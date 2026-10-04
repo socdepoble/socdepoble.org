@@ -1,0 +1,195 @@
+##### P7-A · Les pàgines dels plugins i la portada plegable
+
+**Torn torn_50ca5709-8cd2-416a-bf41-2afdb3450179 · Claude · Onada 4, setena passada, bloc A · 261004.**
+Llum verda del Mestre. Llegits sencers: **261004_0015_prompt_claude_passada_6** (T2 i T3),
+**261004_0014_pla_implementacio_maria**, **261003_2320_directriu_arquitectura_plugins** (només el requisit
+**Hero Image Toggle**: l'arquitectura sencera de plugins és de la **pròxima onada** i no s'ha construït),
+la skill **sdp-universal-page**, **UniversalPage.jsx**, les rutes d'**App.jsx**, la **plataforma d'apps**
+(registre, interruptors i els manifests del Bar, el Lector, la Nevera i Salut), la ruta de la **Consola**,
+**sections.js**, **navigation.js** i **storage.js**. Les **onze il·lustracions** de MarIA hi són, amb el
+nom que tocava: **public/assets/ui/plugins/<id>_vinyeta.jpg**. Doble presència confirmada per una prova.
+
+##### Què hi ha de nou
+
+Una **sola taula**, **src/sections/plugins/registrePlugins.js**, amb els onze plugins en l'ordre del
+Mestre. Una **ruta nova**, **/plugin/:id** (App.jsx:799), que pinta **PluginPage.jsx**: una UniversalPage
+genèrica, la mateixa per als onze. I una **capacitat nova i opcional** de la UniversalPage, la
+**portada plegable** (prop **portadaPlegable**), que **no canvia res** a cap pàgina que no la demane.
+
+##### La taula: on porta cada «Obrir», amb evidència
+
+| id | Títol (esborrany) | Obrir | Evidència |
+| --- | --- | --- | --- |
+| mapa | Mapa | **null, en obres** | destinsControl.js:29-31, cap ruta /mapa |
+| vehicle | Vehicle Compartit | **null, en obres** | destinsControl.js:29-31, cap secció |
+| animalets | Animalets | **null, en obres** | destinsControl.js:29-31, cap secció |
+| gestoria | Gestoria | **null, en obres** | WikiDePobleSection.jsx:53-54 i :75, decisió D3 |
+| rebost | Rebost Domèstic | **/app/nevera/casa** | apps/nevera/manifest.js:15 i :22; vistes/Casa.jsx:2 |
+| salut | Salut | **/app/salut** | apps/salut/manifest.js:22; RutaApps.jsx:84 |
+| consola | Consola Termodinàmica | **/consola** | App.jsx:787; consolaPagines.js:20 |
+| cervell | El Cervell | **/consola/explorador** | consolaPagines.js:28 i :133; ExploradorMapa.jsx:12 |
+| rss | Lector RSS | **/app/lector** | apps/lector/manifest.js:17 |
+| tpv | TPV del Bar | **/app/bar** | apps/bar/manifest.js:16 |
+| bascula | Bàscula de Cooperativa | **null, en obres** | cap codi |
+
+**El Rebost és l'entrada «A casa» de La Nevera de Casa**: la vista diu de si mateixa «la nevera i el
+rebost» (Casa.jsx:2). **El Cervell és l'Explorador de la Consola**: el seu títol és «Explorador del
+cervell» i és el graf d'Obsidian aplicat als agents del Mas (comprovat al navegador: el botó hi porta).
+**La Gestoria té codi**, però només viu dins de la Wiki **en desenvolupament**, sense ruta pròpia, per la
+**decisió D3** del Mestre. No l'he endollada: si el Mestre la vol obrir des d'ací, caldrà decidir-ho.
+
+###### Els interruptors manen en temps d'execució
+
+Quan «Obrir» és una app de la plataforma (**/app/<id>/…**), **useDestiDelPlugin.js** passa per
+**useAppAvaluada**, les mateixes capes que el portal **/app**: build, entorn, amfitrió i persona. Si l'app
+**no es pot obrir ací**, el botó **no fa cap enllaç**: és inert i diu el **motiu de la plataforma**
+(**textDelMotiu**, el mateix text del portal). Casos provats: el **Lector** en un build de producció sense
+**VITE_SDP_APP_LECTOR** diu «Encara està en obres: només es pot provar en desenvolupament»; el **Bar**
+apagat per la persona diu «L'has apagada tu…»; **Salut** dins d'una web d'altri diu que guarda dades de
+salut i només s'obri a la pàgina pròpia. **La Consola no és cap app**, però **només funciona en
+desenvolupament**: les seues dades (**/__iaia/consola.json** i **/__iaia/mapa.json**) només les servix
+**vite serve** (consola-iaia.mjs, **apply: 'serve'**). **Revisió adversarial:** en producció l'enllaç
+portava a «Entrar», a «Accés restringit» o a una Consola sense dades. Ara la **Consola** i el **Cervell**
+porten **entorn: 'desenvolupament'** al registre i, fora de dev, el botó és **inert** amb el motiu
+**entorn-desenvolupament**. L'entradilla de la Consola ja no promet l'accés de superadministració.
+
+##### La pàgina de cada plugin
+
+**Portada** a sang amb la il·lustració, **plegable** i visible per defecte. **H1, H2 i entradilla** del
+registre. **Signada per Sóc de Poble**, com les pàgines de publicació: l'autoria per defecte, els logos i
+el copyright de TextSection, **sense etiquetes**. Al final, el **gran botó blau** a l'ample sencer, que és
+la **mateixa porta** de les pàgines de publicació (**PortaDePagina**, sense tocar PortesTargeta.jsx). Amb
+destí és un **Link del router**: porta la **base de l'amfitrió** a l'href i navega dins del **router en
+memòria** de WordPress. Sense destí és un **botó inert** (**aria-disabled**, «(en obres)» al nom
+accessible), amb l'**avís en text** damunt («Esta eina encara està en obres.») i el **toast** en prémer-lo.
+**Mai navega.** Un id desconegut és la **404 de sempre**. Abans d'esta passada, **/plugin/desconegut**
+queia a **ItemDetailSection** per la ruta **/:sectionId/:itemId**: la prova ho ha posat en roig.
+
+##### La portada plegable (Hero Image Toggle)
+
+**Capacitat genèrica** de la UniversalPage: **portadaPlegable={{ clau, etiquetes? }}**. La clau dels
+plugins és **plugin:<id>**. El botó viu **dins del marc de la portada**, **abans de la imatge**, dalt a la
+dreta. Quan la portada es veu, **flota damunt de la il·lustració**. Plegada, ocupa una **franja pròpia** amb
+el fons de l'app. **No es mou de lloc**, és el **primer que troba el teclat** després de la barra blava i
+**es veu també en mòbil**. La skill no definix cap engranatge de pàgina, i la barra taronja **no es pinta
+en mòbil** (T38), així que no podia anar-hi. **Patró disclosure**: **aria-expanded** i **aria-controls**
+cap al contenidor de la imatge, que plegat porta **hidden**. El text diu el que farà: **«Amaga la
+portada»** o **«Mostra la portada»**, traduït a les **cinc llengües**. Té la **pell de Boto** secundari, amb
+**44 px**, el **focus visible** de .sdp-boto, el text a la **mida base** i una ombra perquè es llija damunt
+de qualsevol dibuix. **Cap transició**, i per tant res que **prefers-reduced-motion** haja d'aturar.
+
+###### On es guarda
+
+L'estat és **de qui mira i de cada plugin**. Va en **una sola clau de storage.js**,
+**portades-plegades**, que **només guarda les plegades**: { v: 1, plegades: { 'plugin:gestoria': true } }.
+Desplegar-la **esborra** la clau. **Sense emmagatzematge** (mode privat, quota), el canvi val igual en eixa
+càrrega. L'esdeveniment **storage** la **sincronitza entre pestanyes**, i les pàgines amb la mateixa clau
+van a una dins de la pestanya. **Cap accés directe** a l'emmagatzematge fora de storage.js (L2).
+
+###### Llei del Píxel
+
+**Sense la prop no canvia res.** Tampoc amb una clau invàlida, sense imatge o amb un **heroComponent**
+propi (l'editor): PageFrame rep **exactament les mateixes props**. Ho diu una **prova de DOM**, el marc de
+la portada idèntic al d'abans, i ho he comprovat al navegador sobre **/page/publicar_mur**. **PageFrame.jsx
+no s'ha tocat.**
+
+##### Textos per a l'aprovació del Mestre (esborranys)
+
+**Tots són esborranys.** Són curts, porten la paraula clau primer i **no prometen res que no existisca**.
+En **Mapa**, **Vehicle Compartit** i **Animalets** he reprès el sentit de les pàgines de publicació
+**sense copiar-ne la privacitat literal**, i diuen clarament que són **eines en obres**.
+
+###### Mapa · «Els llocs del poble, damunt del mapa»
+Eina en obres: encara no es pot marcar cap lloc. Un punt publicat al mapa serà públic i el podrà localitzar
+qualsevol, també des d'altres pobles. **Botó:** Obrir el Mapa.
+
+###### Vehicle Compartit · «Seients buits per a pujar i baixar del poble»
+Eina en obres: encara no es pot publicar cap trajecte. Un trajecte publicat diu a tothom el teu horari i el
+teu camí; les despeses les acordeu entre vosaltres, fora de l'app. **Botó:** Obrir Vehicle Compartit.
+
+###### Animalets · «Animals perduts, trobats i en adopció»
+Eina en obres: encara no es pot publicar cap avís. El telèfon o el contacte que poses en un avís el veurà
+tothom. **Botó:** Obrir Animalets.
+
+###### Gestoria · «Factures i papers del trimestre»
+Eina en obres: encara no es pot obrir des d'ací. No guarda ni envia cap factura. **Botó:** Obrir la Gestoria.
+
+###### Rebost Domèstic · «La nevera i el rebost de casa»
+Apunta el que tens a casa i el que cal comprar, dins de La Nevera de Casa. Les llistes es guarden només en
+este dispositiu. **Botó:** Obrir el Rebost.
+
+###### Salut · «Un quadern per a cuidar dels nostres»
+Apunta com beu, dorm i està la persona que cuides, i ensenya-ho al metge en un full clar. No diagnostica ni
+envia res. **Botó:** Obrir Salut.
+
+###### Consola Termodinàmica · «Què gasta i què falla dins del Mas»
+El tauler d'administració: consums, rebuts, skills i avisos de salut del sistema. Només funciona al
+servidor local de desenvolupament. **Botó:** Obrir la Consola.
+
+###### El Cervell · «Qui es relaciona amb qui, en un graf»
+El mapa de relacions del Mas: skills, rutes i agents units per fils. Viu dins de la Consola, a
+l'Explorador. **Botó:** Obrir el Cervell.
+
+###### Lector RSS · «Les notícies de les entitats del poble, juntes»
+Seguix les fonts que t'interessen i llig-les en un sol lloc, dins de Notícies del Poble. El que llegeixes i
+el que deses es queda en este dispositiu. **Botó:** Obrir el Lector.
+
+###### TPV del Bar · «La caixa del bar o del casino»
+Comandes, taules, tiquets i tancament del torn. Les dades es guarden en este dispositiu. **Botó:** Obrir el Bar.
+
+###### Bàscula de Cooperativa · «Les pesades de la collita»
+Eina en obres: encara no pesa ni guarda res. **Botó:** Obrir la Bàscula.
+
+Els **textos alternatius** de les il·lustracions també són esborranys. Els he escrit **mirant cada
+imatge**.
+
+##### Què queda EN OBRES
+
+Queden **sense destí** **Mapa**, **Vehicle Compartit**, **Animalets**, **Gestoria** i **Bàscula**. Els
+textos del registre **només són en valencià**: són esborranys. Quan el Mestre els aprove, la traducció
+podrà passar per **i18n.js** amb la mateixa clau per a la targeta i per a la pàgina. Queda per a la
+**pròxima onada** l'**arquitectura de plugins** (injecció, cicle de vida i aïllament, directriu 2320).
+Esta taula és només el **padró** que eixa arquitectura podrà llegir.
+
+##### Com l'ha de llegir el bloc B (la graella del Control)
+
+El bloc B **no copia cap text ni cap ruta**: **importa la taula**. **PLUGINS** dona els onze en l'ordre
+de la graella, amb **titol**, **subtitol**, **entradilla**, **imatge** i **imatgeAlt** per a la
+UniversalCard. La targeta porta a la seua pàgina amb **rutaDelPlugin(id)**, que és **/plugin/<id>**, i fa
+de **Saber-ne més**. Si la targeta vol una segona porta **«Obrir»**, l'ha de calcular amb
+**useDestiDelPlugin(plugin)**, **mai amb plugin.obrir a seques**: només el hook respecta els
+interruptors, i així **cap targeta fa un enllaç mort**. La porta ja feta la dona
+**portaDelPlugin(plugin, desti, t)**, del mateix fitxer **useDestiDelPlugin.js**. Torna la forma
+de **PortesTargeta** i l'avís en text: amb **ruta**, enllaç; amb **estat 'en-obres'** o
+**'no-disponible'**, inert i amb el motiu. La pàgina la fa servir, i la graella hi pot passar
+igual. **pluginPerId(id)** només troba ids propis. Les proves del bloc B poden confrontar la graella
+amb **IDS_PLUGINS**. La portada plegable **no és cosa de la targeta**: viu a la pàgina.
+
+##### Proves i portes
+
+**En roig abans:** les 3 proves de l'App (la 404 de /plugin queia a ItemDetailSection), les 13 de la
+portada i les dues suites que no es podien importar. **En verd després**, 65 proves noves:
+**registrePlugins.test.js** (11), **PluginPage.test.jsx** (31), **PluginPage.app.test.jsx** (3, l'App de
+veres), **qualitat.test.js** (7, ESLint a zero amb la configuració del projecte, Pedra Seca i higiene) i
+**UniversalPage.portada.test.jsx** (13). Suites demanades (**src/sections/plugins**,
+**src/components/universal**, **src/app**, **src/apps**): **2.608 de 2.615**. Les **7 roges no són
+d'esta passada**. Dues ja eren roges abans de començar: la barra mòbil i Telefonades d'**App.test.jsx**.
+Quatre són **PageFrame.capes.test.js T38**: llegixen el bloc **@media** de **components.css**, que ara
+edita un altre agent, i este torn **no l'ha tocat**. La setena és la **prova de fum d'App.test.jsx**
+(«Nova conversa» del Xat, un findByRole d'1 s): depén de la càrrega. **Sola passa**: App.test.jsx dona
+71 de 73, amb només les dues d'abans. A més, la ruta /xat no carrega PluginPage i el Xat no usa
+UniversalPage. Les dues roges d'**i18n.claus.test.js** miren **ControlSection.jsx**, que també és d'un
+altre agent. **tractor-enxufe** està en verd. **design_guard** no troba **cap infracció nova** en els
+fitxers d'esta passada: les que ix són de Dialeg.test.jsx, DetallEspai.jsx i DocumentPrintPreview.jsx.
+
+##### Navegador
+
+He provat en una **pestanya de fons** sobre el servidor del **3340**. **/plugin/gestoria** i
+**/plugin/salut** a **1280** i a **375×812**. En els dos amples, la portada es veu per defecte i el botó fa
+**44 px** i **18 px** de text. Plegada, queda una franja de 60 px que **es manté després de recarregar**,
+i la Salut continua desplegada. El focus de teclat és visible (anell de 3 px) i no hi ha **cap scroll
+horitzontal**. **/plugin/cervell** porta a l'**Explorador del cervell**, i **/plugin/desconegut** és la
+**404**. **/page/publicar_mur** té la portada exactament com abans. La consola no dona **cap error**. He
+deixat la clau buida i el viewport en escriptori.
+
+Ancoratge: [[00_index_escriptori]]

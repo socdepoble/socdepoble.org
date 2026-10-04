@@ -62,6 +62,15 @@ export const OPCIONS_TEMA = Object.freeze([
   Object.freeze({ id: 'tema-dark', tipus: 'opcio', opcio: 'dark', clau: 'section.xat.ajustos.tema.fosc', text: 'Mode fosc' })
 ]);
 
+/* D6 · Mode Bancal (Q1 del Mestre, 261004) · Les tres preferències de
+   contrast que coneix config/theme.js ('normal', 'bancal', 'sistema'), en
+   eixe ordre. «Bancal» porta entre parèntesis per a què servix. */
+export const OPCIONS_CONTRAST = Object.freeze([
+  Object.freeze({ id: 'contrast-normal', tipus: 'opcio', opcio: 'normal', clau: 'section.xat.ajustos.contrast.normal', text: 'Normal' }),
+  Object.freeze({ id: 'contrast-bancal', tipus: 'opcio', opcio: 'bancal', clau: 'section.xat.ajustos.contrast.bancal', text: 'Bancal (exterior, màxim contrast)' }),
+  Object.freeze({ id: 'contrast-sistema', tipus: 'opcio', opcio: 'sistema', clau: 'section.xat.ajustos.contrast.sistema', text: 'Segons el sistema' })
+]);
+
 const fila = (id, tipus, clau, text, extra = {}) => Object.freeze({ id, tipus, clau, text, ...extra });
 
 /* ── L'arbre ────────────────────────────────────────────────────────────── */
@@ -162,8 +171,9 @@ export const PAGINES_AJUSTOS = Object.freeze({
     ])
   }),
 
-  /* Una sola pàgina d'Aparença, dos portes (l'arrel i Xats): el tema i la
-     llengua, amb capçalera de secció i ✓ (captura 20.59.01).
+  /* Una sola pàgina d'Aparença, dos portes (l'arrel i Xats): el tema, el
+     contrast (D6, 261004) i la llengua, amb capçalera de secció i ✓
+     (captura 20.59.01).
      Revisió adversarial 260930 (P2) · Els dos ajustos només tenen nom a la
      capçalera: la cerca la indexa amb les `paraules` clau del grup (el que
      la persona escriu per a buscar-lo i no és el nom). Cap paraula que ja
@@ -179,6 +189,15 @@ export const PAGINES_AJUSTOS = Object.freeze({
         paraules: ['section.xat.ajustos.tema.paraules', 'aspecte colors nit'],
         seleccio: 'tema',
         files: OPCIONS_TEMA
+      }),
+      /* D6 (261004) · El contrast, al costat del tema. Les paraules clau no
+         repetixen cap paraula d'una fila (normal, bancal, sistema). */
+      Object.freeze({
+        id: 'contrast',
+        capcalera: ['section.xat.ajustos.contrast', 'Contrast'],
+        paraules: ['section.xat.ajustos.contrast.paraules', 'sol exterior llegibilitat lectura'],
+        seleccio: 'contrast',
+        files: OPCIONS_CONTRAST
       }),
       Object.freeze({
         id: 'llengua',

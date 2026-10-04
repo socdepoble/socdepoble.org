@@ -41,8 +41,12 @@ export default function DocumentPrintPreview({ document: doc, author = '' }) {
   const html = useMemo(() => open ? buildPrintDocument(doc, cover, author) : '', [doc, cover, author, open]);
   const show = withCover => { setCover(withCover); setReady(false); setOpen(true); };
   return <>
-    <button type="button" className="sdp-copyright-selector" onClick={() => show(false)}><Printer size={14} aria-hidden="true" />Vista A4 / PDF</button>
-    <button type="button" className="sdp-copyright-selector" onClick={() => show(true)}><BookOpen size={14} aria-hidden="true" />Crear portada</button>
+    <button type="button" className="sdp-classificacio-pindola" onClick={() => show(false)}>
+      <span className="sp-card-label sdp-badge-buit"><Printer size={14} aria-hidden="true" /><span className="sdp-classificacio-pindola__text">Vista A4 / PDF</span></span>
+    </button>
+    <button type="button" className="sdp-classificacio-pindola" onClick={() => show(true)}>
+      <span className="sp-card-label sdp-badge-buit"><BookOpen size={14} aria-hidden="true" /><span className="sdp-classificacio-pindola__text">Crear portada</span></span>
+    </button>
     {/* T42 · l'avís és la descripció del diàleg (fora del cos, sempre a la
         vista i anunciat en obrir); el cos només porta la casella i el
         document, que és l'únic que fa scroll (en pantalla curta, el diàleg

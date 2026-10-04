@@ -321,7 +321,8 @@ const COMENTARIS = [
   { on: 'modules.css · A1', text: BLOC_A1, tema: FOSC, a: '--sdp-accio', b: '--sdp-accio-subtil', diu: '4,01:1' },
   { on: 'modules.css · A1', text: BLOC_A1, tema: CLAR, a: '--sdp-text-titol', b: '--sdp-accio-subtil', diu: '18,13:1' },
   { on: 'modules.css · A1', text: BLOC_A1, tema: FOSC, a: '--sdp-text-titol', b: '--sdp-accio-subtil', diu: '15,52:1' },
-  { on: 'modules.css · A1', text: BLOC_A1, tema: CLAR, a: '--sdp-text-suau', b: '--sdp-accio-subtil', diu: '6,8:1' },
+  /* Fase E (Q1, 261004): el text suau és el pedra-650; abans, pedra-600 i 6,8:1. */
+  { on: 'modules.css · A1', text: BLOC_A1, tema: CLAR, a: '--sdp-text-suau', b: '--sdp-accio-subtil', diu: '8,49:1' },
   { on: 'modules.css · A1', text: BLOC_A1, tema: FOSC, a: '--sdp-text-suau', b: '--sdp-accio-subtil', diu: '10,82:1' },
   { on: 'mostrari · Blanc sobre blau 600', text: filaDe(especimen, 'Blanc sobre blau 600'), tema: CLAR, a: '--sdp-crom-seleccio-text', b: '--sdp-crom-seleccio-fons', diu: '7,20:1' },
   { on: 'mostrari · cel·la i columna', text: filaDe(especimen, 'Blau 600 contra la columna (grafit 700)'), tema: CLAR, a: '--sdp-crom-seleccio-fons', b: NAV, diu: '1,55:1' },

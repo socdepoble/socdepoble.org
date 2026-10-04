@@ -1,8 +1,8 @@
 {
   "schema": "sdp.release.v1",
   "producte": "soc-de-poble",
-  "versio": "1.0.1",
-  "generat": "2026-10-03T11:24:25.920Z",
+  "versio": "1.0.2",
+  "generat": "2026-10-04T02:21:53.074Z",
   "contracte": {
     "marcatge": "sdp.markup.v1",
     "element": "soc-de-poble",
@@ -33,38 +33,38 @@
   },
   "entrada": {
     "cami": "soc-de-poble.standalone.js",
-    "mida": 3617906,
-    "sha256": "f094730c2c44b7560957cc3bea7b3462dca4c9136f12247074ceda66525870a4",
-    "integrity": "sha384-BhAMFhP60wS+KkZiNZrMUtRYOYScRfT9p47mGbWaY1GzRjXCOhKfDW54CDabu3XV"
+    "mida": 3789921,
+    "sha256": "203037397a498c67947a645d5c0ec87af59839c0a9638069f0c1b029330d5547",
+    "integrity": "sha384-zbp5JzED+oNRjkv2L1+ZxjVD2qE36kws5/GYov+ykb1EgEzmRREXQhcW+opO0p82"
   },
   "fonts": {
     "cami": "fonts/noto-sans.css",
-    "integrity": "sha384-JuhbVVsIoc9cTvCHZ/+r+anOQ5T1hgb1TNCSQ7j/kCImoseEENbmrCyksr/Mqu2m"
+    "integrity": "sha384-1pKog10G8xIectlT/i90hJfaDrMiaKg9Zp8jonCfsaFRcpvNRLyIYLiaq1w82eYO"
   },
   "inventari": {
     "cami": "sdp-inventari.json",
-    "fitxers": 188,
-    "sha256": "fb7b6065927333a2161f1ae97268f1ad3a3a276ffce35b18c7dffd8a289b683e"
+    "fitxers": 215,
+    "sha256": "67c91565e863990889013f2ee9bdb4b4c01db4c081453f1f1069825aad578d7a"
   },
   "canal": "stable",
   "adaptadors": {
     "wordpress": {
       "slug": "socdepoble-enxufe",
-      "versio": "1.0.1",
+      "versio": "1.0.2",
       "requires": "6.5",
       "requires_php": "7.4",
       "tested": "7.1",
       "paquet": {
-        "nom": "socdepoble-enxufe-v1.0.1-261003_1324.zip",
-        "url": "https://gentdelatorre.com/socdepoble-enxufe-v1.0.1-261003_1324.zip",
-        "mida": 108457468,
-        "sha256": "4c5eed6c35ca3232f1aaa6a38f7358000d96a584a832b658bb81b8f1db510c54"
+        "nom": "socdepoble-enxufe-v1.0.2-261004_0421.zip",
+        "url": "https://socdepoble.net/socdepoble-enxufe-v1.0.2-261004_0421.zip",
+        "mida": 128776037,
+        "sha256": "b391424a1cb77871da6ff60f56c9e8a631a512bf623080daee234a9c26366aa9"
       },
       "directori": {
-        "nom": "socdepoble-enxufe-v1.0.1-261003_1324.zip",
-        "cami": "directori/socdepoble-enxufe-v1.0.1-261003_1324.zip",
-        "mida": 108397116,
-        "sha256": "9153e64b4d9ee51bb1ff98631400bc42f97f7607567bca2413d299b70feae1b2",
+        "nom": "socdepoble-enxufe-v1.0.2-261004_0421.zip",
+        "cami": "directori/socdepoble-enxufe-v1.0.2-261004_0421.zip",
+        "mida": 128715648,
+        "sha256": "352a3b0bcf7a001ff9ae0558fe06043685e2c253fa7df60f8acc6c39f1f786a4",
         "requires": "6.6",
         "requires_php": "7.4",
         "tested": "7.1",
@@ -79,19 +79,19 @@
         },
         "entrada": {
           "cami": "soc-de-poble.standalone.js",
-          "mida": 3471480,
-          "sha256": "770f5b2e87cb8c8940183781755ed5d3d27491e18c5316e063ecbac33e51614e",
-          "integrity": "sha384-a0XQaeBp/YCDb8LwVRCtTgFy3lsfKvnabE7S+Gk0qYSZg+Jeatg5n7fnRcouLZZB"
+          "mida": 3643219,
+          "sha256": "7aa8c0cd6e9bc92c405e54b168d9decd6fc28781dbb6a16b1ed8d86c01b6522d",
+          "integrity": "sha384-VTMeRPJf4vMMvPdidUosroSuSqqPknCXcjsb/SNnw254WYi9r8JfksDjv9PT86tT"
         }
       }
     }
   },
   "estatic": {
     "paquet": {
-      "nom": "socdepoble-spa-v1.0.1-261003_1324.zip",
-      "url": "https://gentdelatorre.com/socdepoble-spa-v1.0.1-261003_1324.zip",
-      "mida": 108400760,
-      "sha256": "4b748747e454e48b31f88d1217351f6fd7e021f0be1666d2d24bba0e44dad498"
+      "nom": "socdepoble-spa-v1.0.2-261004_0421.zip",
+      "url": "https://socdepoble.net/socdepoble-spa-v1.0.2-261004_0421.zip",
+      "mida": 128718217,
+      "sha256": "c0aacbafe34abed14cbda9e98f100dfe61a41a9ac66aa9091757c151bba8bd35"
     }
   }
 }

@@ -1,12 +1,43 @@
-import Image from '@tiptap/extension-image';
+import Image, { inputRegex as regexImatgeMarkdown } from '@tiptap/extension-image';
+import { nodeInputRule } from '@tiptap/core';
 import { ReactNodeViewRenderer } from '@tiptap/react';
 import { compressImage } from '../../../../utils/imageUtils.js';
+import { netejaFontImatge } from '../../enquadrament/netejaMetadades.js';
+import { netejaHtmlEnganxat } from './imatgesEnganxades.js';
 import SlashMenu from './slash.js';
 import SdpImageNodeView from './SdpImageNodeView.jsx';
 
+/* RICH-EXIF (Onada 4, ADR multimèdia D4) · allowBase64 es queda (les notes
+   sense servidor hi desen el data URL de compressImage), però cap data URL
+   d'imatge entra amb metadades: ni enganxat, ni arrossegat, ni escrit com
+   a «![alt](src)». La neteja és síncrona i no torna a codificar cap píxel. */
 const SdpImage = Image.extend({
   addNodeView() {
     return ReactNodeViewRenderer(SdpImageNodeView);
+  },
+
+  /* Enganxar i deixar anar HTML: ProseMirror crida esta mateixa funció. */
+  transformPastedHTML(html) {
+    return netejaHtmlEnganxat(html);
+  },
+
+  /* La regla de Markdown de TipTap, amb la font neta. Una imatge que no es
+     pot netejar no es crea: el text escrit es queda com a text. */
+  addInputRules() {
+    return [
+      nodeInputRule({
+        find: (text) => {
+          const m = regexImatgeMarkdown.exec(text);
+          if (!m) return null;
+          const [tot, imatge, alt, src, title] = m;
+          const net = netejaFontImatge(src);
+          if (net === null) return null;
+          return { index: m.index, text: tot, replaceWith: imatge, data: { src: net, alt, title } };
+        },
+        type: this.type,
+        getAttributes: (match) => match.data
+      })
+    ];
   }
 });
 

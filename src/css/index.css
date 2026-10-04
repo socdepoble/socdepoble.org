@@ -71,7 +71,9 @@
    sempre contra components.css i modules.css. */
 @import url('../components/PedraSeca/pecesApps.css');
 @import url('../components/PedraSeca/catalegColleccio.css');
-
+/* Ús de les amplades estretes de Noto Sans (261004). També escriu dins de
+   `@layer components`: sense layer(), per la mateixa raó. */
+@import url('./tipografia-estreta.css');
 
 
 /* 5 · Utilitats */

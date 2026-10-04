@@ -30,8 +30,10 @@ import {
   oblidaEnllacDeRecuperacio, oblidaRecuperacioPendent, recuperacioPendentPer
 } from '../recuperacioPendent.js';
 
-const PAGINA = 'https://gentdelatorre.net/una/pagina?x=1';
-const HASH = 'a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c';   // 56 hex, com GoTrue
+const PAGINA ='https://gentdelatorre.net/una/pagina?x=1';
+/* F1-seguiments (Onada 4, 261003) · La tornada de la recuperació porta la seua marca. */
+const TORNADA_RECUPERACIO = `${PAGINA}&sdp_auth=recuperacio`;
+const HASH ='a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c';   // 56 hex, com GoTrue
 const SESSIO = Object.freeze({ access_token: 'jwt-recuperacio', refresh_token: 'rt-sintetic', user: { id: 'U-1', email: 'ana@poble.test' } });
 const NOVA = 'contrasenya-nova-llarga';
 const errorGoTrue = (status, cos) => Object.assign(new Error(`Supabase ${status}: ${JSON.stringify(cos)}`), { status });
@@ -83,25 +85,27 @@ test('premissa: la pàgina és la de l’amfitrió', () => {
 
 /* ── Anada ── */
 
-test('demanar el correu: POST /auth/v1/recover amb redirect_to del mateix origen que la pàgina, mai socdepoble.org', async () => {
+test('demanar el correu: POST /auth/v1/recover amb redirect_to del mateix origen que la pàgina, amb la marca i mai socdepoble.org', async () => {
   m.request.mockResolvedValueOnce({});
   await expect(demanaRecuperacioContrasenya('  Ana@Poble.TEST ')).resolves.toEqual({ enviat: true });
   expect(m.request).toHaveBeenCalledTimes(1);
   const crida = m.request.mock.calls[0];
   const url = urlDe(crida);
   expect(url.pathname).toBe('/auth/v1/recover');
-  expect(url.searchParams.get('redirect_to')).toBe(PAGINA);
+  /* F1-seguiments · Canvi: la tornada porta la marca sdp_auth=recuperacio (abans, PAGINA sola). */
+  expect(url.searchParams.get('redirect_to')).toBe(TORNADA_RECUPERACIO);
   expect(new URL(url.searchParams.get('redirect_to')).origin).toBe(window.location.origin);
   expect(JSON.stringify(crida)).not.toMatch(/socdepoble/);
   /* Sense PKCE a posta (R.txt §3): cap verificador ni repte viatgen. */
   expect(crida[2]).toEqual({ method: 'POST', body: { email: 'ana@poble.test' } });
 });
 
-test('demanar el correu: la tornada no s’emporta restes d’una entrada anterior ni el fragment', async () => {
-  window.history.replaceState(null, '', '/una/pagina?x=1&code=vell&error_code=bad_oauth_state#token_hash=vell&type=recovery');
+test('demanar el correu: la tornada no s’emporta restes d’una entrada anterior (una marca vella inclosa) ni el fragment', async () => {
+  window.history.replaceState(null, '', '/una/pagina?x=1&code=vell&error_code=bad_oauth_state&sdp_auth=recuperacio#token_hash=vell&type=recovery');
   m.request.mockResolvedValueOnce({});
   await demanaRecuperacioContrasenya('ana@poble.test');
-  expect(urlDe(m.request.mock.calls[0]).searchParams.get('redirect_to')).toBe(PAGINA);
+  /* F1-seguiments · Canvi: una sola marca, la nova (abans, PAGINA sola). */
+  expect(urlDe(m.request.mock.calls[0]).searchParams.get('redirect_to')).toBe(TORNADA_RECUPERACIO);
 });
 
 /* Correcció de la revisió · Anti-enumeració. GoTrue respon 200 a un correu sense
@@ -215,6 +219,102 @@ test('sense tornada de recuperació, recullTornadaOAuth continua amb Google com 
   await expect(recullTornadaOAuth({})).resolves.toBeNull();
   expect(m.request).not.toHaveBeenCalled();
   expect(estatEnllacDeRecuperacio()).toBeNull();
+});
+
+/* F1v2 (261003, W4-02) · gestionaTornada ja només actua amb la seua marca. La
+   recuperació va abans: ha de continuar funcionant igual, també en una pàgina
+   amb consultes de l'amfitrió que diuen code, state o error.
+   F1-seguiments · Esta tornada no porta la marca de la recuperació: és la d'un
+   enllaç demanat abans que n'hi haguera. També ha de funcionar. */
+test('F1v2 · la recuperació continua funcionant: el token es recull i la consulta de l’amfitrió es queda literal', async () => {
+  const ruta = '/una/pagina?x=1&code=HOST-COUPON&state=HOST-STATE&filter=all';
+  await expect(arribaAmb(`${ruta}#token_hash=${HASH}&type=recovery`)).resolves.toEqual({ recuperacio: true });
+  expect(window.location.pathname + window.location.search + window.location.hash).toBe(ruta);
+  expect(m.request).not.toHaveBeenCalled();
+  expect(estatEnllacDeRecuperacio()).toBe(ESTAT_ENLLAC.PENDENT);
+  /* I «Desa» la completa com sempre. */
+  m.request.mockImplementation(async (rutaPeticio) => (rutaPeticio === '/auth/v1/verify' ? SESSIO : { id: 'U-1' }));
+  await expect(definixContrasenyaNova(NOVA, {})).resolves.toBe(true);
+  expect(crides()).toEqual(['POST /auth/v1/verify', 'PUT /auth/v1/user']);
+  expect(m.desa).toHaveBeenCalledWith(SESSIO);
+});
+
+test('F1v2 · sense recuperació ni marca, una pàgina amb ?code i ?error de l’amfitrió no es toca', async () => {
+  for (const ruta of ['/una/pagina?x=1&code=HOST-COUPON&state=HOST-STATE', '/una/pagina?x=1&error=HOST-CHECKOUT-FAILED']) {
+    window.history.replaceState({ amfitrio: true }, '', ruta);
+    const abans = emmagatzemat();
+    await expect(recullTornadaOAuth({}), ruta).resolves.toBeNull();
+    expect(window.location.pathname + window.location.search).toBe(ruta);
+    expect(window.history.state).toEqual({ amfitrio: true });
+    expect(emmagatzemat()).toBe(abans);
+  }
+  expect(m.request).not.toHaveBeenCalled();
+  expect(m.fetch).not.toHaveBeenCalled();
+});
+
+/* ── F1-seguiments (Onada 4, 261003) · La marca de la recuperació ──
+   Amb la plantilla per defecte de GoTrue, un enllaç caducat o ja usat torna a
+   redirect_to amb #error=access_denied&error_code=otp_expired&error_description=…
+   F1v2 no deia res i l'error es quedava a la URL (sense marca, un error de
+   l'amfitrió no es toca, W4-02). Amb la marca: l'avís en valencià, a l'entrada
+   (recuperacio), i de la URL només se'n van la marca i els paràmetres d'error. */
+const ERROR_GOTRUE = 'error=access_denied&error_code=otp_expired&error_description=Email+link+is+invalid+or+has+expired';
+const CADUCAT_EN_ARRIBAR = 'L’enllaç ha caducat o ja s’ha fet servir. Demana’n un altre.';
+
+test('F1-seguiments · de punta a punta: l’enllaç caducat torna a la tornada demanada amb l’error; avís en valencià i la pàgina neta', async () => {
+  m.request.mockResolvedValueOnce({});
+  await demanaRecuperacioContrasenya('ana@poble.test');
+  const { pathname, search } = new URL(urlDe(m.request.mock.calls[0]).searchParams.get('redirect_to'));
+  window.history.replaceState({ usr: 'r' }, '', `${pathname}${search}#${ERROR_GOTRUE}`);
+  const rebuig = await recullTornadaOAuth({}).catch((e) => e);
+  expect(rebuig).toMatchObject({ recuperacio: true, code: CODI_ENTRADA.ENLLAC_CADUCAT });
+  expect(rebuig.message).toBe(CADUCAT_EN_ARRIBAR);
+  expect(window.location.href).toBe(PAGINA);
+  expect(window.history.state).toEqual({ usr: 'r' });
+  expect(m.request).toHaveBeenCalledTimes(1);   // només l'anada
+  expect(estatEnllacDeRecuperacio()).toBeNull();
+});
+
+test.each([
+  ['al fragment', '?x=1&code=HOST-COUPON&state=HOST-STATE&sdp_auth=recuperacio&filter=all', `#${ERROR_GOTRUE}`],
+  ['a la consulta', `?x=1&code=HOST-COUPON&state=HOST-STATE&sdp_auth=recuperacio&${ERROR_GOTRUE}&filter=all`, '']
+])('F1-seguiments · l’error de GoTrue %s amb la marca: ENLLAC_CADUCAT i fora NOMÉS la marca i els paràmetres d’error', async (_cas, consulta, fragment) => {
+  window.sessionStorage.setItem(STORAGE_PREFIX + CLAU_ENLLAC_OBERT, '{"v":1}');   // una arribada anterior en esta pestanya
+  window.history.replaceState({ amfitrio: true }, '', `/una/pagina${consulta}${fragment}`);
+  const rebuig = await recullTornadaOAuth({}).catch((e) => e);
+  expect(rebuig).toMatchObject({ recuperacio: true, code: CODI_ENTRADA.ENLLAC_CADUCAT, message: CADUCAT_EN_ARRIBAR });
+  expect(window.location.pathname + window.location.search + window.location.hash).toBe('/una/pagina?x=1&code=HOST-COUPON&state=HOST-STATE&filter=all');
+  expect(window.history.state).toEqual({ amfitrio: true });
+  expect(m.request).not.toHaveBeenCalled();
+  expect(m.fetch).not.toHaveBeenCalled();
+  /* L'estat 'perdut' d'una arribada anterior no tapa l'avís. */
+  expect(estatEnllacDeRecuperacio()).toBeNull();
+});
+
+test('F1-seguiments · la marca sola (sense token ni error) se’n va i no passa res més', async () => {
+  window.history.replaceState(null, '', '/una/pagina?x=1&sdp_auth=recuperacio');
+  await expect(recullTornadaOAuth({})).resolves.toBeNull();
+  expect(window.location.href).toBe(PAGINA);
+  expect(m.request).not.toHaveBeenCalled();
+  expect(estatEnllacDeRecuperacio()).toBeNull();
+});
+
+/* La mecànica del token_hash (tornadaRecuperacio.js) no canvia: amb la marca a
+   la consulta, el token es llig i es neteja igual, i després se'n va la marca. */
+test.each([
+  ['al fragment (la plantilla «Reset password»)', `/una/pagina?x=1&sdp_auth=recuperacio#token_hash=${HASH}&type=recovery`],
+  ['a la consulta', `/una/pagina?x=1&sdp_auth=recuperacio&token_hash=${HASH}&type=recovery`]
+])('F1-seguiments · el token_hash %s amb la marca: es recull sense cap petició, la URL queda neta i «Desa» el completa', async (_cas, ruta) => {
+  await expect(arribaAmb(ruta)).resolves.toEqual({ recuperacio: true });
+  expect(window.location.href).toBe(PAGINA);
+  expect(m.request).not.toHaveBeenCalled();
+  expect(estatEnllacDeRecuperacio()).toBe(ESTAT_ENLLAC.PENDENT);
+  expect(emmagatzemat()).not.toContain(HASH);
+  m.request.mockImplementation(async (rutaPeticio) => (rutaPeticio === '/auth/v1/verify' ? SESSIO : { id: 'U-1' }));
+  await expect(definixContrasenyaNova(NOVA, {})).resolves.toBe(true);
+  expect(crides()).toEqual(['POST /auth/v1/verify', 'PUT /auth/v1/user']);
+  expect(m.request.mock.calls[0][2].body).toEqual({ type: 'recovery', token_hash: HASH });
+  expect(m.desa).toHaveBeenCalledWith(SESSIO);
 });
 
 /* ── «Desa» ── */

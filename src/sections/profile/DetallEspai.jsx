@@ -21,10 +21,42 @@ const AUTORIA_NODE = Object.freeze({
   authorAvatar: '',
 });
 
+import { useState, useEffect } from 'react';
+
 /* T51 · Pendent: una utilitat encara no té cap data real. La seua
    declaració (aplicacions.js, aplicacionsValides) no porta cap camp de data
    i esta pàgina no se n'inventa cap: cal que la configuració en porte una. */
 export function DetallAplicacio({ aplicacio }) {
+  const [activa, setActiva] = useState(false);
+
+  useEffect(() => {
+    try {
+      const g = localStorage.getItem('sdp_utilitats_actives');
+      if (g) {
+        const parsed = JSON.parse(g);
+        setActiva(Boolean(parsed[aplicacio.id]));
+      }
+    } catch {
+      // Ignorar
+    }
+  }, [aplicacio.id]);
+
+  const toggleActiva = () => {
+    try {
+      const g = localStorage.getItem('sdp_utilitats_actives');
+      const parsed = g ? JSON.parse(g) : {};
+      const novaActiva = !activa;
+      parsed[aplicacio.id] = novaActiva;
+      localStorage.setItem('sdp_utilitats_actives', JSON.stringify(parsed));
+      setActiva(novaActiva);
+      
+      // Dispatch per si algú escolta (encara que no és perfecte entre pestanyes en temps real sense l'event storage complet)
+      window.dispatchEvent(new Event('storage'));
+    } catch {
+      // Ignorar errors
+    }
+  };
+
   if (!aplicacio) return null;
   const connectada = aplicacio.estat === 'connectada' && Boolean(aplicacio.ruta);
   const estat = connectada ? ESTATS_APLICACIO.connectada : ESTATS_APLICACIO.pendent;
@@ -50,6 +82,21 @@ export function DetallAplicacio({ aplicacio }) {
               Esta utilitat encara no té secció en este node. Quan s’hi connecte, s’obrirà des d’ací mateix.
             </p>
           )}
+        </Bloc>
+        
+        <Bloc titol="Ajustos de l'Usuari">
+          <p className="perfil-compte__text">
+            Pots fixar aquesta utilitat al teu Panell de Control perquè siga de ràpid accés.
+          </p>
+          <div style={{ marginTop: 'var(--sdp-gap-md)' }}>
+            <button
+              type="button"
+              className={`sdp-boto ${activa ? 'sdp-boto--perill' : 'sdp-boto--primari'}`}
+              onClick={toggleActiva}
+            >
+              {activa ? 'Ocultar del Panell de Control' : 'Mostrar al Panell de Control'}
+            </button>
+          </div>
         </Bloc>
       </div>
     </UniversalPage>

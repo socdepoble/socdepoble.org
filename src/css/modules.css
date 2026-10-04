@@ -76,8 +76,11 @@
   position: relative;
 }
 
-.sdp-gestor-fitxa:hover {
-  background: var(--sdp-fons-subtil);
+/* Fase B (261004): el hover només amb ratolí; al tàctil no es queda enganxat. */
+@media (hover: hover) and (pointer: fine) {
+  .sdp-gestor-fitxa:hover {
+    background: var(--sdp-fons-subtil);
+  }
 }
 
 /* T62 · Actiu de la navegació secundària en blau d'acció (Pedra Seca §2):
@@ -86,7 +89,7 @@
      · marcador --sdp-accio sobre --sdp-accio-subtil: 3,62:1 en clar i
        4,01:1 en fosc, per damunt del 3:1 de WCAG 1.4.11;
      · títol: 18,13:1 en clar i 15,52:1 en fosc;
-     · subtítol: 6,8:1 en clar i 10,82:1 en fosc.
+     · subtítol: 8,49:1 en clar i 10,82:1 en fosc (--sdp-text-suau, 261004).
    Va després de :hover i guanya per ordre. */
 .sdp-gestor-fitxa[aria-current="true"] {
   background: var(--sdp-accio-subtil);
@@ -254,8 +257,10 @@ aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(2) {
   cursor: pointer;
   padding: var(--sdp-space-2);
 }
-.sdp-workspace-clear:hover {
-  color: var(--sdp-error-text);
+@media (hover: hover) and (pointer: fine) {
+  .sdp-workspace-clear:hover {
+    color: var(--sdp-error-text);
+  }
 }
 
 .sdp-workspace-tags {
@@ -345,7 +350,9 @@ aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(2) {
   cursor: pointer;
   transition: background var(--sdp-t), color var(--sdp-t);
 }
-.sdp-workspace-nav-item:hover { background: var(--sdp-crom-hover); color: var(--sdp-crom-text); }
+@media (hover: hover) and (pointer: fine) {
+  .sdp-workspace-nav-item:hover { background: var(--sdp-crom-hover); color: var(--sdp-crom-text); }
+}
 /* T62 · L'entrada activa de la 1a columna va en blau de crom
    (--sdp-crom-seleccio-*, tokens.css). T62b (ordre del Mestre, 260928):
    fons blau fort, text i icona blancs, 7,20:1. Les xifres de la cel·la
@@ -555,9 +562,11 @@ aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(2) {
   border-radius: 0;
 }
 
-.univ-manager-facet-item:hover {
-  background: var(--sdp-fons-subtil);
-  color: var(--sdp-text-titol);
+@media (hover: hover) and (pointer: fine) {
+  .univ-manager-facet-item:hover {
+    background: var(--sdp-fons-subtil);
+    color: var(--sdp-text-titol);
+  }
 }
 
 /* T62 · Actiu en blau d'acció, com la fitxa del llistat: el text continua
@@ -594,7 +603,8 @@ aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(2) {
      !important. Primer inquilí de la migració de capes (Fase 2 · pas 5).
    · L'estat actiu penja de [aria-pressed="true"]. No hi ha classe
      --active: sense ARIA no hi ha aspecte d'actiu.
-   · Actiu: blau (--sdp-accio) amb text blanc (--sdp-sobre-accio).
+   · Actiu: blau de control (--sdp-accio-control) amb text blanc
+     (--sdp-sobre-accio): 9,21:1, AAA.
    · Llei de Vida: cada opció fa com a mínim --sdp-touch d'alt.        */
 
 /* -- PILLTOGGLE -- */
@@ -632,10 +642,14 @@ aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(2) {
     cursor: pointer;
     transition: background var(--sdp-t), color var(--sdp-t);
   }
-  .sdp-pindola__opcio:hover { background: var(--sdp-fons-subtil); }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-pindola__opcio:hover { background: var(--sdp-fons-subtil); }
+  }
+  /* AAA (Q1, 261004): el blanc de 16px sobre --sdp-accio només feia 3,87:1;
+     sobre --sdp-accio-control fa 9,21:1, en clar i en fosc. */
   .sdp-pindola__opcio[aria-pressed="true"],
   .sdp-pindola__opcio[aria-current="page"] {
-    background: var(--sdp-accio);
+    background: var(--sdp-accio-control);
     color: var(--sdp-sobre-accio);
   }
   .sdp-pindola__opcio:focus-visible {
@@ -647,9 +661,18 @@ aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(2) {
   .sdp-pindola--centrada { display: flex; width: fit-content; margin-inline: auto; }
 
 /* Animació d'aparició. Definida ací, consumida per @layer sdp (sdp.css).
-   Els @keyframes no pertanyen a cap capa: el nom es resol globalment. */
+   Els @keyframes no pertanyen a cap capa: el nom es resol globalment.
+   `transform:` i no la propietat `translate:`, que arriba amb Chrome 104
+   (Baseline 2022). Amb moviment reduït, --sdp-despl-aparicio val 0. */
 @keyframes sdp-aparicio {
-  from { opacity: 0; translate: 0 var(--sdp-space-2); }
+  from { opacity: 0; transform: translateY(var(--sdp-despl-aparicio)); }
+}
+
+/* Entrada dels menús (Kowalski): des de --sdp-escala-aparicio (0,96, mai
+   scale(0)) i l'opacitat. Cada menú posa el seu transform-origin a la
+   cantonada del disparador. Amb moviment reduït l'escala val 1: només fosa. */
+@keyframes sdp-aparicio-menu {
+  from { opacity: 0; transform: scale(var(--sdp-escala-aparicio)); }
 }
 
 /* ═══ PODA SALFUMÀ · 260912 · seient de poda JSX ══════════════════════
@@ -676,8 +699,10 @@ aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(2) {
   cursor: pointer;
   transition: background var(--sdp-t);
 }
-.sdp-dropdown-item:hover {
-  background: var(--sdp-fons-superficie);
+@media (hover: hover) and (pointer: fine) {
+  .sdp-dropdown-item:hover {
+    background: var(--sdp-fons-superficie);
+  }
 }
 .sdp-dropdown-item--danger {
   color: var(--sdp-error);
@@ -691,8 +716,9 @@ aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(2) {
 .accordion-item { border-bottom: 1px solid var(--sdp-vora); }
 .accordion-header { width: 100%; }
 .accordion-item__cos { padding: 0 var(--sdp-space-4) var(--sdp-space-4); }
-.accordion-item__fletxa { transition: rotate var(--sdp-t); }
-.accordion-item__fletxa--obert { rotate: 180deg; }
+/* `transform:` i no `rotate:` (Chrome 104): a Chrome 100-103 la fletxa no giraria. */
+.accordion-item__fletxa { transition: transform var(--sdp-t); }
+.accordion-item__fletxa--obert { transform: rotate(180deg); }
 
 /* ── Dispositius · DevicesSection.jsx ────────────────────────────── */
 .devices-panel__accions { display: flex; flex-wrap: wrap; gap: var(--sdp-space-2); }
@@ -849,6 +875,10 @@ aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(2) {
   z-index: 9999;
   isolation: isolate;
   font-family: inherit;
+  /* Entrada de menú: es posiciona amb top i left (slash.js), no amb
+     transform, i ix davall del cursor de text: origen a dalt a l'esquerra. */
+  transform-origin: top left;
+  animation: sdp-aparicio-menu var(--sdp-durada-rapida) var(--sdp-corba-eixida);
 }
 .sdp-slash-menu__opcio {
   display: flex;
@@ -862,18 +892,23 @@ aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(2) {
   cursor: pointer;
   color: var(--sdp-text-cos);
   font-family: inherit;
-  transition: background 0.1s;
+  transition: background-color var(--sdp-durada-premut) var(--sdp-corba-eixida);
 }
-.sdp-slash-menu__opcio--activa,
-.sdp-slash-menu__opcio:hover {
+.sdp-slash-menu__opcio--activa {
   background: var(--sdp-fons-subtil);
+}
+@media (hover: hover) and (pointer: fine) {
+  .sdp-slash-menu__opcio:hover {
+    background: var(--sdp-fons-subtil);
+  }
 }
 .sdp-slash-menu__titol {
   font-weight: 500;
   font-size: var(--sdp-text-base);
 }
+/* Sòl de 14px (abans 0,85em: 13,6px). */
 .sdp-slash-menu__ajuda {
-  font-size: 0.85em;
+  font-size: var(--sdp-text-meta);
   color: var(--sdp-text-suau);
 }
 .sdp-slash-menu__buit {
@@ -1002,9 +1037,11 @@ aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(2) {
   text-decoration: none;
 }
 
-.table-action:hover {
-  color: var(--sdp-accent-text-hover);
-  text-decoration: underline;
+@media (hover: hover) and (pointer: fine) {
+  .table-action:hover {
+    color: var(--sdp-accent-text-hover);
+    text-decoration: underline;
+  }
 }
 
 /* 7.6 Navegació */
@@ -1024,8 +1061,10 @@ aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(2) {
   transition: color var(--sdp-t);
 }
 
-.nav-bar a:hover {
-  color: var(--sdp-text-titol);
+@media (hover: hover) and (pointer: fine) {
+  .nav-bar a:hover {
+    color: var(--sdp-text-titol);
+  }
 }
 
 .nav-bar a.active {
@@ -1075,9 +1114,11 @@ summary.accordion-header::-webkit-details-marker {
   display: none;
 }
 
-.accordion-header:hover,
-summary.accordion-header:hover {
-  background: var(--sdp-fons-subtil);
+@media (hover: hover) and (pointer: fine) {
+  .accordion-header:hover,
+  summary.accordion-header:hover {
+    background: var(--sdp-fons-subtil);
+  }
 }
 
 .accordion-header svg,
@@ -1147,7 +1188,7 @@ details[open] summary.accordion-header svg:last-child {
 }
 
 .divider-label {
-  font-size: 0.75rem;
+  font-size: var(--sdp-text-meta);
   color: var(--sdp-text-suau);
   margin-bottom: var(--sdp-space-2);
 }
@@ -1163,7 +1204,7 @@ details[open] summary.accordion-header svg:last-child {
   align-items: center;
   text-align: center;
   color: var(--sdp-text-suau);
-  font-size: 0.85rem;
+  font-size: var(--sdp-text-meta);
   font-weight: 700;
   margin: var(--sdp-space-6) 0;
 }
@@ -1215,13 +1256,15 @@ details[open] summary.accordion-header svg:last-child {
   text-align: center;
   cursor: pointer;
   box-shadow: var(--sdp-ombra-2);
-  transition: all var(--sdp-t);
+  /* Kowalski: cap `all`; l'ombra canvia de colp i la targeta no s'alça. */
+  transition: background-color var(--sdp-t), border-color var(--sdp-t);
 }
 
-.sdp-indicator-card:hover {
-  background: var(--sdp-fons-app);
-  box-shadow: var(--sdp-ombra-3);
-  transform: translateY(-2px);
+@media (hover: hover) and (pointer: fine) {
+  .sdp-indicator-card:hover {
+    background: var(--sdp-fons-app);
+    box-shadow: var(--sdp-ombra-3);
+  }
 }
 
 .sdp-indicator-card.active {
@@ -1259,8 +1302,24 @@ details[open] summary.accordion-header svg:last-child {
 
 /* Sistema de Badges Universals (Taxonomia 2026) */
 
+/* AAA (Q1, 261004) · El blanc de 11,2px sobre el blau de marca (--sdp-accio)
+   feia 3,87:1, ni AA. La superfície de control amb text blanc,
+   --sdp-accio-control, fa 9,21:1: és el «fons blau fosc» de la Carpeta
+   (sdp-universal-page §4.1) i el parell de la píndola premuda. */
+.sdp-badge-buit {
+  background: transparent;
+  color: var(--sdp-accio-control);
+  box-shadow: inset 0 0 0 1px var(--sdp-accio-control);
+}
+
+:root[data-theme="dark"] .sdp-badge-buit,
+:host([data-theme="dark"]) .sdp-badge-buit {
+  color: var(--sdp-accent);
+  box-shadow: inset 0 0 0 1px var(--sdp-accent);
+}
+
 .sdp-badge-system {
-  background: var(--sdp-accio);
+  background: var(--sdp-accio-control);
   color: var(--sdp-sobre-accio);
 }
 
@@ -1277,7 +1336,7 @@ details[open] summary.accordion-header svg:last-child {
 
 :root[data-theme="dark"] .sdp-badge-accent,
 :host([data-theme="dark"]) .sdp-badge-accent {
-  background: var(--sdp-accio);
+  background: var(--sdp-accio-control);
   color: var(--sdp-sobre-accio);
 }
 
@@ -1319,13 +1378,14 @@ details[open] summary.accordion-header svg:last-child {
   padding: var(--sdp-space-4);
   border-radius: var(--sdp-radi-s);
   box-shadow: var(--sdp-ombra-1);
-  transition: transform var(--sdp-t), box-shadow var(--sdp-t), border-color var(--sdp-t);
+  transition: border-color var(--sdp-t);
 }
 
-.stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--sdp-ombra-2);
-  border-color: var(--sdp-vora-control);
+@media (hover: hover) and (pointer: fine) {
+  .stat-card:hover {
+    box-shadow: var(--sdp-ombra-2);
+    border-color: var(--sdp-vora-control);
+  }
 }
 
 .stat-icon {
@@ -1348,7 +1408,7 @@ details[open] summary.accordion-header svg:last-child {
 }
 
 .stat-label {
-  font-size: 0.85rem;
+  font-size: var(--sdp-text-meta);
   color: var(--sdp-text-suau);
 }
 
@@ -1361,21 +1421,9 @@ details[open] summary.accordion-header svg:last-child {
 
 .sdp-card-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr));
   gap: var(--sdp-space-6);
   align-items: start;
-}
-
-@media (max-width: 1400px) {
-  .sdp-card-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 800px) {
-  .sdp-card-grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
 }
 
 /* Panell de Control — Contenidor Centrat */
@@ -1394,7 +1442,7 @@ details[open] summary.accordion-header svg:last-child {
   border: 1px solid var(--sdp-vora);
   border-radius: var(--sdp-radi-s) 0 0 var(--sdp-radi-s);
   font-size: var(--sdp-text-cos);
-  transition: border-color var(--sdp-t), box-shadow var(--sdp-t);
+  transition: border-color var(--sdp-t);
   outline: none;
 }
 .search-bar-basic input:focus-visible { outline: 2px solid var(--sdp-accio-forta); outline-offset: 2px; }
@@ -1414,8 +1462,10 @@ details[open] summary.accordion-header svg:last-child {
   transition: background var(--sdp-t);
 }
 
-.search-bar-basic button:hover {
-  background: var(--sdp-fons-invers);
+@media (hover: hover) and (pointer: fine) {
+  .search-bar-basic button:hover {
+    background: var(--sdp-fons-invers);
+  }
 }
 
 .search-filters {
@@ -1432,7 +1482,7 @@ details[open] summary.accordion-header svg:last-child {
   font-size: var(--sdp-text-cos);
   background-color: var(--sdp-fons-targeta);
   color: var(--sdp-text-cos);
-  transition: border-color var(--sdp-t), box-shadow var(--sdp-t);
+  transition: border-color var(--sdp-t);
   outline: none;
 }
 .search-filters select:focus-visible { outline: 2px solid var(--sdp-accio-forta); outline-offset: 2px; }
@@ -1458,8 +1508,10 @@ details[open] summary.accordion-header svg:last-child {
   transition: background var(--sdp-t);
 }
 
-.search-filters button:hover {
-  background: var(--sdp-fons-invers);
+@media (hover: hover) and (pointer: fine) {
+  .search-filters button:hover {
+    background: var(--sdp-fons-invers);
+  }
 }
 
 .search-bar-basic input:focus,
@@ -1481,7 +1533,7 @@ details[open] summary.accordion-header svg:last-child {
 }
 
 .search-result-meta {
-  font-size: 0.75rem;
+  font-size: var(--sdp-text-meta);
   color: var(--sdp-text-suau);
   margin-bottom: var(--sdp-space-2);
   letter-spacing: 0.05em;
@@ -1512,14 +1564,16 @@ details[open] summary.accordion-header svg:last-child {
   color: var(--sdp-text-titol);
   flex: 1;
   background: var(--sdp-fons-targeta);
-  transition: background var(--sdp-t), border-color var(--sdp-t), box-shadow var(--sdp-t);
+  transition: background var(--sdp-t), border-color var(--sdp-t);
 }
 
-.pagination-simple a:hover {
-  background: var(--sdp-fons-subtil);
-  border-color: var(--sdp-vora-control);
-  box-shadow: var(--sdp-ombra-1);
-  color: var(--sdp-text-titol);
+@media (hover: hover) and (pointer: fine) {
+  .pagination-simple a:hover {
+    background: var(--sdp-fons-subtil);
+    border-color: var(--sdp-vora-control);
+    box-shadow: var(--sdp-ombra-1);
+    color: var(--sdp-text-titol);
+  }
 }
 
 .pagination-simple a.next {
@@ -1527,7 +1581,7 @@ details[open] summary.accordion-header svg:last-child {
 }
 
 .pagination-label {
-  font-size: 0.75rem;
+  font-size: var(--sdp-text-meta);
   color: var(--sdp-text-suau);
   margin-bottom: var(--sdp-space-1);
   letter-spacing: 0.05em;
@@ -1557,8 +1611,10 @@ details[open] summary.accordion-header svg:last-child {
   transition: background var(--sdp-t);
 }
 
-.checklist-item:hover {
-  background: var(--sdp-fons-subtil);
+@media (hover: hover) and (pointer: fine) {
+  .checklist-item:hover {
+    background: var(--sdp-fons-subtil);
+  }
 }
 
 .checklist-item:last-child {
@@ -1578,7 +1634,7 @@ details[open] summary.accordion-header svg:last-child {
 }
 
 .checklist-item .date-tag {
-  font-size: 0.75rem;
+  font-size: var(--sdp-text-meta);
   color: var(--sdp-accent-text);
   font-weight: 700;
   white-space: nowrap;
@@ -1600,9 +1656,11 @@ details[open] summary.accordion-header svg:last-child {
   transition: border-color var(--sdp-t), background var(--sdp-t);
 }
 
-.upload-zone:hover {
-  border-color: var(--sdp-accio-text);
-  background: var(--sdp-accio-subtil);
+@media (hover: hover) and (pointer: fine) {
+  .upload-zone:hover {
+    border-color: var(--sdp-accio-text);
+    background: var(--sdp-accio-subtil);
+  }
 }
 
 .upload-zone-text {
@@ -1617,7 +1675,7 @@ details[open] summary.accordion-header svg:last-child {
 }
 
 .upload-zone-sub {
-  font-size: 0.85rem;
+  font-size: var(--sdp-text-meta);
   color: var(--sdp-text-suau);
 }
 
@@ -1627,8 +1685,10 @@ details[open] summary.accordion-header svg:last-child {
   font-weight: 600;
 }
 
-.upload-zone-sub span:hover {
-  text-decoration: underline;
+@media (hover: hover) and (pointer: fine) {
+  .upload-zone-sub span:hover {
+    text-decoration: underline;
+  }
 }
 
 .file-item {
@@ -1641,12 +1701,14 @@ details[open] summary.accordion-header svg:last-child {
   border-radius: var(--sdp-radi-s);
   margin-bottom: var(--sdp-space-2);
   background: var(--sdp-fons-targeta);
-  transition: border-color var(--sdp-t), box-shadow var(--sdp-t);
+  transition: border-color var(--sdp-t);
 }
 
-.file-item:hover {
-  border-color: var(--sdp-vora-control);
-  box-shadow: var(--sdp-ombra-1);
+@media (hover: hover) and (pointer: fine) {
+  .file-item:hover {
+    border-color: var(--sdp-vora-control);
+    box-shadow: var(--sdp-ombra-1);
+  }
 }
 
 .file-item-info {
@@ -1664,20 +1726,26 @@ details[open] summary.accordion-header svg:last-child {
 }
 
 .file-item-meta {
-  font-size: 0.75rem;
+  font-size: var(--sdp-text-meta);
   color: var(--sdp-text-suau);
 }
 
+/* Kowalski: el hover és de color; la icona no s'engrandix. */
 .file-item-action {
   color: var(--sdp-text-suau);
   cursor: pointer;
   flex: none;
-  transition: color var(--sdp-t), transform var(--sdp-t);
+  transition: color var(--sdp-t);
 }
 
-.file-item-action:hover {
-  color: var(--sdp-error);
-  transform: scale(1.1);
+/* Cap hover baixa de banda (Q1, 261004): --sdp-error no canvia amb el tema i
+   en fosc la paperera feia 2,94:1 sobre la targeta, per davall del 3:1 de
+   WCAG 1.4.11. El roig de text (--sdp-error-text) fa 9,43:1 en clar i 10,52:1
+   en fosc. */
+@media (hover: hover) and (pointer: fine) {
+  .file-item-action:hover {
+    color: var(--sdp-error-text);
+  }
 }
 
 .download-card {
@@ -1689,12 +1757,14 @@ details[open] summary.accordion-header svg:last-child {
   border-radius: var(--sdp-radi-s);
   background: var(--sdp-fons-targeta);
   margin-bottom: var(--sdp-space-6);
-  transition: box-shadow var(--sdp-t), border-color var(--sdp-t);
+  transition: border-color var(--sdp-t);
 }
 
-.download-card:hover {
-  box-shadow: var(--sdp-ombra-2);
-  border-color: var(--sdp-vora-control);
+@media (hover: hover) and (pointer: fine) {
+  .download-card:hover {
+    box-shadow: var(--sdp-ombra-2);
+    border-color: var(--sdp-vora-control);
+  }
 }
 
 .download-card-icon {
@@ -1718,7 +1788,7 @@ details[open] summary.accordion-header svg:last-child {
 }
 
 .download-card-meta {
-  font-size: 0.8rem;
+  font-size: var(--sdp-text-meta);
   color: var(--sdp-text-suau);
 }
 
@@ -1733,13 +1803,18 @@ details[open] summary.accordion-header svg:last-child {
   align-items: center;
   justify-content: center;
   text-decoration: none;
-  transition: background var(--sdp-t), transform var(--sdp-t);
+  transition: background var(--sdp-t);
 }
 
-.download-card-btn:hover {
-  background: var(--sdp-accio-hover);
-  transform: scale(1.06);
-  color: var(--sdp-sobre-accio);
+/* Cap hover baixa de banda (Q1, 261004): en fosc --sdp-accio-hover és un blau
+   clar i la icona blanca hi feia 2,66:1, per davall del 3:1 de WCAG 1.4.11.
+   --sdp-accio-control és el mateix blau fort en clar (cap píxel canvia) i
+   en fosc: 9,21:1. */
+@media (hover: hover) and (pointer: fine) {
+  .download-card-btn:hover {
+    background: var(--sdp-accio-control);
+    color: var(--sdp-sobre-accio);
+  }
 }
 
 /* 7.23 Embeddings i media */
@@ -1766,7 +1841,7 @@ details[open] summary.accordion-header svg:last-child {
 }
 
 .embed-caption {
-  font-size: 0.85rem;
+  font-size: var(--sdp-text-meta);
   color: var(--sdp-text-suau);
   text-align: center;
   margin-bottom: var(--sdp-space-6);
@@ -1795,12 +1870,13 @@ details[open] summary.accordion-header svg:last-child {
   color: var(--sdp-sobre-accent);
   border: none;
   cursor: pointer;
-  transition: background var(--sdp-t), transform var(--sdp-t);
+  transition: background var(--sdp-t);
 }
 
-.audio-play-btn:hover {
-  background: var(--sdp-accent-hover);
-  transform: scale(1.06);
+@media (hover: hover) and (pointer: fine) {
+  .audio-play-btn:hover {
+    background: var(--sdp-accent-hover);
+  }
 }
 
 .audio-play-btn svg {
@@ -1829,7 +1905,7 @@ details[open] summary.accordion-header svg:last-child {
 }
 
 .audio-time {
-  font-size: 0.75rem;
+  font-size: var(--sdp-text-meta);
   color: var(--sdp-text-suau);
   font-weight: 700;
 }
@@ -1861,7 +1937,7 @@ details[open] summary.accordion-header svg:last-child {
   padding: 0;
   margin: 0;
   font-family: var(--sdp-font-mono);
-  font-size: 0.85rem;
+  font-size: var(--sdp-text-meta);
   color: var(--sdp-text-titol);
   line-height: 2;
 }
@@ -1888,87 +1964,55 @@ details[open] summary.accordion-header svg:last-child {
    FASE 4: EXPERIÈNCIA PRÈMIUM (PEDRA SECA UX)
    ========================================================================== */
 
-/* --- 1. View Transitions API (La Pedra Lliscant) --- */
+/* --- 1. View Transitions API (La Pedra Lliscant) ---
+   Article 1 de la Constitució: «cap transició marejant». Entre dues vistes,
+   una fosa d'opacitat de 200ms (--sdp-durada-base) i res més: la pàgina ja
+   no s'escala (abans 0,98 i 1,02 en 400ms). Amb menys moviment, cap
+   animació. Els @keyframes sdp-fade-in i sdp-fade-out viuen amb el calaix. */
 
 @supports (view-transition-name: root) {
 @media (prefers-reduced-motion: no-preference) {
     ::view-transition-old(root),
     ::view-transition-new(root) {
-      animation-duration: 0.4s;
-      animation-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      animation-duration: var(--sdp-durada-base);
+      animation-timing-function: var(--sdp-corba-eixida);
       animation-fill-mode: both;
     }
 
     ::view-transition-old(root) {
-      animation-name: sdp-fade-out-scale;
+      animation-name: sdp-fade-out;
     }
 
     ::view-transition-new(root) {
-      animation-name: sdp-fade-in-scale;
+      animation-name: sdp-fade-in;
     }
-
-@keyframes sdp-fade-out-scale {
-      from {
-        opacity: 1;
-        transform: scale(1);
-      }
-
-      to {
-        opacity: 0;
-        transform: scale(0.98);
-      }
-}
-
-@keyframes sdp-fade-in-scale {
-      from {
-        opacity: 0;
-        transform: scale(1.02);
-      }
-
-      to {
-        opacity: 1;
-        transform: scale(1);
-      }
-}
 }
 }
 
-/* --- 2. Scroll-Driven Animations (Sedimentació i Parallax) --- */
+/* --- 2. Scroll-Driven Animations ---
+   Retirades (261004): sdp-reveal i sdp-parallax no tenien cap consumidor i
+   animation-timeline no és de la Baseline 2022. */
 
-@supports (animation-timeline: scroll()) {
-@media (prefers-reduced-motion: no-preference) {
-    /* Animació genèrica d'aparició per scroll */
+/* --- 3. Mode Bancal (Accessibilitat Visual) ---
+   Interruptor data-contrast="bancal" a :root o :host (Q1, 261004): contrast
+   AAA sota el sol, text opac i pes de 600 o més en la lletra menuda. Les
+   regles d'este full viuen al bloc «MODE BANCAL · SUPERFÍCIES DE
+   MODULES.CSS», al final del fitxer i dins de @layer components: ací, dins
+   de `legacy`, perdrien contra les regles de `components` (Xat, Consola,
+   Calendari). Els colors els canvia tokens.css; ací no n'hi ha cap. */
 
-@keyframes sdp-reveal {
-      from {
-        opacity: 0;
-        transform: translateY(30px);
-      }
-
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-}
-
-    /* Parallax per a capçaleres */
-
-@keyframes sdp-parallax {
-      to {
-        transform: translateY(20%) scale(1.05);
-        opacity: 0.6;
-      }
-}
-}
-}
-
-/* --- 3. Mode Bancal (Accessibilitat Visual) --- */
-
-/* Reducció global de moviment */
+/* Reducció global de moviment: la fan els tokens. Amb
+   prefers-reduced-motion, --sdp-escala-aparicio val 1 i --sdp-despl-aparicio
+   0 (tokens.css): menús, avisos i diàlegs només fan la fosa. */
 
 /* --- 4. Micro-interaccions (Hàptica) --- */
 
-/* === TOC DRAWER === */
+/* === TOC DRAWER ===
+   Q4 (261004) · Abans `var(--sdp-t) ease-out`, que es resolia a
+   `0.18s ease ease-out`: dues corbes fan el shorthand invàlid i ni el vel ni
+   el calaix s'animaven mai. Ara durada i corba són tokens separats: el vel fa
+   una fosa de 200ms i el calaix entra en 280ms amb la corba de calaix. Amb
+   menys moviment, l'apagador global de base.css ho fa instantani. */
 
 .toc-overlay {
   position: fixed;
@@ -1979,7 +2023,7 @@ details[open] summary.accordion-header svg:last-child {
   background: var(--sdp-fons-vel);
   z-index: var(--z-calaix);
   display: flex;
-  animation: sdp-fade-in var(--sdp-t) ease-out;
+  animation: sdp-fade-in var(--sdp-durada-base) var(--sdp-corba-eixida);
 }
 
 .toc-drawer {
@@ -1989,7 +2033,7 @@ details[open] summary.accordion-header svg:last-child {
   background: var(--sdp-fons-targeta);
   box-shadow: var(--sdp-ombra-3);
   overflow-y: auto;
-  animation: slideInLeft var(--sdp-t) ease-out;
+  animation: slideInLeft var(--sdp-durada-panell) var(--sdp-corba-calaix);
   display: flex;
   flex-direction: column;
 }
@@ -2019,9 +2063,11 @@ details[open] summary.accordion-header svg:last-child {
   border-radius: var(--sdp-radi-s);
 }
 
-.toc-close-btn:hover {
-  background: var(--sdp-fons-subtil);
-  color: var(--sdp-text-titol);
+@media (hover: hover) and (pointer: fine) {
+  .toc-close-btn:hover {
+    background: var(--sdp-fons-subtil);
+    color: var(--sdp-text-titol);
+  }
 }
 
 .toc-nav {
@@ -2057,10 +2103,16 @@ details[open] summary.accordion-header svg:last-child {
   transition: background var(--sdp-t), color var(--sdp-t);
 }
 
-.toc-item button:hover,
 .toc-item button:focus-visible {
   background: var(--sdp-fons-subtil);
   color: var(--sdp-text-titol);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .toc-item button:hover {
+    background: var(--sdp-fons-subtil);
+    color: var(--sdp-text-titol);
+  }
 }
 
 .toc-level-1:first-child {
@@ -2075,9 +2127,14 @@ details[open] summary.accordion-header svg:last-child {
   letter-spacing: 0.05em;
 }
 
-.toc-level-1 button:hover,
 .toc-level-1 button:focus-visible {
   color: var(--sdp-accio-text);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .toc-level-1 button:hover {
+    color: var(--sdp-accio-text);
+  }
 }
 
 .toc-level-2 button {
@@ -2086,9 +2143,18 @@ details[open] summary.accordion-header svg:last-child {
   color: var(--sdp-accent-titol);
 }
 
-.toc-level-2 button:hover,
+/* AAA (Q1, 261004) · Cap hover baixa de banda. --sdp-accent-hover és un
+   token de FONS: com a text feia 3,58:1. --sdp-accent-text-hover fa 7,97:1
+   sobre la targeta en clar (sobre --sdp-fons-subtil, el fons del hover,
+   6,76:1) i passa de 10:1 en fosc. */
 .toc-level-2 button:focus-visible {
-  color: var(--sdp-accent-hover);
+  color: var(--sdp-accent-text-hover);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .toc-level-2 button:hover {
+    color: var(--sdp-accent-text-hover);
+  }
 }
 
 .toc-level-3 button {
@@ -2097,9 +2163,17 @@ details[open] summary.accordion-header svg:last-child {
   color: var(--sdp-accio-text);
 }
 
-.toc-level-3 button:hover,
+/* AAA (Q1, 261004) · El hover passava a --sdp-accio, el blau de marca, que
+   sobre --sdp-fons-subtil fa 3,29:1 en clar: es queda en --sdp-accio-text
+   (7,81:1 sobre el fons del hover) i el feedback el dona el fons. */
 .toc-level-3 button:focus-visible {
-  color: var(--sdp-accio);
+  color: var(--sdp-accio-text);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .toc-level-3 button:hover {
+    color: var(--sdp-accio-text);
+  }
 }
 
 .toc-level-4 button {
@@ -2143,6 +2217,17 @@ details[open] summary.accordion-header svg:last-child {
 
   to {
     opacity: 1;
+  }
+}
+
+/* La meitat d'eixida de la fosa entre vistes (View Transitions, dalt). */
+@keyframes sdp-fade-out {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
   }
 }
 
@@ -2262,6 +2347,15 @@ details[open] summary.accordion-header svg:last-child {
   display: flex;
   align-items: center;
   gap: var(--sdp-space-3);
+  /* Entrada de 200ms: puja 8px (--sdp-despl-aparicio) i es fon. Els
+     @keyframes componen el centrat translateX(-50%) per no perdre'l. Amb
+     menys moviment el desplaçament val 0 i només queda la fosa. L'eixida
+     és instantània: AvisadorEfimer.jsx desmunta el toast de colp. */
+  animation: sdp-aparicio-avisador var(--sdp-durada-base) var(--sdp-corba-eixida);
+}
+
+@keyframes sdp-aparicio-avisador {
+  from { opacity: 0; transform: translateX(-50%) translateY(var(--sdp-despl-aparicio)); }
 }
 
 /* Realitat Section Styles */
@@ -2338,12 +2432,13 @@ details[open] summary.accordion-header svg:last-child {
   border-top-right-radius: 0;
 }
 
+/* AAA (Q1, 261004): el 0,7 d'opacitat deixava el text de 12px per davall
+   d'AA. Ara 14px i opac, amb el color de la bombolla (--sdp-text-cos). */
 .sdp-chat-bubble-meta {
   display: flex;
   justify-content: flex-end;
-  font-size: 0.75rem;
+  font-size: var(--sdp-text-meta);
   margin-top: 4px;
-  opacity: 0.7;
 }
 
 @media (max-width: 768px) {
@@ -2380,10 +2475,10 @@ details[open] summary.accordion-header svg:last-child {
   justify-content: center;
   background-color: var(--sdp-fons-subtil);
   color: var(--sdp-text-suau);
-  font-size: 0.85rem;
+  font-size: var(--sdp-text-meta);
   font-weight: 600;
   z-index: 10;
-  transition: transform 0.3s ease-out;
+  transition: transform var(--sdp-durada-sostre) var(--sdp-corba-eixida);
   transform: translateY(0px);
 }
 
@@ -2411,23 +2506,8 @@ details[open] summary.accordion-header svg:last-child {
   margin: var(--sdp-space-2) var(--sdp-space-4);
 }
 
-/* ── TRASPASAT DE legacy-components.css ── */
-
-@keyframes sosp-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes sosp-pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-
-  50% {
-    opacity: 0.5;
-  }
-}
+/* ── TRASPASAT DE legacy-components.css ──
+   sosp-spin i sosp-pulse, sense cap consumidor a src, retirats el 261004. */
 
 .detail-page {
   display: flex;
@@ -2580,7 +2660,7 @@ details[open] summary.accordion-header svg:last-child {
 }
 
 .devices-panel__body .card__body p {
-  font-size: 0.8rem;
+  font-size: var(--sdp-text-meta);
   color: var(--sdp-text-suau);
   margin: 8px 0 0 0;
   text-align: center;
@@ -2897,8 +2977,10 @@ details[open] summary.accordion-header svg:last-child {
   border-radius: var(--sdp-radi-s);
 }
 
-.editor-toolbar .toolbar-actions button:hover:not(:disabled) {
-  background: var(--sdp-crom-hover);
+@media (hover: hover) and (pointer: fine) {
+  .editor-toolbar .toolbar-actions button:hover:not(:disabled) {
+    background: var(--sdp-crom-hover);
+  }
 }
 
 .editor-toolbar button:disabled {
@@ -2944,10 +3026,14 @@ details[open] summary.accordion-header svg:last-child {
   text-align: center;
 }
 
+/* AAA (Q1, 261004): el taronja de marca és un token de FONS i com a text
+   feia 2,31:1 sobre la targeta. --sdp-accent-text-hover, el taronja de
+   text AAA, fa 6,76:1 sobre --sdp-fons-subtil en clar i passa de 7:1 en
+   fosc: 24px en negreta és text gran, i el llindar AAA hi és 4,5:1. */
 .sdp-stat-value {
   font-size: 1.5rem;
   font-weight: bold;
-  color: var(--sdp-accent);
+  color: var(--sdp-accent-text-hover);
 }
 
 .sdp-stat-label {
@@ -2995,7 +3081,8 @@ details[open] summary.accordion-header svg:last-child {
   font-family: inherit;
   background: var(--sdp-fons-targeta);
   color: var(--sdp-text-titol);
-  transition: all var(--sdp-t);
+  /* Kowalski: cap `all`. L'anell d'ombra del focus apareix de colp. */
+  transition: border-color var(--sdp-t), background-color var(--sdp-t);
 }
 
 .universal-search-input:focus {
@@ -3190,7 +3277,9 @@ details[open] summary.accordion-header svg:last-child {
     -webkit-line-clamp: 2;
     line-clamp: 2;
     white-space: normal;
-    font-size: var(--sdp-ui-sm);
+    /* Sòl de 14px (abans --sdp-ui-sm, 13px). Dos línies de 14 × 1,3 i el
+       títol caben encara dins dels 86px de la fitxa (73,9px de text i coixí). */
+    font-size: var(--sdp-text-meta);
     color: var(--sdp-text-suau);
     font-weight: 400;
   }
@@ -3368,7 +3457,9 @@ details[open] summary.accordion-header svg:last-child {
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  .sdp-classificacio-pindola:hover > .sp-card-label { text-decoration: underline; }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-classificacio-pindola:hover > .sp-card-label { text-decoration: underline; }
+  }
   /* L'anell de focus abraça la píndola que es veu, no l'àrea tàctil buida. */
   .sdp-classificacio-pindola:focus-visible { outline: none; }
   .sdp-classificacio-pindola:focus-visible > .sp-card-label { outline: 3px solid var(--sdp-focus); outline-offset: 2px; }
@@ -3413,12 +3504,16 @@ details[open] summary.accordion-header svg:last-child {
     letter-spacing: .04em;
     text-transform: uppercase;
   }
-  .sdp-bloc-icon:hover:not(:disabled) { background: var(--sdp-crom-hover); }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-bloc-icon:hover:not(:disabled) { background: var(--sdp-crom-hover); }
+  }
   .sdp-bloc-icon[aria-pressed="true"] {
     background: var(--sdp-crom-actiu-fons);
     color: var(--sdp-crom-actiu-text);
   }
-  .sdp-bloc-action:hover:not(:disabled) { background: var(--sdp-accent-hover); }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-bloc-action:hover:not(:disabled) { background: var(--sdp-accent-hover); }
+  }
   [data-compact="true"] > .sdp-bloc-action,
   [data-compact="true"] .sdp-editor-tools__actions > .sdp-bloc-action {
     width: var(--sdp-bloc-control);
@@ -3588,7 +3683,11 @@ details[open] summary.accordion-header svg:last-child {
     cursor: pointer;
     flex: none;
   }
-  .sdp-xat-nova:hover { background: var(--sdp-accio-hover); }
+  /* Hover: el blau fort, igual en clar; en fosc la icona feia 2,66:1 sobre
+     el blau clar de --sdp-accio-hover i ara 9,21:1 (Q1, cap hover baixa). */
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-xat-nova:hover { background: var(--sdp-accio-control); }
+  }
   .sdp-xat-nova:focus-visible { outline: 2px solid var(--sdp-crom-focus); outline-offset: 2px; }
   .sdp-xat .sdp-xat-obri-rail { color: var(--sdp-crom-actiu-fons); }
   /* En estret i en mitjà el Xat no usa pestanyes de columna (ordre del
@@ -3648,7 +3747,9 @@ details[open] summary.accordion-header svg:last-child {
   .sdp-xat-cerca__camp:focus-within { outline: 2px solid var(--sdp-focus); outline-offset: 1px; }
   .sdp-xat-cerca .sdp-xat-icona { color: var(--sdp-text-suau); }
   .sdp-xat-cerca__etiqueta > input::-webkit-search-cancel-button { appearance: none; }
-  .sdp-xat-cerca .sdp-xat-icona:hover { background: var(--sdp-fons-targeta); }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-xat-cerca .sdp-xat-icona:hover { background: var(--sdp-fons-targeta); }
+  }
   .sdp-xat-cerca .sdp-xat-icona:focus-visible { outline-color: var(--sdp-focus); }
 
   /* Filtre de converses (T12, ordre del Mestre 260927): Tot · No llegits ·
@@ -3688,8 +3789,10 @@ details[open] summary.accordion-header svg:last-child {
     text-align: left;
     cursor: pointer;
   }
-  .sdp-xat-fila:hover,
-  .sdp-xat-opcio:hover { background: var(--sdp-fons-subtil); }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-xat-fila:hover,
+    .sdp-xat-opcio:hover { background: var(--sdp-fons-subtil); }
+  }
   .sdp-xat-fila[aria-current="true"],
   .sdp-xat-opcio[aria-current="true"] { background: var(--sdp-accio-subtil); }
   .sdp-xat-fila:focus-visible,
@@ -3746,7 +3849,9 @@ details[open] summary.accordion-header svg:last-child {
   }
   /* Comptador de no llegits: número dins d'una pastilla (XAT-A10). Un fil
      marcat a mà com a no llegit i sense recompte porta la pastilla buida
-     (--punt), sempre amb el seu text per al lector de pantalla (XAT-P04). */
+     (--punt), sempre amb el seu text per al lector de pantalla (XAT-P04).
+     AAA (Q1, 261004): el número blanc de 14px sobre --sdp-accio feia 3,87:1;
+     sobre la superfície de control, 9,21:1 en clar i en fosc. */
   .sdp-xat-pastilla {
     display: inline-flex;
     align-items: center;
@@ -3755,7 +3860,7 @@ details[open] summary.accordion-header svg:last-child {
     height: var(--sdp-space-6);
     padding: 0 var(--sdp-space-2);
     border-radius: var(--sdp-radi-pastilla);
-    background: var(--sdp-accio);
+    background: var(--sdp-accio-control);
     color: var(--sdp-sobre-accio);
     font-size: var(--sdp-text-meta);
     font-weight: 700;
@@ -3873,7 +3978,9 @@ details[open] summary.accordion-header svg:last-child {
     color: inherit;
     text-decoration: none;
   }
-  .sdp-xat-capcalera__enllac:hover .sdp-xat-capcalera__nom { text-decoration: underline; }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-xat-capcalera__enllac:hover .sdp-xat-capcalera__nom { text-decoration: underline; }
+  }
   .sdp-xat-capcalera__enllac:focus-visible { outline: 2px solid var(--sdp-crom-focus); outline-offset: -2px; }
 
   /* Botó d'icona de --sdp-touch: capçalera, cerca i menú de bombolla. */
@@ -3891,10 +3998,16 @@ details[open] summary.accordion-header svg:last-child {
     cursor: pointer;
     flex: none;
   }
-  .sdp-xat-icona:hover { background: var(--sdp-crom-hover); }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-xat-icona:hover { background: var(--sdp-crom-hover); }
+  }
   .sdp-xat-icona:focus-visible { outline: 2px solid var(--sdp-crom-focus); outline-offset: -2px; }
   .sdp-xat-icona:disabled { opacity: 0.5; cursor: default; }
 
+  /* Entrada del menú (Kowalski, 261004): 180ms des de --sdp-escala-aparicio
+     i l'opacitat, amb l'origen a la cantonada del disparador (dalt a la
+     dreta; a l'esquerra en --esquerra i a les bombolles de l'altra part).
+     El tancament és instantani: el menú es desmunta. */
   .sdp-xat-menu {
     position: absolute;
     top: calc(100% + var(--sdp-space-1));
@@ -3907,6 +4020,8 @@ details[open] summary.accordion-header svg:last-child {
     background: var(--sdp-fons-elevat);
     color: var(--sdp-text-cos);
     box-shadow: var(--sdp-ombra-2);
+    transform-origin: top right;
+    animation: sdp-aparicio-menu var(--sdp-durada-rapida) var(--sdp-corba-eixida);
   }
   .sdp-xat-menu__item {
     display: flex;
@@ -3922,7 +4037,9 @@ details[open] summary.accordion-header svg:last-child {
     text-align: left;
     cursor: pointer;
   }
-  .sdp-xat-menu__item:hover { background: var(--sdp-fons-subtil); }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-xat-menu__item:hover { background: var(--sdp-fons-subtil); }
+  }
   .sdp-xat-menu__item:focus-visible { outline: 2px solid var(--sdp-focus); outline-offset: -2px; }
 
   /* La llista de missatges. */
@@ -3969,8 +4086,10 @@ details[open] summary.accordion-header svg:last-child {
     font-weight: 600;
     cursor: pointer;
   }
-  .sdp-xat-carrega__boto:hover:not(:disabled),
-  .sdp-xat-bombolla__accio:hover { background: var(--sdp-fons-subtil); }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-xat-carrega__boto:hover:not(:disabled),
+    .sdp-xat-bombolla__accio:hover { background: var(--sdp-fons-subtil); }
+  }
   .sdp-xat-carrega__boto:disabled { opacity: 0.6; cursor: default; }
   .sdp-xat-carrega__boto:focus-visible,
   .sdp-xat-bombolla__accio:focus-visible { outline: 2px solid var(--sdp-focus); outline-offset: 2px; }
@@ -4062,7 +4181,9 @@ details[open] summary.accordion-header svg:last-child {
   }
   /* El nom de l'autor també és un enllaç al seu perfil (T4). */
   a.sdp-xat-bombolla__autor { text-decoration: none; }
-  a.sdp-xat-bombolla__autor:hover { text-decoration: underline; }
+  @media (hover: hover) and (pointer: fine) {
+    a.sdp-xat-bombolla__autor:hover { text-decoration: underline; }
+  }
   a.sdp-xat-bombolla__autor:focus-visible { outline: 2px solid var(--sdp-focus); outline-offset: 2px; }
   .sdp-xat-bombolla__text { margin: 0; white-space: pre-wrap; font-weight: 600; }
   .sdp-xat-bombolla__text--esborrat { font-style: italic; color: var(--sdp-text-suau); }
@@ -4117,9 +4238,11 @@ details[open] summary.accordion-header svg:last-child {
     .sdp-xat-bombolla__accions { opacity: 1; }
   }
   .sdp-xat-bombolla__accions .sdp-xat-icona { color: var(--sdp-text-suau); }
-  .sdp-xat-bombolla__accions .sdp-xat-icona:hover { background: var(--sdp-fons-subtil); }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-xat-bombolla__accions .sdp-xat-icona:hover { background: var(--sdp-fons-subtil); }
+  }
   .sdp-xat-bombolla__accions .sdp-xat-icona:focus-visible { outline-color: var(--sdp-focus); }
-  .sdp-xat-item--altre .sdp-xat-menu { right: auto; left: 0; }
+  .sdp-xat-item--altre .sdp-xat-menu { right: auto; left: 0; transform-origin: top left; }
 
   /* Grups (torn 260930, T1): entre dos files la llista posa el gap (8px)
      més el marge editorial de cada li (--sdp-li-gap, base.css); dins d'una
@@ -4160,7 +4283,9 @@ details[open] summary.accordion-header svg:last-child {
     text-align: start;
   }
   button.sdp-xat-cita { cursor: pointer; }
-  button.sdp-xat-cita:hover .sdp-xat-cita__autor { text-decoration: underline; }
+  @media (hover: hover) and (pointer: fine) {
+    button.sdp-xat-cita:hover .sdp-xat-cita__autor { text-decoration: underline; }
+  }
   button.sdp-xat-cita:focus-visible { outline: 2px solid var(--sdp-focus); outline-offset: 2px; }
   .sdp-xat-cita__autor {
     overflow: hidden;
@@ -4228,7 +4353,9 @@ details[open] summary.accordion-header svg:last-child {
     box-shadow: var(--sdp-ombra-2);
     cursor: pointer;
   }
-  .sdp-xat-baixa__boto:hover { background: var(--sdp-fons-subtil); }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-xat-baixa__boto:hover { background: var(--sdp-fons-subtil); }
+  }
   .sdp-xat-baixa__boto:focus-visible { outline: 2px solid var(--sdp-focus); outline-offset: 2px; }
   .sdp-xat-baixa__pastilla {
     position: absolute;
@@ -4342,7 +4469,10 @@ details[open] summary.accordion-header svg:last-child {
     color: var(--sdp-sobre-accio);
     cursor: pointer;
   }
-  .sdp-xat-compositor__envia:hover:not(:disabled) { background: var(--sdp-accio-hover); }
+  /* Hover en blau fort: igual en clar; en fosc, 9,21:1 (abans 2,66:1). */
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-xat-compositor__envia:hover:not(:disabled) { background: var(--sdp-accio-control); }
+  }
   .sdp-xat-compositor__envia:disabled { opacity: 0.5; cursor: default; }
   .sdp-xat-compositor__envia:focus-visible { outline: 2px solid var(--sdp-focus); outline-offset: 2px; }
   .sdp-xat-compositor--seleccio { align-items: center; justify-content: center; }
@@ -4385,7 +4515,9 @@ details[open] summary.accordion-header svg:last-child {
   .sdp-xat-resposta__autor { font-weight: 700; color: var(--sdp-accio-text); }
   .sdp-xat-resposta__text { color: var(--sdp-text-suau); }
   .sdp-xat-resposta .sdp-xat-icona { color: var(--sdp-text-suau); }
-  .sdp-xat-resposta .sdp-xat-icona:hover { background: var(--sdp-fons-elevat); }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-xat-resposta .sdp-xat-icona:hover { background: var(--sdp-fons-elevat); }
+  }
   .sdp-xat-resposta .sdp-xat-icona:focus-visible { outline-color: var(--sdp-focus); }
   .sdp-xat-accio-bloc {
     display: inline-flex;
@@ -4403,7 +4535,9 @@ details[open] summary.accordion-header svg:last-child {
     font-weight: 600;
     cursor: pointer;
   }
-  .sdp-xat-accio-bloc:hover:not(:disabled) { background: var(--sdp-fons-superficie); }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-xat-accio-bloc:hover:not(:disabled) { background: var(--sdp-fons-superficie); }
+  }
   .sdp-xat-accio-bloc:disabled { opacity: 0.5; cursor: default; }
   .sdp-xat-accio-bloc:focus-visible { outline: 2px solid var(--sdp-focus); outline-offset: 2px; }
 
@@ -4488,9 +4622,11 @@ details[open] summary.accordion-header svg:last-child {
     cursor: pointer;
     flex: none;
   }
-  .sdp-xat-mes:hover { background: var(--sdp-crom-hover); }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-xat-mes:hover { background: var(--sdp-crom-hover); }
+  }
   .sdp-xat-mes:focus-visible { outline: 2px solid var(--sdp-crom-focus); outline-offset: 2px; }
-  .sdp-xat-menu--esquerra { right: auto; left: 0; }
+  .sdp-xat-menu--esquerra { right: auto; left: 0; transform-origin: top left; }
 
   /* BarraSeleccio (T68): el recompte a la fila del títol i una sola acció. */
   .sdp-xat-barra-seleccio__recompte { font-variant-numeric: tabular-nums; }
@@ -4508,7 +4644,9 @@ details[open] summary.accordion-header svg:last-child {
     cursor: pointer;
     flex: none;
   }
-  .sdp-xat-barra-seleccio__accio:hover:not(:disabled) { background: var(--sdp-crom-hover); }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-xat-barra-seleccio__accio:hover:not(:disabled) { background: var(--sdp-crom-hover); }
+  }
   .sdp-xat-barra-seleccio__accio:disabled { opacity: 0.5; cursor: default; }
   .sdp-xat-barra-seleccio__accio:focus-visible { outline: 2px solid var(--sdp-crom-focus); outline-offset: -2px; }
 
@@ -4612,7 +4750,9 @@ details[open] summary.accordion-header svg:last-child {
     text-align: left;
     cursor: pointer;
   }
-  .sdp-xat-filtres-cerca__fila:hover { background: var(--sdp-fons-subtil); }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-xat-filtres-cerca__fila:hover { background: var(--sdp-fons-subtil); }
+  }
   .sdp-xat-filtres-cerca__fila:focus-visible { outline: 2px solid var(--sdp-focus); outline-offset: -2px; }
   .sdp-xat-filtres-cerca__icona { display: inline-flex; flex: none; color: var(--sdp-accio-text); }
   .sdp-xat-filtres-cerca__nom { flex: 1 1 auto; min-width: 0; }
@@ -4685,7 +4825,9 @@ details[open] summary.accordion-header svg:last-child {
     background: var(--sdp-fons-targeta);
   }
 
-  /* Píndola d'acció a tota l'amplària: fons blau, text i icona blancs. */
+  /* Píndola d'acció a tota l'amplària: fons blau, text i icona blancs.
+     AAA (Q1, 261004): el parell de .sdp-boto--primari, 9,21:1 en repòs i
+     7,20:1 en hover, en clar i en fosc (abans 3,87:1, i 2,66:1 en hover fosc). */
   .sdp-xat-pindola {
     display: inline-flex;
     align-items: center;
@@ -4696,20 +4838,24 @@ details[open] summary.accordion-header svg:last-child {
     padding: 0 var(--sdp-space-4);
     border: 1px solid transparent;
     border-radius: var(--sdp-radi-pastilla);
-    background: var(--sdp-accio);
+    background: var(--sdp-accio-control);
     color: var(--sdp-sobre-accio);
     font: inherit;
     font-weight: 700;
     cursor: pointer;
   }
-  .sdp-xat-pindola:hover { background: var(--sdp-accio-hover); }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-xat-pindola:hover { background: var(--sdp-accio-control-hover); }
+  }
   .sdp-xat-pindola:focus-visible { outline: 2px solid var(--sdp-focus); outline-offset: 2px; }
   .sdp-xat-pindola--secundaria {
     border-color: var(--sdp-vora-control);
     background: transparent;
     color: var(--sdp-accio-text);
   }
-  .sdp-xat-pindola--secundaria:hover { background: var(--sdp-fons-subtil); }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-xat-pindola--secundaria:hover { background: var(--sdp-fons-subtil); }
+  }
 
   /* El diàleg «Nova conversa» (captura 19.12.49): títol centrat, creu
      rodona, fons subtil i targetes blanques (la d'accions, la de cada
@@ -4748,7 +4894,9 @@ details[open] summary.accordion-header svg:last-child {
   }
   .sdp-xat-opcio-accio > svg { flex: none; color: var(--sdp-accio-text); }
   .sdp-xat-targeta > li:last-child .sdp-xat-opcio-accio { border-bottom: 0; }
-  .sdp-xat-opcio-accio:hover { background: var(--sdp-fons-subtil); }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-xat-opcio-accio:hover { background: var(--sdp-fons-subtil); }
+  }
   .sdp-xat-opcio-accio:focus-visible { outline: 2px solid var(--sdp-focus); outline-offset: -2px; }
   .sdp-xat-dialeg__panell {
     display: grid;
@@ -4848,7 +4996,9 @@ details[open] summary.accordion-header svg:last-child {
     text-align: start;
     cursor: pointer;
   }
-  .sdp-xat-rail-seccio__cap:hover { background: var(--sdp-crom-hover); color: var(--sdp-crom-text); }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-xat-rail-seccio__cap:hover { background: var(--sdp-crom-hover); color: var(--sdp-crom-text); }
+  }
   .sdp-xat-rail-seccio__cap:focus-visible { outline: 2px solid var(--sdp-crom-focus); outline-offset: -2px; }
   .sdp-xat-rail-seccio__nom {
     min-width: 0;
@@ -4936,7 +5086,9 @@ details[open] summary.accordion-header svg:last-child {
     font: inherit;
     font-weight: 600;
   }
-  .sdp-xat-vista__pindola:hover { background: var(--sdp-crom-hover); }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-xat-vista__pindola:hover { background: var(--sdp-crom-hover); }
+  }
   .sdp-xat-vista__pindola:focus-visible { outline: 2px solid var(--sdp-crom-focus); outline-offset: 2px; }
 
   /* Contingut multimèdia (captura 19.41.58): el subtítol i el control
@@ -5069,7 +5221,9 @@ details[open] summary.accordion-header svg:last-child {
     text-align: left;
     cursor: pointer;
   }
-  .sdp-xat-vista-comunitats__tot:hover { background: var(--sdp-fons-subtil); }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-xat-vista-comunitats__tot:hover { background: var(--sdp-fons-subtil); }
+  }
   .sdp-xat-vista-comunitats__tot:focus-visible { outline: 2px solid var(--sdp-focus); outline-offset: -2px; }
 
   /* Amb la barra mòbil a la vista (.sdp-root.is-compact; torn 260930): la
@@ -5217,7 +5371,9 @@ details[open] summary.accordion-header svg:last-child {
     color: var(--sdp-text-titol);
     cursor: pointer;
   }
-  .sdp-xat-ajustos__cercle:hover { background: var(--sdp-fons-subtil); }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-xat-ajustos__cercle:hover { background: var(--sdp-fons-subtil); }
+  }
   .sdp-xat-ajustos__cercle:focus-visible { outline: 2px solid var(--sdp-focus); outline-offset: 2px; }
   /* El h2 editorial (base.css) hi posaria marges, vora i mida de lectura:
      ací és el títol d'una barra, centrat i en negreta. */
@@ -5241,7 +5397,9 @@ details[open] summary.accordion-header svg:last-child {
      la lupa són les de la cerca del Xat (.sdp-xat-cerca__camp). */
   .sdp-xat-ajustos__cerca { flex: none; padding: 0 var(--sdp-space-5) var(--sdp-space-2); }
   .sdp-xat-ajustos__cerca .sdp-xat-cerca__camp { background: var(--sdp-fons-targeta); }
-  .sdp-xat-ajustos__cerca .sdp-xat-icona:hover { background: var(--sdp-fons-subtil); }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-xat-ajustos__cerca .sdp-xat-icona:hover { background: var(--sdp-fons-subtil); }
+  }
   .sdp-xat-ajustos__cerca .sdp-xat-icona:focus-visible { outline-color: var(--sdp-focus); }
   .sdp-xat-ajustos__cos {
     display: flex;
@@ -5309,7 +5467,9 @@ details[open] summary.accordion-header svg:last-child {
     text-align: start;
     cursor: pointer;
   }
-  .sdp-xat-ajustos__fila:hover:not(:disabled) { background: var(--sdp-fons-subtil); }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-xat-ajustos__fila:hover:not(:disabled) { background: var(--sdp-fons-subtil); }
+  }
   .sdp-xat-ajustos__fila:focus-visible { outline: 2px solid var(--sdp-focus); outline-offset: -2px; }
   .sdp-xat-ajustos__fila:disabled { cursor: default; opacity: 0.6; }
   /* L'acció destructiva, en roig i sense xebró (captura 20.53.25). */
@@ -5364,7 +5524,9 @@ details[open] summary.accordion-header svg:last-child {
     text-align: start;
     cursor: pointer;
   }
-  .sdp-xat-ajustos__perfil:hover { background: var(--sdp-fons-subtil); }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-xat-ajustos__perfil:hover { background: var(--sdp-fons-subtil); }
+  }
   .sdp-xat-ajustos__perfil:focus-visible { outline: 2px solid var(--sdp-focus); outline-offset: 2px; }
   .sdp-xat-ajustos__perfil-nom {
     flex: 1 1 auto;
@@ -5425,7 +5587,9 @@ details[open] summary.accordion-header svg:last-child {
     text-align: start;
     cursor: pointer;
   }
-  .sdp-xat-ajustos-entrada:hover { background: var(--sdp-crom-hover); }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-xat-ajustos-entrada:hover { background: var(--sdp-crom-hover); }
+  }
   .sdp-xat-ajustos-entrada:focus-visible { outline: 2px solid var(--sdp-crom-focus); outline-offset: -2px; }
 
   /* El marc de l'espècimen del catàleg (EspecimenXatAjustos): la mida del
@@ -5586,7 +5750,9 @@ details[open] summary.accordion-header svg:last-child {
 .sdp-toast-container { position: relative; z-index: 9999; }
 .sdp-logo-personalitzat.sdp-logo-personalitzat--editable { max-width: 600px; width: 100%; height: auto; border-radius: var(--sdp-radi-s); cursor: pointer; }
 .sdp-editor-tools__group.sdp-editor-tools__group--publicacio { margin-left: auto; border-right: 0; padding-right: 0; }
-.detail-seller { opacity: 0.7; text-transform: uppercase; }
+/* AAA (Q1, 261004): el to suau ve d'un token sòlid (--sdp-text-suau, 9,09:1
+   sobre la targeta), no d'una opacitat de 0,7 sobre el text. */
+.detail-seller { color: var(--sdp-text-suau); text-transform: uppercase; }
 .badge-row.detail-tags, .detail-hero__media.detail-media { margin-top: 18px; }
 .sdp-article.sdp-inventari-global { padding: 2rem; }
 .sdp-media-externa-video { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
@@ -5745,7 +5911,9 @@ details[open] summary.accordion-header svg:last-child {
   }
   /* Safari pinta el triangle natiu encara que el summary siga flex. */
   .sdp-consola__detall-cap::-webkit-details-marker { display: none; }
-  .sdp-consola__detall-cap:hover { background: var(--sdp-fons-subtil); }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-consola__detall-cap:hover { background: var(--sdp-fons-subtil); }
+  }
   .sdp-consola__detall-cap:focus-visible {
     outline: 3px solid var(--sdp-focus);
     outline-offset: 2px;
@@ -5897,7 +6065,6 @@ details[open] summary.accordion-header svg:last-child {
   }
 
   .sdp-explorador__llegenda {
-    max-width: var(--sdp-measure);
     margin: 0;
     color: var(--sdp-text-suau);
     font-size: var(--sdp-text-small);
@@ -5957,7 +6124,9 @@ details[open] summary.accordion-header svg:last-child {
   }
   .sdp-explorador__grup[open] > summary::after { transform: translateY(25%) rotate(225deg); }
   .sdp-explorador__grup[open] > summary { border-block-end: 1px solid var(--sdp-vora); }
-  .sdp-explorador__grup > summary:hover { background: var(--sdp-fons-subtil); }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-explorador__grup > summary:hover { background: var(--sdp-fons-subtil); }
+  }
   .sdp-explorador__grup > summary:focus-visible {
     outline: 3px solid var(--sdp-focus);
     outline-offset: -3px;
@@ -6214,8 +6383,10 @@ details[open] summary.accordion-header svg:last-child {
     cursor: pointer;
     transition: background var(--sdp-t), color var(--sdp-t), border-color var(--sdp-t);
   }
-  .sdp-workspace-rail__boto:hover {
-    background: var(--sdp-crom-hover);
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-workspace-rail__boto:hover {
+      background: var(--sdp-crom-hover);
+    }
   }
   /* Actiu: el mateix blau de selecció de l'arbre desplegat
      (.sdp-workspace-nav-item, T62), amb la icona blanca (T62b). La vora
@@ -6309,10 +6480,22 @@ details[open] summary.accordion-header svg:last-child {
 
 @layer components {
   .sdp-workspace-nav-item__icon svg { width: 24px; height: 24px; }
+  /* AAA (Q1, 261004): el text blanc de 14px sobre --sdp-accio feia 3,87:1;
+     sobre la superfície de control, 9,21:1 (el hover, just davall, 7,20:1). */
   .sdp-classificacio-botonera > .sdp-boto, .sdp-copyright-selector {
-    min-height: 24px; height: auto; padding: 2px 8px; font-size: var(--sdp-text-meta);
+    /* Q2 (261004) · sòl tàctil de 48px, com tot control (abans 24px). */
+    min-height: var(--sdp-touch-min); height: auto; padding: 2px 8px; font-size: var(--sdp-text-meta);
     line-height: 1.4; border: 0; border-radius: var(--sdp-radi-boto);
-    background: var(--sdp-accio); color: var(--sdp-sobre-accio); cursor: pointer;
+    background: var(--sdp-accio-control); color: var(--sdp-sobre-accio); cursor: pointer;
+  }
+  /* Hover propi (revisió R2, 261004). «Categories» i «Emoticona» són
+     .sdp-boto--secundari: el hover del secundari (0,3,0) hi posava
+     --sdp-fons-subtil sota la lletra blanca, 1,18:1 mesurat. Ara el blau fort
+     de control, 7,20:1 en clar i en fosc; els botons de drets, que no en
+     tenien, responen igual. Només amb ratolí (Fase B). */
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-classificacio-botonera > .sdp-boto:hover:not(:disabled),
+    .sdp-copyright-selector:hover:not(:disabled) { background: var(--sdp-accio-control-hover); }
   }
   .sdp-classificacio-botonera > .sdp-boto svg { width: var(--sdp-icona-xs); height: var(--sdp-icona-xs); }
   .sdp-copyright-control { max-width: 100%; min-width: 0; }
@@ -6438,9 +6621,11 @@ details[open] summary.accordion-header svg:last-child {
   /* PerfilShell.css pinta de blau tot .sdp-boto (deute previ): com el peu dels
      diàlegs, la vista torna les seues varietats (0,2,0), també al Perfil. */
   .sdp-drets .sdp-boto--secundari { background: var(--sdp-fons-targeta); color: var(--sdp-text-titol); border: 2px solid var(--sdp-vora-control); }
-  .sdp-drets .sdp-boto--secundari:hover:not(:disabled) { background: var(--sdp-fons-subtil); }
   .sdp-drets .sdp-boto--fantasma { background: transparent; color: var(--sdp-accio-text); border: 2px solid transparent; }
-  .sdp-drets .sdp-boto--fantasma:hover:not(:disabled) { background: var(--sdp-fons-subtil); }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-drets .sdp-boto--secundari:hover:not(:disabled) { background: var(--sdp-fons-subtil); }
+    .sdp-drets .sdp-boto--fantasma:hover:not(:disabled) { background: var(--sdp-fons-subtil); }
+  }
   /* L'espècimen del catàleg: una columna d'editor simulada, amb alçada fixa. */
   .sdp-especimen__columna {
     display: flex;
@@ -6502,7 +6687,8 @@ details[open] summary.accordion-header svg:last-child {
 
   /* T40 · El mes en xicotet (GraellaMes compacta): la mateixa taula que la
      Consola, sense ratlles ni fons de fila; cada dia és un botó de --sdp-touch
-     (7 × 44px caben al full inferior de 360px). */
+     (7 × 44px cabien al full inferior de 360px; amb el sòl de 48px de la Q2,
+     261004, en fan 336, i en un mòbil de 360px cal comprovar-ho). */
   .sdp-calendari { display: flex; flex-direction: column; gap: var(--sdp-space-3); }
   .sdp-calendari .sdp-camp { margin-bottom: 0; }
   .sdp-calendari__navegacio { display: flex; align-items: center; justify-content: space-between; gap: var(--sdp-space-2); }
@@ -6528,7 +6714,9 @@ details[open] summary.accordion-header svg:last-child {
     font: inherit;
     cursor: pointer;
   }
-  .sdp-calendari__dia:hover { background: var(--sdp-fons-subtil); }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-calendari__dia:hover { background: var(--sdp-fons-subtil); }
+  }
   /* Hui es llig sense color: negreta i subratllat. El triat, amb el color d'acció. */
   .sdp-calendari__dia[aria-current="date"] { font-weight: 800; text-decoration: underline; text-underline-offset: var(--sdp-space-1); }
   .sdp-calendari__dia[aria-pressed="true"] { background: var(--sdp-accio-control); color: var(--sdp-sobre-accio); }
@@ -6685,9 +6873,11 @@ details[open] summary.accordion-header svg:last-child {
      farciment deixava la icona de la fletxa a 0px d'ample i «Hui» en blau. Com
      .sdp-drets, la navegació torna les seues varietats amb (0,2,0). */
   .sdp-cal-navegacio .sdp-boto--secundari { background: var(--sdp-fons-targeta); color: var(--sdp-text-titol); border: 2px solid var(--sdp-vora-control); }
-  .sdp-cal-navegacio .sdp-boto--secundari:hover:not(:disabled) { background: var(--sdp-fons-subtil); }
   .sdp-cal-navegacio .sdp-boto--fantasma { background: transparent; color: var(--sdp-accio-text); border: 2px solid transparent; }
-  .sdp-cal-navegacio .sdp-boto--fantasma:hover:not(:disabled) { background: var(--sdp-fons-subtil); }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-cal-navegacio .sdp-boto--secundari:hover:not(:disabled) { background: var(--sdp-fons-subtil); }
+    .sdp-cal-navegacio .sdp-boto--fantasma:hover:not(:disabled) { background: var(--sdp-fons-subtil); }
+  }
   .sdp-cal-navegacio .sdp-cal-navegacio__fletxa { padding: 0; }
   /* El títol del període, gran i de pes normal com a les captures
      (--sdp-text-titol: 19,42:1 en clar i 17,91:1 en fosc). */
@@ -6730,8 +6920,8 @@ details[open] summary.accordion-header svg:last-child {
   }
   .sdp-cal-agenda__dia + .sdp-cal-agenda__dia { border-block-start: 1px solid var(--sdp-vora); }
   /* La data: el número en un cercle que només es pinta hui (invers: 19,42:1
-     en clar i 18,01:1 en fosc) i «oct., dj.» en --sdp-text-suau (7,28:1 i
-     12,49:1). Reinicia l'encapçalament editorial, també la ratlla i el
+     en clar i 18,01:1 en fosc) i «oct., dj.» en --sdp-text-suau (9,09:1 i
+     12,49:1, des del 261004). Reinicia l'encapçalament editorial, també la ratlla i el
      coixí de baix que base.css posa a tot h3. */
   .sdp-cal-agenda__cap {
     flex: 0 0 var(--sdp-cal-agenda-data);
@@ -6815,7 +7005,9 @@ details[open] summary.accordion-header svg:last-child {
      mòbil, un mes per fila) i 2rem amb ratolí (la densitat compacta: hi caben
      quatre mesos, com a la captura). El farciment lateral és de 8px perquè
      els 44px valguen en un mòbil de 360px: 360 − 2 × 16 (marge de la pàgina)
-     − 2 × 1 (vora) − 2 × 8 = 310px ≥ 7 × 44px. */
+     − 2 × 1 (vora) − 2 × 8 = 310px ≥ 7 × 44px. Amb el sòl de 48px (Q2,
+     261004) set dies en demanen 336: en eixe mòbil el min(100%, …) de la
+     graella els deixa en 44,3px, sense desbordar. */
   .sdp-cal-any {
     --sdp-cal-any-dia: var(--sdp-touch);
     --sdp-cal-cercle: 1.75rem;
@@ -6941,8 +7133,8 @@ details[open] summary.accordion-header svg:last-child {
   .sdp-cal-dia[aria-pressed="true"] { border-color: var(--sdp-accio-text); background: var(--sdp-accio-subtil); }
   .sdp-cal-dia:focus-visible { outline: 3px solid var(--sdp-focus); outline-offset: -3px; }
   /* El punt de «té actes» (la tira de la setmana): reserva el lloc sempre, i
-     només el ple es pinta (--sdp-text-suau: 7,28:1 en clar i 12,49:1 en fosc
-     sobre la targeta; 6,80:1 i 10,82:1 sobre el triat; tests/
+     només el ple es pinta (--sdp-text-suau: 9,09:1 en clar i 12,49:1 en fosc
+     sobre la targeta; 8,49:1 i 10,82:1 sobre el triat; tests/
      contrast_calendari_setmana.test.mjs). */
   .sdp-cal-dia__punt { flex: none; inline-size: var(--sdp-space-2); block-size: var(--sdp-space-2); border-radius: var(--sdp-radi-pastilla); }
   .sdp-cal-dia__punt--ple { background: var(--sdp-text-suau); }
@@ -7060,9 +7252,10 @@ details[open] summary.accordion-header svg:last-child {
   }
   /* La tira (contenidor estret): set botons de dia sense el marge de les hores
      (a 343px, 49px cadascun) i una sola columna. Cap pista baixa de
-     --sdp-touch: per davall de 7 × 44px (una secció de menys de 310px) el
-     darrer dia passa a una segona fila en lloc d'encavalcar-se o d'eixir de la
-     vora (auto-fit plega les pistes buides i les set ocupen tota l'amplada). */
+     --sdp-touch: per davall de 7 × --sdp-touch (308px amb 44; 336px amb el
+     sòl de 48 de la Q2, 261004) el darrer dia passa a una segona fila en lloc
+     d'encavalcar-se o d'eixir de la vora (auto-fit plega les pistes buides i
+     les set ocupen tota l'amplada). */
   .sdp-cal-setmana--tira { --sdp-cal-cercle: var(--sdp-space-8); }
   .sdp-cal-setmana--tira .sdp-cal-setmana__capcal { grid-template-columns: repeat(auto-fit, minmax(var(--sdp-touch), 1fr)); padding-inline-start: 0; }
   .sdp-cal-setmana--tira .sdp-cal-dia { padding-block: var(--sdp-space-1); }
@@ -7112,7 +7305,7 @@ details[open] summary.accordion-header svg:last-child {
   }
   /* Les hores, darrere de les columnes: una línia a cada hora en punt, només
      damunt de les columnes (cap a la mitja hora), i l'etiqueta HH:00 al marge,
-     alineada a la dreta i centrada sobre la seua línia (--sdp-text-suau: 7,28:1
+     alineada a la dreta i centrada sobre la seua línia (--sdp-text-suau: 9,09:1
      en clar i 12,49:1 en fosc). La primera hora no es rotula ni es ratlla: la
      vora de la franja ja hi és. */
   .sdp-cal-setmana__hores { position: absolute; inset: 0; margin: 0; padding: 0; list-style: none; pointer-events: none; }
@@ -7512,13 +7705,17 @@ details[open] summary.accordion-header svg:last-child {
     cursor: pointer;
     transition: border-color var(--sdp-t), background-color var(--sdp-t);
   }
-  .sdp-connectar__carpeta:hover { border-color: var(--sdp-vora-forta); }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-connectar__carpeta:hover { border-color: var(--sdp-vora-forta); }
+  }
   .sdp-connectar__carpeta[aria-pressed="true"] { border-color: var(--sdp-accent); background: var(--sdp-accent-subtil); }
   /* Correcció C18 (260928) · La vora taronja (2,73:1) és identitat, no
      l'única marca: la insígnia «Triada» amb el check, com les targetes de
      GrupOpcions. Totes la porten (triar no mou la graella); només es veu en
      la triada. I el hover no passa per damunt de la triada. */
-  .sdp-connectar__carpeta[aria-pressed="true"]:hover { border-color: var(--sdp-accent); }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-connectar__carpeta[aria-pressed="true"]:hover { border-color: var(--sdp-accent); }
+  }
   .sdp-connectar__carpeta[aria-pressed="false"] .sdp-connectar__carpeta-insignia { visibility: hidden; }
   .sdp-connectar__carpeta-icona { flex: none; }
   .sdp-connectar__carpeta-nom {
@@ -7547,7 +7744,9 @@ details[open] summary.accordion-header svg:last-child {
     cursor: pointer;
     transition: border-color var(--sdp-t), background-color var(--sdp-t);
   }
-  .sdp-connectar__pindola:hover { border-color: var(--sdp-vora-forta); }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-connectar__pindola:hover { border-color: var(--sdp-vora-forta); }
+  }
   .sdp-connectar__pindola[aria-pressed="true"],
   .sdp-connectar__pindola--triada {
     border-color: var(--sdp-accio-control);
@@ -7616,7 +7815,9 @@ details[open] summary.accordion-header svg:last-child {
     cursor: pointer;
     transition: background-color var(--sdp-t), border-color var(--sdp-t);
   }
-  .sdp-calaix-identitats__item:hover { background: var(--sdp-fons-hover-subtil); }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-calaix-identitats__item:hover { background: var(--sdp-fons-hover-subtil); }
+  }
   .sdp-calaix-identitats__item:focus-visible { outline: 3px solid var(--sdp-focus); outline-offset: 2px; }
   .sdp-calaix-identitats__item[aria-current="true"] { background: var(--sdp-accio-subtil); border-color: var(--sdp-accio); }
   .sdp-calaix-identitats__text { display: flex; flex-direction: column; flex: 1; min-width: 0; }
@@ -7696,8 +7897,10 @@ details[open] summary.accordion-header svg:last-child {
     color: var(--sdp-crom-text);
     cursor: pointer;
   }
-  .sdp-amfitrio-franja__enllac:hover,
-  .sdp-amfitrio-franja__tanca:hover { background: var(--sdp-crom-hover); }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-amfitrio-franja__enllac:hover,
+    .sdp-amfitrio-franja__tanca:hover { background: var(--sdp-crom-hover); }
+  }
   .sdp-amfitrio-franja__enllac:focus-visible,
   .sdp-amfitrio-franja__tanca:focus-visible { outline: 3px solid var(--sdp-crom-focus); outline-offset: -3px; }
   /* Sobre el crom el pilot pinta amb els seus tokens de crom (tokens.css). */
@@ -7831,9 +8034,11 @@ details[open] summary.accordion-header svg:last-child {
     cursor: pointer;
     transition: border-color var(--sdp-t), background-color var(--sdp-t);
   }
-  .sdp-targeta-opcio__cos:hover { border-color: var(--sdp-vora-forta); }
-  /* Contrast sobre --sdp-accio-subtil mesurat: text-suau 6,8:1 en clar i
-     10,8:1 en fosc; text-cos i text-titol, més. */
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-targeta-opcio__cos:hover { border-color: var(--sdp-vora-forta); }
+  }
+  /* Contrast sobre --sdp-accio-subtil mesurat: text-suau 8,49:1 en clar
+     (261004) i 10,8:1 en fosc; text-cos i text-titol, més. */
   .sdp-targeta-opcio__control:checked + .sdp-targeta-opcio__cos {
     border-color: var(--sdp-accio);
     background: var(--sdp-accio-subtil);
@@ -8085,7 +8290,9 @@ details[open] summary.accordion-header svg:last-child {
     color: var(--sdp-accio-text);
     text-decoration: none;
   }
-  .sdp-resultat-cerca__enllac:hover { text-decoration: underline; }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-resultat-cerca__enllac:hover { text-decoration: underline; }
+  }
   .sdp-resultat-cerca__enllac:focus-visible {
     outline: 3px solid var(--sdp-focus);
     outline-offset: 2px;
@@ -8258,7 +8465,9 @@ details[open] summary.accordion-header svg:last-child {
     font: inherit;
     cursor: pointer;
   }
-  .sdp-estat-desament--boto:hover { background: var(--sdp-crom-scroll-puny); }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-estat-desament--boto:hover { background: var(--sdp-crom-scroll-puny); }
+  }
   .bar-actions .sdp-estat-desament--boto .icon { cursor: pointer; }
 
   /* Els avisos en línia dels camps, davall de l'entradilla (UniversalEditorShell):
@@ -8335,7 +8544,9 @@ details[open] summary.accordion-header svg:last-child {
     text-align: left;
     cursor: pointer;
   }
-  .sdp-tractors-panell__tria:hover { border-color: var(--sdp-vora-forta); }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-tractors-panell__tria:hover { border-color: var(--sdp-vora-forta); }
+  }
   .sdp-tractors-panell__tria[aria-current="true"] {
     border-color: var(--sdp-accio);
     background: var(--sdp-accio-subtil);
@@ -8969,4 +9180,111 @@ details[open] summary.accordion-header svg:last-child {
     padding-block: var(--sdp-space-2);
     border-inline: 0;
   }
+}
+
+/* ── P7-A · PORTADA PLEGABLE DE LA PÀGINA UNIVERSAL (directriu 261003_2320,
+   «Hero Image Toggle»; UniversalPage.jsx, prop portadaPlegable) ──
+   El botó viu dins del marc de la portada (.hero-image, que ja és
+   position: relative i context de nivell 0, layout.css), abans de la imatge.
+   Amb la portada a la vista flota dalt a la dreta, damunt de la il·lustració,
+   amb la pell de Boto secundari (fons de targeta i vora) i una ombra perquè
+   es llija sobre qualsevol dibuix. Plegada, la franja ocupa el marc sencer
+   amb el fons de l'app (tapa el taronja del marc) i el botó es queda al
+   mateix lloc. Text a la mida base (gent gran); l'alçada mínima
+   (--sdp-touch-min) i el focus visible són els de .sdp-boto. Cap transició:
+   res que prefers-reduced-motion haja d'aturar. Sense la prop no hi ha cap
+   d'estes classes al DOM. */
+@layer components {
+  .sdp-portada__barra {
+    position: absolute;
+    inset-block-start: var(--sdp-space-3);
+    inset-inline-end: var(--sdp-space-3);
+    z-index: 1;
+    display: flex;
+    justify-content: flex-end;
+  }
+  .sdp-portada__barra--plegada {
+    position: static;
+    padding: var(--sdp-space-2) var(--sdp-space-3);
+    background: var(--sdp-fons-app);
+  }
+  .sdp-portada__boto {
+    font-size: var(--sdp-text-base);
+    box-shadow: var(--sdp-ombra-2);
+  }
+}
+
+/* W4-08 (Onada 4, 261004) · Panell de Control · La secció «Maquinària i
+   Sistema» s'aparta de les Utilitats amb el token d'espai de 48px (abans, un
+   style en línia de 3rem: 48px amb l'arrel de 16px). En px de token, el
+   marge no depén de la mida de lletra de l'arrel de l'amfitrió WordPress. */
+@layer components {
+  .sdp-control-maquinaria {
+    margin-block-start: var(--sdp-space-12);
+  }
+}
+
+/* ═══ MODE BANCAL · SUPERFÍCIES DE MODULES.CSS (Q1, 261004) ══════════════
+   L'interruptor data-contrast="bancal" va a :root fora de l'incrustat i a
+   :host dins del shadow root, com data-theme. És el plus d'exterior: llegir
+   a ple sol al bancal. Els colors (text suau, accent de text) els canvia
+   tokens.css; ací només hi ha el que és propi d'este full, sense cap color.
+     · Text opac: les accions de la bombolla del Xat es veuen sempre (no
+       esperen el ratolí) i el mapa de fons de la conversa desapareix: el
+       text queda sobre un fons pla.
+     · Pes: la lletra menuda de la interfície densa (14 a 16px) passa a 600.
+       El cos de lectura (18px) i els títols no canvien. La llista va dins de
+       :where() perquè no pese més que una classe: les variants que ja eren
+       negretes (700) ho continuen sent amb una regla pròpia, darrere.
+     · Les ombres de sempre (Q6): cap vora substituta.
+   Dins de @layer components: guanya a `legacy` per capa i a les regles de
+   components per especificitat (l'atribut de :root o :host hi suma) o per
+   ordre (este bloc va l'últim). */
+@layer components {
+  :root[data-contrast="bancal"] .sdp-xat-bombolla__accions,
+  :host([data-contrast="bancal"]) .sdp-xat-bombolla__accions { opacity: 1; }
+
+  :root[data-contrast="bancal"] .sdp-xat-conversa::before,
+  :host([data-contrast="bancal"]) .sdp-xat-conversa::before { display: none; }
+
+  :root[data-contrast="bancal"] :where(
+    .sdp-gestor-fitxa__subtitol, .sdp-nota-fitxa__data,
+    .sdp-xat-fila__hora, .sdp-xat-capcalera__sub, .sdp-xat-sistema__text,
+    .sdp-xat-bombolla__meta, .sdp-xat-opcio__text, .sdp-xat-control__estat,
+    .sdp-xat-resultats__avis, .sdp-xat-fitxa-comunitat__tipus, .sdp-xat-avis,
+    .sdp-xat-vista__subtitol, .sdp-xat-ajustos__nota,
+    .sdp-cal-agenda__cap, .sdp-cal-any__graella th, .sdp-cal-dia__nom,
+    .sdp-calendari--gran .sdp-calendari__pindola,
+    .sdp-connectar__autor, .sdp-connectar__identitat, .sdp-connectar__ajuda,
+    .sdp-connectar__nota, .sdp-connexio-resum__detall, .sdp-calaix-identitats__rol,
+    .sdp-targeta-opcio__ajuda, .sdp-realitat__connexio-text,
+    .sdp-resultat-cerca__meta, .sdp-cerca__estat,
+    .toc-level-4 button, .toc-level-6 button, .sdp-slash-menu__ajuda,
+    .sdp-avisador-efimer, .sdp-chat-bubble-meta, .search-result-meta,
+    .file-item-meta, .download-card-meta, .embed-caption, .upload-zone-sub,
+    .stat-label, .divider-label, .pagination-label
+  ),
+  :host([data-contrast="bancal"]) :where(
+    .sdp-gestor-fitxa__subtitol, .sdp-nota-fitxa__data,
+    .sdp-xat-fila__hora, .sdp-xat-capcalera__sub, .sdp-xat-sistema__text,
+    .sdp-xat-bombolla__meta, .sdp-xat-opcio__text, .sdp-xat-control__estat,
+    .sdp-xat-resultats__avis, .sdp-xat-fitxa-comunitat__tipus, .sdp-xat-avis,
+    .sdp-xat-vista__subtitol, .sdp-xat-ajustos__nota,
+    .sdp-cal-agenda__cap, .sdp-cal-any__graella th, .sdp-cal-dia__nom,
+    .sdp-calendari--gran .sdp-calendari__pindola,
+    .sdp-connectar__autor, .sdp-connectar__identitat, .sdp-connectar__ajuda,
+    .sdp-connectar__nota, .sdp-connexio-resum__detall, .sdp-calaix-identitats__rol,
+    .sdp-targeta-opcio__ajuda, .sdp-realitat__connexio-text,
+    .sdp-resultat-cerca__meta, .sdp-cerca__estat,
+    .toc-level-4 button, .toc-level-6 button, .sdp-slash-menu__ajuda,
+    .sdp-avisador-efimer, .sdp-chat-bubble-meta, .search-result-meta,
+    .file-item-meta, .download-card-meta, .embed-caption, .upload-zone-sub,
+    .stat-label, .divider-label, .pagination-label
+  ) { font-weight: 600; }
+
+  /* Les variants que ja anaven en negreta no s'aprimen. */
+  :root[data-contrast="bancal"] .sdp-xat-fila--nova .sdp-xat-fila__hora,
+  :host([data-contrast="bancal"]) .sdp-xat-fila--nova .sdp-xat-fila__hora,
+  :root[data-contrast="bancal"] .sdp-cal-setmana .sdp-cal-dia__nom,
+  :host([data-contrast="bancal"]) .sdp-cal-setmana .sdp-cal-dia__nom { font-weight: 700; }
 }

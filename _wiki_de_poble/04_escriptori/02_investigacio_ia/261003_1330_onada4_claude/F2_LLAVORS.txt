@@ -1,0 +1,276 @@
+F2 · LES LLAVORS DEL FULL DE RUTA, SENSE DOMINI DE PRODUCCIÓ · ONADA 4 (CLAUDE, TASCA T2)
+==========================================================================================
+Origen: auditoria de Codex 261003_1903 (arxivada a 90_arxiu_historic/261003_1903_auditoria_codex.md,
+§F2, P2). Torn: torn_50ca5709-8cd2-416a-bf41-2afdb3450179.
+Abast tocat: src/sections/text/pageContent.js (només l'entrada «roadmap»: els href i un comentari JS
+damunt de l'entrada) i la prova nova src/sections/text/pageContent.roadmap.test.js. Res més.
+
+
+1. QUÈ PASSAVA
+--------------
+- PAGE_COPY.roadmap.html portava 39 <a> actives i 4 dins de comentaris HTML, totes a
+  https://socdepoble.org/auditoria/llavor/<slug>.
+- Cap ruta de l'app entén /auditoria/llavor/<slug>: té tres segments i a ActorRoutes només hi ha
+  ":sectionId/:itemId" (dos) i el comodí "*" → NotFoundPage (src/app/App.jsx:851-852). No hi ha cap
+  fitxer a public/ ni cap reescriptura pròpia: vercel.json:13-18 ho envia tot a /index.html.
+- hrefInternDeClic (src/app/enllacosInterns.js:77-96) torna null per a una URL absoluta: incrustada
+  en un altre amfitrió (WordPress, Sollutia…), el clic eixia de la instal·lació cap a socdepoble.org.
+- Producció hui (navegador integrat, 261003 vora les 20:00, només lectura):
+  https://socdepoble.org/auditoria/llavor/plantilles-mestre acaba a /mur; /roadmap i /wikidepoble
+  hi pinten «No S'ha Trobat». El desplegament de producció no és l'arbre actual. Si estes URL de
+  llavor havien tingut mai contingut propi: [NO VERIFICAT]; hui no en tenen.
+
+
+2. CRITERI APLICAT
+------------------
+- S'emet una ruta de l'app relativa a l'arrel. Així val en qualsevol amfitrió: sense interceptor
+  (socdepoble.org) el navegador recarrega a la mateixa casa; amb router en memòria o amb base
+  declarada, hrefInternDeClic la passa al router (amb '/comunitat' torna la mateixa ruta).
+- Destí específic NOMÉS si una pàgina interna vigent tracta la mateixa llavor (mateix nom o mateixa
+  tesi amb secció pròpia). Si no, el destí per defecte és el registre de llavors de la Wiki:
+  /wikidepoble?item=00_full_de_ruta, que és la pàgina interna que llista i explica les llavors.
+- Sense #fragment: el sanejador (src/utils/sanitize.js:80-84) no deixa passar l'atribut id, i un
+  fragment no trobaria on parar.
+- Text visible i estructura idèntics (Llei del Píxel): només canvia el valor de cada href. Cap
+  enllaç s'ha desembolcallat. Cap CSS del projecte depén del valor de l'href (cercat a src/ i a
+  public/assets/pedra-seca.css: cap selector a[href…]).
+
+Destins (tots VERIFICATS al codi i al navegador amb el servidor de desenvolupament, :3340):
+- /wikidepoble?item=00_full_de_ruta: ruta "wikidepoble" (App.jsx:841, sections.js:33); el paràmetre
+  ?item obri el document (WikiDePobleSection.jsx:369-370); el document existix al manifest
+  (src/data/wikiManifest.js:247; font _wiki_de_poble/02_saber/00_full_de_ruta.md). Clic real des de
+  /roadmap sobre «Sistema Plantilles Mestre» → /wikidepoble?item=00_full_de_ruta amb el registre.
+- /wikidepoble?item=identitat_visual: wikiManifest.js:840; secció «## 3. Llei de l'Orgull Rural»
+  a _wiki_de_poble/02_saber/identitat_visual.md:31-33. Obert al navegador: es pinta la secció.
+- /ia: ruta "ia" → TextRoute pageKey="anima" (App.jsx:846, sections.js:37); l'HTML de
+  PAGE_COPY.anima porta «4. El Càlcul del Risc (La Por Orgànica)» (pageContent.js:94), amb la mateixa
+  tesi gairebé literal que la llavor. Obert al navegador: es pinta la secció.
+
+
+3. TAULA · 39 LLAVORS ACTIVES
+-----------------------------
+Llegenda de justificació:
+  REG  = default aplicat: cap pàgina interna vigent tracta eixa llavor; va al registre de llavors.
+  REG* = default aplicat, i la llavor té un candidat temàtic (vegeu §5) que NO s'ha aplicat.
+  PRÒPIA = destí específic VERIFICAT (§2).
+
+ #  Secció            slug                    text visible                                   nou href                              just.
+ 1  Collita Tancada   plantilles-mestre       Sistema Plantilles Mestre                      /wikidepoble?item=00_full_de_ruta     REG*
+ 2  Collita Tancada   guardia-de-nit          La Guàrdia de Nit                              /wikidepoble?item=00_full_de_ruta     REG*
+ 3  Collita Tancada   xat-iaia                Xat de la IAIA (Testament Digital)             /wikidepoble?item=00_full_de_ruta     REG*
+ 4  Collita Tancada   ull-del-mestre          L'Ull del Mestre PWA                           /wikidepoble?item=00_full_de_ruta     REG*
+ 5  Collita Tancada   format-pedra-seca       Format Pedra Seca 28px                         /wikidepoble?item=00_full_de_ruta     REG*
+ 6  Collita Tancada   orgull-rural            Llei Orgull Rural Visual                       /wikidepoble?item=identitat_visual    PRÒPIA
+ 7  Sementeres Vives  calculadora-risc        Calculadora de Risc (Maduresa IA)              /ia                                   PRÒPIA
+ 8  Sementeres Vives  ritual-senectut         Ritual de Senectut (Memòria IA)                /wikidepoble?item=00_full_de_ruta     REG*
+ 9  Sementeres Vives  ruper-rato              Rúper Rató (Caza-BOEs)                         /wikidepoble?item=00_full_de_ruta     REG
+10  Sementeres Vives  mesh-viva               Mesh Viva (WebRTC Eg-Walker)                   /wikidepoble?item=00_full_de_ruta     REG (vegeu §4.3)
+11  Sementeres Vives  verificacio-ssi         Verificació SSI (Identitat DIDs)               /wikidepoble?item=00_full_de_ruta     REG
+12  Sementeres Vives  auditoria-espill        Auditoria Espill del Temps                     /wikidepoble?item=00_full_de_ruta     REG
+13  Sementeres Vives  nano-banana             Nano Banana                                    /wikidepoble?item=00_full_de_ruta     REG
+14  Sementeres Vives  ideoteca                Ideoteca P2P                                   /wikidepoble?item=00_full_de_ruta     REG
+15  Sementeres Vives  notes-compartides       Notes Compartides (Murs del Mas)               /wikidepoble?item=00_full_de_ruta     REG*
+16  Sementeres Vives  agent-directory         Agent Directory                                /wikidepoble?item=00_full_de_ruta     REG*
+17  Sementeres Vives  bategat-rag             Bategat RAG PDF Agrícola                       /wikidepoble?item=00_full_de_ruta     REG
+18  Sementeres Vives  consola-solatge         Consola Solatge (Verbose=1)                    /wikidepoble?item=00_full_de_ruta     REG*
+19  Llavors           tramits-xylella         Tràmits Xylella (Insta-Burocràcia)             /wikidepoble?item=00_full_de_ruta     REG
+20  Llavors           dafo-automatic          DAFO Automàtic Poble                           /wikidepoble?item=00_full_de_ruta     REG
+21  Llavors           el-cronista             El Cronista (Les Actes)                        /wikidepoble?item=00_full_de_ruta     REG
+22  Llavors           pont-whatsapp           Pont WhatsApp Nivell Déu                       /wikidepoble?item=00_full_de_ruta     REG
+23  Llavors           walkie-talkie           Walkie-Talkie Sísmic (Anti-Caos)               /wikidepoble?item=00_full_de_ruta     REG
+24  Llavors           nexus-flash             Nexus Flash Notificacions                      /wikidepoble?item=00_full_de_ruta     REG
+25  Llavors           poblacio-radio          Població Ràdio TTS                             /wikidepoble?item=00_full_de_ruta     REG
+26  Llavors           spotify-colaboratiu     Spotify Col·laboratiu (Festes)                 /wikidepoble?item=00_full_de_ruta     REG
+27  Llavors           virtual-store           Virtual Store Rural (Mercat)                   /wikidepoble?item=00_full_de_ruta     REG*
+28  Llavors           lector-aemps            Lector AEMPS de Medicines                      /wikidepoble?item=00_full_de_ruta     REG
+29  Llavors           alerta-anticaigudes     Alerta Anticaigudes Bancals                    /wikidepoble?item=00_full_de_ruta     REG
+30  Llavors           cibermajors             Cibermajors Mode Tutor                         /wikidepoble?item=00_full_de_ruta     REG
+31  Llavors           haptics-bancal          Haptics de Bancal                              /wikidepoble?item=00_full_de_ruta     REG
+32  Llavors           reliquies-qrs           Relíquies en Termoplàstic QRs                  /wikidepoble?item=00_full_de_ruta     REG
+33  Llavors           ghost-crypt             Ghost Memorial Crypt                           /wikidepoble?item=00_full_de_ruta     REG
+34  Llavors           valencianglish          Valencianglish (Dialectologia)                 /wikidepoble?item=00_full_de_ruta     REG
+35  Llavors           master-calendar         Master Calendar Assambleari                    /wikidepoble?item=00_full_de_ruta     REG*
+36  Llavors           chaos-monkey            Auditories Chaos Monkey Red Team               /wikidepoble?item=00_full_de_ruta     REG
+37  Llavors           lectura-bipolar         Sistema Lectura Contrast Extrem                /wikidepoble?item=00_full_de_ruta     REG
+38  Llavors           sobirania-npu           Sobirania AI Purista Offline                   /wikidepoble?item=00_full_de_ruta     REG
+39  Llavors           atles-del-trellat       L'Atles del Trellat (Catàleg Cartogràfic)      /wikidepoble?item=00_full_de_ruta     REG
+
+Recompte: 37 al registre, 2 amb pàgina pròpia. Totes les llavors de la taula, menys la 7, tenen
+entrada al registre 00_full_de_ruta.md (línies 18-78); la 7 (calculadora-risc) no hi és, i per això
+el registre seria un mal destí per a ella.
+
+Comentades (dins de <!-- … -->, no es pinten; mateixa superfície, mateix criteri):
+ C1  Collita Tancada  motor-a10-inmortal  Motor A10 Inmortal (Pedra Seca)  /wikidepoble?item=00_full_de_ruta  REG
+ C2  Collita Tancada  idb-guardian        IDB Guardian (Persistència W.A.L.) /wikidepoble?item=00_full_de_ruta  REG
+ C3  Collita Tancada  pwa-clean           PWA Instal·lable Clean           /wikidepoble?item=00_full_de_ruta  REG
+ C4  Collita Tancada  taller-trellat      Taller Trellat                   /wikidepoble?item=00_full_de_ruta  REG
+Les quatre són a «🍂 Retirades per l'ADR-2026-08» del registre (00_full_de_ruta.md:74-77).
+
+
+4. DECISIONS DEL MESTRE
+-----------------------
+4.1 Frontissa de contingut (BLOQUEJA EL COMMIT). La clau «roadmap» està sota la frontissa
+    (tooling/gates/frontissa-contingut.mjs, primer pas del pre-commit). Abans del canvi, l'empremta de
+    l'arbre coincidia amb el registre .agents/contingut_estructural.json:52-57 (sha256 8f3943fa…000,
+    html 27827: comprovat amb una prova temporal, ja retirada). Després del canvi:
+        sha256 3ec98be808ebfe456c93fa22a32660e49b1475d15882fa2946dccbc0d860acdf
+        html   26915 (−912 caràcters, −3,3 %: no és un retall, el llindar és el 30 %)
+    Cal que el Mestre l'aprove: node tooling/gates/frontissa-contingut.mjs --aprova roadmap --per Mestre
+    (escriu dins de .agents/: decisió humana; l'agent no ho pot fer).
+4.2 Validar el criteri: 37 llavors al registre i 2 amb pàgina pròpia, o triar algun candidat de §5.
+    Tot és reversible canviant un href; el slug original de cada llavor queda en esta taula.
+4.3 Mesh Viva. El full de ruta la pinta activa a «Sementeres Vives (Beta)», però el registre la
+    posa a «Retirades per l'ADR-2026-08» (00_full_de_ruta.md:78). Les altres quatre retirades estan
+    comentades al full de ruta. Comentar-la és un canvi de contingut visible: no s'ha fet.
+4.4 Pàgines pròpies de llavor. Si algun dia es vol una ruta per llavor (p. ex. /llavors/<slug>), cal
+    router i contingut nous. Els slugs del full de ruta i del registre no coincidixen en sis casos:
+    plantilles-mestre / sistema-plantilles-mestre, guardia-de-nit / la-guardia-de-nit,
+    format-pedra-seca / format-gem-modern, orgull-rural / llei-orgull-rural, ideoteca / ideoteca-p2p,
+    pwa-clean / pwa-installable-clean.
+
+
+5. CANDIDATS TEMÀTICS NO APLICATS (REG*)
+----------------------------------------
+Rutes vigents que toquen el tema, però no són la llavor ni en tenen secció pròpia. Només amb
+l'aprovació del Mestre:
+- xat-iaia → /ia (L'Ànima de la IAIA: la personalitat de la IAIA MarIA) o /xat (el Xat).
+- ritual-senectut, guardia-de-nit → /ia («La Llei de l'Oblit Exponencial», demència de context).
+- format-pedra-seca → /disseny (Disseny Pedra Seca; la pàgina està «en reconstrucció» i no parla de
+  28px; el branding de la Wiki dona base_size 19px).
+- ull-del-mestre, consola-solatge → /consola (Consola Termodinàmica): consola d'administració, però
+  no la mateixa peça.
+- plantilles-mestre → algun document de la Wiki sobre la plantilla universal (estandard_ui_universal):
+  contingut NO llegit, [NO VERIFICAT].
+- virtual-store → /mercat; master-calendar → /calendari; notes-compartides → /notes;
+  agent-directory → /poblacio. Són seccions vigents amb el mateix àmbit, però la llavor descriu una
+  visió (P2P, zero comissions, consens assembleari) que la secció actual no acredita.
+
+
+6. FORA D'ABAST (PENDENTS, INTACTES)
+------------------------------------
+- src/data/wikiManifest.js:265 (generat de _wiki_de_poble/02_saber/00_full_de_ruta.md:18-78): el
+  registre al qual ara porta el full de ruta té 45 enllaços absoluts a
+  https://socdepoble.org/auditoria/llavor/<slug>. Mateix patró F2 dins de la Wiki. Cal tocar el .md
+  de la Wiki i regenerar el manifest (zona vedada a esta tasca). Proposta: desembolcallar-los o
+  emetre rutes de l'app amb el mateix criteri; decisió del Mestre.
+- supabase/seed.sql:16: còpia de l'HTML antic del full de ruta amb els 43 enllaços absoluts. Hui les
+  pàgines no es lligen d'ahí (src/data/supabase/content.js:95-100 servix seed.pages, que ix de
+  PAGE_COPY), però si es tornara a carregar reintroduiria F2.
+- Builds amb les URL antigues (es regeneren, no s'editen): wordpress-plugin/dist/soc-de-poble.standalone.js,
+  wordpress-plugin/builds/directori/dist/soc-de-poble.standalone.js, dist/assets/index-DLAj3yFC.js,
+  dist/assets/ConsolaSection-UZPfms0M.js.
+- src/sections/disseny/cataleg/detalls/EspecimenUniversalCard.jsx:84: imageUrl absoluta a un recurs
+  de producció (és una imatge d'un espècimen del catàleg, no un enllaç).
+- Altres socdepoble.org que no són F2: src/config/origensSollutia.js:22,41 i
+  src/config/runtimePolicy.js:4 (llistes d'orígens de confiança), src/utils/ics.js:152 (comentari),
+  EspecimenXat.jsx:88 (text de mostra), EspecimenXatRail.jsx:36 (base per a partir una URL).
+- PAGE_COPY.anima porta href="/skills" (pageContent.js:94): és interna i funciona per la redirecció
+  a /wikidepoble (App.jsx:842); es podria escriure directa. No tocat (una altra entrada).
+
+
+7. PROVES
+---------
+- Nova: src/sections/text/pageContent.roadmap.test.js (4 proves). Abans del canvi en fallaven 4 de 4
+  (39 null de l'interceptor, com la reproducció de Codex); després, 4 de 4 en verd.
+  Comprova: 39 actives i 4 comentades; cap socdepoble.org ni cap href absolut (llista d'externes
+  declarades buida); hrefInternDeClic({button:0}, a, '/comunitat') i sense base tornen l'href;
+  cada destí és un path de SECTIONS, sense #fragment, i el ?item existix al manifest; el mapa
+  (2 pròpies, la resta al registre).
+- npx vitest run src/sections/text src/app/enllacosInterns.test.js src/components/universal/editorial.test.js
+  → 9 fitxers, 201 en verd, 1 en roig PREVI: pageContent.paquet.test.js (les quatre infografies de
+  /projecte no són a public/assets/img/). Ja fallava abans de tocar res (6 fitxers, 118/119) i no té
+  res a veure amb «roadmap».
+- npx vitest run src/sections/wiki-de-poble src/sections/mur src/sections/detail src/data/appSeed
+  → 22 fitxers, 250 en verd.
+- node --test tests/frontissa-contingut.test.mjs → 9/9 (fixtures; la porta real no la pot executar
+  l'agent: vegeu §4.1).
+- Navegador (dev :3340): /roadmap té 39 <a> a l'article, 0 absolutes, 3 destins distints; clic real
+  a una llavor → /wikidepoble?item=00_full_de_ruta amb el registre; /wikidepoble?item=identitat_visual
+  i /ia pinten les seccions citades. Un amfitrió real (WordPress) no s'ha provat de punta a punta:
+  [NO VERIFICAT]; ho cobrix la prova unitària de l'interceptor amb base.
+- Nota de la revisió (§8): el recompte «9 fitxers, 201 en verd» d'esta secció no es reproduïx en
+  l'arbre d'ara. Hui la mateixa ordre dona 8 fitxers i 203 proves (202 en verd, 1 en roig PREVI, el
+  mateix pageContent.paquet.test.js), amb les 4 proves noves de §8 dins. Les xifres antigues queden
+  com a [NO VERIFICAT].
+
+
+8. REVISIÓ ADVERSARIAL (CLAUDE, ONADA 4, SEGONA ONADA, 261003 vora les 20:50)
+-----------------------------------------------------------------------------
+Torn torn_50ca5709-8cd2-416a-bf41-2afdb3450179. Abast de les correccions: l'entrada «roadmap» de
+pageContent.js, la seua prova i este fitxer. pageContent.js NO s'ha tocat en esta revisió.
+
+8.1 Confirmat [VERIFICAT]
+- Només canvien els valors d'href. L'HTML vell (el «-» del git diff) i el nou, amb cada href buidat,
+  són idèntics caràcter a caràcter; 43 href abans i 43 després (39 actius i 4 comentats); cap altre
+  atribut ni cap text tocat. Parells slug → destí: coincidixen amb la taula de §3.
+- Empremta (mateix càlcul que empremta() de tooling/gates/frontissa-contingut.mjs:54-59, SHA-256 de
+  JSON.stringify(PAGE_COPY.roadmap) i llargària de l'html; la porta no s'ha executat):
+    vella 8f3943fa45dbe7942aeffba645b770f8d7cf50163bb6fb05fb2cf07b214da000 · html 27827
+      = la registrada a .agents/contingut_estructural.json:52-57 (Mestre, 2026-09-24);
+    nova  3ec98be808ebfe456c93fa22a32660e49b1475d15882fa2946dccbc0d860acdf · html 26915.
+  El comentari JS de damunt de l'entrada no entra a l'empremta: és fora del valor, i l'empremta de
+  {nou objecte, html vell} torna exactament la registrada. La decisió de §4.1 continua pendent.
+- Mutacions sobre la prova (temporals, ja retirades; sobre les 4 proves de llavors): l'HTML vell
+  les fa caure totes 4; « https://socdepoble&#46;org/ia» (entitat i espai inicial) en una llavor
+  activa en fa caure 3; un absolut a socdepoble.org dins d'un comentari HTML, 2 (la prova 3 el
+  deixava passar perquè només mirava el camí; amb l'origen propi de 8.2 en cauen 3).
+- Navegador (dev :3340, pestanya de fons, només lectura): clic real a cinc llavors distintes
+  (Sistema Plantilles Mestre, Llei Orgull Rural Visual, Calculadora de Risc, Mesh Viva, L'Atles del
+  Trellat): totes pinten el destí, cap «no trobat». Sense base, el clic és natiu (recàrrega), com
+  diu la Llei del Píxel per a socdepoble.org.
+- :visited i CSS: cap regla a[href…], :visited, :link ni :any-link a src/ ni a public/assets/; el
+  color ve de «a { color: var(--sdp-accent-titol) }» (src/css/base.css:226), que val per als dos
+  estats. Que 37 enllaços compartisquen un href no canvia cap píxel.
+- El contingut no ve de cap base de dades: pageCopy ix de seed.pages, que ix de PAGE_COPY
+  (src/data/appSeed.js:130; src/data/supabase/content.js:95-100). El pegat arriba a la pantalla.
+
+8.2 Defecte de la prova, CORREGIT
+- La prova 3 comprovava les rutes contra SECTIONS, que és la navegació, no el router: les <Route>
+  d'App.jsx:779-852 són literals i SECTIONS només pinta la barra (App.jsx:85-87). Retirar
+  <Route path="ia"> o <Route path="wikidepoble">, el document de la Wiki o la secció que justifica el
+  destí deixava les 4 proves en verd.
+  Correcció: 4 proves noves que munten l'app real (PedraSecaEmbed) i fan clic de veres:
+    · router en memòria i rutaInicial '/roadmap' (és com la incrusta el bloc de WordPress: només
+      emet nom-poble, poble i ruta-inicial, wordpress-plugin/includes/marcatge.php:260-262): una
+      llavor de cada destí distint; el clic l'ha de cancel·lar l'interceptor i ha d'aparéixer
+      l'encapçalament que justifica el destí («🗺️ Full de ruta de Sóc de Poble», «3. Llei de l'Orgull
+      Rural», «4. El Càlcul del Risc (La Por Orgànica)») sense «Ací no hi ha res»;
+    · router de navegador amb base '/comunitat': la URL queda /comunitat/wikidepoble?item=00_full_de_ruta
+      amb un sol pushState i es pinta el registre.
+  Mutació de control: una llavor cap a una ruta que el router no té cau amb
+  «expected [ 'Ací no hi ha res', 'Error 404' ] to include '4. El Càlcul del Risc…'».
+  A més, la prova 3 ara exigix origen propi (una URL absoluta amb el camí bo ja no passa sola).
+
+8.3 Oberts, fora d'abast (només informe)
+- [P2] El problema es desplaça un clic. 37 de les 39 llavors porten al registre, i allà la mateixa
+  llavor és un enllaç absolut a https://socdepoble.org/auditoria/llavor/<slug> (45 enllaços,
+  _wiki_de_poble/02_saber/00_full_de_ruta.md:18-78 → src/data/wikiManifest.js:265). Comprovat al
+  navegador: al registre, «Sistema Plantilles Mestre», «Mesh Viva» i «L'Atles del Trellat» tenen eixe
+  href. Incrustada, el segon clic ix de la instal·lació. És de MarIA (Wiki i manifest generat).
+  Proposta: desembolcallar els 45 enllaços al .md (el registre ja és la pàgina de la llavor) i
+  regenerar el manifest; o emetre rutes de l'app amb el criteri de §2.
+- [P3] Col·lisió de base a l'interceptor (src/app/enllacosInterns.js:63-68, treuBase): si un
+  amfitrió declara una base igual al primer segment d'una ruta de l'app, l'enllaç perd el camí.
+  Reproduït: hrefInternDeClic({button:0}, '/ia', base '/ia') → '/'; amb base '/wikidepoble',
+  '/wikidepoble?item=00_full_de_ruta' → '/?item=00_full_de_ruta'. No és d'F2 i el bloc de WordPress
+  no declara base; ho decidix qui porte l'enxufe.
+- [P3] Clic amb modificador o «obrir en una pestanya nova» dins d'un amfitrió sense base: l'interceptor
+  el deixa natiu (enllacosInterns.js:80) i un href relatiu a l'arrel es resol contra l'origen de
+  l'amfitrió (p. ex. https://wordpress.exemple/wikidepoble?item=00_full_de_ruta, que no hi existix).
+  Abans anava a socdepoble.org i acabava a /mur. És el comportament de tot enllaç intern del
+  contingut (Aplec, connexions), no només d'F2: decisió de disseny de l'enxufe.
+- Sense canvi: supabase/seed.sql:16 (43 absoluts, no es llig), builds a dist/ i wordpress-plugin/
+  (es regeneren), _wiki_de_poble/02_saber/00_visio_i_pilars.md:14 (enllaç a la portada pública:
+  referència volguda, no és F2).
+
+8.4 Proves d'esta revisió
+- npx vitest run src/sections/text/pageContent.roadmap.test.js → 1 fitxer, 8/8 en verd.
+- npx vitest run src/sections/text src/app/enllacosInterns.test.js src/components/universal/editorial.test.js
+  → 8 fitxers, 203 proves: 202 en verd, 1 en roig PREVI (pageContent.paquet.test.js: les quatre
+  infografies de PAGE_COPY.projecte, pageContent.js:43, no són a public/assets/img/; l'entrada
+  «roadmap» no porta imatges noves, comprovat amb la comparació de 8.1).
+- npx vitest run src/sections/wiki-de-poble src/sections/mur src/sections/detail src/data/appSeed
+  → 22 fitxers, 250/250 en verd.
+- node --test tests/frontissa-contingut.test.mjs → 9/9.
+
+Ancoratge: [[00_index_escriptori]]

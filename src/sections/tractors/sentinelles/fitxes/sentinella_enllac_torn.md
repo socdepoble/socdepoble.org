@@ -1,6 +1,6 @@
 # Sentinella «Enllaç del Torn»
 
-**Identificador:** `sentinella.enllac-torn` · **Versió:** 1.0.0 · **Nivell:** L0 · **Dades personals:** sí · **Xarxa:** cap
+**Identificador:** `sentinella.enllac-torn` · **Versió:** 1.0.0 · **Nivell:** L0 · **Revisió Humana:** Pendent · **Dades personals:** sí · **Xarxa:** cap
 
 ## Què fa, en una frase
 

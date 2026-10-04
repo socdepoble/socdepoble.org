@@ -10,17 +10,25 @@ import { gestionaTornada, entraAmbGoogle, _intern } from './oauthRelay.js';
 const config = () => ({ hasSupabaseConfig: true, supabaseUrl: 'https://backend.example.test', supabaseAnonKey: 'public' });
 const deferred = () => { let resolve; const promise = new Promise(r => { resolve = r; }); return { resolve, promise }; };
 const sessioBona = () => ({ ok: true, json: async () => ({ access_token: 'synthetic', user: { id: 'A' } }) });
-/* La tornada real de GoTrue amb PKCE: només `?code=`. Ni GoTrue ni auth-js 2.112.4
-   (GoTrueClient.js, _getUrlForProvider) fan viatjar cap `state` del client. */
+/* F1v2 · Un id d'intent ben format (FORMA_INTENT): 22 caràcters base64url. */
+const ID = 'AAAAAAAAAAAAAAAAAAAAAA';
+/* La tornada real de GoTrue amb PKCE: `?code=` sobre la tornada, que des de F1v2
+   porta la marca de l'intent. Ni GoTrue ni auth-js 2.112.4 (GoTrueClient.js,
+   _getUrlForProvider) fan viatjar cap `state` del client. La pestanya del camí 3
+   té el verificador i, al costat, l'id del seu intent. */
 function returning() {
-  window.history.replaceState(null, '', '/?code=code');
+  window.history.replaceState(null, '', `/?code=code&sdp_oauth_attempt=${ID}`);
   setEfimer('sdp:oauth:verificador', 'verifier');
+  setEfimer(_intern.CLAU_INTENT, ID);
   setEfimer('sdp:oauth:backend', backendScope(config()));
 }
 const emergent = () => { const popup = { location: {}, closed: false, close: vi.fn() }; vi.spyOn(window, 'open').mockReturnValue(popup); return popup; };
+/* La marca de la tornada que l'anada ha demanat a /authorize. */
+const intentDe = (popup) => new URL(new URL(popup.location.href).searchParams.get('redirect_to')).searchParams.get('sdp_oauth_attempt');
 afterEach(() => {
   cancelAuthAttempts(); esborraSessio(); vi.restoreAllMocks(); vi.unstubAllGlobals(); vi.useRealTimers();
   window.sessionStorage.clear();   // també el comptador del Circuit Breaker
+  window.localStorage.clear();     // F1v2 · els registres d'espera i de traspàs per id
   window.history.replaceState(null, '', '/');
 });
 test('retorn tardà després de logout no restaura la sessió encara que fetch ignore abort', async () => {
@@ -89,38 +97,74 @@ test('/authorize porta el repte PKCE S256 i la tornada a la pàgina, i cap state
   expect(url.searchParams.get('code_challenge_method')).toBe('S256');
   expect(url.searchParams.get('code_challenge')).toMatch(/^[A-Za-z0-9_-]{43}$/);
   expect(url.searchParams.has('state')).toBe(false);
-  // P1 (261003): la tornada és la pàgina mateixa, no un relé (oauthRelay.amfitrio.test.js ho prova en un amfitrió).
-  expect(url.searchParams.get('redirect_to')).toBe(window.location.href);
+  /* P1 (261003): la tornada és la pàgina mateixa, no un relé (oauthRelay.amfitrio.test.js ho prova en un amfitrió).
+     F1v2 · Canvi: ara hi va la marca d'este intent, la mateixa id que la pestanya guarda al costat del verificador. */
+  const id = intentDe(popup);
+  expect(id).toMatch(_intern.FORMA_INTENT);
+  expect(url.searchParams.get('redirect_to')).toBe(`${window.location.href}?sdp_oauth_attempt=${id}`);
+  expect(getEfimer(_intern.CLAU_INTENT, null)).toBe(id);
   expect(getEfimer('sdp:oauth:state', null)).toBeNull();
   cancelAuthAttempts(); await result;
 });
-test('Camí 1: l’emergent torna només el codi i l’entrada es completa per PKCE', async () => {
+test('F1v2 · cada intent porta un id nou de 128 bits, i el registre d’espera de l’emergent és per id i sense secrets', async () => {
+  vi.stubGlobal('crypto', webcrypto);
+  const ids = [];
+  for (let i = 0; i < 2; i += 1) {
+    const popup = emergent();
+    const work = entraAmbGoogle({}, config); const result = expect(work).rejects.toMatchObject({ name: 'AbortError' });
+    await vi.waitFor(() => expect(popup.location.href).toContain('/authorize'));
+    const id = intentDe(popup);
+    ids.push(id);
+    const espera = JSON.parse(window.localStorage.getItem(STORAGE_PREFIX + _intern.clauEspera(id)));
+    expect(espera).toEqual({ t: expect.any(Number), cami: 'emergent' });
+    expect(JSON.stringify(espera)).not.toContain(getEfimer(_intern.CLAU_VERIFICADOR));
+    cancelAuthAttempts(); await result;
+    // Cancel·lat: el registre del seu id ja no hi és.
+    expect(window.localStorage.getItem(STORAGE_PREFIX + _intern.clauEspera(id))).toBeNull();
+    vi.restoreAllMocks();
+  }
+  expect(ids[0]).not.toBe(ids[1]);
+  for (const id of ids) expect(id).toMatch(/^[A-Za-z0-9_-]{22}$/);
+});
+test('Camí 1: l’emergent torna només el codi del seu id i l’entrada es completa per PKCE', async () => {
   vi.stubGlobal('crypto', webcrypto);
   const fetch = vi.fn(async () => sessioBona()); vi.stubGlobal('fetch', fetch);
   const popup = emergent();
   const work = entraAmbGoogle({}, config);
   await vi.waitFor(() => expect(popup.location.href).toContain('/authorize'));
   const verificador = getEfimer('sdp:oauth:verificador');
-  const missatge = (origin, source) => Object.assign(new Event('message'), { origin, source, data: { type: 'sdp:oauth', code: 'code' } });
+  const id = intentDe(popup);
+  const missatge = (origin, source, data = { type: 'sdp:oauth', id, code: 'code' }) => Object.assign(new Event('message'), { origin, source, data });
   window.dispatchEvent(missatge('https://atacant.example', popup));      // origen alié: ignorat
   window.dispatchEvent(missatge(window.location.origin, { alie: true }));  // font aliena: ignorada
+  // F1v2 · Un altre id, o cap, s'ignora: no és la tornada d'este intent.
+  window.dispatchEvent(missatge(window.location.origin, popup, { type: 'sdp:oauth', id: 'BBBBBBBBBBBBBBBBBBBBBB', code: 'codi-alie' }));
+  window.dispatchEvent(missatge(window.location.origin, popup, { type: 'sdp:oauth', code: 'codi-sense-id' }));
+  window.dispatchEvent(missatge(window.location.origin, popup, { type: 'sdp:oauth', id, error: 123 }));   // error que no és text
+  await new Promise((resol) => { setTimeout(resol, 0); });
+  expect(fetch).not.toHaveBeenCalled();
   window.dispatchEvent(missatge(window.location.origin, popup));
   await expect(work).resolves.toMatchObject({ access_token: 'synthetic' });
   expect(fetch).toHaveBeenCalledTimes(1);
   expect(JSON.parse(fetch.mock.calls[0][1].body)).toEqual({ auth_code: 'code', code_verifier: verificador });
   expect(usuariDeSessio()?.id).toBe('A');
   expect(getEfimer('sdp:oauth:verificador', null)).toBeNull();
+  expect(getEfimer(_intern.CLAU_INTENT, null)).toBeNull();
 });
-test('Camí 2 (COOP): el traspàs per storage amb només el codi completa l’entrada; un de ranci s’ignora', async () => {
+test('Camí 2 (COOP): el traspàs del seu id per storage completa l’entrada; un de ranci, d’un altre id o d’una altra clau s’ignora', async () => {
   vi.stubGlobal('crypto', webcrypto);
   const fetch = vi.fn(async () => sessioBona()); vi.stubGlobal('fetch', fetch);
   const popup = emergent();
   const work = entraAmbGoogle({}, config);
   await vi.waitFor(() => expect(popup.location.href).toContain('/authorize'));
-  const traspas = (t) => Object.assign(new Event('storage'), {
-    key: STORAGE_PREFIX + _intern.CLAU_TRASPAS, newValue: JSON.stringify({ type: 'sdp:oauth', code: 'code', t })
+  const id = intentDe(popup);
+  const traspas = (t, { clau = _intern.clauTraspas(id), dades = { id } } = {}) => Object.assign(new Event('storage'), {
+    key: STORAGE_PREFIX + clau, newValue: JSON.stringify({ type: 'sdp:oauth', code: 'code', t, ...dades })
   });
   window.dispatchEvent(traspas(Date.now() - 180000));
+  window.dispatchEvent(traspas(Date.now(), { dades: { id: 'BBBBBBBBBBBBBBBBBBBBBB' } }));   // la clau és la seua, l'id no
+  window.dispatchEvent(traspas(Date.now(), { clau: 'sdp:oauth:traspas' }));                  // la clau global d'abans de F1v2
+  await new Promise((resol) => { setTimeout(resol, 0); });
   expect(fetch).not.toHaveBeenCalled();
   window.dispatchEvent(traspas(Date.now()));
   await expect(work).resolves.toMatchObject({ access_token: 'synthetic' });
@@ -129,39 +173,87 @@ test('Camí 2 (COOP): el traspàs per storage amb només el codi completa l’en
 test('el verificador és d’un sol ús: el mateix codi no es bescanvia dues vegades', async () => {
   returning(); const fetch = vi.fn(async () => sessioBona()); vi.stubGlobal('fetch', fetch);
   await gestionaTornada({}, config); expect(usuariDeSessio()?.id).toBe('A');
-  window.history.replaceState(null, '', '/?code=code');
+  expect(getEfimer(_intern.CLAU_INTENT, null)).toBeNull();
+  window.history.replaceState(null, '', `/?code=code&sdp_oauth_attempt=${ID}`);
   await expect(gestionaTornada({}, config)).rejects.toThrow('verificador');
   expect(fetch).toHaveBeenCalledTimes(1);
 });
-/* Ordre del Mestre (261002) · Tokens del flux implícit al fragment sense cap codi
-   (l'enllaç de confirmació de correu de GoTrue, o un d'injectat): no s'adopten
-   mai, no s'envien enlloc i no es queden a la barra d'adreces. */
+test('F1v2 · el verificador d’un altre intent no bescanvia el codi d’este', async () => {
+  returning(); const fetch = vi.fn(async () => sessioBona()); vi.stubGlobal('fetch', fetch);
+  setEfimer(_intern.CLAU_INTENT, 'BBBBBBBBBBBBBBBBBBBBBB');
+  await expect(gestionaTornada({}, config)).rejects.toThrow('verificador');
+  expect(fetch).not.toHaveBeenCalled();
+  expect(window.location.search).toBe('');
+});
+/* Ordre del Mestre (261002) · Tokens del flux implícit al fragment (l'enllaç de
+   confirmació de correu de GoTrue): no s'adopten mai, no s'envien enlloc i no es
+   queden a la barra d'adreces. F1v2 (W4-02) · Canvi: només quan la tornada porta
+   la marca de l'alta (sdp_auth=alta, la de supabase/auth.js); sense marca, uns
+   tokens al fragment poden ser de l'amfitrió i no es toquen. */
 const desat = () => JSON.stringify({ ...window.sessionStorage, ...window.localStorage });
-test('261002 · un #access_token sense codi no s’adopta i es neteja, conservant el camí i la consulta', async () => {
+test('261002 · un #access_token de la nostra alta no s’adopta i es neteja, conservant el camí, la consulta i history.state', async () => {
   const fetch = vi.fn(); vi.stubGlobal('fetch', fetch);
-  window.history.replaceState(null, '', '/el-meu-perfil?vista=1#access_token=tok-sintetic&refresh_token=rt-sintetic&token_type=bearer&type=signup');
+  window.history.replaceState({ usr: 'del-router' }, '', '/el-meu-perfil?vista=1&sdp_auth=alta#access_token=tok-sintetic&refresh_token=rt-sintetic&token_type=bearer&type=signup');
   expect(await gestionaTornada({}, config)).toBeNull();
   expect(usuariDeSessio()).toBeNull();
   expect(fetch).not.toHaveBeenCalled();
   expect(desat()).not.toMatch(/tok-sintetic|rt-sintetic/);
   expect(window.location.hash).toBe('');
   expect(window.location.pathname + window.location.search).toBe('/el-meu-perfil?vista=1');
+  expect(window.history.state).toEqual({ usr: 'del-router' });
 });
-test('261002 · un #refresh_token sol també es neteja; un fragment sense tokens no es toca', async () => {
-  window.history.replaceState(null, '', '/mur#refresh_token=rt-sintetic');
+test('261002 · un #refresh_token sol de la nostra alta també es neteja; un fragment sense tokens no es toca', async () => {
+  window.history.replaceState(null, '', '/mur?sdp_auth=alta#refresh_token=rt-sintetic');
   expect(await gestionaTornada({}, config)).toBeNull();
   expect(usuariDeSessio()).toBeNull();
   expect(window.location.hash).toBe('');
+  expect(window.location.search).toBe('');
   window.history.replaceState(null, '', '/mur#seccio-2');
   expect(await gestionaTornada({}, config)).toBeNull();
   expect(window.location.pathname + window.location.hash).toBe('/mur#seccio-2');
 });
-test('un codi injectat en una pestanya que no ha començat cap entrada no es bescanvia', async () => {
+test('F1v2 · l’enllaç de confirmació caducat torna amb error: es neteja i es diu en valencià', async () => {
+  window.history.replaceState(null, '', '/mur?x=1&sdp_auth=alta#error=access_denied&error_code=otp_expired&error_description=Email+link+is+invalid+or+has+expired');
+  const rebuig = await gestionaTornada({}, config).catch((e) => e);
+  expect(rebuig.message).toMatch(/No s’ha pogut confirmar el correu/);
+  expect(rebuig.message).not.toMatch(/Email link|access_denied/);
+  expect(window.location.pathname + window.location.search + window.location.hash).toBe('/mur?x=1');
+});
+test('F1v2 · sense marca, uns tokens implícits al fragment són de l’amfitrió: no s’adopten ni es toquen', async () => {
+  const fetch = vi.fn(); vi.stubGlobal('fetch', fetch);
+  const ruta = '/el-meu-perfil?vista=1#access_token=tok-amfitrio&refresh_token=rt-amfitrio&type=signup';
+  window.history.replaceState({ amfitrio: 1 }, '', ruta);
+  const replace = vi.spyOn(window.history, 'replaceState');
+  expect(await gestionaTornada({}, config)).toBeNull();
+  expect(replace).not.toHaveBeenCalled();
+  expect(window.location.pathname + window.location.search + window.location.hash).toBe(ruta);
+  expect(window.history.state).toEqual({ amfitrio: 1 });
+  expect(usuariDeSessio()).toBeNull();
+  expect(fetch).not.toHaveBeenCalled();
+  expect(desat()).not.toMatch(/tok-amfitrio|rt-amfitrio/);
+});
+test('F1v2 · un codi injectat sense marca no es bescanvia ni es toca', async () => {
   const fetch = vi.fn(async () => sessioBona()); vi.stubGlobal('fetch', fetch);
   window.history.replaceState(null, '', '/mur#sdp_code=codi-alie');
-  await expect(gestionaTornada({}, config)).rejects.toThrow('verificador');
+  expect(await gestionaTornada({}, config)).toBeNull();
   expect(fetch).not.toHaveBeenCalled(); expect(usuariDeSessio()).toBeNull();
-  expect(window.location.hash).toBe('');
+  expect(window.location.hash).toBe('#sdp_code=codi-alie');
+});
+test('F1v2 · amb la nostra marca, sense verificador ni registre: l’error amable i només es lleven els nostres paràmetres', async () => {
+  const fetch = vi.fn(async () => sessioBona()); vi.stubGlobal('fetch', fetch);
+  window.history.replaceState({ usr: 'del-router' }, '', `/mur?filter=all&code=codi-alie&sdp_oauth_attempt=${ID}&page_id=12`);
+  await expect(gestionaTornada({}, config)).rejects.toThrow('S\'ha perdut el verificador d\'esta entrada. Torna a començar des del botó d\'entrar.');
+  expect(fetch).not.toHaveBeenCalled(); expect(usuariDeSessio()).toBeNull();
+  expect(window.location.pathname + window.location.search).toBe('/mur?filter=all&page_id=12');
+  expect(window.history.state).toEqual({ usr: 'del-router' });
+});
+test('F1v2 · una marca mal formada, o repetida, no és nostra: cap efecte', async () => {
+  for (const marca of ['curta', `${ID}x`, `${ID.slice(0, 21)}=`, `${ID}&sdp_oauth_attempt=${ID}`]) {
+    const ruta = `/mur?code=codi&sdp_oauth_attempt=${marca}`;
+    window.history.replaceState(null, '', ruta);
+    expect(await gestionaTornada({}, config), marca).toBeNull();
+    expect(window.location.pathname + window.location.search, marca).toBe(ruta);
+  }
 });
 
 /* ───────── El relé (public/auth/callback.html) ─────────

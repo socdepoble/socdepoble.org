@@ -15,6 +15,8 @@ import { RUTA_DESPRES_D_ENTRAR, modeDEntrada } from '../../config/rutaEntrada.js
 import { delEfimer, getEfimer, setEfimer } from '../../config/storage.js';
 import { CODI_ENTRADA } from '../../data/errorsBackend.js';
 import { ESTAT_ENLLAC } from '../../data/recuperacioPendent.js';
+import { cancelAuthAttempts } from '../../data/authAttempt.js';
+import { CODI_ENTRADA_EN_MARC, googleEnMarcAlie, urlPerAObrirFora } from '../../data/oauthRelay.js';
 
 /* Correcció de la revisió T1–T4 (260930) · host.arrenca() no s'espera abans del
    primer pintat i, fins que l'adaptador no s'instal·la, teCapacitat torna false
@@ -106,6 +108,14 @@ export default function OnboardingSection() {
   const [obreRecuperacio, setObreRecuperacio] = useState(false);
   const [busyStep, setBusyStep] = useState(null);
   const [googleError, setGoogleError] = useState('');
+  /* B (Onada 4, quarta passada, 261003; directriu de MarIA 261003_2221) · En un
+     marc d'un altre origen (política conservadora, data/oauthRelay.js), Google
+     no pot acabar. Es sap abans del clic: en compte del botó, un avís honest i
+     l'eixida a una pestanya nova, a l'entrada real de l'app. Si l'adaptador ho
+     descobrix després (ENTRADA_EN_MARC), el mateix avís. Un marc no canvia
+     l'origen de dalt mentre viu: es mira una vegada. */
+  const [enMarcAlie, setEnMarcAlie] = useState(() => googleEnMarcAlie());
+  const adrecaFora = enMarcAlie ? urlPerAObrirFora() : null;
   /* { text, codi }: la frase i el codi de CODI_ENTRADA, que tria el to de l'avís. */
   const [errorEntrada, setErrorEntrada] = useState(null);
   const mostraError = useCallback((err) => setErrorEntrada({ text: missatgeDEntrada(err), codi: codiDEntrada(err) }), []);
@@ -300,11 +310,32 @@ export default function OnboardingSection() {
       showToast('Benvingut de nou al Mas!', 'success');
       window.dispatchEvent(new CustomEvent('sdp:auth-change'));
     } catch (loginError) {
-      if (op.viu()) setGoogleError(missatgeDEntrada(loginError));
+      if (op.viu() && loginError?.code === CODI_ENTRADA_EN_MARC) setEnMarcAlie(true);
+      else if (op.viu()) setGoogleError(missatgeDEntrada(loginError));
     } finally {
       op.tanca();
     }
   };
+
+  /* F1 (Onada 4, 261003) · Amb COOP, la capa d'autenticació no sap si la
+     finestra de Google encara és oberta (closed menteix: data/oauthRelay.js) i
+     ja no rebutja sola quan la persona la tanca. L'eixida és explícita: avorta
+     l'intent (fora el verificador i els escoltadors; un codi que arribe després
+     no entra) i allibera l'espera, també amb un port que no l'avortara. En
+     prémer-lo, «Cancel·la l’entrada» desapareix i el focus torna a Google. */
+  const botoGoogle = useRef(null);
+  const focusAGoogle = useRef(false);
+  const cancelaGoogle = () => {
+    cancelAuthAttempts();
+    intent.current += 1;
+    focusAGoogle.current = true;
+    setBusyStep(null);
+  };
+  useEffect(() => {
+    if (busyStep !== null || !focusAGoogle.current) return;
+    focusAGoogle.current = false;
+    botoGoogle.current?.focus();
+  }, [busyStep]);
 
   if (recuperacioEnCurs) {
     let pas;
@@ -375,21 +406,49 @@ export default function OnboardingSection() {
             <section className="sp-card sp-card--onboarding">
               <div className="sp-card-body">
                 <h3>Accés ràpid amb Google</h3>
-                <p>
-                  Crea o entra al teu compte amb un sol clic sense contrasenyes.
-                </p>
-                <div className="onboarding-card__action--ple">
-                  <button
-                    type="button"
-                    className="sdp-boto sdp-boto--secundari sdp-boto--ple"
-                    onClick={googleLogin}
-                    disabled={canviDeModePendent || busyStep !== null}
-                    aria-busy={busyStep === 'google' ? 'true' : undefined}
+                {enMarcAlie ? (
+                  /* B · L'enllaç obri una pestanya nova (mai la finestra de dalt),
+                     sense opener ni referent. Si el marc no deixa obrir-ne,
+                     l'adreça es pot copiar. */
+                  <Alerta
+                    to="info"
+                    accions={adrecaFora ? (
+                      <a className="sdp-boto sdp-boto--secundari" href={adrecaFora} target="_blank" rel="noopener noreferrer">
+                        <span>Obri en una pestanya nova</span>
+                      </a>
+                    ) : null}
                   >
-                    {busyStep === 'google' ? <LoaderCircle className="sdp-boto__gir" size={18} aria-hidden="true" /> : null}
-                    Entrar amb Google
-                  </button>
-                </div>
+                    <p><strong>Dins d’este marc no es pot entrar amb Google.</strong> Obri Sóc de Poble en una pestanya nova per a entrar.</p>
+                    {adrecaFora ? <p>Si no s’obri, copia l’adreça: <code>{adrecaFora}</code></p> : null}
+                  </Alerta>
+                ) : (
+                  <>
+                    <p>
+                      Crea o entra al teu compte amb un sol clic sense contrasenyes.
+                    </p>
+                    <div className="onboarding-card__action--ple">
+                      <button
+                        ref={botoGoogle}
+                        type="button"
+                        className="sdp-boto sdp-boto--secundari sdp-boto--ple"
+                        onClick={googleLogin}
+                        disabled={canviDeModePendent || busyStep !== null}
+                        aria-busy={busyStep === 'google' ? 'true' : undefined}
+                      >
+                        {busyStep === 'google' ? <LoaderCircle className="sdp-boto__gir" size={18} aria-hidden="true" /> : null}
+                        Entrar amb Google
+                      </button>
+                    </div>
+                    {busyStep === 'google' ? (
+                      <Alerta
+                        to="info"
+                        accions={<Boto varietat="secundari" onClick={cancelaGoogle}>Cancel·la l’entrada</Boto>}
+                      >
+                        Acaba l’entrada a la finestra de Google. Si l’has tancada o no la trobes, cancel·la-la ací.
+                      </Alerta>
+                    ) : null}
+                  </>
+                )}
                 {googleError && (
                   <div className="sdp-alerta sdp-alerta--error" role="alert">
                     {googleError}

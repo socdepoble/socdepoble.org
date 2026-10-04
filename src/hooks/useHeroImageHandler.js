@@ -60,10 +60,14 @@ export default function useHeroImageHandler({
 
   /* T46 (ordre del Mestre, 260928) · El cos d'handleFileChange, ara amb un
      File directe (el que torna el diàleg d'enquadrament). Mateixa validació,
-     compressió, pujada, desat i missatges. Torna true si ha desat. */
-  const processaFitxer = async (file) => {
+     compressió, pujada, desat i missatges. Torna true si ha desat.
+     Onada 4 · revisió (K2) · `opcions.pesMaxim` canvia el límit només per a
+     esta crida: la foto ORIGINAL d'un flux amb retallador ja l'ha acceptada
+     el retallador amb el seu límit d'entrada. Sense opcions, el de sempre. */
+  const processaFitxer = async (file, opcions) => {
     if (!file) return false;
-    const avis = validaFitxerImatge(file, maxSizeBytes);
+    const pesMaxim = Number(opcions?.pesMaxim) > 0 ? Number(opcions.pesMaxim) : maxSizeBytes;
+    const avis = validaFitxerImatge(file, pesMaxim);
     if (avis) {
       onError(avis);
       return false;
@@ -101,10 +105,12 @@ export default function useHeroImageHandler({
     }
   };
 
-  const handleFileChange = (e) => {
+  /* `opcions` (opcional) passa a processaFitxer. Com a onChange d'un <input>,
+     React només en dona l'esdeveniment: el comportament de sempre. */
+  const handleFileChange = (e, opcions) => {
     const file = e.target.files?.[0];
     e.target.value = '';
-    return processaFitxer(file);
+    return processaFitxer(file, opcions);
   };
 
   const handleDelete = async () => {

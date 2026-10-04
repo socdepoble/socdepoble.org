@@ -92,6 +92,7 @@ export function FitxaSnippet({ vistaRef }) {
   return (
     <UniversalPage
       chrome="system"
+      showLogos={true}
       title="Snippet"
       subtitle="Desa qualsevol web d’un clic"
       lead="Una extensió de Chrome que porta a Sóc de Poble la web que estàs llegint."
@@ -100,9 +101,9 @@ export function FitxaSnippet({ vistaRef }) {
         <section>
           <h2>Què és</h2>
           <p>
-            El Snippet és un botó al teu navegador. Quan trobes una notícia, una recepta o qualsevol pàgina que vols
-            guardar, el prems i l’enllaç arriba al teu Bloc de notes de Sóc de Poble, amb el títol i, si n’has
-            seleccionat, un tros del text. Allí tries la carpeta, les categories i les etiquetes, i es desa com una nota
+            El Snippet és un <strong>botó al teu navegador</strong>. Quan trobes una notícia, una recepta o qualsevol pàgina que vols
+            guardar, <strong>el prems i l’enllaç arriba</strong> al teu Bloc de notes de Sóc de Poble, amb el títol i, si n’has
+            seleccionat, un tros del text. Allí <strong>tries la carpeta i es desa</strong> com una nota
             teua que podràs editar.
           </p>
         </section>
@@ -121,20 +122,20 @@ export function FitxaSnippet({ vistaRef }) {
         <section>
           <h2>Què necessites</h2>
           <ul>
-            <li>Google Chrome a l’ordinador.</li>
-            <li>El teu compte de Sóc de Poble. Si no has entrat, el Snippet t’ho demana abans de desar.</li>
+            <li><strong>Google Chrome</strong> a l’ordinador.</li>
+            <li>El teu <strong>compte de Sóc de Poble</strong>. Si no has entrat, el Snippet t’ho demana abans de desar.</li>
           </ul>
         </section>
 
         <section>
           <h2>Privacitat</h2>
           <p>
-            El Snippet només actua quan el prems. Llavors obri Sóc de Poble en una finestra nova amb l’adreça de la
+            El Snippet <strong>només actua quan el prems</strong>. Llavors obri Sóc de Poble en una <strong>finestra nova</strong> amb l’adreça de la
             pàgina, el títol i el text que hages seleccionat.
           </p>
           <p>
-            Eixes dades viatgen en l’adreça d’eixa finestra: arriben al servidor que servix l’app on desaràs la nota,
-            que pot ser el del teu poble, i poden quedar als seus registres. La nota no es crea fins que prems «Desar»,
+            Eixes dades <strong>viatgen en l’adreça d’eixa finestra</strong>: arriben al servidor que servix l’app on desaràs la nota,
+            que pot ser el del teu poble, i poden quedar als seus registres. La nota <strong>no es crea fins que prems «Desar»</strong>,
             i la imatge de l’altra web no es copia.
           </p>
         </section>

@@ -22,14 +22,35 @@
  * amb el dit o el ratolí (pointer events amb captura) i s'amplia amb dos dits.
  * El teclat i el lector de pantalla van pels lliscadors natius (al costat en
  * escriptori, davall en mòbil: correcció C19).
+ *
+ * ONADA 4, T3a (RETALLADOR i ADR multimèdia) · Ampliacions opcionals; sense
+ * elles, el contracte T46 és exactament el d'abans.
+ *   sortida ({ ampladaMaxima, format: 'image/webp' (reserva JPEG), qualitat })
+ *     · el diàleg lliura el fitxer final i SEMPRE el torna a codificar: cap
+ *     camí torna el fitxer original, que podria portar EXIF (D4).
+ *   permetGeolocalitzacio (false) · ensenya «Vull geolocalitzar aquesta
+ *     imatge», apagada. Encesa: llig el GPS i la data del fitxer ORIGINAL,
+ *     deixa corregir-los o escriure'ls i triar la precisió. També força la
+ *     recodificació.
+ *   onDesa rep un tercer argument, sempre: metadades = { geolocalitzacio:
+ *     { lat, lng, precisio_m, origen: 'exif'|'manual' } | null, dataCaptura }.
+ *     Les coordenades viatgen com a camps, mai dins del fitxer (D6). Amb
+ *     l'opció apagada, tot és null i no s'ha llegit cap GPS.
+ *   lectorMetadades: injectable per a les proves.
+ *   Límits (limits.js): 25 MB, 16.384 px per costat, 50 MP i HEIC, amb un
+ *   avís en línia. Teclat sobre el visor: fletxes, + i −, Retorn desa.
  */
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { Alerta, Boto, Camp, CampText, Carregant, Dialeg, GrupOpcions } from '../../PedraSeca/index.js';
 import {
-  FORMATS, FORMAT_PER_DEFECTE, ambLliscador, arrossega, esSencera, estatInicial, limita, lliscador,
-  marges, midaSortida, midaVisor, pessic, proporcio, rectDeRetall, textAmpliacio, tipusDeSortida, zoomMaxim,
+  FORMATS, FORMAT_PER_DEFECTE, ambLliscador, ambTecla, arrossega, esSencera, estatInicial, limita, lliscador,
+  marges, midaVisor, opcionsSortida, pessic, proporcio, rectDeRetall, textAmpliacio, zoomMaxim,
 } from './enquadrament.js';
+import { llegixMetadadesImatge, senseDades } from './exif.js';
+import { ERROR_UBICACIO, PRECISIO_PER_DEFECTE, geolocalitzacio, llegixCoordenada } from './geolocalitzacio.js';
 import { carregaImatge, dibuixaVisor, exportaRetall } from './imatgeCanvas.js';
+import { ERROR_HEIC, ERROR_PIXELS, comprovaDimensions, comprovaPes, esHeic, missatgeLimit } from './limits.js';
+import { UbicacioImatge } from './UbicacioImatge.jsx';
 
 export const ERROR_CARREGA_FITXER = 'No s’ha pogut obrir esta foto. Prova amb una imatge JPEG, PNG o WebP.';
 export const ERROR_CARREGA_URL = 'No s’ha pogut obrir esta imatge per a enquadrar-la. Torna-la a pujar des del dispositiu.';
@@ -37,6 +58,17 @@ export const ERROR_EXPORTA = 'No s’ha pogut preparar la imatge enquadrada. Tor
 
 const esFitxer = (font) => typeof Blob !== 'undefined' && font instanceof Blob;
 const distancia = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+
+/* Onada 4, T3a · Un límit o un HEIC tenen el seu avís; la resta, el de sempre. */
+const missatgeCarrega = (err, font) => missatgeLimit(err?.codi)
+  || (esHeic(font) ? ERROR_HEIC : (esFitxer(font) ? ERROR_CARREGA_FITXER : ERROR_CARREGA_URL));
+
+/* Onada 4, T3a · L'estat de «Vull geolocalitzar aquesta imatge». lat i lng
+   són el text dels camps (la persona pot escriure «38,59»). */
+const GEO_INICIAL = Object.freeze({
+  actiu: false, llegint: false, trobada: false, lat: '', lng: '', origen: 'manual',
+  precisio: PRECISIO_PER_DEFECTE, dataCaptura: null,
+});
 
 export function DialegEnquadrament({
   obert = true,
@@ -47,9 +79,12 @@ export function DialegEnquadrament({
   descripcio = 'Tria la forma i mou la foto fins que el que importa quede dins del marc. Només es guarda el que hi ha dins.',
   onTanca,
   onDesa,
+  sortida = null,
+  permetGeolocalitzacio = false,
   carregador = carregaImatge,
   exportador = exportaRetall,
   dibuixant = dibuixaVisor,
+  lectorMetadades = llegixMetadadesImatge,
 }) {
   const id = useId();
   const arrelRef = useRef(null);
@@ -71,6 +106,15 @@ export function DialegEnquadrament({
   const estatRef = useRef(estat);
   const punters = useRef(new Map());
   const pessicInici = useRef(null);
+  const [geo, setGeo] = useState(GEO_INICIAL);
+  /* La font de la darrera lectura d'EXIF: es llig una vegada per foto, i una
+     lectura d'una foto anterior que arriba tard no trepitja la nova. */
+  const lecturaGeo = useRef(null);
+  const fontRef = useRef(font);
+  fontRef.current = font;
+  /* Onada 4, T3a · El que fa el teclat sobre el visor s'anuncia (els
+     lliscadors ja s'anuncien sols). */
+  const [anunci, setAnunci] = useState('');
 
   const actualitza = useCallback((nou) => {
     estatRef.current = nou;
@@ -109,15 +153,28 @@ export function DialegEnquadrament({
     setImatge(null);
     setErrorCarrega(null);
     setErrorDesat(null);
+    setGeo(GEO_INICIAL);
+    lecturaGeo.current = null;
+    // Onada 4, T3a · Una foto massa pesada no es descodifica: l'avís arriba abans.
+    if (esFitxer(font) && comprovaPes(font)) {
+      setErrorCarrega(missatgeLimit(comprovaPes(font)));
+      return () => { viu = false; };
+    }
     (async () => {
       try {
         const img = await carregador(font, { signal: controlador.signal });
         if (!viu) { img?.allibera?.(); return; }
+        // Siga quin siga el carregador, una foto de massa píxels no s'enquadra.
+        if (comprovaDimensions(img.amplada, img.alcada)) {
+          img.allibera?.();
+          setErrorCarrega(ERROR_PIXELS);
+          return;
+        }
         carregada = img;
         actualitza(limita(estatRef.current, img.amplada, img.alcada, formatsRef.current));
         setImatge(img);
       } catch (err) {
-        if (viu && err?.name !== 'AbortError') setErrorCarrega(esFitxer(font) ? ERROR_CARREGA_FITXER : ERROR_CARREGA_URL);
+        if (viu && err?.name !== 'AbortError') setErrorCarrega(missatgeCarrega(err, font));
       }
     })();
     return () => {
@@ -215,28 +272,91 @@ export function DialegEnquadrament({
     if (punters.current.size < 2) pessicInici.current = null;
   };
 
+  /* Onada 4, T3a (RETALLADOR §1) · Teclat sobre el visor: les fletxes mouen,
+     + i − amplien, Retorn desa. Escape el gestiona el <dialog> (tanca). */
+  const onTeclaVisor = (ev) => {
+    if (quiet || ev.altKey || ev.ctrlKey || ev.metaKey) return;
+    if (ev.key === 'Enter') {
+      ev.preventDefault();
+      desa();
+      return;
+    }
+    const nou = ambTecla(estatRef.current, ev.key, W, H, formats, { gran: ev.shiftKey });
+    if (!nou) return;
+    ev.preventDefault();
+    actualitza(nou);
+    setAnunci(/^Arrow/.test(ev.key)
+      ? `Posició ${lliscador(nou, 'x', W, H, formats)} % des de l’esquerra i ${lliscador(nou, 'y', W, H, formats)} % des de dalt`
+      : `Ampliació ${textAmpliacio(nou.zoom)}`);
+  };
+
+  /* Onada 4, T3a · La ubicació que es desaria ara mateix (ja arrodonida), o null. */
+  const ubicacio = geo.actiu
+    ? geolocalitzacio({ lat: llegixCoordenada(geo.lat), lng: llegixCoordenada(geo.lng), precisio: geo.precisio, origen: geo.origen })
+    : null;
+  /* Amb `sortida` o amb la geolocalització, el diàleg lliura el fitxer final:
+     sempre un canvas nou, mai l'original amb el seu EXIF (ADR D4). */
+  const recodifica = Boolean(sortida) || permetGeolocalitzacio;
+
+  /* L'EXIF es llig del fitxer ORIGINAL (no del retall, que ja no en porta),
+     una sola vegada per foto i només quan la persona ho demana. */
+  const activaGeo = async (actiu) => {
+    setGeo((g) => ({ ...g, actiu }));
+    if (!actiu || lecturaGeo.current === font) return;
+    const llegida = font;
+    lecturaGeo.current = llegida;
+    if (!esFitxer(llegida)) return;
+    setGeo((g) => ({ ...g, llegint: true }));
+    let dades;
+    try {
+      dades = await lectorMetadades(llegida);
+    } catch {
+      dades = senseDades();
+    }
+    if (!muntatRef.current || fontRef.current !== llegida) return;
+    const gps = dades?.gps || null;
+    setGeo((g) => ({
+      ...g,
+      llegint: false,
+      trobada: Boolean(gps),
+      dataCaptura: dades?.dataCaptura || null,
+      // Si la persona ja havia escrit res mentre es llegia, no se li esborra.
+      ...(gps && g.lat === '' && g.lng === '' ? { lat: String(gps.lat), lng: String(gps.lng), origen: 'exif' } : {}),
+    }));
+  };
+
+  /* Corregir un camp converteix el punt en «manual»: ja no és el de l'EXIF. */
+  const canviaGeo = (camp, valor) => {
+    setGeo((g) => (camp === 'precisio' ? { ...g, precisio: valor } : { ...g, [camp]: valor, origen: 'manual' }));
+  };
+
   const desa = async () => {
-    if (!imatge || desant) return;
+    if (!imatge || desant || (geo.actiu && geo.llegint)) return;
     const e = estatRef.current;
     const rect = rectDeRetall(e, W, H, formats);
     const sencera = esSencera(e, W, H, formats);
-    if (sencera && !esFitxer(font)) {
+    if (sencera && !esFitxer(font) && !geo.actiu) {
       onTanca?.('boto');
       return;
     }
+    if (geo.actiu && !ubicacio) {
+      fallaDesat(ERROR_UBICACIO);
+      return;
+    }
+    const metadades = { geolocalitzacio: ubicacio, dataCaptura: geo.actiu ? geo.dataCaptura : null };
     setErrorDesat(null);
     setDesant(true);
     try {
       let fitxer = font;
-      if (!sencera) {
+      if (!sencera || recodifica) {
         try {
-          fitxer = await exportador(imatge.element, rect, { ...midaSortida(rect), tipus: tipusDeSortida(imatge.tipus) });
+          fitxer = await exportador(imatge.element, rect, opcionsSortida(rect, imatge.tipus, sortida));
         } catch {
           fallaDesat(ERROR_EXPORTA);
           return;
         }
       }
-      await onDesa?.(fitxer, { format: e.format, rect, sencera });
+      await onDesa?.(fitxer, { format: e.format, rect, sencera }, metadades);
     } catch (err) {
       fallaDesat(err?.message || ERROR_EXPORTA);
     } finally {
@@ -259,7 +379,7 @@ export function DialegEnquadrament({
           {/* Secundari i no fantasma: al peu del diàleg només es restituïxen
               secundari i perill (components.css, trampa de PerfilShell.css). */}
           <Boto varietat="secundari" onClick={centra} disabled={quiet}>Centrar</Boto>
-          <Boto varietat="primari" onClick={desa} carregant={desant} disabled={!imatge}>Desar l’enquadrament</Boto>
+          <Boto varietat="primari" onClick={desa} carregant={desant} disabled={!imatge || (geo.actiu && geo.llegint)}>Desar l’enquadrament</Boto>
         </>
       )}
     >
@@ -284,6 +404,10 @@ export function DialegEnquadrament({
                   role="img"
                   aria-label="Previsualització de l’enquadrament"
                   aria-describedby={`${id}-ajuda`}
+                  tabIndex={0}
+                  /* WAI-ARIA 1.2: el «+» separa modificadors; la tecla més és «Plus». */
+                  aria-keyshortcuts="ArrowLeft ArrowRight ArrowUp ArrowDown Plus - Enter"
+                  onKeyDown={onTeclaVisor}
                   onPointerDown={onPointerDown}
                   onPointerMove={onPointerMove}
                   onPointerUp={deixaPunter}
@@ -292,8 +416,9 @@ export function DialegEnquadrament({
                 />
               </div>
               <p id={`${id}-ajuda`} className="sdp-camp__ajuda">
-                Arrossega la foto amb el dit o el ratolí per a moure-la; amb dos dits, l’amplies. També la pots moure i ampliar amb els lliscadors.
+                Arrossega la foto amb el dit o el ratolí per a moure-la; amb dos dits, l’amplies. També la pots moure i ampliar amb els lliscadors o, amb la foto seleccionada, amb les fletxes i les tecles + i −. Retorn la desa.
               </p>
+              <p className="sdp-nomes-lector" aria-live="polite">{anunci}</p>
             </div>
             <div className="sdp-enquadrament__controls">
               <div className="sdp-enquadrament__lliscadors">
@@ -314,6 +439,9 @@ export function DialegEnquadrament({
                 </Camp>
               </div>
               <GrupOpcions llegenda="Forma" opcions={formats} valor={estat.format} onCanvi={canviaForma} disabled={desant} />
+              {permetGeolocalitzacio ? (
+                <UbicacioImatge geo={geo} resultat={ubicacio} desactivat={desant} onActiva={activaGeo} onCanvi={canviaGeo} />
+              ) : null}
             </div>
           </div>
         ) : null}

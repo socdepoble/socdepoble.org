@@ -6,7 +6,7 @@ description: Punter d'arrencada de sessió generat per despertar.mjs
 # ON_ESTIC.md (Punter de Sessió)
 
 > [!IMPORTANT]
-> **GENERAT:** 2026-10-03T11:29:03.644Z
+> **GENERAT:** 2026-10-04T02:14:35.140Z
 > Aquest document l'`@`-importa `CLAUDE.md`, i eixa importació es resol ABANS
 > que el hook l'escriga: la còpia que tens al context és la de la sessió
 > anterior. Per això **ací no hi ha cap llista de l'Escriptori**: la d'ahir
@@ -14,7 +14,7 @@ description: Punter d'arrencada de sessió generat per despertar.mjs
 > llegir eixa carpeta en procediments automàtics.
 
 **Branca Git:** backup-notes-publish
-**Commit:** b22b168b9
+**Commit:** a5963389
 
 ## 1. Contingut de l'Escriptori (Taula de Treball)
 
@@ -28,16 +28,15 @@ Si no tens cap de les dues, llista `_wiki_de_poble/04_escriptori/` amb una eina 
 ## 2. Resum de l'ESTAT recent
 
 > [!WARNING]
-> L'ESTAT s'ha llegit del capçalera sense segell horari: no es pot datar. El fitxer viu més recent és `_wiki_de_poble/04_escriptori/261003_1250_prompt_claude_onada_3.md`.
+> L'ESTAT s'ha llegit del capçalera sense segell horari: no es pot datar. El fitxer viu més recent és `_wiki_de_poble/04_escriptori/261003_1951_auditoria_claude.md`.
 
 Últim relleu anotat a `.agents/ESTAT.md` (primera capçalera del fitxer):
 
-## ESTAT_ACTUAL · 2026-10-02 · Claude / MarIA · Sessió massiva (Gestoria 3T, apps, sentinelles, Olivera)
-- Torn torn_1d1f17bf; auditoria [[261002_1700_auditoria_claude]] v1.0.0; estudi [[261002_1700_informe_estudi_mercat]].
-- Gestoria 3T corregida i verificada amb la carpeta real (26 portes, 2 todo de dades). Empremtes vigents: factures 8806-8D5C, correus D5F2-A9BA (les 206E-31C6 / D317-FC47 ja no valen). Falta: signatura del Mestre i enviament; conciliació bancària sense endollar.
-- Fet: plataforma /app amb interruptors i relleu de barra; esquelet visual comú (ordre T4/T8) amb La Parròquia/El Bar i La Nevera de Casa; Salut local; 7 sentinelles aprovables a la Wiki; Workspace, Editor i Snippet; contracte sdp.amfitrio.v1 i conformitat WP/Sollutia.
-- Laboratoris amb lease: 261002_1745_olivera_arxiva_claude (amb runbook per als torns trencats), 261002_1745_sentinelles_claude, 261002_1745_skills_claude (13 skills).
-- Proves: 4.798/4.801 a la suite ampla (2 roges T3 prèvies); ESLint 0 errors en 255 fitxers.
+## ESTAT_ACTUAL · 2026-10-03 21:36 · Codex · Pegat P6 contrastat
+
+- Informe [[261003_1950_auditoria_codex]] v1.2.2. El cas de focus de cerca mòbil queda corregit en el tall: prova final 5/5 i Chrome /disseny a 375/820 amb focus preservat, rail 56 i sense desbordament horitzontal en eixa vista.
+- Passada ampla layout/workspace: 193/194; única fallada de literal del test corregida per Claude durant el cicle, reexecució dirigida 5/5. No s'afirma reexecució íntegra verda ni validació en mòbil físic. Cap canvi productiu de Codex.
+- W4-02/redirecció continua pendent. Informe vàlid i Olivera correcta; tancament --check exit 1 amb 607 errors, planned (LEDGER/segell/SCC). No hi ha publicació ni desplegament.
 
 ## 3. Què has de fer ara?
 

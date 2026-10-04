@@ -77,7 +77,7 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu — i
 ## Activitat en curs
 
 - [[261004_0320_prompt_claude_gestoria]]
-- [[261004_0430_pla_implementacio_claude]]
+- [[261004_0320_pla_implementacio_claude]]
 
 ## Recursos de Producció en curs
 - [[02_investigacio_ia/261002_0150_investigacio_plugins_claude]]
@@ -1193,6 +1193,6 @@ Enllaços a peces ja existents, verificats al disc; no s’han mogut ni editat e
 - [[02_investigacio_ia/261003_1330_onada4_claude/CONTRACTE_SDP_AUTH_REQUEST.txt]]
 - [[02_investigacio_ia/261003_1330_onada4_claude/CONTROL_TARGETES_DOBLE_ACCIO.txt]]
 
-- [[261004_0430_pla_implementacio_claude]]
+- [[261004_0320_pla_implementacio_claude]]
 
 - [[../10_actes/261004_0435_acta_marmota]]

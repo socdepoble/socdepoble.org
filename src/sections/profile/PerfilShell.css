@@ -37,8 +37,11 @@
   cursor: pointer;
 }
 
-.perfil-identitat:hover {
-  background: var(--sdp-fons-subtil);
+/* Fase B (pla 261004_0050) · el hover només amb ratolí. */
+@media (hover: hover) and (pointer: fine) {
+  .perfil-identitat:hover {
+    background: var(--sdp-fons-subtil);
+  }
 }
 
 /* T62 · Mateix actiu blau que .sdp-gestor-fitxa (modules.css). Cap JSX
@@ -184,23 +187,29 @@
    l'especificitat en (0,1,0), la d'abans: dins del Perfil la cascada no canvia;
    fora, manen les peces de Pedra Seca (components.css). Prova:
    PerfilShell.ambit.test.js. */
+/* Q1 (pla 261004_0050) · rètol blanc de 16px: sobre --sdp-accio feia 3,87:1
+   (ni AA). La superfície de control, com .sdp-boto--primari: 9,21:1 en repòs
+   i 7,20:1 en hover, estable en clar i en fosc. La transició també porta el
+   transform, perquè el premut comú de .sdp-boto no salte de colp ací dins. */
 :where(.perfil-pagina) .sdp-boto {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   min-height: var(--sdp-touch);
   padding: var(--sdp-space-2) var(--sdp-space-6);
-  background: var(--sdp-accio);
+  background: var(--sdp-accio-control);
   color: var(--sdp-sobre-accio);
   border: none;
   border-radius: var(--sdp-radi-boto);
   font-weight: 700;
   cursor: pointer;
-  transition: background var(--sdp-t);
+  transition: background-color var(--sdp-t), transform var(--sdp-durada-premut) var(--sdp-corba-eixida);
 }
 
-:where(.perfil-pagina) .sdp-boto:hover:not(:disabled) {
-  background: var(--sdp-accio-hover);
+@media (hover: hover) and (pointer: fine) {
+  :where(.perfil-pagina) .sdp-boto:hover:not(:disabled) {
+    background: var(--sdp-accio-control-hover);
+  }
 }
 
 :where(.perfil-pagina) .sdp-boto:disabled {

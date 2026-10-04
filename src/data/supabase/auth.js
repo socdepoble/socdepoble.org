@@ -2,7 +2,7 @@ import { normalizeBackendConfig } from '../../config/backendConfig.js';
 import { beginAuthAttempt, cancelAuthAttempts } from '../authAttempt.js';
 import { getEfimer } from '../../config/storage.js';
 import { jwtPerBackend, esBackendDeSessio, configuraBackendSessio, CLAU_ORIGEN, triaRefresc, rotaRegistre, oblidaRegistre, desaSessio, esborraSessio, usuariDeSessio, actualitzaUsuariSessio, capturaSessio, versioSessio, caducitatJwt, MARGE_RENOVACIO_MS } from '../identitat.js';
-import { entraAmbGoogle, gestionaTornada, urlDeTornada } from '../oauthRelay.js';
+import { entraAmbGoogle, exigeixSenseMarcAlie, gestionaTornada, recullMarcaDeRecuperacio, urlDeTornadaAlta, urlDeTornadaRecuperacio } from '../oauthRelay.js';
 import { MOTIU_TORNADA, TIPUS_RECUPERACIO, llegixTornadaDeRecuperacio, netejaTornadaDeRecuperacio } from '../tornadaRecuperacio.js';
 import {
   ESTAT_ENLLAC, anunciaEnllacDeRecuperacio, escoltaRecuperacioPendent, estatEnllacDeRecuperacio, oblidaEnllacDeRecuperacio,
@@ -278,10 +278,14 @@ export async function updateUserPassword(password, config = {}) {
    correu torna on diga `redirect_to`: la pàgina de l'amfitrió on s'ha fet l'alta,
    amb la mateixa tornada i la mateixa validació que l'entrada amb Google. Sense
    ell, GoTrue tria el Referer (només l'origen) o la Site URL del projecte. Sense
-   pàgina http(s) no hi ha tornada possible, i l'alta continua sense. */
+   pàgina http(s) no hi ha tornada possible, i l'alta continua sense.
+   F1v2 (Onada 4, 261003, W4-02) · La tornada porta la marca de l'alta
+   (`sdp_auth=alta`, urlDeTornadaAlta): de tornada, gestionaTornada només neteja
+   els tokens implícits del fragment quan la porta; sense ella, la pàgina és
+   de l'amfitrió i no s'hi toca res. */
 function rutaAlta() {
   let tornada = null;
-  try { tornada = urlDeTornada(); } catch { /* cap pàgina http(s) on tornar */ }
+  try { tornada = urlDeTornadaAlta(); } catch { /* cap pàgina http(s) on tornar */ }
   return tornada ? `/auth/v1/signup?redirect_to=${encodeURIComponent(tornada)}` : '/auth/v1/signup';
 }
 
@@ -466,6 +470,11 @@ export const loginWithGoogle = async (config = {}) => {
     throw Object.assign(new Error('El login amb Google només està disponible a Producció. Utilitza correu i contrasenya.'),
       { code: 'GOOGLE_LOCAL_UNAVAILABLE' });
   }
+  /* B (Onada 4, 261003, directriu de MarIA 261003_2221) · En un marc d'un altre
+     origen, l'error tipat ENTRADA_EN_MARC ABANS de configuraBackendSessio, que
+     pot buidar la sessió de la pestanya: una entrada rebutjada no toca res.
+     oauthRelay.js en té la política i la torna a aplicar ell mateix. */
+  exigeixSenseMarcAlie();
   recorda(config);
   configuraBackendSessio(config);
   const result = await entraAmbGoogle(config, getResolvedConfig);
@@ -478,8 +487,14 @@ export const loginWithGoogle = async (config = {}) => {
    _wiki_de_poble/04_escriptori/02_investigacio_ia/261003_1330_produccio_claude/R.txt.
    · Anada: POST /recover amb redirect_to = la pàgina de l'amfitrió (urlDeTornada
      de P1, la mateixa funció i la mateixa validació que Google i l'alta).
+     F1-seguiments (Onada 4, 261003) · Amb la marca `sdp_auth=recuperacio`
+     (urlDeTornadaRecuperacio), com l'alta: la tornada es reconeix com a nostra.
    · Tornada: la plantilla «Reset password» porta el token_hash al fragment
      (tornadaRecuperacio.js); recullTornadaOAuth el llig i neteja la URL.
+     F1-seguiments · Amb la plantilla per defecte, un enllaç caducat torna amb
+     #error=access_denied&error_code=otp_expired: amb la marca, l'avís en
+     valencià (ENLLAC_CADUCAT_EN_ARRIBAR) i la URL neta (recullMarcaDeRecuperacio).
+     Sense la marca (un enllaç enviat abans), l'error de l'amfitrió no es toca.
    · Sense PKCE a posta: el verificador viu a la capa efímera de la pestanya
      (storage.js) i l'enllaç del correu s'obri en una pestanya nova.
    · Correcció de la revisió: el límit de correus d'un compte es contesta com un
@@ -494,6 +509,8 @@ export const loginWithGoogle = async (config = {}) => {
 const SENSE_TORNADA_RECUPERACIO = 'Esta pàgina no té cap adreça http o https on tornar: no es pot enviar l’enllaç de recuperació.';
 const ENLLAC_INSERVIBLE = 'Este enllaç de recuperació no es pot usar ací. Demana’n un altre des de «Has oblidat la contrasenya?» i, si torna a passar, avisa l’equip del poble.';
 const SENSE_CONFIRMACIO_ENLLAC = 'El servidor no ha confirmat l’enllaç de recuperació. Demana’n un altre.';
+/* F1-seguiments · L'enllaç del correu ha tornat amb l'error de GoTrue. */
+const ENLLAC_CADUCAT_EN_ARRIBAR = 'L’enllaç ha caducat o ja s’ha fet servir. Demana’n un altre.';
 const DESADA_SENSE_SESSIO = 'La contrasenya nova ja està desada, però este navegador no ha pogut obrir la sessió. Torna a entrar amb el correu i la contrasenya nova.';
 const DESADA_SESSIO_CANVIADA = 'La contrasenya nova ja està desada, però la sessió d’este navegador ha canviat mentre es desava. Torna a entrar amb el correu i la contrasenya nova.';
 const TORNA_A_DESAR = 'La sessió d’este navegador ha canviat mentre es desava. Torna a escriure la contrasenya nova i prem «Desa» una altra vegada: l’enllaç encara val.';
@@ -539,7 +556,7 @@ const enllacCaducat = (causa) => ambCodi(
 
 function rutaRecuperacio() {
   let tornada;
-  try { tornada = urlDeTornada(); } catch { throw new Error(SENSE_TORNADA_RECUPERACIO); }
+  try { tornada = urlDeTornadaRecuperacio(); } catch { throw new Error(SENSE_TORNADA_RECUPERACIO); }
   return `/auth/v1/recover?redirect_to=${encodeURIComponent(tornada)}`;
 }
 
@@ -730,12 +747,24 @@ const deRecuperacio = (error) => {
 
 /* R2 · Si la pàgina torna d'un enllaç de recuperació, la URL es neteja de
    seguida i el token espera «Desa» en la memòria d'este mòdul: CAP petició.
-   Torna { recuperacio: true } SENSE sessió; si no n'hi ha, null i seguix Google. */
+   Torna { recuperacio: true } SENSE sessió; si no n'hi ha, null i seguix Google.
+   F1-seguiments · Amb la marca `sdp_auth=recuperacio` i sense token, un error
+   de GoTrue (l'enllaç caducat o ja usat de la plantilla per defecte): l'avís
+   en valencià, ENLLAC_CADUCAT, i la URL neta. Fins ara no deia res i l'error es
+   quedava a la URL. La mecànica del token_hash no canvia: es llig i es neteja
+   primer, i la marca se'n va després. */
 function recullTornadaDeRecuperacio() {
   if (typeof window === 'undefined') return null;
   const tornada = llegixTornadaDeRecuperacio(window.location.href);
-  if (!tornada) return null;
-  netejaTornadaDeRecuperacio();
+  if (tornada) netejaTornadaDeRecuperacio();
+  const marca = recullMarcaDeRecuperacio();
+  if (!tornada) {
+    if (!marca?.error) return null;
+    descartaEnllac();
+    /* L'estat 'perdut' d'una arribada anterior en esta pestanya no tapa l'avís. */
+    oblidaEnllacDeRecuperacio();
+    throw deRecuperacio(ambCodi(new Error(ENLLAC_CADUCAT_EN_ARRIBAR), CODI_ENTRADA.ENLLAC_CADUCAT));
+  }
   descartaEnllac();
   if (!tornada.tokenHash) {
     /* La forma implícita (plantilla per defecte) no s'adopta mai: ordre del Mestre 261002. */

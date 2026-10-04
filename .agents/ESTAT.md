@@ -7,6 +7,246 @@ description: ESTAT DE LA SESSIÓ
 
 <!-- SDP:ESTAT_ACTUAL -->
 
+##### ESTAT_ACTUAL · 2026-10-04 03:33 · Codex · relleu i sentinella pausada
+
+**Informe [[261003_1950_auditoria_codex]] v1.3.30. Acta0325 «Tancament Onada 4» llegida íntegrament; automatització PAUSED confirmada.** Codex queda reservat per a **despertadors i punts crítics**, mentre Claude continua la passada tècnica que descriu al seu informe. **Cap acceptació global ni tancament fictici d’incidències.**
+
+**W4-10 i W4-14: pegats arribats durant el relleu, pendents de contrast funcional propi.** UUID passa a l’adaptador; CopyrightSelector recupera return. **W4-12/W4-13 encara pendents** al tall llegit. **T6 ja ordena boina → pàgina d’autor**: Sóc de Poble → **/projecte**; separar aquest destí del xat. **ZIP1.0.2 no acreditat** a builds. No s’han iniciat proves funcionals ni editat producte en aquest relleu; reprendre només amb **nou despertador**.
+
+**Porta global del relleu: 693 errors, planned**; dues altes: **acta0325 orfa** i **concurrència detectada**. Informe vàlid, Olivera verda. El test de xat torna a variar; **pendent, sense prova atribuïda**. Vigilància pausada, sense repetir la porta per seguir canvis aliens.
+
+##### ESTAT_ACTUAL · 2026-10-04 03:21 · Codex · directriu0320 rebuda
+
+**Informe [[261003_1950_auditoria_codex]] v1.3.29. Directriu0320 amb tasques omplides, referència Gestoria i índex llegits íntegrament.** Encàrrec nou de Claude: **RSS/Nevera amb components universals, Gestoria ERP i Xat multimèdia**. El prompt pressuposa el ZIP1.0.2, però **no apareix a wordpress-plugin/builds**; cinc ZIP antics, inventari registrat. **Lliurament nou no acreditat.**
+
+**Dependència prioritària: W4-14 abans d’estendre l’editor compartit.** W4-12/W4-13/W4-10 encara sense pegat. Només es contrasta el test R2 modificat: **1 passada, 12 no seleccionades, nou hashes estables**; sense repetir incidències ni bateries àmplies. **Cap codi productiu editat; Onada 4 oberta i vigilància mínima de deu minuts.**
+
+
+##### ESTAT_ACTUAL · 2026-10-04 03:11 · Codex · W4-14 reproduït
+
+**Informe [[261003_1950_auditoria_codex]] v1.3.28. W4-14, P2:** BotoDretsAutor perd el **return** i **«Elegir drets d’autor» desapareix** de l’editor editable. Reproduït pel test T39 abans del clic; proposta a Claude: retornar JSX i revalidar **obrir/desar/focus**. Sense evidència de pèrdua de dades.
+
+**6 passades, 3 fallades i 75 no seleccionades**, un worker, **1.404/1.405 hashes estables**; només un test CSS alié a la selecció varia. Les altres dues fallades comparen **classes/textos anteriors**, i paren abans de provar clics. **W4-12/W4-13/W4-10 sense pegat**, Control R3 pendent; contrast de l’any conservat. **Cap codi productiu editat; Onada 4 oberta.**
+
+
+##### ESTAT_ACTUAL · 2026-10-04 03:01 · Codex · contrast R1/R2 178/178
+
+**Informe [[261003_1950_auditoria_codex]] v1.3.27. CSS R1/R2: 178/178**, amb **un worker** i **23/23 hashes estables**. **Any en hover ordinari corregit a font: 7,28:1**, contrastat pels tests nous en quatre modes; controls blaus, sòl de classificació i guardes tàctils també passen. **Sense prova visual global**, ni certificat de totes les mides calculades; **WOFF2 estret absent**.
+
+**Delta posterior:** modules.css torna a variar després de les proves; pendent de contrast, sense repetir ara la bateria.
+
+**Control R3 conserva 1 passada i 1 fallada**, sense repetir-lo. **W4-12/W4-13/W4-10 sense pegat**, W4-11 manté el contrast i F1 no s’ha repetit. **Cap codi productiu editat; Onada 4 oberta.**
+
+
+##### ESTAT_ACTUAL · 2026-10-04 02:50 · Codex · R3 amb fallada reproduïda
+
+**Informe [[261003_1950_auditoria_codex]] v1.3.26. Dues proves R3: 1 passada, 1 fallada i 29 no seleccionades**, amb **un worker** i **62/63 hashes estables**; només modules.css concurrent. **La navegació d’utilitats passa**; el test d’absència de Connectar falla en **Publicar al Mur**, perquè el component havia passat a **showConnect:true** a dalt i baix abans d’executar-lo. Comentaris i test encara indiquen el contrari. **Peu pendent de reconciliació**, sense declarar correcció.
+
+**Cens ja decidit al relleu02:30 de Claude:** Mapa/Vehicle/Animalets només a dalt. Cal actualitzar **tests antics i anotació «PENDENT DEL MESTRE»**, sense tornar a demanar la mateixa decisió. **W4-12/W4-13/W4-10 sense pegat; W4-11 conserva el contrast. Cap font productiva editada; Onada 4 oberta.**
+
+
+**Porta global v1.3.26: 688 errors, planned**; nova falta d’ancoratge de **GESTORIA_REFERENCIA.txt**, llegit íntegrament. Informe vàlid i Olivera verda; relleu documental sense edició aliena.
+
+##### ESTAT_ACTUAL · 2026-10-04 02:40 · Codex · prosa i recursos del paquet
+
+**Informe [[261003_1950_auditoria_codex]] v1.3.25. Claude1951 llegit sencer**, relleu titulat02:40: **flux lliure sense 68ch i imatges nues a ample complet**, segons l’ordre mediada del Mestre. **65/65**, un worker i **24/24 hashes estables**. **Cinc imatges del contingut real passen** resolució/sanejament sota una base WordPress sintètica; **23/24 hashes estables**, amb pageContent concurrent delimitat. Sense prova visual de mida ni hit-testing propi del quadrat nou amb z-index2.
+
+**Esmena editorial lliurada:** Disseny anuncia Condensed/AAA/48px globals abans de completar la verificació; **binari estret absent** i any del quadrat en hover ordinari encara pendent. **W4-12/W4-13/W4-10 sense pegat crític; W4-11 manté el contrast.** Cap canvi productiu ni repetició F1; **Onada 4 oberta.**
+
+
+##### ESTAT_ACTUAL · 2026-10-04 02:28 · Codex · CSS 111/111 i actiu Disseny
+
+**Informe [[261003_1950_auditoria_codex]] v1.3.24.** Delta CSS amb **111/111**, **un worker**, **19/19 hashes estables**. **L’any del quadrat arriba a 7:1 en Bancal**, però conserva **5,36:1 en hover normal**; proposta de regla addicional **opacity:1 també fora de Bancal**, sense canviar grafit ni ombra. El verd dels tests actuals no cobrix l’encreuament complet d’opacitat/hover.
+
+**disseny_vinyeta.jpg incorporada**, llegible **996 × 998**, **354.581 bytes**; manca d’actiu de W4-08 resolta al checkout, sense paquet verificat. **WOFF2 estret absent; W4-12/W4-13/W4-10 encara sense pegat**, W4-11 manté els cinc casos contrastats. Sense nova directriu de primer nivell ni repetició F1. **Cap codi productiu editat; Onada 4 oberta.**
+
+
+**Porta global v1.3.24: 687 errors, planned**, una incidència neta addicional: **catàleg de skills divergent** a manifest.yaml i 00_INDEX_SKILLS.md; segell també divergent. Informe vàlid i Olivera verda. **Relleu a MarIA; sense reparar o resegellar regles alienes.**
+
+##### ESTAT_ACTUAL · 2026-10-04 02:17 · Codex · pla de tancament rebut de Claude
+
+**Informe [[261003_1950_auditoria_codex]] v1.3.23. Claude1951 llegit íntegrament**, hash **67dd1019…**, relleu titulat **02:30**. **Pla alineat** per a W4-12 (arrel local/host/HTML amb domini), W4-13 (importació, props i controls sense escriptura global), W4-10 (UUID a l’adaptador) i W4-08 (cens, i18n i actiu Disseny). **Mapa/Vehicle/Animalets només a dalt**, segons les decisions del Mestre documentades per Claude.
+
+**Implementació pendent:** Claude acaba primer la passada de disseny i després integra el bloc; **cap canvi nou als fitxers crítics**, sense repetir proves. Es conserva l’evidència **76/76** de Bancal/CSS i **cinc casos W4-11**; W4-12/W4-13 continuen obertes. El **ZIP 1.0.2 encara és previst**, no verificat. **Cap codi productiu editat; Onada 4 oberta.**
+
+
+##### ESTAT_ACTUAL · 2026-10-04 02:14 · Codex · represa del Mestre i Bancal 76/76
+
+**Informe [[261003_1950_auditoria_codex]] v1.3.22.** Mestre de tornada després de reiniciar Antigravity/localhost; **Acta0206, ESTAT i directriu0133 rellegits**. Contrast nou de CSS/Bancal i preferència **76/76**, **un worker**, **13/13 hashes estables**, sense prova visual global. **W4-11 manté els cinc casos corregits; W4-12 i W4-13 encara sense pegat.**
+
+**Pròxim bloc per a Claude:** importació/props del Panell → estat de contrast compartit amb Ajustos → arrel local per a contrast/ombra. **Codex contrastarà** muntatge/clics/desmuntatge i preservació d’atributs/estils aliens en **DOM ordinari, Shadow DOM i dues instàncies**. No s’ha repetit OAuth ni s’ha editat el producte. **Onada 4 oberta.**
+
+
+##### ESTAT_ACTUAL · 2026-10-04 02:10 · Codex · W4-11 contrastat; W4-12 i W4-13
+
+**Informe [[261003_1950_auditoria_codex]] v1.3.21. W4-11 corregit al tall delimitat:** cinc clics indisponibles ara porten a **/plugin/:id**, verificats amb JS/JSX registrat estable; CSS concurrent exclòs. **Snippet restaurat**, cens del Control encara en moviment. **W4-12 nova:** embed React sense Shadow DOM esborra contrast de l’HTML alié i no el restaura; el shell Shadow DOM conserva l’amfitrió. **W4-13 nova:** Panell de Disseny importa un default d’UniversalCard inexistent i falla en muntar; cal corregir també props i controls globals abans de revalidar.
+
+**Projecte: 184 passades, 29 fallades i 1 omesa**, amb sis hashes concurrents; reproducció inicial **8/8**, contrast W4-11 posterior **5 passades**, muntatge del Panell **1 fallada**. **Natiu:15 passades i 1 omesa**, dist-natiu absent. **FONTS_LOCALS llegit sencer**, binari estret encara absent al tall; Q7 parcial i Q8 ajornat per Claude. **W4-10 pendent, F1 sense delta ni repetició. Cap codi productiu editat; Onada 4 oberta.**
+
+
+**Tancament documental v1.3.21:** informe vàlid i Olivera verda; porta global **686 errors, planned**, tres altes: FONTS_LOCALS sense àncora, estil inline al Panell i acta0206 orfa. **Acta0206 llegida:** relleu del context de MarIA, sense clausura explícita d’Onada4; retirada de les tres utilitats declarada intencionada. La seua afirmació de controls funcionals discrepa del muntatge fallit W4-13.
+
+##### ESTAT_ACTUAL · 2026-10-04 01:56 · Codex · W4-11, guardes omeses al Control
+
+**Informe [[261003_1950_auditoria_codex]] v1.3.20. W4-11 nova, P2:** la graella del Control navega amb **plugin.obrir** sense el hook. **Cinc casos reproduïts** amb component, targeta i hook reals: Consola/Cervell/RSS en producció, Salut en document alié i TPV apagat. Proposta: **TargetaPlugin + useDestiDelPlugin + portaDelPlugin**. És una regressió de disponibilitat, **sense bypass d’autenticació demostrat**.
+
+**Control 54 verdes, 26 roges i 1 omesa; CSS 13/13; reproduccions 6/6.** Huit plugins en lloc d’onze i accés a **Snippet absent** al tall db40a862. Control estable en les finestres, però **ha tornat a variar a les 01:58**; este delta i els d’**App.jsx, i18n.js i registrePlugins.js** queden pendents. Rellegits íntegrament Claude1951 i PLUGINS_P7. **Cap font productiva editada; Onada 4 oberta.**
+
+##### ESTAT_ACTUAL · 2026-10-04 01:42 · Codex · guarda de plugins i aprovació Impeccable
+
+**Informe [[261003_1950_auditoria_codex]] v1.3.19.** Plugins **56/56**, amb Consola/Cervell **inerts fora de desenvolupament**; verificat en JSDOM amb entorn de producció fixat i contrastat amb el middleware Vite. **25 de 26 hashes estables**; components.css concurrent queda exclòs. Sense build productiu ni nova prova visual.
+
+**Directriu0133 rebuda i rellegida a les 01:48:** Impeccable autoritzat per mediació del Mestre, **48 px sempre**, Noto Sans local amb variant estreta, bluebar sense transformació, drawer **280 ms** i contrast ordinari corregit. **Q6 rectificada: conservar l’ombra actual; denegada la vora sòlida fosca**. L’aprovació substituïx l’espera del pla0050; **aïllament Bancal/WordPress i zoom continuen pendents de contrast**. Últim Control **60 verdes, 20 roges i 1 omesa**, no repetit; W4-10 sense delta. Cap codi productiu editat. **Onada 4 oberta.**
+
+##### ESTAT_ACTUAL · 2026-10-04 01:30 · Codex · porta de plugins i Control ampliat
+
+**Informe [[261003_1950_auditoria_codex]] v1.3.18.** Plugins i portada **65/65** amb el constructor compartit **portaDelPlugin**. Control amb **Treball i Habitatge**: **60 verdes, 20 roges i 1 omesa**; tres fallades antigues i dèsset associades al cens/fixtures ampliat, incloses **quatre claus i18n absents**. Bateria conjunta **146 casos, 41 hashes estables**.
+
+**Onze plugins al Control encara pendents**, igual que W4-10, H2, visual i les esmenes del pla0050. Relleu PLUGINS_P7 rellegit; proves de navegador i atribució de la roja de Xat declarades per Claude, sense reproducció pròpia nova. Cap canvi productiu ni reexecució de F1/WordPress/Capacitor. **Onada 4 oberta.**
+
+##### ESTAT_ACTUAL · 2026-10-04 01:22 · Codex · CSS i pla Bancal contrastats
+
+**Informe [[261003_1950_auditoria_codex]] v1.3.17.** CSS de graella i títol H5: **13/13**, **onze hashes estables**. Pla0050 complet llegit: esmenes concretes per a **Bancal sobre l’arrel interna de WordPress** i **prova de zoom amb duplicació real del text**. Càlcul ×1,84415 del nou H1 a zoom 200 %; **no és una prova de conformitat**.
+
+**Validació visual pendent:** el navegador rebutja la URL `file:` del fixture; cap execució atribuïda ni via alternativa. **H2 de pàgina, graella d’onze plugins al Control i W4-10 continuen pendents.** Sense consens declarat sobre el pla, sense repetició de F1 i sense edició de producte. **Onada 4 oberta.**
+
+##### ESTAT_ACTUAL · 2026-10-04 01:04 · Codex · P7-A i grafit contrastats
+
+**Informe [[261003_1950_auditoria_codex]] v1.3.16.** Pàgines de plugins, portada plegable i catàleg: **61/61**, fonts JS/JSX estables, CSS concurrent delimitat. Quadrat grafit posterior: **8/8**, cinc hashes estables. **Onze pàgines disponibles a font; graella del Control encara pendent** al tall 8799397b. Preferència de portada **local per origen/plugin, no aïllada per compte**. Contrast de l’any en hover **5,36:1**, sense afirmar 7:1 global.
+
+**W4-10 sense pegat**; W4-08 parcial per H2/visual. Pla Impeccable0050 i índex rellegits, pla encara en elaboració. Cap codi de producte editat ni repetició de F1/WP/natiu. **Onada 4 oberta.**
+
+##### ESTAT_ACTUAL · 2026-10-04 00:53 · Codex · Control contrastat i W4-10
+
+**Informe [[261003_1950_auditoria_codex]] v1.3.15.** Control **77 verdes, 3 roges D3/D16 i 1 omesa**, amb **20 hashes estables**. Peu i CTA de les sis pàgines contrastats; **Comentar encara avisa de l’absència de xat**. Primera execució 155/164 delimitada perquè el test del Control canvià durant la finestra; no és el tall final.
+
+**W4-09 corregit a font per al backend UUID**, reproduït fins al payload de l’adaptador amb transport sintètic. **W4-10 nou:** la UI rebutja ids no UUID d’un backend acceptat pel port; contraexemples **42 / wp:organization:42**, proposta de validació específica a l’adaptador. **W4-08 parcial:** grafit/H2 i visual pendents. **Onze actius ja normalitzats**. Prompts Passada7 i Impeccable llegits; este últim demana **pla sense font** per al refinament. F1/WP/natiu sense delta ni repetició; cap codi productiu editat. **Onada 4 oberta.**
+
+##### ESTAT_ACTUAL · 2026-10-04 00:27 · Codex · Reintent W4-02 corregit a font
+
+**Informe [[261003_1950_auditoria_codex]] v1.3.14.** OAuth **f3077635**, test instantània **c2d2fd04**: **214/214**, hashes estables, i **quatre reproduccions independents** amb èxit, denegació, xarxa fallida i cancel·lació. Totes preserven **HOST-COUPON, HOST-STATE i history.state**. W4-02 queda corregit en el **reintent actiu auditat**, amb límits de vigència/guardes i integració real pendents.
+
+**Passada 6 rebuda:** pla0014/prompt0015, Claude00:15 i índex llegits íntegrament. **Onze noms d’actiu proposats no existixen literalment**; noms reals i rutes font deixats al relleu. Plataforma existent **/app/***, ruta /plugin/X pendent d’encaix. **W4-08/W4-09 pendents**, assumits per Claude però sense pegat contrastat. **Relleu Claude00:25 llegit:** 2325 en passada6 i plugins/toggle en passada7; confirma noms reals dels actius. Cap codi de producte editat; Onada 4 oberta.
+
+
+##### ESTAT_ACTUAL · 2026-10-04 00:05 · Codex · Control 51/55 i portada per plugin
+
+**Informe [[261003_1950_auditoria_codex]] v1.3.13.** Annex P5 llegit sencer; Control contrastat amb **51 verdes, 3 roges i 1 omesa**, hashes estables abans/després. **Rectificació pròpia:** el log antic 67/75 era anterior a la revisió del test 33f7e825; no representa el test actual. Les tres roges són D3/D16/Ajustos del xat, pendents de D7.
+
+**2320 incorpora portada visible per defecte i ocultable per plugin**, per al pla de la pròxima onada. Punts d’encaix identificats: PageFrame (heroImage i heroComponent) i preferenciesApps/storage.js. **W4-08/W4-09/W4-02 continuen pendents**; cap codi productiu editat ni repetició F1. Onada 4 oberta.
+
+
+##### ESTAT_ACTUAL · 2026-10-03 23:57 · Codex · Catàleg 3/3 i criteris 2325
+
+**Informe [[261003_1950_auditoria_codex]] v1.3.12.** Catàleg **3/3**; encara no complix el criteri final de peu i etiquetes. **Confirmacions 3/4** llegides: ratlla H3, escala global H1–H6, sis pàgines sense etiquetes i CTA blau Publicar. El títol ja és H3; la mida pròpia **1.4rem** requereix revisar la cascada, no canviar la semàntica.
+
+**Relleu a Claude:** reutilitzar destinsControl per a la CTA al children de TextSection; Mur apunta a **/notes**, cinc publicacions encara **null**, amb estat honest i sense rutes fictícies. **W4-08/W4-09/W4-02 pendents**. Control 25bc8d llegit: només setter sobrer retirat respecte del tall anterior. Cap repetició d’F1 ni edició de producte; Onada 4 oberta.
+
+
+##### ESTAT_ACTUAL · 2026-10-03 23:45 · Codex · W4-07 corregit i W4-09 nou
+
+**Informe [[261003_1950_auditoria_codex]] v1.3.11.** W4-07 corregit en rutes de portes i autor: **`/mur` admesa també en Capacitor**, contrabarres i controls rebutjats; nou casos independents i clics en orígens simulats. **No és acceptació en dispositiu**.
+
+**Nova W4-09:** el Control envia **`socdepoble`** a la RPC de xat remot que espera **UUID**. Payload reproduït amb adaptador real i transport substituït, sense xarxa; proposta de resoldre la identitat pel port del backend. **W4-08 parcial**, bateria **67/75**, amb huit expectatives antigues en ControlSection. Falten peu funcional, absència d'etiquetes i estil definitiu del quadrat. Annexos A/GoTrue rectificats, encara propostes. **W4-02 sense pegat nou**. Cap font de producte editada; Onada 4 oberta.
+
+##### ESTAT_ACTUAL · 2026-10-03 23:32 · Codex · Reintent W4-02 reproduït
+
+**Informe [[261003_1950_auditoria_codex]] v1.3.10.** Un segon intent durant el bescanvi del primer autentica però perd **HOST-COUPON, HOST-STATE i history.state**. Reproducció independent sobre el mòdul real, amb dades sintètiques; proposta de transferir la instantània vàlida de l'intent substituït sense guardar el callback OAuth. **W4-02 continua obert en este cas**.
+
+**92/94 inicials; 20/20 després del pegat de marcs niuats.** Les fixtures modificades passen i **tractor-innerhtml ix amb 0**. Claude reconeix W4-08 i la part nativa de W4-07; no es declaren corregides. **L'última confirmació de 2325 fixa 128 × 128 px, fons fosc i text clar** per a dates/preus, substituint els 92 px inicials. La confirmació 2 exigix **boina taronja, peu blau i cap etiqueta** amb les portes; **2320 encarrega recerca de plugins per a la pròxima Onada**. Graella reproduïda amb **nou divergències**; annex llegit, sense aplicar. Informe vàlid i Olivera verda; tancament **668 errors, planned**. Cap codi de producte editat per Codex; Onada 4 oberta.
+
+##### ESTAT_ACTUAL · 2026-10-03 23:12 · Codex · W4-07 parcial
+
+**Informe [[261003_1950_auditoria_codex]] v1.3.9.** El pegat rebutja la ruta amb contrabarra que resolia a un origen extern, però **`/mur` continua inerta en capacitor**. Contrast independent de nou casos sobre la funció real; proposta de separar la validació interna del filtre HTTP(S), amb helper existent identificat.
+
+**30/30 proves dirigides**, inclòs el cens ESLint F1 ampliat. Cap reexecució funcional OAuth ni canvi de producte de Codex. **W4-07 parcial i W4-08 pendent**; els resultats B/W4-02 de v1.3.8 es conserven. Onada 4 oberta.
+
+##### ESTAT_ACTUAL · 2026-10-03 23:04 · Codex · B i W4-02 contrastats
+
+**Informe [[261003_1950_auditoria_codex]] v1.3.8.** Chrome 154 recupera **HOST-COUPON, HOST-STATE i history.state** després d'una redirecció amb PKCE vàlid. **B rebutja el marc alié abans de PKCE**; avís/enllaç de la UI contrastats en JSDOM. Cas original de W4-02 corregit; quota/caducitat i estat no JSON continuen sent límits explícits. La ruta d'èxit al perfil respon al contracte anterior del Mestre.
+
+**270/272 inicials; 134/134 en el seguiment** després que Claude corregira les dues expectatives. No s'afirma 272/272 ni acceptació real Google/Sollutia. **W4-07 i W4-08 continuen oberts**. Cap codi de producte editat per Codex; servidor i pestanyes de prova tancats. Onada 4 oberta i vigilància de deu minuts.
+
+##### ESTAT_ACTUAL · 2026-10-03 22:54 · Codex · Catàleg i resolució de fusibles
+
+**Informe [[261003_1950_auditoria_codex]] v1.3.7.** Claude v0.6.0 rebut: **W4-07 reconegut, encara sense pegat**. B i W4-02 continuen pendents en les mateixes fonts OAuth. La resolució 2246 autoritza Claude a resoldre les fixtures i actualitzar el contracte de Graella; **no cal una nova consulta al Mestre**.
+
+**29/29 proves dirigides** de vinyeta i catàleg. Encara comproven el model compacte anterior, de manera que **W4-08 continua obert** davant les directrius 2234/2245. Cap reexecució F1/PHP/natiu ni de les fallades del Control sense canvi pertinent. Cap producte editat per Codex; evidència i límits en l'informe viu. Onada 4 oberta, vigilància de deu minuts.
+
+##### ESTAT_ACTUAL · 2026-10-03 22:41 · Codex · Nou criteri del Control
+
+**Informe [[261003_1950_auditoria_codex]] v1.3.6.** Llegits directriu 2234 i contingut 2245: **targeta completa, text visible i autoria socdepoble** substituïxen el model compacte anterior. W4-08: passar portes encara força el cos que oculta text i descarta l’entradilla; proposta concreta per a separar les dues responsabilitats i connectar el suport humà.
+
+**Bateria dirigida: 48/57**, nou roges en ControlSection. Tres expectatives antigues; sis casos d’Utilitats/Snippet sense preferència d’activació preparada, sense atribució d’autoria ni conclusió que el Snippet activat falle. Cal alinear contracte i proves. **W4-07 continua pendent**; identificat helper intern existent per a la reparació. F1 sense delta ni reexecució. Cap codi de producte editat; Olivera torna a verd després que l’índex compartit incorpore el contingut 2245, sense intervenció de Codex en l’índex.
+
+
+##### ESTAT_ACTUAL · 2026-10-03 22:31 · Codex · Directriu B i frontera de portes
+
+**Informe [[261003_1950_auditoria_codex]] v1.3.5.** Llegida la directriu 2221: **B i W4-02 autoritzades per MarIA**, implementació OAuth encara pendent en el tall llegit. Criteris de detecció, eixida fora del marc i restauració d’URL lliurats a Claude. Cap repetició de les 237 proves F1 sense delta.
+
+**W4-07 nova:** reproducció de `normalitzaPortes` mostra `/mur` desactivat amb origen capacitor i destí amb barra inversa acceptat com a intern malgrat resoldre fora de l’origen en web. Proposta de validador intern independent del protocol. **WordPress 1.0.2: 17/17 comprovacions**, metadades coherents, encara sense ZIP nou. Cap codi productiu ni targeta editats per Codex; UI nova encara en treball de Claude. Vigilància cada 10 minuts, Onada 4 oberta.
+
+
+##### ESTAT_ACTUAL · 2026-10-03 22:15 · Codex · Registre OAuth caducat
+
+**Informe [[261003_1950_auditoria_codex]] v1.3.4.** Contrastat el pegat de Claude que captura l'existència del registre abans d'escombrar-lo. Reproducció independent amb bundles abans/després: un retorn caducat indexat **ja no envia missatges, escriu traspàs ni tanca la finestra**; continua netejant el registre i mostra l'error. JSDOM i dades sintètiques, cap xarxa ni nova prova de navegador.
+
+**237/237 proves dirigides**, tres casos més; hashes de font i test estables. **W4-02, iframe + COOP i ZIP antics continuen pendents.** Pla i informes aliens sense canvis, cap producte editat per Codex. Portes i evidència d'este cicle consignades a l'informe viu.
+
+##### ESTAT_ACTUAL · 2026-10-03 22:05 · Codex · Tests F1 completats
+
+**Informe [[261003_1950_auditoria_codex]] v1.3.3.** Claude ha adaptat les dues expectatives de recuperació i afegit casos de seguiment. Bateria dirigida independent: **234/234**, 10 fitxers, 16 casos nous respecte dels 218 anteriors; cens de qualitat P6 ampliat **4/4**. Font OAuth/auth sense delta respecte del hash verificat en Chrome; cap prova de navegador repetida ni codi productiu editat.
+
+**Continuen oberts iframe + COOP, W4-02/redirecció i W4-01 als ZIP antics.** El test nou del límit d'iframe espera l'error, no un login exitós. Fitxers de metadades/imatges enganxades observats com a treball de Claude, fora d'esta acceptació d'F1. Pla i informes aliens sense delta. Verificació documental i tancament d'este cicle consignats en l'informe viu.
+
+##### ESTAT_ACTUAL · 2026-10-03 22:00 · Codex · Relleu a Claude v0.5.0
+
+**Informe [[261003_1950_auditoria_codex]] v1.3.2.** Llegida la resposta nova de Claude: accepta **W4-02** i coincidim en **B ara / A com a contracte futur** per a iframe + COOP. L'informe precisa la diferència origen/lloc, el contracte de missatge pendent, l'emissor i la validació del backend; **no és aprovació humana ni implementació resolta**. El WordPress de component directe conserva el seu camí propi.
+
+**OAuth ha tornat al hash contrastat en navegador**, sense les guardes temporals de mutació. Es mantenen els resultats i límits de 21:57: iframe sense COOP passa; combinat falla; bateria 216/218; W4-02 i ZIP 1.0.1 pendents. Informe/Olivera correctes; tancament posterior **exit 1, 653 errors, planned**. Vigilància cada 10 minuts i despertadors manuals; cap producte, paquet o desplegament modificat per Codex.
+
+##### ESTAT_ACTUAL · 2026-10-03 21:57 · Codex · Pegat F1 arribat en viu
+
+**Informe [[261003_1950_auditoria_codex]] v1.3.1.** Substituïx el diagnòstic previ per al cas d'iframe **sense COOP**, ara **corregit i verificat en Chrome 154**, un bescanvi amb PKCE vàlid i URL/historial preservats. **Iframe entre llocs + COOP continua fallant.** W4-02/redirecció i W4-01 als dos ZIP 1.0.1 continuen oberts. Bateria del nou codi: **216/218**, dues expectatives que encara no inclouen la nova marca de recuperació. Es deixa a Claude l'adaptació dels seus tests i el contrast del paquet definitiu; cap font de producte modificada per Codex.
+
+**Evidència abans/després** en els bancs temporals v3/v4, delimitada per hash; la font ha continuat canviant amb instrumentació de proves de mutació. Servidors i pestanyes de prova tancats. Informe documental vàlid, Olivera correcta; tancament del relleu **653 errors, planned** (LEDGER/segell/SCC), amb nous enllaços d'app rebutjats pel graf a `00_full_de_ruta.md`. Cap publicació ni segellat global.
+
+##### ESTAT_ACTUAL · 2026-10-03 21:51 · Codex · Contrast final de F1 v2
+
+**Informe [[261003_1950_auditoria_codex]] v1.3.0 lliurat.** Despertador manual, Claude v0.4.0 llegit i font OAuth sense delta. **W4-06 reproduït en Chrome 154:** l'iframe entre llocs falla amb opener conservat perquè el registre està particionat; amb COOP també perd l'opener. **Restablir només postMessage no basta** per al segon cas. Dos escenaris nous, cap bescanvi; intents cancel·lats i servidor/pestanyes tancats. Cap codi de producte editat.
+
+**W4-02 continua obert** en redirecció completa. Els tests HOST-COUPON/HOST-CHECKOUT-FAILED protegixen les arribades sense marca, però no acrediten la restauració de la URL original després d'un login propi. **W4-01 corregit a font, encara present als dos ZIP WordPress 1.0.1 inspeccionats.** No hi ha nova publicació, instal·lació ni consens sobre la tercera passada de Claude.
+
+**Vigilància activa cada 10 minuts**, amb prioritat als despertadors manuals. Estil de lectura d'un salt aplicat al relleu. Es mantenen els límits previs de Google/GoTrue/Sollutia reals i de les bateries sense delta. Verificació documental d'este relleu consignada en l'informe viu.
+
+## ESTAT_ACTUAL · 2026-10-03 21:36 · Codex · Pegat P6 contrastat
+
+- Informe [[261003_1950_auditoria_codex]] v1.2.2. El cas de focus de cerca mòbil queda corregit en el tall: prova final 5/5 i Chrome /disseny a 375/820 amb focus preservat, rail 56 i sense desbordament horitzontal en eixa vista.
+- Passada ampla layout/workspace: 193/194; única fallada de literal del test corregida per Claude durant el cicle, reexecució dirigida 5/5. No s'afirma reexecució íntegra verda ni validació en mòbil físic. Cap canvi productiu de Codex.
+- W4-02/redirecció continua pendent. Informe vàlid i Olivera correcta; tancament --check exit 1 amb 607 errors, planned (LEDGER/segell/SCC). No hi ha publicació ni desplegament.
+
+## ESTAT_ACTUAL · 2026-10-03 21:31 · Codex · Delta P6
+
+- Informe [[261003_1950_auditoria_codex]] v1.2.1. Nova prova adversarial de Claude executada: railRevisio 2/2 roges en JSDOM. La segona obertura de cerca des del rail mòbil perd focus a body; diagnosi i proposta lliurades. Revisió en curs, sense atribuir-nos l'autoria de la troballa ni certificar navegador.
+- Pla, auditoria Claude i codi de producte sense delta en iniciar este cicle. Cap edició de producte. Informe vàlid i Olivera correcta; tancament --check repetix 607 errors, planned, amb LEDGER/segell/SCC rojos. Bloquejos previs preservats.
+
+## ESTAT_ACTUAL · 2026-10-03 21:24 · Codex · Heartbeat Onada 4
+
+- Informe [[261003_1950_auditoria_codex]] v1.2.0; mateix torn documental. Vigilància executada, pla i auditoria Claude v0.3.0 llegits; cap font de producte editada.
+- W4-01 corregit localment. F1 v2 supera COOP real en Chrome 154 amb id correlacionat, relé sense opener/nom i PKCE vàlid. Google/GoTrue i Sollutia reals, Safari/Firefox pendents.
+- W4-02 parcial: el retorn alié ja no té efectes, però un login propi amb redirecció completa encara perd code/state inicials de WordPress. Reproducció real local i proposta d'instantània per id lliurades a Claude a l'informe.
+- 156/156 proves OAuth/embed/router, 37/37 natiu/rail, natiu-build 15 passades + 1 omesa. W4-05 esmenat per Claude. Doble acció UX acceptada com a directriu; error de recompte del PRD: 4/12 rutes, no 7/12. Validació visual AppGrid pendent.
+- Servidor i pestanyes de prova tancats. Sense publicació, instal·lació ni desplegament. Informe vàlid; Olivera exit 0; tancament --check exit 1, 607 errors, planned. LEDGER/SCC continuen rojos i ara també el segell (fd402b05 / 37230667); no s'ha resegellat cap canvi alié.
+
+## ESTAT_ACTUAL · 2026-10-03 · Codex · Auditoria adversarial Onada 4
+
+- Torn `torn_5d0e52c6-9955-47e2-89dd-a61c6b3f2728`; informe [[261003_1950_auditoria_codex]] v1.1.0. Auditoria documental, cap font de producte modificada per Codex; implementació simultània de Claude.
+- Reproduïdes W4-01 (muntatge en root alié), W4-02 (query/history OAuth de l’amfitrió) i W4-03 (Chrome real: COOP deixa closed=true, nom buit i opener nul). El primer pegat de Claude conserva PKCE però l’espera global permet que un error alié avorte un login en una altra pestanya. F1 pendent de correlació o redirecció integral.
+- Proves seleccionades verdes: 126 node i 230 Vitest inicials; contrast posterior OAuth 45, frontissa/política/full de ruta 32, natiu 12 Vitest i 13 node amb 1 omesa explícita per absència de dist-natiu. PHP: 14 fitxers amb sintaxi correcta en 8.2/8.3/8.4 i 72 proves repetides en 8.2. No se sumen repeticions ni es certifica PHP 7.4/Sollutia/dispositius.
+- Assessorament Capacitor: entrada i base pròpies revisades, adaptadors encara pendents; W4-05 sobre versions independents i Node >=22 si Capacitor 8. Última directriu UX/UI de MarIA: Control amb Universal Cards il·lustrades, sense text visible, i portes a pàgines específiques amb el mateix Editor Universal. Referència del Mas inspeccionada; sis escenes, noms accessibles i integració descrits. Substituïx el selector inicial de quatre icones.
+- Informe validat i Olivera correcta. Tancament --check exit 1: 591 errors, planned (canvis concurrents de codi, relleu LEDGER absent, metadades del pla, checksum LEDGER i SCC); no es declara arquitectura segellada. Proves temporals aturades, pestanyes tancades; cap publicació, instal·lació o desplegament.
+
+
 ## ESTAT_ACTUAL · 2026-10-03 · Claude (Opus 5.5) · Onada 3 completa, sense commit
 - Torn torn_dba36e21; auditoria [[261003_1330_auditoria_claude]] v1.0.1; acta [[261003_1920_acta_marmota]].
 - Fet a l'arbre (uns 200 fitxers): fulls XLSX/CSV, La Parròquia (Loyverse), Nevera + Mercadona + Temporada, importació de Salut, A1 Model B absolut, indicadors d'admin, Lector RSS 1.0, P1 OAuth, P2/AV avatars, P4 Notes, P5 Dispositius (parcial), P6 Calendari, recuperació de contrasenya amb Safe Links, mestre-detall mòbil, Snippet → Lector, fitxa del Snippet, PWA Fase 0. Laboratoris: skills de disseny, anticipació, empaquetat mòbil, Onada 4.

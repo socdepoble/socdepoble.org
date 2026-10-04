@@ -93,7 +93,7 @@ import { SessionProvider } from './app/contexts/SessionContext.jsx';
 import { UIProvider } from './app/contexts/UIContext.jsx';
 import { IdentitatProvider } from './app/contexts/IdentitatContext.jsx';
 import styles from './css/index.css?inline';
-import { readThemePreference, resolveTheme } from './config/theme';
+import { aplicaContrast, readContrastPreference, readThemePreference, resolveContrast, resolveTheme } from './config/theme';
 import { ErrorBoundary } from './components/ErrorBoundary.jsx';
 import { normalizeBackendConfig } from './config/backendConfig.js';
 import { getRuntimePolicy } from './config/runtimePolicy.js';
@@ -726,6 +726,9 @@ class SocDePobleElement extends BaseElement {
 
     this._recalcularConfig();
     this.dataset.theme = resolveTheme(this._config.themeMode ?? readThemePreference());
+    /* D6 · Mode Bancal (261004): com el tema, abans del primer pintat de
+       React. Després el manté App.jsx (tria i `prefers-contrast`). */
+    aplicaContrast(this, resolveContrast(readContrastPreference()));
     this._escoltaTemaDelSistema();
     this._pintaAmfitrio();
 

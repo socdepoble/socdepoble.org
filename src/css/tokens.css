@@ -57,6 +57,10 @@
   --sdp-pedra-400: #b7b1a5;
   --sdp-pedra-500: #8b857b;
   --sdp-pedra-600: #5b564e;
+  /* Fase E (pla 261004_0050, Q1 del Mestre: AAA sempre) · graó intermedi per
+     al text suau: 7:1 o més sobre la targeta, l'app i el fons subtil sense
+     confondre's amb el text de cos (700). */
+  --sdp-pedra-650: #4c4841;
   --sdp-pedra-700: #3d3b35;
   --sdp-pedra-750: #302e29;
   --sdp-pedra-800: #22211e;
@@ -112,7 +116,7 @@
   /* Text — TOT compleix AA (≥4.5:1) i la majoria AAA (≥7:1) sobre la seua superfície */
   --sdp-text-titol:  var(--sdp-pedra-900);   /* 19,42:1 */
   --sdp-text-cos:    var(--sdp-pedra-700);   /* 11,20:1 */
-  --sdp-text-suau:   var(--sdp-pedra-600);   /*  7,28:1 · AAA */
+  --sdp-text-suau:   var(--sdp-pedra-650);   /*  9,09:1 · AAA · 8,00 sobre l'app, 7,71 sobre el fons subtil */
   --sdp-text-invers: var(--sdp-pedra-50);
   --sdp-text-desactivat: var(--sdp-pedra-500);  /* Afegeix ací overrides temporals o experiments en viu */
 
@@ -123,7 +127,10 @@
 
   /* Accent · taronja — identitat de marca */
   --sdp-accent:            var(--sdp-primary-500);
-  --sdp-accent-hover:      var(--sdp-primary-600);
+  /* Fons de hover dels botons taronja, sempre amb --sdp-sobre-accent damunt:
+     8,97:1 (abans primary-600, 5,42:1: el hover baixava d'AAA). Només fons:
+     el text taronja de hover és --sdp-accent-text-hover. */
+  --sdp-accent-hover:      var(--sdp-primary-400);
   --sdp-accent-subtil:     var(--sdp-primary-50);
   --sdp-sobre-accent:      var(--sdp-pedra-900);    /*  7,12:1 · AAA */
   --sdp-accent-text:       var(--sdp-primary-700);  /*  5,51:1 · AA  (interacció) */
@@ -143,6 +150,14 @@
   --sdp-accio-text:    var(--sdp-secondary-700); /*  9,21:1 · AAA (h1, h3, h5) */
   --sdp-focus:         var(--sdp-secondary-700);
   --sdp-focus-invers:  var(--sdp-primary-400);
+  /* Geometria de l'anell (Kowalski · pla 261004_0050): mateix gruix i
+     separació a tot arreu. L'anell no s'anima mai. */
+  --sdp-focus-gruix:     3px;
+  --sdp-focus-separacio: 2px;
+  /* Anell sobre les barres blaves (barra de pàgina i peu de targeta), que
+     pinten --sdp-accio en clar i en fosc. La roca, estable en els dos temes:
+     5,01:1 contra el blau de marca (abans 1,42:1 en clar i 1,79:1 en fosc). */
+  --sdp-focus-sobre-accio: var(--sdp-pedra-900);
 
   /* Estat semàntic */
   --sdp-error: var(--sdp-error-500);  --sdp-error-fons: var(--sdp-error-50);  --sdp-error-text: var(--sdp-error-700);
@@ -173,16 +188,30 @@
   --sdp-ombra-2: 0 3px 10px rgba(14, 13, 12, 0.07);
   --sdp-ombra-3: 0 10px 28px rgba(14, 13, 12, 0.10);
 
-  /* Moviment */
-  --sdp-t: 0.18s ease;
-  --sdp-t-lenta: 0.3s cubic-bezier(0.2, 0.7, 0.3, 1);
+  /* Moviment · àtoms (Kowalski · pla 261004_0050). Durada i corba van
+     separades: una corba es combina amb qualsevol durada. Cap interacció
+     passa de --sdp-durada-sostre. Amb moviment reduït, les escales valen 1
+     i el desplaçament 0 (bloc de moviment reduït, al final del fitxer). */
+  --sdp-durada-premut: 100ms;
+  --sdp-durada-rapida: 180ms;
+  --sdp-durada-base:   200ms;
+  --sdp-durada-panell: 280ms;
+  --sdp-durada-sostre: 300ms;
+  --sdp-corba-eixida:   cubic-bezier(0.23, 1, 0.32, 1);     /* entrar, hover, premut */
+  --sdp-corba-moviment: cubic-bezier(0.77, 0, 0.175, 1);    /* allò que es desplaça dins de la pantalla */
+  --sdp-corba-calaix:   cubic-bezier(0.32, 0.72, 0, 1);     /* calaixos i fulls inferiors */
+  --sdp-corba-suau:     cubic-bezier(0.2, 0.7, 0.3, 1);
+  --sdp-escala-premut:   0.97;
+  --sdp-escala-aparicio: 0.96;   /* mai scale(0) */
+  --sdp-despl-aparicio:  var(--sdp-space-2);
+  /* Dreceres compostes, només per a `transition`. Fase C (Q del Mestre,
+     261004): --sdp-t passa d'ease a la corba d'eixida; --sdp-t-lenta conserva
+     el valor (300ms i la corba suau). Dins d'`animation`, els àtoms: la
+     drecera ja porta corba, i dues corbes anul·len la declaració. */
+  --sdp-t: var(--sdp-durada-rapida) var(--sdp-corba-eixida);
+  --sdp-t-lenta: var(--sdp-durada-sostre) var(--sdp-corba-suau);
 
   /* Mètriques del layout */
-  --sdp-ctrl-vw: clamp(320px, 100vw, 1024px);
-  --sdp-ctrl-scale: calc((var(--sdp-ctrl-vw) - 320px) / (1024px - 320px));
-  --sdp-step-0: calc(14px + (16 - 14) * var(--sdp-ctrl-scale));
-  --sdp-space-base: var(--sdp-step-0);
-
   --sdp-col-sidebar: 260px;
   --sdp-col-llista: 380px;
   --sdp-alt-negra: 64px;
@@ -202,8 +231,11 @@
      o més (components.css): a l'editor li queden 36rem. */
   --sdp-targeta-viva-ample: 24rem;
 
-  /* LLEI DE VIDA · objectiu tàctil mínim. Cap control per davall. */
-  --sdp-touch: 44px;
+  /* LLEI DE VIDA · objectiu tàctil mínim. Cap control per davall.
+     Mestre 261004 (Q2): 48px sempre, a tot arreu; el mateix valor que
+     --sdp-touch-min (capa 0, design-tokens.json). Si un control no hi cap,
+     s'ajusta l'espai de dins, mai el sòl. */
+  --sdp-touch: 48px;
 
   --sdp-touch-comode: 48px;
 
@@ -226,25 +258,75 @@
   --sdp-font: 'Noto Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --sdp-font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
-  --sdp-text-h1: 2.5rem;
-  --sdp-text-h2: 2rem;
-  --sdp-text-h3: 1.75rem;
-  --sdp-text-h4: 1.5rem;
-  --sdp-text-h5: 1.25rem;
-  --sdp-text-h6: 1.125rem;
+  /* P6 (directriu 261003_2325, confirmació 3 del Mestre) · Escala dels
+     encapçalaments un esglaó amunt per a llegir sense zoom (veïnat major):
+     cada nivell pren la mida del de damunt i l'h1 puja mig rem, com de l'h2
+     a l'h1. Abans: 2.5 · 2 · 1.75 · 1.5 · 1.25 · 1.125rem. El títol de les
+     targetes en penja (components.css, .sp-card-title: un --sdp-text-hN). */
+  --sdp-text-h1: 3rem;
+  --sdp-text-h2: 2.5rem;
+  --sdp-text-h3: 2rem;
+  --sdp-text-h4: 1.75rem;
+  --sdp-text-h5: 1.5rem;
+  --sdp-text-h6: 1.25rem;
   --sdp-text-lead: 1.25rem;
   --sdp-text-base: 1.125rem;
   --sdp-text-small: 1rem;
   --sdp-text-meta: 0.875rem;   /* 14px · sòl absolut de mida de lletra */
 
+  /* Fase D (Q5 del Mestre, 261004) · Tipografia fluida de la PROSA (base.css:
+     h1-h6, p, llistes i .lead). Mínim = l'escala P6 de dalt (al mòbil ningú
+     no perd mida); màxim moderat. Interpolació lineal entre 320 i 1024px
+     (20 i 64rem): constants precalculades, perquè la Baseline 2022 no
+     dividix longituds dins de calc(). Terme en rem + terme en vw: creix amb
+     el zoom i amb la lletra triada (WCAG 1.4.4). Els components conserven
+     els --sdp-text-* fixos: vw és el viewport de l'amfitrió, no la columna.
+     Tota la tipografia passa per custom properties: el futur tauler
+     d'administració les podrà reescriure en calent. */
+  --sdp-fluid-h1:   clamp(3rem, 2.7727rem + 1.1364vw, 3.5rem);        /* 48 a 56px */
+  --sdp-fluid-h2:   clamp(2.5rem, 2.3295rem + 0.8523vw, 2.875rem);    /* 40 a 46px */
+  --sdp-fluid-h3:   clamp(2rem, 1.8864rem + 0.5682vw, 2.25rem);       /* 32 a 36px */
+  --sdp-fluid-h4:   clamp(1.75rem, 1.6932rem + 0.2841vw, 1.875rem);   /* 28 a 30px */
+  --sdp-fluid-h5:   clamp(1.5rem, 1.4432rem + 0.2841vw, 1.625rem);    /* 24 a 26px */
+  --sdp-fluid-h6:   clamp(1.25rem, 1.1932rem + 0.2841vw, 1.375rem);   /* 20 a 22px */
+  --sdp-fluid-lead: clamp(1.25rem, 1.1932rem + 0.2841vw, 1.375rem);   /* 20 a 22px */
+  --sdp-fluid-cos:  clamp(1.125rem, 1.0682rem + 0.2841vw, 1.25rem);   /* 18 a 20px */
+
+  /* Interlineat (Impeccable): 1.2 als títols i 1.6 al cos. */
+  --sdp-leading-titol: 1.2;
+  --sdp-leading-cos:   1.6;
+
+  /* Pesos i espaiat de la prosa: abans eren literals de base.css. */
+  --sdp-pes-semi:    600;
+  --sdp-pes-negreta: 700;
+  --sdp-pes-extra:   800;
+  --sdp-tracking-h1: -0.01em;
+  --sdp-tracking-h2: -0.005em;
+  --sdp-tracking-versaletes: 0.08em;
+
+  /* Amplades de Noto Sans (font-stretch), servides pel paquet local
+     (public/fonts/noto-sans.css). Sense la cara estreta, el navegador pinta
+     l'amplada normal: no la sintetitza. */
+  --sdp-font-amplada-semi:    87.5%;
+  --sdp-font-amplada-estreta: 75%;
+
+  /* Q8 (ajornat, 261004) · rem dins de WordPress: rem es resol contra
+     l'element arrel del document AMFITRIÓ, no contra :host. Un tema que
+     pose la lletra de l'arrel al 62,5 % encongiria tota la tipografia un
+     37,5 %. Cap guarda encara: s'estudia a l'onada de l'arquitectura de
+     plugins (directriu 261003_2320). */
+
   /* Una mateixa plantilla tipogràfica per al menú, les categories i les
      capçaleres de columna, també quan es mostren com a pestanyes. */
   --sdp-font-barra: 600 var(--sdp-text-small)/1.5 var(--sdp-font);
 
-  /* Tipografia d'Interfície (Compacta) */
+  /* Tipografia d'Interfície (Compacta). Cap per davall del sòl de 14px. */
   --sdp-ui-base: 0.9375rem;    /* 15px */
-  --sdp-ui-sm: 0.8125rem;      /* 13px */
+  --sdp-ui-sm: 0.875rem;       /* 14px · el sòl (abans 13px) */
 
+  /* Interlineats de component: mètriques de peces (targetes, calendari,
+     consola), no de prosa. Es conserven: el calendari calcula quantes línies
+     caben en un bloc amb --sdp-leading-tight. */
   --sdp-leading-tight: 1.15;
   --sdp-leading-snug: 1.21;
   --sdp-leading-body: 1.65;
@@ -257,8 +339,9 @@
 
   /* ── RITME VERTICAL EDITORIAL ── */
   --sdp-measure: 68ch;                 /* mesura de columna · APLICADA */
-  --sdp-leading-editorial: 1.65;
-  --sdp-leading-display: 1.15;
+  /* Noms antics de la prosa, ara àlies dels interlineats Impeccable. */
+  --sdp-leading-editorial: var(--sdp-leading-cos);
+  --sdp-leading-display: var(--sdp-leading-titol);
   --sdp-mt-h1: 0;    --sdp-mb-h1: 16px;
   --sdp-mt-h2: 48px; --sdp-mb-h2: 12px;   /* corregit: h2 domina h3 */
   --sdp-mt-h3: 40px; --sdp-mb-h3: 12px;
@@ -406,9 +489,10 @@
   --sdp-fons-invers:     var(--sdp-pedra-100);
   --sdp-fons-vel:        rgba(14, 13, 12, 0.72);
 
-  --sdp-text-titol:  var(--sdp-pedra-50);    /* 17,48:1 */
+  /* Ràtios sobre la targeta fosca (--sdp-pedra-850), recalculades 261004. */
+  --sdp-text-titol:  var(--sdp-pedra-50);    /* 17,91:1 */
   --sdp-text-cos:    var(--sdp-pedra-200);   /* 15,20:1 */
-  --sdp-text-suau:   var(--sdp-pedra-300);   /* 12,44:1 */
+  --sdp-text-suau:   var(--sdp-pedra-300);   /* 12,49:1 */
   --sdp-text-invers: var(--sdp-pedra-900);
   --sdp-text-desactivat: var(--sdp-pedra-500);
 
@@ -419,17 +503,17 @@
   --sdp-accent:            var(--sdp-primary-500);
   --sdp-accent-hover:      var(--sdp-primary-400);
   --sdp-accent-subtil:     var(--sdp-primary-900);
-  --sdp-sobre-accent:      var(--sdp-pedra-900);   /*  7,13:1 */
-  --sdp-accent-text:       var(--sdp-primary-400); /*  8,24:1 */
-  --sdp-accent-text-hover: var(--sdp-primary-300); /* 10,26:1 */
-  --sdp-accent-titol:      var(--sdp-primary-300); /* 10,26:1 */
+  --sdp-sobre-accent:      var(--sdp-pedra-900);   /*  7,12:1 sobre --sdp-accent */
+  --sdp-accent-text:       var(--sdp-primary-400); /*  8,28:1 */
+  --sdp-accent-text-hover: var(--sdp-primary-300); /* 10,30:1 */
+  --sdp-accent-titol:      var(--sdp-primary-300); /* 10,30:1 */
 
   --sdp-accio:         var(--sdp-secondary-500);
   --sdp-accio-hover:   var(--sdp-secondary-400);
   --sdp-accio-forta:   var(--sdp-accio-text);
   --sdp-accio-subtil:  var(--sdp-secondary-900);
   --sdp-sobre-accio:   #ffffff;
-  --sdp-accio-text:    var(--sdp-secondary-300);   /* 10,28:1 */
+  --sdp-accio-text:    var(--sdp-secondary-300);   /* 10,32:1 */
   --sdp-focus:         var(--sdp-focus-invers);
   --sdp-focus-invers:  var(--sdp-primary-400);
 
@@ -443,6 +527,60 @@
   --sdp-ombra-3: 0 10px 28px rgba(0, 0, 0, 0.62);
 }
 
+/* ═══ MODE BANCAL · CONTRAST EXTREM PER A L'HORT A PLE SOL ════════════
+   Q1 del Mestre (261004): les correccions AAA van sempre, en tots els
+   modes; el Bancal és l'interruptor de més. data-contrast="bancal" el posa
+   config/theme.js (arrelDePresentacio, W4-12) a l'<html> quan l'app és ama
+   del document, a l'amfitrió <soc-de-poble> i, en un document alié sense
+   Shadow DOM, a l'arrel del mòdul: el primer selector de cada bloc,
+   .sdp-root[data-contrast="bancal"], mai l'<html> d'un altre. Allà el tema
+   continua a l'<html>, i el niat fosc el troba amb :root[data-theme="dark"].
+   La tria «sistema» resol prefers-contrast: ací tampoc hi ha cap consulta de
+   mitjà.
+   · Text: tres graons foscos; el pitjor cas, el suau sobre el fons subtil,
+     passa de 9:1.
+   · Enllaços, h2, h4 i accent de text: 7:1 o més sobre la targeta i l'app.
+   · Premut sense escala: el retorn és de color.
+   · Les ombres de les targetes es queden (Q6): cap vora sòlida nova.
+   · Cap token de text translúcid. Els --sdp-crom-* no es redefinixen: la
+     closca és immutable (tractor-crom, K1).
+   El bloc fosc niat és obligatori: el Bancal clar empata amb el tema fosc
+   (mateixa especificitat) i va darrere, així que sense el niat pintaria
+   text fosc del tema clar sobre els fons foscos. El niat té un atribut més
+   i guanya els dos.
+   ───────────────────────────────────────────────────────────────── */
+.sdp-root[data-contrast="bancal"],
+:root[data-contrast="bancal"], :host([data-contrast="bancal"]),
+:root[data-contrast="bancal"] .sdp-root, :host([data-contrast="bancal"]) .sdp-root {
+  --sdp-text-cos:  var(--sdp-pedra-800);   /* 16,10:1 · 14,17 sobre l'app · 13,66 sobre el fons subtil */
+  --sdp-text-suau: var(--sdp-pedra-700);   /* 11,20:1 · 9,86 sobre l'app · 9,50 sobre el fons subtil */
+  --sdp-accent-text:       var(--sdp-primary-800);  /* 7,97:1 · 7,01 sobre l'app */
+  --sdp-accent-titol:      var(--sdp-primary-800);  /* 7,97:1 · enllaços, h2 i h4 */
+  --sdp-accent-text-hover: var(--sdp-primary-900);  /* 11,74:1 · el hover enfosquix, mai aclarix */
+  --sdp-escala-premut: 1;
+}
+
+:root[data-theme="dark"] .sdp-root[data-contrast="bancal"],
+:root[data-theme="dark"][data-contrast="bancal"], :host([data-theme="dark"][data-contrast="bancal"]),
+:root[data-theme="dark"][data-contrast="bancal"] .sdp-root, :host([data-theme="dark"][data-contrast="bancal"]) .sdp-root {
+  --sdp-text-cos:  var(--sdp-pedra-100);   /* 16,62:1 sobre la targeta fosca */
+  --sdp-text-suau: var(--sdp-pedra-200);   /* 15,20:1 · 11,51 sobre el fons subtil fosc */
+  --sdp-accent-text:       var(--sdp-primary-300);  /* 10,30:1 */
+  --sdp-accent-titol:      var(--sdp-primary-300);  /* 10,30:1 */
+  --sdp-accent-text-hover: var(--sdp-primary-200);  /* 12,87:1 */
+}
+
+/* Moviment reduït · les escales valen 1 i el desplaçament 0: ni el CSS ni
+   el JS que llig estos tokens mouen res. L'apagador global de les durades
+   viu a base.css (un de sol). */
+@media (prefers-reduced-motion: reduce) {
+  :root, :host, .sdp-root {
+    --sdp-escala-premut: 1;
+    --sdp-escala-aparicio: 1;
+    --sdp-despl-aparicio: 0;
+  }
+}
+
 /* Mostres de paleta · sense cap estil inline */
 .sw-pedra-100 { background: var(--sdp-pedra-100); color: var(--sdp-pedra-900); }
 .sw-pedra-200 { background: var(--sdp-pedra-200); color: var(--sdp-pedra-900); }
@@ -450,6 +588,7 @@
 .sw-pedra-400 { background: var(--sdp-pedra-400); color: var(--sdp-pedra-900); }
 .sw-pedra-500 { background: var(--sdp-pedra-500); color: var(--sdp-pedra-50); }
 .sw-pedra-600 { background: var(--sdp-pedra-600); color: var(--sdp-pedra-50); }
+.sw-pedra-650 { background: var(--sdp-pedra-650); color: var(--sdp-pedra-50); }
 .sw-pedra-700 { background: var(--sdp-pedra-700); color: var(--sdp-pedra-50); }
 .sw-pedra-750 { background: var(--sdp-pedra-750); color: var(--sdp-pedra-50); }
 .sw-pedra-800 { background: var(--sdp-pedra-800); color: var(--sdp-pedra-50); }

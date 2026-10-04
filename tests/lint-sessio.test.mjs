@@ -404,7 +404,105 @@ const FITXERS = [
   'src/sections/mur/datesDeProvaMur.js',
   'src/sections/mur/datesDeProvaMur.test.js',
   'src/sections/mur/MurSection.datesDeProva.test.jsx',
-  'src/data/supabase/content.datesDeProva.test.js'
+  'src/data/supabase/content.datesDeProva.test.js',
+  /* Onada 4 (261003, Claude) · els fitxers nous i modificats que cap cens
+     no vigilava. La resta ja tenen el seu: layout i workspace
+     (AppGridShell.qualitat), onboarding (sections/onboarding/qualitat i
+     oauthRelay.qualitat), natiu (natiu/frontera), oauthRelay i auth
+     (data/qualitat i oauthRelay.qualitat), embed.jsx i
+     entrades.capaDelPaquet (config/qualitat.amfitrio). */
+  /* T3 · retallador: EXIF, orientació, límits, ubicació i metadades. */
+  'src/components/universal/enquadrament/DialegEnquadrament.onada4.test.jsx',
+  'src/components/universal/enquadrament/exif.js',
+  'src/components/universal/enquadrament/exif.test.js',
+  'src/components/universal/enquadrament/exif.fuzz.test.js',
+  'src/components/universal/enquadrament/geolocalitzacio.js',
+  'src/components/universal/enquadrament/geolocalitzacio.test.js',
+  'src/components/universal/enquadrament/imatgeCanvas.test.js',
+  'src/components/universal/enquadrament/jpegProva.js',
+  'src/components/universal/enquadrament/limits.js',
+  'src/components/universal/enquadrament/limits.test.js',
+  'src/components/universal/enquadrament/netejaMetadades.js',
+  'src/components/universal/enquadrament/netejaMetadades.test.js',
+  'src/components/universal/enquadrament/orientacio.js',
+  'src/components/universal/enquadrament/orientacio.test.js',
+  'src/components/universal/enquadrament/orientacio.espec.test.js',
+  'src/components/universal/enquadrament/UbicacioImatge.jsx',
+  /* RICH-EXIF · imatges enganxades al text enriquit. */
+  'src/components/universal/richText/extensions/index.js',
+  'src/components/universal/richText/extensions/imatgesEnganxades.js',
+  'src/components/universal/richText/extensions/imatgesEnganxades.test.js',
+  /* T3 · integració: Perfil, imatge principal i catàleg. */
+  'src/sections/profile/useEnquadramentAvatar.jsx',
+  'src/sections/profile/useEnquadramentAvatar.test.jsx',
+  'src/sections/profile/DialegCapcaleraAvatar.jsx',
+  'src/sections/profile/DialegCapcaleraAvatar.test.jsx',
+  'src/sections/profile/DetallAjust.enquadrament.test.jsx',
+  'src/sections/profile/PerfilEditor.enquadramentAvatar.test.jsx',
+  'src/sections/profile/enquadramentAvatar.limits.test.jsx',
+  'src/sections/profile/enquadramentAvatar.privacitat.test.jsx',
+  'src/utils/imageUtils.js',
+  'src/utils/imageUtils.test.js',
+  'src/sections/disseny/cataleg/detalls/EspecimenEnquadrament.test.jsx',
+  /* F2 · full de ruta sense domini fix. */
+  'src/sections/text/pageContent.js',
+  'src/sections/text/pageContent.roadmap.test.js',
+  /* W4-01 · el paquet autònom només arrenca sobre la seua arrel. */
+  'src/embed.arrel.test.jsx',
+  'src/embed.arrencada.test.jsx',
+  /* P5 · Onada 4 · la vinyeta de doble porta del Panell de Control. */
+  'src/components/PedraSeca/organismes/PortesTargeta.jsx',
+  'src/components/PedraSeca/organismes/UniversalCard.vinyeta.test.jsx',
+  'src/components/PedraSeca/organismes/UniversalCard.vinyeta.capes.test.jsx',
+  'src/sections/control/destinsControl.js',
+  'src/sections/control/destinsControl.test.js',
+  'src/sections/disseny/cataleg/detalls/EspecimenUniversalCard.vinyeta.test.jsx',
+  /* P6 · Onada 4, sisena passada (directriu 2325): quadrat, peu, pàgines i W4-09. */
+  'src/components/PedraSeca/organismes/UniversalCard.quadrat.capes.test.js',
+  'src/sections/control/xatCorporatiu.js',
+  'src/sections/control/xatCorporatiu.test.jsx',
+  'src/sections/control/PublicarDeLaPagina.jsx',
+  'src/sections/control/PublicarDeLaPagina.test.jsx',
+  'src/sections/detail/PageDetailSection.jsx',
+  /* Passada de disseny (pla 261004_0050, Q1-Q8 del Mestre) · els .js i .jsx
+     dels implementadors i dels revisors que cap cens no vigilava. La resta ja
+     en tenen: i18n, App, UIContext, PedraSecaEmbed, pageContent i el Control
+     (dalt); ajustosXat, FullAjustos i navegacio-secundaria (lint_xat);
+     registrePlugins (plugins/qualitat); vite.natiu.config i natiu-build
+     (natiu/frontera). */
+  /* D1 · tokens, base i el mostrari de tipografia. */
+  'src/css/tokens.contracte.test.js',
+  'src/sections/disseny/cataleg/detalls/EspecimenTipografia.jsx',
+  'src/sections/disseny/cataleg/detalls/EspecimenTipografia.test.jsx',
+  /* D2, D3 i D4 · components.css, modules.css i la closca. */
+  'src/css/components.abast.capes.test.js',
+  'src/css/modules.abast.capes.test.js',
+  'src/css/rocaIGuardes.capes.test.js',
+  /* D5 · Noto Sans de casa. */
+  'src/css/fontsLocals.test.js',
+  /* D6 · interruptor Bancal. */
+  'src/config/theme.js',
+  'src/config/theme.contrast.test.js',
+  'src/app/contexts/UIContext.contrast.test.jsx',
+  'src/app/App.contrast.test.jsx',
+  'src/sections/xat/components/FullAjustos.contrast.test.jsx',
+  /* Revisions R1 (contrast i Bancal) i R2 (píxel, moviment i tacte). */
+  'src/css/contrastControlsBlaus.capes.test.js',
+  'src/css/revisioR2.capes.test.js',
+  /* Passada de tancament de l'Onada 4 (261004, Claude) · els .js, .jsx i
+     .mjs nous de C1-C4 que cap cens no vigilava. La resta ja en tenen: App,
+     UIContext, theme, App.contrast, i18n, xat, xatCorporatiu i el Control
+     (dalt); ControlSection i destinsControl també a control/qualitat;
+     registrePlugins.test a plugins/qualitat. */
+  /* C1 · W4-12 (Bancal a l'arrel del mòdul) i W4-13 (Panell de Disseny). */
+  'src/app/App.arrelContrast.test.jsx',
+  'src/config/theme.arrel.test.js',
+  'src/sections/disseny/cataleg/detalls/EspecimenPanell.jsx',
+  'src/sections/disseny/cataleg/detalls/EspecimenPanell.test.jsx',
+  /* C2 · W4-10 (destinatari del xat corporatiu pel port). */
+  'src/data/supabase/xat.destinatari.test.js',
+  /* C4 · capçaleres de columna d'AppGridShell a AAA. */
+  'src/components/layout/AppGridShell.contrast.capes.test.js'
 ];
 
 test('lint dels fitxers de la sessió (lectura)', async () => {

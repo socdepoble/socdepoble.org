@@ -69,6 +69,9 @@ button, input, select, textarea { font: inherit; }
    Regles globals — ÚNICA FONT DE VERITAT.
    Cap element de text necessita cap div embolcall ni estil inline.
    El ritme vertical és implacable per cascada.
+   Fase D (Q5 del Mestre, 261004): mides fluides --sdp-fluid-* (mínim =
+   escala P6), interlineat 1.2 als títols i 1.6 al cos, pesos i espaiat
+   amb tokens. Tota la tipografia de la prosa passa per custom properties.
    ═══════════════════════════════════════════════════════════════ */
 h1, .h1, h2, .h2, h3, .h3, h4, .h4, h5, .h5, h6, .h6 {
   font-family: var(--sdp-font);
@@ -79,29 +82,29 @@ h1, .h1, h2, .h2, h3, .h3, h4, .h4, h5, .h5, h6, .h6 {
   text-transform: none;
 }
 h1, .h1 {
-  font-size: var(--sdp-text-h1);
-  line-height: var(--sdp-leading-display);
-  font-weight: 800;
+  font-size: var(--sdp-fluid-h1);
+  line-height: var(--sdp-leading-titol);
+  font-weight: var(--sdp-pes-extra);
   color: var(--sdp-accio-text);
   text-align: center;
   margin-top: var(--sdp-mt-h1);
   margin-bottom: var(--sdp-mb-h1);
-  letter-spacing: -0.01em;
+  letter-spacing: var(--sdp-tracking-h1);
 }
 h2, .h2 {
-  font-size: var(--sdp-text-h2);
-  line-height: var(--sdp-leading-snug);
-  font-weight: 800;
+  font-size: var(--sdp-fluid-h2);
+  line-height: var(--sdp-leading-titol);
+  font-weight: var(--sdp-pes-extra);
   color: var(--sdp-accent-titol);
   text-align: center;
   margin-top: var(--sdp-mt-h2);
   margin-bottom: var(--sdp-mb-h2);
-  letter-spacing: -0.005em;
+  letter-spacing: var(--sdp-tracking-h2);
 }
 h3, .h3 {
-  font-size: var(--sdp-text-h3);
-  line-height: var(--sdp-leading-snug);
-  font-weight: 700;
+  font-size: var(--sdp-fluid-h3);
+  line-height: var(--sdp-leading-titol);
+  font-weight: var(--sdp-pes-negreta);
   color: var(--sdp-accio-text);
   text-align: left;
   margin-top: var(--sdp-mt-h3);
@@ -110,38 +113,39 @@ h3, .h3 {
   padding-bottom: 12px;
 }
 h4, .h4 {
-  font-size: var(--sdp-text-h4);
-  line-height: var(--sdp-leading-snug);
-  font-weight: 700;
+  font-size: var(--sdp-fluid-h4);
+  line-height: var(--sdp-leading-titol);
+  font-weight: var(--sdp-pes-negreta);
   color: var(--sdp-accent-titol);
   text-align: left;
   margin-top: var(--sdp-mt-h4);
   margin-bottom: var(--sdp-mb-h4);
 }
+/* h5 i h6 són títols: interlineat de títol (abans el de cos, 1.65). */
 h5, .h5 {
-  font-size: var(--sdp-text-h5);
-  line-height: var(--sdp-leading-editorial);
-  font-weight: 700;
+  font-size: var(--sdp-fluid-h5);
+  line-height: var(--sdp-leading-titol);
+  font-weight: var(--sdp-pes-negreta);
   color: var(--sdp-accio-text);
   text-align: left;
   margin-top: var(--sdp-mt-h5);
   margin-bottom: var(--sdp-mb-h5);
 }
 h6, .h6 {
-  font-size: var(--sdp-text-h6);
-  line-height: var(--sdp-leading-editorial);
-  font-weight: 700;
+  font-size: var(--sdp-fluid-h6);
+  line-height: var(--sdp-leading-titol);
+  font-weight: var(--sdp-pes-negreta);
   color: var(--sdp-text-suau);
   text-align: left;
   margin-top: var(--sdp-mt-h6);
   margin-bottom: var(--sdp-mb-h6);
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: var(--sdp-tracking-versaletes);
 }
 p {
   font-family: var(--sdp-font);
-  font-size: var(--sdp-text-base);
-  line-height: var(--sdp-leading-editorial);
+  font-size: var(--sdp-fluid-cos);
+  line-height: var(--sdp-leading-cos);
   color: var(--sdp-text-cos);
   margin-top: 0;
   margin-bottom: var(--sdp-mb-p);
@@ -150,9 +154,9 @@ p {
   hyphens: none;
 }
 .lead {
-  font-size: var(--sdp-text-lead);
-  line-height: 1.5;
-  font-weight: 600;
+  font-size: var(--sdp-fluid-lead);
+  line-height: var(--sdp-leading-cos);
+  font-weight: var(--sdp-pes-semi);
   color: var(--sdp-text-suau);
   text-align: center;
   margin-top: 0;
@@ -160,8 +164,8 @@ p {
 }
 /* ── LLISTES PURES (sense divs embolcall) ── */
 ul, ol {
-  font-size: var(--sdp-text-base);
-  line-height: var(--sdp-leading-editorial);
+  font-size: var(--sdp-fluid-cos);
+  line-height: var(--sdp-leading-cos);
   color: var(--sdp-text-cos);
   margin-top: 0;
   margin-bottom: var(--sdp-mb-ul);
@@ -186,13 +190,31 @@ blockquote {
   font-style: italic;
   color: var(--sdp-text-suau);
 }
+/* La cita, un graó per damunt del cos: la mida de l'entradeta (abans 1.15rem
+   fix, ara de 20 a 22px; cap mínim baixa). */
 blockquote p {
-  font-size: 1.15rem;
-  line-height: 1.6;
+  font-size: var(--sdp-fluid-lead);
+  line-height: var(--sdp-leading-cos);
   color: inherit;
   margin-bottom: 8px;
 }
 blockquote p:last-child { margin-bottom: 0; }
+/* Flux lliure (ordre del Mestre, 261004): la prosa de l'article ocupa tota
+   l'amplària del contenidor, i només el coixí de .content-wrapper la separa
+   de la vora. Retira la mesura de 68ch de la Fase D (skill §4, pendent
+   d'esmenar per MarIA). Cap sagnat: cap regla de prosa porta text-indent. */
+/* Imatges de lectura a ample complet (Horror Vacui, Mestre 261004): les
+   imatges nues del contingut (sense classe, o amb la classe buida que deixa
+   l'HTML de PAGE_COPY) omplin la columna. Les que porten classe són
+   components i decidixen la seua mida; la portada viu fora de l'article.
+   Especificitat zero: qualsevol component la pot desfer. */
+:where(article.content-wrapper, .sdp-prose) :where(img:not([class]), img[class=""]) {
+  display: block;
+  inline-size: 100%;
+  block-size: auto;
+  border-radius: var(--sdp-radi-s);
+  margin-block: var(--sdp-space-6);
+}
 /* ── REGLES ADJACENTS · TRANSICIONS EXACTES ── */
 h1 + .lead, h2 + .lead { margin-top: 0; }
 h1 + p, h2 + p { margin-top: 12px; }
@@ -224,7 +246,10 @@ button, .btn, .nav-item, .sp-card-action, .page-btn,
 }
 
 a { color: var(--sdp-accent-titol); text-decoration: none; transition: color var(--sdp-t); }
-a:hover { color: var(--sdp-accent-text-hover); }
+/* Fase B · el hover només amb ratolí: al tàctil no es queda enganxat. */
+@media (hover: hover) and (pointer: fine) {
+  a:hover { color: var(--sdp-accent-text-hover); }
+}
 /* WCAG 1.4.1 · U05: dins del text, l'enllaç fa 2,03:1 contra el cos i cap
    taronja pot pujar a 3:1 sense baixar del 4,5:1 contra el fons. La pista ha
    de ser no cromàtica. Només enllaços de prosa: els que porten classe són
@@ -237,15 +262,19 @@ a:hover { color: var(--sdp-accent-text-hover); }
 
 ::selection { background: var(--sdp-accent); color: var(--sdp-sobre-accent); }
 
-:focus-visible { outline: 3px solid var(--sdp-focus); outline-offset: 2px; }
+:focus-visible { outline: var(--sdp-focus-gruix) solid var(--sdp-focus); outline-offset: var(--sdp-focus-separacio); }
 /* Sobre superfícies fosques, l'anell de focus és taronja */
 /* Closca (TopBar/SideBar): anell immutable. Abans --sdp-accent-text feia
-   un marró de baix contrast sobre negre en clar i un altre color en fosc. */
+   un marró de baix contrast sobre negre en clar i un altre color en fosc.
+   La barra mòbil ja és roca en els dos temes (Llei de la Roca, layout.css):
+   el mateix anell del crom. */
 .app-sidebar :focus-visible,
-header.bar-black :focus-visible { outline-color: var(--sdp-crom-focus); }
+header.bar-black :focus-visible,
+.mobile-nav :focus-visible { outline-color: var(--sdp-crom-focus); }
+/* Barres blaves (barra de pàgina i peu de targeta): --sdp-accent-text feia
+   1,42:1 contra el blau en clar i 1,79:1 en fosc. Ara, 5,01:1 en tots dos. */
 header.bar-blue :focus-visible,
-.mobile-nav :focus-visible,
-.sp-card-footer :focus-visible { outline-color: var(--sdp-accent-text); }
+.sp-card-footer :focus-visible { outline-color: var(--sdp-focus-sobre-accio); }
 
 .sr-only, .sdp-sr-only {
   position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
@@ -268,14 +297,15 @@ section.design-block { margin-bottom: var(--sdp-space-16); }
 /* En .design-block la tipografia flueix PURA: hereta TOTES les regles globals.
    Només centrem el flux i distingim els títols d'índex del manual. */
 
-/* Títols d'índex de cada secció del manual */
+/* Títols d'índex de cada secció del manual: un graó per davall de l'h3.
+   Abans clamp() només amb vw (no creixia amb el zoom, WCAG 1.4.4). */
 section.design-block > h3:first-of-type,
 section.design-block > h3:first-child {
   text-align: left;
   margin-left: 0;
   margin-right: 0;
   max-width: none;
-  font-size: clamp(1.4rem, 2.4vw, 1.75rem);
+  font-size: var(--sdp-fluid-h4);
 }
 
 .page-intro {
@@ -292,16 +322,16 @@ section.design-block > p:first-of-type {
 
 /* Paleta de mostres */
 .palette { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 24px; margin-bottom: var(--sdp-space-8); }
+/* La mostra no és un control: sense elevació ni ombra de hover (Fase C,
+   Kowalski). L'ombra de repòs es queda (Q6). */
 .swatch {
   border-radius: var(--sdp-radi-m);
   overflow: hidden;
   background: var(--sdp-fons-targeta);
   box-shadow: var(--sdp-ombra-1);
-  transition: transform var(--sdp-t), box-shadow var(--sdp-t);
 }
-.swatch:hover { transform: translateY(-3px); box-shadow: var(--sdp-ombra-3); }
-.swatch-color { height: 100px; padding: var(--sdp-space-4); font-weight: 700; display: flex; align-items: flex-end; }
-.swatch-info { padding: var(--sdp-space-4); font-family: var(--sdp-font-mono); font-size: 0.8rem; color: var(--sdp-text-suau); }
+.swatch-color { height: 100px; padding: var(--sdp-space-4); font-weight: var(--sdp-pes-negreta); display: flex; align-items: flex-end; }
+.swatch-info { padding: var(--sdp-space-4); font-family: var(--sdp-font-mono); font-size: var(--sdp-text-meta); color: var(--sdp-text-suau); }
 
 
 /* Icona en línia amb el text · substituïx 16 estils inline idèntics.
@@ -322,7 +352,7 @@ section.design-block > p:first-of-type {
   border-radius: var(--sdp-radi-s);
   border: 1px solid var(--sdp-vora);
   font-family: var(--sdp-font-mono);
-  font-size: 0.85rem;
+  font-size: var(--sdp-text-meta);
   color: var(--sdp-text-suau);
   overflow-x: auto;
 }
@@ -330,7 +360,7 @@ section.design-block > p:first-of-type {
 /* Espaiat */
 .spacing-item { display: flex; align-items: center; gap: var(--sdp-space-4); margin-bottom: var(--sdp-space-3); }
 .spacing-bar { width: var(--mida, var(--sdp-space-4)); height: var(--sdp-space-4); background: var(--sdp-accent); border-radius: var(--sdp-space-1); flex: none; }
-.spacing-label { font-family: var(--sdp-font-mono); font-size: 0.85rem; color: var(--sdp-text-suau); }
+.spacing-label { font-family: var(--sdp-font-mono); font-size: var(--sdp-text-meta); color: var(--sdp-text-suau); }
 
 /* Grid demo */
 .grid-preview { display: flex; gap: var(--sdp-space-4); }
@@ -341,14 +371,22 @@ section.design-block > p:first-of-type {
   padding: 12px;
   text-align: center;
   border-radius: 4px;
-  font-size: 0.8rem;
+  font-size: var(--sdp-text-meta);
   color: var(--sdp-text-suau);
-  font-weight: 600;
+  font-weight: var(--sdp-pes-semi);
 }
+
+/* Mostrari tipogràfic (EspecimenTipografia): les amplades de Noto Sans. */
+.sdp-tipo-amplada--normal { font-stretch: normal; }
+.sdp-tipo-amplada--semi { font-stretch: var(--sdp-font-amplada-semi); }
+.sdp-tipo-amplada--estreta { font-stretch: var(--sdp-font-amplada-estreta); }
 
 }
 
-/* Migrat des de legat.css */
+/* MOVIMENT REDUÏT · l'únic apagador global (pla 261004_0050, Fase A). El de
+   layout.css era un duplicat: este ja cobrix el seu scroll de main.app-main
+   amb el scroll-behavior de tots els elements. Sense capa: guanya sempre. Els
+   tokens d'escala i de desplaçament es neutralitzen a tokens.css. */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -358,4 +396,23 @@ section.design-block > p:first-of-type {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* COLORS FORÇATS (contrast alt del sistema) · el sistema esborra les ombres i
+   repinta els colors. Tot focus és un outline amb el color del text del
+   sistema: l'anell de la targeta sencera era un box-shadow i desapareixia.
+   Sense capa, com el moviment reduït: guanya als components. Safari no hi
+   entra i no perd res. */
+@media (forced-colors: active) {
+  :focus-visible {
+    outline: var(--sdp-focus-gruix) solid CanvasText;
+    outline-offset: var(--sdp-focus-separacio);
+  }
+  /* La targeta retalla el que sobix (overflow: hidden): l'anell, per dins. */
+  .sp-card-link-overlay:focus-visible { outline-offset: calc(var(--sdp-focus-gruix) * -1); }
+  /* Diàlegs i menús perden l'ombra: la vora els separa del fons. */
+  dialog,
+  [role="dialog"],
+  [role="menu"],
+  [role="listbox"] { border: 1px solid CanvasText; }
 }

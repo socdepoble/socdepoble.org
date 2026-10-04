@@ -121,7 +121,9 @@ test('T46 · «Original» sense zoom amb una foto nova torna el MATEIX fitxer, s
   expect(vista.getByLabelText('Posició horitzontal').disabled).toBe(true);
   await act(async () => { fireEvent.click(vista.getByRole('button', { name: DESAR })); });
   expect(vista.exportador).not.toHaveBeenCalled();
-  expect(vista.onDesa).toHaveBeenCalledWith(vista.font, { format: 'original', rect: { x: 0, y: 0, w: 4000, h: 2000 }, sencera: true });
+  // Onada 4, T3a · el tercer argument (metadades) va sempre; sense geolocalització, tot null.
+  expect(vista.onDesa).toHaveBeenCalledWith(vista.font, { format: 'original', rect: { x: 0, y: 0, w: 4000, h: 2000 }, sencera: true },
+    { geolocalitzacio: null, dataCaptura: null });
 });
 
 test('T46 · «Original» sense zoom sobre una imatge ja desada: no hi ha res a desar i es tanca', async () => {

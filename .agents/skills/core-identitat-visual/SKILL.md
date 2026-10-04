@@ -25,10 +25,12 @@ Està **completament prohibit** generar imatges amb estils genèrics d'IA, minim
 
 ## 2. El Prompt Mestre "Nano" (Escola Bruguera + Berlanga)
 Si has de generar una il·lustració narrativa amb la teua eina `generate_image`, has d'utilitzar ESTRICTAMENT aquest concepte per al prompt:
-- **Tècnica:** Dibuix a tinta, còmic estil Francisco Ibáñez (Escola Bruguera). Imatge a sang (full bleed), sense vores blanques ni marcs. Colors plans tipus gouache, límit CMYK.
+- **Format:** Omet el requeriment de fons transparents (com els PNG); prioritza l'ús de formats lleugers (com **WebP**) per a l'emmagatzematge, atés que l'arquitectura integra el fons blanc de manera natural a pantalla completa.
+- **Tècnica:** Dibuix a tinta, còmic estil Francisco Ibáñez (Escola Bruguera). Imatge a sang (full bleed) assegurant un **marge de seguretat de 3 mm de sang** (deixa que l'escena respire cap enfora, per si alguna vegada el disseny va a impremta i s'ha de tallar). Sense vores blanques artificials ni marcs. Colors plans tipus gouache, límit CMYK.
 - **To / Humor:** Humor costumista, absurd i mordaç estil Luis García Berlanga (humor valencià rural).
 - **Entorn:** Alqueries, esmorzars amb entrepans macissos, bancals, agricultura, tractors, mules, murs de pedra seca. Sense referències globals o urbanes.
-- **Personatges:** Ex: Agricultors, fadrins o iaies valencianes (de 80 anys, amb davantal o jupetí de treball). Amb expressivitat teatral i deformacions còmiques.
+- **Personatges:** Ex: Agricultors, fadrins o iaies valencianes (de 80 anys, amb davantal o jupetí de treball). Amb expressivitat teatral i deformacions còmiques, però **SEMPRE AMB CARES AMABLES I DIVERTIDES** (mai cares roïnes o desagradables). **SEMPRE AMB IGUALTAT DE GÈNERE**: grups mixts d'hòmens i dones en equilibri. Afegeix sempre algun xiquet jugant i animalets (gossos, gats, gallines) per a donar ambient.
+- **Composició i Retall:** Horror vacui (tot ple de detalls absurds). Si el format és rectangular, **l'acció principal ha de passar estrictament al centre**. Açò permet que si l'app retalla la imatge en format quadrat per a una targeta, l'escena principal no es perda.
 - **Text:** Prohibit incloure text genèric o inventat. "Zero Text Rule" tret que es garantisca que és en valencià i autoritzat.
 
 ## 3. Recursos Oficials (Logos i Bàners per a Repositoris)

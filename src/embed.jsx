@@ -1,8 +1,9 @@
 /**
  * embed.jsx — Punt d'entrada del paquet autònom (vite.standalone.config.js,
- * IIFE: soc-de-poble.standalone.js). És el que carrega qualsevol amfitrió i el
- * que munta el standalone quan troba un #root buit. socdepoble.org (build de
- * desenvolupament i de producció del lloc) entra per main.jsx, no per ací.
+ * IIFE: soc-de-poble.standalone.js). És el que carrega qualsevol amfitrió.
+ * Arrenca els elements <soc-de-poble> que l'amfitrió ha escrit al seu
+ * marcatge i no en crea cap. socdepoble.org (build de desenvolupament i de
+ * producció del lloc) entra per main.jsx, no per ací.
  *
  * CANVI 260830: abans cridava `defineCustomElement()` directament, cosa que
  * segellava el backend a l'instant i no deixava cap finestra perquè un host
@@ -18,15 +19,30 @@
  * Si ningú configura res, el comportament és idèntic al d'abans: Supabase.
  *
  * CANVI 260929 (enxufe universal): l'element ja no es fa amo de la URL per
- * defecte. El #root del standalone ho declara ací (`routerType: 'browser'`),
- * com ho feia implícitament fins ara, i les fonts es demanen al costat del
- * paquet, no a l'arrel del domini on s'haja incrustat.
+ * defecte. Fins al 261003 el #root del standalone ho declarava ací
+ * (`routerType: 'browser'`); eixe muntatge ja no existix (vegeu W4-01).
  *
  * CANVI 261003 (Model B, decisions A1 i A3 del Mestre): el pas 2 ja no pot
  * injectar cap implementació de backend ni cap tenant. El paquet els segella
  * per la capa del paquet (config/capaDelPaquet.js), una via interna que es
- * fixa ací, abans d'exposar l'API i de drenar la cua. El #root tampoc no els
- * passa pel JSON de l'element: l'element els pren de la capa del paquet.
+ * fixa ací, abans d'exposar l'API i de drenar la cua. L'element els pren de
+ * la capa del paquet, mai del seu JSON.
+ *
+ * CANVI 261003 (W4-01, auditoria de Codex): el paquet ja no munta res sobre
+ * un `#root`. Abans, si `document.getElementById('root')` era buit, hi penjava
+ * un <soc-de-poble> amb `routerType: 'browser'`. En un WordPress eixe #root
+ * pot ser d'un altre plugin o del tema: el paquet hi creava una segona
+ * instància que no era seua i, si muntava primer, es feia ama de la URL de
+ * l'amfitrió. Que un #root estiga buit no diu de qui és. Ara només arrenquen
+ * els elements explícits (el shortcode, el bloc o qualsevol amfitrió amb el
+ * marcatge universal sdp.markup.v1); sense cap element, cap instància, i
+ * cada element navega segons el que declara (memòria si no diu res).
+ * Cap consumidor del repositori depenia de l'autoarrencada (revisats el
+ * connector de WordPress, els bancs de tests/manual i index.html, que entra
+ * per main.jsx). Si mai en cal un, l'ha de demanar amb una marca explícita i
+ * exclusiva de Sóc de Poble, documentada al contracte, mai deduïda del DOM.
+ * Proves: src/embed.arrel.test.jsx i, amb el host.js de veritat (arrencada,
+ * cicle de vida i cap service worker), src/embed.arrencada.test.jsx.
  */
 
 import { arrencaAuto, exposaGlobal } from './host.js';
@@ -37,26 +53,6 @@ import { fixaCapaDelPaquet } from './config/capaDelPaquet.js';
    contextos React. El banc encastat recarrega complet; la SPA manté HMR. */
 if (import.meta.hot) {
   import.meta.hot.on('vite:beforeUpdate', () => window.location.reload());
-}
-
-/* On viu el paquet. `document.currentScript` només val mentre s'avalua de
-   manera síncrona un <script> clàssic: es captura ací, al nivell superior, o
-   es perd. En un mòdul ES (desenvolupament) val null. */
-const SRC_DEL_PAQUET = (() => {
-  if (typeof document === 'undefined') return '';
-  const src = document.currentScript?.src;
-  return typeof src === 'string' ? src : '';
-})();
-
-/* Les fonts viatgen dins del paquet (dist/fonts/). Sense saber on viu el
-   paquet, la ruta de sempre. */
-function fontsDelPaquet() {
-  if (!SRC_DEL_PAQUET) return '/fonts/noto-sans.css';
-  try {
-    return new URL('fonts/noto-sans.css', SRC_DEL_PAQUET).href;
-  } catch {
-    return '/fonts/noto-sans.css';
-  }
 }
 
 /* Model B: el backend i el tenant del paquet, abans que cap amfitrió parle
@@ -72,34 +68,13 @@ fixaCapaDelPaquet({
 // amb un script pla necessita un global.
 exposaGlobal();
 
+/* Programa el segellat per al següent tick: un <script> col·locat després del
+   bundle encara arriba a temps de cridar configura(). En segellar es definix
+   <soc-de-poble> i cada element explícit del document munta la seua
+   instància. S'espera el DOM perquè arrencaAuto() veja tots els elements
+   (també un `arrencada="manual"`) quan el bundle va al <head>. */
 const init = () => {
-  // Programa el segellat per al següent tick. Un <script> col·locat després
-  // del bundle encara arriba a temps de cridar configura().
   arrencaAuto();
-
-  // Instanciem l'element si trobem l'arrel de muntatge.
-  // Açò permet l'ús standalone tant en DEV com en el build final.
-  const arrel = document.getElementById('root');
-  if (arrel && (!arrel.hasChildNodes() || arrel.innerHTML.trim() === '')) {
-    const element = document.createElement('soc-de-poble');
-    element.setAttribute('fonts-href', fontsDelPaquet());
-
-    const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
-    const isManual = searchParams ? searchParams.get('arrencada') === 'manual' : false;
-
-    if (isManual) {
-      element.setAttribute('arrencada', 'manual');
-    }
-
-    // El backend i el tenant no hi van: l'element els pren de la capa del paquet.
-    element.setAttribute('config', JSON.stringify({
-      pluginUrl: '/',
-      // El #root del standalone és l'amo de la URL: ho declara, no s'endevina.
-      routerType: 'browser',
-      manageDocumentHead: false
-    }));
-    arrel.appendChild(element);
-  }
 };
 
 if (document.readyState === 'loading') {

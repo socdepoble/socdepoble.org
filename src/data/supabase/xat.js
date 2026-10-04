@@ -9,7 +9,10 @@
  *   - loadMissatges(filId, config { abansDeSeq | despresDeSeq, limit }) → Missatge[] per `seq` ascendent
  *   - enviaMissatge(filId, cos | { id, text, tipus, respostaA, metadades }, config) → Missatge
  *   - marcaLlegit(filId, config { llegitFinsSeq, rebutFinsSeq }) → { llegitFinsSeq, rebutFinsSeq }
- *   - creaFilDirecte(altreUsuariId, titol, config) → filId
+ *   - creaFilDirecte(altreUsuariId, titol, config) → filId. En remot,
+ *     altreUsuariId ha de ser un UUID (crea_fil_directe, p_altre_usuari uuid):
+ *     la resta es rebutja abans de cap crida amb `code: 'DESTINATARI_INVALID'`
+ *     (W4-10). La interfície no ho comprova: és una regla d'este proveïdor.
  *   - carregaMembres(text, config) → { usuari_id, nom, fil_id }[]
  *   - subscribeToXat(filId, callback, config) → { subscription, error }
  *   - unsubscribeFromXat(subscription, config)
@@ -37,6 +40,8 @@ const LIMIT_PER_DEFECTE = 50;
 const LIMIT_MAXIM = 100;
 const TEXT_MAXIM = 4096;
 const RE_CODI_SDP = /SDP-XAT-\d{3}/;
+/* W4-10 · Les persones i les entitats de Supabase són UUID (2609272200_xat_entitats.sql). */
+const RE_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const CATEGORIES_CONEGUDES = new Set(['SESSIO_CADUCADA', 'NO_TROBAT', 'DUPLICAT', 'SENSE_PERMIS', 'XARXA']);
 const channelOwners = new WeakMap();
 
@@ -368,6 +373,15 @@ export const creaFilDirecte = async (altreUsuariId, titol = null, config = {}) =
     comprovaSenyal(config);
     const seed = await local(config);
     if (seed) return seed.creaFilDirecte(altreUsuariId, titol, config);
+    /* W4-10 · El destinatari arriba tal com el va donar el port o la URL
+       (?amb=), en el format del backend que siga. Esta RPC només sap obrir un
+       fil amb un UUID: un altre id es rebutja ací, sense client ni crida. */
+    if (typeof altreUsuariId !== 'string' || !RE_UUID.test(altreUsuariId)) {
+      throw errorLocal(
+        'No es pot obrir la conversa: este servidor identifica les persones i les entitats amb un UUID, i el destinatari no en porta cap.',
+        'DESTINATARI_INVALID'
+      );
+    }
     const supabase = await getClient(config);
     comprovaSenyal(config);
     const tenantId = getResolvedConfig(config).tenantId;

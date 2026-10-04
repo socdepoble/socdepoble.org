@@ -40,7 +40,10 @@ const DEL_PAQUET = Object.freeze({
 async function avalua(importaEntrada) {
   vi.resetModules();
   pintats.length = 0;
-  document.body.innerHTML = '<div id="root"></div>';
+  // Un sol node fix: createElement n'hi ha prou; no sanitizeHtml, que lleva l'id="root".
+  const arrel = document.createElement('div');
+  arrel.setAttribute('id', 'root');
+  document.body.replaceChildren(arrel);
   await importaEntrada();
   return { host: await import('./host.js'), capa: await import('./config/capaDelPaquet.js') };
 }
@@ -71,7 +74,7 @@ test('main.jsx: fixa la capa del paquet amb les VITE_* abans de configura(), i c
   expect(host.arrenca).toHaveBeenCalledTimes(1);
 });
 
-test('embed.jsx: fixa la capa del paquet abans d’exposar l’API (i de drenar la cua), i el JSON del #root no porta backend ni tenant', async () => {
+test('embed.jsx: fixa la capa del paquet abans d’exposar l’API (i de drenar la cua), i no munta res sobre el #root', async () => {
   const { host, capa } = await avalua(() => import('./embed.jsx'));
   expect(capa.fixaCapaDelPaquet).toHaveBeenCalledTimes(1);
   expect(capa.fixaCapaDelPaquet).toHaveBeenCalledWith(DEL_PAQUET);
@@ -79,12 +82,11 @@ test('embed.jsx: fixa la capa del paquet abans d’exposar l’API (i de drenar 
   expect(host.exposaGlobal).toHaveBeenCalledTimes(1);
   expect(capa.fixaCapaDelPaquet.mock.invocationCallOrder[0]).toBeLessThan(host.exposaGlobal.mock.invocationCallOrder[0]);
   expect(host.configura).not.toHaveBeenCalled();
-  const element = document.querySelector('#root > soc-de-poble');
-  expect(JSON.parse(element.getAttribute('config'))).toEqual({ pluginUrl: '/', routerType: 'browser', manageDocumentHead: false });
-  // Cap clau que l'element descartaria (backend, tenant ni serveis propis): el #root no perd res.
-  expect(capa.separaClausDelPaquet(JSON.parse(element.getAttribute('config'))).descartades).toEqual([]);
-  for (const atribut of ['tenant-id', 'supabase-url', 'supabase-anon-key', 'backend-url', 'data-mode',
-    'oauth-relay-url', 'bot-api-url', 'sollutia-issuer']) {
-    expect(element.hasAttribute(atribut), atribut).toBe(false);
-  }
+  expect(host.arrencaAuto).toHaveBeenCalledTimes(1);
+  /* W4-01 (261003): el paquet ja no penja cap element del #root, que pot ser
+     d'un altre plugin; només arrenquen els elements explícits. El backend i
+     el tenant tampoc no viatgen per cap JSON: no hi ha element que en porte.
+     Les proves de l'arrel aliena són a embed.arrel.test.jsx. */
+  expect(document.getElementById('root').hasChildNodes()).toBe(false);
+  expect(document.querySelector('soc-de-poble')).toBeNull();
 });

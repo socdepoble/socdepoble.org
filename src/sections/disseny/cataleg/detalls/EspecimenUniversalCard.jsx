@@ -1,10 +1,15 @@
 import { useState } from 'react';
-import { CalendarClock, Car, PawPrint } from 'lucide-react';
+import { CalendarClock, Car, MapPin, PawPrint } from 'lucide-react';
 import { Especimen } from '../Especimen.jsx';
 import { Llinatge } from '../Llinatge.jsx';
 import { UniversalCard, Alerta } from '../../../../components/PedraSeca/index.js';
+import { PortesTargeta } from '../../../../components/PedraSeca/organismes/PortesTargeta.jsx';
 import { BotoVisibilitat } from '../../../../components/universal/barres/BotoVisibilitat.jsx';
+import { dataHoraDeBarra } from '../../../../components/universal/editorial.js';
 import { useNavigate } from '../../../../app/contexts/RouterContext';
+import { objecteDePagina } from '../../../../config/objecteConnectable.js';
+import { PAGE_COPY } from '../../../text/pageContent.js';
+import { useXatCorporatiu } from '../../../control/xatCorporatiu.js';
 
 /* Autoria i peu compartits per les variants: la targeta és una i les dades canvien. */
 const SDP = {
@@ -15,8 +20,41 @@ const SDP = {
 };
 const PEU = { hasFooter: true, showTranslate: true, showComment: true, showShare: true, showConnect: true };
 
+/* P5 · Onada 4 (PRD «Control amb targetes il·lustrades de doble acció», aprovat pel Mestre
+   el 261003) · Les portes: Publicar i Saber-ne més. Destí null: en obres.
+   ESMENA 261003 22:34 (directrius 2234 i 2245) · La targeta amb portes és la UniversalCard
+   estàndard: la boina de socdepoble (l'autor obri el seu xat corporatiu), la il·lustració, i
+   títol, subtítol i entradilla visibles, els de la seua pàgina (PAGE_COPY). Dues mostres: una
+   amb les dues portes obertes (el Mur) i una amb Publicar en obres i sense il·lustració (el Mapa).
+   P6 (directriu 2325) · Amb el peu blau de sempre cap a la seua pàgina (sense Connectar) i cap
+   etiqueta: «en obres» ho diu la porta inerta. W4-09 · L'autor porta al xat corporatiu resolt
+   (xatCorporatiu.js), mai a l'id de llavor en remot. */
+const porta = (id, verb, nom, desti, varietat) => ({ id, verb, nom, desti, varietat });
+const BOINA_SDP = { author: SDP.author, location: SDP.location, avatarUrl: SDP.avatarUrl };
+const ambLaPagina = (clau) => {
+  const pagina = PAGE_COPY[clau];
+  const ruta = `/page/${clau}`;
+  return {
+    title: pagina.title, subtitle: pagina.subtitle, body: pagina.lead, ...dataHoraDeBarra({ creat: pagina.date }),
+    mainHref: ruta, objecte: objecteDePagina({ titol: pagina.title, ruta, id: ruta }), hasFooter: true, showConnect: false
+  };
+};
+const DOBLE_ACCIO = [
+  {
+    clau: 'mur', ...ambLaPagina('publicar_mur'),
+    imageUrl: '/assets/nano_cards/mur_nano_card.jpg',
+    portes: [porta('publicar', 'Publicar', 'Publicar al Mur', '/notes', 'primari'), porta('saber', 'Saber-ne més', 'Saber-ne més sobre el Mur', '/page/publicar_mur', 'secundari')]
+  },
+  {
+    clau: 'mapa', ...ambLaPagina('publicar_mapa'),
+    squareBadge: { type: 'custom', label: 'Publicar al Mapa', content: <MapPin size={48} strokeWidth={1.5} aria-hidden="true" focusable="false" /> },
+    portes: [porta('publicar', 'Publicar', 'Publicar al Mapa', null, 'primari'), porta('saber', 'Saber-ne més', 'Saber-ne més sobre el Mapa', '/page/publicar_mapa', 'secundari')]
+  }
+];
+
 export default function EspecimenUniversalCard() {
   const navega = useNavigate();
+  const xatCorporatiu = useXatCorporatiu();
   const [avis, setAvis] = useState('Encara no has premut el pin ni la bola del món.');
   return (
     <>
@@ -36,14 +74,16 @@ export default function EspecimenUniversalCard() {
         ['isAvis', 'boolean', 'false', 'Afig sp-card--avis a l’article (avís ancorat). Avui cap regla CSS el pinta diferent: és un ganxo per al Mur.'],
         ['headerAction', 'node', '—', 'Una acció pròpia a la dreta de la caputxa, entre el pin i la data. Cap secció la fa servir encara.'],
         ['imageUrl / imageAlt', 'string', '—', 'Mitjà quadrat (aspect-ratio 1/1). Només fonts segures.'],
-        ['squareBadge', "{ type: 'price'|'calendar'|'custom', … }", 'null', 'Insígnia lateral: preu, data (dia/mes/any) o contingut propi. Afegix .has-aside i alinea el text a l’esquerra.'],
+        ['squareBadge', "{ type: 'price'|'calendar'|'custom', … }", 'null', 'Insígnia lateral: preu, data (dia/mes/any) o contingut propi. Afegix .has-aside i alinea el text a l’esquerra. P6: el quadrat de 128 px, fosc com la barra lateral (--sdp-crom-fons) i lletra blanca.'],
+        ['price', 'string', '—', 'P6 · El preu va al mateix quadrat, mai a una píndola (com squareBadge type price). Un preu llarg («1.250,00 €») baixa de lletra i hi cap sencer. Mana squareBadge, després price i després calendarBadge.'],
         ['calendarBadge', '{ dia, mes, any?, dateTime, onClick? }', 'null', 'La insígnia de data d’un esdeveniment (EventCard): un <time dateTime> amb dia, mes i any; amb onClick, un botó. Si també hi ha squareBadge, mana squareBadge.'],
         ['actual', 'boolean', 'false', 'La targeta és l’element triat d’una llista: aria-current="true" a l’element principal (o a l’article, si no n’hi ha).'],
         ['labels', "(string | { text, className, href })[]", '[]', 'Taxonomia: sdp-badge-system · category · tag · accent.'],
         ['hasFooter / showTranslate / showComment / showShare / showConnect', 'boolean', '—', 'Peu blau. hasFooter=true activa les quatre accions per defecte.'],
         ['mainHref / onMainClick', 'string / fn', '—', 'Tota la targeta és un enllaç (overlay) sense tapar les accions.'],
         ['objecte', '{ tipus, id, titol, ruta }', '—', 'T63.2 · El descriptor tipat de l’element (objecteDe, objecteDePerfil…). Sense onComment, Comentar obri el xat comú de la seua Pàgina Universal (/xat?sobre=tipus:id), o el missatge directe d’una persona o una IA. Una nota no en té: Comentar no es pinta. Sense objecte, el xat de la pàgina del detall (mainHref), mai el de la llista. Sense cap xat (objecte null, cap detall o una ruta que el contracte no admet), el botó es queda i el clic ho avisa.'],
-        ['connectLabel', 'string', "'Connectar'", 'Verb de l’acció principal: «Sol·licitar plaça», «Obrir»… Nom accessible: «Connectar amb {títol}»; qualsevol altre verb, «{verb}: {títol}».']
+        ['connectLabel', 'string', "'Connectar'", 'Verb de l’acció principal: «Sol·licitar plaça», «Obrir»… Nom accessible: «Connectar amb {títol}»; qualsevol altre verb, «{verb}: {títol}».'],
+        ['portes', '[{ id, verb, nom, desti, varietat, avis?, enObres? }]', '—', 'P5 · Com a màxim dues portes al final del cos (PortesTargeta): «Publicar» i «Saber-ne més». Amb portes no hi ha enllaç de tota la targeta; la resta de l’anatomia és la de sempre, boina i peu blau inclosos (P6): mainHref ja no fa overlay, és la pàgina de Comentar i Compartir. desti: una ruta de l’app, validada sense mirar el protocol de la finestra (W4-07); null, o una adreça de fora, pinta la porta inerta que avisa.']
       ]}
       a11y={['Cada acció del peu té nom accessible amb el títol: «Comentar Samarreta…».', 'L’overlay d’enllaç és un <a>/<button> real amb aria-label, no un div.', 'Les insígnies de calendari són <time> amb dateTime.']}
       fes={['Un sol h3 per targeta dins d’un feed; el feed porta el seu h2 (si no, headingLevel).', 'squareBadge per a preu, data o icona: mai text llarg.', 'Sense foto, la icona de la part va a squareBadge (Consola, Vehicle, Animalets).', 'Una data que no porta al Calendari (instantània de dades): onDateTime={false}.', 'Passar a emoticona el camp cru del document: la caputxa només la mostra si s’ha triat.']}
@@ -75,12 +115,13 @@ export default function EspecimenUniversalCard() {
           {...SDP} {...PEU}
         />
 
-        {/* 2 · Mercat (amb preu) — la samarreta de Sóc de Poble */}
+        {/* 2 · Mercat (amb preu) — la samarreta de Sóc de Poble. P6 · El preu
+            (price) va al quadrat fosc, com al Mur i al Mercat. */}
         <UniversalCard
           title="Samarreta Sóc de Poble"
           subtitle="L'edició definitiva amb el logotip complet"
           body="Dibuix del mapa del tresor. Cotó Roly de màxima qualitat."
-          squareBadge={{ type: 'price', value: '15 €' }}
+          price="15 €"
           imageUrl="https://socdepoble.org/assets/uploads/brain/media__1776503825171.jpg"
           imageAlt="Samarreta amb el logotip de Sóc de Poble"
           labels={[
@@ -90,6 +131,17 @@ export default function EspecimenUniversalCard() {
             { text: 'samarreta', className: 'sdp-badge-tag' }
           ]}
           time="00:29" date="23/03/22"
+          {...SDP} {...PEU}
+        />
+
+        {/* 2b · P6 · Un preu llarg: la lletra baixa per trams i cap sencer al quadrat. */}
+        <UniversalCard
+          title="Motocultor de segona mà"
+          subtitle="Revisat i a punt per a l'hort"
+          body="Funciona perfectament. Es pot provar a la cooperativa."
+          price="1.250,00 €"
+          labels={[{ text: 'Mercat', className: 'sdp-badge-system' }]}
+          time="18:10" date="02/10/26"
           {...SDP} {...PEU}
         />
 
@@ -205,6 +257,42 @@ export default function EspecimenUniversalCard() {
         />
       </div>
       <p role="status">{avis}</p>
+
+      {/* P5 · Onada 4 · Pedra Seca §9: l'espècimen abans de la producció (el Panell de Control),
+          amb l'ESMENA 261003 22:34 (directrius 2234 i 2245): la targeta estàndard, sencera. */}
+      <h5>Targeta de doble acció (portes)</h5>
+      <p>
+        La del <strong>Panell de Control</strong>. És la <strong>UniversalCard de sempre</strong>, sencera: la boina de
+        l’entitat <strong>socdepoble</strong> (l’autor obri el seu <strong>xat corporatiu</strong>, i la data, el
+        Calendari), la il·lustració, i el <strong>títol, el subtítol i l’entradilla visibles</strong>, els mateixos de la
+        seua pàgina. Al final del cos, <strong>dues portes</strong>: «Publicar», en blau, i «Saber-ne més», que obri la
+        <strong> UniversalPage</strong> de la targeta.
+      </p>
+      <p>
+        Amb <code>portes</code>, la targeta sencera <strong>no és cap enllaç</strong>, però conserva el
+        <strong> peu blau</strong> de sempre (Traduir, Comentar i Compartir), cap a la seua pàgina. És
+        l’<strong>única variació</strong>: dues portes al cos i <strong>cap etiqueta</strong>. Una porta sense destí,
+        o amb un destí que <strong>no és una ruta de l’app</strong>, queda <strong>inerta</strong>: diu que està en
+        obres i no navega. La ruta es valida <strong> sense mirar el protocol de la finestra</strong>, i val igual a
+        la web i a l’app nativa.
+      </p>
+      <div className="sdp-card-grid" role="group" aria-label="Targetes de doble acció de mostra">
+        {DOBLE_ACCIO.map(({ clau, ...targeta }) => (
+          <UniversalCard key={clau} {...BOINA_SDP} authorHref={xatCorporatiu.href || undefined} {...targeta} />
+        ))}
+      </div>
+
+      <h5>Les portes, soles (PortesTargeta)</h5>
+      <p>
+        La peça que pinta les portes. L’índex de Pedra Seca <strong>no l’exporta</strong>: la munta la targeta. El
+        <strong> nom</strong> de cada porta conté el verb visible, i la resta va per a lector.
+      </p>
+      <PortesTargeta
+        portes={[
+          porta('publicar', 'Publicar', 'Publicar: Vehicle Compartit', null, 'primari'),
+          porta('saber', 'Saber-ne més', 'Saber-ne més: Vehicle Compartit', null, 'secundari')
+        ]}
+      />
     </Especimen>
     </>
   );

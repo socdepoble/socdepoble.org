@@ -135,8 +135,8 @@ export function BotoTargetaViva({ document, autor = null, etiquetes, avis = AVIS
   const tanca = useCallback(() => setObert(false), []);
   return (
     <>
-      <button type="button" className="sdp-copyright-selector sdp-boto-targeta-viva" aria-haspopup="dialog" onClick={() => setObert(true)}>
-        <IdCard size={14} aria-hidden="true" />Vista targeta
+      <button type="button" className="sdp-classificacio-pindola sdp-boto-targeta-viva" aria-haspopup="dialog" onClick={() => setObert(true)}>
+        <span className="sp-card-label sdp-badge-buit"><IdCard size={14} aria-hidden="true" /><span className="sdp-classificacio-pindola__text">Vista targeta</span></span>
       </button>
       <Dialeg
         obert={obert}

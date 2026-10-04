@@ -1,7 +1,8 @@
 import { describe, expect, test } from 'vitest';
 import {
-  FORMATS, FORMAT_PER_DEFECTE, ZOOM_MAX, ambLliscador, arrossega, esSencera, estatInicial, limita, lliscador,
-  marcBase, marges, midaSortida, midaVisor, pessic, proporcio, rectDeRetall, textAmpliacio, tipusDeSortida, zoomMaxim,
+  FORMATS, FORMAT_PER_DEFECTE, FORMAT_SORTIDA, PAS_TECLAT, ZOOM_MAX, ambLliscador, ambTecla, arrossega, esSencera,
+  estatInicial, limita, lliscador, marcBase, marges, midaSortida, midaVisor, opcionsSortida, pessic, proporcio,
+  rectDeRetall, textAmpliacio, tipusDeSortida, zoomMaxim,
 } from './enquadrament.js';
 
 /* T46 (ordre del Mestre, 260928) · la matemàtica del re-enquadrament. */
@@ -133,5 +134,54 @@ describe('T46 · eixida', () => {
   test('textAmpliacio en percentatge', () => {
     expect(textAmpliacio(1)).toBe('100 %');
     expect(textAmpliacio(2.345)).toBe('235 %');
+  });
+});
+
+/* Onada 4, T3a · L'eixida demanada pel pare (RETALLADOR §1) i el teclat sobre el visor. */
+describe('T3a · opcionsSortida', () => {
+  test('sense `sortida`, exactament el contracte T46: 1.200 pel costat llarg i el tipus intermedi', () => {
+    expect(opcionsSortida({ w: 2000, h: 2000 }, 'image/jpeg')).toEqual({ amplada: 1200, alcada: 1200, tipus: 'image/jpeg' });
+    expect(opcionsSortida({ w: 3200, h: 1800 }, 'image/png', null)).toEqual({ amplada: 1200, alcada: 675, tipus: 'image/png' });
+  });
+
+  test('amb `sortida`: WebP de sèrie, l’amplada màxima i la qualitat', () => {
+    expect(FORMAT_SORTIDA).toBe('image/webp');
+    expect(opcionsSortida({ w: 2000, h: 2000 }, 'image/jpeg', { ampladaMaxima: 600 }))
+      .toEqual({ amplada: 600, alcada: 600, tipus: 'image/webp' });
+    expect(opcionsSortida({ w: 2000, h: 1000 }, 'image/png', { ampladaMaxima: 800, format: 'image/jpeg', qualitat: 0.8 }))
+      .toEqual({ amplada: 800, alcada: 400, tipus: 'image/jpeg', qualitat: 0.8 });
+  });
+
+  test('amb `sortida`: mai s’amplia; format o qualitat desconeguts, els de sèrie', () => {
+    expect(opcionsSortida({ w: 400, h: 300 }, 'image/jpeg', { ampladaMaxima: 600 })).toEqual({ amplada: 400, alcada: 300, tipus: 'image/webp' });
+    expect(opcionsSortida({ w: 2000, h: 2000 }, 'image/jpeg', { format: 'image/gif', qualitat: 7 })).toEqual({ amplada: 1200, alcada: 1200, tipus: 'image/webp' });
+  });
+});
+
+describe('T3a · ambTecla', () => {
+  const W = 4000;
+  const H = 2000;
+  const base = { ...estatInicial('1:1'), zoom: 2 };
+
+  test('les fletxes mouen el marc com els lliscadors; Maj, quatre vegades més', () => {
+    expect(lliscador(ambTecla(base, 'ArrowRight', W, H), 'x', W, H)).toBe(50 + PAS_TECLAT);
+    expect(lliscador(ambTecla(base, 'ArrowLeft', W, H), 'x', W, H)).toBe(50 - PAS_TECLAT);
+    expect(lliscador(ambTecla(base, 'ArrowDown', W, H), 'y', W, H)).toBe(50 + PAS_TECLAT);
+    expect(lliscador(ambTecla(base, 'ArrowUp', W, H), 'y', W, H)).toBe(50 - PAS_TECLAT);
+    expect(lliscador(ambTecla(base, 'ArrowRight', W, H, FORMATS, { gran: true }), 'x', W, H)).toBe(50 + 4 * PAS_TECLAT);
+  });
+
+  test('a la vora, el marc no ix de la foto', () => {
+    const vora = ambLliscador(base, 'x', 100, W, H);
+    expect(lliscador(ambTecla(vora, 'ArrowRight', W, H), 'x', W, H)).toBe(100);
+  });
+
+  test('+ i − amplien dins dels límits; una tecla aliena torna null', () => {
+    expect(ambTecla(estatInicial('1:1'), '+', W, H).zoom).toBeCloseTo(1.1);
+    expect(ambTecla(estatInicial('1:1'), '=', W, H).zoom).toBeCloseTo(1.1);
+    expect(ambTecla(estatInicial('1:1'), '-', W, H).zoom).toBe(1);
+    expect(ambTecla({ ...estatInicial('1:1'), zoom: ZOOM_MAX }, '+', W, H).zoom).toBe(ZOOM_MAX);
+    expect(ambTecla(base, 'a', W, H)).toBeNull();
+    expect(ambTecla(base, 'Enter', W, H)).toBeNull();
   });
 });

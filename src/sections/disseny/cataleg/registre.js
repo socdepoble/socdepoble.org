@@ -208,3 +208,8 @@ REGISTRE.push({ nom: 'EsqueletCatalegColleccio', fitxer: 'apps/comu/esquelet/Esq
 REGISTRE.push({ nom: 'ColumnaCataleg', fitxer: 'apps/comu/esquelet/ColumnaCataleg.jsx', pagina: 'estructura', estat: 'viu', fora: true });
 REGISTRE.push({ nom: 'ColumnaColleccio', fitxer: 'apps/comu/esquelet/ColumnaColleccio.jsx', pagina: 'estructura', estat: 'viu', fora: true });
 REGISTRE.push({ nom: 'ColumnaColleccions', fitxer: 'apps/comu/esquelet/ColumnaColleccions.jsx', pagina: 'estructura', estat: 'viu', fora: true });
+/* P5 · Onada 4 (PRD «Control amb targetes il·lustrades de doble acció», aprovat pel Mestre el
+   261003, amb l'ESMENA 261003 22:34) · les portes d'UniversalCard, al final del cos de la
+   targeta estàndard. L'índex de PedraSeca no l'exporta: la munta la targeta. Espècimen:
+   EspecimenUniversalCard (fonaments/universalcard). */
+REGISTRE.push({ nom: 'PortesTargeta', fitxer: 'PedraSeca/organismes/PortesTargeta.jsx', pagina: 'fonaments', estat: 'viu' });

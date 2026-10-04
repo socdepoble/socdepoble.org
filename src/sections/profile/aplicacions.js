@@ -35,17 +35,31 @@ export const APLICACIONS = Object.freeze([
     estat: 'pendent',
   }),
   Object.freeze({
-    id: 'llibreria',
-    nom: 'Llibreria',
-    descripcio: 'Llibres i documents del poble, a l’abast de tothom.',
+    id: 'metriques',
+    nom: 'Consola de Mètriques',
+    descripcio: 'Monitorització i auditoria de la IA.',
+    icona: Landmark, // TODO proper icon
+    estat: 'pendent',
+  }),
+  Object.freeze({
+    id: 'lector_rss',
+    nom: 'Curation AI (Lector RSS)',
+    descripcio: 'Agregador de notícies i resums intel·ligents.',
     icona: BookOpen,
     estat: 'pendent',
   }),
   Object.freeze({
-    id: 'ajuntament',
-    nom: 'Ajuntament',
-    descripcio: 'Avisos, bans i tràmits de l’ajuntament.',
+    id: 'cervell',
+    nom: 'Cervell (Node Graph)',
+    descripcio: 'Mapa visual de relacions i categories.',
     icona: Landmark,
+    estat: 'pendent',
+  }),
+  Object.freeze({
+    id: 'snippet',
+    nom: 'Snippet',
+    descripcio: 'Extensió de Chrome per a desar webs al Bloc.',
+    icona: BookOpen,
     estat: 'pendent',
   }),
 ]);

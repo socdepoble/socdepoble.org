@@ -28,6 +28,7 @@ function ambReintent(importer) {
 }
 
 export const CATALOG_DETAIL_LOADERS = {
+  'fonaments/panell': ambReintent(() => import('./detalls/EspecimenPanell.jsx')),
   'fonaments/contracte': ambReintent(() => import('./detalls/EspecimenContracte.jsx')),
   'fonaments/color': ambReintent(() => import('./detalls/EspecimenColor.jsx')),
   'fonaments/tipografia': ambReintent(() => import('./detalls/EspecimenTipografia.jsx')),

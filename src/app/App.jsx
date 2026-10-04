@@ -19,6 +19,8 @@ import { useSessioOpcional } from './contexts/SessionContext.jsx';
 import { reclamaContingutDelConvidat } from '../data/identitat.js';
 import { useToast } from '@/components/universal/NotificationContext.jsx';
 import { delVal } from '../config/storage';
+import { ATRIBUT_CONTRAST, CONTRAST_BANCAL, arrelDePresentacio, reclamaAtribut } from '../config/theme';
+import { esAmaDelDocument } from '../apps/plataforma/interruptors.js';
 import { EVENT_NIVELL_IAIA, esIaiaActiva, nivellIaiaDesat } from '../sections/realitat/nivellIaia.js';
 import { PAGE_COPY } from '../sections/text/pageContent.js';
 import { BotoCrom } from '../components/universal/PanellCrom.jsx';
@@ -54,6 +56,8 @@ const PageDetailSection = lazy(() => import('../sections/detail/PageDetailSectio
 const RealitatSection = lazy(() => import('../sections/realitat/RealitatSection'));
 /* Plataforma d'Apps Enxufables (261002) · el portal /app i cada app a /app/<id>/*. */
 const RutaApps = lazy(() => import('../apps/plataforma/RutaApps.jsx'));
+/* P7-A (261004) · la pàgina de cada utilitat del Panell: /plugin/<id> (sections/plugins/). */
+const PluginPage = lazy(() => import('../sections/plugins/PluginPage.jsx'));
 import NotFoundPage from '../pages/NotFoundPage';
 import { CoreContentProvider, useCoreContent } from './contexts/CoreContentContext';
 import { MurProvider } from '../sections/mur/MurContext';
@@ -231,7 +235,7 @@ function AppShell({ children, mobileNav }) {
   }, [isDesktopSidebarClosed]);
 
   const { showToast } = useToast();
-  const { language, status, themeMode, externalConfig } = useUIState();
+  const { language, status, themeMode, contrastMode, externalConfig } = useUIState();
   const { t } = useUIActions();
   const navigate = useNavigate();
   const { basename, memoria } = useRouter();
@@ -435,26 +439,47 @@ function AppShell({ children, mobileNav }) {
     };
   }, [t, showToast]);
 
+  /* El tema, al seu lloc de sempre: l'amfitrió del Shadow DOM o <html>. Els
+     selectors foscos dels fulls (:root[data-theme="dark"] …) encara no casen
+     amb l'arrel del mòdul, així que el lloc no canvia. W4-12 · s'alinea el
+     defecte que comparteix amb el contrast: reclamaAtribut (theme.js) torna
+     a l'element el data-theme que tenia quan l'app es desmunta, i dues
+     instàncies sobre el mateix element no es barallen. */
   useEffect(() => {
-    if (mainRef.current) {
-      const rootNode = mainRef.current.getRootNode();
-      if (rootNode instanceof ShadowRoot) {
-        rootNode.host.setAttribute('data-theme', themeMode || 'light');
-      } else {
-        document.documentElement.setAttribute('data-theme', themeMode || 'light');
-      }
-    }
+    if (!mainRef.current) return undefined;
+    const rootNode = mainRef.current.getRootNode();
+    const element = rootNode instanceof ShadowRoot ? rootNode.host : document.documentElement;
+    return reclamaAtribut(element, 'data-theme', themeMode || 'light');
   }, [themeMode]);
 
+  /* D6 · Mode Bancal (Q1 del Mestre, 261004) · W4-12 (auditoria de Codex,
+     261004) · data-contrast="bancal" va a l'arrel que diu la política d'arrel
+     i domini (theme.js: arrelDePresentacio): l'amfitrió <soc-de-poble> dins
+     del Shadow DOM; <html> NOMÉS quan l'app és ama del document
+     (esAmaDelDocument, el criteri de la Plataforma d'Apps: manageDocumentHead
+     === true, sense __SDP_EMBEDDED__ i fora d'iframe); en un document alié
+     (l'embed React en DOM ordinari), l'arrel del mòdul, .sdp-root. Així el
+     mode normal ja no esborra el data-contrast de la pàgina amfitriona, i en
+     desmuntar l'element recupera el que tenia (reclamaAtribut). En mode normal
+     l'atribut no hi és. useLayoutEffect (abans de pintar), no useEffect: el
+     primer fotograma ja porta el contrast triat. */
+  const amaDelDocument = esAmaDelDocument(externalConfig);
+  React.useLayoutEffect(() => {
+    const arrel = arrelDePresentacio(rootRef.current, { amaDelDocument });
+    return reclamaAtribut(arrel, ATRIBUT_CONTRAST, contrastMode === CONTRAST_BANCAL ? CONTRAST_BANCAL : null);
+  }, [contrastMode, amaDelDocument]);
+
+  /* Revisió adversarial de C1 (W4-12) · La llengua seguix la mateixa política
+     d'arrel i domini que el contrast: l'amfitrió del Shadow DOM, <html> NOMÉS
+     quan l'app és ama del document (socdepoble.org, com sempre) i, en un
+     document alié, l'arrel del mòdul, que és on viu el text que la parla.
+     Abans, l'embed React en DOM ordinari canviava el lang de tota la pàgina
+     amfitriona (un WordPress en-US passava a «ca») i no el tornava mai;
+     reclamaAtribut el torna en desmuntar. Cap full casa amb [lang] ni :lang(). */
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      if (mainRef.current) {
-        const rootNode = mainRef.current.getRootNode();
-        const host = rootNode instanceof ShadowRoot ? rootNode.host : document.documentElement;
-        host.setAttribute('lang', language || 'ca');
-      }
-    }
-  }, [language]);
+    const arrel = arrelDePresentacio(rootRef.current, { amaDelDocument });
+    return reclamaAtribut(arrel, 'lang', language || 'ca');
+  }, [language, amaDelDocument]);
 
   return (
     <div className={`sdp-root ${isCompact ? 'is-compact' : ''} ${isDesktopSidebarClosed ? 'sidebar-closed' : ''} `} ref={rootRef} onClick={interceptaEnllacos ? alClicarEnllac : undefined}>
@@ -794,6 +819,7 @@ function AppRoutes() {
         <Route path="/utilitats" element={<ControlSection />} />
         <Route path="/connectar" element={<ConnectarSection agents={agents} />} />
         <Route path="/page/:slug" element={<PageDetailSection />} />
+        <Route path="/plugin/:id" element={<PluginPage />} />
         <Route path="/legal" element={<TextRoute pageKey="legal" />} />
         <Route path="/versions" element={<TextRoute pageKey="versions" />} />
         <Route path="/traduccions" element={<TranslationsSection />} />

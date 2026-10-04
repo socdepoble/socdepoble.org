@@ -1,0 +1,24 @@
+/* ═══════════════════════════════════════════════════════════════════
+   TIPOGRAFIA ESTRETA · contracte d'ús de Noto Sans Condensed (Q7, 261004)
+
+   Amplades: --sdp-font-amplada-semi (87.5%, SemiCondensed) i
+   --sdp-font-amplada-estreta (75%, Condensed), declarades a tokens.css.
+   Les cares les declara public/fonts/noto-sans.css (fora del Shadow DOM:
+   un @font-face només compta al document). Ací només hi ha l'ús, i va dins
+   d'index.css perquè arribe també a l'element incrustat.
+
+   Mentre no hi haja el woff2 amb eix wdth, el text estret ix a amplada
+   normal amb Noto Sans, mai amb la lletra del sistema
+   (02_investigacio_ia/261003_1330_onada4_claude/FONTS_LOCALS.txt).
+   Per a etiquetes curtes que no caben; mai per a la prosa.
+   ═══════════════════════════════════════════════════════════════════ */
+
+@layer components {
+  .sdp-text-estret {
+    font-stretch: var(--sdp-font-amplada-semi);
+  }
+
+  .sdp-text-estret--molt {
+    font-stretch: var(--sdp-font-amplada-estreta);
+  }
+}

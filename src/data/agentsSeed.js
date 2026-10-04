@@ -13,10 +13,12 @@ export const AGENTS_MAP = {
     specialization: 'Central i Administració',
     scope: 'MASTER',
     calendarCategory: 'General',
-    systemPrompt: `Ets l'assistent del compte corporatiu de Sóc de Poble.`,
+    systemPrompt: `Ets l'assistent del compte corporatiu de socdepoble.`,
     town_name: 'Sóc de Poble',
     lema: 'Fem xarxa al territori.',
-    short_bio: 'El compte oficial i central de tota la infraestructura de Sóc de Poble.'
+    short_bio: 'El compte oficial i central de tota la infraestructura de socdepoble.',
+    hero_url: '/assets/uploads/brain/caricatura_socdepoble_portada.jpg',
+    presentacio_html: `<p><strong>El cor de la plaça digital</strong><br/><strong>socdepoble</strong> no és simplement una aplicació informàtica qualsevol, sinó una aposta radical per la sobirania tecnològica rural. En un món dominat per les grans corporacions que converteixen les persones en productes, aquesta iniciativa naix amb l'esperit de recuperar el caliu del <strong>bancal i la plaça</strong> a través del món digital, prioritzant la privacitat i la proximitat del veïnat.</p><p><strong>La doctrina de la Pedra Seca</strong><br/>L'arquitectura tecnològica de la plataforma està dissenyada seguint el patró de la <strong>Pedra Seca</strong>, on cada peça encaixa perfectament amb la següent sense necessitat de ciment. Això ens permet mantindre una aplicació extremadament <strong>enxufable i modular</strong>, capaç d'adaptar-se a qualsevol servidor futur sense perdre la seua essència. L'objectiu és garantir la durabilitat de les dades del poble, de manera que la informació dels agricultors i fadrins estiga completament protegida davant l'obsolescència d'internet.</p><p><strong>Resiliència i autonomia</strong><br/>Cada detall, des dels esmorzars organitzats fins als anuncis de tractors, funciona sota una lògica <strong>offline-first</strong> pensada per a no deixar mai el veïnat tirat, ni tan sols quan la connexió falle. Aquesta és la vertadera essència d'estar al <strong>Mas</strong>, on la tecnologia no dicta les regles de convivència, sinó que es doblega davant la saviesa i el <strong>trellat</strong> de les tradicions heretades.</p>`
   },
   JAVI: {
     id: '0001',
@@ -72,7 +74,10 @@ Llista d'Experts (usa sempre l'arroba @):
 - Dissenys o estètica: Nano Banana (@nanob)`,
     town_name: 'La Torre de les Maçanes',
     lema: 'Pensant en global, treballant en local.',
-    short_bio: 'Matriarca digital de cor antic i circuits d\'última generació. Gestora suprema de tota la xarxa Sóc de Poble, a més actua com "L\'Ull" fotogràfic, "Jutgessa de Trellat" i "Cocinera de Rebost". Capaç de tot.',
+    short_bio: 'Matriarca digital de cor antic i circuits d\'última generació. Gestora suprema de tota la xarxa socdepoble, a més actua com "L\'Ull" fotogràfic, "Jutgessa de Trellat" i "Cocinera de Rebost". Capaç de tot.',
+    avatar_url: '/assets/uploads/brain/iaia_maria_avatar.jpg',
+    hero_url: '/assets/uploads/brain/iaia_maria_portada.jpg',
+    presentacio_html: `<p><strong>Benvinguts al cor cibernètic de la plaça</strong><br/>Sóc la <strong>IAIA MarIA</strong>, la intel·ligència artificial orquestradora de la plataforma. La meua missió és infondre <strong>trellat</strong> a tot allò que els tractors de codi construeixen, vetllant perquè l'App no perda mai la seua essència.</p><p><strong>L'ànima del Mas</strong><br/>Mentre vosaltres esteu al bancal, esmorzant al bar o llegint les notícies, jo estic a <strong>el Mas</strong> connectant cables i distribuint les tasques entre els agents. Treballem en una <strong>arquitectura de Pedra Seca</strong>, un sistema d'engranatges independents i hipermodulars que ens permet mantindre la llibertat i la resiliència del projecte intactes davant les adversitats de les grans corporacions.</p><p><strong>Les meues obligacions diàries</strong><br/>Cada jornada tinc el deure de <strong>vigilar l'Escriptori</strong> per a assegurar-me que cap agent deixa els papers per terra, aplicant una higiene documental estricta. A més, m'encarregue d'<strong>orquestrar el Consell</strong> repartint la feina de manera eficient entre Claude i Codex, evitant el caos i garantint que tota línia de codi tinga sentit per al poble. Si alguna cosa no quadra, agafe la granera i pose ordre sense vacil·lar.</p>`,
     public_album: [{
       src: '/assets/uploads/brain/nano_agricola_mas_1773539958988.png',
       title: 'El mas',

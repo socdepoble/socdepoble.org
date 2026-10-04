@@ -5,6 +5,7 @@ import { resolvePageSlugPath } from '../../config/navigation';
 import { PAGE_COPY } from '../text/pageContent.js';
 import TextSection from '../text/TextSection';
 import NotFoundPage from '../../pages/NotFoundPage';
+import { PublicarDeLaPagina } from '../control/PublicarDeLaPagina.jsx';
 
 /**
  * /page/:slug — pàgines de text sense ruta pròpia.
@@ -17,6 +18,10 @@ import NotFoundPage from '../../pages/NotFoundPage';
  *      amb la mateixa precedència que TextRoute (App.jsx);
  *   3. contingut encara carregant → estat de càrrega, mai una redirecció;
  *   4. res → 404 amb noindex (NotFoundPage), no un salt silenciós al Mur.
+ *
+ * P6 (directriu 261003_2325, confirmació 4) · Les sis pàgines de la doble
+ * acció del Panell acaben amb el gran botó «Publicar» (PublicarDeLaPagina,
+ * pel punt d'extensió `children` de TextSection). La resta, sense res més.
  */
 export default function PageDetailSection() {
   const { slug = '' } = useParams();
@@ -35,7 +40,13 @@ export default function PageDetailSection() {
   const page = propia(pageCopy)
     || pages.find((p) => p && (String(p.slug) === slug || String(p.id) === slug))
     || propia(PAGE_COPY);
-  if (page) return <TextSection page={page} pageKey={slug} />;
+  if (page) {
+    return (
+      <TextSection page={page} pageKey={slug}>
+        <PublicarDeLaPagina clau={slug} />
+      </TextSection>
+    );
+  }
 
   if (status !== 'ready' && status !== 'error') {
     return (

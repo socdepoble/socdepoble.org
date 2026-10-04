@@ -40,9 +40,12 @@ function focusActiu(node) {
   return arrel && 'activeElement' in arrel ? arrel.activeElement : null;
 }
 
-/* Un control a l'abast: connectat, actiu i fora de tot subarbre amagat. */
+/* Un control a l'abast: connectat, actiu i fora de tot subarbre amagat.
+   P6 · També fora d'un <dialog> tancat: la roda de la navegació hi té el seu
+   Dialeg sempre muntat, i el navegador no enfoca res d'un diàleg sense
+   `open` (el panell s'obria i el focus es perdia). */
 const esAlAbast = (el) => Boolean(el?.isConnected) && !el.disabled
-  && !el.closest('[aria-hidden="true"], [inert], [hidden]');
+  && !el.closest('[aria-hidden="true"], [inert], [hidden], dialog:not([open])');
 
 /* MD (ordre del Mestre, 261003) · Els panells que es poden obrir en estret. */
 const PANELLS = Object.freeze(['left', 'middle']);
@@ -105,6 +108,22 @@ export default function AppGridShell({
   panellEstret = null,
   tornaEstret = null,
   onPanell = null,
+  /* P6 (ordre del Mestre, 261003) · La llista plegada en rail en pantalles
+     xicotetes. Totes dues opcionals i false per defecte: sense, la closca
+     és la d'abans (el Xat i les apps la munten a mà i no les passen).
+       · railMitja: en «mitja», middleCollapsed plega la llista en el rail
+         de --app-grid-col-collapsed i el detall n'ocupa l'espai. En repòs
+         (desplegada) no canvia cap píxel.
+       · railEstret: en «estret», un rail de --app-grid-col-collapsed a
+         l'esquerra del detall (#app-grid-rail, la primera columna estreta,
+         sempre a la vista amb el detall). La columna de la llista continua
+         sent el panell del mestre-detall: tancada amb el detall a la vista,
+         i el seu panell i el de la navegació tapen rail i detall. El rail
+         és buit: qui munta la closca hi pinta amb un portal (nodeRail).
+     El context ho diu amb llistaPlegable (en esta mida, la llista té el
+     desplegador), llistaEnRail (ara es pinta en rail) i nodeRail. */
+  railMitja = false,
+  railEstret = false,
   'aria-label': ariaLabel = 'Graella de l\'aplicació',
   className = '',
 }) {
@@ -155,6 +174,21 @@ export default function AppGridShell({
   const ultimPanell = useRef(null);
   const focusPendent = useRef(null);
 
+  /* P6 · El rail d'estret (#app-grid-rail): el node, en estat perquè qui
+     munta la closca hi puga pintar amb un portal en el render següent, i en
+     ref per a la guarda del focus. Ref estable: un ref en línia el tornaria
+     a posar a null i a l'element a cada render. */
+  const [nodeRail, setNodeRail] = useState(null);
+  const railRef = useRef(null);
+  const refRail = useCallback((node) => {
+    railRef.current = node;
+    setNodeRail(node);
+  }, []);
+  /* P6 (revisió) · Si el focus era al rail quan la closca ix d'estret (girar
+     el mòbil, l'amfitrió que s'eixampla). El rail es desmunta en eixe commit
+     i el focus cauria a <body>: la guarda el porta a la llista. */
+  const focusAlRail = useRef(false);
+
   const measureRef = useRef(null);
 
   const collapsedRef = useRef({ left: leftCollapsed, middle: middleCollapsed });
@@ -174,6 +208,7 @@ export default function AppGridShell({
 
       const prevMida = midaRef.current;
       if (prevMida !== novaMida) {
+        if (prevMida === 'estret') focusAlRail.current = Boolean(railRef.current?.contains(focusActiu(page)));
         midaDemanada.current = novaMida;
         setMida(novaMida);
         if (novaMida === 'ample') demanaPanell(null);
@@ -267,6 +302,18 @@ export default function AppGridShell({
 
   const tancada = columnesTancades(mida, panellObert);
 
+  /* P6 · Si la llista té desplegador en esta mida i si ara es pinta en
+     rail. En «ample» mana el plegat de sempre (has-middle-collapsed).
+       · mitja: la columna de la llista, plegada, és el rail.
+       · estret: el rail és #app-grid-rail, muntat mentre dura estret (així
+         obrir i tancar un panell no fa refluir l'editor de davall) i tancat
+         (inert, aria-hidden) quan un panell el tapa. */
+  const llistaPlegable = (mida === 'mitja' && railMitja) || (mida === 'estret' && railEstret);
+  const ambRailEstret = mida === 'estret' && railEstret;
+  const railTancat = ambRailEstret && panellObert !== null;
+  const llistaEnRail = (mida === 'mitja' && railMitja && middleCollapsed) || (ambRailEstret && !railTancat);
+  const graellaAmbRail = (mida === 'mitja' && railMitja && middleCollapsed) || ambRailEstret;
+
   const leftRef = useRef(null);
   const middleRef = useRef(null);
   const rightRef = useRef(null);
@@ -286,12 +333,26 @@ export default function AppGridShell({
   useLayoutEffect(() => {
     if (panellDemanat.current !== panellObert || midaDemanada.current !== mida) return;
     const page = pageRef.current;
-    const actiu = focusActiu(page);
+    let actiu = focusActiu(page);
+    /* P6 (revisió) · Fora d'estret el rail ja no hi és: si el focus hi era i
+       ha caigut fora de la closca, va on es pinta ara el contingut del rail,
+       la llista (la fitxa actual, com en obrir-ne el panell). */
+    if (focusAlRail.current && mida !== 'estret') {
+      focusAlRail.current = false;
+      if (page && (!actiu || !page.contains(actiu)) && middleRef.current) {
+        destiDelPanell(middleRef.current)?.focus({ preventScroll: true });
+        actiu = focusActiu(page);
+      }
+    }
     if (!page || !actiu || !page.contains(actiu)) return;
     const tancades = columnesTancades(mida, panellObert);
     const seccions = { left: leftRef, middle: middleRef, right: rightRef };
+    /* P6 · El rail d'estret es tanca amb qualsevol panell obert: si el focus
+       hi era (el menú o la lupa del rail), tampoc no s'hi pot quedar. */
+    const rail = mida === 'estret' && panellObert !== null ? railRef.current : null;
     const columna = COLUMNES
       .map((clau) => (tancades[clau] ? seccions[clau].current : null))
+      .concat(rail)
       .find((el) => el?.contains(actiu));
     if (!columna) return;
     const obridor = [...page.querySelectorAll(`[data-obri-columna][aria-controls~="${columna.id}"]`)].find(esAlAbast);
@@ -363,9 +424,12 @@ export default function AppGridShell({
     tancaPanells,
     obriPanell,
     tornaDelDetall,
+    llistaPlegable,
+    llistaEnRail,
+    nodeRail: ambRailEstret ? nodeRail : null,
     columnWidths,
     applyPreset
-  }), [mida, panellObert, demanaPanell, columnWidths, tancaPanells, obriPanell, tornaDelDetall, applyPreset]);
+  }), [mida, panellObert, demanaPanell, columnWidths, tancaPanells, obriPanell, tornaDelDetall, llistaPlegable, llistaEnRail, ambRailEstret, nodeRail, applyPreset]);
 
   return (
     <AppGridContext.Provider value={ctxValue}>
@@ -377,6 +441,7 @@ export default function AppGridShell({
           className="app-grid-shell"
           data-layout={mida}
           data-panell={panellObert || ''}
+          data-llista={graellaAmbRail ? 'rail' : undefined}
           aria-label={ariaLabel}
         >
 
@@ -412,7 +477,7 @@ export default function AppGridShell({
             >
               {middleColumn}
             </section>
-            {mida !== 'estret' && !(middleCollapsed && mida === 'ample') ? (
+            {mida !== 'estret' && !(middleCollapsed && mida === 'ample') && !graellaAmbRail ? (
               <AppGridResizer
                 className="app-grid-resizer--middle"
                 label={`Redimensionar ${middleTitle}`}
@@ -420,6 +485,16 @@ export default function AppGridShell({
                 min={COLUMN_LIMITS.middle.min}
                 max={COLUMN_LIMITS.middle.max}
                 onResize={(value) => resizeColumn('middle', value)}
+              />
+            ) : null}
+            {ambRailEstret ? (
+              <div
+                ref={refRail}
+                className="app-grid-rail"
+                id="app-grid-rail"
+                data-obert={!railTancat}
+                inert={railTancat ? "true" : undefined}
+                aria-hidden={railTancat ? true : undefined}
               />
             ) : null}
             <section

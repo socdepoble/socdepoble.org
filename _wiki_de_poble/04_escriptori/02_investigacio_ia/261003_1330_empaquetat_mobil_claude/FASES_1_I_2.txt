@@ -495,4 +495,81 @@ Inspector: Chrome › chrome://inspect (Android) i Safari › Desenvolupament (i
     «apagada»). El flag VITE_SDP_APP_* només les compila; sense el canvi de manifest de D6, eixirien
     apagades (LLEGIU §3).
 
+
+ESMENA 261003 (vespre) · W4-05, prerequisits de Capacitor 8 i l'entorn del build natiu
+=====================================================================================
+Torn torn_50ca5709-8cd2-416a-bf41-2afdb3450179 (Claude, Onada 4, segona onada). Origen: W4-05 i la nota de
+prerequisits de 261003_1950_auditoria_codex.md («Contrast del pegat i del preparatiu natiu», 20:12), més la
+revisió adversarial d'este torn. Este bloc MANA sobre el text de dalt on es contradiuen. El text de dalt
+no s'ha reescrit, perquè es puga contrastar.
+
+E1 · §1 Pas 1, Pas 2b i Pas 5: una versió exacta PER PAQUET, no una V per a tots (W4-05).
+  Dalt diu «Tots els paquets oficials @capacitor/* van a la MATEIXA versió» i instal·la app, browser i
+  preferences amb @V. No és així: els plugins oficials (repositori capacitor-plugins) es publiquen amb
+  versions pròpies. Codex hi va llegir, a les branques oficials del tall consultat, core 8.5.2, app 8.1.2,
+  browser 8.0.5 i preferences 8.0.1, i que els plugins declaren el peer @capacitor/core >=8.0.0
+  [reportat per Codex; NO VERIFICAT ací, sense xarxa; no és cap certificació del dist-tag d'npm ni cap
+  proposta d'instal·lació].
+  Pas 1, corregit (Mestre, amb xarxa, el dia de la lease):
+    npm view @capacitor/core version
+    npm view @capacitor/cli version
+    npm view @capacitor/android version
+    npm view @capacitor/ios version
+    npm view @capacitor/app version
+    npm view @capacitor/browser version
+    npm view @capacitor/preferences version
+    (amb D18) npm view @capacitor/filesystem version
+  i, per a cada versió triada, els peers i el motor:
+    npm view @capacitor/android@VANDROID peerDependencies
+    npm view @capacitor/ios@VIOS peerDependencies
+    npm view @capacitor/app@VAPP peerDependencies          (igual per a browser, preferences i filesystem)
+    npm view @capacitor/cli@VCLI engines
+  Regla: core, cli, android i ios, la mateixa versió MAJOR (i la mateixa exacta si npm view els en dona
+  la mateixa; si no, la que satisfaça els peers d'android i ios); cada plugin, la seua última versió
+  publicada que admeta la core triada. Es deixa escrita una taula paquet → versió exacta → peer de core al
+  LLEGIU de la lease. Cap ^ ni ~.
+  Pas 2b, corregit:
+    npm install --package-lock-only --ignore-scripts --save-exact @capacitor/core@VCORE @capacitor/android@VANDROID @capacitor/ios@VIOS @capacitor/app@VAPP @capacitor/browser@VBROWSER @capacitor/preferences@VPREFERENCES
+    npm install --package-lock-only --ignore-scripts --save-exact --save-dev @capacitor/cli@VCLI
+    (amb D18, @capacitor/filesystem@VFILESYSTEM a la primera ordre)
+  Comprovació nova, al Pas 2e:
+    npm ls --package-lock-only --all @capacitor/core
+    Ha d'eixir una sola @capacitor/core, la VCORE, sense «invalid» ni «UNMET PEER». [NO VERIFICAT que la
+    versió d'npm instal·lada admeta --package-lock-only a «npm ls»; si no, es fa després del npm ci del Pas
+    5 i abans de cometre.]
+  Pas 5, corregit: npx cap --version ha de dir VCLI.
+E2 · §0 Prerequisits, si D17 tria Capacitor 8. Reportat per Codex des de la guia oficial
+  (https://capacitorjs.com/docs/updating/8-0) [NO VERIFICAT ací; es torna a mirar el dia de la lease, amb la
+  guia de la versió triada]:
+    node -v                ≥ 22, no ≥ 20. package.json («engines») diu ≥ 20 i val per al web; la màquina
+                           que fa cap sync i els builds natius necessita el mínim de Capacitor. Proposta
+                           per a la mateixa lease (package.json ja hi és): si «npm view @capacitor/cli@VCLI
+                           engines» diu node >=22, alinear «engines». Ho decidix qui fa la lease.
+    xcodebuild -version    ≥ 26.0
+    Android Studio         Otter 2025.2.1 o posterior, amb el JDK que porta dins
+    pod --version          NO cal: les plantilles noves d'iOS de Capacitor 8 fan servir Swift Package Manager
+                           per defecte. Conseqüència: npx cap add ios crea ios/App/App.xcodeproj i cap
+                           App.xcworkspace, i xcodebuild va amb -project, no amb -workspace (RUNBOOK A6). Els
+                           scripts de nous/botigues/ ho detecten sols. Les línies ios/App/Pods/ de la
+                           proposta de .gitignore (FASE_PRELEASE_FETA §6) no fan mal i servixen si mai es
+                           torna a CocoaPods.
+  A més [NO VERIFICAT]: el mínim d'iOS i el minSdk d'Android de la plantilla de la versió triada. El §3.2
+  fixa iOS 16.0 (Baseline 2022); si la plantilla en porta un de més alt, mana la plantilla i es diu al
+  Mestre, perquè canvia qui pot instal·lar l'app.
+E3 · §2.1d: .env.natiu.local declara TOTES les VITE_* que el binari ha de portar, i buida la resta.
+  Canvi de vite.natiu.config.js d'este torn (ARQUITECTURA, ESMENA 261003, R1): el build natiu para si
+  alguna VITE_* amb valor només li arriba de .env o de .env.local. Motiu [VERIFICAT]: Vite segella dins
+  del paquet totes les VITE_* (src/data/telemetria.js:57 i src/sections/calendari/fonts/configFonts.js:138 i
+  :180 lligen import.meta.env sencer), i abans un .env.natiu.local que només canviava la URL deixava
+  passar la clau, el tenant i qualsevol URL local de desenvolupament.
+  Per tant, a més de les línies del §2.1d, cada VITE_* que el Mestre tinga a .env o a .env.local i que no
+  haja d'entrar al binari s'escriu BUIDA a .env.natiu.local («NOM=» i res més). Les de .env.example que
+  hi poden eixir (només els noms): VITE_DATA_MODE, VITE_UMAMI_WEBSITE_ID, VITE_UMAMI_HOST,
+  VITE_UMAMI_SHARE_URL, VITE_GOOGLE_OAUTH_CLIENT_ID, VITE_GCAL_FONTS, VITE_SOLLUTIA_ISSUER,
+  VITE_CANONICAL_URL i VITE_TENANT_ID, més les VITE_SDP_APP_* i qualsevol altra local. No cal endevinar-les:
+  l'error del build en diu els noms (mai els valors).
+E4 · §2.5, §3.5 i el procediment de pujada: els scripts de nous/botigues/ (laboratori, s'instal·len amb
+  lease a scripts/botigues/) fan A4-A8 del RUNBOOK amb les claus d'API i un fitxer d'entorn fora del
+  paquet. Vegeu nous/botigues/LLEGIU.txt i RUNBOOK_BOTIGUES_IA.txt.
+
 Ancoratge: [[00_index_escriptori]]

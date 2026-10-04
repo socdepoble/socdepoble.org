@@ -81,7 +81,7 @@ export function checkLocal(payload, root = ROOT) {
     if (['Bash','exec_command','run_command'].includes(name) && cwd === root && /^node tooling\/gates\/executor-mutacio\.mjs [a-zA-Z0-9_./-]+ [a-zA-Z0-9_./-]+$/.test(shellCommand || '')) return {code:0, errors:[]};
     if (knownRead(payload, root)) return {code: 0, errors: []};
     // Orquestració i navegador: no escriuen al disc; cada subagent torna a passar pel hook eina a eina.
-    if (['Workflow', 'Agent', 'TaskStop', 'SendMessage', 'AskUserQuestion'].includes(name)
+    if (['Workflow', 'Agent', 'TaskStop', 'SendMessage', 'AskUserQuestion', 'CronCreate', 'CronList', 'CronDelete', 'schedule', 'manage_task'].includes(name)
       || name.startsWith('mcp__Claude_Browser__')) return {code: 0, errors: []};
     const documentary = authorizeDocumentCommand(payload, root);
     if (documentary?.kind === 'read') return {code: 0, errors: [], authority: documentary};

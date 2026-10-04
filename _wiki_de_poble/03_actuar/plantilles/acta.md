@@ -78,7 +78,10 @@ La generació entrega esta plantilla i conserva un snapshot del contracte al reb
   2. `[ ]` Tasca prioritària 2.
   3. `[ ]` Tasca prioritària 3.
 
-### 4. Metadades per a Màquines (Patrons Sistèmics)
+### 4. Automillora Proactiva (Obligatori)
+*(Quan llegiu o escriviu aquesta Acta Marmota, teniu el deure d'analitzar críticament la pròpia plantilla. Açò què us pareix? Es pot millorar l'estructura? Falten camps que us farien la vida més fàcil per comprendre el context anterior? Digueu-ho clarament ací per a que la IAIA MarIA puga autoperfeccionar les plantilles de Sóc de Poble).*
+
+### 5. Metadades per a Màquines (Patrons Sistèmics)
 ```yaml
 data: "{{YYMMDD_HHMM}}"
 blockers:

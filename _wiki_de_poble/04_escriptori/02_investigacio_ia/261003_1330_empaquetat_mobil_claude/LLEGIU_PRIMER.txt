@@ -276,4 +276,28 @@ Cada correcció s'ha verificat contra el codi abans d'escriure-la (fitxer:línia
   adreça en clar a FASES; EXCLOSOS descrit com és, per nom a qualsevol fondària (FASES §1).
 - tests/natiu-build.test.mjs amb fixtures i skip explícit (ARQUITECTURA §5).
 
+
+ESMENA 261003 (vespre) · segona onada de l'Onada 4
+--------------------------------------------------
+Este fitxer és el pla de la vespra i no s'ha reescrit. Què hi ha de nou al laboratori, i on:
+- FASE_PRELEASE_FETA.txt: el que ja està fet abans de la lease (§1-§10) i la revisió adversarial d'esta
+  onada (§11), amb les proves i els resultats exactes.
+- RUNBOOK_BOTIGUES_IA.txt: la «Pregunta Zero» pas a pas. La frontera que hi consta és la regla
+  d'operació de Claude, no una llei universal del repositori ni de les botigues (§0, objecció de Codex).
+- nous/capacitor.config.json.txt, i nous/botigues/: els scripts de pujada amb les claus d'API, que lligen
+  els secrets d'un fitxer d'entorn fora del paquet i només pugen amb un «sí» per a cada pujada (el seu
+  LLEGIU.txt). S'instal·len amb lease, perquè scripts/ és governança.
+- FASES_1_I_2.txt i ARQUITECTURA.txt porten al final un bloc «ESMENA 261003» que mana sobre el text de
+  dalt:
+  · W4-05 de Codex: una versió exacta PER PAQUET de Capacitor, amb els seus peers, i no una per a tots;
+    si D17 tria Capacitor 8, Node 22 o més, Xcode 26 o més i Android Studio Otter, i Swift Package
+    Manager per defecte a iOS (FASES E1 i E2; reportat per Codex, es torna a mirar el dia de la lease);
+  · .env.natiu.local declara o buida cada VITE_* que el Mestre tinga a .env o a .env.local: ara el
+    build natiu para si en rep alguna d'eixos fitxers (FASES E3, ARQUITECTURA R1);
+  · l'OAuth natiu reutilitza la marca d'intent de F1 v2 i el consell de Codex: escoltadors de cada intent
+    abans d'obrir el navegador, arrencada freda amb getLaunchUrl, anàlisi exacta de la tornada, i
+    browserFinished com a cancel·lació amb guarda (ARQUITECTURA §3.3-bis).
+- D17 guanya un matís: la versió de Capacitor que es trie fixa també els mínims de la màquina.
+- Per al manifest de la lease, este fitxer continua sent l'única font (FASES §1, Pas 3).
+
 Ancoratge: [[00_index_escriptori]]

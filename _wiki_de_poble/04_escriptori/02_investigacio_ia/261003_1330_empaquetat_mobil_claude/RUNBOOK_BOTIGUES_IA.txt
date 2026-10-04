@@ -1,0 +1,270 @@
+RUNBOOK BOTIGUES PER A IA · «Pregunta Zero»: quant de la pujada a les botigues pot fer un agent d'IA
+====================================================================================================
+Torn: torn_50ca5709-8cd2-416a-bf41-2afdb3450179 (Claude, Onada 4, tasca T4). Data: 261003.
+Abans, cal llegir LLEGIU_PRIMER.txt, FASES_1_I_2.txt (§2-§8) i BOTIGUES.txt. Convencions [VERIFICAT] i
+[NO VERIFICAT]: les de LLEGIU_PRIMER.txt. No s'ha pogut consultar cap web en este torn: TOTS els noms
+d'eina, d'opció, de menú i de rol d'Apple i de Google porten [NO VERIFICAT], encara que no es repetisca a
+cada línia. Abans del primer ús de cada ordre hi ha un pas V (verificar-la amb --help i la documentació
+oficial de la versió instal·lada).
+Format, perquè un agent el puga seguir pas a pas: cada pas té un identificador, i els camps
+  Pre:  condicions que han de ser certes abans de començar;
+  Fa:   qui ho fa (HUMÀ, IA, o IA PREPARA + HUMÀ CONFIRMA);
+  Ordre: el que s'executa (en una terminal sense confinar, autoritzada pel Mestre per a eixa sessió);
+  Esperat: el resultat que demostra que ha anat bé;
+  Para si: la condició que obliga a parar i passar-ho al Mestre (vegeu també §4).
+SCRIPTS (segona onada, 261003): A0, V0 i A4-A8 tenen scripts al laboratori, nous/botigues/ (LLEGIU.txt
+d'eixa carpeta), que s'instal·len amb lease a scripts/botigues/. Lligen els secrets d'un fitxer d'entorn
+fora del paquet (H-F1), no n'imprimixen cap valor, en sec per defecte, i només pugen amb
+--confirma=VERSIO+BUILD. Correspondència:
+  preflight.mjs      A0 (part de l'arbre) i les comprovacions de H-F1 i de les rutes de les claus
+  puja-ios.mjs       V0 d'xcodebuild i altool, A6, A7, la verificació de l'equip i de la versió, A8 i A10
+  puja-android.mjs   V0 de fastlane supply, A4 (opcional, --compila), la verificació de l'empremta, A5 i A10
+Mentre no s'instal·len, valen les ordres d'este runbook tal qual.
+
+
+0. LA PREGUNTA ZERO I LA FRONTERA, DITA AMB VERITAT
+--------------------------------------------------
+Pregunta: pot una IA pujar l'app a l'App Store i a Google Play sense que el Mestre hi toque?
+Resposta curta: gairebé tota la part repetible, sí, a través de les claus d'API de les dues botigues. Una
+part petita és i serà sempre humana: crear els comptes i les claus, signar acords, posar contrasenyes i
+codis, i fer les declaracions legals i l'enviament final.
+La frontera, exactament:
+  · Un agent d'IA com Claude NO escriu contrasenyes, codis de doble factor, contrasenyes de claus de
+    signatura (keystore) ni frases de pas de certificats en cap portal, cap diàleg ni cap terminal; NO
+    crea comptes (tampoc comptes de servei ni comptes de prova); NO accepta acords, condicions ni avisos de
+    galetes; i NO desa ni envia formularis, NO puja binaris i NO publica sense un «sí» explícit del Mestre
+    al xat per a ESA acció concreta. Un «sí» no val per a la següent.
+  · D'on ve: és la REGLA D'OPERACIÓ DE CLAUDE, l'agent que escriu este runbook. No és una llei universal:
+    no la diu el repositori, ni les botigues, ni es deduïx d'este entorn. Codex
+    (261003_1950_auditoria_codex.md, «Pregunta Zero») ho observa amb raó: manen les capacitats,
+    l'autorització i els passos interactius de cada compte, i un altre agent o una altra eina pot tindre
+    altres límits. Les API de les botigues són una via bona i repetible, no l'única possible per
+    definició. Este runbook es dissenya igualment per a la frontera més estricta, per tres motius: la pot
+    seguir qualsevol agent; és bona pràctica de seguretat (els secrets i les declaracions legals es queden
+    amb la persona que en respon); i amb les claus d'API no cal res més. Els scripts de nous/botigues/ no
+    fan complir la regla: la fan possible.
+  · El que SÍ fa l'agent: compilar, versionar, provar, verificar signatures, preparar textos, captures i
+    esborranys de qüestionaris, i executar les pujades amb les claus d'API quan el Mestre ho confirma.
+    Les claus les llig l'eina oficial des d'un fitxer FORA del repositori; l'agent només passa la ruta i
+    els identificadors, i no obri, no imprimix ni copia mai el contingut d'una clau.
+  · Secrets, mai: ni al repositori, ni al LEDGER, ni a la Wiki, ni al xat, ni als rebuts. Si un secret
+    apareix en una eixida, para (§4, S8).
+  · En una sessió confinada com la d'este torn, l'agent no pot executar cap ordre d'este runbook: només
+    preparar fitxers. Les ordres les executa el Mestre o un agent en una sessió que el Mestre autoritze.
+
+
+1. PREPARACIÓ HUMANA D'UNA SOLA VEGADA
+--------------------------------------
+Tot este apartat és HUMÀ. L'agent pot obrir les pàgines i dir on clicar, però no hi escriu credencials,
+no crea res i no accepta res.
+
+Apple (compte d'ORGANITZACIÓ, D-B)
+H-A1 Pre: el programa d'Apple Developer vigent (O4) i els acords d'App Store Connect acceptats (O5).
+     Fa: HUMÀ. App Store Connect › Users and Access › Integrations › App Store Connect API › Team Keys ›
+     generar una clau amb el rol mínim que deixe pujar builds i gestionar TestFlight (proposta: «App
+     Manager»; «Developer» podria bastar per a pujar, però no per a tot TestFlight) [NO VERIFICAT el rol].
+     Esperat: un fitxer AuthKey_<KEY_ID>.p8 (només es pot baixar UNA vegada [NO VERIFICAT]), el Key ID i
+     l'Issuer ID.
+     On viu: ~/.appstoreconnect/private_keys/AuthKey_<KEY_ID>.p8 (ruta on altool la busca [NO VERIFICAT]),
+     amb permisos 600, i una còpia al gestor de contrasenyes. Mai dins del repositori.
+H-A2 Fa: HUMÀ. Xcode › Settings › Accounts: entrar amb l'Apple ID que és membre de l'equip de
+     l'organització (contrasenya i doble factor, el Mestre). Al projecte (FASES §3.2): Signing &
+     Capabilities › Automatically manage signing, Team = l'organització, Bundle Identifier = l'appId de D1.
+     Esperat: Xcode crea o recupera el certificat de distribució i els perfils; el certificat i la seua
+     clau privada queden al Keychain d'inici de sessió.
+H-A3 Fa: HUMÀ. App Store Connect › My Apps › + › New App (FASES §3.4): nom, idioma principal, bundle ID i
+     SKU «socdepoble-ios». És un formulari que crea un registre: humà.
+H-A4 Fa: HUMÀ. Anotar el Team ID (developer.apple.com › Membership), que no és secret.
+
+Google (compte d'ORGANITZACIÓ, D-C i D2)
+H-G1 Fa: HUMÀ. Acabar el compte de Play Console com a organització, amb la verificació que demane.
+H-G2 Fa: HUMÀ. Play Console › Create app: nom, idioma, app/joc, gratuïta, i les declaracions inicials.
+H-G3 Fa: HUMÀ. Clau de PUJADA, una sola vegada i fora del repositori (FASES §2.4):
+       mkdir -p ~/claus-socdepoble
+       keytool -genkeypair -v -keystore ~/claus-socdepoble/upload-socdepoble.jks -alias upload -keyalg RSA -keysize 2048 -validity 10000
+     keytool demana les contrasenyes: les escriu el Mestre. Còpia de la .jks i de les contrasenyes en dos
+     llocs fora de l'ordinador. Activar Play App Signing (Google guarda la clau de signatura de l'app).
+     Esperat: Play Console › Test and release › App integrity mostra l'empremta SHA-256 del certificat de
+     pujada [NO VERIFICAT el menú]. El Mestre l'anota (no és secreta).
+H-G4 Fa: HUMÀ. Compte de servei per a l'API de Google Play Developer: Google Cloud › un projecte › IAM ›
+     Service accounts › crear-ne un › Keys › Add key › JSON. A Play Console › Users and permissions,
+     convidar l'adreça del compte de servei amb permisos de llançament a les pistes de prova (i, si es
+     vol, a producció) per a esta app [NO VERIFICAT el camí exacte: Google el va canviar el 2024].
+     On viu: ~/claus-socdepoble/play-compte-servei.json, permisos 600, i còpia al gestor de contrasenyes.
+H-G5 Fa: HUMÀ. La PRIMERA pujada d'un AAB d'una app nova es fa a mà a Play Console (l'API no la pot
+     crear) [NO VERIFICAT]. Després, la resta pot anar per API (A5).
+
+Eines (instal·lar-les és instal·lació: aprovació del Mestre, QUI_SOC §5)
+H-T1 Xcode (porta xcodebuild i xcrun altool), Android Studio (porta el JDK i keytool), i, si el Mestre ho
+     aprova, fastlane per a supply (Android) i pilot (iOS) [NO VERIFICAT la forma d'instal·lar-lo].
+     Sense fastlane: iOS amb xcrun altool o l'app Transporter (humà); Android, pujada a mà a Play Console.
+
+Fitxer d'entorn de les botigues (PLANTILLA SENSE VALORS) · corregit el 261003, segona onada
+H-F1 Fa: HUMÀ. El Mestre crea el fitxer a partir de nous/botigues/botigues.env.exemple.txt (només noms) i
+     l'omple ell. Dos llocs possibles:
+       · .env.botigues.local a l'arrel del repositori: git l'ignora per «.env.*» (.gitignore:14)
+         [VERIFICAT: llegit i confirmat amb git check-ignore]; Vite no el carrega en cap mode del projecte;
+       · o un fitxer FORA del repositori (per exemple ~/claus-socdepoble/botigues.env, l'opció d'abans),
+         amb la seua ruta a la variable SDP_BOTIGUES_ENV.
+     Després: chmod 600. Regles, que els scripts fan complir (si no, paren):
+       · cap nom VITE_*: Vite segellaria el valor dins del paquet de l'app;
+       · les claus (.p8, JSON del compte de servei, .jks) per RUTA, i eixa ruta FORA del repositori; mai el
+         contingut d'una clau dins del fitxer;
+       · ni el fitxer ni les claus no els pot llegir el grup ni els altres (600);
+       · no pot ser cap fitxer que carregue Vite (.env, .env.local, .env.natiu.local, .env.production.local…).
+     Variables: SDP_APP_ID, SDP_APPLE_TEAM_ID, SDP_ASC_KEY_ID, SDP_ASC_ISSUER_ID, SDP_ASC_KEY_PATH (amb el
+     nom AuthKey_<SDP_ASC_KEY_ID>.p8, que és com la busca altool), SDP_BUILDS_DIR, SDP_PLAY_JSON_KEY_PATH i
+     SDP_ANDROID_UPLOAD_CERT_SHA256. Les contrasenyes de la .jks NO hi van per defecte (A4, opció A: signa
+     el Mestre). Només si el Mestre decidix que signe el script (A4 amb --compila) s'hi afigen
+     SDP_ANDROID_KEYSTORE_PATH, SDP_ANDROID_KEY_ALIAS, SDP_ANDROID_KEYSTORE_PASSWORD i
+     SDP_ANDROID_KEY_PASSWORD; el script les passa NOMÉS a l'entorn del procés de Gradle (--no-daemon) i
+     mai les imprimix. Les escriu el Mestre; cap agent les escriu.
+     SDP_BUILDS_DIR és una carpeta FORA del repositori per als arxius i les IPA d'iOS (per exemple, una
+     carpeta sdp-builds al directori personal): build/ no és a .gitignore [VERIFICAT], i un IPA no ha
+     d'aparéixer mai a git status.
+
+
+2. PASSOS QUE POT EXECUTAR UNA IA DES DE LA TERMINAL (un cop existixen les claus)
+--------------------------------------------------------------------------------
+Tots des de l'arrel del repositori. Abans de cada pujada (A5, A8), un «sí» del Mestre al xat.
+V0  Pre: cap. Fa: IA. Ordre (abans del primer ús de cada eina):
+       xcodebuild -help ; xcrun altool --help ; fastlane supply --help ; fastlane pilot --help
+     Esperat: cada opció que fa servir este runbook existix en la versió instal·lada.
+     Para si: alguna opció no hi és o es diu d'una altra manera. No s'endevina: es consulta la
+     documentació oficial i s'esmena el runbook.
+A0  Preflight. Pre: arbre net a la branca de publicació. Fa: IA. Ordre:
+       git status --short
+       node --test tests/natiu-build.test.mjs
+       npx vitest run src/natiu
+     Esperat: git status buit; totes les proves verdes.
+     Para si: qualsevol roig, o canvis sense cometre.
+A1  Versió. Pre: A0. Fa: IA PREPARA + HUMÀ CONFIRMA els números.
+     Android: versionCode (enter, puja a cada pujada) i versionName ("1.0.0") a android/app/build.gradle.
+     iOS: es passen a la línia d'ordres d'A6 (MARKETING_VERSION i CURRENT_PROJECT_VERSION)
+     [NO VERIFICAT que la plantilla de Capacitor llija eixos ajustos a l'Info.plist].
+     Verificació: rg -n 'versionCode|versionName' android/app/build.gradle
+     Para si: el número de build no és més gran que l'últim pujat a eixa botiga (la botiga el refusa).
+A2  Build web natiu. Pre: A1; .env.natiu.local escrit pel Mestre (FASES §2.1d). Fa: IA. Ordre:
+       npm run build:natiu
+     Esperat: dist-natiu/index.html. I node --test tests/natiu-build.test.mjs ja NO salta la prova de
+     dist-natiu/: la passa.
+     Para si: el build llança (errorsEntornNatiu: URL local, Umami, Google, tenant) o la prova falla.
+A3  Sincronitzar. Pre: A2. Fa: IA. Ordre:
+       npx cap sync
+     Verificació: cmp dist-natiu/index.html android/app/src/main/assets/public/index.html
+                  cmp dist-natiu/index.html ios/App/App/public/index.html
+     Esperat: cap diferència.
+A4  Android · AAB signat. Pre: A3; H-G3; les línies d'android/ de la proposta de .gitignore
+     (FASE_PRELEASE_FETA.txt §6) ja aplicades, perquè l'AAB i android/app/build/ no isquen a git status.
+     Fa: HUMÀ per a la signatura (opció A, la de per defecte): el Mestre executa, a la seua terminal,
+       cd android && ./gradlew bundleRelease
+     amb la configuració de signatura que llig les contrasenyes de variables que posa ell, o amb Android
+     Studio › Build › Generate Signed Bundle. L'agent no les escriu ni les veu.
+     Opció B (DECISIÓ del Mestre, no per defecte): les contrasenyes al Keychain de macOS, posades pel
+     Mestre, i un embolcall fora del repositori que les passa a Gradle sense imprimir-les. Encara així,
+     l'agent només l'executaria amb un «sí» explícit per a eixa execució.
+     Esperat: android/app/build/outputs/bundle/release/app-release.aab
+     Verificació (IA):
+       keytool -printcert -jarfile android/app/build/outputs/bundle/release/app-release.aab
+     L'empremta SHA-256 ha de ser SDP_ANDROID_UPLOAD_CERT_SHA256.
+       shasum -a 256 android/app/build/outputs/bundle/release/app-release.aab     (per al rebut, A10)
+     Para si: l'empremta no casa (s'ha signat amb una altra clau), o qualsevol demanda de contrasenya
+     arriba a l'agent.
+A5  Android · pujada a la prova interna. Pre: A4; H-G4; H-G5; fastlane aprovat; «sí» del Mestre per a
+     ESTA pujada. Fa: IA. Ordre [NO VERIFICAT les opcions]:
+       fastlane supply --aab android/app/build/outputs/bundle/release/app-release.aab --track internal --release_status draft --package_name "$SDP_APP_ID" --json_key "$SDP_PLAY_JSON_KEY_PATH" --skip_upload_metadata true --skip_upload_images true --skip_upload_screenshots true --skip_upload_changelogs true
+     Primer, si l'opció existix, la mateixa ordre amb --validate_only true.
+     Esperat: una versió en esborrany (draft) a la pista interna amb el versionCode d'A1. Promoure-la o
+     publicar-la és HUMÀ (P9).
+     Verificació: el Mestre ho mira a Play Console › Test and release › Internal testing, o l'agent amb
+     una consulta de només lectura de fastlane si existix (google_play_track_version_codes) [NO VERIFICAT].
+     Para si: error d'autorització (permisos del compte de servei: és H-G4, humà), o versionCode repetit.
+A6  iOS · arxiu. Pre: A3; H-A1, H-A2; SDP_BUILDS_DIR existix i és fora del repositori.
+     Fa: IA. Ordre. Amb Capacitor 8 les plantilles d'iOS fan servir Swift Package Manager per defecte
+     (reportat per Codex des de la guia oficial; FASES, ESMENA 261003, E2): no hi ha App.xcworkspace i va
+     -project ios/App/App.xcodeproj en lloc de -workspace. puja-ios.mjs tria sol: l'espai de treball si
+     existix, si no el projecte.
+       xcodebuild -workspace ios/App/App.xcworkspace -scheme App -configuration Release -destination 'generic/platform=iOS' -archivePath "$SDP_BUILDS_DIR/App.xcarchive" -allowProvisioningUpdates -authenticationKeyPath "$SDP_ASC_KEY_PATH" -authenticationKeyID "$SDP_ASC_KEY_ID" -authenticationKeyIssuerID "$SDP_ASC_ISSUER_ID" MARKETING_VERSION=1.0.0 CURRENT_PROJECT_VERSION=<build> archive
+     Esperat: $SDP_BUILDS_DIR/App.xcarchive, i git status --short sense res nou.
+     Verificació: codesign -dv --verbose=4 "$SDP_BUILDS_DIR/App.xcarchive/Products/Applications/App.app"
+       ha de dir TeamIdentifier = SDP_APPLE_TEAM_ID.
+     Para si: el Keychain demana la contrasenya per a la clau del certificat. Ho resol el Mestre (la
+     escriu ell, o tria «Permet sempre» per a codesign); l'agent no hi escriu res.
+A7  iOS · exportar l'IPA. Pre: A6. Fa: IA. Un ExportOptions.plist a $SDP_BUILDS_DIR (fora del
+     repositori), amb: method «app-store-connect» (en Xcode més vells, «app-store») [NO VERIFICAT], teamID,
+     signingStyle automatic, destination «export» (MAI «upload»: la pujada és A8, amb el seu «sí»),
+     uploadSymbols true. Ordre:
+       xcodebuild -exportArchive -archivePath "$SDP_BUILDS_DIR/App.xcarchive" -exportPath "$SDP_BUILDS_DIR/export" -exportOptionsPlist "$SDP_BUILDS_DIR/ExportOptions.plist" -allowProvisioningUpdates -authenticationKeyPath "$SDP_ASC_KEY_PATH" -authenticationKeyID "$SDP_ASC_KEY_ID" -authenticationKeyIssuerID "$SDP_ASC_ISSUER_ID"
+     Esperat: $SDP_BUILDS_DIR/export/App.ipa.
+     Verificació: shasum -a 256 "$SDP_BUILDS_DIR/export/App.ipa" (per al rebut, A10).
+A8  iOS · pujada a App Store Connect. Pre: A7; «sí» del Mestre per a ESTA pujada. Fa: IA.
+     Ordre [NO VERIFICAT: altool encara puja apps, però Apple el va retirar per a la notarització; si la
+     versió d'Xcode ja no l'admet, Transporter (humà). fastlane pilot no s'ha triat per als scripts: el seu
+     api_key_path espera un JSON que pot portar la clau escrita (nous/botigues/LLEGIU.txt §5)]. altool
+     busca AuthKey_<SDP_ASC_KEY_ID>.p8 a carpetes fixes o a la de la variable API_PRIVATE_KEYS_DIR
+     [NO VERIFICAT el nom]; puja-ios.mjs només passa eixa carpeta, mai la clau:
+       xcrun altool --validate-app -f "$SDP_BUILDS_DIR/export/App.ipa" -t ios --apiKey "$SDP_ASC_KEY_ID" --apiIssuer "$SDP_ASC_ISSUER_ID"
+       xcrun altool --upload-app -f "$SDP_BUILDS_DIR/export/App.ipa" -t ios --apiKey "$SDP_ASC_KEY_ID" --apiIssuer "$SDP_ASC_ISSUER_ID"
+     Esperat: «No errors uploading». Després, uns minuts de processament.
+     Verificació: el Mestre a App Store Connect › TestFlight (el build passa de «Processing» a llest), o
+     fastlane pilot builds si està aprovat. ITSAppUsesNonExemptEncryption = NO a l'Info.plist (FASES
+     §3.2) evita la pregunta d'exportació a cada build [NO VERIFICAT que es puga declarar així].
+     Para si: la validació falla (no es puja), o el número de build ja existix.
+A9  TestFlight intern. Pre: A8 processat. Afegir persones de prova envia invitacions en nom del Mestre:
+     IA PREPARA la llista (sense adreces a cap fitxer de la Wiki) + HUMÀ CONFIRMA cada enviament. La prova
+     externa passa per revisió beta: HUMÀ (P9).
+A10 Rebut. Pre: qualsevol pujada feta. Fa: IA. Un .txt nou a este laboratori, per exemple
+     rebuts/AAMMDD_HHMM_pujada_android.txt, amb: commit, versió i build, SHA-256 de l'AAB o de l'IPA,
+     resultats d'A0, l'hora i qui ha dit «sí». CAP secret, cap Key ID, cap adreça. MarIA l'anota al LEDGER.
+
+
+3. PASSOS DE PORTAL: L'AGENT PREPARA, EL MESTRE CONFIRMA
+-------------------------------------------------------
+El Mestre entra als portals (contrasenya i doble factor). L'agent només treballa dins d'una sessió ja
+oberta, amb permís, i para abans de cada «Save», «Submit» o «Publish»: o el clica el Mestre, o el Mestre
+li diu «sí» per a eixa pàgina.
+P1  Textos de la fitxa (FASES §6.1): IA PREPARA un .txt al laboratori (ca i es) i, amb permís, els
+    escriu als camps de l'esborrany. Cada frase ha de ser certa el dia que s'envia (B1, B6).
+    Para si: una frase descriu una funció que encara no hi és.
+P2  Captures (FASES §6.2): IA les fa al simulador i a l'emulador, al poble de demostració (D13) i amb el
+    compte de prova, mai amb dades reals:
+      xcrun simctl io booted screenshot <fitxer>.png
+      adb exec-out screencap -p > <fitxer>.png
+      sips -g pixelWidth -g pixelHeight <fitxer>.png         (les mides que demane cada botiga)
+    Pujar-les a la consola: IA PREPARA + HUMÀ CONFIRMA.
+    Para si: una captura mostra un nom, una cara o un missatge d'una persona real.
+P3  Privacitat (Apple App Privacy, Play Data safety, PrivacyInfo.xcprivacy): IA redacta l'esborrany
+    element per element a partir de FASES §6.4 i D19. Són declaracions legals: les revisa i les envia el
+    Mestre.
+P4  Classificació per edats (FASES §6.3): IA redacta les respostes; HUMÀ les envia.
+P5  Accés per als revisors (FASES §7): les credencials del compte de prova les escriu el Mestre a la
+    consola. L'agent no escriu contrasenyes, tampoc les de prova, en cap portal de fora. Les notes per al
+    revisor, sense credencials, les pot preparar l'agent.
+P6  DSA, dades de comerciant (D4, BOTIGUES B11): decisió i acció HUMANES. Poden publicar dades de contacte
+    a la UE. L'agent no la contesta ni la suggerix com a feta.
+P7  Preu, països i disponibilitat: HUMÀ (depén de D4).
+P8  Exportació de xifratge, publicitat, app de notícies, app governamental, funcions financeres i salut
+    (Play › Contingut de l'app): IA redacta; HUMÀ envia.
+P9  Enviar a revisió, promoure de pista, llançament per fases i publicació a producció: només HUMÀ.
+P10 Acords, impostos, banca i qualsevol avís de condicions: només HUMÀ.
+
+
+4. PUNTS DE PARADA (l'agent para i ho passa al Mestre)
+-----------------------------------------------------
+S1  Qualsevol demanda de credencial: Keychain, Apple ID, doble factor, contrasenya de la keystore, frase
+    de pas d'un certificat, inici de sessió en un portal.
+S2  Qualsevol creació de compte: compte de servei, compte de prova, persona de prova, compte de Play o
+    d'Apple.
+S3  Qualsevol acord, condicions, consentiment o avís de galetes.
+S4  Qualsevol pujada a una botiga, també a les pistes internes: «sí» explícit per a eixa pujada.
+S5  Qualsevol formulari de portal que es desa o s'envia: «sí» explícit per a eixa pàgina.
+S6  Enviar a revisió, publicar, promoure o fer un llançament per fases: només el Mestre.
+S7  Una prova roja, una opció d'eina que no existix o dos intents fallits del mateix pas: Fusible (AGENTS
+    §10). Es para i s'explica; no s'itera a cegues.
+S8  Un secret apareix en una eixida, un registre o un fitxer del repositori: no es copia enlloc, es para i
+    el Mestre el rota (clau d'API nova, compte de servei nou o, per a la keystore, el procediment de Play
+    App Signing).
+S9  Un número de versió o de build repetit o més baix que l'últim pujat.
+S10 Una pregunta de política, de privacitat, de DSA o de contingut que no estiga ja decidida (D1-D19).
+
+Ancoratge: [[00_index_escriptori]]

@@ -35,6 +35,9 @@ const especimen = (categoria, slug, title, subtitle, tags, lead, cerca = '') => 
    navegació. L'ordre és el de lectura: contracte → color → tipografia →
    espaiat → targeta mestra → controls → àtoms → maquetes heretades. */
 const FONAMENTS = [
+  especimen('fonaments', 'panell', 'Panell de Disseny', 'Ajustos del mode Bancal, ombres i lletra', ['sistema', 'ajustos', 'bancal'],
+    'Sistema de control viu. Gestió del contrast (Mode Bancal), la intensitat de les ombres universals i la tipografia (Noto Sans), amb botons per modelar l\'arquitectura de pedra seca des de dins del propi sistema. Disposa de restabliment i exemples aplicats al moment.',
+    'panell disseny ajustos contrast bancal ombra lletra restablir human'),
   especimen('fonaments', 'contracte', 'Contracte de Pedra Seca', 'Lleis, arquitectura universal i pàgines de sistema', ['llei', 'arquitectura', 'sistema']),
   especimen('fonaments', 'color', 'Identitat cromàtica', 'Paleta OKLCH, contrast i escala Pedra', ['token', 'color', 'contrast'],
     'La paleta de Sóc de Poble en OKLCH: tokens semàntics per a fons, text i accents, amb el contrast comprovat en clar i en fosc. Cap component pinta amb un color cru.'),
@@ -44,7 +47,9 @@ const FONAMENTS = [
     'L’escala 4/8 de marges, coixins i separacions, i les mètriques amb nom del layout: alçades de barra, amplades de columna i radis. Cap número solt.'),
   especimen('fonaments', 'universalcard', 'UniversalCard', 'PedraSeca/organismes/UniversalCard.jsx', ['organisme', 'targeta', 'contingut'],
     'La targeta mestra: tota publicació hereta la mateixa anatomia. És una versió reduïda de PageFrame (capçalera taronja d’autoria, mitjà quadrat, cos i peu blau d’accions) amb codi propi: un canvi a les barres no hi arriba sol.',
-    'targeta plana pla emoticona ancorar pin avis'),
+    /* P5 · Onada 4 (261003) · la targeta de doble acció del Panell de Control (PortesTargeta),
+       amb l'ESMENA 261003 22:34: la targeta estàndard amb la boina de socdepoble. */
+    'targeta plana pla emoticona ancorar pin avis portes porta doble accio publicar saber mes control obres socdepoble xat'),
   /* T50 (decisió del Mestre, 260928: «Llista + dreta si hi cap») · la targeta del document que s'escriu. */
   especimen('fonaments', 'targeta-viva', 'Targeta viva', 'TargetaViva · BotoTargetaViva (T50)', ['organisme', 'targeta', 'editor'],
     'La targeta del document mentre s’escriu, amb la mateixa anatomia que tindrà publicada: a la llista, a la dreta de l’editor si hi cap i, si no, darrere del xip «Vista targeta». Els botons no fan res: ho diu un avís.',
@@ -234,10 +239,11 @@ const SUPERPOSICIONS = [
     'publica privada candau bola del mon fitxa nota mur'),
   especimen('superposicions', 'toast', 'Toast', 'useToast · AvisadorEfimer', ['organisme'],
     'Confirmació que no demana cap acció. Si cal actuar, és una Alerta en línia o un Dialeg.'),
-  /* T46 (ordre del Mestre, 260928) · re-enquadrar la capçalera, quadrat de sèrie. */
+  /* T46 (ordre del Mestre, 260928) · re-enquadrar la capçalera, quadrat de sèrie.
+     Onada 4 · T3 · també l'avatar del Perfil, només en quadrat. */
   especimen('superposicions', 'enquadrament', 'Enquadrament', 'Re-enquadrar una foto, quadrat de sèrie (T46)', ['superposicio', 'imatge', 'retall'],
-    'Re-enquadrar la foto de capçalera abans de desar-la: quadrat de sèrie i la part important dins del marc.',
-    'enquadrar retallar foto crop quadrat capcalera hero miniatura dialeg'),
+    'Re-enquadrar la foto de capçalera abans de desar-la: quadrat de sèrie i la part important dins del marc. L’avatar del Perfil hi passa sempre, només en quadrat.',
+    'enquadrar retallar foto crop quadrat capcalera hero miniatura dialeg avatar perfil retallador'),
   /* T52 (ordre del Mestre, 260928) · la vista A4 de l'editor. */
   especimen('superposicions', 'impressio', 'Impressió', 'DocumentPrintPreview · A4 i PDF', ['organisme', 'editor'],
     'La vista A4 del document, amb portada o sense, preparada al dispositiu per a imprimir o desar com a PDF. Viu davall del títol de l’editor, al costat dels drets d’autor.',
@@ -370,7 +376,8 @@ export const ARBRE_UNIVERSAL = Object.freeze([
   { id: 'impressio', nom: 'DocumentPrintPreview', fitxer: 'src/components/universal/DocumentPrintPreview.jsx', pare: 'editor', item: 'superposicions-impressio',
     rol: 'La vista A4 i el PDF, al costat dels drets d’autor.', usa: ['dialeg'] },
   { id: 'enquadrament', nom: 'DialegEnquadrament', fitxer: 'src/components/universal/enquadrament/DialegEnquadrament.jsx', pare: 'editor', item: 'superposicions-enquadrament',
-    rol: 'Re-enquadrar la foto de capçalera.', usa: ['dialeg', 'boto'] },
+    rol: 'Re-enquadrar la foto de capçalera; al Perfil, l’avatar (només en quadrat).', usa: ['dialeg', 'boto'],
+    consumidors: ['el Perfil (DialegCapcaleraAvatar i DetallAjust, per useEnquadramentAvatar)'] },
   { id: 'resum-connexio', nom: 'ResumConnexio', fitxer: 'src/sections/connectar/ResumConnexio.jsx', pare: 'page', item: 'retroalimentacio-resum-connexio',
     muntadaPer: 'ConnectarSection',
     rol: 'El resum de Connectar per a cada destinatari, dins de l’article de la pàgina de Connectar, quan la connexió ja s’ha guardat.' },

@@ -45,7 +45,12 @@
     cursor: pointer;
     overflow: hidden;
   }
-  .sdp-rajola:hover { border-color: var(--sdp-vora-forta); }
+  /* Fase B (pla 261004_0050) · el hover només amb ratolí: al tàctil la vora
+     no es queda enganxada després del toc. Cada guarda queda al lloc de la
+     seua regla: l'ordre de la cascada no canvia i l'escriptori, tampoc. */
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-rajola:hover { border-color: var(--sdp-vora-forta); }
+  }
   .sdp-rajola:focus-visible { outline: 3px solid var(--sdp-focus); outline-offset: 2px; }
   .sdp-rajola[aria-pressed="true"] { border-color: var(--sdp-accio); background: var(--sdp-accio-subtil); }
   .sdp-rajola:disabled { cursor: not-allowed; border-color: var(--sdp-vora); background: var(--sdp-fons-subtil); color: var(--sdp-text-desactivat); }
@@ -110,7 +115,9 @@
     font-variant-numeric: tabular-nums;
     cursor: pointer;
   }
-  .sdp-teclat__tecla:hover { border-color: var(--sdp-vora-forta); }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-teclat__tecla:hover { border-color: var(--sdp-vora-forta); }
+  }
   .sdp-teclat__tecla:focus-visible { outline: 3px solid var(--sdp-focus); outline-offset: 2px; }
   .sdp-teclat__tecla--control { background: var(--sdp-fons-subtil); }
   .sdp-teclat__tecla:disabled { cursor: not-allowed; color: var(--sdp-text-desactivat); }
@@ -168,7 +175,9 @@
     text-decoration: none;
   }
   button.sdp-linia-temps__accio, a.sdp-linia-temps__accio { cursor: pointer; }
-  button.sdp-linia-temps__accio:hover, a.sdp-linia-temps__accio:hover { background: var(--sdp-fons-subtil); }
+  @media (hover: hover) and (pointer: fine) {
+    button.sdp-linia-temps__accio:hover, a.sdp-linia-temps__accio:hover { background: var(--sdp-fons-subtil); }
+  }
   .sdp-linia-temps__accio:focus-visible { outline: 3px solid var(--sdp-focus); outline-offset: -3px; }
   .sdp-linia-temps__accio[aria-current="true"] { background: var(--sdp-accio-subtil); }
   .sdp-linia-temps__titol { font-weight: 700; line-height: 1.2; }

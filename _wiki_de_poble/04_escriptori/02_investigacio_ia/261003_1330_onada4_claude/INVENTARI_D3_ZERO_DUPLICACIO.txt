@@ -1,0 +1,360 @@
+INVENTARI D3 · ZERO DUPLICACIÓ EN COMPARTIR I DESAR (ADR MULTIMÈDIA §3.5) · ONADA 4, TASCA T3c
+==============================================================================================
+Torn: torn_50ca5709-8cd2-416a-bf41-2afdb3450179 (Claude, Onada 4). Tasca de NOMÉS LECTURA: cap línia de
+codi ni cap migració tocada. Decisió de partida: ADR_MULTIMEDIA_FONT_UNICA.txt (D3) d'esta mateixa carpeta.
+Germana: ESQUEMA_MITJANS_PROPOSTA.txt (la taula «mitjans» i la capacitat opcional del port).
+
+Abast declarat per superfície (sdp-workflow, lliçó 260923): src/** i supabase/migrations/**. Fora d'abast:
+src/data/wikiManifest.js (generat), les proves, tooling/ i la Wiki.
+
+Etiquetes: [VERIFICAT] = llegit al codi o executat en este torn. [NO VERIFICAT] = comportament del navegador,
+de Supabase en execució o de terceres parts que no he pogut contrastar (la web està bloquejada pel hook).
+Els números de línia són els de l'arbre a les 20:00 del 261003; altres agents editen en paral·lel.
+
+
+0. EXECUCIONS D'ESTE TORN
+-------------------------
+- node tooling/gates/tractor-enxufe.mjs → E1, E2, E3 i E4 en verd. [VERIFICAT]
+- npx vitest run src/data/contracte.test.js → 1 fitxer, 21 de 21 proves en verd. [VERIFICAT]
+- La resta és lectura (rg i Read). Cap prova nova: no hi ha codi nou.
+
+
+1. RESUM
+--------
+ Fitxa  Lloc                                     Què es copia avui                         Referència amb el que hi ha?   Proposta
+ D3-01  Xat › «Enviar al Bloc de Notes»          text, autor i hora dels missatges         parcial (ids de missatge)      còpia justificada + origen 'xat' (decisió)
+ D3-02  Connectar un element intern → nota      títol, subtítol i entradeta de l'original sí (origen ja hi és)            D4 del Mestre vs D3: decisió
+ D3-03  Compartir al Mur una connexió            el cos editat: una 2a publicació pública  sí (origen al payload)         comptadors i comentaris a l'original
+ D3-04  Comentar / Connectar una targeta         res, però apunten a la CÒPIA              sí (objecteDeConnexio existix) apuntar a l'original
+        'compartit' del Mur
+ D3-05  Contingut de fora (/connectar, Snippet)  títol, subtítol, entradeta; sense imatge  no (el de fora pot caure)      còpia justificada; editable o de lectura: decisió
+ D3-06  Snippet › «Afegir al Lector»             res: url, nom i categoria                  ja és referència               cap canvi
+ D3-07  Lector › «Per a després»                 el resum (≤280) amb enllaç; local         no (la font pot caure)         ja complix l'excepció de l'ADR
+ D3-08  Publicar una nota pròpia al Mur          tots els camps a section_submissions      no (RLS: la nota és privada)   una sola instància pública: justificada
+ D3-09  promoteToPublic (imatges de la nota)     el FITXER: privat + còpia pública         sí, amb SHA-256                una còpia pública per (persona, sha); errada de republicar
+ D3-10  Autoria dins del payload del Mur         nom i foto de qui signa (text)            sí (owner_user_id, author_org_id) resoldre en llegir (més avant)
+ D3-11  Reenviar missatges                       no implementat; l'esquema prepara còpia   no (falta la columna d'origen) reenviat_de + mitjà per referència
+ D3-12  Connectar i enviar per xat               un enllaç (referència) + una nota sempre  sí                             la nota, opcional (decisió)
+ D3-13  Duplicar notes o targetes                no existix; còpia de prova del Foraster   —                              cap canvi (local, en memòria)
+ D3-14  Avatar, capçalera i logo                 1 fitxer per pujada; orfes en reemplaçar  sí, amb SHA-256                un fitxer per (persona, sha); «les dues»: ja 2 obres (T3)
+ D3-15  Imatge dins del text enriquit            1 fitxer per inserció; repetida = 2        sí, amb SHA-256                deduplicar per SHA-256
+ D3-16  Deduplicació SHA-256 de mitjans          cap; ruta amb UUID aleatori               l'ajudant ja existix          ruta per contingut (ESQUEMA §6)
+ D3-17  Purga de la baixa                        detecta referències per text (strpos)     sí, amb la taula mitjans       taula d'índex (ESQUEMA)
+
+Avui NO hi ha cap taula de «m'agrada» ni de comptadors: els únics «comptadors» són el fil de comentaris de
+cada Pàgina Universal (xat de pàgina, 2609282100_xat_de_pagina.sql) i la columna xat_missatges.reenviaments.
+[VERIFICAT: rg «create table» a supabase/migrations/ només dona towns, ajustos, town_memberships, app_content,
+section_submissions, profiles, organizations, organization_memberships, user_platform_roles,
+organization_claims, xat_*, consentiments, notes, politiques_privacitat, consentiments_bloquejats,
+incidencies_alta, baixes i purga_storage_pendent]
+
+
+2. FITXES
+---------
+
+D3-01 · Xat › «Enviar al Bloc de Notes» (el Retall)
+  On: src/sections/xat/components/Conversa.jsx:392-398 i 491-496 (botó); src/sections/xat/XatSection.jsx:643-659
+      (enviaAlBloc → creaNota); src/sections/xat/retall.js:60-91 (construeixRetall). [VERIFICAT]
+  Què passa: els missatges triats es tornen HTML (blockquote amb autor, hora i text escapat) i naix una nota
+      NOVA a 'f-notes'. retall.js:83-90 torna { title, folderId, content }: cap `origen`, cap id de missatge ni
+      de fil. [VERIFICAT]
+  Què es copia: una fila nova a notes (o a IndexedDB en local) amb el text d'altres persones. Cap fitxer, cap
+      comptador (xat_missatges no en té cap de reaccions). [VERIFICAT]
+  Referència viable avui? Parcial. Els missatges tenen id i seq (xat_missatges, 2609270200_xat_f0_fonament.sql:
+      128-130), però la visibilitat d'un missatge depén de la finestra del participant (visible_des_de_seq,
+      visible_fins_seq: 2609270200:92-94), de l'esborrat (esborrat_al: :146) i de la caducitat (caduca_al:
+      :150). Una nota que només apuntara als missatges deixaria de llegir-se quan la persona ix del grup o
+      l'autor l'esborra. [VERIFICAT a l'esquema]
+  Proposta conservadora: còpia JUSTIFICADA (contingut que pot desaparéixer, com l'excepció de l'ADR), però:
+      (a) amb origen { tipus: 'xat', filId, missatges: [ids] } per a poder tornar a la conversa. notes.origen és
+          jsonb i només comprova que siga un objecte (2609272100_notes_origen.sql:23-25): cap migració. Sí que
+          cal estendre TIPUS_ORIGEN (src/data/origenNota.js:45), que avui només admet 'connexio' i 'extern' i
+          descartaria l'origen nou (normalitzaOrigen, :191-207);
+      (b) sense comptadors propis (avui ja no en té).
+  Decisió humana: vegeu §4, punts 1 i 2 (el Retall es pot publicar al Mur com a contingut PROPI; els missatges
+      temporals de F2).
+
+D3-02 · Connectar un element intern (Mur, Mercat, actes, perfils, pàgines) → nota
+  On: src/sections/connectar/ConnectarSection.jsx:359-401 (handleConnect) i 369-381 (creaNota);
+      src/sections/notes/connexions.js:95-97 (cos); src/data/origenNota.js:19-33. [VERIFICAT]
+  Què passa: naix una nota del MAS de qui connecta amb el títol, el subtítol i l'entradeta de l'ORIGINAL resolt
+      (ConnectarSection.jsx:372-375, «D4 · còpia editable») i un cos curt que enllaça l'original. La nota recorda
+      l'original a `origen` (sectionId, itemId, titol, autorId, autorNom, autorTipus, ruta, objecte, drets,
+      abast). Cap imatge: la de l'original no es copia ni es puja. [VERIFICAT]
+  Què es copia: una fila de notes (text de tres camps + presentació). Cap fitxer, cap comptador.
+  Referència viable avui? Sí: l'origen ja hi és i el lector del MAS ja resol l'original per a Comentar
+      (src/sections/notes/ConnexioDetall.jsx:105, objecteDeConnexio).
+  Proposta conservadora: NO tocar res fins que el Mestre decidisca. La decisió D4 del 260930 (comentaris de
+      src/data/origenNota.js:21-22 i src/sections/notes/connexions.js:12-18) diu literalment que una connexió
+      és una còpia editable; la D3 del 261003 diu que desar crea una referència. Són contradictòries per a este
+      cas. Si mana D3: la nota guarda només l'origen i pinta el títol, el subtítol i l'entradeta de l'original
+      en llegir (ja ho fa per a Comentar). Si mana D4: es queda com està i D3 s'aplica als comptadors
+      (D3-03 i D3-04).
+  Decisió humana: §4, punt 3.
+
+D3-03 · Compartir al Mur una connexió (type 'compartit')
+  On: src/sections/notes/NotesContext.jsx:196-197 (una nota amb origen sempre es compartix), 239-241 (cos per al
+      Mur), 277-307 (payload), 279-280 (type 'compartit' i origen), 310-313 (id de la publicació = id de la nota);
+      src/sections/notes/ConnexioDetall.jsx:139-142. [VERIFICAT]
+  Què passa: el cos editat de la nota es publica com una fila NOVA de section_submissions, signada per qui
+      compartix. Cada persona que connecta i compartix el mateix original crea la seua publicació. L'upsert per
+      id (src/data/supabase/content.js:89-90, on_conflict=id) evita duplicats en reintentar, no entre persones.
+  Què es copia: una fila pública amb títol, subtítol, entradeta, cos, imatge de la nota i etiquetes. El fil de
+      comentaris d'eixa fila naix a banda del de l'original (vegeu D3-04).
+  Referència viable avui? Sí: el payload porta l'origen net, sense abast (src/data/mapejadorSeccions.js:47-50).
+  Proposta conservadora: mantindre D4 (el cos editat, citant l'original) mentre el Mestre no diga el contrari,
+      però que la publicació compartida NO tinga comptadors propis: Comentar i Connectar porten a l'original
+      (D3-04). Si mana D3 pur: la publicació compartida és una fila mínima { type: 'compartit', origen } i el
+      Mur pinta l'original resolt.
+  Decisió humana: §4, punt 3.
+
+D3-04 · Comentar i Connectar sobre una targeta 'compartit' del Mur
+  On: src/sections/mur/TargetaDelMur.jsx:48-50 i 64-65; src/config/navigation.js:104-118 (objecteDe usa
+      item.id). [VERIFICAT]
+  Què passa: el descriptor de la targeta compartida és el de la CÒPIA (id de la publicació compartida), no el
+      de l'original. Comentar obri un xat de pàgina propi de la còpia (2609282100_xat_de_pagina.sql, subjecte
+      'publicacio' + id), i Connectar crea una connexió d'una connexió (còpia de còpia). Al lector del MAS, en
+      canvi, Comentar ja va a l'original (ConnexioDetall.jsx:105). [VERIFICAT al codi; NO VERIFICAT al navegador]
+  Referència viable avui? Sí, sense esquema nou: objecteDeConnexio(item.origen) (connexions.js:66-79) torna el
+      descriptor de l'original a partir de l'origen públic que ja viatja al payload.
+  Proposta conservadora: quan item.type === 'compartit' i item.origen.tipus === 'connexio', l'objecte de
+      Comentar i de Connectar és objecteDeConnexio(item.origen); la targeta es pinta igual (Llei del Píxel). Un
+      contingut de fora compartit (origen 'extern') no té Pàgina Universal: es queda amb el fil propi, que és
+      l'únic lloc dins de Sóc de Poble.
+  Decisió humana: canvi de comportament sense redisseny; demana el vistiplau del Mestre (§4, punt 3).
+
+D3-05 · Contingut de fora: /connectar?url= i Snippet Curador «Desar al Bloc»
+  On: src/sections/connectar/contingutExtern.js:1-9 («El contingut de fora es CLONA») i 231-243
+      (notaDeContingutExtern); src/sections/connectar/ConnectarSection.jsx:669-709; src/sections/notes/
+      SnippetCurador.jsx:220-243 (desa) i 310 («La imatge de l'altra web no es copia»); src/sections/notes/
+      modeDesa.js:249-261 (entradaDeDesa). [VERIFICAT]
+  Què es copia: una nota nova amb el títol, el subtítol i l'entradeta que arriben a la URL de compartir (no de
+      la web: l'app no baixa res), un cos «Font: <a>lloc</a>» i origen { tipus: 'extern', url, titol }. Cap
+      imatge (ni còpia ni hotlink). Desar dues vegades la mateixa URL crea dues notes: no hi ha cap comprovació
+      per url (modeDesa.js:249-261 i contingutExtern.js:231-243 no miren les notes existents). [VERIFICAT]
+  Referència viable avui? No: és contingut de fora que pot desaparéixer. És el cas que l'ADR §3.5 posa com a
+      excepció.
+  Proposta conservadora: còpia JUSTIFICADA, amb dos ajustos:
+      (a) abans de crear, si una nota carregada ja té el mateix origen.url normalitzat (urlExterna), oferir
+          «Ja el tens desat: obrir» en lloc de crear-ne una altra. Només és fiable amb notesComplete; en remot,
+          la garantia sencera demanaria un índex a notes ((origen->>'url')) i una consulta del port;
+      (b) cap comptador propi (avui no en té).
+  Decisió humana: l'ADR diu «còpia de LECTURA»; T71 (contingutExtern.js:6-9, NotesEditor.jsx:58-61) la fa
+      EDITABLE. §4, punt 4.
+
+D3-06 · Snippet › «Afegir al Lector» (una font de notícies)
+  On: src/sections/notes/SnippetCurador.jsx:251-272; src/sections/notes/modeDesa.js:239-242. [VERIFICAT]
+  Què es desa: { url, nom, categoriaId } d'una font, local al dispositiu. És una referència: no es copia cap
+      notícia. Complix D3. Cap canvi.
+
+D3-07 · Lector › «Per a després»
+  On: src/apps/lector/nucli/estat.js:7-9 i 63-69 (commutaDespres); src/apps/lector/nucli/model.js:81-95
+      (normalitzaResum); src/apps/lector/magatzem.js:19-22 (local, «cap crida de xarxa»). [VERIFICAT]
+  Què es copia: el RESUM de la notícia (títol ≤300, enllaç, data, autor ≤120, resum ≤280, URL de la imatge,
+      no el fitxer), un sol cop per id (estat.js:32-34) i com a màxim 500 (estat.js:20). Només al dispositiu.
+  Justificació escrita, ja al codi (estat.js:8-9): «perquè la notícia es puga llegir encara que la font ja no
+      la servisca». És exactament l'excepció de l'ADR: còpia de lectura, amb enllaç a l'original, sense
+      comptadors propis. Complix D3. Cap canvi.
+
+D3-08 · Publicar una nota pròpia al Mur
+  On: src/sections/notes/NotesContext.jsx:277-313; src/data/supabase/content.js:60-92;
+      supabase/migrations/2609140000_schema_notes.sql:19 (notes.published_submission_id). [VERIFICAT]
+  Què es copia: els camps de la nota (títol, subtítol, entradeta, cos, imatge, etiquetes, drets, data i
+      emoticona) al payload d'UNA fila de section_submissions, amb el mateix id que la nota: reintentar o
+      «Actualitzar al Mur» reescriu la mateixa fila (upsert), mai en fa una altra.
+  Referència viable avui? No sense obrir la nota: notes és privada per RLS (només la propietària) i la
+      publicació la llig el poble. Llegir la nota en pintar el Mur obligaria a obrir-la o a una vista
+      definidora, que exposaria l'esborrany en curs.
+  Justificació escrita: no és una duplicació en el sentit de D3. La nota és l'ESBORRANY privat i la publicació
+      és l'ÚNICA instància pública; els comentaris viuen a la publicació (un sol fil) i no hi ha cap altre
+      lloc amb comptadors. La frontera de privacitat obliga al snapshot. Cap canvi.
+
+D3-09 · promoteToPublic: les imatges d'una nota en publicar-la
+  On: src/sections/notes/NotesContext.jsx:251-274; src/data/supabase/storage.js:166-191 (sobretot 179-184 i
+      186-188); src/data/supabase/storage.js:31-38 (uploadFile sense opcions). [VERIFICAT]
+  Què es copia: el FITXER. Les imatges del Bloc pugen al bucket privat (carpeta 'notes' → mitjans_privats,
+      storage.js:117-121; NotesEditor.jsx:63-74). En publicar, cada sdp-media://mitjans_privats/… de la
+      capçalera i del cos es baixa i es torna a pujar sencer al bucket públic amb la mateixa ruta; l'original
+      privat no s'esborra a posta (C17, storage.js:186-188). Resultat: dos fitxers per imatge publicada.
+  Errada probable en REPUBLICAR (fora de D3, però la causa és la còpia): la nota continua guardant la
+      referència privada, i cada «Actualitzar al Mur» torna a promoure. uploadFile crida upload(path, file)
+      sense { upsert: true } (storage.js:34); si l'objecte públic ja existix, la pujada falla, promoteToPublic
+      torna la referència PRIVADA (storage.js:181-184) i el payload del Mur la desa. Una referència privada
+      només la pot llegir la propietària (es_ruta_mitjans_propia, 2609200300_blindatge_storage_i_contingut.sql:
+      7-17 i 22-25). [VERIFICAT al codi; NO VERIFICAT en execució: que supabase-js pose upsert a false per
+      defecte i que torne error si l'objecte existix. No hi ha cap prova de storage.js que ho cobrisca: només
+      mocks a NotesContext*.test.jsx]
+  Referència viable avui? Sí, amb el SHA-256: una còpia pública per (persona, sha), que ja seria idempotent.
+  Proposta conservadora: còpia JUSTIFICADA i acotada. La nota és privada i la publicació pública: com a molt
+      UN fitxer privat i UN de públic per (persona, sha256). Amb la ruta per contingut (ESQUEMA §6), la segona
+      promoció troba el fitxer públic ja fet i el reutilitza: desapareix l'errada de republicar. Moure (en
+      lloc de copiar) trencaria la nota, que encara apunta al privat, si no es canvia la referència a un id
+      (ESQUEMA §3, opció B).
+
+D3-10 · L'autoria dins del payload del Mur
+  On: src/sections/notes/NotesContext.jsx:291-293 (author_name, author_avatar, author_location);
+      src/sections/notes/autoriaNota.js:36-38 (una foto sdp-media:// NO viatja); src/data/mapejadorSeccions.js:
+      61-64. [VERIFICAT]
+  Què es copia: el nom, la foto (només si és http(s) o ruta pròpia) i el poble de qui signa, com a text, en
+      publicar. Un canvi de nom o de foto no arriba a les publicacions velles, i una foto PUJADA (sdp-media://)
+      mai es veu al Mur.
+  Referència viable avui? Sí: section_submissions ja té owner_user_id i author_org_id
+      (2609261200_publicacions_autoria.sql:14-16).
+  Proposta conservadora: no és cap fitxer ni comptador; queda per a més avant. Resoldre l'autoria en llegir
+      (per funció, com perfil_public, 2610021520_perfil_public.sql) i, amb la taula mitjans, la foto pujada es
+      podria pintar. Cap canvi en esta onada.
+
+D3-11 · Reenviar missatges del xat
+  On: supabase/migrations/2609270200_xat_f0_fonament.sql:139-142 (reenviat boolean, reenviaments smallint) i
+      :152 (metadades jsonb); 2609272200_xat_entitats.sql:253-255 i 287-290 (xat_envia només admet 'text').
+      Al client no hi ha cap «Reenviar» (rg reenviat/reenviaments a src/: cap ús). [VERIFICAT]
+  Què es copiaria: l'esquema està preparat per a la manera de WhatsApp, una fila NOVA amb el text copiat i la
+      marca «reenviat», sense cap columna que diga DE QUIN missatge ve. Si F1 porta adjunts, la mateixa pujada
+      es repetiria a cada reenviament.
+  Referència viable avui? No a l'esquema (falta la columna). Sí a les metadades (jsonb lliure).
+  Proposta conservadora (per a quan s'implemente, no ara): columna reenviat_de uuid (referència al missatge
+      original, on delete set null) i, per als adjunts, metadades.mitja = id de mitjans: el fitxer no es torna
+      a pujar mai. El text sí que es copia (el missatge original el pot esborrar el seu autor i la persona que
+      el rep pot no veure el fil d'origen): còpia justificada, sense comptadors propis.
+
+D3-12 · Connectar i enviar a persones o grups pel xat
+  On: src/sections/connectar/useAplicaAbast.js:26-45; src/sections/connectar/abastConnexio.js:178-183
+      (missatgeDeConnexio); ConnectarSection.jsx:369-391. [VERIFICAT]
+  Què passa: el xat rep un ENLLAÇ a l'original (referència: complix D3). Però abans es crea sempre la nota del
+      MAS (D3-02), encara que la intenció siga només enviar-ho.
+  Proposta conservadora: cap canvi de codi sense ordre. Si el Mestre vol, «enviar» sense «connectar» (cap nota)
+      seria la forma de referència pura. §4, punt 5.
+
+D3-13 · Duplicar notes o targetes
+  rg de «duplica», «clona», «fes una còpia» a notes, xat, mercat i components/universal: cap acció de
+      duplicar. [VERIFICAT]
+  L'única còpia és la de prova del Foraster (src/sections/notes/NotesEditor.jsx:111-118; autoriaNota.js:20-25):
+      la nota de benvinguda en memòria, sense servidor ni comptadors. Justificada. Cap canvi.
+
+D3-14 · Avatar, capçalera i logo (Perfil, «El compte», closca de l'editor)
+  ARBRE EN MOVIMENT: mentre escrivia, la tasca germana T3 (Retallador) ha canviat DetallAjust.jsx i
+      DialegCapcaleraAvatar.jsx i ha afegit src/sections/profile/useEnquadramentAvatar.jsx (git status, 20:05).
+      Les cites d'ací són les de l'arbre RELLEGIT després d'eixe canvi; on el canvi altera la troballa, ho dic.
+  On: src/hooks/useHeroImageHandler.js:64-102; src/sections/profile/PerfilContext.jsx:473-479 (pujaMitja);
+      src/sections/profile/DetallAjust.jsx:88-132 (ara: triar → retallar → pujaImatge, :105-132, pujada a :117);
+      src/sections/profile/DialegCapcaleraAvatar.jsx:8-12 i 102-127; src/components/universal/
+      UniversalEditorShell.jsx:468-491 i 500-553; src/data/supabase/storage.js:107-127. [VERIFICAT]
+  Quants fitxers per pujada: UN. compressImage (src/utils/imageUtils.js:13-53) escala al costat llarg (600 px
+      avatar i logo, 1200 px capçalera; useHeroImageHandler.js:74-75) i torna WebP; es puja una vegada
+      (storage.js:124, upsert: false). El bucle d'esglaons (useHeroImageHandler.js:78-87) només torna a pujar
+      si la pujada torna una URL buida sense llançar; amb la pujada d'avui, o torna url o llança. Cap mida
+      derivada al servidor: cap «transform» ni render/image a src/data. [VERIFICAT]
+  On es multiplica:
+      (a) ruta amb UUID aleatori (storage.js:122): la mateixa foto pujada dos vegades són dos fitxers;
+      (b) canviar l'avatar o la capçalera deixa l'anterior al bucket per sempre (cap esborrat). A «El compte»
+          la pujada es fa en acabar el retall (DetallAjust.jsx:105-117), encara ABANS de «Guardar»: retallar-ne
+          dos o no guardar deixa orfes (abans del canvi de T3 passava igual, en triar el fitxer);
+      (c) «La mateixa per a les dues» (DialegCapcaleraAvatar.jsx:11). ABANS de T3 pujava la MATEIXA foto dos
+          vegades, a 1200 px i a 600 px: una mida derivada, la que l'ADR D2 no vol. ARA (:102-114 i 116-127)
+          puja la foto sencera per a la capçalera i el RETALL 1:1 per a l'avatar: dos fitxers, però dos imatges
+          diferents. Això encaixa amb «el retall 1:1 com a mitjà propi» de la proposta de baix;
+      (d) re-enquadrar una capçalera que ja existix (UniversalEditorShell.jsx:510 i 544-553) torna a
+          codificar la imatge ja processada i en puja una de nova; l'anterior queda òrfena. El retall de
+          l'avatar també codifica dues vegades (el retallador i després compressImage a DetallAjust.jsx:110):
+          vegeu L3.
+  Referència viable avui? Sí, amb el SHA-256 i la taula mitjans (ESQUEMA).
+  Proposta conservadora: un fitxer per (persona, sha256): una pujada repetida reutilitza el que hi ha. Per a
+      «les dues», el que ja fa T3 (capçalera sencera + retall 1:1 com a mitjà propi) complix D2 i D3: no són
+      variants de mida, són dues obres. Els orfes de (b) i (d) són una purga, no una duplicació en compartir:
+      queda per a una tasca pròpia amb l'índex de mitjans.
+  Decisió humana: §4, punt 6, només si el Mestre preferix UN sol fitxer per als dos camps.
+
+D3-15 · Imatge dins del text enriquit (ordre «Imatge» del menú /)
+  On: src/components/universal/richText/extensions/index.js:125-155 i 43-47; src/sections/notes/NotesEditor.jsx:
+      63-74 i 319. [VERIFICAT]
+  Què passa: cada inserció comprimix a 1200 px, puja un fitxer i posa el src. La mateixa imatge en dos llocs
+      són dos fitxers. En llavor i en local, NotesEditor torna un data URL i la imatge queda DINS del cos de
+      la nota (base64), comprimida dos voltes (useHeroImageHandler o el menú, i després compressImage altra
+      vegada a NotesEditor.jsx:69).
+  Proposta conservadora: deduplicar per SHA-256 com D3-14. El comentari de richText/extensions/index.js:52-55
+      ja demana «una sola porta de pujada per a tota l'aplicació»: la capacitat de l'ESQUEMA ha de ser eixa
+      porta.
+
+D3-16 · Deduplicació SHA-256 de mitjans avui
+  Cap. rg de subtle.digest, sha256 i SHA-256 a src/ (sense el manifest) només troba la Gestoria, els
+      tractors, la Consola, oauthRelay i compte.js: res als mitjans. storage.js:122 usa crypto.randomUUID().
+      [VERIFICAT]
+  Ajudant que ja existix i es pot reutilitzar: sha256 i sha256Hex a src/sections/tractors/nucli/canonic.js:154-
+      159 (el fa servir la Gestoria, src/sections/gestoria/nucli/tractor.js:851). Viu dins d'una secció: per a
+      usar-lo des de data/ caldria pujar-lo a src/utils/ (fora del meu abast). WebCrypto exigix context segur
+      (https o localhost): la Gestoria ja ho avisa (tractor.js:203). [VERIFICAT]
+
+D3-17 · La purga de la baixa endevina les referències llegint text
+  On: supabase/migrations/2609282100_xat_de_pagina.sql:741-760 (l'última versió de l'executor). [VERIFICAT]
+  Què passa: per a saber si un fitxer encara l'usa una entitat o una publicació, busca el nom dins de
+      logo_url, hero_url, presentacio_html i payload::text (strpos). No és duplicació, però és la conseqüència
+      de no tindre índex de mitjans: amb la taula mitjans, «referenciat» seria una consulta i no una cerca de
+      text. El comentari :744-745 ja reconeix la còpia de D3-09 («la còpia pública d'un adjunt té el mateix nom
+      que l'original privat»).
+
+
+3. TROBALLES LATERALS (FORA DE D3; PER A QUI TOQUE)
+--------------------------------------------------
+L1 · Límit del bucket privat desquadrat. El client admet 25 MiB (storage.js:20, 26 214 400 bytes) i el bucket
+     en té 25 242 880 (2609191650_bucket_mitjans_privats.sql:8, uns 24,07 MiB). Un PDF d'entre els dos passa la
+     validació del client i el rebutja el servidor. [VERIFICAT al codi i a la migració; aritmètica feta]
+L2 · L'ADR cita «src/utils/imatgeCanvas.js», que no existix. El fitxer és
+     src/components/universal/enquadrament/imatgeCanvas.js (carregaImatge :36, dibuixaVisor :60, exportaRetall
+     :74). Les altres tres cites de l'ADR (useHeroImageHandler.js:7, DetallAjust.jsx:13, richText/extensions/
+     index.js:44) eren correctes; amb el canvi en curs de T3, el fetch(dataUrl) de DetallAjust ha baixat a la
+     línia 14 (aBlob comença a la 13). [VERIFICAT]
+L3 · Doble codificació en enquadrar: exportaRetall fa un JPEG a 0,92 (imatgeCanvas.js:74 i 87) i després
+     processaFitxer el torna a passar per compressImage a WebP 0,8 (UniversalEditorShell.jsx:544-548;
+     useHeroImageHandler.js:79). Dos codificacions amb pèrdua per pujada: l'ADR D1 i D2 en volen una. [VERIFICAT]
+L4 · Una imatge pujada (sdp-media://) podria no veure's a la targeta del Mur. El payload es munta amb
+     mapSectionSubmissionToItem en ESCRIURE (content.js:74-75): image_url i imageSrc passen per validaUrl, que
+     rebutja l'esquema sdp-media: (mapejadorSeccions.js:18-30 i 65-66), però `image` es queda tal qual. La
+     targeta crida el resolutor SÍNCRON (TargetaDelMur.jsx:60; assetResolver.js:106-132), que no coneix
+     sdp-media:// i hi posaria «/» davant. [VERIFICAT el camí d'escriptura i el resolutor; NO VERIFICAT el camí
+     de lectura de loadMur ni al navegador: cal mirar-ho abans de donar-ho per errada]
+L5 · Un Retall del xat (D3-01) es publica al Mur com a contingut PROPI: no porta origen, per tant publishNote el
+     tracta com a 'feed' (NotesContext.jsx:197 i 279) i ix signat per qui retalla, amb els seus drets, encara
+     que el cos siga d'altres persones. [VERIFICAT al codi]
+L6 · Missatges temporals (F2): el xat té caduca_al i temporal_segons (2609270200:58-60 i 150), però el client
+     encara no els mapeja (rg a xat.js i missatges.js: res). Quan arriben, un Retall d'un fil temporal en faria
+     una còpia permanent. [VERIFICAT l'esquema; el comportament futur és una previsió]
+
+
+4. DECISIONS DEL MESTRE (requires_human_decision)
+-------------------------------------------------
+1. Retall del xat (D3-01, L5): ha de portar origen 'xat' i publicar-se com a COMPARTIT (citant les persones), o
+   no s'ha de poder publicar sense el consentiment de qui va escriure els missatges?
+2. Retall de missatges temporals (L6): es permet, es marca o es bloqueja?
+3. D3 (261003) contra D4 (260930) per a les connexions (D3-02, D3-03, D3-04): la connexió continua sent una
+   còpia editable (D4) o passa a ser una referència (D3)? Mentre no ho digues, la proposta mínima és que
+   Comentar i Connectar d'una targeta compartida vagen a l'original (D3-04), sense tocar la còpia.
+4. Contingut de fora (D3-05): còpia EDITABLE (T71, com ara) o de LECTURA (text de l'ADR §3.5)? I si es vol
+   evitar la mateixa URL dos vegades.
+5. Connectar i enviar (D3-12): enviar per xat sense crear la nota del MAS?
+6. «La mateixa per a les dues» (D3-14 c): T3 ja la fa amb la foto sencera + el retall 1:1 (dos mitjans). Només
+   cal decidir si es preferix un sol fitxer per als dos camps (l'avatar canviaria: Llei del Píxel).
+
+
+5. PROVES D'ACCEPTACIÓ PROPOSADES PER A D3 (QUAN HI HAJA CODI)
+-------------------------------------------------------------
+- Retall: construeixRetall torna origen { tipus: 'xat', filId, missatges } i normalitzaOrigen el conserva.
+- Targeta compartida: amb item.type 'compartit' i origen de connexió, l'objecte de Comentar i de Connectar és
+  el de l'original (objecteDeConnexio), i la targeta pinta el mateix DOM que abans.
+- Pujada repetida: dos pujaMitja amb els mateixos bytes de la mateixa persona tornen el mateix id i el segon
+  porta reutilitzat: true; l'adaptador fals compta UNA sola escriptura al magatzem.
+- Republicar una nota amb imatge: la segona promoció no torna cap referència sdp-media://mitjans_privats/ al
+  payload (prova de storage.js amb un client fals que respon 409 a la segona pujada).
+- «Les dues»: una sola pujada (si el Mestre tria un fitxer).
+- Compartir una targeta al xat (ADR §5): cap fila nova de notes ni de mitjans; només el missatge amb l'enllaç.
+
+
+6. QUÈ HE VERIFICAT I QUÈ NO
+----------------------------
+Verificat (llegit en este torn): tots els file:line citats; l'absència de reaccions, de SHA-256 de mitjans, de
+reenviament al client i de transformacions d'imatge al servidor; el resultat de tractor-enxufe i de
+contracte.test.js.
+No verificat: el comportament de supabase-js amb upsert per defecte i objecte repetit (D3-09); el camí de
+lectura del Mur per a sdp-media:// (L4); qualsevol comportament de navegador. Cap prova al navegador en este
+torn.
+
+Vincles: ADR_MULTIMEDIA_FONT_UNICA.txt · ESQUEMA_MITJANS_PROPOSTA.txt · RETALLADOR.txt

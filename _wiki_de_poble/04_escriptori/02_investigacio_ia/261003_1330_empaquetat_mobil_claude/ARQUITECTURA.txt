@@ -472,4 +472,110 @@ Tres maneres de fallar, i com ens en defensem:
    Defensa: errorsEntornNatiu dins del build (§5), provada amb fixtures, i la prova de fum de la xarxa
    (FASES §8).
 
+
+ESMENA 261003 (vespre) · OAuth natiu amb l'id d'intent de F1 v2, i revisió adversarial del build natiu
+=====================================================================================================
+Torn torn_50ca5709-8cd2-416a-bf41-2afdb3450179 (Claude, Onada 4, segona onada). Este bloc MANA sobre el
+text de dalt on es contradiuen. El text de dalt no s'ha reescrit, perquè es puga contrastar.
+
+R1 · §5 «Comprovacions del build» i §6, tercera manera de fallar [FET al codi, amb prova en roig abans]
+  Dalt, la defensa contra un .env.local de desenvolupament és que VITE_SUPABASE_URL siga https i no local.
+  No n'hi ha prou. Vite segella dins del paquet TOTES les VITE_* de l'entorn del build, no només les que
+  es lligen una a una: src/data/telemetria.js:57 i src/sections/calendari/fonts/configFonts.js:138 i :180
+  reben import.meta.env sencer, i el build el substituïx per un objecte amb totes
+  [VERIFICAT: node_modules/vite/dist/node/chunks/config.js:26522-26551]. Amb un .env.natiu.local que
+  només canviava la URL, la clau de desenvolupament, el tenant de desenvolupament i qualsevol URL local de
+  .env.local entraven al binari: reproduït en roig a tests/natiu-build.test.mjs abans del canvi.
+  Ara vite.natiu.config.js para el build si alguna VITE_* amb valor només li arriba de .env o de
+  .env.local: o la declara .env.natiu / .env.natiu.local, o la porta el procés. Peces pures i exportades:
+  nomsDeclarats(text) i heretadesDelLloc({ natiu, base, declarades, delProces }). L'error diu els noms,
+  mai els valors. Efecte per al Mestre: FASES, ESMENA 261003, E3.
+R2 · §5 «Proves», src/natiu/frontera.test.js [FET, amb sonda en roig abans]
+  El detector no veia onze formes que Vite i Rollup sí empaqueten: import() i require() amb plantilla;
+  import() amb un comentari davant del literal (el de @vite-ignore); import() amb ${…}, que
+  dynamic-import-vars convertix en un glob i s'ho emporta tot; import.meta.glob amb plantilla, amb l'opció
+  base, amb claudàtors dins del patró i començat per **; i new URL('…', import.meta.url), que porta el
+  fitxer dins del paquet com a recurs [VERIFICAT el glob amb plantilla i base a
+  node_modules/vite/dist/node/chunks/config.js:28122-28205 i :28351-28370]. La sonda nova en llistava 11
+  de 11 sense veure; ara cap, cap fals positiu nou, i el cens de tota la producció de src/ continua net.
+
+§3.3-bis · L'OAuth natiu. Substituïx el punt «Tornada» del §3.3 i la idea d'esperaTornada(prefix).
+  Origen: «Frontera nativa revisada amb documentació oficial» de 261003_1950_auditoria_codex.md (20:07),
+  acceptada sencera, més el disseny F1 v2 de l'entrada web (261003_1951_auditoria_claude.md, «Segona
+  onada», 1): un id d'intent aleatori i no secret a la tornada (paràmetre sdp_oauth_attempt) i un registre
+  pendent PER ID; cada missatge porta el seu id i només el consumix l'intent que el va crear.
+  Ací només hi ha el disseny. Res d'açò entra a src/data/oauthRelay.js en este torn: eixe fitxer és del
+  carril F1 v2, i el punt d'injecció natiu s'hi coordina quan F1 v2 estiga tancat. El nom del paràmetre,
+  la forma del registre, la caducitat i el que es neteja són els de F1 v2: si F1 v2 els canvia, este text
+  s'adapta, no al revés. L'obridor real continua sent src/natiu/obridorOAuth.js, l'únic que importa
+  @capacitor/app i @capacitor/browser.
+  Un intent, pas a pas:
+   a) Es crea com a F1 v2: la mateixa marca (PARAM_INTENT, sdp_oauth_attempt) amb un id de la mateixa
+      forma (FORMA_INTENT, 128 bits aleatoris; src/data/oauthRelay.js, capçalera i :147, llegit en este torn;
+      és codi d'un altre carril, encara sense cometre), verificador PKCE i registre d'espera PER ID,
+      amb caducitat i backend. Un intent nou substituïx l'anterior: n'esborra el verificador i en lleva els
+      escoltadors (pas e).
+   b) redirect_to = la tornada fixa amb el marcador:
+        org.socdepoble.app://auth/callback?sdp_oauth_attempt=<id>
+      Conseqüència per al §3.4 [NO VERIFICAT; cal comprovar-ho en configurar Supabase]: fins on se sap del
+      codi de GoTrue, Redirect URLs es compara per patró amb la URL SENCERA, consulta inclosa. L'entrada
+      exacta sense consulta del §3.4 podria no casar, i GoTrue tornaria a la Site URL en silenci. Cal una
+      entrada que admeta només el marcador (per exemple org.socdepoble.app://auth/callback?sdp_oauth_attempt=*),
+      sense comodins a l'esquema, al host ni al camí, i una prova: /authorize amb el marcador torna a
+      l'esquema, no a la web. És la mateixa pregunta que F1 v2 ja deixa oberta per a la tornada web
+      («El comodí ha d'admetre també la marca a la consulta [NO VERIFICAT a cada amfitrió]»,
+      oauthRelay.js, capçalera): es resol una vegada, per a les dues.
+   c) ABANS d'obrir res, s'instal·len els escoltadors D'ESTE intent i s'espera que estiguen actius:
+        const tornada = await App.addListener('appUrlOpen', …);
+        const tancat = await Browser.addListener('browserFinished', …);
+      i només després Browser.open({ url }). Al revés, una tornada ràpida podria arribar sense ningú que
+      l'escoltara.
+   d) Una URL és una tornada nostra només si, analitzada de forma exacta:
+        · la part d'abans de «?» i de «#» és EXACTAMENT org.socdepoble.app://auth/callback (l'esquema sense
+          distingir majúscules; l'autoritat i el camí, igualtat de text). Mai startsWith: acceptaria
+          /callback-alie o /callback/x;
+        · la consulta porta UN sol sdp_oauth_attempt, i és el d'un intent pendent d'este procés;
+        · no porta usuari, contrasenya ni port.
+      La consulta i el fragment es lligen amb URLSearchParams. No es confia en new URL(…).host ni en
+      .pathname per a un esquema propi: els WebView de Chromium d'abans de l'anàlisi estàndard dels URL no
+      especials (Chrome 130, finals de 2024, si no m'enganya la memòria [NO VERIFICAT]) donaven host buit i
+      camí «//auth/callback», i la Baseline admet WebView 100. Prova de fum nova: la tornada en un emulador
+      amb un WebView antic.
+      Si no és nostra, s'ignora sense cap efecte: pot ser un universal link de la v1.1 o una altra cosa.
+   e) Si és nostra: l'intent es marca CONSUMIT abans de cap await (deduplicació); es lleven NOMÉS els seus
+      escoltadors (tornada.remove(), tancat.remove()); Browser.close() (a Android pot no fer res o llançar:
+      dins d'un try [NO VERIFICAT]); es llig code o error amb la mateixa llista PARAMETRES_DE_TORNADA; es
+      bescanvia amb el verificador D'ESTE id, desaSessio, 'sdp:auth-change' i neteja del registre. Un codi
+      sense verificador es rebutja (tancat per defecte). L'error de GoTrue es mostra.
+      MAI App.removeAllListeners(): mataria el backButton i qualsevol altra escolta de l'app.
+   f) browserFinished vol dir que la persona ha tancat el navegador: cancel·lació, però amb guarda. Només
+      cancel·la si l'intent continua PENDENT (ni consumit ni substituït), per dues raons [NO VERIFICAT
+      l'ordre a cada plataforma]: a iOS, el nostre Browser.close() del pas e) també el dispara; a Android,
+      la pestanya es tanca quan l'app torna al davant, i l'avís pot arribar abans o després d'appUrlOpen.
+      Proposta: en rebre'l, esperar un marge curt (1 o 2 s) abans de cancel·lar; si dins del marge arriba
+      la tornada, mana la tornada. browserPageLoaded només diu que s'ha carregat la primera pàgina: no
+      prova res de l'OAuth.
+   g) Arrencada freda: l'entrada nativa, al pas 1 del §1.2 i ABANS de muntar, crida App.getLaunchUrl(). Si
+      la URL passa la prova del pas d), es busca l'id. Després de la mort del procés, el verificador (a la
+      capa efímera) ja no hi és: NO es bescanvia; es diu «L'entrada s'ha interromput; torna-ho a provar» i
+      es neteja (reinici controlat; Codex: no donar-lo per restaurat). Un id ja consumit o desconegut
+      s'ignora: getLaunchUrl pot tornar la mateixa URL quan l'app torna del segon pla, i appUrlOpen i
+      getLaunchUrl poden portar la mateixa tornada (deduplicació per id).
+      El verificador no es guarda en cap magatzem durador per a sobreviure a la mort del procés: seria un
+      secret de PKCE al disc. Si a les proves el reinici és massa freqüent, ho decidix el Mestre.
+   h) Caducitat: un intent que no s'ha consumit dins del termini de F1 v2 perd els escoltadors i el
+      verificador.
+  Proves de src/natiu/oauthNatiu.test.js (substituïxen les del §3.3; App i Browser falsos):
+    · l'escoltador d'appUrlOpen està actiu abans de Browser.open (ordre d'invocació);
+    · s'accepta org.socdepoble.app://auth/callback?code=X&sdp_oauth_attempt=ID; es rebutgen /callback-alie,
+      /callback/, /callbackx, l'autoritat auth.alie, l'esquema org.socdepoble.app.alie, https://auth/callback,
+      l'id d'un altre intent, cap id, l'id dues vegades i un usuari a l'autoritat;
+    · la mateixa tornada dues vegades (dos appUrlOpen, o appUrlOpen i getLaunchUrl): un sol bescanvi;
+    · browserFinished després d'una tornada bona no cancel·la; amb l'intent pendent, cancel·la; el d'un
+      intent vell no toca el nou;
+    · només es lleven els handles de l'intent, i mai es crida removeAllListeners;
+    · arrencada freda sense verificador: cap bescanvi i el missatge de reinici;
+    · un error de GoTrue a la tornada es mostra i tanca l'intent;
+    · la frontera continua: src/data/oauthRelay.js no importa Capacitor (frontera.test.js).
+
 Ancoratge: [[00_index_escriptori]]

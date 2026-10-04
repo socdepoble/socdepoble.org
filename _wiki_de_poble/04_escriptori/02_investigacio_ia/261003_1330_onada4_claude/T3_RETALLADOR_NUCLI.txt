@@ -1,0 +1,133 @@
+T3a · NUCLI DEL RETALLADOR: EXIF/GPS, ORIENTACIÓ, LÍMITS, EIXIDA I GEOLOCALITZACIÓ VOLUNTÀRIA
+==============================================================================================
+Torn torn_50ca5709-8cd2-416a-bf41-2afdb3450179 · Claude · Onada 4 · 261003, vesprada.
+Fonts llegides senceres: RETALLADOR.txt, ADR_MULTIMEDIA_FONT_UNICA.txt, AV.txt §8 i la carpeta
+src/components/universal/enquadrament/ (DialegEnquadrament, enquadrament.js, imatgeCanvas.js i proves).
+Decisió presa abans: el retallador JA EXISTIX (DialegEnquadrament, T46). No hi ha cap organisme nou:
+s'ha estés el que hi havia. Abast tocat: només src/components/universal/enquadrament/**.
+
+
+1. API
+------
+DialegEnquadrament (tot opcional; sense res nou, el contracte T46 és el mateix d'abans)
+  · sortida = { ampladaMaxima, format, qualitat }  (null de sèrie)
+      format: 'image/webp' de sèrie, també 'image/jpeg' o 'image/png'. Si el navegador no sap
+      codificar WebP (toBlob torna un altre tipus), es torna a codificar en JPEG amb fons blanc.
+      ampladaMaxima limita l'AMPLADA (mai s'amplia; l'alçada seguix la forma). Sense ella, 1.200.
+      Amb `sortida`, el diàleg SEMPRE recodifica: el camí «Original sense zoom torna el mateix File»
+      queda només per als pares d'abans (que ja passen per compressImage).
+  · permetGeolocalitzacio = false
+      true: casella «Vull geolocalitzar aquesta imatge», desmarcada. Marcar-la llig el GPS i la data
+      del fitxer ORIGINAL (una vegada per foto), els ensenya en dos camps (latitud, longitud; accepten
+      coma decimal), deixa corregir-los o escriure'ls si la foto no en porta, i tria la precisió
+      (Exacta 5 decimals / 1 m · Uns 100 m 3 decimals / 100 m · Només el poble 2 decimals / 1.000 m).
+      Abans de desar es veu «Es desarà: 38.59, -0.42 (uns 1.000 m).». També força la recodificació.
+  · onDesa(fitxer, { format, rect, sencera }, metadades)  ← TERCER argument, sempre present.
+      El segon ja existia (info): per això metadades va tercer i no segon, com deia l'encàrrec.
+      metadades = { geolocalitzacio: { lat, lng, precisio_m, origen: 'exif'|'manual' } | null,
+                    dataCaptura: 'AAAA-MM-DDThh:mm:ss[+hh:mm]' | null }
+      Opció apagada (o casella desmarcada): tot null i no s'ha llegit cap GPS.
+  · lectorMetadades: injectable per a les proves (de sèrie, llegixMetadadesImatge).
+  · Teclat sobre el visor (tabIndex 0, aria-keyshortcuts): fletxes mouen com els lliscadors (Maj, x4),
+    + / = i − amplien de 0,1 en 0,1, Retorn desa. Escape continua sent del <dialog>. Una regió
+    aria-live (sdp-nomes-lector) anuncia la posició o l'ampliació que fa el teclat.
+  · Límits amb avís en línia: més de 25 MB (abans de descodificar), més de 16.384 px per costat o
+    50 MP (després, siga quin siga el carregador) i HEIC que no s'obri.
+
+Mòduls nous (purs, sense dependències)
+  · exif.js: llegixExif(buffer, { ambGps, ambData }) → { orientacio, gps: { lat, lng, altitud }|null,
+    dataCaptura }; llegixMetadadesImatge(fitxer) (només els primers 256 KB, blob.slice); teExif(buffer);
+    coordenadesValides(lat, lng); senseDades(). Mai llança.
+    Límits: 256 KB llegits, 64 segments, 512 entrades per IFD, 64 caràcters ASCII, tots els
+    desplaçaments dins de l'APP1, IFD visitats (cap bucle), denominadors 0, minuts/segons >= 60,
+    |lat| > 90, |lng| > 180 i el 0/0 d'un GPS sense senyal → sense GPS. Para en SOS/EOI.
+  · orientacio.js: transformacioOrientacio(o, amplada, alcada) → { amplada, alcada, matriu } per a
+    les huit; aplicaMatriu; segmentOrientacio(o); navegadorAplicaOrientacio({ sonda, refresca })
+    (una sonda per sessió: un JPEG 2×1 fet pel mateix canvas amb l'orientació 6 injectada; si la
+    <img> fa 1×2, el navegador ja la posa dreta; jsdom, error o 3 s sense resposta → true).
+  · limits.js: PES_MAXIM_ENTRADA, COSTAT_MAXIM, PIXELS_MAXIMS, ErrorImatge(codi), comprovaPes,
+    comprovaDimensions, esHeic, missatgeLimit i els tres avisos en valencià.
+  · geolocalitzacio.js: PRECISIONS, PRECISIO_PER_DEFECTE ('poble'), llegixCoordenada,
+    errorCoordenada, arrodonix, geolocalitzacio, textUbicacio.
+  · UbicacioImatge.jsx: la part visual de la geolocalització (Casella, GrupCamps, Camp, CampText,
+    GrupOpcions i Carregant de Pedra Seca; cap classe nova, cap style=, cap color).
+  · jpegProva.js: NOMÉS per a les proves, munta JPEG sintètics amb APP1 Exif (II i MM).
+imatgeCanvas.js: carregaImatge aplica els límits i, si el navegador NO posa dreta la foto, la gira
+UNA vegada sobre un canvas (que ja no porta EXIF) i eixe canvas és la font del visor i de l'eixida.
+Si el navegador ja l'ha posada dreta, no llig ni gira res. exportaRetall: reserva WebP → JPEG.
+
+
+2. DECISIONS
+------------
+  · Estendre i no duplicar: cap organisme «Retallador» nou (contra RETALLADOR §1, per decisió prèvia).
+  · metadades com a tercer argument sempre present: forma uniforme per als pares; els que no el
+    volen l'ignoren. Un sol test T46 ha canviat d'expectativa per això (la crida porta 3 arguments).
+  · La data de captura també es llig només amb la casella marcada (ADR §3.1: el lector actua quan
+    la persona activa l'opció). Amb l'opció apagada, metadades és tot null.
+  · Precisió de sèrie «Només el poble» (la més vaga): privacitat de sèrie com D4 i §3.3.
+  · dataCaptura: hora local de la càmera en format ISO, amb el sufix d'OffsetTimeOriginal si n'hi ha.
+  · El 0/0 es rebutja (receptor sense posició).
+  · Fletxes = sentit dels lliscadors (el que s'escolta i el que es fa coincidixen), no el
+    d'arrossegar.
+  · Mapa: cap capa pròpia al projecte. L'única és l'iframe d'OpenStreetMap del Mur (mapConfig.js),
+    servei de tercers: no l'he fet servir (ADR §3.3). Camps numèrics; el mapa queda pendent.
+
+
+3. PROVES (Vitest, jsdom)
+-------------------------
+  · Base abans de tocar res: la carpeta, 2 fitxers, 39/39.
+  · npx vitest run src/components/universal/enquadrament → 8 fitxers, 135/135.
+      exif.test.js 32 · orientacio.test.js 15 · limits.test.js 5 · geolocalitzacio.test.js 8 ·
+      imatgeCanvas.test.js 12 · enquadrament.test.js 25 (19 + 6) · DialegEnquadrament.test.jsx 20
+      (T46; un expect ajustat al tercer argument) · DialegEnquadrament.onada4.test.jsx 18 (nou).
+  · Veïns: les sis suites UniversalEditorShell.* + la carpeta → 14 fitxers, 199/199.
+    src/sections/disseny → 14 fitxers, 125/125. Les quatre proves de T3b al Perfil → 23/23.
+  · node --test tests/lint-sessio.test.mjs → 1 avís, ControlSection.jsx:22 (d'una altra tasca). Els
+    cinc fitxers de la carpeta que hi són llistats, nets. Els fitxers NOUS no hi són: no he pogut
+    passar-los l'ESLint (cap ordre permesa); revisats a mà.
+  · node tooling/gates/design_guard.mjs --arrel=src → ix 1 per Dialeg.test.jsx (style=) i
+    DocumentPrintPreview.jsx (h1): cap dels dos està modificat a l'arbre (git status), ve de HEAD.
+  · node tooling/gates/tractor-enxufe.mjs → E1-E4 en verd.
+
+
+4. VERIFICAT EN UN NAVEGADOR DE VERES (Chromium 152, panell integrat, pestanya de fons)
+-------------------------------------------------------------------------------------
+  · La sonda detecta de veres: amb orientació 5, 6 i 8 la <img> fa 1×2; sense EXIF, 2×1.
+  · drawImage d'una <img> respecta l'orientació igual que naturalWidth: un píxel negre a dalt a
+    l'esquerra del JPEG guardat cau on prediu transformacioOrientacio (1, 2, 3, 6 i 8). La font
+    del visor és la <img> (cap gir propi): cap orientació aplicada dues vegades.
+  · exportaRetall: WebP de veres (RIFF…WEBP, enquadrament.webp); en JPEG, cap APP1.
+  · El lector propi llig el GPS d'un JPEG sintètic dins del navegador.
+  · L'espècimen de T3b amb permetGeolocalitzacio: la casella, els camps omplits des de l'EXIF
+    (38.5919, -0.4184), la precisió i el «Es desarà»; en desar, un fitxer de 800×800 recodificat.
+
+
+5. [NO VERIFICAT]
+-----------------
+  · Safari 16 / iOS i Firefox: si apliquen l'orientació EXIF a la <img> i a drawImage, i si
+    canvas.toBlob sap fer WebP (la reserva JPEG hi és per si no). Només he vist Chromium.
+  · HEIC real: si el selector d'iOS lliura JPEG; si Safari descodifica HEIC. L'avís hi és.
+  · Selectors de fotos que lleven la ubicació (Android 13+, iOS): per això l'entrada a mà.
+  · El focus retingut amb showModal real i dos <dialog> apilats (jsdom no té showModal; el retorn
+    del focus sí que està provat, també amb StrictMode).
+  · Que les dimensions màximes (16.384 px, 50 MP) siguen les reals de cada navegador.
+
+
+6. PENDENTS FORA DEL MEU ABAST
+------------------------------
+  1) EspecimenEnquadrament.jsx:34 (T3b) llig meta?.gps; la forma és meta.geolocalitzacio
+     ({ lat, lng, precisio_m, origen }). Ara l'espècimen ensenya la data però no les coordenades.
+     Proposta: const gps = meta?.geolocalitzacio ?? meta?.gps;
+  2) tests/lint-sessio.test.mjs: afegir exif.js, orientacio.js, limits.js, geolocalitzacio.js,
+     UbicacioImatge.jsx, jpegProva.js i les seues proves, i DialegEnquadrament.onada4.test.jsx.
+  3) Límit de pes: les pujades d'ara tallen a 5 MB (useHeroImageHandler.js:13) ABANS del retallador;
+     el retallador admet 25 MB. Una foto de mòbil de 6-8 MB no arriba mai al retallador. Decisió
+     del Mestre: pujar el pre-filtre o deixar-ho.
+  4) Amb una sola forma (avatar), el diàleg pinta «Forma» amb un sol ràdio. Amagar-lo trencaria tres
+     proves de T3b que el compten: decisió conjunta, no l'he tocat.
+  5) Mapa de vista prèvia per a triar el punt: no n'hi ha cap de propi. Decisió del Mestre.
+  6) Visibilitat pública i difuminat de la ubicació (ADR §3.3) i les columnes (§3.4): BD i Sollutia.
+
+
+Vincles: RETALLADOR.txt · ADR_MULTIMEDIA_FONT_UNICA.txt · T3_RETALLADOR_INTEGRACIO.txt (T3b) ·
+../261003_1330_produccio_claude/AV.txt §8

@@ -88,8 +88,8 @@ function filaPerId(marc, id) {
  * que obri el rail.
  */
 export default function FullAjustos({ obert = false, onTanca = noop, onRetornFocus = null }) {
-  const { t, setTheme, setLanguage } = useUIActions();
-  const { themePreference = null, language = null } = useUIState();
+  const { t, setTheme, setLanguage, setContrast } = useUIActions();
+  const { themePreference = null, language = null, contrastPreference = null } = useUIState();
   const { joId = null, joNom = null, chatThreads = CAP } = useXat();
   const sessio = useSessioOpcional();
   const { mida, tancaPanells, applyPreset, columnWidths } = useAppGrid();
@@ -163,10 +163,12 @@ export default function FullAjustos({ obert = false, onTanca = noop, onRetornFoc
           ambPrivacitat={ambPrivacitat}
           FilaEixida={usuari ? FilaEixidaAmbSessio : null}
           tema={themePreference}
+          contrast={contrastPreference}
           llengua={language}
           amplaria={presetDeMides(columnWidths, PRESETS_COLUMNES)}
           mides={columnWidths}
           onTema={(preferencia) => setTheme?.(preferencia)}
+          onContrast={(preferencia) => setContrast?.(preferencia)}
           onLlengua={(codi) => setLanguage?.(codi)}
           onAmplaria={(id) => applyPreset?.(id)}
           onVes={ves}
@@ -247,8 +249,8 @@ function FilaEixidaAmbSessio({ fila, etiqueta }) {
  */
 export function CosAjustos({
   t, campRef = null, pilaInicial = ARREL, joId = null, joNom = null, preferits = CAP, correu = null,
-  ambSessio = false, ambPrivacitat = null, FilaEixida = null, tema = null, llengua = null, amplaria = null, mides = null,
-  onTema = noop, onLlengua = noop, onAmplaria = noop, onVes = noop, onObriConversa = noop, onTanca = noop
+  ambSessio = false, ambPrivacitat = null, FilaEixida = null, tema = null, contrast = null, llengua = null, amplaria = null, mides = null,
+  onTema = noop, onContrast = noop, onLlengua = noop, onAmplaria = noop, onVes = noop, onObriConversa = noop, onTanca = noop
 }) {
   const [pila, setPila] = useState(() => (Array.isArray(pilaInicial) && pilaInicial.length ? pilaInicial : ARREL));
   const [terme, setTerme] = useState('');
@@ -295,6 +297,7 @@ export function CosAjustos({
     else if (fila.tipus === 'ruta') onVes(fila.ruta);
     else if (fila.tipus === 'opcio') {
       if (grup?.seleccio === 'tema') onTema(fila.opcio);
+      else if (grup?.seleccio === 'contrast') onContrast(fila.opcio);
       else if (grup?.seleccio === 'llengua') onLlengua(fila.opcio);
       else if (grup?.seleccio === 'amplaria') onAmplaria(fila.opcio);
     }
@@ -313,7 +316,9 @@ export function CosAjustos({
     if (clau === 'correu') return correu || '';
     return '';
   };
-  const triada = (grup) => (grup.seleccio === 'tema' ? tema : grup.seleccio === 'llengua' ? llengua : grup.seleccio === 'amplaria' ? amplaria : null);
+  /* L'opció triada de cada selecció única (el ✓ i aria-pressed). */
+  const triades = { tema, contrast, llengua, amplaria };
+  const triada = (grup) => (Object.hasOwn(triades, grup.seleccio) ? triades[grup.seleccio] : null);
 
   /* La nota del peu d'un grup: la del model o, amb `notaDinamica`, una que
      depén de l'estat de l'app. 'amplaria': les mides d'ara. 'privacitat'

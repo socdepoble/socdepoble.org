@@ -4,6 +4,7 @@ import { compressImage } from '../../utils/imageUtils.js';
 import { isSafeUrl } from '../../components/universal/UniversalUtils';
 import { useEixidaSegura } from '../../components/universal/EixidaSegura.jsx';
 import { ERROR_CORREU_INVALID, validaCorreu } from './contacteOrganitzacio.js';
+import { useEnquadramentAvatar } from './useEnquadramentAvatar.jsx';
 
 /* Indirecció per a les proves: jsdom no deixa substituir location.reload. */
 export const pagina = { recarrega: () => window.location.reload() };
@@ -20,6 +21,11 @@ const MAX_DATA_URL = 150_000;
 
 /* El mateix mínim que el formulari d'alta (onboardingModel). */
 const MINIM_CONTRASENYA = 10;
+
+/* Els avisos de la pujada d'una imatge (els de sempre). */
+const ERROR_SENSE_PUJADA = 'El servidor no admet pujada d\'imatges.';
+const ERROR_PUJADA = 'No s\'ha pogut pujar la imatge al servidor.';
+const ERROR_CONNEXIO = 'S\'ha produït un error al pujar la imatge. Comprova la teua connexió.';
 
 /**
  * El formulari d'un ajust del catàleg. Ja no porta la closca de l'editor
@@ -52,6 +58,16 @@ export default function DetallAjust({
   const isPersona = identitat?.mena === 'persona';
   const carpetaMitjans = isPersona ? 'avatars' : 'organitzacions';
 
+  /* Onada 4 · T3 (RETALLADOR.txt §3) · Una foto d'avatar passa abans pel
+     retallador en quadrat, el mateix del Perfil (useEnquadramentAvatar).
+     Cancel·lar no puja res i el focus torna al selector de fitxers. Avui cap
+     ajust de «compte» és una imatge (l'avatar s'edita a la fitxa, amb
+     DialegCapcaleraAvatar): esta branca espera el dia que el catàleg en porte. */
+  const enquadrament = useEnquadramentAvatar({
+    onEnquadrat: pujaImatge,
+    onError: (text) => setMissatge({ tipus: 'error', text }),
+  });
+
   /* El timeout del missatge de "Desat" es neteja en desmuntar. */
   useEffect(() => () => clearTimeout(timeoutMissatge.current), []);
 
@@ -69,31 +85,33 @@ export default function DetallAjust({
 
   /* ── Accions ── */
 
-  async function handleFileChange(e) {
+  /* La foto triada no es puja encara: primer s'enquadra. Sense pujada al
+     servidor no s'obri el retallador (es diria després d'haver retallat). */
+  function handleFileChange(e) {
     const file = e.target.files?.[0];
     e.target.value = '';
     if (!file) return;
-
-    if (!file.type.startsWith('image/')) {
-      setMissatge({ tipus: 'error', text: 'Només imatges, de moment.' });
+    setMissatge(null);
+    if (typeof pujaMitja !== 'function') {
+      setMissatge({ tipus: 'error', text: ERROR_SENSE_PUJADA });
       return;
     }
+    enquadrament.obri(file);
+  }
 
+  /* El fitxer ja retallat: la compressió i la pujada de sempre (600 px, WebP,
+     la carpeta de la identitat), un sol fitxer. Si falla, l'avís ix al
+     formulari i també dins del retallador, que continua obert. */
+  async function pujaImatge(file) {
     setPujant(true);
     setMissatge(null);
-    let dataUrl = null;
+    let error = ERROR_PUJADA;
     try {
-      dataUrl = await compressImage(file, {
+      const dataUrl = await compressImage(file, {
         maxSize: 600,
         format: 'image/webp',
         quality: 0.8,
       });
-
-      if (typeof pujaMitja !== 'function') {
-        setMissatge({ tipus: 'error', text: 'El servidor no admet pujada d\'imatges.' });
-        return;
-      }
-
       const blob = await aBlob(dataUrl);
       const fitxer = new File([blob], 'avatar.webp', { type: 'image/webp' });
       const url = await pujaMitja(fitxer, carpetaMitjans);
@@ -101,15 +119,16 @@ export default function DetallAjust({
       if (url) {
         setValorTemp(url);
         setMissatge({ tipus: 'exit', text: 'Imatge pujada. Ara dóna-li a Guardar.' });
-      } else {
-        setMissatge({ tipus: 'error', text: 'No s\'ha pogut pujar la imatge al servidor.' });
+        return;
       }
-    } catch (error) {
-      console.warn('Upload to storage failed', error);
-      setMissatge({ tipus: 'error', text: 'S\'ha produït un error al pujar la imatge. Comprova la teua connexió.' });
+    } catch (err) {
+      console.warn('Upload to storage failed', err);
+      error = ERROR_CONNEXIO;
     } finally {
       setPujant(false);
     }
+    setMissatge({ tipus: 'error', text: error });
+    throw new Error(error);
   }
 
   async function handleSubmit(e) {
@@ -338,6 +357,8 @@ export default function DetallAjust({
           Selecciona un ajust de l'esquerra per a modificar-lo.
         </p>
       )}
+      {/* Fora del <form>: els controls del retallador no l'han d'enviar. */}
+      {enquadrament.dialeg}
     </div>
   );
 }

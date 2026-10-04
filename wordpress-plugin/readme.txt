@@ -4,7 +4,7 @@ Tags: community, rural, village, social network, embed
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.0.0-dev
+Stable tag: 1.0.2
 License: AGPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/agpl-3.0.html
 
@@ -130,6 +130,12 @@ Packages are written under wordpress-plugin/builds/. Names use the standalone bu
 * A Tenant ID saved by an earlier version is no longer read. It is deleted the next time the WordPress admin area loads, or when the settings are saved. Other settings are kept.
 * The plugin no longer queues a configuration call, so the host page can still make its single window.SocDePoble.configura() call to set its session policy.
 * Package diagnostics no longer show a data scope.
+* Embedding: the application starts only from the shortcode, the block or the universal markup. It no longer mounts on an empty `#root` element, so a `#root` owned by the theme or another plugin stays untouched and the page address stays under WordPress control.
+* Google sign-in: each attempt carries its own random identifier in the return address. The application only handles a return with that identifier and leaves the page's own code, state or error parameters untouched.
+* Profile pictures: a square crop opens before upload, and the uploaded image is re-encoded without EXIF metadata such as the camera location.
+* Roadmap: links to project seeds open inside the embedded application instead of leaving for socdepoble.org.
+* Small screens: the list folds into a narrow rail beside the open item.
+* Control panel: illustrated cards with two actions each, publish with the editor or open the section's page.
 
 = 1.0.0 =
 * First stable release.
@@ -154,7 +160,7 @@ Packages are written under wordpress-plugin/builds/. Names use the standalone bu
 == Upgrade Notice ==
 
 = 1.0.2 =
-The Tenant ID setting is removed: the application always uses the data scope sealed in its package. A saved Tenant ID is ignored and deleted the next time the WordPress admin area loads.
+The application no longer mounts on an empty #root owned by the theme or another plugin. The Tenant ID setting is removed: the application always uses the data scope sealed in its package. A saved Tenant ID is ignored and deleted the next time the WordPress admin area loads.
 
 = 1.0.0 =
 First stable release: optional DeepL translation, a full-screen template for block themes and a clear refusal instead of a fatal error when activating a second copy. Deactivate the older "soc-de-poble" plugin first.

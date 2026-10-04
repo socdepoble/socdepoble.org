@@ -49,17 +49,19 @@ L'espai no s'improvisa. Qualsevol regla de `margin`, `padding` o `gap` ha de ser
 - **Macro-espaiat (separació de seccions):** `2rem` (32px) o `3rem` (48px).
 - *Violació Crítica:* Usar valors com `13px`, `0.7rem`, `15px` està estrictament prohibit.
 
-## 4. Estricta Jerarquia Tipogràfica i Lectura
-- **Ritme Editorial Màxim:** Cap paràgraf o bloc de text de lectura pot superar els `68ch` d'amplada (`max-width: 68ch;`).
-- **Llei de Capçaleres:**
+## 4. Estricta Jerarquia Tipogràfica i Lectura (Regles Impeccable)
+
+- **Llei de Capçaleres i Escala Fluida:**
   - Els `h1` pertanyen **exclusivament** a `<header className="page-title">`.
-  - Els `h2` van a `div.sdp-text-center` o directament al flux documental (NO dins del títol principal).
+  - Els `h2` van a `div.sdp-text-center` o directament al flux documental (NO dins del títol principal). Mai poden sobrepassar jeràrquicament a l'H1 en mida visual en pantalles mòbils.
+  - Per evitar dissenys genèrics i anomalies, utilitzeu funcions `clamp()` per a les capçaleres, assegurant una escala fluida (p. ex., `font-size: clamp(1.2rem, 3vw, 1.8rem);` per a H2) que mantingue proporcions harmòniques en mòbil i web.
   - Els `h1` i `h2` tenen **prohibició estricta** d'acabar amb punt final (`.`).
 - **Alçades de Línia (Line Height):** Títols usen `1.2` (compactes). Text de cos usa `1.6` (lectura llarga).
 
-## 5. La Frugalitat Rústica (Ombres i Vores)
-Nosaltres som de poble, som Pedra Seca. El *Glassmorphism*, els degradats complexes i les ombres difuminades estaran penalitzats severament.
-- **0 Ombres Decoratives:** L'ús de `box-shadow` està prohibit per a finalitats estètiques generals. Només es permet a través dels tokens (`--sdp-ombra-*`) de forma molt contínuda i funcional (p. ex. per elevar un menú flotant contextual sobre una llista). Les targetes normals, per defecte, se separen amb vores o color de fons, no amb ombra permanent.
+## 5. La Frugalitat Rústica i el Moviment (Regles Kowalski)
+Nosaltres som de poble, som Pedra Seca. El *Glassmorphism*, els degradats complexes i les ombres difuminades estaran penalitzats severament. Tot ha de tenir un comportament previsible i d'alta qualitat ("Taste").
+- **Micro-interaccions fluides:** Qualsevol element interactiu (botó, targeta clicable) ha de tenir feedback visual ràpid i precís (estats `:hover` i `:active`). Les transicions no han de superar els `200ms-300ms` i usaran funcions d'easing àgils (tipus `ease-out` o `cubic-bezier` precises) per evitar sensació de lentitud.
+- **0 Ombres Decoratives:** L'ús de `box-shadow` està prohibit per a finalitats estètiques generals. Només es permet a través dels tokens (`--sdp-ombra-*`) de forma molt continguda i funcional (p. ex. per elevar un menú flotant contextual sobre una llista). Les targetes normals, per defecte, se separen amb vores o color de fons, no amb ombra permanent.
 - **Radis de Vora Espectrals:** Només s'admet l'escala de `--sdp-radi-s` fins `--sdp-radi-xl`. Cap component portarà `border-radius: 5px;`.
 
 ## 6. Accessibilitat i Motor Tàctil

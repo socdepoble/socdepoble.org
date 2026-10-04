@@ -75,8 +75,9 @@ describe('l’arbre', () => {
   test('les opcions: el tema de theme.js, les cinc llengües (la pròpia primer) i els tres presets', () => {
     expect(OPCIONS_TEMA.map((o) => o.opcio)).toEqual(PREFERENCIES_TEMA);
     expect(OPCIONS_TEMA.map((o) => etiquetaDeFila(o))).toEqual(['Igual que el sistema', 'Mode clar', 'Mode fosc']);
-    const [tema, llengua] = paginaAjustos('aparenca').grups;
-    expect([tema.seleccio, llengua.seleccio]).toEqual(['tema', 'llengua']);
+    /* D6 (261004) · El contrast va al costat del tema, abans de la llengua. */
+    const [tema, contrast, llengua] = paginaAjustos('aparenca').grups;
+    expect([tema.seleccio, contrast.seleccio, llengua.seleccio]).toEqual(['tema', 'contrast', 'llengua']);
     expect(llengua.files.map((f) => f.opcio)).toEqual(['ca', ...SUPPORTED_LANGUAGES.map((l) => l.code).filter((c) => c !== 'ca')]);
     expect(llengua.files[0].text).toBe('Valencià');
     expect(paginaAjustos('amplaria').grups[0].files.map((f) => f.opcio)).toEqual(PRESETS_AMPLARIA.map(([id]) => id));

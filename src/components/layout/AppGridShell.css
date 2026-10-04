@@ -110,9 +110,12 @@
   z-index: 20;
 }
 .app-grid-shell[data-layout="mitja"] .app-grid-column--right { grid-column: 3; }
+/* Panells lliscants (pla 261004_0050) · només s'anima el transform, amb la
+   durada i la corba de calaix del sistema, com el calaix de la barra lateral
+   (layout.css). Abans eren quatre literals de 0.3s amb una altra corba. */
 .app-grid-shell[data-layout="mitja"] .app-grid-column--left {
   position: absolute; left: 0; top: 0; bottom: 0; width: var(--app-grid-col-sidebar);
-  transform: translateX(-100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateX(-100%); transition: transform var(--sdp-durada-panell) var(--sdp-corba-calaix);
   z-index: 30;
   box-shadow: var(--sdp-ombra-3);
 }
@@ -136,12 +139,12 @@
 .app-grid-shell[data-layout="estret"] .app-grid-column--middle {
   z-index: 20;
   transform: translateX(-100%);
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), visibility 0s linear 0.3s;
+  transition: transform var(--sdp-durada-panell) var(--sdp-corba-calaix), visibility 0s linear var(--sdp-durada-panell);
 }
 .app-grid-shell[data-layout="estret"] .app-grid-column--left {
   z-index: 30;
   transform: translateX(-100%);
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), visibility 0s linear 0.3s;
+  transition: transform var(--sdp-durada-panell) var(--sdp-corba-calaix), visibility 0s linear var(--sdp-durada-panell);
 }
 
 .app-grid-shell[data-layout="mitja"] .app-grid-column--left:not([data-obert="true"]),
@@ -154,13 +157,54 @@
 .app-grid-shell[data-layout="estret"] .app-grid-column--left[data-obert="true"],
 .app-grid-shell[data-layout="estret"] .app-grid-column--middle[data-obert="true"] {
   visibility: visible;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), visibility 0s linear 0s;
+  transition: transform var(--sdp-durada-panell) var(--sdp-corba-calaix), visibility 0s linear 0s;
 }
 .app-grid-shell[data-layout="estret"][data-panell="left"] .app-grid-content .app-grid-column--left {
   transform: translateX(0);
 }
 .app-grid-shell[data-layout="estret"][data-panell="middle"] .app-grid-content .app-grid-column--middle {
   transform: translateX(0);
+}
+
+/* P6 (ordre del Mestre, 261003) · LLISTA EN RAIL EN PANTALLES XICOTETES
+   La closca porta data-llista="rail" quan hi ha un rail de llista fora
+   d'«ample» (AppGridShell railMitja i railEstret): el rail, de l'amplària
+   de la columna plegada de sempre, i el detall amb tota la resta. Sense
+   l'atribut (i sense #app-grid-rail, que només existix amb ell), cap
+   d'estes regles s'aplica i res no canvia.
+     · «mitja»: la columna de la llista, plegada amb el seu Replegar, és el
+       rail; el menú continua sent el panell lliscant de damunt.
+     · «estret»: el rail és #app-grid-rail, a l'esquerra del detall. La
+       llista i la navegació continuen sent els panells del mestre-detall:
+       de banda a banda, lliscant per damunt de rail i detall, i la graella
+       de davall no es mou (l'editor no reflueix). */
+.app-grid-shell[data-layout="mitja"][data-llista="rail"] .app-grid-content,
+.app-grid-shell[data-layout="estret"][data-llista="rail"] .app-grid-content {
+  grid-template-columns: var(--app-grid-col-collapsed) minmax(0, 1fr);
+}
+.app-grid-shell[data-layout="mitja"][data-llista="rail"] .app-grid-column--middle {
+  grid-column: 1;
+}
+.app-grid-shell[data-layout="mitja"][data-llista="rail"] .app-grid-column--right,
+.app-grid-shell[data-layout="estret"][data-llista="rail"] .app-grid-column--right {
+  grid-column: 2;
+}
+.app-grid-shell[data-layout="estret"][data-llista="rail"] .app-grid-column--left,
+.app-grid-shell[data-layout="estret"][data-llista="rail"] .app-grid-column--middle {
+  grid-column: 1 / -1;
+}
+.app-grid-shell[data-layout="estret"][data-llista="rail"] .app-grid-rail {
+  grid-column: 1;
+  grid-row: 1 / 2;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--app-grid-bg-centre);
+}
+.app-grid-shell[data-layout="estret"][data-llista="rail"] .app-grid-rail:not([data-obert="true"]) {
+  visibility: hidden;
 }
 
 /* COLORS DE FONS */
@@ -192,7 +236,12 @@
   inset: 0 -10px;
   background: transparent;
 }
-.app-grid-resizer:hover::before,
+/* Fase B (pla 261004_0050) · el hover només amb ratolí; el focus, sempre. */
+@media (hover: hover) and (pointer: fine) {
+  .app-grid-resizer:hover::before {
+    background: var(--sdp-accent-vel);
+  }
+}
 .app-grid-resizer:focus-visible::before {
   background: var(--sdp-accent-vel);
 }
@@ -211,7 +260,15 @@
 .app-grid-shell[data-layout="estret"] .d-mobile-only { display: inline-flex; }
 .app-grid-shell[data-layout="estret"] .d-desktop-only { display: none; }
 
-/* ── Capçaleres de columna (gris invers, icones blanques) ── */
+/* ── Capçaleres de columna (crom: icones taronja, lletra blanca) ──
+   C4 (Q1 del Mestre, 261004: AAA sempre). Les icones hereten el taronja
+   d'esta regla: són objectes no textuals (WCAG 1.4.11, 3:1 o més) i fan
+   4,11:1 sobre Grafit 700, 4,98 sobre Pissarra 750 i 5,91 sobre Carbó 800.
+   Com a lletra de 16px, el mateix taronja no arribava a 7:1 sobre cap fons
+   de capçalera: tot el text (títol, rètols de les accions de text i del
+   títol plegable) porta --sdp-crom-text, la lletra del crom, que fa 11,20,
+   13,56 i 16,10:1 (mesurat al navegador, 261004). AppGridShell.contrast.capes.test.js ho comprova en clar,
+   fosc, Bancal i Bancal fosc. */
 .app-grid-col-header {
   display: flex;
   align-items: center;
@@ -245,8 +302,15 @@
   cursor: pointer;
 }
 
+/* C4 · Els anells de focus de la capçalera, amb l'anell del crom: la
+   capçalera no canvia amb el tema i --sdp-focus sí. En clar, --sdp-focus
+   (Blau 700) feia 1,22:1 sobre Grafit 700, 1,47 sobre Pissarra 750 (mesurat
+   al navegador amb Tab, 261004) i 1,75 sobre Carbó 800; dins del CREAR blau,
+   1:1. --sdp-crom-focus (Taronja 400) fa 5,17, 6,26 i 7,44:1, i 4,26 dins
+   del blau de control: el mateix anell de les entrades de navegació
+   (modules.css, .sdp-workspace-nav-item:focus-visible). */
 .app-grid-col-header--replegable:focus-visible {
-  outline: 2px solid var(--sdp-focus);
+  outline: 2px solid var(--sdp-crom-focus);
   outline-offset: -2px;
 }
 
@@ -267,7 +331,7 @@
        banda a banda de la columna (56px), amb la icona centrada, apilades
        sense separació: «caixes sòlides, res de botons flotants» (ordre del
        Mestre, 260927 vespre). Les accions de la capçalera del Workspace
-       (roda, lupa) conserven la cel·la de 44 centrada;
+       (roda, lupa) conserven la cel·la de var(--sdp-touch) centrada;
      · amplària de columna --app-grid-col-collapsed (56px): l'eix
        horitzontal de les icones coincidix amb el de la barra principal
        (56px, layout.css).
@@ -344,7 +408,7 @@
 }
 
 .app-grid-col-header__plec--fix { cursor: default; }
-.app-grid-col-header__plec:focus-visible { outline: 2px solid var(--sdp-focus); }
+.app-grid-col-header__plec:focus-visible { outline: 2px solid var(--sdp-crom-focus); }
 
 .app-grid-col-header__titol {
   display: flex;
@@ -352,7 +416,7 @@
   flex: 1 1 auto;
   min-width: 0;
   overflow: hidden;
-  color: var(--sdp-crom-actiu-fons);
+  color: var(--sdp-crom-text);
   font: var(--sdp-font-barra);
   letter-spacing: normal;
   text-transform: none;
@@ -383,6 +447,15 @@
   font-weight: 700;
   text-align: left;
   cursor: pointer;
+}
+
+/* C4 · El rètol de les accions de text («Tot») i el del títol plegable,
+   en lletra del crom. El color va al rètol, no al botó: la icona germana
+   continua heretant el taronja, també dins del Workspace, on modules.css
+   pinta el botó sencer de taronja. */
+.app-grid-col-header__accio-text > span,
+.app-grid-col-header__plegable .sdp-workspace-nav-item__label {
+  color: var(--sdp-crom-text);
 }
 
 .univ-manager-header-search-trigger span {
@@ -417,6 +490,13 @@
 .univ-manager-header-search input:focus-visible { outline: 2px solid var(--sdp-crom-text-secundari); outline-offset: 2px; }
 
 .univ-manager-header-search input::placeholder { color: var(--sdp-crom-text-suau); }
+/* Mode Bancal (Q1 del pla 261004_0050) · cap text translúcid sobre el crom:
+   el blanc sòlid. Els --sdp-crom-* no es redefinixen mai (tractor-crom, K1),
+   per això el canvi va a la regla. Fora del Bancal, res no canvia. */
+:root[data-contrast="bancal"] .univ-manager-header-search input::placeholder,
+:host([data-contrast="bancal"]) .univ-manager-header-search input::placeholder,
+:root[data-contrast="bancal"] .sdp-workspace-sort-menu__title,
+:host([data-contrast="bancal"]) .sdp-workspace-sort-menu__title { color: var(--sdp-crom-text); }
 
 .app-grid-col-header .btn-icon,
 .app-grid-col-header .btn-icon:hover:not(:disabled),
@@ -428,13 +508,14 @@
   background: transparent;
   color: var(--sdp-crom-actiu-fons);
 }
+/* Q2 (pla 261004_0050) · la cel·la és el token tàctil, no un 44 a mà. */
 .app-grid-col-header__accio-icon {
   position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
+  width: var(--sdp-touch);
+  height: var(--sdp-touch);
   padding: 0;
   cursor: pointer;
   flex: none;
@@ -460,7 +541,10 @@
   padding: 0 var(--sdp-space-3);
   border: 0;
   border-radius: var(--sdp-radi-boto);
-  background: var(--sdp-accio);
+  /* Q1 (pla 261004_0050) · rètol blanc de 16px: sobre --sdp-accio feia
+     3,87:1 (ni AA). La superfície de control, com .sdp-boto--primari:
+     9,21:1 en repòs i 7,20:1 en hover, estable en clar i en fosc. */
+  background: var(--sdp-accio-control);
   color: var(--sdp-sobre-accio);
   font: inherit;
   font-weight: 700;
@@ -468,9 +552,11 @@
   cursor: pointer;
 }
 
-.app-grid-col-header__accio:hover:not(:disabled) {
-  background: var(--sdp-accio-hover);
-  color: var(--sdp-sobre-accio);
+@media (hover: hover) and (pointer: fine) {
+  .app-grid-col-header__accio:hover:not(:disabled) {
+    background: var(--sdp-accio-control-hover);
+    color: var(--sdp-sobre-accio);
+  }
 }
 
 .app-grid-col-header .btn-icon:focus-visible,
@@ -480,7 +566,7 @@
 .univ-manager-inbox-header-btn:focus-visible,
 .univ-manager-header-search-trigger:focus-visible,
 .univ-manager-header-search input:focus-visible {
-  outline: 2px solid var(--sdp-focus);
+  outline: 2px solid var(--sdp-crom-focus);
   outline-offset: -2px;
 }
 
@@ -512,12 +598,30 @@
   display: flex;
   align-items: center;
 }
-.sdp-workspace-sort-menu__option:hover {
-  background: var(--sdp-crom-hover);
+@media (hover: hover) and (pointer: fine) {
+  .sdp-workspace-sort-menu__option:hover {
+    background: var(--sdp-crom-hover);
+  }
 }
+/* C4 · L'opció activa, com l'entrada activa de la barra principal
+   (layout.css, .nav-item.active): cel·la taronja amb lletra roca, 7,12:1, i
+   8,97:1 en hover. Abans, lletra taronja sobre Grafit 700: 4,11:1, i l'estat
+   només el deia el color de la lletra. */
 .sdp-workspace-sort-menu__option.active {
-  color: var(--sdp-crom-actiu-fons);
+  background: var(--sdp-crom-actiu-fons);
+  color: var(--sdp-crom-actiu-text);
   font-weight: 600;
+}
+@media (hover: hover) and (pointer: fine) {
+  .sdp-workspace-sort-menu__option.active:hover {
+    background: var(--sdp-crom-actiu-fons-hover);
+  }
+}
+/* C4 · L'anell general (base.css) pinta --sdp-focus, que en clar fa 1,22:1
+   sobre este Grafit 700: ací, el del crom (5,17:1). Gruix i separació, els
+   generals: l'anell cau fora de la cel·la, sobre el fons del menú. */
+.sdp-workspace-sort-menu__option:focus-visible {
+  outline-color: var(--sdp-crom-focus);
 }
 .sdp-workspace-sort-action {
   margin-right: var(--sdp-space-3); /* Separa 12px del botó Crear */

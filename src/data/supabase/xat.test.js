@@ -16,6 +16,8 @@ vi.mock('./utils.js', () => ({ handleError: error => error }));
 
 const deferred = () => { let resolve; const promise = new Promise(r => { resolve = r; }); return { promise, resolve }; };
 const REMOT = { tenantId: '00000000-0000-4000-8000-000000000000' };
+/* W4-10 · A Supabase l'altra part d'un fil directe és un UUID (crea_fil_directe). */
+const ALTRE = '00000000-0000-4000-8000-000000000042';
 const SEED = { dataMode: 'seed', tenantId: '00000000-0000-4000-8000-000000000000' };
 let query, client;
 beforeEach(() => {
@@ -29,7 +31,7 @@ const calls = [
   ['llista', config => loadFils(config)],
   ['missatges', config => loadMissatges('fil', config)],
   ['llegit', config => marcaLlegit('fil', config)],
-  ['creacio', config => creaFilDirecte('B', null, config)],
+  ['creacio', config => creaFilDirecte(ALTRE, null, config)],
   ['membres', config => carregaMembres(null, config)],
   ['enviament', config => enviaMissatge('fil', 'text', config)]
 ];
@@ -164,6 +166,43 @@ describe('historial per cursor i marques', () => {
       altres: [{ id: 'client-real', nom: 'Client', tipus: 'persona', avatarUrl: null }] }];
     expect(await loadFils(REMOT)).toEqual([expect.objectContaining({ entitatId: 'org-real', entitatNom: 'Sóc de Poble', comEntitat: true,
       altres: [{ id: 'client-real', nom: 'Client', tipus: 'persona', avatarUrl: null }] })]);
+  });
+});
+
+/* W4-10 (auditoria de Codex 261003_1950) · La restricció de format és del
+   proveïdor: la interfície passa l'id que li torna el port i és l'adaptador
+   qui sap que crea_fil_directe(p_altre_usuari uuid) només en vol un UUID. */
+describe('W4-10 · crea_fil_directe només rep un UUID', () => {
+  it('un destinatari UUID arriba tal qual a la RPC i torna el fil del servidor', async () => {
+    query.data = 'fil-nou';
+    await expect(creaFilDirecte(ALTRE, null, REMOT)).resolves.toBe('fil-nou');
+    expect(client.rpc).toHaveBeenCalledTimes(1);
+    expect(client.rpc).toHaveBeenCalledWith('crea_fil_directe', {
+      p_tenant_id: '00000000-0000-4000-8000-000000000000', p_altre_usuari: ALTRE, p_titol: null
+    });
+  });
+  it.each([
+    ['l’id opac d’un altre backend', '42'],
+    ['l’id d’entitat de WordPress', 'wp:organization:42'],
+    ['l’id de la llavor', 'socdepoble'],
+    ['el slug de l’entitat', 'soc-de-poble'],
+    ['un UUID amb espais', ` ${ALTRE}`],
+    ['una cadena buida', ''],
+    ['res', null],
+    ['un número', 42]
+  ])('rebutja %s amb un error clar, abans de demanar el client i sense cap RPC', async (_cas, id) => {
+    const error = await creaFilDirecte(id, null, REMOT).catch(e => e);
+    expect(error).toBeInstanceOf(Error);
+    expect(error).toMatchObject({ code: 'DESTINATARI_INVALID', retriable: false });
+    expect(error.message).toMatch(/^No es pot obrir la conversa: .*UUID/);
+    expect(mock.getClient).not.toHaveBeenCalled();
+    expect(client.rpc).not.toHaveBeenCalled();
+  });
+  it('en seed el destinatari de la llavor continua obrint la conversa local, sense Supabase', async () => {
+    const fil = await creaFilDirecte(XAT_SEED_IDS.entitat, null, SEED);
+    expect(XAT_SEED_IDS.entitat).toBe('socdepoble');
+    expect(typeof fil).toBe('string');
+    expect(mock.getClient).not.toHaveBeenCalled();
   });
 });
 

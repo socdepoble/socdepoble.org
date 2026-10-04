@@ -36,6 +36,36 @@
  * '/assets/…' (l'avatar de Pobles, el directori de perfils) penja de la
  * carpeta del paquet. Un valor ja resolt (Mercat, Mur, Agenda) passa intacte
  * i, sense base, tot és el valor de sempre (Llei del Píxel).
+ *
+ * P5 · Onada 4 (PRD «Control amb targetes il·lustrades de doble acció»,
+ * aprovat pel Mestre el 261003) · La prop `portes` (PortesTargeta.jsx): com a
+ * màxim dues portes. Amb portes no hi ha enllaç estirat (el peu, vegeu P6).
+ * ESMENA 261003 22:34 (directrius 2234 i 2245 del Mestre) · La targeta amb
+ * portes és la UniversalCard estàndard, no una variant compacta: boina
+ * d'autoria, imatge, títol, subtítol i entradilla visibles, i les dues portes
+ * al final del cos. La variant «vinyeta» (títol per a lector, reserva 1:1 i
+ * el clic a la il·lustració, D3) s'ha retirat: només són interactius l'autor,
+ * la data i les portes. Sense `portes`, el DOM de sempre, byte a byte
+ * (UniversalCard.vinyeta.test.jsx).
+ * W4-07 · L'autor amb una ruta de l'app passa per la frontera de les portes
+ * (esRutaDeLaPorta), que no depén del protocol de la finestra: a l'app nativa
+ * (capacitor://localhost) isSafeUrl el deixava sense enllaç. Una adreça
+ * absoluta continua passant per isSafeUrl, com sempre.
+ *
+ * P6 · Onada 4, sisena passada (directriu 261003_2325 del Mestre, «la
+ * regressió de l'UniversalCard») ·
+ *  · PREU AL QUADRAT. `price` ja no pinta la píndola: va al quadrat de 128 px,
+ *    el mateix de les dates (SquareBadge), com `squareBadge={{ type: 'price' }}`.
+ *    Mana squareBadge, després el preu i després calendarBadge. Un preu llarg
+ *    («1.250,00 €») baixa de lletra per trams (data-mida, midaDelPreu) i cap
+ *    sencer al quadrat. La píndola .sp-card-price continua al detall
+ *    (detailSectionMeta i la barra de PageFrame, .sp-card-price--en-linia).
+ *  · PEU AMB PORTES. Les portes ja no amaguen el peu blau: la targeta amb
+ *    portes és una pàgina de veres, amb boina dalt i peu baix, com al Mur.
+ *    L'única variació és el cos: dues portes en lloc de l'enllaç de tota la
+ *    targeta. Per això, amb portes, `mainHref` no fa cap overlay però continua
+ *    sent la pàgina de Comentar i Compartir (useAccions), la mateixa de
+ *    «Saber-ne més».
  */
 import { Link } from '../../../app/contexts/RouterContext';
 import { resolRecursPropi } from '../../../config/assetResolver.js';
@@ -47,8 +77,17 @@ import { emoticonaDeBarra } from '../../../utils/emoji.js';
 import { ActionControl, IconButton, DateTimeControl } from '../atoms/controls.jsx';
 import { PinIcon, TranslateIcon, CommentIcon, ShareIcon } from '../atoms/icones.jsx';
 import { useAccions } from '../hooks/useAccions.js';
+import { PortesTargeta, esRutaDeLaPorta, normalitzaPortes } from './PortesTargeta.jsx';
 
 const TITOLS = new Set(['h2', 'h3', 'h4', 'h5', 'h6']);
+
+/* W4-07 · La ruta de l'autor: un camí de l'app ('/…') passa per la frontera
+   de les portes, que no mira la finestra; una adreça absoluta, per isSafeUrl. */
+const rutaDAutorSegura = (href) => {
+  if (typeof href !== 'string' || !href) return null;
+  if (href.startsWith('/')) return esRutaDeLaPorta(href) ? href : null;
+  return isSafeUrl(href) ? href : null;
+};
 
 /* T51 (ordre del Mestre, 260928) · `centre` és l'espai central de la caputxa
    (EmoticonaBarra en lectura): només hi és amb una emoticona triada, i
@@ -74,6 +113,21 @@ function CardHeader({ autor, autorHref, centre, pin, dataHora, headerAction }) {
   );
 }
 
+/**
+ * P6 · El tram de lletra d'un preu dins del quadrat de 128 px (data-mida),
+ * pels caràcters que es veuen: «15 €» es llig gran i «1.250,00 €» cap sencer.
+ * Els límits es van mesurar al navegador amb Noto Sans 900 (components.css,
+ * .sp-card-calendar-badge__dia[data-mida]); un valor més llarg encara parteix
+ * línia dins del quadrat i no se n'ix.
+ */
+export function midaDelPreu(valor) {
+  const caracters = Array.from(String(valor ?? '').trim()).length;
+  if (caracters <= 3) return 'gran';
+  if (caracters <= 5) return 'mitjana';
+  if (caracters <= 7) return 'menuda';
+  return 'minima';
+}
+
 function SquareBadge({ badge }) {
   const isCalendar = badge.dia || badge.mes || badge.any || badge.type === 'calendar';
   const isPrice = badge.type === 'price';
@@ -88,7 +142,7 @@ function SquareBadge({ badge }) {
       {badge.any && <span className="sp-card-calendar-badge__any">{badge.any}</span>}
     </>
   ) : isPrice ? (
-    <span className="sp-card-calendar-badge__dia" data-oversized="true">{badge.value}</span>
+    <span className="sp-card-calendar-badge__dia" data-oversized="true" data-mida={midaDelPreu(badge.value)}>{badge.value}</span>
   ) : badge.content;
 
   if (badge.onClick) {
@@ -133,8 +187,23 @@ function Etiqueta({ label }) {
   );
 }
 
-function CardBody({ imatge, imageAlt, calendarBadge, squareBadge, price, icon, title, TitleTag, subtitle, body, etiquetes, copyright }) {
-  const activeBadge = squareBadge || calendarBadge;
+function LlistaEtiquetes({ etiquetes }) {
+  return (
+    <ul className="sp-card-labels" aria-label="Categories">
+      {etiquetes.map((label, index) => (
+        <Etiqueta key={`${typeof label === 'string' ? label : label.text}-${index}`} label={label} />
+      ))}
+    </ul>
+  );
+}
+
+/* `portes` (P5) · Les portes de la targeta de doble acció, al final del cos.
+   Sense, res: el DOM de sempre.
+   P6 · El preu va al quadrat (SquareBadge), mai a la píndola: un sol
+   indicador, i mana squareBadge, després el preu i després la data. La classe
+   has-price es conserva per a qui la mire. */
+function CardBody({ imatge, imageAlt, calendarBadge, squareBadge, price, icon, title, TitleTag, subtitle, body, etiquetes, copyright, portes = null }) {
+  const activeBadge = squareBadge || (price ? { type: 'price', value: price } : null) || calendarBadge;
   return (
     <>
       {imatge && (
@@ -151,7 +220,6 @@ function CardBody({ imatge, imageAlt, calendarBadge, squareBadge, price, icon, t
         ].filter(Boolean).join(' ')}
       >
         {activeBadge && <SquareBadge badge={activeBadge} />}
-        {price && <p className="sp-card-price">{price}</p>}
         {title && icon ? (
           <div className="sp-card-heading-with-icon">
             <span className="sp-card-title-icon">{icon}</span>
@@ -164,14 +232,9 @@ function CardBody({ imatge, imageAlt, calendarBadge, squareBadge, price, icon, t
         {body && (typeof body === 'string'
           ? <p className="sp-card-text">{body}</p>
           : <div className="sp-card-text">{body}</div>)}
-        {etiquetes.length > 0 && (
-          <ul className="sp-card-labels" aria-label="Categories">
-            {etiquetes.map((label, index) => (
-              <Etiqueta key={`${typeof label === 'string' ? label : label.text}-${index}`} label={label} />
-            ))}
-          </ul>
-        )}
+        {etiquetes.length > 0 && <LlistaEtiquetes etiquetes={etiquetes} />}
         {copyright && <p className="sp-card-copyright">{copyright}</p>}
+        {portes}
       </div>
     </>
   );
@@ -242,10 +305,13 @@ export function UniversalCard({
      on va el focus, a l'element principal (l'enllaç o el botó de tota la
      targeta), com a la fitxa compacta: aria-current="true". Sense element
      principal, a l'article. Sense la prop, el DOM de sempre. */
-  actual = false
+  actual = false,
+  /* P5 · Com a màxim dues portes [{ id, verb, nom, desti, varietat }]
+     (PortesTargeta.jsx), al final del cos de la targeta de sempre. */
+  portes
 }) {
   const safeMainHref = mainHref && isSafeUrl(mainHref) ? mainHref : null;
-  const safeAuthorHref = authorHref && isSafeUrl(authorHref) ? authorHref : null;
+  const safeAuthorHref = rutaDAutorSegura(authorHref);
   const imatgeFont = resolRecursPropi(imageUrl);
   const avatarFont = resolRecursPropi(avatarUrl);
   const safeImageUrl = imatgeFont && isSafeAsset(imatgeFont) ? imatgeFont : null;
@@ -372,8 +438,19 @@ export function UniversalCard({
     className
   ].filter(Boolean).join(' ');
 
+  /* P5 (PRD §5.1) · Amb portes, la targeta sencera no és cap enllaç: un
+     tercer objectiu (l'overlay) faria car un toc fallat i el lector
+     anunciaria un control que només es diu com el títol.
+     P6 · `mainHref` sí que compta: és la pàgina de Comentar i Compartir del
+     peu. onMainClick, en canvi, no fa res i en DEV ho avisa. */
+  const portesNetes = normalitzaPortes(portes);
+  const ambPortes = portesNetes.length > 0;
+  if (ambPortes && onMainClick && import.meta.env.DEV) {
+    console.warn('[UniversalCard] Amb `portes` no es pinta l’enllaç de tota la targeta: onMainClick no fa res (mainHref només és la pàgina del peu).');
+  }
+
   const ariaActual = actual ? 'true' : undefined;
-  const ambPrincipal = Boolean(safeMainHref || onMainClick);
+  const ambPrincipal = !ambPortes && Boolean(safeMainHref || onMainClick);
 
   return (
     <article className={cardClasses} aria-current={ambPrincipal ? undefined : ariaActual}>
@@ -381,7 +458,7 @@ export function UniversalCard({
         <CardHeader autor={autor} autorHref={safeAuthorHref} centre={centre} pin={pin} dataHora={dataHora} headerAction={headerAction} />
       )}
 
-      {safeMainHref ? (
+      {ambPortes ? null : safeMainHref ? (
         <Link className="sp-card-link-overlay" to={safeMainHref} onClick={onMainClick} aria-label={title || 'Obrir detall'} aria-current={ariaActual} />
       ) : onMainClick ? (
         <button type="button" className="sp-card-link-overlay" onClick={onMainClick} aria-label={title || 'Obrir detall'} aria-current={ariaActual} />
@@ -400,8 +477,10 @@ export function UniversalCard({
         body={body}
         etiquetes={etiquetes}
         copyright={copyright}
+        portes={ambPortes ? <PortesTargeta portes={portesNetes} /> : null}
       />
 
+      {/* P6 (directriu 2325, confirmació 2) · El peu es pinta amb portes o sense. */}
       {peuVisible && <CardFooter accions={accions} connectar={connectar} />}
     </article>
   );

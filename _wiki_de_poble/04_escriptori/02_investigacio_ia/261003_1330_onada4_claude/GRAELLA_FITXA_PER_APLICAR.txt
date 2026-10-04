@@ -1,0 +1,187 @@
+##### GRAELLA_FITXA_PER_APLICAR · Porta Graella · text exacte per a 01_produccio/contracte_graella.md
+###### Torn torn_50ca5709-8cd2-416a-bf41-2afdb3450179 · Claude · Onada 4, cinquena passada · 2026-10-03
+
+**Encàrrec:** [[261003_2246_decisio_fusibles]], punt 2. El Mestre autoritza Claude a editar **`01_produccio/contracte_graella.md`**, però **el hook del projecte bloqueja tota escriptura a `01_produccio`** encara que hi haja autorització (límit de l'entorn; **cap document amplia els permisos**, AGENTS §15). No s'ha intentat cap via alternativa. Ací queda **el text exacte per a enganxar** i **on**, perquè el Mestre o MarIA ho apliquen d'una sola vegada.
+
+**Fonts llegides:** `_wiki_de_poble/04_escriptori/01_produccio/contracte_graella.md` (48 línies, només lectura), **`tooling/gates/tractor-graella.mjs`** (sencer, només lectura), `tooling/lib/codi.mjs`, **`src/components/layout/AppGridShell.jsx`** i **`src/components/layout/AppGridColumn.jsx`** (signatures i cos), i els consumidors de les props amb `rg`.
+
+
+##### 1. Com s'ha comprovat (sense executar la porta)
+
+**No puc executar `tooling/`** en este torn. Per no endevinar, he executat **el codi de la porta tal qual**: a la pestanya de fons del navegador integrat (http://localhost:3340) he importat amb `?raw` el text de `tractor-graella.mjs`, n'he tallat **literalment** les funcions `propsReals` i `propsDocumentades` (de «function propsReals» fins a «for (const [nom, fitxer]») i les he avaluades sobre **el text viu** d'`AppGridShell.jsx` i d'`AppGridColumn.jsx`. La fitxa s'ha passat **copiada de la lectura**, perquè Vite respon **403** a qualsevol ruta de `_wiki_de_poble/`.
+
+**Les altres regles de la porta ja passen:** §3 (cap `w < N` a la closca, la fitxa diu 720px i 1090px), §4 (les quatre classes velles només són a `PerfilShell.css`, i la porta només mira `.js` i `.jsx`), §5 (`inert` hi és) i §6 (cap token inventat a `AppGridShell.css`, 226 tokens canònics). **Tot el roig és §2, les props.**
+
+
+##### 2. La troballa: la porta no veu cinc props reals
+
+**`propsReals` lleva els comentaris de bloc línia per línia** (`.split('\n').map((l) => l.replace(/\/\*[\s\S]*?\*\//g, '')…)`). Un **comentari `/* … */` de diverses línies** dins de la signatura no s'esborra: queda com a text, s'ajunta amb la prop següent en el mateix tros entre comes, el tros porta espais i **el filtre `^[\w'\-[\]]+$` el descarta sencer**. La prop que ve **just després d'un comentari multilínia desapareix** de les «reals».
+
+**Props reals invisibles per a la porta:** a `AppGridShell`, **`leftCollapsed`**, **`panellEstret`** i **`railMitja`**; a `AppGridColumn`, **`replegaCompacte`** i **`expandObridor`**.
+
+**Conseqüència directa:** si s'enganxen a la fitxa **només** les sis props de l'encàrrec, **`railMitja`, `replegaCompacte` i `expandObridor` passen a ser «prop-fantasma»** i la porta **continua amb 9 divergències**. Documentar bé el codi la torna a posar roja: és el mateix incentiu invertit que `tooling/lib/codi.mjs` explica a la capçalera.
+
+
+##### 3. Veredicte de §2 en cada escenari (codi de la porta executat, no estimat)
+
+**S0 · fitxa actual:** **9** divergències. No documentades: `AppGridShell.tornaEstret`, `AppGridShell.onPanell`, `AppGridShell.railEstret`, `AppGridColumn.replegaTotaCapcalera`, `AppGridColumn.etiquetaReplega`, `AppGridColumn.controls`. Fantasmes: `AppGridShell.leftIcon`, `AppGridShell.middleIcon`, `AppGridShell.leftCollapsed`.
+
+**S1 · fitxa + només les sis de l'encàrrec:** **9**. Desapareixen tres no documentades i n'apareixen tres fantasmes (`railMitja`, `replegaCompacte`, `expandObridor`).
+
+**S2 · fitxa + els blocs A i B d'avall (deu props):** **7**, totes fantasmes: `leftIcon`, `middleIcon`, `leftCollapsed`, `panellEstret`, `railMitja`, `replegaCompacte`, `expandObridor`.
+
+**S3 · S2 + l'esmena de la porta (§5):** **2**, `leftIcon` i `middleIcon`. **Mateix resultat** si, en compte de l'esmena d'una línia, `propsReals` passa la font per `senseComentaris` de `tooling/lib/codi.mjs`, o si els comentaris es trauen de la desestructuració de les dues signatures (canvi només de comentaris, cap píxel).
+
+**S4 · S3 + el bloc C (decisió de `leftIcon` i `middleIcon`):** **0**. **Porta verda.** Comprovat sobre **el fitxer sencer de §4bis**, línia per línia el mateix text d'esta nota. **Sense l'esmena**, eixe mateix fitxer dona **5** (`leftCollapsed`, `panellEstret`, `railMitja`, `replegaCompacte`, `expandObridor`).
+
+**Sense l'esmena de la porta no hi ha cap fitxa veraç que la pose verda:** caldria esborrar `leftCollapsed` de la fitxa i no documentar mai `panellEstret`, `railMitja`, `replegaCompacte` ni `expandObridor`. **No ho propose: seria fabricar un verd.**
+
+
+##### 4. Text exacte per a enganxar a `01_produccio/contracte_graella.md`
+
+**Dues maneres, el mateix resultat.** **D'un sol pas:** substituir el fitxer sencer pel de §4bis (inclou A, B i C). **Per blocs:** A, B i, si el Mestre el tria, C. **Els números de línia són els de la fitxa d'ara**, abans d'enganxar res; **l'àncora que mana és el text exacte de la línia**, així l'ordre dels blocs no importa.
+
+###### Bloc A · secció «## AppGridShell»
+
+**On:** **just després de la línia 26**, que és exactament:
+
+| `initialPane` | Panell actiu inicial en mode mòbil |
+
+**i abans de** la fila de `aria-label`. Cinc files noves, sense línia en blanc entremig:
+
+```markdown
+| `panellEstret` | Mestre-detall en estret: el panell que s'obri en muntar (`'left'`, `'middle'` o `null`, o una funció que el torna); només al primer mesurament |
+| `tornaEstret` | Mestre-detall en estret: on torna el detall si no se'n coneix cap panell d'abans; amb ell, el context oferix `tornaDelDetall` |
+| `onPanell` | Mestre-detall en estret: avisa de cada panell assentat (`null` és el detall) |
+| `railMitja` | En «mitja», `middleCollapsed` plega la llista en el rail de `--app-grid-col-collapsed` i el detall n'ocupa l'espai; desplegada no canvia cap píxel (per defecte `false`) |
+| `railEstret` | En «estret», un rail de `--app-grid-col-collapsed` a l'esquerra del detall (`#app-grid-rail`), buit: qui munta la closca hi pinta amb un portal (`nodeRail`) (per defecte `false`) |
+```
+
+###### Bloc B · secció «## AppGridColumn»
+
+**On:** **just després de la línia 44**, que és exactament:
+
+| `onReplega` | Callback en replegar |
+
+**i abans de** la fila de `variant`. Cinc files noves, sense línia en blanc entremig:
+
+```markdown
+| `replegaTotaCapcalera` | Si l'única acció de la capçalera és replegar (sense `plegable`, `esquerra`, accions ni fills), tota la fila és el botó de replegar |
+| `etiquetaReplega` | Etiqueta accessible d'eixa fila replegable (per defecte, «Replegar» i el títol) |
+| `controls` | Id de la columna que governen el replegar i l'expandir (`aria-controls`) |
+| `replegaCompacte` | En «mitja» i «estret», el Replegar és el desplegador de la llista: es veu també en estret i declara `aria-expanded` i `aria-controls` (per defecte `false`) |
+| `expandObridor` | En el rail d'estret, l'Expandir obri la columna de la llista i es declara obridor de la closca (`data-obri-columna`) perquè la guarda del focus hi torne en tancar el panell (per defecte `false`) |
+```
+
+**Per què deu i no sis:** **`panellEstret`** és real i no és a la fitxa (la porta no el veu per §2). **`replegaTotaCapcalera`, `etiquetaReplega` i `controls`** ja faltaven a HEAD: les usen fitxers versionats que no han canviat en esta onada (`ClosCaXat.jsx`, `WikiDePobleSection.jsx`, `DesignSection.jsx`, `EspecimenColumnes.jsx` i `UniversalWorkspace.test.jsx:527`). Les descripcions ixen del codi: `AppGridShell.jsx:95-126` i `AppGridColumn.jsx:20-30, 83-128 i 164-176`.
+
+**Format que la porta espera:** cada fila comença per `| ` i el nom entre accents greus (`^\|\s*\`([^\`]+)\``), dins de la secció fins al «## » següent. **Cap cel·la porta una barra vertical**, i cap fila conté «NNNpx», que la regla §3 llegiria com a punt de tall.
+
+###### Bloc C · `leftIcon` i `middleIcon` (decidix el Mestre)
+
+**Què passa:** la closca **no** les desestructura; el comentari d'`AppGridShell.jsx:90` diu que «s'accepten i no es pinten». **Encara les passen** `ClosCaXat.jsx:219-220`, `UniversalWorkspace.jsx:270-271`, `XatSection.jsx:1004` i `XatControlSection.jsx:96`. La porta les marca **fantasma** amb esmena o sense.
+
+**Proposta (fitxa sola, sense tocar codi):** **esborrar** de la taula d'AppGridShell les dues files
+
+| `leftIcon` | Icona columna esquerra |
+| `middleIcon` | Icona columna central |
+
+**i afegir** esta frase **després de la fila de `className`**, **amb una línia en blanc abans i una després** (sense la línia en blanc d'abans, el Markdown de GitHub la llegiria com una fila més de la taula). La porta no la compta perquè no comença per `|`:
+
+```markdown
+**`leftIcon` i `middleIcon`** no són props de la closca: alguns consumidors encara les passen i la closca les ignora. La icona de cada columna la pinta la seua capçalera (`AppGridColumn`, prop `icona`).
+```
+
+**Alternatives que no propose ací:** traure-les dels quatre consumidors (canvi de codi en seccions d'altres actors) o desestructurar-les sense ús (ESLint `no-unused-vars`).
+
+
+##### 4bis. D'un sol pas: el fitxer sencer (blocs A, B i C ja posats)
+
+**Només si la fitxa continua sent la de 48 línies** llegida en este torn (la secció «## AppGridShell» acaba en la fila de `className` i «## AppGridColumn» en la de `children`). Si algú l'ha tocada, useu els blocs. **Si el Mestre no tria el bloc C**, useu A i B per blocs. Contingut sencer de `contracte_graella.md`, de la primera línia a l'última:
+
+```markdown
+---
+type: document
+status: esborrany
+description: Contracte de Graella
+---
+# Contracte de Graella
+
+Aquest document defineix el contracte del framework de graella responsiva (`AppGridShell`).
+
+Punts de tall (breakpoints): 720px i 1090px.
+
+## AppGridShell
+
+| Prop | Descripció |
+|---|---|
+| `children` | El contingut de la graella |
+| `leftColumn` | Component per la columna esquerra |
+| `middleColumn` | Component per la columna central |
+| `rightColumn` | Component per la columna dreta |
+| `leftTitle` | Títol columna esquerra |
+| `middleTitle` | Títol columna central |
+| `leftCollapsed` | Estat inicial plegat esquerra |
+| `middleCollapsed` | Estat inicial plegat central |
+| `initialPane` | Panell actiu inicial en mode mòbil |
+| `panellEstret` | Mestre-detall en estret: el panell que s'obri en muntar (`'left'`, `'middle'` o `null`, o una funció que el torna); només al primer mesurament |
+| `tornaEstret` | Mestre-detall en estret: on torna el detall si no se'n coneix cap panell d'abans; amb ell, el context oferix `tornaDelDetall` |
+| `onPanell` | Mestre-detall en estret: avisa de cada panell assentat (`null` és el detall) |
+| `railMitja` | En «mitja», `middleCollapsed` plega la llista en el rail de `--app-grid-col-collapsed` i el detall n'ocupa l'espai; desplegada no canvia cap píxel (per defecte `false`) |
+| `railEstret` | En «estret», un rail de `--app-grid-col-collapsed` a l'esquerra del detall (`#app-grid-rail`), buit: qui munta la closca hi pinta amb un portal (`nodeRail`) (per defecte `false`) |
+| `aria-label` | Etiqueta accessible |
+| `className` | Classes addicionals |
+
+**`leftIcon` i `middleIcon`** no són props de la closca: alguns consumidors encara les passen i la closca les ignora. La icona de cada columna la pinta la seua capçalera (`AppGridColumn`, prop `icona`).
+
+## AppGridColumn
+
+| Prop | Descripció |
+|---|---|
+| `titol` | Títol de la columna |
+| `icona` | Icona de la columna |
+| `startActions` | Accions a l'esquerra del títol |
+| `endActions` | Accions a la dreta del títol |
+| `accions` | (Deprecat) Ús `endActions` preferentment |
+| `esquerra` | Indica si és la columna esquerra |
+| `esDark` | Indica si la columna usa la variant fosca |
+| `plegable` | Indica si es pot plegar |
+| `obert` | Estat d'obertura |
+| `onPlega` | Callback en plegar |
+| `onReplega` | Callback en replegar |
+| `replegaTotaCapcalera` | Si l'única acció de la capçalera és replegar (sense `plegable`, `esquerra`, accions ni fills), tota la fila és el botó de replegar |
+| `etiquetaReplega` | Etiqueta accessible d'eixa fila replegable (per defecte, «Replegar» i el títol) |
+| `controls` | Id de la columna que governen el replegar i l'expandir (`aria-controls`) |
+| `replegaCompacte` | En «mitja» i «estret», el Replegar és el desplegador de la llista: es veu també en estret i declara `aria-expanded` i `aria-controls` (per defecte `false`) |
+| `expandObridor` | En el rail d'estret, l'Expandir obri la columna de la llista i es declara obridor de la closca (`data-obri-columna`) perquè la guarda del focus hi torne en tancar el panell (per defecte `false`) |
+| `variant` | Variant visual |
+| `collapseBtnRef` | Ref al botó de plegar (successor de focus en replegar) |
+| `expandBtnRef` | Ref al botó d'expandir (successor de focus en plegar) |
+| `children` | Contingut interior |
+```
+
+
+##### 5. L'esmena de la porta (per a MarIA: `tooling/` és fora del meu abast)
+
+**Fitxer:** `tooling/gates/tractor-graella.mjs`, **línia 47**, dins de `propsReals`. **Ara:**
+
+```js
+  return m[1]
+```
+
+**Ha de ser:**
+
+```js
+  return m[1].replace(/\/\*[\s\S]*?\*\//g, '')
+```
+
+**Què fa:** lleva els comentaris de bloc **sencers** abans de partir per línies i per comes. La neteja línia per línia que ve després es pot quedar (ja no troba res). **Alternativa equivalent:** importar `senseComentaris` de `../lib/codi.mjs` i aplicar-lo a la font abans del `match`, com fan les portes que ja l'usen. Totes dues donen **el mateix S3** de §3.
+
+**Prova roja abans, verda després (per a qui l'aplique):** amb la fitxa de S2, la porta sense esmena dona **7**; amb l'esmena, **2**; amb el bloc C, **0**.
+
+
+##### 6. Ordre recomanat per a aplicar-ho d'una sola vegada
+
+**Primer** l'esmena de §5 (MarIA). **Després** els blocs A i B, i el C si el Mestre el tria. **Finalment** `node tooling/gates/tractor-graella.mjs` ha d'eixir amb **0** i el missatge «el contracte i el codi diuen el mateix». **Si s'enganxen només A i B sense l'esmena**, la porta queda en **7**, que és **més veraç però continua roja**.
+
+**Ancoratge:** [[00_index_escriptori]]

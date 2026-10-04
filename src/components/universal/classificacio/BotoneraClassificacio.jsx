@@ -57,13 +57,17 @@ function Pindoles({ tipus, valors, onObri }) {
   );
 }
 
-function BotoResum({ tipus, icona, glif = null, text, resum, onObri }) {
+function BotoResum({ tipus, icona: Icona, glif = null, text, resum, onObri }) {
   return (
-    <Boto icona={icona} aria-haspopup="dialog" onClick={() => onObri?.(tipus)}>
-      {glif ? <span className="sdp-classificacio-botonera__glif" aria-hidden="true">{glif}</span> : null}
-      {text}
-      {resum === null ? null : <span className="sdp-classificacio-botonera__resum">{resum}</span>}
-    </Boto>
+    <button type="button" className="sdp-classificacio-pindola" aria-haspopup="dialog" onClick={() => onObri?.(tipus)}>
+      <span className="sp-card-label sdp-badge-buit">
+        {glif ? <span className="sdp-classificacio-botonera__glif" aria-hidden="true">{glif}</span> : Icona ? <Icona aria-hidden="true" focusable="false" /> : null}
+        <span className="sdp-classificacio-pindola__text">
+          {text}
+          {resum === null ? null : <span className="sdp-classificacio-botonera__resum"> ({resum})</span>}
+        </span>
+      </span>
+    </button>
   );
 }
 

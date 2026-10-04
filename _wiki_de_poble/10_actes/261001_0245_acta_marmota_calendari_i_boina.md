@@ -41,7 +41,7 @@ Plantilla entregada: _wiki_de_poble/03_actuar/plantilles/acta.md; SHA-256 2d5838
 <!-- SDP:SECTION acta.s4 -->
 ## Resultats
 
-Torn `torn_ddd7a133` de Claude, obert amb la petorreta [[260930_2135_prompt_claude]] (30-09, 21:35) i tancat amb esta acta (01-10, 02:45, hora de València). El pla és [[260930_2135_pla_implementacio_claude]] i l'informe viu, amb totes les rondes, és [[260930_2145_auditoria_claude]]. Contrastat amb l'última Acta Marmota, [[261001_0045_acta_marmota]] (MarIA), i amb el lliurament de Codex, [[261001_0052_acta_lliurament_codex]].
+Torn `torn_ddd7a133` de Claude, obert amb la petorreta 260930_2135_prompt_claude (30-09, 21:35) i tancat amb esta acta (01-10, 02:45, hora de València). El pla és 260930_2135_pla_implementacio_claude i l'informe viu, amb totes les rondes, és 260930_2145_auditoria_claude. Contrastat amb l'última Acta Marmota, [[261001_0045_acta_marmota]] (MarIA), i amb el lliurament de Codex, 261001_0052_acta_lliurament_codex.
 
 ### 1. Part Tècnica (Graner Ple de Codis i Arquitectura)
 
@@ -222,8 +222,5 @@ Per a MarIA (amb lease) o el Mestre:
 
 - [[00_index]]
 - [[00_index_escriptori]]
-- [[260930_2135_prompt_claude]]
-- [[260930_2135_pla_implementacio_claude]]
-- [[260930_2145_auditoria_claude]]
 - [[261001_0045_acta_marmota]]
-- [[261001_0052_acta_lliurament_codex]]
+

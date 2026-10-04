@@ -108,6 +108,32 @@ export function midaSortida(rect, maxim = MIDA_SORTIDA) {
   return { amplada: Math.max(1, Math.round(rect.w * k)), alcada: Math.max(1, Math.round(rect.h * k)) };
 }
 
+/** Onada 4, T3a · El format de sèrie quan el pare demana `sortida` (RETALLADOR §1). */
+export const FORMAT_SORTIDA = 'image/webp';
+const FORMATS_SORTIDA = Object.freeze(['image/webp', 'image/jpeg', 'image/png']);
+
+/**
+ * Onada 4, T3a · Les opcions de l'exportador.
+ *   · Sense `sortida` (contracte T46): exactament les d'abans, 1.200 px pel
+ *     costat llarg i el tipus intermedi de tipusDeSortida.
+ *   · Amb `sortida` = { ampladaMaxima, format, qualitat }: l'AMPLADA no passa
+ *     d'ampladaMaxima (mai s'amplia; l'alçada seguix la forma), el format
+ *     demanat (WebP de sèrie; l'exportador cau a JPEG si el navegador no el sap
+ *     codificar) i la qualitat (0..1) si n'hi ha.
+ */
+export function opcionsSortida(rect, tipusOriginal, sortida = null) {
+  if (!sortida) return { ...midaSortida(rect), tipus: tipusDeSortida(tipusOriginal) };
+  const maxim = Number(sortida.ampladaMaxima) > 0 ? Number(sortida.ampladaMaxima) : MIDA_SORTIDA;
+  const k = Math.min(1, maxim / rect.w);
+  const opcions = {
+    amplada: Math.max(1, Math.round(rect.w * k)),
+    alcada: Math.max(1, Math.round(rect.h * k)),
+    tipus: FORMATS_SORTIDA.includes(sortida.format) ? sortida.format : FORMAT_SORTIDA,
+  };
+  if (Number.isFinite(sortida.qualitat) && sortida.qualitat > 0 && sortida.qualitat <= 1) opcions.qualitat = sortida.qualitat;
+  return opcions;
+}
+
 /**
  * Arrossegar dx, dy píxels de pantalla sobre un visor de `ampleCss` px.
  * Com a qualsevol visor tàctil, arrossegar cap a la dreta fa vore el que hi ha
@@ -153,6 +179,32 @@ export function ambLliscador(e, eix, v, W, H, formats = FORMATS) {
   const mig = eix === 'y' ? my : mx;
   const c = mig + (entre(finit(Number(v), 50), 0, 100) / 100) * (1 - 2 * mig);
   return limita(eix === 'y' ? { ...l, cy: c } : { ...l, cx: c }, W, H, formats);
+}
+
+/** Onada 4, T3a · Passos del teclat sobre el visor: punts de lliscador i d'ampliació. */
+export const PAS_TECLAT = 5;
+export const PAS_ZOOM_TECLAT = 0.1;
+
+/**
+ * Onada 4, T3a (RETALLADOR §1) · Una tecla sobre el visor → estat nou, o null
+ * si la tecla no és del retallador. Les fletxes mouen el marc com els
+ * lliscadors (dreta = «Posició horitzontal» puja): el que s'escolta i el que
+ * es fa diuen el mateix. + i − amplien. Amb `gran` (Maj), les fletxes van
+ * quatre vegades més lluny; el zoom no, perquè en molts teclats el + ja és Maj.
+ */
+export function ambTecla(e, tecla, W, H, formats = FORMATS, { gran = false } = {}) {
+  const pas = gran ? PAS_TECLAT * 4 : PAS_TECLAT;
+  const mou = (eix, signe) => ambLliscador(e, eix, lliscador(e, eix, W, H, formats) + signe * pas, W, H, formats);
+  const amplia = (signe) => limita({ ...e, zoom: finit(e.zoom, 1) + signe * PAS_ZOOM_TECLAT }, W, H, formats);
+  switch (tecla) {
+    case 'ArrowLeft': return mou('x', -1);
+    case 'ArrowRight': return mou('x', 1);
+    case 'ArrowUp': return mou('y', -1);
+    case 'ArrowDown': return mou('y', 1);
+    case '+': case '=': case 'Add': return amplia(1);
+    case '-': case '_': case 'Subtract': return amplia(-1);
+    default: return null;
+  }
 }
 
 /** El retall és la foto sencera (no cal tornar a codificar res). */

@@ -3,8 +3,8 @@
     "version": "2.0.0",
     "status": "TANCAT",
     "font_unica_de_veritat": true,
-    "actualitzat": "2026-08-31",
-    "regla": "CAPA 0. Este arxiu declara les constants de marca i els mínims físics, res més. Les rampes i els semàntics viuen a src/css/index.css. Cap altre arxiu pot declarar un token --sdp-canon-*."
+    "actualitzat": "2026-10-04",
+    "regla": "CAPA 0. Este arxiu declara les constants de marca i els mínims físics, res més. Les rampes i els semàntics viuen a src/css/tokens.css. Cap altre arxiu pot declarar un token --sdp-canon-*."
   },
   "color": {
     "taronja": {
@@ -20,10 +20,10 @@
   "radi": {},
   "tacte": {
     "minim_absolut": {
-      "value_px": 44,
+      "value_px": 48,
       "css_var": "--sdp-touch-min",
       "us": "Mínim absolut tàctil.",
-      "nota_normativa": "Reduït a 44px."
+      "nota_normativa": "Mestre 261004: 48px sempre."
     }
   }
 }

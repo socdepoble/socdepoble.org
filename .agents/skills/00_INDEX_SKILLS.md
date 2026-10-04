@@ -20,6 +20,7 @@ Font executiva única: `.agents/skills/`. Este índex només referencia les font
 - [[core-higiene-escriptori/SKILL|core-higiene-escriptori]]: Usa-la abans de crear un prompt, una petorreta, un pla o una auditoria, i quan l'Escriptori estiga brut o el Mestre demane netejar-lo. L'orquestradora el neteja en el mateix torn amb la porta Olivera.
 - [[core-identitat/SKILL|core-identitat]]: Bootstrap d'identitat executiu de la IAIA MarIA. Carrega personalitat, veu, to i missió.
 - [[core-identitat-visual/SKILL|core-identitat-visual]]: Tractor (Skill) obligatori abans de generar cap imatge, recurs gràfic o disseny visual per a Sóc de Poble. Protegeix l'estil Bruguera/Berlanga.
+- [[core-llegibilitat-text/SKILL|core-llegibilitat-text]]: Tractor documental per garantir el format llegible (jerarquia H1-H6) i l'escaneig ràpid amb negretes en tots els textos del sistema.
 - [[core-memoria-historica/SKILL|core-memoria-historica]]: Consulta i destil·la lliçons històriques, registra decisions i prepara relleus documentals sense arxivament automàtic.
 - [[core-neteja-brossa/SKILL|core-neteja-brossa]]: Tractor de neteja d'arrels. Retira de l'arrel de socdepoble.org la brossa solta (logs, pegats, sondes) sense tocar mai la configuració de les eines, l'estat local ni res versionat.
 - [[core-portaveu-institucional/SKILL|core-portaveu-institucional]]: Propaga i assegura l'actualització sincronitzada del Dossier Institucional de Sóc de Poble.

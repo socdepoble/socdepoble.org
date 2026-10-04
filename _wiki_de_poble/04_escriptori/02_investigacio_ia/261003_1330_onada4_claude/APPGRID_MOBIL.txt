@@ -1,0 +1,340 @@
+APPGRID_MOBIL · P6 · AppGridShell usable en pantalles xicotetes
+Torn torn_50ca5709-8cd2-416a-bf41-2afdb3450179 · Claude · Onada 4, segona onada · 2026-10-03
+
+Encàrrec: pla de MarIA 261003_1935_pla_implementacio_maria.md, «Mediació en
+curs», punt 6 (ordre del Mestre retransmesa): «Es pot deixar sempre visible
+la primera columna estreta (tipus menú, de 60px) però la segona columna de
+llistat ha de tindre un desplegador (toggle) clar, perquè la columna
+principal d'edició ocupe l'espai necessari i no es xafen les tres columnes.»
+Abast: src/components/layout/AppGrid* i src/components/universal/workspace/
+UniversalWorkspace*. Fora: ControlSection.jsx (W4-04), seccions, graella.js.
+
+Fonts llegides: AppGridShell.jsx/.css, AppGridColumn.jsx, AppGridResizer.jsx,
+graella.js, UniversalWorkspace.jsx, nivellMestreDetall.js, totes les proves
+de layout/ i de workspace/, src/css/index.css (ordre de capes: reset, sdp,
+legacy, components, utilities; AppGridShell.css entra en `components` després
+de modules.css) i les regles del rail de modules.css (§6141, §3107).
+
+
+1. COMPORTAMENT MESURAT ABANS DEL CANVI (navegador integrat, pestanya de fons,
+   http://localhost:3340, sense sessió)
+
+Punts de tall (graella.js, sense xifres noves): «estret» per davall de 720px
+de closca; «mitja» fins a max(900, navegació + llista + 320 + 2); «ample»
+d'ací amunt. La closca mesura el seu contenidor, no la finestra.
+
+1280x800 (closca 1020, barra de l'app 260):
+  /notes       ample  gtc «56px 0px 280px 0px 684px»  nav 260:56 · llista 316:280 · detall 596:684
+  /disseny     ample  gtc «260px 0px 280px 0px 480px» nav 260:260 · llista 520:280 · detall 800:480
+  /wikidepoble ample  gtc «260px 0px 280px 0px 480px» nav 260:260 · llista 520:280 · detall 800:480
+1024x800 (closca 764: la barra de l'app encara és de 260 fins a 1023):
+  /notes, /disseny, /wikidepoble  mitja  gtc «280px 0px 484px»
+  nav amagada (panell superposat) · llista 260:280 · detall 540:484
+768x1024 (tauleta, closca 768): /disseny mitja, gtc «280px 0px 488px».
+375x812 (mòbil, closca 375): /notes i /disseny estret, una sola columna de
+  375. Amb el mestre-detall (MD, Onada 3) la primera vista és la navegació a
+  pantalla completa; carpeta → llista a pantalla completa; fitxa → detall a
+  pantalla completa amb la fletxa ← de la barra blava cap a la llista. Cap
+  scroll horitzontal (scrollWidth 375).
+/el-meu-perfil demana sessió i redirigix a /registre: no es mesura al
+navegador (cap inici de sessió en este torn). Les proves el cobrixen pel
+UniversalWorkspace comú.
+
+Defectes trobats en «mitja» (tauleta, mòbil apaïsat, encastat estret de
+WordPress, i també l'escriptori de 1024):
+  D1 · El botó «Replegar <LLISTA>» de la capçalera de la llista és mort:
+       canvia l'estat collapsed.middle, però la closca només el pinta en
+       «ample». Clicat a 768: graella igual (280 + 488) i cap canvi.
+  D2 · L'obridor de la navegació de la capçalera de la llista obri un toc de
+       cada dos (toggleColumn commuta el rail d'«ample»). Mesurat a 768:
+       toc 1 cap panell; toc 2 panell obert; toc 3 (després de triar
+       carpeta) cap panell. És el mateix defecte que MD ja havia corregit en
+       estret.
+  D3 · En «mitja» no hi ha cap columna estreta: la navegació desapareix
+       sencera i la llista ocupa 280px fixos, sense manera de donar-ne
+       l'espai a l'editor.
+En «estret» amb MD no es xafa res (un nivell cada vegada), però des de
+l'editor l'única tornada a la llista és la fletxa ← (que fora de MD és
+l'historial): no hi ha cap desplegador de llista visible ni cap columna
+estreta.
+
+
+2. DISSENY
+
+Principi: una sola peça per a plegar la llista a totes les mides, la que ja
+existix en «ample»: el rail de 56px de la llista (variant «collapsed»
+d'AppGridColumn amb Expandir, accions i els glifs dels documents,
+DocumentRail). Cap punt de tall nou, cap xifra nova (56 és
+--app-grid-col-collapsed, PUNTS_DE_TALL.plegada), cap botó flotant.
+
+2.1 «mitja» (opt-in de la closca: railMitja; UniversalWorkspace l'activa
+    sempre fora del mode compacte)
+  · Repòs: igual que ara (llista 280 + detall). 1024 no canvia de píxel.
+  · El «Replegar» de la capçalera de la llista funciona: plega la llista en
+    el rail de 56px i el detall ocupa la resta (graella
+    «var(--app-grid-col-collapsed) minmax(0, 1fr)»). El rail porta, de dalt a
+    baix: Expandir la llista, l'obridor de la navegació (si n'hi ha), la
+    lupa i els glifs dels documents. Este rail és la «primera columna
+    estreta» de l'ordre.
+  · L'estat és el mateix collapsed.middle del Workspace (una decisió de la
+    persona per a totes les mides, com el rail d'«ample»). Plegar lleva
+    espai a la mínima d'«ample» (regla existent de midaDeGraella): si les
+    columnes desades hi caben, la closca passa a «ample» amb la llista en
+    rail. És el comportament que ja té plegar en «ample».
+  · L'obridor de la navegació (capçalera i rail) obri al primer toc
+    (obriPanell('left')), no commuta el rail d'«ample» i es declara obridor
+    de la closca (data-obri-columna, aria-controls="app-grid-sidebar",
+    aria-expanded). Corregix D2.
+
+2.2 «estret» amb mestre-detall (opt-in: railEstret; UniversalWorkspace
+    l'activa només amb MD i fora del compacte)
+  · Els nivells de MD no canvien: carpetes → llista → detall, la fletxa ←
+    torna a la llista, el nivell es recorda (nivellMestreDetall.js), mai dos
+    panells oberts.
+  · Nou: amb el detall a la vista, un rail de 56px a l'esquerra (sempre
+    visible amb el detall) i el detall ocupa la resta (319px en un mòbil de
+    375). El rail és un element propi de la closca (#app-grid-rail), no la
+    columna de la llista: la columna continua sent el panell de MD, tancada
+    amb el detall a la vista. Així el contracte de MD («una sola columna
+    oberta») i les seues proves de secció (Notes, Disseny, Wiki, Perfil,
+    Admin) queden intactes. El contingut del rail el pinta la mateixa
+    columna de la llista amb un portal (nodeRail del context): mateix
+    component, mateix ordre, mateixa cerca i mateixos refs; cap duplicat.
+    (Primer intent, descartat: fer de la columna mateixa el rail; trencava
+    cinc proves de MD de seccions fora d'abast.)
+  · Expandir (rail) obri el panell de la llista, a pantalla completa, com la
+    fletxa ←, i porta el focus a la fitxa actual.
+  · El «Replegar» de la capçalera de la llista es veu ara també en estret
+    (abans d-desktop-only) i torna al detall amb el rail.
+  · Els panells de llista i de carpetes cobrixen rail i detall. El rail es
+    queda muntat davall (tancat: inert, aria-hidden, visibility hidden) i la
+    graella no es mou: l'editor no reflueix mentre el panell llisca.
+  · Sense MD (compacte, demostracions), estret queda com abans.
+
+2.3 ARIA i focus
+  · Desplegador: Expandir del rail amb aria-expanded="false" i
+    aria-controls="app-grid-list"; Replegar de la capçalera amb
+    aria-expanded="true" i aria-controls="app-grid-list". En «ample» els
+    atributs no canvien (Llei del Píxel i proves de DOM).
+  · Replegar → focus a l'Expandir del rail (focusAfterLayout, el mateix
+    patró d'«ample»). Expandir en mitja → al Replegar; en estret → la fitxa
+    actual (obriPanell, el destí de la fletxa ←).
+  · Lupa del rail: obri la llista i el camp de cerca rep el focus.
+  · Obridor de carpetes del rail → la carpeta activa (obriPanell).
+  · En estret, l'Expandir del rail es declara obridor de la llista
+    (data-obri-columna): quan el panell de la llista es tanca amb el focus a
+    dins (Replegar, triar una fitxa), la guarda T6 el porta a l'Expandir en
+    el mateix commit; després focusAfterLayout el porta on toca (el detall,
+    si s'ha triat una fitxa, com MD).
+  · La guarda T6 també vigila el rail: tancat per un panell amb el focus a
+    dins (menú o lupa del rail), l'allibera i el panell nou el rep.
+  · esAlAbast ja no tria res de dins d'un <dialog> tancat: el Dialeg de la
+    roda de la navegació hi és sempre muntat, i sense carpeta activa el focus
+    anava al seu botó «Tancar» (en jsdom; en un navegador, es perdia).
+
+2.4 Persistència
+  Cap de nova. collapsed.middle viu en memòria com fins ara (es reinicia en
+  muntar). Persistir-lo per persona (getVal) faria que l'escriptori de 1024
+  arrancara en rail en una pestanya nova, i això ja seria canviar el repòs.
+  En estret, MD ja recorda el nivell (sessionStorage, getEfimer). Si el
+  Mestre el vol persistent, és una línia amb getVal/setVal.
+
+2.5 Fora de l'abast (no es toca)
+  · Mode compacte (Snippet Curador): el límit T7C-R4 diu que un obridor al
+    detall és decisió del Mestre.
+  · Closques que munten AppGridShell a mà (Xat ClosCaXat, ClosaAplicacio):
+    les dues propietats són opt-in, per defecte false.
+  · graella.js (columnesTancades): no es toca; el rail d'estret és un
+    element a part i la guarda el vigila a AppGridShell.
+
+
+3. INVARIANTS D'ESCRIPTORI (Llei del Píxel)
+  · 1280 i 1024 en repòs: grid-template-columns, x i amplària de les tres
+    columnes iguals a la taula de §1. Es tornen a mesurar després del canvi.
+  · Cap regla nova s'aplica sense data-llista="rail" a la closca, i la
+    closca només el porta amb la llista plegada en mitja o amb railEstret en
+    estret.
+  · DOM a 1024 en repòs: només atributs ARIA nous (aria-expanded,
+    aria-controls, data-obri-columna) i el Replegar sense d-desktop-only,
+    classe que fora d'«estret» no pinta res.
+  · «ample»: cap canvi de DOM ni de CSS efectiu.
+
+
+4. TRES PEDRES
+  Alternatives descartades:
+  (a) Rail també en repòs a «mitja»: l'editor de 1024 perdria 56px.
+  (b) Un estat nou de plegat a la closca: el Snippet (compacte) arrenca amb
+      collapsed.middle i dos estats per a la mateixa llista divergirien.
+  (c) Botó flotant damunt l'editor: prohibit («caixes sòlides, res de botons
+      flotants», ordre del Mestre 260927).
+  Manteniment: tot és CSS amb data-llista i una derivació a la closca; la
+  peça visual és la d'«ample».
+  Tres maneres de fallar:
+  (1) Una secció amb CSS pròpia sobre .app-grid-column--middle en estret
+      (cap trobada a src/**/*.css: només modules.css del Xat i PerfilShell en
+      mitja).
+  (2) El focus perdut en canviar de variant (la fitxa enfocada es desmunta):
+      cobert per la guarda T6 (Expandir obridor), focusAfterLayout i proves.
+  (3) Plegar en mitja fa saltar a «ample» amb columnes desades amples: és la
+      regla existent; documentat, no és regressió.
+  (4) El portal necessita el node del rail: el primer commit d'estret el
+      munta buit i el setState del ref el pinta abans de pintar la pantalla
+      (fase de layout). Cobert per les proves de muntatge en estret.
+
+
+5. DECISIONS PER AL MESTRE
+  · En estret, el rail resta 56px a l'editor (375 → 319). És el que demana
+    l'ordre («sempre visible»); si el vol només en mitja, és llevar railEstret
+    a UniversalWorkspace (una línia).
+  · Persistència del plegat per persona: no s'ha fet (§2.4).
+  · Les proves de MD no s'han tocat: el rail d'estret viu fora de les tres
+    columnes.
+
+
+6. RESULTAT (2026-10-03, després d'implementar)
+
+Fitxers tocats: src/components/layout/AppGridShell.jsx, AppGridShell.css,
+AppGridColumn.jsx; src/components/universal/workspace/UniversalWorkspace.jsx.
+Proves noves: src/components/layout/AppGridShell.rail.test.jsx (9),
+AppGridShell.qualitat.test.js (4: cens, ESLint zero missatges, Pedra Seca),
+src/components/universal/workspace/UniversalWorkspace.railCompacte.test.jsx
+(11). UniversalWorkspace.mestreDetall.test.jsx: tornat a l'original (cap
+canvi net).
+
+Proves [VERIFICAT]
+  · npx vitest run src/components/layout src/components/universal/workspace
+    abans: 16 fitxers, 165 proves verdes; després: 19 fitxers, 189 verdes
+    (165 + 9 + 11 + 4). AppGridShell.capes.test.js, graella.capes.test.js
+    i el qualitat.test.js de workspace (ESLint), verds.
+  · Seccions consumidores (notes, disseny, wiki-de-poble, profile, admin,
+    xat, apps/plataforma, components/universal, components/layout): 205
+    fitxers, 2.573 verdes i 6 roges, totes a src/sections/profile
+    (aplicacions.test.js, PerfilShell.test.jsx, PerfilShell.espai.test.jsx).
+    No són d'este canvi: aplicacions.test.js només importa aplicacions.js,
+    i aplicacions.js i DetallEspai.jsx els ha modificat un altre agent
+    durant este torn (git status; la línia base de les 20:52 era 195
+    fitxers, 2.501 verdes, 0 roges). Les cinc proves de MD de secció que
+    el primer intent trencava, verdes.
+  · node tooling/gates/tractor-enxufe.mjs: E1–E4 verds.
+  · node tooling/gates/design_guard.mjs --arrel=src: ix amb 1 per fitxers
+    d'altres agents (Dialeg.test.jsx, profile/DetallEspai.jsx,
+    DocumentPrintPreview.jsx); cap infracció a layout/ ni a workspace/.
+
+Navegador [VERIFICAT] (pestanya de fons, http://localhost:3340, sense sessió)
+  Escriptori, mateix procediment (redimensionar i després carregar):
+    1280 /disseny    ample gtc «260px 0px 280px 0px 480px», columnes
+                     260:260 · 520:280 · 800:480; empremta interior idèntica
+                     (324 elements, hash -1737108937, 45 botons).
+    1280 /wikidepoble ample, idem; hash -1669620041 idèntic.
+    1280 /notes      ample gtc «56px 0px 280px 0px 684px», columnes
+                     idèntiques, 239 elements i 33 botons idèntics. L'empremta
+                     interior de la línia base es va prendre amb un altre
+                     procediment (carregar i després redimensionar): no és
+                     comparable; amb el mateix procediment, estable entre
+                     càrregues. En «ample» el canvi no afig cap atribut.
+    1024 /notes, /disseny, /wikidepoble  mitja gtc «280px 0px 484px»,
+                     columnes 260:260(amagada) · 260:280 · 540:484, i les
+                     tres empremtes interiors idèntiques (-580520834,
+                     1762180049, -1559140069).
+  375x812:
+    /disseny: carpetes a pantalla completa (rail tancat davall) → COMPONENTS
+      a pantalla completa → espècimen: gtc «56px 319px», rail x0 w56 obert,
+      detall x56 w319 obert, llista i navegació tancades. Rail: «Expandir
+      COMPONENTS» (aria-expanded false, aria-controls app-grid-list),
+      «DISSENY» (obridor), lupa, glifs dels espècimens amb l'actual en blau.
+      Expandir → llista a pantalla completa, focus a la fitxa actual, el
+      Replegar visible a la dreta de la capçalera (aria-expanded true).
+      Replegar → detall amb rail, focus a l'Expandir. Cap scroll
+      horitzontal (scrollWidth 375).
+    /wikidepoble: el mateix recorregut; el menú del rail («WIKI DE POBLE»)
+      obri la navegació al primer toc amb el focus a la carpeta activa.
+    /notes (sense sessió): carpeta Mur → NOTES amb el Replegar visible →
+      detall amb rail (Expandir NOTES, CARPETES, Cercar notes, documents).
+  768x1024 /disseny: repòs «280px 0px 488px» (el d'abans); Replegar →
+    «56px 712px»; el menú del rail obri la navegació els tres tocs seguits;
+    Expandir torna a «280px 0px 488px».
+  Viewport tornat a «desktop» i pestanyes pròpies tancades.
+
+[NO VERIFICAT]
+  · /el-meu-perfil al navegador (demana sessió); cobert per proves de secció.
+  · Encastat de WordPress i Capacitor (cap dispositiu ni amfitrió en este
+    torn).
+  · Lector de pantalla real (només atributs ARIA i proves de focus).
+
+Avís de l'entorn: el hook PostToolUse segell-auto.mjs respon «segell
+divergent; cap resegellat automàtic» des de les 21:00 en cada eina; no el
+pot resoldre este torn (tooling/ fora d'abast). Les escriptures s'han fet.
+
+
+7. REVISIÓ ADVERSARIAL (2026-10-03, 21:27-21:40, mateix torn)
+
+Mètode: cada sospita, reproduïda amb una prova roja abans del pegat o
+refutada. Proves noves:
+src/components/universal/workspace/UniversalWorkspace.railRevisio.test.jsx (5).
+
+Corregit (rojos abans del pegat, verds després):
+  F1 · A estret, la lupa del rail amb la cerca JA oberta deixava el focus a
+       <body>. autoFocus només actua quan el camp naix; el camp continua
+       muntat dins de la llista tancada, el focus es quedava a la lupa del
+       rail que es tapa i la guarda T6 l'alliberava amb blur(). Reproduït en
+       Chrome (pestanya de fons, 375, /notes): «BODY». Pegat a
+       UniversalWorkspace.jsx: campCercaRef i un efecte de layout
+       (cercaDemanada) que enfoca el camp en el mateix commit, abans que la
+       guarda de la closca. Ara, en Chrome: «search@app-grid-list».
+  F2 · A mitjà, l'obridor de la navegació (capçalera de la llista i rail)
+       declara aria-expanded="true" amb el panell obert, però tornar-lo a
+       activar no feia res: obriPanell('left') sobre un panell ja obert. En
+       mitjà la llista no es tanca i l'obridor és a l'abast del teclat. Ara
+       commuta (commutaNavegacio): obert → tancaPanells(), tancat →
+       obriPanell('left'). Verificat a 1024 /notes: aria-expanded
+       true → false i el focus es queda a l'obridor.
+  F3 · D'estret a mitjà o ample (girar el mòbil) amb el focus al rail: el
+       rail es desmunta i el focus queia a <body>. Pegat a AppGridShell.jsx:
+       el mesurament anota si el focus era al rail (focusAlRail) i la guarda
+       el porta a destiDelPanell de la llista (la fitxa actual). Només jsdom:
+       en una pestanya de fons el ResizeObserver no notifica.
+
+Refutat o comprovat sense defecte:
+  · Identitat d'escriptori: 1280 /disseny, /notes, /wikidepoble i 1024 /notes
+    tornats a mesurar (gtc i x:amplària iguals a la taula de §1), també
+    després dels pegats.
+  · Capes CSS: AppGridShell.css entra amb layer(components) després de
+    modules.css; les regles noves (0,4,0) guanyen les de «mitja»/«estret»
+    (0,3,0); cap regla de modules.css penja de .app-grid-column--middle per
+    al rail, així el portal es pinta igual.
+  · Scroll horitzontal: 375 i 414 sense desbordament (scrollWidth = finestra;
+    cap element del detall fora de [56, finestra]).
+  · Encastat de WordPress: el punt de tall és l'amplària del contenidor
+    (pageRef.clientWidth amb ResizeObserver), no la finestra, i la CSS penja
+    de data-layout, no de @media: una columna estreta de WordPress dona
+    «estret» encara que la finestra siga ampla. El focus llig el
+    ShadowRoot (focusActiu). [VERIFICAT per codi; no en un amfitrió real]
+  · Una pestanya de fons no rep ResizeObserver ni requestAnimationFrame:
+    redimensionar sense recarregar mostra una mida rància (/notes «ample» a
+    764). És l'entorn de prova, no el producte.
+
+Obert (no és d'este abast):
+  · La navegació superposada de «mitja» no es pot descartar amb el punter:
+    tapa els obridors i «Replegar CARPETES» és mort fora d'«ample» (el
+    mateix D1 de la llista, a la columna esquerra). Preexistent. Proposta:
+    en mitja i estret, el Replegar de CategoryColumn ha de cridar
+    tancaPanells() i portar el focus a l'obridor; o Escape/clic fora.
+  · A estret la barra fixa .mobile-nav (68px) tapa el peu del rail i del
+    panell de la llista (cap coixí inferior). Preexistent (layout.css).
+  · AdminSection.jsx:142 i :195 lligen item.data amb item null: el detall
+    d'Admin sense selecció peta dins del SlotErrorBoundary (es veu a
+    l'eixida de npx vitest run src/sections/admin, 5 fitxers i 73 proves
+    verdes). AdminSection.jsx no és modificat al git status: preexistent i
+    fora d'abast. Proposta: renderDetail amb item ? … : null.
+
+Proves de la revisió [VERIFICAT]
+  · npx vitest run src/components/layout src/components/universal/workspace
+    abans dels pegats: 19 fitxers, 189 verdes (la xifra de §6 és certa);
+    després: 20 fitxers, 194 verdes (189 + 5 de railRevisio). Les 5 noves
+    eren roges abans del pegat (F1, F2, F3; les dues de control, verdes).
+  · Seccions consumidores (les de §6 més components/layout): 206 fitxers,
+    2.578 verdes i 6 roges, les mateixes 6 del Perfil de §6 (dades
+    d'aplicacions.js i el botó «Mostrar al Panell de Control» de
+    DetallEspai.jsx, d'un altre agent).
+  · design_guard: les mateixes tres infraccions d'altres fitxers; cap a
+    layout/ ni a workspace/. tractor-enxufe: E1–E4 verds.

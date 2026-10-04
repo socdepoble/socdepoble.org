@@ -9,7 +9,7 @@
    Dades sintètiques; NO VERIFICAT en dispositiu (FASE0_PWA §6.11). */
 import { afterEach, expect, test, vi } from 'vitest';
 import { webcrypto } from 'node:crypto';
-import { getEfimer } from '../config/storage.js';
+import { getEfimer, getVal } from '../config/storage.js';
 import { backendScope } from '../config/backendConfig.js';
 import { esborraSessio, usuariDeSessio } from './identitat.js';
 import { cancelAuthAttempts } from './authAttempt.js';
@@ -22,6 +22,8 @@ const vesA = (ruta) => window.history.replaceState(null, '', ruta);
 const unTorn = () => new Promise((resol) => { setTimeout(resol, 0); });
 /* Un matchMedia que només casa amb les consultes donades. */
 const ambMedia = (...casen) => vi.fn((consulta) => ({ matches: casen.includes(consulta), media: consulta }));
+/* L'URL d'autorització que ha rebut la redirecció completa. */
+const urlRedirigida = (espia) => espia.mock.calls[0][0];
 
 afterEach(() => {
   cancelAuthAttempts(); esborraSessio(); vi.restoreAllMocks(); vi.unstubAllGlobals();
@@ -59,7 +61,12 @@ test('instal·lada (display-mode standalone): cap emergent, redirecció completa
   expect(url.searchParams.get('provider')).toBe('google');
   expect(url.searchParams.get('code_challenge_method')).toBe('S256');
   expect(url.searchParams.get('code_challenge')).toBeTruthy();
-  expect(url.searchParams.get('redirect_to')).toBe(PAGINA);
+  /* F1v2 · Canvi: la tornada porta la marca d'este intent (abans, PAGINA sola), i
+     el registre del seu id diu que tornarà per redirecció. */
+  const id = getEfimer(_intern.CLAU_INTENT, null);
+  expect(id).toMatch(_intern.FORMA_INTENT);
+  expect(url.searchParams.get('redirect_to')).toBe(`${PAGINA}&sdp_oauth_attempt=${id}`);
+  expect(getVal(_intern.clauEspera(id), null)).toEqual({ t: expect.any(Number), cami: 'redireccio' });
   // El verificador i l'abast queden a la pestanya que se'n va i hi tornarà.
   expect(getEfimer(_intern.CLAU_VERIFICADOR, null)).toBeTruthy();
   expect(getEfimer('sdp:oauth:backend', null)).toBe(backendScope(config()));
@@ -77,13 +84,33 @@ test('instal·lada a iOS (navigator.standalone): el mateix camí, i de tornada e
   await vi.waitFor(() => expect(redirigeix).toHaveBeenCalledTimes(1));
   expect(obri).not.toHaveBeenCalled();
   const verificador = getEfimer(_intern.CLAU_VERIFICADOR, null);
+  const tornada = new URL(urlRedirigida(redirigeix)).searchParams.get('redirect_to');
   cancelAuthAttempts();
-  // GoTrue torna a la mateixa pàgina amb el codi: la mateixa pestanya el bescanvia.
+  /* GoTrue torna a la tornada demanada amb el codi (F1v2 · canvi: amb la marca de
+     l'intent): la mateixa pestanya el bescanvia. */
   const fetch = vi.fn(async () => sessioBona()); vi.stubGlobal('fetch', fetch);
-  vesA('/el-meu-perfil?vista=1&code=code');
+  vesA(`${new URL(tornada).pathname}${new URL(tornada).search}&code=code`);
   await gestionaTornada({}, config);
   expect(JSON.parse(fetch.mock.calls[0][1].body)).toEqual({ auth_code: 'code', code_verifier: verificador });
   expect(usuariDeSessio()?.id).toBe('A');
+  expect(window.location.href).toBe(PAGINA);
+  expect(getEfimer(_intern.CLAU_INTENT, null)).toBeNull();
+});
+
+test('F1v2 · instal·lada: la tornada d’un camí 3 en una altra pestanya (sense el verificador) dona l’error amable, no bescanvia', async () => {
+  vi.stubGlobal('crypto', webcrypto);
+  vi.stubGlobal('matchMedia', ambMedia('(display-mode: standalone)'));
+  const redirigeix = vi.spyOn(_intern, 'redirigeix').mockImplementation(() => {});
+  entraAmbGoogle({}, config);
+  await vi.waitFor(() => expect(redirigeix).toHaveBeenCalledTimes(1));
+  const tornada = new URL(urlRedirigida(redirigeix)).searchParams.get('redirect_to');
+  cancelAuthAttempts();
+  // L'altra pestanya (el full de Safari a banda): el registre hi és, però no el verificador.
+  window.sessionStorage.clear();
+  const fetch = vi.fn(async () => sessioBona()); vi.stubGlobal('fetch', fetch);
+  vesA(`${new URL(tornada).pathname}${new URL(tornada).search}&code=code`);
+  await expect(gestionaTornada({}, config)).rejects.toThrow('verificador');
+  expect(fetch).not.toHaveBeenCalled();
   expect(window.location.href).toBe(PAGINA);
 });
 

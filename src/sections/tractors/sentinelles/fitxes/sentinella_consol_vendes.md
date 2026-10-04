@@ -1,6 +1,6 @@
 # Sentinella «Cònsol de Vendes»
 
-**Identificador:** `sentinella.consol-vendes` · **Versió:** 1.0.0 · **Nivell:** L0 · **Dades personals:** no · **Xarxa:** cap
+**Identificador:** `sentinella.consol-vendes` · **Versió:** 1.0.0 · **Nivell:** L0 · **Revisió Humana:** Pendent · **Dades personals:** no · **Xarxa:** cap
 
 ## Què fa, en una frase
 

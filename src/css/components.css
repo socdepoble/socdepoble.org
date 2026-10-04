@@ -76,19 +76,27 @@
   .sdp-boto:focus-visible { outline: 3px solid var(--sdp-focus); outline-offset: 2px; }
   .sdp-boto:disabled { cursor: not-allowed; opacity: 0.55; }
   .sdp-boto--primari { background: var(--sdp-accio-control); color: var(--sdp-sobre-accio); }
-  .sdp-boto--primari:hover:not(:disabled) { background: var(--sdp-accio-control-hover); }
   .sdp-boto--accent { background: var(--sdp-accent); color: var(--sdp-sobre-accent); }
-  .sdp-boto--accent:hover:not(:disabled) { background: var(--sdp-accent-hover); }
   .sdp-boto--secundari { background: var(--sdp-fons-targeta); color: var(--sdp-text-titol); border-color: var(--sdp-vora-control); }
-  .sdp-boto--secundari:hover:not(:disabled) { background: var(--sdp-fons-subtil); }
   .sdp-boto--perill { background: var(--sdp-error); color: var(--sdp-sobre-color); }
-  .sdp-boto--perill:hover:not(:disabled) { background: var(--sdp-error-text); }
   .sdp-boto--fantasma { background: transparent; color: var(--sdp-accio-text); }
-  .sdp-boto--fantasma:hover:not(:disabled) { background: var(--sdp-fons-subtil); }
+  /* Fase B (pla 261004_0050) · El hover només amb ratolí: al tàctil no es
+     queda enganxat després del toc. El premut (a baix, bloc PREMUT) no en
+     depén. Mateixa posició i especificitat: l'escriptori no canvia. */
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-boto--primari:hover:not(:disabled) { background: var(--sdp-accio-control-hover); }
+    .sdp-boto--accent:hover:not(:disabled) { background: var(--sdp-accent-hover); }
+    .sdp-boto--secundari:hover:not(:disabled) { background: var(--sdp-fons-subtil); }
+    .sdp-boto--perill:hover:not(:disabled) { background: var(--sdp-error-text); }
+    .sdp-boto--fantasma:hover:not(:disabled) { background: var(--sdp-fons-subtil); }
+  }
   .sdp-boto--gran { min-height: var(--sdp-alt-accio); padding: 0 var(--sdp-space-8); font-size: var(--sdp-text-base); }
   .sdp-boto--ple { width: 100%; }
+  /* Carregador: gir continu, exempt del sostre de 300ms (no és una
+     interacció). Fase A · `transform: rotate()` i no la propietat `rotate`,
+     que arriba amb Chrome 104 (Baseline 2022): a Chrome 100 no girava. */
   .sdp-boto__gir, .sdp-carregant__gir { animation: sdp-gir 0.9s linear infinite; }
-  @keyframes sdp-gir { to { rotate: 360deg; } }
+  @keyframes sdp-gir { to { transform: rotate(360deg); } }
 
   /* ── INSÍGNIA D'ESTAT ─────────────────────────────────────────────── */
   .sdp-insignia {
@@ -163,7 +171,9 @@
     border: 0; border-radius: var(--sdp-radi-s);
     background: transparent; color: var(--sdp-text-suau); cursor: pointer;
   }
-  .sdp-contrasenya__ull:hover:not(:disabled) { color: var(--sdp-text-titol); }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-contrasenya__ull:hover:not(:disabled) { color: var(--sdp-text-titol); }
+  }
   .sdp-contrasenya__ull:focus-visible { outline: 3px solid var(--sdp-focus); outline-offset: -3px; }
   .sdp-contrasenya__ull:disabled { cursor: not-allowed; opacity: 0.55; }
 
@@ -201,12 +211,14 @@
     position: relative; width: 52px; height: 30px; border-radius: var(--sdp-radi-pastilla);
     background: var(--sdp-fons-subtil); border: 2px solid var(--sdp-vora-control); transition: background var(--sdp-t);
   }
+  /* Fase A · `transform: translateX()` i no la propietat `translate`
+     (Chrome 104): a Chrome 100 el botonet no es movia. Mateix píxel. */
   .sdp-interruptor__botonet {
     position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%;
-    background: var(--sdp-text-suau); transition: translate var(--sdp-t), background var(--sdp-t);
+    background: var(--sdp-text-suau); transition: transform var(--sdp-t), background-color var(--sdp-t);
   }
   .sdp-interruptor__control[aria-checked="true"] .sdp-interruptor__carril { background: var(--sdp-accio); border-color: var(--sdp-accio); }
-  .sdp-interruptor__control[aria-checked="true"] .sdp-interruptor__botonet { translate: 22px 0; background: var(--sdp-sobre-accio); }
+  .sdp-interruptor__control[aria-checked="true"] .sdp-interruptor__botonet { transform: translateX(22px); background: var(--sdp-sobre-accio); }
   .sdp-interruptor__estat { min-width: 2ch; }
 
   /* ── DIÀLEG · CONFIRMACIÓ · CALAIX ────────────────────────────────── */
@@ -233,7 +245,9 @@
     width: var(--sdp-touch-min); height: var(--sdp-touch-min); border: 0; border-radius: var(--sdp-radi-boto);
     background: transparent; color: var(--sdp-text-titol); cursor: pointer;
   }
-  .sdp-dialeg__tanca:hover { background: var(--sdp-fons-subtil); }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-dialeg__tanca:hover { background: var(--sdp-fons-subtil); }
+  }
   .sdp-dialeg__tanca:focus-visible { outline: 3px solid var(--sdp-focus); }
   .sdp-dialeg__descripcio { margin: 0; padding: 0 var(--sdp-space-6); color: var(--sdp-text-cos); }
   .sdp-dialeg__cos { padding: var(--sdp-space-4) var(--sdp-space-6); overflow-y: auto; overscroll-behavior: contain; }
@@ -296,7 +310,9 @@
   /* PerfilShell.css pinta de blau tot .sdp-boto (deute previ, carrega després
      a la mateixa capa): com al peu del diàleg, «Eixir» torna a ser secundari. */
   .sdp-pantalla-completa__barra .sdp-boto--secundari { background: var(--sdp-fons-targeta); color: var(--sdp-text-titol); border: 2px solid var(--sdp-vora-control); }
-  .sdp-pantalla-completa__barra .sdp-boto--secundari:hover:not(:disabled) { background: var(--sdp-fons-subtil); }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-pantalla-completa__barra .sdp-boto--secundari:hover:not(:disabled) { background: var(--sdp-fons-subtil); }
+  }
   /* L'únic que desborda (Llei de Scroll). container-type: les @container de
      les targetes es resolen contra l'amplada de la pantalla completa, no
      contra la de la columna on viu el <dialog> dins del DOM. */
@@ -304,7 +320,8 @@
     flex: 1 1 auto; min-height: 0; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain;
     padding: 0 var(--sdp-pad-contenidor) var(--sdp-pad-contenidor); container-type: inline-size;
   }
-  /* El botó d'entrar: només icona, 44×44, com les fletxes del calendari. */
+  /* El botó d'entrar: només icona, --sdp-touch × --sdp-touch (48×48 des de
+     Q2, 261004), com les fletxes del calendari. */
   .sdp-boto.sdp-pantalla-completa__entra { inline-size: var(--sdp-touch); min-inline-size: var(--sdp-touch); padding: 0; gap: 0; }
 
   /* ── PESTANYES ────────────────────────────────────────────────────── */
@@ -318,7 +335,9 @@
     border: 0; border-bottom: 4px solid transparent; background: transparent;
     color: var(--sdp-text-suau); font: inherit; font-weight: 700; cursor: pointer;
   }
-  .sdp-pestanyes__pestanya:hover { color: var(--sdp-text-titol); background: var(--sdp-fons-subtil); }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-pestanyes__pestanya:hover { color: var(--sdp-text-titol); background: var(--sdp-fons-subtil); }
+  }
   .sdp-pestanyes__pestanya[aria-selected="true"] { color: var(--sdp-text-titol); border-bottom-color: var(--sdp-accent-text); }
   .sdp-pestanyes__pestanya:focus-visible, .sdp-pestanyes__panell:focus-visible { outline: 3px solid var(--sdp-focus); outline-offset: -3px; }
   .sdp-pestanyes__panell { padding: var(--sdp-space-4) 0; }
@@ -353,7 +372,9 @@
   .sdp-paginacio__pas:disabled { opacity: 0.45; cursor: not-allowed; }
   .sdp-paginacio__salt { padding-inline: var(--sdp-space-1); color: var(--sdp-text-suau); }
   .sdp-taula--ampla { width: 100%; min-width: 600px; }
-  .sdp-taula--interactiva tbody tr:hover { background: var(--sdp-fons-subtil); cursor: pointer; }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-taula--interactiva tbody tr:hover { background: var(--sdp-fons-subtil); cursor: pointer; }
+  }
   .sdp-accions { display: flex; flex-wrap: wrap; gap: var(--sdp-space-3); align-items: center; }
   .sdp-accions--final { justify-content: flex-end; }
 
@@ -393,11 +414,22 @@
     background: transparent; color: var(--sdp-accio-text); cursor: pointer;
   }
   .sdp-pista__boto:focus-visible { outline: 3px solid var(--sdp-focus); }
+  /* Fase A · el centrat amb `transform: translateX(-50%)` i no amb la
+     propietat `translate` (Chrome 104): a Chrome 100 quedava descentrada.
+     Fase C · entra des de --sdp-escala-aparicio (0,96, mai scale(0)) i
+     l'opacitat, amb l'origen dalt al centre: just davall del botó «?».
+     L'atribut hidden la torna a pintar a cada obertura; el tancament és
+     instantani. Amb moviment reduït l'escala val 1: només la fosa. */
   .sdp-pista__bafarada {
-    position: absolute; top: 100%; left: 50%; translate: -50% 0; z-index: 10;
+    position: absolute; top: 100%; left: 50%; transform: translateX(-50%); z-index: 10;
     width: max-content; max-width: min(18rem, 80vw); padding: var(--sdp-space-3) var(--sdp-space-4);
     border-radius: var(--sdp-radi-s); background: var(--sdp-fons-invers); color: var(--sdp-text-invers);
     box-shadow: var(--sdp-ombra-3); font-size: var(--sdp-text-small); line-height: 1.4;
+    transform-origin: top center;
+    animation: sdp-pista-aparicio var(--sdp-durada-base) var(--sdp-corba-eixida);
+  }
+  @keyframes sdp-pista-aparicio {
+    from { opacity: 0; transform: translateX(-50%) scale(var(--sdp-escala-aparicio)); }
   }
 
   /* ── CATÀLEG (només /disseny) ─────────────────────────────────────── */
@@ -455,7 +487,7 @@
      targeta viva de l'editor; en una columna estreta, a tot l'ample. */
   .sdp-especimen__targetes {
     display: grid; gap: var(--sdp-space-6); align-items: start; margin-bottom: var(--sdp-space-4);
-    grid-template-columns: repeat(auto-fill, min(100%, var(--sdp-targeta-viva-ample)));
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr));
   }
   .sdp-especimen__figura { margin: 0; }
   .sdp-especimen__figura > figcaption { margin-bottom: var(--sdp-space-2); color: var(--sdp-text-suau); }
@@ -543,26 +575,18 @@
   display: inline-flex;
   align-items: center;
   gap: var(--sdp-space-2);
-  transition: transform var(--sdp-t), box-shadow var(--sdp-t), background var(--sdp-t), border-color var(--sdp-t), color var(--sdp-t);
+  transition: background-color var(--sdp-t), border-color var(--sdp-t), color var(--sdp-t), transform var(--sdp-durada-premut) var(--sdp-corba-eixida);
 }
 
-.btn:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: var(--sdp-ombra-hover);
-}
-
+/* Fase C (pla 261004_0050, Kowalski) · Fora l'elevació de −1px i les
+   ombres de hover i de premut: cap ombra animada. En passar-hi per damunt
+   canvia el color de cada varietat; en prémer, l'escala del sistema. */
 .btn:active:not(:disabled) {
-  transform: translateY(0);
-  box-shadow: var(--sdp-ombra-premut);
+  transform: scale(var(--sdp-escala-premut));
 }
 
 .btn-primary {
   background: var(--sdp-accent);
-  color: var(--sdp-sobre-accent);
-}
-
-.btn-primary:hover:not(:disabled) {
-  background: var(--sdp-accent-hover);
   color: var(--sdp-sobre-accent);
 }
 
@@ -571,19 +595,10 @@
   color: var(--sdp-sobre-accio);
 }
 
-.btn-secondary:hover:not(:disabled) {
-  background: var(--sdp-accio-control-hover);
-}
-
 .btn-outline-dark {
   background: transparent;
   border: 1px solid var(--sdp-vora-control);
   color: var(--sdp-text-titol);
-}
-
-.btn-outline-dark:hover:not(:disabled) {
-  border-color: var(--sdp-text-suau);
-  background: var(--sdp-fons-targeta);
 }
 
 .btn-base {
@@ -591,17 +606,34 @@
   color: var(--sdp-text-invers);
 }
 
-.btn-base:hover:not(:disabled) {
-  background: var(--sdp-fons-invers);
-}
-
 .btn-danger {
   background: var(--sdp-error);
   color: var(--sdp-sobre-color);
 }
 
-.btn-danger:hover:not(:disabled) {
-  background: var(--sdp-error-text);
+/* Fase B · el hover de les varietats, només amb ratolí. */
+@media (hover: hover) and (pointer: fine) {
+  .btn-primary:hover:not(:disabled) {
+    background: var(--sdp-accent-hover);
+    color: var(--sdp-sobre-accent);
+  }
+
+  .btn-secondary:hover:not(:disabled) {
+    background: var(--sdp-accio-control-hover);
+  }
+
+  .btn-outline-dark:hover:not(:disabled) {
+    border-color: var(--sdp-text-suau);
+    background: var(--sdp-fons-targeta);
+  }
+
+  .btn-base:hover:not(:disabled) {
+    background: var(--sdp-fons-invers);
+  }
+
+  .btn-danger:hover:not(:disabled) {
+    background: var(--sdp-error-text);
+  }
 }
 
 .btn-sm {
@@ -649,9 +681,11 @@
   transition: border-color var(--sdp-t), color var(--sdp-t), background var(--sdp-t);
 }
 
-.page-btn:hover:not(.active):not([disabled]) {
-  border-color: var(--sdp-accent-text);
-  color: var(--sdp-accent-titol);
+@media (hover: hover) and (pointer: fine) {
+  .page-btn:hover:not(.active):not([disabled]) {
+    border-color: var(--sdp-accent-text);
+    color: var(--sdp-accent-titol);
+  }
 }
 
 .page-btn.active {
@@ -783,7 +817,7 @@
   border: 0;
   padding: 0 12px;
   min-height: var(--sdp-touch);
-  /* 44px LLEI_04_VIDA */
+  /* 48px · LLEI_04_VIDA (sòl tàctil únic des de Q2, 261004) */
   background: transparent;
   color: inherit;
   font: inherit;
@@ -792,19 +826,31 @@
   align-items: center;
   justify-content: center;
   width: 100%;
+  transition: background-color var(--sdp-t), transform var(--sdp-durada-premut) var(--sdp-corba-eixida);
 }
 
-.sp-card-label__action:hover {
-  background: var(--sdp-fons-hover-subtil);
+/* Fase C (pla 261004_0050) · L'etiqueta que es pot prémer respon com les
+   píndoles: el fons en passar-hi per damunt i l'escala del sistema (0,97)
+   en prémer. Amb moviment reduït i al Bancal l'escala val 1. */
+.sp-card-label__action:active {
+  transform: scale(var(--sdp-escala-premut));
 }
 
-:root[data-theme="dark"] .sp-card-label__action:hover,
-:host([data-theme="dark"]) .sp-card-label__action:hover {
-  background: var(--sdp-crom-realc);
-}
+@media (hover: hover) and (pointer: fine) {
+  .sp-card-label__action:hover {
+    background: var(--sdp-fons-hover-subtil);
+  }
 
-.sp-card:hover {
-  box-shadow: var(--sdp-ombra-3);
+  :root[data-theme="dark"] .sp-card-label__action:hover,
+  :host([data-theme="dark"]) .sp-card-label__action:hover {
+    background: var(--sdp-crom-realc);
+  }
+
+  /* Q6 · l'ombra de sempre de la targeta, també en passar-hi per damunt;
+     al tàctil, cap ombra enganxada després del toc. */
+  .sp-card:hover {
+    box-shadow: var(--sdp-ombra-3);
+  }
 }
 
 .sp-card-header {
@@ -912,14 +958,22 @@
   min-width: 0;
 }
 
+/* P6 (directriu 261003_2325, confirmació 3 del Mestre) · El títol de la
+   targeta segueix l'escala canònica dels encapçalaments (tokens.css): un
+   token --sdp-text-hN per davall de l'h3 de pàgina, mai una mida fixa (abans
+   1.4rem, que no pujaven amb l'escala). I el filet fi de punta a punta és
+   seu: el mateix de l'h3 de base.css (1px --sdp-vora i 12px de coixí),
+   declarat ací perquè no depenga de l'etiqueta que pinte el títol. */
 .sp-card-title {
-  font-size: 1.4rem;
+  font-size: var(--sdp-text-h5);
   color: var(--sdp-accio-text);
   font-weight: 800;
   line-height: var(--sdp-leading-tight);
   margin: 0 0 var(--sdp-space-2) 0;
   flex: 1;
   text-align: center;
+  border-bottom: 1px solid var(--sdp-vora);
+  padding-bottom: var(--sdp-space-3);
 }
 
 .sp-card--onboarding,
@@ -1158,9 +1212,14 @@
   padding: 0;
   height: var(--sdp-space-12);
   width: var(--sdp-space-12);
-  opacity: 0.9;
-  transition: opacity var(--sdp-t), transform var(--sdp-t);
 }
+
+/* Fase A (pla 261004_0050) · Fora el residu contra la llei de la família
+   de barra (260927, «cap transform»): l'opacitat 0,9, la transició de
+   transform i el hover que pujava la icona 1px. L'opacitat, la transició i
+   el hover de .sp-card-action els mana la família de CONTROLS DE BARRA (més
+   avall): opacitat 1 i retorn de color. Les accions desactivades ja no
+   pugen en passar-hi per damunt. Mateix píxel en repòs. */
 
 .sp-card-action .icon {
   width: 30px;
@@ -1168,11 +1227,6 @@
   stroke-width: 2.5;
   display: block;
   margin: auto;
-}
-
-.sp-card-action:hover {
-  opacity: 1;
-  transform: translateY(-1px);
 }
 
 .sp-card-connect {
@@ -1219,6 +1273,26 @@
   }
 }
 
+/* P6 (directriu 261003_2325 del Mestre) · EL QUADRAT de 128 px és l'únic
+   indicador de la targeta: la data, el preu o la icona. Fons gris grafit
+   (el pedra-700, decisió d'usabilitat del Mestre per no fer un pegat
+   negre tan brusc), i lletra clara (--sdp-crom-text): la closca no canvia
+   entre clar i fosc, i el quadrat tampoc. Revisió de P6 · El grafit arriba
+   pel crom, mai per la rampa (llei de tokens.css: cap component escriu
+   --sdp-pedra-*): --sdp-workspace-nav-fons és el fons de la columna de
+   navegació (--sdp-crom-capcalera, el mateix grafit 700) i el hover,
+   --sdp-crom-capcalera-clara (el grafit 600). Mateix píxel. Contrastos WCAG:
+     · --sdp-crom-text sobre el grafit: AAA; l'any amb opacitat 0,8: AA;
+     · en passar-hi per damunt (botó), sobre el grafit clar: 7,28:1 · AAA;
+     · anell de focus (base.css, 3px a 2px de distància, sobre la targeta):
+       --sdp-focus sobre --sdp-fons-targeta, 9,21:1 en clar i 8,28:1 en fosc;
+     · en fosc, la targeta (pedra 850) i el quadrat (pedra 700) destaquen bé
+       així que la vora --sdp-vora-control ajuda a marcar el límit.
+   Fase C (pla 261004_0050, Kowalski) · Fora el `transition: all` de 0,2s,
+   l'elevació de −2px i el canvi d'ombra: l'ombra --sdp-ombra-1 es queda
+   (Q6) i no s'anima. El botó respon amb el color del crom en passar-hi per
+   damunt i amb l'escala del sistema (0,97) en prémer. <time> i <div> no
+   responen: la transició no hi fa res. */
 .sp-card-calendar-badge {
   display: flex;
   flex-direction: column;
@@ -1229,31 +1303,44 @@
   margin-bottom: 12px;
   width: 128px;
   height: 128px;
-  background-color: var(--sdp-accent-subtil);
-  color: var(--sdp-accio-text);
+  background-color: var(--sdp-workspace-nav-fons);
+  color: var(--sdp-crom-text);
   border-radius: var(--sdp-radi-xl);
   box-shadow: var(--sdp-ombra-1);
   border: 2px solid transparent;
-  transition: all 0.2s ease-in-out;
+  transition: background-color var(--sdp-t), transform var(--sdp-durada-premut) var(--sdp-corba-eixida);
 }
 
-button.sp-card-calendar-badge:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--sdp-ombra-2);
-  border-color: var(--sdp-accent-subtil);
-  background-color: var(--sdp-accent-subtil);
+@media (hover: hover) and (pointer: fine) {
+  button.sp-card-calendar-badge:hover {
+    background-color: var(--sdp-crom-capcalera-clara);
+  }
+  /* Cap hover baixa de banda (Q1, 261004): l'any, al 80 % d'opacitat, feia
+     7,84:1 sobre el grafit i 5,37:1 sobre el grafit clar del hover. Opac,
+     7,28:1 · AAA. Regla nova: la del hover del quadrat no canvia. */
+  button.sp-card-calendar-badge:hover .sp-card-calendar-badge__any {
+    opacity: 1;
+  }
+}
+
+button.sp-card-calendar-badge:active {
+  transform: scale(var(--sdp-escala-premut));
+}
+
+/* El quadrat que es pot prémer puja damunt del vel enllaç de la targeta
+   (.sp-card-link-overlay, z-index 1), com la resta de peces interactives
+   (la llista de z-index 2 de més amunt). Sense, el vel se l'emportava: el
+   clic obria la targeta i el hover i el premut no hi arribaven mai
+   (comprovat al navegador: elementFromPoint tornava el vel). El <time> i
+   el <div> no es toquen. */
+button.sp-card-calendar-badge {
+  position: relative;
+  z-index: 2;
 }
 
 :root[data-theme="dark"] .sp-card-calendar-badge,
 :host([data-theme="dark"]) .sp-card-calendar-badge {
-  background-color: var(--sdp-fons-lectura);
-  color: var(--sdp-accent-subtil);
-}
-
-:root[data-theme="dark"] button.sp-card-calendar-badge:hover,
-:host([data-theme="dark"]) button.sp-card-calendar-badge:hover {
-  background-color: var(--sdp-accio-subtil);
-  border-color: var(--sdp-accent-subtil);
+  border-color: var(--sdp-vora-control);
 }
 
 .sp-card-calendar-badge__dia {
@@ -1262,6 +1349,19 @@ button.sp-card-calendar-badge:hover {
   line-height: 1;
   font-family: var(--sdp-font);
 }
+
+/* P6 · Un preu (data-mida, UniversalCard.midaDelPreu) cap sencer al quadrat:
+   la lletra baixa per trams i, si encara no hi cap, parteix línia dins. */
+.sp-card-calendar-badge__dia[data-mida] {
+  max-width: 100%;
+  padding-inline: var(--sdp-space-2);
+  text-align: center;
+  overflow-wrap: anywhere;
+  letter-spacing: -0.01em;
+}
+.sp-card-calendar-badge__dia[data-mida="mitjana"] { font-size: 2.25rem; }
+.sp-card-calendar-badge__dia[data-mida="menuda"] { font-size: 1.625rem; }
+.sp-card-calendar-badge__dia[data-mida="minima"] { font-size: 1.25rem; line-height: 1.15; }
 
 .sp-card-calendar-badge__mes {
   font-size: 1.1rem;
@@ -1291,13 +1391,16 @@ button.sp-card-calendar-badge:hover {
   font-size: 0.8rem;
   line-height: var(--sdp-leading-snug);
   cursor: pointer;
-  transition: background var(--sdp-t), transform var(--sdp-t);
+  transition: background-color var(--sdp-t);
   white-space: nowrap;
 }
 
-.btn-taronja-fort:hover {
-  background: var(--sdp-crom-hover);
-  transform: scale(1.02);
+/* Fase C (pla 261004_0050) · cap hover engrandix: fora l'escala d'1,02.
+   El retorn és el vel del crom, i només amb ratolí. */
+@media (hover: hover) and (pointer: fine) {
+  .btn-taronja-fort:hover {
+    background: var(--sdp-crom-hover);
+  }
 }
 
 .btn-taronja-fort.active {
@@ -1325,11 +1428,7 @@ button.sp-card-calendar-badge:hover {
   border: 1px solid var(--sdp-vora);
   background: var(--sdp-fons-targeta);
   color: var(--sdp-text-cos);
-  transition: all var(--sdp-t);
-}
-
-.pill:hover {
-  background: var(--sdp-fons-subtil);
+  transition: background-color var(--sdp-t), border-color var(--sdp-t), color var(--sdp-t), transform var(--sdp-durada-premut) var(--sdp-corba-eixida);
 }
 
 .pill--primary {
@@ -1338,18 +1437,36 @@ button.sp-card-calendar-badge:hover {
   border-color: var(--sdp-accio-control);
 }
 
-.pill--primary:hover {
-  background: var(--sdp-accio-control-hover);
-}
-
 .pill--accent {
   background: var(--sdp-accent);
   color: var(--sdp-sobre-accent);
   border-color: var(--sdp-accent);
 }
 
-.pill--accent:hover {
-  filter: brightness(1.1);
+/* Fase A i B (pla 261004_0050) · La transició nomena les propietats (cap
+   `all`) i el hover només viu amb ratolí. Els hovers van junts darrere de
+   les varietats: tenen més especificitat que elles, el resultat no canvia.
+   El brightness de l'accent es queda (7,6:1 amb la lletra fosca; el token
+   --sdp-accent-hover en clar en fa 5,42) i ja no s'anima. */
+@media (hover: hover) and (pointer: fine) {
+  .pill:hover {
+    background: var(--sdp-fons-subtil);
+  }
+
+  .pill--primary:hover {
+    background: var(--sdp-accio-control-hover);
+  }
+
+  .pill--accent:hover {
+    filter: brightness(1.1);
+  }
+}
+
+/* Fase C · Les píndoles que es poden prémer (botó o enllaç) fan l'escala del
+   sistema. Les d'ara són <span> informatius: no responen. */
+button.pill:active:not(:disabled),
+a.pill:active {
+  transform: scale(var(--sdp-escala-premut));
 }
 
 .badge-row {
@@ -1418,9 +1535,11 @@ button.sp-card-calendar-badge:hover {
   color: var(--sdp-crom-text);
 }
 
-.editor-toolbar .btn-icon:hover {
-  background: var(--sdp-crom-hover);
-  color: var(--sdp-crom-text);
+@media (hover: hover) and (pointer: fine) {
+  .editor-toolbar .btn-icon:hover {
+    background: var(--sdp-crom-hover);
+    color: var(--sdp-crom-text);
+  }
 }
 
 .btn-icon {
@@ -1445,13 +1564,15 @@ button.sp-card-calendar-badge:hover {
   padding: var(--sdp-space-2) 22px;
 }
 
-.btn-publish:hover {
-  background: var(--sdp-accio-hover);
-}
+@media (hover: hover) and (pointer: fine) {
+  .btn-publish:hover {
+    background: var(--sdp-accio-hover);
+  }
 
-.editor-toolbar .btn-icon:hover {
-  outline: 1px solid currentColor;
-  outline-offset: -2px;
+  .editor-toolbar .btn-icon:hover {
+    outline: 1px solid currentColor;
+    outline-offset: -2px;
+  }
 }
 
 /* ═══ CONTROLS DE BARRA · LLEI DE PEDRA SECA ═════════════════════════
@@ -1530,12 +1651,17 @@ time.btn-date-time { cursor: default; }
   display: block;
   opacity: 1;
 }
-.sp-card-action:hover:not(:disabled),
-.btn-icon-orange:hover:not(:disabled),
-.sdp-emoticona-barra--boto:hover:not(:disabled) {
-  background: var(--sdp-crom-hover);
-  opacity: 1;
-  transform: none;
+/* Fase B (pla 261004_0050) · el vel del hover, només amb ratolí. El premut
+   (:active, just davall) és el retorn de color de tots, també al tàctil.
+   Q3 del Mestre · barra blava, peu i CONNECTAR: cap transform, mai. */
+@media (hover: hover) and (pointer: fine) {
+  .sp-card-action:hover:not(:disabled),
+  .btn-icon-orange:hover:not(:disabled),
+  .sdp-emoticona-barra--boto:hover:not(:disabled) {
+    background: var(--sdp-crom-hover);
+    opacity: 1;
+    transform: none;
+  }
 }
 .sp-card-action:active:not(:disabled),
 .btn-icon-orange:active:not(:disabled),
@@ -1580,13 +1706,28 @@ time.btn-date-time { cursor: default; }
   text-transform: uppercase;
   letter-spacing: .04em;
 }
-.btn-connectar:hover:not(:disabled) {
+@media (hover: hover) and (pointer: fine) {
+  .btn-connectar:hover:not(:disabled) {
+    background: var(--sdp-accio-control-hover);
+    opacity: 1;
+    transform: none;
+  }
+}
+/* Fase C · Q3 · CONNECTAR respon en prémer amb color, sense transform: el
+   blau del hover (blanc a 7,20:1, AAA). Al tàctil és l'únic retorn. */
+.btn-connectar:active:not(:disabled) {
   background: var(--sdp-accio-control-hover);
-  opacity: 1;
-  transform: none;
 }
 .btn-date-time { padding-inline: var(--sdp-space-4); }
-.btn-date-time:hover:not(:disabled) { transform: none; }
+@media (hover: hover) and (pointer: fine) {
+  .btn-date-time:hover:not(:disabled) { transform: none; }
+}
+/* Fase C · Q3 · la pastilla de l'hora (botó; el <time> de només lectura no
+   respon) s'enfosquix en prémer: el vel negre més dens de la barra. El text
+   blanc hi guanya contrast, no en perd. */
+button.btn-date-time:active:not(:disabled) {
+  background: var(--sdp-crom-scroll-puny-viu);
+}
 
 .sp-card-action:disabled,
 .btn-icon-orange:disabled,
@@ -1595,7 +1736,8 @@ time.btn-date-time { cursor: default; }
 /* «presentation» (sense onClick): l'atom el desactiva; no ha de semblar apagat. */
 .sp-card-action:disabled { opacity: 1; }
 /* T36 · Comentar i Compartir desactivats a l'editor: cap transform (família
-   de barra). `.sp-card-action:hover` (més amunt) els pujaria 1px en hover. */
+   de barra). El hover que els pujava 1px ja no existix (Fase A, 261004):
+   la regla queda de xarxa. */
 .bar-blue .sp-card-actions .sp-card-action:disabled { transform: none; }
 
 /* Trios de la barra blava (ordre del Mestre, 260924): els cercles es toquen.
@@ -1743,18 +1885,7 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
    que no coneixen @container. T51 · L'excepció del Perfil torna la barra
    com a graella (display: grid), no com a flex: un flex esclafaria les tres
    columnes de la barra. */
-@media (max-width: 720px) {
-  .sdp-universal-page-container > section.bar-orange { display: none; }
-  .sdp-editor-document .sdp-editor-eines { top: var(--sdp-alt-accio); }
-  .perfil-espai .sdp-editor-document .sdp-universal-page-container > section.bar-orange { display: grid; }
-  .perfil-espai .sdp-editor-document .sdp-editor-eines { top: calc(var(--sdp-alt-accio) * 2); }
-}
-@container (max-width: 400px) {
-  .sdp-universal-page-container > section.bar-orange { display: none; }
-  .sdp-editor-document .sdp-editor-eines { top: var(--sdp-alt-accio); }
-  .perfil-espai .sdp-editor-document .sdp-universal-page-container > section.bar-orange { display: grid; }
-  .perfil-espai .sdp-editor-document .sdp-editor-eines { top: calc(var(--sdp-alt-accio) * 2); }
-}
+/* T24 (Revertit pel Mestre, 261004) · La barra taronja JA NO s'amaga en mòbil per preservar l'arquitectura de la UniversalPage. */
 /* ── TARGETA PLANA (Llistats com Notes) ──────────────────────────────
    La previsualització viva del Bloc de Notes ha de llegir-se igual que
    la publicació real: caputxa taronja, cos centrat i peu blau.
@@ -1777,9 +1908,11 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
   background: transparent;
   min-height: auto;
 }
-.sp-card--pla:hover {
-  box-shadow: none;
-  background: var(--sdp-fons-targeta);
+@media (hover: hover) and (pointer: fine) {
+  .sp-card--pla:hover {
+    box-shadow: none;
+    background: var(--sdp-fons-targeta);
+  }
 }
 }
 
@@ -1909,7 +2042,9 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
     text-align: start;
     cursor: pointer;
   }
-  .sdp-menu-traduir__item:hover { background: var(--sdp-fons-subtil); }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-menu-traduir__item:hover { background: var(--sdp-fons-subtil); }
+  }
   /* Dins de la barra blava, l'anell de focus és el de la barra (base.css,
      sobre blau): damunt de la superfície clara del menú, el del sistema. */
   .sdp-menu-traduir__item:focus-visible { outline: 2px solid var(--sdp-focus); outline-offset: -2px; }
@@ -1921,4 +2056,147 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
     margin-inline: var(--sdp-pad-contenidor);
   }
   article.content-wrapper[hidden] { display: none; }
+}
+
+/* ── P5 · LES PORTES DE LA TARGETA DE DOBLE ACCIÓ (Onada 4, 261003) ────
+   PRD «Control amb targetes il·lustrades de doble acció», aprovat pel
+   Mestre, amb l'ESMENA 261003 22:34 (directrius 2234 i 2245): la targeta
+   amb portes és la UniversalCard de sempre (marge, sostre de 500px, boina,
+   imatge i cos), dins de la graella de sempre (.sdp-card-grid). Ací només hi
+   ha les portes, al final del cos (PortesTargeta.jsx). Additiu i limitat a
+   dues classes noves, .sp-card-portes i .sp-card-porta. Cap regla existent
+   canvia (Llei del Píxel): .sp-card, .sp-card-body, .sp-card--action,
+   .sp-card-link-overlay, .sdp-card-grid i .sdp-boto continuen com eren.
+   Bloc @layer components posterior a .sp-card i a .sdp-boto: amb la mateixa
+   especificitat, guanya per ordre de font. Mai sense capa (la fuga
+   reparada de més amunt).
+     · Les portes: una al costat de l'altra quan caben i, si no, apilades.
+       L'ordre és el del DOM: Publicar i Saber-ne més.
+     · La porta: la pell de Boto amb menys coixí lateral i salt de línia
+       permés (llengües llargues, text al 200%), 44px d'alt com a mínim. */
+@layer components {
+  .sp-card-portes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sdp-space-2);
+  }
+  .sp-card-porta {
+    flex: 1 1 9rem;
+    gap: var(--sdp-space-1);
+    min-height: var(--sdp-touch-min);
+    padding-inline: var(--sdp-space-1);
+    text-align: center;
+    overflow-wrap: anywhere;
+  }
+}
+
+/* ── P6 · EL GRAN BOTÓ «PUBLICAR» DE LES SIS PÀGINES (directriu 261003_2325,
+   confirmació 4) ── La porta Publicar de la targeta, al final del text de
+   la seua UniversalPage (PublicarDeLaPagina.jsx), amb la pell de Boto gran i
+   ple (sdp-boto--gran, sdp-boto--ple). Ací només l'aire de dalt i de baix,
+   perquè no s'apegue al darrer paràgraf ni a la navegació de baix. */
+@layer components {
+  .sdp-pagina-accio {
+    margin-block: var(--sdp-space-8) var(--sdp-space-10);
+  }
+}
+
+/* ── SETENA PASSADA · PREMUT, AAA I BANCAL (pla 261004_0050, Q1-Q8) ─────
+   Regles NOVES. Cap regla fixada per les proves de capes canvia: .sdp-boto,
+   .sp-card, .sp-card--action, .sp-card-link-overlay i el peu del diàleg
+   continuen com eren. Amb la mateixa especificitat, este bloc guanya per
+   ordre de font.
+     · Premut (Kowalski): l'escala del sistema (--sdp-escala-premut, 0,97)
+       en 100ms amb la corba d'eixida. La transició es declara en repòs:
+       el gest es pot interrompre. Amb moviment reduït i al Bancal l'escala
+       val 1 (tokens.css).
+     · AAA (Q1, sempre): el hover de perill en fosc.
+     · Colors forçats: la vora de la bafarada (l'anell, a base.css).
+     · Bancal (data-contrast="bancal"): cap text translúcid. */
+@layer components {
+  /* El repòs de .sdp-boto porta també el transform. PerfilShell.css (mateixa
+     capa, després) declara la seua, amb el transform: dins del Perfil mana. */
+  .sdp-boto {
+    transition: background-color var(--sdp-t), border-color var(--sdp-t), transform var(--sdp-durada-premut) var(--sdp-corba-eixida);
+  }
+  .sdp-boto:active:not(:disabled):not([aria-disabled="true"]) {
+    transform: scale(var(--sdp-escala-premut));
+  }
+  /* La porta inerta (aria-disabled, «en obres») també respon en prémer:
+     fa una acció, el toast que ho explica. */
+  .sdp-boto[aria-disabled="true"]:active {
+    transform: scale(var(--sdp-escala-premut));
+  }
+
+  /* AAA (Q1) · Hover de perill en fosc. El fons del hover és
+     --sdp-error-text, que en fosc és un rosa clar: amb la lletra blanca feia
+     1,70:1. No hi ha cap roig fosc semàntic en fosc, i el fons del peu del
+     diàleg el fixa una prova (DialegEsborrarNota.capes.test.js): es canvia
+     la lletra, --sdp-text-invers (la roca en fosc), 11,39:1 · AAA. El fons
+     es repetix perquè dins del Perfil el hover blau de PerfilShell.css no
+     quede amb la lletra fosca (2,69:1). En clar no canvia res: blanc sobre
+     el roig fort, 9,43:1. */
+  @media (hover: hover) and (pointer: fine) {
+    :root[data-theme="dark"] .sdp-boto--perill:hover:not(:disabled),
+    :host([data-theme="dark"]) .sdp-boto--perill:hover:not(:disabled),
+    :root[data-theme="dark"] .btn-danger:hover:not(:disabled),
+    :host([data-theme="dark"]) .btn-danger:hover:not(:disabled) {
+      background: var(--sdp-error-text);
+      color: var(--sdp-text-invers);
+    }
+  }
+  /* El hover del peu del diàleg no porta guarda de ratolí (regla fixada):
+     la lletra el seguix igual, també al tàctil. */
+  :root[data-theme="dark"] .sdp-dialeg__peu .sdp-boto--perill:hover:not(:disabled),
+  :host([data-theme="dark"]) .sdp-dialeg__peu .sdp-boto--perill:hover:not(:disabled) {
+    background: var(--sdp-error-text);
+    color: var(--sdp-text-invers);
+  }
+
+  /* Colors forçats (Windows, alt contrast): el sistema esborra les ombres.
+     L'anell de la targeta sencera (una ombra interior, regla fixada) torna
+     com a outline cap a dins des de base.css, sense capa: hi guanya a tots
+     els components i no es repetix ací. La bafarada (role="status") no entra
+     a la llista de diàlegs i menús de base.css i perd l'ombra: una vora la
+     separa del contingut. CanvasText només es pinta en este mode. */
+  @media (forced-colors: active) {
+    .sdp-pista__bafarada {
+      border: 1px solid CanvasText;
+    }
+  }
+
+  /* Bancal (Q1) · Cap text translúcid. Els desactivats deixen l'opacitat i
+     ho diuen amb un parell sòlid, --sdp-text-suau sobre --sdp-fons-subtil
+     (9,50:1 al Bancal clar i 11,51:1 al fosc), i amb la vora de traços, que
+     no depén del color. Les ombres no es toquen (Q6). */
+  :root[data-contrast="bancal"] .sdp-boto:disabled,
+  :host([data-contrast="bancal"]) .sdp-boto:disabled,
+  :root[data-contrast="bancal"] .sdp-paginacio__pas:disabled,
+  :host([data-contrast="bancal"]) .sdp-paginacio__pas:disabled,
+  :root[data-contrast="bancal"] .page-btn[disabled],
+  :host([data-contrast="bancal"]) .page-btn[disabled] {
+    opacity: 1;
+    background: var(--sdp-fons-subtil);
+    color: var(--sdp-text-suau);
+    border-color: var(--sdp-vora-control);
+    border-style: dashed;
+  }
+  /* .btn no porta vora: el parell sòlid i prou. */
+  :root[data-contrast="bancal"] .btn:disabled,
+  :host([data-contrast="bancal"]) .btn:disabled {
+    opacity: 1;
+    background: var(--sdp-fons-subtil);
+    color: var(--sdp-text-suau);
+  }
+  :root[data-contrast="bancal"] .sdp-contrasenya__ull:disabled,
+  :host([data-contrast="bancal"]) .sdp-contrasenya__ull:disabled {
+    opacity: 1;
+    color: var(--sdp-text-suau);
+  }
+  /* L'any del quadrat: 0,8 d'opacitat fora del Bancal (7,84:1 sobre el
+     grafit); ací, opac (11,20:1). */
+  :root[data-contrast="bancal"] .sp-card-calendar-badge__any,
+  :host([data-contrast="bancal"]) .sp-card-calendar-badge__any {
+    opacity: 1;
+  }
 }

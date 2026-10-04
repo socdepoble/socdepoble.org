@@ -20,6 +20,14 @@ export default function AppGridColumn({
   replegaTotaCapcalera = false,
   etiquetaReplega = null,
   controls = undefined,
+  /* P6 (ordre del Mestre, 261003) · En «mitja» i «estret», el Replegar és
+     el desplegador de la llista: es veu també en estret i declara
+     aria-expanded i aria-controls (`controls`). Sense, el d'abans. */
+  replegaCompacte = false,
+  /* P6 · En el rail d'estret, l'Expandir obri la columna de la llista
+     (tancada): es declara obridor de la closca (data-obri-columna) perquè la
+     guarda del focus hi torne quan el panell es tanca. */
+  expandObridor = false,
   variant = null,
   esDark = false,
   collapseBtnRef = null,
@@ -38,6 +46,9 @@ export default function AppGridColumn({
           : 'app-grid-col-header__accio-icon';
     if (a.className) cls = `${cls} ${a.className}`;
 
+    /* P6 · Una acció que obri una columna de la closca (l'obridor de la
+       navegació del rail de la llista) en declara el control i l'estat, i
+       es marca obridor (data-obri-columna) per a la guarda del focus. */
     return (
       <button
         key={a.id}
@@ -48,6 +59,9 @@ export default function AppGridColumn({
         aria-label={a.etiqueta}
         title={a.etiqueta}
         aria-pressed={a.pressed}
+        aria-controls={a.controls}
+        aria-expanded={a.expanded}
+        data-obri-columna={a.obridor ? '' : undefined}
       >
         {a.icona ? <a.icona size={a.iconSize || 24} aria-hidden focusable="false" /> : null}
         {a.label ? <span>{a.label}</span> : null}
@@ -73,6 +87,7 @@ export default function AppGridColumn({
           onClick={onReplega}
           aria-expanded={controls ? false : undefined}
           aria-controls={controls}
+          data-obri-columna={expandObridor && controls ? '' : undefined}
           aria-label={`Expandir ${titol}`}
           title={`Expandir ${titol}`}
         >
@@ -150,10 +165,12 @@ export default function AppGridColumn({
           <button
             ref={collapseBtnRef}
             type="button"
-            className="app-grid-col-header__accio-icon d-desktop-only"
+            className={replegaCompacte ? 'app-grid-col-header__accio-icon' : 'app-grid-col-header__accio-icon d-desktop-only'}
             onClick={onReplega}
             aria-label={`Replegar ${titol}`}
             title={`Replegar ${titol}`}
+            aria-expanded={replegaCompacte ? true : undefined}
+            aria-controls={replegaCompacte ? controls : undefined}
           >
             <PanelLeftClose size={24} aria-hidden focusable="false" />
           </button>

@@ -11,8 +11,9 @@ import { Copyright } from 'lucide-react';
  */
 export function BotoDretsAutor({ valor = '', onClick }) {
   return (
-    <button type="button" className="sdp-copyright-selector" title={valor} onClick={onClick}>
-      <Copyright size={14} aria-hidden="true" />Elegir drets d'autor</button>
+    <button type="button" className="sdp-classificacio-pindola" title={valor} onClick={onClick}>
+      <span className="sp-card-label sdp-badge-buit"><Copyright size={14} aria-hidden="true" /><span className="sdp-classificacio-pindola__text">Elegir drets d'autor</span></span>
+    </button>
   );
 }
 

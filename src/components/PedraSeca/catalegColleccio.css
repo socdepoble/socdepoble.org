@@ -41,7 +41,12 @@
     font: inherit;
     cursor: pointer;
   }
-  .sdp-accio-icona:hover:not(:disabled) { border-color: var(--sdp-vora-control); background: var(--sdp-fons-subtil); }
+  /* Fase B (pla 261004_0050) · cada hover del full, només amb ratolí: al
+     tàctil no es queda enganxat. Cada guarda queda al lloc de la seua regla
+     perquè l'ordre de la cascada no canvie. */
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-accio-icona:hover:not(:disabled) { border-color: var(--sdp-vora-control); background: var(--sdp-fons-subtil); }
+  }
   .sdp-accio-icona:focus-visible { outline: 3px solid var(--sdp-focus); outline-offset: -3px; }
   .sdp-accio-icona:disabled { cursor: not-allowed; color: var(--sdp-text-desactivat); }
   .sdp-accio-icona[aria-pressed="true"] { color: var(--sdp-accio-text); }
@@ -119,7 +124,9 @@
     color: var(--sdp-text-titol);
     cursor: pointer;
   }
-  .sdp-seccio__plega:hover { border-color: var(--sdp-vora-forta); }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-seccio__plega:hover { border-color: var(--sdp-vora-forta); }
+  }
   .sdp-seccio__plega:focus-visible { outline: 3px solid var(--sdp-focus); outline-offset: 2px; }
   .sdp-seccio__titol { padding-inline: 0; }
   .sdp-seccio__nom { flex: 1 1 auto; min-inline-size: 0; overflow-wrap: anywhere; }
@@ -218,7 +225,9 @@
     -webkit-user-select: none;
     -webkit-touch-callout: none;
   }
-  .sdp-llista-articles__fila:hover:not(:disabled) { background: var(--sdp-fons-subtil); }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-llista-articles__fila:hover:not(:disabled) { background: var(--sdp-fons-subtil); }
+  }
   .sdp-llista-articles__fila:focus-visible { outline: 3px solid var(--sdp-focus); outline-offset: -3px; }
   .sdp-llista-articles__fila:disabled { cursor: not-allowed; color: var(--sdp-text-desactivat); }
   .sdp-llista-articles__element--en-colleccio > .sdp-llista-articles__fila { background: var(--sdp-accio-subtil); }
@@ -290,7 +299,9 @@
     text-align: start;
   }
   button.sdp-linies__principal { cursor: pointer; }
-  button.sdp-linies__principal:hover { background: var(--sdp-fons-subtil); }
+  @media (hover: hover) and (pointer: fine) {
+    button.sdp-linies__principal:hover { background: var(--sdp-fons-subtil); }
+  }
   .sdp-linies__principal:focus-visible { outline: 3px solid var(--sdp-focus); outline-offset: -3px; }
   .sdp-linies__quantitat { grid-row: 1; grid-column: 1; color: var(--sdp-text-titol); font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
   .sdp-linies__nom { grid-row: 1; grid-column: 2; font-weight: 700; line-height: 1.2; overflow-wrap: anywhere; }
@@ -333,7 +344,9 @@
     border-radius: var(--sdp-radi-s);
     cursor: pointer;
   }
-  .sdp-afegit-rapid__opcio:hover { background: var(--sdp-fons-subtil); }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-afegit-rapid__opcio:hover { background: var(--sdp-fons-subtil); }
+  }
   .sdp-afegit-rapid__opcio[aria-selected="true"] { background: var(--sdp-accio-subtil); outline: 2px solid var(--sdp-focus); outline-offset: -2px; }
   .sdp-afegit-rapid__opcio--crea { color: var(--sdp-accio-text); font-weight: 700; }
   .sdp-afegit-rapid__nom { font-weight: 700; }
@@ -420,9 +433,13 @@
     text-decoration: none;
     cursor: pointer;
   }
-  .sdp-barra-resum__obri:hover { background: var(--sdp-fons-subtil); }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-barra-resum__obri:hover { background: var(--sdp-fons-subtil); }
+  }
   .sdp-barra-resum__obri--primari { border-color: var(--sdp-accio-control); background: var(--sdp-accio-control); color: var(--sdp-sobre-accio); }
-  .sdp-barra-resum__obri--primari:hover { border-color: var(--sdp-accio-control-hover); background: var(--sdp-accio-control-hover); }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-barra-resum__obri--primari:hover { border-color: var(--sdp-accio-control-hover); background: var(--sdp-accio-control-hover); }
+  }
   .sdp-barra-resum__obri:focus-visible { outline: 3px solid var(--sdp-focus); outline-offset: 2px; }
   .sdp-barra-resum__obri .sdp-barra-resum__total { font-size: var(--sdp-text-base); color: inherit; }
   .sdp-barra-resum__obri--primari .sdp-barra-resum__comptador { background: var(--sdp-fons-targeta); }
@@ -456,7 +473,9 @@
     text-decoration: none;
     cursor: pointer;
   }
-  .sdp-targeta-colleccio:hover { border-color: var(--sdp-vora-forta); }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-targeta-colleccio:hover { border-color: var(--sdp-vora-forta); }
+  }
   .sdp-targeta-colleccio:focus-visible { outline: 3px solid var(--sdp-focus); outline-offset: 2px; }
   .sdp-targeta-colleccio[aria-current="true"] { border-color: var(--sdp-accio); background: var(--sdp-accio-subtil); }
   .sdp-targeta-colleccio__nom { grid-column: 1; color: var(--sdp-text-titol); font-size: var(--sdp-text-h4); font-weight: 800; line-height: 1.2; overflow-wrap: anywhere; }

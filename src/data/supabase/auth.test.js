@@ -17,14 +17,22 @@ vi.mock('../identitat.js', () => ({ configuraBackendSessio: vi.fn(), esBackendDe
   capturaSessio: () => { const generation = m.epoch - m.refreshes; return () => { if (generation !== m.epoch - m.refreshes) throw new DOMException('La sessió ha canviat.', 'AbortError'); }; }, esborraSessio: () => { m.epoch++; m.clear(); },
   usuariDeSessio: () => m.user, actualitzaUsuariSessio: m.changed,
   caducitatJwt: () => m.exp, MARGE_RENOVACIO_MS: 60_000 }));
-vi.mock('../oauthRelay.js', () => ({ entraAmbGoogle: vi.fn(), gestionaTornada: vi.fn(), urlDeTornada: vi.fn(() => 'https://amfitrio.example.test/pagina?x=1') }));
+/* F1v2 (261003) · L'alta usa urlDeTornadaAlta (la tornada amb sdp_auth=alta).
+   F1-seguiments · La recuperació, urlDeTornadaRecuperacio (sdp_auth=recuperacio), i
+   recullTornadaOAuth mira la seua marca (recullMarcaDeRecuperacio): ací, cap. */
+/* B (quarta passada, 261003) · exigeixSenseMarcAlie: fora d'un marc alié, no fa res. */
+vi.mock('../oauthRelay.js', () => ({ entraAmbGoogle: vi.fn(), gestionaTornada: vi.fn(), exigeixSenseMarcAlie: vi.fn(),
+  urlDeTornadaAlta: vi.fn(() => 'https://amfitrio.example.test/pagina?x=1&sdp_auth=alta'),
+  urlDeTornadaRecuperacio: vi.fn(() => 'https://amfitrio.example.test/pagina?x=1&sdp_auth=recuperacio'),
+  recullMarcaDeRecuperacio: vi.fn(() => null) }));
 vi.mock('./runtime.js', () => ({ configuraRefrescSessio: vi.fn(), getCurrentUser: () => m.user,
   getResolvedConfig: config => ({ supabaseUrl: 'https://example.test', supabaseAnonKey: 'public', runtimeDataMode: config.dataMode || 'remote', ...config }), request: m.request, rpc: vi.fn() }));
 vi.mock('./realtime.js', () => ({ tancaRealtime: m.realtime }));
 vi.mock('./config.js', () => ({ resetClient: vi.fn() }));
 import { refreshSession, logout, loginWithPassword, updateProfile, updateUserPassword, registerWithPassword, loginWithGoogle, recullTornadaOAuth, getProfile, comprovaServidor } from './auth.js';
 import { rpc } from './runtime.js';
-import { entraAmbGoogle, gestionaTornada, urlDeTornada } from '../oauthRelay.js';
+import { entraAmbGoogle, exigeixSenseMarcAlie, gestionaTornada, urlDeTornadaAlta } from '../oauthRelay.js';
+import { configuraBackendSessio } from '../identitat.js';
 import { CODI_ENTRADA } from '../errorsBackend.js';
 
 test.each(['localhost', '127.0.0.1', '[::1]'])('Google en %s explica l’alternativa sense obrir OAuth', async host => {
@@ -233,15 +241,17 @@ test('T4 · registerWithPassword: invalid_credentials també es traduïx, i l’
 });
 
 /* P1 (261003) · Model B. L'enllaç de confirmació del correu torna a la pàgina de
-   l'amfitrió (urlDeTornada), no a la Site URL. Sense pàgina http(s), l'alta continua. */
-test('P1 · registerWithPassword demana a GoTrue que el correu torne a la pàgina de l’amfitrió', async () => {
+   l'amfitrió, no a la Site URL. Sense pàgina http(s), l'alta continua.
+   F1v2 · Canvi: la tornada és la d'urlDeTornadaAlta, amb la marca sdp_auth=alta
+   que fa reconeixible la tornada del correu (W4-02). */
+test('P1 · registerWithPassword demana a GoTrue que el correu torne a la pàgina de l’amfitrió, amb la marca de l’alta', async () => {
   m.request.mockReset().mockResolvedValueOnce({ user: { id: 'A' } });
   await registerWithPassword('synthetic@example.test', 'contrasenya', {});
-  expect(m.request.mock.calls[0][0]).toBe(`/auth/v1/signup?redirect_to=${encodeURIComponent('https://amfitrio.example.test/pagina?x=1')}`);
+  expect(m.request.mock.calls[0][0]).toBe(`/auth/v1/signup?redirect_to=${encodeURIComponent('https://amfitrio.example.test/pagina?x=1&sdp_auth=alta')}`);
   expect(m.request.mock.calls[0][2]).toMatchObject({ method: 'POST', body: { email: 'synthetic@example.test', password: 'contrasenya', data: {} } });
 });
 test('P1 · sense pàgina http(s) on tornar, l’alta continua sense redirect_to', async () => {
-  urlDeTornada.mockImplementationOnce(() => { throw new Error('L’entrada amb Google necessita una pàgina http o https on tornar.'); });
+  urlDeTornadaAlta.mockImplementationOnce(() => { throw new Error('L’entrada amb Google necessita una pàgina http o https on tornar.'); });
   m.request.mockReset().mockResolvedValueOnce({ user: { id: 'A' } });
   await expect(registerWithPassword('synthetic@example.test', 'contrasenya', {})).resolves.toEqual({ user: { id: 'A' } });
   expect(m.request.mock.calls[0][0]).toBe('/auth/v1/signup');
@@ -542,6 +552,19 @@ test('l’entrada amb Google per finestra emergent també completa l’alta', as
   rpc.mockReset(); entraAmbGoogle.mockResolvedValueOnce(SESSIO_GOOGLE);
   expect(await loginWithGoogle({ tenantId: '00000000-0000-4000-8000-000000000000' })).toBe(SESSIO_GOOGLE);
   expect(rpc).toHaveBeenCalledWith('completa_la_meua_alta', { p_tenant_id: '00000000-0000-4000-8000-000000000000' }, { tenantId: '00000000-0000-4000-8000-000000000000' });
+});
+/* B (quarta passada, 261003) · En un marc d'un altre origen, l'error tipat surt
+   ABANS de configuraBackendSessio (que pot buidar la sessió de la pestanya),
+   d'entraAmbGoogle i de completar cap alta. La política, real, la provaran
+   oauthRelay.marc.test.js i OnboardingSection.marc.test.jsx. */
+test('B · Google dins d’un marc d’un altre origen: ENTRADA_EN_MARC sense tocar la sessió ni obrir OAuth', async () => {
+  const rebuig = Object.assign(new Error('Dins d’este marc no es pot entrar amb Google.'), { code: 'ENTRADA_EN_MARC' });
+  exigeixSenseMarcAlie.mockImplementationOnce(() => { throw rebuig; });
+  configuraBackendSessio.mockClear(); entraAmbGoogle.mockClear(); rpc.mockReset();
+  await expect(loginWithGoogle({ tenantId: '00000000-0000-4000-8000-000000000000' })).rejects.toBe(rebuig);
+  expect(configuraBackendSessio).not.toHaveBeenCalled();
+  expect(entraAmbGoogle).not.toHaveBeenCalled();
+  expect(rpc).not.toHaveBeenCalled();
 });
 /* Una alta amb correu que el trigger va deixar sense poble (poble tancat, tenantId buit)
    també s'ha de reparar quan la persona entra. */

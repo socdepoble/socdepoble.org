@@ -15,12 +15,16 @@
  * src/sections/disseny/cataleg/detalls`, sense comptar les proves ni este
  * fitxer). Una versió que no és la darrera és una data falsa a la pastilla.
  *
- * Darrera posada al dia: detalls/EspecimenDretsAutor.jsx, 30-09-2026 20:03:47
- * (+02:00, hora d'estiu), en acabar el torn T1-T4: barra mòbil de sis caselles
- * (EspecimenNavMobil, manifest), Novetats amagada i avís de Telefonades
- * (EspecimenXatRail), Safata d'Entrada (EspecimenResumConnexio) i «Copyright
- * (C)» l'última opció (EspecimenDretsAutor).
+ * Darrera posada al dia: EspecimenUniversalCard.jsx, 04-10-2026 00:43:56
+ * (+02:00, hora d'estiu), Onada 4 · P6 (directriu 261003_2325 del Mestre):
+ * les mostres de doble acció porten el peu blau i cap etiqueta, l'autor va al
+ * xat corporatiu resolt (xatCorporatiu.js), el preu va al quadrat fosc (amb
+ * una mostra de preu llarg) i el contracte documenta `price`. L'anterior,
+ * 03-10-2026 23:42:30 (manifest.js i registre.js, ESMENA 261003 22:34:
+ * la targeta de doble acció estàndard), i abans 22:37:08 (P5), que ja
+ * arreplegava EspecimenEnquadrament.jsx i els espècimens tocats entre el
+ * 30-09 i el 03-10.
  * Quan el manifest porte `creat` i `modificat` per espècimen, manaran eixos
  * camps i esta constant només farà de versió del conjunt.
  */
-export const VERSIO_CATALEG = '2026-09-30T20:03:47+02:00';
+export const VERSIO_CATALEG = '2026-10-04T00:43:56+02:00';

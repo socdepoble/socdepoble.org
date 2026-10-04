@@ -267,22 +267,24 @@ test.each([['true'], [1], ['sí'], [null]])('manageDocumentHead no booleà (%j) 
 
 /* ── Punt d'entrada del paquet ───────────────────────────────────────── */
 
-test('(17) el #root del paquet (embed.jsx) declara navegador: a /pobles pinta Pobles a /pobles', async () => {
+/* W4-01 (261003): el paquet ja no munta res sobre un #root, que en un
+   WordPress pot ser d'un altre plugin. Només arrenquen els elements
+   explícits, que sense declaració naveguen en memòria. Les proves de l'arrel
+   aliena, amb una i dues instàncies, són a embed.arrel.test.jsx. */
+test('(17) el paquet (embed.jsx) no munta res al #root: només l’element explícit, en memòria, i la URL de l’amfitrió no es mou', async () => {
   situa('/pobles');
   capcaleraDeLAmfitrio();
   const arrel = document.createElement('div');
   arrel.id = 'root';
   document.body.appendChild(arrel);
+  const element = await munta();
   await act(async () => { await import('./embed.jsx'); });
-  const element = arrel.querySelector('soc-de-poble');
-  expect(element).not.toBeNull();
-  expect(element.config.routerType).toBe('browser');
-  expect(element.config.manageDocumentHead).toBe(false);
-  // Sense document.currentScript (mòdul ES), la ruta de sempre.
-  expect(element.config.fontsHref).toBe('/fonts/noto-sans.css');
-  expect(text(element)).toContain('Pobles');
+  expect(arrel.hasChildNodes()).toBe(false);
+  expect(document.querySelectorAll('soc-de-poble')).toHaveLength(1);
+  expect([...activeElements]).toEqual([element]);
+  expect(element.config).not.toHaveProperty('routerType');
+  expect(on(element)).toBe('/xat');
   expect(text(element)).not.toContain('NotFound');
-  expect(on(element)).toBe('/pobles');
   expect(window.location.pathname).toBe('/pobles');
   expect(escriptures()).toBe(0);
   expect(document.title).toBe(TITOL_AMFITRIO);

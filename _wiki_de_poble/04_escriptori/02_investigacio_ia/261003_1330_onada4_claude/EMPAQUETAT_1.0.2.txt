@@ -1,0 +1,242 @@
+EMPAQUETAT 1.0.2 DEL CONNECTOR DE WORDPRESS (ENXUFE)
+====================================================
+Torn torn_50ca5709-8cd2-416a-bf41-2afdb3450179 · Claude · Onada 4, quarta passada · 261003, nit.
+Encàrrec: WP-1.0.2. El Mestre vol el ZIP 1.0.2 a punt per a pujar-lo a WordPress, amb la correcció W4-01.
+Skill aplicada: .claude/skills/core-empaquetat-wp/SKILL.md (nom socdepoble-enxufe-vX.Y.Z-aammdd_hhmm.zip,
+destinació wordpress-plugin/builds/, cap brossa a l'arrel).
+
+Llegenda: [VERIFICAT] vol dir comprovat en esta sessió al codi o als artefactes del disc (fitxer:línia).
+[NO VERIFICAT] vol dir inferència o pendent.
+
+
+##### **Estat: tot a punt fins a la compilació. Cap ZIP creat.**
+
+**Fet.** He pujat el plugin a 1.0.2 als tres llocs on declara la versió:
+wordpress-plugin/socdepoble-enxufe.php:6 (capçalera Version), socdepoble-enxufe.php:120 (constant
+SOCDEPOBLE_ENXUFE_VERSIO) i wordpress-plugin/readme.txt:7 (Stable tag). Abans deien 1.0.0-dev. També he
+completat l'entrada 1.0.2 del Changelog, que ja existia amb la retirada del Tenant ID, amb sis línies de
+l'Onada 4, i he afegit W4-01 a l'Upgrade Notice 1.0.2. Fa 275 bytes de 300 amb la mesura de Plugin Check.
+includes/ no té cap constant de versió pròpia: no l'he tocat. includes/bloc/block.json porta
+"version": "0.2.0", però és la versió del bloc, no la del plugin, i l'empaquetador no l'estampa. Queda igual.
+
+**No fet.** No he compilat res ni he creat cap ZIP. El hook del projecte bloqueja npm, vite i els scripts de
+node en esta shell. La compilació la fa l'orquestradora o el Mestre amb les ordres de la secció «Ordres».
+
+**Proves.** node --test tests/enxufe-plugin.test.mjs tests/enxufe-empaqueta.test.mjs
+tests/standalone-build.test.mjs: 54/54 abans i 54/54 després dels canvis. Per fitxers: empaqueta 19,
+plugin 17 i standalone 18. També passen enxufe-pantalla, que llig el readme amb PHP real, i dist-secrets
+(6/6).
+
+
+##### **Per què no hi ha cap .sig al costat de 1.0.1.json**
+
+**La clau pública del plugin és buida.** wordpress-plugin/includes/actualitzador.php:56 definix
+SOCDEPOBLE_ENXUFE_CLAU_PUBLICA com a ''. tests/enxufe-empaqueta.test.mjs:168 ho fixa a propòsit («fins
+que el Mestre en genera una») [VERIFICAT].
+
+**L'empaquetador no pot signar.** wordpress-plugin/eines/empaqueta.mjs:477-484 té dues regles. Amb --clau,
+la clau pública derivada ha de coincidir amb la incrustada, i '' no coincidix mai. Sense --clau, cal --prova.
+Per tant 1.0.1 només es va poder empaquetar amb --prova. stable.json i 1.0.1.json són idèntics (2.905 bytes
+cadascun) i public/enxufe/ no existix: cap canal no s'ha publicat mai [VERIFICAT].
+
+**Conseqüència.** Cap lloc no rep actualitzacions del canal propi, i 1.0.1 tampoc no en podia rebre. Un
+lloc amb la clau buida no oferix mai cap actualització (actualitzador.php:209-212 i 223-228). La 1.0.2
+s'instal·la a mà, pujant el ZIP, igual que la 1.0.1.
+
+
+##### **Precondicions (abans de compilar)**
+
+###### **1 · Codi final de l'Onada 4.**
+El build congela el que hi haja a src/ en eixe moment. Compileu quan la quarta passada estiga tancada:
+instantània W4-02, Opció B de l'iframe i targetes del Control. Abans, comproveu tres coses: «git status
+--short» sense edicions a mitges d'altres actors a src/, la suite ampla de vitest en verd amb les roges
+prèvies demostrades, i les proves de node de baix en verd.
+
+###### **2 · Frontissa de contingut: la clau roadmap.**
+El build NO comprova la frontissa. build:wp és «vite build -c vite.standalone.config.js» i no té cap pre
+script (package.json:66-73) [VERIFICAT]. El commit, sí: .husky/pre-commit:6 executa
+tooling/gates/frontissa-contingut.mjs abans de res. L'empremta aprovada de «roadmap» és del 2026-09-24
+(.agents/contingut_estructural.json:52-56, sha256 8f3943fa…, 27.827 caràcters d'HTML). L'Onada 4 ha
+reescrit els enllaços de les llavors de PAGE_COPY.roadmap a rutes relatives. El bundle 1.0.1 porta 88
+coincidències de «socdepoble.org/auditoria/llavor» i pageContent.js ja només el nomena en un comentari
+(pageContent.js:120). L'empremta, per tant, ha canviat [NO VERIFICAT executant la porta: esta shell no pot].
+Si la release ha d'eixir d'un estat versionat, i ha de ser així, el Mestre aprova primer:
+    node tooling/gates/frontissa-contingut.mjs --aprova roadmap --per Mestre
+Escriu a .agents/: és una decisió humana i cap IA no la pot prendre.
+
+###### **3 · Changelog alineat amb el codi que entra.**
+La línia «Control panel» del readme descriu el PRD aprovat. Si el codi de les targetes no arriba abans del
+build, lleveu eixa línia. Si arriben l'Opció B i la instantània W4-02, s'hi poden afegir estes dues línies,
+en el mateix estil:
+    * Sign-in inside an embedded frame: when the browser blocks it, a clear notice offers to open the application in its own tab.
+    * Google sign-in with a full-page redirect keeps the host page's own query parameters.
+Repassa-les contra el codi final abans d'afegir-les [NO VERIFICAT: l'Opció B i W4-02 són en curs].
+
+###### **4 · Entorn de producció (VITE_*).**
+Un build de Vite (mode production) carrega .env, .env.local i .env.production.local, i l'últim mana. Només
+n'he llegit els noms, cap valor [VERIFICAT]. .env.production.local porta VITE_SUPABASE_URL,
+VITE_SUPABASE_ANON_KEY, VITE_DATA_MODE i VITE_TENANT_ID. .env.local porta les tres primeres i
+VITE_SOLLUTIA_ISSUER. .env porta VITE_TENANT_ID i DEEPL_API_KEY, que no viatja perquè no comença per VITE_.
+L'emissor només ve de .env.local: en la 1.0.1 el bundle hi va segellar «https://socdepoble.org» [VERIFICAT
+al bundle]. Amb SDP_RELEASE=1, la porta errorsDeRelease (vite.standalone.config.js:262-272) rebutja el build
+ABANS de compilar en quatre casos: un node que no és https o que és un host local, un mode que no és remote,
+un tenant que no és un UUID i una versió -dev.
+
+###### **5 · Tenant segellat (decisió del Mestre).**
+La 1.0.1 va segellar el tenant 11111111-2222-3333-4444-555555555555 (builds/1.0.1.json:31). És el poble de
+llavor de supabase/seed.sql:4 (slug «seed-town», «Poble de Llavors») [VERIFICAT]. La porta l'accepta perquè
+només mira la forma UUID. Si producció té un altre poble real per a La Torre, canvieu VITE_TENANT_ID a
+.env.production.local abans de compilar [NO VERIFICAT a producció].
+
+###### **6 · url-base.**
+La 1.0.1 va usar https://gentdelatorre.com/ (builds/1.0.1.json:59). El lloc on s'instal·la el connector és
+gentdelatorre.net (laboratori 261003_1330_produccio_claude/P2.txt:28 i 36). url-base només escriu
+paquet.url al manifest del canal. Per a una pujada manual no té cap efecte, i el canal no va signat. Mantinc
+.com per paritat amb 1.0.1, com demana l'encàrrec. Si el Mestre vol .net, només canvia l'argument.
+
+###### **7 · Índexs de la Wiki dins del paquet (decisió del Mestre).**
+build:wp NO regenera src/data/wikiManifest.js, public/rag-index.json ni public/slugIndex.json, i viatgen tal
+com estan a l'arbre (package.json:64-68) [VERIFICAT]. Per a refrescar-los, executeu primer «node
+tooling/wiki/compile-wiki-to-app.mjs», «npm run rag:build» i «npm run slugs:build». Després reviseu el diff,
+feu el commit i compileu. Recordatori de la memòria del projecte: el plugin s'emporta els tres canals del
+cervell, i arxivar un document no el despublica.
+
+
+##### **Ordres (des de l'arrel del repositori)**
+
+###### **A · Proves prèvies.**
+    cd '/Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org'
+    node --test tests/enxufe-plugin.test.mjs tests/enxufe-empaqueta.test.mjs tests/standalone-build.test.mjs tests/dist-secrets.test.mjs
+Esperat: 60/60 (17 + 19 + 18 + 6).
+
+###### **B · Les dues variants en mode release.**
+    SDP_RELEASE=1 SDP_VERSIO=1.0.2 npm run build:wp
+    SDP_RELEASE=1 SDP_VERSIO=1.0.2 npm run build:wp:directori
+El primer escriu wordpress-plugin/dist/ (runtime autonom, amb React propi). El segon escriu
+wordpress-plugin/builds/directori/dist/ (runtime wordpress, React del nucli, WordPress 6.6 o posterior).
+Amb SDP_RELEASE=1 cada build buida el seu outDir (vite.standalone.config.js:439). Els ZIP 1.0.1 de builds/
+no es toquen. Cada build ha d'imprimir «[sdp-manifest-release] 1.0.2 · N fitxers · node https://….supabase.co
+(remote)» sense «DESENVOLUPAMENT». Una errada «[sdp-release] Este build no es pot publicar» vol dir que una
+precondició 4 falla.
+
+**La SPA estàtica no necessita cap build propi.** El paquet socdepoble-spa-v1.0.2-…zip ix del mateix build
+autònom (wordpress-plugin/dist). «npm run build:web» és el lloc socdepoble.org i no forma part d'esta
+release.
+
+**Opcional.** Per a fixar una sola data «generat» a les dues variants, poseu davant de les dues ordres el
+mateix SOURCE_DATE_EPOCH (segons Unix). La marca aammdd_hhmm dels ZIP ix del build autònom en Europe/Madrid
+(empaqueta.mjs:585-593).
+
+###### **C · Empaquetat sense clau (--prova): l'única via possible hui.**
+    node wordpress-plugin/eines/empaqueta.mjs --prova --url-base https://gentdelatorre.com/
+
+**Què implica --prova.** Primer, no hi ha signatura ni cap fitxer .sig, i la consola ho diu amb «SENSE
+SIGNATURA (--prova)». Segon, l'empaquetador relaxa les seues portes (empaqueta.mjs:333-346): admet versions
+-dev, nodes de desenvolupament i un url-base http cap a localhost. La garantia de producció la dona, per
+tant, el pas B amb SDP_RELEASE=1, que ja ha passat errorsDeRelease. La verificació 3 de baix ho comprova a
+mà. Tercer, sobreescriu builds/stable.json, que està versionat, i crea builds/1.0.2.json. Són fitxers
+locals: no es publiquen si ningú els copia a public/enxufe/. **Per a una pujada manual, --prova és
+correcte.** És exactament el que es va fer amb la 1.0.1.
+
+###### **D · Empaquetat signat (alternativa, decisió del Mestre).**
+Primer, el Mestre genera la clau FORA del repositori. L'eina refusa una ruta dins del repositori i no
+sobreescriu mai cap clau existent:
+    node wordpress-plugin/eines/empaqueta.mjs --genera-clau ~/.sdp/enxufe-ed25519.pem
+Segon, posa la clau pública que imprimix a SOCDEPOBLE_ENXUFE_CLAU_PUBLICA
+(wordpress-plugin/includes/actualitzador.php:56) i actualitza tests/enxufe-empaqueta.test.mjs:168, que hui
+exigix la clau buida. Tercer, compila (pas B) i empaqueta:
+    node wordpress-plugin/eines/empaqueta.mjs --url-base https://gentdelatorre.com/ --clau ~/.sdp/enxufe-ed25519.pem
+La clau privada no entra MAI al repositori ni a cap document. Només els llocs que instal·len un paquet amb
+la clau pública incrustada podran verificar canals futurs. Un lloc amb 1.0.1 continua sense clau i s'ha
+d'actualitzar a mà almenys una vegada. Si un dia es publica el canal, l'ordre és este: primer els ZIP i
+després stable.json, 1.0.2.json i les seues .sig a public/enxufe/.
+
+###### **E · Eixides esperades (AAMMDD_HHMM = hora del build autònom, Europe/Madrid).**
+    wordpress-plugin/builds/socdepoble-enxufe-v1.0.2-AAMMDD_HHMM.zip            ← EL QUE PUJA EL MESTRE A WORDPRESS
+    wordpress-plugin/builds/socdepoble-spa-v1.0.2-AAMMDD_HHMM.zip               ← SPA estàtica per a Sollutia o un altre amfitrió
+    wordpress-plugin/builds/directori/socdepoble-enxufe-v1.0.2-AAMMDD_HHMM.zip  ← variant per a WordPress.org (WP 6.6+)
+    wordpress-plugin/builds/1.0.2.json i wordpress-plugin/builds/stable.json    ← sense .sig amb --prova
+**Avisos esperats.** El primer és l'AVÍS del límit de 10 MB del formulari de WordPress.org: la 1.0.1 feia
+108 MB per variant. El segon és el recompte de restes de dist/ fora de l'inventari, si n'hi ha.
+
+**Quin ZIP es puja.** El de l'arrel de builds/ (socdepoble-enxufe-v1.0.2-…zip): porta l'actualitzador i el
+seu propi React i funciona des de WordPress 6.5. El de directori/ és per a WordPress.org. Un ZIP de 108 MB
+pot topar amb upload_max_filesize del servidor, però la 1.0.1 era igual de gran i s'hi va instal·lar.
+
+**Neteja (skill §3).** L'empaquetador escriu directament a builds/ i no deixa cap carpeta temporal.
+wordpress-plugin/dist/ i builds/directori/dist/ no són brossa: són el build que descriu l'inventari, i git
+els ignora. No cal esborrar res. **Ancoratge (skill §4):** el nom exacte del ZIP generat ha de constar a
+l'ESTAT o a l'acta de tancament de l'Onada.
+
+
+##### **Verificació (la pot executar una IA després de B i C)**
+
+###### **V1 · W4-01 fora dels dos bundles.**
+    rg -c -o -e 'getElementById\(.root.\)' -e 'createElement\(.soc-de-poble.\)' wordpress-plugin/dist/soc-de-poble.standalone.js wordpress-plugin/builds/directori/dist/soc-de-poble.standalone.js
+**Esperat:** cap eixida (rg ix amb 1). La 1.0.1 en porta una de cada patró a cada variant [VERIFICAT]. El
+tros minificat és: const e=document.getElementById("root");if(e&&(!e.hasChildNodes()||e.innerHTML.trim()===""))
+{const t=document.createElement("soc-de-poble"). A src/, les úniques crides a getElementById('root') són
+main.jsx:14 (entrada del lloc) i natiu/entrada.jsx:40 (app nativa). Cap mòdul del graf de src/embed.jsx no
+les importa. A embed.jsx:32 només queda un comentari [VERIFICAT].
+
+###### **V2 · El mateix dins del ZIP (els bytes que puja el Mestre).**
+    node --input-type=module -e "import fs from 'node:fs'; import { llegixZip } from './wordpress-plugin/eines/empaqueta.mjs'; const e = llegixZip(fs.readFileSync(process.argv[1])); const js = e.find((x) => x.nom === 'socdepoble-enxufe/dist/soc-de-poble.standalone.js').dades.toString(); console.log(e.every((x) => x.nom.startsWith('socdepoble-enxufe/')) ? 'arrel correcta' : 'ARREL INCORRECTA'); console.log(/getElementById\(.root.\)/.test(js) ? 'W4-01 PRESENT' : 'W4-01 absent');" wordpress-plugin/builds/socdepoble-enxufe-v1.0.2-AAMMDD_HHMM.zip
+**Esperat:** «arrel correcta» i «W4-01 absent». Repetiu-ho amb el ZIP de directori/.
+
+###### **V3 · Node segellat de producció.**
+    cat wordpress-plugin/dist/sdp-release.json
+    cat wordpress-plugin/builds/directori/dist/sdp-release.json
+**Esperat** a les dues: versio 1.0.2, node.mode remote, node.desenvolupament false, node.origen
+https://<projecte>.supabase.co (la 1.0.1 diu https://adjlvwtxhpclgmnsvwpm.supabase.co) i node.tenant el UUID
+decidit a la precondició 5. El node ha de ser idèntic a les dues. runtime.amfitrio ha de ser autonom a la
+primera i wordpress a la segona.
+
+###### **V4 · Cap backend local dins del bundle.**
+    rg -c -o -e 'localhost:54321' -e '127\.0\.0\.1:54321' wordpress-plugin/dist/soc-de-poble.standalone.js wordpress-plugin/builds/directori/dist/soc-de-poble.standalone.js
+    rg -o -e 'https://[a-z0-9]+\.supabase\.co' wordpress-plugin/dist/soc-de-poble.standalone.js
+    rg -o -e '.{50}Cap emissor configurat' wordpress-plugin/dist/soc-de-poble.standalone.js
+**Esperat.** La primera ordre no trau res. La segona només mostra l'origen de V3. La tercera mostra
+"https://socdepoble.org", mai http://localhost. Un «localhost» solt NO és cap fallada: «localhost:9999» és
+l'URL per defecte de GoTrue dins de supabase-js, «localhost:3340» és un missatge de desenvolupament i hi ha
+llistes de hosts locals que el codi rebutja. Tot això ja era a la 1.0.1.
+
+###### **V5 · L'Onada 4 és dins (discriminants contra la 1.0.1).**
+    rg -c -o 'sdp_oauth_attempt' wordpress-plugin/dist/soc-de-poble.standalone.js
+    rg -c -o 'app-grid-rail' wordpress-plugin/dist/soc-de-poble.standalone.js
+    rg -c -o 'socdepoble\.org/auditoria/llavor' wordpress-plugin/dist/soc-de-poble.standalone.js
+**Esperat:** almenys 1, almenys 1 i cap eixida. En la 1.0.1 eren 0, 0 i 88 [VERIFICAT].
+
+###### **V6 · Empremtes al manifest del canal.**
+    shasum -a 256 wordpress-plugin/dist/soc-de-poble.standalone.js wordpress-plugin/builds/directori/dist/soc-de-poble.standalone.js wordpress-plugin/builds/socdepoble-enxufe-v1.0.2-AAMMDD_HHMM.zip wordpress-plugin/builds/directori/socdepoble-enxufe-v1.0.2-AAMMDD_HHMM.zip wordpress-plugin/builds/socdepoble-spa-v1.0.2-AAMMDD_HHMM.zip
+**Esperat.** Les empremtes han de coincidir, en este ordre, amb cinc camps de builds/1.0.2.json:
+entrada.sha256, adaptadors.wordpress.directori.entrada.sha256, adaptadors.wordpress.paquet.sha256,
+adaptadors.wordpress.directori.sha256 i estatic.paquet.sha256. 1.0.2.json ha de dir versio 1.0.2 i
+adaptadors.wordpress.versio 1.0.2.
+
+###### **V7 · Proves de node.**
+    node --test tests/enxufe-empaqueta.test.mjs tests/standalone-build.test.mjs tests/dist-secrets.test.mjs
+**Esperat:** 43/43 (19 + 18 + 6). Atenció: estes proves validen les eines (empaquetador, config del build,
+detector de secrets), no els bytes generats. La verificació dels artefactes és V1-V6. La porta DeepL sobre
+cada entrada del ZIP la fa l'empaquetador mateix (empaqueta.mjs:502 i 518): si C acaba sense error, cap
+entrada no porta una clau DeepL.
+
+###### **V8 · Després d'instal·lar-lo a gentdelatorre.net (navegador, només lectura).**
+**Ajustos → Sóc de Poble.** Ha de mostrar la versió 1.0.2 i l'empremta de V6.
+**Codi font de la pàgina.** El bundle es carrega amb ver=1.0.2.<12 primeres xifres de entrada.sha256>; la
+1.0.1 era ver=1.0.1.f094730c2c44.
+**Consola.** document.querySelectorAll('soc-de-poble').length ha de ser igual al nombre de shortcodes o
+blocs de la pàgina, i un #root d'un altre plugin ha de quedar intacte.
+**Entrada amb Google.** La tornada porta sdp_oauth_attempt. Els patrons limitats de les Redirect URLs de
+GoTrue, aprovats pel Mestre, han d'incloure l'amfitrió [NO VERIFICAT: és configuració de Supabase, no
+codi].
+
+
+##### **Decisions pendents del Mestre**
+
+**Clau de signatura.** O --prova (manual, com la 1.0.1) o generar la clau i signar (pas D).
+**Tenant segellat.** El de llavor o el real (precondició 5).
+**url-base.** .com o .net (precondició 6).
+**Frontissa roadmap.** Cal aprovar-la per a poder fer el commit (precondició 2).
+**Índexs de la Wiki.** Regenerar-los abans del build o no (precondició 7).
+
+Vincles: [[00_index_escriptori]]

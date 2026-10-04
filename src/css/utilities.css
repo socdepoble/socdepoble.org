@@ -108,8 +108,11 @@
     cursor: pointer;
     border-radius: var(--sdp-radi-m);
   }
-  .sdp-top-bar-btn:hover {
-    background-color: var(--sdp-crom-hover);
+  /* Fase B (pla 261004_0050) · el hover només amb ratolí. */
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-top-bar-btn:hover {
+      background-color: var(--sdp-crom-hover);
+    }
   }
   .sdp-top-bar-btn:focus-visible {
     outline: 2px solid var(--sdp-crom-focus);

@@ -1,4 +1,5 @@
-import { useContext } from 'react';
+import { useContext, useId, useSyncExternalStore } from 'react';
+import { ImageIcon, ImageOff } from 'lucide-react';
 import { useNavigate, Link } from '../../app/contexts/RouterContext';
 import { AppGridContext } from '../layout/AppGridShell';
 import { useToast } from '@/components/universal/NotificationContext.jsx';
@@ -8,6 +9,137 @@ import { isSafeUrl } from './UniversalUtils';
 import { rutaActual, urlPerCompartir, useUbicacioApp } from '../PedraSeca/hooks/useAccions.js';
 import { usePastillaCalendari } from './barres/pastillaCalendari.js';
 import { objecteDePagina, rutaConnectarObjecte } from '../../config/objecteConnectable.js';
+import { resolveAsset } from '../../config/assetResolver';
+import { STORAGE_PREFIX, delVal, getVal, setVal } from '../../config/storage';
+
+/* ── P7-A · PORTADA PLEGABLE (directriu 261003_2320 del Mestre, «Hero Image
+   Toggle»; Onada 4, setena passada) ──────────────────────────────────────
+   Capacitat genèrica i OPCIONAL de la Pàgina Universal: amb
+   portadaPlegable={{ clau, etiquetes? }} la portada (heroImage) es veu per
+   defecte i un botó amb nom la plega i la desplega, per a guanyar espai
+   vertical quan la pàgina és una eina de treball (Gestoria, Bàscula…).
+     · El botó va dins del marc de la portada (.hero-image), ABANS de la
+       imatge: dalt a la dreta, damunt de la il·lustració quan es veu, i en una
+       franja pròpia quan està plegada. No es mou de lloc, és el primer que
+       troba el teclat després de la barra blava i també es veu en mòbil, on
+       la barra taronja no es pinta (components.css, T38).
+     · Disclosure: aria-expanded i aria-controls cap al contenidor de la
+       imatge, que plegat porta `hidden` (fora de la vista i de l'arbre
+       accessible). El text diu el que farà: «Amaga la portada» / «Mostra la
+       portada» (etiquetes.amaga / etiquetes.mostra per a traduir-lo).
+     · L'estat és de qui mira i de cada clau: una sola clau de storage.js
+       ('portades-plegades'), síncrona i xicoteta, que només guarda les
+       plegades: { v: 1, plegades: { 'plugin:gestoria': true } }. Desplegar-la
+       l'esborra. Si l'emmagatzematge no respon (mode privat, quota), el canvi
+       val igual en esta càrrega. L'esdeveniment `storage` la sincronitza entre
+       pestanyes; dins de la pestanya, totes les pàgines amb la mateixa clau
+       van a una (useSyncExternalStore).
+     · Cap transició ni animació: no hi ha res que prefers-reduced-motion haja
+       d'aturar.
+   Sense la prop, amb una clau invàlida, sense imatge o amb un heroComponent
+   propi (l'editor), PageFrame rep exactament el mateix que abans (Llei del
+   Píxel). */
+export const CLAU_PORTADES = 'portades-plegades';
+const VERSIO_PORTADES = 1;
+const PATRO_CLAU_PORTADA = /^[a-z0-9][a-z0-9:_-]{0,63}$/;
+const PORTADES_BUIDES = Object.freeze({ v: VERSIO_PORTADES, plegades: Object.freeze({}) });
+const ETIQUETES_PORTADA = Object.freeze({ amaga: 'Amaga la portada', mostra: 'Mostra la portada' });
+
+let portadesEnMemoria = null;
+const oientsPortades = new Set();
+
+const esObjectePla = (valor) => valor !== null && typeof valor === 'object' && !Array.isArray(valor);
+const esClauDePortada = (clau) => typeof clau === 'string' && PATRO_CLAU_PORTADA.test(clau);
+
+/* Només claus vàlides amb el valor `true`; la resta es descarta. */
+function normalitzaPortades(cru) {
+  if (!esObjectePla(cru) || cru.v !== VERSIO_PORTADES || !esObjectePla(cru.plegades)) return PORTADES_BUIDES;
+  const plegades = {};
+  for (const [clau, valor] of Object.entries(cru.plegades)) if (esClauDePortada(clau) && valor === true) plegades[clau] = true;
+  return Object.freeze({ v: VERSIO_PORTADES, plegades: Object.freeze(plegades) });
+}
+
+function llegeixPortades() {
+  if (portadesEnMemoria === null) portadesEnMemoria = normalitzaPortades(getVal(CLAU_PORTADES, null));
+  return portadesEnMemoria;
+}
+
+function subscriuPortades(oient) {
+  oientsPortades.add(oient);
+  const finestra = globalThis.window;
+  /* Una altra pestanya ha canviat la clau (o ho ha buidat tot: key null). */
+  const enStorage = (event) => {
+    const clau = event?.key ?? null;
+    if (clau !== null && clau !== STORAGE_PREFIX + CLAU_PORTADES) return;
+    portadesEnMemoria = null;
+    oient();
+  };
+  finestra?.addEventListener('storage', enStorage);
+  return () => {
+    oientsPortades.delete(oient);
+    finestra?.removeEventListener('storage', enStorage);
+  };
+}
+
+function desaPortadaPlegada(clau, plegada) {
+  if (!esClauDePortada(clau)) return;
+  const plegades = { ...llegeixPortades().plegades };
+  if (plegada) plegades[clau] = true;
+  else delete plegades[clau];
+  portadesEnMemoria = normalitzaPortades({ v: VERSIO_PORTADES, plegades });
+  if (Object.keys(portadesEnMemoria.plegades).length) setVal(CLAU_PORTADES, portadesEnMemoria);
+  else delVal(CLAU_PORTADES);
+  for (const oient of [...oientsPortades]) oient();
+}
+
+/** Només per a proves: oblida la còpia en memòria (no toca l'emmagatzematge). */
+export function _reiniciaPortades() {
+  portadesEnMemoria = null;
+}
+
+const textDe = (valor, reserva) => (typeof valor === 'string' && valor.trim() ? valor : reserva);
+
+function PortadaPlegable({ clau, imatge, alt, etiquetes }) {
+  const portades = useSyncExternalStore(subscriuPortades, llegeixPortades, llegeixPortades);
+  const idImatge = `sdp-portada-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
+  const visible = portades.plegades[clau] !== true;
+  const Icona = visible ? ImageOff : ImageIcon;
+  return (
+    <>
+      <div className={visible ? 'sdp-portada__barra' : 'sdp-portada__barra sdp-portada__barra--plegada'}>
+        <button
+          type="button"
+          className="sdp-boto sdp-boto--secundari sdp-portada__boto"
+          aria-expanded={visible}
+          aria-controls={idImatge}
+          onClick={() => desaPortadaPlegada(clau, visible)}
+        >
+          <Icona size={20} aria-hidden="true" focusable="false" />
+          <span>{visible ? textDe(etiquetes?.amaga, ETIQUETES_PORTADA.amaga) : textDe(etiquetes?.mostra, ETIQUETES_PORTADA.mostra)}</span>
+        </button>
+      </div>
+      <div id={idImatge} hidden={!visible}>
+        <img alt={alt} src={resolveAsset(imatge)} />
+      </div>
+    </>
+  );
+}
+
+/* La topBarData amb la portada plegable, o null si la pàgina no la demana
+   (o no hi ha cap portada que plegar): llavors no es toca res. */
+function topBarAmbPortada(props, config) {
+  const opcio = props.portadaPlegable;
+  if (!esObjectePla(opcio) || !esClauDePortada(opcio.clau)) return null;
+  const topBarData = props.topBarData ?? config.topBarData ?? {};
+  if (topBarData.heroComponent) return null;
+  const imatge = topBarData.heroImage ?? props.heroImage ?? config.heroImage;
+  if (!imatge) return null;
+  const alt = topBarData.heroAlt ?? props.heroAlt ?? config.heroAlt ?? '';
+  return {
+    ...topBarData,
+    heroComponent: <PortadaPlegable clau={opcio.clau} imatge={imatge} alt={alt} etiquetes={opcio.etiquetes} />
+  };
+}
 
 export function UniversalPage(props) {
   const { showToast } = useToast();
@@ -83,10 +215,15 @@ export function UniversalPage(props) {
   const handleDateTime = onDateTimePropi || alCalendari.onClick;
   const nomPastilla = onDateTimePropi ? undefined : alCalendari.etiqueta;
 
+  /* P7-A · Amb portadaPlegable (i una portada), la topBarData porta el marc
+     plegable; sense, cap prop canvia. */
+  const ambPortada = topBarAmbPortada(props, config);
+
   return (
     <PageFrame
       {...config}
       {...props}
+      {...(ambPortada ? { topBarData: ambPortada } : null)}
       onConnect={handleConnect}
       showConnect={senseConnectar ? false : (props.showConnect ?? config.showConnect)}
       onBack={handleBack}

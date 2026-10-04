@@ -34,7 +34,8 @@
   :where(tbody tr:nth-child(even)) {
     background: var(--sdp-fons-subtil);
   }
-  @media (hover: hover) {
+  /* Fase B (pla 261004_0050) · la mateixa guarda de hover que tot el sistema. */
+  @media (hover: hover) and (pointer: fine) {
     :where(tbody tr:hover) {
       background: var(--sdp-accent-subtil);
     }
@@ -150,9 +151,14 @@
     flex: none;
     object-fit: cover;
   }
+  /* Sòl de lletra de 14px (pla 261004_0050) per a les inicials de sm i md: dues
+     lletres de 14px caben dins del cercle de 32px. EXCEPCIÓ JUSTIFICADA, xs: el
+     cercle de 24px només deixa 20px per dins i dues inicials amples de 14px no
+     hi caben; les inicials són decoració (aria-hidden) i el nom el porten el
+     títol i el text per al lector de pantalla (Avatar.jsx). */
   .sdp-avatar--xs { width: 24px; height: 24px; font-size: 0.6rem; }
-  .sdp-avatar--sm { width: 32px; height: 32px; font-size: 0.68rem; }
-  .sdp-avatar--md { width: var(--sdp-touch-min); height: var(--sdp-touch-min); font-size: 0.8rem; }
+  .sdp-avatar--sm { width: 32px; height: 32px; font-size: var(--sdp-text-meta); }
+  .sdp-avatar--md { width: var(--sdp-touch-min); height: var(--sdp-touch-min); font-size: var(--sdp-text-meta); }
   .sdp-avatar--lg { width: calc(var(--sdp-space-8) + var(--sdp-space-6)); height: calc(var(--sdp-space-8) + var(--sdp-space-6)); font-size: 1rem; }
   .sdp-avatar--xl { width: 80px; height: 80px; font-size: 1.4rem; }
   /* Tons per llavor (xat F0, PER-B03): sis parelles fons/text semàntiques ja
@@ -173,7 +179,7 @@
     grid-template-columns: 120px 1fr auto;
     gap: var(--sdp-space-3);
     align-items: center;
-    font-size: 0.8rem;
+    font-size: var(--sdp-text-meta);   /* sòl de 14px; abans 12,8px */
   }
   .sdp-escala__barra {
     height: 12px;
@@ -209,9 +215,13 @@
   :where(dialog)::backdrop {
     background: var(--sdp-fons-vel);
   }
+  /* Entrada del diàleg (pla 261004_0050, Fase C): la durada base i la corba
+     d'eixida del sistema. El desplaçament el posen els fotogrames clau
+     sdp-aparicio (modules.css). El tancament natiu és instantani:
+     @starting-style no és de la Baseline 2022. */
   @media (prefers-reduced-motion: no-preference) {
     :where(dialog[open]) {
-      animation: sdp-aparicio 120ms ease-out;
+      animation: sdp-aparicio var(--sdp-durada-base) var(--sdp-corba-eixida);
     }
   }
 
@@ -223,7 +233,8 @@
   }
   :where(kbd) {
     font-family: var(--sdp-font-mono);
-    font-size: 0.9em;
+    /* Relativa al text del voltant, però mai per davall del sòl de 14px. */
+    font-size: max(var(--sdp-text-meta), 0.9em);
     background: var(--sdp-fons-subtil);
     border: 1px solid var(--sdp-vora);
     border-radius: var(--sdp-radi-s);

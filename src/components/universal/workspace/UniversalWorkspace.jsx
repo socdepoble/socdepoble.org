@@ -1,4 +1,5 @@
-import React, { useCallback, useMemo, useRef, useState, useEffect, memo } from 'react';
+import React, { useCallback, useLayoutEffect, useMemo, useRef, useState, useEffect, memo } from 'react';
+import { createPortal } from 'react-dom';
 import { Search, Settings, SlidersHorizontal, Inbox, Bookmark, Hash, ChevronDown, ArrowDownAZ, Folder, ArrowLeft } from 'lucide-react';
 import AppGridShell, { useAppGrid } from '../../layout/AppGridShell.jsx';
 import AppGridColumn from '../../layout/AppGridColumn.jsx';
@@ -274,6 +275,12 @@ function WorkspaceFrame({
       panellEstret={mestreDetall ? panellEstret : null}
       tornaEstret={mestreDetall ? 'middle' : null}
       onPanell={mestreDetall ? onPanell : null}
+      /* P6 (ordre del Mestre, 261003) · La llista té desplegador en
+         pantalles xicotetes: en «mitja», fora del mode compacte (el Snippet
+         arrenca amb la llista plegada i en mitja s'ha de vore); en «estret»,
+         només amb el mestre-detall (sense, estret és com abans). */
+      railMitja={!compacte}
+      railEstret={mestreDetall}
       leftColumn={
         <CategoryColumn
           compacte={compacte}
@@ -681,7 +688,7 @@ function ItemListColumn({
     items, categories, navigationGroups, state, status, filteredItems, selectItem, requestItem,
     toggleColumn, setQuery, clearFilters, openSearch, closeSearch, toggleTag
   } = useWorkspace();
-  const { mida, panellObert, tancaPanells, obriPanell } = useAppGrid();
+  const { mida, panellObert, setPanellObert, tancaPanells, obriPanell, llistaPlegable, llistaEnRail, nodeRail } = useAppGrid();
   /* MD · En estret, amb el mestre-detall, l'obridor de la navegació l'obri
      al primer toc (toggleColumn commuta el rail d'«ample» i només obria en
      un toc de cada dos), du el focus a la carpeta activa i es declara obridor
@@ -693,6 +700,31 @@ function ItemListColumn({
      si qui munta l'espai té on tornar (el Tauler d'Admin), la capçalera porta
      la fletxa ←. En mitja i en ample, res. */
   const tornadaEstret = mestreDetall && mida === 'estret' && !obridorEstret && typeof tornaDeLaLlista === 'function';
+  /* P6 (ordre del Mestre, 261003) · Amb el desplegador de la llista
+     (llistaPlegable de la closca), l'obridor de la navegació de «mitja» és
+     el d'estret: obri al primer toc (abans commutava el rail d'«ample» i
+     obria un toc de cada dos), sense tocar eixe rail, i es declara obridor
+     de la closca. El rail de la llista plegada en porta un d'igual: la
+     primera columna estreta dona el menú sense desplegar la llista. */
+  const obridorNavegacio = obridorEstret || (mida === 'mitja' && llistaPlegable && Boolean(categoryIcon));
+  const obridorDelRail = llistaPlegable && (Boolean(categoryIcon) || categories.length > 0);
+  /* P6 (revisió) · L'obridor declara aria-expanded: amb el panell obert, el
+     torna a tancar. En «mitja» el panell de la navegació no tapa la llista i
+     l'obridor continua a l'abast del teclat; abans no feia res i el panell
+     només es tancava triant una carpeta. En estret, amb el panell obert,
+     l'obridor és inert: res no canvia. */
+  const commutaNavegacio = () => (panellObert === 'left' ? tancaPanells() : obriPanell('left'));
+  /* P6 (revisió) · La lupa del rail d'estret porta el focus al camp de cerca.
+     autoFocus només actua quan el camp naix: amb la cerca ja oberta (el camp
+     continua muntat dins de la llista tancada), el focus es quedava a la
+     lupa del rail que es tapa i la guarda de la closca l'alliberava a
+     <body>. Efecte de layout: el del fill corre abans que la guarda de la
+     closca, en el mateix commit. */
+  const campCercaRef = useRef(null);
+  const [cercaDemanada, setCercaDemanada] = useState(0);
+  useLayoutEffect(() => {
+    if (cercaDemanada) campCercaRef.current?.focus({ preventScroll: true });
+  }, [cercaDemanada]);
   const [creating, setCreating] = useState(false);
   const [sortBy, setSortBy] = useState('date');
   const [sortOpen, setSortOpen] = useState(false);
@@ -700,7 +732,10 @@ function ItemListColumn({
     sortBy === 'name' ? (a.title || '').localeCompare(b.title || '', 'ca')
       : (Date.parse(b.updatedAt) || 0) - (Date.parse(a.updatedAt) || 0)
   ), [filteredItems, sortable, sortBy]);
-  const collapsed = state.collapsed.middle && mida === 'ample';
+  /* P6 · En mitja, la closca diu si la columna de la llista es pinta en rail
+     (llistaEnRail). En estret la columna continua sent el panell del
+     mestre-detall i el rail viu a part (#app-grid-rail, railAPart). */
+  const collapsed = (state.collapsed.middle && mida === 'ample') || (llistaEnRail && mida === 'mitja');
 
   // Glif de categoria de cada document (per a la fitxa sense imatge i el rail):
   // primer el de la categoria activa, si el document hi pertany; després, el
@@ -768,59 +803,103 @@ function ItemListColumn({
     if (mida === 'estret') focusAfterLayout(detailFocusRef);
   };
 
-  const searchActions = [{
+  /* P6 · En estret, el rail és a part i desplegar-lo és obrir el panell de
+     la llista (el de la fletxa ←), no el rail d'«ample». En mitja i en
+     ample, el plegat de sempre. */
+  const enEstret = mida === 'estret' && llistaPlegable;
+  const accionsDeCerca = (desDelRail) => [{
     id: 'search',
     etiqueta: labels.search,
     icona: Search,
     onAcciona: () => {
-      if (collapsed) toggleColumn('middle');
+      /* El camp de cerca porta autoFocus: en estret el panell s'obri sense
+         moure el focus (setPanellObert, no obriPanell) i el camp el rep
+         també si ja era obert (cercaDemanada). */
+      if (desDelRail && enEstret) {
+        setPanellObert('middle');
+        setCercaDemanada((n) => n + 1);
+      } else if (desDelRail) toggleColumn('middle');
       openSearch();
     }
   }];
 
+  /* La llista plegada: el desplegador (Expandir) dalt de tot i, davall, les
+     accions i els glifs dels documents. P6 · Fora d'«ample», el rail és la
+     primera columna estreta: porta també l'obridor de la navegació, i en
+     estret l'Expandir es declara obridor de la llista (la guarda del focus
+     hi torna quan el panell es tanca). */
+  const pintaRail = () => (
+    <AppGridColumn
+      variant="collapsed"
+      esDark="intens"
+      titol={labels.items}
+      startActions={obridorDelRail ? [{
+        id: 'obri-navegacio',
+        etiqueta: labels.categories,
+        icona: categoryIcon || Folder,
+        onAcciona: commutaNavegacio,
+        controls: 'app-grid-sidebar',
+        expanded: panellObert === 'left',
+        obridor: true
+      }] : CAP}
+      endActions={accionsDeCerca(true)}
+      expandBtnRef={expandBtnRef}
+      expandObridor={enEstret}
+      controls={replegaTotaCapcalera || llistaPlegable ? 'app-grid-list' : undefined}
+      onReplega={() => {
+        if (enEstret) {
+          obriPanell('middle');
+          return;
+        }
+        toggleColumn('middle');
+        focusAfterLayout(collapseBtnRef);
+      }}
+    >
+      {status !== 'loading' && status !== 'error' ? (
+        <DocumentRail
+          items={sortedItems}
+          activeItemId={state.activeItemId}
+          glifDeCategoria={glifDeCategoria}
+          onChoose={chooseItem}
+          label={labels.items}
+          untitled={labels.untitled}
+        />
+      ) : null}
+    </AppGridColumn>
+  );
+
   if (collapsed) {
-    const railVisible = status !== 'loading' && status !== 'error';
     return (
       <aside ref={rootRef} tabIndex={-1} className="sdp-workspace-column" aria-label={labels.items}>
-        <AppGridColumn
-          variant="collapsed"
-          esDark="intens"
-          titol={labels.items}
-          endActions={searchActions}
-          expandBtnRef={expandBtnRef}
-          controls={replegaTotaCapcalera ? 'app-grid-list' : undefined}
-          onReplega={() => {
-            toggleColumn('middle');
-            focusAfterLayout(collapseBtnRef);
-          }}
-        >
-          {railVisible ? (
-            <DocumentRail
-              items={sortedItems}
-              activeItemId={state.activeItemId}
-              glifDeCategoria={glifDeCategoria}
-              onChoose={chooseItem}
-              label={labels.items}
-              untitled={labels.untitled}
-            />
-          ) : null}
-        </AppGridColumn>
+        {pintaRail()}
       </aside>
     );
   }
 
+  /* P6 · En estret, el rail es pinta al seu lloc de la closca (nodeRail)
+     amb un portal: el mateix component, el mateix estat (ordre, cerca) i els
+     mateixos refs que la llista. */
+  const railAPart = enEstret && nodeRail ? createPortal(
+    <aside className="sdp-workspace-column" aria-label={labels.items}>
+      {pintaRail()}
+    </aside>,
+    nodeRail
+  ) : null;
+
   return (
+    <>
+    {railAPart}
     <aside ref={rootRef} tabIndex={-1} className="sdp-workspace-column" aria-label={labels.items}>
       <AppGridColumn
         esDark={true}
         titol={labels.items}
         icona={icon}
         esquerra={
-          obridorEstret ? (
+          obridorNavegacio ? (
             <button
               type="button"
               className="app-grid-col-header__accio-icon"
-              onClick={() => obriPanell('left')}
+              onClick={commutaNavegacio}
               aria-label={labels.categories}
               title={labels.categories}
               aria-controls="app-grid-sidebar"
@@ -853,15 +932,19 @@ function ItemListColumn({
         }
         collapseBtnRef={collapseBtnRef}
         replegaTotaCapcalera={replegaTotaCapcalera && mida === 'ample'}
-        controls={replegaTotaCapcalera ? 'app-grid-list' : undefined}
+        replegaCompacte={llistaPlegable}
+        controls={replegaTotaCapcalera || llistaPlegable ? 'app-grid-list' : undefined}
         onReplega={() => {
-          toggleColumn('middle');
+          /* P6 · En estret, plegar és tancar el panell: el detall torna amb
+             el rail, i el focus, a l'Expandir del rail. */
+          if (enEstret) tancaPanells();
+          else toggleColumn('middle');
           focusAfterLayout(expandBtnRef);
         }}
       />
       <AppGridColumn
         esDark="intens"
-        startActions={searchActions}
+        startActions={accionsDeCerca(false)}
         endActions={[
           ...(sortable ? [{ 
             id: 'sort', 
@@ -902,6 +985,7 @@ function ItemListColumn({
             <span className="sr-only">{labels.search}</span>
             <Search size={18} aria-hidden="true" />
             <input
+              ref={campCercaRef}
               autoFocus
               type="search"
               value={state.query}
@@ -968,6 +1052,7 @@ function ItemListColumn({
         )}
       </div>
     </aside>
+    </>
   );
 }
 

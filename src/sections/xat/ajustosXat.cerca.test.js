@@ -31,7 +31,9 @@ describe('cercaAjustos · capçaleres i paraules clau', () => {
   });
 
   test('«tema» troba la secció Tema abans que l’opció que el conté per casualitat (sis-tema)', () => {
-    expect(etiquetes(cercaAjustos('tema'))).toEqual(['Tema', 'Igual que el sistema']);
+    /* D6 (261004) · «Segons el sistema» (contrast) també conté «sis-tema»: va
+       darrere, en l'ordre de l'arbre. La secció continua la primera. */
+    expect(etiquetes(cercaAjustos('tema'))).toEqual(['Tema', 'Igual que el sistema', 'Segons el sistema']);
     expect(etiquetes(cercaAjustos('colors'))).toEqual(['Tema']);
   });
 

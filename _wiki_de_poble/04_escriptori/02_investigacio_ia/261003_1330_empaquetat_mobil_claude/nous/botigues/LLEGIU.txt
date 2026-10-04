@@ -1,0 +1,169 @@
+SCRIPTS DE PUJADA A LES BOTIGUES · «Pregunta Zero» · laboratori 261003
+=====================================================================
+Torn: torn_50ca5709-8cd2-416a-bf41-2afdb3450179 (Claude, Onada 4, segona onada). Encàrrec de MarIA
+(261003_1935_pla_implementacio_maria.md, Mediació, punt 4): «Farem servir App Store Connect API. Claude,
+prepara els scripts per agafar els secrets del .env». Convencions [VERIFICAT] i [NO VERIFICAT]: les de
+LLEGIU_PRIMER.txt. Procediment complet: RUNBOOK_BOTIGUES_IA.txt (§2, A0-A10).
+
+
+1. QUÈ HI HA (tot amb sufix .txt: res s'executa fins que s'instal·la)
+--------------------------------------------------------------------
+entorn.mjs.txt            peces comunes: lectura del fitxer d'entorn, regles, màscares, camins, git, eines,
+                          executa() sense shell i amb l'eixida emmascarada línia a línia.
+preflight.mjs.txt         comprovacions de només lectura i la seua CLI.
+puja-ios.mjs.txt          A6 arxiu, A7 exportació, verificació (equip i versió), A8 validació i pujada.
+puja-android.mjs.txt      A4 bundleRelease (opcional), verificació de l'empremta, A5 pujada amb fastlane supply,
+                          o els passos a mà si no hi ha fastlane.
+botigues.env.exemple.txt  la plantilla del fitxer d'entorn: només NOMS.
+botigues.test.mjs.txt     les proves que van a tests/ en instal·lar-los (§6).
+
+
+2. ON VIUEN ELS SECRETS
+-----------------------
+- Un fitxer d'entorn FORA del paquet de l'app, que escriu el Mestre:
+    · per defecte, .env.botigues.local a l'arrel del repositori. Git l'ignora per la regla «.env.*»
+      (.gitignore:14) [VERIFICAT: llegit, i a més «git check-ignore» ho ha confirmat dins de la prova
+      temporal del §6];
+    · o el camí que porte SDP_BOTIGUES_ENV (relatiu a l'arrel, absolut o amb ~/), per exemple
+      ~/claus-socdepoble/botigues.env, que és on el posava RUNBOOK H-F1.
+- Cap nom VITE_*. Vite segella dins del paquet TOTES les VITE_* de l'entorn del build, no només les
+  que es lligen una a una: src/data/telemetria.js:57 i src/sections/calendari/fonts/configFonts.js:138 i
+  :180 reben import.meta.env sencer, i el build el substituïx per un objecte amb totes
+  [VERIFICAT: node_modules/vite/dist/node/chunks/config.js:26522-26551, definePlugin de Vite 7.3.6].
+- Les claus per RUTA, i la ruta FORA del repositori: la .p8 d'App Store Connect (AuthKey_<KEY_ID>.p8), el
+  JSON del compte de servei de Google Play i la keystore. Cap script llig el contingut d'una clau: el passa
+  a l'eina oficial per ruta (-authenticationKeyPath, --json_key) o per carpeta (API_PRIVATE_KEYS_DIR per a
+  altool [NO VERIFICAT el nom de la variable en l'Xcode instal·lat]).
+- Les dues contrasenyes de la keystore només hi van si el Mestre decidix que signe el script (--compila).
+  Per defecte signa ell (RUNBOOK A4, opció A). Amb --compila, les contrasenyes van NOMÉS a l'entorn del
+  procés de Gradle, amb --no-daemon perquè cap dimoni se les quede; mai a la línia d'ordres.
+- El fitxer ha de tindre permisos 600, no pot ser cap fitxer que carregue Vite (.env, .env.local,
+  .env.natiu.local, .env.production.local…), i si és dins del repositori git l'ha d'ignorar.
+- Cap valor ix per pantalla: les ordres es mostren amb <NOM> en lloc de cada valor del fitxer, i
+  l'eixida de les eines passa pel mateix filtre. Un identificador, una ruta o una empremta es canvien
+  només si són una peça sencera; una contrasenya o una variable desconeguda, on siga.
+
+
+3. COM S'USA (un cop instal·lat)
+--------------------------------
+  node scripts/botigues/preflight.mjs --plataforma ios|android|totes [--signa]
+  node scripts/botigues/puja-ios.mjs --versio 1.0.0 --build 7                        en sec
+  node scripts/botigues/puja-ios.mjs --versio 1.0.0 --build 7 --compila              arxiva i exporta; NO puja
+  node scripts/botigues/puja-ios.mjs --versio 1.0.0 --build 7 --confirma=1.0.0+7     valida i PUJA
+  node scripts/botigues/puja-android.mjs --versio 1.0.0 --build 7                    en sec
+  node scripts/botigues/puja-android.mjs --versio 1.0.0 --build 7 --compila          bundleRelease (signa el script)
+  node scripts/botigues/puja-android.mjs --versio 1.0.0 --build 7 --confirma=1.0.0+7 verifica i PUJA en esborrany
+- En sec (per defecte): preflight, opcions de les eines, pla emmascarat. No compila ni puja res.
+- --compila: compila i verifica en local. A iOS, -allowProvisioningUpdates pot crear perfils al compte de
+  l'equip: és un efecte al compte, no una publicació, però cal saber-ho.
+- --confirma=VERSIO+BUILD: el «sí» del Mestre en eixe moment i per a ESTA pujada (RUNBOOK S4). Ha de
+  casar exactament amb --versio i --build; si no, eixida 10. Un «sí» no val per a la pujada següent.
+- Abans de pujar, sempre: la signatura és de l'equip (iOS, codesign) o de la clau de pujada (Android,
+  keytool), i la versió arxivada és la que es confirma (iOS, Info.plist; Android, build.gradle). Si no,
+  eixida 9 o 7 i no es puja res.
+- Android sense fastlane: amb --confirma imprimix els passos per a pujar-lo a mà i ix amb 6 (no ha pujat).
+- Al final, un REBUT sense cap secret (commit, versió, build, sha256, hora). Va a LAB/rebuts/ (RUNBOOK A10).
+
+Codis d'eixida (els mateixos als tres scripts; entorn.mjs, EIXIDA):
+   0  tot correcte (pla en sec, compilació o pujada feta)
+   2  arguments que falten, que sobren o que no s'entenen
+   3  el fitxer d'entorn no hi és, no es llig, té permisos oberts, git no l'ignora o és un fitxer de Vite
+   4  un nom VITE_*, una clau escrita dins del fitxer, un nom repetit o una línia que no s'entén
+   5  falta una variable o el fitxer que nomena, o eixe fitxer és dins del repositori o té permisos oberts
+   6  falta una eina, o no té les opcions que el script farà servir (Android sense fastlane amb --confirma)
+   7  canvis sense cometre, dist-natiu/ absent, projecte natiu desincronitzat o versió que no casa
+   8  xcodebuild, gradle, altool, keytool o fastlane han fallat
+   9  l'equip de la signatura, la versió arxivada o l'empremta del certificat no casen
+  10  --confirma no casa amb --versio i --build
+
+
+4. EL QUE NECESSITA FORA D'ESTOS FITXERS
+---------------------------------------
+- android/app/build.gradle (després de npx cap add android) ha de llegir la signatura de l'entorn només si
+  el Mestre tria --compila. Proposta [NO VERIFICAT contra la plantilla de la versió V; si la plantilla és
+  build.gradle.kts, cal la mateixa idea en Kotlin]:
+      android {
+        signingConfigs {
+          release {
+            if (System.getenv('SDP_ANDROID_KEYSTORE_PATH')) {
+              storeFile file(System.getenv('SDP_ANDROID_KEYSTORE_PATH'))
+              storePassword System.getenv('SDP_ANDROID_KEYSTORE_PASSWORD')
+              keyAlias System.getenv('SDP_ANDROID_KEY_ALIAS')
+              keyPassword System.getenv('SDP_ANDROID_KEY_PASSWORD')
+            }
+          }
+        }
+        buildTypes { release { signingConfig signingConfigs.release } }
+      }
+  Sense eixes variables, el bundle de release ix sense signar i keytool ho diu (eixida 8): llavors signa el
+  Mestre amb Android Studio, que és l'opció A.
+- versionCode i versionName a android/app/build.gradle en la forma de la plantilla (versionCode 7,
+  versionName "1.0.0"); el script els llig i els compara amb --build i --versio.
+- A iOS, l'Info.plist ha de llegir $(MARKETING_VERSION) i $(CURRENT_PROJECT_VERSION) [NO VERIFICAT a la
+  plantilla de la versió V]. Si no, la verificació de la versió arxivada falla (eixida 9) en lloc de pujar
+  un build amb un número que no és el confirmat.
+- Les línies de FASE_PRELEASE_FETA.txt §6 al .gitignore: sense elles, dist-natiu/ i android/app/build/
+  ixen a git status i el preflight para (eixida 7). Això és a propòsit: es puja des d'un commit.
+
+
+5. VERIFICACIÓ DE LES EINES (el pas V0 del RUNBOOK, automatitzat)
+----------------------------------------------------------------
+Cada script busca a l'ajuda de l'eina instal·lada TOTES les opcions que farà servir abans de fer res:
+  xcodebuild -help:        -workspace -project -scheme -configuration -destination -archivePath
+                           -allowProvisioningUpdates -authenticationKeyPath -authenticationKeyID
+                           -authenticationKeyIssuerID -exportArchive -exportPath -exportOptionsPlist
+  xcrun altool --help:     --validate-app --upload-app --file --type --apiKey --apiIssuer
+  fastlane supply --help:  --aab --track --release_status --package_name --json_key --skip_upload_metadata
+                           --skip_upload_images --skip_upload_screenshots --skip_upload_changelogs --validate_only
+Si en falta alguna: eixida 6, i Fusible (AGENTS §10): es consulta la documentació oficial de la versió
+instal·lada i s'esmena el script. Les opcions de dalt són de memòria [NO VERIFICAT ací: no hi ha Xcode
+executable ni fastlane en esta shell]. Altres punts [NO VERIFICAT]: method «app-store-connect» de
+l'ExportOptions.plist (Xcode 15.3 o posterior), la variable API_PRIVATE_KEYS_DIR d'altool, les variables
+FASTLANE_SKIP_UPDATE_CHECK i FASTLANE_OPT_OUT_USAGE (la segona apaga l'analítica de fastlane), el nom
+App.ipa de l'exportació (el script agafa el primer .ipa de la carpeta) i les carpetes on Capacitor copia
+dist-natiu/ (ios/App/App/public i android/app/src/main/assets/public).
+fastlane pilot (iOS) no s'ha fet servir: el seu api_key_path espera un JSON que pot portar la clau
+escrita, i això és el que estes regles eviten. Transporter (l'app) continua sent la via a mà.
+
+
+6. INSTAL·LACIÓ (amb lease: scripts/ i package.json són governança)
+------------------------------------------------------------------
+Mateix patró que FASES_1_I_2.txt §1 (contingut a LAB/nous/, contrastat amb un COMMIT_BASE, executor-mutacio):
+  LAB/nous/botigues/entorn.mjs.txt         → scripts/botigues/entorn.mjs
+  LAB/nous/botigues/preflight.mjs.txt      → scripts/botigues/preflight.mjs
+  LAB/nous/botigues/puja-ios.mjs.txt       → scripts/botigues/puja-ios.mjs
+  LAB/nous/botigues/puja-android.mjs.txt   → scripts/botigues/puja-android.mjs
+  LAB/nous/botigues/botigues.test.mjs.txt  → tests/botigues.test.mjs   (tests/ no és governança)
+  LAB/nous/botigues/botigues.env.exemple.txt: no s'instal·la; el Mestre en fa la còpia (§2).
+Proposta per al mateix package.json de la lease (no aplicada):
+  "botigues:preflight": "node scripts/botigues/preflight.mjs --plataforma totes",
+  "botigues:ios": "node scripts/botigues/puja-ios.mjs",
+  "botigues:android": "node scripts/botigues/puja-android.mjs",
+  i tests/botigues.test.mjs al final de la llista de "test:node".
+Proves (tests/botigues.test.mjs, 6): peces pures; git ignora .env.botigues.local i no un altre nom; fitxer
+d'entorn i rutes reals en una carpeta temporal (permisos, dins del repositori, nom de la .p8, VITE_*, fitxer
+de Vite, cap valor als missatges); plans emmascarats i contrasenyes només a l'entorn del fill, amb un
+procés fill de Node que demostra el filtre de l'eixida; preflight sobre l'arbre real (primera família que
+falla); ús i confirmació que paren abans de tocar res.
+[VERIFICAT el 261003] 6/6 en verd, dues vegades, des d'un bloc temporal de tests/natiu-build.test.mjs
+(ja retirat; natiu-build ha tornat a 16 proves, 15 en verd i 1 saltada amb motiu): primer amb les proves
+escrites dins del bloc i, després, executant ESTE botigues.test.mjs.txt tal qual, amb només els imports
+canviats per mòduls data: fets dels .mjs.txt. Dos errors reals trobats i corregits abans de lliurar:
+  · la màscara canviava «upload» (l'àlies) dins de «--upload-app»: ara un identificador només es
+    canvia si és una peça sencera;
+  · les verificacions analitzaven l'eixida ja emmascarada, i «TeamIdentifier=<SDP_APPLE_TEAM_ID>» feia
+    fallar l'equip BO (i una empremta escrita amb dos punts desapareixia de l'eixida de keytool): ara
+    executa() torna també el text cru, només per a analitzar-lo, mai per a imprimir-lo.
+No executat: cap xcodebuild, gradle, altool, keytool real ni fastlane.
+Després d'instal·lar: node --test tests/botigues.test.mjs; i, abans del primer ús, preflight en sec.
+
+
+7. LA REGLA, DITA AMB EXACTITUD
+-------------------------------
+La frontera de RUNBOOK_BOTIGUES_IA.txt §0 és la regla d'operació de Claude (l'agent), no una llei del
+repositori ni de les botigues (objecció de Codex a 261003_1950_auditoria_codex.md, acceptada). Estos
+scripts no la fan complir: la fan possible. Amb ells, la part repetible (compilar, verificar, pujar amb
+les claus d'API) no necessita que cap agent escriga una contrasenya; i cada pujada continua necessitant
+el «sí» del Mestre per a eixa pujada (--confirma=VERSIO+BUILD).
+
+Ancoratge: [[00_index_escriptori]]
