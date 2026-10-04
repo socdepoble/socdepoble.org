@@ -4,13 +4,19 @@
  * el comptador; i, a les eines, «Marca-ho tot com a llegit» per a la carpeta
  * o la font que es veu (MarcaTotLlegit, la mateixa peça que el detall porta
  * en estret). Cap classe pròpia.
+ * Ordre del Mestre, 261004 (integració final, arreglo 6) · Cada element és una
+ * UniversalCard (NavTargetes): «Totes les fonts», amb la boina de l'app i
+ * quantes fonts hi seguix la persona; cada font, amb la seua boina (ella
+ * mateixa) i la seua descripció o el seu lloc web.
  */
 import AppGridColumn from '../../../components/layout/AppGridColumn.jsx';
 import { EstatBuit, MarcColumna } from '../../../components/PedraSeca/index.js';
 import { DESPRES, comptadorsFonts, fontsDeCarpeta } from '../nucli/index.js';
 import { MarcaTotLlegit, NavTargetes, ObridorCarpetes } from './comunes.jsx';
 import { useVistaLector } from './context.js';
-import { NOTICIES, TOTES, useSeleccio } from './navegacio.js';
+import {
+  NOTICIES, TOTES, autoriaDeFont, autoriaDeLApp, entradetaDeFont, textFontsSeguides, useSeleccio
+} from './navegacio.js';
 
 const textDe = (carpeta, n) => {
   if (carpeta === DESPRES) return n === 1 ? 'desada' : 'desades';
@@ -24,10 +30,16 @@ export function ColumnaFonts({ params }) {
   const fonts = fontsDeCarpeta(dades) || [];
   const { total, perFont } = comptadorsFonts(dades);
   const elements = [
-    { id: TOTES, nom: 'Totes les fonts', comptador: total, secundari: textDe(carpeta, total) },
+    {
+      id: TOTES, nom: 'Totes les fonts', comptador: total, secundari: textDe(carpeta, total),
+      entradeta: textFontsSeguides(fonts.length), autoria: autoriaDeLApp()
+    },
     ...fonts.map((font) => {
       const n = perFont.get(font.id) || 0;
-      return { id: font.id, nom: font.nom, comptador: n, secundari: textDe(carpeta, n), imatge: font.imatge || undefined };
+      return {
+        id: font.id, nom: font.nom, comptador: n, secundari: textDe(carpeta, n),
+        entradeta: entradetaDeFont(font), autoria: autoriaDeFont(font)
+      };
     })
   ];
   const titol = nomCarpeta ? `Fonts · ${nomCarpeta}` : 'Fonts';

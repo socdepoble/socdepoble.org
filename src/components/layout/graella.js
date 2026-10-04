@@ -10,7 +10,9 @@
  *
  * Mides de la closca (data-layout):
  *   · «estret»: una sola columna; navegació i llista són panells superposats.
- *   · «mitja»: llista i detall; la navegació és un panell superposat.
+ *   · «mitja»: llista i detall; la navegació és un panell superposat. Amb
+ *     railEsquerra (barres, ordre del Mestre 261004), la navegació és un rail
+ *     fix de PUNTS_DE_TALL.plegada i desplegar-la obri el panell de damunt.
  *   · «ample»: tres columnes; navegació i llista es poden plegar en rail.
  */
 
@@ -72,13 +74,17 @@ export function midaDeGraella(amplada, plegades = {}, amplades = {}) {
  * 'middle' o null). La mateixa regla pinta inert i aria-hidden a la closca i
  * la llig la guarda del focus.
  *  · En «ample» no se'n tanca cap: plegar és un rail, no un tancament.
- *  · En «mitja» la navegació només és oberta com a panell.
+ *  · En «mitja» la navegació només és oberta com a panell. Amb
+ *    `railEsquerra` (barres, ordre del Mestre 261004: «les dues barres de la
+ *    Wiki han d'estar sempre presents plegades»), és un rail sempre obert.
  *  · En «estret» cada columna és oberta quan és el seu panell, i el detall,
  *    quan no n'hi ha cap.
+ * Sense opcions, el d'abans (el Xat i les apps no passen railEsquerra).
  */
-export function columnesTancades(mida, panell) {
+export function columnesTancades(mida, panell, { railEsquerra = false } = {}) {
+  const navegacioEnRail = mida === 'mitja' && railEsquerra;
   return {
-    left: mida !== 'ample' && panell !== 'left',
+    left: mida !== 'ample' && panell !== 'left' && !navegacioEnRail,
     middle: mida === 'estret' && panell !== 'middle',
     right: mida === 'estret' && panell !== null
   };

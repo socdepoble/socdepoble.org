@@ -62,4 +62,29 @@ describe('sanitize.js', () => {
         expect(sanitizeHtml(`<a href="${href}">x</a>`)).not.toContain('href=');
       });
   });
+
+  /* T7 (ordre del Mestre, 261004) · Les targetes incrustades viatgen com a
+     div amb data-* (DOMPurify té ALLOW_DATA_ATTR per defecte i cap prova ho
+     fixava). Si mai es tancaren, les targetes desapareixerien sense avís. */
+  describe('targetes incrustades (data-*)', () => {
+    const TARGETA = '<div data-sdp-targetes="" class="sdp-targetes" data-forma="sola" data-alineacio="esquerra">'
+      + '<div data-sdp-targeta="publicacio:1" class="sdp-targeta" data-ruta="/mur/1" data-titol="La festa" data-imatge="/assets/mur/1.webp" data-autor-ruta="/perfil/persona/pep">'
+      + '<a href="/mur/1" rel="noopener noreferrer nofollow">La festa</a></div></div>';
+
+    it('data-sdp-targetes, data-sdp-targeta, data-alineacio, data-ruta i la resta sobreviuen, byte a byte', () => {
+      expect(sanitizeHtml(TARGETA)).toBe(TARGETA);
+    });
+
+    it('style i els on* d’eixos div se’n van; les dades es queden', () => {
+      const brut = '<div data-sdp-targetes="" style="position:fixed" onclick="alert(1)"><div data-sdp-targeta="publicacio:1" onmouseover="alert(2)" style="color:red" data-titol="T"></div></div>';
+      const net = sanitizeHtml(brut);
+      expect(net).not.toMatch(/style=|onclick|onmouseover/);
+      expect(net).toContain('data-sdp-targeta="publicacio:1"');
+      expect(net).toContain('data-titol="T"');
+    });
+
+    it('un atribut amb una seqüència de comentari s’esborra sencer (per això la instantània no porta < ni >)', () => {
+      expect(sanitizeHtml('<div data-titol="a --> b">x</div>')).toBe('<div>x</div>');
+    });
+  });
 });

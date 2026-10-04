@@ -41,13 +41,14 @@ const FIL_IAIA = '7c2a1d9e-3b4f-4a5c-9d6e-1f2a3b4c5d04';
 const FIL_COMUNITAT = '7c2a1d9e-3b4f-4a5c-9d6e-1f2a3b4c5d06';
 const FIL_AVISOS = '7c2a1d9e-3b4f-4a5c-9d6e-1f2a3b4c5d07';
 const FIL_GENERAL = '7c2a1d9e-3b4f-4a5c-9d6e-1f2a3b4c5d08';
+const FIL_BETA_TESTERS = '7c2a1d9e-3b4f-4a5c-9d6e-1f2a3b4c5d09';
 
 /* Marcador de la persona que mira; es substituïx en construir la llavor. */
 const JO = 'jo';
 
 export const XAT_SEED_IDS = Object.freeze({
   javi: JAVI, iaia: IAIA, entitat: ENTITAT,
-  filIaia: FIL_IAIA, filComunitat: FIL_COMUNITAT, filAvisos: FIL_AVISOS, filGeneral: FIL_GENERAL
+  filIaia: FIL_IAIA, filComunitat: FIL_COMUNITAT, filAvisos: FIL_AVISOS, filGeneral: FIL_GENERAL, filBetaTesters: FIL_BETA_TESTERS
 });
 
 /* Noms de qui escriu o de qui es pot parlar (la IAIA i l'entitat signen els seus missatges). */
@@ -121,7 +122,12 @@ export function construeixLlavorXat(joId, ara = Date.now()) {
 
     /* ── Comunitat «Sóc de Poble» · Avisos (canal): el primer llegit, l’últim no ── */
     deLEntitat(FIL_AVISOS, a(2, 10, 5), 'Benvinguts a la comunitat de Sóc de Poble! Este és el canal d’avisos: ací publicarem les novetats, les quedades i els canvis importants del projecte.'),
-    deLEntitat(FIL_AVISOS, fa(40), 'En este canal només escriu l’equip de Sóc de Poble. Per a preguntar o conversar, feu servir el grup General de la comunitat.')
+    deLEntitat(FIL_AVISOS, fa(40), 'En este canal només escriu l’equip de Sóc de Poble. Per a preguntar o conversar, feu servir el grup General de la comunitat.'),
+    deLEntitat(FIL_AVISOS, fa(20), 'Estem a punt de donar permís als usuaris per a poder registrar-se i començar amb les primeres interaccions.'),
+
+    /* ── Comunitat «Sóc de Poble» · Beta testers (grup) ── */
+    m(FIL_BETA_TESTERS, ENTITAT, a(2, 10, 0), null, { tipus: 'sistema', metadades: { clau: 'creat' } }),
+    deLEntitat(FIL_BETA_TESTERS, a(2, 10, 1), 'Benvinguts al canal de Beta Testers! Este és l’espai per a fer proves, reportar errors i donar-nos idees sobre el projecte.')
   ];
 
   /* El número d’ordre el posa «el servidor»: ací, l’ordre d’aparició per conversa. */
@@ -148,7 +154,8 @@ export function construeixLlavorXat(joId, ara = Date.now()) {
       titol: ENTITATS_SEED[0].name, orgId: ENTITAT, imatgeUrl: ENTITATS_SEED[0].logo_url, subjecte: subjecte()
     }),
     fil(FIL_AVISOS, 'canal', a(2, 10, 0), { titol: 'Avisos', orgId: ENTITAT, comunitatId: FIL_COMUNITAT, subjecte: subjecte() }),
-    fil(FIL_GENERAL, 'grup', a(2, 10, 0), { titol: 'General', comunitatId: FIL_COMUNITAT, subjecte: subjecte() })
+    fil(FIL_GENERAL, 'grup', a(2, 10, 0), { titol: 'General', comunitatId: FIL_COMUNITAT, subjecte: subjecte() }),
+    fil(FIL_BETA_TESTERS, 'grup', a(2, 10, 0), { titol: 'Beta testers', comunitatId: FIL_COMUNITAT, subjecte: subjecte() })
   ];
 
   const participant = (filId, usuariId, llegitFinsSeq, extra = {}) => ({
@@ -166,10 +173,12 @@ export function construeixLlavorXat(joId, ara = Date.now()) {
        participant virtual (la que signa). A Avisos em queda l'últim per llegir. */
     participant(FIL_COMUNITAT, JO, 0),
     entitatVirtual(FIL_COMUNITAT),
-    participant(FIL_AVISOS, JO, ultimSeq(FIL_AVISOS) - 1),
+    participant(FIL_AVISOS, JO, ultimSeq(FIL_AVISOS) - 2),
     entitatVirtual(FIL_AVISOS),
     participant(FIL_GENERAL, JO, ultimSeq(FIL_GENERAL)),
-    entitatVirtual(FIL_GENERAL)
+    entitatVirtual(FIL_GENERAL),
+    participant(FIL_BETA_TESTERS, JO, ultimSeq(FIL_BETA_TESTERS)),
+    entitatVirtual(FIL_BETA_TESTERS)
   ];
 
   return { fils, participants, missatges };

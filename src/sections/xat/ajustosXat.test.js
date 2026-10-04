@@ -11,6 +11,7 @@ import {
   filaQueObri, filesDePagina, paginaAjustos, pilaDeResultat, textDe
 } from './ajustosXat.js';
 import { PRESETS_AMPLARIA, presetDeMides } from './amplariaColumnes.js';
+import { VISTES_XAT } from './components/ClosCaXat.jsx';
 
 const TOTES = Object.values(PAGINES_AJUSTOS).flatMap(filesDePagina);
 const etiquetes = (resultats) => resultats.map(({ fila }) => etiquetaDeFila(fila));
@@ -54,6 +55,10 @@ describe('l’arbre', () => {
     const rutes = new Set(SECTIONS.map((s) => s.path));
     expect(RUTES_AJUSTOS.perfil).toBe('/el-meu-perfil');
     for (const ruta of [RUTES_AJUSTOS.wiki, RUTES_AJUSTOS.legal, RUTES_AJUSTOS.versions]) expect([ruta, rutes.has(ruta)]).toEqual([ruta, true]);
+    /* Torn 261004 (T5) · La vista del rail: /xat existix i «multimedia» és una de les seues vistes. */
+    const multimedia = new URL(RUTES_AJUSTOS.multimedia, 'https://socdepoble.org');
+    expect(rutes.has(multimedia.pathname)).toBe(true);
+    expect(VISTES_XAT).toContain(multimedia.searchParams.get('vista'));
     for (const fila of TOTES.filter((f) => f.tipus === 'ruta')) expect(Object.values(RUTES_AJUSTOS)).toContain(fila.ruta);
     expect(filesDePagina(paginaAjustos('ajuda')).map((f) => [etiquetaDeFila(f), f.ruta])).toEqual([
       ['Wiki de Poble', '/wikidepoble'], ['Legal i privacitat', '/legal'], ['Versions', '/versions']
@@ -65,9 +70,14 @@ describe('l’arbre', () => {
       const tipus = [Boolean(pagina.grups), Boolean(pagina.especial), Boolean(pagina.construccio)].filter(Boolean);
       expect([pagina.id, tipus.length]).toEqual([pagina.id, 1]);
     }
-    /* En construcció, honestament: el que encara no té dades. */
+    /* En construcció, honestament: el que encara no té dades. Multimèdia ja
+       no hi és: derogat per l'ordre del Mestre del 261004 (prompt
+       261004_0515), la seua fila porta a la vista operativa del rail. */
     const enConstruccio = Object.values(PAGINES_AJUSTOS).filter((p) => p.construccio).map((p) => p.id).sort();
-    expect(enConstruccio).toEqual(['dades', 'destacats', 'historial', 'multimedia', 'notificacions', 'temporals']);
+    expect(enConstruccio).toEqual(['dades', 'destacats', 'historial', 'notificacions', 'temporals']);
+    expect(paginaAjustos('multimedia')).toBeNull();
+    expect(filesDePagina(paginaAjustos('xats')).find((f) => f.id === 'xats-multimedia'))
+      .toMatchObject({ tipus: 'ruta', ruta: '/xat?vista=multimedia', clau: 'section.xat.control.multimedia.titol' });
     /* Destacats diu el mateix que la vista del rail (textosDeVista). */
     expect(paginaAjustos('destacats').construccio).toEqual({ vista: 'destacats' });
   });

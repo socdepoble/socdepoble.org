@@ -40,11 +40,14 @@ import { TEXTOS_LLAVOR } from '../textosLlavor.js';
  *                         · si les dades fallen, el detall porta
  *                           «Reintentar» (la llista, que el porta, és plegada).
  *                       La closca porta la classe `sdp-workspace--compacte`.
- *                       Límit (correcció T7C-R4): en «estret» navegació i
- *                       llista són inerts i el seu obridor (la capçalera de
- *                       la llista) no es veu. La secció ha de dur la tria al
- *                       detall; un obridor al detall és decisió del Mestre.
- *                       El mestre-detall (MD) no s'hi aplica.
+ *                       Límit (correcció T7C-R4), derogat en part (ordre
+ *                       del Mestre, 261004: «com a mínim una barra visible
+ *                       que permeta desplegar l'altra»): en «estret»
+ *                       navegació i llista continuen sent panells tancats,
+ *                       però el rail de la closca (#app-grid-rail) és a la
+ *                       vista i les obri. La secció continua duent la tria
+ *                       al detall; un obridor al detall és decisió del
+ *                       Mestre. El mestre-detall (MD) no s'hi aplica.
  *                       Cap xifra pròpia: els punts de tall són els de
  *                       layout/graella.js, via AppGridShell (`mida`).
  *   - `mestreDetall` → (opcional, MD, ordre del Mestre 261003) el patró
@@ -196,6 +199,13 @@ export function UniversalWorkspace({
   const teNavegacio = grups.length
     ? grups.some((grup) => grup.options?.length)
     : Boolean(model.categories?.length);
+  /* Correcció dels verificadors (261004) · Si la secció declara una
+     navegació: grups (encara que siguen buits mentre carreguen) o
+     categories. Admin passa navigationGroups: [] i cap categoria, i el rail
+     de «mitja» li donava un Expandir cap a un panell buit. Es llig de
+     l'estructura i no de les opcions (teNavegacio): així el rail no apareix
+     de colp, i el detall no es mou 56 px, quan arriben les carpetes. */
+  const declaraNavegacio = grups.length > 0 || Boolean(model.categories?.length);
   const panellEstret = useCallback(
     () => (nivell.current === 'left' && !teNavegacio ? 'middle' : nivell.current),
     [teNavegacio]
@@ -223,6 +233,7 @@ export function UniversalWorkspace({
     >
       <WorkspaceFrame
         compacte={compacte}
+        declaraNavegacio={declaraNavegacio}
         mestreDetall={ambMestreDetall}
         panellEstret={panellEstret}
         onPanell={recordaPanell}
@@ -250,7 +261,7 @@ export function UniversalWorkspace({
 }
 
 function WorkspaceFrame({
-  compacte, mestreDetall, panellEstret, onPanell, tornaDeLaLlista, error, onCreate, onCreateError, onManageCategories, renderItem, renderDetail,
+  compacte, declaraNavegacio, mestreDetall, panellEstret, onPanell, tornaDeLaLlista, error, onCreate, onCreateError, onManageCategories, renderItem, renderDetail,
   labels, icons, tagFilter, collapsibleNavigation, replegaTotaCapcalera, sortable, canCreate, onRetry, listClassName, detailClassName, className
 }) {
   const workspace = useWorkspace();
@@ -264,7 +275,11 @@ function WorkspaceFrame({
   return (
     <AppGridShell
       aria-label="Espai de treball de tres columnes"
-      className={['sdp-workspace', compacte ? 'sdp-workspace--compacte' : '', className].filter(Boolean).join(' ')}
+      /* Barres (ordre del Mestre, 261004) · sdp-workspace--universal és
+         l'abast positiu de la reserva de la barra mòbil als scrollers del
+         Workspace (modules.css): el Xat també porta sdp-workspace i ja la
+         reserva dins dels seus contenidors. */
+      className={['sdp-workspace', 'sdp-workspace--universal', compacte ? 'sdp-workspace--compacte' : '', className].filter(Boolean).join(' ')}
       leftTitle={labels.categories}
       middleTitle={labels.items}
       leftIcon={icons.categories}
@@ -280,7 +295,20 @@ function WorkspaceFrame({
          arrenca amb la llista plegada i en mitja s'ha de vore); en «estret»,
          només amb el mestre-detall (sense, estret és com abans). */
       railMitja={!compacte}
-      railEstret={mestreDetall}
+      /* Barres (ordre del Mestre, 261004: «com a mínim una d'elles visible
+         que permeta desplegar l'altra») · També en mode compacte: el Snippet
+         en «estret» no tenia cap barra ni cap obridor (límit T7C-R4). El
+         rail de la closca no és cap obridor al detall (el que T7C-R4 deixa
+         al Mestre): és la columna plegada, a l'esquerra del detall, que
+         continua sent la vista d'eixida. El mestre-detall no s'hi aplica. */
+      railEstret={mestreDetall || compacte}
+      /* Barres (ordre del Mestre, 261004: «la columna de la Wiki ha d'estar
+         fixa i visible, almenys plegada, en tots els formats») · En «mitja»
+         la navegació és un rail fix i desplegar-la obri el panell. Fora del
+         mode compacte, com railMitja: el Snippet té el seu límit (T7C-R4).
+         Correcció dels verificadors · I només si la secció declara una
+         navegació: Admin (FILTRES sense cap filtre) es queda com era. */
+      railEsquerra={!compacte && declaraNavegacio}
       leftColumn={
         <CategoryColumn
           compacte={compacte}
@@ -345,7 +373,7 @@ function WorkspaceFrame({
 
 function CategoryColumn({ compacte, mestreDetall = false, collapsibleNavigation, replegaTotaCapcalera, focusTarget, onManageCategories, labels, icon, collapseBtnRef, expandBtnRef }) {
   const { navigationGroups, categories, state, selectCategory, toggleColumn } = useWorkspace();
-  const { mida, setPanellObert, tancaPanells } = useAppGrid();
+  const { mida, setPanellObert, tancaPanells, obriPanell, ambRailNavegacio, navegacioEnRail } = useAppGrid();
   const [collapsedGroups, setCollapsedGroups] = useState({});
   const [expandedFolders, setExpandedFolders] = useState(new Set());
 
@@ -395,7 +423,11 @@ function CategoryColumn({ compacte, mestreDetall = false, collapsibleNavigation,
   const headerGroup = groupsToRender.find((group) => !group.label) || null;
   const isGroupOpen = (id) => !collapsedGroups[id];
 
-  const collapsed = state.collapsed.left && mida === 'ample';
+  /* Barres (ordre del Mestre, 261004) · En «mitja», amb el rail de la
+     closca (navegacioEnRail: cap panell obert), la navegació es pinta
+     plegada: Expandir, roda i rail de carpetes. El plegat d'«ample»
+     (collapsed.left) no es toca: és la decisió de la persona en ample. */
+  const collapsed = (state.collapsed.left && mida === 'ample') || navegacioEnRail;
   // La roda dentada no depén de cap secció: sense configuració injectada,
   // obri la de l'espai de treball (amplàries de columna).
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -480,8 +512,17 @@ function CategoryColumn({ compacte, mestreDetall = false, collapsibleNavigation,
           titol={labels.categories}
           endActions={settingsActions}
           expandBtnRef={expandBtnRef}
-          controls={replegaTotaCapcalera ? 'app-grid-sidebar' : undefined}
+          /* Barres · En el rail de «mitja», l'Expandir obri el panell de la
+             navegació (amb el focus a la carpeta activa, obriPanell) i es
+             declara obridor de la closca (aria-controls i data-obri-columna)
+             per a la guarda del focus. En «ample», el plegat de sempre. */
+          controls={replegaTotaCapcalera || navegacioEnRail ? 'app-grid-sidebar' : undefined}
+          expandObridor={navegacioEnRail}
           onReplega={() => {
+            if (navegacioEnRail) {
+              obriPanell('left');
+              return;
+            }
             toggleColumn('left');
             focusAfterLayout(collapseBtnRef);
           }}
@@ -512,6 +553,21 @@ function CategoryColumn({ compacte, mestreDetall = false, collapsibleNavigation,
         replegaTotaCapcalera={replegaTotaCapcalera && mida === 'ample'}
         controls={replegaTotaCapcalera ? 'app-grid-sidebar' : undefined}
         onReplega={() => {
+          /* Barres (261004) · Fora d'«ample», la navegació desplegada és un
+             panell: Replegar el tanca. Abans commutava el plegat d'«ample»:
+             per davall del mínim d'ample no feia res visible i deixava
+             l'estat latent.
+               · Amb el rail de «mitja», torna al rail, amb el focus a
+                 l'Expandir.
+               · Sense rail (el mode compacte en «mitja»; correcció dels
+                 verificadors), el panell es tanca igual i la guarda del
+                 focus de la closca porta el focus a l'obridor de la
+                 capçalera de la llista (data-obri-columna). */
+          if (mida !== 'ample') {
+            tancaPanells();
+            if (ambRailNavegacio) focusAfterLayout(expandBtnRef);
+            return;
+          }
           toggleColumn('left');
           focusAfterLayout(expandBtnRef);
         }}
@@ -706,7 +762,18 @@ function ItemListColumn({
      obria un toc de cada dos), sense tocar eixe rail, i es declara obridor
      de la closca. El rail de la llista plegada en porta un d'igual: la
      primera columna estreta dona el menú sense desplegar la llista. */
-  const obridorNavegacio = obridorEstret || (mida === 'mitja' && llistaPlegable && Boolean(categoryIcon));
+  /* Barres (261004) · En «estret» amb el rail i sense el mestre-detall (el
+     mode compacte), la capçalera de la llista oberta porta el mateix
+     obridor: abans era el toggleColumn d'«ample», que obria un toc de cada
+     dos.
+     Correcció dels verificadors (261004) · També en «mitja» sense el
+     desplegador de la llista (el mode compacte, el Snippet en «mitja»):
+     era l'única porta a la navegació i obria un toc de cada dos. Fora
+     d'«ample», l'obridor de la capçalera és sempre este: el mateix botó i
+     la mateixa icona, i ara obri al primer toc, tanca al segon i es declara
+     obridor de la closca. El toggleColumn que hi havia ha quedat sense cap
+     cas i s'ha retirat. */
+  const obridorNavegacio = obridorEstret || (mida !== 'ample' && Boolean(categoryIcon));
   const obridorDelRail = llistaPlegable && (Boolean(categoryIcon) || categories.length > 0);
   /* P6 (revisió) · L'obridor declara aria-expanded: amb el panell obert, el
      torna a tancar. En «mitja» el panell de la navegació no tapa la llista i
@@ -917,16 +984,6 @@ function ItemListColumn({
               title={labels.back}
             >
               <ArrowLeft size={24} aria-hidden="true" focusable="false" />
-            </button>
-          ) : mida !== 'ample' && categoryIcon ? (
-            <button
-              type="button"
-              className="app-grid-col-header__accio-icon"
-              onClick={() => toggleColumn('left')}
-              aria-label={labels.categories}
-              title={labels.categories}
-            >
-              {React.createElement(categoryIcon, { size: 24, "aria-hidden": true, focusable: "false" })}
             </button>
           ) : null
         }

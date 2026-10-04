@@ -34,7 +34,8 @@
   --sdp-bloc-control: max(var(--sdp-touch), var(--sdp-touch-comode));
   --sdp-bloc-fitxa-mida: 86px;
   --sdp-crom-mostra: var(--sdp-fons-targeta);
-  --sdp-radi-alerta: 6px;
+  /* D-C (ordre del Mestre, 261004) · àlies dins de l'escala, com --sdp-radi-boto (6 → 8px). */
+  --sdp-radi-alerta: var(--sdp-radi-s);
   --sdp-font-alerta: sans-serif;
   --sdp-crom-text-secundari: var(--sdp-pedra-300);
   --sdp-crom-capcalera-profunda: var(--sdp-pedra-850);
@@ -230,6 +231,11 @@
      peu (CONNECTAR amb paraula). L'aside només es veu amb un editor de 60rem
      o més (components.css): a l'editor li queden 36rem. */
   --sdp-targeta-viva-ample: 24rem;
+  --sdp-targeta-incrustada-ample: 22.5rem; /* T7 (261004) · la targeta incrustada al cos: 360px, com .sdp-card-grid */
+  /* Norma del Mestre, 261004 (prompt 261004_1108, T2) · L'avatar redó de qui
+     signa (una persona o la IA) davant de l'H1: 300px, més menut que el
+     logotip d'una entitat (fins a 600px). PageFrame, .page-title-avatar. */
+  --sdp-avatar-capcalera: 18.75rem;
 
   /* LLEI DE VIDA · objectiu tàctil mínim. Cap control per davall.
      Mestre 261004 (Q2): 48px sempre, a tot arreu; el mateix valor que
@@ -275,22 +281,30 @@
   --sdp-text-meta: 0.875rem;   /* 14px · sòl absolut de mida de lletra */
 
   /* Fase D (Q5 del Mestre, 261004) · Tipografia fluida de la PROSA (base.css:
-     h1-h6, p, llistes i .lead). Mínim = l'escala P6 de dalt (al mòbil ningú
-     no perd mida); màxim moderat. Interpolació lineal entre 320 i 1024px
-     (20 i 64rem): constants precalculades, perquè la Baseline 2022 no
-     dividix longituds dins de calc(). Terme en rem + terme en vw: creix amb
-     el zoom i amb la lletra triada (WCAG 1.4.4). Els components conserven
-     els --sdp-text-* fixos: vw és el viewport de l'amfitrió, no la columna.
+     h1-h6, p, llistes i .lead). Rang real de cada nivell al comentari de la
+     línia: el mínim (a 320px) queda per davall de l'escala P6 fixa de dalt
+     perquè el títol càpia sencer en un mòbil estret (acta 261004_1027, ràtio
+     màxim 1.8); el màxim (a 1024px) és moderat. Interpolació lineal entre
+     320 i 1024px (20 i 64rem): constants precalculades, perquè la Baseline
+     2022 no dividix longituds dins de calc(). Terme en rem + terme d'amplada:
+     creix amb el zoom i amb la lletra triada (WCAG 1.4.4). Els components
+     conserven els --sdp-text-* fixos.
+     Valor de BASE en vw (Baseline 2022: Chrome 100 i Firefox 100 no tenen cqi).
+     El terme en cqi (relatiu al contenidor, decisió de MarIA 261004) el posa
+     el bloc @supports (width: 1cqi) de davall d'este. No es pot declarar com
+     una segona línia ací: una custom property no es valida en llegir-la, la
+     segona declaració guanya sempre i, en un navegador sense cqi, var() dona
+     un valor invàlid i el títol hereta la mida del pare.
      Tota la tipografia passa per custom properties: el futur tauler
      d'administració les podrà reescriure en calent. */
-  --sdp-fluid-h1:   clamp(3rem, 2.7727rem + 1.1364vw, 3.5rem);        /* 48 a 56px */
-  --sdp-fluid-h2:   clamp(2.5rem, 2.3295rem + 0.8523vw, 2.875rem);    /* 40 a 46px */
-  --sdp-fluid-h3:   clamp(2rem, 1.8864rem + 0.5682vw, 2.25rem);       /* 32 a 36px */
-  --sdp-fluid-h4:   clamp(1.75rem, 1.6932rem + 0.2841vw, 1.875rem);   /* 28 a 30px */
-  --sdp-fluid-h5:   clamp(1.5rem, 1.4432rem + 0.2841vw, 1.625rem);    /* 24 a 26px */
-  --sdp-fluid-h6:   clamp(1.25rem, 1.1932rem + 0.2841vw, 1.375rem);   /* 20 a 22px */
-  --sdp-fluid-lead: clamp(1.25rem, 1.1932rem + 0.2841vw, 1.375rem);   /* 20 a 22px */
-  --sdp-fluid-cos:  clamp(1.125rem, 1.0682rem + 0.2841vw, 1.25rem);   /* 18 a 20px */
+  --sdp-fluid-h1:   clamp(2rem, 1.3182rem + 3.4091vw, 3.5rem);        /* 32 a 56px */
+  --sdp-fluid-h2:   clamp(1.75rem, 1.2386rem + 2.5568vw, 2.875rem);   /* 28 a 46px */
+  --sdp-fluid-h3:   clamp(1.5rem, 1.1591rem + 1.7045vw, 2.25rem);     /* 24 a 36px */
+  --sdp-fluid-h4:   clamp(1.25rem, 0.9659rem + 1.4205vw, 1.875rem);   /* 20 a 30px */
+  --sdp-fluid-h5:   clamp(1.125rem, 0.8977rem + 1.1364vw, 1.625rem);  /* 18 a 26px */
+  --sdp-fluid-h6:   clamp(1rem, 0.8295rem + 0.8523vw, 1.375rem);      /* 16 a 22px */
+  --sdp-fluid-lead: clamp(1.125rem, 1.0114rem + 0.5682vw, 1.375rem);  /* 18 a 22px */
+  --sdp-fluid-cos:  clamp(1rem, 0.8864rem + 0.5682vw, 1.25rem);       /* 16 a 20px */
 
   /* Interlineat (Impeccable): 1.2 als títols i 1.6 al cos. */
   --sdp-leading-titol: 1.2;
@@ -346,8 +360,9 @@
   --sdp-mt-h2: 48px; --sdp-mb-h2: 12px;   /* corregit: h2 domina h3 */
   --sdp-mt-h3: 40px; --sdp-mb-h3: 12px;
   --sdp-mt-h4: 32px; --sdp-mb-h4: 8px;
-  --sdp-mt-h5: 24px; --sdp-mb-h5: 6px;
-  --sdp-mt-h6: 20px; --sdp-mb-h6: 6px;
+  /* D-C (ordre del Mestre, 261004) · a la reixeta de 4px: l'h5 i l'h6, de 6 a 8px. */
+  --sdp-mt-h5: 24px; --sdp-mb-h5: 8px;
+  --sdp-mt-h6: 20px; --sdp-mb-h6: 8px;
   --sdp-mb-lead: 24px;
   --sdp-mb-p: 20px;
   --sdp-mb-ul: 20px;
@@ -453,6 +468,24 @@
 
   accent-color: var(--sdp-accio);
   color-scheme: light;
+}
+
+/* Tipografia fluida relativa al contenidor (decisió de MarIA, 261004): només
+   on el navegador entén cqi (Safari 16, Chrome 105, Firefox 110). Mateixos
+   mínims, màxims i coeficients que el valor de base en vw del bloc de dalt;
+   ací només canvia la unitat del terme d'amplada. Fora d'este @supports, el
+   vw de dalt continua manant (Baseline 2022). */
+@supports (width: 1cqi) {
+  :root, :host, .sdp-root {
+    --sdp-fluid-h1:   clamp(2rem, 1.3182rem + 3.4091cqi, 3.5rem);
+    --sdp-fluid-h2:   clamp(1.75rem, 1.2386rem + 2.5568cqi, 2.875rem);
+    --sdp-fluid-h3:   clamp(1.5rem, 1.1591rem + 1.7045cqi, 2.25rem);
+    --sdp-fluid-h4:   clamp(1.25rem, 0.9659rem + 1.4205cqi, 1.875rem);
+    --sdp-fluid-h5:   clamp(1.125rem, 0.8977rem + 1.1364cqi, 1.625rem);
+    --sdp-fluid-h6:   clamp(1rem, 0.8295rem + 0.8523cqi, 1.375rem);
+    --sdp-fluid-lead: clamp(1.125rem, 1.0114rem + 0.5682cqi, 1.375rem);
+    --sdp-fluid-cos:  clamp(1rem, 0.8864rem + 0.5682cqi, 1.25rem);
+  }
 }
 
 /* Fons de mapa de la conversa del Xat. Viu a :root i :host, i NO a .sdp-root:

@@ -15,6 +15,7 @@ import { CalendariMapa } from './CalendariMapa.jsx';
 import { InventariMapa } from './InventariMapa.jsx';
 import { EntradesEixides } from './EntradesEixides.jsx';
 import { MapaConsola } from './MapaConsola.jsx';
+import { TEXTOS_AVIS } from './grafMapa.js';
 
 afterEach(cleanup);
 
@@ -73,17 +74,33 @@ const MAPA = Object.freeze({
   ]
 });
 
-/** Tota targeta de resum és la del Panell de Control i viu dins de .sdp-card-grid; la que no obri res, quieta. */
-const esClicable = (t) => [...t.children].some((c) => c.classList.contains('sp-card-link-overlay'));
-function totesDeControl() {
+/* Ordre del Mestre, 261004 (xat: cap xifra solta) · Tota targeta de les
+   vistes del Mapa és una UniversalCard sencera: la boina de Sóc de Poble
+   (l'autor porta a /projecte, la data a la pastilla), la icona a la
+   insígnia lateral, títol, subtítol, entradeta, tota la targeta porta a la
+   seua pàgina pròpia (/consola/xifres/<slug>) i el peu canònic.
+   Derogat per l'ordre del Mestre del 261004 (xat: cap xifra solta): «tota
+   targeta de resum és la del Panell de Control» (UniversalCard «action»,
+   icona de 40 px, sense boina ni pàgina; quieta si no obria res). */
+function totesAmbBoina() {
   const targetes = [...document.querySelectorAll('article.sp-card')];
   expect(targetes.length).toBeGreaterThan(0);
   for (const t of targetes) {
-    expect(t.className).toBe(esClicable(t) ? 'sp-card sp-card--action' : 'sp-card sp-card--action sdp-consola__quieta');
-    expect(t.parentElement.classList.contains('sdp-card-grid')).toBe(true);
-    expect(t.querySelector('.sp-card-title-icon svg').getAttribute('width')).toBe('40');
+    const titol = t.querySelector('h3.sp-card-title').textContent;
+    expect(t.className, titol).toBe('sp-card sdp-consola__targeta');
+    expect(t.parentElement.className).toBe('sdp-card-grid sdp-consola__graella');
+    expect(t.firstElementChild.className).toBe('sp-card-header');
+    expect(t.querySelector('.sp-card-header a.sp-card-author-link').getAttribute('href')).toBe('/projecte');
+    expect(t.querySelector('.sp-card-header .sp-card-author-name').textContent).toBe('Sóc de Poble');
+    expect(t.querySelector('.sp-card-header time.btn-date-time')).not.toBeNull();
+    expect(t.querySelector('.sp-card-calendar-badge svg').getAttribute('width')).toBe('48');
+    expect(t.querySelector('h4.sp-card-subtitle').textContent.length, titol).toBeGreaterThan(0);
+    expect(t.querySelector('.sp-card-text > p').textContent.split(/(?<=\.) /).length, titol).toBeGreaterThanOrEqual(3);
+    expect(t.querySelector('a.sp-card-link-overlay').getAttribute('href'), titol).toMatch(/^\/consola\/xifres\/[a-z0-9-]+$/);
+    expect([...t.querySelectorAll('.sp-card-footer button')].map((b) => b.getAttribute('aria-label')), titol)
+      .toEqual([`Traduir ${titol}`, `Comentar ${titol}`, `Compartir ${titol}`, `Connectar amb ${titol}`]);
   }
-  expect(document.querySelector('.sdp-consola__resum, .sdp-consola__xifra, .sdp-consola__tauler')).toBeNull();
+  expect(document.querySelector('.sdp-consola__resum, .sdp-consola__xifra, .sdp-consola__tauler, .sp-card--action, .sdp-consola__quieta')).toBeNull();
   return targetes;
 }
 
@@ -92,10 +109,15 @@ const titols = () => [...document.querySelectorAll('article.sp-card h3')].map((h
 describe('Fluxos de treball', () => {
   test('sense cap cadena ho diu, i la prosa queda com a suggeriment', () => {
     render(<FluxosMapa mapa={MAPA} />);
-    totesDeControl();
-    // 0 cadenes · 1 suggeriment · 2 punts de trobada (04_escriptori i AGENTS.md)
-    expect(titols()).toEqual(['0', '1', '2']);
+    totesAmbBoina();
+    // 0 cadenes · 1 suggeriment · 2 punts de trobada (04_escriptori i AGENTS.md) · 1 lloc sense lector (04_escriptori)
+    expect(titols()).toEqual(['0 cadenes declarades', '1 suggeriment de la prosa', '2 punts de trobada', '1 lloc amb faena i cap lector']);
     expect(screen.getByText('Cap cadena declarada')).toBeTruthy();
+    /* Correcció 261004 (verificador de la segona passada, punt 2) · el
+       recompte de l'estat buit enllaça amb la seua targeta. */
+    const buit = screen.getByText('Cap cadena declarada').closest('.sdp-buit');
+    expect([...buit.querySelectorAll('a')].map((a) => [a.textContent, a.getAttribute('href')]))
+      .toEqual([['1 lloc', '/consola/xifres/llocs-sense-lector']]);
     const suggeriments = screen.getByRole('region', { name: 'Suggeriments de la prosa' });
     expect(within(suggeriments).getByText('sdp-workflow')).toBeTruthy();
     expect(within(suggeriments).getByText('wiki-busca-skills')).toBeTruthy();
@@ -124,28 +146,49 @@ describe('Fluxos de treball', () => {
 describe('Agents atòmics', () => {
   test('cap agent atòmic, i les quatre peces mesurades amb el Mapa', () => {
     render(<AgentsAtomics mapa={MAPA} />);
-    const targetes = totesDeControl();
+    totesAmbBoina();
     expect(screen.getByText('Agents atòmics al Mas: cap')).toBeTruthy();
-    expect(titols()).toEqual(['Fluxos de treball', 'Tauler', 'Agents que treballen sols', 'Qui avisa quan algo es trenca']);
-    // T11 (ordre del Mestre, 260930): les peces són dades. A cada pàgina s'entra
-    // per la seua targeta del tauler; ací no hi ha cap porta, ni se'n promet cap.
-    expect(screen.queryAllByRole('link')).toEqual([]);
-    expect(targetes.every((t) => t.classList.contains('sdp-consola__quieta'))).toBe(true);
-    expect(document.body.textContent).not.toMatch(/porta a la pàgina/);
-    // Sense enllaç, el text nomena la pàgina de cada peça amb el títol del catàleg.
+    /* Correcció 261004 (verificador de la tercera passada, punt 5) · davant,
+       la targeta del recompte («0 agents atòmics»), que la coberta destacava
+       sense targeta. */
+    expect(titols()).toEqual(['0 agents atòmics', 'Fluxos de treball', 'Tauler', 'Agents que treballen sols', 'Qui avisa quan algo es trenca']);
+    /* Ordre del Mestre, 261004 (xat: cap xifra solta) · cada peça porta a la
+       seua pàgina pròpia. Derogat per l'ordre del Mestre del 261004 (xat: cap
+       xifra solta): la T11 del 260930 (les peces són dades, cap porta, i
+       totes quietes). */
+    expect([...document.querySelectorAll('a.sp-card-link-overlay')].map((a) => a.getAttribute('href'))).toEqual([
+      '/consola/xifres/agents-atomics',
+      '/consola/xifres/peca-fluxos-de-treball', '/consola/xifres/peca-tauler', '/consola/xifres/peca-agents-sols', '/consola/xifres/peca-vigilants'
+    ]);
+    // El text nomena la pàgina del detall de fons de cada peça amb el títol del catàleg.
     expect(document.body.textContent).toContain(
-      'el detall és, per este ordre, a les pàgines «Fluxos de treball», «Entrades i eixides», «Calendari de processos» i «Avisos i salut» de la Consola.');
+      'cada targeta diu com està hui i porta a la seua pàgina, i el detall de fons és, per este ordre, a les pàgines «Fluxos de treball», «Entrades i eixides», «Calendari de processos» i «Avisos i salut» de la Consola.');
     expect(document.body.textContent).not.toMatch(/pàgina del tauler/);
     const etiquetes = [...document.querySelectorAll('.sp-card-label')].map((l) => l.textContent);
     expect(etiquetes).toEqual(['FALTA', 'SENSE LECTOR', 'PARCIAL', 'PARCIAL']);
     expect(document.body.textContent).not.toMatch(/ejemplo|exemple/i);
+    /* Correcció 261004 (verificador de la segona passada, punts 2 i 3) · el
+       recompte dels agents enllaça amb la seua targeta, i concorda. */
+    const buit = screen.getByText('Agents atòmics al Mas: cap').closest('.sdp-buit');
+    expect([...buit.querySelectorAll('a')].map((a) => [a.textContent, a.getAttribute('href')]))
+      .toEqual([['Els 2 agents', '/consola/xifres/agents']]);
+    expect(buit.textContent).toContain('Els 2 agents que troba el Mapa són arnesos que conversen amb el Mestre');
+  });
+
+  test('amb un sol agent, la frase concorda: mai «Els 1 agents»', () => {
+    const un = { ...MAPA, nodes: MAPA.nodes.filter((x) => x.id !== 'agent:antigravity') };
+    render(<AgentsAtomics mapa={un} />);
+    const buit = screen.getByText('Agents atòmics al Mas: cap').closest('.sdp-buit');
+    expect(buit.textContent).not.toContain('Els 1 agents');
+    expect(buit.textContent).toContain('L’únic agent que troba el Mapa és un arnés que conversa amb el Mestre (pàgina Actors): no declara què llig ni què deixa, així que tot el que fa passa per la conversa.');
+    expect(buit.querySelector('a').getAttribute('href')).toBe('/consola/xifres/agents');
   });
 });
 
 describe('Actors', () => {
   test('capa per capa, amb el que troba el Mapa', () => {
     render(<ActorsMapa mapa={MAPA} />);
-    totesDeControl();
+    totesAmbBoina();
     // L'H2 és la introducció de la pàgina (UniversalPage): les capes van en H3.
     expect(screen.queryAllByRole('heading', { level: 2 })).toEqual([]);
     expect([...document.querySelectorAll('section > h3')].map((h) => h.textContent)).toEqual([
@@ -161,10 +204,19 @@ describe('Actors', () => {
     expect(conversen.textContent).toContain('Codex tampoc: al Mapa no ha arribat cap .codex/hooks.json.');
   });
 
+  /* Ordre del Mestre, 261004 (xat: cap xifra solta) · també els títols i
+     els subtítols de les targetes que porten una ruta (titolPrivat), i els
+     noms de fitxer de les entradetes, en <Mono>. */
   test('el mode privacitat amaga les rutes dels scripts', () => {
     render(<PrivacitatConsola.Provider value><ActorsMapa mapa={MAPA} /></PrivacitatConsola.Provider>);
     expect(document.body.textContent).not.toContain('hooks-local.mjs');
     expect(document.body.textContent).not.toContain('reflex_daemon.mjs');
+    expect(document.body.textContent).not.toContain('mapa.json');
+    expect(document.body.textContent).not.toContain('registre_tasques.json');
+    const capes = (nom) => [...screen.getByRole('heading', { level: 3, name: nom }).closest('section').querySelectorAll('article h3')].map((h) => h.textContent);
+    expect(capes('La memòria d’arrencada')).toEqual(['Carregador d’arrencada', 'Carregador d’arrencada']);
+    // Correcció 261004 (verificador de la tercera passada, punt 5) · el recompte del sòl, davant, no porta cap ruta.
+    expect(capes('El sòl')).toEqual(['2 llocs del sòl', 'Lloc del sòl', 'Lloc del sòl']);
   });
 
   /* T10 (ordre del Mestre, 260930): Codex entra a «Els que conversen» amb la
@@ -190,9 +242,13 @@ describe('Actors', () => {
 
   test('Codex conversa amb candats per acreditar: DESCONEGUT, i la targeta de Claude no canvia', () => {
     render(<ActorsMapa mapa={MAPA_CODEX} />);
-    totesDeControl();
+    totesAmbBoina();
     const conversen = screen.getByRole('heading', { level: 3, name: 'Els que conversen' }).closest('section');
-    const arnesos = [...conversen.querySelectorAll('article.sp-card')];
+    /* Correcció 261004 (verificador de la segona passada) · la capa comença
+       per la xifra «agents» del tauler, que es tracta ací. */
+    const [recompte, ...arnesos] = [...conversen.querySelectorAll('article.sp-card')];
+    expect(recompte.querySelector('h3').textContent).toBe('3 agents');
+    expect(recompte.querySelector('a.sp-card-link-overlay').getAttribute('href')).toBe('/consola/xifres/agents');
     expect(arnesos.map((t) => t.querySelector('h3').textContent)).toEqual(['Antigravity', 'Claude Code', 'Codex']);
     const [antigravity, claude, codex] = arnesos;
     expect(codex.textContent).toContain('1 candat · en arrencar carrega 1 document i 0 skills');
@@ -211,14 +267,17 @@ describe('Actors', () => {
   test('el candat de Codex no porta la icona de git', () => {
     render(<ActorsMapa mapa={MAPA_CODEX} />);
     const candats = screen.getByRole('heading', { level: 3, name: 'Els candats' }).closest('section');
+    // Ordre del Mestre, 261004 (xat: cap xifra solta) · la icona, a la insígnia lateral.
     const icona = (titol) => within(candats).getByRole('heading', { level: 3, name: titol })
-      .closest('article').querySelector('.sp-card-title-icon svg').getAttribute('class');
+      .closest('article').querySelector('.sp-card-calendar-badge svg').getAttribute('class');
     expect(icona('SessionStart')).toMatch(/circle-dashed/);
     expect(icona('pre-commit')).toMatch(/git-branch/);
   });
 });
 
-describe('les altres vistes del Mapa també usen la targeta del Control', () => {
+/* Derogat per l'ordre del Mestre del 261004 (xat: cap xifra solta): «les
+   altres vistes del Mapa també usen la targeta del Control». */
+describe('les altres vistes del Mapa també són targetes amb boina i pàgina pròpia', () => {
   test.each([
     ['Calendari', () => <CalendariMapa mapa={MAPA} locale="ca-ES" />],
     ['Inventari', () => <InventariMapa mapa={MAPA} locale="ca-ES" />],
@@ -226,7 +285,18 @@ describe('les altres vistes del Mapa també usen la targeta del Control', () => 
     ['Avisos i salut', () => <MapaConsola locale="ca-ES" font={{ estat: 'ready', mapa: MAPA, error: null, carrega: vi.fn() }} />]
   ])('%s', (_, Vista) => {
     render(<Vista />);
-    totesDeControl();
+    totesAmbBoina();
+  });
+
+  /* Correcció 261004 (verificador de la segona passada) · Avisos i salut pinta
+     les anomalies del tauler que s'hi tracten i les tasques del Mapa; els
+     nodes i les arestes, a l'Explorador. */
+  test('sense Mapa, Avisos i salut pinta les seues targetes amb el nom: cap pàgina sense targeta', () => {
+    render(<MapaConsola locale="ca-ES" font={{ estat: 'absent', mapa: null, error: null, carrega: vi.fn() }} />);
+    totesAmbBoina();
+    expect(titols()).toEqual(['Avisos del Mapa', 'Avisos alts', 'Mètriques de salut amb mesura', 'Línies del LEDGER',
+      'Torns caducats', 'Skills fora del segell', 'Tasques del Mapa']);
+    expect(document.body.textContent).not.toMatch(/\d+ (avisos|nodes|arestes|tasques)/);
   });
 
   test('dins de la Consola, Avisos i salut no repetix el Refrescar de la capçalera', () => {
@@ -267,17 +337,37 @@ describe('Llei del Píxel · les vistes no canvien quan els seus càlculs ixen a
 
   test('Inventari: xifres, semàfor per skill, avisos i filtres', () => {
     render(<InventariMapa mapa={MAPA} locale="ca-ES" />);
-    expect(titols()).toEqual(['2', '1 / 2', '1', '0']);
+    /* Derogat per l'ordre del Mestre del 261004 (xat: cap xifra solta): les
+       xifres soltes ['2', '1 / 2', '1', '0']. Ara són targetes que diuen què
+       compten, i porten a la seua pàgina pròpia. */
+    // Correcció 261004 (verificador de la segona passada) · també «skills amb avisos», la del tauler que es tracta ací.
+    /* Correcció 261004 (verificador de la tercera passada, punt 5) · els estats
+       que la coberta destaca tenen targeta: quantes en roig i en ambre, i les
+       skills sense disparador útil. Derogat «Semàfor ambre o roig a l’Inventari». */
+    expect(titolsIDescripcions()).toEqual([
+      ['2 skills', 'Al cens del Mapa del Mas'],
+      ['1 skill sense cap avís', 'De 2 skills al cens: semàfor verd a l’Inventari'],
+      ['1 skill amb avisos', '0 en roig · 1 en ambre a l’Inventari'],
+      ['1 skill òrfena', '0 skills fantasma: nomenades i sense carpeta al disc'],
+      ['0 skills fora d’algun cens', 'Índex, catàleg de Claude, segell o disc'],
+      ['0 skills sense disparador útil', 'El router no les pot triar soles']
+    ]);
     const taula = screen.getByRole('region', { name: 'Inventari de skills' });
     const files = () => [...taula.querySelectorAll('tbody tr')].map((tr) => {
       const [semafor, , , , , , , , avisos] = tr.children;
       return [tr.querySelector('th').textContent, semafor.textContent, semafor.firstElementChild?.className ?? null,
         avisos.textContent, avisos.firstElementChild?.className ?? null];
     });
+    /* Derogat per l'ordre del Mestre del 261004 (prompt 261004_0515): la
+       columna Avisos ja no pinta el codi cru sol, sinó el codi amb el color
+       de la severitat, la frase de TEXTOS_AVIS i l'evidència en <Mono>. */
     expect(files()).toEqual([
-      ['wiki-busca-skills', 'ambre · 1', 'sdp-insignia sdp-insignia--avis', 'orfe', 'sdp-insignia sdp-insignia--avis'],
+      ['wiki-busca-skills', 'ambre · 1', 'sdp-insignia sdp-insignia--avis', `orfe${TEXTOS_AVIS.orfe}mapa`, 'sdp-consola__avis'],
       ['sdp-workflow', 'verd', 'sdp-insignia sdp-insignia--exit', 'cap', null]
     ]);
+    const avis = taula.querySelector('.sdp-consola__avis');
+    expect([...avis.children].map((el) => `${el.tagName}.${el.className}`))
+      .toEqual(['SPAN.sdp-insignia sdp-insignia--avis', 'P.', 'CODE.sdp-consola__mono']);
     const filtres = screen.getByRole('group', { name: 'Quines skills es mostren' });
     expect(within(filtres).getAllByRole('button').map((b) => b.textContent))
       .toEqual(['Totes', 'Amb avisos', 'Òrfenes', 'Fora d’algun cens', 'Nucli']);
@@ -297,11 +387,17 @@ describe('Llei del Píxel · les vistes no canvien quan els seus càlculs ixen a
 
   test('Agents atòmics: la descripció de cada peça', () => {
     render(<AgentsAtomics mapa={MAPA} />);
+    /* Correcció 261004 (verificador de la segona passada, punt 3) · cada
+       recompte concorda i el subtítol comença en majúscula. Derogat per
+       l'ordre del Mestre del 261004 (xat: cap xifra solta): «1 suggeriments»,
+       «1 de 2 … són vives», «vigilants vius: …» i «1 avisos alts». */
+    // Correcció 261004 (verificador de la tercera passada, punt 5) · davant, el recompte dels agents atòmics.
     expect(titolsIDescripcions()).toEqual([
-      ['Fluxos de treball', '0 cadenes declarades · 1 suggeriments de la prosa'],
+      ['0 agents atòmics', 'Agents que declaren què lligen o què deixen'],
+      ['Fluxos de treball', '0 cadenes declarades · 1 suggeriment de la prosa'],
       ['Tauler', '04_escriptori rep la faena de 3 peces · ningú no declara que la llig'],
-      ['Agents que treballen sols', '1 de 2 tasques que llança launchd són vives'],
-      ['Qui avisa quan algo es trenca', 'vigilants vius: 1 / 2 · 1 avisos alts al Mapa']
+      ['Agents que treballen sols', '1 de 2 tasques que llança launchd és viva'],
+      ['Qui avisa quan algo es trenca', 'Vigilants vius: 1 / 2 · 1 avís alt al Mapa']
     ]);
     expect([...document.querySelectorAll('.sp-card-label')].map((l) => l.className))
       .toEqual(['sp-card-label sdp-badge-tag', 'sp-card-label sdp-badge-tag', 'sp-card-label sdp-badge-tag', 'sp-card-label sdp-badge-tag']);
@@ -310,18 +406,97 @@ describe('Llei del Píxel · les vistes no canvien quan els seus càlculs ixen a
   test('Actors: al sòl, només el lloc amb faena i cap lector porta SENSE LECTOR', () => {
     render(<ActorsMapa mapa={MAPA} />);
     const sol = screen.getByRole('heading', { level: 3, name: 'El sòl' }).closest('section');
+    // Correcció 261004 (verificador de la tercera passada, punt 5) · davant, el recompte del sòl, que diu quants no tenen lector.
     expect([...sol.querySelectorAll('article.sp-card')].map((t) => [
       t.querySelector('h3').textContent, [...t.querySelectorAll('.sp-card-label')].map((l) => l.textContent)
-    ])).toEqual([['04_escriptori', ['SENSE LECTOR']], ['AGENTS.md', []]]);
+    ])).toEqual([['2 llocs del sòl', []], ['04_escriptori', ['SENSE LECTOR']], ['AGENTS.md', []]]);
+    expect(sol.querySelector('article h4').textContent).toBe('Documents i plantilles on treballen · 1 sense lector');
   });
 
-  test('Avisos i salut: les quatre xifres, amb les mètriques mesurades', () => {
+  /* Derogat per l'ordre del Mestre del 261004 (xat: cap xifra solta): les
+     xifres soltes ['2', 'avisos, 1 d’alts'], ['1 / 2', …], ['16', 'nodes'] i
+     ['13', 'arestes']. Ara diuen què compten al títol.
+     Correcció 261004 (verificador de la segona passada, punt 2) · Els nodes i
+     les arestes es pinten a l'Explorador, la pàgina que nomena el seu «On es
+     tracta»; ací, les anomalies del tauler que es tracten ací i les tasques
+     del Mapa («Veure les N tasques» no tenia cap targeta). Els desplegables
+     ja no porten cap recompte. */
+  test('Avisos i salut: les seues xifres, amb les mètriques mesurades', () => {
     render(<MapaConsola locale="ca-ES" font={{ estat: 'ready', mapa: MAPA, error: null, carrega: vi.fn() }} />);
     expect(titolsIDescripcions()).toEqual([
-      ['2', 'avisos, 1 d’alts'],
-      ['1 / 2', 'mètriques de salut amb mesura (la resta, N/A)'],
-      ['16', 'nodes'],
-      ['13', 'arestes']
+      ['2 avisos del Mapa', '1 alt · 1 mitjà · 0 baixos'],
+      ['1 avís alt', 'Severitat alta: cal actuar'],
+      // Correcció 261004 (verificador de la tercera passada, punts 3 i 5) · derogat «De 2 mètriques: la resta, N/A».
+      ['1 mètrica de salut amb mesura', 'De 2 mètriques: 1 sense mesura (N/A)'],
+      ['LEDGER sense mesura', 'Segells fòssils i línies mal formades'],
+      ['Torns sense mesura', 'Oberts i sense tancar'],
+      ['Segell sense mesura', 'O divergents (només els SKILL.md)'],
+      ['4 tasques al Mapa', '1 viva · 1 morta · 1 sense llançador · 1 d’estat desconegut']
     ]);
+    expect([...document.querySelectorAll('a.sp-card-link-overlay')].map((a) => a.getAttribute('href'))).toEqual(
+      ['avisos', 'avisos-alts', 'metriques-amb-mesura', 'linies-ledger', 'torns-caducats', 'skills-fora-del-segell', 'tasques-del-mapa']
+        .map((s) => `/consola/xifres/${s}`));
+    expect([...document.querySelectorAll('details > summary')].map((s) => s.textContent)).toEqual([
+      'Veure els avisos, el més greu primer', 'Veure les tasques i els seus llançadors', 'Veure la funció de salut',
+      'Veure els nodes per tipus i les arestes per confiança', 'Veure totes les arestes'
+    ]);
+  });
+});
+
+/* Ordre del Mestre, 261004 (prompt 261004_0515, §6: cap anomalia del cervell
+   sense mostrar) · Cada avís amb la seua frase, i totes les evidències, en
+   tipografia de màquina i amagades pel mode privacitat. */
+describe('261004 · avisos dits per a persones, amb totes les evidències', () => {
+  const ambEvidencies = {
+    ...MAPA,
+    avisos: [...MAPA.avisos.map((x) => (x.codi === 'orfe' ? x : { ...x, evidencies: [x.evidencia, 'launchd · última línia amb error'] })),
+      { node: 'skill:sdp-workflow', codi: 'codi-nou', severitat: 'baixa', evidencia: null }]
+  };
+  const salut = (privat = false) => render(
+    <PrivacitatConsola.Provider value={privat}>
+      <MapaConsola locale="ca-ES" font={{ estat: 'ready', mapa: ambEvidencies, error: null, carrega: vi.fn() }} />
+    </PrivacitatConsola.Provider>
+  );
+  const filesAvisos = () => [...screen.getByRole('region', { name: 'Avisos del mapa' }).querySelectorAll('tbody tr')]
+    .map((tr) => [tr.children[1].textContent, tr.children[3].textContent]);
+
+  test('Avisos i salut: «codi: frase», i l’evidència, una o totes', () => {
+    salut();
+    expect(filesAvisos()).toEqual([
+      [`tasca-morta: ${TEXTOS_AVIS['tasca-morta']}`, 'tooling/wiki/core/reflex_daemon.mjslaunchd · última línia amb error'],
+      [`orfe: ${TEXTOS_AVIS.orfe}`, 'mapa'],
+      ['codi-nou', '—']
+    ]);
+    const llista = screen.getByRole('list', { name: '2 evidències' });
+    expect(llista.className).toBe('sdp-consola__evidencies');
+    expect([...llista.querySelectorAll('li > code.sdp-consola__mono')].map((c) => c.textContent))
+      .toEqual(['tooling/wiki/core/reflex_daemon.mjs', 'launchd · última línia amb error']);
+  });
+
+  test('amb el mode privacitat, cap evidència es veu (abans la taula d’avisos l’ensenyava)', () => {
+    salut(true);
+    const taula = screen.getByRole('region', { name: 'Avisos del mapa' });
+    expect(taula.textContent).not.toContain('reflex_daemon');
+    expect(taula.textContent).not.toContain('launchd · última');
+    // La frase no és cap dada privada: es continua llegint.
+    expect(taula.textContent).toContain(TEXTOS_AVIS['tasca-morta']);
+  });
+
+  test('Inventari: cada avís de la skill, amb totes les evidències', () => {
+    const mapa = { ...MAPA, avisos: [{ node: 'skill:sdp-workflow', codi: 'crida-inexistent', severitat: 'mitjana',
+      evidencia: 'a → x', evidencies: ['a → x', 'a → y'] }] };
+    render(<InventariMapa mapa={mapa} locale="ca-ES" />);
+    const avis = document.querySelector('.sdp-consola__avis');
+    expect(avis.querySelector('.sdp-insignia').textContent).toBe('crida-inexistent');
+    expect(avis.querySelector('p').textContent).toBe(TEXTOS_AVIS['crida-inexistent']);
+    expect([...avis.querySelectorAll('ul.sdp-consola__evidencies > li')].map((li) => li.textContent)).toEqual(['a → x', 'a → y']);
+  });
+
+  test('Inventari sense router llegible: el filtre continua funcionant com a estat local', () => {
+    render(<InventariMapa mapa={MAPA} locale="ca-ES" />);
+    const filtres = screen.getByRole('group', { name: 'Quines skills es mostren' });
+    fireEvent.click(within(filtres).getByRole('button', { name: 'Amb avisos' }));
+    const noms = [...screen.getByRole('region', { name: 'Inventari de skills' }).querySelectorAll('tbody th')].map((th) => th.textContent);
+    expect(noms).toEqual(['wiki-busca-skills']);
   });
 });

@@ -2,8 +2,9 @@ import { describe, expect, it } from 'vitest';
 import {
   construeixMapa, scriptsDeOrdre, npmDeOrdre, disparadorsDecoratius, disparadorsAmples, nodeDeRuta, dataLedger, PROVA_MAPA
 } from './construeixMapa.js';
-import { normalitzaMapa } from './mapaContent.js';
+import { normalitzaMapa, valorMetrica } from './mapaContent.js';
 import { capesActors } from './actorsMapa.js';
+import { UNITATS_METRICA } from './contracteMapa.js';
 
 const ARA = Date.parse('2026-09-24T12:00:00Z');
 const existeix = (ruta) => ruta !== 'tooling/wiki/core/reflex_daemon.mjs';
@@ -692,6 +693,112 @@ describe('construeixMapa · vigilància (fonts noves de la closca)', () => {
 
   it('sense les fonts noves no hi ha cap avís de vigilància', () => {
     const codis = new Set(mapa().avisos.map((x) => x.codi));
-    for (const codi of ['torns-caducats', 'escriptori-sense-ancora', 'ledger-invalid', 'recaiguda-recent']) expect(codis.has(codi)).toBe(false);
+    for (const codi of ['torns-caducats', 'escriptori-sense-ancora', 'escriptori-sense-rebut', 'ledger-invalid', 'recaiguda-recent']) {
+      expect(codis.has(codi)).toBe(false);
+    }
+    for (const nom of ['ledger-fossils', 'ledger-mal-formades']) expect(metrica(mapa(), nom).valor).toBe('N/A');
+  });
+
+  /* Ordre del Mestre, 261004 (prompt 261004_0515, §6) · Cap anomalia del
+     cervell sense mostrar: el detall que la deduplicació node|codi perdia. */
+  it('261004 · un avís per node i codi, però amb totes les evidències (recaigudes, crides inexistents)', () => {
+    const ledger = { ...VIGILANCIA.ledger, entrades: [
+      { data: '260923', tipus: 'recaiguda', skill: 'wiki-cicle-de-vida', resum: 'arxiu sense preguntar' },
+      { data: '260922', tipus: 'recaiguda', skill: 'wiki-cicle-de-vida', resum: 'buidar l’Escriptori' },
+      { data: '260921', tipus: 'recaiguda', skill: 'wiki-cicle-de-vida', resum: 'arxiu sense preguntar' }
+    ] };
+    const fonts = { ...fontsBase(), ...VIGILANCIA, ledger };
+    fonts.skillsDisc[0] = { ...fonts.skillsDisc[0], mencions: ['core-inexistent', 'core-tampoc', 'core-inexistent'] };
+    const m = construeixMapa(fonts, { existeix, ara: ARA });
+    const recaigudes = m.avisos.filter((x) => x.codi === 'recaiguda-recent');
+    expect(recaigudes).toHaveLength(1);
+    expect(recaigudes[0]).toEqual({
+      node: 'skill:wiki-cicle-de-vida', codi: 'recaiguda-recent', severitat: 'mitjana',
+      evidencia: '.agents/LEDGER.md · 260923 · arxiu sense preguntar',
+      evidencies: [
+        '.agents/LEDGER.md · 260923 · arxiu sense preguntar',
+        '.agents/LEDGER.md · 260922 · buidar l’Escriptori',
+        '.agents/LEDGER.md · 260921 · arxiu sense preguntar'
+      ]
+    });
+    const crides = m.avisos.filter((x) => x.codi === 'crida-inexistent');
+    expect(crides).toHaveLength(1);
+    expect(crides[0].evidencies).toEqual([
+      '.agents/skills/sdp-workflow/SKILL.md → core-inexistent', '.agents/skills/sdp-workflow/SKILL.md → core-tampoc'
+    ]);
+    // Una sola evidència: l'avís de sempre, sense la clau nova.
+    expect(m.avisos.find((x) => x.codi === 'ledger-invalid')).not.toHaveProperty('evidencies');
+    // El contracte les deixa passar, i rebutja una llista que no siga de textos.
+    expect(normalitzaMapa(m).avisos.find((x) => x.codi === 'recaiguda-recent').evidencies).toHaveLength(3);
+    const dolent = { ...m, avisos: [{ ...recaigudes[0], evidencies: ['ok', 7] }] };
+    expect(() => normalitzaMapa(dolent)).toThrow(/evidencies\[1\]/);
+  });
+
+  it('261004 · els torns caducats, un a un: el que va caducar abans, primer; sense caducitat llegible, al final', () => {
+    const avis = vigilat().avisos.find((x) => x.codi === 'torns-caducats');
+    expect(avis.evidencia).toBe('2 de 4 torns caducats sense tancar');
+    expect(avis.evidencies).toEqual([
+      '2 de 4 torns caducats sense tancar',
+      't2 · claude · context_loaded · caducat el 2026-09-23T00:00:00Z',
+      't4 · claude · context_loaded · sense caducitat llegible'
+    ]);
+  });
+
+  it('261004 · el document ancorat sense rebut porta el seu avís; l’ancorat amb rebut, cap', () => {
+    const escriptori = { ...VIGILANCIA.escriptori, documents: [
+      ...VIGILANCIA.escriptori.documents, { nom: '261004_0605_auditoria_claude.md', ancorat: true, ambRebut: false }
+    ] };
+    const m = construeixMapa({ ...fontsBase(), ...VIGILANCIA, escriptori }, { existeix, ara: ARA });
+    const doc = 'document:_wiki_de_poble/04_escriptori/261004_0605_auditoria_claude.md';
+    expect(avisosDe(m, doc)).toEqual(['escriptori-sense-rebut']);
+    expect(m.avisos.find((x) => x.node === doc)).toEqual({
+      node: doc, codi: 'escriptori-sense-rebut', severitat: 'baixa', evidencia: 'cap torn de .agents/runtime/turns en porta el rebut'
+    });
+    expect(m.nodes.some((x) => x.id === 'document:_wiki_de_poble/04_escriptori/260930_0040_auditoria_claude.md')).toBe(false);
+    expect(() => normalitzaMapa(m)).not.toThrow();
+  });
+
+  it('261004 · fòssils i línies mal formades del LEDGER: mètriques pròpies, també amb la signatura vàlida', () => {
+    for (const valid of [false, true]) {
+      const m = construeixMapa({ ...fontsBase(), ledger: { ...VIGILANCIA.ledger, valid } }, { existeix, ara: ARA });
+      expect(metrica(m, 'ledger-fossils')).toMatchObject({ valor: 8, unitat: 'segells fòssils', font: '.agents/LEDGER.md', prova: PROVA_MAPA });
+      expect(metrica(m, 'ledger-mal-formades')).toMatchObject({ valor: 2, unitat: 'línies mal formades', prova: PROVA_MAPA });
+    }
+    const sense = construeixMapa({ ...fontsBase(), ledger: { valid: true, entrades: [] } }, { existeix, ara: ARA });
+    expect(metrica(sense, 'ledger-fossils').valor).toBe('N/A');
+  });
+
+  /* Correcció 261004 (verificador de la tercera passada, punt 1) · Cada
+     unitat que escriu el compilador és al contracte (UNITATS_METRICA), que en
+     sap el singular: la interfície diu «1 minut», mai «1 minuts». Una unitat
+     nova sense singular fa roja esta prova. */
+  it('261004 · cada unitat del compilador és al contracte, i amb un 1 la interfície concorda', () => {
+    const fonts = {
+      ...fontsBase(), ...VIGILANCIA,
+      timeMachine: { ultima: new Date(ARA - 60000).toISOString() },
+      segell: { ...fontsBase().segell, timestamp: new Date(ARA - 3600000).toISOString() },
+      ledger: { ...VIGILANCIA.ledger, fossils: 1, malformades: 1 }
+    };
+    const m = construeixMapa(fonts, { existeix, ara: ARA });
+    const unitats = [...new Set(m.salut.map((s) => s.unitat).filter((u) => u !== 'fraccio'))].sort();
+    expect(unitats).toEqual(['hores', 'línies mal formades', 'minuts', 'recaigudes', 'segells fòssils']);
+    expect(Object.keys(UNITATS_METRICA).sort()).toEqual(unitats);
+    expect(valorMetrica(metrica(m, 'frescor-instantania'))).toBe('1 minut');
+    expect(valorMetrica(metrica(m, 'antiguitat-segell'))).toBe('1 hora');
+    expect(valorMetrica(metrica(m, 'ledger-fossils'))).toBe('1 segell fòssil');
+    expect(valorMetrica(metrica(m, 'ledger-mal-formades'))).toBe('1 línia mal formada');
+  });
+
+  /* Correcció 261004 (verificador de la tercera passada, punt 3) · «de»
+     davant d'1 s'apostrofa també a les evidències del compilador. */
+  it('261004 · amb un sol torn o un sol SKILL.md, l’evidència diu «d’1», mai «de 1»', () => {
+    const torns = [torn('t9', 'context_loaded', '2026-09-23T00:00:00Z')];
+    const fonts = { ...fontsBase(), torns };
+    fonts.skillsDisc = [fonts.skillsDisc[1]];
+    fonts.segell = { manifest: {} };
+    const m = construeixMapa(fonts, { existeix, ara: ARA });
+    expect(m.avisos.find((x) => x.codi === 'torns-caducats').evidencia).toBe('1 d’1 torn caducat sense tancar');
+    expect(m.avisos.find((x) => x.codi === 'segell-trencat').evidencia).toMatch(/^1 d’1 skill fora del segell o divergent · /);
+    expect(m.avisos.flatMap((x) => [x.evidencia, ...(x.evidencies ?? [])]).filter((e) => /\bde 1\b/.test(e ?? ''))).toEqual([]);
   });
 });

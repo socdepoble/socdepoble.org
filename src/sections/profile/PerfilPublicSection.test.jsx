@@ -29,6 +29,8 @@ vi.mock('../../data/backendPort.js', () => ({ teCapacitat: () => mocks.capacitat
 vi.mock('../../host.js', () => ({ quanLlest: async () => {} }));
 import PerfilPublicSection from './PerfilPublicSection.jsx';
 import { AVIS_SENSE_XAT } from '../../components/PedraSeca/hooks/useAccions.js';
+import { oblidaEntitatDelProjecte, RUTA_PROJECTE, rutaDAutoria } from '../../config/navigation.js';
+import { AGENTS_MAP } from '../../data/agentsSeed.js';
 
 const IAIA = { tipus: 'ia', id: 'iaia', slug: 'iaia-maria', nom: 'IAIA MarIA', avatar: '', hero: '', lema: 'Pensant en global', bio: 'Matriarca Digital', presentacioHtml: '<p>Cor antic i circuits nous.</p>', poble: 'La Torre de les Maçanes', esIA: true, publicat: true, propietari: false, copyright: '' };
 const ENTITAT = { ...IAIA, tipus: 'entitat', id: 'socdepoble', nom: 'Sóc de Poble', esIA: false, propietari: true, presentacioHtml: '' };
@@ -37,6 +39,8 @@ afterEach(cleanup);
 beforeEach(() => {
   vi.clearAllMocks(); mocks.config = {}; mocks.id = 'iaia'; mocks.capacitat = true; mocks.load.mockResolvedValue(IAIA);
   mocks.identitat = { memberships: [], actor: null, setActor: vi.fn(() => true) };
+  /* Els ids remots del projecte són d'abast de mòdul: cap prova en deixa per a la següent. */
+  oblidaEntitatDelProjecte();
 });
 
 test('la IAIA porta avís d’intel·ligència artificial i el botó parla amb ella al xat', async () => {
@@ -291,6 +295,154 @@ test('T66 · sense emoticona (o un DTO sense el camp) la cel·la queda buida, se
   expect(container.querySelector('section.bar-orange .sdp-emoticona-barra--buida')).not.toBeNull();
   expect(container.querySelector('section.bar-orange .sdp-emoticona-barra--glif')).toBeNull();
   expect(container.querySelector('section.bar-orange .sdp-emoticona-barra--boto')).toBeNull();
+});
+
+/* Norma del Mestre, 261004 (prompt 261004_1108, logotips) · La pàgina d'una
+   entitat porta dalt de l'H1 el seu logotip; la d'una persona, res. Abans,
+   showLogos={false} el llevava a totes, sense cap ordre escrita. */
+const logosDelTitol = (container) => [...container.querySelectorAll('header.page-title img')];
+
+test('logotips · l’entitat del projecte (per identificador) porta el seu logotip rectangular, clar i fosc, davant de l’H1', async () => {
+  mocks.id = 'soc-de-poble';
+  mocks.load.mockResolvedValue(ENTITAT);
+  const { container } = render(<PerfilPublicSection agents={mocks.agents} />);
+  await screen.findByRole('heading', { level: 1, name: 'Sóc de Poble' });
+  const capcalera = container.querySelector('header.page-title');
+  expect([...capcalera.children].slice(0, 3).map((e) => `${e.tagName}.${e.className}`)).toEqual([
+    'IMG.page-title-logo light-only', 'IMG.page-title-logo dark-only', 'H1.'
+  ]);
+  expect(logosDelTitol(container).map((img) => img.getAttribute('src'))).toEqual([
+    '/assets/system/ui/logo-socdepoble-rect-negre.svg', '/assets/system/ui/logo-socdepoble-rect-blanc.svg'
+  ]);
+  expect(logosDelTitol(container).map((img) => img.getAttribute('alt'))).toEqual(['Logotip Sóc de Poble', 'Logotip Sóc de Poble']);
+});
+
+test('logotips · una altra entitat porta el seu logo_url, una sola imatge per als dos temes; sense logo_url, cap', async () => {
+  mocks.id = 'forn';
+  mocks.load.mockResolvedValue({ ...FORN, avatar: '/assets/forn.png' });
+  const vista = render(<PerfilPublicSection agents={mocks.agents} />);
+  await screen.findByRole('heading', { level: 1, name: 'Forn de la Torre' });
+  await waitFor(() => expect(logosDelTitol(vista.container)).toHaveLength(1));
+  const [logo] = logosDelTitol(vista.container);
+  expect(logo.className).toBe('page-title-logo page-title-logo--entitat');
+  expect(logo.getAttribute('src')).toBe('/assets/forn.png');
+  expect(logo.getAttribute('alt')).toBe('Logotip de Forn de la Torre');
+  expect(logo.getAttribute('referrerpolicy')).toBe('no-referrer');
+  expect(logo.nextElementSibling.tagName).toBe('H1');
+  vista.unmount();
+  mocks.load.mockResolvedValue(FORN);
+  const { container } = render(<PerfilPublicSection agents={mocks.agents} />);
+  await screen.findByRole('heading', { level: 1, name: 'Forn de la Torre' });
+  expect(logosDelTitol(container)).toHaveLength(0);
+});
+
+/* Revisió dels verificadors (front «logo», 261004) · En remot, l'entitat del
+   projecte arriba amb l'id del servidor (un UUID) i el slug declarat. Abans,
+   només la resolució de l'app el registrava: si esta fitxa responia primer, o
+   si la resolució havia fallat i esperava 60 s, el bloc del títol pintava
+   l'avatar quadrat (fins a 600x600) en lloc del logotip rectangular. */
+const UUID_DEL_PROJECTE = '5f1c2a9e-7b3d-4e8a-9c0f-1a2b3c4d5e6f';
+
+test('logotips · en remot, l’entitat del projecte (UUID amb el slug declarat) porta el rectangular des del primer render, mai l’avatar', async () => {
+  mocks.id = 'soc-de-poble';
+  mocks.load.mockResolvedValue({
+    ...ENTITAT, id: UUID_DEL_PROJECTE, slug: 'soc-de-poble', propietari: false, avatar: '/assets/avatar-quadrat.png'
+  });
+  /* Ningú més no l'ha registrat: ni l'app ni cap prova anterior. */
+  expect(rutaDAutoria({ tipus: 'entitat', id: UUID_DEL_PROJECTE })).not.toBe(RUTA_PROJECTE);
+  const { container } = render(<PerfilPublicSection agents={mocks.agents} />);
+  await screen.findByRole('heading', { level: 1, name: 'Sóc de Poble' });
+  const srcs = () => logosDelTitol(container).map((img) => img.getAttribute('src'));
+  expect(srcs()).toEqual(['/assets/system/ui/logo-socdepoble-rect-negre.svg', '/assets/system/ui/logo-socdepoble-rect-blanc.svg']);
+  expect(container.querySelector('.page-title-logo--entitat')).toBeNull();
+  /* Ni després que l'avatar s'haja pogut resoldre. */
+  await new Promise((resol) => { setTimeout(resol, 0); });
+  expect(srcs()).not.toContain('/assets/avatar-quadrat.png');
+  expect(rutaDAutoria({ tipus: 'entitat', id: UUID_DEL_PROJECTE })).toBe(RUTA_PROJECTE);
+});
+
+test('logotips · el nom no fa l’entitat del projecte: una altra que es diga «Sóc de Poble» porta el seu', async () => {
+  mocks.id = 'impostora';
+  mocks.load.mockResolvedValue({ ...FORN, id: 'o-9', slug: 'impostora', nom: 'Sóc de Poble', avatar: '/assets/impostora.png' });
+  const { container } = render(<PerfilPublicSection agents={mocks.agents} />);
+  await screen.findByRole('heading', { level: 1, name: 'Sóc de Poble' });
+  await waitFor(() => expect(logosDelTitol(container)).toHaveLength(1));
+  expect(logosDelTitol(container)[0].getAttribute('src')).toBe('/assets/impostora.png');
+});
+
+/* Derogat per a la persona i la IAIA (ordre del Mestre, 261004, prompt
+   261004_1108 línies 66-69 i T2): ja no comencen per l'H1, porten el seu
+   avatar redó (proves de davall). Un grup continua sense res. */
+test.each([
+  ['un grup', { ...ENTITAT, tipus: 'grup', id: 'g-1', nom: 'Colla', propietari: false, avatar: '/assets/colla.png' }, 'Colla']
+])('logotips · %s no porta cap logotip: el bloc del títol comença per l’H1', async (_que, dto, nom) => {
+  mocks.load.mockResolvedValue(dto);
+  const { container } = render(<PerfilPublicSection agents={mocks.agents} />);
+  await screen.findByRole('heading', { level: 1, name: nom });
+  expect(logosDelTitol(container)).toHaveLength(0);
+  expect(container.querySelector('header.page-title').firstElementChild.tagName).toBe('H1');
+});
+
+/* Norma del Mestre, 261004 (prompt 261004_1108, línies 66-69 i T2) · Una
+   persona o la IAIA porten el seu avatar redó davant de l'H1, mai un
+   logotip. Si la fitxa és de qui mira, l'avatar és un botó que porta al
+   canvi d'imatge del Perfil (el mateix destí que «Edita la fitxa»). */
+test.each([
+  ['una persona', { ...IAIA, tipus: 'persona', id: 'u-1', nom: 'Pepa', esIA: false, avatar: '/assets/pepa.png' }, 'Pepa'],
+  ['la IAIA', { ...IAIA, avatar: '/assets/iaia.png' }, 'IAIA MarIA']
+])('avatar · %s porta el seu avatar redó davant de l’H1, sense logotip', async (_que, dto, nom) => {
+  mocks.load.mockResolvedValue(dto);
+  const { container } = render(<PerfilPublicSection agents={mocks.agents} />);
+  await screen.findByRole('heading', { level: 1, name: nom });
+  const capcalera = container.querySelector('header.page-title');
+  expect([...capcalera.children].map((e) => `${e.tagName}.${e.className}`).slice(0, 2)).toEqual(['DIV.page-title-avatar', 'H1.']);
+  const img = capcalera.querySelector('img.page-title-avatar__imatge');
+  expect(img.getAttribute('src')).toBe(dto.avatar);
+  expect(img.getAttribute('alt')).toBe(`Avatar de ${nom}`);
+  expect(container.querySelector('.page-title-logo')).toBeNull();
+  expect(container.querySelector('button.page-title-avatar')).toBeNull();
+});
+
+test('avatar · la fitxa pròpia d’una persona: l’avatar és un botó que porta al canvi d’imatge del Perfil', async () => {
+  mocks.load.mockResolvedValue({ ...IAIA, tipus: 'persona', id: 'u-1', nom: 'Pepa', esIA: false, propietari: true, avatar: '/assets/pepa.png' });
+  const { container } = render(<PerfilPublicSection agents={mocks.agents} />);
+  await screen.findByRole('heading', { level: 1, name: 'Pepa' });
+  const boto = screen.getByRole('button', { name: 'Canvia la teua imatge' });
+  expect(boto).toBe(container.querySelector('header.page-title > button.page-title-avatar'));
+  fireEvent.click(boto);
+  expect(mocks.navigate).toHaveBeenLastCalledWith('/el-meu-perfil');
+});
+
+test('avatar · una persona sense avatar no porta res: el bloc del títol comença per l’H1', async () => {
+  mocks.load.mockResolvedValue({ ...IAIA, tipus: 'persona', id: 'u-1', nom: 'Pepa', esIA: false, avatar: '' });
+  const { container } = render(<PerfilPublicSection agents={mocks.agents} />);
+  await screen.findByRole('heading', { level: 1, name: 'Pepa' });
+  expect(container.querySelector('header.page-title').firstElementChild.tagName).toBe('H1');
+});
+
+/* Correcció dels verificadors (ordre del Mestre, 261004; skill sdp-pedra-seca
+   §11) · Al catàleg, JAVI (una persona) porta com a avatar_url la marca de
+   Sóc de Poble: la seua fitxa no la pinta com a avatar redó (PageFrame la
+   rebutja). El bloc del títol comença per l'H1. */
+test('avatar · una persona del catàleg amb la marca de Sóc de Poble com a avatar: ni avatar ni logotip', async () => {
+  mocks.config = { dataMode: 'seed' };
+  mocks.capacitat = false;
+  mocks.id = AGENTS_MAP.JAVI.id;
+  render(<PerfilPublicSection agents={[AGENTS_MAP.JAVI]} />);
+  await screen.findByRole('heading', { level: 1, name: AGENTS_MAP.JAVI.name });
+  const capcalera = document.querySelector('header.page-title');
+  expect(capcalera.firstElementChild.tagName).toBe('H1');
+  expect(capcalera.querySelector('.page-title-avatar')).toBeNull();
+  expect([...capcalera.querySelectorAll('img')].map((img) => img.getAttribute('src'))).not.toContain(AGENTS_MAP.JAVI.avatar_url);
+});
+
+test('avatar · una entitat no porta avatar, porta el seu logotip (també la del projecte)', async () => {
+  mocks.id = 'soc-de-poble';
+  mocks.load.mockResolvedValue(ENTITAT);
+  const { container } = render(<PerfilPublicSection agents={mocks.agents} />);
+  await screen.findByRole('heading', { level: 1, name: 'Sóc de Poble' });
+  expect(container.querySelector('.page-title-avatar')).toBeNull();
+  expect(container.querySelectorAll('header.page-title img.page-title-logo')).toHaveLength(2);
 });
 
 test('fins i tot en seed una resposta nul·la del port és autoritativa', async () => {

@@ -26,7 +26,16 @@ vi.mock('../../../components/universal/graph/BrainGraph', async () => {
    llança), avisa amb toasts i casa les rutes amb el manifest publicat. */
 const navega = vi.hoisted(() => vi.fn());
 const toast = vi.hoisted(() => vi.fn());
-vi.mock('../../../app/contexts/RouterContext', () => ({ useNavigate: () => navega }));
+/* Correcció 261004 (verificador de la segona passada) · el recompte de la
+   barra i els interruptors de tipus enllacen amb les targetes dels nodes i
+   de les arestes: Link pinta un <a> amb el seu destí. */
+vi.mock('../../../app/contexts/RouterContext', async () => {
+  const { createElement: h } = await import('react');
+  return {
+    useNavigate: () => navega,
+    Link: ({ to, children, ...props }) => h('a', { href: to, ...props }, children)
+  };
+});
 vi.mock('@/components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: toast }) }));
 vi.mock('../../../data/wikiManifest', () => ({
   wikiManifest: {
@@ -290,6 +299,35 @@ describe('Explorador: la llegenda i els filtres primer, el graf al final (T3)', 
     expect(container.querySelector('[role="search"] [role="status"]').textContent).toBe('8 peces · 4 relacions');
     // Els filtres ja són davall de la cerca: el botó que hi baixava no hi és.
     expect(screen.queryByRole('button', { name: /^Filtres/ })).toBeNull();
+  });
+
+  /* Correcció 261004 (verificador de la segona passada, punt 2) · Les xifres
+     de l'Explorador són targetes (nodes i arestes, al capdamunt, que diuen
+     que es tracten ací), i els recomptes de la barra i dels interruptors de
+     tipus enllacen amb elles. */
+  test('els nodes i les arestes són targetes, i els recomptes hi enllacen', () => {
+    const { container } = pinta();
+    const seccio = container.querySelector('.sdp-explorador');
+    const graella = seccio.firstElementChild;
+    expect(graella.className).toBe('sdp-card-grid sdp-consola__graella');
+    /* Correcció 261004 (verificador de la tercera passada, punt 5) · i els
+       enllaços trencats i les peces òrfenes, que la coberta destaca. */
+    expect([...graella.querySelectorAll('article.sp-card')].map((t) => [
+      t.querySelector('h3').textContent, t.querySelector('a.sp-card-link-overlay').getAttribute('href')
+    ])).toEqual([['8 nodes', '/consola/xifres/nodes'], ['4 arestes', '/consola/xifres/arestes'],
+      ['1 enllaç trencat o peça òrfena', '/consola/xifres/enllacos-trencats']]);
+    const estat = container.querySelector('[role="search"] [role="status"]');
+    const enllacos = () => [...estat.querySelectorAll('a')].map((a) => [a.textContent, a.getAttribute('href')]);
+    expect(enllacos()).toEqual([['8 peces', '/consola/xifres/nodes'], ['4 relacions', '/consola/xifres/arestes']]);
+    /* Amb un filtre, el recompte diu quantes en mostra «de» el total, i el total continua enllaçat.
+       Correcció 261004 (verificador de la tercera passada, punt 3) · derogat «3 de 8 peces»: «d’8». */
+    fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'reflex' } });
+    expect(estat.textContent).toMatch(/^3 d’8 peces · \d+ de 4 relacions$/);
+    expect(enllacos().map(([, href]) => href)).toEqual(['/consola/xifres/nodes', '/consola/xifres/arestes']);
+    // Els recomptes per tipus dels interruptors porten a la targeta dels nodes.
+    const tipus = container.querySelector('.sdp-explorador__filtres details');
+    expect([...tipus.querySelectorAll('.sdp-explorador__opcions > p a')].map((a) => [a.textContent, a.getAttribute('href')]))
+      .toEqual([['8 nodes', '/consola/xifres/nodes']]);
   });
 
   test('els filtres plegats continuen filtrant, i Restablir torna el focus al primer plegable', () => {

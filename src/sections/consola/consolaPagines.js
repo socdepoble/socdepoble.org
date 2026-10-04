@@ -12,6 +12,7 @@
  */
 import { PAGE_COPY } from '../text/pageContent.js';
 import { resumSkills } from './consolaContent.js';
+import { compteOMesura, plural } from './concordanca.js';
 import { esSenseLector, fluxosDelMapa, puntsDeTrobada } from './mapa/fluxosMapa.js';
 import { TITOLS_PECES_AGENTS, agentsAtomics, capesActors, pecesAgents, xifresDelMas } from './mapa/actorsMapa.js';
 import { LLINDAR_ROIG, resumInventari } from './mapa/inventariMapa.js';
@@ -79,38 +80,65 @@ const compta = (llista, prova) => llista.filter(prova).length;
    h5), o null si la seua font no ha arribat. El resum unix les parts amb
    « · »: és la signatura de «Canvis nous» i no pot canviar ni un caràcter. */
 const delMapa = (mesura) => ({ mapa }) => (mapa ? mesura(mapa) : null);
+/* Ordre del Mestre, 261004 (xat: cap xifra solta) · Cada mesura concorda
+   (concordanca.js): «1 tasca», «1 viva», «1 avís». Amb una xifra diferent
+   d'1 el text no canvia ni un caràcter; amb un 1, la signatura canvia una
+   sola vegada i «Canvis nous» hi salta un cop. */
 const MESURES = Object.freeze({
+  /* Ordre del Mestre, 261004 · El pols compara el disc amb manifest.yaml:
+     el que hi diu «orfes» no són les òrfenes del Mapa (sense cap relació que
+     hi arribe). Es diu «fora del manifest» perquè les dues paraules no es
+     contradiguen (el Pols deia 0 orfes i l'Inventari, «Cal reparar»). La
+     signatura del pols canvia una vegada: «Canvis nous» hi salta un cop. */
+  /* Correcció 261004 (verificador de la tercera passada, punt 4) · Sense el
+     diari de sessió, els registres i els rebuts no tenen mesura: no són 0
+     (registresDelDiari). Amb el diari, la signatura no canvia. */
   pols: ({ dades }) => {
     if (!dades) return null;
     const { total, orfes } = resumSkills(dades.skills);
-    return [`${dades.consums.length} registres de consum`, `${dades.rebuts.length} rebuts`, `${total} skills (${orfes.length} orfes)`];
+    return [
+      compteOMesura(registresDelDiari(dades, 'consums'), 'registre de consum', 'registres de consum'),
+      compteOMesura(registresDelDiari(dades, 'rebuts'), 'rebut', 'rebuts'),
+      `${plural(total, 'skill', 'skills')} (${orfes.length} fora del manifest)`
+    ];
   },
-  explorador: delMapa((mapa) => [`${mapa.nodes.length} nodes`, `${mapa.arestes.length} arestes`]),
+  explorador: delMapa((mapa) => [plural(mapa.nodes.length, 'node', 'nodes'), plural(mapa.arestes.length, 'aresta', 'arestes')]),
   calendari: delMapa((mapa) => [
-    `${mapa.tasques.length} tasques`,
-    `${compta(mapa.tasques, (t) => t.estat === 'viu')} vives`,
-    `${compta(mapa.tasques, (t) => t.estat === 'mort')} mortes`
+    plural(mapa.tasques.length, 'tasca', 'tasques'),
+    plural(compta(mapa.tasques, (t) => t.estat === 'viu'), 'viva', 'vives'),
+    plural(compta(mapa.tasques, (t) => t.estat === 'mort'), 'morta', 'mortes')
   ]),
-  inventari: delMapa((mapa) => [`${compta(mapa.nodes, (n) => n.tipus === 'skill')} skills al Mapa`]),
+  inventari: delMapa((mapa) => [plural(compta(mapa.nodes, (n) => n.tipus === 'skill'), 'skill al Mapa', 'skills al Mapa')]),
   entrades: delMapa((mapa) => [
-    `${compta(mapa.nodes, (n) => n.tipus === 'skill')} skills`,
-    `${compta(mapa.nodes, (n) => n.tipus === 'ruta')} rutes documentals`
+    plural(compta(mapa.nodes, (n) => n.tipus === 'skill'), 'skill', 'skills'),
+    plural(compta(mapa.nodes, (n) => n.tipus === 'ruta'), 'ruta documental', 'rutes documentals')
   ]),
+  /* Correcció 261004 (verificador de la tercera passada, punt 5) · La segona
+     mètrica és la xifra de la targeta «metriques-amb-mesura»: derogat «N
+     mètriques», el total sense targeta pròpia (ara el diu el subtítol
+     d'eixa targeta). La signatura de Salut canvia una vegada. */
   salut: delMapa((mapa) => [
-    `${mapa.avisos.length} avisos (${compta(mapa.avisos, (a) => a.severitat === 'alta')} alts)`,
-    `${mapa.salut.length} mètriques`
+    `${plural(mapa.avisos.length, 'avís', 'avisos')} (${plural(compta(mapa.avisos, (a) => a.severitat === 'alta'), 'alt', 'alts')})`,
+    plural(compta(mapa.salut, (m) => m.valor !== 'N/A'), 'mètrica de salut amb mesura', 'mètriques de salut amb mesura')
   ]),
   fluxos: delMapa((mapa) => {
     const { cadenes, suggeriments } = fluxosDelMapa(mapa);
-    return [`${cadenes.length} cadenes declarades`, `${suggeriments.length} suggeriments de la prosa`];
+    return [
+      plural(cadenes.length, 'cadena declarada', 'cadenes declarades'),
+      plural(suggeriments.length, 'suggeriment de la prosa', 'suggeriments de la prosa')
+    ];
   }),
   agents: delMapa((mapa) => [
-    `${agentsAtomics(mapa).length} agents atòmics`,
-    `${compta(mapa.nodes, (n) => n.tipus === 'agent')} arnesos que conversen`
+    plural(agentsAtomics(mapa).length, 'agent atòmic', 'agents atòmics'),
+    plural(compta(mapa.nodes, (n) => n.tipus === 'agent'), 'arnés que conversa', 'arnesos que conversen')
   ]),
   actors: delMapa((mapa) => {
     const { arnesos, candats, programades } = capesActors(mapa);
-    return [`${arnesos.length} arnesos`, `${candats.length} candats`, `${programades.length} tasques programades`];
+    return [
+      plural(arnesos.length, 'arnés', 'arnesos'),
+      plural(candats.length, 'candat', 'candats'),
+      plural(programades.length, 'tasca programada', 'tasques programades')
+    ];
   })
 });
 
@@ -196,6 +224,51 @@ export function recompteArtefactes(dades) {
   return Number.isSafeInteger(n) && n >= 0 ? n : null;
 }
 
+/**
+ * Ordre del Mestre, 261004 (cap anomalia sense mostrar) · Les línies del
+ * diari de sessió i del journal immunitari que el middleware no ha pogut
+ * llegir (consola.json · fonts.<font>.línies_descartades): no compten enlloc
+ * i abans no es deien. Es diuen també quan són zero. null si consola.json no
+ * porta `fonts`; cada valor, null si la seua font no el porta (absent).
+ */
+export function liniesDescartades(dades) {
+  const fonts = dades?.fonts;
+  if (!fonts || typeof fonts !== 'object') return null;
+  const de = (font) => {
+    const n = font?.['línies_descartades'];
+    return Number.isSafeInteger(n) && n >= 0 ? n : null;
+  };
+  const diari = de(fonts.diari);
+  const immunitari = de(fonts.immunitari);
+  return diari === null && immunitari === null ? null : { diari, immunitari };
+}
+
+/**
+ * Correcció 261004 (verificador de la tercera passada, punt 4) · Una font
+ * absent no és cap zero. El middleware publica `operacions: 0`, `rebuts: []`
+ * i `consums: []` també quan el journal immunitari o el diari de sessió no
+ * existixen, i ho diu a fonts.<font>.estat ('absent'). Una font es llig si
+ * consola.json no diu el contrari: sense `fonts` (un productor anterior), es
+ * creu el que porta.
+ */
+export function fontLlegible(dades, font) {
+  const estat = dades?.fonts?.[font]?.estat;
+  return typeof estat !== 'string' || estat === 'ok';
+}
+
+/** Operacions del journal immunitari; null si el journal no es pot llegir (mai 0). */
+export function operacionsImmunitaries(dades) {
+  if (!dades || !fontLlegible(dades, 'immunitari')) return null;
+  const n = dades.immunitari?.operacions;
+  return Number.isSafeInteger(n) && n >= 0 ? n : null;
+}
+
+/** Quants registres del diari de sessió porta `camp` ('rebuts' o 'consums'); null si el diari no es pot llegir (mai 0). */
+export function registresDelDiari(dades, camp) {
+  if (!dades || !fontLlegible(dades, 'diari')) return null;
+  return Array.isArray(dades[camp]) ? dades[camp].length : null;
+}
+
 /* Un instant llegible (mil·lisegons) o null: les dates de consola.json poden
    faltar (un rebut sense `t`) i la Consola no n'inventa cap. */
 const instant = (iso) => {
@@ -256,8 +329,8 @@ export function avisosDeVigilancia(mapa) {
    to } o null; el que compta zero no hi entra. El `to` és el vocabulari
    d'Insignia, i el nivell de l'etiqueta és el to del primer (nivellEstats). */
 
-/** Una xifra amb el que compta: «1 dia», «2 dies». */
-export const plural = (n, un, molts) => `${n} ${n === 1 ? un : molts}`;
+/** Una xifra amb el que compta: «1 dia», «2 dies» (concordanca.js, la de tota la Consola). */
+export { plural };
 /** Dies des d'una data, com es diuen: «avui», «fa 1 dia», «fa 8 dies». */
 export const faDies = (dies) => (dies === 0 ? 'avui' : `fa ${plural(dies, 'dia', 'dies')}`);
 
@@ -281,7 +354,7 @@ function estatRebuts(rebuts, ara) {
    («enllaços trencats o orfes», encàrrec de la llesca), encara que el Mapa en
    gradue uns quants de mitjans. L2 (260930): el compilador ja diu «fitxer
    absent» del fitxer que un contracte declara i no és al disc. */
-const CODIS_TRENCATS = Object.freeze([
+export const CODIS_TRENCATS = Object.freeze([
   ['script-absent', 'script absent', 'scripts absents'],
   ['font-absent', 'font absent', 'fonts absents'],
   ['fitxer-absent', 'fitxer absent', 'fitxers absents'],
@@ -295,8 +368,9 @@ const ESTATS = Object.freeze({
     const { orfes, fantasmes } = resumSkills(dades.skills);
     const recompte = recompteArtefactes(dades);
     return [
-      compte('orfes', orfes.length, 'orfe (disc sense manifest)', 'orfes (disc sense manifest)', 'error'),
-      compte('fantasmes', fantasmes.length, 'fantasma (manifest sense disc)', 'fantasmes (manifest sense disc)', 'error'),
+      // Ordre del Mestre, 261004 · el vocabulari del pols ja no xoca amb el del Mapa (MESURES.pols).
+      compte('orfes', orfes.length, 'skill al disc fora del manifest', 'skills al disc fora del manifest', 'error'),
+      compte('fantasmes', fantasmes.length, 'skill al manifest sense disc', 'skills al manifest sense disc', 'error'),
       saturat(recompte)
         ? compte('saturacio', recompte - LLINDAR_SATURACIO, 'artefacte per damunt del llindar', 'artefactes per damunt del llindar', 'avis')
         : null,
@@ -380,6 +454,51 @@ export function nivellEstats(estats) {
   const to = estats?.[0]?.to;
   return to === 'error' || to === 'avis' ? to : null;
 }
+
+/**
+ * Correcció 261004 (verificador de la tercera passada, punt 5) · Cap xifra
+ * destacada sense targeta. Cada mètrica de la coberta (h5, MESURES) i cada
+ * estat (ESTATS) resumix una xifra que té targeta i pàgina pròpia: el mateix
+ * número és al títol o al subtítol d'eixa targeta. Ací, per pàgina, la
+ * targeta (o les dues, si la mètrica en porta dues xifres) de cada mètrica,
+ * en l'ordre de MESURES, i la de cada estat, per la seua clau. La prova de
+ * consolaPagines.test.js ho contrasta amb les targetes de la Consola: una
+ * mètrica o un estat nou sense targeta la fa roja. Derogat per l'ordre del
+ * Mestre del 261004 (xat: cap xifra solta): «N rutes documentals», «N agents
+ * atòmics», «N candats», els enllaços trencats, les skills sense disparador i
+ * els llocs del sòl sense lector com a xifres de coberta sense targeta.
+ */
+const congela = (perPagina) => Object.freeze(Object.fromEntries(
+  Object.entries(perPagina).map(([id, valor]) => [id, Object.freeze(valor)])
+));
+export const XIFRES_DE_LES_MESURES = congela({
+  pols: [['registres-de-consum'], ['rebuts-de-lectura'], ['skills-del-manifest', 'skills-fora-del-manifest']],
+  explorador: [['nodes'], ['arestes']],
+  calendari: [['tasques-del-mapa'], ['tasques-del-mapa'], ['tasques-del-mapa']],
+  inventari: [['skills']],
+  entrades: [['skills'], ['rutes-documentals']],
+  salut: [['avisos', 'avisos-alts'], ['metriques-amb-mesura']],
+  fluxos: [['cadenes-declarades'], ['suggeriments-de-la-prosa']],
+  agents: [['agents-atomics'], ['agents']],
+  actors: [['agents'], ['candats'], ['coses-que-corren-soles']]
+});
+export const XIFRES_DELS_ESTATS = congela({
+  pols: { orfes: 'skills-fora-del-manifest', fantasmes: 'skills-sense-disc', saturacio: 'artefactes-actius', 'rebuts-rancis': 'ultim-rebut' },
+  explorador: { ...Object.fromEntries(CODIS_TRENCATS.map(([codi]) => [codi, 'enllacos-trencats'])), inferides: 'arestes' },
+  fluxos: { 'sense-lector': 'llocs-sense-lector' },
+  calendari: { mort: 'tasques-del-mapa', 'sense-llancador': 'tasques-del-mapa', 'sense-declaracio': 'tasques-del-mapa', desconegut: 'tasques-del-mapa' },
+  inventari: {
+    roig: 'skills-amb-avisos', ambre: 'skills-amb-avisos', orfenes: 'skills-orfenes', 'fora-cens': 'skills-fora-d-algun-cens',
+    'sense-disparador': 'skills-sense-disparador'
+  },
+  entrades: { opaques: 'skills-opaques' },
+  agents: { fluxos: 'peca-fluxos-de-treball', tauler: 'peca-tauler', sols: 'peca-agents-sols', vigilants: 'peca-vigilants' },
+  actors: {
+    'launchd-morta': 'coses-que-corren-soles', 'sense-consumidor': 'candats', 'per-acreditar': 'candats',
+    'sense-llancador': 'tasques-sense-llancador', 'sol-sense-lector': 'llocs-del-sol'
+  },
+  salut: { alta: 'avisos-alts', mitjana: 'avisos', baixa: 'avisos', 'sense-mesura': 'metriques-amb-mesura' }
+});
 
 /** La dada i l'estat de la font d'una pàgina: consola.json per al pols, el Mapa per a la resta. */
 function fontDe(id, fonts = {}) {

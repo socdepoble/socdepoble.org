@@ -1,0 +1,529 @@
+MODEL D'ORGANITZACIÓ D'EMPRESA IDEAL · «Som de Poble» · proposta per al Mestre · 261004
+==========================================================================================
+Síntesi B del workflow de revisió de ../_gestoria_de_poble. Ordre d'origen: prompt
+261004_0515_prompt_claude_gestoria.md, §2, actualitzat a les 07:35: «Macro-Estructura» (:80), «Gestió
+de la Casa com a Empresa» (:77) i «Sistema d'Auditoria i Autoneteja» (:78).
+Este document NO mou, NO reanomena i NO crea cap carpeta. És el plànol perquè el Mestre decidisca. Claude
+no pot moure fitxers (AGENTS §0.1): tot trasllat el fa el Mestre o MarIA, amb ordre.
+
+Convencions
+- [VERIFICAT]: llegit en este torn al repositori o a ../, amb fitxer:línia.
+- [REVISIÓ]: ve de les set revisions de lectura d'esta nit (només estructura). No ho he tornat a llegir.
+- [NO VERIFICAT]: normativa o comportament extern sense font oficial llegida esta nit.
+- [PROPOSTA]: decisió de disseny meua, esmenable.
+- [ESTIMACIÓ]: xifra o judici meu.
+Guarda de privacitat: ací no hi ha cap nom de persona, document d'identitat, adreça, compte ni dada de
+salut. Les carpetes es descriuen per tipus de document i per recompte.
+
+
+0. EN DOS MINUTS
+----------------
+1. Hui «Som de Poble» (la carpeta pare de socdepoble.org) té huit carpetes germanes i el motor. Fan
+   d'empresa, de llar, de laboratori i d'arxiu alhora. La Gestoria guarda papers de l'activitat,
+   factures domèstiques, cures d'una persona i el dossier d'un bar. Cap carpeta diu per a què servix.
+2. Proposta: una casa sencera amb onze àrees amb prefix «_» (privades per defecte; només la cultura i
+   una part de la comunicació es poden publicar) i un motor públic. Cada àrea és un departament d'empresa
+   de veritat, amb la mateixa anatomia: índex, manifest, subàrees numerades, paperera i arxiu.
+3. Falten quatre àrees: DIRECCIÓ (govern i estratègia), COMERCIAL (clients, botigues, patrocinis),
+   PERSONES (equip i voluntariat) i LLAR (la casa, separada de l'empresa amb frontera dura).
+4. Es fusiona _raw_de_poble dins de _recursos_de_poble. Es reanomena oficina_de_poble a
+   _safata_de_poble, la porta d'entrada única. _arxiu_wiki_de_poble conserva el nom perquè les eines en
+   depenen (somiador.mjs:13) [VERIFICAT].
+5. El prefix «_» no és estètica: ../.gitignore ignora «_*» i «.*» per si mai s'inicialitza git a
+   l'arrel [VERIFICAT]. oficina_de_poble hui queda fora d'eixe cinturó.
+6. Qualsevol persona que es descarregue Sóc de Poble fa servir el motor (l'app) i crea el seu «Som de
+   Poble» al seu ordinador. Res no es puja. Hi ha tres models segons qui és: família, autònom o entitat.
+7. El Panell de Control llig la casa amb File System Access, en mode lectura i sense pujar res, amb la
+   mateixa Font que ja usa la Gestoria (fontNavegador.js) [VERIFICAT]. Cal un mode «cens» nou, perquè el
+   recorregut d'hui està pensat per a una sola carpeta de facturació (tractor.js:57 i :249) [VERIFICAT].
+8. Ara no es mou res. Primer, el manifest i les carpetes noves buides; els reanomenaments, només amb
+   ordre, perquè trenquen eines i proves (§7).
+
+
+1. (a) PER A QUÈ SERVIX CADA CARPETA MESTRA
+-------------------------------------------
+1.1 Què hi ha hui i què hauria de ser [REVISIÓ, recomptes del primer nivell]
+
+_arxiu_wiki_de_poble (unes 300 entrades)
+  Hui: la custòdia humana de la Wiki antiga. Cinc índexs amb noms diferents, cinc arxius dins de l'arxiu
+  (90_, 90_legacy, 99_, dos «Documents_Historics»), còpies comprimides, bundles de més de 3 MB i un
+  expedient d'al·legacions ciutadanes amb enregistraments d'àudio de terceres persones.
+  Hauria de ser: l'ARXIU FRED DEL MOTOR, fora del git. El que la Wiki ja no fa servir i no es pot
+  esborrar. No és l'arxiu de l'empresa: cada àrea té el seu (§3.2).
+_comunicacio_de_poble (1 fitxer)
+  Hui: pràcticament buida; un informe d'estudi de cas.
+  Hauria de ser: MARCA I VEU. Identitat, dossier institucional, productes editorials (calendaris,
+  llibretes), premsa i xarxes.
+_cultura_de_poble (2 carpetes)
+  Hui: el glossari canònic i una fitxa de memòria local. La compila tooling/wiki/compile-cultura.mjs:11
+  [VERIFICAT].
+  Hauria de ser: el mateix. LLENGUA I MEMÒRIA que alimenten l'agent. Amb una part de la comunicació, és
+  l'única àrea que es pot publicar.
+_gestoria_de_poble (18 visibles; vault d'Obsidian)
+  Hui: calaix de tot. Prototip de Tauler amb dades bancàries en clar dins del codi, 66 papers plans que
+  barregen identitat, Seguretat Social, salut i ajudes, factures emeses i rebudes juntes, any i trimestre
+  al mateix nivell, burocràcia de l'activitat i de la casa, i les sis carpetes grogues.
+  La proposta de calaixos del seu 00_index.md (emeses, rebudes, impostos, legal, bancs) mai s'ha aplicat.
+  Hauria de ser: l'ERP ADMINISTRATIU DE L'ACTIVITAT, pur. Res de la llar.
+_multimedia_de_poble (16; vault d'Obsidian)
+  Hui: una safata de captures i imatges sense classificar i quatre subcarpetes buides.
+  Hauria de ser: ACTIUS BRUTS (foto, vídeo, àudio, captures) amb els consentiments d'imatge al costat.
+_raw_de_poble (4; vault d'Obsidian)
+  Hui: dues guies de tercers i dues notes de recerca.
+  Hauria de ser: res a part. Es fusiona a _recursos_de_poble/03_recerca (§2.3).
+_recursos_de_poble (9)
+  Hui: marcadors a serveis externs i un calaix «per incloure».
+  Hauria de ser: COMPRES I PROVEÏDORS. Una fitxa per servei: què es paga, quant, amb quin contracte i com
+  donar-se de baixa. És on es respon la F3 del Tutor (quant costa de veritat la IA).
+oficina_de_poble (1 fitxer)
+  Hui: un calaix de sastre amb una nota de connexions externes (no llegida: cal comprovar que no té
+  claus).
+  Hauria de ser: la SAFATA GLOBAL, amb un altre nom (§2.3).
+socdepoble.org (el repositori)
+  Hui i sempre: el MOTOR. Codi, Wiki operativa i maquinària. L'únic que es versiona i es publica. No ha de
+  contindre cap dada personal ni l'estratègia privada de l'empresa.
+Fitxers solts a l'arrel: un informe d'auditoria d'arquitectura i el seu script de proves (260921_0725).
+  Són del motor: van a _arxiu_wiki_de_poble/motor/ (§3.3).
+
+1.2 La regla del prefix
+- ../.gitignore:1-6 ignora «_*» i «.*», «com a cinturó de seguretat per si alguna vegada s'inicialitza
+  git per error a l'arrel» [VERIFICAT]. Per tant:
+  - prefix «_» = privat, mai versionat;
+  - sense prefix = el motor, públic i versionat (socdepoble.org).
+- oficina_de_poble no porta prefix: si algú fa git init a l'arrel, entraria al primer commit. Els dos
+  fitxers solts de l'arrel, també.
+- Conseqüència per al model: TOTA àrea privada porta «_». El manifest arrel (§3.5) no en porta, però no
+  conté cap dada personal.
+
+
+2. (b) EL QUE FALTA, EL QUE ES FUSIONA I EL QUE ES REANOMENA
+-----------------------------------------------------------
+2.1 Els nivells d'una empresa de veritat i on viu cadascun [PROPOSTA]
+| Nivell d'empresa | Hui | Proposta |
+| Govern i estratègia | plans directors dins de la Wiki del repositori; subvencions a la Gestoria | _direccio_de_poble (NOVA) |
+| Administració i fiscalitat | _gestoria_de_poble, barrejada | _gestoria_de_poble, purgada |
+| Vendes, clients i postvenda | no existix | _comercial_de_poble (NOVA) |
+| Màrqueting i comunicació | _comunicacio (buida), marca escampada en tres llocs | _comunicacio_de_poble |
+| Producte i operacions | socdepoble.org i el laboratori 02_investigacio_ia | socdepoble.org (motor) |
+| Compres i proveïdors | marcadors a _recursos | _recursos_de_poble (absorbix _raw) |
+| Persones | no existix; RETA barrejat amb identitat | _persones_de_poble (NOVA, pot nàixer buida) |
+| Coneixement | _cultura i la Wiki | _cultura_de_poble i la Wiki del motor |
+| Actius digitals | _multimedia, sense classificar | _multimedia_de_poble |
+| Entrada de documents | tres safates parcials i un calaix de sastre | _safata_de_poble (única) |
+| Legal i compliment | escampat | tràmits amb termini: _gestoria/01; dictàmens, RGPD i contractes marc: _direccio/06 |
+| Arxiu | tres arxius independents | 90_arxiu dins de cada àrea; _arxiu_wiki_de_poble per al motor |
+| Seguretat i continuïtat | una clau de signatura en un retall de text dins de la Gestoria [REVISIÓ] | NO és una carpeta: gestor de contrasenyes i còpies 3-2-1 fora de la casa |
+| Llar | dins de la Gestoria | _llar_de_poble (NOVA, íntima, fora de l'empresa) |
+
+2.2 Les quatre àrees noves
+- _direccio_de_poble: qui decidix. Estratègia, pressupost, govern de l'entitat, projectes i subvencions
+  (la planificació; la justificació és de la Gestoria), relacions institucionals, legal i aliances. Hi
+  baixarien, fora del git, els dos plans directors privats que hui viuen a _wiki_de_poble/02_saber/
+  [REVISIÓ: marcats visibility: private, no compilats, però dins del git que es puja].
+- _comercial_de_poble: qui ven. Clients (ajuntaments, associacions), ofertes, el catàleg de serveis
+  M1-M9 del Tutor, botigues i repartiment local, patrocinis i els negocis locals acompanyats.
+- _persones_de_poble: qui treballa. Col·laboradors, voluntariat, formació, assegurances. Conté dades
+  de tercers: és íntima. Pot nàixer buida fins al primer col·laborador.
+- _llar_de_poble: la casa portada com una empresa però separada (§3.4).
+Regla per a dubtes: si té termini legal o l'exigix Hisenda o la Seguretat Social, Gestoria; si ho decidix
+l'assemblea o la direcció, Direcció; si és d'un client, Comercial; si és de la casa, Llar.
+
+2.3 Fusions i reanomenaments, amb el que trenquen [VERIFICAT cada referència]
+| Canvi | Per què | Què trenca |
+| _raw_de_poble → _recursos_de_poble/03_recerca | 4 fitxers; és recerca, no una àrea | tractor_cognitiu.mjs:25 el llista (llista de cens, inofensiu) |
+| oficina_de_poble → _safata_de_poble | rol clar i dins del cinturó «_» | tractor_cognitiu.mjs:26 (cal actualitzar-la) |
+| Dins de _gestoria: 02_Facturacio → 02_factures_emeses + 03_factures_rebudes, minúscules | separar emeses i rebudes; taxonomia | tests/gestoria-c43-real.test.mjs:15 i tests/gestoria-3t-real.test.mjs:58 apunten a 02_Facturacio |
+| Dins de _arxiu_wiki: cinc arxius interns → un per any | soroll | res al codi |
+| _arxiu_wiki_de_poble: ES QUEDA amb el nom | | somiador.mjs:13 i tractor-cens.mjs:104 en depenen |
+| Les dues proves de dades reals: que llegisquen la ruta del manifest | no dependre d'un nom fix | cal reescriure-les i deixar-les fora de la CI |
+Nota: tractor_cognitiu.mjs:23-27 només s'aplica a FITXERS solts (filtra isFile, :35) [VERIFICAT]. Que hi
+falte _recursos_de_poble no fa mal hui; en canvi, el manifest arrel nou (som_de_poble.json) eixiria com a
+fitxer orfe si no s'hi afig.
+
+2.4 Incoherències que el model resol [REVISIÓ]
+- Caixa: la Gestoria usa Majúscula_Inicial i la Wiki minúscules.
+- Prefixos numèrics duplicats (dos 03_ i dos 04_ a la Gestoria).
+- Ordenació amb «¡», «¡¡» i «z» en lloc de números; zBorrar i «xRevisar abans de Borrar» com a
+  paperera informal de dos nivells.
+- Les grogues acaben en _socdepoble i una usa guionet.
+- Categories de fitxer en majúscules (ASSET, DOC, PROMPT, BUNDLE, PETORRETA) contra AGENTS §2.
+- Any i trimestre al mateix nivell (2025 i 2025_4T; 2026 buida i 2026_1T…4T).
+- Quatre vaults d'Obsidian separats i sis noms d'índex diferents.
+- Solapaments: les al·legacions són a l'arxiu de la Wiki i a la Gestoria; la marca, a tres llocs.
+
+
+3. (c) L'ARBRE PROPOSAT
+----------------------
+3.1 Convencions de noms [PROPOSTA]
+- Àrea mestra: «_<area>_de_poble», minúscules, sense accents. L'ordre no el dona el nom sinó el manifest
+  (§3.5): així no cal reanomenar res per a reordenar i les eines no es trenquen.
+- Subàrea: «NN_nom», dos dígits, sense repetir número, minúscules, sense accents, sense «¡» ni «z».
+- Reservats a totes les àrees: 00_ (índex i manifest), 80_paperera, 90_arxiu.
+- Trimestres: carpeta d'any i, dins, «aaaa_nt» (2026/2026_3t). El nom del trimestre ha de portar l'any:
+  el tractor reconeix «2026_3t» però no «3t» sol (tractor.js:81-82 i :160-166) [VERIFICAT]. Un trimestre
+  mogut fora de context continua dient de quin any és.
+- Documents de treball nous: «aammdd_hhmm_categoria_titol» (AGENTS §2).
+- Documents rebuts de fora (factures, resolucions): «aammdd_categoria_origen_referencia.ext», amb la data
+  DEL DOCUMENT, no la del fitxer. El script de migració antic datava pel mtime [REVISIÓ] i per això els
+  noms d'hui menteixen. Proposta que cal validar: AGENTS §2 parla de treball nou i no cobrix este cas.
+- Categories en minúscules: factura, rebut, extracte, model, resolucio, notificacio, contracte, conveni,
+  pressupost, acta, certificat, justificant.
+- MAI un nom de persona ni un número d'identitat en un nom de fitxer o carpeta: s'usa el rol (titular,
+  familiar, client_01, entitat). El nom de fitxer ja és una dada: l'ensenya qualsevol llistat.
+
+3.2 Anatomia de cada àrea (la mateixa a totes, com .agents/cervell.json fa amb la Wiki) [PROPOSTA]
+  00_index_<area>.md     per a humans: què hi ha i per a què servix (compatible amb Obsidian)
+  00_carpeta.json        per a màquines: propòsit, nivell, privacitat, retenció, responsable per rol
+  01_… 0N_…              subàrees
+  80_paperera/aammdd/    quarantena: el que el Panell proposa esborrar i la persona ha acceptat moure
+  90_arxiu/aaaa/         exercicis tancats que encara s'han de conservar
+Per què el manifest NO es diu «.sdp-carpeta.json»: la Font del navegador no llista ni llig cap segment que
+comence per «.» (esRutaOculta, tractor.js:149-151; fontNavegador.js:16-18) [VERIFICAT]. Un manifest ocult
+seria invisible per al Panell.
+Per què la paperera és per àrea i no una sola: una paperera comuna física barrejaria papers íntims de la
+llar amb els de l'empresa i tindria el nivell de protecció més baix. La paperera COMUNA és una VISTA del
+Panell que ajunta les 80_paperera de totes les àrees, cadascuna amb la seua privacitat.
+Una sola safata: la global. Les àrees no en tenen (hui n'hi ha tres de parcials i això és el problema).
+
+3.3 L'arbre de primer i segon nivell [PROPOSTA]
+Privacitat: [pública] es pot publicar · [privada] empresa, no es publica · [íntima] dades personals
+especials o de terceres persones: el Panell només en mostra recomptes.
+
+Som de Poble/                              la casa sencera (dins de Documents, mai a l'arrel de l'usuari)
+  som_de_poble.json                        manifest arrel: àrees, ordre, privacitat, titulars per rol
+  .gitignore                               «_*» i «.*» (ja existix)
+  _safata_de_poble/              [privada] l'ÚNICA porta d'entrada (abans oficina_de_poble)
+    00_index_safata.md, 00_carpeta.json    pla, sense subcarpetes, màxim 20 elements (com AGENTS §12)
+  _direccio_de_poble/            [privada] NOVA · govern i estratègia
+    01_estrategia/                         plans directors, viabilitat, full de ruta, DAFO
+    02_pressupost_i_diners/                pressupost anual, el «tauler de diners» del dilluns (Tutor §3)
+    03_govern/                             estatuts, actes, assemblees, llibre de socis, decisions
+    04_projectes_i_subvencions/            radar de convocatòries i candidatures (aaaa_nom)
+    05_institucions_i_participacio/        convenis marc, ajuntaments, GAL, al·legacions ciutadanes
+    06_legal_i_compliment/                 dictàmens escrits, RGPD (registre i encàrrecs), llicències
+    07_aliances/                           acords signats amb socis (Sollutia i altres)
+    80_paperera/, 90_arxiu/
+  _gestoria_de_poble/            [privada] l'ERP administratiu de l'ACTIVITAT (els mòduls d'ARQUITECTURA §2.2)
+    00_index_gestoria.md, 00_carpeta.json
+    01_identitat_legal/                    censals, alta, baixa i variacions del RETA, NIF, certificats, poders
+    02_factures_emeses/aaaa/aaaa_nt/
+    03_factures_rebudes/aaaa/aaaa_nt/
+    04_bancs/aaaa/                         Norma 43, CSV i extractes
+    05_impostos/aaaa/                      303, 130, 349, 390, 347: justificants de presentació
+    06_seguretat_social/aaaa/              cotitzacions, bases, vida laboral
+    07_expedients/                         kit_digital, subvencions (justificació), marca_oepm, tributs de l'activitat
+    08_lliuraments_gestoria/aaaa/aaaa_nt/  el paquet que s'entrega (full CSV/XLSX i PDF), no una captura solta
+    80_paperera/, 90_arxiu/aaaa/           també el prototip de Tauler i el codi en quarantena (porten dades en clar)
+  _comercial_de_poble/           [privada] NOVA · vendes i clients
+    01_clients/client_NN/                  contracte, encàrrec de tractament, incidències, informe anual
+    02_ofertes_i_pressupostos/aaaa/
+    03_botigues_i_repartiment/             acords amb botigues, tarifes, catàlegs públics; mai comandes amb adreça
+    04_patrocinis/                         convenis, contraprestacions, referència a les factures
+    05_negocis_locals/                     expedients de negocis acompanyats
+    06_cataleg_de_serveis/                 M1-M9: fitxa, preu públic, condicions de baixa (TUTOR §2.1)
+    80_paperera/, 90_arxiu/
+  _comunicacio_de_poble/         [pública en part] marca i veu
+    01_marca/                              logotips, tipografies amb llicència, guia (skill core-identitat-visual)
+    02_dossier_institucional/              (skill core-portaveu-institucional)
+    03_editorial/                          calendaris, diaris i llibretes EN BLANC: fonts de disseny i PDF
+    04_premsa_i_xarxes/
+    05_campanyes/aaaa/
+    06_estudis/                            informes de cas (l'informe que hi ha hui)
+    80_paperera/, 90_arxiu/
+  _multimedia_de_poble/          [privada] actius bruts
+    01_fotos/aaaa/, 02_video/, 03_audio/, 04_captures/, 05_referencies/
+    06_consentiments/                      drets d'imatge i de veu de les persones que hi apareixen
+    80_paperera/, 90_arxiu/
+  _cultura_de_poble/             [pública] llengua i memòria
+    01_llengua/, 02_memoria_i_folklore/, 03_fonts_orals/ (amb consentiment)
+  _recursos_de_poble/            [privada] compres, proveïdors i eines
+    01_proveidors/                         una fitxa per servei: cost, contracte, baixa, dades que hi van
+    02_eines/                              marcadors i accessos, MAI contrasenyes
+    03_recerca/                            lectures i notes crues (absorbix _raw_de_poble)
+    04_llicencies/                         programari, fonts, imatges
+    80_paperera/, 90_arxiu/
+  _persones_de_poble/            [íntima] NOVA · equip
+    01_equip/, 02_voluntariat/, 03_formacio/, 04_assegurances_i_prevencio/, 80_paperera/, 90_arxiu/
+  _llar_de_poble/                [íntima] NOVA · la casa (§3.4)
+  _arxiu_wiki_de_poble/          [privada] arxiu fred del MOTOR (nom fix)
+    wiki/aaaa/                             el que la Wiki ja no fa servir (un sol arxiu per any)
+    motor/                                 informes d'arquitectura, còpies, bundles (els dos fitxers solts de l'arrel)
+  socdepoble.org/                [pública] el motor: codi i Wiki operativa; cap dada personal
+
+3.4 La Llar, separada de l'empresa [PROPOSTA]
+_llar_de_poble/                  [íntima]
+  00_index_llar.md, 00_carpeta.json
+  01_identitat_i_familia/                  documents d'identitat, llibre de família, testaments
+  02_habitatge/                            escriptures, hipoteca, comunitat, obres i les seues factures
+  03_rebuts_i_subministraments/aaaa/       llum, aigua, gas, telèfon de casa
+  04_assegurances_i_garanties/             pòlisses i tiquets de garantia
+  05_vehicles/                             ITV, assegurança, impost de vehicles
+  06_tramits_i_impostos_personals/aaaa/    renda, tributs de la casa, ocupació, ajudes personals
+  07_cures_i_salut/                        quaderns de cures emplenats; ningú fora de la família
+  08_compra/                               llistes, catàlegs de botigues, tiquets domèstics
+  09_patrimoni_i_herencia/                 herències, béns, valoracions
+  80_paperera/, 90_arxiu/aaaa/
+Frontera dura, en quatre capes:
+1. Disc: carpeta pròpia, fora de qualsevol vault d'Obsidian de l'empresa, i còpia de seguretat xifrada.
+2. Panell: només recomptes; per a obrir-la cal triar-la a banda, i no hi ha previsualitzacions (§6.2).
+3. Codi: res de la llar entra al repositori, a la Wiki, al manifest, al RAG, als bundles ni a Supabase.
+   L'app Salut ja ho fa per a les cures (dades només al dispositiu) [REVISIÓ].
+4. Fiscal: un subministrament de casa que l'activitat deduïx en part es queda a la llar; a la Gestoria
+   només hi va la referència i el percentatge d'afectació, a validar amb la gestoria [NO VERIFICAT].
+Nom: l'altra revisió d'esta nit proposava «_casa_de_poble». Trie «_llar_de_poble» perquè «casa» ja vol
+dir el tot (Som de Poble); és un nom i el Mestre pot canviar-lo.
+Diversos titulars: si una mateixa casa porta l'activitat d'un autònom i una entitat, la regla és «un
+titular, un llibre». Dins de 02-07 de la Gestoria, un segment per titular (titular/ i entitat/) només
+quan n'hi ha més d'un. El manifest diu quins hi ha, per rol.
+
+3.5 El manifest arrel: som_de_poble.json [PROPOSTA, esbós]
+{
+  "esquema": "sdp.som.v1",
+  "motor": "socdepoble.org",
+  "titulars": [{ "id": "t1", "rol": "titular" }, { "id": "e1", "rol": "entitat" }],
+  "arees": [
+    { "carpeta": "_safata_de_poble", "ordre": 0, "nivell": "entrada", "privacitat": "privada" },
+    { "carpeta": "_direccio_de_poble", "ordre": 1, "nivell": "govern", "privacitat": "privada" },
+    { "carpeta": "_llar_de_poble", "ordre": 9, "nivell": "llar", "privacitat": "intima" }
+  ]
+}
+- Cap nom, cap NIF, cap ruta absoluta. Es pot ensenyar sense por.
+- És el CENS ÚNIC. Hui el cens està cablejat en quatre llocs que no coincidixen: tractor_cognitiu.mjs:23-27,
+  compile-cultura.mjs:11, somiador.mjs:13 i tractor-cens.mjs:104 [VERIFICAT]. Les eines i el Panell
+  haurien de llegir el manifest.
+- 00_carpeta.json de cada àrea porta el detall: privacitat, responsable per rol i retenció per patró
+  (per exemple {"patro": "02_factures_emeses/**", "tipus": "factura-emesa"}). Els anys no van al disc:
+  els porta el catàleg de tipus del motor, que s'actualitza amb la llei.
+
+3.6 Retenció per àrea: QUAN ES POT ESBORRAR [NO VERIFICAT tot; taula per a validar amb la gestoria]
+| Tipus | Conservació mínima | Àrea |
+| Factures i llibres registre | 4 anys des del final del termini de declaració (LGT art. 66); fins a 10 amb bases negatives o deduccions pendents (art. 66 bis); 6 com a documentació mercantil (Codi de Comerç art. 30) | gestoria |
+| Seguretat Social (rebuts, bases) | 4 anys; el resum de bases i l'últim informe de vida laboral, sempre | gestoria |
+| Subvencions i ajudes | 4 anys des del final de la justificació (LGS art. 39); més si les bases ho diuen | gestoria/07 |
+| Contractes i convenis | vigència + 5 anys (accions personals, art. 1964 CC); 6 si són mercantils | comercial, direcció |
+| Marca | mentre estiga viva, i després com a prova | gestoria/07 |
+| Renda personal | 4 anys des del final del termini voluntari | llar/06 |
+| Escriptures, herència, obres de millora | mentre es tinga el bé i 4 anys des de la venda | llar/02, llar/09 (protegit) |
+| Rebuts domèstics | 5 anys (pagaments periòdics, art. 1966 CC) | llar/03 |
+| Assegurances | vigència + 2 anys (danys) o 5 (persones) | llar/04 |
+| Garanties | tota la garantia legal (3 anys per a béns nous) | llar/04 |
+| Quaderns de cures | sense termini legal; decidix la família; mai automàtic | llar/07 (protegit) |
+| Còpies automàtiques, duplicats per sha256 | candidats a la paperera després del tancament de l'exercici | totes |
+| Credencials en clar | no són un document: al gestor de contrasenyes i fora de la casa | cap |
+«Protegit» vol dir que mai és candidat automàtic: només la persona el pot moure, amb confirmació escrita.
+
+
+4. (d) LES SIS CARPETES GROGUES: ON ENCAIXEN [PROPOSTA; decidix el Mestre]
+-----------------------------------------------------------------------
+| Carpeta groga | Destí | Notes |
+| calendari_socdepoble | _comunicacio_de_poble/03_editorial/calendaris/ | Producte editorial amb marca, sense dades personals. La funció d'imprimir l'any va al motor (secció Calendari). |
+| diari_socdepoble | _comunicacio_de_poble/03_editorial/llibretes/ | Plantilla en blanc. Si el Mestre l'usa com a agenda pròpia, els fulls emplenats van a la llar. |
+| diari_miccional-socdepoble, plantilla en blanc | _comunicacio_de_poble/03_editorial/llibretes/ | És la llavor de l'app Salut. La prova d'estructura llig una còpia de 01_produccio/salut [REVISIÓ]: abans de moure res, decidir quina còpia és la canònica. |
+| diari_miccional-socdepoble, mostres emplenades | _llar_de_poble/07_cures_i_salut/ | Dades de salut d'una persona (art. 9 RGPD). Reanomenades per rol, sense nom. Mai al repositori. |
+| valoracio_agitacio_socdepoble | _llar_de_poble/07_cures_i_salut/ | Només hi ha la versió emplenada. Si se'n fa una plantilla en blanc, va a 03_editorial. |
+| llista_de_la_compra_socdepoble | _llar_de_poble/08_compra/ | La maqueta porta la marca d'un supermercat: no es publica. La còpia del CSV que vigila la prova de la Nevera és a 01_produccio/mercadona [REVISIÓ]. zBorrar va a 80_paperera com a proposta. |
+| la_parroquia_menjar_i_beure_socdepoble | _comercial_de_poble/05_negocis_locals/la_parroquia/ | Expedient de negoci. Dins: operativa (TPV, carta: font de l'app Bar), identitat pròpia del negoci, i l'antic establiment a 90_arxiu. Si és un negoci propi i no d'un client, el que és fiscal va a la Gestoria del titular. |
+Dos avisos que valen per a totes:
+- Una carpeta groga no es mou sencera: es reparteix per funció (plantilla en blanc → editorial; emplenat
+  → llar; fiscal → gestoria).
+- Tres proves del repositori llegixen còpies de la zona humana i se salten en silenci si desapareixen
+  (salut, nevera i bar) [REVISIÓ]. Moure sense actualitzar-les deixa la fidelitat sense vigilància.
+
+Redistribució de la resta de la Gestoria d'hui [REVISIÓ, per tipus; cap nom]:
+- 01_Identitat_Legal (66 plans): RETA, censals, Kit Digital i certificats de l'activitat → gestoria/01, 06
+  i 07; document d'identitat i ocupació personal → llar/01 i llar/06; comunicat mèdic → llar/07; estatuts
+  i alta de l'associació → direccio/03; el retall amb una clau de signatura → gestor de contrasenyes.
+- 03_Burocracia: SUMA es partix (activitat → gestoria/07; casa → llar/06); Herencia (buida) →
+  llar/09; OEPM → gestoria/07/marca_oepm; Agencia_Tributaria (una renda) → llar/06.
+- 03_Projectes_Actius: Subvencions_2026 → direccio/04 (candidatura) i gestoria/07 (si es concedix);
+  CEEC_Alegacions, junt amb la seua còpia de l'arxiu de la Wiki → direccio/05, revisant el consentiment
+  dels enregistraments d'àudio.
+- 00_Tauler_Central i 04_Quarantena_Llegat_Web → gestoria/90_arxiu/prototips/: porten dades bancàries en
+  clar dins del codi i no han d'entrar mai al repositori.
+- 04_Eines_de_Pedra_Seca (el script de migració) → 90_arxiu: datava pel mtime i esborrava fitxers; no
+  s'ha de tornar a executar.
+- 02_Facturacio/2024: les factures domèstiques i familiars i les autodesades de GnuCash s'han de
+  separar abans de proposar-ne res a la paperera.
+
+
+5. (e) PER A QUALSEVOL PERSONA QUE ES DESCARREGUE «SÓC DE POBLE»
+---------------------------------------------------------------
+5.1 Dues peces
+- EL MOTOR és l'app: socdepoble.org al navegador, l'app instal·lada o el connector de WordPress. És codi
+  lliure (AGPL) i és igual per a tothom. Per al Mestre, també és el repositori al disc; per a la resta,
+  no cal tindre'l.
+- LA CASA és la carpeta «Som de Poble» de cada persona, al seu ordinador. És seua, en formats oberts (PDF,
+  CSV, MD, JSON), i no es puja enlloc. El motor la llig quan la persona li ho permet, i la pot deixar de
+  llegir quan vulga. Si Sóc de Poble desapareix, la casa continua (garantia G3, ARQUITECTURA §8.2).
+
+5.2 Tres models segons qui eres [PROPOSTA]
+- Família: _safata + _llar. Res més.
+- Autònom o xicotet negoci: + _gestoria + _comercial + _recursos.
+- Entitat o empresa amb equip: + _direccio + _persones + _comunicacio + _multimedia + _cultura.
+Les àrees que no uses no existixen. El manifest diu quines hi ha. Se n'afig una el dia que fa falta.
+
+5.3 Pas a pas des de zero
+Pas 0 · Decidix el model (5.2). Si dubtes, comença pel de família: créixer és afegir carpetes.
+Pas 1 · Crea «Som de Poble» dins de Documents, no a l'arrel del teu usuari ni a l'escriptori del sistema:
+        els navegadors no deixen triar carpetes del sistema [NO VERIFICAT la llista exacta]. Xifra el disc
+        (FileVault al Mac, BitLocker a Windows). Si la poses dins d'un núvol sincronitzat, que siga una
+        decisió conscient: els papers de la llar hi viatgen.
+Pas 2 · Crea l'esquelet. Hui, a mà, amb la llista de §3.3. Demà, amb un ZIP d'esquelet buit publicat pel
+        projecte (només carpetes, 00_index i 00_carpeta.json) o amb el botó «Crea la teua casa» del
+        Panell, que necessita una capacitat d'escriptura que hui no hi ha (§6.3).
+Pas 3 · Omple som_de_poble.json: quines àrees, en quin ordre i quins titulars, per rol. Cap nom.
+Pas 4 · La primera setmana, tot el que tingues solt va a _safata_de_poble. No classifiques encara.
+Pas 5 · Obri el motor, ves al Panell de Control, «La meua casa», i tria la carpeta. El Panell et mostra el
+        mapa, et diu què és cada cosa de la safata i on aniria. Tu ho mous: hui a mà, demà amb un clic.
+Pas 6 · Rutines (les del Tutor, §3):
+        - cada dilluns, 30 minuts: safata buida i tauler de diners;
+        - cada trimestre: la Gestoria prepara el lliurament, es guarda a 08_lliuraments_gestoria i el
+          trimestre anterior queda tancat;
+        - cada gener: es tanca l'exercici a 90_arxiu/aaaa, es revisa la paperera i s'exporta el .ics
+          privat de venciments de la llar.
+Pas 7 · Còpies 3-2-1: tres còpies, en dos suports, una fora de casa, xifrada. Una vegada al trimestre,
+        prova de restaurar un fitxer. Una còpia dins del mateix disc no és una còpia.
+Pas 8 · Secrets: cap contrasenya, clau de signatura ni certificat en una carpeta. Gestor de contrasenyes
+        i el magatzem de certificats del sistema.
+Pas 9 · Si un dia deixes Sóc de Poble, no perds res: les carpetes ja són teues i ja estan ordenades.
+
+
+6. (f) COM EL PANELL DE CONTROL LLIG LA CASA SENSE PUJAR-LA
+-----------------------------------------------------------
+6.1 On viu [PROPOSTA]
+- Una app de plataforma «La meua casa» (id «som», ruta /app/som), amb dadesPersonals 'financeres'
+  (DADES_PERSONALS només admet false, 'salut' i 'financeres', manifestApp.js:43) [VERIFICAT].
+- Una targeta a la graella «Utilitats i Connectors» de registrePlugins.js, al costat de Gestoria (:105-112)
+  i Rebost (:113-121) [VERIFICAT]. NO va a destinsControl.js: eixos destins són públics [REVISIÓ].
+- No viu dins de la Gestoria: la casa és més que l'activitat, i la Gestoria hui només s'obri a la Wiki en
+  desenvolupament (decisió D3, ARQUITECTURA §7).
+- No s'obri dins de WordPress ni d'un iframe. La guarda d'«ama del document» hui només protegix 'salut'
+  (interruptors.js:67) [VERIFICAT]: cal estendre-la a 'financeres'.
+
+6.2 Com llig (Model B: el disc és un endoll, com el servidor)
+- La Font ja és un endoll amb contracte: { nom, llista(), llig(ruta), escriu?() }, i llista() torna
+  { ruta, mida, modificat } SENSE llegir bytes (fontNavegador.js:13-15) [VERIFICAT]. És el mateix
+  patró que backendPort per al servidor: hui hi ha dos adaptadors, demà n'hi pot haver un de nadiu (app de
+  les botigues) amb el mateix contracte.
+- Dos camins, els que ja hi ha [VERIFICAT]:
+  - Chrome i Edge: demanaCarpeta en mode 'read', només després d'un clic (CAL_GEST), fontNavegador.js:84-98.
+  - Safari i Firefox: <input webkitdirectory>, només lectura, i cal tornar a triar en cada sessió,
+    fontDesDeFitxers, :274-282.
+- El que cal nou: un mode CENS. El recorregut d'hui rebutja una carpeta amb més de 20.000 fitxers amb el
+  missatge «tria la carpeta de la facturació, no una de més amunt» (tractor.js:57 i :249) i no llig
+  fitxers de més de 25 MB (:59) [VERIFICAT]. El cens ha de:
+  1. llegir només noms, mides i dates, nivell a nivell i quan es desplega (mandrós);
+  2. llegir els dos manifests (som_de_poble.json i 00_carpeta.json, JSON menuts);
+  3. no obrir cap contingut si la persona no obri el document.
+- Selecció per àrees: amb el selector, triar l'arrel dona accés a TOT l'arbre, llar inclosa. Proposta:
+  l'empresa es tria per l'arrel, i _llar_de_poble i _persones_de_poble es trien a banda, només quan cal.
+  Així una sessió de feina no obri mai la llar.
+- Què ensenya: una UniversalCard de sistema per àrea, en l'ordre del manifest, sense boina d'autor,
+  clicable sencera. Peu: elements, última modificació i avisos (safata amb més de 20, noms fora de
+  taxonomia, números repetits, fitxers de més de 25 MB, carpetes buides, paperera pendent).
+- Per a cada document, quatre línies: QUÈ ÉS, PER A QUÈ VAL, QUAN ES POT ESBORRAR i PER QUÈ HO DIC.
+  1. Primer pel nom, la ruta i l'àrea (sense obrir).
+  2. Si cal, pel contingut i només amb el clic de la persona, reutilitzant el lector de PDF local i la
+     puntuació amb motius de la Gestoria [REVISIÓ: pdfText.js, receptes.js].
+  3. Si no se sap què és: «revisa'l». Mai és candidat a esborrar.
+  La taula de terminis és la de §3.6, al motor, amb cada fila marcada «a verificar» fins que la valide
+  la gestoria.
+- Àrees íntimes: només recomptes, sense miniatures ni previsualitzacions, i un segon clic per a obrir.
+- Les xifres i els noms de fitxer s'amaguen per defecte amb l'ull, sense deixar-los al DOM.
+
+6.3 Què escriu
+- Per defecte, res.
+- La Font hui no crea carpetes ni mou res, i només escriu CSV i XLSX (fontNavegador.js:24-26 i :124-125)
+  [VERIFICAT]. La paperera i «Crea la teua casa» necessiten una capacitat nova i separada: moure dins de
+  la carpeta triada i crear l'esquelet buit.
+- Moure a la paperera: permís readwrite, un clic per fitxer o per lot, i abans una simulació que ensenya
+  què mouria (com --sec de la porta Olivera). Deixa un rebut sense contingut a 80_paperera: origen,
+  sha256, motiu, data i qui ha dit sí.
+- Si el navegador no sap moure un fitxer, el camí alternatiu és copiar, comprovar el sha256 i, només amb
+  una segona confirmació, retirar l'original [NO VERIFICAT el suport de move() fora de l'espai privat
+  del navegador].
+- Esborrar de veres no ho fa el Panell en la primera versió: buidar la paperera és un gest de la persona
+  al seu sistema. És la regla de la casa: el que no val es trasllada (AGENTS §5).
+- Reanomenar a la taxonomia: proposta per fitxer, mai automàtic.
+
+6.4 Per què no és una capacitat del backend
+- No passa per backendPort ni per Supabase. No hi ha res a enxufar: el «backend» de la casa és el disc de
+  la persona. Sollutia només servix el codi estàtic (ARQUITECTURA §6).
+- La referència a la carpeta no es guarda per defecte: el contracte de la Font diu «res no ix d'este
+  ordinador ni es desa al navegador» (fontNavegador.js:9-11) [VERIFICAT]. Guardar-la en IndexedDB
+  estalviaria tornar a triar la carpeta cada dia, però canvia este contracte: ho ha de decidir el Mestre.
+
+6.5 Riscos i resposta
+1. Cadena de subministrament: el codi ve de la xarxa i, amb el permís, pot llegir la carpeta triada. Un
+   servidor compromés podria servir un codi que l'envie fora.
+   → L'app no pot fer xarxa (les fronteres de les apps ja ho vigilen [REVISIÓ]); versions signades;
+     opció d'instal·lar-la o servir-la en local. És el risc número u.
+2. Massa abast: triar l'arrel obri la llar. → Selecció per àrees (6.2).
+3. Fitxers invisibles: el que comença per «.» no es veu. Els fitxers del núvol no descarregats al disc
+   poden ser marcadors ocults [NO VERIFICAT el format de cada servei]. → El cens avisa quan una carpeta
+   pareix buida però el sistema diu que té pes.
+4. Noms que són dades: el llistat ensenya noms de fitxer amb noms de persones (hui n'hi ha molts
+   [REVISIÓ]). → Ull per defecte, i proposta de reanomenar per rol.
+5. Esborrats equivocats: una escriptura o un justificant d'ajuda perdut costa diners. → Tipus protegits,
+   quarantena sense caducitat automàtica, rebut, i esborrat definitiu fora del Panell.
+6. Obsidian i el Panell movent alhora: dos programes que reanomenen el mateix arbre. → El Panell no mou
+   res sense clic i torna a llegir abans de cada moviment.
+7. Diferències entre navegadors: Safari i Firefox són només lectura i obliguen a triar cada vegada. → El
+   Panell ho diu amb honestedat i no promet la paperera on no pot.
+8. Dins de WordPress: el Panell es pot muntar dins d'una web de tercers. → Guarda d'ama del document
+   estesa a 'financeres' (6.1).
+9. Proves amb dades reals: tests/gestoria-3t-real.test.mjs:58 i tests/gestoria-c43-real.test.mjs:15
+   llegixen la carpeta real [VERIFICAT]. → Fora de la CI, i cap eixida a fitxers versionats.
+10. Escala: carpetes amb centenars d'entrades i fitxers de desenes de MB [REVISIÓ]. → Cens mandrós, sense
+    llegir bytes.
+
+
+7. DESPLEGAMENT PER FASES [PROPOSTA]
+-----------------------------------
+F0 · Ara: este document i les decisions de §8. No es mou res.
+F1 · Esquelet sense trencar res (Mestre o MarIA): som_de_poble.json; les quatre àrees noves buides amb
+     00_index i 00_carpeta.json; afegir el manifest a la llista de tractor_cognitiu.mjs:23-27 perquè no
+     isca com a orfe.
+F2 · Codi del Panell, només lectura: app «som», mode cens, manifests, les quatre línies per document. Amb
+     pla aprovat (sdp-workflow §1) i les proves de frontera.
+F3 · Redistribució a mà, guiada pel Panell: grogues (§4) i 01_Identitat_Legal. Primer la llar i la salut,
+     que són el risc més alt.
+F4 · Reanomenaments, cadascun amb les eines i les proves que trenca, actualitzades en el mateix torn (§2.3).
+F5 · Escriptura: paperera i «Crea la teua casa» (només Chrome i Edge).
+F6 · Per a tothom: el ZIP d'esquelet buit, una guia a la Wiki i el model de §5.
+
+
+8. DECISIONS QUE CAL DEL MESTRE (entre claudàtors, la proposta)
+---------------------------------------------------------------
+O1  Àrees noves: [crear _direccio, _comercial i _llar ara; _persones quan arribe la primera persona].
+O2  Nom de la llar: [_llar_de_poble] o _casa_de_poble.
+O3  La llar dins de Som de Poble amb frontera dura [sí], o en un volum xifrat a banda.
+O4  oficina_de_poble → [_safata_de_poble], comprovant abans que la nota de connexions no té claus.
+O5  _raw_de_poble → [dins de _recursos_de_poble/03_recerca].
+O6  _arxiu_wiki_de_poble: [es queda amb el nom, com a arxiu del motor]; cada àrea té el seu 90_arxiu.
+O7  Trimestres: [2026/2026_3t] o com ara (2026_3T al costat de 2026).
+O8  Documents rebuts: [data del document al nom] o la d'incorporació, com ara.
+O9  Els plans directors privats: [fora del git, a _direccio_de_poble/01_estrategia].
+O10 Les grogues: confirmar el repartiment de §4, i si la_parroquia és negoci propi, client o plantilla.
+O11 Panell: [selecció per àrees, llar a banda] o una sola selecció de l'arrel.
+O12 Guardar la referència a la carpeta al navegador: [no, de moment] o sí, canviant el contracte.
+O13 Vaults d'Obsidian: [un per àrea, la llar fora de qualsevol vault compartit] o un a l'arrel.
+
+
+9. FONTS
+--------
+[VERIFICAT en este torn] ../.gitignore:1-6; tooling/higiene/tractor_cognitiu.mjs:22-27 i :35;
+tooling/wiki/compile-cultura.mjs:11; tooling/brain/somiador.mjs:13; tooling/gates/tractor-cens.mjs:104;
+tests/gestoria-3t-real.test.mjs:58; tests/gestoria-c43-real.test.mjs:15;
+src/sections/gestoria/font/fontNavegador.js:9-19, :24-26, :72-98, :118-135, :274-282;
+src/sections/gestoria/nucli/tractor.js:55-63, :81-82, :149-166, :249;
+src/sections/plugins/registrePlugins.js:105-130; src/apps/plataforma/manifestApp.js:43;
+src/apps/plataforma/interruptors.js:67; prompt 261004_0515_prompt_claude_gestoria.md:76-80.
+[REVISIÓ] les set revisions de lectura d'esta nit (facturació i tauler, paperassa, llibretes de salut,
+la Parròquia, compra i calendaris, macroestructura, llar i autoneteja): recomptes, tipus de document i
+cites que no he tornat a obrir.
+Documents germans: ARQUITECTURA_ERP_GESTORIA.txt (§2.2, §6, §7, §8.2) i TUTOR_EMPRESARIAL.txt (§2.1, §3,
+§9), en esta mateixa carpeta.
+[NO VERIFICAT] terminis de conservació (§3.6), comportament dels navegadors i dels serveis de núvol.
+
+Ancoratge: [[00_index_escriptori]]

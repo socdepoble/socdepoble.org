@@ -118,21 +118,29 @@ const dataDeProps = (props) => ({ time: props.time, date: props.date, dateTime: 
 /* La targeta d'un element de secció: el que pinta la seua pàgina de detall
    (paginaDElement). Sense autor declarat, la barra taronja d'eixa pàgina
    signa amb el de sèrie (PageFrame): la targeta diu el mateix, i `propi`
-   diu si l'autor ve de l'element. */
+   diu si l'autor ve de l'element.
+   T6 (ordre del Mestre, 261004, prompt 261004_0515 §5) · I porta on porta la
+   barra: la pàgina de qui signa o, amb l'autor de sèrie, la del projecte
+   (DEFAULT_AUTHOR.href, el mateix que hi posa PageFrame). Un autor propi
+   sense pàgina coneguda, cap ruta. */
 function targetaDElement(section, item) {
   const props = paginaDElement(section, item);
+  const propi = Boolean(props.authorName);
   return {
     titol: props.title ? String(props.title) : '',
     subtitol: props.subtitle ? String(props.subtitle) : '',
     entradilla: props.lead ? String(props.lead) : '',
     imatge: resolveAsset(props.heroImage || ''),
-    autor: { nom: props.authorName || DEFAULT_AUTHOR.name, propi: Boolean(props.authorName), ruta: props.authorHref || null },
+    autor: { nom: props.authorName || DEFAULT_AUTHOR.name, propi, ruta: props.authorHref || (propi ? null : DEFAULT_AUTHOR.href) },
     data: dataDeProps(props)
   };
 }
 
 /* La targeta d'una pàgina de text: les props de TextSection. Una pàgina de
-   text no declara autor i la seua barra taronja signa amb el de sèrie. */
+   text no declara autor i la seua barra taronja signa amb el de sèrie.
+   T6 (261004) · Derogat per l'ordre del Mestre del 261004 (prompt
+   261004_0515): la ruta ja no és null, és la del projecte, la mateixa de la
+   barra taronja de la pàgina (PageFrame, DEFAULT_AUTHOR.href). */
 function targetaDePagina(page, pageKey, t) {
   const props = propsDePaginaDeText(page, pageKey, t);
   return {
@@ -140,7 +148,7 @@ function targetaDePagina(page, pageKey, t) {
     subtitol: props.subtitle ? String(props.subtitle) : '',
     entradilla: props.lead ? String(props.lead) : '',
     imatge: props.heroImage || '',
-    autor: { nom: DEFAULT_AUTHOR.name, propi: false, ruta: null },
+    autor: { nom: DEFAULT_AUTHOR.name, propi: false, ruta: DEFAULT_AUTHOR.href },
     data: dataDeProps(props)
   };
 }

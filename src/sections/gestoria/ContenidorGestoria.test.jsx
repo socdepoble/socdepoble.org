@@ -12,7 +12,7 @@ import { preparaRegistre } from '../tractors/nucli/aprovacio.js';
 import { crearMagatzemMemoria } from '../tractors/nucli/magatzem.js';
 import { TRACTORS, empremtaDe } from '../tractors/registreTractors.js';
 import ContenidorGestoria, { CONSULTA_TRACTORS } from './ContenidorGestoria.jsx';
-import { TRACTOR_CORREUS, TRACTOR_FACTURES } from './tractors.js';
+import { TRACTOR_CORREUS, TRACTOR_FACTURES, TRACTOR_TAULER } from './tractors.js';
 
 afterEach(() => {
   cleanup();
@@ -81,6 +81,11 @@ function carpeta() {
   return { lectures, showDirectoryPicker };
 }
 
+/* Ordre del Mestre, 261004 («contaminació crítica de rutes/estats entre
+   Gestoria i Wiki»): el Full trimestral viu dins de la closca de l'app
+   /app/gestoria, i ja no a un ítem de la Wiki. */
+const RUTA_DE_L_APP = '/app/gestoria/tauler';
+
 function RutaDeLApp() {
   const { pathname, search } = useLocation();
   return <output aria-label="Ruta">{`${pathname}${search ? `?${search}` : ''}`}</output>;
@@ -90,7 +95,7 @@ function munta({ magatzem = crearMagatzemMemoria() } = {}) {
   const { lectures, showDirectoryPicker } = carpeta();
   const entorn = { location: { origin: autenticador.origen, hostname: autenticador.rpId }, showDirectoryPicker };
   const vista = render(
-    <MemoryRouter rutaInicial="/wikidepoble?categoria=gestoria_cat&item=gestoria_panell">
+    <MemoryRouter rutaInicial={RUTA_DE_L_APP}>
       <ContenidorGestoria magatzem={magatzem} subtle={subtle} entorn={entorn} rellotge={rellotge}
         inflate={null} avui={AVUI} descarrega={vi.fn()} />
       <RutaDeLApp />
@@ -114,7 +119,10 @@ const primerPas = async () => within((await screen.findByRole('heading', { level
 
 describe('la porta d’aprovació, endollada', () => {
   test('el catàleg real té empremta: cap font absent', () => {
-    expect(Object.keys(INFO).sort()).toEqual([TRACTOR_CORREUS.id, TRACTOR_FACTURES.id].sort());
+    /* El tercer tractor, el del Tauler ('gestoria.tauler'), aprovat pel Mestre
+       al xat el 261004: el catàleg el porta i el panell de la Gestoria no el
+       compta (estatTractorsDe només mira els seus dos). */
+    expect(Object.keys(INFO).sort()).toEqual([TRACTOR_CORREUS.id, TRACTOR_FACTURES.id, TRACTOR_TAULER.id].sort());
     for (const info of Object.values(INFO)) expect(info).toMatchObject({ estat: 'ok', fontsAbsents: [] });
   });
 
@@ -130,13 +138,17 @@ describe('la porta d’aprovació, endollada', () => {
     expect(showDirectoryPicker).not.toHaveBeenCalled();
   });
 
-  test('«Obri el panell de Tractors» porta a l’ítem de la Wiki on s’aproven', async () => {
+  /* El contenidor (font signada dels tractors: no es toca) demana la porta
+     amb la consulta relativa CONSULTA_TRACTORS; dins de l'app, AppGestoria la
+     porta a l'ítem de la Wiki on s'aproven (src/apps/gestoria/AppGestoria.test.jsx,
+     i privacitat.test.js confronta les dues rutes). */
+  test('«Obri el panell de Tractors» demana l’ítem de la Wiki on s’aproven, amb la consulta de sempre', async () => {
     munta();
     const primer = await primerPas();
-    expect(ruta()).toBe('/wikidepoble?categoria=gestoria_cat&item=gestoria_panell');
+    expect(ruta()).toBe(RUTA_DE_L_APP);
     fireEvent.click(primer.getByRole('button', { name: 'Obri el panell de Tractors' }));
-    expect(ruta()).toBe(`/wikidepoble${CONSULTA_TRACTORS}`);
-    expect(ruta()).toBe('/wikidepoble?categoria=tractors_cat&item=tractors_aprovacio');
+    expect(ruta()).toBe(`${RUTA_DE_L_APP}${CONSULTA_TRACTORS}`);
+    expect(CONSULTA_TRACTORS).toBe('?categoria=tractors_cat&item=tractors_aprovacio');
   });
 
   test('una confirmació escrita no aprova cap tractor de la Gestoria: les dades personals exigixen signatura', async () => {

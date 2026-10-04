@@ -1,0 +1,100 @@
+RELLEU · front «amfitrio-admin» · integració final 261004
+
+== Segona passada: arreglo del verificador (ACABADA) ==
+
+Resultat
+- D2 ARREGLAT (AdminSection.jsx): Usuaris i Entitats tornen el Workspace sense embolcall. La Pàgina
+  Universal és el detall (PaginaDelDetall: capçalera de columna d'abans + UniversalPage sense barra blava,
+  barra taronja de Sóc de Poble cap a /projecte), també amb item null («Tria un element»). Els estats
+  sense graella (sense capacitat, error) porten la seua (PaginaDEstat). Comentari de derogació posat.
+- D1 ARREGLAT a Usuaris i Entitats: la capçalera del logotip queda dins del detall, en el flux de la
+  columna. NO ARREGLAT al Tauler (D3, AdminSection.barraTaronja.test.jsx continua roja): cal PageFrame,
+  CSS o decisió del Mestre; el chrome del Tauler no es toca per ordre.
+- Proves noves a AdminSection.amfitrio.test.jsx (c): cap UniversalPage al voltant del Workspace; la pàgina
+  del detall sense element i amb element; cap page-title fora del detall; error i sense capacitat amb
+  barra. Contrast fet: tornant a embolcallar Usuaris, 3 roges.
+- npx vitest run admin+detail+consola+richText+config: 1320/1323 (roges: D3 del Tauler i les 2 prèvies
+  d'i18n.claus). Profile+control: les 12 roges prèvies; xat: les 9 prèvies. Cap roja nova.
+  workspace/qualitat i PageFrame.capes: 25/25.
+- Navegador: /admin demana superadmin i redirigix a /registre; sense credencials, cap comprovació visual.
+  Pestanya pròpia tancada i viewport tornat a «desktop» amb el seu tabId.
+
+Per al Mestre (segona passada)
+- La barra taronja d'Usuaris i Entitats ara és a la columna del detall, i la del Tauler continua a tota
+  l'amplada: l'Admin queda amb dos patrons fins que es decidisca el del Tauler.
+- .perfil-detall porta el farciment del Perfil (PerfilShell.css, importat globalment): la capçalera de la
+  columna del detall ja anava a dins i ara també la barra taronja. Sense comprovació visual.
+
+== Detall de la segona passada ==
+
+Defectes rebuts
+- D1 (mitjana) · Proves (c) de l'Admin roges per un canvi concurrent de PageFrame: header.page-title
+  (logotip automàtic de Sóc de Poble) a Usuaris, a Entitats i a la D3 del Tauler.
+- D2 (mitjana) · 7c embolcalla UniversalWorkspace amb una UniversalPage, contra sdp-universal-page §5.
+
+Comprovat
+- npx vitest run src/sections/admin: 81/84, les 3 roges que diu el verificador (dues de (c) i la D3).
+- PageFrame.jsx:566-570: logoAutomatic quan la boina va a /projecte; hasHeader cert sense títol.
+  .app-grid-page és absoluta (AppGridShell.css) i modules.css:9549 només la baixa l'alçada de la taronja:
+  la capçalera queda davall de la graella. Els dos defectes són certs.
+
+En marxa
+- D2: camí B del verificador, l'únic que complix §5 sense esmenar cap regla: Usuaris i Entitats tornen el
+  Workspace sense embolcall i la barra taronja va dins del detall (columna dreta), sense barra blava
+  (261003). Els estats sense graella (sense capacitat, error) porten la seua Pàgina Universal.
+- D1: amb B, el logotip d'Usuaris i Entitats queda dins del detall, en el flux de la columna. La D3 del
+  Tauler no es toca des d'este front (PageFrame, CSS o decisió del Mestre).
+
+Preguntes obertes
+- Si el Mestre preferix esmenar §5 per a chrome 'page', tornar a l'embolcall és un canvi de dues línies.
+
+== Primera passada (conservada) ==
+
+Estat: ACABAT. Els 7 arreglos fets, cadascun amb prova que fallaria sense ell.
+
+Fet
+1 · DetallEspai: la preferència «Mostrar al Panell» passa per storage.js amb un mòdul nou,
+    src/sections/profile/utilitatsActives.js (clau amb prefix, lectura del llegat 'sdp_utilitats_actives',
+    estat compartit per avisar el Panell). Cap 'storage' fals a window. El Panell (ControlSection, només la
+    lectura) escolta l'estat compartit i amaga o mostra a la vista. Proves: DetallEspai.utilitats.test.jsx i
+    dues noves a ControlSection.espais.test.jsx.
+2 · PageDetailSection: llevat l'efecte mort (document.querySelector('.app-main') i shadowRoot). App ja
+    recol·loca amb preparaRecolocacio. Prova a PageDetailSection.test.jsx.
+3 · Consola: useConsola i useMapa no fan cap petició fora de DEV (estat inicial 'absent', Refrescar no
+    demana res); ConsolaIncrustada els crida amb actiu: import.meta.env.DEV === true; els carregadors tornen
+    null sense fetch fora de DEV. Textos explicatius intactes. Prova ConsolaSection.produccio.test.jsx (amb
+    contrast a DEV). App.test.jsx:242-244 coherent: les proves de Consola d'App passen.
+4 · slash.js: el contenidor es guarda a la clausura; amb un contenidor que no és document.body, top i left
+    relatius al seu rectangle i gir cap amunt amb les seues vores. Amb document.body, la branca d'abans
+    literal. z-index intacte. Prova slash.test.js (contenidor a top 32, left 120, també dins d'un shadow root).
+    Al navegador (pestanya pròpia): a socdepoble.org .sdp-root ocupa el viewport exacte, per tant cap píxel
+    canvia; .sdp-root porta container-type: inline-size, que el fa bloc contenidor del fixed dins de
+    l'amfitrió (la causa).
+5 · navigation.js: només l'èxit de la resolució de l'entitat del projecte es guarda per a sempre; una
+    fallada (false, null o error) esborra l'entrada, apunta l'hora i es torna a provar passats 60 s;
+    oblidaEntitatDelProjecte també buida eixe registre. Tres proves noves a navigation.autoria.test.js.
+6 · XatSection: llevat el CustomEvent 'sdp:note-created' a window (grep: cap oient a src ni a public; només
+    les còpies compilades del paquet de WordPress). Prova a XatSection.test.jsx.
+7 · AdminSection: (a) renderDetail amb item null mostra «Tria un element» amb la capçalera; (b) sense la
+    capacitat 'admin', cap crida al port i un EstatBuit honest amb «Tornar al Tauler»; una excepció
+    síncrona del port acaba al .catch; (c) Usuaris i Entitats dins de la mateixa UniversalPage que el Tauler:
+    barra taronja de Sóc de Poble cap a /projecte, sense barra blava; el chrome del Tauler no canvia. Prova
+    AdminSection.amfitrio.test.jsx. [La segona passada canvia la (c): vegeu dalt.]
++ · Porta de qualitat del front: src/config/qualitat.amfitrioAdmin.test.js (ESLint zero missatges als 21
+    fitxers del front, i cap esdeveniment sintètic a la finestra de l'amfitrió). La CLI d'ESLint estava
+    bloquejada pel hook; la porta la passa per l'API del projecte.
+
+Proves del front (primera passada): admin, detail, consola, richText i config 1314 verdes i 2 roges
+(i18n.claus, prèvies); profile i control, les 12 roges prèvies i cap de nova; xat 512 verdes i 9 roges
+(prèvies: avatar de la IAIA i divisor). Cap roja nova.
+
+Per al Mestre (primera passada)
+- La barra blava de l'Admin és decisió seua: amb chrome 'page' el Tauler no en pinta cap, i la fletxa
+  blava que alimenta PontDeTornada (mòbil, dels Indicadors al menú) no es veu enlloc fora de les proves.
+- sdp-universal-page §5 diu que UniversalWorkspace mai va dins d'una UniversalPage; el Tauler ja embolcalla
+  la closca així i, sense barra blava, no tapa cap columna. He seguit el patró del Tauler: cal confirmar-ho
+  o esmenar la regla per a chrome 'page'. [Segona passada: el verificador ho marca com a defecte D2.]
+
+Incidència (primera passada)
+- En tancar, el resize a «desktop» sense tabId va caure a la pestanya del davant (la del Mestre) i en va
+  netejar l'emulació de viewport, si en tenia. La pestanya pròpia no l'havia canviada.

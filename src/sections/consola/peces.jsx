@@ -5,7 +5,7 @@ import { ChevronDown } from 'lucide-react';
 import { Insignia, UniversalCard } from '../../components/PedraSeca';
 import { useNavigate } from '../../app/contexts/RouterContext';
 import { dataHoraDeBarra } from '../../components/universal/editorial.js';
-import { resolveAsset } from '../../config/assetResolver.js';
+import { AUTORIA_SOCDEPOBLE } from '../control/destinsControl.js';
 
 /* Mode privacitat (l'interruptor d'Emowe): amaga rutes, ordres i empremtes
    per a gravar o compartir pantalla sense repassar-la abans. Tot el que la
@@ -33,12 +33,16 @@ export function Mono({ children }) {
    tal qual, amb les classes del Panell de Control. */
 const aEtiqueta = (e) => (e?.to ? { text: e.text, className: `sdp-insignia sdp-insignia--${e.to}` } : e);
 
-/* La targeta de resum de la Consola és la del Panell de Control, sense cap
-   variant pròpia (ordre del Mestre): UniversalCard «action», icona lucide de
-   40 px amb traç 1,5, títol i descripció de subtítol, dins de .sdp-card-grid.
-   Referència: src/sections/control/ControlSection.jsx. `a` la fa enllaç,
-   `onObri` botó; sense cap dels dos, és només resum, i `sdp-consola__quieta`
-   li lleva l'elevació i la mà de «clicable» que la recepta posa a totes. */
+/* OBSOLETA · Ordre del Mestre, 261004 (xat: cap xifra solta). Derogat per
+   l'ordre del Mestre del 261004 (xat: cap xifra solta): cap pàgina de la
+   Consola no la pinta. Tota xifra i tota peça és ara una TargetaConsola amb
+   boina i pàgina pròpia (TargetaXifra, XifresMas.jsx). Es conserva perquè
+   ningú no l'esborre a cegues; no s'ha de tornar a fer servir.
+   Era la targeta de resum del Panell de Control, sense cap variant pròpia:
+   UniversalCard «action», icona lucide de 40 px amb traç 1,5, títol i
+   descripció de subtítol, dins de .sdp-card-grid. `a` la feia enllaç,
+   `onObri` botó; sense cap dels dos, `sdp-consola__quieta` li llevava
+   l'elevació i la mà de «clicable». */
 export function TargetaResum({ icona: Icona, titol, descripcio, a, onObri, etiquetes }) {
   return (
     <UniversalCard
@@ -54,33 +58,44 @@ export function TargetaResum({ icona: Icona, titol, descripcio, a, onObri, etiqu
   );
 }
 
-/** Una xifra és una targeta de resum amb el número de títol i el que compta de subtítol. */
+/** OBSOLETA (ordre del Mestre, 261004, xat: cap xifra solta) · Una xifra
+    solta, sense boina ni pàgina. Cap pàgina de la Consola no la pinta: les
+    xifres són TargetaXifra (XifresMas.jsx). No s'ha de tornar a fer servir. */
 export function Xifra({ etiqueta, valor, icona, a }) {
   return <TargetaResum icona={icona} titol={String(valor)} descripcio={etiqueta} a={a} />;
 }
 
-/* Autoria de les targetes explicatives: la mateixa marca que les targetes
-   del Mur (espècimen de UniversalCard al catàleg de Disseny). L'avatar es
-   resol en pintar la targeta (l'spread llig el getter), amb la base de
-   recursos de l'amfitrió. */
-export const AUTORIA_CONSOLA = Object.freeze({
-  author: 'Consola Termodinàmica',
-  get avatarUrl() { return resolveAsset('/assets/system/ui/logo-socdepoble-cuadrat-verd.svg'); }
-});
-
 /* La targeta que explica una part de la Consola és la UniversalCard
    sencera del Mur, no la recepta compacta del Control (ordre del Mestre,
-   260926): boina taronja amb l'autoria, la font i la data (T51, regla del
-   Mestre: cap document sense data). `creat` és la data de redacció del seu
-   text (el copy de la Consola) i `generat`, la de la instantània que
-   n'actualitza la dada viva: es pinta la més recent (editorial.js,
-   dataHoraDeBarra), amb el format únic dd/mm/aa i hh:mm;
-   la icona de la part en el lloc de la foto (insígnia lateral, com les
-   targetes sense foto del catàleg); títol, subtítol amb el «per a què»,
-   entradilla i la dada viva; etiquetes d'estat; i el peu blau amb l'acció.
-   `a` la fa enllaç (Compartir + «Obrir»); `onObri`, botó («Veure detall»);
-   sense cap dels dos és només explicació: sense peu i sense aparença de
-   clicable (no hi ha peus buits).
+   260926): la icona de la part en el lloc de la foto (insígnia lateral, com
+   les targetes sense foto del catàleg); títol, subtítol amb el «per a què»,
+   entradilla i la dada viva; etiquetes d'estat; i el peu blau.
+   Ordre del Mestre, 261004 (xat: tota targeta amb boina i pàgina pròpia) ·
+   Derogat per l'ordre del Mestre del 261004 (xat: tota targeta amb boina i
+   pàgina pròpia): la targeta de sistema sense boina i la data a l'última
+   línia del cos (prompt 261004_0515, §6/T8). El que no es podia fer era
+   inventar l'autor «Consola Termodinàmica»; l'autor real és l'entitat:
+    · LA BOINA DE SÓC DE POBLE (AUTORIA_SOCDEPOBLE, destinsControl.js): el
+      logo, el nom i el poble, i l'autor porta a la pàgina del projecte
+      (/projecte, rutaDAutoria per l'id de l'entitat, mai pel nom).
+    · LA DATA, A LA PASTILLA DE LA BOINA (T51, regla del Mestre: cap document
+      sense data). `creat` és la data de redacció del seu text (el copy de la
+      Consola) i `generat`, la de la instantània: es pinta la més recent
+      (editorial.js, dataHoraDeBarra), amb el format únic hh:mm i dd/mm/aa.
+      És una instantània de dades, no una publicació: un <time> sense clic
+      (onDateTime={false}), que no porta al Calendari.
+    · LA IMATGE O LA ICONA. `imatge` va al mitjà de la targeta (i és la
+      portada de la seua pàgina); sense, la icona a la insígnia lateral.
+    · TOTA CLICABLE. `a` la fa enllaç cap a la seua pàgina; `onObri`, botó.
+      Sense cap dels dos és només explicació: sense peu i sense aparença de
+      clicable (no hi ha peus buits). Ordre del Mestre, 261004 (xat: cap xifra
+      solta) · hui tota targeta de la Consola porta `a` (la seua pàgina
+      pròpia): el pols ja no obri desplegables i cap targeta no és quieta.
+    · EL PEU DE LA BARRA BLAVA. Traduir, Comentar, Compartir i Connectar per
+      defecte (useAccions), amb el verb canònic «Connectar»: res de «Obrir» ni
+      «Veure detall». Connectar porta on porta la targeta (la pàgina, o el
+      detall del pols) i compta com qualsevol Connectar; Compartir comparteix
+      l'adreça de la seua pàgina (mainHref).
    T2 (ordre del Mestre, 260930) · `metriques`: amb una llista no buida, cada
    mètrica és un h5 centrat (efecte tauler, i l'Índex de la Consola les
    recull); sense, `dada` en paràgraf, que és on van els missatges d'estat
@@ -91,21 +106,26 @@ export const AUTORIA_CONSOLA = Object.freeze({
    no s'empastra) ni etiquetes de la targeta (el nivell i «Canvis nous» van a
    part). Sense estats, el cos és el de sempre. */
 export function TargetaConsola({
-  icona: Icona, titol, subtitol, entradilla, dada, metriques, estats, font, creat, generat, a, onObri, etiquetes
+  icona: Icona, titol, subtitol, entradilla, dada, metriques, estats, creat, generat, a, onObri, etiquetes,
+  imatge = null, imatgeAlt = ''
 }) {
   const navigate = useNavigate();
   const activa = Boolean(a || onObri);
   const obri = a ? () => navigate(a) : onObri;
   const ambMetriques = Array.isArray(metriques) && metriques.length > 0;
   const ambEstats = Array.isArray(estats) && estats.length > 0;
+  const quan = dataHoraDeBarra({ creat, modificat: generat });
   return (
     <UniversalCard
       className={activa ? 'sdp-consola__targeta' : 'sdp-consola__targeta sdp-consola__quieta'}
-      {...AUTORIA_CONSOLA}
-      location={font}
-      {...dataHoraDeBarra({ creat, modificat: generat })}
+      {...AUTORIA_SOCDEPOBLE}
+      time={quan.time}
+      date={quan.date}
+      dateTime={quan.dateTime}
       onDateTime={false}
-      squareBadge={{
+      imageUrl={imatge || undefined}
+      imageAlt={imatgeAlt}
+      squareBadge={imatge ? null : {
         type: 'custom',
         label: titol,
         content: <Icona size={48} strokeWidth={1.5} aria-hidden="true" focusable="false" />
@@ -131,21 +151,15 @@ export function TargetaConsola({
       mainHref={a}
       onMainClick={onObri}
       hasFooter={activa}
-      showTranslate={false}
-      showComment={false}
-      showShare={Boolean(a)}
-      showConnect={activa}
-      connectLabel={a ? 'Obrir' : 'Veure detall'}
-      onConnect={obri}
-      telemetria={{ comptar: false }}
+      onConnect={activa ? obri : undefined}
     />
   );
 }
 
 /* Etiquetes d'estat de les targetes, amb les classes del Panell de Control:
-   el que funciona, en `sdp-badge-system` (ACTIU); la resta, en `sdp-badge-tag`. */
-export const etiquetaBona = (text) => [{ text, className: 'sdp-badge-system' }];
-export const etiquetaPendent = (text) => [{ text, className: 'sdp-badge-tag' }];
+   el que funciona, en `sdp-badge-system` (ACTIU); la resta, en `sdp-badge-tag`.
+   Viuen a xifresComu.js (sense React), perquè les peces del Mapa les calculen. */
+export { etiquetaBona, etiquetaPendent } from './xifresComu.js';
 
 /* ── Desplegables «Veure detall de…» ─────────────────────────────────────
    <details> natiu: s'obri i es tanca sense JavaScript i el lector de
@@ -164,6 +178,10 @@ export const Desplegable = forwardRef(function Desplegable({ id, titol, onToggle
 });
 
 /**
+ * OBSOLET · Ordre del Mestre, 261004 (xat: cap xifra solta). Cap targeta de
+ * la Consola obri ja un desplegable: els panells del pols porten a la seua
+ * pàgina (/consola/pols/<id>). Es conserva perquè ningú no l'esborre a
+ * cegues; no s'ha de tornar a fer servir.
  * La targeta que obri un desplegable diu quin (aria-controls) i si està
  * obert (aria-expanded). UniversalCard no deixa passar atributs als seus
  * botons: s'escriuen al botó de la targeta (overlay) i al «Veure detall» del
@@ -195,7 +213,9 @@ export function useTargetesQueObrin(graella, desplegables) {
   }, [graella, clau]);
 }
 
-/** Qui ha demanat menys moviment rep el salt directe, no el lliscament. */
+/** Qui ha demanat menys moviment rep el salt directe, no el lliscament.
+    OBSOLET (ordre del Mestre, 261004, xat: cap xifra solta) · només el feia
+    servir el pols per a lliscar fins al seu desplegable, que ja no hi és. */
 export function movimentReduit() {
   try {
     return Boolean(globalThis.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches);

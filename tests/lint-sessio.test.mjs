@@ -502,7 +502,32 @@ const FITXERS = [
   /* C2 · W4-10 (destinatari del xat corporatiu pel port). */
   'src/data/supabase/xat.destinatari.test.js',
   /* C4 · capçaleres de columna d'AppGridShell a AAA. */
-  'src/components/layout/AppGridShell.contrast.capes.test.js'
+  'src/components/layout/AppGridShell.contrast.capes.test.js',
+  /* T7 (ordre del Mestre, prompt 261004_0515) · targetes incrustades a
+     l'UniversalEditor: els fitxers nous i els tocats que encara no hi eren
+     (DocumentEditor, NotesEditor, TargetaViva, extensions/index.js,
+     blocsTraduibles i UniversalRichTextToolbar ja són dalt). També els
+     vigila src/components/universal/richText/extensions/targetes/qualitat.test.js. */
+  'src/components/universal/richText/extensions/targetes/TargetesIncrustadesContext.js',
+  'src/components/universal/richText/extensions/targetes/formaDelGrup.js',
+  'src/components/universal/richText/extensions/targetes/formaDelGrup.test.js',
+  'src/components/universal/richText/extensions/targetes/targetesIncrustades.js',
+  'src/components/universal/richText/extensions/targetes/targetesIncrustades.test.js',
+  'src/components/universal/richText/extensions/targetes/TargetaIncrustadaNodeView.jsx',
+  'src/components/universal/richText/extensions/targetes/TargetaIncrustadaNodeView.test.jsx',
+  'src/components/universal/richText/extensions/targetes/DialegTriaTargeta.jsx',
+  'src/components/universal/richText/extensions/targetes/DialegTriaTargeta.test.jsx',
+  'src/components/universal/richText/extensions/targetes/CosAmbTargetes.jsx',
+  'src/components/universal/richText/extensions/targetes/ordresIBarra.test.js',
+  'src/components/universal/richText/extensions/targetes/qualitat.test.js',
+  'src/components/universal/richText/toolbarContract.js',
+  'src/components/universal/richText/tiptapToolbarAdapter.js',
+  'src/components/universal/DocumentEditor.targetes.test.jsx',
+  'src/hooks/useImatgeTargeta.js',
+  'src/sections/notes/NotesEditor.targetes.test.jsx',
+  'src/sections/detail/detailRichText.jsx',
+  'src/sections/detail/detailRichText.test.jsx',
+  'src/utils/sanitize.test.js'
 ];
 
 test('lint dels fitxers de la sessió (lectura)', async () => {

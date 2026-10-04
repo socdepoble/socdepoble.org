@@ -19,6 +19,7 @@ import { DEFAULT_SECTION_PATH } from '../../config/sections';
 import { BarraApp } from './BarraApp.jsx';
 import { titolDe } from './manifestApp.js';
 import { useAppActual } from './PlataformaContext.jsx';
+import { analitzaRuta } from './registreApps.js';
 
 export const TITOL_MENU_SDP = 'Menú Sóc de Poble';
 
@@ -29,7 +30,14 @@ export function BarraLateral({ children, isCompact = false, isDesktopSidebarClos
   const ultimaRuta = useRef(null);
 
   useEffect(() => {
-    if (!app && pathname) ultimaRuta.current = search ? `${pathname}?${search}` : pathname;
+    if (app || !pathname || analitzaRuta(pathname).dins) return undefined;
+    /* Un Navigate pot canonitzar esta ruta en el mateix muntatge. Només
+       recordem l'adreça quan es consolida; la neteja cancel·la els àlies que
+       redirigixen abans, perquè la fletxa no torne a entrar a l'app. */
+    const timer = setTimeout(() => {
+      ultimaRuta.current = search ? `${pathname}?${search}` : pathname;
+    }, 0);
+    return () => clearTimeout(timer);
   }, [app, pathname, search]);
 
   const torna = useCallback(() => {

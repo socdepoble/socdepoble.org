@@ -33,7 +33,11 @@ const FORA = [
   /* Tot el que és editable: l'atribut sense valor també ho és, i una illa
      contenteditable="false" dins d'un editor continua sent part de l'editor
      (closest() la troba pel pare). */
-  '[contenteditable]:not([contenteditable="false"])'
+  '[contenteditable]:not([contenteditable="false"])',
+  /* T7 (ordre del Mestre, 261004) · Les targetes incrustades al cos són
+     objectes d'altres pàgines, no text d'esta: es queden fora del Traductor
+     (CosTraduit les tornaria a pintar com a paràgrafs solts). */
+  '.sdp-targetes'
 ].join(', ');
 const TITOLS = new Set(['h2', 'h3', 'h4', 'h5', 'h6']);
 const INVISIBLE = new Set(['hidden', 'collapse']);

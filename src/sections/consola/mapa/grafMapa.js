@@ -206,6 +206,8 @@ export const TEXTOS_AVIS = Object.freeze({
   'segell-trencat': 'El segell no quadra amb el disc: hi ha skills fora del segell o divergents, i cal reconciliar-lo abans de confiar en cap empremta.',
   'torns-caducats': 'Hi ha torns oberts que han caducat sense tancar-se.',
   'escriptori-sense-ancora': 'Este document de l’Escriptori no té cap enllaç des de l’índex actiu (00_index_escriptori.md).',
+  // Ordre del Mestre, 261004 · el document ancorat sense rebut ja no s'escapa.
+  'escriptori-sense-rebut': 'Este document de l’Escriptori no té el rebut de cap torn: no consta quin torn el va crear ni amb quina plantilla.',
   'ledger-invalid': 'La signatura del LEDGER no és vàlida: el Llibre d’Obra té segells fòssils o línies mal formades.',
   'recaiguda-recent': 'El LEDGER anota una recaiguda recent d’esta skill: una correcció del Mestre que ja estava apresa s’ha tornat a trencar.'
 });

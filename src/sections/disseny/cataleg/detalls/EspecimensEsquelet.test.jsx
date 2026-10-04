@@ -42,10 +42,19 @@ const PECES = [
   ['MarcColumna', 'estructura-marc-columna', 'estructura/marc-columna']
 ];
 
+/* Derogat per l'ordre del Mestre del 261004 (prompt 261004_0515) · GraellaArticles i
+   LlistaArticles passen a 'obsolet' per a codi nou, amb el substitut al registre. L'espècimen
+   continua viu (Salut i el Bar encara les fan servir). La resta, 'viu'. */
+const OBSOLETES = new Map([
+  ['GraellaArticles', 'UniversalCard + GraellaTargetes'],
+  ['LlistaArticles', 'UniversalCard + GraellaTargetes']
+]);
+
 describe('el catàleg les coneix', () => {
-  it('registre «viu» de PedraSeca, ítem del manifest i carregador per a cada peça', () => {
+  it('registre de PedraSeca («viu» o «obsolet» amb substitut), ítem del manifest i carregador per a cada peça', () => {
     for (const [nom, item, clau] of PECES) {
-      expect(REGISTRE.find((e) => e.nom === nom), nom).toMatchObject({ estat: 'viu' });
+      const esperat = OBSOLETES.has(nom) ? { estat: 'obsolet', substitut: OBSOLETES.get(nom) } : { estat: 'viu' };
+      expect(REGISTRE.find((e) => e.nom === nom), nom).toMatchObject(esperat);
       expect(REGISTRE.find((e) => e.nom === nom).fora, nom).toBeUndefined();
       expect(CATALOG_ITEMS.find((i) => i.id === item), item).toMatchObject({ detailKey: clau, status: 'viu' });
       expect(CATALOG_DETAIL_LOADERS[clau], clau).toBeTruthy();

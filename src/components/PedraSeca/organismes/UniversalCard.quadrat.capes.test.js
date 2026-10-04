@@ -179,6 +179,9 @@ describe('P6 · el títol de la targeta i l’escala d’encapçalaments', () =>
     expect(declara(h3, 'padding-bottom', '12px')).toBe(true);
     expect(declara(titol, 'padding-bottom', 'var(--sdp-space-3)')).toBe(true);
     expect(CLAR.get('--sdp-space-3')).toBe('12px');
+    /* Derogat per l'ordre del Mestre del 261004 (D-C, xat 06:38) · el títol
+       porta l'interlineat de títol (1.2), no el de component (1.15). */
+    expect(declara(titol, 'line-height', 'var(--sdp-leading-titol)')).toBe(true);
   });
 });
 

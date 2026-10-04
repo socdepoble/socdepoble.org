@@ -19,11 +19,15 @@ import manifestBar from '../bar/manifest.js';
 import manifestSalut from '../salut/manifest.js';
 import manifestNevera from '../nevera/manifest.js';
 import manifestLector from '../lector/manifest.js';
+/* Ordre del Mestre, 261004 («contaminació crítica de rutes/estats entre
+   Gestoria i Wiki»): la Gestoria ix de la Wiki i és una app més, només en
+   desenvolupament (el seu manifest). */
+import manifestGestoria from '../gestoria/manifest.js';
 import { esIdApp, validaManifestApp } from './manifestApp.js';
 import { tramsSegurs } from './rutesAplicacio.js';
 
 /** Les apps internes, en l'ordre del portal. */
-export const MANIFESTS_INTERNS = Object.freeze([manifestBar, manifestSalut, manifestNevera, manifestLector]);
+export const MANIFESTS_INTERNS = Object.freeze([manifestBar, manifestSalut, manifestNevera, manifestLector, manifestGestoria]);
 
 function validaInternes(manifests) {
   const valides = [];

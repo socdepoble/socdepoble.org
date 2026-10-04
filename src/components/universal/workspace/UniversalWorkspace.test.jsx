@@ -478,7 +478,12 @@ test('T6 · en mitjà, triar una carpeta no deixa el focus retingut al panell es
     mercat.focus();
     fireEvent.click(mercat);
     expect(shell.dataset.panell).toBe('');
-    expect(sidebar.getAttribute('aria-hidden')).toBe('true');
+    /* Derogació (ordre del Mestre, 261004: la columna de la Wiki fixa i
+       visible, almenys plegada) · Abans, tancat el panell, la navegació
+       quedava aria-hidden. Ara torna al rail fix: oberta i sense aria-hidden.
+       El focus no s'hi queda (l'arbre del panell ja no hi és). */
+    expect(sidebar.getAttribute('aria-hidden')).toBeNull();
+    expect(sidebar.querySelector('.sdp-workspace-rail')).not.toBeNull();
     /* Immediatament, abans de cap fotograma. */
     expect(sidebar.contains(document.activeElement)).toBe(false);
     buidaFotogrames();
@@ -555,7 +560,9 @@ test('T6 · en mitjà, triar una carpeta no porta el focus a les capçaleres del
     mercat.focus();
     fireEvent.click(mercat);
     expect(shell.dataset.panell).toBe('');
-    expect(sidebar.getAttribute('aria-hidden')).toBe('true');
+    /* Derogació (ordre del Mestre, 261004) · La navegació torna al rail
+       fix, oberta: abans quedava aria-hidden. */
+    expect(sidebar.getAttribute('aria-hidden')).toBeNull();
     /* Immediatament, abans de cap fotograma. */
     expect(mostres).not.toContain(document.activeElement);
     expect(sidebar.contains(document.activeElement)).toBe(false);

@@ -1,8 +1,10 @@
 import { resolveAsset } from '../../config/assetResolver';
-import { useCallback, useEffect, useId, useState, useRef } from 'react';
+import { useCallback, useEffect, useId, useLayoutEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from '../../app/contexts/RouterContext';
-import { isSafeUrl, DEFAULT_AUTHOR, PAGE_CHROME_MODES } from './UniversalUtils';
+import { Camera } from 'lucide-react';
+import { isSafeAsset, isSafeUrl, DEFAULT_AUTHOR, PAGE_CHROME_MODES } from './UniversalUtils';
+import { useResolvedAssetState } from '../../hooks/useResolvedAsset.js';
 import { escriuSeccio, llegixSeccio, rutaAmbConsulta, slugsDeSeccions } from './workspace/seleccioUrl.js';
 import { useAccions } from '../PedraSeca/hooks/useAccions.js';
 import { useTraduccioPagina } from '../PedraSeca/hooks/useTraduccioPagina.js';
@@ -10,6 +12,13 @@ import { llevaPuntFinal } from './editorial.js';
 import { BarraBlava } from './barres/BarraBlava.jsx';
 import { BarraTaronja } from './barres/BarraTaronja.jsx';
 import { AvisTraduccio, CosTraduit } from './traduccio/TraduccioPagina.jsx';
+import { useToast } from './NotificationContext.jsx';
+
+/* Ordre del Mestre, 261004 (D-A) · El Traduir d'una pàgina que no es
+   traduïx (traduccio={false}: la pàgina de les apps, PaginaApp): ho diu i no
+   envia res al servei de traducció, com les eines locals de la Wiki
+   (AVIS_EINA_LOCAL_SENSE_TRADUCCIO de WikiDePobleSection). */
+export const AVIS_PAGINA_SENSE_TRADUCCIO = 'Esta pàgina no es traduïx: el que mostra no ix d’este dispositiu.';
 
 /* T2 (ordre del Mestre, 260930) · Fins a quin nivell d'encapçalament arriba
    l'Índex: h6 per defecte, perquè tot nivell d'encapçalament del contingut hi
@@ -36,13 +45,156 @@ export function encapcalamentsIndex(container, selector) {
   return elements.map((element, i) => ({ element, slug: slugs[i] }));
 }
 
+/* Ordre del Mestre, 261004 (integració final, auditoria d'amfitrió) · Dins de
+   WordPress l'app viu en l'arrel ombra tancada de <soc-de-poble>. L'Índex es
+   pintava amb un portal al body del tema (sense estils, al peu de la pàgina)
+   i els salts a una secció feien scrollIntoView, que també desplaçava la
+   pàgina de l'amfitrió. Ara l'Índex es pinta dins de l'app i el salt només
+   mou el desplaçador de l'app. A socdepoble.org, el portal continua al body. */
+function dinsDeLEncastat(node) {
+  return node?.getRootNode?.().host?.localName === 'soc-de-poble';
+}
+
+/* On es pinta l'Índex, com Dialeg.jsx: encastat, a l'arrel de l'app
+   (.sdp-root, la caixa que l'amfitrió reserva; layout.css, :host
+   .toc-overlay); si no, al body de sempre (Llei del Píxel). */
+function destiDeLIndex(node) {
+  if (dinsDeLEncastat(node)) return node.closest('.sdp-root') || node.getRootNode();
+  return document.body;
+}
+
+/* L'id estable del diàleg de l'Índex: el botó «Índex» de la barra blava hi
+   apunta amb aria-controls, i qui el busque (el Lector) no depén de la
+   classe. El doble guió no ix mai d'un slug (seleccioUrl.js): no pot
+   coincidir amb l'id que l'Índex posa als encapçalaments (`${idPrefix}-${slug}`). */
+export const idDeLIndex = (idPrefix = 'toc') => `${idPrefix}--index`;
+
+/* Verificació «index-amfitrio», D1 (ordre del Mestre, 261004) · En tancar
+   l'Índex encastat, el focus es pot tornar al botó «Índex» sense robar-lo:
+   és al calaix (o en un fill seu) o s'ha perdut (el calaix ja s'ha desmuntat i
+   el document l'ha portat al body o a l'amfitrió). Si és en un altre control de
+   l'app o en un camp de la pàgina de WordPress, és d'un altre i no es toca
+   (el mateix criteri que focusPerdutALOmbra del Lector).
+   Correcció final (ordre del Mestre, 261004) · A socdepoble.org l'arrel és el
+   document: quan el calaix es desmunta, el focus perdut és al body (o a
+   l'element arrel), no a null. */
+function focusDelCalaixOPerdut(arrel, calaix) {
+  const actiu = arrel?.activeElement;
+  if (!arrel?.host) return !actiu || actiu === arrel?.body || actiu === arrel?.documentElement || calaix.contains(actiu);
+  if (actiu) return calaix.contains(actiu);
+  const pagina = arrel?.host?.ownerDocument;
+  const delDocument = pagina?.activeElement;
+  return !delDocument || delDocument === arrel.host || delDocument === pagina.body || delDocument === pagina.documentElement;
+}
+
+/* Valors d'overflow-y amb què un element fa de desplaçador: el mateix criteri
+   que enllacosInterns.js ('overlay' és l'àlies antic de WebKit per a auto). */
+const OVERFLOW_DESPLACA = new Set(['auto', 'scroll', 'overlay']);
+const px = (valor) => {
+  const n = parseFloat(valor);
+  return Number.isFinite(n) ? n : 0;
+};
+const estilDe = (node) => node.ownerDocument.defaultView.getComputedStyle(node);
+
+/* El desplaçador de l'app més pròxim a l'element: el primer ascendent amb
+   overflow-y auto o scroll i contingut per davall del que es veu (una columna
+   de l'AppGridShell, .app-main__content). Puja per parentElement, que no
+   travessa l'arrel ombra, i para a .sdp-root inclosa: el de l'amfitrió no és
+   nostre. null si no n'hi ha cap. */
+function desplacadorDeLApp(element) {
+  const arrel = element.closest('.sdp-root');
+  for (let node = element.parentElement; node; node = node.parentElement) {
+    if (OVERFLOW_DESPLACA.has(estilDe(node).overflowY) && node.scrollHeight > node.clientHeight) return node;
+    if (node === arrel) return null;
+  }
+  return null;
+}
+
+/* El que tapen, enganxades a dalt del desplaçador, les barres sticky de la
+   pàgina (la blava i la taronja, fills directes del contenidor de la pàgina):
+   la més baixa acaba a top + alçada. Si el desplaçador és dins de la pàgina
+   (un bloc amb scroll propi), les barres no hi són i no compten. */
+function reservaDeLesBarres(element, desplacador) {
+  const pagina = element.closest('.sdp-universal-page-container');
+  if (!pagina || !desplacador.contains(pagina)) return 0;
+  let reserva = 0;
+  for (const fill of pagina.children) {
+    const estil = estilDe(fill);
+    if (estil.position !== 'sticky') continue;
+    const dalt = parseFloat(estil.top);
+    if (Number.isFinite(dalt)) reserva = Math.max(reserva, dalt + fill.offsetHeight);
+  }
+  return reserva;
+}
+
+/* On ha de deixar desplacaASeccio el desplaçador de l'app perquè la secció
+   quede per davall de les barres: { desplacador, top }, o null si no hi ha cap
+   desplaçador de l'app. El top és posició del contingut (no depén del scroll
+   d'ara): si no canvia res de dalt, no canvia. */
+function destiDelSalt(element) {
+  const desplacador = desplacadorDeLApp(element);
+  if (!desplacador) return null;
+  const estil = estilDe(element);
+  const barres = reservaDeLesBarres(element, desplacador);
+  const marge = Math.max(px(estil.scrollMarginTop), barres > 0 ? barres + px(estil.getPropertyValue('--sdp-space-4')) : 0);
+  const top = desplacador.scrollTop + element.getBoundingClientRect().top - desplacador.getBoundingClientRect().top
+    - desplacador.clientTop - px(estilDe(desplacador).scrollPaddingTop) - marge;
+  return { desplacador, top };
+}
+
+/* Correcció final (ordre del Mestre, 261004) · Si la secció ja no és on la
+   deixaria desplacaASeccio (el contingut de dalt ha canviat d'alçada després
+   del salt): el scroll d'ara no és el que toca, amb el límit natural del
+   desplaçador (a dalt de tot o al final no es pot anar més enllà). Un píxel
+   de marge, pels arredoniments del navegador. Sense desplaçador de l'app no
+   hi ha res a corregir. */
+function seccioFora(element) {
+  const desti = destiDelSalt(element);
+  if (!desti) return false;
+  const { desplacador, top } = desti;
+  const maxim = Math.max(0, desplacador.scrollHeight - desplacador.clientHeight);
+  return Math.abs(desplacador.scrollTop - Math.min(Math.max(top, 0), maxim)) > 1;
+}
+
+/**
+ * Porta una secció a dalt de la vista, com scrollIntoView({ block: 'start' }),
+ * però movent NOMÉS el desplaçador de l'app més pròxim: mai la pàgina de
+ * l'amfitrió. El destí queda per davall de les barres enganxades amb el marge
+ * acordat (--sdp-space-4), o al seu scroll-margin-top si en demana més (el
+ * dels desplegables i les mètriques de la Consola ja reserva les dues barres).
+ * `opcions` són les de scrollIntoView d'abans: el behavior es conserva
+ * (smooth a l'Índex; sense, el del CSS a la secció de la URL). Sense cap
+ * desplaçador de l'app: a socdepoble.org, scrollIntoView com abans; encastat,
+ * res (moure's ací seria moure la pàgina de l'amfitrió).
+ */
+export function desplacaASeccio(element, opcions = { block: 'start' }) {
+  const desti = destiDelSalt(element);
+  if (!desti) {
+    if (!dinsDeLEncastat(element)) element.scrollIntoView?.(opcions);
+    return;
+  }
+  const { desplacador, top } = desti;
+  if (typeof desplacador.scrollTo === 'function') {
+    desplacador.scrollTo(opcions.behavior ? { top, behavior: opcions.behavior } : { top });
+  } else {
+    desplacador.scrollTop = top;
+  }
+}
+
 export function TableOfContentsDrawer({
   isOpen, onClose, contentRef, idPrefix = 'toc', nivellMaxIndex = NIVELL_INDEX_PER_DEFECTE,
   /* T7 (P9) · Opcional: rep el slug de l'entrada clicada (PageFrame l'escriu a ?seccio=). */
   onSeccio = null
 }) {
   const [headings, setHeadings] = useState([]);
+  /* Ordre del Mestre, 261004 (integració final) · On es pinta l'Índex: es
+     decidix per node en obrir, abans de pintar (com Dialeg.jsx). */
+  const [desti, setDesti] = useState(null);
   const selector = selectorIndex(nivellMaxIndex);
+
+  useLayoutEffect(() => {
+    setDesti(isOpen ? destiDeLIndex(contentRef?.current) : null);
+  }, [contentRef, isOpen]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -64,7 +216,11 @@ export function TableOfContentsDrawer({
         return {
           id: el.id,
           slug,
-          text: el.innerText || el.textContent,
+          /* Correcció final (ordre del Mestre, 261004) · El text tal com està
+             escrit, no com el pinta la CSS: innerText copiava el text-transform
+             de l'encapçalament (un h6 eixia en majúscules a l'Índex i al lector
+             de pantalla). Els espais, plegats. El slug ja ve de textContent. */
+          text: el.textContent.replace(/\s+/g, ' ').trim(),
           level: parseInt(el.tagName.substring(1), 10),
           element: el
         };
@@ -106,21 +262,60 @@ export function TableOfContentsDrawer({
     };
   }, [contentRef, idPrefix, isOpen, selector]);
 
+  /* Ordre del Mestre, 261004 (integració final) · Esc s'escolta a l'arrel
+     del destí: el document a socdepoble.org, com abans; encastat, l'arrel
+     ombra de la instància (com modalLocal.js i el Lector): una tecla de la
+     pàgina de WordPress no tanca l'Índex de dins. */
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen || !desti) return undefined;
+    const arrel = desti.getRootNode();
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') onClose();
     };
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
+    arrel.addEventListener('keydown', handleKeyDown);
+    return () => arrel.removeEventListener('keydown', handleKeyDown);
+  }, [desti, isOpen, onClose]);
 
-  if (!isOpen) return null;
+  /* Verificació «index-amfitrio», D1 (ordre del Mestre, 261004) · Encastat,
+     Esc només arriba a l'oient de l'arrel ombra si el focus és dins d'ella.
+     Safari i Firefox de macOS no enfoquen el botó «Índex» en clicar-lo, i un
+     clic a un text no enfocable del calaix portava el focus al body del tema:
+     la tecla anava a la pàgina de WordPress i l'Índex no es tancava mai. Ara,
+     encastat, el calaix és enfocable (tabIndex -1: un clic a un text de dins
+     deixa el focus en ell) i el rep en obrir-se, com enfoca() de
+     modalLocal.js. En tancar-se, el focus torna al botó «Índex» (el que hi
+     apunta amb aria-controls), si no se n'ha anat a una altra banda.
+     Correcció final (ordre del Mestre, 261004) · Derogat «a socdepoble.org,
+     res»: el diàleg aria-modal no rebia el focus i el teclat havia de
+     travessar tota la pàgina per a arribar-hi. Ara la SPA fa el mateix que
+     l'encastat. El calaix és un contenidor enfocat per programa: no pinta cap
+     anell, tampoc després d'un ús del teclat (modules.css, .toc-drawer:focus);
+     les entrades i l'aspa conserven el seu. Depén de `desti`: el calaix es
+     munta en el pintat que el posa. */
+  const calaixRef = useRef(null);
+  useEffect(() => {
+    const calaix = calaixRef.current;
+    if (!isOpen || !desti || !calaix) return undefined;
+    const id = idDeLIndex(idPrefix);
+    const pagina = contentRef?.current?.closest?.('.sdp-universal-page-container');
+    const boto = pagina
+      ? [...pagina.querySelectorAll('[aria-controls]')].find((el) => el.getAttribute('aria-controls') === id) || null
+      : null;
+    calaix.focus({ preventScroll: true });
+    return () => {
+      if (boto?.isConnected && focusDelCalaixOPerdut(boto.getRootNode(), calaix)) boto.focus({ preventScroll: true });
+    };
+  }, [contentRef, desti, idPrefix, isOpen]);
+
+  if (!isOpen || !desti) return null;
 
   return createPortal(
     <div className="toc-overlay" onClick={onClose}>
-      <aside 
-        className="toc-drawer" 
+      <aside
+        id={idDeLIndex(idPrefix)}
+        ref={calaixRef}
+        tabIndex={-1}
+        className="toc-drawer"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
@@ -144,7 +339,7 @@ export function TableOfContentsDrawer({
                 <li key={idx} className={`toc-item toc-level-${h.level}`}>
                   <button
                     onClick={() => {
-                      h.element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      desplacaASeccio(h.element, { behavior: 'smooth', block: 'start' });
                       onSeccio?.(h.slug);
                       onClose();
                     }}
@@ -158,7 +353,7 @@ export function TableOfContentsDrawer({
         </nav>
       </aside>
     </div>,
-    document.body
+    desti
   );
 }
 
@@ -176,8 +371,14 @@ function useRouterOpcional() {
 
 /* Quant espera, com a molt, que la secció de la URL aparega al cos (un
    contingut que arriba tard). Després ja no fa scroll: la persona pot estar
-   escrivint i un encapçalament nou no l'ha d'arrossegar. */
+   escrivint i un encapçalament nou no l'ha d'arrossegar. També és el temps
+   que, després del salt, la pàgina vigila que la secció no se'n vaja quan el
+   contingut de dalt canvia d'alçada. */
 const ESPERA_SECCIO_MS = 3000;
+
+/* Qualsevol d'estes vol dir que la persona ja mou la pàgina: el salt a la
+   secció de la URL deixa de corregir-se. */
+const GESTOS_DE_LA_PERSONA = ['wheel', 'touchstart', 'pointerdown', 'keydown'];
 
 /* La secció de la URL que ja s'ha fet servir en esta sessió: l'ha escrita un
    Índex o una pàgina ja hi ha fet scroll. Una pàgina que es munta després
@@ -190,7 +391,10 @@ let seccioConsumida = null;
 export function PageFrame({
   title, subtitle, lead, labels = [], copyright, showLogos = false,
   chrome = 'page', topBarData = {}, heroImage, heroAlt = '',
-  authorName = DEFAULT_AUTHOR.name, authorLocation = DEFAULT_AUTHOR.location,
+  /* T6 (ordre del Mestre, 261004) · Sense nom propi (ni ací ni a
+     topBarData), la barra signa amb DEFAULT_AUTHOR i, si ningú hi posa ruta,
+     enllaça a la pàgina del projecte (DEFAULT_AUTHOR.href). */
+  authorName, authorLocation = DEFAULT_AUTHOR.location,
   authorAvatar = DEFAULT_AUTHOR.avatarUrl,
   /* T4 · amb ruta, avatar i nom de la barra taronja enllacen al perfil públic. */
   authorHref = null,
@@ -214,6 +418,10 @@ export function PageFrame({
      es queda inoperatiu, amb l'avís de la closca, siga quin siga el document. */
   objecte,
   showComment,
+  /* Ordre del Mestre, 261004 (D-A) · showShare={false} amaga Compartir de la
+     barra blava (una llista privada d'una app no té res a compartir). Sense
+     la prop, el de sempre: visible. */
+  showShare,
   // Ranura opcional de l'editor: la botonera de classificació ocupa el lloc
   // de les píndoles, davall del títol. Sense ella el DOM és el de sempre.
   classificacio = null,
@@ -229,6 +437,53 @@ export function PageFrame({
   /* T2 (ordre del Mestre, 260930) · últim nivell d'encapçalament que recull
      l'Índex (1-6). Sense la prop, h1-h6: tots. */
   nivellMaxIndex = NIVELL_INDEX_PER_DEFECTE,
+  /* Ordre del Mestre, 261004 (prompt 261004_0515 §6, «el botonaco de
+     Publicar») · `accioPrincipal`: l'acció gran de la pàgina, dins del bloc
+     del títol, davall de l'H1 i de les etiquetes (o de la classificació) i
+     abans del copyright, en un div.page-title-accio. Sense, el DOM de sempre. */
+  accioPrincipal = null,
+  /* Ordre del Mestre, 261004 (D-A) · `traduccio={false}`: la pàgina no es
+     traduïx. Traduir avisa (AVIS_PAGINA_SENSE_TRADUCCIO) i el Traductor
+     Sobirà queda inert: cap text ix cap al servei. Sense la prop, el de
+     sempre. */
+  traduccio: ambTraduccio = true,
+  /* Ordre del Mestre, 261004 (D-A) · `refTitol`: un ref a l'H1 perquè qui
+     obri la pàgina hi porte el focus. Només amb ell l'H1 porta tabIndex -1. */
+  refTitol,
+  /* Ordre del Mestre, 261004 (D-A) · `telemetria`: com es compta el
+     Connectar de la barra (useAccions). { comptar: false } no el compta (les
+     apps no hi entren). L'origen sempre és 'pagina'. Sense, el de sempre. */
+  telemetria,
+  /* Ordre del Mestre, 261004 (segona decisió: barra taronja universal) ·
+     Tota pàgina porta la barra taronja, siga quin siga el `chrome` (també
+     'system', 'page' i 'none') i encara que no tinga portada. Esta és l'única
+     via d'excepció: senseBarraTaronja la lleva. Només s'hi pot posar per ordre
+     explícita del Mestre, amb el motiu escrit al costat; hui no la passa cap
+     pàgina (PageFrame.barraTaronja.test.jsx ho fixa). */
+  senseBarraTaronja = false,
+  /* Norma del Mestre, 261004 (prompt 261004_1108, logotips) · `logoEntitat`:
+     el logotip de l'entitat que signa la pàgina, { clar, fosc?, alt }, amb
+     els src ja resolts (un sdp-media:// es resol abans, amb
+     useResolvedAsset: PageFrame no el resol). Amb `fosc`, dues imatges (tema
+     clar i fosc), el format ample de Sóc de Poble; sense, una sola per als
+     dos temes (page-title-logo--entitat: fins a 600x600). */
+  logoEntitat = null,
+  /* Norma del Mestre, 261004 · L'única via d'excepció del logotip de
+     l'entitat: senseLogo el lleva, i només amb `true` explícit. Només s'hi
+     pot posar per ordre explícita del Mestre, amb el motiu escrit al costat;
+     hui no la passa cap pàgina (PageFrame.logo.test.jsx ho fixa). No lleva la
+     ranura de l'editor: el logotip que puja la persona és contingut. */
+  senseLogo = false,
+  /* Norma del Mestre, 261004 (prompt 261004_1108, línies 66-69 i T2) ·
+     `avatarAutor`: l'avatar redó de qui signa quan és una persona o la IA,
+     { src, alt, onCanvia? }. El passa qui sap que signa una persona o la IA
+     (la fitxa pública, el detall d'un element), mai s'endevina de la ruta
+     de la boina. El src pot ser un camí, una URL o un sdp-media://: PageFrame
+     el resol (resolveAsset, o useResolvedAsset per a sdp-media://). Va
+     després de les vies del logotip: amb logotip, cap avatar; senseLogo
+     també el lleva. Amb onCanvia (la pàgina és de qui mira i la pot
+     editar), l'avatar és un botó que obri el canvi d'imatge. */
+  avatarAutor = null,
   children,
   className = '',
   LinkComponent = 'a' // To decouple from React Router's Link
@@ -242,8 +497,13 @@ export function PageFrame({
      traducció d'esta pàgina. La font és sempre l'article original
      (containerRef), que no es desmunta mai. A l'editor (T36) no hi ha
      traducció: substituiria el cos que s'està escrivint. */
-  const traduccio = useTraduccioPagina({ titol: title, cosRef: containerRef });
-  const traduida = !accionsInoperatives && traduccio.llengua ? traduccio : null;
+  const traduccio = useTraduccioPagina(ambTraduccio ? { titol: title, cosRef: containerRef } : {});
+  /* D-A · Sense traducció el hook es munta (l'ordre dels hooks no canvia mai)
+     però no rep ni títol ni cos, i ningú no li demana res: inert. */
+  const ambTraductor = ambTraduccio && !accionsInoperatives;
+  const traduida = ambTraductor && traduccio.llengua ? traduccio : null;
+  const { showToast } = useToast();
+  const senseTraduccio = useCallback(() => showToast(AVIS_PAGINA_SENSE_TRADUCCIO), [showToast]);
 
   const {
     handleConnect,
@@ -260,14 +520,16 @@ export function PageFrame({
     title,
     objecte: accionsInoperatives ? undefined : objecte,
     onConnect,
-    onTranslate,
+    onTranslate: ambTraduccio ? onTranslate : (onTranslate || senseTraduccio),
     onComment,
     onShare,
     showConnect,
     showComment,
+    showShare,
     hasFooter: true, // Assuming full chrome provides a footer-like context for these
-    telemetria: { origen: 'pagina' }, // el Connectar de la barra es compta ací, i només ací
-    traduccio: accionsInoperatives ? undefined : traduccio
+    // el Connectar de la barra es compta ací, i només ací (D-A: {comptar:false} no el compta)
+    telemetria: { ...telemetria, origen: 'pagina' },
+    traduccio: ambTraductor ? traduccio : undefined
   });
 
   const handleIndex = onIndex || (() => setIsTocOpen(true));
@@ -302,6 +564,42 @@ export function PageFrame({
     let observador = null;
     let termini = null;
     let fotograma = null;
+    let paraLaVigilancia = null;
+    const deixaDeVigilar = () => {
+      paraLaVigilancia?.();
+      paraLaVigilancia = null;
+    };
+    /* Correcció final (ordre del Mestre, 261004) · El salt es feia una sola
+       vegada. Si després el contingut de dalt canvia d'alçada (les dades de la
+       Consola, una imatge sense mides a Safari 16), la secció se n'anava
+       davall de la barra taronja. Fins a ESPERA_SECCIO_MS després del salt,
+       cada canvi del cos (MutationObserver) o de mida de l'article o de la
+       pàgina (ResizeObserver) comprova si la secció continua on la deixa
+       desplacaASeccio i, si no, hi torna. El primer gest de la persona (roda,
+       toc, clic o tecla) ho para: qui ja llig no s'arrossega. Els gestos
+       s'escolten a l'arrel del cos: el document o, encastat, l'arrel ombra. */
+    const vigilaElSalt = (element) => {
+      deixaDeVigilar();
+      const arrel = container.getRootNode();
+      const pagina = container.closest('.sdp-universal-page-container') || container.parentElement;
+      const reajusta = () => {
+        if (!element.isConnected) deixaDeVigilar();
+        else if (seccioFora(element)) desplacaASeccio(element, { block: 'start' });
+      };
+      const mutacions = new MutationObserver(reajusta);
+      mutacions.observe(container, { childList: true, subtree: true, characterData: true });
+      const mides = typeof ResizeObserver === 'function' ? new ResizeObserver(reajusta) : null;
+      for (const node of [container, pagina]) if (node) mides?.observe(node);
+      const opcions = { capture: true, passive: true };
+      for (const gest of GESTOS_DE_LA_PERSONA) arrel.addEventListener(gest, deixaDeVigilar, opcions);
+      const fi = setTimeout(deixaDeVigilar, ESPERA_SECCIO_MS);
+      paraLaVigilancia = () => {
+        mutacions.disconnect();
+        mides?.disconnect();
+        for (const gest of GESTOS_DE_LA_PERSONA) arrel.removeEventListener(gest, deixaDeVigilar, opcions);
+        clearTimeout(fi);
+      };
+    };
     /* Correcció T3 · El scroll es fa en el fotograma següent. Un enllaç intern
        clicat amb el router en memòria o amb base (l'interceptor d'App.jsx,
        preparaRecolocacio) torna el desplaçador a dalt en el fotograma següent
@@ -313,7 +611,9 @@ export function PageFrame({
         fotograma = null;
         if (!element.isConnected) return;
         seccioConsumida = seccioUrl;
-        element.scrollIntoView?.({ block: 'start' });
+        // Ordre del Mestre, 261004 (integració final) · només el desplaçador de l'app (desplacaASeccio).
+        desplacaASeccio(element, { block: 'start' });
+        vigilaElSalt(element);
       };
       if (typeof requestAnimationFrame === 'function') fotograma = requestAnimationFrame(fes);
       else fes();
@@ -330,6 +630,7 @@ export function PageFrame({
     };
     const para = () => {
       deixaDEsperar();
+      deixaDeVigilar();
       if (fotograma !== null && typeof cancelAnimationFrame === 'function') cancelAnimationFrame(fotograma);
       fotograma = null;
     };
@@ -343,11 +644,15 @@ export function PageFrame({
     return para;
   }, [seccioUrl, nivellMaxIndex]);
 
-  const barAuthorName = topBarData.authorName ?? authorName;
+  /* T6 · Signa per defecte qui no porta nom ni ací ni a topBarData (abans,
+     el valor per defecte del paràmetre: el mateix nom, ara amb ruta). */
+  const nomDeLaBarra = topBarData.authorName ?? authorName;
+  const signaPerDefecte = nomDeLaBarra === undefined;
+  const barAuthorName = signaPerDefecte ? DEFAULT_AUTHOR.name : nomDeLaBarra;
   const barAuthorLocation = topBarData.authorLocation ?? authorLocation;
   // La barra taronja resol i valida l'avatar i la ruta de l'autoria (BarraTaronja).
   const barAuthorAvatar = topBarData.authorAvatar ?? authorAvatar;
-  const barAuthorHref = topBarData.authorHref ?? authorHref;
+  const barAuthorHref = topBarData.authorHref ?? authorHref ?? (signaPerDefecte ? DEFAULT_AUTHOR.href : null);
   const barTime = topBarData.time ?? time;
   const barDate = topBarData.date ?? date;
   const barDateTime = topBarData.dateTime ?? dateTime;
@@ -356,18 +661,57 @@ export function PageFrame({
 
   const resolvedChrome = PAGE_CHROME_MODES.has(chrome) ? chrome : 'page';
   const showBlueBar = resolvedChrome === 'full' || resolvedChrome === 'context' || resolvedChrome === 'system';
-  const showOrangeBar = resolvedChrome === 'full' || resolvedChrome === 'context';
+  /* Ordre del Mestre, 261004 · La barra taronja ja no depén del `chrome`:
+     abans només la portaven 'full' i 'context', i les pàgines de sistema (la
+     Consola, el Mur, el Control…) en quedaven sense. Signa qui passa la pàgina
+     o, si ningú no en passa cap, DEFAULT_AUTHOR (logo, nom i poble de Sóc de
+     Poble) enllaçat a /projecte. La pastilla de data és la que du la pàgina:
+     ací no se n'inventa cap (ni la d'ara ni guionets; skill sdp-pedra-seca
+     §10 i barraTaronjaData.contracte.test.jsx). Només un `true` explícit
+     la lleva: un text o un 1 no l'apaguen, i la config del ContentProvider
+     tampoc, perquè UniversalPage hi torna a escriure la prop de la pàgina
+     damunt de la config (PageFrame.barraTaronja.test.jsx). */
+  const showOrangeBar = senseBarraTaronja !== true;
+  /* Sense barra blava ('page' i 'none') la taronja no té res damunt: el
+     modificador la deixa enganxar-se a dalt de tot (modules.css) en lloc de
+     deixar el forat de la blava que no hi és. Amb la blava, cap classe nova. */
+  const senseBlava = showOrangeBar && !showBlueBar ? 'sdp-universal-page-container--sense-blava' : '';
   const showPageHeader = resolvedChrome !== 'none';
   const pageLabels = Array.isArray(labels) ? labels.filter(Boolean) : [];
   // L'H1 i l'H2 no porten punt final (poliment editorial 260925). Només es
   // toca el text: un node de React passa tal qual.
   const titol = llevaPuntFinal(title);
   const subtitol = llevaPuntFinal(subtitle);
-  const hasHeader = Boolean(showPageHeader && (showLogos || titol || pageLabels.length || copyright || classificacio));
+  /* Norma del Mestre, 261004 (prompt 261004_1108, logotips) · Tota pàgina
+     creada per una entitat, també les de sistema, porta dalt de l'H1 el
+     logotip de l'entitat, gran (fins a 600px) i responsiu. Qui decidix és qui
+     signa, no un interruptor. Per ordre de prioritat:
+       a) la ranura de l'editor (topBarData.logoComponent), com sempre;
+       b) senseLogo === true: cap logotip. L'única excepció, per ordre
+          explícita del Mestre (una cadena o un 1 no l'activen);
+       c) logoEntitat: el logotip de l'entitat que signa;
+       d) signa Sóc de Poble: la ruta de la boina és DEFAULT_AUTHOR.href
+          ('/projecte'), que rutaDAutoria només dona per identificador, mai
+          pel nom. El seu logotip rectangular, amb el marcatge de sempre;
+       e) compatibilitat: showLogos === true continua pintant el de Sóc de
+          Poble, de manera que cap pàgina no el perd hui (Llei del Píxel);
+       f) avatarAutor: una persona o la IA no porten logotip, porten el seu
+          avatar redó (ordre del Mestre, 261004, prompt 261004_1108 T2);
+       g) altrament, res: una font de fora no en porta.
+     Derogat per l'ordre del Mestre, 261004: showLogos ja no decidix sol, i
+     showLogos={false} no lleva el logotip a una pàgina que signa Sóc de
+     Poble. El logotip, o l'avatar, compta per a fer aparéixer el bloc del
+     títol. */
+  const logoDeLaRanura = topBarData?.logoComponent || null;
+  const logoAutomatic = senseLogo === true ? null
+    : (logoDescrit(logoEntitat) ?? (barAuthorHref === DEFAULT_AUTHOR.href || showLogos === true ? DEFAULT_AUTHOR.logo : null));
+  const avatarDeCapcalera = logoDeLaRanura || logoAutomatic || senseLogo === true ? null : avatarDescrit(avatarAutor);
+  const ambLogo = Boolean(logoDeLaRanura || logoAutomatic || avatarDeCapcalera);
+  const hasHeader = Boolean(showPageHeader && (ambLogo || titol || pageLabels.length || copyright || classificacio || accioPrincipal));
 
   return (
     <>
-      <div className={`sdp-universal-page-container sdp-universal-page-container--${layout} ${className}`.trim()}>
+      <div className={['sdp-universal-page-container', `sdp-universal-page-container--${layout}`, senseBlava, className].filter(Boolean).join(' ')}>
       {/* T51 · Les dues barres de color són components propis (barres/): el
           catàleg pinta les de veres. PageFrame hi posa useAccions i les dades. */}
       {showBlueBar && (
@@ -375,6 +719,11 @@ export function PageFrame({
           onBack={onBack}
           onForward={onForward}
           onIndex={handleIndex}
+          /* Ordre del Mestre, 261004 (integració final) · obert, el botó
+             apunta al diàleg de l'Índex propi (aria-controls); tancat, o amb
+             un onIndex de fora, a cap: cap id penjat a un element que no hi
+             és, i el DOM tancat és el de sempre. */
+          indexControla={!onIndex && isTocOpen ? idDeLIndex(tocIdPrefix) : undefined}
           traduirVisible={traduirVisible}
           comentarVisible={comentarVisible}
           compartirVisible={compartirVisible}
@@ -425,18 +774,17 @@ export function PageFrame({
 
       {hasHeader && (
         <header className="page-title">
-          {topBarData?.logoComponent ? (
+          {logoDeLaRanura ? (
             <div className="page-title-logo-personalitzat">
-              {topBarData.logoComponent}
+              {logoDeLaRanura}
             </div>
-          ) : showLogos ? (
-            <>
-              <img alt="Logotip Sóc de Poble" className="page-title-logo light-only" src={resolveAsset("/assets/system/ui/logo-socdepoble-rect-negre.svg")} />
-              <img alt="Logotip Sóc de Poble" className="page-title-logo dark-only" src={resolveAsset("/assets/system/ui/logo-socdepoble-rect-blanc.svg")} />
-            </>
+          ) : logoAutomatic ? (
+            <LogoDeCapcalera {...logoAutomatic} />
+          ) : avatarDeCapcalera ? (
+            <AvatarDeCapcalera {...avatarDeCapcalera} />
           ) : null}
           {titol && (
-            <h1 lang={traduida?.titol ? traduida.lang : undefined}>
+            <h1 lang={traduida?.titol ? traduida.lang : undefined} ref={refTitol} tabIndex={refTitol ? -1 : undefined}>
               {traduida?.titol ? llevaPuntFinal(traduida.titol) : titol}
               {price && <span className="sp-card-price sp-card-price--en-linia">{price}</span>}
             </h1>
@@ -450,8 +798,11 @@ export function PageFrame({
                 const className = typeof label === 'string' ? 'sdp-badge-tag' : label.className || 'sdp-badge-tag';
                 const href = typeof label === 'string' ? null : label.href;
                 const safeHref = href && isSafeUrl(href) ? href : null;
+                /* D-C (ordre del Mestre, 261004) · `sp-card-label--amb-accio`
+                   marca l'etiqueta que porta botó: la CSS hi deixa de
+                   preguntar amb :has() (fora de la Baseline 2022). */
                 return (
-                  <li key={`${text}-${index}`} className={['sp-card-label', className].filter(Boolean).join(' ')}>
+                  <li key={`${text}-${index}`} className={['sp-card-label', className, label.onClick && 'sp-card-label--amb-accio'].filter(Boolean).join(' ')}>
                     {label.onClick ? (
                       <button type="button" className="sp-card-label__action" onClick={label.onClick}>
                         {text}
@@ -472,6 +823,7 @@ export function PageFrame({
               })}
             </ul>
           )}
+          {accioPrincipal ? <div className="page-title-accio">{accioPrincipal}</div> : null}
           {copyright && (
             <p className="sp-card-copyright page-title-copyright">{copyright}</p>
           )}
@@ -481,9 +833,9 @@ export function PageFrame({
       {/* Traductor Sobirà · L'avís, entre el títol i el cos: «Traduint…» o
           «Traduït automàticament del valencià · Veure l'original». Sense
           traducció no es pinta res (Llei del Píxel). */}
-      {accionsInoperatives ? null : (
+      {ambTraductor ? (
         <AvisTraduccio llengua={traduccio.llengua} carregant={traduccio.carregant} onOriginal={traduccio.original} />
-      )}
+      ) : null}
 
       {/* L'original no es desmunta mai: amb una traducció a la vista s'amaga
           (hidden) i conserva el seu estat; la traducció és un article germà
@@ -513,5 +865,137 @@ export function PageFrame({
         contentRef={traduida ? traduccioRef : containerRef}
         idPrefix={tocIdPrefix} nivellMaxIndex={nivellMaxIndex} onSeccio={traduida ? null : escriuSeccioUrl} />
     </>
+  );
+}
+
+/* Norma del Mestre, 261004 (prompt 261004_1108, logotips) · Un src de
+   logotip: un text no buit, o res. */
+const srcDeLogo = (valor) => (typeof valor === 'string' && valor.trim() ? valor.trim() : null);
+
+/* El descriptor `logoEntitat` net ({ clar, fosc, alt }), o null si no porta
+   cap imatge clara: llavors és com si no n'hi haguera. */
+function logoDescrit(logo) {
+  if (!logo || typeof logo !== 'object') return null;
+  const clar = srcDeLogo(logo.clar);
+  if (!clar) return null;
+  return { clar, fosc: srcDeLogo(logo.fosc), alt: typeof logo.alt === 'string' ? logo.alt : '' };
+}
+
+/* Correcció final (ordre del Mestre, 261004; risc de Safari 16 en el salt de
+   ?seccio=) · La mida natural de l'SVG del logotip de Sóc de Poble: viewBox
+   800x208 (el negre) i 3334x867 (el blanc), 300x78 en px CSS. Amb width i
+   height el navegador reserva el lloc del logotip abans de carregar-lo i la
+   secció de la URL no salta quan arriba. El CSS continua manant l'ample
+   (.page-title-logo: fins a 600px, i l'ample de la capçalera en pantalla
+   estreta) amb height: auto, i un cop carregat val la proporció de l'SVG:
+   els píxels finals són els d'abans. Només per als dos fitxers de Sóc de
+   Poble: el d'una altra entitat té la seua mida, que ací no sabem. */
+const MIDA_NATURAL_LOGO_SDP = Object.freeze({ width: '300', height: '78' });
+function midaNaturalDelLogo(clar, fosc) {
+  const sdp = DEFAULT_AUTHOR.logo;
+  return clar === sdp.clar && fosc === sdp.fosc ? MIDA_NATURAL_LOGO_SDP : null;
+}
+
+/* El logotip del bloc del títol, abans de l'H1.
+   · Amb `fosc`: dues imatges, la clara (light-only) i la fosca (dark-only).
+     És el marcatge de sempre del logotip de Sóc de Poble: el mateix ordre
+     d'atributs i les mateixes classes (la mida la dona .page-title-logo:
+     fins a 600px d'ample, i a l'ample de la capçalera en pantalla estreta).
+     Derogat (ordre del Mestre, 261004): ja no és byte a byte el d'abans, el
+     de Sóc de Poble porta al final width i height (la seua mida natural).
+   · Sense `fosc`: una sola imatge per als dos temes, el logo_url d'una
+     altra entitat (sovint quadrat). page-title-logo--entitat la limita a
+     600px d'alt (fins a 600x600, skill sdp-universal-page §1.D) i no envia
+     cap Referer, com l'avatar de la boina (BarraTaronja).
+   resolveAsset és idempotent sobre el que ja ha resolt: un src resolt
+   (DEFAULT_AUTHOR.logo, useResolvedAsset) no canvia. */
+function LogoDeCapcalera({ clar, fosc, alt }) {
+  if (fosc) {
+    const srcClar = resolveAsset(clar);
+    const srcFosc = resolveAsset(fosc);
+    const mida = midaNaturalDelLogo(srcClar, srcFosc);
+    return (
+      <>
+        <img alt={alt} className="page-title-logo light-only" src={srcClar} width={mida?.width} height={mida?.height} />
+        <img alt={alt} className="page-title-logo dark-only" src={srcFosc} width={mida?.width} height={mida?.height} />
+      </>
+    );
+  }
+  return <img alt={alt} className="page-title-logo page-title-logo--entitat" src={resolveAsset(clar)} referrerPolicy="no-referrer" />;
+}
+
+/* Norma del Mestre, 261004 (prompt 261004_1108, línies 66-69 i T2) · Un
+   sdp-media:// és una referència opaca: només la resol el port. */
+const esDelPort = (src) => src.startsWith('sdp-media://');
+
+/* El descriptor `avatarAutor` net ({ src, alt, onCanvia }), o null si no
+   porta cap imatge que es puga pintar: un src buit, o una adreça que no és
+   segura (isSafeAsset, el filtre de l'avatar de la boina) ni abans ni
+   després de resoldre-la: resolveAsset convertiria un «javascript:» o un
+   «//altre.domini» en un camí propi trencat. Un sdp-media:// passa: el resol
+   AvatarDeCapcalera. */
+const esAvatarSegur = (src) => isSafeAsset(src) && isSafeAsset(resolveAsset(src));
+
+/* Correcció dels verificadors (ordre del Mestre, 261004; skill sdp-pedra-seca
+   §11) · La marca de Sóc de Poble (l'avatar quadrat de la boina i el
+   logotip rectangular, clar i fosc) no és mai l'avatar d'una persona ni de
+   la IA: és el que porta l'avatar_url d'un producte o d'un agent de la
+   llavor quan falta la foto, i es pintava com a avatar redó de 300px. Es
+   compara el camí resolt amb la base d'ara (SPA, WordPress amb base-camí o
+   amb URL absoluta), sense origen ni consulta: també un src ja resolt
+   (DEFAULT_AUTHOR.avatarUrl) o una URL absoluta del mateix fitxer. */
+const camiDe = (url) => {
+  try {
+    return new URL(url, 'http://sdp.invalid').pathname;
+  } catch {
+    return String(url);
+  }
+};
+function esMarcaDeLEntitat(url) {
+  const cami = camiDe(resolveAsset(url));
+  const { clar, fosc } = DEFAULT_AUTHOR.logo;
+  return [DEFAULT_AUTHOR.avatarUrl, clar, fosc].some((marca) => camiDe(marca) === cami);
+}
+
+function avatarDescrit(avatar) {
+  if (!avatar || typeof avatar !== 'object') return null;
+  const src = srcDeLogo(avatar.src);
+  if (!src || (!esDelPort(src) && (!esAvatarSegur(src) || esMarcaDeLEntitat(src)))) return null;
+  return {
+    src,
+    alt: typeof avatar.alt === 'string' ? avatar.alt : '',
+    onCanvia: typeof avatar.onCanvia === 'function' ? avatar.onCanvia : null
+  };
+}
+
+/* El nom del botó de l'avatar quan la pàgina és de qui mira. */
+export const ETIQUETA_CANVIA_AVATAR = 'Canvia la teua imatge';
+
+/* L'avatar redó del bloc del títol, centrat davant de l'H1: més menut que el
+   logotip (--sdp-avatar-capcalera, 300px) i a l'ample de la capçalera en
+   pantalla estreta (modules.css). La caixa reserva el lloc (aspect-ratio)
+   abans que arribe la imatge. Un camí o una URL es resolen en el mateix
+   render (resolveAsset); un sdp-media://, pel port (useResolvedAsset):
+   mentre es resol queda la caixa buida i, si no es pot resoldre, no es pinta
+   res. Sense Referer, com l'avatar de la boina. Amb onCanvia és un botó, amb
+   la marca de la càmera: punxant-hi es canvia la imatge pel flux que ja
+   existix (el passa la pàgina). */
+function AvatarDeCapcalera({ src, alt, onCanvia }) {
+  const delPort = esDelPort(src);
+  const resolucio = useResolvedAssetState(delPort ? src : '');
+  const url = delPort ? resolucio.url : resolveAsset(src);
+  // Correcció dels verificadors (261004) · tampoc si el port resol la marca de l'entitat.
+  const imatge = url && isSafeAsset(url) && !esMarcaDeLEntitat(url)
+    ? <img className="page-title-avatar__imatge" src={url} alt={alt} decoding="async" referrerPolicy="no-referrer" />
+    : null;
+  if (!imatge && !(delPort && resolucio.isLoading)) return null;
+  if (!onCanvia) return <div className="page-title-avatar">{imatge}</div>;
+  return (
+    <button type="button" className="page-title-avatar page-title-avatar--canvia" aria-label={ETIQUETA_CANVIA_AVATAR} onClick={onCanvia}>
+      {imatge}
+      <span className="page-title-avatar__marca" aria-hidden="true">
+        <Camera size={24} focusable="false" />
+      </span>
+    </button>
   );
 }

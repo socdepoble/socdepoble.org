@@ -1,4 +1,6 @@
 import React, { useRef } from 'react';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { render, cleanup, screen } from '@testing-library/react';
 import { afterEach, expect, test, vi } from 'vitest';
 import { usePullToRefresh, LLINDAR_PTR, RESISTENCIA_PTR } from './usePullToRefresh.js';
@@ -34,7 +36,8 @@ function Banc({ onRecarrega }) {
       h('input', { 'data-testid': 'camp', 'aria-label': 'Camp' }),
       h('div', { 'data-testid': 'editable', contentEditable: true, suppressContentEditableWarning: true }, 'Editable'),
       h('div', { className: 'sdp-wiki-graf' }, h('span', { 'data-testid': 'graf' }, 'Graf')),
-      h('dialog', { open: true }, h('p', { 'data-testid': 'dialeg' }, 'Diàleg'))
+      h('dialog', { open: true }, h('p', { 'data-testid': 'dialeg' }, 'Diàleg')),
+      h('canvas', { 'data-testid': 'llenç' })
     )
   );
 }
@@ -196,21 +199,180 @@ test('una recàrrega asíncrona torna l’indicador a repòs quan acaba', async 
   expect(indicador().dataset.estat).toBe('repos');
 });
 
-test('incrustat dins d’un ShadowRoot no s’activa', () => {
-  const onRecarrega = vi.fn();
-  const amfitrio = document.createElement('div');
+/* ── Encastat dins d'un ShadowRoot (<soc-de-poble>, Gent de la Torre) ──────
+   Ordre del Mestre, 261004 11:11 · Deroga la prova «incrustat dins d'un
+   ShadowRoot no s'activa»: ara s'activa i recarrega la pàgina, com el
+   refresc natiu, però només amb la pàgina de l'amfitrió a dalt i amb
+   <soc-de-poble> començant dins del viewport. L'ombra és tancada, com la de
+   PedraSecaEmbed: la prova guarda la referència que torna attachShadow. */
+function muntaEnOmbra(onRecarrega) {
+  const amfitrio = document.createElement('soc-de-poble');
   document.body.appendChild(amfitrio);
-  const ombra = amfitrio.attachShadow({ mode: 'open' });
+  const ombra = amfitrio.attachShadow({ mode: 'closed' });
   const punt = document.createElement('div');
   ombra.appendChild(punt);
   const { unmount } = render(h(Banc, { onRecarrega }), { container: punt });
+  const dins = (id) => ombra.querySelector(`[data-testid="${id}"]`);
+  const desmunta = () => {
+    unmount();
+    amfitrio.remove();
+  };
+  return { amfitrio, ombra, dins, desmunta };
+}
 
-  const objectiu = ombra.querySelector('[data-testid="objectiu"]');
-  const moviments = estira(objectiu, [[0, PASSAT]]);
+test('dins d’un ShadowRoot s’activa: un gest complet crida la recàrrega (ordre del Mestre, 261004)', () => {
+  const onRecarrega = vi.fn();
+  const { dins, desmunta } = muntaEnOmbra(onRecarrega);
+  const objectiu = dins('objectiu');
+  expect(dins('indicador').dataset.estat).toBe('repos');
+
+  const moviments = estira(objectiu, [[0, 40], [0, PASSAT]]);
+  expect(moviments.every((ev) => ev.defaultPrevented)).toBe(true);
+  expect(dins('indicador').dataset.estat).toBe('llest');
   toca(objectiu, 'touchend');
+  expect(onRecarrega).toHaveBeenCalledTimes(1);
+  expect(dins('indicador').dataset.estat).toBe('recarregant');
+  desmunta();
+});
+
+test('dins d’un ShadowRoot amb la pàgina de l’amfitrió desplaçada no s’arma', () => {
+  const onRecarrega = vi.fn();
+  const { dins, desmunta } = muntaEnOmbra(onRecarrega);
+  // El scrollingElement és el de la pàgina del tema, no el de l'app.
+  Object.defineProperty(document, 'scrollingElement', {
+    configurable: true,
+    value: { scrollTop: 300 }
+  });
+  try {
+    const moviments = estira(dins('objectiu'), [[0, 40], [0, PASSAT]]);
+    toca(dins('objectiu'), 'touchend');
+    expect(moviments.some((ev) => ev.defaultPrevented)).toBe(false);
+    expect(dins('indicador').dataset.estat).toBe('repos');
+    expect(onRecarrega).not.toHaveBeenCalled();
+
+    // Control: amb la pàgina tornada a dalt, el mateix gest sí que s'arma.
+    delete document.scrollingElement;
+    estira(dins('objectiu'), [[0, PASSAT]]);
+    expect(dins('indicador').dataset.estat).toBe('llest');
+    toca(dins('objectiu'), 'touchcancel');
+  } finally {
+    delete document.scrollingElement;
+    desmunta();
+  }
+});
+
+test('dins d’un ShadowRoot, amb <soc-de-poble> començant per damunt del viewport, no s’arma', () => {
+  const onRecarrega = vi.fn();
+  const { amfitrio, dins, desmunta } = muntaEnOmbra(onRecarrega);
+  // El tema ha desplaçat un contenidor seu: l'app comença 50px per damunt.
+  amfitrio.getBoundingClientRect = () => ({ top: -50, bottom: 600, left: 0, right: 375, width: 375, height: 650, x: 0, y: -50 });
+  const moviments = estira(dins('objectiu'), [[0, 40], [0, PASSAT]]);
+  toca(dins('objectiu'), 'touchend');
   expect(moviments.some((ev) => ev.defaultPrevented)).toBe(false);
-  expect(ombra.querySelector('[data-testid="indicador"]').hasAttribute('data-estat')).toBe(false);
+  expect(dins('indicador').dataset.estat).toBe('repos');
   expect(onRecarrega).not.toHaveBeenCalled();
-  unmount();
-  amfitrio.remove();
+
+  // Amb l'app tornada a dalt (top 0), el mateix gest sí que és nostre.
+  amfitrio.getBoundingClientRect = () => ({ top: 0, bottom: 650, left: 0, right: 375, width: 375, height: 650, x: 0, y: 0 });
+  estira(dins('objectiu'), [[0, 40], [0, PASSAT]]);
+  toca(dins('objectiu'), 'touchend');
+  expect(onRecarrega).toHaveBeenCalledTimes(1);
+  desmunta();
+});
+
+test.each(['camp', 'editable', 'graf', 'dialeg', 'llenç'])('dins d’un ShadowRoot, sobre «%s» el gest no s’arma', (id) => {
+  const onRecarrega = vi.fn();
+  const { dins, desmunta } = muntaEnOmbra(onRecarrega);
+  const moviments = estira(dins(id), [[0, 40], [0, PASSAT]]);
+  toca(dins(id), 'touchend');
+  expect(moviments.some((ev) => ev.defaultPrevented)).toBe(false);
+  expect(dins('indicador').dataset.estat).toBe('repos');
+  expect(onRecarrega).not.toHaveBeenCalled();
+  // Control: fora de l'exclusió, el mateix gest dins de l'ombra sí que s'arma.
+  estira(dins('objectiu'), [[0, PASSAT]]);
+  expect(dins('indicador').dataset.estat).toBe('llest');
+  toca(dins('objectiu'), 'touchcancel');
+  desmunta();
+});
+
+test('dins d’un ShadowRoot, una columna desplaçada, touch-action: none i un segon dit no arrenquen cap recàrrega', () => {
+  const onRecarrega = vi.fn();
+  const { dins, desmunta } = muntaEnOmbra(onRecarrega);
+
+  // Columna a mitja llista (com les de l'AppGridShell): el dit que baixa vol pujar.
+  Object.defineProperty(dins('intern'), 'scrollTop', { configurable: true, value: 1200 });
+  let moviments = estira(dins('objectiu'), [[0, 40], [0, PASSAT]]);
+  toca(dins('objectiu'), 'touchend');
+  expect(moviments.some((ev) => ev.defaultPrevented)).toBe(false);
+  Object.defineProperty(dins('intern'), 'scrollTop', { configurable: true, value: 0 });
+
+  // Una superfície amb el seu propi gest (touch-action: none). jsdom no
+  // resol touch-action: l'estil computat d'eixe node es dona a mà.
+  const original = window.getComputedStyle.bind(window);
+  const espia = vi.spyOn(window, 'getComputedStyle').mockImplementation((el, ...resta) => (
+    el === dins('intern') ? { touchAction: 'none' } : original(el, ...resta)
+  ));
+  moviments = estira(dins('objectiu'), [[0, 40], [0, PASSAT]]);
+  toca(dins('objectiu'), 'touchend');
+  expect(moviments.some((ev) => ev.defaultPrevented)).toBe(false);
+  espia.mockRestore();
+
+  // Un segon dit (zoom) desfà el gest enganxat.
+  estira(dins('objectiu'), [[0, PASSAT]]);
+  expect(dins('indicador').dataset.estat).toBe('llest');
+  toca(dins('objectiu'), 'touchstart', [[100, 100 + PASSAT], [200, 200]]);
+  expect(dins('indicador').dataset.estat).toBe('repos');
+  toca(dins('objectiu'), 'touchend');
+
+  expect(onRecarrega).not.toHaveBeenCalled();
+  desmunta();
+});
+
+/* Encastat, la franja de l'amfitrió s'interposa entre la barra negra (on naix
+   l'indicador) i el contingut: l'indicador baixa apegat al contingut, sense
+   deixar un forat de franja entre tots dos. jsdom no fa layout: els offsetTop
+   es definixen a mà (indicador a 64px, contingut a 129px). */
+test('l’indicador baixa apegat al contingut encara que una franja s’hi interpose', () => {
+  const onRecarrega = vi.fn();
+  render(h(Banc, { onRecarrega }));
+  Object.defineProperty(indicador(), 'offsetTop', { configurable: true, value: 64 });
+  Object.defineProperty(screen.getByTestId('contingut'), 'offsetTop', { configurable: true, value: 129 });
+  const objectiu = screen.getByTestId('objectiu');
+  estira(objectiu, [[0, PASSAT]]);
+  toca(objectiu, 'touchend');
+  expect(screen.getByTestId('contingut').style.transform).toBe(`translateY(${LLINDAR_PTR}px)`);
+  expect(indicador().style.transform).toBe(`translateY(calc(${LLINDAR_PTR + 65}px - 100%))`);
+});
+
+/* La franja tapa l'indicador mentre naix, com la barra negra: ha d'estar
+   posicionada i per damunt del seu z-index (modules.css, «Lliscar per
+   recarregar»). jsdom no resol la cascada: es llig el full. */
+test('la franja de l’amfitrió queda per damunt de l’indicador, dins de @layer components', () => {
+  const css = readFileSync(resolve(process.cwd(), 'src/css/modules.css'), 'utf8')
+    .replace(/\/\*[\s\S]*?\*\//g, '');
+  const regles = [];
+  const pila = [];
+  let tros = '';
+  for (const c of css) {
+    if (c === '{') {
+      pila.push(tros.split(';').pop().trim().replace(/\s+/g, ' '));
+      tros = '';
+    } else if (c === '}') {
+      const prelud = pila.pop();
+      if (prelud && !prelud.startsWith('@')) regles.push({ prelud, cos: tros, context: [...pila] });
+      tros = '';
+    } else {
+      tros += c;
+    }
+  }
+  const valor = (cos, prop) => (cos.match(new RegExp(`(?:^|;)\\s*${prop}\\s*:\\s*([^;]+)`)) || [])[1]?.trim();
+  const franja = regles.filter((r) => r.prelud === '.app-main > .sdp-amfitrio-franja');
+  expect(franja).toHaveLength(1);
+  expect(franja[0].context).toEqual(['@layer components']);
+  expect(valor(franja[0].cos, 'position')).toBe('relative');
+  const zIndicador = Math.max(...regles
+    .filter((r) => r.prelud === '.sdp-ptr-indicator')
+    .map((r) => Number(valor(r.cos, 'z-index')))
+    .filter(Number.isFinite));
+  expect(Number(valor(franja[0].cos, 'z-index'))).toBeGreaterThan(zIndicador);
 });

@@ -1,21 +1,23 @@
 import { useMemo } from 'react';
-import {
-  CalendarDays, CalendarRange, CircleHelp, Infinity as IconaSempre, Power, Shuffle, Sun, Zap
-} from 'lucide-react';
 import { CalendariEsdeveniments, EstatBuit, Insignia, Taula } from '../../../components/PedraSeca';
-import { Mono, TargetaResum } from '../peces.jsx';
+import { Mono } from '../peces.jsx';
+import { GraellaXifres } from '../XifresMas.jsx';
+import { xifresDeVista } from '../xifresMas.js';
 import { textLlancador } from './mapaContent.js';
 import { AL_MES, GRUPS_CADENCIA, classificaTasca, quanDe, resumCalendari, tascaAEsdeveniment } from './calendariMapa.js';
 
 /* Calendari de processos (02_calendari.md): què corre sol, quan, qui ho
    llança i si continua viu. És el calendari d'Emowe en valencià: les caixes
-   per cadència damunt del mes (targetes del Panell de Control), el detall de
-   cada tasca en una taula i, davall, el mes. */
-
-const ICONES_GRUP = Object.freeze({
-  dia: Sun, setmana: CalendarDays, mes: CalendarRange, altra: Shuffle,
-  permanent: IconaSempre, arrencada: Power, esdeveniment: Zap, sense: CircleHelp
-});
+   per cadència damunt del mes, el detall de cada tasca en una taula i,
+   davall, el mes.
+   Ordre del Mestre, 261004 (xat: cap xifra solta) · Cada caixa de cadència
+   és una targeta sencera amb la boina de Sóc de Poble i pàgina pròpia
+   (/consola/xifres/cadencia-<grup>). Derogat per l'ordre del Mestre del
+   261004 (xat: cap xifra solta): les caixes com a targetes compactes del
+   Panell de Control (TargetaResum).
+   Correcció 261004 (verificador de la segona passada) · Davant de les
+   caixes, «Coses que corren soles», la xifra del tauler que es tracta ací;
+   també quan el Mapa no porta cap tasca (la vista «calendari»). */
 
 const TO_ESTAT = Object.freeze({
   viu: 'exit', mort: 'error', 'declarat-sense-llancador': 'neutre',
@@ -35,6 +37,7 @@ function Xip({ tasca }) {
 export function CalendariMapa({ mapa, locale }) {
   const avui = new Date();
   const grups = useMemo(() => resumCalendari(mapa.tasques), [mapa]);
+  const caixes = useMemo(() => xifresDeVista('calendari', mapa), [mapa]);
   const alMes = useMemo(() => mapa.tasques.filter((t) => AL_MES.has(classificaTasca(t))), [mapa]);
   /* T8 (ordre del Mestre, 260930) · Cada tasca que es pot situar en dies, com
      a esdeveniment (tascaAEsdeveniment, equivalent a tocaElDia dia a dia); el
@@ -44,10 +47,13 @@ export function CalendariMapa({ mapa, locale }) {
 
   if (!mapa.tasques.length) {
     return (
-      <EstatBuit titol="Cap tasca al Mapa">
-        El Mapa no porta cap tasca: ni el registre <Mono>.agents/cron/registre_tasques.json</Mono> ni
-        cap llançador de launchd n'han declarat. Tot el que fan els agents comença quan algú ho demana.
-      </EstatBuit>
+      <>
+        <GraellaXifres xifres={caixes} generat={mapa.generat ?? null} />
+        <EstatBuit titol="Cap tasca al Mapa">
+          El Mapa no porta cap tasca: ni el registre <Mono>.agents/cron/registre_tasques.json</Mono> ni
+          cap llançador de launchd n'han declarat. Tot el que fan els agents comença quan algú ho demana.
+        </EstatBuit>
+      </>
     );
   }
 
@@ -62,12 +68,7 @@ export function CalendariMapa({ mapa, locale }) {
         la llança i el registre no la coneix. Una cadència en segons de setmanes o
         mesos no té dia fix i només apareix a la seua caixa.
       </p>
-      <div className="sdp-card-grid">
-        {GRUPS_CADENCIA.filter(([k]) => grups[k].length).map(([k, etiqueta]) => (
-          <TargetaResum key={k} icona={ICONES_GRUP[k]} titol={`${etiqueta} (${grups[k].length})`}
-            descripcio={grups[k].map((t) => t.id).join(' · ')} />
-        ))}
-      </div>
+      <GraellaXifres xifres={caixes} generat={mapa.generat ?? null} />
       {/* T7 (ordre del Mestre, 260930) · les vores fines del calendari també a
           la taula de la pàgina: la capçalera i el contorn de les insígnies. */}
       <Taula titol="Tasques per cadència" densa className="sdp-calendari__taula">

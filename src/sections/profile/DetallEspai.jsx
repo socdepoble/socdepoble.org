@@ -4,6 +4,7 @@ import { dataDeFila } from '../../components/universal/editorial.js';
 import { LlistaNodes } from '../../components/universal/connexio/LlistaNodes.jsx';
 import { ESTATS_APLICACIO } from './aplicacions.js';
 import { BlocPerfil as Bloc } from './BlocPerfil.jsx';
+import { RUTA_PROJECTE } from '../../config/navigation.js';
 
 /* ═══════════════════════════════════════════════════════════════════
    PÀGINES DE LECTURA DE L'ESPAI DE TREBALL DEL PERFIL
@@ -14,47 +15,40 @@ import { BlocPerfil as Bloc } from './BlocPerfil.jsx';
    utilitat sense secció en este node ho diu; amb secció, l'enllaça.
    ═══════════════════════════════════════════════════════════════════ */
 
-/* La utilitat és del node, no de cap persona: la barra taronja ho diu. */
+/* La utilitat és del node, no de cap persona: la barra taronja ho diu.
+   T6 (ordre del Mestre, 261004, prompt 261004_0515 §5) · Signa Sóc de Poble,
+   el sistema, i la boina porta a la pàgina del projecte. */
 const AUTORIA_NODE = Object.freeze({
   authorName: 'Sóc de Poble',
   authorLocation: 'Utilitat d’este node',
   authorAvatar: '',
+  authorHref: RUTA_PROJECTE,
 });
 
 import { useState, useEffect } from 'react';
+import { desaUtilitatActiva, llegixUtilitatsActives, subscriuUtilitatsActives } from './utilitatsActives.js';
 
 /* T51 · Pendent: una utilitat encara no té cap data real. La seua
    declaració (aplicacions.js, aplicacionsValides) no porta cap camp de data
    i esta pàgina no se n'inventa cap: cal que la configuració en porte una. */
 export function DetallAplicacio({ aplicacio }) {
   const [activa, setActiva] = useState(false);
+  const id = aplicacio?.id;
 
+  /* Higiene d'amfitrió (ordre del Mestre, 261004) · La preferència passa per
+     storage.js (utilitatsActives.js), amb el llegat llegit; el Panell se
+     n'assabenta per l'estat compartit d'eixe mòdul. Derogat per l'ordre del
+     Mestre del 261004: l'accés directe a localStorage i el 'storage' fals a
+     window, que arribava a la pàgina de l'amfitrió. */
   useEffect(() => {
-    try {
-      const g = localStorage.getItem('sdp_utilitats_actives');
-      if (g) {
-        const parsed = JSON.parse(g);
-        setActiva(Boolean(parsed[aplicacio.id]));
-      }
-    } catch {
-      // Ignorar
-    }
-  }, [aplicacio.id]);
+    const llig = () => setActiva(Boolean(llegixUtilitatsActives()[id]));
+    llig();
+    return subscriuUtilitatsActives(llig);
+  }, [id]);
 
+  /* Si no queda escrit (quota, sense emmagatzematge), el botó no canvia: cap estat que menteix. */
   const toggleActiva = () => {
-    try {
-      const g = localStorage.getItem('sdp_utilitats_actives');
-      const parsed = g ? JSON.parse(g) : {};
-      const novaActiva = !activa;
-      parsed[aplicacio.id] = novaActiva;
-      localStorage.setItem('sdp_utilitats_actives', JSON.stringify(parsed));
-      setActiva(novaActiva);
-      
-      // Dispatch per si algú escolta (encara que no és perfecte entre pestanyes en temps real sense l'event storage complet)
-      window.dispatchEvent(new Event('storage'));
-    } catch {
-      // Ignorar errors
-    }
+    desaUtilitatActiva(id, !activa);
   };
 
   if (!aplicacio) return null;

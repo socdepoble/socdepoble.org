@@ -28,7 +28,8 @@ import {
 } from './assetResolver.js';
 import { sanitizeHtml } from '../utils/sanitize.js';
 import { DEFAULT_AUTHOR } from '../components/universal/UniversalUtils.js';
-import { AUTORIA_CONSOLA } from '../sections/consola/peces.jsx';
+import * as pecesConsola from '../sections/consola/peces.jsx';
+import { MemoryRouter } from '../app/contexts/RouterContext';
 import { Aplec2023Article } from '../sections/mur/articles/Aplec2023Article.jsx';
 import TextSection from '../sections/text/TextSection.jsx';
 import { PAGE_COPY } from '../sections/text/pageContent.js';
@@ -218,11 +219,33 @@ test('sense script clàssic amb src la base es queda buida: Vite (mòdul), prove
 
 test('les constants de mòdul es resolen en llegir-les: hi val la base fixada després d’importar-les', () => {
   expect(DEFAULT_AUTHOR.avatarUrl).toBe(LOGO);
-  expect({ ...AUTORIA_CONSOLA }).toEqual({ author: 'Consola Termodinàmica', avatarUrl: LOGO });
-  expect(Object.isFrozen(AUTORIA_CONSOLA)).toBe(true);
   fixaBaseRecursos(PAQUET);
   expect(DEFAULT_AUTHOR.avatarUrl).toBe(`${PAQUET}${LOGO}`);
-  expect({ ...AUTORIA_CONSOLA }.avatarUrl).toBe(`${PAQUET}${LOGO}`);
+});
+
+/* AUTORIA_CONSOLA (l'autoria inventada «Consola Termodinàmica» amb el logo)
+   continua sense existir. Derogat per l'ordre del Mestre del 261004 (xat:
+   tota targeta amb boina i pàgina pròpia): «cap targeta de la Consola pinta
+   avatar que calga resoldre». Ara totes porten la boina de l'autor real,
+   l'entitat Sóc de Poble (AUTORIA_SOCDEPOBLE), i el seu logo es resol amb
+   la base vigent, com tota imatge pròpia. */
+test('la Consola ja no exporta cap autoria fingida', () => {
+  expect(pecesConsola.AUTORIA_CONSOLA).toBeUndefined();
+  expect(Object.keys(pecesConsola)).not.toContain('AUTORIA_CONSOLA');
+});
+
+test('la boina de les targetes de la Consola és la de Sóc de Poble, i el seu logo viatja amb el paquet', () => {
+  const Icona = () => null;
+  const targeta = () => React.createElement(MemoryRouter, null, React.createElement(pecesConsola.TargetaConsola, {
+    icona: Icona, titol: 'Rebuts', subtitol: 'Per a comprovar què ha llegit l’eixam', entradilla: 'Cada lectura deixa un rebut.', a: '/consola/pols'
+  }));
+  const avatar = (container) => container.querySelector('.sp-card-header img.sp-card-avatar').getAttribute('src');
+  const sense = render(targeta());
+  expect(avatar(sense.container)).toBe(LOGO);
+  expect(sense.container.querySelector('.sp-card-header a.sp-card-author-link').getAttribute('href')).toBe('/projecte');
+  cleanup();
+  fixaBaseRecursos(PAQUET);
+  expect(avatar(render(targeta()).container)).toBe(`${PAQUET}${LOGO}`);
 });
 
 test('l’article de l’Aplec pinta les seues imatges amb la base vigent', () => {

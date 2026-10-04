@@ -12,7 +12,8 @@ html, body, #root, .sdp-root {
   margin: 0;
   padding: 0;
   overflow: hidden;
-  overscroll-behavior: none;
+  overscroll-behavior-y: auto;
+  overscroll-behavior-x: none;
   -webkit-text-size-adjust: 100%;
   -webkit-hyphens: none;
   hyphens: none;
@@ -26,7 +27,8 @@ html, body, #root, .sdp-root {
   margin: 0;
   padding: 0;
   overflow: hidden;
-  overscroll-behavior: none;
+  overscroll-behavior-y: auto;
+  overscroll-behavior-x: none;
   -webkit-text-size-adjust: 100%;
   -webkit-hyphens: none;
   hyphens: none;
@@ -49,7 +51,8 @@ body, :host, .sdp-root, #root {
   min-width: 0;
   min-height: 0;
   overflow: hidden;
-  overscroll-behavior: none;
+  overscroll-behavior-y: auto;
+  overscroll-behavior-x: none;
   container-type: inline-size;
   container-name: sdp-arrel;
 }
@@ -245,6 +248,19 @@ button, .btn, .nav-item, .sp-card-action, .page-btn,
   min-height: var(--sdp-touch);
 }
 
+/* ── FEEDBACK TÀCTIL GLOBAL (Mestre 261004, iPad UX) ── */
+button:active:not(:disabled), .btn:active:not(:disabled), .nav-item:active, .sp-card-action:active, .page-btn:active,
+.download-card-btn:active, .audio-play-btn:active, .file-item-action:active, summary.accordion-header:active,
+.sp-card-link-overlay:active, .sidebar-control-btn:active, .mobile-nav__cta:active, a[href]:active {
+  transform: scale(var(--sdp-escala-premut));
+  transition: transform var(--sdp-durada-premut) var(--sdp-corba-eixida), opacity var(--sdp-durada-premut) var(--sdp-corba-eixida);
+}
+/* Excepcions on el scale trencava el flux en línia */
+p a[href]:active, li a[href]:active, .sdp-prose a[href]:active, .sdp-taula a[href]:active {
+  transform: none;
+  opacity: 0.7;
+}
+
 a { color: var(--sdp-accent-titol); text-decoration: none; transition: color var(--sdp-t); }
 /* Fase B · el hover només amb ratolí: al tàctil no es queda enganxat. */
 @media (hover: hover) and (pointer: fine) {
@@ -381,6 +397,31 @@ section.design-block > p:first-of-type {
 .sdp-tipo-amplada--semi { font-stretch: var(--sdp-font-amplada-semi); }
 .sdp-tipo-amplada--estreta { font-stretch: var(--sdp-font-amplada-estreta); }
 
+}
+
+/* PROSA · RUTES LLARGUES (correcció final, ordre del Mestre, 261004). Un
+   enllaç o un codi sense espais (una ruta com
+   02_saber/architecture/260913_0635_….md) no tenia per on partir-se i
+   passava de la vora: al detall de la Wiki (overflow-x: hidden) quedava
+   tallat i no es podia llegir. Ara es partix on calga.
+   Arreglo dels verificadors (261004): break-word partix a la vora de la
+   línia (la caixa de contingut de la prosa), no a la vora visible del
+   detall. Un enllaç o un codi que passava de la línia però cabia dins del
+   farciment de l'article no estava tallat, i ara també es partix: en els 75
+   documents de la Wiki, 13 elements a 375, 42 a 768, 103 a 1024 i 23 a 1280
+   (barra de scroll clàssica). Cap CSS partix només el que talla la vora
+   visible: decisió pendent del Mestre (acceptar-ho, limitar-ho a `a`, o una
+   altra). Xifres senceres al RELLEU_correccio_index-wiki.txt de la nit.
+   break-word i no anywhere (l'ordre deia anywhere «o l'equivalent»):
+   anywhere també rebaixa l'amplària mínima, i en mòbil les taules de la
+   prosa, que són desplaçadors horitzontals, s'estretaven i creixien d'alt
+   (00_portada a 375: de 528x1329 a 427x2313) sense que res s'hi tallara.
+   break-word només partix el que no cap en la línia: les taules no canvien
+   (comprovat als 75 documents de la Wiki a 375, 768, 1024 i 1280).
+   Especificitat zero: qualsevol component la pot desfer. Capa components,
+   la de tota regla nova. */
+@layer components {
+  :where(.sdp-prose) :where(a, code) { overflow-wrap: break-word; }
 }
 
 /* MOVIMENT REDUÏT · l'únic apagador global (pla 261004_0050, Fase A). El de

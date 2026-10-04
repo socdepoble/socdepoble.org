@@ -87,6 +87,28 @@ test('pàgina sense imatge, etiquetes, data ni chrome: les reserves de sempre', 
   expect(mocks.seo).toHaveBeenCalledWith(expect.objectContaining({ description: 'Només entradilla' }));
 });
 
+/* T8 (ordre del Mestre, 261004, prompt 261004_0515 §6) · `accioPrincipal`
+   arriba a la UniversalPage (la ranura de PageFrame davall de l'H1) NOMÉS
+   quan n'hi ha: amb null, cap clau nova, i les props són les exactes de
+   sempre (Llei del Píxel, les proves d'igualtat de dalt). */
+test('T8 · accioPrincipal passa a la UniversalPage només quan n’hi ha', () => {
+  const pagina = PAGE_COPY.anima;
+  render(<TextSection page={pagina} pageKey="anima" />);
+  const senseAccio = mocks.props;
+  expect(Object.hasOwn(senseAccio, 'accioPrincipal')).toBe(false);
+  cleanup();
+  render(<TextSection page={pagina} pageKey="anima" accioPrincipal={null} />);
+  expect(mocks.props).toEqual(senseAccio);
+  expect(Object.hasOwn(mocks.props, 'accioPrincipal')).toBe(false);
+  cleanup();
+  const accio = <a href="/notes" className="sdp-boto">Publicar</a>;
+  render(<TextSection page={pagina} pageKey="anima" accioPrincipal={accio} />);
+  expect(mocks.props.accioPrincipal).toBe(accio);
+  const resta = { ...mocks.props };
+  delete resta.accioPrincipal;
+  expect(resta).toEqual(senseAccio);
+});
+
 test('el chrome del copy mana i els fills van davall del text', () => {
   const { container } = render(
     <TextSection page={{ title: 'Legal', html: '<p>Text</p>', chrome: 'context', date: '2026-09-01T10:30:00.000Z' }} pageKey="legal">

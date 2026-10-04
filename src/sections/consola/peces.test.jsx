@@ -22,7 +22,12 @@ afterEach(cleanup);
 /* La recepta del Panell de Control (src/sections/control/ControlSection.jsx):
    UniversalCard «action», icona lucide de 40 px amb traç 1,5, títol h3 i la
    descripció com a subtítol. Cap variant: només `sdp-consola__quieta` quan
-   la targeta no obri res, perquè no pretenga ser clicable. */
+   la targeta no obri res, perquè no pretenga ser clicable.
+   Ordre del Mestre, 261004 (xat: cap xifra solta) · TargetaResum, Xifra i
+   useTargetesQueObrin són OBSOLETS: cap pàgina de la Consola no els pinta
+   (ConsolaSection.test.jsx · capXifraSolta ho vigila). Estes proves només
+   guarden el que fan mentre es conserven al codi; no autoritzen a fer-los
+   servir. */
 function esTargetaDeControl(article, { quieta = false } = {}) {
   expect(article.className).toBe(quieta ? 'sp-card sp-card--action sdp-consola__quieta' : 'sp-card sp-card--action');
   const icona = article.querySelector('.sp-card-heading-with-icon .sp-card-title-icon svg');
@@ -77,42 +82,68 @@ test('Xifra és una targeta de Control amb la xifra de títol i l’etiqueta de 
   expect(document.querySelector('.sdp-consola__xifra')).toBeNull();
 });
 
-/* La targeta explicativa és la UniversalCard sencera del Mur: boina taronja
-   (autoria, font i hora), icona a la insígnia lateral en lloc de foto,
-   títol, subtítol, entradilla, dada viva, etiquetes i peu blau. */
-test('TargetaConsola amb destí: anatomia completa de la targeta mestra i peu amb Compartir i Obrir', () => {
+/* Ordre del Mestre, 261004 (xat: tota targeta amb boina i pàgina pròpia) ·
+   La targeta explicativa porta la boina de l'autor real, l'entitat Sóc de
+   Poble (logo, nom i poble; l'autor porta a /projecte), mai «Consola
+   Termodinàmica» ni «Font: …», i la data a la pastilla de la boina (T51):
+   un <time> sense clic, perquè una instantània de dades no és cap
+   publicació del Calendari. Icona a la insígnia lateral en lloc de foto,
+   títol, subtítol, entradilla, dada viva, etiquetes, tota clicable i el peu
+   de la barra blava amb el verb canònic.
+   Derogat per l'ordre del Mestre del 261004 (xat: tota targeta amb boina i
+   pàgina pròpia): la targeta de sistema sense boina i amb la data a
+   l'última línia del cos (prompt 261004_0515, §6/T8). Ja ho estava el peu
+   «Compartir + Obrir». */
+test('TargetaConsola amb destí: boina de Sóc de Poble amb la data, tota clicable i el peu de la barra blava', () => {
   render(<TargetaConsola icona={Puzzle} titol="Inventari de skills" subtitol="Per a saber quines skills cal cuidar"
     entradilla="Semàfor de cada skill segons els avisos que en fa el Mapa del Mas." dada="22 skills al Mapa"
-    font="Font: el Mapa del Mas" generat="2026-09-25T13:12:23.715Z" a="/consola/inventari"
+    generat="2026-09-25T13:12:23.715Z" a="/consola/inventari"
     etiquetes={[{ text: 'Important', to: 'avis' }]} />);
   const article = screen.getByRole('article');
   expect(article.className).toBe('sp-card sdp-consola__targeta');
   const ordre = [...article.children].map((el) => el.className.split(' ')[0]);
   expect(ordre).toEqual(['sp-card-header', 'sp-card-link-overlay', 'sp-card-body', 'sp-card-footer']);
-  expect(article.querySelector('.sp-card-author-name').textContent).toBe('Consola Termodinàmica');
-  expect(article.querySelector('.sp-card-author-location').textContent).toBe('Font: el Mapa del Mas');
-  expect(article.querySelector('time.btn-date-time').getAttribute('datetime'))
-    .toBe(dataHoraDeBarra({ modificat: '2026-09-25T13:12:23.715Z' }).dateTime);
+  // La boina és la de l'entitat: enllaç a la pàgina del projecte, logo, nom i poble.
+  const autor = article.querySelector('.sp-card-header > a.sp-card-author-link');
+  expect(autor.getAttribute('href')).toBe('/projecte');
+  expect(autor.querySelector('img.sp-card-avatar').getAttribute('src')).toBe('/assets/system/ui/logo-socdepoble-cuadrat-verd.svg');
+  expect(autor.querySelector('.sp-card-author-name').textContent).toBe('Sóc de Poble');
+  expect(autor.querySelector('.sp-card-author-location').textContent).toBe('La Torre de les Maçanes');
+  expect(screen.getByRole('link', { name: /Sóc de Poble/ })).toBe(autor);
+  expect(article.textContent).not.toContain('Consola Termodinàmica');
+  expect(article.textContent).not.toContain('Font:');
+  // La data, a la pastilla de la boina: un <time> sense clic, amb hora i dia.
+  const { time, date, dateTime } = dataHoraDeBarra({ modificat: '2026-09-25T13:12:23.715Z' });
+  const pastillaBoina = article.querySelector('.sp-card-header .sp-card-meta > time.btn-date-time');
+  expect(pastillaBoina.getAttribute('datetime')).toBe(dateTime);
+  expect([...pastillaBoina.querySelectorAll('span')].map((s) => s.textContent)).toEqual([time, date]);
+  expect(article.querySelector('.sp-card-header button')).toBeNull();
   expect(article.querySelector('.sp-card-media-container')).toBeNull();
   const icona = article.querySelector('.sp-card-body.has-aside .sp-card-calendar-badge svg');
   expect([icona.getAttribute('width'), icona.getAttribute('stroke-width'), icona.getAttribute('aria-hidden')]).toEqual(['48', '1.5', 'true']);
   expect(article.querySelector('h3.sp-card-title').textContent).toBe('Inventari de skills');
   expect(article.querySelector('h4.sp-card-subtitle').textContent).toBe('Per a saber quines skills cal cuidar');
+  // El cos ja no porta cap línia de data: només l'entradilla i la dada viva.
   expect([...article.querySelectorAll('.sp-card-text > p')].map((p) => [p.className, p.textContent])).toEqual([
     ['', 'Semàfor de cada skill segons els avisos que en fa el Mapa del Mas.'],
     ['sdp-consola__dada', '22 skills al Mapa']
   ]);
+  expect(article.querySelector('.sp-card-text time, .sdp-consola__data')).toBeNull();
   const etiquetes = [...article.querySelectorAll('.sp-card-label')];
   expect(etiquetes).toHaveLength(1);
   expect(etiquetes[0].className).toBe('sp-card-label sdp-insignia sdp-insignia--avis');
   expect(etiquetes[0].textContent).toBe('Important');
+  // Tota la targeta porta a la seua pàgina.
   expect(screen.getByRole('link', { name: 'Inventari de skills' }).getAttribute('href')).toBe('/consola/inventari');
   const peu = article.querySelector('.sp-card-footer');
-  expect([...peu.querySelectorAll('button')].map((b) => b.getAttribute('aria-label')))
-    .toEqual(['Compartir Inventari de skills', 'Obrir: Inventari de skills']);
-  // «Obrir» porta de veritat a la pàgina.
+  expect([...peu.querySelectorAll('button')].map((b) => b.getAttribute('aria-label'))).toEqual([
+    'Traduir Inventari de skills', 'Comentar Inventari de skills', 'Compartir Inventari de skills', 'Connectar amb Inventari de skills'
+  ]);
+  expect(peu.querySelector('.sp-card-connect-text').textContent).toBe('Connectar');
+  expect(peu.textContent).not.toMatch(/Obrir|Veure detall/);
+  // Connectar porta de veritat a la pàgina de la targeta.
   navega.mockClear();
-  screen.getByRole('button', { name: 'Obrir: Inventari de skills' }).click();
+  screen.getByRole('button', { name: 'Connectar amb Inventari de skills' }).click();
   expect(navega).toHaveBeenCalledWith('/consola/inventari');
 });
 
@@ -232,30 +263,51 @@ test('T3 · la llista d’estats i cada element es reinicien a @layer components
   expect(`${LLISTA} ${ELEMENT}`).not.toMatch(/\d+px|#[0-9a-f]{3,6}\b/i);
 });
 
-test('TargetaConsola amb onObri: sense Compartir, el peu diu «Veure detall» i obri el mateix', () => {
+/* Derogat per l'ordre del Mestre del 261004 (xat: tota targeta amb boina i
+   pàgina pròpia): la línia de data del cos i les seues regles. La data
+   torna a la pastilla de la boina: cap regla de .sdp-consola__data queda
+   viva al full (cap targeta la pinta). */
+test('261004 · sense línia de data al cos, el full ja no en porta cap regla', () => {
+  const moduls = cssNet('src/css/modules.css');
+  expect(moduls).not.toMatch(/\.sdp-consola__data(?![\w-])/);
+});
+
+/* Derogat per l'ordre del Mestre del 261004 (prompt 261004_0515): el peu
+   «Veure detall» sense Compartir. Ara és el de la barra blava, i Connectar
+   obri el mateix detall que la targeta. */
+test('TargetaConsola amb onObri: tota la targeta obri el detall, i Connectar també', () => {
   const onObri = vi.fn();
   render(<TargetaConsola icona={Puzzle} titol="Consums" subtitol="Per a saber qui gasta tòkens i quants"
     entradilla="Tòkens d’entrada i d’eixida que cada agent anota al diari de sessió." dada="3 registres"
-    font="Font: consola.json" onObri={onObri} />);
-  expect(screen.queryByRole('link')).toBeNull();
-  expect(screen.queryByRole('button', { name: /^Compartir/ })).toBeNull();
+    onObri={onObri} />);
+  // Cap enllaç de tota la targeta: és un botó. L'únic enllaç és el de l'autor de la boina.
+  expect(screen.getAllByRole('link').map((a) => a.getAttribute('href'))).toEqual(['/projecte']);
   expect([...document.querySelectorAll('.sp-card-footer button')].map((b) => b.getAttribute('aria-label')))
-    .toEqual(['Veure detall: Consums']);
-  // Sense `creat` ni instantània la targeta no té cap font, i no se n'inventa cap.
-  expect(document.querySelector('.btn-date-time')).toBeNull();
+    .toEqual(['Traduir Consums', 'Comentar Consums', 'Compartir Consums', 'Connectar amb Consums']);
+  // Sense `creat` ni instantània la targeta no té cap data, i no se n'inventa
+  // cap: la boina porta només l'autor.
+  expect(document.querySelector('.btn-date-time, time')).toBeNull();
+  expect(document.querySelector('.sp-card-header .sp-card-author-name').textContent).toBe('Sóc de Poble');
   screen.getByRole('button', { name: 'Consums' }).click();
-  screen.getByRole('button', { name: 'Veure detall: Consums' }).click();
+  screen.getByRole('button', { name: 'Connectar amb Consums' }).click();
   expect(onObri).toHaveBeenCalledTimes(2);
 });
 
-test('TargetaConsola sense acció: explicació quieta, sense peu buit', () => {
+/* Ordre del Mestre, 261004 (xat: cap xifra solta) · cap pàgina de la Consola
+   no pinta ja una targeta quieta: el pols, sense consola.json, continua
+   portant a la pàgina del seu panell (ConsolaSection.test.jsx). Esta prova
+   només guarda que el component no pinta un peu buit si algú no li dona
+   destí. */
+test('TargetaConsola sense acció: explicació quieta, sense peu buit; la boina sí que enllaça a l’autor', () => {
   render(<TargetaConsola icona={Puzzle} titol="Càrrega documental" subtitol="Per a saber quan s’embossa el context"
-    entradilla="Compta els artefactes actius del cervell." dada="Recompte encara no disponible" font="Font: consola.json" />);
+    entradilla="Compta els artefactes actius del cervell." dada="Recompte encara no disponible" />);
   const article = screen.getByRole('article');
   expect(article.className).toBe('sp-card sdp-consola__targeta sdp-consola__quieta');
   expect(article.querySelector('.sp-card-footer')).toBeNull();
+  expect(article.querySelector('.sp-card-link-overlay')).toBeNull();
   expect(screen.queryByRole('button')).toBeNull();
-  expect(screen.queryByRole('link')).toBeNull();
+  // L'únic enllaç és el de l'autor (la boina de sempre), mai la targeta sencera.
+  expect(screen.getAllByRole('link').map((a) => a.getAttribute('href'))).toEqual(['/projecte']);
 });
 
 /* T51 · Regla del Mestre (260928): cap document sense data. La targeta porta
@@ -263,18 +315,24 @@ test('TargetaConsola sense acció: explicació quieta, sense peu buit', () => {
    instantània (`generat`). T4 del prompt 1140 (ordre del Mestre, 261001: la
    pastilla completa, Data + Hora) · La redacció del copy (mitjanit UTC
    exacta) és un instant i es pinta amb l'hora i el dia locals, com la
-   instantània; abans (D5) era un dia sol sense hora. */
-const pastilla = () => [...document.querySelectorAll('.sp-card-header .btn-date-time span')].map((s) => s.textContent);
+   instantània; abans (D5) era un dia sol sense hora.
+   Ordre del Mestre, 261004 (xat: tota targeta amb boina i pàgina pròpia) ·
+   La data torna a la pastilla de la boina: hora i dia, en este ordre, dins
+   d'un <time> sense clic. */
+const pastilla = () => [...(document.querySelector('.sp-card-header time.btn-date-time')?.querySelectorAll('span') ?? [])]
+  .map((s) => s.textContent);
 
 test('T51 · TargetaConsola sense instantània: la data de redacció, sencera (T4: hora i dia locals)', () => {
   render(<TargetaConsola icona={Puzzle} titol="Consums" subtitol="Per a saber qui gasta tòkens i quants"
-    entradilla="Tòkens d’entrada i d’eixida." dada="Sense mesura" font="Font: consola.json"
+    entradilla="Tòkens d’entrada i d’eixida." dada="Sense mesura"
     creat="2026-09-24T00:00:00.000Z" generat={null} />);
   expect(pastilla()).toEqual(['02:00', '24/09/26']);
-  expect(document.querySelector('time.btn-date-time').getAttribute('datetime')).toBe('2026-09-24T02:00:00+02:00');
+  expect(document.querySelector('.sp-card-header time.btn-date-time').getAttribute('datetime')).toBe('2026-09-24T02:00:00+02:00');
   // La mateixa font, el mateix lector que la resta de pastilles.
   const { time, date } = dataHoraDeBarra({ creat: '2026-09-24T00:00:00.000Z' });
   expect([time, date].filter(Boolean)).toEqual(pastilla());
+  // Al cos no hi ha cap data: és a la boina.
+  expect(document.querySelector('.sp-card-text time')).toBeNull();
 });
 
 test('T51 · TargetaConsola amb instantània més recent: mana la instantània; amb una instantània invàlida, la redacció', () => {
@@ -282,12 +340,12 @@ test('T51 · TargetaConsola amb instantània més recent: mana la instantània; 
   const d = new Date(iso);
   const dos = (n) => String(n).padStart(2, '0');
   const { unmount } = render(<TargetaConsola icona={Puzzle} titol="Rebuts" subtitol="Per a comprovar"
-    entradilla="Cada lectura deixa un rebut." dada="2 rebuts" font="Font: consola.json"
+    entradilla="Cada lectura deixa un rebut." dada="2 rebuts"
     creat="2026-09-24T00:00:00.000Z" generat={iso} />);
   expect(pastilla()).toEqual([`${dos(d.getHours())}:${dos(d.getMinutes())}`, `${dos(d.getDate())}/${dos(d.getMonth() + 1)}/26`]);
   unmount();
   render(<TargetaConsola icona={Puzzle} titol="Rebuts" subtitol="Per a comprovar"
-    entradilla="Cada lectura deixa un rebut." dada="2 rebuts" font="Font: consola.json"
+    entradilla="Cada lectura deixa un rebut." dada="2 rebuts"
     creat="2026-09-24T00:00:00.000Z" generat="no és una data" />);
   // T4 · La redacció (mitjanit UTC) és un instant: hora i dia locals.
   expect(pastilla()).toEqual(['02:00', '24/09/26']);
@@ -300,17 +358,17 @@ test('la targeta explicativa que obri un desplegable ho diu també des del peu',
     return (
       <div className="sdp-card-grid" ref={graella}>
         <TargetaConsola icona={Puzzle} titol="Rebuts" subtitol="Per a comprovar què ha llegit l’eixam"
-          entradilla="Cada lectura sencera deixa un rebut." dada="2 rebuts" font="Font: consola.json" onObri={() => {}} />
+          entradilla="Cada lectura sencera deixa un rebut." dada="2 rebuts" onObri={() => {}} />
       </div>
     );
   }
   const { rerender } = render(<Graella obert={false} />);
-  for (const nom of ['Rebuts', 'Veure detall: Rebuts']) {
+  for (const nom of ['Rebuts', 'Connectar amb Rebuts']) {
     const boto = screen.getByRole('button', { name: nom });
     expect([boto.getAttribute('aria-controls'), boto.getAttribute('aria-expanded')]).toEqual(['pols-rebuts', 'false']);
   }
   rerender(<Graella obert />);
-  expect(screen.getByRole('button', { name: 'Veure detall: Rebuts' }).getAttribute('aria-expanded')).toBe('true');
+  expect(screen.getByRole('button', { name: 'Connectar amb Rebuts' }).getAttribute('aria-expanded')).toBe('true');
 });
 
 test('el mode privacitat amaga les rutes, dins i fora del codi', () => {

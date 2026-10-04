@@ -14,6 +14,18 @@
  *              la línia de davall, visible i al nom accessible
  *   peu        un node de l'app, si en vol (p. ex. el teclat de cobrar)
  * Presentacional: les línies arriben ja calculades i els gestos tornen a l'app.
+ *
+ * Ordre del Mestre, 261004 (prompt 261004_0515, «no inventar targetes») ·
+ * forma="targetes" (OPCIONAL): les mateixes línies que les rajoles, però com
+ * a UniversalCard (TargetesArticles de ColumnaCataleg.jsx): el toc les marca,
+ * una pendent diu aria-pressed i porta el text d'estat en etiqueta, i una de
+ * 'fet' o 'anullat' el porta a la línia de davall. La icona del quadrat és la
+ * de la línia (linia.icona, si l'app la vestix). Sota el resum (un h3), el
+ * nom de cada targeta és un h4. Sense la prop, les línies o les rajoles de
+ * sempre, byte a byte (Llei del Píxel).
+ * REGLA D'OR 1 (ordre del Mestre, 261004) · La boina de cada targeta és
+ * linia.autoria ({ nom, href, avatar, poble }), si l'app la vestix
+ * (TargetesArticles). Les línies i les rajoles no la llegixen.
  */
 import { ArrowLeft, Plus } from 'lucide-react';
 import AppGridColumn from '../../../components/layout/AppGridColumn.jsx';
@@ -21,6 +33,7 @@ import {
   BarraResum, EstatBuit, GraellaArticles, LiniesColleccio, MarcColumna, TEXTOS_ESTAT_LINIA, estatLinia
 } from '../../../components/PedraSeca/index.js';
 import { useClosaAplicacio } from '../../plataforma/index.js';
+import { TargetesArticles } from './ColumnaCataleg.jsx';
 import { useVistesEsquelet } from './vistes.js';
 
 const TEXTOS_COLLECCIO = Object.freeze({
@@ -70,7 +83,28 @@ export function ColumnaColleccio({
   return (
     <MarcColumna capcalera={<AppGridColumn titol={titol} startActions={startActions} />}
       eines={resum ? <BarraResum {...resum} forma="capcalera" /> : null} peu={peu} etiqueta={titol}>
-      {forma === 'rajoles' ? (
+      {forma === 'targetes' ? (
+        <TargetesArticles
+          elements={llista.map((linia) => ({
+            /* Ordre del Mestre, 261004 (integració final, F04) · El subtítol i l'entradeta que l'app
+               vestix a la línia (linia.subtitol, linia.entradeta), com al catàleg. */
+            article: {
+              ...comArticle(linia, { ...TEXTOS_ESTAT_LINIA, ...textosLinies }),
+              icona: linia.icona,
+              autoria: linia.autoria,
+              subtitol: linia.subtitol,
+              entradeta: linia.entradeta
+            }
+          }))}
+          etiqueta={titol}
+          nivellTargeta={resum ? 'h4' : 'h3'}
+          commutable
+          textos={{ 'en-colleccio': t.enColleccio }}
+          onTria={onTria ? (article) => onTria(perId.get(article.id)) : undefined}
+          onAccioSecundaria={onEdita ? (article) => onEdita(perId.get(article.id)) : undefined}
+          buit={buit}
+        />
+      ) : forma === 'rajoles' ? (
         <GraellaArticles
           articles={llista.map((linia) => comArticle(linia, { ...TEXTOS_ESTAT_LINIA, ...textosLinies }))}
           etiqueta={titol}

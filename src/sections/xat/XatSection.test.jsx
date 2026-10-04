@@ -215,6 +215,28 @@ test('selecció en ordre i navegació després de confirmar', async () => {
   await waitFor(() => expect(mocks.navigate).toHaveBeenCalledWith('/notes?nota=new-note'));
 });
 
+/* Higiene d'amfitrió (ordre del Mestre, 261004) · Guardar el retall navega a
+   la nota i prou: cap CustomEvent a window amb la nota al detail (ningú no
+   l'escoltava, i dins de WordPress el rebia la pàgina de l'amfitrió). */
+test('guardar el retall no llança cap esdeveniment amb la nota a window', async () => {
+  const nota = { id: 'new-note', content: 'Contingut del retall' };
+  mocks.creaNota.mockResolvedValue(nota);
+  const aWindow = vi.spyOn(window, 'dispatchEvent');
+  try {
+    render(<XatSection />);
+    fireEvent.click(screen.getByRole('button', { name: 'Opcions de la conversa' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Seleccionar missatges' }));
+    fireEvent.click(screen.getAllByRole('checkbox')[0]);
+    fireEvent.click(screen.getByRole('button', { name: /Enviar al Bloc de Notes/ }));
+    await waitFor(() => expect(mocks.navigate).toHaveBeenCalledWith('/notes?nota=new-note'));
+    const ambLaNota = aWindow.mock.calls.map(([ev]) => ev)
+      .filter((ev) => ev?.type === 'sdp:note-created' || ev?.detail?.note === nota);
+    expect(ambLaNota).toEqual([]);
+  } finally {
+    aWindow.mockRestore();
+  }
+});
+
 test('retall.js saneja i escapa correctament', () => {
   const fil = { title: '<img>' };
   const missatges = [{ author: '<b>', text: '<script>alert(1)</script>\n&' }];
@@ -1680,12 +1702,13 @@ test('3B · una conversa oberta des de la vista de comunitats la conserva i la f
 });
 
 /* D17 (ordre del Mestre, 260930): Telefonades porta el seu avís propi, al cos
-   i al toast dels controls inerts; Multimèdia i Destacats, el genèric i el
-   toast «En construcció». */
+   i al toast dels controls inerts; Destacats, el genèric i el toast «En
+   construcció». Contingut multimèdia ja no és a esta llista: derogat per
+   l'ordre del Mestre del 261004 (prompt 261004_0515); és operativa i les
+   seues proves són les de «T5 · ?vista=multimedia» de baix. */
 const AVIS_D17 = 'Aquest és un projecte lliure CC. Aquesta funció està prevista per a quan puguem mantenir-la econòmicament.';
 test.each([
   ['telefonades', 'Telefonades', 'lucide-phone', AVIS_D17, AVIS_D17],
-  ['multimedia', 'Contingut multimèdia', 'lucide-image', 'Encara no està disponible', 'En construcció'],
   ['destacats', 'Destacats', 'lucide-star', 'Encara no està disponible', 'En construcció']
 ])('3B · ?vista=%s: fila de títol calcada, controls inerts que avisen i la dreta buida', (vista, titol, icona, avis, toast) => {
   mocks.threadId = null;
@@ -1745,12 +1768,90 @@ test('3B · cada vista porta els controls de la seua captura', () => {
   const segments = within(mm).getByRole('group', { name: 'Tipus de contingut' });
   expect(within(segments).getAllByRole('button').map((b) => [b.textContent, b.getAttribute('aria-pressed')]))
     .toEqual([['Fitxers', 'true'], ['Enllaços', 'false'], ['Documents', 'false']]);
+  /* Derogat per l'ordre del Mestre del 261004 (prompt 261004_0515): els
+     segments ja no són inerts. Un clic canvia la pestanya, sense toast. */
+  expect(within(segments).getAllByRole('button').some((b) => b.hasAttribute('aria-disabled'))).toBe(false);
+  fireEvent.click(within(segments).getByRole('button', { name: 'Enllaços' }));
+  expect(within(segments).getAllByRole('button').map((b) => [b.textContent, b.getAttribute('aria-pressed')]))
+    .toEqual([['Fitxers', 'false'], ['Enllaços', 'true'], ['Documents', 'false']]);
+  expect(mocks.showToast).not.toHaveBeenCalled();
 
   mocks.params = new URLSearchParams({ vista: 'destacats' });
   view.rerender(<XatSection />);
   const dest = screen.getByRole('complementary', { name: 'Destacats' });
   expect(within(dest).getByRole('button', { name: 'Editar' }).classList.contains('sdp-xat-vista__pindola')).toBe(true);
   expect(within(dest).getByRole('searchbox', { name: 'Cerca' }).getAttribute('aria-disabled')).toBe('true');
+});
+
+/* Ordre del Mestre del 261004 (prompt 261004_0515, T5) · Contingut multimèdia
+   operativa: els enllaços dels missatges carregats (getThreadMessages), el
+   botó germà obri la conversa i conserva la vista, la fletxa hi torna, i
+   Fitxers diu que els adjunts arriben amb F1. La lupa, Ordena i Selecciona
+   continuen dient «En construcció». */
+test('T5 · ?vista=multimedia: Enllaços amb dades reals, i el botó de la conversa conserva la vista', () => {
+  mocks.threadId = null;
+  mocks.params = new URLSearchParams({ vista: 'multimedia' });
+  mocks.threads = [filsDeMostra()[0]];
+  mocks.messages = [
+    { id: '1', seq: 1, text: 'El programa: https://socdepoble.org/festes', sender: 'other', author: 'Veí', creatAl: fa(1) },
+    { id: '2', seq: 2, text: 'Compte: http://xn--pple-43d.com/entra', sender: 'other', author: 'Veí', creatAl: fa(0) }
+  ];
+  render(<XatSection />);
+  const columna = screen.getByRole('complementary', { name: 'Contingut multimèdia' });
+  /* Verificació «xat» (261004) · La fila de títol que munta XatSection, com feia la fila
+     `multimedia` del test.each de 3B abans de T5: el títol i la seua icona (Image de lucide,
+     l'entrada del rail a ClosCaXat), dins del plec del títol i no entre les accions. */
+  const capcalera = columna.querySelector('.app-grid-col-header');
+  expect(capcalera.querySelector('.app-grid-col-header__titol').textContent).toBe('Contingut multimèdia');
+  expect(capcalera.querySelectorAll('.app-grid-col-header__plec svg.lucide-image')).toHaveLength(1);
+  expect(capcalera.querySelector('.app-grid-col-header__accions svg.lucide-image')).toBeNull();
+  /* Fitxers, per defecte: F0 només envia text. */
+  expect(within(columna).getByRole('region', { name: 'En construcció' }).textContent).toContain('Els adjunts arriben amb la fase F1 del xat');
+  expect(within(columna).getByText('Només es veu el contingut de les converses obertes en esta sessió.')).toBeTruthy();
+
+  fireEvent.click(within(columna).getByRole('button', { name: 'Enllaços' }));
+  const enllacos = within(columna).getAllByRole('link');
+  expect(enllacos.map((a) => [a.getAttribute('href'), a.getAttribute('rel'), a.getAttribute('target')])).toEqual([
+    ['http://xn--pple-43d.com/entra', 'noopener noreferrer', '_blank'],
+    ['https://socdepoble.org/festes', 'noopener noreferrer', '_blank']
+  ]);
+  expect(enllacos.every((a) => a.closest('button') === null)).toBe(true);
+  expect(within(columna).getByRole('note').textContent).toContain('xn--pple-43d.com');
+
+  /* Revisió 261004 (Relleus 4-12) · El nom accessible conté el que es veu:
+     la conversa, qui l'ha compartit i l'hora (WCAG 2.5.3). */
+  const [obri] = within(columna).getAllByRole('button', { name: /^Obri la conversa de Conversa · Veí \S/ });
+  fireEvent.click(obri);
+  expect(mocks.navigate).toHaveBeenLastCalledWith('/xat/a?vista=multimedia');
+  expect(mocks.showToast).not.toHaveBeenCalled();
+
+  /* La lupa encara no fa res, i ho diu. */
+  fireEvent.click(within(columna.querySelector('.app-grid-col-header')).getByRole('button', { name: 'Cerca' }));
+  expect(mocks.showToast).toHaveBeenLastCalledWith('En construcció', 'info');
+  /* La dreta, el document per defecte; el rail marca la vista. */
+  expect(document.getElementById('app-grid-main').querySelector('[data-testid="document-per-defecte"]')).toBeTruthy();
+  expect(within(document.getElementById('app-grid-sidebar')).getByRole('button', { name: 'Contingut multimèdia' }).getAttribute('aria-current')).toBe('page');
+});
+
+test('T5 · en estret, la conversa oberta des de Contingut multimèdia ve a pantalla i la fletxa torna a la vista', async () => {
+  mocks.amplada = 375;
+  mocks.threadId = 'a';
+  mocks.params = new URLSearchParams({ vista: 'multimedia' });
+  render(<XatSection />);
+  await waitFor(() => expect(document.getElementById('app-grid-main').getAttribute('data-obert')).toBe('true'));
+  fireEvent.click(screen.getByRole('button', { name: 'Torna a la llista' }));
+  expect(mocks.navigate).toHaveBeenLastCalledWith('/xat?vista=multimedia');
+});
+
+test('T5 · al Control del xat, «Multimèdia, enllaços i documents» porta a la vista nova', () => {
+  render(<XatControlSection />);
+  fireEvent.click(screen.getByRole('button', { name: /Multimèdia, enllaços i documents/ }));
+  expect(mocks.navigate).toHaveBeenLastCalledWith('/xat?vista=multimedia');
+  /* No s'obri cap panell «pendent» a la dreta. */
+  expect(screen.queryByText(/Esta opció encara no està disponible/)).toBeNull();
+  /* Les altres opcions continuen obrint-se a la dreta. */
+  fireEvent.click(screen.getByRole('button', { name: /Missatges temporals/ }));
+  expect(screen.getByRole('heading', { level: 2, name: 'Missatges temporals' })).toBeTruthy();
 });
 
 test('3B · entrar en una vista deixa la cerca; una vista desconeguda és la llista de sempre', () => {

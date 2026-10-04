@@ -7,15 +7,15 @@
  * són exactament les mateixes.
  */
 import {
-  Activity, AppWindow, BookOpen, Boxes, Calculator, CalendarDays, ChartColumn, ChefHat, ClipboardList, Coffee,
-  CupSoda, Droplet, FileText, HeartHandshake, HeartPulse, Inbox, LayoutDashboard, LayoutGrid, NotebookPen,
-  Package, Phone, Pill, Puzzle, Receipt, Settings, ShoppingCart, Stethoscope, Store, Users, Utensils, Wrench
+  Activity, AppWindow, BookOpen, Boxes, Building2, Calculator, CalendarDays, ChartColumn, ChefHat, ClipboardList, Coffee, Contact,
+  CupSoda, Droplet, FileSpreadsheet, FileText, HeartHandshake, HeartPulse, Inbox, Landmark, LayoutDashboard, LayoutGrid, NotebookPen,
+  Package, Percent, Phone, Pill, Puzzle, Receipt, ScanLine, Settings, ShoppingCart, Stethoscope, Store, Users, Utensils, Wrench
 } from 'lucide-react';
 
 export const ICONES_APP = Object.freeze({
-  Activity, AppWindow, BookOpen, Boxes, Calculator, CalendarDays, ChartColumn, ChefHat, ClipboardList, Coffee,
-  CupSoda, Droplet, FileText, HeartHandshake, HeartPulse, Inbox, LayoutDashboard, LayoutGrid, NotebookPen,
-  Package, Phone, Pill, Puzzle, Receipt, Settings, ShoppingCart, Stethoscope, Store, Users, Utensils, Wrench
+  Activity, AppWindow, BookOpen, Boxes, Building2, Calculator, CalendarDays, ChartColumn, ChefHat, ClipboardList, Coffee, Contact,
+  CupSoda, Droplet, FileSpreadsheet, FileText, HeartHandshake, HeartPulse, Inbox, Landmark, LayoutDashboard, LayoutGrid, NotebookPen,
+  Package, Percent, Phone, Pill, Puzzle, Receipt, ScanLine, Settings, ShoppingCart, Stethoscope, Store, Users, Utensils, Wrench
 });
 
 /** El component d'una icona de la llista; AppWindow si el nom no hi és. */

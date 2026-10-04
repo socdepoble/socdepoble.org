@@ -1,0 +1,20 @@
+RELLEU del front «tauler-gestoria» (onada 2, pas 1 del MAPA) · 261004
+
+Bloc 0 · fet: llegits GESTORIA_REFERENCIA (els quatre principis i les guardes), el MAPA §2 i §4 i les portes (privacitat, qualitat, qualitatPanell, tractors/clausura). Línia base de l'ordre (gestoria + tractors + wiki-de-poble + PaginaApp): 105 fitxers, 2616 verdes, 0 roges.
+
+Bloc 1 · fet:
+  - Nucli pur: gestoria/impostos/nucli/impostos.js (303 i 130, «estimació incompleta» mentre falten dades, mai una xifra sense factures) i gestoria/tauler/nucli/resumTauler.js (caixa real, cobertura, finances dels 30 dies que acaben l'últim dia dels extractes, tresoreria per compte i recompte de concilia.js; c43.js, movimentsBanc.js i concilia.js només importats).
+  - Tractor NOU 'gestoria.tauler' (tractors.js, fitxa fitxes/gestoria_tauler.md, nucli/tractorTauler.js fail-closed). Cap font dels dos signats canvia: les seues empremtes continuen valent (clausura.test.js ho fixa).
+  - Closca tauler/ShellGestoria.jsx: rail de nou mòduls (cinc «en obres» amb el perquè), boina personal a la barra taronja de PaginaApp (identitat de la configuració local que tria la persona, un sol ull amb aria-pressed, data de la lectura), Tauler, Bancs, Impostos i el Full trimestral = ContenidorGestoria sense tocar.
+  - TargetaTauler: UniversalCard amb boina del titular, xifra fora del DOM fins a l'ull, sense Compartir ni Comentar, Traduir que només avisa, tota clicable cap a la seua pàgina (PaginaApp).
+  - PaginaApp: prop opcional barActions (sense, el DOM de sempre).
+  - Muntatge a la Wiki només en DEV; esmenes amb motiu a privacitat.test.js, clausura.test.js, ContenidorGestoria.test.jsx i les dues proves de la Wiki.
+  - CSS en un bloc propi al final de modules.css (dins de @layer components).
+
+Bloc 2 · proves: l'ordre del front, 111 fitxers, 2692 verdes, 0 roges.
+
+Preguntes per al Mestre:
+  - L'ítem de la Wiki continua dient-se «Full trimestral» però ara obri la closca sencera: proposta «Gestoria de Poble».
+  - Dins de la Wiki (D3) la pàgina de la closca va niada dins de la pàgina de l'eina local: dos H1 i dues dobles barres (les de dins no s'enganxen). Ho resol l'opció 2b (/app/gestoria).
+  - El tractor 'gestoria.tauler' necessita la teua signatura al panell de Tractors.
+  - A9 (on porta la boina personal: hui /el-meu-perfil), A10 (el nom «Cobertura»), B6 (dipòsit i capital social, fora).

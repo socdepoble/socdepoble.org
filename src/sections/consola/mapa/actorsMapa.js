@@ -144,6 +144,36 @@ export function xifresDelMas(mapa) {
   };
 }
 
+/**
+ * Ordre del Mestre, 261004 (prompt 261004_0515, §6: cap anomalia del cervell
+ * sense mostrar) · Les anomalies que «El Mas en xifres» diu al tauler,
+ * comptades sobre el Mapa. Una mètrica N/A és null (sense mesura), mai zero.
+ *  · alts: avisos de severitat alta.
+ *  · fossils, malFormades: les mètriques ledger-fossils i ledger-mal-formades.
+ *  · tornsCaducats: torns oberts que han caducat sense tancar.
+ *  · foraDelSegell: SKILL.md fora del segell o divergents (només SKILL.md).
+ *  · orfes: peces sense cap relació declarada o derivada que hi arribe
+ *    (codi 'orfe'); fantasmes: skills que algú nomena i no són al disc
+ *    ('skill-fantasma'). El mateix vocabulari que l'Inventari.
+ */
+export function anomaliesDelMas(mapa) {
+  const mesura = (nom) => mapa.salut.find((m) => m.metrica === nom && m.valor !== 'N/A') ?? null;
+  const ambCodi = (codi) => mapa.avisos.filter((a) => a.codi === codi).length;
+  const fossils = mesura('ledger-fossils');
+  const malFormades = mesura('ledger-mal-formades');
+  const torns = mesura('torns-caducats-oberts');
+  const segell = mesura('segell-skills-coherent');
+  return {
+    alts: mapa.avisos.filter((a) => a.severitat === 'alta').length,
+    fossils: fossils ? fossils.valor : null,
+    malFormades: malFormades ? malFormades.valor : null,
+    tornsCaducats: torns ? torns.numerador : null,
+    foraDelSegell: segell ? segell.denominador - segell.numerador : null,
+    orfes: ambCodi('orfe'),
+    fantasmes: ambCodi('skill-fantasma')
+  };
+}
+
 /* ── Les quatre peces que fan possible un agent atòmic ────────────────────
    T3 (ordre del Mestre, 260930): la pàgina Agents atòmics les pinta i la
    coberta de la seua targeta al tauler en diu l'estat; les dues compten amb

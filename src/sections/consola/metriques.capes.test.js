@@ -32,17 +32,35 @@ test('T2 · el bloc de mètriques esquiva la insígnia flotant (clear) i viu a @
   expect(blocDe(moduls, '@layer components {', METRIQUES)).toContain(METRIQUES);
 });
 
+/* Derogat per l'ordre del Mestre del 261004 (barra taronja universal): el
+   marge d'una sola barra, calc(var(--sdp-alt-accio) + var(--sdp-space-4)).
+   Tota pàgina porta ara la blava i la taronja, totes dues sticky i de
+   --sdp-alt-accio: el salt des de l'Índex ha de deixar la mètrica sencera
+   per davall de les dues (verificador de la barra taronja, D1 · Consola). */
+const DUES_BARRES = 'scroll-margin-top: calc(var(--sdp-alt-accio) * 2 + var(--sdp-space-4));';
+
 test('T2 · cada mètrica és un h5 centrat, amb xifres tabulars i tipografia de tokens', () => {
   const regla = blocDe(moduls, '.sdp-consola__metrica {', 'text-align');
   for (const declaracio of [
     'margin: 0;', 'font-size: var(--sdp-text-h5);', 'line-height: var(--sdp-leading-snug);', 'font-weight: 700;',
     'color: var(--sdp-accio-text);', 'text-align: center;', 'font-variant-numeric: tabular-nums;',
-    'scroll-margin-top: calc(var(--sdp-alt-accio) + var(--sdp-space-4));'
+    DUES_BARRES
   ]) expect(regla, declaracio).toContain(declaracio);
   // Pedra Seca: cap valor cru (px, hex) dins de la regla.
   expect(regla).not.toMatch(/\d+px|#[0-9a-f]{3,6}\b/i);
   // Guanya a l'h5 de base.css (legacy) per capa, sense apujar l'especificitat.
   expect(blocDe(moduls, '@layer components {', '.sdp-consola__metrica {')).not.toBe('');
+});
+
+/* Barra taronja universal (261004) · Els desplegables de la Consola i els
+   controls de l'Explorador que reben el focus salten igual que les mètriques:
+   el marge suma les dues barres, i cap regla de la Consola ni de l'Explorador
+   no es queda amb el d'una sola. */
+test('barra taronja universal · desplegables i Explorador deixen lloc a la blava i a la taronja', () => {
+  expect(blocDe(moduls, '.sdp-consola__detall {', 'scroll-margin-top')).toContain(DUES_BARRES);
+  expect(blocDe(moduls, '.sdp-explorador__grup > summary,', 'scroll-margin-top')).toContain(DUES_BARRES);
+  const UNA_BARRA = 'scroll-margin-top: calc(var(--sdp-alt-accio) + var(--sdp-space-4));';
+  expect(moduls).not.toContain(UNA_BARRA);
 });
 
 test('T2 · els nivells 5 i 6 de l’Índex van sagnats, al costat dels altres nivells (@layer legacy)', () => {

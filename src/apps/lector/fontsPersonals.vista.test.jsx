@@ -87,7 +87,10 @@ describe('a la gestió de fonts', () => {
     munta('/app/lector/fonts/colleccio', nav.entorn());
     await screen.findByRole('region', { name: 'Fonts del poble' });
     const personals = await mig().findByRole('list', { name: 'Les teues fonts' });
-    const seguides = mig().getByRole('list', { name: 'Les que seguixes' });
+    /* Derogat per l'ordre del Mestre, 261004 (integració final, arreglo 6) · Les seguides ja no són
+       una llista de TargetesColleccions: són UniversalCard en la graella de Pedra Seca (un grup amb
+       nom, GraellaTargetes). L'ordre que es comprova és el mateix. */
+    const seguides = mig().getByRole('group', { name: 'Les que seguixes' });
     expect(within(seguides).getAllByRole('link').length).toBeGreaterThan(0);
     expect(personals.compareDocumentPosition(seguides) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(mig().getByText('Les teues fonts').compareDocumentPosition(seguides) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();

@@ -41,8 +41,11 @@ const JSX = PRODUCCIO.filter((f) => f.endsWith('.jsx'));
 const especificadors = (codi) => [...codi.matchAll(/(?:from\s+|import\s*\(\s*)['"]([^'"]+)['"]/g)].map((m) => m[1]);
 const senseComentaris = (text) => text.replace(/\/\*[\s\S]*?\*\//g, '');
 
-/* Les úniques classes que l'app escriu: globals de src/css, cap de nova. */
-const CLASSES_GLOBALS = Object.freeze(['sdp-centre', 'lead', 'sdp-boto', 'sdp-boto--primari', 'sdp-boto--secundari', 'sdp-boto--gran', 'sdp-nomes-lector']);
+/* Les úniques classes que l'app escriu: globals de src/css, cap de nova.
+   Derogat per l'ordre del Mestre del 261004 (prompt 261004_0515) · .sdp-centre
+   i .lead eren el títol propi del lector (h2 + entradilla), retirat: el detall
+   és la Pàgina Universal (PaginaApp). La igualtat de davall continua exacta. */
+const CLASSES_GLOBALS = Object.freeze(['sdp-boto', 'sdp-boto--primari', 'sdp-boto--secundari', 'sdp-boto--gran', 'sdp-nomes-lector']);
 
 describe('el cens', () => {
   test('hi són el manifest, el nucli, el port, la llavor, el magatzem, les vistes i les proves', () => {
@@ -121,6 +124,26 @@ describe('estil visual 100% Pedra Seca (ordre del Mestre, 261003)', () => {
     expect(PRODUCCIO.filter((f) => /<ClosaAplicacio\b/.test(llig(f)))).toEqual([`${APP}/AppLector.jsx`]);
   });
 
+  /* Ordre del Mestre, 261004 (prompt 261004_0515, «no inventar targetes»; D-A) · Les notícies són
+     UniversalCard dins de GraellaTargetes, el detall és la Pàgina Universal de les apps (PaginaApp) i
+     el catàleg de fonts va en targetes de l'esquelet. Cap peça pròpia de files o rajoles. */
+  test('no inventar targetes: UniversalCard a les llistes, PaginaApp al detall i cap fila ni rajola pròpia', () => {
+    const importats = (f) => [...llig(f).matchAll(/import\s*\{([^}]+)\}\s*from/g)].flatMap((m) => m[1].split(',').map((s) => s.trim()));
+    const vetades = /^(?:GraellaArticles|LlistaArticles|Rajola|Avatar)$/;
+    expect(PRODUCCIO.flatMap((f) => importats(f).filter((nom) => vetades.test(nom)).map((nom) => `${f}: ${nom}`))).toEqual([]);
+    expect(importats(`${APP}/vistes/Noticies.jsx`)).toEqual(expect.arrayContaining(['UniversalCard', 'GraellaTargetes']));
+    expect(llig(`${APP}/vistes/Noticies.jsx`).match(/<UniversalCard\b/g)).toHaveLength(1);
+    expect(importats(`${APP}/vistes/Lector.jsx`)).toContain('PaginaApp');
+    expect(llig(`${APP}/vistes/Lector.jsx`).match(/<PaginaApp\b/g)).toHaveLength(1);
+    /* Les notícies són de fora: sense telemetria, sense xat comú i amb la imatge privada. */
+    const noticies = llig(`${APP}/vistes/Noticies.jsx`);
+    for (const literal of ['SENSE_TELEMETRIA = Object.freeze({ comptar: false })', 'telemetria={SENSE_TELEMETRIA}', 'objecte={null}', 'imatgePrivada', 'onDateTime={false}']) {
+      expect(noticies, literal).toContain(literal);
+    }
+    const catalegs = PRODUCCIO.flatMap((f) => [...llig(f).matchAll(/<ColumnaCataleg\b(\s+forma="targetes")?/g)].map((m) => [f, Boolean(m[1])]));
+    expect(catalegs).toEqual([[`${APP}/vistes/GestioFonts.jsx`, true]]);
+  });
+
   test('cap HTML cru, tampoc a les proves', () => {
     const cru = new RegExp(['\\binner', 'HTML\\b|\\bouter', 'HTML\\b|insertAdjacent', 'HTML|dangerously', 'SetInnerHTML'].join(''));
     for (const f of DE_LAPP) expect(cru.test(llig(f)), f).toBe(false);
@@ -149,10 +172,12 @@ describe('el manifest i el registre', () => {
     expect(creen).toEqual([`${APP}/AppLector.jsx`]);
   });
 
+  /* Ordre del Mestre, 261004 · La Gestoria entra a la plataforma darrere del
+     Lector: el Lector continua just darrere de la Nevera. */
   test('registreApps.js la registra com a app interna, darrere de la Nevera', () => {
     const registre = llig('src/apps/plataforma/registreApps.js');
     expect(registre).toContain("import manifestLector from '../lector/manifest.js';");
-    expect(registre).toMatch(/MANIFESTS_INTERNS = Object\.freeze\(\[[^\]]*manifestNevera, manifestLector\]\)/);
+    expect(registre).toMatch(/MANIFESTS_INTERNS = Object\.freeze\(\[[^\]]*manifestNevera, manifestLector[\],]/);
   });
 });
 

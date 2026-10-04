@@ -25,15 +25,20 @@ describe('EspecimenTipografia · l’escala que ensenya és la de tokens.css', (
     }
   });
 
-  test('el mínim fluid és la mida fixa P6 del mateix nivell (al mòbil ningú no perd mida)', () => {
-    const parelles = [
-      ['--sdp-fluid-h1', '--sdp-text-h1'], ['--sdp-fluid-h2', '--sdp-text-h2'], ['--sdp-fluid-h3', '--sdp-text-h3'],
-      ['--sdp-fluid-h4', '--sdp-text-h4'], ['--sdp-fluid-h5', '--sdp-text-h5'], ['--sdp-fluid-h6', '--sdp-text-h6'],
-      ['--sdp-fluid-lead', '--sdp-text-lead'], ['--sdp-fluid-cos', '--sdp-text-base']
-    ];
-    for (const [fluid, fix] of parelles) {
-      const min = ESCALA_FLUIDA.find(([nom]) => nom === fluid)[2];
-      expect(min, fluid).toBe(remEnPx(valor(fix)));
+  /* Derogació (acta 261004_1027 i F06 de Codex, 261004): el mínim fluid ja
+     no és la mida fixa P6 del mateix nivell. Es fa més menut perquè el títol
+     càpia sencer a 320px. Es conserven tres coses: la jerarquia (cada
+     encapçalament és més gran que el de davall, a 320 i a 1024px), el sòl del
+     cos de 16px i un creixement de 1.8 com a màxim. */
+  test('el mínim fluid conserva la jerarquia, el sòl de 16px i un creixement de 1.8 com a màxim', () => {
+    const titols = ESCALA_FLUIDA.slice(0, 6);
+    for (let i = 1; i < titols.length; i++) {
+      expect(titols[i - 1][2], `${titols[i - 1][0]} > ${titols[i][0]} a 320px`).toBeGreaterThan(titols[i][2]);
+      expect(titols[i - 1][3], `${titols[i - 1][0]} > ${titols[i][0]} a 1024px`).toBeGreaterThan(titols[i][3]);
+    }
+    for (const [fluid, , min, max] of ESCALA_FLUIDA) {
+      expect(min, `${fluid}: sòl del cos`).toBeGreaterThanOrEqual(16);
+      expect(max / min, `${fluid}: creixement moderat`).toBeLessThanOrEqual(1.8);
     }
   });
 
@@ -59,5 +64,12 @@ describe('EspecimenTipografia · l’escala que ensenya és la de tokens.css', (
     expect(container.querySelectorAll('h1')).toHaveLength(1);
     // Els valors d'abans de la P6 (h1 de 40px, interlineat 1,65) ja no hi són.
     expect(text).not.toMatch(/2\.5rem \(40px\)|1,65|1\.65/);
+  });
+
+  /* Flux lliure (ordre del Mestre del 261004; D-C, xat 06:38): el mostrari
+     no prescriu cap mesura. */
+  test('el mostrari ja no recomana la mesura de 68 caràcters', () => {
+    const { container } = render(<EspecimenTipografia />);
+    expect(container.textContent).not.toMatch(/68 ?(ch|caràcters)/);
   });
 });

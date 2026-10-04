@@ -79,7 +79,13 @@ function Files({ articles, etiqueta, categoriesPerId, onTria, onAccioSecundaria,
   );
 }
 
-/** Les mateixes props que GraellaArticles. */
+/**
+ * Les mateixes props que GraellaArticles.
+ * @deprecated Ordre del Mestre, 261004 (prompt 261004_0515, «no inventar
+ *   targetes»): obsoleta per a codi nou. Una llista de continguts va amb
+ *   UniversalCard (variant 'pla') dins de GraellaTargetes (variant 'llista').
+ *   Salut i el Bar encara la fan servir: no s'esborra.
+ */
 export function LlistaArticles(props) {
   const idPista = useId();
   return pintaArticles(Files, props, idPista, 'sdp-llista-articles__seccions');

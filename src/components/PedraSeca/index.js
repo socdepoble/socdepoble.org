@@ -28,6 +28,11 @@ export { Dropdown, DropdownItem } from './molecules/Dropdown.jsx';
 
 // ── ORGANISMES (Composicions complexes) ────────────────────────────────────
 export { UniversalCard, UniversalCard as Targeta } from './organismes/UniversalCard.jsx';
+/* Ordre del Mestre, 261004 (prompt 261004_0515; D-A) · la graella de targetes de les
+   llistes de les apps i la porta permesa de la Pàgina Universal per a les apps
+   (PageFrame sense traductor ni telemetria). */
+export { GraellaTargetes } from './organismes/GraellaTargetes.jsx';
+export { PaginaApp } from './organismes/PaginaApp.jsx';
 export { UniversalIndicatorCard } from './organismes/UniversalIndicatorCard.jsx';
 export { Dialeg } from './organismes/Dialeg.jsx';
 /* Ordre del Mestre, 261001 · un bloc a tota la caixa de l'App (el Calendari). */
@@ -63,6 +68,8 @@ export { Histograma, nivellHistograma } from './organismes/Histograma.jsx';
 
 // ── ESQUELET DE CATÀLEG I COL·LECCIÓ (ordre del Mestre, 261002: sinergies T4/T8;
 //    un sol esquelet per al TPV del bar i La Compra; estils a catalegColleccio.css) ──
+/* Ordre del Mestre, 261004 · GraellaArticles i LlistaArticles són obsoletes per a codi
+   nou (UniversalCard + GraellaTargetes). Salut i el Bar encara les fan servir: no s'esborren. */
 export { GraellaArticles } from './organismes/GraellaArticles.jsx';
 export { LlistaArticles } from './organismes/LlistaArticles.jsx';
 export { SeccionsCategoria, SelectorCategoria, OrdenaCategories } from './organismes/SeccionsCategoria.jsx';

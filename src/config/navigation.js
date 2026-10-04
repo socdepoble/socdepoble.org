@@ -1,4 +1,5 @@
 import { EVENTS, FEED_POSTS, MARKET_ITEMS, MEDIA_ITEMS, NOTES, TOWNS } from '../data/sectionContent.js';
+import { ENTITAT_PILOT_ID, ENTITAT_PILOT_SLUG, ENTITATS_SEED } from '../data/identitatsSeed.js';
 import {
   esRutaInterna, objecteDePagina, rutaConnectarObjecte, rutaXatDePagina, TIPUS_OBJECTE, tipusDeSeccio
 } from './objecteConnectable.js';
@@ -78,11 +79,153 @@ export function autorDe(item) {
   return null;
 }
 
-/** Ruta del perfil de qui signa una publicació, o null si no se sap qui és. */
-export const rutaDePerfilDAutor = (item) => {
-  const autor = autorDe(item);
-  return autor ? rutaDePerfil(autor.tipus, autor.id) : null;
-};
+/* T6 (ordre del Mestre, 261004, prompt 261004_0515 §5) · La boina taronja
+   d'autor enllaça SEMPRE a la pàgina de qui signa: l'entitat pilot («Sóc de
+   Poble»), a la pàgina del projecte; qualsevol altra persona o entitat, al
+   seu perfil públic. Una sola font per a les targetes, les pàgines i el
+   detall. Es resol per identificador (id, slug o àlies de la llavor), mai pel
+   nom que es veu: un nom es traduïx, es repetix i no diu qui és. */
+
+/** La pàgina del projecte: on porta la boina de l'entitat pilot. */
+export const RUTA_PROJECTE = PAGE_ROUTE_MAP.projecte;
+
+/* Tots els identificadors amb què signa l'entitat pilot (identitatsSeed.js). */
+const IDS_DEL_PROJECTE = new Set([
+  ENTITAT_PILOT_ID, ENTITAT_PILOT_SLUG,
+  ...ENTITATS_SEED.filter((entitat) => entitat.id === ENTITAT_PILOT_ID).flatMap((entitat) => entitat.alies)
+].map(String));
+
+/* Una persona, un grup o un agent IA amb un id que coincidix amb un àlies de
+   l'entitat no és l'entitat: només una entitat (o qui no diu el tipus) hi va. */
+const TIPUS_D_ENTITAT = new Set(['entitat', 'empresa', '', undefined, null]);
+
+/* T6 en remot (revisió del front «nucli», 261004) · Al servidor, l'entitat
+   pilot no és 'socdepoble' (xatCorporatiu.js): és l'id que li dona el
+   proveïdor, un UUID a Supabase (section_submissions.author_org_id). La
+   llavor no el pot saber. La font única és el slug declarat
+   (ENTITAT_PILOT_SLUG, identitatsSeed.js): quan el backend torna una entitat
+   amb eixe slug, el seu id passa a ser un identificador del projecte. Mai pel
+   nom. Qui pinta boines i vol tornar a pintar quan l'id arriba, escolta
+   (subscriuEntitatDelProjecte: hooks/useEntitatDelProjecte.js). */
+const IDS_REMOTS_DEL_PROJECTE = new Set();
+const ESCOLTES_DEL_PROJECTE = new Set();
+let versioDelProjecte = 0;
+
+/* Només una entitat declarada pel backend pot ser el projecte. */
+const TIPUS_DECLARATS_D_ENTITAT = new Set(['entitat', 'empresa']);
+const MODES_LOCALS = new Set(['seed', 'local']);
+
+/* Una resolució per abast de backend (backendScope): la promesa, en curs o resolta. */
+const RESOLUCIONS_DEL_PROJECTE = new Map();
+/* Higiene d'amfitrió (ordre del Mestre, 261004, front «amfitrio-admin») ·
+   L'hora de l'última fallada per abast. Només l'èxit es guarda per a sempre:
+   una fallada (false, null o error) esborra la resolució i es torna a provar
+   passat ESPERA_DESPRES_DE_FALLADA_MS. */
+const FALLADES_DEL_PROJECTE = new Map();
+const ESPERA_DESPRES_DE_FALLADA_MS = 60_000;
+
+const esIdDelProjecte = (id) => IDS_DEL_PROJECTE.has(id) || IDS_REMOTS_DEL_PROJECTE.has(id);
+
+function avisaDelProjecte() {
+  versioDelProjecte += 1;
+  ESCOLTES_DEL_PROJECTE.forEach((escolta) => escolta());
+}
+
+/**
+ * Reconeix l'entitat pilot en una entitat que torna el backend, amb la forma
+ * de loadPerfilPublic ({ tipus, id, slug }): si és una entitat i el seu slug
+ * és el declarat, el seu id porta a RUTA_PROJECTE. Torna cert si ho és.
+ */
+export function registraEntitatDelProjecte(entitat) {
+  const id = entitat?.id == null ? '' : String(entitat.id);
+  if (!id || !TIPUS_DECLARATS_D_ENTITAT.has(entitat.tipus)) return false;
+  if (String(entitat.slug ?? '') !== ENTITAT_PILOT_SLUG) return false;
+  if (!esIdDelProjecte(id)) {
+    IDS_REMOTS_DEL_PROJECTE.add(id);
+    avisaDelProjecte();
+  }
+  return true;
+}
+
+/** Escolta els identificadors nous del projecte (per a useSyncExternalStore). */
+export function subscriuEntitatDelProjecte(escolta) {
+  ESCOLTES_DEL_PROJECTE.add(escolta);
+  return () => { ESCOLTES_DEL_PROJECTE.delete(escolta); };
+}
+
+/** Un número que creix cada vegada que el projecte guanya un identificador. */
+export const versioEntitatDelProjecte = () => versioDelProjecte;
+
+/* El port pot no tindre la capacitat, o no estar encara a punt: cap error ací. */
+function teElDirectori(port) {
+  try {
+    return port.teCapacitat('directori') === true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Resol pel port l'id remot de l'entitat pilot, com resolXatCorporatiu:
+ * loadPerfilPublic amb el slug declarat i la capacitat 'directori'. Una sola
+ * crida per abast de backend mentre és en curs; l'èxit val fins que l'abast
+ * canvia. En llavor no cal: els ids de la llavor ja hi són. Sense abast o
+ * sense la capacitat (el backend encara no és a punt), no fa res i torna null,
+ * i la crida següent ho torna a provar. Pur respecte de React: el port
+ * s'injecta (les proves no toquen la xarxa).
+ * Higiene d'amfitrió (ordre del Mestre, 261004) · Derogat per l'ordre del
+ * Mestre del 261004: «la fallada val fins que l'abast canvia». Una fallada
+ * (el perfil no és el pilot, és null o el port llança) esborra la resolució
+ * i apunta l'hora: durant ESPERA_DESPRES_DE_FALLADA_MS torna null sense
+ * cridar res, i després ho torna a provar. Abans, un tall de xarxa en
+ * arrencar deixava la boina del projecte sense ruta fins a recarregar.
+ */
+export function resolEntitatDelProjecte({ abast, dataMode, port, config = {} } = {}) {
+  if (!abast || MODES_LOCALS.has(dataMode)) return null;
+  if (RESOLUCIONS_DEL_PROJECTE.has(abast)) return RESOLUCIONS_DEL_PROJECTE.get(abast);
+  const fallada = FALLADES_DEL_PROJECTE.get(abast);
+  if (fallada !== undefined && Date.now() - fallada < ESPERA_DESPRES_DE_FALLADA_MS) return null;
+  if (!port || !teElDirectori(port)) return null;
+  const resolucio = Promise.resolve()
+    .then(() => port.loadPerfilPublic(ENTITAT_PILOT_SLUG, config))
+    .then((perfil) => registraEntitatDelProjecte(perfil))
+    .catch(() => false)
+    .then((exit) => {
+      /* Només si encara és la resolució vigent (oblidaEntitatDelProjecte pot haver-la llevat). */
+      if (exit !== true && RESOLUCIONS_DEL_PROJECTE.get(abast) === resolucio) {
+        RESOLUCIONS_DEL_PROJECTE.delete(abast);
+        FALLADES_DEL_PROJECTE.set(abast, Date.now());
+      }
+      return exit;
+    });
+  RESOLUCIONS_DEL_PROJECTE.set(abast, resolucio);
+  FALLADES_DEL_PROJECTE.delete(abast);
+  return resolucio;
+}
+
+/** Per a les proves: oblida els ids remots, les resolucions i les fallades. */
+export function oblidaEntitatDelProjecte() {
+  RESOLUCIONS_DEL_PROJECTE.clear();
+  FALLADES_DEL_PROJECTE.clear();
+  if (IDS_REMOTS_DEL_PROJECTE.size === 0) return;
+  IDS_REMOTS_DEL_PROJECTE.clear();
+  avisaDelProjecte();
+}
+
+/**
+ * Ruta de la pàgina de qui signa ({ tipus, id }): RUTA_PROJECTE per a
+ * l'entitat pilot (pels ids de la llavor o pel remot que ha tornat el
+ * backend), rutaDePerfil per a la resta, o null si no se sap qui és.
+ */
+export function rutaDAutoria(autor) {
+  const id = autor?.id == null ? '' : String(autor.id);
+  if (!id) return null;
+  if (TIPUS_D_ENTITAT.has(autor.tipus) && esIdDelProjecte(id)) return RUTA_PROJECTE;
+  return rutaDePerfil(autor.tipus, id);
+}
+
+/** Ruta de la pàgina de qui signa una publicació, o null si no se sap qui és. */
+export const rutaDePerfilDAutor = (item) => rutaDAutoria(autorDe(item));
 
 /* ── T43 (ordre del Mestre, 260928) · L'objecte connectable ──────────────
    Un sol model per a tots els «Connectar»: un descriptor pur

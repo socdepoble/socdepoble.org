@@ -243,16 +243,48 @@ test('P6 · a 375 sense el mestre-detall, estret és com abans: cap rail, la lli
   });
 });
 
-test('P6 · el mode compacte (Snippet Curador) no porta rail ni desplegador nou en estret ni en mitjà', () => {
-  for (const amplada of [480, 820]) {
-    entorn(amplada, () => {
-      const { container } = munta({ compacte: true, mestreDetall: false });
-      expect(closca(container).hasAttribute('data-llista'), `${amplada}`).toBe(false);
-      expect(rail(container), `${amplada}`).toBeNull();
-      expect(container.querySelector('[aria-controls="app-grid-list"]'), `${amplada}`).toBeNull();
-      cleanup();
-    });
-  }
+/* Derogació (ordre del Mestre, 261004: «com a mínim una barra visible que
+   permeta desplegar l'altra») · Abans el mode compacte no portava rail en
+   cap mida xicoteta, i en estret el Snippet es quedava sense cap barra. Ara
+   en estret porta el rail de la closca; en mitjà, com abans (la llista es
+   veu i la seua capçalera obri la navegació). */
+test('P6 · el mode compacte (Snippet Curador) no porta desplegador nou en mitjà; en estret, el rail de la closca (Barres)', () => {
+  entorn(820, () => {
+    const { container } = munta({ compacte: true, mestreDetall: false });
+    expect(closca(container).hasAttribute('data-llista')).toBe(false);
+    expect(rail(container)).toBeNull();
+    expect(container.querySelector('[aria-controls="app-grid-list"]')).toBeNull();
+    cleanup();
+  });
+  entorn(480, () => {
+    const { container } = munta({ compacte: true, mestreDetall: false });
+    expect([closca(container).dataset.panell, closca(container).dataset.llista]).toEqual(['', 'rail']);
+    expect(tancada(rail(container))).toEqual([false, null]);
+    expect(enRail(container, 'Expandir NOTES').getAttribute('aria-controls')).toBe('app-grid-list');
+    expect(enRail(container, 'CARPETES').getAttribute('aria-controls')).toBe('app-grid-sidebar');
+    /* El detall continua sent la vista d'eixida: cap panell obert. */
+    expect(obertes(container)).toEqual(['#app-grid-main']);
+    cleanup();
+  });
+});
+
+/* Barres · Abans, la capçalera de la llista en compacte portava el
+   toggleColumn d'«ample»: obria la navegació un toc de cada dos. */
+test('Barres · a 480 en mode compacte, l’obridor de la capçalera de la llista obri la navegació al primer toc, cada vegada', () => {
+  entorn(480, ({ buida }) => {
+    const { container } = munta({ compacte: true, mestreDetall: false });
+    for (let volta = 0; volta < 2; volta += 1) {
+      fireEvent.click(enRail(container, 'Expandir NOTES'));
+      expect(panell(container)).toBe('middle');
+      const obridor = enLlista(container, 'CARPETES');
+      expect(obridor.hasAttribute('data-obri-columna')).toBe(true);
+      fireEvent.click(obridor);
+      expect(panell(container), `toc ${volta + 1}`).toBe('left');
+      fireEvent.click(carpeta(container, 'Mercat'));
+      buida();
+      expect(panell(container)).toBe('');
+    }
+  });
 });
 
 /* ═══ Mitjà (820): tauleta, mòbil apaïsat, encastat estret, 1024 ═══════ */

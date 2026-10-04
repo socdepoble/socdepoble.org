@@ -16,6 +16,8 @@
  *   horaRelativa(iso, ara, desfas)   «ara mateix», «fa 5 min», «fa 2 h»,
  *                     «fa 3 dies», «3 d’octubre», «3 d’octubre de 2025»
  *   dataLlarga(iso, desfas)          «3 d’octubre de 2026, 09:30»
+ *   dataDeBoina(iso, desfas)         { time: «09:30», date: «03/10/26» }: la
+ *                     pastilla de la boina taronja (la targeta i la pàgina)
  * `ara` el passa la UI (injectable a les proves) i `desfas` són els minuts del
  * fus de qui llig respecte d'UTC (+120 a l'estiu de València).
  */
@@ -172,6 +174,19 @@ export function dataLlarga(iso, desfas = 0) {
   if (ms === null) return '';
   const [any, mes, dia, hora, minut] = partsLocals(ms, desfas);
   return `${dia} ${DE_MES[mes - 1]} de ${any}, ${dues(hora)}:${dues(minut)}`;
+}
+
+/**
+ * Ordre del Mestre, 261004 (prompt 261004_0515, «no inventar targetes») · La
+ * data de la boina taronja d'una notícia, en el format únic de l'aplicació
+ * (dia «dd/mm/aa» i hora «hh:mm», com editorial.js) i al fus de qui llig:
+ * { time: '09:30', date: '03/10/26' }, o null si no és una data de veres.
+ */
+export function dataDeBoina(iso, desfas = 0) {
+  const ms = msDeData(iso);
+  if (ms === null) return null;
+  const [any, mes, dia, hora, minut] = partsLocals(ms, desfas);
+  return { time: `${dues(hora)}:${dues(minut)}`, date: `${dues(dia)}/${dues(mes)}/${String(any).slice(-2)}` };
 }
 
 /** Quant fa, en valencià, des de `iso` fins a `ara` (ms). Una data futura, absoluta. */

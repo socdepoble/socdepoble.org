@@ -3,8 +3,10 @@ import { useEffect, useRef } from 'react';
 /**
  * usePullToRefresh — «lliscar cap avall per recarregar la pàgina» (mòbil).
  *
- * La Llei de Scroll de Pedra Seca deixa el body quiet (overscroll-behavior:
- * none) i això anul·la el refresc natiu del navegador: este hook el suplix.
+ * La Llei de Scroll de Pedra Seca deixa el body quiet (overflow: hidden) i
+ * el scroll viu en columnes internes: iOS no encadena eixe desplaçament cap
+ * al refresc natiu i una PWA instal·lada (standalone) no en té cap. Este
+ * hook el suplix.
  * Una recàrrega que l'usuari no volia és pitjor que cap, per això el gest
  * només s'arma quan no hi ha cap dubte:
  *   · al touchstart, CAP contenidor entre el dit i la superfície pot tindre
@@ -18,12 +20,16 @@ import { useEffect, useRef } from 'react';
  *   · touchcancel o un segon dit reinicien sense recarregar;
  *   · exclusions: camps de text, select, contenteditable, diàlegs oberts,
  *     canvas, el graf de la Wiki i tot allò amb touch-action: none;
- *   · dins d'un ShadowRoot (<soc-de-poble> incrustat) no s'activa: la
- *     recàrrega s'enduria la pàgina amfitriona.
+ *   · dins d'un ShadowRoot (<soc-de-poble> incrustat, com Gent de la Torre)
+ *     també s'activa i recarrega la pàgina, com el refresc natiu del
+ *     navegador, però només si la pàgina de l'amfitrió està a dalt i
+ *     l'element comença dins del viewport (ordre del Mestre, 261004 11:11;
+ *     deroga el «no s'activa» d'abans).
  *
  * El DOM es toca directament (transform dins d'un rAF, data-* i el text de
  * l'indicador): un setState per touchmove repintaria el shell sencer. La
- * presentació (opacitat, transicions, moviment reduït) viu a navegacio.css.
+ * presentació (opacitat, transicions, moviment reduït) viu a modules.css
+ * («Lliscar per recarregar»).
  *
  * Contracte de DOM:
  *   indicador[data-estat] = repos | estirant | llest | recarregant
@@ -64,8 +70,10 @@ function teContingutPerDamunt(el, vista) {
 }
 
 /* El gest només pot nàixer on el dit no toca res que tinga el seu propi
-   significat tàctil i on tot el camí fins a la superfície està a dalt. */
-function gestPermes(objectiu, superficie, vista) {
+   significat tàctil i on tot el camí fins a la superfície està a dalt.
+   Dins de l'ombra l'oient és a dins: e.target hi és el node real, i
+   closest() i parentElement recorren el mateix arbre fins a la superfície. */
+function gestPermes(objectiu, superficie, vista, amfitrio) {
   if (objectiu.closest(SELECTOR_EXCLOS)) return false;
   for (let node = objectiu; node; node = node.parentElement) {
     if (teContingutPerDamunt(node, vista)) return false;
@@ -73,8 +81,12 @@ function gestPermes(objectiu, superficie, vista) {
     if (node === superficie) break;
   }
   // El body no fa scroll (Llei de Scroll); si mai en fa, també es respecta.
+  // Encastat, és la pàgina de l'amfitrió: desplaçada, el gest és del tema.
   const doc = superficie.ownerDocument;
-  return !((doc?.scrollingElement?.scrollTop || 0) > 0);
+  if ((doc?.scrollingElement?.scrollTop || 0) > 0) return false;
+  // Encastat: <soc-de-poble> ha de començar dins del viewport. Si la persona
+  // ha desplaçat la pàgina del tema i l'app comença per damunt, no és nostre.
+  return !(amfitrio && amfitrio.getBoundingClientRect().top < 0);
 }
 
 function elementDe(objectiu) {
@@ -105,9 +117,18 @@ export function usePullToRefresh({
     const indicador = indicadorRef.current;
     if (!actiu || !superficie || !contingut || !indicador) return undefined;
 
-    // Incrustat dins d'un ShadowRoot: la pàgina no és nostra.
+    /* Incrustat dins d'un ShadowRoot (<soc-de-poble>): el gest s'activa
+       (ordre del Mestre, 261004 11:11). Deroga la guarda que l'apagava perquè
+       «la recàrrega s'enduria la pàgina amfitriona»: a Gent de la Torre el
+       contingut es desplaça dins de l'app, iOS no encadena eixe desplaçament
+       cap al refresc natiu i la persona es quedava sense cap refresc. Dins de
+       l'encastat la recàrrega és la de la pàgina (vista.location.reload),
+       igual que el refresc natiu; gestPermes només l'arma si la pàgina de
+       l'amfitrió està a dalt i l'element comença dins del viewport. */
     const arrel = superficie.getRootNode?.();
-    if (typeof ShadowRoot !== 'undefined' && arrel instanceof ShadowRoot) return undefined;
+    const amfitrio = typeof ShadowRoot !== 'undefined' && arrel instanceof ShadowRoot
+      ? arrel.host
+      : null;
 
     const vista = superficie.ownerDocument?.defaultView || window;
     const demanaMarc = vista.requestAnimationFrame
@@ -122,6 +143,11 @@ export function usePullToRefresh({
     let marc = null;
     let rellotge = null;
     let viu = true;
+    /* px entre el cim de l'indicador i el del contingut. A socdepoble.org és
+       0 (els dos naixen davall de la barra negra); encastat, la franja de
+       l'amfitrió s'hi interposa i l'indicador ha de baixar apegat al
+       contingut, no deixar un forat de franja entre tots dos. */
+    let desfasament = 0;
 
     const posaEstat = (nou) => {
       if (estat === nou) return;
@@ -134,7 +160,7 @@ export function usePullToRefresh({
 
     const posaRecorregut = (px) => {
       contingut.style.transform = px > 0 ? `translateY(${px}px)` : '';
-      indicador.style.transform = px > 0 ? `translateY(calc(${px}px - 100%))` : '';
+      indicador.style.transform = px > 0 ? `translateY(calc(${px + desfasament}px - 100%))` : '';
     };
 
     const pinta = () => {
@@ -200,7 +226,7 @@ export function usePullToRefresh({
       if (estat === 'recarregant') reinicia();
       gest = null;
       const objectiu = elementDe(e.target);
-      if (!objectiu || !gestPermes(objectiu, superficie, vista)) return;
+      if (!objectiu || !gestPermes(objectiu, superficie, vista, amfitrio)) return;
       const toc = e.touches[0];
       gest = { x0: toc.clientX, y0: toc.clientY, fase: 'possible', recorregut: 0 };
     };
@@ -223,6 +249,8 @@ export function usePullToRefresh({
         }
         gest.fase = 'enganxat';
         vista.clearTimeout(rellotge);
+        // offsetTop és de layout: no el falseja el transform d'un gest anterior.
+        desfasament = Math.max(0, (contingut.offsetTop || 0) - (indicador.offsetTop || 0));
         contingut.dataset.ptr = 'actiu';
       }
 

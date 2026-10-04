@@ -333,6 +333,21 @@ test('una pàgina sense dades diu «En construcció» i què hi haurà; Destacat
     .toContain("Ací hi haurà els missatges que marques amb l'estrela");
 });
 
+/* Ordre del Mestre del 261004 (prompt 261004_0515, T5) · «Multimèdia,
+   enllaços i documents» ja no és una pàgina en construcció: porta a la vista
+   operativa del rail i tanca el full. Derogat el «en construcció» d'esta fila. */
+test('Xats › «Multimèdia, enllaços i documents» porta a /xat?vista=multimedia i tanca el full', () => {
+  pinta();
+  obriDesDelPeu();
+  fireEvent.click(fila('Xats'));
+  const multimedia = fila('Multimèdia, enllaços i documents');
+  /* Una fila 'ruta': el mateix xebró que abans, cap «En construcció». */
+  expect(multimedia.querySelector('svg.lucide-chevron-right')).toBeTruthy();
+  fireEvent.click(multimedia);
+  expect(mocks.navigate).toHaveBeenLastCalledWith('/xat?vista=multimedia');
+  expect(screen.queryByRole('dialog', { name: 'Ajustos' })).toBeNull();
+});
+
 test('Ajuda porta a les pàgines pròpies i Privacitat, al Perfil: obrir una ruta tanca el full', () => {
   pinta();
   obriDesDelPeu();

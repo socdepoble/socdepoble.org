@@ -12,9 +12,9 @@
 import { Avatar } from '../../PedraSeca/index.js';
 import { useResolvedAsset } from '../../../hooks/useResolvedAsset.js';
 
-export function AvatarResolt({ nom, src = null, mida = 'sm', llavor = null, alt, className }) {
+export function AvatarResolt({ nom, src = null, mida = 'sm', llavor = null, alt, titol, className }) {
   const url = useResolvedAsset(typeof src === 'string' ? src : '');
-  return <Avatar nom={nom} src={url || null} mida={mida} llavor={llavor} alt={alt} className={className} />;
+  return <Avatar nom={nom} src={url || null} mida={mida} llavor={llavor} alt={alt} titol={titol} className={className} />;
 }
 
 export default AvatarResolt;

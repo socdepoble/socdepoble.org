@@ -16,7 +16,8 @@ export const FORMATS = Object.freeze({
   CURSIVA: 'cursiva',
   RATLLAT: 'ratllat',
   CITACIO: 'citacio',
-  DIVISOR: 'divisor'
+  DIVISOR: 'divisor',
+  TARGETA: 'targeta'
 });
 
 /**
@@ -24,6 +25,11 @@ export const FORMATS = Object.freeze({
  * demana cinc propietats amb nom propi en compte d'una llista. Les files
  * sense `slot` ja viuen al contracte i esperen la Fase 5: existixen a
  * l'adaptador, però encara no tenen on pintar-se.
+ *
+ * T7 (ordre del Mestre, 261004) · `nivell: 'avancat'` marca les files de la
+ * barra desplegada (skill sdp-universal-editor §3): «Targeta» (inserir una
+ * targeta incrustada) hi és, però UniversalToolbar encara no té l'estat
+ * avançat i no la pinta. Mentrestant, l'ordre «/» del cos fa el mateix.
  */
 export const TOOLBAR_SCHEMA = Object.freeze([
   { id: FORMATS.TITOL,    clauI18n: 'editor.format.titol',    etiqueta: 'Títol',    commutable: true,  slot: { estat: 'isHeading', accio: 'toggleHeading' } },
@@ -33,7 +39,8 @@ export const TOOLBAR_SCHEMA = Object.freeze([
   { id: FORMATS.RATLLAT,  clauI18n: 'editor.format.ratllat',  etiqueta: 'Ratllat',  commutable: true,  slot: { estat: 'isStrike',  accio: 'toggleStrike' } },
   { id: FORMATS.SUBTITOL, clauI18n: 'editor.format.subtitol', etiqueta: 'Subtítol', commutable: true,  slot: { estat: 'isSubheading', accio: 'toggleSubheading' } },
   { id: FORMATS.CITACIO,  clauI18n: 'editor.format.citacio',  etiqueta: 'Citació',  commutable: true,  slot: null },
-  { id: FORMATS.DIVISOR,  clauI18n: 'editor.format.divisor',  etiqueta: 'Divisor',  commutable: false, slot: null }
+  { id: FORMATS.DIVISOR,  clauI18n: 'editor.format.divisor',  etiqueta: 'Divisor',  commutable: false, slot: null },
+  { id: FORMATS.TARGETA,  clauI18n: 'editor.inserir.targeta', etiqueta: 'Targeta',  commutable: false, slot: null, nivell: 'avancat' }
 ]);
 
 /** Els botons que UniversalToolbar sap pintar hui. */

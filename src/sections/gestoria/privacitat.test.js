@@ -1,24 +1,40 @@
 // @vitest-environment node
-/* Gestoria i Tractors · privacitat. Les factures només viuen en memòria i
-   res ix d'este ordinador: ni xarxa, ni emmagatzematge del navegador, ni
-   backend. Es llig el text de TOTS els fitxers de producció dels dos carrils
-   (import.meta.glob amb ?raw, sense les proves ni el suport de proves de
+/* Gestoria i Tractors · privacitat. Res ix d'este ordinador: ni xarxa ni
+   backend. L'emmagatzematge del navegador només es permet als magatzems de la
+   llista blanca (IndexedDB): les aprovacions dels tractors, el progrés
+   d'Aprendre i, des del 261004, el llibre Veri*Factu de només afegir, on sí
+   que es desen les factures emeses. Es llig el text de TOTS els fitxers de
+   producció dels dos carrils (import.meta.glob amb ?raw, sense les proves ni el suport de proves de
    __fixtures__) i es comprova també la frontera: App.jsx no té cap ruta
-   /gestoria (D3) i només la Wiki, i només en desenvolupament, carrega estes
-   eines. Els patrons es componen a trossos perquè les portes que llegixen
-   src/ no els troben ací. */
+   /gestoria ni /tractors (D3). Ordre del Mestre, 261004 («contaminació
+   crítica de rutes/estats entre Gestoria i Wiki»): la frontera s'ha mogut amb
+   la Gestoria. Ara només el pont de la seua app (src/apps/gestoria/
+   AppGestoria.jsx), i només en desenvolupament, carrega la Gestoria; el seu
+   únic importador és el manifest de l'app, darrere del literal de DEV; i la
+   Wiki ja no la importa (només els Tractors, també només en desenvolupament).
+   Cap guarda s'afebleix: es mouen al pont. Els patrons es componen a trossos
+   perquè les portes que llegixen src/ no els troben ací. */
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { build } from 'vite';
 import { describe, expect, test } from 'vitest';
 import fontApp from '../../app/App.jsx?raw';
 import fontWiki from '../wiki-de-poble/WikiDePobleSection.jsx?raw';
+import fontRutaWiki from '../wiki-de-poble/RutaWikiDePoble.jsx?raw';
+import fontPont from '../../apps/gestoria/AppGestoria.jsx?raw';
+import fontManifest from '../../apps/gestoria/manifest.js?raw';
+import { ITEM_PORTA_TRACTORS, RUTA_PORTA_TRACTORS } from '../../apps/gestoria/rutes.js';
 import { TRACTORS_GESTORIA } from './tractors.js';
 
 const ARREL = process.cwd();
 const GESTORIA = 'src/sections/gestoria';
 const TRACTORS = 'src/sections/tractors';
 const WIKI = 'src/sections/wiki-de-poble/WikiDePobleSection.jsx';
+/* El pont de l'app i el seu manifest (ordre del Mestre, 261004). */
+const PONT = 'src/apps/gestoria/AppGestoria.jsx';
+const MANIFEST = 'src/apps/gestoria/manifest.js';
+/* Els dos especificadors del pont: la closca i Aprendre. Cap altre. */
+const DEL_PONT = Object.freeze(['../../sections/gestoria/tauler/ShellGestoria.jsx', '../../sections/gestoria/aprendre/Aprendre.jsx']);
 
 /* Ruta des de l'arrel del repositori: les claus del glob són relatives a este fitxer. */
 const desDeArrel = (clau) => path.posix.normalize(path.posix.join(GESTORIA, clau));
@@ -56,7 +72,10 @@ describe('el cens', () => {
       `${GESTORIA}/ContenidorGestoria.jsx`, `${GESTORIA}/PanellGestoria.jsx`, `${GESTORIA}/useGestoria.js`,
       `${GESTORIA}/nucli/tractor.js`, `${GESTORIA}/font/fontNavegador.js`, `${GESTORIA}/enviament/EnviamentGestoria.jsx`,
       `${GESTORIA}/enviament/correuGestoria.js`, `${GESTORIA}/aprendre/Aprendre.jsx`, `${GESTORIA}/fitxes/gestoria_factures.md`,
-      `${TRACTORS}/useTractors.js`, `${TRACTORS}/nucli/aprovacio.js`, `${TRACTORS}/nucli/magatzem.js`
+      `${TRACTORS}/useTractors.js`, `${TRACTORS}/nucli/aprovacio.js`, `${TRACTORS}/nucli/magatzem.js`,
+      // Onada 2, pas 1 (261004): la closca i el Tauler, i les estimacions d'impostos, també hi són.
+      `${GESTORIA}/tauler/ShellGestoria.jsx`, `${GESTORIA}/tauler/nucli/tractorTauler.js`, `${GESTORIA}/impostos/nucli/impostos.js`,
+      `${GESTORIA}/fitxes/gestoria_tauler.md`
     ]) expect(rutes, esperada).toContain(esperada);
     expect(rutes.filter(esProva)).toEqual([]);
     expect(CODI.length).toBeGreaterThan(40);
@@ -80,7 +99,7 @@ describe('res ix d’este ordinador', () => {
     expect(trobats).toEqual([]);
   });
 
-  test('cap emmagatzematge del navegador; IndexedDB només als dos magatzems que no guarden factures', () => {
+  test('cap emmagatzematge del navegador; IndexedDB només als magatzems declarats', () => {
     const vetats = [
       [new RegExp(['\\blocal', 'Storage\\b'].join('')), 'localStorage'],
       [new RegExp(['\\bsession', 'Storage\\b'].join('')), 'sessionStorage'],
@@ -89,11 +108,17 @@ describe('res ix d’este ordinador', () => {
     ];
     const trobats = CODI.flatMap(([ruta, codi]) => vetats.filter(([patro]) => patro.test(codi)).map(([, que]) => `${ruta}: ${que}`));
     expect(trobats).toEqual([]);
-    /* Llista blanca: les aprovacions dels tractors (registres i claus públiques)
-       i el progrés d'Aprendre (caixes de Leitner). Cap dels dos toca factures. */
+    /* Llista blanca: les aprovacions dels tractors (registres i claus públiques),
+       el progrés d'Aprendre (caixes de Leitner) i, des del 261004 per aprovació
+       del Mestre al xat, el llibre legal Veri*Factu: un magatzem de NOMÉS AFEGIR
+       (add, mai put ni delete) amb un sol escriptor. */
     const idb = new RegExp(['\\bindexed', 'DB\\b'].join(''));
     expect(CODI.filter(([, codi]) => idb.test(codi)).map(([ruta]) => ruta).sort())
-      .toEqual([`${GESTORIA}/aprendre/magatzemProgres.js`, `${TRACTORS}/nucli/magatzem.js`]);
+      .toEqual([
+        `${GESTORIA}/aprendre/magatzemProgres.js`,
+        `${GESTORIA}/facturacio/registre/portIndexedDB.js`,
+        `${TRACTORS}/nucli/magatzem.js`
+      ]);
   });
 
   test('cap importació del backend; fora dels dos carrils, només els components i utilitats declarats', () => {
@@ -124,9 +149,13 @@ describe('res ix d’este ordinador', () => {
        · correuGestoria.js compon l'adreça de redacció de Gmail, que obri la
          persona al pas 5; només porta destinatari, assumpte i text.
        · xlsx.js escriu els espais de noms XML de l'estàndard OOXML: són
-         identificadors dins del fitxer i el navegador no s'hi connecta mai. */
+         identificadors dins del fitxer i el navegador no s'hi connecta mai.
+       · qr.js compon el TEXT de l'URL de cotejo de l'AEAT que va dins del QR
+         de cada factura (Orde HAC/1177/2024). Ningú s'hi connecta des d'ací.
+         Aprovat pel Mestre al xat el 261004. */
     const PERMESES = {
       [`${GESTORIA}/enviament/correuGestoria.js`]: ['mail.google.com'],
+      [`${GESTORIA}/facturacio/registre/qr.js`]: ['prewww2.aeat.es', 'www2.agenciatributaria.gob.es'],
       [`${GESTORIA}/nucli/xlsx.js`]: ['purl.org', 'schemas.openxmlformats.org']
     };
     const hosts = Object.fromEntries(CODI.map(([ruta, codi]) => [
@@ -175,61 +204,137 @@ describe('res ix d’este ordinador', () => {
   });
 
   test('les dades personals exigixen signatura: cap tractor que les toque s’aprova amb una confirmació escrita', () => {
-    expect(TRACTORS_GESTORIA.map((m) => m.id)).toEqual(['gestoria.factures', 'gestoria.correus']);
+    /* Tercer manifest, 'gestoria.tauler': llegir els bancs des del Tauler és
+       una lectura nova de dades personals, amb tractor propi (MAPA §4, pas 1,
+       decisió A2). Aprovat pel Mestre al xat el 261004. Els dos d'abans no
+       canvien ni tornen a «pendent». */
+    expect(TRACTORS_GESTORIA.map((m) => m.id)).toEqual(['gestoria.factures', 'gestoria.correus', 'gestoria.tauler']);
     for (const manifest of TRACTORS_GESTORIA) {
       expect(manifest, manifest.id).toMatchObject({ dadesPersonals: true, nivellMinim: 'signatura', xarxa: 'cap' });
     }
   });
 });
 
-describe('la frontera: només la Wiki, i només en desenvolupament', () => {
+/* Ordre del Mestre, 261004 («contaminació crítica de rutes/estats entre
+   Gestoria i Wiki»): la frontera es mou amb la Gestoria. Abans: «només la
+   Wiki, i només en desenvolupament». Ara: la Gestoria, només pel pont de la
+   seua app i només en desenvolupament; els Tractors, només per la Wiki i
+   només en desenvolupament. Cap guarda s'afebleix. */
+describe('la frontera: la Gestoria només pel pont de la seua app, els Tractors només per la Wiki, i només en desenvolupament', () => {
+  const esDelsCarrils = (ruta) => ruta.startsWith(`${GESTORIA}/`) || ruta.startsWith(`${TRACTORS}/`);
+  /* Els especificadors d'un text que entren als carrils, des de qualsevol fitxer de src. */
+  const delsCarrils = (text) => especificadors(text).filter((e) => /(?:^|\/)(?:sections\/)?(?:gestoria|tractors)\//.test(e) && !e.startsWith('./'));
+
   test('D3 · App.jsx no té cap ruta /gestoria ni /tractors, ni importa els dos carrils', () => {
     const rutes = [...fontApp.matchAll(/<Route\b[^>]*?\bpath=["']([^"']+)["']/g)].map((m) => m[1]);
     expect(rutes.length).toBeGreaterThan(5);
     expect(rutes.filter((r) => /gestoria|tractors/i.test(r))).toEqual([]);
     expect(especificadors(fontApp).filter((e) => /sections\/(?:gestoria|tractors)\//.test(e))).toEqual([]);
+    /* La Gestoria s'obri per la plataforma d'apps (/app/*), mai per una ruta pròpia. */
+    expect(rutes).toContain('/app/*');
   });
 
-  test('cap fitxer de src fora dels carrils els importa, excepte la Wiki; ningú importa el suport de proves', () => {
+  test('cap fitxer de src fora dels carrils els importa, excepte el pont (la Gestoria) i la Wiki (els Tractors); ningú importa el suport de proves', () => {
     const fora = [];
     const suport = [];
+    const importadorsGestoria = [];
     for (const ruta of fitxersDe('src')) {
       if (esProva(ruta)) continue;
       const codi = readFileSync(path.join(ARREL, ruta), 'utf8');
       for (const especificador of especificadors(codi)) {
         const desti = resol(ruta, especificador);
         if (desti.includes('/__fixtures__/')) suport.push(`${ruta}: ${especificador}`);
-        const dinsCarril = ruta.startsWith(`${GESTORIA}/`) || ruta.startsWith(`${TRACTORS}/`);
-        if (!dinsCarril && ruta !== WIKI && (desti.startsWith(`${GESTORIA}/`) || desti.startsWith(`${TRACTORS}/`))) {
+        if (esDelsCarrils(ruta)) continue;
+        if (desti.startsWith(`${GESTORIA}/`)) {
+          importadorsGestoria.push(`${ruta}: ${especificador}`);
+          if (!(ruta === PONT && DEL_PONT.includes(especificador))) fora.push(`${ruta}: ${especificador}`);
+        } else if (desti.startsWith(`${TRACTORS}/`) && ruta !== WIKI) {
           fora.push(`${ruta}: ${especificador}`);
         }
       }
     }
     expect(fora).toEqual([]);
     expect(suport).toEqual([]);
+    // El pont no és decoratiu: porta els dos especificadors, i és l'únic importador de la Gestoria.
+    expect(importadorsGestoria).toEqual(DEL_PONT.map((e) => `${PONT}: ${e}`));
   });
 
-  test('la Wiki decidix amb import.meta.env.DEV: la funció pura i els lazy() dins d’una constant nul·la fora de DEV', () => {
+  test('la Wiki ja no importa la Gestoria: només els Tractors, amb lazy() dins d’una constant nul·la fora de DEV', () => {
     expect(fontWiki).toContain('modulsLocalsActius({ DEV: import.meta.env.DEV })');
     const inici = fontWiki.indexOf('const EINES_LOCALS = import.meta.env.DEV ? {');
     expect(inici).toBeGreaterThan(-1);
     const fi = fontWiki.indexOf('} : null;', inici);
     expect(fi).toBeGreaterThan(inici);
     const bloc = fontWiki.slice(inici, fi);
-    const delsCarrils = (text) => especificadors(text).filter((e) => /^\.\.\/(?:gestoria|tractors)\//.test(e));
-    expect(delsCarrils(bloc)).toEqual([
-      '../tractors/PanellTractors.jsx', '../tractors/PanellSentinelles.jsx', '../gestoria/ContenidorGestoria.jsx',
-      '../gestoria/aprendre/Aprendre.jsx'
-    ]);
+    expect(delsCarrils(bloc)).toEqual(['../tractors/PanellTractors.jsx', '../tractors/PanellSentinelles.jsx']);
     // Fora del bloc, cap importació dels dos carrils (tampoc estàtica).
     expect(delsCarrils(fontWiki.slice(0, inici) + fontWiki.slice(fi))).toEqual([]);
-    expect([...bloc.matchAll(/lazy\(\(\) => import\(/g)]).toHaveLength(4);
+    expect([...bloc.matchAll(/lazy\(\(\) => import\(/g)]).toHaveLength(2);
+    // Cap carpeta ni ítem de la Gestoria al model.
+    expect(especificadors(fontWiki).filter((e) => /gestoria/.test(e))).toEqual([]);
+    const iniciModel = fontWiki.indexOf('export function modulsLocalsActius(');
+    const fiModel = fontWiki.indexOf('const MODULS_LOCALS =', iniciModel);
+    expect(iniciModel).toBeGreaterThan(-1);
+    expect(fiModel).toBeGreaterThan(iniciModel);
+    expect(fontWiki.slice(iniciModel, fiModel)).not.toMatch(/gestoria_(?:cat|panell|aprendre)/);
+    expect(fontWiki).not.toMatch(/ShellGestoria|Aprendre\.jsx/);
   });
 
-  /* Vite compila la Wiki sola (tota importació, externa) en mode producció i
-     en mode desenvolupament: el literal es reemplaça i, en producció, les
-     importacions dinàmiques de la Gestoria i dels Tractors desapareixen. */
-  async function compila(produccio) {
+  /* Ordre del Mestre, 261004 («contaminació crítica de rutes/estats entre
+     Gestoria i Wiki»): la Wiki tampoc ENCAMINA cap a la Gestoria. Ni el
+     component ni la seua ruta coneixen els ids vells ni cap destí de l'app, i
+     no redirigixen: una URL vella /wikidepoble?categoria=gestoria_cat&item=…
+     cau com qualsevol ítem desconegut. Ningú importa l'antic mapa de
+     redireccions (rutesWiki.js), perquè la redirecció no torne d'amagat. */
+  test('la Wiki i la seua ruta no encaminen a la Gestoria: cap id vell, cap destí de l’app, cap redirecció', () => {
+    const coneixGestoria = /gestoria_(?:cat|panell|aprendre)|destiGestoria|rutesWiki|['"`]\/app\/gestoria/;
+    for (const [nom, font] of [['WikiDePobleSection.jsx', fontWiki], ['RutaWikiDePoble.jsx', fontRutaWiki]]) {
+      expect(coneixGestoria.test(font), `${nom} coneix la Gestoria`).toBe(false);
+      expect(/\bNavigate\b/.test(font), `${nom} redirigix`).toBe(false);
+    }
+    const mapaVell = 'src/sections/wiki-de-poble/rutesWiki';
+    const importadors = fitxersDe('src').filter((ruta) => !esProva(ruta)).filter((ruta) => especificadors(readFileSync(path.join(ARREL, ruta), 'utf8'))
+      .some((e) => [mapaVell, `${mapaVell}.js`].includes(resol(ruta, e))));
+    expect(importadors).toEqual([]);
+    // Sonda: el patró sí que troba les formes vetades.
+    expect(coneixGestoria.test(['?item=gestoria', '_panell'].join(''))).toBe(true);
+    expect(coneixGestoria.test(["'/app/", "gestoria/tauler'"].join(''))).toBe(true);
+  });
+
+  test('el pont decidix amb import.meta.env.DEV: els dos lazy() dins d’una constant nul·la fora de DEV, i cap altra importació dels carrils', () => {
+    const inici = fontPont.indexOf('const VISTES = import.meta.env.DEV ? Object.freeze({');
+    expect(inici).toBeGreaterThan(-1);
+    const fi = fontPont.indexOf('}) : null;', inici);
+    expect(fi).toBeGreaterThan(inici);
+    const bloc = fontPont.slice(inici, fi);
+    expect(delsCarrils(bloc)).toEqual([...DEL_PONT]);
+    expect(delsCarrils(fontPont.slice(0, inici) + fontPont.slice(fi))).toEqual([]);
+    expect([...bloc.matchAll(/lazy\(\(\) => import\(/g)]).toHaveLength(2);
+    // Els Tractors no hi entren mai, ni ContenidorGestoria directament (arriba per la closca, com abans).
+    expect(fontPont).not.toMatch(/sections\/tractors\/|ContenidorGestoria\.jsx'/);
+  });
+
+  test('l’únic importador del pont és el manifest de l’app, darrere del literal de DEV, amb entorn de desenvolupament i apagada per defecte', () => {
+    expect(fontManifest).toContain("carrega: import.meta.env.DEV || import.meta.env.VITE_SDP_APP_GESTORIA === '1' ? () => import('./AppGestoria.jsx') : null");
+    expect(fontManifest.split('import(').length - 1).toBe(1);
+    expect(fontManifest).toContain("entorn: 'desenvolupament',");
+    expect(fontManifest).toContain('actiuPerDefecte: false,');
+    const importadors = fitxersDe('src').filter((ruta) => !esProva(ruta)).filter((ruta) => especificadors(readFileSync(path.join(ARREL, ruta), 'utf8'))
+      .some((e) => [PONT, PONT.replace(/\.jsx$/, '')].includes(resol(ruta, e))));
+    expect(importadors).toEqual([MANIFEST]);
+  });
+
+  test('la porta dels Tractors: la consulta de la closca (CONSULTA_TRACTORS, font signada) i el desviament de l’app a la Wiki coincidixen', () => {
+    const consulta = /export const CONSULTA_TRACTORS = '([^']+)';/.exec(FONTS[`${GESTORIA}/ContenidorGestoria.jsx`])?.[1];
+    expect(consulta).toBe('?categoria=tractors_cat&item=tractors_aprovacio');
+    expect(RUTA_PORTA_TRACTORS).toBe(`/wikidepoble${consulta}`);
+    expect(new URLSearchParams(consulta).get('item')).toBe(ITEM_PORTA_TRACTORS);
+  });
+
+  /* Vite compila un fitxer sol (tota importació, externa) en mode producció
+     i en mode desenvolupament: el literal es reemplaça i, en producció, les
+     importacions dinàmiques dels carrils desapareixen. */
+  async function compila(entrada, produccio) {
     const abans = process.env.NODE_ENV;
     process.env.NODE_ENV = produccio ? 'production' : 'development';
     try {
@@ -241,7 +346,7 @@ describe('la frontera: només la Wiki, i només en desenvolupament', () => {
         build: {
           write: false,
           minify: false,
-          lib: { entry: path.join(ARREL, WIKI), formats: ['es'], fileName: 'wiki' },
+          lib: { entry: path.join(ARREL, entrada), formats: ['es'], fileName: 'sonda' },
           rollupOptions: { external: (_id, importador) => Boolean(importador) }
         }
       });
@@ -252,12 +357,25 @@ describe('la frontera: només la Wiki, i només en desenvolupament', () => {
     }
   }
 
-  test('al build de producció no queda cap importació de la Gestoria ni dels Tractors', async () => {
-    const carrils = /import\(\s*["'][^"']*(?:ContenidorGestoria|PanellTractors|PanellSentinelles|aprendre\/Aprendre)/g;
-    const desenvolupament = await compila(false);
-    expect(desenvolupament.match(carrils)).toHaveLength(4);
-    const produccio = await compila(true);
+  test('al build de producció de la Wiki no queda cap importació dels Tractors, i ni en desenvolupament cap de la Gestoria', async () => {
+    const carrils = /import\(\s*["'][^"']*(?:ShellGestoria|PanellTractors|PanellSentinelles|aprendre\/Aprendre)/g;
+    const desenvolupament = await compila(WIKI, false);
+    expect(desenvolupament.match(carrils)).toHaveLength(2);
+    expect(desenvolupament).not.toMatch(/ShellGestoria|ContenidorGestoria|Aprendre\.jsx/);
+    const produccio = await compila(WIKI, true);
     expect(produccio.match(carrils)).toBeNull();
-    expect(produccio).not.toMatch(/ContenidorGestoria|PanellTractors|PanellSentinelles|Aprendre\.jsx/);
+    expect(produccio).not.toMatch(/ShellGestoria|ContenidorGestoria|PanellTractors|PanellSentinelles|Aprendre\.jsx/);
+  }, 60000);
+
+  /* La closca (ShellGestoria) porta ContenidorGestoria a dins: vetada al
+     paquet de producció, com abans a la Wiki. Encara que algú compilara
+     l'app en producció (VITE_SDP_APP_GESTORIA), el pont no hi porta res. */
+  test('al build de producció del pont no queda cap importació de la Gestoria', async () => {
+    const gestoria = /import\(\s*["'][^"']*(?:ShellGestoria|aprendre\/Aprendre)/g;
+    const desenvolupament = await compila(PONT, false);
+    expect(desenvolupament.match(gestoria)).toHaveLength(2);
+    const produccio = await compila(PONT, true);
+    expect(produccio.match(gestoria)).toBeNull();
+    expect(produccio).not.toMatch(/ShellGestoria|ContenidorGestoria|Aprendre\.jsx|sections\/gestoria/);
   }, 60000);
 });

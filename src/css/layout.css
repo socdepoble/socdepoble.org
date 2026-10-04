@@ -53,6 +53,11 @@
   }
   :host .sdp-root[data-sdp-estret] > .sdp-capa-modal.sdp-capa-modal--completa { align-items: stretch; }
   :host .sdp-root[data-sdp-estret] > .sdp-capa-modal > .sdp-dialeg.sdp-dialeg--completa { border-radius: 0; }
+  /* Ordre del Mestre, 261004 (integració final, auditoria d'amfitrió) · Encastat,
+     l'Índex de la Pàgina Universal es pinta dins de .sdp-root (PageFrame), com
+     els diàlegs: el vel ocupa la caixa de l'App, no 100vw x 100vh de la pàgina
+     de WordPress. Guanya al .toc-overlay de modules.css (capa legacy). */
+  :host .toc-overlay { inset: 0; width: auto; height: auto; }
 }
 
 @layer legacy {
@@ -71,7 +76,8 @@ main.app-main {
   display: flex;
   flex-direction: column;
   overflow-x: clip;
-  overscroll-behavior: contain;
+  overscroll-behavior-y: auto;
+  overscroll-behavior-x: contain;
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
@@ -87,7 +93,8 @@ main.app-main {
   position: relative;
   overflow-y: auto;
   overflow-x: hidden;
-  overscroll-behavior: contain;
+  overscroll-behavior-y: auto;
+  overscroll-behavior-x: contain;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -113,7 +120,8 @@ nav.app-sidebar {
   color-scheme: dark;
   position: relative;
   z-index: var(--z-sidebar);
-  overscroll-behavior: contain;
+  overscroll-behavior-y: auto;
+  overscroll-behavior-x: contain;
 }
 /* ── SIDEBAR · SCROLL ─────────────────────────────────────────────
    El menú (.app-sidebar-nav) absorbix l'alçada restant. Dins, la llista i
@@ -135,7 +143,8 @@ nav.app-sidebar > .app-sidebar-nav > .app-sidebar-nav__llista {
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
-  overscroll-behavior: contain;
+  overscroll-behavior-y: auto;
+  overscroll-behavior-x: contain;
   scrollbar-width: thin;
   scrollbar-color: var(--sdp-crom-scroll) transparent;
 }

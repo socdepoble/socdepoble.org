@@ -151,12 +151,71 @@ test('T43 · la barra negra diu amb qui actues i el calaix d’identitats viu fo
     expect(within(dialeg).getByRole('button', { name: /Pepa Soler/ }).getAttribute('aria-current')).toBe('true');
     fireEvent.click(forn);
     const entitat = await screen.findByRole('button', { name: 'Identitat activa: Forn de la Torre (organització). Canviar identitat' });
-    expect(entitat.classList.contains('sdp-top-bar-btn--entitat')).toBe(true);
+    expect(entitat.classList.contains('sdp-top-bar-avatar--entitat')).toBe(true);
     expect(entitat.querySelector('.sdp-avatar').textContent).toBe('FD');
     /* Deixa la preferència com estava: es torna a actuar com a persona. */
     fireEvent.click(entitat);
     fireEvent.click(within(await screen.findByRole('dialog', { name: 'Amb qui actues?' })).getByRole('button', { name: /Pepa Soler/ }));
     await screen.findByRole('button', { name: 'Identitat activa: Pepa Soler. Canviar identitat' });
+  } finally {
+    cleanup();
+    if (Object.keys(anterior).length) setBackendImplementation(anterior);
+  }
+});
+
+/* ── Acta 261004_1027 §3 (ordre del Mestre, beta testers) ────────────────
+   Shell real amb sessió i sense cap organització: a la barra negra, en lloc
+   del Foraster, l'avatar de la persona, gran (Avatar lg) i redó, que porta
+   al perfil propi. Sense sessió, el Foraster de sempre («Entrar»). */
+test('acta 261004_1027 · amb sessió, l’avatar gran de la barra negra porta a /el-meu-perfil', async () => {
+  vi.stubGlobal('ResizeObserver', class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  });
+  vi.stubGlobal('matchMedia', vi.fn(query => ({
+    matches: false, media: query, onchange: null,
+    addListener: vi.fn(), removeListener: vi.fn(),
+    addEventListener: vi.fn(), removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn()
+  })));
+  vi.stubGlobal('fetch', vi.fn(() => { throw new Error('Xarxa inesperada'); }));
+  const anterior = { ...getBackendImplementation() };
+  const usuari = { id: 'u-beta', user_metadata: { full_name: 'Pepa Soler', avatar_url: 'https://lh3.googleusercontent.com/a/pepa.png' } };
+  setBackendImplementation({
+    ...Object.fromEntries(CONTRACTE_NUCLI.map(name => [name, async () => null])),
+    getCurrentUser: () => usuari,
+    getRuntimeDataMode: () => 'local',
+    getBackendConfigurat: () => true,
+    getDefaultUserId: () => usuari.id,
+    recullTornadaOAuth: async () => null,
+    loadCoreContent: async () => ({ towns: [], pages: [], agents: [] }),
+    loadMur: async () => ({ feedPosts: [], events: [], marketItems: [] }),
+    loadNotes: async () => ({ notes: [], noteFolders: [] }),
+    loadMultimedia: async () => ({ mediaItems: [], mediaTimelineGroups: [] }),
+    loadFils: async () => [],
+    listMyOrganizations: async () => []
+  });
+  window.history.replaceState(null, '', '/mur');
+  try {
+    render(<PedraSecaEmbed config={{ routerType: 'browser' }} />);
+    const boto = await screen.findByRole('button', { name: 'El teu perfil: Pepa Soler' });
+    const header = boto.closest('header.bar-black');
+    expect(header).not.toBeNull();
+    /* El Foraster ja no hi és: el botó d'entrar de la barra és l'avatar. */
+    expect(within(header).queryByRole('button', { name: 'Entrar' })).toBeNull();
+    expect(boto.className).toBe('sdp-top-bar-avatar');
+    expect(boto.hasAttribute('aria-haspopup')).toBe(false);
+    expect(boto.querySelector('.sdp-avatar.sdp-avatar--lg')).not.toBeNull();
+    const img = await waitFor(() => {
+      const trobada = boto.querySelector('img');
+      expect(trobada).not.toBeNull();
+      return trobada;
+    });
+    expect(img.getAttribute('referrerpolicy')).toBe('no-referrer');
+    expect(header.querySelectorAll('[style]')).toHaveLength(0);
+    fireEvent.click(boto);
+    await waitFor(() => expect(window.location.pathname).toBe('/el-meu-perfil'));
   } finally {
     cleanup();
     if (Object.keys(anterior).length) setBackendImplementation(anterior);
@@ -212,6 +271,24 @@ async function muntaSenseSessio(ruta, cos, config = { routerType: 'browser' }, b
 }
 
 const tornar = () => new URLSearchParams(window.location.search).get('tornar');
+
+/* Acta 261004_1027 §3 · Sense sessió, el Foraster de sempre a la barra negra:
+   la icona de persona amb «Entrar», cap avatar. */
+test('acta 261004_1027 · sense sessió, la barra negra porta el Foraster de sempre i cap avatar', async () => {
+  await muntaSenseSessio('/mur', async () => {
+    const header = await waitFor(() => {
+      const trobat = document.querySelector('header.bar-black');
+      expect(trobat).not.toBeNull();
+      return trobat;
+    });
+    const entrar = await within(header).findByRole('button', { name: 'Entrar' });
+    expect(entrar.className).toBe('icon sdp-top-bar-btn');
+    expect(entrar.getAttribute('title')).toBe('Entrar');
+    expect(entrar.querySelector('svg[aria-hidden="true"]')).not.toBeNull();
+    expect(header.querySelector('.sdp-top-bar-avatar, .sdp-avatar')).toBeNull();
+    expect(within(header).queryByRole('button', { name: /El teu perfil/ })).toBeNull();
+  });
+});
 
 test('a vite serve el tauler de la Consola es pinta sense sessió i no porta a /registre', async () => {
   await muntaSenseSessio('/consola', async () => {

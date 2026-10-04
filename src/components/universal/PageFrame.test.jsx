@@ -15,18 +15,32 @@ test('avatar local vàlid conserva la imatge',()=>{
 });
 
 /* Llei del Píxel: sense la ranura `classificacio`, el bloc del títol és byte a
-   byte el d'abans (Mur, Perfil, Pàgines i la lectura no la passen mai). */
+   byte el d'abans (Mur, Perfil, Pàgines i la lectura no la passen mai).
+   Derogat en part per la norma dels logotips (ordre del Mestre, 261004): una
+   pàgina que signa Sóc de Poble (l'autor per defecte) porta ara el seu
+   logotip davant de l'H1 (PageFrame.logo.test.jsx). La comparació byte a byte
+   es fa amb una persona (Pepa), que no en porta, i a banda amb Sóc de Poble. */
 const CAPCALERA_SENSE_RANURA='<header class="page-title"><h1>Títol</h1>'
   +'<ul class="sp-card-labels page-title-labels" aria-label="Categories">'
   +'<li class="sp-card-label sdp-badge-tag">Sistema</li><li class="sp-card-label sdp-badge-system">Mur</li></ul>'
   +'<p class="sp-card-copyright page-title-copyright">© Sóc de Poble</p></header>';
+/* Derogat en part (ordre del Mestre, 261004, correcció final del risc de
+   Safari 16): cada imatge del logotip de Sóc de Poble porta al final
+   width="300" height="78", la mida natural de l'SVG (PageFrame.logo.test.jsx). */
+const LOGOS_SDP='<img alt="Logotip Sóc de Poble" class="page-title-logo light-only" src="/assets/system/ui/logo-socdepoble-rect-negre.svg" width="300" height="78">'
+  +'<img alt="Logotip Sóc de Poble" class="page-title-logo dark-only" src="/assets/system/ui/logo-socdepoble-rect-blanc.svg" width="300" height="78">';
 const LABELS=['Sistema',{text:'Mur',className:'sdp-badge-system'}];
 test('sense ranura de classificació, la capçalera no canvia ni un node',()=>{
-  const {container}=render(<PageFrame title="Títol" labels={LABELS} copyright="© Sóc de Poble"/>);
+  const {container}=render(<PageFrame title="Títol" labels={LABELS} copyright="© Sóc de Poble" authorName="Pepa" authorHref="/gent/pepa"/>);
   expect(container.querySelector('header.page-title').outerHTML).toBe(CAPCALERA_SENSE_RANURA);
 });
+test('signant Sóc de Poble, la mateixa capçalera amb el seu logotip davant de l’H1 (ordre del Mestre, 261004)',()=>{
+  const {container}=render(<PageFrame title="Títol" labels={LABELS} copyright="© Sóc de Poble"/>);
+  expect(container.querySelector('header.page-title').outerHTML)
+    .toBe(CAPCALERA_SENSE_RANURA.replace('<header class="page-title">','<header class="page-title">'+LOGOS_SDP));
+});
 test('amb ranura, la botonera va just davall del títol i substituïx les píndoles',()=>{
-  const {container}=render(<PageFrame title="Títol" labels={LABELS} copyright="© Sóc de Poble"
+  const {container}=render(<PageFrame title="Títol" labels={LABELS} copyright="© Sóc de Poble" authorName="Pepa" authorHref="/gent/pepa"
     classificacio={<div data-testid="botonera">Botonera</div>}/>);
   const capcalera=container.querySelector('header.page-title');
   expect([...capcalera.children].map(e=>e.tagName+'.'+e.className)).toEqual([

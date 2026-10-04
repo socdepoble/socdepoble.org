@@ -15,12 +15,16 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, test } from 'vitest';
 import { parse } from '@babel/parser';
-import { TRACTOR_CORREUS, TRACTOR_FACTURES } from '../gestoria/tractors.js';
+import { TRACTOR_CORREUS, TRACTOR_FACTURES, TRACTOR_TAULER } from '../gestoria/tractors.js';
 
 const ARREL = process.cwd();
 const GESTORIA = 'src/sections/gestoria';
 const TRACTORS = 'src/sections/tractors';
-const ENTRADES = Object.freeze([`${GESTORIA}/ContenidorGestoria.jsx`, `${GESTORIA}/nucli/tractor.js`]);
+/* Onada 2, pas 1 (ordre del Mestre del 261004, aprovat al xat): la closca de
+   la Gestoria i el tractor del Tauler també són entrades, i el seu manifest
+   ('gestoria.tauler') cobrix el que hi penja i no és dels dos signats. */
+const ENTRADES_TAULER = Object.freeze([`${GESTORIA}/tauler/ShellGestoria.jsx`, `${GESTORIA}/tauler/nucli/tractorTauler.js`]);
+const ENTRADES = Object.freeze([`${GESTORIA}/ContenidorGestoria.jsx`, `${GESTORIA}/nucli/tractor.js`, ...ENTRADES_TAULER]);
 
 /* Del graf però fora de les fonts, a propòsit. */
 const LLISTA_BLANCA = Object.freeze({
@@ -111,7 +115,7 @@ function fitxersDe(directori) {
 }
 
 const { fitxers: GRAF, importacions: IMPORTACIONS } = clausura(ENTRADES);
-const COBERTES = new Set([...TRACTOR_FACTURES.fonts, ...TRACTOR_CORREUS.fonts]);
+const COBERTES = new Set([...TRACTOR_FACTURES.fonts, ...TRACTOR_CORREUS.fonts, ...TRACTOR_TAULER.fonts]);
 
 describe('el lector d’importacions', () => {
 
@@ -180,6 +184,29 @@ describe('la clausura des de les entrades de la Gestoria', () => {
       const falten = [...new Set([...COMUNS, ...portaDelGraf])].filter((ruta) => !manifest.fonts.includes(ruta));
       expect(falten, manifest.id).toEqual([]);
     }
+  });
+
+  test('el Tauler: el seu graf és a les fonts del seu manifest (o a les dels dos signats), amb la porta sencera', () => {
+    const { fitxers } = clausura(ENTRADES_TAULER);
+    const delsSignats = new Set([...TRACTOR_FACTURES.fonts, ...TRACTOR_CORREUS.fonts]);
+    const fora = fitxers.filter((ruta) => dinsCarrils(ruta) && !esProva(ruta) && !TRACTOR_TAULER.fonts.includes(ruta)
+      && !delsSignats.has(ruta) && !(ruta in LLISTA_BLANCA));
+    expect(fora).toEqual([]);
+    const porta = fitxers.filter((ruta) => ruta.startsWith(`${TRACTORS}/`) && !esProva(ruta));
+    expect(porta.length).toBeGreaterThan(5);
+    expect(porta.filter((ruta) => !TRACTOR_TAULER.fonts.includes(ruta))).toEqual([]);
+    expect(fitxers).toContain(`${GESTORIA}/nucli/c43.js`);
+    expect(fitxers).toContain(`${GESTORIA}/ContenidorGestoria.jsx`);
+  });
+
+  test('cap fitxer del Tauler ni de les estimacions és font dels dos tractors signats: les seues empremtes no canvien', () => {
+    const delsSignats = [...TRACTOR_FACTURES.fonts, ...TRACTOR_CORREUS.fonts];
+    expect(delsSignats.filter((ruta) => ruta.startsWith(`${GESTORIA}/tauler/`) || ruta.startsWith(`${GESTORIA}/impostos/`))).toEqual([]);
+    expect(TRACTOR_TAULER.fonts.filter((ruta) => ruta.startsWith(`${GESTORIA}/tauler/`))).toEqual([
+      `${GESTORIA}/tauler/ShellGestoria.jsx`, `${GESTORIA}/tauler/TargetaTauler.jsx`, `${GESTORIA}/tauler/Tauler.jsx`,
+      `${GESTORIA}/tauler/nucli/resumTauler.js`, `${GESTORIA}/tauler/nucli/targetesTauler.js`, `${GESTORIA}/tauler/nucli/tractorTauler.js`,
+      `${GESTORIA}/tauler/useTauler.js`
+    ]);
   });
 
   test('la llista blanca és justa: cada entrada existix, és al graf, no és a cap font i porta motiu', () => {

@@ -2,6 +2,7 @@ import React from 'react';
 import { UniversalCard } from './../PedraSeca';
 import { resolveAsset } from '../../config/assetResolver';
 import { dataDElement, dataHoraDeBarra } from './editorial.js';
+import { DEFAULT_AUTHOR } from './UniversalUtils.js';
 
 /**
  * T5 (ordre del Mestre, 260930) · Les fonts de la pastilla d'un acte del
@@ -46,13 +47,29 @@ function insigniaDeCalendari(esdeveniment, dateTime) {
   };
 }
 
+/**
+ * T6 (ordre del Mestre, 261004, prompt 261004_0515 §5) · On porta la boina
+ * d'un acte: la pàgina de qui signa (`deQuiSigna`, la ruta que en fa qui
+ * pinta la targeta) o, si no se sap qui és, el sistema i la reserva «Sóc de
+ * Poble» (sense nom propi) van a la pàgina del projecte (DEFAULT_AUTHOR.href,
+ * RUTA_PROJECTE de config/navigation.js). Un nom sense identitat coneguda no
+ * s'endevina: sense enllaç.
+ */
+export function rutaDeLaBoinaDeLActe(item, deQuiSigna) {
+  if (deQuiSigna) return deQuiSigna;
+  const ambNomPropi = Boolean(item?.author_name || item?.author);
+  return item?.isSystem || !ambNomPropi ? DEFAULT_AUTHOR.href : undefined;
+}
+
 /* T43 (ordre del Mestre, 260928) · `onConnect`: qui pinta la targeta hi passa
    el Connectar amb el descriptor de l'esdeveniment. Sense ell, el genèric.
    T63.2 · `objecte`: el mateix descriptor tipat ('esdeveniment'); Comentar
    obri el xat comú de l'acte (useAccions). Sense ell, el de la 'pagina'.
    T5 · `esdeveniment`: el model de l'acte (acteAEsdeveniment), que fa qui
-   pinta la targeta (MurSection): components/ no importa de sections/. */
-export function EventCard({ item, esdeveniment = null, onConnect, objecte }) {
+   pinta la targeta (MurSection): components/ no importa de sections/.
+   T6 · `authorHref`: la pàgina de qui signa (rutaDePerfilDAutor), que fa qui
+   pinta la targeta pel mateix motiu: navigation.js arrossega la llavor. */
+export function EventCard({ item, esdeveniment = null, onConnect, objecte, authorHref }) {
   const data = dataDeLActe(esdeveniment, item);
 
   // Use entradilla if available, then lead, then description
@@ -72,7 +89,9 @@ export function EventCard({ item, esdeveniment = null, onConnect, objecte }) {
       imageUrl={resolveAsset((typeof item.image_url === 'string' ? item.image_url : null) || (typeof item.image === 'string' ? item.image : null) || '')}
       imageAlt={item.imageAlt || item.title || item.name || ''}
       author={item.author_name || item.author || "Sóc de Poble"}
-      authorHref={item.isSystem ? "/pobles" : undefined}
+      /* T6 · Derogat per l'ordre del Mestre del 261004 (prompt 261004_0515):
+         el sistema ja no porta a /pobles, i qui signa ja té enllaç. */
+      authorHref={rutaDeLaBoinaDeLActe(item, authorHref)}
       avatarUrl={resolveAsset((typeof item.author_avatar === 'string' ? item.author_avatar : null) || '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg')}
       location={item.author_location || item.location || item.population || "La Torre de les Maçanes"}
       date={data.date}

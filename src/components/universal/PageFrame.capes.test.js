@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, test } from 'vitest';
 
@@ -79,7 +79,26 @@ test('T53 · les fletxes acosten el glif al llibre; la cel·la tàctil no canvia
 test('T53 · la graella base no canvia: el trio continua centrat respecte a tota la barra (variant A)', () => {
   expect(components).toContain(GRAELLA);
   expect(compacta()).not.toContain('grid-template-columns');
-  expect(blocDe(components, '@container (max-width: 336px) {', 'header.bar-blue')).not.toContain('grid-template-columns');
+  /* Correcció final (ordre del Mestre, 261004) · el pas de 336 passa a 367 (vegeu la prova de davall). */
+  expect(blocDe(components, '@container (max-width: 367px) {', 'header.bar-blue')).not.toContain('grid-template-columns');
+});
+
+/* Correcció final (ordre del Mestre, 261004; revisió final de la nit) · Amb
+   --sdp-touch de 48, la barra compacta demana 8 + 144 + 8 + 144 + 8 + 48 + 8
+   = 368px: el pas que la deixa sense separació ni coixí era a 336 (el càlcul
+   de 44px) i entre 337 i 367px de barra CONNECTAR sobreeixia fins a 31px.
+   Ara és a 367: res canvia a 368 o més. Per davall de 336 continua sense
+   cabre (decisió pendent del Mestre). Derogada la xifra de 336 de la prova de
+   dalt (ordre del Mestre, 261004). */
+test('261004 · el pas compacte de la barra blava és a 367px de barra: sense separació ni coixí, CONNECTAR a la cel·la de 48', () => {
+  const pas = blocDe(components, '@container (max-width: 367px) {', 'header.bar-blue { gap: 0; padding: 0; }');
+  expect(pas).toContain('header.bar-blue { gap: 0; padding: 0; }');
+  expect(pas).toContain('.bar-blue .btn-connectar.sp-card-connect { width: var(--sdp-touch); min-width: var(--sdp-touch); height: var(--sdp-touch); min-height: var(--sdp-touch); }');
+  expect(blocDe(components, '@container (max-width: 336px) {', 'bar-blue')).toBe('');
+  expect(blocDe(components, '@layer components {', pas)).not.toBe('');
+  // El pas de 480 (separació i coixí de 8) continua igual: entre 368 i 480 hi cap.
+  expect(compacta()).toContain('header.bar-blue { gap: var(--sdp-space-2); padding: 0 var(--sdp-space-2); }');
+  expect(net('src/css/tokens.css')).toContain('--sdp-touch: 48px;');
 });
 
 test('T53 · les mostres del catàleg tenen contenidor propi i l’estreta fa 28rem', () => {
@@ -87,35 +106,99 @@ test('T53 · les mostres del catàleg tenen contenidor propi i l’estreta fa 28
   expect(components).toContain('.sdp-especimen__barres--estreta { inline-size: min(100%, 28rem); }');
 });
 
-const AMAGA = '.sdp-universal-page-container > section.bar-orange { display: none; }';
-/* T51 · l'excepció torna la barra com a graella, no com a flex. */
-const PERFIL = '.perfil-espai .sdp-editor-document .sdp-universal-page-container > section.bar-orange { display: grid; }';
-const media = () => blocDe(components, '@media (max-width: 720px) {', AMAGA);
-const container = () => blocDe(components, '@container (max-width: 400px) {', AMAGA);
+/* T38 (260928: en mòbil i en columna estreta la barra taronja de pàgina no
+   es pintava; l'editor del Perfil n'era l'excepció i les eines ancorades
+   pujaven a davall de la blava) · Derogat per l'ordre del Mestre del 261004:
+   barra taronja universal. La regla que l'amagava ja la va revertir el
+   Mestre (T24, components.css) i les cinc proves que l'exigien queden
+   derogades. En el seu lloc, la regla nova: cap full l'amaga. */
+const AMAGA_PAGINA = /\.sdp-universal-page-container\s*>\s*section\.bar-orange\s*\{\s*display:\s*none;?\s*\}/;
+const AMAGA_QUALSEVOL = /(?:^|[\s,}])(?:section)?\.bar-orange\s*\{[^}]*display:\s*none/;
 
-test('T38 · en mòbil i en columna estreta la barra taronja de pàgina no es pinta', () => {
-  expect(media()).toContain(AMAGA);
-  expect(container()).toContain(AMAGA);
+/* M1 (verificació del front «barra-autoria», 261004) · La guarda recorre TOTS
+   els fulls CSS de src/ (layout, utilities, AppGridShell, PerfilShell,
+   apps, pecesApps, catalegColleccio, wiki…), no només components i modules.
+   Mira cada regla, també dins de @media, @container i @layer, i també quan
+   la barra és un selector d'una llista ('.x, .bar-orange { … }'): si el
+   subjecte del selector (l'últim compost) és la barra i la regla l'apaga
+   (display: none, visibility: hidden o collapse), és una infracció. Un
+   descendent de la barra (el poble de l'autor en mòbil) no ho és. */
+const fullsCss = (dir) => readdirSync(resolve(process.cwd(), dir), { withFileTypes: true }).flatMap((entrada) => {
+  const ruta = `${dir}/${entrada.name}`;
+  if (entrada.isDirectory()) return fullsCss(ruta);
+  return entrada.name.endsWith('.css') ? [ruta] : [];
+});
+const APAGA = /(?:^|;)\s*(?:display\s*:\s*none|visibility\s*:\s*(?:hidden|collapse))\s*(?:!important\s*)?(?:;|$)/;
+/* Les regles fulla d'un full sense comentaris: [selectors, cos]. */
+const reglesFulla = (css) => [...css.replace(/\/\*[\s\S]*?\*\//g, '').matchAll(/([^{}]*)\{([^{}]*)\}/g)]
+  .map(([, selectors, cos]) => [selectors.trim(), cos.trim()]);
+const subjecteEsLaBarra = (selector) => {
+  const compostos = selector.trim().split(/\s*[\s>+~]\s*/).filter(Boolean);
+  return /\.bar-orange(?![\w-])/.test(compostos[compostos.length - 1] || '');
+};
+const amaguenLaBarra = (css) => reglesFulla(css)
+  .filter(([selectors, cos]) => APAGA.test(cos) && selectors.split(',').some(subjecteEsLaBarra))
+  .map(([selectors]) => selectors);
+
+test('261004 · M1 · el recorregut troba tots els fulls de src/, no només els dos canònics', () => {
+  const fulls = fullsCss('src');
+  expect(fulls).toEqual(expect.arrayContaining([
+    'src/css/components.css', 'src/css/modules.css', 'src/css/layout.css', 'src/css/utilities.css',
+    'src/components/layout/AppGridShell.css'
+  ]));
+  expect(fulls.length).toBeGreaterThan(8);
 });
 
-test('T38 · l’excepció del Perfil (selector d’identitat i avatar) va darrere i pesa més', () => {
-  for (const bloc of [media(), container()]) {
-    expect(bloc.indexOf(PERFIL)).toBeGreaterThan(bloc.indexOf(AMAGA));
-    expect(bloc).toContain('.perfil-espai .sdp-editor-document .sdp-editor-eines { top: calc(var(--sdp-alt-accio) * 2); }');
+test('261004 · M1 · la guarda detecta (casos sintètics en memòria)', () => {
+  expect(amaguenLaBarra('.bar-orange { display: none; }')).toHaveLength(1);
+  expect(amaguenLaBarra('@media (max-width: 720px) { .sdp-x > section.bar-orange { opacity: 1; display:none } }')).toHaveLength(1);
+  expect(amaguenLaBarra('@layer components { .sdp-a, .sdp-b .bar-orange { visibility: hidden; } }')).toHaveLength(1);
+  expect(amaguenLaBarra('@container (max-width: 400px) { .sdp-universal-page-container > section.bar-orange { display: none !important; } }')).toHaveLength(1);
+  // Lícits: un descendent de la barra, un retoc de mòbil, una altra barra, un display que no l'apaga.
+  expect(amaguenLaBarra('.bar-orange .sp-card-author-location { display: none; }')).toEqual([]);
+  expect(amaguenLaBarra('@media (max-width: 720px) { section.bar-orange { padding: 0 var(--sdp-space-4); } }')).toEqual([]);
+  expect(amaguenLaBarra('.bar-orange-clar { display: none; }')).toEqual([]);
+  expect(amaguenLaBarra('section.bar-orange { display: grid; }')).toEqual([]);
+});
+
+test('261004 · barra taronja universal: cap full de src/ amaga la barra taronja de pàgina, ni en mòbil ni en columna estreta', () => {
+  for (const ruta of fullsCss('src')) {
+    const full = net(ruta);
+    expect(AMAGA_PAGINA.test(full), ruta).toBe(false);
+    expect(AMAGA_QUALSEVOL.test(full), ruta).toBe(false);
+    expect(amaguenLaBarra(readFileSync(resolve(process.cwd(), ruta), 'utf8')), ruta).toEqual([]);
+  }
+  // Un retoc de mòbil (coixí, lletra) és lícit; amagar-la, no.
+  for (const obertura of ['@media (max-width: 720px) {', '@container (max-width: 400px) {']) {
+    expect(AMAGA_QUALSEVOL.test(blocDe(components, obertura, 'bar-orange')), obertura).toBe(false);
   }
 });
 
-test('T38 · sense taronja, les eines ancorades pugen a davall de la blava', () => {
-  expect(media()).toContain('.sdp-editor-document .sdp-editor-eines { top: var(--sdp-alt-accio); }');
+/* Ordre del Mestre, 261004 · Sense barra blava ('page' i 'none') la taronja
+   s'enganxa a dalt de tot: el modificador de PageFrame té regla pròpia, dins
+   de @layer components, i no toca cap pàgina amb barra blava. */
+const SENSE_BLAVA = '.sdp-universal-page-container--sense-blava > section.bar-orange { top: 0; }';
+test('261004 · sense barra blava, la taronja puja a dalt de tot (modificador propi dins de @layer components)', () => {
+  expect(moduls).toContain(SENSE_BLAVA);
+  expect(blocDe(moduls, '@layer components {', SENSE_BLAVA)).toContain(SENSE_BLAVA);
 });
 
-test('T38 · la caputxa taronja de les targetes no hi entra', () => {
-  expect(media()).not.toContain('sp-card-header');
-  expect(container()).not.toContain('sp-card-header');
-});
-
-test('T38 · les regles viuen dins de @layer components (guanyen el section.bar-orange de legacy)', () => {
-  expect(blocDe(components, '@layer components {', AMAGA)).toContain('@media (max-width: 720px) {');
+/* D3 (261004) · L'Admin (chrome 'page') embolcalla una AppGridShell, que és
+   absoluta (inset: 0): la graella ha de començar davall de la taronja, no
+   davall d'ella. Regla al mateix bloc, dins de @layer components, sense tocar
+   AppGridShell.css; (0,3,0) guanya al `.app-grid-page` (0,1,0) de la mateixa
+   capa (index.css l'importa a layer(components)). */
+const GRAELLA_DAVALL = '.sdp-universal-page-container--sense-blava > .content-wrapper > .app-grid-page { top: var(--sdp-alt-accio); }';
+test('261004 · D3 · sense blava, una graella absoluta comença davall de la taronja (mateix bloc, @layer components)', () => {
+  expect(moduls).toContain(GRAELLA_DAVALL);
+  expect(blocDe(moduls, '@layer components {', SENSE_BLAVA)).toContain(GRAELLA_DAVALL);
+  // L'alçada de la taronja és la mateixa variable (layout.css): ni més ni menys.
+  expect(net('src/css/layout.css')).toContain('section.bar-orange { height: var(--sdp-alt-accio);');
+  // AppGridShell.css continua sense saber res de la barra, i viu a la capa components.
+  const graella = net('src/components/layout/AppGridShell.css');
+  expect(graella).toContain('.app-grid-page { position: absolute; inset: 0;');
+  expect(graella).not.toContain('bar-orange');
+  expect(net('src/css/index.css')).toContain("@import url('../components/layout/AppGridShell.css') layer(components);");
 });
 
 test('T51 · l’excepció del Perfil ja no pot tornar la barra com a flex (esclafaria les tres columnes)', () => {

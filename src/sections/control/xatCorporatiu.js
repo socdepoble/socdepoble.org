@@ -1,9 +1,16 @@
 /**
  * xatCorporatiu.js — W4-09 (auditoria de Codex 261003_1950, «la boina
- * corporativa usa l'id de llavor en remot») · On porta l'autor «Sóc de
- * Poble» de la boina de les targetes del Panell: el xat corporatiu, el
- * missatge directe de l'entitat (/xat?amb=<id>, com «Escriu-li al xat» de la
- * seua fitxa).
+ * corporativa usa l'id de llavor en remot») · El xat corporatiu de «Sóc de
+ * Poble», el missatge directe de l'entitat (/xat?amb=<id>, com «Escriu-li al
+ * xat» de la seua fitxa).
+ *
+ * T6 (ordre del Mestre, 261004, prompt 261004_0515 §5) · Derogat per l'ordre
+ * del Mestre del 261004 (prompt 261004_0515): este xat ja no és l'enllaç de
+ * la boina, que porta SEMPRE a la pàgina de l'autor (el projecte,
+ * destinsControl.AUTORIA_SOCDEPOBLE). És on porta Comentar del peu de les
+ * targetes del Panell: la skill sdp-universal-page diu que Comentar és el
+ * missatge directe a l'autor. Mentre no hi ha xat on portar, Comentar ho diu
+ * (avisDelXatCorporatiu) i el Panell conserva l'Alerta.
  *
  *  · LLAVOR ('seed' o 'local'): l'id del padró ('socdepoble',
  *    destinsControl.XAT_SOCDEPOBLE), que resol el xat local. Cap crida.
@@ -19,7 +26,7 @@
  *    UUID ho comprova el seu adaptador (data/supabase/xat.js), que rebutja la
  *    resta amb un error clar abans de cap crida. Sense la capacitat, sense
  *    entitat o amb error: cap enllaç i el Panell ho diu. Mentre es resol,
- *    l'autor tampoc és enllaç.
+ *    tampoc (T6: Comentar ho diu amb l'avís de `resolent`).
  *  · Canvi de backend (backendScope: proveïdor, endpoint, tenant i mode): es
  *    torna a resoldre i la resposta vella es descarta (AbortController).
  *  · Fora de l'app (sense UIProvider: l'espècimen del catàleg muntat sol) no
@@ -65,6 +72,24 @@ const hostLlest = ({ signal } = {}) => import('../../host.js').then((host) => ho
 /** La ruta del xat corporatiu amb l'id que ha tornat el port, codificat. */
 export const rutaXatCorporatiu = (id) => `/xat?amb=${encodeURIComponent(id)}`;
 
+/* T6 (261004) · Els avisos quan Comentar no té xat on portar, en parells
+   [clau i18n, reserva en valencià]. `noDisponible` és també el text de
+   l'Alerta del Panell, el de sempre. */
+export const AVISOS_XAT_CORPORATIU = Object.freeze({
+  noDisponible: Object.freeze(['section.control.xatCorporatiu.noDisponible', 'Xat de Sóc de Poble: encara no disponible en este servidor.']),
+  resolent: Object.freeze(['section.control.xatCorporatiu.resolent', 'Xat de Sóc de Poble: encara s’està buscant en este servidor.'])
+});
+
+/**
+ * L'avís de Comentar per a un { estat, href } de useXatCorporatiu: null si
+ * hi ha xat on portar; mentre es resol, `resolent`; sense entitat o amb
+ * error, `noDisponible`.
+ */
+export function avisDelXatCorporatiu(xat) {
+  if (xat?.href) return null;
+  return xat?.estat === 'resolent' ? AVISOS_XAT_CORPORATIU.resolent : AVISOS_XAT_CORPORATIU.noDisponible;
+}
+
 /**
  * Resol on porta l'autor. Pur respecte de React: el port, l'espera de
  * l'amfitrió i la clau s'injecten (les proves no toquen la xarxa).
@@ -109,9 +134,10 @@ function useEstatDeLApp() {
 }
 
 /**
- * { estat, href } de l'autor de la boina per a la configuració de l'app.
- * href és null mentre no hi ha un xat de veres on portar. Fora de l'app no hi
- * ha cap backend: el xat de la llavor, sense crides.
+ * { estat, href } del xat corporatiu (el Comentar de les targetes del Panell,
+ * T6) per a la configuració de l'app. href és null mentre no hi ha un xat de
+ * veres on portar. Fora de l'app no hi ha cap backend: el xat de la llavor,
+ * sense crides.
  */
 export function useXatCorporatiu() {
   const app = useEstatDeLApp();

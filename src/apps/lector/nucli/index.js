@@ -14,7 +14,7 @@
  *   noticies.js     carpetes, filtres i comptadors
  */
 export { analitzaFeed, MAX_ARTICLES } from './analitzador.js';
-export { dataCurta, dataLlarga, horaRelativa, isoDeMs, llegixData, msDeData } from './dates.js';
+export { dataCurta, dataDeBoina, dataLlarga, horaRelativa, isoDeMs, llegixData, msDeData } from './dates.js';
 export { descodifica, netejaText, plega, talla } from './entitats.js';
 export {
   ESQUEMA, LIMITS_ESTAT, commutaDespres, commutaSeguiment, esDesat, esLlegit, estatInicial, marcaLlegit, marcaLlegits,

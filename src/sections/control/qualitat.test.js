@@ -18,6 +18,8 @@ const llig = (ruta) => readFileSync(path.join(ARREL, ruta), 'utf8');
 const CONTROL = [
   'src/sections/control/ControlSection.jsx',
   'src/sections/control/ControlSection.test.jsx',
+  /* Onada 2 de la Gestoria (261004) · Els espais «L’empresa» i «La llar». */
+  'src/sections/control/ControlSection.espais.test.jsx',
   'src/sections/control/destinsControl.js',
   'src/sections/control/destinsControl.test.js',
   'src/sections/control/qualitat.test.js'

@@ -63,7 +63,13 @@ export default function MercatSection() {
                 /* T3 · Sense nom, la reserva de qui no se sap (FORASTER, la
                    mateixa que el mapejador del Mercat): mai l'entitat. */
                 author={item.author_name || item.seller || FORASTER.name}
-                /* Lògica d'Usuari (T4, T5): qui ven té perfil, i Connectar recorda d'on ve. */
+                /* Lògica d'Usuari (T4, T5): qui ven té perfil, i Connectar recorda d'on ve.
+                   T6 (ordre del Mestre, 261004, prompt 261004_0515 §5) · La boina
+                   enllaça a la pàgina de qui signa (rutaDePerfilDAutor: l'entitat
+                   pilot, al projecte; una persona, al seu perfil). La reserva
+                   FORASTER (sense nom ni identitat) i un nom sense identitat
+                   coneguda no tenen cap pàgina: la boina queda sense enllaç, a
+                   propòsit. Mai l'entitat ni el projecte: no és qui signa. */
                 authorHref={rutaDePerfilDAutor(item) || undefined}
                 objecte={producte}
                 onConnect={() => navigate(rutaConnectarObjecte(producte))}

@@ -6,15 +6,15 @@
  *                    les carpetes (el patró de salut/vistes/comunes.jsx:
  *                    data-obri-columna + aria-controls, perquè la guarda de
  *                    focus d'AppGridShell el trobe en tancar-la)
- *   NavTargetes      TargetesColleccions amb enllaços de veres: el clic
+ *   NavTargetes      les targetes de navegació (carpetes, fonts i «Les que
+ *                    seguixes»): UniversalCard amb enllaços de veres; el clic
  *                    normal navega (push) i, en mitjana, tanca el panell
  *   MarcaTotLlegit   «Marca-ho tot com a llegit» per a la carpeta (i la font)
  *                    que es veu: el ✓ de la capçalera de la llista de Feedly
  *   AvisLector       el disc: només en memòria, una altra pestanya o un error
  */
 import { CheckCheck, PanelLeftOpen } from 'lucide-react';
-import { useNavigate, useRouter } from '../../../app/contexts/RouterContext';
-import { Alerta, Boto, TargetesColleccions } from '../../../components/PedraSeca/index.js';
+import { Alerta, Boto, GraellaTargetes, UniversalCard } from '../../../components/PedraSeca/index.js';
 import { useClosaAplicacio } from '../../plataforma/index.js';
 import { articlesDeCarpeta } from '../nucli/index.js';
 import { useVistaLector } from './context.js';
@@ -30,25 +30,69 @@ export function ObridorCarpetes() {
   );
 }
 
-/** `camiDe(element)`: el camí dins de l'app (useApp().ruta(...)). */
+/* Les apps no entren a la telemetria (frontera.test.js): el Connectar del peu no compta. */
+const SENSE_TELEMETRIA = Object.freeze({ comptar: false });
+const textDe = (valor) => (typeof valor === 'string' && valor.trim() !== '' ? valor : undefined);
+
+/**
+ * Ordre del Mestre, 261004 (integració final, arreglo 6; arreglo del verificador, «front roig i
+ * verificació emmascarada») · Les columnes de navegació (Carpetes, Fonts i «Les que seguixes»)
+ * passen a UniversalCard, la targeta de tot Sóc de Poble: boina, títol, subtítol i entradeta,
+ * amb dades reals. Derogada la llista sdp-gestor-llista amb ItemMedia del Workspace (reescrita
+ * a les 11:41 sense relleu): importava fora de la frontera de l'app (Model B) i escrivia classes i
+ * elements de llista a mà (qualitat.test.js), i la inicial de reserva es colava al text de
+ * l'enllaç («HHui6 sense llegir»).
+ *   element   { id, nom, comptador, secundari?, entradeta?, autoria? }
+ *     · títol: el nom; subtítol: el comptador i el seu text («6 sense llegir»), que també és la
+ *       descripció accessible de l'element principal (el nom és el títol);
+ *     · entradeta: la que vestix la columna (què és la carpeta, quantes fonts hi seguixes, la
+ *       descripció o el lloc web de la font; navegacio.js);
+ *     · boina: `autoria` { nom, href?, avatar?, poble? } que vestix la columna (Sóc de Poble per
+ *       a les carpetes, que són de l'app; la font mateixa, sense enllaç, per a una font: la
+ *       targeta sencera ja hi porta; navegacio.js). Sense, cap boina: no se n'inventa cap.
+ *   actiu     l'id de l'element obert: aria-current="true" a l'element principal
+ *   camiDe(e) el camí de l'app on porta (mainHref): enllaç de veres, també en pestanya nova
+ * El peu, el per defecte de les apps (TargetesArticles de l'esquelet): sense Compartir (Hui i
+ * Per a després són l'estat d'este dispositiu), sense xat comú i el Connectar no compta. El
+ * Mestre decidirà què s'apaga. Cap className ni element de llista escrit a mà: GraellaTargetes.
+ * La targeta de sempre, amb fons, no la plana: la columna de les carpetes és fosca i la plana no
+ * s'hi llegia (comprovat al navegador). La carpeta oberta, la vora del bloc del front a
+ * modules.css.
+ */
 export function NavTargetes({ elements, etiqueta, actiu, camiDe, buit = null }) {
-  const navigate = useNavigate();
-  const { basename = '' } = useRouter();
   const { mida, tancaPanells } = useClosaAplicacio();
+  const llista = Array.isArray(elements) ? elements : [];
+  /* En mitjana la columna és un panell superposat: triar-ne una el tanca (navega el Link). */
+  const enTriar = mida === 'mitja' ? () => tancaPanells() : undefined;
   return (
-    <TargetesColleccions
-      colleccions={elements}
-      etiqueta={etiqueta}
-      actiu={actiu}
-      hrefDe={(element) => basename + camiDe(element)}
-      onTria={(element) => {
-        navigate(camiDe(element));
-        /* En mitjana l'esquerra tapa la resta: triar-ne una la tanca (en estret ho fa la ruta). */
-        if (mida === 'mitja') tancaPanells();
+    <GraellaTargetes elements={llista} variant="llista" etiqueta={etiqueta} buit={buit}>
+      {(element) => {
+        const n = Number.isSafeInteger(element.comptador) && element.comptador > 0 ? element.comptador : 0;
+        const subtitol = [String(n), textDe(element.secundari)].filter(Boolean).join(' ');
+        const boina = element.autoria || null;
+        return (
+          <UniversalCard
+            key={element.id}
+            title={element.nom}
+            subtitle={subtitol}
+            body={textDe(element.entradeta)}
+            author={textDe(boina?.nom)}
+            authorHref={textDe(boina?.href)}
+            avatarUrl={textDe(boina?.avatar)}
+            location={textDe(boina?.poble)}
+            imatgePrivada
+            mainHref={camiDe(element)}
+            onMainClick={enTriar}
+            actual={actiu === element.id}
+            descripcioAccessible={subtitol}
+            objecte={null}
+            hasFooter
+            showShare={false}
+            telemetria={SENSE_TELEMETRIA}
+          />
+        );
       }}
-      textComptador={(n) => String(n)}
-      buit={buit}
-    />
+    </GraellaTargetes>
   );
 }
 

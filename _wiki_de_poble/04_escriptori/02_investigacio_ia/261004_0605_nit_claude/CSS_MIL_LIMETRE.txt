@@ -1,0 +1,763 @@
+CSS AL MIL·LÍMETRE · FITXA DEL FRONT «css» (D-C) · nit del 261004
+=====================================================================
+
+ESTAT: PREPARAT, NO APLICAT. Cap fitxer de src/ s'ha tocat.
+
+Per què. L'ordre del xat de la nit diu: no executar res d'amagat del Mestre;
+preparar la fitxa sencera en fitxers i, demà, amb ell present, fer la
+demostració en directe. D-C és un canvi visual pur, i la Llei del Píxel
+(sdp-workflow) exigix l'ordre del Mestre i un pla aprovat. Esta fitxa és eixe
+pla: cada fila diu el valor vell, el nou i quants píxels es mouen, perquè
+demà el Mestre aprove o esmene fila a fila mentre es veu aplicar.
+
+Tall de lectura: 261004, de 06:40 a 06:55. Altres fronts editaven en paral·lel
+modules.css i UniversalCard.jsx. Els números de línia de components.css i de
+tokens.css són d'eixe tall; abans d'aplicar, cal tornar a llegir cada regla.
+Per a modules.css es dona el selector, perquè les línies ja s'hi movien.
+
+Línia base de proves (06:45, sense cap canvi meu)
+  npx vitest run src/css src/components/PedraSeca src/components/universal
+    src/sections/disseny src/sections/consola/metriques.capes.test.js
+    src/components/layout
+  149 fitxers · 1802 proves · 1786 verdes · 16 roges, cap atribuïble a este front:
+    · PageFrame.capes.test.js T38 ×4: components.css:1888 diu «T24 (Revertit
+      pel Mestre, 261004) · La barra taronja JA NO s'amaga en mòbil», però la
+      prova encara exigix el bloc que l'amagava. Cal derogar-la (no és del
+      front css).
+    · Classificacio.test.jsx ×7 i classificacio/qualitat.test.js ×1 (ESLint:
+      BotoneraClassificacio.jsx:31 'Boto' sense ús): arbre viu d'un altre front.
+    · Avatar.xat.test.jsx ×2, TargetaViva.test.jsx ×1, DocumentEditor.test.jsx:469
+      ×1: anteriors al torn.
+
+Llegenda de la columna «px»: «=» vol dir mateix píxel; «sense ús» vol dir que
+cap JSX de src/ pinta eixa classe (comprovat amb grep sobre .jsx, .js i .html
+de src/, public/ i wordpress-plugin/), així que avui no es mou res a la pantalla.
+
+
+1. components.css · TAULA ABANS → DESPRÉS
+-----------------------------------------
+
+A. SÒL DE 14px (D-C §1). --sdp-text-meta = 0.875rem = 14px.
+
+ #  línia  selector                                   propietat   vell        nou                                   px
+ A1  641   .btn-sm                                    font-size   0.85rem     var(--sdp-text-meta)                  13,6→14 · sense ús
+ A2  665   .badge (1a regla)                          font-size   0.75rem     var(--sdp-text-meta)                  12→14 · declaració morta: la 2a .badge (1486) la tapa
+ A3  710   .avatar                                    font-size   0.8rem      var(--sdp-text-meta)                  12,8→14 · sense ús amb text (l'únic .avatar viu és un <img> de public/components/sp-identity-components.js:192)
+ A4  717   .avatar-sm                                 font-size   0.7rem      var(--sdp-text-meta)                  11,2→14 · sense ús
+ A5  805   .sp-card-labels .sp-card-label, .sp-card-label  font-size  0.7rem  var(--sdp-text-meta)                  11,2→14 · VISIBLE a totes les targetes, a les etiquetes de pàgina i a les píndoles de classificació (T7)
+ A6  922   .sp-card-author-location                   font-size   0.85rem     var(--sdp-text-meta)                  13,6→14 · VISIBLE: caputxa i barra taronja
+ A7 1391   .btn-taronja-fort                          font-size   0.8rem      var(--sdp-text-meta)                  12,8→14 · sense ús
+ A8 1486   .badge (2a regla)                          font-size   0.7rem      var(--sdp-text-meta)                  11,2→14 · VISIBLE: detall (detailSectionMeta.jsx:127) i Dispositius (DevicesSection.jsx:317-318)
+ A9  555   .sdp-consola__mono                         font-size   0.9em       max(0.9em, var(--sdp-text-meta))      = dins de prosa (pare de 18-20px: 16,2-18px); puja a 14px si mai el pare és text meta. Troballa nova: el mapa no el comptava.
+
+ Avatar xs: .sdp-avatar--xs viu a sdp.css i la seua excepció ja és a
+ rocaIGuardes.capes.test.js:204. Ací no hi ha cap glif en cercle que no hi
+ càpia: dues inicials a 14px en negreta fan uns 20px d'ample i .avatar-sm en
+ té 32. No cal cap excepció nova a components.css.
+
+B. ESPAIS A LA REIXETA (D-C §2). Escala: space-1 4 · 2 8 · 3 12 · 4 16 · 5 20 · 6 24 · 8 32.
+
+ #  línia  selector                                   propietat       vell                 nou                                                   px
+ B1  662   .badge (1a)                                gap             6px                  var(--sdp-space-2)                                    6→8 · VISIBLE amb icona (Dispositius)
+ B2  663   .badge (1a)                                padding         4px 12px             var(--sdp-space-1) var(--sdp-space-3)                 = (i mort)
+ B3  725   .sp-card                                   margin          0 auto 32px          0 auto var(--sdp-space-8)                             = · regla FIXADA (vegeu §6)
+ B4  803   .sp-card-labels .sp-card-label, .sp-card-label  padding    0 12px               0 var(--sdp-space-3)                                  =
+ B5  818   .sp-card-label__action                     padding         0 12px               0 var(--sdp-space-3)                                  =
+ B6  955   .sp-card-body                              padding         22px 24px 16px       var(--sdp-space-6) var(--sdp-space-6) var(--sdp-space-4)   22→24 a dalt · VISIBLE · regla FIXADA (§6). Alternativa: var(--sdp-space-5) (22→20). Recomanació: 24, el mateix que els costats: el títol centrat queda en un marc d'aire igual per dalt i pels costats; els 16 de baix es queden perquè ve el peu blau.
+ B7 1075   .sp-card .sp-card-body h2                  margin-top      16px                 var(--sdp-space-4)                                    =
+ B8 1144   .sp-card-price                             margin-left     6px                  var(--sdp-space-2)                                    6→8 · VISIBLE al detall
+ B9 1145   .sp-card-price                             margin-bottom   6px                  var(--sdp-space-2)                                    6→8
+ B10 1150  .sp-card-price                             padding         4px 12px             var(--sdp-space-1) var(--sdp-space-3)                 =
+ B11 1302  .sp-card-calendar-badge                    margin-left     16px                 var(--sdp-space-4)                                    =
+ B12 1303  .sp-card-calendar-badge                    margin-bottom   12px                 var(--sdp-space-3)                                    =
+ B13 1377  .sp-card-calendar-badge__any               margin-top      2px                  var(--sdp-space-1)                                    2→4 · és espai, no vora. Cap: 56 + 26,4 + 21,6 + 4 = 108px dins dels 124 interiors del quadrat
+ B14 1422  .pill                                      gap             8px                  var(--sdp-space-2)                                    =
+ B15 1423  .pill                                      padding         8px 16px             var(--sdp-space-2) var(--sdp-space-4)                 =
+ B16 1484  .badge (2a)                                padding         0 12px               0 var(--sdp-space-3)                                  =
+ B17 1515  .devices-panel__head .badge-row, .card__body .badge-row   margin-top   12px   var(--sdp-space-3)                                    =
+ B18 1525  .notes-editor .badge-row                   margin-top      12px                 var(--sdp-space-3)                                    =
+ B19 1530  .card--soft .split-grid .sp-card-labels    margin-bottom   12px                 var(--sdp-space-3)                                    =
+ B20 1564  .btn-publish                               padding         var(--sdp-space-2) 22px   var(--sdp-space-2) var(--sdp-space-5)            22→20, com .sdp-boto · sense ús
+ B21  104  .sdp-insignia                              padding         2px var(--sdp-space-3)    var(--sdp-space-1) var(--sdp-space-3)            2→4 per dalt i per baix: la insígnia passa de 27 a 31px d'alt · VISIBLE
+ B22  199  .sdp-casella__etiqueta                     gap             2px                  var(--sdp-space-1)                                    2→4 entre l'etiqueta i l'ajuda · VISIBLE
+
+ Exempts, amb motiu (no són espais de la reixeta; la guarda els llista i
+ exigix que continuen tal qual):
+ E1   13  .sdp-nomes-lector             margin          -1px   patró visualment amagat (WCAG), estàndard
+ E2  334  .sdp-pestanyes__pestanya      margin-bottom   -2px   encavalca la vora de 2px de la llista: és una vora
+ E3  464  .sdp-anatomia                 gap             2px    és el filet: el fons de la graella fa de vora entre cel·les
+ E4  123  .sdp-alerta__icona            margin-top      2px    ajust òptic: icona de 24px contra una primera línia de 28,8px (18px × 1,6) = 2,4px. A 4px o a 0 quedaria més desquadrada. Si el Mestre la vol a la reixeta: var(--sdp-space-1)
+ No és espai (geometria del control): .sdp-interruptor__botonet top/left 3px (217), centra el botonet de 20px dins del carril de 30px amb vora de 2px.
+
+ MIDES FORA DE TOKEN que D-C nomena:
+ M1 1146   .sp-card-price                             font-size   1.2rem      var(--sdp-text-h6) (1.25rem)          19,2→20 · VISIBLE: detall i píndola del títol de pàgina (.sp-card-price--en-linia)
+ M2 1064   .sp-card .sp-card-body h1                  font-size   1.6rem      var(--sdp-text-h5) (1.5rem)           25,6→24 · el mateix graó que .sp-card-title
+ M3 1073   .sp-card .sp-card-body h2                  font-size   1.25rem     var(--sdp-text-h6)                    =
+
+C. RADIS (D-C §3). Escala real de tokens.css:171-175: s 8 · m 12 · g 16 · xl 28 · pastilla 999. Ull: es diu «g», no «l».
+
+ C1  674   .page-btn                                  border-radius   4px    var(--sdp-radi-s)          4→8 · sense ús (germà viu: .sdp-paginacio__num, ja en radi-s)
+ C2  804   .sp-card-labels .sp-card-label, .sp-card-label  border-radius  12px  var(--sdp-radi-pastilla)  = (alçada 24px: el radi ja es retalla a 12)
+ C3 1424   .pill                                      border-radius   20px   var(--sdp-radi-pastilla)   = (alçada ≈39,6px: el radi es retalla a 19,8)
+ C4 1485   .badge (2a)                                border-radius   12px   var(--sdp-radi-pastilla)   = (alçada 24px)
+ El 50% dels cercles (217, 705, 878, 1413), el 0 i l'inherit queden: són forma, no escala.
+
+D. CAP :has() (D-C §4). Hi ha tres usos, no un.
+
+ D1  811-814  .sp-card-label:has(.sp-card-label__action) { padding: 0; overflow: hidden; }
+      → es retira i entra el modificador .sp-card-label--amb-accio (el posen
+        UniversalCard i PageFrame: vegeu §8). Bloc proposat (opció B, recomanada):
+
+        /* D-C (ordre del Mestre del 261004, prompt 261004_0515) · L'etiqueta
+           que es pot prémer porta .sp-card-label--amb-accio (UniversalCard i
+           PageFrame), en lloc de la pseudoclasse relacional, que Chrome 100 i
+           Firefox 100 no coneixen. La píndola continua fent 24px a la vista;
+           el botó l'ompli i el seu ::after allarga la diana fins a --sdp-touch
+           (48px, Llei de Vida), per dalt i per baix. Abans, overflow: hidden
+           retallava el botó de 48px a 24px: la diana real era de 24px. És el
+           mateix patró que les píndoles de classificació (modules.css, T7):
+           píndola de lectura i àrea tàctil transparent més gran. */
+        .sp-card-label--amb-accio {
+          padding: 0;
+        }
+
+        .sp-card-label--amb-accio > .sp-card-label__action {
+          position: relative;
+          align-self: stretch;
+          min-height: 100%;
+          border-radius: inherit;
+        }
+
+        .sp-card-label--amb-accio > .sp-card-label__action::after {
+          content: '';
+          position: absolute;
+          inset-block: calc((100% - var(--sdp-touch)) / 2);
+          inset-inline: 0;
+        }
+
+      px: en repòs i en passar-hi per damunt, el mateix que pinten hui Safari 16
+      i Chrome 105+ (píndola de 24px, vel del hover dins de la píndola). A
+      Chrome 100 i Firefox 100, hui hi ha coixí doble (12+12px) i el botó de 48px
+      sobreïx: ara queda com als moderns. La diana passa de 24 a 48px.
+      Efecte conegut: els 12px de dalt i de baix de cada etiqueta amb acció ja
+      no obrin la targeta (el vel enllaç és z-index 1, les etiquetes 2). Amb
+      dues files d'etiquetes, les dianes s'encavalquen 4px (separació de 8px).
+      Opció A (alternativa): la píndola amb acció fa 48px a la vista
+      (min-height: var(--sdp-touch); height: auto). És més simple, però
+      desquadra la fila: unes píndoles de 24 i altres de 48.
+
+ D2  181-189  placeholder: la llista de tres selectors amb dues formes relacionals
+      → queda una sola forma:
+        [data-placeholder]:not(:focus):empty::before { content: attr(data-placeholder); color: var(--sdp-text-desactivat); pointer-events: none; cursor: text; font-weight: inherit; }
+      Per què és segur: l'únic que posa data-placeholder és EditableField
+      (UniversalEditorShell.jsx:156), i en perdre el focus ja buida el node
+      («Buit de veres … sense dependre de :has()», UniversalEditorShell.jsx:150-152).
+      Per què és una correcció: un selector desconegut invalida la llista
+      sencera. Hui, a Chrome 100-104 i Firefox 100-120, NO ix cap placeholder.
+      px: el mateix als moderns; a la Baseline 2022 el placeholder torna.
+      Risc: un camp amb dades velles desades amb un <br> o un <p></p> solt
+      (d'abans de valorDelCamp, A3) no mostra el placeholder fins al primer
+      focus i blur. Si el Mestre ho vol cobrir, el front editor pot fer que
+      EditableField netege també en muntar.
+
+E. INTERLINEAT DELS TÍTOLS DE TARGETA (D-C §5). --sdp-leading-titol = 1.2. El token --sdp-leading-tight (1.15) es QUEDA: el calendari compta línies amb ell (tokens.contracte.test.js:159-160).
+
+ E1  971  .sp-card-title                                               line-height  var(--sdp-leading-tight) 1.15  var(--sdp-leading-titol)  +1,2px per línia a 24px
+ E2 1025  .sp-card--action .sp-card-heading-with-icon .sp-card-title   line-height  var(--sdp-leading-tight)       var(--sdp-leading-titol)  +1,08px per línia a 21,6px
+ E3 1068  .sp-card .sp-card-body h1                                    line-height  var(--sdp-leading-tight)       var(--sdp-leading-titol)  amb M2: 29,44→28,8px per línia
+ E4 1078  .sp-card .sp-card-body h2                                    line-height  var(--sdp-leading-snug) 1.21   var(--sdp-leading-titol)  24,2→24px per línia
+ E5 1159  .sp-card-subtitle                                            line-height  var(--sdp-leading-snug)        var(--sdp-leading-titol)  22,26→22,08px · PROPOSTA: és el subtítol de la targeta (nivell de títol); el text literal de D-C només diu «1.15 i 1.21»
+ E6  914  .sp-card-author-name                                         line-height  1.2 literal                    var(--sdp-leading-titol)  =
+
+
+2. tokens.css · TAULA ABANS → DESPRÉS
+-------------------------------------
+
+ T1  349  --sdp-mb-h5      6px    8px                 +2px davall de l'h5 de prosa. Literal en px com els germans (--sdp-mb-h4: 8px), perquè EspecimenTipografia.test.jsx compara el text exacte.
+ T2  350  --sdp-mb-h6      6px    8px                 +2px davall de l'h6
+ T3   37  --sdp-radi-alerta 6px   var(--sdp-radi-s)   6→8. Únic consumidor: modules.css .sdp-arranc-fallida (pantalla d'error d'arrencada de host.js). Es queda com a àlies dins de l'escala, com --sdp-radi-boto.
+ La línia --sdp-targeta-incrustada-ample és del front editor: no es toca.
+ Observació sense proposta: --sdp-alt-accio: 58px no és múltiple de 4 (és una alçada de barra, no un espai; decisió del Mestre si es vol 56 o 60).
+
+
+3. EspecimenTipografia.jsx (taula de marges i 68ch)
+--------------------------------------------------
+
+ S1  39-40  RITME h5 i h6    '6px'   '8px'   (va amb T1 i T2; la prova del costat compara amb tokens.css)
+ S2  56     fes, 2n element: «Mesura de columna de 68ch (--sdp-measure) als paràgrafs, llistes i cites de l’article.»
+            → «Flux lliure: la prosa de l’article ocupa tota l’amplària del contenidor; només el coixí de .content-wrapper la separa de la vora (ordre del Mestre, 261004).»
+ S3  89     espècimen viu: «… La mesura de columna és de 68 caràcters, ni un més.»
+            → «Paràgraf de cos amb interlineat 1,6 perquè la lectura tinga oxigen. La prosa flueix a tota l’amplària de la columna.»
+            (S3 és troballa nova: el mapa només citava la línia 56.)
+ Fora d'abast: EspecimenEspaiat.jsx:13 continua llistant --sdp-measure (68ch). El token existix i el fa servir .sdp-centre (Lector), així que no és una recomanació per a la prosa de l'article.
+
+
+4. GUARDES NOVES (codi a punt d'enganxar demà)
+----------------------------------------------
+
+4.1 Al final de src/css/components.abast.capes.test.js. Fa servir les eines que
+ja hi ha (DECLS, COMPONENTS, on, resol, trossos, valorDe, reglesDe,
+senseComentaris, FULL, enKeyframes, declaracions). La pseudoclasse relacional
+s'escriu partida, com a src/apps/comu/qualitat.test.js:204, perquè el text de
+la prova no dispare la Policia del Disseny.
+
+/* ═══ D-C · Pedra Seca al mil·límetre (ordre del Mestre del 261004, prompt
+   261004_0515) ═══
+   Bessones de modules.abast.capes.test.js (sòl de 14px) i de
+   apps/comu/qualitat.test.js (espais, cap pseudoclasse relacional), ara sobre
+   components.css, on viu la UniversalCard. */
+
+/** El mínim de lletra en px d'un valor resolt; null si no és una longitud.
+    Un em per davall d'1 encongix la lletra del pare, que pot ser el sòl: es
+    compta contra els 14px, el pitjor cas. max() val el seu argument més gran. */
+function minimDeLletra(valor) {
+  const v = valor.trim();
+  const clamp = /^clamp\(([^,]+),/.exec(v);
+  if (clamp) return minimDeLletra(clamp[1]);
+  const maxim = /^max\((.+)\)$/.exec(v);
+  if (maxim) return Math.max(...maxim[1].split(',').map((p) => minimDeLletra(p) ?? 0));
+  const m = /^([\d.]+)(px|rem|em)$/.exec(v);
+  if (!m) return null;
+  if (m[2] === 'em') return Number(m[1]) * 14;
+  return Number(m[1]) * (m[2] === 'px' ? 1 : 16);
+}
+
+test('D-C · sòl de 14px: cap font-size per davall, ni literal ni de token', () => {
+  const dolentes = [];
+  for (const d of DECLS.filter((x) => x.propietat === 'font-size')) {
+    let valor;
+    try {
+      valor = resol(d.valor);
+    } catch (error) {
+      dolentes.push(`${on(d)} · ${error.message}`);
+      continue;
+    }
+    const px = minimDeLletra(valor);
+    if (px !== null && px < 14) dolentes.push(`${on(d)} · ${px}px`);
+  }
+  expect(dolentes).toEqual([]);
+});
+
+test('D-C · la comprovació del sòl veu les formes velles', () => {
+  expect(minimDeLletra('0.7rem')).toBeLessThan(14);
+  expect(minimDeLletra('0.85rem')).toBeLessThan(14);
+  expect(minimDeLletra('0.9em')).toBeLessThan(14);
+  expect(minimDeLletra('max(0.9em, 0.875rem)')).toBe(14);
+  expect(minimDeLletra('clamp(0.75rem, 1vw, 1rem)')).toBe(12);
+});
+
+const RELACIONAL = new RegExp([':ha', 's\\('].join(''), 'g');
+
+test('D-C · cap pseudoclasse relacional (Baseline 2022: Chrome 100 i Firefox 100 tiren la regla sencera)', () => {
+  expect(senseComentaris(FULL).match(RELACIONAL) ?? []).toEqual([]);
+  expect(`.sp-card-label${[':ha', 's(.sp-card-label__action)'].join('')}`.match(RELACIONAL)).toHaveLength(1);
+});
+
+const RADI = /^(0|50%|inherit|var\(--sdp-radi-(s|m|g|xl|pastilla|boto)\))$/;
+
+test('D-C · radis només per token (s, m, g, xl, pastilla, boto), 0, inherit o el cercle del 50 %', () => {
+  const dolentes = DECLS
+    .filter((d) => /^border(-[\w-]+)?-radius$/.test(d.propietat))
+    .filter((d) => !trossos(d.valor).every((t) => RADI.test(t)))
+    .map(on);
+  expect(dolentes).toEqual([]);
+});
+
+/* Espais: 0, auto, l'escala --sdp-space-N, el coixí de contenidor o rem
+   múltiples de 0,25, també dins de calc(), clamp(), max(), min() i env().
+   Exempts, amb motiu (no són espais de la reixeta):
+     · .sdp-nomes-lector, margin -1px: el patró visualment amagat.
+     · .sdp-pestanyes__pestanya, margin-bottom -2px: encavalca la vora de 2px.
+     · .sdp-anatomia, gap 2px: és el filet; el fons fa de vora entre cel·les.
+     · .sdp-alerta__icona, margin-top 2px: ajust òptic de la icona de 24px a
+       la primera línia (28,8px). */
+const ESPAI_EXEMPT = new Set([
+  '.sdp-nomes-lector|margin|-1px',
+  '.sdp-pestanyes__pestanya|margin-bottom|-2px',
+  '.sdp-anatomia|gap|2px',
+  '.sdp-alerta__icona|margin-top|2px'
+]);
+const ES_ESPAI = /^(margin|padding)(-[\w-]+)?$|^(row-|column-)?gap$|^inset(-[\w-]+)?$/;
+
+function funcioValida(t) {
+  const longituds = [...t.matchAll(/(-?\d*\.?\d+)(px|rem|em)\b/g)];
+  const tokens = [...t.matchAll(/var\((--[\w-]+)/g)];
+  return longituds.every(([, n, u]) => (u === 'px' ? Number(n) === 0 : u === 'rem' && Number.isInteger(Number(n) * 4)))
+    && tokens.every(([, nom]) => nom.startsWith('--sdp-'));
+}
+function espaiValid(valor) {
+  return trossos(valor).every((t) => {
+    if (/^-?(0|auto|inherit)$/.test(t)) return true;
+    if (/^var\(--sdp-(space-\d+|pad-contenidor)\)$/.test(t)) return true;
+    const rem = /^-?(\d*\.?\d+)rem$/.exec(t);
+    if (rem) return Number.isInteger(Number(rem[1]) * 4);
+    if (/^(calc|clamp|max|min|env)\(/.test(t)) return funcioValida(t);
+    return false;
+  });
+}
+
+test('D-C · espais de la reixeta: 0, auto, --sdp-space-N, el coixí de contenidor o rem múltiples de 0,25', () => {
+  const dolentes = DECLS
+    .filter((d) => ES_ESPAI.test(d.propietat) && !enKeyframes(d))
+    .filter((d) => !ESPAI_EXEMPT.has(`${d.prelud}|${d.propietat}|${d.valor}`))
+    .filter((d) => !espaiValid(d.valor))
+    .map(on);
+  expect(dolentes).toEqual([]);
+  /* Cada exempció continua existint tal qual: si la regla canvia, es revisa. */
+  for (const clau of ESPAI_EXEMPT) {
+    const [prelud, propietat, valor] = clau.split('|');
+    expect(valorDe(prelud, propietat), clau).toBe(valor);
+  }
+});
+
+test('D-C · la comprovació d’espais veu les formes velles i deixa passar les bones', () => {
+  expect(espaiValid('22px 24px 16px')).toBe(false);
+  expect(espaiValid('6px')).toBe(false);
+  expect(espaiValid('0.3rem')).toBe(false);
+  expect(espaiValid('var(--sdp-space-6) var(--sdp-space-6) var(--sdp-space-4)')).toBe(true);
+  expect(espaiValid('calc(var(--sdp-space-4) + env(safe-area-inset-bottom, 0px))')).toBe(true);
+  expect(espaiValid('clamp(var(--sdp-space-5), 5vw, var(--sdp-space-8))')).toBe(true);
+  expect(espaiValid('calc((100% - var(--sdp-touch)) / 2)')).toBe(true);
+});
+
+test('D-C · títols de la targeta amb l’interlineat de títol (1.2), no el de component', () => {
+  for (const prelud of ['.sp-card-title', '.sp-card .sp-card-body h1', '.sp-card .sp-card-body h2',
+    '.sp-card--action .sp-card-heading-with-icon .sp-card-title', '.sp-card-subtitle', '.sp-card-author-name']) {
+    expect(valorDe(prelud, 'line-height'), prelud).toBe('var(--sdp-leading-titol)');
+  }
+  expect(resol('var(--sdp-leading-titol)')).toBe('1.2');
+});
+
+test('D-C · mides de la targeta amb l’escala fixa: l’h1 com el títol, l’h2 i el preu en h6', () => {
+  expect(valorDe('.sp-card .sp-card-body h1', 'font-size')).toBe(valorDe('.sp-card-title', 'font-size'));
+  expect(valorDe('.sp-card .sp-card-body h2', 'font-size')).toBe('var(--sdp-text-h6)');
+  expect(valorDe('.sp-card-price', 'font-size')).toBe('var(--sdp-text-h6)');
+});
+
+test('D-C · etiqueta amb acció: modificador de classe, sense retallar el botó, píndola de 24px i diana de 48px', () => {
+  expect(reglesDe('.sp-card-label--amb-accio')).toHaveLength(1);
+  expect(valorDe('.sp-card-label--amb-accio', 'overflow')).toBeUndefined();
+  expect(valorDe('.sp-card-label--amb-accio', 'padding')).toBe('0');
+  expect(valorDe('.sp-card-labels .sp-card-label, .sp-card-label', 'height')).toBe('24px');
+  expect(valorDe('.sp-card-label--amb-accio > .sp-card-label__action', 'position')).toBe('relative');
+  const diana = '.sp-card-label--amb-accio > .sp-card-label__action::after';
+  expect(valorDe(diana, 'inset-block')).toBe('calc((100% - var(--sdp-touch)) / 2)');
+  expect(valorDe(diana, 'inset-inline')).toBe('0');
+  /* (24 − 48) / 2 = −12px per dalt i per baix: 48px de diana. */
+  expect(resol('var(--sdp-touch)')).toBe('48px');
+});
+
+ Comprovat a mà sobre el tall llegit (no s'ha pogut executar: la prova viuria a
+ src/ i este front no l'ha tocat):
+   · Sòl: hui cauria amb exactament les 9 files A1-A9. Després de la taula, 0.
+   · Relacional: hui 3 (182, 183, 811). Després, 0.
+   · Radis: hui 4 (C1-C4). Després, 0.
+   · Espais: hui 22 (B1-B22). Les 4 exempcions passen. Després, 0. Les formes
+     amb calc/clamp/env de les línies 130, 165, 283, 297, 307, 321, 985 i 2056
+     passen.
+
+4.2 A src/css/tokens.contracte.test.js, dins del describe «contracte compartit»
+(P = declaracions(PRINCIPAL.cos)):
+
+  /* D-C (ordre del Mestre del 261004, prompt 261004_0515) · el ritme vertical
+     de la prosa, a la reixeta de 4px: l'h5 i l'h6 passen de 6 a 8px. */
+  test('D-C · ritme vertical a la reixeta de 4px: marges de prosa en 0 o múltiples de 4px', () => {
+    const ritme = Object.entries(P).filter(([nom]) => /^--sdp-(mt|mb)-|^--sdp-li-gap$|^--sdp-bq-indent$/.test(nom));
+    expect(ritme.length).toBeGreaterThan(0);
+    for (const [nom, valor] of ritme) {
+      const px = valor === '0' ? 0 : Number(/^(\d+)px$/.exec(valor)?.[1]);
+      expect(px % 4, `${nom}: ${valor}`).toBe(0);
+    }
+    expect([P['--sdp-mb-h5'], P['--sdp-mb-h6']]).toEqual(['8px', '8px']);
+  });
+
+  test('D-C · cap radi fora de l’escala: els àlies apunten a un graó s–xl o a la pastilla', () => {
+    const escala = new Set(['--sdp-radi-s', '--sdp-radi-m', '--sdp-radi-g', '--sdp-radi-xl', '--sdp-radi-pastilla']);
+    for (const [nom, valor] of Object.entries(P).filter(([n]) => n.startsWith('--sdp-radi-') && !escala.has(n))) {
+      expect(valor, nom).toMatch(/^var\(--sdp-radi-(s|m|g|xl|pastilla)\)$/);
+    }
+    expect(P['--sdp-radi-alerta']).toBe('var(--sdp-radi-s)');
+  });
+
+4.3 A src/sections/disseny/cataleg/detalls/EspecimenTipografia.test.jsx, dins del describe:
+
+  /* Flux lliure (ordre del Mestre del 261004): el mostrari no prescriu cap mesura. */
+  test('el mostrari ja no recomana la mesura de 68 caràcters', () => {
+    const { container } = render(<EspecimenTipografia />);
+    expect(container.textContent).not.toMatch(/68 ?(ch|caràcters)/);
+  });
+
+
+5. PROVES QUE FIXAVEN ELS VALORS VELLS
+--------------------------------------
+
+5.1 src/components/PedraSeca/organismes/UniversalCard.vinyeta.capes.test.jsx:100-101
+    (regles exactes copiades). Amb B3 i B6:
+      '.sp-card { … margin: 0 auto var(--sdp-space-8); … }'
+      '.sp-card-body { padding: var(--sdp-space-6) var(--sdp-space-6) var(--sdp-space-4); text-align: center; position: relative; min-width: 0; }'
+    amb el comentari: «Derogat per l'ordre del Mestre del 261004 (prompt
+    261004_0515) · D-C: el 22px de dalt del cos passa a l'escala
+    (--sdp-space-6) i el 32px de davall de la targeta, al seu token (mateix
+    píxel).» Ull: el nom acaba en .capes.test.jsx, no en .capes.test.js. Si es
+    llig la llista de fitxers del front al peu de la lletra, este no hi entra,
+    i cal que el Mestre o MarIA ho autoritzen demà.
+5.2 UniversalCard.quadrat.capes.test.js: cap valor fixat canvia (amplada i alçada
+    128px, token hN del títol, filet, padding-bottom space-3). S'hi afig, dins
+    del test del títol (línia ~180):
+      /* D-C (ordre del Mestre del 261004, prompt 261004_0515) · interlineat de
+         títol (1.2), no el de component (1.15). */
+      expect(declara(titol, 'line-height', 'var(--sdp-leading-titol)')).toBe(true);
+5.3 tokens.contracte.test.js: cap asserció vella es trenca (no fixava mb-h5/h6 ni
+    radi-alerta). Només s'hi afig el 4.2.
+5.4 EspecimenTipografia.test.jsx: la prova del ritme compara RITME amb tokens.css.
+    Passa si T1-T2 i S1 entren junts. S'hi afig el 4.3.
+5.5 components.abast.capes.test.js: les FIXADES (.sp-card, .sp-card--action:hover,
+    el peu del diàleg, .sdp-boto) no canvien de prelud ni de capa: les proves
+    actuals continuen verdes.
+5.6 PageFrame.capes.test.js: les cadenes exactes que fixa (T53, T51, la graella
+    de la barra blava) no les toca cap fila d'esta fitxa. Les 4 roges T38 són
+    anteriors (vegeu la capçalera).
+
+
+6. SEGONA TONGADA DINS DE components.css (D-C no les nomena: decidir demà)
+--------------------------------------------------------------------------
+ Mides fora de token. Les que tenen un token idèntic són neteja de mateix píxel:
+   572 .btn 1rem → var(--sdp-text-small) (=) · 1035 .sp-card--action .sp-card-subtitle 1rem → var(--sdp-text-small) (=)
+   1166 .sp-card-text 1rem → var(--sdp-text-small) (=)
+ Sense token idèntic (canvi visual si es tokenitza):
+   913 .sp-card-author-name 1.05rem (16,8px; base 18 o small 16?)
+   1022 .sp-card--action … .sp-card-title 1.35rem (21,6px; h6 20 o h5 24?)
+   1156 .sp-card-subtitle 1.15rem (18,4px; base 18?)
+   1367 .sp-card-calendar-badge__mes 1.1rem · 1374 __any 0.9rem · 1426 .pill 0.9rem (14,4px; meta 14 o ui-base 15?)
+ No es toquen: els trams del preu del quadrat (1347, 1362-1364), que
+ UniversalCard.quadrat.capes.test.js:151 llig com a rem numèrics, i el «+»
+ de 24px (1243), que és un glif.
+ Baseline: les @container (1247, 1809, 1822, 1978) tenen xarxa @media o un
+ valor per defecte sense consulta (ho diuen els comentaris de 1792-1798 i
+ 1971-1976). No són deute, però el Mestre ha de saber que D-C no les prohibix.
+ Altres: .sp-card--action:hover (993-998) porta translateY(-2px) i
+ «0.2s ease». És regla FIXADA per UniversalCard.vinyeta.capes i
+ components.abast (FIXADES_MOVIMENT). Fora de D-C.
+ Etiquetes dins d'etiquetes: UniversalCard.jsx pinta <a class="sp-card-label">
+ dins de <li class="sp-card-label">: dues píndoles niades, amb coixí doble.
+ Amb la lletra de 14px es notarà més. Fora de D-C.
+
+
+7. DESVIACIONS FORA DE components.css / tokens.css (segona escombrada, amb aprovació)
+-------------------------------------------------------------------------------------
+ layout.css (tall 06:50)
+   219   gap 13px                                         → var(--sdp-space-3) (12)
+   293   .bar-black .right-icons .icon  padding 6px       → var(--sdp-space-1) (la imatge creix de 36 a 40) o var(--sdp-space-2) (baixa a 32)
+   726, 775  header.bar-black .right-icons .icon  padding 6px   → ídem
+   713, 763  padding 0 0 0 6px !important             → var(--sdp-space-1) o var(--sdp-space-2); i el !important, a revisar
+   740, 789  .btn  padding 11px 20px; font-size 0.95rem   → var(--sdp-space-3) var(--sdp-space-5); var(--sdp-ui-base) (15,2→15px)
+   441   border-radius 0 0 36px 36px                      → var(--sdp-radi-xl) (28) o un token nou (decisió)
+   301   margin-left 0.5rem                               → var(--sdp-space-2) (=)
+   453-460  header.page-title h1: margin-bottom space-2 i tracking 0.02em, contra --sdp-mb-h1 16px i --sdp-tracking-h1 -0.01em de base.css (excepció volguda o no?)
+ sdp.css
+   173   .sdp-avatar-grup .sdp-avatar + .sdp-avatar  margin-left -10px  → calc(var(--sdp-space-2) * -1) (-8) o calc(var(--sdp-space-3) * -1) (-12)
+ modules.css (per selector: les línies s'hi movien durant el tall)
+   .sp-card-price--en-linia            margin-bottom 4px              → var(--sdp-space-1) (=)
+   .sdp-slash-menu__opcio              gap 2px                        → var(--sdp-space-1)
+   .sdp-brain-graph-controls           padding 8px; border-radius 12px  → var(--sdp-space-2) (=); var(--sdp-radi-m) (=)
+   .sdp-arranc-fallida pre             border-radius 4px              → var(--sdp-radi-s) (4→8)
+   .audio-player                       border-radius 40px             → var(--sdp-radi-pastilla) (= si l'alçada ≤ 80px)
+   .audio-play-btn svg                 margin-left 2px                → ajust òptic del triangle de play: exempció o var(--sdp-space-1)
+   .audio-progress i la seua barra     border-radius 2px              → var(--sdp-radi-pastilla) (= amb 4px d'alt)
+   .toc-item button                    padding 6px var(--sdp-space-2) → var(--sdp-space-2) var(--sdp-space-2)
+   .sdp-chat-bubble                    padding 8px 12px; border-radius 12px  → tokens (=)
+   .detail-hero .card__title, .card--soft .split-grid .card__title   margin-top 14px  → var(--sdp-space-3) o 4
+   .detail-hero .detail-content, .card--soft + .feed-grid, .badge-row.detail-tags / .detail-hero__media.detail-media   margin-top 18px  → var(--sdp-space-4) o 5
+   .sdp-bloc-list--notes .sdp-gestor-fitxa__text   gap 2px        → var(--sdp-space-1)
+   .sdp-brain-graph-inspector          top/left 16px, padding 16px, border-radius 12px, max-height calc(100% - 32px)  → tokens (=)
+   .sdp-classificacio-botonera > .sdp-boto, .sdp-copyright-selector   padding 2px 8px  → var(--sdp-space-1) var(--sdp-space-2)
+   .sdp-copyright-selector             gap 6px                        → var(--sdp-space-2)
+   .sdp-copyright-selector, .sdp-note-taxonomy-button   padding-inline 10px   → var(--sdp-space-2) o 3
+   padding-inline: calc((var(--sdp-touch-min) - 18px) / 2) (prop de la línia 3178): 18px és la mida del glif; exempció amb motiu o token de glif
+   .download-card-title                font-size 1.1rem               → token de l'escala fixa (decisió)
+ Guardes que ja vigilen estos fulls: sòl de 14px a modules (modules.abast) i a
+ layout, sdp, utilities, AppGridShell, PerfilShell i catalegColleccio
+ (rocaIGuardes). Cap no vigila espais ni radis fora de catalegColleccio,
+ pecesApps i apps.css. Amb la segona escombrada, la guarda d'espais i la de
+ radis de 4.1 es poden extraure a un mòdul compartit i aplicar-les a tots.
+
+
+8. DEPENDÈNCIES I PETICIONS A ALTRES FRONTS
+-------------------------------------------
+ · nucli: la classe sp-card-label--amb-accio. Ha d'anar a UniversalCard
+   (si una etiqueta porta onClick) i TAMBÉ a PageFrame.jsx:454, que és on hui
+   es pinta .sp-card-label__action. Sense la classe a PageFrame, D1 deixaria
+   l'etiqueta de pàgina amb coixí doble i diana de 24px.
+ · editor (opcional, D2): si el Mestre vol cobrir les dades velles amb un <br>
+   solt, EditableField pot netejar també en muntar.
+ · qui porte PageFrame.capes: derogar T38 ×4 («Derogat per l'ordre del Mestre
+   del 261004»), d'acord amb components.css:1888.
+ · Consola: el bloc de CampFitxer va AL FINAL de components.css i ha de passar
+   les guardes de 4.1 (sòl de 14px, cap pseudoclasse relacional, radis i espais
+   per token).
+ · editor: la línia --sdp-targeta-incrustada-ample de tokens.css. Si és un
+   ample, la guarda d'espais no la mira. Si és un espai, ha d'anar en rem
+   múltiple de 0,25 o amb un token.
+
+
+9. ESMENES A LA SKILL sdp-pedra-seca (governança: les fa MarIA o el Mestre; este front no la toca)
+---------------------------------------------------------------------------------------------------
+ §1  La Roca: «--sdp-pedra-900 amb text --sdp-pedra-50» és un primitiu, i §2 ho
+     prohibix. El codi ho resol amb la capa de crom: --sdp-crom-fons i
+     --sdp-crom-text (tokens.css:357-378). Cal escriure eixos noms.
+ §2  «--sdp-text-titol: només per a h1, h2». El codi pinta l'h1 amb
+     --sdp-accio-text (blau fort) i l'h2 amb --sdp-accent-titol (taronja fort),
+     tant a base.css com a EspecimenTipografia. --sdp-text-titol és el text de
+     màxima autoritat dels components.
+ §3  Coherent amb D-C. Es pot afegir la llista d'exempcions de 4.1 (vores i
+     patró visualment amagat) perquè no es tornen a discutir.
+ §4  L'exemple «clamp(1.2rem, 3vw, 1.8rem)» per a l'H2 (19-29px, només vw) no
+     és l'escala real: --sdp-fluid-h2 fa 40-46px, rem+vw (WCAG 1.4.4), i els
+     components usen --sdp-text-hN fixos. Cal remetre als tokens --sdp-fluid-* i
+     --sdp-text-*. Cal afegir també: «títols a 1.2 també a les targetes».
+     I el flux lliure del 261004: cap mesura de 68ch a la prosa de l'article.
+ §5  «De --sdp-radi-s fins --sdp-radi-xl»: l'escala és s, m, g, xl (no «l»), més
+     --sdp-radi-pastilla i l'àlies --sdp-radi-boto. --sdp-radi-alerta, si
+     s'aplica T3, és un àlies de s.
+ §6  «--sdp-touch (44/48px)» → 48px sempre (Mestre 261004, Q2). Diana, no
+     dibuix: una píndola de 24px pot tindre 48px de diana (D1, opció B).
+
+
+10. POLICIA DEL DISSENY · LLINDAR TÀCTIL
+----------------------------------------
+ src/sections/tractors/sentinelles/policiaDisseny.js:21
+   const LLINDARS = Object.freeze({ tactilPx: 44, maxAvisos: 300 });
+ Ha de ser 48, com --sdp-touch i --sdp-touch-min (Q2). No es toca: canviar-lo
+ canvia l'empremta del sentinella, que cobrix contracte.js, i això demana
+ aprovació explícita des de la Wiki (lliçó 261002). policiaDisseny.test.js no
+ fixa el 44. El canvi pot fer eixir roges noves a src/apps i src/utils
+ (policiaDisseny.porta.test.js): cal mesurar-ho abans de reaprovar-lo.
+
+
+11. GUIÓ DE LA DEMOSTRACIÓ (demà, amb el Mestre present)
+--------------------------------------------------------
+ 0. Tall net: tornar a llegir components.css, tokens.css i els fitxers de
+    proves (altres fronts els hauran tocat). Comprovar que la classe
+    sp-card-label--amb-accio ja és a UniversalCard i a PageFrame.
+ 1. Captures ABANS al servidor de desenvolupament (localhost:3340):
+    /disseny (UniversalCard, Insígnia, Formulari, Tipografia), Mur, Mercat
+    (detall amb preu), Dispositius i una pàgina amb etiquetes amb acció, a 375,
+    820 i 1280px.
+ 2. Primer les guardes de 4.1 i 4.2 en roig: es veu que cacen exactament
+    estes files.
+ 3. Aplicar per blocs, cada bloc amb el sí del Mestre: A (lletra), B (espais;
+    triar B6 a 24 o a 20), C (radis), D (relacional; triar opció B o A), E
+    (interlineat; decidir E5), tokens (T1-T3), espècimen (S1-S3), proves (§5).
+ 4. Proves: les guardes en verd, i després la tanda sencera de la línia base.
+    Comparar amb les 16 roges anteriors.
+ 5. Captures DESPRÉS, a les mateixes vistes i amplades. La comparació
+    s'ensenya de costat. Les files marcades amb «=» no han de moure cap píxel.
+ 6. Si alguna fila no agrada: es desfà eixa fila sola (cada fila és una
+    declaració).
+
+
+12. RISCOS
+----------
+ · Lletra de 14px a les etiquetes: les píndoles creixen un 25 % d'ample. En
+   columnes estretes, i a les píndoles de classificació (modules.css T7, amb
+   max-width i overflow), hi haurà més punts suspensius.
+ · Interlineat de 1.2: les targetes amb títols de dues línies creixen uns 2px.
+   Les graelles alineades a dalt (align-items: start) no es desquadren, però
+   les instantànies visuals, si n'hi ha, canviaran.
+ · Arbre compartit: modules.css i UniversalCard.jsx canviaven durant el tall.
+   Tota fila s'ha de reconfirmar contra el fitxer viu abans d'editar.
+ · D2 (placeholder): les dades velles amb un <br> solt (vegeu D2).
+ · El hook segell-auto avisa «segell divergent» després de cada acció. És un
+   estat previ al torn i demana lease: no el resol este front.
+
+
+=====================================================================
+APLICAT 261004
+=====================================================================
+Qui i amb quina ordre. Claude (subagent del workflow de la nit), 07:48-08:15.
+Autorització: el Mestre, per mitjà de l'usuari al xat, va triar a les 06:38
+l'opció «Escombrada global» de src/css/components.css i src/css/tokens.css
+(D-C a 261004_0605_auditoria_claude.md, Relleu 4). La capçalera d'esta fitxa
+(«PREPARAT, NO APLICAT») queda com a història; este bloc la substituïx.
+Eleccions per defecte de l'ordre: B6 a --sdp-space-6; D1 opció B; E5 a 1.2;
+E4 com a exempció documentada; segona tongada al graó més pròxim; mb-h5/h6 a
+8px; --sdp-radi-alerta com a àlies de --sdp-radi-s; placeholder només :empty.
+
+Tall: tots els fitxers rellegits abans de cada canvi (Edit exigix el text
+exacte: cap fila s'ha aplicat sobre un text que haguera canviat). Les línies de
+la taula de dalt ja no coincidixen (components.css havia crescut uns 3-4 en la
+primera meitat); s'ha aplicat per selector i valor vell.
+
+0. GUARDES PRIMER, EN ROIG
+ src/css/components.abast.capes.test.js, bloc final «D-C · Pedra Seca al
+ mil·límetre». Abans d'aplicar res, 9 proves roges i caçaven exactament el que
+ preveia la fitxa:
+   · sòl de 14px: 9 (A1-A9);   · relacional: 3 (les dues del placeholder i
+     la de l'etiqueta);       · radis: 4 (C1-C4);   · espais: 22 (B1-B22);
+   · interlineat de títol, mides h1/h2/preu, segona tongada, etiqueta amb
+     acció i placeholder: roges pel valor vell.
+ Després d'aplicar: 33/33 verdes a components.abast.capes.test.js.
+ Guardes afegides respecte del codi de 4.1: «segona tongada» (les 9 mides de
+ §6 són tokens) i «placeholder: una sola forma, :empty».
+
+1. components.css · APLICAT
+ A1 .btn-sm 0.85rem → var(--sdp-text-meta)
+ A2 .badge (1a) 0.75rem → var(--sdp-text-meta)
+ A3 .avatar 0.8rem → var(--sdp-text-meta)
+ A4 .avatar-sm 0.7rem → var(--sdp-text-meta)
+ A5 .sp-card-labels .sp-card-label, .sp-card-label 0.7rem → var(--sdp-text-meta)
+ A6 .sp-card-author-location 0.85rem → var(--sdp-text-meta)
+ A7 .btn-taronja-fort 0.8rem → var(--sdp-text-meta)
+ A8 .badge (2a) 0.7rem → var(--sdp-text-meta)
+ A9 .sdp-consola__mono 0.9em → max(0.9em, var(--sdp-text-meta)), amb comentari
+ B1 .badge (1a) gap 6px → var(--sdp-space-2)
+ B2 .badge (1a) padding 4px 12px → var(--sdp-space-1) var(--sdp-space-3)
+ B3 .sp-card margin 0 auto 32px → 0 auto var(--sdp-space-8)
+ B4 .sp-card-label padding 0 12px → 0 var(--sdp-space-3)
+ B5 .sp-card-label__action padding 0 12px → 0 var(--sdp-space-3)
+ B6 .sp-card-body 22px 24px 16px → var(--sdp-space-6) var(--sdp-space-6) var(--sdp-space-4)
+ B7 .sp-card .sp-card-body h2 margin-top 16px → var(--sdp-space-4)
+ B8-B10 .sp-card-price margin-left 6px, margin-bottom 6px → var(--sdp-space-2);
+        padding 4px 12px → var(--sdp-space-1) var(--sdp-space-3)
+ B11-B12 .sp-card-calendar-badge margin-left 16px → var(--sdp-space-4);
+        margin-bottom 12px → var(--sdp-space-3)
+ B13 .sp-card-calendar-badge__any margin-top 2px → var(--sdp-space-1)
+ B14-B15 .pill gap 8px → var(--sdp-space-2); padding 8px 16px → var(--sdp-space-2) var(--sdp-space-4)
+ B16 .badge (2a) padding 0 12px → 0 var(--sdp-space-3)
+ B17 .devices-panel__head .badge-row, .card__body .badge-row margin-top 12px → var(--sdp-space-3)
+ B18 .notes-editor .badge-row margin-top 12px → var(--sdp-space-3)
+ B19 .card--soft .split-grid .sp-card-labels margin-bottom 12px → var(--sdp-space-3)
+ B20 .btn-publish padding var(--sdp-space-2) 22px → var(--sdp-space-2) var(--sdp-space-5)
+ B21 .sdp-insignia padding 2px var(--sdp-space-3) → var(--sdp-space-1) var(--sdp-space-3)
+ B22 .sdp-casella__etiqueta gap 2px → var(--sdp-space-1)
+ M1 .sp-card-price 1.2rem → var(--sdp-text-h6)
+ M2 .sp-card .sp-card-body h1 1.6rem → var(--sdp-text-h5)
+ M3 .sp-card .sp-card-body h2 1.25rem → var(--sdp-text-h6)
+ C1 .page-btn 4px → var(--sdp-radi-s)
+ C2 .sp-card-label 12px → var(--sdp-radi-pastilla)
+ C3 .pill 20px → var(--sdp-radi-pastilla)
+ C4 .badge (2a) 12px → var(--sdp-radi-pastilla)
+ D1 fora la regla relacional de l'etiqueta; entra el modificador (opció B).
+    ESMENA a la fitxa: el bloc proposat feia `.sp-card-label--amb-accio`
+    (0,1,0), que dins de .sp-card-labels (on PageFrame la pinta) PERD contra
+    `.sp-card-labels .sp-card-label` (0,2,0): el coixí 0 no s'aplicaria i
+    tornaria el coixí doble. La forma relacional d'abans pesava (0,2,0). Aplicat
+    com a `.sp-card-label.sp-card-label--amb-accio { padding: 0; }`, darrere de
+    la regla base; la guarda ho exigix (prelud, ordre i que la forma d'una
+    classe no existisca). Les dues regles del botó i del ::after, tal qual.
+    PageFrame.jsx ja portava la classe (un altre front); UniversalCard no pinta
+    .sp-card-label__action, així que no li cal.
+ D2 placeholder: una sola forma, [data-placeholder]:not(:focus):empty::before,
+    amb comentari.
+ E1 .sp-card-title line-height → var(--sdp-leading-titol)
+ E2 .sp-card--action .sp-card-heading-with-icon .sp-card-title → var(--sdp-leading-titol)
+ E3 .sp-card .sp-card-body h1 → var(--sdp-leading-titol)
+ E4 .sp-card .sp-card-body h2 (snug) → var(--sdp-leading-titol)
+ E5 .sp-card-subtitle (snug) → var(--sdp-leading-titol)
+ E6 .sp-card-author-name 1.2 literal → var(--sdp-leading-titol)
+ Exempció E4 (la de la fitxa, .sdp-alerta__icona margin-top 2px): es queda,
+ amb comentari al CSS i a la llista ESPAI_EXEMPT de la guarda; també les
+ exempcions E1-E3 (nomes-lector -1px, pestanya -2px, anatomia gap 2px).
+
+ SEGONA TONGADA (§6), aplicada:
+   mateix píxel (token idèntic):
+     .btn 1rem → var(--sdp-text-small)
+     .sp-card--action .sp-card-subtitle 1rem → var(--sdp-text-small)
+     .sp-card-text 1rem → var(--sdp-text-small)
+   sense token idèntic, al graó més pròxim (arredoniment):
+     .sp-card-author-name 1.05rem (16,8px) → var(--sdp-text-small) 16px · −0,8px (base 18 seria +1,2)
+     .sp-card--action … .sp-card-title 1.35rem (21,6px) → var(--sdp-text-h6) 20px · −1,6px (h5 24 seria +2,4)
+     .sp-card-subtitle 1.15rem (18,4px) → var(--sdp-text-base) 18px · −0,4px
+     .sp-card-calendar-badge__mes 1.1rem (17,6px) → var(--sdp-text-base) 18px · +0,4px (small 16 seria −1,6)
+     .sp-card-calendar-badge__any 0.9rem (14,4px) → var(--sdp-text-meta) 14px · −0,4px (ui-base 15 seria +0,6)
+     .pill 0.9rem (14,4px) → var(--sdp-text-meta) 14px · −0,4px
+   El quadrat hi cap: 56 + 27 + 21 + 4 = 108px dins dels 124 interiors
+   (comentari al CSS).
+
+2. tokens.css · APLICAT
+ T1 --sdp-mb-h5 6px → 8px · T2 --sdp-mb-h6 6px → 8px (amb comentari)
+ T3 --sdp-radi-alerta 6px → var(--sdp-radi-s) (amb comentari; 6 → 8px)
+
+3. EspecimenTipografia.jsx · APLICAT
+ S1 RITME h5 i h6 '6px' → '8px'
+ S2 «fes» de la mesura de 68ch → frase del flux lliure (literal de la fitxa)
+ S3 espècimen viu → «… La prosa flueix a tota l’amplària de la columna.»
+
+4. PROVES ACTUALITZADES (comentari «Derogat per l'ordre del Mestre del 261004
+   (D-C, xat 06:38)» on es derogava un valor)
+ · src/css/components.abast.capes.test.js: guardes 4.1 + les dues de dalt.
+ · src/css/tokens.contracte.test.js: les dues de 4.2 (ritme a 4px, radis).
+ · src/components/PedraSeca/organismes/UniversalCard.vinyeta.capes.test.jsx:
+   les cadenes exactes de .sp-card i .sp-card-body (B3, B6), derogades.
+ · src/components/PedraSeca/organismes/UniversalCard.quadrat.capes.test.js:
+   el títol porta var(--sdp-leading-titol), derogat el 1.15.
+ · src/sections/disseny/cataleg/detalls/EspecimenTipografia.test.jsx: 4.3.
+
+5. NO APLICAT (i per què)
+ · §6: el «+» de CONNECTAR (24px, un glif) i els trams del preu del quadrat
+   (3.5 · 2.25 · 1.625 · 1.25rem, i el line-height 1.15 del tram mínim): els
+   llig en rem UniversalCard.quadrat.capes.test.js i la fitxa els excloïa.
+ · §6: les @container (tenen xarxa @media o valor per defecte; D-C no les
+   prohibix), .sp-card--action:hover (regla FIXADA: translateY(-2px) i
+   0.2s ease) i les etiquetes niades de UniversalCard (<a class="sp-card-label">
+   dins de <li class="sp-card-label">: coixí doble, ara amb lletra de 14px).
+ · §7: layout.css, sdp.css i modules.css: segona escombrada, amb aprovació.
+ · §9: esmenes a la skill sdp-pedra-seca: governança (MarIA o el Mestre).
+ · §10: policiaDisseny.js LLINDARS.tactilPx 44 → 48: no es toca (aprovació
+   des de la Wiki, lliçó 261002).
+ · --sdp-alt-accio 58px i --sdp-targeta-incrustada-ample (front editor): intactes.
+ · D2 opcional: que EditableField netege també en muntar (front editor).
+ · PageFrame.capes.test.js T38 ×4: d'un altre actor, no tocat.
+ · Fora d'abast i troballa nova: EspecimenUtilitats.jsx:20 encara diu, en una
+   Pista, «68 caràcters per línia: el límit abans de la fatiga ocular», i
+   EspecimenEspaiat.jsx:13 llista --sdp-measure (68ch). El token el fa servir
+   .sdp-centre, però la Pista contradiu el flux lliure.
+ · Fora d'abast i troballa nova: el comentari de components.css sobre els
+   trios de la barra blava encara diu «Sòl: --sdp-touch (44px …)»; el valor
+   és 48px des de Q2. Només és text.
+ · Captures ABANS/DESPRÉS al navegador (guió §11): no fetes. Sí que s'ha
+   mesurat amb getComputedStyle al servidor de desenvolupament (localhost:3340,
+   pestanya de fons, ja tancada; /disseny › Fonaments › UniversalCard):
+   .sp-card-body 24px 24px 16px; .sp-card margin-bottom 32px; títol 24px amb
+   interlineat 28,8px; mes 18px; any 14px amb 4px de marge; ubicació 14px;
+   nom de l'autor 16px / 19,2px. Etiqueta amb acció (DOM de prova muntat i
+   retirat dins de .sp-card-labels): li de 24px amb coixí 0 i overflow
+   visible; botó de 24px amb coixí 0 12px; ::after a −12px per dalt i per baix
+   (diana de 48px); la germana sense acció, 24px amb coixí 0 12px.
+   Canvis visibles esperats: lletra de 14px
+   a etiquetes, badges, ubicació de l'autor; cos de la targeta 22 → 24px a
+   dalt; insígnia 27 → 31px d'alt; preu i h1 de targeta; mes i any del quadrat;
+   títols +1-2px per línia; diana de l'etiqueta amb acció 24 → 48px.
+
+6. PROVES (arbre compartit: altres actors editaven durant les tandes)
+ Directes, després de l'esmena D1:
+   npx vitest run src/css/components.abast.capes.test.js
+     src/css/tokens.contracte.test.js
+     src/components/PedraSeca/organismes/UniversalCard.quadrat.capes.test.js
+     src/components/PedraSeca/organismes/UniversalCard.vinyeta.capes.test.jsx
+     src/sections/disseny/cataleg/detalls/EspecimenTipografia.test.jsx
+     src/css/contrastControlsBlaus.capes.test.js
+     src/components/PedraSeca/organismes/formulari.test.jsx
+   → 7 fitxers, 115/115 verdes (abans de l'esmena); components.abast +
+     PageFrame.apps després de l'esmena: 48/48 verdes.
+ Tanda demanada (segona passada, 08:06-08:14):
+   npx vitest run src/css src/components/PedraSeca src/components/universal
+     src/sections/disseny src/sections/consola src/components/layout src/apps
+   → 245 fitxers · 3563 proves · 3544 verdes · 19 roges, cap d'este front:
+     · anteriors (llista del prompt): Classificacio ×7, classificacio/qualitat
+       ×1, DocumentEditor T39 (línia 469-471) ×1, TargetaViva:96 ×1,
+       Avatar.xat ×2, PageFrame.capes T38 ×4;
+     · d'altres mans, en moviment: AppGridShell.test ×1 i AppGridShell.rail
+       ×1 (layout per JS, AppGridShell.jsx modificat per un altre actor; cap
+       llig components.css ni tokens.css); consola/peces ×1 (el test i el
+       full els derogava un altre actor durant la tanda; en la reexecució cau
+       una altra prova de DOM del mateix fitxer, l'enllaç d'autor).
+   La primera passada (07:53) donava 21 roges: les 3 de
+   UniversalCard.apps.test.jsx (descripcioAccessible, UniversalCard.jsx
+   canviat en calent per un altre front) i AppNevera ×1 (el mateix span
+   .sdp-nomes-lector) ja passen en la segona.
+ Extres, verdes: src/sections/tractors (29 fitxers, 567/567; inclou la porta
+   de la Policia del Disseny); DialegEsborrarNota, OnboardingCard,
+   PerfilShell.ambit, FullAjustos.capes, gestoria/qualitatPanell. A
+   src/sections/notes, profile, onboarding i gestoria: 10 roges, totes de la
+   llista d'anteriors (NotesEditor ×4, PerfilShell ×5, aplicacions ×1).

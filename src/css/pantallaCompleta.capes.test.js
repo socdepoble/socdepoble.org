@@ -138,9 +138,30 @@ test('el botó d’entrar fa 44×44 (var(--sdp-touch)) i «Eixir» torna a ser s
 
 test('dins de la pantalla completa, la capçalera de la Setmana s’enganxa a dalt del visor', () => {
   expect(declaracions(regla('modules', '.sdp-pantalla-completa .sdp-cal-setmana.sdp-cal-setmana').cos)).toEqual([['--sdp-cal-sostre', '0px']]);
-  // Va darrere de la de l'espècimen, que té menys especificitat.
+  // Va darrere de la base, que té menys especificitat.
   const modules = senseComentaris(FULLS.modules);
-  expect(modules.indexOf('.sdp-pantalla-completa .sdp-cal-setmana.sdp-cal-setmana')).toBeGreaterThan(modules.lastIndexOf('.sdp-especimen .sdp-cal-setmana'));
+  expect(modules.indexOf('.sdp-pantalla-completa .sdp-cal-setmana.sdp-cal-setmana')).toBeGreaterThan(modules.indexOf('--sdp-cal-sostre: calc('));
+});
+
+/* D2 (barra taronja universal, ordre del Mestre 261004) · Fora de la
+   pantalla completa, a /calendari i al catàleg, damunt de la Setmana hi ha la
+   blava i la taronja en tots els amples: el sostre de la capçalera enganxosa
+   són les dues barres. Cap regla el torna a la blava sola (la de l'espècimen
+   en mòbil replicava la T38, revertida). */
+test('D2 · el sostre de la Setmana suma la blava i la taronja, i cap regla el torna a la blava sola', () => {
+  const totes = regles(FULLS.modules);
+  const ambSostre = totes.filter((r) => declaracions(r.cos).some(([prop]) => prop === '--sdp-cal-sostre'))
+    .map((r) => [r.selectors.join(', '), declaracions(r.cos).find(([prop]) => prop === '--sdp-cal-sostre')[1], r.context.join(' | ')]);
+  expect(ambSostre).toEqual([
+    ['.sdp-cal-setmana', 'calc(var(--sdp-alt-accio) * 2)', '@layer components'],
+    ['.sdp-pantalla-completa .sdp-cal-setmana.sdp-cal-setmana', '0px', '@layer components']
+  ]);
+  // La capçalera de dies s'enganxa al sostre.
+  expect(declaracions(totes.find((r) => r.selectors.includes('.sdp-cal-setmana__capcal')).cos))
+    .toEqual(expect.arrayContaining([['position', 'sticky'], ['inset-block-start', 'var(--sdp-cal-sostre)']]));
+  // El sostre és l'alçada de les dues barres: la blava (top 0) i la taronja (top var(--sdp-alt-accio)).
+  const utilitats = llig('src/css/utilities.css');
+  expect(senseComentaris(utilitats).replace(/\s+/g, ' ')).toContain('.sdp-universal-page-container--contained > .bar-orange { top: var(--sdp-alt-accio);');
 });
 
 test('encastada, la capa ocupa la caixa de l’App i el diàleg l’ompli (Frontera C2)', () => {

@@ -129,26 +129,55 @@ describe('contracte compartit · moviment, focus, tàctil i tipografia al primer
     expect(CANON).toBe(css);
   });
 
-  test('tipografia fluida: valors exactes, mínims = escala P6 i interpolació de 320 a 1024px', () => {
+  test('tipografia fluida: valors exactes, mínims ajustats per a mòbil i interpolació de 320 a 1024px', () => {
     const FLUIDS = {
-      '--sdp-fluid-h1': ['clamp(3rem, 2.7727rem + 1.1364vw, 3.5rem)', '--sdp-text-h1'],
-      '--sdp-fluid-h2': ['clamp(2.5rem, 2.3295rem + 0.8523vw, 2.875rem)', '--sdp-text-h2'],
-      '--sdp-fluid-h3': ['clamp(2rem, 1.8864rem + 0.5682vw, 2.25rem)', '--sdp-text-h3'],
-      '--sdp-fluid-h4': ['clamp(1.75rem, 1.6932rem + 0.2841vw, 1.875rem)', '--sdp-text-h4'],
-      '--sdp-fluid-h5': ['clamp(1.5rem, 1.4432rem + 0.2841vw, 1.625rem)', '--sdp-text-h5'],
-      '--sdp-fluid-h6': ['clamp(1.25rem, 1.1932rem + 0.2841vw, 1.375rem)', '--sdp-text-h6'],
-      '--sdp-fluid-lead': ['clamp(1.25rem, 1.1932rem + 0.2841vw, 1.375rem)', '--sdp-text-lead'],
-      '--sdp-fluid-cos': ['clamp(1.125rem, 1.0682rem + 0.2841vw, 1.25rem)', '--sdp-text-base']
+      '--sdp-fluid-h1': 'clamp(2rem, 1.3182rem + 3.4091vw, 3.5rem)',
+      '--sdp-fluid-h2': 'clamp(1.75rem, 1.2386rem + 2.5568vw, 2.875rem)',
+      '--sdp-fluid-h3': 'clamp(1.5rem, 1.1591rem + 1.7045vw, 2.25rem)',
+      '--sdp-fluid-h4': 'clamp(1.25rem, 0.9659rem + 1.4205vw, 1.875rem)',
+      '--sdp-fluid-h5': 'clamp(1.125rem, 0.8977rem + 1.1364vw, 1.625rem)',
+      '--sdp-fluid-h6': 'clamp(1rem, 0.8295rem + 0.8523vw, 1.375rem)',
+      '--sdp-fluid-lead': 'clamp(1.125rem, 1.0114rem + 0.5682vw, 1.375rem)',
+      '--sdp-fluid-cos': 'clamp(1rem, 0.8864rem + 0.5682vw, 1.25rem)'
     };
-    for (const [token, [esperat, fix]] of Object.entries(FLUIDS)) {
+    for (const [token, esperat] of Object.entries(FLUIDS)) {
       expect(P[token], token).toBe(esperat);
       const [, min, a, b, max] = /^clamp\(([\d.]+)rem, ([\d.]+)rem \+ ([\d.]+)vw, ([\d.]+)rem\)$/.exec(P[token]).map(Number);
-      expect(`${min}rem`, `${token}: el mínim és ${fix}`).toBe(P[fix]);
       // El terme preferit toca el mínim a 320px i el màxim a 1024px (mig píxel de marge).
       expect(Math.abs(a * 16 + b * 3.2 - min * 16), token).toBeLessThan(0.05);
       expect(Math.abs(a * 16 + b * 10.24 - max * 16), token).toBeLessThan(0.05);
-      expect(max / min, `${token}: creixement moderat`).toBeLessThanOrEqual(1.17);
+      expect(max / min, `${token}: creixement moderat`).toBeLessThanOrEqual(1.8);
     }
+  });
+
+  /* Fluida relativa al contenidor (decisió de MarIA, 261004) sense trencar la
+     Baseline 2022: el cqi només viu dins de @supports (width: 1cqi). Una
+     segona declaració de la mateixa custom property al bloc principal NO fa
+     de reserva (no es valida en llegir-la): en Chrome 100 o Firefox 100 el
+     var() seria invàlid i el títol heretaria la mida del pare. */
+  test('tipografia fluida: el cqi només dins de @supports (width: 1cqi), amb els mateixos valors que la base en vw', () => {
+    const net = senseComentaris(TOKENS);
+    const inici = net.indexOf('@supports (width: 1cqi) {');
+    expect(inici, 'falta el bloc @supports (width: 1cqi)').toBeGreaterThan(-1);
+    const obre = net.indexOf('{', inici);
+    let prof = 0;
+    let fi = -1;
+    for (let i = obre; i < net.length; i++) {
+      if (net[i] === '{') prof++;
+      if (net[i] === '}' && --prof === 0) { fi = i; break; }
+    }
+    expect(fi, 'el @supports (width: 1cqi) no es tanca').toBeGreaterThan(obre);
+    const dins = net.slice(obre + 1, fi);
+    const fora = net.slice(0, inici) + net.slice(fi + 1);
+    expect(fora, 'cap terme cqi fora del @supports').not.toMatch(/\dcqi\b/);
+    expect(dins).toContain(':root, :host, .sdp-root {');
+    const D = declaracions(dins);
+    const fluids = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'lead', 'cos'].map((n) => `--sdp-fluid-${n}`);
+    for (const token of fluids) {
+      expect(P[token], `${token}: la base és en vw`).toMatch(/\dvw, /);
+      expect(D[token], token).toBe(P[token].replace(/(\d)vw, /, '$1cqi, '));
+    }
+    expect(Object.keys(D).sort()).toEqual([...fluids].sort());
   });
 
   test('interlineat 1.2 i 1.6; els noms antics de la prosa en són àlies; amplades de Noto Sans', () => {
@@ -171,6 +200,27 @@ describe('contracte compartit · moviment, focus, tàctil i tipografia al primer
     for (const mort of ['--sdp-ctrl-vw', '--sdp-ctrl-scale', '--sdp-step-0', '--sdp-space-base']) {
       expect(TOKENS, mort).not.toContain(`${mort}:`);
     }
+  });
+
+  /* D-C (ordre del Mestre del 261004, prompt 261004_0515; escombrada triada al
+     xat a les 06:38) · el ritme vertical de la prosa, a la reixeta de 4px:
+     l'h5 i l'h6 passen de 6 a 8px. */
+  test('D-C · ritme vertical a la reixeta de 4px: marges de prosa en 0 o múltiples de 4px', () => {
+    const ritme = Object.entries(P).filter(([nom]) => /^--sdp-(mt|mb)-|^--sdp-li-gap$|^--sdp-bq-indent$/.test(nom));
+    expect(ritme.length).toBeGreaterThan(0);
+    for (const [nom, valor] of ritme) {
+      const px = valor === '0' ? 0 : Number(/^(\d+)px$/.exec(valor)?.[1]);
+      expect(px % 4, `${nom}: ${valor}`).toBe(0);
+    }
+    expect([P['--sdp-mb-h5'], P['--sdp-mb-h6']]).toEqual(['8px', '8px']);
+  });
+
+  test('D-C · cap radi fora de l’escala: els àlies apunten a un graó s–xl o a la pastilla', () => {
+    const escala = new Set(['--sdp-radi-s', '--sdp-radi-m', '--sdp-radi-g', '--sdp-radi-xl', '--sdp-radi-pastilla']);
+    for (const [nom, valor] of Object.entries(P).filter(([n]) => n.startsWith('--sdp-radi-') && !escala.has(n))) {
+      expect(valor, nom).toMatch(/^var\(--sdp-radi-(s|m|g|xl|pastilla)\)$/);
+    }
+    expect(P['--sdp-radi-alerta']).toBe('var(--sdp-radi-s)');
   });
 });
 

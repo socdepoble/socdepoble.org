@@ -6,7 +6,9 @@
  * del Control (bloc B, que només la llig).
  *
  * Cada plugin: { id, titol, subtitol, entradilla, imatge, imatgeAlt, obrir,
- * etiquetaObrir }.
+ * entorn, espai, etiquetaObrir }.
+ *   · espai  · Onada 2 de la Gestoria (261004) · l'espai del Panell on viu
+ *     la targeta, «L'empresa» o «La llar» (ESPAIS_PLUGINS), o null.
  *   · imatge · la il·lustració de MarIA, /assets/ui/plugins/<id>_vinyeta.jpg
  *     (public/). És la portada (Hero) de la pàgina i la imatge de la targeta.
  *   · obrir  · la ruta de l'app o de la secció QUE JA EXISTIX, o null («en
@@ -34,11 +36,18 @@
  *             (/__iaia/*) només les servix `vite serve` (consola-iaia.mjs:13).
  *   rss     → /app/lector · apps/lector/manifest.js:17 (Notícies del Poble).
  *   tpv     → /app/bar · apps/bar/manifest.js:16 (El Bar, TPV d'hostaleria).
- *   gestoria, bascula, mapa, vehicle, animalets → null. La Gestoria només
- *     viu dins de la Wiki en desenvolupament, sense ruta pròpia (decisió D3:
- *     wiki-de-poble/WikiDePobleSection.jsx:53-54 i :75); Mapa, Vehicle
- *     Compartit i Animalets no tenen secció (control/destinsControl.js:29-31);
- *     la Bàscula no té cap codi.
+ *   gestoria → /app/gestoria · apps/gestoria/manifest.js (id 'gestoria',
+ *             entrades 'tauler' i 'aprendre'). Ordre del Mestre, 261004
+ *             («contaminació crítica de rutes/estats entre Gestoria i Wiki»):
+ *             la Gestoria ja no viu dins de la Wiki (la decisió D3 deixava
+ *             «/app/gestoria, més avant; /gestoria, mai»). L'app porta entorn
+ *             'desenvolupament' i el plugin també: fora de DEV,
+ *             useDestiDelPlugin deixa el botó inert («(no disponible ací)»)
+ *             i la pàgina diu que està en obres. Cap consulta ni dada a la
+ *             ruta (MAPA §2.2, R4).
+ *   bascula, mapa, vehicle, animalets → null. Mapa, Vehicle Compartit i
+ *     Animalets no tenen secció (control/destinsControl.js:29-31); la Bàscula
+ *     no té cap codi.
  *
  * Pur: sense React ni xarxa. Les rutes d'app es fan amb rutaDeApp (la mateixa
  * de la plataforma), que ja és al paquet principal (PlataformaContext). La de
@@ -62,8 +71,11 @@ export const RUTA_PLUGINS = '/plugin';
    /__iaia/mapa.json, que només servix el middleware de dev
    (tooling/vite/consola-iaia.mjs, `apply: 'serve'`). Fora de dev,
    useDestiDelPlugin deixa el botó inert: cap enllaç que porte a «Entrar» o a
-   una Consola sense dades. */
-const plugin = ({ id, titol, subtitol, entradilla, imatgeAlt, obrir = null, entorn = null, etiquetaObrir }) => Object.freeze({
+   una Consola sense dades.
+   espai · l'espai del Panell de Control on viu la targeta ('empresa' o
+   'llar', ESPAIS_PLUGINS), o null si va a les graelles d'Utilitats o de
+   Maquinària. Un sol valor per plugin: cap targeta pot viure en dos espais. */
+const plugin = ({ id, titol, subtitol, entradilla, imatgeAlt, obrir = null, entorn = null, espai = null, etiquetaObrir }) => Object.freeze({
   id,
   titol,
   subtitol,
@@ -72,8 +84,31 @@ const plugin = ({ id, titol, subtitol, entradilla, imatgeAlt, obrir = null, ento
   imatgeAlt,
   obrir,
   entorn,
+  espai,
   etiquetaObrir
 });
+
+/* Onada 2 de la Gestoria (MAPA_EMPRESA_GESTORIA.txt §2.2; decisió A11 del
+   Mestre, 261004: només les targetes que ja funcionen) · Els dos espais nous
+   del Panell de Control, en l'ordre del Panell: entre «Publica al poble» i
+   les Utilitats. Mateix panell, dos espais separats i cap targeta compartida
+   (R3: la llar mai es barreja amb l'empresa). Per W4-08, el que viu en un
+   espai ix de les graelles d'Utilitats i de Maquinària.
+   Targetes ESTÀTIQUES (R1): cap xifra, comptador, data d'un apunt ni avís que
+   isca de les dades. El Panell també es munta dins de l'amfitrió
+   (WordPress): les xifres només viuen dins de cada eina, mai ací. */
+export const ESPAIS_PLUGINS = Object.freeze([
+  Object.freeze({
+    id: 'empresa',
+    titol: 'L’empresa',
+    entradeta: 'Les eines de l’activitat: el que es declara o es justifica davant d’Hisenda i de la gestoria. El Panell no en mostra cap xifra; les dades només es veuen dins de cada eina.'
+  }),
+  Object.freeze({
+    id: 'llar',
+    titol: 'La llar',
+    entradeta: 'Les eines de casa: el rebost, la compra i el quadern de salut. Viuen separades de les de l’empresa, i el Panell no en mostra cap dada.'
+  })
+]);
 
 /* L'ordre és el del Mestre (prompt 261004_0015, T2): el de la graella, el del
    DOM i el del focus. */
@@ -106,8 +141,11 @@ export const PLUGINS = Object.freeze([
     id: 'gestoria',
     titol: 'Gestoria',
     subtitol: 'Factures i papers del trimestre',
-    entradilla: 'Eina en obres: encara no es pot obrir des d’ací. No guarda ni envia cap factura.',
+    entradilla: 'El full de factures del trimestre per a la gestoria i un repàs dels seus conceptes. Encara està en obres: de moment només s’obri en desenvolupament, com a app pròpia. No envia res: enviar-ho a la gestoria ho fas tu.',
     imatgeAlt: 'Un llaurador i una gestora segellen papers en una taula al carrer, entre fulls que volen',
+    obrir: rutaDeApp('gestoria'),
+    entorn: 'desenvolupament',
+    espai: 'empresa',
     etiquetaObrir: 'Obrir la Gestoria'
   }),
   plugin({
@@ -117,6 +155,7 @@ export const PLUGINS = Object.freeze([
     entradilla: 'Apunta el que tens a casa i el que cal comprar, dins de La Nevera de Casa. Les llistes es guarden només en este dispositiu.',
     imatgeAlt: 'Dues iaies etiqueten pots de conserva en un rebost ple de botifarres, tomaques i olives',
     obrir: rutaDeApp('nevera', 'casa'),
+    espai: 'llar',
     etiquetaObrir: 'Obrir el Rebost'
   }),
   plugin({
@@ -126,6 +165,7 @@ export const PLUGINS = Object.freeze([
     entradilla: 'Apunta com beu, dorm i està la persona que cuides, i ensenya-ho al metge en un full clar. No diagnostica ni envia res.',
     imatgeAlt: 'Un metge pren la tensió a un iaio assegut en una cadira de bova, al carrer, entre gats i gossos',
     obrir: rutaDeApp('salut'),
+    espai: 'llar',
     etiquetaObrir: 'Obrir Salut'
   }),
   plugin({
@@ -192,6 +232,12 @@ export const IDS_PLUGINS = Object.freeze(PLUGINS.map((p) => p.id));
 export function pluginPerId(id) {
   if (typeof id !== 'string' || !id) return null;
   return PLUGINS.find((p) => p.id === id) || null;
+}
+
+/** Els plugins d'un espai del Panell (ESPAIS_PLUGINS), en l'ordre de la taula; [] si l'espai no és propi. */
+export function pluginsDeLEspai(espai) {
+  if (!ESPAIS_PLUGINS.some((e) => e.id === espai)) return [];
+  return PLUGINS.filter((p) => p.espai === espai);
 }
 
 /** La ruta de la pàgina d'un plugin: /plugin/<id>. */

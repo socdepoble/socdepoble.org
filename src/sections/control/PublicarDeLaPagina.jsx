@@ -14,16 +14,31 @@
  *  · TextSection el pinta davall del text (children): és React, no HTML, i
  *    cap handler viatja dins de la cadena sanejada.
  * Una pàgina que no és de cap targeta del Panell no pinta res.
+ *
+ * T8 (ordre del Mestre, 261004, prompt 261004_0515 §6, «el botonaco de
+ * Publicar») · El mateix botó gran blau també dalt, davall de l'H1, on van les
+ * etiquetes: la finalitat de la pàgina es veu només entrar. `lloc`:
+ *  · 'baix' (per defecte) · el de sempre, dins de div.sdp-pagina-accio, al
+ *    final del text. Sense la prop, el DOM de sempre.
+ *  · 'dalt' · la porta sola: PageFrame la posa dins de div.page-title-accio
+ *    (la ranura accioPrincipal), que ja li dona l'aire.
+ * Els dos són la mateixa porta (destí, nom accessible i avís): dos controls
+ * amb el mateix nom que porten al mateix lloc (WCAG 2.4.4). El de dalt és
+ * dins del bloc del títol i es veu també amb la pàgina traduïda; el de baix
+ * és dins del cos original, que s'amaga quan es traduïx.
+ * Fora d'abast (decidit): PluginPage (/plugin/:id) té el mateix patró de
+ * botó al final, però amb «Obrir …», no «Publicar»: no porta el de dalt.
  */
 import { useUIActions } from '../../app/contexts/UIContext';
 import { PortaDePagina } from '../../components/PedraSeca/organismes/PortesTargeta.jsx';
 import { destiDePagina, portesDe } from './destinsControl.js';
 
-export function PublicarDeLaPagina({ clau }) {
+export function PublicarDeLaPagina({ clau, lloc = 'baix' }) {
   const { t } = useUIActions();
   const desti = destiDePagina(clau);
   if (!desti) return null;
   const [publicar] = portesDe(desti, t);
+  if (lloc === 'dalt') return <PortaDePagina porta={publicar} />;
   return (
     <div className="sdp-pagina-accio">
       <PortaDePagina porta={publicar} />

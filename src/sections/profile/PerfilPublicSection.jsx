@@ -37,7 +37,12 @@ import { normalizeBackendConfig } from '../../config/backendConfig.js';
 /* T43 (ordre del Mestre, 260928) · Connectar una fitxa pública porta el seu
    descriptor i, per a una entitat o un grup, `organitzacio=ID`. La funció viu
    a config/navigation.js: el directori (ProfileSection) fa el mateix camí. */
-import { objecteDePerfil, rutaConnectarPerfil } from '../../config/navigation.js';
+import {
+  objecteDePerfil, registraEntitatDelProjecte, rutaConnectarPerfil, RUTA_PROJECTE, rutaDAutoria
+} from '../../config/navigation.js';
+import { DEFAULT_AUTHOR } from '../../components/universal/UniversalUtils';
+import { useResolvedAsset } from '../../hooks/useResolvedAsset.js';
+import { resolveAsset } from '../../config/assetResolver.js';
 
 const ETIQUETA = Object.freeze({ persona: 'Persona', entitat: 'Entitat', grup: 'Grup', ia: 'Intel·ligència artificial' });
 
@@ -89,6 +94,16 @@ export default function PerfilPublicSection({ agents = AGENTS_BUITS }) {
       if (!teCapacitat('directori') && normalizeBackendConfig(externalConfig).dataMode !== 'remote') {
         perfil = perfilDelCataleg(agents.find((agent) => String(agent.id) === clau));
       }
+      /* Revisió dels verificadors (front «logo», 261004) · En remot, l'id de
+         l'entitat del projecte és el del servidor (un UUID) i només el
+         registrava la resolució de l'app (useEntitatDelProjecte). Si esta
+         fitxa arribava abans, o si eixa resolució havia fallat i esperava,
+         rutaDAutoria no la reconeixia i el bloc del títol pintava l'avatar
+         quadrat en lloc del logotip rectangular. La fitxa registra ella
+         mateixa el perfil que ha llegit, abans de pintar-lo: és
+         idempotent i reconeix el projecte pel slug declarat, mai pel nom. Un
+         perfil del catàleg no porta slug i no hi fa res. */
+      registraEntitatDelProjecte(perfil);
       if (viu) setEstat({ id: clau, status: 'ready', perfil });
     })();
     return () => { viu = false; };
@@ -96,6 +111,32 @@ export default function PerfilPublicSection({ agents = AGENTS_BUITS }) {
 
   const perfil = estat.status === 'ready' ? estat.perfil : null;
   const carregant = estat.status !== 'ready';
+
+  /* Norma del Mestre, 261004 (prompt 261004_1108, logotips) · La pàgina
+     d'una entitat porta dalt el seu logotip. L'entitat del projecte es
+     reconeix per l'identificador (rutaDAutoria torna /projecte; l'id remot
+     el registra la mateixa càrrega d'esta fitxa, a més de l'AppDataLoader),
+     mai pel nom: el seu logotip
+     rectangular, clar i fosc. Una altra entitat, el seu logo_url (l'avatar
+     del perfil) resolt ací, que pot ser un sdp-media://: una sola imatge per
+     als dos temes. Un grup no en porta (com abans).
+     Correcció final (ordre del Mestre, 261004) · Només un sdp-media:// passa
+     pel port (useResolvedAsset); un camí o una URL es resolen en el mateix
+     render (resolveAsset). Abans tot passava pel hook, que torna '' en el
+     primer render: el logotip entrava un commit més tard i la fitxa saltava
+     fins a 600px. El hook va abans de les eixides primerenques. */
+  const esEntitat = perfil?.tipus === 'entitat';
+  const esElProjecte = esEntitat && rutaDAutoria({ tipus: perfil.tipus, id: perfil.id }) === RUTA_PROJECTE;
+  const logoCru = esEntitat && !esElProjecte && typeof perfil.avatar === 'string' ? perfil.avatar.trim() : '';
+  const logoDelPort = useResolvedAsset(logoCru.startsWith('sdp-media://') ? logoCru : '');
+  const logoPropi = logoCru.startsWith('sdp-media://') ? logoDelPort : (logoCru ? resolveAsset(logoCru) : '');
+  /* Norma del Mestre, 261004 (prompt 261004_1108, línies 66-69 i T2) · Una
+     persona o la IA (ents de carboni o de silici) no porten logotip: porten
+     el seu avatar redó, centrat davant de l'H1 (PageFrame, avatarAutor, que
+     també resol un sdp-media://). Si la fitxa és de qui mira, l'avatar és
+     un botó que porta al canvi d'imatge que ja existix: el Perfil, on
+     «Editar capçalera i avatar» obri DialegCapcaleraAvatar. */
+  const esPersonaOIA = perfil?.tipus === 'persona' || perfil?.tipus === 'ia';
 
   useSEO({
     title: perfil ? perfil.nom : t('section.perfil.public.noTrobat', 'Perfil no trobat'),
@@ -156,6 +197,14 @@ export default function PerfilPublicSection({ agents = AGENTS_BUITS }) {
   const rutaEdita = administra ? rutaFitxaOrganitzacio(membership.id) : '/el-meu-perfil';
   const correuPublic = esOrganitzacio ? String(perfil.correu || '').trim() : '';
   const mailto = correuPublic ? enllacMailto(correuPublic) : null;
+  const logoDeLaFitxa = esElProjecte
+    ? DEFAULT_AUTHOR.logo
+    : (logoPropi ? { clar: logoPropi, alt: `Logotip de ${perfil.nom}` } : null);
+  const avatarDeLaFitxa = esPersonaOIA && perfil.avatar ? {
+    src: perfil.avatar,
+    alt: `Avatar de ${perfil.nom}`,
+    onCanvia: perfil.propietari ? () => navigate(rutaEdita) : undefined
+  } : null;
 
   return (
     <UniversalPage
@@ -166,7 +215,10 @@ export default function PerfilPublicSection({ agents = AGENTS_BUITS }) {
       lead={perfil.lema || undefined}
       heroImage={perfil.hero || undefined}
       heroAlt={perfil.hero ? perfil.nom : ''}
-      showLogos={false}
+      /* Derogat el showLogos={false} (ordre del Mestre, 261004): una entitat
+         porta el seu logotip; una persona o la IA, el seu avatar redó. */
+      logoEntitat={logoDeLaFitxa}
+      avatarAutor={avatarDeLaFitxa}
       labels={etiquetes}
       copyright={perfil.copyright || `© ${perfil.nom}`}
       /* T51 · la data real de la fitxa: `creat` i `modificat` del PerfilPublic

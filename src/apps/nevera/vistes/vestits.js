@@ -13,8 +13,39 @@ import {
   Apple, Beef, Candy, CupSoda, Flower2, House, Milk, PawPrint, Pill, Snowflake, Soup, Tag, Wheat, Croissant
 } from 'lucide-react';
 import {
-  ARTICLES_PRODUCTES, articlePerId, articlesDe, categoriesDeLlista, clauDeNom, productesEnUs, textQuantitat
+  ARTICLES_PRODUCTES, CATEGORIES, articlePerId, articlesDe, categoriesDeLlista, clauDeNom, productesEnUs, textQuantitat
 } from '../nucli/index.js';
+
+/* Sense `autoria`, cap boina: el vestit no sap qui signa (ho sap la vista, autoria.js). */
+const SENSE_AUTORIA = () => undefined;
+
+/* Ordre del Mestre, 261004 (integració final; F04 de Codex: «zero subtítols i zero entradetes
+   en eixe catàleg») · L'anatomia sencera de cada targeta, amb dades reals del catàleg:
+     · subtítol: la secció de l'article («Llet i formatge»);
+     · entradeta: d'on ix l'article. Un producte de botiga, la marca i l'envàs del tall que
+       publica el projecte; un article propi, que és propi; un de base, que és del catàleg de
+       base. La línia de davall (especificació, el que hi ha a casa) continua manant quan n'hi ha
+       (l'esquelet la posa davant).
+   Derogat per l'ordre del Mestre, 261004 (arreglo del verificador, «l'entradeta que pot
+   mentir») · Un article propi ja no diu on s'ha creat: «Recupera una còpia» (Ajustos.jsx)
+   substituïx les dades d'este dispositiu per les d'un .json fet en un altre, i els seus
+   articles propis no s'han creat ací. Mai s'inventen dades: només «Article propi». El text
+   continua pendent del vistiplau del Mestre. */
+const NOMS_SECCIO = new Map(CATEGORIES.map((categoria) => [categoria.id, categoria.nom]));
+
+/** La secció d'un article, per al subtítol de la targeta, o undefined. */
+export const subtitolDe = (article) => NOMS_SECCIO.get(article?.categoriaId) || undefined;
+
+/** L'entradeta d'un article propi: cap lloc ni dispositiu, que una còpia recuperada no garantix. */
+const ENTRADETA_PROPI = 'Article propi';
+
+/** D'on ix un article, per a l'entradeta de la targeta, o undefined sense article. */
+export function entradetaDe(article) {
+  if (!article) return undefined;
+  if (article.propi) return ENTRADETA_PROPI;
+  if (article.font) return detallDeProducte(article) || 'Producte de botiga';
+  return 'Article de base del catàleg';
+}
 
 /* Cap color per categoria (disseny de l'esquelet): la icona i el nom la distingixen. */
 const ICONES = Object.freeze({
@@ -34,6 +65,9 @@ const ICONES = Object.freeze({
   propis: Tag
 });
 
+/** La icona d'una secció (un component de lucide-react), o undefined si no en té. */
+export const iconaDeSeccio = (categoriaId) => (Object.hasOwn(ICONES, categoriaId) ? ICONES[categoriaId] : undefined);
+
 /** El que hi ha a casa, dit amb paraules (mai només amb color). */
 export const TEXTOS_CASA = Object.freeze({ 'hi-ha': 'N’hi ha', 'se-n-acaba': 'Se n’acaba', acabat: 'S’ha acabat' });
 
@@ -47,14 +81,20 @@ export function seccionsDe(estat, llistaId, opcions) {
  * propis i els `productes` de botiga que se li passen (productesALaGraella).
  * `secundari(article)` és la línia de davall; els que són a la llista
  * (`aLaLlista`) porten 'en-colleccio'.
+ * REGLA D'OR 1 (ordre del Mestre, 261004) · `autoria(article)`: la boina de
+ * la targeta, qui signa l'article; la passa la vista (autoriaDArticle,
+ * autoria.js), que és qui entra a la plataforma. Sense, cap boina.
  */
-export function articlesVestits(estat, { aLaLlista = new Set(), secundari = () => undefined, productes = [] } = {}) {
+export function articlesVestits(estat, { aLaLlista = new Set(), secundari = () => undefined, productes = [], autoria = SENSE_AUTORIA } = {}) {
   return [...articlesDe(estat), ...productes].map((article) => ({
     id: article.id,
     nom: article.nom,
     categoriaId: article.categoriaId,
     secundari: secundari(article) || undefined,
-    estat: aLaLlista.has(article.id) ? 'en-colleccio' : 'normal'
+    estat: aLaLlista.has(article.id) ? 'en-colleccio' : 'normal',
+    autoria: autoria(article),
+    subtitol: subtitolDe(article),
+    entradeta: entradetaDe(article)
   }));
 }
 
@@ -107,14 +147,29 @@ export function suggerimentsVestits(estat, { aLaLlista = new Set(), secundari } 
   ];
 }
 
-/** Files { articleId, especificacio } (línies o recents) com a línies de l'esquelet. */
-export function liniesVestides(estat, files, { detall = (fila) => fila.especificacio } = {}) {
-  return files.map((fila) => ({
-    id: fila.articleId,
-    articleId: fila.articleId,
-    nom: articlePerId(estat, fila.articleId)?.nom ?? fila.articleId,
-    detall: detall(fila) || undefined
-  }));
+/**
+ * Files { articleId, especificacio } (línies o recents) com a línies de l'esquelet.
+ * Ordre del Mestre, 261004 (prompt 261004_0515) · `icona`: la de la secció de
+ * l'article, per al quadrat de la targeta (forma="targetes" de ColumnaColleccio:
+ * una línia no porta categoria). Les línies de sempre (LiniesColleccio) no la llegixen.
+ * REGLA D'OR 1 (ordre del Mestre, 261004) · `autoria(article)`: la boina de la
+ * targeta, qui signa l'article de la línia; la passa la vista (autoria.js).
+ * Les línies de sempre tampoc la llegixen.
+ */
+export function liniesVestides(estat, files, { detall = (fila) => fila.especificacio, autoria = SENSE_AUTORIA } = {}) {
+  return files.map((fila) => {
+    const article = articlePerId(estat, fila.articleId);
+    return {
+      id: fila.articleId,
+      articleId: fila.articleId,
+      nom: article?.nom ?? fila.articleId,
+      detall: detall(fila) || undefined,
+      icona: iconaDeSeccio(article?.categoriaId),
+      autoria: autoria(article),
+      subtitol: subtitolDe(article),
+      entradeta: entradetaDe(article)
+    };
+  });
 }
 
 /** Les línies d'una llista per articleId. */

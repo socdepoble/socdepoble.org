@@ -391,3 +391,184 @@ test('Bancal · tot text amb opacitat per davall d’1 torna a ser opac, i el de
     expect(contrast(TEMES[nom], '--sdp-text-suau', '--sdp-fons-subtil'), nom).toBeGreaterThanOrEqual(7);
   }
 });
+
+/* ═══ D-C · Pedra Seca al mil·límetre (ordre del Mestre del 261004, prompt
+   261004_0515; escombrada global triada al xat a les 06:38) ═══
+   Bessones de modules.abast.capes.test.js (sòl de 14px) i de
+   apps/comu/qualitat.test.js (espais, cap pseudoclasse relacional), ara sobre
+   components.css, on viu la UniversalCard. La pseudoclasse relacional
+   s'escriu partida perquè el text de la prova no dispare la Policia del
+   Disseny. */
+
+/** El mínim de lletra en px d'un valor resolt; null si no és una longitud.
+    Un em per davall d'1 encongix la lletra del pare, que pot ser el sòl: es
+    compta contra els 14px, el pitjor cas. max() val el seu argument més gran. */
+function minimDeLletra(valor) {
+  const v = valor.trim();
+  const clamp = /^clamp\(([^,]+),/.exec(v);
+  if (clamp) return minimDeLletra(clamp[1]);
+  const maxim = /^max\((.+)\)$/.exec(v);
+  if (maxim) return Math.max(...maxim[1].split(',').map((p) => minimDeLletra(p) ?? 0));
+  const m = /^([\d.]+)(px|rem|em)$/.exec(v);
+  if (!m) return null;
+  if (m[2] === 'em') return Number(m[1]) * 14;
+  return Number(m[1]) * (m[2] === 'px' ? 1 : 16);
+}
+
+test('D-C · sòl de 14px: cap font-size per davall, ni literal ni de token', () => {
+  const dolentes = [];
+  for (const d of DECLS.filter((x) => x.propietat === 'font-size')) {
+    let valor;
+    try {
+      valor = resol(d.valor);
+    } catch (error) {
+      dolentes.push(`${on(d)} · ${error.message}`);
+      continue;
+    }
+    const px = minimDeLletra(valor);
+    if (px !== null && px < 14) dolentes.push(`${on(d)} · ${px}px`);
+  }
+  expect(dolentes).toEqual([]);
+});
+
+test('D-C · la comprovació del sòl veu les formes velles', () => {
+  expect(minimDeLletra('0.7rem')).toBeLessThan(14);
+  expect(minimDeLletra('0.85rem')).toBeLessThan(14);
+  expect(minimDeLletra('0.9em')).toBeLessThan(14);
+  expect(minimDeLletra('max(0.9em, 0.875rem)')).toBe(14);
+  expect(minimDeLletra('clamp(0.75rem, 1vw, 1rem)')).toBe(12);
+});
+
+const RELACIONAL = new RegExp([':ha', 's\\('].join(''), 'g');
+
+test('D-C · cap pseudoclasse relacional (Baseline 2022: Chrome 100 i Firefox 100 tiren la regla sencera)', () => {
+  expect(senseComentaris(FULL).match(RELACIONAL) ?? []).toEqual([]);
+  expect(`.sp-card-label${[':ha', 's(.sp-card-label__action)'].join('')}`.match(RELACIONAL)).toHaveLength(1);
+});
+
+const RADI = /^(0|50%|inherit|var\(--sdp-radi-(s|m|g|xl|pastilla|boto)\))$/;
+
+test('D-C · radis només per token (s, m, g, xl, pastilla, boto), 0, inherit o el cercle del 50 %', () => {
+  const dolentes = DECLS
+    .filter((d) => /^border(-[\w-]+)?-radius$/.test(d.propietat))
+    .filter((d) => !trossos(d.valor).every((t) => RADI.test(t)))
+    .map(on);
+  expect(dolentes).toEqual([]);
+});
+
+/* Espais: 0, auto, l'escala --sdp-space-N, el coixí de contenidor o rem
+   múltiples de 0,25, també dins de calc(), clamp(), max(), min() i env().
+   Exempts, amb motiu (no són espais de la reixeta):
+     · .sdp-nomes-lector, margin -1px: el patró visualment amagat.
+     · .sdp-pestanyes__pestanya, margin-bottom -2px: encavalca la vora de 2px.
+     · .sdp-anatomia, gap 2px: és el filet; el fons fa de vora entre cel·les.
+     · .sdp-alerta__icona, margin-top 2px: ajust òptic de la icona de 24px a
+       la primera línia (28,8px). */
+const ESPAI_EXEMPT = new Set([
+  '.sdp-nomes-lector|margin|-1px',
+  '.sdp-pestanyes__pestanya|margin-bottom|-2px',
+  '.sdp-anatomia|gap|2px',
+  '.sdp-alerta__icona|margin-top|2px'
+]);
+const ES_ESPAI = /^(margin|padding)(-[\w-]+)?$|^(row-|column-)?gap$|^inset(-[\w-]+)?$/;
+
+function funcioValida(t) {
+  const longituds = [...t.matchAll(/(-?\d*\.?\d+)(px|rem|em)\b/g)];
+  const tokens = [...t.matchAll(/var\((--[\w-]+)/g)];
+  return longituds.every(([, n, u]) => (u === 'px' ? Number(n) === 0 : u === 'rem' && Number.isInteger(Number(n) * 4)))
+    && tokens.every(([, nom]) => nom.startsWith('--sdp-'));
+}
+function espaiValid(valor) {
+  return trossos(valor).every((t) => {
+    if (/^-?(0|auto|inherit)$/.test(t)) return true;
+    if (/^var\(--sdp-(space-\d+|pad-contenidor)\)$/.test(t)) return true;
+    const rem = /^-?(\d*\.?\d+)rem$/.exec(t);
+    if (rem) return Number.isInteger(Number(rem[1]) * 4);
+    if (/^(calc|clamp|max|min|env)\(/.test(t)) return funcioValida(t);
+    return false;
+  });
+}
+
+test('D-C · espais de la reixeta: 0, auto, --sdp-space-N, el coixí de contenidor o rem múltiples de 0,25', () => {
+  const dolentes = DECLS
+    .filter((d) => ES_ESPAI.test(d.propietat) && !enKeyframes(d))
+    .filter((d) => !ESPAI_EXEMPT.has(`${d.prelud}|${d.propietat}|${d.valor}`))
+    .filter((d) => !espaiValid(d.valor))
+    .map(on);
+  expect(dolentes).toEqual([]);
+  /* Cada exempció continua existint tal qual: si la regla canvia, es revisa. */
+  for (const clau of ESPAI_EXEMPT) {
+    const [prelud, propietat, valor] = clau.split('|');
+    expect(valorDe(prelud, propietat), clau).toBe(valor);
+  }
+});
+
+test('D-C · la comprovació d’espais veu les formes velles i deixa passar les bones', () => {
+  expect(espaiValid('22px 24px 16px')).toBe(false);
+  expect(espaiValid('6px')).toBe(false);
+  expect(espaiValid('0.3rem')).toBe(false);
+  expect(espaiValid('var(--sdp-space-6) var(--sdp-space-6) var(--sdp-space-4)')).toBe(true);
+  expect(espaiValid('calc(var(--sdp-space-4) + env(safe-area-inset-bottom, 0px))')).toBe(true);
+  expect(espaiValid('clamp(var(--sdp-space-5), 5vw, var(--sdp-space-8))')).toBe(true);
+  expect(espaiValid('calc((100% - var(--sdp-touch)) / 2)')).toBe(true);
+});
+
+test('D-C · títols de la targeta amb l’interlineat de títol (1.2), no el de component', () => {
+  for (const prelud of ['.sp-card-title', '.sp-card .sp-card-body h1', '.sp-card .sp-card-body h2',
+    '.sp-card--action .sp-card-heading-with-icon .sp-card-title', '.sp-card-subtitle', '.sp-card-author-name']) {
+    expect(valorDe(prelud, 'line-height'), prelud).toBe('var(--sdp-leading-titol)');
+  }
+  expect(resol('var(--sdp-leading-titol)')).toBe('1.2');
+});
+
+test('D-C · mides de la targeta amb l’escala fixa: l’h1 com el títol, l’h2 i el preu en h6', () => {
+  expect(valorDe('.sp-card .sp-card-body h1', 'font-size')).toBe(valorDe('.sp-card-title', 'font-size'));
+  expect(valorDe('.sp-card .sp-card-body h2', 'font-size')).toBe('var(--sdp-text-h6)');
+  expect(valorDe('.sp-card-price', 'font-size')).toBe('var(--sdp-text-h6)');
+});
+
+/* Segona tongada (D-C §6 de la fitxa CSS_MIL_LIMETRE): cap mida de lletra
+   literal a la targeta, al quadrat, a la píndola ni al .btn. Les que no
+   tenien un token idèntic van al graó més pròxim de l'escala de tokens.css
+   (arredoniment documentat a la fitxa). Queden fora, a propòsit: el «+» de
+   CONNECTAR (24px, un glif) i els trams del preu del quadrat (3.5, 2.25,
+   1.625 i 1.25rem), que UniversalCard.quadrat.capes.test.js llig en rem. */
+test('D-C · segona tongada: les mides de lletra de la targeta, el quadrat, .pill i .btn són tokens', () => {
+  const esperat = {
+    '.btn': 'var(--sdp-text-small)',
+    '.sp-card--action .sp-card-subtitle': 'var(--sdp-text-small)',
+    '.sp-card-text': 'var(--sdp-text-small)',
+    '.sp-card-author-name': 'var(--sdp-text-small)',
+    '.sp-card--action .sp-card-heading-with-icon .sp-card-title': 'var(--sdp-text-h6)',
+    '.sp-card-subtitle': 'var(--sdp-text-base)',
+    '.sp-card-calendar-badge__mes': 'var(--sdp-text-base)',
+    '.sp-card-calendar-badge__any': 'var(--sdp-text-meta)',
+    '.pill': 'var(--sdp-text-meta)'
+  };
+  for (const [prelud, valor] of Object.entries(esperat)) expect(valorDe(prelud, 'font-size'), prelud).toBe(valor);
+});
+
+test('D-C · etiqueta amb acció: modificador de classe, sense retallar el botó, píndola de 24px i diana de 48px', () => {
+  /* Dues classes i darrere de la regla base: dins de .sp-card-labels
+     (PageFrame), `.sp-card-labels .sp-card-label` pesa (0,2,0) i una sola
+     classe hi perdria el coixí 0 (el que pesava la forma relacional). */
+  const MODIFICADOR = '.sp-card-label.sp-card-label--amb-accio';
+  expect(reglesDe(MODIFICADOR)).toHaveLength(1);
+  expect(reglesDe('.sp-card-label--amb-accio')).toHaveLength(0);
+  expect(FULL.indexOf(`${MODIFICADOR} {`)).toBeGreaterThan(FULL.indexOf('.sp-card-labels .sp-card-label,'));
+  expect(valorDe(MODIFICADOR, 'overflow')).toBeUndefined();
+  expect(valorDe(MODIFICADOR, 'padding')).toBe('0');
+  expect(valorDe('.sp-card-labels .sp-card-label, .sp-card-label', 'height')).toBe('24px');
+  expect(valorDe('.sp-card-label--amb-accio > .sp-card-label__action', 'position')).toBe('relative');
+  const diana = '.sp-card-label--amb-accio > .sp-card-label__action::after';
+  expect(valorDe(diana, 'inset-block')).toBe('calc((100% - var(--sdp-touch)) / 2)');
+  expect(valorDe(diana, 'inset-inline')).toBe('0');
+  /* (24 − 48) / 2 = −12px per dalt i per baix: 48px de diana. */
+  expect(resol('var(--sdp-touch)')).toBe('48px');
+});
+
+test('D-C · el placeholder de l’EditableField: una sola forma, :empty, sense pseudoclasse relacional', () => {
+  const placeholder = COMPONENTS.filter((r) => r.prelud.includes('[data-placeholder]'));
+  expect(placeholder.map((r) => r.prelud)).toEqual(['[data-placeholder]:not(:focus):empty::before']);
+  expect(declaracions(placeholder[0].cos)).toContainEqual(['content', 'attr(data-placeholder)']);
+});

@@ -3,8 +3,15 @@ import { act, cleanup, fireEvent, render, within } from '@testing-library/react'
 import { afterEach, expect, test, vi } from 'vitest';
 import AppGridShell, { useAppGrid } from './AppGridShell.jsx';
 
+/* Barres (ordre del Mestre, 261004) · El mock era { left: 420, middle: 340 }
+   i SANEJA_AMPLADA (AppGridShell.jsx) rebutja amb raó el left de 420, fora
+   de COLUMN_LIMITS.left (200-340): el canviava pel de per defecte (260) i el
+   mínim d'ample baixava a 922, de manera que 950 ja era «ample» i la prova
+   de plegar es tornava roja. Les dues amplàries, ara dins dels límits i
+   intercanviades: la suma és la mateixa (760) i el mínim d'ample continua
+   sent 1082 (340 + 420 + 320 + 2). Tots els talls dels comentaris valen. */
 vi.mock('../../config/storage.js', () => ({
-  getVal: () => ({ left: 420, middle: 340 }),
+  getVal: () => ({ left: 340, middle: 420 }),
   setVal: vi.fn()
 }));
 
@@ -37,7 +44,7 @@ test('plegar i desplegar recalcula el layout sense esperar un canvi del contenid
    Tancar una columna li posa aria-hidden i inert. Si el focus hi era dins,
    la closca l'ha de traure en el mateix commit: al botó a l'abast que la
    torna a obrir (data-obri-columna i aria-controls) o, si no n'hi ha cap, a
-   <body>. Amb el mock de 420/340, minAmple és 1082: 800 és mitjà i 375,
+   <body>. Amb el mock de 340/420, minAmple és 1082: 800 és mitjà i 375,
    estret. */
 
 /* Un botó que demana un panell a la closca; `controls`, la columna que
@@ -283,7 +290,7 @@ test('T6 · si un efecte de layout torna a obrir en el mateix lot la columna que
    panellEstret: el panell d'eixida en muntar en estret (el primer
    mesurament). tornaEstret: amb ell, el context oferix tornaDelDetall, que torna
    al panell d'on es venia i hi porta el focus. Sense les propietats, la
-   closca d'abans. Amb el mock de 420/340: 1400 és ample, 820 mitjà, 375
+   closca d'abans. Amb el mock de 340/420: 1400 és ample, 820 mitjà, 375
    estret. */
 
 /* La fletxa ← d'un detall: diu si la closca oferix la tornada i la crida. */

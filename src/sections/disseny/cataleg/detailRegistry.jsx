@@ -125,4 +125,7 @@ export const CATALOG_DETAIL_LOADERS = {
   'estructura/esquelet-compra': ambReintent(() => import('./detalls/EspecimenEsqueletCompra.jsx')),
   /* Ordre del Mestre (261003, tancament del Lector RSS) · l'excepció 16:9, només per al Lector. */
   'fonaments/imatge-apaisada': ambReintent(() => import('./detalls/EspecimenImatgeApaisada.jsx')),
+  /* Ordre del Mestre, 261004 (prompt 261004_0515; D-A) · la graella de targetes i la pàgina de les apps. */
+  'fonaments/graella-targetes': ambReintent(() => import('./detalls/EspecimenGraellaTargetes.jsx')),
+  'estructura/pagina-app': ambReintent(() => import('./detalls/EspecimenPaginaApp.jsx')),
 };

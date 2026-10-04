@@ -2,6 +2,10 @@ import { useMemo, useRef, useState } from 'react';
 import { RotateCcw } from 'lucide-react';
 import { Boto, Camp, CampText, Interruptor, PillToggle } from '../../../components/PedraSeca';
 import BrainGraph from '../../../components/universal/graph/BrainGraph';
+import { Link } from '../../../app/contexts/RouterContext';
+import { de, plural } from '../concordanca.js';
+import { GraellaXifres } from '../XifresMas.jsx';
+import { rutaXifra, xifresDeVista } from '../xifresMas.js';
 import { TIPUS_NODE, CONFIANCES } from './contracteMapa.js';
 import { DetallPeca } from './DetallPeca.jsx';
 import {
@@ -15,7 +19,13 @@ import {
    deixava baixar. Primer la llegenda, la cerca i els filtres (tres
    plegables tancats, com al panell de filtres d'Obsidian); al final, el graf
    i el detall de la peça triada (DetallPeca.jsx, T4). Tot es construïx amb
-   peces del catàleg Pedra Seca. */
+   peces del catàleg Pedra Seca.
+   Correcció 261004 (verificador de la segona passada, punt 2) · Les xifres
+   de l'Explorador són targetes: els nodes i les arestes del Mapa (la vista
+   «explorador» de VISTES_XIFRES), al capdamunt. El recompte de la barra diu
+   el que mostren els filtres i enllaça amb les dues targetes, i els recomptes
+   dels interruptors de tipus també hi porten. La concordança és la comuna
+   (concordanca.js). */
 
 const OPCIONS_FORCES = Object.freeze([
   { valor: 'compacte', text: 'Compacte' },
@@ -24,8 +34,19 @@ const OPCIONS_FORCES = Object.freeze([
 ]);
 const DENSITAT_INICIAL = 'normal';
 
-const plural = (n, un, molts) => `${n} ${n === 1 ? un : molts}`;
 const encesos = (grup) => Object.values(grup).filter(Boolean).length;
+
+/* Els que mostren els filtres i, si no són tots, «de» el total: el total és la
+   xifra de la seua targeta i hi porta. Correcció 261004 (verificador de la
+   tercera passada, punt 3) · «3 d’11 peces»: «de» s'apostrofa quan toca. */
+function Recompte({ visibles, total, slug, un, molts }) {
+  return (
+    <>
+      {visibles === total ? null : `${visibles} ${de(total, '')}`}
+      <Link to={rutaXifra(slug)}>{plural(total, un, molts)}</Link>
+    </>
+  );
+}
 
 /** Quants filtres dels plegables s'aparten de l'inici (la cerca ja es veu a la barra). */
 function comptaCanvis(filtres, densitat) {
@@ -73,9 +94,11 @@ export function ExploradorMapa({ mapa }) {
   }, [mapa]);
   const canvis = comptaCanvis(filtres, densitat);
   const nomDensitat = OPCIONS_FORCES.find((o) => o.valor === densitat)?.text;
+  const xifres = useMemo(() => xifresDeVista('explorador', mapa), [mapa]);
 
   return (
     <section className="sdp-explorador">
+      <GraellaXifres xifres={xifres} generat={mapa.generat ?? null} />
       <p className="sdp-explorador__llegenda">
         Cada punt és una peça del Mas i cada línia, una relació del contracte
         (crida, llig, escriu, dispara, encamina, carrega o governa). Una línia
@@ -91,13 +114,19 @@ export function ExploradorMapa({ mapa }) {
           <CampText tipus="search" value={filtres.cerca} onChange={(e) => posa('cerca', e.target.value)} />
         </Camp>
         <p className="sdp-explorador__recompte" role="status">
-          {plural(graf.nodes.length, 'peça', 'peces')} · {plural(graf.links.length, 'relació', 'relacions')}
+          <Recompte visibles={graf.nodes.length} total={mapa.nodes.length} slug="nodes" un="peça" molts="peces" />
+          {' · '}
+          <Recompte visibles={graf.links.length} total={mapa.arestes.length} slug="arestes" un="relació" molts="relacions" />
         </p>
       </div>
       <div className="sdp-explorador__filtres" ref={panellFiltres} role="group" aria-label="Filtres del graf">
         <details className="sdp-explorador__grup">
-          <Resum titol="Tipus de peça" estat={`${encesos(filtres.tipus)} de ${TIPUS_NODE.length}`} />
+          <Resum titol="Tipus de peça" estat={`${encesos(filtres.tipus)} ${de(TIPUS_NODE.length)}`} />
           <div className="sdp-explorador__opcions">
+            <p className="sdp-explorador__llegenda">
+              Entre parèntesis, les peces de cada tipus al Mapa sencer: el desglossament és a la
+              targeta <Link to={rutaXifra('nodes')}>{plural(mapa.nodes.length, 'node', 'nodes')}</Link>.
+            </p>
             {TIPUS_NODE.map((t) => (
               <Interruptor key={t}
                 etiqueta={<><span className="sdp-explorador__punt" data-tipus={t} aria-hidden="true" />{`${NOMS_TIPUS[t]} (${perTipus.get(t) || 0})`}</>}
@@ -108,7 +137,7 @@ export function ExploradorMapa({ mapa }) {
           </div>
         </details>
         <details className="sdp-explorador__grup">
-          <Resum titol="Confiança de les relacions" estat={`${encesos(filtres.confiances)} de ${CONFIANCES.length}`} />
+          <Resum titol="Confiança de les relacions" estat={`${encesos(filtres.confiances)} ${de(CONFIANCES.length)}`} />
           <div className="sdp-explorador__opcions">
             {CONFIANCES.map((c) => (
               <Interruptor key={c} etiqueta={NOMS_CONFIANCA[c]} actiu={filtres.confiances[c]}

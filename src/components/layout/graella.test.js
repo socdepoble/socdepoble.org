@@ -69,4 +69,21 @@ describe('columnesTancades', () => {
     expect(columnesTancades('estret', 'left')).toEqual({ left: false, middle: true, right: true });
     expect(columnesTancades('estret', 'middle')).toEqual({ left: true, middle: false, right: true });
   });
+
+  /* Barres (ordre del Mestre, 261004) · Amb railEsquerra, en «mitja» la
+     navegació és un rail fix: mai tancada. Ample i estret, com sempre. */
+  test('railEsquerra: en mitjà la navegació no es tanca mai; en ample i en estret, res no canvia', () => {
+    const rail = { railEsquerra: true };
+    expect(columnesTancades('mitja', null, rail)).toEqual({ left: false, middle: false, right: false });
+    expect(columnesTancades('mitja', 'left', rail)).toEqual({ left: false, middle: false, right: false });
+    expect(columnesTancades('mitja', 'middle', rail)).toEqual({ left: false, middle: false, right: false });
+    for (const mida of ['ample', 'estret']) {
+      for (const panell of [null, 'left', 'middle']) {
+        expect(columnesTancades(mida, panell, rail), `${mida} ${panell}`).toEqual(columnesTancades(mida, panell));
+      }
+    }
+    /* Sense l'opció, o amb false, la regla d'abans. */
+    expect(columnesTancades('mitja', null, {})).toEqual({ left: true, middle: false, right: false });
+    expect(columnesTancades('mitja', null, { railEsquerra: false })).toEqual({ left: true, middle: false, right: false });
+  });
 });

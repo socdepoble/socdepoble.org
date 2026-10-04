@@ -15,6 +15,10 @@ export default function SectionItemCard({
   className = '',
   // New props that map to UniversalCard natively
   author,
+  /* T6 (ordre del Mestre, 261004, prompt 261004_0515 §5) · la pàgina de qui
+     signa (rutaDAutoria o rutaDePerfilDAutor): la boina hi enllaça. Sense,
+     la boina de sempre, sense enllaç. */
+  authorHref,
   location,
   avatarUrl,
   time,
@@ -54,6 +58,7 @@ export default function SectionItemCard({
         labels={resolvedLabels}
         onMainClick={handleMainClick}
         author={author}
+        authorHref={authorHref}
         location={location}
         avatarUrl={avatarUrl}
         time={time}

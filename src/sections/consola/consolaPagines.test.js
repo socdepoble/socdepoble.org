@@ -4,8 +4,47 @@ import {
   CLAU_VISTES, CODIS_VIGILANCIA, ETIQUETES, IDS_PAGINES, LLINDAR_REBUTS_RANCIS_DIES, LLINDAR_SATURACIO, RUTA_CONSOLA,
   avisosDeVigilancia, dataUltimaOperacio, diesDes, etiquetesPagina, etiquetesPols, llegixVistes, marcaVista,
   mesuresPagina, paginaConsola, paginesConsola, rebutsRancis, resumPagina, segmentPagina, signaturaPagina, ultimRebut,
-  LLINDAR_ROIG, ORDRE_TO, estatsPagina, faDies, nivellEstats, plural
+  LLINDAR_ROIG, ORDRE_TO, estatsPagina, faDies, nivellEstats, plural, liniesDescartades,
+  fontLlegible, operacionsImmunitaries, registresDelDiari
 } from './consolaPagines.js';
+
+/* Correcció 261004 (verificador de la tercera passada, punt 4) · Una font
+   absent no és cap zero: el middleware publica `operacions: 0` i llistes
+   buides també quan el journal o el diari no existixen. */
+describe('una font absent no es compta com a 0', () => {
+  const amb = (diari, immunitari, extra = {}) => ({
+    rebuts: [], consums: [], immunitari: { operacions: 0, ultima: null }, fonts: { diari, immunitari }, ...extra
+  });
+  test('fontLlegible: absent no es llig; ok, o sense `fonts`, sí', () => {
+    expect(fontLlegible(amb({ estat: 'absent' }, { estat: 'ok' }), 'diari')).toBe(false);
+    expect(fontLlegible(amb({ estat: 'absent' }, { estat: 'ok' }), 'immunitari')).toBe(true);
+    expect(fontLlegible({ rebuts: [] }, 'diari')).toBe(true);
+  });
+  test('operacionsImmunitaries i registresDelDiari: null sense la seua font, el recompte amb ella', () => {
+    expect(operacionsImmunitaries(amb({ estat: 'ok' }, { estat: 'absent' }))).toBeNull();
+    expect(operacionsImmunitaries(amb({ estat: 'ok' }, { estat: 'ok' }))).toBe(0);
+    expect(operacionsImmunitaries({ immunitari: { operacions: 15 } })).toBe(15);
+    expect(operacionsImmunitaries(null)).toBeNull();
+    expect(registresDelDiari(amb({ estat: 'absent' }, { estat: 'ok' }), 'rebuts')).toBeNull();
+    expect(registresDelDiari(amb({ estat: 'ok' }, { estat: 'ok' }, { rebuts: [{}, {}] }), 'rebuts')).toBe(2);
+    expect(registresDelDiari(null, 'consums')).toBeNull();
+  });
+});
+
+/* Ordre del Mestre, 261004 (cap anomalia sense mostrar) · Les línies que el
+   middleware descarta del diari i del journal es diuen, també a zero. */
+describe('liniesDescartades', () => {
+  test('llig fonts.<font>.línies_descartades; zero és una mesura, absent és null', () => {
+    const fonts = (diari, immunitari) => ({ fonts: { diari, immunitari } });
+    expect(liniesDescartades(fonts({ estat: 'ok', 'línies_descartades': 2 }, { estat: 'ok', 'línies_descartades': 0 })))
+      .toEqual({ diari: 2, immunitari: 0 });
+    expect(liniesDescartades(fonts({ estat: 'absent' }, { estat: 'ok', 'línies_descartades': 1 }))).toEqual({ diari: null, immunitari: 1 });
+    expect(liniesDescartades(fonts({ estat: 'absent' }, { estat: 'absent' }))).toBeNull();
+    expect(liniesDescartades(fonts({ 'línies_descartades': -1 }, { 'línies_descartades': 1.5 }))).toBeNull();
+    expect(liniesDescartades({})).toBeNull();
+    expect(liniesDescartades(null)).toBeNull();
+  });
+});
 
 describe('catàleg de pàgines de la Consola', () => {
   test('nou pàgines en l’ordre de les pestanyes d’Emowe, cadascuna amb ruta pròpia', () => {
@@ -67,18 +106,27 @@ describe('resumPagina', () => {
   };
   const ambMapa = { mapa, estatMapa: 'ready' };
 
+  /* Correcció 261004 (verificador de la segona passada, punt 3) · Cada
+     recompte concorda (concordanca.js). Derogat per l'ordre del Mestre del
+     261004 (xat: cap xifra solta): «1 vives», «1 rutes», «1 alts»,
+     «1 suggeriments», «1 arnesos», «1 candats», «1 tasques programades». */
   test('resumix dades reals del Mapa', () => {
     expect(resumPagina('explorador', ambMapa)).toBe('6 nodes · 3 arestes');
-    expect(resumPagina('calendari', ambMapa)).toBe('3 tasques · 1 vives · 1 mortes');
+    expect(resumPagina('calendari', ambMapa)).toBe('3 tasques · 1 viva · 1 morta');
     expect(resumPagina('inventari', ambMapa)).toBe('2 skills al Mapa');
-    expect(resumPagina('entrades', ambMapa)).toBe('2 skills · 1 rutes documentals');
-    expect(resumPagina('salut', ambMapa)).toBe('2 avisos (1 alts) · 2 mètriques');
+    expect(resumPagina('entrades', ambMapa)).toBe('2 skills · 1 ruta documental');
+    /* Correcció 261004 (verificador de la tercera passada, punt 5) · la segona
+       mètrica és la xifra de la targeta «metriques-amb-mesura». Derogat per
+       l'ordre del Mestre del 261004 (xat: cap xifra solta): «2 mètriques». */
+    expect(resumPagina('salut', ambMapa)).toBe('2 avisos (1 alt) · 2 mètriques de salut amb mesura');
+    expect(resumPagina('salut', { mapa: { ...mapa, salut: [{ valor: 'N/A' }, { valor: 1 }] }, estatMapa: 'ready' }))
+      .toBe('2 avisos (1 alt) · 1 mètrica de salut amb mesura');
   });
 
   test('les vistes noves també resumixen dades, no promeses', () => {
-    expect(resumPagina('fluxos', ambMapa)).toBe('0 cadenes declarades · 1 suggeriments de la prosa');
-    expect(resumPagina('agents', ambMapa)).toBe('0 agents atòmics · 1 arnesos que conversen');
-    expect(resumPagina('actors', ambMapa)).toBe('1 arnesos · 1 candats · 1 tasques programades');
+    expect(resumPagina('fluxos', ambMapa)).toBe('0 cadenes declarades · 1 suggeriment de la prosa');
+    expect(resumPagina('agents', ambMapa)).toBe('0 agents atòmics · 1 arnés que conversa');
+    expect(resumPagina('actors', ambMapa)).toBe('1 arnés · 1 candat · 1 tasca programada');
   });
 
   test('sense Mapa diu per què, mai una xifra', () => {
@@ -98,8 +146,23 @@ describe('resumPagina', () => {
         { alDisc: true, alManifest: false, core: false }
       ]
     };
-    expect(resumPagina('pols', { dades, estatDades: 'ready' })).toBe('2 registres de consum · 1 rebuts · 2 skills (1 orfes)');
+    // Derogat per l'ordre del Mestre del 261004 (prompt 261004_0515): «orfes» era paraula del Mapa.
+    expect(resumPagina('pols', { dades, estatDades: 'ready' })).toBe('2 registres de consum · 1 rebut · 2 skills (1 fora del manifest)');
     expect(resumPagina('pols', { dades: null, estatDades: 'absent' })).toBe('Dades no disponibles en este entorn');
+  });
+
+  /* Correcció 261004 (verificador de la tercera passada, punt 4) · Sense el
+     diari de sessió (fonts.diari.estat 'absent') el middleware publica
+     `rebuts: []` i `consums: []`: no són 0, són «sense mesura». */
+  test('el pols sense el diari de sessió: registres i rebuts sense mesura, mai 0', () => {
+    const dades = {
+      consums: [], rebuts: [], skills: [{ alDisc: true, alManifest: true, core: true }],
+      fonts: { diari: { estat: 'absent' }, immunitari: { estat: 'ok', 'línies_descartades': 0 } }
+    };
+    expect(resumPagina('pols', { dades, estatDades: 'ready' })).toBe('registres de consum sense mesura · rebuts sense mesura · 1 skill (0 fora del manifest)');
+    // Amb el diari llegible (o sense `fonts`), els zeros són mesura.
+    const ambDiari = { ...dades, fonts: { ...dades.fonts, diari: { estat: 'ok', 'línies_descartades': 0 } } };
+    expect(resumPagina('pols', { dades: ambDiari, estatDades: 'ready' })).toBe('0 registres de consum · 0 rebuts · 1 skill (0 fora del manifest)');
   });
 
   test('una pàgina desconeguda no té resum', () => {
@@ -125,13 +188,15 @@ describe('mesuresPagina · les parts del resum', () => {
   const fonts = { mapa, estatMapa: 'ready', dades, estatDades: 'ready' };
 
   test('cada pàgina torna una llista de mètriques, una xifra amb el que compta', () => {
-    expect(mesuresPagina('pols', fonts)).toEqual(['1 registres de consum', '2 rebuts', '1 skills (1 orfes)']);
-    expect(mesuresPagina('explorador', fonts)).toEqual(['4 nodes', '1 arestes']);
-    expect(mesuresPagina('calendari', fonts)).toEqual(['2 tasques', '1 vives', '1 mortes']);
+    // Correcció 261004 (verificador de la segona passada, punt 3) · cada mètrica concorda.
+    expect(mesuresPagina('pols', fonts)).toEqual(['1 registre de consum', '2 rebuts', '1 skill (1 fora del manifest)']);
+    expect(mesuresPagina('explorador', fonts)).toEqual(['4 nodes', '1 aresta']);
+    expect(mesuresPagina('calendari', fonts)).toEqual(['2 tasques', '1 viva', '1 morta']);
     expect(mesuresPagina('inventari', fonts)).toEqual(['2 skills al Mapa']);
-    expect(mesuresPagina('entrades', fonts)).toEqual(['2 skills', '1 rutes documentals']);
-    expect(mesuresPagina('salut', fonts)).toEqual(['1 avisos (1 alts)', '1 mètriques']);
-    expect(mesuresPagina('agents', fonts)).toEqual(['0 agents atòmics', '1 arnesos que conversen']);
+    expect(mesuresPagina('entrades', fonts)).toEqual(['2 skills', '1 ruta documental']);
+    // Derogat per l'ordre del Mestre del 261004 (xat: cap xifra solta): «1 mètrica», sense targeta.
+    expect(mesuresPagina('salut', fonts)).toEqual(['1 avís (1 alt)', '1 mètrica de salut amb mesura']);
+    expect(mesuresPagina('agents', fonts)).toEqual(['0 agents atòmics', '1 arnés que conversa']);
   });
 
   test('el resum és exactament les mètriques unides amb « · »: la signatura no canvia', () => {
@@ -283,16 +348,19 @@ describe('etiquetesPagina · regles per pàgina, amb les severitats del Mapa', (
 describe('Canvis nous · signatura del resum', () => {
   const mapa = mapaAmb({ nodes: [skill('a')] });
 
+  /* Correcció 261004 (verificador de la segona passada, punt 3) · amb un 1,
+     la signatura concorda («1 node», «1 skill») i canvia una sola vegada. */
   test('la signatura és el resum, i només amb la font carregada', () => {
-    expect(signaturaPagina('explorador', ambMapa(mapa))).toBe('1 nodes · 0 arestes');
+    expect(signaturaPagina('explorador', ambMapa(mapa))).toBe('1 node · 0 arestes');
     expect(signaturaPagina('explorador', { mapa: null, estatMapa: 'loading' })).toBeNull();
-    expect(signaturaPagina('pols', { dades: DADES, estatDades: 'ready' })).toBe('0 registres de consum · 0 rebuts · 1 skills (0 orfes)');
+    // Ordre del Mestre, 261004 · la signatura del pols canvia una vegada amb el vocabulari nou.
+    expect(signaturaPagina('pols', { dades: DADES, estatDades: 'ready' })).toBe('0 registres de consum · 0 rebuts · 1 skill (0 fora del manifest)');
     expect(signaturaPagina('pestanyes', ambMapa(mapa))).toBeNull();
   });
 
   test('«Canvis nous» només si el resum és diferent del que es va vore', () => {
     expect(textos('explorador', ambMapa(mapa), '0 nodes · 0 arestes')).toEqual(['Canvis nous']);
-    expect(textos('explorador', ambMapa(mapa), '1 nodes · 0 arestes')).toEqual([]);
+    expect(textos('explorador', ambMapa(mapa), '1 node · 0 arestes')).toEqual([]);
     expect(textos('explorador', ambMapa(mapa), undefined)).toEqual([]);
     expect(textos('explorador', ambMapa(mapa), null)).toEqual([]);
     // Va després del nivell i no el substituïx.
@@ -654,10 +722,13 @@ describe('T3 · estatsPagina: el desglossament de la coberta', () => {
     expect(textosT3('inventari', nomesB)).toEqual(['Important']);
   });
 
-  test('pols: orfes i fantasmes, error; saturació i rebuts rancis, avís; sense termometria ni crèdits, res', () => {
+  /* Ordre del Mestre, 261004 · El vocabulari del pols ja no xoca amb el del
+     Mapa: ni «orfes» ni «fantasmes» (derogat per l'ordre del Mestre del
+     261004, prompt 261004_0515). */
+  test('pols: fora del manifest i sense disc, error; saturació i rebuts rancis, avís; sense termometria ni crèdits, res', () => {
     const pols = (extra) => estatsT3('pols', ambDades(extra));
     expect(pols({ skills: [orfeDisc, fantasma('f'), fantasma('g')] })).toEqual([
-      ['error', '1 orfe (disc sense manifest)'], ['error', '2 fantasmes (manifest sense disc)']
+      ['error', '1 skill al disc fora del manifest'], ['error', '2 skills al manifest sense disc']
     ]);
     expect(pols({ termometria: { artefactesActius: LLINDAR_SATURACIO + 12 } })).toEqual([['avis', '12 artefactes per damunt del llindar']]);
     expect(pols({ termometria: { artefactesActius: LLINDAR_SATURACIO + 1 } })).toEqual([['avis', '1 artefacte per damunt del llindar']]);
@@ -666,7 +737,7 @@ describe('T3 · estatsPagina: el desglossament de la coberta', () => {
     expect(pols({ rebuts: [rebutDeFa(7 * DIA_T3)] })).toEqual([]);
     expect(pols({ credits: null, termometria: undefined })).toEqual([]);
     expect(pols({ rebuts: [rebutDeFa(8 * DIA_T3)], skills: [orfeDisc] })).toEqual([
-      ['error', '1 orfe (disc sense manifest)'], ['avis', 'Últim rebut fa 8 dies']
+      ['error', '1 skill al disc fora del manifest'], ['avis', 'Últim rebut fa 8 dies']
     ]);
   });
 

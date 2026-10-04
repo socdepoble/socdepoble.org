@@ -12,6 +12,10 @@
  *   · Sense sessió, el botó porta a entrar: /registre?mode=entrar amb la
  *     ruta on estava la persona com a ?tornar (T4, 260930). Si ja és a
  *     /registre no hi torna: l'entrada no s'encadena amb ella mateixa.
+ *   · Acta 261004_1027 §3 (beta testers) · Amb sessió i UNA sola identitat
+ *     (la persona, sense cap organització on mane) no hi ha res a triar:
+ *     l'avatar porta directament al perfil propi (`boto.perfil`). Amb més
+ *     d'una, el calaix, que també hi porta («La meua fitxa i ajustos»).
  * `onNavega(ruta)` el posa la barra (amb la seua transició de vista).
  */
 import { useCallback, useEffect, useState } from 'react';
@@ -40,6 +44,9 @@ export function rutaSencera(router) {
   return cami === null ? '' : `${cami}${search}`;
 }
 
+/** La ruta del perfil propi (App.jsx: <Route path="el-meu-perfil">). */
+export const RUTA_PERFIL_PROPI = '/el-meu-perfil';
+
 export function useIdentitatDeLaBarra({ onNavega, etiquetaEntrar } = {}) {
   const { currentUser } = useSession();
   const { actor, identitats = [], setActor } = useIdentitat();
@@ -48,6 +55,8 @@ export function useIdentitatDeLaBarra({ onNavega, etiquetaEntrar } = {}) {
   const [obert, setObert] = useState(false);
   const teSessio = Boolean(currentUser);
   const entitat = teSessio && actor?.tipus === 'entitat';
+  /* Res a triar: només la persona (o encara cap organització carregada). */
+  const directe = teSessio && !entitat && identitats.length <= 1;
 
   /* Si la sessió se'n va amb el calaix obert, es tanca. */
   useEffect(() => { if (!teSessio) setObert(false); }, [teSessio]);
@@ -74,8 +83,9 @@ export function useIdentitatDeLaBarra({ onNavega, etiquetaEntrar } = {}) {
     llavor: teSessio ? actor?.id ?? null : null,
     entitat,
     obert,
+    perfil: directe,
     etiquetaEntrar,
-    onClick: teSessio ? () => setObert(true) : entra
+    onClick: !teSessio ? entra : directe ? () => navega(RUTA_PERFIL_PROPI) : () => setObert(true)
   };
 
   const calaix = teSessio ? {
@@ -87,7 +97,7 @@ export function useIdentitatDeLaBarra({ onNavega, etiquetaEntrar } = {}) {
        padró i enllaça cada entitat a /empresa/:id. /perfil és el catàleg
        d'agents del contingut base, no el directori d'organitzacions. */
     onConnectar: () => navega('/cerca?tipus=entitats'),
-    onFitxa: () => navega('/el-meu-perfil')
+    onFitxa: () => navega(RUTA_PERFIL_PROPI)
   } : null;
 
   return { boto, calaix };

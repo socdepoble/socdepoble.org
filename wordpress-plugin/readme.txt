@@ -4,7 +4,7 @@ Tags: community, rural, village, social network, embed
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.0.2
+Stable tag: 1.0.3
 License: AGPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/agpl-3.0.html
 
@@ -46,12 +46,11 @@ The project is developed with AI assistance and is designed to remain understand
 
 This plugin connects to the Sóc de Poble service. Accounts, messages and posts are stored in its backend, not in the WordPress database. The application uses the following services when a visitor opens an embedded application and uses the relevant features:
 
-1. Sóc de Poble backend, currently hosted on Supabase: required for the connected service. It handles sign-in, profiles, messages, posts, marketplace listings, events and real-time updates. Terms and privacy information: https://socdepoble.org. Supabase terms: https://supabase.com/terms ; privacy: https://supabase.com/privacy
-2. Sóc de Poble sign-in relay at auth.socdepoble.org: used when a visitor chooses Google sign-in.
-3. Google Sign-In: used only when chosen by the visitor. Terms: https://policies.google.com/terms ; privacy: https://policies.google.com/privacy
-4. OpenStreetMap: used for the map view. Terms: https://wiki.osmfoundation.org/wiki/Terms_of_Use ; privacy: https://osmfoundation.org/wiki/Privacy_Policy
-5. Profile images for accounts using external identity providers may load from lh3.googleusercontent.com, graph.facebook.com or avatars.githubusercontent.com.
-6. Optional DeepL translation: selected text or HTML is sent to api-free.deepl.com or api.deepl.com when a visitor requests translation. Configuration, retention, terms and privacy are described below.
+1. Sóc de Poble backend, currently hosted on Supabase: required for the connected service. It handles sign-in, profiles, messages, posts, marketplace listings, events and real-time updates. Google sign-in returns directly to the page that hosts the application. Terms and privacy information: https://socdepoble.org. Supabase terms: https://supabase.com/terms ; privacy: https://supabase.com/privacy
+2. Google Sign-In: used only when chosen by the visitor. Terms: https://policies.google.com/terms ; privacy: https://policies.google.com/privacy
+3. OpenStreetMap: used for the map view. Terms: https://wiki.osmfoundation.org/wiki/Terms_of_Use ; privacy: https://osmfoundation.org/wiki/Privacy_Policy
+4. Profile images for accounts using external identity providers may load from lh3.googleusercontent.com, graph.facebook.com or avatars.githubusercontent.com.
+5. Optional DeepL translation: selected text or HTML is sent to api-free.deepl.com or api.deepl.com when a visitor requests translation. Configuration, retention, terms and privacy are described below.
 
 Update channel (only in the package distributed by Sóc de Poble, not in the WordPress.org directory): the plugin reads https://socdepoble.org/enxufe/stable.json and its signature to offer updates, then downloads the listed package. It queries this channel after api.wordpress.org answers WordPress's own update check. Requests identify the plugin, not the site. Automatic updates remain disabled until enabled in Plugins. The switch appears after an update check with the plugin active; activation clears the update cache so the next Plugins visit triggers a check. Updates are installed only while the plugin is active, in the socdepoble-enxufe directory, with the release channel key, and outside symlinks or Git checkouts. Automatic updates also require WP-Cron and connectivity to WordPress.org. Settings → Sóc de Poble and Site Health explain unmet conditions.
 
@@ -125,6 +124,20 @@ Packages are written under wordpress-plugin/builds/. Names use the standalone bu
 
 == Changelog ==
 
+= 1.0.3 =
+* Every page, including system pages, shows the orange author bar. The author's name links to the author's page; pages without a named author link to the project page.
+* Pages published by Sóc de Poble show its logo above the title, up to 600 pixels wide and scaled down on small screens. An organization's public profile shows that organization's logo. Pages signed by a person show that person's round avatar instead of the logo.
+* Workspace navigation (Wiki, Notes, Design) stays visible as a narrow rail at medium widths, such as tablets, landscape phones and narrow host boxes. On small screens, lists and pages leave room for the mobile navigation bar.
+* Pull to refresh works on touch screens inside WordPress pages too, only when the host page is scrolled to the top and the application starts within the screen.
+* The section index opens inside the application instead of at the end of the theme's page, receives keyboard focus, and jumping to a section scrolls only the application. Long links in Wiki pages wrap instead of being cut off.
+* Cards from posts, the marketplace and events can be embedded in notes and posts from the editor.
+* Chat: a media view lists the files, links and documents shared in a conversation.
+* Signed-in members see their round avatar in the top bar, linking to their profile.
+* The embedded console no longer requests development-only files from the host.
+* The slash menu of the editor opens next to the cursor inside the host page, and profile settings no longer send storage events to the host window.
+* Fluid text sizes follow the width of their container where the browser supports it, with a viewport-based fallback for older browsers.
+* The project page includes its illustrations in the package.
+
 = 1.0.2 =
 * The Tenant ID setting is removed. The application always uses the data scope sealed in its package; no host setting, attribute or script can change the backend or the data scope.
 * A Tenant ID saved by an earlier version is no longer read. It is deleted the next time the WordPress admin area loads, or when the settings are saved. Other settings are kept.
@@ -158,6 +171,9 @@ Packages are written under wordpress-plugin/builds/. Names use the standalone bu
 * Shortcode and full-screen template.
 
 == Upgrade Notice ==
+
+= 1.0.3 =
+Every page shows its author bar and, when published by Sóc de Poble, its logo. Workspace navigation stays visible at medium widths, pull to refresh works inside WordPress, and the section index opens inside the application.
 
 = 1.0.2 =
 The application no longer mounts on an empty #root owned by the theme or another plugin. The Tenant ID setting is removed: the application always uses the data scope sealed in its package. A saved Tenant ID is ignored and deleted the next time the WordPress admin area loads.

@@ -7,7 +7,7 @@ const AppGridContext = createContext(null);
 export { AppGridContext };
 
 const COLUMN_LIMITS = Object.freeze({
-  left: { min: 200, max: 420 },
+  left: { min: 200, max: 340 },
   middle: { min: 240, max: 520 },
 });
 const DEFAULT_COLUMN_WIDTHS = Object.freeze({ left: 260, middle: 280 });
@@ -124,6 +124,17 @@ export default function AppGridShell({
      desplegador), llistaEnRail (ara es pinta en rail) i nodeRail. */
   railMitja = false,
   railEstret = false,
+  /* Barres (ordre del Mestre, 261004: «les dues barres de la Wiki han
+     d'estar sempre presents plegades, o com a mínim una d'elles visible que
+     permeta desplegar l'altra»). Opcional i false per defecte: sense, la
+     closca és la d'abans (el Xat i les apps no la passen).
+       · railEsquerra: en «mitja», la navegació és un rail fix de
+         --app-grid-col-collapsed a l'esquerra (data-esquerra="rail"), oberta
+         i a l'abast; desplegar-la obri el panell de sempre per damunt. El
+         rail viu en el coixí de la graella: el detall conserva el seu mínim.
+     El context ho diu amb ambRailNavegacio (en esta mida, la navegació té
+     rail) i navegacioEnRail (ara es pinta en rail: cap panell obert). */
+  railEsquerra = false,
   'aria-label': ariaLabel = 'Graella de l\'aplicació',
   className = '',
 }) {
@@ -169,6 +180,12 @@ export default function AppGridShell({
     panellEstretRef.current = panellEstret;
     onPanellRef.current = onPanell;
   }, [panellEstret, onPanell]);
+  /* Barres · resizeColumn és un callback estable: llig d'ací si la closca
+     dona rail a la navegació. */
+  const railEsquerraRef = useRef(railEsquerra);
+  useLayoutEffect(() => {
+    railEsquerraRef.current = railEsquerra;
+  }, [railEsquerra]);
   /* MD · L'últim panell obert en estret (d'on es ve) i el que ha d'enfocar
      el commit que l'òbriga (obriPanell). */
   const ultimPanell = useRef(null);
@@ -278,8 +295,11 @@ export default function AppGridShell({
       const otherColumn = column === 'left' ? 'middle' : 'left';
       // En mitjà el menú és un panell superposat; en ample, un rail plegat
       // ocupa 56px. La mida desada del menú desplegat no lleva espai al xat.
+      // Barres (261004) · En mitjà amb railEsquerra, el rail fix també en
+      // lleva: el de la columna plegada.
+      const enMitjaAmbRail = midaRef.current === 'mitja' && railEsquerraRef.current;
       const otherWidth = midaRef.current !== 'ample' && otherColumn === 'left'
-        ? 0
+        ? (enMitjaAmbRail ? PUNTS_DE_TALL.plegada : 0)
         : collapsedRef.current[otherColumn] ? PUNTS_DE_TALL.plegada : current[otherColumn];
       const reservedResizers = midaRef.current === 'ample' ? RESIZER_WIDTH * 2 : 0;
       const availableMax = containerWidth - otherWidth - RIGHT_COLUMN_MIN - reservedResizers;
@@ -300,7 +320,11 @@ export default function AppGridShell({
     setVal('sdp-grid-widths', nextState);
   }, []);
 
-  const tancada = columnesTancades(mida, panellObert);
+  /* Barres (261004) · En «mitja», amb railEsquerra, la navegació és un rail
+     fix: oberta i a l'abast (graella.js), i el panell desplegat la cobrix. */
+  const esquerraEnRail = mida === 'mitja' && railEsquerra;
+  const navegacioEnRail = esquerraEnRail && panellObert !== 'left';
+  const tancada = columnesTancades(mida, panellObert, { railEsquerra });
 
   /* P6 · Si la llista té desplegador en esta mida i si ara es pinta en
      rail. En «ample» mana el plegat de sempre (has-middle-collapsed).
@@ -345,7 +369,9 @@ export default function AppGridShell({
       }
     }
     if (!page || !actiu || !page.contains(actiu)) return;
-    const tancades = columnesTancades(mida, panellObert);
+    /* Barres · La mateixa regla que pinta inert: amb el rail de «mitja», la
+       navegació no es tanca i el focus que hi és no es mou. */
+    const tancades = columnesTancades(mida, panellObert, { railEsquerra });
     const seccions = { left: leftRef, middle: middleRef, right: rightRef };
     /* P6 · El rail d'estret es tanca amb qualsevol panell obert: si el focus
        hi era (el menú o la lupa del rail), tampoc no s'hi pot quedar. */
@@ -358,7 +384,7 @@ export default function AppGridShell({
     const obridor = [...page.querySelectorAll(`[data-obri-columna][aria-controls~="${columna.id}"]`)].find(esAlAbast);
     if (obridor) obridor.focus({ preventScroll: true });
     else actiu.blur();
-  }, [mida, panellObert]);
+  }, [mida, panellObert, railEsquerra]);
 
   /* MD · En estret, cada panell assentat és el nivell on és la persona:
      es recorda d'on es ve (tornaDelDetall) i se n'avisa (onPanell). Amb un
@@ -386,8 +412,10 @@ export default function AppGridShell({
 
   // En mitjà la CSS limita la llista per deixar 320px al detall. El drag i
   // el teclat han de començar en eixa amplària visible, no en la desada.
+  // Barres (261004) · Amb el rail fix de la navegació, la graella en té
+  // menys: el coixí del rail.
   const middleVisibleWidth = mida === 'mitja' && pageWidth > 0
-    ? Math.min(columnWidths.middle, pageWidth - RIGHT_COLUMN_MIN)
+    ? Math.min(columnWidths.middle, pageWidth - RIGHT_COLUMN_MIN - (esquerraEnRail ? PUNTS_DE_TALL.plegada : 0))
     : columnWidths.middle;
 
   /* Classes modificadores en lloc de :has() (Baseline 2022). */
@@ -427,9 +455,11 @@ export default function AppGridShell({
     llistaPlegable,
     llistaEnRail,
     nodeRail: ambRailEstret ? nodeRail : null,
+    ambRailNavegacio: esquerraEnRail,
+    navegacioEnRail,
     columnWidths,
     applyPreset
-  }), [mida, panellObert, demanaPanell, columnWidths, tancaPanells, obriPanell, tornaDelDetall, llistaPlegable, llistaEnRail, ambRailEstret, nodeRail, applyPreset]);
+  }), [mida, panellObert, demanaPanell, columnWidths, tancaPanells, obriPanell, tornaDelDetall, llistaPlegable, llistaEnRail, ambRailEstret, nodeRail, esquerraEnRail, navegacioEnRail, applyPreset]);
 
   return (
     <AppGridContext.Provider value={ctxValue}>
@@ -442,6 +472,7 @@ export default function AppGridShell({
           data-layout={mida}
           data-panell={panellObert || ''}
           data-llista={graellaAmbRail ? 'rail' : undefined}
+          data-esquerra={esquerraEnRail ? 'rail' : undefined}
           aria-label={ariaLabel}
         >
 

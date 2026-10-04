@@ -49,15 +49,21 @@ const einaLocal = (id, title, subtitle, categoryId, tags) => ({
 });
 
 /**
- * 261002 · Les eines locals: la porta d'aprovació de Tractors, els
- * Sentinelles i la Gestoria de Poble viuen a la Wiki NOMÉS en
- * desenvolupament (decisió D3: cap ruta /gestoria a App.jsx,
- * ControlSection.test.jsx). Esta funció pura decidix
- * quines categories i ítems hi afig la Wiki; al punt d'ús es crida amb el
- * literal import.meta.env.DEV, i els components es carreguen amb lazy() dins
- * d'una constant que fora de DEV és null (EINES_LOCALS): Vite reemplaça el
- * literal per false al build i les importacions dinàmiques desapareixen del
- * paquet de producció.
+ * 261002 · Les eines locals: la porta d'aprovació de Tractors i els
+ * Sentinelles viuen a la Wiki NOMÉS en desenvolupament (decisió D3: cap ruta
+ * /gestoria ni /tractors a App.jsx, ControlSection.test.jsx). Esta funció
+ * pura decidix quines categories i ítems hi afig la Wiki; al punt d'ús es
+ * crida amb el literal import.meta.env.DEV, i els components es carreguen
+ * amb lazy() dins d'una constant que fora de DEV és null (EINES_LOCALS): Vite
+ * reemplaça el literal per false al build i les importacions dinàmiques
+ * desapareixen del paquet de producció.
+ *
+ * Ordre del Mestre, 261004 («contaminació crítica de rutes/estats entre
+ * Gestoria i Wiki»): la Gestoria de Poble ja no viu ací. La seua carpeta,
+ * el Full trimestral i Aprendre s'han mogut a la seua app, /app/gestoria
+ * (src/apps/gestoria), també només en desenvolupament. La Wiki no en
+ * coneix cap id ni cap ruta: una URL vella amb els seus ids cau com
+ * qualsevol ítem desconegut (la portada), sense redirigir enlloc.
  *
  * @param {{ DEV?: boolean }} [env] només DEV === true les activa
  * @returns {{ categories: object[], items: object[] }}
@@ -66,14 +72,11 @@ export function modulsLocalsActius(env) {
   if (env?.DEV !== true) return { categories: [], items: [] };
   return {
     categories: [
-      { id: 'tractors_cat', label: 'Tractors', icon: FileText },
-      { id: 'gestoria_cat', label: 'Gestoria de Poble', icon: FileText }
+      { id: 'tractors_cat', label: 'Tractors', icon: FileText }
     ],
     items: [
       einaLocal('tractors_aprovacio', 'Aprovació de tractors', 'Què fa cada tractor, la seua empremta i la teua signatura', 'tractors_cat', ['tractors']),
-      einaLocal('sentinelles_panell', 'Sentinelles', 'Els set sentinelles d’autonomia: aprova’ls i mira què observen', 'tractors_cat', ['sentinelles']),
-      einaLocal('gestoria_panell', 'Full trimestral', 'El full de factures del trimestre per a la gestoria', 'gestoria_cat', ['gestoria']),
-      einaLocal('gestoria_aprendre', 'Aprendre', 'Repàs espaiat dels conceptes de la gestoria', 'gestoria_cat', ['gestoria'])
+      einaLocal('sentinelles_panell', 'Sentinelles', 'Els set sentinelles d’autonomia: aprova’ls i mira què observen', 'tractors_cat', ['sentinelles'])
     ]
   };
 }
@@ -81,16 +84,16 @@ export function modulsLocalsActius(env) {
 const MODULS_LOCALS = modulsLocalsActius({ DEV: import.meta.env.DEV });
 
 /* Els components de les eines locals, a demanda. Fora de DEV, null: cap
-   importació de la Gestoria ni dels Tractors arriba al build. */
+   importació dels Tractors arriba al build. La Gestoria ja no hi és (ordre
+   del Mestre, 261004): la carrega la seua app, src/apps/gestoria. */
 const EINES_LOCALS = import.meta.env.DEV ? {
   tractors_aprovacio: lazy(() => import('../tractors/PanellTractors.jsx')),
-  sentinelles_panell: lazy(() => import('../tractors/PanellSentinelles.jsx')),
-  gestoria_panell: lazy(() => import('../gestoria/ContenidorGestoria.jsx')),
-  gestoria_aprendre: lazy(() => import('../gestoria/aprendre/Aprendre.jsx'))
+  sentinelles_panell: lazy(() => import('../tractors/PanellSentinelles.jsx'))
 } : null;
 
 /* Traduir enviaria el text de la pàgina al servei de traducció de l'amfitrió
-   (useTraduccioPagina) i ací hi ha factures: les eines locals no es traduïxen. */
+   (useTraduccioPagina), i el que mostren les eines locals no ix d'este
+   ordinador: no es traduïxen. */
 export const AVIS_EINA_LOCAL_SENSE_TRADUCCIO = 'Les eines locals no es traduïxen: el que mostren no ix d’este ordinador.';
 
 function EinaLocal({ item, Eina }) {

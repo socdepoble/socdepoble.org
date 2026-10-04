@@ -23,8 +23,9 @@
  *       - ?sobre=<tipus>:<id>&titol=…&ruta=… (el «Comentar» d'una Pàgina
  *         Universal) obri el xat comú amb obriFilDePagina i hi navega.
  *   · Onada 3B · ?vista=<id> (les entrades del rail, ClosCaXat): la columna
- *     central pinta VistaComunitats (comunitats) o VistaEnConstruccio
- *     (telefonades, multimedia, destacats) en lloc de la llista; la dreta
+ *     central pinta VistaComunitats (comunitats), VistaMultimedia (multimedia,
+ *     operativa des de l'ordre del Mestre del 261004, T5) o
+ *     VistaEnConstruccio (telefonades, destacats) en lloc de la llista; la dreta
  *     conserva l'estat buit de sempre. Sense ?vista= (o amb una que no
  *     existix), la llista de converses de l'onada 3A, sense cap canvi. Una
  *     conversa oberta des de la vista de comunitats la conserva a la columna
@@ -75,6 +76,7 @@ import { PAGE_COPY } from '../text/pageContent.js';
 import ClosCaXat, { BotoObriRail, VISTES_XAT, entradaDeVista } from './components/ClosCaXat.jsx';
 import VistaComunitats from './components/VistaComunitats.jsx';
 import VistaEnConstruccio, { textosDeVista } from './components/VistaEnConstruccio.jsx';
+import VistaMultimedia from './components/VistaMultimedia.jsx';
 import LlistaConverses from './components/LlistaConverses.jsx';
 import FiltreConverses from './components/FiltreConverses.jsx';
 import Conversa from './components/Conversa.jsx';
@@ -645,9 +647,11 @@ function XatWorkspace() {
     try {
       const nota = await creaNota(retall);
       if (!mounted.current) return;
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('sdp:note-created', { detail: { note: nota } }));
-      }
+      /* Higiene d'amfitrió (ordre del Mestre, 261004, front «amfitrio-admin») ·
+         Derogat per l'ordre del Mestre del 261004: el CustomEvent
+         'sdp:note-created' a window, amb la nota sencera al detail. Ningú no
+         l'escoltava (la navegació a /notes?nota= ja obri la nota) i dins de
+         WordPress lliurava el contingut de la nota a la pàgina de l'amfitrió. */
       showToast(t('section.xat.retall.desat', 'Retall guardat al Bloc de Notes.'), 'success');
       navigate(`/notes?nota=${encodeURIComponent(nota.id)}`);
     } catch (error) {
@@ -866,6 +870,26 @@ function XatWorkspace() {
         joId={joId}
       />
     );
+  } else if (vistaActiva === 'multimedia') {
+    /* Ordre del Mestre del 261004 (prompt 261004_0515, T5) · Contingut
+       multimèdia ja és operativa: els enllaços dels missatges carregats en
+       esta sessió i, a Fitxers i Documents, l'estat buit honest fins als
+       adjunts de F1. Una conversa oberta des d'ella conserva la vista
+       (obriFilDeLaVista), i la fletxa hi torna (handleBackToList). La lupa,
+       Ordena i Selecciona continuen inertes: «En construcció». */
+    vistaNode = (
+      <MultimediaDeLaClosca
+        titol={titolVista}
+        icona={entradaVista.Icona}
+        esquerra={<BotoObriRail etiqueta={t('section.xat.rail.menu', 'Menú')} />}
+        fils={threads}
+        missatgesPerFil={getThreadMessages}
+        onObriFil={obriFilDeLaVista}
+        onEnConstruccio={() => showToast(t('section.xat.construccio.titol', 'En construcció'), 'info')}
+        locale={locale}
+        t={t}
+      />
+    );
   } else if (entradaVista) {
     /* D17 · Si la vista porta un avís propi (Telefonades), els controls inerts
        diuen eixe mateix text: una sola font, la de VISTES_EN_CONSTRUCCIO. */
@@ -1073,6 +1097,13 @@ function ResultatsDeLaClosca({ onObriFil, ...resta }) {
 function VistaDeLaClosca({ onObriFil, ...resta }) {
   const obri = useApartaEnEstret(onObriFil);
   return <VistaComunitats {...resta} onObriFil={obri} />;
+}
+
+/* Torn 261004 (T5) · El mateix calc per a Contingut multimèdia: en estret,
+   el botó de la conversa d'un enllaç la porta a pantalla. */
+function MultimediaDeLaClosca({ onObriFil, ...resta }) {
+  const obri = useApartaEnEstret(onObriFil);
+  return <VistaMultimedia {...resta} onObriFil={obri} />;
 }
 
 function FitxaDeLaClosca({ onObriFil, ...resta }) {

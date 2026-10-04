@@ -111,3 +111,6 @@ Quan es construeix una aplicació o secció complexa que empra el sistema de gra
   - La barra blava (`bar-blue`) pertany a la `UniversalPage`, i per tant **només pot ser tan gran com l'editor**. Mai pot ser més gran que ell.
   - Per aconseguir-ho, assegura't que el component que pases com a `renderEditor` al teu Workspace (per exemple, `UniversalEditorShell`) siga qui retorna la `<UniversalPage>`.
 
+## Lliçons del Mestre
+**261004** | **Tota targeta porta boina i tota pàgina (també les de sistema) porta barra taronja**: cada UniversalCard du la seua boina taronja amb l'autor real (per a les targetes de sistema, l'entitat Sóc de Poble enllaçada a /projecte), el cos sencer (títol, subtítol i entradeta que explica què és) i el peu canònic. Tota targeta té la seua pàgina pròpia, i tota pàgina la seua targeta; la imatge de la targeta és l'hero i la imatge SEO de la pàgina, amb el seu slug compartible.
+A més, **tota pàgina, també les de sistema, porta la barra taronja amb el logo i l'autor** perquè siga clicable, encara que no tinga imatge hero (ex. Consola, Pols del cervell). La boina i la barra taronja només es lleven per ordre explícita del Mestre.

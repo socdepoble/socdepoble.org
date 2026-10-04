@@ -64,10 +64,13 @@ describe('ús exclusiu: el Lector i el seu espècimen', () => {
     expect(/className=["'{][^>]*sdp-panoramica/.test(llig(ESPECIMEN))).toBe(false);
   });
 
-  test('la variant només la passen el Lector (les seues notícies) i l’espècimen del catàleg', () => {
+  /* Derogat per l'ordre del Mestre del 261004 (prompt 261004_0515, «no inventar targetes») · Les
+     notícies del Lector ja són UniversalCard (1:1, la targeta de sempre) i no passen la variant.
+     L'excepció continua limitada al Lector i a l'espècimen: al Lector, ara, cap fitxer. */
+  test('la variant només la passen el Lector (ara cap fitxer seu) i l’espècimen del catàleg', () => {
     const usuaris = quiUsa(usaVariant);
     expect(usuaris.filter((f) => !f.startsWith(LECTOR))).toEqual([PECA, ESPECIMEN].sort());
-    expect(usuaris.filter((f) => f.startsWith(LECTOR))).toEqual([`${LECTOR}vistes/Noticies.jsx`]);
+    expect(usuaris.filter((f) => f.startsWith(LECTOR))).toEqual([]);
   });
 });
 

@@ -2,7 +2,8 @@
 /* La Nevera de Casa · el vestit dels productes de botiga: la línia de davall
    (marca · envàs i quantitat). Articles sintètics. */
 import { describe, expect, test } from 'vitest';
-import { detallDeProducte } from './vestits.js';
+import { afig, creaArticlePropi, estatInicial, llegixCopia, serialitzaCopia } from '../nucli/index.js';
+import { articlesVestits, detallDeProducte, entradetaDe, liniesVestides } from './vestits.js';
 
 const article = (envas, quantitat, unitat, marca = 'Marca Inventada') => ({ marca, envas, quantitat, unitat });
 
@@ -27,5 +28,46 @@ describe('detallDeProducte', () => {
     expect(detallDeProducte(article('Bote', null, 'g', ''))).toBe('Bote');
     expect(detallDeProducte(article('', 2, 'kg'))).toBe('Marca Inventada · 2 kg');
     expect(detallDeProducte({})).toBe('');
+  });
+});
+
+/* REGLA D'OR 1 (ordre del Mestre, 261004) · La boina de cada targeta la decidix la vista
+   (autoria.js, que entra a la plataforma): el vestit només la passa, per a cada article, amb
+   l'article sencer (propi o no). Sense, cap boina. */
+describe('l’autoria dels vestits', () => {
+  const estat = afig(creaArticlePropi(estatInicial(), 'Kombutxa'), 'casa', 'p-1');
+  const autoria = (art) => ({ nom: art?.propi ? 'Persona' : 'Projecte' });
+
+  test('articlesVestits: la boina de qui signa cada article, o cap', () => {
+    const vestits = articlesVestits(estat, { autoria });
+    expect(vestits.find((a) => a.id === 'llet').autoria).toEqual({ nom: 'Projecte' });
+    expect(vestits.find((a) => a.id === 'p-1').autoria).toEqual({ nom: 'Persona' });
+    expect(articlesVestits(estat).every((a) => a.autoria === undefined)).toBe(true);
+  });
+
+  test('liniesVestides: la boina de l’article de cada línia, o cap', () => {
+    const files = [{ articleId: 'p-1', especificacio: '' }, { articleId: 'llet', especificacio: '' }];
+    expect(liniesVestides(estat, files, { autoria }).map((l) => l.autoria)).toEqual([{ nom: 'Persona' }, { nom: 'Projecte' }]);
+    expect(liniesVestides(estat, files).map((l) => l.autoria)).toEqual([undefined, undefined]);
+  });
+});
+
+/* Arreglo del verificador (ordre del Mestre, 261004, «l'entradeta que pot mentir») · Un article
+   propi no diu on s'ha creat: una còpia feta en un altre dispositiu i recuperada ací (Ajustos,
+   «Recupera una còpia») porta articles propis que no s'han creat en este. Mai s'inventen dades. */
+describe('l’entradeta d’un article propi', () => {
+  test('diu «Article propi», també després de recuperar una còpia d’un altre dispositiu', () => {
+    const altre = afig(creaArticlePropi(estatInicial(), 'Kombutxa'), 'casa', 'p-1');
+    const recuperada = llegixCopia(serialitzaCopia(altre));
+    expect(recuperada.ok).toBe(true);
+    for (const estatDeLaCopia of [altre, recuperada.estat]) {
+      const propi = articlesVestits(estatDeLaCopia).find((a) => a.id === 'p-1');
+      expect(propi.entradeta).toBe('Article propi');
+      expect(propi.entradeta).not.toMatch(/dispositiu|creat/);
+    }
+    expect(liniesVestides(recuperada.estat, [{ articleId: 'p-1', especificacio: '' }])[0].entradeta).toBe('Article propi');
+    /* Els altres orígens, com eren. */
+    expect(entradetaDe({ id: 'llet' })).toBe('Article de base del catàleg');
+    expect(entradetaDe(undefined)).toBeUndefined();
   });
 });

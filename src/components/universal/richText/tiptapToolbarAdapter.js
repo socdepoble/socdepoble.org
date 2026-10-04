@@ -14,7 +14,11 @@ const TRADUCCIO = Object.freeze({
   cursiva:  { actiu: (e) => e.isActive('italic'),                ordena: (c) => c.toggleItalic() },
   ratllat:  { actiu: (e) => e.isActive('strike'),                ordena: (c) => c.toggleStrike() },
   citacio:  { actiu: (e) => e.isActive('blockquote'),            ordena: (c) => c.toggleBlockquote() },
-  divisor:  { actiu: () => false,                                ordena: (c) => c.setHorizontalRule() }
+  divisor:  { actiu: () => false,                                ordena: (c) => c.setHorizontalRule() },
+  /* T7 · Obri el selector del consumidor. Sense l'extensió de targetes la
+     comanda no existix i el try/catch de llegeixEstat la deixa apagada; amb
+     ella, dins de can() no obri res (la guarda de dispatch és de la comanda). */
+  targeta:  { actiu: (e) => e.isActive('sdpTargeta'),             ordena: (c) => c.obreSelectorDeTargeta() }
 });
 
 /**

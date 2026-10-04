@@ -3,6 +3,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
 const magatzem = new Map();
+const pagina = vi.hoisted(() => ({ props: null }));
 vi.mock('../../config/storage.js', () => ({
   getVal: (clau, reserva) => (magatzem.has(clau) ? magatzem.get(clau) : reserva),
   setVal: (clau, valor) => { magatzem.set(clau, valor); }
@@ -11,7 +12,9 @@ vi.mock('../../app/contexts/UIContext', () => ({ useUIActions: () => ({ t: (_cla
 /* Avatar resol els recursos propis amb resolRecursPropi (T5, 261001): el mock
    també l'ha de portar, identitat com resolveAsset. */
 vi.mock('../../config/assetResolver', () => ({ resolveAsset: (uri) => uri, resolRecursPropi: (valor) => valor }));
-vi.mock('../../components/universal/UniversalPage', () => ({ UniversalPage: ({ title, children }) => <section><p>{title}</p>{children}</section> }));
+vi.mock('../../components/universal/UniversalPage', () => ({
+  UniversalPage: (props) => { pagina.props = props; return <section><p>{props.title}</p>{props.children}</section>; }
+}));
 vi.mock('../profile/agentsSeed', () => ({
   AGENTS: [
     { id: 'iaia', name: 'IAIA MarIA', role: 'Matriarca', type: 'AI', avatar_url: '/a.png' },
@@ -136,6 +139,18 @@ test('T44 · el nivell 3 no demana triar: avatars de tots i el text de la connex
   expect(screen.queryByRole('checkbox')).toBeNull();
   expect(screen.getByText(/t'acompanyen tots alhora: IAIA MarIA i Mestre\./)).toBeTruthy();
   expect(document.querySelectorAll('.sdp-realitat__connexio .sdp-avatar-grup .sdp-avatar')).toHaveLength(2);
+});
+
+/* Norma del Mestre, 261004 (logotips) · La pàgina signa Sóc de Poble (sense
+   autor propi) i porta el seu logotip: ja no passa showLogos={false}, que el
+   llevava sense cap ordre escrita, ni l'excepció senseLogo. El logotip el
+   pinta PageFrame (PageFrame.logo.test.jsx). */
+test('logotips · signa Sóc de Poble i no demana llevar-ne el logotip', () => {
+  render(<RealitatSection />);
+  expect(pagina.props.chrome).toBe('system');
+  for (const prop of ['showLogos', 'senseLogo', 'authorName', 'authorHref', 'topBarData']) {
+    expect(Object.prototype.hasOwnProperty.call(pagina.props, prop), prop).toBe(false);
+  }
 });
 
 test('T44 · un nivell desat fora de rang torna a Passiva', () => {

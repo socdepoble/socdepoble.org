@@ -1,20 +1,22 @@
 /**
  * VistaEnConstruccio.jsx — la columna central d'una entrada del rail que encara
- * no té lògica (onada 3B, decisió del Mestre, 260928): Telefonades, Contingut
- * multimèdia i Destacats existixen per a que l'esquelet de navegació quede
- * idèntic al de WhatsApp Desktop (captures 19.41.49, 19.41.58 i 19.42.17),
- * però no fan res encara i ho diuen.
+ * no té lògica (onada 3B, decisió del Mestre, 260928): Telefonades i Destacats
+ * existixen per a que l'esquelet de navegació quede idèntic al de WhatsApp
+ * Desktop (captures 19.41.49 i 19.42.17), però no fan res encara i ho diuen.
+ *
+ * Ordre del Mestre del 261004 (prompt 261004_0515, T5) · Contingut multimèdia
+ * (captura 19.41.58) ix d'ací: ja és operativa i la pinta VistaMultimedia.
+ * La fila de títol (FilaDeTitolVista) i el bloc del subtítol i el control
+ * segmentat (FilaSegments) s'exporten perquè les dos vistes pinten el MATEIX
+ * DOM; ací no canvia res.
  *
  * De dalt a baix, calcant la captura de cada vista:
  *   · la fila de títol (AppGridColumn, fila 1 de la graella) amb el títol i
  *     les accions de la dreta: el «+» redó (Telefonades), la píndola
- *     «Editar» (Destacats) o les icones de Contingut multimèdia (la lupa,
- *     ordenar i seleccionar, captura 19.41.58);
- *   · si la captura en porta, el subtítol i el control segmentat
- *     («Fitxers | Enllaços | Documents», Contingut multimèdia);
+ *     «Editar» (Destacats) o, si en porta, botons d'icona;
+ *   · si la captura en porta, el subtítol i el control segmentat;
  *   · si la captura en porta, el cercador en píndola (Telefonades i
- *     Destacats; a Contingut multimèdia la cerca és la lupa de la fila de
- *     títol);
+ *     Destacats);
  *   · el cos: una targeta «En construcció» que diu què hi haurà i que encara
  *     no està disponible. L'avís és el genèric del xat, llevat que la vista en
  *     porte un de propi (`avis`): Telefonades porta el de D17 (ordre del
@@ -28,40 +30,25 @@
  * es pot pintar al catàleg de disseny.
  */
 import { useId } from 'react';
-import { Construction, ListChecks, ListFilter, Plus, Search } from 'lucide-react';
+import { Construction, Plus, Search } from 'lucide-react';
 import AppGridColumn from '../../../components/layout/AppGridColumn.jsx';
 
 const CAP = Object.freeze([]);
 const noop = () => {};
 
-/* Les tres vistes en construcció: què porta cada fila de títol i què hi
+/* Les dos vistes en construcció: què porta cada fila de títol i què hi
    haurà. Parells [clau i18n, text en valencià]; el títol i la icona són els
    de l'entrada del rail (ENTRADES_RAIL, ClosCaXat.jsx). `icones`: botons
    d'icona de la fila de títol, [clau, text, Icona]. `avis`: l'avís propi de
-   la vista, en lloc del genèric (D17, Telefonades). */
+   la vista, en lloc del genèric (D17, Telefonades).
+   Torn 261004 (T5) · Contingut multimèdia ja no hi és: els seus textos viuen
+   a TEXTOS_MULTIMEDIA (VistaMultimedia.jsx), amb les mateixes claus. */
 export const VISTES_EN_CONSTRUCCIO = Object.freeze({
   telefonades: Object.freeze({
     accio: Object.freeze({ tipus: 'nou', etiqueta: ['section.xat.vista.telefonades.nova', 'Nova telefonada'] }),
     cerca: ['section.xat.nou.cerca', "Nom, número o @nom d'usuari"],
     descripcio: ['section.xat.vista.telefonades.text', 'Ací hi haurà les telefonades i les videotelefonades amb la gent del poble: les perdudes, les rebudes i les que fas tu.'],
     avis: Object.freeze(['nav.telefonades.avis', 'Aquest és un projecte lliure CC. Aquesta funció està prevista per a quan puguem mantenir-la econòmicament.'])
-  }),
-  multimedia: Object.freeze({
-    icones: Object.freeze([
-      ['section.xat.vista.cerca', 'Cerca', Search],
-      ['section.xat.vista.multimedia.ordena', 'Ordena', ListFilter],
-      ['section.xat.vista.multimedia.selecciona', 'Selecciona', ListChecks]
-    ]),
-    subtitol: ['section.xat.vista.multimedia.subtitol', 'Contingut multimèdia de totes les converses'],
-    segments: Object.freeze({
-      etiqueta: ['section.xat.vista.multimedia.tipus', 'Tipus de contingut'],
-      opcions: Object.freeze([
-        ['section.xat.vista.multimedia.fitxers', 'Fitxers'],
-        ['section.xat.vista.multimedia.enllacos', 'Enllaços'],
-        ['section.xat.vista.multimedia.documents', 'Documents']
-      ])
-    }),
-    descripcio: ['section.xat.vista.multimedia.text', "Ací hi haurà les fotos, els vídeos, els enllaços i els documents que s'han compartit en totes les converses."]
   }),
   destacats: Object.freeze({
     accio: Object.freeze({ tipus: 'pindola', etiqueta: ['section.xat.vista.destacats.editar', 'Editar'] }),
@@ -80,8 +67,9 @@ export const TEXTOS_CONSTRUCCIO = Object.freeze({
 
 /**
  * Els textos d'una vista, ja traduïts, per a passar-los a VistaEnConstruccio.
- * Null si la vista no és una de les tres en construcció. `avis` és buit si la
- * vista no en porta cap de propi (la targeta pinta llavors el genèric).
+ * Null si la vista no és una de les que estan en construcció (des del 261004,
+ * Telefonades i Destacats). `avis` és buit si la vista no en porta cap de
+ * propi (la targeta pinta llavors el genèric).
  */
 export function textosDeVista(id, t) {
   const config = VISTES_EN_CONSTRUCCIO[id];
@@ -98,6 +86,79 @@ export function textosDeVista(id, t) {
   };
 }
 
+/**
+ * La fila de títol d'una vista del rail: el títol, la icona i, a la dreta,
+ * els botons d'icona i l'acció (el «+» redó o la píndola). Tots INERTS:
+ * `inert` porta aria-disabled i el clic que diu «En construcció».
+ * Torn 261004 (T5) · Exportada: VistaMultimedia hi pinta la lupa, Ordena i
+ * Selecciona, encara inerts, amb el mateix DOM.
+ */
+export function FilaDeTitolVista({ titol, icona = null, icones = CAP, accio = null, esquerra = null, inert }) {
+  return (
+    <AppGridColumn esDark={true} titol={titol} icona={icona} esquerra={esquerra}>
+      {(icones || CAP).map(({ etiqueta, Icona }) => (
+        <button key={etiqueta} type="button" className="sdp-xat-icona sdp-xat-inert" aria-label={etiqueta} title={etiqueta} {...inert}>
+          <Icona size={24} aria-hidden="true" focusable="false" />
+        </button>
+      ))}
+      {accio?.tipus === 'nou' ? (
+        <button type="button" className="sdp-xat-nova sdp-xat-inert" aria-label={accio.etiqueta} title={accio.etiqueta} {...inert}>
+          <Plus size={24} aria-hidden="true" focusable="false" />
+        </button>
+      ) : null}
+      {accio?.tipus === 'pindola' ? (
+        <button type="button" className="sdp-xat-vista__pindola sdp-xat-inert" {...inert}>
+          {accio.etiqueta}
+        </button>
+      ) : null}
+    </AppGridColumn>
+  );
+}
+
+/**
+ * El subtítol i el control segmentat, davall de la fila de títol (captura
+ * 19.41.58). Res si no hi ha cap dels dos.
+ *   · Sense `onTria`, els segments són inerts (`inert`) i el primer és el
+ *     premut: el de les vistes en construcció.
+ *   · Torn 261004 (T5) · Amb `onTria`, cada segment és un commutador de
+ *     veres: aria-pressed diu quin és el `triat` i el clic crida onTria(i).
+ *     El DOM és el mateix, sense aria-disabled ni .sdp-xat-inert.
+ */
+export function FilaSegments({ subtitol = '', segments = null, triat = 0, onTria = null, inert }) {
+  const opcions = segments?.opcions || CAP;
+  if (!subtitol && !opcions.length) return null;
+  return (
+    <div className="sdp-xat-vista__fila">
+      {subtitol ? <p className="sdp-xat-vista__subtitol">{subtitol}</p> : null}
+      {opcions.length ? (
+        <div className="sdp-xat-segments" role="group" aria-label={segments.etiqueta}>
+          {opcions.map((opcio, i) => (onTria ? (
+            <button
+              key={opcio}
+              type="button"
+              className="sdp-xat-segments__opcio"
+              aria-pressed={i === triat ? 'true' : 'false'}
+              onClick={() => onTria(i)}
+            >
+              {opcio}
+            </button>
+          ) : (
+            <button
+              key={opcio}
+              type="button"
+              className="sdp-xat-segments__opcio sdp-xat-inert"
+              aria-pressed={i === 0 ? 'true' : 'false'}
+              {...inert}
+            >
+              {opcio}
+            </button>
+          )))}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 export default function VistaEnConstruccio({
   titol, icona = null, icones = CAP, subtitol = '', accio = null, segments = null, cerca = '', descripcio = '',
   avis = '', esquerra = null, onEnConstruccio = noop, t
@@ -105,48 +166,12 @@ export default function VistaEnConstruccio({
   const idTitol = useId();
   /* Inert però enfocable: aria-disabled, i el clic diu «En construcció». */
   const inert = { 'aria-disabled': 'true', onClick: onEnConstruccio };
-  const opcions = segments?.opcions || CAP;
 
   return (
     <>
-      <AppGridColumn esDark={true} titol={titol} icona={icona} esquerra={esquerra}>
-        {(icones || CAP).map(({ etiqueta, Icona }) => (
-          <button key={etiqueta} type="button" className="sdp-xat-icona sdp-xat-inert" aria-label={etiqueta} title={etiqueta} {...inert}>
-            <Icona size={24} aria-hidden="true" focusable="false" />
-          </button>
-        ))}
-        {accio?.tipus === 'nou' ? (
-          <button type="button" className="sdp-xat-nova sdp-xat-inert" aria-label={accio.etiqueta} title={accio.etiqueta} {...inert}>
-            <Plus size={24} aria-hidden="true" focusable="false" />
-          </button>
-        ) : null}
-        {accio?.tipus === 'pindola' ? (
-          <button type="button" className="sdp-xat-vista__pindola sdp-xat-inert" {...inert}>
-            {accio.etiqueta}
-          </button>
-        ) : null}
-      </AppGridColumn>
+      <FilaDeTitolVista titol={titol} icona={icona} icones={icones} accio={accio} esquerra={esquerra} inert={inert} />
 
-      {subtitol || opcions.length ? (
-        <div className="sdp-xat-vista__fila">
-          {subtitol ? <p className="sdp-xat-vista__subtitol">{subtitol}</p> : null}
-          {opcions.length ? (
-            <div className="sdp-xat-segments" role="group" aria-label={segments.etiqueta}>
-              {opcions.map((opcio, i) => (
-                <button
-                  key={opcio}
-                  type="button"
-                  className="sdp-xat-segments__opcio sdp-xat-inert"
-                  aria-pressed={i === 0 ? 'true' : 'false'}
-                  {...inert}
-                >
-                  {opcio}
-                </button>
-              ))}
-            </div>
-          ) : null}
-        </div>
-      ) : null}
+      <FilaSegments subtitol={subtitol} segments={segments} inert={inert} />
 
       {cerca ? (
         <div className="sdp-xat-cerca">

@@ -118,6 +118,22 @@ describe('resumMapa i textos', () => {
     expect(valorMetrica({ ...m2, valor: 45 })).toBe('45 minuts');
   });
 
+  /* Correcció 261004 (verificador de la tercera passada, punt 1) · La unitat
+     concorda amb el valor (UNITATS_METRICA, contracteMapa.js): mai «1 minuts»
+     ni «1 segells fòssils». Una unitat que el contracte no coneix, tal qual. */
+  it('la unitat concorda amb el valor: «1 minut», «1 hora», «1 segell fòssil»; 0 i 2, en plural', () => {
+    const amb = (valor, unitat) => valorMetrica({ metrica: 'x', valor, unitat, numerador: null, denominador: null });
+    expect(amb(1, 'minuts')).toBe('1 minut');
+    expect(amb(1, 'hores')).toBe('1 hora');
+    expect(amb(1, 'recaigudes')).toBe('1 recaiguda');
+    expect(amb(1, 'segells fòssils')).toBe('1 segell fòssil');
+    expect(amb(1, 'línies mal formades')).toBe('1 línia mal formada');
+    expect(amb(0, 'hores')).toBe('0 hores');
+    expect(amb(2, 'segells fòssils')).toBe('2 segells fòssils');
+    expect(amb(1, 'lleugues')).toBe('1 lleugues');
+    expect(amb(1, 'toString')).toBe('1 toString');
+  });
+
   it('descriu llançadors i cadències, i un guió quan no n’hi ha', () => {
     expect(textLlancador({ tipus: 'launchd', etiqueta: 'org.x' })).toBe('launchd · org.x');
     expect(textLlancador(null)).toBe('—');

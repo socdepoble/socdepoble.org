@@ -319,9 +319,15 @@ describe('Espècimens del catàleg · la pastilla amb hora i clicable', () => {
     expect(textos(pastilla)).toEqual(['10:00', '07/08/22']);
     act(() => { fireEvent.click(pastilla); });
     expect(onSoc()).toBe('/calendari?mes=2022-08');
-    // La Consola (onDateTime={false}): un <time> amb hora, sense clic.
+    /* Ordre del Mestre, 261004 (xat: tota targeta amb boina i pàgina pròpia) · L'espècimen 7
+       (la Consola) porta la boina de Sóc de Poble, i la data va a la pastilla de la boina:
+       un <time> amb hora, sense clic (una instantània de dades no porta al Calendari).
+       Derogat per l'ordre del Mestre del 261004 (xat: tota targeta amb boina i pàgina pròpia):
+       la targeta de sistema sense boina, amb la data a l'última línia del cos. */
     const consola = [...container.querySelectorAll('article.sp-card')].find((a) => a.textContent.includes('Calendari de processos'));
-    expect(consola.querySelector('time.btn-date-time').getAttribute('datetime')).toBe('2026-09-26T01:42:00');
+    expect(consola.querySelector('.sp-card-header time.btn-date-time').getAttribute('datetime')).toBe('2026-09-26T01:42:00');
+    expect(consola.querySelector('.sp-card-header a.sp-card-author-link').getAttribute('href')).toBe('/projecte');
+    expect(consola.querySelector('.sp-card-header button.btn-date-time, .sdp-consola__data')).toBeNull();
     // Cap targeta de lectura sense nom de destí: totes les que tenen clic diuen on porten.
     const ambClic = [...container.querySelectorAll('.sp-card-header button.btn-date-time')];
     expect(ambClic.length).toBeGreaterThan(0);

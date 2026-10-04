@@ -24,8 +24,12 @@ afterEach(() => {
 beforeEach(() => vi.useFakeTimers({ toFake: ['Date'] }));
 
 /* Una tasca cada hora (viva, tots els dies), una setmanal de cron (morta, els
-   dijous) i les que no es poden situar en dies. */
+   dijous) i les que no es poden situar en dies. Correcció 261004 (verificador
+   de la segona passada) · el Calendari pinta també «Coses que corren soles»,
+   que compta sobre el Mapa sencer: la prova porta la forma completa d'un Mapa
+   (normalitzaMapa no en deixa passar cap sense nodes, arestes, avisos ni salut). */
 const MAPA = Object.freeze({
+  nodes: [], arestes: [], avisos: [], salut: [],
   tasques: [
     { id: 'plaquetes-diagnostic', estat: 'viu', llancador: { tipus: 'launchd', etiqueta: 'org.socdepoble.plaquetes' }, cadencia: { cada_segons: 3600, en_arrencar: true }, script: 'scripts/immunitari/plaquetes.mjs', font: null },
     { id: 'copia', estat: 'mort', llancador: { tipus: 'launchd', etiqueta: 'org.x.copia' }, cadencia: { cron: '30 2 * * 4' }, script: null, font: null },
@@ -99,12 +103,14 @@ test('T7 · la taula de la pàgina porta la classe de les vores fines; la resta,
   vi.setSystemTime(new Date(2026, 8, 28, 10));
   const { container, getByRole } = render(<CalendariMapa mapa={MAPA} locale="ca-ES" />);
   expect(getByRole('region', { name: 'Tasques per cadència' }).className).toBe('sdp-taula sdp-taula--densa sdp-calendari__taula');
-  expect(container.querySelectorAll('.sdp-card-grid article.sp-card')).toHaveLength(4);
+  // Les quatre caixes de cadència amb tasques, darrere de «Coses que corren soles» (correcció 261004).
+  expect([...container.querySelectorAll('.sdp-card-grid article.sp-card h3')].map((h) => h.textContent))
+    .toEqual(['3 coses que corren soles', '1 tasca diària', '1 tasca setmanal', '1 tasca resident', '1 tasca per esdeveniment']);
 });
 
 test('sense cap tasca situable en dies, l’avís continua entre la barra i la graella', () => {
   vi.setSystemTime(new Date(2026, 8, 28, 10));
-  const { container } = render(<CalendariMapa mapa={{ tasques: MAPA.tasques.slice(2) }} locale="ca-ES" />);
+  const { container } = render(<CalendariMapa mapa={{ ...MAPA, tasques: MAPA.tasques.slice(2) }} locale="ca-ES" />);
   const avis = [...container.querySelectorAll('p')].find((p) => p.textContent.includes('el mes queda buit a posta'));
   expect(avis.previousElementSibling.className).toBe('sdp-consola__capcal');
   expect(avis.nextElementSibling.className).toBe('sdp-taula sdp-calendari--gran');

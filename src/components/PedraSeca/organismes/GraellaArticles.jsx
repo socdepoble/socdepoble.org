@@ -82,6 +82,12 @@ function Reixa({ articles, etiqueta, categoriesPerId, onTria, onAccioSecundaria,
   );
 }
 
+/**
+ * @deprecated Ordre del Mestre, 261004 (prompt 261004_0515, «no inventar
+ *   targetes»): obsoleta per a codi nou. Una graella de continguts va amb
+ *   UniversalCard dins de GraellaTargetes. Salut i el Bar encara la fan
+ *   servir: no s'esborra.
+ */
 export function GraellaArticles(props) {
   const idPista = useId();
   return pintaArticles(Reixa, props, idPista, 'sdp-graella-articles__seccions');

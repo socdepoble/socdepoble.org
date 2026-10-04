@@ -277,7 +277,9 @@ test('T66b · l’estat buit pinta en lectura l’emoticona de l’adaptador, se
   const onObriEmoticona = vi.fn();
   const { container } = buitAmb({ emoticona: '🌾', onObriEmoticona });
   const barra = container.querySelector('section.bar-orange');
-  expect([...barra.children].map((e) => e.className)).toEqual(['sp-card-author', 'sdp-emoticona-barra sdp-emoticona-barra--glif', 'bar-actions']);
+  /* Derogat per l'ordre del Mestre del 261004 (prompt 261004_0515) · T6: l'autor per
+     defecte de l'estat buit enllaça a /projecte, i l'autoria porta la classe de l'enllaç. */
+  expect([...barra.children].map((e) => e.className)).toEqual(['sp-card-author sp-card-author-link', 'sdp-emoticona-barra sdp-emoticona-barra--glif', 'bar-actions']);
   const glif = barra.querySelector('.sdp-emoticona-barra--glif');
   expect(glif.getAttribute('role')).toBe('img');
   expect(glif.getAttribute('aria-label')).toBe('Emoticona del document: 🌾');

@@ -33,12 +33,14 @@ import { SUPPORTED_LANGUAGES } from '../../config/i18n.js';
 import { fitxes as fitxesDeConsulta, plega } from '../search/indexCerca.js';
 import { PRESETS_AMPLARIA } from './amplariaColumnes.js';
 
-/** Les rutes de l'app on porten les files 'ruta'. Totes existixen (sections.js i ClosCaXat.RUTA_PERFIL). */
+/** Les rutes de l'app on porten les files 'ruta'. Totes existixen (sections.js i ClosCaXat.RUTA_PERFIL).
+ *  Torn 261004 (T5) · `multimedia` és la vista del rail (VISTES_XAT, ClosCaXat), ja operativa. */
 export const RUTES_AJUSTOS = Object.freeze({
   perfil: '/el-meu-perfil',
   wiki: '/wikidepoble',
   legal: '/legal',
-  versions: '/versions'
+  versions: '/versions',
+  multimedia: '/xat?vista=multimedia'
 });
 
 /** La pàgina de dalt de la pila. */
@@ -153,7 +155,10 @@ export const PAGINES_AJUSTOS = Object.freeze({
   }),
 
   /* «Chats» (captura 20.58.55): l'Aparença amb el tema com a valor, i les
-     opcions del Control del xat (/control-xat) amb les seues claus. */
+     opcions del Control del xat (/control-xat) amb les seues claus.
+     Ordre del Mestre del 261004 (T5) · «Multimèdia, enllaços i documents»
+     ja no és una pàgina en construcció: porta a la vista del rail
+     (/xat?vista=multimedia) i tanca el full. */
   xats: Object.freeze({
     id: 'xats',
     titol: ['section.xat.rail.xats', 'Xats'],
@@ -166,7 +171,7 @@ export const PAGINES_AJUSTOS = Object.freeze({
       ]) }),
       Object.freeze({ id: 'pendents', files: Object.freeze([
         fila('xats-temporals', 'pagina', 'section.xat.control.temporals.titol', 'Missatges temporals', { pagina: 'temporals' }),
-        fila('xats-multimedia', 'pagina', 'section.xat.control.multimedia.titol', 'Multimèdia, enllaços i documents', { pagina: 'multimedia' })
+        fila('xats-multimedia', 'ruta', 'section.xat.control.multimedia.titol', 'Multimèdia, enllaços i documents', { ruta: RUTES_AJUSTOS.multimedia })
       ]) })
     ])
   }),
@@ -228,12 +233,6 @@ export const PAGINES_AJUSTOS = Object.freeze({
     id: 'temporals',
     titol: ['section.xat.control.temporals.titol', 'Missatges temporals'],
     construccio: Object.freeze({ descripcio: ['section.xat.control.temporals.text', "Activa l'autodestrucció de missatges per a converses sensibles."] })
-  }),
-
-  multimedia: Object.freeze({
-    id: 'multimedia',
-    titol: ['section.xat.control.multimedia.titol', 'Multimèdia, enllaços i documents'],
-    construccio: Object.freeze({ descripcio: ['section.xat.control.multimedia.text', "Revisa tot el que s'ha enviat al xat."] })
   }),
 
   notificacions: Object.freeze({

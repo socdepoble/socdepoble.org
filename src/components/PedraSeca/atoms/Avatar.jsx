@@ -13,6 +13,9 @@
  *   · `alt`: text alternatiu explícit. `alt=""` quan la foto va al costat del
  *     nom escrit (repetir-lo seria soroll per al lector de pantalla).
  * Sense `llavor` ni `alt`, el comportament és idèntic a l'anterior.
+ *   · `titol` (acta 261004_1027 §3): el rètol emergent del cercle. Per
+ *     defecte, el nom. `titol=""` no en posa cap: quan l'avatar és tot un
+ *     botó amb el seu propi `title`, el de dins el tapava.
  *
  * Base de recursos (T5, 261001): un `src` propi ('/assets/…') es resol amb
  * la base de l'amfitrió (config/assetResolver.js) ABANS del filtre de
@@ -35,7 +38,7 @@ export function toDeLlavor(llavor) {
   return (h % TONS) + 1;
 }
 
-export function Avatar({ nom, src = null, mida = 'md', className, llavor = null, alt }) {
+export function Avatar({ nom, src = null, mida = 'md', className, llavor = null, alt, titol }) {
   const m = MIDES.includes(mida) ? mida : 'md';
   const inicials = (nom || '?')
     .trim().split(/\s+/).slice(0, 2)
@@ -53,7 +56,7 @@ export function Avatar({ nom, src = null, mida = 'md', className, llavor = null,
   return (
     <span
       className={['sdp-avatar', `sdp-avatar--${m}`, to ? `sdp-avatar--to-${to}` : null, className].filter(Boolean).join(' ')}
-      title={nom || undefined}
+      title={(titol === undefined ? nom : titol) || undefined}
     >
       {safeSrc
         ? <img className="sdp-avatar__imatge" src={safeSrc} alt={textLector} loading="lazy" referrerPolicy="no-referrer" />

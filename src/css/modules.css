@@ -426,6 +426,31 @@ aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(2) {
   overflow-x: hidden;
   background: var(--sdp-fons-app);
 }
+/* Barres (ordre del Mestre, 261004: que la barra fixa no «es menge
+   contingut») · En compacte, la barra mòbil (nav.mobile-nav, fixa) tapa la
+   part de baix de la closca: .app-grid-page és absoluta i no fa cas del
+   coixí d'.app-main__content (layout.css). Cada scroller del Workspace en
+   reserva l'alçada dins seu, com el Xat (.sdp-xat-conversa i
+   .sdp-xat-llista, més avall): l'última icona del rail, l'última fitxa i el
+   final del document queden per damunt de la barra. Abast positiu
+   (.sdp-workspace--universal, que posa UniversalWorkspace): el Xat també
+   porta .sdp-workspace i no l'ha de tindre doble. La condició, la de la
+   barra: .sdp-root.is-compact (:where() pesa 0).
+   Correcció dels verificadors (261004) · L'abast és l'estructura pròpia
+   del Workspace, amb combinadors de fill des de la closca (.app-grid-page
+   > article > contingut > columna > aside), no qualsevol descendent: el
+   detall de Disseny pinta components de producció del Xat (rail plegat,
+   VistaComunitats) en marcs fixos que no toquen la barra, i hi rebien una
+   segona reserva (144 px dins d'un marc de 576 a 820). Els quatre
+   scrollers: el rail d'una columna plegada (navegació o llista), el rail
+   d'«estret» (#app-grid-rail), el cos de la navegació i de la llista, i
+   el detall. */
+:where(.sdp-root.is-compact) .sdp-workspace--universal > .app-grid-shell > .app-grid-content > .app-grid-column > .sdp-workspace-column > .app-grid-col-header--collapsed > .sdp-workspace-rail,
+:where(.sdp-root.is-compact) .sdp-workspace--universal > .app-grid-shell > .app-grid-content > .app-grid-rail > .sdp-workspace-column > .app-grid-col-header--collapsed > .sdp-workspace-rail,
+:where(.sdp-root.is-compact) .sdp-workspace--universal > .app-grid-shell > .app-grid-content > .app-grid-column > .sdp-workspace-column > .sdp-workspace-column__body,
+:where(.sdp-root.is-compact) .sdp-workspace--universal > .app-grid-shell > .app-grid-content > .app-grid-column--right > .sdp-workspace-detail {
+  padding-bottom: calc(var(--sdp-alt-nav-mobil) + env(safe-area-inset-bottom, 0px));
+}
 .notes-column {
   display: flex;
   flex-direction: column;
@@ -3095,6 +3120,22 @@ details[open] summary.accordion-header svg:last-child {
 
 } /* fi @layer legacy (obert a la línia ~637) */
 
+/* ÍNDEX DE SECCIÓ · el calaix enfocat per programa (correcció final, ordre
+   del Mestre, 261004). En obrir-se, PageFrame li dona el focus (tabIndex -1),
+   a la SPA i a l'encastat, perquè el diàleg aria-modal siga on és el
+   teclat. És un contenidor, no un control: no pinta cap anell, ni obert amb
+   el ratolí ni amb el teclat (Llei del Píxel). Les entrades i l'aspa, que sí
+   que són controls, conserven el seu anell de :focus-visible (base.css).
+   Arreglo dels verificadors (ordre del Mestre, 261004): la regla era
+   :focus:not(:focus-visible), i Chrome hereta el :focus-visible de l'element
+   que tenia el focus; després d'un Esc o d'un Tab, una obertura amb el
+   ratolí pintava l'anell de 3px a la vora del calaix. Fora de la capa legacy
+   on viu la resta del calaix (.toc-drawer, més amunt): tota regla nova va a
+   components. */
+@layer components {
+  .toc-drawer:focus { outline: none; }
+}
+
 /* ═══ BLOC DE NOTES (PROPOSTA CODEX) ═════════════════════════════════
    Va a la capa `components`, no a `legacy`: l'ordre de capes és
    reset, sdp, legacy, components, utilities, i AppGridShell.css (components)
@@ -3565,8 +3606,9 @@ details[open] summary.accordion-header svg:last-child {
      `.sdp-bloc … > .bar-blue`). No hi ha res a esquivar: les eines
      s'ancoren a dalt de tot del contenidor de scroll. */
   .sdp-bloc .sdp-editor-eines { top: 0; }
-  /* L'índex salta amb scrollIntoView({block:'start'}) (PageFrame): sense
-     marge, el títol de destí quedaria davall de les eines ancorades. Les
+  /* L'Índex salta amb desplacaASeccio (PageFrame), que respecta este
+     scroll-margin-top: sense marge, el títol de destí quedaria davall de les
+     eines ancorades. Les
      eines fan flex-wrap i passen d'una fila (58px) a tres (161px, columna
      de 280px): tres barres (174px) les cobrixen. Amb columnes més estretes
      (209px, 317px d'eines) no basta: caldria mesurar-les (ResizeObserver).
@@ -5172,6 +5214,78 @@ details[open] summary.accordion-header svg:last-child {
   .sdp-xat-construccio__avis { margin: 0; max-width: var(--sdp-measure); }
   .sdp-xat-construccio__avis { color: var(--sdp-text-suau); }
 
+  /* Contingut multimèdia operatiu (ordre del Mestre del 261004, prompt
+     261004_0515, T5; VistaMultimedia). El control segmentat ja fa coses, i
+     el cursor ho diu. A Enllaços, cada URL és una fila de la llista a sang:
+     el domini en negreta, l'enllaç (de var(--sdp-touch) d'alt; una URL
+     llarga es parteix on calga) i, germà de l'enllaç, el botó de la
+     conversa on es va compartir, també de var(--sdp-touch). A Fitxers i
+     Documents, les files de xat de sempre. Cap li hereta el sagnat del li
+     editorial (base.css). */
+  .sdp-xat-segments__opcio:not(.sdp-xat-inert) { cursor: pointer; }
+  .sdp-xat-multimedia__item {
+    display: grid;
+    gap: var(--sdp-space-1);
+    margin: 0;
+    padding: var(--sdp-space-2) var(--sdp-space-4);
+    border-bottom: 1px solid var(--sdp-vora);
+  }
+  .sdp-xat-multimedia__adjunt { margin: 0; padding: 0; }
+  .sdp-xat-multimedia__host {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 700;
+    color: var(--sdp-text-titol);
+  }
+  .sdp-xat-multimedia__enllac { min-width: 0; }
+  .sdp-xat-multimedia__enllac > span { display: grid; gap: var(--sdp-space-1); }
+  .sdp-xat-multimedia__enllac .sdp-xat-enllac {
+    display: flex;
+    align-items: center;
+    min-height: var(--sdp-touch);
+    overflow-wrap: anywhere;
+  }
+  .sdp-xat-multimedia__enllac .sdp-xat-enllac__avis { margin-inline-start: 0; }
+  .sdp-xat-multimedia__conversa {
+    display: flex;
+    align-items: center;
+    gap: var(--sdp-space-2);
+    width: 100%;
+    min-height: var(--sdp-touch);
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--sdp-text-suau);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-xat-multimedia__conversa:hover { color: var(--sdp-text-titol); }
+  }
+  .sdp-xat-multimedia__conversa:focus-visible { outline: 2px solid var(--sdp-focus); outline-offset: 2px; }
+  .sdp-xat-multimedia__nom {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  /* Amb la barra mòbil a la vista (.sdp-root.is-compact): la reserva va al
+     contenidor, darrere de l'avís local, i la targeta d'adjunts de dins no
+     la repetix (la regla de baix la posa a totes les targetes).
+     Revisió 261004 (Relleus 4-12) · Les llistes de cada mes tampoc: són
+     .sdp-xat-llista, i la regla de la llista de converses (bloc F0) els
+     posava la reserva a cada una. Es reinicien com a resultats, fitxa,
+     diàleg i comunitats. */
+  :where(.sdp-root.is-compact) .app-grid-shell .sdp-xat-multimedia {
+    padding-bottom: calc(var(--sdp-alt-nav-mobil) + env(safe-area-inset-bottom, 0px));
+  }
+  :where(.sdp-root.is-compact) .app-grid-shell .sdp-xat-multimedia .sdp-xat-construccio { margin-bottom: var(--sdp-space-4); }
+  :where(.sdp-root.is-compact) .app-grid-shell .sdp-xat-multimedia .sdp-xat-llista { padding-bottom: 0; }
+
   /* Vista Comunitats (captura 19.41.43): per a cada comunitat, la fila de
      capçalera (avatar quadrat net, sense les targetes apilades de la llista
      de Xats, i nom en negreta), les files dels fills i «Veure-ho tot ›».
@@ -5831,9 +5945,16 @@ details[open] summary.accordion-header svg:last-child {
      altre paràgraf que es llig com a dada, no com a prosa. */
   /* La graella de les targetes explicatives es mesura pel seu contenidor, no
      per la finestra: el tauler també viu incrustat en una columna de la Wiki
-     (ConsolaIncrustada), on tres columnes de viewport ofegarien el cos. */
+     (ConsolaIncrustada), on tres columnes de viewport ofegarien el cos.
+     auto-fill, com la graella canònica (.sdp-card-grid), i no auto-fit
+     (avís del Mestre, 261004, a /consola/pols): auto-fit esfondra les pistes
+     buides d'una fila incompleta, les columnes s'eixamplen (770px a 1920) i
+     la .sp-card, amb max-width 500px i marge auto, queda centrada en la seua
+     cel·la amb un forat al mig. Amb auto-fill les pistes buides es queden i
+     cada targeta conserva l'amplada de la seua columna, alineada a l'esquerra
+     com la fila de dalt. Una fila plena es pinta igual amb les dues. */
   .sdp-card-grid.sdp-consola__graella {
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 20rem), 1fr));
   }
   .sdp-consola__targeta .sp-card-text > p { margin: 0 0 var(--sdp-space-2); }
   .sdp-consola__targeta .sp-card-text > p:last-child { margin-bottom: 0; }
@@ -5842,11 +5963,17 @@ details[open] summary.accordion-header svg:last-child {
     font-weight: 700;
     font-variant-numeric: tabular-nums;
   }
+  /* Derogat per l'ordre del Mestre del 261004 (xat: tota targeta amb boina i
+     pàgina pròpia): la línia de data del cos (.sdp-consola__data). La
+     targeta de la Consola torna a portar la boina de Sóc de Poble i la data
+     va a la seua pastilla (T51), com totes les targetes. */
   /* T2 (ordre del Mestre, 260930) · Mètriques de tauler: cada xifra és un
      h5 (l'Índex de la Consola les recull), centrat i amb xifres tabulars.
      clear: la insígnia lateral flota a la dreta i en desplaçaria el centre.
      El scroll-margin és el dels desplegables: el salt des de l'Índex no
-     queda davall de la barra blava. */
+     queda davall de les barres. Derogat per l'ordre del Mestre del 261004
+     (barra taronja universal): el marge d'una sola barra (la blava); ara en
+     són dues, la blava i la taronja, totes dues de --sdp-alt-accio. */
   .sdp-consola__metriques {
     clear: both;
     display: grid;
@@ -5860,7 +5987,7 @@ details[open] summary.accordion-header svg:last-child {
     color: var(--sdp-accio-text);
     text-align: center;
     font-variant-numeric: tabular-nums;
-    scroll-margin-top: calc(var(--sdp-alt-accio) + var(--sdp-space-4));
+    scroll-margin-top: calc(var(--sdp-alt-accio) * 2 + var(--sdp-space-4));
   }
   /* T3 (ordre del Mestre, 260930) · Coberta: els estats de dins de la pàgina,
      el més greu primer, darrere de les mètriques i centrats com elles.
@@ -5881,17 +6008,36 @@ details[open] summary.accordion-header svg:last-child {
   }
   .sdp-consola__estats > li { display: flex; margin: 0; padding: 0; }
 
+  /* Ordre del Mestre, 261004 (cap anomalia sense mostrar) · Un avís del Mapa
+     a l'Inventari (AvisosMapa.jsx): el codi amb el color de la severitat, la
+     frase i les evidències, apilats; entre avisos, aire. La llista
+     d'evidències es reinicia com la dels estats: sense el marge de base.css. */
+  .sdp-consola__avis {
+    display: grid;
+    justify-items: start;
+    gap: var(--sdp-space-1);
+  }
+  .sdp-consola__avis + .sdp-consola__avis { margin-top: var(--sdp-space-3); }
+  .sdp-consola__avis > p { margin: 0; }
+  .sdp-consola__evidencies {
+    margin: 0;
+    padding: 0 0 0 var(--sdp-space-5);
+  }
+  .sdp-consola__evidencies > li { margin: 0; padding: 0; }
+
   /* Desplegables «Veure detall de…» (peces.jsx · Desplegable): una fila
      sencera de com a mínim --sdp-touch, amb vora i radi del sistema. El
      xebró gira només amb CSS quan el <details> és obert. scroll-margin-top:
-     la barra blava és sticky dins del contenidor de scroll; sense marge, el
-     desplegable que obri una targeta quedava tapat. */
+     la barra blava i la taronja són sticky dins del contenidor de scroll;
+     sense marge, el desplegable que obri una targeta quedava tapat. Derogat
+     per l'ordre del Mestre del 261004 (barra taronja universal): el marge
+     d'una sola barra. */
   .sdp-consola__detall {
     margin-block: var(--sdp-space-4);
     border: 1px solid var(--sdp-vora);
     border-radius: var(--sdp-radi-m);
     background: var(--sdp-fons-targeta);
-    scroll-margin-top: calc(var(--sdp-alt-accio) + var(--sdp-space-4));
+    scroll-margin-top: calc(var(--sdp-alt-accio) * 2 + var(--sdp-space-4));
   }
   .sdp-consola__detall-cap {
     display: flex;
@@ -6083,13 +6229,15 @@ details[open] summary.accordion-header svg:last-child {
 
   /* «Restablir» torna el focus a la cerca, al primer plegable o al selector
      del detall, i «Vore la peça» el passa al nom de la peça nova. La barra
-     blava és sticky dins del contenidor de scroll: sense marge, tapava el que
-     s'enfocava. Mateixa recepta que .sdp-consola__detall. */
+     blava i la taronja són sticky dins del contenidor de scroll: sense marge,
+     tapaven el que s'enfocava. Mateixa recepta que .sdp-consola__detall
+     (derogat per l'ordre del Mestre del 261004, barra taronja universal: el
+     marge d'una sola barra). */
   .sdp-explorador__grup > summary,
   .sdp-explorador__barra .sdp-control,
   .sdp-explorador__detall .sdp-control,
   .sdp-explorador__detall-cap > h3 {
-    scroll-margin-top: calc(var(--sdp-alt-accio) + var(--sdp-space-4));
+    scroll-margin-top: calc(var(--sdp-alt-accio) * 2 + var(--sdp-space-4));
   }
 
   .sdp-explorador__grup {
@@ -6461,6 +6609,16 @@ details[open] summary.accordion-header svg:last-child {
   .sdp-ptr-indicator[data-estat="recarregant"] {
     color: var(--sdp-text-titol);
   }
+  /* Encastat (Gent de la Torre, ordre del Mestre 261004 11:11), la franja de
+     l'amfitrió viu entre la barra negra i el contingut, i el hook fa baixar
+     l'indicador apegat al contingut. Com la negra, la franja l'ha de tapar
+     mentre naix: sense posició, quedava per davall de l'indicador (z-index
+     10). Ni desplaçament ni vora nova: en repòs, píxel a píxel igual
+     (els seus contorns de focus són interns, outline-offset negatiu). */
+  .app-main > .sdp-amfitrio-franja {
+    position: relative;
+    z-index: 11;
+  }
 
   .app-main__content[data-ptr="actiu"] {
     transition: none;
@@ -6525,6 +6683,37 @@ details[open] summary.accordion-header svg:last-child {
   .sdp-workspace .app-grid-col-header .app-grid-col-header__plegable svg,
   .app-sidebar-nav-footer .nav-item.nav-item--system { color: var(--sdp-crom-actiu-fons); }
   .page-title-logo { width: min(100%, 600px); min-width: min(100%, 260px); }
+  /* Norma del Mestre, 261004 (logotips) · El logotip d'una altra entitat (una
+     sola imatge, sovint quadrada): fins a 600x600 (skill sdp-universal-page
+     §1.D). object-fit: contain ja hi és (layout.css). */
+  .page-title-logo--entitat { max-height: 600px; }
+  /* Norma del Mestre, 261004 (prompt 261004_1108, T2) · L'avatar redó de qui
+     signa (una persona o la IA), centrat davant de l'H1: més menut que el
+     logotip (--sdp-avatar-capcalera, 300px) i a l'ample de la capçalera en
+     pantalla estreta. La caixa reserva el lloc abans que arribe la imatge.
+     Amb onCanvia és un botó: la marca de la càmera diu que es pot canviar. */
+  .page-title-avatar {
+    position: relative; display: block;
+    width: min(100%, var(--sdp-avatar-capcalera)); aspect-ratio: 1 / 1;
+    margin: 0 auto var(--sdp-space-4); padding: 0; border: 0;
+    border-radius: var(--sdp-radi-pastilla); background: var(--sdp-fons-subtil);
+  }
+  .page-title-avatar__imatge {
+    display: block; width: 100%; height: 100%;
+    border-radius: inherit; object-fit: cover;
+  }
+  .page-title-avatar--canvia { color: inherit; cursor: pointer; }
+  .page-title-avatar__marca {
+    position: absolute; inset-inline-end: var(--sdp-space-4); inset-block-end: var(--sdp-space-4);
+    display: flex; align-items: center; justify-content: center;
+    width: var(--sdp-touch); height: var(--sdp-touch);
+    border-radius: var(--sdp-radi-pastilla);
+    background: var(--sdp-accio); color: var(--sdp-sobre-accio);
+    transition: background-color var(--sdp-t);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .page-title-avatar--canvia:hover .page-title-avatar__marca { background: var(--sdp-accio-hover); }
+  }
 }
 
 /* ── Ordres del Mestre, 260927 nit (T31, T32) ─────────────────────────── */
@@ -7189,27 +7378,25 @@ details[open] summary.accordion-header svg:last-child {
     --sdp-cal-marge: 3.5rem;
     --sdp-cal-alt-carril: 1.5rem;
     --sdp-cal-cercle: var(--sdp-space-10);
-    /* L'alçada de les barres enganxoses de damunt: a /calendari (chrome
-       'system', layout 'contained') només hi ha la blava. */
-    --sdp-cal-sostre: var(--sdp-alt-accio);
+    /* L'alçada de les barres enganxoses de damunt. D2 (barra taronja
+       universal, ordre del Mestre 261004) · Tota pàgina porta ara la blava I
+       la taronja, enganxada just davall (top: var(--sdp-alt-accio)), en tots
+       els modes de chrome i en tots els amples: a /calendari (chrome
+       'system', layout 'contained') i al catàleg (chrome 'context') el sostre
+       són les dues barres. Abans era la blava sola i la capçalera de dies
+       quedava 58px davall de la taronja. La regla de l'espècimen i la seua
+       @media de 720px (que replicava la T38, revertida: la taronja ja no
+       s'amaga en mòbil) ja no calen: valien el mateix o eren falses. */
+    --sdp-cal-sostre: calc(var(--sdp-alt-accio) * 2);
     overflow: clip;
     border: 1px solid var(--sdp-vora);
     border-radius: var(--sdp-radi-m);
     background: var(--sdp-fons-targeta);
   }
-  /* Al catàleg (chrome 'context') hi ha la blava i la taronja. */
-  .sdp-especimen .sdp-cal-setmana { --sdp-cal-sostre: calc(var(--sdp-alt-accio) * 2); }
-  /* Fins a 720px de viewport, components.css amaga la taronja de la pàgina
-     (la mateixa condició que torna .sdp-editor-eines a davall de la blava):
-     el sostre del catàleg torna a ser la blava sola. Replica la condició de
-     la barra; no decidix cap columna. La germana @container (max-width:
-     400px) no es replica: Baseline 2022. */
-  @media (max-width: 720px) {
-    .sdp-especimen .sdp-cal-setmana { --sdp-cal-sostre: var(--sdp-alt-accio); }
-  }
   /* Pantalla completa (ordre del Mestre, 261001) · Dins del diàleg no hi ha
      cap barra damunt: la capçalera de dies s'enganxa a dalt del visor, que és
-     el que fa scroll. (0,3,0): guanya també a la de l'espècimen. */
+     el que fa scroll. (0,3,0): guanya a la de la base sense dependre de
+     l'ordre (abans, també a la de l'espècimen, que ja no hi és). */
   .sdp-pantalla-completa .sdp-cal-setmana.sdp-cal-setmana { --sdp-cal-sostre: 0px; }
 
   .sdp-cal-setmana__capcal {
@@ -7778,16 +7965,43 @@ details[open] summary.accordion-header svg:last-child {
 
   /* SDP:T43-barra · T43 (ordre del Mestre, 260928) · Identitat activa a la
      barra negra (BotoIdentitatActiva). És closca: només --sdp-crom-*
-     (tractor-crom K3), igual en clar i en fosc. L'avatar (32px) va dins dels
-     44px del botó; el radi del botó el mana utilities. Una entitat porta un
-     anell de crom: es veu d'un colp que no actues com a tu. */
-  .bar-black .right-icons .sdp-top-bar-btn--identitat { opacity: 1; }
-  .sdp-top-bar-btn--identitat .sdp-avatar {
+     (tractor-crom K3), igual en clar i en fosc. Una entitat porta un anell
+     de crom: es veu d'un colp que no actues com a tu.
+     Acta 261004_1027 §3 (ordre del Mestre, beta testers) · Amb sessió,
+     l'avatar és el botó sencer: redó (radi de pastilla) i gran (Avatar lg,
+     56px, dins dels 64px de la barra), mai per davall de --sdp-touch. No
+     porta .icon ni .sdp-top-bar-btn: la caixa de 48px amb coixí de 6px i el
+     radi de 12px d'utilities eren per a les icones i el feien xicotet i
+     quadrat. Sense sessió (el Foraster), el botó de sempre. */
+  .sdp-top-bar-avatar {
+    display: inline-grid;
+    place-items: center;
+    flex: none;
+    min-width: var(--sdp-touch);
+    min-height: var(--sdp-touch);
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: var(--sdp-radi-pastilla);
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+  }
+  .sdp-top-bar-avatar .sdp-avatar {
     border-width: 0;
     background: var(--sdp-crom-capcalera-clara);
     color: var(--sdp-crom-text);
   }
-  .sdp-top-bar-btn--entitat .sdp-avatar { border: 2px solid var(--sdp-crom-actiu-fons); }
+  .sdp-top-bar-avatar--entitat .sdp-avatar { border: 2px solid var(--sdp-crom-actiu-fons); }
+  /* On es punxa: amb ratolí, un anell de crom en passar-hi per damunt. */
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-top-bar-avatar:hover .sdp-avatar { box-shadow: 0 0 0 2px var(--sdp-crom-hover); }
+  }
+  .sdp-top-bar-avatar:focus-visible {
+    outline: 2px solid var(--sdp-crom-focus);
+    outline-offset: 2px;
+  }
 
   /* Calaix «Amb qui actues?» (CalaixIdentitats): fora de la closca, un
      <dialog> amb el tema. L'activa es pinta des d'aria-current. */
@@ -9224,6 +9438,187 @@ details[open] summary.accordion-header svg:last-child {
   }
 }
 
+/* Ordre del Mestre, 261004 (prompt 261004_0515) · Front «nucli».
+     · .page-title-accio · l'acció principal d'una pàgina (PageFrame,
+       `accioPrincipal`), dins del bloc del títol: 32px de token dalt i baix,
+       el mateix aire que les etiquetes (.page-title-labels). Sense la prop no
+       hi ha cap div al DOM.
+     · .sdp-card-llista · GraellaTargetes en variant 'llista': les targetes
+       planes (variant 'pla') una davall de l'altra, sense buit entre elles;
+       la vora de baix ja la porta .sp-card--pla. La variant 'graella' és la
+       .sdp-card-grid de sempre. */
+@layer components {
+  .page-title-accio {
+    margin-block: var(--sdp-space-8);
+  }
+  .sdp-card-llista {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+}
+
+/* Ordre del Mestre, 261004 (prompt 261004_0515) · Front «autoria».
+     · .sdp-card-llista > .sp-card · en la variant 'llista' de GraellaTargetes
+       (la «Revista» del Lector), la targeta plana ocupa tota la columna, com
+       la fila que substituïx (LlistaArticles, inline-size: 100%): sense el
+       sostre de 500px de la targeta del Mur (components.css, .sp-card), que
+       .sp-card--pla no anul·la.
+     · .sp-card-link-overlay[aria-keyshortcuts] · el sobreposat d'una targeta
+       amb acció secundària (onAccioSecundaria: només llavors porta l'atribut)
+       no obri el menú ni la previsualització de l'enllaç de Safari d'iOS ni
+       comença cap selecció en la pulsació llarga, com les rajoles i les files
+       que reemplaça (catalegColleccio.css). Sense la prop, res no canvia. */
+@layer components {
+  .sdp-card-llista > .sp-card {
+    max-width: none;
+  }
+  .sp-card-link-overlay[aria-keyshortcuts] {
+    touch-action: manipulation;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+}
+
+/* Ordre del Mestre, 261004 (integració final) · Front «lector-nevera».
+     · .sdp-card-llista > .sp-card > .sp-card-media-container · en la variant
+       'llista' de GraellaTargetes (la «Revista» del Lector) la targeta ocupa
+       tota la columna i la imatge 1:1 s'hi estirava sencera. Sostre: l'amplària
+       d'una targeta de la graella (--sdp-targeta-incrustada-ample, 360px, la
+       columna de .sdp-card-grid), centrada. La peça és legítima; el defecte
+       era només el sostre (Codex i l'orquestrador hi coincidixen).
+     · [data-sdp-app="nevera"] .sdp-card-grid > .sp-card · a la Nevera, entre
+       targeta i targeta hi havia 56px: el gap de la graella (24) més el marge
+       de baix de la targeta del Mur (32, components.css). Un sol espaiat, el
+       canònic de la graella: el marge de baix fora. Només la Nevera (l'ordre);
+       el Lector, el Mercat i la Consola continuen com eren (Llei del Píxel).
+     · [data-sdp-app="lector"] … [aria-current="true"] · arreglo 6 (arreglo del
+       verificador): les columnes de navegació del Lector (carpetes i fonts) ja
+       són UniversalCard, i la targeta oberta (aria-current a l'element
+       principal) havia de continuar veient-se, com a TargetesColleccions: una
+       vora interior del color d'acció, de 4px de token. Amb el focus de teclat
+       mana l'anell de focus de sempre (components.css). */
+@layer components {
+  .sdp-card-llista > .sp-card > .sp-card-media-container {
+    max-inline-size: var(--sdp-targeta-incrustada-ample);
+    margin-inline: auto;
+  }
+  [data-sdp-app="nevera"] .sdp-card-grid > .sp-card {
+    margin-block-end: 0;
+  }
+  [data-sdp-app="lector"] .sdp-card-llista > .sp-card > .sp-card-link-overlay[aria-current="true"]:not(:focus-visible) {
+    box-shadow: 0 0 0 var(--sdp-space-1) var(--sdp-accio) inset;
+  }
+}
+
+/* T7 · Ordre del Mestre, 261004 (prompt 261004_0515) · Front «editor».
+   TARGETES INCRUSTADES al cos de l'UniversalEditor i de la lectura
+   (components/universal/richText/extensions/targetes). Es tracten com una
+   imatge: un bloc autònom dins del text. La forma la porta data-forma, que
+   es deriva del nombre de targetes del grup (cap selector de pare ni cap
+   consulta de contenidor: Baseline 2022).
+     · 1 («sola»): flotant a l'esquerra o a la dreta, de 360px
+       (--sdp-targeta-incrustada-ample). left i right: els valors lògics de
+       la flotant arriben amb Chrome 118, fora de la Baseline 2022, i el
+       marge és físic pel mateix motiu. En mòbil, min(100%, …) la fa
+       d'amplària completa sense cap @media.
+     · 2 («parella»): centrades, en una fila que es plega.
+     · 3 o més («graella»): la mateixa fórmula de .sdp-card-grid.
+   La targeta del Mur porta marge i un sostre de 500px: ací mana el grup. El
+   cos que porta targetes (.sdp-amb-targetes: l'arrel de l'editor i l'article
+   de lectura) conté la flotant, i els trossos de text de la lectura
+   hidratada no pinten cap caixa (.sdp-cos-tros). A l'editor, la targeta
+   triada porta l'anell de focus del sistema i les seues eines davall. */
+@layer components {
+  .sdp-targetes {
+    margin-block: var(--sdp-space-6);
+  }
+  .sdp-targeta .sp-card {
+    margin: 0;
+    max-width: none;
+  }
+  .sdp-targetes[data-forma="sola"] > .sdp-targeta {
+    inline-size: min(100%, var(--sdp-targeta-incrustada-ample));
+    margin-block-end: var(--sdp-space-4);
+  }
+  .sdp-targetes[data-forma="sola"][data-alineacio="esquerra"] > .sdp-targeta {
+    float: left;
+    margin-right: var(--sdp-space-6);
+  }
+  .sdp-targetes[data-forma="sola"][data-alineacio="dreta"] > .sdp-targeta {
+    float: right;
+    margin-left: var(--sdp-space-6);
+  }
+  .sdp-targetes[data-forma="parella"] {
+    clear: both;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--sdp-space-6);
+  }
+  .sdp-targetes[data-forma="parella"] > .sdp-targeta {
+    flex: 0 1 var(--sdp-targeta-incrustada-ample);
+    min-inline-size: 0;
+  }
+  .sdp-targetes[data-forma="graella"] {
+    clear: both;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--sdp-targeta-incrustada-ample)), 1fr));
+    gap: var(--sdp-space-6);
+    align-items: start;
+  }
+  .sdp-amb-targetes::after {
+    content: '';
+    display: block;
+    clear: both;
+  }
+  .sdp-cos-tros {
+    display: contents;
+  }
+  .sdp-targeta.ProseMirror-selectednode {
+    outline: var(--sdp-focus-gruix) solid var(--sdp-focus);
+    outline-offset: var(--sdp-focus-separacio);
+  }
+  .sdp-targeta-incrustada__eines {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sdp-space-2);
+    margin-block-start: var(--sdp-space-2);
+  }
+  .sdp-tria-targeta {
+    display: grid;
+    gap: var(--sdp-space-4);
+  }
+  .sdp-tria-targeta__avis {
+    margin: 0;
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-meta);
+  }
+}
+
+/* ═══ BARRA TARONJA UNIVERSAL (ordre del Mestre, 261004) ════════════════
+   Tota pàgina porta la barra taronja (PageFrame.jsx), també les que no
+   porten barra blava (chrome 'page' i 'none': l'Admin, la pàgina 404). La
+   taronja s'enganxa just davall de la blava (top: var(--sdp-alt-accio), a
+   layout.css i a utilities.css): sense blava, eixe top deixaria un forat
+   per on es veuria passar el contingut. El modificador, que PageFrame només
+   posa quan no hi ha blava, la porta a dalt de tot. Especificitat (0,2,1):
+   guanya a la del mode contingut (0,2,0) de utilities.css sense dependre de
+   l'ordre. Amb la blava no canvia res (Llei del Píxel).
+   D3 (261004) · Una graella de columnes (AppGridShell) dins d'una pàgina
+   sense blava (l'Admin, chrome 'page') és absoluta (inset: 0,
+   AppGridShell.css): començava a dalt de tot i la barra taronja, enganxada
+   a top 0 i amb un z-index més alt, tapava les capçaleres de les tres
+   columnes (58px). Ara la graella comença just davall de la taronja.
+   AppGridShell.css no es toca: (0,3,0) guanya al seu inset (0,1,0) dins de
+   la mateixa capa. Cap altra pàgina embolcalla una graella amb una Pàgina
+   Universal, i amb la blava (sense el modificador) no canvia res. */
+@layer components {
+  .sdp-universal-page-container--sense-blava > section.bar-orange { top: 0; }
+  .sdp-universal-page-container--sense-blava > .content-wrapper > .app-grid-page { top: var(--sdp-alt-accio); }
+}
+
 /* ═══ MODE BANCAL · SUPERFÍCIES DE MODULES.CSS (Q1, 261004) ══════════════
    L'interruptor data-contrast="bancal" va a :root fora de l'incrustat i a
    :host dins del shadow root, com data-theme. És el plus d'exterior: llegir
@@ -9287,4 +9682,167 @@ details[open] summary.accordion-header svg:last-child {
   :host([data-contrast="bancal"]) .sdp-xat-fila--nova .sdp-xat-fila__hora,
   :root[data-contrast="bancal"] .sdp-cal-setmana .sdp-cal-dia__nom,
   :host([data-contrast="bancal"]) .sdp-cal-setmana .sdp-cal-dia__nom { font-weight: 700; }
+}
+
+/* ── GESTORIA TAULER (261004) ── */
+@layer components {
+  /* ShellGestoria.jsx, Tauler.jsx i TargetaTauler.jsx (ordre del Mestre,
+     261004; onada 2, pas 1 del MAPA de la Gestoria): la closca, la boina
+     personal i el Tauler Central. Sense media queries ni consultes de
+     contenidor: la pàgina ocupa l'espai disponible amb flex-wrap. L'app
+     /app/gestoria usa la Sidebar exterior i no munta el rail local. Cap
+     opacitat sobre text: una xifra amagada no és
+     un text esvaït, és «Import amagat». Va després del bloc Bancal: cap dels
+     seus selectors no és del Bancal, i el bloc del front T7 es llig fins al
+     marcador del Bancal (targetes/qualitat.test.js). */
+  .sdp-gestoria-closca {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: var(--sdp-space-4);
+  }
+  /* 261004 · Dins de l'app /app/gestoria el rail ja no s'apila com feia a la
+     columna de detall de la Wiki: a 1280 queda al costat de la pàgina. Amb
+     14rem els mòduls «en obres» ixen del rail i la insígnia es partix; amb
+     17rem encara se'n partixen tres. 19rem és la base mínima on cada mòdul
+     (icona, nom i insígnia) cap en una línia. En pantalla estreta el rail
+     continua apilant-se a amplada completa (flex-wrap). */
+  .sdp-gestoria-closca__rail {
+    flex: 1 1 19rem;
+    min-width: 0;
+    padding: var(--sdp-space-3);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-targeta);
+  }
+  .sdp-gestoria-closca__rail-titol {
+    margin: 0 0 var(--sdp-space-2);
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-small);
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+  .sdp-gestoria-closca__moduls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sdp-space-1);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .sdp-gestoria-closca__moduls > li {
+    flex: 1 1 10rem;
+    margin: 0;
+  }
+  .sdp-gestoria-closca__modul {
+    display: flex;
+    align-items: center;
+    gap: var(--sdp-space-2);
+    width: 100%;
+    min-height: var(--sdp-touch);
+    padding: var(--sdp-space-2) var(--sdp-space-3);
+    border: 0;
+    border-radius: var(--sdp-radi-s);
+    background: transparent;
+    color: var(--sdp-text-cos);
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
+  }
+  .sdp-gestoria-closca__modul-nom {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .sdp-gestoria-closca__modul[aria-current="page"] {
+    background: var(--sdp-accent);
+    color: var(--sdp-sobre-accent);
+    font-weight: 700;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-gestoria-closca__modul:hover:not([aria-current="page"]) { background: var(--sdp-fons-subtil); }
+  }
+  .sdp-gestoria-closca__modul:focus-visible {
+    outline: 3px solid var(--sdp-focus);
+    outline-offset: 2px;
+  }
+  .sdp-gestoria-closca__pagina {
+    flex: 999 1 30rem;
+    min-width: 0;
+  }
+  /* Les barres de la pàgina de la closca no s'enganxen. Abans (D3) la
+     closca anava dins de la pàgina de l'eina local i no havien de tapar les
+     de fora; des del 261004 l'app la munta sola i són les úniques barres,
+     però continuen sense enganxar-se per Llei del Píxel: si s'han d'enganxar
+     com les de la resta de pàgines, ho decidix el Mestre. */
+  .sdp-gestoria-closca .sdp-universal-page-container > header.bar-blue,
+  .sdp-gestoria-closca .sdp-universal-page-container > section.bar-orange {
+    position: static;
+  }
+
+  /* La boina personal: un sol ull de privacitat i la data de la lectura. */
+  .sdp-gestoria-boina {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sdp-space-2);
+  }
+  .sdp-gestoria-ull {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: var(--sdp-touch);
+    min-height: var(--sdp-touch);
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+  }
+  .sdp-gestoria-ull:focus-visible {
+    outline: 3px solid currentColor;
+    outline-offset: -3px;
+  }
+
+  /* El Tauler: blocs de UniversalCards i les pàgines de cada targeta. */
+  .sdp-gestoria-tauler__porta {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-3);
+    margin-block-end: var(--sdp-space-6);
+  }
+  .sdp-gestoria-tauler__avisos,
+  .sdp-gestoria-tauler__notes {
+    margin: 0;
+    padding-inline-start: var(--sdp-space-5);
+    color: var(--sdp-text-cos);
+  }
+  .sdp-gestoria-tauler__notes { margin-block: var(--sdp-space-4); }
+  .sdp-gestoria-tauler__bloc,
+  .sdp-gestoria-tauler__seccio { margin-block: var(--sdp-space-6); }
+  .sdp-gestoria-tauler__titol {
+    margin: 0 0 var(--sdp-space-4);
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-h4);
+    text-transform: uppercase;
+  }
+  /* auto-fill i no auto-fit: el mateix forat fantasma que la graella de la
+     Consola (avís del Mestre, 261004); vegeu el comentari de
+     .sdp-consola__graella. */
+  .sdp-card-grid.sdp-gestoria-tauler__graella {
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 20rem), 1fr));
+  }
+  .sdp-gestoria-tauler__targeta .sp-card-text > p { margin: 0 0 var(--sdp-space-2); }
+  .sdp-gestoria-tauler__targeta .sp-card-text > p:last-child { margin-block-end: 0; }
+  .sdp-gestoria-tauler__xifra {
+    margin: 0;
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-h3);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .sdp-gestoria-tauler__amagat {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sdp-space-2);
+  }
 }

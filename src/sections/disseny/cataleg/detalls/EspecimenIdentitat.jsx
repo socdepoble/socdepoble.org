@@ -40,13 +40,14 @@ export default function EspecimenIdentitat() {
       contracte={[
         ['BotoIdentitatActiva.teSessio', 'bool', 'false', 'Sense sessió: icona de persona i «Entrar».'],
         ['BotoIdentitatActiva.entitat', 'bool', 'false', 'Anell de crom i «(organització)» al nom accessible.'],
+        ['BotoIdentitatActiva.perfil', 'bool', 'false', 'Acta 261004_1027 · Una sola identitat: l’avatar porta directament al perfil propi («El teu perfil: {nom}»), sense calaix.'],
         ['BotoIdentitatActiva.avatar', 'string | null', 'null', 'Logo o foto (també sdp-media://, que es resol). Una entitat no hereta mai la foto de la persona.'],
         ['CalaixIdentitats.identitats', '[{ tipus, id, nom, avatar, rol, activa }]', '[]', 'Les d’IdentitatContext; l’activa porta aria-current.'],
         ['CalaixIdentitats.onTria(tipus, id)', 'funció', '—', 'El pare crida setActor i tanca el calaix.'],
         ['TargetaAdministrar.estat', "'pot-connectar' | 'administres' | 'activant' | 'comprovant' | 'pendent' | 'rebutjada' | 'te-propietaria' | 'no-del-poble' | 'membre' | 'sense-sessio' | 'no-disponible'", '—', 'Ho calcula estatDeLAdministracio.'],
         ['TargetaAdministrar.errorLectura', 'Error | null', 'null', 'Error en LLEGIR les peticions pròpies: alerta «No s’ha pogut comprovar», mai «No s’ha pogut enviar».'],
       ]}
-      a11y={['Nom accessible del botó: «Identitat activa: {nom}. Canviar identitat»; l’avatar és decoració (alt="").', 'El calaix és un <dialog> germà del header: no hereta el crom i torna el focus al botó.', 'Les files del calaix són botons de 44px amb :focus-visible; l’activa es diu amb aria-current i amb text («Activa»).']}
+      a11y={['Amb sessió, l’avatar és el botó sencer: redó i de 56px (Avatar lg), mai per davall de --sdp-touch, amb :focus-visible de crom.', 'Nom accessible del botó: «El teu perfil: {nom}» amb una sola identitat; «Identitat activa: {nom}. Canviar identitat» quan obri el calaix. L’avatar és decoració (alt="", sense títol propi).', 'El calaix és un <dialog> germà del header: no hereta el crom i torna el focus al botó.', 'Les files del calaix són botons de 44px amb :focus-visible; l’activa es diu amb aria-current i amb text («Activa»).']}
       fes={['Dir amb qui actues en tot moment, també a la barra de dalt.', 'Separar «Actua com a» d’«Edita la fitxa»: editar no canvia la identitat.', 'Avisar que qui administra veurà també les converses de l’organització.']}
       noFacis={['Pintar la foto de la persona quan actua com una entitat.', 'Canviar d’identitat en silenci en connectar-se.', 'Mostrar el correu d’una altra persona a qui no n’és titular.']}>
 
@@ -54,6 +55,7 @@ export default function EspecimenIdentitat() {
       <section className="bar-black" aria-label="Mostra de la barra negra">
         <div className="right-icons">
           <BotoIdentitatActiva teSessio={false} onClick={res} />
+          <BotoIdentitatActiva teSessio perfil nom="Pepa Soler" llavor="u-1" onClick={res} />
           <BotoIdentitatActiva teSessio nom="Pepa Soler" llavor="u-1" onClick={res} />
           <BotoIdentitatActiva teSessio entitat nom="Forn de la Torre" llavor="o-1" onClick={() => setObert(true)} obert={obert} />
         </div>

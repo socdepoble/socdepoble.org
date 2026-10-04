@@ -27,6 +27,7 @@ vi.mock('./consolaContent.js', async (importOriginal) => ({
 import { RouterProvider, Route, Routes } from '../../app/contexts/RouterContext';
 import ConsolaSection from './ConsolaSection.jsx';
 import { paginesConsola } from './consolaPagines.js';
+import { SLUGS_XIFRES, rutaXifra } from './xifresMas.js';
 
 const MAPA = {
   schema: 'sdp.mapa.v1', generat: '2026-09-25T13:12:23.715Z', tall: null,
@@ -74,63 +75,118 @@ function contenidorDesplacat(inici = 0) {
 const h1 = () => screen.getByRole('heading', { level: 1 }).textContent;
 const tauler = () => screen.getByRole('navigation', { name: 'Pàgines de la Consola' });
 
-test('cada targeta del tauler obri la seua pàgina i la molla de pa torna al tauler', async () => {
+/* Correcció 261004 (verificador, punt 4) · Les dues proves que recorrien les
+   nou pàgines en un sol test passaven del temps límit (8 s). La causa no era
+   cap espera: cada volta feia dues pintades senceres de la pàgina i quatre
+   consultes per rol (getByRole calcula el nom accessible de cada element de
+   tot el document, i el tauler en té centenars entre targetes i peus). Ara
+   cada pàgina és una prova pròpia, i dins del recorregut es busca pel DOM
+   (l'enllaç de la targeta pel seu href, l'H1 i la molla pel selector), que és
+   el que es prova: la ruta i la pàgina que s'obri. */
+const h1Rapid = () => document.querySelector('h1')?.textContent;
+const enllacDelTauler = (ruta) => document.querySelector(`nav[aria-label="Pàgines de la Consola"] a.sp-card-link-overlay[href="${ruta}"]`);
+const mollaCapALaConsola = () => document.querySelector('nav.sdp-molla a[href="/consola"]');
+
+test.each(paginesConsola().map((p) => [p.id, p]))('la targeta del tauler obri /consola/%s i la molla de pa torna al tauler', async (_id, p) => {
   render(<Aplicacio />);
-  await screen.findByText(/registres de consum/);
+  await screen.findByText(/registres? de consum/);
 
-  for (const p of paginesConsola()) {
-    fireEvent.click(within(tauler()).getByRole('link', { name: p.title }));
-    expect(window.location.pathname).toBe(p.ruta);
-    expect(h1()).toBe(p.title);
-    expect(screen.getByRole('navigation', { name: 'Molla de pa' })).toBeTruthy();
+  fireEvent.click(enllacDelTauler(p.ruta));
+  expect(window.location.pathname).toBe(p.ruta);
+  expect(h1Rapid()).toBe(p.title);
+  expect(document.querySelector('nav.sdp-molla[aria-label="Molla de pa"]')).not.toBeNull();
 
-    fireEvent.click(within(screen.getByRole('navigation', { name: 'Molla de pa' })).getByRole('link', { name: 'Consola Termodinàmica' }));
-    expect(window.location.pathname).toBe('/consola');
-    expect(h1()).toBe('Consola Termodinàmica');
-  }
+  fireEvent.click(mollaCapALaConsola());
+  expect(window.location.pathname).toBe('/consola');
+  expect(h1Rapid()).toBe('Consola Termodinàmica');
   expect(errors).not.toHaveBeenCalled();
 });
 
-/* T11 (ordre del Mestre, 260930) · a cada pàgina s'entra per la seua
-   targeta del tauler i se'n torna per la molla de pa. Les xifres del Mas i
-   les peces d'Agents atòmics són dades: clicar-les no porta enlloc. */
-test('les xifres del Mas i les peces dels agents ja no naveguen: són dades', async () => {
+/* Ordre del Mestre, 261004 (xat: tota targeta amb boina i pàgina pròpia) ·
+   Cada xifra del Mas porta a la seua pàgina pròpia (/consola/xifres/<slug>),
+   i d'allí, la pàgina de la Consola que la tracta, amb el filtre de
+   l'Inventari a la URL. Derogat per l'ordre del Mestre del 261004 (xat: tota
+   targeta amb boina i pàgina pròpia): la xifra que portava directament a la
+   pàgina de la Consola (prompt 261004_0515, §6/T8).
+   Ordre del Mestre, 261004 (xat: cap xifra solta) · les peces d'Agents
+   atòmics també porten a la seua pàgina pròpia. Derogat per l'ordre del
+   Mestre del 261004 (xat: cap xifra solta): «les peces d'Agents atòmics
+   continuen sent dades: clicar-les no porta enlloc». */
+test('cada xifra del Mas porta a la seua pàgina pròpia, i d’allí a la de la Consola; les peces dels agents també', async () => {
   render(<Aplicacio />);
-  await screen.findByText(/registres de consum/);
+  await screen.findByText(/registres? de consum/);
 
-  const xifres = screen.getByRole('region', { name: 'El Mas en xifres' });
-  expect(within(xifres).queryAllByRole('link')).toEqual([]);
-  fireEvent.click(within(xifres).getByText('1 skill opaca'));
-  expect(window.location.pathname).toBe('/consola');
-  expect(h1()).toBe('Consola Termodinàmica');
+  const xifres = () => screen.getByRole('region', { name: 'El Mas en xifres' });
+  fireEvent.click(within(xifres()).getByRole('link', { name: '1 skill opaca' }));
+  expect(window.location.pathname).toBe('/consola/xifres/skills-opaques');
+  expect(h1()).toBe('1 skill opaca');
+  fireEvent.click(screen.getByRole('link', { name: 'Entrades i eixides' }));
+  expect(window.location.pathname).toBe('/consola/entrades');
+  expect(h1()).toBe('Entrades i eixides');
+  fireEvent.click(within(screen.getByRole('navigation', { name: 'Molla de pa' })).getByRole('link', { name: 'Consola Termodinàmica' }));
+
+  // La xifra de les skills amb avisos obri la seua pàgina, i d'allí l'Inventari ja filtrat: el filtre és a la URL.
+  fireEvent.click(within(xifres()).getByRole('link', { name: '0 skills amb avisos' }));
+  expect(window.location.pathname).toBe('/consola/xifres/skills-amb-avisos');
+  fireEvent.click(screen.getByRole('link', { name: 'Inventari de skills' }));
+  expect(`${window.location.pathname}${window.location.search}`).toBe('/consola/inventari?filtre=avisos');
+  expect(h1()).toBe('Inventari de skills');
+  const filtres = screen.getByRole('group', { name: 'Quines skills es mostren' });
+  expect(within(filtres).getByRole('button', { name: 'Amb avisos' }).getAttribute('aria-pressed')).toBe('true');
+  expect(screen.getByText('Cap skill casa amb el filtre.')).toBeTruthy();
+  // I triar un altre filtre el reescriu a la URL; «Totes» la neteja.
+  fireEvent.click(within(filtres).getByRole('button', { name: 'Nucli' }));
+  expect(window.location.search).toBe('?filtre=nucli');
+  fireEvent.click(within(screen.getByRole('group', { name: 'Quines skills es mostren' })).getByRole('button', { name: 'Totes' }));
+  expect(window.location.search).toBe('');
 
   window.history.replaceState(null, '', '/consola/agents');
   act(() => { window.dispatchEvent(new PopStateEvent('popstate')); });
   expect(h1()).toBe('Agents atòmics');
   const peces = screen.getByRole('heading', { level: 3, name: 'Les quatre peces que ho fan possible' }).closest('section');
-  expect(within(peces).queryAllByRole('link')).toEqual([]);
-  for (const nom of ['Fluxos de treball', 'Tauler', 'Agents que treballen sols', 'Qui avisa quan algo es trenca']) {
-    fireEvent.click(within(peces).getByRole('heading', { level: 3, name: nom }));
-    expect(window.location.pathname, nom).toBe('/consola/agents');
-  }
-  expect(h1()).toBe('Agents atòmics');
+  expect([...peces.querySelectorAll('a.sp-card-link-overlay')].map((a) => a.getAttribute('href'))).toEqual(
+    ['peca-fluxos-de-treball', 'peca-tauler', 'peca-agents-sols', 'peca-vigilants'].map(rutaXifra));
+  fireEvent.click(peces.querySelector('a.sp-card-link-overlay[href="/consola/xifres/peca-tauler"]'));
+  expect(window.location.pathname).toBe('/consola/xifres/peca-tauler');
+  expect(h1()).toBe('Tauler');
   expect(errors).not.toHaveBeenCalled();
 });
 
-test('a /consola, cada pàgina té exactament una porta; a cada pàgina, l’única cap a la Consola és la molla', async () => {
-  render(<Aplicacio />);
-  await screen.findByText(/registres de consum/);
-  const cap = (prefix) => [...document.querySelectorAll('a[href]')].map((a) => a.getAttribute('href'))
-    .filter((h) => h === prefix || h.startsWith(`${prefix}/`));
-  const recompte = cap('/consola').reduce((acc, h) => ({ ...acc, [h]: (acc[h] || 0) + 1 }), {});
-  expect(recompte).toEqual(Object.fromEntries(paginesConsola().map((p) => [p.ruta, 1])));
+/* Derogat per l'ordre del Mestre del 261004 (prompt 261004_0515): «una sola
+   porta per pàgina» ja no val per a les xifres del Mas, que porten al seu
+   detall. Continua valent per al tauler: una targeta per pàgina.
+   Ordre del Mestre, 261004 (xat: tota targeta amb boina i pàgina pròpia) ·
+   El detall de cada xifra és la seua pàgina pròpia, /consola/xifres/<slug>.
+   Ordre del Mestre, 261004 (xat: cap xifra solta) · Dins de cada pàgina, les
+   targetes de les seues xifres i peces porten a la seua pàgina pròpia
+   (/consola/xifres/<slug>, i les del pols a /consola/pols/<id>): l'única
+   porta cap al tauler o cap a una altra pàgina de la Consola continua sent
+   la molla. Derogat per l'ordre del Mestre del 261004 (xat: cap xifra
+   solta): «a cada pàgina, l'única porta cap a /consola/… és la molla». */
+const cap = (prefix, dins = document) => [...dins.querySelectorAll('a[href]')].map((a) => a.getAttribute('href'))
+  .filter((h) => h === prefix || h.startsWith(`${prefix}/`));
+const esPaginaPropia = (h) => /^\/consola\/(xifres\/[a-z0-9-]+|pols\/[a-z]+)$/.test(h);
 
-  for (const p of paginesConsola()) {
-    fireEvent.click(within(tauler()).getByRole('link', { name: p.title }));
-    expect(h1()).toBe(p.title);
-    expect(cap('/consola'), p.id).toEqual(['/consola']);
-    fireEvent.click(within(screen.getByRole('navigation', { name: 'Molla de pa' })).getByRole('link', { name: 'Consola Termodinàmica' }));
-  }
+test('al tauler de /consola, cada pàgina té exactament una targeta, i cada xifra la seua', async () => {
+  render(<Aplicacio />);
+  await screen.findByText(/registres? de consum/);
+  const recompte = cap('/consola', tauler()).reduce((acc, h) => ({ ...acc, [h]: (acc[h] || 0) + 1 }), {});
+  expect(recompte).toEqual(Object.fromEntries(paginesConsola().map((p) => [p.ruta, 1])));
+  // Fora del tauler, les úniques portes són les de les xifres, una per xifra, cap a la seua pàgina pròpia.
+  const xifres = cap('/consola', screen.getByRole('region', { name: 'El Mas en xifres' }));
+  expect(xifres).toEqual(SLUGS_XIFRES.map(rutaXifra));
+  expect(cap('/consola').length).toBe(paginesConsola().length + xifres.length);
+  expect(errors).not.toHaveBeenCalled();
+});
+
+test.each(paginesConsola().map((p) => [p.id, p]))('a /consola/%s, l’única porta cap a la Consola és la molla; la resta, pàgines pròpies', async (_id, p) => {
+  window.history.replaceState(null, '', p.ruta);
+  render(<Aplicacio />);
+  await screen.findAllByText(/^Instantània/);
+  expect(h1Rapid()).toBe(p.title);
+  const portes = cap('/consola');
+  expect(portes.filter((h) => !esPaginaPropia(h)), p.id).toEqual(['/consola']);
+  expect(mollaCapALaConsola()).not.toBeNull();
   expect(errors).not.toHaveBeenCalled();
 });
 
@@ -138,16 +194,18 @@ test('a /consola, cada pàgina té exactament una porta; a cada pàgina, l’ún
    mètriques de les targetes (h5) hi entren, sagnades davall del seu títol. */
 test('l’Índex de secció de la Consola recull les mètriques en h5', async () => {
   render(<Aplicacio />);
-  await screen.findByText(/registres de consum/);
+  await screen.findByText(/registres? de consum/);
   fireEvent.click(screen.getByRole('button', { name: 'Índex de secció' }));
   const index = screen.getByRole('dialog', { name: 'Taula de continguts' });
   const entrades = [...index.querySelectorAll('li')].map((li) => [li.className, li.textContent]);
   const titol = entrades.findIndex(([, text]) => text === 'El pols del cervell');
   expect(entrades[titol][0]).toBe('toc-item toc-level-3');
+  // Correcció 261004 (verificador de la segona passada, punt 3) · cada mètrica concorda.
   expect(entrades.slice(titol + 2, titol + 5)).toEqual([
-    ['toc-item toc-level-5', '1 registres de consum'],
+    ['toc-item toc-level-5', '1 registre de consum'],
     ['toc-item toc-level-5', '0 rebuts'],
-    ['toc-item toc-level-5', '1 skills (0 orfes)']
+    // Ordre del Mestre, 261004 · «orfes» és paraula del Mapa: el pols diu «fora del manifest».
+    ['toc-item toc-level-5', '1 skill (0 fora del manifest)']
   ]);
   // Totes les mètriques del tauler: 3 del pols i 17 de les huit targetes del Mapa.
   expect(entrades.filter(([classe]) => classe === 'toc-item toc-level-5')).toHaveLength(20);
@@ -160,7 +218,7 @@ test('l’Índex de secció de la Consola recull les mètriques en h5', async ()
 
 test('arrere i avant del navegador tornen a la pàgina i al tauler', async () => {
   render(<Aplicacio />);
-  await screen.findByText(/registres de consum/);
+  await screen.findByText(/registres? de consum/);
   fireEvent.click(within(tauler()).getByRole('link', { name: 'Calendari de processos' }));
   expect(h1()).toBe('Calendari de processos');
 
@@ -177,7 +235,7 @@ test('arrere i avant del navegador tornen a la pàgina i al tauler', async () =>
 test('canviar de pàgina torna al cim del contenidor de scroll', async () => {
   const contenidor = contenidorDesplacat(0);
   render(<Aplicacio />, { container: contenidor });
-  await screen.findByText(/registres de consum/);
+  await screen.findByText(/registres? de consum/);
 
   contenidor.scrollTop = 900;                       // el Mestre ha baixat fins al peu del tauler
   fireEvent.click(within(tauler()).getByRole('link', { name: 'Actors del Mas' }));
@@ -190,21 +248,24 @@ test('canviar de pàgina torna al cim del contenidor de scroll', async () => {
   contenidor.remove();
 });
 
-test('/consola/pols: targetes i desplegables no toquen la ruta', async () => {
+/* Ordre del Mestre, 261004 (xat: cap xifra solta) · Cada targeta del pols
+   porta a la pàgina pròpia del seu panell, i la molla torna al pols.
+   Derogat per l'ordre del Mestre del 261004 (xat: cap xifra solta): «targetes
+   i desplegables no toquen la ruta» (el detall obria un <details>). */
+test('/consola/pols: cada targeta porta a la pàgina del seu panell, i la molla torna al pols', async () => {
   window.history.replaceState(null, '', '/consola/pols');
   render(<Aplicacio />);
-  await screen.findByText('1 registres');
+  await screen.findByText('1 registre');
 
-  for (const nom of ['Consums', 'Crèdits', 'Rebuts', 'Skills']) {
-    const boto = screen.getByRole('button', { name: nom });
-    fireEvent.click(boto);
-    const detall = document.getElementById(boto.getAttribute('aria-controls'));
-    expect(detall.open).toBe(true);
-    expect(boto.getAttribute('aria-expanded')).toBe('true');
+  for (const [id, titol] of [['consums', 'Consums'], ['credits', 'Crèdits'], ['rebuts', 'Rebuts'], ['skills', 'Skills']]) {
+    fireEvent.click(document.querySelector(`a.sp-card-link-overlay[href="/consola/pols/${id}"]`));
+    expect(window.location.pathname).toBe(`/consola/pols/${id}`);
+    expect(h1Rapid()).toBe(titol);
+    fireEvent.click(document.querySelector('nav.sdp-molla a[href="/consola/pols"]'));
+    expect(window.location.pathname).toBe('/consola/pols');
+    expect(h1Rapid()).toBe('El pols del cervell');
   }
-  for (const resum of document.querySelectorAll('summary')) fireEvent.click(resum);
-  expect(window.location.pathname).toBe('/consola/pols');
-  expect(window.location.hash).toBe('');
+  expect(document.querySelector('details')).toBeNull();
   expect(errors).not.toHaveBeenCalled();
 });
 
@@ -212,7 +273,7 @@ test('una subruta desconeguda torna al tauler sense deixar-la a l’historial', 
   window.history.replaceState(null, '', '/consola/pestanyes');
   const abans = window.history.length;
   render(<Aplicacio />);
-  await screen.findByText(/registres de consum/);
+  await screen.findByText(/registres? de consum/);
   expect(window.location.pathname).toBe('/consola');
   expect(window.history.length).toBe(abans);
 });

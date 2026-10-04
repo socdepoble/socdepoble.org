@@ -19,7 +19,11 @@
  *     porten aria-disabled="true" i el clic diu quin botó és:
  *     onClickInoperatiu('comentar' | 'compartir' | 'connectar')) ·
  *   menuTraduir ({ obert, opcions, actual, onTria, onTanca } | null: el
- *     Traductor Sobirà, ordre del Mestre, 260930; el posa useAccions)
+ *     Traductor Sobirà, ordre del Mestre, 260930; el posa useAccions) ·
+ *   indexControla (l'id del diàleg de l'Índex obert: ordre del Mestre,
+ *     261004, integració final; el posa PageFrame mentre l'Índex propi és
+ *     obert. Sense, el botó no porta aria-controls i el marcatge és el de
+ *     sempre)
  *
  * Traductor Sobirà · Amb menuTraduir, Traduir diu que obri un menú
  * (aria-haspopup, aria-expanded) i, obert, el menú de llengües es pinta just
@@ -28,7 +32,7 @@
  * i cap píxel canvia fins que es prem Traduir (Llei del Píxel). El clic
  * continua anant a onTranslate: qui munta la barra decidix què fa.
  */
-import { useRef } from 'react';
+import { useLayoutEffect, useRef } from 'react';
 import {
   BackIcon, ForwardIcon, IndexIcon, TranslateIcon, CommentIcon, ShareIcon,
 } from '../../PedraSeca/atoms/icones.jsx';
@@ -53,8 +57,22 @@ export function BarraBlava({
   comentarXat = null,
   accionsInoperatives = false, onClickInoperatiu = null,
   menuTraduir = null,
+  indexControla,
 }) {
   const botoTraduir = useRef(null);
+  /* Ordre del Mestre, 261004 (integració final, auditoria d'amfitrió) · El
+     botó «Índex» diu quin diàleg obri (aria-controls), i el Lector reconeix
+     l'Índex propi per l'id i no per la classe. L'atom IconButton
+     (PedraSeca/atoms/controls.jsx, fora d'este front) encara no admet
+     aria-controls: l'atribut es posa sobre el seu botó, abans de pintar.
+     Quan l'atom l'admeta, passarà a ser una prop. */
+  const botoIndex = useRef(null);
+  useLayoutEffect(() => {
+    const boto = botoIndex.current;
+    if (!boto) return;
+    if (indexControla) boto.setAttribute('aria-controls', indexControla);
+    else boto.removeAttribute('aria-controls');
+  }, [indexControla]);
   const inoperativa = accionsInoperatives ? 'accio-inoperativa' : '';
   /* T7 (P7) · Inoperatius però enfocables i llegibles: aria-disabled, no
      `disabled` (patró de VistaEnConstruccio). El clic diu QUIN botó és, i qui
@@ -75,7 +93,7 @@ export function BarraBlava({
         )}
         {/* Ordre del Mestre (260924): el Llibre (índex) entre les dues fletxes.
             L'ordre de tabulació seguix el visual. */}
-        <IconButton label="Índex de secció" onClick={onIndex} presentation>
+        <IconButton label="Índex de secció" onClick={onIndex} presentation refBoto={botoIndex}>
           <IndexIcon className="icon" />
         </IconButton>
         {onForward && (

@@ -266,9 +266,21 @@ describe('la porta del catàleg (tooling/gates/tractor-cataleg.mjs) per a les pe
   const importats = new Set([...detalls.matchAll(/import\s*\{([^}]+)\}\s*from\s*'[^']*(?:components\/(?:ui|PedraSeca)\/[^']+|UniversalElements)'/g)]
     .flatMap((m) => m[1].split(',').map((s) => s.trim()).filter(Boolean)));
 
+  /* Ordre del Mestre, 261004 (prompt 261004_0515, «no inventar targetes») · GraellaArticles i
+     LlistaArticles passen a 'obsolet' per a codi nou, amb el substitut al registre. Salut i el
+     Bar encara les fan servir: continuen exportades i el seu espècimen, viu. La resta, 'viu'. */
+  const OBSOLETES = new Map([
+    ['GraellaArticles', 'UniversalCard + GraellaTargetes'],
+    ['LlistaArticles', 'UniversalCard + GraellaTargetes']
+  ]);
   test.each(PECES)('%s: C1 registrat, C2 viu en un espècimen, C3 l’export existix', (nom, fitxer, especimen) => {
     expect([...llig(fitxer).matchAll(/^export\s+(?:function|const)\s+([A-Z]\w*)/gm)].map((m) => m[1])).toContain(nom);
-    expect(entrades.find((e) => e.nom === nom)).toEqual({ nom, fitxer: fitxer.replace('src/components/', ''), estat: 'viu', fora: false });
+    const estat = OBSOLETES.has(nom) ? 'obsolet' : 'viu';
+    expect(entrades.find((e) => e.nom === nom)).toEqual({ nom, fitxer: fitxer.replace('src/components/', ''), estat, fora: false });
+    if (OBSOLETES.has(nom)) {
+      expect(registre).toContain(`{ nom: '${nom}', fitxer: '${fitxer.replace('src/components/', '')}', pagina: 'fonaments', estat: 'obsolet', substitut: '${OBSOLETES.get(nom)}' }`);
+      expect(llig(fitxer), nom).toMatch(new RegExp(`@deprecated[\\s\\S]*?\\*/\\s*export function ${nom}\\b`));
+    }
     expect(importats.has(nom)).toBe(true);
     expect(llig(`${CAT}/detalls/${especimen}.jsx`), especimen).toMatch(new RegExp(`\\b${nom}\\b`));
   });

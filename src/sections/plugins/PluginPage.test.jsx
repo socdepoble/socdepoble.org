@@ -149,16 +149,52 @@ describe('el botó Obrir', () => {
     expect(ubicacio()).toBe('/app/salut');
   });
 
+  /* Onada 2 de la Gestoria (261004) · La Gestoria ja té destí (la seua app,
+     només en desenvolupament): l'exemple de «sense destí» és ara la Bàscula,
+     que no té cap codi. */
   test('sense destí (en obres): botó inert, avís en text i toast, i no navega', () => {
-    const { container } = munta('/plugin/gestoria');
-    expect(screen.queryByRole('link', { name: /Obrir la Gestoria/ })).toBeNull();
-    const boto = screen.getByRole('button', { name: 'Obrir la Gestoria (en obres)' });
+    const { container } = munta('/plugin/bascula');
+    expect(screen.queryByRole('link', { name: /Obrir la Bàscula/ })).toBeNull();
+    const boto = screen.getByRole('button', { name: 'Obrir la Bàscula (en obres)' });
     expect(boto.getAttribute('aria-disabled')).toBe('true');
     expect(boto.getAttribute('type')).toBe('button');
     expect(within(accio(container).parentElement).getByText('Esta eina encara està en obres.')).toBeTruthy();
     fireEvent.click(boto);
+    expect(ubicacio()).toBe('/plugin/bascula');
+    expect(screen.getByText('“Obrir la Bàscula” encara està en obres.')).toBeTruthy();
+  });
+
+  /* Ordre del Mestre, 261004 («contaminació crítica de rutes/estats entre
+     Gestoria i Wiki») · La Gestoria ja no viu dins de la Wiki: en dev,
+     «Obrir» és un enllaç a la seua app, /app/gestoria (cap consulta, cap
+     dada); mai la Wiki ni /gestoria. */
+  test('la Gestoria en desenvolupament obri la seua app pel router, i cap lloc de la Wiki', () => {
+    const { container } = munta('/plugin/gestoria', { entorn: ENTORN_OBERT });
+    const enllac = screen.getByRole('link', { name: 'Obrir la Gestoria' });
+    expect(enllac.getAttribute('href')).toBe('/app/gestoria');
+    expect(document.querySelector('[href="/gestoria"]')).toBeNull();
+    expect(container.querySelector('a[href*="wikidepoble"], a[href*="gestoria_"]')).toBeNull();
+    expect(screen.queryByRole('status')).toBeNull();
+    fireEvent.click(enllac);
+    expect(ubicacio()).toBe('/app/gestoria');
+  });
+
+  /* Fora de desenvolupament, l'app no s'obri (entorn 'desenvolupament'): la
+     pàgina es manté, diu honestament que està en obres i no navega a res. */
+  test('la Gestoria en producció: cap enllaç, botó inert, diu que està en obres i no navega', () => {
+    const { container } = munta('/plugin/gestoria', { entorn: ENTORN_PRODUCCIO });
+    expect(screen.queryByRole('link', { name: /Obrir la Gestoria/ })).toBeNull();
+    expect(container.querySelector('a[href*="wikidepoble"], a[href*="gestoria_"], a[href*="/app/gestoria"]')).toBeNull();
+    const boto = screen.getByRole('button', { name: 'Obrir la Gestoria (no disponible ací)' });
+    expect(boto.getAttribute('aria-disabled')).toBe('true');
+    const motiu = 'Encara està en obres: només es pot provar en desenvolupament.';
+    expect(screen.getByRole('status').textContent).toBe(motiu);
+    fireEvent.click(boto);
     expect(ubicacio()).toBe('/plugin/gestoria');
-    expect(screen.getByText('“Obrir la Gestoria” encara està en obres.')).toBeTruthy();
+    expect(screen.getAllByText(motiu)).toHaveLength(2);
+    // La pàgina de la Gestoria continua sent la seua: portada, títol i entradilla.
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Gestoria');
+    expect(container.querySelector('.hero-image img').getAttribute('src')).toBe('/assets/ui/plugins/gestoria_vinyeta.jpg');
   });
 
   test.each([['mapa', 'Obrir el Mapa'], ['vehicle', 'Obrir Vehicle Compartit'], ['animalets', 'Obrir Animalets'], ['bascula', 'Obrir la Bàscula']])(

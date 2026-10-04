@@ -6,7 +6,11 @@
  * Cada carpeta és un enllaç de veres. En estret, una categoria porta primer a
  * les seues fonts (/noticies/<cat>/fonts); «Hui» i «Per a després», directes
  * a les notícies. Cap classe pròpia: MarcColumna, AppGridColumn i
- * TargetesColleccions de Pedra Seca.
+ * NavTargetes (comunes.jsx).
+ * Ordre del Mestre, 261004 (integració final, arreglo 6) · Cada carpeta és una
+ * UniversalCard: la boina de l'app (Sóc de Poble), el nom, el comptador de
+ * subtítol i, d'entradeta, què és la carpeta (Hui i Per a després) o quantes
+ * fonts hi seguix la persona (una categoria).
  *
  * Quan la columna és un panell superposat (en mitjana, i en estret si s'ha
  * obert damunt d'una altra columna), les eines porten «Torna», que el tanca
@@ -16,10 +20,12 @@
 import AppGridColumn from '../../../components/layout/AppGridColumn.jsx';
 import { Boto, MarcColumna } from '../../../components/PedraSeca/index.js';
 import { useClosaAplicacio } from '../../plataforma/index.js';
-import { CARPETES_FIXES, DESPRES, HUI, comptadorsCarpetes } from '../nucli/index.js';
+import { CARPETES_FIXES, DESPRES, HUI, comptadorsCarpetes, fontsDeCarpeta } from '../nucli/index.js';
 import { AvisLector, NavTargetes } from './comunes.jsx';
 import { useVistaLector } from './context.js';
-import { NOM_CARPETA_FIXA, NOTICIES, TRAM_FONTS, useSeleccio } from './navegacio.js';
+import {
+  ENTRADETA_CARPETA_FIXA, NOM_CARPETA_FIXA, NOTICIES, TRAM_FONTS, autoriaDeLApp, textFontsSeguides, useSeleccio
+} from './navegacio.js';
 
 const textNoLlegides = (n) => (n > 0 ? 'sense llegir' : 'tot llegit');
 
@@ -29,11 +35,17 @@ export function ColumnaCarpetes({ params }) {
   const { carpeta } = useSeleccio(params);
   const comptes = comptadorsCarpetes({ ...noticies, estat: lector.estat, ara });
   const n = (id) => comptes.get(id) || 0;
+  const autoria = autoriaDeLApp();
+  const fontsSeguides = (id) => (fontsDeCarpeta({ ...noticies, estat: lector.estat, carpeta: id }) || []).length;
   const carpetes = [
-    { id: HUI, nom: NOM_CARPETA_FIXA[HUI], comptador: n(HUI), secundari: textNoLlegides(n(HUI)) },
-    { id: DESPRES, nom: NOM_CARPETA_FIXA[DESPRES], comptador: n(DESPRES), secundari: n(DESPRES) === 1 ? 'desada' : 'desades' },
+    { id: HUI, nom: NOM_CARPETA_FIXA[HUI], comptador: n(HUI), secundari: textNoLlegides(n(HUI)), entradeta: ENTRADETA_CARPETA_FIXA[HUI], autoria },
+    {
+      id: DESPRES, nom: NOM_CARPETA_FIXA[DESPRES], comptador: n(DESPRES), secundari: n(DESPRES) === 1 ? 'desada' : 'desades',
+      entradeta: ENTRADETA_CARPETA_FIXA[DESPRES], autoria
+    },
     ...noticies.categories.map((categoria) => ({
-      id: categoria.id, nom: categoria.nom, comptador: n(categoria.id), secundari: textNoLlegides(n(categoria.id))
+      id: categoria.id, nom: categoria.nom, comptador: n(categoria.id), secundari: textNoLlegides(n(categoria.id)),
+      entradeta: textFontsSeguides(fontsSeguides(categoria.id)), autoria
     }))
   ];
   const camiDe = (element) => (mida === 'estret' && !CARPETES_FIXES.includes(element.id)

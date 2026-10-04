@@ -10,11 +10,15 @@
  * aresta cap a un node absent vol dir que compilador i interfície ja no
  * parlen el mateix contracte, i això no es pinta com si res.
  */
-import { ESQUEMA_MAPA, TIPUS_NODE, TIPUS_ARESTA, CONFIANCES, SEVERITATS, ESTATS_TASCA } from './contracteMapa.js';
+import { ESQUEMA_MAPA, TIPUS_NODE, TIPUS_ARESTA, CONFIANCES, SEVERITATS, ESTATS_TASCA, UNITATS_METRICA } from './contracteMapa.js';
+import { plural } from '../concordanca.js';
 
 export const FONT_MAPA = '/__iaia/mapa.json';
 
 export async function carregaMapa(signal) {
+  /* Higiene d'amfitrió (ordre del Mestre, 261004) · El middleware és només de
+     DEV (apply: 'serve'): fora de DEV és absència, sense cap petició a /__iaia/*. */
+  if (import.meta.env.DEV !== true) return null;
   const r = await fetch(FONT_MAPA, { signal, cache: 'no-store' });
   if (r.status === 404) return null;                 // producció, o middleware sense instal·lar
   if (!r.ok) throw new Error(`Mapa ${r.status} ${r.statusText}`);
@@ -106,11 +110,17 @@ export function normalitzaMapa(brut) {
     const a = objecte(v, `avisos[${i}]`);
     const node = text(a.node, `avisos[${i}].node`);
     if (!ids.has(node)) falla(`avisos[${i}] apunta a un node absent`);
+    /* Ordre del Mestre, 261004 · `evidencies` (opcional): totes les
+       evidències d'un avís repetit (construeixMapa.js). Sense, l'avís és el
+       de sempre, amb les quatre claus. */
+    const evidencies = a.evidencies === undefined || a.evidencies === null ? null
+      : llista(a.evidencies, `avisos[${i}].evidencies`).map((e, j) => text(e, `avisos[${i}].evidencies[${j}]`));
     return {
       node,
       codi: text(a.codi, `avisos[${i}].codi`),
       severitat: tancat(a.severitat, SEVERITATS, `avisos[${i}].severitat`),
-      evidencia: text(a.evidencia, `avisos[${i}].evidencia`, true)
+      evidencia: text(a.evidencia, `avisos[${i}].evidencia`, true),
+      ...(evidencies?.length ? { evidencies } : {})
     };
   });
 
@@ -164,11 +174,21 @@ export function resumMapa(mapa) {
   };
 }
 
+/** Totes les evidències d'un avís, en ordre: la llista sencera si n'hi ha més d'una, la sola, o cap. */
+export function evidenciesDe(avis) {
+  if (Array.isArray(avis?.evidencies) && avis.evidencies.length) return avis.evidencies;
+  return typeof avis?.evidencia === 'string' && avis.evidencia ? [avis.evidencia] : [];
+}
+
 /** «n / d» per a fraccions, «valor unitat» per a la resta i N/A sense adorn. */
 export function valorMetrica(m) {
   if (m.valor === 'N/A') return 'N/A';
   if (m.unitat === 'fraccio') return `${m.numerador} / ${m.denominador}`;
-  return `${m.valor} ${m.unitat}`;
+  /* Correcció 261004 (verificador de la tercera passada, punt 1) · la unitat
+     concorda amb el valor: «1 minut», mai «1 minuts» (UNITATS_METRICA). Una
+     unitat que el contracte no coneix es pinta tal com arriba. */
+  const singular = Object.hasOwn(UNITATS_METRICA, m.unitat) ? UNITATS_METRICA[m.unitat] : null;
+  return singular ? plural(m.valor, singular, m.unitat) : `${m.valor} ${m.unitat}`;
 }
 
 export function textCadencia(c) {

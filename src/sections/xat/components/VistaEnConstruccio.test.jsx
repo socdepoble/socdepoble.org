@@ -1,9 +1,12 @@
-/* Onada 3B (captures 19.41.49, 19.41.58 i 19.42.17) · Les vistes que encara
-   no fan res: la fila de títol calcada de cada captura, els controls inerts
-   (aria-disabled i «En construcció» en prémer-los) i la targeta honesta. */
+/* Onada 3B (captures 19.41.49 i 19.42.17) · Les vistes que encara no fan
+   res: la fila de títol calcada de cada captura, els controls inerts
+   (aria-disabled i «En construcció» en prémer-los) i la targeta honesta.
+   Contingut multimèdia (captura 19.41.58) ja no n'és una: derogat per
+   l'ordre del Mestre del 261004 (prompt 261004_0515). Les seues proves
+   viuen a VistaMultimedia.test.jsx. */
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, expect, test, vi } from 'vitest';
-import { Phone } from 'lucide-react';
+import { ListChecks, Phone, Search } from 'lucide-react';
 import VistaEnConstruccio, { VISTES_EN_CONSTRUCCIO, textosDeVista } from './VistaEnConstruccio.jsx';
 
 const t = (_, alternativa) => alternativa;
@@ -14,43 +17,35 @@ const AVIS_GENERIC = 'Encara no està disponible: es construirà en una fase seg
 
 /* D17 (ordre del Mestre, 260930): el text de Telefonades té una sola font,
    VISTES_EN_CONSTRUCCIO.telefonades.avis, amb la clau nav.telefonades.avis.
-   Multimèdia i Destacats conserven l'avís genèric. */
-test('D17 · textosDeVista: Telefonades porta el seu avís propi, i les altres cap', () => {
+   Destacats conserva l'avís genèric. */
+test('D17 · textosDeVista: Telefonades porta el seu avís propi, i Destacats cap', () => {
   expect(VISTES_EN_CONSTRUCCIO.telefonades.avis).toEqual(['nav.telefonades.avis', AVIS_D17]);
   expect(textosDeVista('telefonades', t).avis).toBe(AVIS_D17);
-  expect(textosDeVista('multimedia', t).avis).toBe('');
   expect(textosDeVista('destacats', t).avis).toBe('');
   const tr = vi.fn((clau) => `«${clau}»`);
   expect(textosDeVista('telefonades', tr).avis).toBe('«nav.telefonades.avis»');
 });
 
-test('D17 · la targeta de Telefonades pinta el seu avís i no el genèric; Multimèdia i Destacats, el genèric', () => {
+test('D17 · la targeta de Telefonades pinta el seu avís i no el genèric; Destacats, el genèric', () => {
   const { unmount } = render(<VistaEnConstruccio titol="Telefonades" {...textosDeVista('telefonades', t)} t={t} />);
   const targeta = screen.getByRole('region', { name: 'En construcció' });
   expect(targeta.querySelector('.sdp-xat-construccio__avis').textContent).toBe(AVIS_D17);
   expect(targeta.textContent).not.toContain(AVIS_GENERIC);
   unmount();
-  for (const [id, titol] of [['multimedia', 'Contingut multimèdia'], ['destacats', 'Destacats']]) {
-    const vista = render(<VistaEnConstruccio titol={titol} {...textosDeVista(id, t)} t={t} />);
-    expect(screen.getByRole('region', { name: 'En construcció' }).querySelector('.sdp-xat-construccio__avis').textContent).toBe(AVIS_GENERIC);
-    vista.unmount();
-  }
+  render(<VistaEnConstruccio titol="Destacats" {...textosDeVista('destacats', t)} t={t} />);
+  expect(screen.getByRole('region', { name: 'En construcció' }).querySelector('.sdp-xat-construccio__avis').textContent).toBe(AVIS_GENERIC);
 });
 
-test('textosDeVista: les tres vistes en construcció, i res per a les altres', () => {
-  expect(Object.keys(VISTES_EN_CONSTRUCCIO)).toEqual(['telefonades', 'multimedia', 'destacats']);
+/* Derogat per l'ordre del Mestre del 261004 (prompt 261004_0515): abans eren
+   tres vistes, amb Contingut multimèdia. Ara són dos, i multimedia no en té
+   cap text (els seus viuen a TEXTOS_MULTIMEDIA, VistaMultimedia.jsx). */
+test('textosDeVista: les dos vistes en construcció, i res per a les altres', () => {
+  expect(Object.keys(VISTES_EN_CONSTRUCCIO)).toEqual(['telefonades', 'destacats']);
   expect(textosDeVista('comunitats', t)).toBeNull();
+  expect(textosDeVista('multimedia', t)).toBeNull();
   expect(textosDeVista('telefonades', t)).toEqual(expect.objectContaining({
     accio: { tipus: 'nou', etiqueta: 'Nova telefonada' }, cerca: "Nom, número o @nom d'usuari", segments: null, subtitol: ''
   }));
-  expect(textosDeVista('multimedia', t)).toEqual(expect.objectContaining({
-    accio: null,
-    /* Captura 19.41.58: cap cercador en píndola; la cerca és una icona. */
-    cerca: '',
-    subtitol: 'Contingut multimèdia de totes les converses',
-    segments: { etiqueta: 'Tipus de contingut', opcions: ['Fitxers', 'Enllaços', 'Documents'] }
-  }));
-  expect(textosDeVista('multimedia', t).icones.map((i) => i.etiqueta)).toEqual(['Cerca', 'Ordena', 'Selecciona']);
   expect(textosDeVista('telefonades', t).icones).toEqual([]);
   expect(textosDeVista('destacats', t).icones).toEqual([]);
   expect(textosDeVista('destacats', t).accio).toEqual({ tipus: 'pindola', etiqueta: 'Editar' });
@@ -88,32 +83,36 @@ test('Telefonades: títol i «+» redó inert, cercador de només lectura i la t
   expect(document.querySelector('.sdp-xat-segments')).toBeNull();
 });
 
-test('Contingut multimèdia: la lupa, ordenar i seleccionar a la fila de títol, subtítol i control segmentat, tot inert', () => {
+/* Derogat per l'ordre del Mestre del 261004 (prompt 261004_0515): esta prova
+   fixava Contingut multimèdia inerta. La vista ja és VistaMultimedia; ací
+   queda el contracte de la peça: una vista en construcció amb icones,
+   subtítol i segments els pinta tots inerts, amb el primer segment premut. */
+test('amb icones, subtítol i segments (contracte de la peça): tot inert, el primer segment premut', () => {
   const onEnConstruccio = vi.fn();
-  render(<VistaEnConstruccio titol="Contingut multimèdia" {...textosDeVista('multimedia', t)} onEnConstruccio={onEnConstruccio} t={t} />);
-  expect(screen.getByText('Contingut multimèdia de totes les converses').tagName).toBe('P');
-  const grup = screen.getByRole('group', { name: 'Tipus de contingut' });
-  const opcions = within(grup).getAllByRole('button');
-  expect(opcions.map((b) => [b.textContent, b.getAttribute('aria-pressed'), b.getAttribute('aria-disabled')]))
-    .toEqual([['Fitxers', 'true', 'true'], ['Enllaços', 'false', 'true'], ['Documents', 'false', 'true']]);
+  render(
+    <VistaEnConstruccio
+      titol="Prova"
+      icones={[{ etiqueta: 'Cerca', Icona: Search }, { etiqueta: 'Selecciona', Icona: ListChecks }]}
+      subtitol="Subtítol de prova"
+      segments={{ etiqueta: 'Tipus', opcions: ['A', 'B'] }}
+      onEnConstruccio={onEnConstruccio}
+      t={t}
+    />
+  );
+  expect(screen.getByText('Subtítol de prova').tagName).toBe('P');
+  const opcions = within(screen.getByRole('group', { name: 'Tipus' })).getAllByRole('button');
+  expect(opcions.map((b) => [b.textContent, b.getAttribute('aria-pressed'), b.getAttribute('aria-disabled'), b.classList.contains('sdp-xat-inert')]))
+    .toEqual([['A', 'true', 'true', true], ['B', 'false', 'true', true]]);
   opcions.forEach((b) => fireEvent.click(b));
-  expect(onEnConstruccio).toHaveBeenCalledTimes(3);
-
-  /* Captura 19.41.58: a la dreta de la fila de títol, tres icones (la lupa,
-     ordenar i seleccionar), de 24 en cel·la de 44, enfocables i inertes. */
+  expect(onEnConstruccio).toHaveBeenCalledTimes(2);
   const icones = within(document.querySelector('.app-grid-col-header')).getAllByRole('button');
   expect(icones.map((b) => [b.getAttribute('aria-label'), b.getAttribute('aria-disabled'), b.disabled])).toEqual([
-    ['Cerca', 'true', false], ['Ordena', 'true', false], ['Selecciona', 'true', false]
-  ]);
-  expect(icones.map((b) => b.querySelector('svg').getAttribute('class'))).toEqual([
-    'lucide lucide-search', 'lucide lucide-list-filter', 'lucide lucide-list-checks'
+    ['Cerca', 'true', false], ['Selecciona', 'true', false]
   ]);
   expect(icones.every((b) => b.classList.contains('sdp-xat-icona') && b.querySelector('svg').getAttribute('width') === '24')).toBe(true);
   icones.forEach((b) => fireEvent.click(b));
-  expect(onEnConstruccio).toHaveBeenCalledTimes(6);
-  /* I cap cercador en píndola. */
+  expect(onEnConstruccio).toHaveBeenCalledTimes(4);
   expect(screen.queryByRole('searchbox')).toBeNull();
-  expect(document.querySelector('.sdp-xat-cerca')).toBeNull();
 });
 
 test('el títol «En construcció» és un h3 amb la classe que li neutralitza el coixí editorial', () => {

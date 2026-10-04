@@ -300,6 +300,18 @@ CATALOG_ITEMS.push(
     'apaisada 16:9 lector noticies rss targeta revista miniatura excepcio')
 );
 
+/* Ordre del Mestre, 261004 (prompt 261004_0515, «no inventar targetes»; D-A del xat de les
+   06:38) · front «nucli»: la graella de les targetes de les llistes de les apps i la porta
+   permesa de la Pàgina Universal per a les apps. */
+CATALOG_ITEMS.push(
+  especimen('fonaments', 'graella-targetes', 'Graella de targetes', 'PedraSeca/organismes/GraellaTargetes.jsx', ['organisme', 'targeta', 'graella'],
+    'No és cap targeta: posa les UniversalCard d’una llista en la graella de sempre o en columna i, amb categories, les agrupa en seccions. Amb ella, Notícies i la Nevera deixen les targetes pròpies.',
+    'graella llista targetes seccions categories noticies nevera apps universalcard'),
+  especimen('estructura', 'pagina-app', 'Pàgina de les apps', 'PedraSeca/organismes/PaginaApp.jsx', ['plantilla', 'pagina', 'apps'],
+    'El detall d’un element d’una app amb l’anatomia de la Pàgina Universal: doble barra, portada, bloc del títol i article. Munta PageFrame sense traductor ni telemetria, i amb les imatges privades.',
+    'pagina app detall noticies nevera lector traduir telemetria privada pageframe')
+);
+
 /* T52 (ordre del Mestre, 260928: «que quede clar quin és l'element universal
    pare que controla els altres») · L'ARBRE UNIVERSAL.
    `pare` és la peça universal que governa el node i `relacio` diu com (esmena

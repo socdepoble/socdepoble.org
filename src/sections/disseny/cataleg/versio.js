@@ -15,7 +15,20 @@
  * src/sections/disseny/cataleg/detalls`, sense comptar les proves ni este
  * fitxer). Una versió que no és la darrera és una data falsa a la pastilla.
  *
- * Darrera posada al dia: EspecimenUniversalCard.jsx, 04-10-2026 00:43:56
+ * Darrera posada al dia: EspecimenPage.jsx, 04-10-2026 15:38:35 (+02:00,
+ * hora d'estiu), correcció del verificador del tancament de la nit 261004:
+ * la segona mostra de l'avatar s'obri a pantalla completa (PantallaCompleta)
+ * per a vore'l a la mida de veres, i el text de les mostres diu que dins de
+ * la columna del catàleg s'encongix i quina és la mida de veres.
+ * L'anterior, EspecimenPage.jsx, 04-10-2026 15:20:48 (+02:00,
+ * hora d'estiu), tancament de la nit 261004 (Pedra Seca §9): el bloc del
+ * títol de PageFrame amb tres mostres de veres (l'avatar redó d'una persona
+ * o la IA, el mateix amb onCanvia i el logotip de l'entitat que signa) i la
+ * prop avatarAutor al contracte. Arreplega també els espècimens tocats entre
+ * les 00:43 i les 15:20 sense posar-la al dia (EspecimenCamp.jsx,
+ * EspecimenIdentitat.jsx, EspecimenTipografia.jsx i el mateix
+ * EspecimenPage.jsx a les 11:50).
+ * La d'abans, EspecimenUniversalCard.jsx, 04-10-2026 00:43:56
  * (+02:00, hora d'estiu), Onada 4 · P6 (directriu 261003_2325 del Mestre):
  * les mostres de doble acció porten el peu blau i cap etiqueta, l'autor va al
  * xat corporatiu resolt (xatCorporatiu.js), el preu va al quadrat fosc (amb
@@ -27,4 +40,4 @@
  * Quan el manifest porte `creat` i `modificat` per espècimen, manaran eixos
  * camps i esta constant només farà de versió del conjunt.
  */
-export const VERSIO_CATALEG = '2026-10-04T00:43:56+02:00';
+export const VERSIO_CATALEG = '2026-10-04T15:38:35+02:00';

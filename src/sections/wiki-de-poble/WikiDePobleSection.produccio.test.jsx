@@ -1,8 +1,11 @@
 /* 261002 · La Wiki en mode producció: import.meta.env.DEV és fals ABANS
    d'importar-la (vi.hoisted), com quan Vite el reemplaça al build. Cap
-   categoria ni ítem de les eines locals, i un ?item=gestoria_panell no pinta
-   cap eina. Que el build no porte el codi de la Gestoria ho comprova
-   gestoria/privacitat.test.js compilant la Wiki amb Vite. */
+   categoria ni ítem de les eines locals, i un ?item= d'una eina no pinta
+   res. Que el build no porte el codi dels Tractors (ni, ja en cap mode, el de
+   la Gestoria) ho comprova gestoria/privacitat.test.js compilant la Wiki amb
+   Vite. Ordre del Mestre, 261004 («contaminació crítica de rutes/estats entre
+   Gestoria i Wiki»): la Gestoria ja no és de la Wiki; els seus ids vells són
+   ítems desconeguts, també en producció. */
 import React from 'react';
 import { afterAll, afterEach, expect, test, vi } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
@@ -21,14 +24,16 @@ vi.mock('../../components/universal/workspace/UniversalWorkspace.jsx', () => ({
 }));
 vi.mock('../../data/wikiManifest.js', () => ({ wikiManifest: { categories: [], items: [] } }));
 vi.mock('../../app/contexts/RouterContext', () => ({
-  useNavigate: () => vi.fn(), useLocation: () => ({ pathname: '/wikidepoble', search: fixture.search }), Link: 'a'
+  useNavigate: () => vi.fn(), useLocation: () => ({ pathname: '/wikidepoble', search: fixture.search }), Link: 'a',
+  Navigate: () => { throw new Error('La Wiki no redirigix cap URL d’una eina.'); }
 }));
 vi.mock('../../components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
 vi.mock('../../config/assetResolver', async (importOriginal) => ({ ...(await importOriginal()), resolveAsset: (uri) => uri }));
 vi.mock('../consola/ConsolaSection.jsx', () => ({ ConsolaIncrustada: () => null }));
 vi.mock('../tractors/PanellTractors.jsx', () => ({ default: () => <p>Doble dels Tractors</p> }));
 vi.mock('../tractors/PanellSentinelles.jsx', () => ({ default: () => <p>Doble dels Sentinelles</p> }));
-vi.mock('../gestoria/ContenidorGestoria.jsx', () => ({ default: () => <p>Doble de la Gestoria</p> }));
+/* Sondes: la Wiki ja no les importa (ordre del Mestre, 261004); si ho tornara a fer, es veurien. */
+vi.mock('../gestoria/tauler/ShellGestoria.jsx', () => ({ default: () => <p>Doble de la Gestoria</p> }));
 vi.mock('../gestoria/aprendre/Aprendre.jsx', () => ({ default: () => <p>Doble d’Aprendre</p> }));
 
 import WikiDePobleSection from './WikiDePobleSection.jsx';

@@ -242,11 +242,128 @@ test('un enllaç intern a una secció del document ja pintat hi porta, després 
   desplacador.style.overflowY = 'auto';
   Object.defineProperty(desplacador, 'scrollHeight', { configurable: true, value: 2000 });
   Object.defineProperty(desplacador, 'clientHeight', { configurable: true, value: 500 });
-  desplacador.scrollTo = function scrollTo() { saltats.push([this, 'a dalt']); };
+  /* Ordre del Mestre, 261004 (integració final, auditoria d'amfitrió) · Derogat: el salt a la
+     secció ja no és el scrollIntoView de l'encapçalament (dins de WordPress també movia la pàgina
+     de l'amfitrió), sinó un scrollTo del desplaçador de l'app. Es registren les opcions de cada
+     scrollTo: la recol·locació a dalt i, després, el salt a la secció. */
+  desplacador.scrollTo = function scrollTo(opcions) { saltats.push([this, opcions.top === 0 && opcions.behavior === 'instant' ? 'a dalt' : opcions]); };
+  desplacador.getBoundingClientRect = () => ({ top: 100 });
 
   fireEvent.click(screen.getByRole('link', { name: 'Ves al final' }));
   expect(url()).toBe('/wiki?item=doc&seccio=al-final');
-  fotograma();
   const final = document.querySelectorAll('article.content-wrapper h2')[1];
-  expect(saltats).toEqual([[desplacador, 'a dalt'], [final, { block: 'start' }]]);
+  final.getBoundingClientRect = () => ({ top: 1500 });
+  fotograma();
+  expect(saltats).toEqual([[desplacador, 'a dalt'], [desplacador, { top: 1400 }]]);
+});
+
+/* Correcció final (ordre del Mestre, 261004; revisió final, /consola?seccio=
+   al-cens-del-mapa-del-mas a 375) · El salt es feia una sola vegada: quan
+   arribaven les dades de la Consola, l'H3 de dalt de la mateixa targeta
+   passava de «Skills del cens» (71 px) a «30 skills» (42 px) i el destí
+   quedava 12 px davall de la barra taronja. Ara, fins a ESPERA_SECCIO_MS
+   després del salt, la pàgina hi torna si la secció ja no és on toca, i
+   para al primer gest de la persona. jsdom no té disposició: el desplaçador
+   (scrollTop que es mou amb scrollTo) i la posició del destí al contingut
+   es fixen a mà. */
+function muntaSaltVigilat(desti) {
+  const slug = desti.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  const cos = (dalt, peu) => <><h3>{dalt}</h3><p>Text de dalt.</p><h4>{desti}</h4><p>{peu}</p></>;
+  const arbre = (dalt = 'Skills del cens', peu = 'Peu.') => (
+    <MemoryRouter rutaInicial={`/consola?seccio=${slug}`}><div data-testid="desplacador">{pagina(cos(dalt, peu))}</div></MemoryRouter>
+  );
+  const resultat = render(arbre());
+  const desplacador = screen.getByTestId('desplacador');
+  desplacador.style.overflowY = 'auto';
+  Object.defineProperty(desplacador, 'scrollHeight', { configurable: true, value: 5000 });
+  Object.defineProperty(desplacador, 'clientHeight', { configurable: true, value: 600 });
+  let scrollTop = 0;
+  Object.defineProperty(desplacador, 'scrollTop', { configurable: true, get: () => scrollTop, set: (valor) => { scrollTop = valor; } });
+  desplacador.getBoundingClientRect = () => ({ top: 100 });
+  const moviments = [];
+  desplacador.scrollTo = ({ top }) => { moviments.push(top); scrollTop = top; };
+  /* On és el destí dins del contingut: la prova el mou quan el de dalt canvia d'alçada. */
+  const posicio = { valor: 1500 };
+  const element = document.querySelector('article.content-wrapper h4');
+  element.getBoundingClientRect = () => ({ top: posicio.valor - scrollTop + 100 });
+  /* Canvia el contingut (dalt i peu) i deixa córrer l'observador. */
+  const canvia = async (dalt, peu) => {
+    resultat.rerender(arbre(dalt, peu));
+    await act(async () => {});
+  };
+  return { desplacador, element, moviments, posicio, canvia };
+}
+
+test('després del salt, si el contingut de dalt canvia d’alçada, la pàgina torna a portar-hi la secció', async () => {
+  const { moviments, posicio, canvia } = muntaSaltVigilat('Al cens del mapa');
+  fotograma();
+  expect(moviments).toEqual([1500]);
+  // Un canvi de baix no mou la secció: cap scroll de més.
+  await canvia('Skills del cens', 'Peu nou.');
+  expect(moviments).toEqual([1500]);
+  // El de dalt s'encongix 29 px: la secció hi torna (abans quedava a −12 de la barra).
+  posicio.valor = 1471;
+  await canvia('30 skills', 'Peu nou.');
+  expect(moviments).toEqual([1500, 1471]);
+  // I si torna a créixer, també.
+  posicio.valor = 1530;
+  await canvia('30 skills del cens, ara amb més text', 'Peu nou.');
+  expect(moviments).toEqual([1500, 1471, 1530]);
+});
+
+test.each([
+  ['wheel', (node) => fireEvent.wheel(node)],
+  ['touchstart', (node) => fireEvent.touchStart(node)],
+  ['pointerdown', (node) => fireEvent.pointerDown(node)],
+  ['keydown', (node) => fireEvent.keyDown(node, { key: 'ArrowDown' })]
+])('el primer gest de la persona (%s) para la correcció del salt: qui ja llig no s’arrossega', async (gest, fes) => {
+  const { desplacador, moviments, posicio, canvia } = muntaSaltVigilat(`Gest ${gest}`);
+  fotograma();
+  expect(moviments).toEqual([1500]);
+  fes(desplacador);
+  posicio.valor = 1471;
+  await canvia('30 skills', 'Peu.');
+  expect(moviments).toEqual([1500]);
+});
+
+test('la correcció del salt dura ESPERA_SECCIO_MS (3 s) des del salt, i després ja no mou res', async () => {
+  vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+  try {
+    const { moviments, posicio, canvia } = muntaSaltVigilat('Fins al termini');
+    fotograma();
+    act(() => { vi.advanceTimersByTime(2999); });
+    posicio.valor = 1471;
+    await canvia('30 skills', 'Peu.');
+    expect(moviments).toEqual([1500, 1471]);
+    act(() => { vi.advanceTimersByTime(1); });
+    posicio.valor = 1400;
+    await canvia('Encara més curt', 'Peu.');
+    expect(moviments).toEqual([1500, 1471]);
+  } finally {
+    vi.useRealTimers();
+  }
+});
+
+/* Una imatge sense mides (el logotip a Safari 16) canvia l'alçada sense tocar
+   el DOM: només ho veu un ResizeObserver de l'article o de la pàgina. */
+test('un canvi de mida sense canvi de DOM (ResizeObserver de l’article i de la pàgina) també torna a portar-hi la secció', () => {
+  const observadors = [];
+  vi.stubGlobal('ResizeObserver', class {
+    constructor(avisa) { this.avisa = avisa; this.nodes = []; this.desconnectat = false; observadors.push(this); }
+    observe(node) { this.nodes.push(node); }
+    disconnect() { this.desconnectat = true; }
+  });
+  const { element, moviments, posicio } = muntaSaltVigilat('Davall del logotip');
+  expect(observadors).toEqual([]);
+  fotograma();
+  expect(observadors).toHaveLength(1);
+  const [observador] = observadors;
+  const article = element.closest('article.content-wrapper');
+  expect(observador.nodes).toEqual([article, article.closest('.sdp-universal-page-container')]);
+  posicio.valor = 1656;
+  act(() => observador.avisa([]));
+  expect(moviments).toEqual([1500, 1656]);
+  // En desmuntar-se la pàgina, l'observador es desconnecta.
+  cleanup();
+  expect(observador.desconnectat).toBe(true);
 });

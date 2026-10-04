@@ -45,7 +45,6 @@ export const AGENTS_MAP = {
     name: 'IAIA MarIA',
     avatarName: 'La Matriarca',
     role: 'Matriarca Digital',
-    avatar_url: '/assets/fotos/iaia-maria.png',
     last_message_content: 'Dignitat, terra i xarxa.',
     tag: 'MASTER',
     type: 'AI',

@@ -1,4 +1,4 @@
-import React, { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { UniversalEditorShell } from './UniversalEditorShell';
 import { SelectorVisibilitat, TEXTOS_VISIBILITAT } from './SelectorVisibilitat.jsx';
 import BotoDretsAutor from './CopyrightSelector.jsx';
@@ -6,7 +6,7 @@ import { CopyrightPage } from './drets/CopyrightPage.jsx';
 import DocumentPrintPreview from './DocumentPrintPreview.jsx';
 import { BotoTargetaViva, TargetaViva } from './TargetaViva.jsx';
 import { UniversalPage } from './UniversalPage.jsx';
-import { DateTimeControl } from '../PedraSeca/index.js';
+import { Boto, DateTimeControl, Dialeg } from '../PedraSeca/index.js';
 import { dataHoraAra } from './barres/dataHoraBarra.js';
 import { sanitizeHtml } from '../../utils/sanitize.js';
 import {
@@ -16,6 +16,12 @@ import {
   UniversalRichTextContent,
 } from './richText';
 import { extensionsRiques } from './richText/extensions';
+/* T7 · Les peces de les targetes incrustades viuen en camins a banda: les
+   proves que substituïxen './richText' i './richText/extensions' amb
+   fàbriques tancades no les veuen. */
+import { DialegTriaTargeta } from './richText/extensions/targetes/DialegTriaTargeta.jsx';
+import { NOM_EXTENSIO_TARGETES, TargetesIncrustadesContext } from './richText/extensions/targetes/TargetesIncrustadesContext.js';
+import { attrsDeEntrada } from './richText/extensions/targetes/formaDelGrup.js';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { LLAVOR_NOTA } from '../../sections/notes/NotesSection.jsx';
 
@@ -80,6 +86,12 @@ import { LLAVOR_NOTA } from '../../sections/notes/NotesSection.jsx';
  *                            // del consumidor per a l'aside i el xip de la
  *                            // targeta viva (AVISOS_TARGETA_VIVA de TargetaViva.jsx).
  *                            // Sense la clau, la reserva AVIS_PREVISUALITZACIO.
+ *   targetes: { cerca(consulta) } // Opcional (T7, 261004). Targetes incrustades al
+ *                            // cos: l'ordre «/» «Targeta» obri el selector, que
+ *                            // busca amb cerca() (entrades d'indexCerca: Model B).
+ *                            // Ha de ser CONSTANT durant la vida de l'adaptador:
+ *                            // l'esquema de TipTap es fixa en crear l'editor.
+ *                            // Sense la clau, el DOM és el de sempre.
  *   ...rest // La resta (heroEditLabel, estatDesament…) passa a UniversalEditorShell.
  *
  * T40 (ordre del Mestre, 260928) · La identitat ja no va a la barra taronja
@@ -171,12 +183,15 @@ export function DocumentEditor({ adapter, onToast }) {
     targetaViva = false,
     /* Els textos de l'avís de la targeta viva (sense: la reserva de TargetaViva). */
     avisTargetaViva = null,
+    /* T7 · la font de les targetes incrustades (null: el cos de sempre). */
+    targetes = null,
     ...rest
   } = adapter;
 
+  const ambTargetes = Boolean(targetes);
   const extensions = useMemo(
-    () => extensionsRiques({ onImageUpload: uploadMedia }),
-    [uploadMedia],
+    () => extensionsRiques({ onImageUpload: uploadMedia, ambTargetes }),
+    [uploadMedia, ambTargetes],
   );
 
   const desaLocal = useCallback(
@@ -307,6 +322,35 @@ export function DocumentEditor({ adapter, onToast }) {
     [barAuthorName, barAuthorAvatar, barAuthorLocation],
   );
 
+  /* T7 (ordre del Mestre, prompt 261004_0515) · Targetes incrustades al cos.
+     L'ordre de l'editor (obreSelectorDeTargeta) obri el selector pel magatzem
+     de l'extensió; el selector i l'avís de previsualització són UN sol
+     diàleg cadascun, germans de la closca, mai dins del contenteditable.
+     Abans del retorn primerenc, com la resta de hooks. */
+  const [selectorTargetaObert, setSelectorTargetaObert] = useState(false);
+  const [avisTargetaObert, setAvisTargetaObert] = useState(false);
+  useEffect(() => {
+    const magatzem = ambTargetes && editor && !editor.isDestroyed ? editor.storage?.[NOM_EXTENSIO_TARGETES] : null;
+    if (!magatzem) return undefined;
+    const obre = () => setSelectorTargetaObert(true);
+    magatzem.obreSelector = obre;
+    return () => {
+      if (magatzem.obreSelector === obre) magatzem.obreSelector = null;
+    };
+  }, [ambTargetes, editor]);
+  const tancaSelectorTargeta = useCallback(() => setSelectorTargetaObert(false), []);
+  const triaTargeta = useCallback((entrada) => {
+    setSelectorTargetaObert(false);
+    const attrs = attrsDeEntrada(entrada);
+    if (attrs && editor && !editor.isDestroyed) editor.chain().focus().inserirTargeta(attrs).run();
+  }, [editor]);
+  const avisaTargeta = useCallback(() => setAvisTargetaObert(true), []);
+  const tancaAvisTargeta = useCallback(() => setAvisTargetaObert(false), []);
+  const contextTargetes = useMemo(
+    () => (ambTargetes ? { avisa: avisaTargeta, t } : null),
+    [ambTargetes, avisaTargeta, t],
+  );
+
   if (!document) {
     return (
       <EmptyDocumentPage
@@ -405,7 +449,13 @@ export function DocumentEditor({ adapter, onToast }) {
       classificacio={ranuraClassificacio}
       copyright={copyrightValue}
     >
-      <UniversalRichTextContent editor={editor} />
+      {/* T7 · Els NodeViews de les targetes es munten com a portals dins del
+          cos i llegixen este context (avisa i t). Sense targetes, el cos de sempre. */}
+      {contextTargetes ? (
+        <TargetesIncrustadesContext.Provider value={contextTargetes}>
+          <UniversalRichTextContent editor={editor} />
+        </TargetesIncrustadesContext.Provider>
+      ) : <UniversalRichTextContent editor={editor} />}
     </UniversalEditorShell>
   );
 
@@ -453,6 +503,27 @@ export function DocumentEditor({ adapter, onToast }) {
         bloqueig={bloqueigVisibilitat}
         comNom={visibilitat?.comNom || null}
       />
+      {/* T7 · El selector de targetes i l'avís de previsualització, germans de
+          la closca i només amb targetes: sense la clau, el DOM de sempre. */}
+      {ambTargetes ? (
+        <>
+          <DialegTriaTargeta
+            obert={selectorTargetaObert}
+            onTanca={tancaSelectorTargeta}
+            cerca={targetes?.cerca}
+            onTria={triaTargeta}
+            t={t}
+          />
+          <Dialeg
+            obert={avisTargetaObert}
+            onTanca={tancaAvisTargeta}
+            titol={t('editor.targetes.avis.titol', 'Esta targeta és una previsualització')}
+            descripcio={t('editor.targetes.avis.descripcio', 'Esta targeta està incrustada al document que edites. Els seus botons —connectar, traduir, comentar i compartir— només funcionen quan es llig el document publicat.')}
+            mida="m"
+            accions={<Boto varietat="accent" onClick={tancaAvisTargeta}>{t('editor.targetes.avis.entesos', 'Entesos')}</Boto>}
+          />
+        </>
+      ) : null}
     </>
   );
 }

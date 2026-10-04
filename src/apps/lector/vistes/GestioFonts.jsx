@@ -9,6 +9,15 @@
  *                        una porta a les seues notícies. Davant, si n'hi ha,
  *                        les fonts que ha afegit la persona (FontsPersonals)
  * Cap classe pròpia.
+ * Ordre del Mestre, 261004 (prompt 261004_0515, «no inventar targetes») · Les
+ * fonts del poble són UniversalCard (forma="targetes" de l'esquelet), amb el
+ * logo privat (el filtre de mitjans i sense referent) o, sense, la icona de la
+ * categoria al quadrat. Les que seguixes, al mig, continuen en targetes de
+ * navegació (NavTargetes), que des de l'arreglo 6 de la integració final
+ * (ordre del Mestre, 261004) també són UniversalCard: la boina de la font, el
+ * nom, les no llegides i la seua descripció o el seu lloc web.
+ * REGLA D'OR 1 (ordre del Mestre, 261004) · Cada targeta de font porta la
+ * boina taronja: la font, enllaçada a les seues notícies.
  */
 import { useEffect, useRef, useState } from 'react';
 import AppGridColumn from '../../../components/layout/AppGridColumn.jsx';
@@ -19,7 +28,7 @@ import { HUI, llocDe, seguix } from '../nucli/index.js';
 import { NavTargetes } from './comunes.jsx';
 import { useVistaLector } from './context.js';
 import { iconaDeCategoria } from './icones.js';
-import { NOTICIES } from './navegacio.js';
+import { NOTICIES, autoriaDeFont, entradetaDeFont } from './navegacio.js';
 
 const textFonts = (n) => `${n} ${n === 1 ? 'font' : 'fonts'}`;
 
@@ -104,15 +113,24 @@ function EstatDelPort({ titol }) {
 }
 
 export function ColumnaCatalegFonts() {
-  const { lector, noticies } = useVistaLector();
+  const { lector, noticies, ruta } = useVistaLector();
   if (noticies.estat !== 'llest') return <EstatDelPort titol="Fonts del poble" />;
+  const nomDe = new Map(noticies.categories.map((categoria) => [categoria.id, categoria.nom]));
   const fonts = noticies.fonts.map((font) => ({
     id: font.id,
     nom: font.nom,
     categoriaId: font.categoriaId || undefined,
     secundari: font.descripcio || undefined,
+    /* Ordre del Mestre, 261004 (integració final, F04) · Subtítol i entradeta reals: la secció de
+       la font i, si no porta descripció, el lloc web d'on ve (el domini, sense camí). */
+    subtitol: nomDe.get(font.categoriaId) || undefined,
+    entradeta: llocDe(font.lloc) || undefined,
     imatge: font.imatge || undefined,
-    estat: seguix(lector.estat, font.id) ? 'en-colleccio' : 'normal'
+    estat: seguix(lector.estat, font.id) ? 'en-colleccio' : 'normal',
+    /* REGLA D'OR 1 (ordre del Mestre, 261004) · La boina de la targeta: qui signa una font és la
+       font mateixa, amb el seu logo (privat), i porta a la seua pàgina, les seues notícies (com
+       la boina de cada notícia, Noticies.jsx). */
+    autoria: { nom: font.nom, avatar: font.imatge || undefined, href: ruta(NOTICIES, font.categoriaId || HUI, font.id) }
   }));
   const categories = noticies.categories.map((categoria) => ({
     id: categoria.id, nom: categoria.nom, icona: iconaDeCategoria(categoria.icona), visible: true, ordre: categoria.ordre
@@ -120,6 +138,7 @@ export function ColumnaCatalegFonts() {
   const seguides = fonts.filter((font) => font.estat === 'en-colleccio').length;
   return (
     <ColumnaCataleg
+      forma="targetes"
       titol="Fonts del poble"
       categories={categories}
       articles={fonts}
@@ -146,7 +165,10 @@ export function ColumnaSeguides() {
   }
   const seguides = noticies.fonts.filter((font) => seguix(lector.estat, font.id)).map((font) => {
     const n = perFont.get(font.id) || 0;
-    return { ...font, comptador: n, secundari: n > 0 ? 'sense llegir' : 'tot llegit', imatge: font.imatge || undefined };
+    return {
+      id: font.id, nom: font.nom, categoriaId: font.categoriaId, comptador: n, secundari: n > 0 ? 'sense llegir' : 'tot llegit',
+      entradeta: entradetaDeFont(font), autoria: autoriaDeFont(font)
+    };
   });
   return (
     <MarcColumna

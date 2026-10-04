@@ -11,6 +11,8 @@
  *   · Mapa, Vehicle Compartit i Animalets: sense camí per a publicar i
  *     «EN OBRES» (W4-04).
  *   · La boina és l'entitat socdepoble i porta al seu xat corporatiu.
+ *     Derogat per l'ordre del Mestre del 261004 (prompt 261004_0515): la
+ *     boina porta a la pàgina del projecte (T6); el xat és el de Comentar.
  *   · Cada clau de les portes té la seua entrada en les cinc llengües i, en
  *     valencià, és la reserva de la taula.
  *
@@ -18,12 +20,15 @@
  * MarIA hi ha afegit a les posicions 7 i 8 (els seus textos i la seua data
  * són els de pageContent.js, 261004 01:10). Mapa, Vehicle Compartit i
  * Animalets porten ara la vinyeta del seu plugin; cap targeta usa la icona.
+ * Derogat per l'ordre del Mestre del 261004 (prompt 261004_0515, T8): cada
+ * targeta porta la capçalera de la seua pàgina; Vehicle Compartit i
+ * Animalets, la Nano de la pàgina, no la vinyeta.
  */
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, test } from 'vitest';
 import { SUPPORTED_LANGUAGES, createTranslator } from '../../config/i18n.js';
-import { resolvePageSlugPath } from '../../config/navigation.js';
+import { RUTA_PROJECTE, resolvePageSlugPath } from '../../config/navigation.js';
 import { IAIA_ID } from '../../data/identitatsSeed.js';
 import { PAGE_COPY } from '../text/pageContent.js';
 import { sanitizeHtml } from '../../utils/sanitize.js';
@@ -225,41 +230,64 @@ describe('destinsControl · les targetes i on porta cada porta', () => {
     expect(contingutDe({ pagina: 'constructor' })).toBeNull();
   });
 
-  /* W4-08 · Totes les targetes porten il·lustració: les Nano de Mur, Mercat i
-     Calendari i la vinyeta del plugin de la resta (el Mapa ja en té). Cap
-     targeta usa la icona de la insígnia lateral.
-     DIVERGÈNCIA PENDENT (fora de l'abast d'este fitxer) · Vehicle Compartit i
-     Animalets porten a la targeta la vinyeta, però la capçalera de la seua
-     pàgina (pageContent.js) continua amb la Nano: la llista és exacta, i quan
-     algú les unifique, esta prova demanarà llevar-les d'ací. */
-  const DIVERGENCIES_DE_PORTADA = ['vehicle', 'animalets'];
-  test('les imatges són les il·lustracions del paquet, una per targeta; la pàgina porta la mateixa, tret de la divergència anotada', () => {
-    const nano = new Set(['mur', 'mercat', 'calendari']);
+  /* W4-08 · Totes les targetes porten il·lustració. Cap targeta usa la icona
+     de la insígnia lateral.
+     Derogat per l'ordre del Mestre del 261004 (prompt 261004_0515, T8,
+     «imatges fantasma»): DIVERGENCIES_DE_PORTADA (['vehicle', 'animalets'])
+     passa a []. La imatge ja no és de la taula: contingutDe la llig de la
+     capçalera de la pàgina (PAGE_COPY image i imageAlt), i la targeta és el
+     hero de la seua pàgina per a TOTS els destins. Vehicle Compartit porta
+     el SEAT 600 de la pàgina (vehicle_nano_card.jpg), no «El Titi». */
+  const DIVERGENCIES_DE_PORTADA = [];
+  test('T8 · la imatge de cada targeta és la capçalera de la seua pàgina, amb el mateix text alternatiu; cap divergència', () => {
     for (const desti of DESTINS_CONTROL) {
-      const esperada = nano.has(desti.id)
-        ? `/assets/nano_cards/${desti.id}_nano_card.jpg`
-        : `/assets/ui/plugins/${desti.id}_vinyeta.jpg`;
-      expect([desti.id, desti.imatge, desti.icona]).toEqual([desti.id, esperada, null]);
-      expect(existsSync(resolve(process.cwd(), 'public', desti.imatge.replace(/^\//, ''))), desti.imatge).toBe(true);
+      const { image, imageAlt } = PAGE_COPY[desti.pagina];
+      const contingut = contingutDe(desti);
+      /* Cap segona font: la taula ja no porta imatge. */
+      expect([desti.id, Object.hasOwn(desti, 'imatge'), desti.icona]).toEqual([desti.id, false, null]);
+      expect([desti.id, contingut.imatge, contingut.imatgeAlt]).toEqual([desti.id, image, imageAlt]);
+      expect([desti.id, typeof image, imageAlt.length > 0]).toEqual([desti.id, 'string', true]);
+      expect(existsSync(resolve(process.cwd(), 'public', image.replace(/^\//, ''))), image).toBe(true);
     }
-    /* La pàgina porta la mateixa il·lustració de capçalera, tret de les anotades. */
-    const divergents = DESTINS_CONTROL.filter((desti) => PAGE_COPY[desti.pagina].image !== desti.imatge).map((desti) => desti.id);
+    const divergents = DESTINS_CONTROL.filter((desti) => contingutDe(desti).imatge !== PAGE_COPY[desti.pagina].image).map((desti) => desti.id);
     expect(divergents).toEqual(DIVERGENCIES_DE_PORTADA);
-    for (const id of DIVERGENCIES_DE_PORTADA) {
-      const portada = PAGE_COPY[perId[id].pagina].image;
-      expect(existsSync(resolve(process.cwd(), 'public', portada.replace(/^\//, ''))), portada).toBe(true);
+  });
+
+  /* El cas que va vore el Mestre: la targeta de Vehicle Compartit pintava «El
+     Titi» (la vinyeta del plugin) i la seua pàgina, el SEAT 600. */
+  test('T8 · Vehicle Compartit i Animalets: la Nano de la pàgina, mai la vinyeta del plugin', () => {
+    expect(contingutDe(perId.vehicle).imatge).toBe('/assets/nano_cards/vehicle_nano_card.jpg');
+    expect(contingutDe(perId.animalets).imatge).toBe('/assets/nano_cards/animalets_nano_card.jpg');
+    for (const desti of DESTINS_CONTROL) {
+      expect([desti.id, JSON.stringify(desti).includes('_vinyeta')]).toEqual([desti.id, false]);
+    }
+  });
+
+  test('T8 · una pàgina sense imatge dona una targeta sense imatge (la icona, si n’hi ha), no una inventada', () => {
+    PAGE_COPY.__prova_sense_imatge = { title: 'Sense imatge', date: '2026-10-04T01:10:00+02:00' };
+    try {
+      expect(contingutDe({ pagina: '__prova_sense_imatge' })).toMatchObject({ titol: 'Sense imatge', imatge: null, imatgeAlt: '' });
+    } finally {
+      delete PAGE_COPY.__prova_sense_imatge;
     }
   });
 
   /* W4-09 · L'autoria ja no porta l'enllaç: l'id de llavor només val per al
-     xat local (XAT_SOCDEPOBLE). En remot, l'enllaç el resol xatCorporatiu.js. */
-  test('la boina és l’entitat socdepoble, no la IAIA; el xat de la llavor és a part', () => {
+     xat local (XAT_SOCDEPOBLE). En remot, l'enllaç el resol xatCorporatiu.js.
+     Derogat per l'ordre del Mestre del 261004 (prompt 261004_0515, T6): la
+     boina porta SEMPRE a la pàgina de l'autor; per a l'entitat pilot, la del
+     projecte (RUTA_PROJECTE, resolta per l'id de l'entitat). El xat
+     corporatiu és el de Comentar (ControlSection). */
+  test('la boina és l’entitat socdepoble, no la IAIA, i porta al projecte; el xat de la llavor és a part', () => {
     expect(AUTORIA_SOCDEPOBLE).toEqual({
       author: 'Sóc de Poble',
       location: 'La Torre de les Maçanes',
-      avatarUrl: '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg'
+      avatarUrl: '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg',
+      authorHref: '/projecte'
     });
-    expect(Object.hasOwn(AUTORIA_SOCDEPOBLE, 'authorHref')).toBe(false);
+    expect(AUTORIA_SOCDEPOBLE.authorHref).toBe(RUTA_PROJECTE);
+    expect(AUTORIA_SOCDEPOBLE.authorHref).not.toContain('/xat');
+    expect(rutesEstatiques().has(camiDe(AUTORIA_SOCDEPOBLE.authorHref))).toBe(true);
     expect(XAT_SOCDEPOBLE).toBe('/xat?amb=socdepoble');
     expect(XAT_SOCDEPOBLE).not.toContain(encodeURIComponent(IAIA_ID));
     expect(rutesEstatiques().has(camiDe(XAT_SOCDEPOBLE))).toBe(true);

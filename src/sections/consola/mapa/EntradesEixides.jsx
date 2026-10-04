@@ -1,11 +1,18 @@
 import { useMemo, useState } from 'react';
-import { Box, Puzzle } from 'lucide-react';
 import { Camp, CampText, Insignia, Taula } from '../../../components/PedraSeca';
-import { Xifra } from '../peces.jsx';
+import { GraellaXifres } from '../XifresMas.jsx';
+import { xifresDeVista } from '../xifresMas.js';
 import { etiquetaNode, filesEntradesEixides } from './grafMapa.js';
 
 /* Entrades i eixides (la pestanya «Entradas y salidas» d'Emowe): per a cada
-   skill i cada ruta, què llig, què escriu, qui la crida i a qui crida. */
+   skill i cada ruta, què llig, què escriu, qui la crida i a qui crida.
+   Ordre del Mestre, 261004 (xat: cap xifra solta) · Les dues xifres són les
+   targetes del Mas (skills del cens i skills opaques), amb boina i pàgina
+   pròpia: compten tot el Mapa, no la cerca, perquè una pàgina pròpia no pot
+   dependre d'un filtre que no viatja amb l'adreça. La taula sí que filtra.
+   Derogat per l'ordre del Mestre del 261004 (xat: cap xifra solta): les
+   xifres «Skills mostrades» i «Caixes opaques» com a targetes del Panell de
+   Control, que comptaven només el que casava amb la cerca. */
 
 const TO_CONFIANCA = Object.freeze({ declarat: 'info', derivat: 'neutre', inferit: 'avis' });
 
@@ -21,8 +28,7 @@ function Llista({ arestes, cap }) {
 export function EntradesEixides({ mapa }) {
   const [cerca, setCerca] = useState('');
   const files = useMemo(() => filesEntradesEixides(mapa, cerca), [mapa, cerca]);
-  const opaques = files.filter((f) => f.node.tipus === 'skill' && f.opaca).length;
-  const skills = files.filter((f) => f.node.tipus === 'skill').length;
+  const xifres = useMemo(() => xifresDeVista('entrades', mapa), [mapa]);
 
   return (
     <>
@@ -35,10 +41,7 @@ export function EntradesEixides({ mapa }) {
         no es pot encadenar amb una altra. El remei és el camp <code>contracte</code> del
         frontmatter (llig, escriu, crida), que proposa <code>04_contracte_de_dades.md</code>.
       </p>
-      <div className="sdp-card-grid">
-        <Xifra icona={Puzzle} etiqueta="Skills mostrades" valor={skills} />
-        <Xifra icona={Box} etiqueta="Caixes opaques" valor={`${opaques} / ${skills}`} />
-      </div>
+      <GraellaXifres xifres={xifres} generat={mapa.generat} />
       <Camp etiqueta="Filtra per skill, ruta, fitxer o carpeta">
         <CampText tipus="search" value={cerca} onChange={(e) => setCerca(e.target.value)} />
       </Camp>

@@ -95,21 +95,29 @@ describe('P3 · columnesInicials', () => {
     });
   });
 
-  test('amb { left: true }, en mitjà la navegació continua tancada i el primer clic de la icona l’obri', () => {
+  /* Derogació (ordre del Mestre, 261004: «les dues barres de la Wiki han
+     d'estar sempre presents plegades, o com a mínim una d'elles visible que
+     permeta desplegar l'altra») · Abans, en mitjà la navegació era tancada
+     (aria-hidden) i sense rail. Ara és un rail fix, obert i a l'abast; el
+     primer clic de la icona continua obrint el panell. */
+  test('amb { left: true }, en mitjà la navegació és el rail fix i el primer clic de la icona obri el panell', () => {
     ambAmpladaIFotogrames(820, () => {
       const { container } = render(
         <UniversalWorkspace model={MODEL} labels={ETIQUETES} icons={{ categories: Folder }}
           columnesInicials={{ left: true }} renderDetail={() => null} />
       );
       const shell = container.querySelector('.app-grid-shell');
-      expect([shell.dataset.layout, shell.dataset.panell]).toEqual(['mitja', '']);
+      expect([shell.dataset.layout, shell.dataset.panell, shell.dataset.esquerra]).toEqual(['mitja', '', 'rail']);
       const sidebar = container.querySelector('#app-grid-sidebar');
-      expect(sidebar.getAttribute('aria-hidden')).toBe('true');
-      /* En mitjà no hi ha rail: la navegació és el panell de sempre. */
-      expect(sidebar.querySelector('.sdp-workspace-rail')).toBeNull();
+      expect(sidebar.getAttribute('aria-hidden')).toBeNull();
+      expect(sidebar.hasAttribute('inert')).toBe(false);
+      expect(sidebar.querySelector('.sdp-workspace-rail')).not.toBeNull();
+      expect(within(sidebar).getByRole('button', { name: 'Expandir CARPETES' })).toBeTruthy();
       fireEvent.click(within(container.querySelector('#app-grid-list')).getByRole('button', { name: 'CARPETES' }));
       expect(shell.dataset.panell).toBe('left');
       expect(sidebar.getAttribute('aria-hidden')).toBeNull();
+      /* Desplegada, l'arbre del panell: ja no és el rail. */
+      expect(sidebar.querySelector('.sdp-workspace-rail')).toBeNull();
     });
   });
 });

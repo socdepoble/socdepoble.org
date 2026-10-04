@@ -3,6 +3,9 @@
  * del Panell porta al xat corporatiu de l'entitat REAL. En remot, l'id de
  * llavor ('socdepoble') arribava literal a crea_fil_directe, que exigix un
  * UUID: ara l'entitat es resol pel port del backend abans de fer l'enllaç.
+ * Derogat per l'ordre del Mestre del 261004 (prompt 261004_0515, T6), per a
+ * la boina: l'autor porta a la pàgina del projecte, i este xat és el de
+ * Comentar del peu de les targetes del Panell. La resolució no canvia.
  *
  * W4-10 · El format de l'id és cosa del proveïdor: la interfície fa l'enllaç
  * amb l'id que torna el port («42», «wp:organization:42» o un UUID), només si
@@ -36,7 +39,9 @@ vi.mock('../../data/backendPort.js', () => ({
 }));
 vi.mock('../../host.js', () => ({ quanLlest: (...args) => estat.llest(...args) }));
 
-import { XAT_DE_LLAVOR, resolXatCorporatiu, rutaXatCorporatiu, useXatCorporatiu } from './xatCorporatiu.js';
+import {
+  AVISOS_XAT_CORPORATIU, XAT_DE_LLAVOR, avisDelXatCorporatiu, resolXatCorporatiu, rutaXatCorporatiu, useXatCorporatiu
+} from './xatCorporatiu.js';
 import { XAT_SOCDEPOBLE } from './destinsControl.js';
 import { esRutaInterna } from '../../config/objecteConnectable.js';
 import { resolRuta } from '../../app/contexts/politicaRouter.js';
@@ -137,7 +142,7 @@ describe('resolXatCorporatiu · pur, amb el port injectat', () => {
   });
 });
 
-describe('useXatCorporatiu · la boina del Panell', () => {
+describe('useXatCorporatiu · el Comentar del Panell (abans, la boina)', () => {
   test('seed: el xat de la llavor des del primer pintat, sense crides', () => {
     estat.ui = { externalConfig: { dataMode: 'seed' } };
     const { result } = renderHook(() => useXatCorporatiu());
@@ -213,6 +218,24 @@ describe('useXatCorporatiu · la boina del Panell', () => {
     expect(result.current.href).toBeNull();
     await act(async () => { pendents[1].r({ tipus: 'entitat', id: ALTRE }); });
     expect(result.current).toEqual({ estat: 'remot', href: `/xat?amb=${ALTRE}` });
+  });
+
+  /* T6 (ordre del Mestre, 261004, prompt 261004_0515 §5) · El xat corporatiu
+     és ara el de Comentar. Sense xat on portar, Comentar avisa: mentre es
+     resol, que encara es busca; sense entitat o amb error, el text de
+     l'Alerta del Panell. Amb xat, cap avís. */
+  test('T6 · avisDelXatCorporatiu: cap avís amb xat; «resolent» i «noDisponible» sense', () => {
+    expect(avisDelXatCorporatiu(XAT_DE_LLAVOR)).toBeNull();
+    expect(avisDelXatCorporatiu({ estat: 'remot', href: `/xat?amb=${UUID}` })).toBeNull();
+    expect(avisDelXatCorporatiu({ estat: 'resolent', href: null })).toBe(AVISOS_XAT_CORPORATIU.resolent);
+    for (const xat of [{ estat: 'absent', href: null }, { estat: 'error', href: null }, null, undefined, {}]) {
+      expect(avisDelXatCorporatiu(xat)).toBe(AVISOS_XAT_CORPORATIU.noDisponible);
+    }
+    expect(AVISOS_XAT_CORPORATIU.noDisponible).toEqual([
+      'section.control.xatCorporatiu.noDisponible', 'Xat de Sóc de Poble: encara no disponible en este servidor.'
+    ]);
+    expect(AVISOS_XAT_CORPORATIU.resolent[0]).toBe('section.control.xatCorporatiu.resolent');
+    expect(Object.isFrozen(AVISOS_XAT_CORPORATIU)).toBe(true);
   });
 
   test('de remot a seed: el xat de la llavor a l’instant; desmuntar cancel·la la resolució', async () => {

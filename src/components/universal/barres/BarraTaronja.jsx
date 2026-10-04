@@ -26,11 +26,21 @@
  * d’eixe mes»
  * (barres/pastillaCalendari.js). La barra no toca el router: el clic li
  * arriba fet, com l'enllaç de l'autoria (LinkComponent).
+ *
+ * T6 (ordre del Mestre, 261004) · La ruta de l'autoria passa per la mateixa
+ * regla que la boina de la targeta (rutaDAutorSegura, W4-07): un camí de
+ * l'app enllaça també a l'app nativa (capacitor://localhost), on isSafeUrl
+ * el deixava sense enllaç. Una adreça absoluta, per isSafeUrl com sempre.
+ *
+ * Ordre del Mestre, 261004 (prompt 261004_0515; privacitat) · L'avatar no
+ * envia cap Referer (referrerPolicy="no-referrer"): el detall del Lector hi
+ * pot passar el logo d'una font de fora sense dir-li qui el llig. Un atribut,
+ * cap píxel.
  */
 import { UserRound } from 'lucide-react';
 import { resolveAsset } from '../../../config/assetResolver';
 import { DateTimeControl } from '../../PedraSeca/atoms/controls.jsx';
-import { isSafeUrl, isSafeAsset } from '../UniversalUtils';
+import { isSafeAsset, rutaDAutorSegura } from '../UniversalUtils';
 import { EmoticonaBarra } from '../EmoticonaBarra.jsx';
 
 export function BarraTaronja({
@@ -42,7 +52,7 @@ export function BarraTaronja({
 }) {
   const resolt = typeof authorAvatar === 'string' ? resolveAsset(authorAvatar) : null;
   const avatar = isSafeAsset(resolt) ? resolt : null;
-  const href = authorHref && isSafeUrl(authorHref) ? authorHref : null;
+  const href = rutaDAutorSegura(authorHref);
   const Autor = href ? (LinkComponent === 'a' ? 'a' : LinkComponent) : 'div';
   const propsAutor = href ? (LinkComponent === 'a' ? { href } : { to: href }) : {};
 
@@ -55,6 +65,7 @@ export function BarraTaronja({
             src={avatar}
             alt=""
             decoding="async"
+            referrerPolicy="no-referrer"
             width="48"
             height="48"
             onError={(e) => {

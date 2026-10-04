@@ -1,0 +1,132 @@
+RELLEU · Front «barres» (integració final 261004) · TANCAT
+=========================================================
+
+Ordre: _wiki_de_poble/04_escriptori/261004_1106_prompt_local_claude_urgent_barres.md
+Proposta implementada: la «Proposta mínima i robusta» del contrast (rail
+fix de 56 px per a la barra 1 en «mitja», opt-in amb railEsquerra).
+
+Bloc 1 · Codi (fet)
+- graella.js: columnesTancades(mida, panell, { railEsquerra }). Sense
+  opció, el d'abans.
+- AppGridShell.jsx: prop railEsquerra (false per defecte); data-esquerra
+  ="rail" a l'article en «mitja»; context ambRailNavegacio i
+  navegacioEnRail; la guarda del focus, middleVisibleWidth i resizeColumn
+  compten el rail.
+- AppGridShell.css: tres regles sota [data-layout="mitja"]
+  [data-esquerra="rail"]: coixí de la graella, columna en rail, panell
+  desplegat amb l'ombra de token. Només variables (56px 1 vegada, 320px 2).
+- UniversalWorkspace.jsx: railEsquerra={!compacte}; CategoryColumn plegada
+  amb navegacioEnRail; l'Expandir del rail fa obriPanell('left') (obridor
+  de la closca); el Replegar del panell en «mitja» fa tancaPanells() i
+  torna el focus a l'Expandir. L'obridor de la capçalera de DOCUMENTS es
+  conserva (llevar-lo és decisió del Mestre).
+- Reserva de la barra mòbil: modules.css, bloc «ESTRUCTURA I SCROLL DEL
+  GESTOR UNIVERSAL», una regla per a .sdp-workspace-rail,
+  .sdp-workspace-column__body i .sdp-workspace-detail sota
+  :where(.sdp-root.is-compact) .sdp-workspace--universal (classe nova que
+  posa UniversalWorkspace; el Xat no la porta). Cap bottom a .app-grid-page.
+- Punt 6 (Snippet en estret): T7C-R4 no era cap ordre del Mestre de deixar-
+  lo sense barra (deixa al Mestre «un obridor al detall»). El Snippet rep el
+  rail de la closca en «estret» (railEstret={mestreDetall || compacte}) i la
+  capçalera de la llista hi porta l'obridor que obri al primer toc. Mitjà
+  compacte, com abans. Es reverteix amb una línia si el Mestre no el vol.
+
+Bloc 2 · Proves (fet)
+- Roges heretades (AppGridShell.test.jsx i .rail.test.jsx): mock
+  { left: 340, middle: 420 }, mínim d'ample 1082. SANEJA_AMPLADA intacta.
+- Noves: graella.test.js, AppGridShell.rail.test.jsx (bloc Barres + CSS),
+  UniversalWorkspace.barres.test.jsx, UniversalWorkspace.reserva.capes.test.js,
+  WikiDePobleSection.barres.test.jsx (720/820/943 amb {260,362}), i dos
+  casos de compacte en estret.
+- Derogacions amb comentari (ordre del Mestre, 261004): columnes.test.jsx,
+  dos T6 de UniversalWorkspace.test.jsx, T7C-R4 de compacte.test.jsx i el
+  P6 de railCompacte.test.jsx.
+- Ordre del front: 1621 verdes, 15 roges. 13 són alienes (tokens cqi,
+  EspecimenTipografia, avatars del Xat i de la mostra, botonera de
+  NotesEditor). 2 són XatSection.test.jsx (divisor a 950/800): la MATEIXA
+  causa heretada (setVal left 420 sanejat a 260), fitxer fora del meu
+  abast: cal canviar 420 per 340 a les línies 551 i 577.
+
+Bloc 3 · Navegador (fet, pestanya pròpia de fons, ja tancada i en desktop)
+- Iframes del mateix origen, amplàries desades {260,362}.
+- /wikidepoble, /notes i /disseny: 720 → rail 0/56, llista 56/344, detall
+  320; 768 → detall 350; 820 → 402; 943 → 525; 1024 (Roca) → rail 260/56,
+  detall 346; 1180 → 502; 1203 → 525; 740x360 → 322; 812x375 → 394;
+  932x430 → 514. 0 de desplaçament horitzontal a totes.
+- «Ample» idèntic: 944 (0/260, 260/362, 622/322), 1204, 1280 (detall 398),
+  1440 (558) i 1023 (401), com a la diagnosi.
+- Compacte: l'última icona del rail, l'última fitxa i el final del detall
+  queden per damunt de la barra mòbil (elementFromPoint) a 375, 320, 720,
+  768, 820, 943, 812x375 i 1023. Xat sense canvis (cap classe ni reserva).
+- Encastat (enxufe-amfitrio, ruta-inicial=/wikidepoble): caixa 760 → mitja
+  amb rail 0/56, detall 342, reserva 72 px; caixa 1100 → Roca + rail 260/56,
+  detall 422, sense reserva (no compacte).
+- Panell a 820: Expandir → 260 px per damunt, ombra de token, focus a la
+  carpeta activa; Replegar → torna al rail.
+
+Ronda dels verificadors (FETA)
+- Ordre de proves del front, en quatre tandes: 136 fitxers, 1648 proves,
+  14 roges i cap del front: NotesEditor (4, botonera), avatars del Xat i
+  de la mostra (7), EspecimenTipografia (1) i XatSection.test.jsx (2, la
+  heretada del left 420). layout, workspace i wiki-de-poble: tot verd.
+- Llegits els 9 defectes. Al meu front: reserva escolada a Disseny (D1),
+  Replegar mort en compacte (D2), rail per a una navegació buida (D3,
+  Admin), prova del redimensionament (D5), obridor d'un toc de cada dos
+  en compacte (D8). Fora del front: barra blava que no cap (D4=D7, D6,
+  PageFrame) i XatSection.test.jsx (D9, Xat/orquestradora).
+- Codi fet:
+  · D1 modules.css: la reserva, amb combinadors de fill des de la closca
+    (.sdp-workspace--universal > .app-grid-shell > .app-grid-content >
+    columna > aside > scroller). Els espècimens del Xat de Disseny ja no
+    la reben.
+  · D2 Replegar fora d'«ample» = tancaPanells(), també sense rail; el
+    focus va a l'obridor de la llista (guarda de la closca).
+  · D3 railEsquerra={!compacte && declaraNavegacio}: Admin (grups buits i
+    cap categoria) sense rail, com abans. Es llig de l'estructura i no de
+    les opcions, perquè el rail no aparega de colp quan carreguen les
+    carpetes. Perfil té navegació i conserva el rail: cal mesurar-lo.
+  · D8 obridor de la llista fora d'«ample» = commutaNavegacio (obri al
+    primer toc); retirat el toggleColumn que hi quedava sense cap cas.
+  · D5 la prova del separador mira també l'amplària desada (444px).
+- Proves noves, cadascuna roja amb l'arreglo llevat (comprovat):
+  UniversalWorkspace.reserva.test.jsx (DOM de veres amb els espècimens del
+  Xat al detall), reserva.capes (combinadors de fill), compacte (obridor i
+  Replegar a 820), barres (Admin a 820 i grups buits), rail (desada).
+- Admin i Perfil (sense navegador: totes dues rutes demanen sessió):
+  UniversalWorkspace.barres.consumidors.test.jsx munta les seccions de
+  veres. Admin (Usuaris) a 820: sense rail, com abans. Perfil a 820 i a
+  764 (1024 amb la Roca): rail de PERFIL, Expandir/Replegar, el detall
+  conserva perfil-espai__detall. Canvi del Perfil DECLARAT.
+- Navegador (pestanya pròpia de fons, iframes del mateix origen; ja
+  tancada i en desktop):
+  · Disseny 820, xat-comunitats: els cossos dels espècimens 0 px (abans
+    72); Workspace (rail, llista, detall) 72 px. Queda la reserva PRÒPIA
+    del Xat a .sdp-xat-vista-comunitats (regla del Xat, fora del front).
+  · Snippet 820: l'obridor CARPETES obri al primer toc tres vegades
+    seguides; Replegar tanca (panell buit, navegació inert) i el focus va
+    a l'obridor de la llista.
+  · Wiki/Notes/Disseny 820 i 375: reserva 72 als scrollers, l'última
+    icona del rail a l'abast; ample 944/1023 idèntic (0/260, 260/362,
+    622/322 i 622/401). Encastat 760 (Wiki i Disseny): reserva al
+    Workspace i 0 als espècimens; 1100: sense reserva. 0 de desplaçament
+    horitzontal a totes.
+- NO RESOLT AL FRONT (és de PageFrame): la barra blava no cap en el detall
+  de «mitja» amb el rail. «Connectar» inabastable (elementFromPoint) a
+  /notes 768 (detall 418-768, barra 360/335), /notes 1024 amb la Roca
+  (678-1024, 360/331), /wikidepoble 720 (400-720, 336/305) i 740x360
+  (418-740, 336/307). Snippet 320: «Compartir» 296-344, barra 288/249
+  (a 375, bé). Mentre no ho arregle PageFrame, el rail de «mitja» SÍ que
+  es menja l'última acció de la barra blava: aquest relleu no declara
+  «sense menjar contingut».
+- XatSection.test.jsx (2 roges, left 420 del mock): fitxer del Xat, sense
+  tocar.
+
+Observacions
+- Un altre actor ha editat AppGridShell.css durant el torn (panells
+  d'«estret» al 85 % amb màxim de 360 px i ombra). No ho he tocat.
+- A 320 px amb el rail d'estret, la barra blava de la Pàgina Universal
+  (144 px d'accions) no cap en 264 px: l'última acció queda retallada.
+  Ja passava a la Wiki i a Notes; ara també al Snippet. És de PageFrame.
+- Cal actualitzar .agents/skills/sdp-app-grid-shell/SKILL.md §3 (fora del
+  meu abast): en «mitja», la navegació és un rail fix i desplegar-la obri
+  el panell.

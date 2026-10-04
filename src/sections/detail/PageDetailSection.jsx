@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { Navigate, useParams } from '../../app/contexts/RouterContext';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
 import { resolvePageSlugPath } from '../../config/navigation';
@@ -6,6 +5,7 @@ import { PAGE_COPY } from '../text/pageContent.js';
 import TextSection from '../text/TextSection';
 import NotFoundPage from '../../pages/NotFoundPage';
 import { PublicarDeLaPagina } from '../control/PublicarDeLaPagina.jsx';
+import { destiDePagina } from '../control/destinsControl.js';
 
 /**
  * /page/:slug — pàgines de text sense ruta pròpia.
@@ -22,15 +22,25 @@ import { PublicarDeLaPagina } from '../control/PublicarDeLaPagina.jsx';
  * P6 (directriu 261003_2325, confirmació 4) · Les sis pàgines de la doble
  * acció del Panell acaben amb el gran botó «Publicar» (PublicarDeLaPagina,
  * pel punt d'extensió `children` de TextSection). La resta, sense res més.
+ *
+ * T8 (ordre del Mestre, 261004, prompt 261004_0515 §6) · Les pàgines amb
+ * destí porten el mateix botó també dalt, davall de l'H1 (accioPrincipal de
+ * PageFrame, per TextSection). Es decidix amb destiDePagina(slug), pura, i
+ * mai amb l'element: un <PublicarDeLaPagina/> que pinta null és un element
+ * vertader, i PageFrame pintaria un div.page-title-accio buit a TOTES les
+ * /page/*. El de baix es conserva.
+ *
+ * Higiene d'amfitrió (ordre del Mestre, 261004, front «amfitrio-admin») ·
+ * Derogat per l'ordre del Mestre del 261004: l'efecte que, en canviar de
+ * slug, buscava '.app-main' pel document (o pel shadowRoot de
+ * <soc-de-poble>) i el pujava a dalt. Era codi mort: .app-main no es
+ * desplaça, i App.jsx ja torna a dalt el desplaçador en una navegació de
+ * router (preparaRecolocacio). Dins de WordPress, a més, consultava el
+ * document de l'amfitrió i obria el shadow root des de fora.
  */
 export default function PageDetailSection() {
   const { slug = '' } = useParams();
   const { pages = [], pageCopy = {}, status } = useCoreContent();
-
-  useEffect(() => {
-    const main = document.querySelector('.app-main') || document.querySelector('soc-de-poble')?.shadowRoot?.querySelector('.app-main');
-    if (main) main.scrollTo({ top: 0, left: 0, behavior: 'auto' });
-  }, [slug]);
 
   const canonica = resolvePageSlugPath(slug);
   if (canonica) return <Navigate to={canonica} replace />;
@@ -41,8 +51,9 @@ export default function PageDetailSection() {
     || pages.find((p) => p && (String(p.slug) === slug || String(p.id) === slug))
     || propia(PAGE_COPY);
   if (page) {
+    const accioPrincipal = destiDePagina(slug) ? <PublicarDeLaPagina clau={slug} lloc="dalt" /> : null;
     return (
-      <TextSection page={page} pageKey={slug}>
+      <TextSection page={page} pageKey={slug} accioPrincipal={accioPrincipal}>
         <PublicarDeLaPagina clau={slug} />
       </TextSection>
     );

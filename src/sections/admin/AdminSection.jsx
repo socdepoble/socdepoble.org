@@ -3,12 +3,59 @@ import { User, Building2, ServerCog, ArrowLeft } from 'lucide-react';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import AppGridShell, { useAppGrid } from '../../components/layout/AppGridShell';
 import AppGridColumn from '../../components/layout/AppGridColumn';
-import { adminListUsers, adminListOrganizations } from '../../data/backendPort.js';
+import { adminListUsers, adminListOrganizations, teCapacitat } from '../../data/backendPort.js';
 import { UniversalWorkspace } from '../../components/universal/workspace/UniversalWorkspace.jsx';
+import { Boto, EstatBuit } from '../../components/PedraSeca/index.js';
 import { IndicadorsAdmin } from './IndicadorsAdmin.jsx';
 
 /* MD (revisió) · La fletxa ← de la llista d'Usuaris i d'Entitats en estret. */
 const TORNAR_AL_TAULER = 'Tornar al Tauler';
+
+/* Higiene d'amfitrió (ordre del Mestre, 261004, front «amfitrio-admin») ·
+   Sense la capacitat 'admin' (un node que no l'oferix), cap crida al port:
+   l'estat és 'sense-capacitat', com el dels Indicadors (IndicadorsAdmin.jsx).
+   Un port que no és a punt i llança també val com a «sense». */
+function ambCapacitatAdmin() {
+  try {
+    return teCapacitat('admin') === true;
+  } catch {
+    return false;
+  }
+}
+
+/* Higiene d'amfitrió (261004) · El que es veu quan el node no oferix les
+   dades d'administració: un estat buit honest i el camí de tornada al Tauler
+   (el menú no és a la vista en esta vista). */
+function SenseCapacitat({ icona, que, onBack }) {
+  return (
+    <EstatBuit icona={icona} titol="Este node no oferix les dades d’administració"
+      accio={<Boto varietat="secundari" onClick={onBack}>{TORNAR_AL_TAULER}</Boto>}>
+      {`No hi ha cap llista ${que} per mostrar.`}
+    </EstatBuit>
+  );
+}
+
+/* Higiene d'amfitrió (261004) · La crida al port, només amb la capacitat i
+   dins de la promesa: una excepció síncrona del port també acaba al .catch.
+   Res no s'escriu quan la vista ja s'ha desmuntat. */
+function useLlistaAdmin(carrega, textError) {
+  const [fase] = useState(() => (ambCapacitatAdmin() ? 'llista' : 'sense-capacitat'));
+  const [files, setFiles] = useState([]);
+  const [error, setError] = useState(null);
+  useEffect(() => {
+    if (fase === 'sense-capacitat') return undefined;
+    let viva = true;
+    Promise.resolve()
+      .then(() => carrega())
+      .then((resultat) => { if (viva) setFiles(resultat); })
+      .catch((err) => {
+        console.error(err);
+        if (viva) setError(textError);
+      });
+    return () => { viva = false; };
+  }, [fase, carrega, textError]);
+  return { fase, files, error };
+}
 
 
 function AdminSidebar({ activeTab, setActiveTab }) {
@@ -67,10 +114,12 @@ function AdminDashboard() {
   );
 }
 
-/* MD (ordre del Mestre, 261003) · El detall d'Usuaris i d'Entitats no és una
-   Pàgina Universal (no porta barra blava): en mòbil, la seua capçalera porta
-   la fletxa ← que torna a la llista. Només existix quan la closca oferix la
-   tornada (estret, amb el detall a la vista): en mitja i en ample, res. */
+/* MD (ordre del Mestre, 261003) · El detall d'Usuaris i d'Entitats no porta
+   barra blava: en mòbil, la seua capçalera porta la fletxa ← que torna a la
+   llista. Només existix quan la closca oferix la tornada (estret, amb el
+   detall a la vista): en mitja i en ample, res. Des de la regla del Mestre
+   del 261004 (barra taronja a tota pàgina), davall d'esta capçalera va una
+   Pàgina Universal sense barra blava (PaginaDelDetall). */
 function TornaALaLlista() {
   const { tornaDelDetall } = useAppGrid();
   if (!tornaDelDetall) return null;
@@ -79,6 +128,35 @@ function TornaALaLlista() {
       aria-label="Tornar a la llista" title="Tornar a la llista">
       <ArrowLeft size={24} aria-hidden="true" focusable="false" />
     </button>
+  );
+}
+
+/* sdp-universal-page §5 i regla del Mestre (261004: tota pàgina, també les
+   de sistema, porta la barra taronja amb l'autor) · La pàgina d'Usuaris i
+   d'Entitats és el detall, la columna dreta: la Pàgina Universal es construïx
+   ací dins, mai al voltant del Workspace. Sense barra blava (chrome 'page',
+   ordre del Mestre 261003): la capçalera de la columna, amb la fletxa ← en
+   estret, és la d'abans, i davall la barra taronja signa Sóc de Poble
+   (DEFAULT_AUTHOR de PageFrame, enllaçat a /projecte). El logotip de qui
+   signa (norma del Mestre, 261004) queda així dins del detall, en el flux de
+   la columna: cap graella absoluta el tapa. */
+function PaginaDelDetall({ titol, children }) {
+  return (
+    <aside className="perfil-detall">
+      <AppGridColumn titol={titol} esquerra={<TornaALaLlista />} />
+      <UniversalPage>{children}</UniversalPage>
+    </aside>
+  );
+}
+
+/* Higiene d'amfitrió (261004) · UniversalWorkspace crida renderDetail amb
+   item null quan no hi ha cap element triat (la llista encara és buida o
+   carrega): el detall ho diu, amb la seua capçalera, i no peta. */
+function DetallBuit({ titol }) {
+  return (
+    <PaginaDelDetall titol={titol}>
+      <EstatBuit titol="Tria un element" />
+    </PaginaDelDetall>
   );
 }
 
@@ -95,21 +173,23 @@ function PontDeTornada({ onCanvi }) {
   return null;
 }
 
+/* Regla del Mestre (261004) · Els estats sense Workspace (sense la capacitat,
+   l'error) són una pàgina sencera sense graella: porten la seua Pàgina
+   Universal, amb la barra taronja. Ací no hi ha cap Workspace que embolcallar
+   (sdp-universal-page §5). */
+function PaginaDEstat({ children }) {
+  return <UniversalPage>{children}</UniversalPage>;
+}
+
 function AdminUsersManager({ onBack }) {
-  const [users, setUsers] = useState([]);
-  const [error, setError] = useState(null);
-  
-  useEffect(() => {
-    adminListUsers()
-      .then(setUsers)
-      .catch(err => {
-        console.error(err);
-        setError("Error de permisos o de xarxa en carregar usuaris.");
-      });
-  }, []);
+  const { fase, files: users, error } = useLlistaAdmin(adminListUsers, 'Error de permisos o de xarxa en carregar usuaris.');
+
+  if (fase === 'sense-capacitat') {
+    return <PaginaDEstat><SenseCapacitat icona={User} que="d’usuaris" onBack={onBack} /></PaginaDEstat>;
+  }
 
   if (error) {
-    return <div className="sdp-alerta sdp-alerta--error" role="alert">{error}</div>;
+    return <PaginaDEstat><div className="sdp-alerta sdp-alerta--error" role="alert">{error}</div></PaginaDEstat>;
   }
 
   const model = {
@@ -135,36 +215,29 @@ function AdminUsersManager({ onBack }) {
       mestreDetall="navegacio"
       tornaDeLaLlista={onBack}
       labels={{ categories: 'FILTRES', items: 'Administració: Usuaris', back: TORNAR_AL_TAULER }}
-      renderDetail={({ item }) => (
-         <aside className="perfil-detall">
-           <AppGridColumn titol="Detall de l'Usuari" esquerra={<TornaALaLlista />} />
+      renderDetail={({ item }) => (item ? (
+         <PaginaDelDetall titol="Detall de l'Usuari">
            <div className="perfil-detall-buit">
              <h2>{item.data.email}</h2>
              <p className="sdp-camp__ajuda">ID: {item.data.id}</p>
              <p>Alta: {item.data.created_at}</p>
              <p>Últim accés: {item.data.last_sign_in_at}</p>
            </div>
-         </aside>
-      )}
+         </PaginaDelDetall>
+      ) : <DetallBuit titol="Detall de l'Usuari" />)}
     />
   );
 }
 
 function AdminCompaniesManager({ onBack }) {
-  const [companies, setCompanies] = useState([]);
-  const [error, setError] = useState(null);
-  
-  useEffect(() => {
-    adminListOrganizations()
-      .then(setCompanies)
-      .catch(err => {
-        console.error(err);
-        setError("Error de permisos o de xarxa en carregar entitats.");
-      });
-  }, []);
+  const { fase, files: companies, error } = useLlistaAdmin(adminListOrganizations, 'Error de permisos o de xarxa en carregar entitats.');
+
+  if (fase === 'sense-capacitat') {
+    return <PaginaDEstat><SenseCapacitat icona={Building2} que="d’entitats" onBack={onBack} /></PaginaDEstat>;
+  }
 
   if (error) {
-    return <div className="sdp-alerta sdp-alerta--error" role="alert">{error}</div>;
+    return <PaginaDEstat><div className="sdp-alerta sdp-alerta--error" role="alert">{error}</div></PaginaDEstat>;
   }
 
   const model = {
@@ -188,17 +261,16 @@ function AdminCompaniesManager({ onBack }) {
       mestreDetall="navegacio"
       tornaDeLaLlista={onBack}
       labels={{ categories: 'FILTRES', items: 'Administració: Entitats', back: TORNAR_AL_TAULER }}
-      renderDetail={({ item }) => (
-         <aside className="perfil-detall">
-           <AppGridColumn titol="Detall de l'Entitat" esquerra={<TornaALaLlista />} />
+      renderDetail={({ item }) => (item ? (
+         <PaginaDelDetall titol="Detall de l'Entitat">
            <div className="perfil-detall-buit">
              <h2>{item.data.name}</h2>
              <p className="sdp-camp__ajuda">ID: {item.data.id} / Slug: {item.data.slug}</p>
              <p>Alta: {item.data.created_at}</p>
              <p>{item.data.description}</p>
            </div>
-         </aside>
-      )}
+         </PaginaDelDetall>
+      ) : <DetallBuit titol="Detall de l'Entitat" />)}
     />
   );
 }
@@ -209,8 +281,20 @@ export default function AdminSection() {
      blava (PontDeTornada); null fora d'estret. */
   const [tornada, setTornada] = useState(null);
 
-  if (activeTab === 'usuaris') return <AdminUsersManager onBack={() => setActiveTab('dashboard')} />;
-  if (activeTab === 'entitats') return <AdminCompaniesManager onBack={() => setActiveTab('dashboard')} />;
+  /* Regla del Mestre (261004: tota pàgina, també les de sistema, porta la
+     barra taronja amb l'autor) · Usuaris i Entitats la porten dins del detall
+     (PaginaDelDetall) i als estats sense graella (PaginaDEstat). Derogat
+     (sdp-universal-page §5 i norma de logotips, ordre del Mestre, 261004):
+     l'embolcall d'ací amb una UniversalPage al voltant del Workspace. Contra
+     §5, i el logotip que PageFrame hi posa damunt del contingut quedava davall
+     de la graella absoluta. L'arrel torna el Workspace directament. El chrome
+     del Tauler no canvia. */
+  if (activeTab === 'usuaris') {
+    return <AdminUsersManager onBack={() => setActiveTab('dashboard')} />;
+  }
+  if (activeTab === 'entitats') {
+    return <AdminCompaniesManager onBack={() => setActiveTab('dashboard')} />;
+  }
 
   /* El benvingut del Tauler no canvia. Els Indicadors (decisió del Mestre
      261003, «Graphfy») ocupen la columna del detall, que abans era buida.

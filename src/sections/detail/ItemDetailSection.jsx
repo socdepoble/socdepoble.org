@@ -7,7 +7,7 @@ import { useMultimedia } from '../../sections/multimedia/MultimediaContext';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { buildDetailSectionMeta } from './detailSectionMeta.jsx';
 import { useSEO } from '../../hooks/useSEO.js';
-import { objecteDe, rutaConnectarObjecte, tipusDeSeccio } from '../../config/navigation.js';
+import { autorDe, objecteDe, rutaConnectarObjecte, tipusDeSeccio } from '../../config/navigation.js';
 import { paginaDElement, trobaElement } from './elementDeSeccio.js';
 
 export default function ItemDetailSection() {
@@ -68,15 +68,33 @@ export default function ItemDetailSection() {
      no «Gent de Sella», entre per on s'entre. */
   const objecte = objecteDe({ ...item, title: section.getTitle(item) || item.title }, sectionId);
   const objecteXat = { ...objecte, titol: objecteDe(item, sectionId).titol || objecte.titol };
+  /* T54 · títol, foto, drets (T39), autoria (T4) i data (T40): les mateixes
+     props que pinta el lector de connexions del MAS (elementDeSeccio.js). */
+  const pagina = paginaDElement(section, item);
+  /* Norma del Mestre, 261004 (prompt 261004_1108, línies 66-69 i T2) · Qui
+     signa decidix la capçalera. Una persona (o la IA), reconeguda per
+     identificador (autorDe), porta el seu avatar redó davant de l'H1, mai el
+     logotip de Sóc de Poble. L'entitat del projecte el porta perquè la seua
+     boina va a /projecte (PageFrame, via d). Derogat el showLogos={true}
+     (ordre del Mestre, 261004): pintava el logotip de Sóc de Poble a la
+     fitxa de qualsevol persona.
+     Correcció dels verificadors (ordre del Mestre, 261004) · L'avatar de
+     capçalera és només el de la identitat de qui signa (author_avatar, T3
+     de 261001), mai l'avatar_url de l'element: eixe camp no és l'autoria i
+     al Mercat porta la marca de Sóc de Poble (marketSeed.js). Sense
+     author_avatar, el bloc del títol comença per l'H1. La boina continua
+     amb el seu avatar (pagina.authorAvatar). */
+  const avatarDeLaIdentitat = typeof item.author_avatar === 'string' ? item.author_avatar : '';
+  const avatarAutor = autorDe(item)?.tipus === 'persona' && avatarDeLaIdentitat
+    ? { src: avatarDeLaIdentitat, alt: pagina.authorName ? `Avatar de ${pagina.authorName}` : 'Avatar de qui signa' }
+    : null;
 
   return (
     <UniversalPage
       onConnect={() => navigate(rutaConnectarObjecte(objecte))}
       objecte={objecteXat}
-      /* T54 · títol, foto, drets (T39), autoria (T4) i data (T40): les mateixes
-         props que pinta el lector de connexions del MAS (elementDeSeccio.js). */
-      {...paginaDElement(section, item)}
-      showLogos={true}
+      {...pagina}
+      avatarAutor={avatarAutor}
       chrome="full"
     >
       <div className="content-wrapper">

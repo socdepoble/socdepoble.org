@@ -20,8 +20,9 @@ const PRODUCTES = [
 ];
 const euros = (cents) => `${Math.floor(cents / 100)},${String(cents % 100).padStart(2, '0')} €`;
 
-/* La «intel·ligència de dades» de l'app de prova: una comanda en memòria. */
-function AppDeProva() {
+/* La «intel·ligència de dades» de l'app de prova: una comanda en memòria.
+   `forma` (ordre del Mestre, 261004): la del catàleg i la de la comanda; sense, la de sempre. */
+function AppDeProva({ forma }) {
   const [quantitats, setQuantitats] = useState({});
   const articles = useMemo(() => PRODUCTES.map((p) => ({
     id: p.id, nom: p.nom, categoriaId: p.categoriaId, valor: euros(p.cents), estat: quantitats[p.id] ? 'en-colleccio' : 'normal'
@@ -35,12 +36,15 @@ function AppDeProva() {
   return (
     <EsqueletCatalegColleccio
       entrada="caixa"
-      cataleg={{ titol: 'Productes', categories: CATEGORIES, articles, onTria: afig, resum }}
-      colleccio={{ titol: 'Comanda', linies, resum: { ...resum, accio: { text: 'Cobra', onClick: () => {} } } }}
+      cataleg={{ titol: 'Productes', categories: CATEGORIES, articles, onTria: afig, resum, forma }}
+      colleccio={{ titol: 'Comanda', linies, resum: { ...resum, accio: { text: 'Cobra', onClick: () => {} } }, forma }}
       colleccions={{ titol: 'Tiquets oberts', colleccions: [{ id: 'barra', nom: 'Barra', comptador: linies.length }], actiu: 'barra' }}
     />
   );
 }
+
+/* Ordre del Mestre, 261004 (prompt 261004_0515) · La mateixa app amb forma="targetes". */
+const AppDeTargetes = () => <AppDeProva forma="targetes" />;
 
 /* ESQ-R6 · Una app amb diverses col·leccions (els tiquets oberts): l'activa
    viu al camí (/caixa/<tiquet>) i l'app la llig amb useColleccioActiva. */
@@ -108,6 +112,24 @@ describe('EsqueletCatalegColleccio dins de la plataforma', () => {
       .toContain('sdp-graella-articles__element--en-colleccio');
     /* En ample no hi ha peu al catàleg: la comanda ja es veu. */
     expect(screen.queryByRole('link', { name: /^Comanda/ })).toBeNull();
+  });
+
+  /* Ordre del Mestre, 261004 (prompt 261004_0515, «no inventar targetes») · La forma arriba a les
+     dues columnes per les props de la pantalla: catàleg i comanda en UniversalCard. */
+  test('forma="targetes": catàleg i comanda en UniversalCard; tocar afig a la comanda i la targeta ho diu', async () => {
+    ambAmplada(1400);
+    muntaPlataforma('/app/prova/caixa', { registre: registre(AppDeTargetes) });
+    await screen.findByRole('region', { name: 'Productes' });
+    const cataleg = within(columna('app-grid-main'));
+    fireEvent.click(cataleg.getByRole('button', { name: 'Tallat' }));
+    expect(cataleg.getByRole('button', { name: 'Tallat' }).closest('article.sp-card').querySelector('.sp-card-text').textContent).toBe('1,30 €');
+    expect(within(cataleg.getByRole('button', { name: 'Tallat' }).closest('article')).getByText('Ja és a la col·lecció')).toBeTruthy();
+    const comanda = within(columna('app-grid-list'));
+    expect(comanda.getAllByRole('heading', { level: 3 }).map((h) => h.textContent)).toEqual(['Comanda 1 línies']);
+    const linia = comanda.getByRole('button', { name: 'Tallat' });
+    expect(linia.getAttribute('aria-pressed')).toBe('true');
+    expect(linia.closest('article.sp-card').querySelector('.sp-card-title').tagName).toBe('H4');
+    expect(document.querySelector('.sdp-graella-articles, .sdp-rajola')).toBeNull();
   });
 
   test('canviar de categoria no desmunta cap columna: la comanda continua on era', async () => {

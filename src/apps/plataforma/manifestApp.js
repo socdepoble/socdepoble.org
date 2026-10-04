@@ -26,10 +26,10 @@ export const LLENGUES_APP = Object.freeze(['ca', 'es', 'en', 'eu', 'gl']);
 /* Llista tancada d'icones (noms de lucide-react). Afegir-ne una és una decisió
    de la plataforma: iconesApp.js ha de tindre exactament estes claus. */
 export const NOMS_ICONES = Object.freeze([
-  'Activity', 'AppWindow', 'BookOpen', 'Boxes', 'Calculator', 'CalendarDays', 'ChartColumn', 'ChefHat',
-  'ClipboardList', 'Coffee', 'CupSoda', 'Droplet', 'FileText', 'HeartHandshake', 'HeartPulse', 'Inbox',
-  'LayoutDashboard', 'LayoutGrid', 'NotebookPen', 'Package', 'Phone', 'Pill', 'Puzzle', 'Receipt',
-  'Settings', 'ShoppingCart', 'Stethoscope', 'Store', 'Users', 'Utensils', 'Wrench'
+  'Activity', 'AppWindow', 'BookOpen', 'Boxes', 'Building2', 'Calculator', 'CalendarDays', 'ChartColumn', 'ChefHat',
+  'ClipboardList', 'Coffee', 'Contact', 'CupSoda', 'Droplet', 'FileSpreadsheet', 'FileText', 'HeartHandshake', 'HeartPulse', 'Inbox',
+  'Landmark', 'LayoutDashboard', 'LayoutGrid', 'NotebookPen', 'Package', 'Percent', 'Phone', 'Pill', 'Puzzle', 'Receipt',
+  'ScanLine', 'Settings', 'ShoppingCart', 'Stethoscope', 'Store', 'Users', 'Utensils', 'Wrench'
 ]);
 
 /* Prefixos admesos per a l'element d'una app externa. El nucli no en coneix

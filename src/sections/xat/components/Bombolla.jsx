@@ -40,6 +40,7 @@ import { AlertTriangle, CheckCircle2, Circle, Copy, MoreVertical, Reply } from '
 import { Link } from '../../../app/contexts/RouterContext';
 import MarquesEstat from './MarquesEstat.jsx';
 import CitaResposta from './CitaResposta.jsx';
+import EnllacSegur from './EnllacSegur.jsx';
 import { etiquetaHora } from '../temps.js';
 import { segmentaEnllacos } from '../enllacos.js';
 import { rutaDePerfil } from '../../../config/navigation.js';
@@ -66,21 +67,13 @@ function AutorDeLaBombolla({ missatge, esGrup, triable, t }) {
   );
 }
 
+/* Torn 261004 (T5) · Cada enllaç és EnllacSegur, la peça que també pinta la
+   vista «Contingut multimèdia». El DOM no canvia. */
 function TextAmbEnllacos({ text, t }) {
   const segments = segmentaEnllacos(text);
   return segments.map((segment, i) => {
     if (segment.tipus !== 'enllac') return <span key={i}>{segment.text}</span>;
-    return (
-      <span key={i}>
-        <a className="sdp-xat-enllac" href={segment.href} target="_blank" rel="noopener noreferrer">{segment.text}</a>
-        {segment.sospitos ? (
-          <span className="sdp-xat-enllac__avis" role="note">
-            <AlertTriangle size={14} aria-hidden="true" focusable="false" />
-            {t('section.xat.enllac.avis', 'Este enllaç porta a un domini amb caràcters enganyosos ({host}).').replace('{host}', segment.host)}
-          </span>
-        ) : null}
-      </span>
-    );
+    return <EnllacSegur key={i} segment={segment} t={t} />;
   });
 }
 

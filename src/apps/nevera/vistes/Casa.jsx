@@ -9,12 +9,16 @@
  * «A casa» és de tota la casa, no d'una llista: es veuen totes les seccions,
  * també les que la llista del camí amaga al seu catàleg. «Busca a casa…»
  * també troba els productes de botiga; els que se seguixen ixen a la graella.
+ * Ordre del Mestre, 261004 (prompt 261004_0515) · La graella és de targetes
+ * (forma="targetes" de l'esquelet: UniversalCard). «Cal comprar» continua en
+ * línies.
  */
 import { Plus, Refrigerator } from 'lucide-react';
 import { Boto } from '../../../components/PedraSeca/index.js';
 import { ColumnaCataleg, ColumnaColleccio, useVistaCataleg } from '../../comu/esquelet/index.js';
 import { propostesDeCasa } from '../nucli/index.js';
 import { AvisNevera } from './AvisNevera.jsx';
+import { autoriaDArticle } from './autoria.js';
 import { CASA } from './constants.js';
 import { textArticles, useVistaNevera } from './context.js';
 import { useObriDetall } from './useObriDetall.js';
@@ -31,16 +35,19 @@ const DEIXA = Object.freeze({ valor: 'deixa', etiqueta: 'No el seguisques' });
 
 export function ColumnaACasa({ params }) {
   const { estat, accions, llistaVigent } = useVistaNevera();
-  const { article: obert } = useVistaCataleg();
+  /* La fitxa d'un producte de botiga també el posa a la graella, com el detall (vestits.js). */
+  const { article: obert, fitxa } = useVistaCataleg();
   const llista = llistaVigent(params);
   const linies = perArticle(llista);
   const aCasa = new Map(estat.casa.map((entrada) => [entrada.articleId, entrada.estat]));
   const vestit = { aLaLlista: new Set(linies.keys()), secundari: (a) => TEXTOS_CASA[aCasa.get(a.id)] };
-  const articles = articlesVestits(estat, { ...vestit, productes: productesALaGraella(estat, llista.id, obert) });
+  /* REGLA D'OR 1 (261004) · Cada targeta, amb la boina de qui signa l'article (autoria.js). */
+  const articles = articlesVestits(estat, { ...vestit, productes: productesALaGraella(estat, llista.id, obert || fitxa), autoria: autoriaDArticle });
   const seguits = articles.filter((article) => aCasa.has(article.id));
   const propostes = propostesDeCasa(estat, llista.id);
   return (
     <ColumnaCataleg
+      forma="targetes"
       titol="A casa"
       categories={seccionsDe(estat, llista.id, { totesVisibles: true })}
       articles={articles}

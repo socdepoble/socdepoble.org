@@ -105,8 +105,28 @@ const MAGATZEM = /^src\/apps\/[^/]+\/magatzem\.js$/;
    cap: bar, nevera i salut hi entren només per <app>/magatzem.js. */
 const EXCEPCIONS_EMMAGATZEMATGE = new Map();
 
+/* EL PONT DE LA GESTORIA · ruta → { especificadors, motiu }. Ordre del Mestre,
+   261004 («contaminació crítica de rutes/estats entre Gestoria i Wiki»): la
+   Gestoria ix de la Wiki i viu a la seua app, /app/gestoria. El seu codi es
+   queda a src/sections/gestoria, on el vigila la seua guarda
+   (gestoria/privacitat.test.js: cap xarxa ni backend, l'emmagatzematge només
+   als magatzems declarats, i només en desenvolupament). Este és l'ÚNIC
+   fitxer de src/apps que hi entra, amb ELS especificadors d'esta llista i cap
+   altre, tots per import() dins de la constant de DEV. Cap altre fitxer de
+   src/apps, tampoc de la mateixa app, s'hi acull; i els Tractors, mai. No
+   afebleix cap regla general: només eixos dos parells (fitxer, especificador)
+   passen, i la resta de comprovacions (xarxa, URL, emmagatzematge, backend)
+   s'apliquen igual al pont. */
+const PONTS_GESTORIA = new Map([
+  ['src/apps/gestoria/AppGestoria.jsx', Object.freeze({
+    especificadors: Object.freeze(['../../sections/gestoria/tauler/ShellGestoria.jsx', '../../sections/gestoria/aprendre/Aprendre.jsx']),
+    motiu: 'Ordre del Mestre, 261004: la Gestoria passa de la Wiki a /app/gestoria; el codi es queda al seu carril, amb la seua guarda.'
+  })]
+]);
+const esPont = (ruta, especificador, ponts = PONTS_GESTORIA) => Boolean(ponts.get(ruta)?.especificadors.includes(especificador));
+
 /* Les infraccions d'un fitxer de producció d'una app, com a «ruta: què». */
-function infraccionsDe(ruta, codi, excepcions = EXCEPCIONS_EMMAGATZEMATGE) {
+function infraccionsDe(ruta, codi, excepcions = EXCEPCIONS_EMMAGATZEMATGE, ponts = PONTS_GESTORIA) {
   const propia = (ruta.match(APP_DE) || [''])[0];
   const potMotor = MAGATZEM.test(ruta) || excepcions.has(ruta);
   const trobades = [];
@@ -116,7 +136,7 @@ function infraccionsDe(ruta, codi, excepcions = EXCEPCIONS_EMMAGATZEMATGE) {
     if (IMPORT_VETAT.test(desti)) trobades.push(`import ${especificador}`);
     else if (MOTOR_LOCAL.test(desti)) {
       if (!potMotor) trobades.push(`import ${especificador} fora de magatzem.js`);
-    } else if (!PAQUETS.has(desti) && !PERMESOS_DE_FORA.has(desti) && !desti.startsWith(UTILS)) {
+    } else if (!PAQUETS.has(desti) && !PERMESOS_DE_FORA.has(desti) && !desti.startsWith(UTILS) && !esPont(ruta, especificador, ponts)) {
       trobades.push(`import ${especificador} fora de la llista blanca`);
     }
   }
@@ -210,10 +230,50 @@ describe('cerca global i traducció', () => {
     expect(trobats).toEqual([]);
   });
 
-  test('cap app importa la Gestoria ni els Tractors (D3)', () => {
+  /* D3 continua per a tota la resta de src/apps: només el pont de la Gestoria
+     (PONTS_GESTORIA, ordre del Mestre del 261004) hi entra, amb els seus dos
+     especificadors. Els Tractors, cap. */
+  test('cap app importa la Gestoria ni els Tractors (D3), llevat del pont declarat de la Gestoria', () => {
     const trobats = APPS.flatMap((fitxer) => especificadors(llig(fitxer))
-      .filter((e) => /sections\/(?:gestoria|tractors)\//.test(e)).map((e) => `${fitxer}: ${e}`));
+      .filter((e) => /sections\/(?:gestoria|tractors)\//.test(e) && !esPont(fitxer, e)).map((e) => `${fitxer}: ${e}`));
     expect(trobats).toEqual([]);
+  });
+
+  test('el pont de la Gestoria és just: existix, porta exactament els seus especificadors, dinàmics i dins de DEV, i cap dels Tractors', () => {
+    expect([...PONTS_GESTORIA.keys()]).toEqual(['src/apps/gestoria/AppGestoria.jsx']);
+    for (const [ruta, { especificadors: llista, motiu }] of PONTS_GESTORIA) {
+      expect(APPS, ruta).toContain(ruta);
+      expect(motiu.length, ruta).toBeGreaterThan(40);
+      expect(llista.every((e) => /^\.\.\/\.\.\/sections\/gestoria\//.test(e)), ruta).toBe(true);
+      const codi = llig(ruta);
+      const delsCarrils = (text) => especificadors(text).filter((e) => /sections\/(?:gestoria|tractors)\//.test(e));
+      /* Tots dins de la constant de DEV, per import(), i fora d'ella cap. */
+      const inici = codi.indexOf('const VISTES = import.meta.env.DEV ? Object.freeze({');
+      const fi = codi.indexOf('}) : null;', inici);
+      expect(inici, ruta).toBeGreaterThan(-1);
+      expect(fi, ruta).toBeGreaterThan(inici);
+      const bloc = codi.slice(inici, fi);
+      expect(delsCarrils(bloc)).toEqual([...llista]);
+      expect([...bloc.matchAll(/lazy\(\(\) => import\('\.\.\/\.\.\/sections\/gestoria\//g)]).toHaveLength(llista.length);
+      expect(delsCarrils(codi.slice(0, inici) + codi.slice(fi))).toEqual([]);
+    }
+  });
+
+  test('el pont no s’estén: ni a un altre fitxer, ni a un altre especificador, ni als Tractors (casos sintètics)', () => {
+    const PONT = 'src/apps/gestoria/AppGestoria.jsx';
+    const shell = "const C = lazy(() => import('../../sections/gestoria/tauler/ShellGestoria.jsx'));";
+    expect(infraccionsDe(PONT, shell)).toEqual([]);
+    expect(infraccionsDe('src/apps/gestoria/Altre.jsx', shell))
+      .toEqual(['src/apps/gestoria/Altre.jsx: import ../../sections/gestoria/tauler/ShellGestoria.jsx fora de la llista blanca']);
+    expect(infraccionsDe('src/apps/bar/AppBar.jsx', shell)).toHaveLength(1);
+    expect(infraccionsDe(PONT, "import C from '../../sections/gestoria/ContenidorGestoria.jsx';"))
+      .toEqual([`${PONT}: import ../../sections/gestoria/ContenidorGestoria.jsx fora de la llista blanca`]);
+    expect(infraccionsDe(PONT, "const T = lazy(() => import('../../sections/tractors/PanellTractors.jsx'));"))
+      .toEqual([`${PONT}: import ../../sections/tractors/PanellTractors.jsx fora de la llista blanca`]);
+    /* La resta de la regla s'aplica igual al pont. */
+    expect(infraccionsDe(PONT, ['await fet', 'ch(adreca);'].join(''))).toEqual([`${PONT}: fetch`]);
+    expect(esPont(PONT, '../../sections/gestoria/aprendre/Aprendre.jsx')).toBe(true);
+    expect(esPont(PONT, '../../sections/gestoria/aprendre/Aprendre.jsx', new Map())).toBe(false);
   });
 });
 

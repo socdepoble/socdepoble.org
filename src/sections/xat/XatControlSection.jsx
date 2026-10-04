@@ -20,6 +20,10 @@
  * L'opció «Amplària de les columnes» fa exactament el que fa la roda del Bloc
  * de Notes (WorkspaceSettingsDialog): els tres valors predefinits d'AppGridShell.
  * La resta d'opcions diuen honestament que encara no fan res (UX-D03).
+ *
+ * Ordre del Mestre del 261004 (prompt 261004_0515, T5) · «Multimèdia,
+ * enllaços i documents» ja no és pendent: porta (`ruta`) a la vista del rail
+ * /xat?vista=multimedia, la mateixa porta que la fila d'Ajustos > Xats.
  */
 import { useState } from 'react';
 import { ArrowLeft, CircleDashed, Image as ImageIcon, PanelLeft, ShieldCheck, Timer } from 'lucide-react';
@@ -27,14 +31,17 @@ import AppGridColumn from '../../components/layout/AppGridColumn.jsx';
 import { useAppGrid } from '../../components/layout/AppGridShell.jsx';
 import { Boto } from '../../components/PedraSeca/index.js';
 import { useUIActions } from '../../app/contexts/UIContext';
+import { useNavigate } from '../../app/contexts/RouterContext';
 import { useSEO } from '../../hooks/useSEO';
 import { resolveAsset } from '../../config/assetResolver.js';
 import ClosCaXat, { BotoObriRail } from './components/ClosCaXat.jsx';
 import PanellInicialMobil from './components/PanellInicialMobil.jsx';
 import { PRESETS_AMPLARIA } from './amplariaColumnes.js';
+import { RUTES_AJUSTOS } from './ajustosXat.js';
 
+/* `ruta`: l'opció no s'obri a la dreta, porta a eixa ruta de l'app. */
 const OPCIONS = [
-  { id: 'multimedia', icona: ImageIcon, titol: ['section.xat.control.multimedia.titol', 'Multimèdia, enllaços i documents'], text: ['section.xat.control.multimedia.text', "Revisa tot el que s'ha enviat al xat."], pendent: true },
+  { id: 'multimedia', icona: ImageIcon, titol: ['section.xat.control.multimedia.titol', 'Multimèdia, enllaços i documents'], text: ['section.xat.control.multimedia.text', "Revisa tot el que s'ha enviat al xat."], pendent: false, ruta: RUTES_AJUSTOS.multimedia },
   { id: 'temporals', icona: Timer, titol: ['section.xat.control.temporals.titol', 'Missatges temporals'], text: ['section.xat.control.temporals.text', "Activa l'autodestrucció de missatges per a converses sensibles."], pendent: true },
   { id: 'privacitat', icona: ShieldCheck, titol: ['section.xat.control.privacitat.titol', 'Privacitat i seguretat'], text: ['section.xat.control.privacitat.text', 'Silenciar notificacions, bloquejar, xifratge extrem a extrem.'], pendent: true },
   { id: 'espai', icona: PanelLeft, titol: ['section.xat.control.espai.titol', 'Amplària de les columnes'], text: ['section.xat.control.espai.text', 'Tria com d\'amples són les columnes de navegació i de llista.'], pendent: false }
@@ -47,9 +54,16 @@ const OPCIONS = [
 
 export default function XatControlSection() {
   const { t } = useUIActions();
+  const navigate = useNavigate();
   const [opcioId, setOpcioId] = useState(null);
   const opcio = OPCIONS.find((o) => o.id === opcioId) || null;
   const titol = t('section.xat.control.titol', 'Control del xat');
+  /* Torn 261004 (T5) · Una opció amb `ruta` hi porta; la resta s'obri a la dreta. */
+  const triaOpcio = (id) => {
+    const triada = OPCIONS.find((o) => o.id === id);
+    if (triada?.ruta) navigate(triada.ruta);
+    else setOpcioId(id);
+  };
 
   useSEO({
     title: titol,
@@ -70,7 +84,7 @@ export default function XatControlSection() {
       />
       <FilaSegona />
       <div className="sdp-workspace-column__body">
-        <LlistaOpcions opcioId={opcioId} onTria={setOpcioId} t={t} />
+        <LlistaOpcions opcioId={opcioId} onTria={triaOpcio} t={t} />
       </div>
     </aside>
   );

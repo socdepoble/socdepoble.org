@@ -83,6 +83,35 @@ describe('useVistaCataleg', () => {
     expect(ubicacio()).toBe('/app/bar/caixa');
   });
 
+  /* Ordre del Mestre, 261004 (auditoria 0605, «?seccio= sobreviu al tancament de l'article») · La
+     secció que hi escriu l'Índex de la Pàgina Universal és de l'article obert: deixar l'article
+     l'esborra, i la vista no la llig ni la torna. */
+  test('la secció de l’article (?seccio=) no sobreviu a l’article: tancar-lo, obrir-ne un altre o triar categoria l’esborren', () => {
+    munta('/app/bar/caixa?vista=llista&article=tallat&seccio=preus');
+    expect(captura.vista).not.toHaveProperty('seccio');
+    act(() => captura.vista.tancaArticle());
+    expect(ubicacio()).toBe('/app/bar/caixa?vista=llista');
+    cleanup();
+    munta('/app/bar/caixa?categoria=cafes&article=tallat&seccio=preus');
+    act(() => captura.vista.obriArticle('cafe'));
+    expect(ubicacio()).toBe('/app/bar/caixa?categoria=cafes&article=cafe');
+    cleanup();
+    munta('/app/bar/caixa?article=tallat&seccio=preus');
+    act(() => captura.vista.triaCategoria('cafes'));
+    expect(ubicacio()).toBe('/app/bar/caixa?categoria=cafes');
+    /* Canviar la vista no deixa l'article: la secció es queda. */
+    cleanup();
+    munta('/app/bar/caixa?article=tallat&seccio=preus');
+    act(() => captura.vista.triaVista('llista'));
+    expect(ubicacio()).toBe('/app/bar/caixa?article=tallat&seccio=preus&vista=llista');
+  });
+
+  test('canviar de banda tanca el detall i també la seua secció', () => {
+    munta('/app/bar/caixa?categoria=cafes&article=tallat&seccio=preus');
+    expect(captura.vistes.cataleg.cami).toBe('/app/bar/caixa?categoria=cafes');
+    expect(captura.vistes.colleccio.cami).toBe('/app/bar/caixa/colleccio?categoria=cafes');
+  });
+
   test('una altra vista per defecte (la llista del TPV mòbil)', () => {
     munta('/app/bar/caixa', { vistaPerDefecte: 'llista' });
     expect(captura.vista.vista).toBe('llista');

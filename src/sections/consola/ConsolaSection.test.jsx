@@ -58,44 +58,67 @@ const MAPA = {
   salut: []
 };
 
-/* Dues receptes de targeta, cap d'inventada:
-   - TargetaResum (xifres i vistes del Mapa): la del Panell de Control,
-     «action», icona de 40 px dins de .sdp-card-grid;
-   - TargetaConsola (tauler i pols): la UniversalCard sencera del Mur, amb
-     boina taronja, icona a la insígnia lateral, entradilla i peu blau.
-   La que no obri res du a més `sdp-consola__quieta`, que li lleva
-   l'aparença de clicable (i, sense acció, no té peu). */
+/* Una sola recepta de targeta, cap d'inventada: TargetaConsola (tauler, pols,
+   les xifres del Mas, les de dins de les pàgines i les peces del Mapa), la
+   UniversalCard sencera del Mur, amb la boina de Sóc de Poble (l'autor porta
+   a /projecte) i la data a la seua pastilla, icona a la insígnia lateral,
+   entradilla i el peu de la barra blava; tota la targeta porta a la seua
+   pàgina pròpia.
+   Derogat per l'ordre del Mestre del 261004 (xat: cap xifra solta): la
+   segona recepta, TargetaResum (la del Panell de Control, «action», icona de
+   40 px, sense boina ni pàgina), que conservaven «les xifres dels detalls».
+   Derogat per l'ordre del Mestre del 261004 (xat: tota targeta amb boina i
+   pàgina pròpia): la targeta de sistema sense boina, amb la data a
+   l'última línia del cos (prompt 261004_0515, §6/T8). Continua derogada la
+   boina inventada «Consola Termodinàmica» i la «Font: …». Cap targeta de la
+   Consola és ja `sdp-consola__quieta`. */
 const esClicable = (t) => [...t.children].some((c) => c.classList.contains('sp-card-link-overlay'));
-const esExplicativa = (t) => t.classList.contains('sdp-consola__targeta');
-function targetesDeControl(contenidor = document) {
-  const targetes = [...contenidor.querySelectorAll('article.sp-card')].filter((t) => !esExplicativa(t));
-  for (const t of targetes) {
-    expect(t.className).toBe(esClicable(t) ? 'sp-card sp-card--action' : 'sp-card sp-card--action sdp-consola__quieta');
-    expect(t.parentElement.classList.contains('sdp-card-grid')).toBe(true);
-    expect(t.querySelector('.sp-card-title-icon svg').getAttribute('width')).toBe('40');
-  }
+/** Cap targeta del Control ni cap targeta sense boina: cap xifra solta. */
+function capXifraSolta(contenidor = document) {
+  expect([...contenidor.querySelectorAll('article.sp-card--action, article.sdp-consola__quieta')]).toEqual([]);
+  expect([...contenidor.querySelectorAll('article.sp-card')].filter((t) => !t.querySelector(':scope > .sp-card-header'))).toEqual([]);
   expect(document.querySelector('.sdp-consola__tauler, .sdp-consola__resum, .sdp-consola__xifra')).toBeNull();
-  return targetes;
 }
-function targetesExplicatives(contenidor = document) {
+/** La boina de Sóc de Poble: l'autor enllaçat a la pàgina del projecte, amb logo i poble. */
+function teBoinaDeSocDePoble(t) {
+  const capcal = t.firstElementChild;
+  expect(capcal.className).toBe('sp-card-header');
+  const autor = capcal.querySelector('a.sp-card-author-link');
+  expect(autor.getAttribute('href')).toBe('/projecte');
+  expect(autor.querySelector('.sp-card-author-name').textContent).toBe('Sóc de Poble');
+  expect(autor.querySelector('.sp-card-author-location').textContent).toBe('La Torre de les Maçanes');
+  expect(autor.querySelector('img.sp-card-avatar').getAttribute('src')).toBe('/assets/system/ui/logo-socdepoble-cuadrat-verd.svg');
+}
+function targetesExplicatives(contenidor = document, { perA = true } = {}) {
   const targetes = [...contenidor.querySelectorAll('article.sp-card.sdp-consola__targeta')];
   for (const t of targetes) {
     expect(t.className).toBe(esClicable(t) ? 'sp-card sdp-consola__targeta' : 'sp-card sdp-consola__targeta sdp-consola__quieta');
     expect(t.parentElement.classList.contains('sdp-card-grid')).toBe(true);
-    // Boina taronja d'autoria i font; la icona ocupa el lloc de la foto.
-    expect(t.querySelector('.sp-card-header .sp-card-author-name').textContent).toBe('Consola Termodinàmica');
-    expect(t.querySelector('.sp-card-header .sp-card-author-location').textContent).toMatch(/^Font: /);
+    // La boina de l'autor real; mai una autoria inventada ni la font. La icona ocupa el lloc de la foto.
+    teBoinaDeSocDePoble(t);
+    expect(t.textContent).not.toMatch(/Consola Termodinàmica|Font: /);
     expect(t.querySelector('.sp-card-media-container')).toBeNull();
     expect(t.querySelector('.sp-card-calendar-badge svg').getAttribute('width')).toBe('48');
-    // Títol, subtítol «per a…» i entradilla.
+    // Títol, subtítol («per a…» al tauler i al pols) i entradilla.
     expect(t.querySelector('h3.sp-card-title')).not.toBeNull();
-    expect(t.querySelector('h4.sp-card-subtitle').textContent).toMatch(/^Per a /);
+    if (perA) expect(t.querySelector('h4.sp-card-subtitle').textContent).toMatch(/^Per a /);
+    else expect(t.querySelector('h4.sp-card-subtitle').textContent.length).toBeGreaterThan(5);
     expect(t.querySelector('.sp-card-text > p').textContent.length).toBeGreaterThan(20);
-    // Peu blau només quan hi ha acció: cap peu buit.
+    // Peu blau només quan hi ha acció: cap peu buit. I és el de la barra blava, amb el verb canònic.
     expect(Boolean(t.querySelector('.sp-card-footer .sp-card-connect'))).toBe(esClicable(t));
+    if (esClicable(t)) {
+      const titol = t.querySelector('h3').textContent;
+      expect([...t.querySelectorAll('.sp-card-footer button')].map((b) => b.getAttribute('aria-label')))
+        .toEqual([`Traduir ${titol}`, `Comentar ${titol}`, `Compartir ${titol}`, `Connectar amb ${titol}`]);
+    }
   }
   return targetes;
 }
+
+/* T51 · La data de cada targeta explicativa, a la pastilla de la boina: un
+   <time> sense clic (ordre del Mestre, 261004: tota targeta amb boina). */
+const datesDeLaBoina = (contenidor) => [...contenidor.querySelectorAll('.sp-card-header .sp-card-meta > time.btn-date-time')];
+const textDeLaPastilla = (pastilla) => [...pastilla.querySelectorAll('span')].map((s) => s.textContent).join(' · ');
 
 /** Les etiquetes de cada targeta d'un contenidor, pel títol de la targeta. */
 function etiquetesPerTargeta(contenidor) {
@@ -110,32 +133,55 @@ test('/consola: el tauler són nou targetes universals que expliquen cada pàgin
   await screen.findByText('Dades no disponibles en este entorn');
 
   expect(screen.getAllByRole('heading', { level: 1 }).map((h) => h.textContent)).toEqual(['Consola Termodinàmica']);
-  expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual(['Manteniment de la IAIA']);
+  /* Correcció 261004 (verificador, punt 9) · sense Mapa, «El Mas en xifres»
+     també es pinta (cap pàgina sense targeta): el seu h2 ve darrere del de
+     la introducció. */
+  expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual(['Manteniment de la IAIA', 'El Mas en xifres']);
   expect(document.querySelector('.page-intro h2 + p.lead')).not.toBeNull();
   expect(screen.queryByRole('tablist')).toBeNull();
 
   const nav = screen.getByRole('navigation', { name: 'Pàgines de la Consola' });
   expect(targetesExplicatives(nav)).toHaveLength(9);
   expect(nav.className).toBe('sdp-card-grid sdp-consola__graella');
-  expect(within(nav).getAllByRole('link').map((a) => a.getAttribute('href'))).toEqual(PAGINES.map((id) => `/consola/${id}`));
-  // El peu blau porta Compartir i «Obrir» amb el títol al nom accessible.
-  expect(within(nav).getAllByRole('button', { name: /^Obrir: / })).toHaveLength(9);
-  expect(within(nav).getAllByRole('button', { name: /^Compartir / })).toHaveLength(9);
+  // Tota la targeta porta a la seua pàgina; l'autor de la boina, a /projecte.
+  expect([...nav.querySelectorAll('a.sp-card-link-overlay')].map((a) => a.getAttribute('href'))).toEqual(PAGINES.map((id) => `/consola/${id}`));
+  expect([...nav.querySelectorAll('a.sp-card-author-link')].map((a) => a.getAttribute('href'))).toEqual(Array(9).fill('/projecte'));
+  // Ordre del Mestre, 261004 · el peu de la barra blava, amb el títol al nom
+  // accessible. Derogat per l'ordre del Mestre del 261004 (prompt
+  // 261004_0515): «Compartir + Obrir».
+  for (const verb of ['Traduir ', 'Comentar ', 'Compartir ', 'Connectar amb ']) {
+    expect(within(nav).getAllByRole('button', { name: new RegExp(`^${verb}`) }), verb).toHaveLength(9);
+  }
+  expect(within(nav).queryAllByRole('button', { name: /^(Obrir|Veure detall)/ })).toEqual([]);
   // La dada viva va a part de l'entradilla; si falta la font, diu per què.
   expect(screen.getAllByText('Mapa no disponible en este entorn').map((p) => p.className)).toEqual(Array(8).fill('sdp-consola__dada'));
   // T51 · cap targeta sense data: sense instantània, la del copy de la
-  // Consola (PAGE_COPY), mai la d'ara.
+  // Consola (PAGE_COPY), mai la d'ara; a la pastilla de la boina, mai al cos.
   const copia = dataHoraDeBarra({ creat: PAGE_COPY.consola.date });
-  const dates = [...nav.querySelectorAll('.sp-card-header .btn-date-time')];
+  const dates = datesDeLaBoina(nav);
   expect(dates).toHaveLength(9);
-  expect(dates.every((d) => d.getAttribute('datetime') === copia.dateTime && d.textContent === `${copia.time}${copia.date}`)).toBe(true);
+  expect(dates.every((d) => d.getAttribute('datetime') === copia.dateTime
+    && textDeLaPastilla(d) === [copia.time, copia.date].filter(Boolean).join(' · '))).toBe(true);
+  expect(nav.querySelector('.sp-card-text time, .sdp-consola__data')).toBeNull();
   // Sense cap font, cada targeta ho diu també d'un colp d'ull.
   expect(Object.values(etiquetesPerTargeta(nav))).toEqual(Array(9).fill(['Sense font:neutre']));
   // T3 · sense font no hi ha res de dins que desglossar.
   expect(nav.querySelector('.sdp-consola__estats')).toBeNull();
+  // Correcció 261004 (verificador, punt 9) · sense Mapa, les deu xifres del
+  // Mas continuen sent targetes, amb el seu nom i cap número inventat.
+  const xifres = screen.getByRole('region', { name: 'El Mas en xifres' });
+  expect(targetesExplicatives(xifres, { perA: false })).toHaveLength(10);
+  expect([...xifres.querySelectorAll('h3')].map((h) => h.textContent).join(' ')).not.toMatch(/\d/);
+  expect([...xifres.querySelectorAll('a.sp-card-link-overlay')].map((a) => a.getAttribute('href'))).toEqual(SLUGS.map((s) => `/consola/xifres/${s}`));
+  capXifraSolta();
 });
 
-test('/consola amb Mapa: la boina porta l’hora local de la instantània, que no navega', async () => {
+/* Ordre del Mestre, 261004 (xat: tota targeta amb boina i pàgina pròpia) ·
+   La data torna a la pastilla de la boina: un <time> de només lectura, que
+   no porta al Calendari (una instantània de dades no és cap publicació).
+   Derogat per l'ordre del Mestre del 261004 (xat: tota targeta amb boina i
+   pàgina pròpia): la data a l'última línia del cos. */
+test('/consola amb Mapa: la pastilla de la boina porta l’hora local de la instantània, que no navega', async () => {
   fonts.mapa = MAPA;
   render(<ConsolaSection />);
   await screen.findByText('Dades no disponibles en este entorn');
@@ -143,15 +189,15 @@ test('/consola amb Mapa: la boina porta l’hora local de la instantània, que n
   // Les huit del Mapa porten la instantània (més recent que el copy); el pols,
   // sense consola.json, la data del copy.
   const instantania = dataHoraDeBarra({ modificat: MAPA.generat }).dateTime;
-  const hores = [...nav.querySelectorAll('.sp-card-header .btn-date-time')]
-    .filter((h) => h.getAttribute('datetime') === instantania);
+  const hores = datesDeLaBoina(nav).filter((h) => h.getAttribute('datetime') === instantania);
   expect(hores).toHaveLength(8);
-  expect(hores.every((h) => h.tagName === 'TIME')).toBe(true);
+  expect(hores.every((h) => h.tagName === 'TIME' && !h.closest('a, button'))).toBe(true);
+  expect(nav.querySelector('.sp-card-header button')).toBeNull();
   expect(new Date(instantania).getTime()).toBe(Date.parse('2026-09-25T13:12:23Z'));
   // Hora i data locals: la prova no depén de la zona horària de qui l'executa.
   const d = new Date(MAPA.generat);
   const dos = (n) => String(n).padStart(2, '0');
-  expect(hores[0].textContent).toBe(`${dos(d.getHours())}:${dos(d.getMinutes())}${dos(d.getDate())}/${dos(d.getMonth() + 1)}/${String(d.getFullYear()).slice(-2)}`);
+  expect(textDeLaPastilla(hores[0])).toBe(`${dos(d.getHours())}:${dos(d.getMinutes())} · ${dos(d.getDate())}/${dos(d.getMonth() + 1)}/${String(d.getFullYear()).slice(-2)}`);
 });
 
 test('/consola amb Mapa: etiquetes d’un colp d’ull calculades amb les dades, mai inventades', async () => {
@@ -225,17 +271,22 @@ test('T3 · /consola amb Mapa: el to del primer estat és el de l’etiqueta de 
   }
 });
 
+/* Correcció 261004 (verificador de la segona passada, punt 3) · les
+   signatures concorden («1 tasca · 1 viva», «1 arnés que conversa»): amb un 1
+   canvien una sola vegada. */
 test('T3 · /consola: la coberta no fa saltar «Canvis nous», perquè la signatura no en sap res', async () => {
   fonts.mapa = MAPA;
   localStorage.setItem(CLAU_VISTES, JSON.stringify({
     explorador: '3 nodes · 0 arestes',
     fluxos: '0 cadenes declarades · 0 suggeriments de la prosa',
-    calendari: '1 tasques · 1 vives · 0 mortes',
+    calendari: '1 tasca · 1 viva · 0 mortes',
     inventari: '2 skills al Mapa',
     entrades: '2 skills · 0 rutes documentals',
-    agents: '0 agents atòmics · 1 arnesos que conversen',
-    actors: '1 arnesos · 0 candats · 1 tasques programades',
-    salut: '1 avisos (0 alts) · 0 mètriques'
+    agents: '0 agents atòmics · 1 arnés que conversa',
+    actors: '1 arnés · 0 candats · 1 tasca programada',
+    /* Correcció 261004 (verificador de la tercera passada, punt 5) · la mètrica
+       és la xifra de la targeta «metriques-amb-mesura». Derogat «0 mètriques». */
+    salut: '1 avís (0 alts) · 0 mètriques de salut amb mesura'
   }));
   render(<ConsolaSection />);
   await screen.findByText('Dades no disponibles en este entorn');
@@ -246,7 +297,7 @@ test('T3 · /consola: la coberta no fa saltar «Canvis nous», perquè la signat
 
 test('/consola: «Canvis nous» quan el resum ha canviat des de l’última visita d’este visitant', async () => {
   fonts.mapa = MAPA;
-  localStorage.setItem(CLAU_VISTES, JSON.stringify({ explorador: '2 nodes · 0 arestes', calendari: '1 tasques · 1 vives · 0 mortes' }));
+  localStorage.setItem(CLAU_VISTES, JSON.stringify({ explorador: '2 nodes · 0 arestes', calendari: '1 tasca · 1 viva · 0 mortes' }));
   render(<ConsolaSection />);
   await screen.findByText('Dades no disponibles en este entorn');
   const etiquetes = etiquetesPerTargeta(screen.getByRole('navigation', { name: 'Pàgines de la Consola' }));
@@ -284,23 +335,104 @@ test.each(PAGINES)('/consola/%s: H1, H2 d’introducció sense punt final i entr
   expect(screen.getAllByRole('heading', { level: 2 })).toEqual([h2]);
 });
 
-test('/consola amb Mapa: les xifres de la capçalera d’Emowe, també com a targetes del Control', async () => {
+/* Ordre del Mestre, 261004 (xat: tota targeta amb boina i pàgina pròpia) ·
+   Cap xifra solta: cada una és una UniversalCard sencera, amb la boina de
+   Sóc de Poble (autor a /projecte, la data de la mesura a la pastilla),
+   títol amb la xifra, subtítol, entradeta que explica què compta, d'on ix i
+   per què importa, la icona a la insígnia lateral i el peu canònic. Tota la
+   targeta porta a la seua pàgina pròpia, /consola/xifres/<slug>.
+   Derogat per l'ordre del Mestre del 261004 (xat: tota targeta amb boina i
+   pàgina pròpia): les xifres com a targetes compactes del Control, sense
+   boina ni peu, que portaven a una pàgina de la Consola (prompt
+   261004_0515, §6/T8; la T11 del 260930 ja estava derogada). */
+const SLUGS = ['skills', 'agents', 'skills-opaques', 'coses-que-corren-soles', 'skills-amb-avisos', 'avisos-alts',
+  'linies-ledger', 'torns-caducats', 'skills-fora-del-segell', 'skills-orfenes'];
+
+test('/consola amb Mapa: cada xifra del Mas és una targeta pura amb boina, cos i peu, que porta a la seua pàgina', async () => {
   fonts.mapa = MAPA;
   render(<ConsolaSection />);
   await screen.findByText('Dades no disponibles en este entorn');
 
   const xifres = screen.getByRole('region', { name: 'El Mas en xifres' });
-  const targetes = targetesDeControl(xifres);
-  // El títol porta la xifra i el nom.
-  expect(targetes.map((t) => t.querySelector('h3').textContent)).toEqual(
-    ['2 skills', '1 agent', '2 skills opaques', '1 cosa que corre sola', '1 skill amb avisos']
-  );
-  // T11 (ordre del Mestre, 260930) · són dades, no portes: cap enllaç ni
-  // botó, i totes quietes (sense l'aparença de clicable).
-  expect(within(xifres).queryAllByRole('link')).toEqual([]);
-  expect(within(xifres).queryAllByRole('button')).toEqual([]);
-  expect(targetes.every((t) => t.classList.contains('sdp-consola__quieta'))).toBe(true);
-  targetesDeControl();
+  // Cap targeta compacta del Control: les deu són explicatives, amb boina.
+  capXifraSolta(xifres);
+  const targetes = targetesExplicatives(xifres, { perA: false });
+  expect(targetes).toHaveLength(10);
+  expect(xifres.querySelector('.sdp-card-grid').className).toBe('sdp-card-grid sdp-consola__graella');
+  // El títol porta la xifra i el que compta; una mesura absent (el Mapa de la
+  // prova no porta salut) ho diu, mai és un zero.
+  expect(targetes.map((t) => [t.querySelector('h3').textContent, t.querySelector('h4').textContent])).toEqual([
+    ['2 skills', 'Al cens del Mapa del Mas'],
+    ['1 agent', 'Arnesos que conversen amb el Mestre'],
+    ['2 skills opaques', 'Sense entrades ni eixides declarades'],
+    ['1 cosa que corre sola', 'Tasques que llança launchd · 1 viva'],
+    // Correcció 261004 (verificador de la tercera passada, punt 5) · derogat «Semàfor ambre o roig a l’Inventari».
+    ['1 skill amb avisos', '0 en roig · 1 en ambre a l’Inventari'],
+    ['0 avisos alts', 'Severitat alta: cal actuar'],
+    // Correcció 261004 (verificador de la segona passada, punt 3) · derogat «— segells fòssils · — línies mal formades».
+    ['LEDGER sense mesura', 'Segells fòssils i línies mal formades'],
+    ['Torns sense mesura', 'Oberts i sense tancar'],
+    ['Segell sense mesura', 'O divergents (només els SKILL.md)'],
+    ['1 skill òrfena', '0 skills fantasma: nomenades i sense carpeta al disc']
+  ]);
+  for (const t of targetes) {
+    const titol = t.querySelector('h3').textContent;
+    // L'entradeta diu què compta, d'on ix (el fitxer o el generador) i per què importa: tres frases.
+    const entradeta = t.querySelector('.sp-card-text > p').textContent;
+    expect(entradeta.split(/(?<=\.) /).length, titol).toBeGreaterThanOrEqual(3);
+    expect(entradeta, titol).toMatch(/mapa\.json|LEDGER\.md|SKILLS_SEAL\.json|runtime\/turns/);
+    // Sense imatge, la icona de la mètrica a la insígnia lateral.
+    expect(t.querySelector('.sp-card-body.has-aside .sp-card-calendar-badge svg'), titol).not.toBeNull();
+    // La data de la mesura (la instantània del Mapa) a la pastilla de la boina.
+    expect(datesDeLaBoina(t)[0].getAttribute('datetime')).toBe(dataHoraDeBarra({ modificat: MAPA.generat }).dateTime);
+    // El peu canònic: quatre accions.
+    expect([...t.querySelectorAll('.sp-card-footer button')].map((b) => b.getAttribute('aria-label')), titol)
+      .toEqual([`Traduir ${titol}`, `Comentar ${titol}`, `Compartir ${titol}`, `Connectar amb ${titol}`]);
+  }
+  // Tota la targeta porta a la pàgina pròpia de la xifra; l'autor, a /projecte.
+  expect([...xifres.querySelectorAll('a.sp-card-link-overlay')].map((a) => a.getAttribute('href')))
+    .toEqual(SLUGS.map((slug) => `/consola/xifres/${slug}`));
+  expect([...xifres.querySelectorAll('a.sp-card-author-link')].map((a) => a.getAttribute('href'))).toEqual(Array(10).fill('/projecte'));
+  expect(targetes.some((t) => t.classList.contains('sdp-consola__quieta'))).toBe(false);
+  // Cap peça del tauler sense boina.
+  expect([...document.querySelectorAll('main article.sp-card')].filter((t) => !t.querySelector(':scope > .sp-card-header'))).toEqual([]);
+});
+
+test('261004 · El Mas en xifres: les anomalies del Mapa amb mesura (LEDGER, torns, segell, alts, fantasmes)', async () => {
+  const metrica = (nom, extra) => ({ metrica: nom, unitat: 'fraccio', numerador: null, denominador: null, font: 'x', prova: 'p', ...extra });
+  fonts.mapa = {
+    ...MAPA,
+    nodes: [...MAPA.nodes, { id: 'skill:perduda', tipus: 'skill', font: null, atributs: {} }],
+    avisos: [...MAPA.avisos,
+      { node: 'skill:perduda', codi: 'skill-fantasma', severitat: 'alta', evidencia: 'disc' },
+      { node: 'skill:sdp-workflow', codi: 'segell-divergent', severitat: 'alta', evidencia: '.agents/SKILLS_SEAL.json' }],
+    salut: [
+      metrica('ledger-fossils', { valor: 8, unitat: 'segells fòssils' }),
+      metrica('ledger-mal-formades', { valor: 2, unitat: 'línies mal formades' }),
+      metrica('torns-caducats-oberts', { valor: 0.878, numerador: 166, denominador: 189 }),
+      metrica('segell-skills-coherent', { valor: 0.833, numerador: 25, denominador: 30 })
+    ]
+  };
+  render(<ConsolaSection />);
+  await screen.findByText('Dades no disponibles en este entorn');
+  const xifres = screen.getByRole('region', { name: 'El Mas en xifres' });
+  const perTitol = Object.fromEntries([...xifres.querySelectorAll('article')].map((t) => [
+    t.querySelector('h3').textContent, t.querySelector('h4').textContent]));
+  expect(perTitol).toMatchObject({
+    '2 avisos alts': 'Severitat alta: cal actuar',
+    '10 línies del LEDGER per revisar': '8 segells fòssils · 2 línies mal formades',
+    '166 torns caducats': 'Oberts i sense tancar',
+    '5 skills fora del segell': 'O divergents (només els SKILL.md)',
+    // Correcció 261004 (verificador de la tercera passada, punt 2) · derogat «1 skill fantasma: nomenades».
+    '1 skill òrfena': '1 skill fantasma: nomenada i sense carpeta al disc'
+  });
+  // Cada una porta a la seua pàgina pròpia, amb un slug que no depén de la xifra.
+  expect(Object.fromEntries([...xifres.querySelectorAll('article')].map((t) => [
+    t.querySelector('h3').textContent, t.querySelector('a.sp-card-link-overlay').getAttribute('href')]))).toMatchObject({
+    '166 torns caducats': '/consola/xifres/torns-caducats',
+    '10 línies del LEDGER per revisar': '/consola/xifres/linies-ledger',
+    '5 skills fora del segell': '/consola/xifres/skills-fora-del-segell'
+  });
 });
 
 /* T2 (ordre del Mestre, 260930) · efecte tauler: cada mètrica de les
@@ -315,8 +447,10 @@ test('/consola amb Mapa: les mètriques del tauler són h5, en l’ordre del res
     [...t.querySelectorAll('.sdp-consola__metriques > h5.sdp-consola__metrica')].map((h) => h.textContent)
   ]));
   expect(perTargeta['Explorador del cervell']).toEqual(['3 nodes', '0 arestes']);
-  expect(perTargeta['Calendari de processos']).toEqual(['1 tasques', '1 vives', '0 mortes']);
-  expect(perTargeta['Avisos i salut']).toEqual(['1 avisos (0 alts)', '0 mètriques']);
+  // Correcció 261004 (verificador de la segona passada, punt 3) · cada mètrica concorda.
+  expect(perTargeta['Calendari de processos']).toEqual(['1 tasca', '1 viva', '0 mortes']);
+  // Correcció 261004 (verificador de la tercera passada, punt 5) · derogat «0 mètriques», sense targeta.
+  expect(perTargeta['Avisos i salut']).toEqual(['1 avís (0 alts)', '0 mètriques de salut amb mesura']);
   // Sense consola.json, el pols no té mètriques: diu per què en paràgraf.
   expect(perTargeta['El pols del cervell']).toEqual([]);
   expect(screen.getByText('Dades no disponibles en este entorn').tagName).toBe('P');
@@ -361,7 +495,14 @@ test.each(PAGINES)('/consola/%s: la molla de pa és un panell propi al cim i les
   expect(molla.closest('.sdp-consola__capcal')).toBeNull();
 });
 
-test('/consola/pols: targetes de resum del Control i el detall a part, que la targeta obri', async () => {
+/* Ordre del Mestre, 261004 (xat: cap xifra solta) · Cada panell del pols és
+   una targeta sencera que porta a la seua pàgina pròpia, /consola/pols/<id>
+   (ConsolaSection.pols.test.jsx), també sense font: mai una targeta quieta
+   sense peu. Derogat per l'ordre del Mestre del 261004 (xat: cap xifra
+   solta): el detall en un <details> davall de la graella que la targeta
+   obria, i la Càrrega documental quieta (sense botó, peu ni aparença de
+   clicable) quan no hi havia termometria. */
+test('/consola/pols: cinc targetes amb boina, cada una porta a la pàgina del seu panell; cap desplegable', async () => {
   ruta.comodi = 'pols';
   fonts.consola = {
     generat: '2026-09-25T13:00:00.000Z',
@@ -370,46 +511,36 @@ test('/consola/pols: targetes de resum del Control i el detall a part, que la ta
     segell: null, immunitari: { operacions: 3 }
   };
   render(<ConsolaSection />);
-  await screen.findByText('1 registres');
+  await screen.findByText('1 registre');
 
-  // La primera graella són els cinc panells explicats; les xifres dels
-  // detalls conserven la targeta del Control.
-  targetesDeControl();
+  capXifraSolta();
   const graella = document.querySelector('.sdp-card-grid');
   const resums = targetesExplicatives(graella);
   expect(resums.map((t) => t.querySelector('h3').textContent)).toEqual(['Càrrega documental', 'Consums', 'Crèdits', 'Rebuts', 'Skills']);
-  // T51 · la instantània (més recent que el copy), en ISO local.
-  expect(resums[1].querySelector('.sp-card-header .btn-date-time').getAttribute('datetime'))
+  // T51 · la instantània (més recent que el copy), en ISO local, a la pastilla de la boina.
+  expect(datesDeLaBoina(resums[1])[0].getAttribute('datetime'))
     .toBe(dataHoraDeBarra({ modificat: '2026-09-25T13:00:00.000Z' }).dateTime);
-  // La càrrega documental no té font: ni botó, ni peu, ni aparença de clicable, i ho diu.
-  expect(resums[0].className).toBe('sp-card sdp-consola__targeta sdp-consola__quieta');
-  expect(resums[0].querySelector('.sp-card-footer')).toBeNull();
-  expect(screen.queryByRole('button', { name: 'Càrrega documental' })).toBeNull();
-  expect(document.getElementById('pols-carrega')).toBeNull();
-  // El «Veure detall» del peu blau diu el mateix que la targeta.
-  const peu = screen.getByRole('button', { name: 'Veure detall: Consums' });
-  expect(peu.getAttribute('aria-controls')).toBe('pols-consums');
-  expect(peu.getAttribute('aria-expanded')).toBe('false');
+  // Totes porten a la seua pàgina, també la Càrrega sense font, amb el peu canònic.
+  expect([...graella.querySelectorAll('a.sp-card-link-overlay')].map((a) => a.getAttribute('href')))
+    .toEqual(['carrega', 'consums', 'credits', 'rebuts', 'skills'].map((id) => `/consola/pols/${id}`));
+  expect(resums.every((t) => t.querySelector('.sp-card-footer .sp-card-connect'))).toBe(true);
+  expect(resums[0].querySelector('.sdp-consola__dada').textContent).toMatch(/^Recompte d’artefactes actius encara no disponible/);
   expect(etiquetesPerTargeta(graella)).toEqual({
     'Càrrega documental': ['Sense font:neutre'], Consums: [], Crèdits: ['Sense font:neutre'], Rebuts: [], Skills: []
   });
+  // Cap desplegable ni cap botó que n'obriga: el detall és la pàgina del panell.
+  expect(document.querySelector('details, [aria-controls^="pols-"]')).toBeNull();
+});
 
-  const detall = document.getElementById('pols-consums');
-  expect(detall.tagName).toBe('DETAILS');
-  expect(detall.className).toBe('sdp-consola__detall');
-  expect(detall.querySelector('summary').textContent).toBe('Veure detall de consums');
-  expect(detall.open).toBe(false);
-  const boto = screen.getByRole('button', { name: 'Consums' });
-  expect(boto.getAttribute('aria-controls')).toBe('pols-consums');
-  expect(boto.getAttribute('aria-expanded')).toBe('false');
-  fireEvent.click(boto);
-  expect(detall.open).toBe(true);
-  expect(boto.getAttribute('aria-expanded')).toBe('true');
-  expect(document.activeElement).toBe(detall.querySelector('summary'));
-  // Tancar-lo des del seu summary també ho diu la targeta.
-  detall.open = false;
-  fireEvent(detall, new Event('toggle'));
-  expect(boto.getAttribute('aria-expanded')).toBe('false');
+test('/consola/pols sense consola.json: les cinc targetes continuen completes, amb peu, i porten a la seua pàgina', async () => {
+  ruta.comodi = 'pols';
+  render(<ConsolaSection />);
+  await screen.findByText('Consola no disponible');
+  const graella = document.querySelector('.sdp-card-grid');
+  const resums = targetesExplicatives(graella);
+  expect(resums).toHaveLength(5);
+  expect(resums.every((t) => esClicable(t) && t.querySelector('.sp-card-footer .sp-card-connect'))).toBe(true);
+  capXifraSolta();
 });
 
 test('/consola/pols: una skill fora del manifest pinta «Cal reparar» a la seua targeta', async () => {
@@ -420,12 +551,13 @@ test('/consola/pols: una skill fora del manifest pinta «Cal reparar» a la seua
     segell: null, immunitari: { operacions: 0 }
   };
   render(<ConsolaSection />);
-  // T2 · la targeta Skills porta tres mètriques en h5.
-  await screen.findByText('1 orfes');
+  // T2 · la targeta Skills porta tres mètriques en h5. Ordre del Mestre,
+  // 261004 · sense «orfes» ni «fantasmes», que són paraules del Mapa.
+  await screen.findByText('1 fora del manifest');
   const skills = [...document.querySelectorAll('.sdp-card-grid article.sp-card')]
     .find((t) => t.querySelector('h3').textContent === 'Skills');
   expect([...skills.querySelectorAll('h5.sdp-consola__metrica')].map((h) => h.textContent))
-    .toEqual(['1 skills', '1 orfes', '0 fantasmes']);
+    .toEqual(['1 skill', '1 fora del manifest', '0 sense disc']);
   expect(etiquetesPerTargeta(document.querySelector('.sdp-card-grid'))).toEqual({
     'Càrrega documental': ['Sense font:neutre'], Consums: [], Crèdits: [], Rebuts: [], Skills: ['Cal reparar:error']
   });
@@ -435,18 +567,19 @@ test('/consola/pols: les mètriques dels cinc panells són h5; sense mesura, el 
   ruta.comodi = 'pols';
   fonts.consola = AMB_REBUT();
   render(<ConsolaSection />);
-  await screen.findByText('1 rebuts de lectura');
+  await screen.findByText('1 rebut de lectura');
   const graella = document.querySelector('.sdp-card-grid');
   const perTargeta = Object.fromEntries([...graella.querySelectorAll('article.sp-card')].map((t) => [
     t.querySelector('h3').textContent,
     [...t.querySelectorAll('h5.sdp-consola__metrica')].map((h) => h.textContent)
   ]));
+  // Correcció 261004 (verificador de la segona passada, punt 3) · cada mètrica concorda.
   expect(perTargeta).toEqual({
     'Càrrega documental': ['162 artefactes actius', 'avís per damunt de 150'],
     Consums: [],
-    Crèdits: ['1 proveïdors'],
-    Rebuts: ['1 rebuts de lectura'],
-    Skills: ['1 skills', '0 orfes', '0 fantasmes']
+    Crèdits: ['1 proveïdor'],
+    Rebuts: ['1 rebut de lectura'],
+    Skills: ['1 skill', '0 fora del manifest', '0 sense disc']
   });
   expect(screen.getByText('Sense mesura de tòkens').className).toBe('sdp-consola__dada');
 });
@@ -461,43 +594,22 @@ const AMB_REBUT = () => ({
   termometria: { artefactesActius: 162, abast: 'Escriptori i actes vives' }
 });
 
-test('/consola/pols: Crèdits, Rebuts amb «Veure fonts» i Càrrega amb termometria s’obrin des del peu blau', async () => {
-  ruta.comodi = 'pols';
-  fonts.consola = AMB_REBUT();
-  render(<ConsolaSection />);
-  await screen.findByText('1 rebuts de lectura');
+/* Derogat per l'ordre del Mestre del 261004 (xat: cap xifra solta): Crèdits,
+   Rebuts amb «Veure fonts» i la Càrrega obrint el seu desplegable des del peu
+   blau, i la privacitat del peu dins del desplegable de Rebuts. Ara cada
+   panell té pàgina pròpia: les mateixes comprovacions viuen, amb el router
+   de veres, a ConsolaSection.pols.test.jsx. */
 
-  // Amb termometria la Càrrega ja no és quieta: obri el seu detall i avisa de saturació.
-  fireEvent.click(screen.getByRole('button', { name: 'Veure detall: Càrrega documental' }));
-  expect(document.getElementById('pols-carrega').open).toBe(true);
-  expect(screen.getByText('Escriptori i actes vives')).toBeTruthy();
-  expect(screen.getByText('Revisem la saturació')).toBeTruthy();
-
-  fireEvent.click(screen.getByRole('button', { name: 'Veure detall: Crèdits' }));
-  expect(document.getElementById('pols-credits').open).toBe(true);
-
-  fireEvent.click(screen.getByRole('button', { name: 'Veure detall: Rebuts' }));
-  expect(document.getElementById('pols-rebuts').open).toBe(true);
-  fireEvent.click(screen.getByRole('button', { name: /^Veure les 1 fonts del rebut/ }));
-  expect(screen.getByText('.agents/BOOTSTRAP.md')).toBeTruthy();
-  expect(screen.getByText('Petició ced19fcaab00 · ' + new Date('2026-09-20T01:03:39.000Z').toLocaleString('ca-ES'))).toBeTruthy();
-});
-
-test('/consola/pols: la privacitat del peu amaga rutes, protocols i la petició del diàleg, i es recorda', async () => {
+test('/consola/pols: la privacitat del peu es recorda en la visita següent', async () => {
   ruta.comodi = 'pols';
   fonts.consola = AMB_REBUT();
   const { unmount } = render(<ConsolaSection />);
-  await screen.findByText('1 rebuts de lectura');
+  await screen.findByText('1 rebut de lectura');
   fireEvent.click(within(document.querySelector('.sdp-consola__peu')).getByRole('switch'));
-  fireEvent.click(screen.getByRole('button', { name: 'Veure detall: Rebuts' }));
-  expect(within(document.getElementById('pols-rebuts')).queryByText('auditoria_canonica.md')).toBeNull();
-  fireEvent.click(screen.getByRole('button', { name: /^Veure les 1 fonts del rebut/ }));
-  expect(screen.queryByText('.agents/BOOTSTRAP.md')).toBeNull();
-  expect(screen.queryByText(/^Petició ced19fcaab00/)).toBeNull();
   // Una altra visita arrenca amb la privacitat activa.
   unmount();
   render(<ConsolaSection />);
-  await screen.findByText('1 rebuts de lectura');
+  await screen.findByText('1 rebut de lectura');
   expect(within(document.querySelector('.sdp-consola__peu')).getByRole('switch').getAttribute('aria-checked')).toBe('true');
 });
 
@@ -516,18 +628,8 @@ const ambRebutDe = (dies, marge) => ({
 });
 const etiquetaRebuts = () => etiquetesPerTargeta(document.querySelector('.sdp-card-grid')).Rebuts;
 
-test('/consola/pols: el detall de Rebuts diu quan va entrar l’últim, i fa quants dies', async () => {
-  ruta.comodi = 'pols';
-  fonts.consola = ambRebutDe(10);
-  render(<ConsolaSection />);
-  await screen.findByText('2 rebuts de lectura');
-  const detall = document.getElementById('pols-rebuts');
-  const linia = detall.querySelector('p.sdp-consola__segell');
-  // El més recent, no el primer de la llista.
-  expect(linia.textContent).toBe(`Últim rebut: ${new Date(fonts.consola.rebuts[1].t).toLocaleString('ca-ES')} (fa 10 dies)`);
-  // Va abans de la taula, dins del mateix desplegable.
-  expect(linia.nextElementSibling.getAttribute('role')).toBe('region');
-});
+/* El detall de Rebuts (quan va entrar l'últim) és ara a la pàgina del
+   panell: ConsolaSection.pols.test.jsx. */
 
 test('/consola/pols: rebuts de més de 7 dies porten «Important»; de 7 o menys, res', async () => {
   ruta.comodi = 'pols';
@@ -543,19 +645,61 @@ test('/consola/pols: rebuts de més de 7 dies porten «Important»; de 7 o menys
   expect(etiquetaRebuts()).toEqual([]);
 });
 
-test('/consola/pols: el peu data l’última operació immunitària si consola.json la porta; si no, no n’inventa', async () => {
+/* Correcció 261004 (verificador de la segona passada, punt 2) · El recompte
+   d'operacions immunitàries (T12: amb la data de l'última si consola.json la
+   porta) és una targeta del pols amb pàgina pròpia. Derogat per l'ordre del
+   Mestre del 261004 (xat: cap xifra solta): «el peu data l'última operació
+   immunitària» (el recompte, solt, al peu de totes les pàgines del pols). */
+const xifraDelPols = (slug) => document.querySelector(`a.sp-card-link-overlay[href="/consola/xifres/${slug}"]`)?.closest('article') ?? null;
+const titolISubtitol = (targeta) => [targeta.querySelector('h3').textContent, targeta.querySelector('h4').textContent];
+
+test('/consola/pols: les operacions immunitàries són una targeta amb la data de l’última; si no la porta, no n’inventa', async () => {
   ruta.comodi = 'pols';
   const data = '2026-08-03T13:43:04.716Z';
   fonts.consola = { ...AMB_REBUT(), immunitari: { operacions: 15, ultima: { op: 'OP-015', tipus: 'DESTRUEIX', data } } };
   const { unmount } = render(<ConsolaSection />);
-  await screen.findByText('1 rebuts de lectura');
+  await screen.findByText('1 rebut de lectura');
   const estat = () => document.querySelector('.sdp-consola__peu [role="status"]').textContent;
-  expect(estat()).toBe(`Instantània: ${new Date(AMB_REBUT().generat).toLocaleString('ca-ES')} · 15 operacions immunitàries, l’última el ${new Date(data).toLocaleString('ca-ES')}`);
+  expect(estat()).toBe(`Instantània: ${new Date(AMB_REBUT().generat).toLocaleString('ca-ES')}`);
+  expect(titolISubtitol(xifraDelPols('operacions-immunitaries')))
+    .toEqual(['15 operacions immunitàries', `L’última, el ${new Date(data).toLocaleString('ca-ES')}`]);
   unmount();
-  fonts.consola = { ...AMB_REBUT(), immunitari: { operacions: 3, ultima: null } };
+  fonts.consola = { ...AMB_REBUT(), immunitari: { operacions: 1, ultima: null } };
   render(<ConsolaSection />);
-  await screen.findByText('1 rebuts de lectura');
-  expect(estat()).toBe(`Instantània: ${new Date(AMB_REBUT().generat).toLocaleString('ca-ES')} · 3 operacions immunitàries`);
+  await screen.findByText('1 rebut de lectura');
+  expect(estat()).toBe(`Instantània: ${new Date(AMB_REBUT().generat).toLocaleString('ca-ES')}`);
+  expect(titolISubtitol(xifraDelPols('operacions-immunitaries'))).toEqual(['1 operació immunitària', 'Sense data de l’última']);
+});
+
+/* Ordre del Mestre, 261004 (cap anomalia sense mostrar) · consola.json porta
+   les línies que el middleware no ha pogut llegir: el pols les diu sempre i,
+   si n'hi ha, avisa. Correcció 261004 (verificador de la segona passada,
+   punt 2) · el recompte és una targeta, i l'avís hi enllaça. Derogat per
+   l'ordre del Mestre del 261004 (xat: cap xifra solta): la línia «Línies
+   descartades: …» (sdp-consola__segell). */
+test('261004 · /consola/pols: les línies descartades del diari i del journal són una targeta, també a zero', async () => {
+  ruta.comodi = 'pols';
+  const ambFonts = (diari, immunitari) => ({ ...AMB_REBUT(), fonts: {
+    diari: { estat: 'ok', 'línies_descartades': diari, h: 1 }, immunitari: { estat: 'ok', 'línies_descartades': immunitari, h: 1 }
+  } });
+  fonts.consola = ambFonts(0, 0);
+  const { unmount } = render(<ConsolaSection />);
+  await screen.findByText('1 rebut de lectura');
+  expect(titolISubtitol(xifraDelPols('linies-descartades'))).toEqual(['0 línies descartades', 'Diari de sessió: 0 · journal immunitari: 0']);
+  expect(screen.queryByText('Hi ha línies que no es poden llegir')).toBeNull();
+  expect(document.querySelector('.sdp-consola__segell')).toBeNull();
+  unmount();
+  fonts.consola = ambFonts(3, 1);
+  render(<ConsolaSection />);
+  await screen.findByText('1 rebut de lectura');
+  expect(titolISubtitol(xifraDelPols('linies-descartades'))).toEqual(['4 línies descartades', 'Diari de sessió: 3 · journal immunitari: 1']);
+  const avis = screen.getByText('Hi ha línies que no es poden llegir').closest('.sdp-alerta');
+  expect(avis.className).toBe('sdp-alerta sdp-alerta--avis');
+  expect(avis.textContent).toContain('4 línies del diari o del journal no són JSON vàlid');
+  expect([...avis.querySelectorAll('a')].map((a) => [a.textContent, a.getAttribute('href')]))
+    .toEqual([['4 línies descartades', '/consola/xifres/linies-descartades']]);
+  // El peu de dades continua sent l'últim element de la pàgina.
+  expect([...document.querySelector('main').children].filter((el) => el.tagName !== 'DIALOG').at(-1).className).toBe('sdp-consola__peu');
 });
 
 /* Les evidències tenen la forma que escriu el compilador (construeixMapa.js):
@@ -583,17 +727,24 @@ test('/consola: una alerta al cim quan el Mapa porta un codi de vigilància, amb
   expect(alerta).toBe(alertaDeVigilancia());
   expect(alerta.className).toBe('sdp-alerta sdp-alerta--error');
   // La frase humana (la del detall de l'Explorador) i, separat, on mirar: sense parèntesis afegits.
+  /* Correcció 261004 (verificador de la segona passada, punt 2) · l'evidència
+     porta recomptes que resumixen una xifra amb targeta: cada avís enllaça amb
+     la seua (el segell, amb «skills fora del segell»; el LEDGER, amb «línies
+     del LEDGER»), pel títol de la targeta. Derogat per l'ordre del Mestre del
+     261004 (xat: cap xifra solta): «sense porta pròpia: a Avisos i salut
+     s'entra per la seua targeta». */
   expect([...alerta.querySelectorAll('li')].map((li) => li.textContent)).toEqual([
-    `El segell no quadra amb el disc: hi ha skills fora del segell o divergents, i cal reconciliar-lo abans de confiar en cap empremta. On: .agents/SKILLS_SEAL.json · Evidència: ${EVIDENCIA_SEGELL}`,
-    `La signatura del LEDGER no és vàlida: el Llibre d’Obra té segells fòssils o línies mal formades. On: .agents/LEDGER.md · Evidència: ${EVIDENCIA_LEDGER}`,
-    'La signatura del LEDGER no és vàlida: el Llibre d’Obra té segells fòssils o línies mal formades. On: .agents/LEDGER.md'
+    `El segell no quadra amb el disc: hi ha skills fora del segell o divergents, i cal reconciliar-lo abans de confiar en cap empremta. On: .agents/SKILLS_SEAL.json · Evidència: ${EVIDENCIA_SEGELL} · La seua xifra: Segell sense mesura`,
+    `La signatura del LEDGER no és vàlida: el Llibre d’Obra té segells fòssils o línies mal formades. On: .agents/LEDGER.md · Evidència: ${EVIDENCIA_LEDGER} · La seua xifra: LEDGER sense mesura`,
+    'La signatura del LEDGER no és vàlida: el Llibre d’Obra té segells fòssils o línies mal formades. On: .agents/LEDGER.md · La seua xifra: LEDGER sense mesura'
   ]);
   // La ruta va en tipografia de màquina.
   expect([...alerta.querySelectorAll('li > code.sdp-consola__mono')].map((c) => c.textContent))
     .toEqual(['.agents/SKILLS_SEAL.json', '.agents/LEDGER.md', '.agents/LEDGER.md']);
   expect(alerta.textContent).toContain('El detall i què cal reparar són a la pàgina Avisos i salut.');
-  // Sense porta pròpia: a Avisos i salut s'entra per la seua targeta.
-  expect(within(alerta).queryAllByRole('link')).toEqual([]);
+  expect([...alerta.querySelectorAll('li > a')].map((a) => a.getAttribute('href'))).toEqual([
+    '/consola/xifres/skills-fora-del-segell', '/consola/xifres/linies-ledger', '/consola/xifres/linies-ledger'
+  ]);
   // Va abans del tauler.
   expect(alerta.nextElementSibling).toBe(screen.getByRole('navigation', { name: 'Pàgines de la Consola' }));
 });
@@ -645,17 +796,8 @@ test('Consola incrustada (Wiki): també respecta la privacitat recordada', async
   expect(alertaDeVigilancia().textContent).toContain('.agents/SKILLS_SEAL.json');
 });
 
-/* T9 (260930) · les taules del pols no porten límit d'alçada propi. */
-test('/consola/pols: les taules de Rebuts i d’Inventari no porten sdp-taula--llarga', async () => {
-  ruta.comodi = 'pols';
-  fonts.consola = AMB_REBUT();
-  render(<ConsolaSection />);
-  await screen.findByText('1 rebuts de lectura');
-  for (const nom of ['Rebuts de lectura Matrix', 'Inventari de skills']) {
-    expect(screen.getByRole('region', { name: nom }).className, nom).toBe('sdp-taula sdp-taula--densa');
-  }
-  expect(document.querySelector('.sdp-taula--llarga')).toBeNull();
-});
+/* T9 (260930) · les taules del pols no porten límit d'alçada propi: ara són
+   a les pàgines dels panells (ConsolaSection.pols.test.jsx). */
 
 test.each([
   ['fluxos', 'Fluxos de treball', 'Cap cadena declarada', ['Cadenes declarades', 'Suggeriments de la prosa', 'Punts de trobada']],
@@ -669,7 +811,41 @@ test.each([
   expect(screen.getByRole('heading', { level: 1 }).textContent).toBe(titol);
   expect(screen.getByText(text)).toBeTruthy();
   expect([...document.querySelectorAll('section > h3')].map((h) => h.textContent)).toEqual(seccions);
-  targetesDeControl();
+  // Ordre del Mestre, 261004 (xat: cap xifra solta) · cada targeta, amb boina i pàgina pròpia.
+  capXifraSolta();
+  const targetes = targetesExplicatives(document, { perA: false });
+  expect(targetes.length).toBeGreaterThan(0);
+  expect(targetes.every((t) => /^\/consola\/xifres\/[a-z0-9-]+$/.test(t.querySelector('a.sp-card-link-overlay').getAttribute('href')))).toBe(true);
+});
+
+/* Correcció 261004 (verificador, punt 1) · sense Mapa, les pàgines que
+   compten xifres fixes les pinten igual, amb el seu nom: cap pàgina de xifra
+   sense la seua targeta. Correcció 261004 (verificador de la segona passada,
+   punt 1) · també l'Explorador, el Calendari i Actors, amb les xifres que es
+   pinten sempre; les condicionals i les peces no es poden saber sense Mapa, i
+   no tenen ni targeta ni pàgina (ConsolaSection.viceversa.test.jsx).
+   Correcció 261004 (verificador de la tercera passada, punt 5) · i els
+   recomptes que la coberta destaca: skills sense disparador, enllaços
+   trencats, rutes documentals, agents atòmics, candats i llocs del sòl. */
+test.each([
+  ['inventari', ['Skills del cens', 'Skills sense cap avís', 'Skills amb avisos', 'Skills òrfenes', 'Skills fora d’algun cens',
+    'Skills sense disparador útil']],
+  ['fluxos', ['Cadenes declarades', 'Suggeriments de la prosa', 'Punts de trobada', 'Llocs sense lector']],
+  ['entrades', ['Skills del cens', 'Skills opaques', 'Rutes documentals']],
+  ['agents', ['Agents atòmics', 'Fluxos de treball', 'Tauler', 'Agents que treballen sols', 'Qui avisa quan algo es trenca']],
+  ['salut', ['Avisos del Mapa', 'Avisos alts', 'Mètriques de salut amb mesura', 'Línies del LEDGER', 'Torns caducats',
+    'Skills fora del segell', 'Tasques del Mapa']],
+  ['explorador', ['Nodes del Mapa', 'Arestes del Mapa', 'Enllaços trencats i peces òrfenes']],
+  ['calendari', ['Coses que corren soles']],
+  ['actors', ['Agents', 'Candats', 'Llocs del sòl']]
+])('/consola/%s sense Mapa: les seues xifres continuen sent targetes, amb el nom', async (id, titols) => {
+  ruta.comodi = id;
+  render(<ConsolaSection />);
+  await screen.findByText('Instantània encara no disponible.');
+  expect(screen.getAllByText('Mapa no disponible')).toHaveLength(1);
+  const targetes = targetesExplicatives(document, { perA: false });
+  expect(targetes.map((t) => t.querySelector('h3').textContent)).toEqual(titols);
+  capXifraSolta();
 });
 
 test('/consola/salut: un sol Refrescar i un sol missatge quan el Mapa no hi és', async () => {
@@ -688,7 +864,11 @@ test('/consola/salut amb Mapa: els detalls són desplegables de la Consola', asy
   await screen.findAllByText(/^Instantània del Mapa: /);
   const detalls = [...document.querySelectorAll('details')];
   expect(detalls.map((d) => d.className)).toEqual(Array(5).fill('sdp-consola__detall'));
-  expect(detalls[0].querySelector('summary').textContent).toBe('Veure els 1 avisos');
+  /* Correcció 261004 (verificador de la segona passada, punt 2) · cap
+     recompte al títol del desplegable: la xifra és a la seua targeta.
+     Derogat per l'ordre del Mestre del 261004 (xat: cap xifra solta): «Veure
+     els 1 avisos». */
+  expect(detalls[0].querySelector('summary').textContent).toBe('Veure els avisos, el més greu primer');
   expect(detalls.every((d) => d.querySelector('summary > svg[aria-hidden="true"]'))).toBe(true);
 });
 

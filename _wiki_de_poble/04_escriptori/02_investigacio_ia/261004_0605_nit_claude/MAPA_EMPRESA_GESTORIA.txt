@@ -1,0 +1,779 @@
+MAPA DE L'EMPRESA I DE LA LLAR · GESTORIA DE POBLE · síntesi A · nit del 261004
+=================================================================================
+Workflow nocturn, front «gestoria», fase de NOMÉS LECTURA de ../_gestoria_de_poble. Ordre d'origen: prompt
+261004_0515_prompt_claude_gestoria.md, §2 (:72-80, actualitzat en directe pel Mestre i MarIA a les 07:35)
+i tasques T3-T4 (:126-127). Este document no és codi i no ha mogut ni editat res, ni al repositori ni a
+../_gestoria_de_poble. Complementa ARQUITECTURA_ERP_GESTORIA.txt (mateixa carpeta), que es va escriure
+abans de conéixer les carpetes; la seua secció 12 recull el que canvia.
+
+Guarda de privacitat d'este document: només ESTRUCTURA (camps, seccions, tipus de document, organisme,
+periodicitat, terminis genèrics). Cap nom de persona, document d'identitat, adreça, telèfon, correu,
+compte, import d'una persona, valor de salut ni nom de fitxer que porte un nom. Els documents es nomenen
+pel seu tipus («la mostra emplenada del diari miccional»).
+
+Convencions
+- [VERIFICAT]: llegit al codi en este torn. Es cita fitxer:línia.
+- [REVISIÓ]: ve de les set revisions de lectura d'este workflow (facturació i tauler; paperassa;
+  llibretes de salut; La Parròquia; compra i calendaris; macroestructura; llar, autoneteja i repartiment).
+  Les cites de codi en què es basa una decisió s'han tornat a mirar; on no, es diu.
+- [NO VERIFICAT]: normativa o pràctica sense font oficial llegida en este torn. Tots els terminis legals
+  d'este document són «a verificar amb la gestoria».
+- [PROPOSTA]: decisió de disseny meua, que el Mestre pot esmenar.
+- [ESTIMACIÓ]: xifra orientativa, no una dada.
+
+
+0. EN DOS MINUTS
+----------------
+1. ../_gestoria_de_poble no és una gestoria: és el calaix de tota la casa. Hi conviuen l'ERP real
+   (factures, bancs, Seguretat Social, Hisenda, subvencions, marca), la vida personal (renda, tributs de
+   casa, una herència), dades de salut d'una tercera persona, el dossier sencer d'un negoci d'hostaleria i
+   plantilles de producte. La primera feina és SEPARAR, no programar.
+2. L'ERP de la Gestoria es queda amb el que es DECLARA o es JUSTIFICA: facturació, despeses, bancs,
+   impostos, identitat legal, burocràcia, projectes i subvencions. La Llar és un espai a part, amb app i
+   magatzem propis. Salut es queda a l'app Salut. El Bar s'endú l'operativa d'hostaleria. El calendari i el
+   diari van a Calendari o Notes. La marca, les botigues i els patrocinis van a un futur mòdul
+   Empresa/Comercial (§1).
+3. El Panell de Control guanya dos espais nous, «L'empresa» i «La llar», amb targetes ESTÀTIQUES: cap xifra
+   al Panell. Les xifres només dins de l'espai privat, emmascarades per defecte (§2).
+4. Frontera D3: proposte mantindre-la ara (la targeta porta a l'eina local de la Wiki, només en
+   desenvolupament, canviant una dada) i obrir /app/gestoria, mai /gestoria, quan hi haja Tauler i
+   Facturació usable (§2.3).
+5. Autoneteja: catàleg tancat de tipus amb QUÈ ÉS, PER A QUÈ SERVIX i QUAN ES POT ESBORRAR; classificador
+   local que, si dubta, diu «revisa'l»; i una paperera comuna que no caduca mai sola. Proposa, no esborra (§3).
+6. Onada 2 en huit passos, de la closca del Tauler al port de facturació compartit amb el Bar i el
+   repartiment (§4). Cada pas diu fitxers, proves i quina signatura o decisió humana necessita.
+7. Model d'Organització d'Empresa Ideal: cada carpeta mestra és un departament; en falten quatre
+   (direcció, comercial, persones i la llar); l'ordre el dona un manifest arrel, no un reanomenament (§5).
+8. Repartiment local: la botiga cobra, factura i reparteix; Sóc de Poble només cobra una quota pública de
+   programari i mai toca els diners de la persona veïna (§6).
+9. Avís de porta, per lectura (no executada): facturacio/registre/portIndexedDB.js:59 conté el literal
+   que la llista blanca d'IndexedDB de privacitat.test.js:94-96 no admet. La porta hauria d'estar roja.
+   Cal executar-la i que el Mestre decidisca (E4) abans de res més (§4, pas 0).
+10. Les preguntes al Mestre, deduplicades i amb la proposta per defecte, són a §7.
+
+
+1. (a) ON VA CADA CARPETA
+-------------------------
+Destins possibles: un mòdul de la Gestoria (ERP), la Llar (app nova, privada), una app que ja existix
+(Salut, Nevera, Bar), una secció pública (Calendari, Notes), un mòdul futur (Empresa/Comercial,
+Participació) o l'arxiu. «Va a» vol dir on viurà la FUNCIÓ al programari i on hauria de viure el FITXER al
+disc segons el Model de §5; cap fitxer real entra al repositori.
+
+| Carpeta o contingut (../_gestoria_de_poble/) | Destí | Motiu |
+| 00_index.md (cinc calaixos proposats i mai aplicats) | Model d'Organització (§5) | La proposta (emeses, rebudes, impostos, legal, bancs) s'incorpora al model de la carpeta mestra |
+| 00_Tauler_Central/ (prototip HTML/JS amb Dexie, 9 vistes, subpàgines caixa/hisenda/rebost/gestora) | Gestoria · Tauler: es REPRODUÏX la funció, no es porta cap fitxer | Du dades bancàries en clar dins del codi, muta registres que diu «append-only», carrega CDN sense versió ni SRI i pinta text del banc amb innerHTML sense escapar [REVISIÓ] |
+| 01_Identitat_Legal/: identitat, alta censal, alta/baixa/variació del RETA, número d'afiliació, rebuts de cotització, informes de bases i de vida laboral, titularitat i canvi de compte | Gestoria · Identitat legal (mòdul nou), titular ACTIVITAT | Font única de l'emissor de Facturació; sensibilitat «identitat» |
+| 01_Identitat_Legal/: Kit Digital i Acelera pyme (sol·licitud, resolució, acords, avís de venciment, signatures) | Gestoria · Projectes i subvencions (mòdul nou) | Expedient amb terminis, fases i justificació |
+| 01_Identitat_Legal/: notificacions de tributs locals | Gestoria · Burocràcia si el bé està afecte a l'activitat; si no, la Llar | Separació per àmbit |
+| 01_Identitat_Legal/: comunicat mèdic d'incapacitat temporal i sol·licitud de pagament directe | FORA de l'ERP: app Salut o caixa forta; l'ERP només sap que hi ha «una incidència oberta» | Categoria especial (art. 9 RGPD) |
+| 01_Identitat_Legal/: demanda d'ocupació (alta i renovacions), autoentrevista, model 145 | Identitat legal, sensibilitat «laboral» | Renovació periòdica amb termini; retencions |
+| 01_Identitat_Legal/: retall de text que, pel nom, és una clau de signatura | FORA de tot: gestor de contrasenyes (acció humana) | Credencial en clar en una carpeta que llegixen IAs; ningú l'ha oberta |
+| 01_Identitat_Legal/: resguards amb nom opac (hash o UUID) i duplicats exactes | Classificador d'autoneteja (§3) | Només es poden tipificar llegint-ne el contingut en local; els duplicats, per sha256 |
+| 01_Identitat_Legal/<associació>/ (estatuts, alta al registre, targeta NIF de l'entitat, certificat de representació) | Identitat legal, segon titular (àmbit ENTITAT) | Multititular: persona autònoma i associació |
+| 02_Facturacio/: factures emeses (només F1 al 21 %, sèrie «F»+AA+NNNN, dues maquetes) | Gestoria · Facturació com a LLEGAT que sembra la sèrie; i full trimestral | La correlativitat continua des de l'historial emés fora del programa |
+| 02_Facturacio/: factures rebudes, parelles PDF+CSV, rebuts, tiquets | Gestoria · Escàner i full trimestral (el tractor actual) | Ja hi ha classifica.js, receptes.js i auditoria.js [REVISIÓ] |
+| 02_Facturacio/: pressupostos (sèrie pròpia, 90 dies) | Gestoria · Facturació, submòdul Pressupostos (nou) | Fora de la cadena fiscal, convertibles a factura |
+| 02_Facturacio/: models 303/130 i fulls trimestrals ja lliurats | Gestoria · Impostos i Informes, com a històric | Contrast del càlcul orientatiu amb el presentat |
+| 02_Facturacio/: extractes (CSV del banc, XLS, Norma 43) i CSV de pagaments de Google | Gestoria · Bancs i Tresoreria | c43.js i movimentsBanc.js ja els llegixen; falta el parser de Google [REVISIÓ] |
+| 02_Facturacio/2024: autodesades de GnuCash (més d'un centenar) | Autoneteja: candidates a la paperera si GnuCash ja no és el llibre | Soroll; cada una és una còpia sencera de la comptabilitat |
+| 02_Facturacio/: documents d'àmbit personal o familiar barrejats | La Llar | Barrejats, trenquen el 303 i el 130 |
+| 02_Facturacio/: duplicats entre trimestres; 2026/ buida; imatge del format per a la gestoria | Autoneteja (duplicats) i pregunta B1 (format del full) | El format lliurat no coincidix amb la plantilla per defecte del codi |
+| 03_Burocracia/Agencia_Tributaria (declaració de la renda) | La Llar; Impostos de la Gestoria només en llig el rendiment de l'activitat | Document mixt |
+| 03_Burocracia/Herencia (buida) | La Llar · Patrimoni (futur) | No és empresa |
+| 03_Burocracia/Kit_Digital (certificat del domini, signatures) | Projectes i subvencions, com a evidència | Annex de justificació |
+| 03_Burocracia/OEPM_Marques | Identitat legal (actius: marca) i Burocràcia (terminis curts) | Suspens de forma amb un mes des del BOPI [REVISIÓ] |
+| 03_Burocracia/SUMA | Burocràcia (activitat) o Llar (personal) | Per àmbit |
+| 03_Projectes_Actius/CEEC_Alegacions | FORA de la Gestoria: futur espai de Participació o Grups | És participació ciutadana, no gestoria |
+| 03_Projectes_Actius/Subvencions_2026 | Projectes i subvencions (expedient i fites); la redacció i el radar, al futur mòdul Empresa | «Qui planifica és Empresa i qui declara és Gestoria» (ARQUITECTURA §9) |
+| 04_Eines_de_Pedra_Seca/migracio_massiva.py | Arxiu; no tornar a executar | Data pel mtime i esborra fitxers [REVISIÓ] |
+| 04_Quarantena_Llegat_Web/gestoria | Arxiu; no es porta | Còpia antiga amb les mateixes dades en clar |
+| 90_Arxiu_Historic, .obsidian | Fora d'abast (no oberts) | Ordre del Mestre |
+| calendari_socdepoble (planificador anual de 12 columnes × 31 files, en grisos) | Secció pública Calendari: acció «Imprimir l'any» a la vista Any; el disseny, a Comunicació | No porta cap dada personal; falta la font de festius |
+| diari_socdepoble (agenda d'un dia, franges de 30 minuts) | Pendent del Mestre: vista Dia imprimible del Calendari, Notes o registre de jornada (Empresa) | No és salut ni gestoria |
+| diari_miccional-socdepoble (plantilla en blanc + mostres emplenades) | App Salut (src/apps/salut); les mostres emplenades, a la Llar (cures i salut), MAI al repositori | L'app ja en reproduïx les dades; falten MUDA, QUÈ FEIA?, la graella i el full imprimible [REVISIÓ] |
+| valoracio_agitacio_socdepoble (full setmanal de medicació i agitació, exportació emplenada) | App Salut, vista nova «Setmana»; l'emplenat, a la Llar | L'app porta l'agitació per episodis, no per hores |
+| llista_de_la_compra_socdepoble (CSV de 14 columnes, maqueta PDF, XLSX més nou, icones de tercers) | La Llar · La Nevera de Casa (importador i catàleg ja existixen) | Falta imprimir la llista; els fulls originals es queden fora del repositori |
+| la_parroquia_menjar_i_beure_socdepoble | Repartit: operativa → app Bar; fiscalitat → Gestoria · Facturació (F2 i R5 pel port, §4 pas 8); marca, web i comunicació → Empresa/Comercial; l'antic establiment → arxiu; la base de dades de receptes → arxiu | No es mou sencera a la Gestoria: barreja quatre funcions |
+
+Notes de la taula
+- Els documents d'àmbit personal i de salut que hi ha hui dins de 01_Identitat_Legal i 02_Facturacio no
+  són un problema del programari: són un problema de carpeta. El programari els ha de reconéixer i NO
+  indexar-los com a negoci, encara que el Mestre no els moga mai.
+- Hi ha còpies de fitxers d'esta carpeta que les proves del repositori llegixen des de 01_produccio
+  (diari miccional, llista de la compra, exportació del TPV). Si la redistribució les mou, eixes proves se
+  salten sense avisar [REVISIÓ]. Abans de moure res, cal decidir-ne la ruta (pregunta D7).
+
+
+2. (b) EL PANELL DE CONTROL: «L'EMPRESA» I «LA LLAR»
+---------------------------------------------------
+2.1 Com és hui [VERIFICAT]
+- ControlSection.jsx pinta tres blocs: «Publica al poble» (:273-285, DESTINS_CONTROL de
+  destinsControl.js:116-169), «Utilitats i Connectors» (:287-319) i «Maquinària i Sistema» (:323-345).
+- Les utilitats ixen d'UNA taula, PLUGINS (registrePlugins.js:80-186). Cada targeta és TargetaDUtilitat
+  (ControlSection.jsx:147-163): UniversalCard canònica, clicable sencera cap a /plugin/<id>, i el botó
+  «Obrir» el decidix la pàgina del plugin amb useDestiDelPlugin, mai la graella.
+- Regla W4-08: el que ja té targeta en un bloc no es repetix en un altre (ControlSection.jsx:177-183).
+- registrePlugins.test.js fixa els dotze ids i el seu ordre (:21, :49-53), exigix que cada il·lustració
+  existisca a public/ (:60-66) i que cada «Obrir» siga una ruta que App servix de veres (:100-112). La
+  contraprova diu expressament que /gestoria NO és una ruta (:106).
+- El Panell no pot importar la Gestoria (privacitat.test.js:193-210) ni cap app de dades personals. Per
+  tant, avui, cap targeta del Panell pot mostrar una xifra de la Gestoria, de Salut o de la Nevera.
+
+2.2 Proposta [PROPOSTA]
+Dos blocs nous entre «Publica al poble» i «Utilitats» (ControlSection.jsx:287): primer «L'empresa» i
+després «La llar». Mateix panell, dos espais separats, cap targeta compartida.
+- Mecanisme: un camp nou `espai: 'empresa' | 'llar' | null` a plugin() (registrePlugins.js:66-76). La
+  taula continua sent una sola. ControlSection filtra per espai i, per la regla W4-08, el que va a un espai
+  ix de la graella d'Utilitats.
+- Cada targeta és la TargetaDUtilitat de sempre: boina de Sóc de Poble cap al projecte, il·lustració,
+  títol, subtítol, entradilla, tota la targeta cap a /plugin/<id> i el peu canònic. Cap targeta nova
+  inventada (directiva «no inventar targetes», GESTORIA_REFERENCIA.txt:85-88).
+- Llei del Píxel: moure Gestoria, Rebost i Salut a un espai nou canvia la graella d'Utilitats. És un
+  redisseny ordenat pel prompt (:77), però el Mestre n'ha d'aprovar la llista abans (pregunta A11).
+- Cost de cada targeta nova: un id nou a ORDRE (registrePlugins.test.js:21) i una il·lustració de MarIA
+  amb la skill core-identitat-visual (:60-66). Per això proposte activar poques targetes i deixar els
+  mòduls futurs dins del rail del Tauler en lloc de posar-los com a targetes «en obres».
+
+Espai «L'EMPRESA»
+| Id | Títol | Subtítol | Destí | Quan |
+| gestoria (ja existix, :105-112) | Gestoria | El tauler de l'empresa: caixa, Hisenda, bancs i factures | Opció D3: eina local /wikidepoble?categoria=gestoria_cat&item=gestoria_panell, amb entorn 'desenvolupament'. Opció B: /app/gestoria | v1 |
+| aprendre (nou) | Aprendre | Repàs d'IVA i IRPF, a poc a poc | Eina local /wikidepoble?categoria=gestoria_cat&item=gestoria_aprendre (WikiDePobleSection.jsx:76), entorn 'desenvolupament' | v1, opcional |
+| facturacio (nou) | Facturació | Factures, rectificatives i pressupostos | Pàgina «en obres» (obrir: null) fins a la fase F1 | quan existisca |
+| burocracia (nou) | Burocràcia i terminis | Models, cotitzacions i notificacions | «En obres» | quan existisca |
+| identitat (nou) | Identitat legal | Titulars, altes, poders i marca | «En obres» | quan existisca |
+| subvencions (nou) | Projectes i subvencions | Expedients, fites i justificació | «En obres» | quan existisca |
+| paperassa (nou) | Paperassa | Què és cada paper i quan es pot llençar | «En obres» | quan existisca |
+| botigues (nou) | Botigues adherides | Les botigues que reparteixen amb Sóc de Poble | «En obres» (§6) | quan existisca |
+
+Espai «LA LLAR»
+| Id | Títol | Subtítol | Destí | Quan |
+| compra (nou) | La compra | La llista per a la botiga o el súper | /app/nevera/llista (rutaDeApp('nevera', 'llista'); l'entrada 'llista' existix a apps/nevera/manifest.js:20) | v1 |
+| rebost (ja existix, :113-121) | Rebost Domèstic | La nevera i el rebost de casa | /app/nevera/casa | v1 |
+| salut (ja existix, :122-130) | Salut | Un quadern per a cuidar dels nostres | /app/salut | v1 |
+| casa (nou) | Papers de casa | Escriptures, rebuts, assegurances i vehicles | «En obres» fins que existisca l'app Llar (/app/llar, §4 pas 6) | quan existisca |
+| botiga (nou) | Demana a la botiga | La cistella del poble, portada a casa | «En obres» (§6) | quan existisca |
+
+Restriccions de privacitat, totes obligatòries
+R1. Targetes estàtiques al Panell: cap xifra, comptador, data d'un apunt, àlies ni avís que isca de les
+    dades. El Panell també es munta dins de l'amfitrió (WordPress); una sola xifra pintada ací trauria les
+    dades de la seua frontera. Els comptadors només viuen dins de l'espai privat.
+R2. Compartir i Traduir d'una targeta del Panell comparteixen o traduïxen la pàgina pública /plugin/<id>,
+    que no porta dades: s'accepten. Dins de l'espai privat, cap targeta amb dades es pot compartir ni
+    traduir (vegeu 2.4).
+R3. La llar mai es barreja amb l'empresa: blocs separats, cap targeta compartida, cap comptador creuat,
+    magatzems separats; la Gestoria no importa cap app i cap app importa la Gestoria
+    (fronteres.test.js:213-217 [VERIFICAT]); cap registre fiscal porta res de la Llar.
+R4. Cap dada a la URL: ni noms, ni imports, ni noms de fitxer. Només vistes i ids propis.
+R5. Salut continua sent una targeta estàtica i cap fitxer del Panell ni de la Gestoria importa
+    src/apps/salut [REVISIÓ].
+
+2.3 La frontera D3: les dues opcions, amb el que costen [VERIFICAT, llevat del que es marca]
+Opció 1 · Mantindre D3: les targetes porten a l'eina local de la Wiki.
+- Canvi: la dada `obrir` del plugin 'gestoria' passa de null a
+  '/wikidepoble?categoria=gestoria_cat&item=gestoria_panell', amb `entorn: 'desenvolupament'`, com la
+  Consola (registrePlugins.js:137-138). La prova ja accepta la consulta, perquè talla per «?»
+  (registrePlugins.test.js:33-34), i 'wikidepoble' és una ruta d'App (App.jsx:867). Cal esmenar només les
+  expectatives de :79-93 i :114-118. La Wiki ja selecciona l'ítem per la consulta
+  (WikiDePobleSection.jsx:368-376).
+- La frontera no es toca: privacitat.test.js continua igual.
+- Telemetria: la visita viatja com «/wikidepoble», sense la consulta (telemetria.js:99-110). No revela
+  que es fa servir la Gestoria.
+- Costos: només funciona en desenvolupament, a l'ordinador del Mestre; fora de DEV, la porta és inerta
+  i ho diu. La Gestoria continua dins d'una pàgina de la Wiki amb les etiquetes «WIKI DE POBLE · Eina
+  local» (WikiDePobleSection.jsx:96-117): no és el «salt al món privat» del principi 1. El Panell no pot
+  mostrar cap xifra. Cada eina local nova obliga a esmenar la prova que fixa exactament quatre lazy()
+  (privacitat.test.js:212-227); per això la closca del Tauler hauria de substituir l'entrada actual i no
+  sumar-ne una (§4, pas 1).
+Opció 2 · Ruta pròpia.
+- 2a · /gestoria literal: DESACONSELLADA. La prohibixen privacitat.test.js:186-191 i la contraprova de
+  registrePlugins.test.js:106. La telemetria l'enviaria com «/gestoria» (telemetria.js:106-110),
+  revelant que la persona fa servir la gestoria. No passaria pels interruptors de les apps.
+- 2b · /app/gestoria, com a app de plataforma (opció B d'ARQUITECTURA §7.2). Avantatges: interruptors de
+  build, entorn, amfitrió i persona; la telemetria la tapa com «/app/*» (fronteres.test.js:184-197);
+  manifest amb dadesPersonals 'financeres' (manifestApp.js:43); és el «salt al món privat».
+  Costos: moure el codi a src/apps/gestoria, perquè una app no pot importar sections/gestoria
+  (fronteres.test.js:213-217); una app no pot muntar UniversalPage ni la telemetria (:207-211); cal
+  reescriure les proves de frontera de privacitat.test.js (:185-262); tornar a signar els dos tractors
+  (les seues fonts canvien de ruta, tractors.js:28-45); estendre la guarda d'ama del document a
+  'financeres', que hui només protegix 'salut' (interruptors.js:67). [ESTIMACIÓ] 1-2 setmanes.
+Recomanació [PROPOSTA]: opció 1 durant l'onada 2. Opció 2b quan la Gestoria tinga Tauler i Facturació
+usable (fase F5 d'ARQUITECTURA). Mai 2a.
+
+2.4 Dins de l'espai privat: el Tauler
+Les targetes del Tauler són UniversalCards que CALCULA el sistema. La data o el termini van al
+squareBadge, l'import a `price` (el quadrat de 128 px, UniversalCard.jsx:57-62) i l'estat a `labels`. Tota
+la targeta és clicable i porta al seu detall dins de la closca.
+| Targeta | Què diu | Font | Hui |
+| Caixa Real | Saldo disponible | Saldo final de la Norma 43 (c43.js:294) i apunts de caixa | El parser existix; no hi ha persistència |
+| Hisenda · IVA (303) | Estimació del trimestre en curs, amb el termini al quadrat | nucli/impostos.js (nou) | No existix cap càlcul |
+| Hisenda · IRPF (130) | Estimació del pagament fraccionat | nucli/impostos.js (nou) | No existix |
+| Cobertura (l'«El Rebost» del prototip; nom pendent, A10) | Mesos que cobrix la caixa | resumTauler.js (nou): saldo dividit per la mitjana de despesa dels últims 6 mesos [PROPOSTA de fórmula] | No existix |
+| Ingressos, Despeses i Rendiment dels últims 30 dies | Tres targetes, sobre la base imposable | Moviments i full trimestral | Parcial |
+| Tresoreria (una per compte) | Saldo i moviments; del compte, només els 4 últims dígits (c43.js:29-32 [REVISIÓ]) | c43.js, movimentsBanc.js | Parcial |
+| Conciliació | Moviments i factures sense parella | concilia.js:305 [REVISIÓ] | La lògica existix; no persistix |
+| Factures emeses | Següent número de la sèrie i pendents de cobrament | facturacio/ i el llegat (§4 pas 2) | No existix |
+| Full trimestral | En quin dels cinc passos està | PanellGestoria (existent) | Sí |
+| Pròxims terminis | El termini més proper, «el teu termini» | burocracia/ (nou) | No existix |
+Fora del Tauler, fins que el Mestre decidisca (B6): el dipòsit a termini, el capital social cooperatiu i
+la caixa en metàl·lic del prototip, perquè semblen patrimoni personal.
+
+Anatomia i privacitat dins de l'espai privat
+- Boina: la de la pàgina és la personal del titular (principi 2, GESTORIA_REFERENCIA.txt:14-16). La de
+  cada targeta: o la del titular, que és l'amo real de les dades, o cap, perquè són targetes de sistema
+  (prompt :101). MAI una autora fingida: el prototip hi posava «IAIA Gestora» i una hora fixa
+  [REVISIÓ]. Decidix el Mestre (A9).
+- Peu: Compartir apagat (showShare={false}). Traduir només avisa, com fan hui les eines locals
+  (WikiDePobleSection.jsx:92-110): cap xifra al servei de traducció. Comentar no es pinta (esPrivat,
+  useAccions.js:244-246). Connectar apagat o amb telemetria {comptar:false} (useAccions.js:219-223),
+  perquè Connectar crida registraEsdeveniment i aquesta fa una crida de xarxa (telemetria.js:172). Totes
+  estes opcions ja existixen a useAccions.js:243-248 [VERIFICAT]. La revisió R3 del Connectar continua
+  pendent del Mestre.
+- Xifres emmascarades per defecte, amb un ull que té aria-pressed. Una xifra amagada NO és al DOM:
+  el quadrat diu «Import amagat» (GESTORIA_REFERENCIA.txt:70-73). La preferència NO es pot desar en
+  localStorage dins del carril, perquè privacitat.test.js:84-91 ho veta [VERIFICAT; corregix la
+  revisió 1]: es guarda en memòria i torna a amagar-se a cada sessió.
+- Tota xifra fiscal porta la llegenda «estimació per a revisar amb la gestoria», mai «declaració».
+- Les dades només ixen de la carpeta que tria la persona i del magatzem propi; res no ix de l'ordinador.
+
+
+3. (c) EL SISTEMA D'AUDITORIA I AUTONETEJA
+-----------------------------------------
+3.1 Principis [PROPOSTA]
+P1. Res s'esborra sol. El que no val es trasllada (AGENTS §5 i la porta Olivera, que «no esborra res mai»
+    [REVISIÓ]).
+P2. Fail-closed: si no se sap què és un document, va a «revisa'l», mai a la paperera.
+P3. Tipus protegits (identitat, escriptures, herència, marca, subvencions vives, salut, llibre fiscal): mai
+    són candidats automàtics; com a molt, «es pot arxivar».
+P4. Simulació primer: cada pas ensenya què mouria abans de moure-ho (el --sec de la porta Olivera).
+P5. Local i sense xarxa: el contingut es llig a l'ordinador i no es guarda mai el text sencer.
+P6. Cada esborrat deixa un rebut sense contingut: tipus, sha256, data, regla de termini aplicada i qui ha
+    dit que sí.
+
+3.2 Catàleg de tipus (dada pura i congelada, com nucli/cataleg.js)
+Tots els terminis són [NO VERIFICAT] i diuen «a verificar amb la gestoria». «Protegit» vol dir que mai
+és candidat automàtic.
+| Tipus | Què és | Per a què servix | Quan es pot esborrar | Àmbit | Protegit |
+| Factura emesa | Factura que has fet tu (F1, F2, R) | IVA repercutit, llibre d'expedides, prova d'ingrés | 4 anys des del final del termini de declaració (art. 66 LGT); 6 per als llibres i justificants mercantils (art. 30 CCom); fins a 10 si hi ha bases negatives o deduccions pendents (art. 66 bis) | activitat | sí, fins al venciment |
+| Llibre de registres Veri*Factu | La cadena encadenada de factures | Prova d'integritat davant l'AEAT | Mai des de l'app; s'exporta | activitat | sempre |
+| Factura rebuda | Factura d'un proveïdor | Deduir l'IVA i la despesa | Com la factura emesa | activitat | sí, fins al venciment |
+| Rebut o justificant de pagament | Prova que s'ha pagat; no és una factura | Conciliar; justificar una subvenció | Quan ja no el necessite ni la factura ni l'expedient; com a mínim 4 anys | activitat | no |
+| Tiquet simplificat | Factura simplificada sense destinatari | Despesa menor (no permet deduir l'IVA) | 4 anys si és de l'activitat; de casa, quan acabe la garantia | segons | no |
+| Pressupost | Oferta sense valor fiscal | Convertir-lo en factura; prova de les condicions | El no acceptat, un any després de caducar [PROPOSTA]; l'acceptat, amb la seua factura | activitat | no |
+| Full trimestral lliurat (CSV, XLSX, PDF) | El que es va entregar a la gestoria | Prova del lliurament | 4 anys | activitat | no |
+| Model presentat i justificant (303, 130, 349, 390, 347, 100) | Declaració | Prova davant d'una comprovació | 4 anys des del final del termini; mentre hi haja recurs o inspecció, mai | segons | sí |
+| Extracte bancari (Norma 43, CSV, XLS) | Moviments del compte | Conciliació i tresoreria | 4 anys (activitat); 6 per als llibres mercantils | activitat | no |
+| Còpia automàtica d'un programa (autodesades, .log) | Còpia intermèdia | Cap, si hi ha l'última bona | Després de cada tancament trimestral, conservant l'última i la de tancament d'exercici [PROPOSTA] | activitat | no |
+| Duplicat exacte (mateix sha256) | Una còpia | Cap | Sempre que es conserve l'original i no siga una còpia que llig el repositori | qualsevol | no |
+| Document d'identitat | Identificació | Tràmits | El caducat, destrucció segura amb un «sí»; el vigent, mai | llar | sí |
+| Alta, baixa o variació del RETA; resolucions de la TGSS | Actes de la Seguretat Social | Prova d'afiliació i períodes | 4 anys (art. 24 LGSS); recomanat conservar sempre l'últim informe de vida laboral i el de bases | activitat | sí |
+| Rebut de cotització mensual | Quota pagada | Despesa deduïble i prova | 4 anys | activitat | no |
+| Informe de vida laboral o de bases | Una fotografia en una data | Prova | Quan n'hi ha un de més nou (es conserva l'últim) | activitat | no |
+| Certificat de titularitat bancària | Prova del compte | Tràmits | Quan canvia el compte o caduca la vigència que demana l'organisme | activitat | no |
+| Demanda d'ocupació i renovacions | Inscripció | Renovar-la a temps | L'anterior, quan es renova (es conserva la prova de la renovació) | llar | no |
+| Model 145 | Dades per a les retencions | Retencions d'IRPF | Mentre estiga vigent, i 4 anys més | activitat | no |
+| Incapacitat temporal (comunicat mèdic, sol·licituds) | Dades de salut | La prestació | Ho decidix la persona; FORA de l'ERP | llar (salut) | sí |
+| Notificació o resolució administrativa (TGSS, SUMA, OEPM) | Acte amb termini de recurs | Recórrer; prova | 4 anys des que és ferma; amb un recurs obert, mai | segons | sí, mentre hi haja termini |
+| Rebut de tribut local (IBI, vehicles) | Pagament anual | Prova; l'IBI segueix el bé | IBI: mentre es siga propietari i 4 anys més; vehicles: 4 anys | segons | no |
+| Expedient de marca | Sol·licitud, suspens, contestació, concessió | El dret sobre la marca | Mentre la marca estiga viva (renovació cada 10 anys) i, com a prova, mai | activitat | sí |
+| Ajuda o subvenció (sol·licitud, resolució, acords, justificació) | Expedient | Control i reintegrament | 4 anys des de la justificació (art. 39 LGS); amb fons europeus potser 5 (mireu les bases) | activitat o entitat | sí, fins al venciment |
+| Signatura electrònica (.p7s, informe de signatura) | Prova de signatura | Validesa del document signat | Amb el document que signa | segons | igual que el document |
+| Escriptura, hipoteca, herència, obres de millora | Títols de propietat | Valor d'adquisició i drets | Mentre es tinga el bé i 4 anys des de la venda | llar | sí |
+| Declaració de la renda | Declaració anual | Prova | 4 anys des del final del termini voluntari | llar (mixt) | sí, fins al venciment |
+| Pòlissa d'assegurança | Contracte | Sinistres | Vigència més 2 anys (danys) o 5 (persones) (art. 23 LCS) | segons | no |
+| Garantia (factura o tiquet de compra) | Prova de compra | Reclamar | Mentre dure la garantia legal (3 anys per a béns nous) més el temps de reclamar | llar | no |
+| Rebut domèstic (llum, aigua, telèfon, comunitat, lloguer) | Pagament periòdic | Prova | 5 anys (art. 1966 CC); si està afecte a l'activitat, com la factura | llar | no |
+| Catàleg de botiga o llista de preus (CSV) | Fotografia de preus | Refrescar el catàleg | Quan arriba un tall nou i el repositori ja no el llig | llar | no |
+| Plantilla en blanc (diaris, llista, calendari) | Model reutilitzable | Producte | Mai; les versions antigues, a l'arxiu | producte | sí |
+| Mostra emplenada de salut | Dades de salut d'una tercera persona | Les cures | Ho decidix la persona; mai al repositori | llar (salut) | sí |
+| Credencial en clar | No és un document | Cap | Es mou a un gestor de contrasenyes i la còpia en clar s'esborra amb confirmació | qualsevol | acció humana |
+| Enllaç (.webloc) | Marcador | Accés a un servei | Quan es dóna de baixa el servei | qualsevol | no |
+| Font de disseny (.afpub, .afdesign) | El fitxer editable | Regenerar les exportacions | Mentre es vulga el disseny; les exportacions es poden regenerar | producte | no |
+| Codi antic o prototip | Codi | Referència | A l'arxiu; mai es publica | activitat | no |
+| Desconegut | Res que el classificador reconega | Cap | MAI: «revisa'l» | — | sempre |
+
+3.3 El classificador local [PROPOSTA; les peces existents, REVISIÓ]
+- Passa 1, pel nom i la ruta: s'amplien les receptes de classifica.js. Hui TIPUS_DOCUMENT només coneix
+  factures, rebuts, fulls, extractes i imatges (classifica.js:16 [VERIFICAT]).
+- Passa 2, pel contingut: extreuTextPdf (pdfText.js), amb el seu pressupost contra PDF maliciosos, i una
+  funció detectaTipusDocument que copia la puntuació amb motius de detectaProveidor (receptes.js:576-627):
+  llindar de confiança i organisme emissor per les paraules de la capçalera (el bloc de referències
+  electròniques de la TGSS, el codi de verificació de SUMA, el BOPI de l'OEPM, el segell de Red.es).
+- Passa 3, duplicats: sha256 també entre carpetes. detectaDuplicats (classifica.js:196-246) només els
+  veu entre carpetes si se li passa el sha256. Es proposa esborrar la còpia, mai l'original, i mai una
+  còpia que llig una prova del repositori.
+- Eixida de cada document, en llenguatge pla: QUÈ ÉS, PER A QUÈ SERVIX, QUAN ES POT ESBORRAR (una data o
+  «mai sense revisar-lo»), PER QUÈ HO DIC (els motius), àmbit i sensibilitat.
+- No es guarda mai el text sencer. Per exemple, el detall de trucades d'una factura de telefonia porta
+  números de tercers i s'ha de descartar.
+- Llegir documents personals és un tractor: cal un manifest nou signat (xarxa 'cap', dadesPersonals,
+  nivellMinim 'signatura'). privacitat.test.js:177-182 fixa exactament dos tractors: ampliar-ho és
+  decisió del Mestre (E5).
+- Si també el fa servir la Llar, el nucli de lectura (pdfText, inflate, zip, csv, dates, diners, nif,
+  classifica, receptes) s'ha de moure a src/utils/documents/, i això canvia les fonts dels dos tractors
+  (tractors.js:34-71): tornar a signar-los (A6).
+- Fals positiu que cal corregir abans: un rebut de cotització, un avís de tributs o una taxa no tenen
+  factura i hui donarien REBUT_SENSE_FACTURA (auditoria.js:494-547 [VERIFICAT]). Cal un tipus
+  «document de pagament oficial».
+
+3.4 La paperera comuna amb quarantena [PROPOSTA]
+- Estats: viu → arxivat → en quarantena → esborrat definitiu.
+- Arxivar és traslladar a l'arxiu de la seua carpeta mestra. Quarantena és una paperera comuna de tot
+  «Som de Poble», _paperera_de_poble/AAMMDD/<carpeta mestra>/<ruta relativa>, amb un manifest d'origen per
+  a poder tornar-ho. Formalitza el que el Mestre ja fa a mà amb «zBorrar», «zzBorrar» i «xRevisar abans
+  de Borrar». Si el Mestre la prefereix per carpeta mestra, el canvi és una dada (C1).
+- La quarantena NO caduca sola. És la diferència deliberada amb la paperera de les notes, que purga sola
+  als 30 dies en carregar [REVISIÓ]. Passat el termini, el Panell PROPOSA esborrar-ho; no ho executa.
+- Abans de proposar l'esborrat definitiu es comprova: còpia de seguretat feta (3-2-1), termini vençut,
+  cap expedient obert (ajuda en control, inspecció, recurs) i que no és una còpia que llig el repositori.
+- Esborrat definitiu: dos passos per als tipus ordinaris, com el diàleg d'esborrar notes; per als
+  protegits, a més, confirmació escrita, com l'aprovació dels tractors (C2). El «no» és el botó per
+  defecte, i el text diu exactament què passarà.
+- Límit tècnic [NO VERIFICAT el suport de cada navegador]: moure fitxers des del navegador demana permís
+  d'escriptura i una capacitat de moure que fontNavegador.js no té (no crea carpetes ni mou res
+  [REVISIÓ]); a Safari i Firefox la carpeta només es pot llegir. On no es puga moure, el Panell dóna un
+  «pla de neteja» en forma de llista i ho mou la persona, o un script local amb simulació, com la porta
+  Olivera.
+
+3.5 Proves mínimes del sistema
+- Un tipus protegit mai és candidat; un desconegut mai és candidat.
+- La quarantena no caduca amb el rellotge (rellotge simulat a +10 anys: res esborrat).
+- Un duplicat només proposa la còpia; una còpia que llig el repositori (productes.test.js:15-16,
+  laParroquia.test.js:52, tests/gestoria-*-real [REVISIÓ]) mai és candidata.
+- El rebut d'esborrat no conté text ni nom de fitxer original.
+- Sense xarxa, sense localStorage i amb IndexedDB només a la llista blanca (privacitat.test.js:66-97).
+
+
+4. (d) PLA D'IMPLEMENTACIÓ DE L'ONADA 2
+--------------------------------------
+Ordre per mòduls. Per a cada pas: fitxers, proves, decisió humana, i què es fa ara i què es planifica.
+Regla que travessa tot el pla [VERIFICAT, tractors.js:1-11 i :28-71]: ContenidorGestoria.jsx,
+PanellGestoria.jsx, useGestoria.js i tot el nucli de BASE_GESTORIA (model.js, auditoria.js, csv.js,
+dates.js, diners.js, nif.js, proveidors.js, cataleg.js, tractor.js, fontNavegador.js) són fonts dels dos
+tractors signats. Tocar-ne una línia els torna a «pendent» i el Mestre els ha de tornar a signar. Per això
+cada pas diu si toca eixes fonts.
+
+Pas 0 · Portes i decisions prèvies (abans de cap codi)
+- Executar privacitat.test.js, facturacio/frontera.test.js, qualitat.test.js, qualitatPanell.test.js i
+  tractors/clausura.test.js. Per lectura, privacitat.test.js:94-96 hauria de fallar per
+  portIndexedDB.js:59 (fa servir globalThis.indexedDB i no és a la llista blanca). No s'ha d'afeblir la
+  prova per a posar-la verda: és la decisió E4 d'ARQUITECTURA (§10).
+- Decisions que desbloquegen el pla: E1 (D3, §2.3), A2 (tractor del Tauler), B1 (format del full), B2-B3
+  (sèrie i data de pas).
+
+Pas 1 · Tauler amb UniversalCard (Caixa Real, Hisenda, Cobertura, Finances 30 dies, Bancs), reconstruint
+PanellGestoria
+- Estratègia per a no tornar a signar res en este pas: una closca nova, gestoria/tauler/ShellGestoria.jsx
+  (rail i boina personal), que conté el Tauler i carrega ContenidorGestoria com a mòdul «Full trimestral»
+  sense tocar-lo. La Wiki munta la closca en lloc de ContenidorGestoria (WikiDePobleSection.jsx:88). Cost:
+  esmenar dues expectatives de frontera, privacitat.test.js:220-223 (la llista de lazy()) i :256 (el patró
+  del build), que és decisió del Mestre. Alternativa: posar el Tauler dins de ContenidorGestoria, que obliga
+  a tornar a signar els dos tractors.
+- Fitxers nous: gestoria/tauler/nucli/resumTauler.js (pur: caixa, cobertura, finances de 30 dies,
+  tresoreria per compte, recompte de conciliació, tot derivat de c43.js, movimentsBanc.js i concilia.js,
+  cap xifra al codi); gestoria/impostos/nucli/impostos.js (pur: estimació del 303 i del 130; mentre la
+  factura rebuda no tinga «tipus d'operació», el 303 diu «estimació incompleta»); gestoria/tauler/
+  TargetaTauler.jsx (UniversalCard amb el peu privat de 2.4); gestoria/tauler/Tauler.jsx.
+- Llegir els bancs des del Tauler és una lectura nova de dades personals: o un tractor nou
+  'gestoria.tauler' (privacitat.test.js:177-182 en fixa dos), o ampliar el del full trimestral i tornar a
+  signar (A2). Proposta: tractor nou, que separa responsabilitats.
+- Proves: resumTauler.test.js i impostos.test.js amb dades sintètiques (cap NIF ni compte reals,
+  privacitat.test.js:161-175); TargetaTauler.test.jsx (amagat per defecte i cap xifra al DOM; aria-pressed;
+  sense Compartir ni Comentar; Traduir només avisa; Connectar apagat; tota la targeta clicable; cap
+  style= ni color cru); ShellGestoria.test.jsx; les portes de privacitat i clausura, verdes.
+- PanellGestoria (assistent de 5 passos) no canvia en este pas. Passar-lo a UniversalCard, per la
+  directiva «no inventar targetes», és un pas posterior amb signatura nova.
+- Decisió humana: E1, A2, A3, A9 (boina), A10 (nom «El Rebost»), B6 (dipòsit i capital social).
+- Ara: resumTauler.js, impostos.js i TargetaTauler amb les seues proves. Planificat: muntar la closca a la
+  Wiki després de A3; les targetes «Factures emeses» i «Pròxims terminis» quan existisquen els passos 2 i 4.
+
+Pas 2 · Facturació sobre el nucli Veri*Factu (facturacio/, que no és font de cap tractor)
+- serie.js: hui només admet PREFIX+AAAA-NNNN (serie.js:19-20 [VERIFICAT]). La sèrie real, «F»+AA+NNNN
+  (pintada «F26 0001»), no casa: la següent començaria per l'1 i duplicaria un número ja emés [REVISIÓ].
+  Cal una plantilla de sèrie que admeta les dues formes i compare sense espais (com numeroCompacte de
+  model.js).
+- facturacio/llegat.js (nou): l'historial emés fora del programa (des de 2023) entra fora de la cadena.
+  Només sembra l'últim número per sèrie i any i alimenta FORAT_NUMERACIO. Mai es registra com a alta, que
+  posaria l'hora d'ara [REVISIÓ].
+- facturaEmesa.js: domicili de l'emissor i del destinatari (obligatori en una F1; un mateix NIF pot tindre
+  diverses adreces i la factura congela la triada); nom comercial separat del legal; detall multilínia i
+  unitat («Hores») fora dels camps fiscals, perquè el concepte refusa salts de línia; descripció de
+  l'operació derivada del primer concepte, perquè és obligatòria (facturaEmesa.js:192-193 [VERIFICAT]) i
+  cap factura real en porta; data d'operació; venciment, mètode i compte de cobrament.
+- facturacio/configEmpresa.js (nou): només l'esquema. Els valors (NIF, domicili, IBAN, logo) viuen en
+  configuració local, mai al codi ni a les proves.
+- facturacio/pressupost.js (nou): sèrie pròpia, validesa de 90 dies, conversió a factura sense copiar a mà.
+- facturacio/impressio/ (nou): factura A4 imprimible, amb el QR de 30-40 mm a la primera pàgina quan es
+  decidisca el codificador (E6; qr.js té el dibuix pendent [REVISIÓ]).
+- Proves: serie.test.js (F260001 → F260002; amb llegat no torna a l'1); llegat.test.js (forats amb
+  auditoria); facturaEmesa.test.js (sense domicili, una F1 no es crea; el detall no entra a l'empremta);
+  els vectors oficials de l'empremta i frontera.test.js (res exporta editar ni esborrar; encara no està
+  endollat, frontera.test.js:73-78).
+- Decisió humana: B2 (continuar la sèrie o una nova), B3 (data de pas des de l'eina externa: dos programes
+  no poden emetre en la mateixa sèrie), prefix de les rectificatives, B4 (retenció), B5 (ROI), E2, E4, E6.
+- Ara: sèrie, llegat, camps nous, pressupostos, tot pur. Planificat: la pantalla d'emissió F1 i la
+  impressió (fase F1 d'ARQUITECTURA).
+
+Pas 3 · Identitat legal
+- Fitxers nous: gestoria/identitat/nucli/titular.js (titular persona o entitat, id opac, àmbit) i
+  document.js (document custodiat: tipus del catàleg de §3, organisme, dates del document, de notificació i
+  d'efectes, referència opaca, sha256, sensibilitat i conservació). Del codi de verificació només es guarda
+  que existix: no hi ha xifrat en repòs al client [REVISIÓ] i qui el té pot baixar-se l'original.
+- La configuració de l'emissor de Facturació ix d'ací (una sola font).
+- Proves: multititular; cap literal amb forma de DNI o IBAN; la sensibilitat «salut» queda fora.
+- Decisió humana: B11 (titulars), A5 ('identitat' a DADES_PERSONALS, manifestApp.js:43 i :227), B14 (el
+  retall de text amb la clau).
+- Ara: el model pur. Planificat: la pantalla i la ingesta.
+
+Pas 4 · Burocràcia amb calendari d'obligacions
+- Fitxers nous: gestoria/burocracia/nucli/obligacions.js (catàleg per any amb la regla que diu a qui
+  s'aplica, la finestra, l'organisme i la font oficial: 303, 130, 349, 390, 347, 100, cotització del RETA,
+  tributs locals, demanda d'ocupació, OEPM); terminis.js (motor de terminis relatius: origen —
+  notificació, publicació, resolució, validació, factura—, durada, unitat —dies hàbils o naturals, mesos—,
+  calendari d'inhàbils, conseqüència, qui el fa); avisos.js (a 15, 7 i 2 dies, G8 d'ARQUITECTURA).
+- Exportació .ics local amb títols genèrics que la persona importa a mà. La Gestoria no pot importar
+  src/utils/ics.js (privacitat.test.js:101-108 en limita els imports): cal ampliar la llista o fer un
+  generador propi dins del carril (A8). El calendari públic mai mostra terminis.
+- Correcció a auditoria.js (font signada → tornar a signar): el tipus «document de pagament oficial» no
+  dispara REBUT_SENSE_FACTURA.
+- Proves: terminis.test.js amb rellotge fix (cap de setmana, festiu, canvi de mes); avisos; .ics sense
+  noms ni imports.
+- Decisió humana: B9 (què presenta la gestoria i què el titular), font del calendari d'inhàbils, A8.
+- Ara: catàleg i motor purs. Planificat: avisos a la pantalla i .ics.
+
+Pas 5 · Projectes i subvencions
+- Fitxer nou: gestoria/projectes/nucli/expedient.js (fases, fites, terminis del Kit Digital, justificació,
+  codi comptable diferenciat, conservació, doble finançament: una factura no pot sumar més del 100 % entre
+  expedients). receptes.js ja llig l'import subvencionat de les factures del Kit Digital [REVISIÓ].
+- Cal un tipus «ingrés sense factura» (subvencions) a model.js, que hui només admet ingrés i despesa
+  (model.js:21 [VERIFICAT]): font signada → tornar a signar.
+- Proves: doble finançament per damunt del 100 % = error; terminis de les fases.
+- Decisió humana: B12 (estat dels acords; NLnet). Ara: el model pur. Planificat: la resta.
+
+Pas 6 · La Llar
+- App de plataforma nova, src/apps/llar (/app/llar): manifest sdp.app.v1, dadesPersonals 'financeres',
+  entorn de desenvolupament i gratuïta. Abans, estendre la guarda d'ama del document a 'financeres'
+  (interruptors.js:67), perquè no s'obriga dins d'un iframe ni de WordPress.
+- Tres àmbits: LLAR (la persona i la casa), ACTIVITAT (la mateixa persona com a autònoma) i ENTITAT
+  (l'associació). La Llar mostra el seu àmbit i, només en lectura, els venciments de l'activitat.
+- Entrades: Tauler (què vence i què falta), Papers (índex sense els bytes: ruta relativa, sha256, tipus,
+  dates i venciment; el fitxer es queda al disc), Habitatge, Rebuts i subministraments, Assegurances i
+  garanties, Vehicles, Impostos de la llar, Compra (enllaç a la Nevera), Paperera i Còpia.
+- Reutilitza esdeveniment.js i ics.js per als venciments, mai el /calendari públic.
+- Proves de frontera: no importa la Gestoria; cap xarxa; cap UniversalPage; bytes de documents mai a
+  IndexedDB; dins d'un iframe, «no disponible».
+- Decisió humana: D1 (tres àmbits), A6 (on viu el lector de documents), D2 (només local), F2.
+- Ara: només les targetes estàtiques del Panell (pas 1). Planificat: l'app.
+
+Pas 7 · Autoneteja
+- Fitxers nous: documents/catalegTipus.js (la taula de §3.2, congelada), classificaDocument.js (les tres
+  passes), plaNeteja.js (proposta i simulació, mai moviment), rebutEsborrat.js.
+- Proves: les de §3.5.
+- Decisió humana: C1 (paperera comuna o per carpeta), C2, C3 (terminis validats per la gestoria o
+  mostrats «a verificar»), E5 (tractor nou).
+- Ara: catàleg i classificador, que només proposen. Planificat: moure fitxers on el navegador ho permeta.
+
+Pas 8 · Port de facturació compartit amb el TPV del Bar i amb el repartiment local
+- La plataforma definix un contracte neutre, sense coneixement fiscal, «sdp.servei.facturacio.v1»:
+  emetSimplificada(venda), rectificaSimplificada(devolucio), perOrigen(idOrigen), resumPeriode({des,
+  fins}) i estat(). Cap verb d'editar o esborrar, amb un validador com el de registre/port.js. L'exposa
+  plataforma/index.js com a useServei('facturacio'), que torna null si no hi és.
+- La Gestoria l'implementa en facturacio/serveiTPV.js: venda → F2 en mode «IVA inclòs», sèrie T,
+  registre d'alta, acusament (número, data, text del QR, empremta curta). El mode «IVA inclòs» és
+  obligatori: hui facturaEmesa calcula la base com quantitat × preu i hi afig la quota, i un PVP amb IVA
+  pagaria l'IVA dues vegades [REVISIÓ].
+- Un sol fitxer pont declarat (opció A de D3) crea el servei i el passa a la plataforma.
+- El Bar: guarda l'acusament dins del tiquet, escrit una sola vegada; el número de torn continua sent
+  intern, mai fiscal; afig Bizum als mètodes de pagament; el tancament porta el desglossament per IVA i el
+  primer i l'últim número de factura. Sense servei, el Bar continua amb la nota «no és factura» i no es pot
+  activar en producció.
+- Repartiment local, fase 1: no emetem res. La botiga factura amb el seu TPV (§6). Si un dia la botiga fa
+  servir el nostre TPV, el port és el mateix.
+- Proves: tres línies d'1,10 € al 10 % fan 3,30 € exactes; idempotència (mai dues F2 per al mateix
+  tiquet); bar/frontera.test.js i plataforma/fronteres.test.js continuen verdes.
+- Decisió humana: E1 (opció A), E7 d'ARQUITECTURA, E1-E9 de La Parròquia (§7, bloc E).
+- Ara: res. Planificat: després de F1 i de la decisió D3.
+
+Resum: què s'implementa ara i què es planifica
+| Mòdul | Ara (onada 2) | Planificat |
+| Tauler | resumTauler.js, impostos.js, TargetaTauler, proves | Closca a la Wiki (A3), opció 2b (/app/gestoria) a F5 |
+| Facturació | Sèrie, llegat, camps, pressupostos (purs) | Pantalla d'emissió, impressió amb QR, endoll al port |
+| Identitat legal | Model pur | Pantalla, ingesta |
+| Burocràcia | Catàleg d'obligacions i motor de terminis | Avisos a pantalla, .ics |
+| Projectes i subvencions | Model pur d'expedient | Pantalla, vincle factura-expedient |
+| La Llar | Targetes estàtiques del Panell | App /app/llar |
+| Autoneteja | Catàleg i classificador (només proposen) | Moure fitxers, paperera física |
+| Port de facturació | — | Contracte, servei TPV, Bar, repartiment |
+| Panell | Camp `espai` i dos blocs, després d'A11 | Targetes «en obres» amb il·lustració |
+
+
+5. MODEL D'ORGANITZACIÓ D'EMPRESA IDEAL (MACRO-ESTRUCTURA «SOM DE POBLE»)
+-----------------------------------------------------------------------
+Ordre del prompt (:80): per a què servix cada carpeta mestra, quines falten i com s'organitzen, perquè
+qualsevol persona que es descarregue Sóc de Poble puga aplicar-ho a la seua vida i a la seua empresa.
+
+5.1 Principi [PROPOSTA]
+«Som de Poble» és la casa sencera al disc de la persona, empresa i llar, amb una frontera dura entre les
+dues. Cada carpeta mestra és un departament. socdepoble.org és el motor (codi, Wiki operativa i
+maquinària) i no conté mai dades personals. El Panell de Control és la porta d'entrada a tot: llig el disc
+local i no puja res.
+
+5.2 Com és hui [REVISIÓ; només noms i recomptes]
+- Vuit carpetes germanes del repositori: un arxiu de la Wiki antiga amb cinc arxius dins; una carpeta de
+  comunicació pràcticament buida; el lèxic cultural; la gestoria (que fa d'ERP, de llar i de laboratori de
+  producte); una safata d'imatges sense classificar; lectures crues; marcadors de serveis; i un calaix de
+  sastre amb un sol fitxer.
+- Incoherències: un prefix «_» que no porten totes; Majúscula_Inicial contra minúscules; prefixos numèrics
+  repetits (dos 03_ i dos 04_ dins de la gestoria); ordenació improvisada amb «¡» i «z»; any i trimestre al
+  mateix nivell (2025 i 2025_4T); quatre vaults d'Obsidian separats; un índex amb un nom diferent a cada
+  carpeta; temes repetits en dos llocs (al·legacions, codi de la gestoria, identitat visual, safates).
+- Cens cablejat: cada eina té la seua llista de carpetes germanes i no coincidixen (el tractor cognitiu,
+  el compilador de cultura, el Somiador, el cens de tractors, les proves reals de la gestoria) [REVISIÓ].
+
+5.3 Les carpetes mestres
+| Carpeta | Nivell d'empresa | Per a què servix | Privacitat |
+| _direccio_de_poble (NOVA) | Direcció | Estratègia, viabilitat, full de ruta, pressupost, decisions i actes de direcció, titularitat de la marca. Hi baixarien, fora del git, els plans directors privats que ara són a la Wiki | privada |
+| _gestoria_de_poble | Administració (ERP) | Només el que es declara o es justifica: 00_tauler, 01_empresa (altes, estatuts, marca), 02_factures_emeses/aaaa/nT, 03_factures_rebudes/aaaa/nT, 04_bancs/aaaa, 05_impostos/aaaa/model, 06_seguretat_social, 07_expedients (subvencions, tributs de l'activitat), 90_arxiu/exercici | privada |
+| _comercial_de_poble (NOVA) | Comercial | Clients, catàleg de botigues adherides, comandes i repartiment, patrocinis, pressupostos i contractes. Els negocis d'hostaleria hi van com a expedient de client o com a plantilla | privada |
+| _comunicacio_de_poble | Comunicació | Marca, dossier institucional, premsa, xarxes i productes editorials (el calendari i el diari) | pública quan es publica |
+| _multimedia_de_poble | Actius | Foto, vídeo, àudio i captures en brut; el que es publica passa a comunicació | privada (drets d'imatge) |
+| _cultura_de_poble | Coneixement | El lèxic i el folklore que alimenten l'agent. Es queda com està | pública |
+| _recursos_de_poble | Proveïdors i eines | Una fitxa per servei (enllaç, contracte, llicència, com donar-se de baixa); absorbix les lectures crues com a recursos/recerca | privada |
+| _persones_de_poble (NOVA) | Persones | Col·laboradors, repartidors, voluntariat, formació i acords. Pot començar buida | privada |
+| _llar_de_poble (NOVA) | La casa, SEPARADA | Compra, cures i salut, patrimoni (escriptures, herència), rebuts domèstics, vehicles i tributs de casa, assegurances. Mai entra al repositori, a la Wiki, al backend ni als bundles | íntima |
+| oficina_de_poble → safata global | Entrada | Tot entra per ací i el Panell ho classifica; com a màxim 20 elements, com la safata de la Wiki | privada |
+| _arxiu_wiki_de_poble → arxiu de totes les àrees | Arxiu | Pla i per exercici, amb caducitat per tipus (§3); la Wiki antiga n'és una secció | segons l'origen |
+| _paperera_de_poble (NOVA) | Quarantena | La paperera comuna de §3.4 | segons l'origen |
+| socdepoble.org | Motor | Codi, Wiki operativa i maquinària | pública (AGPL) |
+
+5.4 Anatomia de cada carpeta mestra (la mateixa de la Wiki, .agents/cervell.json)
+- 00_index_<area>.md, l'índex.
+- .sdp-carpeta.json: propòsit, nivell d'empresa, privacitat (pública, privada o íntima), retenció per
+  patró, responsable.
+- 00_safata/ per al que entra a l'àrea; subàrees numerades sense prefixos repetits; 90_arxiu/.
+- Correspondència amb la Wiki: 01_ser ↔ direcció; 02_saber ↔ cultura i recursos; 03_actuar ↔ les
+  plantilles de cada àrea; 04_escriptori ↔ les safates; 10_actes ↔ justificants i signatures; 90_arxiu ↔
+  l'arxiu global.
+- A l'arrel, un manifest ../som_de_poble.json fa de cens únic (carpetes, ordre, propòsit, privacitat,
+  retenció). El llegirien el tractor cognitiu, el compilador de cultura, el Somiador, la Consola i el
+  Panell, en lloc de les llistes cablejades.
+
+5.5 Nomenclatura
+Carpetes en minúscules, sense «¡», sense «z» d'ordenació i sense accents; fitxers
+aammdd_hhmm_categoria_titol en minúscules (AGENTS §2); cap nom de persona en un nom de fitxer, sinó el rol
+(titular, familiar, client); l'any amb els trimestres a dins (2026/3T).
+
+5.6 Redistribució de les carpetes grogues [PROPOSTA; decidix el Mestre, F3]
+- calendari_socdepoble i diari_socdepoble → _comunicacio_de_poble (disseny).
+- Plantilles EN BLANC del diari miccional i de la llista de la compra → producte (són la llavor de Salut i
+  de la Nevera).
+- Mostres EMPLENADES i el full d'agitació → _llar_de_poble/cures_i_salut.
+- llista_de_la_compra (fulls de dades) → _llar_de_poble/compra.
+- la_parroquia → _comercial_de_poble (o producte, si és una plantilla per a bars: F4).
+
+5.7 Desplegament per fases
+1. Manifest arrel i carpetes noves buides. Cap reanomenament.
+2. Els reanomenaments, només amb ordre expressa: trenquen eines i proves (el Somiador, el cens de
+   tractors, el tractor cognitiu i les proves reals de la gestoria depenen dels noms [REVISIÓ]).
+3. Al Panell, una targeta «La meua casa» que mostra cada carpeta mestra amb recomptes, sense llegir el
+   contingut. El selector de carpeta actual està pensat per a una sola carpeta de facturació i rebutja
+   les grans [REVISIÓ]: cal un mode de cens superficial (noms, recomptes, mides i dates).
+4. Per a qui es descarregue Sóc de Poble: «Crea la teua casa», que genera l'esquelet buit amb índexs i
+   manifests i no toca mai res existent. Necessita una capacitat d'escriptura que hui no hi ha.
+
+
+6. TUTOR EMPRESARIAL: REPARTIMENT LOCAL (B2C) I PATROCINIS (B2B)
+--------------------------------------------------------------
+Ordre del prompt (:79). Amb la mirada de tutor: què guanya cadascú, qui cobra, qui factura i on pot fallar.
+
+6.1 Actors
+Persona veïna (client), tendent (la botiga, com a organització), repartidor del poble (autònom, assalariat
+de la botiga o el mateix tendent), Sóc de Poble (proveïdor de programari, MAI intermediari de diners) i
+la gestoria de cadascú.
+
+6.2 Fase 1, sense servidor nou i sense diners a l'app [PROPOSTA]
+1. La botiga carrega el seu catàleg d'un CSV o de l'exportació del seu TPV. L'importador del Bar ja ho fa
+   amb un TPV comercial, però descarta pes, codi de barres i existències, que una botiga sí que necessita
+   [REVISIÓ].
+2. Cada producte és una UniversalCard del Mercat, amb la boina de la botiga, preu en cèntims i IVA. Hui
+   el Mercat guarda el preu com a text [REVISIÓ].
+3. La persona veïna convertix la llista de la Nevera en cistella amb una funció pura (llista → cistella):
+   el que casa, casa; el que no, «pregunta-ho al tendent».
+4. La comanda viatja com un missatge estructurat pel Xat directe, que ja és nucli del contracte de
+   dades. L'adreça només va en eixe fil i només si la persona la posa.
+5. El tendent accepta (amb substitucions i el pes real), prepara i porta.
+6. El tendent cobra en lliurar: efectiu, datàfon o pagament directe a la botiga.
+7. El tiquet o la factura el fa el TPV de la botiga, no Sóc de Poble.
+
+6.3 Diners i factures [NO VERIFICAT, cal dictamen de la gestoria]
+- Els 2-3 € de repartiment els cobra la BOTIGA. Si van dins de la venda, segueixen probablement el tipus
+  d'IVA dels productes; si els cobra un repartidor autònom, és un servei al 21 % que factura a la botiga
+  cada mes.
+- Sóc de Poble cobra una quota fixa i pública per botiga, sense permanència i amb baixa en un clic
+  [ESTIMACIÓ: 10-20 € al mes; la botiga pilot, gratis]. Mai un percentatge per comanda: així no som
+  intermediaris de pagaments ni plataforma de vendes (normativa de serveis de pagament i obligacions
+  d'informar dels venedors).
+- Viabilitat [ESTIMACIÓ]: a 2,50 € la comanda i unes 4 comandes per hora, entren uns 10 €/h, per davall del
+  cost d'un sou. Funciona agrupant comandes en dues franges per setmana, amb una cistella mínima, i com a
+  complement del temps del tendent. Un repartidor del poble només és viable si compartix ruta entre
+  diverses botigues.
+- Facturar per compte de les botigues ens convertiria en productors de programari de facturació per a
+  tercers (TUTOR_EMPRESARIAL.txt §4): no es fa en fase 1.
+
+6.4 Patrocinis (B2B)
+- Fitxa de necessitat patrocinable, conveni escrit (tipus de document protegit), pàgina pública de
+  patrocinadors amb UniversalCard i la boina de l'empresa patrocinadora, i una factura per cada prestació.
+- Un patrocini en espècie (una obra a canvi de publicitat) és una permuta: cadascú factura la seua
+  prestació a valor de mercat, amb IVA. Un conveni de la Llei 49/2002 només si l'entitat hi està acollida
+  [NO VERIFICAT].
+- Si l'obra és en un habitatge particular, el patrocini barreja la llar i l'empresa i pot ser una
+  retribució en espècie. Recomanació: que el signe l'entitat i que l'objecte siga un bé del projecte o del
+  poble; si no, que es tracte com a ingrés de l'activitat, amb factura. La targeta pública no ha de
+  mostrar l'adreça ni l'aspecte reconeixible d'una casa particular.
+
+6.5 Privacitat del repartiment
+L'adreça i l'historial de compres revelen salut (parafarmàcia, dietes, bolquers), la composició de la llar
+i les absències (risc de robatori). Per això: l'adreça només al fil de la comanda, visible per a qui
+reparteix només en l'estat «en camí» i esborrada després del lliurament; cap analítica per comanda; res a
+la targeta pública. La botiga és responsable del tractament i Sóc de Poble, si hi intervé, encarregat amb
+contracte (art. 28 RGPD) [NO VERIFICAT].
+
+6.6 On viu cada peça
+- Catàleg de botiga, cistella i comanda: app futura «Botiga del Poble» (/app/botiga) i el flux de la
+  persona veïna dins de la Nevera. Fora de la Gestoria.
+- La quota de Sóc de Poble a les botigues i els patrocinis: l'ERP de Sóc de Poble (Facturació F1 de
+  l'entitat) i _comercial_de_poble.
+- Fase 2, amb entitat i assessorament: capacitat opcional 'botigues' al Model B (llegir i publicar el
+  catàleg, enviar la comanda, consultar i actualitzar l'estat) i un origen 'domicili' a les comandes del
+  TPV si la botiga fa servir el nostre.
+
+
+7. (e) PREGUNTES AL MESTRE (deduplicades; entre claudàtors, la proposta per defecte)
+-----------------------------------------------------------------------------------
+A · Fronteres i arquitectura
+A1. D3: mantindre-la (l'eina local de la Wiki) o obrir /app/gestoria? [mantindre-la a l'onada 2;
+    /app/gestoria a F5; mai /gestoria] (§2.3)
+A2. El Tauler llig els bancs amb un tractor nou signat ('gestoria.tauler') o s'amplia el del full
+    trimestral i es tornen a signar els dos? [tractor nou]
+A3. Esmenem privacitat.test.js:220-223 i :256 perquè la Wiki munte la closca nova en lloc de
+    ContenidorGestoria? [sí; evita tornar a signar ara]
+A4. La llista blanca d'IndexedDB (privacitat.test.js:94-96) i portIndexedDB.js: s'hi afig el llibre de
+    registres? Per lectura, la porta ja hauria d'estar roja. [sí, un sol fitxer, amb el motiu escrit]
+A5. Afegim 'identitat' a DADES_PERSONALS (manifestApp.js:43) i estenem la guarda d'ama del document a
+    'financeres' (interruptors.js:67)? [sí a les dues]
+A6. El lector de documents es mou a src/utils/documents (i es tornen a signar els tractors) o la Llar viu
+    dins de la Gestoria? [moure'l, alineat amb F2 d'ARQUITECTURA]
+A7. Guardem al navegador la referència a la carpeta perquè no s'haja de triar cada dia? Canvia el
+    contracte de fontNavegador.js («ni es desa al navegador»). [no, de moment]
+A8. Terminis al calendari personal amb un .ics local de títols genèrics, en lloc d'una font de
+    calendari? [sí]
+A9. RESOLTA pel Mestre al xat (261004, després de la síntesi): TOTA targeta porta boina, tret d'ordre
+    explícita seua. Les targetes del Tauler porten la boina personal del titular (principi 2 de
+    GESTORIA_REFERENCIA), enllaçada a la seua pàgina, amb cos sencer i pàgina pròpia. Queda oberta només
+    una cosa: el Connectar i el Compartir d'una targeta amb xifres privades (la guarda «Identitat privada»
+    diu desactivat o explícit). [Compartir explícit, mai per defecte; Connectar cap a la pàgina pròpia]
+A10. «El Rebost» del Tauler (mesos de cobertura) i el «Rebost Domèstic» de la Nevera: quin nom es queda
+     cadascun? [«Cobertura» per al Tauler]
+A11. Aproves la llista de targetes dels dos espais del Panell (§2.2)? Només les que ja funcionen o també
+     les «en obres», que necessiten il·lustració cadascuna? [només les que funcionen]
+
+B · Facturació, impostos i papers de l'empresa
+B1. Format vigent del full per a la gestoria: el verd amb les despeses en ordre descendent (el que es va
+    lliurar) o el negre i gris ascendent que el codi usa per defecte (plantilla.js:71 i :78 contra
+    :111-117)? [el que es lliura de veres: confirmar-ho amb la gestoria]
+B2. Sèrie: continuem la «F»+AA+NNNN dins del programa o obrim una sèrie nova el dia del pas a
+    Veri*Factu? Prefix de les rectificatives? [continuar; «R»+AA+NNNN, a confirmar]
+B3. Quan es deixa l'eina de facturació externa? Dos programes no poden emetre en la mateixa sèrie.
+B4. L'activitat és empresarial o professional (epígraf IAE)? Cap factura emesa porta retenció d'IRPF.
+B5. El NIF està donat d'alta al ROI? Hi ha proveïdors de la UE amb inversió del subjecte passiu, un que
+    cobra IVA espanyol, i el full lliurat posa 0,00 sense autoliquidar-la: com ho vol la gestoria?
+B6. Dipòsit a termini, capital social cooperatiu i caixa en metàl·lic: són del negoci o personals?
+    [personals: fora del Tauler]
+B7. Les despeses d'àmbit personal dins de 02_Facturacio: camp «àmbit» o les filtra la gestoria? [camp]
+B8. On es guarda la còpia obligatòria del llibre (exportació JSON)? [dins de ../_gestoria_de_poble,
+    fora del repositori]
+B9. Quines obligacions presenta la gestoria externa (303, 130, renda, 347…) i quines el titular? L'ERP
+    ha de dir de cada termini qui el fa.
+B10. Modalitat Veri*Factu i data d'obligació vigent per a l'IRPF (l'últim ajornament conegut diu
+     1-7-2027 [NO VERIFICAT]).
+B11. Titulars: només la persona autònoma o també les associacions des del principi? [la persona primer]
+B12. Kit Digital: en quin estat està cada acord? Un assessor pot confirmar que la relació amb el soci
+     tecnològic no és «vinculació» (art. 68.2 RD 887/2006)? NLnet: es va presentar i amb quin resultat?
+B13. El domini històric del projecte, que segons el certificat caducava a finals d'agost de 2026, es va
+     renovar?
+B14. Retires tu el retall de text amb la clau de signatura a un gestor de contrasenyes? Cap IA l'ha obert.
+
+C · Paperassa i autoneteja
+C1. Paperera comuna a l'arrel de «Som de Poble» o una per carpeta mestra? [comuna]
+C2. Esborrat de tipus protegits amb confirmació escrita? [sí]
+C3. El Panell mostra ja «es pot esborrar a partir de…» amb els terminis «a verificar», o espera que la
+    gestoria valide la taula? [mostrar-los marcats, i no proposar cap esborrat fins a la validació]
+C4. GnuCash continua sent el llibre? Si no, les autodesades de 2024 van a la paperera.
+C5. Ordenem 02_Facturacio (duplicats, 2026/ buida)? L'script de migració no s'hauria de tornar a executar.
+C6. Qui reanomena i deduplica 01_Identitat_Legal? Claude no pot moure fitxers: MarIA o tu.
+C7. zBorrar, zzBorrar i «xRevisar abans de Borrar» es poden donar per candidates? No s'han obert.
+
+D · La llar, la salut i la compra
+D1. Tres àmbits (llar, activitat, entitat) o dos? [tres]
+D2. La Llar és només local? Si mai hi ha còpia al servidor, xifrada d'extrem a extrem i com a capacitat
+    opcional? [sí a les dues]
+D3. L'IBI i el vehicle propis, la renda i l'herència van a la Llar? [sí]
+D4. Herència: fora d'abast, o hi ha una data de referència per als terminis?
+D5. Salut: afegim MUDA i QUÈ FEIA? (la llegenda del PDF en blanc ja en definix els nivells) i «Menjar»
+    com a beguda pròpia? L'agitació horària 0-5 és una vista nova al costat dels episodis o el
+    substitut? Medicació com a pauta configurada (fins a 3, amb dosi mínima)? Full A4 imprimible, amb el
+    PDF com a font de les mesures? PIXAT: dia de rellotge, finestra clínica o tots dos amb nota?
+    [vista nova; pauta configurada; full imprimible; tots dos amb nota]
+D6. Les plantilles en blanc poden entrar al repositori (Salut › Saber, Nevera)? I les mostres emplenades
+    queden fora per sempre, amb una porta que ho vigile? [sí a les dues]
+D7. Les còpies que vigilen proves (diari miccional, llista de la compra, TPV, a 01_produccio): es queden on
+    són o es canvia la ruta de la prova abans de moure-les? Si desapareixen, les proves se salten sense dir
+    res. [es queden fins que canviem la prova]
+D8. Llista de la compra: la font de veritat és el CSV o l'XLSX més nou? Impresa amb preus i marca o només
+    article, envàs i casella? Amb l'aspecte de la maqueta o un de Sóc de Poble? [XLSX exportat a CSV;
+    sense preus; aspecte propi]
+D9. Calendari imprimible: una fulla de 12×31 o un full per mes? Festius de quin municipi? [12×31]
+D10. El diari de franges de 30 minuts: agenda (Calendari o Notes), registre de jornada o llibreta per
+     vendre? Quina convenció d'hores (la plantilla passa a 12 h a partir de les 13)?
+D11. T2 (eliminar LlistaArticles i GraellaArticles) trencaria diversos usos dins de Salut: Salut fora
+     d'abast de la T2 o es migra en el mateix torn?
+
+E · El Bar, les botigues i els patrocinis
+E1. La Parròquia: qui emet les factures (autònom, societat o associació) i en quin règim? Factura hui
+    amb el TPV comercial? Si és així, el nostre Bar no ha d'emetre res en paral·lel.
+E2. IVA de les begudes alcohòliques servides al local (el TPV les té al 21 %) i el recàrrec
+    d'equivalència del full de compres: cal confirmar-ho amb la gestoria.
+E3. Acceptes un fitxer pont (opció A) perquè la plataforma injecte el servei de facturació al Bar?
+E4. Quants dispositius de cobrament i quina impressora (58 mm, Bluetooth o USB)? [un sol dispositiu
+    fiscal fins que hi haja servidor]
+E5. Qui declara els al·lèrgens plat per plat, amb traces? Acceptes una font única de preus (el catàleg
+    del Bar genera la carta, el full de comanda i la carta digital)?
+E6. La còpia canònica de l'exportació del TPV i de les fotos: 01_produccio o la carpeta de la gestoria?
+E7. Teniu llicència comercial de les fonts d'ús personal o demo, o les substituïm per les OFL?
+E8. Invitacions i consum propi: línia a 0 € o autoconsum? (ho decidix la gestoria)
+E9. L'antic establiment de la carpeta és un negoci tancat (arxiu)?
+E10. Repartiment: confirmes que els 2-3 € els cobra la botiga i que Sóc de Poble mai toca els diners ni
+     assigna repartidors? Quota fixa i pública per botiga o comissió? [botiga cobra; quota fixa]
+E11. Pilot de comandes pel Xat directe (missatge estructurat, sense servidor nou)? La botiga pilot hi està
+     d'acord, quin TPV té i ven al pes o refrigerat?
+E12. Patrocini de la façana: és un habitatge particular o un bé del projecte? Qui signa el conveni (la
+     persona autònoma o l'associació)? [l'associació, sobre un bé del projecte]
+
+F · Macroestructura i carpetes
+F1. Reanomenem les carpetes mestres o posem l'ordre i el propòsit en un manifest arrel? [manifest]
+F2. La Llar viu dins de «Som de Poble» amb frontera dura, o en una altra ubicació o volum xifrat que el
+    Panell també pot veure?
+F3. Confirmes la redistribució de les grogues de §5.6?
+F4. La Parròquia és un negoci propi antic, un client real o una plantilla per a bars?
+F5. Traiem de la Wiki del repositori els plans directors privats (viabilitat i legal i subvencions) cap a
+    _direccio_de_poble, fora del git? Un d'ells nomena persones particulars: cal revisar-lo (MarIA o tu).
+F6. Un sol vault d'Obsidian a l'arrel o un per carpeta mestra? Hi ha sincronització o publicació activa al
+    de la gestoria?
+F7. Any amb els trimestres a dins (2026/3T) o al mateix nivell (2026_3T)? [a dins]
+F8. Les proves que llegixen dades reals de la gestoria (tests/gestoria-*-real) han de quedar fora de la
+    CI i de qualsevol registre versionat? [sí]
+F9. Creem ja _persones_de_poble, buida, o quan arribe la primera persona col·laboradora?
+F10. La nota de connexions MCP del calaix de sastre: algú pot comprovar que no conté claus ni tokens?
+F11. Una nota de la carpeta d'al·legacions remet a una ruta dins de public/ del repositori que hui no
+     existix: posem una prova que vigile que mai hi entra un document signat?
+
+Ancoratge: [[00_index_escriptori]]

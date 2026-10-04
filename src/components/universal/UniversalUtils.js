@@ -1,4 +1,6 @@
 import { resolveAsset } from '../../config/assetResolver';
+import { esRutaInterna } from '../../config/objecteConnectable.js';
+import { resolRuta } from '../../app/contexts/politicaRouter.js';
 
 export function isSafeUrl(url) {
   if (typeof url !== 'string' || !url) return false;
@@ -18,6 +20,21 @@ export function isSafeAsset(url) {
   return isSafeUrl(url);
 }
 
+/**
+ * W4-07 · La ruta de l'autor d'una boina taronja (targeta o pàgina), o null.
+ * Un camí de l'app ('/…') passa per la frontera de les portes (esRutaDeLaPorta
+ * de PortesTargeta.jsx: esRutaInterna + resolRuta), que no mira el protocol de
+ * la finestra: a l'app nativa (capacitor://localhost) isSafeUrl el deixava
+ * sense enllaç. Una adreça absoluta continua passant per isSafeUrl.
+ * T6 (ordre del Mestre, 261004) · Una sola regla per a UniversalCard i
+ * BarraTaronja: abans només la targeta la tenia.
+ */
+export function rutaDAutorSegura(href) {
+  if (typeof href !== 'string' || !href) return null;
+  if (href.startsWith('/')) return esRutaInterna(href) && resolRuta(href) !== null ? href : null;
+  return isSafeUrl(href) ? href : null;
+}
+
 export function isValidDate(dd, mm, yy) {
   const d = new Date(yy, mm - 1, dd);
   return d.getFullYear() === Number(yy) && 
@@ -26,11 +43,29 @@ export function isValidDate(dd, mm, yy) {
 }
 
 /* L'avatar es resol en llegir-lo, no en importar el mòdul: així hi val la
-   base de recursos que l'amfitrió fixe després (config/assetResolver.js). */
+   base de recursos que l'amfitrió fixe després (config/assetResolver.js).
+   T6 (ordre del Mestre, 261004) · `href`: la boina de «Sóc de Poble» porta a
+   la pàgina del projecte. És RUTA_PROJECTE de config/navigation.js escrita
+   ací en literal: importar-la arrossegaria la llavor de totes les seccions
+   (sectionContent.js) a cada mòdul que llig estes utilitats i obriria la
+   porta a un cicle d'importació. Una prova en fixa la igualtat. */
 export const DEFAULT_AUTHOR = {
   name: 'Sóc de Poble',
   location: 'La Torre de les Maçanes',
-  get avatarUrl() { return resolveAsset('/assets/system/ui/logo-socdepoble-cuadrat-verd.svg'); }
+  href: '/projecte',
+  get avatarUrl() { return resolveAsset('/assets/system/ui/logo-socdepoble-cuadrat-verd.svg'); },
+  /* Norma del Mestre, 261004 (prompt 261004_1108, logotips) · El logotip de
+     pàgina de l'entitat: el rectangular, negre per al tema clar i blanc per
+     al fosc (el quadrat verd és l'avatar de la boina). Es resol en llegir-lo,
+     com l'avatar. PageFrame el pinta dalt de l'H1 de tota pàgina que signa
+     Sóc de Poble; la fitxa pública de l'entitat el passa com a logoEntitat. */
+  get logo() {
+    return {
+      clar: resolveAsset('/assets/system/ui/logo-socdepoble-rect-negre.svg'),
+      fosc: resolveAsset('/assets/system/ui/logo-socdepoble-rect-blanc.svg'),
+      alt: 'Logotip Sóc de Poble'
+    };
+  }
 };
 
 /* T22 (Mestre, 260927) · La persona sense sessió és el Foraster, i el seu

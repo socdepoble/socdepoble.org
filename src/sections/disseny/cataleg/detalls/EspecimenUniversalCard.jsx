@@ -8,8 +8,8 @@ import { BotoVisibilitat } from '../../../../components/universal/barres/BotoVis
 import { dataHoraDeBarra } from '../../../../components/universal/editorial.js';
 import { useNavigate } from '../../../../app/contexts/RouterContext';
 import { objecteDePagina } from '../../../../config/objecteConnectable.js';
+import { RUTA_PROJECTE } from '../../../../config/navigation.js';
 import { PAGE_COPY } from '../../../text/pageContent.js';
-import { useXatCorporatiu } from '../../../control/xatCorporatiu.js';
 
 /* Autoria i peu compartits per les variants: la targeta és una i les dades canvien. */
 const SDP = {
@@ -27,10 +27,19 @@ const PEU = { hasFooter: true, showTranslate: true, showComment: true, showShare
    títol, subtítol i entradilla visibles, els de la seua pàgina (PAGE_COPY). Dues mostres: una
    amb les dues portes obertes (el Mur) i una amb Publicar en obres i sense il·lustració (el Mapa).
    P6 (directriu 2325) · Amb el peu blau de sempre cap a la seua pàgina (sense Connectar) i cap
-   etiqueta: «en obres» ho diu la porta inerta. W4-09 · L'autor porta al xat corporatiu resolt
-   (xatCorporatiu.js), mai a l'id de llavor en remot. */
+   etiqueta: «en obres» ho diu la porta inerta.
+   T6 (ordre del Mestre, 261004; deroga W4-09) · La boina de socdepoble porta a la pàgina del
+   projecte (RUTA_PROJECTE, la de rutaDAutoria), ja no al seu xat corporatiu. */
 const porta = (id, verb, nom, desti, varietat) => ({ id, verb, nom, desti, varietat });
-const BOINA_SDP = { author: SDP.author, location: SDP.location, avatarUrl: SDP.avatarUrl };
+const BOINA_SDP = { author: SDP.author, location: SDP.location, avatarUrl: SDP.avatarUrl, authorHref: RUTA_PROJECTE };
+
+/* Ordre del Mestre, 261004 (prompt 261004_0515, «no inventar targetes») · Les opcionals de les
+   llistes de les apps (Notícies, la Nevera): imatgePrivada, idElement, premuda i
+   onAccioSecundaria. Dades de mostra, sense cap persona. */
+const DE_LA_COMPRA = [
+  { id: 'farina', title: 'Farina de la Torre', subtitle: 'Paquet d’un quilo', imageUrl: '/assets/nano_cards/mur_nano_card.jpg' },
+  { id: 'oli', title: 'Oli de la cooperativa', subtitle: 'Garrafa de cinc litres', imageUrl: 'https://exemple.invalid/oli.jpg' }
+];
 const ambLaPagina = (clau) => {
   const pagina = PAGE_COPY[clau];
   const ruta = `/page/${clau}`;
@@ -54,8 +63,14 @@ const DOBLE_ACCIO = [
 
 export default function EspecimenUniversalCard() {
   const navega = useNavigate();
-  const xatCorporatiu = useXatCorporatiu();
   const [avis, setAvis] = useState('Encara no has premut el pin ni la bola del món.');
+  const [aLaLlista, setALaLlista] = useState(() => new Set(['farina']));
+  const [detall, setDetall] = useState('Prem una targeta per a posar-la o llevar-la de la llista; mantín-la premuda per a obrir-ne el detall.');
+  const commuta = (id) => setALaLlista((abans) => {
+    const nou = new Set(abans);
+    if (nou.has(id)) nou.delete(id); else nou.add(id);
+    return nou;
+  });
   return (
     <>
     <Llinatge id="card" />
@@ -66,7 +81,7 @@ export default function EspecimenUniversalCard() {
         ['headingLevel', "'h2' | 'h3' | 'h4' | 'h5' | 'h6'", "'h3'", 'L’etiqueta del títol, segons el feed on viu; qualsevol altre valor torna a h3.'],
         ['variant', "'default' | 'pla'", "'default'", "'pla' (sp-card--pla): sense marc, radi ni ombra, per a viure dins d’una llista. És la targeta viva del Bloc de Notes i del Perfil."],
         ['author / location / avatarUrl', 'string', '—', 'Capçalera taronja. Si no hi ha cap dels tres, no es pinta.'],
-        ['authorHref', 'string', '—', 'Amb una ruta segura, l’autoria de la caputxa és un enllaç: al perfil, o a /pobles si publica el sistema (EventCard, Mur).'],
+        ['authorHref', 'string', '—', 'Amb una ruta segura, l’autoria de la caputxa és un enllaç a la pàgina de qui signa (T6, ordre del Mestre, 261004): una persona o una entitat, al seu perfil; Sóc de Poble (el sistema), a la pàgina del projecte, /projecte. La ruta ix de rutaDAutoria (config/navigation.js), que resol per id, slug o àlies, mai pel nom. Un poble, a /pobles. Una ruta de l’app enllaça també a l’app nativa (rutaDAutorSegura, W4-07).'],
         ['emoticona', 'string', "''", 'El camp cru d’emoticona del document. Només amb una emoticona triada la caputxa passa a tres columnes, amb l’emoticona al centre (EmoticonaBarra en lectura). Mai la ploma.'],
         ['time / date / dateTime', 'string', '—', 'DateTimeControl a la capçalera, amb l’hora si la font en té (un dia sol, sense hora). El clic obri el Calendari en el mes de la data, amb totes les targetes d’eixe mes (/calendari?mes=AAAA-MM, mes local, mai UTC), i no arriba a l’enllaç de la targeta; el nom accessible diu l’hora, el dia (en l’ordre en què es veuen) i on porta (ordre del Mestre, 261001).'],
         ['onDateTime', 'fn | false', '—', 'Un clic propi per a la pastilla (la previsualització que avisa); false, un <time> sense clic. Sense, el Calendari.'],
@@ -83,7 +98,11 @@ export default function EspecimenUniversalCard() {
         ['mainHref / onMainClick', 'string / fn', '—', 'Tota la targeta és un enllaç (overlay) sense tapar les accions.'],
         ['objecte', '{ tipus, id, titol, ruta }', '—', 'T63.2 · El descriptor tipat de l’element (objecteDe, objecteDePerfil…). Sense onComment, Comentar obri el xat comú de la seua Pàgina Universal (/xat?sobre=tipus:id), o el missatge directe d’una persona o una IA. Una nota no en té: Comentar no es pinta. Sense objecte, el xat de la pàgina del detall (mainHref), mai el de la llista. Sense cap xat (objecte null, cap detall o una ruta que el contracte no admet), el botó es queda i el clic ho avisa.'],
         ['connectLabel', 'string', "'Connectar'", 'Verb de l’acció principal: «Sol·licitar plaça», «Obrir»… Nom accessible: «Connectar amb {títol}»; qualsevol altre verb, «{verb}: {títol}».'],
-        ['portes', '[{ id, verb, nom, desti, varietat, avis?, enObres? }]', '—', 'P5 · Com a màxim dues portes al final del cos (PortesTargeta): «Publicar» i «Saber-ne més». Amb portes no hi ha enllaç de tota la targeta; la resta de l’anatomia és la de sempre, boina i peu blau inclosos (P6): mainHref ja no fa overlay, és la pàgina de Comentar i Compartir. desti: una ruta de l’app, validada sense mirar el protocol de la finestra (W4-07); null, o una adreça de fora, pinta la porta inerta que avisa.']
+        ['portes', '[{ id, verb, nom, desti, varietat, avis?, enObres? }]', '—', 'P5 · Com a màxim dues portes al final del cos (PortesTargeta): «Publicar» i «Saber-ne més». Amb portes no hi ha enllaç de tota la targeta; la resta de l’anatomia és la de sempre, boina i peu blau inclosos (P6): mainHref ja no fa overlay, és la pàgina de Comentar i Compartir. desti: una ruta de l’app, validada sense mirar el protocol de la finestra (W4-07); null, o una adreça de fora, pinta la porta inerta que avisa.'],
+        ['imatgePrivada', 'boolean', 'false', 'Ordre del Mestre, 261004 · La imatge i l’avatar passen pel filtre de les peces de les apps (fontSegura de marca.jsx: el mateix origen o el de mitjans) i es demanen sense referent (referrerpolicy="no-referrer"). Una imatge de fora no es pinta. Per a les llistes de les apps (Notícies, la Nevera).'],
+        ['idElement', 'string', '—', 'Ordre del Mestre, 261004 · data-element a l’element principal: la llista hi torna el focus quan es tanca el detall.'],
+        ['premuda', 'boolean', '—', 'Ordre del Mestre, 261004 · aria-pressed a l’element principal quan és un botó (onMainClick): la targeta que posa i lleva de la col·lecció (la Nevera).'],
+        ['onAccioSecundaria', 'fn(element)', '—', 'Ordre del Mestre, 261004 · Pulsació llarga, clic dret o Maj+F10 sobre l’element principal (pulsacioLlarga.js, com les rajoles): el detall de l’element. El clic que ve després d’una pulsació llarga no fa l’acció principal. Necessita mainHref o onMainClick.']
       ]}
       a11y={['Cada acció del peu té nom accessible amb el títol: «Comentar Samarreta…».', 'L’overlay d’enllaç és un <a>/<button> real amb aria-label, no un div.', 'Les insígnies de calendari són <time> amb dateTime.']}
       fes={['Un sol h3 per targeta dins d’un feed; el feed porta el seu h2 (si no, headingLevel).', 'squareBadge per a preu, data o icona: mai text llarg.', 'Sense foto, la icona de la part va a squareBadge (Consola, Vehicle, Animalets).', 'Una data que no porta al Calendari (instantània de dades): onDateTime={false}.', 'Passar a emoticona el camp cru del document: la caputxa només la mostra si s’ha triat.']}
@@ -194,10 +213,24 @@ export default function EspecimenUniversalCard() {
         />
 
         {/* 7 · Explicativa (Consola): icona en lloc de foto, entradilla i les
-            mètriques vives en h5 centrats (T2, ordre del Mestre, 260930), hora
-            de només lectura i un «Obrir» que no compta com a Connectar.
-            La instància real és TargetaConsola (src/sections/consola/peces.jsx). */}
+            mètriques vives en h5 centrats (T2, ordre del Mestre, 260930).
+            Derogat per l'ordre del Mestre del 261004 (xat: tota targeta amb
+            boina i pàgina pròpia): la targeta de sistema sense boina i amb la
+            data a l'última línia del cos. Ara porta la boina de Sóc de Poble
+            (l'autor porta a /projecte) i la data a la pastilla, un <time>
+            sense clic (instantània de dades, onDateTime={false}); tota
+            clicable i el peu de la barra blava, amb Connectar cap a la seua
+            pàgina. Ordre del Mestre, 261004 (xat: cap xifra solta) · totes
+            les xifres de la Consola (les del Mas, les de dins de cada pàgina i
+            del pols) i cada peça del Mapa són esta mateixa targeta, amb pàgina
+            pròpia a /consola/xifres/<slug>; cap no és ja una targeta compacta
+            del Control. La instància real és TargetaConsola
+            (src/sections/consola/peces.jsx), que pinta TargetaXifra
+            (src/sections/consola/XifresMas.jsx). */}
         <UniversalCard
+          className="sdp-consola__targeta"
+          {...BOINA_SDP}
+          time="01:42" date="26/09/26" dateTime="2026-09-26T01:42:00" onDateTime={false}
           title="Calendari de processos"
           subtitle="Per a vigilar el que corre sense ningú davant"
           body={(
@@ -212,12 +245,8 @@ export default function EspecimenUniversalCard() {
           )}
           squareBadge={{ type: 'custom', label: 'Calendari de processos', content: <CalendarClock size={48} strokeWidth={1.5} aria-hidden="true" focusable="false" /> }}
           labels={[{ text: 'Cal reparar', className: 'sdp-insignia sdp-insignia--error' }]}
-          author="Consola Termodinàmica" location="Font: el Mapa del Mas"
-          avatarUrl={SDP.avatarUrl}
-          time="01:42" date="26/09/26" dateTime="2026-09-26T01:42:00" onDateTime={false}
           mainHref="/consola/calendari"
-          showShare showConnect onConnect={() => navega('/consola/calendari')} connectLabel="Obrir"
-          telemetria={{ comptar: false }}
+          hasFooter onConnect={() => navega('/consola/calendari')}
         />
       </div>
 
@@ -258,6 +287,27 @@ export default function EspecimenUniversalCard() {
       </div>
       <p role="status">{avis}</p>
 
+      {/* Ordre del Mestre, 261004 (prompt 261004_0515) · Les targetes de les llistes de les apps. */}
+      <h5>Targetes de les llistes de les apps (commutables i privades)</h5>
+      <p>
+        Les de <strong>Notícies</strong> i de <strong>la Nevera</strong>. Un toc les posa o les lleva de la llista
+        (<code>premuda</code>: <strong>aria-pressed</strong> al botó de tota la targeta); la <strong>pulsació llarga</strong>,
+        el clic dret o <strong>Maj+F10</strong> n’obrin el detall (<code>onAccioSecundaria</code>). Amb
+        <code> imatgePrivada</code>, una imatge d’un <strong>servidor de fora no es pinta</strong> (la segona mostra) i la
+        pròpia es demana <strong>sense referent</strong>. <code>idElement</code> deixa tornar el focus a la targeta.
+      </p>
+      <div className="sdp-card-grid" role="group" aria-label="Targetes commutables de mostra">
+        {DE_LA_COMPRA.map((article) => (
+          <UniversalCard key={article.id} imatgePrivada idElement={article.id}
+            title={article.title} subtitle={article.subtitle} imageUrl={article.imageUrl}
+            labels={aLaLlista.has(article.id) ? [{ text: 'A la llista', className: 'sdp-badge-accent' }] : []}
+            premuda={aLaLlista.has(article.id)} onMainClick={() => commuta(article.id)}
+            onAccioSecundaria={() => setDetall(`S’obriria el detall de «${article.title}».`)}
+          />
+        ))}
+      </div>
+      <p role="status">{detall}</p>
+
       {/* P5 · Onada 4 · Pedra Seca §9: l'espècimen abans de la producció (el Panell de Control),
           amb l'ESMENA 261003 22:34 (directrius 2234 i 2245): la targeta estàndard, sencera. */}
       <h5>Targeta de doble acció (portes)</h5>
@@ -278,7 +328,7 @@ export default function EspecimenUniversalCard() {
       </p>
       <div className="sdp-card-grid" role="group" aria-label="Targetes de doble acció de mostra">
         {DOBLE_ACCIO.map(({ clau, ...targeta }) => (
-          <UniversalCard key={clau} {...BOINA_SDP} authorHref={xatCorporatiu.href || undefined} {...targeta} />
+          <UniversalCard key={clau} {...BOINA_SDP} {...targeta} />
         ))}
       </div>
 

@@ -16,21 +16,50 @@ import { useNavigate } from '../../app/contexts/RouterContext';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { resolveAsset } from '../../config/assetResolver';
 import {
-  getSectionItemPath, objecteDe, objecteDePagina, rutaConnectarObjecte, rutaDePerfilDAutor
+  getSectionItemPath, objecteDe, objecteDePagina, RUTA_PROJECTE, rutaConnectarObjecte, rutaDePerfilDAutor
 } from '../../config/navigation';
 import { COPYRIGHT_SDP, dataDElement } from '../../components/universal/editorial.js';
+import { useEntitatDelProjecte } from '../../hooks/useEntitatDelProjecte.js';
+
+/**
+ * T6 (ordre del Mestre, 261004, prompt 261004_0515 §5) · On porta la boina
+ * d'una publicació del Mur: la pàgina de qui signa (una persona o una
+ * entitat, rutaDePerfilDAutor, que ja porta l'entitat pilot al projecte); si
+ * no se sap qui és, una pàgina del sistema o una publicació signada amb la
+ * reserva «Sóc de Poble» (sense nom propi) van a RUTA_PROJECTE. Un nom sense
+ * identitat coneguda no s'endevina: sense enllaç.
+ */
+export function rutaDeLaBoinaDelMur(item) {
+  const deQuiSigna = rutaDePerfilDAutor(item);
+  if (deQuiSigna) return deQuiSigna;
+  const ambNomPropi = Boolean(item?.author_name || item?.seller);
+  return item?.isSystem || !ambNomPropi ? RUTA_PROJECTE : undefined;
+}
 
 export function TargetaDelMur({ item, esdeveniment = null }) {
   const { t } = useUIActions();
   const navigate = useNavigate();
+  /* T6 en remot · l'id de servidor de l'entitat pilot: quan arriba, la boina
+     de les seues publicacions torna a pintar-se i porta al projecte. */
+  useEntitatDelProjecte();
 
   if (item.type === 'event') {
     /* T43 (ordre del Mestre, 260928) · el calendari també es connecta amb el seu
        descriptor; T63.2 · i Comentar obri el xat comú de l'acte.
        T5 · la pastilla i la insígnia, del model de l'acte (el mateix
-       del Calendari i del filtre ?date=). */
+       del Calendari i del filtre ?date=).
+       T6 (261004) · la pàgina de qui signa l'acte, si se sap; la reserva i
+       el sistema els resol EventCard (components/ no llig navigation.js). */
     const acte = objecteDe(item, 'events');
-    return <EventCard item={item} esdeveniment={esdeveniment} objecte={acte} onConnect={() => navigate(rutaConnectarObjecte(acte))} />;
+    return (
+      <EventCard
+        item={item}
+        esdeveniment={esdeveniment}
+        objecte={acte}
+        authorHref={rutaDePerfilDAutor(item) || undefined}
+        onConnect={() => navigate(rutaConnectarObjecte(acte))}
+      />
+    );
   }
   /* T51 · La pastilla de LECTURA amb el format i el lector únics
      (editorial.js · dataDElement), els mateixos del detall: el dia de
@@ -60,7 +89,9 @@ export function TargetaDelMur({ item, esdeveniment = null }) {
       imageUrl={resolveAsset(item.image_url || item.image || item.images?.[0] || item.imageSrc || '')}
       imageAlt={item.imageAlt || item.title || ''}
       author={item.author_name || item.seller || "Sóc de Poble"}
-      authorHref={item.isSystem ? "/pobles" : rutaDePerfilDAutor(item) || undefined}
+      /* T6 · Derogat per l'ordre del Mestre del 261004 (prompt 261004_0515):
+         el sistema ja no porta a /pobles, sinó a la pàgina de qui signa. */
+      authorHref={rutaDeLaBoinaDelMur(item)}
       objecte={objecte}
       onConnect={() => navigate(rutaConnectarObjecte(objecte))}
       avatarUrl={resolveAsset(item.author_avatar || item.avatar_url || '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg')}

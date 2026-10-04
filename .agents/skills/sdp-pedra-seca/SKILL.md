@@ -87,5 +87,9 @@ L'equivalent a l'Spec-driven per al disseny:
 - Totes les icones de la barra són blanques dins del cercle de vel fosc.
 - El component pare és `src/components/universal/barres/BarraTaronja.jsx`; PageFrame i els espècimens el munten.
 
+## 11. Identitat Visual (Avatars vs Logotips)
+- **Persones i IA (Avatars):** Els usuaris, persones físiques i la IAIA utilitzen OBLIGATÒRIAMENT un avatar redó i gran (300-360 px), mai un logotip corporatiu ni figures abstractes per defecte a les seues fitxes personals.
+- **Entitat Oficial:** El logotip complet de "Sóc de Poble" es reserva de forma estricta i exclusiva per a la pàgina corporativa de l'entitat, la capçalera oficial i els actes organitzats per aquesta. Mai s'ha d'utilitzar com a "avatar" o imatge de recurs quan falta la foto d'una persona.
+
 ## Ancoratge de Seguretat
 - [[00_INDEX_SKILLS]]

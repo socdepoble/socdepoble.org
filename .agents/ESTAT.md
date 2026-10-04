@@ -7,6 +7,73 @@ description: ESTAT DE LA SESSIÓ
 
 <!-- SDP:ESTAT_ACTUAL -->
 
+## ESTAT_ACTUAL · 2026-10-04 19:13 · Claude · integració final i 1.0.3 a punt de compilar
+
+- Gestoria Veri*Factu v2 (F01-F03) i ara app pròpia `/app/gestoria`, només en DEV, fora de la Wiki;
+- targetes UniversalCard a la Consola, el Lector i la Nevera;
+- barra taronja universal; logotip per a l'entitat i avatar redó per a la persona;
+- rail fix de la Wiki en «mitja» i reserva de la barra mòbil;
+- pull-to-refresh a WordPress;
+- Índex dins de l'ombra;
+- tipografia `cqi` amb `@supports`;
+- connector 1.0.3 (versió, Changelog, Upgrade Notice).
+`src`: 11 811 verdes i 52 roges, cap dels fronts de la nit llevat d'Admin D3. Node del connector: 96/96. Semàfor verd per a compilar segons EMPAQUETAT_1.0.3.txt; el ZIP de les 11:51 no val. Pendents del Mestre a l'auditoria 0605, §Troballes.
+
+## ESTAT_ACTUAL · 2026-10-04 15:54 · Codex · tancament ampliat 1.0.3 verificat
+
+Torn `torn_3829d514-eb9a-406e-ae86-dd2647b0abfd`; pla 1420 v1.2.0, informe 1435 v1.2.0 i acta 1445 v1.1.0, documents vàlids. Entrega anterior acabada amb ZIP 15:14 abans de comprovar Claude Desktop: Verifica 0/1 i bateria final pendent. Condició humana complida; Sidebar completa assumida i acabada. Manifest amb nou mòduls i Aprendre; BarraApp és l’única navegació exterior, zero rail interior a l’app. Closca controlada per la ruta, sense remuntar useTauler entre els nou mòduls; detall i avís anterior es tanquen. Retorn blau existent a Sóc de Poble, amb ruta anterior conservada per la plataforma. Pont DEV, privacitat i ContenidorGestoria preservats. Gestoria financera només en DEV.
+
+146/146 proves de plataforma (cinc suites), 36/36 closca i privacitat (dues suites), ESLint del front exit 0. Revisió independent sense bloquejants. CUA ample i compacte confirma menú complet, rutes Bancs/Full/Impostos, tancament del menú mòbil i retorn a /xat en entrada directa; la prova de plataforma cobreix retorn a Wiki. Avatars redons verificats en el tancament anterior. Captura 261004_gestoria_sidebar_completa.jpg; viewport restaurat.
+
+ZIP FINAL: `wordpress-plugin/builds/socdepoble-enxufe-v1.0.3-261004_1545.zip`, 130.751.256 bytes, SHA-256 `398330989fab0c9e06e0956de2258ba9f6efe1111ddf33d9ab711e56d1eadf06`. Release autònom i directori; 855 fonts estables als dos builds i empaquetat. Verificació exhaustiva valid:true/errors:[] de tres ZIP, CRC, inventaris, SRI, hashes, canal, entorn remote, tipografia i absència de finances DEV; revisió selectiva independent concorda. Logs /tmp/sdp-sidebar-103-*. Canal manual sense signatura. Els ZIP 11:51, 14:59 i 15:14 queden com a talls anteriors, no són l’entrega actual. Cap desplegament, commit ni activació financera productiva.
+
+Escriptori: 14 documents vius/ajornats indexats, safata buida, set prompts consumits arxivats amb handoff; zones protegides intactes. Governança heretada continua pendent: tall anterior valid:false/planned amb 1.199 incidències, nou --check valid:false/planned amb 1.198 incidències a /tmp/sdp-sidebar-103-closure.json. Sense resegellat d’història aliena. Altres fronts ajornats.
+
+Coordinació: root únic escriptor de UI; route_review només AppGestoria.test.jsx; dos agents de revisió en lectura. L’intent de missatge en Claude Desktop es va interrompre per interacció humana i no es considera enviat; el relleu compartit queda ací. Informe nou de Claude Relleu 25 llegit com a context; el seu espècimen d’avatar queda inclòs en la recompilació estable, sense editar el seu front.
+
+
+##### ESTAT_ACTUAL · 2026-10-04 11:25 · Claude · Integració Final en Dos Fases (Relleu 22)
+
+**Informe de Claude (Relleu 22):** El poliment ha acabat (tot verd). S'ha iniciat la Integració Final en dos meitats.
+- **Primera meitat (en curs):** Integra les troballes de Codex (F01-F05), l'activació del *pull-to-refresh* dins de WordPress i reparacions d'higiene d'amfitrió.
+- **Segona meitat (pendent de diagnosis):** S'executarà només tinguen les mesures visuals exactes per a les barres de la Wiki sempre visibles, logotips d'entitat i estils de l'Índex a WP (tot afecta `PageFrame`/`AppGridShell`).
+- **Bloquejos previs al build (1.0.3):** 1. Test WP trencat per atributs no declarats (`ruta-a-url`, `base-path`). 2. Quatre imatges del projecte fora de `public/` (causaran 404). 3. Confirmar nom ('Gent de la Torre') i domini de producció abans de segellar.
+
+## ESTAT_ACTUAL · 2026-10-04 11:07 · Codex · ampliació beta, Sollutia i paquet
+
+**Torn `torn_a6932539-8ecf-4fae-84b4-02faa6959a8e`; informes [[261004_1010_auditoria_codex]] i [[261004_1045_auditoria_codex]], v1.1.0, vàlids.** Rellegits els relleus 19–20 de Claude i el prompt de tancament 1045. Claude accepta F01–F06; al tall de font rellegit els pegats comptables encara no han arribat. Auditoria i relleu documental, sense font productiva editada.
+
+**F07, bloqueig d'acceptació beta:** la pàgina real `/registre?mode=entrar` carrega, mostra servidor no disponible i desactiva Google, correu, contrasenya, entrada i recuperació. El reintent conserva el bloqueig. Vite servix la pàgina. Claude identifica després el node local 127.0.0.1:54321 apagat; el contrast propi no troba cap procés escoltant. Bloqueig d’entorn local, sense regressió de codi demostrada; entrada remota de producció sense prova pròpia. Cap credencial escrita ni compte creat.
+
+**Verificació T3:** 397/402 al bloc ampliat de 20 suites; 94/96 al repàs aïllat App + identitat. Xat i Consola ja passen al repàs; resten les dues discrepàncies entre la barra mòbil actual i els tests de Telefonades/ordre. Connector WordPress: 55/56, amb marcatge `base-path`/`ruta-a-url` i expectativa antiga per reconciliar. UI i sessió consumixen port genèric, salut/recuperació opcionals; cap prova d'endpoints Sollutia reals.
+
+**Producció:** ZIP 1.0.2 de les 05:27 coherent amb manifest i inventari, 215/215 fitxers sense divergències. És anterior als poliments; 1.0.3 anunciada per Claude encara sense artefacte observat. El hook que Claude declara no s'ha interpretat com una compilació feta ni com un bloqueig de Codex. Cap desplegament.
+
+**Abast visual:** RSS Compartir continua confirmat a font; marge de dues barres present, sense contrast final propi de scroll/apilament en WordPress. Les troballes visuals noves del relleu 20 de Claude queden atribuïdes a ell i pendents de verificació independent. Olivera verda i dos informes vàlids; tancament global valid:false, 1.208 incidències i context_loaded, sense resegellar història aliena. Pla mecànic i deute global pendents; no són 1.208 defectes de producte.
+
+##### ESTAT_ACTUAL · 2026-10-04 10:57 · Claude · Creuament Codex i Integració Final (Relleu 20)
+
+**Informe de Claude (Relleu 20):** L'informe de Codex ha sigut llegit sencer i creuat amb l'auditoria pròpia. Les tasques prèvies seguixen en marxa.
+- **Troballes de Codex a integrar:** Errors crítics en Facturació (F01, F02, F03), Nevera UI (F04), Compartir del Lector (F05) i tipografia a tokens (F06).
+- **Troballes de Claude a integrar:** Marges de la barra mòbil tapant contingut i el salt de l'Índex dins de WP, que es dibuixa sense estils (vici d'enxufabilitat a erradicar per a Sollutia). El Lector encara no usa UniversalCard.
+- **Pla de Tancament:** Quan acaben els poliments en curs, es farà la integració conjunta (separada per fronts amb verificadors). A continuació proves netes, captures, i finalment es deixarà tot a punt (1.0.3) perquè MarIA en compile el *bundle*.
+## ESTAT_ACTUAL · 2026-10-04 10:48 · Codex · auditoria independent i relleu per a Claude
+
+**Torn `torn_a6932539-8ecf-4fae-84b4-02faa6959a8e`. Informes [[261004_1010_auditoria_codex]] i [[261004_1045_auditoria_codex]] omplits i vàlids pel comprovador documental.** El segon és el resum específic demanat a les 10:42; l'informe complet conserva reproduccions i hashes. Cap font productiva editada per Codex.
+
+**F01/F02 P1 abans d'activació comptable:** el port admet una referència anterior incoherent; l'alta no connecta política NOVA/llegat F/data de pas i permet repetir número amb una altra data. **F03 P2:** divergència textual de còpia no detectada. Quatre casos adversos reproduïts en memòria amb dades sintètiques. Hash AEAT casos 1 i 2 correcte; capacitat remota i remissió encara pendents, amb Facturació «en obres».
+
+**Relleu visual/RSS:** Compartir de la llista del Lector usa la ruta de la llista perquè no passa mainHref/onShare; troballa convergent amb Claude. Els marges CSS de Consola/Explorador ja reserven dues barres a font, però el contrast visual del pegat i de z-index continua pendent. Acta 1027 i relleu 18 llegits; caiguda temporal i represa del servidor distingides de regressions de producte. Avatar i altres encàrrecs continuen a càrrec del front de Claude.
+
+**Proves per talls:** Gestoria inicial 1991/1991; UI/CSS inicial 1477 passades, 1 fallada corregida i 1 omesa; repàs posterior 544/550 amb sis expectatives del Tauler corregides, contrast dels afectats + GraellaTargetes 53/53. No sumar com una suite única. Ports Sollutia verds; tokens/graella i segell globals rojos. Tancament final pendent de diagnòstic; cap acceptació global, segell nou, commit o desplegament.
+
+##### ESTAT_ACTUAL · 2026-10-04 10:41 · Claude · Represa post-caiguda i aclariments de l'Acta
+
+**Informe de Claude (Relleu 18):** Context recuperat. Els treballs en curs no s'han aturat per la caiguda.
+- **T2 en execució:** S'inicia la feina de l'avatar de 48px per als usuaris logats a la barra superior (el fitxer està lliure). S'auditarà també el registre/entrada per si hi ha bloquejos.
+- **Ajornat a la passada final:** La reparació del "Compartir" del Lector RSS i l'auditoria del z-index de la boina queden pendents per a la passada final, atès que els fitxers estan bloquejats pel poliment actual.
+- **Discrepàncies de l'Acta (10:27):** Les troballes de l'Índex tapat i de Compartir del Lector són de Claude (l'informe de Codex al disc està buit). A més, l'ajust de tipografia fluida per a 320px no s'ha dut a terme aquesta nit.
+- **Pendent per a pròxima sessió:** Mercadona, Animalets i triatge de `02_investigacio_ia`.
 ##### ESTAT_ACTUAL · 2026-10-04 03:33 · Codex · relleu i sentinella pausada
 
 **Informe [[261003_1950_auditoria_codex]] v1.3.30. Acta0325 «Tancament Onada 4» llegida íntegrament; automatització PAUSED confirmada.** Codex queda reservat per a **despertadors i punts crítics**, mentre Claude continua la passada tècnica que descriu al seu informe. **Cap acceptació global ni tancament fictici d’incidències.**

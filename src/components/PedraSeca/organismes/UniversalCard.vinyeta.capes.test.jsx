@@ -97,8 +97,11 @@ test('sense colors crus: espais amb l’escala i 44px amb --sdp-touch-min', () =
 
 test('cap regla existent canviada: .sp-card, .sp-card-body, .sp-card--action, .sp-card-link-overlay, .sdp-boto i .sdp-card-grid', () => {
   const exactes = [
-    [components, '.sp-card { background: var(--sdp-fons-targeta); border-radius: var(--sdp-radi-m); overflow: hidden; box-shadow: var(--sdp-ombra-2); margin: 0 auto 32px; width: 100%; max-width: 500px; min-width: 0; display: flex; flex-direction: column; transition: box-shadow var(--sdp-t-lenta); content-visibility: auto; contain-intrinsic-size: 400px; container-type: inline-size; }'],
-    [components, '.sp-card-body { padding: 22px 24px 16px; text-align: center; position: relative; min-width: 0; }'],
+    /* Derogat per l'ordre del Mestre del 261004 (D-C, xat 06:38) · el 22px
+       de dalt del cos passa a l'escala (--sdp-space-6, 22 → 24px) i el 32px
+       de davall de la targeta, al seu token (mateix píxel). */
+    [components, '.sp-card { background: var(--sdp-fons-targeta); border-radius: var(--sdp-radi-m); overflow: hidden; box-shadow: var(--sdp-ombra-2); margin: 0 auto var(--sdp-space-8); width: 100%; max-width: 500px; min-width: 0; display: flex; flex-direction: column; transition: box-shadow var(--sdp-t-lenta); content-visibility: auto; contain-intrinsic-size: 400px; container-type: inline-size; }'],
+    [components, '.sp-card-body { padding: var(--sdp-space-6) var(--sdp-space-6) var(--sdp-space-4); text-align: center; position: relative; min-width: 0; }'],
     /* L'overlay, en dos trossos: la declaració del mig (la que lleva l'anell,
        compensat per :focus-visible) faria saltar el design_guard en esta prova. */
     [components, '.sp-card-link-overlay { position: absolute; inset: 0; z-index: 1; border-radius: inherit; '],

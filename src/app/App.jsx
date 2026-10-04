@@ -1,6 +1,7 @@
 import { RouteSEO } from '../hooks/RouteSEO';
 import { RouteTelemetria } from '../hooks/RouteTelemetria';
 import { usePullToRefresh } from '../hooks/usePullToRefresh.js';
+import { useEntitatDelProjecte } from '../hooks/useEntitatDelProjecte.js';
 import React, { lazy, Suspense, useCallback, useEffect, useRef, memo, StrictMode, useMemo, useState } from 'react';
 import { Navigate, NavLink, Route, Routes, useNavigate, useLocation, useRouter } from './contexts/RouterContext';
 import { MoonStar, Search, Settings, Sun, Globe } from '../icons.jsx';
@@ -45,7 +46,7 @@ const ConsolaSection = lazy(() => import('../sections/consola/ConsolaSection'));
 const TranslationsSection = lazy(() => import('../sections/translations/TranslationsSection'));
 const TextSection = lazy(() => import('../sections/text/TextSection'));
 const TaulerTelemetria = lazy(() => import('../sections/text/TaulerTelemetria'));
-const WikiDePobleSection = lazy(() => import('../sections/wiki-de-poble/WikiDePobleSection'));
+import RutaWikiDePoble from '../sections/wiki-de-poble/RutaWikiDePoble.jsx';
 const DesignSection = lazy(() => import('../sections/disseny/DesignSection'));
 const SearchSection = lazy(() => import('../sections/search/SearchSection'));
 const ProfileSection = lazy(() => import('../sections/profile/ProfileSection'));
@@ -540,7 +541,8 @@ function AppShell({ children, mobileNav }) {
         ) : null}
 
         {/* Estat del gest de recarregar: el text l'escriu usePullToRefresh
-            (buit i transparent en repòs; navegacio.css). */}
+            (buit i transparent en repòs; modules.css, «Lliscar per
+            recarregar»). També encastat a <soc-de-poble> (261004). */}
         <div
           ref={indicatorRef}
           className="pull-to-refresh-indicator sdp-ptr-indicator"
@@ -700,6 +702,15 @@ function AppContent({ config }) {
 function AppDataLoader() {
   const core = useCoreContent();
   const location = useLocation();
+  /* T6 en remot (verificació del front «autoria», 261004) · L'id de servidor
+     de l'entitat pilot es resol ací, una sola vegada per a tota l'app i per
+     abast de backend (resolEntitatDelProjecte; en llavor, cap crida). Abans
+     només el demanaven la targeta del Mur i el detall d'una publicació del
+     MAS: qui entrava directament a /mercat, /mur/:id o /mercat/:id veia la
+     boina del pilot portar a /empresa/<uuid> tota la sessió. Quan l'id
+     arriba, este component torna a pintar les rutes i totes les boines
+     (rutaDAutoria) porten a /projecte. */
+  useEntitatDelProjecte();
 
   // Eliminar el bloqueig global per a error o loading del Core permet a Sóc de Poble
   // mantindre l'accessibilitat a les seccions independents (Xat, Mur, Notes)
@@ -864,7 +875,7 @@ function ActorRoutes({ agents }) {
       <Route path="grup/:agentId" element={<PerfilPublicSection agents={agents} />} />
       
       <Route path="projecte" element={<TextRoute pageKey="projecte" />} />
-      <Route path="wikidepoble" element={<WikiDePobleSection />} />
+      <Route path="wikidepoble" element={<RutaWikiDePoble />} />
       <Route path="skills" element={<Navigate to="../wikidepoble" replace />} />
       <Route path="constitucio" element={<TextRoute pageKey="constitucio" />} />
       <Route path="disseny" element={<DesignSection />} />

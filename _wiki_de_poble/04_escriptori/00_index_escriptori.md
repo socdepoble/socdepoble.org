@@ -76,8 +76,22 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu — i
 
 ## Activitat en curs
 
-- [[261004_0320_prompt_claude_gestoria]]
-- [[261004_0320_pla_implementacio_claude]]
+Tancament autoritzat: rutes Gestoria/Wiki, avatars i paquet 1.0.3. Els altres documents es conserven com a relleu o fronts ajornats per a la pròxima sessió.
+
+- [[261004_0515_prompt_claude_gestoria]]
+- [[261004_0515_pla_implementacio_claude]]
+- [[261004_0605_auditoria_claude]]
+- [[261004_0655_instruccions_ux_ipad_claude]]
+- [[261004_0905_instruccions_triage_investigacio_claude]]
+- [[261004_0935_idees_modul_animalets]]
+- [[261004_1010_auditoria_codex]]
+- [[261004_1015_instruccions_claude_petorreta]]
+- [[261004_1045_auditoria_codex]]
+- [[261004_1130_cas_us_retall_imatges]]
+- [[261004_1200_prompt_local_codex_auditoria_extrema]]
+- [[261004_1420_pla_implementacio_codex]]
+- [[261004_1435_auditoria_codex]]
+- [[261004_1445_acta_marmota_codex]]
 
 ## Recursos de Producció en curs
 - [[02_investigacio_ia/261002_0150_investigacio_plugins_claude]]
@@ -95,6 +109,19 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu — i
 - [[01_produccio/iaia_maria_portada.jpg]]
 
 ## Investigació IA
+- Laboratori de la nit 261004 (Claude, [[261004_0605_auditoria_claude]]); els relleus `RELLEU_*.txt` del mateix directori són el canal viu de cada front:
+- [[02_investigacio_ia/261004_0605_nit_claude/EMPAQUETAT_1.0.3.txt]]
+- [[02_investigacio_ia/261004_0605_nit_claude/GESTORIA_FACTURACIO_TECNICA.txt]]
+- [[02_investigacio_ia/261004_0605_nit_claude/ARQUITECTURA_ERP_GESTORIA.txt]]
+- [[02_investigacio_ia/261004_0605_nit_claude/MAPA_EMPRESA_GESTORIA.txt]]
+- [[02_investigacio_ia/261004_0605_nit_claude/MODEL_ORGANITZACIO_EMPRESA.txt]]
+- [[02_investigacio_ia/261004_0605_nit_claude/TUTOR_EMPRESARIAL.txt]]
+- [[02_investigacio_ia/261004_0605_nit_claude/AUDITORIA_CAPACITATS_CLAUDE.txt]]
+- [[02_investigacio_ia/261004_0605_nit_claude/FITXES_BOTIGUES.txt]]
+- [[02_investigacio_ia/261004_0605_nit_claude/DEMO_EN_DIRECTE.txt]]
+- [[02_investigacio_ia/261004_0605_nit_claude/BLOQUEJANTS_BOTIGUES.txt]]
+- [[02_investigacio_ia/261004_0605_nit_claude/TRUCADES_WEBRTC.txt]]
+- [[02_investigacio_ia/261004_0605_nit_claude/CSS_MIL_LIMETRE.txt]]
 - [[02_investigacio_ia/261003_1330_onada4_claude/EMPAQUETAT_1.0.2.txt]]
 - [[02_investigacio_ia/261003_1330_onada4_claude/ESQUEMA_MITJANS_PROPOSTA.txt]]
 - [[02_investigacio_ia/261003_1330_onada4_claude/F2_LLAVORS.txt]]
@@ -1193,6 +1220,27 @@ Enllaços a peces ja existents, verificats al disc; no s’han mogut ni editat e
 - [[02_investigacio_ia/261003_1330_onada4_claude/CONTRACTE_SDP_AUTH_REQUEST.txt]]
 - [[02_investigacio_ia/261003_1330_onada4_claude/CONTROL_TARGETES_DOBLE_ACCIO.txt]]
 
-- [[261004_0320_pla_implementacio_claude]]
-
 - [[../10_actes/261004_0435_acta_marmota]]
+
+
+
+
+
+
+
+
+
+
+
+## Tasques pendents (Pròxima sessió)
+- **Neteja Termodinàmica (LEDGER i Skills):** Abans d'obrir cap front nou, cal reparar les alertes roges de la Consola de Manteniment. Reparar els segells fòssils del `LEDGER.md`, validar el frontmatter de les skills (com `core-llegibilitat-text`) i sincronitzar el catàleg perquè no hi haja skills "fora-cataleg-claude" ni òrfenes.
+- **Recuperació de Multimèdia (Nano Banana i fotografies velles):** Recopilar els antics arxius de l'antiga plataforma de Sóc de Poble (les imatges que va crear la Nano Banana i les fotos). Integrar-ho tot per poder visualitzar-ho en la secció "Multimèdia" i afegir l'opció per esborrar-ho si l'usuari és super administrador.
+- **Redisseny del Calendari (Clon Google Calendar):** Ajustar l'aspecte i el funcionament del Calendari perquè s'assemble cada vegada més al de Google, agafant com a referència i guia estricta les captures de pantalla que ja tenim desades a `01_produccio`.
+- **Targeta gran a WhatsApp (Open Graph):** Configurar les etiquetes meta de la pàgina (`og:image` i `twitter:card="summary_large_image"`) i preparar una versió panoràmica del logotip (idealment 1200x630 px) perquè en compartir l'enllaç per WhatsApp o xarxes isca la imatge en gran "en plan tocho" i no la miniatura xicoteta al costat.
+- **Pàgina de la IAIA (URL i SEO OGP):** Canviar la ruta `/ia` per la correcta `/iaia`. A més, cal arreglar el SEO d'aquesta pàgina perquè en compartir-la agafe correctament l'etiqueta `og:image` apuntant a la imatge 'hero' (la imatge de la IAIA a la Masia controlant-ho tot) en lloc de mostrar SEO zero.
+- **Refactorització de la Gestoria (Fidelitat visual i Arquitectura):** Refer l'aspecte de l'aplicació autònoma de la Gestoria prenent com a guia les captures de la interfície original. **Crucial:** Les aplicacions autònomes no es munten *dins* de l'espai de treball normal. El sistema sencer passa a ser l'aplicació. La barra negra desapareix i la barra taronja es converteix en la *sidebar* principal. En punxar al logotip blau de Sóc de Poble, es torna al sistema principal.
+- **Assignació semàntica d'emoticones (Emojis natius):** Revisar el contingut de cada targeta/secció (com els Tractors, documents, etc.) i assignar-li un emoji natiu (Mac/Android) que represente fidelment el seu propòsit per evitar la repetició visual d'icones genèriques.
+- **Directori d'Emoticones XL (Pàgina de Disseny):** Afegir una nova secció "Emoticones" a la pàgina de Disseny (al costat de Fonaments, Estructura, etc.). Utilitzarem una carpeta desplegable (acordió) que contindrà subcarpetes per a cada categoria d'emojis. Dins de cada subcarpeta es mostraran els emojis a mida gegant (x5 ampliats) per afavorir-ne el reconeixement visual i l'associació psicològica.
+
+
+

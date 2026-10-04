@@ -7,9 +7,9 @@
  * amfitrió) l'apaga, la persona el veu desactivat i llig per què. Una app
  * premium sense dret ho diu tal qual: res de patrons foscos.
  */
-import { useId } from 'react';
-import { Link } from '../../app/contexts/RouterContext';
+import { Link, useNavigate } from '../../app/contexts/RouterContext';
 import { useUIState } from '../../app/contexts/UIContext';
+import { PaginaApp } from '../../components/PedraSeca/index.js';
 import { EstatBuit } from '../../components/PedraSeca/atoms/estats.jsx';
 import { Insignia } from '../../components/PedraSeca/atoms/Insignia.jsx';
 import { Interruptor } from '../../components/PedraSeca/organismes/formulari.jsx';
@@ -74,24 +74,34 @@ function FitxaApp({ app, idioma, onApaga }) {
   );
 }
 
+/* Norma del Mestre, 261004 (logotips; «SÍ A TOT») · El portal és una pàgina
+   de sistema i porta l'anatomia de totes: abans pintava el bloc del títol a
+   mà, fora de la Pàgina Universal, sense barres ni logotip. Ara és la Pàgina
+   Universal de les apps (PaginaApp, la porta permesa des de src/apps): doble
+   barra, la boina de Sóc de Poble (sense autor, signa el projecte i enllaça a
+   /projecte) i el seu logotip dalt de l'H1. El contingut i l'ordre, els de
+   sempre: l'H1, l'entradeta i la llista. Tornar va a la pàgina d'abans, com
+   a la resta de pàgines de sistema (UniversalPage). */
 export function PortalApps() {
   const apps = useApps();
   const apaga = useApagaApp();
+  const navigate = useNavigate();
   const { language } = useUIState();
-  const idTitol = useId();
   return (
-    <section className="sdp-app-portal" aria-labelledby={idTitol}>
-      <header className="page-title">
-        <h1 id={idTitol}>Apps</h1>
-        <p className="lead">Eines del poble que s’enxufen i es desenxufen. El node decidix quines porta; tu, quines vols vore.</p>
-      </header>
-      {apps.length === 0 ? (
-        <EstatBuit titol="Encara no hi ha cap app">Quan este node en porte alguna, la voràs ací.</EstatBuit>
-      ) : (
-        <ul className="sdp-app-portal__llista">
-          {apps.map((app) => <FitxaApp key={app.manifest.id} app={app} idioma={language} onApaga={apaga} />)}
-        </ul>
-      )}
-    </section>
+    <PaginaApp
+      title="Apps"
+      lead="Eines del poble que s’enxufen i es desenxufen. El node decidix quines porta; tu, quines vols vore."
+      onBack={() => navigate(-1)}
+    >
+      <div className="sdp-app-portal">
+        {apps.length === 0 ? (
+          <EstatBuit titol="Encara no hi ha cap app">Quan este node en porte alguna, la voràs ací.</EstatBuit>
+        ) : (
+          <ul className="sdp-app-portal__llista">
+            {apps.map((app) => <FitxaApp key={app.manifest.id} app={app} idioma={language} onApaga={apaga} />)}
+          </ul>
+        )}
+      </div>
+    </PaginaApp>
   );
 }

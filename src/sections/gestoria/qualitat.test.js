@@ -30,15 +30,29 @@ function fitxersDe(directori) {
 }
 
 const GESTORIA = fitxersDe(CARRIL).filter((f) => !EXCLOSOS.some((exclos) => f.startsWith(exclos)));
+/* Ordre del Mestre, 261004: també la ruta de la Wiki i les proves que fixen
+   que una URL vella de la Gestoria cau com un ítem desconegut. */
 const WIKI = [
   'src/sections/wiki-de-poble/WikiDePobleSection.jsx',
   'src/sections/wiki-de-poble/WikiDePobleSection.einesLocals.test.jsx',
-  'src/sections/wiki-de-poble/WikiDePobleSection.produccio.test.jsx'
+  'src/sections/wiki-de-poble/WikiDePobleSection.produccio.test.jsx',
+  'src/sections/wiki-de-poble/WikiDePobleSection.migracioGestoria.test.jsx',
+  'src/sections/wiki-de-poble/RutaWikiDePoble.jsx',
+  'src/sections/wiki-de-poble/RutaWikiDePoble.test.jsx'
+];
+/* Ordre del Mestre, 261004 («contaminació crítica de rutes/estats entre
+   Gestoria i Wiki»): la Gestoria viu a la seua app. El pont, el manifest, les
+   rutes i la seua prova passen les mateixes portes que el carril. */
+const APP = [
+  'src/apps/gestoria/AppGestoria.jsx',
+  'src/apps/gestoria/AppGestoria.test.jsx',
+  'src/apps/gestoria/manifest.js',
+  'src/apps/gestoria/rutes.js'
 ];
 const SUPORT = ['tests/helpers/autenticadorSimulat.js'];
 /* La prova amb la carpeta real (node:test): no porta cap valor real, però sí les invariants de l'onada G3T. */
 const PROVES_REALS = ['tests/gestoria-3t-real.test.mjs'];
-const TOTS = [...GESTORIA, ...WIKI, ...SUPORT, ...PROVES_REALS];
+const TOTS = [...GESTORIA, ...WIKI, ...APP, ...SUPORT, ...PROVES_REALS];
 const esProva = (f) => /\.test\.m?jsx?$/.test(f) || f.includes('/__fixtures__/');
 const PRODUCCIO = TOTS.filter((f) => !esProva(f));
 const JSX = PRODUCCIO.filter((f) => f.endsWith('.jsx'));

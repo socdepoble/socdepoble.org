@@ -12,7 +12,7 @@ vi.mock('../../../app/contexts/IdentitatContext', () => ({ useIdentitat: () => m
 vi.mock('../../../hooks/useResolvedAsset.js', () => ({
   useResolvedAsset: (ref) => (ref?.startsWith('sdp-media://') ? `/media/${ref.slice('sdp-media://'.length)}` : ref || '')
 }));
-import { useIdentitatDeLaBarra } from './useIdentitatDeLaBarra.js';
+import { RUTA_PERFIL_PROPI, useIdentitatDeLaBarra } from './useIdentitatDeLaBarra.js';
 import { BotoIdentitatActiva } from './BotoIdentitatActiva.jsx';
 import { CalaixIdentitats } from './CalaixIdentitats.jsx';
 import { BrowserRouter, MemoryRouter } from '../../../app/contexts/RouterContext';
@@ -91,6 +91,34 @@ test('les accions del calaix tanquen i naveguen; sense sessió el botó porta a 
   fireEvent.click(screen.getByRole('button', { name: 'Entrar' }));
   expect(onNavega).toHaveBeenLastCalledWith('/registre?mode=entrar&tornar=%2F');
   expect(container.ownerDocument.querySelector('dialog')).toBeNull();
+});
+
+/* Acta 261004_1027 §3 (beta testers) · Una persona sense organitzacions no
+   té res a triar: el seu avatar gran porta directament al perfil propi. */
+test('acta 261004_1027 · persona sola: l’avatar porta a /el-meu-perfil i no obri cap calaix', async () => {
+  m.identitat.identitats = [{ ...PERSONA, activa: true }];
+  const onNavega = vi.fn();
+  render(<Barra onNavega={onNavega} />);
+  const boto = screen.getByRole('button', { name: 'El teu perfil: Pepa Soler' });
+  expect(RUTA_PERFIL_PROPI).toBe('/el-meu-perfil');
+  expect(boto.hasAttribute('aria-haspopup')).toBe(false);
+  expect(boto.querySelector('.sdp-avatar--lg img').getAttribute('src')).toBe('https://lh3.googleusercontent.com/a/pepa.png');
+  await act(async () => { fireEvent.click(boto); });
+  expect(onNavega).toHaveBeenCalledTimes(1);
+  expect(onNavega).toHaveBeenCalledWith('/el-meu-perfil');
+  expect(screen.queryByRole('dialog')).toBeNull();
+});
+
+test('acta 261004_1027 · quan arriba una organització on mana, l’avatar torna a obrir el calaix', async () => {
+  m.identitat.identitats = [{ ...PERSONA, activa: true }];
+  const onNavega = vi.fn();
+  const { rerender } = render(<Barra onNavega={onNavega} />);
+  expect(screen.getByRole('button', { name: 'El teu perfil: Pepa Soler' })).toBeTruthy();
+  m.identitat = { ...m.identitat, identitats: [{ ...PERSONA, activa: true }, { ...FORN, activa: false }] };
+  rerender(<Barra onNavega={onNavega} />);
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Identitat activa: Pepa Soler. Canviar identitat' })); });
+  expect(screen.getByRole('dialog', { name: 'Amb qui actues?' })).toBeTruthy();
+  expect(onNavega).not.toHaveBeenCalled();
 });
 
 const senseSessio = () => {

@@ -101,7 +101,7 @@
   /* ── INSÍGNIA D'ESTAT ─────────────────────────────────────────────── */
   .sdp-insignia {
     display: inline-flex; align-items: center; gap: var(--sdp-space-1);
-    padding: 2px var(--sdp-space-3); border-radius: var(--sdp-radi-pastilla);
+    padding: var(--sdp-space-1) var(--sdp-space-3); border-radius: var(--sdp-radi-pastilla);
     font-size: var(--sdp-text-meta); font-weight: 700; line-height: 1.5; border: 1px solid currentColor;
   }
   .sdp-insignia--neutre { background: var(--sdp-fons-subtil); color: var(--sdp-text-cos); }
@@ -120,6 +120,8 @@
   .sdp-alerta--exit, .sdp-alerta--ok { background: var(--sdp-exit-fons); color: var(--sdp-exit-text); }
   .sdp-alerta--avis  { background: var(--sdp-avis-fons);  color: var(--sdp-avis-text); }
   .sdp-alerta--error { background: var(--sdp-error-fons); color: var(--sdp-error-text); }
+  /* D-C · exempció documentada (no és un espai de la reixeta): ajust òptic de
+     la icona de 24px contra una primera línia de 28,8px (18px × 1,6). */
   .sdp-alerta__icona { flex: none; margin-top: 2px; }
   .sdp-alerta__cos { flex: 1; min-width: 0; }
   .sdp-alerta__titol { margin: 0 0 var(--sdp-space-1); font-weight: 800; }
@@ -178,9 +180,12 @@
   .sdp-contrasenya__ull:disabled { cursor: not-allowed; opacity: 0.55; }
 
   /* ── PLACEHOLDERS (EditableField) ─────────────────────────────────── */
-  [data-placeholder]:not(:focus):empty::before,
-  [contenteditable][data-placeholder]:not(:focus):has(> br:only-child)::before,
-  [contenteditable][data-placeholder]:not(:focus):has(> :empty:only-child)::before {
+  /* D-C (ordre del Mestre, 261004) · Una sola forma, :empty. Les dues
+     formes relacionals que l'acompanyaven invalidaven la llista sencera a
+     Chrome 100-104 i Firefox 100-120 (cap placeholder). L'únic que posa
+     data-placeholder és EditableField (UniversalEditorShell.jsx), que en
+     perdre el focus ja buida el node. */
+  [data-placeholder]:not(:focus):empty::before {
     content: attr(data-placeholder);
     color: var(--sdp-text-desactivat);
     pointer-events: none;
@@ -196,7 +201,7 @@
   .sdp-casella { display: flex; align-items: flex-start; gap: var(--sdp-space-3); min-height: var(--sdp-touch-min); padding-block: var(--sdp-space-2); }
   .sdp-casella__control { flex: none; width: 24px; height: 24px; margin: 0; accent-color: var(--sdp-accio); cursor: pointer; }
   .sdp-casella__control:focus-visible { outline: 3px solid var(--sdp-focus); outline-offset: 2px; }
-  .sdp-casella__etiqueta { display: flex; flex-direction: column; gap: 2px; cursor: pointer; color: var(--sdp-text-titol); }
+  .sdp-casella__etiqueta { display: flex; flex-direction: column; gap: var(--sdp-space-1); cursor: pointer; color: var(--sdp-text-titol); }
   .sdp-casella__ajuda { color: var(--sdp-text-suau); font-size: var(--sdp-text-meta); }
 
   .sdp-interruptor { display: flex; align-items: center; justify-content: space-between; gap: var(--sdp-space-4); min-height: var(--sdp-touch-min); }
@@ -552,7 +557,9 @@
   }
   .sdp-consola__instantania, .sdp-consola__segell { margin: 0; color: var(--sdp-text-suau); font-weight: 700; }
   .sdp-consola__segell { margin-bottom: var(--sdp-space-4); }
-  .sdp-consola__mono { font-family: var(--sdp-font-mono); font-size: 0.9em; overflow-wrap: anywhere; }
+  /* D-C (ordre del Mestre, 261004) · dins de prosa fa el 90 % del pare; mai
+     per davall del sòl de 14px si el pare és text meta. */
+  .sdp-consola__mono { font-family: var(--sdp-font-mono); font-size: max(0.9em, var(--sdp-text-meta)); overflow-wrap: anywhere; }
   .sdp-consola__llista { display: flex; flex-direction: column; gap: var(--sdp-space-4); }
 
 /* Migrat des de legat.css */
@@ -569,7 +576,7 @@
   border-radius: var(--sdp-radi-boto);
   font-family: var(--sdp-font);
   font-weight: 700;
-  font-size: 1rem;
+  font-size: var(--sdp-text-small);
   cursor: pointer;
   border: none;
   display: inline-flex;
@@ -638,7 +645,7 @@
 
 .btn-sm {
   padding: var(--sdp-space-2) var(--sdp-space-4);
-  font-size: 0.85rem;
+  font-size: var(--sdp-text-meta);
 }
 
 .btn:disabled {
@@ -659,10 +666,10 @@
 .badge {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 12px;
+  gap: var(--sdp-space-2);
+  padding: var(--sdp-space-1) var(--sdp-space-3);
   border-radius: var(--sdp-radi-pastilla);
-  font-size: 0.75rem;
+  font-size: var(--sdp-text-meta);
   font-weight: 700;
   text-transform: uppercase;
   white-space: nowrap;
@@ -671,7 +678,7 @@
 .page-btn {
   padding: var(--sdp-space-2) var(--sdp-space-4);
   border: 1px solid var(--sdp-vora);
-  border-radius: 4px;
+  border-radius: var(--sdp-radi-s);
   background: var(--sdp-fons-targeta);
   color: var(--sdp-text-titol);
   font-weight: 600;
@@ -707,14 +714,14 @@
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  font-size: 0.8rem;
+  font-size: var(--sdp-text-meta);
   flex: none;
 }
 
 .avatar-sm {
   width: 32px;
   height: 32px;
-  font-size: 0.7rem;
+  font-size: var(--sdp-text-meta);
 }
 
 .sp-card {
@@ -722,7 +729,7 @@
   border-radius: var(--sdp-radi-m);
   overflow: hidden;
   box-shadow: var(--sdp-ombra-2);
-  margin: 0 auto 32px;
+  margin: 0 auto var(--sdp-space-8);
   width: 100%;
   max-width: 500px;
   min-width: 0;
@@ -800,22 +807,47 @@
   align-items: center;
   justify-content: center;
   height: 24px;
-  padding: 0 12px;
-  border-radius: 12px;
-  font-size: 0.7rem;
+  padding: 0 var(--sdp-space-3);
+  border-radius: var(--sdp-radi-pastilla);
+  font-size: var(--sdp-text-meta);
   font-weight: 800;
   letter-spacing: 0.05em;
   white-space: nowrap;
 }
 
-.sp-card-label:has(.sp-card-label__action) {
+/* D-C (ordre del Mestre del 261004, prompt 261004_0515) · L'etiqueta que es
+   pot prémer porta .sp-card-label--amb-accio (PageFrame; UniversalCard no
+   pinta etiquetes amb botó), en lloc de la pseudoclasse relacional, que
+   Chrome 100 i Firefox 100 no coneixen. La píndola continua fent 24px a la
+   vista; el botó l'ompli i el seu ::after allarga la diana fins a
+   --sdp-touch (48px, Llei de Vida), per dalt i per baix. Abans, overflow:
+   hidden retallava el botó de 48px a 24px: la diana real era de 24px. És el
+   mateix patró que les píndoles de classificació (modules.css, T7): píndola
+   de lectura i àrea tàctil transparent més gran. Dues classes (0,2,0) i
+   darrere de la regla de dalt: dins de .sp-card-labels (PageFrame), una
+   sola classe perdria contra `.sp-card-labels .sp-card-label` i tornaria el
+   coixí doble; la forma relacional d'abans també pesava (0,2,0). */
+.sp-card-label.sp-card-label--amb-accio {
   padding: 0;
-  overflow: hidden;
+}
+
+.sp-card-label--amb-accio > .sp-card-label__action {
+  position: relative;
+  align-self: stretch;
+  min-height: 100%;
+  border-radius: inherit;
+}
+
+.sp-card-label--amb-accio > .sp-card-label__action::after {
+  content: '';
+  position: absolute;
+  inset-block: calc((100% - var(--sdp-touch)) / 2);
+  inset-inline: 0;
 }
 
 .sp-card-label__action {
   border: 0;
-  padding: 0 12px;
+  padding: 0 var(--sdp-space-3);
   min-height: var(--sdp-touch);
   /* 48px · LLEI_04_VIDA (sòl tàctil únic des de Q2, 261004) */
   background: transparent;
@@ -910,8 +942,8 @@
 .sp-card-author-name {
   font-weight: 700;
   color: var(--sdp-sobre-accent);
-  font-size: 1.05rem;
-  line-height: 1.2;
+  font-size: var(--sdp-text-small);
+  line-height: var(--sdp-leading-titol);
   display: block;
   white-space: nowrap;
   overflow: hidden;
@@ -919,7 +951,7 @@
 }
 
 .sp-card-author-location {
-  font-size: 0.85rem;
+  font-size: var(--sdp-text-meta);
   color: var(--sdp-sobre-accent);
   display: block;
   white-space: nowrap;
@@ -952,7 +984,7 @@
 }
 
 .sp-card-body {
-  padding: 22px 24px 16px;
+  padding: var(--sdp-space-6) var(--sdp-space-6) var(--sdp-space-4);
   text-align: center;
   position: relative;
   min-width: 0;
@@ -968,7 +1000,7 @@
   font-size: var(--sdp-text-h5);
   color: var(--sdp-accio-text);
   font-weight: 800;
-  line-height: var(--sdp-leading-tight);
+  line-height: var(--sdp-leading-titol);
   margin: 0 0 var(--sdp-space-2) 0;
   flex: 1;
   text-align: center;
@@ -1019,10 +1051,10 @@
 .sp-card--action .sp-card-heading-with-icon .sp-card-title {
   text-align: center;
   margin: 0;
-  font-size: 1.35rem;
+  font-size: var(--sdp-text-h6);
   font-weight: 800;
   color: var(--sdp-accio-text);
-  line-height: var(--sdp-leading-tight);
+  line-height: var(--sdp-leading-titol);
 }
 
 .sp-card--action .sp-card-title-icon {
@@ -1032,7 +1064,7 @@
 .sp-card--action .sp-card-subtitle {
   text-align: center;
   margin: 0;
-  font-size: 1rem;
+  font-size: var(--sdp-text-small);
   color: var(--sdp-text-suau);
   font-weight: 500;
   line-height: var(--sdp-leading-body);
@@ -1061,21 +1093,21 @@
 }
 
 .sp-card .sp-card-body h1 {
-  font-size: 1.6rem;
+  font-size: var(--sdp-text-h5);
   margin-top: 0;
   margin-bottom: var(--sdp-space-2);
   color: var(--sdp-accio-text);
-  line-height: var(--sdp-leading-tight);
+  line-height: var(--sdp-leading-titol);
   font-weight: 800;
 }
 
 .sp-card .sp-card-body h2 {
-  font-size: 1.25rem;
+  font-size: var(--sdp-text-h6);
   /* subtítol més menut */
-  margin-top: 16px;
+  margin-top: var(--sdp-space-4);
   margin-bottom: var(--sdp-space-4);
   color: var(--sdp-accent-titol);
-  line-height: var(--sdp-leading-snug);
+  line-height: var(--sdp-leading-titol);
   font-weight: 600;
 }
 
@@ -1141,29 +1173,29 @@
 
 .sp-card-price {
   float: right;
-  margin-left: 6px;
-  margin-bottom: 6px;
-  font-size: 1.2rem;
+  margin-left: var(--sdp-space-2);
+  margin-bottom: var(--sdp-space-2);
+  font-size: var(--sdp-text-h6);
   font-weight: 800;
   color: var(--sdp-accio-text);
   background: var(--sdp-accio-subtil);
-  padding: 4px 12px;
+  padding: var(--sdp-space-1) var(--sdp-space-3);
   border-radius: var(--sdp-radi-pastilla);
   white-space: nowrap;
 }
 
 .sp-card-subtitle {
-  font-size: 1.15rem;
+  font-size: var(--sdp-text-base);
   color: var(--sdp-accent-titol);
   font-weight: 700;
-  line-height: var(--sdp-leading-snug);
+  line-height: var(--sdp-leading-titol);
   margin-top: var(--sdp-space-4);
   margin-bottom: var(--sdp-space-3);
   text-align: center;
 }
 
 .sp-card-text {
-  font-size: 1rem;
+  font-size: var(--sdp-text-small);
   color: var(--sdp-text-suau);
   font-weight: 500;
   line-height: var(--sdp-leading-body);
@@ -1299,8 +1331,8 @@
   justify-content: center;
   align-items: center;
   float: right;
-  margin-left: 16px;
-  margin-bottom: 12px;
+  margin-left: var(--sdp-space-4);
+  margin-bottom: var(--sdp-space-3);
   width: 128px;
   height: 128px;
   background-color: var(--sdp-workspace-nav-fons);
@@ -1363,18 +1395,22 @@ button.sp-card-calendar-badge {
 .sp-card-calendar-badge__dia[data-mida="menuda"] { font-size: 1.625rem; }
 .sp-card-calendar-badge__dia[data-mida="minima"] { font-size: 1.25rem; line-height: 1.15; }
 
+/* D-C (ordre del Mestre, 261004) · el mes i l'any, al graó més pròxim de
+   l'escala: 17,6 → 18px (--sdp-text-base) i 14,4 → 14px (--sdp-text-meta);
+   el respir entre ells, de 2 a 4px (--sdp-space-1). Hi cap: 56 + 27 + 21 +
+   4 = 108px dins dels 124 interiors del quadrat. */
 .sp-card-calendar-badge__mes {
-  font-size: 1.1rem;
+  font-size: var(--sdp-text-base);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
 .sp-card-calendar-badge__any {
-  font-size: 0.9rem;
+  font-size: var(--sdp-text-meta);
   font-weight: 500;
   opacity: 0.8;
-  margin-top: 2px;
+  margin-top: var(--sdp-space-1);
 }
 
 .btn-taronja-fort {
@@ -1388,7 +1424,7 @@ button.sp-card-calendar-badge {
   align-items: center;
   justify-content: center;
   border-radius: var(--sdp-radi-boto);
-  font-size: 0.8rem;
+  font-size: var(--sdp-text-meta);
   line-height: var(--sdp-leading-snug);
   cursor: pointer;
   transition: background-color var(--sdp-t);
@@ -1419,11 +1455,11 @@ button.sp-card-calendar-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 8px 16px;
-  border-radius: 20px;
+  gap: var(--sdp-space-2);
+  padding: var(--sdp-space-2) var(--sdp-space-4);
+  border-radius: var(--sdp-radi-pastilla);
   font-weight: 700;
-  font-size: 0.9rem;
+  font-size: var(--sdp-text-meta);
   cursor: pointer;
   border: 1px solid var(--sdp-vora);
   background: var(--sdp-fons-targeta);
@@ -1481,9 +1517,9 @@ a.pill:active {
   align-items: center;
   justify-content: center;
   height: 24px;
-  padding: 0 12px;
-  border-radius: 12px;
-  font-size: 0.7rem;
+  padding: 0 var(--sdp-space-3);
+  border-radius: var(--sdp-radi-pastilla);
+  font-size: var(--sdp-text-meta);
   font-weight: 800;
   letter-spacing: 0.05em;
   background: var(--sdp-fons-subtil);
@@ -1512,7 +1548,7 @@ a.pill:active {
 .devices-panel__head .badge-row,
 .card__body .badge-row {
   justify-content: center;
-  margin-top: 12px;
+  margin-top: var(--sdp-space-3);
 }
 
 .devices-panel__body .card__body .badge-row {
@@ -1522,12 +1558,12 @@ a.pill:active {
 }
 
 .notes-editor .badge-row {
-  margin-top: 12px;
+  margin-top: var(--sdp-space-3);
 }
 
 .card--soft .split-grid .sp-card-labels {
   margin-top: 0;
-  margin-bottom: 12px;
+  margin-bottom: var(--sdp-space-3);
   justify-content: center;
 }
 
@@ -1561,7 +1597,7 @@ a.pill:active {
   background: var(--sdp-accio);
   color: var(--sdp-sobre-accio);
   font-weight: 700;
-  padding: var(--sdp-space-2) 22px;
+  padding: var(--sdp-space-2) var(--sdp-space-5);
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -1741,16 +1777,16 @@ button.btn-date-time:active:not(:disabled) {
 .bar-blue .sp-card-actions .sp-card-action:disabled { transform: none; }
 
 /* Trios de la barra blava (ordre del Mestre, 260924): els cercles es toquen.
-   La separació la dona el mateix cercle tàctil. Sòl: --sdp-touch (44px,
-   Llei de Vida); per davall d'ací no es baixa. Distància entre icones:
-   abans 28px (48 + 4 de gap), ara 20px de glif a glif (44 + 0); al pack de
-   navegació, des de T53, les fletxes queden a 16px del llibre (cada glif
-   s'hi acosta 4px dins de la seua cel·la, més avall). L'alçada també baixa a 44px
-   perquè el vel de hover continue sent un cercle i no una pastilla.
+   La separació la dona el mateix cercle tàctil. Sòl: --sdp-touch (48px
+   des del 261004, Llei de Vida); per davall d'ací no es baixa. Les icones
+   van a tocar (gap 0): de glif a glif, la cel·la sencera; al pack de
+   navegació, des de T53, les fletxes s'acosten al llibre (cada glif
+   s'hi acosta 4px dins de la seua cel·la, més avall). L'alçada és la mateixa
+   cel·la perquè el vel de hover continue sent un cercle i no una pastilla.
    T20 (260927 nit): cada trio és un PACK que no s'encongix. En una barra
    estreta, la graella `1fr auto 1fr` d'abans deixava que els dos trios se
    solaparen; el que no cap sobreïx per la dreta, i tot es veu fins als
-   308px de barra (0 de coixí + 132 + 132 + 44). El gap i el coixí són a
+   336px de barra (0 de coixí + 144 + 144 + 48). El gap i el coixí són a
    layout.css; la graella de tres columnes (T37) és just davall. */
 .bar-blue-left,
 .bar-blue .sp-card-actions { gap: 0; }
@@ -1803,23 +1839,30 @@ header.bar-blue { container-type: inline-size; }
    contenidor. Els descendents de la barra continuen consultant la barra. */
 .sdp-universal-page-container { container-type: inline-size; }
 /* T53 · el llindar és el de les dues xarxes (480). Amb la paraula, la barra
-   demana 474 (coixí 32 + separació 48 + 132 + 132 + CONNECTAR 130): amb
-   el llindar de 400 d'abans, entre 401 i 474 d'ample de barra CONNECTAR
-   sobreeixia (la columna de l'editor de Notes en pantalles d'uns 1000). */
+   demana 498 (coixí 32 + separació 48 + 144 + 144 + CONNECTAR 130; abans
+   de --sdp-touch 48 eren 474): amb el llindar de 400 d'abans, CONNECTAR
+   sobreeixia (la columna de l'editor de Notes en pantalles d'uns 1000). La
+   paraula consulta la caixa de contingut de la barra (sense el coixí de 32):
+   només torna a partir de 513px de barra, i hi cap (mesurat, 261004). */
 @container (max-width: 480px) {
   .bar-blue .sp-card-connect-text { display: none; }
   .bar-blue .sp-card-connect-plus { display: inline; }
   .bar-blue .btn-connectar.sp-card-connect { width: var(--sdp-touch-comode); padding: 0; }
   /* T20 · els packs s'acosten a 8px i el coixí de la barra baixa a 8px:
-     8 + 132 + 8 + 132 + 8 + 48 + 8 = 344px de barra (dues separacions, una
-     per cada frontera de la graella de tres columnes). El pas següent
-     continua a 336: entre 337 i 343px de barra en falten fins a 7, i
-     canviar el llindar és un canvi visual pendent d'ordre del Mestre. */
+     8 + 144 + 8 + 144 + 8 + 48 + 8 = 368px de barra (dues separacions, una
+     per cada frontera de la graella de tres columnes). */
   header.bar-blue { gap: var(--sdp-space-2); padding: 0 var(--sdp-space-2); }
 }
-/* T20 · per davall de 336px de barra: packs a tocar, sense coixí, i el «+»
-   a la cel·la de 44 com les icones: 132 + 132 + 44 = 308px. */
-@container (max-width: 336px) {
+/* T20 · per davall de 368px de barra: packs a tocar, sense coixí, i el «+»
+   a la cel·la de 48 com les icones: 144 + 144 + 48 = 336px.
+   Correcció final (ordre del Mestre, 261004) · El pas era a 336, del temps
+   de --sdp-touch 44 (8 + 132 + 8 + 132 + 8 + 48 + 8 = 344): amb 48, entre
+   337 i 367px de barra CONNECTAR sobreeixia (el detall de la Wiki amb el
+   rail de 56px: 358px de barra en una finestra de 1255; 346-350 a 768 i
+   1024 quan la barra de scroll no ocupa lloc). Per davall de 336px de barra
+   (un telèfon de 320, el detall de la Wiki a 375, o a 768 i 1024 amb barra
+   de scroll clàssica) encara no hi cap res: decisió pendent del Mestre. */
+@container (max-width: 367px) {
   header.bar-blue { gap: 0; padding: 0; }
   .bar-blue .btn-connectar.sp-card-connect {
     width: var(--sdp-touch);
@@ -2198,5 +2241,31 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
   :root[data-contrast="bancal"] .sp-card-calendar-badge__any,
   :host([data-contrast="bancal"]) .sp-card-calendar-badge__any {
     opacity: 1;
+  }
+}
+
+/* ── CAMPFITXER (D-D, ordre del Mestre, 261004) ───────────────────────────
+   El selector de fitxers de Pedra Seca (formulari.jsx): el control natiu
+   viu amagat (.sdp-nomes-lector) dins de la fila, que el posiciona, i es
+   veu un Boto secundari (48px, el sòl tàctil únic) amb la línia d'estat al
+   costat. Si no hi cap, l'estat baixa davall del botó. Sense :has(). */
+@layer components {
+  .sdp-camp-fitxer {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sdp-space-2) var(--sdp-space-3);
+  }
+  .sdp-camp-fitxer__boto {
+    min-block-size: var(--sdp-touch);
+  }
+  .sdp-camp-fitxer__estat {
+    flex: 1 1 12rem;
+    min-width: 0;
+    margin: 0;
+    overflow-wrap: anywhere;
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-small);
   }
 }

@@ -2,12 +2,20 @@
  * BotoIdentitatActiva.jsx — Amb qui actues, a la barra negra (T43, ordre del
  * Mestre, 260928).
  *
- *   · Sense sessió: la icona de persona i «Entrar» (porta al registre).
+ *   · Sense sessió: la icona de persona i «Entrar» (porta al registre). És el
+ *     Foraster de sempre: el seu DOM no canvia.
  *   · Persona: la seua foto o les seues inicials.
  *   · Entitat: el SEU logo o les SEUES inicials, MAI la foto de la persona, i
  *     un anell de crom perquè es veja d'un colp que no actues com a tu.
- * El nom accessible diu sempre la identitat activa i que el botó la canvia.
- * L'avatar és decoració (alt=""): el nom ja el porta el botó.
+ *
+ * Acta 261004_1027 §3 (ordre del Mestre, beta testers) · Amb sessió, l'avatar
+ * és redó i gran (Avatar `lg`, 56px; mai menys de --sdp-touch) i és el botó
+ * sencer: no hi ha caixa d'icona al voltant. Amb `perfil` (una sola
+ * identitat: res a triar) porta directament al perfil propi i el seu nom
+ * accessible és «El teu perfil: {nom}». Sense `perfil` (la persona mana en
+ * alguna organització), obri el calaix «Amb qui actues?» com fins ara.
+ * L'avatar és decoració (alt="", sense títol propi): el nom i el rètol els
+ * porta el botó.
  *
  * Presentacional: rep la identitat per props. Les classes són cadenes
  * senceres (cap classe muntada a trossos) i la closca només pinta amb
@@ -21,9 +29,14 @@ export function etiquetaIdentitatActiva(nom, entitat = false) {
   return `Identitat activa: ${nom}${entitat ? ' (organització)' : ''}. Canviar identitat`;
 }
 
+/** Acta 261004_1027 §3 · El nom accessible de l'avatar que porta al perfil. */
+export function etiquetaPerfilPropi(nom) {
+  return `El teu perfil: ${nom}`;
+}
+
 export function BotoIdentitatActiva({
   teSessio = false, nom, avatar = null, llavor = null, entitat = false, obert = false,
-  onClick, etiquetaEntrar = 'Entrar'
+  perfil = false, onClick, etiquetaEntrar = 'Entrar'
 }) {
   if (!teSessio) {
     return (
@@ -33,19 +46,30 @@ export function BotoIdentitatActiva({
     );
   }
   const nomVisible = nom || 'El meu compte';
+  const imatge = <AvatarResolt nom={nomVisible} src={avatar} mida="lg" llavor={llavor} alt="" titol="" />;
+  /* Una entitat activa vol dir que hi ha més d'una identitat: mai arriba ací
+     amb `perfil`, però si hi arribara, el calaix mana (no s'amaga l'anell). */
+  if (perfil && !entitat) {
+    const etiqueta = etiquetaPerfilPropi(nomVisible);
+    return (
+      <button type="button" className="sdp-top-bar-avatar" onClick={onClick} aria-label={etiqueta} title={etiqueta}>
+        {imatge}
+      </button>
+    );
+  }
   return (
     <button
       type="button"
       className={entitat
-        ? 'icon sdp-top-bar-btn sdp-top-bar-btn--identitat sdp-top-bar-btn--entitat'
-        : 'icon sdp-top-bar-btn sdp-top-bar-btn--identitat'}
+        ? 'sdp-top-bar-avatar sdp-top-bar-avatar--entitat'
+        : 'sdp-top-bar-avatar'}
       onClick={onClick}
       aria-haspopup="dialog"
       aria-expanded={obert ? 'true' : 'false'}
       aria-label={etiquetaIdentitatActiva(nomVisible, entitat)}
       title={`Actues com a ${nomVisible}`}
     >
-      <AvatarResolt nom={nomVisible} src={avatar} mida="sm" llavor={llavor} alt="" />
+      {imatge}
     </button>
   );
 }

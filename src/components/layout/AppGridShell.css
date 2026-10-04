@@ -123,6 +123,32 @@
   transform: translateX(0);
 }
 
+/* Barres (ordre del Mestre, 261004: «les dues barres de la Wiki han d'estar
+   sempre presents plegades, o com a mínim una d'elles visible que permeta
+   desplegar l'altra») · LA NAVEGACIÓ EN RAIL EN «MITJA»
+   Amb data-esquerra="rail" (AppGridShell railEsquerra, que només passa el
+   Workspace), la navegació no ix de pantalla: és un rail fix de
+   --app-grid-col-collapsed a l'esquerra. L'espai es reserva amb el coixí de
+   la graella, no amb una pista nova: els percentatges de les pistes es
+   resolen contra la caixa de contingut, i el calc i el minmax de dalt
+   continuen guardant el mínim del detall. La columna ja és absoluta dins del
+   contingut (relatiu): el rail viu en el coixí. Desplegada, és el panell de
+   sempre (data-panell="left"): l'amplària de la columna, per damunt del rail
+   i de la llista, amb l'ombra de token. Sense l'atribut res no canvia (el
+   Xat, les apps), i «ample» i «estret» no el porten mai. */
+.app-grid-shell[data-layout="mitja"][data-esquerra="rail"] .app-grid-content {
+  padding-inline-start: var(--app-grid-col-collapsed);
+}
+.app-grid-shell[data-layout="mitja"][data-esquerra="rail"] .app-grid-column--left {
+  width: var(--app-grid-col-collapsed);
+  transform: none;
+  box-shadow: none;
+}
+.app-grid-shell[data-layout="mitja"][data-esquerra="rail"][data-panell="left"] .app-grid-column--left {
+  width: var(--app-grid-col-sidebar);
+  box-shadow: var(--sdp-ombra-3);
+}
+
 /* MÒBIL */
 .app-grid-shell[data-layout="estret"] .app-grid-content {
   display: grid;
@@ -138,11 +164,19 @@
 .app-grid-shell[data-layout="estret"] .app-grid-column--right { z-index: 1; }
 .app-grid-shell[data-layout="estret"] .app-grid-column--middle {
   z-index: 20;
+  width: 85%;
+  max-width: 360px;
+  justify-self: start;
+  box-shadow: var(--sdp-ombra-3);
   transform: translateX(-100%);
   transition: transform var(--sdp-durada-panell) var(--sdp-corba-calaix), visibility 0s linear var(--sdp-durada-panell);
 }
 .app-grid-shell[data-layout="estret"] .app-grid-column--left {
   z-index: 30;
+  width: 85%;
+  max-width: 360px;
+  justify-self: start;
+  box-shadow: var(--sdp-ombra-3);
   transform: translateX(-100%);
   transition: transform var(--sdp-durada-panell) var(--sdp-corba-calaix), visibility 0s linear var(--sdp-durada-panell);
 }

@@ -1,0 +1,53 @@
+RELLEU · contrast final de PageFrame (fronts «logo» i «index-amfitrio») · integració final 261004
+Encàrrec: NOMÉS LECTURA. Cap fitxer de producte tocat.
+
+== Bloc 1 · Lectura i navegador (acabat) ==
+
+Lectura
+- PageFrame.jsx sencer (807 línies, darrera modificació 12:37:44; no ha canviat durant el contrast).
+  Les dues regions no se solapen: «index-amfitrio» viu a dinsDeLEncastat, destiDeLIndex, idDeLIndex,
+  focusDelCalaixOPerdut, desplacadorDeLApp, reservaDeLesBarres, desplacaASeccio, TableOfContentsDrawer,
+  la prop indexControla de BarraBlava i l'efecte de ?seccio=. «logo» viu a les props logoEntitat i
+  senseLogo, a logoDeLaRanura/logoAutomatic/ambLogo/hasHeader, al bloc header.page-title i als dos
+  ajudants del final (logoDescrit, LogoDeCapcalera). Cap identificador repetit ni cap import perdut.
+- Contrast de cascada: el logotip viu a header.page-title, fora d'article.content-wrapper; l'Índex i
+  ?seccio= només lligen l'article, i reservaDeLesBarres només compta fills sticky (la capçalera no ho és).
+- Llegits també BarraBlava.jsx, layout.css (:host .toc-overlay, .page-title-logo, .light-only/.dark-only),
+  modules.css (.toc-overlay legacy, .page-title-logo i --entitat), UniversalUtils.js (DEFAULT_AUTHOR.logo),
+  PageFrame.indexAmfitrio.test.jsx i PedraSecaEmbed.index.test.jsx.
+
+Navegador (pestanya pròpia de fons, ja tancada; viewport tornat a desktop)
+- 1280, /projecte: logotip 600x156 dins de la capçalera; Índex fill del body, id toc-r1--index, botó amb
+  aria-controls només obert, calaix sense tabindex. Salt a les dues últimes seccions: destí a y=196, 16 px
+  per davall de la taronja (180); el document no es mou. El primer salt, abans que carregaren les
+  infografies de baix, queda retallat pel màxim de scroll del moment (comportament natiu, no del canvi).
+- 1280, /consola: logotip 600x156; salt a «21 skills amb avisos» i «167 torns caducats»: y=196; l'últim
+  H4 queda a y=568 perquè el desplaçador ja és al final.
+- 375, /consola amb ?seccio= en carregar: y=196; logotip 279x73. Índex: vel 375x812, calaix 319, salts a
+  y=196. Sense desbordament horitzontal del desplaçador (375/375).
+- 375, /projecte: logotip 279x73; salts a y=196.
+- Encastat de prova (<soc-de-poble ruta-inicial="/projecte"> dins d'un desplaçador de tema, ja llevat):
+  logotip present a l'arrel ombra (600x156, el blanc amagat), vel de l'Índex dins de .sdp-root amb la caixa
+  de l'element (885x600), calaix amb tabindex -1 i focus, salt 16 px per davall de la taronja, tema i
+  document quiets, la URL de la SPA intacta i el focus tornat al botó «Índex».
+- Incidència: durant la prova la pestanya pròpia va passar a ser la del davant i hi va haver navegació dins
+  de l'app (de /consola a /projecte) que no era meua; la vaig tancar en eixe moment.
+
+== Bloc 2 · Proves (acabat) ==
+npx vitest run src/components/universal src/components/PedraSeca src/PedraSecaEmbed src/embed src/css
+(començada a les 13:00:41, després de l'última escriptura de PageFrame.jsx; src/embed no existix)
+- 149 fitxers: 144 verds i 5 rojos. 2101 proves: 2089 verdes i 12 roges, 518 s.
+- Cap roja és de PageFrame, de l'Índex, del logotip, de l'encastat ni del CSS. Totes són d'altres fronts:
+  · classificació: Classificacio.test (7, «Emoticona (—)» en lloc de «Emoticona—»), classificacio/qualitat
+    (BotoneraClassificacio.jsx:31, 'Boto' sense ús), DocumentEditor.test T39 i TargetaViva.test T50
+    (sdp-classificacio-pindola en lloc de sdp-copyright-selector);
+  · xat: Avatar.xat.test (2), la llista del xat ja no pinta la IAIA. El xat no fa servir DEFAULT_AUTHOR:
+    no ve del logotip.
+- tokens.contracte.test.js, roig al relleu de l'Índex, ara passa.
+
+== Conclusió ==
+Els dos fronts no s'han trepitjat: regions disjuntes, proves verdes i comportament conjunt correcte al 3340
+(SPA i encastat). Una sola interacció de risc, baixa i no reproduïble a Chromium: el logotip nou no reserva
+alçada abans de carregar (img sense width/height) i el salt de ?seccio= es fa al primer fotograma; a Safari 16,
+que no té ancoratge de scroll, una càrrega en fred pot deixar la secció més avall per l'alçada del logotip
+(156 px a 1280, 73 a 375). Decisió del Mestre si cal reservar la proporció (canviaria el marcatge byte a byte).

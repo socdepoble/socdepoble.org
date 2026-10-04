@@ -106,4 +106,52 @@ export const TRACTOR_CORREUS = Object.freeze({
   caducitatDies: 90
 });
 
-export const TRACTORS_GESTORIA = Object.freeze([TRACTOR_FACTURES, TRACTOR_CORREUS]);
+/* Ordre del Mestre, 261004 (onada 2, pas 1 del MAPA; aprovat al xat): el
+   Tauler de l'empresa llig els extractes del banc amb un tractor NOU, separat
+   dels dos signats. Les seues fonts són la closca (tauler/), el seu nucli i
+   els lectors del banc que ja existien; cap font dels altres dos canvia, i
+   per això les seues empremtes aprovades continuen valent. */
+const UI_TAULER = [
+  'src/sections/gestoria/tauler/ShellGestoria.jsx',
+  'src/sections/gestoria/tauler/TargetaTauler.jsx',
+  'src/sections/gestoria/tauler/Tauler.jsx',
+  'src/sections/gestoria/tauler/useTauler.js'
+];
+
+const NUCLI_TAULER = [
+  'src/sections/gestoria/impostos/nucli/impostos.js',
+  'src/sections/gestoria/nucli/c43.js',
+  'src/sections/gestoria/nucli/cataleg.js',
+  'src/sections/gestoria/nucli/concilia.js',
+  'src/sections/gestoria/nucli/csv.js',
+  'src/sections/gestoria/nucli/dates.js',
+  'src/sections/gestoria/nucli/diners.js',
+  'src/sections/gestoria/nucli/model.js',
+  'src/sections/gestoria/nucli/movimentsBanc.js',
+  'src/sections/gestoria/nucli/nif.js',
+  'src/sections/gestoria/nucli/proveidors.js',
+  'src/sections/gestoria/tauler/nucli/resumTauler.js',
+  'src/sections/gestoria/tauler/nucli/targetesTauler.js',
+  'src/sections/gestoria/tauler/nucli/tractorTauler.js'
+];
+
+export const TRACTOR_TAULER = Object.freeze({
+  schema: 'sdp.tractor.v1',
+  id: 'gestoria.tauler',
+  nom: 'Gestoria · Tauler de l’empresa',
+  versio: '1.0.0',
+  descripcio: 'Llig només en este ordinador els extractes del banc que tries (Norma 43 o el CSV de moviments) i en calcula la caixa real, la cobertura, les finances dels últims 30 dies i la tresoreria de cada compte.',
+  fitxa: 'src/sections/gestoria/fitxes/gestoria_tauler.md',
+  fonts: Object.freeze([...PORTA_APROVACIO, ...UI_TAULER, ...NUCLI_TAULER].sort()),
+  llig: Object.freeze([
+    'Els extractes del banc que tries amb el selector del sistema: Norma 43 (.n43, .aeb, .c43, .q43, .txt, .dat) o el CSV de moviments',
+    'Si el tries també, el fitxer de configuració de l’empresa (.json): només el nom i la població de la boina'
+  ]),
+  escriu: Object.freeze(['Res']),
+  xarxa: 'cap',
+  dadesPersonals: true,
+  nivellMinim: 'signatura',
+  caducitatDies: 90
+});
+
+export const TRACTORS_GESTORIA = Object.freeze([TRACTOR_FACTURES, TRACTOR_CORREUS, TRACTOR_TAULER]);

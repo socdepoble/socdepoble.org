@@ -77,7 +77,9 @@ export default function RealitatSection() {
         'Cada nivell diu fins on pot arribar la IA. La tria es guarda només en este navegador i la pots canviar quan vulgues.'
       )}
       chrome="system"
-      showLogos={false}
+      /* Norma del Mestre, 261004 (logotips) · Signa Sóc de Poble, i porta el
+         seu logotip dalt de l'H1. Derogat el showLogos={false} que el llevava
+         sense cap ordre escrita (ordre del Mestre, 261004). */
     >
       {/* T44 (ordre del Mestre, 260928) · substituïx la llista grisa de T31:
           un tauler d'estat lligat a la IAIA de la barra negra, els nivells com

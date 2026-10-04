@@ -1,7 +1,7 @@
 import { useIdentitat } from "../../app/contexts/IdentitatContext.jsx";
 import { useCoreContent } from "../../app/contexts/CoreContentContext.jsx";
 import { useSession } from "../../app/contexts/SessionContext.jsx";
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { useLocalSandbox } from './useLocalSandbox.js';
 import { compressImage } from '../../utils/imageUtils.js';
 import { useNotes, etiquetesDeNota } from './NotesContext';
@@ -26,6 +26,9 @@ import { Alerta, Insignia } from '../../components/PedraSeca';
 import { llicenciaDeLActor } from '../../components/universal/drets/herencia.js';
 import { ID_COPIA_PROVA, ID_NOTA_BENVINGUDA, autoriaDeLActor, autoriaDeNota } from './autoriaNota.js';
 import { useNotaPreparadaDelBloc } from './notaPreparada.js';
+import { useMur } from '../mur/MurContext';
+import { cercaEntrades, deActe, dePagina, dePoble, deProducte, dePublicacio, textPla } from '../search/indexCerca.js';
+import { rutaDePerfilDAutor } from '../../config/navigation.js';
 
 /* Constants de mòdul */
 const SENSE_PARAMS = {};
@@ -73,6 +76,53 @@ async function pujarImatgeDeNota(fitxer, config) {
   return res.url;
 }
 
+/* T7 (ordre del Mestre, prompt 261004_0515) · Les targetes que el Bloc pot
+   incrustar al cos d'una nota: les fonts públiques que ja carreguen el Mur i
+   el contingut base, amb els adaptadors purs de /cerca (indexCerca.js), més
+   el que la instantània de la targeta necessita (subtítol, autor, la seua
+   pàgina i poble). Cap nota ni cap conversa: una nota privada incrustada en
+   una publicació exposaria el seu títol (decisió per defecte, pendent del
+   Mestre). Només el Bloc de Notes oferix targetes; el Perfil, pendent. */
+const textDe = (...valors) => valors.map((valor) => textPla(valor)).find(Boolean) || '';
+const autoriaDe = (element) => {
+  try {
+    return rutaDePerfilDAutor(element) || '';
+  } catch {
+    return '';
+  }
+};
+
+function entradesDeTargetes({ publicacions, actes, productes, pobles, pagines }) {
+  const entrades = [];
+  const afig = (llista, adaptador, extra) => {
+    for (const element of Array.isArray(llista) ? llista : CAP) {
+      const entrada = adaptador(element, SENSE_PARAMS);
+      if (entrada && !entrada.privada) entrades.push({ ...entrada, ...extra(element) });
+    }
+  };
+  afig(publicacions, dePublicacio, (post) => ({
+    subtitol: textDe(post?.post_subtitle, post?.subtitle),
+    autor: textDe(post?.author_name, post?.author),
+    autorRuta: autoriaDe(post),
+    poble: textDe(post?.town_name, post?.author_location)
+  }));
+  afig(actes, deActe, (acte) => ({
+    subtitol: textDe(acte?.subtitle),
+    autor: textDe(acte?.author_name),
+    autorRuta: autoriaDe(acte),
+    poble: textDe(acte?.author_location, acte?.town_name)
+  }));
+  afig(productes, deProducte, (producte) => ({
+    subtitol: textDe(producte?.subtitle),
+    autor: textDe(producte?.seller, producte?.author_name),
+    autorRuta: autoriaDe(producte),
+    poble: textDe(producte?.population, producte?.author_location)
+  }));
+  afig(pobles, dePoble, (poble) => ({ subtitol: textDe(poble?.post_subtitle), poble: textDe(poble?.comarca) }));
+  afig(pagines, dePagina, (pagina) => ({ subtitol: textDe(pagina?.subtitle) }));
+  return entrades;
+}
+
 /* T7 · `onToast` és opcional: sense, els avisos de l'editor (p. ex. una
    capçalera que no s'ha pogut pujar) van al missatge ràpid de l'app
    (useToast), i no a la consola. Abans cap muntatge (NotesDetail, el
@@ -83,9 +133,29 @@ export default function NotesEditor({ activeNote, onToast = null }) {
     notes = CAP, notesComplete, mouNota, esborraNota, potEsborrar = false, scopeKey
   } = useNotes();
   const { actorId, actor, memberships } = useIdentitat();
-  const { agents } = useCoreContent();
+  const { agents, towns, pages } = useCoreContent();
   const { currentUser, esSuperadmin = false } = useSession();
   const { showToast } = useToast();
+  const mur = useMur();
+
+  /* T7 · La font de les targetes incrustades (DocumentEditor · targetes). La
+     funció és estable: notesAdapter es recalcula amb trenta dependències i
+     l'esquema de l'editor es fixa en crear-lo. Les entrades es fan quan es
+     busca, no a cada render, i es recorden mentre les fonts no canvien. */
+  const fontsTargetes = useRef(null);
+  fontsTargetes.current = {
+    publicacions: mur.feedPosts, actes: mur.events, productes: mur.marketItems, pobles: towns, pagines: pages
+  };
+  const memoriaTargetes = useRef({ fonts: null, entrades: CAP });
+  const cercaTargetes = useCallback((consulta) => {
+    const fonts = fontsTargetes.current;
+    const memoria = memoriaTargetes.current;
+    if (!memoria.fonts || Object.keys(fonts).some((clau) => fonts[clau] !== memoria.fonts[clau])) {
+      memoriaTargetes.current = { fonts, entrades: entradesDeTargetes(fonts) };
+    }
+    return cercaEntrades(memoriaTargetes.current.entrades, consulta).llista;
+  }, []);
+  const targetes = useMemo(() => ({ cerca: cercaTargetes }), [cercaTargetes]);
 
   /* Poliment T41/T43 · el mateix nom que publishNote posa al Mur (autoriaNota):
      el selector i la barra no poden dir una cosa i el Mur una altra. */
@@ -345,6 +415,9 @@ export default function NotesEditor({ activeNote, onToast = null }) {
       barAuthorLocation: signatura.poble,
       copyright: '© Sóc de Poble',
       posicioEines: 'davall-entradilla',
+      /* T7 (ordre del Mestre, 261004) · Targetes incrustades al cos: l'ordre
+         «/» «Targeta». Sempre present (constant): l'esquema no es reconstruïx. */
+      targetes,
       /* P4 (ordre del Mestre, 261003; desfà la targeta viva de l'editor de
          T50) · Sense `targetaViva`: ni l'aside de la dreta ni el xip «Vista
          targeta». Ocupava 24rem al costat de l'editor (en un MacBook Air, amb
@@ -373,7 +446,7 @@ export default function NotesEditor({ activeNote, onToast = null }) {
       } : {}),
       ...(estatDesament ? { estatDesament } : {})
     };
-  }, [notaEnEdicio, documentPerAlEditor, esSandbox, esPreparada, creacioPreparada, escriuPreparada, desaPreparada, foraster, actor, actorId, autoria, memberships, actualitzaSandbox, setLocalNoteField, saveNoteField, publishNote, compartirNota, connexio, dretsReservats, dretsDeLOriginal, extern, citaOrigen, pucBorrar, obriBorrar, obriEmoticona, noteFolders, t, signatura, emptyDocument, config, classificacio, carpetes, carpetaId, estatDesament, dataNomesAlDispositiu]);
+  }, [notaEnEdicio, documentPerAlEditor, esSandbox, esPreparada, creacioPreparada, escriuPreparada, desaPreparada, foraster, actor, actorId, autoria, memberships, actualitzaSandbox, setLocalNoteField, saveNoteField, publishNote, compartirNota, connexio, dretsReservats, dretsDeLOriginal, extern, citaOrigen, pucBorrar, obriBorrar, obriEmoticona, noteFolders, t, signatura, emptyDocument, config, classificacio, carpetes, carpetaId, estatDesament, dataNomesAlDispositiu, targetes]);
 
   // Reanomenar i esborrar necessiten veure totes les notes: amb el llistat a
   // mitges, una nota no carregada es quedaria amb el nom vell.

@@ -48,8 +48,11 @@ const importats = (codi) => [...codi.matchAll(/import\s*\{([^}]+)\}\s*from/g)].f
    graella de Pedra Seca amb el marc de l'esquelet (MarcColumna +
    AppGridColumn), com Ajustos, i UNA sola vegada: el detall és ColumnaCataleg.
    Si el Mestre la rebutja, l'eixida és un lloc per a eines pròpies a
-   l'esquelet comú (src/apps/comu). { fitxer: { peça: vegades que es munta } } */
-const PECES_SOLTES = Object.freeze({ [`${APP}/vistes/Temporada.jsx`]: Object.freeze({ GraellaArticles: 1 }) });
+   l'esquelet comú (src/apps/comu). { fitxer: { peça: vegades que es munta } }
+   Derogat per l'ordre del Mestre del 261004 (prompt 261004_0515, «no inventar
+   targetes») · La graella solta ja no és GraellaArticles: és GraellaTargetes
+   amb UniversalCard, una vegada cada una. L'excepció no s'eixampla. */
+const PECES_SOLTES = Object.freeze({ [`${APP}/vistes/Temporada.jsx`]: Object.freeze({ GraellaTargetes: 1, UniversalCard: 1 }) });
 
 describe('el cens', () => {
   test('hi són el manifest, el nucli, el magatzem, la vista i les proves', () => {
@@ -104,7 +107,9 @@ describe('un sol esquelet visual (ordre del Mestre, sinergies T4/T8)', () => {
   });
 
   test('cap peça de catàleg o col·lecció importada a soles: les graelles i targetes, només a través de les columnes', () => {
-    const peces = /\b(?:GraellaArticles|LlistaArticles|LiniesColleccio|TargetesColleccions|SeccionsCategoria|BarraResum|AfegitRapid|DetallArticle|Rajola)\b/;
+    /* Ordre del Mestre, 261004 · També les peces noves de les llistes de les apps (la graella de
+       targetes, la targeta i la pàgina): només a través de les columnes, llevat de l'excepció. */
+    const peces = /\b(?:GraellaArticles|LlistaArticles|LiniesColleccio|TargetesColleccions|SeccionsCategoria|BarraResum|AfegitRapid|DetallArticle|Rajola|GraellaTargetes|UniversalCard|Targeta|PaginaApp)\b/;
     const soltes = (f) => Object.keys(PECES_SOLTES[f] || {});
     for (const f of PRODUCCIO) expect(importats(llig(f)).filter((nom) => peces.test(nom) && !soltes(f).includes(nom)), f).toEqual([]);
     /* L'excepció no és morta ni s'eixampla: el fitxer encara importa cada peça
@@ -115,6 +120,20 @@ describe('un sol esquelet visual (ordre del Mestre, sinergies T4/T8)', () => {
         expect(llig(f).match(new RegExp(`<${peca}\\b`, 'g')) || [], `${f}: ${peca}`).toHaveLength(vegades);
       }
     }
+  });
+
+  /* Ordre del Mestre, 261004 (prompt 261004_0515, «no inventar targetes») · Cap rajola ni fila
+     pròpia: cada catàleg de la Nevera porta la forma de targetes de l'esquelet (UniversalCard), i cap
+     col·lecció torna a les rajoles. La prop va la primera, perquè la guarda la puga llegir. */
+  test('no inventar targetes: cada ColumnaCataleg porta forma="targetes" i cap ColumnaColleccio va en rajoles', () => {
+    const catalegs = JSX.flatMap((f) => [...llig(f).matchAll(/<ColumnaCataleg\b(\s+forma="targetes")?/g)].map((m) => [f, Boolean(m[1])]));
+    expect(catalegs.length).toBeGreaterThanOrEqual(4);
+    expect(catalegs.filter(([, ambTargetes]) => !ambTargetes).map(([f]) => f)).toEqual([]);
+    const colleccions = JSX.flatMap((f) => [...llig(f).matchAll(/<ColumnaColleccio\b(\s+forma="targetes")?/g)].map((m) => [f, Boolean(m[1])]));
+    expect(colleccions.filter(([, ambTargetes]) => ambTargetes).map(([f]) => f)).toEqual([`${APP}/vistes/Compra.jsx`]);
+    for (const f of JSX) expect(llig(f), f).not.toMatch(/forma="rajoles"/);
+    /* Sonda: la guarda distingix les dues formes. */
+    expect([...'<ColumnaCataleg\n      forma="targetes"\n<ColumnaCataleg titol="x"'.matchAll(/<ColumnaCataleg\b(\s+forma="targetes")?/g)].map((m) => Boolean(m[1]))).toEqual([true, false]);
   });
 
   test('cap AppGridShell a mà: l’única closca és ClosaAplicacio, i una sola, a AppNevera', () => {

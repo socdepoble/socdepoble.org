@@ -16,6 +16,10 @@ import fontEstatError from '../sections/mur/EstatErrorDades.jsx?raw';
 import fontCalendari from '../sections/calendari/CalendariSection.jsx?raw';
 import fontMarcaAmfitrio from '../components/universal/MarcaAmfitrio.jsx?raw';
 import fontEstatConnexio from '../components/universal/connexio/estatConnexio.js?raw';
+import { TEXTOS_MULTIMEDIA } from '../sections/xat/components/VistaMultimedia.jsx';
+import { AVISOS_XAT_CORPORATIU } from '../sections/control/xatCorporatiu.js';
+import fontDialegTriaTargeta from '../components/universal/richText/extensions/targetes/DialegTriaTargeta.jsx?raw';
+import fontTargetaIncrustada from '../components/universal/richText/extensions/targetes/TargetaIncrustadaNodeView.jsx?raw';
 
 const CLAUS = {
   'nav.panel': {
@@ -188,6 +192,142 @@ const CLAUS = {
   },
   'connexio.sense': {
     ca: 'Sense connexió', es: 'Sin conexión', en: 'No connection', eu: 'Konexiorik gabe', gl: 'Sen conexión'
+  },
+  /* Ordre del Mestre del 261004 (prompt 261004_0515, T5) · La vista
+     «Contingut multimèdia» del Xat, ja operativa (VistaMultimedia.jsx). Les
+     d'eu i gl són proposta a revisar per algú que les parle. */
+  'section.xat.vista.multimedia.fitxers.buit': {
+    ca: "Ací hi haurà les fotos i els vídeos que s'han compartit en les converses.",
+    es: 'Aquí estarán las fotos y los vídeos compartidos en las conversaciones.',
+    en: 'Photos and videos shared in conversations will be here.',
+    eu: 'Hemen egongo dira elkarrizketetan partekatutako argazkiak eta bideoak.',
+    gl: 'Aquí estarán as fotos e os vídeos compartidos nas conversas.'
+  },
+  'section.xat.vista.multimedia.enllacos.buit': {
+    ca: "Encara no s'ha compartit cap enllaç en les converses obertes.",
+    es: 'Todavía no se ha compartido ningún enlace en las conversaciones abiertas.',
+    en: 'No links have been shared in the open conversations yet.',
+    eu: 'Oraindik ez da estekarik partekatu irekitako elkarrizketetan.',
+    gl: 'Aínda non se compartiu ningunha ligazón nas conversas abertas.'
+  },
+  'section.xat.vista.multimedia.documents.buit': {
+    ca: "Ací hi haurà els documents que s'han compartit en les converses.",
+    es: 'Aquí estarán los documentos compartidos en las conversaciones.',
+    en: 'Documents shared in conversations will be here.',
+    eu: 'Hemen egongo dira elkarrizketetan partekatutako dokumentuak.',
+    gl: 'Aquí estarán os documentos compartidos nas conversas.'
+  },
+  'section.xat.vista.multimedia.adjunts': {
+    ca: 'Els adjunts arriben amb la fase F1 del xat: ara només es pot enviar text.',
+    es: 'Los adjuntos llegan con la fase F1 del chat: ahora solo se puede enviar texto.',
+    en: 'Attachments arrive with phase F1 of the chat: for now only text can be sent.',
+    eu: 'Eranskinak txataren F1 fasearekin iritsiko dira: oraingoz testua bakarrik bidal daiteke.',
+    gl: 'Os anexos chegan coa fase F1 do chat: agora só se pode enviar texto.'
+  },
+  'section.xat.vista.multimedia.avisLocal': {
+    ca: 'Només es veu el contingut de les converses obertes en esta sessió.',
+    es: 'Solo se ve el contenido de las conversaciones abiertas en esta sesión.',
+    en: 'Only content from the conversations opened in this session is shown.',
+    eu: 'Saio honetan irekitako elkarrizketetako edukia bakarrik ikusten da.',
+    gl: 'Só se ve o contido das conversas abertas nesta sesión.'
+  },
+  'section.xat.vista.multimedia.obri': {
+    ca: 'Obri la conversa de {nom}',
+    es: 'Abrir la conversación de {nom}',
+    en: 'Open the conversation {nom}',
+    eu: 'Ireki {nom} elkarrizketa',
+    gl: 'Abrir a conversa de {nom}'
+  },
+  'section.xat.vista.multimedia.senseData': {
+    ca: 'Sense data', es: 'Sin fecha', en: 'No date', eu: 'Datarik gabe', gl: 'Sen data'
+  },
+  /* 261004 · Per al front Editor (T7, «Inserir targeta» a l'UniversalEditor):
+     el nom de la peça al menú d'inserció. */
+  'editor.inserir.targeta': {
+    ca: 'Targeta', es: 'Tarjeta', en: 'Card', eu: 'Txartela', gl: 'Tarxeta'
+  },
+  /* Ordre del Mestre del 261004 (prompt 261004_0515, T6) · Comentar sense xat
+     on portar (AVISOS_XAT_CORPORATIU de xatCorporatiu.js). Les d'eu i gl són
+     proposta a revisar per algú que les parle. */
+  'section.control.xatCorporatiu.noDisponible': {
+    ca: 'Xat de Sóc de Poble: encara no disponible en este servidor.',
+    es: 'Chat de Sóc de Poble: todavía no disponible en este servidor.',
+    en: 'Sóc de Poble chat: not available on this server yet.',
+    eu: 'Sóc de Poble txata: oraindik ez dago erabilgarri zerbitzari honetan.',
+    gl: 'Chat de Sóc de Poble: aínda non dispoñible neste servidor.'
+  },
+  'section.control.xatCorporatiu.resolent': {
+    ca: 'Xat de Sóc de Poble: encara s’està buscant en este servidor.',
+    es: 'Chat de Sóc de Poble: todavía se está buscando en este servidor.',
+    en: 'Sóc de Poble chat: still being looked up on this server.',
+    eu: 'Sóc de Poble txata: oraindik bilatzen ari da zerbitzari honetan.',
+    gl: 'Chat de Sóc de Poble: aínda se está a buscar neste servidor.'
+  },
+  /* Ordre del Mestre del 261004 (prompt 261004_0515, T7) · El selector i les
+     eines de la targeta incrustada (richText/extensions/targetes). Les d'eu i
+     gl són proposta a revisar per algú que les parle. */
+  'editor.targetes.tipus.publicacio': {
+    ca: 'Publicació', es: 'Publicación', en: 'Post', eu: 'Argitalpena', gl: 'Publicación'
+  },
+  'editor.targetes.tipus.esdeveniment': {
+    ca: 'Acte', es: 'Evento', en: 'Event', eu: 'Ekitaldia', gl: 'Evento'
+  },
+  'editor.targetes.tipus.producte': {
+    ca: 'Producte', es: 'Producto', en: 'Product', eu: 'Produktua', gl: 'Produto'
+  },
+  'editor.targetes.tipus.poble': {
+    ca: 'Poble', es: 'Pueblo', en: 'Village', eu: 'Herria', gl: 'Pobo'
+  },
+  'editor.targetes.tipus.pagina': {
+    ca: 'Pàgina', es: 'Página', en: 'Page', eu: 'Orria', gl: 'Páxina'
+  },
+  'editor.targetes.dialeg.buit': {
+    ca: 'Escriu el que busques: una publicació, un acte, un producte, un poble o una pàgina.',
+    es: 'Escribe lo que buscas: una publicación, un evento, un producto, un pueblo o una página.',
+    en: 'Type what you are looking for: a post, an event, a product, a village or a page.',
+    eu: 'Idatzi bilatzen duzuna: argitalpen bat, ekitaldi bat, produktu bat, herri bat edo orri bat.',
+    gl: 'Escribe o que buscas: unha publicación, un evento, un produto, un pobo ou unha páxina.'
+  },
+  'editor.targetes.dialeg.capResultat': {
+    ca: 'Cap targeta pública coincidix amb la cerca.',
+    es: 'Ninguna tarjeta pública coincide con la búsqueda.',
+    en: 'No public card matches the search.',
+    eu: 'Ez dago bilaketarekin bat datorren txartel publikorik.',
+    gl: 'Ningunha tarxeta pública coincide coa busca.'
+  },
+  'editor.targetes.dialeg.titol': {
+    ca: 'Inserir una targeta', es: 'Insertar una tarjeta', en: 'Insert a card', eu: 'Txertatu txartel bat', gl: 'Inserir unha tarxeta'
+  },
+  'editor.targetes.dialeg.descripcio': {
+    ca: 'La targeta s’incrusta al text com una imatge: una sola s’alinea a un costat, dues van al centre i tres o més fan una graella.',
+    es: 'La tarjeta se incrusta en el texto como una imagen: una sola se alinea a un lado, dos van al centro y tres o más forman una cuadrícula.',
+    en: 'The card is embedded in the text like an image: a single one aligns to one side, two go in the centre and three or more make a grid.',
+    eu: 'Txartela testuan txertatzen da irudi bat bezala: bakarra alde batera lerrokatzen da, bi erdian doaz eta hiru edo gehiagok sareta bat osatzen dute.',
+    gl: 'A tarxeta incrústase no texto como unha imaxe: unha soa alíñase a un lado, dúas van ao centro e tres ou máis forman unha grella.'
+  },
+  'editor.targetes.dialeg.inserir': {
+    ca: 'Inserir', es: 'Insertar', en: 'Insert', eu: 'Txertatu', gl: 'Inserir'
+  },
+  'editor.targetes.dialeg.cerca': {
+    ca: 'Busca', es: 'Buscar', en: 'Search', eu: 'Bilatu', gl: 'Buscar'
+  },
+  'editor.targetes.dialeg.resultats': {
+    ca: 'Resultats', es: 'Resultados', en: 'Results', eu: 'Emaitzak', gl: 'Resultados'
+  },
+  'editor.targetes.dialeg.triada': {
+    ca: 'Triada', es: 'Elegida', en: 'Selected', eu: 'Hautatua', gl: 'Escollida'
+  },
+  'editor.targetes.eines': {
+    ca: 'Eines de la targeta', es: 'Herramientas de la tarjeta', en: 'Card tools', eu: 'Txartelaren tresnak', gl: 'Ferramentas da tarxeta'
+  },
+  'editor.targetes.esquerra': {
+    ca: 'Esquerra', es: 'Izquierda', en: 'Left', eu: 'Ezkerra', gl: 'Esquerda'
+  },
+  'editor.targetes.dreta': {
+    ca: 'Dreta', es: 'Derecha', en: 'Right', eu: 'Eskuina', gl: 'Dereita'
+  },
+  'editor.targetes.lleva': {
+    ca: 'Llevar la targeta', es: 'Quitar la tarjeta', en: 'Remove the card', eu: 'Kendu txartela', gl: 'Quitar a tarxeta'
   }
 };
 
@@ -196,8 +336,12 @@ const CLAUS = {
    «≠ valencià» de baix servix per a detectar una llengua que cau al valencià
    per falta d'entrada; per a estes parelles, eixa falta la detecta igualment
    el recompte «una sola aparició per llengua», que continua obligatori, i el
-   text exacte es continua comprovant. Les claus anteriors no en tenen cap. */
-const IGUALS_AL_VALENCIA = Object.freeze({ 'section.notes.compartir': ['es', 'gl'] });
+   text exacte es continua comprovant. Les claus anteriors no en tenen cap.
+   261004 (T7) · «Inserir» és també la forma gallega del botó. */
+const IGUALS_AL_VALENCIA = Object.freeze({
+  'section.notes.compartir': ['es', 'gl'],
+  'editor.targetes.dialeg.inserir': ['gl']
+});
 
 const LLENGUES = SUPPORTED_LANGUAGES.map(({ code }) => code);
 
@@ -257,6 +401,39 @@ describe('claus i18n del torn T1–T4', () => {
   ])('%s: la reserva de %s és el valor valencià', (clau, fitxer) => {
     const font = FONTS[fitxer];
     expect([clau, font.includes(`t('${clau}', '${CLAUS[clau].ca}')`)]).toEqual([clau, true]);
+  });
+
+  /* 261004 (T5) · La reserva de VistaMultimedia viu a TEXTOS_MULTIMEDIA com
+     a parells [clau, text]: el text de cada parell és el valor valencià. */
+  test('les reserves de TEXTOS_MULTIMEDIA són els valors valencians', () => {
+    const { buit, adjunts, avisLocal, obri, senseData } = TEXTOS_MULTIMEDIA;
+    const parells = [buit.fitxers, buit.enllacos, buit.documents, adjunts, avisLocal, obri, senseData];
+    expect(parells.map(([clau]) => clau).sort()).toEqual(Object.keys(CLAUS).filter((clau) => clau.startsWith('section.xat.vista.multimedia.')).sort());
+    for (const [clau, reserva] of parells) expect([clau, reserva]).toEqual([clau, CLAUS[clau].ca]);
+  });
+
+  /* 261004 (T6) · La reserva de Comentar viu a AVISOS_XAT_CORPORATIU com a
+     parells [clau, text]: el text de cada parell és el valor valencià. */
+  test('les reserves d’AVISOS_XAT_CORPORATIU són els valors valencians', () => {
+    const { noDisponible, resolent } = AVISOS_XAT_CORPORATIU;
+    expect([noDisponible, resolent].map(([clau]) => clau).sort())
+      .toEqual(Object.keys(CLAUS).filter((clau) => clau.startsWith('section.control.xatCorporatiu.')).sort());
+    for (const [clau, reserva] of [noDisponible, resolent]) expect([clau, reserva]).toEqual([clau, CLAUS[clau].ca]);
+  });
+
+  /* 261004 (T7) · Les claus editor.targetes.* del front de la targeta
+     incrustada: cada clau de la taula la crida el front amb la reserva
+     valenciana, com t('clau', 'text') o com a parell ['clau', 'text']; i
+     cap clau del front queda fora de la taula. */
+  test('les reserves del front de targetes són els valors valencians', () => {
+    const font = `${fontDialegTriaTargeta}\n${fontTargetaIncrustada}`;
+    const deLaTaula = Object.keys(CLAUS).filter((clau) => clau.startsWith('editor.targetes.'));
+    for (const clau of deLaTaula) {
+      const reserva = CLAUS[clau].ca;
+      expect([clau, font.includes(`t('${clau}', '${reserva}')`) || font.includes(`['${clau}', '${reserva}']`)]).toEqual([clau, true]);
+    }
+    const delFront = [...new Set([...font.matchAll(/'(editor\.targetes\.[\w.]+)'/g)].map((m) => m[1]))].sort();
+    expect(delFront).toEqual([...deLaTaula].sort());
   });
 
   /* T7 (261001) · amfitrio.servidor («Estàs al servidor de …») queda retirada

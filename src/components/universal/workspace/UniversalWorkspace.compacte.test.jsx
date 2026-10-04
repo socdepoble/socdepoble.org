@@ -141,26 +141,103 @@ describe('mode compacte', () => {
     });
   });
 
-  /* Correcció T7C-R4 · El límit, dit tal com és: en «estret» el detall és
-     l'única columna oberta i navegació i llista no s'abasten (cap obridor a
-     la vista). La secció que munta el mode compacte ha de dur la tria al
-     detall (el Snippet Curador ho fa amb la píndola de carpeta i
-     DialegCarpeta). Un obridor al detall és decisió del Mestre. */
-  test('en estret, navegació i llista són inerts i cap obridor seu és a l’abast: el detall és la vista', () => {
-    ambAmpladaIFotogrames(480, () => {
+  /* Correcció dels verificadors (261004) · En «mitja» el Snippet no té el
+     rail de la navegació (railEsquerra, fora del mode compacte): l'obridor
+     de la capçalera de la llista és l'única porta a la navegació. Era el
+     toggleColumn d'«ample» i obria un toc de cada dos (la closca obri el
+     panell en desplegar, no en plegar). Ara obri al primer toc cada vegada
+     i es declara obridor de la closca. */
+  test('en mitja, l’obridor de la navegació de la llista obri al primer toc cada vegada, també després de triar una carpeta', () => {
+    ambAmpladaIFotogrames(820, (buidaFotogrames) => {
       const { container } = munta();
       const shell = container.querySelector('.app-grid-shell');
-      expect([shell.dataset.layout, shell.dataset.panell]).toEqual(['estret', '']);
+      expect([shell.dataset.layout, shell.hasAttribute('data-esquerra')]).toEqual(['mitja', false]);
+      const llista = container.querySelector('#app-grid-list');
+      const obridor = within(llista).getByRole('button', { name: 'CARPETES' });
+      expect(obridor.getAttribute('aria-controls')).toBe('app-grid-sidebar');
+      expect(obridor.hasAttribute('data-obri-columna')).toBe(true);
+      expect(obridor.getAttribute('aria-expanded')).toBe('false');
+      for (const carpeta of ['TIC', 'Mur']) {
+        fireEvent.click(within(llista).getByRole('button', { name: 'CARPETES' }));
+        expect([carpeta, shell.dataset.panell]).toEqual([carpeta, 'left']);
+        fireEvent.click(within(container.querySelector('#app-grid-sidebar')).getByRole('button', { name: carpeta }));
+        buidaFotogrames();
+        expect([carpeta, shell.dataset.panell]).toEqual([carpeta, '']);
+      }
+      /* Amb el panell obert, el segon toc el tanca. */
+      fireEvent.click(within(llista).getByRole('button', { name: 'CARPETES' }));
+      expect(shell.dataset.panell).toBe('left');
+      expect(within(llista).getByRole('button', { name: 'CARPETES' }).getAttribute('aria-expanded')).toBe('true');
+      fireEvent.click(within(llista).getByRole('button', { name: 'CARPETES' }));
+      expect(shell.dataset.panell).toBe('');
+    });
+  });
+
+  /* Correcció dels verificadors (261004) · El Replegar del panell obert en
+     «mitja» el tanca (tancaPanells) també sense el rail de la navegació.
+     Abans commutava el plegat d'«ample»: en mode compacte la navegació
+     arrenca plegada, i desplegar-la tornava a obrir el panell (el botó era
+     mort i el panell només es tancava triant una carpeta). El focus va a
+     l'obridor de la llista, per la guarda de la closca. */
+  test('en mitja, Replegar tanca el panell de la navegació i el focus torna a l’obridor de la llista', () => {
+    ambAmpladaIFotogrames(820, (buidaFotogrames) => {
+      const { container } = munta();
+      const shell = container.querySelector('.app-grid-shell');
+      const llista = container.querySelector('#app-grid-list');
+      fireEvent.click(within(llista).getByRole('button', { name: 'CARPETES' }));
+      buidaFotogrames();
+      expect(shell.dataset.panell).toBe('left');
+      const navegacio = container.querySelector('#app-grid-sidebar');
+      for (let vegada = 0; vegada < 2; vegada += 1) {
+        const replegar = within(navegacio).getByRole('button', { name: 'Replegar CARPETES' });
+        replegar.focus();
+        fireEvent.click(replegar);
+        buidaFotogrames();
+        expect([vegada, shell.dataset.panell]).toEqual([vegada, '']);
+        expect([navegacio.hasAttribute('inert'), navegacio.getAttribute('aria-hidden')]).toEqual([true, 'true']);
+        expect(document.activeElement).toBe(within(llista).getByRole('button', { name: 'CARPETES' }));
+        /* Cap estat latent: el mateix obridor la torna a obrir al primer toc. */
+        fireEvent.click(document.activeElement);
+        buidaFotogrames();
+        expect(shell.dataset.panell).toBe('left');
+      }
+    });
+  });
+
+  /* Correcció T7C-R4 · El detall és la vista: en «estret» és l'única
+     columna oberta i navegació i llista són panells tancats. La secció que
+     munta el mode compacte du la tria al detall (el Snippet Curador ho fa
+     amb la píndola de carpeta i DialegCarpeta). Un obridor al detall
+     continua sent decisió del Mestre.
+     Derogació (ordre del Mestre, 261004: «les dues barres han d'estar
+     sempre presents plegades, o com a mínim una d'elles visible que permeta
+     desplegar l'altra») · Abans no hi havia cap obridor a l'abast. Ara el
+     rail de la closca (#app-grid-rail), a l'esquerra del detall, obri la
+     navegació, i triar-hi una carpeta torna al detall, com en «mitja». */
+  test('en estret, el detall és la vista i el rail de la closca obri la navegació; triar una carpeta torna al detall', () => {
+    ambAmpladaIFotogrames(480, (buidaFotogrames) => {
+      const { container } = munta();
+      const shell = container.querySelector('.app-grid-shell');
+      expect([shell.dataset.layout, shell.dataset.panell, shell.dataset.llista]).toEqual(['estret', '', 'rail']);
       for (const id of ['#app-grid-sidebar', '#app-grid-list']) {
         const columna = container.querySelector(id);
         expect([id, columna.hasAttribute('inert'), columna.getAttribute('aria-hidden')]).toEqual([id, true, 'true']);
       }
       const detall = container.querySelector('#app-grid-main');
       expect([detall.hasAttribute('inert'), detall.getAttribute('aria-hidden')]).toEqual([false, null]);
-      /* Cap obridor de carpetes ni de llista a l'arbre accessible. */
-      expect(screen.queryByRole('button', { name: 'CARPETES' })).toBeNull();
-      expect(screen.queryByRole('navigation', { name: 'CARPETES' })).toBeNull();
       expect(screen.getByTestId('detall').textContent).toBe('f-mur|cap');
+      const rail = container.querySelector('#app-grid-rail');
+      expect([rail.hasAttribute('inert'), rail.getAttribute('aria-hidden')]).toEqual([false, null]);
+      const obridor = within(rail).getByRole('button', { name: 'CARPETES' });
+      expect(obridor.getAttribute('aria-controls')).toBe('app-grid-sidebar');
+      expect(within(rail).getByRole('button', { name: 'Expandir NOTES' }).getAttribute('aria-controls')).toBe('app-grid-list');
+      fireEvent.click(obridor);
+      expect(shell.dataset.panell).toBe('left');
+      fireEvent.click(within(container.querySelector('#app-grid-sidebar')).getByRole('button', { name: 'TIC' }));
+      buidaFotogrames();
+      expect(shell.dataset.panell).toBe('');
+      expect(screen.getByTestId('detall').textContent).toBe('f-tic|cap');
+      expect(document.activeElement).toBe(container.querySelector('.sdp-workspace-detail'));
     });
   });
 

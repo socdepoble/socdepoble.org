@@ -164,6 +164,11 @@ REGISTRE.push({ nom: 'VistaComunitats', fitxer: 'sections/xat/components/VistaCo
 REGISTRE.push({ nom: 'DialegNovaConversa', fitxer: 'sections/xat/components/DialegNovaConversa.jsx', pagina: 'superposicions', estat: 'viu', fora: true });
 REGISTRE.push({ nom: 'RailXat', fitxer: 'sections/xat/components/ClosCaXat.jsx', pagina: 'navegacio', estat: 'viu', fora: true });
 REGISTRE.push({ nom: 'VistaEnConstruccio', fitxer: 'sections/xat/components/VistaEnConstruccio.jsx', pagina: 'navegacio', estat: 'viu', fora: true });
+/* Ordre del Mestre del 261004 (prompt 261004_0515, T5) · Contingut multimèdia operativa i
+   l'enllaç segur extret de Bombolla; viuen a sections/xat/components/, fora de PedraSeca.
+   Espècimens: EspecimenXatRail (la vista) i EspecimenXat (l'enllaç dins de la bombolla). */
+REGISTRE.push({ nom: 'VistaMultimedia', fitxer: 'sections/xat/components/VistaMultimedia.jsx', pagina: 'navegacio', estat: 'viu', fora: true });
+REGISTRE.push({ nom: 'EnllacSegur', fitxer: 'sections/xat/components/EnllacSegur.jsx', pagina: 'fonaments', estat: 'viu', fora: true });
 /* Torn 260930 (T1) · el full «Ajustos» del Xat; viu a sections/xat/components/, fora de
    PedraSeca. Espècimen: EspecimenXatAjustos. */
 REGISTRE.push({ nom: 'FullAjustos', fitxer: 'sections/xat/components/FullAjustos.jsx', pagina: 'superposicions', estat: 'viu', fora: true });
@@ -189,9 +194,13 @@ REGISTRE.push({ nom: 'Histograma', fitxer: 'PedraSeca/organismes/Histograma.jsx'
    esquelet visual per al TPV del bar («La Parròquia») i La Compra («La Nevera de Casa»).
    Espècimens: EspecimenArticles, EspecimenSeccionsCategoria, EspecimenColleccio,
    EspecimenAfegitRapid, EspecimenDetallArticle, EspecimenMarcColumna i els dos vestits de les
-   mateixes columnes, EspecimenEsqueletBar i EspecimenEsqueletCompra. */
-REGISTRE.push({ nom: 'GraellaArticles', fitxer: 'PedraSeca/organismes/GraellaArticles.jsx', pagina: 'fonaments', estat: 'viu' });
-REGISTRE.push({ nom: 'LlistaArticles', fitxer: 'PedraSeca/organismes/LlistaArticles.jsx', pagina: 'fonaments', estat: 'viu' });
+   mateixes columnes, EspecimenEsqueletBar i EspecimenEsqueletCompra.
+   Ordre del Mestre, 261004 (prompt 261004_0515, «no inventar targetes») · GraellaArticles i
+   LlistaArticles són obsoletes per a codi nou: les llistes van amb UniversalCard dins de
+   GraellaTargetes. Salut i el Bar encara les fan servir: no s'esborren, i el seu espècimen
+   continua viu. */
+REGISTRE.push({ nom: 'GraellaArticles', fitxer: 'PedraSeca/organismes/GraellaArticles.jsx', pagina: 'fonaments', estat: 'obsolet', substitut: 'UniversalCard + GraellaTargetes' });
+REGISTRE.push({ nom: 'LlistaArticles', fitxer: 'PedraSeca/organismes/LlistaArticles.jsx', pagina: 'fonaments', estat: 'obsolet', substitut: 'UniversalCard + GraellaTargetes' });
 REGISTRE.push({ nom: 'SeccionsCategoria', fitxer: 'PedraSeca/organismes/SeccionsCategoria.jsx', pagina: 'navegacio', estat: 'viu' });
 REGISTRE.push({ nom: 'SelectorCategoria', fitxer: 'PedraSeca/organismes/SeccionsCategoria.jsx', pagina: 'navegacio', estat: 'viu' });
 REGISTRE.push({ nom: 'OrdenaCategories', fitxer: 'PedraSeca/organismes/SeccionsCategoria.jsx', pagina: 'navegacio', estat: 'viu' });
@@ -213,3 +222,13 @@ REGISTRE.push({ nom: 'ColumnaColleccions', fitxer: 'apps/comu/esquelet/ColumnaCo
    targeta estàndard. L'índex de PedraSeca no l'exporta: la munta la targeta. Espècimen:
    EspecimenUniversalCard (fonaments/universalcard). */
 REGISTRE.push({ nom: 'PortesTargeta', fitxer: 'PedraSeca/organismes/PortesTargeta.jsx', pagina: 'fonaments', estat: 'viu' });
+/* Ordre del Mestre, 261004 (prompt 261004_0515; D-A del xat de les 06:38) · front «nucli».
+   GraellaTargetes: el contenidor de les UniversalCard de les llistes de les apps (graella o
+   columna, amb seccions). PaginaApp: la porta permesa de la Pàgina Universal per a les apps
+   (PageFrame sense traductor ni telemetria). Espècimens: EspecimenGraellaTargetes
+   (fonaments/graella-targetes) i EspecimenPaginaApp (estructura/pagina-app). */
+REGISTRE.push({ nom: 'GraellaTargetes', fitxer: 'PedraSeca/organismes/GraellaTargetes.jsx', pagina: 'fonaments', estat: 'viu' });
+REGISTRE.push({ nom: 'PaginaApp', fitxer: 'PedraSeca/organismes/PaginaApp.jsx', pagina: 'estructura', estat: 'viu' });
+/* D-D (ordre del Mestre, 261004) · El selector de fitxers de Pedra Seca: CampText tipus="file"
+   hi delega. Espècimen: EspecimenCamp (formularis/camp). */
+REGISTRE.push({ nom: 'CampFitxer', fitxer: 'PedraSeca/organismes/formulari.jsx', pagina: 'formularis', estat: 'viu' });

@@ -45,6 +45,15 @@
  * el pinta (vegeu la Revisió R3, al final d'esta capçalera).
  * W4-09 · L'autor porta al xat corporatiu resolt pel port del backend
  * (xatCorporatiu.js); sense resoldre, no és enllaç i el Panell ho diu.
+ * T6 (ordre del Mestre, 261004, prompt 261004_0515 §5) · Derogat per l'ordre
+ * del Mestre del 261004 (prompt 261004_0515), per a la boina: l'autor de
+ * totes les targetes del Panell, dalt i baix, porta SEMPRE a la seua pàgina,
+ * la del projecte (AUTORIA_SOCDEPOBLE.authorHref). El xat corporatiu passa a
+ * Comentar del peu (el missatge directe a l'autor, skill sdp-universal-page);
+ * sense resoldre, Comentar avisa i l'Alerta del Panell es conserva.
+ * T8 (ordre del Mestre, 261004, «imatges fantasma») · La imatge de les
+ * targetes de dalt és la capçalera de la seua pàgina (contingutDe): cap
+ * il·lustració escrita a mà.
  *
  * P7-B · Onada 4, setena passada, bloc B (prompt 261004_0015 T3; relleu
  * PLUGINS_P7.txt) · «Utilitats i Connectors» pinta les onze utilitats de
@@ -64,34 +73,47 @@
  * useDestiDelPlugin, mai esta graella.
  * Revisió R3 · El Connectar del peu (showConnect) espera la decisió del
  * Mestre: la prova R3 de ControlSection.test.jsx en fa de fusible.
+ *
+ * Onada 2 de la Gestoria (ordre del Mestre, 261004; MAPA_EMPRESA_GESTORIA.txt
+ * §2.2; decisió A11: només les targetes que ja funcionen) · Dos espais nous,
+ * «L'empresa» i «La llar», entre «Publica al poble» i les Utilitats. Els
+ * llig del registre (ESPAIS_PLUGINS i el camp `espai` de cada plugin): cap
+ * text ni ruta copiats ací. Cada targeta és la TargetaDUtilitat de sempre
+ * (boina de Sóc de Poble cap al projecte, il·lustració, títol, subtítol,
+ * entradilla, tota la targeta cap a /plugin/<id> i el peu canònic). Targetes
+ * estàtiques: cap xifra ni dada (R1). Un plugin d'un espai no es repetix a
+ * Utilitats ni a Maquinària (W4-08), i cap targeta viu en dos espais (R3).
  */
 import {
   LogOut,
   MessageSquare
 } from 'lucide-react';
-import { useCallback, useId, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate, useSearchParams } from '../../app/contexts/RouterContext';
 import { useEixidaSegura } from '../../components/universal/EixidaSegura.jsx';
 import { UniversalPage } from '../../components/universal/UniversalPage';
+import { useToast } from '../../components/universal/NotificationContext.jsx';
 import { Alerta, UniversalButton, UniversalCard } from '../../components/universal/../PedraSeca';
 import { useUIActions } from '../../app/contexts/UIContext';
-import { objecteDePagina } from '../../config/objecteConnectable.js';
-import { getPreferenciaLlegat } from '../../config/storage.js';
+import { llegixUtilitatsActives, subscriuUtilitatsActives } from '../profile/utilitatsActives.js';
 import { FitxaSnippet } from './FitxaSnippet.jsx';
 import { CLAU_FITXA, FITXA_SNIPPET, rutaDeLaFitxa } from './destiSnippet.js';
 import { posicioDeLaVista, recolocaLaVista } from './vistaDeLaFitxa.js';
 import { AUTORIA_SOCDEPOBLE, DESTINS_CONTROL, TEXTOS_PORTES, contingutDe, portesDe } from './destinsControl.js';
-import { useXatCorporatiu } from './xatCorporatiu.js';
-import { PLUGINS, rutaDelPlugin } from '../plugins/registrePlugins.js';
+import { AVISOS_XAT_CORPORATIU, avisDelXatCorporatiu, useXatCorporatiu } from './xatCorporatiu.js';
+import { ESPAIS_PLUGINS, PLUGINS, pluginsDeLEspai, rutaDelPlugin } from '../plugins/registrePlugins.js';
 
 /* P5 · Una targeta de doble acció: la UniversalCard de sempre amb el
-   contingut de la seua pàgina i les dues portes. Sense il·lustració (el
-   Mapa), la icona va a la insígnia lateral.
+   contingut de la seua pàgina i les dues portes. Sense il·lustració, la
+   icona va a la insígnia lateral.
    P6 · Amb el peu de sempre cap a la seua pàgina (mainHref, sense overlay
    perquè té portes) i sense etiquetes. Connectar (showConnect) espera la
-   decisió del Mestre (revisió R3). `autorHref`: el xat corporatiu resolt, o
-   res. */
-function TargetaDeDesti({ desti, t, autorHref }) {
+   decisió del Mestre (revisió R3).
+   T6 (261004) · La boina, la d'AUTORIA_SOCDEPOBLE amb la seua ruta (el
+   projecte). `onComentar`: el xat corporatiu, el mateix per a tot el Panell.
+   T8 (261004) · La imatge i el seu text alternatiu, els de la capçalera de
+   la pàgina (contingutDe): la targeta reflectix el hero. */
+function TargetaDeDesti({ desti, t, onComentar }) {
   const contingut = contingutDe(desti);
   if (!contingut) return null;
   const Icona = desti.icona;
@@ -100,19 +122,19 @@ function TargetaDeDesti({ desti, t, autorHref }) {
       title={contingut.titol}
       subtitle={contingut.subtitol}
       body={contingut.entradilla}
-      imageUrl={desti.imatge || undefined}
-      squareBadge={!desti.imatge && Icona ? {
+      imageUrl={contingut.imatge || undefined}
+      imageAlt={contingut.imatgeAlt}
+      squareBadge={!contingut.imatge && Icona ? {
         type: 'custom',
         label: contingut.titol,
         content: <Icona size={48} strokeWidth={1.5} aria-hidden="true" focusable="false" />
       } : null}
       {...AUTORIA_SOCDEPOBLE}
-      authorHref={autorHref || undefined}
       time={contingut.time}
       date={contingut.date}
       dateTime={contingut.dateTime}
       mainHref={desti.saberMes}
-      objecte={objecteDePagina({ titol: contingut.titol, ruta: desti.saberMes, id: desti.saberMes })}
+      onComment={onComentar}
       hasFooter={true}
       showConnect={true}
       portes={portesDe(desti, t)}
@@ -129,8 +151,10 @@ function TargetaDeDesti({ desti, t, autorHref }) {
    espera la decisió del Mestre).
    `ruta` · la pàgina de la utilitat; és un Link del router: porta la base de
    l'amfitrió a l'href i navega dins del router en memòria de WordPress.
-   `abansDObrir` · el Snippet hi recorda on era el Panell (vistaDeLaFitxa.js). */
-function TargetaDUtilitat({ titol, subtitol, entradilla, imatge, imatgeAlt = '', ruta, autorHref, abansDObrir }) {
+   `abansDObrir` · el Snippet hi recorda on era el Panell (vistaDeLaFitxa.js).
+   T6 (261004) · La boina porta al projecte i `onComentar` al xat
+   corporatiu, com dalt. */
+function TargetaDUtilitat({ titol, subtitol, entradilla, imatge, imatgeAlt = '', ruta, onComentar, abansDObrir }) {
   return (
     <UniversalCard
       title={titol}
@@ -139,23 +163,53 @@ function TargetaDUtilitat({ titol, subtitol, entradilla, imatge, imatgeAlt = '',
       imageUrl={imatge}
       imageAlt={imatgeAlt}
       {...AUTORIA_SOCDEPOBLE}
-      authorHref={autorHref || undefined}
       mainHref={ruta}
       onMainClick={abansDObrir}
-      objecte={objecteDePagina({ titol, ruta, id: ruta })}
+      onComment={onComentar}
       hasFooter={true}
       showConnect={true}
     />
   );
 }
 
-/* P7-B · La preferència de les Utilitats (DetallEspai.jsx l'escriu amb la
-   clau de llegat 'sdp_utilitats_actives': { <id>: booleà }) es llig com una
-   EXCLUSIÓ explícita: una utilitat s'amaga NOMÉS si el valor guardat és
-   exactament false. Sense preferència, malmesa o amb qualsevol altre valor,
-   es veu: per defecte es pinten totes les del registre que no tenen targeta
-   dalt (W4-08) i el Snippet. */
-const CLAU_UTILITATS = 'sdp_utilitats_actives';
+/* Onada 2 de la Gestoria (261004; MAPA §2.2) · Un espai del Panell,
+   «L'empresa» o «La llar»: una secció amb el seu h2, l'entradeta i la graella
+   de sempre, amb les targetes canòniques de les Utilitats. Sense cap targeta
+   visible (la persona les ha llevades totes a DetallEspai), no es pinta: cap
+   capçalera buida. */
+function EspaiDelPanell({ espai, visibles, onComentar }) {
+  const plugins = pluginsDeLEspai(espai.id).filter(visibles);
+  if (plugins.length === 0) return null;
+  return (
+    <section>
+      <h2>{espai.titol}</h2>
+      <p className="lead">{espai.entradeta}</p>
+      <div className="sdp-card-grid">
+        {plugins.map((plugin) => (
+          <TargetaDUtilitat
+            key={plugin.id}
+            titol={plugin.titol}
+            subtitol={plugin.subtitol}
+            entradilla={plugin.entradilla}
+            imatge={plugin.imatge}
+            imatgeAlt={plugin.imatgeAlt}
+            ruta={rutaDelPlugin(plugin.id)}
+            onComentar={onComentar}
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/* P7-B · La preferència de les Utilitats ({ <id>: booleà }, la que escriu
+   DetallEspai.jsx) es llig com una EXCLUSIÓ explícita: una utilitat s'amaga
+   NOMÉS si el valor guardat és exactament false. Sense preferència, malmesa o
+   amb qualsevol altre valor, es veu: per defecte es pinten totes les del
+   registre que no tenen targeta dalt (W4-08) i el Snippet.
+   Higiene d'amfitrió (ordre del Mestre, 261004) · Es llig per
+   utilitatsActives.js: la clau amb prefix de storage.js i, si no n'hi ha, la
+   de llegat ('sdp_utilitats_actives'). */
 /* L'id del Snippet a APLICACIONS (profile/aplicacions.js), el que hi guarda DetallEspai. */
 const ID_SNIPPET = 'snippet';
 /* W4-08 · Les eines d'administració i de sistema, en l'ordre del registre:
@@ -165,9 +219,12 @@ const IDS_MAQUINARIA = Object.freeze(['consola', 'cervell', 'rss', 'tpv', 'bascu
    Vehicle Compartit i Animalets) no es repetix a les graelles de baix. */
 const IDS_NOMES_DALT = new Set(DESTINS_CONTROL.map((desti) => desti.id));
 const visible = (amagades) => (plugin) => !amagades.has(plugin.id) && !IDS_NOMES_DALT.has(plugin.id);
-/* Les dues graelles de baix: les utilitats i la maquinària, sense repetits. */
-const PLUGINS_UTILITATS = PLUGINS.filter((plugin) => !IDS_MAQUINARIA.includes(plugin.id));
-const PLUGINS_MAQUINARIA = PLUGINS.filter((plugin) => IDS_MAQUINARIA.includes(plugin.id));
+/* Les dues graelles de baix: les utilitats i la maquinària, sense repetits.
+   Onada 2 de la Gestoria (261004) · Sense els plugins que ja viuen en un
+   espai («L'empresa» o «La llar»): W4-08, cap targeta en dos blocs. */
+const SENSE_ESPAI = PLUGINS.filter((plugin) => !plugin.espai);
+const PLUGINS_UTILITATS = SENSE_ESPAI.filter((plugin) => !IDS_MAQUINARIA.includes(plugin.id));
+const PLUGINS_MAQUINARIA = SENSE_ESPAI.filter((plugin) => IDS_MAQUINARIA.includes(plugin.id));
 /* El Snippet no és del registre de plugins: la seua targeta de sempre. */
 const SNIPPET = Object.freeze({
   titol: 'Snippet',
@@ -175,15 +232,9 @@ const SNIPPET = Object.freeze({
   imatge: '/assets/nano_cards/snippet_nano_card.jpg'
 });
 
-function utilitatsAmagades(cru) {
-  let valor = null;
-  try {
-    valor = JSON.parse(cru);
-  } catch {
-    return new Set();
-  }
-  if (!valor || typeof valor !== 'object' || Array.isArray(valor)) return new Set();
-  return new Set(Object.keys(valor).filter((id) => valor[id] === false));
+/* La preferència ja arriba sanejada (un objecte pla o {}): només compta el false explícit. */
+function utilitatsAmagades(preferencia) {
+  return new Set(Object.keys(preferencia).filter((id) => preferencia[id] === false));
 }
 
 export default function ControlSection() {
@@ -212,6 +263,7 @@ function PanellControl({ vistaRef, abansDeLaFitxa }) {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const { t } = useUIActions();
+  const { showToast } = useToast();
   /* T47 (correcció de la revisió, 260928) · «Eixir del poble» és la mateixa
      eixida que «Tancar sessió»: la de SessionContext, que primer envia el
      pendent i després oblida els esborranys d'este dispositiu. C01 · Si
@@ -227,15 +279,25 @@ function PanellControl({ vistaRef, abansDeLaFitxa }) {
   const eixida = useEixidaSegura({ despres: despresDEixir });
 
   /* Les Utilitats que la persona ha llevat del Panell (DetallEspai.jsx escriu
-     la preferència; ací només es llig en muntar el Panell, per storage.js). */
-  const [amagades] = useState(() => utilitatsAmagades(getPreferenciaLlegat(CLAU_UTILITATS)));
+     la preferència). Es llig en muntar el Panell i, si canvia mentre és a la
+     vista, l'estat compartit d'utilitatsActives.js ho diu: cap 'storage' a
+     window (ordre del Mestre, 261004). */
+  const [amagades, setAmagades] = useState(() => utilitatsAmagades(llegixUtilitatsActives()));
+  useEffect(
+    () => subscriuUtilitatsActives(() => setAmagades(utilitatsAmagades(llegixUtilitatsActives()))),
+    []
+  );
 
   /* P5 · El títol de la graella, per a lector: les targetes h3 pengen d'un h2. */
   const idDestins = useId();
-  /* W4-09 · On porta l'autor de la boina: en llavor, el xat de la llavor; en
-     remot, l'entitat resolta pel port. Sense entitat o amb error, avís honest. */
+  /* W4-09 · El xat corporatiu: en llavor, el xat de la llavor; en remot,
+     l'entitat resolta pel port. Sense entitat o amb error, avís honest.
+     T6 (261004) · És on porta Comentar de totes les targetes del Panell (la
+     boina, al projecte). Mentre no hi ha xat, el clic ho diu i no navega. */
   const xatCorporatiu = useXatCorporatiu();
   const senseXatCorporatiu = xatCorporatiu.estat === 'absent' || xatCorporatiu.estat === 'error';
+  const avisDelXat = avisDelXatCorporatiu(xatCorporatiu);
+  const comentaAlXat = () => (avisDelXat ? showToast(t(...avisDelXat)) : navigate(xatCorporatiu.href));
 
   return (
     <UniversalPage
@@ -258,13 +320,19 @@ function PanellControl({ vistaRef, abansDeLaFitxa }) {
               les sis de 2245 i, des del 261004, Treball i Habitatge. */}
           <div className="sdp-card-grid">
             {DESTINS_CONTROL.map((desti) => (
-              <TargetaDeDesti key={desti.id} desti={desti} t={t} autorHref={xatCorporatiu.href} />
+              <TargetaDeDesti key={desti.id} desti={desti} t={t} onComentar={comentaAlXat} />
             ))}
           </div>
           {senseXatCorporatiu ? (
-            <Alerta to="info">Xat de Sóc de Poble: encara no disponible en este servidor.</Alerta>
+            <Alerta to="info">{t(...AVISOS_XAT_CORPORATIU.noDisponible)}</Alerta>
           ) : null}
         </section>
+
+        {/* Onada 2 de la Gestoria (261004) · «L'empresa» i «La llar», en
+            l'ordre del registre (ESPAIS_PLUGINS): dos espais separats. */}
+        {ESPAIS_PLUGINS.map((espai) => (
+          <EspaiDelPanell key={espai.id} espai={espai} visibles={visible(amagades)} onComentar={comentaAlXat} />
+        ))}
 
         <section>
           <h2>Utilitats i Connectors (Plugins)</h2>
@@ -284,7 +352,7 @@ function PanellControl({ vistaRef, abansDeLaFitxa }) {
                 imatge={plugin.imatge}
                 imatgeAlt={plugin.imatgeAlt}
                 ruta={rutaDelPlugin(plugin.id)}
-                autorHref={xatCorporatiu.href}
+                onComentar={comentaAlXat}
               />
             ))}
             {amagades.has(ID_SNIPPET) ? null : (
@@ -293,7 +361,7 @@ function PanellControl({ vistaRef, abansDeLaFitxa }) {
                 subtitol={SNIPPET.subtitol}
                 imatge={SNIPPET.imatge}
                 ruta={rutaDeLaFitxa(pathname)}
-                autorHref={xatCorporatiu.href}
+                onComentar={comentaAlXat}
                 abansDObrir={abansDeLaFitxa}
               />
             )}
@@ -320,7 +388,7 @@ function PanellControl({ vistaRef, abansDeLaFitxa }) {
                 imatge={plugin.imatge}
                 imatgeAlt={plugin.imatgeAlt}
                 ruta={rutaDelPlugin(plugin.id)}
-                autorHref={xatCorporatiu.href}
+                onComentar={comentaAlXat}
               />
             ))}
           </div>

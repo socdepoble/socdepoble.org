@@ -26,6 +26,21 @@ function contenidorDe(editor) {
   return document.querySelector('.sdp-root') || document.body;
 }
 
+/**
+ * Higiene d'amfitrió (ordre del Mestre, 261004, front «amfitrio-admin») · La
+ * caixa viu dins del contenidor (.sdp-root), que dins de l'amfitrió fa de
+ * bloc contenidor de la seua position: fixed, però el cursor (clientRect)
+ * dona coordenades del viewport. Amb un contenidor que no és document.body,
+ * top i left es resten del seu rectangle i el gir cap amunt es decidix amb
+ * les seues vores. Amb document.body (o un contenidor sense rectangle, com un
+ * shadow root sense .sdp-root), el rectangle és nul i tot és com abans,
+ * contra el viewport.
+ */
+function rectangleDe(pare) {
+  if (!pare || pare === document.body || typeof pare.getBoundingClientRect !== 'function') return null;
+  return pare.getBoundingClientRect();
+}
+
 export const SlashMenu = Extension.create({
   name: 'sdpSlashMenu',
 
@@ -63,6 +78,8 @@ export const SlashMenu = Extension.create({
 
         render: () => {
           let caixa = null;
+          /* El contenidor on es munta la caixa: d'ell es resten les coordenades. */
+          let pare = null;
           let items = [];
           let actiu = 0;
           let propsActuals = null;
@@ -83,10 +100,19 @@ export const SlashMenu = Extension.create({
 
             const alt = caixa.offsetHeight || 0;
             const ample = caixa.offsetWidth || 0;
-            const capMunt = r.bottom + alt + 8 > window.innerHeight && r.top - alt - 8 > 0;
+            const c = rectangleDe(pare);
 
-            caixa.style.top = `${Math.round(capMunt ? r.top - alt - 6 : r.bottom + 6)}px`;
-            caixa.style.left = `${Math.round(Math.min(r.left, window.innerWidth - ample - 12))}px`;
+            if (!c) {
+              const capMunt = r.bottom + alt + 8 > window.innerHeight && r.top - alt - 8 > 0;
+
+              caixa.style.top = `${Math.round(capMunt ? r.top - alt - 6 : r.bottom + 6)}px`;
+              caixa.style.left = `${Math.round(Math.min(r.left, window.innerWidth - ample - 12))}px`;
+              return;
+            }
+
+            const capMunt = r.bottom + alt + 8 > c.bottom && r.top - alt - 8 > c.top;
+            caixa.style.top = `${Math.round((capMunt ? r.top - alt - 6 : r.bottom + 6) - c.top)}px`;
+            caixa.style.left = `${Math.round(Math.min(r.left, c.right - ample - 12) - c.left)}px`;
           };
 
           const pinta = () => {
@@ -140,7 +166,7 @@ export const SlashMenu = Extension.create({
               items = props.items || [];
               actiu = 0;
 
-              const pare = contenidorDe(props.editor);
+              pare = contenidorDe(props.editor);
               if (!pare) return;
 
               caixa = document.createElement('div');

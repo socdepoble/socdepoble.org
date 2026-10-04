@@ -1,13 +1,24 @@
 import { useMemo } from 'react';
-import { FolderOpen, Waypoints, Workflow } from 'lucide-react';
+import { Workflow } from 'lucide-react';
 import { EstatBuit, Insignia, Taula } from '../../../components/PedraSeca';
-import { Mono, Privat, Xifra } from '../peces.jsx';
+import { Link } from '../../../app/contexts/RouterContext';
+import { concorda, de, plural } from '../concordanca.js';
+import { Mono, Privat } from '../peces.jsx';
+import { GraellaXifres } from '../XifresMas.jsx';
+import { rutaXifra, xifresDeVista } from '../xifresMas.js';
 import { NOMS_TIPUS, etiquetaNode } from './grafMapa.js';
 import { esSenseLector, fluxosDelMapa } from './fluxosMapa.js';
 
 /* Fluxos de treball (01_fluxos_skills.md): la pestanya «Flujos trabajo
    skills» d'Emowe amb la regla del Mas. Només encadenen les relacions
-   declarades o derivades; la prosa queda com a suggeriment de «declara'm». */
+   declarades o derivades; la prosa queda com a suggeriment de «declara'm».
+   Ordre del Mestre, 261004 (xat: cap xifra solta) · Les xifres són
+   targetes senceres amb boina i pàgina pròpia (XifresMas.jsx). Derogat per
+   l'ordre del Mestre del 261004 (xat: cap xifra solta): les xifres com a
+   targetes compactes del Panell de Control (Xifra).
+   Correcció 261004 (verificador de la segona passada, punt 2) · Els llocs
+   que reben faena sense lector també són una targeta, i la frase de l'estat
+   buit que els compta hi enllaça. */
 
 const TO_CONFIANCA = Object.freeze({ declarat: 'info', derivat: 'neutre', inferit: 'avis' });
 const nom = (id) => etiquetaNode({ id });
@@ -29,7 +40,8 @@ function Cadena({ cadena }) {
     <>
       <h4>{noms}</h4>
       <p>
-        Cadena de {cadena.passos.length} passos. Confiança de la baula més feble:{' '}
+        {/* Correcció 261004 (verificador de la tercera passada, punt 3) · «Cadena d’8 passos». */}
+        {`Cadena ${de(cadena.passos.length, plural(cadena.passos.length, 'pas', 'passos'))}.`} Confiança de la baula més feble:{' '}
         <Insignia to={TO_CONFIANCA[cadena.confianca]}>{cadena.confianca}</Insignia>
       </p>
       <Taula titol={`Cadena ${noms}`} densa>
@@ -57,6 +69,7 @@ function Cadena({ cadena }) {
 
 export function FluxosMapa({ mapa }) {
   const { cadenes, suggeriments, punts } = useMemo(() => fluxosDelMapa(mapa), [mapa]);
+  const xifres = useMemo(() => xifresDeVista('fluxos', mapa), [mapa]);
   const senseLector = punts.filter(esSenseLector).length;
 
   return (
@@ -67,18 +80,17 @@ export function FluxosMapa({ mapa }) {
         declarades o derivades: una skill que en nomena una altra no la crida per força,
         i per això el que diu la prosa queda a part, com a suggeriment del que caldria declarar.
       </p>
-      <div className="sdp-card-grid">
-        <Xifra icona={Workflow} valor={cadenes.length} etiqueta="Cadenes declarades o derivades" />
-        <Xifra icona={Waypoints} valor={suggeriments.length} etiqueta="Suggeriments de la prosa (inferits)" />
-        <Xifra icona={FolderOpen} valor={punts.length} etiqueta="Punts de trobada: llocs on una peça escriu o llig" />
-      </div>
+      <GraellaXifres xifres={xifres} generat={mapa.generat} />
 
       <section>
         <h3>Cadenes declarades</h3>
         {cadenes.length ? cadenes.map((c) => <Cadena key={c.id} cadena={c} />) : (
           <EstatBuit icona={Workflow} titol="Cap cadena declarada">
             Cap ruta ni skill declara que llig el que una altra deixa
-            {senseLector ? <>: {senseLector} {senseLector === 1 ? 'lloc rep' : 'llocs reben'} faena i ningú no declara que la replega</> : null}.
+            {senseLector ? (
+              <>: <Link to={rutaXifra('llocs-sense-lector')}>{plural(senseLector, 'lloc', 'llocs')}</Link>{' '}
+                {concorda(senseLector, 'rep', 'reben')} faena i ningú no declara que la replega</>
+            ) : null}.
             Quan es declare (el camp <code>contracte.llig</code> de les skills, o les <code>lectures</code> de
             cada ruta a <Mono>.agents/protocolledge.json</Mono>), les cadenes apareixeran ací soles.
           </EstatBuit>

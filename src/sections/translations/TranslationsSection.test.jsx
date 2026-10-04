@@ -40,10 +40,16 @@ beforeEach(() => { vi.clearAllMocks(); m.language = 'ca'; m.pagina = null; });
 const seccio = (nom) => screen.getByRole('region', { name: nom });
 const targetaDe = (llengua) => screen.getByRole('heading', { level: 3, name: llengua }).closest('article');
 
-test('la pàgina existix i no és buida: crom de sistema, sense logos, dues seccions de targetes', () => {
+/* Derogat «sense logos» (ordre del Mestre, 261004, norma dels logotips): la
+   pàgina signa Sóc de Poble (sense autor propi) i PageFrame hi pinta el seu
+   logotip dalt de l'H1 (PageFrame.logo.test.jsx). Ací es mira que la secció
+   no el lleva: ni senseLogo ni cap autoria pròpia. */
+test('la pàgina existix i no és buida: crom de sistema, signada per Sóc de Poble (amb el seu logotip), dues seccions de targetes', () => {
   const { container } = render(<TranslationsSection />);
   expect(m.pagina.chrome).toBe('system');
-  expect(m.pagina.showLogos).toBeFalsy();
+  expect(m.pagina.senseLogo).toBeUndefined();
+  expect(m.pagina.authorName).toBeUndefined();
+  expect(m.pagina.authorHref).toBeUndefined();
   expect(m.pagina.title).toBe('Traduccions i llengua');
   expect(seccio('Idioma del Sistema')).toBeTruthy();
   expect(seccio('Traducció Dinàmica de Targetes')).toBeTruthy();

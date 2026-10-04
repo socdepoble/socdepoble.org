@@ -105,6 +105,14 @@ test('T2 · incrustat en un amfitrió, l’avatar del poble penja del paquet (re
   fixaBaseRecursos('https://amfitrio.example/wp-content/plugins/soc-de-poble/dist');
   mocks.core = llavor([TOWNS.find((t) => t.id === 'sella')]);
   const { container } = render(<PoblesSection />);
-  expect(container.querySelector('.sp-card-author img.sp-card-avatar').getAttribute('src'))
+  /* Ordre del Mestre del 261004 (barra taronja universal) · La pàgina de
+     sistema ja porta la seua barra taronja, amb el logo de Sóc de Poble com a
+     avatar: l'avatar del poble es busca dins de la seua targeta, no el primer
+     del document. */
+  const [sella] = targetes(container);
+  expect(sella.querySelector('.sp-card-author img.sp-card-avatar').getAttribute('src'))
     .toBe('https://amfitrio.example/wp-content/plugins/soc-de-poble/dist/assets/towns/sella/2.jpg');
+  // La barra de la pàgina també penja del paquet.
+  expect(container.querySelector('section.bar-orange img.sp-card-avatar').getAttribute('src'))
+    .toBe('https://amfitrio.example/wp-content/plugins/soc-de-poble/dist/assets/system/ui/logo-socdepoble-cuadrat-verd.svg');
 });

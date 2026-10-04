@@ -22,6 +22,16 @@
  * La graella del mig va a soles (l'única excepció de qualitat.test.js, pendent
  * del vistiplau del Mestre): cap columna de l'esquelet té lloc a les eines per
  * al mes i el filtre.
+ * Ordre del Mestre, 261004 (prompt 261004_0515, «no inventar targetes») · Eixa
+ * graella ja no és de rajoles: GraellaTargetes amb una UniversalCard per
+ * línia, com les targetes de l'esquelet (forma="targetes", TargetesArticles):
+ * el nom (h4, dins de la secció), l'especificació, la icona de la secció al
+ * quadrat, «Per comprar» en etiqueta, aria-pressed, data-element i el peu per
+ * defecte sense Compartir ni telemetria. El detall és ColumnaCataleg amb
+ * forma="targetes".
+ * REGLA D'OR 1 (ordre del Mestre, 261004) · Les dues graelles porten la boina
+ * taronja amb qui signa cada article (autoria.js): el projecte o, per a un
+ * article propi, «Tu».
  *
  * SEPARAR-LA, i què cal tocar de veres:
  *   (a) El filtre ja hi és.
@@ -39,12 +49,15 @@
  */
 import { CalendarDays, CalendarX, CircleDashed, Sun, Sunrise, Sunset } from 'lucide-react';
 import AppGridColumn from '../../../components/layout/AppGridColumn.jsx';
-import { EstatBuit, GraellaArticles, MarcColumna, NavegacioPeriode } from '../../../components/PedraSeca/index.js';
+import { EstatBuit, GraellaTargetes, MarcColumna, NavegacioPeriode, UniversalCard } from '../../../components/PedraSeca/index.js';
 import { ColumnaCataleg, useVistesEsquelet } from '../../comu/esquelet/index.js';
 import { useClosaAplicacio, useParametresConsulta } from '../../plataforma/index.js';
+import { articlePerId } from '../nucli/index.js';
 import { AvisNevera } from './AvisNevera.jsx';
+import { autoriaDArticle } from './autoria.js';
 import { TEMPORADA } from './constants.js';
 import { textArticles, useVistaNevera } from './context.js';
+import { entradetaDe, subtitolDe } from './vestits.js';
 import {
   esParametreMes, grupsDeTemporada, liniesPerTemporada, mesVei, nomDelMes, seccionsDeTemporada,
   suggerimentsDeTemporada, titolDeTemporada
@@ -67,6 +80,14 @@ const BUIT_DETALL = Object.freeze({ buit: 'Res de temporada este mes', buitText:
 /* Cap color per secció: la icona i el nom la distingixen (l'estat es diu sempre amb text). */
 const ICONES = Object.freeze({ plena: Sun, inici: Sunrise, final: Sunset, fora: CalendarX, 'sense-dada': CircleDashed });
 const ambIcona = (seccio) => ({ ...seccio, icona: ICONES[seccio.id] });
+/* Les apps no entren a la telemetria (frontera.test.js): el Connectar del peu no compta. */
+const SENSE_TELEMETRIA = Object.freeze({ comptar: false });
+
+/* El quadrat d'una línia: la icona de la seua secció de temporada (48 px, com a l'espècimen). */
+function QuadratDeTemporada({ grup }) {
+  const Icona = ICONES[grup] || CircleDashed;
+  return <Icona size={48} strokeWidth={1.5} aria-hidden="true" focusable="false" />;
+}
 
 /* El mes d'ara (1–12), del rellotge del dispositiu: només la vista el llig. */
 const mesDAra = () => new Date().getMonth() + 1;
@@ -110,6 +131,8 @@ export function ColumnaLlistaPerTemporada({ params }) {
     id: 'de-temporada', icona: CalendarDays, etiqueta: titolDeTemporada(vista.mes), onAcciona: vistes.cataleg.vesA
   });
   const articles = liniesPerTemporada(estat, llista.id, vista.mes);
+  const grups = grupsDeTemporada(vista.nomesDeTemporada).map(ambIcona);
+  const nomDelGrup = new Map(grups.map((grup) => [grup.id, grup.nom]));
   const buit = articles.length === 0
     ? <EstatBuit titol="La llista és buida">Toca el que és de temporada per a posar-ho a la llista, o afig-ho des de La compra.</EstatBuit>
     : <EstatBuit titol="Res de temporada a la llista">Tria «Tot» per a vore tota la llista.</EstatBuit>;
@@ -124,15 +147,38 @@ export function ColumnaLlistaPerTemporada({ params }) {
       peu={<AvisNevera />}
       etiqueta={titol}
     >
-      <GraellaArticles
-        articles={articles}
-        categories={grupsDeTemporada(vista.nomesDeTemporada).map(ambIcona)}
-        etiqueta={titol}
-        commutable
-        textos={TEXTOS_MIG}
-        onTria={(article) => accions.marcaComprat(llista.id, article.id)}
-        buit={buit}
-      />
+      <GraellaTargetes elements={articles} categories={grups} etiqueta={titol} buit={buit}>
+        {(article) => {
+          /* REGLA D'OR 1 (261004) · La boina: qui signa l'article de la línia (autoria.js).
+             autoriaDe pot tornar null (una identitat que la plataforma no coneix): la
+             targeta es queda sense boina, com a l'esquelet, i la columna no peta. */
+          const delCataleg = articlePerId(estat, article.id);
+          const boina = autoriaDArticle(delCataleg) || {};
+          return (
+            <UniversalCard
+              key={article.id}
+              headingLevel="h4"
+              author={boina.nom || undefined}
+              authorHref={boina.href || undefined}
+              avatarUrl={boina.avatar || undefined}
+              location={boina.poble || undefined}
+              title={article.nom}
+              /* Integració final (261004, F04) · Subtítol i entradeta reals, com a l'esquelet
+                 (vestits.js): la secció de l'article i, sense especificació, d'on ix. */
+              subtitle={subtitolDe(delCataleg)}
+              body={article.secundari || entradetaDe(delCataleg)}
+              squareBadge={{ type: 'custom', label: nomDelGrup.get(article.categoriaId) || article.nom, content: <QuadratDeTemporada grup={article.categoriaId} /> }}
+              labels={[TEXTOS_MIG[article.estat]]}
+              onMainClick={() => accions.marcaComprat(llista.id, article.id)}
+              premuda={article.estat === 'en-colleccio'}
+              idElement={article.id}
+              hasFooter
+              showShare={false}
+              telemetria={SENSE_TELEMETRIA}
+            />
+          );
+        }}
+      </GraellaTargetes>
     </MarcColumna>
   );
 }
@@ -142,11 +188,25 @@ export function ColumnaDeTemporada({ params }) {
   const { estat, accions, llistaVigent } = useVistaNevera();
   const { mes } = useVistaTemporada();
   const llista = llistaVigent(params);
+  /* REGLA D'OR 1 (261004) · La boina de cada suggeriment: l'article de la Nevera que hi
+     correspon o, si encara no n'és cap, el calendari de temporada del projecte (autoria.js). */
+  const suggeriments = suggerimentsDeTemporada(estat, llista.id, mes).map((suggeriment) => {
+    const delCataleg = articlePerId(estat, suggeriment.id);
+    return {
+      ...suggeriment,
+      autoria: autoriaDArticle(delCataleg),
+      /* Integració final (261004, F04) · Subtítol i entradeta reals: la secció i d'on ix l'article
+         o, si encara no n'és cap, que és un suggeriment del calendari de temporada. */
+      subtitol: subtitolDe(delCataleg),
+      entradeta: delCataleg ? entradetaDe(delCataleg) : 'Suggeriment del calendari de temporada'
+    };
+  });
   return (
     <ColumnaCataleg
+      forma="targetes"
       titol={titolDeTemporada(mes)}
       categories={seccionsDeTemporada().map(ambIcona)}
-      articles={suggerimentsDeTemporada(estat, llista.id, mes)}
+      articles={suggeriments}
       selector={false}
       ambVistes={false}
       commutable

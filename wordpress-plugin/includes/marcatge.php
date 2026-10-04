@@ -261,7 +261,7 @@ function socdepoble_enxufe_element( $instancia = array(), $amb_serveis = true ) 
 	if ( '' !== $ruta ) {
 		$atributs .= ' ruta-inicial="' . esc_attr( $ruta ) . '"';
 	}
-
+	
 	return '<soc-de-poble' . $atributs . '></soc-de-poble>';
 }
 

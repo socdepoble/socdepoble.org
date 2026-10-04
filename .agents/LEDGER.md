@@ -18,6 +18,10 @@ Qualsevol IA (o humà) que modifique codi està obligada a afegir-hi una entrada
 
 ---
 
+261004 | integracio | gestoria+targetes+barres+logo+ptr | integració final verificada, 1.0.3 a punt de compilar
+261004 | correccio | sdp-universal-page | rellegir el prompt sencer abans de decidir l'abast d'una norma
+261004 | correcció | sdp-universal-page | barra taronja obligatòria a tota pàgina de sistema
+261004 | correcció | sdp-universal-page | targetes sempre amb boina, cos sencer i pàgina pròpia
 261002 | torn | torn_1d1f17bf-1055-4cba-9809-c045372f9d7a | Claude (Opus 5.5, Ultracode): Gestoria 3T (8806-8D5C), plataforma d'apps, esquelet T4/T8, Bar, Nevera, Salut, 7 sentinelles, T7, enxufe WP; 56 agents.
 261002 | recaiguda | core-higiene-escriptori | trasllat a mà de l'Escriptori amb ask autoaprovat; reparació al lab 1745
 261002 | auditoria | claude | fatiga al laboratori, login al perfil, banc pur, 7 sentinelles en contracte
@@ -774,3 +778,35 @@ Torn torn_2c591b20-7040-40dd-abfa-9a538e439ccf. Endpoint públic DeepL, cache, p
 261003 | pendent | desplegament | producció en 1.0.1.f094730c2c44, sense cap correcció d'avui
 
 <!-- HASH: 7f425b065e3592d7aa0cdf1e53e0b1cdb6e51675a09b71e29880098a101d73ba -->
+
+## 2026-10-04T08:48:00Z · Codex · Auditoria de Gestoria, targetes i CSS; relleu RSS
+
+- Torn torn_a6932539-8ecf-4fae-84b4-02faa6959a8e. Informes 261004_1010_auditoria_codex i 261004_1045_auditoria_codex generats pel circuit canònic, ancorats i validats documentalment; ESTAT amb relleu. Lectura del reinici, Acta 1027 i prompt 1042. Cap font productiva modificada.
+- Quatre reproduccions sintètiques: referència anterior incoherent acceptada, número repetit en altra data, llegat F acceptat sense aplicar la política i còpia amb text divergent sense error. Casos oficials hash 1 i 2 contrastats amb AEAT. Troballa RSS: peu sense ruta pròpia; marges per a dues barres arribats a font, visual pendent. Sense compartició externa ni dades comptables reals.
+- Gestoria inicial 1991/1991; UI/CSS 1477 verdes, 1 fallada posteriorment corregida, 1 omesa; repàs 544/550, amb les sis expectatives corregides contrastades després (53/53 en afectats + GraellaTargetes). Resultats separats per versions; portes globals sense verd ni tancament fictici.
+- Història anterior preservada literalment. SHA-256 del fitxer abans d'afegir: 28908a26ef177366def2bce10e7a78312ace7bf80357374c6a8eb214fa45f885. El segell previ ja era invàlid: guardat 7f425b065e3592d7aa0cdf1e53e0b1cdb6e51675a09b71e29880098a101d73ba, cos calculat 1d33b074628df6352530af2b691a0d35e221b7dfa6694380df16ad36dfb26eec. No s'ha resignat una història aliena ni canviat regles de governança; discrepància consignada per al diagnòstic de tancament.
+
+
+## 2026-10-04T09:08:38Z · Codex · ampliació d’auditoria per a Claude
+
+Torn `torn_a6932539-8ecf-4fae-84b4-02faa6959a8e`. Informes `261004_1010_auditoria_codex.md` i `261004_1045_auditoria_codex.md`, v1.1.0, comprovador documental vàlid i Olivera verda. Bloc auth/config/App 397 passades, 5 fallades; repàs App/identitat 94 passades, 2 fallades de navegació mòbil. Connector WordPress 55 passades, 1 fallada de contracte/marcatge. Entrada real bloquejada per sonda de salut a /registre, reintent sense canvi; causa remota pendent i cap credencial enviada. ZIP 1.0.2 de les 05:27 amb manifest, entrada i 215 fitxers coherents; paquet final nou no observat. Cap codi productiu, commit, segell ni desplegament. La signatura històrica del LEDGER ja era invàlida; no s’ha revalidat per a ocultar el deute.
+
+Diagnòstic final del torn `torn_a6932539-8ecf-4fae-84b4-02faa6959a8e`: tancament --check valid:false, 1.208 incidències, context_loaded; Plantilles/Autoritat/skills passen, LEDGER/segell/Wiki/SCC fallen. Dos informes propis vàlids i Olivera verda; cap tancament o signatura nous.
+
+Aclariment de F07 al relleu 20 de Claude: node local 127.0.0.1:54321 apagat; el contrast propi no troba cap procés escoltant. Bloqueig d’entorn local, sense regressió de codi demostrada ni extrapolació a producció. Prompt urgent 1111 llegit com a context; pull-to-refresh no verificat.
+
+## 2026-10-04 15:07 · Codex · tancament 1.0.3 · torn_3829d514-eb9a-406e-ae86-dd2647b0abfd
+
+Ordre executiva humana: separar Gestoria de la Wiki, tancar avatars i empaquetar 1.0.3. Es conserva /app/gestoria de Claude; Codex completa migració abans de lazy, mapa pur, retorn fora de /app i proves de càrrega nova. 59/59 rutes finals, 43/43 avatars, 60/60 capçaleres amb solapament, 2/2 prosa i 96/96 Node; ESLint passa. Builds release autònom/directori i empaquetador canònic executats amb 856 fonts estables. ZIP main 14:59 SHA256 89cf3c59000042e5d9dc60f0bb569d92eff1e6d2732961e3e165e142d2482cd0, manual i sense signatura de canal. Set prompts consumits arxivats amb rebuts/índex; fonts financeres limitades a DEV. Sense commit ni desplegament. Informes 1435 i acta 1445; governança heretada es contrasta sense resegellar història. Nova Sidebar de Gestoria condicionada a acabar este tancament i comprovar si Claude continua pendent.
+
+## 2026-10-04 15:19 · Codex · tall final estricte · torn_3829d514-eb9a-406e-ae86-dd2647b0abfd
+
+Esta entrada completa el tall anterior de15:07: Claude retira les migracions legacy i actualitza proves; Codex accepta la separació estricta Wiki/Gestoria i revalida61/61 en5suites. Recompilació completa+directori i paquetcanònic15:14, fonts856estables, verificacióexhaustiva valid:true/errors:[] en3ZIP. Definitiu mainWP SHA256 be05c4549bff404fd0c856ed4e4a8a25812afc420e58b00cc819fd21bd819e9a,130749581B;14:59/11:51 nolliurar. Informe1435v1.1 i acta1445 actualitzats; tancamentglobal1199incidències heretades, sense resegellat ni desplegament. Nova Sidebar només després d’esta entrega i amb condicióClaude comprovada.
+
+
+## 2026-10-04 15:54 · Codex · Sidebar condicionada i entrega 1.0.3 · torn_3829d514-eb9a-406e-ae86-dd2647b0abfd
+
+Tancament anterior complet abans de comprovar Claude Desktop (Verifica 0/1, bateria pendent): condició humana complida. Pla 1420 v1.2.0 vinculat abans d’editar. BarraApp conté nou mòduls i Aprendre; Closca controlada per ruta sense rail interior, useTauler conservat i detall/avís segellats per mòdul. Pont DEV i ContenidorGestoria intactes. 146/146 plataforma, 36/36 closca/privacitat, ESLint verd; revisió independent i CUA ample/mòbil correctes. Dos builds release i empaquetat final1545 amb 855 fonts estables; tres ZIP valid:true/errors:[] de CRC/inventari/SRI/hashes/canal/privacitat. MainWP 130751256 B, SHA256 398330989fab0c9e06e0956de2258ba9f6efe1111ddf33d9ab711e56d1eadf06. Informe1435 v1.2 i acta1445 v1.1 vàlids, Olivera verda. Sense desplegament, commit, activació financera productiva ni resegellat d’història aliena. 15:14 queda històric; 15:45 és el paquet actual. Coordinació documental a ESTAT; missatge natiu interromput, no enviat.
+
+
+<!-- HASH: ff723ce1e88ba9df0cecfd3170cde5e7b040334d5b3371b15c39fb615d961d76 -->

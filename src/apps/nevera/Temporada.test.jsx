@@ -15,11 +15,21 @@ import { creaRegistre } from '../plataforma/registreApps.js';
 import AppNevera from './AppNevera.jsx';
 import { NOM_BASE, STORE, creaMagatzemNevera } from './magatzem.js';
 import manifestNevera from './manifest.js';
-import { ARTICLES_BASE, ARTICLES_PRODUCTES, afig, estatInicial } from './nucli/index.js';
+import { ARTICLES_BASE, ARTICLES_PRODUCTES, afig, afigPerNom, estatInicial } from './nucli/index.js';
 import { mesVei, nomDelMes, titolDeTemporada } from './vistes/perTemporada.js';
 
 const ENTORN = Object.freeze({ ...ENTORN_OBERT, produccio: false });
 const tancats = [];
+
+/* Ordre del Mestre, 261004 (verificació «lector-nevera», D1) · autoriaDe de la plataforma
+   pot tornar null (una identitat que no coneix). Hui el padró pilot sempre la resol, així
+   que la prova de la guarda força el null ací, sense tocar el padró; la resta de proves
+   veuen l'autoria de veres. */
+const autoriaForcada = vi.hoisted(() => ({ nulla: false }));
+vi.mock('./vistes/autoria.js', async (original) => {
+  const real = await original();
+  return { ...real, autoriaDArticle: (article) => (autoriaForcada.nulla ? null : real.autoriaDArticle(article)) };
+});
 
 /* Un navegador fals (compartible amb una altra «pestanya») i l'app registrada
    amb el seu magatzem; `estat`, el que ja hi ha al disc. */
@@ -46,8 +56,12 @@ const desat = (idb) => idb.files(NOM_BASE, STORE)[0];
 const liniesDesades = (idb) => desat(idb)?.llistes.find((l) => l.id === 'casa')?.linies.map((l) => l.articleId);
 const espera = (ms) => act(() => new Promise((resolve) => { setTimeout(resolve, ms); }));
 const titols = (columnaDe) => columnaDe().getAllByRole('heading', { level: 3 }).map((titol) => titol.textContent);
-/* Els articles d'una secció de la graella, en ordre (la reixa du el nom de la secció). */
-const delGrup = (columnaDe, grup) => within(columnaDe().getByRole('list', { name: grup })).getAllByRole('button').map((b) => b.dataset.article);
+/* Derogat per l'ordre del Mestre del 261004 (prompt 261004_0515, «no inventar targetes») · Les
+   rajoles ja són UniversalCard dins de GraellaTargetes: cada secció és una regió amb el nom de la
+   capçalera («Plena temporada 2 articles») i l'element principal de cada targeta porta data-element. */
+const seccio = (columnaDe, grup) => columnaDe().getByRole('region', { name: new RegExp(`^${grup} \\d+ articles?$`) });
+/* Els articles d'una secció de la graella, en ordre. */
+const delGrup = (columnaDe, grup) => [...seccio(columnaDe, grup).querySelectorAll('button[data-element]')].map((b) => b.dataset.element);
 const mesDAra = () => new Date().getMonth() + 1;
 /* El camí de la Temporada de «Casa» en un mes: el mes d'ara no s'escriu. */
 const cami = (mes) => `/app/nevera/temporada/casa${mes === mesDAra() ? '' : `?mes=${mes}`}`;
@@ -77,6 +91,7 @@ beforeEach(() => {
 
 afterEach(() => {
   cleanup();
+  autoriaForcada.nulla = false;
   while (tancats.length) tancats.pop().tanca();
   window.history.replaceState(null, '', '/');
   vi.restoreAllMocks();
@@ -97,7 +112,7 @@ describe('La llista per temporada (el mig)', () => {
     expect(delGrup(mig, 'Fora de temporada')).toEqual(['maduixes', 'taronges']);
     expect(delGrup(mig, 'Sense dada de temporada')).toEqual(['platans', 'llet']);
     /* Tot el que hi ha al mig és per comprar, com a La compra: ho diuen aria-pressed i el text d'estat. */
-    const rajoles = mig().getAllByRole('button').filter((boto) => boto.dataset.article);
+    const rajoles = mig().getAllByRole('button').filter((boto) => boto.dataset.element);
     expect(rajoles).toHaveLength(LLISTA_AGOST.length);
     expect(rajoles.every((rajola) => rajola.getAttribute('aria-pressed') === 'true')).toBe(true);
     expect(mig().getAllByText('Per comprar')).toHaveLength(LLISTA_AGOST.length);
@@ -107,8 +122,23 @@ describe('La llista per temporada (el mig)', () => {
     /* El detall: el que és de temporada a l'agost, amb les tres seccions de temporada del mig. */
     expect(screen.getByRole('region', { name: 'De temporada a l’agost' })).toBeTruthy();
     expect(titols(detall).map((titol) => titol.replace(/ \d+ articles?$/, ''))).toEqual(['Plena temporada', 'Comença la temporada', 'S’acaba la temporada']);
-    expect(within(detall().getByRole('list', { name: 'S’acaba la temporada' })).getByRole('button', { name: 'Creïlles' }).getAttribute('aria-pressed')).toBe('true');
+    expect(within(seccio(detall, 'S’acaba la temporada')).getByRole('button', { name: 'Creïlles' }).getAttribute('aria-pressed')).toBe('true');
     expect(screen.getByRole('separator', { name: 'Redimensionar La llista per temporada' })).toBeTruthy();
+  });
+
+  /* Ordre del Mestre, 261004 (prompt 261004_0515, «no inventar targetes») · La graella solta del mig
+     ja és de UniversalCard, com les de l'esquelet. */
+  test('cada línia del mig és una UniversalCard: la icona de la secció de temporada al quadrat, «Per comprar» en etiqueta i el peu sense Compartir', async () => {
+    munta('/app/nevera/temporada/casa?mes=8', await prepara(ambLinies(['tomaques'])));
+    await screen.findByRole('region', { name: REGIO });
+    const targeta = within(seccio(mig, 'Plena temporada')).getByRole('button', { name: 'Tomaques' }).closest('article.sp-card');
+    expect(targeta.querySelector('.sp-card-calendar-badge').getAttribute('aria-label')).toBe('Plena temporada');
+    expect(targeta.querySelector('.sp-card-calendar-badge svg[aria-hidden="true"]')).not.toBeNull();
+    expect(targeta.querySelector('.sp-card-title').tagName).toBe('H4');
+    expect(within(targeta).getByText('Per comprar').className).toBe('sp-card-label sdp-badge-tag');
+    expect([...targeta.querySelectorAll('footer button')].map((b) => b.getAttribute('aria-label')))
+      .toEqual(['Traduir Tomaques', 'Comentar Tomaques', 'Connectar amb Tomaques']);
+    expect(document.querySelector('#app-grid-list .sdp-graella-articles, #app-grid-list .sdp-rajola')).toBeNull();
   });
 
   test('el filtre «De temporada» amaga Fora i Sense dada (a la URL); «Tot» ho torna', async () => {
@@ -190,8 +220,10 @@ describe('La llista per temporada (el mig)', () => {
     const estat = afig(ambLinies(['tomaques']), 'casa', 'llet', { especificacio: 'sense lactosa' });
     const { idb } = munta('/app/nevera/temporada/casa?mes=8', await prepara(estat));
     await screen.findByRole('region', { name: REGIO });
-    fireEvent.click(mig().getByRole('button', { name: 'Llet sense lactosa' }));
-    expect(mig().queryByRole('button', { name: 'Llet sense lactosa' })).toBeNull();
+    const llet = mig().getByRole('button', { name: 'Llet' });
+    expect(llet.closest('article.sp-card').querySelector('.sp-card-text').textContent).toBe('sense lactosa');
+    fireEvent.click(llet);
+    expect(mig().queryByRole('button', { name: 'Llet' })).toBeNull();
     await waitFor(() => expect(liniesDesades(idb)).toEqual(['tomaques']));
     expect(desat(idb).llistes[0].recents).toEqual([{ articleId: 'llet', especificacio: 'sense lactosa' }]);
   });
@@ -204,11 +236,11 @@ describe('La llista per temporada (el mig)', () => {
     expect(delGrup(mig, 'Sense dada de temporada')).toEqual([FRESC_SENSE_DADA.id]);
     /* La rajola del seu producte del calendari diu que ja és a la llista; el
        toc lleva eixa línia, sense crear cap article. */
-    const rajola = () => within(detall().getByRole('list', { name: 'Plena temporada' })).getByRole('button', { name: RAJOLA_DEL_FRESC });
+    const rajola = () => within(seccio(detall, 'Plena temporada')).getByRole('button', { name: RAJOLA_DEL_FRESC });
     expect(rajola().getAttribute('aria-pressed')).toBe('true');
     fireEvent.click(rajola());
     expect(rajola().getAttribute('aria-pressed')).toBe('false');
-    expect(mig().queryByRole('list', { name: 'Plena temporada' })).toBeNull();
+    expect(mig().queryByRole('region', { name: /^Plena temporada / })).toBeNull();
     await waitFor(() => expect(liniesDesades(idb)).toEqual([FRESC_SENSE_DADA.id]));
     expect(desat(idb).propis).toEqual([]);
   });
@@ -260,6 +292,59 @@ describe('De temporada a… (el detall)', () => {
     expect(mig().queryByRole('button', { name: 'Tomaques' })).toBeNull();
     await waitFor(() => expect(liniesDesades(idb)).toEqual(['carabasso']));
     expect(desat(idb).propis).toEqual([{ id: 'p-1', nom: 'Albergínies' }]);
+  });
+});
+
+/* REGLA D'OR 1 (ordre del Mestre, 261004) · Tota targeta porta la boina taronja amb l'autor real:
+   els articles del catàleg i els suggeriments del calendari, l'entitat Sóc de Poble (a la pàgina
+   del projecte); un article propi, «Tu», sense enllaç (la plataforma no dona a les apps la identitat
+   de la persona, i no se n'inventa cap). */
+describe('la boina de totes les targetes (REGLA D’OR 1)', () => {
+  const boinaDe = (boto) => boto.closest('article.sp-card').querySelector('header.sp-card-header');
+  const delProjecte = (boto) => {
+    const boina = boinaDe(boto);
+    expect(boina.querySelector('.sp-card-author-name').textContent).toBe('Sóc de Poble');
+    expect(within(boina).getByRole('link', { name: /^Sóc de Poble/ }).getAttribute('href')).toBe('/projecte');
+  };
+  const propia = (boto) => {
+    const boina = boinaDe(boto);
+    expect(boina.querySelector('.sp-card-author-name').textContent).toBe('Tu');
+    expect(within(boina).queryByRole('link')).toBeNull();
+  };
+
+  test('el mig i el detall: el catàleg i el calendari signen Sóc de Poble; un article propi, «Tu»', async () => {
+    munta('/app/nevera/temporada/casa?mes=8', await prepara(afigPerNom(ambLinies(['tomaques']), 'casa', 'Kombutxa')));
+    await screen.findByRole('region', { name: REGIO });
+    const targetes = [...document.querySelectorAll('#app-grid-main article.sp-card, #app-grid-list article.sp-card')];
+    expect(targetes.length).toBeGreaterThan(5);
+    for (const targeta of targetes) {
+      expect(targeta.querySelector('header.sp-card-header .sp-card-author-name'), targeta.textContent).not.toBeNull();
+    }
+    delProjecte(mig().getByRole('button', { name: 'Tomaques' }));
+    propia(mig().getByRole('button', { name: 'Kombutxa' }));
+    delProjecte(detall().getByRole('button', { name: 'Carabassó' }));
+    /* Un suggeriment del calendari que encara no és cap article: el calendari és del projecte. */
+    delProjecte(detall().getByRole('button', { name: 'Albergínies' }));
+    /* Tocat, es crea com a article propi: des d'ara el signa la persona, al mig i al detall. */
+    fireEvent.click(detall().getByRole('button', { name: 'Albergínies' }));
+    propia(mig().getByRole('button', { name: 'Albergínies' }));
+    propia(detall().getByRole('button', { name: 'Albergínies' }));
+  });
+
+  /* Verificació «lector-nevera», D1 · Sense la guarda, `boina.nom` sobre null petava tota la
+     columna del mig. Amb ella, la targeta es queda sense boina (com a l'esquelet) i no
+     s'inventa cap autor. */
+  test('una identitat que la plataforma no coneix (autoriaDe torna null): cap boina inventada, i el mig no peta', async () => {
+    autoriaForcada.nulla = true;
+    munta('/app/nevera/temporada/casa?mes=8', await prepara(ambLinies(['tomaques'])));
+    await screen.findByRole('region', { name: REGIO });
+    const targeta = mig().getByRole('button', { name: 'Tomaques' }).closest('article.sp-card');
+    expect(targeta.querySelector('.sp-card-author-name')).toBeNull();
+    expect(within(targeta).queryByRole('link')).toBeNull();
+    expect(within(targeta).getByText('Per comprar')).toBeTruthy();
+    /* El detall (l'esquelet) ja ho tolerava: també sense boina. */
+    const carabasso = detall().getByRole('button', { name: 'Carabassó' }).closest('article.sp-card');
+    expect(carabasso.querySelector('.sp-card-author-name')).toBeNull();
   });
 });
 

@@ -5,22 +5,28 @@
  * TPV del bar, amb una altra intel·ligència de dades. Ací no hi ha cap
  * graella, llista ni targeta pròpia: només es vestixen les dades del nucli.
  *   ColumnaLlistes      «Les meues llistes» (ColumnaColleccions: targetes)
- *   ColumnaLaCompra     el que falta, en rajoles a l'estil de Bring: un toc
+ *   ColumnaLaCompra     el que falta, en targetes a l'estil de Bring: un toc
  *                       ho marca com a comprat (ix i passa a «Recents»)
  *   ColumnaLlistaActiva la mateixa llista, al costat de «Llistes»
  *   ColumnaCatalegCompra els articles per seccions de la llista, «Recents»
  *                       davant, «Necessite…» (amb els productes de botiga)
  *                       i l'especificació (DetallArticle)
+ * Ordre del Mestre, 261004 (prompt 261004_0515, «no inventar targetes») · El
+ * catàleg i la llista porten forma="targetes": cada article és una
+ * UniversalCard de l'esquelet (les rajoles pròpies ja no). La resta, igual.
  */
 import { Clock, Trash2 } from 'lucide-react';
 import { Boto } from '../../../components/PedraSeca/index.js';
 import { ColumnaCataleg, ColumnaColleccio, ColumnaColleccions, useVistaCataleg } from '../../comu/esquelet/index.js';
 import { articlePerId, liniesOrdenades, recentsDisponibles } from '../nucli/index.js';
 import { AvisNevera } from './AvisNevera.jsx';
+import { autoriaDArticle } from './autoria.js';
 import { COMPRA } from './constants.js';
 import { llistaDelCami, textArticles, useVistaNevera } from './context.js';
 import { useObriDetall } from './useObriDetall.js';
-import { articlesVestits, liniesVestides, perArticle, productesALaGraella, seccionsDe, suggerimentsVestits } from './vestits.js';
+import {
+  articlesVestits, entradetaDe, liniesVestides, perArticle, productesALaGraella, seccionsDe, subtitolDe, suggerimentsVestits
+} from './vestits.js';
 
 const TEXTOS_LLISTA = Object.freeze({
   enColleccio: 'Per comprar',
@@ -60,12 +66,13 @@ function LaCompra({ params, ambEdicio, vigent = false }) {
   if (!llista) {
     return <ColumnaColleccio titol="Llista desconeguda" linies={[]} textos={TEXTOS_LLISTA_DESCONEGUDA} primer={COMPRA.primer} tram={COMPRA.tram} />;
   }
-  const linies = liniesVestides(estat, liniesOrdenades(estat, llista.id));
+  /* REGLA D'OR 1 (261004) · Cada targeta, amb la boina de qui signa l'article (autoria.js). */
+  const linies = liniesVestides(estat, liniesOrdenades(estat, llista.id), { autoria: autoriaDArticle });
   return (
     <ColumnaColleccio
+      forma="targetes"
       titol={llista.nom}
       linies={linies}
-      forma="rajoles"
       resum={{ etiqueta: 'Per comprar', comptador: linies.length, textComptador: textArticles }}
       onTria={(linia) => accions.marcaComprat(llista.id, linia.articleId)}
       onEdita={ambEdicio ? (linia) => obriDetall(linia.articleId) : undefined}
@@ -90,11 +97,12 @@ export function ColumnaLlistaActiva({ params }) {
 /** El catàleg de La compra: tocar posa o lleva de la llista; el botó dret dona l'especificació. */
 export function ColumnaCatalegCompra({ params }) {
   const { estat, accions, llistaDe } = useVistaNevera();
-  const { article: obert } = useVistaCataleg();
+  /* La fitxa d'un producte de botiga també el posa a la graella, com el detall (vestits.js). */
+  const { article: obert, fitxa } = useVistaCataleg();
   const llista = llistaDe(params);
   const linies = perArticle(llista);
   const vestit = { aLaLlista: new Set(linies.keys()), secundari: (a) => linies.get(a.id)?.especificacio };
-  const articles = articlesVestits(estat, { ...vestit, productes: productesALaGraella(estat, llista?.id, obert) });
+  const articles = articlesVestits(estat, { ...vestit, productes: productesALaGraella(estat, llista?.id, obert || fitxa), autoria: autoriaDArticle });
   const recents = llista ? recentsDisponibles(estat, llista.id) : [];
   const destacats = recents.length ? [{
     id: 'recents',
@@ -102,13 +110,21 @@ export function ColumnaCatalegCompra({ params }) {
     icona: Clock,
     articles: recents.map((recent) => {
       const article = articlePerId(estat, recent.articleId);
-      return { id: article.id, nom: article.nom, categoriaId: article.categoriaId, secundari: recent.especificacio || undefined };
+      return {
+        id: article.id, nom: article.nom, categoriaId: article.categoriaId, secundari: recent.especificacio || undefined,
+        /* REGLA D'OR 1 (261004) · La boina de la targeta, com les de la graella (vestits.js). */
+        autoria: autoriaDArticle(article),
+        /* Integració final (261004, F04) · El subtítol i l'entradeta, com les de la graella. */
+        subtitol: subtitolDe(article),
+        entradeta: entradetaDe(article)
+      };
     })
   }] : [];
   const especificacioRecent = (id) => llista?.recents.find((recent) => recent.articleId === id)?.especificacio ?? '';
 
   return (
     <ColumnaCataleg
+      forma="targetes"
       titol="Catàleg"
       categories={seccionsDe(estat, llista?.id)}
       articles={articles}

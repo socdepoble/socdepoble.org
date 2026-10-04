@@ -2,7 +2,7 @@
    xicotetes (AppGridShell railMitja i railEstret). Sense les propietats, la
    closca és la d'abans; en «ample» no canvia res. jsdom no fa layout: la
    geometria es comprova en la regla CSS (al final) i al navegador
-   (APPGRID_MOBIL.txt). Amb el mock de 420/340: 1400 és ample, 820 mitjà,
+   (APPGRID_MOBIL.txt). Amb el mock de 340/420: 1400 és ample, 820 mitjà,
    375 estret. */
 import React from 'react';
 import { createPortal } from 'react-dom';
@@ -13,8 +13,14 @@ import { afterEach, expect, test, vi } from 'vitest';
 import AppGridShell, { useAppGrid } from './AppGridShell.jsx';
 import { PUNTS_DE_TALL } from './graella.js';
 
+/* Barres (ordre del Mestre, 261004) · El mock era { left: 420, middle: 340 }
+   i SANEJA_AMPLADA rebutja amb raó el left de 420, fora de
+   COLUMN_LIMITS.left (200-340): el canviava per 260, el mínim d'ample
+   baixava a 922 i la prova de 950 es tornava roja. Ara dins dels límits i
+   intercanviades: el mínim d'ample continua sent 1082 (340 + 420 + 320 + 2)
+   i els talls de dalt valen. */
 vi.mock('../../config/storage.js', () => ({
-  getVal: () => ({ left: 420, middle: 340 }),
+  getVal: () => ({ left: 340, middle: 420 }),
   setVal: vi.fn()
 }));
 
@@ -220,6 +226,122 @@ test('P6 · d’ample a estret amb la closca muntada el detall es queda, amb el 
   expect(sonda(container)).toMatchObject({ node: 'false' });
 });
 
+/* ═══ Barres (ordre del Mestre, 261004) · railEsquerra ════════════════════
+   «Les dues barres de la Wiki han d'estar sempre presents plegades, o com a
+   mínim una d'elles visible que permeta desplegar l'altra.» En «mitja», amb
+   railEsquerra, la navegació és un rail fix: oberta, a l'abast i marcada
+   amb data-esquerra; desplegar-la és el panell de sempre. Sense la
+   propietat (el Xat, les apps), la closca d'abans. */
+function SondaEsquerra() {
+  const { ambRailNavegacio, navegacioEnRail } = useAppGrid();
+  return <span data-testid="esquerra" data-amb={String(ambRailNavegacio)} data-en={String(navegacioEnRail)} />;
+}
+const closcaEsquerra = (props = {}) => (
+  <AppGridShell
+    leftColumn={<Panell nom="Tanca el menú" valor={null} />}
+    middleColumn={(
+      <>
+        <SondaEsquerra />
+        <Panell nom="Menú" valor="left" controls="app-grid-sidebar" />
+      </>
+    )}
+    rightColumn={<p>Detall</p>}
+    {...props}
+  />
+);
+const esquerra = (c) => c.querySelector('[data-testid="esquerra"]').dataset;
+
+test('Barres · a 820 amb railEsquerra la navegació és un rail fix (data-esquerra), oberta i a l’abast; el panell la desplega i la torna al rail', () => {
+  senseObservador();
+  ambAmplada(820);
+  const { container } = render(closcaEsquerra({ railEsquerra: true }));
+  const s = shell(container);
+  expect([s.dataset.layout, s.dataset.panell, s.dataset.esquerra]).toEqual(['mitja', '', 'rail']);
+  expect(tancada(navegacio(container))).toEqual([false, null]);
+  expect(navegacio(container).dataset.obert).toBe('true');
+  expect(esquerra(container)).toMatchObject({ amb: 'true', en: 'true' });
+
+  fireEvent.click(boto(container, 'Menú'));
+  expect([s.dataset.panell, s.dataset.esquerra]).toEqual(['left', 'rail']);
+  expect(tancada(navegacio(container))).toEqual([false, null]);
+  /* Desplegada, el panell: ja no es pinta en rail. */
+  expect(esquerra(container)).toMatchObject({ amb: 'true', en: 'false' });
+
+  fireEvent.click(boto(container, 'Tanca el menú'));
+  expect(s.dataset.panell).toBe('');
+  expect(tancada(navegacio(container))).toEqual([false, null]);
+  expect(esquerra(container)).toMatchObject({ amb: 'true', en: 'true' });
+});
+
+test('Barres · a 375 i a 1400 railEsquerra no hi fa res: cap data-esquerra i el contracte de sempre', () => {
+  senseObservador();
+  for (const [amplada, mida, tancadaNav] of [[375, 'estret', [true, 'true']], [1400, 'ample', [false, null]]]) {
+    ambAmplada(amplada);
+    const { container } = render(closcaEsquerra({ railEsquerra: true }));
+    expect(shell(container).dataset.layout).toBe(mida);
+    expect(shell(container).hasAttribute('data-esquerra'), `${amplada}`).toBe(false);
+    expect(tancada(navegacio(container)), `${amplada}`).toEqual(tancadaNav);
+    expect(esquerra(container)).toMatchObject({ amb: 'false', en: 'false' });
+    cleanup();
+  }
+});
+
+test('Barres · sense railEsquerra, el DOM de 820 és el d’abans: la navegació amagada i inert, sense data-esquerra', () => {
+  senseObservador();
+  ambAmplada(820);
+  const sense = render(closcaEsquerra()).container.innerHTML;
+  cleanup();
+  const { container } = render(closcaEsquerra({ railEsquerra: false }));
+  expect(container.innerHTML).toBe(sense);
+  expect(shell(container).hasAttribute('data-esquerra')).toBe(false);
+  expect(tancada(navegacio(container))).toEqual([true, 'true']);
+  expect(esquerra(container)).toMatchObject({ amb: 'false', en: 'false' });
+});
+
+test('Barres · la guarda del focus usa la mateixa regla: tancar el panell amb el focus al rail no el mou a l’obridor', () => {
+  senseObservador();
+  ambAmplada(820);
+  const { container } = render(closcaEsquerra({ railEsquerra: true, initialPane: 'left' }));
+  expect(shell(container).dataset.panell).toBe('left');
+  const tanca = within(navegacio(container)).getByRole('button', { name: 'Tanca el menú' });
+  tanca.focus();
+  fireEvent.click(tanca);
+  expect(shell(container).dataset.panell).toBe('');
+  /* El rail no és cap columna tancada: el focus es queda on era. Sense
+     l'opció a la guarda, se n'anava a l'obridor «Menú» de la llista. */
+  expect(document.activeElement).toBe(tanca);
+});
+
+test('Barres · el separador i el redimensionament compten el rail fix en mitjà', () => {
+  senseObservador();
+  const separador = (c) => c.querySelector('.app-grid-resizer--middle');
+  /* 760: sense rail, la llista visible és min(420, 760 - 320) = 420; amb el
+     rail, min(420, 760 - 320 - 56) = 384. */
+  ambAmplada(760);
+  const sense = render(closcaEsquerra());
+  expect(separador(sense.container).getAttribute('aria-valuenow')).toBe('420');
+  cleanup();
+  const amb = render(closcaEsquerra({ railEsquerra: true }));
+  expect(separador(amb.container).getAttribute('aria-valuenow')).toBe(String(760 - PUNTS_DE_TALL.detall - PUNTS_DE_TALL.plegada));
+  cleanup();
+  /* 820, tecla Fi: el màxim de la llista deixa el detall i el rail.
+     Correcció dels verificadors (261004) · aria-valuenow és
+     middleVisibleWidth, que ja resta el rail: valdria 444 encara que
+     resizeColumn desara 500. Es comprova també l'amplària DESADA (la
+     variable de la pàgina), que és la que després mou el tall d'«ample». */
+  const desada = (c) => c.querySelector('.app-grid-page').style.getPropertyValue('--app-grid-col-list');
+  ambAmplada(820);
+  const ambFi = render(closcaEsquerra({ railEsquerra: true }));
+  fireEvent.keyDown(separador(ambFi.container), { key: 'End' });
+  expect(separador(ambFi.container).getAttribute('aria-valuenow')).toBe(String(820 - PUNTS_DE_TALL.detall - PUNTS_DE_TALL.plegada));
+  expect(desada(ambFi.container)).toBe(`${820 - PUNTS_DE_TALL.detall - PUNTS_DE_TALL.plegada}px`);
+  cleanup();
+  const senseFi = render(closcaEsquerra());
+  fireEvent.keyDown(separador(senseFi.container), { key: 'End' });
+  expect(separador(senseFi.container).getAttribute('aria-valuenow')).toBe(String(820 - PUNTS_DE_TALL.detall));
+  expect(desada(senseFi.container)).toBe(`${820 - PUNTS_DE_TALL.detall}px`);
+});
+
 /* ═══ La regla CSS (jsdom no pinta: es llig el full) ═══════════════════ */
 const css = readFileSync(resolve(process.cwd(), 'src/components/layout/AppGridShell.css'), 'utf8')
   .replace(/\/\*[\s\S]*?\*\//g, '').replace(/\s+/g, ' ');
@@ -244,4 +366,36 @@ test('P6 · CSS: el rail és --app-grid-col-collapsed i el detall, la resta; tot
   }
   /* El rail no escriu cap xifra pròpia (graella.capes.test.js en vigila la font). */
   expect(css.split(`${PUNTS_DE_TALL.plegada}px`).length - 1).toBe(1);
+});
+
+/* Barres (ordre del Mestre, 261004) · Les tres regles del rail fix de la
+   navegació en «mitja»: el coixí de la graella (no una pista nova), la
+   columna en rail i el panell desplegat amb l'ombra de token. Només
+   variables: cap xifra nova, i el mínim del detall continua sent el calc i
+   el minmax de sempre, que el coixí no toca. */
+test('Barres · CSS: el rail de la navegació viu en el coixí de «mitja», amb només variables, i tot penja de data-esquerra="rail"', () => {
+  const sel = '\\.app-grid-shell\\[data-layout="mitja"\\]\\[data-esquerra="rail"\\]';
+  expect(css).toMatch(new RegExp(`${sel} \\.app-grid-content \\{ padding-inline-start: var\\(--app-grid-col-collapsed\\); \\}`));
+  expect(css).toMatch(new RegExp(`${sel} \\.app-grid-column--left \\{ width: var\\(--app-grid-col-collapsed\\); transform: none; box-shadow: none; \\}`));
+  expect(css).toMatch(new RegExp(`${sel}\\[data-panell="left"\\] \\.app-grid-column--left \\{ width: var\\(--app-grid-col-sidebar\\); box-shadow: var\\(--sdp-ombra-3\\); \\}`));
+  /* El detall de «mitja» conserva el seu mínim: les pistes de sempre. */
+  expect(css).toContain(`min(var(--app-grid-col-list-live, var(--app-grid-col-list)), calc(100% - ${PUNTS_DE_TALL.detall}px))`);
+  expect(css).toContain(`minmax(${PUNTS_DE_TALL.detall}px, 1fr)`);
+  /* Cap regla amb data-esquerra fora de «mitja», i cap pista nova. */
+  const regles = [...css.matchAll(/([^{}]+)\{([^}]*)\}/g)].map(([, selector, cos]) => [selector.trim(), cos]);
+  const ambEsquerra = regles.filter(([selector]) => selector.includes('data-esquerra'));
+  expect(ambEsquerra.length).toBe(3);
+  for (const [selector, cos] of ambEsquerra) {
+    expect(selector).toContain('[data-layout="mitja"][data-esquerra="rail"]');
+    expect(cos).not.toContain('grid-template-columns');
+    expect(cos).not.toMatch(/\d+px/);
+  }
+  /* Els recomptes de graella.capes.test.js: 56px una vegada i 320px dues. */
+  expect(css.split(`${PUNTS_DE_TALL.plegada}px`).length - 1).toBe(1);
+  expect(css.split(`${PUNTS_DE_TALL.detall}px`).length - 1).toBe(2);
+  /* La closca no s'escurça per baix: la reserva de la barra mòbil va als
+     scrollers del Workspace (modules.css), no a .app-grid-page. */
+  const pagina = regles.filter(([selector]) => /(^|,\s*)\.app-grid-page\s*$/.test(selector)).map(([, cos]) => cos).join(' ');
+  expect(pagina).toContain('inset: 0;');
+  expect(pagina).not.toMatch(/(^|[\s;])bottom:/);
 });

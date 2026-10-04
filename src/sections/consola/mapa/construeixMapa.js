@@ -16,6 +16,9 @@
  */
 
 import { ESQUEMA_MAPA } from './contracteMapa.js';
+// Ordre del Mestre, 261004 (xat: cap xifra solta) · les evidències també concorden («1 segell fòssil»),
+// i «de» davant d'una xifra s'apostrofa quan toca («1 d’1 torn», verificador de la tercera passada, punt 3).
+import { concorda, de, plural } from '../concordanca.js';
 
 /** Ordre que reproduïx el mapa: tota mètrica calculada ací cita esta prova. */
 export const PROVA_MAPA = 'node tooling/brain/mapa-consola.mjs --json';
@@ -137,9 +140,27 @@ export function construeixMapa(fonts = {}, { existeix = null, ara = null } = {})
     const clau = `${de}|${a}|${tipus}|${confianca}`;
     if (!arestes.has(clau)) arestes.set(clau, { de, a, tipus, confianca, evidencia });
   };
+  /* Ordre del Mestre, 261004 (cap anomalia sense mostrar) · Un avís per node
+     i codi, com sempre, però sense perdre el detall: si el mateix node i codi
+     torna amb una altra evidència (tres recaigudes de la mateixa skill, dues
+     crides a skills que no existixen, els torns caducats un a un),
+     `evidencies` les porta totes, en ordre i sense repetir, i `evidencia`
+     continua sent la primera. El recompte d'avisos no canvia: ni les cobertes
+     del tauler ni les signatures de «Canvis nous». */
   const avis = (nodeId, codi, severitat, evidencia) => {
     const clau = `${nodeId}|${codi}`;
-    if (!avisos.has(clau)) avisos.set(clau, { node: nodeId, codi, severitat, evidencia });
+    const previ = avisos.get(clau);
+    if (!previ) {
+      avisos.set(clau, { node: nodeId, codi, severitat, evidencia });
+      return;
+    }
+    if (typeof evidencia !== 'string' || !evidencia) return;
+    if (!previ.evidencia) {
+      previ.evidencia = evidencia;
+      return;
+    }
+    const totes = previ.evidencies ?? [previ.evidencia];
+    if (!totes.includes(evidencia)) previ.evidencies = [...totes, evidencia];
   };
   const comprovaScript = (ruta, evidencia) => {
     if (existeix && !existeix(ruta)) avis(`script:${ruta}`, 'script-absent', 'alta', evidencia);
@@ -644,7 +665,7 @@ export function construeixMapa(fonts = {}, { existeix = null, ara = null } = {})
       const segell = nodeRuta('.agents/SKILLS_SEAL.json');
       // L'evidència porta només dades: la frase de l'avís és TEXTOS_AVIS
       // (grafMapa.js), i l'alerta del tauler les pinta juntes.
-      avis(segell.id, 'segell-trencat', 'alta', `${rutes.size - coherents} de ${rutes.size} skills fora del segell o divergents · mesura de només SKILL.md; el segell sencer, amb 00_INDEX_SKILLS.md: node tooling/gates/segella.mjs`);
+      avis(segell.id, 'segell-trencat', 'alta', `${rutes.size - coherents} ${de(rutes.size, plural(rutes.size, 'skill', 'skills'))} fora del segell o ${concorda(rutes.size - coherents, 'divergent', 'divergents')} · mesura de només SKILL.md; el segell sencer, amb 00_INDEX_SKILLS.md: node tooling/gates/segella.mjs`);
     }
   } else salut.push(metrica('segell-skills-coherent', { font: FONT_SEGELL }));
 
@@ -683,7 +704,17 @@ export function construeixMapa(fonts = {}, { existeix = null, ara = null } = {})
     : { font: FONT_TORNS }));
   if (caducats) {
     const carpeta = nodeRuta(FONT_TORNS);
-    avis(carpeta.id, 'torns-caducats', 'mitjana', `${caducats} de ${torns.length} torns caducats sense tancar`);
+    avis(carpeta.id, 'torns-caducats', 'mitjana', `${caducats} ${de(torns.length, plural(torns.length, 'torn caducat', 'torns caducats'))} sense tancar`);
+    /* Ordre del Mestre, 261004 · I quins són, un per evidència: el que va
+       caducar abans, primer; els que no porten caducitat llegible, al final. */
+    const expira = (t) => { const x = Date.parse(t?.expiresAt); return Number.isFinite(x) ? x : Infinity; };
+    const llista = torns.filter(caducat)
+      .sort((x, y) => expira(x) - expira(y) || String(x?.id ?? '').localeCompare(String(y?.id ?? '')));
+    for (const t of llista) {
+      const quan = Number.isFinite(expira(t)) ? `caducat el ${t.expiresAt}` : 'sense caducitat llegible';
+      avis(carpeta.id, 'torns-caducats', 'mitjana',
+        [t?.id ?? 'torn sense id', t?.actor, t?.state ?? 'sense estat', quan].filter(Boolean).join(' · '));
+    }
   }
 
   const escriptori = fonts.escriptori && typeof fonts.escriptori === 'object' ? fonts.escriptori : null;
@@ -709,13 +740,19 @@ export function construeixMapa(fonts = {}, { existeix = null, ara = null } = {})
       font: `${CARPETA_ESCRIPTORI} · safata d’entrada (AGENTS.md §12)`,
       prova: PROVA_MAPA
     } : { font: `${CARPETA_ESCRIPTORI} · safata d’entrada (AGENTS.md §12)` }));
+  /* Ordre del Mestre, 261004 · El document ancorat però sense rebut tampoc
+     s'escapa: abans només en quedava la fracció (escriptori-amb-rebut). */
   for (const d of documentsEscriptori || []) {
-    if (d.ancorat !== false) continue;
+    if (d.ancorat !== false && d.ambRebut !== false) continue;
     const nomDoc = d.nom.trim();
     const ruta = nomDoc.startsWith(`${CARPETA_ESCRIPTORI}/`) ? nomDoc : `${CARPETA_ESCRIPTORI}/${nomDoc}`;
     const doc = nodeRuta(ruta);
-    avis(doc.id, 'escriptori-sense-ancora', 'baixa',
-      `sense enllaç a 00_index_escriptori.md${d.ambRebut === false ? ' ni rebut de cap torn' : ''}`);
+    if (d.ancorat === false) {
+      avis(doc.id, 'escriptori-sense-ancora', 'baixa',
+        `sense enllaç a 00_index_escriptori.md${d.ambRebut === false ? ' ni rebut de cap torn' : ''}`);
+    } else {
+      avis(doc.id, 'escriptori-sense-rebut', 'baixa', `cap torn de ${FONT_TORNS} en porta el rebut`);
+    }
   }
 
   const ledger = fonts.ledger && typeof fonts.ledger === 'object' ? fonts.ledger : null;
@@ -737,12 +774,23 @@ export function construeixMapa(fonts = {}, { existeix = null, ara = null } = {})
   salut.push(metrica('integritat-ledger', typeof ledger?.valid === 'boolean' ? {
     numerador: ledger.valid ? 1 : 0, denominador: 1, font: '.agents/LEDGER.md', prova: PROVA_LEDGER
   } : { font: '.agents/LEDGER.md' }));
+  /* Ordre del Mestre, 261004 · Els fòssils i les línies mal formades tenen
+     mètrica pròpia, amb valor també quan la signatura és vàlida: abans només
+     eixien dins de l'evidència de 'ledger-invalid'. Quines línies són ho sap
+     només la closca (petició a tooling/: analitzaLedger no en guarda els
+     números). */
+  const recompteLedger = (nom, camp, unitat) => salut.push(metrica(nom,
+    Number.isInteger(ledger?.[camp]) && ledger[camp] >= 0
+      ? { valor: ledger[camp], unitat, font: '.agents/LEDGER.md', prova: PROVA_MAPA }
+      : { unitat, font: '.agents/LEDGER.md' }));
+  recompteLedger('ledger-fossils', 'fossils', 'segells fòssils');
+  recompteLedger('ledger-mal-formades', 'malformades', 'línies mal formades');
   if (ledger?.valid === false) {
     const doc = nodeRuta('.agents/LEDGER.md');
     const detall = [
       'signatura del LEDGER no vàlida',
-      Number.isInteger(ledger.fossils) ? `${ledger.fossils} segells fòssils` : null,
-      Number.isInteger(ledger.malformades) ? `${ledger.malformades} línies mal formades` : null
+      Number.isInteger(ledger.fossils) ? plural(ledger.fossils, 'segell fòssil', 'segells fòssils') : null,
+      Number.isInteger(ledger.malformades) ? plural(ledger.malformades, 'línia mal formada', 'línies mal formades') : null
     ].filter(Boolean);
     avis(doc.id, 'ledger-invalid', 'alta', [...detall, PROVA_LEDGER].join(' · '));
   }

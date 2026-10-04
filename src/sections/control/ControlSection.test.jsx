@@ -140,7 +140,9 @@ test('D3 · la taula de rutes d’App té les rutes que el Panell necessita i no
    P5 (Onada 4, 261003) · Les targetes de dalt ja no són un enllaç sencer:
    naveguen les seues portes obertes (a.sp-card-porta), l'autor de la boina
    (el xat de socdepoble) i la pastilla de la data (el Calendari). Una porta
-   pot portar a la pàgina de la targeta (/page/<clau>, PageDetailSection). */
+   pot portar a la pàgina de la targeta (/page/<clau>, PageDetailSection).
+   Derogat per l'ordre del Mestre del 261004 (prompt 261004_0515, T6): l'autor
+   de la boina porta a la pàgina del projecte (/projecte), no al xat. */
 test('D3 · cap targeta ni botó del Panell navega a una ruta que no és a la taula d’App', () => {
   const clicables = () => [
     ...document.querySelectorAll('button.sp-card-link-overlay, a.sp-card-porta, a.sp-card-author-link, button.btn-date-time'),
@@ -159,7 +161,8 @@ test('D3 · cap targeta ni botó del Panell navega a una ruta que no és a la ta
     destins.push([esPorta, ubicacio()]);
   }
   /* P5 · Cada porta oberta porta a un lloc distint (abans, Mur i Agenda
-     portaven tots dos a /mur). Les boines porten totes al mateix xat.
+     portaven tots dos a /mur). Les boines porten totes al mateix lloc (T6,
+     261004: el projecte).
      W4-08 · Huit targetes: Publicar al Mur i els huit Saber-ne més. */
   const deLesPortes = destins.filter(([esPorta]) => esPorta).map(([, desti]) => desti);
   expect(deLesPortes).toHaveLength(DESTINS_CONTROL.length + 1);
@@ -245,10 +248,13 @@ test('D3 · «Missatges per a dubtes» obri el Xat (/xat), no un fil inexistent'
    targeta es busca sempre dins d'estes seccions.
    W4-08 · Decisió del Mestre (Acta 261004_0206, §4) · Mapa, Vehicle Compartit
    i Animalets viuen NOMÉS dalt, com a targetes de publicació: cap plugin amb
-   targeta dalt (DESTINS_CONTROL) es repetix baix. */
-const SECCIONS_DUTILITATS = ['Utilitats i Connectors (Plugins)', 'Maquinària i Sistema'];
+   targeta dalt (DESTINS_CONTROL) es repetix baix.
+   Onada 2 de la Gestoria (261004; MAPA §2.2) · Els dos espais nous, «L’empresa»
+   i «La llar», també són graelles del registre: van davant de les Utilitats,
+   en l'ordre del DOM. ControlSection.espais.test.jsx en prova la separació. */
+const SECCIONS_DUTILITATS = ['L’empresa', 'La llar', 'Utilitats i Connectors (Plugins)', 'Maquinària i Sistema'];
 const seccioDe = (nom) => screen.queryByRole('heading', { level: 2, name: nom })?.closest('section') ?? null;
-const seccioDUtilitats = () => seccioDe(SECCIONS_DUTILITATS[0]);
+const seccioDUtilitats = () => seccioDe('Utilitats i Connectors (Plugins)');
 const targetesDe = (seccio) => (seccio ? [...seccio.querySelectorAll('.sdp-card-grid > article.sp-card')] : []);
 const targetesDUtilitats = () => SECCIONS_DUTILITATS.flatMap((nom) => targetesDe(seccioDe(nom)));
 const titolDeTargeta = (targeta) => targeta.querySelector('.sp-card-title').textContent;
@@ -288,12 +294,14 @@ test('P7-B · W4-08 · el registre sense les de dalt es veu una vegada, en l’o
     expect(targeta.className, titol).toBe('sp-card');
     expect(targeta.querySelector('.sp-card-labels'), titol).toBeNull();
     expect(targeta.querySelector('.sp-card-portes'), titol).toBeNull();
-    /* La boina de Sóc de Poble, dalt de tot i sense data (el registre no en porta). */
+    /* La boina de Sóc de Poble, dalt de tot i sense data (el registre no en porta).
+       Derogat per l'ordre del Mestre del 261004 (prompt 261004_0515, T6):
+       l'autor porta a la pàgina del projecte, no al xat corporatiu. */
     const capcal = targeta.querySelector('header.sp-card-header');
     expect(targeta.firstElementChild, titol).toBe(capcal);
     expect(capcal.querySelector('.sp-card-author-name').textContent, titol).toBe(AUTORIA_SOCDEPOBLE.author);
     expect(capcal.querySelector('.sp-card-author-location').textContent, titol).toBe(AUTORIA_SOCDEPOBLE.location);
-    expect(capcal.querySelector('a.sp-card-author-link').getAttribute('href'), titol).toBe('/xat?amb=socdepoble');
+    expect(capcal.querySelector('a.sp-card-author-link').getAttribute('href'), titol).toBe('/projecte');
     expect(capcal.querySelector('.btn-date-time'), titol).toBeNull();
     /* L'enllaç de tota la targeta, amb el nom del títol. */
     const enllac = targeta.querySelector('a.sp-card-link-overlay');
@@ -348,8 +356,11 @@ test('P7-B · cada targeta obri /plugin/<id> pel router; amb base, l’href la p
 /* El peu va a la mateixa pàgina que obri la targeta: Compartir en comparteix
    l'adreça (mai /control a seques), Comentar avisa que /plugin/<id> encara
    no té xat comú (PAGINES_AMB_XAT, com les pàgines de dalt) i Traduir porta
-   al traductor de les targetes. */
-test('P7-B · el peu de cada utilitat: Compartir, la seua pàgina; Comentar avisa i es queda; Traduir, el de les targetes', async () => {
+   al traductor de les targetes.
+   Derogat per l'ordre del Mestre del 261004 (prompt 261004_0515, T6), per a
+   Comentar: és el missatge directe a l'autor, el xat corporatiu (la prova
+   següent). Compartir i Traduir no canvien. */
+test('P7-B · el peu de cada utilitat: Compartir, la seua pàgina; Traduir, el de les targetes', async () => {
   const share = vi.fn().mockResolvedValue(undefined);
   Object.defineProperty(navigator, 'share', { value: share, configurable: true });
   try {
@@ -357,9 +368,6 @@ test('P7-B · el peu de cada utilitat: Compartir, la seua pàgina; Comentar avis
     const targetes = targetesDUtilitats();
     for (let index = 0; index < targetes.length; index += 1) {
       const titol = titolDeTargeta(targetes[index]);
-      estat.toast.mockClear();
-      fireEvent.click(within(targetes[index]).getByRole('button', { name: `Comentar ${titol}` }));
-      expect(estat.toast, titol).toHaveBeenCalledWith(AVIS_SENSE_XAT);
       fireEvent.click(within(targetes[index]).getByRole('button', { name: `Compartir ${titol}` }));
       await waitFor(() => expect(share).toHaveBeenCalledTimes(index + 1));
       const [{ title, url }] = share.mock.calls[index];
@@ -373,6 +381,25 @@ test('P7-B · el peu de cada utilitat: Compartir, la seua pàgina; Comentar avis
   }
 });
 
+/* T6 (ordre del Mestre, 261004, prompt 261004_0515 §5) · Comentar de cada
+   utilitat (i del Snippet) és el missatge directe a l'autor, Sóc de Poble:
+   el xat corporatiu (en seed, el de la llavor). Mai l'avís de xat comú. */
+test('T6 · Comentar de cada utilitat obri el xat corporatiu de Sóc de Poble', () => {
+  pinta();
+  const total = targetesDUtilitats().length;
+  expect(total).toBeGreaterThan(1);
+  for (let index = 0; index < total; index += 1) {
+    cleanup();
+    estat.toast.mockClear();
+    pinta();
+    const targeta = targetesDUtilitats()[index];
+    const titol = titolDeTargeta(targeta);
+    fireEvent.click(within(targeta).getByRole('button', { name: `Comentar ${titol}` }));
+    expect(ubicacio(), titol).toBe('/xat?amb=socdepoble');
+    expect(estat.toast, titol).not.toHaveBeenCalledWith(AVIS_SENSE_XAT);
+  }
+}, 30_000);
+
 /* W4-08 · Decisió del Mestre (Acta 261004_0206, §4), que substituïx la doble
    presència del prompt 261004_0015 §3: Mapa, Vehicle Compartit i Animalets
    viuen NOMÉS dalt, com a targetes de publicació (W4-04, posicions 4, 5 i 6).
@@ -381,7 +408,7 @@ test('P7-B · el peu de cada utilitat: Compartir, la seua pàgina; Comentar avis
 test('P7-B · W4-08 · Mapa, Vehicle Compartit i Animalets només dalt: cap targeta ni enllaç d’eina a les graelles de baix', () => {
   pinta();
   expect(targetesDeDalt().slice(3, 6).map(titolDe)).toEqual(['Publicar al Mapa', 'Vehicle Compartit', 'Animalets']);
-  const deBaix = [seccioDUtilitats(), seccioDe(SECCIONS_DUTILITATS[1])];
+  const deBaix = SECCIONS_DUTILITATS.map(seccioDe);
   expect(deBaix.every(Boolean)).toBe(true);
   for (const [titol, id] of NOMES_DALT) {
     expect(IDS_PLUGINS, id).toContain(id);
@@ -596,8 +623,11 @@ test('P5 · W4-08 · huit targetes estàndard en ordre, a la graella de sempre a
 /* Directriu 2234, punt 3 · La boina és l'entitat socdepoble, no la IAIA:
    l'autor (tret de la data i l'hora) obri el seu xat corporatiu.
    P6 (directriu 2325, confirmació 2) · Exactament la boina del Mur: autor,
-   lloc i data i hora, dalt de tot. En seed, el xat de la llavor. */
-test('P5 · la boina de cada targeta és socdepoble: l’autor obri el seu xat i la data, el Calendari', () => {
+   lloc i data i hora, dalt de tot. En seed, el xat de la llavor.
+   Derogat per l'ordre del Mestre del 261004 (prompt 261004_0515, T6, deroga
+   W4-09/2234 per a la boina): l'autor porta SEMPRE a la seua pàgina, la del
+   projecte (/projecte). El xat corporatiu és ara Comentar del peu. */
+test('P5 · T6 · la boina de cada targeta és socdepoble: l’autor obri la pàgina del projecte i la data, el Calendari', () => {
   pinta();
   for (const [index, targeta] of targetesDeDalt().entries()) {
     const capcal = targeta.querySelector('header.sp-card-header');
@@ -605,12 +635,12 @@ test('P5 · la boina de cada targeta és socdepoble: l’autor obri el seu xat i
     expect(capcal.querySelector('.sp-card-author-location').textContent, titolDe(targeta)).toBe('La Torre de les Maçanes');
     expect([...capcal.querySelectorAll('.btn-date-time span')].map((s) => s.textContent), titolDe(targeta)).toEqual(DATES_DALT[index]);
     expect(capcal.querySelector('.sp-card-author-name').textContent, titolDe(targeta)).toBe('Sóc de Poble');
-    expect(capcal.querySelector('a.sp-card-author-link').getAttribute('href'), titolDe(targeta)).toBe('/xat?amb=socdepoble');
+    expect(capcal.querySelector('a.sp-card-author-link').getAttribute('href'), titolDe(targeta)).toBe('/projecte');
     expect(capcal.textContent, titolDe(targeta)).not.toMatch(/IAIA|MarIA/);
     expect(capcal.querySelector('.sp-card-meta button.btn-date-time').closest('a'), titolDe(targeta)).toBeNull();
   }
   fireEvent.click(targetesDeDalt()[3].querySelector('a.sp-card-author-link'));
-  expect(ubicacio()).toBe('/xat?amb=socdepoble');
+  expect(ubicacio()).toBe('/projecte');
   cleanup();
   pinta();
   fireEvent.click(targetesDeDalt()[0].querySelector('button.btn-date-time'));
@@ -619,8 +649,13 @@ test('P5 · la boina de cada targeta és socdepoble: l’autor obri el seu xat i
 
 /* W4-08 · Totes porten il·lustració (el Mapa ja té la seua vinyeta): les Nano
    de Mur, Mercat i Calendari i la vinyeta del plugin de la resta. Cap targeta
-   pinta la icona a la insígnia lateral. */
-test('P5 · W4-08 · la imatge és la il·lustració de cada targeta, decorativa; cap targeta porta icona a la insígnia lateral', () => {
+   pinta la icona a la insígnia lateral.
+   Derogat per l'ordre del Mestre del 261004 (prompt 261004_0515, T8,
+   «imatges fantasma»): la imatge és la capçalera (hero) de la pàgina de cada
+   targeta, amb el seu text alternatiu (PAGE_COPY image i imageAlt). Vehicle
+   Compartit porta el SEAT 600 de la seua pàgina, no «El Titi»; Animalets, la
+   seua Nano. Ja no és decorativa: diu el mateix que el hero. */
+test('P5 · T8 · la imatge de cada targeta és el hero de la seua pàgina, amb el seu alt; cap targeta porta icona a la insígnia lateral', () => {
   pinta();
   const targetes = targetesDeDalt();
   const esperades = [
@@ -628,16 +663,32 @@ test('P5 · W4-08 · la imatge és la il·lustració de cada targeta, decorativa
     ['mercat', '/assets/nano_cards/mercat_nano_card.jpg'],
     ['calendari', '/assets/nano_cards/calendari_nano_card.jpg'],
     ['mapa', '/assets/ui/plugins/mapa_vinyeta.jpg'],
-    ['vehicle', '/assets/ui/plugins/vehicle_vinyeta.jpg'],
-    ['animalets', '/assets/ui/plugins/animalets_vinyeta.jpg'],
+    ['vehicle', '/assets/nano_cards/vehicle_nano_card.jpg'],
+    ['animalets', '/assets/nano_cards/animalets_nano_card.jpg'],
     ['treball', '/assets/ui/plugins/treball_vinyeta.jpg'],
     ['habitatge', '/assets/ui/plugins/habitatge_vinyeta.jpg']
   ];
   expect(targetes).toHaveLength(esperades.length);
   for (const [index, [id, src]] of esperades.entries()) {
+    const pagina = PAGE_COPY[PAGINES[index]];
     const imatge = targetes[index].querySelector('img.sp-card-media');
-    expect([id, imatge.getAttribute('src'), imatge.getAttribute('alt')]).toEqual([id, src, '']);
+    /* Targeta == hero: la mateixa imatge i el mateix alt que la pàgina. */
+    expect([id, imatge.getAttribute('src'), imatge.getAttribute('alt')]).toEqual([id, src, pagina.imageAlt]);
+    expect([id, src]).toEqual([id, pagina.image]);
     expect(targetes[index].querySelector('.sp-card-calendar-badge svg.lucide-map-pin'), id).toBeNull();
+  }
+  /* «El Titi» (la vinyeta del plugin Vehicle) ja no és a cap targeta de dalt. */
+  expect(targetes.some((targeta) => targeta.innerHTML.includes('vehicle_vinyeta'))).toBe(false);
+});
+
+/* T8 · L'anatomia de la targeta (D-B, 261004): boina dalt de tot, després la
+   imatge, el cos i el peu. Mesurat al DOM de cada targeta del Panell. */
+test('T8 · D-B · cada targeta de dalt: boina → imatge → cos → peu', () => {
+  pinta();
+  for (const targeta of targetesDeDalt()) {
+    expect([titolDe(targeta), [...targeta.children].map((fill) => fill.className)]).toEqual([
+      titolDe(targeta), ['sp-card-header', 'sp-card-media-container', 'sp-card-body', 'sp-card-footer']
+    ]);
   }
 });
 
@@ -738,7 +789,9 @@ test('P5 · en anglés, les portes es tradueixen i porten al mateix lloc; el con
    useAccions només encén el peu per defecte amb hasFooter === true: el Panell
    el passa, amb la pàgina de la targeta (/page/<clau>, la de «Saber-ne més»)
    com a mainHref i com a objecte de Comentar, i sense Connectar. Es prova el
-   resultat del clic de cada acció, no només que hi siga. */
+   resultat del clic de cada acció, no només que hi siga.
+   T6 (261004) · Comentar ja no és el de l'objecte de la pàgina: és el xat
+   corporatiu (vegeu la prova de Comentar). */
 const PAGINA_DE = (index) => `/page/${PAGINES[index]}`;
 const accioDe = (targeta, verb) => within(targeta).getByRole('button', { name: `${verb} ${titolDe(targeta)}` });
 
@@ -754,15 +807,21 @@ test('P6 · Traduir de cada targeta porta al traductor de les targetes, com al M
 /* La pàgina /page/<clau> encara no és a la llista tancada de pàgines amb xat
    comú (PAGINES_AMB_XAT, data/contracte.js, pendent del Mestre): Comentar de
    la targeta ho diu i no navega. Abans, sense objecte ni pàgina, cap
-   targeta del Panell sabia de quina pàgina era. Mai el xat de /control. */
-test('P6 · Comentar va a l’objecte de la pàgina de la targeta: sense xat comú, avisa i es queda', () => {
-  pinta();
-  targetesDeDalt().forEach((targeta) => {
+   targeta del Panell sabia de quina pàgina era. Mai el xat de /control.
+   Derogat per l'ordre del Mestre del 261004 (prompt 261004_0515, T6):
+   Comentar és el missatge directe a l'autor (skill sdp-universal-page), i
+   l'autor de les targetes del Panell és Sóc de Poble: el xat corporatiu (en
+   seed, el de la llavor). Mai el xat de /control ni l'avís de xat comú. */
+test('P6 · T6 · Comentar de cada targeta de dalt obri el xat corporatiu de Sóc de Poble', () => {
+  for (let index = 0; index < DESTINS_CONTROL.length; index += 1) {
     estat.toast.mockClear();
+    pinta();
+    const targeta = targetesDeDalt()[index];
     fireEvent.click(accioDe(targeta, 'Comentar'));
-    expect(estat.toast, titolDe(targeta)).toHaveBeenCalledWith(AVIS_SENSE_XAT);
-    expect(ubicacio(), titolDe(targeta)).toBe('/control');
-  });
+    expect(ubicacio(), titolDe(targeta)).toBe('/xat?amb=socdepoble');
+    expect(estat.toast, titolDe(targeta)).not.toHaveBeenCalledWith(AVIS_SENSE_XAT);
+    cleanup();
+  }
 });
 
 test('P6 · Compartir comparteix l’adreça de la pàgina de la targeta (Saber-ne més), mai /control', async () => {
@@ -850,34 +909,72 @@ test('W4-11 · cap utilitat porta directament al destí d’«Obrir»: el Panell
 
 /* W4-09 · En remot, l'autor porta a l'entitat resolta pel port (UUID); sense
    resoldre no hi ha enllaç (cap RPC amb el slug) i el Panell ho diu.
-   xatCorporatiu.test.jsx en prova la resolució; ací, el cablejat. */
-test('W4-09 · remot resolt: totes les boines porten al xat de l’entitat real, sense avís', () => {
+   xatCorporatiu.test.jsx en prova la resolució; ací, el cablejat.
+   Derogat per l'ordre del Mestre del 261004 (prompt 261004_0515, T6, deroga
+   W4-09/2234 per a la boina): la boina porta SEMPRE al projecte, es resolga
+   o no el xat. El xat resolt és el de Comentar; sense resoldre, Comentar
+   avisa (avisDelXatCorporatiu) i l'Alerta del Panell es conserva. */
+const BOINES_AL_PROJECTE = () => [...targetesDeDalt(), ...targetesDUtilitats()]
+  .map((targeta) => targeta.querySelector('a.sp-card-author-link')?.getAttribute('href'));
+
+test('W4-09 · T6 · remot resolt: Comentar porta al xat de l’entitat real; la boina, al projecte; sense avís', () => {
   const href = '/xat?amb=7d1f4c2e-9a3b-4c5d-8e6f-0a1b2c3d4e5f';
   estat.xat = { estat: 'remot', href };
   pinta();
-  expect(targetesDeDalt().map((targeta) => targeta.querySelector('a.sp-card-author-link')?.getAttribute('href'))).toEqual(Array(DESTINS_CONTROL.length).fill(href));
+  const boines = BOINES_AL_PROJECTE();
+  expect(boines.length).toBeGreaterThan(DESTINS_CONTROL.length);
+  expect(boines).toEqual(Array(boines.length).fill('/projecte'));
   expect(screen.queryByText(/Xat de Sóc de Poble/)).toBeNull();
-  fireEvent.click(targetesDeDalt()[0].querySelector('a.sp-card-author-link'));
+  fireEvent.click(accioDe(targetesDeDalt()[0], 'Comentar'));
   expect(ubicacio()).toBe(href);
+  cleanup();
+  pinta();
+  const utilitat = targetesDUtilitats()[0];
+  fireEvent.click(within(utilitat).getByRole('button', { name: `Comentar ${titolDeTargeta(utilitat)}` }));
+  expect(ubicacio()).toBe(href);
+  expect(estat.toast).not.toHaveBeenCalled();
 });
 
-test('W4-09 · remot sense entitat o amb error: cap enllaç d’autor i un avís honest; resolent, cap avís', () => {
+test('W4-09 · T6 · remot sense entitat o amb error: la boina continua al projecte, Comentar avisa i el Panell ho diu', () => {
   for (const xat of [{ estat: 'absent', href: null }, { estat: 'error', href: null }]) {
     estat.xat = xat;
+    estat.toast.mockClear();
     pinta();
+    const boines = BOINES_AL_PROJECTE();
+    expect(boines, xat.estat).toEqual(Array(boines.length).fill('/projecte'));
     for (const targeta of targetesDeDalt()) {
-      expect(targeta.querySelector('a.sp-card-author-link'), xat.estat).toBeNull();
       expect(targeta.querySelector('.sp-card-author-name').textContent).toBe('Sóc de Poble');
     }
     const avis = screen.getByText('Xat de Sóc de Poble: encara no disponible en este servidor.');
     expect(avis.closest('[role="status"]'), xat.estat).not.toBeNull();
     expect(document.querySelector('[href*="amb=socdepoble"]'), xat.estat).toBeNull();
+    fireEvent.click(accioDe(targetesDeDalt()[4], 'Comentar'));
+    expect(estat.toast, xat.estat).toHaveBeenLastCalledWith('Xat de Sóc de Poble: encara no disponible en este servidor.');
+    expect(ubicacio(), xat.estat).toBe('/control');
     cleanup();
   }
+});
+
+test('W4-09 · T6 · remot resolent: la boina al projecte, cap Alerta, i Comentar diu que encara es busca', () => {
   estat.xat = { estat: 'resolent', href: null };
   pinta();
-  expect(document.querySelectorAll('a.sp-card-author-link')).toHaveLength(0);
+  const boines = BOINES_AL_PROJECTE();
+  expect(boines).toEqual(Array(boines.length).fill('/projecte'));
   expect(screen.queryByText(/Xat de Sóc de Poble/)).toBeNull();
+  fireEvent.click(accioDe(targetesDeDalt()[0], 'Comentar'));
+  expect(estat.toast).toHaveBeenLastCalledWith('Xat de Sóc de Poble: encara s’està buscant en este servidor.');
+  expect(ubicacio()).toBe('/control');
+});
+
+/* En anglés, l'avís de Comentar i l'Alerta passen pel traductor (reserva en
+   valencià fins que el diccionari en porte la clau). */
+test('T6 · l’avís del xat corporatiu passa pel traductor amb la seua clau', () => {
+  const claus = [];
+  estat.traductor = (clau, reserva) => { claus.push(clau); return reserva; };
+  estat.xat = { estat: 'error', href: null };
+  pinta();
+  fireEvent.click(accioDe(targetesDeDalt()[0], 'Comentar'));
+  expect(claus).toContain('section.control.xatCorporatiu.noDisponible');
 });
 
 test('D3 · el títol de la pàgina és «Panell de Control», i la pestanya també a /control i a /utilitats', () => {

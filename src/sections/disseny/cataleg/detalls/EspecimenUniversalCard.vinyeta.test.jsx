@@ -6,8 +6,10 @@
  * obres sense il·lustració) i PortesTargeta sola. Les mostres d'abans no
  * canvien. El nom del fitxer és el de P5: este torn no pot moure fitxers.
  * P6 (directriu 2325) · Les mostres de portes porten el peu blau i cap
- * etiqueta; el preu va al quadrat. Muntat sol (sense UIProvider), l'autor
- * porta al xat de la llavor (xatCorporatiu.js).
+ * etiqueta; el preu va al quadrat.
+ * Derogat per l'ordre del Mestre del 261004 (prompt 261004_0515) · T6: la
+ * boina de socdepoble porta a la pàgina del projecte (/projecte), ja no al seu
+ * xat corporatiu (W4-09).
  */
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, expect, test } from 'vitest';
@@ -38,7 +40,8 @@ test('dues targetes de doble acció estàndard: boina de socdepoble, contingut d
   const [mur, mapa] = targetes;
   for (const [targeta, clau] of [[mur, 'publicar_mur'], [mapa, 'publicar_mapa']]) {
     expect(targeta.className).toBe('sp-card');
-    expect(targeta.querySelector('a.sp-card-author-link').getAttribute('href')).toBe('/xat?amb=socdepoble');
+    /* Derogat per l'ordre del Mestre del 261004 (prompt 261004_0515): abans '/xat?amb=socdepoble' (W4-09). */
+    expect(targeta.querySelector('a.sp-card-author-link').getAttribute('href')).toBe('/projecte');
     expect(within(targeta).getByRole('heading', { level: 3 }).textContent).toBe(PAGE_COPY[clau].title);
     expect(targeta.querySelector('p.sp-card-text').textContent).toBe(PAGE_COPY[clau].lead);
     expect(targeta.querySelector('.sp-card-body').lastElementChild.className).toBe('sp-card-portes');
@@ -46,7 +49,7 @@ test('dues targetes de doble acció estàndard: boina de socdepoble, contingut d
   }
   expect(mur.querySelector('img.sp-card-media').getAttribute('alt')).toBe('');
   expect(within(mur).getAllByRole('link').map((enllac) => enllac.getAttribute('href'))).toEqual([
-    '/xat?amb=socdepoble', '/notes', '/page/publicar_mur'
+    '/projecte', '/notes', '/page/publicar_mur'
   ]);
   expect(within(mapa).getByRole('button', { name: 'Publicar al Mapa (en obres)' }).getAttribute('aria-disabled')).toBe('true');
   expect(mapa.querySelector('.sp-card-calendar-badge svg.lucide-map-pin')).not.toBeNull();
@@ -98,7 +101,8 @@ test('les portes de la mostra naveguen amb el router; PortesTargeta sola pinta l
   cleanup();
   pinta();
   fireEvent.click(screen.getByRole('group', { name: 'Targetes de doble acció de mostra' }).querySelector('a.sp-card-author-link'));
-  expect(ubicacio()).toBe('/xat?amb=socdepoble');
+  /* Derogat per l'ordre del Mestre del 261004 (prompt 261004_0515): abans '/xat?amb=socdepoble'. */
+  expect(ubicacio()).toBe('/projecte');
   cleanup();
   const arrel = pinta();
   const soles = [...arrel.querySelectorAll('.sp-card-portes')].find((portes) => !portes.closest('article'));

@@ -5,6 +5,9 @@
 export const FONT_CONSOLA = '/__iaia/consola.json';
 
 export async function carregaConsola(signal) {
+  /* Higiene d'amfitrió (ordre del Mestre, 261004) · El middleware és només de
+     DEV (apply: 'serve'): fora de DEV és absència, sense cap petició a /__iaia/*. */
+  if (import.meta.env.DEV !== true) return null;
   const r = await fetch(FONT_CONSOLA, { signal, cache: 'no-store' });
   if (r.status === 404) return null;                 // producció: no hi ha consola
   if (!r.ok) throw new Error(`Consola ${r.status} ${r.statusText}`);

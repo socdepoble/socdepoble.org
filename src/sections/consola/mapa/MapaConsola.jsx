@@ -1,15 +1,17 @@
-import { HeartPulse, Link2, Network, RefreshCw, TriangleAlert } from 'lucide-react';
+import { Network, RefreshCw } from 'lucide-react';
 import { Alerta, Boto, Carregant, EstatBuit, Insignia, Taula } from '../../../components/PedraSeca';
-import { Desplegable, Xifra, Mono } from '../peces.jsx';
+import { Desplegable, Mono } from '../peces.jsx';
+import { GraellaXifres } from '../XifresMas.jsx';
+import { xifresDeVista } from '../xifresMas.js';
 import { curt, dataLocal } from '../consolaContent.js';
 import { resumMapa, valorMetrica, textCadencia, textLlancador } from './mapaContent.js';
 import { useMapa } from './useMapa.js';
+import { EvidenciesAvis, TO_SEVERITAT, codiIFrase } from './AvisosMapa.jsx';
 
 /* El Mapa de la Consola: qui crida qui, què corre sol i amb quina confiança.
    Contracte: _wiki_de_poble/02_saber/03_consola_termodinamica/04_contracte_de_dades.md
    Tot el que falta es pinta (N/A, «sense llançador»), mai s'amaga. */
 
-const TO_SEVERITAT = Object.freeze({ alta: 'error', mitjana: 'avis', baixa: 'info' });
 const TO_ESTAT = Object.freeze({
   viu: 'exit', mort: 'error', 'declarat-sense-llancador': 'neutre',
   'llancador-sense-declaracio': 'avis', desconegut: 'neutre'
@@ -21,6 +23,9 @@ const TEXT_ESTAT = Object.freeze({
 /* La confiança no és salut: només l'inferit avisa, perquè ix de la prosa. */
 const TO_CONFIANCA = Object.freeze({ declarat: 'info', derivat: 'neutre', inferit: 'avis' });
 
+/* Ordre del Mestre, 261004 (cap anomalia sense mostrar) · L'avís es diu amb
+   la seua frase darrere del codi, i l'evidència, totes si n'hi ha més d'una,
+   va en <Mono>: abans era text cru i el mode privacitat no l'amagava. */
 function TaulaAvisos({ avisos }) {
   return (
     <Taula titol="Avisos del mapa" densa>
@@ -31,9 +36,9 @@ function TaulaAvisos({ avisos }) {
         {avisos.map((a) => (
           <tr key={`${a.node}|${a.codi}`}>
             <th scope="row"><Mono>{a.node}</Mono></th>
-            <td>{a.codi}</td>
+            <td>{codiIFrase(a.codi)}</td>
             <td><Insignia to={TO_SEVERITAT[a.severitat]}>{a.severitat}</Insignia></td>
-            <td>{a.evidencia ?? '—'}</td>
+            <td><EvidenciesAvis avis={a} /></td>
           </tr>
         ))}
       </tbody>
@@ -120,7 +125,18 @@ function TaulaRecompte({ titol, capcal, files }) {
    per a totes les pàgines; sense `font`, el panell el llig pel seu compte.
    Dins de la Consola, el Refrescar és el de la capçalera (llig les dues
    fonts): el botó propi només ix quan el panell viu sol.
-   Les xifres són targetes del Panell de Control; el detall, desplegables. */
+   Ordre del Mestre, 261004 (xat: cap xifra solta) · Les xifres són targetes
+   senceres amb boina i pàgina pròpia (XifresMas.jsx), també sense Mapa (amb
+   el seu nom: la seua pàgina diu per què no hi ha dada); el detall,
+   desplegables. Derogat per l'ordre del Mestre del 261004 (xat: cap xifra
+   solta): les xifres com a targetes del Panell de Control (Xifra).
+   Correcció 261004 (verificador de la segona passada, punt 2) · Les
+   targetes són les de la vista «salut» (VISTES_XIFRES): les anomalies del
+   tauler que es tracten ací i les tasques del Mapa; els nodes i les arestes,
+   a l'Explorador, que és on es tracten. Els desplegables ja no porten cap
+   recompte al títol: la xifra és a la seua targeta. Derogat per l'ordre del
+   Mestre del 261004 (xat: cap xifra solta): «Veure els N avisos», «Veure les
+   N tasques» i «Veure les N arestes». */
 export function MapaConsola({ locale, font }) {
   const propi = useMapa({ actiu: !font });
   const { estat, mapa, error, carrega } = font ?? propi;
@@ -139,6 +155,9 @@ export function MapaConsola({ locale, font }) {
           instal·lat al middleware de la Consola.
         </EstatBuit>
       )}
+      {/* Correcció 261004 (verificador de la tercera passada, punt 5) · sense Mapa, també
+          mentre es llig: les targetes amb el seu nom (la seua pàgina ja existix). */}
+      {!mapa && <GraellaXifres xifres={xifresDeVista('salut', null)} />}
       {estat === 'error' && (
         <Alerta to="error" titol="No s’ha pogut llegir el mapa">
           {mapa ? 'Es conserva l’última lectura bona. ' : ''}
@@ -152,16 +171,11 @@ export function MapaConsola({ locale, font }) {
             : 'Tall desconegut: sense branca ni commit, dos mapes no es poden comparar.'}
           {` · Generat: ${dataLocal(mapa.generat, locale)}`}
         </p>
-        <div className="sdp-card-grid">
-          <Xifra icona={TriangleAlert} etiqueta={`avisos, ${resum.alts} d’alts`} valor={resum.avisos} />
-          <Xifra icona={HeartPulse} etiqueta="mètriques de salut amb mesura (la resta, N/A)" valor={`${resum.mesurades} / ${mapa.salut.length}`} />
-          <Xifra icona={Network} etiqueta="nodes" valor={resum.nodes} />
-          <Xifra icona={Link2} etiqueta="arestes" valor={resum.arestes} />
-        </div>
-        <Desplegable titol={`Veure els ${resum.avisos} avisos`}>
+        <GraellaXifres xifres={xifresDeVista('salut', mapa)} generat={mapa.generat} />
+        <Desplegable titol="Veure els avisos, el més greu primer">
           <TaulaAvisos avisos={resum.avisosOrdenats} />
         </Desplegable>
-        <Desplegable titol={`Veure les ${resum.tasques} tasques`}>
+        <Desplegable titol="Veure les tasques i els seus llançadors">
           <TaulaTasques tasques={mapa.tasques} />
         </Desplegable>
         <Desplegable titol="Veure la funció de salut">
@@ -171,7 +185,7 @@ export function MapaConsola({ locale, font }) {
           <TaulaRecompte titol="Nodes per tipus" capcal="Tipus" files={resum.perTipus} />
           <TaulaRecompte titol="Arestes per confiança" capcal="Confiança" files={resum.perConfianca} />
         </Desplegable>
-        <Desplegable titol={`Veure les ${resum.arestes} arestes`}>
+        <Desplegable titol="Veure totes les arestes">
           <TaulaArestes arestes={mapa.arestes} />
         </Desplegable>
       </>}

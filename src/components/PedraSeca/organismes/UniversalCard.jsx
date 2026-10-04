@@ -66,10 +66,39 @@
  *    targeta. Per això, amb portes, `mainHref` no fa cap overlay però continua
  *    sent la pàgina de Comentar i Compartir (useAccions), la mateixa de
  *    «Saber-ne més».
+ *
+ * Ordre del Mestre, 261004 (prompt 261004_0515, «no inventar targetes») · Les
+ * llistes de les apps (Notícies, la Nevera) passen a UniversalCard. Cinc
+ * props OPCIONALS per a fer-ho sense perdre res del que ja feien; sense
+ * elles, el DOM de sempre, byte a byte (UniversalCard.vinyeta.test.jsx):
+ *  · `imatgePrivada` · la imatge i l'avatar passen pel filtre de les peces de
+ *    les apps (fontSegura de marca.jsx, esFontImatgeSegura: el mateix origen
+ *    o el de mitjans, mai un servidor de fora) i es demanen sense referent
+ *    (referrerPolicy="no-referrer"). Una imatge que no hi passa no es pinta.
+ *  · `idElement` · data-element a l'element principal: la llista hi torna el
+ *    focus quan es tanca el detall.
+ *  · `premuda` · aria-pressed a l'element principal quan és un botó
+ *    (onMainClick): la targeta commutable de la Nevera.
+ *  · `onAccioSecundaria` · la pulsació llarga, el clic dret i Maj+F10 (o la
+ *    tecla de menú) sobre l'element principal (pulsacioLlarga.js, el mateix
+ *    camí de les rajoles). Rep l'element que l'ha disparada. El clic que ve
+ *    després d'una pulsació llarga no fa l'acció principal.
+ *  · `descripcioAccessible` (text; regressió de la Nevera) · el que la rajola
+ *    deia al lector de pantalla i l'element principal, que només porta el
+ *    títol, ja no deia: l'estat i l'especificació («S’ha acabat», «sense
+ *    lactosa»). Amb ella, aria-describedby a l'element principal apunta a un
+ *    span .sdp-nomes-lector amb eixe text (id de useId), dins de l'element:
+ *    els fills de l'article no canvien. Sense element principal no hi ha qui
+ *    la diga: res.
+ * La variant 16:9 del Lector NO entra ací: qualitat.panoramica.test.js limita
+ * l'excepció a agrupacio.jsx, al Lector i al seu espècimen.
+ * W4-07 · rutaDAutorSegura ja és la compartida d'UniversalUtils (la de la
+ * barra taronja de les pàgines és la mateixa).
  */
+import { useId } from 'react';
 import { Link } from '../../../app/contexts/RouterContext';
 import { resolRecursPropi } from '../../../config/assetResolver.js';
-import { isSafeAsset, isSafeUrl } from '../../universal/UniversalUtils';
+import { isSafeAsset, isSafeUrl, rutaDAutorSegura } from '../../universal/UniversalUtils';
 import { llevaPuntFinal } from '../../universal/editorial.js';
 import { EmoticonaBarra } from '../../universal/EmoticonaBarra.jsx';
 import { usePastillaCalendari } from '../../universal/barres/pastillaCalendari.js';
@@ -77,17 +106,23 @@ import { emoticonaDeBarra } from '../../../utils/emoji.js';
 import { ActionControl, IconButton, DateTimeControl } from '../atoms/controls.jsx';
 import { PinIcon, TranslateIcon, CommentIcon, ShareIcon } from '../atoms/icones.jsx';
 import { useAccions } from '../hooks/useAccions.js';
-import { PortesTargeta, esRutaDeLaPorta, normalitzaPortes } from './PortesTargeta.jsx';
+import { PortesTargeta, normalitzaPortes } from './PortesTargeta.jsx';
+import { fontSegura } from './marca.jsx';
+import { usePulsacioLlarga } from './pulsacioLlarga.js';
 
 const TITOLS = new Set(['h2', 'h3', 'h4', 'h5', 'h6']);
 
-/* W4-07 · La ruta de l'autor: un camí de l'app ('/…') passa per la frontera
-   de les portes, que no mira la finestra; una adreça absoluta, per isSafeUrl. */
-const rutaDAutorSegura = (href) => {
-  if (typeof href !== 'string' || !href) return null;
-  if (href.startsWith('/')) return esRutaDeLaPorta(href) ? href : null;
-  return isSafeUrl(href) ? href : null;
+/* Ordre del Mestre, 261004 · `imatgePrivada`: el filtre de les peces de les
+   apps, el mateix (fontSegura de marca.jsx: resolRecursPropi i
+   esFontImatgeSegura). Sense, el de sempre (T5: resolRecursPropi i isSafeAsset). */
+const fontDeLaTargeta = (valor, privada) => {
+  if (privada) return fontSegura(valor);
+  const font = resolRecursPropi(valor);
+  return font && isSafeAsset(font) ? font : null;
 };
+
+/* L'atribut que només es pinta amb la prop: sense, cap atribut nou. */
+const SENSE_REFERENT = Object.freeze({ referrerPolicy: 'no-referrer' });
 
 /* T51 (ordre del Mestre, 260928) · `centre` és l'espai central de la caputxa
    (EmoticonaBarra en lectura): només hi és amb una emoticona triada, i
@@ -202,13 +237,13 @@ function LlistaEtiquetes({ etiquetes }) {
    P6 · El preu va al quadrat (SquareBadge), mai a la píndola: un sol
    indicador, i mana squareBadge, després el preu i després la data. La classe
    has-price es conserva per a qui la mire. */
-function CardBody({ imatge, imageAlt, calendarBadge, squareBadge, price, icon, title, TitleTag, subtitle, body, etiquetes, copyright, portes = null }) {
+function CardBody({ imatge, imageAlt, calendarBadge, squareBadge, price, icon, title, TitleTag, subtitle, body, etiquetes, copyright, portes = null, privada = false }) {
   const activeBadge = squareBadge || (price ? { type: 'price', value: price } : null) || calendarBadge;
   return (
     <>
       {imatge && (
         <div className="sp-card-media-container">
-          <img className="sp-card-media" src={imatge} alt={imageAlt} loading="lazy" decoding="async" />
+          <img className="sp-card-media" src={imatge} alt={imageAlt} loading="lazy" decoding="async" {...(privada ? SENSE_REFERENT : null)} />
         </div>
       )}
       <div
@@ -308,19 +343,33 @@ export function UniversalCard({
   actual = false,
   /* P5 · Com a màxim dues portes [{ id, verb, nom, desti, varietat }]
      (PortesTargeta.jsx), al final del cos de la targeta de sempre. */
-  portes
+  portes,
+  /* Ordre del Mestre, 261004 (capçalera) · Les quatre opcionals de les
+     llistes de les apps. Sense elles, el DOM de sempre. */
+  imatgePrivada = false,
+  idElement,
+  premuda,
+  onAccioSecundaria,
+  /* Ordre del Mestre, 261004 (regressió de la Nevera) · la descripció
+     accessible de l'element principal. Sense, el DOM de sempre. */
+  descripcioAccessible
 }) {
+  const idDescripcio = useId();
   const safeMainHref = mainHref && isSafeUrl(mainHref) ? mainHref : null;
   const safeAuthorHref = rutaDAutorSegura(authorHref);
-  const imatgeFont = resolRecursPropi(imageUrl);
-  const avatarFont = resolRecursPropi(avatarUrl);
-  const safeImageUrl = imatgeFont && isSafeAsset(imatgeFont) ? imatgeFont : null;
-  const safeAvatarUrl = avatarFont && isSafeAsset(avatarFont) ? avatarFont : null;
+  const safeImageUrl = fontDeLaTargeta(imageUrl, imatgePrivada);
+  const safeAvatarUrl = fontDeLaTargeta(avatarUrl, imatgePrivada);
   const TitleTag = TITOLS.has(headingLevel) ? headingLevel : 'h3';
   const etiquetes = Array.isArray(labels) ? labels.filter(Boolean) : [];
   const ambTitol = (verb) => (title ? `${verb} ${title}` : verb);
 
   const alCalendari = usePastillaCalendari({ time, date, dateTime });
+
+  /* Ordre del Mestre, 261004 · L'acció secundària (pulsacioLlarga.js). El
+     hook es crida sempre; sense onAccioSecundaria no torna cap gestor. */
+  const pulsacio = usePulsacioLlarga(typeof onAccioSecundaria === 'function'
+    ? (_objecte, element) => onAccioSecundaria(element)
+    : null);
 
   const {
     handleConnect,
@@ -363,7 +412,7 @@ export function UniversalCard({
   const autor = teAutor && (
     <span className="sp-card-author">
       {safeAvatarUrl ? (
-        <img alt={avatarAlt} className="sp-card-avatar" src={safeAvatarUrl} width="48" height="48" />
+        <img alt={avatarAlt} className="sp-card-avatar" src={safeAvatarUrl} width="48" height="48" {...(imatgePrivada ? SENSE_REFERENT : null)} />
       ) : (
         <span className="sp-card-avatar sp-card-avatar--fallback">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></svg>
@@ -452,6 +501,32 @@ export function UniversalCard({
   const ariaActual = actual ? 'true' : undefined;
   const ambPrincipal = !ambPortes && Boolean(safeMainHref || onMainClick);
 
+  /* Ordre del Mestre, 261004 · El que les opcionals afigen a l'element
+     principal (l'enllaç o el botó de tota la targeta). Sense elles, res: ni
+     un atribut ni un gestor nou. */
+  const secundaria = pulsacio(null);
+  const ambSecundaria = typeof onAccioSecundaria === 'function';
+  const descripcio = ambPrincipal && typeof descripcioAccessible === 'string' ? descripcioAccessible.trim() : '';
+  /* Dins de l'element principal: l'anatomia de l'article no canvia i, amb el
+     nom per aria-label, el lector no la llig dues vegades. */
+  const textDescripcio = descripcio ? <span id={idDescripcio} className="sdp-nomes-lector">{descripcio}</span> : null;
+  const extresPrincipal = {
+    ...(idElement != null && idElement !== '' ? { 'data-element': String(idElement) } : null),
+    ...(descripcio ? { 'aria-describedby': idDescripcio } : null),
+    /* Com les rajoles (GraellaArticles): el lector anuncia la drecera. */
+    ...(ambSecundaria ? { 'aria-keyshortcuts': 'Shift+F10' } : null),
+    ...secundaria.handlers
+  };
+  /* El clic que és la cua d'una pulsació llarga no fa l'acció principal. Un
+     Link navega després del seu onClick: es para abans, en la captura. */
+  const clicDelBoto = ambSecundaria && onMainClick
+    ? (event) => { if (!secundaria.consumeix()) onMainClick(event); }
+    : onMainClick;
+  const capturaDelEnllac = ambSecundaria
+    ? { onClickCapture: (event) => { if (secundaria.consumeix()) { event.preventDefault(); event.stopPropagation(); } } }
+    : null;
+  const ariaPremuda = typeof premuda === 'boolean' ? { 'aria-pressed': premuda ? 'true' : 'false' } : null;
+
   return (
     <article className={cardClasses} aria-current={ambPrincipal ? undefined : ariaActual}>
       {(autor || centre || pin || headerAction || dataHora) && (
@@ -459,9 +534,13 @@ export function UniversalCard({
       )}
 
       {ambPortes ? null : safeMainHref ? (
-        <Link className="sp-card-link-overlay" to={safeMainHref} onClick={onMainClick} aria-label={title || 'Obrir detall'} aria-current={ariaActual} />
+        <Link className="sp-card-link-overlay" to={safeMainHref} onClick={onMainClick} aria-label={title || 'Obrir detall'} aria-current={ariaActual} {...extresPrincipal} {...capturaDelEnllac}>
+          {textDescripcio}
+        </Link>
       ) : onMainClick ? (
-        <button type="button" className="sp-card-link-overlay" onClick={onMainClick} aria-label={title || 'Obrir detall'} aria-current={ariaActual} />
+        <button type="button" className="sp-card-link-overlay" onClick={clicDelBoto} aria-label={title || 'Obrir detall'} aria-current={ariaActual} {...ariaPremuda} {...extresPrincipal}>
+          {textDescripcio}
+        </button>
       ) : null}
 
       <CardBody
@@ -478,6 +557,7 @@ export function UniversalCard({
         etiquetes={etiquetes}
         copyright={copyright}
         portes={ambPortes ? <PortesTargeta portes={portesNetes} /> : null}
+        privada={imatgePrivada}
       />
 
       {/* P6 (directriu 2325, confirmació 2) · El peu es pinta amb portes o sense. */}

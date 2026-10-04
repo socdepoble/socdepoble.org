@@ -1,28 +1,26 @@
-import React, { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
-  Activity, Anchor, ArrowLeftRight, Bot, Box, CalendarClock, Coins, Gauge, Ghost, HeartPulse, LogIn, LogOut,
-  Network, Puzzle, Receipt, RefreshCw, Timer, TriangleAlert, Unlink, Users, Workflow
+  Activity, ArrowLeftRight, Bot, CalendarClock, HeartPulse, Network, Puzzle, RefreshCw, Users, Workflow
 } from 'lucide-react';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import {
-  Alerta, Boto, Dialeg, Taula, Insignia, EstatBuit, Carregant, Progres, Interruptor, MollaPa
+  Alerta, Boto, Carregant, EstatBuit, Interruptor, MollaPa
 } from '../../components/PedraSeca';
 import { useSEO } from '../../hooks/useSEO';
 import { useUIState } from '../../app/contexts/UIContext';
-import { Navigate, useParams } from '../../app/contexts/RouterContext';
+import { Link, Navigate, useParams } from '../../app/contexts/RouterContext';
+import { carregaConsola, dataLocal } from './consolaContent.js';
 import {
-  carregaConsola, resumSkills, resumConsums, curt, dataLocal
-} from './consolaContent.js';
-import {
-  LLINDAR_SATURACIO, RUTA_CONSOLA, avisosDeVigilancia, copyConsola, dataUltimaOperacio, desaPrivacitat, diesDes,
-  estatsPagina, etiquetesPagina, etiquetesPols, faDies, llegixPrivacitat, llegixVistes, marcaVista, mesuresPagina,
-  paginaConsola, paginesConsola, plural, recompteArtefactes, resumPagina, saturat, segmentPagina, signaturaPagina,
-  ultimRebut
+  RUTA_CONSOLA, avisosDeVigilancia, copyConsola, desaPrivacitat,
+  estatsPagina, etiquetesPagina, llegixPrivacitat, llegixVistes, marcaVista, mesuresPagina,
+  paginaConsola, paginesConsola, resumPagina, segmentPagina, signaturaPagina
 } from './consolaPagines.js';
-import {
-  Desplegable, Xifra, Mono, Privat, PrivacitatConsola, TargetaConsola, TargetaResum, movimentReduit, tornaAlCim,
-  useTargetesQueObrin
-} from './peces.jsx';
+import { Mono, Privat, PrivacitatConsola, TargetaConsola, tornaAlCim } from './peces.jsx';
+import { PaginaPanellPols, PaginaPols } from './PolsConsola.jsx';
+import { panellPols, segmentPols } from './polsConsola.js';
+import { GraellaXifres, PaginaXifra, XifresMas } from './XifresMas.jsx';
+import { XIFRA_DE_CODI, segmentXifra, xifraDelMas, xifresDeLaGraella, xifresDeVista } from './xifresMas.js';
+import { entradetaPlana } from './xifresComu.js';
 import { MapaConsola } from './mapa/MapaConsola.jsx';
 import { useMapa } from './mapa/useMapa.js';
 import { ExploradorMapa } from './mapa/ExploradorMapa.jsx';
@@ -32,43 +30,57 @@ import { EntradesEixides } from './mapa/EntradesEixides.jsx';
 import { FluxosMapa } from './mapa/FluxosMapa.jsx';
 import { AgentsAtomics } from './mapa/AgentsAtomics.jsx';
 import { ActorsMapa } from './mapa/ActorsMapa.jsx';
-import { xifresDelMas } from './mapa/actorsMapa.js';
 import { TEXTOS_AVIS } from './mapa/grafMapa.js';
 
-/* La Consola és un tauler de nou targetes (/consola) i una ruta per pàgina
-   (/consola/<id>). Les dues fonts (consola.json i el Mapa) es lligen una sola
-   vegada per a tota la secció: /consola/* munta el mateix element per a totes
-   les subrutes, i navegar entre pàgines no torna a llegir res. Les targetes
-   que expliquen una part de la Consola (tauler i pols) són UniversalCard
-   senceres (TargetaConsola); les xifres i les vistes del Mapa conserven la
-   targeta compacta del Panell de Control (TargetaResum, peces.jsx). */
+/* La Consola és un tauler de nou targetes (/consola), una ruta per pàgina
+   (/consola/<id>), una per panell del pols (/consola/pols/<id>) i una per
+   xifra o peça del Mapa (/consola/xifres/<slug>). Les dues fonts
+   (consola.json i el Mapa) es lligen una sola vegada per a tota la secció:
+   /consola/* munta el mateix element per a totes les subrutes, i navegar
+   entre pàgines no torna a llegir res.
+   Ordre del Mestre, 261004 (xat: cap xifra solta) · Tota targeta de la
+   Consola és una UniversalCard sencera amb la boina de Sóc de Poble
+   (TargetaConsola, peces.jsx) i té pàgina pròpia: les del tauler, la seua
+   pàgina; les del pols, la del seu panell; les xifres i les peces del Mapa,
+   la seua (XifresMas.jsx). Derogat per l'ordre del Mestre del 261004 (xat:
+   cap xifra solta): l'excepció de les xifres de dins dels panells i de les
+   vistes del Mapa, que conservaven la targeta compacta del Panell de Control
+   (TargetaResum) sense boina ni pàgina. */
 
 const ICONES = Object.freeze({
   pols: Activity, explorador: Network, fluxos: Workflow, calendari: CalendarClock,
   inventari: Puzzle, entrades: ArrowLeftRight, agents: Bot, actors: Users, salut: HeartPulse
 });
 
-/* D'on ix cada targeta: la capçalera ho diu amb l'hora de la instantània. */
-const FONT_DADES = 'Font: consola.json';
-const FONT_MAPA = 'Font: el Mapa del Mas';
-
-/* T51 · Cap targeta sense data (regla del Mestre). Les targetes són
+/* Ordre del Mestre, 261004 (xat: tota targeta amb boina i pàgina pròpia) ·
+   Les targetes de la Consola porten la boina de Sóc de Poble i la data a la
+   seua pastilla (TargetaConsola, peces.jsx). La font («Font: consola.json»,
+   «Font: el Mapa del Mas») continua sense pintar-se.
+   T51 · Cap targeta sense data (regla del Mestre). Les targetes són
    fragments de la pàgina Consola i porten la data de versió del copy
    d'eixa pàgina (PAGE_COPY.consola.date, un dia sense hora), no una data
-   pròpia del seu text: els cinc panells del pols tenen el text escrit ací
-   (PaginaPols), i les pàgines del tauler que PAGE_COPY encara no porta,
-   el copy provisional de consolaPagines.js. Si hi ha instantània i és més
-   recent, mana la instantània (TargetaConsola). */
+   pròpia del seu text. Si hi ha instantània i és més recent, mana la
+   instantània (TargetaConsola). */
 const dataDelCopy = () => copyConsola().date;
 
-/** Una lectura de /__iaia/consola.json. Un error conserva l'última instantània bona. */
-function useConsola() {
-  const [estat, setEstat] = useState('loading');
+/* Higiene d'amfitrió (ordre del Mestre, 261004, front «amfitrio-admin») ·
+   consola.json només el servix el middleware de desenvolupament
+   (tooling/vite/consola-iaia.mjs, apply: 'serve'). Fora de DEV no es fa cap
+   petició a /__iaia/*: l'estat és 'absent' des del principi, com useMapa. Es
+   llig en cada crida perquè les proves puguen canviar l'entorn. */
+const ambMiddleware = () => import.meta.env.DEV === true;
+
+/** Una lectura de /__iaia/consola.json. Un error conserva l'última instantània bona.
+    `actiu: false` (o fora de DEV) no llig res, ni en muntar ni amb `carrega`. */
+function useConsola({ actiu = true } = {}) {
+  const llig = actiu && ambMiddleware();
+  const [estat, setEstat] = useState(llig ? 'loading' : 'absent');
   const [dades, setDades] = useState(null);
   const [error, setError] = useState(null);
   const enCurs = useRef(null);
 
   const carrega = useCallback(() => {
+    if (!ambMiddleware()) return;
     enCurs.current?.abort();
     const ac = new AbortController();
     enCurs.current = ac;
@@ -87,327 +99,53 @@ function useConsola() {
       });
   }, []);
   useEffect(() => {
+    if (!llig) return undefined;
     carrega();
     return () => enCurs.current?.abort();
-  }, [carrega]);
+  }, [llig, carrega]);
 
   return { estat, dades, error, carrega };
 }
 
-function PanellConsums({ consums, locale }) {
-  if (consums.length === 0) {
-    return (
-      <EstatBuit icona={Activity} titol="Cap consum registrat">
-        El diari <Mono>.agents/.diari_sessio.jsonl</Mono> no conté cap entrada <Mono>consum.tokens</Mono>.
-        Quan un agent en registre, apareixerà ací sense tocar codi.
-      </EstatBuit>
-    );
-  }
-  const { total, perAgent } = resumConsums(consums);
-  const n = (x) => x.toLocaleString(locale);
-  return (
-    <>
-      <div className="sdp-card-grid">
-        <Xifra icona={LogIn} etiqueta="Tòkens d'entrada" valor={n(total.entrada)} />
-        <Xifra icona={LogOut} etiqueta="Tòkens d'eixida" valor={n(total.eixida)} />
-        <Xifra icona={Activity} etiqueta="Registres de consum" valor={n(consums.length)} />
-      </div>
-      <Taula titol="Consum de tòkens per agent" densa>
-        <thead>
-          <tr><th scope="col">Agent</th><th scope="col">Registres</th><th scope="col">Entrada</th><th scope="col">Eixida</th></tr>
-        </thead>
-        <tbody>
-          {perAgent.map((a) => (
-            <tr key={a.agent}>
-              <th scope="row">{a.agent}</th>
-              <td>{n(a.sessions)}</td>
-              <td>{n(a.entrada)}</td>
-              <td>{n(a.eixida)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </Taula>
-    </>
-  );
-}
-
-function PanellCredits({ credits, estrategia }) {
-  if (!credits && !estrategia) {
-    return (
-      <EstatBuit icona={Coins} titol="Sense font de crèdits">
-        Cap fitxer del repositori registra el saldo de crèdits de l'eixam. La consola no l'inventa:
-        quan hi haja font (§3.6 de l'auditoria 260920_0300), es connecta ací.
-      </EstatBuit>
-    );
-  }
-  return (
-    <div className="sdp-consola__llista">
-      {estrategia && (
-        <div className="sdp-consola__estrategia">
-          {estrategia}
-        </div>
-      )}
-      {credits && credits.map((c) => {
-        if (c.tipus === 'ajust') {
-          return (
-            <div key={c.proveidor} className="sdp-consola__ajust">
-              <span>{c.proveidor}</span>
-              <span className={`sdp-consola__ajust-valor ${c.actiu ? 'sdp-consola__ajust-valor--actiu' : ''}`}>{c.valor}</span>
-            </div>
-          );
-        }
-        return (
-          <Progres key={c.proveidor} etiqueta={`${c.proveidor} · ${c.consumit ?? c.valor} ${c.limit ? '/ ' + c.limit : ''}`}
-            valor={c.consumit ?? c.valor} max={c.limit ?? c.valor} />
-        );
-      })}
-    </div>
-  );
-}
-
-function PanellRebuts({ rebuts, locale, onVeure }) {
-  if (rebuts.length === 0) {
-    return (
-      <EstatBuit icona={Receipt} titol="Cap rebut Matrix">
-        El diari de sessió no té entrades <Mono>matrix.rebut</Mono>.
-      </EstatBuit>
-    );
-  }
-  /* T12 (ordre del Mestre, 260930) · Quan va entrar l'últim rebut: un diari
-     que ningú no escriu ha de dir-ho, no passar per viu. Mateixa línia de
-     procedència que el segell de l'inventari de skills.
-     T9 (260930) · les taules del pols ja no porten límit d'alçada propi (són
-     dins d'un desplegable): l'únic scroll vertical és el de la pàgina. */
-  const ultim = ultimRebut(rebuts);
-  return (
-    <>
-      {ultim && (
-        <p className="sdp-consola__segell">
-          {`Últim rebut: ${dataLocal(ultim, locale)} (${faDies(diesDes(ultim))})`}
-        </p>
-      )}
-      <Taula titol="Rebuts de lectura Matrix" densa>
-        <thead>
-          <tr>
-            <th scope="col">Data</th>
-            <th scope="col">Petició</th>
-            <th scope="col">Protocol</th>
-            <th scope="col">Fonts</th>
-            <th scope="col"><span className="sdp-nomes-lector">Accions</span></th>
-          </tr>
-        </thead>
-        <tbody>
-          {rebuts.map((r, i) => {
-            const quan = dataLocal(r.t, locale);
-            return (
-              <tr key={`${r.t}-${r.peticio}-${i}`}>
-                <td>{quan}</td>
-                <td><Mono>{curt(r.peticio)}</Mono></td>
-                <td>{r.protocols.length ? <Privat>{r.protocols.map((p) => p.split('/').pop()).join(', ')}</Privat> : '—'}</td>
-                <td>{r.fonts.length}</td>
-                <td>
-                  <Boto varietat="fantasma" onClick={() => onVeure(r)} aria-label={`Veure les ${r.fonts.length} fonts del rebut de ${quan}`}>
-                    Veure fonts
-                  </Boto>
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </Taula>
-    </>
-  );
-}
-
-function PanellSkills({ skills, segell, locale }) {
-  const { total, orfes, fantasmes, nucli } = resumSkills(skills);
-  return (
-    <>
-      <div className="sdp-card-grid">
-        <Xifra icona={Puzzle} etiqueta="Skills" valor={total} />
-        <Xifra icona={Anchor} etiqueta="Nucli (core)" valor={nucli.length} />
-        <Xifra icona={Unlink} etiqueta="Orfes (disc sense manifest)" valor={orfes.length} />
-        <Xifra icona={Ghost} etiqueta="Fantasmes (manifest sense disc)" valor={fantasmes.length} />
-      </div>
-      {segell ? (
-        <p className="sdp-consola__segell">
-          Segell <Mono>{curt(segell.hash)}</Mono> · {segell.filesCount} fitxers · {dataLocal(segell.timestamp, locale)}
-        </p>
-      ) : null}
-      <Taula titol="Inventari de skills" densa>
-        <thead>
-          <tr><th scope="col">Skill</th><th scope="col">Estat</th><th scope="col">Manifest</th><th scope="col">Disc</th><th scope="col">Descripció</th></tr>
-        </thead>
-        <tbody>
-          {skills.map((s) => (
-            <tr key={s.nom}>
-              <th scope="row">{s.core ? <strong>{s.nom}</strong> : s.nom}</th>
-              <td>{s.estat ? <Insignia to={s.estat === 'canonic' ? 'exit' : 'info'}>{s.estat}</Insignia> : <Insignia to="neutre">sense estat</Insignia>}</td>
-              <td>{s.alManifest ? <Insignia to="exit">sí</Insignia> : <Insignia to="error">no</Insignia>}</td>
-              <td>{s.alDisc ? <Insignia to="exit">sí</Insignia> : <Insignia to="error">esborrat</Insignia>}</td>
-              <td>{s.descripcio}</td>
-            </tr>
-          ))}
-        </tbody>
-      </Taula>
-    </>
-  );
-}
-
-/* Les pàgines que viuen del Mapa diuen per què no hi ha dades, mai n'inventen. */
-function AmbMapa({ font, children }) {
+/* Les pàgines que viuen del Mapa diuen per què no hi ha dades, mai n'inventen.
+   Ordre del Mestre, 261004 (xat: cap xifra solta) · Sense Mapa, les xifres de
+   la pàgina que es pinten sempre també hi són, amb el seu nom: la seua pàgina
+   existix i diu per què no hi ha dada (cap pàgina sense targeta).
+   Correcció 261004 (verificador de la segona passada, punt 1) · Les targetes
+   són les de la vista (VISTES_XIFRES), la mateixa font que decidix quines
+   pàgines existixen: les condicionals i les peces de les famílies no es
+   poden saber sense Mapa, i ni es pinten ni tenen pàgina.
+   Correcció 261004 (verificador de la tercera passada, punt 5) · Mentre es
+   llig el Mapa, també: «Llegint el mapa…» i, davall, les targetes que la
+   vista pinta sense Mapa, amb el seu nom i sense cap número. Abans la pàgina
+   quedava buida mentre la pàgina de cada una d'eixes xifres ja existia. */
+function AmbMapa({ font, vista, children }) {
   if (font.mapa) return children(font.mapa);
-  if (font.estat === 'loading') return <Carregant etiqueta="Llegint el mapa…" />;
+  const xifres = <GraellaXifres xifres={xifresDeVista(vista, null)} />;
+  if (font.estat === 'loading') return <><Carregant etiqueta="Llegint el mapa…" />{xifres}</>;
   if (font.estat === 'error') {
     return (
-      <Alerta to="error" titol="No s’ha pogut llegir el mapa">
-        {font.error?.message || 'Torna a provar-ho amb Refrescar.'}
-      </Alerta>
+      <>
+        <Alerta to="error" titol="No s’ha pogut llegir el mapa">
+          {font.error?.message || 'Torna a provar-ho amb Refrescar.'}
+        </Alerta>
+        {xifres}
+      </>
     );
   }
   return (
-    <EstatBuit icona={Network} titol="Mapa no disponible">
-      Esta pàgina viu del Mapa (<Mono>GET /__iaia/mapa.json</Mono>), que només se servix al
-      servidor local de desenvolupament. Mentre el compilador <Mono>tooling/brain/mapa-consola.mjs</Mono> i
-      la ruta del middleware no s’instal·len, no hi ha dades i la Consola no en inventa.
-    </EstatBuit>
-  );
-}
-
-/* ── Pàgina «El pols del cervell» ──────────────────────────────────────── */
-
-function PaginaPols({ consola, locale, onVeure }) {
-  const { estat, dades, error } = consola;
-  const detalls = useRef({});
-  const graella = useRef(null);
-  const [oberts, setOberts] = useState({});
-  const inventari = dades ? resumSkills(dades.skills) : null;
-  const termometria = dades?.termometria;
-  const recompte = recompteArtefactes(dades);
-  const mesurat = recompte !== null;
-  const llindar = LLINDAR_SATURACIO;
-  const etiquetes = etiquetesPols(dades, estat);
-  const estatSenseDades = estat === 'loading' ? 'Llegint…'
-    : estat === 'absent' ? 'No disponible en este entorn'
-      : 'No s’ha pogut llegir';
-  const anota = (id, obert) => setOberts((o) => (Boolean(o[id]) === obert ? o : { ...o, [id]: obert }));
-  /* Cada targeta resumix un panell; el detall viu plegat davall de la graella
-     i la targeta l'obri, hi llisca (salt directe amb moviment reduït) i hi
-     porta el focus sense un segon salt. */
-  const obre = (id) => {
-    const el = detalls.current[id];
-    if (!el) return;
-    el.open = true;
-    anota(id, true);
-    el.scrollIntoView?.({ behavior: movimentReduit() ? 'auto' : 'smooth', block: 'start' });
-    el.querySelector('summary')?.focus({ preventScroll: true });
-  };
-  /* Cada panell s'explica a si mateix: el «per a què» de subtítol, què mesura
-     d'entradilla i les mètriques vives a part (T2, 260930: cada una en h5) o,
-     si no n'hi ha, per què en un paràgraf (`senseMesura`). */
-  const panells = [
-    { id: 'carrega', titol: 'Càrrega documental', Icona: Gauge,
-      subtitol: 'Per a saber quan s’embossa el context',
-      entradilla: 'Compta els artefactes actius del cervell i avisa quan passen del llindar de saturació. No arxiva res: només diu quan cal revisar rellevància i context.',
-      metriques: mesurat ? [`${recompte} artefactes actius`, `avís per damunt de ${llindar}`] : null,
-      senseMesura: 'Recompte d’artefactes actius encara no disponible: les skills i els rebuts no en són cap mesura',
-      contingut: mesurat && <>
-        <Progres etiqueta="Artefactes actius respecte del llindar d’avís"
-          valor={Math.min(recompte, llindar)} max={llindar} />
-        {termometria.abast && <p>{termometria.abast}</p>}
-      </> },
-    { id: 'consums', titol: 'Consums', Icona: Activity,
-      subtitol: 'Per a saber qui gasta tòkens i quants',
-      entradilla: 'Tòkens d’entrada i d’eixida que cada agent anota al diari de sessió. Si no hi ha cap registre, no vol dir consum zero: vol dir que ningú no l’ha mesurat.',
-      metriques: dades?.consums.length ? [`${dades.consums.length} registres`] : null,
-      senseMesura: dades ? 'Sense mesura de tòkens' : estatSenseDades,
-      contingut: dades && <PanellConsums consums={dades.consums} locale={locale} /> },
-    { id: 'credits', titol: 'Crèdits', Icona: Coins,
-      subtitol: 'Per a saber quant queda de cada proveïdor',
-      entradilla: 'Saldo consumit de cada proveïdor d’IA respecte del seu límit. Mentre cap fitxer no el registre, la Consola ho diu en lloc d’inventar-lo.',
-      metriques: dades?.credits?.length ? [`${dades.credits.length} proveïdors`] : null,
-      senseMesura: dades ? 'Saldo desconegut' : estatSenseDades,
-      contingut: dades && <PanellCredits credits={dades.credits?.length ? dades.credits : null} estrategia={dades.estrategia_consum} /> },
-    { id: 'rebuts', titol: 'Rebuts', Icona: Receipt,
-      subtitol: 'Per a comprovar què ha llegit de veritat l’eixam',
-      entradilla: 'Cada vegada que un agent llig senceres les fonts d’un protocol, en queda un rebut amb l’empremta de cada fitxer. Obri’l per vore quines fonts va llegir.',
-      metriques: dades ? [`${dades.rebuts.length} rebuts de lectura`] : null,
-      senseMesura: estatSenseDades,
-      contingut: dades && <PanellRebuts rebuts={dades.rebuts} locale={locale} onVeure={onVeure} /> },
-    { id: 'skills', titol: 'Skills', Icona: Puzzle,
-      subtitol: 'Per a saber quins procediments cal cuidar',
-      entradilla: 'L’inventari de procediments de l’eixam: quins són del nucli, quins viuen al disc sense manifest (orfes) i quins són al manifest sense disc (fantasmes).',
-      metriques: inventari
-        ? [`${inventari.total} skills`, `${inventari.orfes.length} orfes`, `${inventari.fantasmes.length} fantasmes`] : null,
-      senseMesura: estatSenseDades,
-      contingut: dades && <PanellSkills skills={dades.skills} segell={dades.segell} locale={locale} /> }
-  ];
-  useTargetesQueObrin(graella, panells.map(({ id, contingut }) => (
-    contingut ? { controla: `pols-${id}`, obert: oberts[id] } : null
-  )));
-
-  return (
     <>
-      {estat === 'loading' && !dades && <Carregant etiqueta="Llegint l’estat de l’eixam…" />}
-      {estat === 'absent' && <Alerta to="info" titol="Consola no disponible">
-        Esta font només es publica al servidor local de desenvolupament.
-      </Alerta>}
-      {estat === 'error' && <Alerta to="error" titol="No s’ha pogut refrescar">
-        {dades ? 'Es conserva l’última instantània bona. ' : ''}
-        {error?.message || 'Torna a provar-ho amb Refrescar.'}
-      </Alerta>}
-      {saturat(recompte) && <Alerta to="avis" titol="Revisem la saturació">
-        Hi ha {recompte - llindar} artefactes per damunt del llindar.
-        Cal revisar rellevància i context; no s’arxiva res automàticament.
-      </Alerta>}
-      <div className="sdp-card-grid sdp-consola__graella" ref={graella}>
-        {panells.map(({ id, titol, Icona, subtitol, entradilla, metriques, senseMesura, contingut }) => (
-          <TargetaConsola key={id} icona={Icona} titol={titol} subtitol={subtitol} entradilla={entradilla}
-            metriques={metriques} dada={senseMesura}
-            font={FONT_DADES} creat={dataDelCopy()} generat={dades?.generat} etiquetes={etiquetes[id]}
-            onObri={contingut ? () => obre(id) : undefined} />
-        ))}
-      </div>
-      {panells.filter((p) => p.contingut).map(({ id, titol, contingut }) => (
-        <Desplegable key={id} id={`pols-${id}`} ref={(el) => { detalls.current[id] = el; }}
-          titol={`Veure detall de ${titol.toLocaleLowerCase(locale)}`}
-          onToggle={(e) => anota(id, e.currentTarget.open)}>
-          {contingut}
-        </Desplegable>
-      ))}
+      <EstatBuit icona={Network} titol="Mapa no disponible">
+        Esta pàgina viu del Mapa (<Mono>GET /__iaia/mapa.json</Mono>), que només se servix al
+        servidor local de desenvolupament. Mentre el compilador <Mono>tooling/brain/mapa-consola.mjs</Mono> i
+        la ruta del middleware no s’instal·len, no hi ha dades i la Consola no en inventa.
+      </EstatBuit>
+      {xifres}
     </>
   );
 }
 
 /* ── Tauler i peces compartides ─────────────────────────────────────────── */
-
-/**
- * Les cinc xifres de la capçalera del «Mapa de mis agentes». T11 (ordre del
- * Mestre, 260930): són dades, no portes. A cada pàgina s'entra per la seua
- * targeta del tauler i se'n torna per la molla de pa; dues xifres cap a
- * l'inventari i «avisos» cap a dos llocs diferents confonien el camí.
- */
-function XifresMas({ mapa }) {
-  const id = useId();
-  const x = xifresDelMas(mapa);
-  return (
-    <section aria-labelledby={id}>
-      <h2 id={id}>El Mas en xifres</h2>
-      <div className="sdp-card-grid">
-        <TargetaResum icona={Puzzle} titol={plural(x.skills, 'skill', 'skills')}
-          descripcio="al cens del Mapa" />
-        <TargetaResum icona={Bot} titol={plural(x.agents, 'agent', 'agents')}
-          descripcio="arnesos que conversen amb el Mestre" />
-        <TargetaResum icona={Box} titol={plural(x.opaques, 'skill opaca', 'skills opaques')}
-          descripcio="sense entrades ni eixides declarades" />
-        <TargetaResum icona={Timer} titol={plural(x.programades, 'cosa que corre sola', 'coses que corren soles')}
-          descripcio={`tasques que llança launchd · ${plural(x.vives, 'viva', 'vives')}`} />
-        <TargetaResum icona={TriangleAlert} titol={plural(x.ambAvisos, 'skill amb avisos', 'skills amb avisos')}
-          descripcio="semàfor ambre o roig a l’inventari" />
-      </div>
-    </section>
-  );
-}
 
 /* T12 (ordre del Mestre, 260930) · La ruta de l'avís és el seu node sense el
    tipus (document:.agents/SKILLS_SEAL.json). */
@@ -416,26 +154,36 @@ const rutaDelNode = (node) => String(node ?? '').replace(/^[a-z]+:/, '');
 /**
  * Quan la vigilància mateixa està trencada (CODIS_VIGILANCIA, consolaPagines.js),
  * el tauler ho diu dalt de tot amb una <Alerta to="error"> (rol alert: cal
- * actuar ja) i sense enllaç propi: la porta a Avisos i salut és la seua
- * targeta. Què està trencat es diu amb la redacció del detall de l'Explorador
- * (TEXTOS_AVIS, grafMapa.js; Avisos i salut pinta el codi tal qual, i per
- * això un codi sense text es diu pel seu nom); on mirar va darrere, separat
- * de la frase: la ruta del node i l'evidència del compilador, que passen pel
- * mode privacitat del marc (PrivacitatConsola).
+ * actuar ja). Què està trencat es diu amb la redacció del detall de
+ * l'Explorador (TEXTOS_AVIS, grafMapa.js; Avisos i salut pinta el codi tal
+ * qual, i per això un codi sense text es diu pel seu nom); on mirar va
+ * darrere, separat de la frase: la ruta del node i l'evidència del
+ * compilador, que passen pel mode privacitat del marc (PrivacitatConsola).
  * Correcció B1 (260930): rol alert de l'encàrrec i procedència sense parèntesis.
+ * Correcció 261004 (verificador de la segona passada, punt 2) · L'evidència
+ * porta recomptes («8 segells fòssils», «6 de 30 skills fora del segell»)
+ * que resumixen una xifra amb targeta: cada avís hi enllaça, amb el títol de
+ * la targeta (XIFRA_DE_CODI). Derogat per l'ordre del Mestre del 261004 (xat:
+ * cap xifra solta): «sense enllaç propi: la porta a Avisos i salut és la seua
+ * targeta».
  */
 function AlertaVigilancia({ mapa }) {
   const avisos = avisosDeVigilancia(mapa);
   if (!avisos.length) return null;
+  const delMas = new Map(xifresDeLaGraella(mapa).map((x) => [x.slug, x]));
   return (
     <Alerta to="error" titol="La vigilància del cervell està trencada">
       <ul>
-        {avisos.map((a, i) => (
-          <li key={`${a.node}-${a.codi}-${i}`}>
-            {TEXTOS_AVIS[a.codi] ?? `Avís ${a.codi}.`} On: <Mono>{rutaDelNode(a.node)}</Mono>
-            {typeof a.evidencia === 'string' && a.evidencia ? <> · Evidència: <Privat>{a.evidencia}</Privat></> : null}
-          </li>
-        ))}
+        {avisos.map((a, i) => {
+          const xifra = delMas.get(XIFRA_DE_CODI[a.codi]);
+          return (
+            <li key={`${a.node}-${a.codi}-${i}`}>
+              {TEXTOS_AVIS[a.codi] ?? `Avís ${a.codi}.`} On: <Mono>{rutaDelNode(a.node)}</Mono>
+              {typeof a.evidencia === 'string' && a.evidencia ? <> · Evidència: <Privat>{a.evidencia}</Privat></> : null}
+              {xifra ? <> · La seua xifra: <Link to={xifra.ruta}>{xifra.titol}</Link></> : null}
+            </li>
+          );
+        })}
       </ul>
       <p>El detall i què cal reparar són a la pàgina {paginaConsola('salut').title}.</p>
     </Alerta>
@@ -452,7 +200,7 @@ const fontsDe = (consola, mapa) => ({
  * reals o diu per què no n'hi ha, desglossa a la coberta el que la pàgina
  * marca per dins (T3) i du les etiquetes d'un colp d'ull (consolaPagines.js).
  * El record de visites es llig en muntar el tauler: tornar-hi des d'una
- * pàgina el refresca.
+ * pàgina el refresca. Davall, «El Mas en xifres», també sense Mapa.
  */
 export function ConsolaTauler({ consola, mapa, cimRef }) {
   const fonts = fontsDe(consola, mapa);
@@ -469,22 +217,24 @@ export function ConsolaTauler({ consola, mapa, cimRef }) {
             <TargetaConsola key={p.id} icona={ICONES[p.id]} titol={p.title} subtitol={p.subtitle}
               entradilla={p.lead} metriques={mesuresPagina(p.id, fonts)} dada={resumPagina(p.id, fonts)} a={p.ruta}
               estats={estatsPagina(p.id, fonts, ara)}
-              font={delMapa ? FONT_MAPA : FONT_DADES} creat={dataDelCopy()}
+              creat={dataDelCopy()}
               generat={delMapa ? mapa.mapa?.generat : consola.dades?.generat}
               etiquetes={etiquetesPagina(p.id, fonts, vistes?.[p.id], ara)} />
           );
         })}
       </nav>
-      {mapa.mapa && <XifresMas mapa={mapa.mapa} />}
+      <XifresMas mapa={mapa.mapa} />
     </>
   );
 }
 
 /** El tauler dins d'un altre marc (la Wiki): llig les seues fonts, i la
-    privacitat que el visitant va deixar a la Consola, pel seu compte. */
+    privacitat que el visitant va deixar a la Consola, pel seu compte.
+    Higiene d'amfitrió (261004) · La Wiki és pública: fora de DEV les dues
+    fonts no es demanen i el tauler diu que no hi ha dades. */
 export function ConsolaIncrustada() {
-  const consola = useConsola();
-  const mapa = useMapa();
+  const consola = useConsola({ actiu: import.meta.env.DEV === true });
+  const mapa = useMapa({ actiu: import.meta.env.DEV === true });
   const [privat] = useState(() => llegixPrivacitat());
   return (
     <PrivacitatConsola.Provider value={privat}>
@@ -499,15 +249,13 @@ export function ConsolaIncrustada() {
    de la posició: tornaAlCim puja pels pares fins al contenidor de scroll. */
 function ControlsConsola({ pagina, consola, mapa, privat, onPrivat, locale, cimRef }) {
   const { dades } = consola;
-  /* T12 (ordre del Mestre, 260930) · Un recompte d'operacions immunitàries
-     sense data no diu si el sistema és viu: si consola.json porta la data de
-     l'última (immunitari.ultima.data), el peu la mostra; si no, no se n'inventa. */
-  const ultimaOperacio = dataUltimaOperacio(dades);
-  const immunitari = dades && `${dades.immunitari.operacions} operacions immunitàries${
-    ultimaOperacio ? `, l’última el ${dataLocal(ultimaOperacio, locale)}` : ''}`;
-  /* Cada pàgina data la seua pròpia font: el pols, consola.json; la resta, el Mapa. */
+  /* Correcció 261004 (verificador de la segona passada, punt 2) · El recompte
+     d'operacions immunitàries (amb la data de l'última, T12) era una xifra
+     solta al peu de totes les pàgines del pols: ara és la targeta
+     «operacions-immunitaries» del pols. El peu només data la instantània.
+     Cada pàgina data la seua pròpia font: el pols, consola.json; la resta, el Mapa. */
   const instantania = pagina === 'pols'
-    ? (dades?.generat && `Instantània: ${dataLocal(dades.generat, locale)} · ${immunitari}`)
+    ? (dades?.generat && `Instantània: ${dataLocal(dades.generat, locale)}`)
     : (mapa.mapa?.generat && `Instantània del Mapa: ${dataLocal(mapa.mapa.generat, locale)}`);
   return (
     <div className="sdp-consola__peu" ref={cimRef}>
@@ -523,10 +271,11 @@ function ControlsConsola({ pagina, consola, mapa, privat, onPrivat, locale, cimR
   );
 }
 
-function ContingutPagina({ id, consola, mapa, locale, onVeure }) {
-  const ambMapa = (pinta) => <AmbMapa font={mapa}>{pinta}</AmbMapa>;
+/* Cada pàgina és una vista de VISTES_XIFRES (xifresMas.js) amb el seu id. */
+function ContingutPagina({ id, consola, mapa, locale }) {
+  const ambMapa = (pinta) => <AmbMapa font={mapa} vista={id}>{pinta}</AmbMapa>;
   switch (id) {
-    case 'pols': return <PaginaPols consola={consola} locale={locale} onVeure={onVeure} />;
+    case 'pols': return <PaginaPols consola={consola} locale={locale} />;
     case 'explorador': return ambMapa((m) => <ExploradorMapa mapa={m} />);
     case 'fluxos': return ambMapa((m) => <FluxosMapa mapa={m} />);
     case 'calendari': return ambMapa((m) => <CalendariMapa mapa={m} locale={locale} />);
@@ -541,34 +290,74 @@ function ContingutPagina({ id, consola, mapa, locale, onVeure }) {
 
 /* ── Secció ─────────────────────────────────────────────────────────────── */
 
+/* El títol i la descripció de la pestanya: el tauler, una pàgina, un panell
+   del pols o una xifra (la seua imatge, si en té, és la del SEO). El que no
+   existix no s'indexa. Amb el mode privacitat, el títol de la pestanya no
+   porta cap ruta (titolPrivat). */
+function seoDe({ copy, pagina, slugXifra, xifra, llegint, idPanell, panell, privat }) {
+  if (slugXifra !== null) {
+    // Mentre les fonts es lligen no se sap si la xifra existix (PaginaXifra espera).
+    if (!xifra && llegint) return { title: `El Mas en xifres · ${copy.title}`, description: copy.lead };
+    if (!xifra) return { title: `Xifra no trobada · ${copy.title}`, description: 'Esta adreça no correspon a cap xifra del Mas.', index: false };
+    const titol = privat && xifra.titolPrivat ? xifra.titolPrivat : xifra.titol;
+    return { title: `${titol} · ${copy.title}`, description: xifra.entradeta, image: xifra.imatge || undefined };
+  }
+  if (idPanell !== null) {
+    if (!panell) return { title: `Panell no trobat · ${copy.title}`, description: 'Esta adreça no correspon a cap panell del pols.', index: false };
+    return { title: `${panell.titol} · ${copy.title}`, description: entradetaPlana(panell.entradilla) };
+  }
+  if (pagina) return { title: `${pagina.title} · ${copy.title}`, description: pagina.lead };
+  return { title: copy.title, description: copy.lead };
+}
+
 export default function ConsolaSection() {
   const { locale } = useUIState();
   const params = useParams();
-  const id = segmentPagina(params['*']);
-  const pagina = id ? paginaConsola(id) : null;
+  /* Ordre del Mestre, 261004 (xat: cap xifra solta) · /consola/xifres/<slug>
+     és la pàgina d'una xifra o d'una peça; /consola/pols/<id>, la d'un panell
+     del pols; la resta de rutes, les de sempre (segmentPagina no canvia). */
+  const comodi = params['*'];
+  const slugXifra = segmentXifra(comodi);
+  const idPanell = slugXifra === null ? segmentPols(comodi) : null;
+  const id = slugXifra === null && idPanell === null ? segmentPagina(comodi) : '';
+  const pagina = slugXifra === null && idPanell === null && id ? paginaConsola(id) : null;
   const copy = copyConsola();
   const consola = useConsola();
   const mapa = useMapa();
   const [privat, setPrivatEstat] = useState(() => llegixPrivacitat());
   const setPrivat = useCallback((actiu) => { setPrivatEstat(actiu); desaPrivacitat(actiu); }, []);
-  const [rebutObert, setRebutObert] = useState(null);
   const cim = useRef(null);
   const signatura = pagina ? signaturaPagina(pagina.id, fontsDe(consola, mapa)) : null;
+  const xifra = slugXifra === null ? null : xifraDelMas(slugXifra, mapa.mapa, consola.dades, locale);
+  const panell = idPanell === null ? null : panellPols(idPanell);
 
-  useSEO({
-    title: pagina ? `${pagina.title} · ${copy.title}` : copy.title,
-    description: pagina ? pagina.lead : copy.lead
-  });
+  const llegint = mapa.estat === 'loading' || consola.estat === 'loading';
+  useSEO(seoDe({ copy, pagina, slugXifra, xifra, llegint, idPanell, panell, privat }));
 
   /* /consola/* és un sol element muntat: canviar de pàgina no desmunta res i
      el contenidor de scroll de l'aplicació es quedava on era. */
-  useLayoutEffect(() => { tornaAlCim(cim.current); }, [id]);
+  useLayoutEffect(() => { tornaAlCim(cim.current); }, [id, slugXifra, idPanell]);
 
   /* Obrir una pàgina amb la seua font carregada la marca com a vista: el
      tauler només dirà «Canvis nous» si el resum canvia després. */
   useEffect(() => {
     if (pagina && signatura) marcaVista(pagina.id, signatura);
   }, [pagina?.id, signatura]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const peu = (quina) => (
+    <ControlsConsola pagina={quina} consola={consola} mapa={mapa} privat={privat} onPrivat={setPrivat} locale={locale} cimRef={cim} />
+  );
+
+  if (slugXifra !== null) {
+    return (
+      <PaginaXifra slug={slugXifra} fonts={{ mapa, consola }} creat={dataDelCopy()} privat={privat} locale={locale}
+        peu={peu(xifra?.origen === 'consola' ? 'pols' : 'xifra')} />
+    );
+  }
+
+  if (idPanell !== null) {
+    return <PaginaPanellPols id={idPanell} consola={consola} locale={locale} privat={privat} peu={peu('pols')} />;
+  }
 
   if (id === null) return <Navigate to={RUTA_CONSOLA} replace />;
 
@@ -590,20 +379,8 @@ export default function ConsolaSection() {
       <PrivacitatConsola.Provider value={privat}>
         <MollaPa className="sdp-molla--panell"
           passos={[{ etiqueta: copy.title, a: RUTA_CONSOLA }, { etiqueta: pagina.title }]} />
-        <ContingutPagina id={pagina.id} consola={consola} mapa={mapa} locale={locale} onVeure={setRebutObert} />
-        <ControlsConsola pagina={pagina.id} consola={consola} mapa={mapa} privat={privat} onPrivat={setPrivat} locale={locale} cimRef={cim} />
-        <Dialeg obert={rebutObert !== null} onTanca={() => setRebutObert(null)}
-          titol="Fonts llegides senceres" mida="g"
-          descripcio={rebutObert ? (privat ? dataLocal(rebutObert.t, locale)
-            : `Petició ${curt(rebutObert.peticio)} · ${dataLocal(rebutObert.t, locale)}`) : undefined}
-          accions={<Boto varietat="primari" onClick={() => setRebutObert(null)}>Tancar</Boto>}>
-          {rebutObert && <Taula titol="Fonts del rebut" densa>
-            <thead><tr><th scope="col">Ruta</th><th scope="col">sha256</th></tr></thead>
-            <tbody>{rebutObert.fonts.map((f) => (
-              <tr key={f.ruta}><td><Mono>{f.ruta}</Mono></td><td><Mono>{curt(f.sha256)}</Mono></td></tr>
-            ))}</tbody>
-          </Taula>}
-        </Dialeg>
+        <ContingutPagina id={pagina.id} consola={consola} mapa={mapa} locale={locale} />
+        {peu(pagina.id)}
       </PrivacitatConsola.Provider>
     </UniversalPage>
   );

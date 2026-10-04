@@ -1,0 +1,85 @@
+RELLEU · Correcció crítica Gestoria / Wiki (261004)
+Ordre del Mestre: «contaminació crítica de rutes/estats entre Gestoria i Wiki».
+
+[1] Inici (14:17)
+- Llegits: WikiDePobleSection.jsx (modulsLocalsActius, EINES_LOCALS, EINES_AMB_PAGINA_PROPIA),
+  registrePlugins.js (RUTA_GESTORIA_LOCAL), la plataforma d'apps (registreApps, manifestApp,
+  RutaApps, BarraApp, ClosaAplicacio), fronteres.test.js, qualitat.test.js, privacitat.test.js.
+- Proves de partida (bloc del front): 3633 verdes, 7 roges previes i alienes
+  (6 a ControlSection.test.jsx pel Connectar de les targetes i «Ajustos del xat»;
+  1 a bar/llavors/laParroquia.test.js per fotos absents).
+
+[2] Fet (14:28)
+- Wiki: fora la carpeta i els dos ítems de la Gestoria, les seues entrades d'EINES_LOCALS i
+  EINES_AMB_PAGINA_PROPIA (buida, llevada amb la seua branca). Tractors i Sentinelles intactes.
+- App nova src/apps/gestoria: manifest (entorn desenvolupament, actiuPerDefecte false, literal DEV),
+  AppGestoria.jsx (únic pont, dos import() dins de DEV), rutes.js (la consulta de la porta de
+  Tractors que demana la closca es porta a la Wiki, a una ruta fixa).
+- registreApps.js la registra; registrePlugins.js porta «Gestoria» a rutaDeApp('gestoria').
+- fronteres.test.js: excepció escrita i provada (PONTS_GESTORIA) només per a eixos dos parells.
+- privacitat.test.js: la frontera es mou al pont; la Wiki ja no importa la Gestoria.
+- ShellGestoria.jsx: el títol del rail passa de «Panell de control» a «Gestoria» (i dos comentaris).
+  ATENCIÓ: ShellGestoria.jsx és font del tractor 'gestoria.tauler': la seua empremta canvia i,
+  si el Mestre l'havia signat, torna a «pendent». ContenidorGestoria.jsx (signat) no es toca.
+
+[3] Edició concurrent (14:27 → 14:37)
+- Una altra mà edita WikiDePobleSection.jsx, WikiDePobleSection.einesLocals.test.jsx,
+  privacitat.test.js i crea WikiDePobleSection.migracioGestoria.test.jsx: en DEV, una URL vella
+  (?item=gestoria_panell, ?item=gestoria_aprendre o ?categoria=gestoria_cat) redirigix a
+  /app/gestoria/tauler o /app/gestoria/aprendre abans de muntar la Wiki. L'encàrrec d'este front
+  deia «ítem desconegut, sense pintar res de la Gestoria». La redirecció no pinta la Gestoria dins
+  de la Wiki, però sí que obri l'app. No ho desfaig: és decisió de l'orquestradora o del Mestre.
+
+[4] Navegador (pestanya pròpia, DEV 3340, 1280 i 375; tancada i viewport a desktop)
+- /wikidepoble: cap carpeta «Gestoria», «Tot» sense Full trimestral ni Aprendre.
+- /app/gestoria → /app/gestoria/tauler: la closca sola, amb la barra de l'app (Tauler, Aprendre),
+  rail «GESTORIA», un H1 «Tauler Central», cap Wiki al voltant; a 375, sense desplaçament horitzontal.
+- «Obri el panell de Tractors» → /wikidepoble?categoria=tractors_cat&item=tractors_aprovacio.
+- /app/gestoria/aprendre: H1 «Aprendre», píndoles GESTORIA i Aprendre.
+- /control, «L'empresa» → /plugin/gestoria → «Obrir la Gestoria» → /app/gestoria.
+- /app (portal): Gestoria de Poble, Disponible en DEV.
+
+[5] Proves (14:50) · ACABAT
+- npx vitest run src/sections/gestoria src/sections/wiki-de-poble src/sections/plugins
+  src/sections/control src/apps: 3657 verdes, 10 roges. 7 són les de partida (6 ControlSection,
+  1 laParroquia). Les 3 d'AppNevera són temps esgotats de 5 s amb la màquina carregada: soles,
+  37/38 i la roja canvia de prova; el seu registre només porta la Nevera, res d'este front.
+- Repàs directe: AppGestoria, ShellGestoria, ContenidorGestoria, TargetaTauler i PluginPage 79/79;
+  fronteres, registreApps, Wiki (einesLocals, produccio), plugins i privacitat verdes.
+
+Pendents per al Mestre
+- 'gestoria.tauler': ShellGestoria.jsx ha canviat (títol del rail): si estava signat, cal tornar-lo a signar.
+- Decidir la redirecció de les URL velles (vegeu [3]).
+- Textos signats que encara diuen «Wiki» (ContenidorGestoria.jsx, useGestoria.js, fitxa de factures):
+  no es toquen sense tornar a signar els dos tractors.
+- En producció el portal /app llistarà «Gestoria de Poble» com «Este node no porta esta app»,
+  com les altres apps de desenvolupament.
+
+[6] Arreglo dels verificadors · inici
+- Encàrrec de l'orquestradora: tres defectes. (a) i (b) la URL vella /wikidepoble?…gestoria_…
+  ha de caure com un ítem desconegut de la Wiki, sense redirigir a l'app; (c) el rail de la
+  closca a 1280 desborda (modules.css, flex 14rem → 17rem).
+- Estat trobat: la redirecció ja no viu només a WikiDePobleSection.jsx. Una altra mà l'ha
+  portada també a RutaWikiDePoble.jsx (nou, ruta de App.jsx) i a rutesWiki.js (nou), amb
+  RutaWikiDePoble.test.jsx. Avís a l'altra mà: este front lleva la redirecció de la Wiki per
+  ordre de l'orquestradora; per favor, no la tornes a posar sense decisió del Mestre.
+
+[7] Arreglo dels verificadors · ACABAT (15:22)
+- (a)(b) Fora la redirecció: WikiDePobleSection.jsx ja no importa Navigate ni rutesWiki.js; la
+  ruta RutaWikiDePoble.jsx es queda com a càrrega lazy de la Wiki, sense cap redirecció
+  (App.jsx no es toca). Una URL vella cau com un ítem desconegut: portada «Wiki de Poble»,
+  cap app, cap closca. Proves adaptades: einesLocals (4 casos), RutaWikiDePoble.test.jsx i
+  migracioGestoria.test.jsx (reduït a proves sense redirecció; els casos vells ara exigixen la
+  portada). privacitat.test.js: guarda nova (la Wiki i la seua ruta no nomenen ids vells, cap
+  destí /app/gestoria ni Navigate; ningú importa rutesWiki.js). qualitat.test.js passa ESLint
+  també a la ruta i a les dues proves noves.
+- rutesWiki.js queda sense cap importador. No l'he esborrat ni mogut (esborrar demana el
+  Mestre; el hook bloqueja mkdir i mv). Pendent per a l'orquestradora.
+- (c) Rail de la closca: modules.css passa a flex 1 1 19rem, no 17rem. Mesurat al navegador a
+  1280: amb 17rem Facturació, Burocràcia i Escàner Local encara partixen la insígnia; amb
+  19rem cap mòdul ix del rail i tots van en una línia (48 px). A 375 el rail s'apila a amplada
+  completa, sense desplaçament horitzontal. Prova a AppGestoria.test.jsx.
+- Navegador (pestanya pròpia, 1280 i 375): les tres URL velles es queden a /wikidepoble amb la
+  portada i cap rastre de la Gestoria. Pestanya tancada, viewport a desktop.
+- Proves: gestoria + wiki + plugins + apps: 3558 verdes, 1 roja prèvia (laParroquia), 2 omeses.
+  Control: les 6 roges prèvies de ControlSection.test.jsx, alienes.

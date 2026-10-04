@@ -15,8 +15,8 @@ import { useIdentitatDeLaBarra } from '../../components/universal/identitat/useI
 import { BotoIdentitatActiva } from '../../components/universal/identitat/BotoIdentitatActiva.jsx';
 import { CalaixIdentitats } from '../../components/universal/identitat/CalaixIdentitats.jsx';
 
-function Barra() {
-  const { boto, calaix } = useIdentitatDeLaBarra({ onNavega: vi.fn(), etiquetaEntrar: 'Entrar' });
+function Barra({ onNavega = vi.fn() }) {
+  const { boto, calaix } = useIdentitatDeLaBarra({ onNavega, etiquetaEntrar: 'Entrar' });
   return (
     <>
       <header className="bar-black"><div className="right-icons"><BotoIdentitatActiva {...boto} /></div></header>
@@ -40,14 +40,17 @@ async function obriCalaix() {
   return screen.getByRole('dialog', { name: 'Amb qui actues?' });
 }
 
-test('amb una sola identitat el botó continua a la barra i el calaix només la llista a ella, activa', async () => {
+/* Acta 261004_1027 §3 (beta testers) · Amb una sola identitat no hi ha res a
+   triar: el botó continua a la barra, és l'avatar gran i porta al perfil. */
+test('amb una sola identitat el botó continua a la barra i porta al perfil, sense calaix', async () => {
   m.valor = { ...m.valor, identitats: [persona] };
-  render(<Barra />);
-  const dialeg = await obriCalaix();
-  const files = within(within(dialeg).getByRole('list', { name: 'Identitats' })).getAllByRole('button');
-  expect(files).toHaveLength(1);
-  expect(files[0].getAttribute('aria-current')).toBe('true');
-  expect(dialeg.textContent).not.toContain('Forn');
+  const onNavega = vi.fn();
+  render(<Barra onNavega={onNavega} />);
+  const boto = screen.getByRole('button', { name: 'El teu perfil: Pep' });
+  expect(boto.closest('header.bar-black')).not.toBeNull();
+  await act(async () => { fireEvent.click(boto); });
+  expect(onNavega).toHaveBeenCalledWith('/el-meu-perfil');
+  expect(screen.queryByRole('dialog')).toBeNull();
 });
 
 test('el disparador és un sol botó, sense botons niats, i té nom accessible complet', async () => {

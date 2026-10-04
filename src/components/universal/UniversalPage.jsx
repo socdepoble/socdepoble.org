@@ -21,8 +21,9 @@ import { STORAGE_PREFIX, delVal, getVal, setVal } from '../../config/storage';
      · El botó va dins del marc de la portada (.hero-image), ABANS de la
        imatge: dalt a la dreta, damunt de la il·lustració quan es veu, i en una
        franja pròpia quan està plegada. No es mou de lloc, és el primer que
-       troba el teclat després de la barra blava i també es veu en mòbil, on
-       la barra taronja no es pinta (components.css, T38).
+       troba el teclat després de la barra blava i també es veu en mòbil.
+       (La T38, que amagava la barra taronja en mòbil, la va revertir el
+       Mestre el 261004: ara tota pàgina la porta, PageFrame.jsx.)
      · Disclosure: aria-expanded i aria-controls cap al contenidor de la
        imatge, que plegat porta `hidden` (fora de la vista i de l'arbre
        accessible). El text diu el que farà: «Amaga la portada» / «Mostra la
@@ -224,6 +225,16 @@ export function UniversalPage(props) {
       {...config}
       {...props}
       {...(ambPortada ? { topBarData: ambPortada } : null)}
+      /* Barra taronja universal (ordre del Mestre, 261004) · L'única via
+         d'excepció (senseBarraTaronja) és una prop explícita de la pàgina, i
+         només amb `true`. La config del ContentProvider, que s'escampa
+         damunt, no la pot apagar: ací es torna a escriure des de les props. */
+      senseBarraTaronja={props.senseBarraTaronja === true}
+      /* Logotip de l'entitat (norma del Mestre, 261004) · El mateix patró:
+         l'única excepció (senseLogo) és una prop explícita de la pàgina, i
+         només amb `true`. Ni la config del ContentProvider ni topBarData la
+         poden posar: ací es torna a escriure des de les props. */
+      senseLogo={props.senseLogo === true}
       onConnect={handleConnect}
       showConnect={senseConnectar ? false : (props.showConnect ?? config.showConnect)}
       onBack={handleBack}

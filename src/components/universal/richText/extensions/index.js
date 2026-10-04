@@ -6,6 +6,7 @@ import { netejaFontImatge } from '../../enquadrament/netejaMetadades.js';
 import { netejaHtmlEnganxat } from './imatgesEnganxades.js';
 import SlashMenu from './slash.js';
 import SdpImageNodeView from './SdpImageNodeView.jsx';
+import { TargetesIncrustades } from './targetes/targetesIncrustades.js';
 
 /* RICH-EXIF (Onada 4, ADR multimèdia D4) · allowBase64 es queda (les notes
    sense servidor hi desen el data URL de compressImage), però cap data URL
@@ -84,8 +85,21 @@ async function aFitxerWebp(dataUrl, nom = 'imatge.webp') {
  *        La MATEIXA capacitat que fa servir el hero. Una sola porta de
  *        pujada per a tota l'aplicació: si n'hi ha dues, només una tindrà
  *        polítiques.
+ * @param {boolean} [opcions.ambTargetes] T7 (ordre del Mestre, 261004) · Afig
+ *        l'ordre «Targeta», que obri el selector del consumidor. Només amb
+ *        l'extensió de targetes (extensionsRiques amb ambTargetes).
  */
-export function creaOrdres({ onImageUpload = null } = {}) {
+export function creaOrdres({ onImageUpload = null, ambTargetes = false } = {}) {
+  const ordreTargeta = {
+    id: 'targeta',
+    titol: 'Targeta',
+    ajuda: 'Incrusta una targeta del Mur, el Mercat, l’Agenda o un poble',
+    paraules: ['targeta', 'card', 'incrustar', 'fitxa'],
+    executa: ({ editor, range }) => {
+      editor.chain().focus().deleteRange(range).run();
+      editor.commands.obreSelectorDeTargeta();
+    }
+  };
   return [
     {
       id: 'titol',
@@ -184,7 +198,8 @@ export function creaOrdres({ onImageUpload = null } = {}) {
           console.warn('[slash] No s\'ha pogut inserir la imatge:', err?.message);
         }
       }
-    }
+    },
+    ...(ambTargetes ? [ordreTargeta] : [])
   ];
 }
 
@@ -192,15 +207,21 @@ export function creaOrdres({ onImageUpload = null } = {}) {
  * Extensions riques. El host les memoritza (useMemo) abans de passar-les:
  * si l'array canvia d'identitat a cada render, useEditor reconstruïx
  * l'editor i el cursor salta.
+ *
+ * T7 (ordre del Mestre, 261004) · `ambTargetes` afig les targetes
+ * incrustades (targetes/targetesIncrustades.js) i la seua ordre «/». Ha de
+ * ser CONSTANT durant la vida de l'editor: l'esquema es fixa en crear-lo.
+ * Sense, les mateixes extensions de sempre.
  */
-export function extensionsRiques({ onImageUpload = null } = {}) {
+export function extensionsRiques({ onImageUpload = null, ambTargetes = false } = {}) {
   return [
     SdpImage.configure({
       inline: false,
       allowBase64: true,
       HTMLAttributes: { class: 'sdp-imatge-cos', loading: 'lazy', decoding: 'async' }
     }),
-    SlashMenu.configure({ ordres: creaOrdres({ onImageUpload }) })
+    SlashMenu.configure({ ordres: creaOrdres({ onImageUpload, ambTargetes }) }),
+    ...(ambTargetes ? [TargetesIncrustades] : [])
   ];
 }
 

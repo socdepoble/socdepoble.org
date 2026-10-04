@@ -18,7 +18,8 @@ vi.mock('../../app/contexts/RouterContext', async () => {
 });
 vi.mock('./NotificationContext.jsx', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
 
-import { EventCard } from './EventCard.jsx';
+import { EventCard, rutaDeLaBoinaDeLActe } from './EventCard.jsx';
+import { DEFAULT_AUTHOR } from './UniversalUtils.js';
 import { acteAEsdeveniment } from '../../sections/mur/agendaMur.js';
 import { CALENDAR_EVENTS } from '../../sections/mur/eventsSeed.js';
 import { ocorreElDia } from '../../utils/esdeveniment.js';
@@ -100,6 +101,46 @@ test('sense la prop esdeveniment, la regla T51 de qualsevol element i cap insíg
   act(() => { render(<EventCard item={{ id: 'aplec-2023', title: 'Aplec', date: '2026-08-14T09:00:00' }} />, { container: arrel }); });
   expect(insignia()).toBeNull();
   expect(pastilla()).toEqual(['09:00', '14/08/26']);
+});
+
+/* T6 (ordre del Mestre, 261004, prompt 261004_0515 §5) · La boina d'un acte
+   enllaça SEMPRE a la pàgina de qui signa: la que en fa qui pinta la targeta
+   (authorHref, TargetaDelMur); sense, el sistema i la reserva «Sóc de Poble»
+   van al projecte. Derogat per l'ordre del Mestre del 261004 (prompt
+   261004_0515): el sistema ja no porta a /pobles. Un nom sense identitat
+   coneguda queda sense enllaç. */
+describe('T6 · la boina de l’acte', () => {
+  const enllacDeLAutor = () => arrel.querySelector('.sp-card-header a.sp-card-author-link')?.getAttribute('href') ?? null;
+  const nomDeLAutor = () => arrel.querySelector('.sp-card-header .sp-card-author-name').textContent;
+
+  test('el sistema i la reserva «Sóc de Poble» porten a la pàgina del projecte', () => {
+    pinta({ id: 's', title: 'Avís del sistema', isSystem: true, date: '2026-11-14' });
+    expect([nomDeLAutor(), enllacDeLAutor()]).toEqual(['Sóc de Poble', '/projecte']);
+    pinta({ id: 'r', title: 'Sense autor', date: '2026-11-14' });
+    expect([nomDeLAutor(), enllacDeLAutor()]).toEqual(['Sóc de Poble', '/projecte']);
+    expect(DEFAULT_AUTHOR.href).toBe('/projecte');
+  });
+
+  test('una persona o una entitat porta a la seua pàgina; un nom sense identitat, sense enllaç', () => {
+    cleanup();
+    arrel = document.createElement('div');
+    act(() => {
+      render(<EventCard item={{ id: 'p', title: 'Ball', author_name: 'Javi', date: '2026-11-14' }} authorHref="/gent/javillinares" />, { container: arrel });
+    });
+    expect([nomDeLAutor(), enllacDeLAutor()]).toEqual(['Javi', '/gent/javillinares']);
+    pinta({ id: 'n', title: 'Ball', author_name: 'Pepa', date: '2026-11-14' });
+    expect([nomDeLAutor(), enllacDeLAutor()]).toEqual(['Pepa', null]);
+    expect(arrel.querySelector('.sp-card-header span.sp-card-author-block')).not.toBeNull();
+  });
+
+  test('rutaDeLaBoinaDeLActe: qui signa mana; després, el sistema i la reserva', () => {
+    expect(rutaDeLaBoinaDeLActe({ isSystem: true, author_name: 'Javi' }, '/gent/javillinares')).toBe('/gent/javillinares');
+    expect(rutaDeLaBoinaDeLActe({ isSystem: true }, undefined)).toBe('/projecte');
+    expect(rutaDeLaBoinaDeLActe({}, null)).toBe('/projecte');
+    expect(rutaDeLaBoinaDeLActe({ author: 'Associació' }, undefined)).toBeUndefined();
+    expect(rutaDeLaBoinaDeLActe({ author_name: 'Pepa' }, '')).toBeUndefined();
+    expect(rutaDeLaBoinaDeLActe(null)).toBe('/projecte');
+  });
 });
 
 /* Tres fusos: el del poble, un de negatiu (on el dia UTC recula) i el més

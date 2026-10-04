@@ -1,50 +1,46 @@
 import { useMemo } from 'react';
-import { Bot, CircleDashed, FileStack, FolderOpen, GitBranch, Lock, LockOpen, Timer } from 'lucide-react';
+import { Bot, FileStack, FolderOpen, Lock, Timer } from 'lucide-react';
 import { EstatBuit, Taula } from '../../../components/PedraSeca';
-import { Mono, Privat, TargetaResum, etiquetaBona, etiquetaPendent } from '../peces.jsx';
+import { Mono } from '../peces.jsx';
+import { GraellaXifres } from '../XifresMas.jsx';
+import { xifresDeFamilia, xifresDeGrup } from '../xifresMas.js';
 import { etiquetaNode } from './grafMapa.js';
-import { quanDe } from './calendariMapa.js';
 import { capesActors } from './actorsMapa.js';
-import { esSenseLector } from './fluxosMapa.js';
 
 /* Actors del Mas (05_actors_i_salut.md): la pestanya «Actores» d'Emowe, capa
    per capa. Cada capa ix del Mapa; la relació amb la capa del costat va
    escrita en la targeta (qui dispara quin candat, qui carrega què), perquè es
-   puga llegir també sense vore cap línia. */
+   puga llegir també sense vore cap línia.
+   Ordre del Mestre, 261004 (xat: cap xifra solta) · Cada arnés, carregador,
+   candat, tasca i lloc del sòl és una targeta sencera amb la boina de Sóc de
+   Poble i pàgina pròpia (pecesMapa.js, XifresMas.jsx). Derogat per l'ordre
+   del Mestre del 261004 (xat: cap xifra solta): les peces com a targetes
+   compactes del Panell de Control (TargetaResum), sense boina ni pàgina. Els
+   estats (ACTIU, SENSE CONSUMIDOR, VIU, MORT, FALTA…) són les etiquetes de
+   cada targeta, com abans.
+   Correcció 261004 (verificador de la segona passada) · «Els que conversen»
+   comença per la xifra «agents» del tauler, que es tracta ací. Les targetes
+   de la pàgina són les de la vista «actors» (VISTES_XIFRES): sense Mapa no
+   es pot saber quines peces hi ha, i cap no té targeta ni pàgina. */
 
-const darrer = (cami) => String(cami).split('/').filter(Boolean).pop() || String(cami);
-const plural = (n, un, molts) => `${n} ${n === 1 ? un : molts}`;
 const noms = (nodes) => nodes.map((n) => n.atributs?.arnes ?? etiquetaNode(n)).join(', ');
-
-const ESTAT_TASCA = Object.freeze({
-  viu: etiquetaBona('VIU'),
-  mort: etiquetaPendent('MORT'),
-  'declarat-sense-llancador': etiquetaPendent('SENSE LLANÇADOR'),
-  'llancador-sense-declaracio': etiquetaPendent('SENSE DECLARACIÓ'),
-  desconegut: etiquetaPendent('DESCONEGUT')
-});
-
-function estatArnes(a) {
-  if (!a.candats) return etiquetaPendent('SENSE CANDATS');
-  if (a.acreditats === a.candats) return etiquetaBona('ACTIU');
-  if (a.acreditats) return etiquetaPendent('PARCIAL');
-  // T10 (ordre del Mestre, 260930): candats per acreditar, com els de Codex.
-  return a.desconeguts === a.candats ? etiquetaPendent('DESCONEGUT') : etiquetaPendent('SENSE CONSUMIDOR');
-}
-
-function estatCandat(c) {
-  if (c.acreditat === true) return etiquetaBona('ACTIU');
-  return c.acreditat === false ? etiquetaPendent('SENSE CONSUMIDOR') : etiquetaPendent('DESCONEGUT');
-}
-
-function arrencada({ documents, skills }) {
-  if (!documents.length && !skills.length) return 'no declara què carrega en arrencar';
-  return `en arrencar carrega ${plural(documents.length, 'document', 'documents')} i ${plural(skills.length, 'skill', 'skills')}`;
-}
 
 export function ActorsMapa({ mapa }) {
   const capes = useMemo(() => capesActors(mapa), [mapa]);
-  const { arnesos, carregadors, candats, programades, senseLlancador, sol } = capes;
+  const { arnesos, carregadors } = capes;
+  /* Correcció 261004 (verificador de la tercera passada, punt 5) · Els
+     candats i el sòl porten la targeta del seu recompte davant de les peces:
+     la coberta en destacava el nombre i els estats sense cap targeta. */
+  const peces = useMemo(() => ({
+    recompte: xifresDeGrup('actors', mapa),
+    arnesos: xifresDeFamilia('arnes', mapa),
+    carregadors: xifresDeFamilia('carregador', mapa),
+    recompteCandats: xifresDeGrup('candats', mapa),
+    candats: xifresDeFamilia('candat', mapa),
+    tasques: [...xifresDeFamilia('tasca', mapa), ...xifresDeGrup('sense-llancador', mapa)],
+    recompteSol: xifresDeGrup('sol', mapa),
+    sol: xifresDeFamilia('lloc', mapa)
+  }), [mapa]);
   const senseCodex = !arnesos.some((a) => a.node.id === 'agent:codex');
 
   return (
@@ -66,31 +62,15 @@ export function ActorsMapa({ mapa }) {
           {senseCodex ? <> Codex tampoc: al Mapa no ha arribat cap <Mono>.codex/hooks.json</Mono>.</> : null}
         </p>
         <p>SENSE CONSUMIDOR significa que els candats (hooks) existeixen al repositori, però la telemetria visual no pot acreditar quin agent els dispara. Pot faltar una configuració, com <Mono>CLAUDE.md</Mono>, que declare qui els consumix; l'etiqueta no prova que no s'executen. DESCONEGUT vol dir que els candats estan declarats per a un client que els pot consumir, però el Mas encara no té cap evidència que salten.</p>
-        {arnesos.length ? (
-          <div className="sdp-card-grid">
-            {arnesos.map((a) => (
-              <TargetaResum key={a.node.id} icona={Bot} titol={a.nom}
-                descripcio={`${plural(a.candats, 'candat', 'candats')} · ${arrencada(a.arrencada)}`}
-                etiquetes={estatArnes(a)} />
-            ))}
-          </div>
-        ) : <EstatBuit icona={Bot} titol="Cap arnés al Mapa" />}
+        <GraellaXifres xifres={[...peces.recompte, ...peces.arnesos]} generat={mapa.generat} />
+        {peces.arnesos.length ? null : <EstatBuit icona={Bot} titol="Cap arnés al Mapa" />}
       </section>
 
       <section>
         <h3>La memòria d’arrencada</h3>
         <p>El que s'ha carregat abans de la primera paraula. Un carregador que cap arnés no declara carregar només compta si algú el llig a mà.</p>
         {carregadors.length ? <>
-          <div className="sdp-card-grid">
-            {carregadors.map((c) => {
-              const docs = c.carrega.filter((n) => n.tipus === 'document').length;
-              const skills = c.carrega.filter((n) => n.tipus === 'skill').length;
-              return (
-                <TargetaResum key={c.node.id} icona={FileStack} titol={<Privat>{etiquetaNode(c.node)}</Privat>}
-                  descripcio={`carrega ${plural(docs, 'document', 'documents')} i ${plural(skills, 'skill', 'skills')} · ${c.perQui.length ? `el carrega ${noms(c.perQui)}` : 'cap arnés declara que el carrega'}`} />
-              );
-            })}
-          </div>
+          <GraellaXifres xifres={peces.carregadors} generat={mapa.generat} />
           <Taula titol="Què es carrega en arrencar" densa>
             <thead>
               <tr><th scope="col">Carregador</th><th scope="col">Carrega</th><th scope="col">Qui el carrega</th></tr>
@@ -115,51 +95,23 @@ export function ActorsMapa({ mapa }) {
           Els hooks intercepten cada eina de l'agent abans o després d'executar-se. Un candat
           sense consumidor acreditat és una promesa: està declarat, però ningú no demostra que salte.
         </p>
-        {candats.length ? (
-          <div className="sdp-card-grid">
-            {candats.map((c) => (
-              <TargetaResum key={c.id}
-                icona={c.acreditat === true ? Lock : c.acreditat === false ? LockOpen : c.arnes === 'git' ? GitBranch : CircleDashed}
-                titol={c.esdeveniment}
-                descripcio={c.scripts.length
-                  ? <>{c.arnes} · dispara <Privat>{c.scripts.map(darrer).join(', ')}</Privat></>
-                  : `${c.arnes} · sense script declarat`}
-                etiquetes={estatCandat(c)} />
-            ))}
-          </div>
-        ) : <EstatBuit icona={Lock} titol="Cap candat al Mapa" />}
+        <GraellaXifres xifres={[...peces.recompteCandats, ...peces.candats]} generat={mapa.generat} />
+        {peces.candats.length ? null : <EstatBuit icona={Lock} titol="Cap candat al Mapa" />}
       </section>
 
       <section>
         <h3>El que corre sol</h3>
         <p>Les tasques que llança el rellotge del sistema (launchd), sense ningú davant. Les que el registre declara i ningú no llança, a part.</p>
-        {programades.length || senseLlancador.length ? (
-          <div className="sdp-card-grid">
-            {programades.map((t) => (
-              <TargetaResum key={t.id} icona={Timer} titol={t.id}
-                descripcio={<>{quanDe(t)}{t.script ? <> · <Privat>{darrer(t.script)}</Privat></> : null}</>}
-                etiquetes={ESTAT_TASCA[t.estat]} />
-            ))}
-            {senseLlancador.length ? (
-              <TargetaResum icona={CircleDashed} titol={plural(senseLlancador.length, 'tasca sense llançador', 'tasques sense llançador')}
-                descripcio={senseLlancador.map((t) => t.id).join(' · ')} etiquetes={etiquetaPendent('FALTA')} />
-            ) : null}
-          </div>
-        ) : <EstatBuit icona={Timer} titol="Res no corre sol">Cap tasca del Mapa té llançador: els agents només treballen mentre algú els parla.</EstatBuit>}
+        {peces.tasques.length
+          ? <GraellaXifres xifres={peces.tasques} generat={mapa.generat} />
+          : <EstatBuit icona={Timer} titol="Res no corre sol">Cap tasca del Mapa té llançador: els agents només treballen mentre algú els parla.</EstatBuit>}
       </section>
 
       <section>
         <h3>El sòl</h3>
         <p>On treballen: els llocs on les peces deixen la faena o la lligen.</p>
-        {sol.length ? (
-          <div className="sdp-card-grid">
-            {sol.map((p) => (
-              <TargetaResum key={p.node.id} icona={FolderOpen} titol={<Privat>{etiquetaNode(p.node)}</Privat>}
-                descripcio={`hi escriuen ${p.escriuen.length} · el lligen ${p.lligen.length}`}
-                etiquetes={esSenseLector(p) ? etiquetaPendent('SENSE LECTOR') : undefined} />
-            ))}
-          </div>
-        ) : <EstatBuit icona={FolderOpen} titol="Cap lloc declarat" />}
+        <GraellaXifres xifres={[...peces.recompteSol, ...peces.sol]} generat={mapa.generat} />
+        {peces.sol.length ? null : <EstatBuit icona={FolderOpen} titol="Cap lloc declarat" />}
       </section>
     </>
   );

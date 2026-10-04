@@ -245,6 +245,191 @@ describe('ColumnaColleccio', () => {
   });
 });
 
+/* Ordre del Mestre, 261004 (prompt 261004_0515, «no inventar targetes») · forma="targetes": les
+   mateixes columnes amb UniversalCard dins de GraellaTargetes. Sense la prop, el de sempre. */
+describe('forma="targetes" (UniversalCard)', () => {
+  const targetaDe = (nom) => screen.getByRole('button', { name: nom }).closest('article.sp-card');
+
+  test('ColumnaCataleg: seccions h3 i targetes h4, el quadrat amb la icona de la secció, l’estat en etiqueta i data-element', () => {
+    const { container } = munta(<ColumnaCataleg forma="targetes" titol="Productes" categories={CATEGORIES} articles={ARTICLES} commutable
+      textosEstat={{ 'en-colleccio': 'A la comanda' }} />);
+    const cos = screen.getByRole('region', { name: 'Productes' });
+    expect(within(cos).getAllByRole('heading', { level: 3 }).map((h) => h.textContent)).toEqual(['Cafès 2 articles', 'Begudes 1 article']);
+    expect(within(cos).getAllByRole('heading', { level: 4 }).map((h) => h.textContent)).toEqual(['Tallat', 'Cafè amb llet', 'Aigua']);
+    expect([...container.querySelectorAll('.sdp-seccio__cos > div')].map((d) => d.className)).toEqual(['sdp-card-grid', 'sdp-card-grid']);
+    expect(container.querySelector('.sdp-graella-articles, .sdp-llista-articles, .sdp-rajola, ul.sdp-graella-articles')).toBeNull();
+    /* El toc commuta: aria-pressed a l'element principal, i l'estat també en text. */
+    const llet = screen.getByRole('button', { name: 'Cafè amb llet' });
+    expect(llet.getAttribute('aria-pressed')).toBe('true');
+    expect(llet.dataset.element).toBe('cafe-llet');
+    expect(within(targetaDe('Cafè amb llet')).getByText('A la comanda').className).toBe('sp-card-label sdp-badge-tag');
+    expect(screen.getByRole('button', { name: 'Tallat' }).getAttribute('aria-pressed')).toBe('false');
+    /* La línia de davall (el valor) i el quadrat amb la icona de la seua secció. */
+    const tallat = targetaDe('Tallat');
+    expect(tallat.querySelector('.sp-card-text').textContent).toBe('1,30 €');
+    expect(tallat.querySelector('.sp-card-calendar-badge').getAttribute('aria-label')).toBe('Cafès');
+    expect(tallat.querySelector('.sp-card-calendar-badge svg.lucide-coffee')).not.toBeNull();
+    /* El peu per defecte, sense Compartir. */
+    expect([...tallat.querySelectorAll('footer button')].map((b) => b.getAttribute('aria-label'))).toEqual(['Traduir Tallat', 'Comentar Tallat', 'Connectar amb Tallat']);
+  });
+
+  test('ColumnaCataleg: el toc crida onTria; el botó dret, Maj+F10 o la pulsació llarga obrin el detall per la URL', () => {
+    const onTria = vi.fn();
+    munta(<ColumnaCataleg forma="targetes" titol="Productes" categories={CATEGORIES} articles={ARTICLES} onTria={onTria} detall={{}} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Tallat' }));
+    expect(onTria).toHaveBeenCalledWith(ARTICLES[0], expect.objectContaining({ obriDetall: expect.any(Function) }));
+    const aigua = screen.getByRole('button', { name: 'Aigua' });
+    expect(aigua.getAttribute('aria-keyshortcuts')).toBe('Shift+F10');
+    fireEvent.contextMenu(aigua);
+    expect(ubicacio()).toBe('/app/bar/caixa?article=aigua');
+    expect(screen.getByRole('dialog', { name: 'Aigua' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel·la' }));
+    fireEvent.keyDown(screen.getByRole('button', { name: 'Tallat' }), { key: 'F10', shiftKey: true });
+    expect(ubicacio()).toBe('/app/bar/caixa?article=tallat');
+  });
+
+  test('ColumnaCataleg: els destacats porten la icona de la seua secció; la vista llista, la targeta plana en columna; un article desactivat no es pot tocar', () => {
+    const destacats = [{ id: 'recents', nom: 'Recents', articles: [ARTICLES[2]] }];
+    const articles = [...ARTICLES, { id: 'gel', nom: 'Gel', categoriaId: 'begudes', estat: 'desactivat' }];
+    const { container } = munta(<ColumnaCataleg forma="targetes" titol="Productes" categories={CATEGORIES} articles={articles} destacats={destacats} />,
+      { ruta: '/app/bar/caixa?vista=llista' });
+    const [recent] = within(screen.getByRole('region', { name: /^Recents/ })).getAllByRole('button', { name: 'Aigua' });
+    expect(recent.closest('article').querySelector('.sp-card-calendar-badge').getAttribute('aria-label')).toBe('Begudes');
+    expect([...container.querySelectorAll('.sdp-seccio__cos > div')].every((d) => d.className === 'sdp-card-llista')).toBe(true);
+    expect(container.querySelectorAll('article.sp-card--pla')).toHaveLength(5);
+    expect(screen.queryByRole('button', { name: 'Gel' })).toBeNull();
+    expect(within(screen.getByRole('heading', { level: 4, name: 'Gel' }).closest('article')).getByText('No disponible')).toBeTruthy();
+  });
+
+  test('ColumnaCataleg sense categories: una sola graella amb el nom de la columna i targetes h3', () => {
+    munta(<ColumnaCataleg forma="targetes" titol="Productes" articles={ARTICLES} selector={null} />);
+    const graella = screen.getByRole('group', { name: 'Productes' });
+    expect(graella.className).toBe('sdp-card-grid');
+    expect(within(graella).getAllByRole('heading', { level: 3 }).map((h) => h.textContent)).toEqual(['Tallat', 'Cafè amb llet', 'Aigua']);
+    /* Sense secció ni icona pròpia, cap quadrat inventat. */
+    expect(graella.querySelector('.sp-card-calendar-badge')).toBeNull();
+  });
+
+  /* Ordre del Mestre, 261004 (regressió de la Nevera) · L'element principal de la targeta només
+     porta el nom: el que la rajola deia al lector (l'especificació, l'estat i la insígnia) ho
+     diu la seua descripció accessible, en l'ordre de la rajola. Sense res a dir, cap descripció. */
+  const descripcioDe = (boto) => {
+    const id = boto.getAttribute('aria-describedby');
+    return id ? document.getElementById(id).textContent : null;
+  };
+
+  test('ColumnaCataleg: la descripció accessible diu l’especificació, l’estat i la insígnia', () => {
+    const articles = [
+      ...ARTICLES,
+      { id: 'llet', nom: 'Llet', categoriaId: 'begudes', secundari: 'sense lactosa', insignia: '2', estat: 'en-colleccio' },
+      { id: 'sal', nom: 'Sal', categoriaId: 'begudes' },
+      { id: 'gel', nom: 'Gel', categoriaId: 'begudes', valor: '0,50 €', estat: 'desactivat' }
+    ];
+    munta(<ColumnaCataleg forma="targetes" titol="Productes" categories={CATEGORIES} articles={articles} commutable
+      textosEstat={{ 'en-colleccio': 'A la comanda' }} />);
+    expect(descripcioDe(screen.getByRole('button', { name: 'Tallat' }))).toBe('1,30 €');
+    expect(descripcioDe(screen.getByRole('button', { name: 'Cafè amb llet' }))).toBe('1,50 €, A la comanda');
+    expect(descripcioDe(screen.getByRole('button', { name: 'Llet' }))).toBe('sense lactosa, A la comanda, 2');
+    /* El nom continua sent només el nom. */
+    expect(screen.getByRole('button', { name: 'Llet' }).getAttribute('aria-label')).toBe('Llet');
+    /* Res a dir: cap descripció ni cap span. */
+    const sal = screen.getByRole('button', { name: 'Sal' });
+    expect(sal.hasAttribute('aria-describedby')).toBe(false);
+    expect(sal.closest('article').querySelector('.sdp-nomes-lector')).toBeNull();
+    /* Desactivat: no hi ha element principal; l'estat continua en l'etiqueta. */
+    const gel = screen.getByRole('heading', { level: 4, name: 'Gel' }).closest('article');
+    expect(gel.querySelector('[aria-describedby], .sdp-nomes-lector')).toBeNull();
+    /* El text és dins de l'element principal, que continua sent el segon fill de l'article. */
+    const llet = screen.getByRole('button', { name: 'Llet' });
+    expect(document.getElementById(llet.getAttribute('aria-describedby')).parentElement).toBe(llet);
+    expect([...llet.closest('article').children].map((e) => e.className)).toEqual(['sp-card-link-overlay', 'sp-card-body has-calendar-badge has-aside', 'sp-card-footer']);
+  });
+
+  test('ColumnaColleccio: pendent diu l’estat; fet i anul·lat, el seu text de la línia de davall; la quantitat, la insígnia', () => {
+    const linies = [
+      { id: 'p', articleId: 'pomes', quantitat: 3, nom: 'Pomes', detall: '1 kg' },
+      { id: 'f', articleId: 'llet', quantitat: 1, nom: 'Llet', estat: 'fet' },
+      { id: 'x', articleId: 'pa', quantitat: 1, nom: 'Pa', estat: 'anullat' }
+    ];
+    munta(<ColumnaColleccio forma="targetes" titol="Llista" linies={linies} textosLinies={{ fet: 'Comprat' }} textos={{ enColleccio: 'Per comprar' }} onTria={() => {}} />);
+    expect(descripcioDe(screen.getByRole('button', { name: 'Pomes' }))).toBe('1 kg, Per comprar, 3');
+    expect(descripcioDe(screen.getByRole('button', { name: 'Llet' }))).toBe('Comprat');
+    expect(descripcioDe(screen.getByRole('button', { name: 'Pa' }))).toBe('Anul·lat');
+  });
+
+  /* REGLA D'OR 1 (ordre del Mestre, 261004) · La boina taronja amb l'autor real: la que l'app vestix
+     a cada article (`autoria`, la forma de PaginaApp). L'esquelet no n'inventa cap. */
+  test('la boina: `article.autoria` (nom, poble, avatar i ruta) a dalt de la targeta; sense, la targeta de sempre', () => {
+    const PROJECTE = { nom: 'Sóc de Poble', poble: 'La Torre de les Maçanes', avatar: '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg', href: '/projecte' };
+    const articles = [{ ...ARTICLES[0], autoria: PROJECTE }, { ...ARTICLES[1], autoria: { nom: 'Tu' } }, ARTICLES[2]];
+    munta(<ColumnaCataleg forma="targetes" titol="Productes" categories={CATEGORIES} articles={articles} />);
+    const tallat = targetaDe('Tallat');
+    expect([...tallat.children].map((e) => e.className)[0]).toBe('sp-card-header');
+    const autor = within(tallat.querySelector('header.sp-card-header')).getByRole('link', { name: /^Sóc de Poble/ });
+    expect(autor.getAttribute('href')).toBe('/projecte');
+    expect(tallat.querySelector('.sp-card-author-location').textContent).toBe('La Torre de les Maçanes');
+    /* L'avatar és la imatge privada de les apps: el filtre de mitjans i sense referent. */
+    const avatar = tallat.querySelector('img.sp-card-avatar');
+    expect(avatar.getAttribute('src')).toBe('/assets/system/ui/logo-socdepoble-cuadrat-verd.svg');
+    expect(avatar.getAttribute('referrerpolicy')).toBe('no-referrer');
+    /* Sense ruta: el nom, sense enllaç. */
+    const llet = targetaDe('Cafè amb llet').querySelector('header.sp-card-header');
+    expect(llet.querySelector('span.sp-card-author-block .sp-card-author-name').textContent).toBe('Tu');
+    expect(within(llet).queryByRole('link')).toBeNull();
+    /* Sense autoria: cap boina inventada. */
+    expect(targetaDe('Aigua').querySelector('header.sp-card-header')).toBeNull();
+  });
+
+  test('ColumnaColleccio: la boina de cada línia (`linia.autoria`)', () => {
+    const linies = [{ id: 'p', articleId: 'pomes', quantitat: 1, nom: 'Pomes', autoria: { nom: 'Sóc de Poble', href: '/projecte' } }];
+    munta(<ColumnaColleccio forma="targetes" titol="Llista" linies={linies} onTria={() => {}} />);
+    expect(within(targetaDe('Pomes')).getByRole('link', { name: 'Sóc de Poble' }).getAttribute('href')).toBe('/projecte');
+  });
+
+  test('Llei del Píxel: sense la prop, el cos de sempre (rajoles i files), cap UniversalCard', () => {
+    const { container, unmount } = munta(<ColumnaCataleg titol="Productes" categories={CATEGORIES} articles={ARTICLES} />);
+    expect(container.querySelector('.sdp-graella-articles')).not.toBeNull();
+    expect(container.querySelector('.sp-card')).toBeNull();
+    unmount();
+    const colleccio = munta(<ColumnaColleccio titol="Llista" linies={LINIES} forma="rajoles" />).container;
+    expect(colleccio.querySelector('.sdp-graella-articles')).not.toBeNull();
+    expect(colleccio.querySelector('.sp-card')).toBeNull();
+  });
+
+  test('ColumnaColleccio: pendent premuda amb l’etiqueta, fet i anul·lat amb el text a la línia de davall; la icona de la línia; h4 sota el resum', () => {
+    const onTria = vi.fn();
+    const onEdita = vi.fn();
+    const linies = [
+      { id: 'p', articleId: 'pomes', quantitat: 1, nom: 'Pomes', detall: '1 kg', icona: CupSoda },
+      { id: 'f', articleId: 'llet', quantitat: 1, nom: 'Llet', estat: 'fet' },
+      { id: 'x', articleId: 'pa', quantitat: 1, nom: 'Pa', estat: 'anullat' }
+    ];
+    const { unmount } = munta(<ColumnaColleccio forma="targetes" titol="Llista" linies={linies} resum={RESUM} textosLinies={{ fet: 'Comprat' }}
+      textos={{ enColleccio: 'Per comprar' }} onTria={onTria} onEdita={onEdita} />);
+    expect(screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent)).toEqual(['Comanda 2 línies']);
+    expect(screen.getAllByRole('heading', { level: 4 }).map((h) => h.textContent)).toEqual(['Pomes', 'Llet', 'Pa']);
+    const pomes = screen.getByRole('button', { name: 'Pomes' });
+    expect(pomes.getAttribute('aria-pressed')).toBe('true');
+    expect(within(targetaDe('Pomes')).getByText('Per comprar')).toBeTruthy();
+    expect(targetaDe('Pomes').querySelector('.sp-card-text').textContent).toBe('1 kg');
+    expect(targetaDe('Pomes').querySelector('.sp-card-calendar-badge svg.lucide-cup-soda')).not.toBeNull();
+    expect(screen.getByRole('button', { name: 'Llet' }).getAttribute('aria-pressed')).toBe('false');
+    expect(targetaDe('Llet').querySelector('.sp-card-text').textContent).toBe('Comprat');
+    expect(targetaDe('Pa').querySelector('.sp-card-text').textContent).toBe('Anul·lat');
+    fireEvent.click(pomes);
+    expect(onTria).toHaveBeenCalledWith(linies[0]);
+    fireEvent.contextMenu(screen.getByRole('button', { name: 'Llet' }));
+    expect(onEdita).toHaveBeenCalledWith(linies[1]);
+    unmount();
+    /* Sense resum, el nom de la targeta és un h3; buida, l'estat buit de sempre. */
+    const sola = munta(<ColumnaColleccio forma="targetes" titol="Llista" linies={linies.slice(0, 1)} />);
+    expect(screen.getByRole('heading', { level: 3 }).textContent).toBe('Pomes');
+    sola.unmount();
+    munta(<ColumnaColleccio forma="targetes" titol="Llista" linies={[]} />);
+    expect(screen.getByText('Encara no hi ha res')).toBeTruthy();
+  });
+});
+
 describe('ColumnaColleccions', () => {
   test('les targetes són enllaços dins de l’app; el clic navega amb push', () => {
     munta(<ColumnaColleccions titol="Tiquets oberts" colleccions={[{ id: 'barra', nom: 'Barra', comptador: 2 }, { id: 't3', nom: 'Taula 3', comptador: 5 }]}

@@ -6,6 +6,7 @@ vi.mock('../../../config/assetResolver', () => ({ resolveAsset: (uri) => uri }))
 vi.mock('../../../app/contexts/RouterContext', () => ({ useNavigate: () => vi.fn(), Link: 'a' }));
 vi.mock('../NotificationContext.jsx', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
 import { BarraTaronja } from './BarraTaronja.jsx';
+import { isSafeUrl, rutaDAutorSegura } from '../UniversalUtils.js';
 import { BotoVisibilitat } from './BotoVisibilitat.jsx';
 import { PageFrame } from '../PageFrame.jsx';
 import { IconaEstatDesament } from '../EstatDesament.jsx';
@@ -120,6 +121,8 @@ const comprovaMarcatge = (seccio) => {
   expect(etiquetes(autor)).toEqual(['img', 'div', 'div']);
   expect(fills(autor)).toEqual(['sp-card-avatar', 'sp-card-avatar sp-card-avatar--fallback sp-card-avatar--amagat', 'sp-card-author-info']);
   expect(autor.children[0].getAttribute('src')).toBe('/assets/pepa.webp');
+  /* Ordre del Mestre, 261004 (prompt 261004_0515; privacitat) · l'avatar no envia cap Referer. */
+  expect(autor.children[0].getAttribute('referrerpolicy')).toBe('no-referrer');
   expect(etiquetes(autor.children[1])).toEqual(['svg']);
   expect(autor.children[1].querySelector('svg.lucide-user-round')).not.toBeNull();
   expect(etiquetes(autor.children[2])).toEqual(['div', 'div']);
@@ -168,6 +171,49 @@ test('el botó d’emoticona porta l’anell de focus de la barra taronja (C15),
   const boto = barra({ onObriEmoticona: () => {} }).querySelector('.sdp-emoticona-barra--boto');
   expect(boto.matches('section.bar-orange > .sdp-emoticona-barra--boto')).toBe(true);
   expect(boto.closest('.bar-actions')).toBeNull();
+});
+
+/* T6 (ordre del Mestre, 261004) · La ruta de l'autoria de la barra passa per
+   la regla de la boina de la targeta (rutaDAutorSegura, W4-07): una ruta de
+   l'app enllaça també a l'app nativa (capacitor://localhost), on isSafeUrl la
+   deixava sense enllaç. Una adreça absoluta, per isSafeUrl com sempre. */
+const ORIGENS = Object.freeze({
+  https: { origin: 'https://socdepoble.org', protocol: 'https:', host: 'socdepoble.org', hostname: 'socdepoble.org', href: 'https://socdepoble.org/page/x', pathname: '/page/x', search: '', hash: '' },
+  capacitor: { origin: 'capacitor://localhost', protocol: 'capacitor:', host: 'localhost', hostname: 'localhost', href: 'capacitor://localhost/page/x', pathname: '/page/x', search: '', hash: '' }
+});
+for (const [nom, origen] of Object.entries(ORIGENS)) {
+  test(`T6 · origen ${nom}: una ruta de l’app enllaça l’autoria; una contrabarra o un esquema, no`, () => {
+    vi.stubGlobal('location', origen);
+    try {
+      expect(isSafeUrl('/projecte')).toBe(nom !== 'capacitor');
+      for (const ruta of ['/projecte', '/gent/javillinares', '/empresa/forn?x=1']) {
+        expect([ruta, rutaDAutorSegura(ruta)]).toEqual([ruta, ruta]);
+        const autor = barra({ authorHref: ruta }).firstElementChild;
+        expect([ruta, autor.tagName, autor.getAttribute('href')]).toEqual([ruta, 'A', ruta]);
+        cleanup();
+      }
+      for (const dolenta of ['/\\altra.example/x', '//altra.example/x', '/mur x', 'javascript:alert(1)', '', null, 42]) {
+        expect([dolenta, rutaDAutorSegura(dolenta)]).toEqual([dolenta, null]);
+        expect(barra({ authorHref: dolenta }).firstElementChild.tagName).toBe('DIV');
+        cleanup();
+      }
+      /* Una adreça absoluta continua amb isSafeUrl: http(s) sí, un altre esquema no. */
+      expect(rutaDAutorSegura('https://exemple.org/autora')).toBe('https://exemple.org/autora');
+      expect(rutaDAutorSegura('capacitor://localhost/mur')).toBeNull();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+}
+
+/* Ordre del Mestre, 261004 (prompt 261004_0515; privacitat) · L'avatar de la
+   barra no envia cap Referer: el detall del Lector hi pot passar el logo
+   d'una font de fora. Només l'atribut: la resta de l'<img>, la de sempre. */
+test('l’avatar porta referrerPolicy="no-referrer" i la resta d’atributs de sempre', () => {
+  const img = barra({ authorAvatar: 'https://diari.example/logo.png' }).querySelector('img.sp-card-avatar');
+  expect(img.getAttribute('referrerpolicy')).toBe('no-referrer');
+  expect(img.getAttributeNames().sort()).toEqual(['alt', 'class', 'decoding', 'height', 'referrerpolicy', 'src', 'width']);
+  expect(img.getAttribute('src')).toBe('https://diari.example/logo.png');
 });
 
 test('PageFrame passa onObriEmoticona de topBarData a l’espai central', () => {

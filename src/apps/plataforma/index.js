@@ -15,6 +15,9 @@
  *   useRutaApp(rutes)      · la ruta interna que casa amb la URL, amb els paràmetres validats
  *   validaRutes, coincidixRuta, esSlug, esIdOpac, esData, esUuid, VALIDADORS
  *   ESDEVENIMENT_NAVEGA    · per a les apps externes (custom elements)
+ *   ENTITAT_PROJECTE, autoriaDe(autor) · la boina d'autor de les targetes
+ *                            d'una app ({ nom, poble, avatar, href }),
+ *                            resolta per identificador (REGLA D'OR 1, 261004)
  */
 export { useApp, useInterruptorsApp } from './PlataformaContext.jsx';
 export { ClosaAplicacio, useClosaAplicacio, validaTaulaDeClosa } from './ClosaAplicacio.jsx';
@@ -24,3 +27,4 @@ export {
 } from './rutesAplicacio.js';
 export { ESDEVENIMENT_NAVEGA } from './ElementExtern.jsx';
 export { ESQUEMA_APP, NOMS_ICONES, rutaDeApp, titolDe } from './manifestApp.js';
+export { ENTITAT_PROJECTE, autoriaDe } from './autoria.js';

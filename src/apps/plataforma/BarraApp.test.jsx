@@ -8,7 +8,7 @@ import { BrowserRouter, Link } from '../../app/contexts/RouterContext.jsx';
 import { UIProvider } from '../../app/contexts/UIContext.jsx';
 import { DEFAULT_SECTION_PATH } from '../../config/sections';
 import { muntaPlataforma, preparaNavegador } from './__fixtures__/munta.jsx';
-import { manifestDeProva } from './__fixtures__/manifests.js';
+import { manifestDeProva, manifestExternDeProva } from './__fixtures__/manifests.js';
 import { BarraLateral, TITOL_MENU_SDP, useTitolBarraLateral } from './BarraLateral.jsx';
 import { creaRegistre } from './registreApps.js';
 
@@ -125,9 +125,11 @@ describe('dins d’una app', () => {
     expect(actius(nav)).toEqual(['/app/prova/caixa-b']);
   });
 
-  test('la fletxa torna (push) a l’última ruta de Sóc de Poble, amb la consulta', () => {
+  test('la fletxa torna (push) a l’última ruta de Sóc de Poble, amb la consulta', async () => {
     muntaBarra('/mur');
     fireEvent.click(screen.getByRole('link', { name: 'Ves a comunitats' }));
+    // La ruta externa es consolida abans d'un nou clic, com al navegador.
+    await new Promise((resolve) => setTimeout(resolve, 0));
     fireEvent.click(screen.getByRole('link', { name: 'Entra a la prova' }));
     const nav = screen.getByRole('navigation', { name: 'Navegació principal' });
     const llarg = window.history.length;
@@ -141,6 +143,30 @@ describe('dins d’una app', () => {
     const { nav } = muntaBarra('/app/prova/inici');
     fireEvent.click(within(nav).getByRole('button', { name: 'Torna a Sóc de Poble' }));
     expect(window.location.pathname).toBe(DEFAULT_SECTION_PATH);
+  });
+
+  test('una ruta d’app no es recorda com a ruta de retorn mentre el registre encara no la coneix', async () => {
+    const retardat = creaRegistre({ internes: [] });
+    muntaPlataforma('/app/gestoria/aprendre', {
+      registre: retardat,
+      fills: <nav aria-label="Navegació principal"><BarraLateral><BarraSdp /></BarraLateral></nav>
+    });
+    const nav = screen.getByRole('navigation', { name: 'Navegació principal' });
+    expect(within(nav).getByRole('button', { name: 'Panell de control' })).toBeTruthy();
+    expect(within(nav).queryByRole('button', { name: 'Torna a Sóc de Poble' })).toBeNull();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    act(() => {
+      const resultat = retardat.registraAppExterna(manifestExternDeProva({
+        id: 'gestoria',
+        titol: { ca: 'Gestoria de prova' },
+        entrades: [{ slug: 'aprendre', titol: { ca: 'Aprendre' }, icona: 'NotebookPen' }],
+        entradaPerDefecte: 'aprendre'
+      }));
+      expect(resultat.ok).toBe(true);
+    });
+    fireEvent.click(within(nav).getByRole('button', { name: 'Torna a Sóc de Poble' }));
+    expect(window.location.pathname).toBe(DEFAULT_SECTION_PATH);
+    expect(within(nav).getByRole('button', { name: 'Panell de control' })).toBeTruthy();
   });
 
   test('en compacte, triar una entrada o la fletxa tanca el calaix; cap botó de plegar', () => {

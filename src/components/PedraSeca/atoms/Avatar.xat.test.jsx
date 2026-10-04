@@ -3,7 +3,7 @@
  *
  * El camí de veritat dels dos 404 de gentdelatorre.net: la llavor del xat
  * (localXat en mode seed) → mapejaFil → les files de la llista. La IAIA
- * arriba amb '/assets/fotos/iaia-maria.png' i la comunitat «Sóc de Poble» amb
+ * arriba amb l'avatar vigent d'AGENTS_MAP i la comunitat «Sóc de Poble» amb
  * el logo cuadrat-verd. Sense base han de quedar com sempre; amb la base del
  * paquet, cap <img> del xat pot demanar '/assets/…' a l'arrel de l'amfitrió.
  * No es munta la secció sencera (contextos, rail, mides): les files són on es
@@ -15,8 +15,9 @@ import FilaConversa, { FilaComunitat } from '../../../sections/xat/components/Fi
 import { agrupaComunitats, mapejaFil } from '../../../sections/xat/missatges.js';
 import { localXat, reiniciaLocalXat } from '../../../data/localXat.js';
 import { fixaBaseRecursos } from '../../../config/assetResolver.js';
+import { AGENTS_MAP } from '../../../data/agentsSeed.js';
 
-const IAIA = '/assets/fotos/iaia-maria.png';
+const IAIA = AGENTS_MAP.IAIA.avatar_url;
 const LOGO = '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg';
 /* Mateix origen que la pàgina, com el plugin-url de WordPress. */
 const PAQUET = `${window.location.origin}/wp-content/plugins/socdepoble-enxufe/dist`;
