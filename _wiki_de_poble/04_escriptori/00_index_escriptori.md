@@ -1194,3 +1194,5 @@ Enllaços a peces ja existents, verificats al disc; no s’han mogut ni editat e
 - [[02_investigacio_ia/261003_1330_onada4_claude/CONTROL_TARGETES_DOBLE_ACCIO.txt]]
 
 - [[261004_0430_pla_implementacio_claude]]
+
+- [[../10_actes/261004_0435_acta_marmota]]
