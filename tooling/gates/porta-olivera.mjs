@@ -47,13 +47,22 @@
  *  un terminal (o un pipe que ningú tanca) no envia mai, i la porta es penjava
  *  just quan la skill manava executar-la.
  */
-import { CAMINS } from '../lib/arrel.mjs';
+import { CAMINS, arrelSegura, esMain } from '../lib/arrel.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 import tty from 'node:tty';
-import { pathToFileURL } from 'node:url';
 
-export const ARREL = process.env.SDP_ARREL || process.cwd();
+// La ubicació de l'eina resol l'arrel. Conservar l'error permet importar les
+// funcions amb una arrel explícita en fixtures, sense donar cap verd implícit.
+let errorArrel = null;
+export const ARREL = (() => {
+  try { return process.env.SDP_ARREL ? path.resolve(process.env.SDP_ARREL) : arrelSegura(); }
+  catch (error) { errorArrel = error; return null; }
+})();
+function arrelPerDefecte() {
+  if (ARREL) return ARREL;
+  throw errorArrel;
+}
 const ESCRIPTORI = CAMINS.escriptori;
 const ARXIU = CAMINS.arxiuHistoric;
 const INDEX = CAMINS.indexEscriptori;
@@ -75,48 +84,64 @@ export function avui(ara = new Date()) {
   return `${p(ara.getFullYear() % 100)}${p(ara.getMonth() + 1)}${p(ara.getDate())}`;
 }
 
-/** Documents solts de l'Escriptori, amb data, categoria i cognom. */
-export function inventari(arrel = ARREL) {
+/** Artefactes regulars visibles del primer nivell, de qualsevol extensió.
+ * Els controls ocults no formen part de la taula documental; Safata i carpetes
+ * permanents conserven els seus circuits. Diagnosticar mai els mou ni els llig.
+ */
+function fitxersSolts(arrel) {
   const dir = path.join(arrel, ESCRIPTORI);
   if (!fs.existsSync(dir)) return [];
   return fs.readdirSync(dir, { withFileTypes: true })
-    .filter((e) => e.isFile() && !e.name.startsWith('.') && e.name.endsWith('.md'))
+    .filter(e => e.isFile() && !e.name.startsWith('.'))
+    .map(e => ({ nom: e.name, rel: `${ESCRIPTORI}/${e.name}` }));
+}
+
+/** Documents Markdown termodinàmics: política d'envelliment i arxivat intacta. */
+export function inventari(arrel = arrelPerDefecte()) {
+  return fitxersSolts(arrel)
     .map((e) => {
-      const m = NOM.exec(e.name);
+      const m = NOM.exec(e.nom);
       if (!m) return null;
       const [, data, hora, resta] = m;
       const categoria = resta.startsWith('pla_implementacio') ? 'pla' : resta.split('_')[0];
-      return { nom: e.name, rel: `${ESCRIPTORI}/${e.name}`, data, hora, categoria, resta };
+      return { ...e, data, hora, categoria, resta };
     })
     .filter(Boolean);
 }
 
 /**
  * Noms (sense `.md`) que l'índex declara vius davall de qualsevol «## Activitat en
- * curs». Només compten les àncores planes, com a `ancoratge()`: una àncora amb `/`
- * apunta fora del primer nivell i no pot protegir cap document de la taula.
+ * curs». Comparteix resolució amb `ancoratge()`: només compta si el camí
+ * resol al primer nivell; un homònim d'una altra carpeta no protegix la taula.
  */
-export function vius(arrel = ARREL) {
+function viusExactes(arrel) {
   const p = path.join(arrel, INDEX);
   const text = fs.existsSync(p) ? fs.readFileSync(p, 'utf8') : '';
   const noms = new Set();
-  for (const bloc of text.matchAll(ACTIVITAT)) {
-    for (const a of bloc[1].matchAll(/\[\[([^\]|#]+)/g)) {
-      const nom = a[1].trim();
-      if (nom && !nom.includes('/')) noms.add(nom.replace(/\.md$/, ''));
+  const presents = new Set(fitxersSolts(arrel).map(d => d.nom));
+  for (const bloc of prosaIndex(text).matchAll(ACTIVITAT)) {
+    for (const a of bloc[1].matchAll(/\[\[([^\]]+)\]\]/g)) {
+      const nom = nomPrimerNivell(referent(a[1], false));
+      const resolt = nom && resolNomExacte(nom, presents);
+      if (resolt) noms.add(resolt);
     }
   }
   return noms;
 }
+export function vius(arrel = arrelPerDefecte()) {
+  // Conserva l'API històrica sense .md; la política de ranci compara el fitxer
+  // complet perquè un recurs homònim no acredite la vida d'un altre document.
+  return new Set([...viusExactes(arrel)].map(nom => nom.replace(/\.md$/, '')));
+}
 
 /** El que hauria d'estar a l'arxiu: categoria de torn, data anterior a hui i cap declaració de viu. */
-export function ranci(arrel = ARREL, dia = avui()) {
-  const viu = vius(arrel);
-  return inventari(arrel).filter((d) => TRANSITORIES.test(d.categoria) && d.data < dia && !viu.has(d.nom.replace(/\.md$/, '')));
+export function ranci(arrel = arrelPerDefecte(), dia = avui()) {
+  const viu = viusExactes(arrel);
+  return inventari(arrel).filter((d) => TRANSITORIES.test(d.categoria) && d.data < dia && !viu.has(d.nom));
 }
 
 /** Pissarra compartida d'aquesta jornada. */
-export function plaDeHui(arrel = ARREL, dia = avui()) {
+export function plaDeHui(arrel = arrelPerDefecte(), dia = avui()) {
   return inventari(arrel).filter((d) => /^pla_implementacio(?:_|$)/.test(d.resta) && d.data === dia);
 }
 
@@ -125,7 +150,7 @@ export function plaDeHui(arrel = ARREL, dia = avui()) {
  * carpeta es busca sense distingir caixa: el codi en conserva `00_Bandeja_d_Entrada`
  * i el disc du `00_bandeja_d_entrada`, i a Linux una comparació exacta no la veuria.
  */
-export function safata(arrel = ARREL) {
+export function safata(arrel = arrelPerDefecte()) {
   const dir = path.join(arrel, ESCRIPTORI);
   if (!fs.existsSync(dir)) return { carpeta: null, elements: [] };
   const carpeta = fs.readdirSync(dir, { withFileTypes: true })
@@ -135,18 +160,54 @@ export function safata(arrel = ARREL) {
   return { carpeta: `${ESCRIPTORI}/${carpeta.name}`, elements };
 }
 
+/** Prosa amb offsets intactes: comentaris i codi no acrediten cap àncora. */
+function prosaIndex(text) {
+  const mask = part => part.replace(/[^\r\n]/g, ' ');
+  let fence = null;
+  return text.replace(/<!--[\s\S]*?-->/g, mask).split(/(?<=\n)/).map(line => {
+    const mark = /^ {0,3}(`{3,}|~{3,})/.exec(line);
+    if (mark) {
+      if (!fence) fence = mark[1];
+      else if (mark[1][0] === fence[0] && mark[1].length >= fence.length) fence = null;
+      return mask(line);
+    }
+    return fence ? mask(line) : line;
+  }).join('').replace(/`[^`]*`/g, mask);
+}
+const referent = (raw, senseMarkdown = true) => {
+  const ref = raw.replace(/\\(?=[|#])/g,'').split(/[|#]/)[0].trim();
+  return senseMarkdown ? ref.replace(/\.md$/, '') : ref;
+};
+function nomPrimerNivell(ref) {
+  const normalized = path.posix.normalize(ref);
+  for (const candidate of [path.posix.join(ESCRIPTORI,normalized),path.posix.join(CAMINS.wiki,normalized),normalized]) {
+    if (path.posix.dirname(candidate) === ESCRIPTORI) return path.posix.basename(candidate);
+  }
+  return null;
+}
+
+// Una extensió explícita sempre identifica eixe recurs. Només un referent
+// sense extensió pot abreviar .md; noms Markdown amb punts usen .md explícit.
+function resolNomExacte(nom, presents) {
+  return presents.has(nom) ? nom : !path.posix.extname(nom) && presents.has(`${nom}.md`) ? `${nom}.md` : null;
+}
+
 /** Documents de l'Escriptori sense àncora a l'índex, i àncores a documents absents. */
-export function ancoratge(arrel = ARREL) {
+export function ancoratge(arrel = arrelPerDefecte()) {
   const indexPath = path.join(arrel, INDEX);
   const text = fs.existsSync(indexPath) ? fs.readFileSync(indexPath, 'utf8') : '';
-  const ancores = [...text.matchAll(/\[\[([^\]]+)\]\]/g)].map((m) => m[1].split('|')[0].trim());
-  const docs = inventari(arrel).filter((d) => d.nom !== '00_index_escriptori.md');
-  const noms = new Set(docs.map((d) => d.nom.replace(/\.md$/, '')));
-  const ancorats = new Set(ancores.map((a) => path.basename(a)));
+  const ancores = [...prosaIndex(text).matchAll(/\[\[([^\]]+)\]\]/g)].map(m => referent(m[1], false));
+  const presents = fitxersSolts(arrel);
+  const docs = presents.filter(d => d.nom !== '00_index_escriptori.md');
+  const noms = new Set(presents.map(d => d.nom));
+  // Obsidian permet ometre .md. Un nom exacte present preval sobre eixa
+  // abreviatura: [[x.jpg]] mai acredita alhora x.jpg i x.jpg.md.
+  const resol = nom => resolNomExacte(nom, noms);
+  const referents = ancores.map(ref => ({ ref, nom: nomPrimerNivell(ref) })).filter(a => a.nom);
+  const ancorats = new Set(referents.map(a => resol(a.nom)).filter(Boolean));
   return {
-    senseAncora: docs.filter((d) => !ancorats.has(d.nom.replace(/\.md$/, ''))).map((d) => d.nom),
-    // Només comptem àncores planes: les que porten `/` apunten fora de l'Escriptori.
-    fantasma: ancores.filter((a) => !a.includes('/') && !noms.has(a) && a !== '00_index_escriptori')
+    senseAncora: docs.filter(d => !ancorats.has(d.nom)).map(d => d.nom),
+    fantasma: referents.filter(a => !resol(a.nom)).map(a => a.ref)
   };
 }
 
@@ -154,8 +215,23 @@ export function ancoratge(arrel = ARREL) {
  * Escriptori net: la definició única (AGENTS §0.1) i el que jutja l'informe.
  * Brossa, Safata i àncores; el «pla de hui» no hi entra, és cosa de la petorreta.
  */
-export function checkTaula(arrel = ARREL, { dia = avui() } = {}) {
+function errorsEstructura(arrel) {
   const errors = [];
+  for (const [rel, directory] of [[ESCRIPTORI, true], [INDEX, false]]) {
+    try {
+      const stat = fs.lstatSync(path.join(arrel, rel));
+      if (stat.isSymbolicLink() || !(directory ? stat.isDirectory() : stat.isFile()))
+        errors.push(`Estructura de l'Escriptori invàlida: ${rel}`);
+    } catch (error) {
+      if (error.code !== 'ENOENT') throw error;
+      errors.push(`Estructura de l'Escriptori absent: ${rel}`);
+    }
+  }
+  return errors;
+}
+export function checkTaula(arrel = arrelPerDefecte(), { dia = avui() } = {}) {
+  const errors = errorsEstructura(arrel);
+  if (errors.length) return { valid: false, errors };
 
   const bruts = ranci(arrel, dia);
   if (bruts.length) {
@@ -175,7 +251,7 @@ export function checkTaula(arrel = ARREL, { dia = avui() } = {}) {
 }
 
 /** Les tres comprovacions de la transició Pla → Petorreta: la taula, el pla i la secció 0. */
-export function checkOlivera(arrel = ARREL, { contingut = null, dia = avui() } = {}) {
+export function checkOlivera(arrel = arrelPerDefecte(), { contingut = null, dia = avui() } = {}) {
   const errors = [...checkTaula(arrel, { dia }).errors];
 
   if (!plaDeHui(arrel, dia).length) {
@@ -230,7 +306,7 @@ function rutaIContingut(payload) {
   return { dialecte, fitxer, contingut };
 }
 
-export function checkPayload(payload, arrel = ARREL) {
+export function checkPayload(payload, arrel = arrelPerDefecte()) {
   if (!payload || typeof payload !== 'object' || !payload.tool_name || (!payload.tool_input && !payload.toolArgs)) return {code: 2, errors: ['Payload de hook incomplet']};
   const { dialecte, fitxer, contingut } = rutaIContingut(payload);
   if (!fitxer) {
@@ -253,7 +329,11 @@ export function checkPayload(payload, arrel = ARREL) {
  * que no són a la taula i categories que no són de torn. L'índex, els recursos i
  * les notes es queden on són, i per nom tampoc ixen.
  */
-export function arxivables(arrel = ARREL, { noms = [], dia = avui() } = {}) {
+export function arxivables(arrel = arrelPerDefecte(), { noms = [], dia = avui() } = {}) {
+  // Fins i tot una simulació o un lot buit ha comprovat la seua estructura.
+  // No convertir una còpia buida/índex absent en «Res a arxivar» amb èxit.
+  const errors = errorsEstructura(arrel);
+  if (errors.length) throw new Error(errors.join('\n'));
   if (!noms.length) return ranci(arrel, dia);
   const inv = inventari(arrel);
   const triats = [];
@@ -275,7 +355,7 @@ export function arxivables(arrel = ARREL, { noms = [], dia = avui() } = {}) {
 }
 
 /** Trasllat a l'arxiu. Amb `sec` només respon què faria: cap fitxer mogut ni índex tocat. */
-export function arxiva(arrel = ARREL, { noms = [], sec = false, dia = avui() } = {}) {
+export function arxiva(arrel = arrelPerDefecte(), { noms = [], sec = false, dia = avui() } = {}) {
   const bruts = arxivables(arrel, { noms, dia });
   if (!bruts.length) return { moguts: [], index: false, sec };
   const desti = path.join(arrel, ARXIU);
@@ -300,13 +380,24 @@ export function arxiva(arrel = ARREL, { noms = [], sec = false, dia = avui() } =
   let tocat = false;
   if (fs.existsSync(indexPath)) {
     const noms = new Set(moguts.filter((m) => m.nota === 'mogut').map((m) => m.nom.replace(/\.md$/, '')));
-    const linies = fs.readFileSync(indexPath, 'utf8').split('\n');
-    const netes = linies.filter((l) => {
-      const m = /^\s*-\s*\[\[([^\]]+)\]\]/.exec(l);
-      return !(m && noms.has(path.basename(m[1].split('|')[0].trim())));
-    });
-    if (netes.length !== linies.length) {
-      fs.writeFileSync(indexPath, netes.join('\n'), 'utf8');
+    const original = fs.readFileSync(indexPath, 'utf8');
+    const prose = prosaIndex(original);
+    const removals = [...prose.matchAll(/\[\[([^\]]+)\]\]/g)]
+      .filter(match=>noms.has(nomPrimerNivell(referent(match[1]))))
+      .map(match=>({start:match.index,end:match.index+match[0].length}));
+    // Només una línia composta íntegrament per la seua àncora pot desaparéixer.
+    // En taula, prosa o línia compartida lleva el token, preservant la resta.
+    let offset = 0;
+    const updated = original.split(/(?<=\n)/).map(line=>{
+      const start = offset; offset += line.length;
+      const selected = removals.filter(item=>item.start>=start && item.end<=start+line.length);
+      if (!selected.length) return line;
+      let clean = line;
+      for (const item of selected.reverse()) clean=clean.slice(0,item.start-start)+clean.slice(item.end-start);
+      return /^[ \t]*(?:[-*][ \t]*)?(?:\r?\n)?$/.test(clean) ? '' : clean;
+    }).join('');
+    if (updated !== original) {
+      fs.writeFileSync(indexPath, updated, 'utf8');
       tocat = true;
     }
   }
@@ -338,14 +429,20 @@ function opcions(argv) {
 }
 
 function informe(arrel, dia = avui()) {
+  const taula = checkTaula(arrel, { dia });
+  if (taula.errors.some(error => error.startsWith("Estructura de l'Escriptori"))) {
+    for (const error of taula.errors) console.error(`[Porta Olivera] ${error}`);
+    return 1;
+  }
   const docs = inventari(arrel);
-  const presents = new Set(docs.map((d) => d.nom.replace(/\.md$/, '')));
-  const viu = [...vius(arrel)].filter((n) => presents.has(n)).sort();
+  const activitat = viusExactes(arrel);
+  const viu = docs.filter(d => activitat.has(d.nom)).map(d => d.nom.replace(/\.md$/, '')).sort();
   const bruts = ranci(arrel, dia);
   const bustia = safata(arrel);
   const anc = ancoratge(arrel);
   const pla = plaDeHui(arrel, dia);
   console.log(`[Porta Olivera] Escriptori: ${docs.length} documents solts.`);
+  console.log(`ℹ️ Artefactes regulars visibles de primer nivell: ${fitxersSolts(arrel).filter(d => d.nom !== '00_index_escriptori.md').length}; tots exigixen àncora, l'arxivat de torn continua limitat a Markdown.`);
   console.log(viu.length
     ? `🌿 Declarats vius a «## Activitat en curs» (es conserven): ${viu.join(', ')}`
     : '🌿 Cap document de la taula declarat viu a «## Activitat en curs».');
@@ -364,7 +461,7 @@ function informe(arrel, dia = avui()) {
 
 function main(argv = process.argv.slice(2)) {
   const o = opcions(argv);
-  const arrel = ARREL;
+  const arrel = arrelPerDefecte();
 
   if (o.arxiva) {
     const r = arxiva(arrel, { noms: o.noms, sec: o.sec });
@@ -373,7 +470,7 @@ function main(argv = process.argv.slice(2)) {
     for (const m of r.moguts) console.log(`   · ${m.nom} → ${ARXIU}/ (${m.nota})`);
     if (r.index) console.log(`   · ${INDEX} actualitzat.`);
     if (r.moguts.some((m) => m.nota === 'mogut')) console.log('   Si algun portava rebut de torn: node tooling/wiki/document.mjs handoff --turn-id ID --file ORIGEN --to DESTÍ');
-    process.exitCode = 0;
+    process.exitCode = !o.sec && r.moguts.some(m=>m.nota !== 'mogut') ? 1 : 0;
     return;
   }
 
@@ -411,6 +508,6 @@ function main(argv = process.argv.slice(2)) {
 // fixture de proves a os.tmpdir()) no coincidixen, el mòdul es carrega en
 // silenci i la porta ix 0 sense comprovar res. Resoldre el symlink és el que
 // fa que la guarda parle sempre.
-if (process.argv[1] && import.meta.url === pathToFileURL(fs.realpathSync(process.argv[1])).href) {
+if (esMain(import.meta.url)) {
   try { main(); } catch (e) { console.error(e.message); process.exitCode = 2; }
 }

@@ -13,6 +13,7 @@ import { tancaRealtime } from './realtime.js';
 import { resetClient } from './config.js';
 import { emojiSol } from '../../utils/emoji.js';
 import { CODI_ENTRADA, ambCodi, esBackendInabastable } from '../errorsBackend.js';
+import { ErrorColumnaAbsent, columnaAbsent } from '../autodesament/errors.js';
 
 let renovacioEnCurs = null;
 const emetCanvi = (user) => globalThis.window?.dispatchEvent(new CustomEvent('sdp:auth-change', { detail: { user } }));
@@ -204,6 +205,26 @@ const ambIconNormalitzat = (updates) => (updates?.icon === undefined
   ? updates
   : { ...updates, icon: emojiSol(updates.icon) || null });
 
+/* F1 (ordre del Mestre, 261004; pla 2045, Marató 2230) · Una base desfasada
+   (2609110600 sense aplicar) rebutja el PATCH sencer amb PGRST204: PostgREST no
+   troba la columna a la seua memòria de l'esquema. Arribava crua a la vista
+   («Could not find the 'is_public' column…»: DetallAjust i SelectorVisibilitat
+   pinten el missatge). Ara és un ErrorColumnaAbsent amb la columna i els camps
+   que no s'han desat: la cua el classifica com a 'columna' i la frase diu què
+   passa sense culpar ningú. El PATCH no ha escrit res, i GoTrue tampoc: el PUT
+   només va després d'una fila confirmada. Torna null si l'error és un altre. */
+function errorDeColumnaAbsent(error, cos) {
+  const missatge = String(error?.message || '');
+  const columna = columnaAbsent(missatge);
+  const delCos = Boolean(columna) && Object.hasOwn(cos, columna);
+  if (!delCos && !/PGRST204/.test(missatge)) return null;
+  const quina = delCos ? `la columna «${columna}»` : 'una de les columnes';
+  return Object.assign(new ErrorColumnaAbsent(
+    `El servidor encara no té ${quina} del perfil: el canvi no s’ha desat. Cal aplicar-hi una migració pendent.`,
+    { columna: delCos ? columna : null, camps: delCos ? [columna] : [] }
+  ), { cause: error });
+}
+
 export async function updateProfile(entrada, config = {}) {
   const updates = ambIconNormalitzat(entrada);
   const current = capturaSessio();
@@ -249,8 +270,13 @@ export async function updateProfile(entrada, config = {}) {
      la RLS no deixa tocar (baixa en curs: «profiles sense baixa») no deixa GoTrue
      desquadrat amb un canvi que el perfil no té. */
   current();
-  const rows = await request(`/rest/v1/profiles?id=eq.${encodeURIComponent(user.id)}`, capturedConfig,
-    { method: 'PATCH', headers: { Prefer: 'return=representation' }, body: safeUpdates });
+  let rows;
+  try {
+    rows = await request(`/rest/v1/profiles?id=eq.${encodeURIComponent(user.id)}`, capturedConfig,
+      { method: 'PATCH', headers: { Prefer: 'return=representation' }, body: safeUpdates });
+  } catch (error) {
+    throw errorDeColumnaAbsent(error, safeUpdates) || error;
+  }
   current();
   if (!Array.isArray(rows) || rows.length !== 1 || rows[0].id !== user.id) {
     throw new Error('El perfil no s’ha confirmat. Recarrega abans de tornar a guardar.');

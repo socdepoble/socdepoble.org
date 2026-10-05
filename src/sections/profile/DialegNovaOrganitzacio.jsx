@@ -30,7 +30,10 @@ export function DialegNovaOrganitzacio({ obert, onTanca, onCrea, empresesMare = 
   const enviant = useRef(false);
 
   const slugVisible = slug ?? normalizeSlug(nom);
-  const ambGrups = empresesMare.length > 0;
+  /* Un grup sempre penja d'una mare que la persona mana: creaOrganitzacio el
+     rebutja sense parentOrganizationId (organizations.js:31) i la política
+     d'INSERT també. Sense cap mare possible, «Grup» no s'oferix i s'explica. */
+  const potCrearGrup = empresesMare.length > 0;
 
   const envia = async (e) => {
     e?.preventDefault?.();
@@ -92,12 +95,12 @@ export function DialegNovaOrganitzacio({ obert, onTanca, onCrea, empresesMare = 
         </Camp>
         <GrupOpcions
           llegenda="Tipus"
-          opcions={ambGrups ? TIPUS : TIPUS.slice(0, 1)}
+          opcions={potCrearGrup ? TIPUS : TIPUS.slice(0, 1)}
           valor={kind}
           onCanvi={setKind}
           disabled={desant}
         />
-        {ambGrups ? null : (
+        {potCrearGrup ? null : (
           <p className="sdp-camp__ajuda">Per a crear un grup, primer has d’administrar una empresa.</p>
         )}
         {kind === 'group' ? (

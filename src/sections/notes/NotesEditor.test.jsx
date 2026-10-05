@@ -372,7 +372,7 @@ test('P4 · la nota preparada escriu pel canal del Bloc, sense ploma, sense «Bo
   expect(mocks.adapter.deleteDocument).toBeUndefined();
   expect(mocks.adapter.visibilitat.bloqueig).toEqual({ opcio: 'publica', motiu: MOTIU_PREPARADA });
   // Els botons de classificació es conserven i hi escriuen pel mateix canal.
-  expect(botonera().map((b) => b.textContent)).toEqual(['Mur', 'Categories0', 'Etiquetes0', 'Emoticona—']);
+  expect(botonera().map((b) => b.textContent)).toEqual(['Mur', 'Categories (0)', 'Etiquetes (0)', 'Emoticona (—)']);
   fireEvent.click(botonera()[0]);
   fireEvent.click(screen.getByRole('radio', { name: 'Altres notes' }));
   fireEvent.click(screen.getByRole('button', { name: 'Desar' }));
@@ -530,7 +530,7 @@ test('T40 · el Bloc activa el calendari de publicació (també a la còpia de p
 test('E8 · la barra grisa no té interfície morta: l’adaptador porta la botonera, no metaActions', () => {
   render(<NotesEditor activeNote={{ id: 'personal', folderId: 'f-mur', categories: ['Sistema'], tags: [] }} />);
   expect(mocks.adapter).not.toHaveProperty('metaActions');
-  expect(botonera().map((b) => b.textContent)).toEqual(['Mur', 'Sistema', 'Etiquetes0', 'Emoticona—']);
+  expect(botonera().map((b) => b.textContent)).toEqual(['Mur', 'Sistema', 'Etiquetes (0)', 'Emoticona (—)']);
   expect(botonera().map((b) => b.getAttribute('aria-label'))).toEqual(['Carpetes: Mur', 'Categories: Sistema', null, null]);
 });
 
@@ -547,7 +547,7 @@ test('T51 · l’adaptador passa l’emoticona crua de la nota, i onObriEmoticon
   act(() => mocks.adapter.onObriEmoticona());
   expect(screen.getByRole('dialog', { name: 'Emoticona del document' })).toBeTruthy();
   // La botonera continua amb el seu botó «Emoticona», l'últim.
-  expect(botonera().map((b) => b.textContent)).toEqual(['Mur', 'Sistema', 'Etiquetes0', '🌿Emoticona']);
+  expect(botonera().map((b) => b.textContent)).toEqual(['Mur', 'Sistema', 'Etiquetes (0)', '🌿Emoticona']);
 });
 
 test('T51 · sense emoticona el camp cru és buit (mai la 🪶 de la llista); sense nota, cap botó', () => {
@@ -585,7 +585,7 @@ test('E5 · el primer desat de la nota de benvinguda conserva totes les etiquete
   mocks.notes = [n1];
   render(<NotesEditor activeNote={n1} />);
   // T7B-V1 · Les quatre etiquetes, dins d'un sol botó (un objectiu per grup).
-  expect(botonera().map((b) => b.textContent)).toEqual(['Mur', 'Categories0', 'SistemaProductivitatTutorialSóc de Poble', 'Emoticona—']);
+  expect(botonera().map((b) => b.textContent)).toEqual(['Mur', 'Categories (0)', 'SistemaProductivitatTutorialSóc de Poble', 'Emoticona (—)']);
   fireEvent.click(botonera().find((b) => b.getAttribute('aria-label') === 'Etiquetes: Sistema, Productivitat, Tutorial, Sóc de Poble'));
   for (const nom of n1.labels) expect(screen.getByRole('checkbox', { name: nom }).checked).toBe(true);
   fireEvent.click(screen.getByRole('button', { name: 'Desar' }));

@@ -3,6 +3,7 @@ import { act, render, screen, fireEvent, cleanup, within } from '@testing-librar
 import { afterEach, beforeAll, expect, test, vi } from 'vitest';
 import { NotebookPen } from 'lucide-react';
 import { DefaultItemCard, UniversalWorkspace } from './UniversalWorkspace.jsx';
+import { WorkspaceProvider, useWorkspace } from './WorkspaceContext.jsx';
 import { useAppGrid } from '../../layout/AppGridShell.jsx';
 import AppGridColumn from '../../layout/AppGridColumn.jsx';
 import { NotaFitxa } from '../../../sections/notes/NotaFitxa.jsx';
@@ -569,4 +570,54 @@ test('T6 · en mitjà, triar una carpeta no porta el focus a les capçaleres del
     buidaFotogrames();
     expect(document.activeElement).toBe(container.querySelector('#app-grid-list aside.sdp-workspace-column'));
   });
+});
+
+/* La política d'autotria és opcional: les accions manuals i els altres
+   consumidors conserven el seu contracte sense conéixer fonts del Bloc. */
+function SelectionPolicyProbe() {
+ const workspace=useWorkspace();
+ return <><output data-testid="policy-selection">{`${workspace.state.activeCategoryId}:${workspace.state.activeItemId??'cap'}:${workspace.state.needsInitialSelection}`}</output>
+  <button onClick={()=>workspace.selectCategory('a')}>Categoria A</button>
+  <button onClick={()=>workspace.selectCategory('b')}>Categoria B</button>
+  <button onClick={()=>workspace.selectItem('fallback')}>Tria manual</button>
+  <button onClick={()=>workspace.requestItem('nova-manual')}>Creació manual</button></>;
+}
+const policyCategories=[{id:'a'},{id:'b'}];
+const policyItems=[{id:'a1',categoryIds:['a']},{id:'fallback',categoryIds:['b']}];
+const policySelection=()=>screen.getByTestId('policy-selection').textContent;
+function policyTree(props) {return <WorkspaceProvider categories={policyCategories} items={policyItems} itemsComplete initialSelection={{categoryId:'a',itemId:'a1'}} {...props}><SelectionPolicyProbe/></WorkspaceProvider>;}
+
+test('sense política, triar una carpeta continua obrint el primer candidat habitual',()=>{
+ render(policyTree({}));fireEvent.click(screen.getByRole('button',{name:'Categoria B'}));
+ expect(policySelection()).toBe('b:fallback:false');
+});
+test('una autotria ajornada conserva la carpeta i obri el candidat real quan arriba',()=>{
+ const change=vi.fn(),canAutoSelect=({categoryId,item})=>categoryId!=='b'||Boolean(item&&item.id!=='fallback');
+ const vista=render(policyTree({canAutoSelect,onSelectionChange:change}));
+ fireEvent.click(screen.getByRole('button',{name:'Categoria B'}));
+ expect(policySelection()).toBe('b:cap:true');
+ expect(change).toHaveBeenLastCalledWith({categoryId:'b',itemId:null},{reason:'user'});
+ vista.rerender(policyTree({canAutoSelect,onSelectionChange:change,items:[...policyItems,{id:'real',categoryIds:['b']}]}));
+ expect(policySelection()).toBe('b:real:false');
+});
+test('la política no impedix selectItem ni requestItem manuals',()=>{
+ render(policyTree({canAutoSelect:()=>false}));
+ fireEvent.click(screen.getByRole('button',{name:'Tria manual'}));
+ expect(policySelection()).toBe('b:fallback:false');
+ fireEvent.click(screen.getByRole('button',{name:'Creació manual'}));
+ expect(policySelection()).toBe('b:nova-manual:false');
+});
+test('una preparada recordada ajornada no amaga un altre candidat disponible',()=>{
+ const canAutoSelect=({categoryId,item})=>categoryId!=='b'||Boolean(item&&item.id!=='fallback');
+ render(policyTree({canAutoSelect,initialSelection:{categoryId:'b',itemId:'fallback'},items:[...policyItems,{id:'real',categoryIds:['b']}]}));
+ fireEvent.click(screen.getByRole('button',{name:'Categoria A'}));
+ fireEvent.click(screen.getByRole('button',{name:'Categoria B'}));
+ expect(policySelection()).toBe('b:real:false');
+});
+test('la reconciliació no substituïx un ID absent per un fallback ajornat',()=>{
+ const canAutoSelect=({item})=>Boolean(item&&item.id!=='fallback');
+ const vista=render(policyTree({canAutoSelect,initialSelection:{categoryId:'b',itemId:'fantasma'}}));
+ expect(policySelection()).toBe('b:fantasma:false');
+ vista.rerender(policyTree({canAutoSelect,initialSelection:{categoryId:'b',itemId:'fantasma'},items:[...policyItems,{id:'real',categoryIds:['b']}]}));
+ expect(policySelection()).toBe('b:real:false');
 });

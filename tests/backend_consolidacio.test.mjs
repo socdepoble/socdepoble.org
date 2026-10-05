@@ -9,6 +9,7 @@ import { ROOT, sha, inventari, projeccions, comprovaCataleg, segura } from '../t
 import { prepara, resolProtocols, identitatTorn, desaEmissio, verificaEmissio } from '../tooling/brain/context_documental.mjs';
 import { CONTRACTE_NUCLI, CAPACITATS } from '../src/data/contracte.js';
 import { validatePublicCredentials } from '../src/config/publicCredentials.js';
+import { CODI_BACKEND_INABASTABLE, CODI_MITJANS, esBackendInabastable } from '../src/data/errorsBackend.js';
 
 function fixture(t) {
   const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'sdp-consolidacio-')));
@@ -198,12 +199,15 @@ test('singleton: config fixada, clau diferent rebutjada i token renovat', async 
   assert.notEqual(await client.getClient(), first); assert.equal(creates, 2); assert.ok(removed);
 });
 test('storage: poble explícit, carpetes validades i prefix coherent amb RLS', async t => {
-  t.after(() => { delete globalThis.__SDP_TEST_DEPS; });
+  const oldWarn = console.warn, avisos = [];
+  t.after(() => { delete globalThis.__SDP_TEST_DEPS; console.warn = oldWarn; });
   const uid = '11111111-1111-1111-1111-111111111111', tenant = '22222222-2222-2222-2222-222222222222';
-  let sent;
+  let sent, resposta = {error:null};
+  // F2 (Marató 2230) · isolated() lleva els imports: els d'errorsBackend.js s'injecten reals.
   const storage = await isolated('src/data/supabase/storage.js', {
     getResolvedConfig: c => c, usuariDeSessio: () => ({id:uid}), handleError: e => e,
-    getClient: async () => ({storage:{from:bucket=>({upload:async (name, data, options)=>{sent={bucket,name,options};return {error:null};}})}}),
+    getClient: async () => ({storage:{from:bucket=>({upload:async (name, data, options)=>{sent={bucket,name,options};return resposta;}})}}),
+    CODI_BACKEND_INABASTABLE, CODI_MITJANS, esBackendInabastable,
   });
   const blob = new Blob(['x'], {type:'image/png'});
   await assert.rejects(storage.uploadToStorage(blob, {carpeta:'notes'}));
@@ -211,6 +215,50 @@ test('storage: poble explícit, carpetes validades i prefix coherent amb RLS', a
   const result = await storage.uploadToStorage(blob, {carpeta:'notes'}, {tenantId:tenant});
   assert.equal(sent.bucket, 'mitjans_privats'); assert.ok(sent.name.startsWith(`${tenant}/${uid}/notes/`));
   assert.equal(sent.options.upsert, false); assert.ok(result.url.startsWith('sdp-media://mitjans_privats/'));
+  // F2 · Un rebuig de RLS ix amb codi neutral i sense ruta, uid ni poble al missatge ni a la consola.
+  resposta = {error:{status:400, statusCode:'403', message:'new row violates row-level security policy'}};
+  console.warn = (...args) => { avisos.push(JSON.stringify(args)); };
+  await assert.rejects(storage.uploadToStorage(blob, {carpeta:'avatars'}, {tenantId:tenant}), error => {
+    assert.equal(error.codi, CODI_MITJANS.SENSE_PERMIS);
+    assert.match(error.message, /^No s’ha pogut pujar el fitxer: /);
+    for (const secret of [uid, tenant, 'avatars', 'row-level']) assert.ok(!error.message.includes(secret), secret);
+    assert.equal(error.cause, resposta.error);
+    return true;
+  });
+  assert.equal(sent.bucket, 'mitjans'); assert.equal(avisos.length, 1);
+  for (const secret of [uid, tenant, 'avatars']) assert.ok(!avisos[0].includes(secret), secret);
+  // Poliment F2 · Pel camí sencer: el JWT antic sense code és sessió; la clau
+  // pública rebutjada per Kong no ho és; un AbortError no és «el servidor no respon».
+  const casos = [
+    [{status:400, statusCode:'400', message:'invalid signature'}, CODI_MITJANS.SESSIO, /la sessió/],
+    [{status:401, statusCode:'401', message:'Invalid API key'}, CODI_MITJANS.DESCONEGUT, /\(HTTP 401\)\.$/],
+    [{name:'StorageUnknownError', message:'Fetch is aborted', originalError:new DOMException('Fetch is aborted', 'AbortError')}, CODI_MITJANS.DESCONEGUT, /error inesperat\.$/],
+    // Bloquejant de Codex (Relleus 13 i 17): les dades estructurades manen sobre paraules de la ruta.
+    [{status:413, statusCode:'413', message:'users/jwt/avatar.png'}, CODI_MITJANS.MASSA_GRAN, /límit de mida/],
+    [{status:500, statusCode:'500', message:'users/Unauthorized/avatar.png'}, CODI_MITJANS.SERVIDOR, /el servidor ha fallat/],
+    [{status:403, statusCode:'403', code:'InvalidJWT', message:''}, CODI_MITJANS.SESSIO, /la sessió/],
+    [{name:'StorageUnknownError', message:"Failed to execute 'fetch' on 'Window': Invalid value", originalError:new TypeError("Failed to execute 'fetch' on 'Window': Invalid value")}, CODI_MITJANS.DESCONEGUT, /error inesperat\.$/],
+  ];
+  for (const [error, codi, text] of casos) {
+    resposta = {error};
+    await assert.rejects(storage.uploadToStorage(blob, {carpeta:'avatars'}, {tenantId:tenant}), rebuig => {
+      assert.equal(rebuig.codi, codi, error.message);
+      assert.match(rebuig.message, text);
+      assert.equal(esBackendInabastable(rebuig), false);
+      return true;
+    });
+  }
+  // Relleu 21 de Codex · Un code desconegut que porta la ruta no arriba a la consola.
+  const cru = 'SENTINELLA_CRU_7f3a';
+  avisos.length = 0;
+  resposta = {error:{status:400, statusCode:'400', code:`inesperat:${tenant}/${uid}/avatars/x.webp`, message:cru}};
+  await assert.rejects(storage.uploadToStorage(blob, {carpeta:'avatars'}, {tenantId:tenant}), rebuig => {
+    assert.equal(rebuig.codi, CODI_MITJANS.DESCONEGUT);
+    assert.ok(!rebuig.message.includes(cru));
+    return true;
+  });
+  assert.equal(avisos.length, 1);
+  for (const secret of [uid, tenant, 'avatars', 'inesperat:', cru]) assert.ok(!avisos[0].includes(secret), secret);
 });
 test('dos cicles d’arrancada i tancament no recreen espills; SCC aïllat', t => {
   const root = fixture(t), payload = transcript(root);

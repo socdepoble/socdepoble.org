@@ -92,7 +92,10 @@ test('arranca el shell real i carrega els providers sense activar ErrorBoundary'
       expect(backend.listMyOrganizations).toHaveBeenCalled();
       expect(screen.getByRole('main')).toBeTruthy();
     });
-    await screen.findByRole('button', { name: 'Nova conversa' });
+    /* La ruta lazy real encara ha de resoldre després dels providers. El
+       límit de Testing Library (1 s) no és un pressupost de transformació de
+       Vite en fred; manté el botó i totes les guàrdies de xarxa/error exigits. */
+    await screen.findByRole('button', { name: 'Nova conversa' }, { timeout: 8000 });
     expect(screen.queryByText("No s'ha pogut carregar Sóc de Poble")).toBeNull();
     expect(screen.queryByText('Hi ha hagut un problema')).toBeNull();
     expect(inesperat).not.toHaveBeenCalled();
@@ -103,7 +106,7 @@ test('arranca el shell real i carrega els providers sense activar ErrorBoundary'
     // Si hi havia backend, el restaurem; el cas inicial buit queda aïllat per Vitest.
     if (Object.keys(anterior).length) setBackendImplementation(anterior);
   }
-});
+}, 10000);
 
 /* ── T43 (ordre del Mestre, 260928) · Identitat activa a la barra negra ──
    Shell real amb sessió: el botó diu amb qui actues, el calaix és germà del
@@ -140,7 +143,13 @@ test('T43 · la barra negra diu amb qui actues i el calaix d’identitats viu fo
   });
   try {
     render(<PedraSecaEmbed config={{ routerType: 'memory' }} />);
-    const boto = await screen.findByRole('button', { name: 'Identitat activa: Pepa Soler. Canviar identitat' });
+    // La identitat viu al header: mantenim rol/nom accessibles sense recórrer tot el catàleg.
+    const header = await waitFor(() => {
+      const trobat = document.querySelector('header.bar-black');
+      expect(trobat).not.toBeNull();
+      return trobat;
+    });
+    const boto = await within(header).findByRole('button', { name: 'Identitat activa: Pepa Soler. Canviar identitat' });
     expect(boto.closest('header.bar-black')).not.toBeNull();
     expect(boto.hasAttribute('style')).toBe(false);
     fireEvent.click(boto);
@@ -150,13 +159,13 @@ test('T43 · la barra negra diu amb qui actues i el calaix d’identitats viu fo
     const forn = await within(dialeg).findByRole('button', { name: /Forn de la Torre/ });
     expect(within(dialeg).getByRole('button', { name: /Pepa Soler/ }).getAttribute('aria-current')).toBe('true');
     fireEvent.click(forn);
-    const entitat = await screen.findByRole('button', { name: 'Identitat activa: Forn de la Torre (organització). Canviar identitat' });
+    const entitat = await within(header).findByRole('button', { name: 'Identitat activa: Forn de la Torre (organització). Canviar identitat' });
     expect(entitat.classList.contains('sdp-top-bar-avatar--entitat')).toBe(true);
     expect(entitat.querySelector('.sdp-avatar').textContent).toBe('FD');
     /* Deixa la preferència com estava: es torna a actuar com a persona. */
     fireEvent.click(entitat);
     fireEvent.click(within(await screen.findByRole('dialog', { name: 'Amb qui actues?' })).getByRole('button', { name: /Pepa Soler/ }));
-    await screen.findByRole('button', { name: 'Identitat activa: Pepa Soler. Canviar identitat' });
+    await within(header).findByRole('button', { name: 'Identitat activa: Pepa Soler. Canviar identitat' });
   } finally {
     cleanup();
     if (Object.keys(anterior).length) setBackendImplementation(anterior);
@@ -292,25 +301,23 @@ test('acta 261004_1027 · sense sessió, la barra negra porta el Foraster de sem
 
 test('a vite serve el tauler de la Consola es pinta sense sessió i no porta a /registre', async () => {
   await muntaSenseSessio('/consola', async () => {
-    await waitFor(() => {
-      expect(window.location.pathname).toBe('/consola');
-      expect(screen.getByRole('heading', { name: copyConsola().title })).toBeTruthy();
-    });
+    // Import real de la Consola: el primer transform de Vite pot superar 1s.
+    // Esperem el resultat accessible amb límit, sense substituir el lazy per un mock.
+    expect(await screen.findByRole('heading', { name: copyConsola().title }, { timeout: 8000 })).toBeTruthy();
+    expect(window.location.pathname).toBe('/consola');
     expect(screen.getByRole('navigation', { name: 'Pàgines de la Consola' })).toBeTruthy();
   });
-});
+}, 10000);
 
 test('a vite serve una pàgina de la Consola (/consola/pols) es pinta sense sessió', async () => {
   await muntaSenseSessio('/consola/pols', async () => {
-    await waitFor(() => {
-      expect(window.location.pathname).toBe('/consola/pols');
-      expect(screen.getByRole('heading', { name: paginaConsola('pols').title })).toBeTruthy();
-    });
+    expect(await screen.findByRole('heading', { name: paginaConsola('pols').title }, { timeout: 8000 })).toBeTruthy();
+    expect(window.location.pathname).toBe('/consola/pols');
     // 404 de /__iaia/consola.json → la pàgina ho diu, no inventa dades.
     expect(await screen.findByText('Consola no disponible')).toBeTruthy();
     expect(screen.queryByText('Hi ha hagut un problema')).toBeNull();
   });
-});
+}, 10000);
 
 test('en un build (DEV false) /consola/pols sense sessió continua portant a /registre', async () => {
   guarda.produccio = true;

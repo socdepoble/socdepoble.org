@@ -28,8 +28,8 @@ const PAGE_ROUTE_MAP = {
   constitucio: '/constitucio',
   ruta: '/roadmap',
   roadmap: '/roadmap',
-  anima: '/ia',
-  ia: '/ia',
+  anima: '/iaia',
+  ia: '/iaia',
   legal: '/legal',
   versions: '/versions',
   /* T8 (261001) · la cerca i /page/fedivers van a la ruta canònica. */
@@ -79,12 +79,10 @@ export function autorDe(item) {
   return null;
 }
 
-/* T6 (ordre del Mestre, 261004, prompt 261004_0515 §5) · La boina taronja
-   d'autor enllaça SEMPRE a la pàgina de qui signa: l'entitat pilot («Sóc de
-   Poble»), a la pàgina del projecte; qualsevol altra persona o entitat, al
-   seu perfil públic. Una sola font per a les targetes, les pàgines i el
-   detall. Es resol per identificador (id, slug o àlies de la llavor), mai pel
-   nom que es veu: un nom es traduïx, es repetix i no diu qui és. */
+/* Autoria editorial del Mur: l'entitat pilot porta a /projecte; la resta,
+   al perfil públic. El Mercat usa rutaDePerfilPublicDAutor i porta sempre
+   al perfil de qui ven, també per al pilot (marató2230, pla2045).
+   Es resol per identificador (id, slug o àlies), mai pel nom visible. */
 
 /** La pàgina del projecte: on porta la boina de l'entitat pilot. */
 export const RUTA_PROJECTE = PAGE_ROUTE_MAP.projecte;
@@ -226,6 +224,13 @@ export function rutaDAutoria(autor) {
 
 /** Ruta de la pàgina de qui signa una publicació, o null si no se sap qui és. */
 export const rutaDePerfilDAutor = (item) => rutaDAutoria(autorDe(item));
+
+/* Marató 2230 · Al Mercat, la boina obri el perfil públic de qui ven,
+   també quan és l'entitat pilot. Mai se substituïx per una pàgina editorial. */
+export function rutaDePerfilPublicDAutor(item) {
+  const autor = autorDe(item);
+  return autor ? rutaDePerfil(autor.tipus, autor.id) : null;
+}
 
 /* ── T43 (ordre del Mestre, 260928) · L'objecte connectable ──────────────
    Un sol model per a tots els «Connectar»: un descriptor pur

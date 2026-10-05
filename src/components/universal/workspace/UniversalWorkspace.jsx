@@ -220,6 +220,7 @@ export function UniversalWorkspace({
       key={model.workspaceKey}
       itemsComplete={model.itemsComplete}
       resolveItemId={model.resolveItemId}
+      canAutoSelect={model.canAutoSelect}
       navigationGroups={model.navigationGroups ?? CAP}
       categories={model.categories ?? CAP}
       items={model.items ?? CAP}

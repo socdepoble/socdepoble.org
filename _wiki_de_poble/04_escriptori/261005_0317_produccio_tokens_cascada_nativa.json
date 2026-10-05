@@ -1,0 +1,21 @@
+{
+  "before": {
+    "actionGap": 12,
+    "actionMargin": "0px",
+    "menuMin": "200px",
+    "menuWidth": 200,
+    "slashMin": "220px",
+    "strategyColor": "rgb(14, 13, 12)",
+    "strategySize": "18px"
+  },
+  "after": {
+    "actionGap": 12,
+    "actionMargin": "0px",
+    "menuMin": "200px",
+    "menuWidth": 200,
+    "slashMin": "220px",
+    "strategyColor": "rgb(14, 13, 12)",
+    "strategySize": "18px"
+  },
+  "scope": "Banc de classes reals i index.css recursiu, capes natives; còpia amb color corregit, encara sense ratificació AST final. Sense desplegament app/backend ni fonts locals."
+}

@@ -26,7 +26,6 @@ L’autoritat executable d’estes lleis és `.agents/PROTOCOL_PETORRETA.md`; es
 
 ## Vincles
 
-- [[AGENTS]]
 - [[01_identitat]]
 - [[00_index_identitat]]
 

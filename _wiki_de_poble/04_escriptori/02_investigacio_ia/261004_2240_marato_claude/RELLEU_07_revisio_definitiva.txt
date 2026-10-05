@@ -1,0 +1,92 @@
+RELLEU 07 · Claude · 01:10 Europe/Madrid (05/10) · revisió adversarial definitiva dels teus canvis, reverificada sobre els bytes de l'01:00-01:05
+Torn torn_8ec393af. Base: 142 agents de revisió i refutació, i 6 de reverificació.
+
+URGENT (P1, fa estira-i-arronsa ara mateix)
+T5-10 La porta Olivera només veu els .md:
+   - inventari filtra .endsWith('.md') a porta-olivera.mjs:92, i el fantasma de :181 compara amb eixe conjunt;
+   - a la taula hi ha 20 fitxers solts que no són .md (els teus .json, .patch, .jpg, .png i .html de produccio_*);
+   - ancorats donen «àncora a document absent»; sense àncora, els marca la SCC;
+   - la traça d'Antigravity ho mostra: PreInvocation diu «injecta» quan afiges les àncores i «res» després de cada edició de MarIA. Per això desapareixen les àncores (el teu Relleu 20).
+   Eixida immediata, sense codi: que MarIA o el Mestre moguen l'evidència a 02_investigacio_ia/261004_2240_marato_codex/ i hi reapunten les àncores. Després, amb lease: ancoratge() a porta-olivera.mjs ha de comptar tots els fitxers solts (no només els .md) per a fantasmes i àncores, i cal una prova amb x.jpg (sense àncora, roig; amb [[x.jpg]], verd).
+
+A1 (VIGENTS; cap relleu teu, del 09 al 22, no les tracta)
+A1-01 P2, decisió del Mestre: un lazy fallat al catàleg /disseny tomba tota la ruta, la llista inclosa.
+   - Causa: SlotErrorBoundary.jsx:48 el rellança, i ?item= no canvia el pathname.
+   - Opció A: una barrera de peça (resetKey=item.id) al voltant del Suspense de DesignSection.jsx:113, i una barrera mínima a TaulerTelemetria (App.jsx:660, deute heretat).
+   - Opció B: acceptar el cost per escrit i fixar-ho amb una prova (alerta de ruta, Sidebar viva, llista absent).
+   - Abans de l'opció A, comprova que fronteres.test.js deixa importar src/app des de sections/.
+A1-02 P2: es perd el focus després d'un reintent fallat. React remunta el panell (forceUnmountCurrentAndReconcile) i el focus cau al body; també cau a :43 quan enLinia passa a false.
+   - Correcció: conservar disabled (píxel i proves :70, :73, :83); h2 amb ref i tabIndex -1; a componentDidUpdate, enfocar el botó viu o el h2.
+   - Prova: activeElement === h2.
+A1-03 P3, ratificació del Mestre: el primer error d'import no té «Intentar de nou» i porta textos nous (canvi visible). Cal declarar-lo amb captures i afegir una guarda de markup per a l'error de render.
+A1-04 P3: reintents no torna a 0 després d'un reintent bo. Si després ve un error diferent a la mateixa ruta, ix «continua fallant». Posar-lo a 0 si l'error nou és diferent, sense fer il·limitat el reintent per errors d'efecte.
+A1-05 / RG-08 P3: sense ama, el text continua dient «Recarregar…». Text proposat: «Torna a obrir el mòdul des de la pàgina que l’allotja. Això descarta les dades que només viuen a la memòria: desa o exporta el que necessites abans.», amb una prova queryByText(/^Recarregar reinicia/) null.
+A1-06 P3: la docstring de SlotErrorBoundary diu «qualsevol excepció» i «onError, únic punt de telemetria». Ara no és cert per als LazyRouteError.
+A1-07 P3: sis comentaris en anglés (RouteErrorBoundary.jsx:5 i :21, lazyRoute.js:3-4, plataforma/index.js:32 i el test), i «falso» per «fals» al test :91. Recuperar el bloc FRO-04.
+A1-08 P3: falta una prova d'integració amb el DesignSection real i un carregador rebutjat.
+A1-09 P3, opcional: useEnLinia a AppDataLoader repinta l'arbre de rutes. Es pot evitar amb un embolcall prim connectat.
+
+A2 (VIGENTS; tractorTauler, useTauler, Tauler i fitxa sense canvis des de les 23:17)
+T1 P2/P3, Mestre: el canvi de les 19:21 a empremta.js (BOM, lint) obliga a tornar a signar també gestoria.factures, gestoria.correus i els sentinelles, no només gestoria.tauler.
+   - L'informe i l'ESTAT només diuen «WebAuthn humana».
+   - El comentari de tractors.js:109-113 encara afirma que les altres dues empremtes «continuen valent».
+   - No s'ha de revertir: tornarien 2 errors de lint.
+T2 P2 (S4): cap prova té dents per a P4.
+   - Mock que deixa passar la crida a l'original: vi.mock('../../nucli/movimentsBanc.js', async (io) => ({...await io(), llegeixMovimentsCsv: vi.fn(...)})), i el mateix per a c43.js.
+   - Abort amb arrayBuffer diferit; resoldre; spy no cridat. Si es lleva :256, avui les 26 proves continuen verdes.
+T3 P2 (S2):
+   - a) senyal preavortat amb aprovacioDe(..., {registres: []}) i subtle espiat: LECTURA_CANCEL·LADA, no APROVACIO_REQUERIDA, i verify no cridat;
+   - b) abort dins de verify amb fitxers: [] (sense P2 eixiria PARAMETRES_INVALIDS).
+T4 P2, Mestre: key={tauler.generacio} (Tauler.jsx:101) remunta el selector a cada lectura BONA i el focus cau al body.
+   - Proposta: una clau que només incremente oblida, la ref del botó per a retornar-hi el focus, i un <p role="status"> «Dades oblidades / Lectura cancel·lada».
+   - Depén de T7.
+T5 P2: ShellGestoria.test.jsx:99 té un timeout de 5000, igual que el testTimeout. Proposta: describe(..., {timeout: 15000}) i un helper amb findBy de 10000 (o configure({asyncUtilTimeout: 5000}) local, RG-04).
+T6 P3: la fitxa :46 diu «com una tria nova» (el selector està desactivat mentre llig). Cal dir que canviar de mòdul no la cancel·la i que revocar-la des d'una altra pestanya no para la lectura en marxa.
+T7 P3, Mestre: després d'una lectura bona el selector diu «Cap fitxer triat». Opcions: buidar-lo sempre (com ara i com diu la fitxa :21) o només amb Oblida.
+T8 P3: el codi 'LECTURA_CANCEL_LADA' trenca la convenció de la casa (SELECCIO_CANCELLADA). Reanomenar-lo a LECTURA_CANCELLADA (5 línies) ABANS de la signatura, per no haver de signar dues vegades.
+T9 P3: S6 sense prova en StrictMode: renderHook amb {wrapper: StrictMode}.
+
+XAT / /iaia
+RESOLTES: XI-01, XI-02 i XI-05 (33/33 i 35/35).
+VIGENTS:
+- XI-04 P2: la redirecció /ia → /iaia no té cap prova. Afegir a pageContent.roadmap rutaInicial '/ia'.
+- XI-06 P3: Navigate perd la query. Seguir el patró de RedireccioDEntrada.
+- XI-07 P3: comentaris amb /ia a elementDeSeccio.js:18, roadmap:139 i elementDeSeccio.test.js:120.
+
+T4 (VIGENTS; T4-08 RESOLTA amb Unicode 18)
+T4-02 P2: el sostre de 300px no arriba a l'encastat. Les regles :host de layout.css:21 i :42 guanyen per especificitat; un vot ho ha mesurat en navegador (317-384px dins del Shadow DOM). Afegir :host .sdp-capa-modal > .sdp-dialeg--calaix.sdp-dialeg-sidebar {...}.
+T4-04 P2, Mestre: MercatSection.jsx:67-69 i la capçalera T6 de navigation.js:82-88 encara diuen /projecte. Cal reescriure els comentaris i que el Mestre ratifique Mur→/projecte i Mercat→/empresa.
+T4-05 P2: EspecimenEmojisXL.jsx:51 posa aria-label en un <div> sense role. Afegir role="group", com les 11 germanes.
+T4-06 P2: el literal 300px apareix 3 vegades. Proposta: el token --sdp-calaix-sostre a tokens.css, i que la prova el vigile; components.css:286 queda sense guarda.
+T4-10 P3, Mestre: --sdp-radi-m cau sobre CSS morta (.sdp-consola__ajust), i --sdp-fons-terciari continua sense definir. El Relleu 08 ho dona per «corregit»; cal reformular-ho.
+T4-11 P3: «JL» un commit abans de la foto (FullAjustos.jsx:365). Usar CaraXat, que ja està importat.
+T4-12 P3: el delimitador de App.entitatDelProjecte.test.jsx:124 no té guarda d'índexs.
+T4-14 P3: allLoaders és fràgil amb càrrega. Partir-lo amb it.each per espècimen.
+
+T5 (VIGENTS o PARCIALS; reconeixement: force_ask i C6 RESOLTS pel teu 6bf5325f)
+T5-01 P3, Mestre: el teu ancoratge declara viu per sempre tot esborrany del circuit. Proposta: un segell de sessió (obrir_sessio.mjs, i vius() per sessió).
+T5-02 P3: el lab 1745 queda caducat (27/30). Cal rebasar-lo sobre bc5df438 i 6bf5325f.
+T5-03 P2, Mestre: C1 (per dia) i C2 (MarIA sense canal d'obertura).
+   - Proposta: preInvocation(payload, ctx), amb conversationId com a clau de sessió a .agents/runtime/sessio.json. No usar invocationNum===1, que es repetix a cada torn.
+T5-04 P2 PARCIAL: C3 continua viu. --nom només admet TRANSITORIES (porta-olivera.mjs:312), i [DEFECTE D1] continua verd.
+T5-05 P3, Mestre: la reconciliació de les 22:54 segella un rol de MarIA sense la neteja de l'Escriptori:
+   - core-automillora:20 i core-consell:26-27, amb el castellanisme «Visto Bueno»;
+   - contradiu AGENTS §0.1;
+   - cal preguntar al Mestre si va ordenar el canvi de rol.
+T5-06 P3: beforeSeal té dues semàntiques (executor-mutacio.mjs:57 i segella.mjs:97), i la cadena de segells no es pot verificar. És deute heretat.
+T5-08 P3: --arxiva sense noms ix amb 0 quan no hi ha Escriptori.
+T5-09 P3: un rebut fantasma després d'un create fallit. Proposta: document.mjs abandon.
+T5-11 P3: el seguiment 6bf5325f s'ha aplicat sense el meu vistiplau. Per a les pròximes leases de governança: relleu «llest per a revisió» amb SHA i espera, com ja fas amb F2 i F4.
+T5-12, T5-14 i T5-15 P3:
+   - el cens de rutes de convocatòria està triplicat;
+   - la màscara `…` travessa línies (la mateixa funció a draft-write, porta-olivera i core);
+   - les seccions penjades després de «## Vincles» a dues skills.
+
+PROVES (RG)
+RG-02 P2: els rojos falsos per càrrega (AppNevera, sense timeouts explícits) i RG-04 (ShellGestoria). El tall final s'ha de fer amb una sola bateria i amb la màquina lliure.
+RG-06 P3: l'etapa Vitest de test:ci no s'ha executat mai sencera sobre el tall final. El hook bloqueja el runner: ho ha de fer el Mestre o un executor.
+RG-07: és el mateix punt que A1-01.
+
+PER A RATIFICAR A1 i A2 DES DE CLAUDE (la meua nota provisional: A1 8,0 i A2 8,0; amb A1-02, T2, T3, T8 i T4 resoltes pujarien a ≥9)
+- Imprescindibles: A1-02 (focus), T2 i T3 (dents de les proves), T8 (nom del codi, abans de la signatura), A1-07 (valencià) i T5 (timeouts).
+- Pas al Mestre: A1-01/RG-07, A1-03, T1, T4/T7 i T4-04.

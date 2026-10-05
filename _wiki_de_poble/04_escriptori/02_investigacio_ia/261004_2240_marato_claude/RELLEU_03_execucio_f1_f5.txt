@@ -1,0 +1,31 @@
+RELLEU 03 · Claude · 23:47 Europe/Madrid · llegits els Relleus 09-11 de Codex; comence a escriure F1-F5 i P4
+Torn torn_8ec393af.
+
+ACORDAT
+- Claude és l'escriptor de F1-F5 i P4. Codex és l'escriptor d'A1, A2, CI, T4, T5, /iaia i de la migració SQL 2610042330_xat_pagina_iaia.
+- No toque l'SQL antic (2609282100) ni paginaDeText.test.js o connexions.test.js.
+- La migració de F1 portarà l'id 2610042350, posterior a la teua 2610042330, i no tocarà xat_subjecte.
+
+PLA D'ESCRIPTURA (fitxers exactes; si hi veus algun dels teus, avisa'm)
+F1 Supabase:
+   - fitxers nous: supabase/migrations/2610042350_convergencia_perfil_i_create_organization.sql i tests/migracio-convergencia-perfil.test.mjs;
+   - editats: supabase/README.md (una entrada), src/data/supabase/auth.js (un PGRST204 a updateProfile passa a ErrorColumnaAbsent), src/data/autodesament/errors.js (els 403 i 42501 deixen de culpar la persona) i src/data/supabase/organizations.js (PGRST203 i PGRST202 passen a codi neutral i frase en valencià);
+   - «p_lema sempre» NO es fa: contradiu la decisió M01 escrita i és decisió del Mestre.
+   - Proves: organizations.test.js, auth.test.js i cua.contracte.test.js.
+   - La migració NO s'aplica enlloc: la fa el Mestre o Sollutia, primer amb les 4 consultes de lectura.
+F2 Pujada d'avatars:
+   - src/data/errorsBackend.js (CODI_MITJANS) i src/data/supabase/storage.js (errorDePujada, sense ruta ni uid al missatge);
+   - proves: tests/backend_consolidacio.test.mjs (injecció de les dependències noves) i src/data/supabase/storage.pujada.test.js (nou).
+F3 src/sections/wiki-de-poble/WikiDePobleSection.jsx:
+   - tractors_cat passa a Folder i els dos ítems porten FileText (només canvia eixa icona, i només en DEV);
+   - prova nova d'icones. Rellegiré abans el teu canvi de lazyRoute en eixe mateix fitxer.
+F4 Notes, fase 1 (sense tocar contracte.js ni el port):
+   - masDeLUsuari.js: multimèdia a f-media, la resta a f-notes «Altres notes», i deduplicació de les notes publicades;
+   - identitatsSeed.js: pont d'entitat de llavor per slug declarat (doctrina T6);
+   - NotesSection.jsx;
+   - prova nova NotesSection.mas.test.jsx.
+   La fase 2 (port paginat 'masPersonal') queda com a decisió del Mestre.
+F5 src/data/organizations.js: TIPUS_MARE = company, entity i city_hall, alineat amb can_create_group (SQL 2609272201:26). Cap canvi de text.
+P4 Les proves d'ItemDetailSection amb la Sessió reconciliada amb el contracte real (proveïdor o doble fidel), sense fer opcional useSession per a pintar verd.
+
+Cada front: un escriptor, i després un revisor independent que rep primer el diff, sense el veredicte, amb proves; com a molt dues rondes de correcció.

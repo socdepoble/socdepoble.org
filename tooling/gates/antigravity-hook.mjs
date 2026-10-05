@@ -21,10 +21,10 @@
  *    pre-tool        · escriure un prompt, una petorreta o un pla al primer nivell
  *                      de l'Escriptori: `deny` si la Plantilla viva o la Porta
  *                      Olivera hi troben errors, amb el motiu i la via de sortida;
- *                    · `run_command` amb `mv` que toca `04_escriptori`: `ask` (el
+ *                    · `run_command` destructiu que toca Escriptori/governança: `force_ask` (el
  *                      trasllat a mà deixa àncores fantasma a l'índex);
  *                    · `run_command` que redirigix (`>`, `>>`, `| tee`) a un
- *                      document del primer nivell: `ask` (el contingut no es pot
+ *                      document del primer nivell: `force_ask` (el contingut no es pot
  *                      jutjar, i és la via per on van nàixer documents sense rebut);
  *                    · la resta: `allow`.
  *    pre-invocation  · si l'Escriptori no passa `checkTaula` (definició única,
@@ -57,6 +57,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { knownPureRead, SECURITY_PATHS, mutationPath } from './mutation-policy.mjs';
+import { documentArgv } from '../documental/command-policy.mjs';
 
 export const DESK = '_wiki_de_poble/04_escriptori';
 export const INTERRUPTOR = '.agents/runtime/antigravity-hook.off';
@@ -76,6 +78,7 @@ const AUTOPROTEGITS = new Set(['.agents/hooks.json', 'tooling/gates/antigravity-
 
 const ALLOW = Object.freeze({ decision: 'allow' });
 const ask = (reason) => ({ decision: 'ask', reason });
+const forceAsk = (reason) => ({ decision: 'force_ask', reason });
 const MAX_ERRORS = 12;
 
 const VIA_OLIVERA = 'node tooling/gates/porta-olivera.mjs';
@@ -100,6 +103,8 @@ export function relatiu(root, cami, base = root) {
 const alPrimerNivell = (rel) => path.posix.dirname(rel) === DESK;
 const esMd = (rel) => /\.md$/i.test(rel);
 const zonaHumana = (rel) => rel.toLowerCase().startsWith(`${DESK}/01_produccio/`);
+const governat = rel => SECURITY_PATHS.some(dir=>rel.toLowerCase()===dir || rel.toLowerCase().startsWith(`${dir}/`))
+  || /^(?:agents|claude)\.md$|^package(?:-lock)?\.json$/i.test(rel);
 const argsDe = (crida) => (crida?.args && typeof crida.args === 'object' && !Array.isArray(crida.args) ? crida.args : {});
 
 export function esEscriptura(nom, args = {}) {
@@ -123,11 +128,43 @@ export function sensePosicions(args) {
   return out;
 }
 
+/** Nom literal de shell: resol cometes/escapes, mai executa expansions. */
+function shellLiteral(raw) {
+  let value='',quote=null;
+  for(let i=0;i<raw.length;i++) {
+    const character=raw[i];
+    if(quote==="'") { if(character===quote)quote=null;else value+=character;continue; }
+    if(character==='"' || (!quote && character==="'")) { quote=quote?null:character;continue; }
+    if(character==='\\') {
+      const next=raw[++i];if(next===undefined)return null;
+      if(quote==='"' && !/[$`"\\]/.test(next))value+='\\';
+      value+=next;continue;
+    }
+    if(character==='$'||character==='`')return null;
+    value+=character;
+  }
+  return quote?null:value;
+}
+function redirectionWords(command) {
+  const targets=[];
+  for(const match of command.matchAll(/(?:>>?|\|\s*tee(?:\s+-a)?(?:\s+--)?)\s*((?:'[^']*'|"(?:\\.|[^"\\])*"|\\.|[^\s;&|<>])+)/g)) {
+    targets.push(match[1]);
+  }
+  // tee pot escriure diversos destins: cada nom literal passa per la mateixa porta.
+  for(const tee of command.matchAll(/\|\s*tee(?:\s+-a)?(?:\s+--)?\s+([^;&|\n]+)/g)) {
+    for(const word of tee[1].matchAll(/(?:'[^']*'|"(?:\\.|[^"\\])*"|\\.|[^\s;&|<>])+/g)) {
+      const literal=shellLiteral(word[0]);if(!literal || !literal.startsWith('-'))targets.push(word[0]);
+    }
+  }
+  return [...new Set(targets)];
+}
+const redirectionTargets=command=>redirectionWords(command).map(shellLiteral).filter(Boolean);
+
 /** Destins de les redireccions d'una ordre que cauen al primer nivell de l'Escriptori. */
 export function redireccionsAlTaulell(ordre, root, cwd = root) {
   const out = [];
-  for (const m of ordre.matchAll(/(?:>>?|\|\s*tee(?:\s+-a)?)\s*(?:'([^']+)'|"([^"]+)"|([^\s;&|<>]+))/g)) {
-    const rel = relatiu(root, m[1] || m[2] || m[3], cwd);
+  for (const target of redirectionTargets(ordre)) {
+    const rel = relatiu(root, target, cwd);
     if (rel && alPrimerNivell(rel) && esMd(rel)) out.push(rel);
   }
   return out;
@@ -138,16 +175,56 @@ export function redireccionsAlTaulell(ordre, root, cwd = root) {
 function preShell(args, root) {
   const ordre = typeof args.CommandLine === 'string' ? args.CommandLine : typeof args.Command === 'string' ? args.Command : null;
   if (ordre === null) return ask('Hook Olivera: run_command sense CommandLine; cap comprovació feta.');
+  if (typeof args.CommandLine === 'string' && typeof args.Command === 'string' && args.CommandLine !== args.Command) {
+    return forceAsk('Hook Olivera: CommandLine i Command divergents; cap ordre privilegiada acreditada.');
+  }
   if (ordre.includes('antigravity-hook.off')) {
-    return ask(`L'interruptor ${INTERRUPTOR} és del Mestre: apagar el hook necessita el seu permís.`);
+    return forceAsk(`L'interruptor ${INTERRUPTOR} és del Mestre: apagar el hook necessita el seu permís.`);
   }
   const cwd = typeof args.Cwd === 'string' && args.Cwd ? path.resolve(root, args.Cwd) : root;
-  const cwdRel = relatiu(root, cwd) ?? '';
-  const tocaTaulell = ordre.includes('04_escriptori') || cwdRel === DESK || cwdRel.startsWith(`${DESK}/`);
-  if (tocaTaulell && /(?:^|[\s;&|(`])mv(?=\s|$)/.test(ordre)) return ask(MOTIU_MV);
+  const cwdRel = (relatiu(root, cwd) ?? '').toLowerCase();
+  // Les lectures elementals ja aprovades no es convertixen en preguntes perquè
+  // el patró cercat diga «rm» o esmente una ruta governada.
+  if (knownPureRead({tool_name:'run_command',tool_input:{command:ordre}},root)) return ALLOW;
+  // Un argument literal d'una CLI governada pot citar «rm .» com a text.
+  // L'argv no admet composició ni expansió; l'autoritat continua a l'executor/CLI.
+  try {
+    const argv=documentArgv(ordre);
+    if (argv[0]==='node' && ['tooling/wiki/document.mjs','tooling/gates/obrir_torn.mjs','tooling/gates/porta-olivera.mjs','tooling/gates/executor-mutacio.mjs'].includes(argv[1])) return ALLOW;
+  } catch { /* ordre composta: mai una excepció per prefix */ }
+  const lexicalRisk = ordre.replace(/['"\\]/g,'');
+  const riskText = lexicalRisk.toLowerCase();
+  const mentions = dir => new RegExp(`(?:^|[\\s/])${dir.replaceAll('.','[.]')}(?=$|[\\s/;&|()])`).test(riskText);
+  const tocaTaulell = mentions('04_escriptori') || cwdRel === DESK || cwdRel.startsWith(`${DESK}/`);
+  const enclosesProtected = directory => [DESK,...SECURITY_PATHS].some(dir=>{
+    const rel=path.relative(directory,path.join(root,dir));
+    return rel==='' || (rel!=='..' && !rel.startsWith(`..${path.sep}`) && !path.isAbsolute(rel));
+  });
+  const ancestorRisk = lexicalRisk.split(/[ \t;&|]+/).some(word=>word && !word.startsWith('-') && enclosesProtected(word==='*'?cwd:path.resolve(cwd,word)))
+    || lexicalRisk.endsWith(root) || lexicalRisk.endsWith(`${root}/`) || lexicalRisk.includes(`${root} `);
+  const tocaGovern = ancestorRisk || SECURITY_PATHS.some(dir=>mentions(dir) || cwdRel===dir || cwdRel.startsWith(`${dir}/`)) || /(?:AGENTS|CLAUDE)\.md|package(?:-lock)?\.json/i.test(riskText);
+  const destructiva = /(?:^|[\s;&|(`])(?:\/(?:[^/\s`]+\/)*)?(?:rm|mv|unlink|rmdir|truncate)(?=[\s`]|$)/.test(riskText);
+  if (tocaTaulell && destructiva) return forceAsk(`${MOTIU_MV}${tocaGovern?' Si afecta governança, necessita executor-mutacio.mjs amb pla exacte i lease.':''}`);
+  if (tocaGovern && destructiva) return forceAsk('Destrucció o trasllat de governança: necessita autoritat explícita; usa executor-mutacio.mjs amb pla exacte i lease.');
+  // Un intèrpret inline amb destí explícit no és una via documental ni un lease.
+  if ((tocaTaulell || tocaGovern) && /(?:^|[\s;&|('"`])(?:\/(?:[^/\s'"`]+\/)*)?(?:node|python[0-9.]*|perl|ruby|sh|bash|zsh)(?:[ \t]+[^;&|]*)?[ \t]-(?:e|c|p)(?=[ \t]|$)/.test(lexicalRisk)) {
+    return forceAsk('Intèrpret inline amb ruta protegida: necessita autoritat explícita; usa la via documental o executor-mutacio amb pla i lease.');
+  }
+  if((tocaTaulell||tocaGovern) && redirectionWords(ordre).some(raw=>shellLiteral(raw)===null)) {
+    return forceAsk('Redirecció amb expansió no verificable i ruta protegida: cap destí ni autoritat acreditats.');
+  }
+  for (const target of redirectionTargets(ordre)) {
+    const rel=relatiu(root,target,cwd);
+    if(!rel)continue; // /dev/null i artefactes fora del repo ja preaprovats.
+    if(governat(rel)||zonaHumana(rel))return forceAsk(`Redirecció a ${rel}: ruta protegida; usa la via amb autoritat explícita.`);
+    try {
+      const physical=mutationPath(root,target,cwd);
+      if(governat(physical)||zonaHumana(physical)||(alPrimerNivell(physical)&&esMd(physical)))return forceAsk(`Redirecció a ${physical}: ruta física protegida; usa node tooling/wiki/document.mjs context → create o executor-mutacio.mjs amb pla exacte i lease.`);
+    } catch(error) { return forceAsk(`Destí de redirecció protegit: ${retalla(error.message)}`); }
+  }
   const redir = redireccionsAlTaulell(ordre, root, cwd);
   if (redir.length) {
-    return ask(`Escriptura per shell a ${redir.join(', ')}: no passa per cap porta ni deixa rebut. Un document de l'Escriptori s'escriu amb l'eina d'edició, i un prompt o un pla naix de node tooling/wiki/document.mjs context → create.`);
+    return forceAsk(`Escriptura per shell a ${redir.join(', ')}: no passa per cap porta ni deixa rebut. Un document de l'Escriptori s'escriu amb l'eina d'edició, i un prompt o un pla naix de node tooling/wiki/document.mjs context → create.`);
   }
   return ALLOW;
 }
@@ -167,8 +244,15 @@ function preEscriptura(args, { root, portes }) {
   if (!cami) return ask("Hook Olivera: eina d'escriptura sense TargetFile; cap comprovació feta.");
   const rel = relatiu(root, cami);
   if (rel === null) return ALLOW; // fora del repositori: artefactes propis de l'IDE (~/.gemini/…)
-  if (zonaHumana(rel)) return ask(`${rel} és a la zona humana (01_produccio): només amb ordre directa i explícita del Mestre (AGENTS §12).`);
-  if (AUTOPROTEGITS.has(rel)) return ask(`${rel} governa el hook d'Antigravity: canviar-lo és decisió del Mestre.`);
+  if (zonaHumana(rel)) return forceAsk(`${rel} és a la zona humana (01_produccio): només amb ordre directa i explícita del Mestre (AGENTS §12).`);
+  if (AUTOPROTEGITS.has(rel)) return forceAsk(`${rel} governa el hook d'Antigravity: canviar-lo és decisió del Mestre.`);
+  if (governat(rel)) return forceAsk(`${rel} és governança: usa executor-mutacio.mjs amb pla exacte i lease; l’eina directa no acredita autoritat.`);
+  // Una àlies en src pot apuntar a governança o eixir de l'arrel. Reusa la
+  // mateixa resolució física i defensa de hardlinks que la política de mutació.
+  try {
+    const physical = mutationPath(root,cami);
+    if (governat(physical) || zonaHumana(physical)) return forceAsk(`${physical} és una ruta física protegida; l'àlies no acredita autoritat.`);
+  } catch (error) { return forceAsk(`Ruta d'escriptura protegida: ${retalla(error.message)}`); }
   if (!alPrimerNivell(rel) || !esMd(rel)) return ALLOW;
   if (!portes) throw new Error('portes no carregades per a una escriptura a l’Escriptori');
 

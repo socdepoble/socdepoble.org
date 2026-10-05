@@ -104,4 +104,3 @@ Quan acabeu de redactar el vostre informe, hi heu d'afegir un punt final titulat
 ## Vincles
 
 - [[00_index]]
-- [[00_index_escriptori]]

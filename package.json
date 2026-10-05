@@ -76,7 +76,7 @@
     "db:seed:generate": "sh scripts/generate-supabase-seed.sh",
     "pdf:render": "sh tooling/pdf/render_pdf.sh",
     "test": "vitest",
-    "test:node": "node --test tests/backend_consolidacio.test.mjs tests/sistema_nervios.test.mjs tests/standalone-build.test.mjs tests/lint_enxufe.test.mjs tests/vite-empremta-dev.test.mjs tests/enxufe-plugin.test.mjs tests/enxufe-pantalla.test.mjs tests/enxufe-empaqueta.test.mjs tests/enxufe-runtime.test.mjs tests/public_exports.test.mjs tests/enxufe-traduccio.test.mjs tests/dist-secrets.test.mjs tests/porta-olivera-v3.test.mjs tests/antigravity-hook.test.mjs tests/fonts-vigilancia.test.mjs tests/mapa-consola.test.mjs",
+    "test:node": "node tooling/tests/run-node-tests.mjs",
     "lint": "eslint src tooling scripts tests --max-warnings=0",
     "porta:llavor": "node tooling/gates/tractor-llavor.mjs",
     "porta:58px": "node tooling/gates/01_porta_pedra_seca_58px.mjs",
@@ -93,7 +93,13 @@
     "skills:index": "node tooling/brain/build_skills_index.mjs",
     "router": "node tooling/session/persona_router.mjs --punters",
     "porta:segella:update": "node tooling/gates/segella.mjs --update",
-    "brain:cens": "node tooling/brain/cens_cromatic.mjs"
+    "brain:cens": "node tooling/brain/cens_cromatic.mjs",
+    "test:unit": "vitest run --maxWorkers=2",
+    "test:ci": "node tooling/tests/run-node-tests.mjs --ci",
+    "test:node:inventory": "node tooling/tests/run-node-tests.mjs --list",
+    "test:node:laboratory": "node tooling/tests/run-node-tests.mjs --suite laboratory",
+    "test:node:session": "node tooling/tests/run-node-tests.mjs --suite session",
+    "test:node:all": "node tooling/tests/run-node-tests.mjs --suite all"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.4",
@@ -126,7 +132,7 @@
     "vitest": "^4.1.10"
   },
   "engines": {
-    "node": ">=20"
+    "node": "^22.20.0 || ^24.12.0 || >=25.0.0"
   },
   "private": true
 }

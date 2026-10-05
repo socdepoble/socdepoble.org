@@ -110,35 +110,35 @@ test('fora del repositori (artefactes de l’IDE), subcarpetes i documents no vi
   assert.equal(f.crides.operacio.length, 0, 'un document no vigilat no es reconstruïx');
 });
 
-test('zona humana i peces del mateix hook → ask', () => {
+test('zona humana i peces del mateix hook → force_ask', () => {
   const produccio = crida('write_to_file', { TargetFile: alTaulell('01_produccio/pagina.html'), CodeContent: 'x' });
-  assert.equal(preTool(produccio, { root: ROOT }).decision, 'ask');
+  assert.equal(preTool(produccio, { root: ROOT }).decision, 'force_ask');
   for (const rel of ['.agents/hooks.json', 'tooling/gates/antigravity-hook.mjs', INTERRUPTOR]) {
     const r = preTool(crida('write_to_file', { TargetFile: path.join(ROOT, rel), CodeContent: '' }), { root: ROOT });
-    assert.equal(r.decision, 'ask', rel);
+    assert.equal(r.decision, 'force_ask', rel);
   }
-  assert.equal(preTool(crida('run_command', { CommandLine: `touch ${INTERRUPTOR}` }), { root: ROOT }).decision, 'ask');
+  assert.equal(preTool(crida('run_command', { CommandLine: `touch ${INTERRUPTOR}` }), { root: ROOT }).decision, 'force_ask');
 });
 
-test('mv que toca l’Escriptori → ask amb la via canònica; la resta de shell → allow', () => {
+test('mv que toca l’Escriptori → force_ask amb la via canònica; la resta de shell → allow', () => {
   for (const CommandLine of [
     `mv ${DESK}/260929_2346_prompt_x.md _wiki_de_poble/90_arxiu_historic/`,
     `git mv ${DESK}/a.md ${DESK}/b.md`,
     `cd ${DESK} && mv a.md b.md`
   ]) {
     const r = preTool(crida('run_command', { CommandLine }), { root: ROOT });
-    assert.equal(r.decision, 'ask', CommandLine);
+    assert.equal(r.decision, 'force_ask', CommandLine);
     assert.match(r.reason, /--arxiva/);
   }
-  assert.equal(preTool(crida('run_command', { CommandLine: 'mv a.md b.md', Cwd: path.join(ROOT, DESK) }), { root: ROOT }).decision, 'ask');
+  assert.equal(preTool(crida('run_command', { CommandLine: 'mv a.md b.md', Cwd: path.join(ROOT, DESK) }), { root: ROOT }).decision, 'force_ask');
   assert.equal(preTool(crida('run_command', { CommandLine: `ls ${DESK}` }), { root: ROOT }).decision, 'allow');
   assert.equal(preTool(crida('run_command', { CommandLine: 'mv src/a.js src/b.js' }), { root: ROOT }).decision, 'allow');
   assert.equal(preTool(crida('run_command', { CommandLine: 'node tooling/gates/porta-olivera.mjs --arxiva --sec' }), { root: ROOT }).decision, 'allow');
 });
 
-test('redirecció de shell a un document del primer nivell → ask; a /dev/null → allow', () => {
+test('redirecció de shell a un document del primer nivell → force_ask; a /dev/null → allow', () => {
   const r = preTool(crida('run_command', { CommandLine: `cat <<'EOF' > "${DESK}/260930_1200_prompt_x.md"` }), { root: ROOT });
-  assert.equal(r.decision, 'ask');
+  assert.equal(r.decision, 'force_ask');
   assert.match(r.reason, /document\.mjs context → create/);
   assert.equal(preTool(crida('run_command', { CommandLine: 'npm test > /dev/null 2>&1' }), { root: ROOT }).decision, 'allow');
 });
@@ -235,13 +235,13 @@ test('procés: interruptor d’apagada → allow sense comprovar ni traçar', (t
 test('procés: eixida JSON per stdout i una línia de traça per invocació', (t) => {
   const arrel = mas(t);
   assert.deepEqual(executa(arrel, 'pre-tool', crida('view_file', { AbsolutePath: path.join(arrel, 'README.md') })), { decision: 'allow' });
-  assert.equal(executa(arrel, 'pre-tool', crida('run_command', { CommandLine: `mv ${DESK}/a.md x.md` })).decision, 'ask');
+  assert.equal(executa(arrel, 'pre-tool', crida('run_command', { CommandLine: `mv ${DESK}/a.md x.md` })).decision, 'force_ask');
   const l = traces(arrel);
   assert.equal(l.length, 2);
   assert.equal(l[0].mode, 'pre-tool');
   assert.equal(l[0].eina, 'view_file');
   assert.equal(l[0].decisio, 'allow');
-  assert.equal(l[1].decisio, 'ask');
+  assert.equal(l[1].decisio, 'force_ask');
 });
 
 test('procés: payload il·legible, buit o mode desconegut → ask', (t) => {

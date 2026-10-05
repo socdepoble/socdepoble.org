@@ -2,8 +2,10 @@ import { buildSearchText, firstMediaSource, toMediaDescription } from '../../con
 import { MARKET_ITEMS } from '../mercat/marketContent.js';
 import { FEED_POSTS } from '../mur/feedContent.js';
 import { TOWNS } from '../pobles/townsContent.js';
+import { LEGACY_MEDIA } from './legacyMedia.js';
 
 export const MEDIA_ITEMS = [
+  ...LEGACY_MEDIA,
   ...(FEED_POSTS
     .map((item, index) => {
       const src = firstMediaSource(item.image_url || item.image);

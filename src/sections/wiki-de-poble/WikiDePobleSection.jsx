@@ -1,4 +1,5 @@
-import React, { Suspense, lazy, useMemo } from 'react';
+import { lazyRoute } from '../../apps/plataforma/lazyRoute.js';
+import React, { Suspense, useMemo } from 'react';
 import { UniversalWorkspace } from '../../components/universal/workspace/UniversalWorkspace.jsx';
 import { ALL_CATEGORY_ID } from '../../components/universal/workspace/workspaceState.js';
 import { UniversalPage } from '../../components/universal/UniversalPage.jsx';
@@ -36,11 +37,14 @@ if (import.meta.env?.DEV && !PAGE_COPY[COVER_PAGE_KEYS.wiki]) {
  */
 const copyDePortada = (pageCopy, clau) => pageCopy?.[clau] || PAGE_COPY[clau];
 
-/* Una eina local com a ítem de la Wiki, amb la forma dels ítems sintètics de la Consola. */
+/* Una eina local com a ítem de la Wiki, amb la forma dels ítems sintètics de la Consola.
+   La fitxa porta FileText propi: sense ell heretaria la carpeta de tractors_cat
+   (glifDeCategoria) i canviaria un segon píxel (pla 2045, Marató 2230, F3). */
 const einaLocal = (id, title, subtitle, categoryId, tags) => ({
   id,
   title,
   subtitle,
+  icon: FileText,
   categoryId,
   categoryIds: [categoryId],
   tags,
@@ -71,8 +75,17 @@ const einaLocal = (id, title, subtitle, categoryId, tags) => ({
 export function modulsLocalsActius(env) {
   if (env?.DEV !== true) return { categories: [], items: [] };
   return {
+    /* Ordre del Mestre, 261004 (pla 2045, Marató 2230, F3) · Regla del glif:
+       una categoria que agrupa documents porta Folder (Tractors i les carpetes
+       del manifest); una entrada directa a una sola pàgina, FileText (Wiki de
+       Poble, Consola); un document final, el seu glif.
+       Excepció vigent: els documents del manifest no declaren icon i encara
+       hereten la carpeta de la seua categoria (ItemMedia i el rail del
+       UniversalWorkspace, via glifDeCategoria; ho fixa icones.test.jsx).
+       Posar-los FileText és decisió pendent del Mestre: opció A, només les
+       fitxes de Tractors (l'estat d'ara); opció B, també els documents. */
     categories: [
-      { id: 'tractors_cat', label: 'Tractors', icon: FileText }
+      { id: 'tractors_cat', label: 'Tractors', icon: Folder }
     ],
     items: [
       einaLocal('tractors_aprovacio', 'Aprovació de tractors', 'Què fa cada tractor, la seua empremta i la teua signatura', 'tractors_cat', ['tractors']),
@@ -87,8 +100,8 @@ const MODULS_LOCALS = modulsLocalsActius({ DEV: import.meta.env.DEV });
    importació dels Tractors arriba al build. La Gestoria ja no hi és (ordre
    del Mestre, 261004): la carrega la seua app, src/apps/gestoria. */
 const EINES_LOCALS = import.meta.env.DEV ? {
-  tractors_aprovacio: lazy(() => import('../tractors/PanellTractors.jsx')),
-  sentinelles_panell: lazy(() => import('../tractors/PanellSentinelles.jsx'))
+  tractors_aprovacio: lazyRoute(() => import('../tractors/PanellTractors.jsx')),
+  sentinelles_panell: lazyRoute(() => import('../tractors/PanellSentinelles.jsx'))
 } : null;
 
 /* Traduir enviaria el text de la pàgina al servei de traducció de l'amfitrió

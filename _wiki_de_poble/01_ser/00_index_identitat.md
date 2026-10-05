@@ -39,7 +39,6 @@ El registre executable és `.agents/cervell.json`. No es reanomenen carpetes.
 - [[doc_governanca]]
 - [[00_arquitectura_tecnica_unificada]]
 - [[sistema_immunitari]]
-- [[AGENTS]]
 - [[02_saber/03_consola_termodinamica/00_portada|Consola Termodinàmica]]
 - [[doc_logos_oficials]]
 - [[doc_taula_mestra]]

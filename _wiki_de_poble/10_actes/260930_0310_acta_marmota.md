@@ -37,7 +37,6 @@ Plantilla entregada: _wiki_de_poble/03_actuar/plantilles/acta.md; SHA-256 3ae94f
 
 2026-09-30T01:02:58.527Z: esborrany creat; contingut i verificació pendents.
 
-- 00:37 torn `torn_d8024ad3-9c76-48e7-b402-348fbb2dedb5` (code) sobre el prompt [[../90_arxiu_historic/260929_2346_prompt_claude_consola]] i el pla de MarIA [[../90_arxiu_historic/260929_2346_pla_implementacio_consola]]. Pla refinat i vinculat: [[../90_arxiu_historic/260930_0040_pla_implementacio_consola]].
 - 00:45-01:10 nou lectors independents del codi. 01:15-02:40 implementació de src en quatre llesques amb revisió adversarial, i paquet de governança en un laboratori. El Mestre va afegir la T15 (barra lateral) en calent i va reconciliar el segell de skills (0c91c0dd).
 - 02:40-03:10 el límit setmanal va tombar correctors i l'integrador; Claude va tancar a mà les dues proves que un corrector va deixar a mitges, va escriure el generador de lease i el relleu, i va passar totes les proves.
 
@@ -69,7 +68,6 @@ Laboratori `_wiki_de_poble/04_escriptori/02_investigacio_ia/260930_0040_governan
 
 ### Primer, abans de res (Mestre)
 
-1. Aplicar el paquet amb la lease: `open` → `lease.mjs bootstrap --session=ID` → `seal` → `executor-mutacio.mjs` (ordres exactes al xat de tancament i a [[../90_arxiu_historic/260930_0040_auditoria_claude]]). Entremig, cap canvi a l'arbre ni cap commit.
 2. Després: els dos enllaços `.claude/skills/core-neteja-brossa` i `.claude/skills/core-telemetria-huma`; `node tooling/gates/tancament.mjs --close --turn-id torn_d8024ad3-9c76-48e7-b402-348fbb2dedb5` (el torn caduca el 2026-09-30 a les 22:37 UTC); commit revisat.
 
 ### Tasques per al pròxim agent
@@ -87,7 +85,3 @@ Laboratori `_wiki_de_poble/04_escriptori/02_investigacio_ia/260930_0040_governan
 ## Vincles
 
 - [[00_index]]
-- [[00_index_escriptori]]
-- [[../90_arxiu_historic/260930_0040_auditoria_claude]]
-- [[../90_arxiu_historic/260930_0040_pla_implementacio_consola]]
-- [[../90_arxiu_historic/260929_2346_prompt_claude_consola]]

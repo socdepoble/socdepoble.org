@@ -23,7 +23,8 @@ const mocks = vi.hoisted(() => ({
   sessio: null,
   amplada: 1280,
   externalConfig: undefined,
-  towns: []
+  towns: [],
+  joAvatar: null
 }));
 
 vi.mock('../../../app/contexts/RouterContext', () => ({
@@ -41,7 +42,7 @@ vi.mock('../../../app/contexts/CoreContentContext', () => ({
   useCoreContent: () => ({ status: 'ready', towns: mocks.towns })
 }));
 vi.mock('../XatContext', () => ({
-  useXat: () => ({ comunitats: [], joId: 'jo', joNom: 'Javi Llinares', chatThreads: mocks.fils })
+  useXat: () => ({ comunitats: [], joId: 'jo', joNom: 'Javi Llinares', joAvatar: mocks.joAvatar, chatThreads: mocks.fils })
 }));
 /* La sessió, quan n'hi ha: useSessioOpcional (el full) i useSession
    (useEixidaSegura, la mateixa eixida que el Panell de Control). */
@@ -72,6 +73,7 @@ beforeEach(() => {
   mocks.amplada = 1280;
   mocks.externalConfig = undefined;
   mocks.towns = [];
+  mocks.joAvatar = null;
 });
 afterEach(() => {
   cleanup();
@@ -375,4 +377,19 @@ test('en estret, «Tu» tanca abans el panell del rail; en tancar el full, el fo
   fireEvent.click(within(full()).getByRole('button', { name: 'Tanca els ajustos' }));
   expect(screen.queryByRole('dialog', { name: 'Ajustos' })).toBeNull();
   expect(document.activeElement).toBe(document.querySelector('.sdp-xat-obri-rail'));
+});
+
+/* Marató 2230 · La foto de la persona arriba al full i es resol pel port.
+   La mateixa targeta continua accessible pel nom escrit, sense duplicar alt. */
+test('els Ajustos mostren la foto pròpia i la descarten quan la persona ja no en té', async () => {
+  mocks.joAvatar = '/assets/profile-javi.jpg';
+  const vista = pinta();
+  obriDesDelPeu();
+  const perfil = () => within(full()).getByRole('button', { name: 'Javi Llinares, El meu perfil' });
+  await waitFor(() => expect(perfil().querySelector('img')?.getAttribute('src')).toBe('/assets/profile-javi.jpg'));
+  expect(perfil().querySelector('img').getAttribute('alt')).toBe('');
+  mocks.joAvatar = null;
+  vista.rerender(<ClosCaXat middleTitle="Xats" middleColumn={<div />} rightColumn={<div />} />);
+  expect(perfil().querySelector('img')).toBeNull();
+  expect(perfil().textContent).toContain('JL');
 });

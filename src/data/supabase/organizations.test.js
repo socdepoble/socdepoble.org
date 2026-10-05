@@ -318,3 +318,50 @@ test.each(['seed', 'local'])('T43 · en %s tot delega a localPerfils: alta immed
   expect(m.request).not.toHaveBeenCalled();
   reiniciaLocalPerfils();
 });
+
+/* ── F1 (ordre del Mestre, 261004; pla 2045, Marató 2230) · create_organization
+   contra una base desfasada: codi neutral i frase en valencià, sense «PGRST»
+   ni l'anglés de PostgREST. La crida no canvia (p_lema només si ve, M01). ── */
+
+/* La frase no diu quantes versions hi ha ni l'id de la migració (2610042350):
+   a qui crea l'organització no li diu res. */
+const ESQUEMA_DESFASAT = 'El servidor d’este poble té més d’una versió de la funció que crea organitzacions i no en sap triar cap: l’organització no s’ha creat. Cal aplicar-hi una migració pendent.';
+
+test('F1 · dues create_organization al servidor (PGRST203, HTTP 300): ESQUEMA-DESFASAT, sense anglés ni PGRST', async () => {
+  const cru = errorServidor(300, '{"code":"PGRST203","details":null,"hint":"Try renaming the parameters or the function itself in the database so function overloading can be resolved","message":"Could not choose the best candidate function between: public.create_organization(p_tenant_id => uuid, p_kind => text, p_name => text, p_slug => text, p_description => text, p_parent_organization_id => uuid), public.create_organization(p_tenant_id => uuid, p_kind => text, p_name => text, p_slug => text, p_lema => text, p_description => text, p_parent_organization_id => uuid)"}');
+  m.request.mockRejectedValueOnce(cru);
+  const fallada = await createOrganization({ kind: 'company', name: 'Forn', slug: 'forn' }).catch((e) => e);
+  expect(fallada).toMatchObject({ code: 'ESQUEMA-DESFASAT', message: ESQUEMA_DESFASAT });
+  expect(fallada.cause).toBe(cru);
+  expect(fallada.message).not.toMatch(/PGRST|Supabase|candidate|function|overloading|2610042350|dues versions/i);
+  // La crida sense lema no porta p_lema (M01): el client no tria cap de les versions.
+  const body = m.request.mock.calls[0][2].body;
+  expect(body).not.toHaveProperty('p_lema');
+});
+
+test('F1 · un HTTP 300 sense PGRST203 al cos (cos buit) també és ESQUEMA-DESFASAT', async () => {
+  const cru = errorServidor(300, 'Error desconegut.');
+  m.request.mockRejectedValueOnce(cru);
+  const fallada = await createOrganization({ kind: 'company', name: 'Forn', slug: 'forn' }).catch((e) => e);
+  expect(fallada).toMatchObject({ code: 'ESQUEMA-DESFASAT', message: ESQUEMA_DESFASAT });
+  expect(fallada.cause).toBe(cru);
+  expect(m.request.mock.calls[0][2].body).not.toHaveProperty('p_lema');
+});
+
+test('F1 · sense la funció al servidor (PGRST202): NO-DISPONIBLE, en valencià', async () => {
+  m.request.mockRejectedValueOnce(errorServidor(404, '{"code":"PGRST202","details":"Searched for the function public.create_organization","hint":null,"message":"Could not find the function public.create_organization in the schema cache"}'));
+  const fallada = await createOrganization({ kind: 'company', name: 'Forn', slug: 'forn' }).catch((e) => e);
+  expect(fallada).toMatchObject({ code: 'NO-DISPONIBLE',
+    message: 'El servidor d’este poble encara no té la funció que crea organitzacions: l’organització no s’ha creat. Cal aplicar-hi les migracions pendents.' });
+  expect(fallada.message).not.toMatch(/PGRST|Supabase|Could not/i);
+});
+
+test('F1 · la resta d’errors de create_organization passen tal qual (els propis del servidor, la xarxa, la cancel·lació)', async () => {
+  const propi = errorServidor(409, '{"code":"23505","message":"L’identificador ja pertany a una altra organització."}');
+  const xarxa = new TypeError('Failed to fetch');
+  const cancel = Object.assign(new Error('Cancel·lat'), { name: 'AbortError' });
+  for (const error of [propi, xarxa, cancel]) {
+    m.request.mockRejectedValueOnce(error);
+    await expect(createOrganization({ kind: 'company', name: 'Forn', slug: 'forn' })).rejects.toBe(error);
+  }
+});

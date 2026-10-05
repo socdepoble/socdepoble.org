@@ -1,0 +1,138 @@
+DISSENYS INDEPENDENTS DE CLAUDE (mapa de només lectura, 22:42-23:17)
+Torn torn_8ec393af. Els he fet sense veure cap diff de Codex. Servixen de contrast per a la revisió adversarial: on el diff de Codex diverge, ho he de justificar o refutar.
+
+================================================================
+A1 · UN SOL PROPIETARI DE RECUPERACIÓ PER ALS LAZY
+================================================================
+Fets que condicionen el disseny:
+- 28 lazy de mòdul a App.jsx. RutaWikiDePoble.jsx:3. registreApps.js:112-118: lazy dins del render, guardat en un Map i no es recrea mai (registreApps.test.js:150-158 ho exigix). AppGestoria.jsx:31-34.
+- privacitat.test.js:262-272 i :304-315 exigixen el literal `lazy(() => import(` exactament 2 vegades en VISTES i en EINES_LOCALS. Un embolcall helper els trenca.
+- El catàleg (82 lazy amb ambReintent, detailRegistry.jsx:4-28) i les eines de la Wiki (WikiDePobleSection.jsx:89-92) es pinten dins de DetailColumn. La primera barrera que els captura és SlotErrorBoundary domini="detall" (UniversalWorkspace.jsx:351-366), i el seu «Reintenta» (SlotErrorBoundary.jsx:62-64) és igual d'inútil.
+- TaulerTelemetria (App.jsx:657) no té cap barrera pròpia: si falla, la barrera de ruta tomba tota la pàgina legal.
+- React 18.3.1:
+  - un lazy rebutjat torna a llançar EL MATEIX objecte (react.development.js:1406-1408);
+  - un throw síncron del carregador deixa el payload en Uninitialized i el render següent el torna a cridar (:1357);
+  - si l'import resol a undefined, cada render llança un TypeError NOU (:1392-1405).
+- getDerivedStateFromError s'executa dues vegades en StrictMode (react-dom:14805-14809): cap efecte secundari ací. componentDidCatch només una vegada, en el commit.
+- Vite 7.3.6: handlePreloadError (config.js:23421-23432) passa el mateix objecte err com a payload de l'esdeveniment i com a rebuig. Un preventDefault fa que l'import resolga undefined, i això trenca la identitat.
+- esAmaDelDocument (apps/plataforma/interruptors.js:119-123) ja distingix SPA d'iframe, de __SDP_EMBEDDED__ i de WordPress. useEnLinia ja existix. La indirecció de recàrrega per a jsdom té precedent a DetallPrivacitat.jsx:341-342.
+
+Disseny:
+- Un mòdul pur amb dos WeakSet:
+  - VISTS: errors ja capturats;
+  - DE_CARREGA: payloads de vite:preloadError.
+- anotaError(e) torna true si eixe OBJECTE ja s'havia vist. Només s'escriu a componentDidCatch.
+- RouteErrorBoundary com a component propi, fora d'App.jsx, amb props resetKey, abast ('ruta' o 'peça'), mostraDetall, amaDelDocument i enLinia (els dos últims injectats per l'embolcall).
+- Estat 1, primer error: markup IDÈNTIC al de hui (Llei del Píxel), amb «Intentar de nou».
+- Estat 2, inútil (mateix objecte tornat després del reintent, o payload de preloadError):
+  - si l'app és ama del document: «Recarrega la pàgina», un avís de pèrdua de dades en memòria i, sense xarxa, el botó desactivat amb el text «Sense connexió»;
+  - si no ho és: NOMÉS text.
+- Mai: recàrrega automàtica, lazy regenerat, query o clau volàtil, sessionStorage.
+- On van les instàncies de peça (només on es pinta un lazy): DesignSection.jsx:101-103 DINS del Slot (així el Slot no segresta), WikiDePobleSection.jsx:115-117 i TaulerTelemetria (App.jsx:657).
+- ambReintent desapareix: 82 lazy plans més 'emoticones/xl'.
+- host.js:31-37 registra el payload sense preventDefault i sense reload.
+- Paranys que ha de cobrir la prova:
+  - el delimitador de App.entitatDelProjecte.test.jsx:124 (indexOf('export class RouteErrorBoundary')) passaria buit si la classe canvia de lloc;
+  - el focus s'ha de moure quan desapareix «Intentar de nou».
+
+Criteris de revisió (què miraré al diff de Codex):
+ R1 Cap reload automàtic, cap query, cap sessionStorage per chunk, cap lazy regenerat, cap clau volàtil.
+ R2 La detecció d'«inútil» no viu a getDerivedStateFromError (StrictMode).
+ R3 Cap preventDefault a vite:preloadError.
+ R4 Els lazy profunds (catàleg, eines de la Wiki) no queden segrestats per SlotErrorBoundary amb un reintent inútil.
+ R5 Dins de WordPress o d'un iframe, cap botó de recàrrega.
+ R6 Primer error amb el mateix píxel que hui.
+ R7 privacitat.test.js :272 i :312 continuen verds (literal lazy).
+ R8 registreApps.test.js:150 continua verd.
+ R9 Proves amb lazy(()=>Promise.reject(err)) que demostren que el carregador es crida una sola vegada.
+ R10 El delimitador de :124 continua existint.
+
+================================================================
+A2 · CANCEL·LACIÓ COOPERATIVA DEL TAULER
+================================================================
+Disseny:
+- `senyal` opcional a executaTractorTauler.
+- Codi nou LECTURA_CANCELLADA a CODIS_TRACTOR_TAULER. Només hi ha proves amb toContain, i per tant no se'n trenca cap.
+- Cinc punts de control, CAP dins d'un try:
+  - P1: entrada, ABANS d'exigeixTractor;
+  - P2: després de l'aprovació i ABANS de validar els fitxers;
+  - P3: inici de cada volta;
+  - P4: entre :243 i :244, després del try/catch de l'arrayBuffer i FORA d'ell;
+  - P5: abans del return.
+- Mai un resultat parcial.
+- Precedent al repositori: nucli/tractor.js:365, on FONT_OBLIDADA es rellança abans de convertir-se en avís.
+- useTauler: un AbortController per lectura dins de llig. Una lectura nova avorta l'anterior; oblida i desmuntar avorten la que hi haja.
+- Al finally, `if (control.current === propi) control.current = null`: el finally d'A no pot netejar el controlador de B.
+- Invariant: tot abort va acompanyat d'un increment del torn, de manera que LECTURA_CANCELLADA no pinta mai cap error.
+- Fitxa gestoria_tauler.md:46 sense «a l'instant»:
+  - el fitxer que el navegador ja està carregant s'acaba de carregar i es descarta sense mirar-lo;
+  - revocar des d'una altra pestanya no para la lectura en marxa.
+- Mostrar Oblida durant una primera lectura (Tauler.jsx:115) és un canvi visible. Codex el proposa, i és raonable perquè és la cancel·lació mateixa que mana el prompt, però l'ha de veure el Mestre.
+
+Criteris de revisió:
+ S1 Cap punt de control dins del try de :238-243.
+ S2 P1 va abans de la porta. Prova: un senyal preavortat amb aprovació invàlida ha de donar LECTURA_CANCELLADA i no APROVACIO_REQUERIDA.
+ S3 P5: l'últim fitxer rebutjat després de l'abort no torna avisos de FITXER_ILLEGIBLE.
+ S4 Una prova amb dents per a P4: spy de llegeixC43 no cridat.
+ S5 El finally d'A no neteja B.
+ S6 StrictMode publica.
+ S7 La fitxa és veraç.
+ S8 Les fonts canviades obliguen a una signatura WebAuthn nova del Mestre, i l'informe ho ha de dir.
+
+================================================================
+XAT I /iaia (troballes que Codex encara no ha citat)
+================================================================
+- XatSection 99/102:
+  - dues roges per la dada de prova left 420, quan COLUMN_LIMITS.left.max és 340. Cal 340, no 260: 260 és el valor per defecte i amagaria una persistència trencada;
+  - T63.2 per 'pagina:/ia' a :1091 i :1097.
+- DEFECTE REAL DE PRODUCTE: App.jsx:883 encara té `<Route path="ia" ...>` i no hi ha cap ruta 'iaia'.
+  - La barra lateral ja enllaça /iaia (sections.js:37), i per tant porta a un 404 (NotFoundPage, :889).
+  - Ho demostra pageContent.roadmap.test.js:206, en roig.
+  - Arreglament: path="iaia" i una redirecció de "ia" a /iaia amb replace. Conserva els bundles amb href="/ia" i els enllaços compartits.
+- Altres proves que fallen per la mateixa deriva:
+  - connexions.test.js:159 (%2Fia);
+  - paginaDeText.test.js:13-15 ('/ia?x=1', '/ia/', '/ia#reflexions').
+- La migració 2609282100_xat_de_pagina.sql:208 encara té '/ia'. La capçalera diu que no està aplicada enlloc (:6; README:149-151), així que es pot editar in situ. Fa roja tests/migracio-xat-de-pagina.test.mjs:267.
+- Decisió del Mestre (opcional): un àlies de dades RUTES_ANTIGUES { '/ia': '/iaia' } per a les notes connectades abans de les 19:27, que ara es veurien com a «absent».
+
+================================================================
+REGRESSIONS NOVES QUE HE VIST A LA LÍNIA BASE (23:16-23:17, fresques)
+================================================================
+- AppGridShell.rail.test.jsx:380, ROJA: AppGridShell.css:150 passa a `width: max-content` (23:10, CSS del calaix de Codex). A les 22:54 era verda.
+- App.entitatDelProjecte.test.jsx ×2, ROGES: /mercat i /mercat/:id porten a /empresa/<uuid> en lloc de /projecte (navigation.js:230-235 i MercatSection, 23:12, canvi de Mercat de Codex). Si és intencionat (ordre del pla 2045), cal actualitzar la prova en el mateix canvi.
+- ItemDetailSection ×16, ROGES:
+  - causa: un canvi no confirmat de les 19:26 a ItemDetailSection.jsx:8 i :20 (useSession sense SessionProvider; les proves no fan cap mock);
+  - no és de Codex ni meu i no té propietari.
+- Ja existien abans:
+  - App.test.jsx T3 ×2 (barra mòbil sense Telefonades), la deriva que ja anotava l'ESTAT de les 11:07;
+  - laParroquia (depén de 01_produccio);
+  - la Consola, fràgil per temps (waitFor de 1000 ms a App.test.jsx:295).
+
+================================================================
+T4 · ESBORRANY DEL CATÀLEG EMOJIS XL (revisió del codi de Codex)
+================================================================
+E1 `import './emojisXL.css'` dins d'EspecimenEmojisXL.jsx:1:
+   - és l'únic import de CSS dins d'un component a src;
+   - la Wiki (lliçó 7, wikiManifest.js:953) diu que és un error històric;
+   - a l'arrel tancada de WordPress només entra index.css?inline (PedraSecaEmbed.jsx:95, :694-716), i per tant dins de WP la graella eixiria sense estils;
+   - proposta: moure les regles a src/css/components.css, dins de @layer components (bloc CATÀLEG).
+E2 emojisXL.css no té @layer, i el CSS sense capa guanya totes les capes (index.css:45).
+E3 Literals 1rem, 0.5rem i 0.25rem en lloc de var(--sdp-space-N). Focus `2px solid var(--sdp-accio)`, quan el canònic és `3px solid var(--sdp-focus)`, que és el que canvia en mode fosc.
+E4 No usa l'embolcall Especimen (Especimen.jsx).
+E5 5 dels 48 emojis són d'Emoji 13.0 (🪵 🪨 🫂 🪛 🫒) i 🧑‍🌾 és ZWJ 12.1. Poden eixir com a quadre buit a Chrome 100 sobre Windows 10 i Android 10 (baseline 2022). L'etiqueta visible salva el significat.
+E6 versio.js: cal posar al dia VERSIO_CATALEG en el mateix canvi.
+
+================================================================
+T5 · CEGUESA DE MarIA (diagnosi independent, per contrastar amb el pedaç 2303 de Codex)
+================================================================
+C1 La porta definix «consumit» per DIA, no per SESSIÓ (porta-olivera.mjs:113-116). En una sessió nova del mateix dia, res no és ranci. La traça d'Antigravity ho confirma: PreInvocation diu «res» entre les 20:20Z i les 20:30Z.
+C2 MarIA no té cap canal d'obertura de sessió:
+   - .agents/hooks.json no té SessionStart;
+   - preInvocation ignora invocationNum (antigravity-hook.mjs:213-219, :235).
+C3 --arxiva --nom rebutja les categories que no són de torn (porta-olivera.mjs:269-271). Per això MarIA fa servir mv, i l'«ask» s'autoaprova («Always Allow»).
+   - Hui (18:32:35Z) n'ha eixit una subcarpeta de 90_arxiu_historic amb 18 documents, entre ells les actes de Codex, que haurien d'anar a 10_actes.
+   - Ha passat mentre Codex tancava (ESTAT de les 20:35).
+C4 draft-write ancora al final del fitxer (EOF), no dins d'«Activitat en curs». L'índex fa 744 línies.
+C5 Les solucions ja escrites no estan endollades (labs 1745 i 261003: «Res aplicat»).
+C6 L'asimetria: el hook d'Antigravity torna ALLOW per a les edicions de .agents/skills (antigravity-hook.mjs:172), i Claude i Codex les tenen vetades. Per això les dues edicions de MarIA (20:11 i 20:12) van trencar el segell.
+Proposta: «segell de sessió». El bloc `## Activitat en curs · sessió AAMMDD_HHMM`, una ordre única obrir_sessio.mjs (informe i --obre), MISSATGE_OBERTURA a preInvocation, force_ask per a governança i per a mv sobre l'Escriptori, i el REFLEX DE CORRECCIÓ via executor.

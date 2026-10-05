@@ -7,6 +7,29 @@ description: ESTAT DE LA SESSIÓ
 
 <!-- SDP:ESTAT_ACTUAL -->
 
+## ESTAT_ACTUAL · 2026-10-05 04:40 · Claude · tancament de la Marató 2230
+
+Informe [[261004_2245_auditoria_claude]] i avaluació [[261005_0345_avaluacio_final_marato]] (global 6,1). Fronts de Claude F1-F5 i P4 vius amb proves. Revisió adversarial de Codex amb 3 rondes d'ACK. Migració 2610042350 no aplicada. Res no està commitejat i hi ha un parany de commit parcial: tooling/tests, lazyRoute.js, RouteErrorBoundary, migracions i imatge OG sense versionar. Cap test:ci complet sobre el tall congelat. Següent: el commit atòmic, un runner únic i la primera tasca de 261005_0345_tasques_pendents_consola_visual (crash de useSession en eixir des de Control).
+
+## ESTAT_ACTUAL · 2026-10-05 00:58 · Codex · marató2230 en verificació final
+
+Torn torn_6cd529b4-5a35-441b-a3e2-25b9b94cf252, pla2230 vinculat abans de producció i informe viu261004_2240_auditoria_codex a l’Escriptori. A1ratificada9,0 i A2ratificada9,2 amb revisió independent; cap recàrrega automàtica i cancel·lació cooperativa, arrayBuffer físic no interrompible. CI descoberta96 (70principals,16laboratori,10sessió); Nodeprincipal770:765passats,0fallats,1skipheretat,4TODO diagnòstics. Xat102/102; avatars55/55; App75/75; Nevera/Lector/graella57/57; CLS90/90 només contracteDOM. T5executor real20CAS, segell5be515e9… vàlid i leases consumides; D7/D8/D9/D11 residuals explícits.
+
+Claude real RELLEU05 accepta bloquejants F2/F4 i els corregix com a propietari; stages Codex només propostes, NOaplicats. No s’atribuïx consens final a un subagent. Emojiscomplet i reauditoriaLighthouse en marxa; primerLighthouse /disseny51/100/100/66, CLS0,279 abanscorrecció; noindexcatàleg intencional. UIEditor i focus reparats amb regressions. Cap prova remotaSollutia/SQL, WebAuthn humana, PWAinstal·lació, ZIPnou, commit o desplegament. BateriaVitest globalfinal i portes pendents: encara NOverdglobal. Història anterior conservada.
+
+
+## ESTAT_ACTUAL · 2026-10-04 20:35 · Codex · relleu d’arxivat concurrent
+
+Entrega final activa [[261004_2035_auditoria_codex]], v1.1.0, torn torn_60aebc0d-ec6a-45bf-8e20-964e41e03e35. Una operació externa ha arxivat pla1948/informe2005/acta2025 mentre es comprovava el tancament. Codex només n’ha registrat els handoffs reals i ha creat l’entrega final a l’Escriptori; cap moviment de fitxer. No s’assumix la Marató2045. Primer tancament8errors (dos de governança i sis links propis de línia); segon53 després de l’arxivat concurrent. Enllaços propis corregits a l’entrega final, sense resegellar història o tocar documents aliens. Informe i acta anteriors preservats. Sense canvis productius.
+
+
+## ESTAT_ACTUAL · 2026-10-04 20:30 · Codex · auditoria adversarial acabada, sense canvis productius
+
+Torn torn_60aebc0d-ec6a-45bf-8e20-964e41e03e35; pla1948 vinculat, informe2005 i acta2025. No regressió bloquejant reproduïda de Sidebar/historial/segell. Dos límits: A1P2, reintent lazy rebutjat no torna a carregar, deute heretat; A2P2, oblidar/desmuntar useTauler no para lectures restants, sense publicació tardana ni fuga observada i origen respecte Sidebar no datable.182/182 existents,13/13 rutes,2/2 imports interiors,6/6 casos sòlids d’estat (suite7/7 inclou sonda nativa no acreditada). Inventari1.994 fitxers sense canvis, HEAD2022ee32 estable. Context complet17documents llegit. La cita atribuïda a Claude era del revisor anterior de Codex; independència limitada declarada.
+
+Model: Sol amb esforç adequat i escalada concreta si hi ha incertesa material;7% no és una tarifa universal, fonts oficials i inferència condicionada a l’informe. Cap codi productiu, ZIP, desplegament, commit ni segell d’història aliena. El paquet1545 continua sent l’entrega documental anterior, sense recertificació en aquest nou torn. Resultat de portes al relleu final del2035; no assumir verd global.
+
+
 ## ESTAT_ACTUAL · 2026-10-04 19:13 · Claude · integració final i 1.0.3 a punt de compilar
 
 - Gestoria Veri*Factu v2 (F01-F03) i ara app pròpia `/app/gestoria`, només en DEV, fora de la Wiki;
@@ -1605,3 +1628,6 @@ Auditoria [[260922_2225_auditoria_codex]], torn `torn_23ec2699-11c3-47cb-9e19-70
 ## 260923_0017 · Codex · Auditoria UniversalWorkspace
 
 Torn `torn_16bdcf0c-b12e-4623-85de-dfd6d74cb0f9`, abast documental. Informe [[260923_0017_auditoria_codex]] i rèplica annexada al pla 0010. Set troballes: alta només després de servidor, passarel·la NotesContext incompleta, creació absent en Wiki/Disseny, portades com a documents, callback del graf absent, resolució confosa amb portada i filtres que amaguen creacions. Contracte proposat: documents/vistes/drafts separats, controlador compartit i adaptadors de persistència. 11/11 proves existents passen; navegador 3340 confirma error sense sessió i CREAR desactivat en Wiki/Disseny. Cap font de producte modificada. Consens no acreditat; Acta Marmota pendent.
+
+
+Tancament de l’auditoria torn_60aebc0d-ec6a-45bf-8e20-964e41e03e35: entrega2035 validada, Olivera verda. Diagnòstic després de handoffs10 incidències; tres àncores pròpies afegides després. Rebuts de context previs encara indiquen rutes retirades, malgrat el handoff dels artefactes; eina no alterada. LEDGER/segell i dos orfes aliens impedixen verd formal. Informe tècnic acabat; cap reparació, desplegament ni canvi de font.

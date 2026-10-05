@@ -1,0 +1,1953 @@
+--- a/package.json
++++ b/package.json
+@@ -76,7 +76,7 @@
+     "db:seed:generate": "sh scripts/generate-supabase-seed.sh",
+     "pdf:render": "sh tooling/pdf/render_pdf.sh",
+     "test": "vitest",
+-    "test:node": "node --test tests/backend_consolidacio.test.mjs tests/sistema_nervios.test.mjs tests/standalone-build.test.mjs tests/lint_enxufe.test.mjs tests/vite-empremta-dev.test.mjs tests/enxufe-plugin.test.mjs tests/enxufe-pantalla.test.mjs tests/enxufe-empaqueta.test.mjs tests/enxufe-runtime.test.mjs tests/public_exports.test.mjs tests/enxufe-traduccio.test.mjs tests/dist-secrets.test.mjs tests/porta-olivera-v3.test.mjs tests/antigravity-hook.test.mjs tests/fonts-vigilancia.test.mjs tests/mapa-consola.test.mjs",
++    "test:node": "node tooling/tests/run-node-tests.mjs",
+     "lint": "eslint src tooling scripts tests --max-warnings=0",
+     "porta:llavor": "node tooling/gates/tractor-llavor.mjs",
+     "porta:58px": "node tooling/gates/01_porta_pedra_seca_58px.mjs",
+@@ -93,7 +93,13 @@
+     "skills:index": "node tooling/brain/build_skills_index.mjs",
+     "router": "node tooling/session/persona_router.mjs --punters",
+     "porta:segella:update": "node tooling/gates/segella.mjs --update",
+-    "brain:cens": "node tooling/brain/cens_cromatic.mjs"
++    "brain:cens": "node tooling/brain/cens_cromatic.mjs",
++    "test:unit": "vitest run --maxWorkers=2",
++    "test:ci": "node tooling/tests/run-node-tests.mjs --ci",
++    "test:node:inventory": "node tooling/tests/run-node-tests.mjs --list",
++    "test:node:laboratory": "node tooling/tests/run-node-tests.mjs --suite laboratory",
++    "test:node:session": "node tooling/tests/run-node-tests.mjs --suite session",
++    "test:node:all": "node tooling/tests/run-node-tests.mjs --suite all"
+   },
+   "dependencies": {
+     "@supabase/supabase-js": "^2.112.4",
+@@ -126,7 +132,7 @@
+     "vitest": "^4.1.10"
+   },
+   "engines": {
+-    "node": ">=20"
++    "node": "^22.20.0 || ^24.12.0 || >=25.0.0"
+   },
+   "private": true
+ }
+--- a/package-lock.json
++++ b/package-lock.json
+@@ -38,7 +38,7 @@
+         "vitest": "^4.1.10"
+       },
+       "engines": {
+-        "node": ">=20"
++        "node": "^22.20.0 || ^24.12.0 || >=25.0.0"
+       }
+     },
+     "node_modules/@asamuzakjp/css-color": {
+--- a/.github/workflows/wiki-integrity.yml
++++ b/.github/workflows/wiki-integrity.yml
+@@ -19,7 +19,7 @@
+   verify:
+     name: Tests i auditories
+     runs-on: ubuntu-latest
+-    timeout-minutes: 15
++    timeout-minutes: 45
+ 
+     steps:
+       - name: Obri el repositori
+@@ -30,7 +30,7 @@
+       - name: Setup Node
+         uses: actions/setup-node@v4
+         with:
+-          node-version: 20
++          node-version: '22.20.0'
+           cache: 'npm'
+ 
+       - name: Install dependencies
+@@ -41,12 +41,9 @@
+           sudo apt-get update -qq
+           sudo apt-get install -y php-cli php-sqlite3
+ 
+-      - name: Proves Node i WordPress
+-        run: npm run test:node
++      - name: Proves completes (Node, WordPress i Vitest)
++        run: npm run test:ci
+ 
+-      - name: Proves adversarials documentals
+-        run: node --test tests/documental.test.mjs tests/porta-reflex.test.mjs tests/fortificacio.test.mjs tests/hooks-local.test.mjs tests/security-chain.test.mjs tests/verificador-scc.test.mjs tests/git-hooks.test.mjs
+-
+       - name: Valida documents del canvi
+         env:
+           SDP_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+@@ -58,10 +55,8 @@
+           fi
+ 
+       - name: Comprova integritat de documentació i nomenclatures
+-        run: npm run gate
++        run: npm run porta -- --nomes-portes
+ 
+       - name: Linter i auditories d'estil
+         run: npm run lint
+ 
+-      - name: Executa els tests unitaris
+-        run: npm run test
+--- a/tooling/tests/run-node-tests.mjs
++++ b/tooling/tests/run-node-tests.mjs
+@@ -0,0 +1,112 @@
++#!/usr/bin/env node
++import fs from 'node:fs';
++import path from 'node:path';
++import { spawnSync } from 'node:child_process';
++import { fileURLToPath, pathToFileURL } from 'node:url';
++
++export const SUITES = Object.freeze(['primary', 'laboratory', 'session']);
++export const ROOTS = Object.freeze(['tests', 'tooling']);
++const ROOT = path.resolve(fileURLToPath(new URL('../..', import.meta.url)));
++const MANIFEST = 'tooling/tests/node-suite-manifest.json';
++
++/** Descobrix totes les proves Node del producte i de les eines, amb ordre estable. */
++export function discoverNodeTests(root) {
++  const found = [];
++  const visit = (relative) => {
++    for (const item of fs.readdirSync(path.join(root, relative), { withFileTypes: true })) {
++      const name = path.posix.join(relative, item.name);
++      if (item.isDirectory()) visit(name);
++      else if (item.name.endsWith('.test.mjs')) {
++        if (!item.isFile()) throw new Error(`La prova no és un fitxer regular: ${name}`);
++        found.push(name);
++      }
++    }
++  };
++  for (const directory of ROOTS) visit(directory);
++  return found.sort();
++}
++
++/** Una prova nova, una entrada retirada o una doble assignació no donen verd buit. */
++export function validateManifest(root, manifest) {
++  if (manifest?.schema !== 'sdp.node-suites.v1' || !Array.isArray(manifest.files)) {
++    throw new Error('Manifest de proves Node invàlid');
++  }
++  if (!Array.isArray(manifest.requiredPrimary) || manifest.requiredPrimary.length === 0) {
++    throw new Error('Cal declarar la cobertura primària obligatòria');
++  }
++  const files = discoverNodeTests(root);
++  const discovered = new Set(files);
++  const assignments = new Map();
++  for (const entry of manifest.files) {
++    if (!entry || typeof entry.path !== 'string' || !SUITES.includes(entry.suite)
++        || typeof entry.reason !== 'string' || !entry.reason.trim()) {
++      throw new Error('Cada prova necessita ruta, suite i motiu explícits');
++    }
++    if (assignments.has(entry.path)) throw new Error(`Prova duplicada al manifest: ${entry.path}`);
++    if (!discovered.has(entry.path)) throw new Error(`Entrada sense prova al disc: ${entry.path}`);
++    assignments.set(entry.path, entry.suite);
++  }
++  const unclassified = files.filter((name) => !assignments.has(name));
++  if (unclassified.length) throw new Error(`Proves sense classificar: ${unclassified.join(', ')}`);
++  if (new Set(manifest.requiredPrimary).size !== manifest.requiredPrimary.length) {
++    throw new Error('Cobertura primària obligatòria duplicada');
++  }
++  for (const name of manifest.requiredPrimary) {
++    if (assignments.get(name) !== 'primary') throw new Error(`Cobertura primària absent: ${name}`);
++  }
++  return {
++    files,
++    suites: Object.fromEntries(SUITES.map((suite) => [suite, files.filter((name) => assignments.get(name) === suite)]))
++  };
++}
++
++const exitCode = (result) => result.error || result.signal || !Number.isInteger(result.status) ? 1 : result.status;
++
++export function runNodeSuite(root, catalog, suite = 'primary', run = spawnSync) {
++  if (![...SUITES, 'all'].includes(suite)) throw new Error(`Suite desconeguda: ${suite}`);
++  const files = suite === 'all' ? catalog.files : catalog.suites[suite];
++  if (!files.length) throw new Error(`La suite ${suite} és buida`);
++  const result = run(process.execPath, ['--test', '--test-concurrency=2', ...files], { cwd: root, stdio: 'inherit' });
++  if (result.error) process.stderr.write(`${result.error.message}\n`);
++  return exitCode(result);
++}
++
++/** Les dues etapes deixen evidència fins i tot quan la primera falla. Cap watcher. */
++export function runCi(root, catalog, run = spawnSync) {
++  const node = runNodeSuite(root, catalog, 'primary', run);
++  const unit = exitCode(run(process.execPath, [path.join(root, 'node_modules/vitest/vitest.mjs'), 'run', '--maxWorkers=2'], {
++    cwd: root, stdio: 'inherit'
++  }));
++  process.stdout.write(`CI · Node=${node} · Vitest=${unit}\n`);
++  return node === 0 && unit === 0 ? 0 : 1;
++}
++
++export function main(args = process.argv.slice(2)) {
++  let suite = 'primary';
++  let list = false;
++  let ci = false;
++  let selected = false;
++  for (let i = 0; i < args.length; i += 1) {
++    if (args[i] === '--suite' && args[i + 1]) { suite = args[++i]; selected = true; }
++    else if (args[i] === '--list') list = true;
++    else if (args[i] === '--ci') ci = true;
++    else throw new Error(`Opció desconeguda o incompleta: ${args[i]}`);
++  }
++  if (![...SUITES, 'all'].includes(suite) || (ci && (selected || list))) {
++    throw new Error('Ús: run-node-tests.mjs [--suite primary|laboratory|session|all] [--list] | --ci');
++  }
++  const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, MANIFEST), 'utf8'));
++  const catalog = validateManifest(ROOT, manifest);
++  if (list) {
++    process.stdout.write(`${JSON.stringify(catalog, null, 2)}\n`);
++    return 0;
++  }
++  process.stdout.write(`Proves Node · ${catalog.files.length} classificades · ${SUITES.map((name) => `${name}=${catalog.suites[name].length}`).join(' · ')}\n`);
++  process.stdout.write(`Selecció: ${ci ? 'primary + Vitest' : suite}. Laboratori i sessió tenen corredors explícits; un verd primari no certifica el repositori sencer.\n`);
++  return ci ? runCi(ROOT, catalog) : runNodeSuite(ROOT, catalog, suite);
++}
++
++if (process.argv[1] && pathToFileURL(path.resolve(process.argv[1])).href === import.meta.url) {
++  try { process.exitCode = main(); }
++  catch (error) { process.stderr.write(`${error.message}\n`); process.exitCode = 1; }
++}
+--- a/tooling/tests/node-suite-manifest.json
++++ b/tooling/tests/node-suite-manifest.json
+@@ -0,0 +1,525 @@
++{
++  "schema": "sdp.node-suites.v1",
++  "policy": {
++    "discovery": "Tots els *.test.mjs sota tests/ i tooling/, recursivament. Una prova nova sense entrada, una entrada absent o duplicada i una excepció sense motiu bloquegen la cadena.",
++    "primary": "Regressions del producte i eines instal·lades amb fixtures portables. Una fallada no es recategoritza: es resol o es declara roja.",
++    "laboratory": "Assajos de prototips, pegats i leases contra laboratoris/preimatges històriques. Execució explícita: npm run test:node:laboratory.",
++    "session": "Diagnòstics del torn/HEAD local i corpus humans opcionals. Execució explícita: npm run test:node:session.",
++    "health": "Verd primari i CI no certifiquen verd de laboratori/sessió. npm run test:node:all conserva la visibilitat del deute complet; cap prova ni asserció es retira."
++  },
++  "requiredPrimary": [
++    "tests/antigravity-hook.test.mjs",
++    "tests/backend_consolidacio.test.mjs",
++    "tests/cognitive-document-handoff.test.mjs",
++    "tests/cognitive-hook-safety.test.mjs",
++    "tests/cognitive-preflight.test.mjs",
++    "tests/conformitat-amfitrio.test.mjs",
++    "tests/dist-secrets.test.mjs",
++    "tests/documental.test.mjs",
++    "tests/enxufe-empaqueta.test.mjs",
++    "tests/enxufe-pantalla.test.mjs",
++    "tests/enxufe-plugin.test.mjs",
++    "tests/enxufe-runtime.test.mjs",
++    "tests/enxufe-traduccio.test.mjs",
++    "tests/fonts-vigilancia.test.mjs",
++    "tests/fortificacio.test.mjs",
++    "tests/git-hooks.test.mjs",
++    "tests/hooks-local.test.mjs",
++    "tests/lint_enxufe.test.mjs",
++    "tests/mapa-consola.test.mjs",
++    "tests/migracio-convergencia-perfil.test.mjs",
++    "tests/migracio-xat-de-pagina.test.mjs",
++    "tests/node-suite-policy.test.mjs",
++    "tests/plantilla-viva-escriptori.test.mjs",
++    "tests/porta-olivera-v3.test.mjs",
++    "tests/porta-reflex.test.mjs",
++    "tests/public_exports.test.mjs",
++    "tests/security-chain.test.mjs",
++    "tests/sistema_nervios.test.mjs",
++    "tests/standalone-build.test.mjs",
++    "tests/verificador-scc.test.mjs",
++    "tests/vite-empremta-dev.test.mjs"
++  ],
++  "files": [
++    {
++      "path": "tests/action-contrast.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    },
++    {
++      "path": "tests/anticipacio-261003.test.mjs",
++      "suite": "laboratory",
++      "reason": "Corredor 261003 que importa el prototip .txt del laboratori; la CLI usa el dia real contra fixtures 261003. Cal adoptar el producte abans de portar esta cobertura al corredor primari."
++    },
++    {
++      "path": "tests/antigravity-hook.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    },
++    {
++      "path": "tests/backend_consolidacio.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    },
++    {
++      "path": "tests/canonada-generats.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    },
++    {
++      "path": "tests/cerca-consulta.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    },
++    {
++      "path": "tests/cerca-sessio.test.mjs",
++      "suite": "session",
++      "reason": "Corredor de cerca ad hoc: PATRONS i DIRS es canvien segons el torn; no és una prova de regressió de producte."
++    },
++    {
++      "path": "tests/cognitive-document-handoff.test.mjs",
++      "suite": "primary",
++      "reason": "Porta permanent de lliurament documental (payload/correlació/roles) adoptada a T5; fixtures sintètiques."
++    },
++    {
++      "path": "tests/cognitive-hook-safety.test.mjs",
++      "suite": "primary",
++      "reason": "Guàrdies permanents dels hooks del Tractor Cognitiu adoptades a T5; fixtures sintètiques de no execució/destructivitat."
++    },
++    {
++      "path": "tests/cognitive-preflight.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    },
++    {
++      "path": "tests/conformitat-amfitrio.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    },
++    {
++      "path": "tests/contrast_calendari_mes.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    },
++    {
++      "path": "tests/contrast_calendari_setmana.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    },
++    {
++      "path": "tests/corpus-scope.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    },
++    {
++      "path": "tests/design-contracts.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    },
++    {
++      "path": "tests/dist-secrets.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    },
++    {
++      "path": "tests/document-command-policy.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    },
++    {
++      "path": "tests/document-corpus.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    },
++    {
++      "path": "tests/document-create-race.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    },
++    {
++      "path": "tests/documental.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    },
++    {
++      "path": "tests/enllacos-sessio.test.mjs",
++      "suite": "session",
++      "reason": "Audita git diff HEAD de la sessió; un checkout net de CI no té els canvis locals que esta prova avalua. Manté corredor explícit i no s’amaga el deute de la sessió."
++    },
++    {
++      "path": "tests/enxufe-empaqueta.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    },
++    {
++      "path": "tests/enxufe-pantalla.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    },
++    {
++      "path": "tests/enxufe-plugin.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    },
++    {
++      "path": "tests/enxufe-runtime.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    },
++    {
++      "path": "tests/enxufe-traduccio.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    },
++    {
++      "path": "tests/fatiga-261002.test.mjs",
++      "suite": "laboratory",
++      "reason": "Assaig de lease del paquet 261002: contrasta les bases congelades del pegat contra el disc viu. El CAS roig no és una regressió del producte instal·lat."
++    },
++    {
++      "path": "tests/fonts-vigilancia.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    },
++    {
++      "path": "tests/fortificacio.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    },
++    {
++      "path": "tests/frontissa-contingut.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    },
++    {
++      "path": "tests/frontissa-gate.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    },
++    {
++      "path": "tests/frontmatter-sessio.test.mjs",
++      "suite": "session",
++      "reason": "Audita documents modificats a HEAD/índex local; el checkout net de CI produïx una comprovació buida. La porta de documents real continua al workflow."
++    },
++    {
++      "path": "tests/gestoria-3t-real.test.mjs",
++      "suite": "session",
++      "reason": "Usa factures i extracte reals del Mestre fora del repositori; inclou TODO de justificants humans pendents. Les regressions de Gestoria amb dades sintètiques viuen a Vitest."
++    },
++    {
++      "path": "tests/gestoria-c43-real.test.mjs",
++      "suite": "session",
++      "reason": "Usa l’extracte financer real del Mestre fora del repositori i se salta quan no hi és. Les regressions sintètiques del lector Norma43 viuen a Vitest."
++    },
++    {
++      "path": "tests/git-hooks.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    },
++    {
++      "path": "tests/governanca-260930-lease.test.mjs",
++      "suite": "laboratory",
++      "reason": "Assaig d’adopció del paquet de governança 260930 amb imports del laboratori i/o hashes de preimatges congelades. No substituïx les proves de les eines instal·lades."
++    },
++    {
++      "path": "tests/governanca-260930-mapa.test.mjs",
++      "suite": "laboratory",
++      "reason": "Assaig d’adopció del paquet de governança 260930 amb imports del laboratori i/o hashes de preimatges congelades. No substituïx les proves de les eines instal·lades."
++    },
++    {
++      "path": "tests/governanca-260930-maria.test.mjs",
++      "suite": "laboratory",
++      "reason": "Assaig d’adopció del paquet de governança 260930 amb imports del laboratori i/o hashes de preimatges congelades. No substituïx les proves de les eines instal·lades."
++    },
++    {
++      "path": "tests/governanca-260930-olivera.test.mjs",
++      "suite": "laboratory",
++      "reason": "Assaig d’adopció del paquet de governança 260930 amb imports del laboratori i/o hashes de preimatges congelades. No substituïx les proves de les eines instal·lades."
++    },
++    {
++      "path": "tests/governanca-260930-segell.test.mjs",
++      "suite": "session",
++      "reason": "Imprimix divergències de segell del disc actual i només afirma el tipus del hash; no prova el criteri de salut del segell. La porta real es manté a gate."
++    },
++    {
++      "path": "tests/governanca-260930-t1.test.mjs",
++      "suite": "laboratory",
++      "reason": "Assaig d’adopció del paquet de governança 260930 amb imports del laboratori i/o hashes de preimatges congelades. No substituïx les proves de les eines instal·lades."
++    },
++    {
++      "path": "tests/governanca-260930b-portes.test.mjs",
++      "suite": "laboratory",
++      "reason": "Assaig d’adopció del paquet de governança 260930 amb imports del laboratori i/o hashes de preimatges congelades. No substituïx les proves de les eines instal·lades."
++    },
++    {
++      "path": "tests/governanca-260930b-torns.test.mjs",
++      "suite": "laboratory",
++      "reason": "Assaig d’adopció del paquet de governança 260930 amb imports del laboratori i/o hashes de preimatges congelades. No substituïx les proves de les eines instal·lades."
++    },
++    {
++      "path": "tests/hooks-local.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    },
++    {
++      "path": "tests/inventari-directoris.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    },
++    {
++      "path": "tests/lint-sessio.test.mjs",
++      "suite": "session",
++      "reason": "FITXERS és una selecció temporal del torn per a lectura engabiada. ESLint complet continua al workflow i a npm run lint."
++    },
++    {
++      "path": "tests/lint-torn-261002.test.mjs",
++      "suite": "session",
++      "reason": "Corredor de lots declarats per la sessió 261002; exclou deliberadament part del producte. ESLint complet continua al workflow."
++    },
++    {
++      "path": "tests/lint_calendari.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    },
++    {
++      "path": "tests/lint_calendari_fonts.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    },
++    {
++      "path": "tests/lint_calendari_mes.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    },
++    {
++      "path": "tests/lint_enxufe.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    },
++    {
++      "path": "tests/lint_logica_usuari.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    },
++    {
++      "path": "tests/lint_pantalla_completa.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    },
++    {
++      "path": "tests/lint_xat.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    },
++    {
++      "path": "tests/llaurador-progress.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    },
++    {
++      "path": "tests/mapa-consola.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    },
++    {
++      "path": "tests/migracio-convergencia-perfil.test.mjs",
++      "suite": "primary",
++      "reason": "F1 permanent: paritat CAMPS_PERFIL, permisos de columna i convergència segura de create_organization; SQL local sense dades de sessió."
++    },
++    {
++      "path": "tests/migracio-identitat-f1.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    },
++    {
++      "path": "tests/migracio-notes-paperera.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    },
++    {
++      "path": "tests/migracio-perfil-emoticona.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    },
++    {
++      "path": "tests/migracio-perfil-public.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    },
++    {
++      "path": "tests/migracio-xat-de-pagina.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    },
++    {
++      "path": "tests/natiu-build.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    },
++    {
++      "path": "tests/node-suite-policy.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    },
++    {
++      "path": "tests/olivera-arxiva-261002.test.mjs",
++      "suite": "laboratory",
++      "reason": "Assaig del paquet de laboratori 261002 sobre hashes de la base històrica; no és una prova estable de la instal·lació actual."
++    },
++    {
++      "path": "tests/pedra-debt.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    },
++    {
++      "path": "tests/petorreta-generador.test.mjs",
++      "suite": "laboratory",
++      "reason": "CANDIDATS prioritza el generador del laboratori 260927; el seu parser de secció 0 no reconeix la plantilla vigent. No s’ha portat la prova al generador instal·lat."
++    },
++    {
++      "path": "tests/plantilla-viva-escriptori.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    },
++    {
++      "path": "tests/plantilla-viva-installacio.test.mjs",
++      "suite": "laboratory",
++      "reason": "Assaig de pegats d’instal·lació del laboratori 260924; construeix preimatges antigues de Context i hooks. Les proves permanents de documental/hooks corren a primary."
++    },
++    {
++      "path": "tests/porta-olivera-diagnosi.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    },
++    {
++      "path": "tests/porta-olivera-v2.test.mjs",
++      "suite": "laboratory",
++      "reason": "CANDIDATS prioritza la porta v2 del laboratori 260924 i APIs retirades; la porta instal·lada té regressions permanents a porta-olivera-v3 i cognitive-preflight."
++    },
++    {
++      "path": "tests/porta-olivera-v3.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    },
++    {
++      "path": "tests/porta-receptor.test.mjs",
++      "suite": "laboratory",
++      "reason": "CANDIDATS prioritza receptor i generador del laboratori 260927, no les eines permanents; la plantilla viva ha evolucionat."
++    },
++    {
++      "path": "tests/porta-reflex.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    },
++    {
++      "path": "tests/porta-taxonomia.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    },
++    {
++      "path": "tests/portes-sessio.test.mjs",
++      "suite": "session",
++      "reason": "Diagnostica tota la cadena local amb una baseline de portes heretades de 260925. El workflow executa la cadena real directament amb npm run gate."
++    },
++    {
++      "path": "tests/public_exports.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    },
++    {
++      "path": "tests/salut-diari-miccional-estructura.test.mjs",
++      "suite": "session",
++      "reason": "Inventari estructural d’un full humà opcional de la sessió per a dissenyar l’importador; no és una prova portable de producte. Les regressions de Salut viuen a Vitest."
++    },
++    {
++      "path": "tests/security-chain.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    },
++    {
++      "path": "tests/sistema_nervios.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    },
++    {
++      "path": "tests/standalone-build.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    },
++    {
++      "path": "tests/time-machine.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    },
++    {
++      "path": "tests/tractor-arrel.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    },
++    {
++      "path": "tests/tractor-autosanacio.test.mjs",
++      "suite": "laboratory",
++      "reason": "CANDIDATS prioritza el prototip de laboratori 260924 abans de qualsevol instal·lació permanent; corredor de prototip, no del producte actual."
++    },
++    {
++      "path": "tests/tractor-enxufe.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    },
++    {
++      "path": "tests/tractor-fortification.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    },
++    {
++      "path": "tests/tractor-importacions.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    },
++    {
++      "path": "tests/tractor-inline-styles.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    },
++    {
++      "path": "tests/tractor-orfes-brain.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    },
++    {
++      "path": "tests/tractor-rls-realtime.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    },
++    {
++      "path": "tests/tractor-sinapsis.test.mjs",
++      "suite": "laboratory",
++      "reason": "CANDIDATS prioritza el prototip de laboratori 260924 abans de qualsevol instal·lació permanent; corredor de prototip, no del producte actual."
++    },
++    {
++      "path": "tests/verificador-scc.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    },
++    {
++      "path": "tests/vite-empremta-dev.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    },
++    {
++      "path": "tests/xat_f0_migracio.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    },
++    {
++      "path": "tooling/broker/broker.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    },
++    {
++      "path": "tooling/gates/tractor-psicopatia.test.mjs",
++      "suite": "primary",
++      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
++    }
++  ]
++}
+--- a/tests/node-suite-policy.test.mjs
++++ b/tests/node-suite-policy.test.mjs
+@@ -0,0 +1,119 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import fs from 'node:fs';
++import os from 'node:os';
++import path from 'node:path';
++import { fileURLToPath } from 'node:url';
++import { spawnSync } from 'node:child_process';
++import { discoverNodeTests, validateManifest, runNodeSuite, runCi } from '../tooling/tests/run-node-tests.mjs';
++import { passos, seleccionaPassos } from '../tooling/gates/run-portes.mjs';
++
++const ROOT = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
++const entry = (name, suite = 'primary') => ({ path: name, suite, reason: 'Fixture sintètica' });
++function fixture(t) {
++  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'sdp-node-suites-'));
++  const files = ['tests/a.test.mjs', 'tests/nested/b.test.mjs', 'tooling/gates/c.test.mjs'];
++  for (const name of files) {
++    fs.mkdirSync(path.dirname(path.join(root, name)), { recursive: true });
++    fs.writeFileSync(path.join(root, name), '');
++  }
++  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
++  const manifest = { schema: 'sdp.node-suites.v1', requiredPrimary: [files[0]], files: [entry(files[0]), entry(files[1], 'laboratory'), entry(files[2], 'session')] };
++  return { root, files, manifest };
++}
++
++test('el manifest viu classifica cada prova i protegeix les cobertures noves de CI i T5', () => {
++  const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'tooling/tests/node-suite-manifest.json'), 'utf8'));
++  const catalog = validateManifest(ROOT, manifest);
++  assert.equal(catalog.files.length, manifest.files.length);
++  for (const name of ['tests/conformitat-amfitrio.test.mjs', 'tests/migracio-xat-de-pagina.test.mjs', 'tests/cognitive-preflight.test.mjs', 'tests/plantilla-viva-escriptori.test.mjs', 'tests/cognitive-document-handoff.test.mjs', 'tests/cognitive-hook-safety.test.mjs', 'tests/migracio-convergencia-perfil.test.mjs']) {
++    assert.ok(catalog.suites.primary.includes(name), `${name}: fora de la cadena primària`);
++    assert.ok(manifest.requiredPrimary.includes(name), `${name}: cobertura no protegida`);
++  }
++});
++
++test('la descoberta és recursiva i totes les eines entren al cens', (t) => {
++  const { root, files } = fixture(t);
++  assert.deepEqual(discoverNodeTests(root), [...files].sort());
++});
++
++test('una prova nova sense classificació bloqueja la cadena', (t) => {
++  const { root, manifest } = fixture(t);
++  fs.writeFileSync(path.join(root, 'tests/new.test.mjs'), '');
++  assert.throws(() => validateManifest(root, manifest), /sense classificar: tests\/new\.test\.mjs/);
++});
++
++test('no s’accepten dobles assignacions, entrades absents ni exclusions sense motiu', (t) => {
++  const { root, manifest } = fixture(t);
++  assert.throws(() => validateManifest(root, { ...manifest, files: [...manifest.files, manifest.files[0]] }), /duplicada/);
++  assert.throws(() => validateManifest(root, { ...manifest, files: [...manifest.files, entry('tests/absent.test.mjs')] }), /sense prova/);
++  assert.throws(() => validateManifest(root, { ...manifest, files: [{ ...manifest.files[0], reason: '' }, ...manifest.files.slice(1)] }), /motiu explícits/);
++  assert.throws(() => validateManifest(root, { ...manifest, files: [{ ...manifest.files[0], suite: 'ignored' }, ...manifest.files.slice(1)] }), /suite/);
++});
++
++test('la cobertura requerida no es pot excloure canviant-ne la categoria', (t) => {
++  const { root, manifest } = fixture(t);
++  assert.throws(() => validateManifest(root, { ...manifest, files: [{ ...manifest.files[0], suite: 'session' }, ...manifest.files.slice(1)] }), /Cobertura primària absent/);
++});
++
++test('cada corredor selecciona els fitxers exactes i conserva els codis de fallada', (t) => {
++  const { root, manifest } = fixture(t);
++  const catalog = validateManifest(root, manifest);
++  for (const suite of ['primary', 'laboratory', 'session', 'all']) {
++    let invocation;
++    assert.equal(runNodeSuite(root, catalog, suite, (...args) => { invocation = args; return { status: 7 }; }), 7);
++    assert.deepEqual(invocation[1], ['--test', '--test-concurrency=2', ...(suite === 'all' ? catalog.files : catalog.suites[suite])]);
++    assert.equal(invocation[2].cwd, root);
++  }
++  assert.equal(runNodeSuite(root, catalog, 'primary', () => ({ status: null, signal: 'SIGTERM' })), 1);
++  assert.throws(() => runNodeSuite(root, catalog, 'absent'), /desconeguda/);
++});
++
++test('CI executa Node i Vitest run, també amb Node roig, i qualsevol fallada conserva exit 1', (t) => {
++  const { root, manifest } = fixture(t);
++  const catalog = validateManifest(root, manifest);
++  for (const statuses of [[1, 0], [0, 1], [0, 0]]) {
++    const calls = [];
++    const code = runCi(root, catalog, (...args) => { calls.push(args); return { status: statuses[calls.length - 1] }; });
++    assert.equal(calls.length, 2);
++    assert.deepEqual(calls[1][1], [path.join(root, 'node_modules/vitest/vitest.mjs'), 'run', '--maxWorkers=2']);
++    assert.equal(code, statuses.every((status) => status === 0) ? 0 : 1);
++  }
++});
++
++
++test('el mode de CI manté totes les portes i elimina només les bateries ja executades', () => {
++  const proves = new Set(['test:documental', 'test:node', 'test']);
++  const esBateria = pas => pas.cmd === 'npm' && pas.args[0] === 'run' && proves.has(pas.args[1]);
++  const bateries = passos.filter(esBateria);
++  assert.deepEqual(bateries.map(pas => pas.args[1]).sort(), [...proves].sort());
++  assert.deepEqual(seleccionaPassos(), passos, 'el mode complet conserva totes les bateries');
++  const portes = seleccionaPassos({ nomesPortes: true });
++  assert.deepEqual(portes, passos.filter(pas => !esBateria(pas)), 'només es lleva la bateria duplicada; cap porta');
++  assert.equal(portes.length, passos.length - 3);
++  for (const nom of ['Porta Build', 'Porta Reflex', 'Segell de skills', 'Tractor Cognitiu', 'Porta RLS', 'Linter']) {
++    assert.ok(portes.some(pas => pas.nom === nom), `${nom}: porta perduda`);
++  }
++  assert.deepEqual(seleccionaPassos({ diagnostic: true }), passos.filter(pas => pas.readOnly));
++  assert.throws(() => seleccionaPassos({ diagnostic: true, nomesPortes: true }), /modes diferents/);
++});
++
++
++test('la comanda real del workflow arriba al CLI de les portes amb --nomes-portes', (t) => {
++  const workflow = fs.readFileSync(path.join(ROOT, '.github/workflows/wiki-integrity.yml'), 'utf8');
++  const command = /^\s+run: (npm run \S+ -- --nomes-portes)\s*$/m.exec(workflow)?.[1];
++  assert.ok(command, 'ordre explícita de només portes absent del workflow');
++  const { root } = fixture(t);
++  fs.writeFileSync(path.join(root, 'package.json'), JSON.stringify({
++    private: true, scripts: { porta: 'node argv.cjs', gate: 'npm run porta' }
++  }));
++  fs.writeFileSync(path.join(root, 'argv.cjs'), 'process.stdout.write("SDP_ARGV:" + JSON.stringify(process.argv.slice(2)) + "\\n");\n');
++  const result = spawnSync('npm', command.split(/\s+/).slice(1), {
++    cwd: root, encoding: 'utf8', timeout: 15000,
++    env: { ...process.env, npm_config_update_notifier: 'false' }
++  });
++  assert.equal(result.status, 0, result.stderr);
++  const args = /^SDP_ARGV:(.+)$/m.exec(result.stdout)?.[1];
++  assert.ok(args, 'el CLI fill no ha rebut la comanda');
++  assert.deepEqual(JSON.parse(args), ['--nomes-portes'], 'npm ha consumit el flag en una capa intermèdia');
++});
+--- a/tooling/gates/run-portes.mjs
++++ b/tooling/gates/run-portes.mjs
+@@ -32,7 +32,7 @@
+   {nom:'Segell de skills',cmd:'node',args:['tooling/gates/segella.mjs'],readOnly:true,script:'porta:segella'},
+   {nom:'Integritat del LEDGER',cmd:'node',args:['tooling/verify-ledger.mjs'],readOnly:true},
+   { readOnly:true, nom: 'Contracte documental', cmd: 'node', args: ['tooling/gates/porta-documents.mjs'], script: 'porta:documents' },
+-  { nom: 'Proves del contracte documental', cmd: 'npm', args: ['run', 'test:documental'] },
++  { nom: 'Proves del contracte documental', cmd: 'npm', args: ['run', 'test:documental'], prova: true },
+   { nom: 'Tractor Psicopatia', cmd: 'node', args: ['tooling/gates/tractor-psicopatia.mjs'], script: 'porta:psicopatia' },
+   { nom: 'Porta 58px', cmd: 'node', args: ['tooling/gates/01_porta_pedra_seca_58px.mjs'], script: 'porta:58px' },
+   { nom: 'Linter', cmd: 'npm', args: ['run', 'lint'] },
+@@ -86,10 +86,17 @@
+   { nom: 'Porta RLS', cmd: 'node', args: ['tooling/gates/tractor-rls.mjs'], script: 'porta:rls' },
+   { nom: 'Porta Catàleg', cmd: 'node', args: ['tooling/gates/tractor-cataleg.mjs'], script: 'porta:cataleg' },
+ 
+-  { nom: 'Proves NodeJS', cmd: 'npm', args: ['run', 'test:node'] },
+-  { nom: 'Proves', cmd: 'npm', args: ['run', 'test', '--', '--run'] }
++  { nom: 'Proves NodeJS', cmd: 'npm', args: ['run', 'test:node'], prova: true },
++  { nom: 'Proves', cmd: 'npm', args: ['run', 'test', '--', '--run'], prova: true }
+ ];
+ 
++/** Selecció explícita: el mode de CI conserva totes les portes del mode complet.
++ * Les bateries marcades ja s'han executat a test:ci; esta selecció no les certifica. */
++export function seleccionaPassos({ diagnostic = false, nomesPortes = false } = {}) {
++  if (diagnostic && nomesPortes) throw new Error('--diagnostic i --nomes-portes són modes diferents');
++  return passos.filter(pas => (!diagnostic || pas.readOnly) && (!nomesPortes || !pas.prova));
++}
++
+ const isMain = esMain(import.meta.url);
+ 
+ if (isMain) {
+@@ -104,9 +111,13 @@
+   console.log("\n🚀 INICIANT CADENA AGREGATIVA DE PORTES...\n");
+ 
+   const diagnostic=process.argv.includes('--diagnostic');
++  const nomesPortes=process.argv.includes('--nomes-portes');
++  let seleccionats;
++  try { seleccionats=seleccionaPassos({ diagnostic, nomesPortes }); }
++  catch (error) { console.error(error.message); process.exit(1); }
++  if(nomesPortes) console.log('Mode --nomes-portes: les proves documentals, Node i Vitest s’ometen intencionadament. Este mode no les executa ni les certifica.');
+   let failures=0;
+-  for (const pas of passos) {
+-    if(diagnostic && !pas.readOnly) continue;
++  for (const pas of seleccionats) {
+     console.log(`\n────────────────────────────────────────────────────────────────────────`);
+     console.log(`⏳ Executant ${pas.nom}...`);
+     console.log(`────────────────────────────────────────────────────────────────────────\n`);
+@@ -123,7 +134,8 @@
+ 
+   if(diagnostic){console.log(JSON.stringify({diagnostic:true,failures,valid:failures===0}));process.exit(failures?1:0);}
+   console.log(`\n========================================================================`);
+-  console.log(`🎉 TOTES LES PORTES HAN PASSAT AMB ÈXIT. MUR DE PEDRA SECA INTACTE.`);
++  if(nomesPortes) console.log('TOTES LES PORTES HAN PASSAT. LES PROVES NO S’HAN EXECUTAT EN ESTE MODE.');
++  else console.log(`🎉 TOTES LES PORTES HAN PASSAT AMB ÈXIT. MUR DE PEDRA SECA INTACTE.`);
+   console.log(`========================================================================\n`);
+   process.exit(0);
+ }
+--- a/supabase/migrations/2610042330_xat_pagina_iaia.sql
++++ b/supabase/migrations/2610042330_xat_pagina_iaia.sql
+@@ -0,0 +1,152 @@
++-- ============================================================================
++-- 261004_2330 · Ruta canònica del xat de la pàgina /iaia
++-- Correcció posterior a 2609282100_xat_de_pagina.sql; no reescriu la història.
++-- Revisada i NO aplicada a cap base de dades. Depén de la migració de pàgina
++-- i de les seues dependències. No substituïx la condició de moderació prèvia.
++--
++-- private.xat_subjecte conserva literalment les branques i permisos previs,
++-- amb /iaia a la llista tancada del client. Només l'entrada antiga exacta /ia
++-- és un àlies: tant /ia com /iaia resolen clau i ruta /iaia abans del bloqueig
++-- de la RPC existent. No s'accepta cap prefix, ruta privada ni ruta del client.
++--
++-- La fila antiga es reanomena dins d'una transacció, preservant id, missatges,
++-- seq, participants i permisos. Si un poble ja té dos fils (/ia i /iaia) del
++-- mateix tipus, SDP-XAT-014 avorta TOTA la migració: fusionar histories o
++-- marques requereix un pla explícit; ací no es tria ni s'esborra cap fil.
++-- El CHECK posterior impedeix que una RPC antiga encara en vol recree /ia.
++-- La ruta i el títol es refresquen; una URI antiga acabada en /ia passa a
++-- /iaia. Si superaria 600 caràcters, queda null com en la RPC existent.
++-- Additiva i idempotent. Cap alta de participant, política o RPC pública nova.
++-- ============================================================================
++
++begin;
++set local lock_timeout = '5s';
++set local statement_timeout = '120s';
++
++-- Impedeix inserts/updates concurrents mentre es comprova i canvia la clau.
++lock table public.xat_fils in share row exclusive mode;
++
++do $$
++begin
++  if exists (
++    select 1 from public.xat_fils f
++    where f.subjecte_tipus = 'pagina' and f.subjecte_id in ('/ia', '/iaia')
++    group by f.tenant_id, f.tipus
++    having count(*) > 1
++  ) then
++    raise exception 'SDP-XAT-014: hi ha dos fils per a la pàgina canònica.' using errcode = '23505';
++  end if;
++end;
++$$;
++
++-- Només metadades del subjecte: no canvia id, titol del fil, seq ni autoria.
++update public.xat_fils f
++   set subjecte_id = '/iaia',
++       subjecte_ruta = '/iaia',
++       subjecte_titol = 'L''ànima de la iaia',
++       subjecte_uri = case
++         when f.subjecte_uri like 'https://%/ia' then
++           case when char_length(f.subjecte_uri) <= 598
++             then regexp_replace(f.subjecte_uri, '/ia$', '/iaia') else null end
++         else f.subjecte_uri end
++ where f.subjecte_tipus = 'pagina' and f.subjecte_id in ('/ia', '/iaia')
++   and (f.subjecte_id is distinct from '/iaia'
++     or f.subjecte_ruta is distinct from '/iaia'
++     or f.subjecte_titol is distinct from 'L''ànima de la iaia'
++     or f.subjecte_uri like 'https://%/ia');
++
++-- Una execució antiga que resolgué /ia abans del commit no pot duplicar el fil.
++alter table public.xat_fils
++  drop constraint if exists xat_fils_pagina_iaia_canonica;
++alter table public.xat_fils
++  add constraint xat_fils_pagina_iaia_canonica check (
++    subjecte_tipus is distinct from 'pagina' or subjecte_id is distinct from '/ia'
++  );
++
++create or replace function private.xat_subjecte(p_tenant_id uuid, p_tipus text, p_id text)
++returns table (clau text, titol text, org_id uuid, ruta text)
++language plpgsql stable security definer set search_path = ''
++as $$
++declare
++  v_clau  text;
++  v_titol text;
++  v_org   uuid;
++  v_tram  text;
++begin
++  if p_tipus in ('entitat', 'grup') then
++    select o.id::text, o.name::text, o.id into v_clau, v_titol, v_org
++    from public.organizations o
++    where o.tenant_id = p_tenant_id and (o.id::text = p_id or o.slug = p_id)
++      and (o.kind = 'group') = (p_tipus = 'grup')
++      and (o.visibility = 'public' or private.is_organization_member(o.id))
++    limit 1;
++  elsif p_tipus = 'poble' then
++    -- La clau és l'id; la ruta, el slug, que és com /pobles/:id coneix els pobles.
++    select t.id::text, t.name::text, coalesce(t.slug, t.id::text) into v_clau, v_titol, v_tram
++    from public.towns t
++    where t.id::text = p_id or t.slug = p_id
++    limit 1;
++    if v_clau is null then
++      select p_id, coalesce(e ->> 'name', e ->> 'title') into v_clau, v_titol
++      from public.app_content c
++      cross join lateral jsonb_array_elements(
++        case when jsonb_typeof(c.payload) = 'array' then c.payload else '[]'::jsonb end) e
++      where c.tenant_id = p_tenant_id and c.key = 'towns' and e ->> 'id' = p_id
++      limit 1;
++    end if;
++  elsif p_tipus in ('publicacio', 'producte', 'esdeveniment', 'multimedia') then
++    select s.id::text, s.title::text into v_clau, v_titol
++    from public.section_submissions s
++    where s.tenant_id = p_tenant_id and s.id::text = p_id
++      and s.section_id = case p_tipus when 'publicacio' then 'mur' when 'producte' then 'mercat'
++        when 'esdeveniment' then 'events' else 'multimedia' end
++    limit 1;
++    if v_clau is null then
++      select p_id, coalesce(e ->> 'title', e ->> 'name') into v_clau, v_titol
++      from public.app_content c
++      cross join lateral jsonb_array_elements(
++        case when jsonb_typeof(c.payload) = 'array' then c.payload else '[]'::jsonb end) e
++      where c.tenant_id = p_tenant_id
++        and c.key = case p_tipus when 'publicacio' then 'feedPosts' when 'producte' then 'marketItems'
++          when 'esdeveniment' then 'events' else 'mediaItems' end
++        and e ->> 'id' = p_id
++      limit 1;
++    end if;
++  elsif p_tipus = 'pagina' then
++    -- PAGINES_AMB_XAT (src/data/contracte.js), amb els mateixos títols.
++    select pg.cami, pg.nom into v_clau, v_titol
++    from (values
++      ('/mur', 'Mur'),
++      ('/mercat', 'Mercat'),
++      ('/pobles', 'Pobles'),
++      ('/multimedia', 'Multimèdia'),
++      ('/dispositius', 'Dispositius'),
++      ('/disseny', 'Disseny'),
++      ('/wikidepoble', 'Wiki de Poble'),
++      ('/projecte', 'El projecte'),
++      ('/constitucio', 'Constitució'),
++      ('/iaia', 'L''ànima de la iaia'),
++      ('/roadmap', 'Full de ruta'),
++      ('/versions', 'Versions'),
++      ('/legal', 'Legal i privacitat')
++    ) as pg (cami, nom)
++    where pg.cami = case when p_id = '/ia' then '/iaia' else p_id end;
++  end if;
++  if v_clau is null then
++    return;
++  end if;
++  v_tram := coalesce(v_tram, v_clau);
++  return query select v_clau, v_titol, v_org,
++    case
++      when p_tipus = 'pagina' then v_clau
++      when v_tram !~ '^[A-Za-z0-9._~-]{1,200}$' then null
++      else (case p_tipus when 'entitat' then '/empresa/' when 'grup' then '/grup/' when 'poble' then '/pobles/'
++        when 'publicacio' then '/mur/' when 'producte' then '/mercat/' when 'esdeveniment' then '/events/'
++        when 'multimedia' then '/multimedia/' end) || v_tram
++    end;
++end;
++$$;
++revoke execute on function private.xat_subjecte(uuid, text, text) from public, anon, authenticated;
++
++notify pgrst, 'reload schema';
++commit;
+--- a/tests/migracio-xat-de-pagina.test.mjs
++++ b/tests/migracio-xat-de-pagina.test.mjs
+@@ -13,8 +13,10 @@
+ 
+ const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+ const MIGRACIO = 'supabase/migrations/2609282100_xat_de_pagina.sql';
++const CANONICA = 'supabase/migrations/2610042330_xat_pagina_iaia.sql';
+ const llig = (cami) => fs.readFileSync(path.join(REPO, cami), 'utf8');
+ const sql = llig(MIGRACIO);
++const sqlCanonica = llig(CANONICA);
+ const readme = llig('supabase/README.md');
+ const capcalera = sql.slice(0, sql.indexOf('begin;'));
+ 
+@@ -95,6 +97,9 @@
+   return [{esquema: m[1], nom: m[2], capcalera: (cosA === -1 ? st : st.slice(0, cosA)).toLowerCase(), st}];
+ });
+ const FUNCIONS = funcionsDe(STS);
++const STS_CANONICA = sentencies(sqlCanonica);
++const FUNCIONS_VIGENTS = funcionsDe([...STS, ...STS_CANONICA]);
++const subjecteVigent = () => FUNCIONS_VIGENTS.filter((f) => f.nom === 'xat_subjecte').at(-1);
+ const funcio = (nom) => {
+   const f = FUNCIONS.find((x) => x.nom === nom);
+   assert.ok(f, `${nom} absent`);
+@@ -264,12 +269,13 @@
+   assert.match(f.st, /o\.tenant_id = p_tenant_id/i);
+ });
+ 
+-test('una pàgina només té xat si és de la llista tancada del client, amb el títol del servidor', () => {
+-  const f = funcio('xat_subjecte');
++test('la llista vigent de pàgines després d’història + correcció és exactament la del client', () => {
++  const f = subjecteVigent();
++  assert.ok(f, 'resolutor vigent absent');
+   const parells = [...f.st.matchAll(/\('(\/[a-z]+)', '((?:[^']|'')*)'\)/g)].map(([, cami, nom]) => [cami, nom.replace(/''/g, "'")]);
+   assert.deepEqual(Object.fromEntries(parells), {...PAGINES_AMB_XAT});
+   assert.equal(parells.length, Object.keys(PAGINES_AMB_XAT).length, 'rutes repetides');
+-  assert.match(f.st, /\) as pg \(cami, nom\)\s+where pg\.cami = p_id;/);
++  assert.match(f.st, /\) as pg \(cami, nom\)\s+where pg\.cami = case when p_id = '\/ia' then '\/iaia' else p_id end;/);
+   /* Cap ruta privada ni cap prefix: la llista és de rutes senceres. */
+   for (const [cami] of parells) {
+     assert.doesNotMatch(cami, /^\/(notes|gent|perfil|el-meu-perfil|xat|control|consola|connectar|registre|admin|e)(\/|$)/);
+@@ -427,4 +433,92 @@
+   assert.ok(sql.endsWith('\n'));
+   assert.ok(!sql.endsWith('\n\n'));
+   assert.doesNotMatch(sql, /offline-first|local-first/i);
++});
++
++
++// ── Correcció posterior: la història es conserva, la versió vigent canvia ──
++test('la correcció és una transacció posterior amb bloqueig, esperes i reload', () => {
++  assert.equal(STS_CANONICA[0].trim().toLowerCase(), 'begin');
++  assert.match(STS_CANONICA[1], /^\s*set local lock_timeout = '5s'\s*$/i);
++  assert.match(STS_CANONICA[2], /^\s*set local statement_timeout = '120s'\s*$/i);
++  assert.match(STS_CANONICA[3], /^\s*lock table public\.xat_fils in share row exclusive mode\s*$/i);
++  assert.match(STS_CANONICA.at(-2), /^\s*notify pgrst, 'reload schema'\s*$/i);
++  assert.equal(STS_CANONICA.at(-1).trim().toLowerCase(), 'commit');
++  const header = sqlCanonica.slice(0, sqlCanonica.indexOf('begin;'));
++  assert.match(header, /NO aplicada/);
++  assert.ok(header.includes(path.basename(MIGRACIO)));
++  assert.match(header, /moderació/);
++});
++
++test('el resolutor nou conserva totes les autoritzacions i només canvia la clau i l’àlies exacte', () => {
++  const original = funcio('xat_subjecte');
++  assert.match(original.st, /\('\/ia', 'L''ànima de la iaia'\)/, 'la història no es reescriu');
++  const expected = original.st
++    .replace("('/ia', 'L''ànima de la iaia')", "('/iaia', 'L''ànima de la iaia')")
++    .replace('where pg.cami = p_id;', "where pg.cami = case when p_id = '/ia' then '/iaia' else p_id end;");
++  assert.equal(normalitza(subjecteVigent().st), normalitza(expected));
++  const noves = funcionsDe(STS_CANONICA);
++  assert.deepEqual(noves.map((f) => `${f.esquema}.${f.nom}`), ['private.xat_subjecte']);
++  assert.match(noves[0].capcalera, /security definer set search_path = ''/);
++  const revoke = STS_CANONICA[STS_CANONICA.indexOf(noves[0].st) + 1];
++  assert.match(revoke, /^\s*revoke execute on function private\.xat_subjecte\(uuid, text, text\) from public, anon, authenticated\s*$/i);
++  assert.doesNotMatch(STS_CANONICA.join(';\n'), /create policy|grant\s|create.*function public\./i);
++});
++
++test('la identitat canònica arriba a la RPC abans del seu bloqueig i la cerca del fil existent', () => {
++  const vigent = subjecteVigent();
++  assert.match(vigent.st, /select pg\.cami, pg\.nom into v_clau, v_titol/);
++  assert.match(vigent.st, /where pg\.cami = case when p_id = '\/ia' then '\/iaia' else p_id end;/);
++  assert.match(vigent.st, /when p_tipus = 'pagina' then v_clau/);
++  const obri = funcio('obri_fil_de_pagina').st;
++  assert.ok(obri.indexOf('from private.xat_subjecte(') < obri.indexOf('pg_advisory_xact_lock('));
++  assert.match(obri, /hashtextextended\('xat:subjecte:' \|\| p_tenant_id::text \|\| ':' \|\| v_tipus \|\| ':' \|\| v_clau, 0\)/);
++  assert.match(funcio('xat_fil_del_subjecte').st, /f\.subjecte_id = p_subjecte_id and f\.tipus = p_tipus/);
++  assert.doesNotMatch(vigent.st, /where pg\.cami like|where pg\.cami ilike|p_ruta/i);
+ });
++
++test('dos fils antics i canònics avorten abans d’actualitzar, sense fusionar històries', () => {
++  const guard = STS_CANONICA.find((st) => /^\s*do \$\$/i.test(st));
++  const update = STS_CANONICA.find((st) => /^\s*update public\.xat_fils f/i.test(st));
++  assert.ok(guard && update, 'guàrdia i actualització necessàries');
++  assert.ok(STS_CANONICA.indexOf(guard) < STS_CANONICA.indexOf(update));
++  assert.match(guard, /f\.subjecte_tipus = 'pagina' and f\.subjecte_id in \('\/ia', '\/iaia'\)/);
++  assert.match(guard, /group by f\.tenant_id, f\.tipus\s+having count\(\*\) > 1/);
++  assert.match(guard, /raise exception 'SDP-XAT-014: hi ha dos fils per a la pàgina canònica\.' using errcode = '23505';/);
++  assert.doesNotMatch(guard, /exception when|raise notice|%/i);
++  assert.doesNotMatch(STS_CANONICA.join(';\n'), /delete from|truncate|drop table|insert into|xat_missatges|xat_participants/i);
++});
++
++test('la migració canvia només metadades del subjecte i conserva id, seq, participants i autoria', () => {
++  const updates = STS_CANONICA.filter((st) => /^\s*update /i.test(st));
++  assert.equal(updates.length, 1);
++  const update = updates[0];
++  assert.match(update, /where f\.subjecte_tipus = 'pagina' and f\.subjecte_id in \('\/ia', '\/iaia'\)/i);
++  const changed = [...update.matchAll(/(?:\bset|,)\s*([a-z_]+)\s*=/gi)].map((m) => m[1]);
++  assert.deepEqual(changed, ['subjecte_id', 'subjecte_ruta', 'subjecte_titol', 'subjecte_uri']);
++  assert.match(update, /set subjecte_id = '\/iaia',\s+subjecte_ruta = '\/iaia',\s+subjecte_titol = 'L''ànima de la iaia'/);
++  assert.match(update, /f\.subjecte_uri like 'https:\/\/%\/ia'/);
++  assert.match(update, /char_length\(f\.subjecte_uri\) <= 598\s+then regexp_replace\(f\.subjecte_uri, '\/ia\$', '\/iaia'\) else null end/);
++  assert.match(update, /else f\.subjecte_uri end/);
++  assert.match(update, /and \(f\.subjecte_id is distinct from '\/iaia'/, 'idempotent: només les files divergents');
++});
++
++test('el CHECK impedeix recrear /ia encara que una RPC antiga estiga en vol', () => {
++  const drop = STS_CANONICA.find((st) => /drop constraint if exists xat_fils_pagina_iaia_canonica/i.test(st));
++  const add = STS_CANONICA.find((st) => /add constraint xat_fils_pagina_iaia_canonica/i.test(st));
++  assert.ok(drop && add);
++  assert.ok(STS_CANONICA.indexOf(drop) < STS_CANONICA.indexOf(add));
++  assert.match(add, /check \(\s*subjecte_tipus is distinct from 'pagina' or subjecte_id is distinct from '\/ia'\s*\)/i);
++  assert.doesNotMatch(add, /not valid/i);
++  assert.ok(STS_CANONICA.indexOf(add) < STS_CANONICA.indexOf(subjecteVigent().st));
++});
++
++test('el README documenta dependència, àlies, identitat estable i conflicte sense dir que està aplicada', () => {
++  const entry = readme.indexOf(`\`migrations/${path.basename(CANONICA)}\``);
++  assert.ok(entry > readme.indexOf(`\`migrations/${path.basename(MIGRACIO)}\``));
++  const docs = readme.slice(entry, readme.indexOf('- `seed.sql`', entry));
++  for (const text of ['/iaia', '/ia', 'SDP-XAT-014', 'id', 'missatges', 'participants', 'NO aplicada']) {
++    assert.ok(docs.includes(text), `${text} absent`);
++  }
++  assert.ok(sqlCanonica.endsWith('\n') && !sqlCanonica.endsWith('\n\n'));
++});
+--- a/supabase/README.md
++++ b/supabase/README.md
+@@ -168,6 +168,15 @@
+   depén: va després de les dos i de 2609282035.** Sense moderació: vegeu «Xat
+   de pàgina i comunitats».
+ 
++- `migrations/2610042330_xat_pagina_iaia.sql`
++  Correcció posterior al xat de pàgina: `/iaia` és la clau i ruta canòniques;
++  l'entrada antiga exacta `/ia` resol al mateix fil. Reanomena les metadades
++  del subjecte preservant id, missatges, seq, participants i permisos. Un
++  CHECK impedeix recrear la clau antiga. Si un poble ja té les dos files,
++  `SDP-XAT-014` avorta tota la transacció; no fusiona ni esborra històries.
++  **NO aplicada. Va després de 2609282100 i les seues dependències**, abans
++  de publicar un client amb la nova ruta; conserva la condició de moderació.
++
+ - `seed.sql`
+   Contingut inicial del portal.
+ 
+--- a/tooling/documental/core.mjs
++++ b/tooling/documental/core.mjs
+@@ -148,9 +148,18 @@
+   }).join('\n');
+ }
+ export function anchored(index, file) {
+-  const clean = withoutCode(index).replace(/`[^`]*`/g, '');
+-  const name = path.basename(file, '.md');
+-  return [...clean.matchAll(/\[\[([^|\]#]+)(?:[|#][^\]]*)?\]\]/g)].some(m => m[1].trim() === name);
++  const clean = withoutCode(index).replace(/`[^`]*`/g, '').replace(/\\(?=[|#])/g,'');
++  const lexical = String(file).split(path.sep).join('/');
++  const start = lexical.indexOf(`${CAMINS.wiki}/`);
++  if (start < 0) return false;
++  const target = path.posix.normalize(lexical.slice(start)).replace(/\.md$/, '');
++  return [...clean.matchAll(/\[\[([^|\]#]+)(?:[|#][^\]]*)?\]\]/g)].some(m => {
++    const ref = m[1].trim().replace(/\.md$/, '');
++    // L'índex de l'Escriptori admet camí relatiu, des de Wiki o des del repo.
++    // Un basename ambigu no acredita un document d'una altra carpeta.
++    return [path.posix.join(DESK, ref), path.posix.join(CAMINS.wiki, ref), ref]
++      .some(candidate => path.posix.normalize(candidate) === target);
++  });
+ }
+ export function sections(body) {
+   const clean = withoutCode(body);
+--- a/tooling/documental/draft-write.mjs
++++ b/tooling/documental/draft-write.mjs
+@@ -79,7 +79,7 @@
+   }).join('').replace(/`[^`]*`/g, mask);
+ }
+ function anchorDraft(index, anchor, firstLevel) {
+-  if (!firstLevel) return index.includes(anchor) ? index : `${index}\n- ${anchor}\n`;
++  if (!firstLevel) return indexProse(index).includes(anchor) ? index : `${index}\n- ${anchor}\n`;
+   const prose = indexProse(index);
+   const active = /^##[ \t]+Activitat en curs[^\n]*(?:\r?\n|$)/m.exec(prose);
+   if (!active) return `${index}\n## Activitat en curs\n\n- ${anchor}\n`;
+@@ -111,7 +111,8 @@
+     created = { fd, stat: fs.fstatSync(fd) };
+     assertOwned(root, file, created.stat, fd);
+     fs.writeFileSync(fd, content, 'utf8'); fs.fsyncSync(fd);
+-    const anchor = `[[${path.basename(file, '.md')}]]`;
++    const relative = path.relative(path.dirname(index.file), file).split(path.sep).join('/').replace(/\.md$/, '');
++    const anchor = `[[${relative}]]`;
+     const anchored = anchorDraft(index.content, anchor, path.dirname(file) === path.join(root, CAMINS.escriptori));
+     if (anchored !== index.content) {
+       const tempFile = `${index.file}.${randomUUID()}.tmp`;
+--- a/tooling/documental/turns.mjs
++++ b/tooling/documental/turns.mjs
+@@ -214,10 +214,20 @@
+   if(!match||match[1]!==id) throw new Error('Identitat del relleu divergent');
+   return mutateTurn(root,id,turn=>{
+     const receipt=turn.receipts[match[2]];
+-    if(!receipt||receipt.file!==source) throw new Error('Rebut del relleu absent');
++    const prior = receipt?.file===target && receipt.moves?.find(move=>move.from===source && move.to===target && move.hash===digest);
++    if(!receipt || (receipt.file!==source && !prior)) throw new Error('Rebut del relleu absent');
+     if(turn.plan?.file===source && turn.plan.hash!==digest) throw new Error('Pla modificat durant el relleu');
+-    receipt.file=target;
+-    receipt.moves=[...(receipt.moves||[]),{from:source,to:target,hash:digest,at:new Date().toISOString()}];
++    // El reflex identifica el rebut immutable que va fer nàixer el document.
++    // Captura IDs exactes: un context posterior per a reutilitzar source no és
++    // cap lectura d'este arxiu. Legacy: prefix d'emissió, sense fiar-se del rellotge.
++    const emitted = Object.values(turn.receipts);
++    const original = emitted.slice(0, emitted.indexOf(receipt)+1).filter(candidate=>
++      candidate.file===source && candidate.route===receipt.route && candidate.contractSnapshot===receipt.contractSnapshot);
++    const receiptIds = prior?.receiptIds || original.map(candidate=>candidate.id);
++    for(const owned of emitted.filter(candidate=>candidate.file===source && receiptIds.includes(candidate.id))) {
++      owned.file=target;
++      owned.moves=[...(owned.moves||[]),{from:source,to:target,hash:digest,at:new Date().toISOString(),receiptIds}];
++    }
+     if(turn.plan?.file===source) turn.plan.file=target;
+     turn.ownedPaths=[...new Set([...(turn.ownedPaths||[]).filter(p=>p!==source),target])];
+     // Preserve source history, while recognising that its absence is an intentional handoff.
+--- a/tooling/gates/porta-olivera.mjs
++++ b/tooling/gates/porta-olivera.mjs
+@@ -47,11 +47,10 @@
+  *  un terminal (o un pipe que ningú tanca) no envia mai, i la porta es penjava
+  *  just quan la skill manava executar-la.
+  */
+-import { CAMINS, arrelSegura } from '../lib/arrel.mjs';
++import { CAMINS, arrelSegura, esMain } from '../lib/arrel.mjs';
+ import fs from 'node:fs';
+ import path from 'node:path';
+ import tty from 'node:tty';
+-import { pathToFileURL } from 'node:url';
+ 
+ // La ubicació de l'eina resol l'arrel. Conservar l'error permet importar les
+ // funcions amb una arrel explícita en fixtures, sense donar cap verd implícit.
+@@ -103,17 +102,17 @@
+ 
+ /**
+  * Noms (sense `.md`) que l'índex declara vius davall de qualsevol «## Activitat en
+- * curs». Només compten les àncores planes, com a `ancoratge()`: una àncora amb `/`
+- * apunta fora del primer nivell i no pot protegir cap document de la taula.
++ * curs». Comparteix resolució amb `ancoratge()`: només compta si el camí
++ * resol al primer nivell; un homònim d'una altra carpeta no protegix la taula.
+  */
+ export function vius(arrel = arrelPerDefecte()) {
+   const p = path.join(arrel, INDEX);
+   const text = fs.existsSync(p) ? fs.readFileSync(p, 'utf8') : '';
+   const noms = new Set();
+-  for (const bloc of text.matchAll(ACTIVITAT)) {
+-    for (const a of bloc[1].matchAll(/\[\[([^\]|#]+)/g)) {
+-      const nom = a[1].trim();
+-      if (nom && !nom.includes('/')) noms.add(nom.replace(/\.md$/, ''));
++  for (const bloc of prosaIndex(text).matchAll(ACTIVITAT)) {
++    for (const a of bloc[1].matchAll(/\[\[([^\]]+)\]\]/g)) {
++      const nom = nomPrimerNivell(referent(a[1]));
++      if (nom) noms.add(nom);
+     }
+   }
+   return noms;
+@@ -145,14 +144,37 @@
+   return { carpeta: `${ESCRIPTORI}/${carpeta.name}`, elements };
+ }
+ 
++/** Prosa amb offsets intactes: comentaris i codi no acrediten cap àncora. */
++function prosaIndex(text) {
++  const mask = part => part.replace(/[^\r\n]/g, ' ');
++  let fence = null;
++  return text.replace(/<!--[\s\S]*?-->/g, mask).split(/(?<=\n)/).map(line => {
++    const mark = /^ {0,3}(`{3,}|~{3,})/.exec(line);
++    if (mark) {
++      if (!fence) fence = mark[1];
++      else if (mark[1][0] === fence[0] && mark[1].length >= fence.length) fence = null;
++      return mask(line);
++    }
++    return fence ? mask(line) : line;
++  }).join('').replace(/`[^`]*`/g, mask);
++}
++const referent = raw => raw.replace(/\\(?=[|#])/g,'').split(/[|#]/)[0].trim().replace(/\.md$/, '');
++function nomPrimerNivell(ref) {
++  const normalized = path.posix.normalize(ref);
++  for (const candidate of [path.posix.join(ESCRIPTORI,normalized),path.posix.join(CAMINS.wiki,normalized),normalized]) {
++    if (path.posix.dirname(candidate) === ESCRIPTORI) return path.posix.basename(candidate);
++  }
++  return null;
++}
++
+ /** Documents de l'Escriptori sense àncora a l'índex, i àncores a documents absents. */
+ export function ancoratge(arrel = arrelPerDefecte()) {
+   const indexPath = path.join(arrel, INDEX);
+   const text = fs.existsSync(indexPath) ? fs.readFileSync(indexPath, 'utf8') : '';
+-  const ancores = [...text.matchAll(/\[\[([^\]]+)\]\]/g)].map((m) => m[1].split('|')[0].trim());
++  const ancores = [...prosaIndex(text).matchAll(/\[\[([^\]]+)\]\]/g)].map((m) => referent(m[1]));
+   const docs = inventari(arrel).filter((d) => d.nom !== '00_index_escriptori.md');
+   const noms = new Set(docs.map((d) => d.nom.replace(/\.md$/, '')));
+-  const ancorats = new Set(ancores.map((a) => path.basename(a)));
++  const ancorats = new Set(ancores.map(nomPrimerNivell).filter(Boolean));
+   return {
+     senseAncora: docs.filter((d) => !ancorats.has(d.nom.replace(/\.md$/, ''))).map((d) => d.nom),
+     // Només comptem àncores planes: les que porten `/` apunten fora de l'Escriptori.
+@@ -321,13 +343,24 @@
+   let tocat = false;
+   if (fs.existsSync(indexPath)) {
+     const noms = new Set(moguts.filter((m) => m.nota === 'mogut').map((m) => m.nom.replace(/\.md$/, '')));
+-    const linies = fs.readFileSync(indexPath, 'utf8').split('\n');
+-    const netes = linies.filter((l) => {
+-      const m = /^\s*-\s*\[\[([^\]]+)\]\]/.exec(l);
+-      return !(m && noms.has(path.basename(m[1].split('|')[0].trim())));
+-    });
+-    if (netes.length !== linies.length) {
+-      fs.writeFileSync(indexPath, netes.join('\n'), 'utf8');
++    const original = fs.readFileSync(indexPath, 'utf8');
++    const prose = prosaIndex(original);
++    const removals = [...prose.matchAll(/\[\[([^\]]+)\]\]/g)]
++      .filter(match=>noms.has(nomPrimerNivell(referent(match[1]))))
++      .map(match=>({start:match.index,end:match.index+match[0].length}));
++    // Només una línia composta íntegrament per la seua àncora pot desaparéixer.
++    // En taula, prosa o línia compartida lleva el token, preservant la resta.
++    let offset = 0;
++    const updated = original.split(/(?<=\n)/).map(line=>{
++      const start = offset; offset += line.length;
++      const selected = removals.filter(item=>item.start>=start && item.end<=start+line.length);
++      if (!selected.length) return line;
++      let clean = line;
++      for (const item of selected.reverse()) clean=clean.slice(0,item.start-start)+clean.slice(item.end-start);
++      return /^[ \t]*(?:[-*][ \t]*)?(?:\r?\n)?$/.test(clean) ? '' : clean;
++    }).join('');
++    if (updated !== original) {
++      fs.writeFileSync(indexPath, updated, 'utf8');
+       tocat = true;
+     }
+   }
+@@ -399,7 +432,7 @@
+     for (const m of r.moguts) console.log(`   · ${m.nom} → ${ARXIU}/ (${m.nota})`);
+     if (r.index) console.log(`   · ${INDEX} actualitzat.`);
+     if (r.moguts.some((m) => m.nota === 'mogut')) console.log('   Si algun portava rebut de torn: node tooling/wiki/document.mjs handoff --turn-id ID --file ORIGEN --to DESTÍ');
+-    process.exitCode = 0;
++    process.exitCode = !o.sec && r.moguts.some(m=>m.nota !== 'mogut') ? 1 : 0;
+     return;
+   }
+ 
+@@ -437,6 +470,6 @@
+ // fixture de proves a os.tmpdir()) no coincidixen, el mòdul es carrega en
+ // silenci i la porta ix 0 sense comprovar res. Resoldre el symlink és el que
+ // fa que la guarda parle sempre.
+-if (process.argv[1] && import.meta.url === pathToFileURL(fs.realpathSync(process.argv[1])).href) {
++if (esMain(import.meta.url)) {
+   try { main(); } catch (e) { console.error(e.message); process.exitCode = 2; }
+ }
+--- a/tooling/gates/antigravity-hook.mjs
++++ b/tooling/gates/antigravity-hook.mjs
+@@ -21,10 +21,10 @@
+  *    pre-tool        · escriure un prompt, una petorreta o un pla al primer nivell
+  *                      de l'Escriptori: `deny` si la Plantilla viva o la Porta
+  *                      Olivera hi troben errors, amb el motiu i la via de sortida;
+- *                    · `run_command` amb `mv` que toca `04_escriptori`: `ask` (el
++ *                    · `run_command` destructiu que toca Escriptori/governança: `force_ask` (el
+  *                      trasllat a mà deixa àncores fantasma a l'índex);
+  *                    · `run_command` que redirigix (`>`, `>>`, `| tee`) a un
+- *                      document del primer nivell: `ask` (el contingut no es pot
++ *                      document del primer nivell: `force_ask` (el contingut no es pot
+  *                      jutjar, i és la via per on van nàixer documents sense rebut);
+  *                    · la resta: `allow`.
+  *    pre-invocation  · si l'Escriptori no passa `checkTaula` (definició única,
+@@ -57,6 +57,8 @@
+ import fs from 'node:fs';
+ import path from 'node:path';
+ import { pathToFileURL } from 'node:url';
++import { knownPureRead, SECURITY_PATHS, mutationPath } from './mutation-policy.mjs';
++import { documentArgv } from '../documental/command-policy.mjs';
+ 
+ export const DESK = '_wiki_de_poble/04_escriptori';
+ export const INTERRUPTOR = '.agents/runtime/antigravity-hook.off';
+@@ -76,6 +78,7 @@
+ 
+ const ALLOW = Object.freeze({ decision: 'allow' });
+ const ask = (reason) => ({ decision: 'ask', reason });
++const forceAsk = (reason) => ({ decision: 'force_ask', reason });
+ const MAX_ERRORS = 12;
+ 
+ const VIA_OLIVERA = 'node tooling/gates/porta-olivera.mjs';
+@@ -100,6 +103,8 @@
+ const alPrimerNivell = (rel) => path.posix.dirname(rel) === DESK;
+ const esMd = (rel) => /\.md$/i.test(rel);
+ const zonaHumana = (rel) => rel.toLowerCase().startsWith(`${DESK}/01_produccio/`);
++const governat = rel => SECURITY_PATHS.some(dir=>rel.toLowerCase()===dir || rel.toLowerCase().startsWith(`${dir}/`))
++  || /^(?:agents|claude)\.md$|^package(?:-lock)?\.json$/i.test(rel);
+ const argsDe = (crida) => (crida?.args && typeof crida.args === 'object' && !Array.isArray(crida.args) ? crida.args : {});
+ 
+ export function esEscriptura(nom, args = {}) {
+@@ -123,11 +128,43 @@
+   return out;
+ }
+ 
++/** Nom literal de shell: resol cometes/escapes, mai executa expansions. */
++function shellLiteral(raw) {
++  let value='',quote=null;
++  for(let i=0;i<raw.length;i++) {
++    const character=raw[i];
++    if(quote==="'") { if(character===quote)quote=null;else value+=character;continue; }
++    if(character==='"' || (!quote && character==="'")) { quote=quote?null:character;continue; }
++    if(character==='\\') {
++      const next=raw[++i];if(next===undefined)return null;
++      if(quote==='"' && !/[$`"\\]/.test(next))value+='\\';
++      value+=next;continue;
++    }
++    if(character==='$'||character==='`')return null;
++    value+=character;
++  }
++  return quote?null:value;
++}
++function redirectionWords(command) {
++  const targets=[];
++  for(const match of command.matchAll(/(?:>>?|\|\s*tee(?:\s+-a)?(?:\s+--)?)\s*((?:'[^']*'|"(?:\\.|[^"\\])*"|\\.|[^\s;&|<>])+)/g)) {
++    targets.push(match[1]);
++  }
++  // tee pot escriure diversos destins: cada nom literal passa per la mateixa porta.
++  for(const tee of command.matchAll(/\|\s*tee(?:\s+-a)?(?:\s+--)?\s+([^;&|\n]+)/g)) {
++    for(const word of tee[1].matchAll(/(?:'[^']*'|"(?:\\.|[^"\\])*"|\\.|[^\s;&|<>])+/g)) {
++      const literal=shellLiteral(word[0]);if(!literal || !literal.startsWith('-'))targets.push(word[0]);
++    }
++  }
++  return [...new Set(targets)];
++}
++const redirectionTargets=command=>redirectionWords(command).map(shellLiteral).filter(Boolean);
++
+ /** Destins de les redireccions d'una ordre que cauen al primer nivell de l'Escriptori. */
+ export function redireccionsAlTaulell(ordre, root, cwd = root) {
+   const out = [];
+-  for (const m of ordre.matchAll(/(?:>>?|\|\s*tee(?:\s+-a)?)\s*(?:'([^']+)'|"([^"]+)"|([^\s;&|<>]+))/g)) {
+-    const rel = relatiu(root, m[1] || m[2] || m[3], cwd);
++  for (const target of redirectionTargets(ordre)) {
++    const rel = relatiu(root, target, cwd);
+     if (rel && alPrimerNivell(rel) && esMd(rel)) out.push(rel);
+   }
+   return out;
+@@ -138,16 +175,56 @@
+ function preShell(args, root) {
+   const ordre = typeof args.CommandLine === 'string' ? args.CommandLine : typeof args.Command === 'string' ? args.Command : null;
+   if (ordre === null) return ask('Hook Olivera: run_command sense CommandLine; cap comprovació feta.');
++  if (typeof args.CommandLine === 'string' && typeof args.Command === 'string' && args.CommandLine !== args.Command) {
++    return forceAsk('Hook Olivera: CommandLine i Command divergents; cap ordre privilegiada acreditada.');
++  }
+   if (ordre.includes('antigravity-hook.off')) {
+-    return ask(`L'interruptor ${INTERRUPTOR} és del Mestre: apagar el hook necessita el seu permís.`);
++    return forceAsk(`L'interruptor ${INTERRUPTOR} és del Mestre: apagar el hook necessita el seu permís.`);
+   }
+   const cwd = typeof args.Cwd === 'string' && args.Cwd ? path.resolve(root, args.Cwd) : root;
+-  const cwdRel = relatiu(root, cwd) ?? '';
+-  const tocaTaulell = ordre.includes('04_escriptori') || cwdRel === DESK || cwdRel.startsWith(`${DESK}/`);
+-  if (tocaTaulell && /(?:^|[\s;&|(`])mv(?=\s|$)/.test(ordre)) return ask(MOTIU_MV);
++  const cwdRel = (relatiu(root, cwd) ?? '').toLowerCase();
++  // Les lectures elementals ja aprovades no es convertixen en preguntes perquè
++  // el patró cercat diga «rm» o esmente una ruta governada.
++  if (knownPureRead({tool_name:'run_command',tool_input:{command:ordre}},root)) return ALLOW;
++  // Un argument literal d'una CLI governada pot citar «rm .» com a text.
++  // L'argv no admet composició ni expansió; l'autoritat continua a l'executor/CLI.
++  try {
++    const argv=documentArgv(ordre);
++    if (argv[0]==='node' && ['tooling/wiki/document.mjs','tooling/gates/obrir_torn.mjs','tooling/gates/porta-olivera.mjs','tooling/gates/executor-mutacio.mjs'].includes(argv[1])) return ALLOW;
++  } catch { /* ordre composta: mai una excepció per prefix */ }
++  const lexicalRisk = ordre.replace(/['"\\]/g,'');
++  const riskText = lexicalRisk.toLowerCase();
++  const mentions = dir => new RegExp(`(?:^|[\\s/])${dir.replaceAll('.','[.]')}(?=$|[\\s/;&|()])`).test(riskText);
++  const tocaTaulell = mentions('04_escriptori') || cwdRel === DESK || cwdRel.startsWith(`${DESK}/`);
++  const enclosesProtected = directory => [DESK,...SECURITY_PATHS].some(dir=>{
++    const rel=path.relative(directory,path.join(root,dir));
++    return rel==='' || (rel!=='..' && !rel.startsWith(`..${path.sep}`) && !path.isAbsolute(rel));
++  });
++  const ancestorRisk = lexicalRisk.split(/[ \t;&|]+/).some(word=>word && !word.startsWith('-') && enclosesProtected(word==='*'?cwd:path.resolve(cwd,word)))
++    || lexicalRisk.endsWith(root) || lexicalRisk.endsWith(`${root}/`) || lexicalRisk.includes(`${root} `);
++  const tocaGovern = ancestorRisk || SECURITY_PATHS.some(dir=>mentions(dir) || cwdRel===dir || cwdRel.startsWith(`${dir}/`)) || /(?:AGENTS|CLAUDE)\.md|package(?:-lock)?\.json/i.test(riskText);
++  const destructiva = /(?:^|[\s;&|(`])(?:\/(?:[^/\s`]+\/)*)?(?:rm|mv|unlink|rmdir|truncate)(?=[\s`]|$)/.test(riskText);
++  if (tocaTaulell && destructiva) return forceAsk(`${MOTIU_MV}${tocaGovern?' Si afecta governança, necessita executor-mutacio.mjs amb pla exacte i lease.':''}`);
++  if (tocaGovern && destructiva) return forceAsk('Destrucció o trasllat de governança: necessita autoritat explícita; usa executor-mutacio.mjs amb pla exacte i lease.');
++  // Un intèrpret inline amb destí explícit no és una via documental ni un lease.
++  if ((tocaTaulell || tocaGovern) && /(?:^|[\s;&|('"`])(?:\/(?:[^/\s'"`]+\/)*)?(?:node|python[0-9.]*|perl|ruby|sh|bash|zsh)(?:[ \t]+[^;&|]*)?[ \t]-(?:e|c|p)(?=[ \t]|$)/.test(lexicalRisk)) {
++    return forceAsk('Intèrpret inline amb ruta protegida: necessita autoritat explícita; usa la via documental o executor-mutacio amb pla i lease.');
++  }
++  if((tocaTaulell||tocaGovern) && redirectionWords(ordre).some(raw=>shellLiteral(raw)===null)) {
++    return forceAsk('Redirecció amb expansió no verificable i ruta protegida: cap destí ni autoritat acreditats.');
++  }
++  for (const target of redirectionTargets(ordre)) {
++    const rel=relatiu(root,target,cwd);
++    if(!rel)continue; // /dev/null i artefactes fora del repo ja preaprovats.
++    if(governat(rel)||zonaHumana(rel))return forceAsk(`Redirecció a ${rel}: ruta protegida; usa la via amb autoritat explícita.`);
++    try {
++      const physical=mutationPath(root,target,cwd);
++      if(governat(physical)||zonaHumana(physical)||(alPrimerNivell(physical)&&esMd(physical)))return forceAsk(`Redirecció a ${physical}: ruta física protegida; usa node tooling/wiki/document.mjs context → create o executor-mutacio.mjs amb pla exacte i lease.`);
++    } catch(error) { return forceAsk(`Destí de redirecció protegit: ${retalla(error.message)}`); }
++  }
+   const redir = redireccionsAlTaulell(ordre, root, cwd);
+   if (redir.length) {
+-    return ask(`Escriptura per shell a ${redir.join(', ')}: no passa per cap porta ni deixa rebut. Un document de l'Escriptori s'escriu amb l'eina d'edició, i un prompt o un pla naix de node tooling/wiki/document.mjs context → create.`);
++    return forceAsk(`Escriptura per shell a ${redir.join(', ')}: no passa per cap porta ni deixa rebut. Un document de l'Escriptori s'escriu amb l'eina d'edició, i un prompt o un pla naix de node tooling/wiki/document.mjs context → create.`);
+   }
+   return ALLOW;
+ }
+@@ -167,8 +244,15 @@
+   if (!cami) return ask("Hook Olivera: eina d'escriptura sense TargetFile; cap comprovació feta.");
+   const rel = relatiu(root, cami);
+   if (rel === null) return ALLOW; // fora del repositori: artefactes propis de l'IDE (~/.gemini/…)
+-  if (zonaHumana(rel)) return ask(`${rel} és a la zona humana (01_produccio): només amb ordre directa i explícita del Mestre (AGENTS §12).`);
+-  if (AUTOPROTEGITS.has(rel)) return ask(`${rel} governa el hook d'Antigravity: canviar-lo és decisió del Mestre.`);
++  if (zonaHumana(rel)) return forceAsk(`${rel} és a la zona humana (01_produccio): només amb ordre directa i explícita del Mestre (AGENTS §12).`);
++  if (AUTOPROTEGITS.has(rel)) return forceAsk(`${rel} governa el hook d'Antigravity: canviar-lo és decisió del Mestre.`);
++  if (governat(rel)) return forceAsk(`${rel} és governança: usa executor-mutacio.mjs amb pla exacte i lease; l’eina directa no acredita autoritat.`);
++  // Una àlies en src pot apuntar a governança o eixir de l'arrel. Reusa la
++  // mateixa resolució física i defensa de hardlinks que la política de mutació.
++  try {
++    const physical = mutationPath(root,cami);
++    if (governat(physical) || zonaHumana(physical)) return forceAsk(`${physical} és una ruta física protegida; l'àlies no acredita autoritat.`);
++  } catch (error) { return forceAsk(`Ruta d'escriptura protegida: ${retalla(error.message)}`); }
+   if (!alPrimerNivell(rel) || !esMd(rel)) return ALLOW;
+   if (!portes) throw new Error('portes no carregades per a una escriptura a l’Escriptori');
+ 
+--- a/.agents/skills/sdp-pedra-seca/SKILL.md
++++ b/.agents/skills/sdp-pedra-seca/SKILL.md
+@@ -91,5 +91,11 @@
+ - **Persones i IA (Avatars):** Els usuaris, persones físiques i la IAIA utilitzen OBLIGATÒRIAMENT un avatar redó i gran (300-360 px), mai un logotip corporatiu ni figures abstractes per defecte a les seues fitxes personals.
+ - **Entitat Oficial:** El logotip complet de "Sóc de Poble" es reserva de forma estricta i exclusiva per a la pàgina corporativa de l'entitat, la capçalera oficial i els actes organitzats per aquesta. Mai s'ha d'utilitzar com a "avatar" o imatge de recurs quan falta la foto d'una persona.
+ 
++## 12. Tornada arrere lliure de tensió (Pla 261004_2045)
++
++- En mòbil, els menús emergents i calaixos de navegació s'adapten al contingut i tenen un màxim de 300px d'amplària. Han de deixar visible espai tàctil de la vista anterior perquè es puga tancar el menú tocant fora.
++- Les etiquetes llargues usen `text-overflow: ellipsis`; el nom complet continua disponible com a nom accessible de l'acció. El truncament visual no elimina la identificació per a lectors de pantalla.
++- Este límit s'aplica a menús i calaixos. Una pantalla completa de treball, com l'editor o el visor, és legítima quan conserva una eixida o tornada arrere visible i accessible; no és una prohibició general d'ocupar el 100% de la pantalla.
++
+ ## Ancoratge de Seguretat
+ - [[00_INDEX_SKILLS]]
+--- a/tests/porta-olivera-diagnosi.test.mjs
++++ b/tests/porta-olivera-diagnosi.test.mjs
+@@ -119,22 +119,22 @@
+ 
+ /* ── 3. Àncores ───────────────────────────────────────────────────────────── */
+ 
+-test('[DEFECTE D3] una àncora amb «.md» o amb «#secció» compta alhora com a absent i com a fantasma, encara que vius() la reconeix', (t) => {
++test('[CONTROL D3] una àncora amb .md o #secció és coherent entre vius i ancoratge', (t) => {
+   const a = `${VELL}_0900_prompt_a.md`;
+   const b = `${VELL}_0905_auditoria_b.md`;
+   const arrel = mas(t, ['# Índex', '', '## Activitat en curs', '', `- [[${a}]]`, `- [[${sense(b)}#T6]]`, '']);
+   posa(arrel, a); posa(arrel, b);
+   assert.deepEqual([...vius(arrel)].sort(), [sense(a), sense(b)], 'vius() lleva «.md» i «#»: els dos són vius');
+   const anc = ancoratge(arrel);
+-  assert.deepEqual(anc.senseAncora.sort(), [a, b].sort());
+-  assert.deepEqual(anc.fantasma.sort(), [a, `${sense(b)}#T6`].sort());
+-  assert.equal(checkTaula(arrel).valid, false);
++  assert.deepEqual(anc.senseAncora, []);
++  assert.deepEqual(anc.fantasma, []);
++  assert.equal(checkTaula(arrel).valid, true);
+ });
+ 
+-test('[DEFECTE D4] --arxiva només despenja línies «- [[X]]»: les àncores en taula, prosa o «*» queden fantasma, i una línia amb dos àncores se n’emporta la que no s’arxiva', (t) => {
++test('[CONTROL D4] --arxiva despenja només els tokens moguts en taula, prosa i llista; preserva altres àncores', (t) => {
+   const [A, B, C, D, E] = ['a', 'b', 'c', 'd', 'e'].map((x) => `${VELL}_0900_auditoria_${x}.md`);
+   const arrel = mas(t, [
+-    '# Índex', '', '## Treball', '',
++    '# Índex', '', '## Activitat en curs', '',
+     '| Document | Estat |', '| --- | --- |', `| [[${sense(A)}]] | consumit |`, '',
+     `Vegeu també [[${sense(B)}]] per al context.`, '',
+     `* [[${sense(C)}]]`, '',
+@@ -145,21 +145,22 @@
+   const r = arxiva(arrel, { noms: [A, B, C, D] });
+   assert.equal(r.moguts.filter((m) => m.nota === 'mogut').length, 4);
+   const anc = ancoratge(arrel);
+-  assert.deepEqual(anc.fantasma, [sense(A), sense(B), sense(C)]);
+-  assert.deepEqual(anc.senseAncora, [E], 'E ha perdut la seua àncora sense haver-se mogut');
+-  assert.equal(checkTaula(arrel).valid, false, 'just després d’un --arxiva «correcte» la porta torna a caure');
++  assert.deepEqual(anc.fantasma, []);
++  assert.deepEqual(anc.senseAncora, []);
++  assert.match(index(arrel),new RegExp(`\\[\\[${sense(E)}\\]\\]`));
++  assert.equal(checkTaula(arrel).valid, true);
+ });
+ 
+ /* ── 4. Col·lisió i arrel ─────────────────────────────────────────────────── */
+ 
+-test('[DEFECTE D5] si el nom ja és a l’arxiu, --arxiva no mou res, deixa l’àncora i ix amb 0', (t) => {
++test('[CONTROL D5] col·lisió a l’arxiu conserva les dues versions i retorna resultat incomplet', (t) => {
+   const x = `${VELL}_0900_auditoria_repetida.md`;
+   const arrel = mas(t, ['# Índex', '', `- [[${sense(x)}]]`, '']);
+   posa(arrel, x);
+   fs.mkdirSync(path.join(arrel, ARXIU), { recursive: true });
+   fs.writeFileSync(path.join(arrel, ARXIU, x), '# versió anterior\n');
+   const p = spawnSync(process.execPath, [PORTA, '--arxiva', '--nom', x], { cwd: arrel, env: { ...process.env, SDP_ARREL: arrel }, encoding: 'utf8', timeout: 10000 });
+-  assert.equal(p.status, 0, p.stderr);
++  assert.equal(p.status, 1, p.stderr);
+   assert.match(p.stdout, /ja existia a l’arxiu; no es sobreescriu/);
+   assert.ok(aTaula(arrel, x), 'el document continua a la taula');
+   assert.match(index(arrel), new RegExp(`\\[\\[${sense(x)}\\]\\]`));
+@@ -187,7 +188,7 @@
+ 
+ /* ── 5. Rebuts de torn: arxivar no fa el relleu, i el relleu no casa amb la porta ── */
+ 
+-test('[DEFECTE D7] --arxiva no fa el relleu; amb el relleu fet, checkTurn exigix l’àncora plana que checkTaula diu fantasma', (t) => {
++test('[DEFECTE D7 parcial] --arxiva no fa el relleu; CONTROL el relleu posterior i àncora amb camí són coherents', (t) => {
+   const root = fixture(t);
+   const d = validDoc(root, { suffix: 'consumida' });
+   writeDoc(root, d);
+@@ -206,13 +207,13 @@
+   assert.ok(!errors.some((e) => e.startsWith('Document eliminat sense relleu')));
+   assert.ok(errors.includes(`Document sense àncora: ${desti}`), errors.join('\n'));
+ 
+-  // L'àncora amb camí cap a l'arxiu (la del laboratori 260930b) no li val a checkTurn...
++  // L'àncora amb camí acredita el document arxivat en les dues portes.
+   fs.appendFileSync(path.join(root, INDEX), `\n- [[../90_arxiu_historic/${sense(nom)}]]\n`);
+   errors = checkTurn(root, d.turn.turn_id).errors;
+-  assert.ok(errors.includes(`Document sense àncora: ${desti}`));
++  assert.ok(!errors.includes(`Document sense àncora: ${desti}`));
+   assert.equal(checkTaula(root).valid, true);
+ 
+-  // ...i la plana, que sí que li val, fa caure la Porta Olivera.
++  // Una àncora plana extra és fantasma i no és la prova del document arxivat.
+   fs.appendFileSync(path.join(root, INDEX), `\n- [[${sense(nom)}]]\n`);
+   errors = checkTurn(root, d.turn.turn_id).errors;
+   assert.ok(!errors.includes(`Document sense àncora: ${desti}`));
+@@ -282,7 +283,7 @@
+   assert.match(handoff.errors.join('\n'), /Operació fora del circuit documental ordinari/);
+ });
+ 
+-test('[DEFECTE D10] hook d’Antigravity: pregunta per «mv» però autoaprova «rm», «cp && rm» i «/bin/mv» sobre l’Escriptori', () => {
++test('[CONTROL D10] hook d’Antigravity força permís per mv, rm, cp&&rm i /bin/mv sobre l’Escriptori', () => {
+   const root = REPO;
+   const doc = `${DESK}/${DIA}_0310_visio_arquitectonica_expansio.md`;
+   const run = (CommandLine) => preTool({ toolCall: { name: 'run_command', args: { CommandLine } } }, { root }).decision;
+@@ -290,12 +291,12 @@
+   assert.equal(run(`node tooling/gates/porta-olivera.mjs --arxiva --nom ${path.basename(doc)}`), 'allow');
+   assert.equal(run(`node tooling/wiki/document.mjs handoff --turn-id ID --file ${doc} --to ${ARXIU}/x.md`), 'allow');
+   // El trasllat transparent pregunta...
+-  assert.equal(run(`mv ${doc} ${ARXIU}/`), 'ask');
+-  assert.equal(run(`git mv ${doc} ${ARXIU}/`), 'ask');
++  assert.equal(run(`mv ${doc} ${ARXIU}/`), 'force_ask');
++  assert.equal(run(`git mv ${doc} ${ARXIU}/`), 'force_ask');
+   // ...i l'esborrat i les variants que no diuen «mv» s'aproven soles (AGENTS §5).
+-  assert.equal(run(`rm ${doc}`), 'allow');
+-  assert.equal(run(`cp ${doc} ${ARXIU}/ && rm ${doc}`), 'allow');
+-  assert.equal(run(`/bin/mv ${doc} ${ARXIU}/`), 'allow');
++  assert.equal(run(`rm ${doc}`), 'force_ask');
++  assert.equal(run(`cp ${doc} ${ARXIU}/ && rm ${doc}`), 'force_ask');
++  assert.equal(run(`/bin/mv ${doc} ${ARXIU}/`), 'force_ask');
+ });
+ 
+ /* ── 7. Ergonomia: la porta de la petorreta jutja la taula a cada edició ──── */
+--- a/tests/antigravity-hook.test.mjs
++++ b/tests/antigravity-hook.test.mjs
+@@ -110,35 +110,35 @@
+   assert.equal(f.crides.operacio.length, 0, 'un document no vigilat no es reconstruïx');
+ });
+ 
+-test('zona humana i peces del mateix hook → ask', () => {
++test('zona humana i peces del mateix hook → force_ask', () => {
+   const produccio = crida('write_to_file', { TargetFile: alTaulell('01_produccio/pagina.html'), CodeContent: 'x' });
+-  assert.equal(preTool(produccio, { root: ROOT }).decision, 'ask');
++  assert.equal(preTool(produccio, { root: ROOT }).decision, 'force_ask');
+   for (const rel of ['.agents/hooks.json', 'tooling/gates/antigravity-hook.mjs', INTERRUPTOR]) {
+     const r = preTool(crida('write_to_file', { TargetFile: path.join(ROOT, rel), CodeContent: '' }), { root: ROOT });
+-    assert.equal(r.decision, 'ask', rel);
++    assert.equal(r.decision, 'force_ask', rel);
+   }
+-  assert.equal(preTool(crida('run_command', { CommandLine: `touch ${INTERRUPTOR}` }), { root: ROOT }).decision, 'ask');
++  assert.equal(preTool(crida('run_command', { CommandLine: `touch ${INTERRUPTOR}` }), { root: ROOT }).decision, 'force_ask');
+ });
+ 
+-test('mv que toca l’Escriptori → ask amb la via canònica; la resta de shell → allow', () => {
++test('mv que toca l’Escriptori → force_ask amb la via canònica; la resta de shell → allow', () => {
+   for (const CommandLine of [
+     `mv ${DESK}/260929_2346_prompt_x.md _wiki_de_poble/90_arxiu_historic/`,
+     `git mv ${DESK}/a.md ${DESK}/b.md`,
+     `cd ${DESK} && mv a.md b.md`
+   ]) {
+     const r = preTool(crida('run_command', { CommandLine }), { root: ROOT });
+-    assert.equal(r.decision, 'ask', CommandLine);
++    assert.equal(r.decision, 'force_ask', CommandLine);
+     assert.match(r.reason, /--arxiva/);
+   }
+-  assert.equal(preTool(crida('run_command', { CommandLine: 'mv a.md b.md', Cwd: path.join(ROOT, DESK) }), { root: ROOT }).decision, 'ask');
++  assert.equal(preTool(crida('run_command', { CommandLine: 'mv a.md b.md', Cwd: path.join(ROOT, DESK) }), { root: ROOT }).decision, 'force_ask');
+   assert.equal(preTool(crida('run_command', { CommandLine: `ls ${DESK}` }), { root: ROOT }).decision, 'allow');
+   assert.equal(preTool(crida('run_command', { CommandLine: 'mv src/a.js src/b.js' }), { root: ROOT }).decision, 'allow');
+   assert.equal(preTool(crida('run_command', { CommandLine: 'node tooling/gates/porta-olivera.mjs --arxiva --sec' }), { root: ROOT }).decision, 'allow');
+ });
+ 
+-test('redirecció de shell a un document del primer nivell → ask; a /dev/null → allow', () => {
++test('redirecció de shell a un document del primer nivell → force_ask; a /dev/null → allow', () => {
+   const r = preTool(crida('run_command', { CommandLine: `cat <<'EOF' > "${DESK}/260930_1200_prompt_x.md"` }), { root: ROOT });
+-  assert.equal(r.decision, 'ask');
++  assert.equal(r.decision, 'force_ask');
+   assert.match(r.reason, /document\.mjs context → create/);
+   assert.equal(preTool(crida('run_command', { CommandLine: 'npm test > /dev/null 2>&1' }), { root: ROOT }).decision, 'allow');
+ });
+@@ -235,13 +235,13 @@
+ test('procés: eixida JSON per stdout i una línia de traça per invocació', (t) => {
+   const arrel = mas(t);
+   assert.deepEqual(executa(arrel, 'pre-tool', crida('view_file', { AbsolutePath: path.join(arrel, 'README.md') })), { decision: 'allow' });
+-  assert.equal(executa(arrel, 'pre-tool', crida('run_command', { CommandLine: `mv ${DESK}/a.md x.md` })).decision, 'ask');
++  assert.equal(executa(arrel, 'pre-tool', crida('run_command', { CommandLine: `mv ${DESK}/a.md x.md` })).decision, 'force_ask');
+   const l = traces(arrel);
+   assert.equal(l.length, 2);
+   assert.equal(l[0].mode, 'pre-tool');
+   assert.equal(l[0].eina, 'view_file');
+   assert.equal(l[0].decisio, 'allow');
+-  assert.equal(l[1].decisio, 'ask');
++  assert.equal(l[1].decisio, 'force_ask');
+ });
+ 
+ test('procés: payload il·legible, buit o mode desconegut → ask', (t) => {
+--- a/tests/cognitive-document-handoff.test.mjs
++++ b/tests/cognitive-document-handoff.test.mjs
+@@ -0,0 +1,72 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import fs from 'node:fs';
++import path from 'node:path';
++import {fixture} from './helpers/documental.mjs';
++import {openTurn,deliverContext,readTurn,handoffDocument,mutateTurn} from '../tooling/documental/turns.mjs';
++import {createDraft} from '../tooling/wiki/document.mjs';
++import {anchored,sha} from '../tooling/documental/core.mjs';
++import {checkTaula,avui} from '../tooling/gates/porta-olivera.mjs';
++const DESK='_wiki_de_poble/04_escriptori',INDEX=`${DESK}/00_index_escriptori.md`;
++const doc=(suffix)=>`${avui()}_1230_${suffix}.md`;
++const text=(root,file)=>fs.readFileSync(path.join(root,file),'utf8');
++const put=(root,file,content)=>{fs.mkdirSync(path.dirname(path.join(root,file)),{recursive:true});fs.writeFileSync(path.join(root,file),content);};
++for(const [route,destination] of [['auditoria',`${DESK}/02_investigacio_ia`],['acta','_wiki_de_poble/10_actes']])test(`esborrany ${route} fora primer nivell deixa àncora exacta i taula neta`,t=>{
++ const root=fixture(t),turn=openTurn(root,{scope:'documents'}),file=`${destination}/${doc(`${route}_subcarpeta`)}`;
++ createDraft(root,turn.turn_id,{route,file,title:'Prova',description:'Prova d’ancoratge exacte en subcarpeta'});
++ assert.ok(anchored(text(root,INDEX),file));
++ assert.equal(checkTaula(root).valid,true,checkTaula(root).errors.join('\n'));
++ assert.doesNotMatch(text(root,INDEX),new RegExp(`- \\[\\[${path.basename(file,'.md')}\\]\\]`),'sense basename fantasma');
++});
++test('una àncora plana homònima no acredita el document de la subcarpeta',()=>{
++ const name=doc('auditoria_homonima'),file=`${DESK}/02_investigacio_ia/${name}`;
++ assert.equal(anchored(`- [[${path.basename(name,'.md')}]]`,file),false);
++ assert.equal(anchored(`- [[02_investigacio_ia/${name}#Resultats|prova]]`,file),true);
++ assert.equal(anchored(`- [[04_escriptori/02_investigacio_ia/${name}]]`,file),true);
++ assert.equal(anchored(`- [[${file}]]`,file),true);
++ assert.equal(anchored(`- [[02_investigacio_ia/altre/${name}]]`,file),false);
++});
++test('esborrany de subcarpeta encara s’ancora si el camí ja existix com a exemple inline',t=>{
++ const root=fixture(t),turn=openTurn(root,{scope:'documents'}),file=`${DESK}/02_investigacio_ia/${doc('auditoria_inline_lab')}`;
++ const ref=`02_investigacio_ia/${path.basename(file,'.md')}`;
++ put(root,INDEX,`# Índex\nExemple: \`[[${ref}]]\`\n`);
++ createDraft(root,turn.turn_id,{route:'auditoria',file,title:'Prova',description:'Prova d’ancoratge fora de l’exemple inline'});
++ assert.ok(anchored(text(root,INDEX),file));assert.equal(checkTaula(root).valid,true);
++});
++function moved(t){
++ const root=fixture(t),turn=openTurn(root,{scope:'documents'}),source=`${DESK}/${doc('auditoria_duplicada')}`,target=`_wiki_de_poble/90_arxiu_historic/${path.basename(source)}`;
++ const opts={route:'auditoria',file:source,title:'Prova',description:'Prova de relleu complet dels rebuts d’un torn'};
++ deliverContext(root,turn.turn_id,opts);createDraft(root,turn.turn_id,opts);
++ const raw=text(root,source);fs.mkdirSync(path.dirname(path.join(root,target)),{recursive:true});fs.renameSync(path.join(root,source),path.join(root,target));
++ return{root,turn,source,target,raw};
++}
++test('handoff reapunta tots els rebuts duplicats del mateix torn i preserva tercers',t=>{
++ const s=moved(t),other=openTurn(s.root,{scope:'documents'}),otherFile=path.join(s.root,'.agents/runtime/turns',`${other.turn_id}.json`),before=fs.readFileSync(otherFile);
++ handoffDocument(s.root,s.turn.turn_id,s.source,s.target);
++ const receipts=Object.values(readTurn(s.root,s.turn.turn_id).receipts);
++ assert.equal(receipts.length,2);assert.ok(receipts.every(r=>r.file===s.target&&r.moves.length===1));
++ assert.deepEqual(fs.readFileSync(otherFile),before);assert.equal(text(s.root,s.target),s.raw);
++});
++test('handoff completa el duplicat quan el rebut del reflex ja té un trasllat acreditat',t=>{
++ const s=moved(t),raw=s.raw;
++ const id=/reflex:.*:([0-9a-f-]+)["']?/.exec(raw)[1];
++ mutateTurn(s.root,s.turn.turn_id,turn=>{const receipt=turn.receipts[id];receipt.file=s.target;receipt.moves=[{from:s.source,to:s.target,hash:sha(raw),at:new Date().toISOString()}];});
++ handoffDocument(s.root,s.turn.turn_id,s.source,s.target);
++ assert.ok(Object.values(readTurn(s.root,s.turn.turn_id).receipts).every(r=>r.file===s.target&&r.moves.length===1));
++});
++test('un rebut emés per al destí no acredita un source absent ni altera els registres',t=>{
++ const root=fixture(t),turn=openTurn(root,{scope:'documents'}),target=`${DESK}/${doc('auditoria_original_destino')}`;
++ createDraft(root,turn.turn_id,{route:'auditoria',file:target,title:'Prova',description:'Prova de rebuig d’un relleu sense traça original'});
++ const before=readTurn(root,turn.turn_id);
++ assert.throws(()=>handoffDocument(root,turn.turn_id,`${DESK}/${doc('auditoria_source_inventat')}`,target),/Rebut del relleu absent/);
++ assert.deepEqual(readTurn(root,turn.turn_id),before);
++});
++
++for(const beforeFirstHandoff of [false,true])test(`context nou per source no es reapunta: abans del primer relleu=${beforeFirstHandoff}`,t=>{
++ const s=moved(t);
++ if(!beforeFirstHandoff)handoffDocument(s.root,s.turn.turn_id,s.source,s.target);
++ const delivery=deliverContext(s.root,s.turn.turn_id,{route:'auditoria',file:s.source});
++ const id=delivery.reflex.split(':').at(-1),before=readTurn(s.root,s.turn.turn_id).receipts[id];
++ handoffDocument(s.root,s.turn.turn_id,s.source,s.target);
++ assert.deepEqual(readTurn(s.root,s.turn.turn_id).receipts[id],before,'el context nou no acredita l’arxiu antic');
++});
+--- a/tests/cognitive-hook-safety.test.mjs
++++ b/tests/cognitive-hook-safety.test.mjs
+@@ -0,0 +1,99 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import fs from 'node:fs';
++import path from 'node:path';
++import {spawnSync} from 'node:child_process';
++import {anchored} from '../tooling/documental/core.mjs';
++import {fixture} from './helpers/documental.mjs';
++import {preTool} from '../tooling/gates/antigravity-hook.mjs';
++import {arxiva,ancoratge,checkTaula,avui,vius} from '../tooling/gates/porta-olivera.mjs';
++const DESK='_wiki_de_poble/04_escriptori',INDEX=`${DESK}/00_index_escriptori.md`,ARXIU='_wiki_de_poble/90_arxiu_historic';
++const put=(root,file,text)=>{fs.mkdirSync(path.dirname(path.join(root,file)),{recursive:true});fs.writeFileSync(path.join(root,file),text);};
++const get=(root,file)=>fs.readFileSync(path.join(root,file),'utf8');
++const call=(root,args)=>preTool({toolCall:{name:'run_command',args}},{root});
++test('variants destructives protegides force_ask; el classificador no executa cap ordre',t=>{
++ const root=fixture(t),file=`${DESK}/${avui()}_0900_auditoria_guard.md`;
++ put(root,file,'Document intacte\n');
++ for(const CommandLine of [`rm ${file}`,`/bin/rm ${file}`,`'rm' ${file}`,`r'm' ${file}`,`r\\m ${file}`,`rm -rf .agents`,`/bin/RM -rf .AGENTS`,`rm -rf src/..`,`rm -rf .`,`rm -rf ./`,`rm -rf ..`,`rm -rf _wiki_de_poble`,`rm -rf *`,`rm -rf "${root}"`,`rm .a'gents'/test`,`rm _wiki_de_poble/04_escrip'tori'/test.md`,`rm _wiki_de_poble/04_escrip\\tori/test.md`,`/bin/mv ${file} /tmp/`,`cp ${file} /tmp/a && rm ${file}`,`sh -c 'rm ${file}'`,`node -e "require('fs').unlinkSync('${file}')"`,`python3 -c "import os; os.unlink('${file}')"`]) {
++  assert.equal(call(root,{CommandLine}).decision,'force_ask',CommandLine);
++ }
++ assert.equal(call(root,{CommandLine:'rm a.md',Cwd:path.join(root,DESK)}).decision,'force_ask');
++ assert.equal(call(root,{CommandLine:'rg -n "rm a.md" .',Cwd:path.join(root,DESK)}).decision,'allow');
++ assert.equal(call(root,{CommandLine:'rm -rf .',Cwd:'/tmp'}).decision,'allow','neteja temporal fora del repo no és governança');
++ assert.equal(get(root,file),'Document intacte\n');
++});
++test('lectures pures i via documental preaprovada continuen allow amb text rm i rutes governades',t=>{
++ const root=fixture(t),file=`${DESK}/a.md`;
++ for(const CommandLine of [`rg -n 'rm ${file}' .agents/skills`,`cat .agents/skills/core-higiene-escriptori/SKILL.md`,`ls ${DESK}`,'node tooling/gates/porta-olivera.mjs --arxiva --sec',`node tooling/wiki/document.mjs create --turn-id ID --file ${file} --description 'Audita rm . al Tauler'`,'npm test','mv src/a.js src/b.js'])assert.equal(call(root,{CommandLine}).decision,'allow',CommandLine);
++});
++test('eina directa o redirecció a governança no hereta un Always Allow vell',t=>{
++ const root=fixture(t);
++ for(const relative of ['.agents/skills/core-higiene-escriptori/SKILL.md','tooling/documental/turns.mjs','.github/workflows/ci.yml','package.json']) {
++  const r=preTool({toolCall:{name:'write_to_file',args:{TargetFile:path.join(root,relative),CodeContent:'test'}}},{root});
++  assert.equal(r.decision,'force_ask',relative);
++  assert.equal(call(root,{CommandLine:`echo x > ${relative}`}).decision,'force_ask',relative);
++ }
++ assert.equal(call(root,{CommandLine:'rm one.md',Cwd:path.join(root,'.agents/skills')}).decision,'force_ask');
++ assert.equal(call(root,{CommandLine:'npm test',Command:`rm ${DESK}/a.md`}).decision,'force_ask');
++});
++test('àncora d’una altra carpeta amb mateix basename no acredita un document solt',t=>{
++ const root=fixture(t),name=`${avui()}_0900_auditoria_homonima.md`;
++ put(root,`${DESK}/${name}`,'Document solt\n');
++ put(root,INDEX,`# Índex\n\n- [[02_investigacio_ia/${name.slice(0,-3)}]]\n`);
++ assert.deepEqual(ancoratge(root).senseAncora,[name]);
++});
++test('arxivar preserva text humà, àncora homònima externa i exemples de codi',t=>{
++ const root=fixture(t),name=`${avui()}_0900_auditoria_preservada.md`,base=name.slice(0,-3);
++ put(root,`${DESK}/${name}`,'Document original\n');
++ const human='Text humà amb accent i instrucció independent.';
++ put(root,`${DESK}/01_produccio/control.txt`,human);put(root,`${DESK}/00_bandeja_d_entrada/control.txt`,human);
++ const before=`# Índex\n${human} [[${base}.md#Resultats|Veure]] i [[../10_actes/${base}]]\nExemple: \`[[${base}]]\`\n<!-- [[${base}]] -->\n`;
++ put(root,INDEX,before);
++ arxiva(root,{noms:[name]});
++ const after=get(root,INDEX);
++ assert.equal(after,before.replace(`[[${base}.md#Resultats|Veure]]`,''));
++ assert.equal(get(root,`${ARXIU}/${name}`),'Document original\n');
++ assert.equal(get(root,`${DESK}/01_produccio/control.txt`),human);assert.equal(get(root,`${DESK}/00_bandeja_d_entrada/control.txt`),human);
++ assert.equal(checkTaula(root).valid,false,'la safata pendent continua explícitament roja');
++});
++
++test('importar porta Olivera des de node stdin no tracta el guió com a fitxer executable',()=>{
++ const uri=new URL('../tooling/gates/porta-olivera.mjs',import.meta.url).href;
++ const result=spawnSync(process.execPath,['--input-type=module','-'],{input:`import {checkTaula} from ${JSON.stringify(uri)}; console.log(typeof checkTaula);`,encoding:'utf8'});
++ assert.equal(result.status,0,result.stderr);assert.equal(result.stdout.trim(),'function');
++});
++
++test('àlies escapats de taula Obsidian són coherents i despenjar conserva cel·les humanes',t=>{
++ const root=fixture(t),name='250101_0900_auditoria_alias_escapat.md',base=name.slice(0,-3),file=`${DESK}/${name}`;
++ put(root,file,'Document antic viu\n');
++ const link=`[[${base}\\|Etiqueta completa]]`,before=`# Índex\n\n## Activitat en curs\n\n| Document | Estat |\n| --- | --- |\n| ${link} | valor humà |\n`;
++ put(root,INDEX,before);
++ assert.ok(anchored(before,file));assert.ok(vius(root).has(base));assert.equal(checkTaula(root).valid,true);
++ arxiva(root,{noms:[name]});assert.equal(get(root,INDEX),before.replace(link,''));assert.equal(checkTaula(root).valid,true);
++});
++for(const prefix of ['04_escriptori/','_wiki_de_poble/04_escriptori/','../04_escriptori/'])test(`un viu amb camí exacte ${prefix} no s’arxiva per data`,t=>{
++ const root=fixture(t),name='250101_0900_auditoria_viu_amb_cami.md',base=name.slice(0,-3),file=`${DESK}/${name}`;
++ put(root,file,'Document antic viu\n');put(root,INDEX,`# Índex\n\n## Activitat en curs\n\n- [[${prefix}${base}.md#Resultats|Nom]]\n`);
++ assert.ok(vius(root).has(base));assert.equal(checkTaula(root).valid,true);assert.deepEqual(arxiva(root).moguts,[]);assert.equal(get(root,file),'Document antic viu\n');
++});
++
++test('àlies symlink de governança, hardlink i eixida física de l’arrel fallen tancats sense escriure',t=>{
++ const root=fixture(t),protectedFile='.agents/hooks.json';put(root,protectedFile,'Governança intacta\n');
++ fs.mkdirSync(path.join(root,'src'),{recursive:true});
++ fs.symlinkSync('../.agents/hooks.json',path.join(root,'src/alias.js'));fs.linkSync(path.join(root,protectedFile),path.join(root,'src/hardlink.js'));
++ fs.symlinkSync('/tmp/target-outside-governance',path.join(root,'src/escape.js'));
++ for(const file of ['src/alias.js','src/hardlink.js','src/escape.js']) {
++  const decision=preTool({toolCall:{name:'write_to_file',args:{TargetFile:path.join(root,file),CodeContent:'No s’escriu'}}},{root});
++  assert.equal(decision.decision,'force_ask',file);
++ }
++ assert.equal(get(root,protectedFile),'Governança intacta\n');
++});
++
++test('redirecció quoted amb espais, quotes parcials i àlies físic no escreta governança',t=>{
++ const root=fixture(t),nested=path.join(root,'Mas amb espais'),target=path.join(nested,'.agents/hooks.json');
++ fs.mkdirSync(path.dirname(target),{recursive:true});fs.writeFileSync(target,'Governança intacta\n');fs.mkdirSync(path.join(nested,'src'),{recursive:true});fs.symlinkSync('../.agents/hooks.json',path.join(nested,'src/alias.js'));
++ for(const CommandLine of [`printf x > '${target}'`,`printf x > "${target}"`,`printf x > ${target.replaceAll(' ','\\ ')}`,`printf x > src/alias.js`,`printf x > .a'gents'/hooks.json`,'printf x > ".agents/$target"','printf x > ".agents/${target:-hooks.json}"',`printf x | tee /tmp/ordinary-sdp-output '${target}'`]) {
++  assert.equal(call(nested,{CommandLine}).decision,'force_ask',CommandLine);
++ }
++ assert.equal(fs.readFileSync(target,'utf8'),'Governança intacta\n');
++});

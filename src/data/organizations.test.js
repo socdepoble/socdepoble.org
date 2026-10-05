@@ -1,3 +1,5 @@
+import { readFileSync, readdirSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { beforeEach, expect, test, vi } from 'vitest';
 const m = vi.hoisted(() => ({ user: { id: 'A' }, entrada: 0, createOrganization: vi.fn() }));
 vi.mock('./backendPort.js', () => ({ createOrganization: m.createOrganization, getCurrentUser: () => m.user }));
@@ -5,7 +7,7 @@ vi.mock('./identitat.js', () => ({ capturaSessio: () => {
   const entrada = m.entrada;
   return () => { if (entrada !== m.entrada) throw new DOMException('La sessió ha canviat.', 'AbortError'); };
 } }));
-import { creaOrganitzacio } from './organizations.js';
+import { creaOrganitzacio, TIPUS_MARE } from './organizations.js';
 
 const empresa = { name: 'Forn', slug: 'forn', kind: 'company' };
 const mare = { id: 'O', kind: 'company', role: 'owner' };
@@ -24,6 +26,19 @@ test.each(['owner', 'admin'])('un grup es crea sota una empresa amb rol %s', asy
   expect(m.createOrganization).toHaveBeenCalledWith(grup, {});
 });
 
+/* F5 (ordre del Mestre, 261004; pla 2045, Marató 2230) · Una associació o un
+   ajuntament que la persona administra també pot ser mare d'un grup, com ja
+   admet private.can_create_group (2609272201_grups_mare.sql:26). */
+test.each([
+  ['entity', 'owner'], ['entity', 'admin'], ['city_hall', 'owner'], ['city_hall', 'admin'],
+])('un grup es crea sota una organització %s amb rol %s', async (kind, role) => {
+  await creaOrganitzacio(grup, {}, [{ ...mare, kind, role }]);
+  expect(m.createOrganization).toHaveBeenCalledWith(grup, {});
+});
+
+/* F5 · poliment · Amb només les dades al títol, les cinc altes de `grup`
+   es deien igual i una roja no deia quina mare l'havia provocada: el títol
+   porta l'índex (%#) i també la llista d'organitzacions. */
 test.each([
   [{ ...empresa, name: 'F' }, [], 'Nom o identificador'],
   [{ ...empresa, name: 'F'.repeat(121) }, [], 'Nom o identificador'],
@@ -34,10 +49,12 @@ test.each([
   [grup, [], 'administrar'],
   [grup, [{ ...mare, role: 'member' }], 'administrar'],
   [grup, [{ ...mare, kind: 'group' }], 'administrar'],
+  [grup, [{ ...mare, kind: 'persona' }], 'administrar'],
+  [grup, [{ ...mare, kind: 'entity', role: 'member' }], 'administrar'],
   [{ ...empresa, description: 'a'.repeat(501) }, [], 'descripció'],
   [{ ...empresa, lema: 'a'.repeat(257) }, [], 'lema'],
   [{ ...empresa, lema: '🌾'.repeat(257) }, [], 'lema'],
-])('una alta invàlida no arriba al port (%j)', async (dades, organitzacions, error) => {
+])('una alta invàlida no arriba al port (%#: %j, mares %j)', async (dades, organitzacions, error) => {
   await expect(creaOrganitzacio(dades, {}, organitzacions)).rejects.toThrow(error);
   expect(m.createOrganization).not.toHaveBeenCalled();
 });
@@ -112,4 +129,28 @@ test('una resposta després de canviar sessió es descarta', async () => {
   m.entrada++;
   resol({ id: 'N' });
   await comprova;
+});
+
+/* F5 · Guarda de deriva entre el domini i l'SQL. Si algú estreny o amplia els
+   tipus de mare en una capa sense l'altra, cau. Es llig l'SQL (patró de
+   limitsText.test.js): un mock que copiara la constant no detectaria res. */
+const MIGRACIONS = resolve(process.cwd(), 'supabase/migrations');
+const llig = (fitxer) => readFileSync(resolve(MIGRACIONS, fitxer), 'utf8');
+const RE_CAN_CREATE_GROUP = /create\s+or\s+replace\s+function\s+private\.can_create_group\s*\([\s\S]*?\n\$\$;/i;
+const kindsMare = (sql) => {
+  const cos = RE_CAN_CREATE_GROUP.exec(sql)?.[0] ?? '';
+  const llista = /parent\.kind\s+in\s*\(([^)]*)\)/i.exec(cos)?.[1] ?? '';
+  return llista.split(',').map((kind) => kind.trim().replace(/^'|'$/g, '')).filter(Boolean).sort();
+};
+
+test('TIPUS_MARE és el conjunt de kinds de can_create_group (2609272201_grups_mare.sql)', () => {
+  expect(kindsMare(llig('2609272201_grups_mare.sql'))).toEqual([...TIPUS_MARE].sort());
+});
+
+test('l’última migració que redefinix can_create_group diu el mateix que el client', () => {
+  /* En ordre alfabètic, el mateix en què s'apliquen (supabase/README.md). */
+  const ultima = readdirSync(MIGRACIONS).filter((fitxer) => fitxer.endsWith('.sql')).sort()
+    .filter((fitxer) => RE_CAN_CREATE_GROUP.test(llig(fitxer))).at(-1);
+  expect(ultima).toBeDefined();
+  expect(kindsMare(llig(ultima))).toEqual([...TIPUS_MARE].sort());
 });

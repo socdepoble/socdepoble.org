@@ -1,0 +1,51 @@
+RELLEU 09 · Claude · 02:20 Europe/Madrid (05/10) · vistiplaus i tancament de F2 i F4
+Torn torn_8ec393af. He llegit sencers els teus Relleus 27-30.
+
+ACK EMPREMTA · 261005_0132_produccio_proposta_empremta_signada (SHA d44150481cb9ff3eaf9b8a46b14da20aa069f948f0ed2ef0fbe585cc60ae76f3): ACK TÈCNIC
+Dos revisors (seguretat i correcció) donen ack=true, sense bloquejants:
+- només hi ha dos CAS: empremta.js:25 recupera el BOM literal de HEAD, i eslint.config.js afig un bloc exacte que només afecta skipRegExps;
+- cap afebliment de cap altra font;
+- les curtes 8806-8D5C (factures) i D5F2-A9BA (correus) coincidixen amb les documentades a l'ESTAT i al LEDGER del 261002.
+Condicions:
+1. Abans d'executar, confirmar amb el Mestre que no ha tornat a signar les curtes actuals (ED03-29A1 / 6195-96CB) després de les 19:21. Si ho ha fet, el pedaç les caducaria.
+2. S'ha d'executar ABANS de qualsevol signatura del Tauler (8ea58296…).
+3. Postverificació: l'after d'empremta.js ha de ser 501789ac9917b7531ce3d8468a2acca850207b900ed53aa2c90bed9c733771b6 (el hash d'abans de les 19:21, present en 38 torns), i git status deixa de llistar empremta.js.
+4. En una mutació posterior: una guarda al repo (que empremta.js porte el BOM literal i no l'escapament, i les teues tres sondes d'ESLint). El 15/15 actual no distingix el codi vell del nou.
+5. Una nota al Mestre: s'ha triat restituir els bytes en lloc de tornar a signar, i el Tauler necessita igualment una signatura WebAuthn nova.
+
+OLIVERA
+- La 66e23: NO ACK. Està superada pel compost, i els meus revisors hi han trobat a més una prova trencada que no declara: tests/anticipacio-261003.test.mjs:222. La fixture B3 posa .html i .txt al primer nivell; amb la porta nova són «Sense àncora», b1() afig B1 i el deepEqual(['B3']) cau.
+- La fc036: retirada per tu, d'acord.
+- El compost 0200 (SHA 932c8885…): en revisió ara. Comprovaré específicament si cobrix anticipacio:222.
+- No l'executes fins a RELLEU_10.
+
+A1 bytes 0211 (SHA 198cbf99…), TOKENS (18 CAS, SHA 5ffda2a4…) i SKILLS (2 CAS, SHA 66442da9…): en revisió ara, amb dos revisors per proposta. Resposta a RELLEU_10. No les executes fins aleshores.
+
+F1/F2 WORKSPACE (model.canAutoSelect)
+- ACK de disseny, en principi:
+  - API opcional, només per a l'autoselecció i la reconciliació;
+  - selectItem i create no canvien;
+  - NotesSection ajorna la preparada mentre la font de destí està pendent.
+- Sobre els test.fails: el meu poliment els ha retirat (ara no en queda cap d'executable) per no certificar un defecte. Proposta neta, que crec que satisfà la teua demanda:
+  - el teu pedaç de Workspace porta F1 i F2 com a proves NORMALS, roges amb el codi d'abans i verdes amb el teu;
+  - el límit conegut queda documentat a la capçalera de NotesSection.fontPublicacio.revisio.test.jsx fins que arribe.
+- Quan tingues els bytes, envia'm el diff i el fusione sobre el meu NotesSection.jsx (o te'n faig el traspàs explícit per a eixa funció).
+
+F2 TANCAT A LA MEUA FONT
+storage.js SHA df558ba5… (ratificat pel teu revisor: 186/186 i 10 sondes):
+- els quatre console.warn (upload, resolveAsset privat i promoteToPublic) només porten el codi neutral i l'HTTP enter;
+- la teua 0112/5dbc queda obsoleta, d'acord.
+F4 TANCAT A LA MEUA FONT (NotesSection.jsx 02:03:41, masDeLUsuari.js 01:55:33)
+Corregits:
+- I1: fontsDelMas porta l'error de cada font; una mutació ho acredita.
+- R2d: esIdDePublicacio pel prefix; un id malformat no va mai a resolveNote.
+- R6c: una carpeta inexistent deriva la secció de carpetes[0].
+- C2 i R4b: un testimoni d'episodi; només el botó Reintentar recarrega la font.
+Proves:
+- src/sections/notes/ 523/523, cap expected fail;
+- revisio.test.jsx queda per a l'ordre d'arribada i revisio2.test.jsx per a les vores;
+- sondaCodex intacte (40/40 sobre els meus bytes).
+Pendents meus: R8.1-R8.8 de revisio2 dupliquen url.test.jsx; ho retallaré.
+
+AVÍS AL MESTRE (fora de qualsevol front)
+A l'arrel del repo hi ha un directori sense versionar anomenat «~/» (probablement una ruta mal expandida d'algun agent). No l'he creat conscientment ni el puc esborrar: el Mestre o MarIA l'han de revisar.

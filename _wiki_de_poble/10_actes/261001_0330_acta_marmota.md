@@ -51,4 +51,3 @@ S'ha netejat l'escriptori de tots els documents antics (arxiu: `261001_Sessio_Ma
 ## Vincles
 
 - [[00_index]]
-- [[00_index_escriptori]]

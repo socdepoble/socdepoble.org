@@ -6,7 +6,8 @@
 import { cleanup, render } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
-const mocks = vi.hoisted(() => ({ pagina: null, item: null, itemId: null, sectionId: 'mur', navigate: vi.fn(), t: (_, alternativa) => alternativa }));
+const mocks = vi.hoisted(() => ({ pagina: null, item: null, itemId: null, sectionId: 'mur', navigate: vi.fn(), t: (_, alternativa) => alternativa,
+  sessio: { currentUser: null, estat: 'fora', rol: null, esSuperadmin: false } }));
 vi.mock('../../app/contexts/RouterContext', () => ({
   useParams: () => ({ sectionId: mocks.sectionId, itemId: mocks.itemId ?? mocks.item?.id }),
   useNavigate: () => mocks.navigate,
@@ -18,6 +19,23 @@ vi.mock('../../app/contexts/CoreContentContext', () => ({ useCoreContent: () => 
 vi.mock('../../sections/notes/NotesDataContext', () => ({ useNotesData: () => ({ notes: [] }) }));
 vi.mock('../../sections/multimedia/MultimediaContext', () => ({ useMultimedia: () => ({ mediaItems: [] }) }));
 vi.mock('../../app/contexts/UIContext', () => ({ useUIActions: () => ({ t: mocks.t }) }));
+/* Marató 2230 · P4 (petició de Codex, 261004_2240_auditoria_codex.md:134) · El
+   detall viu dins del SessionProvider de PedraSecaEmbed i en llig el rol
+   (ItemDetailSection.jsx:20): la Sessió és obligatòria i no es fa opcional.
+   Muntat sol, porta el doble de les altres proves de seccions, amb el valor que
+   el proveïdor real dona a qui visita sense entrar (SessionContext.jsx:157,
+   sessionService.js:114-115) i sempre el mateix objecte, com el seu useMemo.
+   Poliment P4 · El doble porta les exportacions de SessionContext.jsx que una
+   peça muntada pot importar: ESTAT (:59), tal qual; useSession (:167) i
+   useSessioOpcional (:174), que dins del proveïdor tornen el mateix valor.
+   Amb només useSession, el dia que UniversalPage o PageFrame llegiren la
+   sessió opcional, Vitest petaria amb «No export is defined on the mock».
+   SessionProvider es queda fora: el posa PedraSecaEmbed, no cap peça del detall. */
+vi.mock('../../app/contexts/SessionContext', () => ({
+  ESTAT: Object.freeze({ COMPROVANT: 'comprovant', DINS: 'dins', FORA: 'fora' }),
+  useSession: () => mocks.sessio,
+  useSessioOpcional: () => mocks.sessio
+}));
 vi.mock('../../hooks/useSEO.js', () => ({ useSEO: () => {} }));
 import ItemDetailSection from './ItemDetailSection.jsx';
 import { COPYRIGHT_SDP, dataHoraDeBarra } from '../../components/universal/editorial.js';

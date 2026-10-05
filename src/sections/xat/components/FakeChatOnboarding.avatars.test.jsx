@@ -27,6 +27,7 @@ import LlistaConverses from './LlistaConverses.jsx';
 import { XatContext } from '../XatContext.jsx';
 import { fixaBaseRecursos } from '../../../config/assetResolver.js';
 import { permetOrigenMitjans } from '../../../utils/sanitize.js';
+import { AGENTS_MAP } from '../../../data/agentsSeed.js';
 
 const t = (_, alternativa) => alternativa;
 const PAQUET = 'https://amfitrio.example/wp-content/plugins/socdepoble-enxufe/dist';
@@ -35,7 +36,7 @@ const TORRE = {
   id: POBLE.id, title: 'La Torre de les Maçanes',
   image_url: '/assets/towns/la-torre-de-les-macanes/1.jpg', avatar_url: '/assets/towns/la-torre-de-les-macanes/2.jpg'
 };
-const IAIA = '/assets/fotos/iaia-maria.png';
+const IAIA = AGENTS_MAP.IAIA.avatar_url;
 const LOGO = '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg';
 
 /* La llista de mostra amb les files de veres: les comunitats i els fils solts. */

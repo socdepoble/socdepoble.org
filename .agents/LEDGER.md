@@ -18,6 +18,7 @@ Qualsevol IA (o humà) que modifique codi està obligada a afegir-hi una entrada
 
 ---
 
+261005 | recaiguda | wiki-documentacio-i-reflex | canal viu: Claude 40 min sense relleu durant el mapa inicial
 261004 | integracio | gestoria+targetes+barres+logo+ptr | integració final verificada, 1.0.3 a punt de compilar
 261004 | correccio | sdp-universal-page | rellegir el prompt sencer abans de decidir l'abast d'una norma
 261004 | correcció | sdp-universal-page | barra taronja obligatòria a tota pàgina de sistema
@@ -809,4 +810,23 @@ Esta entrada completa el tall anterior de15:07: Claude retira les migracions leg
 Tancament anterior complet abans de comprovar Claude Desktop (Verifica 0/1, bateria pendent): condició humana complida. Pla 1420 v1.2.0 vinculat abans d’editar. BarraApp conté nou mòduls i Aprendre; Closca controlada per ruta sense rail interior, useTauler conservat i detall/avís segellats per mòdul. Pont DEV i ContenidorGestoria intactes. 146/146 plataforma, 36/36 closca/privacitat, ESLint verd; revisió independent i CUA ample/mòbil correctes. Dos builds release i empaquetat final1545 amb 855 fonts estables; tres ZIP valid:true/errors:[] de CRC/inventari/SRI/hashes/canal/privacitat. MainWP 130751256 B, SHA256 398330989fab0c9e06e0956de2258ba9f6efe1111ddf33d9ab711e56d1eadf06. Informe1435 v1.2 i acta1445 v1.1 vàlids, Olivera verda. Sense desplegament, commit, activació financera productiva ni resegellat d’història aliena. 15:14 queda històric; 15:45 és el paquet actual. Coordinació documental a ESTAT; missatge natiu interromput, no enviat.
 
 
-<!-- HASH: ff723ce1e88ba9df0cecfd3170cde5e7b040334d5b3371b15c39fb615d961d76 -->
+
+
+## 2026-10-04T18:29:59Z · Codex · auditoria adversarial de lectura · torn_60aebc0d-ec6a-45bf-8e20-964e41e03e35
+
+Pla1948 i informes2005/acta2025 creats des de context/create canònics. Lectura íntegra17documents del primer nivell i fonts de ruta/estat.182 proves existents verdes;13 rutes,2 imports interiors i6 casos sòlids d’estat reproduïts;7a sonda input.files exclosa com a prova nativa. Dos límits A1reintent lazy i A2cancel·lació, amb abast/origen delimitats, sense regressió bloquejant de Sidebar confirmada. Fonts1.994 sense canvis; HEAD2022ee32 estable; cap nou ZIP/desplegament o reparació. Model i tarifa verificada amb docs oficials, cap telemetria inventada. Torn de codi accidental per --help consignat, no utilitzat. Història anterior i HASH previ preservats; SHA256 del LEDGER abans d’afegir aquest relleu: d0a916d45a74fc181e257dbc4b9c29c4ff0849f7717db336db2cdad57ccae67a. No resegellat d’història aliena; el tancament global es comprova separadament.
+
+
+## 2026-10-04T18:38:49Z · Codex · relleu documental concurrent · torn_60aebc0d-ec6a-45bf-8e20-964e41e03e35
+
+Arxivat extern observat de tres documents propis: handoffs registrats al torn, sense moure fitxers. Entrega final2035 v1.1 creada canònicament a l’Escriptori, amb enllaços de font compatibles amb el verificador de Wiki. Diagnòstics globals8 i53 incidències abans/després de l’arxivat; es preserven història i HASH aliens. No assumida la Marató2045 ni canviat producte/ZIP.
+<!-- HASH: 68ba24ea589d7eff783af6319b208cd2ad0b908a7070e46b6c89485a2bf5c59c -->
+
+## 2026-10-04T22:58:07Z · Codex · marató2230 · torn_6cd529b4-5a35-441b-a3e2-25b9b94cf252
+
+Implementació humana autoritzada A1/A2/CI/T4/T5; pla2230 estable i informe261004_2240 viu. CadenaCIdescoberta i gates sense duplicació de bateries; Node770:765pass,0fail,1skip previ,4TODO encara diagnòstics. Cancel·lació61persistents+8sondes; lazy111persistents+7sondes; revisors Codex independents9,2/9,0, no consensClaude fingit. T5CAS governats reals bc5df438…,6bf5325f…,e1fdf137… i segell5be515e9…, leases consumides; repositori viu79/79, còpia113/113. ResidualsD7/D8/D9/D11 declarats.
+
+Es conserva literalment TOT el fitxer anterior, inclosos HASH històrics. SHA256 dels bytes abans d’esta entrada: 4363f8450cd2921f246b66caa3c47622a3cac277c8e90528fe409e52c689ef16. Footer final anterior observat: 68ba24ea589d7eff783af6319b208cd2ad0b908a7070e46b6c89485a2bf5c59c; el verificador oficial no el reconeixia com a signatura final. El HASHnou acredita exclusivament la integritat dels bytes actuals i esta entrada; no acredita retrospectivament autoria, aprovació ni veracitat de les entrades històriques. Aplicació amb Reflexopen/seal, CAS i executor; no s’inventa WebAuthn. Bateriaglobal, portes i remesuraLighthouse encara pendents; Claude05 reté F2/F4. Sense canvis remots, paquet, commit o desplegament.
+
+
+<!-- HASH: c6eb528cbc0e44e9b6f9217e28df2426eeaee2fc37bfc5cdb1511a6d776e4421 -->

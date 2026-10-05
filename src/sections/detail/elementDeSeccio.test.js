@@ -109,7 +109,7 @@ test('useElementDeSeccio: perfils, pàgines, notes i claus estranyes no es resol
 const ANIMA_IMATGE = '/assets/uploads/brain/nano_anima_mas_ibanez_v3_1781060081431.webp';
 
 test('T71 · useOriginalDeConnexio: un element del Mercat, amb la targeta de l’original (no la de l’URL)', () => {
-  const origen = { sectionId: 'mercat', itemId: 'samarreta-socdepoble', titol: 'Títol de l’URL', autorNom: 'Algú de l’URL', ruta: '/ia' };
+  const origen = { sectionId: 'mercat', itemId: 'samarreta-socdepoble', titol: 'Títol de l’URL', autorNom: 'Algú de l’URL', ruta: '/iaia' };
   const { result } = renderHook(() => useOriginalDeConnexio(origen));
   expect(result.current).toMatchObject({ tipus: 'seccio', item: SAMARRETA, estat: 'trobat', page: null, pageKey: null });
   expect(result.current.targeta).toMatchObject({
@@ -117,8 +117,8 @@ test('T71 · useOriginalDeConnexio: un element del Mercat, amb la targeta de l�
   });
 });
 
-test('T71 · una pàgina de text (/ia): L’Ànima de la IAIA amb la seua foto i l’autor de sèrie, mai el de l’URL', () => {
-  const origen = { tipus: 'connexio', sectionId: '', itemId: '/ia', ruta: '/ia', titol: 'Un altre títol', autorNom: 'Foraster', objecte: 'pagina' };
+test('T71 · una pàgina de text (/iaia): L’Ànima de la IAIA amb la seua foto i l’autor de sèrie, mai el de l’URL', () => {
+  const origen = { tipus: 'connexio', sectionId: '', itemId: '/iaia', ruta: '/iaia', titol: 'Un altre títol', autorNom: 'Foraster', objecte: 'pagina' };
   const { result } = renderHook(() => useOriginalDeConnexio(origen));
   expect(result.current).toMatchObject({ tipus: 'pagina', pageKey: 'anima', page: PAGE_COPY.anima, estat: 'trobat', item: null });
   /* Derogat per l'ordre del Mestre del 261004 (prompt 261004_0515, T6): la
@@ -144,7 +144,7 @@ test('T6 · la ruta de l’autor de la targeta d’un element és la de la barra
   };
   expect(ruta({ id: 'a', title: 'Sense autor' })).toEqual({ nom: DEFAULT_AUTHOR.name, propi: false, ruta: '/projecte' });
   expect(ruta({ id: 'b', title: 'Del forn', author_name: 'Forn', author_org_id: 'forn' })).toEqual({ nom: 'Forn', propi: true, ruta: '/empresa/forn' });
-  expect(ruta({ id: 'c', title: 'Del projecte', author_name: 'Sóc de Poble', author_org_id: 'socdepoble' })).toMatchObject({ ruta: '/projecte' });
+  expect(ruta({ id: 'c', title: 'Del projecte', author_name: 'Sóc de Poble', author_org_id: 'socdepoble' })).toMatchObject({ ruta: '/empresa/socdepoble' });
   expect(ruta({ id: 'd', title: 'Sense identitat', author_name: 'Pepa' })).toEqual({ nom: 'Pepa', propi: true, ruta: null });
   /* La de la barra: paginaDElement porta el mateix enllaç (o cap, i PageFrame hi posa el de sèrie). */
   const seccio = buildMercatDetailSectionMeta({ marketItems: [], t: mocks.t });
@@ -153,7 +153,7 @@ test('T6 · la ruta de l’autor de la targeta d’un element és la de la barra
 
 test('T71 · el copy del core mana; una pàgina que encara no és al contingut diu l’estat del core', () => {
   mocks.core = { status: 'ready', towns: [], pageCopy: { anima: { title: 'Ànima del core', image: '/assets/nova.png' } } };
-  expect(renderHook(() => useOriginalDeConnexio({ ruta: '/ia' })).result.current.targeta).toMatchObject({ titol: 'Ànima del core', imatge: '/assets/nova.png' });
+  expect(renderHook(() => useOriginalDeConnexio({ ruta: '/iaia' })).result.current.targeta).toMatchObject({ titol: 'Ànima del core', imatge: '/assets/nova.png' });
   mocks.core = { status: 'loading', towns: [], pages: [] };
   expect(renderHook(() => useOriginalDeConnexio({ ruta: '/page/festes' })).result.current).toMatchObject({ tipus: null, estat: 'carregant', targeta: null });
   mocks.core = { status: 'error', towns: [] };
@@ -168,7 +168,7 @@ test('T71 · absent: un perfil, /disseny, una ruta estranya o un element de secc
     { sectionId: '', itemId: '/disseny', ruta: '/disseny' },
     { sectionId: '', itemId: '/connectar', ruta: '/connectar?item_id=x' },
     // Secció coneguda sense l'element: la ruta desada no la substituïx.
-    { sectionId: 'mercat', itemId: 'no-hi-es', ruta: '/ia' },
+    { sectionId: 'mercat', itemId: 'no-hi-es', ruta: '/iaia' },
     {}, null, undefined
   ];
   for (const origen of casos) {

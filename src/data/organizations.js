@@ -4,6 +4,13 @@ import { MAXIM_LEMA } from './limitsText.js';
 
 const TIPUS = new Set(['company', 'group']);
 const ROLS = new Set(['owner', 'admin', 'member']);
+/* F5 (ordre del Mestre, 261004; pla 2045, Marató 2230) · Els tipus que poden
+   ser mare d'un grup: el mateix conjunt que private.can_create_group
+   (2609272201_grups_mare.sql:26), que és l'autoritat de seguretat. Abans el
+   client només admetia 'company' i rebutjava una associació o un ajuntament
+   que el servidor sí accepta. No amplia cap permís; organizations.test.js
+   vigila que les dues capes no divergisquen. */
+export const TIPUS_MARE = new Set(['company', 'entity', 'city_hall']);
 
 /** Alta d'entitats del domini. El proveïdor, la persistència i els seus errors
  * queden darrere del port; el formulari només envia dades i espera confirmació. */
@@ -22,7 +29,7 @@ export async function creaOrganitzacio(dades, config = {}, organitzacions = []) 
     ? input.parentOrganizationId.trim() : '';
   if (kind === 'group') {
     if (!parentOrganizationId) throw new Error('Un grup necessita una empresa mare.');
-    if (!organitzacions.some((org) => org.id === parentOrganizationId && org.kind === 'company'
+    if (!organitzacions.some((org) => org.id === parentOrganizationId && TIPUS_MARE.has(org.kind)
       && ['owner', 'admin'].includes(org.role))) {
       throw new Error('Tria una empresa que pugues administrar.');
     }

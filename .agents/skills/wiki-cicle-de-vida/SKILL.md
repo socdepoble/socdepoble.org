@@ -5,6 +5,7 @@ description: Flux de treball per a Soc de Poble i Protocol d'higiene cognitiva p
 tags:
   - core
 name: wiki-cicle-de-vida
+prioritat: 1
 triggers_on:
   - obrir el torn
   - tancar el torn

@@ -1,4 +1,5 @@
 import { Bot, Building2, Lock, Network, ShieldCheck, UserRound, Users } from 'lucide-react';
+import { TIPUS_MARE } from '../../data/organizations.js';
 import { ESTATS_APLICACIO } from './aplicacions.js';
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -179,7 +180,25 @@ export function itemsDAplicacions(aplicacions = []) {
   }));
 }
 
-/** Empreses que la persona mana: les úniques que poden ser mare d'un grup. */
+/* F5 · poliment (ordre del Mestre, 261004; Marató 2230) · Qui pot ser mare
+   d'un grup es decidix amb la mateixa llista blanca que el domini (TIPUS_MARE,
+   organizations.js), no amb «tot el que no és grup»: el diàleg no ha
+   d'oferir una mare que creaOrganitzacio rebutjaria. El kind ve de la fila
+   del port: identitat.dades és la fila de listMyOrganizations
+   (PerfilContext.jsx:326-333), la RPC el torna sempre (columna NOT NULL,
+   2609080000_initial_schema.sql:78) i l'adaptador local també. Hui no canvia
+   res visible: el CHECK només admet els quatre kinds i els tres de mare ja
+   eren «empresa». Una identitat sense kind (un port que no el declare o un
+   doble de proves com el de PerfilShell.test.jsx) conserva el criteri
+   d'abans, i el domini la rebutja com abans: cap opció no desapareix per
+   una dada absent. */
+const potSerMare = (identitat) => {
+  if (!esOrganitzacio(identitat)) return false;
+  const kind = identitat.dades?.kind;
+  return kind == null ? identitat.mena === 'empresa' : TIPUS_MARE.has(kind);
+};
+
+/** Organitzacions que la persona mana i que poden ser mare d'un grup. */
 export const empresesMare = (identitats) => identitats
-  .filter((identitat) => identitat.mena === 'empresa' && ROLS_QUE_MANEN.has(identitat.dades?.role))
+  .filter((identitat) => potSerMare(identitat) && ROLS_QUE_MANEN.has(identitat.dades?.role))
   .map((identitat) => ({ valor: String(identitat.id), etiqueta: identitat.nom }));

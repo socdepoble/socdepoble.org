@@ -92,7 +92,7 @@ describe('calculaEmpremta', () => {
   test('CRLF, BOM i bytes donen la mateixa empremta que el text LF', async () => {
     const base = await calculaEmpremta(entrada(), subtle);
     const windows = entrada({
-      fitxa: `﻿${FITXA.replace(/\n/g, '\r\n')}`,
+      fitxa: `\uFEFF${FITXA.replace(/\n/g, '\r\n')}`,
       fonts: [
         { ruta: 'src/gestoria/lector.js', contingut: new TextEncoder().encode(LECTOR.replace(/\n/g, '\r\n')) },
         { ruta: 'src/gestoria/full.js', contingut: FULL }

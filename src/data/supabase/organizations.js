@@ -30,7 +30,12 @@ export async function createOrganization(organization, config = {}) {
   /* create_organization ja accepta p_lema (M01); només s'envia si ve, i així
      una crida sense lema és idèntica a la d'abans. */
   if (organization?.lema !== undefined) body.p_lema = organization.lema;
-  const rows = await request('/rest/v1/rpc/create_organization', config, { method: 'POST', body });
+  let rows;
+  try {
+    rows = await request('/rest/v1/rpc/create_organization', config, { method: 'POST', body });
+  } catch (error) {
+    throw errorDeCreacio(error);
+  }
   const creada = Array.isArray(rows) ? rows[0] : rows;
   /* Ací coneixem el tenant efectivament enviat després de resoldre àlies i
      configuració del host. PostgreSQL retorna els UUID en minúscules. */
@@ -115,7 +120,7 @@ const RE_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 const LIMIT_JUSTIFICACIO = 1000;
 const RE_CODI_CLAIM = /SDP-CLAIM-\d{3}/;
 const RE_CODI_ORGMAIL = /SDP-ORGMAIL-\d{3}/;
-const CODIS_NORMALITZATS = /^(SDP-CLAIM-\d{3}|SDP-ORGMAIL-\d{3}|JA-PENDENT|NO-DISPONIBLE|CORREU-INVALID)$/;
+const CODIS_NORMALITZATS = /^(SDP-CLAIM-\d{3}|SDP-ORGMAIL-\d{3}|JA-PENDENT|NO-DISPONIBLE|CORREU-INVALID|ESQUEMA-DESFASAT)$/;
 
 const MISSATGES_CLAIM = Object.freeze({
   'SDP-CLAIM-000': 'Cal iniciar sessió per a administrar una organització.',
@@ -140,6 +145,27 @@ const idOrganitzacio = (orgId) => {
   const id = String(orgId ?? '').trim();
   return RE_UUID.test(id) ? id.toLowerCase() : null;
 };
+
+/* F1 (ordre del Mestre, 261004; pla 2045, Marató 2230) · create_organization
+   contra una base desfasada. PGRST203 (HTTP 300): hi ha més d'una versió de la
+   funció i PostgREST no en tria cap, perquè la crida sense p_lema casa amb més
+   d'una. PGRST202 (o 404): la funció no hi és. El diàleg pintava el `message`
+   en anglés de PostgREST; ara rep un codi neutral i una frase en valencià.
+   La frase no diu quantes versions hi ha (el client no ho sap) ni l'id de la
+   migració, que no li diu res a qui crea l'organització. La crida no canvia
+   (p_lema només si ve, M01): la cura és al servidor, la migració
+   2610042350_convergencia_perfil_i_create_organization.sql. */
+const ESQUEMA_DESFASAT = 'El servidor d’este poble té més d’una versió de la funció que crea organitzacions i no en sap triar cap: l’organització no s’ha creat. Cal aplicar-hi una migració pendent.';
+const SENSE_CREACIO = 'El servidor d’este poble encara no té la funció que crea organitzacions: l’organització no s’ha creat. Cal aplicar-hi les migracions pendents.';
+
+function errorDeCreacio(error) {
+  if (jaNormalitzat(error) || esCancel(error)) return error;
+  if (/\bPGRST203\b/.test(String(error?.message || '')) || Number(error?.status) === 300) {
+    return errorAmbCodi(ESQUEMA_DESFASAT, 'ESQUEMA-DESFASAT', error);
+  }
+  if (esquemaAbsent(error)) return errorAmbCodi(SENSE_CREACIO, 'NO-DISPONIBLE', error);
+  return error;
+}
 
 function errorDeReclamacio(error) {
   if (jaNormalitzat(error) || esCancel(error)) return error;

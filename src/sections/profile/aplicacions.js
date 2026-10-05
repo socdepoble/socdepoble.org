@@ -15,10 +15,9 @@ import { BookOpen, Landmark, Receipt } from 'lucide-react';
      · estat       'pendent' (este node no té la secció) o 'connectada'
      · ruta        només amb 'connectada': la ruta interna de la secció
 
-   Hui cap de les tres té secció en este node: no hi ha cap ruta de
-   Gestoria, Llibreria ni Ajuntament a App.jsx ni a config/sections.js
-   (`ajuntament/:agentId` és la fitxa pública d'un agent, no la
-   utilitat). Totes són 'pendent' i la seua pàgina no pinta cap botó.
+   Estes cinc utilitats encara no tenen una ruta connectada des del Perfil.
+   Totes són 'pendent'; la seua fitxa permet triar si apareixen al Panell,
+   sense prometre que el servei estiga disponible.
    ═══════════════════════════════════════════════════════════════════ */
 
 export const ESTATS_APLICACIO = Object.freeze({
@@ -42,7 +41,7 @@ export const APLICACIONS = Object.freeze([
     estat: 'pendent',
   }),
   Object.freeze({
-    id: 'lector_rss',
+    id: 'lector-rss',
     nom: 'Curation AI (Lector RSS)',
     descripcio: 'Agregador de notícies i resums intel·ligents.',
     icona: BookOpen,

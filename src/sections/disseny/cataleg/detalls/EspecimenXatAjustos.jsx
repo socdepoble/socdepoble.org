@@ -51,6 +51,7 @@ function Marc({ etiqueta, pilaInicial, setAvis, FilaEixida, preferits }) {
         pilaInicial={pilaInicial}
         joId="jo"
         joNom="Javi Llinares"
+        joAvatar="/assets/fotos/javi-llinares-perfil-1200px.jpg"
         preferits={preferits}
         correu="javi@exemple.org"
         ambSessio
@@ -84,7 +85,7 @@ export default function EspecimenXatAjustos() {
       descripcio="«Tu» al peu del rail obri este full, calcat del d’«Ajustes» de WhatsApp Desktop: un modal centrat de mida fixa, amb una pila de pàgines dins del mateix marc. A l’arrel, la X, el cercador, la targeta del perfil i els grups de files; a cada subpàgina, el ‹ i el títol. Només hi ha el que Sóc de Poble ja té: els preferits, el compte i l’eixida, l’aparença (tema i llengua), l’amplària de les columnes i les pàgines d’ajuda. La resta diu que està en construcció. Els canvis s’apliquen a l’acte. En estret ocupa tota la pantalla, amb el mateix tall que convertix els altres diàlegs en full inferior (≤720px; a l’encastat, [data-sdp-estret]). «Privacitat» obri el perfil, i la nota del grup ho diu mentre el Mestre no decidix com portar a «Privacitat i dades». La cerca troba també les capçaleres de secció: «llengua», «idioma» o «tema» porten a l’Aparença."
       contracte={[
         ['FullAjustos', '{ obert, onTanca(motiu), onRetornFocus? }', 'false', 'El Dialeg «sense-marc» amb les dades de l’app (useXat, UIContext, SessionContext, useAppGrid). ClosCaXat el munta una vegada. Obrir una ruta el tanca.'],
-        ['CosAjustos', '{ t, pilaInicial?, joId, joNom, preferits, correu, ambSessio, ambPrivacitat?, FilaEixida?, tema, llengua, amplaria, mides, onTema, onLlengua, onAmplaria, onVes, onObriConversa, onTanca, campRef? }', 'ambPrivacitat: null', 'El marc presentacional: tot per props. FilaEixida pinta «Tanca la sessió» quan hi ha sessió. ambPrivacitat (el backend té «Privacitat i dades»: true o false; null, no se sap i no hi ha nota) tria la nota de «Privacitat».'],
+        ['CosAjustos', '{ t, pilaInicial?, joId, joNom, joAvatar?, preferits, correu, ambSessio, ambPrivacitat?, FilaEixida?, tema, llengua, amplaria, mides, onTema, onLlengua, onAmplaria, onVes, onObriConversa, onTanca, campRef? }', 'ambPrivacitat: null', 'El marc presentacional: tot per props. FilaEixida pinta «Tanca la sessió» quan hi ha sessió. ambPrivacitat (el backend té «Privacitat i dades»: true o false; null, no se sap i no hi ha nota) tria la nota de «Privacitat».'],
         ['PAGINES_AJUSTOS', '{ [id]: { titol, grups? | especial? | construccio? } }', '—', 'L’arbre (ajustosXat.js). Fila: pagina (xebró, empeny), ruta (xebró, obri i tanca), opcio (✓), accio (roig, sense xebró). Grup: capcalera?, paraules? (el que la cerca troba a més de la capçalera), notaDinamica? (\'amplaria\' o \'privacitat\').'],
         ['cercaAjustos(terme, { t, ambSessio })', 'string', 'null', 'Les files de tot l’arbre que contenen cada paraula, amb el plegat d’accents de /cerca, i la pàgina on viuen; i les capçaleres de secció, per la capçalera o les paraules clau (en la llengua de la interfície i en valencià), com a fila \'seccio\' que obri la seua pàgina.']
       ]}

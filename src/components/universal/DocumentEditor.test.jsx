@@ -468,7 +468,7 @@ test('T39 · el botó de sempre obri la vista dins de la columna; la closca s’
   const { container } = editor({ updateLocal: vi.fn(), saveRemote: vi.fn() });
   const shell = container.querySelector('.sdp-editor-shell-atomic');
   const cos = screen.getByTestId('cos');
-  expect(botoDrets().className).toBe('sdp-copyright-selector');
+  expect(botoDrets().className).toBe('sdp-classificacio-pindola');
   expect(botoDrets().getAttribute('aria-haspopup')).toBeNull();
   expect(container.querySelector('section.sdp-drets')).toBeNull();
   act(() => { fireEvent.click(botoDrets()); });

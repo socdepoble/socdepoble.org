@@ -131,4 +131,3 @@ Auditar no autoritza esborrar, arxivar ni corregir contingut alié. Les comprova
 ## Vincles
 
 - [[00_index]]
-- [[00_index_escriptori]]

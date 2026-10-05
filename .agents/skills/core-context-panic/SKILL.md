@@ -5,6 +5,7 @@ description: Fusible davant bucles d’errors, desincronització de context o fa
 tags:
   - core
 name: core-context-panic
+prioritat: 1
 triggers_on:
   - panic
   - bucle d'errors

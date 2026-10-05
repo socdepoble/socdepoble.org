@@ -1,9 +1,9 @@
-/* D3 i D16 (ordres del Mestre, 260930) · El Panell de Control (/control i
-   l'àlies /utilitats): cap targeta porta a una ruta que no és a la taula de
-   rutes d'App, «Ajustos del xat» obri el Control del xat (l'entrada que
-   substituïx «Novetats», amagada del rail), «Missatges per a dubtes» obri el
-   Xat, «Gestoria de Poble» diu «EN OBRES» sense clic, i la pàgina i la
-   pestanya del navegador es diuen «Panell de Control».
+/* D3 i D16 (ordres del Mestre, 260930), P5 i W4-08 (261004) · El Panell de
+   Control (/control i l'àlies /utilitats): les huit targetes de publicació
+   tenen portes de lectura; Publicar al Mur obri el Bloc i la resta avisa
+   que està en obres. Cap control porta a una ruta que no servix l'app.
+   «Missatges per a dubtes» obri el Xat i la Gestoria, la seua fitxa de
+   plugin. La pàgina i la pestanya es diuen «Panell de Control».
 
    Router propi en memòria (MemoryRouter) i les targetes de veres
    (UniversalCard); només se substituïxen la UniversalPage (la seua
@@ -177,47 +177,55 @@ test('D3 · cap targeta ni botó del Panell navega a una ruta que no és a la ta
      temps no és el que es prova: el límit explícit no afluixa cap asserció. */
 }, 30_000);
 
-/* Ordre del Mestre, 261001 · El Panell és compacte: només les eines
-   d'edició (Mur, Mercat, Agenda, Notes i Ajustos del xat), tal com diu l'Acta
-   Marmota 261001_0045 (§1, «Control de Poble»). «Publicar al Xat» ja no hi
-   és; el Xat continua obert des de «Missatges per a dubtes» (prova de baix). */
-test('D3 · les targetes que naveguen i el seu destí, amb «Ajustos del xat» → /control-xat (D16)', () => {
+/* P5 (261003) i W4-08 (261004) substituïxen les targetes d'edició del
+   Panell antic: les huit pàgines tenen una porta de lectura accessible.
+   Mur publica des del Bloc; les altres portes d'escriptura expliquen que
+   encara estan en obres (destinsControl.js). */
+test('D3 · les huit targetes de publicació enllacen les seues pàgines en ordre', () => {
   pinta();
-  const esperats = [
-    ['Publicar al Mur', '/mur'],
-    ['Publicar al Mercat', '/mercat'],
-    ["Publicar a l'Agenda", '/mur'],
-    ['Editor de Notes', '/notes'],
-    ['Ajustos del xat', '/control-xat'],
-    /* CU (261003) · l'única Utilitat que navega: la seua fitxa. */
-    ['Snippet', '/control?fitxa=snippet']
-  ];
-  expect([...document.querySelectorAll('button.sp-card-link-overlay')].map((b) => b.getAttribute('aria-label')))
-    .toEqual(esperats.map(([titol]) => titol));
-  for (const [titol, desti] of esperats) {
-    fireEvent.click(screen.getByRole('button', { name: titol }));
-    expect(ubicacio(), titol).toBe(desti);
+  const esperats = ['publicar_mur', 'publicar_mercat', 'publicar_calendari', 'publicar_mapa', 'vehicle_compartit', 'animalets', 'treball', 'habitatge'];
+  const noms = ['Saber-ne més sobre el Mur', 'Saber-ne més sobre el Mercat', 'Saber-ne més sobre el Calendari', 'Saber-ne més sobre el Mapa', 'Saber-ne més: Vehicle Compartit', 'Saber-ne més: Animalets', 'Saber-ne més: Treball', 'Saber-ne més: Habitatge'];
+  const targetes = [...document.querySelectorAll('article.sp-card')].slice(0, 8);
+  expect(targetes).toHaveLength(8);
+  const enllacos = targetes.map((targeta, i) => within(targeta).getByRole('link', { name: noms[i] }));
+  expect(enllacos.map((enllac) => enllac.getAttribute('href')))
+    .toEqual(esperats.map((pagina) => `/page/${pagina}`));
+  for (const [i, targeta] of targetes.entries()) {
+    expect(targeta.querySelector('.sp-card-link-overlay')).toBeNull();
+    fireEvent.click(enllacos[i]);
+    expect(ubicacio()).toBe(`/page/${esperats[i]}`);
   }
 });
 
-test('D16 · «Ajustos del xat» porta el dibuix de la capçalera del Control del xat (CircleDashed)', () => {
+test('P5 · Publicar al Mur obri el Bloc; la resta de portes conserva l’avís accessible d’obres', () => {
   pinta();
-  const targeta = screen.getByRole('button', { name: 'Ajustos del xat' }).closest('article');
-  expect(targeta.querySelector('.sp-card-title-icon svg.lucide-circle-dashed')).toBeTruthy();
-  expect(within(targeta).queryByText('EN OBRES')).toBeNull();
+  const publicar = screen.getByRole('link', { name: 'Publicar al Mur' });
+  expect(publicar.getAttribute('href')).toBe('/notes');
+  fireEvent.click(publicar);
+  expect(ubicacio()).toBe('/notes');
+  const inertes = [...document.querySelectorAll('button.sp-card-porta[aria-disabled="true"]')];
+  expect(inertes).toHaveLength(7);
+  const noms = [
+    'Publicar al Mercat (en obres)', 'Publicar al Calendari (en obres)', 'Publicar al Mapa (en obres)',
+    'Publicar: Vehicle Compartit (en obres)', 'Publicar: Animalets (en obres)',
+    'Publicar: Treball (en obres)', 'Publicar: Habitatge (en obres)'
+  ];
+  for (const [i, boto] of inertes.entries()) expect(screen.getByRole('button', { name: noms[i] })).toBe(boto);
+  fireEvent.click(inertes[0]);
+  expect(ubicacio()).toBe('/notes');
+  expect(estat.toast).toHaveBeenCalledWith('“Publicar al Mercat” encara està en obres.');
 });
 
-/* Correcció de la revisió (260930) · «Ajustos del xat» és l'única porta al
-   Control del xat (D16), que sí es tradueix: la targeta es tradueix amb ell. */
-test('D16 · en anglés, la targeta «Ajustos del xat» es tradueix i continua obrint /control-xat', () => {
+test('P5 · en anglés, les dues portes es tradueixen i Publicar al Mur continua obrint el Bloc', () => {
   estat.traductor = createTranslator('en');
   pinta();
-  const boto = screen.getByRole('button', { name: 'Chat settings' });
-  expect(within(boto.closest('article')).getByText('Column width and chat preferences')).toBeTruthy();
-  expect(screen.queryByText('Ajustos del xat')).toBeNull();
-  expect(screen.queryByText('Amplària de les columnes i preferències del xat')).toBeNull();
-  fireEvent.click(boto);
-  expect(ubicacio()).toBe('/control-xat');
+  const targeta = document.querySelector('article.sp-card');
+  expect(within(targeta).getByRole('link', { name: 'Publish on the Wall' }).querySelector('span:not(.sdp-sr-only)').textContent).toBe('Publish');
+  expect(within(targeta).getByRole('link', { name: 'Learn more about the Wall' }).querySelector('span:not(.sdp-sr-only)').textContent).toBe('Learn more');
+  expect(within(targeta).queryByText('Publicar')).toBeNull();
+  expect(within(targeta).queryByText('Saber-ne més')).toBeNull();
+  fireEvent.click(within(targeta).getByRole('link', { name: 'Publish on the Wall' }));
+  expect(ubicacio()).toBe('/notes');
 });
 
 /* P7-B · La Gestoria ja no és la targeta «EN OBRES» sense clic: és una de les

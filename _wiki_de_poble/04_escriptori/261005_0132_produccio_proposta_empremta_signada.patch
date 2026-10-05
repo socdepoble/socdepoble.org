@@ -1,0 +1,24 @@
+--- a/src/sections/tractors/nucli/empremta.js
++++ b/src/sections/tractors/nucli/empremta.js
+@@ -22,7 +22,7 @@
+ 
+ export function normalitzaText(contingut) {
+   const text = typeof contingut === 'string' ? contingut : desdeUtf8(contingut);
+-  return text.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n');
++  return text.replace(/^﻿/, '').replace(/\r\n/g, '\n');
+ }
+ 
+ export function manifestNet(manifest) {
+--- a/eslint.config.js
++++ b/eslint.config.js
+@@ -68,5 +68,10 @@
+     rules: {
+       'no-unused-vars': ['warn', { 'argsIgnorePattern': '^_', 'varsIgnorePattern': '^_' }]
+     }
++  },
++  {
++    // El BOM literal del regex forma part de les fonts signades: conservem els bytes.
++    files: ['src/sections/tractors/nucli/empremta.js'],
++    rules: { 'no-irregular-whitespace': ['error', { skipRegExps: true }] }
+   }
+ ];

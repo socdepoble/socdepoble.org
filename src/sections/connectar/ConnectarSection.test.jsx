@@ -407,9 +407,9 @@ test('T54 · sense l’element als proveïdors, la targeta ix sense imatge i amb
 });
 
 /* ── T71 · l'intern es resol (també les pàgines de text) i manen les dades de l'original ── */
-const ANIMA = 'item_id=%2Fia&title=T%C3%ADtol%20de%20l%E2%80%99URL&objecte=pagina&ruta=%2Fia&author=Foraster&targetUserId=intrus&autorTipus=persona';
+const ANIMA = 'item_id=%2Fiaia&title=T%C3%ADtol%20de%20l%E2%80%99URL&objecte=pagina&ruta=%2Fiaia&author=Foraster&targetUserId=intrus&autorTipus=persona';
 
-test('T71 · una pàgina de text (/ia): la mini-card porta la foto, el títol i l’autor de l’original, no els de l’URL', () => {
+test('T71 · una pàgina de text (/iaia): la mini-card porta la foto, el títol i l’autor de l’original, no els de l’URL', () => {
   mocks.params = new URLSearchParams(ANIMA);
   const { container } = render(<ConnectarSection />);
   const targeta = container.querySelector('.sdp-connectar__previsualitzacio .sp-card');
@@ -429,10 +429,10 @@ test('T71 · en guardar una connexió resolta, la memòria cau (títol i cos) é
   await waitFor(() => expect(mocks.crea).toHaveBeenCalledTimes(1));
   const [entrada] = mocks.crea.mock.calls[0];
   expect(entrada.title).toBe("L'Ànima de la IAIA");
-  expect(entrada.origen).toMatchObject({ tipus: 'connexio', titol: "L'Ànima de la IAIA", autorNom: '', ruta: '/ia', objecte: 'pagina' });
+  expect(entrada.origen).toMatchObject({ tipus: 'connexio', titol: "L'Ànima de la IAIA", autorNom: '', ruta: '/iaia', objecte: 'pagina' });
   /* T71b · una pàgina no declara autor: cap identitat, tampoc la de l'URL. */
   expect(entrada.origen).toMatchObject({ autorId: '', autorTipus: '' });
-  expect(entrada.content).toContain('<a href="/ia">L\'Ànima de la IAIA</a>');
+  expect(entrada.content).toContain('<a href="/iaia">L\'Ànima de la IAIA</a>');
   expect(JSON.stringify(entrada)).not.toMatch(/Foraster|Títol de l’URL|intrus/);
 });
 

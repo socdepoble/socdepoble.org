@@ -34,6 +34,7 @@ import { rpc } from './runtime.js';
 import { entraAmbGoogle, exigeixSenseMarcAlie, gestionaTornada, urlDeTornadaAlta } from '../oauthRelay.js';
 import { configuraBackendSessio } from '../identitat.js';
 import { CODI_ENTRADA } from '../errorsBackend.js';
+import { ErrorColumnaAbsent, classificaError } from '../autodesament/errors.js';
 
 test.each(['localhost', '127.0.0.1', '[::1]'])('Google en %s explica l’alternativa sense obrir OAuth', async host => {
   entraAmbGoogle.mockClear();
@@ -489,6 +490,50 @@ test('una capçalera incrustada (data:) no s’envia', async () => {
   m.request.mockReset(); m.user = { id: 'A' };
   await expect(updateProfile({ hero_url: 'data:image/png;base64,AAAA' })).rejects.toThrow('no es desen incrustades');
   expect(m.request).not.toHaveBeenCalled();
+});
+
+/* F1 (ordre del Mestre, 261004; pla 2045, Marató 2230) · Una base sense
+   2609110600: el PATCH de la Visibilitat de la fitxa torna PGRST204. */
+test('F1 · PGRST204 de is_public: ErrorColumnaAbsent amb la columna i els camps, classificat com a columna, i cap PUT a GoTrue', async () => {
+  m.request.mockReset(); m.changed.mockClear(); m.user = { id: 'A' };
+  const cru = Object.assign(new Error('Supabase 400: {"code":"PGRST204","details":null,"hint":null,"message":"Could not find the \'is_public\' column of \'profiles\' in the schema cache"}'), { status: 400 });
+  m.request.mockRejectedValueOnce(cru);
+  const fallada = await updateProfile({ is_public: true }).catch((error) => error);
+  expect(fallada).toBeInstanceOf(ErrorColumnaAbsent);
+  expect(fallada).toMatchObject({ name: 'ErrorColumnaAbsent', columna: 'is_public', camps: ['is_public'] });
+  expect(fallada.cause).toBe(cru);
+  expect(fallada.message).toContain('«is_public»');
+  expect(fallada.message).not.toMatch(/PGRST|Could not find|schema cache|permís/);
+  expect(classificaError(fallada)).toMatchObject({ tipus: 'columna', columna: 'is_public' });
+  // Només el PATCH: GoTrue no rep res d'un canvi que el perfil no té.
+  expect(crides()).toEqual([{ ruta: 'PATCH /rest/v1/profiles', cos: { is_public: true } }]);
+  expect(m.changed).not.toHaveBeenCalled();
+});
+/* Un PGRST204 que no nomena cap columna del cos (cos tallat, o una columna
+   que el PATCH no porta): es diu igual, sense inventar-ne cap. */
+test('F1 · PGRST204 sense cap columna del cos llegible: ErrorColumnaAbsent amb columna null i camps buits', async () => {
+  const SENSE_COLUMNA = 'El servidor encara no té una de les columnes del perfil: el canvi no s’ha desat. Cal aplicar-hi una migració pendent.';
+  for (const cos of ['{"code":"PGRST204"}',
+    '{"code":"PGRST204","message":"Could not find the \'altra\' column of \'profiles\' in the schema cache"}']) {
+    m.request.mockReset(); m.changed.mockClear(); m.user = { id: 'A' };
+    const cru = Object.assign(new Error(`Supabase 400: ${cos}`), { status: 400 });
+    m.request.mockRejectedValueOnce(cru);
+    const fallada = await updateProfile({ bio: 'Llaurador' }).catch((error) => error);
+    expect(fallada).toBeInstanceOf(ErrorColumnaAbsent);
+    expect(fallada).toMatchObject({ columna: null, camps: [], message: SENSE_COLUMNA });
+    expect(fallada.cause).toBe(cru);
+    expect(classificaError(fallada)).toEqual({ tipus: 'columna', missatge: SENSE_COLUMNA, columna: null });
+    expect(crides()).toEqual([{ ruta: 'PATCH /rest/v1/profiles', cos: { bio: 'Llaurador' } }]);
+    expect(m.changed).not.toHaveBeenCalled();
+  }
+});
+test('F1 · un error del PATCH que no és de columna passa tal qual (el 403 d’un permís absent, que classifica errors.js)', async () => {
+  m.request.mockReset(); m.changed.mockClear(); m.user = { id: 'A' };
+  const permis = Object.assign(new Error('Supabase 403: {"code":"42501","message":"permission denied for table profiles"}'), { status: 403 });
+  m.request.mockRejectedValueOnce(permis);
+  await expect(updateProfile({ bio: 'Llaurador' })).rejects.toBe(permis);
+  expect(m.request).toHaveBeenCalledTimes(1);
+  expect(m.changed).not.toHaveBeenCalled();
 });
 
 /* ───────── D11 · L'alta amb Google es completa al servidor, de millor esforç ───────── */

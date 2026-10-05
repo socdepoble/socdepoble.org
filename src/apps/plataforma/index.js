@@ -28,3 +28,6 @@ export {
 export { ESDEVENIMENT_NAVEGA } from './ElementExtern.jsx';
 export { ESQUEMA_APP, NOMS_ICONES, rutaDeApp, titolDe } from './manifestApp.js';
 export { ENTITAT_PROJECTE, autoriaDe } from './autoria.js';
+
+/* Loading delegates recovery to the enclosing route owner. */
+export { lazyRoute } from './lazyRoute.js';

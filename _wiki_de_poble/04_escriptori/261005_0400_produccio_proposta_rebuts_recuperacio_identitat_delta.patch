@@ -1,0 +1,55 @@
+--- f742/tooling/documental/turns.mjs
++++ successor/tooling/documental/turns.mjs
+@@ -197,6 +197,7 @@
+       const contexts = activeReceipts(turn).filter(receipt => receipt.file === rel);
+       if (contexts.length) {
+         const receipt = contexts[0];
++        if (!receiptPattern.test(`sdp:${id}:${receipt.id}`) || turn.receipts[receipt.id] !== receipt) throw new Error('Rebut de context amb identitat divergent');
+         if (contexts.length !== 1 || Object.hasOwn(receipt, 'creation')) throw new Error('Context de creació ambigu o ja preparat');
+         if (receipt.route !== route.id || receipt.routeVersion !== route.version || receipt.template !== route.plantilla || receipt.templateHash !== route.templateHash || receipt.contractSnapshot !== sha(JSON.stringify(contract))) throw new Error('Context de creació amb contracte o plantilla divergent');
+         readContract(root, receipt.contractSnapshot, snapshot => {
+--- f742/tooling/documental/command-policy.mjs
++++ successor/tooling/documental/command-policy.mjs
+@@ -89,7 +89,9 @@
+     physical(root,`.agents/runtime/contracts/${sha(JSON.stringify(contract))}.json`);
+     if(!(route.destins||[DESK]).some(dir=>opts.file.startsWith(`${dir}/`)))throw new Error('Destí divergent de ruta');
+     if(action==='create') {
+-      if(!activeReceipts(turn).some(receipt=>receipt.route===route.id&&receipt.file===opts.file))throw new Error('Cal context entregat per a este document abans de create');
++      const contexts=activeReceipts(turn).filter(receipt=>receipt.route===route.id&&receipt.file===opts.file);
++      if(!contexts.length)throw new Error('Cal context entregat per a este document abans de create');
++      if(contexts.some(receipt=>!receiptPattern.test(`sdp:${turn.turn_id}:${receipt.id}`)||turn.receipts[receipt.id]!==receipt))throw new Error('Rebut de context amb identitat divergent');
+       if(fs.existsSync(file))throw new Error('create no sobreescriu documents');
+       if(opts.title.length>300||opts.description.length>1000||opts.actor?.length>120)throw new Error('Metadades documentals massa llargues');
+       const errors=validateSchema({...route.output,description:opts.description,visibility:'private'},contract.schema);
+--- f742/tests/cognitive-preflight.test.mjs
++++ successor/tests/cognitive-preflight.test.mjs
+@@ -609,3 +609,13 @@
+  assert.throws(()=>turns.recoverCreation(root,turn.turn_id,{file:opts.file,reflex:delivery.reflex}),/sense rebut preparat/);
+  assert.deepEqual(readTurn(root,turn.turn_id),failed);
+ });
++
++for(const changedId of ['no-es-un-uuid','00000000-0000-4000-8000-000000000000']) test(`B3-identitat · context legacy amb ID ${changedId} no crea ni prepara`,t=>{
++ const root=fixture(t),turn=openTurn(root,{scope:'documents'}),opts=optsFailed('legacy_id');
++ const delivery=deliverContext(root,turn.turn_id,opts),key=delivery.reflex.split(':').at(-1);
++ mutateTurn(root,turn.turn_id,record=>{record.receipts[key].id=changedId;});
++ const before=readTurn(root,turn.turn_id);let failure;
++ try{createDraft(root,turn.turn_id,opts);}catch(error){failure=error;}
++ assert.deepEqual({fileCreated:fs.existsSync(path.join(root,opts.file)),metadataChanged:JSON.stringify(readTurn(root,turn.turn_id))!==JSON.stringify(before)},{fileCreated:false,metadataChanged:false});
++ assert.match(failure?.message||'',/identitat divergent/);
++});
+--- f742/tests/document-command-policy.test.mjs
++++ successor/tests/document-command-policy.test.mjs
+@@ -156,3 +156,13 @@
+  mutateTurn(root,turn.turn_id,record=>{record.receipts[second.reflex.split(':').at(-1)].file=file;});
+  assert.equal(checkLocal(payload(root,recover),root).code,2);
+ });
++
++test('B3-identitat · política create no concedeix autoritat a un context amb ID malformat',t=>{
++ const root=setup(t),turn=openTurn(root,{scope:'documents'}),delivery=deliverContext(root,turn.turn_id,{route:'auditoria',file});
++ const create=command('create',turn,' --route auditoria --title "Prova" --description "Rebuig d’identitat divergent"'),key=delivery.reflex.split(':').at(-1);
++ for(const changedId of ['no-es-un-uuid','00000000-0000-4000-8000-000000000000']){
++  mutateTurn(root,turn.turn_id,record=>{record.receipts[key].id=changedId;});const before=readTurn(root,turn.turn_id);
++  assert.equal(checkLocal(payload(root,create),root).code,2,changedId);assert.deepEqual(readTurn(root,turn.turn_id),before);
++  assert.equal(fs.existsSync(path.join(root,file)),false);
++ }
++});

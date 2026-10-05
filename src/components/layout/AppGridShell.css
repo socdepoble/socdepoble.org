@@ -114,7 +114,9 @@
    durada i la corba de calaix del sistema, com el calaix de la barra lateral
    (layout.css). Abans eren quatre literals de 0.3s amb una altra corba. */
 .app-grid-shell[data-layout="mitja"] .app-grid-column--left {
-  position: absolute; left: 0; top: 0; bottom: 0; width: var(--app-grid-col-sidebar);
+  position: absolute; left: 0; top: 0; bottom: 0;
+  width: max-content;
+  max-width: min(var(--sdp-menu-ample-max), calc(100% - var(--sdp-touch-min)));
   transform: translateX(-100%); transition: transform var(--sdp-durada-panell) var(--sdp-corba-calaix);
   z-index: 30;
   box-shadow: var(--sdp-ombra-3);
@@ -145,7 +147,7 @@
   box-shadow: none;
 }
 .app-grid-shell[data-layout="mitja"][data-esquerra="rail"][data-panell="left"] .app-grid-column--left {
-  width: var(--app-grid-col-sidebar);
+  width: max-content;
   box-shadow: var(--sdp-ombra-3);
 }
 
@@ -173,8 +175,8 @@
 }
 .app-grid-shell[data-layout="estret"] .app-grid-column--left {
   z-index: 30;
-  width: 85%;
-  max-width: 360px;
+  width: max-content;
+  max-width: min(var(--sdp-menu-ample-max), calc(100% - var(--sdp-touch-min)));
   justify-self: start;
   box-shadow: var(--sdp-ombra-3);
   transform: translateX(-100%);

@@ -10,7 +10,13 @@
  *
  * La lectura viu NOMÉS en la memòria d'este hook: res es desa al navegador.
  * `llegit` és l'instant de la darrera lectura bona (la data de sincronització
- * de la boina). `oblida` ho buida tot. `generacio` canvia a cada lectura bona
+ * de la boina). `oblida` ho buida tot i cancel·la la lectura activa; també
+ * la cancel·len una crida programàtica nova a `llig` i el desmuntatge.
+ * El selector està desactivat mentre llig; canviar de mòdul dins de la closca
+ * conserva la lectura. Revocar l'aprovació només bloqueja les lectures següents.
+ * El fitxer ja començat acaba,
+ * però els seus bytes es descarten i no se'n comença cap altre.
+ * `generacio` canvia a cada lectura bona
  * i a cada oblit: les targetes la porten a la clau i tornen a nàixer amb
  * l'ull tancat, de manera que l'ull obert d'una targeta no passa mai a les
  * xifres d'una lectura nova (ordre del Mestre, 261004).
@@ -36,26 +42,37 @@ export function useTauler({ magatzem, subtle, tractors, entorn, rellotge } = {})
   const fila = porta.tractors.find((t) => t.id === TRACTOR_TAULER.id) ?? null;
   const [estat, setEstat] = useState(ESTAT_BUIT);
   const torn = useRef(0);
+  const lecturaActiva = useRef(null);
 
   useEffect(() => () => {
     torn.current += 1;
+    lecturaActiva.current?.abort();
+    lecturaActiva.current = null;
   }, []);
 
   const llig = useCallback(async (fitxers) => {
     const meu = ++torn.current;
+    lecturaActiva.current?.abort();
+    const controlador = new AbortController();
+    lecturaActiva.current = controlador;
     setEstat((previ) => ({ ...previ, llegint: true, error: null }));
     try {
       const aprovacio = await contextAprovacio(TRACTOR_TAULER.id, { magatzem, subtle, tractors, entorn, rellotge });
-      const lectura = await executaTractorTauler({ fitxers, aprovacio, subtle });
+      const lectura = await executaTractorTauler({ fitxers, aprovacio, subtle, signal: controlador.signal });
       const ara = typeof rellotge === 'function' ? rellotge() : Date.now();
       if (meu === torn.current) setEstat({ llegint: false, error: null, lectura, llegit: ara, generacio: meu });
     } catch (error) {
       if (meu === torn.current) setEstat((previ) => ({ ...previ, llegint: false, error: missatgeDe(error) }));
+    } finally {
+      // Una lectura antiga no pot retirar el controlador de la següent.
+      if (lecturaActiva.current === controlador) lecturaActiva.current = null;
     }
   }, [magatzem, subtle, tractors, entorn, rellotge]);
 
   const oblida = useCallback(() => {
     torn.current += 1;
+    lecturaActiva.current?.abort();
+    lecturaActiva.current = null;
     setEstat({ ...ESTAT_BUIT, generacio: torn.current });
   }, []);
 

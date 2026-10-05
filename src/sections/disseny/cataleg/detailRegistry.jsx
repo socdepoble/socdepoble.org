@@ -1,131 +1,105 @@
-import { getPreferenciaLlegat, setPreferenciaLlegat } from '../../../config/storage.js';
-import { lazy } from 'react';
-
-function ambReintent(importer) {
-  return lazy(async () => {
-    let pageHasAlreadyBeenForceRefreshed = false;
-    try {
-      pageHasAlreadyBeenForceRefreshed = JSON.parse(
-        getPreferenciaLlegat('sdp-chunk-refreshed', null, true) || 'false'
-      );
-    } catch (e) {
-      console.warn("[ambReintent] No s'ha pogut llegir sessionStorage:", e);
-    }
-
-    try {
-      const component = await importer();
-      try { setPreferenciaLlegat('sdp-chunk-refreshed', 'false', true); } catch { /* silenci */ }
-      return component;
-    } catch (error) {
-      if (!pageHasAlreadyBeenForceRefreshed) {
-        try { setPreferenciaLlegat('sdp-chunk-refreshed', 'true', true); } catch { /* silenci */ }
-        window.location.reload();
-        return new Promise(() => {}); // never resolves, page is reloading
-      }
-      throw error;
-    }
-  });
-}
+import { lazyRoute } from '../../../apps/plataforma/lazyRoute.js';
 
 export const CATALOG_DETAIL_LOADERS = {
-  'fonaments/panell': ambReintent(() => import('./detalls/EspecimenPanell.jsx')),
-  'fonaments/contracte': ambReintent(() => import('./detalls/EspecimenContracte.jsx')),
-  'fonaments/color': ambReintent(() => import('./detalls/EspecimenColor.jsx')),
-  'fonaments/tipografia': ambReintent(() => import('./detalls/EspecimenTipografia.jsx')),
-  'fonaments/espaiat': ambReintent(() => import('./detalls/EspecimenEspaiat.jsx')),
-  'fonaments/universalcard': ambReintent(() => import('./detalls/EspecimenUniversalCard.jsx')),
+  'emoticones/xl': lazyRoute(() => import('./detalls/EspecimenEmojisXL.jsx')),
+  'fonaments/panell': lazyRoute(() => import('./detalls/EspecimenPanell.jsx')),
+  'fonaments/contracte': lazyRoute(() => import('./detalls/EspecimenContracte.jsx')),
+  'fonaments/color': lazyRoute(() => import('./detalls/EspecimenColor.jsx')),
+  'fonaments/tipografia': lazyRoute(() => import('./detalls/EspecimenTipografia.jsx')),
+  'fonaments/espaiat': lazyRoute(() => import('./detalls/EspecimenEspaiat.jsx')),
+  'fonaments/universalcard': lazyRoute(() => import('./detalls/EspecimenUniversalCard.jsx')),
   /* T50 (decisió del Mestre, 260928) · la targeta del document que s'escriu. */
-  'fonaments/targeta-viva': ambReintent(() => import('./detalls/EspecimenTargetaViva.jsx')),
-  'fonaments/controls-barra': ambReintent(() => import('./detalls/EspecimenControlsBarra.jsx')),
+  'fonaments/targeta-viva': lazyRoute(() => import('./detalls/EspecimenTargetaViva.jsx')),
+  'fonaments/controls-barra': lazyRoute(() => import('./detalls/EspecimenControlsBarra.jsx')),
   /* T51 (ordre del Mestre, 260928) · l'espai central de la barra taronja. */
-  'fonaments/emoticona-barra': ambReintent(() => import('./detalls/EspecimenEmoticonaBarra.jsx')),
-  'fonaments/avatar': ambReintent(() => import('./detalls/EspecimenAvatar.jsx')),
-  'fonaments/botonera': ambReintent(() => import('./detalls/EspecimenBotonera.jsx')),
-  'fonaments/taula': ambReintent(() => import('./detalls/EspecimenTaula.jsx')),
-  'fonaments/indicador': ambReintent(() => import('./detalls/EspecimenIndicador.jsx')),
-  'fonaments/xat': ambReintent(() => import('./detalls/EspecimenXat.jsx')),
+  'fonaments/emoticona-barra': lazyRoute(() => import('./detalls/EspecimenEmoticonaBarra.jsx')),
+  'fonaments/avatar': lazyRoute(() => import('./detalls/EspecimenAvatar.jsx')),
+  'fonaments/botonera': lazyRoute(() => import('./detalls/EspecimenBotonera.jsx')),
+  'fonaments/taula': lazyRoute(() => import('./detalls/EspecimenTaula.jsx')),
+  'fonaments/indicador': lazyRoute(() => import('./detalls/EspecimenIndicador.jsx')),
+  'fonaments/xat': lazyRoute(() => import('./detalls/EspecimenXat.jsx')),
   /* Onada 3B (Pedra Seca §9) · les peces noves del Xat. */
-  'fonaments/xat-llista': ambReintent(() => import('./detalls/EspecimenXatLlista.jsx')),
-  'fonaments/xat-cerca': ambReintent(() => import('./detalls/EspecimenXatCerca.jsx')),
-  'fonaments/xat-comunitats': ambReintent(() => import('./detalls/EspecimenXatComunitats.jsx')),
-  'superposicions/xat-nova-conversa': ambReintent(() => import('./detalls/EspecimenXatNovaConversa.jsx')),
+  'fonaments/xat-llista': lazyRoute(() => import('./detalls/EspecimenXatLlista.jsx')),
+  'fonaments/xat-cerca': lazyRoute(() => import('./detalls/EspecimenXatCerca.jsx')),
+  'fonaments/xat-comunitats': lazyRoute(() => import('./detalls/EspecimenXatComunitats.jsx')),
+  'superposicions/xat-nova-conversa': lazyRoute(() => import('./detalls/EspecimenXatNovaConversa.jsx')),
   /* Torn 260930 (T1) · el full «Ajustos» del Xat. */
-  'superposicions/xat-ajustos': ambReintent(() => import('./detalls/EspecimenXatAjustos.jsx')),
-  'navegacio/xat-rail': ambReintent(() => import('./detalls/EspecimenXatRail.jsx')),
-  'fonaments/cerca-filtres': ambReintent(() => import('./detalls/EspecimenCercaFiltres.jsx')),
-  'fonaments/tasques-fitxers': ambReintent(() => import('./detalls/EspecimenTasquesFitxers.jsx')),
-  'fonaments/media-externa': ambReintent(() => import('./detalls/EspecimenMediaExterna.jsx')),
-  'fonaments/utilitats': ambReintent(() => import('./detalls/EspecimenUtilitats.jsx')),
-  'inventari/global': ambReintent(() => import('./detalls/EspecimenInventariGlobal.jsx')),
+  'superposicions/xat-ajustos': lazyRoute(() => import('./detalls/EspecimenXatAjustos.jsx')),
+  'navegacio/xat-rail': lazyRoute(() => import('./detalls/EspecimenXatRail.jsx')),
+  'fonaments/cerca-filtres': lazyRoute(() => import('./detalls/EspecimenCercaFiltres.jsx')),
+  'fonaments/tasques-fitxers': lazyRoute(() => import('./detalls/EspecimenTasquesFitxers.jsx')),
+  'fonaments/media-externa': lazyRoute(() => import('./detalls/EspecimenMediaExterna.jsx')),
+  'fonaments/utilitats': lazyRoute(() => import('./detalls/EspecimenUtilitats.jsx')),
+  'inventari/global': lazyRoute(() => import('./detalls/EspecimenInventariGlobal.jsx')),
   /* T52 (ordre del Mestre, 260928) · l'arbre universal va primer: diu qui és el pare de qui. */
-  'estructura/arbre': ambReintent(() => import('./detalls/EspecimenArbreUniversal.jsx')),
-  'estructura/shell': ambReintent(() => import('./detalls/EspecimenShell.jsx')),
-  'estructura/page': ambReintent(() => import('./detalls/EspecimenPage.jsx')),
-  'estructura/gestor': ambReintent(() => import('./detalls/EspecimenGestor.jsx')),
-  'estructura/universalworkspace': ambReintent(() => import('./detalls/EspecimenUniversalWorkspace.jsx')),
-  'estructura/columnes': ambReintent(() => import('./detalls/EspecimenColumnes.jsx')),
-  'estructura/divisor': ambReintent(() => import('./detalls/EspecimenDivisor.jsx')),
-  'estructura/composicio': ambReintent(() => import('./detalls/EspecimenComposicio.jsx')),
-  'estructura/barra-eines': ambReintent(() => import('./detalls/EspecimenBarraEines.jsx')),
-  'formularis/boto': ambReintent(() => import('./detalls/EspecimenBoto.jsx')),
-  'formularis/camp': ambReintent(() => import('./detalls/EspecimenCamp.jsx')),
-  'formularis/opcions': ambReintent(() => import('./detalls/EspecimenOpcions.jsx')),
-  'formularis/pindola': ambReintent(() => import('./detalls/EspecimenPindola.jsx')),
-  'formularis/cerca': ambReintent(() => import('./detalls/EspecimenCerca.jsx')),
-  'formularis/formulari-complex': ambReintent(() => import('./detalls/EspecimenFormulariComplex.jsx')),
+  'estructura/arbre': lazyRoute(() => import('./detalls/EspecimenArbreUniversal.jsx')),
+  'estructura/shell': lazyRoute(() => import('./detalls/EspecimenShell.jsx')),
+  'estructura/page': lazyRoute(() => import('./detalls/EspecimenPage.jsx')),
+  'estructura/gestor': lazyRoute(() => import('./detalls/EspecimenGestor.jsx')),
+  'estructura/universalworkspace': lazyRoute(() => import('./detalls/EspecimenUniversalWorkspace.jsx')),
+  'estructura/columnes': lazyRoute(() => import('./detalls/EspecimenColumnes.jsx')),
+  'estructura/divisor': lazyRoute(() => import('./detalls/EspecimenDivisor.jsx')),
+  'estructura/composicio': lazyRoute(() => import('./detalls/EspecimenComposicio.jsx')),
+  'estructura/barra-eines': lazyRoute(() => import('./detalls/EspecimenBarraEines.jsx')),
+  'formularis/boto': lazyRoute(() => import('./detalls/EspecimenBoto.jsx')),
+  'formularis/camp': lazyRoute(() => import('./detalls/EspecimenCamp.jsx')),
+  'formularis/opcions': lazyRoute(() => import('./detalls/EspecimenOpcions.jsx')),
+  'formularis/pindola': lazyRoute(() => import('./detalls/EspecimenPindola.jsx')),
+  'formularis/cerca': lazyRoute(() => import('./detalls/EspecimenCerca.jsx')),
+  'formularis/formulari-complex': lazyRoute(() => import('./detalls/EspecimenFormulariComplex.jsx')),
   /* T40 (ordre del Mestre, 260928) · el mes compartit Consola–editor i la pastilla de data. */
-  'formularis/calendari': ambReintent(() => import('./detalls/EspecimenCalendari.jsx')),
+  'formularis/calendari': lazyRoute(() => import('./detalls/EspecimenCalendari.jsx')),
   /* T39 (ordre del Mestre, 260928) · drets d'autor a pantalla completa dins de l'editor. */
-  'formularis/drets-autor': ambReintent(() => import('./detalls/EspecimenDretsAutor.jsx')),
+  'formularis/drets-autor': lazyRoute(() => import('./detalls/EspecimenDretsAutor.jsx')),
   /* T52 (ordre del Mestre, 260928) · la botonera de davall del títol i els seus diàlegs. */
-  'formularis/classificacio': ambReintent(() => import('./detalls/EspecimenClassificacio.jsx')),
-  'navegacio/pestanyes': ambReintent(() => import('./detalls/EspecimenPestanyes.jsx')),
-  'navegacio/molla': ambReintent(() => import('./detalls/EspecimenMolla.jsx')),
-  'navegacio/paginacio': ambReintent(() => import('./detalls/EspecimenPaginacio.jsx')),
-  'navegacio/acordio': ambReintent(() => import('./detalls/EspecimenAcordio.jsx')),
-  'navegacio/nav-mobil': ambReintent(() => import('./detalls/EspecimenNavMobil.jsx')),
-  'retroalimentacio/alerta': ambReintent(() => import('./detalls/EspecimenAlerta.jsx')),
-  'retroalimentacio/insignia': ambReintent(() => import('./detalls/EspecimenInsignia.jsx')),
-  'retroalimentacio/buit': ambReintent(() => import('./detalls/EspecimenBuit.jsx')),
-  'retroalimentacio/carrega': ambReintent(() => import('./detalls/EspecimenCarrega.jsx')),
-  'retroalimentacio/progres': ambReintent(() => import('./detalls/EspecimenProgres.jsx')),
-  'retroalimentacio/estat-desament': ambReintent(() => import('./detalls/EspecimenEstatDesament.jsx')),
-  'retroalimentacio/resum-connexio': ambReintent(() => import('./detalls/EspecimenResumConnexio.jsx')),
+  'formularis/classificacio': lazyRoute(() => import('./detalls/EspecimenClassificacio.jsx')),
+  'navegacio/pestanyes': lazyRoute(() => import('./detalls/EspecimenPestanyes.jsx')),
+  'navegacio/molla': lazyRoute(() => import('./detalls/EspecimenMolla.jsx')),
+  'navegacio/paginacio': lazyRoute(() => import('./detalls/EspecimenPaginacio.jsx')),
+  'navegacio/acordio': lazyRoute(() => import('./detalls/EspecimenAcordio.jsx')),
+  'navegacio/nav-mobil': lazyRoute(() => import('./detalls/EspecimenNavMobil.jsx')),
+  'retroalimentacio/alerta': lazyRoute(() => import('./detalls/EspecimenAlerta.jsx')),
+  'retroalimentacio/insignia': lazyRoute(() => import('./detalls/EspecimenInsignia.jsx')),
+  'retroalimentacio/buit': lazyRoute(() => import('./detalls/EspecimenBuit.jsx')),
+  'retroalimentacio/carrega': lazyRoute(() => import('./detalls/EspecimenCarrega.jsx')),
+  'retroalimentacio/progres': lazyRoute(() => import('./detalls/EspecimenProgres.jsx')),
+  'retroalimentacio/estat-desament': lazyRoute(() => import('./detalls/EspecimenEstatDesament.jsx')),
+  'retroalimentacio/resum-connexio': lazyRoute(() => import('./detalls/EspecimenResumConnexio.jsx')),
   /* T7-T9 (ordre del Mestre, 261001) · el pilot de connexió i la llista de nodes. */
-  'retroalimentacio/connexio': ambReintent(() => import('./detalls/EspecimenConnexio.jsx')),
+  'retroalimentacio/connexio': lazyRoute(() => import('./detalls/EspecimenConnexio.jsx')),
   /* T43 (ordre del Mestre, 260928) · identitat activa i administrar organitzacions. */
-  'fonaments/identitat': ambReintent(() => import('./detalls/EspecimenIdentitat.jsx')),
-  'superposicions/dialeg': ambReintent(() => import('./detalls/EspecimenDialeg.jsx')),
-  'superposicions/confirmacio': ambReintent(() => import('./detalls/EspecimenConfirmacio.jsx')),
-  'superposicions/calaix': ambReintent(() => import('./detalls/EspecimenCalaix.jsx')),
+  'fonaments/identitat': lazyRoute(() => import('./detalls/EspecimenIdentitat.jsx')),
+  'superposicions/dialeg': lazyRoute(() => import('./detalls/EspecimenDialeg.jsx')),
+  'superposicions/confirmacio': lazyRoute(() => import('./detalls/EspecimenConfirmacio.jsx')),
+  'superposicions/calaix': lazyRoute(() => import('./detalls/EspecimenCalaix.jsx')),
   /* Ordre del Mestre, 261001 · el Calendari a pantalla completa. */
-  'superposicions/pantalla-completa': ambReintent(() => import('./detalls/EspecimenPantallaCompleta.jsx')),
-  'superposicions/pista': ambReintent(() => import('./detalls/EspecimenPista.jsx')),
-  'superposicions/menu': ambReintent(() => import('./detalls/EspecimenMenu.jsx')),
+  'superposicions/pantalla-completa': lazyRoute(() => import('./detalls/EspecimenPantallaCompleta.jsx')),
+  'superposicions/pista': lazyRoute(() => import('./detalls/EspecimenPista.jsx')),
+  'superposicions/menu': lazyRoute(() => import('./detalls/EspecimenMenu.jsx')),
   /* T41 (ordre del Mestre, 260928) · pública o privada, amb avís. */
-  'superposicions/visibilitat': ambReintent(() => import('./detalls/EspecimenSelectorVisibilitat.jsx')),
-  'superposicions/toast': ambReintent(() => import('./detalls/EspecimenToast.jsx')),
+  'superposicions/visibilitat': lazyRoute(() => import('./detalls/EspecimenSelectorVisibilitat.jsx')),
+  'superposicions/toast': lazyRoute(() => import('./detalls/EspecimenToast.jsx')),
   /* T46 (ordre del Mestre, 260928) · re-enquadrar la capçalera, quadrat de sèrie. */
-  'superposicions/enquadrament': ambReintent(() => import('./detalls/EspecimenEnquadrament.jsx')),
+  'superposicions/enquadrament': lazyRoute(() => import('./detalls/EspecimenEnquadrament.jsx')),
   /* T52 (ordre del Mestre, 260928) · la vista A4 de l'editor. */
-  'superposicions/impressio': ambReintent(() => import('./detalls/EspecimenImpressio.jsx')),
+  'superposicions/impressio': lazyRoute(() => import('./detalls/EspecimenImpressio.jsx')),
   /* Fase 0 de les apps El Bar i Salut (Pedra Seca §9) · les peces genèriques noves. */
-  'formularis/rajola': ambReintent(() => import('./detalls/EspecimenRajola.jsx')),
-  'formularis/teclat-numeric': ambReintent(() => import('./detalls/EspecimenTeclatNumeric.jsx')),
-  'fonaments/linia-del-temps': ambReintent(() => import('./detalls/EspecimenLiniaDelTemps.jsx')),
-  'fonaments/histograma': ambReintent(() => import('./detalls/EspecimenHistograma.jsx')),
+  'formularis/rajola': lazyRoute(() => import('./detalls/EspecimenRajola.jsx')),
+  'formularis/teclat-numeric': lazyRoute(() => import('./detalls/EspecimenTeclatNumeric.jsx')),
+  'fonaments/linia-del-temps': lazyRoute(() => import('./detalls/EspecimenLiniaDelTemps.jsx')),
+  'fonaments/histograma': lazyRoute(() => import('./detalls/EspecimenHistograma.jsx')),
   /* Ordre del Mestre (261002, sinergies T4/T8) · l'esquelet comú de catàleg i col·lecció. */
-  'fonaments/articles': ambReintent(() => import('./detalls/EspecimenArticles.jsx')),
-  'navegacio/seccions-categoria': ambReintent(() => import('./detalls/EspecimenSeccionsCategoria.jsx')),
-  'fonaments/colleccio': ambReintent(() => import('./detalls/EspecimenColleccio.jsx')),
-  'formularis/afegit-rapid': ambReintent(() => import('./detalls/EspecimenAfegitRapid.jsx')),
-  'superposicions/detall-article': ambReintent(() => import('./detalls/EspecimenDetallArticle.jsx')),
-  'estructura/marc-columna': ambReintent(() => import('./detalls/EspecimenMarcColumna.jsx')),
-  'estructura/esquelet-bar': ambReintent(() => import('./detalls/EspecimenEsqueletBar.jsx')),
-  'estructura/esquelet-compra': ambReintent(() => import('./detalls/EspecimenEsqueletCompra.jsx')),
+  'fonaments/articles': lazyRoute(() => import('./detalls/EspecimenArticles.jsx')),
+  'navegacio/seccions-categoria': lazyRoute(() => import('./detalls/EspecimenSeccionsCategoria.jsx')),
+  'fonaments/colleccio': lazyRoute(() => import('./detalls/EspecimenColleccio.jsx')),
+  'formularis/afegit-rapid': lazyRoute(() => import('./detalls/EspecimenAfegitRapid.jsx')),
+  'superposicions/detall-article': lazyRoute(() => import('./detalls/EspecimenDetallArticle.jsx')),
+  'estructura/marc-columna': lazyRoute(() => import('./detalls/EspecimenMarcColumna.jsx')),
+  'estructura/esquelet-bar': lazyRoute(() => import('./detalls/EspecimenEsqueletBar.jsx')),
+  'estructura/esquelet-compra': lazyRoute(() => import('./detalls/EspecimenEsqueletCompra.jsx')),
   /* Ordre del Mestre (261003, tancament del Lector RSS) · l'excepció 16:9, només per al Lector. */
-  'fonaments/imatge-apaisada': ambReintent(() => import('./detalls/EspecimenImatgeApaisada.jsx')),
+  'fonaments/imatge-apaisada': lazyRoute(() => import('./detalls/EspecimenImatgeApaisada.jsx')),
   /* Ordre del Mestre, 261004 (prompt 261004_0515; D-A) · la graella de targetes i la pàgina de les apps. */
-  'fonaments/graella-targetes': ambReintent(() => import('./detalls/EspecimenGraellaTargetes.jsx')),
-  'estructura/pagina-app': ambReintent(() => import('./detalls/EspecimenPaginaApp.jsx')),
+  'fonaments/graella-targetes': lazyRoute(() => import('./detalls/EspecimenGraellaTargetes.jsx')),
+  'estructura/pagina-app': lazyRoute(() => import('./detalls/EspecimenPaginaApp.jsx')),
 };

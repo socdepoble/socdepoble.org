@@ -214,6 +214,8 @@
 
   /* Mètriques del layout */
   --sdp-col-sidebar: 260px;
+  /* Pla 2045 · Sostre modulable del menú; el calaix reserva aire per tancar. */
+  --sdp-menu-ample-max: 300px;
   --sdp-col-llista: 380px;
   --sdp-alt-negra: 64px;
   --sdp-alt-accio: 58px;

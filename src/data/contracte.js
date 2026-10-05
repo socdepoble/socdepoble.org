@@ -218,7 +218,7 @@ export const PAGINES_AMB_XAT = Object.freeze({
   '/wikidepoble': 'Wiki de Poble',
   '/projecte': 'El projecte',
   '/constitucio': 'Constitució',
-  '/ia': "L'ànima de la iaia",
+  '/iaia': "L'ànima de la iaia",
   '/roadmap': 'Full de ruta',
   '/versions': 'Versions',
   '/legal': 'Legal i privacitat'

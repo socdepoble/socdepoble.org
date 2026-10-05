@@ -1,6 +1,7 @@
-import React, { lazy } from 'react';
+import React from 'react';
+import { lazyRoute } from '../../apps/plataforma/lazyRoute.js';
 
-const WikiDePobleSection = lazy(() => import('./WikiDePobleSection.jsx'));
+const WikiDePobleSection = lazyRoute(() => import('./WikiDePobleSection.jsx'));
 
 /* La ruta /wikidepoble: la Wiki, carregada a demanda. Ordre del Mestre,
    261004 («contaminació crítica de rutes/estats entre Gestoria i Wiki»): la

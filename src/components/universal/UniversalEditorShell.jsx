@@ -573,16 +573,23 @@ export function useEditorShell({
     formattedDate,
     topBarData: {
       logoComponent: showLogoUpload ? ((logoImage && !logoHandler.isEditing) ? (
-        <img
-          src={resolvedLogoImage || (logoImage.startsWith('sdp-media://') ? undefined : resolRecursPropi(logoImage))}
-          alt="Logotip"
-          className="sdp-logo-personalitzat sdp-logo-personalitzat--editable"
-          role="button"
-          tabIndex="0"
-          onClick={logoHandler.startEdit}
-          onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), logoHandler.startEdit())}
-          title="Clica per canviar el logotip"
-        />
+        <>
+          <img
+            src={resolvedLogoImage || (logoImage.startsWith('sdp-media://') ? undefined : resolRecursPropi(logoImage))}
+            alt="Logotip"
+            className="sdp-logo-personalitzat sdp-logo-personalitzat--editable"
+            role="button"
+            tabIndex="0"
+            onClick={logoHandler.startEdit}
+            onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), logoHandler.startEdit())}
+            title="Clica per canviar el logotip"
+          />
+          <div className="sdp-alerta__accions sdp-camp sdp-camp--centrat">
+            <button type="button" className="sdp-boto sdp-boto--secundari" onClick={logoHandler.startEdit}>
+              <ImageIcon size={16} aria-hidden="true" /> Editar logotip
+            </button>
+          </div>
+        </>
       ) : (
         <div className="sdp-alerta__accions sdp-camp sdp-camp--centrat">
           <input type="file" accept="image/*,video/*,audio/*,.pdf,.doc,.docx" ref={logoHandler.fileInputRef} onChange={logoHandler.handleFileChange} className="sdp-nomes-lector" />
@@ -599,17 +606,24 @@ export function useEditorShell({
         </div>
       )) : null,
       heroComponent: (heroImage && !heroHandler.isEditing) ? (
-        <img
-          ref={heroImgRef}
-          src={resolvedHeroImage || (heroImage.startsWith('sdp-media://') ? undefined : resolRecursPropi(heroImage))}
-          alt="Capçalera"
-          className="sdp-hero__imatge"
-          role="button"
-          tabIndex="0"
-          onClick={heroHandler.startEdit}
-          onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), heroHandler.startEdit())}
-          title="Clica per canviar la imatge"
-        />
+        <>
+          <img
+            ref={heroImgRef}
+            src={resolvedHeroImage || (heroImage.startsWith('sdp-media://') ? undefined : resolRecursPropi(heroImage))}
+            alt="Capçalera"
+            className="sdp-hero__imatge"
+            role="button"
+            tabIndex="0"
+            onClick={heroHandler.startEdit}
+            onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), heroHandler.startEdit())}
+            title="Clica per canviar la imatge"
+          />
+          <div className="sdp-alerta__accions sdp-camp sdp-camp--centrat">
+            <button type="button" className="sdp-boto sdp-boto--secundari" disabled={pujant} onClick={heroHandler.startEdit}>
+              <ImageIcon size={16} aria-hidden="true" /> {heroEditLabel}
+            </button>
+          </div>
+        </>
       ) : (
         <div className="sdp-alerta__accions sdp-camp sdp-camp--centrat">
           <input type="file" accept="image/*,video/*,audio/*,.pdf,.doc,.docx" ref={heroHandler.fileInputRef} onChange={potEnquadrar ? triaHero : heroHandler.handleFileChange} className="sdp-nomes-lector" />

@@ -7,7 +7,7 @@ import yaml from 'js-yaml';
 import { ROOT, options } from '../documental/cli.mjs';
 import { loadContract, validateSchema, parseDocument } from '../documental/core.mjs';
 import { checkDraftDestinations, writeIndexedDraft } from '../documental/draft-write.mjs';
-import { deliverContext, bindPlan, validateDocument, ownPaths, handoffDocument } from '../documental/turns.mjs';
+import { deliverContext, bindPlan, validateDocument, ownPaths, handoffDocument, commitCreation, failCreation } from '../documental/turns.mjs';
 
 export function draft(delivery, {title, description, actor='agent-local'}) {
   const now = new Date().toISOString();
@@ -31,13 +31,21 @@ export function createDraft(root, id, opts) {
   root = fs.realpathSync(root);
   const file = path.resolve(root, opts.file);
   checkDraftDestinations(root, file);
-  const delivery = deliverContext(root,id,opts);
-  const raw = draft(delivery,opts);
-  const contract = loadContract(root,{templates:false});
-  const errors = validateSchema({...delivery.route.output,description:opts.description,visibility:'private',reflex:delivery.reflex},contract.schema);
-  if (errors.length) throw new Error(errors.join('\n'));
-  writeIndexedDraft(root, file, raw);
-  return {file:opts.file,reflex:delivery.reflex,state:'draft',note:'Completa les seccions [pendent] abans de validar.'};
+  const delivery = deliverContext(root,id,{...opts, creation:true});
+  try {
+    const raw = draft(delivery,opts);
+    const contract = loadContract(root,{templates:false});
+    const errors = validateSchema({...delivery.route.output,description:opts.description,visibility:'private',reflex:delivery.reflex},contract.schema);
+    if (errors.length) throw new Error(errors.join('\n'));
+    writeIndexedDraft(root, file, raw, { requireCleanTable: ['prompt.local', 'prompt.consell'].includes(delivery.route.id) });
+    commitCreation(root,id,delivery.reflex,raw);
+    return {file:opts.file,reflex:delivery.reflex,state:'draft',note:'Completa les seccions [pendent] abans de validar.'};
+  } catch (error) {
+    // Si hi ha un fitxer parcial/concurrent o falla la metadata, el rebut queda
+    // preparat i visible per a recuperació. Mai certifiquem una absència falsa.
+    try { failCreation(root,id,delivery.reflex); } catch { /* pendent, sense eliminar res */ }
+    throw error;
+  }
 }
 async function main() {
   const o=options(), root=path.resolve(o.arrel || ROOT), command=o._[0];

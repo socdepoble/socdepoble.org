@@ -54,7 +54,7 @@ const EXTERNES_DECLARADES = Object.freeze(new Set());
 const REGISTRE_DE_LLAVORS = '/wikidepoble?item=00_full_de_ruta';
 /* Les dues llavors amb pàgina pròpia vigent; la resta van al registre. */
 const DESTINS_PROPIS = Object.freeze({
-  'Calculadora de Risc (Maduresa IA)': '/ia',
+  'Calculadora de Risc (Maduresa IA)': '/iaia',
   'Llei Orgull Rural Visual': '/wikidepoble?item=identitat_visual'
 });
 
@@ -136,11 +136,11 @@ test('el registre de llavors per defecte; pàgina pròpia només on n’hi ha un
 /* ── De punta a punta, amb l'app real ─────────────────────────────────────
    Cada destí distint, amb l'encapçalament que en justifica l'elecció (§2 del
    F2_LLAVORS.txt): el registre de llavors, la secció «3. Llei de l'Orgull
-   Rural» d'identitat_visual i «4. El Càlcul del Risc» de l'Ànima (/ia). */
+   Rural» d'identitat_visual i «4. El Càlcul del Risc» de l'Ànima (/iaia). */
 const PAGINA_DEL_DESTI = Object.freeze({
   [REGISTRE_DE_LLAVORS]: '🗺️ Full de ruta de Sóc de Poble',
   '/wikidepoble?item=identitat_visual': "3. Llei de l'Orgull Rural",
-  '/ia': '4. El Càlcul del Risc (La Por Orgànica)'
+  '/iaia': '4. El Càlcul del Risc (La Por Orgànica)'
 });
 /* Cada espera caduca abans que la prova: si falla, falla amb el missatge de
    l'asserció, no amb un «timed out» de vitest. */
@@ -221,5 +221,15 @@ test('amb una base declarada (/comunitat), una llavor porta a /comunitat/wikidep
     await waitFor(() => expect(window.location.pathname + window.location.search).toBe('/comunitat' + REGISTRE_DE_LLAVORS), ESPERA);
     expect(empenta).toHaveBeenCalledTimes(1);
     await paginaPintada(PAGINA_DEL_DESTI[REGISTRE_DE_LLAVORS]);
+  });
+}, LIMIT_DE_PROVA);
+
+
+test.each(['/ia', '/ia?origen=full&item=prova'])('l’àlies històric %s conserva la consulta i obri la pàgina IAIA real', async (ruta) => {
+  window.history.replaceState(null, '', ruta);
+  await muntaLApp({ routerType: 'browser' }, async () => {
+    const sufix = ruta.slice('/ia'.length);
+    await waitFor(() => expect(window.location.pathname + window.location.search + window.location.hash).toBe('/iaia' + sufix), ESPERA);
+    await paginaPintada(PAGINA_DEL_DESTI['/iaia']);
   });
 }, LIMIT_DE_PROVA);

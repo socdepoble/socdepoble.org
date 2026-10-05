@@ -1,0 +1,47 @@
+{
+  "id": "9a6db409-091c-48d6-94c9-9e2b32f38418",
+  "session": "3d45da99-4c62-4b83-8cbb-9c47e24dbf78",
+  "operationId": "marato-workspace_autotria-261005_0307",
+  "claim": "3d45da99-4c62-4b83-8cbb-9c47e24dbf78:governance-write",
+  "planHash": "b9d255dd7f4140b8321db65094bd309abb98b469181db371e48b64c69c242478",
+  "beforeSeal": "1e107c915da1225039beaa126c0b082f1b5d39ecd6f4f458a27d10e9e32761f3",
+  "files": [
+    {
+      "path": "src/sections/notes/NotesSection.jsx",
+      "before": "98ecbe600e238fc24426fd860f12b73edf1826421b6a354062f49a5c81353da9",
+      "after": "65ce49426e45ab4e6eee50e0f0e74c4423d0ebfbdda2025de19fb6df6c09028d"
+    },
+    {
+      "path": "src/components/universal/workspace/WorkspaceContext.jsx",
+      "before": "38820019ee83673379ddcb5e908c026c00f103af353145e940150e5c4e73a703",
+      "after": "c98e09598436bca593ccd4b1ed67b4853854cf486c2fdd313ff94eed08a6bb00"
+    },
+    {
+      "path": "src/components/universal/workspace/UniversalWorkspace.jsx",
+      "before": "4ed5ed42d458d1bbe4229ad617f1a8fbff9fd7cdc672ceb97f1ee76288d81570",
+      "after": "8bb2eb5d09ad2b8c90e6269ea104cecf58208f264ed7c90c233d62f261b243b9"
+    },
+    {
+      "path": "src/components/universal/workspace/workspaceState.js",
+      "before": "47b3d21d7f118cd23afbaa1d73fa069590d9e12a49a0abd128f77c12dd306715",
+      "after": "d5085c139081972f28fc623349653bdd56241843ccb33ebf7bb4f5ae0663c90d"
+    },
+    {
+      "path": "src/sections/notes/NotesSection.fontPublicacio.revisio.test.jsx",
+      "before": "03eb0106f4151c232907dfa7955a32e7efa0e1b9335dc0aa4e10f246da54b5de",
+      "after": "998dbc16c005be4ace53cf04d83a9afb050fe3517ce2f409a1655e68634c6fd9"
+    },
+    {
+      "path": "src/components/universal/workspace/UniversalWorkspace.test.jsx",
+      "before": "28de4712ee882532d306561a3d04d28971004cc8a070d44fa9aa02e3ee95db8e",
+      "after": "e79e39380982999317edd77f23d6aa7eee416b833fb57d78db2def6db3c6590e"
+    },
+    {
+      "path": "src/components/universal/workspace/workspaceState.test.js",
+      "before": "df8750e47ff5e5e47cc432cce11b0de94b72556eb145cf5f67eb027d87739cb4",
+      "after": "5046b75ffadf6918cb5c0239d241fc9381ff60c6fc502385ce11a76116e46edb"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "5be515e906a26495855ab59280a1e2426ce7ab073f62b3041e1bedc8f2add73c"
+}

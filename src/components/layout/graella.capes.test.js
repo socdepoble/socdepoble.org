@@ -44,8 +44,13 @@ describe('layout.css', () => {
     expect(css).toContain(`@container sdp-arrel (max-width: ${estret}px)`);
     expect(css).toContain(`@media (max-width: ${estret}px)`);
     const talls = [...css.matchAll(/max-width: (\d+)px\)/g)].map(([, n]) => Number(n));
-    /* Cap altre tall de consulta que no siga el d'estret o el de mòbil estret (480). */
-    expect([...new Set(talls)].sort((a, b) => a - b)).toEqual([480, estret]);
+    /* T4 (261004): les sis accions de la barra necessiten llevar el gap a
+       400px. És un ajust de la barra, no un nou tall de les columnes. */
+    expect([...new Set(talls)].sort((a, b) => a - b)).toEqual([400, 480, estret]);
+    const barra = ':where(.sdp-root.is-compact) nav.mobile-nav { gap: 0; padding-inline: 0; justify-content: space-evenly; }';
+    expect(css).toContain(`@container sdp-arrel (max-width: 400px) { ${barra} }`);
+    expect(css).toContain(`@supports not (container-type: inline-size) { @media (max-width: 400px) { ${barra} } }`);
+    expect(vegades(css, 'max-width: 400px)')).toBe(2);
   });
 });
 

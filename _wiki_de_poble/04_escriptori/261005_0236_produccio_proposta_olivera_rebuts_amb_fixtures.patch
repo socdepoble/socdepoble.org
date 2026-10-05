@@ -1,0 +1,898 @@
+--- a/tooling/gates/porta-olivera.mjs
++++ b/tooling/gates/porta-olivera.mjs
+@@ -84,18 +84,27 @@
+   return `${p(ara.getFullYear() % 100)}${p(ara.getMonth() + 1)}${p(ara.getDate())}`;
+ }
+ 
+-/** Documents solts de l'Escriptori, amb data, categoria i cognom. */
+-export function inventari(arrel = arrelPerDefecte()) {
++/** Artefactes regulars visibles del primer nivell, de qualsevol extensió.
++ * Els controls ocults no formen part de la taula documental; Safata i carpetes
++ * permanents conserven els seus circuits. Diagnosticar mai els mou ni els llig.
++ */
++function fitxersSolts(arrel) {
+   const dir = path.join(arrel, ESCRIPTORI);
+   if (!fs.existsSync(dir)) return [];
+   return fs.readdirSync(dir, { withFileTypes: true })
+-    .filter((e) => e.isFile() && !e.name.startsWith('.') && e.name.endsWith('.md'))
++    .filter(e => e.isFile() && !e.name.startsWith('.'))
++    .map(e => ({ nom: e.name, rel: `${ESCRIPTORI}/${e.name}` }));
++}
++
++/** Documents Markdown termodinàmics: política d'envelliment i arxivat intacta. */
++export function inventari(arrel = arrelPerDefecte()) {
++  return fitxersSolts(arrel)
+     .map((e) => {
+-      const m = NOM.exec(e.name);
++      const m = NOM.exec(e.nom);
+       if (!m) return null;
+       const [, data, hora, resta] = m;
+       const categoria = resta.startsWith('pla_implementacio') ? 'pla' : resta.split('_')[0];
+-      return { nom: e.name, rel: `${ESCRIPTORI}/${e.name}`, data, hora, categoria, resta };
++      return { ...e, data, hora, categoria, resta };
+     })
+     .filter(Boolean);
+ }
+@@ -105,23 +114,30 @@
+  * curs». Comparteix resolució amb `ancoratge()`: només compta si el camí
+  * resol al primer nivell; un homònim d'una altra carpeta no protegix la taula.
+  */
+-export function vius(arrel = arrelPerDefecte()) {
++function viusExactes(arrel) {
+   const p = path.join(arrel, INDEX);
+   const text = fs.existsSync(p) ? fs.readFileSync(p, 'utf8') : '';
+   const noms = new Set();
++  const presents = new Set(fitxersSolts(arrel).map(d => d.nom));
+   for (const bloc of prosaIndex(text).matchAll(ACTIVITAT)) {
+     for (const a of bloc[1].matchAll(/\[\[([^\]]+)\]\]/g)) {
+-      const nom = nomPrimerNivell(referent(a[1]));
+-      if (nom) noms.add(nom);
++      const nom = nomPrimerNivell(referent(a[1], false));
++      const resolt = nom && resolNomExacte(nom, presents);
++      if (resolt) noms.add(resolt);
+     }
+   }
+   return noms;
++}
++export function vius(arrel = arrelPerDefecte()) {
++  // Conserva l'API històrica sense .md; la política de ranci compara el fitxer
++  // complet perquè un recurs homònim no acredite la vida d'un altre document.
++  return new Set([...viusExactes(arrel)].map(nom => nom.replace(/\.md$/, '')));
+ }
+ 
+ /** El que hauria d'estar a l'arxiu: categoria de torn, data anterior a hui i cap declaració de viu. */
+ export function ranci(arrel = arrelPerDefecte(), dia = avui()) {
+-  const viu = vius(arrel);
+-  return inventari(arrel).filter((d) => TRANSITORIES.test(d.categoria) && d.data < dia && !viu.has(d.nom.replace(/\.md$/, '')));
++  const viu = viusExactes(arrel);
++  return inventari(arrel).filter((d) => TRANSITORIES.test(d.categoria) && d.data < dia && !viu.has(d.nom));
+ }
+ 
+ /** Pissarra compartida d'aquesta jornada. */
+@@ -158,7 +174,10 @@
+     return fence ? mask(line) : line;
+   }).join('').replace(/`[^`]*`/g, mask);
+ }
+-const referent = raw => raw.replace(/\\(?=[|#])/g,'').split(/[|#]/)[0].trim().replace(/\.md$/, '');
++const referent = (raw, senseMarkdown = true) => {
++  const ref = raw.replace(/\\(?=[|#])/g,'').split(/[|#]/)[0].trim();
++  return senseMarkdown ? ref.replace(/\.md$/, '') : ref;
++};
+ function nomPrimerNivell(ref) {
+   const normalized = path.posix.normalize(ref);
+   for (const candidate of [path.posix.join(ESCRIPTORI,normalized),path.posix.join(CAMINS.wiki,normalized),normalized]) {
+@@ -167,18 +186,28 @@
+   return null;
+ }
+ 
++// Una extensió explícita sempre identifica eixe recurs. Només un referent
++// sense extensió pot abreviar .md; noms Markdown amb punts usen .md explícit.
++function resolNomExacte(nom, presents) {
++  return presents.has(nom) ? nom : !path.posix.extname(nom) && presents.has(`${nom}.md`) ? `${nom}.md` : null;
++}
++
+ /** Documents de l'Escriptori sense àncora a l'índex, i àncores a documents absents. */
+ export function ancoratge(arrel = arrelPerDefecte()) {
+   const indexPath = path.join(arrel, INDEX);
+   const text = fs.existsSync(indexPath) ? fs.readFileSync(indexPath, 'utf8') : '';
+-  const ancores = [...prosaIndex(text).matchAll(/\[\[([^\]]+)\]\]/g)].map((m) => referent(m[1]));
+-  const docs = inventari(arrel).filter((d) => d.nom !== '00_index_escriptori.md');
+-  const noms = new Set(docs.map((d) => d.nom.replace(/\.md$/, '')));
+-  const ancorats = new Set(ancores.map(nomPrimerNivell).filter(Boolean));
++  const ancores = [...prosaIndex(text).matchAll(/\[\[([^\]]+)\]\]/g)].map(m => referent(m[1], false));
++  const presents = fitxersSolts(arrel);
++  const docs = presents.filter(d => d.nom !== '00_index_escriptori.md');
++  const noms = new Set(presents.map(d => d.nom));
++  // Obsidian permet ometre .md. Un nom exacte present preval sobre eixa
++  // abreviatura: [[x.jpg]] mai acredita alhora x.jpg i x.jpg.md.
++  const resol = nom => resolNomExacte(nom, noms);
++  const referents = ancores.map(ref => ({ ref, nom: nomPrimerNivell(ref) })).filter(a => a.nom);
++  const ancorats = new Set(referents.map(a => resol(a.nom)).filter(Boolean));
+   return {
+-    senseAncora: docs.filter((d) => !ancorats.has(d.nom.replace(/\.md$/, ''))).map((d) => d.nom),
+-    // Només comptem àncores planes: les que porten `/` apunten fora de l'Escriptori.
+-    fantasma: ancores.filter((a) => !a.includes('/') && !noms.has(a) && a !== '00_index_escriptori')
++    senseAncora: docs.filter(d => !ancorats.has(d.nom)).map(d => d.nom),
++    fantasma: referents.filter(a => !resol(a.nom)).map(a => a.ref)
+   };
+ }
+ 
+@@ -186,7 +215,7 @@
+  * Escriptori net: la definició única (AGENTS §0.1) i el que jutja l'informe.
+  * Brossa, Safata i àncores; el «pla de hui» no hi entra, és cosa de la petorreta.
+  */
+-export function checkTaula(arrel = arrelPerDefecte(), { dia = avui() } = {}) {
++function errorsEstructura(arrel) {
+   const errors = [];
+   for (const [rel, directory] of [[ESCRIPTORI, true], [INDEX, false]]) {
+     try {
+@@ -198,6 +227,10 @@
+       errors.push(`Estructura de l'Escriptori absent: ${rel}`);
+     }
+   }
++  return errors;
++}
++export function checkTaula(arrel = arrelPerDefecte(), { dia = avui() } = {}) {
++  const errors = errorsEstructura(arrel);
+   if (errors.length) return { valid: false, errors };
+ 
+   const bruts = ranci(arrel, dia);
+@@ -297,6 +330,10 @@
+  * les notes es queden on són, i per nom tampoc ixen.
+  */
+ export function arxivables(arrel = arrelPerDefecte(), { noms = [], dia = avui() } = {}) {
++  // Fins i tot una simulació o un lot buit ha comprovat la seua estructura.
++  // No convertir una còpia buida/índex absent en «Res a arxivar» amb èxit.
++  const errors = errorsEstructura(arrel);
++  if (errors.length) throw new Error(errors.join('\n'));
+   if (!noms.length) return ranci(arrel, dia);
+   const inv = inventari(arrel);
+   const triats = [];
+@@ -398,13 +435,14 @@
+     return 1;
+   }
+   const docs = inventari(arrel);
+-  const presents = new Set(docs.map((d) => d.nom.replace(/\.md$/, '')));
+-  const viu = [...vius(arrel)].filter((n) => presents.has(n)).sort();
++  const activitat = viusExactes(arrel);
++  const viu = docs.filter(d => activitat.has(d.nom)).map(d => d.nom.replace(/\.md$/, '')).sort();
+   const bruts = ranci(arrel, dia);
+   const bustia = safata(arrel);
+   const anc = ancoratge(arrel);
+   const pla = plaDeHui(arrel, dia);
+   console.log(`[Porta Olivera] Escriptori: ${docs.length} documents solts.`);
++  console.log(`ℹ️ Artefactes regulars visibles de primer nivell: ${fitxersSolts(arrel).filter(d => d.nom !== '00_index_escriptori.md').length}; tots exigixen àncora, l'arxivat de torn continua limitat a Markdown.`);
+   console.log(viu.length
+     ? `🌿 Declarats vius a «## Activitat en curs» (es conserven): ${viu.join(', ')}`
+     : '🌿 Cap document de la taula declarat viu a «## Activitat en curs».');
+--- a/tests/cognitive-preflight.test.mjs
++++ b/tests/cognitive-preflight.test.mjs
+@@ -6,10 +6,14 @@
+ import {pathToFileURL} from 'node:url';
+ import {spawnSync} from 'node:child_process';
+ import {fixture, REPO} from './helpers/documental.mjs';
+-import {openTurn, deliverContext, readTurn} from '../tooling/documental/turns.mjs';
++import {openTurn, deliverContext, readTurn, checkTurn, bindPlan, protectedTurnFiles, ownPaths, mutateTurn, validateDocument} from '../tooling/documental/turns.mjs';
++import * as turns from '../tooling/documental/turns.mjs';
++import {validDoc, writeDoc, relay} from './helpers/documental.mjs';
++import {inspeccionaText} from '../tooling/gates/porta-plantilla-viva.mjs';
++import {draft} from '../tooling/wiki/document.mjs';
+ import {createDraft} from '../tooling/wiki/document.mjs';
+ import {anchored, withoutCode} from '../tooling/documental/core.mjs';
+-import {checkTaula, vius, ranci, avui} from '../tooling/gates/porta-olivera.mjs';
++import {checkTaula, vius, ranci, avui, ancoratge, arxiva, arxivables, inventari} from '../tooling/gates/porta-olivera.mjs';
+ const DESK='_wiki_de_poble/04_escriptori';
+ const INDEX=`${DESK}/00_index_escriptori.md`;
+ const doc=(name)=>`${DESK}/${avui()}_1230_${name}.md`;
+@@ -158,3 +162,285 @@
+  assert.doesNotMatch(cli.stdout,/✅/);
+  assert.doesNotMatch(cli.stderr,/\n\s+at /,'diagnòstic sense stack cru');
+ });
++
++
++// T5-10: un derivat és evidència de treball encara que no siga Markdown.
++for (const extension of ['jpg','json','patch','html','PNG']) test(`recurs .${extension} exigix àncora exacta i no es declara fantasma quan existix`,t=>{
++ const root=fixture(t),name=`x.${extension}`,file=`${DESK}/${name}`;
++ const bytes=Buffer.from([0,255,10,13,127]);put(root,file,bytes);
++ assert.deepEqual(ancoratge(root),{senseAncora:[name],fantasma:[]});
++ assert.equal(checkTaula(root).valid,false,'el recurs no ancorat no pot donar verd');
++ put(root,INDEX,`# Índex\n\n- [[${name}]]\n`);
++ assert.deepEqual(ancoratge(root),{senseAncora:[],fantasma:[]});
++ assert.equal(checkTaula(root).valid,true,'recurs existent amb extensió exacta');
++ assert.deepEqual(fs.readFileSync(path.join(root,file)),bytes,'diagnosticar no transforma els bytes');
++ fs.unlinkSync(path.join(root,file));
++ assert.deepEqual(ancoratge(root),{senseAncora:[],fantasma:[name]});
++ assert.equal(checkTaula(root).valid,false,'una àncora al recurs absent fa caure la porta');
++});
++test('fragments, àlies escapats i camins de primer nivell resolen el recurs exacte',t=>{
++ const root=fixture(t),name='prova.report.json';put(root,`${DESK}/${name}`,'{}\n');
++ for (const ref of [name,`04_escriptori/${name}`,`${DESK}/${name}`,`${name}#Resultats|informe`,`${name}\\|informe`]) {
++  put(root,INDEX,`# Índex\n\n| Evidència |\n| --- |\n| [[${ref}]] |\n`);
++  assert.deepEqual(ancoratge(root),{senseAncora:[],fantasma:[]},ref);
++ }
++ fs.unlinkSync(path.join(root,DESK,name));
++ put(root,INDEX,`# Índex\n- [[04_escriptori/${name}]]\n`);
++ assert.deepEqual(ancoratge(root),{senseAncora:[],fantasma:[`04_escriptori/${name}`]});
++});
++test('un homònim sense extensió, extern, comentat o en codi no ancora un recurs',t=>{
++ const root=fixture(t),name='x.jpg';put(root,`${DESK}/${name}`,'x');
++ for (const ref of ['[[x]]','[[x.md]]',`[[../90_arxiu_historic/${name}]]`,`[[02_investigacio_ia/${name}]]`,`<!-- [[${name}]] -->`,`\`[[${name}]]\``,`\`\`\`markdown\n[[${name}]]\n\`\`\``]) {
++  put(root,INDEX,`# Índex\n${ref}\n`);
++  assert.deepEqual(ancoratge(root).senseAncora,[name],ref);
++  assert.equal(checkTaula(root).valid,false,ref);
++ }
++});
++test('l’àncora amb extensió distingix x.jpg de x.jpg.md sense acreditar-los junts',t=>{
++ const root=fixture(t);put(root,`${DESK}/x.jpg`,'image');put(root,`${DESK}/x.jpg.md`,'# nota\n');
++ put(root,INDEX,'# Índex\n- [[x.jpg]]\n');
++ assert.deepEqual(ancoratge(root),{senseAncora:['x.jpg.md'],fantasma:[]});
++ fs.appendFileSync(path.join(root,INDEX),'- [[x.jpg.md]]\n');
++ assert.deepEqual(ancoratge(root),{senseAncora:[],fantasma:[]});
++});
++test('els recursos i Markdown sense nom termodinàmic s’ancoren però l’arxivat de torn continua acotat',t=>{
++ const root=fixture(t),resource='250101_0900_auditoria_prova.json',note='notes humanes.md';
++ put(root,`${DESK}/${resource}`,'{}\n');put(root,`${DESK}/${note}`,'# nota\n');
++ assert.deepEqual(ancoratge(root).senseAncora,[resource,note]);
++ put(root,INDEX,`# Índex\n- [[${resource}]]\n- [[notes humanes]]\n`);
++ assert.equal(checkTaula(root).valid,true);
++ assert.deepEqual(inventari(root),[],'només metadades Markdown termodinàmiques');
++ assert.deepEqual(ranci(root,'991231'),[],'cap política nova d’envelliment de recursos');
++ assert.deepEqual(arxivables(root),[]);
++ assert.throws(()=>arxivables(root,{noms:[resource]}),/no és cap document solt/);
++ assert.deepEqual(arxiva(root),{moguts:[],index:false,sec:false});
++ assert.equal(fs.readFileSync(path.join(root,DESK,resource),'utf8'),'{}\n');
++ assert.equal(fs.readFileSync(path.join(root,DESK,note),'utf8'),'# nota\n');
++});
++
++test('una activitat del recurs homònim sense extensió no protegix el Markdown ranci',t=>{
++ const root=fixture(t),stem='250101_0900_auditoria_homonima';
++ put(root,`${DESK}/${stem}`,'resource');put(root,`${DESK}/${stem}.md`,'# Document\n');
++ put(root,INDEX,`# Índex\n\n## Activitat en curs\n- [[${stem}]]\n\n## Referències\n- [[${stem}.md]]\n`);
++ assert.deepEqual(ancoratge(root),{senseAncora:[],fantasma:[]});
++ assert.deepEqual(ranci(root,'991231').map(d=>d.nom),[`${stem}.md`]);
++ assert.equal(checkTaula(root,{dia:'991231'}).valid,false);
++ fs.appendFileSync(path.join(root,INDEX),`\n## Activitat en curs (document)\n- [[${stem}.md]]\n`);
++ assert.deepEqual(ranci(root,'991231'),[],'amb declaració exacta Markdown, el document continua viu');
++ assert.equal(checkTaula(root,{dia:'991231'}).valid,true);
++});
++
++test('els controls ocults i carpetes permanents no entren en l’ancoratge de la taula',t=>{
++ const root=fixture(t);
++ put(root,`${DESK}/.DS_Store`,Buffer.from([0,255,10]));
++ put(root,`${DESK}/.ancora_sessio.json`,'{"control":true}\n');
++ put(root,`${DESK}/01_produccio/prova.jpg`,'human');
++ put(root,`${DESK}/02_investigacio_ia/prova.json`,'{}\n');
++ assert.deepEqual(ancoratge(root),{senseAncora:[],fantasma:[]});
++ assert.equal(checkTaula(root).valid,true);
++ assert.deepEqual(arxiva(root),{moguts:[],index:false,sec:false});
++ assert.equal(fs.readFileSync(path.join(root,DESK,'01_produccio/prova.jpg'),'utf8'),'human');
++ assert.equal(fs.readFileSync(path.join(root,DESK,'.ancora_sessio.json'),'utf8'),'{"control":true}\n');
++});
++
++test('CLI informe jutja els recursos visibles: sense àncora roja, amb nom exacte verda i absent roja',t=>{
++ const root=fixture(t),name='prova.jpg';put(root,`${DESK}/${name}`,Buffer.from([255,216,255]));
++ const run=()=>spawnSync(process.execPath,[path.join(REPO,'tooling/gates/porta-olivera.mjs'),'--informe'],{cwd:os.tmpdir(),env:{...process.env,SDP_ARREL:root},encoding:'utf8',timeout:10000});
++ let result=run();assert.equal(result.status,1,result.stderr);assert.match(result.stdout,/Sense àncora a l'índex: prova\.jpg/);
++ put(root,INDEX,`# Índex\n- [[${name}]]\n`);
++ result=run();assert.equal(result.status,0,result.stderr);assert.match(result.stdout,/Artefactes regulars visibles de primer nivell: 1/);
++ fs.unlinkSync(path.join(root,DESK,name));
++ result=run();assert.equal(result.status,1,result.stderr);assert.match(result.stdout,/Àncores a documents absents.*prova\.jpg/);
++});
++
++test('una extensió de recurs explícita absent no es reapunta a un homònim Markdown',t=>{
++ const root=fixture(t);put(root,`${DESK}/x.jpg`,'image');put(root,`${DESK}/x.jpg.md`,'# Document\n');
++ put(root,INDEX,'# Índex\n- [[x.jpg]]\n- [[x.jpg.md]]\n');
++ assert.equal(checkTaula(root).valid,true);
++ fs.unlinkSync(path.join(root,DESK,'x.jpg'));
++ assert.deepEqual(ancoratge(root),{senseAncora:[],fantasma:['x.jpg']},'l’evidència desapareguda continua denunciada');
++ assert.equal(checkTaula(root).valid,false);
++ put(root,INDEX,'# Índex\n- [[x.jpg.md]]\n');
++ assert.equal(checkTaula(root).valid,true,'el document amb punts s’ancora amb .md explícit');
++});
++
++
++/* T5-09: proves de fallada amb el writer real, sense esborrar rebuts ni fitxers. */
++function failCAS(root, turn, opts, {replace = false} = {}) {
++ const original=fs.writeFileSync;let injected=false, raw, failure;
++ const anchor=`[[${path.basename(opts.file,'.md')}]]`;
++ fs.writeFileSync=(file,data,...args)=>{
++  const result=original(file,data,...args);
++  if(typeof file==='number'&&typeof data==='string'&&data.startsWith('---')&&data.includes(`sdp:${turn.turn_id}:`))raw=data;
++  if(!injected&&typeof file==='number'&&typeof data==='string'&&data.includes(anchor)) {
++   injected=true;fs.appendFileSync(path.join(root,INDEX),'\nText legítim concurrent.\n');
++   if(replace) {
++    fs.renameSync(path.join(root,opts.file),path.join(root,opts.file+'.owned-backup'));
++    original(path.join(root,opts.file),'Document concurrent que no és nostre.\n');
++   }
++  }
++  return result;
++ };
++ try{createDraft(root,turn.turn_id,opts);}catch(error){failure=error;}finally{fs.writeFileSync=original;}
++ assert.equal(injected,true);assert.match(failure?.message||'',/substituït/);
++ return {failure,raw,record:readTurn(root,turn.turn_id)};
++}
++const optsFailed=(suffix='cas')=>({...options('auditoria'),file:doc(`auditoria_failed_${suffix}`)});
++function priorPlan(root,turn) {
++ const plan=validDoc(root,{turn,route:'pla.implementacio',suffix:'pla_previ'});writeDoc(root,plan);bindPlan(root,turn.turn_id,plan.file);relay(root,turn.turn_id);
++ return readTurn(root,turn.turn_id).plan;
++}
++test('T5-09 · rollback CAS conserva una entrega real fallida i no exigix document fantasma',t=>{
++ const root=fixture(t),turn=openTurn(root,{scope:'documents'}),opts=optsFailed();
++ const {record}=failCAS(root,turn,opts);const receipts=Object.values(record.receipts);
++ assert.equal(receipts.length,1,'la traça d’entrega real es conserva');
++ assert.equal(receipts[0].creation?.state,'failed');assert.equal(receipts[0].creation.absent,true);
++ assert.ok(record.history.some(h=>h.action==='create-failed'&&h.receiptId===receipts[0].id));
++ assert.equal(fs.existsSync(path.join(root,opts.file)),false);
++ assert.ok(fs.readFileSync(path.join(root,INDEX),'utf8').includes('Text legítim concurrent.'));
++ assert.ok(!checkTurn(root,turn.turn_id).errors.some(e=>e.includes('Document eliminat sense relleu')));
++ assert.equal(protectedTurnFiles(root).has(opts.file),false);
++});
++test('T5-09 · un create fallit conserva el pla vinculat i permet tancar el torn documental net',t=>{
++ const root=fixture(t),turn=openTurn(root,{scope:'documents'}),plan=priorPlan(root,turn),opts=optsFailed('planned');
++ const {record}=failCAS(root,turn,opts);
++ assert.deepEqual(record.plan,plan);assert.equal(record.state,'planned');
++ assert.equal(checkTurn(root,turn.turn_id).valid,true);
++});
++test('T5-09 · context CLI legacy continua exigint el seu document',t=>{
++ const root=fixture(t),turn=openTurn(root,{scope:'documents'}),opts=optsFailed('legacy');
++ deliverContext(root,turn.turn_id,opts);const receipt=Object.values(readTurn(root,turn.turn_id).receipts)[0];
++ assert.equal(Object.hasOwn(receipt,'creation'),false);
++ assert.ok(checkTurn(root,turn.turn_id).errors.some(e=>e.includes('Document eliminat sense relleu')));
++ assert.equal(protectedTurnFiles(root).has(opts.file),true);
++});
++test('T5-09 · un reflex failed no es pot reproduir ni amagar amb ownership alié',t=>{
++ const root=fixture(t),turn=openTurn(root,{scope:'documents'}),opts=optsFailed('replay');
++ priorPlan(root,turn);const {raw}=failCAS(root,turn,opts);
++ const replay=raw.replaceAll('[pendent]','Comprovat amb evidència.');
++ fs.writeFileSync(path.join(root,opts.file),replay);fs.appendFileSync(path.join(root,INDEX),`\n- [[${path.basename(opts.file,'.md')}]]\n`);
++ ownPaths(root,turn.turn_id,[doc('auditoria_aliena')]);
++ assert.match(validateDocument(root,replay,opts.file).join(),/creació fallida/i);
++ assert.match(checkTurn(root,turn.turn_id).errors.join(),/creació fallida/i);
++ assert.match(inspeccionaText(root,opts.file,replay).errors.join(),/creació fallida/i);
++});
++test('T5-09 · reusar el mateix path amb un context nou autenticat no reactiva el rebut failed',t=>{
++ const root=fixture(t),turn=openTurn(root,{scope:'documents'}),opts=optsFailed('newcontext');
++ priorPlan(root,turn);failCAS(root,turn,opts);
++ const delivery=deliverContext(root,turn.turn_id,opts);
++ const content=draft(delivery,opts).replaceAll('[pendent]','Comprovat amb evidència.');
++ fs.writeFileSync(path.join(root,opts.file),content);fs.appendFileSync(path.join(root,INDEX),`\n- [[${path.basename(opts.file,'.md')}]]\n`);
++ assert.deepEqual(validateDocument(root,content,opts.file),[]);
++ assert.equal(checkTurn(root,turn.turn_id).valid,true);
++ assert.equal(Object.values(readTurn(root,turn.turn_id).receipts).filter(r=>r.creation?.state==='failed').length,1);
++ assert.equal(protectedTurnFiles(root).has(opts.file),true);
++});
++test('T5-09 · reintentar create al mateix path deixa traça failed i un nou committed real',t=>{
++ const root=fixture(t),turn=openTurn(root,{scope:'documents'}),opts=optsFailed('retry');
++ failCAS(root,turn,opts);createDraft(root,turn.turn_id,opts);
++ const receipts=Object.values(readTurn(root,turn.turn_id).receipts);
++ assert.deepEqual(receipts.map(r=>r.creation?.state),['failed','committed']);
++ assert.match(receipts[1].creation.documentHash,/^[a-f0-9]{64}$/);
++ assert.ok(fs.existsSync(path.join(root,opts.file)));
++});
++test('T5-09 · un fitxer concurrent existent no es certifica absent ni esborra',t=>{
++ const root=fixture(t),turn=openTurn(root,{scope:'documents'}),opts=optsFailed('partial');
++ const {record}=failCAS(root,turn,opts,{replace:true});
++ assert.equal(Object.values(record.receipts)[0].creation?.state,'prepared');
++ assert.equal(fs.readFileSync(path.join(root,opts.file),'utf8'),'Document concurrent que no és nostre.\n');
++ assert.match(checkTurn(root,turn.turn_id).errors.join(),/creació pendent/i);
++});
++test('T5-09 · si falla consolidar el rebut, conserva draft i índex però queda prepared visible',t=>{
++ const root=fixture(t),turn=openTurn(root,{scope:'documents'}),opts=optsFailed('commit');
++ const original=fs.writeFileSync;let injected=false;
++ fs.writeFileSync=(file,data,...args)=>{
++  if(typeof file==='string'&&file.includes(`${path.sep}turns${path.sep}`)&&typeof data==='string'&&data.includes('create-committed')) {
++   injected=true;throw new Error('EIO: fallada sintètica consolidant rebut');
++  }
++  return original(file,data,...args);
++ };
++ try{assert.throws(()=>createDraft(root,turn.turn_id,opts),/EIO: fallada sintètica/);}finally{fs.writeFileSync=original;}
++ assert.equal(injected,true);assert.equal(fs.existsSync(path.join(root,opts.file)),true);
++ assert.ok(anchored(fs.readFileSync(path.join(root,INDEX),'utf8'),opts.file));
++ const receipt=Object.values(readTurn(root,turn.turn_id).receipts)[0];
++ assert.equal(receipt.creation?.state,'prepared');assert.equal(protectedTurnFiles(root).has(opts.file),true);
++ assert.match(checkTurn(root,turn.turn_id).errors.join(),/creació pendent/i);
++});
++test('T5-09 · un únic rebut failed no és context actiu per a vincular un pla',t=>{
++ const root=fixture(t),turn=openTurn(root,{scope:'documents'}),opts=optsFailed('bind');failCAS(root,turn,opts);
++ const plan=validDoc(root,{route:'pla.implementacio',suffix:'pla_d_un_altre_torn'});writeDoc(root,plan);
++ assert.throws(()=>bindPlan(root,turn.turn_id,plan.file),/context actiu/i);
++});
++test('T5-09 · un symlink sobre el path failed falla tancat sense llegir-ne el destí privat',t=>{
++ const root=fixture(t),turn=openTurn(root,{scope:'documents'}),opts=optsFailed('symlink');failCAS(root,turn,opts);
++ const outside=fs.mkdtempSync(path.join(os.tmpdir(),'sdp-private-failed-'));t.after(()=>fs.rmSync(outside,{recursive:true,force:true}));
++ const target=path.join(outside,'privat.md');fs.writeFileSync(target,'CONTINGUT_PRIVAT_NO_LLEGIR');fs.symlinkSync(target,path.join(root,opts.file));
++ const original=fs.readFileSync;let outsideRead=false;
++ fs.readFileSync=(file,...args)=>{if(file===target||file===path.join(root,opts.file))outsideRead=true;return original(file,...args);};
++ try{assert.match(checkTurn(root,turn.turn_id).errors.join(),/creació fallida.*no regular/i);}finally{fs.readFileSync=original;}
++ assert.equal(outsideRead,false);assert.equal(fs.readFileSync(target,'utf8'),'CONTINGUT_PRIVAT_NO_LLEGIR');
++});
++
++test('T5-09 · recuperar una creació prepared comprova bytes i àncora abans de committed',t=>{
++ const root=fixture(t),turn=openTurn(root,{scope:'documents'}),opts=optsFailed('recover');
++ const delivery=deliverContext(root,turn.turn_id,{...opts,creation:true}),raw=draft(delivery,opts);
++ fs.writeFileSync(path.join(root,opts.file),raw);fs.appendFileSync(path.join(root,INDEX),`\n- [[${path.basename(opts.file,'.md')}]]\n`);
++ assert.throws(()=>turns.commitCreation(root,turn.turn_id,delivery.reflex,raw+'CANVI'),/pendent/);
++ assert.equal(Object.values(readTurn(root,turn.turn_id).receipts)[0].creation.state,'prepared');
++ turns.commitCreation(root,turn.turn_id,delivery.reflex,raw);
++ assert.equal(Object.values(readTurn(root,turn.turn_id).receipts)[0].creation.state,'committed');
++ assert.ok(!checkTurn(root,turn.turn_id).errors.some(e=>/creació pendent/i.test(e)));
++});
++test('T5-09 · una fase prepared no autoritza documents encara que s’invente un tancament independent',t=>{
++ const root=fixture(t),turn=openTurn(root,{scope:'documents'}),opts=optsFailed('fakeclosed');
++ const delivery=deliverContext(root,turn.turn_id,{...opts,creation:true}),raw=draft(delivery,opts).replaceAll('[pendent]','Comprovat amb evidència.');
++ fs.writeFileSync(path.join(root,opts.file),raw);
++ mutateTurn(root,turn.turn_id,record=>{record.state='closed';});
++ assert.match(validateDocument(root,raw,opts.file,{closed:true}).join(),/creació pendent/i);
++ assert.match(inspeccionaText(root,opts.file,raw).errors.join(),/creació pendent/i);
++});
++test('T5-09 · un reflex inventat al path failed no s’oculta darrere ownership',t=>{
++ const root=fixture(t),turn=openTurn(root,{scope:'documents'}),opts=optsFailed('unknownreplay');
++ priorPlan(root,turn);const {raw,record}=failCAS(root,turn,opts);
++ const id=Object.values(record.receipts).at(-1).id;
++ const fake=raw.replace(id,'00000000-0000-4000-8000-000000000000').replaceAll('[pendent]','Comprovat amb evidència.');
++ fs.writeFileSync(path.join(root,opts.file),fake);ownPaths(root,turn.turn_id,[doc('auditoria_aliena')]);
++ assert.match(checkTurn(root,turn.turn_id).errors.join(),/Rebut absent/i);
++});
++
++test('T5-09 · afegir una fase failed sense traça real no eximix el document obligatori',t=>{
++ const root=fixture(t),turn=openTurn(root,{scope:'documents'}),opts=optsFailed('inventedphase');
++ deliverContext(root,turn.turn_id,opts);
++ mutateTurn(root,turn.turn_id,record=>{const r=Object.values(record.receipts)[0];r.creation={state:'failed',preparedAt:r.issuedAt,failedAt:r.issuedAt,absent:true};});
++ assert.throws(()=>checkTurn(root,turn.turn_id),/sense traça/i);
++ assert.throws(()=>protectedTurnFiles(root),/sense traça/i);
++});
++
++for (const window of ['before-leaf-lstat', 'before-leaf-open']) {
++ test(`T5-09 · substituir un pare ${window} no llig bytes privats ni acredita absència`, t => {
++  const root=fs.realpathSync(fixture(t)),turn=openTurn(root,{scope:'documents'}),opts=optsFailed(`parent_${window.replaceAll('-','_')}`);
++  const delivery=deliverContext(root,turn.turn_id,{...opts,creation:true});
++  const dir=path.join(root,DESK),file=path.join(root,opts.file),saved=dir+'.original';
++  const outside=fs.mkdtempSync(path.join(os.tmpdir(),'sdp-private-parent-'));
++  t.after(()=>fs.rmSync(outside,{recursive:true,force:true}));
++  const target=path.join(outside,path.basename(file));
++  fs.writeFileSync(file,'Fitxer nostre anterior.\n');fs.writeFileSync(target,'CONTINGUT_PRIVAT_SINTETIC_NO_LLEGIR');
++  const privateStat=fs.statSync(target),oldLstat=fs.lstatSync,oldOpen=fs.openSync,oldRead=fs.readFileSync;
++  let swapped=false,privateRead=false;
++  const swap=()=>{if(!swapped){swapped=true;fs.renameSync(dir,saved);fs.symlinkSync(outside,dir);}};
++  fs.lstatSync=(name,...args)=>{if(window==='before-leaf-lstat'&&name===file)swap();return oldLstat(name,...args);};
++  fs.openSync=(name,...args)=>{if(window==='before-leaf-open'&&name===file)swap();return oldOpen(name,...args);};
++  fs.readFileSync=(name,...args)=>{
++   if(typeof name==='number'){const stat=fs.fstatSync(name);if(stat.dev===privateStat.dev&&stat.ino===privateStat.ino)privateRead=true;}
++   return oldRead(name,...args);
++  };
++  try{assert.throws(()=>turns.failCreation(root,turn.turn_id,delivery.reflex),/no regular|substituïda/);}
++  finally{
++   fs.lstatSync=oldLstat;fs.openSync=oldOpen;fs.readFileSync=oldRead;
++   if(swapped){fs.unlinkSync(dir);fs.renameSync(saved,dir);}
++  }
++  assert.equal(swapped,true);assert.equal(privateRead,false,'cap descriptor privat es llig darrere del pare substituït');
++  assert.equal(Object.values(readTurn(root,turn.turn_id).receipts)[0].creation.state,'prepared');
++  assert.equal(fs.readFileSync(target,'utf8'),'CONTINGUT_PRIVAT_SINTETIC_NO_LLEGIR');
++ });
++}
+--- a/tests/porta-olivera-diagnosi.test.mjs
++++ b/tests/porta-olivera-diagnosi.test.mjs
+@@ -315,3 +315,30 @@
+   assert.equal(r.code, 2);
+   assert.deepEqual(r.errors, [`Sense àncora a l’índex: ${aliena}`]);
+ });
++
++
++/* T5-08/10: controls nous sobre estructura i derivats, sense maquillar D7–D11. */
++test('[CONTROL T5-08] arxiva no declara èxit sobre un Escriptori absent o sense índex',t=>{
++ const empty=fs.mkdtempSync(path.join(os.tmpdir(),'sdp-archive-absent-'));t.after(()=>fs.rmSync(empty,{recursive:true,force:true}));
++ for (const options of [{},{sec:true},{noms:['250101_0900_auditoria_absent.md']}]) {
++  assert.throws(()=>arxiva(empty,options),/Estructura de l'Escriptori absent/);
++  assert.equal(fs.existsSync(path.join(empty,ARXIU)),false,'cap carpeta d’arxiu creada');
++ }
++ const root=mas(t),name=`${VELL}_0900_auditoria_conservada.md`;
++ posa(root,name);fs.unlinkSync(path.join(root,INDEX));
++ assert.throws(()=>arxiva(root,{noms:[name]}),/Estructura de l'Escriptori absent/);
++ assert.equal(aTaula(root,name),true,'fallar abans de moure el document');
++ assert.equal(aArxiu(root,name),false);
++});
++test('[CONTROL T5-10] archivar Markdown preserva byte a byte els derivats i les seues àncores',t=>{
++ const name=`${VELL}_0900_auditoria_consumida.md`,resource='prova.jpg';
++ const root=mas(t,['# Índex','',`- [[${sense(name)}]]`,`- [[${resource}]]`,'']);
++ posa(root,name);posa(root,resource,Buffer.from([255,216,255,0]));
++ const before=fs.readFileSync(path.join(root,DESK,resource));
++ assert.equal(checkTaula(root).errors.some(e=>e.includes('Àncores a documents absents')),false);
++ const result=arxiva(root,{noms:[name]});
++ assert.deepEqual(result.moguts.map(x=>x.nota),['mogut']);
++ assert.deepEqual(fs.readFileSync(path.join(root,DESK,resource)),before);
++ assert.ok(index(root).includes(`[[${resource}]]`),'l’àncora del recurs es conserva');
++ assert.deepEqual(ancoratge(root),{senseAncora:[],fantasma:[]});
++});
+--- a/tooling/documental/turns.mjs
++++ b/tooling/documental/turns.mjs
+@@ -84,7 +84,87 @@
+   fs.writeFileSync(file, `${JSON.stringify(turn, null, 2)}\n`, {flag:'wx', mode:0o600});
+   return turn;
+ }
+-export function deliverContext(root, id, {route:routeId, file}) {
++// Els rebuts de context legacy no tenen fase de creació i conserven el contracte.
++export function isActiveReceipt(receipt) {
++  if (!Object.hasOwn(receipt, 'creation')) return true;
++  const phase = receipt.creation;
++  if (!phase || !['prepared', 'committed', 'failed'].includes(phase.state) || !Number.isFinite(Date.parse(phase.preparedAt))) throw new Error('Fase de creació del rebut invàlida');
++  if (phase.state === 'failed' && (phase.absent !== true || !Number.isFinite(Date.parse(phase.failedAt)))) throw new Error('Absència de creació fallida no acreditada');
++  if (phase.state === 'committed' && (!/^[a-f0-9]{64}$/.test(phase.documentHash || '') || !Number.isFinite(Date.parse(phase.committedAt)))) throw new Error('Creació consolidada sense empremta');
++  return phase.state !== 'failed';
++}
++export function activeReceipts(turn) {
++  return Object.values(turn.receipts).filter(receipt => {
++    if (isActiveReceipt(receipt)) return true;
++    if (!turn.history.some(event => event.action === 'create-failed' && event.receiptId === receipt.id && event.file === receipt.file && event.absent === true && event.at === receipt.creation.failedAt)) throw new Error('Creació fallida sense traça d’absència');
++    return false;
++  });
++}
++
++// Observació física per descriptor: mai llegim un symlink o un hardlink.
++function creationFile(root, relative) {
++  root = fs.realpathSync(root);
++  if (typeof relative !== 'string' || path.isAbsolute(relative) || relative.includes('\\') || relative.split('/').some(p => !p || p === '.' || p === '..')) throw new Error('Ruta de creació documental no regular');
++  const parts = relative.split('/');
++  const parents = () => {
++    let current = root;
++    for (const part of parts.slice(0, -1)) {
++      current = path.join(current, part);
++      try {
++        const stat = fs.lstatSync(current);
++        if (!stat.isDirectory() || stat.isSymbolicLink()) throw new Error('Ruta de creació documental no regular');
++      } catch (error) { if (error.code === 'ENOENT') return false; throw error; }
++    }
++    return true;
++  };
++  if (!parents()) return { exists: false };
++  const file = path.join(root, relative);
++  let named;
++  try { named = fs.lstatSync(file); } catch (error) { if (error.code === 'ENOENT') return { exists: false }; throw error; }
++  const regular = stat => stat.isFile() && !stat.isSymbolicLink() && stat.nlink === 1;
++  if (!regular(named)) throw new Error('Ruta de creació documental no regular');
++  const fd = fs.openSync(file, fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW);
++  try {
++    const opened = fs.fstatSync(fd);
++    if (!regular(opened) || opened.dev !== named.dev || opened.ino !== named.ino) throw new Error('Ruta de creació documental substituïda');
++    if (!parents()) throw new Error('Ruta de creació documental substituïda');
++    const raw = fs.readFileSync(fd, 'utf8');
++    if (!parents()) throw new Error('Ruta de creació documental substituïda');
++    const after = fs.lstatSync(file), last = fs.fstatSync(fd);
++    if (!regular(after) || !regular(last) || after.dev !== opened.dev || after.ino !== opened.ino) throw new Error('Ruta de creació documental substituïda');
++    return { exists: true, raw };
++  } finally { fs.closeSync(fd); }
++}
++function creationReceipt(turn, reflex) {
++  const match = receiptPattern.exec(reflex || '');
++  const receipt = match && match[1] === turn.turn_id && turn.receipts[match[2]];
++  if (!receipt || receipt.creation?.state !== 'prepared') throw new Error('Creació sense rebut preparat');
++  isActiveReceipt(receipt);
++  return receipt;
++}
++export function commitCreation(root, id, reflex, raw) {
++  return mutateTurn(root, id, turn => {
++    const receipt = creationReceipt(turn, reflex);
++    const observed = creationFile(root, receipt.file);
++    const index = creationFile(root, `${DESK}/00_index_escriptori.md`);
++    if (!observed.exists || observed.raw !== raw || parseDocument(raw).data.reflex !== reflex || !index.exists || !anchored(index.raw, receipt.file)) throw new Error('Creació pendent: fitxer, empremta o àncora divergent');
++    const at = new Date().toISOString();
++    receipt.creation = { ...receipt.creation, state: 'committed', committedAt: at, documentHash: sha(raw) };
++    turn.verification = null;
++    turn.history.push({ action: 'create-committed', receiptId: receipt.id, file: receipt.file, at, hash: sha(raw) });
++  });
++}
++export function failCreation(root, id, reflex) {
++  return mutateTurn(root, id, turn => {
++    const receipt = creationReceipt(turn, reflex);
++    if (creationFile(root, receipt.file).exists) throw new Error('Creació pendent: el fitxer encara existix');
++    const at = new Date().toISOString();
++    receipt.creation = { ...receipt.creation, state: 'failed', failedAt: at, absent: true };
++    turn.verification = null;
++    turn.history.push({ action: 'create-failed', receiptId: receipt.id, file: receipt.file, at, absent: true });
++  });
++}
++export function deliverContext(root, id, {route:routeId, file, creation = false}) {
+   const contract = loadContract(root, {route:routeId}), route = resolveRoute(contract, {route:routeId});
+   const rel = relativePath(root, file);
+   if (!(route.destins || [DESK]).some(dir=>rel.startsWith(`${dir}/`)) || humanZone(rel) || path.basename(rel) === '00_index_escriptori.md') throw new Error('Destí de document no autoritzat');
+@@ -99,6 +179,7 @@
+     const receiptId = randomUUID();
+     const receipt = {id:receiptId, route:route.id, routeVersion:route.version, file:rel,
+       contractSnapshot:saveContract(root,contract), template:route.plantilla, templateHash:route.templateHash, issuedAt:new Date().toISOString()};
++    if (creation) receipt.creation = {state:'prepared', preparedAt:new Date().toISOString()};
+     turn.receipts[receiptId] = receipt;
+     // New context invalidates verification, but retains an already bound plan.
+     turn.verification = null;
+@@ -121,6 +202,8 @@
+       const turn = readRecord ? readRecord(m[1]) : readTurn(root, m[1], {closed});
+       const receipt = turn.receipts[m[2]];
+       if (!receipt || receipt.id !== m[2] || receipt.file !== rel) throw new Error('Rebut absent o vinculat a un altre document');
++      if (!isActiveReceipt(receipt)) throw new Error('Rebut de creació fallida: no autoritza cap document');
++      if (receipt.creation?.state === 'prepared') throw new Error('Rebut de creació pendent de consolidar');
+       const contract = receipt.contractSnapshot ? readContract(root,receipt.contractSnapshot,readSnapshot) : loadContract(root,{route:receipt.route});
+       if (!receipt.contractSnapshot && turn.contractHash !== contract.hash) throw new Error('Contracte del rebut caducat');
+       errors.push(...validateSchema(parsed.data, contract.schema));
+@@ -142,7 +225,7 @@
+   if (errors.length || parsed.data.type !== 'document') throw new Error(`Pla invàlid: ${errors.join('; ')}`);
+   if (!rel.startsWith(`${DESK}/`) || humanZone(rel)) throw new Error('El pla ha de viure a l’Escriptori');
+   return mutateTurn(root, id, turn => {
+-    if (!Object.keys(turn.receipts).length) throw new Error('Cal entregar context abans de vincular el pla');
++    if (!activeReceipts(turn).length) throw new Error('Cal entregar context actiu abans de vincular el pla');
+     turn.plan = {file:rel, hash:sha(raw)};
+     turn.verification = null;
+     move(turn, 'planned', 'bind-plan');
+@@ -155,12 +238,13 @@
+   if (!Object.values(turn.receipts).every(r=>r.contractSnapshot) && turn.contractHash !== contract.hash) errors.push('Contracte canviat durant el torn');
+   if (!turn.plan || !fs.existsSync(path.join(root,turn.plan.file)) || hashFile(path.join(root, turn.plan.file)) !== turn.plan.hash) errors.push(`Pla absent o modificat: ${turn.plan?.file || '(sense pla)'}`);
+   if (!['planned', 'verified'].includes(turn.state)) errors.push('El torn encara no està planificat');
+-  const current = inventory(root,{files:Object.values(turn.receipts).map(r=>r.file)}), changed = changes(turn.initial, current);
++  const receipts = activeReceipts(turn);
++  const current = inventory(root,{files:receipts.map(r=>r.file)}), changed = changes(turn.initial, current);
+   // Explicit ownership avoids importing another agent's documents into this turn.
+   // Human-zone and scope checks still use the complete repository delta.
+-  const owned = turn.ownedPaths ? new Set([...turn.ownedPaths,...Object.values(turn.receipts).map(r=>r.file)]) : null;
++  const owned = turn.ownedPaths ? new Set([...turn.ownedPaths,...receipts.map(r=>r.file)]) : null;
+   const documents = new Set([...changed.filter(p=>!humanZone(p)).filter(p=>!turn.relocated?.includes(p)).filter(p=>!owned || owned.has(p)).filter(p => p.startsWith(`${DESK}/`) && p.endsWith('.md')),
+-    ...Object.values(turn.receipts).map(r => r.file)]);
++    ...receipts.map(r => r.file)]);
+   if (turn.scope === 'documents' && changed.some(p => /^(src|tooling|scripts|tests)\//.test(p) || /^package(?:-lock)?\.json$/.test(p))) errors.push('Canvis de codi fora de l’abast documental');
+   for (const p of ['.agents/ESTAT.md', '.agents/LEDGER.md']) {
+     if (current[p] === turn.initial[p] || !fs.readFileSync(path.join(root,p),'utf8').includes(id)) errors.push(`${p}: falta el relleu d’aquest torn`);
+@@ -168,8 +252,23 @@
+   const humanBefore=turn.humanBaseline?.files || (turn.humanInventoryVersion===1 ? Object.fromEntries(Object.entries(turn.initial).filter(([p])=>humanZone(p))) : null);
+   if(!humanBefore) errors.push('Vigilància humana sense inventari inicial; cal una migració explícita observada');
+   else for(const file of changes(humanBefore,Object.fromEntries(Object.entries(current).filter(([p])=>humanZone(p))))) errors.push(`Zona humana modificada: ${file}`);
++  // Una creació fallida no exigix un document absent; el seu reflex no pot
++  // reaparéixer ni quedar ocult per ownership. Un context nou sí que pot usar el path.
++  const blockedFailedFiles = new Set();
++  for (const receipt of Object.values(turn.receipts)) {
++    if (receipt.creation?.state === 'prepared') errors.push(`Creació pendent de consolidar: ${receipt.file}`);
++    if (isActiveReceipt(receipt)) continue;
++    let observed;
++    try { observed = creationFile(root, receipt.file); }
++    catch { errors.push(`Creació fallida amb ruta no regular: ${receipt.file}`); blockedFailedFiles.add(receipt.file); continue; }
++    if (!observed.exists) continue;
++    // El path només pot reaparéixer amb un altre rebut real, també si la nova
++    // autoria és aliena al torn. Ownership no pot amagar un reflex inventat.
++    errors.push(...validateDocument(root,observed.raw,receipt.file,{readRecord:otherId=>otherId===id?turn:readTurn(root,otherId,{closed:true})}).map(error=>`${receipt.file}: ${error}`));
++  }
+   const index = fs.readFileSync(path.join(root, DESK, '00_index_escriptori.md'),'utf8');
+   for (const file of documents) {
++    if (blockedFailedFiles.has(file)) continue;
+     if (humanZone(file)) { errors.push(`Zona humana modificada: ${file}`); continue; }
+     if (!fs.existsSync(path.join(root,file))) { errors.push(`Document eliminat sense relleu: ${file}`); continue; }
+     const raw = fs.readFileSync(path.join(root,file),'utf8');
+@@ -184,7 +283,7 @@
+     if (!checked.valid) throw new Error(checked.errors.join('\n'));
+     const result = runChecks(turn);
+     if (!result.valid) throw new Error(result.errors.join('\n'));
+-    const after = inventory(root,{files:Object.values(turn.receipts).map(r=>r.file)});
++    const after = inventory(root,{files:activeReceipts(turn).map(r=>r.file)});
+     if (changes(checked.current,after).length) throw new Error('La comprovació ha modificat fitxers o hi ha escriptura concurrent');
+     turn.verification = {at:new Date().toISOString(), files:after, checks:result.checks};
+     move(turn,'verified','verify');
+@@ -216,15 +315,16 @@
+     const receipt=turn.receipts[match[2]];
+     const prior = receipt?.file===target && receipt.moves?.find(move=>move.from===source && move.to===target && move.hash===digest);
+     if(!receipt || (receipt.file!==source && !prior)) throw new Error('Rebut del relleu absent');
++    if (!isActiveReceipt(receipt) || receipt.creation?.state === 'prepared') throw new Error('Rebut de relleu sense creació consolidada');
+     if(turn.plan?.file===source && turn.plan.hash!==digest) throw new Error('Pla modificat durant el relleu');
+     // El reflex identifica el rebut immutable que va fer nàixer el document.
+     // Captura IDs exactes: un context posterior per a reutilitzar source no és
+     // cap lectura d'este arxiu. Legacy: prefix d'emissió, sense fiar-se del rellotge.
+     const emitted = Object.values(turn.receipts);
+     const original = emitted.slice(0, emitted.indexOf(receipt)+1).filter(candidate=>
+-      candidate.file===source && candidate.route===receipt.route && candidate.contractSnapshot===receipt.contractSnapshot);
++      isActiveReceipt(candidate) && candidate.file===source && candidate.route===receipt.route && candidate.contractSnapshot===receipt.contractSnapshot);
+     const receiptIds = prior?.receiptIds || original.map(candidate=>candidate.id);
+-    for(const owned of emitted.filter(candidate=>candidate.file===source && receiptIds.includes(candidate.id))) {
++    for(const owned of emitted.filter(candidate=>isActiveReceipt(candidate) && candidate.file===source && receiptIds.includes(candidate.id))) {
+       owned.file=target;
+       owned.moves=[...(owned.moves||[]),{from:source,to:target,hash:digest,at:new Date().toISOString(),receiptIds}];
+     }
+@@ -244,7 +344,7 @@
+     if(!turnPattern.test(turn.turn_id)||!Array.isArray(turn.history)||!turn.receipts) throw new Error(`Torn il·legible: ${name}`);
+     // Closed receipts are protected too until an explicit archival handoff is supported.
+     if(turn.plan?.file) out.add(turn.plan.file);
+-    for(const receipt of Object.values(turn.receipts)) out.add(receipt.file);
++    for(const receipt of activeReceipts(turn)) out.add(receipt.file);
+   }
+   return out;
+ }
+--- a/tooling/wiki/document.mjs
++++ b/tooling/wiki/document.mjs
+@@ -7,7 +7,7 @@
+ import { ROOT, options } from '../documental/cli.mjs';
+ import { loadContract, validateSchema, parseDocument } from '../documental/core.mjs';
+ import { checkDraftDestinations, writeIndexedDraft } from '../documental/draft-write.mjs';
+-import { deliverContext, bindPlan, validateDocument, ownPaths, handoffDocument } from '../documental/turns.mjs';
++import { deliverContext, bindPlan, validateDocument, ownPaths, handoffDocument, commitCreation, failCreation } from '../documental/turns.mjs';
+ 
+ export function draft(delivery, {title, description, actor='agent-local'}) {
+   const now = new Date().toISOString();
+@@ -31,13 +31,21 @@
+   root = fs.realpathSync(root);
+   const file = path.resolve(root, opts.file);
+   checkDraftDestinations(root, file);
+-  const delivery = deliverContext(root,id,opts);
+-  const raw = draft(delivery,opts);
+-  const contract = loadContract(root,{templates:false});
+-  const errors = validateSchema({...delivery.route.output,description:opts.description,visibility:'private',reflex:delivery.reflex},contract.schema);
+-  if (errors.length) throw new Error(errors.join('\n'));
+-  writeIndexedDraft(root, file, raw, { requireCleanTable: ['prompt.local', 'prompt.consell'].includes(delivery.route.id) });
+-  return {file:opts.file,reflex:delivery.reflex,state:'draft',note:'Completa les seccions [pendent] abans de validar.'};
++  const delivery = deliverContext(root,id,{...opts, creation:true});
++  try {
++    const raw = draft(delivery,opts);
++    const contract = loadContract(root,{templates:false});
++    const errors = validateSchema({...delivery.route.output,description:opts.description,visibility:'private',reflex:delivery.reflex},contract.schema);
++    if (errors.length) throw new Error(errors.join('\n'));
++    writeIndexedDraft(root, file, raw, { requireCleanTable: ['prompt.local', 'prompt.consell'].includes(delivery.route.id) });
++    commitCreation(root,id,delivery.reflex,raw);
++    return {file:opts.file,reflex:delivery.reflex,state:'draft',note:'Completa les seccions [pendent] abans de validar.'};
++  } catch (error) {
++    // Si hi ha un fitxer parcial/concurrent o falla la metadata, el rebut queda
++    // preparat i visible per a recuperació. Mai certifiquem una absència falsa.
++    try { failCreation(root,id,delivery.reflex); } catch { /* pendent, sense eliminar res */ }
++    throw error;
++  }
+ }
+ async function main() {
+   const o=options(), root=path.resolve(o.arrel || ROOT), command=o._[0];
+--- a/tooling/documental/command-policy.mjs
++++ b/tooling/documental/command-policy.mjs
+@@ -2,7 +2,7 @@
+ import fs from 'node:fs';
+ import path from 'node:path';
+ import {DESK, humanZone, loadContract, resolveRoute, parseDocument, validateSchema, turnPattern, sha} from './core.mjs';
+-import {readTurn, validateDocument} from './turns.mjs';
++import {readTurn, validateDocument, activeReceipts} from './turns.mjs';
+ import {normalizeShellCommand} from '../gates/mutation-policy.mjs';
+ 
+ // A deliberately small argv language. No shell expansion, escapes, globs or operators.
+@@ -89,7 +89,7 @@
+     physical(root,`.agents/runtime/contracts/${sha(JSON.stringify(contract))}.json`);
+     if(!(route.destins||[DESK]).some(dir=>opts.file.startsWith(`${dir}/`)))throw new Error('Destí divergent de ruta');
+     if(action==='create') {
+-      if(!Object.values(turn.receipts).some(receipt=>receipt.route===route.id&&receipt.file===opts.file))throw new Error('Cal context entregat per a este document abans de create');
++      if(!activeReceipts(turn).some(receipt=>receipt.route===route.id&&receipt.file===opts.file))throw new Error('Cal context entregat per a este document abans de create');
+       if(fs.existsSync(file))throw new Error('create no sobreescriu documents');
+       if(opts.title.length>300||opts.description.length>1000||opts.actor?.length>120)throw new Error('Metadades documentals massa llargues');
+       const errors=validateSchema({...route.output,description:opts.description,visibility:'private'},contract.schema);
+@@ -102,7 +102,7 @@
+     const parsed=parseDocument(content);
+     const errors=validateDocument(root,content,opts.file,{closed:true});
+     if(parsed.data.type!=='document'||errors.length)throw new Error(`Pla documental invàlid: ${errors.join('; ')}`);
+-    if(!Object.keys(turn.receipts).length)throw new Error('Cal context abans de vincular pla');
+-  } else if(!Object.values(turn.receipts).some(receipt=>receipt.file===opts.file)&&turn.plan?.file!==opts.file)throw new Error('own només per a documents amb rebut o pla d’este torn');
++    if(!activeReceipts(turn).length)throw new Error('Cal context actiu abans de vincular pla');
++  } else if(!activeReceipts(turn).some(receipt=>receipt.file===opts.file)&&turn.plan?.file!==opts.file)throw new Error('own només per a documents amb rebut o pla d’este torn');
+   return {kind:'document-mutation',command:action,file:opts.file,turnId:turn.turn_id};
+ }
+--- a/tooling/gates/porta-plantilla-viva.mjs
++++ b/tooling/gates/porta-plantilla-viva.mjs
+@@ -47,7 +47,7 @@
+   DESK, json, parseDocument, loadContract, readContract, resolveRoute,
+   validateSchema, sections, withoutCode, receiptPattern, relativePath
+ } from '../documental/core.mjs';
+-import { validateDocument, protectedTurnFiles } from '../documental/turns.mjs';
++import { validateDocument, protectedTurnFiles, isActiveReceipt } from '../documental/turns.mjs';
+ 
+ export const QUARANTENA = '.sdp-paperera/plantilles';
+ export const REGISTRE_VIGILANT = '.agents/runtime/plantilla-viva.log';
+@@ -139,6 +139,10 @@
+   const receipt = turn?.receipts?.[m[2]];
+   if (turn?.turn_id !== m[1] || !receipt || receipt.id !== m[2]) return { error: 'reflex: el rebut no és al registre del torn' };
+   if (receipt.file !== rel) return { error: `reflex: el rebut és de «${receipt.file}», no d'este fitxer` };
++  try {
++    if (!isActiveReceipt(receipt)) return {error:'reflex: rebut de creació fallida'};
++    if (receipt.creation?.state === 'prepared') return {error:'reflex: rebut de creació pendent de consolidar'};
++  } catch (error) { return {error:error.message}; }
+   return { receipt, id: `${m[1]}:${m[2]}` };
+ }
+ 
+--- a/tests/anticipacio-261003.test.mjs
++++ b/tests/anticipacio-261003.test.mjs
+@@ -72,9 +72,10 @@
+ }
+ 
+ /**
+- * Un repositori fals amb l'Escriptori, l'índex, l'ESTAT i les actes. Cada `.md`
+- * taxonòmic que no és a `vius` s'ancora davall de «## Documents», perquè la porta
+- * Olivera no hi veja àncores pendents que la prova no busca.
++ * Un repositori fals amb l'Escriptori, l'índex, l'ESTAT i les actes. Cada fitxer
++ * visible que no és a `vius` s'ancora davall de «## Documents», inclosos els
++ * recursos amb extensió explícita. L'àncora acredita presència, no vida: B3
++ * encara jutja els solts d'ahir fora de la política Markdown de ranci.
+  */
+ function mas(t, { docs = {}, vius = [], estat = ESTAT, ledger = '# LEDGER\n', actes = [`${AHIR}_2300_acta_marmota.md`], ordre = 'directe' } = {}) {
+   const arrel = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'sdp-anticipacio-mas-')));
+@@ -85,8 +86,9 @@
+   const noms = Object.keys(docs);
+   for (const nom of ordre === 'invers' ? [...noms].reverse() : noms) posa(arrel, `${DESK}/${nom}`, docs[nom]);
+   const declarats = vius.join('\n');
+-  const ancores = noms.filter((n) => /^\d{6}_\d{4}_[a-z0-9_]+\.md$/.test(n) && !declarats.includes(`[[${n.replace(/\.md$/, '')}]]`))
+-    .map((n) => `- [[${n.replace(/\.md$/, '')}]]`);
++  const referent = (nom) => nom.replace(/\.md$/, '');
++  const ancores = noms.filter((n) => !n.startsWith('.') && !declarats.includes(`[[${referent(n)}]]`))
++    .map((n) => `- [[${referent(n)}]]`);
+   posa(arrel, `${DESK}/00_index_escriptori.md`, `---\ntype: index\n---\n# Índex de l'Escriptori\n\n## Activitat en curs\n\n${declarats}\n\n## Documents\n\n${ancores.join('\n')}\n`);
+   posa(arrel, '.agents/ESTAT.md', estat);
+   posa(arrel, '.agents/LEDGER.md', ledger);
+@@ -206,7 +208,7 @@
+ 
+ /* ── 2. Els altres bloquejants ────────────────────────────────────────────── */
+ 
+-test('B3: solts d’ahir que la porta no veu (categoria no de torn, .html, sense segell), però no el ranci que ja és B1', (t) => {
++test('B3: solts d’ahir fora de ranci amb recursos ancorats (categoria no de torn, .html, sense segell), però no el ranci que ja és B1', (t) => {
+   if (salta(t)) return;
+   const arrel = mas(t, {
+     docs: {
+@@ -218,8 +220,13 @@
+     },
+   });
+   posa(arrel, `${DESK}/.DS_Store`, 'brossa del Finder');
++  const taula = olivera.checkTaula(arrel, { dia: DIA });
++  assert.equal(taula.valid, true, taula.errors.join(' · '));
++  const index = fs.readFileSync(path.join(arrel, DESK, '00_index_escriptori.md'), 'utf8');
++  assert.ok(index.includes(`- [[${AHIR}_1200_esborrany_maqueta.html]]`));
++  assert.ok(index.includes('- [[notes_soltes.txt]]'));
+   const m = a.miseries(arrel, { ara: ARA, ruta: 'prompt.local', fitxer: PROMPT, torn: torn(), deps: DEPS });
+-  assert.deepEqual(ids(m.bloquejants), ['B3'], 'la porta Olivera dona verd: és un punt cec');
++  assert.deepEqual(ids(m.bloquejants), ['B3'], 'àncores presents: B3 encara exigeix decidir la vida o el destí dels solts');
+   assert.deepEqual(m.bloquejants[0].docs, [`${AHIR}_0310_visio_arquitectonica_expansio.md`, `${AHIR}_1200_esborrany_maqueta.html`, `${AHIR}_1650_planificacio_claude_massiva.md`, 'notes_soltes.txt']);
+   assert.match(m.bloquejants[0].detall, /categoria «planificacio»/);
+   assert.match(m.bloquejants[0].detall, /extensió \.html/);
+@@ -230,6 +237,27 @@
+   const declarat = mas(t, { docs: { [`${AHIR}_1650_planificacio_claude_massiva.md`]: '# P\n', [PLA_BO]: PLA }, vius: [`- [[${AHIR}_1650_planificacio_claude_massiva]] · fins 261004 · pendent de lectura`] });
+   assert.deepEqual(a.miseries(declarat, { ara: ARA, ruta: 'prompt.local', fitxer: PROMPT, torn: torn(), deps: DEPS }).bloquejants, []);
+ });
++
++/* L'arnés ancóra els recursos per defecte; una absència real continua sent B1,
++   i no substituïx la decisió de B3 sobre els solts d'ahir. */
++for (const recurs of [`${AHIR}_1200_esborrany_maqueta.html`, 'notes_soltes.txt']) {
++  test(`B1+B3: un recurs sense àncora (${recurs}) continua roig sense perdre B3`, (t) => {
++    if (salta(t)) return;
++    const docs = { [`${AHIR}_1200_esborrany_maqueta.html`]: '<p>maqueta</p>\n', 'notes_soltes.txt': 'notes\n', [PLA_BO]: PLA };
++    const arrel = mas(t, { docs });
++    const index = path.join(arrel, DESK, '00_index_escriptori.md');
++    const abans = fs.readFileSync(index, 'utf8');
++    const ancora = `- [[${recurs}]]`;
++    assert.equal(abans.split(ancora).length, 2);
++    fs.writeFileSync(index, abans.replace(ancora, ''));
++    const taula = olivera.checkTaula(arrel, { dia: DIA });
++    assert.equal(taula.valid, false);
++    assert.ok(taula.errors.some((error) => error.includes(recurs)), taula.errors.join(' · '));
++    const m = a.miseries(arrel, { ara: ARA, ruta: 'prompt.local', fitxer: PROMPT, torn: torn(), deps: DEPS });
++    assert.deepEqual(ids(m.bloquejants), ['B1', 'B3']);
++    assert.deepEqual(m.bloquejants.find((b) => b.id === 'B3').docs, [`${AHIR}_1200_esborrany_maqueta.html`, 'notes_soltes.txt']);
++  });
++}
+ 
+ test('B4: pla absent, d’una altra hora, buit, sense vincular, amb sufix d’actor o invàlid; el bo passa i el pla mateix no es demana', (t) => {
+   if (salta(t)) return;
+@@ -1111,7 +1139,24 @@
+ test('CLI (camí amb espais): sense les portes del repositori falla tancat amb B6, és lectura i rebutja banderes dolentes', (t) => {
+   if (salta(t)) return;
+   const arrel = mas(t, { docs: { [PLA_BO]: PLA } });
+-  const cli = (...args) => spawnSync(process.execPath, [MODUL, ...args], { cwd: arrel, env: { ...process.env, SDP_ARREL: arrel }, encoding: 'utf8', timeout: 20000 });
++  // El fill usa la mateixa jornada sintètica que el Mas. El Date del pare no
++  // es toca; els constructors amb arguments i Date.now conserven el contracte.
++  const rellotge = path.join(arrel, 'rellotge-sintetic.mjs');
++  fs.writeFileSync(rellotge, `import assert from 'node:assert/strict';
++const DateReal = globalThis.Date;
++const ara = ${ARA.getTime()};
++class DateSintetic extends DateReal {
++  constructor(...args) { if (args.length) super(...args); else super(ara); }
++  static now() { return ara; }
++}
++globalThis.Date = DateSintetic;
++assert.equal(new Date().getTime(), ara);
++assert.equal(Date.now(), ara);
++assert.equal(new Date(0).getTime(), 0);
++assert.equal(new Date('2000-01-01T00:00:00.000Z').getTime(), DateReal.parse('2000-01-01T00:00:00.000Z'));
++assert.equal(new Date(2020, 0, 2).getTime(), new DateReal(2020, 0, 2).getTime());
++`);
++  const cli = (...args) => spawnSync(process.execPath, ['--import', pathToFileURL(rellotge).href, MODUL, ...args], { cwd: arrel, env: { ...process.env, SDP_ARREL: arrel }, encoding: 'utf8', timeout: 20000 });
+   const json = cli('--json', '--ruta', 'prompt.local', '--fitxer', PROMPT);
+   assert.equal(json.status, 1, json.stderr);
+   assert.match(json.stderr, /dependència no carregada: porta-olivera\.mjs/);

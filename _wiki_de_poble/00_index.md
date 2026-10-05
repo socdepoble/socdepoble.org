@@ -25,7 +25,6 @@ D'ací pengen la identitat, el saber, les eines, les actes i l'Escriptori de Só
 - [[connexio_radical]]
 - [[ADR-2026-08-ONLINE-FIRST]]
 - [[estandard_ui_universal]]
-- [[pla_director_legal_i_subvencions]]
 
 ## Arxiu Històric
 
@@ -59,7 +58,6 @@ D'ací pengen la identitat, el saber, les eines, les actes i l'Escriptori de Só
 - [[10_actes/260918_1436_ACTA_MARMOTA_Unificacio_i_Llucidesa.md]]
 ## Escriptori i Safata d'Entrada
 
-- [[00_index_escriptori]]
 
 
 ## Taxonomia
@@ -86,16 +84,11 @@ D'ací pengen la identitat, el saber, les eines, les actes i l'Escriptori de Só
 - [[02_saber/maquina.md]]
 
 ## Orphans Recovered
-- [[AGENTS.md]]
 - [CLAUDE.md](../CLAUDE.md)
 - [INTEGRACIO.md](../INTEGRACIO.md)
 - [VEINS.md](../VEINS.md)
 - [[_wiki_de_poble/01_ser/personalitat_iaia.md]]
 - [Contingència històrica](02_saber/protocols_tecnics/contingencia_offline.md)
-- [[_wiki_de_poble/04_escriptori/01_produccio/260911_0006_tasques_ui_standardization.md]]
-- [[_wiki_de_poble/04_escriptori/01_produccio/260911_0012_agenda_futur_extensio_chrome.md]]
-- [[_wiki_de_poble/04_escriptori/01_produccio/260911_0645_propostes_manifest_panell_control.md]]
-- [[_wiki_de_poble/04_escriptori/01_produccio/contracte_graella.md]]
 - [[_wiki_de_poble/10_actes/260921_1002_acta_marmota.md]]
 - [Auditoria històrica de vigència](../docs/auditories/260915_0436_AUDITORIA_purga_vigencia.md)
 - [[10_actes/260918_1736_ACTA_MARMOTA_Disseny_Bloc_Notes.md]]
@@ -108,4 +101,3 @@ D'ací pengen la identitat, el saber, les eines, les actes i l'Escriptori de Só
 
 ## Vincles
 
-- [[00_index_escriptori]]

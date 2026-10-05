@@ -13,8 +13,10 @@ import {PAGINES_AMB_XAT, TIPUS_SUBJECTE_XAT, rutaDeSubjecte} from '../src/data/c
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const MIGRACIO = 'supabase/migrations/2609282100_xat_de_pagina.sql';
+const CANONICA = 'supabase/migrations/2610042330_xat_pagina_iaia.sql';
 const llig = (cami) => fs.readFileSync(path.join(REPO, cami), 'utf8');
 const sql = llig(MIGRACIO);
+const sqlCanonica = llig(CANONICA);
 const readme = llig('supabase/README.md');
 const capcalera = sql.slice(0, sql.indexOf('begin;'));
 
@@ -95,6 +97,9 @@ const funcionsDe = (sts) => sts.flatMap((st) => {
   return [{esquema: m[1], nom: m[2], capcalera: (cosA === -1 ? st : st.slice(0, cosA)).toLowerCase(), st}];
 });
 const FUNCIONS = funcionsDe(STS);
+const STS_CANONICA = sentencies(sqlCanonica);
+const FUNCIONS_VIGENTS = funcionsDe([...STS, ...STS_CANONICA]);
+const subjecteVigent = () => FUNCIONS_VIGENTS.filter((f) => f.nom === 'xat_subjecte').at(-1);
 const funcio = (nom) => {
   const f = FUNCIONS.find((x) => x.nom === nom);
   assert.ok(f, `${nom} absent`);
@@ -264,12 +269,13 @@ test('private.xat_subjecte: mai notes i organitzacions de membres només per a m
   assert.match(f.st, /o\.tenant_id = p_tenant_id/i);
 });
 
-test('una pàgina només té xat si és de la llista tancada del client, amb el títol del servidor', () => {
-  const f = funcio('xat_subjecte');
+test('la llista vigent de pàgines després d’història + correcció és exactament la del client', () => {
+  const f = subjecteVigent();
+  assert.ok(f, 'resolutor vigent absent');
   const parells = [...f.st.matchAll(/\('(\/[a-z]+)', '((?:[^']|'')*)'\)/g)].map(([, cami, nom]) => [cami, nom.replace(/''/g, "'")]);
   assert.deepEqual(Object.fromEntries(parells), {...PAGINES_AMB_XAT});
   assert.equal(parells.length, Object.keys(PAGINES_AMB_XAT).length, 'rutes repetides');
-  assert.match(f.st, /\) as pg \(cami, nom\)\s+where pg\.cami = p_id;/);
+  assert.match(f.st, /\) as pg \(cami, nom\)\s+where pg\.cami = case when p_id = '\/ia' then '\/iaia' else p_id end;/);
   /* Cap ruta privada ni cap prefix: la llista és de rutes senceres. */
   for (const [cami] of parells) {
     assert.doesNotMatch(cami, /^\/(notes|gent|perfil|el-meu-perfil|xat|control|consola|connectar|registre|admin|e)(\/|$)/);
@@ -427,4 +433,92 @@ test('higiene de fitxer: una sola línia buida final i cap vocabulari prohibit',
   assert.ok(sql.endsWith('\n'));
   assert.ok(!sql.endsWith('\n\n'));
   assert.doesNotMatch(sql, /offline-first|local-first/i);
+});
+
+
+// ── Correcció posterior: la història es conserva, la versió vigent canvia ──
+test('la correcció és una transacció posterior amb bloqueig, esperes i reload', () => {
+  assert.equal(STS_CANONICA[0].trim().toLowerCase(), 'begin');
+  assert.match(STS_CANONICA[1], /^\s*set local lock_timeout = '5s'\s*$/i);
+  assert.match(STS_CANONICA[2], /^\s*set local statement_timeout = '120s'\s*$/i);
+  assert.match(STS_CANONICA[3], /^\s*lock table public\.xat_fils in share row exclusive mode\s*$/i);
+  assert.match(STS_CANONICA.at(-2), /^\s*notify pgrst, 'reload schema'\s*$/i);
+  assert.equal(STS_CANONICA.at(-1).trim().toLowerCase(), 'commit');
+  const header = sqlCanonica.slice(0, sqlCanonica.indexOf('begin;'));
+  assert.match(header, /NO aplicada/);
+  assert.ok(header.includes(path.basename(MIGRACIO)));
+  assert.match(header, /moderació/);
+});
+
+test('el resolutor nou conserva totes les autoritzacions i només canvia la clau i l’àlies exacte', () => {
+  const original = funcio('xat_subjecte');
+  assert.match(original.st, /\('\/ia', 'L''ànima de la iaia'\)/, 'la història no es reescriu');
+  const expected = original.st
+    .replace("('/ia', 'L''ànima de la iaia')", "('/iaia', 'L''ànima de la iaia')")
+    .replace('where pg.cami = p_id;', "where pg.cami = case when p_id = '/ia' then '/iaia' else p_id end;");
+  assert.equal(normalitza(subjecteVigent().st), normalitza(expected));
+  const noves = funcionsDe(STS_CANONICA);
+  assert.deepEqual(noves.map((f) => `${f.esquema}.${f.nom}`), ['private.xat_subjecte']);
+  assert.match(noves[0].capcalera, /security definer set search_path = ''/);
+  const revoke = STS_CANONICA[STS_CANONICA.indexOf(noves[0].st) + 1];
+  assert.match(revoke, /^\s*revoke execute on function private\.xat_subjecte\(uuid, text, text\) from public, anon, authenticated\s*$/i);
+  assert.doesNotMatch(STS_CANONICA.join(';\n'), /create policy|grant\s|create.*function public\./i);
+});
+
+test('la identitat canònica arriba a la RPC abans del seu bloqueig i la cerca del fil existent', () => {
+  const vigent = subjecteVigent();
+  assert.match(vigent.st, /select pg\.cami, pg\.nom into v_clau, v_titol/);
+  assert.match(vigent.st, /where pg\.cami = case when p_id = '\/ia' then '\/iaia' else p_id end;/);
+  assert.match(vigent.st, /when p_tipus = 'pagina' then v_clau/);
+  const obri = funcio('obri_fil_de_pagina').st;
+  assert.ok(obri.indexOf('from private.xat_subjecte(') < obri.indexOf('pg_advisory_xact_lock('));
+  assert.match(obri, /hashtextextended\('xat:subjecte:' \|\| p_tenant_id::text \|\| ':' \|\| v_tipus \|\| ':' \|\| v_clau, 0\)/);
+  assert.match(funcio('xat_fil_del_subjecte').st, /f\.subjecte_id = p_subjecte_id and f\.tipus = p_tipus/);
+  assert.doesNotMatch(vigent.st, /where pg\.cami like|where pg\.cami ilike|p_ruta/i);
+});
+
+test('dos fils antics i canònics avorten abans d’actualitzar, sense fusionar històries', () => {
+  const guard = STS_CANONICA.find((st) => /^\s*do \$\$/i.test(st));
+  const update = STS_CANONICA.find((st) => /^\s*update public\.xat_fils f/i.test(st));
+  assert.ok(guard && update, 'guàrdia i actualització necessàries');
+  assert.ok(STS_CANONICA.indexOf(guard) < STS_CANONICA.indexOf(update));
+  assert.match(guard, /f\.subjecte_tipus = 'pagina' and f\.subjecte_id in \('\/ia', '\/iaia'\)/);
+  assert.match(guard, /group by f\.tenant_id, f\.tipus\s+having count\(\*\) > 1/);
+  assert.match(guard, /raise exception 'SDP-XAT-014: hi ha dos fils per a la pàgina canònica\.' using errcode = '23505';/);
+  assert.doesNotMatch(guard, /exception when|raise notice|%/i);
+  assert.doesNotMatch(STS_CANONICA.join(';\n'), /delete from|truncate|drop table|insert into|xat_missatges|xat_participants/i);
+});
+
+test('la migració canvia només metadades del subjecte i conserva id, seq, participants i autoria', () => {
+  const updates = STS_CANONICA.filter((st) => /^\s*update /i.test(st));
+  assert.equal(updates.length, 1);
+  const update = updates[0];
+  assert.match(update, /where f\.subjecte_tipus = 'pagina' and f\.subjecte_id in \('\/ia', '\/iaia'\)/i);
+  const changed = [...update.matchAll(/(?:\bset|,)\s*([a-z_]+)\s*=/gi)].map((m) => m[1]);
+  assert.deepEqual(changed, ['subjecte_id', 'subjecte_ruta', 'subjecte_titol', 'subjecte_uri']);
+  assert.match(update, /set subjecte_id = '\/iaia',\s+subjecte_ruta = '\/iaia',\s+subjecte_titol = 'L''ànima de la iaia'/);
+  assert.match(update, /f\.subjecte_uri like 'https:\/\/%\/ia'/);
+  assert.match(update, /char_length\(f\.subjecte_uri\) <= 598\s+then regexp_replace\(f\.subjecte_uri, '\/ia\$', '\/iaia'\) else null end/);
+  assert.match(update, /else f\.subjecte_uri end/);
+  assert.match(update, /and \(f\.subjecte_id is distinct from '\/iaia'/, 'idempotent: només les files divergents');
+});
+
+test('el CHECK impedeix recrear /ia encara que una RPC antiga estiga en vol', () => {
+  const drop = STS_CANONICA.find((st) => /drop constraint if exists xat_fils_pagina_iaia_canonica/i.test(st));
+  const add = STS_CANONICA.find((st) => /add constraint xat_fils_pagina_iaia_canonica/i.test(st));
+  assert.ok(drop && add);
+  assert.ok(STS_CANONICA.indexOf(drop) < STS_CANONICA.indexOf(add));
+  assert.match(add, /check \(\s*subjecte_tipus is distinct from 'pagina' or subjecte_id is distinct from '\/ia'\s*\)/i);
+  assert.doesNotMatch(add, /not valid/i);
+  assert.ok(STS_CANONICA.indexOf(add) < STS_CANONICA.indexOf(subjecteVigent().st));
+});
+
+test('el README documenta dependència, àlies, identitat estable i conflicte sense dir que està aplicada', () => {
+  const entry = readme.indexOf(`\`migrations/${path.basename(CANONICA)}\``);
+  assert.ok(entry > readme.indexOf(`\`migrations/${path.basename(MIGRACIO)}\``));
+  const docs = readme.slice(entry, readme.indexOf('- `seed.sql`', entry));
+  for (const text of ['/iaia', '/ia', 'SDP-XAT-014', 'id', 'missatges', 'participants', 'NO aplicada']) {
+    assert.ok(docs.includes(text), `${text} absent`);
+  }
+  assert.ok(sqlCanonica.endsWith('\n') && !sqlCanonica.endsWith('\n\n'));
 });

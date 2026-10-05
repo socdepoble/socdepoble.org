@@ -155,8 +155,8 @@ test('T63.2 · objecteDeConnexio: el descriptor de l’original, amb el tipus qu
 test('T63.2 · una persona o una IA connectada: el directe; una pàgina: la seua ruta', () => {
   const persona = { tipus: 'connexio', sectionId: 'perfil', itemId: 'u1', titol: 'Pepa', autorTipus: 'persona', ruta: '/gent/u1', objecte: 'persona' };
   expect(rutaXatDePagina(objecteDeConnexio(persona))).toBe('/xat?amb=u1');
-  const anima = { tipus: 'connexio', sectionId: '', itemId: '/ia', ruta: '/ia', objecte: 'pagina', titol: 'Ànima' };
-  expect(rutaXatDePagina(objecteDeConnexio(anima))).toBe('/xat?sobre=pagina:%2Fia&titol=%C3%80nima&ruta=%2Fia');
+  const anima = { tipus: 'connexio', sectionId: '', itemId: '/iaia', ruta: '/iaia', objecte: 'pagina', titol: 'Ànima' };
+  expect(rutaXatDePagina(objecteDeConnexio(anima))).toBe('/xat?sobre=pagina:%2Fiaia&titol=%C3%80nima&ruta=%2Fiaia');
 });
 
 test('T63.2 · una connexió d’abans de T43 (sense objecte) pren el tipus de la secció, com ConnectarSection', () => {

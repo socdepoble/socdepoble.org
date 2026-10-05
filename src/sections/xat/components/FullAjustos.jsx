@@ -45,8 +45,9 @@ import {
   ArrowDownUp, BellDot, Check, ChevronLeft, ChevronRight, CircleQuestionMark, CircleX, Heart, KeyRound,
   Lock, MessageCircle, Palette, RefreshCw, Search, Star, X
 } from 'lucide-react';
-import { Avatar, Dialeg } from '../../../components/PedraSeca/index.js';
+import { Dialeg } from '../../../components/PedraSeca/index.js';
 import CaraXat from './CaraXat.jsx';
+import { AvatarResolt } from '../../../components/universal/identitat/AvatarResolt.jsx';
 import { PRESETS_COLUMNES, useAppGrid } from '../../../components/layout/AppGridShell.jsx';
 import { useEixidaSegura } from '../../../components/universal/EixidaSegura.jsx';
 import { useNavigate } from '../../../app/contexts/RouterContext';
@@ -90,7 +91,7 @@ function filaPerId(marc, id) {
 export default function FullAjustos({ obert = false, onTanca = noop, onRetornFocus = null }) {
   const { t, setTheme, setLanguage, setContrast } = useUIActions();
   const { themePreference = null, language = null, contrastPreference = null } = useUIState();
-  const { joId = null, joNom = null, chatThreads = CAP } = useXat();
+  const { joId = null, joNom = null, joAvatar = null, chatThreads = CAP } = useXat();
   const sessio = useSessioOpcional();
   const { mida, tancaPanells, applyPreset, columnWidths } = useAppGrid();
   const navigate = useNavigate();
@@ -157,6 +158,7 @@ export default function FullAjustos({ obert = false, onTanca = noop, onRetornFoc
           campRef={campRef}
           joId={joId}
           joNom={joNom}
+          joAvatar={joAvatar}
           preferits={preferits}
           correu={correu}
           ambSessio={Boolean(usuari)}
@@ -248,7 +250,7 @@ function FilaEixidaAmbSessio({ fila, etiqueta }) {
  * null si no se sap) tria la nota que diu on porta «Privacitat».
  */
 export function CosAjustos({
-  t, campRef = null, pilaInicial = ARREL, joId = null, joNom = null, preferits = CAP, correu = null,
+  t, campRef = null, pilaInicial = ARREL, joId = null, joNom = null, joAvatar = null, preferits = CAP, correu = null,
   ambSessio = false, ambPrivacitat = null, FilaEixida = null, tema = null, contrast = null, llengua = null, amplaria = null, mides = null,
   onTema = noop, onContrast = noop, onLlengua = noop, onAmplaria = noop, onVes = noop, onObriConversa = noop, onTanca = noop
 }) {
@@ -360,7 +362,7 @@ export function CosAjustos({
               aria-label={`${joNom || t('section.xat.rail.tu', 'Tu')}, ${t('section.xat.ajustos.elMeuPerfil', 'El meu perfil')}`}
               onClick={() => onVes(RUTES_AJUSTOS.perfil)}
             >
-              <Avatar nom={joNom || t('section.xat.rail.tu', 'Tu')} mida="lg" llavor={joId} alt="" />
+              <AvatarResolt nom={joNom || t('section.xat.rail.tu', 'Tu')} src={joAvatar} mida="lg" llavor={joId} alt="" />
               <span className="sdp-xat-ajustos__perfil-nom">{joNom || t('section.xat.rail.tu', 'Tu')}</span>
             </button>
           </div>

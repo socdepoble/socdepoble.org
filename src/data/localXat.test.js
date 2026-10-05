@@ -106,7 +106,11 @@ describe('la comunitat «Sóc de Poble» de la llavor', () => {
     expect(perSlug.filId).toBe(XAT_SEED_IDS.filGeneral);
     expect(perSlug.fils.map((f) => f.id)).toEqual([XAT_SEED_IDS.filComunitat, XAT_SEED_IDS.filAvisos, XAT_SEED_IDS.filGeneral]);
     expect((await localXat.obriFilDePagina({ tipus: 'entitat', id: XAT_SEED_IDS.entitat }, SEED)).filId).toBe(XAT_SEED_IDS.filGeneral);
-    expect(await localXat.loadFils(SEED)).toHaveLength(4);
+    const fils = await localXat.loadFils(SEED);
+    expect(fils).toHaveLength(5);
+    expect(fils.find((f) => f.id === XAT_SEED_IDS.filBetaTesters)).toMatchObject({
+      tipus: 'grup', titol: 'Beta testers', comunitatId: XAT_SEED_IDS.filComunitat, subjecte: { tipus: 'entitat', id: XAT_SEED_IDS.entitat }
+    });
   });
 
   it('els fils de la llavor conserven comunitatId i subjecte; un fil de pàgina no llista les persones', async () => {
@@ -123,7 +127,7 @@ describe('la comunitat «Sóc de Poble» de la llavor', () => {
     const avisos = (await localXat.loadFils(SEED)).find((f) => f.id === XAT_SEED_IDS.filAvisos);
     expect(avisos.rol).toBe('admin');
     const avis = await localXat.enviaMissatge(XAT_SEED_IDS.filAvisos, { id: 'avis-1', text: 'Dissabte, quedada a la plaça' }, SEED);
-    expect(avis).toMatchObject({ seq: 3, usuariId: 'jo-A', comOrgId: XAT_SEED_IDS.entitat, autorNom: 'Sóc de Poble' });
+    expect(avis).toMatchObject({ seq: 4, usuariId: 'jo-A', comOrgId: XAT_SEED_IDS.entitat, autorNom: 'Sóc de Poble' });
     expect(avis.metadades).toHaveProperty('autorPersona');
   });
 
@@ -131,7 +135,7 @@ describe('la comunitat «Sóc de Poble» de la llavor', () => {
     mock.user = null;
     const avisos = (await localXat.loadFils(SEED)).find((f) => f.id === XAT_SEED_IDS.filAvisos);
     expect(avisos.rol).toBe('membre');
-    expect(await localXat.loadMissatges(XAT_SEED_IDS.filAvisos, SEED)).toHaveLength(2);
+    expect(await localXat.loadMissatges(XAT_SEED_IDS.filAvisos, SEED)).toHaveLength(3);
     await expect(localXat.enviaMissatge(XAT_SEED_IDS.filAvisos, { id: 'avis-convidat', text: 'Hola' }, SEED))
       .rejects.toMatchObject({ code: 'SDP-XAT-011' });
     expect(await localXat.enviaMissatge(XAT_SEED_IDS.filGeneral, { id: 'general-convidat', text: 'Hola' }, SEED))

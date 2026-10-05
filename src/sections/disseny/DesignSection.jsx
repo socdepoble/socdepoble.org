@@ -40,7 +40,16 @@ const entradillaEnCurs = (categoria) => (
  * seua pastilla diu un altre dia i porta a un Calendari on la seua targeta no
  * hi és. Mentre el core carrega (pageCopy buit), mana PAGE_COPY, com abans.
  */
-const copyDeLaPortada = (pageCopy) => pageCopy?.disseny || PAGE_COPY.disseny;
+const PORTADA_ANTIGA = '/assets/uploads/brain/ibanez_pedra_seca_design_1780873465211.png';
+const PORTADA_LLEUGERA = '/assets/uploads/brain/ibanez_pedra_seca_design_1780873465211.jpg';
+const copyDeLaPortada = (pageCopy) => {
+  const page = pageCopy?.disseny || PAGE_COPY.disseny;
+  // Derivat del mateix recurs propi: el core antic conserva text/data/autoria.
+  // Una portada diferent conserva la seua URL i metadades, sense inferir mida.
+  return [PORTADA_ANTIGA, PORTADA_LLEUGERA].includes(page.image)
+    ? { ...page, image: PORTADA_LLEUGERA, imageWidth: 768, imageHeight: 768 }
+    : page;
+};
 
 function CatalogDetail({ item }) {
   const { pageCopy } = useCoreContent();
@@ -58,6 +67,9 @@ function CatalogDetail({ item }) {
         lead={page.lead}
         heroImage={page.image}
         heroAlt={page.imageAlt || ''}
+        heroWidth={page.imageWidth}
+        heroHeight={page.imageHeight}
+        heroFetchPriority="high"
         showLogos={true}
         labels={page.labels}
         copyright={COPYRIGHT_SDP}

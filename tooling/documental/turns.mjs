@@ -1,5 +1,6 @@
 /** Persistent per-turn records. Locks never silently recover; failed writes leave the prior record intact. */
 import { CAMINS } from '../lib/arrel.mjs';
+import { checkTaula } from '../gates/porta-olivera.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
@@ -83,15 +84,102 @@ export function openTurn(root, { actor = 'agent-local', scope = 'code' } = {}) {
   fs.writeFileSync(file, `${JSON.stringify(turn, null, 2)}\n`, {flag:'wx', mode:0o600});
   return turn;
 }
-export function deliverContext(root, id, {route:routeId, file}) {
+// Els rebuts de context legacy no tenen fase de creació i conserven el contracte.
+export function isActiveReceipt(receipt) {
+  if (!Object.hasOwn(receipt, 'creation')) return true;
+  const phase = receipt.creation;
+  if (!phase || !['prepared', 'committed', 'failed'].includes(phase.state) || !Number.isFinite(Date.parse(phase.preparedAt))) throw new Error('Fase de creació del rebut invàlida');
+  if (phase.state === 'failed' && (phase.absent !== true || !Number.isFinite(Date.parse(phase.failedAt)))) throw new Error('Absència de creació fallida no acreditada');
+  if (phase.state === 'committed' && (!/^[a-f0-9]{64}$/.test(phase.documentHash || '') || !Number.isFinite(Date.parse(phase.committedAt)))) throw new Error('Creació consolidada sense empremta');
+  return phase.state !== 'failed';
+}
+export function activeReceipts(turn) {
+  return Object.values(turn.receipts).filter(receipt => {
+    if (isActiveReceipt(receipt)) return true;
+    if (!turn.history.some(event => event.action === 'create-failed' && event.receiptId === receipt.id && event.file === receipt.file && event.absent === true && event.at === receipt.creation.failedAt)) throw new Error('Creació fallida sense traça d’absència');
+    return false;
+  });
+}
+
+// Observació física per descriptor: mai llegim un symlink o un hardlink.
+function creationFile(root, relative) {
+  root = fs.realpathSync(root);
+  if (typeof relative !== 'string' || path.isAbsolute(relative) || relative.includes('\\') || relative.split('/').some(p => !p || p === '.' || p === '..')) throw new Error('Ruta de creació documental no regular');
+  const parts = relative.split('/');
+  const parents = () => {
+    let current = root;
+    for (const part of parts.slice(0, -1)) {
+      current = path.join(current, part);
+      try {
+        const stat = fs.lstatSync(current);
+        if (!stat.isDirectory() || stat.isSymbolicLink()) throw new Error('Ruta de creació documental no regular');
+      } catch (error) { if (error.code === 'ENOENT') return false; throw error; }
+    }
+    return true;
+  };
+  if (!parents()) return { exists: false };
+  const file = path.join(root, relative);
+  let named;
+  try { named = fs.lstatSync(file); } catch (error) { if (error.code === 'ENOENT') return { exists: false }; throw error; }
+  const regular = stat => stat.isFile() && !stat.isSymbolicLink() && stat.nlink === 1;
+  if (!regular(named)) throw new Error('Ruta de creació documental no regular');
+  const fd = fs.openSync(file, fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW);
+  try {
+    const opened = fs.fstatSync(fd);
+    if (!regular(opened) || opened.dev !== named.dev || opened.ino !== named.ino) throw new Error('Ruta de creació documental substituïda');
+    if (!parents()) throw new Error('Ruta de creació documental substituïda');
+    const raw = fs.readFileSync(fd, 'utf8');
+    if (!parents()) throw new Error('Ruta de creació documental substituïda');
+    const after = fs.lstatSync(file), last = fs.fstatSync(fd);
+    if (!regular(after) || !regular(last) || after.dev !== opened.dev || after.ino !== opened.ino) throw new Error('Ruta de creació documental substituïda');
+    return { exists: true, raw };
+  } finally { fs.closeSync(fd); }
+}
+function creationReceipt(turn, reflex) {
+  const match = receiptPattern.exec(reflex || '');
+  const receipt = match && match[1] === turn.turn_id && turn.receipts[match[2]];
+  if (!receipt || receipt.creation?.state !== 'prepared') throw new Error('Creació sense rebut preparat');
+  isActiveReceipt(receipt);
+  return receipt;
+}
+export function commitCreation(root, id, reflex, raw) {
+  return mutateTurn(root, id, turn => {
+    const receipt = creationReceipt(turn, reflex);
+    const observed = creationFile(root, receipt.file);
+    const index = creationFile(root, `${DESK}/00_index_escriptori.md`);
+    if (!observed.exists || observed.raw !== raw || parseDocument(raw).data.reflex !== reflex || !index.exists || !anchored(index.raw, receipt.file)) throw new Error('Creació pendent: fitxer, empremta o àncora divergent');
+    const at = new Date().toISOString();
+    receipt.creation = { ...receipt.creation, state: 'committed', committedAt: at, documentHash: sha(raw) };
+    turn.verification = null;
+    turn.history.push({ action: 'create-committed', receiptId: receipt.id, file: receipt.file, at, hash: sha(raw) });
+  });
+}
+export function failCreation(root, id, reflex) {
+  return mutateTurn(root, id, turn => {
+    const receipt = creationReceipt(turn, reflex);
+    if (creationFile(root, receipt.file).exists) throw new Error('Creació pendent: el fitxer encara existix');
+    const at = new Date().toISOString();
+    receipt.creation = { ...receipt.creation, state: 'failed', failedAt: at, absent: true };
+    turn.verification = null;
+    turn.history.push({ action: 'create-failed', receiptId: receipt.id, file: receipt.file, at, absent: true });
+  });
+}
+export function deliverContext(root, id, {route:routeId, file, creation = false}) {
   const contract = loadContract(root, {route:routeId}), route = resolveRoute(contract, {route:routeId});
   const rel = relativePath(root, file);
   if (!(route.destins || [DESK]).some(dir=>rel.startsWith(`${dir}/`)) || humanZone(rel) || path.basename(rel) === '00_index_escriptori.md') throw new Error('Destí de document no autoritzat');
   if (!/^\d{6}_\d{4}_[a-z0-9_]+\.md$/.test(path.basename(rel))) throw new Error('Nom termodinàmic invàlid');
+  // Convocar agents exigix taula neta també fora d'un hook; una auditoria pot
+  // documentar una taula bruta. create revalida ací, encara que ja tinga context.
+  if (['prompt.local', 'prompt.consell'].includes(route.id)) {
+    const taula = checkTaula(root);
+    if (!taula.valid) throw new Error(`Convocatòria amb Escriptori brut:\n${taula.errors.join('\n')}`);
+  }
   return mutateTurn(root, id, turn => {
     const receiptId = randomUUID();
     const receipt = {id:receiptId, route:route.id, routeVersion:route.version, file:rel,
       contractSnapshot:saveContract(root,contract), template:route.plantilla, templateHash:route.templateHash, issuedAt:new Date().toISOString()};
+    if (creation) receipt.creation = {state:'prepared', preparedAt:new Date().toISOString()};
     turn.receipts[receiptId] = receipt;
     // New context invalidates verification, but retains an already bound plan.
     turn.verification = null;
@@ -114,6 +202,8 @@ export function validateDocument(root, content, file, { closed = false, readReco
       const turn = readRecord ? readRecord(m[1]) : readTurn(root, m[1], {closed});
       const receipt = turn.receipts[m[2]];
       if (!receipt || receipt.id !== m[2] || receipt.file !== rel) throw new Error('Rebut absent o vinculat a un altre document');
+      if (!isActiveReceipt(receipt)) throw new Error('Rebut de creació fallida: no autoritza cap document');
+      if (receipt.creation?.state === 'prepared') throw new Error('Rebut de creació pendent de consolidar');
       const contract = receipt.contractSnapshot ? readContract(root,receipt.contractSnapshot,readSnapshot) : loadContract(root,{route:receipt.route});
       if (!receipt.contractSnapshot && turn.contractHash !== contract.hash) throw new Error('Contracte del rebut caducat');
       errors.push(...validateSchema(parsed.data, contract.schema));
@@ -135,7 +225,7 @@ export function bindPlan(root, id, file) {
   if (errors.length || parsed.data.type !== 'document') throw new Error(`Pla invàlid: ${errors.join('; ')}`);
   if (!rel.startsWith(`${DESK}/`) || humanZone(rel)) throw new Error('El pla ha de viure a l’Escriptori');
   return mutateTurn(root, id, turn => {
-    if (!Object.keys(turn.receipts).length) throw new Error('Cal entregar context abans de vincular el pla');
+    if (!activeReceipts(turn).length) throw new Error('Cal entregar context actiu abans de vincular el pla');
     turn.plan = {file:rel, hash:sha(raw)};
     turn.verification = null;
     move(turn, 'planned', 'bind-plan');
@@ -148,12 +238,13 @@ export function checkTurn(root, id, {turn:provided} = {}) {
   if (!Object.values(turn.receipts).every(r=>r.contractSnapshot) && turn.contractHash !== contract.hash) errors.push('Contracte canviat durant el torn');
   if (!turn.plan || !fs.existsSync(path.join(root,turn.plan.file)) || hashFile(path.join(root, turn.plan.file)) !== turn.plan.hash) errors.push(`Pla absent o modificat: ${turn.plan?.file || '(sense pla)'}`);
   if (!['planned', 'verified'].includes(turn.state)) errors.push('El torn encara no està planificat');
-  const current = inventory(root,{files:Object.values(turn.receipts).map(r=>r.file)}), changed = changes(turn.initial, current);
+  const receipts = activeReceipts(turn);
+  const current = inventory(root,{files:receipts.map(r=>r.file)}), changed = changes(turn.initial, current);
   // Explicit ownership avoids importing another agent's documents into this turn.
   // Human-zone and scope checks still use the complete repository delta.
-  const owned = turn.ownedPaths ? new Set([...turn.ownedPaths,...Object.values(turn.receipts).map(r=>r.file)]) : null;
+  const owned = turn.ownedPaths ? new Set([...turn.ownedPaths,...receipts.map(r=>r.file)]) : null;
   const documents = new Set([...changed.filter(p=>!humanZone(p)).filter(p=>!turn.relocated?.includes(p)).filter(p=>!owned || owned.has(p)).filter(p => p.startsWith(`${DESK}/`) && p.endsWith('.md')),
-    ...Object.values(turn.receipts).map(r => r.file)]);
+    ...receipts.map(r => r.file)]);
   if (turn.scope === 'documents' && changed.some(p => /^(src|tooling|scripts|tests)\//.test(p) || /^package(?:-lock)?\.json$/.test(p))) errors.push('Canvis de codi fora de l’abast documental');
   for (const p of ['.agents/ESTAT.md', '.agents/LEDGER.md']) {
     if (current[p] === turn.initial[p] || !fs.readFileSync(path.join(root,p),'utf8').includes(id)) errors.push(`${p}: falta el relleu d’aquest torn`);
@@ -161,8 +252,23 @@ export function checkTurn(root, id, {turn:provided} = {}) {
   const humanBefore=turn.humanBaseline?.files || (turn.humanInventoryVersion===1 ? Object.fromEntries(Object.entries(turn.initial).filter(([p])=>humanZone(p))) : null);
   if(!humanBefore) errors.push('Vigilància humana sense inventari inicial; cal una migració explícita observada');
   else for(const file of changes(humanBefore,Object.fromEntries(Object.entries(current).filter(([p])=>humanZone(p))))) errors.push(`Zona humana modificada: ${file}`);
+  // Una creació fallida no exigix un document absent; el seu reflex no pot
+  // reaparéixer ni quedar ocult per ownership. Un context nou sí que pot usar el path.
+  const blockedFailedFiles = new Set();
+  for (const receipt of Object.values(turn.receipts)) {
+    if (receipt.creation?.state === 'prepared') errors.push(`Creació pendent de consolidar: ${receipt.file}`);
+    if (isActiveReceipt(receipt)) continue;
+    let observed;
+    try { observed = creationFile(root, receipt.file); }
+    catch { errors.push(`Creació fallida amb ruta no regular: ${receipt.file}`); blockedFailedFiles.add(receipt.file); continue; }
+    if (!observed.exists) continue;
+    // El path només pot reaparéixer amb un altre rebut real, també si la nova
+    // autoria és aliena al torn. Ownership no pot amagar un reflex inventat.
+    errors.push(...validateDocument(root,observed.raw,receipt.file,{readRecord:otherId=>otherId===id?turn:readTurn(root,otherId,{closed:true})}).map(error=>`${receipt.file}: ${error}`));
+  }
   const index = fs.readFileSync(path.join(root, DESK, '00_index_escriptori.md'),'utf8');
   for (const file of documents) {
+    if (blockedFailedFiles.has(file)) continue;
     if (humanZone(file)) { errors.push(`Zona humana modificada: ${file}`); continue; }
     if (!fs.existsSync(path.join(root,file))) { errors.push(`Document eliminat sense relleu: ${file}`); continue; }
     const raw = fs.readFileSync(path.join(root,file),'utf8');
@@ -177,7 +283,7 @@ export function sealTurn(root, id, runChecks, {close = false} = {}) {
     if (!checked.valid) throw new Error(checked.errors.join('\n'));
     const result = runChecks(turn);
     if (!result.valid) throw new Error(result.errors.join('\n'));
-    const after = inventory(root,{files:Object.values(turn.receipts).map(r=>r.file)});
+    const after = inventory(root,{files:activeReceipts(turn).map(r=>r.file)});
     if (changes(checked.current,after).length) throw new Error('La comprovació ha modificat fitxers o hi ha escriptura concurrent');
     turn.verification = {at:new Date().toISOString(), files:after, checks:result.checks};
     move(turn,'verified','verify');
@@ -207,10 +313,21 @@ export function handoffDocument(root,id,from,to) {
   if(!match||match[1]!==id) throw new Error('Identitat del relleu divergent');
   return mutateTurn(root,id,turn=>{
     const receipt=turn.receipts[match[2]];
-    if(!receipt||receipt.file!==source) throw new Error('Rebut del relleu absent');
+    const prior = receipt?.file===target && receipt.moves?.find(move=>move.from===source && move.to===target && move.hash===digest);
+    if(!receipt || (receipt.file!==source && !prior)) throw new Error('Rebut del relleu absent');
+    if (!isActiveReceipt(receipt) || receipt.creation?.state === 'prepared') throw new Error('Rebut de relleu sense creació consolidada');
     if(turn.plan?.file===source && turn.plan.hash!==digest) throw new Error('Pla modificat durant el relleu');
-    receipt.file=target;
-    receipt.moves=[...(receipt.moves||[]),{from:source,to:target,hash:digest,at:new Date().toISOString()}];
+    // El reflex identifica el rebut immutable que va fer nàixer el document.
+    // Captura IDs exactes: un context posterior per a reutilitzar source no és
+    // cap lectura d'este arxiu. Legacy: prefix d'emissió, sense fiar-se del rellotge.
+    const emitted = Object.values(turn.receipts);
+    const original = emitted.slice(0, emitted.indexOf(receipt)+1).filter(candidate=>
+      isActiveReceipt(candidate) && candidate.file===source && candidate.route===receipt.route && candidate.contractSnapshot===receipt.contractSnapshot);
+    const receiptIds = prior?.receiptIds || original.map(candidate=>candidate.id);
+    for(const owned of emitted.filter(candidate=>isActiveReceipt(candidate) && candidate.file===source && receiptIds.includes(candidate.id))) {
+      owned.file=target;
+      owned.moves=[...(owned.moves||[]),{from:source,to:target,hash:digest,at:new Date().toISOString(),receiptIds}];
+    }
     if(turn.plan?.file===source) turn.plan.file=target;
     turn.ownedPaths=[...new Set([...(turn.ownedPaths||[]).filter(p=>p!==source),target])];
     // Preserve source history, while recognising that its absence is an intentional handoff.
@@ -227,7 +344,7 @@ export function protectedTurnFiles(root) {
     if(!turnPattern.test(turn.turn_id)||!Array.isArray(turn.history)||!turn.receipts) throw new Error(`Torn il·legible: ${name}`);
     // Closed receipts are protected too until an explicit archival handoff is supported.
     if(turn.plan?.file) out.add(turn.plan.file);
-    for(const receipt of Object.values(turn.receipts)) out.add(receipt.file);
+    for(const receipt of activeReceipts(turn)) out.add(receipt.file);
   }
   return out;
 }

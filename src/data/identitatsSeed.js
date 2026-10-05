@@ -15,7 +15,8 @@
  * provar el canal compartit del xat, el MAS de l'entitat i la fitxa sense una
  * base de dades. En remot la pertinença la diu el servidor
  * (list_my_organizations) i este fitxer no mana res: només aporta la IAIA,
- * que viu al paquet i no a cap taula.
+ * que viu al paquet i no a cap taula, i el pont per slug declarat de
+ * l'entitat pilot amb el contingut que la llavor signa (aliesDeLActor, F4).
  */
 import { AGENTS_MAP } from './agentsSeed.js';
 
@@ -124,20 +125,31 @@ export function rolALEntitat(orgId, usuariId, { teSessio = false } = {}) {
 }
 
 /**
- * Tots els identificadors amb què un actor pot haver signat contingut. En
- * remot són l'id i l'slug; en seed s'hi afigen els àlies de la llavor. El
- * convidat no hereta els de la persona pilot: sense sessió, res és seu.
+ * Tots els identificadors amb què un actor pot haver signat contingut:
+ * · sempre, el seu id i el seu slug declarat;
+ * · una entitat del padró pilot (per id o per slug declarat), a més, els àlies
+ *   amb què la llavor la signa, en QUALSEVOL mode (F4, ordre del Mestre,
+ *   261004; PRD de la Marató 2230, Fase 1). La taula app_content de
+ *   supabase/seed.sql signa la samarreta i l'Aplec amb 'socdepoble', i al
+ *   servidor l'entitat és un uuid amb l'slug declarat 'soc-de-poble': sense
+ *   el pont, el seu MAS remot no els veia. És la doctrina de T6
+ *   (navigation.js): per id o slug declarat, mai pel nom;
+ * · una persona, només en seed, els àlies de la persona pilot. El convidat no
+ *   els hereta (sense sessió, res és seu), i en remot cap persona en rep
+ *   (D1: un compte no es casa per nom amb 'javillinares').
  */
 export function aliesDeLActor(actor, { dataMode = 'remote' } = {}) {
   const alies = new Set();
   if (!actor?.id) return alies;
   alies.add(String(actor.id));
   if (actor.slug) alies.add(String(actor.slug));
-  if (dataMode !== 'seed') return alies;
   if (actor.tipus === 'entitat') {
     const entitat = entitatSeed(actor.id) || entitatSeed(actor.slug);
     entitat?.alies.forEach((a) => alies.add(a));
-  } else if (actor.tipus === 'persona' && actor.rol !== 'convidat') {
+    return alies;
+  }
+  if (dataMode !== 'seed') return alies;
+  if (actor.tipus === 'persona' && actor.rol !== 'convidat') {
     PERSONA_PILOT.alies.forEach((a) => alies.add(a));
   }
   return alies;

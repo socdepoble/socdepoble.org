@@ -92,4 +92,3 @@ src/App.jsx: 9b2c...
 ## Vincles
 
 - [[00_index]]
-- [[00_index_escriptori]]

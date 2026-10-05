@@ -136,7 +136,7 @@ function TargetaDeDesti({ desti, t, onComentar }) {
       mainHref={desti.saberMes}
       onComment={onComentar}
       hasFooter={true}
-      showConnect={true}
+      showConnect={false}
       portes={portesDe(desti, t)}
     />
   );
@@ -167,7 +167,7 @@ function TargetaDUtilitat({ titol, subtitol, entradilla, imatge, imatgeAlt = '',
       onMainClick={abansDObrir}
       onComment={onComentar}
       hasFooter={true}
-      showConnect={true}
+      showConnect={false}
     />
   );
 }

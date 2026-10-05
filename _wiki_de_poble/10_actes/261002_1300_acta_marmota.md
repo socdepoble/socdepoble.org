@@ -70,4 +70,3 @@ Aquests pendents **es deleguen immediatament a la pròxima IA (suggerim Claude):
 ## Vincles
 
 - [[00_index]]
-- [[00_index_escriptori]]

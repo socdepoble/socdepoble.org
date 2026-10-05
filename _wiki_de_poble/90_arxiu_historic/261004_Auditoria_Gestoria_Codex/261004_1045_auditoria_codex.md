@@ -53,9 +53,7 @@ Plantilla entregada: _wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonic
 
 ### R1 · P2 · «Compartir» ha de portar al detall de la notícia
 
-La targeta de [Noticies.jsx:157](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/apps/lector/vistes/Noticies.jsx:157>) passa `onMainClick={() => obri(article.id)}` i `hasFooter`, però no passa `mainHref` ni `onShare`. El peu apareix, però no coneix la ruta del detall.
 
-La traça és: UniversalCard → `useAccions({ mainHref: null })` → [handleShare:241](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/components/PedraSeca/hooks/useAccions.js:241>) → [urlPerCompartir:135](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/components/PedraSeca/hooks/useAccions.js:135>). Sense href, el navegador usa la URL actual i el router de memòria usa l'entrada actual de l'app. Des de la llista s'envia la llista, encara que la notícia tinga detall propi amb `?article=<id>`.
 
 **Resultat esperat:** el peu de la targeta compartix la ruta del seu article, amb el basename correcte; des del detall compartix el mateix article. No ha d'enviar l'identificador com una ruta nova inventada ni compartir l'amfitrió del router de memòria.
 
@@ -71,11 +69,7 @@ La barra taronja universal afegix un segon sostre enganxós davall de la barra b
 
 El relleu 17 de Claude documenta l'Índex tapat i la reparació en curs. Les lectures pròpies del CSS mostren que els selectors següents han passat de reservar `--sdp-alt-accio + --sdp-space-4` a reservar **`--sdp-alt-accio * 2 + --sdp-space-4`**:
 
-- [Mètriques de Consola, modules.css:5939](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/css/modules.css:5939>).
-- [Desplegables de Consola, modules.css:5989](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/css/modules.css:5989>).
-- [Focus de l'Explorador, modules.css:6191](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/css/modules.css:6191>).
 
-[PageFrame.jsx:154](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/components/universal/PageFrame.jsx:154>) usa `scrollIntoView({ block: 'start' })`; el marge del destí és una part essencial del contracte. No s'ha de pujar el z-index del contingut per a dissimular un destí que queda davall de les barres.
 
 **Prova mínima d'acceptació:** en una pàgina llarga de Consola, obrir l'Índex i triar un destí de baix. Quan acabe el salt, el rectangle del destí ha de començar per davall del límit inferior de la barra taronja visible, amb el marge acordat. Repetir en mida d'escriptori i mòbil, i en els modes de chrome efectivament afectats. També contrastar «Vore la peça» i el retorn de focus a filtres de l'Explorador.
 
@@ -143,7 +137,6 @@ El prompt 1111 de pull-to-refresh també s'ha llegit sencer com a context de la 
 - [[00_index]]
 - [[00_index_escriptori]]
 - [[261004_1010_auditoria_codex]]
-- [[261004_1042_prompt_local_codex_resum]]
 - [[261004_0605_auditoria_claude]]
 - [[../10_actes/261004_1027_acta_marmota]]
 

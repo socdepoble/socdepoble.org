@@ -1,0 +1,441 @@
+--- a/tooling/documental/turns.mjs
++++ b/tooling/documental/turns.mjs
+@@ -138,30 +138,46 @@
+ function creationReceipt(turn, reflex) {
+   const match = receiptPattern.exec(reflex || '');
+   const receipt = match && match[1] === turn.turn_id && turn.receipts[match[2]];
+-  if (!receipt || receipt.creation?.state !== 'prepared') throw new Error('Creació sense rebut preparat');
++  if (!receipt || receipt.id !== match[2] || receipt.creation?.state !== 'prepared') throw new Error('Creació sense rebut preparat');
+   isActiveReceipt(receipt);
+   return receipt;
+ }
++function commitPreparedCreation(root, turn, reflex, raw) {
++  const receipt = creationReceipt(turn, reflex);
++  const observed = creationFile(root, receipt.file);
++  const index = creationFile(root, `${DESK}/00_index_escriptori.md`);
++  if (!observed.exists || observed.raw !== raw || parseDocument(raw).data.reflex !== reflex || !index.exists || !anchored(index.raw, receipt.file)) throw new Error('Creació pendent: fitxer, empremta o àncora divergent');
++  const at = new Date().toISOString();
++  receipt.creation = { ...receipt.creation, state: 'committed', committedAt: at, documentHash: sha(raw) };
++  turn.verification = null;
++  turn.history.push({ action: 'create-committed', receiptId: receipt.id, file: receipt.file, at, hash: sha(raw) });
++}
++function failPreparedCreation(root, turn, reflex) {
++  const receipt = creationReceipt(turn, reflex);
++  if (creationFile(root, receipt.file).exists) throw new Error('Creació pendent: el fitxer encara existix');
++  const at = new Date().toISOString();
++  receipt.creation = { ...receipt.creation, state: 'failed', failedAt: at, absent: true };
++  turn.verification = null;
++  turn.history.push({ action: 'create-failed', receiptId: receipt.id, file: receipt.file, at, absent: true });
++}
+ export function commitCreation(root, id, reflex, raw) {
++  return mutateTurn(root, id, turn => { commitPreparedCreation(root, turn, reflex, raw); });
++}
++export function failCreation(root, id, reflex) {
++  return mutateTurn(root, id, turn => { failPreparedCreation(root, turn, reflex); });
++}
++/** Consolida només el draft físic del rebut explícit, o acredita l'absència.
++ * No genera, substituïx ni elimina cap document; tota la decisió usa un lock.
++ */
++export function recoverCreation(root, id, { file, reflex }) {
+   return mutateTurn(root, id, turn => {
+     const receipt = creationReceipt(turn, reflex);
+-    const observed = creationFile(root, receipt.file);
+-    const index = creationFile(root, `${DESK}/00_index_escriptori.md`);
+-    if (!observed.exists || observed.raw !== raw || parseDocument(raw).data.reflex !== reflex || !index.exists || !anchored(index.raw, receipt.file)) throw new Error('Creació pendent: fitxer, empremta o àncora divergent');
+-    const at = new Date().toISOString();
+-    receipt.creation = { ...receipt.creation, state: 'committed', committedAt: at, documentHash: sha(raw) };
+-    turn.verification = null;
+-    turn.history.push({ action: 'create-committed', receiptId: receipt.id, file: receipt.file, at, hash: sha(raw) });
+-  });
+-}
+-export function failCreation(root, id, reflex) {
+-  return mutateTurn(root, id, turn => {
+-    const receipt = creationReceipt(turn, reflex);
+-    if (creationFile(root, receipt.file).exists) throw new Error('Creació pendent: el fitxer encara existix');
+-    const at = new Date().toISOString();
+-    receipt.creation = { ...receipt.creation, state: 'failed', failedAt: at, absent: true };
+-    turn.verification = null;
+-    turn.history.push({ action: 'create-failed', receiptId: receipt.id, file: receipt.file, at, absent: true });
++    if (receipt.file !== file || humanZone(file) || !file.startsWith(`${DESK}/`) || path.basename(file) === '00_index_escriptori.md') throw new Error('Rebut de recuperació vinculat a un altre document');
++    if (activeReceipts(turn).some(other => other.id !== receipt.id && other.file === file && other.creation?.state === 'prepared')) throw new Error('Creació preparada ambigua');
++    const observed = creationFile(root, file);
++    if (observed.exists) commitPreparedCreation(root, turn, reflex, observed.raw);
++    else failPreparedCreation(root, turn, reflex);
++    return { file, reflex, state: receipt.creation.state, turn_id: turn.turn_id };
+   });
+ }
+ export function deliverContext(root, id, {route:routeId, file, creation = false}) {
+@@ -176,6 +192,27 @@
+     if (!taula.valid) throw new Error(`Convocatòria amb Escriptori brut:\n${taula.errors.join('\n')}`);
+   }
+   return mutateTurn(root, id, turn => {
++    if (creation) {
++      if (creationFile(root, rel).exists) throw new Error('Creació pendent: el fitxer encara existix');
++      const contexts = activeReceipts(turn).filter(receipt => receipt.file === rel);
++      if (contexts.length) {
++        const receipt = contexts[0];
++        if (!receiptPattern.test(`sdp:${id}:${receipt.id}`) || turn.receipts[receipt.id] !== receipt) throw new Error('Rebut de context amb identitat divergent');
++        if (contexts.length !== 1 || Object.hasOwn(receipt, 'creation')) throw new Error('Context de creació ambigu o ja preparat');
++        if (receipt.route !== route.id || receipt.routeVersion !== route.version || receipt.template !== route.plantilla || receipt.templateHash !== route.templateHash || receipt.contractSnapshot !== sha(JSON.stringify(contract))) throw new Error('Context de creació amb contracte o plantilla divergent');
++        readContract(root, receipt.contractSnapshot, snapshot => {
++          const observed = creationFile(root, snapshot);
++          if (!observed.exists) throw new Error('Snapshot de context absent');
++          return observed.raw;
++        }); // Snapshot immutable, observat sense seguir àlies físics.
++        const at = new Date().toISOString();
++        receipt.creation = { state: 'prepared', preparedAt: at };
++        turn.verification = null;
++        turn.state = turn.plan ? 'planned' : 'context_loaded';
++        turn.history.push({ state: turn.state, action: 'create-prepared-from-context', receiptId: receipt.id, file: rel, at });
++        return { reflex: `sdp:${id}:${receipt.id}`, route, template: route.templateText };
++      }
++    }
+     const receiptId = randomUUID();
+     const receipt = {id:receiptId, route:route.id, routeVersion:route.version, file:rel,
+       contractSnapshot:saveContract(root,contract), template:route.plantilla, templateHash:route.templateHash, issuedAt:new Date().toISOString()};
+--- a/tooling/documental/command-policy.mjs
++++ b/tooling/documental/command-policy.mjs
+@@ -1,8 +1,8 @@
+ /** P13 authority: bounded documentary commands are state mutations, never knownRead. */
+ import fs from 'node:fs';
+ import path from 'node:path';
+-import {DESK, humanZone, loadContract, resolveRoute, parseDocument, validateSchema, turnPattern, sha} from './core.mjs';
+-import {readTurn, validateDocument, activeReceipts} from './turns.mjs';
++import {DESK, humanZone, loadContract, resolveRoute, parseDocument, validateSchema, turnPattern, receiptPattern, sha} from './core.mjs';
++import {readTurn, validateDocument, activeReceipts, isActiveReceipt} from './turns.mjs';
+ import {normalizeShellCommand} from '../gates/mutation-policy.mjs';
+ 
+ // A deliberately small argv language. No shell expansion, escapes, globs or operators.
+@@ -75,7 +75,7 @@
+     return {kind:'document-mutation',command:'open'};
+   }
+   const action=argv[2];
+-  const specifications={context:[['turn-id','route','file'],['turn-id','route','file']],create:[['turn-id','route','file','title','description','actor'],['turn-id','route','file','title','description']],plan:[['turn-id','file'],['turn-id','file']],check:[['file'],['file']],own:[['turn-id','file'],['turn-id','file']]};
++  const specifications={recover:[['turn-id','file','reflex'],['turn-id','file','reflex']],context:[['turn-id','route','file'],['turn-id','route','file']],create:[['turn-id','route','file','title','description','actor'],['turn-id','route','file','title','description']],plan:[['turn-id','file'],['turn-id','file']],check:[['file'],['file']],own:[['turn-id','file'],['turn-id','file']]};
+   if(!Object.hasOwn(specifications,action))throw new Error('Operació fora del circuit documental ordinari');
+   const opts=flags(argv.slice(3),...specifications[action]);
+   const file=documentPath(root,opts.file,{named:action!=='check'});
+@@ -89,7 +89,9 @@
+     physical(root,`.agents/runtime/contracts/${sha(JSON.stringify(contract))}.json`);
+     if(!(route.destins||[DESK]).some(dir=>opts.file.startsWith(`${dir}/`)))throw new Error('Destí divergent de ruta');
+     if(action==='create') {
+-      if(!activeReceipts(turn).some(receipt=>receipt.route===route.id&&receipt.file===opts.file))throw new Error('Cal context entregat per a este document abans de create');
++      const contexts=activeReceipts(turn).filter(receipt=>receipt.route===route.id&&receipt.file===opts.file);
++      if(!contexts.length)throw new Error('Cal context entregat per a este document abans de create');
++      if(contexts.some(receipt=>!receiptPattern.test(`sdp:${turn.turn_id}:${receipt.id}`)||turn.receipts[receipt.id]!==receipt))throw new Error('Rebut de context amb identitat divergent');
+       if(fs.existsSync(file))throw new Error('create no sobreescriu documents');
+       if(opts.title.length>300||opts.description.length>1000||opts.actor?.length>120)throw new Error('Metadades documentals massa llargues');
+       const errors=validateSchema({...route.output,description:opts.description,visibility:'private'},contract.schema);
+@@ -97,6 +99,11 @@
+       physical(root,`${DESK}/00_index_escriptori.md`);
+       physical(root,'.agents/runtime/document-create.lock');
+     }
++  } else if(action==='recover') {
++    const match=receiptPattern.exec(opts.reflex),receipt=match&&match[1]===turn.turn_id&&turn.receipts[match[2]];
++    if(!receipt||receipt.id!==match[2]||receipt.file!==opts.file||receipt.creation?.state!=='prepared'||!isActiveReceipt(receipt))throw new Error('Recuperació sense rebut preparat del document');
++    if(activeReceipts(turn).some(other=>other.id!==receipt.id&&other.file===opts.file&&other.creation?.state==='prepared'))throw new Error('Creació preparada ambigua');
++    physical(root,`${DESK}/00_index_escriptori.md`);
+   } else if(action==='plan') {
+     const content=fs.readFileSync(file,'utf8');
+     const parsed=parseDocument(content);
+--- a/tooling/wiki/document.mjs
++++ b/tooling/wiki/document.mjs
+@@ -7,7 +7,7 @@
+ import { ROOT, options } from '../documental/cli.mjs';
+ import { loadContract, validateSchema, parseDocument } from '../documental/core.mjs';
+ import { checkDraftDestinations, writeIndexedDraft } from '../documental/draft-write.mjs';
+-import { deliverContext, bindPlan, validateDocument, ownPaths, handoffDocument, commitCreation, failCreation } from '../documental/turns.mjs';
++import { deliverContext, bindPlan, validateDocument, ownPaths, handoffDocument, commitCreation, failCreation, recoverCreation } from '../documental/turns.mjs';
+ 
+ export function draft(delivery, {title, description, actor='agent-local'}) {
+   const now = new Date().toISOString();
+@@ -51,10 +51,11 @@
+   const o=options(), root=path.resolve(o.arrel || ROOT), command=o._[0];
+   let result;
+   if(o.help || !command) {
+-    console.log('Ús: document.mjs context|create|plan|check|own|handoff|import --turn-id ID --route ID --file CAMÍ\ncreate: --title TÍTOL --description DESCRIPCIÓ [--actor NOM]\nown: --file CAMÍ (repetix la comanda per cada fitxer)\nhandoff: --file ORIGEN --to DESTÍ (després del moviment explícit)\nRutes: '+loadContract(root,{templates:false}).router.rutes.map(r=>r.id).join(', '));
++    console.log('Ús: document.mjs context|create|recover|plan|check|own|handoff|import --turn-id ID --route ID --file CAMÍ\ncreate: --title TÍTOL --description DESCRIPCIÓ [--actor NOM]\nrecover: --turn-id ID --file CAMÍ --reflex REBUT (consolida el draft present o acredita absència; no elimina fitxers)\nown: --file CAMÍ (repetix la comanda per cada fitxer)\nhandoff: --file ORIGEN --to DESTÍ (després del moviment explícit)\nRutes: '+loadContract(root,{templates:false}).router.rutes.map(r=>r.id).join(', '));
+     return;
+   }
+-  if(command==='import') {const {importDocument}=await import('../documental/import.mjs');result=importDocument(root,o['turn-id'],o);}
++  if(command==='recover') result=recoverCreation(root,o['turn-id'],{file:o.file,reflex:o.reflex});
++  else if(command==='import') {const {importDocument}=await import('../documental/import.mjs');result=importDocument(root,o['turn-id'],o);}
+   else if(command==='own') result=ownPaths(root,o['turn-id'],[o.file]);
+   else if(command==='handoff') result=handoffDocument(root,o['turn-id'],o.file,o.to);
+   else if (command==='context') {
+@@ -63,7 +64,7 @@
+   } else if(command==='create') result=createDraft(root,o['turn-id'],{route:o.route,file:o.file,title:o.title,description:o.description,actor:o.actor});
+   else if(command==='plan') {const t=bindPlan(root,o['turn-id'],o.file);result={turn_id:t.turn_id,state:t.state,plan:t.plan};}
+   else if(command==='check') {const errors=validateDocument(root,fs.readFileSync(path.join(root,o.file),'utf8'),o.file,{closed:true});result={valid:!errors.length,errors};process.exitCode=errors.length?1:0;}
+-  else throw new Error('Ús: document.mjs context|create|plan|check --turn-id ID --route ID --file CAMÍ');
++  else throw new Error('Ús: document.mjs context|create|recover|plan|check --turn-id ID --route ID --file CAMÍ');
+   console.log(JSON.stringify(result,null,2));
+ }
+ if (esMain(import.meta.url)) {
+--- a/tests/cognitive-preflight.test.mjs
++++ b/tests/cognitive-preflight.test.mjs
+@@ -444,3 +444,178 @@
+   assert.equal(fs.readFileSync(target,'utf8'),'CONTINGUT_PRIVAT_SINTETIC_NO_LLEGIR');
+  });
+ }
++
++/* T5-09B: canonical context→create i recuperació explícita del draft. */
++test('T5-09B · context→create fallit conserva un únic rebut i deixa de reclamar el fitxer absent',t=>{
++ const root=fixture(t),turn=openTurn(root,{scope:'documents'}),plan=priorPlan(root,turn),opts=optsFailed('canonical');
++ const delivered=deliverContext(root,turn.turn_id,opts),before=readTurn(root,turn.turn_id),legacy=Object.values(before.receipts).at(-1);
++ const {record}=failCAS(root,turn,opts);
++ assert.equal(Object.keys(record.receipts).length,Object.keys(before.receipts).length,'cap segona entrega simulada');
++ const receipt=record.receipts[legacy.id];
++ assert.equal(receipt.issuedAt,legacy.issuedAt);assert.equal(receipt.contractSnapshot,legacy.contractSnapshot);
++ assert.equal(receipt.creation.state,'failed');assert.deepEqual(record.plan,plan);
++ assert.ok(record.history.some(h=>h.action==='create-prepared-from-context'&&h.receiptId===legacy.id&&h.file===opts.file));
++ assert.equal(delivered.reflex,`sdp:${turn.turn_id}:${receipt.id}`);
++ assert.equal(checkTurn(root,turn.turn_id).valid,true);
++});
++const recoverCLI=(root,turn,file,reflex)=>spawnSync(process.execPath,[path.join(REPO,'tooling/wiki/document.mjs'),'recover','--turn-id',turn.turn_id,'--file',file,'--reflex',reflex],{cwd:root,env:{...process.env,SDP_ARREL:root},encoding:'utf8',timeout:10000});
++function preparedDraft(root,turn,opts,{write=true,anchor=true}={}) {
++ put(root,'.agents/AGENTS.md','# BIOS sintètica de recuperació\n');
++ const delivery=deliverContext(root,turn.turn_id,{...opts,creation:true}),raw=draft(delivery,opts);
++ if(write)fs.writeFileSync(path.join(root,opts.file),raw);
++ if(write&&anchor)fs.appendFileSync(path.join(root,INDEX),`\n- [[${path.basename(opts.file,'.md')}]]\n`);
++ return {delivery,raw};
++}
++test('T5-09B · CLI recover consolida un prepared present sense regenerar ni canviar bytes',t=>{
++ const root=fixture(t),turn=openTurn(root,{scope:'documents'}),opts=optsFailed('cli_present'),{delivery,raw}=preparedDraft(root,turn,opts);
++ const index=fs.readFileSync(path.join(root,INDEX),'utf8'),before=readTurn(root,turn.turn_id);
++ const r=recoverCLI(root,turn,opts.file,delivery.reflex);assert.equal(r.status,0,r.stderr);assert.equal(JSON.parse(r.stdout).state,'committed');
++ const after=readTurn(root,turn.turn_id),receipt=Object.values(after.receipts)[0];
++ assert.equal(receipt.id,Object.values(before.receipts)[0].id);assert.equal(receipt.creation.state,'committed');
++ assert.equal(fs.readFileSync(path.join(root,opts.file),'utf8'),raw);assert.equal(fs.readFileSync(path.join(root,INDEX),'utf8'),index);
++ assert.ok(!checkTurn(root,turn.turn_id).errors.some(e=>/creació pendent/i.test(e)));
++ const replay=recoverCLI(root,turn,opts.file,delivery.reflex);assert.notEqual(replay.status,0);assert.deepEqual(readTurn(root,turn.turn_id),after);
++});
++test('T5-09B · CLI recover només acredita failed quan el fitxer és absent',t=>{
++ const root=fixture(t),turn=openTurn(root,{scope:'documents'}),opts=optsFailed('cli_absent'),{delivery}=preparedDraft(root,turn,opts,{write:false});
++ const r=recoverCLI(root,turn,opts.file,delivery.reflex);assert.equal(r.status,0,r.stderr);assert.equal(JSON.parse(r.stdout).state,'failed');
++ const receipt=Object.values(readTurn(root,turn.turn_id).receipts)[0];assert.equal(receipt.creation.absent,true);
++ assert.equal(protectedTurnFiles(root).has(opts.file),false);
++});
++
++test('T5-09B · la preparació des de context és actual, única i conserva la història original',t=>{
++ const root=fixture(t),turn=openTurn(root,{scope:'documents'}),opts=optsFailed('now');
++ const delivery=deliverContext(root,turn.turn_id,opts);
++ mutateTurn(root,turn.turn_id,record=>{record.receipts[delivery.reflex.split(':').at(-1)].issuedAt='2001-01-01T00:00:00.000Z';});
++ const before=readTurn(root,turn.turn_id),start=Date.now();
++ createDraft(root,turn.turn_id,opts);
++ const after=readTurn(root,turn.turn_id),receipt=Object.values(after.receipts)[0];
++ assert.equal(Object.keys(after.receipts).length,1);assert.equal(receipt.issuedAt,'2001-01-01T00:00:00.000Z');
++ assert.deepEqual(after.history.slice(0,before.history.length),before.history);
++ assert.equal(receipt.contractSnapshot,Object.values(before.receipts)[0].contractSnapshot);
++ assert.ok(Date.parse(receipt.creation.preparedAt)>=start,'no atribueix intenció de crear al context antic');
++ const event=after.history.find(h=>h.action==='create-prepared-from-context');
++ assert.equal(event.at,receipt.creation.preparedAt);assert.equal(event.receiptId,receipt.id);assert.equal(event.file,opts.file);
++ assert.equal(receipt.creation.state,'committed');
++ assert.equal(parseReflex(fs.readFileSync(path.join(root,opts.file),'utf8')),delivery.reflex);
++});
++function parseReflex(raw) { return /^reflex: (.+)$/m.exec(raw)?.[1]; }
++for(const reason of ['duplicate','other-route','template-changed']) test(`T5-09B · create rebutja un context ${reason} sense alterar-lo`,t=>{
++ const root=fixture(t),turn=openTurn(root,{scope:'documents'}),opts=optsFailed(reason.replaceAll('-','_'));
++ const delivery=deliverContext(root,turn.turn_id,reason==='other-route'?{...opts,route:'pla.implementacio'}:opts);
++ if(reason==='duplicate')deliverContext(root,turn.turn_id,opts);
++ if(reason==='template-changed') {
++  const receipt=Object.values(readTurn(root,turn.turn_id).receipts)[0];
++  fs.appendFileSync(path.join(root,receipt.template),'\nText nou de plantilla.\n');
++ }
++ const before=readTurn(root,turn.turn_id),index=fs.readFileSync(path.join(root,INDEX),'utf8');
++ assert.throws(()=>createDraft(root,turn.turn_id,opts),/ambigu|divergent/);
++ assert.deepEqual(readTurn(root,turn.turn_id),before);assert.equal(fs.existsSync(path.join(root,opts.file)),false);
++ assert.equal(fs.readFileSync(path.join(root,INDEX),'utf8'),index);
++ assert.ok(Object.values(before.receipts).some(r=>delivery.reflex.endsWith(r.id)));
++});
++for(const alias of ['symlink','hardlink']) test(`T5-09B · preparar des de context no llig un snapshot ${alias}`,t=>{
++ const root=fs.realpathSync(fixture(t)),turn=openTurn(root,{scope:'documents'}),opts=optsFailed(`snapshot_${alias}`);
++ deliverContext(root,turn.turn_id,opts);
++ const before=readTurn(root,turn.turn_id),receipt=Object.values(before.receipts)[0],snapshot=path.join(root,`.agents/runtime/contracts/${receipt.contractSnapshot}.json`);
++ const outside=fs.mkdtempSync(path.join(os.tmpdir(),'sdp-private-snapshot-'));t.after(()=>fs.rmSync(outside,{recursive:true,force:true}));
++ const target=path.join(outside,'privat.json');fs.writeFileSync(target,fs.readFileSync(snapshot));fs.unlinkSync(snapshot);
++ if(alias==='symlink')fs.symlinkSync(target,snapshot);else fs.linkSync(target,snapshot);
++ const privateStat=fs.statSync(target),original=fs.readFileSync;let privateRead=false;
++ fs.readFileSync=(name,...args)=>{
++  if(typeof name==='number'){const stat=fs.fstatSync(name);if(stat.dev===privateStat.dev&&stat.ino===privateStat.ino)privateRead=true;}
++  if(name===snapshot||name===target)privateRead=true;
++  return original(name,...args);
++ };
++ try{assert.throws(()=>createDraft(root,turn.turn_id,opts),/no regular/);}finally{fs.readFileSync=original;}
++ assert.equal(privateRead,false);assert.deepEqual(readTurn(root,turn.turn_id),before);assert.equal(fs.existsSync(path.join(root,opts.file)),false);
++});
++for(const reason of ['wrong-file','foreign-turn','wrong-reflex','unanchored','inline-anchor','ambiguous']) test(`T5-09B · recover ${reason} falla tancat i conserva metadata`,t=>{
++ const root=fixture(t),turn=openTurn(root,{scope:'documents'}),opts=optsFailed(`reject_${reason.replaceAll('-','_')}`);
++ const {delivery,raw}=preparedDraft(root,turn,opts,{anchor:!['unanchored','inline-anchor'].includes(reason)});
++ if(reason==='inline-anchor')fs.appendFileSync(path.join(root,INDEX),`\nExemple: \`[[${path.basename(opts.file,'.md')}]]\`\n`);
++ if(reason==='wrong-reflex')fs.writeFileSync(path.join(root,opts.file),raw.replace(delivery.reflex,'sdp:torn_00000000-0000-4000-8000-000000000000:00000000-0000-4000-8000-000000000000'));
++ if(reason==='ambiguous') {
++  const other=deliverContext(root,turn.turn_id,{...opts,file:doc('auditoria_prepared_altra'),creation:true});
++  mutateTurn(root,turn.turn_id,record=>{record.receipts[other.reflex.split(':').at(-1)].file=opts.file;});
++ }
++ const before=readTurn(root,turn.turn_id),bytes=fs.readFileSync(path.join(root,opts.file)),index=fs.readFileSync(path.join(root,INDEX));
++ const id=reason==='foreign-turn'?openTurn(root,{scope:'documents'}).turn_id:turn.turn_id;
++ assert.throws(()=>turns.recoverCreation(root,id,{file:reason==='wrong-file'?doc('auditoria_path_alié'):opts.file,reflex:delivery.reflex}),/rebut|Rebut|pendent|ambigua/);
++ assert.deepEqual(readTurn(root,turn.turn_id),before);assert.deepEqual(fs.readFileSync(path.join(root,opts.file)),bytes);assert.deepEqual(fs.readFileSync(path.join(root,INDEX)),index);
++});
++for(const alias of ['symlink','hardlink','parent-symlink','index-symlink','index-hardlink']) test(`T5-09B · recover no llig ni muta una ruta ${alias}`,t=>{
++ const root=fs.realpathSync(fixture(t)),turn=openTurn(root,{scope:'documents'}),opts=optsFailed(alias.replaceAll('-','_'));
++ const {delivery}=preparedDraft(root,turn,opts);
++ const outside=fs.mkdtempSync(path.join(os.tmpdir(),'sdp-private-recover-'));t.after(()=>fs.rmSync(outside,{recursive:true,force:true}));
++ const indexAlias=alias.startsWith('index-'),file=path.join(root,indexAlias?INDEX:opts.file),target=path.join(outside,path.basename(file));
++ fs.writeFileSync(target,indexAlias?fs.readFileSync(file):'CONTINGUT_PRIVAT_SINTETIC');
++ const privateStat=fs.statSync(target),dir=path.join(root,DESK),saved=dir+'.saved';
++ if(alias==='parent-symlink'){fs.renameSync(dir,saved);fs.symlinkSync(outside,dir);}else{fs.unlinkSync(file);if(alias.endsWith('symlink'))fs.symlinkSync(target,file);else fs.linkSync(target,file);}
++ const before=readTurn(root,turn.turn_id),original=fs.readFileSync;let privateRead=false;
++ fs.readFileSync=(name,...args)=>{if(typeof name==='number'){const stat=fs.fstatSync(name);if(stat.dev===privateStat.dev&&stat.ino===privateStat.ino)privateRead=true;}if(name===target||name===file)privateRead=true;return original(name,...args);};
++ try{assert.throws(()=>turns.recoverCreation(root,turn.turn_id,{file:opts.file,reflex:delivery.reflex}),/no regular/);}
++ finally{fs.readFileSync=original;if(alias==='parent-symlink'){fs.unlinkSync(dir);fs.renameSync(saved,dir);}}
++ assert.equal(privateRead,false);assert.deepEqual(readTurn(root,turn.turn_id),before);
++});
++test('T5-09B · recover usa un únic lock i un error consolidant deixa el prepared visible',t=>{
++ const root=fs.realpathSync(fixture(t)),turn=openTurn(root,{scope:'documents'}),opts=optsFailed('lock');
++ const {delivery,raw}=preparedDraft(root,turn,opts),before=readTurn(root,turn.turn_id),index=fs.readFileSync(path.join(root,INDEX),'utf8');
++ const originalOpen=fs.openSync,originalWrite=fs.writeFileSync;let locks=0,injected=false;
++ fs.openSync=(name,...args)=>{if(name===path.join(root,`.agents/runtime/turns/${turn.turn_id}.json.lock`))locks++;return originalOpen(name,...args);};
++ fs.writeFileSync=(name,data,...args)=>{if(typeof name==='string'&&name.includes(`${path.sep}turns${path.sep}`)&&typeof data==='string'&&data.includes('create-committed')){injected=true;throw new Error('EIO: consolidació de recuperació');}return originalWrite(name,data,...args);};
++ try{assert.throws(()=>turns.recoverCreation(root,turn.turn_id,{file:opts.file,reflex:delivery.reflex}),/EIO: consolidació/);}finally{fs.openSync=originalOpen;fs.writeFileSync=originalWrite;}
++ assert.equal(injected,true);assert.equal(locks,1);assert.deepEqual(readTurn(root,turn.turn_id),before);
++ assert.equal(fs.readFileSync(path.join(root,opts.file),'utf8'),raw);assert.equal(fs.readFileSync(path.join(root,INDEX),'utf8'),index);
++ assert.match(checkTurn(root,turn.turn_id).errors.join(),/creació pendent/i);
++});
++test('T5-09B · un fitxer que arriba entre observació i failed no s’acredita absent',t=>{
++ const root=fs.realpathSync(fixture(t)),turn=openTurn(root,{scope:'documents'}),opts=optsFailed('arrival');
++ const {delivery}=preparedDraft(root,turn,opts,{write:false}),before=readTurn(root,turn.turn_id),file=path.join(root,opts.file);
++ const original=fs.lstatSync;let injected=false;
++ fs.lstatSync=(name,...args)=>{
++  if(!injected&&name===file){injected=true;fs.writeFileSync(file,'Fitxer concurrent que cal conservar.\n');const error=new Error('Absència anterior a l’arribada');error.code='ENOENT';throw error;}
++  return original(name,...args);
++ };
++ try{assert.throws(()=>turns.recoverCreation(root,turn.turn_id,{file:opts.file,reflex:delivery.reflex}),/fitxer encara existix/);}finally{fs.lstatSync=original;}
++ assert.equal(injected,true);assert.deepEqual(readTurn(root,turn.turn_id),before);assert.equal(fs.readFileSync(file,'utf8'),'Fitxer concurrent que cal conservar.\n');
++});
++
++test('T5-09B · el snapshot alterat no es reentrega ni es converteix en prepared',t=>{
++ const root=fixture(t),turn=openTurn(root,{scope:'documents'}),opts=optsFailed('snapshot_bytes');
++ deliverContext(root,turn.turn_id,opts);const before=readTurn(root,turn.turn_id),receipt=Object.values(before.receipts)[0];
++ fs.appendFileSync(path.join(root,`.agents/runtime/contracts/${receipt.contractSnapshot}.json`),'\n');
++ assert.throws(()=>createDraft(root,turn.turn_id,opts),/Snapshot immutable alterat/);
++ assert.deepEqual(readTurn(root,turn.turn_id),before);assert.equal(fs.existsSync(path.join(root,opts.file)),false);
++});
++test('T5-09B · CLI create després de context usa el mateix reflex entregat',t=>{
++ const root=fixture(t);put(root,'.agents/AGENTS.md','# BIOS sintètica de CLI\n');
++ const turn=openTurn(root,{scope:'documents'}),opts=optsFailed('cli_canonical');
++ const call=(action,extra=[])=>spawnSync(process.execPath,[path.join(REPO,'tooling/wiki/document.mjs'),action,'--turn-id',turn.turn_id,'--file',opts.file,...extra],{cwd:root,env:{...process.env,SDP_ARREL:root},encoding:'utf8',timeout:10000});
++ const context=call('context',['--route',opts.route]);assert.equal(context.status,0,context.stderr);const delivered=JSON.parse(context.stdout);
++ const created=call('create',['--route',opts.route,'--title',opts.title,'--description',opts.description]);assert.equal(created.status,0,created.stderr);
++ assert.equal(JSON.parse(created.stdout).reflex,delivered.reflex);assert.equal(Object.keys(readTurn(root,turn.turn_id).receipts).length,1);
++ assert.equal(parseReflex(fs.readFileSync(path.join(root,opts.file),'utf8')),delivered.reflex);
++});
++test('T5-09B · recover rebutja un ID de rebut divergent i un failed reproduït',t=>{
++ const root=fixture(t),turn=openTurn(root,{scope:'documents'}),opts=optsFailed('receipt_identity');
++ const {delivery}=preparedDraft(root,turn,opts,{write:false});
++ mutateTurn(root,turn.turn_id,record=>{record.receipts[delivery.reflex.split(':').at(-1)].id='00000000-0000-4000-8000-000000000000';});
++ const before=readTurn(root,turn.turn_id);
++ assert.throws(()=>turns.recoverCreation(root,turn.turn_id,{file:opts.file,reflex:delivery.reflex}),/sense rebut preparat/);
++ assert.deepEqual(readTurn(root,turn.turn_id),before);
++ mutateTurn(root,turn.turn_id,record=>{record.receipts[delivery.reflex.split(':').at(-1)].id=delivery.reflex.split(':').at(-1);});
++ turns.recoverCreation(root,turn.turn_id,{file:opts.file,reflex:delivery.reflex});const failed=readTurn(root,turn.turn_id);
++ assert.throws(()=>turns.recoverCreation(root,turn.turn_id,{file:opts.file,reflex:delivery.reflex}),/sense rebut preparat/);
++ assert.deepEqual(readTurn(root,turn.turn_id),failed);
++});
++
++for(const changedId of ['no-es-un-uuid','00000000-0000-4000-8000-000000000000']) test(`B3-identitat · context legacy amb ID ${changedId} no crea ni prepara`,t=>{
++ const root=fixture(t),turn=openTurn(root,{scope:'documents'}),opts=optsFailed('legacy_id');
++ const delivery=deliverContext(root,turn.turn_id,opts),key=delivery.reflex.split(':').at(-1);
++ mutateTurn(root,turn.turn_id,record=>{record.receipts[key].id=changedId;});
++ const before=readTurn(root,turn.turn_id);let failure;
++ try{createDraft(root,turn.turn_id,opts);}catch(error){failure=error;}
++ assert.deepEqual({fileCreated:fs.existsSync(path.join(root,opts.file)),metadataChanged:JSON.stringify(readTurn(root,turn.turn_id))!==JSON.stringify(before)},{fileCreated:false,metadataChanged:false});
++ assert.match(failure?.message||'',/identitat divergent/);
++});
+--- a/tests/document-command-policy.test.mjs
++++ b/tests/document-command-policy.test.mjs
+@@ -4,7 +4,7 @@
+ import path from 'node:path';
+ import os from 'node:os';
+ import {fixture, REPO, writeDoc} from './helpers/documental.mjs';
+-import {openTurn, deliverContext, bindPlan} from '../tooling/documental/turns.mjs';
++import {openTurn, deliverContext, bindPlan, readTurn, mutateTurn} from '../tooling/documental/turns.mjs';
+ import {createDraft, draft} from '../tooling/wiki/document.mjs';
+ import {authorizeDocumentCommand} from '../tooling/documental/command-policy.mjs';
+ import {knownRead} from '../tooling/gates/mutation-policy.mjs';
+@@ -119,3 +119,50 @@
+  assert.equal(checkLocal({tool_name:'exec_command',cwd:root,tool_input:{cmd:'pwd',workdir:root}},root).code,0);
+  assert.equal(checkLocal({tool_name:'exec_command',cwd:root,tool_input:{cmd:'node tooling/gates/executor-mutacio.mjs pla.json lease.json',workdir:root}},root).code,0);
+ });
++
++const recoverCommand=(turn,reflex,target=file)=>`node tooling/wiki/document.mjs recover --turn-id ${turn.turn_id} --file ${target} --reflex ${reflex}`;
++test('recover és mutació documental explícita només per al prepared del fitxer exacte',t=>{
++ const root=setup(t),turn=openTurn(root,{scope:'documents'}),delivery=deliverContext(root,turn.turn_id,{route:'auditoria',file,creation:true});
++ const recover=recoverCommand(turn,delivery.reflex),before=readTurn(root,turn.turn_id);
++ for(const present of [false,true]){
++  if(present)fs.writeFileSync(path.join(root,file),draft(delivery,{title:'Prova',description:'Recuperació explícita'}));
++  const result=checkLocal(payload(root,recover),root);
++  assert.equal(result.code,0,JSON.stringify(result));assert.equal(result.authority.kind,'document-mutation');assert.equal(result.authority.command,'recover');assert.equal(result.authority.file,file);
++  assert.equal(knownRead(payload(root,recover),root),false);assert.deepEqual(readTurn(root,turn.turn_id),before,'autoritzar no consolida metadata');
++ }
++});
++test('recover rebutja context legacy, reflex alié, replay, flags extra i shell sense mutar',t=>{
++ const root=setup(t),turn=openTurn(root,{scope:'documents'}),legacy=deliverContext(root,turn.turn_id,{route:'auditoria',file});
++ assert.equal(checkLocal(payload(root,recoverCommand(turn,legacy.reflex)),root).code,2);
++ const preparedFile=file.replace('_prova.md','_preparada.md'),delivery=deliverContext(root,turn.turn_id,{route:'auditoria',file:preparedFile,creation:true});
++ const recover=recoverCommand(turn,delivery.reflex,preparedFile),before=readTurn(root,turn.turn_id),foreign=openTurn(root,{scope:'documents'});
++ const commands=[
++  recoverCommand(turn,delivery.reflex),recoverCommand(foreign,delivery.reflex,preparedFile),recover.replace(delivery.reflex,'sdp:torn_00000000-0000-4000-8000-000000000000:00000000-0000-4000-8000-000000000000'),
++  recover.replace(` --reflex ${delivery.reflex}`,''),`${recover} --reflex ${delivery.reflex}`,`${recover} --route auditoria`,`${recover} --arrel /tmp`,`${recover} --output /tmp/out`,`${recover}; pwd`,`${recover} > /tmp/out`
++ ];
++ for(const value of commands){assert.equal(checkLocal(payload(root,value),root).code,2,value);assert.equal(knownRead(payload(root,value),root),false);}
++ assert.deepEqual(readTurn(root,turn.turn_id),before);
++ mutateTurn(root,turn.turn_id,record=>{const receipt=Object.values(record.receipts).find(r=>r.file===preparedFile);receipt.creation={...receipt.creation,state:'committed',committedAt:new Date().toISOString(),documentHash:'a'.repeat(64)};});
++ assert.equal(checkLocal(payload(root,recover),root).code,2,'una recuperació committed no es repeteix');
++});
++test('recover rebutja àlies físics i preparacions ambigües abans de concedir autoritat',t=>{
++ const root=setup(t),turn=openTurn(root,{scope:'documents'}),delivery=deliverContext(root,turn.turn_id,{route:'auditoria',file,creation:true});
++ const recover=recoverCommand(turn,delivery.reflex),before=readTurn(root,turn.turn_id),target=path.join(root,'private.md');
++ fs.writeFileSync(target,'Privat sintètic');fs.symlinkSync(target,path.join(root,file));
++ assert.equal(checkLocal(payload(root,recover),root).code,2);fs.unlinkSync(path.join(root,file));
++ fs.linkSync(target,path.join(root,file));assert.equal(checkLocal(payload(root,recover),root).code,2);fs.unlinkSync(path.join(root,file));
++ assert.deepEqual(readTurn(root,turn.turn_id),before);
++ const second=deliverContext(root,turn.turn_id,{route:'auditoria',file:file.replace('_prova.md','_altra.md'),creation:true});
++ mutateTurn(root,turn.turn_id,record=>{record.receipts[second.reflex.split(':').at(-1)].file=file;});
++ assert.equal(checkLocal(payload(root,recover),root).code,2);
++});
++
++test('B3-identitat · política create no concedeix autoritat a un context amb ID malformat',t=>{
++ const root=setup(t),turn=openTurn(root,{scope:'documents'}),delivery=deliverContext(root,turn.turn_id,{route:'auditoria',file});
++ const create=command('create',turn,' --route auditoria --title "Prova" --description "Rebuig d’identitat divergent"'),key=delivery.reflex.split(':').at(-1);
++ for(const changedId of ['no-es-un-uuid','00000000-0000-4000-8000-000000000000']){
++  mutateTurn(root,turn.turn_id,record=>{record.receipts[key].id=changedId;});const before=readTurn(root,turn.turn_id);
++  assert.equal(checkLocal(payload(root,create),root).code,2,changedId);assert.deepEqual(readTurn(root,turn.turn_id),before);
++  assert.equal(fs.existsSync(path.join(root,file)),false);
++ }
++});
+--- a/tests/cognitive-document-handoff.test.mjs
++++ b/tests/cognitive-document-handoff.test.mjs
+@@ -2,6 +2,7 @@
+ import assert from 'node:assert/strict';
+ import fs from 'node:fs';
+ import path from 'node:path';
++import {randomUUID} from 'node:crypto';
+ import {fixture} from './helpers/documental.mjs';
+ import {openTurn,deliverContext,readTurn,handoffDocument,mutateTurn} from '../tooling/documental/turns.mjs';
+ import {createDraft} from '../tooling/wiki/document.mjs';
+@@ -37,6 +38,13 @@
+  const root=fixture(t),turn=openTurn(root,{scope:'documents'}),source=`${DESK}/${doc('auditoria_duplicada')}`,target=`_wiki_de_poble/90_arxiu_historic/${path.basename(source)}`;
+  const opts={route:'auditoria',file:source,title:'Prova',description:'Prova de relleu complet dels rebuts d’un torn'};
+  deliverContext(root,turn.turn_id,opts);createDraft(root,turn.turn_id,opts);
++ // Registre anterior al lifecycle: dos contexts històrics abans del reflex
++ // principal. El create canònic actual ja no emet un segon rebut.
++ mutateTurn(root,turn.turn_id,record=>{
++  const principal={...Object.values(record.receipts)[0]};delete principal.creation;
++  const duplicat={...principal,id:randomUUID()};
++  record.receipts={[duplicat.id]:duplicat,[principal.id]:principal};
++ });
+  const raw=text(root,source);fs.mkdirSync(path.dirname(path.join(root,target)),{recursive:true});fs.renameSync(path.join(root,source),path.join(root,target));
+  return{root,turn,source,target,raw};
+ }

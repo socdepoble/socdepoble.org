@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { loadFils, loadMissatges, marcaLlegit, creaFilDirecte, carregaMembres, enviaMissatge, subscribeToXat, unsubscribeFromXat } from './xat.js';
 import { reiniciaLocalXat } from '../localXat.js';
+import { AGENTS_MAP } from '../agentsSeed.js';
 import { XAT_SEED_IDS, XAT_SEED_MEMBRES, XAT_SEED_NOMS, construeixLlavorXat } from '../xatSeed.js';
 
 /* modePerDefecte fa de política d'execució del host (host.js): és el mode que
@@ -254,7 +255,7 @@ describe('mode seed (localXat)', () => {
   /* T63.1 · La Pàgina Universal d'on naix la comunitat: el perfil públic de l'entitat pilot. */
   const SUBJECTE = { tipus: 'entitat', id: 'socdepoble', ruta: '/empresa/socdepoble', titol: 'Sóc de Poble' };
   const LOGO = '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg';
-  const TIPUS_DE_LA_LLAVOR = ['canal', 'comunitat', 'grup', 'iaia'];
+  const TIPUS_DE_LA_LLAVOR = ['canal', 'comunitat', 'grup', 'grup', 'iaia'];
   const noLlegits = (fils) => fils.reduce((total, f) => total + f.noLlegits, 0);
 
   it('T63.1 · la llavor només porta identitats reals: cap persona ni conversa inventada', () => {
@@ -275,7 +276,7 @@ describe('mode seed (localXat)', () => {
       .toEqual([expect.objectContaining({ usuariId: XAT_SEED_IDS.iaia, esIA: true, text: expect.stringMatching(/^Hola! Sóc la IAIA MarIA/) })]);
   });
 
-  it('T63.1 · la comunitat «Sóc de Poble» naix de la Pàgina Universal de l’entitat i porta Avisos i General', () => {
+  it('T63.1 · la comunitat «Sóc de Poble» naix de la Pàgina Universal de l’entitat i porta Avisos, General i Beta testers', () => {
     const llavor = construeixLlavorXat('jo-proves', Date.UTC(2026, 8, 28, 12, 0));
     const fil = (id) => llavor.fils.find(f => f.id === id);
     /* Contracte del Xat §1: tot fil porta comunitatId i subjecte (null si no en té). */
@@ -286,10 +287,13 @@ describe('mode seed (localXat)', () => {
       comunitatId: null, subjecte: SUBJECTE, creatAl: expect.any(String), actualitzatAl: expect.any(String), ultimSeq: 0
     });
     expect(fil(XAT_SEED_IDS.filAvisos)).toMatchObject({
-      tipus: 'canal', titol: 'Avisos', orgId: 'socdepoble', comunitatId: XAT_SEED_IDS.filComunitat, subjecte: SUBJECTE, ultimSeq: 2
+      tipus: 'canal', titol: 'Avisos', orgId: 'socdepoble', comunitatId: XAT_SEED_IDS.filComunitat, subjecte: SUBJECTE, ultimSeq: 3
     });
     expect(fil(XAT_SEED_IDS.filGeneral)).toMatchObject({
       tipus: 'grup', titol: 'General', orgId: null, comunitatId: XAT_SEED_IDS.filComunitat, subjecte: SUBJECTE, ultimSeq: 2
+    });
+    expect(fil(XAT_SEED_IDS.filBetaTesters)).toMatchObject({
+      tipus: 'grup', titol: 'Beta testers', orgId: null, comunitatId: XAT_SEED_IDS.filComunitat, subjecte: SUBJECTE, ultimSeq: 2
     });
     /* Cada fil té la seua còpia del subjecte: tocar-ne una no en canvia cap altra. */
     expect(fil(XAT_SEED_IDS.filAvisos).subjecte).not.toBe(fil(XAT_SEED_IDS.filGeneral).subjecte);
@@ -298,37 +302,43 @@ describe('mode seed (localXat)', () => {
     /* Els avisos els signa l'entitat; General s'obri amb el missatge de sistema de creació. */
     const avisos = llavor.missatges.filter(m => m.filId === XAT_SEED_IDS.filAvisos);
     expect(avisos.map(m => [m.seq, m.usuariId, m.autorNom, m.comOrgId])).toEqual([
-      [1, 'socdepoble', 'Sóc de Poble', 'socdepoble'], [2, 'socdepoble', 'Sóc de Poble', 'socdepoble']
+      [1, 'socdepoble', 'Sóc de Poble', 'socdepoble'], [2, 'socdepoble', 'Sóc de Poble', 'socdepoble'],
+      [3, 'socdepoble', 'Sóc de Poble', 'socdepoble']
     ]);
     const general = llavor.missatges.filter(m => m.filId === XAT_SEED_IDS.filGeneral);
     expect(general[0]).toMatchObject({ seq: 1, tipus: 'sistema', text: null, metadades: { clau: 'creat' } });
     expect(general[1]).toMatchObject({ seq: 2, tipus: 'text', autorNom: 'Sóc de Poble', comOrgId: 'socdepoble' });
-    /* Jo a tots tres; l'entitat hi és com a participant virtual. A Avisos em queda l'últim per llegir. */
+    /* Jo a la comunitat i als tres fills; l'entitat hi és com a participant virtual. A Avisos queden dos missatges per llegir. */
     const de = (filId) => llavor.participants.filter(p => p.filId === filId).map(p => [p.usuariId, p.esEntitat, p.llegitFinsSeq]);
     expect(de(XAT_SEED_IDS.filComunitat)).toEqual([['jo-proves', false, 0], ['socdepoble', true, 0]]);
-    expect(de(XAT_SEED_IDS.filAvisos)).toEqual([['jo-proves', false, 1], ['socdepoble', true, 2]]);
+    expect(de(XAT_SEED_IDS.filAvisos)).toEqual([['jo-proves', false, 1], ['socdepoble', true, 3]]);
     expect(de(XAT_SEED_IDS.filGeneral)).toEqual([['jo-proves', false, 2], ['socdepoble', true, 2]]);
+    expect(de(XAT_SEED_IDS.filBetaTesters)).toEqual([['jo-proves', false, 2], ['socdepoble', true, 2]]);
+    const beta = llavor.missatges.filter(m => m.filId === XAT_SEED_IDS.filBetaTesters);
+    expect(beta).toHaveLength(2);
+    expect(beta[0]).toMatchObject({ seq: 1, tipus: 'sistema', text: null, metadades: { clau: 'creat' } });
+    expect(beta[1]).toMatchObject({ seq: 2, autorNom: 'Sóc de Poble', comOrgId: 'socdepoble', text: expect.stringMatching(/^Benvinguts al canal de Beta Testers!/) });
   });
 
-  it('serveix les quatre converses de la llavor sense tocar Supabase, amb un avís per llegir', async () => {
+  it('serveix les cinc converses de la llavor sense tocar Supabase, amb dos avisos per llegir', async () => {
     const fils = await loadFils(SEED);
     expect(mock.getClient).not.toHaveBeenCalled();
-    expect(fils).toHaveLength(4);
+    expect(fils).toHaveLength(5);
     expect(fils.map(f => f.tipus).sort()).toEqual(TIPUS_DE_LA_LLAVOR);
-    expect(noLlegits(fils)).toBe(1);
+    expect(noLlegits(fils)).toBe(2);
     /* T4 · cada fil diu qui són els altres, amb tipus i avatar. */
     const iaia = fils.find(f => f.id === XAT_SEED_IDS.filIaia);
-    expect(iaia.altres).toEqual([{ id: XAT_SEED_IDS.iaia, nom: 'IAIA MarIA', tipus: 'ia', avatarUrl: '/assets/fotos/iaia-maria.png' }]);
-    expect(iaia.imatgeUrl).toBe('/assets/fotos/iaia-maria.png');
+    expect(iaia.altres).toEqual([{ id: XAT_SEED_IDS.iaia, nom: 'IAIA MarIA', tipus: 'ia', avatarUrl: AGENTS_MAP.IAIA.avatar_url }]);
+    expect(iaia.imatgeUrl).toBe(AGENTS_MAP.IAIA.avatar_url);
     expect(fils.find(f => f.id === XAT_SEED_IDS.filComunitat)).toMatchObject({
       tipus: 'comunitat', titol: 'Sóc de Poble', imatgeUrl: LOGO, ultimSeq: 0, noLlegits: 0, ultimText: null, entitatId: 'socdepoble'
     });
     const avisos = fils.find(f => f.id === XAT_SEED_IDS.filAvisos);
     expect(avisos).toMatchObject({
-      tipus: 'canal', titol: 'Avisos', ultimSeq: 2, llegitFinsSeq: 1, noLlegits: 1, imatgeUrl: LOGO,
-      entitatId: 'socdepoble', entitatNom: 'Sóc de Poble', comEntitat: false, llegitPelsAltresFinsSeq: 2
+      tipus: 'canal', titol: 'Avisos', ultimSeq: 3, llegitFinsSeq: 1, noLlegits: 2, imatgeUrl: LOGO,
+      entitatId: 'socdepoble', entitatNom: 'Sóc de Poble', comEntitat: false, llegitPelsAltresFinsSeq: 3
     });
-    expect(avisos.ultimText).toMatch(/^En este canal només escriu l’equip de Sóc de Poble/);
+    expect(avisos.ultimText).toMatch(/^Estem a punt de donar permís als usuaris/);
     expect(fils.find(f => f.id === XAT_SEED_IDS.filGeneral)).toMatchObject({ tipus: 'grup', titol: 'General', ultimSeq: 2, noLlegits: 0 });
   });
 
@@ -378,7 +388,8 @@ describe('mode seed (localXat)', () => {
   it('T2 · els avisos els signa l’entitat; com a client, obric un canal propi amb ella, idempotent', async () => {
     const avisos = await loadMissatges(XAT_SEED_IDS.filAvisos, SEED);
     expect(avisos.map(m => [m.seq, m.autorNom, m.comOrgId, m.esIA])).toEqual([
-      [1, 'Sóc de Poble', XAT_SEED_IDS.entitat, false], [2, 'Sóc de Poble', XAT_SEED_IDS.entitat, false]
+      [1, 'Sóc de Poble', XAT_SEED_IDS.entitat, false], [2, 'Sóc de Poble', XAT_SEED_IDS.entitat, false],
+      [3, 'Sóc de Poble', XAT_SEED_IDS.entitat, false]
     ]);
     /* Com a client, jo obric un canal amb l'entitat: no és cap fill de la comunitat i l'altra part és l'entitat. */
     const nou = await creaFilDirecte(XAT_SEED_IDS.entitat, null, SEED);
@@ -419,9 +430,9 @@ describe('mode seed (localXat)', () => {
   });
   it('marcaLlegit no retrocedix i sense marca arriba a l’últim', async () => {
     const fil = XAT_SEED_IDS.filAvisos;
-    expect(await marcaLlegit(fil, { ...SEED, llegitFinsSeq: 0 })).toEqual({ llegitFinsSeq: 1, rebutFinsSeq: 2 });
-    expect(await marcaLlegit(fil, SEED)).toEqual({ llegitFinsSeq: 2, rebutFinsSeq: 2 });
-    expect(await marcaLlegit(fil, { ...SEED, llegitFinsSeq: 1 })).toEqual({ llegitFinsSeq: 2, rebutFinsSeq: 2 });
+    expect(await marcaLlegit(fil, { ...SEED, llegitFinsSeq: 0 })).toEqual({ llegitFinsSeq: 1, rebutFinsSeq: 3 });
+    expect(await marcaLlegit(fil, SEED)).toEqual({ llegitFinsSeq: 3, rebutFinsSeq: 3 });
+    expect(await marcaLlegit(fil, { ...SEED, llegitFinsSeq: 1 })).toEqual({ llegitFinsSeq: 3, rebutFinsSeq: 3 });
     const fils = await loadFils(SEED);
     expect(fils.find(f => f.id === fil).noLlegits).toBe(0);
     expect(noLlegits(fils)).toBe(0);
@@ -458,7 +469,7 @@ describe('mode seed (localXat)', () => {
     mock.user = null;
     const fils = await loadFils(SEED);
     expect(fils.map(f => f.tipus).sort()).toEqual(TIPUS_DE_LA_LLAVOR);
-    expect(noLlegits(fils)).toBe(1);
+    expect(noLlegits(fils)).toBe(2);
     const meu = await enviaMissatge(XAT_SEED_IDS.filGeneral, 'Hola des del convidat', SEED);
     expect(meu.usuariId).toBe('convidat-seed');
   });

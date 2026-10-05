@@ -91,5 +91,11 @@ L'equivalent a l'Spec-driven per al disseny:
 - **Persones i IA (Avatars):** Els usuaris, persones físiques i la IAIA utilitzen OBLIGATÒRIAMENT un avatar redó i gran (300-360 px), mai un logotip corporatiu ni figures abstractes per defecte a les seues fitxes personals.
 - **Entitat Oficial:** El logotip complet de "Sóc de Poble" es reserva de forma estricta i exclusiva per a la pàgina corporativa de l'entitat, la capçalera oficial i els actes organitzats per aquesta. Mai s'ha d'utilitzar com a "avatar" o imatge de recurs quan falta la foto d'una persona.
 
+## 12. Tornada arrere lliure de tensió (Pla 261004_2045)
+
+- En mòbil, els menús emergents i calaixos de navegació s'adapten al contingut i tenen un màxim de 300px d'amplària. Han de deixar visible espai tàctil de la vista anterior perquè es puga tancar el menú tocant fora.
+- Les etiquetes llargues usen `text-overflow: ellipsis`; el nom complet continua disponible com a nom accessible de l'acció. El truncament visual no elimina la identificació per a lectors de pantalla.
+- Este límit s'aplica a menús i calaixos. Una pantalla completa de treball, com l'editor o el visor, és legítima quan conserva una eixida o tornada arrere visible i accessible; no és una prohibició general d'ocupar el 100% de la pantalla.
+
 ## Ancoratge de Seguretat
 - [[00_INDEX_SKILLS]]

@@ -17,6 +17,7 @@ export function WorkspaceProvider({
   items = [],
   itemsComplete = false,
   resolveItemId,
+  canAutoSelect,
   resolutionKey = 0,
   status = 'ready',
   initialSelection,
@@ -132,13 +133,15 @@ export function WorkspaceProvider({
   const normalizedItemsRef = useRef(normalizedItems);
   const statusRef = useRef(status);
   const ambitDeRef = useRef(ambitDe);
+  const canAutoSelectRef = useRef(canAutoSelect);
 
   useEffect(() => {
     stateRef.current = state;
     normalizedItemsRef.current = normalizedItems;
     statusRef.current = status;
     ambitDeRef.current = ambitDe;
-  }, [state, normalizedItems, status, ambitDe]);
+    canAutoSelectRef.current = canAutoSelect;
+  }, [state, normalizedItems, status, ambitDe, canAutoSelect]);
 
   const selectCategory = useCallback((categoryId) => {
     if (statusRef.current !== 'ready') return;
@@ -147,18 +150,26 @@ export function WorkspaceProvider({
 
     const id = String(categoryId);
     let itemId = null;
+    let deferred = false;
     if (!categoriaSenseElement) {
       const candidates = filterWorkspaceItems(items, {
         ...currentState,
         activeCategoryId: id
       }, { ambit: ambitDeRef.current(id) });
+      // La pell pot ajornar sols la tria automàtica d'una carpeta pendent.
+      // Una nota disponible continua elegible; selectItem i requestItem són manuals.
+      const eligible = typeof canAutoSelectRef.current === 'function'
+        ? candidates.filter(item => canAutoSelectRef.current({ categoryId: id, item }) !== false)
+        : candidates;
       const remembered = currentState.lastItemByCategory[id];
-      itemId = candidates.some((item) => String(item.id) === remembered)
+      itemId = eligible.some((item) => String(item.id) === remembered)
         ? remembered
-        : candidates[0]?.id ?? null;
+        : eligible[0]?.id ?? null;
+      deferred = itemId === null && typeof canAutoSelectRef.current === 'function'
+        && canAutoSelectRef.current({ categoryId: id, item: null }) === false;
     }
 
-    dispatch({ type: 'category/select', categoryId: id, itemId });
+    dispatch({ type: 'category/select', categoryId: id, itemId, needsInitialSelection: deferred });
     emitSelection({ categoryId: id, itemId }, 'user');
   }, [emitSelection, categoriaSenseElement]);
 
@@ -358,17 +369,24 @@ export function WorkspaceProvider({
     let itemId = state.activeItemId;
 
     // T7C · Amb categoriaSenseElement, cap element per defecte.
+    // La política opcional només participa en les tries de reserva, mai en
+    // una selecció existent. Sense política es conserva el comportament habitual.
+    const permits = item => typeof canAutoSelect !== 'function'
+      || canAutoSelect({ categoryId, item }) !== false;
     const firstItemId = () => (categoriaSenseElement ? null : normalizedItems.find((item) =>
-      pertanyA(item, categoryId)
+      pertanyA(item, categoryId) && permits(item)
     )?.id ?? null);
+    const deferred = itemId => itemId === null && !categoriaSenseElement && !permits(null);
 
     if (itemId !== null && !itemById.has(itemId)) {
       // Error, càrrega i "found però encara no injectat" conserven
       // l'ID. Cap d'aquests estats autoritza el fallback.
       if (itemResolution.status !== 'not-found') return;
       itemId = firstItemId();
+      if (deferred(itemId)) return;
     } else if (state.needsInitialSelection && itemId === null) {
       itemId = firstItemId();
+      if (deferred(itemId)) return;
 
       // Una pàgina buida parcial no tanca la selecció inicial (sense
       // element per defecte no hi ha res a esperar).
@@ -423,7 +441,8 @@ export function WorkspaceProvider({
     state.pendingItemId,
     emitSelection,
     pertanyA,
-    categoriaSenseElement
+    categoriaSenseElement,
+    canAutoSelect
   ]);
 
   const value = useMemo(() => ({

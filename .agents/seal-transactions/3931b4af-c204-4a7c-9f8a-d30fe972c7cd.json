@@ -1,0 +1,27 @@
+{
+  "id": "3931b4af-c204-4a7c-9f8a-d30fe972c7cd",
+  "session": "39a171b7-62ec-49de-95be-56087f5c3d38",
+  "operationId": "sdp-current-state-261005_0059",
+  "claim": "39a171b7-62ec-49de-95be-56087f5c3d38:governance-write",
+  "planHash": "5c2bb078a555a9901f49f5b5dc2d77e5b66f69ed48e817f388d1c034bf9e3e48",
+  "beforeSeal": "b48d9a2dca2daeaf8ffa0499fc1f70251bfa5718ed05495a250da17cb9f41de8",
+  "files": [
+    {
+      "path": ".agents/ESTAT.md",
+      "before": "6308790d9ecbadf1f2b9f99004dd1ba9004bd35eb5c57c8ce80779037a6c2260",
+      "after": "a93c0c29821641863ff79ace2cdabb7ad9141180e585c0a2127fe656aa9d1c4f"
+    },
+    {
+      "path": ".agents/LEDGER.md",
+      "before": "4363f8450cd2921f246b66caa3c47622a3cac277c8e90528fe409e52c689ef16",
+      "after": "9c75c7b0e61c9486aa8ab37198df96430b11ad384b71042039ff456c0daec4ae"
+    },
+    {
+      "path": ".agents/ON_ESTIC.md",
+      "before": "6b9f06bbe219b171359a3d29745064aab471dd11f04f97dc334136e19c8bd48b",
+      "after": "dc5beee5b36c916f423dbf0d7cf9c142bbe7d025f3254ae205300c59e8b0bfd4"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "5be515e906a26495855ab59280a1e2426ce7ab073f62b3041e1bedc8f2add73c"
+}

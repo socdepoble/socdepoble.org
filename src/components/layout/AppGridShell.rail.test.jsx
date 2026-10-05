@@ -12,6 +12,10 @@ import { act, cleanup, fireEvent, render, within } from '@testing-library/react'
 import { afterEach, expect, test, vi } from 'vitest';
 import AppGridShell, { useAppGrid } from './AppGridShell.jsx';
 import { PUNTS_DE_TALL } from './graella.js';
+import postcss from 'postcss';
+import Specificity from '@bramus/specificity';
+import { execFileSync } from 'node:child_process';
+import { Dialeg } from '../PedraSeca/organismes/Dialeg.jsx';
 
 /* Barres (ordre del Mestre, 261004) · El mock era { left: 420, middle: 340 }
    i SANEJA_AMPLADA rebutja amb raó el left de 420, fora de
@@ -377,7 +381,9 @@ test('Barres · CSS: el rail de la navegació viu en el coixí de «mitja», amb
   const sel = '\\.app-grid-shell\\[data-layout="mitja"\\]\\[data-esquerra="rail"\\]';
   expect(css).toMatch(new RegExp(`${sel} \\.app-grid-content \\{ padding-inline-start: var\\(--app-grid-col-collapsed\\); \\}`));
   expect(css).toMatch(new RegExp(`${sel} \\.app-grid-column--left \\{ width: var\\(--app-grid-col-collapsed\\); transform: none; box-shadow: none; \\}`));
-  expect(css).toMatch(new RegExp(`${sel}\\[data-panell="left"\\] \\.app-grid-column--left \\{ width: var\\(--app-grid-col-sidebar\\); box-shadow: var\\(--sdp-ombra-3\\); \\}`));
+  expect(css).toMatch(new RegExp(`${sel}\\[data-panell="left"\\] \\.app-grid-column--left \\{ width: max-content; box-shadow: var\\(--sdp-ombra-3\\); \\}`));
+  /* Pla2045: menú segons contingut, topall300px i espai tàctil fora. */
+  expect(css).toContain('max-width: min(var(--sdp-menu-ample-max), calc(100% - var(--sdp-touch-min)));');
   /* El detall de «mitja» conserva el seu mínim: les pistes de sempre. */
   expect(css).toContain(`min(var(--app-grid-col-list-live, var(--app-grid-col-list)), calc(100% - ${PUNTS_DE_TALL.detall}px))`);
   expect(css).toContain(`minmax(${PUNTS_DE_TALL.detall}px, 1fr)`);
@@ -398,4 +404,123 @@ test('Barres · CSS: el rail de la navegació viu en el coixí de «mitja», amb
   const pagina = regles.filter(([selector]) => /(^|,\s*)\.app-grid-page\s*$/.test(selector)).map(([, cos]) => cos).join(' ');
   expect(pagina).toContain('inset: 0;');
   expect(pagina).not.toMatch(/(^|[\s;])bottom:/);
+});
+
+/* Enxufe · Vite processa el full real que PedraSecaEmbed injecta. jsdom no
+   pinta @layer: PostCSS i l'analitzador d'especificitat del lock resolen les
+   declaracions sobre el Dialeg real portalitzat. No es compta cap literal
+   ni es busquen selectors esperats; les dimensions es projecten en la caixa
+   de cada instància. La mesura de píxel real queda per al navegador. */
+let fullEnxufat;
+let estilsEnxufats;
+const capesDelFull = () => {
+  const capes = [];
+  fullEnxufat.walkAtRules('layer', (regla) => {
+    for (const nom of regla.params.split(',').map((s) => s.trim())) if (!capes.includes(nom)) capes.push(nom);
+  });
+  return capes;
+};
+function selectorLocal(node, selector) {
+  const host = node.getRootNode().host;
+  const inici = /^:host(?:\(([^)]*)\))?(?:\s+|$)/.exec(selector);
+  if (inici) {
+    if (!host || (inici[1] && !host.matches(inici[1]))) return false;
+    selector = selector.slice(inici[0].length);
+    if (!selector) return node === host;
+  } else if (selector.includes(':host')) return false;
+  try { return node.matches(selector); } catch { return false; }
+}
+function declaracioGuanyadora(node, propietat) {
+  let guanyadora = null;
+  let ordre = 0;
+  const CAPES = capesDelFull();
+  fullEnxufat.walkRules((regla) => {
+    ordre++;
+    const d = regla.nodes?.findLast((n) => n.type === 'decl' && n.prop === propietat);
+    if (!d) return;
+    let pare = regla.parent;
+    let capa = CAPES.length;
+    while (pare) {
+      if (pare.type === 'atrule' && pare.name === 'layer') capa = CAPES.indexOf(pare.params);
+      pare = pare.parent;
+    }
+    for (const selector of regla.selectors) {
+      if (!selectorLocal(node, selector)) continue;
+      const [especificitat] = Specificity.calculate(selector);
+      const rang = [d.important ? 1 : 0, d.important ? -capa : capa, ...especificitat.toArray(), ordre];
+      if (!guanyadora || rang.some((n, i) => n !== guanyadora.rang[i] && rang.slice(0, i).every((p, j) => p === guanyadora.rang[j]) && n > guanyadora.rang[i])) {
+        guanyadora = { valor: d.value, rang };
+      }
+    }
+  });
+  return guanyadora?.valor;
+}
+function variableDe(node, nom) {
+  const root = node.closest('.sdp-root');
+  return root.style.getPropertyValue(nom) || declaracioGuanyadora(root, nom);
+}
+function pixelsDe(valor, node, amplada) {
+  const variable = /^var\((--[\w-]+)\)$/.exec(valor);
+  if (variable) return pixelsDe(variableDe(node, variable[1]), node, amplada);
+  const min = /^min\((.*),\s*(.*)\)$/.exec(valor);
+  if (min) return Math.min(pixelsDe(min[1], node, amplada), pixelsDe(min[2], node, amplada));
+  const resta = /^calc\((.*) - (.*)\)$/.exec(valor);
+  if (resta) return pixelsDe(resta[1], node, amplada) - pixelsDe(resta[2], node, amplada);
+  const dimensio = /^([\d.]+)(px|rem|%)$/.exec(valor);
+  if (!dimensio) throw new Error(`Dimensió CSS no interpretable en esta prova: ${valor}`);
+  return Number(dimensio[1]) * ({ px: 1, rem: 16, '%': amplada / 100 })[dimensio[2]];
+}
+function calaixEncastat(sidebar = true) {
+  const host = document.createElement('soc-de-poble');
+  document.body.append(host);
+  const shadow = host.attachShadow({ mode: 'closed' });
+  const estil = document.createElement('style');
+  estil.textContent = estilsEnxufats;
+  shadow.append(estil);
+  const root = document.createElement('div');
+  root.className = 'sdp-root is-compact';
+  shadow.append(root);
+  const muntatge = document.createElement('div');
+  root.append(muntatge);
+  render(<Dialeg obert titol="Menú de la instància" costat="esquerra" variant="sense-marc" className={sidebar ? 'sdp-dialeg-sidebar' : undefined}><nav>Una etiqueta prou llarga per requerir el sostre del menú</nav></Dialeg>, { container: muntatge, baseElement: root });
+  return { host, shadow, root, dialeg: within(root).getByRole('dialog', { name: 'Menú de la instància' }) };
+}
+
+test('Enxufe · la cascada del full injectat deixa espai tàctil fora del calaix de cada instància', async () => {
+  // Vitest omet CSS per defecte. Processem l'entrada amb la mateixa API de
+  // Vite, sense .env, servidor, build escrit ni cap configuració global nova.
+  estilsEnxufats = execFileSync(process.execPath, ['--input-type=module', '-e', `
+    import { readFileSync } from 'node:fs';
+    import { resolve } from 'node:path';
+    import { preprocessCSS, resolveConfig } from 'vite';
+    const entrada = resolve(process.cwd(), 'src/css/index.css');
+    const config = await resolveConfig({ configFile: false, envFile: false, root: process.cwd(), logLevel: 'silent' }, 'build');
+    const { code } = await preprocessCSS(readFileSync(entrada, 'utf8'), entrada, config);
+    process.stdout.write(code);
+  `], { cwd: process.cwd(), encoding: 'utf8', maxBuffer: 8 * 1024 * 1024 });
+  fullEnxufat = postcss.parse(estilsEnxufats);
+  const instancies = [calaixEncastat(), calaixEncastat()];
+  const control = calaixEncastat(false);
+  try {
+    for (const { shadow, root, dialeg } of instancies) {
+      expect(dialeg.getRootNode()).toBe(shadow);
+      expect(dialeg.parentElement.classList.contains('sdp-capa-modal--calaix')).toBe(true);
+      expect(dialeg.parentElement.parentElement).toBe(root);
+      expect(document.body.querySelector('dialog')).toBeNull();
+      expect(declaracioGuanyadora(dialeg, 'width')).toBe('max-content');
+      for (const amplada of [280, 360, 600]) {
+        const maxim = pixelsDe(declaracioGuanyadora(dialeg, 'max-width'), dialeg, amplada);
+        expect(maxim, `sostre del calaix dins de ${amplada}px`).toBeLessThanOrEqual(300);
+        expect(amplada - maxim, `aire per a tancar dins de ${amplada}px`).toBeGreaterThanOrEqual(48);
+      }
+    }
+    instancies[0].root.style.setProperty('--sdp-menu-ample-max', '240px');
+    expect(pixelsDe(declaracioGuanyadora(instancies[0].dialeg, 'max-width'), instancies[0].dialeg, 600)).toBe(240);
+    expect(pixelsDe(declaracioGuanyadora(instancies[1].dialeg, 'max-width'), instancies[1].dialeg, 600)).toBe(300);
+    // El sostre del menú no captura altres calaixos de la mateixa instància.
+    expect(pixelsDe(declaracioGuanyadora(control.dialeg, 'max-width'), control.dialeg, 600)).toBe(600);
+  } finally {
+    cleanup();
+    [...instancies, control].forEach(({ host }) => host.remove());
+  }
 });

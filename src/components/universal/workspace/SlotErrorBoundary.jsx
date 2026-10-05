@@ -1,3 +1,4 @@
+import { esErrorLazy } from '../../../apps/plataforma/lazyRoute.js';
 import { Component } from 'react';
 
 /**
@@ -44,6 +45,7 @@ export class SlotErrorBoundary extends Component {
   render() {
     const { error } = this.state;
     if (!error) return this.props.children;
+    if (esErrorLazy(error)) throw error;
 
     const { domini = 'panell', fallback } = this.props;
     if (typeof fallback === 'function') {

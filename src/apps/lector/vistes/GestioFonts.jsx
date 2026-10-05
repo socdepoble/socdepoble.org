@@ -54,6 +54,7 @@ const TEXTOS_PERSONALS = Object.freeze({ lleva: (nom) => `Lleva la font ${nom}` 
 function FontsPersonals() {
   const { lector, personals, noticies } = useVistaLector();
   const arrel = useRef(null);
+  const rondaFocus = useRef(0);
   /* Correcció SN-R6 (el patró C16 de /connectar) · Llevar-ne una desmunta la
      paperera premuda: el focus va a la de la línia següent, o a l'anterior,
      o, si no en queda cap, a la columna (una regió amb nom que s'enfoca).
@@ -61,10 +62,21 @@ function FontsPersonals() {
   const [focusDesti, setFocusDesti] = useState(null);
   useEffect(() => {
     if (!focusDesti) return;
-    const linia = [...(arrel.current?.querySelectorAll('[data-linia]') || [])].find((node) => node.dataset.linia === focusDesti.id);
-    (linia?.querySelector('button') || focusDesti.regio)?.focus();
+    /* Un avís pot invalidar la lectura de lleva(): l'èxit de l'escriptura
+       encara no vol dir que la línia haja desaparegut de la vista. */
+    if (personals.fonts.some((font) => font.id === focusDesti.llevadaId)) return;
+    const { premuda, regio } = focusDesti;
+    const doc = premuda.ownerDocument;
+    const encaraSeu = doc.activeElement === premuda || (!premuda.isConnected && doc.activeElement === doc.body);
+    if (encaraSeu) {
+      const veina = personals.fonts.find((font) => font.id === focusDesti.veinaId)
+        || personals.fonts[Math.min(focusDesti.index, personals.fonts.length - 1)];
+      const linia = [...(arrel.current?.querySelectorAll('[data-linia]') || [])].find((node) => node.dataset.linia === veina?.id);
+      const desti = linia?.querySelector('button') || (regio?.isConnected ? regio : null);
+      desti?.focus();
+    }
     setFocusDesti(null);
-  }, [focusDesti]);
+  }, [focusDesti, personals.fonts]);
 
   if (personals.fonts.length === 0) return null;
   const nomDe = new Map(noticies.categories.map((categoria) => [categoria.id, categoria.nom]));
@@ -74,10 +86,16 @@ function FontsPersonals() {
     detall: ['Pendent del connector', llocDe(font.url), nomDe.get(font.categoriaId)].filter(Boolean).join(' · ')
   }));
   const lleva = async (linia) => {
+    const ronda = ++rondaFocus.current;
+    setFocusDesti(null);
     const index = personals.fonts.findIndex((font) => font.id === linia.id);
     const veina = personals.fonts[index + 1] || personals.fonts[index - 1] || null;
     const regio = arrel.current?.closest('[role="region"]') || null;
-    if (await personals.lleva(linia.id)) setFocusDesti({ id: veina?.id ?? null, regio });
+    const premuda = arrel.current?.ownerDocument.activeElement;
+    const teFocus = arrel.current?.contains(premuda) && premuda.closest('[data-linia]')?.dataset.linia === linia.id;
+    if (await personals.lleva(linia.id) && teFocus && ronda === rondaFocus.current) {
+      setFocusDesti({ llevadaId: linia.id, veinaId: veina?.id ?? null, index, premuda, regio });
+    }
   };
   return (
     <div ref={arrel}>

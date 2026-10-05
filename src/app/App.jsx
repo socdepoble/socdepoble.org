@@ -2,10 +2,10 @@ import { RouteSEO } from '../hooks/RouteSEO';
 import { RouteTelemetria } from '../hooks/RouteTelemetria';
 import { usePullToRefresh } from '../hooks/usePullToRefresh.js';
 import { useEntitatDelProjecte } from '../hooks/useEntitatDelProjecte.js';
-import React, { lazy, Suspense, useCallback, useEffect, useRef, memo, StrictMode, useMemo, useState } from 'react';
+import React, { Suspense, useCallback, useEffect, useRef, memo, StrictMode, useMemo, useState } from 'react';
 import { Navigate, NavLink, Route, Routes, useNavigate, useLocation, useRouter } from './contexts/RouterContext';
 import { MoonStar, Search, Settings, Sun, Globe } from '../icons.jsx';
-import { PanelLeftClose } from 'lucide-react';
+import { PanelLeftClose, Phone } from 'lucide-react';
 import { IaiaIcon } from '../components/PedraSeca/atoms/icones';
 import BrandMark from '../components/BrandMark';
 import { NotificationProvider } from '../components/universal/NotificationContext.jsx';
@@ -22,50 +22,53 @@ import { useToast } from '@/components/universal/NotificationContext.jsx';
 import { delVal } from '../config/storage';
 import { ATRIBUT_CONTRAST, CONTRAST_BANCAL, arrelDePresentacio, reclamaAtribut } from '../config/theme';
 import { esAmaDelDocument } from '../apps/plataforma/interruptors.js';
+import { lazyRoute } from '../apps/plataforma/lazyRoute.js';
+import { RouteErrorBoundary } from './RouteErrorBoundary.jsx';
+export { RouteErrorBoundary } from './RouteErrorBoundary.jsx';
 import { EVENT_NIVELL_IAIA, esIaiaActiva, nivellIaiaDesat } from '../sections/realitat/nivellIaia.js';
 import { PAGE_COPY } from '../sections/text/pageContent.js';
 import { BotoCrom } from '../components/universal/PanellCrom.jsx';
 /* T47 · Escriptors de l'autodesament des de l'arrencada (reprenen esborranys pendents). */
 import './autodesamentEscriptors.js';
-const XatSection = lazy(() => import('../sections/xat/XatSection'));
-const MurSection = lazy(() => import('../sections/mur/MurSection'));
-const MercatSection = lazy(() => import('../sections/mercat/MercatSection'));
-const PoblesSection = lazy(() => import('../sections/pobles/PoblesSection'));
-const PoblacioSection = lazy(() => import('../sections/poblacio/PoblacioSection'));
-const CalendariSection = lazy(() => import('../sections/calendari/CalendariSection'));
-const MultimediaSection = lazy(() => import('../sections/multimedia/MultimediaSection'));
-const NotesSection = lazy(() => import('../sections/notes/NotesSection'));
+const XatSection = lazyRoute(() => import('../sections/xat/XatSection'));
+const MurSection = lazyRoute(() => import('../sections/mur/MurSection'));
+const MercatSection = lazyRoute(() => import('../sections/mercat/MercatSection'));
+const PoblesSection = lazyRoute(() => import('../sections/pobles/PoblesSection'));
+const PoblacioSection = lazyRoute(() => import('../sections/poblacio/PoblacioSection'));
+const CalendariSection = lazyRoute(() => import('../sections/calendari/CalendariSection'));
+const MultimediaSection = lazyRoute(() => import('../sections/multimedia/MultimediaSection'));
+const NotesSection = lazyRoute(() => import('../sections/notes/NotesSection'));
 
-const DevicesSection = lazy(() => import('../sections/dispositius/DevicesSection'));
-const ConnectarSection = lazy(() => import('../sections/connectar/ConnectarSection'));
-const ControlSection = lazy(() => import('../sections/control/ControlSection'));
-const OnboardingSection = lazy(() => import('../sections/onboarding/OnboardingSection'));
-const AdminSection = lazy(() => import('../sections/admin/AdminSection'));
-const ConsolaSection = lazy(() => import('../sections/consola/ConsolaSection'));
+const DevicesSection = lazyRoute(() => import('../sections/dispositius/DevicesSection'));
+const ConnectarSection = lazyRoute(() => import('../sections/connectar/ConnectarSection'));
+const ControlSection = lazyRoute(() => import('../sections/control/ControlSection'));
+const OnboardingSection = lazyRoute(() => import('../sections/onboarding/OnboardingSection'));
+const AdminSection = lazyRoute(() => import('../sections/admin/AdminSection'));
+const ConsolaSection = lazyRoute(() => import('../sections/consola/ConsolaSection'));
 
-const TranslationsSection = lazy(() => import('../sections/translations/TranslationsSection'));
-const TextSection = lazy(() => import('../sections/text/TextSection'));
-const TaulerTelemetria = lazy(() => import('../sections/text/TaulerTelemetria'));
+const TranslationsSection = lazyRoute(() => import('../sections/translations/TranslationsSection'));
+const TextSection = lazyRoute(() => import('../sections/text/TextSection'));
+const TaulerTelemetria = lazyRoute(() => import('../sections/text/TaulerTelemetria'));
 import RutaWikiDePoble from '../sections/wiki-de-poble/RutaWikiDePoble.jsx';
-const DesignSection = lazy(() => import('../sections/disseny/DesignSection'));
-const SearchSection = lazy(() => import('../sections/search/SearchSection'));
-const ProfileSection = lazy(() => import('../sections/profile/ProfileSection'));
-const PerfilPublicSection = lazy(() => import('../sections/profile/PerfilPublicSection'));
-const PerfilShell = lazy(() => import('../sections/profile/PerfilShell'));
-const ItemDetailSection = lazy(() => import('../sections/detail/ItemDetailSection'));
-const PageDetailSection = lazy(() => import('../sections/detail/PageDetailSection'));
-const RealitatSection = lazy(() => import('../sections/realitat/RealitatSection'));
+const DesignSection = lazyRoute(() => import('../sections/disseny/DesignSection'));
+const SearchSection = lazyRoute(() => import('../sections/search/SearchSection'));
+const ProfileSection = lazyRoute(() => import('../sections/profile/ProfileSection'));
+const PerfilPublicSection = lazyRoute(() => import('../sections/profile/PerfilPublicSection'));
+const PerfilShell = lazyRoute(() => import('../sections/profile/PerfilShell'));
+const ItemDetailSection = lazyRoute(() => import('../sections/detail/ItemDetailSection'));
+const PageDetailSection = lazyRoute(() => import('../sections/detail/PageDetailSection'));
+const RealitatSection = lazyRoute(() => import('../sections/realitat/RealitatSection'));
 /* Plataforma d'Apps Enxufables (261002) · el portal /app i cada app a /app/<id>/*. */
-const RutaApps = lazy(() => import('../apps/plataforma/RutaApps.jsx'));
+const RutaApps = lazyRoute(() => import('../apps/plataforma/RutaApps.jsx'));
 /* P7-A (261004) · la pàgina de cada utilitat del Panell: /plugin/<id> (sections/plugins/). */
-const PluginPage = lazy(() => import('../sections/plugins/PluginPage.jsx'));
+const PluginPage = lazyRoute(() => import('../sections/plugins/PluginPage.jsx'));
 import NotFoundPage from '../pages/NotFoundPage';
 import { CoreContentProvider, useCoreContent } from './contexts/CoreContentContext';
 import { MurProvider } from '../sections/mur/MurContext';
 import { NotesDataProvider } from '../sections/notes/NotesDataContext';
 import { NotesProvider } from '../sections/notes/NotesContext';
 import { XatProvider } from '../sections/xat/XatContext';
-const XatControlSection = lazy(() => import('../sections/xat/XatControlSection'));
+const XatControlSection = lazyRoute(() => import('../sections/xat/XatControlSection'));
 import { MultimediaProvider } from '../sections/multimedia/MultimediaContext';
 import { useUIActions, useUIState } from './contexts/UIContext';
 /* T43 (ordre del Mestre, 260928) · la identitat activa de la barra negra. */
@@ -106,7 +109,7 @@ const AMPLE_MAXIM_COMPACTE = 1023;
    a SECTIONS la publicaria al manifest SEO i a la barra lateral. */
 const seccioDeLaBarraMobil = (id) => NAV_SECTIONS.find((section) => section.id === id);
 const MOBILE_NAV_LEADING = ['xat', 'mur'].map(seccioDeLaBarraMobil).filter(Boolean);
-const MOBILE_NAV_TRAILING = ['mercat', 'pobles'].map(seccioDeLaBarraMobil).filter(Boolean);
+const MOBILE_NAV_TRAILING = ['pobles', 'mercat'].map(seccioDeLaBarraMobil).filter(Boolean);
 
 function RouteFallback() {
   return (
@@ -702,14 +705,18 @@ function AppContent({ config }) {
 function AppDataLoader() {
   const core = useCoreContent();
   const location = useLocation();
+  const { externalConfig } = useUIState();
+  const enLinia = useEnLinia();
   /* T6 en remot (verificació del front «autoria», 261004) · L'id de servidor
      de l'entitat pilot es resol ací, una sola vegada per a tota l'app i per
      abast de backend (resolEntitatDelProjecte; en llavor, cap crida). Abans
      només el demanaven la targeta del Mur i el detall d'una publicació del
      MAS: qui entrava directament a /mercat, /mur/:id o /mercat/:id veia la
      boina del pilot portar a /empresa/<uuid> tota la sessió. Quan l'id
-     arriba, este component torna a pintar les rutes i totes les boines
-     (rutaDAutoria) porten a /projecte. */
+     arriba, este component torna a pintar les rutes i les boines que usen
+     rutaDAutoria porten a /projecte. Al Mercat, rutaDePerfilPublicDAutor
+     conserva el perfil públic de qui ven, també per a l'entitat pilot
+     (Marató 2230, pla 2045). */
   useEntitatDelProjecte();
 
   // Eliminar el bloqueig global per a error o loading del Core permet a Sóc de Poble
@@ -727,57 +734,21 @@ function AppDataLoader() {
       <RouteTelemetria />
       {/* FRO-04 · La barrera es reinicia sola en canviar de ruta: una secció
           que ha petat no segresta la navegació cap a les altres. */}
-      <RouteErrorBoundary resetKey={location.pathname}>
+      <RouteErrorBoundary resetKey={location.pathname} externalConfig={externalConfig} enLinia={enLinia}>
         <AppRoutes />
       </RouteErrorBoundary>
     </>
   );
 }
 
-/* FRO-04 · Barrera d'errors de ruta.
-   - `resetKey` (la ruta) la reinicia en navegar: l'error d'una secció no
-     acompanya la persona a la següent.
-   - El missatge tècnic (`error.message`) només ix en desenvolupament: en un
-     build, la traça no és per a la persona del poble sinó per a la consola. */
-export class RouteErrorBoundary extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = { hasError: false, error: null, resetKey: props.resetKey };
-  }
-  static getDerivedStateFromError(error) {
-    return { hasError: true, error };
-  }
-  static getDerivedStateFromProps(props, state) {
-    if (props.resetKey !== state.resetKey) {
-      return { hasError: false, error: null, resetKey: props.resetKey };
-    }
-    return null;
-  }
-  componentDidCatch(error, errorInfo) {
-    console.error('[RouteErrorBoundary] Error capturat a la ruta:', error, errorInfo);
-  }
-  render() {
-    if (this.state.hasError) {
-      const detall = this.props.mostraDetall ?? Boolean(import.meta.env?.DEV);
-      return (
-        <div className="sdp-route-error" role="alert">
-          <h2 className="sdp-route-error__titol">Hi ha hagut un problema</h2>
-          <p>Aquesta secció no ha pogut carregar-se correctament.</p>
-          {detall ? (
-            <pre className="sdp-error-pre">
-              {this.state.error?.message || String(this.state.error)}
-            </pre>
-          ) : null}
-          <button type="button" onClick={() => this.setState({ hasError: false, error: null })} className="sdp-boto sdp-boto--secundari sdp-route-error__reintent">
-            Intentar de nou
-          </button>
-        </div>
-      );
-    }
-    return this.props.children;
-  }
-}
 
+
+/* Àlies històric: conserva la consulta dins del router de l’amfitrió. */
+function RedireccioIaia() {
+  const { search } = useLocation();
+  const consulta = new URLSearchParams(search).toString();
+  return <Navigate to={consulta ? `/iaia?${consulta}` : '/iaia'} replace />;
+}
 
 function ActorRedirect({ to }) {
   return <Navigate to={`/${to}`} replace />;
@@ -880,7 +851,8 @@ function ActorRoutes({ agents }) {
       <Route path="constitucio" element={<TextRoute pageKey="constitucio" />} />
       <Route path="disseny" element={<DesignSection />} />
       <Route path="roadmap" element={<TextRoute pageKey="roadmap" />} />
-      <Route path="ia" element={<TextRoute pageKey="anima" />} />
+      <Route path="iaia" element={<TextRoute pageKey="anima" />} />
+      <Route path="ia" element={<RedireccioIaia />} />
       {/* T8 (ordre del Mestre, 261001) · On porta la franja de l'amfitrió: què
           és un node. Pàgina de text fora de la barra lateral i del Mur. */}
       <Route path="fedivers" element={<TextRoute pageKey="fedivers" />} />
@@ -895,6 +867,8 @@ const MobileNav = memo(function MobileNav() {
   const { language } = useUIState();
   const { t } = useUIActions();
   const navigate = useNavigate();
+  const [telefonadesObertes, setTelefonadesObertes] = useState(false);
+  const telefonades = t('section.xat.rail.telefonades', 'Telefonades');
 
   const enllacMobil = (section) => {
     const Icon = section.icon;
@@ -930,7 +904,16 @@ const MobileNav = memo(function MobileNav() {
           <Settings strokeWidth={2.1} />
         </button>
         {MOBILE_NAV_TRAILING.map((section) => enllacMobil(section))}
+        <button type="button" className="nav-item" aria-label={telefonades} aria-haspopup="dialog"
+          onClick={(event) => { event.currentTarget.focus(); setTelefonadesObertes(true); }}>
+          <Phone className="nav-item__icon" strokeWidth={2.1} aria-hidden="true" focusable="false" />
+          <span className="nav-item__text"><strong>{telefonades}</strong></span>
+        </button>
       </nav>
+      <Dialeg obert={telefonadesObertes} onTanca={() => setTelefonadesObertes(false)} titol={telefonades}
+        accions={<button type="button" className="sdp-boto" onClick={() => setTelefonadesObertes(false)}>{t('common.entesos', 'Entesos')}</button>}>
+        <p>{t('nav.telefonades.avis', 'Aquest és un projecte lliure CC. Aquesta funció està prevista per a quan puguem mantenir-la econòmicament.')}</p>
+      </Dialeg>
     </>
   );
 });

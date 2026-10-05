@@ -481,7 +481,4 @@ L’acta Marmota de tancament de jornada queda pendent de consolidar amb les alt
 ## Vincles
 
 - [[00_index]]
-- [[00_index_escriptori]]
 
-- [[../90_arxiu_historic/260923_1515_pla_implementacio_olivera]]
-- [[../90_arxiu_historic/260923_1515_prompt_conjunt_olivera]]

@@ -1,5 +1,6 @@
 ---
 name: core-telemetria-huma
+prioritat: 2
 type: skill
 status: actiu
 triggers_on: ["inici de sessió", "tancament de sessió", "fatiga", "nanochat"]

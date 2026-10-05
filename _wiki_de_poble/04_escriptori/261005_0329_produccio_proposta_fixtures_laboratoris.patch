@@ -1,0 +1,56 @@
+--- a/tests/olivera-arxiva-261002.test.mjs
++++ b/tests/olivera-arxiva-261002.test.mjs
+@@ -30,6 +30,9 @@
+ const REL_LAB = '_wiki_de_poble/04_escriptori/02_investigacio_ia/261002_1745_olivera_arxiva_claude';
+ const LAB = path.join(REPO, REL_LAB);
+ const NOUS = path.join(LAB, 'nous');
++// Els consumidors que no viatgen amb el paquet han de compartir la seua API base.
++const COMMIT_FIXTURE = '62b623339';
++const CONSUMIDORS_TORNS = ['tooling/wiki/document.mjs', 'tooling/documental/command-policy.mjs', 'tooling/gates/porta-plantilla-viva.mjs'];
+ const OPERACIO = 'sdp-olivera-arxiva-261002-';
+ const DESK = '_wiki_de_poble/04_escriptori';
+ const ARXIU = '_wiki_de_poble/90_arxiu_historic';
+@@ -91,6 +94,16 @@
+   for (const rel of fitxersDe(path.join(NOUS, 'tooling'))) {
+     fs.mkdirSync(path.dirname(path.join(dir, 'tooling', rel)), { recursive: true });
+     fs.copyFileSync(path.join(NOUS, 'tooling', rel), path.join(dir, 'tooling', rel));
++  }
++  for (const rel of CONSUMIDORS_TORNS) {
++    if (fs.existsSync(path.join(NOUS, rel))) continue; // El consumidor proposat pel laboratori mana.
++    const original = execFileSync('git', ['cat-file', 'blob', `${COMMIT_FIXTURE}:${rel}`], { cwd: REPO });
++    fs.writeFileSync(path.join(dir, rel), original);
++  }
++  // Les guardes actuals inspeccionen la font signada i la configuració real d'ESLint.
++  for (const rel of ['src/sections/tractors/nucli/empremta.js', 'eslint.config.js']) {
++    fs.mkdirSync(path.dirname(path.join(dir, rel)), { recursive: true });
++    fs.copyFileSync(path.join(REPO, rel), path.join(dir, rel));
+   }
+   fs.symlinkSync(path.join(REPO, 'node_modules'), path.join(dir, 'node_modules'), 'dir');
+   fs.writeFileSync(path.join(dir, '.agents/AGENTS.md'), '# BIOS de la còpia de proves\n');
+--- a/tests/governanca-260930b-torns.test.mjs
++++ b/tests/governanca-260930b-torns.test.mjs
+@@ -25,6 +25,9 @@
+ 
+ const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+ const LAB = path.join(REPO, '_wiki_de_poble/04_escriptori/02_investigacio_ia/260930_0400_governanca_claude');
++// Commit declarat a BASES del laboratori; cap consumidor actual pot demanar API posterior.
++const COMMIT_FIXTURE = '638a6f333';
++const CONSUMIDORS_TORNS = ['tooling/wiki/document.mjs', 'tooling/documental/command-policy.mjs', 'tooling/gates/porta-plantilla-viva.mjs'];
+ const HI_HA_LAB = fs.existsSync(path.join(LAB, 'prepara-pla.mjs'));
+ const pla = HI_HA_LAB ? await import(pathToFileURL(path.join(LAB, 'prepara-pla.mjs')).href) : null;
+ 
+@@ -185,6 +188,14 @@
+       fs.mkdirSync(path.dirname(path.join(dir, ruta)), { recursive: true });
+       fs.copyFileSync(path.join(LAB, 'nous', font), path.join(dir, ruta));
+     }
++    for (const rel of CONSUMIDORS_TORNS) {
++      if (FITXERS.has(rel)) continue;
++      const original = execFileSync('git', ['cat-file', 'blob', `${COMMIT_FIXTURE}:${rel}`], { cwd: REPO });
++      fs.writeFileSync(path.join(dir, rel), original);
++    }
++    // El generador de la mateixa base usa també el seu vocabulari del Registre.
++    const routerBase = execFileSync('git', ['cat-file', 'blob', `${COMMIT_FIXTURE}:.agents/protocolledge.json`], { cwd: REPO });
++    fs.writeFileSync(path.join(dir, '.agents/protocolledge.json'), routerBase);
+   }
+   fs.symlinkSync(path.join(REPO, 'node_modules'), path.join(dir, 'node_modules'), 'dir');
+   fs.symlinkSync(path.join(REPO, 'src'), path.join(dir, 'src'), 'dir');

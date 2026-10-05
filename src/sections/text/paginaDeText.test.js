@@ -8,14 +8,14 @@ import { PAGE_COPY } from './pageContent.js';
 import { RUTES_SENSE_PAGINA_DE_TEXT, pageKeyDeRuta, paginaDeRuta, propsDePaginaDeText } from './paginaDeText.js';
 import { COPYRIGHT_SDP, dataHoraDeBarra } from '../../components/universal/editorial.js';
 
-test('les rutes de text amb pageKey propi: /ia és «anima», amb query, fragment o barra final', () => {
-  expect(pageKeyDeRuta('/ia')).toBe('anima');
+test('les rutes de text amb pageKey propi: /iaia i l’àlies /ia són «anima», amb query, fragment o barra final', () => {
+  for (const ruta of ['/iaia', '/iaia?x=1', '/iaia/', '/iaia#reflexions', '/ia']) expect(pageKeyDeRuta(ruta)).toBe('anima');
   expect(pageKeyDeRuta('/ia?x=1')).toBe('anima');
   expect(pageKeyDeRuta('/ia/')).toBe('anima');
   expect(pageKeyDeRuta('/ia#reflexions')).toBe('anima');
   expect(pageKeyDeRuta('/projecte')).toBe('projecte');
   expect(pageKeyDeRuta('/legal')).toBe('legal');
-  expect(paginaDeRuta('/ia')).toEqual({ pageKey: 'anima', page: PAGE_COPY.anima });
+  expect(paginaDeRuta('/iaia')).toEqual({ pageKey: 'anima', page: PAGE_COPY.anima });
 });
 
 /* T8 (ordre del Mestre, 261001) · /fedivers, on porta la franja de l'amfitrió,
@@ -89,9 +89,9 @@ test('claus pròpies només: «constructor» o «__proto__» no són cap pàgina
 
 test('el copy del core mana sobre PAGE_COPY, com a TextRoute', () => {
   const nova = { title: 'L’Ànima (core)', html: '<p>nou</p>' };
-  expect(paginaDeRuta('/ia', { pageCopy: { anima: nova } })).toEqual({ pageKey: 'anima', page: nova });
+  expect(paginaDeRuta('/iaia', { pageCopy: { anima: nova } })).toEqual({ pageKey: 'anima', page: nova });
   // Les pàgines per slug només compten a /page/:slug.
-  expect(paginaDeRuta('/ia', { pages: [{ slug: 'anima', title: 'No' }] }).page).toBe(PAGE_COPY.anima);
+  expect(paginaDeRuta('/iaia', { pages: [{ slug: 'anima', title: 'No' }] }).page).toBe(PAGE_COPY.anima);
 });
 
 test('propsDePaginaDeText: les de TextSection (hero resolt, etiquetes, drets i data del copy)', () => {
@@ -100,6 +100,9 @@ test('propsDePaginaDeText: les de TextSection (hero resolt, etiquetes, drets i d
     subtitle: PAGE_COPY.anima.subtitle,
     lead: PAGE_COPY.anima.lead,
     heroImage: '/assets/uploads/brain/nano_anima_mas_ibanez_v3_1781060081431.webp',
+    heroWidth: 1024,
+    heroHeight: 1024,
+    heroFetchPriority: 'high',
     heroAlt: 'Il·lustració de la IAIA',
     labels: PAGE_COPY.anima.labels,
     copyright: COPYRIGHT_SDP,

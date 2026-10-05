@@ -1,0 +1,334 @@
+--- a/src/sections/notes/NotesSection.jsx
++++ b/src/sections/notes/NotesSection.jsx
+@@ -19,6 +19,7 @@
+ import { iconaDeCarpeta, opcionsDeCarpetes } from './carpetes.js';
+ import { escriuSeleccio, llegixSeleccio } from '../../components/universal/workspace/seleccioUrl.js';
+ import { ALL_CATEGORY_ID } from '../../components/universal/workspace/workspaceState.js';
++import { buildWorkspaceFolderForest, descendentsDeCarpeta } from '../../components/universal/workspace/workspaceFolderForest.js';
+ import { CARPETA_ALTRES, CARPETA_PER_SECCIO, itemsPublicatsDe } from './masDeLUsuari.js';
+ import { llicenciaDeLActor } from '../../components/universal/drets/herencia.js';
+ import { LLICENCIA_PER_DEFECTE } from '../../components/universal/drets/llicencies.js';
+@@ -141,11 +142,13 @@
+   /* T1 · el MAS també ensenya el que l'actor ha publicat, per carpeta.
+      T39 · `memberships` porta el copyright de les entitats (herència). */
+   const { actor, memberships } = useIdentitat();
+-  const { sortedFeedPosts = CAP, sortedMarketItems = CAP, sortedEvents = CAP } = useMur();
++  const mur = useMur();
++  const { sortedFeedPosts = CAP, sortedMarketItems = CAP, sortedEvents = CAP } = mur;
+   /* F4 (ordre del Mestre, 261004; PRD de la Marató 2230, Fase 1) · També els
+      mitjans de l'actor, a «Multimèdia». Ja passen pel port (MultimediaContext ·
+      loadMultimedia): cap petició nova. Sense proveïdor, cap mitjà. */
+-  const { mediaItems = CAP } = useMultimedia();
++  const multimedia = useMultimedia();
++  const { mediaItems = CAP } = multimedia;
+   const alies = useMemo(() => aliesDeLActor(actor, { dataMode: config?.dataMode }), [actor, config?.dataMode]);
+   const {
+     status, error, notes, noteFolders, creaNota, setLocalNoteField, updateNote,
+@@ -207,6 +210,42 @@
+      copiat obri la mateixa carpeta amb la mateixa nota. La secció (?seccio=)
+      l'escriu l'Índex de la pàgina; canviar de nota l'oblida. */
+   const enUrl = llegixSeleccio(params, CLAUS_URL);
++
++  /* F4 · Una publicació és de la seua font, no del port de notes. Mentre
++     eixa font carrega, revalida o falla, una URL copiada conserva la tria.
++     Les notes ordinàries continuen regides només pel seu propi context. */
++  const esPublicacio = String(enUrl.item ?? '').startsWith('publicacio:');
++  /* Sense item, una carpeta pública buida de notes ordinàries encara pot
++     rebre publicacions: no fixem la preparada abans que arribe la font.
++     Si ja hi ha una nota privada visible, incloses les subcarpetes i les
++     notes publicades al Mur, la font aliena no en bloqueja l'obertura. */
++  const seccioCarpeta = !modeDesa && !enUrl.item ? Object.entries(CARPETA_PER_SECCIO)
++    .find(([, id]) => id === (enUrl.carpeta ?? carpetes[0]?.id))?.[0] : null;
++  const teNotaALaCarpeta = useMemo(() => {
++    if (!seccioCarpeta) return false;
++    const id = CARPETA_PER_SECCIO[seccioCarpeta];
++    const incloses = new Set([id, ...descendentsDeCarpeta(buildWorkspaceFolderForest(carpetes), id)]);
++    return notes.some((nota) => toWorkspaceNote(nota, noteFolders).categoryIds.some((carpeta) => incloses.has(carpeta)));
++  }, [seccioCarpeta, carpetes, notes, noteFolders]);
++  const seccioPublicada = /^publicacio:([^:]+):/.exec(String(enUrl.item ?? ''))?.[1]
++    ?? (teNotaALaCarpeta ? null : seccioCarpeta);
++  const fontDeLaSeleccio = modeDesa ? null : seccioPublicada === 'multimedia' ? multimedia
++    : ['mur', 'mercat', 'events'].includes(seccioPublicada) ? mur : null;
++  const estatSeleccio = status === 'ready' ? (fontDeLaSeleccio?.status ?? status) : status;
++  const errorSeleccio = status === 'ready' && fontDeLaSeleccio ? fontDeLaSeleccio.error : error;
++  const refrescaSeleccio = status === 'ready' ? (fontDeLaSeleccio?.refresh ?? refresh) : refresh;
++  /* Els contextos públics no acrediten una llista exhaustiva (el port remot
++     encara limita les seccions a 50). Cap ID virtual s'envia a resolveNote
++     ni es dona per absent només perquè queda fora d'eixa finestra. */
++  const resolSeleccio = useCallback((id, opcions) => {
++    if (String(id).startsWith('publicacio:')) {
++      throw new Error('La publicació no està disponible en les dades carregades.');
++    }
++    if (typeof resolveNote !== 'function') {
++      throw new Error('La llista parcial de notes no disposa de resolució per ID.');
++    }
++    return resolveNote(id, opcions);
++  }, [resolveNote]);
+ 
+   /* ── P4 (ordre del Mestre, 261003) · La «Nota sense títol» ─────────────
+      Sempre n'hi ha una de preparada (notaPreparada.js), a la carpeta, la
+@@ -293,14 +332,14 @@
+       // En entrar, la primera carpeta (Mur) es pinta activa: la mateixa cara
+       // que Wiki i Disseny (pla 260924_1710 §3.4).
+       primeraCarpeta: carpetes[0] ? carpetes[0].id : undefined,
+-      status,
+-      error,
+-      itemsComplete: notesComplete,
+-      resolveItemId: resolveNote,
++      status: estatSeleccio,
++      error: errorSeleccio,
++      itemsComplete: esPublicacio ? false : notesComplete,
++      resolveItemId: resolSeleccio,
+       workspaceKey,
+       /* P4 · CREAR NOTA es pinta sempre que la persona pot tindre notes, i
+          l'espai de treball el desactiva mentre carrega (abans desapareixia). */
+-      refresh, canCreate: !calEntrar,
++      refresh: refrescaSeleccio, canCreate: !calEntrar,
+       /* T7C · Al snippet la navegació tria on arriba l'enllaç: només les
+          carpetes. Categories i etiquetes es trien a la botonera. */
+       navigationGroups: modeDesa ? [grupCarpetes] : [
+@@ -318,7 +357,7 @@
+         ...(itemPreparada ? [itemPreparada] : [])
+       ]
+     };
+-  }, [status, error, notesComplete, resolveNote, workspaceKey, refresh, calEntrar, noteFolders, notes, carpetes, allCategories, allTags, publicacions, modeDesa, preparada.id, preparada.camps, itemPreparada]);
++  }, [estatSeleccio, errorSeleccio, esPublicacio, notesComplete, resolSeleccio, workspaceKey, refrescaSeleccio, calEntrar, noteFolders, notes, carpetes, allCategories, allTags, publicacions, modeDesa, preparada.id, preparada.camps, itemPreparada]);
+ 
+   /* T7C · La carpeta on arriba l'enllaç (la de la URL si és del Bloc; si
+      no, la Safata d’Entrada) és la categoria activa del Workspace, i el
+--- /dev/null
++++ b/src/sections/notes/NotesSection.publicacions.url.test.jsx
+@@ -0,0 +1,233 @@
++/* F4 · Router i Workspace reals. Les notes i les publicacions arriben de
++   ports independents: una font pendent no demostra absència d'una publicació
++   ni envia el seu ID virtual al port privat de notes. Dades sintètiques. */
++import React from 'react';
++import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
++import { afterEach, beforeAll, beforeEach, expect, test, vi } from 'vitest';
++import { MemoryRouter, useLocation } from '../../app/contexts/RouterContext';
++
++const dades = vi.hoisted(() => ({
++  notes: [], noteFolders: [], notesStatus: 'ready', notesComplete: true, notesError: null,
++  media: [], mediaStatus: 'ready', mediaError: null,
++  feed: [], mercat: [], events: [], murStatus: 'ready', murError: null,
++  resolveNote: vi.fn(), refreshNotes: vi.fn(), refreshMur: vi.fn(), refreshMedia: vi.fn(),
++  activate: () => () => {}
++}));
++vi.mock('./NotesContext', async (importOriginal) => ({ ...await importOriginal(), useNotes: () => ({
++  notes: dades.notes, noteFolders: dades.noteFolders, status: dades.notesStatus, error: dades.notesError,
++  notesComplete: dades.notesComplete, canCreate: true, teSessio: true,
++  resolveNote: dades.resolveNote, refresh: dades.refreshNotes,
++  obriConfiguracioNotes: () => {}, creaNota: async () => ({ id: 'nova' })
++}) }));
++vi.mock('./NotesDataContext.jsx', () => ({ useNotesData: () => ({ activate: dades.activate, config: { dataMode: 'remote' } }) }));
++vi.mock('../../app/contexts/IdentitatContext.jsx', () => ({ useIdentitat: () => ({ actor: { tipus: 'persona', id: 'uuid-prova', rol: 'persona' }, memberships: [] }) }));
++vi.mock('../mur/MurContext', () => ({ useMur: () => ({
++  status: dades.murStatus, error: dades.murError, refresh: dades.refreshMur,
++  sortedFeedPosts: dades.feed, sortedMarketItems: dades.mercat, sortedEvents: dades.events
++}) }));
++vi.mock('../multimedia/MultimediaContext.jsx', () => ({ useMultimedia: () => ({
++  status: dades.mediaStatus, error: dades.mediaError, refresh: dades.refreshMedia, mediaItems: dades.media
++}) }));
++vi.mock('./SnippetCurador.jsx', () => ({ SnippetCurador: () => <p data-testid="curador">Snippet privat</p> }));
++vi.mock('./NotesDetail.jsx', () => ({ default: ({ activeNote }) => <p data-testid="detall-nota">{activeNote?.id ?? 'cap'}</p> }));
++vi.mock('./NotaFitxa.jsx', () => ({ NotaFitxa: ({ item, active, onSelect }) => (
++  <button type="button" aria-current={active ? 'true' : undefined} onClick={onSelect}>{item.title}</button>
++) }));
++vi.mock('./ConnexioFitxa.jsx', () => ({ ConnexioFitxa: () => null }));
++vi.mock('./PublicacioDetall.jsx', () => ({
++  PublicacioDetall: ({ item }) => <p data-testid="detall-publicacio">{item?.id ?? 'cap'}</p>,
++  PublicacioFitxa: ({ item, active, onSelect }) => <button type="button" aria-current={active ? 'true' : undefined} onClick={onSelect}>{item.title}</button>
++}));
++vi.mock('../../hooks/useResolvedAsset.js', () => ({
++  useResolvedAsset: (ref) => ref,
++  useResolvedAssetState: (ref) => ({ url: ref, status: ref ? 'ready' : 'idle', error: null, isLoading: false, retry: () => {}, cancel: () => {} })
++}));
++import NotesSection from './NotesSection.jsx';
++
++beforeAll(() => {
++  if (typeof globalThis.ResizeObserver === 'undefined') vi.stubGlobal('ResizeObserver', class { observe() {} unobserve() {} disconnect() {} });
++  Object.defineProperty(HTMLElement.prototype, 'clientWidth', { configurable: true, get: () => 1400 });
++});
++beforeEach(() => {
++  Object.assign(dades, {
++    notes: [], noteFolders: [], notesStatus: 'ready', notesComplete: true, notesError: null,
++    media: [], mediaStatus: 'ready', mediaError: null,
++    feed: [], mercat: [], events: [], murStatus: 'ready', murError: null
++  });
++  vi.clearAllMocks();
++  dades.resolveNote.mockResolvedValue({ status: 'not-found' });
++});
++afterEach(() => cleanup());
++
++function Sonda() {
++  const { pathname, search } = useLocation();
++  return <output data-testid="url">{search ? `${pathname}?${search}` : pathname}</output>;
++}
++const vista = (ruta) => <MemoryRouter rutaInicial={ruta}><NotesSection /><Sonda /></MemoryRouter>;
++const tria = () => new URL(screen.getByTestId('url').textContent, 'http://localhost').searchParams.get('nota');
++const carpeta = { multimedia: 'f-media', mur: 'f-mur', mercat: 'f-mercat', events: 'f-events' };
++const coleccio = { multimedia: 'media', mur: 'feed', mercat: 'mercat', events: 'events' };
++const font = (seccio) => seccio === 'multimedia' ? 'media' : 'mur';
++const rutaDe = (seccio, id) => `/notes?carpeta=${carpeta[seccio]}&nota=${encodeURIComponent(id)}`;
++
++for (const seccio of ['multimedia', 'mur', 'mercat', 'events']) {
++  for (const estat of ['loading', 'revalidating', 'error']) {
++    test(`F4 · ${seccio}: ${estat} → ready conserva la URL copiada i obri la publicació`, async () => {
++      const id = `publicacio:${seccio}:element-prova`;
++      const ruta = rutaDe(seccio, id);
++      dades[`${font(seccio)}Status`] = estat;
++      if (estat === 'error') dades[`${font(seccio)}Error`] = new Error('Font temporalment indisponible');
++      const view = render(vista(ruta));
++      expect(tria()).toBe(id);
++      expect(dades.resolveNote).not.toHaveBeenCalled();
++      if (estat === 'error') expect(screen.getAllByRole('alert').length).toBeGreaterThan(0);
++      dades[coleccio[seccio]] = [{ id: 'element-prova', title: 'Peça pròpia', ownerUserId: 'uuid-prova', kind: 'image', src: '/a.jpg' }];
++      dades[`${font(seccio)}Status`] = 'ready';
++      dades[`${font(seccio)}Error`] = null;
++      view.rerender(vista(ruta));
++      expect(tria()).toBe(id);
++      expect(screen.getByTestId('detall-publicacio').textContent).toBe(id);
++      expect(dades.resolveNote).not.toHaveBeenCalled();
++      await waitFor(() => expect(screen.queryByRole('alert')).toBeNull());
++    });
++  }
++}
++
++test('F4 · revalidar una publicació que ja estava oberta no la substituïx per una nota preparada', () => {
++  const id = 'publicacio:multimedia:element-prova';
++  const ruta = rutaDe('multimedia', id);
++  dades.media = [{ id: 'element-prova', title: 'Peça pròpia', ownerUserId: 'uuid-prova', kind: 'image', src: '/a.jpg' }];
++  const view = render(vista(ruta));
++  expect(screen.getByTestId('detall-publicacio').textContent).toBe(id);
++  dades.mediaStatus = 'revalidating';
++  dades.media = [];
++  view.rerender(vista(ruta));
++  expect(tria()).toBe(id);
++  expect(dades.resolveNote).not.toHaveBeenCalled();
++  dades.mediaStatus = 'ready';
++  dades.media = [{ id: 'element-prova', title: 'Peça pròpia', ownerUserId: 'uuid-prova' }];
++  view.rerender(vista(ruta));
++  expect(tria()).toBe(id);
++  expect(screen.getByTestId('detall-publicacio').textContent).toBe(id);
++});
++
++for (const completa of [true, false]) {
++  test(`F4 · una publicació fora de la finestra amb notesComplete=${completa} no consulta el port privat ni acredita absència`, async () => {
++    const id = 'publicacio:multimedia:fora-finestra';
++    dades.notesComplete = completa;
++    render(vista(rutaDe('multimedia', id)));
++    await waitFor(() => expect(screen.getByText('No s’ha pogut obrir l’element.')).toBeTruthy());
++    expect(tria()).toBe(id);
++    expect(dades.resolveNote).not.toHaveBeenCalled();
++    expect(screen.queryByText('L’element no és accessible o ja no existix.')).toBeNull();
++  });
++}
++
++test('F4 · una nota ordinària ready no queda bloquejada per Mur loading ni Multimèdia error', () => {
++  dades.notes = [{ id: 'n1', title: 'Primera', folderId: 'f-mur' }];
++  dades.murStatus = 'loading';
++  dades.mediaStatus = 'error';
++  dades.mediaError = new Error('Font aliena caiguda');
++  render(vista('/notes?nota=n1'));
++  expect(tria()).toBe('n1');
++  expect(screen.getByTestId('detall-nota').textContent).toBe('n1');
++  expect(screen.queryByRole('alert')).toBeNull();
++});
++
++test('F4 · una nota ordinària absent en una llista parcial continua delegant la resolució per ID', async () => {
++  dades.notesComplete = false;
++  dades.mediaStatus = 'error';
++  dades.resolveNote.mockRejectedValue(new Error('Resolució privada temporalment indisponible'));
++  render(vista('/notes?nota=uuid-nota-pendent'));
++  await waitFor(() => expect(dades.resolveNote).toHaveBeenCalledTimes(1));
++  expect(dades.resolveNote.mock.calls[0][0]).toBe('uuid-nota-pendent');
++  expect(dades.resolveNote.mock.calls[0][1].signal).toBeInstanceOf(AbortSignal);
++  await waitFor(() => expect(screen.getByText('No s’ha pogut obrir l’element.')).toBeTruthy());
++  expect(tria()).toBe('uuid-nota-pendent');
++});
++
++test('F4 · Reintentar una font seleccionada en error refresca eixa font', () => {
++  dades.mediaStatus = 'error';
++  dades.mediaError = new Error('Font caiguda');
++  render(vista(rutaDe('multimedia', 'publicacio:multimedia:element-prova')));
++  fireEvent.click(screen.getByRole('button', { name: 'Reintentar' }));
++  expect(dades.refreshMedia).toHaveBeenCalledTimes(1);
++  expect(dades.refreshNotes).not.toHaveBeenCalled();
++  expect(dades.refreshMur).not.toHaveBeenCalled();
++});
++
++test('F4 · si falla Notes, Reintentar continua refrescant Notes encara que la URL siga d’una publicació', () => {
++  dades.notesStatus = 'error';
++  dades.notesError = new Error('Notes temporalment indisponible');
++  render(vista(rutaDe('multimedia', 'publicacio:multimedia:element-prova')));
++  fireEvent.click(screen.getByRole('button', { name: 'Reintentar' }));
++  expect(dades.refreshNotes).toHaveBeenCalledTimes(1);
++  expect(dades.refreshMedia).not.toHaveBeenCalled();
++});
++
++for (const seccio of ['multimedia', 'mur', 'mercat', 'events']) {
++  for (const estat of ['loading', 'revalidating', 'error']) {
++    test(`F4 · carpeta ${seccio} sense item espera ${estat} abans de triar la primera publicació`, () => {
++      const ruta = `/notes?carpeta=${carpeta[seccio]}`;
++      dades[`${font(seccio)}Status`] = estat;
++      if (estat === 'error') dades[`${font(seccio)}Error`] = new Error('Font temporalment indisponible');
++      const view = render(vista(ruta));
++      expect(tria()).toBeNull();
++      dades[coleccio[seccio]] = [{ id: 'element-prova', title: 'Peça pròpia', ownerUserId: 'uuid-prova' }];
++      dades[`${font(seccio)}Status`] = 'ready';
++      dades[`${font(seccio)}Error`] = null;
++      view.rerender(vista(ruta));
++      const id = `publicacio:${seccio}:element-prova`;
++      expect(tria()).toBe(id);
++      expect(screen.getByTestId('detall-publicacio').textContent).toBe(id);
++      expect(dades.resolveNote).not.toHaveBeenCalled();
++    });
++  }
++  test(`F4 · la carpeta ${seccio} amb una nota ordinària no espera la font pública en error`, () => {
++    dades.notes = [{ id: 'nota-prova', title: 'Nota privada', folderId: carpeta[seccio] }];
++    dades[`${font(seccio)}Status`] = 'error';
++    dades[`${font(seccio)}Error`] = new Error('Font aliena caiguda');
++    render(vista(`/notes?carpeta=${carpeta[seccio]}`));
++    expect(tria()).toBe('nota-prova');
++    expect(screen.getByTestId('detall-nota').textContent).toBe('nota-prova');
++    expect(screen.queryByRole('alert')).toBeNull();
++  });
++}
++
++test('F4 · les notes ordinàries d’una subcarpeta continuen visibles abans que arribe la font pública', () => {
++  dades.noteFolders = [{ id: 'f-media', name: 'Multimèdia' }, { id: 'sub-media', name: 'Bancals', parentId: 'f-media' }];
++  dades.notes = [{ id: 'nota-subcarpeta', title: 'Nota privada', folderId: 'sub-media' }];
++  dades.mediaStatus = 'loading';
++  render(vista('/notes?carpeta=f-media'));
++  expect(tria()).toBe('nota-subcarpeta');
++  expect(screen.getByTestId('detall-nota').textContent).toBe('nota-subcarpeta');
++});
++
++test('F4 · la nota editable publicada també al Mur no queda bloquejada per la font pública', () => {
++  dades.notes = [{ id: 'nota-publicada', title: 'Nota pròpia', folderId: 'f-notes', isPublished: true, publishedSubmissionId: 'publicada' }];
++  dades.murStatus = 'loading';
++  render(vista('/notes?carpeta=f-mur'));
++  expect(tria()).toBe('nota-publicada');
++  expect(screen.getByTestId('detall-nota').textContent).toBe('nota-publicada');
++});
++
++for (const idCarpeta of ['f-media', 'f-mur']) {
++  test(`F4 · el snippet privat en ${idCarpeta} no espera cap font pública`, () => {
++    dades.mediaStatus = 'error';
++    dades.mediaError = new Error('Font aliena caiguda');
++    dades.murStatus = 'loading';
++    render(vista(`/notes?mode=desa&carpeta=${idCarpeta}`));
++    expect(screen.getByTestId('curador').textContent).toBe('Snippet privat');
++    expect(screen.queryByRole('alert')).toBeNull();
++    expect(tria()).toBeNull();
++    expect(dades.resolveNote).not.toHaveBeenCalled();
++  });
++}
++
++test('F4 · el snippet continua governat per l’error propi de Notes', () => {
++  dades.notesStatus = 'error';
++  dades.notesError = new Error('Notes caigudes');
++  render(vista('/notes?mode=desa&carpeta=f-media'));
++  expect(screen.queryByTestId('curador')).toBeNull();
++  expect(screen.getAllByRole('alert').length).toBeGreaterThan(0);
++});

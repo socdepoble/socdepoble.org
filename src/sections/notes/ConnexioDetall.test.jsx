@@ -112,7 +112,7 @@ test('T63.2 · caiguda d’un perfil: Comentar és el directe amb la persona; un
   unmount();
   const anima = render(<ConnexioDetall nota={nota(ORIGEN_ANIMA)} />);
   fireEvent.click(comentarBarra(anima.container));
-  expect(destiXat()).toMatchObject({ cami: '/xat', sobre: 'pagina:/ia', ruta: '/ia' });
+  expect(destiXat()).toMatchObject({ cami: '/xat', sobre: 'pagina:/iaia', ruta: '/iaia' });
 });
 
 test('T63.2 · una connexió a una nota no té xat comú: cap Comentar a la barra', () => {
@@ -176,7 +176,7 @@ test('absent (un perfil): caiguda amb el títol de l’origen, avís i «Obri l�
 
 /* ── T71 · l'intern és un accés directe de lectura a l'original ── */
 const ORIGEN_ANIMA = {
-  tipus: 'connexio', sectionId: '', itemId: '/ia', ruta: '/ia', objecte: 'pagina',
+  tipus: 'connexio', sectionId: '', itemId: '/iaia', ruta: '/iaia', objecte: 'pagina',
   // El que l'URL de Connectar podia portar: no mana quan l'original es resol.
   titol: 'Títol de l’URL', autorNom: 'Foraster'
 };
@@ -199,7 +199,7 @@ test('T71 · una connexió a /ia es llig com /ia: títol, foto, autor i cos de l
   const tira = screen.getByRole('group', { name: 'Recopilació de la connexió' });
   expect(container.querySelector('article.content-wrapper').lastElementChild).toBe(tira);
   fireEvent.click(screen.getByRole('button', { name: 'Obri l’original' }));
-  expect(mocks.navigate).toHaveBeenCalledWith('/ia');
+  expect(mocks.navigate).toHaveBeenCalledWith('/iaia');
 });
 
 test('T71 · el cos d’una pàgina del core passa pel sanejador', () => {

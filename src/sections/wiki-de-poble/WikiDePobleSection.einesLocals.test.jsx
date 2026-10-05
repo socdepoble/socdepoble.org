@@ -12,6 +12,7 @@
 import React from 'react';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { FileText, Folder } from 'lucide-react';
 
 const fixture = vi.hoisted(() => ({ itemId: '__intro', search: '', props: null, showToast: vi.fn(), redireccions: [] }));
 vi.mock('../../components/universal/workspace/UniversalWorkspace.jsx', () => ({
@@ -81,6 +82,20 @@ describe('modulsLocalsActius: la decisió, pura', () => {
       expect(item).toMatchObject({ categoryIds: [item.categoryId], attributes: { type: 'Eina local', author: 'Sistema' }, content: '' });
       expect(item.subtitle).toEqual(expect.any(String));
     }
+  });
+
+  /* Ordre del Mestre, 261004 (pla 2045, Marató 2230, F3) · Tractors agrupa dos
+     documents: porta carpeta. Les seues fitxes porten FileText propi perquè no
+     hereten la carpeta (Llei del Píxel: només canvia el glif de la categoria).
+     Es compara la identitat del component, no la classe de lucide: toBe per
+     element, perquè les icones de lucide-react són objectes forwardRef i
+     toEqual només en compararia l'estructura. */
+  test('amb DEV cert: Tractors porta Folder i cada eina, FileText propi', () => {
+    const { categories, items } = modulsLocalsActius({ DEV: true });
+    expect(categories).toHaveLength(1);
+    expect(categories[0].icon).toBe(Folder);
+    expect(items.map((i) => i.id)).toEqual(LOCALS.map(([id]) => id));
+    for (const item of items) expect(item.icon).toBe(FileText);
   });
 
   test.each([

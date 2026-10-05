@@ -1,0 +1,58 @@
+--- a/tooling/gates/verificador-scc.mjs
++++ b/tooling/gates/verificador-scc.mjs
+@@ -132,8 +132,10 @@
+   }
+ 
+   /** 3. Construcció del Graf i Detecció d'Orfes Operatius (DFS) */
+-  async auditGraphConnectivity(allFiles) {
+-    const allFilesMap = allFiles;
++  async auditGraphConnectivity(allFiles, linkFiles = allFiles) {
++    // Els recursos poden ser destinacions d’enllaços; només Markdown és node
++    // del graf i es llig per a extraure’n arestes.
++    const allFilesMap = linkFiles;
+ 
+     // 3.1 Construir el graf d'adjacència només amb nodes operatius
+     for (const file of allFiles) {
+@@ -254,8 +256,9 @@
+       } catch(e) { this.errors.push({code:'SCC_IO',message:e.message,affected_files:[dir]}); }
+     };
+     await walkDesk(join(this.wikiRoot, this.ESCRIPTORI_DIR));
+-    await this.verifyEscriptoriAnchoring([...new Set([...allFiles, ...deskFiles])]);
+-    await this.auditGraphConnectivity(allFiles);
++    const linkFiles = [...new Set([...allFiles, ...deskFiles])];
++    await this.verifyEscriptoriAnchoring(linkFiles);
++    await this.auditGraphConnectivity(allFiles, linkFiles);
+     await this.verifyNoInlineColors();
+ 
+     return {
+--- a/tests/verificador-scc.test.mjs
++++ b/tests/verificador-scc.test.mjs
+@@ -31,6 +31,28 @@
+  let r=await new VerificadorSCC(root).runAudits();assert.equal(r.errors.filter(e=>e.code==='ESCRIPTORI_UNANCHORED').length,2);
+  put(`${desk}/00_index_escriptori.md`,'[HTML](01_produccio/demo.html)\n[Binari](01_produccio/raw.bin)');r=await new VerificadorSCC(root).runAudits();assert.equal(r.valid,true,JSON.stringify(r));
+ });
++for(const [name,bytes] of [
++ ['prova.json',Buffer.from('{"exemple":"[[no_s_ha_de_llegir]]"}')],
++ ['prova.png',Buffer.from([137,80,78,71,13,10,26,10,0,255])],
++ ['prova.bin',Buffer.from([0,255,128])],
++ ['prova.patch',Buffer.from('+ [[no_s_ha_de_llegir]]\n')],
++ ['prova.html',Buffer.from('<p>[[no_s_ha_de_llegir]]</p>')],
++])test(`SCC resol el wikilink exacte de ${name} sense convertir el recurs en node Markdown`,async t=>{
++ const {root,put}=setup(t);const resource=path.join(root,desk,name);
++ put(`${desk}/${name}`,bytes);put(`${desk}/00_index_escriptori.md`,`[[${name}]]`);
++ const verifier=new VerificadorSCC(root),result=await verifier.runAudits();
++ assert.equal(result.valid,true,JSON.stringify(result));assert.equal(result.filesChecked,2);
++ assert.equal(verifier.graph.has(resource),false);
++ assert.equal(verifier.graph.get(path.join(root,desk,'00_index_escriptori.md')).has(resource),true);
++ assert.deepEqual(fs.readFileSync(resource),bytes);
++});
++test('l’extensió explícita absent no es resol amb un homònim .md',async t=>{
++ const {root,put}=setup(t);put(`${desk}/prova.jpg.md`,'# Homònim Markdown');
++ put(`${desk}/00_index_escriptori.md`,'[[prova.jpg.md]]\n[[prova.jpg]]');
++ const result=await new VerificadorSCC(root).runAudits();assert.equal(result.valid,false);
++ assert.ok(result.errors.some(e=>e.code==='LINK_INVALID' && e.message.includes('prova.jpg')));
++ assert.equal(result.errors.some(e=>e.code==='ESCRIPTORI_UNANCHORED'),false);
++});
+ test('enllaç fora de l’arrel i symlink fallen explícitament',async t=>{
+  const {root,put}=setup(t);put(`${desk}/00_index_escriptori.md`,'[fora](../../../outside.md)');
+  fs.symlinkSync(path.join(root,'_wiki_de_poble/00_index.md'),path.join(root,desk,'alias.md'));

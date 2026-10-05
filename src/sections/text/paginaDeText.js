@@ -5,7 +5,7 @@
  *   · propsDePaginaDeText: les props que TextSection passa a la UniversalPage
  *     (títol, subtítol, entradilla, hero resolt, etiquetes, drets i data). Les
  *     comparteix el lector de connexions (notes/ConnexioDetall.jsx): una
- *     connexió a /ia es llig igual que /ia.
+ *     connexió a /iaia es llig igual que /iaia; /ia es conserva com a àlies.
  *   · pageKeyDeRuta i paginaDeRuta: de la ruta desada en connectar a la clau
  *     i a la pàgina, amb la mateixa precedència que les rutes de veres
  *     (TextRoute a App.jsx i PageDetailSection).
@@ -51,6 +51,9 @@ export function propsDePaginaDeText(page, pageKey, t) {
     lead: page.lead,
     heroImage: resolveAsset(page.image || HERO_PER_DEFECTE),
     heroAlt: page.imageAlt || ALT_PER_DEFECTE,
+    ...(page.image && page.imageWidth != null && page.imageHeight != null
+      ? { heroWidth: page.imageWidth, heroHeight: page.imageHeight } : {}),
+    ...(page.imageFetchPriority === 'high' ? { heroFetchPriority: 'high' } : {}),
     labels: page.labels || [
       { text: String(pageKey).toUpperCase(), className: 'sdp-badge-system' },
       { text: t?.('section.text.page', 'Pàgina') || 'Pàgina', className: 'sdp-badge-category' }
@@ -86,6 +89,8 @@ function slugDe(cami) {
 function clauDeRuta(ruta) {
   const cami = camiDe(ruta);
   if (!cami || RUTES_SENSE_PAGINA_DE_TEXT.includes(cami)) return null;
+  // Les connexions desades abans de la ruta canònica continuen llegint la mateixa pàgina.
+  if (cami === '/ia') return clauDeRuta('/iaia');
   const seccio = SECTIONS.find((s) => s.kind === 'text' && s.path === cami);
   if (seccio) return typeof seccio.pageKey === 'string' && seccio.pageKey ? { pageKey: seccio.pageKey, via: 'seccio' } : null;
   const slug = slugDe(cami);

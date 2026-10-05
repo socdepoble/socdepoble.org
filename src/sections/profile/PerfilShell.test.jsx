@@ -70,7 +70,8 @@ test('primera columna: tres grups en ordre, la persona amb el seu nom, les organ
   expect(grups()[0].options.map((o) => [o.id, o.label])).toEqual([['jo', 'Pep']]);
   expect(grups()[1].options.map((o) => [o.id, o.label])).toEqual([['O', 'Forn'], ['G', 'Colla']]);
   expect(grups()[2].options.map((o) => [o.id, o.label])).toEqual([
-    ['app-gestoria', 'Gestoria de Poble'], ['app-llibreria', 'Llibreria'], ['app-ajuntament', 'Ajuntament'],
+    ['app-gestoria', 'Gestoria de Poble'], ['app-metriques', 'Consola de Mètriques'],
+    ['app-lector-rss', 'Curation AI (Lector RSS)'], ['app-cervell', 'Cervell (Node Graph)'], ['app-snippet', 'Snippet'],
   ]);
   for (const opcio of grups().flatMap((g) => g.options)) expect(opcio.icon).toBeTruthy();
   expect(grups()[1].options[0].icon).not.toBe(grups()[1].options[1].icon);
@@ -101,8 +102,9 @@ test('segona columna: els fills de cada element segons el tipus', () => {
   expect(filsDe('O')).toEqual(['O-fitxa', 'O-compte']);
   expect(filsDe('G')).toEqual(['G-fitxa', 'G-compte']);
   expect(filsDe('app-gestoria')).toEqual(['app-gestoria-sobre']);
-  expect(filsDe('app-llibreria')).toEqual(['app-llibreria-sobre']);
-  expect(filsDe('app-ajuntament')).toEqual(['app-ajuntament-sobre']);
+  for (const id of ['metriques', 'lector-rss', 'cervell', 'snippet']) {
+    expect(filsDe(`app-${id}`)).toEqual([`app-${id}-sobre`]);
+  }
   expect(filsDe('sense-organitzacions')).toEqual([]);
   expect(item('jo-privacitat')).toMatchObject({ title: 'Privacitat i dades' });
   expect(item('app-gestoria-sobre')).toMatchObject({ title: 'Sobre esta utilitat', subtitle: 'Pendent de connectar en este node' });
@@ -135,13 +137,13 @@ test('tercera columna: l’editor per a la fitxa, El compte, i Privacitat i dade
   expect(m.workspace.renderDetail({ item: null })).toBeNull();
 });
 
-test('una aplicació pendent: pàgina de lectura amb nom, descripció i estat, sense cap botó ni enllaç', () => {
+test('una aplicació pendent: estat honest, només la preferència del Panell i cap enllaç d’obertura', () => {
   render(<PerfilShell />);
-  for (const [id, nom] of [['gestoria', 'Gestoria de Poble'], ['llibreria', 'Llibreria'], ['ajuntament', 'Ajuntament']]) {
+  for (const [id, nom] of [['gestoria', 'Gestoria de Poble'], ['metriques', 'Consola de Mètriques'], ['lector-rss', 'Curation AI (Lector RSS)'], ['cervell', 'Cervell (Node Graph)'], ['snippet', 'Snippet']]) {
     const vista = render(m.workspace.renderDetail({ item: item(`app-${id}-sobre`) }));
     expect(screen.getByRole('heading', { level: 1, name: nom })).toBeTruthy();
     expect(screen.getByText('Pendent de connectar en este node')).toBeTruthy();
-    expect(screen.queryAllByRole('button')).toEqual([]);
+    expect(screen.getAllByRole('button').map((b) => b.textContent)).toEqual(['Mostrar al Panell de Control']);
     expect(screen.queryAllByRole('link')).toEqual([]);
     vista.unmount();
   }

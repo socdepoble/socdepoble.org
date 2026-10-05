@@ -28,3 +28,13 @@ describe('workspaceReducer', () => {
     expect(next.activeItemId).toBe('molla');
   });
 });
+
+
+it('category/select només espera una autotria quan l’acció ho declara explícitament',()=>{
+ const state=createWorkspaceState({categoryId:'a',itemId:'nota'});
+ const normal=workspaceReducer(state,{type:'category/select',categoryId:'b',itemId:null});
+ const ajornat=workspaceReducer(state,{type:'category/select',categoryId:'b',itemId:null,needsInitialSelection:true});
+ expect(normal.needsInitialSelection).toBe(false);
+ expect(ajornat.needsInitialSelection).toBe(true);
+ expect(ajornat.activeCategoryId).toBe('b');expect(ajornat.activeItemId).toBeNull();
+});

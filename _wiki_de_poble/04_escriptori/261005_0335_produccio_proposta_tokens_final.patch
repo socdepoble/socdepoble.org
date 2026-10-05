@@ -1,0 +1,1681 @@
+--- a/src/css/modules.css	2026-10-04 23:12:01
++++ b/src/css/modules.css	2026-10-05 03:13:05
+@@ -709,7 +709,7 @@
+    ═══════════════════════════════════════════════════════════════════ */
+ 
+ /* ── Desplegable · Dropdown.jsx ──────────────────────────────────── */
+-.xat-header-dropdown { min-width: 200px; }
++.xat-header-dropdown { min-width: var(--sdp-desplegable-ample); }
+ .sdp-dropdown-item {
+   display: flex;
+   align-items: center;
+@@ -2417,7 +2417,6 @@
+   border: 1px solid var(--sdp-vora);
+   border-radius: var(--sdp-radi-g);
+   padding: 8px 0;
+-  min-width: 220px;
+   z-index: 100;
+   box-shadow: var(--sdp-ombra-2);
+ }
+@@ -6083,25 +6082,8 @@
+   .sdp-consola__estrategia {
+     margin-bottom: var(--sdp-space-6);
+     white-space: pre-line;
+-    font-size: var(--sdp-text-sm);
+-    color: var(--sdp-text-sec);
+-  }
+-  .sdp-consola__ajust {
+-    display: flex;
+-    justify-content: space-between;
+-    font-size: var(--sdp-text-xs);
+-    margin-bottom: var(--sdp-space-2);
+-    padding: var(--sdp-space-2);
+-    background-color: var(--sdp-fons-terciari);
+-    border-radius: var(--sdp-radi-m);
+   }
+-  .sdp-consola__ajust-valor {
+-    font-weight: 600;
+-    color: var(--sdp-text-sec);
+-  }
+-  .sdp-consola__ajust-valor--actiu {
+-    color: var(--sdp-ok);
+-  }
++
+ }
+ 
+ /* ── EXPLORADOR · llegenda, cerca i filtres; el graf i el detall al final ── */
+@@ -7029,25 +7011,7 @@
+      les vistes noves, derivats de tokens semàntics existents. Es declaren dins
+      de l'App (.sdp-root): el tema fosc els resol sol, sense cap redefinició.
+      Cap hex ni primitiu. */
+-  .sdp-cal-setmana,
+-  .sdp-cal-mes,
+-  .sdp-cal-agenda,
+-  .sdp-cal-any,
+-  .sdp-cal-navegacio {
+-    --sdp-cal-hui-fons: var(--sdp-fons-invers);
+-    --sdp-cal-hui-text: var(--sdp-text-invers);
+-    --sdp-cal-ara: var(--sdp-accent-text);
+-    --sdp-cal-separacio: var(--sdp-space-1);
+-    --sdp-cal-bloc-fons: var(--sdp-fons-subtil);
+-    --sdp-cal-bloc-text: var(--sdp-text-cos);
+-    --sdp-cal-bloc-vora: var(--sdp-vora-forta);
+-  }
+   /* El color d'un acte segons la seua font (classeDeFont, utils/disposicioCalendari.js). */
+-  .sdp-cal-font--esdeveniment { --sdp-cal-bloc-fons: var(--sdp-info-fons); --sdp-cal-bloc-text: var(--sdp-info-text); --sdp-cal-bloc-vora: var(--sdp-info); }
+-  .sdp-cal-font--publicacio { --sdp-cal-bloc-fons: var(--sdp-fons-subtil); --sdp-cal-bloc-text: var(--sdp-text-cos); --sdp-cal-bloc-vora: var(--sdp-vora-forta); }
+-  .sdp-cal-font--producte { --sdp-cal-bloc-fons: var(--sdp-exit-fons); --sdp-cal-bloc-text: var(--sdp-exit-text); --sdp-cal-bloc-vora: var(--sdp-exit); }
+-  .sdp-cal-font--pagina { --sdp-cal-bloc-fons: var(--sdp-accent-subtil); --sdp-cal-bloc-text: var(--sdp-accent-text); --sdp-cal-bloc-vora: var(--sdp-accent-text); }
+-  .sdp-cal-font--agenda { --sdp-cal-bloc-fons: var(--sdp-fons-targeta); --sdp-cal-bloc-text: var(--sdp-text-cos); --sdp-cal-bloc-vora: var(--sdp-vora-control); }
+ 
+   /* Navegació (NavegacioPeriode). Fase visual (prompt 261001_0445) · «Hui»,
+      les fletxes, el títol i el selector de vista, en l'ordre de les captures;
+@@ -7091,9 +7055,6 @@
+      en un contenidor estret la data passa damunt (flex-wrap, cap media
+      query). Cap scroll propi: la llista creix dins del visor. */
+   .sdp-cal-agenda {
+-    --sdp-cal-agenda-data: 7rem;
+-    --sdp-cal-agenda-hora: 7rem;
+-    --sdp-cal-cercle: var(--sdp-space-10);
+     border: 1px solid var(--sdp-vora);
+     border-radius: var(--sdp-radi-m);
+     background: var(--sdp-fons-targeta);
+@@ -7198,16 +7159,11 @@
+      261004) set dies en demanen 336: en eixe mòbil el min(100%, …) de la
+      graella els deixa en 44,3px, sense desbordar. */
+   .sdp-cal-any {
+-    --sdp-cal-any-dia: var(--sdp-touch);
+-    --sdp-cal-cercle: 1.75rem;
+     padding: var(--sdp-space-4) var(--sdp-space-2);
+     border: 1px solid var(--sdp-vora);
+     border-radius: var(--sdp-radi-m);
+     background: var(--sdp-fons-targeta);
+   }
+-  @media (pointer: fine) {
+-    .sdp-cal-any { --sdp-cal-any-dia: 2rem; }
+-  }
+   .sdp-cal-any__mesos {
+     display: grid;
+     grid-template-columns: repeat(auto-fill, minmax(min(100%, calc(7 * var(--sdp-cal-any-dia))), 1fr));
+@@ -7374,10 +7330,6 @@
+      rang dinàmic (--sdp-cal-hora-inicial i --sdp-cal-hores) arriba a la
+      graella des d'una ref. */
+   .sdp-cal-setmana {
+-    --sdp-cal-hora: 3rem;
+-    --sdp-cal-marge: 3.5rem;
+-    --sdp-cal-alt-carril: 1.5rem;
+-    --sdp-cal-cercle: var(--sdp-space-10);
+     /* L'alçada de les barres enganxoses de damunt. D2 (barra taronja
+        universal, ordre del Mestre 261004) · Tota pàgina porta ara la blava I
+        la taronja, enganxada just davall (top: var(--sdp-alt-accio)), en tots
+@@ -7387,7 +7339,6 @@
+        quedava 58px davall de la taronja. La regla de l'espècimen i la seua
+        @media de 720px (que replicava la T38, revertida: la taronja ja no
+        s'amaga en mòbil) ja no calen: valien el mateix o eren falses. */
+-    --sdp-cal-sostre: calc(var(--sdp-alt-accio) * 2);
+     overflow: clip;
+     border: 1px solid var(--sdp-vora);
+     border-radius: var(--sdp-radi-m);
+@@ -7397,7 +7348,6 @@
+      cap barra damunt: la capçalera de dies s'enganxa a dalt del visor, que és
+      el que fa scroll. (0,3,0): guanya a la de la base sense dependre de
+      l'ordre (abans, també a la de l'espècimen, que ja no hi és). */
+-  .sdp-pantalla-completa .sdp-cal-setmana.sdp-cal-setmana { --sdp-cal-sostre: 0px; }
+ 
+   .sdp-cal-setmana__capcal {
+     position: sticky;
+@@ -7443,7 +7393,6 @@
+      sòl de 48 de la Q2, 261004) el darrer dia passa a una segona fila en lloc
+      d'encavalcar-se o d'eixir de la vora (auto-fit plega les pistes buides i
+      les set ocupen tota l'amplada). */
+-  .sdp-cal-setmana--tira { --sdp-cal-cercle: var(--sdp-space-8); }
+   .sdp-cal-setmana--tira .sdp-cal-setmana__capcal { grid-template-columns: repeat(auto-fit, minmax(var(--sdp-touch), 1fr)); padding-inline-start: 0; }
+   .sdp-cal-setmana--tira .sdp-cal-dia { padding-block: var(--sdp-space-1); }
+   .sdp-cal-setmana--tira .sdp-cal-dia__numero { font-size: var(--sdp-text-h5); }
+@@ -7609,7 +7558,6 @@
+      54, 78 i 102 minuts). En tàctil res no canvia i cap control baixa de
+      --sdp-touch. */
+   @media (pointer: fine) {
+-    .sdp-cal-setmana--compacta { --sdp-cal-hora: 2.5rem; --sdp-cal-alt-carril: 1.25rem; }
+     .sdp-cal-setmana--compacta .sdp-cal-dia { padding-block: var(--sdp-space-1); }
+     .sdp-cal-setmana--compacta .sdp-cal-setmana__bloc { padding-block: 0; }
+   }
+@@ -7622,11 +7570,6 @@
+      (pointer-events). overflow: clip retalla els cantons sense fer cap
+      contenidor de scroll (Llei de Scroll; Safari 16, Chrome 90, Firefox 81). */
+   .sdp-cal-mes {
+-    --sdp-cal-alt-numero: 2rem;
+-    --sdp-cal-alt-carril: 1.5rem;
+-    --sdp-cal-alt-mes: calc(var(--sdp-cal-alt-carril) + var(--sdp-space-1));
+-    --sdp-cal-cercle: 1.5rem;
+-    --sdp-cal-carrils: 3;
+     overflow: clip;
+     border: 1px solid var(--sdp-vora);
+     border-radius: var(--sdp-radi-m);
+@@ -7728,7 +7671,6 @@
+   /* Densitat compacta, només amb ratolí: en tàctil cap control baixa de
+      --sdp-touch. La cel·la perd el farciment de dalt i els carrils baixen. */
+   @media (pointer: fine) {
+-    .sdp-cal-mes--densitat-compacta { --sdp-cal-alt-numero: 1.75rem; --sdp-cal-alt-carril: 1.25rem; }
+     .sdp-cal-mes--densitat-compacta .sdp-cal-dia--mes { padding-block-start: 0; }
+     .sdp-cal-mes--densitat-compacta .sdp-cal-mes__setmana { padding-block-start: var(--sdp-space-1); }
+   }
+@@ -7739,7 +7681,6 @@
+      (el nom del botó ho diu tot). Després de la densitat: guanya la tira.
+      L'agenda, en contorn: la tira buida amb vora i el punt en anell (regla
+      de dalt), com a la resta de vistes. */
+-  .sdp-cal-mes--compacte { --sdp-cal-alt-carril: var(--sdp-space-2); --sdp-cal-alt-mes: 1.5rem; }
+   .sdp-cal-mes--compacte .sdp-cal-barra { padding: 0; border-width: 0; background: var(--sdp-cal-bloc-text); }
+   .sdp-cal-mes--compacte .sdp-cal-barra.sdp-cal-font--agenda:not(.sdp-cal-barra--punt) { border: 2px solid var(--sdp-cal-bloc-text); background: transparent; }
+   .sdp-cal-mes--compacte .sdp-cal-barra--punt { display: flex; align-items: center; background: transparent; }
+@@ -9846,3 +9787,7 @@
+     gap: var(--sdp-space-2);
+   }
+ }
++
++@layer components {
++  .perfil-utilitat__accio { margin-block-start: 0; }
++}
+--- a/src/sections/profile/DetallEspai.jsx	2026-10-04 11:32:52
++++ b/src/sections/profile/DetallEspai.jsx	2026-10-05 01:32:42
+@@ -82,7 +82,7 @@
+           <p className="perfil-compte__text">
+             Pots fixar aquesta utilitat al teu Panell de Control perquè siga de ràpid accés.
+           </p>
+-          <div style={{ marginTop: 'var(--sdp-gap-md)' }}>
++          <div className="perfil-utilitat__accio">
+             <button
+               type="button"
+               className={`sdp-boto ${activa ? 'sdp-boto--perill' : 'sdp-boto--primari'}`}
+--- a/src/sections/profile/DetallEspai.utilitats.test.jsx	2026-10-04 11:34:36
++++ b/src/sections/profile/DetallEspai.utilitats.test.jsx	2026-10-05 01:32:42
+@@ -28,6 +28,13 @@
+ const MOSTRAR = 'Mostrar al Panell de Control';
+ const OCULTAR = 'Ocultar del Panell de Control';
+ 
++test('l’acció de la utilitat no escriu estil inline ni un token fantasma', () => {
++  const { container } = render(<DetallAplicacio aplicacio={APLICACIO} />);
++  const button = screen.getByRole('button', { name: MOSTRAR });
++  expect(button.parentElement.className).toBe('perfil-utilitat__accio');
++  expect(container.querySelector('[style]')).toBeNull();
++});
++
+ const neteja = () => {
+   localStorage.removeItem(CLAU_PROPIA);
+   localStorage.removeItem(CLAU_UTILITATS_LLEGAT);
+--- a/src/css/modules.abast.capes.test.js	2026-10-04 01:59:49
++++ b/src/css/modules.abast.capes.test.js	2026-10-05 03:12:35
+@@ -310,11 +310,7 @@
+   expect(dolentes).toEqual([]);
+ });
+ 
+-/* Sòl de lletra: 14px (--sdp-text-meta). Excepcions amb motiu:
+-   · .sdp-consola__estrategia i .sdp-consola__ajust citen tokens que no
+-     existixen (--sdp-text-sm, --sdp-text-xs): la declaració és invàlida i
+-     la lletra s'hereta del pare. És deute anterior, documentat a l'informe. */
+-const LLETRA_EXEMPTA = new Set(['.sdp-consola__estrategia', '.sdp-consola__ajust']);
++/* Sòl de lletra: 14px (--sdp-text-meta), sense excepcions de tokens inexistents. */
+ 
+ function pxDe(valor) {
+   const m = /^([\d.]+)(px|rem|em)$/.exec(valor.trim());
+@@ -324,7 +320,7 @@
+ 
+ test('sòl de 14px: cap font-size per davall, ni literal ni de token', () => {
+   const dolentes = [];
+-  for (const d of DECLS.filter((x) => x.propietat === 'font-size' && !LLETRA_EXEMPTA.has(x.prelud))) {
++  for (const d of DECLS.filter((x) => x.propietat === 'font-size')) {
+     let valor;
+     try {
+       valor = resol(d.valor);
+@@ -373,3 +369,12 @@
+   expect(opacs.length).toBeGreaterThan(0);
+   expect(pesos.length).toBeGreaterThan(0);
+ });
++
++// RELLEU10: els dos tokens absents invalidaven aquestes propietats. Llevar-los
++// conserva el color i la mida heretats, en lloc de substituir-los per un tema nou.
++test('la informació d’estratègia hereta color i tipografia del contenidor', () => {
++  const propies = DECLS.filter(d => d.prelud === '.sdp-consola__estrategia');
++  expect(propies.length).toBeGreaterThan(0);
++  expect(propies.filter(d => ['color', 'font', 'font-size'].includes(d.propietat))).toEqual([]);
++  expect(valorDe('.sdp-consola__estrategia', 'white-space')).toBe('pre-line');
++});
+--- a/tooling/gates/tractor-tokens.mjs	2026-09-14 22:24:46
++++ b/tooling/gates/tractor-tokens.mjs	2026-10-05 03:29:57
+@@ -1,302 +1,382 @@
+ #!/usr/bin/env node
+-/**
+- * tractor-tokens.mjs — PORTA DE VOCABULARI DEL SISTEMA DE DISSENY
+- *
+- * LLEI DURA. Zero deute. Sense sostre. Sense `--baseline`.
+- *
+- * PER QUÈ EXISTIX (auditoria Seient Núm. 5, 260831):
+- *   `tractor-pedra-seca.mjs` compta els tokens fantasma amb sostre
+- *   (`LLEI_02_TOKEN_FANTASMA  32  màx 32`). Un sostre igual a la realitat
+- *   actual no és una llei: és una fotografia. La premissa de Pedra Seca
+- *   («tot està centralitzat») no es pot fer VERITAT amb una porta
+- *   calibrada per acceptar la mentida.
+- *
+- *   Esta porta no té sostre. O el vocabulari és tancat o no passa.
+- *
+- * LLEIS
+- *   T1 · Cap `var(--sdp-*)` sense definició. Sense fallback la declaració
+- *        s'anul·la sencera: el component no es degrada, desapareix.
+- *   T2 · Cap `var(--sdp-*, fallback)` tampoc. El fallback és una còpia
+- *        privada del sistema de disseny dins d'un component.
+- *   T3 · Un sol lloc de definició. Els tokens `--sdp-*` només es declaren
+- *        als blocs de tema de src/css/tokens.css.
+- *   T4 · Dos capes. Cap component pot citar una primitiva
+- *        (`--sdp-pedra-*`, `--sdp-primary-*`, `--sdp-secondary-*`,
+- *        `--sdp-error|avis|exit-<num>`) directament: només semàntics.
+- *
+- * Ús:
+- *   node tooling/gates/tractor-tokens.mjs
+- *   node tooling/gates/tractor-tokens.mjs --root ../
+- *   node tooling/gates/tractor-tokens.mjs --nomes T1   # una llei
+- *
+- * Eixides: 0 net · 1 infracció · 2 error d'execució.
++/** Vocabulari tancat: tema canònic, endolls numèrics explícits i fonts de producció.
++ * Les proves de contraexemples s'executen a la CI; els seus literals no són CSS de l'app.
++ * T1 desconegut; T2 fallback de tema; T3 definició fora de font; T4 primitiu;
++ * T5 capa0; T6 Tailwind; T7 endoll runtime sense propietari verificable. Cap baseline.
+  */
+-
+-import { senseComentaris } from '../lib/codi.mjs';
+-import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs';
++import fs from 'node:fs';
+ import path from 'node:path';
++import { parse } from '@babel/parser';
++import postcss from 'postcss';
++import { arrel, esMain } from '../lib/arrel.mjs';
+ 
+-const ROOT = (() => {
+-  const i = process.argv.indexOf('--root');
+-  return path.resolve(i > -1 ? process.argv[i + 1] : process.cwd());
+-})();
+-
+-const NOMES = (() => {
+-  const i = process.argv.indexOf('--nomes');
+-  return i > -1 ? process.argv[i + 1] : null;
+-})();
+-
+-const R = (rel) => path.join(ROOT, rel);
+ const FONT_TOKENS = 'src/css/tokens.css';
+-/* CAPA 0 · generada des de design-tokens.json. Declara constants de marca
+-   i mínims físics; res més. És un lloc de declaració LEGÍTIM per a T3,
+-   i les seues constants són intocables per als components (T5). */
+ const FONT_CANON = 'src/css/design-tokens.css';
+-const SALTA = new Set(['node_modules', 'dist', 'build', 'coverage']);
+-const EXT = /\.(css|js|jsx|ts|tsx)$/;
++const CONTRACTE = 'tooling/contracts/css-runtime-properties.json';
++const EXT = /\.(css|[cm]?[jt]sx?)$/;
++const PRIMITIVA = /^--sdp-(pedra|primary|secondary|error|avis|exit)-\d+$|^--sdp-(blanc|negre)(-pur)?$/;
++const EXEMPTS_T4 = new Set([FONT_TOKENS, 'src/sections/disseny/DesignSection.jsx']);
++const esProva = rel => /\.(?:test|spec)\.[cm]?[jt]sx?$/.test(rel) || /\/(?:__tests__|__fixtures__|__mocks__)\//.test(rel);
++const linia = (s, i) => s.slice(0, i).split('\n').length;
++const calleeName = n => n?.type === 'Identifier' ? n.name : null;
++const keyName = n => n?.type === 'StringLiteral' ? n.value : n?.type === 'Identifier' ? n.name : null;
++const stringEstatica = n => n?.type==='StringLiteral' ? n.value : n?.type==='TemplateLiteral'&&!n.expressions.length ? n.quasis.map(q=>q.value.cooked??q.value.raw).join('') : null;
++const numeroLiteral = n => n?.type==='NumericLiteral' ? n.value : n?.type==='UnaryExpression'&&['+','-'].includes(n.operator)&&n.argument?.type==='NumericLiteral' ? (n.operator==='-'?-n.argument.value:n.argument.value) : null;
+ 
+-/* Primitives: escales numèriques. Un component mai les cita. */
+-const PRIMITIVA =
+-  /^--sdp-(pedra|primary|secondary|error|avis|exit)-\d+$|^--sdp-(blanc|negre)(-pur)?$/;
+-
+-/* Fitxers on SÍ que és legítim citar primitives: la pròpia capa de tema
+-   i la pantalla que documenta el sistema (mostrari de colors). */
+-const EXEMPTS_T4 = new Set([
+-  'src/css/tokens.css',
+-  'src/sections/disseny/DesignSection.jsx'
+-]);
+-
+-const infraccions = [];
+-const OK = [];
+-const falla = (llei, fitxer, linia, missatge) =>
+-  infraccions.push({ llei, fitxer, linia, missatge });
+-const passa = (llei) => OK.push(llei);
+-const actiu = (llei) => !NOMES || NOMES === llei.split(' ')[0];
+-
+-function arbre(rel, eixida = []) {
+-  const base = R(rel);
+-  if (!existsSync(base)) return eixida;
+-  for (const nom of readdirSync(base)) {
+-    if (SALTA.has(nom) || nom.startsWith('.')) continue;
+-    const abs = path.join(base, nom);
+-    const sub = path.join(rel, nom);
+-    if (statSync(abs).isDirectory()) arbre(sub, eixida);
+-    else if (EXT.test(nom)) eixida.push(sub);
++const PORTS_INSTANCIA = [
++  {name:'--sdp-desplegable-ample',writer:'src/components/PedraSeca/molecules/Dropdown.jsx',owner:'Dropdown',access:'hook',kind:'css-length-prop',binding:'minWidth'},
++  {name:'--sdp-ombra-2',writer:'src/sections/disseny/cataleg/detalls/EspecimenPanell.jsx',owner:'EspecimenPanell',access:'hook',kind:'semantic-choice',binding:'OMBRES',tokens:['--sdp-ombra-1','--sdp-ombra-3']},
++  {name:'--sdp-crom-mostra',writer:'src/components/universal/PanellCrom.jsx',owner:'PanellCrom',access:'jsx-style-preview',kind:'derived-palette',engine:'src/config/crom.js',export:'previsualitza'},
++  {name:'--sdp-xat-fons-imatge',writer:'src/PedraSecaEmbed.jsx',owner:'_aplicaBaseRecursos',access:'setProperty',kind:'resolved-asset',resolver:'src/config/assetResolver.js',asset:'assets/system/ui/xat-bg-map-v2.jpg'}
++];
++const MOTOR_TEMA = {writer:'src/config/crom.js',setters:['aplica'],removers:['restaura'],ramps:['primary','secondary'],steps:[50,100,200,300,400,500,600,700,800,900],canons:['--sdp-canon-blau','--sdp-canon-taronja'],tints:['--sdp-anell-accio','--sdp-anell-accent','--sdp-accent-vel','--sdp-ombra-accio']};
++const ownerDe = parents => [...parents].reverse().find(n=>['FunctionDeclaration','ClassMethod'].includes(n.type));
++const nomOwner = owner => owner?.type==='ClassMethod'?keyName(owner.key):owner?.id?.name;
++const forma = node => JSON.stringify(node,(key,value)=>['start','end','loc','extra','comments','leadingComments','trailingComments','innerComments'].includes(key)?undefined:value);
++const expressio = source => parse(`(${source})`,{sourceType:'module',plugins:['jsx']}).program.body[0].expression;
++const mateixaExpressio = (node,text) => forma(node)===forma(expressio(text));
++function nodes(node,predicate,result=[]) {
++  if(!node||typeof node!=='object')return result;
++  if(predicate(node))result.push(node);
++  for(const [key,value] of Object.entries(node))if(!['loc','extra','comments'].includes(key)){
++    if(Array.isArray(value))value.forEach(v=>nodes(v,predicate,result));else if(value&&typeof value==='object')nodes(value,predicate,result);
+   }
+-  return eixida;
++  return result;
+ }
++const membre = (node,object,property) => ['MemberExpression','OptionalMemberExpression'].includes(node?.type)&&node.object?.name===object&&(node.computed?stringEstatica(node.property):keyName(node.property))===property;
++const congela = node => node?.type==='CallExpression'&&membre(node.callee,'Object','freeze')&&node.arguments.length===1?node.arguments[0]:null;
++const valorEstatica = node => stringEstatica(node)??numeroLiteral(node);
+ 
+-/* ══════════════════════════════════════════════════════════════════
+-   Extracció dels tokens declarats + límits dels blocs de tema
+-   ══════════════════════════════════════════════════════════════════ */
+-if (!existsSync(R(FONT_TOKENS))) {
+-  console.error(`PARAT. No existix ${FONT_TOKENS}. Arrel equivocada?`);
+-  process.exit(2);
++const cosFuncio = source => parse(`function owner(){${source}}`,{sourceType:'module'}).program.body[0].body;
++const COSSOS_MOTOR = {
++  aplica:cosFuncio('const b=base(arrel); for(const [nom,valor] of Object.entries(b.esglaons)) arrel.style.setProperty(nom,giraTo(valor,delta)); for(const [nom,valor] of Object.entries(b.canons)) arrel.style.setProperty(nom,giraTo(valor,delta)); for(const [nom,valor] of Object.entries(b.tintes)) arrel.style.setProperty(nom,giraTintes(valor,delta));'),
++  restaura:cosFuncio('const b=base(arrel); for(const nom of [...Object.keys(b.esglaons),...Object.keys(b.canons),...Object.keys(b.tintes)]) { arrel.style.removeProperty(nom); }')
++};
++function nomsBinding(pattern){
++  if(!pattern)return [];
++  if(pattern.type==='Identifier')return [pattern.name];
++  if(pattern.type==='ObjectPattern')return pattern.properties.flatMap(p=>nomsBinding(p.type==='RestElement'?p.argument:p.value));
++  if(pattern.type==='ArrayPattern')return pattern.elements.flatMap(nomsBinding);
++  if(pattern.type==='AssignmentPattern')return nomsBinding(pattern.left);
++  if(pattern.type==='RestElement')return nomsBinding(pattern.argument);
++  return [];
+ }
+-
+-const cssFont = readFileSync(R(FONT_TOKENS), 'utf8');
+-const liniesFont = cssFont.split('\n');
+-
+-/* Els tokens de la capa 0 existixen de veres: T1 no els pot cridar fantasmes. */
+-const CANON = new Set();
+-if (existsSync(R(FONT_CANON))) {
+-  for (const m of readFileSync(R(FONT_CANON), 'utf8').matchAll(/(--sdp-[\w-]+)\s*:/g)) {
+-    CANON.add(m[1]);
++// Les dianes d’una assignació poden ser membres dins de patrons, no sols noms.
++function arrelsEscriptura(pattern) {
++  if(!pattern)return [];
++  if(['MemberExpression','OptionalMemberExpression'].includes(pattern.type))return arrelsEscriptura(pattern.object);
++  if(pattern.type==='Identifier')return [pattern.name];
++  if(pattern.type==='ObjectPattern')return pattern.properties.flatMap(p=>arrelsEscriptura(p.type==='RestElement'?p.argument:p.value));
++  if(pattern.type==='ArrayPattern')return pattern.elements.flatMap(arrelsEscriptura);
++  if(pattern.type==='AssignmentPattern')return arrelsEscriptura(pattern.left);
++  if(pattern.type==='RestElement')return arrelsEscriptura(pattern.argument);
++  return [];
++}
++function bindingEnScope(name,owner,parents,canonicalDeclaration=null) {
++  const scopes=parents.slice(parents.indexOf(owner)+1);
++  const shadows=statement=>{
++    if(statement===canonicalDeclaration)return false;
++    if(statement?.type==='VariableDeclaration')return statement.declarations.some(d=>d!==canonicalDeclaration&&nomsBinding(d.id).includes(name));
++    return ['FunctionDeclaration','ClassDeclaration'].includes(statement?.type)&&statement.id?.name===name;
++  };
++  // El node de declaració canònica és la identitat del binding de la ref.
++  // Prop: només el paràmetre del component. Ref: només el useRef del seu cos.
++  for(const n of scopes){
++    if(['FunctionExpression','ArrowFunctionExpression','FunctionDeclaration','ClassMethod','ClassPrivateMethod','ObjectMethod'].includes(n.type)&&(n.params.some(p=>nomsBinding(p).includes(name))||n.type==='FunctionExpression'&&n.id?.name===name))return false;
++    if(n.type==='CatchClause'&&nomsBinding(n.param).includes(name))return false;
++    if(n.type==='BlockStatement'&&n.body.some(shadows))return false;
++    if(n.type==='ForStatement'&&shadows(n.init))return false;
++    if(['ForInStatement','ForOfStatement'].includes(n.type)&&shadows(n.left))return false;
++    if(n.type==='SwitchStatement'&&n.cases.some(c=>c.consequent.some(shadows)))return false;
+   }
++  return !nodes(owner,n=>
++    n.type==='AssignmentExpression'&&nomsBinding(n.left).includes(name)||
++    n.type==='UpdateExpression'&&nomsBinding(n.argument).includes(name)||
++    ['ForInStatement','ForOfStatement'].includes(n.type)&&n.left?.type!=='VariableDeclaration'&&nomsBinding(n.left).includes(name)||
++    n.type==='VariableDeclaration'&&n.kind==='var'&&n.declarations.some(d=>d!==canonicalDeclaration&&nomsBinding(d.id).includes(name))
++  ).length;
+ }
+ 
+-/* Blocs on és legítim DECLARAR un token: qualsevol selector que continga
+-   :root, :host o .sdp-root, i els @media de tema/contrast. */
+-const OBRE_TEMA = /(:root|:host|\.sdp-root|@media\s*\((?:prefers-color-scheme|prefers-contrast|forced-colors))/;
+-
+-const liniesTema = new Set();
+-{
+-  let dins = false;
+-  let prof = 0;
+-  liniesFont.forEach((l, i) => {
+-    if (!dins && OBRE_TEMA.test(l) && l.includes('{')) {
+-      dins = true;
+-      prof = 0;
++export function comprovaTokens(root = arrel(), { nomes = null } = {}) {
++  if (nomes !== null && !/^T[1-7]$/.test(nomes)) throw new Error(`Regla desconeguda: ${nomes}`);
++  const errors = [], ok = [], produccio = [], excloses = [];
++  const actiu = rule => !nomes || rule === nomes;
++  const falla = (llei, fitxer, fila, missatge) => { if (actiu(llei) || llei === 'T0') errors.push({llei,fitxer,linia:fila,missatge}); };
++  const read = rel => fs.readFileSync(path.join(root,rel),'utf8');
++  function walk(rel) {
++    for (const entry of fs.readdirSync(path.join(root,rel),{withFileTypes:true})) {
++      if (entry.name.startsWith('.') || ['node_modules','dist','build','coverage'].includes(entry.name)) continue;
++      const file = `${rel}/${entry.name}`;
++      if (fs.statSync(path.join(root,file)).isDirectory()) walk(file);
++      else if (EXT.test(entry.name)) (esProva(file) ? excloses : produccio).push(file);
+     }
+-    if (dins) {
+-      liniesTema.add(i + 1);
+-      prof += (l.match(/\{/g) || []).length - (l.match(/\}/g) || []).length;
+-      if (prof <= 0) dins = false;
+-    }
+-  });
+-}
+-
+-const DEFINITS = new Set(CANON);
+-liniesFont.forEach((l, i) => {
+-  if (!liniesTema.has(i + 1)) return;
+-  for (const m of l.matchAll(/(--[\w-]+)\s*:/g)) DEFINITS.add(m[1]);
+-});
+-
+-/* Els tokens d'escala z viuen al mateix bloc però amb prefix `--z-`. */
+-for (const m of cssFont.matchAll(/(--z-[\w-]+)\s*:/g)) DEFINITS.add(m[1]);
+-
+-const FITXERS = arbre('src');
+-
+-/* ══════════════════════════════════════════════════════════════════
+-   T1 · CAP var(--sdp-*) SENSE DEFINICIÓ
+-   ══════════════════════════════════════════════════════════════════ */
+-if (actiu('T1 · Token inexistent')) {
+-  const LLEI = 'T1 · Token inexistent';
+-  let net = true;
+-  for (const rel of FITXERS) {
+-    senseComentaris(readFileSync(R(rel), 'utf8'), rel).split('\n').forEach((l, i) => {
+-      for (const m of l.matchAll(/var\(\s*(--(?:sdp|z)-[\w-]+)\s*[,)]/g)) {
+-        const t = m[1];
+-        if (DEFINITS.has(t)) continue;
+-        net = false;
+-        falla(LLEI, rel, i + 1,
+-          `\`${t}\` no es declara enlloc. Sense fallback el navegador anul·la la declaració sencera: el component no es degrada, desapareix.`);
+-      }
+-    });
+   }
+-  if (net) passa(LLEI);
+-}
+-
+-/* ══════════════════════════════════════════════════════════════════
+-   T2 · CAP FALLBACK DINS DE var()
+-   ══════════════════════════════════════════════════════════════════ */
+-if (actiu('T2 · Fallback prohibit')) {
+-  const LLEI = 'T2 · Fallback prohibit';
+-  let net = true;
+-  for (const rel of FITXERS) {
+-    senseComentaris(readFileSync(R(rel), 'utf8'), rel).split('\n').forEach((l, i) => {
+-      for (const m of l.matchAll(/var\(\s*(--sdp-[\w-]+)\s*,\s*([^)]+)\)/g)) {
+-        net = false;
+-        falla(LLEI, rel, i + 1,
+-          `\`var(${m[1]}, ${m[2].trim().slice(0, 24)})\`: el fallback és una còpia privada del sistema de disseny. Si el token existix, sobra; si no existix, l'has d'afegir al tema.`);
+-      }
+-    });
++  walk('src');
++  if (!produccio.length) throw new Error('Cap font de producció: una auditoria buida no pot donar verd.');
++  const definitions = new Set();
++  for (const file of [FONT_TOKENS,FONT_CANON]) {
++    const css = postcss.parse(read(file),{from:file});
++    css.walkDecls(d => { if (/^--(?:sdp|z)-[\w-]+$/.test(d.prop)) definitions.add(d.prop); });
+   }
+-  if (net) passa(LLEI);
+-}
+-
+-/* ══════════════════════════════════════════════════════════════════
+-   T3 · UN SOL LLOC DE DEFINICIÓ
+-   ══════════════════════════════════════════════════════════════════ */
+-if (actiu('T3 · Font única')) {
+-  const LLEI = 'T3 · Font única';
+-  let net = true;
+-  for (const rel of FITXERS) {
+-    const norm3 = rel.replace(/\\/g, '/');
+-    if (norm3 === FONT_CANON) continue;   // capa 0 · generada, declaració legítima
+-    const esFont = norm3 === FONT_TOKENS;
+-    senseComentaris(readFileSync(R(rel), 'utf8'), rel).split('\n').forEach((l, i) => {
+-      for (const m of l.matchAll(/(--sdp-[\w-]+)\s*:/g)) {
+-        if (esFont && liniesTema.has(i + 1)) continue;
+-        net = false;
+-        falla(LLEI, rel, i + 1,
+-          `\`${m[1]}\` es declara fora dels blocs de tema de ${FONT_TOKENS}. Dues definicions són dos sistemes de disseny.`);
+-      }
+-    });
++  const contract = JSON.parse(read(CONTRACTE));
++  if (contract.schema !== 'sdp.css.runtime.v1' || contract.hook !== 'src/hooks/usePropietatsCss.js' || !Array.isArray(contract.parameters)) throw new Error('Contracte runtime invàlid.');
++  const runtime = new Map(), seen = new Map();
++  if(JSON.stringify(contract.instancePorts)!==JSON.stringify(PORTS_INSTANCIA)||JSON.stringify(contract.themeEngine)!==JSON.stringify(MOTOR_TEMA))throw new Error('Contracte de ports/tema no ratificat: noms, owners i derivacions exactes.');
++  const ports=new Map(),portsSeen=new Set();
++  for(const p of contract.instancePorts){
++    if(!definitions.has(p.name)||!produccio.includes(p.writer)||(p.tokens??[]).some(n=>!definitions.has(n)))throw new Error(`Port d’instància sense font/owner: ${p.name}`);
++    ports.set(p.name,p);
+   }
+-  if (net) passa(LLEI);
+-}
+-
+-/* ══════════════════════════════════════════════════════════════════
+-   T4 · DOS CAPES (primitiva → semàntic → component)
+-   ══════════════════════════════════════════════════════════════════ */
+-if (actiu('T4 · Dos capes')) {
+-  const LLEI = 'T4 · Dos capes';
+-  let net = true;
+-  for (const rel of FITXERS) {
+-    const norm = rel.replace(/\\/g, '/');
+-    if (EXEMPTS_T4.has(norm)) continue;
+-    senseComentaris(readFileSync(R(rel), 'utf8'), rel).split('\n').forEach((l, i) => {
+-      for (const m of l.matchAll(/var\(\s*(--sdp-[\w-]+)\s*[,)]/g)) {
+-        if (!PRIMITIVA.test(m[1])) continue;
+-        net = false;
+-        falla(LLEI, rel, i + 1,
+-          `\`${m[1]}\` és una primitiva. Un component cita semàntics (--sdp-text-*, --sdp-fons-*, --sdp-accio-*…), mai l'escala crua: la primitiva no canvia amb el tema fosc.`);
+-      }
+-    });
++  const themeNames=[...MOTOR_TEMA.ramps.flatMap(r=>MOTOR_TEMA.steps.map(n=>`--sdp-${r}-${n}`)),...MOTOR_TEMA.canons,...MOTOR_TEMA.tints];
++  if(!produccio.includes(contract.themeEngine.writer)||themeNames.some(n=>!definitions.has(n)))throw new Error('Motor de tema sense font/tokens canònics.');
++  const hostExports=new Map(), exportsSeen=new Map();
++  if (!Array.isArray(contract.hostExports??[])) throw new Error('Exportacions host invàlides.');
++  for (const h of contract.hostExports??[]) {
++    if (h.name!=='--sdp-bg'||h.writer!=='src/PedraSecaEmbed.jsx'||h.scope!=='amfitrio-opt-in'||h.sourceToken!=='--sdp-fons-app'||h.contract!=='_wiki_de_poble/02_saber/estandard_integracio_react.md'||!Array.isArray(h.methods)||h.methods.join(',')!=='_pintaAmfitrio,_despintaAmfitrio'||hostExports.has(h.name)||!produccio.includes(h.writer)||!definitions.has(h.sourceToken)) throw new Error('Contracte host desconegut o sense propietari.');
++    hostExports.set(h.name,h);exportsSeen.set(h.name,new Set());
+   }
+-  if (net) passa(LLEI);
+-}
+-
+-/* ══════════════════════════════════════════════════════════════════
+-   T5 · LA CAPA 0 NO ES CITA
+-   El cànon el consumix la rampa d'index.css, no els components. Un botó
+-   que cita --sdp-canon-taronja es queda taronja al tema fosc.
+-   ══════════════════════════════════════════════════════════════════ */
+-if (actiu('T5 · Capa 0 intocable')) {
+-  const LLEI = 'T5 · Capa 0 intocable';
+-  let net = true;
+-  for (const rel of FITXERS) {
+-    const norm = rel.replace(/\\/g, '/');
+-    if (norm === FONT_TOKENS || norm === FONT_CANON) continue;
+-    senseComentaris(readFileSync(R(rel), 'utf8'), rel).split('\n').forEach((l, i) => {
+-      for (const m of l.matchAll(/var\(\s*(--sdp-canon-[\w-]+)\s*[,)]/g)) {
+-        net = false;
+-        falla(LLEI, rel, i + 1,
+-          `\`${m[1]}\` és capa 0: una constant de marca, no un color d'interfície. ` +
+-          `Només la rampa d'${FONT_TOKENS} la pot ancorar. Un component que la cita ` +
+-          `no es mou amb el tema fosc ni amb l'alt contrast.`);
++  for (const p of contract.parameters) {
++    if (!/^--sdp-cal-[\w-]+$/.test(p.name) || p.kind !== 'number' || runtime.has(p.name) || !Array.isArray(p.writers) || !p.writers.length || new Set(p.writers).size !== p.writers.length || p.writers.some(f => !produccio.includes(f)) || (p.fallback !== undefined && !Number.isFinite(p.fallback))) throw new Error(`Paràmetre runtime invàlid: ${p.name}`);
++    runtime.set(p.name,p); seen.set(p.name,new Set());
++  }
++  function reads(value,file,fila) {
++    for (const m of value.matchAll(/var\(\s*(--(?:sdp|z)-[\w-]+)\s*([,)])/g)) {
++      const name = m[1];
++      if (!definitions.has(name) && !runtime.has(name)) falla('T1',file,fila+linia(value,m.index)-1,`Token inexistent: ${name}`);
++      if (m[2] === ',') {
++        const fallback = value.slice(m.index+m[0].length).match(/^\s*([^)]*)\)/)?.[1]?.trim();
++        const parameter = runtime.get(name);
++        if (!parameter || parameter.fallback === undefined || fallback !== String(parameter.fallback)) falla('T2',file,fila+linia(value,m.index)-1,`Fallback prohibit: ${name}, ${fallback ?? '?'}`);
+       }
+-    });
++      if (!EXEMPTS_T4.has(file) && PRIMITIVA.test(name)) falla('T4',file,fila,`Primitiva en component: ${name}`);
++      if (file !== FONT_TOKENS && file !== FONT_CANON && name.startsWith('--sdp-canon-')) falla('T5',file,fila,`Capa 0 en component: ${name}`);
++    }
++    if (/(?:bg|text|border)-\[#[0-9a-fA-F]{3,6}\]/.test(value)) falla('T6',file,fila,'Color fix Tailwind.');
+   }
+-  if (net) passa(LLEI);
+-}
+-
+-/* ══════════════════════════════════════════════════════════════════
+-   T6 · ZERO TAILWIND TÒXIC (bg-[#hex], text-[#hex])
+-   Els colors fixos trencarien l'accessibilitat i el mode fosc.
+-   ══════════════════════════════════════════════════════════════════ */
+-if (actiu('T6 · Zero Tailwind Tòxic')) {
+-  const LLEI = 'T6 · Zero Tailwind Tòxic';
+-  let net = true;
+-  for (const rel of FITXERS) {
+-    if (!rel.endsWith('.jsx') && !rel.endsWith('.tsx')) continue;
+-    senseComentaris(readFileSync(R(rel), 'utf8'), rel).split('\n').forEach((l, i) => {
+-      const match = l.match(/(?:bg|text|border)-\[#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})\]/);
+-      if (match) {
+-        net = false;
+-        falla(LLEI, rel, i + 1,
+-          `Has hardcodejat el color \`#${match[1]}\` amb classes tòxiques de Tailwind. S'han d'utilitzar variables CSS semàntiques de la Capa 2 (Pedra Seca).`);
++  function cssInscrit(text,file,fila,obligatori=false) {
++    // Els comentaris CSS no són declaracions. El text de <style>, en canvi,
++    // és una font executable encara que Babel el represente com a JSXText.
++    if (obligatori || (text.includes('{') && text.includes('}'))) {
++      try {
++        const css=postcss.parse(text,{from:file});
++        css.walkDecls(d=>{
++          const row=fila+d.source.start.line-1;
++          if(d.prop.startsWith('--sdp-'))falla('T3',file,row,`Definició CSS fora de la font: ${d.prop}`);
++          reads(d.value,file,row);
++        });
++        return;
++      } catch(error) {
++        if(obligatori){falla('T0',file,fila,`CSS inscrit no analitzable: ${error.reason}`);return;}
+       }
+-    });
++    }
++    reads(text,file,fila);
++    for(const m of text.matchAll(/(--sdp-[\w-]+)\s*:/g))falla('T3',file,fila,`Definició CSS fora de la font: ${m[1]}`);
+   }
+-  if (net) passa(LLEI);
+-}
+-
+-/* ══════════════════════════════════════════════════════════════════
+-   INFORME
+-   ══════════════════════════════════════════════════════════════════ */
+-const banda = '─'.repeat(72);
+-console.log(`\n🪨 TRACTOR DE TOKENS — vocabulari tancat, zero deute\n   ${DEFINITS.size} tokens declarats · ${FITXERS.length} fonts revisades\n${banda}`);
+-
+-for (const l of OK) console.log(`  ✅ ${l}`);
+-
+-if (infraccions.length) {
+-  const perLlei = new Map();
+-  for (const i of infraccions) {
+-    if (!perLlei.has(i.llei)) perLlei.set(i.llei, []);
+-    perLlei.get(i.llei).push(i);
+-  }
+-  console.log(`\n❌ INFRACCIONS (${infraccions.length})\n${banda}`);
+-  for (const [llei, llista] of perLlei) {
+-    console.log(`\n  ${llei}  (${llista.length})`);
+-    const vistes = new Set();
+-    for (const i of llista) {
+-      const clau = `${i.fitxer}|${i.missatge.slice(0, 40)}`;
+-      if (vistes.has(clau)) continue;
+-      vistes.add(clau);
+-      if (vistes.size > 12) break;
+-      console.log(`    ${i.fitxer}:${i.linia}`);
+-      console.log(`      ↳ ${i.missatge}`);
++  for (const file of produccio) {
++    const source = read(file);
++    if (file.endsWith('.css')) {
++      const css = postcss.parse(source,{from:file});
++      css.walkDecls(d => {
++        const fila = d.source.start.line;
++        if (d.prop.startsWith('--sdp-') && file !== FONT_TOKENS && file !== FONT_CANON) falla('T3',file,fila,`Definició fora de la font canònica: ${d.prop}`);
++        reads(d.value,file,fila);
++      });
++      continue;
+     }
+-    if (llista.length > vistes.size) {
+-      console.log(`    … i ${llista.length - vistes.size} ocurrències més.`);
++    let ast;
++    try { ast=parse(source,{sourceType:'unambiguous',plugins:['jsx',...(/\.tsx?$/.test(file)?['typescript']:[])]}); }
++    catch (error) { falla('T0',file,error.loc?.line??1,`Font no analitzable: ${error.message}`); continue; }
++    const imports = new Map(), namedImports=new Map();
++    const declarations=new Map(nodes(ast,n=>n.type==='VariableDeclarator'&&n.id?.type==='Identifier').map(n=>[n.id.name,n.init]));
++    const catalogues = new Set();
++    for (const node of ast.program.body) if (node.type === 'ImportDeclaration') for (const spec of node.specifiers) {
++      if(spec.type==='ImportSpecifier')namedImports.set(spec.local.name,{name:spec.imported?.name,rawSource:node.source.value,source:path.posix.normalize(path.posix.join(path.posix.dirname(file),node.source.value))});
++      if (spec.type === 'ImportSpecifier' && spec.imported?.name === 'Especimen' && path.posix.normalize(path.posix.join(path.posix.dirname(file),node.source.value)) === 'src/sections/disseny/cataleg/Especimen.jsx') catalogues.add(spec.local.name);
++      if (spec.type === 'ImportSpecifier' && spec.imported?.name === 'usePropietatsCss') imports.set(spec.local.name,path.posix.normalize(path.posix.join(path.posix.dirname(file),node.source.value)));
+     }
++    function importActiu(name,parents,source,exported,raw=false) {
++      const imported=namedImports.get(name);
++      return imported?.name===exported&&(raw?imported.rawSource:imported.source)===source&&bindingEnScope(name,ast.program,parents);
++    }
++    function portPermes(name,value,parents,access) {
++      const p=ports.get(name),owner=ownerDe(parents);
++      if(!p||file!==p.writer||nomOwner(owner)!==p.owner||p.access!==access)return false;
++      const call=[...parents].reverse().find(n=>['CallExpression','OptionalCallExpression'].includes(n.type));
++      if(access==='hook'){
++        const ref=p.kind==='css-length-prop'?'wrapper':'mostraRef';
++        const decl=owner?.body?.body?.flatMap(n=>n.type==='VariableDeclaration'?n.declarations:[]).find(d=>d.id?.name===ref);
++        const declParents=[...parents.slice(0,parents.indexOf(owner)+1),owner.body];
++        if(!importActiu(calleeName(call?.callee),parents,contract.hook,'usePropietatsCss')||!importActiu('useRef',declParents,'react','useRef',true)||call?.arguments[0]?.name!==ref||!mateixaExpressio(decl?.init,'useRef(null)')||!bindingEnScope(ref,owner,parents,decl)||!mesclaNoReassignada(ref)||!nodes(owner,n=>n.type==='JSXAttribute'&&n.name?.name==='ref'&&n.value?.expression?.name===ref).length)return false;
++      }
++      if(p.kind==='css-length-prop') {
++        // El valor dinàmic només és la prop explícita minWidth del component.
++        return value?.type==='Identifier'&&value.name===p.binding&&bindingEnScope(p.binding,owner,parents)&&owner.params?.some(param=>param.type==='ObjectPattern'&&param.properties.some(prop=>keyName(prop.key)===p.binding&&prop.value?.name===p.binding));
++      }
++      if(p.kind==='semantic-choice') {
++        const tableDecl=ast.program.body.flatMap(n=>{const declaration=n.type==='ExportNamedDeclaration'?n.declaration:n;return declaration?.type==='VariableDeclaration'?declaration.declarations:[];}).find(d=>d.id?.name===p.binding);
++        const table=congela(tableDecl?.init);
++        const validTable=table?.type==='ArrayExpression'&&table.elements.length===3&&table.elements.every(entry=>{
++          const row=congela(entry),values=row?.type==='ObjectExpression'&&row.properties.filter(prop=>keyName(prop.key)==='valor'),v=values?.[0]?.value;
++          return values?.length===1&&row.properties.every(prop=>prop.type==='ObjectProperty'&&!prop.computed)&&v&&(v.type==='NullLiteral'||p.tokens.includes(stringEstatica(v)?.match(/^var\((--sdp-[\w-]+)\)$/)?.[1]));
++        });
++        const values=table?.elements.flatMap(entry=>{const row=congela(entry);return row?.properties?.filter(prop=>keyName(prop.key)==='valor').map(prop=>stringEstatica(prop.value))??[];});
++        return validTable&&bindingEnScope(p.binding,ast.program,parents,tableDecl)&&p.tokens.every(token=>values.includes(`var(${token})`))&&mesclaNoReassignada(p.binding)&&mateixaExpressio(value,'OMBRES.find((o) => o.id === ombra)?.valor');
++      }
++      if(p.kind==='derived-palette') {
++        const imported=namedImports.get(p.export);
++        const mostresDecl=owner.body.body.flatMap(n=>n.type==='VariableDeclaration'?n.declarations:[]).find(d=>d.id?.name==='mostres');
++        const mostres=mostresDecl?.init,declParents=[...parents.slice(0,parents.indexOf(owner)+1),owner.body];
++        const sourceOK=imported?.source===p.engine&&imported?.name===p.export&&importActiu(p.export,declParents,p.engine,p.export)&&importActiu('useMemo',declParents,'react','useMemo',true)&&bindingEnScope('mostres',owner,parents,mostresDecl)&&mateixaExpressio(mostres,'useMemo(() => (arrel && obert ? previsualitza(arrel, delta) : []), [arrel, obert, delta])');
++        const maps=parents.filter(n=>n.type==='CallExpression'&&(membre(n.callee,'mostres','map')||membre(n.callee,'passos','map')));
++        const bindings=maps.length===2&&maps.every(n=>{
++          const param=n.arguments[0]?.params?.[0],required=membre(n.callee,'mostres','map')?['rampa','passos']:['pas','hex'];
++          return param?.type==='ObjectPattern'&&required.every(name=>param.properties.some(p=>p.type==='ObjectProperty'&&!p.computed&&keyName(p.key)===name&&p.value?.name===name));
++        });
++        const passosOwner=maps.find(n=>membre(n.callee,'mostres','map'))?.arguments[0];
++        const hexOwner=maps.find(n=>membre(n.callee,'passos','map'))?.arguments[0];
++        const lexicals=passosOwner&&hexOwner&&bindingEnScope('passos',passosOwner,parents)&&bindingEnScope('hex',hexOwner,parents);
++        const style=parents.some(n=>n.type==='JSXAttribute'&&n.name?.name==='style');
++        return sourceOK&&bindings&&lexicals&&mesclaNoReassignada('mostres')&&style&&mateixaExpressio(value,"typeof hex === 'string' && hex.length === 7 && /^#[0-9a-fA-F]{6}$/.test(hex) ? hex : null");
++      }
++      if(p.kind==='resolved-asset') {
++        // Una fletxa conserva this; una funció ordinària pot rebre un altre
++        // receptor i deixa de ser el port de la instància de l’Embed.
++        const ownerIndex=parents.indexOf(owner);
++        const ordinaries=['FunctionExpression','FunctionDeclaration','ObjectMethod','ClassMethod','ClassPrivateMethod'];
++        if(owner.type!=='ClassMethod'||parents.slice(0,ownerIndex).some(n=>[...ordinaries,'ArrowFunctionExpression'].includes(n.type)))return false;
++        if(parents.slice(ownerIndex+1).some(n=>ordinaries.includes(n.type)))return false;
++        const imported=namedImports.get('resolveAsset');
++        return imported?.source===p.resolver&&imported?.name==='resolveAsset'&&importActiu('resolveAsset',parents,p.resolver,'resolveAsset')&&mateixaExpressio(value,'`url("${resolveAsset("'+p.asset+'")}")`');
++      }
++      return false;
++    }
++    function mesclaNoReassignada(name) {
++      return !nodes(ast,n=>
++        n.type==='AssignmentExpression'&&arrelsEscriptura(n.left).includes(name)||
++        n.type==='UpdateExpression'&&arrelsEscriptura(n.argument).includes(name)||
++        ['ForInStatement','ForOfStatement'].includes(n.type)&&n.left?.type!=='VariableDeclaration'&&arrelsEscriptura(n.left).includes(name)
++      ).length;
++    }
++    function genericPermes(node,parents,methodName) {
++      const owner=ownerDe(parents),name=nomOwner(owner),loop=[...parents].reverse().find(n=>n.type==='ForOfStatement');
++      if(file===contract.hook&&name==='usePropietatsCss') {
++        const object=node.callee.object;
++        return membre(object,'node','style')&&node.arguments[0]?.name==='nom'&&loop?.right?.name==='parelles'&&(methodName==='removeProperty'||node.arguments[1]?.name==='valor');
++      }
++      if(file!==MOTOR_TEMA.writer)return false;
++      // La paleta llegida de la font només arriba al DOM per estos cossos.
++      // Qualsevol mutació del base, nom reassignat o bucle let trenca el port.
++      if(!COSSOS_MOTOR[name]||forma(owner.body)!==forma(COSSOS_MOTOR[name]))return false;
++      const ramps=declarations.get('RAMPES'),steps=declarations.get('ESGLAONS'),canons=declarations.get('CANONS'),tints=declarations.get('TINTES');
++      const list=n=>n?.type==='ArrayExpression'?n.elements.map(e=>e.name==='CANON_BLAU'?stringEstatica(declarations.get('CANON_BLAU')):valorEstatica(e)):null;
++      if(JSON.stringify(list(ramps))!==JSON.stringify(MOTOR_TEMA.ramps)||JSON.stringify(list(steps))!==JSON.stringify(MOTOR_TEMA.steps)||JSON.stringify(list(canons))!==JSON.stringify(MOTOR_TEMA.canons)||JSON.stringify(list(tints))!==JSON.stringify(MOTOR_TEMA.tints))return false;
++      if(!['RAMPES','ESGLAONS','CANONS','TINTES','CANON_BLAU'].every(mesclaNoReassignada)||!membre(node.callee.object,'arrel','style')||node.arguments[0]?.name!=='nom')return false;
++      const baseOK=owner?.body?.body?.[0]?.type==='VariableDeclaration'&&owner.body.body[0].declarations.length===1&&owner.body.body[0].declarations[0].id?.name==='b'&&mateixaExpressio(owner.body.body[0].declarations[0].init,'base(arrel)');
++      if(!baseOK)return false;
++      if(methodName==='setProperty'&&MOTOR_TEMA.setters.includes(name)) {
++        for(const [group,transform]of [['esglaons','giraTo'],['canons','giraTo'],['tintes','giraTintes']])if(mateixaExpressio(loop?.right,`Object.entries(b.${group})`)&&mateixaExpressio(node.arguments[1],`${transform}(valor, delta)`))return true;
++      }
++      return methodName==='removeProperty'&&MOTOR_TEMA.removers.includes(name)&&mateixaExpressio(loop?.right,'[...Object.keys(b.esglaons), ...Object.keys(b.canons), ...Object.keys(b.tintes)]');
++    }
++
++    function visit(node,parents=[]) {
++      if (!node || typeof node !== 'object') return;
++      const attrIndex=parents.findLastIndex(n=>n.type==='JSXAttribute');
++      const attr=parents[attrIndex];
++      const opening=[...parents].reverse().find(n=>n.type==='JSXOpeningElement');
++      const staticProse=parents.slice(attrIndex+1).every(n=>['JSXExpressionContainer','ArrayExpression','TemplateLiteral'].includes(n.type));
++      const prosaCatalog=attr && staticProse && ['descripcio','contracte','a11y','fes','noFacis'].includes(attr.name?.name) && catalogues.has(opening?.name?.name);
++      if ((node.type === 'StringLiteral' || node.type === 'TemplateElement') && !prosaCatalog) {
++        const text=node.type==='StringLiteral'?node.value:node.value.raw;
++        cssInscrit(text,file,node.loc.start.line);
++      }
++      if(node.type==='JSXText' && parents.some(n=>n.type==='JSXElement'&&n.openingElement?.name?.name==='style'))cssInscrit(node.value,file,node.loc.start.line,true);
++      if (['CallExpression','OptionalCallExpression'].includes(node.type)) {
++        const method=calleeName(node.callee);
++        if (imports.get(method)===contract.hook && (node.arguments[1]?.type!=='ObjectExpression' || node.arguments[1].properties.some(p=>p.type!=='ObjectProperty'||p.computed))) falla('T7',file,node.loc.start.line,'Endolls runtime: objecte explícit sense spread ni nom calculat.');
++        const member=['MemberExpression','OptionalMemberExpression'].includes(node.callee?.type);
++        const methodName=member?(node.callee.computed?stringEstatica(node.callee.property):keyName(node.callee.property)):null;
++        if (['setProperty','removeProperty'].includes(methodName)) {
++          const name=stringEstatica(node.arguments[0]);
++          const host=hostExports.get(name);
++          const owner=[...parents].reverse().find(n=>n.type==='ClassMethod');
++          const ownerName=keyName(owner?.key);
++          const start=owner?.body?.body?.[0];
++          const documentGuard=start?.type==='IfStatement'&&start.test?.type==='BinaryExpression'&&start.test.operator==='==='&&start.test.left?.type==='UnaryExpression'&&start.test.left.operator==='typeof'&&start.test.left.argument?.name==='document'&&start.test.right?.value==='undefined'&&start.consequent?.type==='ReturnStatement';
++          const first=documentGuard?owner?.body?.body?.[1]:start;
++          const guard=first?.type==='IfStatement'&&first.test?.type==='UnaryExpression'&&first.test.operator==='!'&&first.test.argument?.type==='CallExpression'&&first.test.argument.callee?.object?.type==='ThisExpression'&&first.test.argument.callee?.property?.name==='hasAttribute'&&first.test.argument.arguments?.[0]?.value==='pinta-amfitrio'&&first.consequent?.type==='ReturnStatement';
++          const authorised=host&&file===host.writer&&host.methods.includes(ownerName)&&(ownerName!=='_pintaAmfitrio'||guard);
++          if(authorised)exportsSeen.get(name).add(ownerName);
++          if (name?.startsWith('--sdp-') && !definitions.has(name) && !runtime.has(name) && !authorised) falla('T1',file,node.loc.start.line,`Propietat desconeguda: ${name}`);
++          if (runtime.has(name)) falla('T7',file,node.loc.start.line,`Endoll fora del port declarat: ${name}`);
++          if(name?.startsWith('--sdp-')&&definitions.has(name)){
++            const target=node.callee.object;
++            const instance=target?.type==='MemberExpression'&&target.object?.type==='ThisExpression'&&keyName(target.property)==='style';
++            const allowed=methodName==='setProperty'&&instance&&portPermes(name,node.arguments[1],parents,'setProperty');
++            if(allowed)portsSeen.add(name);else falla('T3',file,node.loc.start.line,`Escriptura de tema fora del propietari/port: ${name}`);
++          }
++          if(name===null&&!genericPermes(node,parents,methodName))falla('T7',file,node.loc.start.line,'Setter dinàmic fora del hook o motor de tema amb derivació canònica.');
++        }
++      }
++      if(['AssignmentExpression','UpdateExpression'].includes(node.type)){
++        const left=node.type==='AssignmentExpression'?node.left:node.argument;
++        const name=['MemberExpression','OptionalMemberExpression'].includes(left?.type)?(left.computed?stringEstatica(left.property):keyName(left.property)):null;
++        if(name?.startsWith('--sdp-')){
++          if(!definitions.has(name)&&!runtime.has(name))falla('T1',file,node.loc.start.line,`Propietat desconeguda: ${name}`);
++          falla('T3',file,node.loc.start.line,`Assignació de tema fora de la font/port: ${name}`);
++        }
++      }
++      if (node.type === 'ObjectProperty') {
++        const name=node.computed?stringEstatica(node.key):keyName(node.key);
++        if (name?.startsWith('--sdp-')) {
++          const p=runtime.get(name);
++          if (!definitions.has(name) && !p) falla('T1',file,node.loc.start.line,`Propietat desconeguda: ${name}`);
++          if(definitions.has(name)&&!p){
++            const call=[...parents].reverse().find(a=>['CallExpression','OptionalCallExpression'].includes(a.type));
++            const directHook=call?.arguments?.[1]===parents.at(-1)&&imports.get(calleeName(call?.callee))===contract.hook;
++            const allowed=portPermes(name,node.value,parents,directHook?'hook':'jsx-style-preview');
++            if(allowed)portsSeen.add(name);else falla('T3',file,node.loc.start.line,`Definició/escriptura de tema fora del propietari/port: ${name}`);
++          }
++          if (p) {
++            const call=[...parents].reverse().find(a=>['CallExpression','OptionalCallExpression'].includes(a.type));
++            const method=calleeName(call?.callee);
++            const directObject=call?.arguments?.[1]===parents.at(-1);
++            if (!p.writers.includes(file) || imports.get(method)!==contract.hook || !importActiu(method,parents,contract.hook,'usePropietatsCss') || !directObject) falla('T7',file,node.loc.start.line,`Escriptor no declarat per a ${name}`);
++            else {
++              seen.get(name).add(file);
++              const literal=numeroLiteral(node.value);
++              const text=stringEstatica(node.value);
++              if ((literal!==null&&!Number.isFinite(literal)) || (text!==null && (!text.trim()||!Number.isFinite(Number(text)))) || ['NullLiteral','BooleanLiteral','ObjectExpression','ArrayExpression'].includes(node.value.type)) falla('T7',file,node.loc.start.line,`Paràmetre numèric invàlid: ${name}`);
++            }
++          }
++        }
++      }
++      for (const [key,value] of Object.entries(node)) {
++        if (['loc','extra','comments','tokens'].includes(key)) continue;
++        if (Array.isArray(value)) value.forEach(v=>visit(v,[...parents,node]));
++        else if(value&&typeof value==='object') visit(value,[...parents,node]);
++      }
++    }
++    visit(ast);
+   }
+-  console.log(`\n${banda}`);
+-  console.log('El vocabulari no és tancat. Esta llei no admet sostre de deute.\n');
+-  process.exit(1);
++  for(const p of ports.values())if(!portsSeen.has(p.name))falla('T7',p.writer,1,`Port d’instància sense derivació real: ${p.name}`);
++  for(const h of hostExports.values()) for(const method of h.methods) if(!exportsSeen.get(h.name).has(method)) falla('T7',h.writer,1,`Exportació host sense escriptor/opt-in verificat: ${h.name} (${method})`);
++  for (const p of runtime.values()) for (const writer of p.writers) if (!seen.get(p.name).has(writer)) falla('T7',writer,1,`Endoll declarat sense escriptor real: ${p.name}`);
++  for (const rule of ['T1','T2','T3','T4','T5','T6','T7']) if(actiu(rule)&&!errors.some(e=>e.llei===rule))ok.push(rule);
++  return {errors,ok,produccio,excloses,tokens:definitions.size,runtime:runtime.size,hostExports:hostExports.size};
+ }
+ 
+-console.log(`\n${banda}\nVocabulari tancat. Cap component s'inventa res.\n`);
+-process.exit(0);
++if (esMain(import.meta.url)) {
++  try {
++    const rootIndex=process.argv.indexOf('--root'), onlyIndex=process.argv.indexOf('--nomes');
++    if(onlyIndex>=0&&!/^T[1-7]$/.test(process.argv[onlyIndex+1]??''))throw new Error('Cal una regla T1–T7 després de --nomes.');
++    const root=rootIndex>=0?path.resolve(process.argv[rootIndex+1]):arrel();
++    const r=comprovaTokens(root,{nomes:onlyIndex>=0?process.argv[onlyIndex+1]:null});
++    console.log(`🪨 TRACTOR DE TOKENS · ${r.tokens} tokens · ${r.runtime} paràmetres numèrics · ${r.produccio.length} fonts de producció`);
++    console.log(`ℹ️ ${r.excloses.length} fonts de proves/fixtures excloses del CSS productiu; les regressions s'executen a test:ci.`);
++    for(const rule of r.ok)console.log(`✅ ${rule}`);
++    for(const error of r.errors)console.error(`${error.fitxer}:${error.linia} [${error.llei}] ${error.missatge}`);
++    console.log(`${r.errors.length} infraccions. Cap baseline.`);
++    process.exitCode=r.errors.length?1:0;
++  }catch(error){console.error(`[TOKENS] ${error.message}`);process.exitCode=2;}
++}
+--- a/src/css/tokens.css	2026-10-05 01:24:39
++++ b/src/css/tokens.css	2026-10-05 03:02:17
+@@ -216,6 +216,7 @@
+   --sdp-col-sidebar: 260px;
+   /* Pla 2045 · Sostre modulable del menú; el calaix reserva aire per tancar. */
+   --sdp-menu-ample-max: 300px;
++  --sdp-desplegable-ample: 200px;
+   --sdp-col-llista: 380px;
+   --sdp-alt-negra: 64px;
+   --sdp-alt-accio: 58px;
+@@ -641,3 +642,56 @@
+ .sw-crom-seleccio-fons { background: var(--sdp-crom-seleccio-fons); color: var(--sdp-crom-seleccio-text); }
+ .sw-crom-seleccio-text { background: var(--sdp-crom-seleccio-text); color: var(--sdp-crom-seleccio-fons); box-shadow: inset 0 0 0 1px var(--sdp-fons-hover-subtil); }
+ .sw-crom-seleccio-vora { background: var(--sdp-crom-subcapcalera-fosca); color: var(--sdp-crom-text); box-shadow: inset 0 0 0 2px var(--sdp-crom-seleccio-vora); }
++
++/* Calendari: defaults i variants de tema acotats al component. Geometria de cada acte: contracte CSS runtime.
++   Mateixos selectors, ordre i @media de components; cap valor per acte al tema. */
++@layer components {
++    .sdp-cal-setmana,
++  .sdp-cal-mes,
++  .sdp-cal-agenda,
++  .sdp-cal-any,
++  .sdp-cal-navegacio {
++    --sdp-cal-hui-fons: var(--sdp-fons-invers);
++    --sdp-cal-hui-text: var(--sdp-text-invers);
++    --sdp-cal-ara: var(--sdp-accent-text);
++    --sdp-cal-separacio: var(--sdp-space-1);
++    --sdp-cal-bloc-fons: var(--sdp-fons-subtil);
++    --sdp-cal-bloc-text: var(--sdp-text-cos);
++    --sdp-cal-bloc-vora: var(--sdp-vora-forta);}
++    .sdp-cal-font--esdeveniment { --sdp-cal-bloc-fons: var(--sdp-info-fons); --sdp-cal-bloc-text: var(--sdp-info-text); --sdp-cal-bloc-vora: var(--sdp-info);}
++    .sdp-cal-font--publicacio { --sdp-cal-bloc-fons: var(--sdp-fons-subtil); --sdp-cal-bloc-text: var(--sdp-text-cos); --sdp-cal-bloc-vora: var(--sdp-vora-forta);}
++    .sdp-cal-font--producte { --sdp-cal-bloc-fons: var(--sdp-exit-fons); --sdp-cal-bloc-text: var(--sdp-exit-text); --sdp-cal-bloc-vora: var(--sdp-exit);}
++    .sdp-cal-font--pagina { --sdp-cal-bloc-fons: var(--sdp-accent-subtil); --sdp-cal-bloc-text: var(--sdp-accent-text); --sdp-cal-bloc-vora: var(--sdp-accent-text);}
++    .sdp-cal-font--agenda { --sdp-cal-bloc-fons: var(--sdp-fons-targeta); --sdp-cal-bloc-text: var(--sdp-text-cos); --sdp-cal-bloc-vora: var(--sdp-vora-control);}
++    .sdp-cal-agenda {
++    --sdp-cal-agenda-data: 7rem;
++    --sdp-cal-agenda-hora: 7rem;
++    --sdp-cal-cercle: var(--sdp-space-10);}
++    .sdp-cal-any {
++    --sdp-cal-any-dia: var(--sdp-touch);
++    --sdp-cal-cercle: 1.75rem;}
++    @media (pointer: fine) {
++        .sdp-cal-any { --sdp-cal-any-dia: 2rem;}
++    }
++    .sdp-cal-setmana {
++    --sdp-cal-hora: 3rem;
++    --sdp-cal-marge: 3.5rem;
++    --sdp-cal-alt-carril: 1.5rem;
++    --sdp-cal-cercle: var(--sdp-space-10);
++    --sdp-cal-sostre: calc(var(--sdp-alt-accio) * 2);}
++    .sdp-pantalla-completa .sdp-cal-setmana.sdp-cal-setmana { --sdp-cal-sostre: 0px;}
++    .sdp-cal-setmana--tira { --sdp-cal-cercle: var(--sdp-space-8);}
++    @media (pointer: fine) {
++        .sdp-cal-setmana--compacta { --sdp-cal-hora: 2.5rem; --sdp-cal-alt-carril: 1.25rem;}
++    }
++    .sdp-cal-mes {
++    --sdp-cal-alt-numero: 2rem;
++    --sdp-cal-alt-carril: 1.5rem;
++    --sdp-cal-alt-mes: calc(var(--sdp-cal-alt-carril) + var(--sdp-space-1));
++    --sdp-cal-cercle: 1.5rem;
++    --sdp-cal-carrils: 3;}
++    @media (pointer: fine) {
++        .sdp-cal-mes--densitat-compacta { --sdp-cal-alt-numero: 1.75rem; --sdp-cal-alt-carril: 1.25rem;}
++    }
++    .sdp-cal-mes--compacte { --sdp-cal-alt-carril: var(--sdp-space-2); --sdp-cal-alt-mes: 1.5rem;}
++}
+--- a/tests/pedra-debt.test.mjs	2026-09-24 04:22:19
++++ b/tests/pedra-debt.test.mjs	2026-10-05 03:29:33
+@@ -49,3 +49,256 @@
+   assert.match(run.stdout, /src\/css\/orphan.css/);
+   assert.doesNotMatch(run.stdout, /src\/css\/(?:linked|direct).css/);
+ });
++
++
++// T4: la porta de vocabulari comprova fonts executables, no els literals dels seus contraexemples.
++const { comprovaTokens } = await import('../tooling/gates/tractor-tokens.mjs');
++const runtimeContract = JSON.parse(fs.readFileSync(path.join(ROOT,'tooling/contracts/css-runtime-properties.json'),'utf8'));
++function tokenFixture(t) {
++ const root=fs.mkdtempSync(path.join(os.tmpdir(),'sdp-token-contract-'));t.after(()=>fs.rmSync(root,{recursive:true,force:true}));
++ const put=(file,text)=>{const p=path.join(root,file);fs.mkdirSync(path.dirname(p),{recursive:true});fs.writeFileSync(p,text);};
++ const canonical=[
++  '--sdp-text-cos','--sdp-fons-app','--sdp-pedra-400','--sdp-cal-carrils',
++  ...runtimeContract.instancePorts.map(p=>p.name),'--sdp-ombra-1','--sdp-ombra-3',
++  ...runtimeContract.themeEngine.ramps.flatMap(r=>runtimeContract.themeEngine.steps.map(n=>`--sdp-${r}-${n}`)),
++  ...runtimeContract.themeEngine.canons,...runtimeContract.themeEngine.tints
++ ];
++ put('src/css/tokens.css',`:root { ${[...new Set(canonical)].map(n=>`${n}: black;`).join(' ')} }`);
++ put('src/css/design-tokens.css',':root { --sdp-canon-taronja: orange; }');
++ put('tooling/contracts/css-runtime-properties.json',JSON.stringify(runtimeContract));
++ put(runtimeContract.hook,fs.readFileSync(path.join(ROOT,runtimeContract.hook),'utf8'));
++ put(runtimeContract.themeEngine.writer,fs.readFileSync(path.join(ROOT,runtimeContract.themeEngine.writer),'utf8'));
++ put('src/PedraSecaEmbed.jsx',"import {resolveAsset} from './config/assetResolver.js'; class Embed { _pintaAmfitrio() { if(!this.hasAttribute('pinta-amfitrio')) return; document.documentElement.style.setProperty('--sdp-bg',value); } static _despintaAmfitrio() { document.documentElement.style.setProperty('--sdp-bg',previ.valor); } _aplicaBaseRecursos() { this.style.setProperty('--sdp-xat-fons-imatge', `url(\"${resolveAsset('assets/system/ui/xat-bg-map-v2.jpg')}\")`); } }");
++ put('src/components/PedraSeca/molecules/Dropdown.jsx',"import {useRef} from 'react'; import {usePropietatsCss} from '../../../hooks/usePropietatsCss.js'; function Dropdown({minWidth}) { const wrapper=useRef(null); usePropietatsCss(wrapper,{'--sdp-desplegable-ample':minWidth}); return <div ref={wrapper}/>; }");
++ put('src/sections/disseny/cataleg/detalls/EspecimenPanell.jsx',"import {useRef} from 'react'; import {usePropietatsCss} from '../../../../hooks/usePropietatsCss.js'; const OMBRES=Object.freeze([Object.freeze({valor:'var(--sdp-ombra-1)'}),Object.freeze({valor:null}),Object.freeze({valor:'var(--sdp-ombra-3)'})]); function EspecimenPanell() { const mostraRef=useRef(null); usePropietatsCss(mostraRef,{'--sdp-ombra-2':OMBRES.find((o)=>o.id===ombra)?.valor}); return <div ref={mostraRef}/>; }");
++ put('src/components/universal/PanellCrom.jsx',"import {useMemo} from 'react'; import {previsualitza} from '../../config/crom.js'; function PanellCrom({arrel,obert,delta}) { const mostres=useMemo(()=>arrel&&obert?previsualitza(arrel,delta):[],[arrel,obert,delta]); return mostres.map(({rampa,passos})=>passos.map(({pas,hex})=><li key={pas} style={{'--sdp-crom-mostra': typeof hex === 'string' && hex.length === 7 && /^#[0-9a-fA-F]{6}$/.test(hex) ? hex : null}}/>)); }");
++ const writers=[...new Set(runtimeContract.parameters.flatMap(p=>p.writers))];
++ for(const file of writers) {
++  const relative=path.posix.relative(path.posix.dirname(file),runtimeContract.hook);
++  const keys=runtimeContract.parameters.filter(p=>p.writers.includes(file)).map(p=>JSON.stringify(p.name)+': 1').join(',');
++  put(file,`import {usePropietatsCss} from '${relative}'; usePropietatsCss(ref,{${keys}});`);
++ }
++ put('src/style.css','.a { color: var(--sdp-text-cos); height: calc(var(--sdp-cal-hores, 24) * 1px); }');
++ return {root,put};
++}
++test('tokens: paràmetres runtime amb escriptor real i fallback numèric canònic passen sense tokens globals d’acte',t=>{
++ const {root}=tokenFixture(t),r=comprovaTokens(root);assert.deepEqual(r.errors,[]);assert.equal(r.runtime,12);assert.equal(r.tokens,36);assert.ok(r.produccio.length>2);
++});
++test('tokens: literals negatius de proves i text del catàleg no es convertixen en CSS productiu',t=>{
++ const {root,put}=tokenFixture(t);
++ put('src/negative.test.jsx',"const css='.bad { --sdp-unknown: red; color: var(--sdp-missing); }';");
++ put('src/sections/disseny/cataleg/Doc.jsx',"import { Especimen } from './Especimen.jsx'; const doc=<Especimen fes={['--sdp-text-cos: frase descriptiva']}><p>--sdp-fons-app: llegenda</p></Especimen>;");
++ const r=comprovaTokens(root);assert.deepEqual(r.errors,[]);assert.deepEqual(r.excloses,['src/negative.test.jsx']);
++});
++test('tokens: el mateix CSS inscrit en JS executable falla; un atribut CSS no s’amaga com a prosa',t=>{
++ const {root,put}=tokenFixture(t);put('src/actual.jsx',"const css='.bad { --sdp-color-local: red; color: var(--sdp-inexistent); }';");
++ const r=comprovaTokens(root);assert.ok(r.errors.some(e=>e.llei==='T3'&&e.missatge.includes('--sdp-color-local')));assert.ok(r.errors.some(e=>e.llei==='T1'&&e.missatge.includes('--sdp-inexistent')));
++});
++test('tokens: colors locals, primitius i fallback de tema continuen rojos',t=>{
++ const {root,put}=tokenFixture(t);put('src/style.css','.a { --sdp-color-local: red; color: var(--sdp-pedra-400); background: var(--sdp-fons-app, white); }');
++ const laws=new Set(comprovaTokens(root).errors.map(e=>e.llei));for(const rule of ['T3','T4','T2'])assert.ok(laws.has(rule),rule);
++});
++test('tokens: fallback runtime diferent del contracte i escriptura no declarada fallen',t=>{
++ const {root,put}=tokenFixture(t);put('src/bad.js',"import { usePropietatsCss } from './hooks/usePropietatsCss.js'; usePropietatsCss(ref, {'--sdp-cal-inici': 2});");
++ put('src/style.css','.a { height: calc(var(--sdp-cal-hores, 23) * 1px); }');
++ const laws=new Set(comprovaTokens(root).errors.map(e=>e.llei));assert.ok(laws.has('T7'));assert.ok(laws.has('T2'));
++});
++test('tokens: no basta declarar un endoll al manifest; ha de tindre cadascun dels seus escriptors',t=>{
++ const {root,put}=tokenFixture(t);put(runtimeContract.parameters[0].writers[0],'export const moved = true;');assert.ok(comprovaTokens(root).errors.some(e=>e.llei==='T7'&&e.missatge.includes('sense escriptor real')));
++});
++test('tokens: un endoll desconegut o una font malformada no pot produir un verd',t=>{
++ const {root,put}=tokenFixture(t);put('src/bad.js',"el.style.setProperty('--sdp-no-declarat','1');");assert.ok(comprovaTokens(root).errors.some(e=>e.llei==='T1'));put('src/bad.js','const x = <div');assert.ok(comprovaTokens(root).errors.some(e=>e.llei==='T0'));
++});
++test('tokens: spread, text no numèric i regla inexistent no poden evadir la comprovació',t=>{
++ const {root,put}=tokenFixture(t);const file=runtimeContract.parameters[0].writers[0];const relative=path.posix.relative(path.posix.dirname(file),runtimeContract.hook);
++ put(file,`import {usePropietatsCss} from '${relative}'; usePropietatsCss(ref,{'--sdp-cal-inici':'red',...other});`);assert.ok(comprovaTokens(root).errors.some(e=>e.llei==='T7'&&e.missatge.includes('numèric')));assert.ok(comprovaTokens(root).errors.some(e=>e.missatge.includes('spread')));assert.throws(()=>comprovaTokens(root,{nomes:'FAKE'}),/Regla desconeguda/);
++});
++
++test('tokens: el pont host opt-in no es convertix en token de la UI ni admet un altre owner',t=>{
++ const {root,put}=tokenFixture(t);assert.equal(comprovaTokens(root).hostExports,1);
++ put('src/consumer.css','.a { background: var(--sdp-bg); }');put('src/outsider.js',"el.style.setProperty('--sdp-bg','red');");
++ const r=comprovaTokens(root);assert.ok(r.errors.some(e=>e.llei==='T1'&&e.fitxer==='src/consumer.css'));assert.ok(r.errors.some(e=>e.llei==='T1'&&e.fitxer==='src/outsider.js'));
++});
++test('tokens: llevar l’opt-in del publicador declarat fa caure la porta',t=>{
++ const {root,put}=tokenFixture(t);put('src/PedraSecaEmbed.jsx',"class Embed { _pintaAmfitrio() { document.documentElement.style.setProperty('--sdp-bg',value); } static _despintaAmfitrio() { document.documentElement.style.setProperty('--sdp-bg',previ.valor); } }");
++ const r=comprovaTokens(root);assert.ok(r.errors.some(e=>e.llei==='T7'&&e.missatge.includes('opt-in')));
++});
++
++test('tokens: l’opt-in després de publicar al document no és una guarda vàlida',t=>{
++ const {root,put}=tokenFixture(t);put('src/PedraSecaEmbed.jsx',"class Embed { _pintaAmfitrio() { document.documentElement.style.setProperty('--sdp-bg',value); if(!this.hasAttribute('pinta-amfitrio')) return; } static _despintaAmfitrio() { document.documentElement.style.setProperty('--sdp-bg',previ.valor); } }");assert.ok(comprovaTokens(root).errors.some(e=>e.llei==='T7'));
++});
++
++test('tokens: CSS executable en un element style no pot passar com a JSXText descriptiu',t=>{
++ const {root,put}=tokenFixture(t);
++ put('src/actual.jsx',"const sheet=<style>.a &#123; --sdp-color-local: red; color: var(--sdp-inexistent); &#125;</style>;");
++ const r=comprovaTokens(root);assert.ok(r.errors.some(e=>e.llei==='T3'&&e.missatge.includes('--sdp-color-local')));assert.ok(r.errors.some(e=>e.llei==='T1'&&e.missatge.includes('--sdp-inexistent')));
++});
++
++test('tokens: un node executable dins d’una prop descriptiva no hereta l’exempció de prosa',t=>{
++ const {root,put}=tokenFixture(t);
++ put('src/sections/disseny/cataleg/Doc.jsx',"import { Especimen } from './Especimen.jsx'; const doc=<Especimen fes={[React.createElement('style',null,'.a { --sdp-color-local: red; color: var(--sdp-inexistent); }')]} />;");
++ const r=comprovaTokens(root);assert.ok(r.errors.some(e=>e.llei==='T3'&&e.missatge.includes('--sdp-color-local')));assert.ok(r.errors.some(e=>e.llei==='T1'&&e.missatge.includes('--sdp-inexistent')));
++});
++
++test('tokens: comentaris d’una fulla CSS inscrita no creen tokens ni oculten declaracions reals',t=>{
++ const {root,put}=tokenFixture(t);put('src/actual.js',"const sheet='/* --sdp-color-local: red; color: var(--sdp-inexistent); */ .a { color: var(--sdp-text-cos); }';");
++ assert.deepEqual(comprovaTokens(root).errors,[]);
++ put('src/actual.js',"const sheet='/* comentari */ .a { --sdp-color-local: red; color: var(--sdp-inexistent); }';");
++ const r=comprovaTokens(root);assert.ok(r.errors.some(e=>e.llei==='T3'));assert.ok(r.errors.some(e=>e.llei==='T1'));
++});
++
++test('tokens: CSS inscrit malformat falla de manera explícita en lloc d’acreditar una font buida',t=>{
++ const {root,put}=tokenFixture(t);put('src/actual.jsx',"const sheet=<style>.a &#123; color: var(--sdp-text-cos);</style>;");
++ assert.ok(comprovaTokens(root).errors.some(e=>e.llei==='T0'&&e.missatge.includes('CSS inscrit')));
++});
++
++test('tokens: la CLI no interpreta un selector buit com una auditoria general reeixida',t=>{
++ const {root}=tokenFixture(t);assert.throws(()=>comprovaTokens(root,{nomes:''}),/Regla desconeguda/);
++ const run=spawnSync(process.execPath,[path.join(ROOT,'tooling/gates/tractor-tokens.mjs'),'--root',root,'--nomes'],{encoding:'utf8'});
++ assert.equal(run.status,2);assert.match(run.stderr,/regla T1–T7/);assert.doesNotMatch(run.stdout,/✅/);
++});
++
++for(const [name,code]of [
++ ['setter amb nom entre claudàtors',"el.style['setProperty']('--sdp-cal-inici','red');"],
++ ['nom d’endoll en plantilla estàtica',"el.style.setProperty(`--sdp-cal-inici`,'red');"],
++ ['literal numèric infinit',"usePropietatsCss(ref,{'--sdp-cal-inici':1e309});"],
++ ['crida opcional del setter',"el.style.setProperty?.('--sdp-cal-inici','red');"],
++ ['accés opcional del setter',"el?.style.setProperty('--sdp-cal-inici','red');"],
++ ['nom de mètode en plantilla estàtica',"el.style[`setProperty`]('--sdp-cal-inici','red');"],
++ ['literal numèric negatiu infinit',"usePropietatsCss(ref,{'--sdp-cal-inici':-1e309});"],
++ ['valor de text en plantilla estàtica',"usePropietatsCss(ref,{'--sdp-cal-inici':`red`});"],
++])test(`tokens: ${name} no evadeix el contracte de geometria`,t=>{
++ const {root}=tokenFixture(t),file=runtimeContract.parameters[0].writers[0];
++ fs.appendFileSync(path.join(root,file),code);
++ assert.ok(comprovaTokens(root).errors.some(e=>e.llei==='T7'),name);
++});
++
++for(const [name,code,law]of [
++ ['color canònic amb setter natiu',"el.style.setProperty('--sdp-text-cos','red');",'T3'],
++ ['color canònic amb setter opcional',"el.style?.setProperty('--sdp-text-cos','red');",'T3'],
++ ['color canònic amb setter entre claudàtors',"el.style['setProperty']('--sdp-text-cos','red');",'T3'],
++ ['color canònic amb hook',"usePropietatsCss(ref,{'--sdp-text-cos':'red'});",'T3'],
++ ['color canònic JSX amb clau calculada estàtica',"const x=<div style={{['--sdp-text-cos']:'red'}}/>;",'T3'],
++ ['port conegut fora del propietari',"usePropietatsCss(ref,{'--sdp-desplegable-ample':'300px'});",'T3'],
++ ['retirada de token canònic fora del motor',"el.style.removeProperty('--sdp-text-cos');",'T3'],
++ ['nom de setter dinàmic en un component',"el.style.setProperty(nom,valor);",'T7'],
++ ['retirada dinàmica en un component',"el.style.removeProperty(nom);",'T7']
++])test(`tokens: ${name} conserva la font única`,t=>{
++ const {root,put}=tokenFixture(t);put('src/outsider.jsx',`import {usePropietatsCss} from './hooks/usePropietatsCss.js'; ${code}`);
++ assert.ok(comprovaTokens(root).errors.some(e=>e.fitxer==='src/outsider.jsx'&&e.llei===law),name);
++});
++
++for(const [name,file,before,after]of [
++ ['Dropdown amb color com a amplada','src/components/PedraSeca/molecules/Dropdown.jsx',"'--sdp-desplegable-ample':minWidth","'--sdp-desplegable-ample':'red'"],
++ ['Dropdown en una funció aliena del mateix fitxer','src/components/PedraSeca/molecules/Dropdown.jsx','function Dropdown(','function UnAltre('],
++ ['Dropdown aplica el port al document','src/components/PedraSeca/molecules/Dropdown.jsx','useRef(null)','useRef(document.documentElement)'],
++ ['ombra escrita a mà en la taula','src/sections/disseny/cataleg/detalls/EspecimenPanell.jsx',"valor:'var(--sdp-ombra-1)'","valor:'0 1px 3px red'"],
++ ['ombra deriva d’una altra expressió','src/sections/disseny/cataleg/detalls/EspecimenPanell.jsx','OMBRES.find((o)=>o.id===ombra)?.valor',"'red'"],
++ ['mostra de Crom amb color arbitrari','src/components/universal/PanellCrom.jsx',"typeof hex === 'string' && hex.length === 7 && /^#[0-9a-fA-F]{6}$/.test(hex) ? hex : null","'red'"],
++ ['mostra de Crom amb motor alié','src/components/universal/PanellCrom.jsx',"from '../../config/crom.js'","from '../../config/outsider.js'"],
++ ['mostra de Crom amb font reassignada','src/components/universal/PanellCrom.jsx','return mostres.map',"mostres = foreign; return mostres.map"],
++ ['recurs d’Embed sense resolutor','src/PedraSecaEmbed.jsx',"resolveAsset('assets/system/ui/xat-bg-map-v2.jpg')","foreign('assets/system/ui/xat-bg-map-v2.jpg')"],
++ ['recurs d’Embed escrit a html','src/PedraSecaEmbed.jsx',"this.style.setProperty('--sdp-xat-fons-imatge'","document.documentElement.style.setProperty('--sdp-xat-fons-imatge'"],
++ ['motor Crom amb una tinta aliena','src/config/crom.js',"const TINTES = ['--sdp-anell-accio'","const TINTES = ['--sdp-text-cos'"],
++ ['motor Crom amb un color literal','src/config/crom.js','giraTo(valor, delta)',"'red'"],
++])test(`tokens: ${name} rebutja la derivació trencada`,t=>{
++ const {root}=tokenFixture(t),target=path.join(root,file),source=fs.readFileSync(target,'utf8');assert.ok(source.includes(before),name);fs.writeFileSync(target,source.replace(before,after));
++ assert.ok(comprovaTokens(root).errors.some(e=>e.fitxer===file&&['T3','T7'].includes(e.llei)),name);
++});
++
++test('tokens: el hook intern no autoritza un setter afegit a una altra funció',t=>{
++ const {root}=tokenFixture(t);fs.appendFileSync(path.join(root,runtimeContract.hook),'\nfunction outsider() { for(const [nom,valor]of parelles) node.style.setProperty(nom,valor); }');
++ assert.ok(comprovaTokens(root).errors.some(e=>e.fitxer===runtimeContract.hook&&e.llei==='T7'));
++});
++test('tokens: el motor central no autoritza redefinir un semàntic amb un nom literal',t=>{
++ const {root}=tokenFixture(t);fs.appendFileSync(path.join(root,runtimeContract.themeEngine.writer),"\nfunction outsider() { arrel.style.setProperty('--sdp-text-cos','red'); }");
++ assert.ok(comprovaTokens(root).errors.some(e=>e.fitxer===runtimeContract.themeEngine.writer&&e.llei==='T3'));
++});
++test('tokens: afegir un owner/color al manifest no obri una excepció opaca',t=>{
++ const {root,put}=tokenFixture(t),contract=structuredClone(runtimeContract);contract.instancePorts.push({name:'--sdp-text-cos',writer:'src/outsider.jsx',kind:'color'});put('tooling/contracts/css-runtime-properties.json',JSON.stringify(contract));
++ assert.throws(()=>comprovaTokens(root),/Contracte de ports\/tema no ratificat/);
++});
++
++for(const [name,file,before,after]of [
++ ['base de Crom mutada abans del bucle','src/config/crom.js','const b = base(arrel);',"const b = base(arrel); b.esglaons['--sdp-text-cos']='#ff0000';"],
++ ['bucle de Crom reassigna el nom','src/config/crom.js','for (const [nom, valor] of Object.entries(b.esglaons))\n    arrel.style.setProperty(nom, giraTo(valor, delta));',"for (let [nom, valor] of Object.entries(b.esglaons)) { nom='--sdp-text-cos'; arrel.style.setProperty(nom,giraTo(valor,delta)); }"],
++ ['bucle de Crom usa let encara sense reassignar','src/config/crom.js','for (const [nom, valor] of Object.entries(b.esglaons))','for (let [nom, valor] of Object.entries(b.esglaons))'],
++ ['base de Crom mutada amb una crida opaca','src/config/crom.js','const b = base(arrel);','const b = base(arrel); foreignMutation(b.esglaons);'],
++ ['prop minWidth reassignada abans del port','src/components/PedraSeca/molecules/Dropdown.jsx',"usePropietatsCss(wrapper,{'--sdp-desplegable-ample':minWidth});","minWidth='red'; usePropietatsCss(wrapper,{'--sdp-desplegable-ample':minWidth});"],
++ ['prop minWidth substituïda per un callback local','src/components/PedraSeca/molecules/Dropdown.jsx',"usePropietatsCss(wrapper,{'--sdp-desplegable-ample':minWidth});","((minWidth)=>usePropietatsCss(wrapper,{'--sdp-desplegable-ample':minWidth}))('red');"],
++ ['prop minWidth substituïda en un bloc local','src/components/PedraSeca/molecules/Dropdown.jsx',"usePropietatsCss(wrapper,{'--sdp-desplegable-ample':minWidth});","{ const minWidth='red'; usePropietatsCss(wrapper,{'--sdp-desplegable-ample':minWidth}); }"],
++ ['ref del port substituïda per un callback local','src/components/PedraSeca/molecules/Dropdown.jsx',"usePropietatsCss(wrapper,{'--sdp-desplegable-ample':minWidth});","((wrapper)=>usePropietatsCss(wrapper,{'--sdp-desplegable-ample':minWidth}))(document.documentElement);"],
++])test(`tokens: ${name} no és la derivació declarada`,t=>{
++ const {root}=tokenFixture(t),target=path.join(root,file),source=fs.readFileSync(target,'utf8');assert.ok(source.includes(before),name);fs.writeFileSync(target,source.replace(before,after));
++ assert.ok(comprovaTokens(root).errors.some(e=>e.fitxer===file&&['T3','T7'].includes(e.llei)),name);
++});
++test('tokens: mutar una clau canònica d’un mapa no evita la font única',t=>{
++ const {root,put}=tokenFixture(t);put('src/outsider.js',"palette['--sdp-text-cos'] = '#ff0000';");
++ assert.ok(comprovaTokens(root).errors.some(e=>e.fitxer==='src/outsider.js'&&e.llei==='T3'));
++});
++
++for(const [name,code]of [
++ ['prop minWidth assignada en for-of sense declaració',"for(minWidth of ['red']) usePropietatsCss(wrapper,{'--sdp-desplegable-ample':minWidth});"],
++ ['ref wrapper assignada en for-in sense declaració',"for(wrapper in foreign) usePropietatsCss(wrapper,{'--sdp-desplegable-ample':minWidth});"],
++ ['prop minWidth assignada amb patró de for-of',"for({minWidth} of foreign) usePropietatsCss(wrapper,{'--sdp-desplegable-ample':minWidth});"],
++ ['ref.current assignada en patró array',"[wrapper.current]=[document.documentElement]; usePropietatsCss(wrapper,{'--sdp-desplegable-ample':minWidth});"],
++ ['ref.current assignada en patró objecte',"({current:wrapper.current}={current:document.documentElement}); usePropietatsCss(wrapper,{'--sdp-desplegable-ample':minWidth});"],
++ ['ref.current assignada en patró de bucle',"for([wrapper.current] of foreign) usePropietatsCss(wrapper,{'--sdp-desplegable-ample':minWidth});"],
++ ['hook importat suplentat per bloc',"{const usePropietatsCss=foreign; usePropietatsCss(wrapper,{'--sdp-desplegable-ample':minWidth});}"],
++ ['hook importat suplentat per callback',"((usePropietatsCss)=>usePropietatsCss(wrapper,{'--sdp-desplegable-ample':minWidth}))(foreign);"],
++ ['hook importat suplentat per catch',"try {foreign();} catch(usePropietatsCss) {usePropietatsCss(wrapper,{'--sdp-desplegable-ample':minWidth});}"],
++ ['prop minWidth en for-of',"for(const minWidth of ['red']) usePropietatsCss(wrapper,{'--sdp-desplegable-ample':minWidth});"],
++ ['prop minWidth en for-in',"for(const minWidth in values) usePropietatsCss(wrapper,{'--sdp-desplegable-ample':minWidth});"],
++ ['prop minWidth en inicialitzador for',"for(let minWidth='red';ready;ready=false) usePropietatsCss(wrapper,{'--sdp-desplegable-ample':minWidth});"],
++ ['prop minWidth en switch',"switch(mode){case 0: const minWidth='red'; usePropietatsCss(wrapper,{'--sdp-desplegable-ample':minWidth});}"],
++ ['prop minWidth assignada amb destructuració',"({minWidth}={minWidth:'red'}); usePropietatsCss(wrapper,{'--sdp-desplegable-ample':minWidth});"],
++ ['prop minWidth assignada amb patró array',"[minWidth]=['red']; usePropietatsCss(wrapper,{'--sdp-desplegable-ample':minWidth});"],
++ ['ref wrapper declarada en bloc alié',"{const wrapper=document.documentElement; usePropietatsCss(wrapper,{'--sdp-desplegable-ample':minWidth});}"],
++ ['ref wrapper en for-of',"for(const wrapper of [document.documentElement]) usePropietatsCss(wrapper,{'--sdp-desplegable-ample':minWidth});"],
++ ['ref wrapper en for-in',"for(const wrapper in foreign) usePropietatsCss(wrapper,{'--sdp-desplegable-ample':minWidth});"],
++ ['ref wrapper assignada amb destructuració',"({wrapper}=foreign); usePropietatsCss(wrapper,{'--sdp-desplegable-ample':minWidth});"],
++ ['prop minWidth en catch',"try {foreign();} catch(minWidth) {usePropietatsCss(wrapper,{'--sdp-desplegable-ample':minWidth});}"],
++])test(`tokens: ${name} no suplanta el binding canònic`,t=>{
++ const {root}=tokenFixture(t),file='src/components/PedraSeca/molecules/Dropdown.jsx',target=path.join(root,file),source=fs.readFileSync(target,'utf8');
++ const original="usePropietatsCss(wrapper,{'--sdp-desplegable-ample':minWidth});";assert.ok(source.includes(original));fs.writeFileSync(target,source.replace(original,code));
++ assert.ok(comprovaTokens(root).errors.some(e=>e.fitxer===file&&['T3','T7'].includes(e.llei)),name);
++});
++
++for(const [name,before,after]of [
++ ['useRef suplentat per paràmetre', 'function Dropdown({minWidth})', 'function Dropdown({minWidth},useRef)'],
++ ['useRef suplentat per binding local', 'const wrapper=useRef(null);', 'const useRef=foreign; const wrapper=useRef(null);'],
++ ['useRef importat d’un paquet alié', "import {useRef} from 'react';", "import {useRef} from 'foreign';"],
++ ['hook suplentat per paràmetre', 'function Dropdown({minWidth})', 'function Dropdown({minWidth},usePropietatsCss)'],
++])test(`tokens: ${name} no acredita el port canònic`,t=>{
++ const {root}=tokenFixture(t),file='src/components/PedraSeca/molecules/Dropdown.jsx',target=path.join(root,file),source=fs.readFileSync(target,'utf8');
++ assert.ok(source.includes(before));fs.writeFileSync(target,source.replace(before,after));
++ assert.ok(comprovaTokens(root).errors.some(e=>e.fitxer===file&&['T3','T7'].includes(e.llei)),name);
++});
++
++for(const [name,file,before,after]of [
++ ['motor de mostra suplentat per paràmetre','src/components/universal/PanellCrom.jsx','function PanellCrom({arrel,obert,delta})','function PanellCrom({arrel,obert,delta},previsualitza)'],
++ ['useMemo suplentat per paràmetre','src/components/universal/PanellCrom.jsx','function PanellCrom({arrel,obert,delta})','function PanellCrom({arrel,obert,delta},useMemo)'],
++ ['resolutor suplentat per paràmetre','src/PedraSecaEmbed.jsx','_aplicaBaseRecursos()','_aplicaBaseRecursos(resolveAsset)'],
++ ['resolutor suplentat per binding local','src/PedraSecaEmbed.jsx',"this.style.setProperty('--sdp-xat-fons-imatge'","const resolveAsset=foreign; this.style.setProperty('--sdp-xat-fons-imatge'"],
++ ['taula d’ombres suplentada per paràmetre','src/sections/disseny/cataleg/detalls/EspecimenPanell.jsx','function EspecimenPanell()','function EspecimenPanell(OMBRES)'],
++ ['hex de paleta suplentat per callback','src/components/universal/PanellCrom.jsx','<li key={pas} style={{',"((hex)=><li key={pas} style={{"],
++])test(`tokens: ${name} no deriva de la font declarada`,t=>{
++ const {root}=tokenFixture(t),target=path.join(root,file),source=fs.readFileSync(target,'utf8');assert.ok(source.includes(before));
++ let changed=source.replace(before,after);
++ if(name==='hex de paleta suplentat per callback')changed=changed.replace('}}/>));','}}/>)(foreign)));');
++ fs.writeFileSync(target,changed);
++ assert.ok(comprovaTokens(root).errors.some(e=>e.fitxer===file&&['T3','T7'].includes(e.llei)),name);
++});
++
++for(const [name,body,allowed]of [
++ ['funció homònima suplanta el propietari', 'function _aplicaBaseRecursos(){WRITE}; _aplicaBaseRecursos.call(document.documentElement);', false],
++ ['classe interior homònima suplanta el propietari', 'class Inner { _aplicaBaseRecursos(){WRITE} }; new Inner()._aplicaBaseRecursos.call(document.documentElement);', false],
++ ['funció ordinària canvia el receptor', 'const f=function(){WRITE}; f.call(document.documentElement);', false],
++ ['fletxa conserva el receptor de l’Embed', 'const f=()=>{WRITE}; f();', true],
++])test(`tokens: ${name} en el port de recurs`,t=>{
++ const {root}=tokenFixture(t),file='src/PedraSecaEmbed.jsx',target=path.join(root,file),source=fs.readFileSync(target,'utf8');
++ const write="this.style.setProperty('--sdp-xat-fons-imatge', `url(\"${resolveAsset('assets/system/ui/xat-bg-map-v2.jpg')}\")`);";
++ assert.ok(source.includes(write));fs.writeFileSync(target,source.replace(write,body.replace('WRITE',write)));
++ const errors=comprovaTokens(root).errors;
++ if(allowed)assert.deepEqual(errors,[]);else assert.ok(errors.some(e=>e.fitxer===file&&['T3','T7'].includes(e.llei)));
++});
+--- a/src/components/PedraSeca/organismes/VistaAgenda.test.jsx	2026-10-01 07:21:16
++++ b/src/components/PedraSeca/organismes/VistaAgenda.test.jsx	2026-10-05 01:44:19
+@@ -151,7 +151,7 @@
+ const llegix = (ruta) => readFileSync(resolve(process.cwd(), ruta), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+ const TOKENS = llegix('src/css/tokens.css');
+ const CANONS = llegix('src/css/design-tokens.css');
+-const FULLS = `${llegix('src/css/components.css')}\n${llegix('src/css/modules.css')}`;
++const FULLS = `${TOKENS}\n${llegix('src/css/components.css')}\n${llegix('src/css/modules.css')}`;
+ const declaracions = (text) => Object.fromEntries([...text.matchAll(/(--[\w-]+)\s*:\s*([^;]+);/g)].map((m) => [m[1], m[2].trim()]));
+ const iniciFosc = TOKENS.indexOf(':root[data-theme="dark"]');
+ const TEMES = {
+--- a/src/utils/disposicioCalendari.setmana.test.js	2026-10-01 07:12:04
++++ b/src/utils/disposicioCalendari.setmana.test.js	2026-10-05 01:46:26
+@@ -81,13 +81,13 @@
+ const TOKENS = llig('tokens.css');
+ const MODULES = llig('modules.css');
+ const valorDe = (text, nom) => new RegExp(`${nom}\\s*:\\s*([^;]+);`).exec(text)?.[1].trim();
+-const cosDe = (selector) => new RegExp(`\\n\\s*${selector.replace(/[.]/g, '\\.')}\\s*\\{([^{}]*)\\}`).exec(MODULES)?.[1];
++const cosDe = (selector) => new RegExp(`\\n\\s*${selector.replace(/[.]/g, '\\.')}\\s*\\{([^{}]*)\\}`).exec(`${TOKENS}\n${MODULES}`)?.[1];
+ const enPx = (valor) => (valor.endsWith('rem') ? parseFloat(valor) * 16 : parseFloat(valor));
+ 
+ test('cap forma demana més línies de les que caben, i cap en deixa una que hi cabria (normal i compacta)', () => {
+   const linia = enPx(valorDe(TOKENS, '--sdp-text-meta')) * Number(valorDe(TOKENS, '--sdp-leading-tight'));
+   const espai1 = enPx(valorDe(TOKENS, '--sdp-space-1'));
+-  expect(valorDe(MODULES, '--sdp-cal-separacio')).toBe('var(--sdp-space-1)');
++  expect(valorDe(TOKENS, '--sdp-cal-separacio')).toBe('var(--sdp-space-1)');
+   expect(valorDe(cosDe('.sdp-cal-setmana__bloc'), 'padding-block')).toBe('var(--sdp-space-1) 0');
+   expect(valorDe(cosDe('.sdp-cal-setmana--compacta .sdp-cal-setmana__bloc'), 'padding-block')).toBe('0');
+   const metriques = {
+--- a/src/utils/disposicioCalendari.font.test.js	2026-10-01 06:14:23
++++ b/src/utils/disposicioCalendari.font.test.js	2026-10-05 01:44:19
+@@ -24,8 +24,8 @@
+   expect(classeDeFont(null)).toBe('sdp-cal-font--publicacio');
+ });
+ 
+-test('cada classe que pot eixir té regla al bloc SDP:calendari-vistes de modules.css', () => {
+-  const css = readFileSync(resolve(process.cwd(), 'src/css/modules.css'), 'utf8');
++test('cada classe que pot eixir té regla al tema canònic de tokens.css', () => {
++  const css = readFileSync(resolve(process.cwd(), 'src/css/tokens.css'), 'utf8');
+   for (const tipus of ['esdeveniment', 'publicacio', 'producte', 'pagina', 'agenda']) {
+     expect(css).toMatch(new RegExp(`\\.sdp-cal-font--${tipus}\\s*\\{[^}]*--sdp-cal-bloc-fons:`));
+   }
+--- a/src/css/pantallaCompleta.capes.test.js	2026-10-04 10:27:20
++++ b/src/css/pantallaCompleta.capes.test.js	2026-10-05 01:46:26
+@@ -50,6 +50,7 @@
+   .map(([prop, ...valor]) => [prop.trim(), valor.join(':').trim()]);
+ 
+ const FULLS = {
++  tokens: llig('src/css/tokens.css'),
+   components: llig('src/css/components.css'),
+   layout: llig('src/css/layout.css'),
+   modules: llig('src/css/modules.css')
+@@ -74,7 +75,7 @@
+   ['layout', ':host .sdp-root[data-sdp-estret] > .sdp-capa-modal.sdp-capa-modal--completa'],
+   ['layout', ':host .sdp-root[data-sdp-estret] > .sdp-capa-modal > .sdp-dialeg.sdp-dialeg--completa'],
+   ['modules', '.sdp-calendari__barra > .sdp-pantalla-completa__entra'],
+-  ['modules', '.sdp-pantalla-completa .sdp-cal-setmana.sdp-cal-setmana']
++  ['tokens', '.sdp-pantalla-completa .sdp-cal-setmana.sdp-cal-setmana']
+ ];
+ 
+ test('les regles de la pantalla completa són on toca, i no n’hi ha cap més', () => {
+@@ -137,9 +138,9 @@
+ });
+ 
+ test('dins de la pantalla completa, la capçalera de la Setmana s’enganxa a dalt del visor', () => {
+-  expect(declaracions(regla('modules', '.sdp-pantalla-completa .sdp-cal-setmana.sdp-cal-setmana').cos)).toEqual([['--sdp-cal-sostre', '0px']]);
++  expect(declaracions(regla('tokens', '.sdp-pantalla-completa .sdp-cal-setmana.sdp-cal-setmana').cos)).toEqual([['--sdp-cal-sostre', '0px']]);
+   // Va darrere de la base, que té menys especificitat.
+-  const modules = senseComentaris(FULLS.modules);
++  const modules = senseComentaris(FULLS.tokens);
+   expect(modules.indexOf('.sdp-pantalla-completa .sdp-cal-setmana.sdp-cal-setmana')).toBeGreaterThan(modules.indexOf('--sdp-cal-sostre: calc('));
+ });
+ 
+@@ -149,7 +150,7 @@
+    són les dues barres. Cap regla el torna a la blava sola (la de l'espècimen
+    en mòbil replicava la T38, revertida). */
+ test('D2 · el sostre de la Setmana suma la blava i la taronja, i cap regla el torna a la blava sola', () => {
+-  const totes = regles(FULLS.modules);
++  const totes = [...regles(FULLS.tokens), ...regles(FULLS.modules)];
+   const ambSostre = totes.filter((r) => declaracions(r.cos).some(([prop]) => prop === '--sdp-cal-sostre'))
+     .map((r) => [r.selectors.join(', '), declaracions(r.cos).find(([prop]) => prop === '--sdp-cal-sostre')[1], r.context.join(' | ')]);
+   expect(ambSostre).toEqual([
+--- a/tests/contrast_calendari_setmana.test.mjs	2026-10-04 23:19:08
++++ b/tests/contrast_calendari_setmana.test.mjs	2026-10-05 01:46:26
+@@ -4,7 +4,7 @@
+  *  en fosc, cada parella de colors que pinta VistaSetmana i comprova WCAG AA:
+  *  text ≥ 4,5:1 i senyals gràfics (cercle de hui, vora del triat, línia i punt
+  *  d'«ara», vora d'inici dels blocs, punt de «té actes») ≥ 3:1. Les parelles
+- *  de font es llegixen de les regles .sdp-cal-font--* de modules.css. També
++ *  de font es llegixen de les regles .sdp-cal-font--* de tokens.css. També
+  *  comprova com a text que les regles de la setmana fan servir eixes parelles,
+  *  que la capçalera és enganxosa sense cap overflow a la superfície i que no hi
+  *  ha cap hex, primitiu, ombra, scroll propi ni media query de viewport. Cap
+@@ -22,6 +22,7 @@
+ 
+ const tokens = llig('src/css/tokens.css');
+ const modules = llig('src/css/modules.css');
++const CSS = `${tokens}\n${modules}`;
+ const iniciFosc = tokens.indexOf(':root[data-theme="dark"]');
+ assert(iniciFosc > 0, 'tokens.css no té el bloc fosc');
+ const clar = { ...declaracions(llig('src/css/design-tokens.css')), ...declaracions(tokens.slice(0, iniciFosc)) };
+@@ -29,14 +30,15 @@
+ 
+ /* El cos d'una regla de modules.css ({ propietat: valor }). */
+ function regla(selector) {
+-  const cos = new RegExp(`(?:^|\\n)\\s*${escapa(selector)}\\s*\\{([^{}]*)\\}`).exec(modules)?.[1];
+-  assert(cos, `falta la regla ${selector}`);
+-  return Object.fromEntries(cos.replace(/\/\*[\s\S]*?\*\//g, '').split(';').map((part) => /^\s*([\w-]+)\s*:\s*(.+)$/s.exec(part.trim())).filter(Boolean).map((m) => [m[1], m[2].trim()]));
++  const pattern = new RegExp(`(?:^|\\n)\\s*${escapa(selector)}\\s*\\{([^{}]*)\\}`, 'g');
++  const matches = [...CSS.matchAll(pattern)];
++  assert(matches.length, `falta la regla ${selector}`);
++  return Object.assign({}, ...matches.map(m => Object.fromEntries(m[1].replace(/\/\*[\s\S]*?\*\//g, '').split(';').map(part => /^\s*([\w-]+)\s*:\s*(.+)$/s.exec(part.trim())).filter(Boolean).map(x => [x[1], x[2].trim()]))));
+ }
+ 
+ const FONTS = ['esdeveniment', 'publicacio', 'producte', 'pagina', 'agenda'];
+-const cosAlies = /\{([^{}]*--sdp-cal-hui-fons\s*:[^{}]*)\}/.exec(modules)?.[1];
+-assert(cosAlies, 'modules.css no declara els àlies --sdp-cal-*');
++const cosAlies = /\{([^{}]*--sdp-cal-hui-fons\s*:[^{}]*)\}/.exec(tokens)?.[1];
++assert(cosAlies, 'tokens.css no declara els àlies --sdp-cal-*');
+ const ALIES = declaracions(cosAlies);
+ const deFont = (font) => regla(`.sdp-cal-font--${font}`);
+ 
+--- a/tests/contrast_calendari_mes.test.mjs	2026-10-01 06:59:18
++++ b/tests/contrast_calendari_mes.test.mjs	2026-10-05 01:46:26
+@@ -4,7 +4,7 @@
+  *  comprova WCAG AA: text ≥ 4,5:1 i senyals gràfics (punts, tires, la vora
+  *  del triat i l'anell de focus) ≥ 3:1 sobre la cel·la, la triada i el
+  *  hover. Les parelles de
+- *  font es llegixen de les regles .sdp-cal-font--* de modules.css: si algú en
++ *  font es llegixen de les regles .sdp-cal-font--* de tokens.css: si algú en
+  *  canvia una, la porta ho torna a mesurar. També comprova com a text que les
+  *  regles del mes fan servir eixes parelles i cap hex, primitiu, ombra ni
+  *  scroll propi. Cap import relatiu: tot es resol des de l'arrel. */
+@@ -21,6 +21,7 @@
+ 
+ const tokens = llig('src/css/tokens.css');
+ const modules = llig('src/css/modules.css');
++const CSS = `${tokens}\n${modules}`;
+ const iniciFosc = tokens.indexOf(':root[data-theme="dark"]');
+ assert(iniciFosc > 0, 'tokens.css no té el bloc fosc');
+ const clar = { ...declaracions(llig('src/css/design-tokens.css')), ...declaracions(tokens.slice(0, iniciFosc)) };
+@@ -28,15 +29,16 @@
+ 
+ /* El cos d'una regla de modules.css ({ propietat: valor }). */
+ function regla(selector) {
+-  const cos = new RegExp(`(?:^|\\n)\\s*${escapa(selector)}\\s*\\{([^{}]*)\\}`).exec(modules)?.[1];
+-  assert(cos, `falta la regla ${selector}`);
+-  return Object.fromEntries(cos.split(';').map((part) => /^\s*([\w-]+)\s*:\s*(.+)$/s.exec(part.trim())).filter(Boolean).map((m) => [m[1], m[2].trim()]));
++  const pattern = new RegExp(`(?:^|\\n)\\s*${escapa(selector)}\\s*\\{([^{}]*)\\}`, 'g');
++  const matches = [...CSS.matchAll(pattern)];
++  assert(matches.length, `falta la regla ${selector}`);
++  return Object.assign({}, ...matches.map(m => Object.fromEntries(m[1].replace(/\/\*[\s\S]*?\*\//g, '').split(';').map(part => /^\s*([\w-]+)\s*:\s*(.+)$/s.exec(part.trim())).filter(Boolean).map(x => [x[1], x[2].trim()]))));
+ }
+ 
+ const FONTS = ['esdeveniment', 'publicacio', 'producte', 'pagina', 'agenda'];
+ /* Els àlies de color de les vistes (--sdp-cal-hui-*, --sdp-cal-bloc-* per defecte…): la regla que declara --sdp-cal-hui-fons. */
+-const cosAlies = /\{([^{}]*--sdp-cal-hui-fons\s*:[^{}]*)\}/.exec(modules)?.[1];
+-assert(cosAlies, 'modules.css no declara els àlies --sdp-cal-*');
++const cosAlies = /\{([^{}]*--sdp-cal-hui-fons\s*:[^{}]*)\}/.exec(tokens)?.[1];
++assert(cosAlies, 'tokens.css no declara els àlies --sdp-cal-*');
+ const ALIES = declaracions(cosAlies);
+ const deFont = (font) => regla(`.sdp-cal-font--${font}`);
+ 
+--- /dev/null	2026-10-05 03:30:47
++++ b/src/components/PedraSeca/molecules/Dropdown.port.test.jsx	2026-10-05 03:04:42
+@@ -0,0 +1,32 @@
++import React from 'react';
++import {cleanup,fireEvent,render,screen} from '@testing-library/react';
++import {afterEach,expect,test} from 'vitest';
++import postcss from 'postcss';
++import {Dropdown,DropdownItem} from './Dropdown.jsx';
++import { readFileSync } from 'node:fs';
++import { resolve } from 'node:path';
++const tokens=readFileSync(resolve(process.cwd(),'src/css/tokens.css'),'utf8');
++const modules=readFileSync(resolve(process.cwd(),'src/css/modules.css'),'utf8');
++afterEach(cleanup);
++const content=<DropdownItem>Acció</DropdownItem>;
++const view=(name,width)=> <Dropdown trigger={<span>{name}</span>} minWidth={width}>{content}</Dropdown>;
++const wrapper=container=>container.querySelector('.sp-dropdown-wrapper');
++test('el menú real usa el token canònic de200px, sense la declaració llegat de220px',()=>{
++ const declarations=[];postcss.parse(tokens).walkDecls(d=>{if(d.prop==='--sdp-desplegable-ample')declarations.push(d.value.trim());});expect(declarations).toEqual(['200px']);
++ const widths=[];postcss.parse(modules).walkRules(r=>{if(r.selector==='.xat-header-dropdown')r.walkDecls('min-width',d=>{
++  const layers=[];for(let n=r.parent;n;n=n.parent)if(n.type==='atrule'&&n.name==='layer')layers.unshift(n.params);
++  widths.push({value:d.value,layer:layers.join('.')});
++ });});expect(widths).toEqual([{value:'var(--sdp-desplegable-ample)',layer:'components'}]);
++ // La barra / de l’editor és un altre menú: conserva el seu sostre original.
++ const slash=[];postcss.parse(modules).walkRules(r=>{if(r.selector==='.sdp-slash-menu')r.walkDecls('min-width',d=>slash.push(d.value));});expect(slash).toEqual(['220px']);
++});
++test('el paràmetre viu al wrapper permanent: obrir,tancar i reobrir conserva la mateixa amplada',()=>{
++ const {container}=render(view('Primer','18rem'));const node=wrapper(container);const trigger=screen.getByRole('button',{name:'Primer'});expect(node.style.getPropertyValue('--sdp-desplegable-ample')).toBe('18rem');expect(container.querySelector('.xat-header-dropdown')).toBeNull();
++ fireEvent.click(trigger);expect(container.querySelector('.xat-header-dropdown')).toBeTruthy();expect(node.style.getPropertyValue('--sdp-desplegable-ample')).toBe('18rem');fireEvent.keyDown(trigger,{key:'Escape'});expect(container.querySelector('.xat-header-dropdown')).toBeNull();fireEvent.click(trigger);expect(container.querySelector('.xat-header-dropdown')).toBeTruthy();expect(node.style.getPropertyValue('--sdp-desplegable-ample')).toBe('18rem');
++});
++test('canviar i retirar la prop actualitza i neteja la ref, recuperant el tema per defecte',()=>{
++ const {container,rerender}=render(view('Tria','16rem'));const node=wrapper(container);rerender(view('Tria','20rem'));expect(node.style.getPropertyValue('--sdp-desplegable-ample')).toBe('20rem');rerender(view('Tria',undefined));expect(node.style.getPropertyValue('--sdp-desplegable-ample')).toBe('');
++});
++test('dues instàncies mantenen els paràmetres independents i cap estil JSX en el panell',()=>{
++ const {container}=render(<>{view('Un','16rem')}{view('Dos','24rem')}</>);const nodes=[...container.querySelectorAll('.sp-dropdown-wrapper')];expect(nodes.map(n=>n.style.getPropertyValue('--sdp-desplegable-ample'))).toEqual(['16rem','24rem']);fireEvent.click(screen.getByRole('button',{name:'Un'}));expect(container.querySelector('.xat-header-dropdown').getAttribute('style')).toBeNull();expect(nodes[1].style.getPropertyValue('--sdp-desplegable-ample')).toBe('24rem');
++});
+--- a/src/components/PedraSeca/molecules/Dropdown.jsx	2026-09-22 03:28:24
++++ b/src/components/PedraSeca/molecules/Dropdown.jsx	2026-10-05 03:03:09
+@@ -1,11 +1,15 @@
+ /**
+  * Dropdown.jsx
+- * Trasllat literal des d'UniversalElements.jsx (260910). Cap canvi de comportament.
++ * Origen: UniversalElements.jsx (260910). minWidth configura l'amplada per instància.
+  */
+-import { useState } from 'react';
++import { useRef, useState } from 'react';
++import { usePropietatsCss } from '../../../hooks/usePropietatsCss.js';
+ 
+-export function Dropdown({ trigger, children, className = '', right = false, minWidth = '200px' }) {
++export function Dropdown({ trigger, children, className = '', right = false, minWidth }) {
+   const [isOpen, setIsOpen] = useState(false);
++  const wrapper = useRef(null);
++  // Opció explícita per instància; absent, hereta els 200px del tema canònic.
++  usePropietatsCss(wrapper, { '--sdp-desplegable-ample': minWidth });
+   
+   const handleKeyDown = (e) => {
+     if (e.key === 'Enter' || e.key === ' ') {
+@@ -17,7 +21,7 @@
+   };
+   
+   return (
+-    <div className={`sp-dropdown-wrapper ${className}`}>
++    <div ref={wrapper} className={`sp-dropdown-wrapper ${className}`}>
+       <div 
+         className="sp-dropdown-trigger"
+         role="button"
+@@ -37,7 +41,6 @@
+       {isOpen && (
+         <div 
+           className={`xat-header-dropdown ${right ? 'xat-header-dropdown--right' : 'xat-header-dropdown--left'}`}
+-          style={{ '--sdp-desplegable-ample': minWidth }}
+         >
+           {children}
+         </div>
+--- a/src/PedraSecaEmbed.jsx	2026-10-04 01:53:11
++++ b/src/PedraSecaEmbed.jsx	2026-10-05 01:51:21
+@@ -882,12 +882,10 @@
+ 
+   /* ══════════════════ P0-8 · MARC BRILLANT (260831) ══════════════════
+    *
+-   * `blank.php` pinta `html, body` amb `background-color: var(--sdp-bg,…)`.
+-   * `--sdp-bg` viu ara als blocs de tema del sistema de disseny, dins del
+-   * shadow root. Però les propietats personalitzades hereten CAP AVALL: un
+-   * token declarat a `:host` mai arriba a `html`, que és son pare. Per tant
+-   * `blank.php` pintava sempre el fallback beix i, en mode fosc, l'app negra
+-   * quedava emmarcada en clar. De nit, per a gent gran, això enlluerna.
++   * L’atribut `pinta-amfitrio` publica el fons computat `--sdp-fons-app`
++   * com `--sdp-bg` del document per als amfitrions que adopten eixe port.
++   * Els tokens del Shadow DOM només hereten cap avall: no arriben a html,
++   * que és son pare. És una exportació opt-in, no un token de la UI.
+    *
+    * L'única via que travessa la frontera cap amunt és JavaScript. Es llig el
+    * valor JA CALCULAT pel tema actiu i es publica al document. Cap color viu
+--- /dev/null	2026-10-05 03:30:47
++++ b/tooling/contracts/css-runtime-properties.json	2026-10-05 02:36:19
+@@ -0,0 +1,183 @@
++{
++  "schema": "sdp.css.runtime.v1",
++  "hook": "src/hooks/usePropietatsCss.js",
++  "parameters": [
++    {
++      "name": "--sdp-cal-inici",
++      "kind": "number",
++      "writers": [
++        "src/components/PedraSeca/organismes/VistaSetmana.jsx"
++      ]
++    },
++    {
++      "name": "--sdp-cal-fi",
++      "kind": "number",
++      "writers": [
++        "src/components/PedraSeca/organismes/VistaSetmana.jsx"
++      ]
++    },
++    {
++      "name": "--sdp-cal-col",
++      "kind": "number",
++      "writers": [
++        "src/components/PedraSeca/organismes/VistaSetmana.jsx"
++      ]
++    },
++    {
++      "name": "--sdp-cal-cols",
++      "kind": "number",
++      "writers": [
++        "src/components/PedraSeca/organismes/VistaSetmana.jsx"
++      ]
++    },
++    {
++      "name": "--sdp-cal-amplada",
++      "kind": "number",
++      "writers": [
++        "src/components/PedraSeca/organismes/VistaSetmana.jsx"
++      ]
++    },
++    {
++      "name": "--sdp-cal-col-inici",
++      "kind": "number",
++      "writers": [
++        "src/components/PedraSeca/organismes/VistaSetmana.jsx",
++        "src/components/PedraSeca/organismes/VistaMes.jsx"
++      ]
++    },
++    {
++      "name": "--sdp-cal-col-fi",
++      "kind": "number",
++      "writers": [
++        "src/components/PedraSeca/organismes/VistaSetmana.jsx",
++        "src/components/PedraSeca/organismes/VistaMes.jsx"
++      ]
++    },
++    {
++      "name": "--sdp-cal-carril",
++      "kind": "number",
++      "writers": [
++        "src/components/PedraSeca/organismes/VistaSetmana.jsx",
++        "src/components/PedraSeca/organismes/VistaMes.jsx"
++      ]
++    },
++    {
++      "name": "--sdp-cal-minut",
++      "kind": "number",
++      "writers": [
++        "src/components/PedraSeca/organismes/VistaSetmana.jsx"
++      ]
++    },
++    {
++      "name": "--sdp-cal-hora-inicial",
++      "kind": "number",
++      "writers": [
++        "src/components/PedraSeca/organismes/VistaSetmana.jsx"
++      ],
++      "fallback": 0
++    },
++    {
++      "name": "--sdp-cal-hores",
++      "kind": "number",
++      "writers": [
++        "src/components/PedraSeca/organismes/VistaSetmana.jsx"
++      ],
++      "fallback": 24
++    },
++    {
++      "name": "--sdp-cal-carrils",
++      "kind": "number",
++      "writers": [
++        "src/components/PedraSeca/organismes/VistaMes.jsx"
++      ]
++    }
++  ],
++  "hostExports": [
++    {
++      "name": "--sdp-bg",
++      "writer": "src/PedraSecaEmbed.jsx",
++      "methods": [
++        "_pintaAmfitrio",
++        "_despintaAmfitrio"
++      ],
++      "scope": "amfitrio-opt-in",
++      "sourceToken": "--sdp-fons-app",
++      "contract": "_wiki_de_poble/02_saber/estandard_integracio_react.md"
++    }
++  ],
++  "instancePorts": [
++    {
++      "name": "--sdp-desplegable-ample",
++      "writer": "src/components/PedraSeca/molecules/Dropdown.jsx",
++      "owner": "Dropdown",
++      "access": "hook",
++      "kind": "css-length-prop",
++      "binding": "minWidth"
++    },
++    {
++      "name": "--sdp-ombra-2",
++      "writer": "src/sections/disseny/cataleg/detalls/EspecimenPanell.jsx",
++      "owner": "EspecimenPanell",
++      "access": "hook",
++      "kind": "semantic-choice",
++      "binding": "OMBRES",
++      "tokens": [
++        "--sdp-ombra-1",
++        "--sdp-ombra-3"
++      ]
++    },
++    {
++      "name": "--sdp-crom-mostra",
++      "writer": "src/components/universal/PanellCrom.jsx",
++      "owner": "PanellCrom",
++      "access": "jsx-style-preview",
++      "kind": "derived-palette",
++      "engine": "src/config/crom.js",
++      "export": "previsualitza"
++    },
++    {
++      "name": "--sdp-xat-fons-imatge",
++      "writer": "src/PedraSecaEmbed.jsx",
++      "owner": "_aplicaBaseRecursos",
++      "access": "setProperty",
++      "kind": "resolved-asset",
++      "resolver": "src/config/assetResolver.js",
++      "asset": "assets/system/ui/xat-bg-map-v2.jpg"
++    }
++  ],
++  "themeEngine": {
++    "writer": "src/config/crom.js",
++    "setters": [
++      "aplica"
++    ],
++    "removers": [
++      "restaura"
++    ],
++    "ramps": [
++      "primary",
++      "secondary"
++    ],
++    "steps": [
++      50,
++      100,
++      200,
++      300,
++      400,
++      500,
++      600,
++      700,
++      800,
++      900
++    ],
++    "canons": [
++      "--sdp-canon-blau",
++      "--sdp-canon-taronja"
++    ],
++    "tints": [
++      "--sdp-anell-accio",
++      "--sdp-anell-accent",
++      "--sdp-accent-vel",
++      "--sdp-ombra-accio"
++    ]
++  }
++}
+--- a/src/sections/disseny/cataleg/detalls/EspecimenMenu.jsx	2026-09-24 03:53:43
++++ b/src/sections/disseny/cataleg/detalls/EspecimenMenu.jsx	2026-10-05 03:03:09
+@@ -3,8 +3,8 @@
+ 
+ export default function EspecimenMenu() {
+   return (
+-    <Especimen id="menu" nom="Dropdown · DropdownItem" fitxer="src/components/PedraSeca/Dropdown.jsx"
+-        descripcio="Menú contextual. DEUTE: minWidth arriba com a estil en línia i no gestiona focus per fletxes; pendent de migrar a <dialog>       o popover."
++    <Especimen id="menu" nom="Dropdown · DropdownItem" fitxer="src/components/PedraSeca/molecules/Dropdown.jsx"
++        descripcio="Menú contextual. minWidth configura l'amplada de cada instància; per defecte hereta els 200px del tema. DEUTE: no gestiona el focus amb fletxes; pendent de migrar a <dialog> o popover."
+         fes={['Accions secundàries d’un element.']} noFacis={['Navegació principal dins d’un menú flotant.']}>
+         <Dropdown trigger={<button type="button" className="sdp-boto sdp-boto--secundari">Opcions de la nota</button>}>
+           <DropdownItem>Fer pública</DropdownItem>

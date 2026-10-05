@@ -1,6 +1,6 @@
 /** T5 · Les imatges del cos dels detalls (variacions del Mercat i element de
  *  Multimèdia) amb la base dels recursos. Sense base, el src de sempre. */
-import { cleanup, render } from '@testing-library/react';
+import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, expect, test } from 'vitest';
 import { buildMercatDetailSectionMeta, buildMultimediaDetailSectionMeta } from './detailSectionMeta.jsx';
 import { fixaBaseRecursos } from '../../config/assetResolver.js';
@@ -42,4 +42,12 @@ test('amb base, els /assets/ pengen del paquet i un valor ja resolt no es duplic
     .toEqual([`${PAQUET}${LOGO}`, `${PAQUET}/assets/mercat/ampolla.jpg`]);
   expect(srcsDe(buildMultimediaDetailSectionMeta({ t }).renderBody(ELEMENT)))
     .toEqual([`${PAQUET}/assets/towns/tibi/1.jpg`]);
+});
+
+test('multimèdia no oferix una supressió fictícia al superadmin sense acció del port', () => {
+  const { container } = render(buildMultimediaDetailSectionMeta({ t, rol: 'superadmin' }).renderBody(ELEMENT));
+  expect(screen.queryByRole('button', { name: 'Esborra element de l’arxiu' })).toBeNull();
+  expect(container.querySelector('button')).toBeNull();
+  expect(container.querySelector('[style], .sdp-toolbar-admin')).toBeNull();
+  expect(screen.getByRole('img', { name: 'Era' }).getAttribute('src')).toBe(ELEMENT.src);
 });

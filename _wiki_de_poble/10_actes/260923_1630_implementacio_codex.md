@@ -80,6 +80,4 @@ Revisar i confiar les definicions de Codex amb `/hooks` abans de la primera sess
 ## Vincles
 
 - [[00_index]]
-- [[00_index_escriptori]]
 
-**Ancoratge de Seguretat:** [[00_index_escriptori]]

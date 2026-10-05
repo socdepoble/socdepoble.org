@@ -30,6 +30,27 @@ description: "Documentació canònica de Sóc de Poble."
   persona del padró a la seua fitxa; sense la funció, el clic acaba en «Perfil
   no trobat».
 
+- `migrations/2610042350_convergencia_perfil_i_create_organization.sql`
+  Ordre del Mestre (261004, F1): convergència d'una base desfasada. Errors
+  reals: Visibilitat de la fitxa amb PGRST204 (`profiles.is_public` absent),
+  Avatar i Subtítol amb «no tens permís» i Nova organització amb PGRST203
+  (més d'una `create_organization`). Que l'error d'Avatar i Subtítol siga un
+  42501 de PostgREST (permís de columna absent) és una INFERÈNCIA: podria ser
+  un 403 de GoTrue al PUT de `/auth/v1/user`, i es confirma a la pestanya
+  Xarxa del navegador; si és GoTrue, esta migració no el cura. Afig
+  `is_public` si falta, torna a donar el permís d'UPDATE de cada columna de
+  `CAMPS_PERFIL` que existix (`SDP-CONV-001` avisa de les absents) i esborra,
+  sense CASCADE, tota funció `create_organization` (`prokind = 'f'`) que no
+  siga la canònica de 7 arguments; si la canònica falta, avorta sencera
+  (`SDP-CONV-002`). Cap
+  política ni funció nova; **no aplicada**. **Va després de totes les
+  pendents d'esta llista, en ordre alfabètic, i abans de publicar el
+  client**; no en substituïx cap. Abans d'aplicar-la, el Mestre o Sollutia
+  executen les quatre consultes de només lectura de la capçalera.
+  **No torneu a executar 2609110600 sola per a «arreglar» `is_public`**: la
+  seua política «profiles read own» per a `authenticated` i `anon` reobriria
+  el padró sencer, que 2609121500, 2609150000 i 2609160600 tornen a tancar.
+
 - `migrations/2609080000_initial_schema.sql`
   Taules base, funcions de `private`, triggers d'alta i polítiques RLS.
 
@@ -150,6 +171,15 @@ description: "Documentació canònica de Sóc de Poble."
   com tampoc F0 (2609270200) ni `xat_entitats` (2609272200), de les quals
   depén: va després de les dos i de 2609282035.** Sense moderació: vegeu «Xat
   de pàgina i comunitats».
+
+- `migrations/2610042330_xat_pagina_iaia.sql`
+  Correcció posterior al xat de pàgina: `/iaia` és la clau i ruta canòniques;
+  l'entrada antiga exacta `/ia` resol al mateix fil. Reanomena les metadades
+  del subjecte preservant id, missatges, seq, participants i permisos. Un
+  CHECK impedeix recrear la clau antiga. Si un poble ja té les dos files,
+  `SDP-XAT-014` avorta tota la transacció; no fusiona ni esborra històries.
+  **NO aplicada. Va després de 2609282100 i les seues dependències**, abans
+  de publicar un client amb la nova ruta; conserva la condició de moderació.
 
 - `seed.sql`
   Contingut inicial del portal.

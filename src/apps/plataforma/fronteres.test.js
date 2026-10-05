@@ -254,7 +254,7 @@ describe('cerca global i traducció', () => {
       expect(fi, ruta).toBeGreaterThan(inici);
       const bloc = codi.slice(inici, fi);
       expect(delsCarrils(bloc)).toEqual([...llista]);
-      expect([...bloc.matchAll(/lazy\(\(\) => import\('\.\.\/\.\.\/sections\/gestoria\//g)]).toHaveLength(llista.length);
+      expect([...bloc.matchAll(/lazyRoute\(\(\) => import\('\.\.\/\.\.\/sections\/gestoria\//g)]).toHaveLength(llista.length);
       expect(delsCarrils(codi.slice(0, inici) + codi.slice(fi))).toEqual([]);
     }
   });

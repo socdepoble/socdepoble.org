@@ -4,6 +4,7 @@ import { renderRichText, renderPostContent } from './detailRichText.jsx';
 import { getFirstImage } from './detailHelpers.jsx';
 import { Aplec2023Article } from '../mur/articles/Aplec2023Article.jsx';
 import { resolRecursPropi } from '../../config/assetResolver.js';
+import { rutaDePerfilPublicDAutor } from '../../config/navigation.js';
 
 /* T5 · Les imatges del cos (variacions del Mercat, Multimèdia) es resolen en
    pintar-les: incrustat, un '/assets/…' penja del paquet. Sense base, el de
@@ -14,6 +15,7 @@ export function buildMercatDetailSectionMeta({ marketItems = [], t }) {
     title: t('section.detail.mercat.title', 'Mercat'),
     label: t('section.detail.mercat.label', 'Producte'),
     listPath: '/mercat',
+    getAuthorHref: rutaDePerfilPublicDAutor,
     items: marketItems,
     getTitle: (item) => item.title || t('section.detail.mercat.itemTitle', 'Producte'),
     getSubtitle: (item) => item.subtitle || item.description || item.summary || '',
@@ -133,6 +135,8 @@ export function buildMurDetailSectionMeta({ feedPosts = [], t }) {
   };
 }
 
+/* Sense una acció de supressió pel port, el detall no oferix un botó que
+   només simula la destrucció amb alert(), tampoc a una administradora. */
 export function buildMultimediaDetailSectionMeta({ mediaItems = [], t }) {
   return {
     title: t('section.detail.multimedia.title', 'Multimèdia'),
@@ -156,6 +160,7 @@ export function buildMultimediaDetailSectionMeta({ mediaItems = [], t }) {
             <img src={resolRecursPropi(item.src)} alt={item.title} decoding="async" />
           </div>
         ) : null}
+
       </>
     )
   };
@@ -189,13 +194,13 @@ export function buildEventsDetailSectionMeta({ events = [], t }) {
   };
 }
 
-export function buildDetailSectionMeta({ events, feedPosts, marketItems, mediaItems, notes, towns, t }) {
+export function buildDetailSectionMeta({ events, feedPosts, marketItems, mediaItems, notes, towns, t, rol }) {
   return {
     mur: buildMurDetailSectionMeta({ feedPosts, t }),
     mercat: buildMercatDetailSectionMeta({ marketItems, t }),
     events: buildEventsDetailSectionMeta({ events, t }),
     pobles: buildPoblesDetailSectionMeta({ towns, t }),
-    multimedia: buildMultimediaDetailSectionMeta({ mediaItems, t }),
+    multimedia: buildMultimediaDetailSectionMeta({ mediaItems, t, rol }),
     notes: buildNotesDetailSectionMeta({ notes, t })
   };
 }

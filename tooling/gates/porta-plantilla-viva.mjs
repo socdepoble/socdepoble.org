@@ -47,7 +47,7 @@ import {
   DESK, json, parseDocument, loadContract, readContract, resolveRoute,
   validateSchema, sections, withoutCode, receiptPattern, relativePath
 } from '../documental/core.mjs';
-import { validateDocument, protectedTurnFiles } from '../documental/turns.mjs';
+import { validateDocument, protectedTurnFiles, isActiveReceipt } from '../documental/turns.mjs';
 
 export const QUARANTENA = '.sdp-paperera/plantilles';
 export const REGISTRE_VIGILANT = '.agents/runtime/plantilla-viva.log';
@@ -139,6 +139,10 @@ function rebutDelDocument(root, reflex, rel) {
   const receipt = turn?.receipts?.[m[2]];
   if (turn?.turn_id !== m[1] || !receipt || receipt.id !== m[2]) return { error: 'reflex: el rebut no és al registre del torn' };
   if (receipt.file !== rel) return { error: `reflex: el rebut és de «${receipt.file}», no d'este fitxer` };
+  try {
+    if (!isActiveReceipt(receipt)) return {error:'reflex: rebut de creació fallida'};
+    if (receipt.creation?.state === 'prepared') return {error:'reflex: rebut de creació pendent de consolidar'};
+  } catch (error) { return {error:error.message}; }
   return { receipt, id: `${m[1]}:${m[2]}` };
 }
 

@@ -524,14 +524,20 @@ describe('xat de pàgina i comunitats (T63.2, T67)', () => {
      persona, no el de l'entitat amb què actua) i, sense ningú (remot sense
      sessió, ja comprovada), ?sobre= porta a /registre. Mai es veu el jo d'un
      altre scope. */
-  it('exposa joId i joNom del scope visible; senseSessio només amb la sessió ja comprovada', async () => {
+  it('exposa joId, joNom i joAvatar de la persona del scope visible; senseSessio només amb la sessió ja comprovada', async () => {
     mock.identitats = [
-      { tipus: 'persona', id: 'A', nom: 'Pepa Soler' },
-      { tipus: 'entitat', id: 'o-1', nom: 'Forn de la Torre' }
+      { tipus: 'persona', id: 'A', nom: 'Pepa Soler', avatar: '/assets/pepa.jpg' },
+      { tipus: 'entitat', id: 'o-1', nom: 'Forn de la Torre', avatar: '/assets/forn.jpg' }
     ];
     const view = await muntat();
     expect(value.joId).toBe('A');
     expect(value.joNom).toBe('Pepa Soler');
+    expect(value.joAvatar).toBe('/assets/pepa.jpg');
+    mock.identitats = [{ tipus: 'persona', id: 'B', nom: 'Altra persona', avatar: '/assets/altra.jpg' }, ...mock.identitats];
+    mock.actorKey = 'entitat::o-1';
+    view.rerender(tree(CONFIG));
+    await waitFor(() => expect(value.status).toBe('ready'));
+    expect(value.joAvatar).toBe('/assets/pepa.jpg');
     expect(value.senseSessio).toBe(false);
 
     mock.session = { currentUser: null, generacio: 2, estat: 'comprovant' };
@@ -539,6 +545,7 @@ describe('xat de pàgina i comunitats (T63.2, T67)', () => {
     view.rerender(tree(CONFIG));
     expect(snapshots[0].joId).toBeNull();
     expect(snapshots[0].joNom).toBeNull();
+    expect(snapshots[0].joAvatar).toBeNull();
     await waitFor(() => expect(value.status).toBe('ready'));
     expect(value.joId).toBeNull();
     expect(value.senseSessio).toBe(false);

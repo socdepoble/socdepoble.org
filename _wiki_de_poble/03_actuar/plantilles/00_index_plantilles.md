@@ -21,6 +21,7 @@ Aquestes plantilles defineixen l'estàndard actual per a generar documents estru
 - [[skill|Plantilla per a crear noves Skills d'IA]]
 
 ## Anàlisi i Producte
+- [[prompt_nano_banana|Plantilla Prompt Nano Banana (Multimèdia)]]
 - [[estudi_consell|Plantilla d'Estudi / Dictamen del Consell]]
 - [[brainstorming|Plantilla de Brainstorming i Ideació]]
 - [[doc_to_app|Plantilla de Doc to App (Casos d'Ús)]]

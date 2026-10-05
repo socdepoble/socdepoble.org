@@ -1,7 +1,8 @@
 /**
- * PublicacioDetall.jsx — una publicació pròpia (Mur, Mercat o agenda) vista
- * des del MAS (T1): fitxa al llistat i lectura a la columna dreta. No és cap
- * nota i no s'edita ací: el botó porta a la publicació de veres.
+ * PublicacioDetall.jsx — una publicació pròpia (Mur, Mercat, agenda o
+ * Multimèdia) vista des del MAS (T1): fitxa al llistat i lectura a la columna
+ * dreta. No és cap nota i no s'edita ací: el botó porta a la publicació de
+ * veres.
  */
 import { ExternalLink } from 'lucide-react';
 import { useNavigate } from '../../app/contexts/RouterContext';

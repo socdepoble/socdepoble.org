@@ -31,8 +31,8 @@
 if (typeof window !== 'undefined') {
   window.addEventListener('vite:preloadError', (event) => {
     console.error('[host] Error de xarxa en la càrrega diferida de mòduls Vite:', event);
-    // El catch de l'arrenca pintarà això si passa durant l'arrencada, 
-    // però això ens cobreix canvis de ruta asíncrons.
+    // No preventDefault: el rebuig ha d'arribar al carregador i al propietari
+    // de ruta. No hi ha recàrregues automàtiques ni cap estat a la URL.
   });
 }
 

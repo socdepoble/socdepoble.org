@@ -148,9 +148,18 @@ export function withoutCode(body) {
   }).join('\n');
 }
 export function anchored(index, file) {
-  const clean = withoutCode(index).replace(/`[^`]*`/g, '');
-  const name = path.basename(file, '.md');
-  return [...clean.matchAll(/\[\[([^|\]#]+)(?:[|#][^\]]*)?\]\]/g)].some(m => m[1].trim() === name);
+  const clean = withoutCode(index).replace(/`[^`]*`/g, '').replace(/\\(?=[|#])/g,'');
+  const lexical = String(file).split(path.sep).join('/');
+  const start = lexical.indexOf(`${CAMINS.wiki}/`);
+  if (start < 0) return false;
+  const target = path.posix.normalize(lexical.slice(start)).replace(/\.md$/, '');
+  return [...clean.matchAll(/\[\[([^|\]#]+)(?:[|#][^\]]*)?\]\]/g)].some(m => {
+    const ref = m[1].trim().replace(/\.md$/, '');
+    // L'índex de l'Escriptori admet camí relatiu, des de Wiki o des del repo.
+    // Un basename ambigu no acredita un document d'una altra carpeta.
+    return [path.posix.join(DESK, ref), path.posix.join(CAMINS.wiki, ref), ref]
+      .some(candidate => path.posix.normalize(candidate) === target);
+  });
 }
 export function sections(body) {
   const clean = withoutCode(body);

@@ -51,9 +51,10 @@ export function trobaElement(section, itemId) {
 }
 
 /** Les props de la UniversalPage d'un element: les de la pàgina de detall
- *  (ItemDetailSection), sense les del marc (Connectar, logos i chrome). */
+ *  (ItemDetailSection), sense les accions ni chrome. L'autoria aporta el logotip. */
 export function paginaDElement(section, item) {
   const titol = section.getTitle(item);
+  const rutaDAutoria = rutaDePerfilDAutor(item);
   let authorName = item.author_name;
   let authorLocation = item.author_location || item.location;
   let authorAvatar = item.author_avatar || item.avatar_url || item.avatarUrl;
@@ -82,8 +83,11 @@ export function paginaDElement(section, item) {
     authorName,
     authorLocation,
     authorAvatar,
+    /* La marca depén de la identitat declarada, encara que la boina del
+       Mercat porte al perfil públic. Cap nom visible dona un logotip. */
+    ...(rutaDAutoria === DEFAULT_AUTHOR.href ? { logoEntitat: DEFAULT_AUTHOR.logo } : {}),
     /* T4: l'autoria de la barra taronja enllaça al perfil públic de qui signa. */
-    authorHref: rutaDePerfilDAutor(item),
+    authorHref: section.getAuthorHref ? section.getAuthorHref(item) : rutaDAutoria,
     /* T51 · la regla de data viu a editorial.js (pura, sense React). */
     ...dataDElement(item)
   };

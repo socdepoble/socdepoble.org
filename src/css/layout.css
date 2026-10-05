@@ -704,6 +704,25 @@ nav.mobile-nav { display: none; }
 }
 
 /* ══ MÒBIL ESTRET · ≤480px ════════════════════════════════════ */
+/* Sis accions: cinc objectius de 48px i el control de 60px necessiten
+   300px abans dels coixins. En una caixa estreta repartim l’aire disponible
+   sense un gap mínim que expulse Xat o Telefonades fora de la pantalla. */
+@container sdp-arrel (max-width: 400px) {
+  :where(.sdp-root.is-compact) nav.mobile-nav {
+    gap: 0;
+    padding-inline: 0;
+    justify-content: space-evenly;
+  }
+}
+@supports not (container-type: inline-size) {
+  @media (max-width: 400px) {
+    :where(.sdp-root.is-compact) nav.mobile-nav {
+      gap: 0;
+      padding-inline: 0;
+      justify-content: space-evenly;
+    }
+  }
+}
 @container sdp-arrel (max-width: 480px) {
   /* Barra Negra - Escalat per pantalles minúscules */
   header.bar-black { padding: 0 8px; }

@@ -36,6 +36,7 @@ import { BarraTaronja } from '../../components/universal/barres/BarraTaronja.jsx
 import { PERSONA_PILOT, autoriaSeed } from '../../data/identitatsSeed.js';
 import { desaSessio, esborraSessio, usuariDeSessio } from '../../data/identitat.js';
 import { createLocalPerfilsAdapter } from '../../data/localPerfils.js';
+import { autorDe, rutaDePerfil } from '../../config/navigation.js';
 import { FORASTER } from '../../components/universal/UniversalUtils.js';
 
 const LOGO = '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg';
@@ -148,4 +149,32 @@ test('les imatges pròpies de la llavor del Mercat existixen a public/ (cap 404:
      wordpress-plugin/dist no es versiona i en un clon net o a la CI no hi és;
      el paquet copia public/ sencer (vite.standalone.config.js · PROPIS_DEL_LLOC). */
   expect(propies.filter((ruta) => !existsSync(join(process.cwd(), 'public', ruta)))).toEqual([]);
+});
+
+/* El pla de la marató corregix la navegació editorial antiga del Mercat:
+   la persona i l'empresa han de tindre una fitxa pública real. */
+test('Mercat i detall: cada boina obri el perfil públic del venedor pel seu identificador', () => {
+  const arrel = render(<MercatSection />).container;
+  const perfils = createLocalPerfilsAdapter();
+  const seccio = buildMercatDetailSectionMeta({ marketItems: MARKET_ITEMS, t });
+  for (const item of [MAC, SAMARRETA]) {
+    const autor = autorDe(item);
+    const ruta = rutaDePerfil(autor.tipus, autor.id);
+    const targeta = targetaDe(arrel, item.title);
+    expect(targeta.querySelector('.sp-card-header a')?.getAttribute('href')).toBe(ruta);
+    expect(paginaDElement(seccio, item).authorHref).toBe(ruta);
+    const clau = decodeURIComponent(ruta.split('/').at(-1));
+    expect(perfils.loadPerfilPublic(clau, null)).not.toBeNull();
+    expect(ruta).not.toBe('/projecte');
+  }
+});
+
+test('Mercat: els ids remots diferents del mateix nom conserven el seu perfil, sense autoria no inventa ruta', () => {
+  mocks.mur.sortedMarketItems = [
+    { id: 'remot', title: 'Producte remot', author_name: 'Sóc de Poble', author_org_id: 'entitat-remota', created_at: '2026-10-04T20:00:00Z' },
+    { id: 'sense', title: 'Sense identitat', author_name: 'Sóc de Poble', created_at: '2026-10-04T20:00:00Z' }
+  ];
+  const arrel = render(<MercatSection />).container;
+  expect(targetaDe(arrel, 'Producte remot').querySelector('.sp-card-header a')?.getAttribute('href')).toBe('/empresa/entitat-remota');
+  expect(targetaDe(arrel, 'Sense identitat').querySelector('.sp-card-header a')).toBeNull();
 });

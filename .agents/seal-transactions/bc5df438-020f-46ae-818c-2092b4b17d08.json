@@ -1,0 +1,52 @@
+{
+  "id": "bc5df438-020f-46ae-818c-2092b4b17d08",
+  "session": "7446e768-0e3d-431d-bda2-9cb6435ea775",
+  "operationId": "sdp-cognitive-preflight-261004",
+  "claim": "7446e768-0e3d-431d-bda2-9cb6435ea775:governance-write",
+  "planHash": "e31d5617c18484dcd04f78b87b050799dec3416c3992fa94ac0bd5b711a92a21",
+  "beforeSeal": "f4a14535fd674d384e50e04269f6cf4554dab6fd8c8bbf5de0c203cb47976f7b",
+  "files": [
+    {
+      "path": "tooling/documental/turns.mjs",
+      "before": "5bf2388b94bd9eba5e81100e60700a8d93fba22c3a18992de0f6e0974da528b6",
+      "after": "af10fc78898c7c06b79789bae9bfb481958dadf7ec36714d06c434275a3b947d"
+    },
+    {
+      "path": "tooling/documental/draft-write.mjs",
+      "before": "849f0c5f60a9ce6fd9fdf3f4ec3f23d88b2d1104a0238582acd0ff5fe05982e4",
+      "after": "c03b893b1518c0f0a38012095327a81c4915980b096c527d27f90bc90a8d2ca1"
+    },
+    {
+      "path": "tooling/gates/porta-olivera.mjs",
+      "before": "f54b37a53cb2ac1224bae5fdbce063f9c5f7451fb877206d715eb346da59f9c6",
+      "after": "4cde29b1ba307bb6d33d173bd6ca54dd3fc825af83c62d5ffb19c75853b78d8a"
+    },
+    {
+      "path": "tooling/wiki/document.mjs",
+      "before": "1db228daeceeb4e8d515f244142f668cf0bcdb72ecab48e9be393edb20246eaf",
+      "after": "f96cb9cd632bde9d8fb02c3a3dd10b9b7c3e04996063859840c085f85595ec5e"
+    },
+    {
+      "path": ".agents/skills/core-higiene-escriptori/SKILL.md",
+      "before": "6e4f2a68c754f5ed585fb4bece812170244484e1dbe4e8e9fb4f185b589b4840",
+      "after": "f189e004beb30c04ead911f9b74e1ed81798f7d562678a8474387b7c9a1912c3"
+    },
+    {
+      "path": ".agents/skills/wiki-documentacio-i-reflex/SKILL.md",
+      "before": "f8e7515479bdd1cd5b91f8e670a121bb88e618c781e8aae3d544fbc10fe7d321",
+      "after": "e9c8be43a0e6dd68338eab3fa90da430a7514c79e7df2ec92ceecc34360fc4fe"
+    },
+    {
+      "path": "tests/cognitive-preflight.test.mjs",
+      "before": null,
+      "after": "cc6afab16dbd5809df4c970d65f1081a0363251945904a01b717efd4653ac3e7"
+    },
+    {
+      "path": "tests/porta-olivera-diagnosi.test.mjs",
+      "before": "6ba09f277d8a3a5495ddba21d34098bedae73c0f87d67334025453e406c6500c",
+      "after": "9aab7876b6a3c111fdabd13874b86c8455930233dc4e8057fdec6098f7103c7e"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "2005173cade9659f78d9faf92c6b6cc91346538292f67bf2d709b3dd8436b38b"
+}

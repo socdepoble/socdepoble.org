@@ -6093,7 +6093,7 @@ details[open] summary.accordion-header svg:last-child {
     margin-bottom: var(--sdp-space-2);
     padding: var(--sdp-space-2);
     background-color: var(--sdp-fons-terciari);
-    border-radius: var(--sdp-radi-base);
+    border-radius: var(--sdp-radi-m);
   }
   .sdp-consola__ajust-valor {
     font-weight: 600;

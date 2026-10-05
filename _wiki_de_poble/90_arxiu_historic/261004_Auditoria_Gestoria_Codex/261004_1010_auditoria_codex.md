@@ -64,9 +64,7 @@ P1 indica un bloqueig abans d'activació comptable; P2, una garantia o funció i
 
 ### F01 · P1 · El port pot guardar un encadenament que el seu verificador rebutja
 
-**Troballa nova, reproduïda.** [port.js:130](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/sections/gestoria/facturacio/registre/port.js:130>) comprova l'ordinal i l'empremta anterior, però no compara el número ni la data de la factura anterior amb l'últim registre guardat. La comprovació de l'empremta del registre tampoc ho cobrix: eixos camps de referència no entren en el hash oficial.
 
-Després de guardar A2026-0001, genere A2026-0002 correctament i canvie només `encadenament.numSerie` a A2026-0999. `port.afegix()` l'accepta; el llibre queda amb dos registres i `verificaCadena()` torna `valida: false`, incidència `TRENCAMENT`. [cadena.js:135](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/sections/gestoria/facturacio/registre/cadena.js:135>) sí que detecta la discrepància després de guardar-la. Això contradiu el comentari del port que promet no desar cap registre que no es puga verificar.
 
 La reproducció executa el port de memòria. IndexedDB crida la mateixa `comprovaAfegit` dins de la transacció; és una extensió sustentada en el codi compartit, sense haver alterat una base real del navegador. El camí ordinari `registraAlta()` construeix bé la referència, però `afegix()` és una frontera pública del contracte i ha de refusar entrades incoherents.
 
@@ -74,17 +72,14 @@ La reproducció executa el port de memòria. IndexedDB crida la mateixa `comprov
 
 ### F02 · P1 · La política NOVA / F tancada existix com a helper, però no governa l'alta
 
-**Troballa nova d'integració, reproduïda; latent perquè Facturació continua «en obres».** [serie.js:115](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/sections/gestoria/facturacio/serie.js:115>) refusa una sèrie que coincidix amb el llegat i una data anterior al pas, quan rep eixa configuració. És una bona guarda aïllada. [cadena.js:74](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/sections/gestoria/facturacio/registre/cadena.js:74>) rep factura i port, però cap política d'empresa, llegat o data de pas, i no invoca la guarda.
 
 He registrat `F260001`, expedida el 03/10, amb instant de generació del 04/10: l'alta s'accepta i la cadena és vàlida. Amb llegat F/2026 i pas 04/10, la crida separada a `comprovaEmissio()` refusa la mateixa sèrie amb `SERIE_CONFUSA`. La configuració existix, però el flux d'alta no la consumix.
 
-També s'accepten dos A2026-0001 del mateix emissor amb dates 03/10 i 04/10; la verificació dona cadena vàlida. [validacio.js:49](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/sections/gestoria/facturacio/registre/validacio.js:49>) identifica registres per emissor + número + data. Esta identitat fiscal no substituïx la política de numeració correlativa pròpia de la sèrie: falta una comprovació de negoci abans de l'emissió.
 
 **Correcció proposada:** un cas d'ús pur d'emissió que exigisca configuració, llegat i data de pas; calcule el següent número; i assegure la reserva del número i l'alta sense carreres. En backend, la unicitat de negoci també ha de ser atòmica. Mantindre el constructor fiscal genèric i la identitat del registre separats d'esta política. No atribuir garanties d'emissió al helper abans de connectar-lo.
 
 ### F03 · P2 · Restaurar una «còpia exacta» només compara empremtes parcials
 
-**Extensió nova d'una limitació ja reconeguda per Claude.** La documentació de [restauraCopia, port.js:235](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/sections/gestoria/facturacio/registre/port.js:235>) promet refusar una còpia divergent i reconéixer un prefix exacte. La comparació efectiva del solapament usa l'empremta de l'últim registre, no el contingut complet de les factures.
 
 Exporte una alta, canvie només `factura.descripcio` en la còpia i intente restaurar-la sobre el port original. La còpia passa `verificaCadena()` i la restauració acaba amb `{ afegits: 0 }`; el text del port i el text de la còpia són diferents. No s'ha sobreescrit el port ni s'ha perdut informació en este cas, però no es detecta la divergència promesa.
 
@@ -96,7 +91,6 @@ El hash oficial no cobrix la descripció, tots els noms ni tots els domicilis. E
 
 El model de factura, sèries, pressupostos, QR i cadena viu en JS pur, amb constructors immutables. El port fa explícits quatre mètodes i refusa altres funcions, incloses claus Symbol. Els registres es copien abans del resum asíncron. IndexedDB comprova l'últim registre, el duplicat i l'afegit en una transacció; això és una base sòlida per a un adaptador intercanviable.
 
-La separació de fases és deliberada: `frontera.test.js` fixa que el nucli de facturació encara no s'importa des de fora. [ShellGestoria.jsx:60](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/sections/gestoria/tauler/ShellGestoria.jsx:60>) marca Facturació «en obres». El contracte de dades general encara no declara la capacitat `facturacio`; `port.js` la reserva per a la fase 3. Per tant, no és honest dir que hui bastaria introduir un endpoint de Sollutia per a emetre i remetre factures.
 
 Falten el contracte remot implementat, la concurrència entre clients al servidor, la traducció al protocol de remissió, la validació contra esquemes, el tractament de respostes i reintents, i els punts de control acceptats. La remissió està prevista al servidor, cosa coherent amb la independència de la UI. Són fases pendents declarades, no un acoblament ocult a Supabase. L'acceptació d'AEAT queda fora de les proves locals. La [documentació tècnica oficial](https://sede.agenciatributaria.gob.es/Sede/iva/sistemas-informaticos-facturacion-verifactu/informacion-tecnica.html) és la referència per a eixa futura integració.
 
@@ -104,7 +98,6 @@ Al Tauler he contrastat ports injectables, autorització abans de llegir fitxers
 
 ### F04 · P2 · Usar UniversalCard no assegura l'anatomia completa de cada targeta
 
-**Compliment parcial, amb límits ja declarats i una discrepància d'acceptació encara oberta.** [UniversalCard.jsx:266](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/components/PedraSeca/organismes/UniversalCard.jsx:266>) pinta subtítol i entradeta només si el consumidor els passa. La peça compartida no imposa per si mateixa la Llei de la Targeta.
 
 | Superfície | Contrast propi | Límit |
 | --- | --- | --- |
@@ -114,21 +107,17 @@ Al Tauler he contrastat ports injectables, autorització abans de llegir fitxers
 | Articles privats de la Nevera | `AUTORIA_PROPIA` declara «Tu» | No té nom ni enllaç real de perfil perquè la plataforma no entrega eixa identitat a l'app; Claude ja ho reconeix |
 | Tauler de Gestoria | UniversalCard amb titular i detall PaginaApp dins de la closca | Detall local en estat React, sense ruta pública; és una decisió explícita de privacitat, que cal reconciliar amb la regla de slug compartible |
 
-La Nevera passa `title` i una línia opcional de propietats, però cap `subtitle`, a [ColumnaCataleg.jsx:117](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/apps/comu/esquelet/ColumnaCataleg.jsx:117>). Això no acredita «cos sencer» en totes les targetes. Mantindre l'acció de commutar és una necessitat del producte; completar el detall no hauria d'eliminar-la.
 
 **Correcció proposada:** una matriu explícita de requisits per a targeta de sistema, article extern, article privat i targeta commutable. Per als articles propis, passar la identitat amb una capacitat de plataforma, sense importar autenticació Supabase dins del catàleg. Per al contingut RSS que no té subtítol o autor, decidir l'excepció amb transparència; no inventar dades per a superar una prova. Per a la Nevera, fer accessible un detall que complisca el contracte acordat conservant la commutació. Els documents privats no han de posar dades financeres en una URL per a aparentar compliment.
 
 ### F05 · P2 · Compartir una notícia des de la targeta compartix la llista
 
-**Troballa convergent amb Claude, demostrada per la traça independent del codi; sense enviar cap compartició externa.** [Noticies.jsx:157](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/apps/lector/vistes/Noticies.jsx:157>) passa `onMainClick` per a obrir l'article i `hasFooter`, però no `mainHref` ni `onShare`. La targeta entrega `mainHref: null` al hook.
 
-[useAccions.js:241](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/components/PedraSeca/hooks/useAccions.js:241>) compon la compartició a partir d'eixe href; [urlPerCompartir:135](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/components/PedraSeca/hooks/useAccions.js:135>) usa la ruta actual quan no hi ha href. Des de la llista, el resultat és la llista, no `?article=<id>`, encara que l'article tinga detall propi. En router de memòria també es pren l'entrada actual de la llista.
 
 **Correcció proposada:** passar a la targeta la ruta del detall per al peu, mantenint el retorn i el focus que gestiona `obri()`. Afegir una prova de la URL rebuda per `navigator.share` o el fallback, tant en router de navegador com de memòria. Una prova que només comprova que apareix el botó no detecta esta fallada.
 
 ### T3 · Reixeta, CSS i apilament
 
-La [reixeta principal, modules.css:1422](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/css/modules.css:1422>) conserva `repeat(auto-fill, minmax(min(100%, 360px), 1fr))` i el gap canònic de 24 px. El canvi de literals com 22 px a tokens de 20/24 px no és una pèrdua de reixeta per si mateix: cal valorar la funció de cada espai i les instruccions de normalització. Les proves d'espaiat de components passen en l'abast CSS executat.
 
 `GraellaTargetes` és un contenidor legítim dins de PedraSeca: reutilitza `.sdp-card-grid`, `.sdp-card-llista` i `SeccionsCategoria`; no implementa una nova closca ni duplica UniversalWorkspace. La responsabilitat de disposar targetes dins d'una columna és distinta de la de disposar les columnes del Workspace. La seua suite independent passa. Que tota app haja de passar sempre pel Workspace és un altre criteri, que no es pot deduir només del nom d'esta peça.
 
@@ -136,7 +125,6 @@ Els nivells centrals revisats posen la taronja a 99080, la blava a 99090, la neg
 
 ### F06 · P3 · La documentació de la tipografia fluida contradiu els tokens
 
-**Vigent al tall.** [tokens.css:280](</Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/src/css/tokens.css:280>) diu que el mínim fluid és l'escala P6 de damunt i que al mòbil ningú perd mida. L'h1 fix és 3 rem, però el mínim fluid actual és 2 rem, i altres nivells també tenen mínims inferiors.
 
 La primera passada detectà que el test encara esperava el mínim anterior. Durant l'auditoria s'ha actualitzat el test i la suite CSS posterior passa. Per tant, **no reporte aquella fallada de test com a vigent**. El comentari contradictori sí que queda: cal descriure el rang real i la directriu que el justifica, sense canviar automàticament les mides acordades.
 
@@ -192,13 +180,11 @@ Totes les passades Vitest pròpies usen un worker. Les xifres de passades que se
 Ordre exacta de la passada de les 10:19:
 
 ```sh
-./node_modules/.bin/vitest run src/css src/components/PedraSeca/organismes/UniversalCard src/components/universal/PageFrame src/sections/consola src/apps/lector src/apps/nevera src/apps/comu/esquelet --maxWorkers=1 --reporter=dot
 ```
 
 Ordre exacta de la passada de les 10:28:
 
 ```sh
-./node_modules/.bin/vitest run src/sections/gestoria/facturacio src/sections/gestoria/tauler src/css src/apps/lector/AppLector.test.jsx src/apps/nevera/Temporada.test.jsx --maxWorkers=1 --reporter=dot
 ```
 
 ### Casos oficials 1 i 2
@@ -216,11 +202,6 @@ Executar des de l'arrel `socdepoble.org` amb Node. Només usa memòria, sense ba
 
 ```sh
 node --input-type=module <<'JS'
-import { creaFacturaEmesa } from './src/sections/gestoria/facturacio/facturaEmesa.js';
-import { creaPortMemoria, restauraCopia } from './src/sections/gestoria/facturacio/registre/port.js';
-import { registraAlta, verificaCadena } from './src/sections/gestoria/facturacio/registre/cadena.js';
-import { creaRegistreAlta } from './src/sections/gestoria/facturacio/registre/registreAlta.js';
-import { comprovaEmissio } from './src/sections/gestoria/facturacio/serie.js';
 const instant = Date.UTC(2026, 9, 4, 10);
 const domicili = { adreca: 'Plaça de Prova, 1', codiPostal: '46999', poblacio: 'Poble de Prova' };
 const f = (numSerie, dataExpedicio = '2026-10-04') => creaFacturaEmesa({
@@ -317,7 +298,6 @@ La lectura de context abasta els documents Markdown presents i els relleus actiu
 - [[261004_1045_auditoria_codex]]
 - [[taxonomia_documental]]
 - [[261004_0605_auditoria_claude]]
-- [[261004_1006_prompt_codex_auditoria]]
 - [[261004_0515_pla_implementacio_claude]]
 
 ## Proposta d'Automillora

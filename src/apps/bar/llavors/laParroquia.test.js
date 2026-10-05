@@ -10,11 +10,14 @@
    · El preu obert amb més d'una variant (Malibú, Coquetes fregides): la caixa
      en fa triar la variant abans del preu, i el cost és el de la triada.
    · Les fotos: cada slug d'IMATGES_DISPONIBLES té el seu webp a public/, i
-     cada destí del mapa d'imatges del laboratori és un slug real.
+     cada destí del mapa versionat és un slug real (199, sense omissions).
+     Els originals humans ABSENT es declaren no comprovats; si arriba cap
+     arrel del corpus, tots els orígens han d'existir (PARTIAL és roig).
    · El literal de compilació: fora del servidor de desenvolupament, La
      Parròquia només hi és amb VITE_SDP_BAR_LLAVOR_LA_PARROQUIA=1.
    Cap asserció mostra cap valor del CSV quan falla, només recomptes i ids. */
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { validaCataleg, variantDe } from '../nucli/cataleg.js';
@@ -168,6 +171,20 @@ describe('la carta de La Parròquia', () => {
   });
 });
 
+/* Els originals són un lliurament humà opcional, separat del mapa versionat.
+   La carpeta general pot existir per altres encàrrecs: només les arrels que
+   el mapa declara acrediten un corpus lliurat. Si n'arriba cap, no admetem
+   un lliurament parcial ni anunciem una verificació que no s'ha pogut fer. */
+function comprovaCorpus(entrades, arrel = PRODUCCIO, informa = (text) => process.stderr.write(`${text}\n`)) {
+  const arrels = [...new Set(entrades.map(([, origen]) => origen.split('/')[0]))];
+  const lliurades = arrels.filter((nom) => existsSync(path.join(arrel, nom)));
+  const absents = entrades.map(([, origen]) => origen).filter((origen) => !existsSync(path.join(arrel, origen)));
+  const estat = lliurades.length === 0 ? 'ABSENT' : (absents.length ? 'PARTIAL' : 'COMPLETE');
+  informa(`Parròquia · originals ${estat}: ${entrades.length - absents.length}/${entrades.length}; ${estat === 'ABSENT' ? 'fidelitat dels originals NO comprovada' : 'comprovació estricta del corpus lliurat'}`);
+  if (estat !== 'ABSENT') expect(absents, `Corpus humà ${estat}: falta completar els orígens del mapa`).toEqual([]);
+  return { estat, presents: entrades.length - absents.length, total: entrades.length };
+}
+
 describe('les fotos', () => {
   test('cada foto marcada com a disponible té el seu webp a public/ i és la d’un producte', () => {
     const definitives = carta.productes.filter((p) => p.imatge.estat === 'definitiva').map((p) => `${p.categoriaId}/${p.imatge.slug}`).sort();
@@ -176,14 +193,39 @@ describe('les fotos', () => {
     for (const cami of llistades) expect(existsSync(path.join(FOTOS, `${cami}.webp`)), cami).toBe(true);
   });
 
-  test.skipIf(!existsSync(MAPA))('cada destí del mapa d’imatges del laboratori és un slug real i el seu origen existix', () => {
+  test('cada destí del mapa versionat és un slug real; el corpus d’origen declara ABSENT, PARTIAL o COMPLETE', () => {
     const reals = new Set(carta.productes.map((p) => `${p.categoriaId}/${p.imatge.slug}`));
     const entrades = readFileSync(MAPA, 'utf8').split('\n')
       .map((l) => /^\s*([a-z0-9-]+\/[a-z0-9-]+)\.webp\s+<-\s+(\S.*\S)\s*$/.exec(l)).filter(Boolean).map((m) => [m[1], m[2]]);
-    expect(entrades.length).toBeGreaterThan(0);
+    expect(entrades).toHaveLength(199);
     expect(entrades.map(([desti]) => desti).filter((desti) => !reals.has(desti))).toEqual([]);
     expect(new Set(entrades.map(([desti]) => desti)).size).toBe(entrades.length);
-    if (existsSync(PRODUCCIO)) expect(entrades.map(([, origen]) => origen).filter((origen) => !existsSync(path.join(PRODUCCIO, origen)))).toEqual([]);
+    // Les arrels són les dos declarades pel mapa: una errada de ruta no
+    // pot convertir un corpus incomplet en un ABSENT que parega opcional.
+    expect([...new Set(entrades.map(([, origen]) => origen.split('/')[0]))].sort()).toEqual(['la_parroquia', 'loyverse']);
+    expect(entrades.filter(([, origen]) => origen.split('/').includes('..'))).toEqual([]);
+    comprovaCorpus(entrades);
+  });
+
+  test('una carpeta aliena no acredita originals; el primer lliurament incomplet falla fins que arriben tots', () => {
+    const arrel = mkdtempSync(path.join(tmpdir(), 'sdp-parroquia-corpus-'));
+    const informa = vi.fn();
+    const entrades = [['cafeteria/bombo', 'loyverse/bombo.jpg'], ['tapes/callos', 'la_parroquia/callos.jpg']];
+    try {
+      mkdirSync(path.join(arrel, 'altres_materials'));
+      expect(comprovaCorpus(entrades, arrel, informa)).toEqual({ estat: 'ABSENT', presents: 0, total: 2 });
+      expect(informa).toHaveBeenLastCalledWith(expect.stringContaining('NO comprovada'));
+      mkdirSync(path.join(arrel, 'loyverse'));
+      expect(() => comprovaCorpus(entrades, arrel, informa)).toThrow(/PARTIAL/);
+      writeFileSync(path.join(arrel, 'loyverse/bombo.jpg'), 'fixture');
+      expect(() => comprovaCorpus(entrades, arrel, informa)).toThrow(/PARTIAL/);
+      mkdirSync(path.join(arrel, 'la_parroquia'));
+      writeFileSync(path.join(arrel, 'la_parroquia/callos.jpg'), 'fixture');
+      expect(comprovaCorpus(entrades, arrel, informa)).toEqual({ estat: 'COMPLETE', presents: 2, total: 2 });
+      expect(informa).toHaveBeenLastCalledWith(expect.stringContaining('2/2'));
+    } finally {
+      rmSync(arrel, { recursive: true, force: true });
+    }
   });
 });
 

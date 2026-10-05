@@ -71,4 +71,3 @@ La generació entrega esta plantilla i conserva un snapshot del contracte al reb
 ## Vincles
 
 - [[00_index]]
-- [[00_index_escriptori]]

@@ -99,4 +99,3 @@ _Fent poble amb [[el_projecte|Sóc de Poble]]! © 2026_
 ## Vincles
 
 - [[00_index]]
-- [[00_index_escriptori]]

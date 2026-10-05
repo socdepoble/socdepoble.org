@@ -544,7 +544,7 @@ test('el llibre: fulles, sistema de dates, cadenes, estils i noms definits', { s
 });
 
 test('cada fulla: dimensió, combinacions, fórmules, validacions, capçalera i perfil de columnes (sense valors)', { skip: SALTA }, () => {
-  const { fulles, parts, text, cadenes, est, date1904 } = llibre();
+  const { fulles, text, cadenes, est, date1904 } = llibre();
   const deTreball = fulles.filter((f) => f.tipus === 'worksheet');
   assert.ok(deTreball.length > 0, 'almenys una fulla de treball');
   for (const f of deTreball) {

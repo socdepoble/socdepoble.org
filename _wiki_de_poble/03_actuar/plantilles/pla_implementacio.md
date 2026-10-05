@@ -87,4 +87,3 @@ Passos que executarem (portes, linting, tests, llançament de scripts) per compr
 ## Vincles
 
 - [[00_index]]
-- [[00_index_escriptori]]

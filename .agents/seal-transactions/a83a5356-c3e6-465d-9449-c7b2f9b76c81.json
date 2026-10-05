@@ -1,0 +1,52 @@
+{
+  "id": "a83a5356-c3e6-465d-9449-c7b2f9b76c81",
+  "session": "bb8f6706-dda8-4f70-b53a-aa2642e0abe8",
+  "operationId": "marato-olivera_rebuts-261005_0308",
+  "claim": "bb8f6706-dda8-4f70-b53a-aa2642e0abe8:governance-write",
+  "planHash": "11daf63fa5ab9591abae039b709b354d4038c2773dbae4a97474af4fcdf559f7",
+  "beforeSeal": "7ad0a127bbd4874ceac8b5867ef7dec740c9e0245ec1f8a8033a0d9c3467d6d2",
+  "files": [
+    {
+      "path": "tooling/gates/porta-olivera.mjs",
+      "before": "ec879f7b1873664c05bf891a7458063e668197baaff5aa2d8fd2f42558998e33",
+      "after": "cfb79f0d22b2e5eb323c83acba35a31e1a3618afaa39f45fe6f51c1510287631"
+    },
+    {
+      "path": "tests/cognitive-preflight.test.mjs",
+      "before": "cc6afab16dbd5809df4c970d65f1081a0363251945904a01b717efd4653ac3e7",
+      "after": "105c0f02153483acd315c3ba43c446ec582d43ca9a94f0d3d27e941169a03d90"
+    },
+    {
+      "path": "tests/porta-olivera-diagnosi.test.mjs",
+      "before": "d92e3c7881e720d6780c4c2e9450f6ae52f5ca4c67043d88f9371cf6ca58d570",
+      "after": "f3905bd56441c6f24ab71c0a2492557ae66cf3252956b577befbd62036289e95"
+    },
+    {
+      "path": "tooling/documental/turns.mjs",
+      "before": "b23dfbd2b623f4d5737707f0968b8c15a26bae5e047997c823c3dcfb875f5bca",
+      "after": "502d839a69eb806700130e25a260a5b6b3f0f2e2f5744ac2ea29678a6942d6cf"
+    },
+    {
+      "path": "tooling/wiki/document.mjs",
+      "before": "f96cb9cd632bde9d8fb02c3a3dd10b9b7c3e04996063859840c085f85595ec5e",
+      "after": "8acb0f92087f1eb65309101b68000a2b334b79837c4b90e45ed170e43da12810"
+    },
+    {
+      "path": "tooling/documental/command-policy.mjs",
+      "before": "9fc5d39c2c31cd736de3ced309d0c552880f90d164bfbd64fd217ee591808219",
+      "after": "193bdae777d209be39cd42f6ad3ff72b5cef680dcf37b531af27fe4db5e3cdc3"
+    },
+    {
+      "path": "tooling/gates/porta-plantilla-viva.mjs",
+      "before": "f7672ed77cf93c4d9ef6f1a39e5318d212483be50d71284ca44e60ed9059170a",
+      "after": "2a257aa1f21b53d11409ace297df4c4189e91ce604fe07db97aecf29820ebad2"
+    },
+    {
+      "path": "tests/anticipacio-261003.test.mjs",
+      "before": "f2f0cded76cb18cd6d1f03a7102e6ad67c9fa0a096ee12619c5f2b9c5620476b",
+      "after": "9360d6cb8023e26f266fad03a0d08896f03a317c79ab62fe55dd669cdd7724a3"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "5be515e906a26495855ab59280a1e2426ce7ab073f62b3041e1bedc8f2add73c"
+}

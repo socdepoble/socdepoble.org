@@ -548,7 +548,8 @@ test('el rail porta icones de 24 com la roda de Menú, plegat i desplegat', () =
 test.each([[950, 'ample'], [800, 'mitja']])('el divisor de Converses s’arrossega i recorda l’amplària a %ipx (%s)', async (amplada, layout) => {
   const ampladesAnteriors = getVal('sdp-grid-widths');
   const railAnterior = getVal('sdp-xat-rail');
-  setVal('sdp-grid-widths', { left: 420, middle: 280 });
+  // AppGridShell conserva un menú vàlid (200–340px); 420 era sanejat a 260.
+  setVal('sdp-grid-widths', { left: 340, middle: 280 });
   setVal('sdp-xat-rail', 'plegat');
   mocks.amplada = amplada;
   try {
@@ -574,7 +575,7 @@ test.each([[950, 'ample'], [800, 'mitja']])('el divisor de Converses s’arrosse
     expect(allibera).toHaveBeenCalledWith(7);
     expect(divisor.getAttribute('aria-valuenow')).toBe('450');
     expect(document.querySelector('.app-grid-page').style.getPropertyValue('--app-grid-col-list')).toBe('450px');
-    expect(getVal('sdp-grid-widths')).toEqual({ left: 420, middle: 450 });
+    expect(getVal('sdp-grid-widths')).toEqual({ left: 340, middle: 450 });
     expect(shell.dataset.layout).toBe(layout);
     expect(document.getElementById('app-grid-main').getAttribute('aria-hidden')).toBeNull();
 
@@ -1088,13 +1089,13 @@ test('T63.2 · amb StrictMode, ?sobre= i ?amb= s’obrin una sola vegada i hi na
    mateixa instància del Xat (/xat i /xat/ID la conserven). */
 test('T63.2 · la mateixa instància torna a obrir el mateix ?sobre= després d’haver-ne eixit', async () => {
   mocks.threadId = null;
-  mocks.params = new URLSearchParams({ sobre: 'pagina:/ia' });
+  mocks.params = new URLSearchParams({ sobre: 'pagina:/iaia' });
   mocks.obriFilDePagina.mockResolvedValue('g-ia');
   const view = render(<XatSection />);
   await waitFor(() => expect(mocks.obriFilDePagina).toHaveBeenCalledTimes(1));
   mocks.params = new URLSearchParams();
   view.rerender(<XatSection />);
-  mocks.params = new URLSearchParams({ sobre: 'pagina:/ia' });
+  mocks.params = new URLSearchParams({ sobre: 'pagina:/iaia' });
   view.rerender(<XatSection />);
   await waitFor(() => expect(mocks.obriFilDePagina).toHaveBeenCalledTimes(2));
 });

@@ -1,8 +1,8 @@
 import { expect, test } from 'vitest';
 import { APLICACIONS, ESTATS_APLICACIO, aplicacionsValides } from './aplicacions.js';
 
-test('les utilitats de sèrie: Gestoria, Llibreria i Ajuntament, pendents i amb icona', () => {
-  expect(APLICACIONS.map((a) => a.id)).toEqual(['gestoria', 'llibreria', 'ajuntament']);
+test('les utilitats de sèrie: les cinc utilitats declarades, pendents i amb icona', () => {
+  expect(APLICACIONS.map((a) => a.id)).toEqual(['gestoria', 'metriques', 'lector-rss', 'cervell', 'snippet']);
   for (const aplicacio of APLICACIONS) {
     expect(aplicacio.estat).toBe('pendent');
     expect(aplicacio.icona).toBeTruthy();
@@ -10,7 +10,7 @@ test('les utilitats de sèrie: Gestoria, Llibreria i Ajuntament, pendents i amb 
     expect(aplicacio).not.toHaveProperty('ruta');
   }
   // La configuració de sèrie ja és vàlida: passar-la pel filtre no la canvia.
-  expect(aplicacionsValides(APLICACIONS).map((a) => a.id)).toEqual(['gestoria', 'llibreria', 'ajuntament']);
+  expect(aplicacionsValides(APLICACIONS).map((a) => a.id)).toEqual(['gestoria', 'metriques', 'lector-rss', 'cervell', 'snippet']);
   expect(Object.isFrozen(APLICACIONS)).toBe(true);
 });
 

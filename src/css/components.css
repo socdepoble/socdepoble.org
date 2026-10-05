@@ -279,7 +279,13 @@
   .sdp-dialeg--dreta { inset: 0 0 0 auto; border-inline-end: 0; }
   /* Calaix de la barra lateral (App.jsx, mode compacte): negre de dalt a baix.
      Sense açò, el <dialog> pintava --sdp-fons-targeta davall del menú. */
-  .sdp-dialeg-sidebar { background: var(--sdp-crom-fons); border: 0; }
+  .sdp-dialeg.sdp-dialeg-sidebar,
+  :host .sdp-capa-modal > .sdp-dialeg.sdp-dialeg-sidebar {
+    background: var(--sdp-crom-fons);
+    border: 0;
+    width: max-content;
+    max-width: min(var(--sdp-menu-ample-max), calc(100% - var(--sdp-touch-min)));
+  }
   @media (max-width: 720px) {
     /* Mòbil: el modal es convertix en full inferior; el polze arriba als botons. */
     .sdp-dialeg:not(.sdp-dialeg--calaix) {
@@ -2268,4 +2274,62 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
     color: var(--sdp-text-suau);
     font-size: var(--sdp-text-small);
   }
+}
+
+/* Catàleg Emojis XL: dins del full que també s'injecta al Shadow DOM. */
+@layer components {
+  .sdp-emojis-xl details {
+    margin-block: var(--sdp-space-4);
+    border-block-end: 1px solid var(--sdp-vora);
+  }
+  .sdp-emojis-xl summary {
+    min-block-size: var(--sdp-touch);
+    padding-block: var(--sdp-space-2);
+    color: var(--sdp-text-titol);
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .sdp-emojis-xl summary:focus-visible {
+    outline: 3px solid var(--sdp-focus);
+    outline-offset: var(--sdp-space-1);
+  }
+  .sdp-emojis-xl__graella {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 8rem), 1fr));
+    gap: var(--sdp-space-4);
+    margin: var(--sdp-space-4) 0;
+    padding: 0;
+    list-style: none;
+  }
+  .sdp-emojis-xl__graella li {
+    min-inline-size: 0;
+    /* El conteniment de pintura deixa dins el focus que ix del botó. */
+    padding: calc(var(--sdp-space-1) + 3px);
+    content-visibility: auto;
+    contain-intrinsic-size: auto 10rem;
+  }
+  .sdp-emojis-xl__boto {
+    display: grid;
+    justify-items: center;
+    gap: var(--sdp-space-2);
+    inline-size: 100%;
+    min-block-size: var(--sdp-touch);
+    padding: var(--sdp-space-2);
+    border: 1px solid var(--sdp-vora-control);
+    border-radius: var(--sdp-radi-s);
+    background: var(--sdp-fons-targeta);
+    color: var(--sdp-text-cos);
+    font: inherit;
+    text-align: center;
+    overflow-wrap: anywhere;
+    cursor: pointer;
+  }
+  .sdp-emojis-xl__boto:focus-visible {
+    outline: 3px solid var(--sdp-focus);
+    outline-offset: var(--sdp-space-1);
+  }
+  .sdp-emojis-xl__estat {
+    overflow-wrap: anywhere;
+  }
+  .sdp-emojis-xl__glif { font-size: 5rem; line-height: 1.2; }
 }

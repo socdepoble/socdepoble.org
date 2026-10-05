@@ -120,7 +120,7 @@ test('D4 · teDretsReservats: només quan els drets nets comencen per «©»', (
 const EXTERN = { tipus: 'extern', url: 'https://exemple.org/recepta?id=7#pas-2', titol: 'Recepta de coca' };
 
 test('extern: url http(s) normalitzada, el lloc deduït de la url (mai rebut) i només els camps del tipus', () => {
-  expect(normalitzaOrigen({ ...EXTERN, lloc: 'mentida.example', itemId: 'x', ruta: '/ia', abast: { mode: 'poble' } })).toEqual({
+  expect(normalitzaOrigen({ ...EXTERN, lloc: 'mentida.example', itemId: 'x', ruta: '/iaia', abast: { mode: 'poble' } })).toEqual({
     tipus: 'extern', url: 'https://exemple.org/recepta?id=7#pas-2', lloc: 'exemple.org', titol: 'Recepta de coca'
   });
   expect(normalitzaOrigen({ tipus: 'extern', url: 'http://Exemple.ORG' })).toEqual({ tipus: 'extern', url: 'http://exemple.org/', lloc: 'exemple.org' });
@@ -130,7 +130,7 @@ test('extern: url http(s) normalitzada, el lloc deduït de la url (mai rebut) i 
 test('extern: sense url vàlida no hi ha origen; javascript:, data:, relatives i credencials, fora', () => {
   const dolentes = [
     undefined, '', '   ', 'javascript:alert(1)', 'JaVaScRiPt:alert(1)', ' javascript:alert(1)', 'data:text/html,<script>alert(1)</script>',
-    'data:image/png;base64,AAAA', 'file:///etc/passwd', 'ftp://exemple.org/x', 'mailto:pepa@exemple.org', '/ia', '//exemple.org/x',
+    'data:image/png;base64,AAAA', 'file:///etc/passwd', 'ftp://exemple.org/x', 'mailto:pepa@exemple.org', '/iaia', '//exemple.org/x',
     'exemple.org', 'https://usuari:clau@exemple.org/', 'https://exemple.org/amb espai', 'https://exemple.org/\u0000x', 42, { href: 'https://exemple.org' }
   ];
   for (const url of dolentes) {
@@ -140,7 +140,7 @@ test('extern: sense url vàlida no hi ha origen; javascript:, data:, relatives i
   expect(validaUrlExterna('javascript:alert(1)').motiu).toBe('esquema');
   expect(validaUrlExterna('data:text/html,x').motiu).toBe('esquema');
   expect(validaUrlExterna('https://u:p@exemple.org').motiu).toBe('credencials');
-  expect(validaUrlExterna('/ia').motiu).toBe('malformada');
+  expect(validaUrlExterna('/iaia').motiu).toBe('malformada');
   expect(validaUrlExterna('').motiu).toBe('buida');
   expect(validaUrlExterna('https://exemple.org/').motiu).toBeNull();
 });

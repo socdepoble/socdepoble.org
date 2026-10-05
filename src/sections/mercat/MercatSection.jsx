@@ -2,7 +2,7 @@ import React from 'react';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { ContentProvider } from '../../components/universal/ContentProvider';
 import { UniversalCard } from '../../components/universal/../PedraSeca';
-import { getSectionItemPath, objecteDe, rutaConnectarObjecte, rutaDePerfilDAutor } from '../../config/navigation';
+import { getSectionItemPath, objecteDe, rutaConnectarObjecte, rutaDePerfilPublicDAutor } from '../../config/navigation';
 import { useNavigate } from '../../app/contexts/RouterContext';
 
 import { useSEO } from '../../hooks/useSEO';
@@ -64,13 +64,14 @@ export default function MercatSection() {
                    mateixa que el mapejador del Mercat): mai l'entitat. */
                 author={item.author_name || item.seller || FORASTER.name}
                 /* Lògica d'Usuari (T4, T5): qui ven té perfil, i Connectar recorda d'on ve.
-                   T6 (ordre del Mestre, 261004, prompt 261004_0515 §5) · La boina
-                   enllaça a la pàgina de qui signa (rutaDePerfilDAutor: l'entitat
-                   pilot, al projecte; una persona, al seu perfil). La reserva
+                   Marató 2230 (pla 2045) · La boina enllaça al perfil públic de
+                   qui ven (rutaDePerfilPublicDAutor), també quan és l'entitat
+                   pilot. La reserva
                    FORASTER (sense nom ni identitat) i un nom sense identitat
                    coneguda no tenen cap pàgina: la boina queda sense enllaç, a
-                   propòsit. Mai l'entitat ni el projecte: no és qui signa. */
-                authorHref={rutaDePerfilDAutor(item) || undefined}
+                   propòsit. La reserva es manté sense enllaç i no suplanta
+                   cap altra autoria. */
+                authorHref={rutaDePerfilPublicDAutor(item) || undefined}
                 objecte={producte}
                 onConnect={() => navigate(rutaConnectarObjecte(producte))}
                 /* SPEC G · les imatges pròpies ('/assets/…') es resolen en

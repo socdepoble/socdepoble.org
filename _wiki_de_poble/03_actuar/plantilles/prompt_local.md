@@ -69,7 +69,7 @@ Llegiu obligatòriament els següents fitxers abans d'actuar: `AGENTS.md`, `_wik
 **Directrius Arquitectòniques (Innegociables):**
 - **Hipermodularitat i Enxufabilitat:** La plataforma és un client pur (SPA) altament desacoblat. 
 - **Backend Intercanviable (Model B):** El servidor actual (Supabase) funciona exclusivament com un endoll. Cap lògica de negoci de la UI ha d'estar fortament acoblada a ell. El sistema ha de poder enxufar-se com a mòdul a WordPress o Joomla sense trencar res.
-- **Visió de futur:** Evolució cap al **Fedivers** i App Nadiua (offline-first). El model de mal·leabilitat i independència a seguir és **Obsidian**.
+- **Visió de futur:** Evolució cap al **Fedivers**. El model de mal·leabilitat i independència a seguir és **Obsidian**.
 - Tot el codi produït ha de respectar aquesta estricta modularitat i independència del proveïdor.
 
 **🔥 DIRECTIVA SUPREMA (Llei de l'Enxufabilitat):**
@@ -113,5 +113,4 @@ Quan acabeu de redactar el vostre informe, hi heu d'afegir un punt final titulat
 ## Vincles
 
 - [[00_index]]
-- [[00_index_escriptori]]
 - [[taxonomia_documental]]

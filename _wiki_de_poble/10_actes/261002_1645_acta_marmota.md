@@ -62,4 +62,3 @@ Plantilla entregada: _wiki_de_poble/03_actuar/plantilles/acta.md; SHA-256 2d5838
 ## Vincles
 
 - [[00_index]]
-- [[00_index_escriptori]]

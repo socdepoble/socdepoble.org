@@ -47,7 +47,6 @@ Auditoria i annex lliurats amb rebuts. Pissarra comuna llegida i replicada. Cap 
 ```markdown
 ## ESTAT_ACTUAL · 260924_0717 · Codex · Auditoria atòmica entregada
 
-- Torn `torn_4e7c263a-f34f-4fb1-bb89-794c6d1f51b7` (documents); entrega [[../90_arxiu_historic/260924_Auditoria_Olivera/260924_0717_auditoria_codex]], annex [[../90_arxiu_historic/260924_Auditoria_Olivera/260924_0717_pla_implementacio_fortificacio_codex]] i rèplica al pla [[../90_arxiu_historic/260924_Auditoria_Olivera/260924_0720_pla_implementacio_olivera]].
 - Tres subagents i coordinador. React217/217; Node217/227 amb10 fallades de catàleg; lint i builds directes passen. Sondes4/4 defectes reproduïts, navegador confirma rutes/focus/contrast.
 - Prioritats: draft antic amb revisió nova, ruta /page morta, promoció de mitjans no idempotent, lectura sdp-media i llicència ignorada; plans estratègics dins del build públic local.
 - Gàbia: segell trencat per alta taxonomia; open/test/tancament denegats sota hook. Matcher F1 original rebutjat també per Claude0716; F1′ pendent de prova d’herència, verificació necessita runner sense mutar fonts. Consens pendent.
@@ -69,7 +68,3 @@ Recuperar segell i catàleg amb paquet revisat; habilitar circuit de lease/verif
 ## Vincles
 
 - [[00_index]]
-- [[00_index_escriptori]]
-- [[../90_arxiu_historic/260924_Auditoria_Olivera/260924_0717_auditoria_codex]]
-- [[../90_arxiu_historic/260924_Auditoria_Olivera/260924_0720_pla_implementacio_olivera]]
-- [[../90_arxiu_historic/260924_Auditoria_Olivera/260924_0717_pla_implementacio_fortificacio_codex]]

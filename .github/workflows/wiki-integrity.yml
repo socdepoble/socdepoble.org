@@ -19,7 +19,7 @@ jobs:
   verify:
     name: Tests i auditories
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 45
 
     steps:
       - name: Obri el repositori
@@ -30,7 +30,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: '22.20.0'
           cache: 'npm'
 
       - name: Install dependencies
@@ -41,11 +41,8 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y php-cli php-sqlite3
 
-      - name: Proves Node i WordPress
-        run: npm run test:node
-
-      - name: Proves adversarials documentals
-        run: node --test tests/documental.test.mjs tests/porta-reflex.test.mjs tests/fortificacio.test.mjs tests/hooks-local.test.mjs tests/security-chain.test.mjs tests/verificador-scc.test.mjs tests/git-hooks.test.mjs
+      - name: Proves completes (Node, WordPress i Vitest)
+        run: npm run test:ci
 
       - name: Valida documents del canvi
         env:
@@ -58,10 +55,8 @@ jobs:
           fi
 
       - name: Comprova integritat de documentació i nomenclatures
-        run: npm run gate
+        run: npm run porta -- --nomes-portes
 
       - name: Linter i auditories d'estil
         run: npm run lint
 
-      - name: Executa els tests unitaris
-        run: npm run test

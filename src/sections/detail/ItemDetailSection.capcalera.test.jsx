@@ -1,8 +1,8 @@
 /**
  * Norma del Mestre, 261004 (prompt 261004_1108, línies 63-69 i T2) · Qui signa
  * decidix la capçalera de la fitxa d'un element (Mercat, agenda, Mur):
- *  · l'entitat del projecte, reconeguda per identificador (la boina va a
- *    /projecte): el seu logotip rectangular;
+ *  · l'entitat del projecte, reconeguda per identificador: el seu logotip
+ *    rectangular, també amb la boina al perfil públic del Mercat;
  *  · una persona (o la IA): el seu avatar redó davant de l'H1, MAI el
  *    logotip de Sóc de Poble.
  * Derogat el showLogos={true} d'ItemDetailSection (ordre del Mestre, 261004):
@@ -19,7 +19,8 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
   sectionId: 'mercat', itemId: null, navigate: vi.fn(), t: (_, alternativa) => alternativa,
-  mur: { events: [], feedPosts: [], marketItems: [] }
+  mur: { events: [], feedPosts: [], marketItems: [] },
+  sessio: { currentUser: null, estat: 'fora', rol: null, esSuperadmin: false }
 }));
 vi.mock('../../app/contexts/RouterContext', () => ({
   useParams: () => ({ sectionId: mocks.sectionId, itemId: mocks.itemId }),
@@ -34,6 +35,22 @@ vi.mock('../../sections/multimedia/MultimediaContext', () => ({ useMultimedia: (
 vi.mock('../../app/contexts/UIContext', async (importOriginal) => ({
   ...(await importOriginal()),
   useUIActions: () => ({ t: mocks.t })
+}));
+/* Marató 2230 · P4 (petició de Codex, 261004_2240_auditoria_codex.md:134) · El
+   detall llig el rol de la Sessió obligatòria (ItemDetailSection.jsx:20), que
+   a l'app posa el SessionProvider de PedraSecaEmbed. Ací, el doble de les
+   altres proves de seccions amb el valor del proveïdor real per a qui visita
+   sense entrar (SessionContext.jsx:157, sessionService.js:114-115).
+   Poliment P4 · Ací UniversalPage i PageFrame són de veres: el doble porta les
+   exportacions de SessionContext.jsx que poden importar, ESTAT (:59) tal qual,
+   useSession (:167) i useSessioOpcional (:174), que dins del proveïdor tornen
+   el mateix valor. Amb només useSession, el dia que una d'elles llegira la
+   sessió opcional, Vitest petaria amb «No export is defined on the mock».
+   SessionProvider es queda fora: el posa PedraSecaEmbed, no cap peça del detall. */
+vi.mock('../../app/contexts/SessionContext', () => ({
+  ESTAT: Object.freeze({ COMPROVANT: 'comprovant', DINS: 'dins', FORA: 'fora' }),
+  useSession: () => mocks.sessio,
+  useSessioOpcional: () => mocks.sessio
 }));
 vi.mock('../../hooks/useSEO.js', () => ({ useSEO: () => {} }));
 vi.mock('../../components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
@@ -72,7 +89,7 @@ afterEach(cleanup);
 describe('l’entitat del projecte (per identificador): el seu logotip, cap avatar', () => {
   test('/mercat/samarreta-socdepoble', () => {
     const container = pinta('mercat', llavor(MARKET_ITEMS, 'samarreta-socdepoble'));
-    expect(boina(container)).toBe(RUTA_PROJECTE);
+    expect(boina(container)).toBe('/empresa/socdepoble');
     expect(fills(container).slice(0, 3)).toEqual(['IMG.page-title-logo light-only', 'IMG.page-title-logo dark-only', 'H1.']);
     expect(capcalera(container).querySelector('img').getAttribute('src')).toBe(LOGO_NEGRE);
     expect(container.querySelector('.page-title-avatar')).toBeNull();

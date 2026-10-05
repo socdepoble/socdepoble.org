@@ -391,6 +391,10 @@ let seccioConsumida = null;
 export function PageFrame({
   title, subtitle, lead, labels = [], copyright, showLogos = false,
   chrome = 'page', topBarData = {}, heroImage, heroAlt = '',
+  /* Dimensions conegudes de la portada: es passen juntes per reservar-ne
+     la proporció abans de carregar. Sense un parell vàlid, no s'endevina.
+     La prioritat alta és una decisió explícita de qui posa la portada. */
+  heroWidth, heroHeight, heroFetchPriority,
   /* T6 (ordre del Mestre, 261004) · Sense nom propi (ni ací ni a
      topBarData), la barra signa amb DEFAULT_AUTHOR i, si ningú hi posa ruta,
      enllaça a la pàgina del projecte (DEFAULT_AUTHOR.href). */
@@ -658,6 +662,13 @@ export function PageFrame({
   const barDateTime = topBarData.dateTime ?? dateTime;
   const barHeroImage = topBarData.heroImage ?? heroImage;
   const barHeroAlt = topBarData.heroAlt ?? heroAlt;
+  // El parell és una unitat lligada a la imatge: una portada nova no
+  // hereta la proporció de la que topBarData ha substituït.
+  const dimensionsHero = topBarData.heroWidth !== undefined || topBarData.heroHeight !== undefined
+    ? [topBarData.heroWidth, topBarData.heroHeight] : (barHeroImage === heroImage ? [heroWidth, heroHeight] : null);
+  const midaHero = dimensionsHero?.every((valor) => Number.isFinite(valor) && valor > 0)
+    ? { width: dimensionsHero[0], height: dimensionsHero[1] } : null;
+  const prioritatHero = (topBarData.heroFetchPriority ?? heroFetchPriority) === 'high' ? 'high' : undefined;
 
   const resolvedChrome = PAGE_CHROME_MODES.has(chrome) ? chrome : 'page';
   const showBlueBar = resolvedChrome === 'full' || resolvedChrome === 'context' || resolvedChrome === 'system';
@@ -748,7 +759,7 @@ export function PageFrame({
         </div>
       ) : barHeroImage ? (
         <div className="hero-image">
-          <img alt={barHeroAlt} src={resolveAsset(barHeroImage)} />
+          <img alt={barHeroAlt} src={resolveAsset(barHeroImage)} width={midaHero?.width} height={midaHero?.height} fetchpriority={prioritatHero} />
         </div>
       ) : null}
 

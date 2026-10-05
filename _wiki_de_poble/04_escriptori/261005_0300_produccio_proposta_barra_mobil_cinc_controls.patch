@@ -1,0 +1,138 @@
+--- a/src/app/App.jsx
++++ b/src/app/App.jsx
+@@ -5,7 +5,7 @@
+ import React, { Suspense, useCallback, useEffect, useRef, memo, StrictMode, useMemo, useState } from 'react';
+ import { Navigate, NavLink, Route, Routes, useNavigate, useLocation, useRouter } from './contexts/RouterContext';
+ import { MoonStar, Search, Settings, Sun, Globe } from '../icons.jsx';
+-import { PanelLeftClose, Phone } from 'lucide-react';
++import { PanelLeftClose } from 'lucide-react';
+ import { IaiaIcon } from '../components/PedraSeca/atoms/icones';
+ import BrandMark from '../components/BrandMark';
+ import { NotificationProvider } from '../components/universal/NotificationContext.jsx';
+@@ -102,14 +102,12 @@
+    ací, canvia allà. */
+ const AMPLE_MAXIM_COMPACTE = 1023;
+ 
+-/* T3 (ordre del Mestre, 260930) · La barra inferior mòbil porta sis caselles
+-   en un ordre explícit: Xat, Mur, [Panell de Control], Pobles, Mercat i
+-   Telefonades. Ja no ix de tallar SECTIONS, que continua manant l'ordre de la
+-   barra lateral. Telefonades no és cap secció ni cap ruta (MobileNav): posar-la
+-   a SECTIONS la publicaria al manifest SEO i a la barra lateral. */
++/* T4 (marató del Mestre, 261004) · Cinc caselles inferiors en ordre explícit:
++   Xat, Mur, [Panell de Control], Mercat i Pobles. SECTIONS continua manant
++   l'ordre de la barra lateral; les Telefonades viuen al seu rail del Xat. */
+ const seccioDeLaBarraMobil = (id) => NAV_SECTIONS.find((section) => section.id === id);
+ const MOBILE_NAV_LEADING = ['xat', 'mur'].map(seccioDeLaBarraMobil).filter(Boolean);
+-const MOBILE_NAV_TRAILING = ['pobles', 'mercat'].map(seccioDeLaBarraMobil).filter(Boolean);
++const MOBILE_NAV_TRAILING = ['mercat', 'pobles'].map(seccioDeLaBarraMobil).filter(Boolean);
+ 
+ function RouteFallback() {
+   return (
+@@ -873,8 +871,6 @@
+   const { language } = useUIState();
+   const { t } = useUIActions();
+   const navigate = useNavigate();
+-  const [telefonadesObertes, setTelefonadesObertes] = useState(false);
+-  const telefonades = t('section.xat.rail.telefonades', 'Telefonades');
+ 
+   const enllacMobil = (section) => {
+     const Icon = section.icon;
+@@ -910,16 +906,7 @@
+           <Settings strokeWidth={2.1} />
+         </button>
+         {MOBILE_NAV_TRAILING.map((section) => enllacMobil(section))}
+-        <button type="button" className="nav-item" aria-label={telefonades} aria-haspopup="dialog"
+-          onClick={(event) => { event.currentTarget.focus(); setTelefonadesObertes(true); }}>
+-          <Phone className="nav-item__icon" strokeWidth={2.1} aria-hidden="true" focusable="false" />
+-          <span className="nav-item__text"><strong>{telefonades}</strong></span>
+-        </button>
+       </nav>
+-      <Dialeg obert={telefonadesObertes} onTanca={() => setTelefonadesObertes(false)} titol={telefonades}
+-        accions={<button type="button" className="sdp-boto" onClick={() => setTelefonadesObertes(false)}>{t('common.entesos', 'Entesos')}</button>}>
+-        <p>{t('nav.telefonades.avis', 'Aquest és un projecte lliure CC. Aquesta funció està prevista per a quan puguem mantenir-la econòmicament.')}</p>
+-      </Dialeg>
+     </>
+   );
+ });
+--- a/src/app/App.test.jsx
++++ b/src/app/App.test.jsx
+@@ -530,22 +530,20 @@
+   });
+ });
+ 
+-/* ── T3 (ordre del Mestre, 260930) · Barra inferior mòbil de sis caselles ──
+-   Ordre explícit (ja no ix de tallar SECTIONS): Xat, Mur, el botó central
+-   «Panell de Control», Pobles, Mercat i Telefonades. Telefonades és un botó
+-   que obri l'avís de D17: no és una ruta ni una secció, no navega i no
+-   s'encén. La barra lateral conserva el seu ordre. */
+-const AVIS_D17 = 'Aquest és un projecte lliure CC. Aquesta funció està prevista per a quan puguem mantenir-la econòmicament.';
++/* ── T4 (marató del Mestre, 261004) · Cinc caselles mòbils ─────────────
++   Ordre explícit: Xat, Mur, el botó central «Panell de Control», Mercat i
++   Pobles. La barra lateral conserva el seu ordre; les Telefonades del Xat
++   conserven la seua superfície pròpia. */
+ const casellaMobil = (el) => el.getAttribute('href') ?? el.getAttribute('aria-label') ?? el.textContent;
+ 
+-test('T3 · la barra mòbil porta Xat, Mur, Panell de Control, Pobles, Mercat i Telefonades, en eixe ordre', async () => {
++test('T4 mòbil · la barra porta exactament Xat, Mur, Panell de Control, Mercat i Pobles, en eixe ordre', async () => {
+   vi.stubGlobal('innerWidth', 1024);
+   await muntaSenseSessio('/mur', async () => {
+     const [principal, mobil] = await barres();
+-    expect([...mobil.children].map(casellaMobil)).toEqual(['/xat', '/mur', 'Panell de Control', '/pobles', '/mercat', 'Telefonades']);
++    expect([...mobil.children].map(casellaMobil)).toEqual(['/xat', '/mur', 'Panell de Control', '/mercat', '/pobles']);
+     expect([...mobil.children].map((el) => el.getAttribute('aria-label') ?? el.textContent))
+-      .toEqual(['Xat', 'Mur', 'Panell de Control', 'Pobles', 'Mercat', 'Telefonades']);
+-    expect([...mobil.children].map((el) => el.tagName)).toEqual(['A', 'A', 'BUTTON', 'A', 'A', 'BUTTON']);
++      .toEqual(['Xat', 'Mur', 'Panell de Control', 'Mercat', 'Pobles']);
++    expect([...mobil.children].map((el) => el.tagName)).toEqual(['A', 'A', 'BUTTON', 'A', 'A']);
+     /* La barra lateral no canvia: continua amb l'ordre de SECTIONS. */
+     expect([...principal.querySelectorAll('a.nav-item')].slice(0, 4).map((a) => a.getAttribute('href')))
+       .toEqual(['/xat', '/mur', '/mercat', '/pobles']);
+@@ -571,46 +569,12 @@
+   });
+ });
+ 
+-test('T3 · Telefonades obri l’avís de D17 en un diàleg, sense navegar, sense xarxa ni actius, i torna el focus en tancar', async () => {
++test('T4 mòbil · la barra no oferix Telefonades ni el seu diàleg', async () => {
+   vi.stubGlobal('innerWidth', 1024);
+   await muntaSenseSessio('/mur', async () => {
+     const [, mobil] = await barres();
+-    const boto = within(mobil).getByRole('button', { name: 'Telefonades' });
+-    expect(boto.getAttribute('type')).toBe('button');
+-    expect(boto.getAttribute('aria-haspopup')).toBe('dialog');
+-    expect(boto.classList.contains('nav-item')).toBe(true);
++    expect(within(mobil).queryByRole('button', { name: 'Telefonades' })).toBeNull();
+     expect(screen.queryByRole('dialog', { name: 'Telefonades' })).toBeNull();
+-    const peticions = globalThis.fetch.mock.calls.length;
+-
+-    /* Correcció de la revisió (260930) · Sense boto.focus() previ: Safari no
+-       dona el focus a un botó tocat, i el clic de jsdom tampoc. El focus ha
+-       de ser en un altre lloc abans del clic perquè la prova de retorn de
+-       baix no passe per casualitat. */
+-    expect(document.activeElement).not.toBe(boto);
+-    fireEvent.click(boto);
+-    const dialeg = await screen.findByRole('dialog', { name: 'Telefonades' });
+-    expect(dialeg.hasAttribute('open')).toBe(true);
+-    expect(dialeg.closest('nav')).toBeNull();
+-    expect(within(dialeg).getByText(AVIS_D17)).toBeTruthy();
+-    expect(dialeg.querySelectorAll('[style]')).toHaveLength(0);
+-    expect(window.location.pathname + window.location.search).toBe('/mur');
+-    expect(actius(mobil)).toEqual(['/mur']);
+-    expect(boto.hasAttribute('aria-current')).toBe(false);
+-    expect(boto.classList.contains('active')).toBe(false);
+-    expect(globalThis.fetch.mock.calls.length).toBe(peticions);
+-
+-    /* «Entesos» el tanca i el focus torna a Telefonades (no es queda a dins). */
+-    const entesos = within(dialeg).getByRole('button', { name: 'Entesos' });
+-    entesos.focus();
+-    fireEvent.click(entesos);
+-    await waitFor(() => expect(dialeg.hasAttribute('open')).toBe(false));
+-    expect(document.activeElement).toBe(boto);
+-
+-    /* La creu també el tanca, i es pot tornar a obrir. */
+-    fireEvent.click(boto);
+-    await waitFor(() => expect(dialeg.hasAttribute('open')).toBe(true));
+-    fireEvent.click(within(dialeg).getByRole('button', { name: 'Tancar' }));
+-    await waitFor(() => expect(dialeg.hasAttribute('open')).toBe(false));
+     expect(window.location.pathname + window.location.search).toBe('/mur');
+     expect(actius(mobil)).toEqual(['/mur']);
+   });

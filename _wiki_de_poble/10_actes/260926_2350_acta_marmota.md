@@ -8,7 +8,7 @@
 ## 2. La Visió Mestra (Refinada i Registrada)
 El canvi més important de la nit: hem actualitzat la plantilla ISO de skills (`skill.md`) per incloure-hi de manera permanent la Visió Mestra del projecte.
 - **Doble identitat:** Sóc de Poble serà una **App Nadiua (Mac/iOS/Android)**.
-- **Privadesa local:** Funcionament **offline-first a l'estil Obsidian o Notion**. Tota la informació és de l'usuari en el seu propi dispositiu.
+- **Privadesa local:** Funcionament amb **prioritat local a l'estil Obsidian o Notion**. Tota la informació és de l'usuari en el seu propi dispositiu.
 - **Publicació a la carta:** L'usuari podrà decidir si enxufa l'aplicació per a publicar contingut online (Sollutia/Supabase o Fedivers).
 
 ## 3. Preparació de la "Reunió a l'Olivera" per al Mòdul de Xat

@@ -415,6 +415,58 @@ test('classificació: validació, columna, sessió, conflicte, permís i tempora
   expect(classificaError(new Error('desconegut')).tipus).toBe('servidor');
 });
 
+/* F1 (ordre del Mestre, 261004; pla 2045, Marató 2230) · Un 403 o un 42501 no
+   culpa la persona: diu què ha rebutjat el canvi. Continuen sent 'servidor'
+   (error de camp amb «Tornar a provar»): el contracte de la cua no canvia.
+   Les frases van dins de «El servidor no ha acceptat el canvi (…)»
+   (PerfilEditor.jsx) i de «No s’ha pogut desar: …» (Notes): no comencen per
+   «el servidor» ni afirmen «de columna», que Postgres no ho diu. */
+const PERMIS_ABSENT = 'falta un permís al servidor per a desar este camp: cal aplicar-hi una migració pendent';
+const REGLES_D_ACCES = 'les regles d’accés no admeten este canvi';
+const REBUIG_403 = 'la petició s’ha rebutjat amb un error 403';
+const permisDenegat = (detall) => Object.assign(new Error(`Supabase 403: {"code":"42501","details":null,"hint":null,"message":"${detall}"}`), { status: 403 });
+
+test('F1 · permís: permís absent al servidor, regles d’accés (RLS) i 403 sense codi de Postgres; mai «no tens permís»', async () => {
+  const permis = classificaError(permisDenegat('permission denied for table profiles'));
+  expect(permis).toEqual({ tipus: 'servidor', missatge: PERMIS_ABSENT });
+  const rls = classificaError(Object.assign(new Error('Supabase 403: {"code":"42501","message":"new row violates row-level security policy for table \\"profiles\\""}'), { status: 403 }));
+  expect(rls).toEqual({ tipus: 'servidor', missatge: REGLES_D_ACCES });
+  const goTrue = classificaError(Object.assign(new Error('Supabase 403: {"code":403,"error_code":"not_admin","msg":"User not allowed"}'), { status: 403 }));
+  expect(goTrue).toEqual({ tipus: 'servidor', missatge: REBUIG_403 });
+  // Un 42501 sense status ni detall (rpc(), una funció amb errcode 42501): regles d'accés.
+  expect(classificaError(new Error('Supabase 403: {"code":"42501"}')))
+    .toEqual({ tipus: 'servidor', missatge: REGLES_D_ACCES });
+  for (const { missatge } of [permis, rls, goTrue]) {
+    expect(missatge).not.toMatch(/no tens permís/i);
+    expect(missatge).not.toMatch(/^el servidor/i);
+    expect(missatge).not.toMatch(/de columna/i);
+  }
+
+  // A la cua: error de camp de tipus servidor amb la frase nova, i «Tornar a provar» funciona.
+  const escriu = vi.fn()
+    .mockRejectedValueOnce(Object.assign(new Error('Supabase 403: {"code":"42501","message":"permission denied for table profiles"}'), { status: 403 }))
+    .mockResolvedValue({});
+  const { cua } = crea();
+  cua.registraEscriptor('fitxa', escriptor(escriu));
+  cua.encua(ref(), 'subtitle', 'Llaurador');
+  expect(await cua.desaAra(ref(), 'subtitle')).toBe(false);
+  expect(cua.llig(ref()).errors.subtitle).toMatchObject({ tipus: 'servidor', missatge: PERMIS_ABSENT });
+  expect(await cua.reintenta(ref(), 'subtitle')).toBe(true);
+  expect(escriu).toHaveBeenCalledTimes(2);
+});
+
+test('F1 · permís: «permission denied for column» i «… for relation» (Postgres anteriors a l’11) diuen el mateix que «for table»', () => {
+  for (const detall of [
+    'permission denied for column avatar_url of relation profiles',
+    'permission denied for relation profiles',
+  ]) {
+    expect(classificaError(permisDenegat(detall))).toEqual({ tipus: 'servidor', missatge: PERMIS_ABSENT });
+  }
+  // Sense status, només pel codi 42501 del cos: la mateixa frase.
+  expect(classificaError(new Error('Supabase 403: {"code":"42501","message":"permission denied for relation profiles"}')))
+    .toEqual({ tipus: 'servidor', missatge: PERMIS_ABSENT });
+});
+
 test('T47 · un 4xx determinista o una fallada sense status de l’adaptador no es reintenta per sempre: error de camp, «Tornar a provar» o «Tornar al que hi ha desat»', async () => {
   vi.useFakeTimers();
   const escriu = vi.fn()

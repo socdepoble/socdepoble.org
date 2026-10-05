@@ -224,7 +224,6 @@ Aquestes eines configuren un instrumental de consulta, no una autoritat.
 
 - [[00_index_identitat]]
 - [[01_identitat]]
-- [[AGENTS]]
 - [[doc_governanca]]
 - [[arquitectura_protocol_lazaro]]
 - [[el_projecte]]

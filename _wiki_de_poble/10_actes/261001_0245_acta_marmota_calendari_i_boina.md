@@ -221,6 +221,5 @@ Per a MarIA (amb lease) o el Mestre:
 ## Vincles
 
 - [[00_index]]
-- [[00_index_escriptori]]
 - [[261001_0045_acta_marmota]]
 

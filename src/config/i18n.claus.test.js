@@ -11,7 +11,7 @@ import { describe, expect, test } from 'vitest';
 import { SUPPORTED_LANGUAGES, createTranslator } from './i18n.js';
 import fontI18n from './i18n.js?raw';
 import fontNotesEditor from '../sections/notes/NotesEditor.jsx?raw';
-import fontControl from '../sections/control/ControlSection.jsx?raw';
+import fontDestinsControl from '../sections/control/destinsControl.js?raw';
 import fontEstatError from '../sections/mur/EstatErrorDades.jsx?raw';
 import fontCalendari from '../sections/calendari/CalendariSection.jsx?raw';
 import fontMarcaAmfitrio from '../components/universal/MarcaAmfitrio.jsx?raw';
@@ -97,6 +97,12 @@ const CLAUS = {
     en: 'Column width and chat preferences',
     eu: 'Zutabeen zabalera eta txataren hobespenak',
     gl: 'Largura das columnas e preferencias do chat'
+  },
+  'section.control.porta.publicar': {
+    ca: 'Publicar', es: 'Publicar', en: 'Publish', eu: 'Argitaratu', gl: 'Publicar'
+  },
+  'section.control.porta.saberMes': {
+    ca: 'Saber-ne més', es: 'Saber más', en: 'Learn more', eu: 'Gehiago jakin', gl: 'Saber máis'
   },
   'error.servidor': {
     ca: 'El servidor del poble ha tornat un error. Torna-ho a provar més tard.',
@@ -337,9 +343,11 @@ const CLAUS = {
    per falta d'entrada; per a estes parelles, eixa falta la detecta igualment
    el recompte «una sola aparició per llengua», que continua obligatori, i el
    text exacte es continua comprovant. Les claus anteriors no en tenen cap.
-   261004 (T7) · «Inserir» és també la forma gallega del botó. */
+   261004 (T7) · «Inserir» és també la forma gallega del botó i «Publicar»
+   és igual en valencià, castellà i gallec. */
 const IGUALS_AL_VALENCIA = Object.freeze({
   'section.notes.compartir': ['es', 'gl'],
+  'section.control.porta.publicar': ['es', 'gl'],
   'editor.targetes.dialeg.inserir': ['gl']
 });
 
@@ -374,7 +382,7 @@ describe('claus i18n del torn T1–T4', () => {
      clau és el valor valencià: si divergixen, el valencià depén de si la clau
      existix o no al diccionari. */
   const FONTS = {
-    NotesEditor: fontNotesEditor, ControlSection: fontControl, EstatErrorDades: fontEstatError, CalendariSection: fontCalendari,
+    NotesEditor: fontNotesEditor, destinsControl: fontDestinsControl, EstatErrorDades: fontEstatError, CalendariSection: fontCalendari,
     MarcaAmfitrio: fontMarcaAmfitrio, estatConnexio: fontEstatConnexio
   };
   /* Ordre del Mestre, 261001 · Les tres claus del Calendari: la reserva de
@@ -384,8 +392,8 @@ describe('claus i18n del torn T1–T4', () => {
     ['section.notes.connexio.titol', 'NotesEditor'],
     ['section.notes.connexio.altri', 'NotesEditor'],
     ['section.notes.compartir', 'NotesEditor'],
-    ['section.control.ajustosXat.titol', 'ControlSection'],
-    ['section.control.ajustosXat.subtitol', 'ControlSection'],
+    ['section.control.porta.publicar', 'destinsControl'],
+    ['section.control.porta.saberMes', 'destinsControl'],
     ['error.servidor', 'EstatErrorDades'],
     ['section.calendari.title', 'CalendariSection'],
     ['section.calendari.subtitle', 'CalendariSection'],
@@ -400,7 +408,10 @@ describe('claus i18n del torn T1–T4', () => {
     ['connexio.sense', 'estatConnexio']
   ])('%s: la reserva de %s és el valor valencià', (clau, fitxer) => {
     const font = FONTS[fitxer];
-    expect([clau, font.includes(`t('${clau}', '${CLAUS[clau].ca}')`)]).toEqual([clau, true]);
+    const crida = fitxer === 'destinsControl'
+      ? `['${clau}', '${CLAUS[clau].ca}']`
+      : `t('${clau}', '${CLAUS[clau].ca}')`;
+    expect([clau, font.includes(crida)]).toEqual([clau, true]);
   });
 
   /* 261004 (T5) · La reserva de VistaMultimedia viu a TEXTOS_MULTIMEDIA com

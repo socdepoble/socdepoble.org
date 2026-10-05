@@ -126,7 +126,7 @@ const ambNota = (extra, cos) => {
 };
 
 test('T71 · una connexió és kind «connexio», sense ploma ni glif propi, i la llista la pinta amb ConnexioFitxa', () => {
-  ambNota({ id: 'c1', title: 'L’Ànima de la IAIA', folderId: 'f-connectats', origen: { tipus: 'connexio', itemId: '/ia', ruta: '/ia' } }, (item) => {
+  ambNota({ id: 'c1', title: 'L’Ànima de la IAIA', folderId: 'f-connectats', origen: { tipus: 'connexio', itemId: '/iaia', ruta: '/iaia' } }, (item) => {
     expect(item.kind).toBe('connexio');
     expect(item.icon).toBeUndefined();
     expect(item.categoryIds[0]).toBe('f-connectats');

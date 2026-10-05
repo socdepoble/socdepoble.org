@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="ca">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Prova responsive de l’enxufe</title>
+  <style>
+    body { margin: 0; font: 16px/1.5 system-ui; color: #222; background: #eee; }
+    header, footer { padding: 16px; background: white; }
+    label { margin-right: 16px; }
+    select, button { font: inherit; }
+    main { margin: 24px; }
+    .marc { width: 375px; height: 480px; margin: 24px 0; border: 0; }
+    /* Tema amfitrió deliberadament incompatible amb els controls de l’app. */
+    button { border-radius: 0; color: purple; }
+    nav { padding: 80px; }
+    output { display: block; white-space: pre-wrap; font: 13px/1.4 monospace; }
+    .espai { height: 400px; }
+  </style>
+</head>
+<body>
+  <header>
+    <strong>Amfitrió — capçalera intacta</strong><br>
+    <label>Amplària <select id="ample"><option>375</option><option>720</option><option>1023</option><option>1023.5</option><option>1024</option><option>1200</option></select></label>
+    <label>Alçada <select id="alt"><option>480</option><option>320</option><option>640</option></select></label>
+    <button id="segona">Afegir segona instància</button>
+    <button id="moure">Moure primera instància</button>
+    <button id="sense-cq">Desactivar @container</button>
+    <button id="mesura">Mesurar</button>
+    <button id="menu-prova">Obrir menús de les instàncies</button>
+    <button id="tanca-menu-prova">Tancar menús de les instàncies</button>
+    <button id="dialeg">Obrir nova conversa</button>
+    <button id="conversa-prova">Obrir conversa de prova</button>
+    <button id="respon-prova">Respondre primer missatge</button>
+  </header>
+  <main>
+    <div class="marc" id="primer"><soc-de-poble plugin-url="/" fonts-href="/fonts/noto-sans.css" nom-poble="Gent de la Torre" poble="la-torre-de-les-macanes" ruta-inicial="/xat"></soc-de-poble></div>
+    <div id="destinacio"></div>
+    <output id="resultat" aria-label="Geometria de l’encastament">Esperant el muntatge…</output>
+  </main>
+  <footer>Amfitrió — peu intacte</footer>
+  <div class="espai" aria-hidden="true"></div>
+  <script type="module">
+    // ?compilat prova el mateix JS distribuït a WordPress, sense HMR.
+    const compilat = new URLSearchParams(location.search).has('compilat');
+    const pluginUrl = compilat ? '/wordpress-plugin/dist/' : '/';
+    document.querySelector('soc-de-poble').setAttribute('plugin-url', pluginUrl);
+    const entrada = compilat ? '/wordpress-plugin/dist/soc-de-poble.standalone.js' : '/src/embed.jsx';
+    await import(/* @vite-ignore */ entrada);
+    const primer = document.querySelector('#primer');
+    const desti = document.querySelector('#destinacio');
+    const ample = document.querySelector('#ample');
+    const alt = document.querySelector('#alt');
+    const elements = () => [...document.querySelectorAll('soc-de-poble')];
+    const rect = node => node ? Object.fromEntries(['x','y','width','height','bottom'].map(k => [k, Math.round(node.getBoundingClientRect()[k] * 100) / 100])) : null;
+    function mesura() {
+      document.querySelector('#resultat').textContent = JSON.stringify(elements().map(el => {
+        const shadow = el._closedRoot;
+        const shell = shadow?.querySelector('.sdp-root .sdp-root');
+        const nav = shadow?.querySelector('nav.mobile-nav');
+        const dialeg = shadow?.querySelector('dialog[open]');
+        return { amfitrio: rect(el), compact: shell?.classList.contains('is-compact'), barra: rect(nav), dialeg: rect(dialeg), capa: rect(dialeg?.parentElement), cap: rect(dialeg?.querySelector('.sdp-dialeg__cap')), cos: rect(dialeg?.querySelector('.sdp-dialeg__cos')), focus: shadow?.activeElement?.getAttribute('aria-label') || shadow?.activeElement?.localName,
+          display: nav && getComputedStyle(nav).display,
+          desbordament: shell && shell.scrollWidth > shell.clientWidth, scrollAmfitrio: window.scrollY, url: location.pathname };
+      }), null, 2);
+    }
+    function ajusta() {
+      document.querySelectorAll('.marc').forEach(el => { el.style.width = `${ample.value}px`; el.style.height = `${alt.value}px`; });
+      requestAnimationFrame(() => requestAnimationFrame(mesura));
+    }
+    ample.addEventListener('change', ajusta);
+    alt.addEventListener('change', ajusta);
+    document.querySelector('#mesura').addEventListener('click', mesura);
+    document.querySelector('#menu-prova').addEventListener('click', () => {
+      elements().forEach(el => {
+        const shadow = el._closedRoot;
+        const boto = shadow?.querySelector('button[aria-label="Obrir menú"]');
+        if (boto?.getAttribute('aria-expanded') !== 'true') boto?.click();
+      });
+      requestAnimationFrame(() => requestAnimationFrame(mesura));
+    });
+    document.querySelector('#tanca-menu-prova').addEventListener('click', () => {
+      elements().forEach(el => {
+        const boto = el._closedRoot?.querySelector('button[aria-label="Obrir menú"]');
+        if (boto?.getAttribute('aria-expanded') === 'true') boto.click();
+      });
+      requestAnimationFrame(() => requestAnimationFrame(mesura));
+    });
+    document.querySelector('#moure').addEventListener('click', () => {
+      (primer.parentNode === desti ? document.querySelector('main') : desti).appendChild(primer);
+      requestAnimationFrame(mesura);
+    });
+    document.querySelector('#segona').addEventListener('click', event => {
+      if (document.querySelector('#segon')) return;
+      const caixa = document.createElement('div'); caixa.className = 'marc'; caixa.id = 'segon';
+      const el = document.createElement('soc-de-poble');
+      el.setAttribute('plugin-url',pluginUrl); el.setAttribute('fonts-href','/fonts/noto-sans.css');
+      el.setAttribute('ruta-inicial','/legal'); caixa.append(el); desti.append(caixa);
+      event.target.disabled = true; ajusta();
+    });
+    document.querySelector('#sense-cq').addEventListener('click', event => {
+      const llevats = new Set();
+      function neteja(sheet) {
+        for (let i=sheet.cssRules.length-1; i>=0; i--) {
+          const rule=sheet.cssRules[i];
+          if (rule.constructor.name === 'CSSContainerRule') sheet.deleteRule(i);
+          else if (rule.cssRules) neteja(rule);
+        }
+      }
+      elements().forEach(el => {
+        const shadow=el._closedRoot;
+        [...shadow.adoptedStyleSheets, ...[...shadow.querySelectorAll('style')].map(s=>s.sheet)].filter(Boolean).forEach(sheet=>{
+          if (!llevats.has(sheet)) { neteja(sheet); llevats.add(sheet); }
+        });
+      });
+      event.target.disabled=true; requestAnimationFrame(mesura);
+    });
+    document.querySelector('#dialeg').addEventListener('click', () => {
+      const shadow = primer.querySelector('soc-de-poble')._closedRoot;
+      shadow.addEventListener('animationend', mesura, { once: true });
+      shadow.querySelector('button[aria-label="Nova conversa"]')?.click();
+      requestAnimationFrame(mesura);
+    });
+    document.querySelector('#conversa-prova').addEventListener('click', () => {
+      const shadow = primer.querySelector('soc-de-poble')._closedRoot;
+      [...shadow.querySelectorAll('.sdp-xat-fila')].find(node => node.textContent.includes('IAIA MarIA'))?.click();
+      requestAnimationFrame(mesura);
+    });
+    document.querySelector('#respon-prova').addEventListener('click', () => {
+      const shadow = primer.querySelector('soc-de-poble')._closedRoot;
+      shadow.querySelector('[data-missatge] .sdp-xat-bombolla__accions > button')?.click();
+      requestAnimationFrame(() => {
+        [...shadow.querySelectorAll('[role="menuitem"]')].find(node => node.textContent.trim() === 'Respon')?.click();
+        requestAnimationFrame(mesura);
+      });
+    });
+    document.addEventListener('scroll', mesura);
+    // Només el banc de proves inspecciona la geometria del shadow tancat.
+    setTimeout(mesura, 1500);
+  </script>
+</body>
+</html>

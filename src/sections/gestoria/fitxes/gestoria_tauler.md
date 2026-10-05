@@ -18,7 +18,7 @@ Llig, només en este ordinador, els extractes del banc que tu tries i en calcula
 
 - Els extractes del banc que tries: els llig sencers en la memòria del navegador, però en guarda només el que diu el pas 3.
 - De la configuració de l'empresa, si la tries: només el nom (el comercial, si n'hi ha) i la població del domicili fiscal, per a la teua boina. La resta del fitxer no es guarda.
-- El nom d'un fitxer només es guarda dins de l'avís d'un fitxer que no s'ha pogut llegir, perquè sàpies quin és.
+- El selector mostra el nom dels fitxers triats. Es buida en acabar una lectura bona o prémer «Oblida les dades». Dins de la lectura, el nom només es guarda en els avisos, perquè sàpies quin fitxer els ha causat.
 
 ## Què escriu
 
@@ -43,7 +43,7 @@ Llig, només en este ordinador, els extractes del banc que tu tries i en calcula
 
 ## Com es desenxufa
 
-«Oblida les dades» buida la memòria del Tauler i torna a amagar totes les xifres. Revocar l'aprovació al panell de Tractors el bloqueja a l'instant.
+«Oblida les dades» buida les dades guardades del Tauler i els noms del selector, i torna a amagar totes les xifres. També cancel·la la lectura activa. Mentre llig, el selector està desactivat: no es pot triar un altre lot. Canviar de mòdul dins de Gestoria conserva la lectura; tancar la Gestoria la cancel·la. El navegador no permet interrompre el fitxer que ja ha començat a llegir: quan acaba, els seus bytes es descarten, no es llig cap fitxer següent i no es publica cap resultat parcial. Revocar l’aprovació al panell de Tractors, també des d’una altra pestanya, bloqueja les lectures següents però no interromp una lectura que ja està en marxa.
 
 ## L'aprovació
 

@@ -32,7 +32,12 @@ const CENS = Object.freeze([
   'src/data/recuperacioPendent.test.js',
   'src/data/sessionService.test.js',
   'src/data/supabase/organizations.test.js',
-  'src/app/contexts/scopedProviders.test.jsx'
+  'src/app/contexts/scopedProviders.test.jsx',
+  /* F2 (Marató 2230) · La traducció del rebuig d'una pujada al vocabulari del port. */
+  'src/data/supabase/storage.js',
+  'src/data/supabase/storage.pujada.test.js',
+  /* F2 · La privacitat de la consola de resolveAsset i promoteToPublic. */
+  'src/data/supabase/storage.privacitat.test.js'
 ]);
 
 describe('el cens', () => {

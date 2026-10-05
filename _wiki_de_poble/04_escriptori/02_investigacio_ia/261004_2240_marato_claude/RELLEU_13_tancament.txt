@@ -1,0 +1,30 @@
+RELLEU 13 · Claude · 04:40 Europe/Madrid (05/10) · tancament de Claude: informes publicats i validats
+Torn torn_8ec393af.
+
+PUBLICAT (circuit documental: context, create i check, tots dos valid:true)
+- _wiki_de_poble/04_escriptori/261005_0345_avaluacio_final_marato.md. Document per al Mestre: nota global 6,1 (aprovat), 8 capacitats, fronts de la marató, prioritats i decisions pendents.
+- _wiki_de_poble/04_escriptori/261004_2245_auditoria_claude.md. Informe de Claude per al prompt 2230: el que he fet, la revisió creuada, les notes i la Proposta d'Automillora (anàlisi del prompt, capacitats noves i ceguesa de MarIA).
+
+NOTES DE LES CAPACITATS (panells: dos avaluadors i un reconciliador, només el codi viu)
+| Capacitat | Nota |
+| Rendiment | 4,7 |
+| Accessibilitat | 6,9 |
+| SEO i compartició | 4,8 |
+| UX/UI i Pedra Seca | 5,7 |
+| Arquitectura i codi | 7,4 |
+| Arquitectura cognitiva | 6,1 |
+| Tests i CI | 6,1 |
+| Resiliència | 6,7 |
+| GLOBAL | 6,1 |
+Fronts: A1 7,5 · A2 9,7 · F1-F5 i P4 7,8 · T4 6,9 · T5 6,1 · CI 6,1.
+
+PER A CODEX
+- Si discrepes d'alguna nota, deixa-ho al teu relleu. A la pròxima obertura ho incorporaré a 261005_0345 com a «Codex discrepa», amb la teua autoria.
+- La teua captura 261005_0357_produccio_emojis_xl_final.png no té àncora. La porta Olivera n'ix roja (és l'únic error).
+- No he ratificat els huit paquets pendents (e187, 3c2d, ec281, 946, V9, ed359, eff88d29 i 33f1fb4f) per la congelació. Consten com a pendents de decisió del Mestre.
+
+PER A MarIA (Claude no pot escriure a .agents/ ni executar tancament.mjs; cal executor o el Mestre)
+- Text proposat per a ESTAT, si el voleu afegir:
+  «ESTAT_ACTUAL · 2026-10-05 04:40 · Claude · tancament de la Marató 2230. Informe [[261004_2245_auditoria_claude]] i avaluació [[261005_0345_avaluacio_final_marato]] (global 6,1). Fronts de Claude F1-F5 i P4 vius amb proves. Revisió adversarial de Codex amb 3 rondes d'ACK. Migració 2610042350 no aplicada. Res no està commitejat i hi ha un parany de commit parcial: tooling/tests, lazyRoute.js, RouteErrorBoundary, migracions i imatge OG sense versionar. Cap test:ci complet sobre el tall congelat. Següent: el commit atòmic, un runner únic i la primera tasca de 261005_0345_tasques_pendents_consola_visual (crash de useSession en eixir des de Control).»
+- Línia proposada per al LEDGER: «261005 | recaiguda | wiki-documentacio-i-reflex | canal viu: Claude 40 min sense relleu durant el mapa inicial».
+- El torn torn_8ec393af queda obert: no tinc permís per a executar tancament.mjs.

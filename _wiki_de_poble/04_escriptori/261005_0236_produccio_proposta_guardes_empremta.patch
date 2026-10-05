@@ -1,0 +1,26 @@
+--- a/tests/security-chain.test.mjs
++++ b/tests/security-chain.test.mjs
+@@ -93,3 +93,23 @@
+  assert.equal(JSON.parse(fs.readFileSync(path.join(root,'.agents/SKILLS_SEAL.json'),'utf8')).hash,before);
+  assert.equal(verificaSegell(root).ok,false);
+ });
++
++/* La font compartida forma part de les empremtes signades. Una reparació de
++   lint no pot canviar silenciosament els seus bytes ni relaxar altres fonts. */
++test('empremta compartida: conserva el BOM literal de la font signada', () => {
++ const font=fs.readFileSync(path.join(REPO,'src/sections/tractors/nucli/empremta.js'),'utf8');
++ const bom=String.fromCodePoint(0xFEFF);
++ assert.ok(font.includes(`/^${bom}/`),'el BOM ha de continuar literal en la font signada');
++ assert.ok(!font.includes('/^\\uFEFF/'),'escapar el BOM canviaria totes les empremtes');
++});
++for (const [nom,file,regex,espera] of [
++ ['RegExp de la font signada','src/sections/tractors/nucli/empremta.js',true,false],
++ ['RegExp d’una altra font','src/utils/sonda-bom.js',true,true],
++ ['espai fora de RegExp a la font signada','src/sections/tractors/nucli/empremta.js',false,true]
++]) test(`ESLint BOM: ${nom}`,async () => {
++ const {ESLint}=await import('eslint');
++ const bom=String.fromCodePoint(0xFEFF);
++ const font=regex ? `export const prova=/^${bom}/;\n` : `export${bom}const prova=1;\n`;
++ const [resultat]=await new ESLint({cwd:REPO}).lintText(font,{filePath:path.join(REPO,file)});
++ assert.equal(resultat.messages.some(m=>m.ruleId==='no-irregular-whitespace'),espera);
++});

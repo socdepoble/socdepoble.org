@@ -6,6 +6,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { CAMINS } from '../lib/arrel.mjs';
+import { checkTaula } from '../gates/porta-olivera.mjs';
 
 const same = (a, b) => a.dev === b.dev && a.ino === b.ino;
 const regular = stat => stat.isFile() && stat.nlink === 1;
@@ -63,7 +64,32 @@ export function checkDraftDestinations(root, file) {
   const index = openIndex(root);
   fs.closeSync(index.fd);
 }
-export function writeIndexedDraft(root, file, content) {
+function indexProse(index) {
+  // Conserva offsets per inserir sense alterar comentaris ni exemples de codi.
+  const mask = text => text.replace(/[^\r\n]/g, ' ');
+  let fence = null;
+  return index.replace(/<!--[\s\S]*?-->/g, mask).split(/(?<=\n)/).map(line => {
+    const mark = /^ {0,3}(`{3,}|~{3,})/.exec(line);
+    if (mark) {
+      if (!fence) fence = mark[1];
+      else if (mark[1][0] === fence[0] && mark[1].length >= fence.length) fence = null;
+      return mask(line);
+    }
+    return fence ? mask(line) : line;
+  }).join('').replace(/`[^`]*`/g, mask);
+}
+function anchorDraft(index, anchor, firstLevel) {
+  if (!firstLevel) return indexProse(index).includes(anchor) ? index : `${index}\n- ${anchor}\n`;
+  const prose = indexProse(index);
+  const active = /^##[ \t]+Activitat en curs[^\n]*(?:\r?\n|$)/m.exec(prose);
+  if (!active) return `${index}\n## Activitat en curs\n\n- ${anchor}\n`;
+  const start = active.index + active[0].length;
+  const next = /^##[ \t]/m.exec(prose.slice(start));
+  const end = next ? start + next.index : index.length;
+  if (prose.slice(start, end).includes(anchor)) return index;
+  return `${index.slice(0, start)}\n- ${anchor}\n${index.slice(start)}`;
+}
+export function writeIndexedDraft(root, file, content, { requireCleanTable = false } = {}) {
   root = fs.realpathSync(root);
   checkDraftDestinations(root, file);
   const lock = path.join(root, CAMINS.agents, 'runtime', 'document-create.lock');
@@ -74,19 +100,27 @@ export function writeIndexedDraft(root, file, content) {
   try {
     assertOwned(root, lock, lockStat, lockFd);
     index = openIndex(root);
+    // Revalida dins del lock: context pot haver emés el rebut abans que un
+    // altre actor deixe un document nou sense classificar. No es mou res.
+    if (requireCleanTable) {
+      const taula = checkTaula(root);
+      if (!taula.valid) throw new Error(`Convocatòria amb Escriptori brut:\n${taula.errors.join('\n')}`);
+    }
     parents(root, file, true);
     const fd = fs.openSync(file, fs.constants.O_WRONLY | fs.constants.O_CREAT | fs.constants.O_EXCL | fs.constants.O_NOFOLLOW, 0o600);
     created = { fd, stat: fs.fstatSync(fd) };
     assertOwned(root, file, created.stat, fd);
     fs.writeFileSync(fd, content, 'utf8'); fs.fsyncSync(fd);
-    const anchor = `[[${path.basename(file, '.md')}]]`;
-    if (!index.content.includes(anchor)) {
+    const relative = path.relative(path.dirname(index.file), file).split(path.sep).join('/').replace(/\.md$/, '');
+    const anchor = `[[${relative}]]`;
+    const anchored = anchorDraft(index.content, anchor, path.dirname(file) === path.join(root, CAMINS.escriptori));
+    if (anchored !== index.content) {
       const tempFile = `${index.file}.${randomUUID()}.tmp`;
       parents(root, tempFile);
       const tempFd = fs.openSync(tempFile, fs.constants.O_WRONLY | fs.constants.O_CREAT | fs.constants.O_EXCL | fs.constants.O_NOFOLLOW, index.stat.mode & 0o777);
       temporary = { file: tempFile, fd: tempFd, stat: fs.fstatSync(tempFd) };
       assertOwned(root, tempFile, temporary.stat, tempFd);
-      fs.writeFileSync(tempFd, `${index.content}\n- ${anchor}\n`, 'utf8'); fs.fsyncSync(tempFd);
+      fs.writeFileSync(tempFd, anchored, 'utf8'); fs.fsyncSync(tempFd);
     }
     // CAS de bytes i inode: preserva també les edicions concurrents legítimes.
     const latest = openIndex(root);

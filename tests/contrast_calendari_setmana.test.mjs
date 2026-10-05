@@ -31,7 +31,7 @@ const TEMES = { clar, fosc: { ...clar, ...declaracions(tokens.slice(iniciFosc, t
 function regla(selector) {
   const cos = new RegExp(`(?:^|\\n)\\s*${escapa(selector)}\\s*\\{([^{}]*)\\}`).exec(modules)?.[1];
   assert(cos, `falta la regla ${selector}`);
-  return Object.fromEntries(cos.split(';').map((part) => /^\s*([\w-]+)\s*:\s*(.+)$/s.exec(part.trim())).filter(Boolean).map((m) => [m[1], m[2].trim()]));
+  return Object.fromEntries(cos.replace(/\/\*[\s\S]*?\*\//g, '').split(';').map((part) => /^\s*([\w-]+)\s*:\s*(.+)$/s.exec(part.trim())).filter(Boolean).map((m) => [m[1], m[2].trim()]));
 }
 
 const FONTS = ['esdeveniment', 'publicacio', 'producte', 'pagina', 'agenda'];
@@ -168,20 +168,21 @@ test('la tira: cap pista de la capçalera baixa de --sdp-touch (per davall de 7 
   assert.equal(tira['grid-template-columns'], 'repeat(auto-fit, minmax(var(--sdp-touch), 1fr))');
 });
 
-test('al catàleg, el sostre del sticky seguix la barra taronja: el doble de la blava, i la blava sola on components.css amaga la taronja', () => {
-  assert.equal(regla('.sdp-especimen .sdp-cal-setmana')['--sdp-cal-sostre'], 'calc(var(--sdp-alt-accio) * 2)');
-  assert.match(modules, /@media \(max-width: 720px\) \{\s*\.sdp-especimen \.sdp-cal-setmana \{ --sdp-cal-sostre: var\(--sdp-alt-accio\); \}\s*\}/);
-  // La condició que es replica: la de components.css que amaga la taronja de la pàgina.
-  assert.match(llig('src/css/components.css'), /@media \(max-width: 720px\) \{\s*\.sdp-universal-page-container > section\.bar-orange \{ display: none; \}/);
+/* D2 (ordre del Mestre, 261004), modules.css: la barra taronja universal es
+   conserva a tots els amples; T38 s'ha revertit a components.css. */
+test('el sostre del sticky conserva les dues barres a tots els amples; en pantalla completa és zero', () => {
+  assert.equal(regla('.sdp-cal-setmana')['--sdp-cal-sostre'], 'calc(var(--sdp-alt-accio) * 2)');
+  assert.equal(regla('.sdp-pantalla-completa .sdp-cal-setmana.sdp-cal-setmana')['--sdp-cal-sostre'], '0px');
+  assert.doesNotMatch(modules, /\.sdp-especimen \.sdp-cal-setmana\s*\{/);
+  const components = llig('src/css/components.css').replace(/\/\*[\s\S]*?\*\//g, '');
+  assert.doesNotMatch(components, /\.sdp-universal-page-container\s*>\s*section\.bar-orange\s*\{[^}]*display:\s*none/);
 });
 
 test('Pedra Seca a les regles del dia i de la setmana: cap hex ni primitiu, radis de l’escala, espais de 0,25rem, cap ombra, scroll ni media query de viewport', () => {
   const inici = modules.indexOf('/* El dia: la capçalera de la setmana');
   const fi = modules.indexOf('/* Mes i 2 setmanes (VistaMes).', inici);
   assert(inici > 0 && fi > inici, 'no trobe les regles del dia i de la setmana');
-  // L'única @media d'amplada admesa replica la condició de la barra taronja (només el sostre del catàleg).
-  const SOSTRE = /@media \(max-width: 720px\) \{\s*\.sdp-especimen \.sdp-cal-setmana \{ --sdp-cal-sostre: var\(--sdp-alt-accio\); \}\s*\}/;
-  const text = modules.slice(inici, fi).replace(/\/\*[\s\S]*?\*\//g, '').replace(SOSTRE, '');
+  const text = modules.slice(inici, fi).replace(/\/\*[\s\S]*?\*\//g, '');
   const dolents = [];
   if (/#[0-9a-f]{3,8}\b/i.test(text)) dolents.push('hex');
   if (/--sdp-(pedra|primary|secondary|exit|error|avis)-\d/.test(text)) dolents.push('primitiu');

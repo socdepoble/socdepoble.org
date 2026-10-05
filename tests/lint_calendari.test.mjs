@@ -127,7 +127,7 @@ test('taxonomia: AgendaMur.jsx i AgendaSection.jsx no tenen cap importador; /cal
     .filter((f) => /['"][^'"]*\/(AgendaMur(\.jsx)?|agenda\/AgendaSection(\.jsx)?)['"]/.test(llig(f)));
   assert.deepEqual(importadors, []);
   const app = llig('src/app/App.jsx');
-  assert.match(app, /const CalendariSection = lazy\(\(\) => import\('\.\.\/sections\/calendari\/CalendariSection'\)\);/);
+  assert.match(app, /const CalendariSection = lazyRoute\(\(\) => import\('\.\.\/sections\/calendari\/CalendariSection'\)\);/);
   assert.match(app, /<Route path="calendari" element=\{<CalendariSection \/>\} \/>/);
   assert.doesNotMatch(app, /AgendaSection/);
 });

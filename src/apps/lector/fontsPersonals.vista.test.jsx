@@ -3,7 +3,7 @@
    la llavor sintètica i el magatzem sobre el navegador fals de P2. Les fonts
    s'hi posen per l'API pública (fontsPersonals.js), com ho fa el Snippet
    Curador del Bloc. Adreces d'example.org: cap dada personal. */
-import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { creaCanalFals, creaIdbFals, creaLocksFals } from '../../utils/__fixtures__/navegadorFals.js';
 import { creaRegistre } from '../plataforma/registreApps.js';
@@ -38,6 +38,31 @@ function navegador() {
     return { registre: creaRegistre({ internes: [{ ...manifestLector, carrega: () => Promise.resolve({ default: App }) }] }) };
   };
   return { idb, api, magatzem, entorn };
+}
+
+/* L'escriptura i els avisos són reals; només es retarda la publicació de la
+   lectura. El magatzem és immutable: el delegat conserva els getters vius. */
+function retardaLectures(magatzem) {
+  let retardades = false;
+  const pendents = [];
+  const descriptors = Object.getOwnPropertyDescriptors(magatzem);
+  const escriptures = vi.fn(magatzem.actualitzaPersonals);
+  descriptors.actualitzaPersonals.value = escriptures;
+  descriptors.llegixPersonals.value = vi.fn(async () => {
+    const registre = await magatzem.llegixPersonals();
+    if (!retardades) return registre;
+    return new Promise((resolve) => pendents.push(() => resolve(registre)));
+  });
+  return {
+    magatzem: Object.defineProperties({}, descriptors),
+    escriptures,
+    pendents,
+    retarda: () => { retardades = true; },
+    allibera: () => {
+      retardades = false;
+      while (pendents.length) pendents.shift()();
+    }
+  };
 }
 
 beforeEach(() => {
@@ -112,6 +137,66 @@ describe('a la gestió de fonts', () => {
     await waitFor(() => expect(mig().queryByRole('list', { name: 'Les teues fonts' })).toBeNull());
     await waitFor(() => expect(document.activeElement).toBe(mig().getByRole('region', { name: 'Les que seguixes' })));
     expect(await nav.api.llistaFontsPersonals()).toEqual([]);
+  });
+
+  test('SN-R6 · dues retirades amb la lectura pendent esperen el DOM nou abans de moure el focus', async () => {
+    const nav = navegador();
+    await nav.api.afigFontPersonal({ url: 'https://example.org/una', nom: 'La Una' });
+    await nav.api.afigFontPersonal({ url: 'https://example.org/dos', nom: 'La Dos' });
+    const retardat = retardaLectures(nav.magatzem());
+    munta('/app/lector/fonts', nav.entorn(retardat.magatzem));
+    await screen.findByRole('region', { name: 'Fonts del poble' });
+    const llista = await mig().findByRole('list', { name: 'Les teues fonts' });
+    const primera = within(llista).getByRole('button', { name: 'Lleva la font La Dos' });
+    const segona = within(llista).getByRole('button', { name: 'Lleva la font La Una' });
+    retardat.retarda();
+    try {
+      primera.focus();
+      fireEvent.click(primera);
+      await waitFor(() => expect(retardat.escriptures).toHaveBeenCalledTimes(1));
+      await act(async () => { await retardat.escriptures.mock.results[0].value; });
+      await waitFor(() => expect(retardat.pendents.length).toBeGreaterThan(0));
+      expect(primera.isConnected).toBe(true);
+      expect(document.activeElement).toBe(primera);
+
+      /* Un segon toc real posa el focus al segon botó, encara visible. */
+      segona.focus();
+      fireEvent.click(segona);
+      await waitFor(() => expect(retardat.escriptures).toHaveBeenCalledTimes(2));
+      await act(async () => { await retardat.escriptures.mock.results[1].value; });
+      expect(document.activeElement).toBe(segona);
+      await act(async () => { retardat.allibera(); });
+      await waitFor(() => expect(mig().queryByRole('list', { name: 'Les teues fonts' })).toBeNull());
+      expect(document.activeElement).toBe(mig().getByRole('region', { name: 'Les que seguixes' }));
+      expect(await nav.api.llistaFontsPersonals()).toEqual([]);
+    } finally {
+      await act(async () => { retardat.allibera(); });
+    }
+  });
+
+  test('SN-R6 · la lectura retardada no recupera el focus si la persona ja ha canviat de columna', async () => {
+    const nav = navegador();
+    await nav.api.afigFontPersonal({ url: URL_BARRI, nom: NOM_BARRI });
+    const retardat = retardaLectures(nav.magatzem());
+    munta('/app/lector/fonts', nav.entorn(retardat.magatzem));
+    const altraColumna = await screen.findByRole('region', { name: 'Fonts del poble' });
+    const llista = await mig().findByRole('list', { name: 'Les teues fonts' });
+    const paperera = within(llista).getByRole('button', { name: `Lleva la font ${NOM_BARRI}` });
+    retardat.retarda();
+    try {
+      paperera.focus();
+      fireEvent.click(paperera);
+      await waitFor(() => expect(retardat.escriptures).toHaveBeenCalledTimes(1));
+      await act(async () => { await retardat.escriptures.mock.results[0].value; });
+      await waitFor(() => expect(retardat.pendents.length).toBeGreaterThan(0));
+      altraColumna.focus();
+      expect(document.activeElement).toBe(altraColumna);
+      await act(async () => { retardat.allibera(); });
+      await waitFor(() => expect(mig().queryByRole('list', { name: 'Les teues fonts' })).toBeNull());
+      expect(document.activeElement).toBe(altraColumna);
+    } finally {
+      await act(async () => { retardat.allibera(); });
+    }
   });
 
   test('sense cap font personal, res de nou a la columna', async () => {

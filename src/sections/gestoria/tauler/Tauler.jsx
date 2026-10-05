@@ -19,7 +19,7 @@
  * Tractors; amb ella, el selector dels extractes. Cap xifra es pinta fins que
  * la persona prem l'ull (a la targeta o a la boina de la pàgina).
  */
-import { useId } from 'react';
+import { useId, useLayoutEffect, useRef, useState } from 'react';
 import { Construction, EyeOff, FileSearch } from 'lucide-react';
 import { Boto } from '../../../components/PedraSeca/atoms/Boto.jsx';
 import { Carregant, EstatBuit } from '../../../components/PedraSeca/atoms/estats.jsx';
@@ -83,7 +83,40 @@ export function BlocTargetes({ titol, targetes, titular, pastilla, visible, gene
  *   `onOblida`: el que fa «Oblida les dades» (la closca hi tanca també l'ull); sense, tauler.oblida
  */
 export function PortaTauler({ tauler, onObreTractors, onOblida }) {
-  const { porta, fila, aprovat, llegint, error, lectura } = tauler;
+  const { porta, fila, aprovat, llegint, error, lectura, generacio } = tauler;
+  const refPorta = useRef(null);
+  const focusPropi = useRef(null);
+  const anterior = useRef({ generacio, llegint });
+  const [anunci, setAnunci] = useState('');
+
+  useLayoutEffect(() => {
+    const focus = focusPropi.current;
+    if (llegint && focus?.node.disabled) focus.desactivat = true;
+    const canviDeLot = anterior.current.generacio !== generacio;
+    const fiDeLectura = anterior.current.llegint && !llegint;
+    if (canviDeLot || fiDeLectura) {
+      if (!llegint && lectura && !error) setAnunci('Lectura completada.');
+      if (focus && (!focus.node.isConnected || focus.node.disabled || focus.desactivat)) {
+        const doc = focus.node.ownerDocument;
+        // En un endoll Shadow DOM, activeElement del document és l'amfitrió.
+        const esShadow = focus.arrel !== doc;
+        const actiu = focus.arrel.activeElement;
+        const tornaAlCos = esShadow
+          ? !actiu && (doc.activeElement === focus.arrel.host || doc.activeElement === doc.body || !doc.activeElement)
+          : actiu === doc.body;
+        if (tornaAlCos) refPorta.current?.querySelector('button:not([disabled])')?.focus();
+      }
+    }
+    anterior.current = { generacio, llegint };
+  }, [generacio, llegint, lectura, error]);
+
+  const recordaFocus = (event) => {
+    focusPropi.current = { node: event.target, arrel: event.target.getRootNode(), desactivat: false };
+  };
+  const oblida = () => {
+    setAnunci(llegint ? 'Lectura cancel·lada. Les dades s’han oblidat.' : 'Les dades s’han oblidat.');
+    (onOblida ?? tauler.oblida)();
+  };
   if (porta.carregant) return <Carregant etiqueta="Llegint les aprovacions dels tractors…" />;
   if (!aprovat) {
     const estat = ESTATS_TRACTOR[fila?.estat] ?? ESTATS_TRACTOR.pendent;
@@ -97,11 +130,12 @@ export function PortaTauler({ tauler, onObreTractors, onOblida }) {
     );
   }
   return (
-    <div className="sdp-gestoria-tauler__porta">
-      <Camp etiqueta="Tria els extractes del banc"
+    <div className="sdp-gestoria-tauler__porta" ref={refPorta} onFocusCapture={recordaFocus}>
+      <p role="status" aria-label="Estat de la lectura" aria-atomic="true" className="sdp-nomes-lector">{anunci}</p>
+      <Camp key={tauler.generacio} etiqueta="Tria els extractes del banc"
         ajuda="Norma 43 o el CSV de moviments i, si vols, la configuració de l’empresa (.json) per a la teua boina. Res es puja enlloc.">
         <CampText tipus="file" multiple accept={ACCEPTA_TAULER} disabled={llegint}
-          onChange={(event) => tauler.llig(Array.from(event.target.files ?? []))} />
+          onChange={(event) => { setAnunci(''); tauler.llig(Array.from(event.target.files ?? [])); }} />
       </Camp>
       {llegint ? <Carregant etiqueta="Llegint els extractes…" /> : null}
       {error ? <Alerta to="error" titol="No s’han pogut llegir els extractes">{error}</Alerta> : null}
@@ -112,8 +146,8 @@ export function PortaTauler({ tauler, onObreTractors, onOblida }) {
           </ul>
         </Alerta>
       ) : null}
-      {lectura ? (
-        <Boto varietat="secundari" onClick={onOblida ?? tauler.oblida}>Oblida les dades</Boto>
+      {lectura || llegint ? (
+        <Boto varietat="secundari" onClick={oblida}>Oblida les dades</Boto>
       ) : null}
     </div>
   );

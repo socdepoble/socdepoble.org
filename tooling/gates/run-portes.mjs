@@ -32,7 +32,7 @@ export const passos = [
   {nom:'Segell de skills',cmd:'node',args:['tooling/gates/segella.mjs'],readOnly:true,script:'porta:segella'},
   {nom:'Integritat del LEDGER',cmd:'node',args:['tooling/verify-ledger.mjs'],readOnly:true},
   { readOnly:true, nom: 'Contracte documental', cmd: 'node', args: ['tooling/gates/porta-documents.mjs'], script: 'porta:documents' },
-  { nom: 'Proves del contracte documental', cmd: 'npm', args: ['run', 'test:documental'] },
+  { nom: 'Proves del contracte documental', cmd: 'npm', args: ['run', 'test:documental'], prova: true },
   { nom: 'Tractor Psicopatia', cmd: 'node', args: ['tooling/gates/tractor-psicopatia.mjs'], script: 'porta:psicopatia' },
   { nom: 'Porta 58px', cmd: 'node', args: ['tooling/gates/01_porta_pedra_seca_58px.mjs'], script: 'porta:58px' },
   { nom: 'Linter', cmd: 'npm', args: ['run', 'lint'] },
@@ -86,9 +86,16 @@ export const passos = [
   { nom: 'Porta RLS', cmd: 'node', args: ['tooling/gates/tractor-rls.mjs'], script: 'porta:rls' },
   { nom: 'Porta Catàleg', cmd: 'node', args: ['tooling/gates/tractor-cataleg.mjs'], script: 'porta:cataleg' },
 
-  { nom: 'Proves NodeJS', cmd: 'npm', args: ['run', 'test:node'] },
-  { nom: 'Proves', cmd: 'npm', args: ['run', 'test', '--', '--run'] }
+  { nom: 'Proves NodeJS', cmd: 'npm', args: ['run', 'test:node'], prova: true },
+  { nom: 'Proves', cmd: 'npm', args: ['run', 'test', '--', '--run'], prova: true }
 ];
+
+/** Selecció explícita: el mode de CI conserva totes les portes del mode complet.
+ * Les bateries marcades ja s'han executat a test:ci; esta selecció no les certifica. */
+export function seleccionaPassos({ diagnostic = false, nomesPortes = false } = {}) {
+  if (diagnostic && nomesPortes) throw new Error('--diagnostic i --nomes-portes són modes diferents');
+  return passos.filter(pas => (!diagnostic || pas.readOnly) && (!nomesPortes || !pas.prova));
+}
 
 const isMain = esMain(import.meta.url);
 
@@ -104,9 +111,13 @@ if (isMain) {
   console.log("\n🚀 INICIANT CADENA AGREGATIVA DE PORTES...\n");
 
   const diagnostic=process.argv.includes('--diagnostic');
+  const nomesPortes=process.argv.includes('--nomes-portes');
+  let seleccionats;
+  try { seleccionats=seleccionaPassos({ diagnostic, nomesPortes }); }
+  catch (error) { console.error(error.message); process.exit(1); }
+  if(nomesPortes) console.log('Mode --nomes-portes: les proves documentals, Node i Vitest s’ometen intencionadament. Este mode no les executa ni les certifica.');
   let failures=0;
-  for (const pas of passos) {
-    if(diagnostic && !pas.readOnly) continue;
+  for (const pas of seleccionats) {
     console.log(`\n────────────────────────────────────────────────────────────────────────`);
     console.log(`⏳ Executant ${pas.nom}...`);
     console.log(`────────────────────────────────────────────────────────────────────────\n`);
@@ -123,7 +134,8 @@ if (isMain) {
 
   if(diagnostic){console.log(JSON.stringify({diagnostic:true,failures,valid:failures===0}));process.exit(failures?1:0);}
   console.log(`\n========================================================================`);
-  console.log(`🎉 TOTES LES PORTES HAN PASSAT AMB ÈXIT. MUR DE PEDRA SECA INTACTE.`);
+  if(nomesPortes) console.log('TOTES LES PORTES HAN PASSAT. LES PROVES NO S’HAN EXECUTAT EN ESTE MODE.');
+  else console.log(`🎉 TOTES LES PORTES HAN PASSAT AMB ÈXIT. MUR DE PEDRA SECA INTACTE.`);
   console.log(`========================================================================\n`);
   process.exit(0);
 }

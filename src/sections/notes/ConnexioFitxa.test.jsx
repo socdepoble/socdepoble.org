@@ -35,7 +35,7 @@ const fitxa = (origen, nota = {}) => ({
   categoryIds: ['f-connectats'], icon: undefined, image: '',
   data: { id: 'c1', title: '', content: '<p>Element connectat des de Sóc de Poble.</p>', createdAt: '2026-09-20T10:00:00.000Z', origen, ...nota }
 });
-const ORIGEN_ANIMA = { tipus: 'connexio', sectionId: '', itemId: '/ia', ruta: '/ia', objecte: 'pagina', titol: 'Títol de l’URL', autorNom: 'Foraster' };
+const ORIGEN_ANIMA = { tipus: 'connexio', sectionId: '', itemId: '/iaia', ruta: '/iaia', objecte: 'pagina', titol: 'Títol de l’URL', autorNom: 'Foraster' };
 
 afterEach(cleanup);
 beforeEach(() => {

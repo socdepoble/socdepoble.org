@@ -269,7 +269,7 @@ describe('la frontera: la Gestoria només pel pont de la seua app, els Tractors 
     expect(delsCarrils(bloc)).toEqual(['../tractors/PanellTractors.jsx', '../tractors/PanellSentinelles.jsx']);
     // Fora del bloc, cap importació dels dos carrils (tampoc estàtica).
     expect(delsCarrils(fontWiki.slice(0, inici) + fontWiki.slice(fi))).toEqual([]);
-    expect([...bloc.matchAll(/lazy\(\(\) => import\(/g)]).toHaveLength(2);
+    expect([...bloc.matchAll(/lazyRoute\(\(\) => import\(/g)]).toHaveLength(2);
     // Cap carpeta ni ítem de la Gestoria al model.
     expect(especificadors(fontWiki).filter((e) => /gestoria/.test(e))).toEqual([]);
     const iniciModel = fontWiki.indexOf('export function modulsLocalsActius(');
@@ -309,7 +309,7 @@ describe('la frontera: la Gestoria només pel pont de la seua app, els Tractors 
     const bloc = fontPont.slice(inici, fi);
     expect(delsCarrils(bloc)).toEqual([...DEL_PONT]);
     expect(delsCarrils(fontPont.slice(0, inici) + fontPont.slice(fi))).toEqual([]);
-    expect([...bloc.matchAll(/lazy\(\(\) => import\(/g)]).toHaveLength(2);
+    expect([...bloc.matchAll(/lazyRoute\(\(\) => import\(/g)]).toHaveLength(2);
     // Els Tractors no hi entren mai, ni ContenidorGestoria directament (arriba per la closca, com abans).
     expect(fontPont).not.toMatch(/sections\/tractors\/|ContenidorGestoria\.jsx'/);
   });

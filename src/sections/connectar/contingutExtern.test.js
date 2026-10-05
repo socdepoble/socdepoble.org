@@ -33,7 +33,7 @@ test('javascript:, data: i la resta d’esquemes es rebutgen amb el motiu, i no 
     expect(notaDeContingutExtern({ ...BO, url })).toBeNull();
   }
   expect(validaContingutExtern({ ...BO, url: '' }).errors.url).toBe('Falta l’adreça de la pàgina.');
-  expect(validaContingutExtern({ ...BO, url: '/ia' }).errors.url).toBe('L’adreça no és vàlida.');
+  expect(validaContingutExtern({ ...BO, url: '/iaia' }).errors.url).toBe('L’adreça no és vàlida.');
   expect(validaContingutExtern({ ...BO, url: 'https://u:p@exemple.org' }).errors.url).toMatch(/contrasenya/);
   expect(validaContingutExtern({ ...BO, url: 'https://u:p@exemple.org' }).errors.url).toContain('no es connecta');
   expect(validaContingutExtern(null).ok).toBe(false);

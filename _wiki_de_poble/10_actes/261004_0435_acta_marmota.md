@@ -62,4 +62,3 @@ S'han realitzat satisfactòriament totes les validacions sobre els ZIPs V1-V7, a
 ## Vincles
 
 - [[00_index]]
-- [[00_index_escriptori]]

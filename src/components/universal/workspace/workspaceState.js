@@ -37,7 +37,7 @@ export function workspaceReducer(state, action) {
           ? (action.itemId == null ? null : String(action.itemId))
           : (memory[categoryId] ?? null),
         lastItemByCategory: memory,
-        needsInitialSelection: false,
+        needsInitialSelection: action.needsInitialSelection === true,
         pendingItemId: null
       };
     }

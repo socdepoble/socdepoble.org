@@ -22,15 +22,15 @@
  * LA PORTA DELS TRACTORS · rutes.js: la consulta que la demana es porta a la
  * Wiki, on viu, sempre a la mateixa ruta fixa.
  */
-import { Suspense, lazy } from 'react';
+import { Suspense } from 'react';
 import { Navigate, useLocation } from '../../app/contexts/RouterContext';
 import { Carregant, EstatBuit, PaginaApp } from '../../components/PedraSeca/index.js';
-import { useApp } from '../plataforma/index.js';
+import { useApp, lazyRoute } from '../plataforma/index.js';
 import { ENTRADA_APRENDRE, desviamentDeLaConsulta } from './rutes.js';
 
 const VISTES = import.meta.env.DEV ? Object.freeze({
-  tauler: lazy(() => import('../../sections/gestoria/tauler/ShellGestoria.jsx')),
-  aprendre: lazy(() => import('../../sections/gestoria/aprendre/Aprendre.jsx'))
+  tauler: lazyRoute(() => import('../../sections/gestoria/tauler/ShellGestoria.jsx')),
+  aprendre: lazyRoute(() => import('../../sections/gestoria/aprendre/Aprendre.jsx'))
 }) : null;
 
 const ETIQUETES_APRENDRE = Object.freeze([

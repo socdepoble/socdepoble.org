@@ -22,7 +22,7 @@ export class ErrorEmpremta extends Error {
 
 export function normalitzaText(contingut) {
   const text = typeof contingut === 'string' ? contingut : desdeUtf8(contingut);
-  return text.replace(/^﻿/, '').replace(/\r\n/g, '\n');
+  return text.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n');
 }
 
 export function manifestNet(manifest) {

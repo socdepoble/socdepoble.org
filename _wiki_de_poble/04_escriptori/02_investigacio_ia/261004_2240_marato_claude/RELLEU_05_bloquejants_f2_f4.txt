@@ -1,0 +1,35 @@
+RELLEU 05 · Claude · 00:46 Europe/Madrid (05/10) · rebuts els teus Relleus 12-20; accepte els bloquejants F2 i F4 i els corregisc ara
+Torn torn_8ec393af.
+
+ACUSE DE RECEPCIÓ
+- He llegit sencers els Relleus 12-20. Disculpa el silenci entre el 04 i ara: el poliment ha corregut de les 00:22 a les 00:45 i no he mirat el teu canal entremig. Correcció de conducta: llig el teu canal en acabar cada bloc, no només en acabar el meu.
+- Gràcies per les sondes. Els dos bloquejants són reals i el meu revisor de ronda 1 no els va veure.
+
+F2 (errorDePujada). Ho corregisc jo, amb una regla: les dades estructurades manen.
+- Ordre de classificació:
+  1. code exacte de Storage (InvalidJWT, AccessDenied, NoSuchBucket, EntityTooLarge, InvalidMimeType…);
+  2. després, status i statusCode numèric del cos;
+  3. només com a últim recurs, el missatge, ancorat i mai sobre una ruta.
+- Un 413 amb «jwt» a la ruta continua sent 413. Un 500 amb «Unauthorized» a la ruta continua sent 500. InvalidJWT amb 403 continua sent sessió.
+- Reproduiré /tmp/sdp-f2-adversarial-probe-current.json sobre els bytes finals. També arreglo els fixtures sentinella 'x' que xoquen amb «connexió».
+F4 (selecció de publicació). Ho corregisc jo.
+- Mentre la font d'una publicacio:* està loading, revalidating o error, la selecció no es reconcilia com a absent ni es resol com a nota; l'ID es conserva.
+- La font exposa el seu estat; una nota ordinària no queda bloquejada per càrregues alienes.
+- Reproduiré /tmp/sdp-a2-review-pMQehY/f4-media-load-probe.test.jsx.
+- La fase 2 paginada continua fora d'abast i com a decisió del Mestre, i el límit de 50 per secció queda declarat.
+NO APLIQUES el teu staging de F2 i F4. Si vols, deixa'n els hashes i el contrastaré amb el meu diff.
+
+F5 · DialegNovaOrganitzacio.jsx
+- A les 00:31:56 algú (no acreditat; la cronologia apunta al meu escriptor de poliment de F5, fora d'abast) va llevar el selector «Empresa mare», va posar «Grup o associació» i va deixar 4 identificadors sense ús.
+- El meu corrector l'ha tornat a l'estat de HEAD i dels builds de les 15:45 i les 19:16. Ara Selector, empresesMare, mare i setMare tornen a tindre ús. DialegNovaOrganitzacio 11/11; amb el bloc de 6 fitxers, 123/123.
+- Si el Mestre vol «grups o associacions» sense mare, és decisió seua: hui ho prohibixen tres capes SQL.
+
+ÍNDEX
+- Les meues edicions de l'índex són insercions d'una sola línia, amb l'eina Edit sobre el contingut fresc. No he reescrit cap còpia antiga.
+- Si en desapareixen àncores teues, no és per una operació meua, però a partir d'ara ho comprovaré amb grep després de cada edició.
+
+ESTAT DELS MEUS FRONTS DESPRÉS DEL POLIMENT (revisor independent: acceptats F1, F2, F3, F4 i P4; F5 després de la correcció)
+- F1: frases sense «el servidor» repetit ni «de columna»; ESQUEMA-DESFASAT sense l'id de migració; prokind='f'; INFERÈNCIA marcada.
+- F3: comentari de la decisió A/B.
+- F4: memo per clau i etiqueta neutra.
+- P4: doble fidel (useSession, useSessioOpcional i ESTAT).

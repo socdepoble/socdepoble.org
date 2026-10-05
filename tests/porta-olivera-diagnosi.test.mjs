@@ -119,22 +119,22 @@ test('[DEFECTE D1] categories fora de TRANSITORIES (visio, brainstorming, estudi
 
 /* ── 3. Àncores ───────────────────────────────────────────────────────────── */
 
-test('[DEFECTE D3] una àncora amb «.md» o amb «#secció» compta alhora com a absent i com a fantasma, encara que vius() la reconeix', (t) => {
+test('[CONTROL D3] una àncora amb .md o #secció és coherent entre vius i ancoratge', (t) => {
   const a = `${VELL}_0900_prompt_a.md`;
   const b = `${VELL}_0905_auditoria_b.md`;
   const arrel = mas(t, ['# Índex', '', '## Activitat en curs', '', `- [[${a}]]`, `- [[${sense(b)}#T6]]`, '']);
   posa(arrel, a); posa(arrel, b);
   assert.deepEqual([...vius(arrel)].sort(), [sense(a), sense(b)], 'vius() lleva «.md» i «#»: els dos són vius');
   const anc = ancoratge(arrel);
-  assert.deepEqual(anc.senseAncora.sort(), [a, b].sort());
-  assert.deepEqual(anc.fantasma.sort(), [a, `${sense(b)}#T6`].sort());
-  assert.equal(checkTaula(arrel).valid, false);
+  assert.deepEqual(anc.senseAncora, []);
+  assert.deepEqual(anc.fantasma, []);
+  assert.equal(checkTaula(arrel).valid, true);
 });
 
-test('[DEFECTE D4] --arxiva només despenja línies «- [[X]]»: les àncores en taula, prosa o «*» queden fantasma, i una línia amb dos àncores se n’emporta la que no s’arxiva', (t) => {
+test('[CONTROL D4] --arxiva despenja només els tokens moguts en taula, prosa i llista; preserva altres àncores', (t) => {
   const [A, B, C, D, E] = ['a', 'b', 'c', 'd', 'e'].map((x) => `${VELL}_0900_auditoria_${x}.md`);
   const arrel = mas(t, [
-    '# Índex', '', '## Treball', '',
+    '# Índex', '', '## Activitat en curs', '',
     '| Document | Estat |', '| --- | --- |', `| [[${sense(A)}]] | consumit |`, '',
     `Vegeu també [[${sense(B)}]] per al context.`, '',
     `* [[${sense(C)}]]`, '',
@@ -145,44 +145,50 @@ test('[DEFECTE D4] --arxiva només despenja línies «- [[X]]»: les àncores en
   const r = arxiva(arrel, { noms: [A, B, C, D] });
   assert.equal(r.moguts.filter((m) => m.nota === 'mogut').length, 4);
   const anc = ancoratge(arrel);
-  assert.deepEqual(anc.fantasma, [sense(A), sense(B), sense(C)]);
-  assert.deepEqual(anc.senseAncora, [E], 'E ha perdut la seua àncora sense haver-se mogut');
-  assert.equal(checkTaula(arrel).valid, false, 'just després d’un --arxiva «correcte» la porta torna a caure');
+  assert.deepEqual(anc.fantasma, []);
+  assert.deepEqual(anc.senseAncora, []);
+  assert.match(index(arrel),new RegExp(`\\[\\[${sense(E)}\\]\\]`));
+  assert.equal(checkTaula(arrel).valid, true);
 });
 
 /* ── 4. Col·lisió i arrel ─────────────────────────────────────────────────── */
 
-test('[DEFECTE D5] si el nom ja és a l’arxiu, --arxiva no mou res, deixa l’àncora i ix amb 0', (t) => {
+test('[CONTROL D5] col·lisió a l’arxiu conserva les dues versions i retorna resultat incomplet', (t) => {
   const x = `${VELL}_0900_auditoria_repetida.md`;
   const arrel = mas(t, ['# Índex', '', `- [[${sense(x)}]]`, '']);
   posa(arrel, x);
   fs.mkdirSync(path.join(arrel, ARXIU), { recursive: true });
   fs.writeFileSync(path.join(arrel, ARXIU, x), '# versió anterior\n');
   const p = spawnSync(process.execPath, [PORTA, '--arxiva', '--nom', x], { cwd: arrel, env: { ...process.env, SDP_ARREL: arrel }, encoding: 'utf8', timeout: 10000 });
-  assert.equal(p.status, 0, p.stderr);
+  assert.equal(p.status, 1, p.stderr);
   assert.match(p.stdout, /ja existia a l’arxiu; no es sobreescriu/);
   assert.ok(aTaula(arrel, x), 'el document continua a la taula');
   assert.match(index(arrel), new RegExp(`\\[\\[${sense(x)}\\]\\]`));
   assert.equal(checkTaula(arrel).valid, false, 'i la porta continua roja després d’un «èxit»');
 });
 
-test('[DEFECTE D6] l’arrel és el cwd (porta-olivera.mjs:56): des d’una subcarpeta l’informe diu 0 documents i ix amb 0, i --nom no troba el document', (t) => {
+test('[CONTROL D6] l’informe i la simulació resolen l’arrel de l’eina encara que cwd siga una subcarpeta', (t) => {
   const x = `${VELL}_0900_auditoria_rancia.md`;
   const arrel = mas(t, ['# Índex', '', `- [[${sense(x)}]]`, '']);
   posa(arrel, x);
-  assert.equal(checkTaula(arrel).valid, false, 'la taula real està bruta');
+  for (const file of ['tooling/gates/porta-olivera.mjs', 'tooling/lib/arrel.mjs', '.agents/AGENTS.md']) {
+    fs.mkdirSync(path.dirname(path.join(arrel, file)), { recursive: true });
+    fs.copyFileSync(path.join(REPO, file), path.join(arrel, file));
+  }
+  const cli = path.join(arrel, 'tooling/gates/porta-olivera.mjs');
   const cwd = path.join(arrel, '_wiki_de_poble');
-  const inf = spawnSync(process.execPath, [PORTA, '--informe'], { cwd, env: entornSenseArrel(), encoding: 'utf8', timeout: 10000 });
-  assert.equal(inf.status, 0, 'verd fals');
-  assert.match(inf.stdout, /Escriptori: 0 documents solts/);
-  const arx = spawnSync(process.execPath, [PORTA, '--arxiva', '--nom', x], { cwd, env: entornSenseArrel(), encoding: 'utf8', timeout: 10000 });
-  assert.equal(arx.status, 2);
-  assert.match(arx.stderr, /no és cap document solt/);
+  const inf = spawnSync(process.execPath, [cli, '--informe'], { cwd, env: entornSenseArrel(), encoding: 'utf8', timeout: 10000 });
+  assert.equal(inf.status, 1, inf.stderr);
+  assert.match(inf.stdout, new RegExp(x));
+  const arx = spawnSync(process.execPath, [cli, '--arxiva', '--sec', '--nom', x], { cwd, env: entornSenseArrel(), encoding: 'utf8', timeout: 10000 });
+  assert.equal(arx.status, 0, arx.stderr);
+  assert.match(arx.stdout, /simulació: es mouria/);
+  assert.ok(aTaula(arrel, x), 'la simulació no mou el document');
 });
 
 /* ── 5. Rebuts de torn: arxivar no fa el relleu, i el relleu no casa amb la porta ── */
 
-test('[DEFECTE D7] --arxiva no fa el relleu; amb el relleu fet, checkTurn exigix l’àncora plana que checkTaula diu fantasma', (t) => {
+test('[DEFECTE D7 parcial] --arxiva no fa el relleu; CONTROL el relleu posterior i àncora amb camí són coherents', (t) => {
   const root = fixture(t);
   const d = validDoc(root, { suffix: 'consumida' });
   writeDoc(root, d);
@@ -201,13 +207,13 @@ test('[DEFECTE D7] --arxiva no fa el relleu; amb el relleu fet, checkTurn exigix
   assert.ok(!errors.some((e) => e.startsWith('Document eliminat sense relleu')));
   assert.ok(errors.includes(`Document sense àncora: ${desti}`), errors.join('\n'));
 
-  // L'àncora amb camí cap a l'arxiu (la del laboratori 260930b) no li val a checkTurn...
+  // L'àncora amb camí acredita el document arxivat en les dues portes.
   fs.appendFileSync(path.join(root, INDEX), `\n- [[../90_arxiu_historic/${sense(nom)}]]\n`);
   errors = checkTurn(root, d.turn.turn_id).errors;
-  assert.ok(errors.includes(`Document sense àncora: ${desti}`));
+  assert.ok(!errors.includes(`Document sense àncora: ${desti}`));
   assert.equal(checkTaula(root).valid, true);
 
-  // ...i la plana, que sí que li val, fa caure la Porta Olivera.
+  // Una àncora plana extra és fantasma i no és la prova del document arxivat.
   fs.appendFileSync(path.join(root, INDEX), `\n- [[${sense(nom)}]]\n`);
   errors = checkTurn(root, d.turn.turn_id).errors;
   assert.ok(!errors.includes(`Document sense àncora: ${desti}`));
@@ -277,7 +283,7 @@ test('[DEFECTE D9] hook de Claude i Codex: AGENTS §0.1 i les skills manen ordre
   assert.match(handoff.errors.join('\n'), /Operació fora del circuit documental ordinari/);
 });
 
-test('[DEFECTE D10] hook d’Antigravity: pregunta per «mv» però autoaprova «rm», «cp && rm» i «/bin/mv» sobre l’Escriptori', () => {
+test('[CONTROL D10] hook d’Antigravity força permís per mv, rm, cp&&rm i /bin/mv sobre l’Escriptori', () => {
   const root = REPO;
   const doc = `${DESK}/${DIA}_0310_visio_arquitectonica_expansio.md`;
   const run = (CommandLine) => preTool({ toolCall: { name: 'run_command', args: { CommandLine } } }, { root }).decision;
@@ -285,12 +291,12 @@ test('[DEFECTE D10] hook d’Antigravity: pregunta per «mv» però autoaprova �
   assert.equal(run(`node tooling/gates/porta-olivera.mjs --arxiva --nom ${path.basename(doc)}`), 'allow');
   assert.equal(run(`node tooling/wiki/document.mjs handoff --turn-id ID --file ${doc} --to ${ARXIU}/x.md`), 'allow');
   // El trasllat transparent pregunta...
-  assert.equal(run(`mv ${doc} ${ARXIU}/`), 'ask');
-  assert.equal(run(`git mv ${doc} ${ARXIU}/`), 'ask');
+  assert.equal(run(`mv ${doc} ${ARXIU}/`), 'force_ask');
+  assert.equal(run(`git mv ${doc} ${ARXIU}/`), 'force_ask');
   // ...i l'esborrat i les variants que no diuen «mv» s'aproven soles (AGENTS §5).
-  assert.equal(run(`rm ${doc}`), 'allow');
-  assert.equal(run(`cp ${doc} ${ARXIU}/ && rm ${doc}`), 'allow');
-  assert.equal(run(`/bin/mv ${doc} ${ARXIU}/`), 'allow');
+  assert.equal(run(`rm ${doc}`), 'force_ask');
+  assert.equal(run(`cp ${doc} ${ARXIU}/ && rm ${doc}`), 'force_ask');
+  assert.equal(run(`/bin/mv ${doc} ${ARXIU}/`), 'force_ask');
 });
 
 /* ── 7. Ergonomia: la porta de la petorreta jutja la taula a cada edició ──── */
@@ -308,4 +314,31 @@ test('[DEFECTE D11] editar una petorreta ja nascuda queda bloquejat per un docum
   const r = checkPayload(edicio, arrel);
   assert.equal(r.code, 2);
   assert.deepEqual(r.errors, [`Sense àncora a l’índex: ${aliena}`]);
+});
+
+
+/* T5-08/10: controls nous sobre estructura i derivats, sense maquillar D7–D11. */
+test('[CONTROL T5-08] arxiva no declara èxit sobre un Escriptori absent o sense índex',t=>{
+ const empty=fs.mkdtempSync(path.join(os.tmpdir(),'sdp-archive-absent-'));t.after(()=>fs.rmSync(empty,{recursive:true,force:true}));
+ for (const options of [{},{sec:true},{noms:['250101_0900_auditoria_absent.md']}]) {
+  assert.throws(()=>arxiva(empty,options),/Estructura de l'Escriptori absent/);
+  assert.equal(fs.existsSync(path.join(empty,ARXIU)),false,'cap carpeta d’arxiu creada');
+ }
+ const root=mas(t),name=`${VELL}_0900_auditoria_conservada.md`;
+ posa(root,name);fs.unlinkSync(path.join(root,INDEX));
+ assert.throws(()=>arxiva(root,{noms:[name]}),/Estructura de l'Escriptori absent/);
+ assert.equal(aTaula(root,name),true,'fallar abans de moure el document');
+ assert.equal(aArxiu(root,name),false);
+});
+test('[CONTROL T5-10] archivar Markdown preserva byte a byte els derivats i les seues àncores',t=>{
+ const name=`${VELL}_0900_auditoria_consumida.md`,resource='prova.jpg';
+ const root=mas(t,['# Índex','',`- [[${sense(name)}]]`,`- [[${resource}]]`,'']);
+ posa(root,name);posa(root,resource,Buffer.from([255,216,255,0]));
+ const before=fs.readFileSync(path.join(root,DESK,resource));
+ assert.equal(checkTaula(root).errors.some(e=>e.includes('Àncores a documents absents')),false);
+ const result=arxiva(root,{noms:[name]});
+ assert.deepEqual(result.moguts.map(x=>x.nota),['mogut']);
+ assert.deepEqual(fs.readFileSync(path.join(root,DESK,resource)),before);
+ assert.ok(index(root).includes(`[[${resource}]]`),'l’àncora del recurs es conserva');
+ assert.deepEqual(ancoratge(root),{senseAncora:[],fantasma:[]});
 });

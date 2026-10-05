@@ -135,6 +135,40 @@ describe('fail-closed: sense l’aprovació del seu manifest, cap fitxer es llig
 describe('amb l’aprovació vigent', () => {
   const aprovacio = aprovacioDe(TRACTOR_TAULER);
 
+  test('un senyal ja cancel·lat rebutja abans de demanar cap byte', async () => {
+    const controlador = new AbortController();
+    controlador.abort();
+    const triat = fitxer('no_es_llig.csv', CSV);
+    const error = await errorDe(executaTractorTauler({ fitxers: [triat], aprovacio, signal: controlador.signal }));
+    expect(error).toBeInstanceOf(ErrorTauler);
+    expect(error.codi).toBe('LECTURA_CANCELLADA');
+    expect(CODIS_TRACTOR_TAULER).toContain(error.codi);
+    expect(triat.arrayBuffer).not.toHaveBeenCalled();
+  });
+
+  test('cancel·lar durant la verificació criptogràfica no inicia fitxers després', async () => {
+    const controlador = new AbortController();
+    const original = globalThis.crypto.subtle;
+    // La signatura es verifica de veres; s'avorta en tornar la verificació.
+    const subtle = new Proxy(original, {
+      get(target, key) {
+        const valor = Reflect.get(target, key, target);
+        if (key === 'verify') return async (...args) => {
+          const valid = await valor.apply(target, args);
+          controlador.abort();
+          return valid;
+        };
+        return typeof valor === 'function' ? valor.bind(target) : valor;
+      }
+    });
+    const triat = fitxer('no_es_llig.csv', CSV);
+    const error = await errorDe(executaTractorTauler({ fitxers: [triat], aprovacio, subtle, signal: controlador.signal }));
+    expect(controlador.signal.aborted).toBe(true);
+    expect(error).toBeInstanceOf(ErrorTauler);
+    expect(error.codi).toBe('LECTURA_CANCELLADA');
+    expect(triat.arrayBuffer).not.toHaveBeenCalled();
+  });
+
   test('llig la Norma 43, el CSV i, de la configuració, només el nom i la població', async () => {
     const r = await executaTractorTauler({
       fitxers: [fitxer('extracte.n43', N43), fitxer('moviments.csv', CSV), fitxer('empresa.json', CONFIG)], aprovacio

@@ -13,5 +13,4 @@ L'original del BIOS és `AGENTS.md` de l'arrel i les normes executives viuen a `
 ## Vincles
 
 - [[00_index]]
-- [[AGENTS]]
 - [[doc_governanca]]

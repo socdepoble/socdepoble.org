@@ -25,31 +25,16 @@ describe('Lazy Loaders del Catàleg', () => {
     expect(new Set(claus)).toEqual(new Set(Object.keys(CATALOG_DETAIL_LOADERS)));
   });
 
-  it('carrega i renderitza tots els espècimens asíncrons', async () => {
+  it('el cens de mòduls físics coincidix amb tots els carregadors', () => {
     expect(Object.keys(SPECIMEN_MODULES)).toHaveLength(Object.keys(CATALOG_DETAIL_LOADERS).length);
-
-    const moduls = await Promise.all(
-      Object.entries(SPECIMEN_MODULES).map(async ([ruta, importa]) => [ruta, await importa()])
-    );
-
-    for (const [ruta, modul] of moduls) {
-      try {
-        const Especimen = modul.default;
-        const vista = render(
-          <MemoryRouter>
-            <Especimen />
-          </MemoryRouter>
-        );
-        await waitFor(() => {
-          expect(vista.container.firstElementChild, ruta).not.toBeNull();
-        });
-        vista.unmount();
-      } catch (e) {
-        throw new Error(`L’espècimen ${ruta} ha fallat: ${e.message}`);
-      }
-    }
     expect(Object.keys(CATALOG_DETAIL_LOADERS).length).toBeGreaterThan(20);
-    /* La importació de tots els espècimens compta dins del temps de la prova:
-       amb la màquina carregada (altres proves en paral·lel) passava de 15 s. */
-  }, 45_000);
+  });
+
+  it.each(Object.entries(SPECIMEN_MODULES))('carrega i renderitza %s', async (ruta, importa) => {
+    const modul = await importa();
+    const Especimen = modul.default;
+    const vista = render(<MemoryRouter><Especimen /></MemoryRouter>);
+    await waitFor(() => expect(vista.container.firstElementChild, ruta).not.toBeNull());
+    vista.unmount();
+  });
 });

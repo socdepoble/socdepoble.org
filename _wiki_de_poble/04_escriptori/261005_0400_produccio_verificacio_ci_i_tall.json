@@ -1,0 +1,111 @@
+{
+  "observed_at_utc": "2026-10-05T02:00:28.455756+00:00",
+  "live_source_cut": {
+    "observed_before_at_utc": "2026-10-05T01:45:12.887040+00:00",
+    "observed_after_at_utc": "2026-10-05T01:59:12.193376+00:00",
+    "before_manifest_sha256": "f1b930bb23556b288a9d6f1e2588bbabb0f1cc31be0405c9119d8e76d2715961",
+    "listed_files_checked": 2053,
+    "changed_listed_inputs": [],
+    "limit": "Listed-source byte comparison only, first snapshot captured during Node. Corpus/report/runtime writes outside the declared source cut remain mutable; not a whole-repository frozen cut or a pre-start snapshot."
+  },
+  "test_ci": {
+    "command": "npm run test:ci",
+    "exit_code": 1,
+    "node": {
+      "tests": 801,
+      "passed": 796,
+      "failed": 0,
+      "skipped": 1,
+      "todo": 4,
+      "duration_ms": 108371.291958,
+      "exit_code": 0
+    },
+    "vitest": {
+      "files": 748,
+      "files_passed": 745,
+      "files_failed": 2,
+      "files_skipped": 1,
+      "tests": 12456,
+      "passed": 12446,
+      "failed": 2,
+      "skipped": 8,
+      "duration_seconds": 694.63,
+      "exit_code": 1
+    },
+    "raw_log_private": "/tmp/sdp-marato-live-frozen-test-ci.log",
+    "raw_log_sha256": "6dc3203b1adbccaa67d9579d3fa1b58c5ba6cef671aacfcfef02b2b316b93873",
+    "failures": [
+      "Emojis XL padding rejected by components.abast.capes",
+      "TextSection Ànima props fixture omits heroWidth/heroHeight/heroFetchPriority"
+    ]
+  },
+  "gates": {
+    "commands": 55,
+    "exit_zero": 33,
+    "exit_one": 22,
+    "timeouts": 0,
+    "exec_errors": 0,
+    "global_corpus_cut_stable": false,
+    "tool_sources_observed_stable": 91,
+    "artifacts_changed": 0,
+    "evidence": "/tmp/sdp-marato-gates-frozen.json"
+  },
+  "builds": {
+    "web": {
+      "exit": 0,
+      "seconds": 5.54,
+      "path": "/tmp/sdp-marato-build-web"
+    },
+    "wordpress": {
+      "exit": 0,
+      "seconds": 20.95,
+      "path": "/tmp/sdp-marato-final-wp",
+      "raw_log_sha256": "f2ea09368b8760ea31de9a2f213dca6f96149a37da6642a3093d4b208234894b"
+    }
+  },
+  "proposal_b3": {
+    "sha256": "7f0abde21f31dfaca583c59dada83f3bcda84e1e16001b7493e4eb572af3693f",
+    "cas": [
+      {
+        "path": "tooling/documental/turns.mjs",
+        "before": "502d839a69eb806700130e25a260a5b6b3f0f2e2f5744ac2ea29678a6942d6cf",
+        "expected": "502d839a69eb806700130e25a260a5b6b3f0f2e2f5744ac2ea29678a6942d6cf",
+        "content_sha256": "b223fed65fc170c84fd4111630390fa09837a1ed3889841cbfa986bcd5fe83bb"
+      },
+      {
+        "path": "tooling/documental/command-policy.mjs",
+        "before": "193bdae777d209be39cd42f6ad3ff72b5cef680dcf37b531af27fe4db5e3cdc3",
+        "expected": "193bdae777d209be39cd42f6ad3ff72b5cef680dcf37b531af27fe4db5e3cdc3",
+        "content_sha256": "dce5fe66bbd7391bd6c3f2ff47775628b10f690a1787987e3aab46c9b6ab3185"
+      },
+      {
+        "path": "tooling/wiki/document.mjs",
+        "before": "8acb0f92087f1eb65309101b68000a2b334b79837c4b90e45ed170e43da12810",
+        "expected": "8acb0f92087f1eb65309101b68000a2b334b79837c4b90e45ed170e43da12810",
+        "content_sha256": "8f005453baf0c488085fb6dab8930abd29bf3d40f090655d3969966788324365"
+      },
+      {
+        "path": "tests/cognitive-preflight.test.mjs",
+        "before": "105c0f02153483acd315c3ba43c446ec582d43ca9a94f0d3d27e941169a03d90",
+        "expected": "105c0f02153483acd315c3ba43c446ec582d43ca9a94f0d3d27e941169a03d90",
+        "content_sha256": "ffec807e53ac8ee283467a6f787e00f1f6e24993f998fddd8523d3a594a78d31"
+      },
+      {
+        "path": "tests/document-command-policy.test.mjs",
+        "before": "878311e98a404a39bd1ba587351e718971ea71117d8ddb6052f4a949008427a2",
+        "expected": "878311e98a404a39bd1ba587351e718971ea71117d8ddb6052f4a949008427a2",
+        "content_sha256": "b669b7357219ee69c221c8637328b0bb792e9f43c001c6b510c418186ae98d5e"
+      },
+      {
+        "path": "tests/cognitive-document-handoff.test.mjs",
+        "before": "7b5c8152fa4e603663e152e79d6ad0cc93e8bdbdc12314fec4141b9729e9b87e",
+        "expected": "7b5c8152fa4e603663e152e79d6ad0cc93e8bdbdc12314fec4141b9729e9b87e",
+        "content_sha256": "8acfacbe81d0c44db6517cb4735f064db6edaf9ab98eae5fd78ad1a3f51480e8"
+      }
+    ],
+    "state": "COPY ONLY; real Claude RELLEU12 defers review, no LIVE adoption",
+    "author_node": 158,
+    "independent_selected": 35,
+    "withdrawn": "f74252792c8e34a525beef8fd5eb27ba2ae0ddf671f515c2f503742162b7ddd1"
+  }
+}

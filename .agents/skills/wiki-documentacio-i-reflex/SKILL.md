@@ -6,6 +6,7 @@ tags:
   - reflex
   - abocament
 name: wiki-documentacio-i-reflex
+prioritat: 2
 core: true
 triggers_on:
   - acte reflex
@@ -99,3 +100,7 @@ Totes les Actes o Estudis destil·lats s'han de tancar amb un **Ancoratge de Seg
 
 ## Vincles
 - [[00_index]]
+
+## Convocatòria i evidència de lectura
+
+Per a `prompt.local` i `prompt.consell`, el CLI comprova la taula en `context` i la revalida en `create`. Els esborranys solts queden ancorats a «## Activitat en curs»; conservar-los no autoritza cap trasllat. Un manifest acredita rutes i hashes, però no la comprensió: declara quines fonts has llegit íntegrament i quines queden pendents. Separa comprovacions de regressió de proves `[DEFECTE]`, que poden passar reproduint deute conegut.

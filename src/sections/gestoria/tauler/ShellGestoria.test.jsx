@@ -94,10 +94,16 @@ const rail = () => within(screen.getByRole('navigation', { name: 'Panell de cont
 const triaModul = (nom) => fireEvent.click(rail().getByText(nom).closest('button'));
 
 async function llegixExtractes() {
-  const input = await screen.findByLabelText('Tria els extractes del banc');
+  // La porta verifica la signatura amb WebCrypto després del muntatge.
+  // Espera local de 3 s: inferior al pressupost de 5 s de cada prova.
+  // La saturació per builds simultanis s’ha de classificar separadament.
+  const input = await screen.findByLabelText('Tria els extractes del banc', {}, { timeout: 3000 });
   await act(async () => {
     fireEvent.change(input, { target: { files: [fitxer('extracte.n43', N43), fitxer('empresa.json', CONFIG)] } });
   });
+  // Oblida també es veu durant la primera lectura: el selector habilitat
+  // marca que ja ha acabat, i el botó comprova que hi ha dades guardades.
+  await waitFor(() => expect(screen.getByLabelText('Tria els extractes del banc').disabled).toBe(false));
   await waitFor(() => expect(screen.getByRole('button', { name: 'Oblida les dades' })).toBeTruthy());
 }
 

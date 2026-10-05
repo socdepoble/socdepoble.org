@@ -58,7 +58,8 @@ export const ACCEPTA_TAULER = [...EXTENSIONS_NORMA43, 'csv', 'json'].map((ext) =
 export const ESQUEMA_CONFIG = 'sdp.gestoria.config-empresa.v1';
 /** Els codis d'ErrorTauler i dels avisos de lectura. */
 export const CODIS_TRACTOR_TAULER = Object.freeze([
-  'PARAMETRES_INVALIDS', 'MASSA_FITXERS', 'TIPUS_DESCONEGUT', 'FITXER_MASSA_GRAN', 'FITXER_ILLEGIBLE', 'CONFIG_INVALIDA'
+  'PARAMETRES_INVALIDS', 'MASSA_FITXERS', 'TIPUS_DESCONEGUT', 'FITXER_MASSA_GRAN', 'FITXER_ILLEGIBLE', 'CONFIG_INVALIDA',
+  'LECTURA_CANCELLADA'
 ]);
 const MAX_TEXT = 120;
 
@@ -68,6 +69,12 @@ export class ErrorTauler extends Error {
     this.name = 'ErrorTauler';
     this.codi = codi;
   }
+}
+
+/* File.arrayBuffer no admet AbortSignal. Quan acaba, descartem els bytes
+   d'una lectura cancel·lada i no comencem cap fitxer més ni tornem parcials. */
+function comprovaCancelLacio(signal) {
+  if (signal?.aborted) throw new ErrorTauler('LECTURA_CANCELLADA', 'La lectura dels extractes s’ha cancel·lat.');
 }
 
 const avis = (codi, missatge, fitxer) => Object.freeze({ codi, severitat: 'mitjana', missatge, fitxer });
@@ -204,12 +211,15 @@ async function bytesDe(fitxer) {
  * @param {object} p.aprovacio el de contextAprovacio('gestoria.tauler')
  * @param {SubtleCrypto} [p.subtle]
  * @param {{ fitxers?: number, midaFitxer?: number }} [p.limits]
+ * @param {AbortSignal} [p.signal] cancel·lació cooperativa entre etapes
  * @returns {Promise<{ extractes: Array<{ lectura: object }>, csv: Array<{ lectura: object }>,
  *   identitat: { nom: string, poble: string }|null, avisos: Array<{ codi: string, severitat: string, missatge: string, fitxer: string }> }>}
  *   `lectura`: la reduïda (reduixC43, reduixCsv), mai la sencera.
  */
-export async function executaTractorTauler({ fitxers, aprovacio, subtle, limits = {} } = {}) {
+export async function executaTractorTauler({ fitxers, aprovacio, subtle, limits = {}, signal } = {}) {
+  comprovaCancelLacio(signal);
   await exigeixTractor(aprovacio, subtle);
+  comprovaCancelLacio(signal);
   const lim = {
     fitxers: enterPositiu(limits.fitxers, LIMITS_TAULER.fitxers),
     midaFitxer: enterPositiu(limits.midaFitxer, LIMITS_TAULER.midaFitxer)
@@ -224,6 +234,7 @@ export async function executaTractorTauler({ fitxers, aprovacio, subtle, limits 
   const avisos = [];
   let identitat = null;
   for (const fitxer of llista) {
+    comprovaCancelLacio(signal);
     const nom = typeof fitxer?.name === 'string' && fitxer.name !== '' ? fitxer.name : 'sense nom';
     const ext = extensio(nom);
     if (![...EXTENSIONS_NORMA43, 'csv', 'json'].includes(ext)) {
@@ -235,9 +246,15 @@ export async function executaTractorTauler({ fitxers, aprovacio, subtle, limits 
       continue;
     }
     let bytes;
+    let illegible = false;
     try {
       bytes = await bytesDe(fitxer);
     } catch {
+      illegible = true;
+    }
+    // Fora del catch: ni el rebuig de l'últim fitxer pot ocultar l'abort.
+    comprovaCancelLacio(signal);
+    if (illegible) {
       avisos.push(avis('FITXER_ILLEGIBLE', `«${nom}» no s’ha pogut llegir.`, nom));
       continue;
     }
@@ -261,5 +278,6 @@ export async function executaTractorTauler({ fitxers, aprovacio, subtle, limits 
       extractes.push({ lectura: reduixC43(llegeixC43(bytes)) });
     }
   }
+  comprovaCancelLacio(signal);
   return { extractes, csv, identitat, avisos };
 }

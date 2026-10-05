@@ -1,6 +1,7 @@
 ---
 type: skill
 name: core-higiene-escriptori
+prioritat: 1
 description: Usa-la abans de crear un prompt, una petorreta, un pla o una auditoria, i quan l'Escriptori estiga brut o el Mestre demane netejar-lo. L'orquestradora el neteja en el mateix torn amb la porta Olivera.
 status: actiu
 tags: [govern]
@@ -52,3 +53,9 @@ L'orquestradora (MarIA) o el Mestre. Claude i Codex no poden moure fitxers. La n
 
 ## Vincles
 - [[00_INDEX_SKILLS]]
+
+## Preflight mecànic de convocatòries
+
+`document.mjs context` i `create` per a `prompt.local` o `prompt.consell` comproven la taula abans d'emetre un rebut nou. Si fallen, resol la classificació amb la porta; el rebut no substituïx la higiene. Les auditories poden documentar una taula bruta. Un document solt creat pel circuit queda declarat viu a «## Activitat en curs» fins que l'orquestradora decidisca el seu relleu.
+
+Una prova de diagnosi etiquetada `[DEFECTE]` pot passar perquè reproduïx el defecte: registra-la com a deute confirmat, no com a reparació. L'informe d'higiene ha de comprovar una taula i un índex existents; zero documents sobre una arrel absent no és verd.

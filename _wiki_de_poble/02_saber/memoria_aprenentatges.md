@@ -119,8 +119,4 @@ L'arxiu històric (`90_arxiu_historic/`) queda fora del graf operatiu i del RAG 
 ## Vincles
 - [[00_index_identitat]]
 - [[00_index]]
-- [[../../.agents/skills/00_INDEX_SKILLS]]
-- [[../../.agents/skills/core-identitat/SKILL]]
-- [[../../.agents/skills/sdp-pedra-seca/SKILL]]
-- [[../../.agents/skills/wiki-documentacio-i-reflex/SKILL]]
 - [[ADR-2026-09-SOLLUTIA-MODEL-B]]

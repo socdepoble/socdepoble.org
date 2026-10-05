@@ -1,0 +1,23 @@
+--- a/src/css/components.css
++++ b/src/css/components.css
+@@ -2304,7 +2304,7 @@
+   .sdp-emojis-xl__graella li {
+     min-inline-size: 0;
+     /* El conteniment de pintura deixa dins el focus que ix del botó. */
+-    padding: calc(var(--sdp-space-1) + 3px);
++    padding: var(--sdp-space-2);
+     content-visibility: auto;
+     contain-intrinsic-size: auto 10rem;
+   }
+--- a/src/sections/text/TextSection.test.jsx
++++ b/src/sections/text/TextSection.test.jsx
+@@ -39,6 +39,9 @@
+     subtitle: pagina.subtitle,
+     lead: pagina.lead,
+     heroImage: '/assets/uploads/brain/nano_anima_mas_ibanez_v3_1781060081431.webp',
++    heroWidth: 1024,
++    heroHeight: 1024,
++    heroFetchPriority: 'high',
+     heroAlt: 'Il·lustració de la IAIA',
+     showLogos: true,
+     labels: pagina.labels,

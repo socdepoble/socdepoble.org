@@ -21,7 +21,6 @@ description: Acta de Tancament de Sessió i Endreça de l'Escriptori
 - **Reducció de Soroll:** Netejar l'escriptori redueix el *token count* del pròxim preflight de manera massiva (menys brossa per llegir al pròxim Nanochat).
 
 ## Ancoratge de Seguretat
-[[00_index]] | [[00_index_escriptori]]
 
 ## Vincles
 

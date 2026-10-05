@@ -28,7 +28,7 @@
  * suspensius en una columna estreta; el `title` el mostra sencer.
  */
 import { Feather, Folder, Shapes, Tags } from 'lucide-react';
-import { Boto } from '../../PedraSeca/index.js';
+
 
 const CAP = Object.freeze([]);
 

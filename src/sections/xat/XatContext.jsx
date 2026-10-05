@@ -153,6 +153,7 @@ const BUIT = {
   ambitEstable: '',
   joId: null,
   joNom: null,
+  joAvatar: null,
   senseSessio: false,
   chatThreads: [],
   chatMessages: [],
@@ -220,7 +221,9 @@ export function XatProvider({ children, config }) {
   const { actorKey, identitats } = useIdentitat();
   /* Onada 3 · El nom de la persona (no el de l'entitat amb què actua): el xat
      és sempre de `joId`, i «Nova conversa» el pinta amb «(Tu)». */
-  const joNom = (Array.isArray(identitats) ? identitats.find((i) => i?.tipus === 'persona')?.nom : null) || null;
+  const persona = Array.isArray(identitats) ? identitats.find((i) => i?.tipus === 'persona' && i.id === usuari?.id) : null;
+  const joNom = persona?.nom || null;
+  const joAvatar = persona?.avatar || null;
   /* Sense sessió, el xat només existix en mode seed/local (l'adaptador ja escriu
      com a convidat amb el mateix identificador); en remot cal la sessió. Es llig
      de la configuració i no del port, que encara no està segellat al primer render. */
@@ -862,6 +865,7 @@ export function XatProvider({ children, config }) {
        conversa» el pinta amb «(Tu)»). Null sense sessió en remot. */
     joId: visible ? joId : null,
     joNom: visible ? joNom : null,
+    joAvatar: visible ? joAvatar : null,
     /* Remot sense sessió, ja comprovat (mai mentre la sessió es comprova):
        ?sobre= porta a /registre en lloc de fer com si. */
     senseSessio: !joId && estatSessio !== 'comprovant',
@@ -889,7 +893,7 @@ export function XatProvider({ children, config }) {
        en entrar (en remot, només quan la persona hi prem). */
     modeDades,
     consumixEntrada
-  }), [visible, joId, joNom, estatSessio, estat, avis, scopeKey, ambitEstable, filsVisibles, missatgesDerivats, totalNoLlegits, filActiu, getThreadMessages,
+  }), [visible, joId, joNom, joAvatar, estatSessio, estat, avis, scopeKey, ambitEstable, filsVisibles, missatgesDerivats, totalNoLlegits, filActiu, getThreadMessages,
     hiHaMesAntics, carregantAntics, carregaMesAntics, sendChatMessage, reintenta, descartaFallit, marcaVist,
     obriFil, creaFil, cercaMembres, carregaFils, obriFilDePagina, comunitats, contactesFrequents, marcaLlegides,
     modeDades, consumixEntrada]);

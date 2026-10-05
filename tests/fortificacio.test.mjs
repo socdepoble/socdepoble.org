@@ -86,6 +86,15 @@ test('P-2 · el relleu deixa promoure un document a 10_actes i tancar el torn',t
   assert.match(checkTurn(root,d.turn.turn_id).errors.join('\n'),/Document eliminat sense relleu|sense àncora/);
   handoffDocument(root,d.turn.turn_id,d.file,desti);
   bindPlan(root,d.turn.turn_id,plan.file);
+  // El rebut conserva la identitat; l'àncora ha de seguir el camí exacte nou.
+  // L'enllaç pla anterior no pot acreditar un homònim fora de l'Escriptori.
+  assert.match(checkTurn(root,d.turn.turn_id).errors.join('\n'),/Document sense àncora/);
+  const index=path.join(root,'_wiki_de_poble/04_escriptori/00_index_escriptori.md');
+  const anterior=`[[${path.basename(d.file,'.md')}]]`;
+  const nova=`[[../10_actes/${path.basename(desti)}]]`;
+  const text=fs.readFileSync(index,'utf8');
+  assert.ok(text.includes(anterior),'la fixture ha de contindre l’àncora original');
+  fs.writeFileSync(index,text.replace(anterior,nova));
   const r=checkTurn(root,d.turn.turn_id);
   assert.equal(r.valid,true,`el torn ha de sobreviure al moviment: ${r.errors.join(' | ')}`);
 });

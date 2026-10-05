@@ -8,7 +8,8 @@ export const CATALOG_CATEGORIES = [
   { id: 'superposicions', label: 'Superposicions', order: 40, icon: '🗂️' },
   { id: 'retroalimentacio', label: 'Retroalimentació', order: 50, icon: '🔔' },
   { id: 'navegacio', label: 'Navegació', order: 60, icon: '🧭' },
-  { id: 'inventari', label: 'Inventari', order: 70, icon: '📦' }
+  { id: 'inventari', label: 'Inventari', order: 70, icon: '📦' },
+  { id: 'emoticones', label: 'Emojis XL', order: 80, icon: '🌻' }
 ];
 
 /* Un espècimen del catàleg. L'id és `categoria-slug` i el carregador,
@@ -252,6 +253,9 @@ const SUPERPOSICIONS = [
 
 export const CATALOG_ITEMS = [
   ...FONAMENTS,
+  { ...especimen('emoticones', 'xl', 'Emojis XL', 'Emoticones del poble per famílies', ['emoticona', 'cataleg', 'accessibilitat'],
+    'Un directori d’emoticones grans amb el seu nom: natura, eines, persones, documents i vida al poble. Cada família es pot desplegar amb el teclat.',
+    'emoji emojis emoticones natura rural eines persones documents'), icon: '🌻' },
   especimen('inventari', 'global', 'Inventari Global', 'Taula de components', ['inventari', 'llista'],
     'Tots els components registrats al catàleg, on viuen i en quin estat estan. La porta del catàleg falla si un component de PedraSeca/ no hi és.',
     'components'),

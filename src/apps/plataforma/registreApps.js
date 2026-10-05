@@ -14,7 +14,7 @@
  * Una app interna invàlida no tomba l'App: queda fora i ho diu la consola
  * (registreApps.test.js la posa en roig abans que arribe a ningú).
  */
-import { lazy } from 'react';
+import { lazyRoute } from './lazyRoute.js';
 import manifestBar from '../bar/manifest.js';
 import manifestSalut from '../salut/manifest.js';
 import manifestNevera from '../nevera/manifest.js';
@@ -113,7 +113,7 @@ export function creaRegistre({ internes } = {}) {
     componentDe(id) {
       const app = appPerId(id);
       if (!app || app.origen !== 'interna' || typeof app.carrega !== 'function') return null;
-      if (!components.has(id)) components.set(id, lazy(app.carrega));
+      if (!components.has(id)) components.set(id, lazyRoute(app.carrega));
       return components.get(id);
     }
   });

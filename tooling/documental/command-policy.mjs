@@ -2,7 +2,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {DESK, humanZone, loadContract, resolveRoute, parseDocument, validateSchema, turnPattern, sha} from './core.mjs';
-import {readTurn, validateDocument} from './turns.mjs';
+import {readTurn, validateDocument, activeReceipts} from './turns.mjs';
 import {normalizeShellCommand} from '../gates/mutation-policy.mjs';
 
 // A deliberately small argv language. No shell expansion, escapes, globs or operators.
@@ -89,7 +89,7 @@ export function authorizeDocumentCommand(payload, root) {
     physical(root,`.agents/runtime/contracts/${sha(JSON.stringify(contract))}.json`);
     if(!(route.destins||[DESK]).some(dir=>opts.file.startsWith(`${dir}/`)))throw new Error('Destí divergent de ruta');
     if(action==='create') {
-      if(!Object.values(turn.receipts).some(receipt=>receipt.route===route.id&&receipt.file===opts.file))throw new Error('Cal context entregat per a este document abans de create');
+      if(!activeReceipts(turn).some(receipt=>receipt.route===route.id&&receipt.file===opts.file))throw new Error('Cal context entregat per a este document abans de create');
       if(fs.existsSync(file))throw new Error('create no sobreescriu documents');
       if(opts.title.length>300||opts.description.length>1000||opts.actor?.length>120)throw new Error('Metadades documentals massa llargues');
       const errors=validateSchema({...route.output,description:opts.description,visibility:'private'},contract.schema);
@@ -102,7 +102,7 @@ export function authorizeDocumentCommand(payload, root) {
     const parsed=parseDocument(content);
     const errors=validateDocument(root,content,opts.file,{closed:true});
     if(parsed.data.type!=='document'||errors.length)throw new Error(`Pla documental invàlid: ${errors.join('; ')}`);
-    if(!Object.keys(turn.receipts).length)throw new Error('Cal context abans de vincular pla');
-  } else if(!Object.values(turn.receipts).some(receipt=>receipt.file===opts.file)&&turn.plan?.file!==opts.file)throw new Error('own només per a documents amb rebut o pla d’este torn');
+    if(!activeReceipts(turn).length)throw new Error('Cal context actiu abans de vincular pla');
+  } else if(!activeReceipts(turn).some(receipt=>receipt.file===opts.file)&&turn.plan?.file!==opts.file)throw new Error('own només per a documents amb rebut o pla d’este torn');
   return {kind:'document-mutation',command:action,file:opts.file,turnId:turn.turn_id};
 }

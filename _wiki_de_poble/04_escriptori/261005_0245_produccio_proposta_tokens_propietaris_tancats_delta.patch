@@ -1,0 +1,340 @@
+--- v3/tooling/gates/tractor-tokens.mjs
++++ v4/tooling/gates/tractor-tokens.mjs
+@@ -23,6 +23,30 @@
+ const stringEstatica = n => n?.type==='StringLiteral' ? n.value : n?.type==='TemplateLiteral'&&!n.expressions.length ? n.quasis.map(q=>q.value.cooked??q.value.raw).join('') : null;
+ const numeroLiteral = n => n?.type==='NumericLiteral' ? n.value : n?.type==='UnaryExpression'&&['+','-'].includes(n.operator)&&n.argument?.type==='NumericLiteral' ? (n.operator==='-'?-n.argument.value:n.argument.value) : null;
+ 
++const PORTS_INSTANCIA = [
++  {name:'--sdp-desplegable-ample',writer:'src/components/PedraSeca/molecules/Dropdown.jsx',owner:'Dropdown',access:'hook',kind:'css-length-prop',binding:'minWidth'},
++  {name:'--sdp-ombra-2',writer:'src/sections/disseny/cataleg/detalls/EspecimenPanell.jsx',owner:'EspecimenPanell',access:'hook',kind:'semantic-choice',binding:'OMBRES',tokens:['--sdp-ombra-1','--sdp-ombra-3']},
++  {name:'--sdp-crom-mostra',writer:'src/components/universal/PanellCrom.jsx',owner:'PanellCrom',access:'jsx-style-preview',kind:'derived-palette',engine:'src/config/crom.js',export:'previsualitza'},
++  {name:'--sdp-xat-fons-imatge',writer:'src/PedraSecaEmbed.jsx',owner:'_aplicaBaseRecursos',access:'setProperty',kind:'resolved-asset',resolver:'src/config/assetResolver.js',asset:'assets/system/ui/xat-bg-map-v2.jpg'}
++];
++const MOTOR_TEMA = {writer:'src/config/crom.js',setters:['aplica'],removers:['restaura'],ramps:['primary','secondary'],steps:[50,100,200,300,400,500,600,700,800,900],canons:['--sdp-canon-blau','--sdp-canon-taronja'],tints:['--sdp-anell-accio','--sdp-anell-accent','--sdp-accent-vel','--sdp-ombra-accio']};
++const ownerDe = parents => [...parents].reverse().find(n=>['FunctionDeclaration','ClassMethod'].includes(n.type));
++const nomOwner = owner => owner?.type==='ClassMethod'?keyName(owner.key):owner?.id?.name;
++const forma = node => JSON.stringify(node,(key,value)=>['start','end','loc','extra','comments','leadingComments','trailingComments','innerComments'].includes(key)?undefined:value);
++const expressio = source => parse(`(${source})`,{sourceType:'module',plugins:['jsx']}).program.body[0].expression;
++const mateixaExpressio = (node,text) => forma(node)===forma(expressio(text));
++function nodes(node,predicate,result=[]) {
++  if(!node||typeof node!=='object')return result;
++  if(predicate(node))result.push(node);
++  for(const [key,value] of Object.entries(node))if(!['loc','extra','comments'].includes(key)){
++    if(Array.isArray(value))value.forEach(v=>nodes(v,predicate,result));else if(value&&typeof value==='object')nodes(value,predicate,result);
++  }
++  return result;
++}
++const membre = (node,object,property) => ['MemberExpression','OptionalMemberExpression'].includes(node?.type)&&node.object?.name===object&&(node.computed?stringEstatica(node.property):keyName(node.property))===property;
++const congela = node => node?.type==='CallExpression'&&membre(node.callee,'Object','freeze')&&node.arguments.length===1?node.arguments[0]:null;
++const valorEstatica = node => stringEstatica(node)??numeroLiteral(node);
++
+ export function comprovaTokens(root = arrel(), { nomes = null } = {}) {
+   if (nomes !== null && !/^T[1-7]$/.test(nomes)) throw new Error(`Regla desconeguda: ${nomes}`);
+   const errors = [], ok = [], produccio = [], excloses = [];
+@@ -47,6 +71,14 @@
+   const contract = JSON.parse(read(CONTRACTE));
+   if (contract.schema !== 'sdp.css.runtime.v1' || contract.hook !== 'src/hooks/usePropietatsCss.js' || !Array.isArray(contract.parameters)) throw new Error('Contracte runtime invàlid.');
+   const runtime = new Map(), seen = new Map();
++  if(JSON.stringify(contract.instancePorts)!==JSON.stringify(PORTS_INSTANCIA)||JSON.stringify(contract.themeEngine)!==JSON.stringify(MOTOR_TEMA))throw new Error('Contracte de ports/tema no ratificat: noms, owners i derivacions exactes.');
++  const ports=new Map(),portsSeen=new Set();
++  for(const p of contract.instancePorts){
++    if(!definitions.has(p.name)||!produccio.includes(p.writer)||(p.tokens??[]).some(n=>!definitions.has(n)))throw new Error(`Port d’instància sense font/owner: ${p.name}`);
++    ports.set(p.name,p);
++  }
++  const themeNames=[...MOTOR_TEMA.ramps.flatMap(r=>MOTOR_TEMA.steps.map(n=>`--sdp-${r}-${n}`)),...MOTOR_TEMA.canons,...MOTOR_TEMA.tints];
++  if(!produccio.includes(contract.themeEngine.writer)||themeNames.some(n=>!definitions.has(n)))throw new Error('Motor de tema sense font/tokens canònics.');
+   const hostExports=new Map(), exportsSeen=new Map();
+   if (!Array.isArray(contract.hostExports??[])) throw new Error('Exportacions host invàlides.');
+   for (const h of contract.hostExports??[]) {
+@@ -104,12 +136,74 @@
+     let ast;
+     try { ast=parse(source,{sourceType:'unambiguous',plugins:['jsx',...(/\.tsx?$/.test(file)?['typescript']:[])]}); }
+     catch (error) { falla('T0',file,error.loc?.line??1,`Font no analitzable: ${error.message}`); continue; }
+-    const imports = new Map();
++    const imports = new Map(), namedImports=new Map();
++    const declarations=new Map(nodes(ast,n=>n.type==='VariableDeclarator'&&n.id?.type==='Identifier').map(n=>[n.id.name,n.init]));
+     const catalogues = new Set();
+     for (const node of ast.program.body) if (node.type === 'ImportDeclaration') for (const spec of node.specifiers) {
++      if(spec.type==='ImportSpecifier')namedImports.set(spec.local.name,{name:spec.imported?.name,source:path.posix.normalize(path.posix.join(path.posix.dirname(file),node.source.value))});
+       if (spec.type === 'ImportSpecifier' && spec.imported?.name === 'Especimen' && path.posix.normalize(path.posix.join(path.posix.dirname(file),node.source.value)) === 'src/sections/disseny/cataleg/Especimen.jsx') catalogues.add(spec.local.name);
+       if (spec.type === 'ImportSpecifier' && spec.imported?.name === 'usePropietatsCss') imports.set(spec.local.name,path.posix.normalize(path.posix.join(path.posix.dirname(file),node.source.value)));
+     }
++    function portPermes(name,value,parents,access) {
++      const p=ports.get(name),owner=ownerDe(parents);
++      if(!p||file!==p.writer||nomOwner(owner)!==p.owner||p.access!==access)return false;
++      const call=[...parents].reverse().find(n=>['CallExpression','OptionalCallExpression'].includes(n.type));
++      if(access==='hook'){
++        const ref=p.kind==='css-length-prop'?'wrapper':'mostraRef';
++        if(call?.arguments[0]?.name!==ref||!mateixaExpressio(declarations.get(ref),'useRef(null)')||!mesclaNoReassignada(ref)||!nodes(owner,n=>n.type==='JSXAttribute'&&n.name?.name==='ref'&&n.value?.expression?.name===ref).length)return false;
++      }
++      if(p.kind==='css-length-prop') {
++        // El valor dinàmic només és la prop explícita minWidth del component.
++        return value?.type==='Identifier'&&value.name===p.binding&&owner.params?.some(param=>param.type==='ObjectPattern'&&param.properties.some(prop=>keyName(prop.key)===p.binding&&prop.value?.name===p.binding));
++      }
++      if(p.kind==='semantic-choice') {
++        const table=congela(declarations.get(p.binding));
++        const validTable=table?.type==='ArrayExpression'&&table.elements.length===3&&table.elements.every(entry=>{
++          const row=congela(entry),values=row?.type==='ObjectExpression'&&row.properties.filter(prop=>keyName(prop.key)==='valor'),v=values?.[0]?.value;
++          return values?.length===1&&row.properties.every(prop=>prop.type==='ObjectProperty'&&!prop.computed)&&v&&(v.type==='NullLiteral'||p.tokens.includes(stringEstatica(v)?.match(/^var\((--sdp-[\w-]+)\)$/)?.[1]));
++        });
++        const values=table?.elements.flatMap(entry=>{const row=congela(entry);return row?.properties?.filter(prop=>keyName(prop.key)==='valor').map(prop=>stringEstatica(prop.value))??[];});
++        return validTable&&p.tokens.every(token=>values.includes(`var(${token})`))&&mesclaNoReassignada(p.binding)&&mateixaExpressio(value,'OMBRES.find((o) => o.id === ombra)?.valor');
++      }
++      if(p.kind==='derived-palette') {
++        const imported=namedImports.get(p.export),mostres=declarations.get('mostres');
++        const sourceOK=imported?.source===p.engine&&imported?.name===p.export&&mateixaExpressio(mostres,'useMemo(() => (arrel && obert ? previsualitza(arrel, delta) : []), [arrel, obert, delta])');
++        const maps=parents.filter(n=>n.type==='CallExpression'&&(membre(n.callee,'mostres','map')||membre(n.callee,'passos','map')));
++        const bindings=maps.length===2&&maps.every(n=>{
++          const param=n.arguments[0]?.params?.[0],required=membre(n.callee,'mostres','map')?['rampa','passos']:['pas','hex'];
++          return param?.type==='ObjectPattern'&&required.every(name=>param.properties.some(p=>p.type==='ObjectProperty'&&!p.computed&&keyName(p.key)===name&&p.value?.name===name));
++        });
++        const style=parents.some(n=>n.type==='JSXAttribute'&&n.name?.name==='style');
++        return sourceOK&&bindings&&mesclaNoReassignada('mostres')&&style&&mateixaExpressio(value,"typeof hex === 'string' && hex.length === 7 && /^#[0-9a-fA-F]{6}$/.test(hex) ? hex : null");
++      }
++      if(p.kind==='resolved-asset') {
++        const imported=namedImports.get('resolveAsset');
++        return imported?.source===p.resolver&&imported?.name==='resolveAsset'&&mateixaExpressio(value,'`url("${resolveAsset("'+p.asset+'")}")`');
++      }
++      return false;
++    }
++    function mesclaNoReassignada(name) {
++      return !nodes(ast,n=>n.type==='AssignmentExpression'&&(n.left?.name===name||n.left?.object?.name===name)||n.type==='UpdateExpression'&&(n.argument?.name===name||n.argument?.object?.name===name)).length;
++    }
++    function genericPermes(node,parents,methodName) {
++      const owner=ownerDe(parents),name=nomOwner(owner),loop=[...parents].reverse().find(n=>n.type==='ForOfStatement');
++      if(file===contract.hook&&name==='usePropietatsCss') {
++        const object=node.callee.object;
++        return membre(object,'node','style')&&node.arguments[0]?.name==='nom'&&loop?.right?.name==='parelles'&&(methodName==='removeProperty'||node.arguments[1]?.name==='valor');
++      }
++      if(file!==MOTOR_TEMA.writer)return false;
++      const ramps=declarations.get('RAMPES'),steps=declarations.get('ESGLAONS'),canons=declarations.get('CANONS'),tints=declarations.get('TINTES');
++      const list=n=>n?.type==='ArrayExpression'?n.elements.map(e=>e.name==='CANON_BLAU'?stringEstatica(declarations.get('CANON_BLAU')):valorEstatica(e)):null;
++      if(JSON.stringify(list(ramps))!==JSON.stringify(MOTOR_TEMA.ramps)||JSON.stringify(list(steps))!==JSON.stringify(MOTOR_TEMA.steps)||JSON.stringify(list(canons))!==JSON.stringify(MOTOR_TEMA.canons)||JSON.stringify(list(tints))!==JSON.stringify(MOTOR_TEMA.tints))return false;
++      if(!['RAMPES','ESGLAONS','CANONS','TINTES','CANON_BLAU'].every(mesclaNoReassignada)||!membre(node.callee.object,'arrel','style')||node.arguments[0]?.name!=='nom')return false;
++      const baseOK=owner?.body?.body?.[0]?.type==='VariableDeclaration'&&owner.body.body[0].declarations.length===1&&owner.body.body[0].declarations[0].id?.name==='b'&&mateixaExpressio(owner.body.body[0].declarations[0].init,'base(arrel)');
++      if(!baseOK)return false;
++      if(methodName==='setProperty'&&MOTOR_TEMA.setters.includes(name)) {
++        for(const [group,transform]of [['esglaons','giraTo'],['canons','giraTo'],['tintes','giraTintes']])if(mateixaExpressio(loop?.right,`Object.entries(b.${group})`)&&mateixaExpressio(node.arguments[1],`${transform}(valor, delta)`))return true;
++      }
++      return methodName==='removeProperty'&&MOTOR_TEMA.removers.includes(name)&&mateixaExpressio(loop?.right,'[...Object.keys(b.esglaons), ...Object.keys(b.canons), ...Object.keys(b.tintes)]');
++    }
++
+     function visit(node,parents=[]) {
+       if (!node || typeof node !== 'object') return;
+       const attrIndex=parents.findLastIndex(n=>n.type==='JSXAttribute');
+@@ -127,7 +221,7 @@
+         if (imports.get(method)===contract.hook && (node.arguments[1]?.type!=='ObjectExpression' || node.arguments[1].properties.some(p=>p.type!=='ObjectProperty'||p.computed))) falla('T7',file,node.loc.start.line,'Endolls runtime: objecte explícit sense spread ni nom calculat.');
+         const member=['MemberExpression','OptionalMemberExpression'].includes(node.callee?.type);
+         const methodName=member?(node.callee.computed?stringEstatica(node.callee.property):keyName(node.callee.property)):null;
+-        if (methodName==='setProperty') {
++        if (['setProperty','removeProperty'].includes(methodName)) {
+           const name=stringEstatica(node.arguments[0]);
+           const host=hostExports.get(name);
+           const owner=[...parents].reverse().find(n=>n.type==='ClassMethod');
+@@ -140,13 +234,26 @@
+           if(authorised)exportsSeen.get(name).add(ownerName);
+           if (name?.startsWith('--sdp-') && !definitions.has(name) && !runtime.has(name) && !authorised) falla('T1',file,node.loc.start.line,`Propietat desconeguda: ${name}`);
+           if (runtime.has(name)) falla('T7',file,node.loc.start.line,`Endoll fora del port declarat: ${name}`);
++          if(name?.startsWith('--sdp-')&&definitions.has(name)){
++            const target=node.callee.object;
++            const instance=target?.type==='MemberExpression'&&target.object?.type==='ThisExpression'&&keyName(target.property)==='style';
++            const allowed=methodName==='setProperty'&&instance&&portPermes(name,node.arguments[1],parents,'setProperty');
++            if(allowed)portsSeen.add(name);else falla('T3',file,node.loc.start.line,`Escriptura de tema fora del propietari/port: ${name}`);
++          }
++          if(name===null&&!genericPermes(node,parents,methodName))falla('T7',file,node.loc.start.line,'Setter dinàmic fora del hook o motor de tema amb derivació canònica.');
+         }
+       }
+-      if (node.type === 'ObjectProperty' && !node.computed) {
+-        const name=keyName(node.key);
++      if (node.type === 'ObjectProperty') {
++        const name=node.computed?stringEstatica(node.key):keyName(node.key);
+         if (name?.startsWith('--sdp-')) {
+           const p=runtime.get(name);
+           if (!definitions.has(name) && !p) falla('T1',file,node.loc.start.line,`Propietat desconeguda: ${name}`);
++          if(definitions.has(name)&&!p){
++            const call=[...parents].reverse().find(a=>['CallExpression','OptionalCallExpression'].includes(a.type));
++            const directHook=call?.arguments?.[1]===parents.at(-1)&&imports.get(calleeName(call?.callee))===contract.hook;
++            const allowed=portPermes(name,node.value,parents,directHook?'hook':'jsx-style-preview');
++            if(allowed)portsSeen.add(name);else falla('T3',file,node.loc.start.line,`Definició/escriptura de tema fora del propietari/port: ${name}`);
++          }
+           if (p) {
+             const call=[...parents].reverse().find(a=>['CallExpression','OptionalCallExpression'].includes(a.type));
+             const method=calleeName(call?.callee);
+@@ -169,6 +276,7 @@
+     }
+     visit(ast);
+   }
++  for(const p of ports.values())if(!portsSeen.has(p.name))falla('T7',p.writer,1,`Port d’instància sense derivació real: ${p.name}`);
+   for(const h of hostExports.values()) for(const method of h.methods) if(!exportsSeen.get(h.name).has(method)) falla('T7',h.writer,1,`Exportació host sense escriptor/opt-in verificat: ${h.name} (${method})`);
+   for (const p of runtime.values()) for (const writer of p.writers) if (!seen.get(p.name).has(writer)) falla('T7',writer,1,`Endoll declarat sense escriptor real: ${p.name}`);
+   for (const rule of ['T1','T2','T3','T4','T5','T6','T7']) if(actiu(rule)&&!errors.some(e=>e.llei===rule))ok.push(rule);
+--- v3/tests/pedra-debt.test.mjs
++++ v4/tests/pedra-debt.test.mjs
+@@ -57,11 +57,21 @@
+ function tokenFixture(t) {
+  const root=fs.mkdtempSync(path.join(os.tmpdir(),'sdp-token-contract-'));t.after(()=>fs.rmSync(root,{recursive:true,force:true}));
+  const put=(file,text)=>{const p=path.join(root,file);fs.mkdirSync(path.dirname(p),{recursive:true});fs.writeFileSync(p,text);};
+- put('src/css/tokens.css',':root { --sdp-text-cos: black; --sdp-fons-app: white; --sdp-pedra-400: gray; --sdp-cal-carrils: 3; }');
++ const canonical=[
++  '--sdp-text-cos','--sdp-fons-app','--sdp-pedra-400','--sdp-cal-carrils',
++  ...runtimeContract.instancePorts.map(p=>p.name),'--sdp-ombra-1','--sdp-ombra-3',
++  ...runtimeContract.themeEngine.ramps.flatMap(r=>runtimeContract.themeEngine.steps.map(n=>`--sdp-${r}-${n}`)),
++  ...runtimeContract.themeEngine.canons,...runtimeContract.themeEngine.tints
++ ];
++ put('src/css/tokens.css',`:root { ${[...new Set(canonical)].map(n=>`${n}: black;`).join(' ')} }`);
+  put('src/css/design-tokens.css',':root { --sdp-canon-taronja: orange; }');
+  put('tooling/contracts/css-runtime-properties.json',JSON.stringify(runtimeContract));
+- put(runtimeContract.hook,'export function usePropietatsCss() {}');
+- put('src/PedraSecaEmbed.jsx',"class Embed { _pintaAmfitrio() { if(!this.hasAttribute('pinta-amfitrio')) return; document.documentElement.style.setProperty('--sdp-bg',value); } static _despintaAmfitrio() { document.documentElement.style.setProperty('--sdp-bg',previ.valor); } }");
++ put(runtimeContract.hook,fs.readFileSync(path.join(ROOT,runtimeContract.hook),'utf8'));
++ put(runtimeContract.themeEngine.writer,fs.readFileSync(path.join(ROOT,runtimeContract.themeEngine.writer),'utf8'));
++ put('src/PedraSecaEmbed.jsx',"import {resolveAsset} from './config/assetResolver.js'; class Embed { _pintaAmfitrio() { if(!this.hasAttribute('pinta-amfitrio')) return; document.documentElement.style.setProperty('--sdp-bg',value); } static _despintaAmfitrio() { document.documentElement.style.setProperty('--sdp-bg',previ.valor); } _aplicaBaseRecursos() { this.style.setProperty('--sdp-xat-fons-imatge', `url(\"${resolveAsset('assets/system/ui/xat-bg-map-v2.jpg')}\")`); } }");
++ put('src/components/PedraSeca/molecules/Dropdown.jsx',"import {usePropietatsCss} from '../../../hooks/usePropietatsCss.js'; function Dropdown({minWidth}) { const wrapper=useRef(null); usePropietatsCss(wrapper,{'--sdp-desplegable-ample':minWidth}); return <div ref={wrapper}/>; }");
++ put('src/sections/disseny/cataleg/detalls/EspecimenPanell.jsx',"import {usePropietatsCss} from '../../../../hooks/usePropietatsCss.js'; const OMBRES=Object.freeze([Object.freeze({valor:'var(--sdp-ombra-1)'}),Object.freeze({valor:null}),Object.freeze({valor:'var(--sdp-ombra-3)'})]); function EspecimenPanell() { const mostraRef=useRef(null); usePropietatsCss(mostraRef,{'--sdp-ombra-2':OMBRES.find((o)=>o.id===ombra)?.valor}); return <div ref={mostraRef}/>; }");
++ put('src/components/universal/PanellCrom.jsx',"import {previsualitza} from '../../config/crom.js'; function PanellCrom({arrel,obert,delta}) { const mostres=useMemo(()=>arrel&&obert?previsualitza(arrel,delta):[],[arrel,obert,delta]); return mostres.map(({rampa,passos})=>passos.map(({pas,hex})=><li key={pas} style={{'--sdp-crom-mostra': typeof hex === 'string' && hex.length === 7 && /^#[0-9a-fA-F]{6}$/.test(hex) ? hex : null}}/>)); }");
+  const writers=[...new Set(runtimeContract.parameters.flatMap(p=>p.writers))];
+  for(const file of writers) {
+   const relative=path.posix.relative(path.posix.dirname(file),runtimeContract.hook);
+@@ -72,7 +82,7 @@
+  return {root,put};
+ }
+ test('tokens: paràmetres runtime amb escriptor real i fallback numèric canònic passen sense tokens globals d’acte',t=>{
+- const {root}=tokenFixture(t),r=comprovaTokens(root);assert.deepEqual(r.errors,[]);assert.equal(r.runtime,12);assert.equal(r.tokens,5);assert.ok(r.produccio.length>2);
++ const {root}=tokenFixture(t),r=comprovaTokens(root);assert.deepEqual(r.errors,[]);assert.equal(r.runtime,12);assert.equal(r.tokens,36);assert.ok(r.produccio.length>2);
+ });
+ test('tokens: literals negatius de proves i text del catàleg no es convertixen en CSS productiu',t=>{
+  const {root,put}=tokenFixture(t);
+@@ -162,3 +172,49 @@
+  fs.appendFileSync(path.join(root,file),code);
+  assert.ok(comprovaTokens(root).errors.some(e=>e.llei==='T7'),name);
+ });
++
++for(const [name,code,law]of [
++ ['color canònic amb setter natiu',"el.style.setProperty('--sdp-text-cos','red');",'T3'],
++ ['color canònic amb setter opcional',"el.style?.setProperty('--sdp-text-cos','red');",'T3'],
++ ['color canònic amb setter entre claudàtors',"el.style['setProperty']('--sdp-text-cos','red');",'T3'],
++ ['color canònic amb hook',"usePropietatsCss(ref,{'--sdp-text-cos':'red'});",'T3'],
++ ['color canònic JSX amb clau calculada estàtica',"const x=<div style={{['--sdp-text-cos']:'red'}}/>;",'T3'],
++ ['port conegut fora del propietari',"usePropietatsCss(ref,{'--sdp-desplegable-ample':'300px'});",'T3'],
++ ['retirada de token canònic fora del motor',"el.style.removeProperty('--sdp-text-cos');",'T3'],
++ ['nom de setter dinàmic en un component',"el.style.setProperty(nom,valor);",'T7'],
++ ['retirada dinàmica en un component',"el.style.removeProperty(nom);",'T7']
++])test(`tokens: ${name} conserva la font única`,t=>{
++ const {root,put}=tokenFixture(t);put('src/outsider.jsx',`import {usePropietatsCss} from './hooks/usePropietatsCss.js'; ${code}`);
++ assert.ok(comprovaTokens(root).errors.some(e=>e.fitxer==='src/outsider.jsx'&&e.llei===law),name);
++});
++
++for(const [name,file,before,after]of [
++ ['Dropdown amb color com a amplada','src/components/PedraSeca/molecules/Dropdown.jsx',"'--sdp-desplegable-ample':minWidth","'--sdp-desplegable-ample':'red'"],
++ ['Dropdown en una funció aliena del mateix fitxer','src/components/PedraSeca/molecules/Dropdown.jsx','function Dropdown(','function UnAltre('],
++ ['Dropdown aplica el port al document','src/components/PedraSeca/molecules/Dropdown.jsx','useRef(null)','useRef(document.documentElement)'],
++ ['ombra escrita a mà en la taula','src/sections/disseny/cataleg/detalls/EspecimenPanell.jsx',"valor:'var(--sdp-ombra-1)'","valor:'0 1px 3px red'"],
++ ['ombra deriva d’una altra expressió','src/sections/disseny/cataleg/detalls/EspecimenPanell.jsx','OMBRES.find((o)=>o.id===ombra)?.valor',"'red'"],
++ ['mostra de Crom amb color arbitrari','src/components/universal/PanellCrom.jsx',"typeof hex === 'string' && hex.length === 7 && /^#[0-9a-fA-F]{6}$/.test(hex) ? hex : null","'red'"],
++ ['mostra de Crom amb motor alié','src/components/universal/PanellCrom.jsx',"from '../../config/crom.js'","from '../../config/outsider.js'"],
++ ['mostra de Crom amb font reassignada','src/components/universal/PanellCrom.jsx','return mostres.map',"mostres = foreign; return mostres.map"],
++ ['recurs d’Embed sense resolutor','src/PedraSecaEmbed.jsx',"resolveAsset('assets/system/ui/xat-bg-map-v2.jpg')","foreign('assets/system/ui/xat-bg-map-v2.jpg')"],
++ ['recurs d’Embed escrit a html','src/PedraSecaEmbed.jsx',"this.style.setProperty('--sdp-xat-fons-imatge'","document.documentElement.style.setProperty('--sdp-xat-fons-imatge'"],
++ ['motor Crom amb una tinta aliena','src/config/crom.js',"const TINTES = ['--sdp-anell-accio'","const TINTES = ['--sdp-text-cos'"],
++ ['motor Crom amb un color literal','src/config/crom.js','giraTo(valor, delta)',"'red'"],
++])test(`tokens: ${name} rebutja la derivació trencada`,t=>{
++ const {root}=tokenFixture(t),target=path.join(root,file),source=fs.readFileSync(target,'utf8');assert.ok(source.includes(before),name);fs.writeFileSync(target,source.replace(before,after));
++ assert.ok(comprovaTokens(root).errors.some(e=>e.fitxer===file&&['T3','T7'].includes(e.llei)),name);
++});
++
++test('tokens: el hook intern no autoritza un setter afegit a una altra funció',t=>{
++ const {root}=tokenFixture(t);fs.appendFileSync(path.join(root,runtimeContract.hook),'\nfunction outsider() { for(const [nom,valor]of parelles) node.style.setProperty(nom,valor); }');
++ assert.ok(comprovaTokens(root).errors.some(e=>e.fitxer===runtimeContract.hook&&e.llei==='T7'));
++});
++test('tokens: el motor central no autoritza redefinir un semàntic amb un nom literal',t=>{
++ const {root}=tokenFixture(t);fs.appendFileSync(path.join(root,runtimeContract.themeEngine.writer),"\nfunction outsider() { arrel.style.setProperty('--sdp-text-cos','red'); }");
++ assert.ok(comprovaTokens(root).errors.some(e=>e.fitxer===runtimeContract.themeEngine.writer&&e.llei==='T3'));
++});
++test('tokens: afegir un owner/color al manifest no obri una excepció opaca',t=>{
++ const {root,put}=tokenFixture(t),contract=structuredClone(runtimeContract);contract.instancePorts.push({name:'--sdp-text-cos',writer:'src/outsider.jsx',kind:'color'});put('tooling/contracts/css-runtime-properties.json',JSON.stringify(contract));
++ assert.throws(()=>comprovaTokens(root),/Contracte de ports\/tema no ratificat/);
++});
+--- v3/tooling/contracts/css-runtime-properties.json
++++ v4/tooling/contracts/css-runtime-properties.json
+@@ -104,5 +104,80 @@
+       "sourceToken": "--sdp-fons-app",
+       "contract": "_wiki_de_poble/02_saber/estandard_integracio_react.md"
+     }
+-  ]
++  ],
++  "instancePorts": [
++    {
++      "name": "--sdp-desplegable-ample",
++      "writer": "src/components/PedraSeca/molecules/Dropdown.jsx",
++      "owner": "Dropdown",
++      "access": "hook",
++      "kind": "css-length-prop",
++      "binding": "minWidth"
++    },
++    {
++      "name": "--sdp-ombra-2",
++      "writer": "src/sections/disseny/cataleg/detalls/EspecimenPanell.jsx",
++      "owner": "EspecimenPanell",
++      "access": "hook",
++      "kind": "semantic-choice",
++      "binding": "OMBRES",
++      "tokens": [
++        "--sdp-ombra-1",
++        "--sdp-ombra-3"
++      ]
++    },
++    {
++      "name": "--sdp-crom-mostra",
++      "writer": "src/components/universal/PanellCrom.jsx",
++      "owner": "PanellCrom",
++      "access": "jsx-style-preview",
++      "kind": "derived-palette",
++      "engine": "src/config/crom.js",
++      "export": "previsualitza"
++    },
++    {
++      "name": "--sdp-xat-fons-imatge",
++      "writer": "src/PedraSecaEmbed.jsx",
++      "owner": "_aplicaBaseRecursos",
++      "access": "setProperty",
++      "kind": "resolved-asset",
++      "resolver": "src/config/assetResolver.js",
++      "asset": "assets/system/ui/xat-bg-map-v2.jpg"
++    }
++  ],
++  "themeEngine": {
++    "writer": "src/config/crom.js",
++    "setters": [
++      "aplica"
++    ],
++    "removers": [
++      "restaura"
++    ],
++    "ramps": [
++      "primary",
++      "secondary"
++    ],
++    "steps": [
++      50,
++      100,
++      200,
++      300,
++      400,
++      500,
++      600,
++      700,
++      800,
++      900
++    ],
++    "canons": [
++      "--sdp-canon-blau",
++      "--sdp-canon-taronja"
++    ],
++    "tints": [
++      "--sdp-anell-accio",
++      "--sdp-anell-accent",
++      "--sdp-accent-vel",
++      "--sdp-ombra-accio"
++    ]
++  }
+ }

@@ -58,9 +58,9 @@ test('D3 · la regla que baixa la graella casa amb la graella de veres de l’Ad
   const graella = container.querySelector('.app-grid-page');
   expect(graella).not.toBeNull();
   expect(container.querySelector(SELECTOR_DE_LA_REGLA)).toBe(graella);
-  // La barra és germana anterior de l'article que conté la graella, no cap fill seu.
+  // La barra i el títol són germans anteriors del contingut que conté la graella.
   const pagina = container.querySelector('.sdp-universal-page-container');
-  expect([...pagina.children].map((e) => e.className)).toEqual(['bar-orange', 'content-wrapper']);
+  expect([...pagina.children].map((e) => e.className)).toEqual(['bar-orange', 'page-title', 'content-wrapper']);
   expect(graella.querySelector('section.bar-orange')).toBeNull();
   // Les tres columnes, amb les seues capçaleres, viuen dins de la graella que baixa.
   for (const columna of ['left', 'middle', 'right']) {

@@ -1,0 +1,112 @@
+{
+  "id": "6bf5325f-c7ac-4abe-a1a0-f6d2322dc624",
+  "session": "aa0cc834-4f2a-44ff-a285-ea92980518b5",
+  "operationId": "sdp-marato-ci-sql-cognitiu-261005_0010",
+  "claim": "aa0cc834-4f2a-44ff-a285-ea92980518b5:governance-write",
+  "planHash": "b6d6e79c0cb7f1f6a53a8e2817718da982bb7a11ca6a4fbf203a3af302934b9b",
+  "beforeSeal": "96e46a7cdf488c0e52ce51b26c4bf60b10a3f68cb19fdaa267428f32ed51f7f5",
+  "files": [
+    {
+      "path": "package.json",
+      "before": "50684f2e1acd2bcb3fd972f7fd5812a49d5145500ad409cb1dc06ce44dd11814",
+      "after": "e3369a47848c4bb712f53f5a18eb468cf667d39cbd8d1b2853279bf806371e27"
+    },
+    {
+      "path": "package-lock.json",
+      "before": "4b961f435ab024f2dcefeaeb1ce69a0225090882d90810a031d5a1661905435a",
+      "after": "db1d5a0639380e0877d8227c0a9ee89920b7d42121d680113f74241c61ddbc7f"
+    },
+    {
+      "path": ".github/workflows/wiki-integrity.yml",
+      "before": "ce88eabc6740e7ce8d3ae8df5efe5ab5bc45f0c6c36cf0af3a9f1efa30f0f882",
+      "after": "93c306095db2774ab05a0d0c4b1a2794c1d77af5aff86d73b5ebc254681c0bbe"
+    },
+    {
+      "path": "tooling/tests/run-node-tests.mjs",
+      "before": null,
+      "after": "477d7d66bf984d1f463dd50f6af9d73458ca13847b673d3c9cccd50590031a6f"
+    },
+    {
+      "path": "tooling/tests/node-suite-manifest.json",
+      "before": null,
+      "after": "7e2c421a27f2fa8421445950b36355bc0b7839f5813cadffbebe92d32655b0c8"
+    },
+    {
+      "path": "tests/node-suite-policy.test.mjs",
+      "before": null,
+      "after": "b7983e01039ca777ba67dbd251465df91619e8f86729b176c438478be2005d77"
+    },
+    {
+      "path": "tooling/gates/run-portes.mjs",
+      "before": "408ca70d399a0ef8ad68033001d3b90aee01cab0ae5c52a847c38eb805641e7d",
+      "after": "ace399dbc8e657198824366524c8f4bec11f70d146a7a7dbe75399839d6fdd28"
+    },
+    {
+      "path": "supabase/migrations/2610042330_xat_pagina_iaia.sql",
+      "before": null,
+      "after": "2e7ec25a9887464b28eae9ff4735b6173f00e6a17ea1c3061c9a7302523eae35"
+    },
+    {
+      "path": "tests/migracio-xat-de-pagina.test.mjs",
+      "before": "65925f5fdceabda342b7ae5f252aa5bba34d0298428aae34ec9a28e04a3ced30",
+      "after": "14b2013feef0ac0c895dfa31051abc369c52281929f907c3a193b99d409319ed"
+    },
+    {
+      "path": "supabase/README.md",
+      "before": "db551c8ecc55815d7f7b79ef04c270e8c17c609004f174c192ee65a53bca5b74",
+      "after": "6fa0606cfee0ac234256d9544de7cf515f1c2e8e02ac7c25f750420b15be0225"
+    },
+    {
+      "path": "tooling/documental/core.mjs",
+      "before": "26554d124c3c040c2044f69e308ac2dc26e47eba95ef5d20531cedfc2e67b469",
+      "after": "8315402c83ea150d76472bc39ac5a18b0c4d841619e4eb76abda65fd499ac349"
+    },
+    {
+      "path": "tooling/documental/draft-write.mjs",
+      "before": "c03b893b1518c0f0a38012095327a81c4915980b096c527d27f90bc90a8d2ca1",
+      "after": "1eb5e1152d0b8bad48d6693661867b1c75efdcadbcc4d4daf65714c71f2c4170"
+    },
+    {
+      "path": "tooling/documental/turns.mjs",
+      "before": "af10fc78898c7c06b79789bae9bfb481958dadf7ec36714d06c434275a3b947d",
+      "after": "b23dfbd2b623f4d5737707f0968b8c15a26bae5e047997c823c3dcfb875f5bca"
+    },
+    {
+      "path": "tooling/gates/porta-olivera.mjs",
+      "before": "4cde29b1ba307bb6d33d173bd6ca54dd3fc825af83c62d5ffb19c75853b78d8a",
+      "after": "ec879f7b1873664c05bf891a7458063e668197baaff5aa2d8fd2f42558998e33"
+    },
+    {
+      "path": "tooling/gates/antigravity-hook.mjs",
+      "before": "f5895f6b6f964558ea046b831f78c1985db68fa32665e1aa47974d5f9c86f7a7",
+      "after": "c79c0801c571755a7c9b553556564c0d263a5f0d2ecd7e37e5562a4e44382ed3"
+    },
+    {
+      "path": ".agents/skills/sdp-pedra-seca/SKILL.md",
+      "before": "f5699e3c1fcc01111098f3ffc58081427c69e533619b07982e0f32b69119eb06",
+      "after": "7954650e47934cb158316c9a0e5c592a39fb7e9ad6edadb2c702880d3419931f"
+    },
+    {
+      "path": "tests/porta-olivera-diagnosi.test.mjs",
+      "before": "9aab7876b6a3c111fdabd13874b86c8455930233dc4e8057fdec6098f7103c7e",
+      "after": "d92e3c7881e720d6780c4c2e9450f6ae52f5ca4c67043d88f9371cf6ca58d570"
+    },
+    {
+      "path": "tests/antigravity-hook.test.mjs",
+      "before": "cec915948b24545b07fb155b4a15de59dfb89c5d1fcbd7c90a1d67e826eec519",
+      "after": "defc759b88b04dd93b7300ee2d34825db95c4d1189fc81579599d63e9aa144ab"
+    },
+    {
+      "path": "tests/cognitive-document-handoff.test.mjs",
+      "before": null,
+      "after": "7b5c8152fa4e603663e152e79d6ad0cc93e8bdbdc12314fec4141b9729e9b87e"
+    },
+    {
+      "path": "tests/cognitive-hook-safety.test.mjs",
+      "before": null,
+      "after": "2883c6b46250a5cfb477125cea3a2e40406c59bf3a51c460a219a8a0ad0e8cfa"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "5be515e906a26495855ab59280a1e2426ce7ab073f62b3041e1bedc8f2add73c"
+}

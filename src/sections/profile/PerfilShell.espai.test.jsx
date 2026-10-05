@@ -66,7 +66,7 @@ const detall = (container) => container.querySelector('.sdp-workspace-detail');
 test('la primera columna, en ordre: la persona pel seu nom, GRUPS I EMPRESES i APLICACIONS', () => {
   const { container } = render(<PerfilShell />);
   expect(etiquetesDe(navegacio())).toEqual([
-    'Javi Llinares', 'GRUPS I EMPRESES', 'Forn', 'APLICACIONS', 'Gestoria de Poble', 'Llibreria', 'Ajuntament',
+    'Javi Llinares', 'GRUPS I EMPRESES', 'Forn', 'APLICACIONS', 'Gestoria de Poble', 'Consola de Mètriques', 'Curation AI (Lector RSS)', 'Cervell (Node Graph)', 'Snippet',
   ]);
   expect(within(navegacio()).getByRole('button', { name: 'GRUPS I EMPRESES' }).getAttribute('aria-expanded')).toBe('true');
   // En entrar: la persona activa, els seus apartats i la fitxa oberta.
@@ -101,7 +101,7 @@ test('cada element de l’esquerra obri els seus apartats i el primer al detall'
   const pagina = detall(container);
   expect(within(pagina).getByRole('heading', { level: 1, name: 'Gestoria de Poble' })).toBeTruthy();
   expect(within(pagina).getByText('Pendent de connectar en este node')).toBeTruthy();
-  expect(within(pagina).queryAllByRole('button')).toEqual([]);
+  expect(within(pagina).getAllByRole('button').map((b) => b.textContent)).toEqual(['Mostrar al Panell de Control']);
   expect(within(pagina).queryAllByRole('link')).toEqual([]);
 });
 

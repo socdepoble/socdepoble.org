@@ -93,3 +93,24 @@ test('sense el pageCopy del core (carregant, o un core que no el porta), mana PA
     cleanup();
   }
 });
+
+
+test('la portada pròpia antiga usa el derivat lleuger amb espai reservat i conserva el copy del core', () => {
+  mocks.core.pageCopy.disseny = { ...PAGE_COPY.disseny, image: '/assets/uploads/brain/ibanez_pedra_seca_design_1780873465211.png', title: 'Disseny del core' };
+  const { container } = render(<DesignSection />);
+  const imatge = container.querySelector('.hero-image img');
+  expect(imatge.getAttribute('src')).toBe('/assets/uploads/brain/ibanez_pedra_seca_design_1780873465211.jpg');
+  expect(imatge.getAttribute('width')).toBe('768');
+  expect(imatge.getAttribute('height')).toBe('768');
+  expect(imatge.getAttribute('fetchpriority')).toBe('high');
+  expect(container.querySelector('header.page-title h1').textContent).toBe('Disseny del core');
+});
+
+test('una portada remota diferent conserva la seua URL i no hereta una proporció inventada', () => {
+  mocks.core.pageCopy.disseny = { ...PAGE_COPY.disseny, image: 'https://example.org/portada.jpg', imageWidth: undefined, imageHeight: undefined };
+  const { container } = render(<DesignSection />);
+  const imatge = container.querySelector('.hero-image img');
+  expect(imatge.getAttribute('src')).toBe('https://example.org/portada.jpg');
+  expect(imatge.hasAttribute('width')).toBe(false);
+  expect(imatge.hasAttribute('height')).toBe(false);
+});

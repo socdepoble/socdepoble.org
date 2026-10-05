@@ -5,6 +5,7 @@ import { useCoreContent } from '../../app/contexts/CoreContentContext';
 import { useNotesData } from '../../sections/notes/NotesDataContext';
 import { useMultimedia } from '../../sections/multimedia/MultimediaContext';
 import { useUIActions } from '../../app/contexts/UIContext';
+import { useSession } from '../../app/contexts/SessionContext';
 import { buildDetailSectionMeta } from './detailSectionMeta.jsx';
 import { useSEO } from '../../hooks/useSEO.js';
 import { autorDe, objecteDe, rutaConnectarObjecte, tipusDeSeccio } from '../../config/navigation.js';
@@ -16,10 +17,11 @@ export default function ItemDetailSection() {
   const { notes } = useNotesData();
   const { mediaItems } = useMultimedia();
   const { t } = useUIActions();
+  const { rol } = useSession();
   const { sectionId, itemId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const SECTION_META = buildDetailSectionMeta({ events, feedPosts, marketItems, mediaItems, notes, towns, t });
+  const SECTION_META = buildDetailSectionMeta({ events, feedPosts, marketItems, mediaItems, notes, towns, t, rol });
   const section = SECTION_META[sectionId];
   /* T54 · el mateix resolvedor que el diàleg Connectar i el lector del MAS. */
   const fallbackItem = trobaElement(section, itemId);

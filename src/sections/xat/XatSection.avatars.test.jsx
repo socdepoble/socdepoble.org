@@ -28,6 +28,7 @@ import { agrupaComunitats, mapejaFil } from './missatges.js';
 import { buidaEsborranys } from './esborranys.js';
 import { fixaBaseRecursos } from '../../config/assetResolver.js';
 import { permetOrigenMitjans } from '../../utils/sanitize.js';
+import { AGENTS_MAP } from '../../data/agentsSeed.js';
 
 const mocks = vi.hoisted(() => ({
   navigate: vi.fn(),
@@ -82,7 +83,7 @@ const NODE = 'https://node.example';
 const POBLE = { id: 'la-torre-de-les-macanes', nom: 'Gent de la Torre' };
 const CARA = '/assets/towns/la-torre-de-les-macanes/2.jpg';
 const TORRE = { id: POBLE.id, title: 'La Torre de les Maçanes', image_url: '/assets/towns/la-torre-de-les-macanes/1.jpg', avatar_url: CARA };
-const IAIA = '/assets/fotos/iaia-maria.png';
+const IAIA = AGENTS_MAP.IAIA.avatar_url;
 const LOGO = '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg';
 const COLLA = '/assets/uploads/avatars/mixa-comic.png';
 const GOOGLE = 'https://lh3.googleusercontent.com/a/pepa=s96-c';

@@ -17,7 +17,7 @@ test('T23 · la botonera porta un quart botó d’emoticona: ploma sense emotico
   const grup = screen.getByRole('group', { name: 'Classificació del document' });
   const botons = within(grup).getAllByRole('button');
   expect(botons).toHaveLength(4);
-  expect(botons[3].textContent).toBe('Emoticona—');
+  expect(botons[3].textContent).toBe('Emoticona (—)');
   expect(botons[3].querySelector('svg.lucide-feather')).toBeTruthy();
   fireEvent.click(botons[3]);
   expect(onObri).toHaveBeenLastCalledWith('emoticona');
@@ -64,10 +64,10 @@ test('sense res triat, la botonera porta els botons de resum de sempre i obri ca
   render(<BotoneraClassificacio categories={[]} etiquetes={[]} onObri={onObri} />);
   const grup = screen.getByRole('group', { name: 'Classificació del document' });
   const botons = within(grup).getAllByRole('button');
-  expect(botons.map((b) => b.textContent)).toEqual(['Carpetes—', 'Categories0', 'Etiquetes0', 'Emoticona—']);
-  botons.forEach((b) => expect(b.className).toContain('sdp-boto'));
+  expect(botons.map((b) => b.textContent)).toEqual(['Carpetes (—)', 'Categories (0)', 'Etiquetes (0)', 'Emoticona (—)']);
+  botons.forEach((b) => expect(b.className).toBe('sdp-classificacio-pindola'));
   botons.forEach((b) => expect(b.getAttribute('aria-haspopup')).toBe('dialog'));
-  expect(grup.querySelector('.sdp-classificacio-pindola')).toBeNull();
+  expect(grup.querySelectorAll('.sp-card-label.sdp-badge-buit')).toHaveLength(4);
   for (const boto of botons) fireEvent.click(boto);
   expect(onObri.mock.calls.map(([tipus]) => tipus)).toEqual(['carpeta', 'categories', 'etiquetes', 'emoticona']);
 });
@@ -84,7 +84,7 @@ test('T7 · amb carpeta, categories i etiquetes triades, la botonera pinta pínd
   render(<BotoneraClassificacio carpeta="Mur" categories={['Sistema']} etiquetes={['a', 'b']} onObri={onObri} />);
   const grup = screen.getByRole('group', { name: 'Classificació del document' });
   const botons = within(grup).getAllByRole('button');
-  expect(botons.map((b) => b.textContent)).toEqual(['Mur', 'Sistema', 'ab', 'Emoticona—']);
+  expect(botons.map((b) => b.textContent)).toEqual(['Mur', 'Sistema', 'ab', 'Emoticona (—)']);
   expect(botons.map((b) => b.getAttribute('aria-label'))).toEqual([
     'Carpetes: Mur', 'Categories: Sistema', 'Etiquetes: a, b', null
   ]);
@@ -123,7 +123,8 @@ test('T7B-V1 · un sol objectiu tàctil per grup: la botonera no passa mai de qu
   render(<BotoneraClassificacio carpeta="Mur" categories={['Hort', 'Reg', 'Festes']} etiquetes={etiquetes} onObri={onObri} />);
   const grup = screen.getByRole('group', { name: 'Classificació del document' });
   expect(within(grup).getAllByRole('button')).toHaveLength(4);
-  expect(grup.querySelectorAll('.sdp-classificacio-pindola')).toHaveLength(3);
+  expect(grup.querySelectorAll('.sdp-classificacio-pindola')).toHaveLength(4);
+  expect(grup.querySelectorAll('.sp-card-label.sdp-badge-buit')).toHaveLength(1);
   const deLesEtiquetes = within(grup).getByRole('button', { name: 'Etiquetes: Sistema, Productivitat, Tutorial, Sóc de Poble' });
   expect([...deLesEtiquetes.querySelectorAll('.sp-card-label')].map((p) => p.textContent)).toEqual(etiquetes);
   // Cap botó niat: les píndoles de dins són text, no objectius propis.
@@ -150,7 +151,7 @@ test('T7 · cada grup decidix per separat: un grup buit conserva el seu botó de
   const onObri = vi.fn();
   render(<BotoneraClassificacio carpeta="Mur" categories={['Sistema']} etiquetes={[]} emoticona="🌿" onObri={onObri} />);
   const botons = within(screen.getByRole('group', { name: 'Classificació del document' })).getAllByRole('button');
-  expect(botons.map((b) => b.textContent)).toEqual(['Mur', 'Sistema', 'Etiquetes0', '🌿Emoticona']);
+  expect(botons.map((b) => b.textContent)).toEqual(['Mur', 'Sistema', 'Etiquetes (0)', '🌿Emoticona']);
   fireEvent.click(botons[2]);
   expect(onObri).toHaveBeenLastCalledWith('etiquetes');
 });
@@ -176,7 +177,7 @@ test('T7B-R1 · el mateix valor com a categoria i com a etiqueta es distingix se
 test('T7B-R2 · el valor de cada píndola viu en el seu element de text, després de la icona', () => {
   const llarg = 'Categoria de nom molt llarg per a una columna estreta';
   render(<BotoneraClassificacio carpeta="Mur" categories={[llarg]} etiquetes={['a', 'b']} onObri={vi.fn()} />);
-  const pindoles = [...document.querySelectorAll('.sdp-classificacio-pindola > .sp-card-label')];
+  const pindoles = [...document.querySelectorAll('.sdp-classificacio-pindola > .sp-card-label:not(.sdp-badge-buit)')];
   expect(pindoles.map((p) => p.textContent)).toEqual(['Mur', llarg, 'a', 'b']);
   for (const label of pindoles) {
     const text = label.querySelector(':scope > .sdp-classificacio-pindola__text');
@@ -192,7 +193,7 @@ test('T7B-R2 · el valor de cada píndola viu en el seu element de text, despré
 test('T7 · valors buits o repetits no trenquen la botonera', () => {
   render(<BotoneraClassificacio carpeta="" categories={['', 'Hort', 'Hort']} etiquetes={[null, '']} onObri={vi.fn()} />);
   const botons = within(screen.getByRole('group', { name: 'Classificació del document' })).getAllByRole('button');
-  expect(botons.map((b) => b.textContent)).toEqual(['Carpetes—', 'HortHort', 'Etiquetes0', 'Emoticona—']);
+  expect(botons.map((b) => b.textContent)).toEqual(['Carpetes (—)', 'HortHort', 'Etiquetes (0)', 'Emoticona (—)']);
   expect(botons[1].getAttribute('aria-label')).toBe('Categories: Hort, Hort');
 });
 

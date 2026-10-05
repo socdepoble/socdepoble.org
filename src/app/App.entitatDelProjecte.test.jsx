@@ -1,8 +1,8 @@
 /* T6 en remot (verificació del front «autoria», 261004) · L'app sencera, en
    mode remot i amb el router del navegador, resol l'id de servidor de
    l'entitat pilot UNA sola vegada i a nivell d'app (AppDataLoader,
-   useEntitatDelProjecte): /mercat, /mercat/:id i /mur/:id porten la boina del
-   pilot a /projecte encara que s'hi entre directament, sense passar pel Mur
+   useEntitatDelProjecte): /mur/:id conserva l’enllaç editorial /projecte;
+   /mercat i /mercat/:id porten al perfil real (Pla 261004_2045), també directament, sense passar pel Mur
    ni per una publicació del MAS. Una altra entitat del servidor continua
    portant al seu perfil. En llavor, cap crida. Els UUID i els continguts són
    sintètics; cap xarxa (fetch llança). */
@@ -86,18 +86,18 @@ const autoriaDeLaBarra = (arrel) => arrel.querySelector('.sdp-universal-page-con
 /* Les crides al directori per a resoldre el pilot (pel slug declarat, mai pel nom). */
 const cridesDelPilot = (espia) => espia.mock.calls.filter(([clau]) => clau === ENTITAT_PILOT_SLUG).length;
 
-test('/mercat, entrant directament: la boina del pilot porta a /projecte; la d’una altra entitat, al seu perfil; una sola crida', async () => {
+test('/mercat, entrant directament: cada boina porta al perfil de l’autor real; una sola crida del pilot', async () => {
   await munta('/mercat', async ({ container, loadPerfilPublic }) => {
-    await waitFor(() => expect(boinaDeLaTargeta(container, PRODUCTE_PILOT.title)).toBe(RUTA_PROJECTE));
+    await waitFor(() => expect(boinaDeLaTargeta(container, PRODUCTE_PILOT.title)).toBe(`/empresa/${UUID_PILOT}`));
     expect(boinaDeLaTargeta(container, PRODUCTE_ALTRA.title)).toBe(`/empresa/${UUID_ALTRA}`);
     expect(cridesDelPilot(loadPerfilPublic)).toBe(1);
     expect(loadPerfilPublic.mock.calls.every(([clau]) => clau === ENTITAT_PILOT_SLUG)).toBe(true);
   });
 });
 
-test('/mercat/:id, entrant directament: la barra taronja del detall porta a /projecte', async () => {
+test('/mercat/:id, entrant directament: la barra taronja del detall porta al perfil de l’autor', async () => {
   await munta(`/mercat/${PRODUCTE_PILOT.id}`, async ({ container, loadPerfilPublic }) => {
-    await waitFor(() => expect(autoriaDeLaBarra(container)).toBe(RUTA_PROJECTE));
+    await waitFor(() => expect(autoriaDeLaBarra(container)).toBe(`/empresa/${UUID_PILOT}`));
     expect(cridesDelPilot(loadPerfilPublic)).toBe(1);
   });
 });
@@ -121,7 +121,11 @@ test('el disparador és un de sol, a nivell d’app: AppDataLoader, damunt de to
   const { join } = await import('node:path');
   const codi = readFileSync(join(process.cwd(), 'src/app/App.jsx'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
   expect(codi.match(/\buseEntitatDelProjecte\(\)/g)).toHaveLength(1);
-  const carregador = codi.slice(codi.indexOf('function AppDataLoader()'), codi.indexOf('export class RouteErrorBoundary'));
+  const inici = codi.indexOf('function AppDataLoader()');
+  const fi = codi.indexOf('function ActorRedirect');
+  expect(inici).toBeGreaterThanOrEqual(0);
+  expect(fi).toBeGreaterThan(inici);
+  const carregador = codi.slice(inici, fi);
   expect(carregador).toContain('useEntitatDelProjecte();');
   expect(carregador).toContain('<AppRoutes />');
 });

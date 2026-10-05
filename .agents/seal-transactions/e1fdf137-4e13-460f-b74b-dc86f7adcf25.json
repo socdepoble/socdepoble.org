@@ -1,0 +1,22 @@
+{
+  "id": "e1fdf137-4e13-460f-b74b-dc86f7adcf25",
+  "session": "392eca31-83c5-4fdb-91e5-7592425028cd",
+  "operationId": "sdp-node-fixtures-261005_0025",
+  "claim": "392eca31-83c5-4fdb-91e5-7592425028cd:governance-write",
+  "planHash": "4fbc04c354ef0f247a7aca2dcb65a37f682f130b953a9e5917476ab6a932710e",
+  "beforeSeal": "b5b6edfca04ed4749661d93cd6ea038a666b02d0953654349c484b3dacc4eb01",
+  "files": [
+    {
+      "path": "tests/fortificacio.test.mjs",
+      "before": "5e249f61251049179005ae5e23b5c37008456c0e6cc5d522bc03cb6bc5bc8a3c",
+      "after": "ae0cade6b7451268ea86f29ec602fd1d0da2c5b79215b8f1890e057a93708c30"
+    },
+    {
+      "path": "tests/lint_calendari.test.mjs",
+      "before": "cd5bad6a8b552a91c1a0d3bc2c57656a4239644278f8b0b15214e1e607bed7d9",
+      "after": "ca0b145a23c16d4d605aa0902efcb346484733c65d19400db8b1164c482fc8cc"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "5be515e906a26495855ab59280a1e2426ce7ab073f62b3041e1bedc8f2add73c"
+}

@@ -1,0 +1,73 @@
+--- frozen114/src/sections/notes/NotesSection.jsx
++++ successor/src/sections/notes/NotesSection.jsx
+@@ -426,12 +426,13 @@
+   /* F1/F2 · El Workspace pregunta per la carpeta destí abans que la URL
+      canviï. Només ajornem la preparada de reserva o una carpeta sense cap
+      candidat mentre la seua font és pendent. Les notes/publicacions existents
+-     i una preparada demanada amb CREAR NOTA continuen disponibles. */
++     continuen elegibles. CREAR NOTA i les tries manuals no passen per esta
++     política: una demanda anterior no autoritza el fallback d'una altra carpeta. */
+   const canAutoSelect = useCallback(({ categoryId, item }) => {
+-    if (modeDesa || (item && item.id !== preparada.id) || demanada === preparada.id) return true;
++    if (modeDesa || (item && item.id !== preparada.id)) return true;
+     const font = fontDe(fontsDelMas, seccioDeCarpeta(categoryId));
+     return !ESTATS_PENDENTS.has(font?.status);
+-  }, [modeDesa, preparada.id, demanada, fontsDelMas]);
++  }, [modeDesa, preparada.id, fontsDelMas]);
+ 
+   const model = useMemo(() => {
+     const grupCarpetes = {
+--- frozen114/src/sections/notes/NotesSection.fontPublicacio.revisio.test.jsx
++++ successor/src/sections/notes/NotesSection.fontPublicacio.revisio.test.jsx
+@@ -24,7 +24,7 @@
+    que la preparada de reserva no es fixa abans que arribe la publicació,
+    sense bloquejar una nota disponible ni una tria manual. */
+ import React, { StrictMode } from 'react';
+-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
++import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+ import { afterEach, beforeAll, expect, test, vi } from 'vitest';
+ import { MemoryRouter, useLocation } from '../../app/contexts/RouterContext';
+ 
+@@ -214,12 +214,40 @@
+  expect(nota()).toBe('nota-media');expect(detall()).toBe('nota-media');
+  expect(dades.mediaRefresh).not.toHaveBeenCalled();
+ });
+-test('F4-autotria · CREAR NOTA continua triant la preparada amb la font pendent',()=>{
++test('F4-autotria · CREAR NOTA continua triant la preparada amb la font pendent',async ()=>{
+  Object.assign(dades,{mediaStatus:'loading'});
+  const repinta=munta('/notes?carpeta=f-media');
+  expect(nota()).toBeNull();
+  fireEvent.click(screen.getByRole('button',{name:'CREAR NOTA'}));
+- const id=nota();expect(id).toMatch(/^[0-9a-f-]{36}$/);expect(detall()).toBe(id);
++ await waitFor(()=>expect(nota()).toMatch(/^[0-9a-f-]{36}$/));
++ const id=nota();expect(detall()).toBe(id);
+  Object.assign(dades,{mediaStatus:'ready',media:[FOTO]});repinta();
+  expect(nota()).toBe(id);expect(detall()).toBe(id);expect(dades.mediaRefresh).not.toHaveBeenCalled();
+ });
++
++/* Una tria manual en una carpeta no autoritza el fallback de la següent. */
++for (const source of ['media', 'mur']) {
++  test(`F4-transició · crear a Notes i després triar ${source} pendent espera la publicació`, async () => {
++    const name = source === 'media' ? 'Multimèdia' : 'Mur';
++    const folder = source === 'media' ? 'f-media' : 'f-mur';
++    const collection = source === 'media' ? 'media' : 'feed';
++    const publicacio = source === 'media' ? FOTO : POST;
++    const publicacioId = source === 'media' ? FOTO_ID : 'publicacio:mur:p2';
++    Object.assign(dades, { [`${source}Status`]: 'loading' });
++    const repinta = munta('/notes?carpeta=f-notes&nota=uuid-a', { estricte: true });
++    fireEvent.click(screen.getByRole('button', { name: 'CREAR NOTA' }));
++    await waitFor(() => expect(nota()).toMatch(/^[0-9a-f-]{36}$/));
++    const preparadaId = nota();
++    expect(detall()).toBe(preparadaId);
++    fireEvent.click(within(rail()).getByRole('button', { name }));
++    expect(nota()).toBeNull();
++    expect(new URL(screen.getByTestId('url').textContent, 'http://localhost').searchParams.get('carpeta')).toBe(folder);
++    Object.assign(dades, { [`${source}Status`]: 'ready', [collection]: [publicacio] });
++    repinta();
++    expect(nota()).toBe(publicacioId);
++    expect(detall()).toBe(publicacioId);
++    expect(dades.mediaRefresh).not.toHaveBeenCalled();
++    expect(dades.murRefresh).not.toHaveBeenCalled();
++    expect(dades.resolveNote).not.toHaveBeenCalled();
++  });
++}
