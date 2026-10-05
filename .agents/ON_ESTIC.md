@@ -6,7 +6,7 @@ description: Punter d'arrencada de sessió generat per despertar.mjs
 # ON_ESTIC.md (Punter de Sessió)
 
 > [!IMPORTANT]
-> **GENERAT:** 2026-10-04T22:58:07Z
+> **GENERAT:** 2026-10-05T10:06:32.068Z
 > Aquest document l'`@`-importa `CLAUDE.md`, i eixa importació es resol ABANS
 > que el hook l'escriga: la còpia que tens al context és la de la sessió
 > anterior. Per això **ací no hi ha cap llista de l'Escriptori**: la d'ahir
@@ -14,7 +14,7 @@ description: Punter d'arrencada de sessió generat per despertar.mjs
 > llegir eixa carpeta en procediments automàtics.
 
 **Branca Git:** backup-notes-publish
-**Commit:** 2022ee32
+**Commit:** 886f4272
 
 ## 1. Contingut de l'Escriptori (Taula de Treball)
 
@@ -27,9 +27,14 @@ Si no tens cap de les dues, llista `_wiki_de_poble/04_escriptori/` amb una eina 
 
 ## 2. Resum de l'ESTAT recent
 
-Fotografia del relleu actual a 2026-10-04T22:58:07Z. El punter és contextual i pot quedar ranci: consultar el fitxer viu abans d’actuar.
+> [!WARNING]
+> L'ESTAT s'ha llegit del capçalera sense segell horari: no es pot datar. El fitxer viu més recent és `_wiki_de_poble/04_escriptori/261005_1155_prompt_fable_local.md`.
 
-Torn torn_6cd529b4-5a35-441b-a3e2-25b9b94cf252, marató2230 en verificació final. A1/A2 i cadenaCI reparades; Node765passades i zero fallades, quatreTODO diagnòstics. Claude real05 corregix F2/F4; no aplicar stages Codex mentre reté propietat. Informe viu261004_2240_auditoria_codex. BateriaVitest globalfinal, portes i remesuraLighthouse encara pendents; NOsalutglobal acreditada. Sense desplegament o nouZIP.
+Últim relleu anotat a `.agents/ESTAT.md` (primera capçalera del fitxer):
+
+## ESTAT_ACTUAL · 2026-10-05 04:40 · Claude · tancament de la Marató 2230
+
+Informe [[261004_2245_auditoria_claude]] i avaluació [[261005_0345_avaluacio_final_marato]] (global 6,1). Fronts de Claude F1-F5 i P4 vius amb proves. Revisió adversarial de Codex amb 3 rondes d'ACK. Migració 2610042350 no aplicada. Res no està commitejat i hi ha un parany de commit parcial: tooling/tests, lazyRoute.js, RouteErrorBoundary, migracions i imatge OG sense versionar. Cap test:ci complet sobre el tall congelat. Següent: el commit atòmic, un runner únic i la primera tasca de 261005_0345_tasques_pendents_consola_visual (crash de useSession en eixir des de Control).
 
 ## 3. Què has de fer ara?
 

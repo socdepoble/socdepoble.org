@@ -2,10 +2,10 @@
   "schema": "sdp.contingut.v1",
   "claus": {
     "anima": {
-      "sha256": "f539fa546ae51493e654f9b02c3a0a7ef797a642d47dc31f5c02a2e23b13bba8",
+      "sha256": "fc6340e07ccd3d424be90c69345e7a802025ccc6a850927da6d26e3a0100521b",
       "html": 10321,
-      "aprovat_per": "Mestre",
-      "data": "2026-10-01"
+      "aprovat_per": "MarIA",
+      "data": "2026-10-05"
     },
     "consola": {
       "sha256": "f5b751a42484369b3674031285ad5a4ebe14ff1be53ca072cd7e41a874a397f0",
@@ -20,10 +20,10 @@
       "data": "2026-09-24"
     },
     "disseny": {
-      "sha256": "51b9a445eadd622918be25d32d1332e8c16c3f010ce7ee09efbb5b67d0aba10d",
+      "sha256": "6d65eb07e4512bc9400f4e55b6fccd3a02c74480f68e8eeb7699d7686a0faa47",
       "html": 2147,
       "aprovat_per": "MarIA",
-      "data": "2026-10-04"
+      "data": "2026-10-05"
     },
     "fedivers": {
       "sha256": "042b41663bdec1b0c59b7f7e47946b765a80a29bceb80a3b6ed3e9d1b816a326",
@@ -44,16 +44,16 @@
       "data": "2026-10-01"
     },
     "projecte": {
-      "sha256": "a24bef2348e6c66d7999f6c4b5ffd2bff802f5cfd49da45aaefc83dd6d225d92",
+      "sha256": "ae08fdc2f070dd32873a1fc513ed0f7479ac0b8d5ca6c2606c0009748432985b",
       "html": 9238,
-      "aprovat_per": "Mestre",
-      "data": "2026-10-01"
+      "aprovat_per": "MarIA",
+      "data": "2026-10-05"
     },
     "roadmap": {
-      "sha256": "3ec98be808ebfe456c93fa22a32660e49b1475d15882fa2946dccbc0d860acdf",
-      "html": 26915,
-      "aprovat_per": "Mestre",
-      "data": "2026-10-04"
+      "sha256": "b06851a3ac2ed12d4285ab07895d795221b2fc07c64ef82992d15a9a4e0cd5d3",
+      "html": 26917,
+      "aprovat_per": "MarIA",
+      "data": "2026-10-05"
     },
     "versions": {
       "sha256": "0d29d65a15801cc0461e1fd7ae2488e979fe15bcfcea18178b46878f2a77b4a0",

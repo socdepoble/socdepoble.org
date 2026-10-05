@@ -1,10 +1,11 @@
 {
-  "timestamp": "2026-10-05T01:08:21.731Z",
-  "hash": "5be515e906a26495855ab59280a1e2426ce7ab073f62b3041e1bedc8f2add73c",
-  "filesCount": 31,
+  "timestamp": "2026-10-05T11:09:29.076Z",
+  "hash": "22b967269c8aebec6d1874f84cfef932dc83455df957a5dab07149836ac2659d",
+  "filesCount": 33,
   "manifest": {
     ".agents/skills/00_INDEX_SKILLS.md": "003f85a67dd7e609e6dbd41642b315b862f08d7a18bab26af4ccc6ebc18e9d1d",
     ".agents/skills/core-automillora/SKILL.md": "71a24ffb6d80e90697409d84269ed2d71fa3206727f3ca313f17c54744e0fac7",
+    ".agents/skills/core-comprensio-reflexiva/SKILL.md": "4f25cfbf361a25e9d929634a0fcede2e227c6393a9551e9a5666211d91684b66",
     ".agents/skills/core-consell-i-colmena/SKILL.md": "ebea09d0ad6bedd78e20d4baa69e7afdf2b1087ac6de4af92492a807daee343a",
     ".agents/skills/core-context-panic/SKILL.md": "a3ccd94fccc1845eba4b07768d483270c222558ea1a40092b4509048b0a69cda",
     ".agents/skills/core-edicio-segura/SKILL.md": "6954a96da56bfc2fa603c7493e93a23dee5092db9a0931fa2790751a84aa6a29",
@@ -19,6 +20,7 @@
     ".agents/skills/core-portaveu-institucional/SKILL.md": "82598cf5a9e308b253336964a74caccbfded15eb7d54a434fe3be6ec6ab4953f",
     ".agents/skills/core-restauracio-segellada/SKILL.md": "472e72e71eb66ba075913da2fe12122553bd7af955ead5e05eb295f39103e583",
     ".agents/skills/core-taxonomia-estricta/SKILL.md": "4f13e2d1b322c712af968de747c4586c8341ec08b5410e4355cb196b618fa966",
+    ".agents/skills/core-tecniques-investigacio/SKILL.md": "9920f3bfc8cd39b520219f384eb9195805a22259cb0b96efb8c9c02367891da8",
     ".agents/skills/core-telemetria-huma/SKILL.md": "c8fbfc0fcedfb370fc02480c14f15d3ad06a4c4d679b97dec26fd6e46328b643",
     ".agents/skills/core-temps-termodinamic/SKILL.md": "0be05a96c79116a1b87b053cf18469da04ef513af18a43f94959a9c15d800a9a",
     ".agents/skills/sdp-app-grid-shell/SKILL.md": "62d5fabd3a81687ed43a4e59718b7bad80d02d6dd4cfb80e23ec375f35fb10ca",
@@ -35,5 +37,5 @@
     ".agents/skills/wiki-documentacio-i-reflex/SKILL.md": "e9c8be43a0e6dd68338eab3fa90da430a7514c79e7df2ec92ceecc34360fc4fe",
     ".agents/skills/wiki-propagar-veritat/SKILL.md": "0c593430951042bc83350615024ceb2604389b5616d3f9166a7b6dbcd0609633"
   },
-  "transaction": "a83a5356-c3e6-465d-9449-c7b2f9b76c81"
+  "transaction": "5e1ac28e-f90c-4292-9fe7-14532e10a9ae"
 }

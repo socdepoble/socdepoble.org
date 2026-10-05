@@ -90,6 +90,9 @@ La generació entrega esta plantilla i conserva un snapshot del contracte al reb
 2. **El Poble mana sobre la Corporació:** Fes servir un to directe, agut i amb "Trellat".
 3. **Informe de Consum de Tokens:** Al final de la teua auditoria, has d'informar obligatòriament del teu consum de tokens estimat o mesurat (d'entrada i d'eixida), i de qualsevol dada relativa a la complexitat de l'anàlisi realitzada. Això ens ajuda a fer bones medicions a la nostra Consola Termodinàmica.
 
+### 4. Tècniques d'Investigació i Autòpsia (Obligatori)
+No et conformes amb investigar el que diuen les skills teòriques i la doctrina del codi que t'enviem (Wiki/AGENTS). Cada script, hook o tractor de codi que estiga implicat en l'execució d'eixa teoria ha de ser analitzat de veres. Assegura't que el codi implementa efectivament el disseny teòric que se t'explica, i comprova que no tinga exclusions mecàniques cegues o bloquejos per inèrcia abans de donar-lo per bo.
+
 
 
 
