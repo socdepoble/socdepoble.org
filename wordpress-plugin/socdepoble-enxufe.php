@@ -3,7 +3,7 @@
  * Plugin Name:       Sóc de Poble — Enxufe
  * Plugin URI:        https://socdepoble.org/enxufe/
  * Description:       Embeds the Sóc de Poble rural community app with the universal host markup: a shortcode, a block and an optional full-screen template.
- * Version:           1.0.3
+ * Version:           1.0.5
  * Requires at least: 6.5
  * Requires PHP:      7.4
  * Author:            Sóc de Poble
@@ -117,7 +117,7 @@ if ( defined( 'SOCDEPOBLE_ENXUFE_FITXER' ) ) {
 	return;
 }
 
-const SOCDEPOBLE_ENXUFE_VERSIO    = '1.0.3';
+const SOCDEPOBLE_ENXUFE_VERSIO    = '1.0.5';
 const SOCDEPOBLE_ENXUFE_FITXER    = __FILE__;
 const SOCDEPOBLE_ENXUFE_SLUG      = 'socdepoble-enxufe';
 const SOCDEPOBLE_ENXUFE_HANDLE    = 'socdepoble-enxufe';

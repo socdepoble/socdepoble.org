@@ -4,7 +4,7 @@ Tags: community, rural, village, social network, embed
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.0.3
+Stable tag: 1.0.5
 License: AGPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/agpl-3.0.html
 
@@ -124,6 +124,9 @@ Packages are written under wordpress-plugin/builds/. Names use the standalone bu
 
 == Changelog ==
 
+= 1.0.5 =
+* TPV Pedra Seca integration with offline capability and allergens support.
+
 = 1.0.3 =
 * Every page, including system pages, shows the orange author bar. The author's name links to the author's page; pages without a named author link to the project page.
 * Pages published by Sóc de Poble show its logo above the title, up to 600 pixels wide and scaled down on small screens. An organization's public profile shows that organization's logo. Pages signed by a person show that person's round avatar instead of the logo.
@@ -171,6 +174,9 @@ Packages are written under wordpress-plugin/builds/. Names use the standalone bu
 * Shortcode and full-screen template.
 
 == Upgrade Notice ==
+
+= 1.0.5 =
+TPV integration with Pedra Seca architecture and offline capabilities.
 
 = 1.0.3 =
 Every page shows its author bar and, when published by Sóc de Poble, its logo. Workspace navigation stays visible at medium widths, pull to refresh works inside WordPress, and the section index opens inside the application.
