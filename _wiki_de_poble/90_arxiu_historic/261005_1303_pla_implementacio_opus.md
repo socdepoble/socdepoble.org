@@ -25,7 +25,7 @@ reflex: sdp:torn_6f2b5c7d-b0de-4b08-a27f-e867dff0765c:628620ed-72cd-4877-9605-ee
 | Aprovació humana | pendent |
 | Plantilla | _wiki_de_poble/03_actuar/plantilles/pla_implementacio.md (v2.0.0) |
 | Model IA | Opus 5.5 Ultracode |
-| Tokens consumits | [pendent] |
+| Tokens consumits | Sense comptador de cost; 9,12 M tokens de subagents en l'execució de les Fases 1-3 (vegeu el Registre de 261006_0025_auditoria_opus) |
 
 <!-- SDP:SECTION pla.implementacio.s2 -->
 ## Acte reflex
@@ -53,6 +53,13 @@ Plantilla entregada: _wiki_de_poble/03_actuar/plantilles/pla_implementacio.md; S
 - [ ] **Pas 3.1:** Eliminar fitxers brossa gegants (com el bundle de 67MB `261005_1154_BUNDLE_null.md`).
 - [ ] **Pas 3.2:** Revertir els paràmetres temporals (ex. `stable.json`).
 - [ ] **Pas 3.3:** Finalitzar l'auditoria amb instruccions per al Commit Atòmic.
+
+### Fase 4: Enxufabilitat i Mode Local (Model B)
+- [ ] **Pas 4.1:** Permetre l'accés a `/app/gestoria` (i a la resta d'apps locals com el TPV i la Nevera) sense que la guarda `RequireAuth` redirigisca a `/registre`. El sistema complet s'ha d'obrir en local i sense connexió de xarxa al backend per a poder explorar-lo.
+
+### Fase 5: Unificació Visual Rebost i TPV (Patró Loyverse)
+- [ ] **Pas 5.1:** Redissenyar la "Nevera/Rebost" i la "Llista de la compra" aprofitant el format visual i estructural del TPV clonat de Loyverse ("La Parròquia"). **NOTA PER A CLAUDE:** El Mestre ha deixat les captures originals de referència de Loyverse a `_wiki_de_poble/04_escriptori/01_produccio/loyverse_clon` i `_wiki_de_poble/04_escriptori/01_produccio/loyverse_clon_mobil`. A més, tens les **noves captures de l'iPad** disponibles a `_wiki_de_poble/04_escriptori/01_produccio/loyverse_clon_ipad`.
+- [ ] **Pas 5.2:** Integrar el catàleg de productes (llista de Mercadona) aplicant aquest disseny Loyverse (productes categoritzats en graella) de forma que el codi dels llistats d'articles siga estructuralment idèntic tant per a vendre (TPV) com per a emmagatzemar/comprar (Rebost).
 
 <!-- SDP:SECTION pla.implementacio.s5 -->
 ## Verificació

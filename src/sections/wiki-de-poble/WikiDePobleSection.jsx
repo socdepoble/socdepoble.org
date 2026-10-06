@@ -84,12 +84,11 @@ export function modulsLocalsActius(env) {
        UniversalWorkspace, via glifDeCategoria; ho fixa icones.test.jsx).
        Posar-los FileText és decisió pendent del Mestre: opció A, només les
        fitxes de Tractors (l'estat d'ara); opció B, també els documents. */
-    categories: [
-      { id: 'tractors_cat', label: 'Tractors', icon: Folder }
-    ],
+    categories: [],
     items: [
-      einaLocal('tractors_aprovacio', 'Aprovació de tractors', 'Què fa cada tractor, la seua empremta i la teua signatura', 'tractors_cat', ['tractors']),
-      einaLocal('sentinelles_panell', 'Sentinelles', 'Els set sentinelles d’autonomia: aprova’ls i mira què observen', 'tractors_cat', ['sentinelles'])
+      einaLocal('tractors_aprovacio', 'Aprovació de tractors', 'Què fa cada tractor, la seua empremta i la teua signatura', 'maquinaria_cat', ['tractors']),
+      einaLocal('sentinelles_panell', 'Sentinelles', 'Els set sentinelles d’autonomia: aprova’ls i mira què observen', 'maquinaria_cat', ['sentinelles']),
+      einaLocal('agents_panell', 'Agents (BIOS)', 'EL BIOS COGNITIU i directrius dels agents (AGENTS.md)', 'maquinaria_cat', ['agents'])
     ]
   };
 }
@@ -101,7 +100,8 @@ const MODULS_LOCALS = modulsLocalsActius({ DEV: import.meta.env.DEV });
    del Mestre, 261004): la carrega la seua app, src/apps/gestoria. */
 const EINES_LOCALS = import.meta.env.DEV ? {
   tractors_aprovacio: lazyRoute(() => import('../tractors/PanellTractors.jsx')),
-  sentinelles_panell: lazyRoute(() => import('../tractors/PanellSentinelles.jsx'))
+  sentinelles_panell: lazyRoute(() => import('../tractors/PanellSentinelles.jsx')),
+  agents_panell: lazyRoute(() => import('../tractors/PanellAgents.jsx'))
 } : null;
 
 /* Traduir enviaria el text de la pàgina al servei de traducció de l'amfitrió
@@ -335,7 +335,7 @@ export default function WikiDePobleSection() {
       workspaceKey: 'wikidepoble',
       categories: [
         { id: '__intro_cat', label: 'Wiki de Poble', icon: FileText },
-        { id: 'consola_termodinamica_cat', label: 'Consola Termodinàmica', icon: FileText },
+        { id: 'maquinaria_cat', label: 'Maquinària de la IAIA', icon: Folder },
         ...MODULS_LOCALS.categories,
         ...wikiManifest.categories.map(c => ({
           id: c.id,
@@ -358,8 +358,8 @@ export default function WikiDePobleSection() {
           id: 'consola_termodinamica',
           title: consola?.title || 'Consola Termodinàmica',
           subtitle: consola?.subtitle || 'Manteniment de la IAIA',
-          categoryId: 'consola_termodinamica_cat',
-          categoryIds: ['consola_termodinamica_cat'],
+          categoryId: 'maquinaria_cat',
+          categoryIds: ['maquinaria_cat'],
           tags: ['consola', 'ia'],
           attributes: { type: 'Eina Interactiva', author: 'Sistema', date: consola?.date },
           content: ''

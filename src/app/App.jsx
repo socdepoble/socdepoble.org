@@ -5,7 +5,7 @@ import { useEntitatDelProjecte } from '../hooks/useEntitatDelProjecte.js';
 import React, { Suspense, useCallback, useEffect, useRef, memo, StrictMode, useMemo, useState } from 'react';
 import { Navigate, NavLink, Route, Routes, useNavigate, useLocation, useRouter } from './contexts/RouterContext';
 import { MoonStar, Search, Settings, Sun, Globe } from '../icons.jsx';
-import { PanelLeftClose, Phone } from 'lucide-react';
+import { PanelLeftClose } from 'lucide-react';
 import { IaiaIcon } from '../components/PedraSeca/atoms/icones';
 import BrandMark from '../components/BrandMark';
 import { NotificationProvider } from '../components/universal/NotificationContext.jsx';
@@ -867,8 +867,6 @@ const MobileNav = memo(function MobileNav() {
   const { language } = useUIState();
   const { t } = useUIActions();
   const navigate = useNavigate();
-  const [telefonadesObertes, setTelefonadesObertes] = useState(false);
-  const telefonades = t('section.xat.rail.telefonades', 'Telefonades');
 
   const enllacMobil = (section) => {
     const Icon = section.icon;
@@ -904,16 +902,7 @@ const MobileNav = memo(function MobileNav() {
           <Settings strokeWidth={2.1} />
         </button>
         {MOBILE_NAV_TRAILING.map((section) => enllacMobil(section))}
-        <button type="button" className="nav-item" aria-label={telefonades} aria-haspopup="dialog"
-          onClick={(event) => { event.currentTarget.focus(); setTelefonadesObertes(true); }}>
-          <Phone className="nav-item__icon" strokeWidth={2.1} aria-hidden="true" focusable="false" />
-          <span className="nav-item__text"><strong>{telefonades}</strong></span>
-        </button>
       </nav>
-      <Dialeg obert={telefonadesObertes} onTanca={() => setTelefonadesObertes(false)} titol={telefonades}
-        accions={<button type="button" className="sdp-boto" onClick={() => setTelefonadesObertes(false)}>{t('common.entesos', 'Entesos')}</button>}>
-        <p>{t('nav.telefonades.avis', 'Aquest és un projecte lliure CC. Aquesta funció està prevista per a quan puguem mantenir-la econòmicament.')}</p>
-      </Dialeg>
     </>
   );
 });

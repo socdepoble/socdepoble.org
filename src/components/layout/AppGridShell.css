@@ -173,6 +173,11 @@
   transform: translateX(-100%);
   transition: transform var(--sdp-durada-panell) var(--sdp-corba-calaix), visibility 0s linear var(--sdp-durada-panell);
 }
+/* P6 (261005) · El Xat (WhatsApp) en estret necessita que la llista ocupe tota la pantalla */
+.app-grid-shell.sdp-xat[data-layout="estret"] .app-grid-column--middle {
+  width: 100%;
+  max-width: none;
+}
 .app-grid-shell[data-layout="estret"] .app-grid-column--left {
   z-index: 30;
   width: max-content;
@@ -254,6 +259,30 @@
 :root[data-theme="dark"] .app-grid-page .app-grid-column--right,
 :host([data-theme="dark"]) .app-grid-page .app-grid-column--right {
   background: var(--sdp-fons-app);
+}
+
+/* Fons del panell (backdrop) */
+.app-grid-backdrop {
+  position: absolute;
+  inset: 0;
+  background: var(--sdp-fons-vel);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--sdp-durada-panell) linear, visibility 0s linear var(--sdp-durada-panell);
+  touch-action: none;
+}
+.app-grid-shell[data-layout="mitja"][data-panell="left"] .app-grid-backdrop,
+.app-grid-shell[data-layout="estret"][data-panell="left"] .app-grid-backdrop {
+  z-index: 25;
+  opacity: 1;
+  visibility: visible;
+  transition: opacity var(--sdp-durada-panell) linear, visibility 0s linear 0s;
+}
+.app-grid-shell[data-layout="estret"][data-panell="middle"] .app-grid-backdrop {
+  z-index: 10;
+  opacity: 1;
+  visibility: visible;
+  transition: opacity var(--sdp-durada-panell) linear, visibility 0s linear 0s;
 }
 
 .app-grid-resizer {

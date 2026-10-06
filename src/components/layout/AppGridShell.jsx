@@ -478,6 +478,7 @@ export default function AppGridShell({
 
 
           <div className={contentMods}>
+            <div className="app-grid-backdrop" aria-hidden="true" onClick={tancaPanells} />
             <section
               ref={leftRef}
               className="app-grid-column app-grid-column--left"
