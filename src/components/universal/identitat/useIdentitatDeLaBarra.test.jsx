@@ -6,7 +6,7 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest';
    botó i el calaix de veres; la sessió, la identitat i els mitjans simulats. */
 const m = vi.hoisted(() => ({ user: null, identitat: null }));
 vi.mock('../../../app/contexts/SessionContext', () => ({ useSession: () => ({ currentUser: m.user }) }));
-vi.mock('../../../app/contexts/IdentitatContext', () => ({ useIdentitat: () => m.identitat }));
+vi.mock('../../../app/contexts/IdentitatContext.jsx', () => ({ useIdentitat: () => m.identitat }));
 /* Com la capacitat 'mitjans': un sdp-media:// es resol a una URL servible
    (ací, del mateix origen, que l'Avatar accepta). */
 vi.mock('../../../hooks/useResolvedAsset.js', () => ({

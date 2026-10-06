@@ -20,7 +20,7 @@
  */
 import { useCallback, useEffect, useState } from 'react';
 import { useSession } from '../../../app/contexts/SessionContext';
-import { useIdentitat } from '../../../app/contexts/IdentitatContext';
+import { useIdentitat } from '../../../app/contexts/IdentitatContext.jsx';
 import { useUbicacioApp } from '../../PedraSeca/hooks/useAccions.js';
 import { treuBase } from '../../../app/contexts/politicaRouter.js';
 import { esRutaDEntrada, rutaDEntrada } from '../../../config/rutaEntrada.js';
