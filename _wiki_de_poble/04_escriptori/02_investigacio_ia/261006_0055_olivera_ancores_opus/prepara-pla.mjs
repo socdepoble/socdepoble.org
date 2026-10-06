@@ -45,7 +45,7 @@ export const BASES = Object.freeze({
 });
 export const INTENT = 'Paquet 261006 Olivera ancores: arxivat per nom de qualsevol extensio, carpeta de sessio, reapuntat, remei de les ancores fantasma, repara i renomena a la porta Olivera, i anchorDraft sense linies en blanc ni duplicats, amb executor-mutacio';
 export const LLEGIU = `${REL_LAB}/LLEGIU_PRIMER.txt`;
-export const NOM_PETORRETA = '261006_0055_PROMPT_olivera_ancores_amb_executor.md';
+export const NOM_PETORRETA = '261006_0055_PROMPT_olivera_ancores_amb_executor_i_reapuntat_de_les_sessions_al_disc.md';
 /** Prefix de l'operationId del pla: el marcador que l'executor deixa a .agents/seal-transactions/. */
 export const OPERACIO = 'sdp-olivera-ancores-261006-';
 const TRANSACCIONS = '.agents/seal-transactions';

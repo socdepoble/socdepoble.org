@@ -1,0 +1,1231 @@
+<?php
+/**
+ * Plugin Name: Vigilant - 100% Free Security Suite: Firewall, 2FA, Login, Headers, Scanner…
+ * Plugin URI: https://servicios.ayudawp.com
+ * Description: Complete security solution for WordPress. Firewall, 2FA, security headers, login protection, file integrity monitoring, activity logging and more.
+ * Version: 3.0.4
+ * Author: Fernando Tellado
+ * Author URI: https://ayudawp.com
+ * Text Domain: vigilante
+ * Requires at least: 6.2
+ * Tested up to: 7.1
+ * Requires PHP: 7.4
+ * License: GPL v2 or later
+ * License URI: https://www.gnu.org/licenses/gpl-2.0.html
+ *
+ * @package Vigilante
+ */
+
+// Prevent direct access
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
+/**
+ * Plugin constants
+ */
+define( 'VIGILANTE_VERSION', '3.0.4' );
+define( 'VIGILANTE_PLUGIN_FILE', __FILE__ );
+define( 'VIGILANTE_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
+define( 'VIGILANTE_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
+define( 'VIGILANTE_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );
+define( 'VIGILANTE_INCLUDES_DIR', VIGILANTE_PLUGIN_DIR . 'includes/' );
+define( 'VIGILANTE_ADMIN_DIR', VIGILANTE_PLUGIN_DIR . 'admin/' );
+define( 'VIGILANTE_ASSETS_URL', VIGILANTE_PLUGIN_URL . 'assets/' );
+
+// Backup directory outside plugin folder (persists through updates)
+define( 'VIGILANTE_BACKUP_DIR', WP_CONTENT_DIR . '/vigilante-backups/' );
+
+// Minimum requirements
+define( 'VIGILANTE_MIN_PHP_VERSION', '7.4' );
+define( 'VIGILANTE_MIN_WP_VERSION', '5.0' );
+
+/**
+ * Check minimum requirements before loading
+ *
+ * @return bool True if requirements are met
+ */
+function vigilante_check_requirements() {
+    $meets_requirements = true;
+
+    // Check PHP version
+    if ( version_compare( PHP_VERSION, VIGILANTE_MIN_PHP_VERSION, '<' ) ) {
+        $meets_requirements = false;
+    }
+
+    // Check WordPress version
+    global $wp_version;
+    if ( version_compare( $wp_version, VIGILANTE_MIN_WP_VERSION, '<' ) ) {
+        $meets_requirements = false;
+    }
+
+    if ( ! $meets_requirements ) {
+        add_action( 'admin_notices', 'vigilante_requirements_notice' );
+    }
+
+    return $meets_requirements;
+}
+
+/**
+ * Display requirements notice - called at admin_notices (after init)
+ */
+function vigilante_requirements_notice() {
+    global $wp_version;
+    $errors = array();
+
+    if ( version_compare( PHP_VERSION, VIGILANTE_MIN_PHP_VERSION, '<' ) ) {
+        $errors[] = sprintf(
+            /* translators: 1: Current PHP version, 2: Required PHP version */
+            __( 'Vigilant requires PHP %2$s or higher. You are running PHP %1$s.', 'vigilante' ),
+            PHP_VERSION,
+            VIGILANTE_MIN_PHP_VERSION
+        );
+    }
+
+    if ( version_compare( $wp_version, VIGILANTE_MIN_WP_VERSION, '<' ) ) {
+        $errors[] = sprintf(
+            /* translators: 1: Current WordPress version, 2: Required WordPress version */
+            __( 'Vigilant requires WordPress %2$s or higher. You are running WordPress %1$s.', 'vigilante' ),
+            $wp_version,
+            VIGILANTE_MIN_WP_VERSION
+        );
+    }
+
+    foreach ( $errors as $error ) {
+        printf(
+            '<div class="notice notice-error"><p>%s</p></div>',
+            esc_html( $error )
+        );
+    }
+}
+
+/**
+ * Load plugin files
+ */
+function vigilante_load_plugin() {
+    // Check requirements first
+    if ( ! vigilante_check_requirements() ) {
+        return;
+    }
+
+    // Load core classes (no translations used in these)
+    require_once VIGILANTE_INCLUDES_DIR . 'class-database.php';
+    require_once VIGILANTE_INCLUDES_DIR . 'class-settings.php';
+    require_once VIGILANTE_INCLUDES_DIR . 'class-ip-utils.php';
+    require_once VIGILANTE_INCLUDES_DIR . 'class-backup-manager.php';
+    require_once VIGILANTE_INCLUDES_DIR . 'class-activator.php';
+    require_once VIGILANTE_INCLUDES_DIR . 'class-deactivator.php';
+
+    // Load security module files (just loading, not initializing)
+    require_once VIGILANTE_INCLUDES_DIR . 'class-firewall.php';
+    require_once VIGILANTE_INCLUDES_DIR . 'class-security-headers.php';
+    require_once VIGILANTE_INCLUDES_DIR . 'class-htaccess-protection.php';
+    require_once VIGILANTE_INCLUDES_DIR . 'class-htaccess-recovery.php';
+    require_once VIGILANTE_INCLUDES_DIR . 'class-wpconfig-security.php';
+    require_once VIGILANTE_INCLUDES_DIR . 'class-https-enforcer.php';
+    require_once VIGILANTE_INCLUDES_DIR . 'class-rest-api-security.php';
+    require_once VIGILANTE_INCLUDES_DIR . 'class-user-security.php';
+    require_once VIGILANTE_INCLUDES_DIR . 'class-login-security.php';
+    require_once VIGILANTE_INCLUDES_DIR . 'trait-two-factor-session.php';
+    require_once VIGILANTE_INCLUDES_DIR . 'class-two-factor-email.php';
+    require_once VIGILANTE_INCLUDES_DIR . 'class-two-factor-totp.php';
+    require_once VIGILANTE_INCLUDES_DIR . 'class-email-template.php';
+    require_once VIGILANTE_INCLUDES_DIR . 'class-comment-security.php';
+    require_once VIGILANTE_INCLUDES_DIR . 'class-head-cleaner.php';
+    require_once VIGILANTE_INCLUDES_DIR . 'class-feed-manager.php';
+    require_once VIGILANTE_INCLUDES_DIR . 'class-activity-log.php';
+    require_once VIGILANTE_INCLUDES_DIR . 'class-audit-alerts.php';
+    require_once VIGILANTE_INCLUDES_DIR . 'class-file-integrity.php';
+    require_once VIGILANTE_INCLUDES_DIR . 'class-plugin-status.php';
+    require_once VIGILANTE_INCLUDES_DIR . 'class-self-integrity-guidance.php';
+    require_once VIGILANTE_INCLUDES_DIR . 'class-self-integrity.php';
+    require_once VIGILANTE_INCLUDES_DIR . 'class-self-repair.php';
+    require_once VIGILANTE_INCLUDES_DIR . 'class-under-attack.php';
+    require_once VIGILANTE_INCLUDES_DIR . 'class-database-backup.php';
+    require_once VIGILANTE_INCLUDES_DIR . 'class-database-prefix.php';
+    require_once VIGILANTE_INCLUDES_DIR . 'class-security-analyzer.php';
+
+    // Load admin classes
+    if ( is_admin() ) {
+        require_once VIGILANTE_ADMIN_DIR . 'class-admin-analyzer-ajax.php';
+        require_once VIGILANTE_ADMIN_DIR . 'class-admin-recovery-ajax.php';
+        require_once VIGILANTE_ADMIN_DIR . 'class-admin-audit-alerts-ajax.php';
+        require_once VIGILANTE_ADMIN_DIR . 'class-admin.php';
+    }
+
+    // Weekly Security Analyzer cron (registered even outside admin so it fires on cron hit).
+    add_action( 'vigilante_analyzer_weekly_scan', 'vigilante_run_analyzer_cron' );
+
+    // Daily plugin status check (closed-in-wp.org detection).
+    add_action( 'vigilante_plugin_status_check', 'vigilante_run_plugin_status_check' );
+
+    // Post-Under Attack scan (one-shot, scheduled by Vigilante_Under_Attack::deactivate).
+    add_action( 'vigilante_under_attack_post_scan', 'vigilante_run_post_under_attack_scan' );
+
+    // Self-protection: verify Vigilant's own files right after the WordPress
+    // updater replaced them. Priority 10, ahead of the File Integrity handler
+    // at 20, which skips Vigilant while the self-check is on. Registered outside
+    // is_admin() because automatic updates run from cron and WP-CLI.
+    add_action( 'upgrader_process_complete', 'vigilante_on_upgrader_process_complete', 10, 2 );
+
+    // One click repair of Vigilant's own files (admin-post action).
+    Vigilante_Self_Repair::init();
+    add_filter( 'upgrader_post_install', 'vigilante_mark_upgrader_wrote', 10, 3 );
+
+    // Initialize core components only - modules will be initialized at init
+    add_action( 'init', 'vigilante_init_plugin', 1 );
+}
+
+/**
+ * Initialize plugin at init hook (translations are ready)
+ */
+function vigilante_init_plugin() {
+    Vigilante_Main::get_instance();
+}
+
+/**
+ * Main plugin class - Singleton pattern
+ */
+final class Vigilante_Main {
+
+    /**
+     * Single instance of the class
+     *
+     * @var Vigilante_Main|null
+     */
+    private static $instance = null;
+
+    /**
+     * Settings instance
+     *
+     * @var Vigilante_Settings
+     */
+    public $settings;
+
+    /**
+     * Database instance
+     *
+     * @var Vigilante_Database
+     */
+    public $database;
+
+    /**
+     * Activity log instance
+     *
+     * @var Vigilante_Activity_Log
+     */
+    public $activity_log;
+
+    /**
+     * Self-protection instance, the only one that registers hooks
+     *
+     * @var Vigilante_Self_Integrity|null
+     */
+    public $self_integrity;
+
+    /**
+     * Get single instance of the class
+     *
+     * @return Vigilante_Main
+     */
+    public static function get_instance() {
+        if ( null === self::$instance ) {
+            self::$instance = new self();
+        }
+        return self::$instance;
+    }
+
+    /**
+     * Constructor - private to enforce singleton
+     */
+    private function __construct() {
+        $this->init_core();
+        $this->init_modules();
+        $this->init_hooks();
+    }
+
+    /**
+     * Prevent cloning
+     */
+    private function __clone() {}
+
+    /**
+     * Prevent unserializing
+     *
+     * @throws Exception Always throws exception.
+     */
+    public function __wakeup() {
+        throw new Exception( 'Cannot unserialize singleton' );
+    }
+
+    /**
+     * Initialize core components
+     */
+    private function init_core() {
+        $this->database     = new Vigilante_Database();
+        $this->settings     = new Vigilante_Settings();
+        $this->activity_log = new Vigilante_Activity_Log( $this->settings, $this->database );
+
+        // Auto-create/update tables when DB version is outdated (handles file-only updates)
+        if ( $this->database->needs_update() ) {
+            $this->database->create_tables();
+        }
+
+        // One-time cleanup: versions before 2.7.0 wrote config backups (including
+        // wp-config.php) as files under wp-content/vigilante-backups/. Those now
+        // live in the database, so remove anything left on disk.
+        if ( ! get_option( 'vigilante_legacy_backups_cleaned' ) ) {
+            Vigilante_Backup_Manager::cleanup_legacy_files();
+            update_option( 'vigilante_legacy_backups_cleaned', 1, false );
+        }
+
+        // Once (2.11.6): the copies of wp-config.php, .htaccess and robots.txt
+        // that earlier versions kept in the options table, on this site and, on
+        // a network, on every site of it.
+        Vigilante_Backup_Manager::maybe_purge_stored_copies();
+
+        /*
+         * One-time (3.0.1): put back the lists that every version up to 3.0.0
+         * blanked without being asked.
+         *
+         * Saving any tab wrote array() over every list of that section whose key
+         * the submitted form did not carry, and four of those lists have no
+         * field on any screen, so their key could never be carried. Pressing
+         * Save on the Firewall tab emptied allowed_http_methods; pressing it on
+         * Users emptied insecure_usernames and the roles of registration
+         * approval. Nothing showed, because reading the settings merged the
+         * shipped values over the top of whatever was stored.
+         *
+         * 3.0.1 stops doing that: an empty stored list now means empty, which is
+         * what makes unticking every role work. On a site that had been saved,
+         * an empty allowed_http_methods would make the firewall answer 403 to
+         * every method, the front page included.
+         *
+         * So the key is removed, not filled in: with no key the setting takes
+         * its shipped value again, which is exactly what it was worth before,
+         * and it follows the shipped value if that ever changes. Only these
+         * four, and only when empty. Every other list has a field on screen, so
+         * an empty one was emptied by somebody who meant it, and it is left
+         * alone. Runs once per site, tracked by an option and not a transient.
+         */
+        if ( ! get_option( 'vigilante_blank_lists_restored' ) ) {
+            $vig_stored  = get_option( Vigilante_Settings::OPTION_NAME, array() );
+            $vig_changed = false;
+
+            if ( is_array( $vig_stored ) ) {
+                $vig_blanked = array(
+                    array( 'firewall', 'allowed_http_methods' ),
+                    array( 'user_security', 'insecure_usernames' ),
+                    array( 'rest_api_security', 'allowed_public_endpoints' ),
+                    array( 'user_security', 'registration_approval', 'affected_roles' ),
+                );
+
+                foreach ( $vig_blanked as $vig_path ) {
+                    if ( 2 === count( $vig_path ) ) {
+                        if ( isset( $vig_stored[ $vig_path[0] ][ $vig_path[1] ] ) && array() === $vig_stored[ $vig_path[0] ][ $vig_path[1] ] ) {
+                            unset( $vig_stored[ $vig_path[0] ][ $vig_path[1] ] );
+                            $vig_changed = true;
+                        }
+                    } elseif ( isset( $vig_stored[ $vig_path[0] ][ $vig_path[1] ][ $vig_path[2] ] ) && array() === $vig_stored[ $vig_path[0] ][ $vig_path[1] ][ $vig_path[2] ] ) {
+                        unset( $vig_stored[ $vig_path[0] ][ $vig_path[1] ][ $vig_path[2] ] );
+                        $vig_changed = true;
+                    }
+                }
+            }
+
+            if ( $vig_changed ) {
+                update_option( Vigilante_Settings::OPTION_NAME, $vig_stored );
+                $this->settings->clear_cache();
+            }
+
+            update_option( 'vigilante_blank_lists_restored', 1, false );
+        }
+
+        // One-time migration (2.9.0): add '.css' to File Integrity's excluded
+        // extensions on existing installs. Stylesheets are rewritten so often by
+        // themes and optimizer plugins that they were the main post-update false
+        // positive. New installs get it from the defaults; this brings existing
+        // sites in line without touching any other setting. Additive, idempotent.
+        if ( ! get_option( 'vigilante_css_exclusion_migrated' ) ) {
+            $fi = $this->settings->get_section( 'file_integrity' );
+            if ( is_array( $fi ) ) {
+                $ext = ( isset( $fi['excluded_extensions'] ) && is_array( $fi['excluded_extensions'] ) )
+                    ? $fi['excluded_extensions']
+                    : array();
+                if ( ! in_array( '.css', $ext, true ) ) {
+                    $ext[]                     = '.css';
+                    $fi['excluded_extensions'] = $ext;
+                    $this->settings->update_section( 'file_integrity', $fi );
+                }
+            }
+            update_option( 'vigilante_css_exclusion_migrated', 1, false );
+        }
+
+        // One-time on upgrade to 2.9.0: drop any cached WordPress.org checksum
+        // manifests. The new comparison is array-aware and self-corrects a cached
+        // array-md5 value, but a manifest cached by an older version while wp.org
+        // was still propagating a new release could otherwise keep producing
+        // false "modified" results until it expires (up to 24h). Flushing on
+        // upgrade guarantees a clean slate on the very release that fixes them;
+        // the next scan refetches fresh manifests. One-time, bulk, no caching.
+        if ( ! get_option( 'vigilante_checksum_cache_flushed_290' ) ) {
+            global $wpdb;
+            $wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- one-time 2.9.0 migration dropping stale checksum transients so the new comparison starts clean.
+                "DELETE FROM {$wpdb->options}
+                WHERE option_name LIKE '\\_transient\\_vigilante\\_plugin\\_checksums\\_%'
+                OR option_name LIKE '\\_transient\\_timeout\\_vigilante\\_plugin\\_checksums\\_%'
+                OR option_name LIKE '\\_transient\\_vigilante\\_theme\\_checksums\\_%'
+                OR option_name LIKE '\\_transient\\_timeout\\_vigilante\\_theme\\_checksums\\_%'
+                OR option_name LIKE '\\_transient\\_vigilante\\_core\\_checksums\\_%'
+                OR option_name LIKE '\\_transient\\_timeout\\_vigilante\\_core\\_checksums\\_%'"
+            );
+            update_option( 'vigilante_checksum_cache_flushed_290', 1, false );
+        }
+    }
+
+    /**
+     * Initialize security modules based on settings
+     */
+    private function init_modules() {
+        $options = $this->settings->get_all_options();
+
+        // Self-heal: a UI bug in earlier 2.4.x betas could leave a section's
+        // top-level 'enabled' flag set to false because the section forms do
+        // not render a checkbox for that field — saving any tab caused the
+        // generic save handler to treat the missing field as "unchecked" and
+        // store it as false. If the master module toggle on the Dashboard is
+        // on but the section flag is off, restore it here so the module's
+        // hooks can attach. Idempotent: noop on healthy installs.
+        $sections = array(
+            'firewall',
+            'security_headers',
+            'login_security',
+            'rest_api_security',
+            'user_security',
+            'wp_hardening',
+            'file_integrity',
+            'activity_log',
+        );
+        $heal_changed = false;
+        foreach ( $sections as $section_name ) {
+            if ( ! empty( $options['modules'][ $section_name ] )
+                && isset( $options[ $section_name ] )
+                && is_array( $options[ $section_name ] )
+                && array_key_exists( 'enabled', $options[ $section_name ] )
+                && empty( $options[ $section_name ]['enabled'] ) ) {
+                $options[ $section_name ]['enabled'] = true;
+                $heal_changed = true;
+            }
+        }
+        if ( $heal_changed ) {
+            update_option( Vigilante_Settings::OPTION_NAME, $options );
+            $this->settings->clear_cache();
+            $options = $this->settings->get_all_options();
+        }
+
+        // Firewall - runs early to block threats
+        if ( ! empty( $options['modules']['firewall'] ) ) {
+            new Vigilante_Firewall( $this->settings, $this->activity_log );
+        }
+
+        // Security Headers - rules are applied via .htaccess, no runtime hooks needed
+        // HTTPS Enforcer still needs runtime hooks
+        if ( ! empty( $options['modules']['security_headers'] ) ) {
+            new Vigilante_Https_Enforcer( $this->settings );
+        }
+
+        // REST API Security
+        if ( ! empty( $options['modules']['rest_api_security'] ) ) {
+            new Vigilante_Rest_Api_Security( $this->settings );
+        }
+
+        // User Security
+        if ( ! empty( $options['modules']['user_security'] ) ) {
+            new Vigilante_User_Security( $this->settings, $this->activity_log );
+        } else {
+            /*
+             * Turning the module off must not quietly unlock the accounts it
+             * already locked. A forced password reset and a registration waiting
+             * for approval are marks written on somebody's account, with their
+             * sessions already destroyed and the activity log saying they cannot
+             * get in; until 2.11.10 both stopped being enforced the moment this
+             * toggle went off and every one of those accounts logged in again
+             * with its old password. Only the enforcing half is registered here.
+             */
+            new Vigilante_User_Security( $this->settings, $this->activity_log, true );
+        }
+
+        // Login Security
+        $login_security = null;
+
+        if ( ! empty( $options['modules']['login_security'] ) ) {
+            $login_security = new Vigilante_Login_Security( $this->settings, $this->database, $this->activity_log );
+        }
+
+        /*
+         * Two factor on a network is decided for the whole network, so it has to
+         * be ENFORCED on the whole network too. Gating these two on this site's
+         * module toggle left the last leg of the bypass open: the administrator
+         * of any subsite can turn Login Security off on their own site, which
+         * takes them out of the picture but not out of the network, and the
+         * session cookie WordPress issues there is valid on every host of it. So
+         * a login sent to that subsite registered no second factor check at all
+         * and the cookie it handed back opened the main site. Reproduced over
+         * HTTP by the second cross review of 2.11.10.
+         *
+         * Same reasoning, and the same shape, as the enforcement-only User
+         * Security above: on a network the enforcing half is registered whatever
+         * this site says. On a single site there is no other site to protect and
+         * the toggle means what it says.
+         */
+        if ( is_multisite() || null !== $login_security ) {
+            new Vigilante_Two_Factor_Email( $this->settings, $this->database, $this->activity_log, $login_security );
+            new Vigilante_Two_Factor_TOTP( $this->settings, $this->database, $this->activity_log, $login_security );
+        }
+
+        // WordPress Hardening (includes comments, head cleaner, feeds)
+        if ( ! empty( $options['modules']['wp_hardening'] ) ) {
+            new Vigilante_Comment_Security( $this->settings );
+            new Vigilante_Head_Cleaner( $this->settings );
+            new Vigilante_Feed_Manager( $this->settings );
+        }
+
+        // File Integrity Scanner
+        if ( ! empty( $options['modules']['file_integrity'] ) ) {
+            $file_integrity = new Vigilante_File_Integrity( $this->settings, $this->database, $this->activity_log );
+            $file_integrity->init_hooks();
+            $file_integrity->init_cleanup_hooks();
+
+            new Vigilante_Plugin_Status( $this->settings, $this->activity_log );
+        } elseif ( is_admin() ) {
+            /*
+             * The module is off, and the cleanup goes on anyway. It is not
+             * integrity monitoring: it takes out of the database the copy of
+             * wp-config.php that earlier versions stored, credentials and all.
+             * Turning the module off is not a decision to keep them.
+             *
+             * Two holes closed here, both reported by @calzbert after reading the
+             * 2.11.3 diff. A site with the module off cleaned itself by neither
+             * of its own two paths, because both hang off this class. And with
+             * the module off on the MAIN site, the network sweep was not
+             * registered either, which is what would have reached every other
+             * site: the sweep removes each site's option without asking whether
+             * the module is on over there.
+             *
+             * Only in the admin, because both hooks are admin_init and there is
+             * nothing to gain from building this on a front-end request. Note
+             * that admin-ajax.php fires admin_init too (wp-admin/admin-ajax.php
+             * :45), so this also runs on wp_ajax_nopriv_* requests from
+             * visitors with no session. That is deliberate and it is what the
+             * module has been doing since 2.11.2: the cleanup asks for no
+             * capability because it also runs under wp-cron with nobody logged
+             * in, and all it does is take the plugin's own copy out of the
+             * database. The network sweep, which does reach across sites, is
+             * the one that demands manage_network_options.
+             */
+            $file_integrity = new Vigilante_File_Integrity( $this->settings, $this->database, $this->activity_log );
+            $file_integrity->init_cleanup_hooks();
+        }
+
+        // Activity Log is always initialized (core component)
+        // Logging is gated by the modules.activity_log toggle and per-type flags
+
+        // Audit Alerts engine - an alerting layer on top of Security Audit.
+        // Only instantiated when Security Audit is on, because it reacts to the
+        // events the activity log records (a passive subscriber, no per-module
+        // coupling). Both alert legs are opt-in, off by default.
+        if ( ! empty( $options['modules']['activity_log'] ) ) {
+            new Vigilante_Audit_Alerts( $this->settings, $this->activity_log );
+        }
+
+        // Under Attack mode - always loaded (independent of modules)
+        new Vigilante_Under_Attack( $this->settings, $this->activity_log );
+
+        // Self-protection - always loaded, NOT gated by modules.file_integrity:
+        // the version change and watchdog paths must stay alive with the File
+        // Integrity module off. There is no setting to gate it: see
+        // Vigilante_Self_Integrity::is_on(). Hooks are registered here and only here;
+        // every other new of the class is a plain object.
+        $this->self_integrity = new Vigilante_Self_Integrity( $this->settings, $this->activity_log );
+        $this->self_integrity->init_hooks();
+
+        // Admin interface
+        if ( is_admin() ) {
+            new Vigilante_Admin( $this->settings, $this->database, $this->activity_log );
+        }
+    }
+
+    /**
+     * Initialize WordPress hooks
+     */
+    private function init_hooks() {
+        // Plugin action links
+        add_filter( 'plugin_action_links_' . VIGILANTE_PLUGIN_BASENAME, array( $this, 'add_action_links' ) );
+
+        // Scheduled tasks
+        add_action( 'vigilante_daily_maintenance', array( $this, 'daily_maintenance' ) );
+        add_action( 'vigilante_hourly_checks', array( $this, 'hourly_checks' ) );
+
+        // AJAX handlers
+        add_action( 'wp_ajax_vigilante_dismiss_notice', array( $this, 'ajax_dismiss_notice' ) );
+
+        // Regenerate critical file baseline after Vigilante modifies wp-config.php or .htaccess
+        add_action( 'vigilante_critical_file_written', array( $this, 'on_critical_file_written' ) );
+
+        // Keep the server layer in step with the installed version.
+        add_action( 'init', array( $this, 'maybe_sync_server_files' ), 20 );
+    }
+
+    /**
+     * Rewrite the .htaccess block when the installed version has moved on
+     *
+     * Updating the plugin did not touch the file: the block was only rewritten
+     * on activation or when the Headers or Firewall tab was saved. So a fix
+     * that lives inside those rules never reached a site that merely updated,
+     * which is exactly what happened with the connect-src of 2.9.6: the browser
+     * kept receiving the old policy, and image uploads kept failing on
+     * WordPress 7.1 until someone pressed Save. This rewrites the block once
+     * per version, and picks up the rules that an activation from WP-CLI had to
+     * leave pending because it could not tell what server it was on.
+     *
+     * Only the content between the plugin markers is rewritten, the same part
+     * any save has always rewritten.
+     *
+     * @since 2.9.9
+     */
+    public function maybe_sync_server_files() {
+        $pending = (bool) get_option( 'vigilante_server_files_pending' );
+
+        if ( ! $pending && VIGILANTE_VERSION === get_option( 'vigilante_server_files_version' ) ) {
+            return;
+        }
+
+        // A failed write is not retried on every request.
+        if ( (int) get_option( 'vigilante_server_files_retry_after' ) > time() ) {
+            return;
+        }
+
+        /*
+         * A subsite has nothing to do here, ever: the file belongs to the main
+         * site. Marking it done keeps every request from re-checking.
+         *
+         * 2.10.0 asked the wrong question at this point and it cost the whole
+         * feature on networks. can_write_shared_files() ends in a capability
+         * check, and this runs on init for every request, so on a network the
+         * branch below was the one nearly every visitor took: it retired the job
+         * without having written a thing. The .htaccess was never refreshed after
+         * an update, and the one-shot snapshot behind it was consumed without
+         * being taken, so not even a network administrator visiting afterwards
+         * retried, because the version had already been marked. Reported by
+         * @calzbert, who found it reading the code.
+         */
+        if ( ! Vigilante_Settings::owns_shared_files() ) {
+            $this->mark_server_files_synced();
+            return;
+        }
+
+        require_once VIGILANTE_INCLUDES_DIR . 'class-htaccess-manager.php';
+        $manager = Vigilante_Htaccess_Manager::get_instance();
+
+        if ( ! $manager->is_apache() ) {
+            // Still on the command line with nothing to learn from: stay pending.
+            if ( $manager->server_is_unknown() ) {
+                return;
+            }
+
+            // Not Apache: there is no block to keep in step.
+            $this->mark_server_files_synced();
+            return;
+        }
+
+        $options  = get_option( Vigilante_Settings::OPTION_NAME, array() );
+        $headers  = isset( $options['security_headers'] ) ? (array) $options['security_headers'] : array();
+        $failed   = false;
+        $rewrote  = false;
+
+        /*
+         * Last chance to keep what the file still says. The rewrites below are
+         * precisely what overwrites it, and on a site whose header settings the
+         * 2.9.8 migration reset, this file is the only remaining copy of what the
+         * owner had actually chosen. Captured here rather than inside the write
+         * path so it only ever happens on a version change: an ordinary save also
+         * leaves the file describing the previous values for an instant, and
+         * capturing there would spend the single slot on a difference the owner
+         * made deliberately.
+         */
+        $wrote_last = (string) get_option( 'vigilante_server_files_version' );
+
+        /*
+         * And only on the very first sync that arrives from a version older than
+         * this one. That is the whole window: the file still describes what the
+         * owner chose, and the rewrite below is what ends it. Gating on the
+         * version also keeps a future release, one that legitimately changes what
+         * the block contains, from reading its own improvement as damage and
+         * offering to undo it.
+         */
+        /*
+         * 2.10.1 and not 2.10.0, deliberately: it gives the networks a second
+         * chance. On a network 2.10.0 marked this done without writing anything,
+         * so the window closed with the snapshot untaken. But nothing was
+         * written, which means the .htaccess on those sites still describes the
+         * configuration its owner actually chose. Reopening the window one
+         * version wide is what lets them be recovered after all.
+         *
+         * Harmless where it already worked: a site that took a snapshot is
+         * skipped because one exists, and a site that found nothing to take has
+         * had its file rewritten to match its settings, so there is still no
+         * difference to find.
+         */
+        if ( '' === $wrote_last || version_compare( $wrote_last, '2.10.1', '<' ) ) {
+            require_once VIGILANTE_INCLUDES_DIR . 'class-htaccess-recovery.php';
+            Vigilante_Htaccess_Recovery::maybe_capture( $manager->get_content(), $this->settings );
+        }
+
+        $needs_protection_block = ! empty( $options['modules']['firewall'] )
+            || ! empty( $headers['hide_server_signature'] )
+            || ! empty( $headers['remove_fingerprinting_headers'] );
+
+        /*
+         * A 'locked' result is not a failure: another request is doing this very
+         * work right now. Returning without marking anything leaves the pending
+         * state alone, so whichever request wins finishes the job and this one
+         * stays out of the way. Treating it as a failure would arm the one hour
+         * backoff for something that is already being handled.
+         */
+        $locked     = false;
+        $incomplete = false;
+        $unreadable = false;
+        $settled    = array( 'locked', 'block_incomplete', 'read_failed' );
+
+        if ( $needs_protection_block ) {
+            require_once VIGILANTE_INCLUDES_DIR . 'class-htaccess-protection.php';
+            $result     = ( new Vigilante_Htaccess_Protection( $this->settings ) )->apply_rules( true );
+            $code       = is_wp_error( $result ) ? $result->get_error_code() : ( true === $result ? '' : 'unexpected_result' );
+            $locked     = $locked || 'locked' === $code;
+            $incomplete = $incomplete || 'block_incomplete' === $code;
+            $unreadable = $unreadable || 'read_failed' === $code;
+            $failed     = $failed || ( '' !== $code && ! in_array( $code, $settled, true ) );
+            $rewrote    = true;
+        }
+
+        if ( ! $locked && ! empty( $options['modules']['security_headers'] ) ) {
+            require_once VIGILANTE_INCLUDES_DIR . 'class-security-headers.php';
+            $result     = ( new Vigilante_Security_Headers( $this->settings ) )->apply_rules( true );
+            $code       = is_wp_error( $result ) ? $result->get_error_code() : ( true === $result ? '' : 'unexpected_result' );
+            $locked     = $locked || 'locked' === $code;
+            $incomplete = $incomplete || 'block_incomplete' === $code;
+            $unreadable = $unreadable || 'read_failed' === $code;
+            $failed     = $failed || ( '' !== $code && ! in_array( $code, $settled, true ) );
+            $rewrote    = true;
+        }
+
+        if ( $locked ) {
+            return;
+        }
+
+        if ( $failed ) {
+            update_option( 'vigilante_server_files_retry_after', time() + HOUR_IN_SECONDS );
+
+            // A refusal to write the server rules is exactly the kind of thing
+            // that used to happen in silence, so it is recorded and retried in
+            // an hour instead of being forgotten.
+            if ( $this->activity_log ) {
+                $this->activity_log->log(
+                    'system',
+                    'server_rules_write_failed',
+                    __( 'The .htaccess rules could not be rewritten after the update. Vigilant will try again in an hour; if the file is read only, fix its permissions or save the Firewall or Headers tab once.', 'vigilante' ),
+                    array( 'version' => VIGILANTE_VERSION ),
+                    'warning'
+                );
+            }
+
+            return;
+        }
+
+        /*
+         * A block with a BEGIN line and no END is not going to mend itself, so
+         * retrying every hour would only repeat the refusal: it is recorded once
+         * for this version, with what to do about it, and the job is marked done.
+         * Saving the Firewall or Headers tab after fixing the file writes the
+         * rules again.
+         */
+        if ( $incomplete && $this->activity_log ) {
+            $this->activity_log->log(
+                'system',
+                'server_rules_block_incomplete',
+                __( 'The .htaccess rules were not rewritten after the update because a Vigilant block in that file has a BEGIN line without its END, and rewriting it would have cut everything below it. Remove the broken block by hand, then save the Firewall or Headers tab.', 'vigilante' ),
+                array( 'version' => VIGILANTE_VERSION ),
+                'warning'
+            );
+        }
+
+        /*
+         * Same for a .htaccess that PHP can write but not read: since 2.11.8 it is
+         * left as it is rather than replaced by the Vigilant rules alone, and
+         * that does not mend itself either. The first version of that fix left
+         * it to the hourly retry, with a message about read only files; found by
+         * the cross review of 2.11.8.
+         */
+        if ( $unreadable && $this->activity_log ) {
+            $this->activity_log->log(
+                'system',
+                'server_rules_read_failed',
+                __( 'The .htaccess rules were not rewritten after the update because PHP can write that file but cannot read it, and writing it without reading it would have removed every other rule in it. Let PHP read the file, then save the Firewall or Headers tab.', 'vigilante' ),
+                array( 'version' => VIGILANTE_VERSION ),
+                'warning'
+            );
+        }
+
+        $this->mark_server_files_synced();
+
+        if ( $rewrote && ! $incomplete && ! $unreadable && $this->activity_log ) {
+            $this->activity_log->log(
+                'system',
+                'server_rules_refreshed',
+                sprintf(
+                    /* translators: %s: plugin version. */
+                    __( 'The .htaccess rules were rewritten to match Vigilant %s.', 'vigilante' ),
+                    VIGILANTE_VERSION
+                ),
+                array( 'version' => VIGILANTE_VERSION ),
+                'info'
+            );
+        }
+    }
+
+    /**
+     * Record that the server layer matches the installed version
+     *
+     * @since 2.9.9
+     */
+    private function mark_server_files_synced() {
+        update_option( 'vigilante_server_files_version', VIGILANTE_VERSION );
+        delete_option( 'vigilante_server_files_pending' );
+        delete_option( 'vigilante_server_files_retry_after' );
+    }
+
+    /**
+     * Update the critical file baseline after Vigilante writes to a monitored file
+     *
+     * @param string $filename File that was modified (e.g. 'wp-config.php').
+     */
+    public function on_critical_file_written( $filename ) {
+        if ( ! class_exists( 'Vigilante_File_Integrity' ) ) {
+            require_once VIGILANTE_INCLUDES_DIR . 'class-file-integrity.php';
+        }
+
+        $fi = new Vigilante_File_Integrity( $this->settings, $this->database, $this->activity_log );
+        $fi->update_critical_file_baseline( $filename );
+    }
+
+    /**
+     * Add plugin action links
+     *
+     * @param array $links Existing links.
+     * @return array Modified links.
+     */
+    public function add_action_links( $links ) {
+        $plugin_links = array(
+            '<a href="' . esc_url( admin_url( 'admin.php?page=vigilante' ) ) . '">' . esc_html__( 'Security Settings', 'vigilante' ) . '</a>',
+        );
+        return array_merge( $plugin_links, $links );
+    }
+
+    /**
+     * Daily maintenance tasks
+     */
+    public function daily_maintenance() {
+        // Clean old activity logs
+        $this->activity_log->cleanup_old_logs();
+
+        // Clean old login attempts
+        $this->database->cleanup_old_login_attempts();
+
+        // Clean expired 2FA codes and trusted devices
+        $this->database->cleanup_expired_2fa_codes();
+        $this->database->cleanup_expired_trusted_devices();
+
+        // Remove sensitive files (readme.html, license.txt, licencia.txt)
+        // WordPress core updates recreate these files, so we clean them daily.
+        // They sit in the root every site of a network shares, so only the main
+        // site removes them, from its own settings; until 2.11.6 the daily
+        // maintenance of any site did.
+        $advanced = Vigilante_Settings::owns_shared_files() ? $this->settings->get_section( 'advanced' ) : array();
+        if ( ! empty( $advanced['remove_readme'] ) ) {
+            $readme_path = ABSPATH . 'readme.html';
+            if ( file_exists( $readme_path ) ) {
+                wp_delete_file( $readme_path );
+            }
+        }
+        if ( ! empty( $advanced['remove_license'] ) ) {
+            $license_files = array( 'license.txt', 'licencia.txt' );
+            foreach ( $license_files as $license_file ) {
+                $license_path = ABSPATH . $license_file;
+                if ( file_exists( $license_path ) ) {
+                    wp_delete_file( $license_path );
+                }
+            }
+        }
+
+        // Self-protection from cron, for sites nobody opens the admin of: the
+        // watchdog of Vigilant's own scheduled events, and the check for a
+        // version change made outside the WordPress updater (FTP, manual).
+        // The version change goes first: it is the path that reports a downgrade
+        // by email, and the watchdog's own daily check would otherwise get there
+        // before it.
+        if ( $this->self_integrity ) {
+            if ( $this->self_integrity->is_enabled() ) {
+                $this->self_integrity->detect_version_change();
+                $this->self_integrity->run_watchdog();
+            } else {
+                // Switched off by code: the one line that still has to be
+                // written, or an installation that stopped checking itself
+                // would do it in silence.
+                $this->self_integrity->audit_off_state();
+            }
+        }
+
+        // Log maintenance
+        $this->activity_log->log( 'system', 'maintenance', __( 'Daily maintenance completed', 'vigilante' ) );
+    }
+
+    /**
+     * Hourly checks
+     */
+    public function hourly_checks() {
+        // File integrity scans are handled by the File_Integrity class own cron schedule
+        // based on the configured scan_frequency (daily/weekly).
+    }
+
+    /**
+     * AJAX handler for dismissing notices
+     */
+    public function ajax_dismiss_notice() {
+        check_ajax_referer( 'vigilante_dismiss_notice', 'nonce' );
+
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_die( -1 );
+        }
+
+        $notice_id = isset( $_POST['notice_id'] ) ? sanitize_key( $_POST['notice_id'] ) : '';
+
+        if ( $notice_id ) {
+            $dismissed = get_option( 'vigilante_dismissed_notices', array() );
+            $dismissed[ $notice_id ] = time();
+            update_option( 'vigilante_dismissed_notices', $dismissed );
+        }
+
+        wp_send_json_success();
+    }
+}
+
+/**
+ * Cron handler for the weekly Security Analyzer scan.
+ *
+ * Resolves the shared Vigilante_Security_Analyzer (lazily; no cost when the
+ * cron is not firing) and lets it run the scan + regression email logic.
+ */
+function vigilante_run_analyzer_cron() {
+    if ( ! class_exists( 'Vigilante_Security_Analyzer' ) ) {
+        require_once VIGILANTE_INCLUDES_DIR . 'class-security-analyzer.php';
+    }
+    if ( ! class_exists( 'Vigilante_Settings' ) ) {
+        require_once VIGILANTE_INCLUDES_DIR . 'class-settings.php';
+    }
+
+    $settings     = new Vigilante_Settings();
+    $activity_log = null;
+    if ( class_exists( 'Vigilante_Activity_Log' ) && class_exists( 'Vigilante_Database' ) ) {
+        $database     = new Vigilante_Database();
+        $activity_log = new Vigilante_Activity_Log( $settings, $database );
+    }
+
+    $analyzer = new Vigilante_Security_Analyzer( $settings, $activity_log );
+    $analyzer->cron_weekly_scan();
+}
+
+/**
+ * Cron handler for the daily plugin status check.
+ *
+ * Resolves the shared Vigilante_Plugin_Status lazily so the daily cron has no
+ * cost while it is not firing.
+ */
+function vigilante_run_plugin_status_check() {
+    if ( ! class_exists( 'Vigilante_Plugin_Status' ) ) {
+        require_once VIGILANTE_INCLUDES_DIR . 'class-plugin-status.php';
+    }
+    if ( ! class_exists( 'Vigilante_Settings' ) ) {
+        require_once VIGILANTE_INCLUDES_DIR . 'class-settings.php';
+    }
+
+    $settings     = new Vigilante_Settings();
+    $activity_log = null;
+    if ( class_exists( 'Vigilante_Activity_Log' ) && class_exists( 'Vigilante_Database' ) ) {
+        $database     = new Vigilante_Database();
+        $activity_log = new Vigilante_Activity_Log( $settings, $database );
+    }
+
+    $checker = new Vigilante_Plugin_Status( $settings, $activity_log );
+    $checker->run_scheduled_check();
+}
+
+/**
+ * Run a Security Analyzer full scan after Under Attack mode deactivates.
+ *
+ * Scheduled one-shot from Vigilante_Under_Attack::deactivate() so the dashboard
+ * reflects the restored configuration with the slow HTTP/header probes the
+ * mode prevented from running safely while it was active.
+ */
+function vigilante_run_post_under_attack_scan() {
+    if ( ! class_exists( 'Vigilante_Under_Attack' ) ) {
+        require_once VIGILANTE_INCLUDES_DIR . 'class-under-attack.php';
+    }
+    if ( ! class_exists( 'Vigilante_Settings' ) ) {
+        require_once VIGILANTE_INCLUDES_DIR . 'class-settings.php';
+    }
+
+    $settings     = new Vigilante_Settings();
+    $activity_log = null;
+    if ( class_exists( 'Vigilante_Activity_Log' ) && class_exists( 'Vigilante_Database' ) ) {
+        $database     = new Vigilante_Database();
+        $activity_log = new Vigilante_Activity_Log( $settings, $database );
+    }
+
+    $under_attack = new Vigilante_Under_Attack( $settings, $activity_log );
+    $under_attack->run_analyzer_scan( 'all' );
+}
+
+/**
+ * Verify Vigilant's own files right after the WordPress updater replaced them
+ *
+ * Runs as the OLD code with the NEW files already on disk, so the class reads
+ * everything from disk (the Version header, the manifest) and nothing from
+ * constants in memory. The first update to 3.0.0 is not seen here, because the
+ * code that receives the hook is 2.x: that one is covered by the 3.0.0
+ * migration block of Vigilante_Admin::run_migrations().
+ *
+ * Plugin_Upgrader::upgrade() passes the updated plugin in 'plugin', and
+ * bulk_upgrade() passes the list in 'plugins'; both are read. Replacing the
+ * plugin by uploading its zip, from the screen or with `wp plugin install
+ * --force`, goes through Plugin_Upgrader::install() instead, whose context
+ * names no plugin (wp-admin/includes/class-plugin-upgrader.php, install()):
+ * plugin_info() reads it from the folder that was written.
+ *
+ * The check itself waits for the end of the request (see
+ * vigilante_verify_after_upgrade()): WP_Upgrader::run() fires this hook also
+ * when the install failed, and restores the previous copy of the plugin on
+ * shutdown, so checking here reported the half-moved folder of a failed update
+ * as tampering, by email.
+ *
+ * @since 3.0.0
+ *
+ * @param WP_Upgrader|mixed $upgrader   Upgrader instance.
+ * @param array             $hook_extra Update context.
+ */
+function vigilante_on_upgrader_process_complete( $upgrader, $hook_extra ) {
+    if ( ! is_array( $hook_extra ) || 'plugin' !== ( isset( $hook_extra['type'] ) ? $hook_extra['type'] : '' ) ) {
+        return;
+    }
+
+    $action = isset( $hook_extra['action'] ) ? $hook_extra['action'] : '';
+    $files  = array();
+    if ( 'update' === $action ) {
+        $files = ( ! empty( $hook_extra['plugins'] ) && is_array( $hook_extra['plugins'] ) ) ? $hook_extra['plugins'] : array();
+        if ( ! empty( $hook_extra['plugin'] ) ) {
+            $files[] = $hook_extra['plugin'];
+        }
+    } elseif ( 'install' === $action && is_object( $upgrader ) && method_exists( $upgrader, 'plugin_info' ) ) {
+        $installed = $upgrader->plugin_info();
+        if ( is_string( $installed ) && '' !== $installed ) {
+            $files[] = $installed;
+        }
+    } else {
+        return;
+    }
+    if ( ! in_array( VIGILANTE_PLUGIN_BASENAME, array_map( 'strval', $files ), true ) ) {
+        return;
+    }
+
+    // After WP_Upgrader::restore_temp_backup() (shutdown, priority 10) and
+    // before WP_Upgrader::delete_temp_backup() (priority 100).
+    if ( false === has_action( 'shutdown', 'vigilante_verify_after_upgrade' ) ) {
+        add_action( 'shutdown', 'vigilante_verify_after_upgrade', 50 );
+    }
+}
+
+/**
+ * The check after an update, at the end of the request
+ *
+ * By now a failed update has had its previous copy restored, so the files
+ * on disk are the ones the site will run. Hooked by
+ * vigilante_on_upgrader_process_complete(); a bulk update with Vigilant in
+ * the list hooks it once.
+ *
+ * @since 3.0.0
+ */
+function vigilante_verify_after_upgrade() {
+    if ( ! class_exists( 'Vigilante_Settings' ) ) {
+        require_once VIGILANTE_INCLUDES_DIR . 'class-settings.php';
+    }
+    if ( ! class_exists( 'Vigilante_Self_Integrity' ) ) {
+        require_once VIGILANTE_INCLUDES_DIR . 'class-self-integrity-guidance.php';
+        require_once VIGILANTE_INCLUDES_DIR . 'class-self-integrity.php';
+    }
+
+    $settings     = new Vigilante_Settings();
+    $activity_log = null;
+    if ( class_exists( 'Vigilante_Activity_Log' ) && class_exists( 'Vigilante_Database' ) ) {
+        $database     = new Vigilante_Database();
+        $activity_log = new Vigilante_Activity_Log( $settings, $database );
+    }
+
+    $self_integrity = new Vigilante_Self_Integrity( $settings, $activity_log );
+    $self_integrity->handle_upgrader( vigilante_upgrader_wrote_files_on_disk() );
+}
+
+/**
+ * Whether the files on disk are the ones the WordPress updater wrote in this request
+ *
+ * The marker of vigilante_mark_upgrader_wrote() says WordPress wrote the
+ * folder, not that the folder is still that copy at the end of the request:
+ * the automatic updater puts the previous copy back when the updated plugin
+ * breaks its loopback request, and a failed install is restored on shutdown.
+ * The manifest identifies the copy, so the updater is trusted only when the
+ * manifest on disk is the one it wrote.
+ *
+ * @since 3.0.0
+ *
+ * @return bool
+ */
+function vigilante_upgrader_wrote_files_on_disk() {
+    $mark = isset( $GLOBALS['vigilante_upgrader_wrote'] ) ? $GLOBALS['vigilante_upgrader_wrote'] : null;
+    if ( ! is_array( $mark ) || ! array_key_exists( 'manifest', $mark ) ) {
+        return false;
+    }
+    return $mark['manifest'] === Vigilante_Self_Integrity::manifest_fingerprint_of( VIGILANTE_PLUGIN_DIR );
+}
+
+/**
+ * Remember that the WordPress updater wrote Vigilant's folder in this request
+ *
+ * upgrader_post_install runs once per package, after the files are in place
+ * and before upgrader_process_complete. The hook that follows names every
+ * plugin of a bulk update, including the ones that were skipped, so the check
+ * after the update only trusts the updater when this marker says it really
+ * replaced the folder. Only a folder of that name in the plugins directory
+ * counts (a theme can have the same name), and the marker keeps the
+ * fingerprint of the manifest that was written, which
+ * vigilante_upgrader_wrote_files_on_disk() compares with the disk at the end.
+ *
+ * @since 3.0.0
+ *
+ * @param bool|WP_Error $response   Installation response.
+ * @param array         $hook_extra Extra arguments passed to hooked filters.
+ * @param array         $result     Installation result data.
+ * @return bool|WP_Error The response, unchanged.
+ */
+function vigilante_mark_upgrader_wrote( $response, $hook_extra, $result ) {
+    if ( is_wp_error( $response ) || ! is_array( $result ) || ! isset( $result['destination_name'], $result['destination'], $result['local_destination'] ) ) {
+        return $response;
+    }
+    if ( dirname( VIGILANTE_PLUGIN_BASENAME ) !== $result['destination_name'] ) {
+        return $response;
+    }
+    if ( untrailingslashit( wp_normalize_path( (string) $result['local_destination'] ) ) !== untrailingslashit( wp_normalize_path( WP_PLUGIN_DIR ) ) ) {
+        return $response;
+    }
+    if ( ! class_exists( 'Vigilante_Self_Integrity' ) ) {
+        require_once VIGILANTE_INCLUDES_DIR . 'class-self-integrity-guidance.php';
+        require_once VIGILANTE_INCLUDES_DIR . 'class-self-integrity.php';
+    }
+    $GLOBALS['vigilante_upgrader_wrote'] = array(
+        'manifest' => Vigilante_Self_Integrity::manifest_fingerprint_of( (string) $result['destination'] ),
+    );
+    return $response;
+}
+
+/**
+ * Plugin activation hook
+ */
+function vigilante_activate() {
+    require_once VIGILANTE_INCLUDES_DIR . 'class-database.php';
+    require_once VIGILANTE_INCLUDES_DIR . 'class-settings.php';
+    require_once VIGILANTE_INCLUDES_DIR . 'class-backup-manager.php';
+    require_once VIGILANTE_INCLUDES_DIR . 'class-activator.php';
+
+    Vigilante_Activator::activate();
+}
+register_activation_hook( __FILE__, 'vigilante_activate' );
+
+/**
+ * Plugin deactivation hook
+ *
+ * @param bool $network_wide Whether core is deactivating the plugin for the whole network.
+ */
+function vigilante_deactivate( $network_wide = false ) {
+    require_once VIGILANTE_INCLUDES_DIR . 'class-database.php';
+    require_once VIGILANTE_INCLUDES_DIR . 'class-settings.php';
+    require_once VIGILANTE_INCLUDES_DIR . 'class-backup-manager.php';
+    require_once VIGILANTE_INCLUDES_DIR . 'class-wpconfig-security.php';
+    require_once VIGILANTE_INCLUDES_DIR . 'class-deactivator.php';
+
+    Vigilante_Deactivator::deactivate( (bool) $network_wide );
+}
+register_deactivation_hook( __FILE__, 'vigilante_deactivate' );
+
+/**
+ * Initialize plugin after WordPress loads
+ */
+add_action( 'plugins_loaded', 'vigilante_load_plugin' );
+
+/*
+ * The hidden wp-admin is answered as early as the request can be judged with
+ * certainty, before the theme and the other plugins load. The modules are built
+ * on init priority 1, so until 2.9.9 a request that was going to be refused had
+ * already paid for the whole boot.
+ */
+add_action( 'plugins_loaded', 'vigilante_block_hidden_admin_early', 1 );
+
+/**
+ * Cheap gate for the early hidden wp-admin rejection
+ *
+ * Everything that can be decided without loading a single plugin class is
+ * decided here, so the usual request pays nothing more than a couple of
+ * comparisons and one option read that WordPress has already cached.
+ *
+ * @since 2.9.9
+ */
+function vigilante_block_hidden_admin_early() {
+    if ( ! is_admin() ) {
+        return;
+    }
+
+    $method = isset( $_SERVER['REQUEST_METHOD'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REQUEST_METHOD'] ) ) : 'GET';
+
+    // POST is how remote managers authenticate, and the later path lets it through too.
+    if ( 'GET' !== $method ) {
+        return;
+    }
+
+    $options = get_option( 'vigilante_options', array() );
+
+    if ( ! is_array( $options )
+        || empty( $options['modules']['login_security'] )
+        || empty( $options['login_security']['custom_login_url'] ) ) {
+        return;
+    }
+
+    require_once VIGILANTE_INCLUDES_DIR . 'class-ip-utils.php';
+    require_once VIGILANTE_INCLUDES_DIR . 'class-login-security.php';
+
+    Vigilante_Login_Security::maybe_block_hidden_admin_early( $options );
+}
+
+/**
+ * Helper function to get plugin instance
+ *
+ * @return Vigilante_Main
+ */
+function vigilante() {
+    return Vigilante_Main::get_instance();
+}

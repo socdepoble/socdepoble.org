@@ -1,0 +1,1606 @@
+<?php
+/**
+ * Under Attack Mode
+ *
+ * Emergency mode with JavaScript challenge and aggressive restrictions.
+ * Temporarily blocks automated traffic while allowing real browsers through.
+ *
+ * @package Vigilante
+ */
+
+// Prevent direct access
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
+/**
+ * Class Vigilante_Under_Attack
+ *
+ * Provides temporary emergency protection against active attacks
+ */
+class Vigilante_Under_Attack {
+
+    /**
+     * Option name for Under Attack mode state
+     */
+    const OPTION_NAME = 'vigilante_under_attack_mode';
+
+    /**
+     * Cookie name for JS challenge verification
+     */
+    const COOKIE_NAME = 'vigilante_ua_verified';
+
+    /**
+     * Default duration in seconds (4 hours)
+     */
+    const DEFAULT_DURATION = 14400;
+
+    /**
+     * Challenge difficulty (number of leading zeros in hash)
+     */
+    const CHALLENGE_DIFFICULTY = 4;
+
+    /**
+     * Challenge token lifetime in seconds (15 minutes).
+     *
+     * Long enough to tolerate slow Proof-of-Work on weak CPUs and short tab
+     * idle, but short enough that a token copied from an old page is useless.
+     */
+    const NONCE_TTL = 900;
+
+    /**
+     * Requests per minute per address while the mode is active
+     */
+    const RATE_LIMIT = 30;
+
+    /**
+     * Requests per minute for a visitor who passed the challenge
+     *
+     * Ten times the aggressive limit: far above what a person browsing sends
+     * through WordPress, far below a flood.
+     *
+     * @since 2.11.8
+     */
+    const VERIFIED_RATE_LIMIT = 300;
+
+    /**
+     * .htaccess block markers for cache bypass
+     */
+    const HTACCESS_MARKER_START = '# BEGIN Vigilante Under Attack';
+    const HTACCESS_MARKER_END   = '# END Vigilante Under Attack';
+
+    /**
+     * Settings instance
+     *
+     * @var Vigilante_Settings
+     */
+    private $settings;
+
+    /**
+     * Activity log instance
+     *
+     * @var Vigilante_Activity_Log
+     */
+    private $activity_log;
+
+    /**
+     * Cached mode status
+     *
+     * @var array|null
+     */
+    private $status = null;
+
+    /**
+     * Constructor
+     *
+     * Hooks are registered on wp_loaded/template_redirect to avoid
+     * the init-within-init timing issue where callbacks registered
+     * during init execution are silently skipped by WordPress.
+     *
+     * @param Vigilante_Settings     $settings     Settings instance.
+     * @param Vigilante_Activity_Log $activity_log Activity log instance.
+     */
+    public function __construct( $settings, $activity_log ) {
+        $this->settings     = $settings;
+        $this->activity_log = $activity_log;
+
+        // Apply restrictions when active (is_active() auto-deactivates if expired)
+        if ( $this->is_active() ) {
+            // JS challenge for frontend visitors + challenge response handler
+            add_action( 'template_redirect', array( $this, 'maybe_serve_challenge' ), 1 );
+
+            // Override rate limiting to aggressive values. Verified visitors get a
+            // higher limit from the same filter, not an exemption.
+            add_filter( 'vigilante_rate_limit_requests', array( $this, 'aggressive_rate_limit' ) );
+            add_filter( 'vigilante_rate_limit_duration', array( $this, 'aggressive_block_duration' ) );
+            add_filter( 'vigilante_rate_limit_key', array( $this, 'verified_rate_limit_key' ) );
+
+            // Block restricted HTTP methods and empty user agents (wp_loaded fires after init)
+            add_action( 'wp_loaded', array( $this, 'restrict_http_methods' ) );
+            add_action( 'wp_loaded', array( $this, 'block_empty_user_agent' ) );
+
+            // Block XML-RPC completely
+            add_filter( 'xmlrpc_enabled', '__return_false' );
+            add_filter( 'xmlrpc_methods', '__return_empty_array' );
+
+            // Restrict REST API to authenticated users only at the network layer.
+            // (vigilante_options is also forced to authenticated_only via the snapshot,
+            //  but this filter is stricter — it doesn't allow the public endpoints
+            //  that the regular module's "selective" mode exposes.)
+            add_filter( 'rest_authentication_errors', array( $this, 'restrict_rest_api' ), 99 );
+
+            // Pause new user registrations regardless of WP core setting.
+            add_filter( 'pre_option_users_can_register', '__return_zero' );
+
+            // Force every new comment to moderation queue.
+            add_filter( 'pre_comment_approved', array( $this, 'force_comment_moderation' ), 99 );
+
+            // Tell caching plugins to stop serving cached pages
+            $this->send_nocache_headers_for_plugins();
+        }
+    }
+
+    /**
+     * Check if Under Attack mode is currently active
+     *
+     * Self-correcting: if the mode has expired, it deactivates automatically
+     * and returns false. This replaces the old check_expiration hook that
+     * never fired due to the init-within-init timing issue.
+     *
+     * @return bool
+     */
+    public function is_active() {
+        $status = $this->get_status();
+
+        if ( empty( $status['active'] ) ) {
+            return false;
+        }
+
+        // Auto-deactivate if expired
+        $expires_at = ( $status['activated_at'] ?? 0 ) + ( $status['duration'] ?? 0 );
+
+        if ( $expires_at <= time() ) {
+            $this->deactivate( 'expired' );
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Get current mode status
+     *
+     * @return array Status array with keys: active, activated_at, duration, secret.
+     */
+    public function get_status() {
+        if ( null === $this->status ) {
+            $this->status = get_option( self::OPTION_NAME, array(
+                'active'           => false,
+                'activated_at'     => 0,
+                'duration'         => self::DEFAULT_DURATION,
+                'secret'           => '',
+                'previous_options' => null,
+                'previous_preset'  => null,
+            ) );
+        }
+        return $this->status;
+    }
+
+    /**
+     * Get remaining time in seconds
+     *
+     * @return int Seconds remaining, 0 if not active or expired.
+     */
+    public function get_remaining_time() {
+        $status = $this->get_status();
+
+        if ( empty( $status['active'] ) || empty( $status['activated_at'] ) ) {
+            return 0;
+        }
+
+        $expires_at = $status['activated_at'] + $status['duration'];
+        $remaining  = $expires_at - time();
+
+        return max( 0, $remaining );
+    }
+
+    /**
+     * Activate Under Attack mode
+     *
+     * @param int $duration Duration in seconds. Default 4 hours.
+     * @return bool Success.
+     */
+    public function activate( $duration = 0 ) {
+        if ( $duration <= 0 ) {
+            $duration = self::DEFAULT_DURATION;
+        }
+
+        // Snapshot the user's current configuration so we can restore it on
+        // deactivate. We snapshot BEFORE applying the hardened config — any
+        // changes the user makes to vigilante_options while the mode is active
+        // will be reverted when the mode ends. The admin UI shows a banner
+        // warning about this.
+        $previous_options = get_option( Vigilante_Settings::OPTION_NAME, array() );
+        $previous_preset  = get_option( 'vigilante_active_preset', '' );
+
+        // Generate a secret for HMAC cookie signing
+        $secret = wp_generate_password( 64, true, true );
+
+        $status = array(
+            'active'           => true,
+            'activated_at'     => time(),
+            'duration'         => absint( $duration ),
+            'secret'           => $secret,
+            'previous_options' => $previous_options,
+            'previous_preset'  => $previous_preset,
+        );
+
+        $result = update_option( self::OPTION_NAME, $status );
+        $this->status = null;
+
+        if ( $result ) {
+            // Apply the hardened configuration: Maximum preset + Under Attack overrides.
+            $this->apply_hardened_options( $previous_options );
+
+            // Refresh the Security Analyzer score so the dashboard reflects the
+            // hardened config instead of the snapshot of the previous one.
+            //
+            // 1) Run the 'fast' phase synchronously (sub-second, offline checks
+            //    like filesystem, options, WP version, modules) so the dashboard
+            //    has at least the cheap checks refreshed when the AJAX returns
+            //    and the page reloads.
+            // 2) Schedule a full ('all') scan in the background to also refresh
+            //    the slow HTTP-probe checks. The page reload triggers wp-cron,
+            //    which picks up the one-shot event.
+            $this->run_analyzer_scan( 'fast' );
+            if ( ! wp_next_scheduled( 'vigilante_under_attack_post_scan' ) ) {
+                wp_schedule_single_event( time() + 5, 'vigilante_under_attack_post_scan' );
+            }
+
+            // Cache bypass - best-effort, must not break activation AJAX response
+            $this->safe_manage_cache( 'activate' );
+
+            if ( $this->activity_log ) {
+                $this->activity_log->log(
+                    'security',
+                    'under_attack_activated',
+                    sprintf(
+                        /* translators: %s: Duration in hours */
+                        __( 'Under Attack mode activated for %s hours', 'vigilante' ),
+                        round( $duration / 3600, 1 )
+                    ),
+                    array( 'duration' => $duration ),
+                    'warning'
+                );
+            }
+        }
+
+        // Send notification email
+        $this->send_notification( 'activated', $duration );
+
+        return $result;
+    }
+
+    /**
+     * Deactivate Under Attack mode
+     *
+     * @param string $reason Reason for deactivation.
+     * @return bool Success.
+     */
+    public function deactivate( $reason = 'manual' ) {
+        // Restore the user's previous configuration BEFORE clearing the snapshot —
+        // if the restore fails for any reason we want the snapshot to remain so
+        // the next activation can recover.
+        $current_status   = $this->get_status();
+        $previous_options = $current_status['previous_options'] ?? null;
+        $previous_preset  = $current_status['previous_preset'] ?? null;
+
+        if ( is_array( $previous_options ) && ! empty( $previous_options ) ) {
+            $previous_options = $this->keep_file_settings_changed_meanwhile( $previous_options, $current_status );
+            update_option( Vigilante_Settings::OPTION_NAME, $previous_options );
+        }
+        if ( null !== $previous_preset ) {
+            if ( '' === $previous_preset ) {
+                delete_option( 'vigilante_active_preset' );
+            } else {
+                update_option( 'vigilante_active_preset', $previous_preset );
+            }
+        }
+
+        $status = array(
+            'active'           => false,
+            'activated_at'     => 0,
+            'duration'         => self::DEFAULT_DURATION,
+            'secret'           => '',
+            'previous_options' => null,
+            'previous_preset'  => null,
+        );
+
+        $result = update_option( self::OPTION_NAME, $status );
+        $this->status = null;
+
+        if ( $result ) {
+            // Remove cache bypass rules - best-effort
+            $this->safe_manage_cache( 'manual' === $reason ? 'deactivate' : 'deactivate_auto' );
+
+            // Refresh the Security Analyzer with a full scan so the dashboard
+            // reflects the restored configuration (including the slow HTTP/header
+            // probes that we couldn't run safely while UA was active). Schedule
+            // it for ~10 seconds out so the AJAX response returns immediately
+            // and the WP cache layer has time to settle.
+            if ( ! wp_next_scheduled( 'vigilante_under_attack_post_scan' ) ) {
+                wp_schedule_single_event( time() + 10, 'vigilante_under_attack_post_scan' );
+            }
+
+            if ( $this->activity_log ) {
+                $this->activity_log->log(
+                    'security',
+                    'under_attack_deactivated',
+                    sprintf(
+                        /* translators: %s: Reason */
+                        __( 'Under Attack mode deactivated (%s)', 'vigilante' ),
+                        $reason
+                    ),
+                    array( 'reason' => $reason ),
+                    'info'
+                );
+            }
+        }
+
+        // Send notification email
+        $this->send_notification( 'deactivated' );
+
+        return $result;
+    }
+
+    /**
+     * Run the Security Analyzer and persist its results.
+     *
+     * Used by activate() (fast phase only — offline checks) and by the cron
+     * hook scheduled at deactivate() (full scan — fast + slow). Lazy-loads the
+     * analyzer the same way vigilante.php does for the weekly scan, so the
+     * extra classes only get loaded when actually needed.
+     *
+     * @param string $phase 'fast' | 'slow' | 'all'.
+     * @return void
+     */
+    public function run_analyzer_scan( $phase = 'all' ) {
+        if ( ! class_exists( 'Vigilante_Security_Analyzer' ) ) {
+            $analyzer_file = VIGILANTE_INCLUDES_DIR . 'class-security-analyzer.php';
+            if ( ! file_exists( $analyzer_file ) ) {
+                return;
+            }
+            require_once $analyzer_file;
+        }
+
+        try {
+            $analyzer = new Vigilante_Security_Analyzer( $this->settings, $this->activity_log );
+            // run_scan() persists the report internally via persist_scan(),
+            // so the dashboard widget will read fresh data on the next page load.
+            $analyzer->run_scan( $phase );
+
+            if ( $this->activity_log ) {
+                $this->activity_log->log(
+                    'security',
+                    'under_attack_scan_completed',
+                    sprintf(
+                        /* translators: %s: phase name (fast / slow / all) */
+                        __( 'Security Analyzer refresh after Under Attack mode change (phase: %s)', 'vigilante' ),
+                        $phase
+                    ),
+                    array( 'phase' => $phase ),
+                    'info'
+                );
+            }
+        } catch ( \Throwable $e ) {
+            // Best-effort: never let a scan failure block UA activation/deactivation.
+            if ( $this->activity_log ) {
+                $this->activity_log->log(
+                    'security',
+                    'under_attack_scan_failed',
+                    $e->getMessage(),
+                    array( 'phase' => $phase ),
+                    'warning'
+                );
+            }
+        }
+    }
+
+    /**
+     * Build and persist the hardened vigilante_options for Under Attack mode.
+     *
+     * Layered: Maximum preset overrides on top of the user's current config,
+     * then Under Attack-specific overrides (stricter login, all activity log
+     * events, all modules forced on) on top of that. Any setting not touched
+     * by either layer keeps the user's original value.
+     *
+     * @param array $base_options User's current vigilante_options (snapshot).
+     */
+    private function apply_hardened_options( $base_options ) {
+        if ( ! is_array( $base_options ) ) {
+            $base_options = array();
+        }
+
+        $presets        = $this->settings->get_presets();
+        $maximum_preset = $presets['maximum'] ?? array();
+        // Drop the metadata fields ('name', 'description') that the preset array carries.
+        unset( $maximum_preset['name'], $maximum_preset['description'] );
+
+        // Activity Log retention: don't downgrade if the user already keeps
+        // logs for longer, but bump it up if they have a tight retention that
+        // would lose visibility during an attack. Same logic for max_entries.
+        $current_log     = $base_options['activity_log'] ?? array();
+        $current_days    = isset( $current_log['retention_days'] ) ? absint( $current_log['retention_days'] ) : 30;
+        $current_entries = isset( $current_log['max_entries'] ) ? absint( $current_log['max_entries'] ) : 10000;
+        $forced_days     = max( $current_days, 30 );
+        $forced_entries  = max( $current_entries, 10000 );
+
+        // Under Attack-specific overrides on top of Maximum.
+        $ua_overrides = array(
+            // All security modules forced on regardless of user's config.
+            'modules' => array(
+                'firewall'          => true,
+                'security_headers'  => true,
+                'login_security'    => true,
+                'rest_api_security' => true,
+                'user_security'     => true,
+                'wp_hardening'      => true,
+                'file_integrity'    => true,
+                'activity_log'      => true,
+            ),
+            // Login: stricter than Maximum (2 attempts vs Maximum's 3).
+            'login_security' => array(
+                'max_attempts' => 2,
+            ),
+            // File Integrity: full scope plus daily auto-scan (Maximum already
+            // forces these, but we restate them here in case Maximum is edited
+            // in the future and to make the UA contract explicit).
+            'file_integrity' => array(
+                'scan_core'            => true,
+                'scan_plugins'         => true,
+                'scan_themes'          => true,
+                'scan_uploads'         => true,
+                'scan_critical_config' => true,
+                'auto_scan'            => true,
+                'scan_frequency'       => 'daily',
+            ),
+            // Activity Log: bump retention to default if user has it lower.
+            'activity_log' => array(
+                'retention_days' => $forced_days,
+                'max_entries'    => $forced_entries,
+            ),
+        );
+
+        // Same list-aware merge the presets use: array_replace_recursive() would
+        // combine the role lists position by position instead of replacing them.
+        $hardened = Vigilante_Settings::merge_preset( $base_options, $maximum_preset );
+        $hardened = Vigilante_Settings::merge_preset( $hardened, $ua_overrides );
+
+        // The hardening is for this site. On the main site of a network, a user
+        // without network rights does not get to rewrite the rules every site
+        // shares with it (2.11.6). The restore does not use this check: it runs
+        // from whichever request switches the mode off or notices that it
+        // expired, often with no user, and deactivate() sorts out instead what
+        // changed while the mode was on.
+        $hardened = Vigilante_Settings::keep_locked_file_settings( $hardened, $base_options );
+
+        update_option( Vigilante_Settings::OPTION_NAME, $hardened );
+        $this->settings->clear_cache();
+        $this->remember_applied_file_settings();
+
+        // Drop any lingering active preset marker — under-attack is not a preset
+        // and the previous preset is already saved in our own status option.
+        delete_option( 'vigilante_active_preset' );
+    }
+
+    /**
+     * Record what the hardening left in the settings the shared files are built from
+     *
+     * deactivate() compares them with what is stored when the mode ends, to tell
+     * a value the mode applied from one somebody changed while it was on.
+     *
+     * @since 2.11.7
+     */
+    private function remember_applied_file_settings() {
+        $status = get_option( self::OPTION_NAME, array() );
+
+        if ( ! is_array( $status ) || empty( $status['active'] ) ) {
+            return;
+        }
+
+        $status['applied_file_settings'] = self::file_settings_values( get_option( Vigilante_Settings::OPTION_NAME, array() ) );
+        update_option( self::OPTION_NAME, $status );
+        $this->status = null;
+    }
+
+    /**
+     * Keep the shared file settings that somebody changed while the mode was on
+     *
+     * The snapshot is what the site had before the mode, and putting all of it
+     * back also undid what a network administrator changed meanwhile in the
+     * settings the shared wp-config.php and .htaccess are built from. Any
+     * administrator of the main site can switch the mode off, so one without
+     * network rights could roll those changes back, and the next rewrite of the
+     * files would publish the old values (wordpress.org automated review of
+     * 2.11.6).
+     *
+     * Asking who switches the mode off, as the saving code does, is not enough
+     * here: the mode also ends on the first request after it expires, usually
+     * with no user, and there that check would keep the hardened values for
+     * good. So each of those settings is compared with what the mode applied:
+     * the unchanged ones go back to the snapshot and the changed ones keep their
+     * current value. A mode switched on by a version that kept no record falls
+     * back to the check.
+     *
+     * @since 2.11.7
+     *
+     * @param array $previous Snapshot taken when the mode was switched on.
+     * @param array $status   Mode status, with the record of what it applied.
+     * @return array
+     */
+    private function keep_file_settings_changed_meanwhile( $previous, $status ) {
+        if ( ! is_multisite() ) {
+            return $previous;
+        }
+
+        $current = get_option( Vigilante_Settings::OPTION_NAME, array() );
+        $current = is_array( $current ) ? $current : array();
+
+        if ( ! isset( $status['applied_file_settings'] ) || ! is_array( $status['applied_file_settings'] ) ) {
+            return Vigilante_Settings::keep_locked_file_settings( $previous, $current );
+        }
+
+        $applied = $status['applied_file_settings'];
+
+        foreach ( self::file_settings_values( $current ) as $path => $now ) {
+            if ( ! array_key_exists( $path, $applied ) || $now === $applied[ $path ] ) {
+                continue;
+            }
+
+            $parts   = explode( '.', $path, 2 );
+            $section = $parts[0];
+
+            if ( ! isset( $parts[1] ) ) {
+                if ( $now['set'] ) {
+                    $previous[ $section ] = $now['value'];
+                } else {
+                    unset( $previous[ $section ] );
+                }
+                continue;
+            }
+
+            if ( $now['set'] ) {
+                if ( ! isset( $previous[ $section ] ) || ! is_array( $previous[ $section ] ) ) {
+                    $previous[ $section ] = array();
+                }
+                $previous[ $section ][ $parts[1] ] = $now['value'];
+            } elseif ( isset( $previous[ $section ] ) && is_array( $previous[ $section ] ) ) {
+                unset( $previous[ $section ][ $parts[1] ] );
+            }
+        }
+
+        return $previous;
+    }
+
+    /**
+     * The value of every setting the shared files are built from, by path
+     *
+     * 'section' for a section shared whole, 'section.key' for a single key. Each
+     * entry says whether the setting is stored and what it holds, so an absent
+     * key and a stored one never compare as equal.
+     *
+     * @since 2.11.7
+     *
+     * @param array $options Configuration.
+     * @return array
+     */
+    private static function file_settings_values( $options ) {
+        $options = is_array( $options ) ? $options : array();
+        $keys    = Vigilante_Settings::get_shared_file_settings();
+
+        foreach ( Vigilante_Settings::get_main_site_file_settings() as $section => $list ) {
+            if ( ! isset( $keys[ $section ] ) ) {
+                $keys[ $section ] = $list;
+            } elseif ( is_array( $keys[ $section ] ) ) {
+                $keys[ $section ] = array_values( array_unique( array_merge( $keys[ $section ], $list ) ) );
+            }
+        }
+
+        $values = array();
+
+        foreach ( $keys as $section => $list ) {
+            $stored = ( isset( $options[ $section ] ) && is_array( $options[ $section ] ) ) ? $options[ $section ] : null;
+
+            if ( true === $list ) {
+                $values[ $section ] = array( 'set' => null !== $stored, 'value' => $stored );
+                continue;
+            }
+
+            foreach ( $list as $key ) {
+                $set = null !== $stored && array_key_exists( $key, $stored );
+                $values[ $section . '.' . $key ] = array( 'set' => $set, 'value' => $set ? $stored[ $key ] : null );
+            }
+        }
+
+        return $values;
+    }
+
+    // =========================================================================
+    // CACHE MANAGEMENT
+    // =========================================================================
+
+    /**
+     * Safely run cache operations without breaking the calling flow
+     *
+     * Wraps cache operations in output buffering and try/catch to prevent
+     * WP_Filesystem credential forms or PHP errors from corrupting
+     * AJAX responses.
+     *
+     * @param string $action 'activate', 'deactivate' (a person switched the mode
+     *                       off) or 'deactivate_auto' (the mode expired on its
+     *                       own, from whichever request noticed it).
+     */
+    private function safe_manage_cache( $action ) {
+        ob_start();
+        try {
+            if ( 'activate' === $action ) {
+                $this->add_cache_bypass_rules();
+                $this->purge_page_caches();
+            } else {
+                $this->remove_cache_bypass_rules( 'deactivate_auto' === $action );
+            }
+        } catch ( \Throwable $e ) {
+            // Cache operations are best-effort and must not break the
+            // activation AJAX response, but a swallowed exception is not the
+            // same as nothing happening: until 2.11.0 this block hid a missing
+            // class and the cache rules were never written from a request that
+            // had not loaded the .htaccess manager, with no trace anywhere.
+            if ( $this->activity_log ) {
+                $this->activity_log->log(
+                    'security',
+                    'under_attack_cache_error',
+                    sprintf(
+                        /* translators: 1: activate/deactivate, 2: error message */
+                        __( 'Under Attack cache step (%1$s) failed: %2$s', 'vigilante' ),
+                        $action,
+                        $e->getMessage()
+                    ),
+                    array( 'action' => $action ),
+                    'warning'
+                );
+            }
+        }
+        ob_end_clean();
+    }
+
+    /**
+     * Add .htaccess rules to bypass full-page caching during Under Attack mode
+     *
+     * Goes through Vigilante_Htaccess_Manager like every other block the
+     * plugin writes: lock, backup, validation, read-back, and on a network the
+     * check that only a network administrator on the main site rewrites the
+     * shared file. Until 2.11.0 this method wrote the file directly, so the
+     * administrator of any subsite rewrote the root .htaccess of the whole
+     * network by switching the mode on (S5 of the 28 Aug 2026 audit). The mode
+     * is switched on by a person from the admin screen, so the write counts
+     * as a decision and asks for the capability.
+     *
+     * A refused write is not a failure of the mode: the challenge, the rate
+     * limit and the REST restriction never touch this file and stay on.
+     * safe_manage_cache() swallows the WP_Error for that reason.
+     */
+    private function add_cache_bypass_rules() {
+        // Loaded on demand by every consumer of the manager, and not by the
+        // bootstrap: in an AJAX request where nothing else has needed it, the
+        // class is not there and get_instance() throws.
+        require_once VIGILANTE_INCLUDES_DIR . 'class-htaccess-manager.php';
+
+        $result = Vigilante_Htaccess_Manager::get_instance()->add_block(
+            self::HTACCESS_MARKER_START,
+            self::HTACCESS_MARKER_END,
+            self::get_cache_bypass_rules(),
+            'top',
+            false
+        );
+
+        $this->log_cache_result( 'activate', $result );
+    }
+
+    /**
+     * The cache-bypass rules, without markers
+     *
+     * @since 2.11.0 Public, so the admin can show them when they could not be written.
+     *
+     * @return string
+     */
+    public static function get_cache_bypass_rules() {
+        $rules  = '<IfModule mod_headers.c>' . "\n";
+        $rules .= '    Header set Cache-Control "no-store, no-cache, must-revalidate, max-age=0"' . "\n";
+        $rules .= '    Header set Pragma "no-cache"' . "\n";
+        $rules .= '</IfModule>' . "\n";
+        $rules .= '<IfModule LiteSpeed>' . "\n";
+        $rules .= '    CacheDisable public /' . "\n";
+        $rules .= '</IfModule>';
+
+        return $rules;
+    }
+
+    /**
+     * The full block to paste by hand, markers included
+     *
+     * @since 2.11.0
+     *
+     * @return string
+     */
+    public static function get_cache_bypass_block() {
+        return self::HTACCESS_MARKER_START . "\n" . self::get_cache_bypass_rules() . "\n" . self::HTACCESS_MARKER_END;
+    }
+
+    /**
+     * Whether the mode is active but its cache rules are not in the .htaccess
+     *
+     * True on a site that owns the shared file (single site, or the main site
+     * of a network) and runs Apache or LiteSpeed, when the block is missing:
+     * the write was refused, typically on a host where WordPress cannot write
+     * files by itself. The admin then shows the block to add by hand. On a
+     * subsite the file is deliberately out of reach, so this stays false.
+     *
+     * @since 2.11.0
+     *
+     * @return bool
+     */
+    public function cache_rules_missing() {
+        if ( ! $this->is_active() || ! Vigilante_Settings::owns_shared_files() ) {
+            return false;
+        }
+
+        require_once VIGILANTE_INCLUDES_DIR . 'class-htaccess-manager.php';
+
+        if ( ! Vigilante_Htaccess_Manager::get_instance()->is_apache() ) {
+            return false;
+        }
+
+        $path = ABSPATH . '.htaccess';
+
+        if ( ! is_readable( $path ) ) {
+            return true;
+        }
+
+        $content = file_get_contents( $path ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Read-only check of the site's own .htaccess for a marker; WP_Filesystem is not warranted.
+
+        return false === $content || false === strpos( $content, self::HTACCESS_MARKER_START );
+    }
+
+    /**
+     * Record a refused .htaccess write, so a mode active without its cache
+     * rules leaves a trace (a refused network write, a held lock, a failed
+     * read-back). A WP_Error is not an exception and the catch below never
+     * sees it.
+     *
+     * @param string        $action activate or deactivate.
+     * @param bool|WP_Error $result What the manager returned.
+     */
+    private function log_cache_result( $action, $result ) {
+        if ( ! is_wp_error( $result ) || ! $this->activity_log ) {
+            return;
+        }
+
+        $this->activity_log->log(
+            'security',
+            'under_attack_cache_skipped',
+            sprintf(
+                /* translators: 1: activate/deactivate, 2: reason */
+                __( 'Under Attack cache rules not written (%1$s): %2$s', 'vigilante' ),
+                $action,
+                $result->get_error_message()
+            ),
+            array(
+                'action' => $action,
+                'code'   => $result->get_error_code(),
+            ),
+            'info'
+        );
+    }
+
+    /**
+     * Remove .htaccess cache bypass rules when mode is deactivated
+     *
+     * Same path as add_cache_bypass_rules(). When the mode expires by itself
+     * the removal is Vigilant acting alone, from whichever request noticed the
+     * expiry, so the only requirement is being on the main site: there is no
+     * user to ask a capability of, and asking one of a passing visitor would
+     * leave the block in place until an administrator happened to come by.
+     *
+     * @param bool $automatic True when the mode expired, false when a person
+     *                        switched it off.
+     */
+    private function remove_cache_bypass_rules( $automatic = false ) {
+        require_once VIGILANTE_INCLUDES_DIR . 'class-htaccess-manager.php';
+
+        $result = Vigilante_Htaccess_Manager::get_instance()->remove_block(
+            self::HTACCESS_MARKER_START,
+            self::HTACCESS_MARKER_END,
+            $automatic
+        );
+
+        $this->log_cache_result( 'deactivate', $result );
+    }
+
+    /**
+     * Purge known page caches so existing cached pages are cleared
+     *
+     * Fires hooks and calls functions for common caching plugins.
+     * Failures are silently ignored (cache purge is best-effort).
+     */
+    private function purge_page_caches() {
+        /*
+         * Every purge below reaches the whole network: the object cache is one
+         * for all sites, the cache plugins purge everything they hold, and the
+         * SiteGround folder is shared. Until 2.11.8 the administrator of any
+         * subsite ran all of it by switching the mode on, as many times as they
+         * liked. Found by the audits of the network and of the admin surface for
+         * 2.11.8. The mode itself does not depend on it: the challenge, the rate
+         * limit and the REST restriction work the same without the purge.
+         */
+        if ( is_multisite() && ! current_user_can( 'manage_network_options' ) ) {
+            return;
+        }
+
+        // WordPress object cache
+        wp_cache_flush();
+
+        // Third-party cache plugin hooks - these are the official hook names
+        // defined by each plugin, not ours to prefix.
+
+        // LiteSpeed Cache
+        if ( has_action( 'litespeed_purge_all' ) ) {
+            do_action( 'litespeed_purge_all' ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Third-party hook
+        }
+
+        // WP Super Cache
+        if ( function_exists( 'wp_cache_clear_cache' ) ) {
+            wp_cache_clear_cache();
+        }
+
+        // W3 Total Cache
+        if ( function_exists( 'w3tc_flush_all' ) ) {
+            w3tc_flush_all();
+        }
+
+        // WP Rocket
+        if ( function_exists( 'rocket_clean_domain' ) ) {
+            rocket_clean_domain();
+        }
+
+        // WP Fastest Cache
+        if ( has_action( 'wpfc_clear_all_cache' ) ) {
+            do_action( 'wpfc_clear_all_cache' ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Third-party hook
+        }
+
+        // Autoptimize
+        if ( class_exists( 'autoptimizeCache' ) && method_exists( 'autoptimizeCache', 'clearall' ) ) {
+            autoptimizeCache::clearall();
+        }
+
+        // SG Optimizer / Speed Optimizer (SiteGround) - multiple purge methods
+        // Public API function (purges Dynamic + File-based + Object caches)
+        if ( function_exists( 'sg_cachepress_purge_cache' ) ) {
+            sg_cachepress_purge_cache();
+        }
+
+        // Modern SG Optimizer (7.x+) internal Supercacher class
+        if ( class_exists( '\SiteGround_Optimizer\Supercacher\Supercacher' ) ) {
+            if ( method_exists( '\SiteGround_Optimizer\Supercacher\Supercacher', 'purge_cache' ) ) {
+                \SiteGround_Optimizer\Supercacher\Supercacher::purge_cache();
+            }
+            if ( method_exists( '\SiteGround_Optimizer\Supercacher\Supercacher', 'delete_assets' ) ) {
+                \SiteGround_Optimizer\Supercacher\Supercacher::delete_assets();
+            }
+        }
+
+        // SG file-based cache directory cleanup
+        $sg_file_cache_dir = WP_CONTENT_DIR . '/cache/sg-optimizer';
+        if ( is_dir( $sg_file_cache_dir ) ) {
+            $this->recursive_delete_dir( $sg_file_cache_dir );
+        }
+
+        // Hummingbird
+        if ( has_action( 'wphb_clear_page_cache' ) ) {
+            do_action( 'wphb_clear_page_cache' ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Third-party hook
+        }
+
+        // Cache Enabler
+        if ( has_action( 'ce_clear_cache' ) ) {
+            do_action( 'ce_clear_cache' ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Third-party hook
+        }
+
+        // Breeze (Cloudways)
+        if ( has_action( 'breeze_clear_all_cache' ) ) {
+            do_action( 'breeze_clear_all_cache' ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Third-party hook
+        }
+
+        // Generic hook used by some plugins
+        if ( has_action( 'cachify_flush_cache' ) ) {
+            do_action( 'cachify_flush_cache' ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Third-party hook
+        }
+    }
+
+    /**
+     * Set constants and headers that tell caching plugins to skip caching
+     *
+     * Called during constructor when mode is active, so every PHP request
+     * signals to caching layers not to serve or store cached responses.
+     */
+    private function send_nocache_headers_for_plugins() {
+        // Standard cache-control constants recognized by caching plugins.
+
+        // DONOTCACHEPAGE is respected by WP Super Cache, W3TC, WP Rocket, Batcache and others
+        if ( ! defined( 'DONOTCACHEPAGE' ) ) {
+            define( 'DONOTCACHEPAGE', true ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedConstantFound -- Industry-standard constant
+        }
+
+        // DONOTCACHEOBJECT is respected by W3TC
+        if ( ! defined( 'DONOTCACHEOBJECT' ) ) {
+            define( 'DONOTCACHEOBJECT', true ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedConstantFound -- Industry-standard constant
+        }
+
+        // DONOTCACHEDB is respected by W3TC
+        if ( ! defined( 'DONOTCACHEDB' ) ) {
+            define( 'DONOTCACHEDB', true ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedConstantFound -- Industry-standard constant
+        }
+
+        // LiteSpeed Cache
+        if ( ! defined( 'LSCACHE_NO_CACHE' ) ) {
+            define( 'LSCACHE_NO_CACHE', true ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedConstantFound -- LiteSpeed standard constant
+        }
+
+        // Send nocache headers early for any PHP-served response
+        if ( ! headers_sent() ) {
+            nocache_headers();
+            // NGINX reverse proxy directive - do not cache this response
+            header( 'X-Accel-Expires: 0' );
+            // Generic CDN/reverse proxy directive
+            header( 'Surrogate-Control: no-store' );
+        }
+
+        // SG Optimizer: register our verification cookie as bypass cookie
+        // When a verified visitor has this cookie, SG NGINX skips its cache
+        // and lets PHP handle the request (where has_valid_cookie() returns true)
+        add_filter( 'sgo_bypass_cookies', array( $this, 'add_sg_bypass_cookie' ) );
+    }
+
+    /**
+     * Add Vigilante verification cookie to SG Optimizer bypass list
+     *
+     * When SG NGINX sees this cookie in a request, it bypasses its cache
+     * and lets PHP handle the request directly.
+     *
+     * @param array $cookies Existing bypass cookies.
+     * @return array Modified bypass cookies.
+     */
+    public function add_sg_bypass_cookie( $cookies ) {
+        $cookies[] = self::COOKIE_NAME;
+        return $cookies;
+    }
+
+    // =========================================================================
+    // JS CHALLENGE
+    // =========================================================================
+
+    /**
+     * Serve JS challenge page if visitor is not verified
+     *
+     * Also handles challenge response POST inline to avoid
+     * the init-within-init timing issue.
+     */
+    public function maybe_serve_challenge() {
+        // Never challenge logged-in users
+        if ( is_user_logged_in() ) {
+            return;
+        }
+
+        // Never challenge admin/login/cron/AJAX
+        if ( is_admin() || wp_doing_cron() || wp_doing_ajax() ) {
+            return;
+        }
+
+        // Check if request is for wp-login.php
+        if ( isset( $GLOBALS['pagenow'] ) && 'wp-login.php' === $GLOBALS['pagenow'] ) {
+            return;
+        }
+
+        // Handle challenge response POST first (before serving a new challenge)
+        if ( $this->process_challenge_response() ) {
+            return;
+        }
+
+        // Check if visitor has valid verification cookie
+        if ( $this->has_valid_cookie() ) {
+            return;
+        }
+
+        // Check if IP is whitelisted in firewall settings
+        if ( $this->is_ip_whitelisted() ) {
+            return;
+        }
+
+        // Serve the challenge page
+        $this->render_challenge_page();
+        exit;
+    }
+
+    /**
+     * Process challenge response POST
+     *
+     * Called from maybe_serve_challenge() to handle the proof-of-work
+     * response inline at template_redirect, avoiding the init timing issue.
+     *
+     * @return bool True if response was valid and redirect happened.
+     */
+    private function process_challenge_response() {
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing
+        if ( ! isset( $_SERVER['REQUEST_METHOD'] ) || 'POST' !== $_SERVER['REQUEST_METHOD'] || empty( $_POST['vigilante_ua_response'] ) ) {
+            return false;
+        }
+
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing
+        $response  = sanitize_text_field( wp_unslash( $_POST['vigilante_ua_response'] ) );
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing
+        $nonce_val = sanitize_text_field( wp_unslash( $_POST['vigilante_ua_nonce'] ?? '' ) );
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing
+        $redirect  = esc_url_raw( wp_unslash( $_POST['vigilante_ua_redirect'] ?? '' ) );
+
+        // The token is checked, never stored or deleted, so a wrong answer
+        // changes nothing for anybody else. See issue_challenge_token().
+        if ( strlen( $response ) > 64 || ! $this->challenge_token_is_valid( $nonce_val ) ) {
+            return false;
+        }
+
+        // Verify the proof-of-work response
+        if ( $this->verify_challenge( $response, $nonce_val ) ) {
+            $this->set_verification_cookie();
+
+            // Redirect to the original URL
+            if ( empty( $redirect ) || ! wp_validate_redirect( $redirect ) ) {
+                $redirect = home_url( '/' );
+            }
+
+            wp_safe_redirect( $redirect );
+            exit;
+        }
+
+        return false;
+    }
+
+    /**
+     * A challenge token of its own for this page
+     *
+     * Signed, not stored. Until 2.11.7 the challenge nonce was a transient keyed
+     * by the visitor address, reused by every page that address loaded, and any
+     * answer carrying it deleted it before the proof of work was checked. A
+     * client sharing the address, behind the same NAT, or every visitor behind a
+     * proxy with no trusted header configured, could keep the others in a
+     * challenge loop by sending junk answers (wordpress.org automated security
+     * review of 2.11.7). Each page now gets its own token, bound to the address
+     * and to the time it was issued and signed with the secret of this
+     * activation: nothing is shared, nothing is deleted, a refresh no longer has
+     * to reuse a nonce to avoid a loop, and no transient is written per address.
+     *
+     * @since 2.11.8
+     *
+     * @return string
+     */
+    private function issue_challenge_token() {
+        $id     = wp_generate_password( 16, false );
+        $issued = time();
+
+        return $id . '.' . $issued . '.' . $this->sign_challenge( $id, $issued );
+    }
+
+    /**
+     * Signature of a challenge token for the current visitor
+     *
+     * The 'challenge|' prefix keeps it from ever matching the signature of a
+     * verification cookie, which uses the same secret.
+     *
+     * @since 2.11.8
+     *
+     * @param string $id     Random part of the token.
+     * @param int    $issued Time the token was issued.
+     * @return string
+     */
+    private function sign_challenge( $id, $issued ) {
+        $status = $this->get_status();
+
+        return hash_hmac( 'sha256', 'challenge|' . $id . '|' . $issued . '|' . $this->get_visitor_ip_hash(), (string) ( $status['secret'] ?? '' ) );
+    }
+
+    /**
+     * Whether a challenge token was issued to this visitor, recently, by this activation
+     *
+     * @since 2.11.8
+     *
+     * @param string $token Token sent back with the answer.
+     * @return bool
+     */
+    private function challenge_token_is_valid( $token ) {
+        $status = $this->get_status();
+        $parts  = explode( '.', (string) $token );
+
+        if ( empty( $status['secret'] ) || 3 !== count( $parts ) || '' === $parts[0] || ! ctype_digit( $parts[1] ) ) {
+            return false;
+        }
+
+        $age = time() - (int) $parts[1];
+
+        if ( $age < 0 || $age > self::NONCE_TTL ) {
+            return false;
+        }
+
+        return hash_equals( $this->sign_challenge( $parts[0], (int) $parts[1] ), $parts[2] );
+    }
+
+    /**
+     * Verify the proof-of-work challenge response
+     *
+     * @param string $response The nonce value found by the client.
+     * @param string $nonce    The challenge nonce.
+     * @return bool
+     */
+    private function verify_challenge( $response, $nonce ) {
+        $hash = hash( 'sha256', $nonce . $response );
+        $prefix = str_repeat( '0', self::CHALLENGE_DIFFICULTY );
+
+        return 0 === strpos( $hash, $prefix );
+    }
+
+    /**
+     * Check if visitor has a valid verification cookie
+     *
+     * Public so other modules (firewall) can grant verified visitors
+     * bypass on rate-limit checks.
+     *
+     * @return bool
+     */
+    public function has_valid_cookie() {
+        if ( ! isset( $_COOKIE[ self::COOKIE_NAME ] ) ) {
+            return false;
+        }
+
+        $cookie = sanitize_text_field( wp_unslash( $_COOKIE[ self::COOKIE_NAME ] ) );
+        $parts  = explode( '|', $cookie );
+
+        if ( count( $parts ) !== 3 ) {
+            return false;
+        }
+
+        list( $ip_hash, $expires, $signature ) = $parts;
+
+        // Check expiration
+        if ( (int) $expires < time() ) {
+            return false;
+        }
+
+        // Verify HMAC signature
+        $status   = $this->get_status();
+        $expected = hash_hmac( 'sha256', $ip_hash . '|' . $expires, $status['secret'] );
+
+        if ( ! hash_equals( $expected, $signature ) ) {
+            return false;
+        }
+
+        // Verify IP matches (prevents cookie theft)
+        $current_ip_hash = $this->get_visitor_ip_hash();
+        if ( ! hash_equals( $ip_hash, $current_ip_hash ) ) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Set the verification cookie after passing the challenge
+     */
+    private function set_verification_cookie() {
+        $status  = $this->get_status();
+        $ip_hash = $this->get_visitor_ip_hash();
+
+        // Cookie expires when the mode expires
+        $expires = $status['activated_at'] + $status['duration'];
+
+        // HMAC signature
+        $signature = hash_hmac( 'sha256', $ip_hash . '|' . $expires, $status['secret'] );
+
+        $cookie_value = $ip_hash . '|' . $expires . '|' . $signature;
+
+        // Set cookie - secure flags
+        $secure   = is_ssl();
+        $httponly  = true;
+        $samesite = 'Lax';
+
+        if ( PHP_VERSION_ID >= 70300 ) {
+            setcookie( self::COOKIE_NAME, $cookie_value, array(
+                'expires'  => $expires,
+                'path'     => COOKIEPATH,
+                'domain'   => COOKIE_DOMAIN,
+                'secure'   => $secure,
+                'httponly'  => $httponly,
+                'samesite' => $samesite,
+            ) );
+        } else {
+            setcookie(
+                self::COOKIE_NAME,
+                $cookie_value,
+                $expires,
+                COOKIEPATH . '; SameSite=' . $samesite,
+                COOKIE_DOMAIN,
+                $secure,
+                $httponly
+            );
+        }
+    }
+
+    /**
+     * Render the JS challenge page
+     *
+     * Uses external CSS/JS files for CSP compatibility.
+     */
+    private function render_challenge_page() {
+        $site_name = get_bloginfo( 'name' );
+
+        // A token of its own for this page. An earlier token stays valid until it
+        // expires, so a refresh while the solver runs does not break it.
+        $challenge_nonce = $this->issue_challenge_token();
+
+        /*
+         * Where to send the visitor once the challenge is solved: the page they
+         * asked for, as they asked for it. The target used to go through
+         * sanitize_text_field(), which deletes every %XX octet, so a visitor who
+         * asked for /categor%C3%ADa/ landed on /categora/, a 404, on every page
+         * whose address has an accent or a non-Latin letter (measured on 1 oct
+         * 2026 against 3.0.1). The host only picks where the visitor lands:
+         * process_challenge_response() validates it against the site's own
+         * before redirecting and falls back to the home page.
+         */
+        $request_uri = Vigilante_IP_Utils::request_uri();
+
+        if ( '' === $request_uri || '/' !== $request_uri[0] ) {
+            $request_uri = '/';
+        }
+
+        $current_url = ( is_ssl() ? 'https' : 'http' ) . '://' . sanitize_text_field( wp_unslash( $_SERVER['HTTP_HOST'] ?? '' ) ) . $request_uri;
+
+        // Asset URLs (external files for CSP compatibility)
+        $css_url = VIGILANTE_ASSETS_URL . 'css/under-attack-challenge.css?ver=' . VIGILANTE_VERSION;
+        $js_url  = VIGILANTE_ASSETS_URL . 'js/under-attack-challenge.js?ver=' . VIGILANTE_VERSION;
+
+        status_header( 503 );
+        header( 'Retry-After: 5' );
+        header( 'Cache-Control: no-store, no-cache, must-revalidate, max-age=0' );
+        header( 'Pragma: no-cache' );
+
+        ?><!DOCTYPE html>
+<html lang="<?php echo esc_attr( get_bloginfo( 'language' ) ); ?>">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow">
+    <title><?php echo esc_html( $site_name ); ?></title>
+    <?php // phpcs:ignore WordPress.WP.EnqueuedResources.NonEnqueuedStylesheet -- Standalone challenge page served with exit, outside WP enqueue cycle. ?>
+    <link rel="stylesheet" href="<?php echo esc_url( $css_url ); ?>">
+</head>
+<body>
+    <div class="challenge-container">
+        <div class="site-name"><?php echo esc_html( $site_name ); ?></div>
+        <div class="spinner" id="spinner"></div>
+        <p class="message" id="msg"><?php esc_html_e( 'Checking your connection before proceeding', 'vigilante' ); ?></p>
+        <p class="message-sub"><?php esc_html_e( 'This process is automatic. You will be redirected shortly.', 'vigilante' ); ?></p>
+        <noscript>
+            <div class="error-msg">
+                <?php esc_html_e( 'Please enable JavaScript to access this website.', 'vigilante' ); ?>
+            </div>
+        </noscript>
+    </div>
+
+    <form id="ua-form" method="POST" style="display:none" data-nonce="<?php echo esc_attr( $challenge_nonce ); ?>" data-difficulty="<?php echo absint( self::CHALLENGE_DIFFICULTY ); ?>">
+        <input type="hidden" name="vigilante_ua_nonce" value="<?php echo esc_attr( $challenge_nonce ); ?>">
+        <input type="hidden" name="vigilante_ua_response" id="ua-response" value="">
+        <input type="hidden" name="vigilante_ua_redirect" value="<?php echo esc_attr( esc_url( $current_url ) ); ?>">
+    </form>
+
+    <?php // phpcs:ignore WordPress.WP.EnqueuedResources.NonEnqueuedScript -- Standalone challenge page served with exit, outside WP enqueue cycle. ?>
+    <script src="<?php echo esc_url( $js_url ); ?>"></script>
+</body>
+</html>
+        <?php
+    }
+
+    // =========================================================================
+    // RATE LIMITING AND RESTRICTIONS
+    // =========================================================================
+
+    /**
+     * Override rate limiting to aggressive values
+     *
+     * Visitors who passed the JS challenge get VERIFIED_RATE_LIMIT, or the
+     * site's own limit if that is higher, so a human loading a page with many
+     * requests through WordPress does not burn the aggressive cap and get a 429,
+     * which used to look like the challenge was failing.
+     *
+     * Until 2.11.8 they skipped rate limiting altogether, for as long as the
+     * mode lasted. The proof of work takes a script a few milliseconds, so a
+     * bot solved it once and then flooded with no limit at all, which is the
+     * flood the mode exists to cap. Found by the audit of Under Attack for
+     * 2.11.8.
+     *
+     * @param int $requests Requests per minute configured for the site.
+     * @return int
+     */
+    public function aggressive_rate_limit( $requests ) {
+        if ( $this->has_valid_cookie() ) {
+            return max( absint( $requests ), self::VERIFIED_RATE_LIMIT );
+        }
+
+        return self::RATE_LIMIT;
+    }
+
+    /**
+     * A count of their own for visitors who passed the challenge
+     *
+     * The firewall counts and blocks by address. Without the exemption that
+     * 2.11.8 removed, a verified visitor was counted with everybody else at the
+     * same address, so an unverified client behind the same NAT, or any visitor
+     * of a site behind a proxy with no trusted header, got the address blocked
+     * for fifteen minutes and the verified visitors with it. Found by the cross
+     * review of 2.11.8. The key adds the signature of the verification cookie,
+     * which is tied to the address and to this activation: verified visitors
+     * of one address share a count of VERIFIED_RATE_LIMIT, apart from the rest.
+     *
+     * @since 2.11.8
+     *
+     * @param string $key Key the firewall would use, the address.
+     * @return string
+     */
+    public function verified_rate_limit_key( $key ) {
+        if ( ! $this->has_valid_cookie() || ! isset( $_COOKIE[ self::COOKIE_NAME ] ) ) {
+            return $key;
+        }
+
+        $parts = explode( '|', sanitize_text_field( wp_unslash( $_COOKIE[ self::COOKIE_NAME ] ) ) );
+
+        return $key . '|verified|' . end( $parts );
+    }
+
+    /**
+     * Override block duration to aggressive value
+     *
+     * @param int $duration Original block duration.
+     * @return int Aggressive duration (15 minutes).
+     */
+    public function aggressive_block_duration( $duration ) {
+        return 900;
+    }
+
+    /**
+     * Send every comment to moderation while Under Attack is active.
+     *
+     * @param int|string|WP_Error $approved Original approval status.
+     * @return int|string|WP_Error Forced 0 (moderation), unless WP itself
+     *                              flagged spam/error which we keep.
+     */
+    public function force_comment_moderation( $approved ) {
+        if ( is_wp_error( $approved ) || 'spam' === $approved || 'trash' === $approved ) {
+            return $approved;
+        }
+        return 0;
+    }
+
+    /**
+     * Restrict HTTP methods to GET, POST, HEAD only
+     */
+    public function restrict_http_methods() {
+        if ( is_admin() || wp_doing_cron() || wp_doing_ajax() ) {
+            return;
+        }
+
+        $method = isset( $_SERVER['REQUEST_METHOD'] ) ? strtoupper( sanitize_text_field( wp_unslash( $_SERVER['REQUEST_METHOD'] ) ) ) : 'GET';
+
+        $allowed = array( 'GET', 'POST', 'HEAD' );
+
+        if ( ! in_array( $method, $allowed, true ) ) {
+            status_header( 405 );
+            header( 'Allow: GET, POST, HEAD' );
+            wp_die(
+                esc_html__( 'Method not allowed.', 'vigilante' ),
+                esc_html__( 'Method Not Allowed', 'vigilante' ),
+                array( 'response' => 405 )
+            );
+        }
+    }
+
+    /**
+     * Block requests with empty user agent
+     */
+    public function block_empty_user_agent() {
+        if ( is_admin() || wp_doing_cron() || wp_doing_ajax() ) {
+            return;
+        }
+
+        $user_agent = isset( $_SERVER['HTTP_USER_AGENT'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ) : '';
+
+        if ( empty( trim( $user_agent ) ) ) {
+            status_header( 403 );
+            wp_die(
+                esc_html__( 'Access denied.', 'vigilante' ),
+                esc_html__( 'Forbidden', 'vigilante' ),
+                array( 'response' => 403 )
+            );
+        }
+    }
+
+    /**
+     * Restrict REST API to authenticated users only
+     *
+     * @param WP_Error|null|true $result Current auth result.
+     * @return WP_Error|null|true
+     */
+    public function restrict_rest_api( $result ) {
+        if ( is_user_logged_in() ) {
+            return $result;
+        }
+
+        return new WP_Error(
+            'rest_under_attack',
+            __( 'REST API access temporarily restricted.', 'vigilante' ),
+            array( 'status' => 503 )
+        );
+    }
+
+    // =========================================================================
+    // HELPER METHODS
+    // =========================================================================
+
+    /**
+     * Check if IP is in the firewall whitelist
+     *
+     * @return bool
+     */
+    private function is_ip_whitelisted() {
+        $firewall_options = $this->settings->get_section( 'firewall' );
+        $whitelist        = $firewall_options['ip_whitelist'] ?? array();
+
+        if ( empty( $whitelist ) ) {
+            return false;
+        }
+
+        // Same matcher as the rest of the plugin. Until 2.9.9 this compared
+        // with a plain === inside a loop, so in Under Attack mode a whitelist
+        // entry written as a CIDR range or a wildcard matched nothing, while
+        // the very same entry worked in the firewall.
+        return Vigilante_IP_Utils::in_list( $this->get_visitor_ip(), $whitelist );
+    }
+
+    /**
+     * Get visitor IP address
+     *
+     * Resolved by the same helper the firewall uses, so the whole plugin
+     * applies one proxy policy: the header the administrator marked as
+     * trusted, and REMOTE_ADDR otherwise.
+     *
+     * Until 2.11.1 this method read CF-Connecting-IP, X-Forwarded-For and
+     * X-Real-IP directly, taking whichever came first, without asking whether
+     * the request had actually arrived through a proxy. Any client can send
+     * those headers. Under Attack mode builds four things on this value, the
+     * whitelist decision, the challenge nonce, the signed verification cookie
+     * and the rate limit exemption, so on a site not behind an edge that
+     * rewrites them, one solved challenge could be replayed from anywhere by
+     * repeating the same invented header, and a known whitelisted address
+     * skipped the challenge outright. Reported by the automated security
+     * review of wp.org on 9 sep 2026 and fixed in 2.11.2.
+     *
+     * Behaviour note for sites behind Cloudflare or a reverse proxy: with no
+     * trusted header configured, every visitor now resolves to the proxy
+     * address, which is already how the firewall sees them. Set the trusted
+     * proxy header in the firewall settings to get the real client address in
+     * both places.
+     *
+     * @return string
+     */
+    private function get_visitor_ip() {
+        return Vigilante_IP_Utils::get_client_ip();
+    }
+
+    /**
+     * Get hashed visitor IP for privacy-safe comparisons
+     *
+     * @return string
+     */
+    private function get_visitor_ip_hash() {
+        return hash( 'sha256', $this->get_visitor_ip() . wp_salt( 'auth' ) );
+    }
+
+    /**
+     * Recursively delete contents of a directory (files and subdirectories)
+     *
+     * Used for cleaning file-based cache directories.
+     * Only deletes contents, preserves the top-level directory.
+     *
+     * @param string $dir Directory path to clean.
+     */
+    private function recursive_delete_dir( $dir ) {
+        if ( ! is_dir( $dir ) ) {
+            return;
+        }
+
+        $items = scandir( $dir );
+
+        if ( false === $items ) {
+            return;
+        }
+
+        foreach ( $items as $item ) {
+            if ( '.' === $item || '..' === $item ) {
+                continue;
+            }
+
+            $path = $dir . '/' . $item;
+
+            if ( is_dir( $path ) ) {
+                $this->recursive_delete_dir( $path );
+                @rmdir( $path ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_rmdir, WordPress.PHP.NoSilencedErrors.Discouraged -- No WP equivalent for rmdir
+            } else {
+                wp_delete_file( $path );
+            }
+        }
+    }
+
+    /**
+     * Send email notification when mode is activated/deactivated
+     *
+     * @param string $action   Either 'activated' or 'deactivated'.
+     * @param int    $duration Duration in seconds (only for activation).
+     */
+    private function send_notification( $action, $duration = 0 ) {
+        // Use centralized notification recipients
+        $recipients = Vigilante_Email_Template::get_admin_recipients();
+
+        if ( empty( $recipients ) ) {
+            return;
+        }
+
+        $site_name = get_bloginfo( 'name' );
+
+        if ( 'activated' === $action ) {
+            $subject = sprintf(
+                /* translators: %s: Site name */
+                __( '[%s] Under Attack mode activated', 'vigilante' ),
+                $site_name
+            );
+
+            $hours = round( $duration / 3600, 1 );
+            $body  = Vigilante_Email_Template::alert_box( __( 'Under Attack mode has been activated.', 'vigilante' ) );
+            $body .= Vigilante_Email_Template::data_table( array(
+                __( 'Duration', 'vigilante' ) => $hours . ' ' . __( 'hours', 'vigilante' ),
+            ) );
+            $body .= Vigilante_Email_Template::p( __( 'The mode will automatically deactivate when the timer expires. You can manually deactivate it from the Vigilant dashboard.', 'vigilante' ) );
+            $body .= Vigilante_Email_Template::button( admin_url( 'admin.php?page=vigilante&tab=dashboard#vigilante-section-dashboard-under-attack' ), __( 'Go to dashboard', 'vigilante' ) );
+
+            $title = __( 'Under Attack mode activated', 'vigilante' );
+            $alert = true;
+        } else {
+            $subject = sprintf(
+                /* translators: %s: Site name */
+                __( '[%s] Under Attack mode deactivated', 'vigilante' ),
+                $site_name
+            );
+
+            $body  = Vigilante_Email_Template::success_box( __( 'Under Attack mode has been deactivated. Your site is now operating with normal security settings.', 'vigilante' ) );
+
+            $title = __( 'Under Attack mode deactivated', 'vigilante' );
+            $alert = false;
+        }
+
+        // Send to centralized recipients
+        Vigilante_Email_Template::send( $recipients, $subject, $title, $body, $alert );
+    }
+}

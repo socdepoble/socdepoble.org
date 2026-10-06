@@ -1,0 +1,668 @@
+<?php
+/**
+ * Shared two-factor session and trusted-device logic
+ *
+ * Used by Vigilante_Two_Factor_Email and Vigilante_Two_Factor_TOTP. Until
+ * 2.11.0 both classes carried their own copy of this code, byte for byte,
+ * which is how the trusted-device check kept identifying a browser by its
+ * User-Agent in two places at once (S1 of the 28 Aug 2026 audit).
+ *
+ * The using class must provide $this->database (Vigilante_Database),
+ * $this->policy() (the two_factor settings array) and log_event().
+ *
+ * @package Vigilante
+ * @since 2.11.0
+ */
+
+// Prevent direct access
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
+/**
+ * Trait Vigilante_Two_Factor_Session
+ */
+trait Vigilante_Two_Factor_Session {
+
+    /**
+     * The second factor mechanics in force, resolved once per request
+     *
+     * The method, the expiry and the grace period come from the main site on a
+     * network, so they are the same wherever the login arrives. Read here and not
+     * in the constructor because the constructors run on init on EVERY request of
+     * every site: reading the main site's settings there meant a switch_to_blog()
+     * and the whole autoloaded option set of the main site on every front page
+     * view of every subsite, measured at 318 rows and 89 KB by the third cross
+     * review of 2.11.10. Nothing outside a login needs this value.
+     *
+     * Whether an account NEEDS a second factor, and which class asks for it, are
+     * separate questions with their own answers: two_factor_required_for() and
+     * two_factor_handler_for().
+     *
+     * @since 2.11.10
+     *
+     * @return array
+     */
+    protected function policy() {
+        if ( null === $this->options ) {
+            $this->options = Vigilante_Settings::two_factor_policy();
+        }
+
+        return $this->options;
+    }
+
+    /**
+     * Whether this class is the one that must ask this account for its factor
+     *
+     * @since 2.11.10
+     * @since 2.11.11 The enrolment can be passed in by a caller that has just read it.
+     *
+     * @param WP_User   $user     User being authenticated.
+     * @param string    $method   Method this class implements, 'email' or 'totp'.
+     * @param bool|null $enrolled Whether the account has a TOTP enrolment, when the
+     *                            caller already read its row. On a network that read
+     *                            can search every site the account belongs to, and
+     *                            the dashboard hooks run on every screen.
+     * @return bool
+     */
+    protected function handles_second_factor( $user, $method, $enrolled = null ) {
+        if ( null === $enrolled ) {
+            $enrolled = $this->database && method_exists( $this->database, 'has_totp_enrolment' )
+                ? $this->database->has_totp_enrolment( $user->ID )
+                : false;
+        }
+
+        return ( $method === Vigilante_Settings::two_factor_handler_for( $user, $enrolled ) );
+    }
+
+    /**
+     * Whether the verification pending in this request belongs to this class
+     *
+     * Both second factor classes hang off login_form_vigilante_2fa and login_form
+     * since 2.11.10, so without this the two of them printed a form on the same
+     * page and both tried to verify the same code. Measured as "the second factor
+     * is asked for twice" by the release matrix. The same election as the
+     * authenticate filter, so a given pending session is handled start to finish
+     * by one class.
+     *
+     * @since 2.11.10
+     *
+     * @param string $method Method this class implements, 'email' or 'totp'.
+     * @return bool True also when there is nothing pending, so each class goes on
+     *              applying its own rules.
+     */
+    protected function pending_belongs_to( $method ) {
+        $user_id = $this->get_pending_user_id();
+
+        if ( ! $user_id ) {
+            return true;
+        }
+
+        $user = get_userdata( $user_id );
+
+        return $user ? $this->handles_second_factor( $user, $method ) : true;
+    }
+
+    /**
+     * User ID authenticated through an application password in this request, or 0.
+     *
+     * Set by the core action application_password_did_authenticate, which only
+     * fires when the credentials were an application password. That is a second
+     * factor of its own, so the interactive verification does not apply (S16).
+     *
+     * @var int
+     */
+    private $app_password_user_id = 0;
+
+    // =========================================================================
+    // Names
+    // =========================================================================
+
+    /**
+     * Cookie carrying the pending-verification token.
+     *
+     * @return string
+     */
+    private function pending_cookie_name() {
+        return 'vigilante_2fa_token';
+    }
+
+    /**
+     * Cookie carrying the trusted-device secret.
+     *
+     * @return string
+     */
+    private function device_cookie_name() {
+        return 'vigilante_2fa_device';
+    }
+
+    // =========================================================================
+    // Request context (S16)
+    // =========================================================================
+
+    /**
+     * Register the hook that flags application-password logins.
+     *
+     * Called from the module's init_hooks().
+     */
+    protected function init_session_hooks() {
+        add_action( 'application_password_did_authenticate', array( $this, 'remember_app_password_user' ) );
+
+        // Why the verification session ended, explained on the login screen it
+        // sends the visitor back to. Both classes use the trait, so both
+        // register this; the notice itself prints once (see the method).
+        add_filter( 'login_message', array( $this, 'show_2fa_session_notice' ) );
+    }
+
+    /**
+     * Explain on the login screen why a verification session ended
+     *
+     * Until 2.11.12 running out of verification attempts cleared the pending
+     * session and redirected to wp-login.php with no message at all: the visitor
+     * was back at the password form with no idea why, typed the password again,
+     * and that correct password was counted as one more failed login.
+     *
+     * The query argument only picks one of the literal strings below. It decides
+     * nothing and it is not trusted for anything (rule 21): anyone can add it to
+     * a URL, and all it can produce is one of these notices on a login screen.
+     *
+     * @since 2.11.12
+     *
+     * @param string $message Login screen message so far.
+     * @return string
+     */
+    public function show_2fa_session_notice( $message ) {
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only display of a static notice on the login screen; nothing is decided or written.
+        $notice = isset( $_GET['vigilante_2fa_notice'] ) ? sanitize_key( wp_unslash( $_GET['vigilante_2fa_notice'] ) ) : '';
+
+        if ( '' === $notice ) {
+            return $message;
+        }
+
+        // Both two-factor classes use this trait and both register the filter,
+        // so without this the notice would print twice on a site that has them
+        // both loaded. A trait gives each using class its own statics, hence the
+        // prefixed global rather than a static property.
+        if ( ! empty( $GLOBALS['vigilante_2fa_notice_printed'] ) ) {
+            return $message;
+        }
+
+        $texts = array(
+            'attempts' => __( 'Too many incorrect verification codes. The verification session was closed for security. Log in again to start a new one.', 'vigilante' ),
+            'expired'  => __( 'The verification session expired. Log in again to start a new one.', 'vigilante' ),
+        );
+
+        if ( ! isset( $texts[ $notice ] ) ) {
+            return $message;
+        }
+
+        $GLOBALS['vigilante_2fa_notice_printed'] = true;
+
+        return $message . '<div id="login_error" class="notice notice-error"><p>' . esc_html( $texts[ $notice ] ) . '</p></div>';
+    }
+
+    /**
+     * Send the visitor back to the login screen with an explanation
+     *
+     * @since 2.11.12
+     *
+     * @param string $notice One of the keys of show_2fa_session_notice().
+     * @return void
+     */
+    private function redirect_to_login_with_notice( $notice ) {
+        wp_safe_redirect( add_query_arg( 'vigilante_2fa_notice', rawurlencode( $notice ), wp_login_url() ) );
+        exit;
+    }
+
+    /**
+     * Remember which user authenticated with an application password.
+     *
+     * @param WP_User $user Authenticated user.
+     */
+    public function remember_app_password_user( $user ) {
+        if ( $user instanceof WP_User ) {
+            $this->app_password_user_id = (int) $user->ID;
+        }
+    }
+
+    /**
+     * Whether this user was authenticated with an application password in this request.
+     *
+     * @param WP_User|mixed $user User being authenticated.
+     * @return bool
+     */
+    private function authenticated_with_app_password( $user ) {
+        return $user instanceof WP_User
+            && $this->app_password_user_id > 0
+            && (int) $user->ID === $this->app_password_user_id;
+    }
+
+    /**
+     * Whether the request comes through REST or XML-RPC, where no form can be shown.
+     *
+     * @return bool
+     */
+    private function is_api_request() {
+        if ( defined( 'REST_REQUEST' ) && REST_REQUEST ) {
+            return true;
+        }
+
+        if ( defined( 'XMLRPC_REQUEST' ) && XMLRPC_REQUEST ) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * The error returned to an API login that still needs its second factor.
+     *
+     * No pending session is created and no code is sent: a connector that
+     * retries with the main password used to trigger one email per attempt.
+     *
+     * @return WP_Error
+     */
+    private function api_requires_2fa_error() {
+        // A controlled rejection, not a wrong password: the credentials were
+        // right and the account simply needs its second factor. The error code
+        // is what keeps it out of the brute force count; see
+        // Vigilante_Login_Security::CONTROLLED_REJECTIONS.
+        return new WP_Error(
+            'vigilante_2fa_required',
+            __( 'This account requires two-factor authentication. Log in from a browser, or use an application password for API access.', 'vigilante' )
+        );
+    }
+
+    // =========================================================================
+    // Pending verification session (S3, S15)
+    // =========================================================================
+
+    /**
+     * Set pending verification state
+     *
+     * The token travels only in an HttpOnly cookie (and in the hidden field of
+     * the form the cookie holder is shown). There is no lookup by IP address:
+     * behind a proxy or a CDN that used to hand one user's pending session to
+     * whoever shared the apparent address (S3).
+     *
+     * @param int $user_id User ID.
+     * @return string Token for the pending session
+     */
+    private function set_pending_verification( $user_id ) {
+        $user_id = absint( $user_id );
+        $token   = $this->get_existing_token_for_user( $user_id );
+        $data    = $token ? get_transient( 'vigilante_2fa_pending_' . $token ) : false;
+
+        if ( ! $token ) {
+            $token = wp_generate_password( 32, false );
+        }
+
+        // The attempt counter survives a fresh password login within the hour,
+        // so re-authenticating does not reset it (S2).
+        $attempts = ( is_array( $data ) && isset( $data['attempts'] ) ) ? absint( $data['attempts'] ) : 0;
+
+        // Where the login was headed. The verification form is a second request
+        // with its own POST, so redirect_to has to travel in the session or it
+        // is lost and every login lands on the dashboard (2.11.12). Kept from a
+        // previous pending session when this request does not carry one.
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Not a decision: stored as-is and validated against the site by wp_validate_redirect() before use, in pending_login_redirect().
+        $redirect_to = isset( $_REQUEST['redirect_to'] ) ? esc_url_raw( wp_unslash( $_REQUEST['redirect_to'] ) ) : '';
+
+        if ( '' === $redirect_to && is_array( $data ) && ! empty( $data['redirect_to'] ) ) {
+            $redirect_to = (string) $data['redirect_to'];
+        }
+
+        set_transient(
+            'vigilante_2fa_pending_' . $token,
+            array(
+                'user_id'     => $user_id,
+                'created_at'  => time(),
+                'attempts'    => $attempts,
+                'redirect_to' => $redirect_to,
+            ),
+            HOUR_IN_SECONDS
+        );
+
+        // Reverse lookup (user_id -> token), used only to reuse the token on a
+        // repeated password login. It is never handed to a visitor.
+        set_transient( 'vigilante_2fa_user_token_' . $user_id, $token, HOUR_IN_SECONDS );
+
+        $this->set_cookie( $this->pending_cookie_name(), $token, time() + HOUR_IN_SECONDS, 'Strict' );
+
+        // Make the token available in the current request.
+        $_COOKIE[ $this->pending_cookie_name() ] = $token;
+
+        return $token;
+    }
+
+    /**
+     * Get the existing pending token for a user if still valid
+     *
+     * @param int $user_id User ID.
+     * @return string|false Token or false if not found
+     */
+    private function get_existing_token_for_user( $user_id ) {
+        $token = get_transient( 'vigilante_2fa_user_token_' . absint( $user_id ) );
+
+        if ( ! $token ) {
+            return false;
+        }
+
+        $data = get_transient( 'vigilante_2fa_pending_' . $token );
+
+        if ( ! is_array( $data ) || empty( $data['user_id'] ) || absint( $data['user_id'] ) !== absint( $user_id ) ) {
+            return false;
+        }
+
+        return $token;
+    }
+
+    /**
+     * The pending token presented by this request, from the form or the cookie.
+     *
+     * @return string Token or empty string.
+     */
+    private function get_pending_token() {
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Session token, not form data: the verification form nonce is checked in handle_2fa_form() before anything acts on it.
+        if ( isset( $_POST['vigilante_2fa_token'] ) ) {
+            // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Same token as the line above.
+            return sanitize_text_field( wp_unslash( $_POST['vigilante_2fa_token'] ) );
+        }
+
+        if ( isset( $_COOKIE[ $this->pending_cookie_name() ] ) ) {
+            return sanitize_text_field( wp_unslash( $_COOKIE[ $this->pending_cookie_name() ] ) );
+        }
+
+        return '';
+    }
+
+    /**
+     * The pending session presented by this request.
+     *
+     * @return array|false Session data (user_id, created_at, attempts, token) or false.
+     */
+    private function get_pending_session() {
+        $token = $this->get_pending_token();
+
+        if ( '' === $token ) {
+            return false;
+        }
+
+        $data = get_transient( 'vigilante_2fa_pending_' . $token );
+
+        if ( ! is_array( $data ) || empty( $data['user_id'] ) ) {
+            return false;
+        }
+
+        $data['user_id']  = absint( $data['user_id'] );
+        $data['attempts'] = isset( $data['attempts'] ) ? absint( $data['attempts'] ) : 0;
+        $data['token']    = $token;
+
+        return $data;
+    }
+
+    /**
+     * Get pending verification user ID
+     *
+     * @return int|false User ID or false if not pending
+     */
+    private function get_pending_user_id() {
+        $session = $this->get_pending_session();
+
+        return $session ? $session['user_id'] : false;
+    }
+
+    /**
+     * Where to send the visitor once the second factor is verified
+     *
+     * @since 2.11.12
+     *
+     * @return string URL on this site.
+     */
+    private function pending_login_redirect() {
+        $session = $this->get_pending_session();
+        $stored  = ( is_array( $session ) && ! empty( $session['redirect_to'] ) ) ? (string) $session['redirect_to'] : '';
+
+        if ( '' === $stored ) {
+            return admin_url();
+        }
+
+        // Same gate core uses: anything off this site falls back to the
+        // dashboard, so a stored value cannot send anyone off-site.
+        return wp_validate_redirect( $stored, admin_url() );
+    }
+
+    /**
+     * Failed attempts recorded on the pending session presented by this request.
+     *
+     * @return int
+     */
+    private function get_pending_attempts() {
+        $session = $this->get_pending_session();
+
+        return $session ? $session['attempts'] : 0;
+    }
+
+    /**
+     * Record one more failed attempt on the pending session.
+     *
+     * @return int Attempts after the increment, or 0 if there is no session.
+     */
+    private function increment_pending_attempts() {
+        $session = $this->get_pending_session();
+
+        if ( ! $session ) {
+            return 0;
+        }
+
+        $token = $session['token'];
+        unset( $session['token'] );
+        $session['attempts']++;
+
+        set_transient( 'vigilante_2fa_pending_' . $token, $session, HOUR_IN_SECONDS );
+
+        return $session['attempts'];
+    }
+
+    /**
+     * Clear pending verification
+     */
+    private function clear_pending_verification() {
+        $token = $this->get_pending_token();
+
+        if ( '' !== $token ) {
+            $data = get_transient( 'vigilante_2fa_pending_' . $token );
+
+            if ( is_array( $data ) && ! empty( $data['user_id'] ) ) {
+                delete_transient( 'vigilante_2fa_user_token_' . absint( $data['user_id'] ) );
+            }
+
+            delete_transient( 'vigilante_2fa_pending_' . $token );
+        }
+
+        $this->set_cookie( $this->pending_cookie_name(), '', time() - YEAR_IN_SECONDS, 'Strict' );
+        unset( $_COOKIE[ $this->pending_cookie_name() ] );
+    }
+
+    /**
+     * End a form submission whose nonce did not verify (S15).
+     *
+     * Until 2.11.0 this redirected to the login screen with no message and no
+     * record; the pending cookie was still set, so the form came back with no
+     * explanation. Now the holder of a pending session sees why and the
+     * attempt is logged. Either way the request ends here: a bare return would
+     * let wp-login.php fall through to wp_signon() without the second factor.
+     *
+     * @param int|false $user_id Pending user, if any.
+     */
+    private function handle_invalid_nonce( $user_id ) {
+        if ( $user_id ) {
+            set_transient(
+                'vigilante_2fa_error_' . $user_id,
+                __( 'The verification form expired. Please try again.', 'vigilante' ),
+                60
+            );
+
+            $this->log_event( '2fa_nonce_failed', $user_id, __( 'Verification form submitted with an invalid or expired nonce', 'vigilante' ), 'warning' );
+
+            wp_safe_redirect( add_query_arg( 'vigilante_2fa', '1', wp_login_url() ) );
+            exit;
+        }
+
+        wp_safe_redirect( wp_login_url() );
+        exit;
+    }
+
+    // =========================================================================
+    // Trusted devices (S1, S4)
+    // =========================================================================
+
+    /**
+     * Check if the current device is trusted
+     *
+     * The device presents a random secret from an HttpOnly cookie and only its
+     * SHA-256 is stored. Until 2.11.0 the identity was a hash of the User-Agent,
+     * so anyone with the password who reproduced the browser string skipped the
+     * second factor (S1). The option is enforced here as well: with it off no
+     * stored row is honoured, whatever the form sent (S4).
+     *
+     * @param int $user_id User ID.
+     * @return bool
+     */
+    private function is_device_trusted( $user_id ) {
+        if ( empty( $this->policy()['allow_remember_device'] ) ) {
+            return false;
+        }
+
+        $token = $this->present_device_token();
+
+        if ( '' === $token ) {
+            return false;
+        }
+
+        return $this->database->is_device_trusted( absint( $user_id ), hash( 'sha256', $token ) );
+    }
+
+    /**
+     * Trust the current device
+     *
+     * Ignored silently when the option is off: a cached form may still send
+     * the checkbox, and that is no reason to refuse the login (S4).
+     *
+     * @param int $user_id User ID.
+     * @return bool True if a device row was written.
+     */
+    private function trust_device( $user_id ) {
+        if ( empty( $this->policy()['allow_remember_device'] ) ) {
+            return false;
+        }
+
+        try {
+            $token = bin2hex( random_bytes( 32 ) );
+        } catch ( Exception $e ) {
+            return false;
+        }
+
+        $user_agent    = isset( $_SERVER['HTTP_USER_AGENT'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ) : '';
+        $remember_days = absint( $this->policy()['remember_device_days'] ?? 30 );
+
+        if ( $remember_days < 1 ) {
+            $remember_days = 30;
+        }
+
+        $expires = time() + ( $remember_days * DAY_IN_SECONDS );
+
+        // The User-Agent is kept as a label for the device list only; it plays
+        // no part in recognising the device.
+        $written = $this->database->trust_device(
+            absint( $user_id ),
+            hash( 'sha256', $token ),
+            $user_agent,
+            gmdate( 'Y-m-d H:i:s', $expires )
+        );
+
+        if ( ! $written ) {
+            return false;
+        }
+
+        // Lax, not Strict: the cookie has to travel on the GET that brings the
+        // user back to wp-login.php from another site.
+        $this->set_cookie( $this->device_cookie_name(), $token, $expires, 'Lax' );
+
+        return true;
+    }
+
+    /**
+     * The device secret presented by this request, if well formed.
+     *
+     * @return string 64 hex characters or empty string.
+     */
+    private function present_device_token() {
+        if ( ! isset( $_COOKIE[ $this->device_cookie_name() ] ) ) {
+            return '';
+        }
+
+        $token = sanitize_text_field( wp_unslash( $_COOKIE[ $this->device_cookie_name() ] ) );
+
+        return preg_match( '/^[0-9a-f]{64}$/', $token ) ? $token : '';
+    }
+
+    // =========================================================================
+    // Cookies
+    // =========================================================================
+
+    /**
+     * Set a plugin cookie with the attributes every 2FA cookie shares.
+     *
+     * @param string $name     Cookie name.
+     * @param string $value    Value (empty to clear).
+     * @param int    $expires  Expiry timestamp.
+     * @param string $samesite Lax or Strict.
+     */
+    private function set_cookie( $name, $value, $expires, $samesite ) {
+        if ( headers_sent() ) {
+            return;
+        }
+
+        /*
+         * On a network these secrets used to travel to every site, while the rows
+         * that validate them carry the blog prefix and belong to one: a device
+         * trusted on one site handed its 64 hex secret to every other site,
+         * where a site administrator, or anything running there, could read it
+         * from the request and replay it.
+         *
+         * Both halves of the scope have to move, and the first attempt only moved
+         * one. An empty domain says "this host only", which isolates the sites of
+         * a network by subdomains; but in a network by subdirectories every site
+         * shares the host and the core leaves COOKIE_DOMAIN empty anyway
+         * (wp-includes/ms-default-constants.php sets it only for subdomain
+         * installs), so that change alone did nothing there. What separates those
+         * sites is the path. Found by the cross review of 2.11.10.
+         *
+         * So on a network the cookie is scoped to this site's own host and path,
+         * which is exactly the reach of the table that validates it. On a single
+         * site both come out as the core's own values and nothing changes.
+         */
+        $domain = COOKIE_DOMAIN;
+        $path   = COOKIEPATH;
+
+        if ( is_multisite() ) {
+            $domain    = '';
+            $site_path = wp_parse_url( home_url( '/' ), PHP_URL_PATH );
+            $path      = ( is_string( $site_path ) && '' !== $site_path ) ? $site_path : '/';
+        }
+
+        setcookie(
+            $name,
+            $value,
+            array(
+                'expires'  => $expires,
+                'path'     => $path,
+                'domain'   => $domain,
+                'secure'   => is_ssl(),
+                'httponly' => true,
+                'samesite' => $samesite,
+            )
+        );
+    }
+}

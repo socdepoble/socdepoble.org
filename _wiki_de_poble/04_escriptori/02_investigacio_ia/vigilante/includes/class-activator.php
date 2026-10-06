@@ -1,0 +1,544 @@
+<?php
+/**
+ * Activator Class
+ *
+ * Handles plugin activation tasks
+ *
+ * @package Vigilante
+ */
+
+// Prevent direct access
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
+/**
+ * Class Vigilante_Activator
+ *
+ * Fired during plugin activation
+ */
+class Vigilante_Activator {
+
+    /**
+     * Run activation tasks
+     */
+    public static function activate() {
+        // Start output buffering to prevent any accidental output
+        ob_start();
+
+        // Check requirements first
+        if ( ! self::check_requirements() ) {
+            ob_end_clean();
+            return;
+        }
+
+        // Create database tables
+        $database = new Vigilante_Database();
+        $database->create_tables();
+
+        // Initialize default settings
+        $settings = new Vigilante_Settings();
+        $current_options = get_option( Vigilante_Settings::OPTION_NAME );
+        
+        if ( false === $current_options ) {
+            // First installation - set defaults
+            $first_run = $settings->get_default_options();
+
+            /*
+             * XML-RPC on a brand new install: block the pingback methods, which is
+             * what gets abused for amplification, and leave the rest reachable so
+             * the WordPress app, Jetpack or a remote manager keep working out of
+             * the box. Disabling it completely is the stricter choice and the one
+             * the settings screen recommends, but it is not imposed on a site that
+             * never asked for it. Brute force through XML-RPC stays covered either
+             * way, because those logins go through wp_authenticate() and the login
+             * lockout hooks into it.
+             *
+             * Only written here, on a first installation. Sites upgrading keep
+             * whatever they had: the activation hook does not run on an update, and
+             * Vigilante_Comment_Security::resolve_xmlrpc_mode() answers 'full' when
+             * nothing is stored, which is what every version since 1.0.0 did.
+             */
+            $first_run = Vigilante_Settings::apply_install_tweaks( $first_run );
+
+            update_option( Vigilante_Settings::OPTION_NAME, $first_run );
+            // Refresh settings instance to get new values
+            $settings->clear_cache();
+            $settings = new Vigilante_Settings();
+        } else {
+            // Existing installation - run idempotent migrations
+            if ( self::run_migrations( $current_options ) ) {
+                $settings->clear_cache();
+                $settings = new Vigilante_Settings();
+            }
+        }
+
+        // Apply htaccess protection (part of firewall module)
+        if ( $settings->is_module_enabled( 'firewall' ) ) {
+            self::apply_htaccess_protection( $settings );
+        }
+
+        // Apply security headers to htaccess
+        if ( $settings->is_module_enabled( 'security_headers' ) ) {
+            self::apply_security_headers( $settings );
+        }
+
+        // Apply wp-config security (part of wp_hardening module)
+        if ( $settings->is_module_enabled( 'wp_hardening' ) ) {
+            self::apply_wpconfig_security( $settings );
+        }
+
+        // Update WordPress options for HTTPS (part of security_headers module)
+        if ( $settings->is_module_enabled( 'security_headers' ) ) {
+            self::enforce_https( $settings );
+        }
+
+        // Apply comment security settings (part of wp_hardening module)
+        if ( $settings->is_module_enabled( 'wp_hardening' ) ) {
+            self::apply_comment_security( $settings );
+        }
+
+        // Remove sensitive files
+        self::remove_sensitive_files( $settings );
+
+        // Generate critical config files baseline (after all Vigilante writes above)
+        self::generate_critical_baseline( $settings );
+
+        // Schedule cron events
+        self::schedule_events();
+
+        // Capture the self-integrity anchor (A3: manifest fingerprint in DB).
+        self::anchor_self_integrity( $settings );
+
+        // Set activation transient for admin notice
+        set_transient( 'vigilante_activated', true, 30 );
+
+        // Store activation time
+        update_option( 'vigilante_activated_time', time() );
+
+        // Send activation email if enabled
+        self::send_activation_email( $settings );
+
+        // Flush rewrite rules
+        flush_rewrite_rules();
+
+        // Clean any output that may have been generated
+        ob_end_clean();
+    }
+
+    /**
+     * Anchor the self-integrity check on activation
+     *
+     * The first activation captures the fingerprint of the shipped manifest,
+     * unless WordPress.org distributes something else for that version, so
+     * the self-check has a baseline from the very first run. A
+     * reactivation keeps the anchor it already has and checks against it:
+     * capturing again adopted whatever manifest the folder held at that
+     * moment, a regenerated one included, the same reason the critical files
+     * baseline is not thrown away on reactivation.
+     *
+     * @since 3.0.0
+     *
+     * @param Vigilante_Settings $settings Settings instance.
+     * @return void
+     */
+    public static function anchor_self_integrity( $settings ) {
+        if ( ! class_exists( 'Vigilante_Self_Integrity' ) ) {
+            require_once VIGILANTE_INCLUDES_DIR . 'class-self-integrity.php';
+        }
+        // run_check() captures on the first run itself, but only when
+        // WordPress.org does not contradict the manifest; with an anchor already
+        // there it checks against it.
+        $self_integrity = new Vigilante_Self_Integrity( $settings );
+        $self_integrity->run_check( 'activation' );
+    }
+
+    /**
+     * Idempotent migrations for existing installations.
+     *
+     * @param array $current_options Current vigilante_options array.
+     * @return bool True if any migration changed the stored option.
+     */
+    private static function run_migrations( $current_options ) {
+        $changed = false;
+
+        // Migration: rest_api_security.mode legacy value 'authenticated'
+        // (UI bug shipped a <select> value that did not match the backend
+        // string 'authenticated_only', so manual saves wrote a value the
+        // module ignored). Normalise so the option is honoured again.
+        if ( isset( $current_options['rest_api_security']['mode'] )
+            && 'authenticated' === $current_options['rest_api_security']['mode'] ) {
+            $current_options['rest_api_security']['mode'] = 'authenticated_only';
+            $changed = true;
+        }
+
+        // Migration: rest_api_security.protected_endpoints used to default to
+        // ['/wp/v2/users'], which duplicated the "Block user enumeration"
+        // toggle and confused users (turning that toggle off didn't unblock
+        // /users because protected_endpoints kept it locked in selective
+        // mode). If the saved list is still the legacy single-element default,
+        // empty it out so there is one knob per behaviour. Custom lists
+        // (anything other than exactly ['/wp/v2/users']) are left untouched.
+        if ( isset( $current_options['rest_api_security']['protected_endpoints'] )
+            && is_array( $current_options['rest_api_security']['protected_endpoints'] )
+            && array( '/wp/v2/users' ) === array_values( $current_options['rest_api_security']['protected_endpoints'] ) ) {
+            $current_options['rest_api_security']['protected_endpoints'] = array();
+            $changed = true;
+        }
+
+        // Migration: section-level 'enabled' flag wrongly stored as false.
+        // Earlier 2.4.x betas had a UI save handler that treated the absence
+        // of a field in the form as "checkbox unchecked" — including the
+        // top-level 'enabled' master flag, which has no checkbox in any
+        // section form. This left modules silently disabled even though the
+        // Dashboard master toggle was on. Restore the flag where it makes
+        // sense (master toggle on + flag false).
+        $sections = array(
+            'firewall',
+            'security_headers',
+            'login_security',
+            'rest_api_security',
+            'user_security',
+            'wp_hardening',
+            'file_integrity',
+            'activity_log',
+        );
+        foreach ( $sections as $section_name ) {
+            if ( ! empty( $current_options['modules'][ $section_name ] )
+                && isset( $current_options[ $section_name ] )
+                && is_array( $current_options[ $section_name ] )
+                && array_key_exists( 'enabled', $current_options[ $section_name ] )
+                && empty( $current_options[ $section_name ]['enabled'] ) ) {
+                $current_options[ $section_name ]['enabled'] = true;
+                $changed = true;
+            }
+        }
+
+        if ( $changed ) {
+            update_option( Vigilante_Settings::OPTION_NAME, $current_options );
+        }
+
+        return $changed;
+    }
+
+    /**
+     * Check minimum requirements
+     *
+     * @return bool
+     */
+    private static function check_requirements() {
+        // PHP version check
+        if ( version_compare( PHP_VERSION, '7.4', '<' ) ) {
+            add_action( 'admin_notices', function() {
+                printf(
+                    '<div class="notice notice-error"><p>%s</p></div>',
+                    esc_html__( 'Vigilant requires PHP 7.4 or higher.', 'vigilante' )
+                );
+            });
+            return false;
+        }
+
+        // WordPress version check
+        global $wp_version;
+        if ( version_compare( $wp_version, '5.0', '<' ) ) {
+            add_action( 'admin_notices', function() {
+                printf(
+                    '<div class="notice notice-error"><p>%s</p></div>',
+                    esc_html__( 'Vigilant requires WordPress 5.0 or higher.', 'vigilante' )
+                );
+            });
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Apply htaccess protection
+     *
+     * @param Vigilante_Settings $settings Settings instance.
+     */
+    private static function apply_htaccess_protection( $settings ) {
+        // Only apply if Apache server
+        if ( ! self::is_apache() ) {
+            self::mark_server_files_pending();
+            return;
+        }
+
+        require_once VIGILANTE_INCLUDES_DIR . 'class-htaccess-protection.php';
+        
+        $htaccess = new Vigilante_Htaccess_Protection( $settings );
+        $htaccess->apply_rules();
+    }
+
+    /**
+     * Apply security headers to htaccess
+     *
+     * @param Vigilante_Settings $settings Settings instance.
+     */
+    private static function apply_security_headers( $settings ) {
+        // Only apply if Apache server
+        if ( ! self::is_apache() ) {
+            self::mark_server_files_pending();
+            return;
+        }
+
+        require_once VIGILANTE_INCLUDES_DIR . 'class-security-headers.php';
+        
+        $security_headers = new Vigilante_Security_Headers( $settings );
+        $security_headers->apply_rules();
+    }
+
+    /**
+     * Apply wp-config security
+     *
+     * @param Vigilante_Settings $settings Settings instance.
+     */
+    private static function apply_wpconfig_security( $settings ) {
+        require_once VIGILANTE_INCLUDES_DIR . 'class-wpconfig-security.php';
+        
+        $wpconfig = new Vigilante_Wpconfig_Security( $settings );
+        $wpconfig->apply_security_constants();
+    }
+
+    /**
+     * Enforce HTTPS in WordPress settings
+     *
+     * @param Vigilante_Settings $settings Settings instance.
+     */
+    private static function enforce_https( $settings ) {
+        $options = $settings->get_section( 'security_headers' );
+
+        if ( empty( $options['force_https'] ) ) {
+            return;
+        }
+
+        /*
+         * Only rewrite the URLs when the request doing the activation is itself
+         * running over HTTPS, which proves the site answers over it. Without this
+         * check, activating on an HTTP-only site pointed it at an address that
+         * may not respond, locking the owner out of their own admin. is_ssl() is
+         * also false under WP-CLI, where there is no request to learn from, so a
+         * command-line activation leaves the URLs alone as well.
+         */
+        if ( ! is_ssl() ) {
+            return;
+        }
+
+        // Check if already HTTPS
+        $site_url = get_option( 'siteurl' );
+        $home_url = get_option( 'home' );
+
+        // Update to HTTPS if not already
+        if ( strpos( $site_url, 'https://' ) === false ) {
+            update_option( 'siteurl', str_replace( 'http://', 'https://', $site_url ) );
+        }
+
+        if ( strpos( $home_url, 'https://' ) === false ) {
+            update_option( 'home', str_replace( 'http://', 'https://', $home_url ) );
+        }
+    }
+
+    /**
+     * Remove sensitive files from WordPress root
+     *
+     * @param Vigilante_Settings $settings Settings instance.
+     */
+    private static function remove_sensitive_files( $settings ) {
+        // They sit in the root every site of a network shares. Until 2.11.6 the
+        // activation on any site removed them.
+        if ( ! Vigilante_Settings::can_write_shared_files() ) {
+            return;
+        }
+
+        $advanced = $settings->get_section( 'advanced' );
+
+        // Remove readme.html
+        if ( ! empty( $advanced['remove_readme'] ) ) {
+            $readme_path = ABSPATH . 'readme.html';
+            if ( file_exists( $readme_path ) ) {
+                wp_delete_file( $readme_path );
+            }
+        }
+
+        // Remove license.txt / licencia.txt (Spanish locale)
+        if ( ! empty( $advanced['remove_license'] ) ) {
+            $license_files = array( 'license.txt', 'licencia.txt' );
+            foreach ( $license_files as $license_file ) {
+                $license_path = ABSPATH . $license_file;
+                if ( file_exists( $license_path ) ) {
+                    wp_delete_file( $license_path );
+                }
+            }
+        }
+    }
+
+    /**
+     * Generate initial baseline hashes for critical config files
+     *
+     * Called once during activation, after Vigilante has written its own
+     * blocks to wp-config.php and .htaccess. The baseline stores the
+     * normalized hash (excluding Vigilante blocks) so that subsequent
+     * scans can detect unauthorized external modifications.
+     *
+     * @param Vigilante_Settings $settings Settings instance.
+     */
+    private static function generate_critical_baseline( $settings ) {
+        if ( ! class_exists( 'Vigilante_File_Integrity' ) ) {
+            require_once VIGILANTE_INCLUDES_DIR . 'class-file-integrity.php';
+        }
+
+        $database     = new Vigilante_Database();
+        $activity_log = null; // Not needed for baseline generation
+
+        $fi = new Vigilante_File_Integrity( $settings, $database, $activity_log );
+
+        // Same care as the migration: reactivating the plugin on a site that
+        // already has an approved baseline must not throw it away and adopt
+        // whatever the files say today.
+        if ( ! $fi->get_critical_files_baseline() ) {
+            $fi->regenerate_all_baselines();
+        }
+    }
+
+    /**
+     * Schedule cron events
+     */
+    private static function schedule_events() {
+        // Daily maintenance
+        if ( ! wp_next_scheduled( 'vigilante_daily_maintenance' ) ) {
+            wp_schedule_event( time(), 'daily', 'vigilante_daily_maintenance' );
+        }
+
+        // Hourly checks
+        if ( ! wp_next_scheduled( 'vigilante_hourly_checks' ) ) {
+            wp_schedule_event( time(), 'hourly', 'vigilante_hourly_checks' );
+        }
+
+        // Weekly security analyzer scan
+        if ( ! wp_next_scheduled( 'vigilante_analyzer_weekly_scan' ) ) {
+            wp_schedule_event( time() + DAY_IN_SECONDS, 'weekly', 'vigilante_analyzer_weekly_scan' );
+        }
+
+        // Daily plugin status check (closed-in-wp.org detection)
+        if ( ! wp_next_scheduled( 'vigilante_plugin_status_check' ) ) {
+            wp_schedule_event( time() + HOUR_IN_SECONDS, 'daily', 'vigilante_plugin_status_check' );
+        }
+    }
+
+    /**
+     * Send activation notification email
+     *
+     * @param Vigilante_Settings $settings Settings instance.
+     */
+    private static function send_activation_email( $settings ) {
+        $email_settings = $settings->get_section( 'email' );
+
+        if ( empty( $email_settings['send_activation_email'] ) ) {
+            return;
+        }
+
+        if ( ! class_exists( 'Vigilante_Email_Template' ) ) {
+            require_once VIGILANTE_INCLUDES_DIR . 'class-email-template.php';
+        }
+
+        $to = Vigilante_Email_Template::get_admin_recipients();
+
+        $site_name = get_bloginfo( 'name' );
+        $site_url = get_site_url();
+
+        $subject = sprintf(
+            /* translators: %s: Site name */
+            __( '[%s] Vigilant Activated', 'vigilante' ),
+            $site_name
+        );
+
+        $body  = Vigilante_Email_Template::p( __( 'Vigilant has been activated on your website. All security modules are now enabled with default settings.', 'vigilante' ) );
+        $body .= Vigilante_Email_Template::data_table( array(
+            __( 'Site', 'vigilante' )   => $site_name,
+            __( 'URL', 'vigilante' )    => $site_url,
+            __( 'Date', 'vigilante' )   => wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ) ),
+        ) );
+        $body .= Vigilante_Email_Template::info_box( __( 'Please review the settings in your WordPress admin panel.', 'vigilante' ) );
+        $body .= Vigilante_Email_Template::button( admin_url( 'admin.php?page=vigilante' ), __( 'Go to Vigilant', 'vigilante' ) );
+
+        Vigilante_Email_Template::send( $to, $subject, __( 'Plugin activated', 'vigilante' ), $body );
+    }
+
+    /**
+     * Apply comment security settings to WordPress options
+     *
+     * @param Vigilante_Settings $settings Settings instance.
+     */
+    private static function apply_comment_security( $settings ) {
+        $options = $settings->get_section( 'wp_hardening' );
+
+        // Disable pingbacks
+        if ( ! empty( $options['disable_pingbacks'] ) ) {
+            update_option( 'default_pingback_flag', 0 );
+            update_option( 'default_ping_status', 'closed' );
+        }
+
+        // Disable trackbacks
+        if ( ! empty( $options['disable_trackbacks'] ) ) {
+            update_option( 'default_ping_status', 'closed' );
+        }
+
+        // Require comment moderation
+        if ( ! empty( $options['require_comment_moderation'] ) ) {
+            update_option( 'comment_moderation', 1 );
+        }
+    }
+
+    /**
+     * Check if server is Apache
+     *
+     * @return bool
+     */
+    private static function is_apache() {
+        require_once VIGILANTE_INCLUDES_DIR . 'class-htaccess-manager.php';
+
+        // One detection for the whole plugin. This used to be a second copy of
+        // the same logic, so fixing one never fixed the other.
+        return Vigilante_Htaccess_Manager::get_instance()->is_apache();
+    }
+
+    /**
+     * Leave the server layer pending when the server could not be identified
+     *
+     * An activation from WP-CLI has no request to read the server software
+     * from, so before 2.9.9 the two apply_* guards below simply returned and
+     * the site was left without the .htaccess layer, with every switch showing
+     * as on. Now it is written down, so the first web request applies it, and
+     * it is logged, so it is visible that it happened.
+     *
+     * @since 2.9.9
+     */
+    private static function mark_server_files_pending() {
+        require_once VIGILANTE_INCLUDES_DIR . 'class-htaccess-manager.php';
+
+        // On a server known not to be Apache there is nothing to write, ever.
+        if ( ! Vigilante_Htaccess_Manager::get_instance()->server_is_unknown() ) {
+            return;
+        }
+
+        update_option( 'vigilante_server_files_pending', 1 );
+
+        // The activation runs before the plugin has loaded its own files, so
+        // every link of the chain has to be pulled in: the log asks the database
+        // for the client IP, and that resolves it through the IP helper.
+        require_once VIGILANTE_INCLUDES_DIR . 'class-ip-utils.php';
+        require_once VIGILANTE_INCLUDES_DIR . 'class-database.php';
+        require_once VIGILANTE_INCLUDES_DIR . 'class-activity-log.php';
+
+        $settings     = new Vigilante_Settings();
+        $activity_log = new Vigilante_Activity_Log( $settings, new Vigilante_Database() );
+        $activity_log->log(
+            'system',
+            'server_rules_pending',
+            __( 'The server type could not be identified from this request, so the .htaccess rules were left pending and will be written on the first web request.', 'vigilante' ),
+            array( 'sapi' => PHP_SAPI ),
+            'warning'
+        );
+    }
+}
