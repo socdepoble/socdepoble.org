@@ -20,6 +20,8 @@ const CONTROL = [
   'src/sections/control/ControlSection.test.jsx',
   /* Onada 2 de la Gestoria (261004) · Els espais «L’empresa» i «La llar». */
   'src/sections/control/ControlSection.espais.test.jsx',
+  /* T4 (261006) · «Eixir del poble» dins de SessionProvider, amb les rutes lazy reals. */
+  'src/sections/control/ControlSection.sessio.test.jsx',
   'src/sections/control/destinsControl.js',
   'src/sections/control/destinsControl.test.js',
   'src/sections/control/qualitat.test.js'
