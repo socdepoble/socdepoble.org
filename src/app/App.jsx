@@ -5,7 +5,7 @@ import { useEntitatDelProjecte } from '../hooks/useEntitatDelProjecte.js';
 import React, { Suspense, useCallback, useEffect, useRef, memo, StrictMode, useMemo, useState } from 'react';
 import { Navigate, NavLink, Route, Routes, useNavigate, useLocation, useRouter } from './contexts/RouterContext';
 import { MoonStar, Search, Settings, Sun, Globe } from '../icons.jsx';
-import { PanelLeftClose } from 'lucide-react';
+import { ChevronDown, LayoutGrid, PanelLeftClose } from 'lucide-react';
 import { IaiaIcon } from '../components/PedraSeca/atoms/icones';
 import BrandMark from '../components/BrandMark';
 import { NotificationProvider } from '../components/universal/NotificationContext.jsx';
@@ -90,11 +90,19 @@ import { consolaDemanaSessio } from './guards/guardaConsola.js';
    d'una app, la seua barra; a la resta de rutes, SidebarContent tal qual. */
 import { BarraLateral, useTitolBarraLateral } from '../apps/plataforma/BarraLateral.jsx';
 
+/* T5 (ordre del Mestre, 261007) · Barra lateral neta: CONTROL fix a dalt; a la
+   vista només Xat, Mur, Mercat, Pobles i Notes; la resta, dins del desplegable
+   «Sistema», en l'ordre de SECTION_ORDER (Versions i Legal darrere de Full de
+   ruta, amb el mateix estil). Sense peu fix: tota la llista fa scroll. */
+const SECCIONS_VISIBLES = ['xat', 'mur', 'mercat', 'pobles', 'notes'];
 const ALL_NAV_SECTIONS = SECTIONS.filter((section) => SECTION_ORDER.includes(section.id));
-const NAV_SECTIONS = ALL_NAV_SECTIONS.filter(s => s.id !== 'versions' && s.id !== 'legal');
-const SYSTEM_SECTIONS = ALL_NAV_SECTIONS.filter(s => s.id === 'versions' || s.id === 'legal');
-/* La barra lateral separa les eines del poble (fins a Notes) dels textos del projecte. */
+const NAV_SECTIONS = ALL_NAV_SECTIONS.filter((section) => SECCIONS_VISIBLES.includes(section.id));
+const SYSTEM_SECTIONS = ALL_NAV_SECTIONS.filter((section) => !SECCIONS_VISIBLES.includes(section.id));
+/* Dins de «Sistema», un filet separa les eines dels textos del projecte. */
 const PRIMERA_DEL_PROJECTE = 'projecte';
+/* Com NavLink (matchPaths): la ruta, les subrutes i tot el que hi penja amb '/'. */
+const casaSeccio = (pathname, section) => [section.path, ...(section.subrutes || [])]
+  .some((ruta) => pathname === ruta || pathname.startsWith(`${ruta}/`));
 
 /* Punt de tall de la barra lateral (ordre del Mestre, 260926; abans 1100):
    fins a 1023px és calaix (Dialeg) i des de 1024px és columna fixa.
@@ -126,6 +134,10 @@ const SidebarContent = memo(({ isCompact, isDesktopSidebarClosed, toggleSidebar,
      el botó CONTROL és l'element actiu de la barra. */
   const { pathname } = useLocation();
   const controlActiu = /^\/(control|utilitats)(\/|$)/.test(pathname);
+  /* «Sistema» s'obri sol quan la ruta activa és dins: l'entrada encesa sempre es veu. */
+  const sistemaActiu = SYSTEM_SECTIONS.some((section) => casaSeccio(pathname, section));
+  const [sistemaObert, setSistemaObert] = useState(sistemaActiu);
+  useEffect(() => { if (sistemaActiu) setSistemaObert(true); }, [sistemaActiu]);
   const enllac = (section, classeExtra = '') => {
     const Icon = section.icon;
     const labels = section.kind === 'gestoria'
@@ -173,20 +185,25 @@ const SidebarContent = memo(({ isCompact, isDesktopSidebarClosed, toggleSidebar,
         </button>}
         </div>
 
-        {/* Llista i peu són germans: el scroll es tria a layout.css (§ SIDEBAR · SCROLL).
-            «Seccions» és un grup (role), no un div genèric amb nom. */}
+        {/* Sense peu: la llista sencera fa scroll (layout.css § SIDEBAR · SCROLL).
+            «Seccions» i «Sistema» són grups (role), no divs genèrics amb nom. */}
         <div className="app-sidebar-nav">
           <div className="app-sidebar-nav__llista" role="group" aria-label="Seccions">
-            {NAV_SECTIONS.map((section) => (
-              <React.Fragment key={section.id}>
-                {section.id === PRIMERA_DEL_PROJECTE && <hr className="app-sidebar-divider" />}
-                {enllac(section)}
-              </React.Fragment>
-            ))}
-          </div>
-          
-          <div className="app-sidebar-nav-footer">
-            {SYSTEM_SECTIONS.map((section) => enllac(section, ' nav-item--system'))}
+            {NAV_SECTIONS.map((section) => enllac(section))}
+            <button type="button" className="nav-item nav-item--desplegable" aria-expanded={sistemaObert}
+              aria-controls="app-sidebar-sistema" onClick={() => setSistemaObert((obert) => !obert)}>
+              <LayoutGrid className="icona-linia" strokeWidth={2.1} size={24} aria-hidden="true" focusable="false" />
+              <span className="nav-item__text">Sistema</span>
+              <ChevronDown className="nav-item__xebro" strokeWidth={2.1} size={20} aria-hidden="true" focusable="false" />
+            </button>
+            <div id="app-sidebar-sistema" className="app-sidebar-sistema" role="group" aria-label="Sistema" hidden={!sistemaObert}>
+              {SYSTEM_SECTIONS.map((section) => (
+                <React.Fragment key={section.id}>
+                  {section.id === PRIMERA_DEL_PROJECTE && <hr className="app-sidebar-divider" />}
+                  {enllac(section)}
+                </React.Fragment>
+              ))}
+            </div>
           </div>
         </div>
     </>

@@ -2519,12 +2519,6 @@ details[open] summary.accordion-header svg:last-child {
   flex-direction: column;
 }
 
-.app-sidebar-nav-footer {
-  margin-top: auto;
-  border-top: 1px solid var(--sdp-crom-sistema);
-  padding-top: var(--sdp-space-2);
-}
-
 .app-sidebar-divider {
   border: 0;
   border-top: 1px solid var(--sdp-crom-vora-forta);

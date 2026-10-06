@@ -453,7 +453,8 @@ test('T9 · les cel·les plegades van de banda a banda i s’apilen sense separa
   assert.match(regla(modules, '.sdp-workspace-rail__grup'), /align-items\s*:\s*stretch\s*;/);
   assert.match(regla(modules, '.sdp-workspace-rail__grup'), /gap\s*:\s*0\s*;/);
   assert.match(regla(modules, '.sdp-workspace-rail__boto'), /width\s*:\s*100%\s*;/);
-  const llistaPlegada = regla(layout, `${PLEGADA} .app-sidebar-nav__llista,\n  ${PLEGADA} .app-sidebar-nav-footer`);
+  /* T5 (261007): sense peu fix, la llista és l'única pila de cel·les plegades. */
+  const llistaPlegada = regla(layout, `${PLEGADA} .app-sidebar-nav__llista`);
   assert.match(llistaPlegada, /align-items\s*:\s*stretch\s*;/);
   assert.match(llistaPlegada, /gap\s*:\s*0\s*;/);
   assert.match(regla(layout, `${PLEGADA} .nav-item`), /width\s*:\s*auto\s*;/);

@@ -342,7 +342,7 @@ describe('Mode Bancal (Q1) · cap translucidesa sobre la roca', () => {
   test('opacitat 1 a les icones de les barres i rètols de la closca en un color sòlid', () => {
     expect(per('.bar-black .right-icons .icon')).toMatch(/opacity: 1/);
     expect(per('.bar-actions .icon')).toMatch(/opacity: 1/);
-    const retol = color(CLAR, tokenDe(per('.nav-item:not(.active):not(.nav-item--system)'), 'color'));
+    const retol = color(CLAR, tokenDe(per('.nav-item:not(.active)'), 'color'));
     expect(retol?.a).toBe(1);
   });
 
@@ -352,7 +352,7 @@ describe('Mode Bancal (Q1) · cap translucidesa sobre la roca', () => {
     const bancal = bancalDe(ruta);
     const cobert = (selector) => bancal.some((r) => color(CLAR, tokenDe(r.cos, 'color'))?.a === 1
       && r.selectors.some((s) => s === `${ROOT}${selector}`
-        || (s === `${ROOT}.nav-item:not(.active):not(.nav-item--system)` && /\.nav-item$/.test(selector))));
+        || (s === `${ROOT}.nav-item:not(.active)` && /\.nav-item$/.test(selector))));
     const sense = regles(CSS[ruta]).filter((r) => !esBancal(r) && tokenDe(r.cos, 'color') === '--sdp-crom-text-suau')
       .flatMap((r) => r.selectors).filter((s) => !cobert(s));
     expect(sense).toEqual([]);

@@ -124,22 +124,26 @@ nav.app-sidebar {
   overscroll-behavior-x: contain;
 }
 /* ── SIDEBAR · SCROLL ─────────────────────────────────────────────
-   El menú (.app-sidebar-nav) absorbix l'alçada restant. Dins, la llista i
-   el peu (Versions, Legal) són germans: el comportament es tria només ací.
+   El menú (.app-sidebar-nav) absorbix l'alçada restant. T5 (ordre del Mestre,
+   261007): ja no hi ha peu fix; Versions i Legal viuen dins de «Sistema».
 
-   OPCIÓ A (activa) · «peu fix»: la llista fa scroll i el peu queda sempre
-   a baix de tot.
-   OPCIÓ B · «tot fa scroll»: el menú sencer (marca inclosa) llisca com una
-   sola peça i el peu va al final de la llista (a baix si sobra espai).
-   Per a passar a B: comenta el bloc A i descomenta el bloc B. */
+   OPCIÓ A (activa) · la marca i CONTROL queden fixos a dalt i la llista
+   sencera (les cinc entrades i «Sistema») fa scroll.
+   OPCIÓ B · «tot fa scroll»: el menú sencer (marca i CONTROL inclosos) llisca
+   com una sola peça. Per a passar a B: comenta el bloc A i descomenta el B.
 
-/* A · peu fix */
+   La llista és una columna flex: estira cada fill de banda a banda, també el
+   <button> de «Sistema», sense el width: 100% que K4 prohibix a .nav-item. */
+
+/* A · capçalera fixa, llista amb scroll */
 nav.app-sidebar > .app-sidebar-nav {
   flex: 1 1 auto;
   min-height: 0;
   overflow: hidden;
 }
 nav.app-sidebar > .app-sidebar-nav > .app-sidebar-nav__llista {
+  display: flex;
+  flex-direction: column;
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
@@ -148,7 +152,7 @@ nav.app-sidebar > .app-sidebar-nav > .app-sidebar-nav__llista {
   scrollbar-width: thin;
   scrollbar-color: var(--sdp-crom-scroll) transparent;
 }
-nav.app-sidebar > .app-sidebar-nav > .app-sidebar-nav-footer { flex: none; }
+nav.app-sidebar > .app-sidebar-nav > .app-sidebar-nav__llista > * { flex: none; }
 
 /* B · tot fa scroll
 nav.app-sidebar {
@@ -260,22 +264,21 @@ nav.app-sidebar .nav-item { min-height: var(--sdp-touch-min); margin-bottom: 0; 
   white-space: nowrap;
 }
 
-.nav-item.nav-item--system {
-  background-color: transparent;
-  color: var(--sdp-crom-actiu-fons);
+/* T5 (ordre del Mestre, 261007) · «Sistema» és una entrada més de la barra feta
+   botó: la mateixa caixa, rètol i colors que .nav-item, sense groc. Només li
+   cal llevar el vestit UA del <button>. El xebró gira quan el grup s'obri. */
+nav.app-sidebar .nav-item--desplegable {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  text-align: start;
 }
-@media (hover: hover) and (pointer: fine) {
-  .nav-item.nav-item--system:hover {
-    background-color: transparent;
-    color: var(--sdp-crom-actiu-fons);
-  }
+.nav-item__xebro {
+  flex: none;
+  margin-inline-start: auto;
+  transition: transform var(--sdp-t);
 }
-/* Abans: --sdp-text-invers → en fosc, text negre sobre la SideBar negra
-   (1,23:1, invisible). */
-.nav-item.nav-item--system.active {
-  background-color: var(--sdp-crom-sistema-actiu);
-  color: var(--sdp-crom-text);
-}
+.nav-item--desplegable[aria-expanded="true"] .nav-item__xebro { transform: rotate(180deg); }
 
 /* ── 4. COLUMNA 2 · LLISTA CONTEXTUAL (opcional) ───────────────
    Esta demo no la inclou; l'app real (xats, llocs…) només ha de
@@ -614,8 +617,8 @@ nav.mobile-nav { display: none; }
   /* Mode Bancal · el rètol en repòs de la barra mòbil i de la lateral, blanc
      sòlid (19,4:1): cap text translúcid sobre la roca. (L'anell de focus sobre
      la roca, el del crom a 8,97:1, el posa base.css al grup de la closca.) */
-  :root[data-contrast="bancal"] .nav-item:not(.active):not(.nav-item--system),
-  :host([data-contrast="bancal"]) .nav-item:not(.active):not(.nav-item--system) { color: var(--sdp-crom-text); }
+  :root[data-contrast="bancal"] .nav-item:not(.active),
+  :host([data-contrast="bancal"]) .nav-item:not(.active) { color: var(--sdp-crom-text); }
   :where(.sdp-root.is-compact) .mobile-nav .nav-item__icon {
     width: 22px;
     height: 22px;
@@ -901,7 +904,8 @@ nav.mobile-nav { display: none; }
      PUNTS_DE_TALL.plegada (graella.js) i graella.capes.test.js ho vigila,
      com el tall ≤720px de dalt (PUNTS_DE_TALL.estret). */
   .sdp-root:not(.is-compact).sidebar-closed nav.app-sidebar { width: 56px; }
-  .sdp-root:not(.is-compact).sidebar-closed nav.app-sidebar .nav-item__text { display: none; }
+  .sdp-root:not(.is-compact).sidebar-closed nav.app-sidebar .nav-item__text,
+  .sdp-root:not(.is-compact).sidebar-closed nav.app-sidebar .nav-item__xebro { display: none; }
 
   /* RAIL DE LA BARRA PRINCIPAL · el mateix joc de regles que el rail
      d'AppGridShell.css (ordre del Mestre, 260927): fila superior de
@@ -916,15 +920,11 @@ nav.mobile-nav { display: none; }
   .sdp-root:not(.is-compact).sidebar-closed nav.app-sidebar .app-sidebar-nav {
     padding: 0 0 var(--sdp-space-2);
   }
-  .sdp-root:not(.is-compact).sidebar-closed nav.app-sidebar .app-sidebar-nav__llista,
-  .sdp-root:not(.is-compact).sidebar-closed nav.app-sidebar .app-sidebar-nav-footer {
+  .sdp-root:not(.is-compact).sidebar-closed nav.app-sidebar .app-sidebar-nav__llista {
     display: flex;
     flex-direction: column;
     align-items: stretch;
     gap: 0;
-  }
-  .sdp-root:not(.is-compact).sidebar-closed nav.app-sidebar .app-sidebar-nav-footer {
-    padding-top: var(--sdp-space-1);
   }
   /* Separador de grups: 1px amb var(--sdp-space-1) a cada costat (el gap),
      igual que la vora entre grups del rail del Workspace. */
