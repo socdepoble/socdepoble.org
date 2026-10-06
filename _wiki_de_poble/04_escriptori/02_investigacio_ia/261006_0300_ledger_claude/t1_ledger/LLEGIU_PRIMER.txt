@@ -1,0 +1,262 @@
+LLEGIU_PRIMER · Laboratori 261006_0300_ledger_claude/t1_ledger
+Paquet 261006 «LEDGER: peus històrics i línies enganxades»: tasca T1 del prompt 261006_0224_prompt_claude_ledger
+Preparat per Claude (Opus 5.5) el 261006 sobre HEAD 76947e5d, torn torn_9d5803f4. Res d'este laboratori està aplicat.
+Revisat a la segona onada (261006, 04:40) amb les cinc correccions menors de l'escèptic: §0, §2, §3, §4, §5, §6 i §7.
+Revisat a la tercera onada (261006, 05:17): «afegida dalt» en lloc dels calcs de «prepend» (§4 i §7) i el risc de la
+Petorreta (prepara-pla.mjs:371), que ara cita la política del manifest en lloc d'atribuir-la al Mestre.
+
+======================================================================
+0. QUÈ ÉS, EN QUATRE LÍNIES
+======================================================================
+
+La Consola compta els 10 peus intercalats del LEDGER com a «segells fòssils» per revisar (la targeta diu
+«12 línies del LEDGER per revisar»). Amb el paquet, tot peu intercalat és peu històric i es compta a part
+(peusHistorics). Un peu sense text a la seua línia (sol o amb altres peus) no compta com a anomalia; un peu
+enganxat a prosa o darrere d'una entrada continua comptant com a segell fòssil (fossils). Cap dels 10 peus
+d'hui compta com a fòssil: el 0a2f3a6e, enganxat davant d'una entrada, fa comptar la seua línia (605) com a
+mal formada fins que se separa. Cap peu s'esborra. Les dues línies enganxades (605 i 619 hui) se separen
+amb un sol salt de línia cadascuna: llevant els dos salts, el LEDGER és idèntic byte a byte. El codi s'aplica amb
+executor-mutacio.mjs i una lease; el LEDGER el separa prepara-pla.mjs en el moment de fer el pla (llig el
+disc i localitza les fusions pel contingut). La signatura la fa el Mestre després, en l'ordre de §3.
+Corredor: tests/laboratori-ledger-261006.test.js (Vitest).
+
+======================================================================
+1. ON VIU EL RECOMPTE, I PER QUÈ NO CANVIA mapa-consola.mjs
+======================================================================
+
+  · tooling/brain/mapa-consola.mjs és la closca: a :311 només fa «ledger: resumLedger(arrel)» i passa
+    l'objecte al compilador. El recompte és a tooling/brain/fonts-vigilancia.mjs:223-249 (analitzaLedger;
+    :248 «fossils: Math.max(marques - 1, 0)»). src/sections/consola/mapa/construeixMapa.js:786-787 en fa
+    les mètriques ledger-fossils i ledger-mal-formades, i src/sections/consola/xifresMas.js:235-239 les
+    suma com a «línies del LEDGER per revisar».
+  · Per això el paquet canvia fonts-vigilancia.mjs i deixa mapa-consola.mjs intacte. A més, qualsevol
+    canvi a mapa-consola.mjs tomba una prova verda del corredor del 260930b
+    (tests/governanca-260930b-torns.test.mjs:106-119), que exigix cada línia del fitxer instal·lat dins de
+    la seua còpia.
+  · Alternatives considerades i no proposades: (1) reclassificar a la closca sobreescrivint «fossils»: dos
+    llocs que parsegen el LEDGER i un contracte que diu una cosa i en fa una altra; (2) canviar només el
+    títol de la targeta a xifresMas.js: és un canvi de text a la UI (Llei del Píxel) i deixaria el número
+    fals a mapa.json.
+
+======================================================================
+2. PECES I QUÈ FA CADASCUNA
+======================================================================
+
+nous/tooling/brain/fonts-vigilancia.mjs  (base b3740494 a HEAD; cap import nou, les mateixes exportacions)
+  · analitzaLedger torna { valid, entrades, fossils, peusHistorics, malformades }.
+  · peusHistorics: totes les marques HASH menys l'última, que és el peu final i l'únic que valida
+    (tooling/verify-ledger.mjs:20 i :31). És el recompte que abans es deia fossils.
+  · fossils: només els peus intercalats que comparteixen la línia amb text i que malformades no ha comptat
+    ja (un segell enganxat a prosa o darrere d'una entrada). El segell enganxat davant d'una entrada (forma 3,
+    la línia 605) ja compta una vegada com a línia mal formada i no es torna a comptar: la targeta compta
+    línies físiques, 2 abans del split i 0 després (no 3). Un peu enganxat compta alhora a peusHistorics i
+    a fossils o malformades (nous/tests/fonts-vigilancia.test.mjs:175-191: 6 peus històrics, 2 fòssils, 1
+    mal formada). Sobre el LEDGER d'hui fossils és 0 perquè cap peu intercalat està enganxat a prosa ni
+    darrere d'una entrada; la regla general continua comptant-los.
+  · malformades: el mateix que a HEAD. La lògica de línia passa a llegeixLinia sense cap canvi; sobre el
+    LEDGER real, entrades (57) i malformades (2) coincidixen amb l'analitzador d'ara.
+  · El contracte de la capçalera (línia 11) afig peusHistorics.
+nous/tests/fonts-vigilancia.test.mjs  (base 329a3b8f)
+  · Canvien dues línies: el fixture de les quatre formes passa de «fossils: 1» a «fossils: 0, peusHistorics: 1»
+    i el LEDGER buit porta peusHistorics 0. Totes les altres proves, lletra per lletra.
+  · Dues proves noves «LEDGER 261006»: les menes de peu (net, dos en una línia, enganxat a prosa, darrere
+    d'una entrada, forma 3, final) i la separació de les dues fusions.
+nous/tests/mapa-consola.test.mjs  (base e4e226ba)
+  · El contracte del LEDGER inclou peusHistorics (dues línies).
+  · Prova nova: amb dos peus nets, ledger-fossils 0 i cap avís; amb un segell enganxat a prosa, 1.
+prepara-pla.mjs
+  · Pla sdp.mutation.v1. Codi: BASES amb el sha de cada original a HEAD 76947e5d; si el disc no casa, deriva.
+  · LEDGER: cap còpia congelada. Es llig del disc en fer el pla, amb una sola lectura (el before de la CAS i
+    el text que es separa són els mateixos bytes). FUSIONS localitza cada fusió pel contingut, mai pel
+    número, i comprova que el punt parteix la línia en un peu o una entrada i una entrada. S'hi inserix un
+    sol «\n». Abans de tornar el pla es comprova que, llevant els salts, el text és idèntic byte a byte.
+    Una fusió ja separada es deixa estar; una absent o repetida és deriva.
+  · comprova: diu si la signatura final és vàlida i, si no ho és, quina línia l'explica (explicaTrencament).
+    No calcula cap signatura per a escriure-la.
+  · operationId sdp-ledger-peus-261006-…; Petorreta 261006_0300_PROMPT_ledger_peus_historics_i_linies_
+    enganxades_amb_executor_i_lease.md (un sol nom, sense salt).
+
+======================================================================
+3. ORDRE D'APLICACIÓ I SIGNATURA (Mestre, des de l'arrel)
+======================================================================
+
+  0. PRECONDICIONS
+     · node tooling/gates/segella.mjs ha d'eixir verd: l'executor ho exigix (executor-mutacio.mjs:42). Hui
+       ho és. Si T2 o T5 toquen skills abans, cal resegellar primer.
+     · La decisió de §5 sobre la deriva declarada.
+     · Entre el pla i l'executor ningú escriu al LEDGER: la CAS ho rebutjaria. Si passa, es refà el pla;
+       no es força.
+  1. node _wiki_de_poble/04_escriptori/02_investigacio_ia/261006_0300_ledger_claude/t1_ledger/prepara-pla.mjs comprova
+     Ha de dir «Pla vàlid: 4 fitxers», les dues fusions «enganxada» i l'estat de la signatura. Hui:
+     TRENCADA, i l'explica la línia 21 (§4a).
+  2. L'ordre d'open que imprimix (reflex_petorreta.mjs open … --risk=high --operation=governance-write).
+  3. prepara-pla.mjs comprova --session=SESSIÓ, i les ordres que imprimix en eixe ordre (pla, Petorreta,
+     manifest, seal i executor).
+  4. Després de l'executor (valid:true i una transacció a .agents/seal-transactions):
+       node --test tests/fonts-vigilancia.test.mjs tests/mapa-consola.test.mjs
+       node tooling/brain/mapa-consola.mjs --json     (ledger-fossils 0 i ledger-mal-formades 0;
+                                                       integritat-ledger 0 fins que el Mestre signe)
+  5. SIGNATURA. La signatura final ja està trencada hui i els dos salts la tornen a trencar: cal signar.
+     Forma recomanada, perquè no s'esborre cap peu:
+       a. Afegir AL FINAL del LEDGER, darrere de la línia «<!-- HASH: c6eb528c… -->», una línia en blanc i
+          el relleu. Per exemple:
+          261006 | torn | claude | T1: línies 605 i 619 separades (2 salts, cap caràcter esborrat); peus intercalats = peus històrics; transacció <id>
+          No a la línia 21: una línia afegida dalt trenca la signatura i tots els peus d'abans (§4a).
+       b. node tooling/verify-ledger.mjs --sign
+       c. node tooling/verify-ledger.mjs        → «Signatura criptogràfica verificada i vàlida»
+     Així c6eb528c queda com a peu històric número 11 (corredor, cas ii).
+     Forma alternativa, la pràctica fins hui: --sign just després del pas 4. verify-ledger.mjs:28 i :37
+     REEMPLACEN el peu final, i c6eb528c desapareix del LEDGER (corredor, cas i). Segons la forense de git de
+     la primera onada (§4b, no reproduïda pel corredor), és la mateixa substitució que va fer desaparéixer
+     900fe2e6, 4ba2dc24, 61a03bed i ff723ce1.
+     En les dues formes, la signatura nova segella també la línia 21: reviseu-la abans de signar.
+  6. EL CORREDOR tests/laboratori-ledger-261006.test.js fa skip sol un cop aplicat (transacció del paquet, o
+     codi i LEDGER ja aplicats) i també quan s'arxiva este laboratori (pas 7). No cal retirar cap prova. El
+     paquet no afig cap .test.mjs nou: tooling/tests/node-suite-manifest.json no canvia per ell.
+  7. Relleu a l'ESTAT i arxivar este laboratori.
+
+======================================================================
+4. EL QUE HE TROBAT AL LEDGER
+======================================================================
+
+4a. REPRODUÏBLE: amb el corredor (LEDGER del disc i còpies a os.tmpdir) o llegint el codi
+
+  · El LEDGER del disc és el de HEAD 76947e5d: git status --short no hi mostra cap canvi (261006, 04:40).
+  · La signatura final JA és invàlida a HEAD 76947e5d. La prova 2 del corredor executa verify-ledger.mjs
+    sobre una còpia (exit 1), i explicaTrencament (prepara-pla.mjs:238-247) troba que el peu c6eb528c
+    segella exactament el LEDGER d'ara SENSE la línia 21 («261005 | recaiguda | wiki-documentacio-i-reflex |
+    canal viu: Claude 40 min sense relleu durant el mapa inicial»). Per tant, la línia es va afegir dalt
+    després del segell c6eb528c, que tanca l'entrada «Codex · marató2230» (LEDGER:825-832). Qui la va
+    escriure no consta ni al LEDGER ni als artefactes d'este laboratori. El corredor anota el número de
+    línia i no l'afirma, perquè depén del LEDGER viu.
+  · Cap dels 10 peus de l'auditoria segella ja el text que té davant (amb «\n\n», amb «\n» o sense
+    separador): ho afirma la prova 2 del corredor. Les entrades curtes s'afigen dalt (LEDGER:21-33, en ordre
+    descendent) i cada inserció dalt canvia el prefix de tots els peus de sota. Hui els peus històrics són
+    record, no evidència verificable. La separació de 605 i 619 no trenca cap segell que encara valguera.
+  · Com naixen els peus intercalats (lectura del codi): verify-ledger.mjs:20 només reconeix el peu si és al
+    final del fitxer. Si algú escriu darrere, :28 no el lleva i :37 n'afig un de nou. ledger.mjs:4 i :15 fan
+    el mateix. El cas (ii) del corredor ho reproduïx: c6eb528c queda com a peu intercalat.
+  · tooling/documental/ledger.mjs:14-18 (withSignedLedger, el que fa servir tancament --close) resigna el
+    cos sencer sense mirar si la signatura d'abans era vàlida: un tancament amb èxit segella qualsevol canvi
+    anterior, també un de no revisat. Fora d'este paquet.
+  · tooling/scratch_malformades.mjs és un fitxer de prova solt a tooling/ que no crida ningú (cap
+    referència a tooling/, tests/, scripts/, package.json, .husky/ ni .github/). Fora d'este paquet.
+
+4b. NO REPRODUÏBLE DES DELS ARTEFACTES: forense de git de la primera onada
+
+  Estes afirmacions ixen d'ordres de git que es van executar a la primera onada. El corredor no les executa
+  i el hook d'esta sessió no les admet. Són una pista, no una prova:
+  · que 886f4272 siga l'últim commit que toca .agents/LEDGER.md (HEAD és 76947e5d, posterior);
+  · que l'historial del LEDGER tinga 38 commits;
+  · la successió de peus finals 900fe2e6 → 4ba2dc24 → 61a03bed → 7f425b06, i que ff723ce1 desaparega entre
+    2022ee32 i 886f4272.
+  Al LEDGER d'ara només se'n veuen dos rastres: 61a03bed a LEDGER:692, citat com a sha del cos previ d'una
+  entrega, i 7f425b06 com a peu intercalat a LEDGER:781. 900fe2e6, 4ba2dc24 i ff723ce1 no hi apareixen.
+  Per a reproduir-ho, des de l'arrel:
+    git log --oneline -- .agents/LEDGER.md
+    git show COMMIT:.agents/LEDGER.md        (i buscar-hi les marques «<!-- HASH:»)
+
+======================================================================
+5. DECISIONS PER AL MESTRE
+======================================================================
+
+  · DERIVA DECLARADA (5 proves). Canviar fonts-vigilancia.mjs desperta 9 proves adormides dels corredors del
+    laboratori 260930_0040 (paquet ja aplicat i mai retirat). Fan skip només mentre el fitxer siga byte a
+    byte el del laboratori (tests/governanca-260930-mapa.test.mjs:24-36, tests/governanca-260930-lease.test.mjs:21-25).
+    Amb el paquet, 4 passen i 5 cauen: les 3 de lease («la propietat contracte.llig ja hi és; el pegat ja
+    s'ha aplicat») i 2 de mapa («ja existix: el pegat l'havia de crear»). Cauen perquè el seu paquet ja és
+    al disc, no per este.
+    Abast: els dos fitxers són de la suite laboratory (tooling/tests/node-suite-manifest.json:221 i :226).
+    test:ci executa només la suite primary i Vitest (tooling/tests/run-node-tests.mjs:76-77), així que el
+    paquet no posa roja la CI: el roig queda a npm run test:node:laboratory i a test:node:all. La política
+    del manifest (:8) diu que cap prova ni asserció es retira, i el precedent de :177 diu que un CAS roig de
+    laboratori no és una regressió del producte instal·lat. Opcions conformes amb la política:
+      (a) acceptar el roig de laboratori, declarat, fins que es decidisca què fer amb el 260930_0040;
+      (b) arxivar el laboratori 260930_0040. 02_investigacio_ia/ és zona protegida: cal ordre del Mestre i
+          ho fa MarIA o el Mestre, mai Claude ni Codex (AGENTS §0.1 i §12). Els dos corredors
+          fan skip quan no el troben (tests/governanca-260930-mapa.test.mjs:32 i
+          tests/governanca-260930-lease.test.mjs:23), i també els corredors -t1, -olivera i -maria.
+    Sense esta decisió el corredor no és prova suficient: tolera estos cinc noms exactes, només de skip a
+    fail, i qualsevol altra caiguda el posa roig.
+  · Peu c6eb528c: conservar-lo com a peu històric (§3.5, forma recomanada) o deixar que --sign el reemplace.
+  · Línia 21: decidir si es segella tal com és abans de signar. Registra una recaiguda de la skill
+    wiki-documentacio-i-reflex (canal viu: Claude 40 min sense relleu); qui la va escriure no consta (§4a).
+  · Convenció d'escriptura del LEDGER, que ningú ha fixat: les entrades curtes s'afigen dalt (línies 21-33) i
+    les llargues s'afigen al final. Si els peus han de ser evidència verificable, tota escriptura hauria
+    d'anar al final i el --sign darrere. No la dedueixo: és el Mestre qui ha de triar la forma.
+  · L'ETIQUETA «SEGELLS FÒSSILS» CANVIA DE SIGNIFICAT. La Consola continua dient «segell fòssil / segells
+    fòssils» (src/sections/consola/mapa/construeixMapa.js:786 i :792; src/sections/consola/xifresMas.js:237,
+    :243-247 i :255-259), però amb el paquet el camp fossils ja només compta el segell enganxat a prosa o
+    darrere d'una entrada. Després d'aplicar, la Consola dirà «0 segells fòssils» mentre el LEDGER conserva
+    els 10 peus que l'ordre del Mestre anomena fòssils (11 si se signa en la forma recomanada de §3.5).
+    peusHistorics no arriba a mapa.json com a mètrica: cap superfície els mostra ni avisa si n'apareix un
+    de nou, net, darrere d'una escriptura al final.
+    El Mestre tria:
+      (a) una mètrica nova de peus històrics: mètrica a construeixMapa.js:786 i fila a la taula «Mètriques
+          del LEDGER» (xifresMas.js:264). Canvi de píxel: cal ordre;
+      (b) un altre text per a l'etiqueta actual, que diga «segell enganxat» o el que el Mestre trie. També
+          és canvi de píxel: cal ordre;
+      (c) aplicar el paquet sense tocar src/ i acceptar que, a la Consola, «segells fòssils» vol dir des
+          d'ara «segells enganxats».
+    No he tocat src/: les tres opcions són del Mestre.
+  · Aprovació a la Wiki (lliçó 261002 de wiki-documentacio-i-reflex): no és un tractor nou, sinó un canvi de
+    lectura d'un mòdul que ja existix. Si el Mestre vol el document d'aprovació igualment, va abans de l'open.
+
+======================================================================
+6. PROVES (executades el 261006 abans de lliurar; repetides a la segona onada, 04:41)
+======================================================================
+
+  npx vitest run tests/laboratori-ledger-261006.test.js       → 7 de 7 verdes (7,6 s)
+  node --test tests/fonts-vigilancia.test.mjs tests/mapa-consola.test.mjs   → 20 de 20 (repositori real,
+                                                                 abans del paquet)
+  El resum de xifres el deixa el corredor a os.tmpdir()/laboratori-ledger-261006.txt.
+
+  · LEDGER real en còpia temporal: 123.767 bytes, 832 línies, 11 marques HASH, sense «\r».
+      analitzador d'ara:      abans fossils 10, malformades 2 · després fossils 10, malformades 0
+      analitzador del paquet: abans peusHistorics 10, fossils 0, malformades 2 · després 10, 0 i 0
+      57 entrades canòniques abans i després, idèntiques; les 11 marques, en el mateix ordre; els 10 peus
+      de l'auditoria Opus §8.2 hi són tots.
+      Reversibilitat: llevant els 2 salts, Buffer.equals amb el disc; exactament +2 bytes.
+  · verify-ledger.mjs real, en procés fill i sobre còpies (prova 2):
+      hui: exit 1 (l'explica la línia 21) · després del split: exit 1, hash esperat 1f8a5c76…
+      peus de l'auditoria que encara segellen el seu prefix («\n\n», «\n» o res): cap de 10 (afirmat)
+      (i) --sign directe: exit 0, i c6eb528c desapareix (reemplaçat per 1f8a5c76…)
+      (ii) entrada al final i --sign: exit 0, c6eb528c es conserva, 12 marques.
+  · L'analitzador nou sobre les dues maneres de signar (prova 3):
+      (i)  valid, fossils 0, malformades 0, peusHistorics 10; c6eb528c absent.
+      (ii) valid, fossils 0, malformades 0, peusHistorics 11; c6eb528c present.
+  · prepara-pla: 4 fitxers al pla i cap deriva; el before del LEDGER és el sha del disc; detecta deriva amb
+    bases falses, amb una fusió absent i amb una repetida; una fusió ja separada no es toca; la Petorreta
+    passa validatePetorreta i cap patró sensible.
+  · Superfície: només els tres fitxers; a fonts-vigilancia només canvien el contracte, el comentari de
+    fossils i el cos d'analitzaLedger; els mateixos imports i exportacions; mapa-consola.mjs fora.
+  · ESLint del repositori: zero missatges als fitxers de nous/, a prepara-pla.mjs i al corredor.
+  · Mapa compilat amb la closca de cada còpia sobre el LEDGER real:
+      codi d'ara:   ledger-fossils 10, ledger-mal-formades 2 (després del split, 10 i 0)
+      paquet:       0 i 2 abans del split, 0 i 0 després
+    Targeta «Línies del LEDGER» de la Consola (xifraDelMas):
+      ara:                     «12 línies del LEDGER per revisar · 10 segells fòssils · 2 línies mal formades»
+      paquet, abans del split: «2 línies del LEDGER per revisar · 0 segells fòssils · 2 línies mal formades»
+      paquet, després:         «0 línies del LEDGER per revisar · 0 segells fòssils · 0 línies mal formades»
+    La targeta té la mateixa forma i només canvien els números, però l'etiqueta «segells fòssils» canvia
+    de significat (§5).
+  · Bateria en dues còpies del repositori (10 fitxers node --test: fonts-vigilancia, mapa-consola,
+    governanca-260930-mapa, governanca-260930-lease, governanca-260930b-torns, anticipacio-261003,
+    backend_consolidacio, document-corpus, document-create-race i documental):
+      Base:   95 pass · 14 fail · 11 skip.     Paquet: 102 pass · 19 fail · 2 skip.
+      3 proves noves, totes verdes. Cap regressió fora de la deriva declarada (5, §5). Les roges de la base
+      (backend_consolidacio 9, governanca-260930b-torns 5) són les mateixes a les dues bandes.
+
+======================================================================
+7. LÍMITS (declarats, no resolts ací)
+======================================================================
+
+  · El pla no signa. Entre l'executor i el --sign del Mestre fallen verify-ledger.mjs, la porta «Integritat
+    del LEDGER» (run-portes.mjs:33) i tancament (tancament.mjs:17). Ja fallaven hui per la línia 21.
+  · FUSIONS és una llista tancada de dues. Si apareix una altra línia enganxada, el paquet no la toca (abast
+    per superfície) i la Consola la comptarà a malformades.
+  · L'última marca és sempre el peu final, encara que no estiga al final del fitxer: un LEDGER acabat en
+    text sense peu té un peu històric menys (la mateixa regla que «una sola marca és l'última»,
+    tests/fonts-vigilancia.test.mjs:156).
+  · Les xifres d'este LLEGIU són del LEDGER del 261006 a les 03:30, i a les 04:41 el corredor les ha tornat
+    a donar idèntiques. prepara-pla les torna a calcular sobre el disc en el moment d'aplicar.

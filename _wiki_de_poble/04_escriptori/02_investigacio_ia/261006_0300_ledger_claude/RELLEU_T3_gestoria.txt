@@ -1,0 +1,51 @@
+RELLEU T3 · Gestoria local sense redirecció · pendent d'arrencar
+
+SEGONA ONADA · T3-PROVES · ACABAT 04:45
+
+Fitxer tocat de src/: només src/app/App.appsLocals.test.jsx. Cap canvi de producció (ni guarda ni ruta): en cap mode la Gestoria redirigix, recarrega ni crida enterRemoteMode sense clic.
+
+Fet:
+- D2: test.each sobre remote, seed i local a «/app/<id> es munta» (5 apps x 3 modes), a «la Gestoria de veres» i a «servidor caigut». El mode arriba a la closca per la config del muntatge (com App.test.jsx:673-685) i el port fals diu el mateix mode. Prova que el mode arriba de veres: els conjunts de crides canvien per mode.
+- D3: fora la llista blanca. Conjunt EXACTE per mode (toEqual), igual per a totes les apps:
+  · comunes: getCurrentUser, getDefaultUserId, getRuntimeDataMode, loadCoreContent, loadMur, loadMultimedia;
+  · remote: + recullTornadaOAuth;
+  · seed i local: + loadNotes i loadFils del convidat local (NotesDataContext.jsx:263-285, XatContext.jsx:230-231).
+  getBackendConfigurat no es crida. El port fals torna ara el convidat sense sessió, com el real (identitat.js:421-427).
+- D5: /control espera el h2 «Maquinària i Sistema» de la secció .sdp-control-maquinaria (ControlSection.jsx:373-374) i «Eixir del poble» (:408-416).
+- D1: [DEFECTE D1] en local i en seed (convenció de tests/porta-olivera-diagnosi.test.mjs:8-11): el clic al titular porta a /registre?tornar=/el-meu-perfil i OnboardingSection crida enterRemoteMode una vegada amb el mode local. [CONTROL] en remot: no el crida. OnboardingSection intacte.
+- Correcció de la primera onada: Nevera i Salut canonitzen dins seu amb replace (AppNevera.jsx:92-99 → /llista/casa; AppSalut.jsx:34 → /avis); l'asserció del camí exacte de l'entrada per defecte depenia del moment de mirar. Ara: «dins de l'app».
+
+Proves:
+- npx vitest run src/app/App.appsLocals.test.jsx: 31/31 (tres passades).
+- Mutació: sense loadFils al conjunt local, 14 roges (totes les seed i local amb conjunt). Restaurat.
+- npx vitest run src/app/App.appsLocals.test.jsx src/app/qualitat.appsLocals.test.js src/apps/plataforma src/apps/gestoria: 16 fitxers, 336/336.
+
+Avís: App.jsx l'edita un altre front mentre treballe (s'ha desplaçat una línia). Les cites d'App.jsx noves van per símbol; les de la capçalera de la primera onada són una foto del 261006.
+
+Pendent del Mestre: D1 (el clic al titular en mode local canvia a remot i recarrega).
+
+TERCERA ONADA · T3-CORRECCIÓ D1 · EN MARXA 05:16 · ACABAT 05:19
+
+Fitxer tocat de src/: només src/app/App.appsLocals.test.jsx (sense versionar). Cap canvi de producció: OnboardingSection, host.js, backendPort i l'adaptador Supabase intactes.
+
+Fet:
+- munta() (:133 i :162) accepta `capacitats`: mètodes opcionals del contracte fora del nucli. Sense ells, el port fals continua sent només CONTRACTE_NUCLI.
+- [DEFECTE D1] en tres variants, cadascuna en local i en seed (helper clicAlTitularFinsAlRegistre, :316):
+  · :327 port sense 'salut' (la que ja hi era): enterRemoteMode una vegada i cap comprovaServidor.
+  · :336 amb 'salut' i { ok: true }: la sonda es crida una vegada amb el mode, ABANS d'enterRemoteMode (invocationCallOrder), enterRemoteMode una vegada, cap avís i cap fetch.
+  · :350 amb 'salut' i { ok: false }: la sonda una vegada, l'avís «El servidor del poble no respon ara mateix» amb «Torna-ho a provar» (OnboardingSection.jsx:388-395), cap enterRemoteMode, la ruta queda a /registre i cap fetch.
+  La branca 'salut' és la del lloc propi: host.js:156-157 instal·la ./data/supabase/index.js, que exporta comprovaServidor (supabase/index.js:29; supabase/index.test.js:25-26). La sonda real fa GET /auth/v1/health i, amb la xarxa caiguda, torna { ok: false } (supabase/auth.js:352-368). OnboardingSection decidix a :172-178 i només canvia de mode si respon (:151-166).
+- :283 la prova de control en remot porta «[CONTROL]» al títol, com tests/porta-olivera-diagnosi.test.mjs:10 i :97.
+
+Correcció del que diu la segona onada: les línies 15 i 25 d'este relleu i la comprovació de navegador D1 del lliurament descrivien només la branca sense 'salut'. La comprovació de navegador D1 queda així:
+  D1 (fes-ho l'últim, perquè pot canviar el mode): en mode local i sense sessió, clica «Titular sense configurar». Porta a /registre?mode=entrar&tornar=%2Fel-meu-perfil i l'entrada fa GET <URL de Supabase configurada>/auth/v1/health.
+  · Si el backend respon, desa l'elecció remota i recarrega a remot. Per a tornar al mode local cal reiniciar el servidor de desenvolupament o usar «Tornar al mode de proves».
+  · Sense backend (p. ex., http://127.0.0.1:54321 dona ERR_CONNECTION_REFUSED, com ha vist l'orquestrador), es queda a /registre en mode local, mostra l'avís «El servidor del poble no respon ara mateix…» amb «Torna-ho a provar» i NO recarrega.
+  En els dos casos el clic ix de la Gestoria cap a /registre: això és el que continua sent [DEFECTE D1].
+
+Proves:
+- npx vitest run src/app/App.appsLocals.test.jsx --reporter verbose: 35/35 (31 d'abans + 4 noves; cap skip, only ni todo).
+- Mutació: la sonda de :350 canviada a { ok: true } fa roges les 2 variants del servidor caigut (no troba l'avís). Restaurat a { ok: false }.
+- npx vitest run src/app/App.appsLocals.test.jsx src/app/qualitat.appsLocals.test.js: 2 fitxers, 37/37.
+
+Pendent del Mestre: D1 continua obert. En el lloc propi, amb backend, el clic canvia a remot i recarrega; sense backend, deixa la persona a /registre amb l'avís. La reparació (OnboardingSection.jsx:123 i :182-187, o el titular de la boina) ha d'invertir les sis proves [DEFECTE D1].

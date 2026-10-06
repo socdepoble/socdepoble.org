@@ -1,0 +1,25 @@
+RELLEU T6a · Proves de WikiDePobleSection · SEGONA ONADA: Telefonades fora de la barra mòbil · ACABAT (04:45)
+
+TERCERA ONADA · CORRECCIÓ T6a · ACABAT (05:19) · arrencada 05:16
+
+Decisió del Mestre (xat 261006): «Sí, fora de la barra». La Maquinària de la IAIA i PanellAgents són ordre seua.
+
+Segona onada (resum): proves T3 reescrites a src/app/App.test.jsx:533-618 (barra de cinc caselles Xat, Mur, Panell de Control, Pobles, Mercat; cap Telefonades a la barra mòbil; l'avís de D17 es comprova des de Xat → Menú → Telefonades, /xat?vista=telefonades). App.jsx: comentari T3 i embolcall buit de MobileNav, DOM idèntic. layout.css: només comentaris. Catàleg alineat amb la barra real (EspecimenNavMobil.jsx, manifest.js:182-183, versio.js a 2026-10-06T04:42:10+02:00): CANVI VISIBLE del catàleg de disseny.
+
+Tercera onada, fet:
+- src/sections/disseny/cataleg/detalls/EspecimenNavMobil.jsx: retirada la regla de noFacis «Tornar a posar-hi Telefonades sense ordre del Mestre…», que va redactar l'agent i el Mestre no ha dictat. No l'he substituïda per res: noFacis queda amb «Més de sis caselles.» (:24) i «Amagar-la en fer scroll.» (:25). versio.js no canvia (ordre de l'orquestradora: el canvi és dins de la mateixa versió del catàleg).
+- src/sections/xat/components/VistaEnConstruccio.jsx:22-25: només comentari. Ara diu que la clau de D17 és l'única font d'eixe text per al rail i el toast dels controls inerts (XatSection.jsx:894-904), i que la barra mòbil ja no el porta des del 261006. Zero píxels.
+- Proves: npx vitest run src/sections/disseny src/sections/xat src/app/App.test.jsx src/config/i18n.claus.test.js (05:17:30) → 64 fitxers, 981/981 verdes.
+
+Pendent per al Mestre (cap d'estes coses s'ha tocat):
+1. Sonda tests/laboratori-telefonades-261006.test.js: ja ha complit i és intacta. Cal excloure-la del commit o esborrar-la; els agents no la poden esborrar.
+2. Límit «Més de sis caselles.» a noFacis (EspecimenNavMobil.jsx:24): era ordre del 260930 i la barra ara en té cinc. Mantindre sis o rebaixar-lo a cinc.
+3. CSS sobrera de .mobile-nav .nav-item (src/css/layout.css:584-602): border: 0 (:594), cursor: pointer (:599) i appearance: none (:600) eren per al botó de Telefonades; hui cap botó de la barra porta .nav-item i no afecten cap element visible. Llevar-les és canvi de CSS i necessita ordre.
+4. Clau i18n common.entesos òrfena: només viu a src/config/i18n.js:161, :931, :1680, :2437, :3186 i a src/config/i18n.claus.test.js:40. És residu de la retirada del diàleg de Telefonades (el botó «Entesos»). Llevar-la de les cinc llengües i del test necessita ordre.
+5. Glif FileText de la fitxa de la Consola dins de la Maquinària de la IAIA (src/sections/wiki-de-poble/WikiDePobleSection.jsx:362-376, icon a :368): la Consola ja no té carpeta pròpia i conserva el FileText perquè no herete la carpeta de maquinaria_cat. Ratificar-ho. Lligat amb l'excepció de :87-91 (opció A, només les fitxes; opció B, també els documents del manifest).
+6. Porta dels Tractors des de la Gestoria: src/apps/gestoria/rutes.js:24 (RUTA_PORTA_TRACTORS) i src/sections/gestoria/ContenidorGestoria.jsx:25 (CONSULTA_TRACTORS), font signada, encara apunten a categoria=tractors_cat. La Wiki ja no declara eixa categoria: tractors_aprovacio penja de maquinaria_cat (WikiDePobleSection.jsx:94). No ho he comprovat al navegador.
+7. design_guard: llei dura tailwind-visual per la classe sdp-m-m a src/sections/tractors/PanellAgents.jsx:34 (PanellAgents és ordre del Mestre).
+8. Catàleg de la segona onada: l'alineació de l'espècimen (EspecimenNavMobil.jsx, manifest.js:182-183, versio.js:18 i :46) és un canvi visible. Ratificar-la o revertir eixos tres fitxers.
+9. versio.js: EspecimenNavMobil.jsx té ara mtime 05:16:25, posterior a VERSIO_CATALEG (04:42:10). La capçalera de versio.js:11-16 demana la darrera modificació real dels fitxers del catàleg. Per ordre de l'orquestradora no s'ha posat al dia: mantindre 04:42:10 o posar-la a 2026-10-06T05:16:25+02:00.
+
+Preguntes obertes: les nou decisions de dalt. Cap més.

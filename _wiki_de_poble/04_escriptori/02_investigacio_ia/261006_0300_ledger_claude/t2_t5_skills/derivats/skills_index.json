@@ -1,0 +1,382 @@
+{
+  "schema": "sdp.skills_index.v1",
+  "core": [
+    {
+      "name": "core-consell-i-colmena",
+      "path": ".agents/skills/core-consell-i-colmena/SKILL.md",
+      "description": "Defineix la família electrònica (El Consell), els seus rols i estratègies de delegació i consum en la Ment Colmena Integral.",
+      "triggers_on": [
+        "consell",
+        "equip ia",
+        "ment colmena",
+        "rols ia"
+      ]
+    },
+    {
+      "name": "core-context-panic",
+      "path": ".agents/skills/core-context-panic/SKILL.md",
+      "description": "Fusible davant bucles d’errors, desincronització de context o fatiga de l’agent; indica com aturar i registrar el bloqueig.",
+      "triggers_on": [
+        "panic",
+        "bucle d'errors",
+        "people-pleasing",
+        "al·lucinació",
+        "fatiga"
+      ]
+    },
+    {
+      "name": "core-identitat",
+      "path": ".agents/skills/core-identitat/SKILL.md",
+      "description": "Bootstrap d'identitat executiu de la IAIA MarIA. Carrega personalitat, veu, to i missió.",
+      "triggers_on": [
+        "identitat de la IAIA",
+        "personalitat de la IAIA",
+        "veu i to de la IAIA"
+      ]
+    },
+    {
+      "name": "core-memoria-historica",
+      "path": ".agents/skills/core-memoria-historica/SKILL.md",
+      "description": "Consulta i destil·la lliçons històriques, registra decisions i prepara relleus documentals sense arxivament automàtic.",
+      "triggers_on": [
+        "lliçons apreses",
+        "memòria històrica",
+        "recuperar una decisió anterior"
+      ]
+    },
+    {
+      "name": "core-restauracio-segellada",
+      "path": ".agents/skills/core-restauracio-segellada/SKILL.md",
+      "description": "Core skill per a restauració segura",
+      "triggers_on": [
+        "restaura",
+        "restaurar",
+        "còpia de seguretat",
+        "copia de seguretat",
+        "backup",
+        "torna arrere",
+        "tornar arrere",
+        "revertir",
+        "revert",
+        "rollback",
+        "checkout",
+        "restore",
+        "recupera la versió",
+        "recuperar versió",
+        "com estava abans",
+        "git checkout",
+        "git reset",
+        "git revert"
+      ]
+    },
+    {
+      "name": "sdp-pedra-seca",
+      "path": ".agents/skills/sdp-pedra-seca/SKILL.md",
+      "description": "Reglament matemàtic visual Pedra Seca (Alta Definició)",
+      "triggers_on": [
+        "disseny",
+        "estils css",
+        "interfície",
+        "pedra",
+        "seca",
+        "estil",
+        "colors",
+        "components"
+      ]
+    },
+    {
+      "name": "sdp-workflow",
+      "path": ".agents/skills/sdp-workflow/SKILL.md",
+      "description": "Workflow principal de treball i Spec-Driven Development",
+      "triggers_on": [
+        "workflow",
+        "procediment",
+        "planificacio",
+        "arquitectura"
+      ]
+    },
+    {
+      "name": "wiki-documentacio-i-reflex",
+      "path": ".agents/skills/wiki-documentacio-i-reflex/SKILL.md",
+      "description": "Per a crear prompt, petorreta, bundle, pla o acta. Escriptori net (AGENTS §0.1), ruta de .agents/protocolledge.json (prompt.local per a Claude i Codex, prompt.consell per a IAs externes), document.mjs context i create.",
+      "triggers_on": [
+        "acte reflex",
+        "petorreta",
+        "crear prompt",
+        "abans de començar"
+      ]
+    }
+  ],
+  "plugins": {
+    "core-automillora": {
+      "name": "core-automillora",
+      "path": ".agents/skills/core-automillora/SKILL.md",
+      "description": "Protocol d'Automillora Contínua, Mimetisme Empàtic i l'Olivera (Co-working a Tres Bandes). Defineix com la IA aprèn de la insistència humana per humanitzar-se i com coordina tasques entre MarIA, Claude i Codex.",
+      "triggers_on": [
+        "automillora",
+        "core"
+      ]
+    },
+    "core-comprensio-reflexiva": {
+      "name": "core-comprensio-reflexiva",
+      "path": ".agents/skills/core-comprensio-reflexiva/SKILL.md",
+      "description": "Tractor cognitiu per aturar la impulsivitat. Obliga a pensar i entendre l'objectiu de la petició (l'aixada) abans d'actuar compulsivament.",
+      "triggers_on": [
+        "aixada",
+        "impulsivitat",
+        "comprensió reflexiva",
+        "entendre la petició"
+      ]
+    },
+    "core-edicio-segura": {
+      "name": "core-edicio-segura",
+      "path": ".agents/skills/core-edicio-segura/SKILL.md",
+      "description": "Fusible preventiu i Tractor contra l'edició cega i la desincronització destructiva de la IAIA MarIA.",
+      "triggers_on": [
+        "edicio de components React"
+      ]
+    },
+    "core-empaquetat-wp": {
+      "name": "core-empaquetat-wp",
+      "path": ".agents/skills/core-empaquetat-wp/SKILL.md",
+      "description": "Tractor cognitiu per estandarditzar la creació, nomenclatura i emmagatzematge dels arxius ZIP del connector de WordPress, evitant l'acumulació de brossa a l'arrel.",
+      "triggers_on": [
+        "zip del plugin",
+        "empaquetar l'enxufe",
+        "empaqueta el plugin",
+        "release de l'enxufe",
+        "plugin de wordpress"
+      ]
+    },
+    "core-estrategia-ia": {
+      "name": "core-estrategia-ia",
+      "path": ".agents/skills/core-estrategia-ia/SKILL.md",
+      "description": "Estratègia de consum, triatge de models i telemetria persistent de costos.",
+      "triggers_on": [
+        "consum",
+        "estrategia",
+        "captures de consum"
+      ]
+    },
+    "core-higiene-escriptori": {
+      "name": "core-higiene-escriptori",
+      "path": ".agents/skills/core-higiene-escriptori/SKILL.md",
+      "description": "Usa-la abans de crear un prompt, una petorreta, un pla o una auditoria, i quan l'Escriptori estiga brut o el Mestre demane netejar-lo. L'orquestradora el neteja en el mateix torn amb la porta Olivera.",
+      "triggers_on": [
+        "petorreta",
+        "prompt per a",
+        "crear prompt",
+        "pla d'implementació",
+        "escriptori brut",
+        "escriptori net",
+        "neteja l'escriptori",
+        "higiene",
+        "classificacio de documents de treball"
+      ]
+    },
+    "core-identitat-visual": {
+      "name": "core-identitat-visual",
+      "path": ".agents/skills/core-identitat-visual/SKILL.md",
+      "description": "Tractor (Skill) obligatori abans de generar cap imatge, recurs gràfic o disseny visual per a Sóc de Poble. Protegeix l'estil Bruguera/Berlanga.",
+      "triggers_on": [
+        "genera una imatge",
+        "generar una imatge",
+        "il·lustració",
+        "recurs gràfic",
+        "bàner"
+      ]
+    },
+    "core-llegibilitat-text": {
+      "name": "core-llegibilitat-text",
+      "path": ".agents/skills/core-llegibilitat-text/SKILL.md",
+      "description": "Tractor documental per garantir el format llegible (jerarquia H1-H6) i l'escaneig ràpid amb negretes en tots els textos del sistema.",
+      "triggers_on": [
+        "redactar text",
+        "formatar contingut",
+        "revisar pàgina",
+        "copy"
+      ]
+    },
+    "core-maquetacio-markdown": {
+      "name": "core-maquetacio-markdown",
+      "path": ".agents/skills/core-maquetacio-markdown/SKILL.md",
+      "description": "Regles verificables per a maquetar els fitxers Markdown del repositori (Wiki, skills, prompts i actes), amb un sol H1, encapçalaments sense salts, Vincles al final i llista de comprovació.",
+      "triggers_on": [
+        "maquetació markdown",
+        "maquetacio markdown",
+        "maquetar un markdown",
+        "jerarquia d'encapçalaments",
+        "secció de vincles"
+      ]
+    },
+    "core-neteja-brossa": {
+      "name": "core-neteja-brossa",
+      "path": ".agents/skills/core-neteja-brossa/SKILL.md",
+      "description": "Tractor de neteja d'arrels. Retira de l'arrel de socdepoble.org la brossa solta (logs, pegats, sondes) sense tocar mai la configuració de les eines, l'estat local ni res versionat.",
+      "triggers_on": [
+        "brossa a l'arrel",
+        "neteja de l'arrel",
+        "fitxers solts a l'arrel",
+        "neteja_brossa_arrel"
+      ]
+    },
+    "core-portaveu-institucional": {
+      "name": "core-portaveu-institucional",
+      "path": ".agents/skills/core-portaveu-institucional/SKILL.md",
+      "description": "Propaga i assegura l'actualització sincronitzada del Dossier Institucional de Sóc de Poble.",
+      "triggers_on": [
+        "dossier institucional",
+        "dossier complet",
+        "missatge de presentació",
+        "presentació del projecte"
+      ]
+    },
+    "core-taxonomia-estricta": {
+      "name": "core-taxonomia-estricta",
+      "path": ".agents/skills/core-taxonomia-estricta/SKILL.md",
+      "description": "Tractor documental per blindar la taxonomia i evitar generació de documents arbitraris que no segueixen les plantilles canòniques.",
+      "triggers_on": [
+        "prompt_generation",
+        "planning",
+        "documentation"
+      ]
+    },
+    "core-tecniques-investigacio": {
+      "name": "core-tecniques-investigacio",
+      "path": ".agents/skills/core-tecniques-investigacio/SKILL.md",
+      "description": "Tractor que defineix com les IAs (locals o externes) han d'investigar els problemes, verificant el codi real dels tractors en lloc de conformar-se amb llegir la teoria de les regles.",
+      "triggers_on": [
+        "autòpsia",
+        "tècniques d'investigació",
+        "investigar el codi",
+        "cacera de bugs"
+      ]
+    },
+    "core-telemetria-huma": {
+      "name": "core-telemetria-huma",
+      "path": ".agents/skills/core-telemetria-huma/SKILL.md",
+      "description": "Tractor cognitiu per mesurar el temps invertit, l'esforç i la fatiga humana del Mestre, lligant nanochats en jornades reals.",
+      "triggers_on": [
+        "inici de sessió",
+        "tancament de sessió",
+        "fatiga",
+        "nanochat"
+      ]
+    },
+    "core-temps-termodinamic": {
+      "name": "core-temps-termodinamic",
+      "path": ".agents/skills/core-temps-termodinamic/SKILL.md",
+      "description": "Assegura l'ordre cronològic absolut en la taxonomia documental. Tractor de prevenció contra viatges en el temps.",
+      "triggers_on": [
+        "marca de temps",
+        "aammdd_hhmm",
+        "timestamp",
+        "hora termodinàmica"
+      ]
+    },
+    "sdp-app-grid-shell": {
+      "name": "sdp-app-grid-shell",
+      "path": ".agents/skills/sdp-app-grid-shell/SKILL.md",
+      "description": "Lògica visual i de comportament del AppGridShell i UniversalWorkspace. Comportament de les barres, icones i redimensionament.",
+      "triggers_on": [
+        "app grid shell"
+      ]
+    },
+    "sdp-calendari-agricola": {
+      "name": "sdp-calendari-agricola",
+      "path": ".agents/skills/sdp-calendari-agricola/SKILL.md",
+      "description": "Especificació de producte i regles de desenvolupament per al Calendari Agrícola de tomaques i cultius.",
+      "triggers_on": [
+        "calendari agricola",
+        "plantar tomaques",
+        "sms llauradors"
+      ]
+    },
+    "sdp-casos-us-essencials": {
+      "name": "sdp-casos-us-essencials",
+      "path": ".agents/skills/sdp-casos-us-essencials/SKILL.md",
+      "description": "Consulta els casos d’ús rurals del producte abans de desenvolupar models de dades, navegació o targetes que els hagen de suportar.",
+      "triggers_on": [
+        "casos d’ús rurals",
+        "menjar solidari",
+        "cures al poble",
+        "funcionalitats essencials del poble"
+      ]
+    },
+    "sdp-clon-whatsapp": {
+      "name": "sdp-clon-whatsapp",
+      "path": ".agents/skills/sdp-clon-whatsapp/SKILL.md",
+      "description": "Directriu arquitectònica i de disseny per clonar la UI/UX de WhatsApp al mil·límetre (Patró Pedra Seca).",
+      "triggers_on": [
+        "clon de whatsapp",
+        "com ho fa whatsapp",
+        "pantalla nova",
+        "menú d'ajustos",
+        "bottom sheet"
+      ]
+    },
+    "sdp-estudi-mercat": {
+      "name": "sdp-estudi-mercat",
+      "path": ".agents/skills/sdp-estudi-mercat/SKILL.md",
+      "description": "Protocol per a la realització d'estudis de mercat i anàlisi de la competència, enfocat a extreure conclusions arquitectòniques i estratègiques.",
+      "triggers_on": [
+        "estudi de mercat",
+        "analitza la competència",
+        "investiga un competidor"
+      ]
+    },
+    "sdp-universal-editor": {
+      "name": "sdp-universal-editor",
+      "path": ".agents/skills/sdp-universal-editor/SKILL.md",
+      "description": "Especificació de disseny i UX de l'Editor Universal (TipTap). Regles per a la barra d'eines, iconografia, metadades i la jerarquia de plantilles interactives.",
+      "triggers_on": [
+        "UniversalEditor",
+        "TipTap",
+        "toolbar",
+        "NotesEditor"
+      ]
+    },
+    "sdp-universal-page": {
+      "name": "sdp-universal-page",
+      "path": ".agents/skills/sdp-universal-page/SKILL.md",
+      "description": "Estàndard d'arquitectura, anatomia i configuració de la UniversalPage de Sóc de Poble. Defineix l'estructura visual, el comportament del scroll i els blocs que la formen.",
+      "triggers_on": [
+        "UniversalPage",
+        "chrome",
+        "bar-blue",
+        "page-header"
+      ]
+    },
+    "wiki-busca-skills": {
+      "name": "wiki-busca-skills",
+      "path": ".agents/skills/wiki-busca-skills/SKILL.md",
+      "description": "Caçador de Skills i coneixement. Cerca, analitza i adapta metodologies i automatitzacions d'altres repositoris d'avantguarda al sistema de Sóc de Poble.",
+      "triggers_on": [
+        "buscar skills externes",
+        "adaptar una skill",
+        "investigar un repositori d’agents"
+      ]
+    },
+    "wiki-cicle-de-vida": {
+      "name": "wiki-cicle-de-vida",
+      "path": ".agents/skills/wiki-cicle-de-vida/SKILL.md",
+      "description": "Flux de treball per a Soc de Poble i Protocol d'higiene cognitiva per evitar l'esgotament del context.",
+      "triggers_on": [
+        "obrir el torn",
+        "tancar el torn",
+        "relleu documental",
+        "tancament de sessió"
+      ]
+    },
+    "wiki-propagar-veritat": {
+      "name": "wiki-propagar-veritat",
+      "path": ".agents/skills/wiki-propagar-veritat/SKILL.md",
+      "description": "Propaga un canvi de decisió estructural o arquitectònica arreu de tota la Wiki per mantenir la coherència del sistema.",
+      "triggers_on": [
+        "propagar una decisió",
+        "actualitzar una decisió arquitectònica",
+        "coherència de la wiki"
+      ]
+    }
+  }
+}

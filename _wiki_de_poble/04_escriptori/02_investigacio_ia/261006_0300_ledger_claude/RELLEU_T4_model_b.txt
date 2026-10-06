@@ -1,0 +1,19 @@
+RELLEU T4 · Doctrina Sollutia (Model B) · pendent d'arrencar
+
+SEGONA ONADA · T4-APLICA · ACABAT (261006 05:00)
+Decisió del Mestre: candidata S amb la variant final («ADR + port neutral», amb WordPress i Joomla); ADR-2026-09 signada el 2026-10-06.
+1. Aplicat amb Edit: ADR-2026-09 (:3 status canonic, :10 frase, :14 signada, F1-F3, S5); prompt_local.md (v3.4.0 a :38/:43, historial :54, frase :73, Directiva Suprema :78); estandard_integracio_react.md:129-130 (F4, F5); src/data/contracte.js:147 i src/data/conformitat/kit.js:11 (comentaris); títol de src/data/contracte.test.js:207.
+   Efecte: el wiki-watcher del servidor de desenvolupament ha regenerat src/data/wikiManifest.js (5 línies; una és prompt_consell, ja ranci a HEAD).
+2. Paquet de governança a t4_model_b/ (format Olivera): nous/AGENTS.md.txt, nous/.agents/AGENTS.md.txt (mateixos bytes), nous/.agents/QUI_SOC.md.txt, nous/.agents/protocolledge.json; prepara-pla.mjs (BASES del tall, deriva, precondició de la Wiki, genera, Petorreta de 9 paraules); substitucions.json v2; LLEGIU_PRIMER.txt amb l'ordre d'aplicació.
+3. CANDIDATES.txt: decisió al principi, menors de l'escèptic, D5/D10 (la Frontissa no es pot recórrer hui), excepció del 0224 a §5, D9 amb el text proposat de cada alineació.
+Proves: corredor 15/15 (+1 skip, mode genera); vitest host+config+conformitat+contracte 525/525; node --test conformitat-amfitrio+frontissa-gate 27/27; porta-plantilles 13/13; tractor-enxufe E1-E4 verd; porta-documents roja per 6 errors: 1 alié i previ (rebut del prompt 0224) i 5 de l'informe del torn, encara esquelet (correcció de l'orquestrador, 05:55).
+Per a MarIA: ancorar t4_model_b/ i este relleu; corregir ESTAT.md:1020 (signada el 6-10) i tancar D1 d'ESTAT.md:888 al relleu; el Mestre aplica el paquet amb l'executor (LLEGIU_PRIMER.txt §3).
+
+TERCERA ONADA · T4-TEXT · ACABAT (261006 05:18). Arrencada a les 05:16. Els dos menors de l'escèptic, només text:
+  · LLEGIU_PRIMER.txt:18-21: la llista de normes vigents en canonic ja no inclou soci_sollutia (soci_sollutia.md:2 és
+    type document) i hi entra estandard_ui_universal (type norma, status canonic). S'hi afig que l'ADR-2026-08
+    (ADR-2026-08-ONLINE-FIRST.md:3) continua en esborrany perquè consta acceptada (:14) però no signada, i que
+    l'ADR-2026-09 és la primera ADR que passa a canonic per signatura.
+  · Línia 3 d'este relleu: l'hora d'acabament de la segona onada era futura (~05:35). Ara diu 05:00, l'hora de
+    l'última escriptura del relleu en eixa onada (ls -la, «Oct 6 05:00», abans de tocar-lo hui).
+  Prova: npx vitest run tests/laboratori-model-b-261006.test.js → 15 verdes i 1 skip (mode genera), 05:17:55.

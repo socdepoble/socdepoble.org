@@ -1,0 +1,587 @@
+DECISIÓ DEL MESTRE (261006): candidata S amb la variant final; aplicada a la Wiki i a src/; governança al paquet
+  · Al xat: «ADR + port neutral» (D1) i «Sí, signada hui» (D8). La variant final de l'orquestrador fa dos
+    ajustos a la frase S de §3: l'etiqueta en negreta va dins de la frase (la plantilla ja no la repetix,
+    §4.5 S2) i nomena WordPress i Joomla, com la plantilla antiga i l'opció triada. Frase final, idèntica
+    als quatre llocs:
+**Model B:** Sollutia és l'amfitrió i el soci d'infraestructura de Sóc de Poble: allotja el Web Component, ens pot passar la sessió i ens obri la seua API només en lectura (GET a través de la Frontissa), sense injectar cap backend ni interferir en l'arquitectura o el disseny. Les dades del poble viuen al Supabase de Sóc de Poble, única font de veritat, darrere d'un port neutral (`src/data/backendPort.js`): el frontend, 100% modular, s'enxufa a qualsevol amfitrió (Sollutia, WordPress o Joomla), canviar de backend és una decisió de Sóc de Poble amb una ADR i el kit de conformitat, i sempre podem traure-ho «tot fora».
+  · Aplicat amb Edit (segona onada): ADR-2026-09 (:10, :14 signada el 6-10-2026, F1-F3, S5, status canonic),
+    plantilla prompt_local (S2, S3, V1-V3), estandard_integracio_react (F4, F5), contracte.js:147 i kit.js:11
+    (C1, C2) i el títol de contracte.test.js:207. Llista parell a parell: substitucions.json, «aplicat».
+  · Al paquet (executor i lease del Mestre): AGENTS.md:53 i el mirall, QUI_SOC.md:37 (Q-BS) i
+    protocolledge.json:70 (3.4.0). Format, proves i ordre d'aplicació: LLEGIU_PRIMER.txt.
+  · Les alineacions de §4.10 NO s'han aplicat: són decisions del Mestre amb text proposat a §6, D9.
+
+CANDIDATES · Front T4 · Doctrina Sollutia (Model B) · ENX-01
+Preparat per Claude (Opus 5.5) el 261006 sobre HEAD 76947e5d, torn torn_9d5803f4-d18b-4c99-898a-4e795edf38f4.
+Encàrrec: prompt 261006_0224 (T4) i auditoria Opus 261006_0025 §6, ENX-01 (línies 227-234).
+Primera onada: res aplicat, cap fitxer de doctrina tocat. Segona onada: vegeu la decisió de dalt. Les
+seccions §0-§5 conserven l'anàlisi que va servir per a triar; on la decisió les ha superades, ho diuen.
+
+======================================================================
+0. EN POQUES LÍNIES
+======================================================================
+
+Els tres llocs fan servir la mateixa etiqueta, «Model B», per a tres coses distintes. AGENTS.md §8 posa
+«(Model B)» a «connectar-se al seu backend» (el de Sollutia, «Backend API»): al peu de la lletra és el
+Model A de la taxonomia de l'ADR, i només amb una lectura caritativa és l'API que llegim per GET; no diu qui
+és la font de veritat. La plantilla prompt_local posa «(Model B)» a «Backend Intercanviable», un port neutral (P).
+Només l'ADR-2026-09 diu el que el codi fa: Supabase de SdP font de veritat, Sollutia amfitriona i lectura GET.
+El codi aplica el B estricte a l'amfitrió amb proves verdes (decisions A1 i A3 del Mestre, 261003), i el
+port és neutral. La síntesi S (B més port neutral) és compatible amb el codi sense tocar cap línia executable.
+
+======================================================================
+1. INVENTARI (pas 1)
+======================================================================
+
+Lectures: A = Sollutia backend que substituïx Supabase. B = Supabase de SdP font de veritat, Sollutia
+amfitriona i lectura per GET via la Frontissa. P = port neutral, backend intercanviable, enxufable a
+qualsevol amfitrió. «Mana» vol dir que és doctrina que es carrega o es copia; «descriu» vol dir
+explicació, història o comentari.
+
+1.1 BIOS i entrada del cervell (.agents/cervell.json:3-11)
+
+  AGENTS.md:52-53 · «Amfitrió SPA i Backend API» … «connectar-se al seu backend … com un simple "endoll"
+    (Model B)» … «traure "tot fora"» · ambigua A/B amb l'etiqueta de B: al peu de la lletra Sollutia és
+    backend (A); amb lectura caritativa «el seu backend» és l'API que llegim per GET (B); no diu qui és la
+    font de veritat. L'endoll i el «tot fora» són P · MANA (únic original del BIOS, AGENTS §15).
+  .agents/AGENTS.md:52-53 · còpia idèntica · el mateix · mirall generat (porta-autoritat.mjs:10-13).
+  .agents/QUI_SOC.md:37 · «El sistema usa Supabase (Sollutia).» · ambigua, tira cap a A (presenta el
+    Supabase com a cosa de Sollutia) · MANA (CLAUDE.md la importa a cada sessió).
+  .agents/QUI_SOC.md:14-15 · «sense … dependències tòxiques», «sobirania tecnològica» · no definix; és
+    el criteri que A posa en tensió.
+  .agents/BOOTSTRAP.md:14 · «la font de veritat és Supabase» · B (compatible amb P i S) · MANA (entrada 2).
+  _wiki_de_poble/01_ser/02_genotip.md:19 · «arquitectura online amb Supabase autoritatiu (ADR-2026-08)»
+    · B · MANA (entrada 3).
+  .agents/BIOS.md:21 · «sessions … per cookies HttpOnly (Sollutia)» · tangencial (sessions) i en tensió
+    amb el codi, que guarda el JWT a la capa efímera (src/data/identitat.js:45-50) · descriu; QUI_SOC
+    diu que el reemplaça.
+  _wiki_de_poble/03_actuar/plantilles/prompt_local.md:71-72 · «Backend Intercanviable (Model B): El
+    servidor actual (Supabase) funciona exclusivament com un endoll … enxufar-se com a mòdul a WordPress
+    o Joomla» · P amb l'etiqueta de B · MANA: és bloc fix (protocolledge.json:83-86) i cada prompt local
+    el copia literal.
+  prompt_local.md:76-77 · Directiva Suprema: «l'enxufabilitat instantània amb Sollutia … els punts
+    d'accés (endpoints/dades) del seu backend» · ambigua: no diu per on entren les dades ni si substituïxen
+    Supabase; llegida amb §8 tira cap a A · MANA, mateix bloc fix. És el «bloqueig» d'ENX-01: els
+    endpoints no tenen destí doctrinal.
+  prompt_local.md:38 i :43 diuen v3.3.1; .agents/protocolledge.json:70 diu 3.3.0; els prompts nous
+    escriuen «(v3.3.0)» (tooling/wiki/document.mjs:16; p. ex. 261006_0224_prompt_claude_ledger.md:33).
+  _wiki_de_poble/02_saber/architecture/ADR-2026-09-SOLLUTIA-MODEL-B.md:10 · «el Supabase de Sóc de
+    Poble és l'única font de veritat … només li llegim per GET a través de la Frontissa» · B · norma
+    acceptada el 16-09 i «pendent de signatura» (:14).
+  ADR-2026-09:21-26 · taxonomia A, B i C · referència.   ADR-2026-09:43 · «backendPort.js no s'obri a
+    implementacions de Sollutia» · B.
+  ADR-2026-09, cites mortes (ja les va trobar Opus): :24 cita identitat.js:241-272 (adoptaSessioExterna
+    és a :486); :35-36 cita client.js:29-33 i :16 (client.js té 17 línies; ESCRIPTURES_PERMESES és a :9) i
+    un «token de la sessió» que el transport no envia (creaFrontissa.js:60-63).
+  .agents/ESTAT.md:888 (260923) · «decisió del Mestre sobre D1 (frase canònica d'AGENTS §8)» · pendent
+    des del 23-09. ESTAT.md:342 (261003) · «A1 Model B absolut». ESTAT.md:1020 diu «signada el 16-09»,
+    contra ADR:14 «pendent de signatura».
+
+1.2 Wiki viva (01_ser, 02_saber, 03_actuar): quasi tota diu B
+  01_ser/01_identitat.md:21 · «s'endolla a Sollutia com a amfitrió sense que Sollutia l'injecte ni el
+    governe … dades … a Supabase de Sóc de Poble» · B · descriu (identitat).
+  01_ser/personalitat_iaia.md:17 · B.
+  02_saber/soci_sollutia.md:14, :54, :82, :96 · «no injecta backend ni governa el frontend»; «l'API de
+    Sollutia, que SdP llig només per GET» · B · status canonic.
+  02_saber/doc_governanca.md:31-33 i :48-51 · B.
+  02_saber/estandard_integracio_react.md:4, :11, :15, :78-80 · B.
+    :129-130 · FET DESFASAT: «configura() de src/host.js accepta hui backend» i «Admet … els àlies
+    backend_url i tenant_id». Fals des del 261003: host.js:81-110 els descarta i
+    contracteAmfitrio.js:108-111 els prohibix. :70 parla d'àlies «portats a la seua clau canònica», també
+    desfasat (pendent, fora del pla).
+  02_saber/00_arquitectura_tecnica_unificada.md:12, :22, :26-33, :39 · B.
+  02_saber/llibre_blanc_produccio_pedra_seca.md:24-25 · B.
+  02_saber/memoria_aprenentatges.md:54-56 · B.
+  02_saber/el_projecte.md:22 · B.
+  02_saber/codex_huma/arquitectura_l_anima.md:28 · B.   codex_huma/arquitectura_sistema_nervios.md:41 · B.
+  02_saber/protocols_tecnics/seguretat_execucio.md:50 · B (Frontissa GET).
+  02_saber/00_index_maquina.md:15 · B.   architecture/ADR-2026-08-ONLINE-FIRST.md:47 · remet a l'ADR-2026-09.
+  02_saber/core_registre_automillora.md:22, :26 · «delegant el risc tècnic a Sollutia» · història (A difusa).
+  03_actuar/plantilles/prompt_consell.md:102 · «Prompte ens integrarem amb el proveïdor de backend,
+    Sollutia.» · A · MANA: és dins de «## Context», el bloc fix de prompt.consell (protocolledge.json:44-46).
+  03_actuar/plantilles/skill.md:62 · «al backend de Supabase/Sollutia» · A difusa · plantilla de skills.
+  03_actuar/plantilles/prompt_nano_banana.md:33 i 00_index.md:35 · neutrals.
+  03_actuar/plantilles/skill.md:17 · «Versió ISO: 2.0.0 (Actualitzada a l'era 100% Online Sollutia)» · A difusa ·
+    descriu (afegit després de la revisió adversarial).
+  .agents/rules/firebase_hosting.md:22 · «Si l'allotjament el proveeix Sollutia sense Firebase» · B
+    (Sollutia allotja) · descriu (afegit després de la revisió adversarial).
+
+1.3 Skills (segellades: segella.mjs:10; editar-ne una exigix resegellar)
+  core-portaveu-institucional/SKILL.md:18 · «independència de Supabase/Sollutia» · P/A difusa · mana la difusió.
+  core-portaveu-institucional/SKILL.md:28 · «Enxufe Sollutia» com a apartat del text públic d'«El Projecte»
+    (PAGE_COPY.projecte) · ambigua · mana la redacció del text públic (afegit després de la revisió adversarial).
+  core-portaveu-institucional/SKILL.md:32 · «com Supabase és només un "endoll" intercanviable» · P ·
+    mana propagar-ho a README.md.
+  sdp-estudi-mercat/SKILL.md:47 · «per al backend de Sollutia» · A.
+  sdp-calendari-agricola/SKILL.md:21 · «taules core de Sollutia/Supabase» · A difusa; :32 «integrant-se a
+    Sollutia» · ambigua.
+  wiki-busca-skills/SKILL.md:34, wiki-documentacio-i-reflex/SKILL.md:60, core-empaquetat-wp/SKILL.md:26 · neutrals.
+  sdp-pedra-seca/SKILL.md:71-73 · «Model d'Enxufabilitat Universal» és visual (tokens), no de backend.
+
+1.4 Codi (src)
+  src/config/contracteAmfitrio.js:6 · «Model B: Sollutia és un endoll d'infraestructura, mai backend» ·
+    B estricte · MANA al codi (sdp.amfitrio.v1, amb proves de paritat).
+  src/config/contracteAmfitrio.js:108-121 · configura: admeses auth i config; prohibides backend,
+    backend_url i tenant_id; modelB amb les claus de backend i de tenant · B.
+  src/config/capaDelPaquet.js:1-20 · decisions A1 i A3 del Mestre (261003): el backend i el tenant els
+    tria i els segella SdP; :19-20 «L'adaptador de backend injectat (el port del Model A) també és només
+    del paquet» · B amb la costura de S.
+  src/host.js:4-10 i :81-110 · B; :112-134 injectaBackendDelPaquet: «COSTURA SENSE CONSUMIDOR (261003)
+    … Es conserva com a port del Model A per a un adaptador propi futur; retirar-la … és decisió del
+    Mestre» · S; :155-158 Supabase per defecte.
+  src/main.jsx:17-26 i src/embed.jsx:25-29 · B.
+  src/data/backendPort.js:8-50 · valida qualsevol implementació del contracte; no sap de cap proveïdor · P/S.
+  src/data/contracte.js:146-147 · «un backend sense ella (Sollutia) continua sent vàlid» · A/P · comentari.
+  src/data/conformitat/kit.js:10-12 · «Un altre adaptador (Sollutia) s'hi enxufa igual» · A/P · comentari.
+  src/data/identitat.js:447, :473, :481-484 · Sollutia com a emissora de la sessió; el JWT va contra el
+    PostgREST de SdP · B · comentari.
+  src/data/adaptadors/sollutia/client.js:3-9 · «Composició interna Model B», catàleg buit · B.
+  src/data/adaptadors/sollutia/creaFrontissa.js:60-63 · GET, credentials omit, redirect error, sense token · B.
+  src/data/SELF-DESCRIBE.md:9-12 · «L'amfitrió (WordPress, Sollutia o un altre) … L'adaptador de dades és
+    del paquet» · és, literalment, la síntesi S · descriu.
+  src/sections/text/pageContent.js:43 · «Ací és on entra Sollutia (Supabase)» · A (confon les dues
+    cases) · TEXT PÚBLIC d'«El Projecte». :123 · «Supabase i el backend de Sollutia com a "pont"» ·
+    història pública. :177 · «Un endoll per a qualsevol web … WordPress, Sollutia, MediaWiki» · P/S, públic.
+  Afegits després de la revisió adversarial (tots «descriu», comentaris o títols de prova; cap no mana):
+  src/data/contracte.test.js:207 · títol «un backend injectat sense recuperacioContrasenya (Sollutia)» · A/P ·
+    germà de contracte.js:147; corregit a la segona onada (C3, mateix assert).
+  src/data/errorsBackend.js:3 · «cap adaptador (GoTrue, PostgREST, Sollutia)» · A/P · descriu.
+  src/data/errorsBackend.js:39 · «Cada adaptador (Supabase Storage, Sollutia) traduïx el rebuig» · A/P · descriu.
+  src/data/traductor.js:15-16 · «Si demà un altre amfitrió (Sollutia) oferix el mateix contracte, n'hi ha
+    prou de canviar l'URL (Model B)» · A/P (un amfitrió que servix el contracte) · descriu.
+  src/data/autodesament/cua.js:21 i src/data/autodesament/ambit.js:8 · «Model B» en el sentit de «només
+    parlen amb el port» · P · descriu.
+  src/data/supabase/organizations.js:114 · «Els errors es normalitzen ací (Model B)» · P · descriu.
+  src/data/sessionService.js:62 · «endolls WordPress/Joomla» · P/S (amfitrions) · descriu.
+  src/data/wikiManifest.js · còpia publicada de la Wiki (vegeu §5).
+  tooling/mocks/sollutiaBackend.js:1-6 · «Model B Estricte» · zero consumidors.
+
+1.5 Tooling
+  tooling/gates/tractor-enxufe.mjs:5-9 · «L'AGENTS.md §8 diu que el Frontend s'ha d'escriure per a
+    integrar-se pacíficament a la plataforma de Sollutia i separar-se sense trauma» · P (paràfrasi d'un
+    §8 anterior) · descriu. :143 · pista «un host que implemente el contracte sencer» · A/P.
+    E1-E4 (:13-16) no comproven qui tria el backend: el tractor ix verd amb A i amb B. Hui ix verd.
+  tooling/gates/tractor-frontissa.mjs:10-11 i :29-40 · estructura de la Frontissa (B) · no definix.
+  tooling/gates/tractor-sollutia.mjs:2-40 · Sollutia com a pàgina amfitriona (B) · no definix.
+
+1.6 Còpies i superfícies públiques
+  src/data/wikiManifest.js:1493 (prompt_local publicat; encara diu v3.3.0, ranci respecte del disc 3.3.1),
+    :549 (ADR), :113, :223, :244, :283 · generat (compile-wiki-to-app.mjs:26, :210-218).
+  .agents/runtime/contracts/*.json · set instantànies amb el text vell · evidència immutable
+    (core.mjs:187-207). No es toquen.
+  _wiki_de_poble/04_escriptori/261006_0224_prompt_claude_ledger.md:53 i :58 · còpia del bloc fix · NO
+    s'ha de tocar: el seu rebut el valida contra la instantània (vegeu §5).
+  README.md:13 · «Hui utilitzem Supabase (via Sollutia) com un simple "enxufe" … connectar a un backend de
+    WordPress, Joomla o Wikimedia» · P amb A difusa · públic (GitHub).
+  wordpress-plugin/readme.txt:83 · Sollutia com a amfitrió · B.
+
+======================================================================
+2. CONTRAST AMB EL CODI (pas 2)
+======================================================================
+
+  · Amfitrió: B estricte, mecanitzat i verd. configura() descarta backend, backend_url, tenant_id i les
+    claus del paquet (host.js:81-110, capaDelPaquet.js:44-54, contracteAmfitrio.js:108-121). Proves
+    executades hui: npx vitest run tests/host.test.js src/config/hostAdapter.test.js
+    src/config/contracteAmfitrio.test.js src/data/conformitat/kit.test.js → 4 fitxers, 85/85;
+    node --test tests/conformitat-amfitrio.test.mjs → 16/16 (un Sollutia desviat amb backend o tenant no passa).
+  · Port: neutral. backendPort.js:18-50 accepta qualsevol implementació que complisca el nucli de 32
+    mètodes (contracte.js:18-51) amb capacitats senceres. El kit (src/data/conformitat/kit.js) és el
+    contracte de comportament per a qualsevol adaptador.
+  · Qui tria: el paquet. host.js:155-158 carrega Supabase si ningú n'ha posat cap. La costura
+    injectaBackendDelPaquet (host.js:126-134) té zero cridadors productius (comptats: només
+    tests/host.test.js:168-184, src/config/hostAdapter.test.js:13-39 i hostIframeAdapter.test.js:28).
+  · Frontissa: B, però maquinària sense endollar. Cap fitxer de src importa client.js (comptat); el
+    catàleg és buit (client.js:4-8); el GET va sense token (creaFrontissa.js:60-63), contra ADR:35.
+    node --test tests/frontissa-gate.test.mjs → 11/11.
+    I no es pot recórrer hui tal com està: el catàleg de recursos i el transport no casen.
+    src/data/adaptadors/sollutia/recursos.js:4-15 descriu cada recurs amb `traductor`;
+    creaFrontissa.js:19-27 exigix `enabled`, `captureId`, `decode`, `path`, `params`, `maxBytes` i
+    `timeoutMs`; i client.js:4-8 porta `resources: Object.freeze({})` i no importa RECURSOS. L'auditoria
+    Opus (261006_0025, :235-237) ja ho marcava com a P1. El destí doctrinal de S3 (la Frontissa) és vàlid,
+    però obrir-lo demana un canvi de codi que la frase no cobrix (D5 i D10).
+  · Sessió: adoptaSessioExterna (identitat.js:486) adopta un JWT emés per l'amfitrió (iss i aud de la
+    política, fail-closed) i el fa servir contra el PostgREST de SdP (identitat.js:481-484): B.
+  · tractor-enxufe: E1-E4 verds hui; no distingix A de B (vegeu 1.5). Qui protegix el B són les proves de host.
+  · Comentaris que contradiuen el codi sota B i S: contracte.js:147 i kit.js:11 (Sollutia com a adaptador).
+
+  Compatibilitat sense canviar codi:
+    B · sí. Zero línies executables. Sobren els dos comentaris.
+    S · sí. Zero línies executables. La costura interna i el kit ja són la garantia del port neutral.
+    P · només si «intercanviable» vol dir «per decisió de SdP». Si vol dir que l'amfitrió pot posar el
+        backend, contradiu host.js:81-110, capaDelPaquet.js i tests/host.test.js:28-149.
+    A · no. Cal un adaptador Sollutia complet (32 mètodes del nucli, kit verd) i una entrada que el cride
+        amb injectaBackendDelPaquet, o bé desfer A1 i A3 (host, capa del paquet, contracte d'amfitrió,
+        proves de host i de conformitat, connector de WordPress).
+
+======================================================================
+3. CANDIDATES (pas 3)
+======================================================================
+
+Cada frase va idèntica, caràcter per caràcter, als llocs que diu llocsDeLaFrase (substitucions.json).
+
+FRASE A
+Model A: Sollutia és el soci d'infraestructura i el proveïdor de backend de Sóc de Poble; allotja el Web Component i servix les dades del poble a través d'un adaptador complet del port (`src/data/backendPort.js`) que substituïx Supabase, sense interferir en el disseny del frontend. El frontend, 100% modular, no depén de cap backend concret, i les dades del poble s'han de poder exportar senceres perquè sempre puguem traure-ho «tot fora».
+  Llocs: AGENTS.md §8 i mirall, prompt_local:72 i :77, QUI_SOC:37, versió. L'ADR-2026-09 passa a
+    substituïda (:14) i cal una ADR nova: la frase única no és completa fins que existisca.
+  Codi: el gran. Adaptador Sollutia complet amb kit verd i una entrada que el cride; o desfer A1 i A3.
+  Contradiu: AGENTS §8 («No han d'interferir en l'arquitectura»: el backend és arquitectura); QUI_SOC:14-15
+    (sobirania, cap dependència tòxica); BOOTSTRAP.md:14 i genotip:19 (Supabase font de veritat);
+    ADR-2026-08 i ADR-2026-09; soci_sollutia.md:96; les decisions A1 i A3 (261003) i uns quinze documents
+    de la Wiki (§4.6). El «tot fora» passa a dependre d'una exportació des de Sollutia.
+
+FRASE B
+Model B: Sollutia és l'amfitrió i el soci d'infraestructura de Sóc de Poble; allotja el Web Component, li pot passar la sessió i ens obri la seua API només en lectura (GET a través de la Frontissa), sense injectar cap backend ni interferir en l'arquitectura o el disseny. Les dades del poble només viuen al Supabase de Sóc de Poble, que és l'única font de veritat i el backend segellat del paquet, i el frontend, 100% modular, ens permet traure-ho «tot fora» quan calga.
+  Llocs: AGENTS.md §8 i mirall, prompt_local:72 i :77, ADR:10, QUI_SOC:37, versió, fets (ADR i
+    estàndard d'integració), dos comentaris de codi.
+  Codi: zero línies executables.
+  Contradiu: README.md:13 i core-portaveu-institucional:32 (Supabase com a endoll intercanviable),
+    prompt_consell:102 (Sollutia proveïdora de backend), pageContent.js:43 (públic), sdp-estudi-mercat:47.
+    La plantilla perd la menció de WordPress i Joomla (el codi la conserva: connector i contracte d'amfitrió).
+    Deixa sense paraula la costura injectaBackendDelPaquet: l'ADR diu que el port no s'obri.
+
+FRASE P
+Port neutral: el frontend és un client pur, 100% modular, que només parla amb el port (`src/data/backendPort.js`); el backend de hui, Supabase, és un endoll intercanviable per qualsevol adaptador que passe el kit de conformitat, i el component s'enxufa com a mòdul a qualsevol amfitrió (Sollutia, WordPress, Joomla o una pàgina senzilla) sense trencar res. Així sempre podem traure-ho «tot fora».
+  Llocs: AGENTS.md §8 i mirall, prompt_local:72 (la Directiva de :77 queda igual i continua ambigua),
+    ADR:10 i :43, QUI_SOC:37, versió, fets.
+  Codi: zero, si «intercanviable» és per decisió de SdP. No diu qui tria: si l'amfitrió, contradiu el codi.
+  Contradiu: el nom i la conseqüència de l'ADR-2026-09 («no s'obri»); deixa AGENTS §8 sense dir quin
+    paper té Sollutia; no dona destí als endpoints de Sollutia (ENX-01 continua obert).
+
+FRASE S (síntesi: B més la garantia del port neutral i de l'enxufe a qualsevol amfitrió)
+Model B: Sollutia és l'amfitrió i el soci d'infraestructura de Sóc de Poble; allotja el Web Component, li pot passar la sessió i ens obri la seua API només en lectura (GET a través de la Frontissa), sense injectar cap backend ni interferir en l'arquitectura o el disseny. El backend el tria i el segella Sóc de Poble (hui el seu Supabase, única font de veritat de les dades del poble) darrere d'un port neutral (`src/data/backendPort.js`): el frontend, 100% modular, s'enxufa a qualsevol amfitrió, canviar de backend és una decisió de Sóc de Poble amb una ADR i el kit de conformitat, i sempre podem traure-ho «tot fora».
+  Llocs: els mateixos que B, més ADR:43 (el port no s'obri a cap amfitrió; canviar de backend és ADR + kit
+    per la via interna del paquet).
+  Codi: zero línies executables. Recull el que ja diuen host.js:112-134, capaDelPaquet.js:19-20,
+    SELF-DESCRIBE.md:9-12 i kit.js.
+  Contradiu: prompt_consell:102, sdp-estudi-mercat:47, pageContent.js:43 (públic) i la paraula «via
+    Sollutia» de README.md:13. És compatible amb core-portaveu-institucional:32 i amb el «backend de
+    WordPress, Joomla o Wikimedia» de README.md:13 com a tria futura de SdP per ADR.
+  Per què la recomane (la tria és del Mestre): zero codi; coherent amb A1 i A3 i amb la Wiki que ja diu B;
+    conserva les garanties que el Mestre va escriure a la plantilla (endoll, qualsevol amfitrió, «tot
+    fora») com a propietats del port i no com a dret de l'amfitrió; dona destí als endpoints de Sollutia
+    (la Frontissa per a llegir) i deixa oberta, sense bloqueig doctrinal, una tria futura de Sollutia com
+    a backend per ADR i kit, sense que l'amfitrió injecte res.
+
+======================================================================
+4. SUBSTITUCIONS EXACTES (pas 4)
+======================================================================
+
+Segona onada: substitucions.json és ara sdp.t4.governanca.v2 i només porta la candidata triada (la frase
+final, la governança del paquet i el que ja s'ha aplicat). Els parells d'esta secció són la lectura de la
+primera onada i es conserven com a història de la tria; S2 i V3 es van aplicar amb la variant final.
+Font mecànica (primera onada): substitucions.json (mateixos textos). {{FRASE}} és la frase de §3 de la candidata triada
+i {{ETIQUETA}} la seua etiqueta (substitucions.json, «etiquetes»). Cada text VELL apareix una sola
+vegada al seu fitxer al tall 76947e5d (ho comprova el corredor). Grups per candidata:
+  A = nucli_A + quisoc_A + versio
+  B = nucli_B + quisoc_BS + versio + fets + codi_BS
+  P = nucli_P + quisoc_P + versio + fets
+  S = nucli_S + quisoc_BS + versio + fets + codi_BS
+El mirall .agents/AGENTS.md rep sempre els mateixos bytes que AGENTS.md, dins del mateix pla.
+
+4.1 Textos vells compartits
+
+[VELL-AG53] AGENTS.md:53 (i .agents/AGENTS.md:53)
+Sollutia té el rol exclusiu de **proveïdor de suport tècnic d'infraestructura (Amfitrió SPA i Backend API)**. No han d'interferir en l'arquitectura ni en el disseny. El codi frontend s'ha d'escriure de forma 100% modular i independent per a connectar-se al seu backend de forma completament transparent, com un simple "endoll" (Model B). Això garanteix que sempre tinguem l'opció de traure "tot fora" si fóra necessari.
+
+[VELL-PL72] _wiki_de_poble/03_actuar/plantilles/prompt_local.md:72
+- **Backend Intercanviable (Model B):** El servidor actual (Supabase) funciona exclusivament com un endoll. Cap lògica de negoci de la UI ha d'estar fortament acoblada a ell. El sistema ha de poder enxufar-se com a mòdul a WordPress o Joomla sense trencar res.
+
+[VELL-PL77] prompt_local.md:77 (segona oració de la Directiva Suprema)
+És imminent que Sollutia ens lliure els punts d'accés (endpoints/dades) del seu backend.
+
+[VELL-ADR10] _wiki_de_poble/02_saber/architecture/ADR-2026-09-SOLLUTIA-MODEL-B.md:10
+Amb el Model B, el Supabase de Sóc de Poble és l'única font de veritat de les dades del poble, Sollutia allotja el Web Component i ens pot passar la sessió, i nosaltres només li llegim per GET a través de la Frontissa. Sollutia no injecta res al nostre port de backend ni hi ha escriptures creuades.
+
+[VELL-ADR43] ADR-2026-09:43
+- `src/data/backendPort.js` no s'obri a implementacions de Sollutia: el backend segellat és el de SdP.
+
+[VELL-QS37] .agents/QUI_SOC.md:37 (fragment de la línia)
+El sistema usa Supabase (Sollutia).
+
+4.2 Grup nucli_A
+  A1 · AGENTS.md:53 · VELL-AG53 → NOU:
+{{FRASE}}
+  A2 · prompt_local.md:72 · VELL-PL72 → NOU:
+- **Model A (Sollutia):** {{FRASE}}
+  A3 · prompt_local.md:77 · VELL-PL77 → NOU:
+És imminent que Sollutia ens lliure els punts d'accés (endpoints/dades) del seu backend: entraran per un adaptador complet del port que passe el kit de conformitat (`src/data/conformitat/kit.js`).
+  A4 · ADR-2026-09:14 · VELL:
+Acceptada pel Mestre el 16 de setembre de 2026. Aprovació humana: pendent de signatura.
+    NOU:
+Acceptada pel Mestre el 16 de setembre de 2026 i substituïda per la seua tria del Model A (frase canònica a AGENTS.md §8). Cal una ADR nova que la reemplace; esta es conserva com a història. Aprovació humana: pendent.
+
+4.3 Grup nucli_B
+  B1 · AGENTS.md:53 · VELL-AG53 → NOU: {{FRASE}}
+  B2 · prompt_local.md:72 · VELL-PL72 → NOU:
+- **Model B (Sollutia):** {{FRASE}}
+  B3 · prompt_local.md:77 · VELL-PL77 → NOU:
+És imminent que Sollutia ens lliure els punts d'accés (endpoints/dades) de la seua API: entraran per la Frontissa (`src/data/adaptadors/sollutia/`), només en lectura GET i cada recurs amb captura real, traductor i fixture, sense tocar el port de backend.
+  B4 · ADR-2026-09:10 · VELL-ADR10 → NOU:
+{{FRASE}} No hi ha escriptures creuades.
+
+4.4 Grup nucli_P
+  P1 · AGENTS.md:53 · VELL-AG53 → NOU: {{FRASE}}
+  P2 · prompt_local.md:72 · VELL-PL72 → NOU:
+- **Port neutral (enxufabilitat):** {{FRASE}}
+  P3 · ADR-2026-09:10 · VELL-ADR10 → NOU:
+{{FRASE}} Sollutia hi entra com a amfitrió i, en lectura, per la Frontissa; no hi ha escriptures creuades.
+  P4 · ADR-2026-09:43 · VELL-ADR43 → NOU:
+- `src/data/backendPort.js` admet qualsevol adaptador que passe el kit de conformitat (`src/data/conformitat/kit.js`); hui el backend segellat és el Supabase de SdP.
+
+4.5 Grup nucli_S
+  S1 · AGENTS.md:53 · VELL-AG53 → NOU: {{FRASE}}
+  S2 · prompt_local.md:72 · VELL-PL72 → NOU: - **Model B (Sollutia):** {{FRASE}}
+       SUPERAT a la variant final (aplicada): «- {{FRASE}}». L'etiqueta ja va dins de la frase i el prefix
+       no la repetix (defecte de la revisió adversarial: «Model B (Sollutia): Model B:»).
+  S3 · prompt_local.md:77 · VELL-PL77 → NOU: el mateix de B3.
+  S4 · ADR-2026-09:10 · VELL-ADR10 → NOU: {{FRASE}} No hi ha escriptures creuades.
+  S5 · ADR-2026-09:43 · VELL-ADR43 → NOU:
+- `src/data/backendPort.js` no s'obri a implementacions de Sollutia ni de cap amfitrió: el backend segellat el tria SdP. Canviar-lo demana una ADR nova i un adaptador que passe el kit de conformitat (`src/data/conformitat/kit.js`), injectat només per la via interna del paquet (`injectaBackendDelPaquet` a `src/host.js`).
+
+4.6 Grups de QUI_SOC (.agents/QUI_SOC.md:37, VELL-QS37)
+  Q-A  → El sistema usa el backend de Sollutia a través del port (Model A).
+  Q-BS → El sistema usa el Supabase de Sóc de Poble, única font de veritat; Sollutia n'és l'amfitrió (Model B).
+  Q-P  → El sistema usa hui Supabase, un backend intercanviable darrere del port.
+
+4.7 Grup versio (totes les candidates)
+  V1 · prompt_local.md:38 · | Versió del document | 3.3.1 | → | Versió del document | 3.4.0 |
+  V2 · prompt_local.md:43 · | Plantilla | prompt_local.md (v3.3.1) | → | Plantilla | prompt_local.md (v3.4.0) |
+  V3 · prompt_local.md:52-54 · VELL:
+## Historial
+
+- **v3.3.1 (261005_1250):**
+    NOU:
+## Historial
+
+- **v3.4.0 (ENX-01):** Frase canònica única de l'enxufabilitat amb Sollutia al Context Tècnic, idèntica a la d'AGENTS.md §8 ({{ETIQUETA}}, triada pel Mestre). La versió s'alinea amb `.agents/protocolledge.json`, que deia 3.3.0 mentre la plantilla deia 3.3.1.
+- **v3.3.1 (261005_1250):**
+  V4 · .agents/protocolledge.json:70 · "version": "3.3.0" → "version": "3.4.0"
+
+4.8 Grup fets (B, P i S): correccions de fet, sense canvi de doctrina
+  F1 · ADR-2026-09:24 · `src/data/identitat.js:241-272` → `src/data/identitat.js:486`
+  F2 · ADR-2026-09:35-36 · VELL:
+token de la sessió
+   (`client.js:29-33`)
+    NOU (la decisió del token es conserva i es marca pendent):
+token de la sessió
+   (pendent: el transport encara no l'envia, `creaFrontissa.js:60-63`)
+  F3 · ADR-2026-09:36 · (`client.js:16`) → (`client.js:9`)
+  F4 · _wiki_de_poble/02_saber/estandard_integracio_react.md:129 · VELL:
+Admet `auth`, `config` i els àlies `backend_url` i `tenant_id`.
+    NOU:
+Admet `auth` i `config`; `backend`, `backend_url` i `tenant_id` es descarten amb un avís (Model B, decisions A1 i A3 del Mestre, 261003: `src/config/contracteAmfitrio.js:108-111`).
+  F5 · estandard_integracio_react.md:130 · VELL:
+* **Fet verificat (260929) · decisió de govern pendent (`requires_human_decision: true`).** `configura()` de `src/host.js` accepta hui `backend`: un adaptador complet que valida `validaBackendImplementation` (`src/data/backendPort.js`: tot el nucli del contracte, cap capacitat a mitges) i que substituïx Supabase abans del segellat; amb un adaptador extern, `injectaSessio()` delega en el seu `adoptaSessioExterna`. El Model B diu que el backend el tria SdP i que `backendPort.js` no s'obri a implementacions de l'amfitrió. La doctrina no canvia: cap amfitrió passa `backend`. Tancar la porta al codi o reconéixer-la en una ADR ho decidix el Mestre.
+    NOU:
+* **Fet verificat (261006) · decisió de govern pendent (`requires_human_decision: true`).** Des del 261003 (decisions A1 i A3 del Mestre), `configura()` de `src/host.js` ja no accepta `backend`: el descarta amb un avís, com `backend_url` i `tenant_id` (`src/host.js:85-110`). Un adaptador complet només pot entrar per la via interna del paquet, `injectaBackendDelPaquet()` (`src/host.js:126`), que valida `validaBackendImplementation` (`src/data/backendPort.js`) i que hui no crida cap entrada productiva, només les proves; amb eixe adaptador, `injectaSessio()` delega en el seu `adoptaSessioExterna`. Retirar eixa costura o reconéixer-la en una ADR ho decidix el Mestre.
+
+4.9 Grup codi_BS (B i S): només comentaris, zero píxels
+  C1 · src/data/contracte.js:147 · un backend sense ella (Sollutia) continua sent vàlid → un backend sense ella continua sent vàlid
+  C2 · src/data/conformitat/kit.js:11 · adaptador (Sollutia) s'hi enxufa igual → adaptador que trie Sóc de Poble s'hi enxufa igual
+
+4.10 Fora del pla: alineacions pendents que la tria arrossega (no s'apliquen sense ordre)
+  · prompt_consell.md:102 (bloc fix del Consell; caldria pujar la seua versió, protocolledge.json:24).
+    Proposta per a B i S, sense aplicar: «Prompte ens integrarem amb el proveïdor de backend, Sollutia.» →
+    «Prompte ens integrarem amb Sollutia, el nostre amfitrió i soci d'infraestructura (Model B).»
+  · plantilles/skill.md:62 («al backend de Supabase/Sollutia»).
+  · Skills segellades: sdp-estudi-mercat:47, sdp-calendari-agricola:21 i :32, core-portaveu-institucional:18
+    i :32 (sota B). Cal resegellar amb el Mestre.
+  · README.md:13 («via Sollutia»; sota B, també el backend de WordPress, Joomla o Wikimedia).
+  · src/sections/text/pageContent.js:43 («Sollutia (Supabase)») i :123: TEXT VISIBLE. Llei del Píxel: és
+    redisseny i necessita ordre expressa del Mestre.
+  · tractor-enxufe.mjs:5-9 i :143 (comentari i pista; tooling, laboratori a part).
+  · estandard_integracio_react.md:70 (àlies «portats a la clau canònica»; cal verificar-lo abans).
+  · Sota A, tota la Wiki de §1.2 que diu B (uns quinze documents) i el codi de §2: cal ADR nova primer.
+
+======================================================================
+5. CAMÍ D'APLICACIÓ (pas 5)
+======================================================================
+
+  AGENTS.md i .agents/AGENTS.md · governança: només amb executor-mutacio.mjs i lease. El mirall és còpia
+    exacta, sense cap transformació: porta-autoritat.mjs:10-13 llig AGENTS.md i, amb --write, l'escriu tal
+    qual; sense bandera compara byte a byte i revisa que existisquen les rutes dels enllaços Markdown
+    (:16-23). Per això el pla porta el mirall amb els mateixos bytes i no cal --write; després,
+    node tooling/gates/porta-autoritat.mjs ha de tornar valid:true. Cap frase porta enllaços Markdown.
+    tractor-doctrina.mjs revisa que existisquen les rutes citades a .agents/**/*.md: src/data/backendPort.js existix.
+  .agents/QUI_SOC.md · governança, executor. No és dins del segell (segella.mjs:10 només cobrix skills).
+  .agents/protocolledge.json · governança, executor. Pujar 3.3.0 → 3.4.0 canvia contract.hash
+    (core.mjs:129). Només afecta torns amb algun rebut SENSE instantània: checkTurn (turns.mjs:238) i
+    validateDocument (turns.mjs:208). El corredor ho compta: el 261006 a les 03:30 n'hi havia tres, tots
+    «planned» i caducats el 2026-09-23 (torn_acdcaf49…, torn_afa18e33…, torn_f8920453…); cap torn viu en
+    queda afectat, i el corredor cau si n'apareix un de viu. No hi ha cap prova que fixe 3.3.0 o 3.3.1
+    (grep a tests, tooling i skills).
+  prompt_local.md · Wiki, editable, però va al mateix pla per atomicitat. Què passa en editar-la:
+    · El rebut de cada document guarda una instantània del contracte amb el templateHash i els blocs fixos
+      de la plantilla d'aquell moment (turns.mjs:180-181, core.mjs:122-127, :188-198). validateDocument i la
+      Plantilla viva validen contra eixa instantània (turns.mjs:207-213, porta-plantilla-viva.mjs:165-174).
+      Per tant editar la plantilla NO trenca rebuts ni contractes vigents amb instantània.
+    · Sí que trencaria un document que s'editara per posar-hi el text nou: el seu bloc fix ha de coincidir
+      amb la instantània (core.mjs:175-177). Els prompts ja creats (p. ex. 261006_0224) es deixen com estan.
+    · Un rebut sense instantània (format antic) es validaria contra la plantilla viva i cauria amb «Plantilla
+      del rebut canviada» (turns.mjs:211). Hui a l'Escriptori només hi ha un prompt local, el 0224, i el seu
+      rebut porta instantània (torn_c8669d8b…json:2894). La plantilla no ha canviat des d'eixe rebut: el
+      sha256 del disc (3de95f71…) és el templateHash del rebut. (De passada: el frontmatter apunta al
+      rebut e0cdbec3, que és del fitxer «261006_0224_petorreta_claude_ledger.md» (torn_c8669d8b…json:2893),
+      i el document es diu «…_prompt_…». Durant este torn ha aparegut un rebut nou per al nom bo,
+      d520bbe6 (:2921-2929), amb la mateixa instantània, però el frontmatter encara no l'usa. Fora d'este front.)
+    · EXCEPCIÓ (correcció de la revisió adversarial): porta-plantilla-viva valida contra la plantilla VIVA
+      qualsevol document el reflex del qual no és del seu fitxer. El 0224 està en eixe cas:
+      porta-plantilla-viva.mjs:141 dona «reflex: el rebut és de «…_petorreta_…»», sense instantània :169
+      carrega el contracte viu, i revisaEstructura (:124-126) hi suma «bloc normatiu alterat: «Context Tècnic
+      i Arquitectònic»» des que la plantilla porta la frase nova (segona onada). La porta ja era roja per a
+      este document: no canvia cap eixida. Si el reflex passa a d520bbe6 (instantània fddbede1, amb el bloc
+      vell), els dos errors desapareixen. porta-documents no ho veu: validateDocument cau abans
+      (turns.mjs:204). El corredor ho comprova en totes dues direccions.
+    · Pujar versió: cap eina compara la versió escrita dins de la plantilla amb la de protocolledge.json;
+      routeVersion es compara només contra la instantània del rebut (turns.mjs:211). No és obligatori, però
+      el Registre dels prompts nous escriu la de protocolledge.json (document.mjs:16), que hui ja diverge
+      de la plantilla (3.3.0 contra 3.3.1). Proposta: 3.4.0 a tots dos llocs, en el mateix pla (grup versio).
+    · porta-plantilles.mjs compara només seccions i blocs presents (:15-33): continua verda (verificat hui:
+      13 rutes; el corredor carrega el contracte amb la plantilla nova en un directori temporal).
+  ADR-2026-09 · Wiki, editable. Signar-la és acte del Mestre: cap substitució toca «pendent de signatura»,
+    excepte A4 (candidata A), que la declara substituïda. SEGONA ONADA: el Mestre la va signar el 261006;
+    :14 ho diu i el status passa a canonic (tooling/wiki/schema.json:33-43; tractor-frontmatter només hi
+    aplica l'enum, F3; tractor-registre i tractor-cognitiu miren només skills).
+  estandard_integracio_react.md · Wiki, editable; va al pla per coherència.
+  src/data/contracte.js i src/data/conformitat/kit.js · codi, editable; només comentaris (el corredor ho
+    comprova llevant comentaris). El «/* SDP-LOCK */» de contracte.js:1 és una marca: cap porta la vigila
+    (només turns.mjs:73 mira el fitxer .agents/SDP-LOCK).
+  src/data/wikiManifest.js · còpia publicada, generada: «NO l'editis manualment» (wikiManifest.js:1-2).
+    La regenera tooling/wiki/compile-wiki-to-app.mjs (OUT_REL a :26, escriptura condicional a :210-218),
+    que també corre en npm run build (prebuild, package.json:66) i dins del servidor de desenvolupament
+    (tooling/vite/wiki-watcher.mjs). La versió versionada ja és rància (prompt_local v3.3.0 a :1493).
+    Després d'aplicar: node tooling/wiki/compile-wiki-to-app.mjs i versionar-lo amb el mateix commit.
+
+  SEGONA ONADA: este ordre i el prepara-pla per substitucions de la primera onada queden superats. La Wiki
+  i src/ ja s'han aplicat amb Edit; la governança va en format de l'Olivera (nous/ amb la ruta real, BASES
+  fixada al tall i deriva), i el seu ordre d'aplicació és a LLEGIU_PRIMER.txt §3. El manifest publicat ja
+  l'ha regenerat el servidor de desenvolupament (tooling/vite/wiki-watcher.mjs:44-73).
+  Ordre de la primera onada (història):
+    0. Tria D1 (i D2-D4). Sense tria no hi ha open.
+    1. node _wiki_de_poble/04_escriptori/02_investigacio_ia/261006_0300_ledger_claude/t4_model_b/prepara-pla.mjs comprova --candidata=X
+       Ha de dir «Pla vàlid (candidata X): N fitxers». Si diu deriva, un text vell ja no hi és: no es força.
+    2. L'ordre d'open que imprimix (reflex_petorreta.mjs open … --risk=high --operation=governance-write).
+    3. prepara-pla.mjs comprova --candidata=X --session=SESSIÓ, i les ordres que imprimix en eixe ordre
+       (pla, Petorreta, manifest, seal i executor). L'executor exigix el segell vàlid abans
+       (executor-mutacio.mjs:42): si el front T2 l'ha trencat, primer es resegella.
+    4. Verificació: node tooling/gates/porta-autoritat.mjs; node tooling/gates/porta-plantilles.mjs;
+       node tooling/gates/tractor-enxufe.mjs; node tooling/gates/tractor-doctrina.mjs;
+       npx vitest run tests/host.test.js src/config src/data/conformitat;
+       node --test tests/conformitat-amfitrio.test.mjs tests/frontissa-gate.test.mjs.
+    5. node tooling/wiki/compile-wiki-to-app.mjs (manifest publicat).
+    6. Retirar el corredor tests/laboratori-model-b-261006.test.js en el mateix commit (fa skip quan el
+       §8 antic ja no hi és, però és codi mort dins de test:ci).
+    7. LEDGER i ESTAT (tanca la D1 d'ESTAT.md:888) i arxivar este laboratori.
+
+======================================================================
+6. DECISIONS PER AL MESTRE
+======================================================================
+
+  D1 · Quina lectura mana: A, B, P o S. Recomanació: S (§3). Prohibició sense substitut: no l'he triada.
+       DECIDIDA (Mestre, 261006): S amb la variant final, «ADR + port neutral».
+  D2 · «Supabase (Sollutia)» (QUI_SOC:37, pageContent.js:43, README.md:13): Sollutia opera o allotja el
+       Supabase de SdP, o són dues cases separades? Les frases B i S diuen «el Supabase de Sóc de Poble»
+       (propietat i autoritat), que val en tots dos casos; si Sollutia l'opera, convé dir-ho en una ADR.
+  D3 · Abast: el pla porta, a més dels tres llocs, QUI_SOC:37, l'estàndard d'integració (fet desfasat),
+       les cites mortes de l'ADR i dos comentaris de codi. Llevar-ne cap grup és editar candidates a
+       substitucions.json i tornar a passar el corredor.
+       APLICAT per l'encàrrec de la segona onada, amb el títol de contracte.test.js:207 (C3).
+  D4 · Versió 3.4.0 a la plantilla i a protocolledge.json (recomanada; efectes a §5).
+       APLICAT a la plantilla; protocolledge.json va al paquet (LLEGIU_PRIMER.txt §4, efectes).
+  D5 · Destí dels endpoints de Sollutia (B3/S3): la Frontissa, en lectura (decidit amb S i aplicat a la
+       Directiva Suprema). Si el Mestre vol escriptures, cal una ADR nova que les afija a
+       ESCRIPTURES_PERMESES (ADR:42). Avís: hui la Frontissa no es pot recórrer. recursos.js:4-15 usa
+       `traductor`; creaFrontissa.js:19-27 exigix `decode` i altres camps (`enabled`, `captureId`, `path`,
+       `params`, `maxBytes`, `timeoutMs`); client.js:4-8 no importa el catàleg. Vegeu D10.
+  D6 · Costura injectaBackendDelPaquet (host.js:112-134): S la convertix en la via doctrinal d'un canvi
+       de backend per ADR; B la deixa sense paraula. Conservar-la o retirar-la continua sent decisió seua.
+  D7 · Token del GET a Sollutia: l'ADR el decidix i el codi no l'envia. F2 el marca pendent; enviar-lo és
+       canvi de codi i de seguretat (font d'un token cap a un origen extern).
+  D8 · Signatura de l'ADR: ADR:14 diu pendent; ESTAT.md:1020 diu signada el 16-09. Un dels dos s'equivoca.
+       DECIDIDA (Mestre, 261006): «Sí, signada hui». ADR:14 ja diu acceptada el 16-09 i signada el 6-10.
+       ESTAT.md:1020 l'ha de corregir MarIA en el relleu (el hook no deixa editar .agents/).
+  D9 · Alineacions de §4.10, cadascuna amb la seua ordre. NO aplicades. Text proposat sota S (la decisió):
+     · _wiki_de_poble/03_actuar/plantilles/prompt_consell.md:102 (bloc fix «Context» del Consell; cal pujar
+       la versió de prompt.consell a protocolledge.json:24, 2.0.0 → 2.1.0, i una línia d'Historial):
+         «Prompte ens integrarem amb el proveïdor de backend, Sollutia.» →
+         «Prompte ens integrarem amb Sollutia, el nostre amfitrió i soci d'infraestructura (Model B): el
+         Supabase de Sóc de Poble continua sent l'única font de veritat.»
+     · Skills segellades (qualsevol edició trenca el segell: resegellar amb el Mestre):
+         sdp-estudi-mercat/SKILL.md:47 «per al backend de Sollutia» → «per a la integració amb Sollutia
+           (amfitrió, i la seua API en lectura per la Frontissa)».
+         sdp-calendari-agricola/SKILL.md:21 «les taules core de Sollutia/Supabase» → «les taules core del
+           Supabase de Sóc de Poble».
+         sdp-calendari-agricola/SKILL.md:32 «integrant-se a Sollutia» → «enxufant-se a Sollutia com a
+           amfitrió (Model B)».
+         core-portaveu-institucional/SKILL.md:18 «independència de Supabase/Sollutia» → «port neutral: el
+           Supabase de Sóc de Poble com a única font de veritat i Sollutia com a amfitrió».
+         core-portaveu-institucional/SKILL.md:28 «Enxufe Sollutia» → «Enxufe a Sollutia com a amfitrió (Model B)».
+         core-portaveu-institucional/SKILL.md:32 «com Supabase és només un "endoll" intercanviable» → «com el
+           port neutral deixa canviar de backend per decisió de Sóc de Poble (una ADR i el kit de conformitat)».
+     · _wiki_de_poble/03_actuar/plantilles/skill.md:62 «al backend de Supabase/Sollutia» → «al Supabase de
+       Sóc de Poble»; i :17 «(Actualitzada a l'era 100% Online Sollutia)» → «(Actualitzada a l'era 100%
+       Online, Model B)». Wiki editable, però és una plantilla de ruta: necessita ordre.
+     · README.md:13 (públic, GitHub): «Hui utilitzem Supabase (via Sollutia) com un simple "enxufe" per
+       obtindre velocitat i eficiència.» → «Hui utilitzem el Supabase de Sóc de Poble, única font de veritat,
+       darrere d'un port neutral; Sollutia n'és l'amfitrió (Model B).»; i «demà, aquest mateix enxufe es
+       podria desconnectar de Supabase i connectar a un backend de WordPress, Joomla o Wikimedia» → «demà,
+       per decisió de Sóc de Poble (una ADR i el kit de conformitat), el port es podria connectar a un
+       backend de WordPress, Joomla o Wikimedia».
+     · src/sections/text/pageContent.js:43 (TEXT VISIBLE d'«El Projecte»; Llei del Píxel: canviar-lo és
+       redisseny i necessita ordre expressa): «Ací és on entra <strong>Sollutia</strong> (Supabase).» →
+       «Ací és on entra el <strong>Supabase de Sóc de Poble</strong>, l'única font de veritat, i
+       <strong>Sollutia</strong> n'és l'amfitrió.»; i «es podria desconnectar de Sollutia i connectar-se
+       directament a WordPress» → «es podria desconnectar d'eixe Supabase i connectar-se directament a
+       WordPress». pageContent.js:123 (història V18, «Supabase i el backend de Sollutia com a "pont"») és
+       crònica: proposta de deixar-la com està o «Supabase com a "pont" pragmàtic i Sollutia com a amfitrió».
+     · tooling/gates/tractor-enxufe.mjs:5-9 (comentari; tooling, via laboratori): «L'AGENTS.md §8 diu que
+       el Frontend s'ha d'escriure per a integrar-se pacíficament a la plataforma de Sollutia i separar-se
+       sense trauma.» → «L'AGENTS.md §8 (Model B) diu que Sollutia és l'amfitrió i que el frontend només
+       parla amb un port neutral: s'enxufa a qualsevol amfitrió i en pot eixir sense trauma.»; :143, la pista
+       «un host que implemente el contracte sencer» → «un adaptador que entre per la via interna del paquet
+       (injectaBackendDelPaquet)». A més, cap llei E1-E4 mira qui tria el backend: una E5 («cap amfitrió
+       tria el backend») protegiria la decisió; hui la protegixen només les proves de host.
+     · Comentaris de src/data fora de la superfície d'esta onada (cap píxel): traductor.js:15-16 «un altre
+       amfitrió (Sollutia) oferix el mateix contracte» → «Sóc de Poble tria un altre backend amb el mateix
+       contracte (ADR i kit)»; errorsBackend.js:3 i :39 «Sollutia» com a adaptador → «un altre adaptador que
+       trie Sóc de Poble».
+     · _wiki_de_poble/02_saber/estandard_integracio_react.md:70: diu que configura() porta els àlies del
+       backend «a la seua clau canònica»; F4 i F5 (aplicats) diuen que des del 261003 els descarta
+       (host.js:85-91, contracteAmfitrio.js:108-111). Cal verificar el pas 3 del canal abans de reescriure'l.
+  D10 · La Frontissa no es pot recórrer hui (§2 i D5): fer casar recursos.js (traductor) amb el transport
+       (decode i camps) i endollar el catàleg a client.js és codi, fora de la frase. Ordre i abast, del Mestre.
+
+======================================================================
+7. PROVES I LÍMITS
+======================================================================
+
+  Segona onada (261006, després de la decisió): el corredor és nou i cobrix la candidata triada (llista a
+  LLEGIU_PRIMER.txt §2). npx vitest run tests/laboratori-model-b-261006.test.js → 15 verdes i 1 skip (el
+  mode genera). Les proves de sota són de la primera onada i es conserven com a història.
+
+  Proves de la primera onada (executades el 261006 abans de lliurar):
+    · npx vitest run tests/laboratori-model-b-261006.test.js → 12/12: ESLint sense cap missatge; cada
+      parell i cada frase són ací al peu de la lletra; per a A, B, P i S el pla passa validatePlan de
+      l'executor amb el sha del disc, la frase hi és una sola vegada a cada lloc, el mirall té els mateixos
+      bytes, la plantilla conserva seccions i blocs fixos i el contracte carrega amb la versió 3.4.0, i als
+      fitxers de codi només canvien comentaris; les cites ruta:línia dels textos nous són vives; la
+      costura i la Frontissa no tenen cap consumidor productiu; la Petorreta passaria validatePetorreta.
+    · sha256 al tall: AGENTS.md i .agents/AGENTS.md 5efd440f… (idèntics); QUI_SOC.md 88c78646…;
+      protocolledge.json 126758b5…; prompt_local.md 3de95f71…; ADR-2026-09 cf917229…;
+      estandard_integracio_react.md 3a5652db…; contracte.js a91c62d0…; kit.js f40bcb04….
+    · npx vitest run tests/host.test.js src/config/hostAdapter.test.js src/config/contracteAmfitrio.test.js
+      src/data/conformitat/kit.test.js → 85/85.
+    · node --test tests/conformitat-amfitrio.test.mjs → 16/16; node --test tests/frontissa-gate.test.mjs → 11/11.
+    · node tooling/gates/porta-plantilles.mjs → 13 rutes verdes; node tooling/gates/tractor-enxufe.mjs → E1-E4 verds.
+
+  Límits declarats:
+    · No he executat prepara-pla.mjs des de la línia d'ordres (el hook ho denega): el corredor l'importa i
+      en crida totes les funcions, també validatePlan de l'executor i validatePetorreta del Reflex.
+    · No he pogut executar porta-autoritat.mjs ni tractor-doctrina.mjs (fora de la llista del hook): el
+      corredor comprova el mirall byte a byte i que existisquen les rutes citades als textos nous.
+    · Concurrència: AGENTS.md el poden tocar altres fronts. El pla es genera sobre el disc d'eixe moment i
+      només falla si algú canvia les línies substituïdes; la CAS de l'executor fa la resta.
+    · La frase S és llarga (dos oracions). Escurçar-la és tornar a editar substitucions.json i este
+      fitxer: el corredor exigix que coincidisquen.
+
+Ancoratge: [[00_index_escriptori]]

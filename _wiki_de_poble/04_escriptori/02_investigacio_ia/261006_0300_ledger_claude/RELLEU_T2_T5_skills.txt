@@ -1,0 +1,18 @@
+RELLEU T2+T5 · Catàleg de skills i skill de maquetació Markdown · ronda de correcció acabada (03:59)
+
+Tercera onada (arrencada 05:16, acabada 05:24): corregits els quatre defectes menors de la revisió T2_T5.
+Acabat:
+- (1) LLEGIU §5 reescrit: t6_higiene ja porta la projecció de 00_INDEX_SKILLS.md amb CAS quan el catàleg carrega
+  (t6_higiene/LLEGIU_PRIMER.txt:90-95 i :124-127; prepara-pla.mjs:25-28 i :289-291). L'ordre T2 → t6 es manté.
+  També §1 (deriva) i el comentari del corredor.
+- (2) core-maquetacio-markdown §1: dues línies noves, frontera amb sdp-universal-page i com es convertix el font.
+  Sense contradicció: la D7 no s'obri (LLEGIU §1 i §4, amb ruta:línia de parseMarkdown, PageFrame i el compilador).
+- (3) D8 al LLEGIU §4: línia proposada per a core-llegibilitat-text, amb les conseqüències (6 fitxers; F3, F4 i F9
+  per fitxer modificat amb deute). No s'ha escrit a la skill instal·lada.
+- (4) Corredor: compara només les tres entrades del paquet i el recompte de derivats/skills_index.json; ja no
+  escriu cap instantània.
+- Proves: npx vitest run tests/laboratori-skills-261006.test.js → 14/14 (05:23:59), segell del paquet 5a3baec0.
+  node --test tests/backend_consolidacio.test.mjs al repositori real → 5 pass, 9 fail (paquet no aplicat).
+  segella.mjs real → sense canvis, 22b96726.
+En marxa: res.
+Preguntes obertes: D1-D6 i D8 del LLEGIU §4.

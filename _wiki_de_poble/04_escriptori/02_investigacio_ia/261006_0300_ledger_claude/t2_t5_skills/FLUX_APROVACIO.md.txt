@@ -1,0 +1,64 @@
+---
+type: document
+status: esborrany
+description: Flux de la skill core-maquetacio-markdown perquè el Mestre l'aprove des de la Wiki abans que siga efectiva.
+tags:
+  - skills
+  - tractors
+---
+# Flux d'aprovació de core-maquetacio-markdown
+
+Este document explica què farà la skill nova de maquetació Markdown, quan s'activarà i com es para. La lliçó 261002 de `wiki-documentacio-i-reflex` exigix que el Mestre l'aprove des de la Wiki abans que la skill siga efectiva.
+
+## 1. Què fa
+
+La skill és un procediment de lectura i escriptura de fitxers Markdown, sense cap codi propi.
+
+- Dona 22 regles de forma (R1 a R22) per a frontmatter, encapçalaments, seccions, paràgrafs, llistes, codi, cites i enllaços.
+- Dona un procediment de nou passos i una llista de comprovació d'onze punts abans de desar.
+- Porta com a casos de prova els errors reals d'AGENTS.md i de l'índex de l'Escriptori, amb la línia de cada un.
+- Remet a les portes que ja existixen (`tractor-frontmatter.mjs`, `tractor-registre.mjs` i `cataleg_skills.mjs --check`) per a validar el resultat.
+
+## 2. Quan es dispara
+
+La skill s'activa per tres camins, i cap d'ells executa res sol.
+
+- **Router de Claude:** `tooling/session/persona_router.mjs` la nomena quan el text del Mestre conté un dels disparadors: maquetació markdown, maquetacio markdown, maquetar un markdown, jerarquia d'encapçalaments o secció de vincles.
+- **Invocació explícita:** Claude la pot carregar per nom si té l'enllaç a `.claude/skills/`, i MarIA la llig des de `.agents/skills/`.
+- **Encàrrec:** un prompt o un pla que la nomene.
+
+Cap disparador conté ni és contingut per un disparador d'una altra skill, i cap xoca amb els de la resta del catàleg (comprovat al corredor `tests/laboratori-skills-261006.test.js`).
+
+## 3. Què no fa
+
+La skill fixa la forma d'un fitxer quan algú l'escriu o el revisa per encàrrec.
+
+- No mou, no reanomena, no arxiva ni esborra cap document.
+- No reformata documents existents per iniciativa pròpia: la Wiki integrada els pinta a l'aplicació i canviar-ne la forma canvia la pantalla (Llei del Píxel).
+- No toca AGENTS.md ni l'índex de l'Escriptori: els seus errors són casos de comprovació, i corregir-los demana ordre del Mestre.
+- No toca `04_escriptori/01_produccio/` ni els fitxers que generen les eines.
+- No afig cap porta nova ni cap hook.
+
+## 4. Com es desactiva
+
+Hi ha tres nivells, de menys a més. Els dos primers deixen la skill al disc.
+
+1. **Sense disparadors:** canviar `triggers_on` per una llista buida (`triggers_on: []`). El router deixa de nomenar-la i continua invocable per nom. Requerix resegellat, que l'executor fa sol.
+2. **Fora de Claude:** llevar l'enllaç `.claude/skills/core-maquetacio-markdown`. Claude deixa de vore-la com a skill invocable.
+3. **Retirada:** traure la carpeta de `.agents/skills/` (trasllat de MarIA o del Mestre, mai esborrat), regenerar el catàleg amb `node tooling/brain/cataleg_skills.mjs --escriu` i resegellar.
+
+Canviar `status` a `arxivat` no servix: `tooling/brain/cataleg_skills.mjs:56-57` llança per a tota skill que no estiga `actiu` o `canonic`, i el catàleg i `test:ci` es tornarien rojos. Com s'ha de desactivar una skill deixant-la al disc és una decisió pendent del Mestre.
+
+## 5. Com s'aprova
+
+L'aprovació és del Mestre i es fa abans de l'open de la lease.
+
+1. MarIA promou este esborrany a la Wiki com a document propi.
+2. El Mestre el llig a la pàgina i l'aprova.
+3. Només llavors es fa l'open de `prepara-pla.mjs` (pas 0 del LLEGIU_PRIMER del laboratori).
+
+Avui no hi ha cap superfície de la Wiki que aprove skills: el Panell de Tractors aprova tractors per empremta (`src/sections/tractors/nucli/aprovacio.js`), i `src/sections/tractors/registreSkills.js` no existix. Com queda registrada l'aprovació d'una skill és una decisió pendent del Mestre.
+
+## Vincles
+
+- [[00_INDEX_SKILLS]]

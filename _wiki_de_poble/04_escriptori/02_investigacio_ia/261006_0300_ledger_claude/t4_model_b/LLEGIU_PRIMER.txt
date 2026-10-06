@@ -1,0 +1,184 @@
+LLEGIU_PRIMER · Laboratori 261006_0300_ledger_claude/t4_model_b
+Paquet de governança del Model B (ENX-01): AGENTS.md §8 i el seu mirall, QUI_SOC.md i protocolledge.json
+Preparat per Claude (Opus 5.5) el 261006 sobre HEAD 76947e5d, torn torn_9d5803f4-d18b-4c99-898a-4e795edf38f4,
+segona onada. Res de la governança està aplicat: ho fa el Mestre amb executor-mutacio.mjs i una lease.
+
+======================================================================
+0. DECISIÓ DEL MESTRE I QUÈ JA ESTÀ FET
+======================================================================
+
+Decisió del Mestre al xat (261006): «ADR + port neutral» (candidata S de CANDIDATES.txt §3 amb la
+variant final de l'orquestrador) i «Sí, signada hui» per a l'ADR-2026-09. La frase canònica, idèntica
+caràcter per caràcter als quatre llocs (font única: substitucions.json, «frase»):
+
+**Model B:** Sollutia és l'amfitrió i el soci d'infraestructura de Sóc de Poble: allotja el Web Component, ens pot passar la sessió i ens obri la seua API només en lectura (GET a través de la Frontissa), sense injectar cap backend ni interferir en l'arquitectura o el disseny. Les dades del poble viuen al Supabase de Sóc de Poble, única font de veritat, darrere d'un port neutral (`src/data/backendPort.js`): el frontend, 100% modular, s'enxufa a qualsevol amfitrió (Sollutia, WordPress o Joomla), canviar de backend és una decisió de Sóc de Poble amb una ADR i el kit de conformitat, i sempre podem traure-ho «tot fora».
+
+JA APLICAT amb Edit (segona onada; substitucions.json, «aplicat», ho llista parell a parell):
+  · _wiki_de_poble/02_saber/architecture/ADR-2026-09-SOLLUTIA-MODEL-B.md
+      :3  status esborrany → canonic (enum de tooling/wiki/schema.json:33-43; és el valor de les normes
+          vigents: doc_governanca, estandard_integracio_react, estandard_ui_universal, llei_05_privacitat).
+          L'ADR germana, ADR-2026-08-ONLINE-FIRST.md:3, continua en esborrany: consta acceptada (:14) però
+          no signada. Per tant, l'ADR-2026-09 és la primera ADR que passa a canonic per signatura.
+      :10 la frase + « No hi ha escriptures creuades.»
+      :14 acceptada el 16-09-2026 i signada pel Mestre el 6-10-2026 (xat, torn torn_9d5803f4), «Aprovació
+          humana: signada.»
+      :24 F1 (identitat.js:486); :35-36 F2 (el token del GET, pendent: creaFrontissa.js:60-63) i F3
+          (client.js:9); :43 S5 (el port no s'obri a cap amfitrió; canviar de backend és ADR + kit, per la
+          via interna del paquet).
+  · _wiki_de_poble/03_actuar/plantilles/prompt_local.md
+      :38 i :43 versió 3.4.0; :54 línia d'historial v3.4.0; :73 «- » + la frase (bloc fix «Context Tècnic
+      i Arquitectònic», sense repetir l'etiqueta); :78 Directiva Suprema: els punts d'accés de Sollutia
+      entren per la Frontissa, només en lectura.
+  · _wiki_de_poble/02_saber/estandard_integracio_react.md:129-130 (F4 i F5: configura() descarta backend,
+      backend_url i tenant_id des del 261003).
+  · src/data/contracte.js:147 i src/data/conformitat/kit.js:11 (només comentaris) i el títol de la prova
+      src/data/contracte.test.js:207 (mateixos asserts). Zero línies executables, zero píxels.
+  · Efecte automàtic: el servidor de desenvolupament (tooling/vite/wiki-watcher.mjs:44-73) ha regenerat
+      src/data/wikiManifest.js amb els tres documents de la Wiki. S'ha de versionar amb ells. Contra HEAD
+      canvien 5 línies: :543 (status de l'ADR), :549 (ADR), :765 (estàndard d'integració), :1493
+      (prompt_local) i :1473 (prompt_consell, que no he tocat: la còpia de HEAD ja era rància).
+
+======================================================================
+1. PECES D'ESTE PAQUET
+======================================================================
+
+nous/AGENTS.md.txt i nous/.agents/AGENTS.md.txt
+  · AGENTS.md amb la línia 53 (§8) canviada per la frase. Res més. El mirall porta els mateixos bytes:
+    porta-autoritat.mjs:13 compara byte a byte, i amb el pla no cal --write.
+nous/.agents/QUI_SOC.md.txt
+  · Línia 37: «El sistema usa Supabase (Sollutia).» → «El sistema usa el Supabase de Sóc de Poble, única
+    font de veritat; Sollutia n'és l'amfitrió (Model B).» (Q-BS de CANDIDATES.txt §4.6). Res més.
+nous/.agents/protocolledge.json
+  · Línia 70: la ruta prompt.local passa de "3.3.0" a "3.4.0", la versió que ja diu la plantilla. Res més
+    (sense salt de línia final, com l'original).
+substitucions.json (sdp.t4.governanca.v2)
+  · Font única de la frase, dels quatre llocs on viu i dels parells vell → nou de la governança i del que
+    ja s'ha aplicat. Les quatre candidates de la primera onada (A, B, P i S) són a CANDIDATES.txt §3-§4.
+prepara-pla.mjs
+  · BASES fixa el sha256 de cada original al tall 76947e5d i és el `before` de la CAS de l'executor.
+    «comprova» diu pendent, aplicat o deriva per a cada fitxer. Deriva = el disc ja no és el del tall:
+    no es força, es refà el paquet («genera», després d'actualitzar BASES).
+  · Precondició mecànica: la frase ha de ser ja, una sola vegada, a la plantilla i a l'ADR, i l'ADR ha de
+    dir «Aprovació humana: signada.». Si no, el pla es nega: AGENTS.md no pot dir el que la Wiki no diu.
+  · «genera» refà nous/ des del disc del tall més les substitucions. És com s'han fet els fitxers de
+    nous/: una còpia a mà no conserva els espais finals de línia (AGENTS.md:30, QUI_SOC.md:10 i :42).
+  · operationId sdp-model-b-enx01-261006-…; Petorreta 261006_0300_PROMPT_model_b_frase_canonica_agents_
+    mirall_quisoc_protocolledge_executor.md (9 paraules de títol; validatePetorreta en vol de 8 a 12).
+CANDIDATES.txt
+  · Inventari, contrast amb el codi, les quatre candidates, la decisió del Mestre al principi i les
+    decisions que encara són seues (§6).
+
+======================================================================
+2. PROVES (executades el 261006 abans de lliurar)
+======================================================================
+
+  npx vitest run tests/laboratori-model-b-261006.test.js
+    · ESLint del repositori sobre prepara-pla.mjs, el corredor i els tres fitxers de src/ tocats: zero.
+    · BASES és el sha256 del disc; una base falsa és deriva amb «refés el paquet».
+    · Cada fitxer de nous/ és l'original del disc amb les substitucions i res més; el mirall porta els
+      mateixos bytes que AGENTS.md (a nous/ i al disc d'ara).
+    · La frase és idèntica, una sola vegada i en la seua línia, a AGENTS.md:53 i al mirall (nous/), a la
+      plantilla :73 i a l'ADR :10 (disc). precondicions() és buida.
+    · porta-autoritat (checkAuthority): valid:true hui i en una còpia amb el paquet aplicat.
+    · El contracte carrega: hui prompt.local 3.3.0 amb la frase al bloc fix; amb el protocolledge de nous/,
+      3.4.0, mateixos encapçalaments, i el router només canvia en eixa versió.
+    · El pla passa validatePlan de l'executor (4 fitxers, `before` = BASES, scopes .agents/AGENTS.md,
+      .agents/QUI_SOC.md, .agents/protocolledge.json i AGENTS.md).
+    · Sense la frase a la plantilla, precondicions() ho diu i el pla es nega.
+    · La Petorreta passa validatePetorreta; ni ella, ni el manifest, ni este fitxer, ni CANDIDATES.txt
+      porten cap patró sensible del seal.
+    · D'extrem a extrem, en un directori temporal amb una sessió fictícia: comprova --session imprimix
+      les ordres fins a l'executor; preparaSessio es nega amb un target fora dels scopes, amb la sessió
+      no oberta i amb risc baix; parseArgs rebutja les ordres i els arguments desconeguts.
+    · La CLI real: «node prepara-pla.mjs comprova» ix amb 0, imprimix «Pla vàlid: 4 fitxers» i l'ordre
+      d'open; «manifest» torna el JSON amb este fitxer.
+    · El que s'ha aplicat a la Wiki i a src/ hi és (cap text vell, cada nou una vegada); contracte.js i
+      kit.js són iguals a HEAD sense comentaris; contracte.test.js només canvia el títol.
+    · Cites vives: identitat.js:486, creaFrontissa.js:60-63 (sense Authorization), client.js:9 i 17
+      línies, contracteAmfitrio.js:108-111, host.js:85-110 i :126; i les de D5.
+    · injectaBackendDelPaquet no té cridadors productius i la Frontissa no té consumidors.
+    · Efectes: cap torn viu té rebuts sense instantània; la Plantilla viva sobre el 0224 (§4); el
+      tractor-frontmatter no troba cap fallada als tres documents de la Wiki tocats.
+  Altres proves del front (segona onada):
+    · node tooling/gates/porta-plantilles.mjs → 13 rutes verdes.
+    · node tooling/gates/porta-documents.mjs → 6 errors: 1 alié i previ (el rebut del prompt 0224, §4) i 5
+      de l'informe del torn, que aleshores era un esquelet; estos 5 desapareixen en completar l'informe.
+    · npx vitest run tests/host.test.js src/config src/data/conformitat src/data/contracte.test.js → verd.
+    · node --test tests/conformitat-amfitrio.test.mjs tests/frontissa-gate.test.mjs → verd.
+
+======================================================================
+3. ORDRE D'APLICACIÓ (Mestre, des de l'arrel)
+======================================================================
+
+  0. La decisió ja és presa (261006). La Wiki ja porta la frase: comprova ho exigix.
+  1. node _wiki_de_poble/04_escriptori/02_investigacio_ia/261006_0300_ledger_claude/t4_model_b/prepara-pla.mjs comprova
+     Ha de dir «Pla vàlid: 4 fitxers». Si diu deriva, algú ha tocat un original després de 76947e5d: no es
+     força; s'actualitza BASES, es refà nous/ amb «genera» i es torna a passar el corredor.
+  2. L'ordre d'open que imprimix (reflex_petorreta.mjs open … --risk=high --operation=governance-write
+     amb els quatre scopes).
+  3. node …/prepara-pla.mjs comprova --session=SESSIÓ, i les ordres que imprimix en eixe ordre (pla,
+     Petorreta, manifest, seal i executor). L'executor exigix el segell de skills vàlid abans
+     (executor-mutacio.mjs:42): si un altre front l'ha trencat, primer es resegella.
+  4. Després de l'executor (valid:true i una transacció a .agents/seal-transactions):
+       node tooling/gates/porta-autoritat.mjs          (valid:true; el mirall és idèntic sense --write)
+       node tooling/gates/porta-plantilles.mjs
+       node tooling/gates/tractor-doctrina.mjs         (la frase cita src/data/backendPort.js, que existix)
+       node tooling/gates/tractor-enxufe.mjs
+       npx vitest run tests/host.test.js src/config src/data/conformitat src/data/contracte.test.js
+       node --test tests/conformitat-amfitrio.test.mjs tests/frontissa-gate.test.mjs
+  5. RETIRAR EL CORREDOR: tests/laboratori-model-b-261006.test.js fa skip quan nous/ ja és al disc o hi ha
+     la transacció, però és codi mort dins de test:ci (Vitest): s'ha de llevar en el mateix commit.
+  6. LEDGER i ESTAT: la transacció, la decisió D1 que ESTAT.md:888 tenia pendent des del 23-09, i la
+     correcció d'ESTAT.md:1020 («signada el 16-09»: era acceptada el 16-09 i signada el 6-10). Arxivar
+     este laboratori.
+
+======================================================================
+4. EFECTES DECLARATS
+======================================================================
+
+  · Plantilla prompt_local editada (ja aplicat). Els rebuts amb instantània del contracte no canvien:
+    validateDocument i la Plantilla viva validen contra la instantània (turns.mjs:207-213,
+    porta-plantilla-viva.mjs:165-169). Els prompts ja creats es deixen com estan.
+  · EXCEPCIÓ, el prompt 261006_0224_prompt_claude_ledger.md: el seu reflex apunta al rebut e0cdbec3, que
+    és del fitxer «…_petorreta_…» (torn_c8669d8b…json:2889-2897). porta-plantilla-viva.mjs:141 dona
+    l'error del reflex i, sense instantània, :169 carrega el contracte viu: des d'esta onada, revisaEstructura
+    (:124-126) hi afig «bloc normatiu alterat: «Context Tècnic i Arquitectònic»». La porta ja era roja per
+    a este document: no canvia l'eixida. Si el reflex passa al rebut d520bbe6 (:2921-2929, del nom bo i
+    amb la instantània fddbede1), els dos errors desapareixen. No l'he tocat: és fora d'este front.
+    porta-documents no ho veu: validateDocument cau abans, a turns.mjs:204.
+  · Fins que s'aplique el paquet, la plantilla diu 3.4.0 i protocolledge.json 3.3.0: un prompt nou escriu
+    «3.3.0» al Registre (document.mjs:16), com abans escrivia 3.3.0 amb la plantilla a 3.3.1. Cap eina
+    compara les dues versions.
+  · Pujar protocolledge.json canvia contract.hash (core.mjs:129): checkTurn (turns.mjs:238) i
+    validateDocument (:208) només ho noten en torns amb algun rebut sense instantània. El corredor
+    exigix que cap torn no tancat i viu en tinga; els tres que en tenien (acdcaf49, afa18e33, f8920453)
+    van caducar el 2026-09-23.
+  · El panell d'Agents de la Wiki (PanellAgents.jsx) mostra AGENTS.md tal qual: aplicar el paquet canvia
+    eixe text. És el contingut que ha decidit el Mestre, no un canvi de disseny.
+  · nous/.agents/protocolledge.json és un segon fitxer amb este nom base al repositori: tractor-doctrina
+    resol les cites «protocolledge.json» sense camí des de .agents/ pel directori del document
+    (tractor-doctrina.mjs:225-229), i a les skills totes porten el camí sencer. Desapareix en arxivar
+    el laboratori.
+
+======================================================================
+5. DECISIONS QUE CONTINUEN SENT DEL MESTRE
+======================================================================
+
+  Les alineacions de CANDIDATES.txt §4.10 NO s'han aplicat. Cadascuna necessita la seua ordre; el text
+  proposat sota la decisió presa (S) és a CANDIDATES.txt §6, D9.
+  A més: D2 (si Sollutia opera el Supabase de SdP), D6 (la costura injectaBackendDelPaquet), D7 (el token
+  del GET cap a Sollutia) i la decisió nova D10 (la Frontissa no es pot recórrer hui; obrir-la és codi).
+
+======================================================================
+6. LÍMITS
+======================================================================
+
+  · No he pogut executar porta-autoritat.mjs, tractor-doctrina.mjs ni tractor-frontmatter.mjs des de la
+    línia d'ordres (el hook ho denega): el corredor importa checkAuthority i executa el tractor-frontmatter
+    amb --json des d'una prova. tractor-doctrina no s'ha executat; la seua regla (la ruta citada existix)
+    la comprova el corredor per a la frase.
+  · Concurrència: si un altre front toca AGENTS.md, QUI_SOC.md o protocolledge.json abans de l'executor,
+    comprova dirà deriva. És el senyal per a refer el paquet, mai per a forçar-lo.
+  · El paquet no toca .claude/ ni cap skill: no cal resegellar per ell.
+
+Ancoratge: [[00_index_escriptori]]

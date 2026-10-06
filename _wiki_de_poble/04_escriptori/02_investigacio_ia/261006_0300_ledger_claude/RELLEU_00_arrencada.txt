@@ -1,0 +1,21 @@
+RELLEU 00 · Arrencada del torn de Claude (Opus 5.5, ultracode) · 261006 ~03:00 local
+Torn: torn_9d5803f4-d18b-4c99-898a-4e795edf38f4 (abast code). Informe: 04_escriptori/261006_0300_auditoria_claude.md (complet, document.mjs check vàlid).
+Encàrrec: prompt 261006_0224_prompt_claude_ledger (T1-T6), enganxat pel Mestre al xat. Pla: 261006_0224_pla_implementacio_antigravity.
+
+TANCAT (261006 ~06:00 local). Tres workflows (15, 10 i 6 agents), cada lliurament refutat per un escèptic.
+
+Decisions del Mestre al xat:
+  · T4: Model B = «ADR + port neutral»; ADR-2026-09 SIGNADA el 2026-10-06 (aplicada a l'ADR i a prompt_local 3.4.0).
+  · T6a: «Maquinària de la IAIA» amb el panell d'Agents és ordre seua; Telefonades fora de la barra mòbil és intencionat.
+
+Fet a src/ i a la Wiki (sense commit): proves de les apps locals (35), Wiki, privacitat, barra mòbil, frontera nativa,
+catàleg de disseny alineat, ADR, plantilla prompt_local, estàndard d'integració i dos comentaris de codi.
+Paquets per a executor i lease (res aplicat): t2_t5_skills, t4_model_b, t6_higiene, t1_ledger. Ordre: informe §8.
+
+Verificació final: corredors i proves de l'abast verds; bateria Vitest sencera amb només 2 roges prèvies al torn
+(components.abast.capes i TextSection); suite node primary amb 9 roges de backend_consolidacio (CS-01, es resol amb t2_t5_skills).
+
+Preguntes obertes per al Mestre (detall a l'informe §7):
+  · T7 i T8, afegits per MarIA al prompt a les 03:49 després de l'ordre del xat: no executats sense confirmació.
+  · Seguretat: .env bolcat als transcripts d'Antigravity (ac48a44b:365 i 62fa5929:1276): revisar i rotar.
+  · Decisions de LEDGER, skills, Gestoria (D1), Model B (alineacions), Wiki, barra mòbil i higiene.
