@@ -141,7 +141,10 @@ test('LEDGER: quatre formes, malformades, fòssils i signatura vàlida', () => {
       { data: '260927', tipus: 'torn', skill: 'claude-fable', resum: 'primera.' },
       { data: '260928', tipus: 'torn', skill: 'claude', resum: 'segona' }
     ],
-    fossils: 1,
+    // 261006 (T1 del Mestre): el segell enganxat davant d'una entrada és un peu
+    // històric; l'anomalia és la línia (forma 3), que ja compta a malformades.
+    fossils: 0,
+    peusHistorics: 1,
     malformades: 4
   });
 });
@@ -154,7 +157,8 @@ test('LEDGER: la signatura l’han d’acceptar ledger.mjs i verify-ledger.mjs a
   const sense = analitzaLedger(COS_LEDGER);
   assert.equal(sense.valid, false);
   assert.equal(sense.fossils, 0, 'una sola marca és l’última, encara que no segelle');
-  assert.deepEqual(analitzaLedger(''), { valid: false, entrades: [], fossils: 0, malformades: 0 });
+  assert.equal(sense.peusHistorics, 0, 'l’última marca és el peu final, no un peu històric');
+  assert.deepEqual(analitzaLedger(''), { valid: false, entrades: [], fossils: 0, peusHistorics: 0, malformades: 0 });
 });
 
 test('LEDGER: resumLedger llig el fitxer o torna null', () => {
@@ -163,6 +167,45 @@ test('LEDGER: resumLedger llig el fitxer o torna null', () => {
   escriu(arrel, '.agents/LEDGER.md', signa(COS_LEDGER));
   assert.equal(resumLedger(arrel).valid, true);
   assert.equal(resumLedger(arrel).entrades.length, 5);
+});
+
+/* ── 261006 (prompt 261006_0224, T1) · Peus intercalats: tots són història; l'enganxat a text, a més, és anomalia ── */
+const peu = (c) => `<!-- HASH: ${c.repeat(64)} -->`;
+
+test('LEDGER 261006: els peus intercalats són història; només és fòssil el segell enganxat que cap línia mal formada recull', () => {
+  const cos = [
+    '# LEDGER', '',
+    '260922 | torn | claude | primera', '',
+    peu('a'), '',
+    '260923 | torn | claude | segona',
+    `${peu('b')}${peu('c')}`,
+    `- Nota de prosa ${peu('d')}`,
+    `260924 | torn | claude | amb segell al final ${peu('e')}`,
+    `${peu('f')}260925 | torn | claude | forma 3`,
+    '260926 | torn | claude | última'
+  ].join('\n');
+  const r = analitzaLedger(signa(cos));
+  assert.equal(r.valid, true);
+  assert.equal(r.peusHistorics, 6, 'a, b, c, d, e i f: tots els peus intercalats, també els enganxats');
+  assert.equal(r.fossils, 2, 'd i e: enganxats a un text que cap línia mal formada no recull');
+  assert.equal(r.malformades, 1, 'la forma 3 compta una sola vegada, com a línia');
+  assert.deepEqual(r.entrades.map((e) => e.data), ['260922', '260923', '260924', '260925', '260926']);
+  // El peu final no és mai història: sense signar i sense les dues últimes línies,
+  // l'última marca (e) fa de peu final i deixa de comptar com a fòssil.
+  const sense = analitzaLedger(cos.split('\n').slice(0, -2).join('\n'));
+  assert.deepEqual([sense.valid, sense.peusHistorics, sense.fossils], [false, 4, 1]);
+});
+
+test('LEDGER 261006: separar les dues línies enganxades no esborra cap peu i deixa zero anomalies', () => {
+  const abans = ['# LEDGER', '', `${peu('a')}260927 | torn | claude-fable | enganxada al peu`,
+    '260927 | torn | claude-fable | primera.260928 | torn | claude | segona'].join('\n');
+  const despres = ['# LEDGER', '', peu('a'), '260927 | torn | claude-fable | enganxada al peu',
+    '260927 | torn | claude-fable | primera.', '260928 | torn | claude | segona'].join('\n');
+  assert.equal(despres.length, abans.length + 2, 'només s’hi afigen dos salts de línia');
+  const [a, d] = [analitzaLedger(signa(abans)), analitzaLedger(signa(despres))];
+  assert.deepEqual([a.peusHistorics, a.fossils, a.malformades], [1, 0, 2]);
+  assert.deepEqual([d.peusHistorics, d.fossils, d.malformades], [1, 0, 0]);
+  assert.deepEqual(d.entrades, a.entrades, 'les mateixes entrades, amb el mateix text');
 });
 
 test('ESTAT: data de la primera capçalera en ISO local, sense buscar-ne una altra', () => {

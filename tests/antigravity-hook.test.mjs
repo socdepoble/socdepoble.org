@@ -8,6 +8,8 @@
  *
  *  Tres blocs: el nucli amb portes falses, el procés real contra un Mas de prova
  *  a os.tmpdir() (amb les portes de veres) i l'esquema del hooks.json versionat.
+ *  Les proves «[261006 t6]» són les del briefing de taula (laboratori
+ *  261006_0300_ledger_claude/t6_higiene).
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -19,6 +21,11 @@ import { fileURLToPath } from 'node:url';
 import {
   preTool, preInvocation, calenPortes, sensePosicions, perError, DESK, INTERRUPTOR, TRACA, MODES
 } from '../tooling/gates/antigravity-hook.mjs';
+
+/* El briefing no exporta res nou (vegeu el comentari del hook): les proves en
+   repetixen els dos literals que necessiten. */
+const BRIEFINGS = '.agents/runtime/antigravity-briefing.log';
+const MARCA_BRIEFING = '[Briefing de taula';
 
 const REPO = fileURLToPath(new URL('..', import.meta.url));
 const SCRIPT = fileURLToPath(new URL('../tooling/gates/antigravity-hook.mjs', import.meta.url));
@@ -194,6 +201,260 @@ test('PreInvocation: taula bruta → missatge efímer curt; taula neta → {}', 
   assert.throws(() => preInvocation({ portes: portes({ taula: null }) }), /il·legible/);
 });
 
+/** Memòria falsa del briefing: recorda les claus que ja ha vist. */
+function memoria() {
+  const vistes = [];
+  return { vistes, primera: (clau) => { if (vistes.includes(clau)) return false; vistes.push(clau); return true; } };
+}
+const HERETATS = Object.freeze({ dia: '261006', documents: ['261006_0224_prompt_claude_ledger.md', '261005_1303_prompt_opus_local.md', '261005_1303_pla_implementacio_opus.md'], artefactes: 0 });
+
+test('[261006 t6] PreInvocation: taula neta amb vius declarats → briefing una vegada per conversa i jornada', () => {
+  const m = memoria();
+  const f = { ...portes(), heretats: () => HERETATS };
+  const p = { invocationNum: 1, initialNumSteps: 1, conversationId: 'conv-a' };
+  const r = preInvocation({ portes: f, payload: p, primera: m.primera });
+  const msg = r.injectSteps[0].ephemeralMessage;
+  assert.ok(msg.startsWith(MARCA_BRIEFING), msg);
+  assert.match(msg, /AGENTS §0\.1 · primera crida de la conversa\]/);
+  assert.match(msg, /verd no vol dir consumit/);
+  assert.match(msg, /3 document\(s\) continuen declarats vius a «## Activitat en curs», 2 d'abans de hui \(261005_1303_pla_implementacio_opus, 261005_1303_prompt_opus_local, 261006_0224_prompt_claude_ledger\)/,
+    'tots els declarats vius, els més antics primer, i quants són d’abans de hui');
+  assert.doesNotMatch(msg, /prompt_opus_local\.md/, 'els noms van sense .md, com els admet --nom');
+  assert.match(msg, /core-higiene-escriptori, pas 0/);
+  assert.match(msg, /es queda declarat i ho dius al Mestre \(qui i per a què\)/);
+  assert.match(msg, /node tooling\/gates\/porta-olivera\.mjs --arxiva --sec --nom NOM/);
+  assert.match(msg, /ni mv, ni rm, ni scripts sobre l'índex/);
+  assert.doesNotMatch(msg, /sense esperar l'ordre/, 'el briefing no empeny a actuar fora de les vies');
+  assert.doesNotMatch(msg, /al costat de l'àncora/, '--arxiva deixaria el motiu solt a l’índex');
+  assert.ok(msg.length < 1100, `efímer curt: ${msg.length}`);
+  assert.deepEqual(m.vistes, ['conv-a:261006']);
+  assert.deepEqual(preInvocation({ portes: f, payload: { ...p, invocationNum: 2 }, primera: m.primera }), {}, 'la segona crida de la mateixa conversa i jornada calla');
+  assert.ok(preInvocation({ portes: f, payload: { conversationId: 'conv-b' }, primera: m.primera }).injectSteps, 'una altra conversa el rep');
+  assert.ok(preInvocation({ portes: { ...f, heretats: () => ({ ...HERETATS, dia: '261007' }) }, payload: p, primera: m.primera }).injectSteps, 'una jornada nova el torna a dir');
+  assert.deepEqual(m.vistes, ['conv-a:261006', 'conv-b:261006', 'conv-a:261007']);
+});
+
+test('[261006 t6] PreInvocation: sense heretats, sense memòria o amb la taula bruta → cap briefing', () => {
+  let crides = 0;
+  const primera = () => { crides++; return true; };
+  assert.deepEqual(preInvocation({ portes: { ...portes(), heretats: () => ({ dia: '261006', documents: [], artefactes: 0 }) }, primera }), {});
+  assert.equal(crides, 0, 'sense res a dir no es gasta la memòria');
+  assert.deepEqual(preInvocation({ portes: { ...portes(), heretats: () => HERETATS } }), {}, 'sense memòria no hi ha briefing: es repetiria a cada crida');
+  assert.deepEqual(preInvocation({ portes: portes(), primera }), {}, 'portes sense heretats: el comportament d’abans');
+  const brut = preInvocation({
+    portes: { ...portes({ taula: { valid: false, errors: ['Sense àncora a l’índex: x.md'] } }), heretats: () => { throw new Error('no s’ha de calcular'); } },
+    primera
+  });
+  assert.match(brut.injectSteps[0].ephemeralMessage, /^\[Escriptori brut/);
+  assert.equal(crides, 0, 'la taula bruta mana i no consumix el briefing');
+  assert.deepEqual(preInvocation({ portes: { ...portes(), heretats: () => HERETATS }, primera: () => false }), {});
+  assert.throws(() => preInvocation({ portes: { ...portes(), heretats: () => null }, primera }), /heretats ha tornat un resultat il·legible/);
+});
+
+test('[261006 t6] text del briefing: artefactes sols, ordre, retall de noms, unió i clau de memòria', () => {
+  const claus = [];
+  const primera = (clau) => { claus.push(clau); return true; };
+  const briefing = (h, payload = null) => preInvocation({ portes: { ...portes(), heretats: () => ({ dia: '261006', ...h }) }, payload, primera });
+  assert.deepEqual(briefing({ documents: [], artefactes: 0 }), {});
+  const art = briefing({ documents: [], artefactes: 90 }).injectSteps[0].ephemeralMessage;
+  assert.ok(art.startsWith(MARCA_BRIEFING));
+  assert.match(art, /90 artefacte\(s\) d'abans de hui continuen al primer nivell/);
+  assert.doesNotMatch(art, /document\(s\)/);
+  const molts = Array.from({ length: 9 }, (_, i) => `26100${9 - i}_0900_prompt_${9 - i}.md`);
+  const m = briefing({ documents: molts, artefactes: 2 }, { conversationId: 'abc' }).injectSteps[0].ephemeralMessage;
+  assert.match(m, /9 document\(s\) continuen declarats vius a «## Activitat en curs», 5 d'abans de hui \(261001_0900_prompt_1, /, 'ordenats per data encara que l’índex els porte desordenats');
+  assert.match(m, /261006_0900_prompt_6 \+3\)/);
+  assert.doesNotMatch(m, /prompt_7/);
+  assert.match(m, /, i 2 artefacte\(s\)/);
+  assert.ok(m.length < 1100, `efímer curt: ${m.length}`);
+  const hui = briefing({ documents: ['261006_0224_prompt_claude_ledger.md'], artefactes: 0 }).injectSteps[0].ephemeralMessage;
+  assert.match(hui, /1 document\(s\) continuen declarats vius a «## Activitat en curs» \(261006_0224_prompt_claude_ledger\)/, 'sense cap d’abans de hui no se’n diu cap recompte');
+  assert.deepEqual(claus, ['sense-conversa:261006', 'abc:261006', 'sense-conversa:261006'], 'la clau és la conversa i la jornada; sense conversa, «sense-conversa»');
+});
+
+test('[261006 t6] el cas del 5-10: dotze declarats vius, sis d’abans de hui i sis de la marató de la mateixa nit', () => {
+  // Llista literal de l'informe de la porta al transcript 62fa5929 (pas 14, 09:39:11Z).
+  const vius = ['261004_2045_pla_implementacio_marato_excelencia', '261004_2119_auditoria_adversarial_claude_codex',
+    '261004_2230_pla_implementacio_equip_claude_codex', '261004_2230_prompt_equip_claude_codex', '261004_2240_auditoria_codex',
+    '261004_2245_auditoria_claude', '261005_0335_pla_implementacio_avaluacio', '261005_0335_prompt_avaluacio',
+    '261005_0345_avaluacio_final_marato', '261005_0345_tasques_pendents_consola_visual', '261005_0410_prompt_tancament_codex',
+    '261005_0432_auditoria_codex'].map((n) => `${n}.md`);
+  const r = preInvocation({ portes: { ...portes(), heretats: () => ({ dia: '261005', documents: vius, artefactes: 0 }) }, payload: { conversationId: '62fa5929' }, primera: () => true });
+  const msg = r.injectSteps[0].ephemeralMessage;
+  assert.match(msg, /12 document\(s\) continuen declarats vius a «## Activitat en curs», 6 d'abans de hui \(261004_2045_pla_implementacio_marato_excelencia, /);
+  assert.match(msg, /261004_2245_auditoria_claude \+6\)/, 'els sis de la marató de la mateixa nit també hi són, comptats');
+  assert.ok(msg.length < 1100, `efímer curt: ${msg.length}`);
+});
+
+test('[261006 t6] briefing: els noms que la porta no deixa eixir per nom (BUNDLE, PROMPT i ABSENTS de crear_bundle) no reben l’ordre --nom', () => {
+  const briefing = (h) => preInvocation({ portes: { ...portes(), heretats: () => ({ dia: '261005', ...h }) }, payload: { conversationId: '62fa5929' }, primera: () => true }).injectSteps[0].ephemeralMessage;
+  // Els tres fitxers que scratch_anchor.mjs va declarar vius el 5-10 (transcript 62fa5929:78). La porta del
+  // 0055 només deixa eixir per nom la part termodinàmica en minúscules (NOM_ARTEFACTE): «--nom …BUNDLE_null»
+  // responia «no és cap document solt» (transcript 62fa5929:131).
+  const nulls = ['261005_1154_PROMPT_null.md', '261005_1154_ABSENTS_null.json', '261005_1154_BUNDLE_null.md'];
+  const sols = briefing({ documents: nulls, artefactes: 0 });
+  assert.match(sols, /3 no pot\(en\) eixir per nom \(majúscules o nom no termodinàmic; ANC-06: 261005_1154_ABSENTS_null\.json, 261005_1154_BUNDLE_null, 261005_1154_PROMPT_null\): per a eixos, pregunta al Mestre\./);
+  assert.doesNotMatch(sols, /--nom/, 'cap ordre --nom que la porta rebutjaria sempre');
+  assert.match(sols, /si no, pregunta al Mestre, perquè la porta no els deixa eixir per nom\./);
+  assert.match(sols, /ni mv, ni rm, ni scripts sobre l'índex/);
+  // El 5-10 sencer després de scratch_anchor: els dotze de l'informe i els tres fitxers *_null.
+  const dotze = ['261004_2045_pla_implementacio_marato_excelencia', '261004_2119_auditoria_adversarial_claude_codex',
+    '261004_2230_pla_implementacio_equip_claude_codex', '261004_2230_prompt_equip_claude_codex', '261004_2240_auditoria_codex',
+    '261004_2245_auditoria_claude', '261005_0335_pla_implementacio_avaluacio', '261005_0335_prompt_avaluacio',
+    '261005_0345_avaluacio_final_marato', '261005_0345_tasques_pendents_consola_visual', '261005_0410_prompt_tancament_codex',
+    '261005_0432_auditoria_codex'].map((n) => `${n}.md`);
+  const mixt = briefing({ documents: [...dotze, ...nulls], artefactes: 0 });
+  assert.match(mixt, /15 document\(s\) continuen declarats vius a «## Activitat en curs», 6 d'abans de hui \(/);
+  assert.match(mixt, /\. 3 no pot\(en\) eixir per nom \(majúscules o nom no termodinàmic; ANC-06: 261005_1154_ABSENTS_null\.json, /);
+  assert.match(mixt, /si no, node tooling\/gates\/porta-olivera\.mjs --arxiva --sec --nom NOM/, 'els altres sí que reben l’ordre');
+  // Artefactes no declarats: el host diu quants no poden eixir per nom.
+  const art = briefing({ documents: [], artefactes: 2, artefactesSenseNom: 1 });
+  assert.match(art, /2 artefacte\(s\) d'abans de hui continuen al primer nivell\. 1 no pot\(en\) eixir per nom \(majúscules o nom no termodinàmic; ANC-06\): per a eixos, pregunta al Mestre\./);
+  assert.match(art, /--arxiva --sec --nom NOM/);
+  assert.doesNotMatch(briefing({ documents: [], artefactes: 1, artefactesSenseNom: 1 }), /--nom/);
+  assert.doesNotMatch(briefing({ documents: dotze, artefactes: 0 }), /no pot\(en\) eixir per nom/, 'sense noms rebutjats, cap frase de més');
+  for (const m of [sols, mixt, art]) assert.ok(m.length < 1100, `efímer curt: ${m.length}`);
+});
+
+/* ── Guarda de l'índex i de l'arxiu ───────────────────────────────────────── */
+
+/** Arrel de prova amb l'Escriptori i l'índex: la guarda resol rutes i llig scripts reals. */
+function arrelGuarda(t) {
+  const arrel = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'sdp-guarda-index-')));
+  fs.mkdirSync(path.join(arrel, DESK), { recursive: true });
+  fs.writeFileSync(path.join(arrel, DESK, '00_index_escriptori.md'), '# Índex\n');
+  t.after(() => fs.rmSync(arrel, { recursive: true, force: true }));
+  return arrel;
+}
+
+test('[261006 t6] guarda de l’índex: heretoc, sed -i, perl -i i tee sobre l’índex → force_ask; lectures, git i la porta → allow', (t) => {
+  const arrel = arrelGuarda(t);
+  const idx = `${DESK}/00_index_escriptori.md`;
+  // El scratch_clean.mjs del 5-10 (transcript 62fa5929), escurçat.
+  const heretoc = `cat << 'EOF' > scratch_clean.mjs\nimport fs from 'fs';\nconst indexPath = '${idx}';\nlet content = fs.readFileSync(indexPath, 'utf-8');\nfs.writeFileSync(indexPath, content);\nEOF\nnode scratch_clean.mjs`;
+  for (const [CommandLine, Cwd] of [
+    [heretoc],
+    [`sed -i '' '/261002_0026_prompt_codex_claude/d' ${idx}`],
+    ["sed -i '' 's/261001_1000_/261001_0400_/g' 00_index_escriptori.md", path.join(arrel, DESK)],
+    [`sed -E -i '' 's/a/b/' ${idx}`],
+  ]) {
+    const r = preTool(crida('run_command', Cwd ? { CommandLine, Cwd } : { CommandLine }), { root: arrel });
+    assert.equal(r.decision, 'force_ask', CommandLine);
+    assert.match(r.reason, /índex de l'Escriptori per shell o per un script ad hoc/, CommandLine);
+    assert.match(r.reason, /pregunta al Mestre/);
+  }
+  for (const CommandLine of [`perl -pi -e 's/a/b/' ${idx}`, `echo x | tee -a ${idx}`]) {
+    assert.equal(preTool(crida('run_command', { CommandLine }), { root: arrel }).decision, 'force_ask', CommandLine);
+  }
+  for (const CommandLine of [
+    `cat ${idx} | grep 1303`,
+    `git add ${idx}`,
+    `git diff ${idx}`,
+    `grep -c 'Activitat en curs' ${idx} > /tmp/sdp-n.txt`,
+    'node tooling/gates/porta-olivera.mjs --arxiva --nom 261005_1155_prompt_fable.md',
+    'npm run olivera:arxiva',
+    "sed -n '1,20p' README.md",
+  ]) {
+    assert.equal(preTool(crida('run_command', { CommandLine }), { root: arrel }).decision, 'allow', CommandLine);
+  }
+});
+
+test('[261006 t6] guarda de l’índex: un script ad hoc que el nomena i escriu → force_ask; versionat o que només llig → allow', (t) => {
+  const arrel = arrelGuarda(t);
+  const escriu = `const fs = require('fs');\nconst f = '${DESK}/00_index_escriptori.md';\nfs.writeFileSync(f, fs.readFileSync(f, 'utf8').replace('a', 'b'));\n`;
+  fs.writeFileSync(path.join(arrel, 'update_index.cjs'), escriu);
+  fs.mkdirSync(path.join(arrel, 'scratch'));
+  fs.writeFileSync(path.join(arrel, 'scratch/llig.mjs'), `import fs from 'fs';\nconsole.log(fs.readFileSync('${DESK}/00_index_escriptori.md', 'utf8'));\n`);
+  fs.writeFileSync(path.join(arrel, 'scratch/fix.py'), `p = '${DESK}/00_index_escriptori.md'\nwith open(p, 'w') as f:\n    f.write('x')\n`);
+  for (const dir of ['tooling/brain', 'tests']) fs.mkdirSync(path.join(arrel, dir), { recursive: true });
+  fs.writeFileSync(path.join(arrel, 'tooling/brain/x.mjs'), escriu);
+  fs.writeFileSync(path.join(arrel, 'tests/x.test.mjs'), escriu);
+  const fora = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'sdp-guarda-fora-')));
+  t.after(() => fs.rmSync(fora, { recursive: true, force: true }));
+  fs.writeFileSync(path.join(fora, 'fix.js'), escriu);
+
+  const decidix = (CommandLine) => preTool(crida('run_command', { CommandLine }), { root: arrel });
+  const a = decidix('node update_index.cjs');
+  assert.equal(a.decision, 'force_ask');
+  assert.match(a.reason, /Script: update_index\.cjs\./);
+  assert.equal(decidix('python3 scratch/fix.py').decision, 'force_ask');
+  const b = decidix(`node ${path.join(fora, 'fix.js')}`);
+  assert.equal(b.decision, 'force_ask', 'un script de la carpeta de l’IDE, fora del repositori, també');
+  assert.match(b.reason, /fix\.js/);
+  for (const CommandLine of ['node scratch/llig.mjs', 'node tooling/brain/x.mjs', 'node --test tests/x.test.mjs', 'node no-existix.mjs', "node -e 'console.log(1)'"]) {
+    assert.equal(decidix(CommandLine).decision, 'allow', CommandLine);
+  }
+});
+
+test('[261006 t6] guarda de l’índex: un script ad hoc cridat amb el camí absolut d’una arrel amb espais (entre cometes o amb «\\ ») → force_ask', (t) => {
+  // L'arrel real és «…/Som de Poble/socdepoble.org» i MarIA hi escriu camins absoluts entre cometes
+  // dobles (transcript 62fa5929:1180-1208). Partit pels espais, el camí deixava una cometa oberta i passava.
+  const fora = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'sdp-guarda-espais-')));
+  t.after(() => fs.rmSync(fora, { recursive: true, force: true }));
+  const arrel = path.join(fora, 'Som de Poble', 'socdepoble.org');
+  fs.mkdirSync(path.join(arrel, DESK), { recursive: true });
+  fs.writeFileSync(path.join(arrel, DESK, '00_index_escriptori.md'), '# Índex\n');
+  const escriu = `import fs from 'fs';\nconst indexPath = '${DESK}/00_index_escriptori.md';\nfs.writeFileSync(indexPath, fs.readFileSync(indexPath, 'utf8'));\n`;
+  fs.writeFileSync(path.join(arrel, 'scratch_clean.mjs'), escriu);
+  fs.mkdirSync(path.join(arrel, 'scratch'));
+  fs.writeFileSync(path.join(arrel, 'scratch/llig.mjs'), `import fs from 'fs';\nconsole.log(fs.readFileSync('${DESK}/00_index_escriptori.md', 'utf8'));\n`);
+  fs.mkdirSync(path.join(arrel, 'tooling/brain'), { recursive: true });
+  fs.writeFileSync(path.join(arrel, 'tooling/brain/x.mjs'), escriu);
+  const script = path.join(arrel, 'scratch_clean.mjs');
+  assert.match(script, / de Poble\//, 'la prova necessita un camí amb espais');
+  const decidix = (args) => preTool(crida('run_command', args), { root: arrel });
+  for (const CommandLine of [
+    `node "${script}"`,
+    `node '${script}'`,
+    `node ${script.replaceAll(' ', '\\ ')}`,
+    `node "${script}" && node tooling/gates/porta-olivera.mjs`,
+  ]) {
+    const r = decidix({ CommandLine });
+    assert.equal(r.decision, 'force_ask', CommandLine);
+    assert.match(r.reason, /Script: scratch_clean\.mjs\./, CommandLine);
+  }
+  assert.equal(decidix({ CommandLine: 'node scratch_clean.mjs', Cwd: arrel }).decision, 'force_ask', 'Cwd amb espais i camí relatiu');
+  for (const CommandLine of [
+    `node "${path.join(arrel, 'scratch/llig.mjs')}"`,
+    `node "${path.join(arrel, 'tooling/brain/x.mjs')}"`,
+    `node "${path.join(arrel, 'no-existix.mjs')}"`,
+  ]) {
+    assert.equal(decidix({ CommandLine }).decision, 'allow', CommandLine);
+  }
+});
+
+test('[261006 t6] [DEFECTE] escapaments coneguts de la guarda d’scripts ad hoc: un cd dins de la mateixa ordre i un script de shell amb sed -i', (t) => {
+  // Deute confirmat i declarat (LLEGIU §5): estes proves passen perquè reproduïxen l'escapament.
+  const arrel = arrelGuarda(t);
+  const escriu = `import fs from 'fs';\nconst indexPath = '${DESK}/00_index_escriptori.md';\nfs.writeFileSync(indexPath, fs.readFileSync(indexPath, 'utf8'));\n`;
+  fs.writeFileSync(path.join(arrel, 'scratch_clean.mjs'), escriu);
+  fs.mkdirSync(path.join(arrel, 'scratch'));
+  fs.writeFileSync(path.join(arrel, 'scratch/neteja.sh'), `sed -i '' '/prompt_vell/d' ${DESK}/00_index_escriptori.md\n`);
+  const decidix = (CommandLine) => preTool(crida('run_command', { CommandLine }), { root: arrel });
+  // El camí es resol contra Cwd, no contra el cd previ: «../scratch_clean.mjs» des de l'arrel ix del repositori i no existix.
+  assert.equal(decidix('cd scratch && node ../scratch_clean.mjs').decision, 'allow');
+  // API_ESCRIPTURA no mira sed: un script de shell que fa sed -i sobre l'índex no es reconeix com a escriptura.
+  assert.equal(decidix('sh scratch/neteja.sh').decision, 'allow');
+  // Les mateixes escriptures dites a l'ordre, o amb el camí resolt des de Cwd, sí que pregunten.
+  assert.equal(decidix(`sed -i '' '/prompt_vell/d' ${DESK}/00_index_escriptori.md`).decision, 'force_ask');
+  assert.equal(decidix('node scratch_clean.mjs').decision, 'force_ask');
+});
+
+test('[261006 t6] esborrar o moure dins de 90_arxiu_historic → force_ask amb AGENTS §5; llegir-lo → allow', (t) => {
+  const arrel = arrelGuarda(t);
+  fs.mkdirSync(path.join(arrel, '_wiki_de_poble/90_arxiu_historic'), { recursive: true });
+  const decidix = (args) => preTool(crida('run_command', args), { root: arrel });
+  // El rm -f del 5-10 (transcript 62fa5929) sobre tres fitxers que acabaven d'arribar a l'arxiu.
+  const r = decidix({ CommandLine: 'rm -f _wiki_de_poble/90_arxiu_historic/261005_1154_BUNDLE_null.md' });
+  assert.equal(r.decision, 'force_ask');
+  assert.match(r.reason, /AGENTS §5/);
+  assert.equal(decidix({ CommandLine: 'rm x.md', Cwd: path.join(arrel, '_wiki_de_poble/90_arxiu_historic') }).decision, 'force_ask');
+  const mv = decidix({ CommandLine: `mv ${DESK}/260929_2346_prompt_x.md _wiki_de_poble/90_arxiu_historic/` });
+  assert.equal(mv.decision, 'force_ask');
+  assert.match(mv.reason, /--arxiva/, 'un trasllat des de l’Escriptori continua portant la via canònica');
+  assert.equal(decidix({ CommandLine: 'ls _wiki_de_poble/90_arxiu_historic' }).decision, 'allow');
+});
+
 /* ── Procés real contra un Mas de prova ───────────────────────────────────── */
 
 function mas(t) {
@@ -267,6 +528,66 @@ test('procés: PreInvocation injecta amb la taula bruta i calla amb la neta', (t
   const r = executa(arrel, 'pre-invocation', { invocationNum: 2, initialNumSteps: 10 });
   assert.match(r.injectSteps[0].ephemeralMessage, /AGENTS §0\.1/);
   assert.match(r.injectSteps[0].ephemeralMessage, /250101_1200_prompt_vell\.md/);
+});
+
+test('[261006 t6] procés: la taula bruta deixa el motiu a la traça', (t) => {
+  const arrel = mas(t);
+  fs.writeFileSync(path.join(arrel, DESK, '250101_1200_prompt_vell.md'), '# vell\n');
+  executa(arrel, 'pre-invocation', { invocationNum: 1, conversationId: 'conv-brut' });
+  const [l] = traces(arrel);
+  assert.equal(l.decisio, 'injecta');
+  assert.match(l.motiu, /^\[Escriptori brut · AGENTS §0\.1\]/);
+  assert.match(l.motiu, /250101_1200_prompt_vell\.md/);
+  assert.equal(fs.existsSync(path.join(arrel, BRIEFINGS)), false, 'la taula bruta no gasta el briefing');
+});
+
+test('[261006 t6] procés: briefing real amb la porta instal·lada, una vegada per conversa i jornada', (t) => {
+  const arrel = mas(t);
+  const vell = '250101_1200_prompt_vell';
+  fs.writeFileSync(path.join(arrel, DESK, `${vell}.md`), '# vell\n');
+  fs.writeFileSync(path.join(arrel, DESK, '00_index_escriptori.md'), `# Índex\n\n## Activitat en curs\n\n- [[${vell}]]\n`);
+  const a = executa(arrel, 'pre-invocation', { invocationNum: 1, initialNumSteps: 1, conversationId: 'conv-real' });
+  assert.ok(a.injectSteps[0].ephemeralMessage.startsWith(MARCA_BRIEFING), JSON.stringify(a));
+  assert.match(a.injectSteps[0].ephemeralMessage, /1 document\(s\) continuen declarats vius a «## Activitat en curs», 1 d'abans de hui \(250101_1200_prompt_vell\)/);
+  assert.deepEqual(executa(arrel, 'pre-invocation', { invocationNum: 2, conversationId: 'conv-real' }), {});
+  assert.ok(executa(arrel, 'pre-invocation', { invocationNum: 1, conversationId: 'conv-altra' }).injectSteps);
+  const l = traces(arrel);
+  assert.deepEqual(l.map((x) => x.decisio), ['briefing', 'res', 'briefing']);
+  assert.match(l[0].motiu, /^\[Briefing de taula/);
+  assert.equal(l[1].motiu, undefined);
+  const memoria = fs.readFileSync(path.join(arrel, BRIEFINGS), 'utf8').trim().split('\n').map((x) => JSON.parse(x).clau);
+  assert.deepEqual(memoria, [`conv-real:${avui()}`, `conv-altra:${avui()}`]);
+  // Arxivat el document, la taula queda neta i sense heretats: cap briefing nou.
+  fs.renameSync(path.join(arrel, DESK, `${vell}.md`), path.join(arrel, `${vell}.md`));
+  fs.writeFileSync(path.join(arrel, DESK, '00_index_escriptori.md'), '# Índex\n');
+  assert.deepEqual(executa(arrel, 'pre-invocation', { invocationNum: 1, conversationId: 'conv-tercera' }), {});
+});
+
+test('[261006 t6] procés: els vius de hui també hi entren, un .md en majúscules declarat viu és document i un artefacte d’abans de hui ancorat compta', (t) => {
+  const arrel = mas(t);
+  const hui = `${avui()}_0900_prompt_hui`;
+  const bundle = '250101_1154_BUNDLE_null.md';
+  const captura = '250101_1200_produccio_captura.png';
+  const absents = '250101_1154_ABSENTS_null.json';
+  fs.writeFileSync(path.join(arrel, DESK, `${hui}.md`), '# hui\n');
+  fs.writeFileSync(path.join(arrel, DESK, bundle), '# bundle\n');
+  fs.writeFileSync(path.join(arrel, DESK, captura), 'png');
+  fs.writeFileSync(path.join(arrel, DESK, absents), '[]\n');
+  fs.writeFileSync(path.join(arrel, DESK, '00_index_escriptori.md'), `# Índex\n\n## Activitat en curs\n\n- [[${hui}]]\n- [[${bundle}]]\n\n## Recursos\n\n- [[${captura}]]\n- [[${absents}]]\n`);
+  const r = executa(arrel, 'pre-invocation', { invocationNum: 1, conversationId: 'conv-artefacte' });
+  const msg = r.injectSteps[0].ephemeralMessage;
+  assert.ok(msg.startsWith(MARCA_BRIEFING), msg);
+  assert.match(msg, new RegExp(`2 document\\(s\\) continuen declarats vius a «## Activitat en curs», 1 d'abans de hui \\(250101_1154_BUNDLE_null, ${hui}\\)`));
+  assert.match(msg, /, i 2 artefacte\(s\) d'abans de hui continuen al primer nivell/, 'la captura i l’ABSENTS no són declarats vius: compten com a artefactes');
+  // El BUNDLE declarat i l'ABSENTS no declarat no ixen per nom: es diuen a banda; la resta conserva l'ordre --nom.
+  assert.match(msg, /\. 2 no pot\(en\) eixir per nom \(majúscules o nom no termodinàmic; ANC-06: 250101_1154_BUNDLE_null\): per a eixos, pregunta al Mestre\./);
+  assert.match(msg, /--arxiva --sec --nom NOM/);
+  // Sense res declarat ni artefactes, res a dir: ni briefing ni memòria gastada.
+  for (const f of [`${hui}.md`, bundle, captura, absents]) fs.renameSync(path.join(arrel, DESK, f), path.join(arrel, f));
+  fs.writeFileSync(path.join(arrel, DESK, '00_index_escriptori.md'), '# Índex\n');
+  assert.deepEqual(executa(arrel, 'pre-invocation', { invocationNum: 1, conversationId: 'conv-buida' }), {});
+  const memoria = fs.readFileSync(path.join(arrel, BRIEFINGS), 'utf8').trim().split('\n').map((x) => JSON.parse(x).clau);
+  assert.deepEqual(memoria, [`conv-artefacte:${avui()}`]);
 });
 
 /* ── Esquema de .agents/hooks.json ────────────────────────────────────────── */

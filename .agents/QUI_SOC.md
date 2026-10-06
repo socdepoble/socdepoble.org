@@ -34,7 +34,7 @@ Abans de redactar qualsevol prompt, auditoria, o decisió arquitectònica:
 3. L'autoritat executiva viu a `.agents/skills/`.
 
 ## 5. Arquitectura i Baseline
-- **Online i Enxufable:** El sistema usa Supabase (Sollutia). Codi frontend 100% modular.
+- **Online i Enxufable:** El sistema usa el Supabase de Sóc de Poble, única font de veritat; Sollutia n'és l'amfitrió (Model B). Codi frontend 100% modular.
 - **Baseline Canònic (2022):** Safari/iOS 16.0, Chrome 100, Firefox 100. Sense polyfills vells.
 - **Tolerància Zero:** Prohibició de `npm install` sense aprovació.
 

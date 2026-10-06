@@ -202,10 +202,13 @@ test('[DEFECTE D7 parcial] --arxiva no fa el relleu; CONTROL el relleu posterior
   assert.ok(abans.includes(`Document eliminat sense relleu: ${d.file}`), abans.join('\n'));
 
   // Relleu fet a mà (és el que mana la skill i el que el hook de Claude i Codex nega).
+  // 261006: el rebut d'un torn obert conserva una àncora amb camí davall de
+  // «## Arxivat amb la Porta Olivera», i el relleu ja no deixa el torn sense àncora.
   handoffDocument(root, d.turn.turn_id, d.file, desti);
   let errors = checkTurn(root, d.turn.turn_id).errors;
   assert.ok(!errors.some((e) => e.startsWith('Document eliminat sense relleu')));
-  assert.ok(errors.includes(`Document sense àncora: ${desti}`), errors.join('\n'));
+  assert.ok(!errors.includes(`Document sense àncora: ${desti}`), errors.join('\n'));
+  assert.ok(index(root).includes(`## Arxivat amb la Porta Olivera\n\n- [[../90_arxiu_historic/${sense(nom)}]]\n`), index(root));
 
   // L'àncora amb camí acredita el document arxivat en les dues portes.
   fs.appendFileSync(path.join(root, INDEX), `\n- [[../90_arxiu_historic/${sense(nom)}]]\n`);

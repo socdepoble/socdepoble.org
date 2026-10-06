@@ -12,20 +12,23 @@ tags:
 Font executiva única: `.agents/skills/`. Este índex només referencia les fonts.
 
 - [[core-automillora/SKILL|core-automillora]]: Protocol d'Automillora Contínua, Mimetisme Empàtic i l'Olivera (Co-working a Tres Bandes). Defineix com la IA aprèn de la insistència humana per humanitzar-se i com coordina tasques entre MarIA, Claude i Codex.
+- [[core-comprensio-reflexiva/SKILL|core-comprensio-reflexiva]]: Tractor cognitiu per aturar la impulsivitat. Obliga a pensar i entendre l'objectiu de la petició (l'aixada) abans d'actuar compulsivament.
 - [[core-consell-i-colmena/SKILL|core-consell-i-colmena]]: Defineix la família electrònica (El Consell), els seus rols i estratègies de delegació i consum en la Ment Colmena Integral.
 - [[core-context-panic/SKILL|core-context-panic]]: Fusible davant bucles d’errors, desincronització de context o fatiga de l’agent; indica com aturar i registrar el bloqueig.
 - [[core-edicio-segura/SKILL|core-edicio-segura]]: Fusible preventiu i Tractor contra l'edició cega i la desincronització destructiva de la IAIA MarIA.
 - [[core-empaquetat-wp/SKILL|core-empaquetat-wp]]: Tractor cognitiu per estandarditzar la creació, nomenclatura i emmagatzematge dels arxius ZIP del connector de WordPress, evitant l'acumulació de brossa a l'arrel.
 - [[core-estrategia-ia/SKILL|core-estrategia-ia]]: Estratègia de consum, triatge de models i telemetria persistent de costos.
-- [[core-higiene-escriptori/SKILL|core-higiene-escriptori]]: Usa-la abans de crear un prompt, una petorreta, un pla o una auditoria, i quan l'Escriptori estiga brut o el Mestre demane netejar-lo. L'orquestradora el neteja en el mateix torn amb la porta Olivera.
+- [[core-higiene-escriptori/SKILL|core-higiene-escriptori]]: Usa-la en arrencar cada conversa (abans de la primera resposta al Mestre), quan el hook injecte un briefing de taula o l'Escriptori estiga brut, abans de crear un prompt, una petorreta, un pla o una auditoria, i abans de tancar la sessió. L'orquestradora decidix cada document declarat viu i arxiva el consumit amb les ordres de la porta Olivera.
 - [[core-identitat/SKILL|core-identitat]]: Bootstrap d'identitat executiu de la IAIA MarIA. Carrega personalitat, veu, to i missió.
 - [[core-identitat-visual/SKILL|core-identitat-visual]]: Tractor (Skill) obligatori abans de generar cap imatge, recurs gràfic o disseny visual per a Sóc de Poble. Protegeix l'estil Bruguera/Berlanga.
 - [[core-llegibilitat-text/SKILL|core-llegibilitat-text]]: Tractor documental per garantir el format llegible (jerarquia H1-H6) i l'escaneig ràpid amb negretes en tots els textos del sistema.
+- [[core-maquetacio-markdown/SKILL|core-maquetacio-markdown]]: Regles verificables per a maquetar els fitxers Markdown del repositori (Wiki, skills, prompts i actes), amb un sol H1, encapçalaments sense salts, Vincles al final i llista de comprovació.
 - [[core-memoria-historica/SKILL|core-memoria-historica]]: Consulta i destil·la lliçons històriques, registra decisions i prepara relleus documentals sense arxivament automàtic.
 - [[core-neteja-brossa/SKILL|core-neteja-brossa]]: Tractor de neteja d'arrels. Retira de l'arrel de socdepoble.org la brossa solta (logs, pegats, sondes) sense tocar mai la configuració de les eines, l'estat local ni res versionat.
 - [[core-portaveu-institucional/SKILL|core-portaveu-institucional]]: Propaga i assegura l'actualització sincronitzada del Dossier Institucional de Sóc de Poble.
 - [[core-restauracio-segellada/SKILL|core-restauracio-segellada]]: Core skill per a restauració segura
 - [[core-taxonomia-estricta/SKILL|core-taxonomia-estricta]]: Tractor documental per blindar la taxonomia i evitar generació de documents arbitraris que no segueixen les plantilles canòniques.
+- [[core-tecniques-investigacio/SKILL|core-tecniques-investigacio]]: Tractor que defineix com les IAs (locals o externes) han d'investigar els problemes, verificant el codi real dels tractors en lloc de conformar-se amb llegir la teoria de les regles.
 - [[core-telemetria-huma/SKILL|core-telemetria-huma]]: Tractor cognitiu per mesurar el temps invertit, l'esforç i la fatiga humana del Mestre, lligant nanochats en jornades reals.
 - [[core-temps-termodinamic/SKILL|core-temps-termodinamic]]: Assegura l'ordre cronològic absolut en la taxonomia documental. Tractor de prevenció contra viatges en el temps.
 - [[sdp-app-grid-shell/SKILL|sdp-app-grid-shell]]: Lògica visual i de comportament del AppGridShell i UniversalWorkspace. Comportament de les barres, icones i redimensionament.

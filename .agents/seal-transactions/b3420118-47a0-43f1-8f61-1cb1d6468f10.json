@@ -1,0 +1,37 @@
+{
+  "id": "b3420118-47a0-43f1-8f61-1cb1d6468f10",
+  "session": "ef73fc1b-4845-4c1c-a467-e9636bdcf1e3",
+  "operationId": "sdp-skills-cataleg-261006-ef73fc1b",
+  "claim": "ef73fc1b-4845-4c1c-a467-e9636bdcf1e3:governance-write",
+  "planHash": "0b5feb66ee0fa82e237588f053917cad8b360ea8c6f252a96efb2d13747d72e2",
+  "beforeSeal": "6ed7aa5d5c0e655c3655314e8cf64616fcb2d4746c1d3eeb937c52b2e10439dc",
+  "files": [
+    {
+      "path": ".agents/manifest.yaml",
+      "before": "a59d1cc2aa1787b408cd68f8736f4f06bf6c83496139da239197824cac7ce476",
+      "after": "7c3a4759f06f42b22f1ec1b53b7d5aedce1f07c4ec94b4372c32a845de691f3e"
+    },
+    {
+      "path": ".agents/skills/00_INDEX_SKILLS.md",
+      "before": "003f85a67dd7e609e6dbd41642b315b862f08d7a18bab26af4ccc6ebc18e9d1d",
+      "after": "8aeac09a9bf105999860ab00af5c7b5f98666ea94f796878149cba516976c6e0"
+    },
+    {
+      "path": ".agents/skills/core-comprensio-reflexiva/SKILL.md",
+      "before": "4f25cfbf361a25e9d929634a0fcede2e227c6393a9551e9a5666211d91684b66",
+      "after": "0f24a2c812f082010902588661c6228782da318e57e08546ed23563bd87d2fd0"
+    },
+    {
+      "path": ".agents/skills/core-maquetacio-markdown/SKILL.md",
+      "before": null,
+      "after": "e913690f7406bfc77b85e17bd5d508531be7d7c6f4eb2702221768798faf25b7"
+    },
+    {
+      "path": ".agents/skills/core-tecniques-investigacio/SKILL.md",
+      "before": "9920f3bfc8cd39b520219f384eb9195805a22259cb0b96efb8c9c02367891da8",
+      "after": "bac49e35d7cfcd125323571f4cec236d7ccf0fe3f7e61585a0c48dc54742d28e"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "5a3baec04002d6f65c5875a73511645b6b1b8d2e2b51a3dcf2e768664e2bb6b8"
+}

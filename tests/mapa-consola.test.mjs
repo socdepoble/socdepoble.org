@@ -198,9 +198,9 @@ function comprovaContracte({ torns, escriptori, ledger, estat }) {
     assert.equal(typeof d.ancorat, 'boolean');
     assert.equal(typeof d.ambRebut, 'boolean');
   }
-  assert.deepEqual(claus(ledger), ['entrades', 'fossils', 'malformades', 'valid']);
+  assert.deepEqual(claus(ledger), ['entrades', 'fossils', 'malformades', 'peusHistorics', 'valid']);
   assert.equal(typeof ledger.valid, 'boolean');
-  assert.ok(Number.isInteger(ledger.fossils) && Number.isInteger(ledger.malformades));
+  assert.ok(Number.isInteger(ledger.fossils) && Number.isInteger(ledger.malformades) && Number.isInteger(ledger.peusHistorics));
   for (const e of ledger.entrades) {
     assert.deepEqual(claus(e), ['data', 'resum', 'skill', 'tipus']);
     assert.match(e.data, /^\d{6}$/);
@@ -245,4 +245,26 @@ test('fonts de vigilància absents: null, i no s’afigen a les fonts absents ob
   assert.deepEqual([fonts.torns, fonts.escriptori, fonts.ledger, fonts.estat], [null, null, null, null]);
   assert.ok(!fonts.absents.some((a) => /runtime\/turns|04_escriptori|LEDGER|ESTAT/.test(a.ruta)));
   assert.doesNotThrow(() => normalitzaMapa(recullMapa(arrel, { home, plataforma: 'linux', ara: ARA })));
+});
+
+/* ── 261006 (prompt 261006_0224, T1) · El Mapa no compta els peus històrics com a fòssils ── */
+test('LEDGER 261006: els peus intercalats arriben com a peus històrics i les mètriques del Mapa no els compten', () => {
+  const peu = (c) => `<!-- HASH: ${c.repeat(64)} -->`;
+  const valorDe = (mapa, nom) => mapa.salut.find((m) => m.metrica === nom)?.valor;
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'home-'));
+  const amb = (cos) => {
+    const arrel = mas();
+    escriu(arrel, '.agents/LEDGER.md', `${cos}\n\n<!-- HASH: ${crypto.createHash('sha256').update(cos).digest('hex')} -->`);
+    return { fonts: recullFonts(arrel, { home, plataforma: 'linux', ara: ARA }), mapa: recullMapa(arrel, { home, plataforma: 'linux', ara: ARA }) };
+  };
+  const net = amb(['# LEDGER', '', '260924 | torn | claude | a', '', peu('a'), '', '260924 | torn | claude | b', '', peu('b'), '', '260924 | torn | claude | c'].join('\n'));
+  assert.deepEqual([net.fonts.ledger.valid, net.fonts.ledger.peusHistorics, net.fonts.ledger.fossils, net.fonts.ledger.malformades], [true, 2, 0, 0]);
+  assert.equal(valorDe(net.mapa, 'ledger-fossils'), 0, 'dos peus històrics no són cap segell per revisar');
+  assert.equal(valorDe(net.mapa, 'ledger-mal-formades'), 0);
+  assert.ok(!net.mapa.avisos.some((a) => a.codi === 'ledger-invalid'));
+  assert.doesNotThrow(() => normalitzaMapa(net.mapa));
+  // Un segell enganxat a prosa sí que és un fòssil, i el Mapa el compta.
+  const brut = amb(['# LEDGER', '', '260924 | torn | claude | a', `- nota ${peu('a')}`, '260924 | torn | claude | b'].join('\n'));
+  assert.deepEqual([brut.fonts.ledger.peusHistorics, brut.fonts.ledger.fossils], [1, 1]);
+  assert.equal(valorDe(brut.mapa, 'ledger-fossils'), 1);
 });

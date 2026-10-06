@@ -6,7 +6,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { CAMINS } from '../lib/arrel.mjs';
-import { checkTaula } from '../gates/porta-olivera.mjs';
+import { checkTaula, prosaIndex, ancoresDe, apuntaA, insereixLlista, nomsSolts } from '../gates/porta-olivera.mjs';
 
 const same = (a, b) => a.dev === b.dev && a.ino === b.ino;
 const regular = stat => stat.isFile() && stat.nlink === 1;
@@ -64,30 +64,23 @@ export function checkDraftDestinations(root, file) {
   const index = openIndex(root);
   fs.closeSync(index.fd);
 }
-function indexProse(index) {
-  // Conserva offsets per inserir sense alterar comentaris ni exemples de codi.
-  const mask = text => text.replace(/[^\r\n]/g, ' ');
-  let fence = null;
-  return index.replace(/<!--[\s\S]*?-->/g, mask).split(/(?<=\n)/).map(line => {
-    const mark = /^ {0,3}(`{3,}|~{3,})/.exec(line);
-    if (mark) {
-      if (!fence) fence = mark[1];
-      else if (mark[1][0] === fence[0] && mark[1].length >= fence.length) fence = null;
-      return mask(line);
-    }
-    return fence ? mask(line) : line;
-  }).join('').replace(/`[^`]*`/g, mask);
-}
-function anchorDraft(index, anchor, firstLevel) {
-  if (!firstLevel) return indexProse(index).includes(anchor) ? index : `${index}\n- ${anchor}\n`;
-  const prose = indexProse(index);
+/**
+ * Àncora del draft. Al primer nivell va dins de la llista d'«Activitat en curs»,
+ * sense cap línia en blanc pròpia (ANC-W6), i no es repetix si el document ja hi
+ * és en qualsevol forma: x, x.md, x|àlies, 04_escriptori/x (ANC-W7). La resolució
+ * és la de la porta Olivera; comentaris i exemples de codi no compten.
+ */
+function anchorDraft(index, anchor, { rel, firstLevel, presents }) {
+  const present = (start = 0, end = index.length) => ancoresDe(index)
+    .some(a => a.inici >= start && a.inici < end && apuntaA(a.raw, rel, presents));
+  if (!firstLevel) return present() ? index : `${index}${index && !index.endsWith('\n') ? '\n' : ''}- ${anchor}\n`;
+  const prose = prosaIndex(index);
   const active = /^##[ \t]+Activitat en curs[^\n]*(?:\r?\n|$)/m.exec(prose);
   if (!active) return `${index}\n## Activitat en curs\n\n- ${anchor}\n`;
   const start = active.index + active[0].length;
   const next = /^##[ \t]/m.exec(prose.slice(start));
   const end = next ? start + next.index : index.length;
-  if (prose.slice(start, end).includes(anchor)) return index;
-  return `${index.slice(0, start)}\n- ${anchor}\n${index.slice(start)}`;
+  return present(start, end) ? index : insereixLlista(index, start, [`- ${anchor}`]);
 }
 export function writeIndexedDraft(root, file, content, { requireCleanTable = false } = {}) {
   root = fs.realpathSync(root);
@@ -111,9 +104,16 @@ export function writeIndexedDraft(root, file, content, { requireCleanTable = fal
     created = { fd, stat: fs.fstatSync(fd) };
     assertOwned(root, file, created.stat, fd);
     fs.writeFileSync(fd, content, 'utf8'); fs.fsyncSync(fd);
-    const relative = path.relative(path.dirname(index.file), file).split(path.sep).join('/').replace(/\.md$/, '');
-    const anchor = `[[${relative}]]`;
-    const anchored = anchorDraft(index.content, anchor, path.dirname(file) === path.join(root, CAMINS.escriptori));
+    const firstLevel = path.dirname(file) === path.join(root, CAMINS.escriptori);
+    const presents = firstLevel ? nomsSolts(root) : null;
+    const relative = path.relative(path.dirname(index.file), file).split(path.sep).join('/');
+    const stem = relative.replace(/\.md$/, '');
+    // .md s'omet com fa Obsidian, llevat que un recurs homònim sense extensió se
+    // l'enduria o que el nom porte una altra extensió: llavors va explícit.
+    const abreuja = !path.posix.extname(path.posix.basename(stem)) && !(firstLevel && presents.has(path.posix.basename(stem)));
+    const anchor = `[[${abreuja ? stem : relative}]]`;
+    const rel = path.relative(root, file).split(path.sep).join('/');
+    const anchored = anchorDraft(index.content, anchor, { rel, firstLevel, presents });
     if (anchored !== index.content) {
       const tempFile = `${index.file}.${randomUUID()}.tmp`;
       parents(root, tempFile);

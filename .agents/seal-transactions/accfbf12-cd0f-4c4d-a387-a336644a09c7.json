@@ -1,0 +1,32 @@
+{
+  "id": "accfbf12-cd0f-4c4d-a387-a336644a09c7",
+  "session": "c16bcaa8-08a5-4941-b808-df833b133bae",
+  "operationId": "sdp-model-b-enx01-261006-c16bcaa8",
+  "claim": "c16bcaa8-08a5-4941-b808-df833b133bae:governance-write",
+  "planHash": "7331ab1b38389b857b1a62662e00338922648b3fa5489c0d946ac3f2c020509a",
+  "beforeSeal": "2b7ec976b69dfd6f00bde18bd74266e6d98da855a0de035a19ceaa64e50604a1",
+  "files": [
+    {
+      "path": ".agents/AGENTS.md",
+      "before": "5efd440f0c0c22ab5268ea91602a3ea6ad3ef4b80565aab71d628e142eaa5e8a",
+      "after": "8c1e036999b5298a2d946d605539f30dbc67e356e8aac9a31c7a24287240693a"
+    },
+    {
+      "path": ".agents/QUI_SOC.md",
+      "before": "88c7864696183ffed1db0860cf36e7260594cb49b43b25143caf536d60c58435",
+      "after": "c43d4081e9e988890f88b9399b137edad6abdb18cb58bd06ce872052d4666731"
+    },
+    {
+      "path": ".agents/protocolledge.json",
+      "before": "126758b52e7a1e8209c04b0e49a3738d428bcc085e1554451555c0b0648491ef",
+      "after": "c22f920eed55a5d67ab134a34bbf974101f50fe6ea0ae62ceb9603531fd0bb90"
+    },
+    {
+      "path": "AGENTS.md",
+      "before": "5efd440f0c0c22ab5268ea91602a3ea6ad3ef4b80565aab71d628e142eaa5e8a",
+      "after": "8c1e036999b5298a2d946d605539f30dbc67e356e8aac9a31c7a24287240693a"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "5a3baec04002d6f65c5875a73511645b6b1b8d2e2b51a3dcf2e768664e2bb6b8"
+}

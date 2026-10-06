@@ -212,7 +212,8 @@ test('els recursos i Markdown sense nom termodinàmic s’ancoren però l’arxi
  assert.deepEqual(inventari(root),[],'només metadades Markdown termodinàmiques');
  assert.deepEqual(ranci(root,'991231'),[],'cap política nova d’envelliment de recursos');
  assert.deepEqual(arxivables(root),[]);
- assert.throws(()=>arxivables(root,{noms:[resource]}),/no és cap document solt/);
+ // 261006: un artefacte de torn amb nom termodinàmic ix per nom, de qualsevol extensió.
+ assert.deepEqual(arxivables(root,{noms:[resource]}).map(d=>d.nom),[resource]);
  assert.deepEqual(arxiva(root),{moguts:[],index:false,sec:false});
  assert.equal(fs.readFileSync(path.join(root,DESK,resource),'utf8'),'{}\n');
  assert.equal(fs.readFileSync(path.join(root,DESK,note),'utf8'),'# nota\n');
@@ -444,3 +445,56 @@ for (const window of ['before-leaf-lstat', 'before-leaf-open']) {
   assert.equal(fs.readFileSync(target,'utf8'),'CONTINGUT_PRIVAT_SINTETIC_NO_LLEGIR');
  });
 }
+
+/* 261006: anchorDraft escriu dins de la llista i no duplica referents (ANC-W6, ANC-W7). */
+const tres=[
+ ['una llista',name=>`# Índex\n\n## Activitat en curs\n\n- [[${name}]]\n\n## Referències\n\nText humà.\n`],
+ ['una secció buida',()=>'# Índex\n\n## Activitat en curs\n\n## Referències\n'],
+ ['prosa',()=>'# Índex\n\n## Activitat en curs\n\nText humà de la secció.\n'],
+];
+// El torn de createDraft continua obert: arxivar deixa l'índex byte a byte i hi afig
+// només l'àncora amb camí del document, perquè el handoff no deixe el torn sense àncora.
+for (const [cas,fer] of tres) test(`261006 · ANC-W6: l’àncora nova entra davant de ${cas} sense línia en blanc pròpia, i crear i arxivar torna l’índex byte a byte, més l’àncora amb camí del torn obert`,t=>{
+ const root=fixture(t),turn=openTurn(root,{scope:'documents'});
+ const existent=`${avui()}_1200_auditoria_existent`;put(root,`${DESK}/${existent}.md`,'# Existent\n');
+ const base=fer(existent);put(root,INDEX,base);
+ const opts={...options('auditoria'),file:doc('auditoria_w6')};
+ createDraft(root,turn.turn_id,opts);
+ const nou=path.basename(opts.file,'.md');
+ const separa=cas==='prosa'?'\n':'';
+ assert.equal(fs.readFileSync(path.join(root,INDEX),'utf8'),base.replace('## Activitat en curs\n\n',`## Activitat en curs\n\n- [[${nou}]]\n${separa}`));
+ assert.ok(vius(root).has(nou));
+ arxiva(root,{noms:[path.basename(opts.file)]});
+ assert.equal(fs.readFileSync(path.join(root,INDEX),'utf8'),`${base}\n## Arxivat amb la Porta Olivera\n\n- [[../90_arxiu_historic/${nou}]]\n`,'cap línia en blanc de més per cicle');
+});
+for (const forma of ['{x}.md','{x}|àlies','04_escriptori/{x}','_wiki_de_poble/04_escriptori/{x}#Secció','{x}\\|àlies']) test(`261006 · ANC-W7: ja declarat a «Activitat en curs» com a [[${forma}]], create no hi afig cap duplicat`,t=>{
+ const root=fixture(t),turn=openTurn(root,{scope:'documents'}),opts={...options('auditoria'),file:doc('auditoria_w7')};
+ const x=path.basename(opts.file,'.md');
+ const base=`# Índex\n\n## Activitat en curs\n\n- [[${forma.replace('{x}',x)}]]\n`;
+ put(root,INDEX,base);
+ createDraft(root,turn.turn_id,opts);
+ assert.equal(fs.readFileSync(path.join(root,INDEX),'utf8'),base);
+ assert.ok(vius(root).has(x));
+ assert.equal(checkTaula(root).valid,true,checkTaula(root).errors.join('\n'));
+});
+test('261006 · ANC-W7: fora del primer nivell, una àncora amb .md ja present no es duplica i l’apèndix no porta blanc propi',t=>{
+ const root=fixture(t),turn=openTurn(root,{scope:'documents'});
+ const acta=`_wiki_de_poble/10_actes/${avui()}_1230_acta_w7.md`;
+ const base=`# Índex\n\n- [[../10_actes/${path.basename(acta)}]]\n`;
+ put(root,INDEX,base);
+ createDraft(root,turn.turn_id,{route:'acta',file:acta,title:'Prova',description:'Acta sense àncora duplicada'});
+ assert.equal(fs.readFileSync(path.join(root,INDEX),'utf8'),base);
+ const altra=`_wiki_de_poble/10_actes/${avui()}_1231_acta_nova.md`;
+ createDraft(root,turn.turn_id,{route:'acta',file:altra,title:'Prova',description:'Acta afegida al final'});
+ assert.equal(fs.readFileSync(path.join(root,INDEX),'utf8'),`${base}- [[../10_actes/${path.basename(altra,'.md')}]]\n`);
+ assert.ok(anchored(fs.readFileSync(path.join(root,INDEX),'utf8'),altra));
+});
+test('261006 · un recurs homònim sense extensió fa que l’àncora del draft porte .md explícit',t=>{
+ const root=fixture(t),turn=openTurn(root,{scope:'documents'}),opts={...options('auditoria'),file:doc('auditoria_homonim')};
+ const stem=path.basename(opts.file,'.md');put(root,`${DESK}/${stem}`,'recurs');
+ put(root,INDEX,`# Índex\n\n- [[${stem}]]\n\n## Activitat en curs\n\n`);
+ createDraft(root,turn.turn_id,opts);
+ assert.ok(fs.readFileSync(path.join(root,INDEX),'utf8').includes(`- [[${stem}.md]]`));
+ assert.deepEqual(ancoratge(root),{senseAncora:[],fantasma:[]});
+ assert.ok(vius(root).has(stem));
+});

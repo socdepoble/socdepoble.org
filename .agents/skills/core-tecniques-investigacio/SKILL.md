@@ -1,7 +1,17 @@
 ---
-name: Tècniques d'Investigació i Autòpsia
-description: Tractor que defineix com les IAs (locals o externes) han d'investigar els problemes: verificant el codi real dels tractors en lloc de conformar-se amb llegir la teoria de les regles.
-tags: [cognitiu, investigacio, core]
+type: skill
+status: actiu
+name: core-tecniques-investigacio
+description: Tractor que defineix com les IAs (locals o externes) han d'investigar els problemes, verificant el codi real dels tractors en lloc de conformar-se amb llegir la teoria de les regles.
+tags:
+  - core
+  - auditoria
+  - tractors
+triggers_on:
+  - autòpsia
+  - tècniques d'investigació
+  - investigar el codi
+  - cacera de bugs
 ---
 
 # Tècniques d'Investigació i Autòpsia

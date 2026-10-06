@@ -1,0 +1,32 @@
+{
+  "id": "d007031d-571d-45f7-be39-7fbbf818e86e",
+  "session": "5ae3982b-a562-43c6-bd53-016d4ecb10b7",
+  "operationId": "sdp-ledger-peus-261006-5ae3982b",
+  "claim": "5ae3982b-a562-43c6-bd53-016d4ecb10b7:governance-write",
+  "planHash": "0cbd138bd0f4a58b579a5eaad685dbe06db80de4c08a18c50ed8dd7e4b1e5261",
+  "beforeSeal": "0a05b1b9d87ee35032d46ac10520105137d1f2ed3dbeec92f01d9ed429e62760",
+  "files": [
+    {
+      "path": ".agents/LEDGER.md",
+      "before": "74198e0e31f4209bd924ba8822138a2b8a3d267d92d7b6c48514cfa574d1daab",
+      "after": "026c61cbcd53b4e99062b7e902fc2eb78af4f53a709d1869230a535fca220b49"
+    },
+    {
+      "path": "tests/fonts-vigilancia.test.mjs",
+      "before": "329a3b8fa58046895626d4935a88a449b16d525b44953d3ca2e4cb4987b8b4ca",
+      "after": "a85cf79fbb27e62a93094a7bbf0e8360c4a80eb3bf35b1b77880cc2d9b1508e2"
+    },
+    {
+      "path": "tests/mapa-consola.test.mjs",
+      "before": "e4e226ba60fb6fc6c4232896239f09f54c682b346ac7a553e4952a6aba151817",
+      "after": "42f4649bc625126933417002462a48801b60045e5d8bede0d96b111d44a46a2d"
+    },
+    {
+      "path": "tooling/brain/fonts-vigilancia.mjs",
+      "before": "b37404944e7b50314e77bc21cf666550a185f757f87beec08ecd6a184e9ad0ff",
+      "after": "9c257d40e448a7b3e471263e173224496dd1b6c07ac7ffe4b63bd52167d385b3"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "fb119df60715f55e74a0cbe7dd9d923482ea2e5e21ba2596c2efbb00485d9058"
+}

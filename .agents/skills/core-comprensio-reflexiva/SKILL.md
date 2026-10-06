@@ -1,7 +1,17 @@
 ---
-name: Comprensió Reflexiva
+type: skill
+status: actiu
+name: core-comprensio-reflexiva
 description: Tractor cognitiu per aturar la impulsivitat. Obliga a pensar i entendre l'objectiu de la petició (l'aixada) abans d'actuar compulsivament.
-tags: [cognitiu, reflexio, core]
+tags:
+  - core
+  - trellat
+  - reflex
+triggers_on:
+  - aixada
+  - impulsivitat
+  - comprensió reflexiva
+  - entendre la petició
 ---
 
 # Tractor de Comprensió Reflexiva

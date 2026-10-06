@@ -4,9 +4,9 @@
   "actor": "Antigravity",
   "scope": "documents",
   "state": "context_loaded",
-  "revision": 5,
+  "revision": 6,
   "createdAt": "2026-10-06T00:24:24.390Z",
-  "updatedAt": "2026-10-06T00:25:32.309Z",
+  "updatedAt": "2026-10-06T01:26:12.759Z",
   "expiresAt": "2026-10-07T00:24:24.390Z",
   "contractHash": "5503c6dc29a6ce8c6708d7b81f7bd79546d13d574467174b95aae4265e1b0d5e",
   "humanInventoryVersion": 1,
@@ -2917,6 +2917,16 @@
         "committedAt": "2026-10-06T00:25:32.309Z",
         "documentHash": "fd9fa665edf074375b6b2df1e7e6ea907cec0a7038f8dcd2cdacf5a1f5380734"
       }
+    },
+    "d520bbe6-7da6-4849-b1ea-e9fc129ed6c5": {
+      "id": "d520bbe6-7da6-4849-b1ea-e9fc129ed6c5",
+      "route": "prompt.local",
+      "routeVersion": "3.3.0",
+      "file": "_wiki_de_poble/04_escriptori/261006_0224_prompt_claude_ledger.md",
+      "contractSnapshot": "fddbede122b57f08dbe3ecd7415ad80f1997ed93d45aa49bd1dcf020dbc31e1d",
+      "template": "_wiki_de_poble/03_actuar/plantilles/prompt_local.md",
+      "templateHash": "3de95f715769c8424fc01a6f3b9053fb68646e7345b170f18694e03965c6eafe",
+      "issuedAt": "2026-10-06T01:26:12.759Z"
     }
   },
   "plan": null,
@@ -2955,6 +2965,11 @@
       "file": "_wiki_de_poble/04_escriptori/261006_0224_pla_implementacio_antigravity.md",
       "at": "2026-10-06T00:25:32.309Z",
       "hash": "fd9fa665edf074375b6b2df1e7e6ea907cec0a7038f8dcd2cdacf5a1f5380734"
+    },
+    {
+      "state": "context_loaded",
+      "action": "context",
+      "at": "2026-10-06T01:26:12.759Z"
     }
   ]
 }

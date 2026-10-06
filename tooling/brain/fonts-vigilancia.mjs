@@ -8,7 +8,7 @@
  *
  *   torns      null | [{ id, actor, scope, state, createdAt, expiresAt, rebuts, ambPla }]
  *   escriptori null | { documents: [{ nom, ancorat, ambRebut }], safata, limitSafata: 20 }
- *   ledger     null | { valid, entrades: [{ data: 'AAMMDD', tipus, skill, resum }], fossils, malformades }
+ *   ledger     null | { valid, entrades: [{ data: 'AAMMDD', tipus, skill, resum }], fossils, peusHistorics, malformades }
  *   estat      null | { data: <ISO local o null>, bytes }
  *
  * Regla de la casa: el que falta es pinta, no s'inventa. Cada funció torna
@@ -205,6 +205,28 @@ function entradaCanonica(tros) {
 }
 
 /**
+ * Llig una línia física: hi afig a `entrades` les entrades canòniques que porta
+ * i torna si compta com a mal formada (formes 3 i 4, entrada coixa o data
+ * impossible). Una línia que no comença com una entrada no és mal formada.
+ */
+function llegeixLinia(cru, entrades) {
+  let resta = cru.replace(/\r$/, '').replace(/^[ \t]*#{1,6}[ \t]+/, '');
+  let anomala = false;
+  const senseHash = resta.replace(/^(?:[ \t]*<!-- HASH: [a-f0-9]{64} -->)+[ \t]*/, '');
+  if (senseHash !== resta) { anomala = true; resta = senseHash; }
+  if (!INICI_ENTRADA.test(resta)) return false;
+  const inicis = [...resta.matchAll(ENTRADA_EN_LINIA)].map((m) => m.index);
+  if (inicis[0] !== 0) return true;
+  if (inicis.length > 1) anomala = true;
+  for (let i = 0; i < inicis.length; i += 1) {
+    const e = entradaCanonica(resta.slice(inicis[i], inicis[i + 1]));
+    if (e) entrades.push(e);
+    else anomala = true;
+  }
+  return anomala;
+}
+
+/**
  * Analitza el text del LEDGER. Línia canònica: `AAMMDD | tipus | skill | resum`,
  * en les quatre formes vistes (informe T12 §2.1):
  *   1. nua;
@@ -218,7 +240,18 @@ function entradaCanonica(tros) {
  * `valid`: la signatura final casa amb el sha256 del cos, i ho accepten alhora
  * ledger.mjs (tancament) i verify-ledger.mjs (porta del pas 0). Si només en
  * passa un (un salt de línia després del segell), no és vàlid: fail-closed.
- * `fossils`: marques HASH que no són l'última.
+ *
+ * Peus (ordre del Mestre, 261006, prompt 261006_0224 T1): l'última marca HASH
+ * és el peu final, l'únic que valida. Les altres són peus intercalats, segells
+ * d'abans que van quedar dins del cos quan algú va escriure darrere sense
+ * reemplaçar-los. No s'esborren (QUI_SOC §3.3). Un peu sense text a la línia
+ * és història del Llibre d'Obra, no anomalia; un peu enganxat a text, sí.
+ * `peusHistorics`: tots els peus intercalats (el recompte que abans es deia
+ *   `fossils`).
+ * `fossils`: els peus intercalats que comparteixen la línia amb text i que
+ *   `malformades` no ha comptat ja: un segell enganxat a prosa o darrere d'una
+ *   entrada. Un segell enganxat davant d'una entrada (forma 3) ja compta una
+ *   vegada com a línia mal formada i no es torna a comptar.
  */
 export function analitzaLedger(cos) {
   const signat = (re) => {
@@ -226,26 +259,20 @@ export function analitzaLedger(cos) {
     return Boolean(m) && sha256(cos.slice(0, m.index)) === m[1];
   };
   const valid = signat(SEGELL_TANCAMENT) && signat(SEGELL_PORTA);
-  const marques = (cos.match(MARCA_HASH) || []).length;
   const entrades = [];
   let malformades = 0;
+  /** Una casella per marca HASH, en ordre: és un segell enganxat que cap línia mal formada no recull? */
+  const marques = [];
   for (const cru of cos.split('\n')) {
-    let resta = cru.replace(/\r$/, '').replace(/^[ \t]*#{1,6}[ \t]+/, '');
-    let anomala = false;
-    const senseHash = resta.replace(/^(?:[ \t]*<!-- HASH: [a-f0-9]{64} -->)+[ \t]*/, '');
-    if (senseHash !== resta) { anomala = true; resta = senseHash; }
-    if (!INICI_ENTRADA.test(resta)) continue;
-    const inicis = [...resta.matchAll(ENTRADA_EN_LINIA)].map((m) => m.index);
-    if (inicis[0] !== 0) { malformades += 1; continue; }
-    if (inicis.length > 1) anomala = true;
-    for (let i = 0; i < inicis.length; i += 1) {
-      const e = entradaCanonica(resta.slice(inicis[i], inicis[i + 1]));
-      if (e) entrades.push(e);
-      else anomala = true;
-    }
-    if (anomala) malformades += 1;
+    const malformada = llegeixLinia(cru, entrades);
+    if (malformada) malformades += 1;
+    const enLinia = (cru.match(MARCA_HASH) || []).length;
+    const enganxada = enLinia > 0 && cru.replace(MARCA_HASH, '').trim() !== '';
+    for (let i = 0; i < enLinia; i += 1) marques.push(enganxada && !malformada);
   }
-  return { valid, entrades, fossils: Math.max(marques - 1, 0), malformades };
+  // L'última marca és el peu final; la resta són peus intercalats.
+  const intercalats = marques.slice(0, -1);
+  return { valid, entrades, fossils: intercalats.filter(Boolean).length, peusHistorics: intercalats.length, malformades };
 }
 
 /** Resum de `.agents/LEDGER.md`, o null si no hi és. */

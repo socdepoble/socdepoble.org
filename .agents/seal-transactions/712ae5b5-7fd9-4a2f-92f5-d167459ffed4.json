@@ -1,0 +1,37 @@
+{
+  "id": "712ae5b5-7fd9-4a2f-92f5-d167459ffed4",
+  "session": "53098532-dfe6-494a-b57b-dd79e3b490f3",
+  "operationId": "sdp-higiene-t6-261006-53098532",
+  "claim": "53098532-dfe6-494a-b57b-dd79e3b490f3:governance-write",
+  "planHash": "eff0e53a9a6c0f7deb3d2b16a949771f29e7ceb48d8da27fa3c844d80c14c1b8",
+  "beforeSeal": "5bfe60dc0caa484d03b2f758f20340efdd26c9029b0f418eebee7458b29a1966",
+  "files": [
+    {
+      "path": ".agents/skills/core-higiene-escriptori/SKILL.md",
+      "before": "f189e004beb30c04ead911f9b74e1ed81798f7d562678a8474387b7c9a1912c3",
+      "after": "c63fa69802559b09be0c1f271b307e54a572bf928c15a9bc13d54d521930a704"
+    },
+    {
+      "path": ".agents/skills/core-identitat/SKILL.md",
+      "before": "11fc2c9705fa8b6b64ec3ec80ea01a49df3146c660f887a2693176af83c840d2",
+      "after": "3609f9e9b3e28b1689ae378711064e28a767f359b327f4f6e1acc36c33605b23"
+    },
+    {
+      "path": "tests/antigravity-hook.test.mjs",
+      "before": "defc759b88b04dd93b7300ee2d34825db95c4d1189fc81579599d63e9aa144ab",
+      "after": "95e475da86be658da5fde2f42582c262326670c1cf6534c77b96e8b6123a4dc9"
+    },
+    {
+      "path": "tooling/gates/antigravity-hook.mjs",
+      "before": "c79c0801c571755a7c9b553556564c0d263a5f0d2ecd7e37e5562a4e44382ed3",
+      "after": "b3819723c5844a294474ee327d70b1d820192654ebaa1fee132e3a0417b39256"
+    },
+    {
+      "path": ".agents/skills/00_INDEX_SKILLS.md",
+      "before": "8aeac09a9bf105999860ab00af5c7b5f98666ea94f796878149cba516976c6e0",
+      "after": "10ef91a81e4af5ca7169b1b1240e0671418fb18099a76d5ec04154313539bf0e"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "fb119df60715f55e74a0cbe7dd9d923482ea2e5e21ba2596c2efbb00485d9058"
+}

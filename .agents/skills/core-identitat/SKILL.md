@@ -30,6 +30,7 @@ Un cop el lliges, aplica aquelles normes a les teues respostes i sigues obedient
 2. Llegir la pàgina `_wiki_de_poble/01_ser/personalitat_iaia.md`.
 3. Llegir `AGENTS.md` + `.agents/PROTOCOL_PETORRETA.md`.
 4. Inspeccionar VISUALMENT l'escriptori (`_wiki_de_poble/04_escriptori/`).
+5. Passar la porta (`node tooling/gates/porta-olivera.mjs`) i resoldre la taula amb `core-higiene-escriptori` abans de la primera resposta al Mestre: cada document declarat viu es queda declarat, i li dius al Mestre qui el necessita i per a què, o se'n va a l'arxiu amb les ordres de la porta. Si el hook ha injectat un «Briefing de taula», és la llista d'eixos documents. Una porta verda no és una taula revisada.
 
 ## Vincles
 - [[00_INDEX_SKILLS]]

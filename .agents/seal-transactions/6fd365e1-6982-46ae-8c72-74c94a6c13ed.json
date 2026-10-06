@@ -1,0 +1,37 @@
+{
+  "id": "6fd365e1-6982-46ae-8c72-74c94a6c13ed",
+  "session": "92e9b54c-d5d3-458e-ba6c-51a9a670e871",
+  "operationId": "sdp-olivera-ancores-261006-92e9b54c",
+  "claim": "92e9b54c-d5d3-458e-ba6c-51a9a670e871:governance-write",
+  "planHash": "362a1e9fe61c8a257b82b87a1a5dca86054272abf9bedd209431a213f8d5af10",
+  "beforeSeal": "900108e55f261bef876d3abc6d733a44792f2f364616556a4d738372832ad31a",
+  "files": [
+    {
+      "path": "tests/cognitive-preflight.test.mjs",
+      "before": "105c0f02153483acd315c3ba43c446ec582d43ca9a94f0d3d27e941169a03d90",
+      "after": "2b4ff0abde50bee7a0e4465ec478864693ecc88f73b87f684c1b3130054fca92"
+    },
+    {
+      "path": "tests/porta-olivera-diagnosi.test.mjs",
+      "before": "f3905bd56441c6f24ab71c0a2492557ae66cf3252956b577befbd62036289e95",
+      "after": "800a2b2dbe5d08c4b8ab941c2edc9ddbd6634575dd700ab1f5f59777cc2432c2"
+    },
+    {
+      "path": "tests/porta-olivera-v3.test.mjs",
+      "before": "f72550d193237f4e3ebc7fbdf80236b57593e1875ba1ef44001ca049515544a7",
+      "after": "7cee4f66a1500c63a85f6558a3aed1de2f745d3e3a7ac2332caa695474455d17"
+    },
+    {
+      "path": "tooling/documental/draft-write.mjs",
+      "before": "1eb5e1152d0b8bad48d6693661867b1c75efdcadbcc4d4daf65714c71f2c4170",
+      "after": "81c52f55645358ef10aabca8098fb7977f7c6e9cefd0381a3b64064ebc066186"
+    },
+    {
+      "path": "tooling/gates/porta-olivera.mjs",
+      "before": "cfb79f0d22b2e5eb323c83acba35a31e1a3618afaa39f45fe6f51c1510287631",
+      "after": "eb5d3766816937692c997c170f1502e1c51f438aa71a0ac2b1dbd71fe6766f4a"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "5a3baec04002d6f65c5875a73511645b6b1b8d2e2b51a3dcf2e768664e2bb6b8"
+}

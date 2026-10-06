@@ -50,7 +50,7 @@ Quan l'usuari demana un **"Prompt" o "Auditoria"** per al Consell (ex: Z, Qwen, 
 No faces que l'usuari treballe per a tu. Fes anar eines directament (`run_command`, etc.).
 
 ## 8. LLEI DE L'ENXUFABILITAT (Sollutia)
-Sollutia té el rol exclusiu de **proveïdor de suport tècnic d'infraestructura (Amfitrió SPA i Backend API)**. No han d'interferir en l'arquitectura ni en el disseny. El codi frontend s'ha d'escriure de forma 100% modular i independent per a connectar-se al seu backend de forma completament transparent, com un simple "endoll" (Model B). Això garanteix que sempre tinguem l'opció de traure "tot fora" si fóra necessari.
+**Model B:** Sollutia és l'amfitrió i el soci d'infraestructura de Sóc de Poble: allotja el Web Component, ens pot passar la sessió i ens obri la seua API només en lectura (GET a través de la Frontissa), sense injectar cap backend ni interferir en l'arquitectura o el disseny. Les dades del poble viuen al Supabase de Sóc de Poble, única font de veritat, darrere d'un port neutral (`src/data/backendPort.js`): el frontend, 100% modular, s'enxufa a qualsevol amfitrió (Sollutia, WordPress o Joomla), canviar de backend és una decisió de Sóc de Poble amb una ADR i el kit de conformitat, i sempre podem traure-ho «tot fora».
 
 ## 9. FORMAT ZERO FRICCIÓ (ARXIUS I BLOCS, NO CITES)
 - **Per a textos llargs o Prompts per a altres IAs (més de 4-5 paràgrafs):** CREA SEMPRE UN ARXIU MARKDOWN (.md) AL DISC (a l'Escriptori).

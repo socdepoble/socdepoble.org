@@ -7,6 +7,18 @@ description: ESTAT DE LA SESSIÓ
 
 <!-- SDP:ESTAT_ACTUAL -->
 
+## ESTAT_ACTUAL · 2026-10-06 23:45 · Claude · TPV Universal
+
+Relleu [[261006_2250_auditoria_claude]]. Fet: peça UniversalTPV (Pedra Seca), entrada /app/bar/tpv, ruta Unica i pont useSessioApp de la plataforma, sessió a tot el Bar amb mode de proves i venda offline amb sessió desada, model producteUniversal (canals i 14 al·lèrgens), icones d'al·lèrgens del Mestre, contracte sdp.vendes.v1. Res commitejat. Decisions pendents: ADR offline del service worker, auth.js sense commit (auth.persistencia.test.js, altre front), cicle d'imports de src/data, endollar la Nevera. Suite sencera de src: 3 rojos aliens al TPV. Següent: commit atòmic del TPV (sense auth.js, onboarding, identitat de la barra ni les migracions 2610061448/1450) i la Gestoria.
+
+## ESTAT_ACTUAL · 2026-10-06 19:10 · MarIA · Diagnòstic Login i Capacitat Offline
+
+Diagnòstic del problema de login (T1-T4) completat sense alterar codi de producció (per evitar trepitjar a Claude). S'ha descobert que `OnboardingSection` perd el `modeDades` (rep `remote` per defecte) i això cancel·la l'avaluació de `sondaIEntra`, evitant que aparega el botó de mock quan el servidor falla. La correcció queda pendent de ser integrada un cop Claude acabi.
+
+Afegida la directiva estricta de Capacitat Offline al `261006_1140_pla_implementacio.md` i al prompt actiu `261006_1215_prompt_claude_loiverse.md` (TPV Loiverse) tal com ha demanat el Mestre, establint-ho com a prioritat absoluta al costat de la hipermodularitat. Escriptori net; Claude pot continuar.
+
+
+
 ## ESTAT_ACTUAL · 2026-10-05 04:40 · Claude · tancament de la Marató 2230
 
 Informe [[261004_2245_auditoria_claude]] i avaluació [[261005_0345_avaluacio_final_marato]] (global 6,1). Fronts de Claude F1-F5 i P4 vius amb proves. Revisió adversarial de Codex amb 3 rondes d'ACK. Migració 2610042350 no aplicada. Res no està commitejat i hi ha un parany de commit parcial: tooling/tests, lazyRoute.js, RouteErrorBoundary, migracions i imatge OG sense versionar. Cap test:ci complet sobre el tall congelat. Següent: el commit atòmic, un runner únic i la primera tasca de 261005_0345_tasques_pendents_consola_visual (crash de useSession en eixir des de Control).
