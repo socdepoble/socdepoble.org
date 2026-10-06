@@ -184,7 +184,9 @@ describe('Arbre universal (espècimen)', () => {
       const item = CATALOG_ITEMS.find((i) => i.id === node.item);
       const Carregador = CATALOG_DETAIL_LOADERS[item.detailKey];
       const vista = render(<MemoryRouter><Suspense fallback={null}><Carregador /></Suspense></MemoryRouter>);
-      await waitFor(() => expect(vista.container.querySelector(`#llinatge-${node.id}`), node.id).not.toBeNull());
+      /* El carregador és lazy: sota càrrega, el primer import d'un espècimen
+         (calendari) passa del segon per defecte de waitFor. */
+      await waitFor(() => expect(vista.container.querySelector(`#llinatge-${node.id}`), node.id).not.toBeNull(), { timeout: 5000 });
       expect(vista.container.querySelectorAll('.sdp-llinatge'), node.id).toHaveLength(1);
       vista.unmount();
     }

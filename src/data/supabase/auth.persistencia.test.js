@@ -188,6 +188,29 @@ test('logout: una revocació que falla no fa fallar l’eixida', async () => {
   expect(registre()).toBeNull();
 });
 
+/* 57c3f2d9 · «Tanca les altres sessions» revoca les altres i deixa esta entrada. */
+test('logout «others»: revoca les altres sessions i conserva la d’este navegador', async () => {
+  entra('r1');
+  const jwt = getEfimer(CLAU_JWT, null);
+  const fetch = vi.fn(async () => ({ ok: true, status: 204 })); vi.stubGlobal('fetch', fetch);
+  await logout(CONFIG, { scope: 'others' });
+  expect(fetch).toHaveBeenCalledTimes(1);
+  const [url, opcions] = fetch.mock.calls[0];
+  expect(url).toBe('https://backend.example.test/auth/v1/logout?scope=others');
+  expect(opcions).toMatchObject({ headers: { Authorization: `Bearer ${jwt}` } });
+  expect(usuariDeSessio()?.id).toBe(A);                       // esta sessió continua viva
+  expect(registre()).toMatchObject({ rt: 'r1', sub: A });
+  expect(getEfimer(CLAU_JWT, null)).toBe(jwt);
+});
+
+test('logout «others» d’una sessió de l’amfitrió no revoca res: és seua', async () => {
+  expect(adoptaSessioExterna({ access_token: token(A), user: { id: A } })).toBe(true);
+  const fetch = vi.fn(async () => ({ ok: true, status: 204 })); vi.stubGlobal('fetch', fetch);
+  await logout(CONFIG, { scope: 'others' });
+  expect(fetch).not.toHaveBeenCalled();
+  expect(usuariDeSessio()?.id).toBe(A);
+});
+
 test('logout sense configuració usa l’última coneguda; «global» tanca totes les sessions del compte', async () => {
   vi.stubGlobal('fetch', vi.fn(async () => ({ ok: false, status: 503 })));
   await refreshSession(CONFIG).catch(() => false);            // recorda la configuració

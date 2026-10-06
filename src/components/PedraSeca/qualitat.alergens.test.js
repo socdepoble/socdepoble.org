@@ -313,7 +313,7 @@ describe('Pedra Seca · alergens.css', () => {
   });
 
   /* El dibuix del Mestre és un disc de color amb la figura buidada: la figura es veu del color
-     del fons de la icona. Amb el fons de la targeta, en fosc (#181715), el peix quedava a 1,76:1
+     del fons de la icona. Amb el fons de la targeta, en fosc (--sdp-fons-targeta), el peix quedava a 1,76:1
      del seu disc. El fons ha de ser el blanc de sempre en clar i en fosc. */
   test('el fons de la figura buidada és el mateix blanc en clar i en fosc, i en clar és el de la targeta (cap píxel no canvia)', () => {
     const fons = valorDe(cosDe('.sdp-alergens__icona'), 'background');

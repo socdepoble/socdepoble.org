@@ -858,10 +858,12 @@ async function tanca({ abast = 'actor', config = {}, scope = null } = {}) {
      pendent (també qui ix des de l'amfitrió, sense passar per SessionContext).
      Buidar només la pestanya, no: la sessió continua a les altres. */
   if (abast !== 'pestanya') oblidaRecuperacioPendent();
+  /* La revocació ix abans del primer await: el keepalive no espera que tanque
+     el Realtime. revoca() usa fetch i la configuració, no el client. */
+  const revocacio = jwt ? revoca(destination, jwt, scope) : null;
   await tancaRealtime();
   resetClient();
   emetCanvi(null);
-  const revocacio = jwt ? revoca(destination, jwt, scope) : null;
   if (revocacio) await esperaAmbTopall(revocacio, ESPERA_REVOCACIO_MS);
 }
 

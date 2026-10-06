@@ -2302,7 +2302,7 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
   .sdp-emojis-xl__graella li {
     min-inline-size: 0;
     /* El conteniment de pintura deixa dins el focus que ix del botó. */
-    padding: calc(var(--sdp-space-1) + 3px);
+    padding: calc(var(--sdp-space-1) + var(--sdp-focus-gruix));
     content-visibility: auto;
     contain-intrinsic-size: auto 10rem;
   }
