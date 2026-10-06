@@ -26,6 +26,11 @@
   border: 0;
 }
 
+/* Mode immersiu (ordre del Mestre, 261007; layout.css § MODE IMMERSIU): la
+   vista que demana la pantalla sencera no té barra inferior que reservar.
+   Viu ací, fora de capa com el token: una regla en capa no el sobreescriu. */
+.sdp-root[data-sdp-immersiu] { --sdp-alt-nav-mobil: 0px; }
+
 :root, :host, .sdp-root {
   /* Defaults traslladats dels components sense alterar els valors. */
   --sdp-workspace-fila1-fons: var(--sdp-crom-subcapcalera-fosca);

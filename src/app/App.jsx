@@ -89,6 +89,7 @@ import { consolaDemanaSessio } from './guards/guardaConsola.js';
 /* Plataforma d'Apps Enxufables (261002) · relleu de la barra lateral: dins
    d'una app, la seua barra; a la resta de rutes, SidebarContent tal qual. */
 import { BarraLateral, useTitolBarraLateral } from '../apps/plataforma/BarraLateral.jsx';
+import { ProveidorModeImmersiu } from './contexts/ModeImmersiuContext.jsx';
 
 /* T5 (ordre del Mestre, 261007) · Barra lateral neta: CONTROL fix a dalt; a la
    vista només Xat, Mur, Mercat, Pobles i Notes; la resta, dins del desplegable
@@ -239,6 +240,15 @@ function AppShell({ children, mobileNav }) {
   }, []);
 
   const isCompact = containerWidth <= AMPLE_MAXIM_COMPACTE;
+  /* Mode immersiu (ordre del Mestre, 261007): una vista demana la pantalla
+     sencera (la conversa del Xat en mòbil) i, en compacte, l'arrel porta
+     data-sdp-immersiu (layout.css § MODE IMMERSIU). Les peticions es compten. */
+  const [peticionsImmersiu, setPeticionsImmersiu] = useState(0);
+  const demanaImmersiu = useCallback(() => {
+    setPeticionsImmersiu((n) => n + 1);
+    return () => setPeticionsImmersiu((n) => n - 1);
+  }, []);
+  const immersiu = isCompact && peticionsImmersiu > 0;
   const toggleSidebar = () => {
     if (isCompact) {
       setIsMobileSidebarOpen(v => !v);
@@ -504,7 +514,9 @@ function AppShell({ children, mobileNav }) {
   }, [language, amaDelDocument]);
 
   return (
-    <div className={`sdp-root ${isCompact ? 'is-compact' : ''} ${isDesktopSidebarClosed ? 'sidebar-closed' : ''} `} ref={rootRef} onClick={interceptaEnllacos ? alClicarEnllac : undefined}>
+    <ProveidorModeImmersiu value={demanaImmersiu}>
+    <div className={`sdp-root ${isCompact ? 'is-compact' : ''} ${isDesktopSidebarClosed ? 'sidebar-closed' : ''} `} ref={rootRef}
+      data-sdp-immersiu={immersiu ? '' : undefined} onClick={interceptaEnllacos ? alClicarEnllac : undefined}>
       <a href="#main-content" className="sr-only sr-only-focusable sdp-skip-link">Salta al contingut principal</a>
       
       {isCompact ? (
@@ -578,6 +590,7 @@ function AppShell({ children, mobileNav }) {
 
       {mobileNav}
     </div>
+    </ProveidorModeImmersiu>
   );
 }
 

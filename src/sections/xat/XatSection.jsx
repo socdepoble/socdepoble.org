@@ -60,6 +60,7 @@ import { useLocation, useNavigate, useParams, useSearchParams } from '../../app/
 import NotFoundPage from '../../pages/NotFoundPage';
 import AppGridColumn from '../../components/layout/AppGridColumn.jsx';
 import { useAppGrid } from '../../components/layout/AppGridShell.jsx';
+import { useModeImmersiu } from '../../app/contexts/ModeImmersiuContext.jsx';
 import TextSection from '../text/TextSection';
 import { useXat } from './XatContext';
 import { useUIActions, useUIState } from '../../app/contexts/UIContext';
@@ -988,6 +989,7 @@ function XatWorkspace() {
     <>
       <PanellInicialMobil llistaPrimer={!threadId || trobatEsComunitat} />
       <EntradaDelPoble poble={poble} comunitat={comunitatDelPoble} aLaLlista={!threadId && pathname === '/xat' && !params.toString()} />
+      {activeThread ? <ConversaAPantallaCompleta /> : null}
       {activeThread ? (
         <Conversa
           key={activeThread.id}
@@ -1108,7 +1110,25 @@ function MultimediaDeLaClosca({ onObriFil, ...resta }) {
 
 function FitxaDeLaClosca({ onObriFil, ...resta }) {
   const obri = useApartaEnEstret(onObriFil);
+  /* La fitxa de la comunitat també és una pantalla empesa a WhatsApp mòbil
+     (captures 12.54.22 i 12.54.37): fletxa a dalt i cap barra inferior. */
+  const { mida } = useAppGrid();
+  useModeImmersiu(mida === 'estret');
   return <FitxaComunitat {...resta} onObriFil={obri} />;
+}
+
+/* Ordre del Mestre (261007) · Clon de WhatsApp en mòbil: a WhatsApp la barra
+   inferior només viu a les pestanyes d'arrel; tota pantalla empesa (conversa,
+   fitxa de comunitat, ajustos) ocupa la pantalla sencera amb la fletxa a dalt
+   (captures 12.54.22, 12.54.54 i 12.57.33). Amb la conversa a pantalla (estret
+   i cap panell obert damunt), la closca amaga la barra negra, la franja i la
+   barra inferior (ModeImmersiuContext); la fletxa torna a la llista i el mode
+   s'apaga sol. En «mitja» la llista conviu amb la conversa i les barres es
+   queden. Les pàgines universals no el demanen mai: la barra negra hi és fixa. */
+function ConversaAPantallaCompleta() {
+  const { mida, panellObert } = useAppGrid();
+  useModeImmersiu(mida === 'estret' && panellObert === null);
+  return null;
 }
 
 /* ─────────────────────── La columna dreta sense conversa ─────────────────── */

@@ -544,6 +544,17 @@ nav.mobile-nav { display: none; }
   /* El visor deixa espai per a la barra inferior fixa (a l'interior del scroll) */
   :where(.sdp-root.is-compact) .app-main__content { padding-bottom: calc(var(--sdp-alt-nav-mobil) + env(safe-area-inset-bottom, 0px)); }
 
+  /* ── MODE IMMERSIU (ordre del Mestre, 261007) ──
+     Una vista demana la pantalla sencera (ModeImmersiuContext; la closca només
+     posa l'atribut en compacte): la conversa del Xat en mòbil, com WhatsApp.
+     Fora la barra negra, la franja de l'amfitrió i la barra inferior. La
+     reserva de la barra inferior (--sdp-alt-nav-mobil) passa a zero a
+     tokens.css, fora de capa com el token, i tots els coixins que la sumen
+     ho seguixen sols; el safe-area es queda. */
+  .sdp-root[data-sdp-immersiu] header.bar-black,
+  .sdp-root[data-sdp-immersiu] .sdp-amfitrio-franja,
+  .sdp-root[data-sdp-immersiu] nav.mobile-nav { display: none; }
+
   /* Barra inferior: FIXA a baix, sempre visible, z-index alt.
      T3 (ordre del Mestre, 260930; esmena del 261006) · Cinc caselles (Xat,
      Mur, Panell de Control, Pobles i Mercat) han de cabre a 360-375px:
