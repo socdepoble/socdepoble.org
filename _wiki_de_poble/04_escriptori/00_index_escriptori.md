@@ -31,6 +31,8 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu — i
 
 ## Activitat en curs
 
+- [[261006_0300_auditoria_claude]]
+
 - [[261006_0224_pla_implementacio_antigravity]]
 
 - [[261006_0224_prompt_claude_ledger]]
@@ -103,6 +105,59 @@ Fitxers moguts a l'històric a mà per MarIA per a netejar l'escriptori, atès q
 ## Laboratori de tractors (codi en quarantena, pendent d'instal·lar)
 
 Una àncora per fitxer, agrupades per carpeta. La porta SCC (`tooling/gates/verificador-scc.mjs`) exigix que cada fitxer de l'Escriptori, laboratori inclòs, tinga enllaç en este índex, i un camí escrit entre accents greus no compta com a enllaç. Les àncores porten la ruta des de l'Escriptori perquè hi ha noms repetits entre subcarpetes.
+
+### 261006_0300_ledger_claude
+
+Torn torn_9d5803f4 de Claude (prompt 261006_0224, T1-T6): canal viu i paquets per a aplicar amb executor-mutacio.mjs i lease del Mestre. Res d'este laboratori està aplicat.
+
+- [[02_investigacio_ia/261006_0300_ledger_claude/RELLEU_00_arrencada.txt]]
+- [[02_investigacio_ia/261006_0300_ledger_claude/RELLEU_T1_ledger.txt]]
+- [[02_investigacio_ia/261006_0300_ledger_claude/RELLEU_T2_T5_skills.txt]]
+- [[02_investigacio_ia/261006_0300_ledger_claude/RELLEU_T3_gestoria.txt]]
+- [[02_investigacio_ia/261006_0300_ledger_claude/RELLEU_T4_model_b.txt]]
+- [[02_investigacio_ia/261006_0300_ledger_claude/RELLEU_T6a_proves_wiki.txt]]
+- [[02_investigacio_ia/261006_0300_ledger_claude/RELLEU_T6b_amnesia.txt]]
+
+Paquet T1 · LEDGER: peus històrics a fonts-vigilancia.mjs i separació de les dues línies enganxades sense esborrar cap caràcter.
+
+- [[02_investigacio_ia/261006_0300_ledger_claude/t1_ledger/LLEGIU_PRIMER.txt]]
+- [[02_investigacio_ia/261006_0300_ledger_claude/t1_ledger/prepara-pla.mjs]]
+- [[02_investigacio_ia/261006_0300_ledger_claude/t1_ledger/nous/tooling/brain/fonts-vigilancia.mjs]]
+- [[02_investigacio_ia/261006_0300_ledger_claude/t1_ledger/nous/tests/fonts-vigilancia.test.mjs]]
+- [[02_investigacio_ia/261006_0300_ledger_claude/t1_ledger/nous/tests/mapa-consola.test.mjs]]
+
+Paquet T2+T5 · frontmatter canònic de les dues skills, catàleg regenerat i skill nova core-maquetacio-markdown amb el seu flux d'aprovació.
+
+- [[02_investigacio_ia/261006_0300_ledger_claude/t2_t5_skills/LLEGIU_PRIMER.txt]]
+- [[02_investigacio_ia/261006_0300_ledger_claude/t2_t5_skills/FLUX_APROVACIO.md.txt]]
+- [[02_investigacio_ia/261006_0300_ledger_claude/t2_t5_skills/prepara-pla.mjs]]
+- [[02_investigacio_ia/261006_0300_ledger_claude/t2_t5_skills/derivats/skills_index.json]]
+- [[02_investigacio_ia/261006_0300_ledger_claude/t2_t5_skills/nous/.agents/manifest.yaml]]
+- [[02_investigacio_ia/261006_0300_ledger_claude/t2_t5_skills/nous/.agents/skills/00_INDEX_SKILLS.md.txt]]
+- [[02_investigacio_ia/261006_0300_ledger_claude/t2_t5_skills/nous/.agents/skills/core-comprensio-reflexiva/SKILL.md.txt]]
+- [[02_investigacio_ia/261006_0300_ledger_claude/t2_t5_skills/nous/.agents/skills/core-tecniques-investigacio/SKILL.md.txt]]
+- [[02_investigacio_ia/261006_0300_ledger_claude/t2_t5_skills/nous/.agents/skills/core-maquetacio-markdown/SKILL.md.txt]]
+
+Paquet T4 · Model B: frase canònica triada i signada pel Mestre el 261006, aplicada ja a l'ADR i a la plantilla; ací, la part de governança (AGENTS §8, mirall, QUI_SOC i versió del protocolledge).
+
+- [[02_investigacio_ia/261006_0300_ledger_claude/t4_model_b/LLEGIU_PRIMER.txt]]
+- [[02_investigacio_ia/261006_0300_ledger_claude/t4_model_b/CANDIDATES.txt]]
+- [[02_investigacio_ia/261006_0300_ledger_claude/t4_model_b/substitucions.json]]
+- [[02_investigacio_ia/261006_0300_ledger_claude/t4_model_b/prepara-pla.mjs]]
+- [[02_investigacio_ia/261006_0300_ledger_claude/t4_model_b/nous/AGENTS.md.txt]]
+- [[02_investigacio_ia/261006_0300_ledger_claude/t4_model_b/nous/.agents/AGENTS.md.txt]]
+- [[02_investigacio_ia/261006_0300_ledger_claude/t4_model_b/nous/.agents/QUI_SOC.md.txt]]
+- [[02_investigacio_ia/261006_0300_ledger_claude/t4_model_b/nous/.agents/protocolledge.json]]
+
+Paquet T6 · amnèsia de neteja: diagnosi, briefing de taula i guardes de l'índex al hook d'Antigravity, core-higiene-escriptori 3.4.0 i pas 5 de core-identitat.
+
+- [[02_investigacio_ia/261006_0300_ledger_claude/t6_higiene/DIAGNOSI.txt]]
+- [[02_investigacio_ia/261006_0300_ledger_claude/t6_higiene/LLEGIU_PRIMER.txt]]
+- [[02_investigacio_ia/261006_0300_ledger_claude/t6_higiene/prepara-pla.mjs]]
+- [[02_investigacio_ia/261006_0300_ledger_claude/t6_higiene/nous/tooling/gates/antigravity-hook.mjs]]
+- [[02_investigacio_ia/261006_0300_ledger_claude/t6_higiene/nous/tests/antigravity-hook.test.mjs]]
+- [[02_investigacio_ia/261006_0300_ledger_claude/t6_higiene/nous/.agents/skills/core-higiene-escriptori/SKILL.md.txt]]
+- [[02_investigacio_ia/261006_0300_ledger_claude/t6_higiene/nous/.agents/skills/core-identitat/SKILL.md.txt]]
 
 ### 261006_0055_olivera_ancores_opus
 
