@@ -1,0 +1,249 @@
+LLEGIU_PRIMER · Laboratori 261006_0055_olivera_ancores_opus
+Paquet 261006 «Olivera àncores»: tasques T2 i T3 del Mestre (porta Olivera i àncores de l'índex)
+Preparat per Claude (Opus 5.5) el 261006 sobre HEAD 44e2b8e2, i corregit el mateix dia després de la
+revisió adversarial (vegeu §7). Res d'este laboratori està aplicat.
+
+======================================================================
+0. QUÈ ÉS, EN QUATRE LÍNIES
+======================================================================
+
+L'autòpsia de les àncores fantasma (lents ancores-escriptors, ancores-jutge i ancores-evidencia, ja
+refutades) diu que la causa dominant és el trasllat i el reanomenat a mà: --arxiva no podia moure ni
+artefactes que no foren Markdown ni produccio/avaluacio, ni a una carpeta de sessió, i el circuit no
+tenia reanomenat. Este paquet ho porta dins de la porta, sense cap import nou.
+
+Les versions noves completes viuen a ./nous amb la ruta real. S'apliquen amb executor-mutacio.mjs i
+una lease del Mestre, mai a mà: tooling/ és governança. El corredor és tests/laboratori-olivera-261006.test.js
+(Vitest): construïx dues còpies de HEAD a os.tmpdir(), una amb el paquet superposat, hi passa la
+bateria de la porta i de draft-write i exigix zero fallades noves i totes les proves noves verdes.
+
+======================================================================
+1. PECES I QUÈ FA CADASCUNA
+======================================================================
+
+nous/tooling/gates/porta-olivera.mjs  (base: el fitxer de HEAD; cap import nou, la diagnosi D6 en
+copia només porta-olivera, arrel i AGENTS, i turns.mjs ja la importa)
+  · (a) artefactes(): inventari de qualsevol extensió, també doble (.report.html) i en majúscules
+        (.PNG). categoriaDe() respecta les compostes: pla_implementacio és «pla», macro_prompt i
+        micro_bundle no es partixen. inventari() continua només Markdown (envelliment intacte).
+  · (b) Per nom ixen TRANSITORIES més produccio i avaluacio (PER_NOM). estudi, visio, brainstorming,
+        planificacio i nota continuen rebutjades, i un sol nom dolent atura el lot sencer.
+  · (c) --sessio aammdd_Nom: un sol segment, destí dins de 90_arxiu_historic/. Si l'arxiu o la carpeta
+        existixen i són un symlink o no són un directori, error abans de moure res.
+  · (d) --reapunta: fora d'«Activitat en curs» l'àncora passa a [[../90_arxiu_historic/[SESSIO/]nom|àlies]]
+        (àlies, fragment i «!» conservats; sense | ni # no es repetix l'últim caràcter). Dins d'Activitat
+        se n'ix. Si el document es queda sense cap àncora, la rep davall de
+        «## Arxivat amb la Porta Olivera», perquè checkTurn després del handoff no diga «Document sense àncora».
+        SENSE --reapunta, --arxiva despenja com a HEAD, amb una sola excepció: un Markdown que porta el
+        rebut d'un torn obert i vigent (relleu possible, vegeu (j)) i que es queda sense cap àncora rep
+        la mateixa línia a «## Arxivat amb la Porta Olivera». Així l'ordre handoff que imprimix la porta
+        deixa el torn tancable també en el flux per defecte (npm run olivera:arxiva, AGENTS §0.1). Els
+        documents sense rebut o amb el torn tancat o caducat es despengen sense rastre, com abans.
+  · (e) El despenjat resol amb la mateixa regla que ancoratge() i amb el cens pres abans del trasllat
+        (T2-ANC), dins del lock: arxivar H.md ja no s'emporta [[H]] quan existix el recurs H.
+  · (f) Bucle de trasllat amb try/finally (T2-LOT): el que ja s'ha mogut es despenja encara que el lot
+        caiga a mitges, i l'error ho diu. Col·lisió com a HEAD: el que xoca es queda, la resta es mou, exit 1.
+        El trasllat és per enllaç dur i no trepitja mai: si el destí apareix entre la comprovació i el
+        moviment, l'element rep la nota de col·lisió i el destí queda intacte.
+  · (g) L'índex s'escriu per temporal ocult i rename, amb CAS (un editor que no pren el lock no es
+        trepitja) i dins del mateix lock exclusiu que draft-write (.agents/runtime/document-create.lock,
+        obert amb wx). Un índex amb enllaç dur o symlink atura l'ordre abans de moure res.
+  · (h) Cada fantasma diu on és el document, buscat NOMÉS pel nom (readdir, mai contingut) a
+        90_arxiu_historic/ i les seues subcarpetes de primer nivell, a 10_actes/ i a les subcarpetes de
+        l'Escriptori, i quina àncora amb camí el reprén; o que és ambigu; o que «no és a cap dels llocs
+        cercats», amb la llista dels llocs i l'avís que la cerca no baixa més d'un nivell (mai «no és
+        enlloc»). Els missatges continuen començant per «Àncores a documents absents: » i, a l'informe,
+        per «❌ Àncores a documents absents (fan caure la porta): ».
+  · (i) --repara [--sec]: reescriu al mateix lloc els fantasmes amb un sol destí (àlies conservat),
+        retira de la prosa els que no en tenen cap i en deixa constància, sense enllaç viu, davall de
+        «## Àncores sense destí (Porta Olivera)». Els ambigus no es toquen (exit 1). Amb --sec avisa que
+        «sense destí» vol dir només que no és als llocs cercats: un document més fons es retiraria igual.
+  · (j) --renomena VELL --a NOU [--sec]: reanomena un document solt dins de l'Escriptori (els dos noms
+        taxonòmics, la mateixa extensió, NOU no pot existir; el trasllat és per enllaç dur i no trepitja
+        mai), reescriu totes les formes d'àncora ([[x]], [[x.md]], [[x|àlies]], [[04_escriptori/x]],
+        ![[x]], [[x\|àlies]] en taula) i imprimix l'ordre document.mjs handoff exacta amb el torn del
+        frontmatter. És la peça que substituïx el «crear i reanomenar amb mv».
+        Abans de moure res (també amb --sec) comprova que el relleu és possible, amb les guardes de
+        readTurn i handoffDocument llegides amb fs del registre .agents/runtime/turns/<torn>.json: registre
+        vàlid, torn no tancat, expiresAt a més de 10 minuts, rebut present i del fitxer VELL, i creació
+        consolidada si en té. Si no, exit 2 i el document conserva el nom: reanomenat, quedaria amb un
+        rebut d'un altre fitxer i porta-plantilla-viva --staged, validateDocument i el hook d'edició el
+        rebutjarien per a sempre. Si el rebut ja és de NOU (un mv a mà previ), el reanomenat el torna al
+        seu lloc sense handoff, encara que el torn haja caducat: és també la recuperació d'un handoff
+        fallit, i la CLI la imprimix al costat de l'ordre handoff.
+        Si un recurs sense extensió es diu com NOU sense .md, l'àncora reescrita porta .md explícit
+        (la mateixa guarda que abreuja a draft-write).
+  · (k) Les àncores es lligen amb \[\[([^[\]\n]+)\]\]: un «[[» sense tancar ja no s'empassa la línia següent.
+  · L'informe conserva «ℹ️ Artefactes regulars visibles de primer nivell:» i afig, sense canviar el
+    verd, quants artefactes de jornades anteriors poden eixir per nom.
+  · --arxiva imprimix, per a cada Markdown mogut: «Relleu del torn: … handoff --turn-id <torn real> …»
+    si el relleu és possible; «Rebut del torn T sense relleu possible (motiu): no hi ha cap handoff a
+    fer» si el torn està tancat o caducat; i l'ordre genèrica amb ID si no hi ha rebut al frontmatter.
+  · Exportacions noves: PER_NOM, SECCIO_ARXIVATS, SECCIO_SENSE_DESTI, artefactes, nomsSolts,
+    prosaIndex, resolAncora, ancoresDe, apuntaA, insereixLlista, remeis, repara, renomena. Cap perduda.
+
+nous/tooling/documental/draft-write.mjs
+  · anchorDraft insereix «- [[x]]» dins de la llista d'«Activitat en curs», darrere dels blancs que
+    seguixen la capçalera i sense cap línia en blanc pròpia (ANC-W6). Només davant de prosa o d'una
+    taula hi posa un blanc, i la porta el plega en arxivar: crear i arxivar torna l'índex byte a byte,
+    més la línia amb camí de «## Arxivat amb la Porta Olivera» quan el torn del document continua obert.
+    Fora del primer nivell, l'apèndix tampoc porta blanc propi.
+  · Detecta duplicats per referent normalitzat (x, x.md, x|àlies, 04_escriptori/x, amb camí des de la
+    Wiki o des del repositori) amb els helpers exportats de la porta (ANC-W7). Ja n'importava checkTaula:
+    cap mòdul nou. indexProse desapareix: és la mateixa prosaIndex de la porta.
+  · Si un recurs homònim sense extensió s'enduria l'àncora abreujada, l'àncora porta .md explícit.
+
+nous/tests/porta-olivera-v3.test.mjs, nous/tests/cognitive-preflight.test.mjs i
+nous/tests/porta-olivera-diagnosi.test.mjs
+  · Còpies completes de les instal·lades amb les proves noves «[261006 …]» i «261006 · …» (una o més
+    per a cada canvi de a a k, i les de W6/W7 d'anchorDraft). A cognitive-preflight s'inverteix la
+    línia 215: un .json de torn amb nom termodinàmic ara sí que ix per nom. A la diagnosi només canvia
+    la D7 (mateix títol): després del handoff el torn ja no diu «Document sense àncora», perquè el rebut
+    obert conserva la línia amb camí. És la inversió en positiu que la convenció de la diagnosi demana.
+    Cap fitxer de prova nou: el manifest tooling/tests/node-suite-manifest.json no canvia.
+
+prepara-pla.mjs
+  · Pla sdp.mutation.v1 per a executor-mutacio.mjs. Sense git: BASES fixa el sha256 de cada original a
+    HEAD i és el `before` de la CAS (5 fitxers). «comprova» diu pendent, aplicat o deriva per a cada
+    fitxer, recorda la precondició de la Wiki i imprimix l'ordre d'open. No escriu cap fitxer.
+    operationId: sdp-olivera-ancores-261006-…
+
+======================================================================
+2. PROVES (executades el 261006 abans de lliurar)
+======================================================================
+
+  npx vitest run tests/laboratori-olivera-261006.test.js
+
+  · ESLint del repositori (per API) sobre els .mjs de nous/, prepara-pla.mjs i el corredor: zero missatges.
+  · prepara-pla: cap deriva sobre HEAD, i un `before` fals es detecta com a deriva.
+  · Bateria (27 fitxers: v3, diagnosi, cognitive-preflight, cognitive-hook-safety, tractor-fortification,
+    sistema_nervios, cognitive-document-handoff, antigravity-hook, anticipacio-261003,
+    document-create-race, documental, document-command-policy, hooks-local, porta-reflex,
+    security-chain, fortificacio, porta-receptor, plantilla-viva-installacio, petorreta-generador,
+    porta-olivera-v2, els governanca-260930*, lint-torn-261002 i olivera-arxiva-261002), cada fitxer
+    amb el seu `node --test` a les dues còpies, tres processos alhora.
+      Base (HEAD): 325 pass · 40 fail · 9 skip.   Paquet: 358 pass · 42 fail · 9 skip.
+      35 proves noves, totes verdes. Cap regressió.
+    Regla de regressió: el que passava a la base ha de passar, i el que feia skip o todo no pot fallar.
+    Una caiguda del paquet es repetix una sola vegada en sèrie abans de declarar-la (un timeout per
+    càrrega de CPU no és una regressió); la segona execució mana. Les roges de HEAD (laboratoris amb
+    preimatges congelades) continuen igual a les dues bandes.
+  · Deriva declarada, i només esta: dues proves de tests/governanca-260930b-portes.test.mjs (suite
+    laboratory). Comparen l'API instal·lada de la porta amb la còpia del 260930b i hi superposen la
+    seua porta, que no té els helpers que ara importa draft-write. Caurien amb qualsevol exportació
+    nova. El LLEGIU del 261002 §4 ja ho anunciava: és el senyal per a rebasar o arxivar el 260930b.
+    ÉS UNA EXCEPCIÓ A «CAP FALLADA NOVA» i només val amb l'acceptació explícita del Mestre (§5). El
+    corredor la tolera per nom exacte; qualsevol altra caiguda el posa roig.
+
+======================================================================
+3. ORDRE D'APLICACIÓ (Mestre, des de l'arrel)
+======================================================================
+
+  0. PRECONDICIÓ, abans de cap open (lliçó 261002 de wiki-documentacio-i-reflex, «Aprovació explícita
+     al frontend»): MarIA crea a la Wiki el document que explica el flux nou (arxivat per nom de
+     qualsevol extensió, --sessio, --reapunta, la línia amb camí dels rebuts de torn obert, --repara i
+     --renomena) i el Mestre l'aprova des de la pàgina. Sense eixa aprovació no es fa el pas 1.
+     prepara-pla.mjs comprova ho recorda.
+  1. node _wiki_de_poble/04_escriptori/02_investigacio_ia/261006_0055_olivera_ancores_opus/prepara-pla.mjs comprova
+     Ha de dir «Pla vàlid: 5 fitxers». Si diu «deriva», algú ha tocat un original després de 44e2b8e2:
+     no es força, es refà el paquet.
+  2. L'ordre d'open que imprimix (reflex_petorreta.mjs open … --risk=high --operation=governance-write).
+  3. node …/prepara-pla.mjs comprova --session=SESSIÓ, i les ordres que imprimix en eixe ordre (pla,
+     Petorreta, manifest, seal i executor).
+  4. Després de l'executor (valid:true i una transacció a .agents/seal-transactions):
+       node --test tests/porta-olivera-v3.test.mjs tests/porta-olivera-diagnosi.test.mjs tests/cognitive-preflight.test.mjs tests/cognitive-hook-safety.test.mjs tests/cognitive-document-handoff.test.mjs tests/antigravity-hook.test.mjs tests/tractor-fortification.test.mjs tests/sistema_nervios.test.mjs
+       node tooling/gates/porta-olivera.mjs
+  5. RETIRAR EL CORREDOR: tests/laboratori-olivera-261006.test.js fa skip quan els fitxers són els de
+     nous/, però és codi mort i corre dins de test:ci (Vitest): s'ha de llevar en el mateix commit. Si en
+     aplicar-lo s'hi afig cap fitxer *.test.mjs nou, s'ha d'afegir a tooling/tests/node-suite-manifest.json,
+     o test:ci peta sencer (este paquet no n'afig cap).
+  6. Registra la transacció al LEDGER (amb l'aprovació de la Wiki del pas 0) i a l'ESTAT, i arxiva este
+     laboratori.
+
+======================================================================
+4. EL PAQUET 261002 QUEDA SUPERAT (no es fa el rebase)
+======================================================================
+
+  · El 261002_1745_olivera_arxiva_claude no resol T2 (NOM només .md, inventari .md, destí sempre
+    l'arrel) i deriva en sis fitxers de codi respecte de HEAD: el seu turns.mjs no té commitCreation
+    (tests/olivera-arxiva-261002.test.mjs peta en carregar), la seua porta importa turns.mjs i core.mjs
+    (cicle amb turns.mjs:3 i trencaria la D6), i les seues proves contradiuen cognitive-preflight T5-10,
+    v3:124 i cognitive-hook-safety:54/72.
+  · Del 261002 se'n prenen idees, no codi: la secció «## Arxivat amb la Porta Olivera», el remei del
+    fantasma i el reapuntat amb camí.
+  · NO es retira sense mirar els dependents: tests/anticipacio-261003.test.mjs:758 usa la seua
+    SKILL.md.txt 3.2.0 com a base del plec, i tests/lint-torn-261002.test.mjs en lint la porta.
+    Arxivar-lo és decisió del Mestre, junt amb el 260930b (vegeu §2, deriva declarada).
+
+======================================================================
+5. DECISIONS PER AL MESTRE
+======================================================================
+
+  · Deriva declarada del 260930b (§2): acceptar-la explícitament, o rebasar o arxivar el 260930b abans
+    d'aplicar este paquet o en el mateix acte. Sense l'acceptació, el corredor no és prova suficient.
+  · produccio i avaluacio com a categories que ixen per nom: incloses. No envellixen soles (ranci
+    continua sent Markdown + TRANSITORIES). Cal decidir si avaluacio entra al catàleg
+    (tooling/wiki/taxonomia.json i taxonomia_documental.md): porta-taxonomia --staged la fa caure (T3)
+    i també les dobles extensions (T1). Fable diu que el commit 886f4272 en va versionar; cal aclarir
+    si es va fer amb --no-verify.
+  · Caixa de --sessio: la regex admet majúscules (casa amb 261005_Sessio_Marato_2230, la forma de les
+    carpetes que ja hi ha). Si les sessions noves han de ser en minúscules (AGENTS §2), es restringix.
+  · --reapunta: NO és per defecte. Sense la bandera, --arxiva despenja (v3:124 ho fixa), excepte la
+    línia amb camí dels Markdown amb rebut de torn obert, que és el mínim perquè el handoff imprés no
+    deixe el torn sense àncora (diagnosi D7). Cal confirmar eixa excepció. L'alternativa és no
+    imprimir el handoff sense --reapunta, però llavors el document ja és a l'arxiu sense àncora i
+    tornar a arxivar no és possible: la reparació seria a mà. Fer --reapunta per defecte deixaria
+    rastre a l'índex de cada arxivat, i omple l'índex d'enllaços a 90_arxiu_historic/, la zona que
+    AGENTS §5 exclou dels procediments automàtics.
+  · La secció «## Arxivat amb la Porta Olivera» creix amb cada arxivat de torn obert. Quan el torn tanca
+    ja no la necessita: MarIA en pot podar les línies. La porta no les poda sola.
+  · --repara reescriu al mateix lloc, també dins d'«Activitat en curs»: repara l'enllaç, no decidix la
+    vida. --renomena exigix la mateixa extensió. Totes dues, com --arxiva, són de MarIA o del Mestre:
+    hooks-local no les compta com a lectura i les denega a Claude i Codex (prova [261006 i·j]).
+  · --renomena refusa quan el relleu no és possible (torn tancat, caducat o a menys de 10 minuts de
+    caducar, rebut d'un altre fitxer o creació sense consolidar). Cal confirmar el marge de 10 minuts.
+  · Efecte lateral de categoriaDe: un macro_prompt o micro_prompt de jornades anteriors passa a ser
+    ranci i bloqueja context i create de prompt.local/prompt.consell (turns.mjs:174-177) fins que
+    s'arxive o es declare viu. Avui no n'hi ha cap a l'Escriptori.
+  · La skill core-higiene-escriptori (línia 36, l'abast de l'arxivat per nom; línia 38, «si el document
+    és a l'arxiu, lleva la línia»; lliçó de la línia 50, «arxivar i despenjar són un sol acte») s'ha
+    d'harmonitzar amb --reapunta, la línia amb camí dels rebuts oberts, --repara i --renomena, i
+    qualsevol edició invalida el segell de skills: cal resegellar amb el Mestre. Este paquet no la toca.
+
+======================================================================
+6. LÍMITS CONEGUTS (declarats, no resolts ací)
+======================================================================
+
+  · Fitxers sense extensió i noms amb majúscules a la part termodinàmica (crear_bundle escriu BUNDLE,
+    PROMPT i ABSENTS) no són artefactes: no ixen per nom. El remei és a crear_bundle (ANC-06).
+  · --renomena reescriu l'índex, no els altres documents que enllacen el nom vell. Cura el símptoma:
+    la causa del reanomenat (create no contrasta el nom amb la ruta, i porta-plantilla-viva:65/164
+    denega després «el nom demana planificacio») és a turns.mjs i a la Plantilla viva, fora d'este paquet.
+  · --renomena no comprova el hash del pla vinculat (caldria node:crypto, un import nou). Si el document
+    és el pla del torn i s'ha modificat després de vincular-lo, handoff el rebutja («Pla modificat
+    durant el relleu»); checkTurn ja el donava roig. La recuperació és la de (j): --renomena NOU --a VELL.
+  · Els enllaços Markdown [t](x.md) no ancoren ni es despengen (ANC-05): continua sent decisió humana
+    quina forma és canònica.
+  · El remei busca en l'arxiu, les seues sessions de primer nivell, 10_actes i les subcarpetes de
+    l'Escriptori (no més fons). Un document que és en dos llocs és ambigu i no es toca; un que és més
+    fons es dona «sense destí» i --repara en retiraria l'àncora (amb constància i amb l'avís de --sec).
+  · La màscara de codi en línia encara travessa paràgrafs (ANC-12) i %%…%% no s'emmascara (ANC-13):
+    són de la funció compartida prosaIndex i queden per a la peça d'un sol resolutor.
+  · El hook d'Antigravity continua sense mirar find -delete, rsync o sed -i (ANC-E2), i draft-write
+    continua escrivint el seu temporal visible un instant al primer nivell. Fora d'este paquet.
+
+======================================================================
+7. CORRECCIONS DESPRÉS DE LA REVISIÓ ADVERSARIAL (261006)
+======================================================================
+
+  · --renomena comprovava el torn després de moure: ara el relleu es comprova abans (j), amb prova del
+    torn caducat, a punt de caducar i tancat (exit 2, VELL al lloc, índex intacte) i del retorn.
+  · Sense --reapunta, el handoff imprés deixava el torn amb «Document sense àncora»: ara el rebut obert
+    rep la línia amb camí (d), amb prova a v3 (obert, tancat i sense rebut) i la D7 invertida.
+  · El corredor tolerava skip → fail i corria sis processos alhora: ara és regressió, la piscina és de
+    tres i una caiguda es repetix una vegada en sèrie. La deriva declarada queda subjecta al Mestre.
+  · El trasllat d'--arxiva podia trepitjar un destí aparegut després de la comprovació: ara és per
+    enllaç dur (f) i el cens del despenjat es pren dins del lock.
+  · --renomena abreujava [[NOU]] encara que un recurs sense extensió es diguera igual: ara porta .md.
+  · «no és enlloc» deia més del que la cerca sap: ara «no és a cap dels llocs cercats», amb l'avís a
+    --repara --sec.
