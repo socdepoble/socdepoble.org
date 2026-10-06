@@ -144,7 +144,7 @@ export const CAPACITATS = Object.freeze({
     'comprovaServidor'
   ]),
   /* R (Onada 3, 261003) · Recuperar la contrasenya perduda. Opcional a posta:
-     un backend sense ella (Sollutia) continua sent vàlid i /registre no pinta
+     un backend sense ella continua sent vàlid i /registre no pinta
      «Has oblidat la contrasenya?». La interfície ho pregunta amb
      teCapacitat('recuperacioContrasenya'). Formes:
        demanaRecuperacioContrasenya(correu, config) → Promise<{ enviat: true }>

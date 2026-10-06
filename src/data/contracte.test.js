@@ -204,7 +204,7 @@ test('R · recuperacioContrasenya és una capacitat opcional de dos mètodes, fo
     .toThrow('Capacitat parcial: recuperacioContrasenya');
 });
 
-test('R · un backend injectat sense recuperacioContrasenya (Sollutia) continua sent vàlid i no la pot cridar', () => {
+test('R · un backend injectat sense recuperacioContrasenya continua sent vàlid i no la pot cridar', () => {
   expect(() => port.validaBackendImplementation(nucli())).not.toThrow();
   port.setBackendImplementation(nucli());
   expect(port.teCapacitat('recuperacioContrasenya')).toBe(false);

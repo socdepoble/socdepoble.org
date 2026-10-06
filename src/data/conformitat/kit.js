@@ -8,7 +8,7 @@
    Pur: només importa el contracte. No importa cap adaptador ni cap corredor
    de proves; qui el passa decidix com. L'adaptador Supabase el passa en mode
    'seed' i sense xarxa (src/data/supabase/conformitat.test.js). Un altre
-   adaptador (Sollutia) s'hi enxufa igual, amb un fetch de mentida que servisca
+   adaptador que trie Sóc de Poble s'hi enxufa igual, amb un fetch de mentida que servisca
    les seues captures reals.
    Els casos d'ESCRIPTURA (escriu: true) només corren amb
    contextDeConformitat({ escriptures: true }): creen dades. */

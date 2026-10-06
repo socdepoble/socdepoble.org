@@ -126,8 +126,8 @@ Un amfitrió amb comptes propis fixa la política d'autenticació i entrega la s
 </script>
 ```
 
-* `configura()` es crida una sola vegada i abans de l'arrencada; després llança. Admet `auth`, `config` i els àlies `backend_url` i `tenant_id`.
-* **Fet verificat (260929) · decisió de govern pendent (`requires_human_decision: true`).** `configura()` de `src/host.js` accepta hui `backend`: un adaptador complet que valida `validaBackendImplementation` (`src/data/backendPort.js`: tot el nucli del contracte, cap capacitat a mitges) i que substituïx Supabase abans del segellat; amb un adaptador extern, `injectaSessio()` delega en el seu `adoptaSessioExterna`. El Model B diu que el backend el tria SdP i que `backendPort.js` no s'obri a implementacions de l'amfitrió. La doctrina no canvia: cap amfitrió passa `backend`. Tancar la porta al codi o reconéixer-la en una ADR ho decidix el Mestre.
+* `configura()` es crida una sola vegada i abans de l'arrencada; després llança. Admet `auth` i `config`; `backend`, `backend_url` i `tenant_id` es descarten amb un avís (Model B, decisions A1 i A3 del Mestre, 261003: `src/config/contracteAmfitrio.js:108-111`).
+* **Fet verificat (261006) · decisió de govern pendent (`requires_human_decision: true`).** Des del 261003 (decisions A1 i A3 del Mestre), `configura()` de `src/host.js` ja no accepta `backend`: el descarta amb un avís, com `backend_url` i `tenant_id` (`src/host.js:85-110`). Un adaptador complet només pot entrar per la via interna del paquet, `injectaBackendDelPaquet()` (`src/host.js:126`), que valida `validaBackendImplementation` (`src/data/backendPort.js`) i que hui no crida cap entrada productiva, només les proves; amb eixe adaptador, `injectaSessio()` delega en el seu `adoptaSessioExterna`. Retirar eixa costura o reconéixer-la en una ADR ho decidix el Mestre.
 * Per a entregar la sessió, l'amfitrió no declara cap endpoint: el backend ja viatja dins del paquet (vegeu «Backend segellat al paquet»), i amb només les tres peces l'element arrenca amb ell.
 
 ## LLEI 2: La Frontera del Mas (`.sdp-root`)
