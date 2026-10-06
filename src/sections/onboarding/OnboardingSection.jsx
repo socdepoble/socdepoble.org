@@ -143,6 +143,7 @@ export default function OnboardingSection() {
      respon. Si no, no es desa res i la persona continua en mode de proves amb
      un avís i «Torna-ho a provar». Sense la capacitat, com fins ara. */
   const [servidorCaigut, setServidorCaigut] = useState(false);
+  const [simulaLocal, setSimulaLocal] = useState(false);
   const [sondant, setSondant] = useState(false);
   /* Correcció de la revisió T1–T4 (260930) · Entrada automàtica suspesa per la
      marca de «Tornar al mode de proves»: només el botó manual connecta. */
@@ -385,16 +386,21 @@ export default function OnboardingSection() {
               </p>
             </div>
 
-            {servidorCaigut ? (
+            {servidorCaigut && !simulaLocal ? (
               <Alerta
                 to="avis"
-                accions={<Boto varietat="secundari" carregant={sondant} onClick={sondaIEntra}>Torna-ho a provar</Boto>}
+                accions={<>
+                  <Boto varietat="secundari" carregant={sondant} onClick={sondaIEntra}>Torna-ho a provar</Boto>
+                  {(modeDades === 'local' || modeDades === 'seed') ? (
+                    <Boto varietat="terciari" onClick={() => setSimulaLocal(true)}>Forçar entrada local (Mock)</Boto>
+                  ) : null}
+                </>}
               >
                 El servidor del poble no respon ara mateix. Continues en mode de proves: pots explorar l’app, però encara no pots crear el compte ni entrar.
               </Alerta>
             ) : null}
 
-            {entradaSuspesa && !servidorCaigut ? (
+            {entradaSuspesa && !servidorCaigut && !simulaLocal ? (
               <Alerta
                 to="avis"
                 accions={<Boto varietat="secundari" carregant={sondant} onClick={decidixEntrada}>Connectar amb el servidor</Boto>}
@@ -432,7 +438,7 @@ export default function OnboardingSection() {
                         type="button"
                         className="sdp-boto sdp-boto--secundari sdp-boto--ple"
                         onClick={googleLogin}
-                        disabled={canviDeModePendent || busyStep !== null}
+                        disabled={(canviDeModePendent && !simulaLocal) || busyStep !== null}
                         aria-busy={busyStep === 'google' ? 'true' : undefined}
                       >
                         {busyStep === 'google' ? <LoaderCircle className="sdp-boto__gir" size={18} aria-hidden="true" /> : null}
@@ -468,7 +474,7 @@ export default function OnboardingSection() {
                envia; en mode de proves el formulari queda desactivat sense gir
                (no s'envien credencials en mode local). */
             isBusy={sondant || busyStep === 'register'}
-            bloquejat={canviDeModePendent}
+            bloquejat={canviDeModePendent && !simulaLocal}
             error={errorEntrada?.text ?? ''}
             codiError={errorEntrada?.codi ?? null}
             accionsError={potTornarAProves

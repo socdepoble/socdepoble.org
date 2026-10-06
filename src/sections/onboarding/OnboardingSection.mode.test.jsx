@@ -177,7 +177,7 @@ test('T16 amb sonda · el servidor no respon: no es desa res, avís en mode de p
   const sonda = deferred();
   m.comprova.mockReturnValueOnce(sonda.promesa);
   await act(async () => { fireEvent.click(reintent()); });
-  const ocupat = within(screen.getByRole('status')).getByRole('button');
+  const ocupat = within(screen.getByRole('status')).getByRole('button', { name: 'Treballant…' });
   expect(ocupat.disabled).toBe(true);
   expect(ocupat.getAttribute('aria-busy')).toBe('true');
   await act(async () => { sonda.resol({ ok: true }); });
