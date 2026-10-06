@@ -48,3 +48,8 @@ supabase/.temp/
 supabase/.branches/
 wordpress-plugin/supabase/
 docker.env
+
+# Fons d'imatges del Mestre (64 MB, 261007): viu al disc, no a git, per no
+# unflar el repositori. La secció Multimèdia (T6) el servirà des de la carpeta
+# que llegisca l'app; vegeu el requisit al pla de la marató 261007.
+/_multimedia_de_poble/
