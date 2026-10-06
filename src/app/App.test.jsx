@@ -530,22 +530,27 @@ test('T61 · no-regressió: a /control l’únic actiu és el botó CONTROL de l
   });
 });
 
-/* ── T3 (ordre del Mestre, 260930) · Barra inferior mòbil de sis caselles ──
+/* ── T3 (ordre del Mestre, 260930; esmena del 261006) · Barra inferior mòbil ──
    Ordre explícit (ja no ix de tallar SECTIONS): Xat, Mur, el botó central
-   «Panell de Control», Pobles, Mercat i Telefonades. Telefonades és un botó
-   que obri l'avís de D17: no és una ruta ni una secció, no navega i no
-   s'encén. La barra lateral conserva el seu ordre. */
+   «Panell de Control», Pobles i Mercat. Telefonades n'ha eixit per decisió
+   del Mestre (261006, «Sí, fora de la barra»): l'avís de D17 viu a la vista
+   Telefonades del rail del Xat (/xat?vista=telefonades), no a la barra. La
+   barra lateral conserva el seu ordre. */
 const AVIS_D17 = 'Aquest és un projecte lliure CC. Aquesta funció està prevista per a quan puguem mantenir-la econòmicament.';
 const casellaMobil = (el) => el.getAttribute('href') ?? el.getAttribute('aria-label') ?? el.textContent;
 
-test('T3 · la barra mòbil porta Xat, Mur, Panell de Control, Pobles, Mercat i Telefonades, en eixe ordre', async () => {
+test('T3 · la barra mòbil porta Xat, Mur, Panell de Control, Pobles i Mercat, en eixe ordre, i res més', async () => {
   vi.stubGlobal('innerWidth', 1024);
   await muntaSenseSessio('/mur', async () => {
     const [principal, mobil] = await barres();
-    expect([...mobil.children].map(casellaMobil)).toEqual(['/xat', '/mur', 'Panell de Control', '/pobles', '/mercat', 'Telefonades']);
+    expect([...mobil.children].map(casellaMobil)).toEqual(['/xat', '/mur', 'Panell de Control', '/pobles', '/mercat']);
     expect([...mobil.children].map((el) => el.getAttribute('aria-label') ?? el.textContent))
-      .toEqual(['Xat', 'Mur', 'Panell de Control', 'Pobles', 'Mercat', 'Telefonades']);
-    expect([...mobil.children].map((el) => el.tagName)).toEqual(['A', 'A', 'BUTTON', 'A', 'A', 'BUTTON']);
+      .toEqual(['Xat', 'Mur', 'Panell de Control', 'Pobles', 'Mercat']);
+    expect([...mobil.children].map((el) => el.tagName)).toEqual(['A', 'A', 'BUTTON', 'A', 'A']);
+    /* La barra mòbil és germana directa del <main> i l'últim node de la
+       closca: cap embolcall ni cap node buit al voltant (MobileNav). */
+    expect(mobil.previousSibling).toBe(document.getElementById('main-content'));
+    expect(mobil.nextSibling).toBeNull();
     /* La barra lateral no canvia: continua amb l'ordre de SECTIONS. */
     expect([...principal.querySelectorAll('a.nav-item')].slice(0, 4).map((a) => a.getAttribute('href')))
       .toEqual(['/xat', '/mur', '/mercat', '/pobles']);
@@ -571,48 +576,44 @@ test('T3 · el botó central es diu «Panell de Control», no té text visible n
   });
 });
 
-test('T3 · Telefonades obri l’avís de D17 en un diàleg, sense navegar, sense xarxa ni actius, i torna el focus en tancar', async () => {
+test('T3 · Telefonades no és a la barra mòbil; l’avís de D17 s’obri des del rail del Xat, sense xarxa, i les barres només encenen Xat', async () => {
   vi.stubGlobal('innerWidth', 1024);
   await muntaSenseSessio('/mur', async () => {
-    const [, mobil] = await barres();
-    const boto = within(mobil).getByRole('button', { name: 'Telefonades' });
-    expect(boto.getAttribute('type')).toBe('button');
-    expect(boto.getAttribute('aria-haspopup')).toBe('dialog');
-    expect(boto.classList.contains('nav-item')).toBe(true);
+    const [principal, mobil] = await barres();
+    /* Decisió del Mestre (261006): ni botó ni rètol Telefonades a la barra
+       mòbil, ni el diàleg de D17 que obria. L'únic botó és el central. */
+    expect(within(mobil).getAllByRole('button').map((b) => b.getAttribute('aria-label'))).toEqual(['Panell de Control']);
+    expect(within(mobil).queryByRole('button', { name: 'Telefonades' })).toBeNull();
+    expect(within(mobil).queryByText('Telefonades')).toBeNull();
+    expect(mobil.querySelector('[aria-haspopup]')).toBeNull();
     expect(screen.queryByRole('dialog', { name: 'Telefonades' })).toBeNull();
+    expect(screen.queryByText(AVIS_D17)).toBeNull();
     const peticions = globalThis.fetch.mock.calls.length;
 
-    /* Correcció de la revisió (260930) · Sense boto.focus() previ: Safari no
-       dona el focus a un botó tocat, i el clic de jsdom tampoc. El focus ha
-       de ser en un altre lloc abans del clic perquè la prova de retorn de
-       baix no passe per casualitat. */
-    expect(document.activeElement).not.toBe(boto);
-    fireEvent.click(boto);
-    const dialeg = await screen.findByRole('dialog', { name: 'Telefonades' });
-    expect(dialeg.hasAttribute('open')).toBe(true);
-    expect(dialeg.closest('nav')).toBeNull();
-    expect(within(dialeg).getByText(AVIS_D17)).toBeTruthy();
-    expect(dialeg.querySelectorAll('[style]')).toHaveLength(0);
-    expect(window.location.pathname + window.location.search).toBe('/mur');
-    expect(actius(mobil)).toEqual(['/mur']);
-    expect(boto.hasAttribute('aria-current')).toBe(false);
-    expect(boto.classList.contains('active')).toBe(false);
+    /* L'avís de D17 continua accessible: Xat (barra mòbil) → Menú (obri el
+       rail del Xat, que fora d'«ample» és un panell tancat) → Telefonades. */
+    fireEvent.click(within(mobil).getByRole('link', { name: 'Xat' }));
+    await waitFor(() => expect(window.location.pathname).toBe('/xat'));
+    const obriRail = await waitFor(() => {
+      const trobat = document.getElementById('app-grid-list')?.querySelector('.sdp-xat-obri-rail');
+      expect(trobat).toBeTruthy();
+      return trobat;
+    });
+    expect(obriRail.getAttribute('aria-controls')).toBe('app-grid-sidebar');
+    fireEvent.click(obriRail);
+    const rail = document.getElementById('app-grid-sidebar');
+    await waitFor(() => expect(rail.getAttribute('data-obert')).toBe('true'));
+    fireEvent.click(within(rail).getByRole('button', { name: 'Telefonades' }));
+    await waitFor(() => expect(window.location.pathname + window.location.search).toBe('/xat?vista=telefonades'));
+    const columna = await screen.findByRole('complementary', { name: 'Telefonades' });
+    const targeta = within(columna).getByRole('region', { name: 'En construcció' });
+    expect(targeta.querySelector('.sdp-xat-construccio__avis').textContent).toBe(AVIS_D17);
+    expect([...rail.querySelectorAll('[aria-current="page"]')].map((el) => el.getAttribute('aria-label') ?? el.textContent))
+      .toEqual(['Telefonades']);
+    /* És una vista del Xat, no una ruta pròpia: les dues barres encenen només Xat. */
+    for (const nav of [principal, mobil]) expect(actius(nav)).toEqual(['/xat']);
+    expect(screen.queryByRole('dialog', { name: 'Telefonades' })).toBeNull();
     expect(globalThis.fetch.mock.calls.length).toBe(peticions);
-
-    /* «Entesos» el tanca i el focus torna a Telefonades (no es queda a dins). */
-    const entesos = within(dialeg).getByRole('button', { name: 'Entesos' });
-    entesos.focus();
-    fireEvent.click(entesos);
-    await waitFor(() => expect(dialeg.hasAttribute('open')).toBe(false));
-    expect(document.activeElement).toBe(boto);
-
-    /* La creu també el tanca, i es pot tornar a obrir. */
-    fireEvent.click(boto);
-    await waitFor(() => expect(dialeg.hasAttribute('open')).toBe(true));
-    fireEvent.click(within(dialeg).getByRole('button', { name: 'Tancar' }));
-    await waitFor(() => expect(dialeg.hasAttribute('open')).toBe(false));
-    expect(window.location.pathname + window.location.search).toBe('/mur');
-    expect(actius(mobil)).toEqual(['/mur']);
   });
 });
 

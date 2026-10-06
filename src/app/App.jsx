@@ -102,11 +102,12 @@ const PRIMERA_DEL_PROJECTE = 'projecte';
    ací, canvia allà. */
 const AMPLE_MAXIM_COMPACTE = 1023;
 
-/* T3 (ordre del Mestre, 260930) · La barra inferior mòbil porta sis caselles
-   en un ordre explícit: Xat, Mur, [Panell de Control], Pobles, Mercat i
-   Telefonades. Ja no ix de tallar SECTIONS, que continua manant l'ordre de la
-   barra lateral. Telefonades no és cap secció ni cap ruta (MobileNav): posar-la
-   a SECTIONS la publicaria al manifest SEO i a la barra lateral. */
+/* T3 (ordre del Mestre, 260930; esmena del 261006) · La barra inferior mòbil
+   porta cinc caselles en un ordre explícit: Xat, Mur, [Panell de Control],
+   Pobles i Mercat. Ja no ix de tallar SECTIONS, que continua manant l'ordre de
+   la barra lateral. Telefonades n'ha eixit per decisió del Mestre (261006,
+   «Sí, fora de la barra»): l'avís de D17 viu a la vista Telefonades del rail
+   del Xat (/xat?vista=telefonades). */
 const seccioDeLaBarraMobil = (id) => NAV_SECTIONS.find((section) => section.id === id);
 const MOBILE_NAV_LEADING = ['xat', 'mur'].map(seccioDeLaBarraMobil).filter(Boolean);
 const MOBILE_NAV_TRAILING = ['pobles', 'mercat'].map(seccioDeLaBarraMobil).filter(Boolean);
@@ -893,16 +894,13 @@ const MobileNav = memo(function MobileNav() {
     }
   };
 
-
   return (
-    <>
-      <nav className="mobile-nav" aria-label="Navegació mòbil">
-        {MOBILE_NAV_LEADING.map((section) => enllacMobil(section))}
-        <button type="button" className="mobile-nav__cta" onClick={vesAlPanell} aria-label={t('nav.panel', 'Panell de Control')}>
-          <Settings strokeWidth={2.1} />
-        </button>
-        {MOBILE_NAV_TRAILING.map((section) => enllacMobil(section))}
-      </nav>
-    </>
+    <nav className="mobile-nav" aria-label="Navegació mòbil">
+      {MOBILE_NAV_LEADING.map((section) => enllacMobil(section))}
+      <button type="button" className="mobile-nav__cta" onClick={vesAlPanell} aria-label={t('nav.panel', 'Panell de Control')}>
+        <Settings strokeWidth={2.1} />
+      </button>
+      {MOBILE_NAV_TRAILING.map((section) => enllacMobil(section))}
+    </nav>
   );
 });

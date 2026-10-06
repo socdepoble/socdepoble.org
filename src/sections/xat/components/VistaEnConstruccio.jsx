@@ -20,8 +20,9 @@
  *   · el cos: una targeta «En construcció» que diu què hi haurà i que encara
  *     no està disponible. L'avís és el genèric del xat, llevat que la vista en
  *     porte un de propi (`avis`): Telefonades porta el de D17 (ordre del
- *     Mestre, 260930), que és l'única font d'eixe text per al rail, la barra
- *     mòbil i el toast dels controls inerts.
+ *     Mestre, 260930), que és l'única font d'eixe text per al rail i el toast
+ *     dels controls inerts. La barra mòbil ja no el porta: Telefonades n'ha
+ *     eixit per decisió del Mestre (261006).
  *
  * Tots els controls són INERTS: aria-disabled="true" (no `disabled`, perquè
  * es puguen enfocar i llegir) i, en prémer-los, `onEnConstruccio` (qui la

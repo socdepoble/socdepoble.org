@@ -542,12 +542,14 @@ nav.mobile-nav { display: none; }
   :where(.sdp-root.is-compact) .app-main__content { padding-bottom: calc(var(--sdp-alt-nav-mobil) + env(safe-area-inset-bottom, 0px)); }
 
   /* Barra inferior: FIXA a baix, sempre visible, z-index alt.
-     T3 (ordre del Mestre, 260930) · Sis caselles (Xat, Mur, Panell de
-     Control, Pobles, Mercat i Telefonades) han de cabre a 360-375px: marges,
-     coixins i radis de l'escala, cap px nou. Pressupost (estimat, es mesura
-     al navegador): a 375px queden 375 − 2×4 (marge) − 2×4 (coixí) − 48 (botó
-     central) = 311px per a cinc caselles que en demanen ≈290; a 360px, 296.
-     Alçada: 8 + 55 + 8 = 71px, més 8 de separació = 79 ≤ 96
+     T3 (ordre del Mestre, 260930; esmena del 261006) · Cinc caselles (Xat,
+     Mur, Panell de Control, Pobles i Mercat) han de cabre a 360-375px:
+     marges, coixins i radis de l'escala, cap px nou. Telefonades n'ha eixit
+     per decisió del Mestre (261006) sense tocar cap regla. El pressupost es
+     va fer per a sis caselles (estimat, es mesura al navegador): a 375px
+     queden 375 − 2×4 (marge) − 2×4 (coixí) − 48 (botó central) = 311px per a
+     les cinc del voltant, que en demanaven ≈290; a 360px, 296. Amb quatre,
+     en sobra. Alçada: 8 + 55 + 8 = 71px, més 8 de separació = 79 ≤ 96
      (--sdp-alt-nav-mobil, la reserva del visor, no canvia). */
   :where(.sdp-root.is-compact) nav.mobile-nav {
     display: flex;
@@ -572,9 +574,11 @@ nav.mobile-nav { display: none; }
     background: var(--sdp-crom-fons);
     border-top: 1px solid var(--sdp-crom-vora);
   }
-  /* Enllaços i el botó de Telefonades: la mateixa pell. La vora, el cursor i
-     l'aparença anul·len les del botó natiu; la lletra ja la posa .nav-item
-     (--sdp-font-barra), igual per als dos.
+  /* Les caselles enllaç de la barra. La vora, el cursor i l'aparença
+     anul·len les del botó natiu: són del botó de Telefonades, que compartia
+     esta pell fins al 261006. Hui cap botó de la barra porta .nav-item, i es
+     conserven perquè llevar-les és un canvi de CSS fora d'abast. La lletra ja
+     la posa .nav-item (--sdp-font-barra).
      Text en repòs: --sdp-crom-text-suau, el mateix blanc al 78 % que abans
      donava l'opacitat 0,78, però sense opacitat sobre el text (11,8:1, AAA). */
   :where(.sdp-root.is-compact) .mobile-nav .nav-item {
@@ -626,7 +630,8 @@ nav.mobile-nav { display: none; }
      centrada el rètol prenia l'amplada del seu text i envaïa les caselles
      veïnes; ara, si no hi cap, es retalla amb punts suspensius (.nav-item__text)
      i el nom sencer queda al nom accessible. Pes 700 i sense espaiat extra:
-     abans el <strong> pujava a 800 i l'espaiat afegia ≈3px a «Telefonades». */
+     abans el <strong> pujava a 800 i l'espaiat afegia ≈3px a «Telefonades»,
+     el rètol més llarg mentre va ser a la barra (fins al 261006). */
   :where(.sdp-root.is-compact) .mobile-nav .nav-item__text {
     max-width: 100%;
     font-size: var(--sdp-text-meta);
@@ -704,9 +709,10 @@ nav.mobile-nav { display: none; }
 }
 
 /* ══ MÒBIL ESTRET · ≤480px ════════════════════════════════════ */
-/* Sis accions: cinc objectius de 48px i el control de 60px necessiten
-   300px abans dels coixins. En una caixa estreta repartim l’aire disponible
-   sense un gap mínim que expulse Xat o Telefonades fora de la pantalla. */
+/* Cinc accions (sis fins al 261006, amb Telefonades): quatre objectius de
+   48px i el control de 60px necessiten 252px abans dels coixins (amb sis,
+   300px). En una caixa estreta repartim l’aire disponible sense un gap
+   mínim que expulse Xat o Mercat fora de la pantalla. */
 @container sdp-arrel (max-width: 400px) {
   :where(.sdp-root.is-compact) nav.mobile-nav {
     gap: 0;
