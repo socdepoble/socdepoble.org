@@ -26,6 +26,12 @@ export const CODI_ENTRADA = Object.freeze({
 /** Una petició que no ha arribat al servidor. Va a `error.codi`, com 'sense-capacitat'. */
 export const CODI_BACKEND_INABASTABLE = 'backend-inabastable';
 
+/** ENX-16 (261006) · El servidor no té l'esquema que demana l'operació (una
+ * columna o una taula sense migrar). Va a `error.codi`. La vista el mira abans
+ * de cap text del proveïdor; el text cru de PostgREST (PGRST204, 42703) queda
+ * com a reserva per als adaptadors que encara no el traduïxen. */
+export const CODI_ESQUEMA_ABSENT = 'esquema-absent';
+
 /** F2 (ordre del Mestre, 261004; pla 2045, Marató 2230) · Pujada de fitxers
  * (capacitat 'mitjans'). Va a `error.codi`, com CODI_BACKEND_INABASTABLE. Eixe
  * codi és genèric (qualsevol petició que no arriba al servidor, no només les

@@ -21,6 +21,7 @@
  * Funcions pures, sense React ni xarxa. L'execució viu a useAplicaAbast.js.
  */
 import { MODES_ABAST } from '../../data/origenNota.js';
+import { CODI_ESQUEMA_ABSENT } from '../../data/errorsBackend.js';
 
 export { MODES_ABAST };
 
@@ -186,10 +187,13 @@ export function missatgeDeConnexio({ titol = '', autorNom = '' } = {}, url = '')
  * D10 · Sense la migració 2609272100 el servidor no té la columna notes.origen
  * i rebutja la connexió amb un error de PostgREST. Es diu clar, sense el
  * missatge cru. La resta d'errors passen tal qual.
+ * ENX-16 (261006) · Primer el codi neutral (error.codi 'esquema-absent'),
+ * que pot portar qualsevol adaptador; la regex de PostgREST queda de reserva.
  */
 export function missatgeDeLError(error) {
   const text = String(error?.message || '');
-  const columnaOrigen = /origen/i.test(text) && /PGRST204|42703|column|columna/i.test(text);
+  const columnaOrigen = error?.codi === CODI_ESQUEMA_ABSENT
+    || (/origen/i.test(text) && /PGRST204|42703|column|columna/i.test(text));
   if (columnaOrigen) {
     return 'El servidor d’este poble encara no admet connexions: falta aplicar-hi la migració de l’origen de les notes. La connexió no s’ha fet.';
   }

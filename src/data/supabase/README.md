@@ -15,7 +15,7 @@
 | `organizations.js`   | Gestió d'organitzacions i perfils   | `config.js`             |
 | `xat.js`             | Xat i missatgeria                   | `config.js`, `utils.js` |
 | `storage.js`         | Emmagatzematge de fitxers           | `config.js`, `utils.js` |
-| `realtime.js`        | Subscripcions en temps real         | `config.js`             |
+| `realtime.js`        | Cicle de vida dels canals (baixa, reautenticació, tancament) | `config.js` |
 | `utils.js`           | Funcions utilitàries auxiliars      | -                       |
 | `index.js`           | Punt d'entrada del contracte        | Tots                    |
 

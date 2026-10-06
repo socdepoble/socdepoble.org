@@ -1,45 +1,16 @@
 /**
  * @module supabase/realtime
- * @description Subscripcions en temps real a taules de Supabase.
+ * @description Cicle de vida dels canals en temps real de Supabase.
  * @contract
- *   - subscribeToTable(table, callback)
  *   - unsubscribe(subscription)
- *   - subscribeToCustomChannel(channelName, callback)
+ *   - reautenticaRealtime()
+ *   - tancaRealtime()
+ * ENX-17 (261006) · Sense subscripcions genèriques (subscribeToTable,
+ * subscribeToCustomChannel): no les cridava ningú. L'únic canal viu és el del
+ * Xat (subscribeToXat, xat.js), que només avisa {tipus:'nous', filId, seq}.
  */
 
-import { clientActual, getClient } from './config.js';
-
-/**
- * Subscriu a canvis en una taula.
- * @param {string} table - Nom de la taula.
- * @param {Function} callback - Funció a executar en cada canvi.
- * @param {object} options - Opcions (event: 'INSERT'|'UPDATE'|'DELETE'|'*').
- * @returns {Promise<{subscription: object, error: object}>}
- */
-export const subscribeToTable = async (table, callback, options = {}) => {
-  try {
-    const supabase = await getClient();
-    const channelName = options.channelName || `table_${table}_changes`;
-    const channel = supabase
-      .channel(channelName)
-      .on(
-        'postgres_changes',
-        {
-          event: options.event || '*',
-          schema: 'public',
-          table,
-          filter: options.filter,
-        },
-        (payload) => callback(null, payload)
-      )
-      .on('error', (error) => callback(error, null))
-      .subscribe();
-
-    return { subscription: channel, error: null };
-  } catch (error) {
-    return { subscription: null, error };
-  }
-};
+import { clientActual } from './config.js';
 
 /**
  * Donar de baixa una subscripció. Sense client viu no hi ha canal a tancar:
@@ -50,27 +21,6 @@ export const unsubscribe = async (subscription) => {
   if (subscription) {
     const supabase = clientActual();
     supabase?.removeChannel(subscription);
-  }
-};
-
-/**
- * Subscriu a un canal personalitzat.
- * @param {string} channelName - Nom del canal.
- * @param {Function} callback - Funció a executar en rebre missatges.
- * @returns {Promise<{subscription: object, error: object}>}
- */
-export const subscribeToCustomChannel = async (channelName, callback) => {
-  try {
-    const supabase = await getClient();
-    const channel = supabase
-      .channel(channelName)
-      .on('broadcast', { event: channelName }, (payload) => callback(null, payload))
-      .on('error', (error) => callback(error, null))
-      .subscribe();
-
-    return { subscription: channel, error: null };
-  } catch (error) {
-    return { subscription: null, error };
   }
 };
 
