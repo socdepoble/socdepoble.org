@@ -129,7 +129,13 @@ describe('res ix d’este ordinador', () => {
       (r) => r === 'src/app/contexts/RouterContext',
       (r) => r === 'src/utils/sanitize.js',
       (r) => r === 'src/sections/wiki-de-poble/parseMarkdown.js',
-      (r) => r === 'react' || r === 'lucide-react'
+      (r) => r === 'react' || r === 'lucide-react',
+      /* 261006 (MarIA, PanellAgents.jsx de les 01:52; prompt 261006_0224, T6):
+         Agents (BIOS) llig AGENTS.md, el BIOS que ja és públic al repositori,
+         com a text i només en desenvolupament (EINES_LOCALS de la Wiki). El
+         permís val només per a eixe fitxer i des d'eixe component, i res no
+         ix d'este ordinador. */
+      (r, origen) => origen === `${TRACTORS}/PanellAgents.jsx` && r === 'AGENTS.md?raw'
     ];
     const ambBackend = [];
     const fora = [];
@@ -137,7 +143,7 @@ describe('res ix d’este ordinador', () => {
       for (const especificador of especificadors(codi)) {
         if (backend.test(especificador)) ambBackend.push(`${ruta}: ${especificador}`);
         const desti = resol(ruta, especificador);
-        if (!permesos.some((permes) => permes(desti))) fora.push(`${ruta}: ${especificador}`);
+        if (!permesos.some((permes) => permes(desti, ruta))) fora.push(`${ruta}: ${especificador}`);
       }
     }
     expect(ambBackend).toEqual([]);
@@ -266,10 +272,11 @@ describe('la frontera: la Gestoria només pel pont de la seua app, els Tractors 
     const fi = fontWiki.indexOf('} : null;', inici);
     expect(fi).toBeGreaterThan(inici);
     const bloc = fontWiki.slice(inici, fi);
-    expect(delsCarrils(bloc)).toEqual(['../tractors/PanellTractors.jsx', '../tractors/PanellSentinelles.jsx']);
+    // 261006: el tercer, Agents (BIOS), també del carril dels Tractors (PanellAgents.jsx).
+    expect(delsCarrils(bloc)).toEqual(['../tractors/PanellTractors.jsx', '../tractors/PanellSentinelles.jsx', '../tractors/PanellAgents.jsx']);
     // Fora del bloc, cap importació dels dos carrils (tampoc estàtica).
     expect(delsCarrils(fontWiki.slice(0, inici) + fontWiki.slice(fi))).toEqual([]);
-    expect([...bloc.matchAll(/lazyRoute\(\(\) => import\(/g)]).toHaveLength(2);
+    expect([...bloc.matchAll(/lazyRoute\(\(\) => import\(/g)]).toHaveLength(3);
     // Cap carpeta ni ítem de la Gestoria al model.
     expect(especificadors(fontWiki).filter((e) => /gestoria/.test(e))).toEqual([]);
     const iniciModel = fontWiki.indexOf('export function modulsLocalsActius(');
@@ -358,13 +365,13 @@ describe('la frontera: la Gestoria només pel pont de la seua app, els Tractors 
   }
 
   test('al build de producció de la Wiki no queda cap importació dels Tractors, i ni en desenvolupament cap de la Gestoria', async () => {
-    const carrils = /import\(\s*["'][^"']*(?:ShellGestoria|PanellTractors|PanellSentinelles|aprendre\/Aprendre)/g;
+    const carrils = /import\(\s*["'][^"']*(?:ShellGestoria|PanellTractors|PanellSentinelles|PanellAgents|aprendre\/Aprendre)/g;
     const desenvolupament = await compila(WIKI, false);
-    expect(desenvolupament.match(carrils)).toHaveLength(2);
+    expect(desenvolupament.match(carrils)).toHaveLength(3);
     expect(desenvolupament).not.toMatch(/ShellGestoria|ContenidorGestoria|Aprendre\.jsx/);
     const produccio = await compila(WIKI, true);
     expect(produccio.match(carrils)).toBeNull();
-    expect(produccio).not.toMatch(/ShellGestoria|ContenidorGestoria|PanellTractors|PanellSentinelles|Aprendre\.jsx/);
+    expect(produccio).not.toMatch(/ShellGestoria|ContenidorGestoria|PanellTractors|PanellSentinelles|PanellAgents|Aprendre\.jsx/);
   }, 60000);
 
   /* La closca (ShellGestoria) porta ContenidorGestoria a dins: vetada al

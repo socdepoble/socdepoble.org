@@ -5,7 +5,10 @@
    la Gestoria) ho comprova gestoria/privacitat.test.js compilant la Wiki amb
    Vite. Ordre del Mestre, 261004 («contaminació crítica de rutes/estats entre
    Gestoria i Wiki»): la Gestoria ja no és de la Wiki; els seus ids vells són
-   ítems desconeguts, també en producció. */
+   ítems desconeguts, també en producció.
+   261006 (MarIA, WikiDePobleSection.jsx de les 01:46; prompt 261006_0224, T6):
+   la Consola ja no té carpeta pròpia i penja de «Maquinària de la IAIA». En
+   producció, eixa carpeta només porta la Consola. */
 import React from 'react';
 import { afterAll, afterEach, expect, test, vi } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
@@ -32,6 +35,7 @@ vi.mock('../../config/assetResolver', async (importOriginal) => ({ ...(await imp
 vi.mock('../consola/ConsolaSection.jsx', () => ({ ConsolaIncrustada: () => null }));
 vi.mock('../tractors/PanellTractors.jsx', () => ({ default: () => <p>Doble dels Tractors</p> }));
 vi.mock('../tractors/PanellSentinelles.jsx', () => ({ default: () => <p>Doble dels Sentinelles</p> }));
+vi.mock('../tractors/PanellAgents.jsx', () => ({ default: () => <p>Doble dels Agents</p> }));
 /* Sondes: la Wiki ja no les importa (ordre del Mestre, 261004); si ho tornara a fer, es veurien. */
 vi.mock('../gestoria/tauler/ShellGestoria.jsx', () => ({ default: () => <p>Doble de la Gestoria</p> }));
 vi.mock('../gestoria/aprendre/Aprendre.jsx', () => ({ default: () => <p>Doble d’Aprendre</p> }));
@@ -49,12 +53,13 @@ test('l’entorn de la prova és el de producció', () => {
 test('cap categoria ni ítem de les eines locals', () => {
   render(<WikiDePobleSection />);
   const { model } = fixture.props;
-  expect(model.categories.map((c) => c.id)).toEqual(['__intro_cat', 'consola_termodinamica_cat']);
+  expect(model.categories.map((c) => c.id)).toEqual(['__intro_cat', 'maquinaria_cat']);
   expect(model.items.map((i) => i.id)).toEqual(['__intro', 'consola_termodinamica']);
+  expect(model.items.filter((i) => i.categoryId === 'maquinaria_cat').map((i) => i.id)).toEqual(['consola_termodinamica']);
 });
 
 test('una URL amb l’ítem d’una eina no la pinta: l’ítem no existix i es veu la portada', async () => {
-  for (const id of ['gestoria_panell', 'gestoria_aprendre', 'tractors_aprovacio', 'sentinelles_panell']) {
+  for (const id of ['gestoria_panell', 'gestoria_aprendre', 'tractors_aprovacio', 'sentinelles_panell', 'agents_panell']) {
     fixture.itemId = id;
     fixture.search = `?item=${id}`;
     const arrel = render(<WikiDePobleSection />).container;

@@ -38,8 +38,9 @@ if (import.meta.env?.DEV && !PAGE_COPY[COVER_PAGE_KEYS.wiki]) {
 const copyDePortada = (pageCopy, clau) => pageCopy?.[clau] || PAGE_COPY[clau];
 
 /* Una eina local com a ítem de la Wiki, amb la forma dels ítems sintètics de la Consola.
-   La fitxa porta FileText propi: sense ell heretaria la carpeta de tractors_cat
-   (glifDeCategoria) i canviaria un segon píxel (pla 2045, Marató 2230, F3). */
+   La fitxa porta FileText propi: sense ell heretaria la carpeta de la seua
+   categoria, hui maquinaria_cat (glifDeCategoria), i canviaria un segon píxel
+   (pla 2045, Marató 2230, F3). */
 const einaLocal = (id, title, subtitle, categoryId, tags) => ({
   id,
   title,
@@ -79,11 +80,16 @@ export function modulsLocalsActius(env) {
        una categoria que agrupa documents porta Folder (Tractors i les carpetes
        del manifest); una entrada directa a una sola pàgina, FileText (Wiki de
        Poble, Consola); un document final, el seu glif.
+       261006 (MarIA; prompt 261006_0224, T6) · Ni Tractors ni la Consola tenen
+       ja carpeta pròpia: les eines locals i la Consola pengen de maquinaria_cat
+       («Maquinària de la IAIA», Folder), que declara la Wiki. Ací ja no es
+       torna cap categoria, i cada fitxa conserva el FileText propi.
        Excepció vigent: els documents del manifest no declaren icon i encara
        hereten la carpeta de la seua categoria (ItemMedia i el rail del
        UniversalWorkspace, via glifDeCategoria; ho fixa icones.test.jsx).
        Posar-los FileText és decisió pendent del Mestre: opció A, només les
-       fitxes de Tractors (l'estat d'ara); opció B, també els documents. */
+       fitxes de la Maquinària de la IAIA (l'estat d'ara: Consola, Tractors,
+       Sentinelles i Agents); opció B, també els documents. */
     categories: [],
     items: [
       einaLocal('tractors_aprovacio', 'Aprovació de tractors', 'Què fa cada tractor, la seua empremta i la teua signatura', 'maquinaria_cat', ['tractors']),
@@ -356,6 +362,11 @@ export default function WikiDePobleSection() {
         },
         {
           id: 'consola_termodinamica',
+          /* 261006 · La Consola ja no té carpeta pròpia (consola_termodinamica_cat,
+             FileText). Sense glif propi, la seua fitxa heretaria la carpeta de
+             maquinaria_cat. Conserva el document que portava, com les eines
+             locals (regla del glif, 261004). */
+          icon: FileText,
           title: consola?.title || 'Consola Termodinàmica',
           subtitle: consola?.subtitle || 'Manteniment de la IAIA',
           categoryId: 'maquinaria_cat',

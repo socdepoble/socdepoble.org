@@ -108,13 +108,17 @@ function resol(fitxer, especificador) {
 
 const esCapacitor = (especificador) => especificador === CAP || especificador.startsWith(`${CAP}/`);
 
+/* Una consulta de Vite al final (?raw, ?url, ?inline, ?worker…) tria com es
+   carrega el fitxer, no és un comodí de glob: es lleva abans de resoldre. */
+const CONSULTA_VITE = /\?(?:raw|url|inline|worker|sharedworker|init)(?:&[\w=-]*)*$/;
+
 /* Cert si l'especificador (o el patró de glob) pot arribar a src/natiu/ o a
    Capacitor. D'un glob es mira la carpeta fixa, la d'abans del primer comodí:
    hi arriba si és dins de src/natiu/, si és una carpeta que la conté o si no
    n'hi ha cap (el comodí és al principi). */
 function arribaAlNatiu(fitxer, especificador) {
   if (esCapacitor(especificador)) return true;
-  const desti = resol(fitxer, especificador);
+  const desti = resol(fitxer, especificador.replace(CONSULTA_VITE, ''));
   if (desti === null) return false;
   const fix = desti.split(/[*{[?]/)[0];
   if (fix === desti) return desti === NATIU || desti.startsWith(`${NATIU}/`);
@@ -184,6 +188,17 @@ describe('les sondes: el detector veu cada forma d’arribar al natiu', () => {
     ];
     expect(positius.filter((codi) => !arriba(codi)), 'formes que el detector no veu').toEqual([]);
     expect(negatius.filter(arriba), 'falsos positius').toEqual([]);
+  });
+
+  /* 261006 · PanellAgents.jsx importa '../../../AGENTS.md?raw': el «?» de la
+     consulta de Vite no és cap comodí i AGENTS.md no és al natiu. */
+  test('una consulta de Vite (?raw, ?url) no fa de comodí, però no amaga el natiu', () => {
+    const DE = 'src/sections/tractors/PanellAgents.jsx';
+    const arriba = (codi) => especificadors(codi).some((e) => arribaAlNatiu(DE, e));
+    expect(arriba("import text from '../../../AGENTS.md?raw';")).toBe(false);
+    expect(arriba("import u from '../../../AGENTS.md?url';")).toBe(false);
+    expect(arriba("import text from '../../natiu/entrada.jsx?raw';")).toBe(true);
+    expect(arriba("const f = import.meta.glob('../../natiu/?.js');")).toBe(true);
   });
 
   test('el cens mira de veres: hi ha producció fora del natiu, i les peces que nomena el §5 hi són', () => {

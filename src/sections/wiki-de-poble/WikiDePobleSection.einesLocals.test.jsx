@@ -1,5 +1,6 @@
-/* 261002 · Les eines locals de la Wiki (Tractors i Sentinelles), que només
-   hi són en desenvolupament: vitest corre amb import.meta.env.DEV cert. El
+/* 261002 · Les eines locals de la Wiki (Tractors, Sentinelles i, des del
+   261006, Agents), que només hi són en desenvolupament: vitest corre amb
+   import.meta.env.DEV cert. El
    mode producció el proven modulsLocalsActius (ací) i
    WikiDePobleSection.produccio.test.jsx. Els components són dobles: les seues
    proves són a tractors/. UniversalPage és la de veres: es mira la capçalera
@@ -8,7 +9,12 @@
    Gestoria i Wiki»): la Gestoria de Poble ja no és cap eina local de la Wiki.
    Viu a la seua app (src/apps/gestoria): ací es prova que en desenvolupament
    la Wiki no en porta cap carpeta, cap ítem ni cap closca. Els dobles de la
-   Gestoria es queden com a sonda: si la Wiki la tornara a importar, es veurien. */
+   Gestoria es queden com a sonda: si la Wiki la tornara a importar, es veurien.
+   261006 (MarIA, WikiDePobleSection.jsx de les 01:46; prompt 261006_0224, T6,
+   «la retirada de la Consola/Tractors»): ni Tractors ni la Consola tenen ja
+   carpeta pròpia. Les tres eines locals i la Consola pengen de maquinaria_cat
+   («Maquinària de la IAIA»), que declara la Wiki, i modulsLocalsActius ja no
+   en torna cap categoria. */
 import React from 'react';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
@@ -41,6 +47,7 @@ vi.mock('../../config/assetResolver', async (importOriginal) => ({ ...(await imp
 vi.mock('../consola/ConsolaSection.jsx', () => ({ ConsolaIncrustada: () => null }));
 vi.mock('../tractors/PanellTractors.jsx', () => ({ default: () => <p>Doble dels Tractors</p> }));
 vi.mock('../tractors/PanellSentinelles.jsx', () => ({ default: () => <p>Doble dels Sentinelles</p> }));
+vi.mock('../tractors/PanellAgents.jsx', () => ({ default: () => <p>Doble dels Agents</p> }));
 /* Sondes: si la Wiki tornara a carregar la closca o Aprendre, es veurien. */
 vi.mock('../gestoria/tauler/ShellGestoria.jsx', () => ({ default: () => <p>Doble de la Gestoria</p> }));
 vi.mock('../gestoria/aprendre/Aprendre.jsx', () => ({ default: () => <p>Doble d’Aprendre</p> }));
@@ -67,15 +74,16 @@ const pindoles = (arrel) => [...arrel.querySelectorAll('.page-title-labels > li'
   .map((li) => [li.textContent, li.className.replace('sp-card-label ', '')]);
 
 const LOCALS = [
-  ['tractors_aprovacio', 'Aprovació de tractors', 'tractors_cat', 'tractors', 'Doble dels Tractors'],
-  ['sentinelles_panell', 'Sentinelles', 'tractors_cat', 'sentinelles', 'Doble dels Sentinelles']
+  ['tractors_aprovacio', 'Aprovació de tractors', 'maquinaria_cat', 'tractors', 'Doble dels Tractors'],
+  ['sentinelles_panell', 'Sentinelles', 'maquinaria_cat', 'sentinelles', 'Doble dels Sentinelles'],
+  ['agents_panell', 'Agents (BIOS)', 'maquinaria_cat', 'agents', 'Doble dels Agents']
 ];
 const esDeLaGestoria = (text) => /gestoria/i.test(String(text));
 
 describe('modulsLocalsActius: la decisió, pura', () => {
-  test('amb DEV cert: una categoria (Tractors) i dos ítems, amb la forma dels de la Consola; res de la Gestoria', () => {
+  test('amb DEV cert: cap categoria pròpia i tres ítems a la Maquinària, amb la forma dels de la Consola; res de la Gestoria', () => {
     const { categories, items } = modulsLocalsActius({ DEV: true });
-    expect(categories.map((c) => [c.id, c.label])).toEqual([['tractors_cat', 'Tractors']]);
+    expect(categories).toEqual([]);
     expect(items.map((i) => [i.id, i.title, i.categoryId, i.tags[0]])).toEqual(LOCALS.map(([id, titol, cat, etiqueta]) => [id, titol, cat, etiqueta]));
     expect([...categories, ...items].filter((x) => esDeLaGestoria(x.id) || esDeLaGestoria(x.label) || esDeLaGestoria(x.title))).toEqual([]);
     for (const item of items) {
@@ -84,16 +92,16 @@ describe('modulsLocalsActius: la decisió, pura', () => {
     }
   });
 
-  /* Ordre del Mestre, 261004 (pla 2045, Marató 2230, F3) · Tractors agrupa dos
-     documents: porta carpeta. Les seues fitxes porten FileText propi perquè no
-     hereten la carpeta (Llei del Píxel: només canvia el glif de la categoria).
-     Es compara la identitat del component, no la classe de lucide: toBe per
+  /* Ordre del Mestre, 261004 (pla 2045, Marató 2230, F3) · La carpeta que
+     agrupa les eines porta Folder; les seues fitxes porten FileText propi
+     perquè no hereten la carpeta (Llei del Píxel). Des del 261006 la carpeta
+     és maquinaria_cat i la declara la Wiki (en desenvolupament, avall). Es
+     compara la identitat del component, no la classe de lucide: toBe per
      element, perquè les icones de lucide-react són objectes forwardRef i
      toEqual només en compararia l'estructura. */
-  test('amb DEV cert: Tractors porta Folder i cada eina, FileText propi', () => {
+  test('amb DEV cert: cap carpeta pròpia, i cada eina, FileText propi', () => {
     const { categories, items } = modulsLocalsActius({ DEV: true });
-    expect(categories).toHaveLength(1);
-    expect(categories[0].icon).toBe(Folder);
+    expect(categories).toHaveLength(0);
     expect(items.map((i) => i.id)).toEqual(LOCALS.map(([id]) => id));
     for (const item of items) expect(item.icon).toBe(FileText);
   });
@@ -110,11 +118,20 @@ describe('modulsLocalsActius: la decisió, pura', () => {
 });
 
 describe('en desenvolupament', () => {
-  test('la categoria dels Tractors va darrere de la Consola, i els seus dos ítems hi pengen', () => {
+  test('la Maquinària de la IAIA va darrere de la portada; la Consola i les tres eines hi pengen, i ja no hi ha carpeta de la Consola ni dels Tractors', () => {
     render(<WikiDePobleSection />);
     const { model } = fixture.props;
-    expect(model.categories.map((c) => c.id)).toEqual(['__intro_cat', 'consola_termodinamica_cat', 'tractors_cat', 'folder:02_saber']);
-    expect(model.items.filter((i) => i.categoryId === 'tractors_cat').map((i) => i.id)).toEqual(LOCALS.map(([id]) => id));
+    expect(model.categories.map((c) => c.id)).toEqual(['__intro_cat', 'maquinaria_cat', 'folder:02_saber']);
+    const maquinaria = model.categories.find((c) => c.id === 'maquinaria_cat');
+    expect(maquinaria.label).toBe('Maquinària de la IAIA');
+    expect(maquinaria.icon).toBe(Folder);
+    expect(model.items.filter((i) => i.categoryId === 'maquinaria_cat').map((i) => i.id))
+      .toEqual(['consola_termodinamica', ...LOCALS.map(([id]) => id)]);
+    for (const item of model.items.filter((i) => i.categoryId === 'maquinaria_cat')) {
+      expect(item.categoryIds, item.id).toEqual(['maquinaria_cat']);
+      // Regla del glif (261004): cap fitxa de la Maquinària hereta la carpeta.
+      expect(item.icon, item.id).toBe(FileText);
+    }
   });
 
   /* Ordre del Mestre, 261004 («contaminació crítica de rutes/estats entre
