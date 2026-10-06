@@ -858,10 +858,10 @@ async function tanca({ abast = 'actor', config = {}, scope = null } = {}) {
      pendent (també qui ix des de l'amfitrió, sense passar per SessionContext).
      Buidar només la pestanya, no: la sessió continua a les altres. */
   if (abast !== 'pestanya') oblidaRecuperacioPendent();
+  await tancaRealtime();
   resetClient();
   emetCanvi(null);
   const revocacio = jwt ? revoca(destination, jwt, scope) : null;
-  await tancaRealtime();
   if (revocacio) await esperaAmbTopall(revocacio, ESPERA_REVOCACIO_MS);
 }
 
@@ -876,6 +876,13 @@ async function tanca({ abast = 'actor', config = {}, scope = null } = {}) {
  * pestanya el puguen tornar a provar.
  */
 export async function logout(config = {}, { scope = 'local', abast = 'actor' } = {}) {
+  if (scope === 'others') {
+    const destination = normalizeBackendConfig(config?.supabaseUrl || config?.backend_url || config?.backendUrl ? config : configDarrera);
+    const jwt = getEfimer(CLAU_ORIGEN, null) !== 'amfitrio' ? jwtPerBackend(destination) : null;
+    const revocacio = jwt ? revoca(destination, jwt, scope) : null;
+    if (revocacio) await esperaAmbTopall(revocacio, ESPERA_REVOCACIO_MS);
+    return;
+  }
   if (abast === 'pestanya') return tanca({ config, abast: 'pestanya' });
   return tanca({ config, scope: ABASTS_REVOCACIO.includes(scope) ? scope : 'local' });
 }
