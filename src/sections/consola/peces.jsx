@@ -1,6 +1,6 @@
 /* Peces internes de la Consola (sense classes noves fora de sdp-consola__*).
    Les comparteixen els panells de ConsolaSection i el Mapa. */
-import { createContext, forwardRef, useContext, useLayoutEffect } from 'react';
+import { createContext, forwardRef, useContext } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { Insignia, UniversalCard } from '../../components/PedraSeca';
 import { useNavigate } from '../../app/contexts/RouterContext';
@@ -176,53 +176,6 @@ export const Desplegable = forwardRef(function Desplegable({ id, titol, onToggle
     </details>
   );
 });
-
-/**
- * OBSOLET · Ordre del Mestre, 261004 (xat: cap xifra solta). Cap targeta de
- * la Consola obri ja un desplegable: els panells del pols porten a la seua
- * pàgina (/consola/pols/<id>). Es conserva perquè ningú no l'esborre a
- * cegues; no s'ha de tornar a fer servir.
- * La targeta que obri un desplegable diu quin (aria-controls) i si està
- * obert (aria-expanded). UniversalCard no deixa passar atributs als seus
- * botons: s'escriuen al botó de la targeta (overlay) i al «Veure detall» del
- * peu, que React no gestiona. `desplegables[i]` va amb el fill i-èsim de la
- * graella: { controla, obert } o null si la targeta no obri res.
- */
-export function useTargetesQueObrin(graella, desplegables) {
-  const clau = desplegables.map((d) => (d ? `${d.controla}:${d.obert}` : '-')).join('|');
-  useLayoutEffect(() => {
-    const targetes = graella.current?.children ?? [];
-    desplegables.forEach((d, i) => {
-      const targeta = targetes[i];
-      const botons = [
-        [...(targeta?.children ?? [])]
-          .find((el) => el.tagName === 'BUTTON' && el.classList.contains('sp-card-link-overlay')),
-        targeta?.querySelector?.('.sp-card-footer button.sp-card-connect')
-      ].filter(Boolean);
-      for (const boto of botons) {
-        if (d) {
-          boto.setAttribute('aria-controls', d.controla);
-          boto.setAttribute('aria-expanded', String(Boolean(d.obert)));
-        } else {
-          boto.removeAttribute('aria-controls');
-          boto.removeAttribute('aria-expanded');
-        }
-      }
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [graella, clau]);
-}
-
-/** Qui ha demanat menys moviment rep el salt directe, no el lliscament.
-    OBSOLET (ordre del Mestre, 261004, xat: cap xifra solta) · només el feia
-    servir el pols per a lliscar fins al seu desplegable, que ja no hi és. */
-export function movimentReduit() {
-  try {
-    return Boolean(globalThis.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches);
-  } catch {
-    return false;
-  }
-}
 
 /**
  * Torna al cim el primer contenidor desplaçat que embolcalla `el`. Les

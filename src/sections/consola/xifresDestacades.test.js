@@ -80,8 +80,6 @@ const CONSOLA = {
   generat: new Date(ARA).toISOString(),
   consums: [{ agent: 'claude', entrada: 10, eixida: 5 }, { agent: 'codex', entrada: 1, eixida: 1 }],
   rebuts: [{ t: new Date(ARA - 10 * DIA).toISOString(), peticio: 'p', protocols: ['a/b.md'], fonts: [{ ruta: 'x', sha256: 'y' }] }],
-  credits: [{ proveidor: 'Claude', consumit: 6, limit: 100, tipus: 'quota' }, { proveidor: 'Codex', valor: 'DESACTIVADA', tipus: 'ajust', actiu: false },
-    { proveidor: 'Gemini', consumit: 1, limit: 8, tipus: 'quota' }],
   skills: [
     { nom: 'a', estat: 'canonic', descripcio: '', core: true, alDisc: true, alManifest: true },
     { nom: 'nova', estat: null, descripcio: '', core: false, alDisc: true, alManifest: false },
@@ -155,10 +153,7 @@ describe('cap xifra destacada sense targeta', () => {
     expect(titol('agents-atomics')).toEqual(['1 agent atòmic', 'Agents que declaren què lligen o què deixen']);
     expect(titol('candats')).toEqual(['4 candats', '1 acreditat · 1 sense consumidor · 2 per acreditar']);
     expect(titol('llocs-del-sol')).toEqual(['2 llocs del sòl', 'Documents i plantilles on treballen · 1 sense lector']);
-    expect(titol('proveidors-de-credits')).toEqual(['3 proveïdors de crèdits', '2 quotes · 1 ajust']);
     expect(titol('coses-que-corren-soles')).toEqual(['4 coses que corren soles', 'Tasques que llança launchd · 1 viva · 2 mortes']);
     expect(titol('arestes')[1]).toBe('8 declarades · 1 derivada · 2 inferides de la prosa');
-    // «de» s'apostrofa davant d'un 8: el saldo de Gemini.
-    expect(TARGETES.get('credit-gemini').subtitol).toBe('Consumit: 1 d’8');
   });
 });

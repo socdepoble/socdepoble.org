@@ -103,7 +103,7 @@ describe('la targeta i la pàgina diuen el mateix', () => {
      fora de les marques, en cap xifra. */
   test('cada entradeta marca els seus noms de fitxer, i en té tres frases', () => {
     const FITXER = /[\w.-]+\.(?:json|jsonl|ndjson|md|mjs|yaml)\b|\/__iaia\/|~\/Library|\.agents\//;
-    // Totes les targetes de la Consola, sense font i amb les dues (també les peces i els crèdits).
+    // Totes les targetes de la Consola, sense font i amb les dues (també les peces).
     const totes = [
       ...targetesDeLaConsola().values(),
       ...targetesDeLaConsola(AMB_SALUT, CONSOLA).values()
@@ -168,10 +168,9 @@ describe('la targeta i la pàgina diuen el mateix', () => {
     expect(x.titol).not.toMatch(/\d/);
     const senseFont = SLUGS_FIXOS.map((slug) => [slug, xifraDelMas(slug)]);
     for (const [slug, xifra] of senseFont.filter(([, xf]) => xf)) expect(xifra.titol, slug).not.toMatch(/\d/);
-    // Correcció 261004 (verificador de la tercera passada, punt 5) · el recompte de proveïdors, com els proveïdors.
     expect(senseFont.filter(([, xf]) => !xf).map(([slug]) => slug).sort()).toEqual([
       'cadencia-altra', 'cadencia-arrencada', 'cadencia-dia', 'cadencia-esdeveniment', 'cadencia-mes',
-      'cadencia-permanent', 'cadencia-sense', 'cadencia-setmana', 'proveidors-de-credits', 'tasques-sense-llancador'
+      'cadencia-permanent', 'cadencia-sense', 'cadencia-setmana', 'tasques-sense-llancador'
     ]);
     expect(xifraDelMas('no-existix', MAPA)).toBeNull();
     expect(detallXifra('no-existix', MAPA)).toBeNull();
@@ -229,19 +228,21 @@ describe('les xifres de dins de les pàgines i del pols', () => {
     expect(xifresDeGrup('calendari', null).map((x) => x.slug)).toEqual(['coses-que-corren-soles']);
   });
 
-  test('les del pols viuen de consola.json: sense registre, «sense mesura»; el panell que les tracta', () => {
-    expect(xifresDeGrup('consums', null, CONSOLA).map((x) => x.titol)).toEqual([
-      `${(1201).toLocaleString('ca-ES')} tòkens d’entrada`, '301 tòkens d’eixida', '2 registres de consum'
-    ]);
+  test('les del pols viuen de consola.json: sense registre, «sense mesura»; el panell o la pàgina que les tracta', () => {
+    expect(xifraDelMas('registres-de-consum', null, CONSOLA).titol).toBe('2 registres de consum');
+    expect(xifraDelMas('registres-de-consum', null, CONSOLA).tracta).toEqual({ ruta: '/consola/pols', titol: 'El pols del cervell' });
+    /* Frase aprovada pel Mestre (D2, 261006) en retirar les xifres de tòkens. */
+    expect(xifraDelMas('registres-de-consum', null, CONSOLA).entradeta)
+      .toContain('Un agent que no anota el seu consum no compta, encara que gaste: sense registres, la Consola no en sap res.');
     expect(xifresDeGrup('skills-pols', null, CONSOLA).map((x) => x.titol)).toEqual([
       '2 skills al disc o al manifest', '1 skill del nucli', '1 skill fora del manifest', '0 skills sense disc',
       'Segell de skills absent'
     ]);
     const buit = { ...CONSOLA, consums: [] };
-    expect(xifraDelMas('tokens-d-entrada', null, buit).titol).toBe('Tòkens d’entrada sense mesura');
-    expect(detallXifra('tokens-d-entrada', null, buit).senseMesura).toMatch(/ningú no ha mesurat/);
-    expect(xifraDelMas('tokens-d-entrada', MAPA).titol).toBe('Tòkens d’entrada');
-    expect(detallXifra('tokens-d-entrada', MAPA)).toBeNull();
+    expect(xifraDelMas('registres-de-consum', null, buit).titol).toBe('0 registres de consum');
+    expect(detallXifra('registres-de-consum', null, buit).senseMesura).toMatch(/ningú no ha mesurat/);
+    expect(xifraDelMas('registres-de-consum', MAPA).titol).toBe('Registres de consum');
+    expect(detallXifra('registres-de-consum', MAPA)).toBeNull();
     expect(xifraDelMas('skills-sense-disc', null, CONSOLA).tracta).toEqual({ ruta: '/consola/pols/skills', titol: 'Skills' });
     expect(detallXifra('registres-de-consum', null, CONSOLA).generador).toBe('tooling/vite/consola-iaia.mjs');
   });
@@ -266,8 +267,7 @@ describe('les peces del Mapa, una a una', () => {
   };
 
   test('cada família dona un slug estable derivat de l’id, i la pàgina diu el mateix', () => {
-    // Correcció 261004 (verificador de la segona passada) · també els proveïdors de crèdits del pols.
-    expect(IDS_FAMILIES).toEqual(['arnes', 'carregador', 'candat', 'tasca', 'lloc', 'agent-atomic', 'credit']);
+    expect(IDS_FAMILIES).toEqual(['arnes', 'carregador', 'candat', 'tasca', 'lloc', 'agent-atomic']);
     expect(xifresDeFamilia('arnes', ACTORS).map((x) => [x.slug, x.titol, x.subtitol, x.etiquetes])).toEqual([
       ['arnes-claude-code', 'Claude Code', '1 candat · en arrencar carrega 1 document i 1 skill', [{ text: 'ACTIU', className: 'sdp-badge-system' }]]
     ]);
@@ -324,28 +324,6 @@ describe('les peces del Mapa, una a una', () => {
     }
     expect(xifraDelMas('arnes-claude-code', ACTORS)).not.toBeNull();
     expect(xifresDeFamilia('arnes', null)).toEqual([]);
-  });
-
-  test('els proveïdors de crèdits viuen de consola.json: una targeta per proveïdor, i sense consola.json cap', () => {
-    const credits = [
-      { proveidor: 'ChatGPT Pro 100 (Límit Setmanal %)', consumit: 60, limit: 100, tipus: 'quota' },
-      { proveidor: 'Crèdits restants (Codex / Work)', valor: '1702 crèdits', tipus: 'ajust', actiu: true },
-      { proveidor: 'Recàrrega automàtica', valor: 'DESACTIVADA', tipus: 'ajust', actiu: false }
-    ];
-    const ambCredits = { ...CONSOLA, credits };
-    expect(xifresDeFamilia('credit', null, ambCredits).map((x) => [x.slug, x.titol, x.subtitol, x.etiquetes?.[0]?.text ?? null]))
-      .toEqual([
-        ['credit-chatgpt-pro-100-limit-setmanal', 'ChatGPT Pro 100 (Límit Setmanal %)', 'Consumit: 60 de 100', null],
-        ['credit-credits-restants-codex-work', 'Crèdits restants (Codex / Work)', '1702 crèdits', 'ACTIU'],
-        ['credit-recarrega-automatica', 'Recàrrega automàtica', 'DESACTIVADA', 'INACTIU']
-      ]);
-    const x = xifraDelMas('credit-credits-restants-codex-work', MAPA, ambCredits);
-    expect([x.origen, x.tracta]).toEqual(['consola', { ruta: '/consola/pols/credits', titol: 'Crèdits' }]);
-    const d = detallXifra('credit-chatgpt-pro-100-limit-setmanal', null, ambCredits);
-    expect([d.generador, d.prova]).toEqual(['tooling/vite/consola-iaia.mjs', null]);
-    expect(d.taules[0].files.map((f) => f.celes[1].text)).toEqual(['ChatGPT Pro 100 (Límit Setmanal %)', '60', '100', '60 %']);
-    expect(xifraDelMas('credit-credits-restants-codex-work', MAPA, null)).toBeNull();
-    expect(xifresDeFamilia('credit', MAPA, { ...CONSOLA, credits: null })).toEqual([]);
   });
 
   test('dos ids que es normalitzen igual no comparteixen slug', () => {
@@ -445,12 +423,14 @@ describe('el viceversa estricte: targetes pintades === pàgines', () => {
   const CONSOLA_PLE = {
     ...CONSOLA,
     rebuts: [{ t: '2026-09-20T01:03:39.000Z', peticio: 'ced19fcaab00ffff', protocols: ['a/b.md'], fonts: [{ ruta: 'x', sha256: 'y' }] }],
-    credits: [{ proveidor: 'Claude', consumit: 6, limit: 100, tipus: 'quota' },
-      { proveidor: 'Recàrrega automàtica', valor: 'DESACTIVADA', tipus: 'ajust', actiu: false }],
     segell: { hash: 'abcdef0123456789', timestamp: '2026-10-02T07:01:17.116Z', filesCount: 2, manifest: { 'a/SKILL.md': '1111', 'b/SKILL.md': '2222' } },
     immunitari: { operacions: 3, ultima: { op: 'OP-3', tipus: 'ADOPTA', fitxer: 'x.md', data: '2026-08-03T13:43:04.716Z' } },
     fonts: { diari: { estat: 'ok', 'línies_descartades': 1 }, immunitari: { estat: 'ok', 'línies_descartades': 0 } },
-    termometria: { artefactesActius: 162, abast: 'Escriptori' }
+    termometria: { artefactesActius: 162, abast: 'Escriptori' },
+    /* Fase A (pas 2.2 del pla, 261006) · El middleware encara publica els
+       crèdits a consola.json: amb ells a les dades, ni 'credit-claude' ni
+       'proveidors-de-credits' (FALSOS) poden tindre targeta ni pàgina. */
+    credits: [{ proveidor: 'Claude', consumit: 6, limit: 100 }]
   };
   const FONTS = [
     ['amb el Mapa i consola.json', MAPA_PLE, CONSOLA_PLE],
@@ -459,7 +439,8 @@ describe('el viceversa estricte: targetes pintades === pàgines', () => {
     ['sense cap font (producció)', null, null]
   ];
   const FALSOS = ['arnes-patata', 'lloc-qualsevol-cosa', 'agent-atomic-xyz', 'carregador-res', 'candat-res', 'tasca-res',
-    'credit-res', 'cadencia-mes', 'no-existix', 'xifres', ''];
+    'credit-res', 'cadencia-mes', 'no-existix', 'xifres', '', 'credit-claude', 'proveidors-de-credits',
+    'tokens-d-entrada', 'tokens-d-eixida'];
   const UNIVERS = [...new Set([
     ...SLUGS_FIXOS, ...IDS_FAMILIES.flatMap((id) => xifresDeFamilia(id, MAPA_PLE, CONSOLA_PLE).map((x) => x.slug)), ...FALSOS
   ])];
@@ -494,7 +475,7 @@ describe('el viceversa estricte: targetes pintades === pàgines', () => {
     }
   });
 
-  test('les vistes són el tauler, les nou pàgines i els cinc panells; cada xifra fixa i cada família és en alguna', () => {
+  test('les vistes són el tauler, les nou pàgines i els tres panells; cada xifra fixa i cada família és en alguna', () => {
     expect([...IDS_VISTES].sort()).toEqual(['tauler', ...IDS_PAGINES, ...IDS_PANELLS.map((p) => `pols/${p}`)].sort());
     const trossos = Object.values(VISTES_XIFRES).flat();
     expect([...new Set(trossos.filter((t) => t.grup).map((t) => t.grup))].sort()).toEqual(Object.keys(GRUPS_XIFRES).sort());
@@ -543,7 +524,7 @@ describe('la concordança de les targetes', () => {
   /* Correcció 261004 (verificador de la tercera passada, punts 2 i 3) · Amb una
      sola fantasma, una sola skill al cens, una sola mètrica o un sol agent: la
      frase concorda i «de» s'apostrofa. */
-  test('subtítols amb un 1: «nomenada», «D’1 skill», «D’1 mètrica», «Sumats d’1 agent»', () => {
+  test('subtítols amb un 1: «nomenada», «D’1 skill», «D’1 mètrica», «D’1 agent»', () => {
     const fantasma = {
       ...MAPA,
       nodes: [{ id: 'skill:x', tipus: 'skill', font: null, atributs: {} }],
@@ -556,7 +537,6 @@ describe('la concordança de les targetes', () => {
     expect(xifraDelMas('metriques-amb-mesura', fantasma).subtitol).toBe('D’1 mètrica: 1 sense mesura (N/A)');
     expect(xifraDelMas('metriques-amb-mesura', AMB_SALUT).subtitol).toBe('De 4 mètriques: 0 sense mesura (N/A)');
     const unAgent = { ...CONSOLA, consums: [{ agent: 'claude', entrada: 10, eixida: 5 }] };
-    expect(xifraDelMas('tokens-d-entrada', null, unAgent).subtitol).toBe('Sumats d’1 agent');
     expect(xifraDelMas('registres-de-consum', null, unAgent).subtitol).toBe('D’1 agent');
     expect(xifraDelMas('registres-de-consum', null, CONSOLA).subtitol).toBe('De 2 agents');
   });
@@ -577,10 +557,8 @@ describe('una mesura absent no es compta com a 0', () => {
     expect(xifraDelMas('operacions-immunitaries', null, SENSE_FONTS).subtitol).toBe('El journal immunitari no es pot llegir');
     expect(titol('rebuts-de-lectura')).toBe('Rebuts de lectura sense mesura');
     expect(titol('registres-de-consum')).toBe('Registres de consum sense mesura');
-    expect(titol('tokens-d-entrada')).toBe('Tòkens d’entrada sense mesura');
-    expect(xifraDelMas('tokens-d-entrada', null, SENSE_FONTS).subtitol).toBe('El diari de sessió no es pot llegir');
     expect(xifraDelMas('ultim-rebut', null, SENSE_FONTS).subtitol).toBe('El diari de sessió no es pot llegir');
-    for (const slug of ['operacions-immunitaries', 'rebuts-de-lectura', 'registres-de-consum', 'tokens-d-eixida', 'ultim-rebut']) {
+    for (const slug of ['operacions-immunitaries', 'rebuts-de-lectura', 'registres-de-consum', 'ultim-rebut']) {
       expect(titol(slug), slug).not.toMatch(/\b0\b/);
       expect(detallXifra(slug, null, SENSE_FONTS).senseMesura, slug).toMatch(/no existix o no es pot llegir/);
     }

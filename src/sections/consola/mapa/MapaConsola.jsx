@@ -1,11 +1,10 @@
-import { Network, RefreshCw } from 'lucide-react';
-import { Alerta, Boto, Carregant, EstatBuit, Insignia, Taula } from '../../../components/PedraSeca';
+import { Network } from 'lucide-react';
+import { Alerta, Carregant, EstatBuit, Insignia, Taula } from '../../../components/PedraSeca';
 import { Desplegable, Mono } from '../peces.jsx';
 import { GraellaXifres } from '../XifresMas.jsx';
 import { xifresDeVista } from '../xifresMas.js';
 import { curt, dataLocal } from '../consolaContent.js';
 import { resumMapa, valorMetrica, textCadencia, textLlancador } from './mapaContent.js';
-import { useMapa } from './useMapa.js';
 import { EvidenciesAvis, TO_SEVERITAT, codiIFrase } from './AvisosMapa.jsx';
 
 /* El Mapa de la Consola: qui crida qui, què corre sol i amb quina confiança.
@@ -121,10 +120,9 @@ function TaulaRecompte({ titol, capcal, files }) {
   );
 }
 
-/* `font` és el resultat de useMapa() quan la Consola ja ha llegit el Mapa
-   per a totes les pàgines; sense `font`, el panell el llig pel seu compte.
-   Dins de la Consola, el Refrescar és el de la capçalera (llig les dues
-   fonts): el botó propi només ix quan el panell viu sol.
+/* `font` és el resultat de useMapa() de la Consola, que llig el Mapa una
+   sola vegada per a totes les pàgines; el Refrescar és el del peu (llig les
+   dues fonts).
    Ordre del Mestre, 261004 (xat: cap xifra solta) · Les xifres són targetes
    senceres amb boina i pàgina pròpia (XifresMas.jsx), també sense Mapa (amb
    el seu nom: la seua pàgina diu per què no hi ha dada); el detall,
@@ -138,8 +136,7 @@ function TaulaRecompte({ titol, capcal, files }) {
    Mestre del 261004 (xat: cap xifra solta): «Veure els N avisos», «Veure les
    N tasques» i «Veure les N arestes». */
 export function MapaConsola({ locale, font }) {
-  const propi = useMapa({ actiu: !font });
-  const { estat, mapa, error, carrega } = font ?? propi;
+  const { estat, mapa, error } = font;
 
   const resum = mapa ? resumMapa(mapa) : null;
   const tall = mapa?.tall;
@@ -189,12 +186,6 @@ export function MapaConsola({ locale, font }) {
           <TaulaArestes arestes={mapa.arestes} />
         </Desplegable>
       </>}
-      {!font && (
-        <div className="sdp-consola__capcal">
-          <Boto varietat="secundari" icona={RefreshCw}
-            carregant={estat === 'loading'} onClick={carrega}>Refrescar el mapa</Boto>
-        </div>
-      )}
     </>
   );
 }

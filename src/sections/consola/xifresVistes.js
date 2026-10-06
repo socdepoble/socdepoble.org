@@ -671,7 +671,6 @@ const RECOMPTES = [
 const ORIGEN_DIARI = 'Ix de les entrades consum.tokens de `.agents/.diari_sessio.jsonl`, que el middleware `tooling/vite/consola-iaia.mjs` servix a `/__iaia/consola.json`.';
 const ORIGEN_INVENTARI = 'Ix de la llista skills de `/__iaia/consola.json`, que el middleware `tooling/vite/consola-iaia.mjs` compon llegint el disc i `manifest.yaml`.';
 const ORIGEN_REBUTS = 'Ix de les entrades matrix.rebut de `.agents/.diari_sessio.jsonl`, que el middleware `tooling/vite/consola-iaia.mjs` servix a `/__iaia/consola.json`.';
-const tokens = (n, v, quins) => `${n(v)} ${concorda(v, 'tòken', 'tòkens')} ${quins}`;
 /* Un recompte de línies descartades: el número o, si la font no el porta, «sense mesura». */
 const liniesDe = (n) => (n === null ? 'sense mesura' : String(n));
 /* Correcció 261004 (verificador de la tercera passada, punts 3 i 4) · «d’1
@@ -680,22 +679,18 @@ const dAgents = (consums) => de(consums.perAgent.length, plural(consums.perAgent
 const DIARI_ILLEGIBLE = 'El diari de sessió no es pot llegir';
 // «de 7 dies»: el llindar dels rebuts rancis, apostrofat si cal.
 const MES_DE_DIES = de(LLINDAR_REBUTS_RANCIS_DIES, plural(LLINDAR_REBUTS_RANCIS_DIES, 'dia', 'dies'));
-const senseRegistres = (consums) => (consums.registres === null ? DIARI_ILLEGIBLE : 'Cap registre al diari de sessió');
 
-/* Una fila per agent: els seus registres i, si la xifra és d'una altra cosa
-   (els tòkens), eixa columna al costat. */
-const taulaPerAgent = (titol, columna, valor) => (_dades, { consums, n }) => ({
+/* Una fila per agent amb els seus registres. Fase A (pas 2.2 del pla,
+   261006) · sense les xifres de tòkens, ja no hi ha cap columna al costat. */
+const taulaPerAgent = (titol) => (_dades, { consums, n }) => ({
   senseMesura: consums.registres ? null
     : consums.registres === null
       ? 'El diari de sessió no existix o no es pot llegir: no hi ha cap mesura del consum, i això no és cap zero.'
       : 'El diari de sessió no té cap entrada consum.tokens: ningú no ha mesurat el consum, i això no és cap zero.',
   taules: [{
     titol,
-    columnes: columna ? ['Agent', 'Registres', columna] : ['Agent', 'Registres'],
-    files: consums.perAgent.map((a) => ({
-      clau: a.agent,
-      celes: columna ? [text(a.agent), text(n(a.sessions)), text(n(valor(a)))] : [text(a.agent), text(n(a.sessions))]
-    })),
+    columnes: ['Agent', 'Registres'],
+    files: consums.perAgent.map((a) => ({ clau: a.agent, celes: [text(a.agent), text(n(a.sessions))] })),
     buit: 'Cap agent ha anotat consum.'
   }]
 });
@@ -713,43 +708,17 @@ const taulaSkillsPols = (titol, quines, buit) => (_dades, { skills }) => ({
 
 const POLS = [
   {
-    slug: 'tokens-d-entrada', origen: 'consola', pagina: 'pols', panell: 'consums', icona: 'logIn', nom: 'Tòkens d’entrada',
-    titol: ({ consums, n }) => (consums.registres ? tokens(n, consums.total.entrada, 'd’entrada') : 'Tòkens d’entrada sense mesura'),
-    subtitol: ({ consums }) => (consums.registres ? `Sumats ${dAgents(consums)}` : senseRegistres(consums)),
-    subtitolSenseFont: 'Sumats de tots els agents',
-    entradeta: [
-      'Suma els tòkens d’entrada que cada agent anota al diari de sessió.',
-      ORIGEN_DIARI,
-      'Sense cap registre no vol dir consum zero: vol dir que ningú no l’ha mesurat.'
-    ],
-    font: `${FONT_CONSOLA} · consums`,
-    detall: taulaPerAgent('Tòkens d’entrada per agent', 'Entrada', (a) => a.entrada)
-  },
-  {
-    slug: 'tokens-d-eixida', origen: 'consola', pagina: 'pols', panell: 'consums', icona: 'logOut', nom: 'Tòkens d’eixida',
-    titol: ({ consums, n }) => (consums.registres ? tokens(n, consums.total.eixida, 'd’eixida') : 'Tòkens d’eixida sense mesura'),
-    subtitol: ({ consums }) => (consums.registres ? `Sumats ${dAgents(consums)}` : senseRegistres(consums)),
-    subtitolSenseFont: 'Sumats de tots els agents',
-    entradeta: [
-      'Suma els tòkens d’eixida que cada agent anota al diari de sessió.',
-      ORIGEN_DIARI,
-      'Sense cap registre no vol dir consum zero: vol dir que ningú no l’ha mesurat.'
-    ],
-    font: `${FONT_CONSOLA} · consums`,
-    detall: taulaPerAgent('Tòkens d’eixida per agent', 'Eixida', (a) => a.eixida)
-  },
-  {
-    slug: 'registres-de-consum', origen: 'consola', pagina: 'pols', panell: 'consums', icona: 'activity', nom: 'Registres de consum',
+    slug: 'registres-de-consum', origen: 'consola', pagina: 'pols', icona: 'activity', nom: 'Registres de consum',
     titol: ({ consums }) => senseMesura(consums.registres, 'registre de consum', 'registres de consum', 'Registres de consum sense mesura'),
     subtitol: ({ consums }) => (consums.registres === null ? DIARI_ILLEGIBLE : ambMajuscula(dAgents(consums))),
     subtitolSenseFont: 'Al diari de sessió',
     entradeta: [
       'Compta les entrades de consum que els agents han anotat al diari de sessió.',
       ORIGEN_DIARI,
-      'És la base de les dues xifres de tòkens: un agent que no anota no compta, encara que gaste.'
+      'Un agent que no anota el seu consum no compta, encara que gaste: sense registres, la Consola no en sap res.'
     ],
     font: `${FONT_CONSOLA} · consums`,
-    detall: taulaPerAgent('Registres de consum per agent', null)
+    detall: taulaPerAgent('Registres de consum per agent')
   },
   {
     slug: 'skills-del-manifest', origen: 'consola', pagina: 'pols', panell: 'skills', icona: 'puzzle', nom: 'Skills al disc o al manifest',
@@ -988,37 +957,6 @@ const POLS = [
         buit: 'consola.json no porta el recompte.'
       }]
     })
-  },
-  /* Correcció 261004 (verificador de la tercera passada, punt 5) · La coberta
-     de Crèdits destacava «N proveïdors» sense cap targeta. Com els proveïdors
-     mateixos, només es pinta (i té pàgina) quan consola.json en porta. */
-  {
-    slug: 'proveidors-de-credits', origen: 'consola', pagina: 'pols', panell: 'credits', icona: 'wallet', nom: 'Proveïdors de crèdits',
-    existeix: ({ credits }) => credits.length > 0,
-    titol: ({ credits }) => plural(credits.length, 'proveïdor de crèdits', 'proveïdors de crèdits'),
-    subtitol: ({ credits }) => {
-      const ajustos = credits.filter((c) => c.tipus === 'ajust').length;
-      return `${plural(credits.length - ajustos, 'quota', 'quotes')} · ${plural(ajustos, 'ajust', 'ajustos')}`;
-    },
-    subtitolSenseFont: 'Quotes i ajustos anotats',
-    entradeta: [
-      'Compta els proveïdors d’IA amb el saldo o un ajust anotat: les quotes (el consumit respecte del límit) i els ajustos (un valor tal com el mostra el seu tauler).',
-      'Ix de la llista credits de `/__iaia/consola.json`, que el middleware `tooling/vite/consola-iaia.mjs` llig de `.agents/credits.json`.',
-      'Un proveïdor que no hi és no té cap saldo conegut, i la Consola no l’inventa.'
-    ],
-    font: `${FONT_CONSOLA} · credits`,
-    detall: (_dades, { credits }) => ({
-      taules: [{
-        titol: 'Proveïdors de crèdits',
-        columnes: ['Proveïdor', 'Tipus', 'Saldo'],
-        files: credits.map((c, i) => ({
-          clau: `${c.proveidor}|${i}`,
-          celes: [text(c.proveidor), text(c.tipus === 'ajust' ? 'ajust' : 'quota'),
-            text(c.tipus === 'ajust' ? String(c.valor) : `${c.consumit} ${de(c.limit)}`)]
-        })),
-        buit: 'consola.json no porta cap proveïdor.'
-      }]
-    })
   }
 ];
 
@@ -1047,12 +985,10 @@ export const GRUPS_VISTES = Object.freeze({
   actors: Object.freeze(['agents']),
   candats: Object.freeze(['candats']),
   sol: Object.freeze(['llocs-del-sol']),
-  'credits-pols': Object.freeze(['proveidors-de-credits']),
   calendari: Object.freeze(['coses-que-corren-soles', ...CADENCIES.map((d) => d.slug)]),
   'sense-llancador': Object.freeze(['tasques-sense-llancador']),
-  pols: Object.freeze(['operacions-immunitaries', 'linies-descartades']),
+  pols: Object.freeze(['operacions-immunitaries', 'linies-descartades', 'registres-de-consum']),
   carrega: Object.freeze(['artefactes-actius']),
-  consums: Object.freeze(['tokens-d-entrada', 'tokens-d-eixida', 'registres-de-consum']),
   rebuts: Object.freeze(['rebuts-de-lectura', 'ultim-rebut']),
   'skills-pols': Object.freeze(['skills-del-manifest', 'skills-del-nucli', 'skills-fora-del-manifest', 'skills-sense-disc', 'segell-de-skills'])
 });

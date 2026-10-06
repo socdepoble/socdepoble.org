@@ -68,26 +68,9 @@ export function normalitza(brut) {
       entrada: numero(c.entrada, `consums[${i}].entrada`, true),
       eixida: numero(c.eixida, `consums[${i}].eixida`, true) };
   });
-  const credits = b.credits === null ? null : llista(b.credits, 'credits').map((v, i) => {
-    const c = objecte(v, `credits[${i}]`);
-    const tipus = c.tipus === 'ajust' ? 'ajust' : 'quota';
-    if (tipus === 'ajust') {
-      /* Un ajust és la lectura del tauler del proveïdor tal com es mostra
-         («1702 crèdits», «DESACTIVADA», 1) i PanellCredits el pinta tal qual:
-         admet un enter no negatiu o un text no buit. Abans només admetia
-         números, i un sol ajust de text tombava consola.json sencer. */
-      return { ...c, tipus,
-        proveidor: text(c.proveidor, `credits[${i}].proveidor`),
-        valor: typeof c.valor === 'number'
-          ? numero(c.valor, `credits[${i}].valor`, true)
-          : text(c.valor, `credits[${i}].valor`),
-        actiu: c.actiu !== undefined ? boolea(c.actiu, `credits[${i}].actiu`) : true };
-    }
-    return { ...c, tipus,
-      proveidor: text(c.proveidor, `credits[${i}].proveidor`),
-      consumit: numero(c.consumit, `credits[${i}].consumit`),
-      limit: numero(c.limit, `credits[${i}].limit`, false, true) };
-  });
+  /* Fase A (pas 2.2 del pla, 261006) · Sense panell de Crèdits, `credits` i
+     `estrategia_consum` ni es validen ni es conserven: un fitxer mal format
+     ja no pot tombar consola.json sencer. */
   const noms = new Set();
   const skills = llista(b.skills, 'skills').map((v, i) => {
     const s = objecte(v, `skills[${i}]`);
@@ -125,8 +108,7 @@ export function normalitza(brut) {
   
   return {
     generat: text(b.generat, 'generat', true),
-    estrategia_consum: b.estrategia_consum !== undefined ? text(b.estrategia_consum, 'estrategia_consum', false, true) : undefined,
-    rebuts, consums, credits, skills, segell, termometria,
+    rebuts, consums, skills, segell, termometria,
     immunitari: { ...immunitari, operacions: numero(immunitari.operacions, 'immunitari.operacions', true) },
     fonts
   };

@@ -541,12 +541,14 @@ export function etiquetesPagina(id, fonts, vist, ara = Date.now()) {
 }
 
 /**
- * Etiquetes de les cinc targetes del pols, amb la mateixa llei: sense
+ * Etiquetes de les tres targetes del pols, amb la mateixa llei: sense
  * consola.json, totes diuen per què; amb dades, només on hi ha base.
- * `ara` és el rellotge dels rebuts rancis (T12).
+ * `ara` és el rellotge dels rebuts rancis (T12). Els ids són els de
+ * IDS_PANELLS (polsConsola.js importa d'ací: no s'importa per no fer cap
+ * cicle); consolaPagines.test.js comprova que coincidixen.
  */
 export function etiquetesPols(dades, estat, ara = Date.now()) {
-  const IDS = ['carrega', 'consums', 'credits', 'rebuts', 'skills'];
+  const IDS = ['carrega', 'rebuts', 'skills'];
   if (!dades) {
     const comu = estat === 'loading' ? [] : [estat === 'error' ? ETIQUETES.reparar : ETIQUETES.senseFont];
     return Object.fromEntries(IDS.map((id) => [id, comu]));
@@ -555,8 +557,6 @@ export function etiquetesPols(dades, estat, ara = Date.now()) {
   const { orfes, fantasmes } = resumSkills(dades.skills);
   return {
     carrega: recompte === null ? [ETIQUETES.senseFont] : saturat(recompte) ? [ETIQUETES.important] : [],
-    consums: [],
-    credits: dades.credits?.length ? [] : [ETIQUETES.senseFont],
     rebuts: rebutsRancis(dades.rebuts, ara) ? [ETIQUETES.important] : [],
     skills: orfes.length || fantasmes.length ? [ETIQUETES.reparar] : []
   };

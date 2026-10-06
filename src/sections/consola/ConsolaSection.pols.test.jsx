@@ -2,13 +2,13 @@ import React from 'react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 
-/* Ordre del Mestre, 261004 (xat: cap xifra solta) · Les cinc targetes del
+/* Ordre del Mestre, 261004 (xat: cap xifra solta) · Les tres targetes del
    pols porten a la pàgina pròpia del seu panell (/consola/pols/<id>,
    PaginaApp) amb el contingut que abans obria un desplegable; Compartir
    comparteix eixa adreça. Sense consola.json (producció), la pàgina explica
-   que la dada només existix en local. Les xifres de dins (tòkens, registres,
-   skills) són targetes amb boina i pàgina pròpia. Router de veres; només es
-   falsegen les fonts. */
+   que la dada només existix en local. Les xifres de dins (rebuts, skills) són
+   targetes amb boina i pàgina pròpia. Router de veres; només es falsegen les
+   fonts. */
 const fonts = vi.hoisted(() => ({ consola: null }));
 vi.mock('../../app/contexts/UIContext', () => ({
   useUIState: () => ({ locale: 'ca-ES' }),
@@ -33,7 +33,7 @@ const AMB_REBUT = () => ({
   generat: '2026-09-25T13:00:00.000Z',
   rebuts: [{ t: '2026-09-20T01:03:39.000Z', peticio: 'ced19fcaab00ffff', protocols: ['_wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonica.md'],
     fonts: [{ ruta: '.agents/BOOTSTRAP.md', sha256: 'eb1c1b03a1400000' }] }],
-  consums: [{ agent: 'claude', entrada: 10, eixida: 5 }], credits: [{ proveidor: 'Claude', consumit: 6, limit: 100 }],
+  consums: [{ agent: 'claude', entrada: 10, eixida: 5 }],
   skills: [
     { nom: 'sdp-workflow', estat: 'canonic', descripcio: 'x', core: true, alDisc: true, alManifest: true },
     { nom: 'nova', estat: null, descripcio: '', core: false, alDisc: true, alManifest: false }
@@ -72,7 +72,7 @@ const h1 = () => document.querySelector('h1')?.textContent;
 const barraTaronja = () => document.querySelector('section.bar-orange');
 
 test.each([
-  ['carrega', 'Càrrega documental'], ['consums', 'Consums'], ['credits', 'Crèdits'], ['rebuts', 'Rebuts'], ['skills', 'Skills']
+  ['carrega', 'Càrrega documental'], ['rebuts', 'Rebuts'], ['skills', 'Skills']
 ])('/consola/pols/%s: pàgina pròpia amb el títol de la targeta, Sóc de Poble a la barra taronja i la molla', async (id, titol) => {
   await obri(`/consola/pols/${id}`, /^Instantània: /);
   expect(h1()).toBe(titol);
@@ -92,14 +92,14 @@ test.each([
 /* Norma del Mestre, 261004 (prompt 261004_1108, logotips) · La pàgina d'un
    panell del pols (PaginaApp amb AUTORIA_SOCDEPOBLE, ruta /projecte) signa
    Sóc de Poble i porta el seu logotip dalt de l'H1. Abans no en portava. */
-test('logotips · /consola/pols/consums porta el logotip de Sóc de Poble dalt de l’H1', async () => {
-  await obri('/consola/pols/consums', /^Instantània: /);
+test('logotips · /consola/pols/rebuts porta el logotip de Sóc de Poble dalt de l’H1', async () => {
+  await obri('/consola/pols/rebuts', /^Instantània: /);
   const logos = [...document.querySelectorAll('header.page-title > img.page-title-logo')];
   expect(logos.map((img) => [img.className, img.getAttribute('src')])).toEqual([
     ['page-title-logo light-only', '/assets/system/ui/logo-socdepoble-rect-negre.svg'],
     ['page-title-logo dark-only', '/assets/system/ui/logo-socdepoble-rect-blanc.svg']
   ]);
-  expect(logos[1].nextElementSibling.textContent).toBe('Consums');
+  expect(logos[1].nextElementSibling.textContent).toBe('Rebuts');
 });
 
 /* Correcció 261004 (verificador de la segona passada, punt 2) · el recompte
@@ -124,12 +124,9 @@ test('sense el diari ni el journal: les targetes i les cobertes diuen «sense me
   expect(screen.getByText('Diari de sessió no disponible')).toBeTruthy();
   expect(screen.queryByText('Cap rebut Matrix')).toBeNull();
   cleanup();
-  await obri('/consola/pols/consums', /^Instantània: /);
-  expect(titols()).toEqual(['Tòkens d’entrada sense mesura', 'Tòkens d’eixida sense mesura', 'Registres de consum sense mesura']);
-  expect(screen.getByText('Diari de sessió no disponible')).toBeTruthy();
-  cleanup();
   await obri('/consola/pols', /^Instantània: /);
   expect(titols()).toContain('Operacions immunitàries sense mesura');
+  expect(titols()).toContain('Registres de consum sense mesura');
   const rebuts = targetes().find((t) => t.querySelector('h3').textContent === 'Rebuts');
   expect(rebuts.querySelector('h5')).toBeNull();
   expect(rebuts.querySelector('.sdp-consola__dada').textContent).toBe('Sense mesura: el diari de sessió no es pot llegir');
@@ -151,47 +148,19 @@ test('/consola/pols/carrega: la termometria és una targeta, i l’avís de satu
   expect(document.querySelector('[role="progressbar"], progress')).toBeNull();
 });
 
-test('/consola/pols/credits: cada proveïdor és una targeta amb pàgina pròpia, sense barres soltes', async () => {
-  fonts.consola = { ...AMB_REBUT(), estrategia_consum: 'Primer, els crèdits que caduquen.', credits: [
-    { proveidor: 'ChatGPT Pro 100 (Límit Setmanal %)', consumit: 60, limit: 100 },
-    { proveidor: 'Crèdits restants (Codex / Work)', valor: '1702 crèdits', tipus: 'ajust', actiu: true }
-  ] };
-  await obri('/consola/pols/credits', /^Instantània: /);
-  expect(screen.getByText('Primer, els crèdits que caduquen.')).toBeTruthy();
-  /* Correcció 261004 (verificador de la tercera passada, punt 5) · davant dels
-     proveïdors, la targeta del seu recompte: la coberta de Crèdits destacava
-     «N proveïdors» sense cap targeta. */
-  expect(targetes().map((t) => [t.querySelector('h3').textContent, t.querySelector('h4').textContent, href(t)])).toEqual([
-    ['2 proveïdors de crèdits', '1 quota · 1 ajust', '/consola/xifres/proveidors-de-credits'],
-    ['ChatGPT Pro 100 (Límit Setmanal %)', 'Consumit: 60 de 100', '/consola/xifres/credit-chatgpt-pro-100-limit-setmanal'],
-    ['Crèdits restants (Codex / Work)', '1702 crèdits', '/consola/xifres/credit-credits-restants-codex-work']
-  ]);
-  expect(targetes().every((t) => t.querySelector(':scope > .sp-card-header a.sp-card-author-link').getAttribute('href') === '/projecte')).toBe(true);
-  expect(document.querySelector('[role="progressbar"], progress, .sdp-consola__ajust')).toBeNull();
-  // La pàgina del proveïdor existix amb consola.json, i diu el mateix que la targeta.
-  fireEvent.click(targetes()[2].querySelector('a.sp-card-link-overlay'));
-  expect(window.location.pathname).toBe('/consola/xifres/credit-credits-restants-codex-work');
-  expect(h1()).toBe('Crèdits restants (Codex / Work)');
-  expect(screen.getByRole('link', { name: 'Crèdits' }).getAttribute('href')).toBe('/consola/pols/credits');
-  expect(errors).not.toHaveBeenCalled();
-});
-
-test('/consola/pols/consums i /skills: les xifres de dins són targetes amb boina que porten a la seua pàgina', async () => {
-  await obri('/consola/pols/consums', /^Instantània: /);
-  const consums = [...document.querySelectorAll('article.sp-card')];
-  expect(consums.map((t) => t.querySelector('h3').textContent)).toEqual(['10 tòkens d’entrada', '5 tòkens d’eixida', '1 registre de consum']);
-  expect(consums.map((t) => t.querySelector('a.sp-card-link-overlay').getAttribute('href'))).toEqual(
-    ['tokens-d-entrada', 'tokens-d-eixida', 'registres-de-consum'].map((s) => `/consola/xifres/${s}`));
-  expect(consums.every((t) => t.querySelector(':scope > .sp-card-header a.sp-card-author-link').getAttribute('href') === '/projecte')).toBe(true);
-  expect(document.querySelector('.sp-card--action, .sdp-consola__quieta')).toBeNull();
-  cleanup();
-
+test('/consola/pols/skills: les xifres de dins són targetes amb boina que porten a la seua pàgina', async () => {
   await obri('/consola/pols/skills', /^Instantània: /);
   // Correcció 261004 (verificador de la segona passada, punt 2) · el segell també és una targeta.
   expect([...document.querySelectorAll('article.sp-card h3')].map((h) => h.textContent)).toEqual([
     '2 skills al disc o al manifest', '1 skill del nucli', '1 skill fora del manifest', '0 skills sense disc',
     'Segell de skills absent'
   ]);
+  expect(targetes().map(href)).toEqual(
+    ['skills-del-manifest', 'skills-del-nucli', 'skills-fora-del-manifest', 'skills-sense-disc', 'segell-de-skills']
+      .map((s) => `/consola/xifres/${s}`));
+  expect(targetes().every((t) => t.querySelector(':scope > .sp-card-header a.sp-card-author-link').getAttribute('href') === '/projecte'))
+    .toBe(true);
+  expect(document.querySelector('.sp-card--action, .sdp-consola__quieta')).toBeNull();
   expect(document.querySelector('.sdp-consola__segell')).toBeNull();
   // T9 (260930) · la taula del pols no porta límit d'alçada propi.
   expect(screen.getByRole('region', { name: 'Inventari de skills' }).className).toBe('sdp-taula sdp-taula--densa');
@@ -234,7 +203,7 @@ test('/consola/pols/rebuts: la privacitat del peu amaga rutes, protocols i la pe
 test('Compartir de la targeta del pols comparteix l’adreça del panell; Connectar hi porta', async () => {
   const copia = vi.fn(() => Promise.resolve());
   vi.stubGlobal('navigator', { ...navigator, share: undefined, clipboard: { writeText: copia } });
-  await obri('/consola/pols', '1 registre');
+  await obri('/consola/pols', '1 rebut de lectura');
   await act(async () => {
     fireEvent.click(screen.getByRole('button', { name: 'Compartir Rebuts' }));
   });
@@ -246,21 +215,19 @@ test('Compartir de la targeta del pols comparteix l’adreça del panell; Connec
 
 test('sense consola.json: la pàgina del panell existix i diu que la dada només és en local', async () => {
   fonts.consola = null;
-  await obri('/consola/pols/consums', 'Consola no disponible');
-  expect(h1()).toBe('Consums');
+  await obri('/consola/pols/rebuts', 'Consola no disponible');
+  expect(h1()).toBe('Rebuts');
   expect(document.querySelector('table')).toBeNull();
   // Les xifres del panell continuen sent targetes, amb el seu nom i cap número.
-  expect(titols()).toEqual(['Tòkens d’entrada', 'Tòkens d’eixida', 'Registres de consum']);
+  expect(titols()).toEqual(['Rebuts de lectura', 'Últim rebut']);
   expect(within(document.querySelector('.sdp-consola__peu')).getByRole('status').textContent).toBe('Instantània encara no disponible.');
 });
 
 /* Correcció 261004 (verificador de la segona passada, punt 1) · Sense
    consola.json, cada panell pinta les targetes que es pinten sempre, amb el
-   seu nom; els proveïdors de crèdits no es poden saber, i ni targeta ni
-   pàgina. */
+   seu nom. */
 test.each([
   ['carrega', ['Artefactes actius']],
-  ['credits', []],
   ['rebuts', ['Rebuts de lectura', 'Últim rebut']],
   ['skills', ['Skills al disc o al manifest', 'Skills del nucli', 'Skills fora del manifest', 'Skills sense disc', 'Segell de skills']]
 ])('sense consola.json: /consola/pols/%s pinta les seues targetes amb el nom', async (id, esperats) => {
@@ -274,7 +241,21 @@ test('sense consola.json: el pols pinta les operacions immunitàries i les líni
   fonts.consola = null;
   await obri('/consola/pols', 'Consola no disponible');
   const pols = [...document.querySelectorAll('.sdp-card-grid')].at(-1);
-  expect([...pols.querySelectorAll('article.sp-card h3')].map((h) => h.textContent)).toEqual(['Operacions immunitàries', 'Línies descartades']);
+  expect([...pols.querySelectorAll('article.sp-card h3')].map((h) => h.textContent))
+    .toEqual(['Operacions immunitàries', 'Línies descartades', 'Registres de consum']);
+});
+
+/* Fase A (pas 2.2 del pla, 261006) · els panells de Consums i de Crèdits
+   s'han retirat; els registres de consum són una targeta del pols. */
+test('Consums i Crèdits ja no són panells: el pols no hi enllaça i les seues adreces diuen «Panell no trobat»', async () => {
+  await obri('/consola/pols', '1 rebut de lectura');
+  expect(document.querySelector('a[href="/consola/pols/consums"], a[href="/consola/pols/credits"]')).toBeNull();
+  for (const id of ['consums', 'credits']) {
+    cleanup();
+    await obri(`/consola/pols/${id}`, 'Cap panell amb este nom');
+    expect(h1()).toBe('Panell no trobat');
+  }
+  expect(errors).not.toHaveBeenCalled();
 });
 
 test('un panell que no existix no peta: estat buit honest i camí de tornada al pols', async () => {

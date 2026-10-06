@@ -298,7 +298,7 @@ test.each(paginesConsola().map((p) => [p.id, p]))('les rutes de la Consola conti
   expect(h1Rapid()).toBe(p.title);
 });
 
-test.each(['/consola/xifres', '/consola/xifres/torns-caducats/extra', '/consola/pols/consums/extra', '/consola/pestanyes'])(
+test.each(['/consola/xifres', '/consola/xifres/torns-caducats/extra', '/consola/pols/rebuts/extra', '/consola/pestanyes'])(
   'les xifres i els panells sols i les subrutes desconegudes (%s) tornen al tauler', async (ruta) => {
     window.history.replaceState(null, '', ruta);
     render(<Aplicacio />);
@@ -343,11 +343,11 @@ test('una cadència sense tasques no té targeta ni pàgina: «Xifra no trobada�
 });
 
 test('una xifra de consola.json sense consola.json: la pàgina existix i diu que la dada només és en local', async () => {
-  await obri('/consola/xifres/tokens-d-entrada');
-  expect(h1Rapid()).toBe('Tòkens d’entrada');
+  await obri('/consola/xifres/rebuts-de-lectura');
+  expect(h1Rapid()).toBe('Rebuts de lectura');
   expect(screen.getByText('Consola no disponible')).toBeTruthy();
   expect(document.querySelector('table')).toBeNull();
-  expect(screen.getByRole('link', { name: 'Consums' }).getAttribute('href')).toBe('/consola/pols/consums');
+  expect(screen.getByRole('link', { name: 'Rebuts' }).getAttribute('href')).toBe('/consola/pols/rebuts');
   // El peu data la seua font, consola.json (absent ací).
   expect(document.querySelector('.sdp-consola__peu [role="status"]').textContent).toBe('Instantània encara no disponible.');
 });

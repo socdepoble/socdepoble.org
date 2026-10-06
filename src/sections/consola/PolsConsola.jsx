@@ -1,6 +1,6 @@
 /**
  * PolsConsola.jsx — «El pols del cervell» (/consola/pols) i la pàgina pròpia
- * de cada un dels seus cinc panells (/consola/pols/<id>).
+ * de cada un dels seus tres panells (/consola/pols/<id>).
  *
  * Ordre del Mestre, 261004 (xat: cap xifra solta) · Cada panell és una
  * targeta sencera amb la boina de Sóc de Poble que porta a la seua pàgina
@@ -10,26 +10,26 @@
  * hi havia dades). Compartir comparteix l'adreça del panell. Sense
  * consola.json (producció), la targeta continua sent una targeta completa i
  * la pàgina explica que la dada només existix en local. Les xifres del pols
- * (tòkens, registres, skills) són targetes de xifra amb pàgina pròpia
+ * (rebuts, skills) són targetes de xifra amb pàgina pròpia
  * (XifresMas.jsx), com totes les de la Consola.
  *
  * Correcció 261004 (verificador de la segona passada, punt 2) · També les
- * que quedaven soltes: la barra i l'avís de la Càrrega, cada proveïdor de
- * Crèdits, el nombre de rebuts i l'últim, el segell de Skills i, al pols,
+ * que quedaven soltes: la barra i l'avís de la Càrrega, el nombre de
+ * rebuts i l'últim, el segell de Skills i, al pols,
  * les operacions immunitàries i les línies descartades. Cada panell pinta
  * les targetes de la seua vista (VISTES_XIFRES, xifresMas.js), també sense
  * consola.json; els avisos que porten un recompte enllacen amb la seua
  * targeta.
  */
 import { useState } from 'react';
-import { Activity, Coins, Gauge, Puzzle, Receipt, SearchX } from 'lucide-react';
+import { Gauge, Puzzle, Receipt, SearchX } from 'lucide-react';
 import {
   Alerta, Boto, Carregant, Dialeg, EstatBuit, Insignia, MollaPa, PaginaApp, Taula
 } from '../../components/PedraSeca';
 import { Link, useNavigate } from '../../app/contexts/RouterContext';
 import { dataHoraDeBarra } from '../../components/universal/editorial.js';
 import { AUTORIA_SOCDEPOBLE } from '../control/destinsControl.js';
-import { curt, dataLocal, resumConsums } from './consolaContent.js';
+import { curt, dataLocal } from './consolaContent.js';
 import {
   LLINDAR_SATURACIO, RUTA_CONSOLA, copyConsola, etiquetesPols, fontLlegible, liniesDescartades, plural,
   recompteArtefactes, saturat
@@ -40,7 +40,7 @@ import { RUTA_POLS, cobertesPols, panellPols, panellsPols } from './polsConsola.
 import { Entradeta, GraellaXifres } from './XifresMas.jsx';
 import { xifresDeVista } from './xifresMas.js';
 
-const ICONES_PANELLS = Object.freeze({ gauge: Gauge, activity: Activity, coins: Coins, receipt: Receipt, puzzle: Puzzle });
+const ICONES_PANELLS = Object.freeze({ gauge: Gauge, receipt: Receipt, puzzle: Puzzle });
 
 const AUTOR = Object.freeze({
   nom: AUTORIA_SOCDEPOBLE.author,
@@ -88,73 +88,6 @@ function DiariIllegible({ icona }) {
       El diari <Mono>.agents/.diari_sessio.jsonl</Mono> no existix o no es pot llegir: no hi ha mesura, i això no
       és cap zero.
     </EstatBuit>
-  );
-}
-
-function PanellConsums({ dades, locale }) {
-  const { consums } = dades;
-  const xifres = <XifresDelPols vista="pols/consums" dades={dades} locale={locale} />;
-  if (!fontLlegible(dades, 'diari')) return <>{xifres}<DiariIllegible icona={Activity} /></>;
-  if (consums.length === 0) {
-    return (
-      <>
-        {xifres}
-        <EstatBuit icona={Activity} titol="Cap consum registrat">
-          El diari <Mono>.agents/.diari_sessio.jsonl</Mono> no conté cap entrada <Mono>consum.tokens</Mono>.
-          Quan un agent en registre, apareixerà ací sense tocar codi.
-        </EstatBuit>
-      </>
-    );
-  }
-  const { perAgent } = resumConsums(consums);
-  const n = (x) => x.toLocaleString(locale);
-  return (
-    <>
-      {xifres}
-      <Taula titol="Consum de tòkens per agent" densa>
-        <thead>
-          <tr><th scope="col">Agent</th><th scope="col">Registres</th><th scope="col">Entrada</th><th scope="col">Eixida</th></tr>
-        </thead>
-        <tbody>
-          {perAgent.map((a) => (
-            <tr key={a.agent}>
-              <th scope="row">{a.agent}</th>
-              <td>{n(a.sessions)}</td>
-              <td>{n(a.entrada)}</td>
-              <td>{n(a.eixida)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </Taula>
-    </>
-  );
-}
-
-/* Correcció 261004 (verificador de la segona passada, punt 2) · Cada
-   proveïdor és una targeta amb pàgina pròpia (la família «credit»,
-   pecesMapa.js). Derogat per l'ordre del Mestre del 261004 (xat: cap xifra
-   solta): la barra «consumit / límit» i la fila «proveïdor · valor» de cada
-   ajust, que pintaven el saldo solt. */
-function PanellCredits({ dades, locale }) {
-  const xifres = xifresDeVista('pols/credits', null, dades, locale);
-  const estrategia = dades.estrategia_consum;
-  if (!xifres.length && !estrategia) {
-    return (
-      <EstatBuit icona={Coins} titol="Sense font de crèdits">
-        Cap fitxer del repositori registra el saldo de crèdits de l'eixam. La consola no l'inventa:
-        quan hi haja font (§3.6 de l'auditoria 260920_0300), es connecta ací.
-      </EstatBuit>
-    );
-  }
-  return (
-    <>
-      {estrategia && (
-        <div className="sdp-consola__estrategia">
-          {estrategia}
-        </div>
-      )}
-      <GraellaXifres xifres={xifres} generat={dades.generat} />
-    </>
   );
 }
 
@@ -230,7 +163,7 @@ function PanellSkills({ dades, locale }) {
           {skills.map((s) => (
             <tr key={s.nom}>
               <th scope="row">{s.core ? <strong>{s.nom}</strong> : s.nom}</th>
-              <td>{s.estat ? <Insignia to={s.estat === 'canonic' ? 'exit' : 'info'}>{s.estat}</Insignia> : <Insignia to="neutre">sense estat</Insignia>}</td>
+              <td>{s.estat ? <Insignia to={s.estat === 'canonic' ? 'exit' : 'info'}>{s.estat}</Insignia> : <Insignia to="error">sense estat</Insignia>}</td>
               <td>{s.alManifest ? <Insignia to="exit">sí</Insignia> : <Insignia to="error">no</Insignia>}</td>
               <td>{s.alDisc ? <Insignia to="exit">sí</Insignia> : <Insignia to="error">esborrat</Insignia>}</td>
               <td>{s.descripcio}</td>
@@ -317,9 +250,7 @@ function AvisLiniesDescartades({ dades, locale }) {
 /* ── La pàgina d'un panell ─────────────────────────────────────────────── */
 
 /* Sense consola.json, cada panell ho diu i pinta les targetes de la seua
-   vista que es pinten sempre, amb el seu nom (cap pàgina sense targeta). Els
-   proveïdors de crèdits no es poden saber sense la font: cap targeta ni
-   pàgina. */
+   vista que es pinten sempre, amb el seu nom (cap pàgina sense targeta). */
 function SenseConsola({ id, consola, locale }) {
   const motiu = consola.estat === 'loading' ? <Carregant etiqueta="Llegint l’estat de l’eixam…" />
     : consola.estat === 'error' ? (
@@ -361,11 +292,11 @@ export function PaginaPanellPols({ id, consola, locale = 'ca-ES', privat = false
   if (!panell) {
     return (
       <PaginaApp title="Panell no trobat" subtitle="El pols del cervell"
-        lead="Esta adreça no correspon a cap panell del pols: els cinc panells són al pols del cervell."
+        lead="Esta adreça no correspon a cap panell del pols: els tres panells són al pols del cervell."
         author={AUTOR} {...quan} onBack={tornar}>
         {molla('Panell no trobat')}
         <EstatBuit icona={SearchX} titol="Cap panell amb este nom">
-          <Link to={RUTA_POLS}>Torna al pols del cervell</Link> per a vore els cinc panells.
+          <Link to={RUTA_POLS}>Torna al pols del cervell</Link> per a vore els tres panells.
         </EstatBuit>
       </PaginaApp>
     );
@@ -373,8 +304,6 @@ export function PaginaPanellPols({ id, consola, locale = 'ca-ES', privat = false
 
   const contingut = !dades ? <SenseConsola id={panell.id} consola={consola} locale={locale} /> : {
     carrega: <PanellCarrega dades={dades} locale={locale} />,
-    consums: <PanellConsums dades={dades} locale={locale} />,
-    credits: <PanellCredits dades={dades} locale={locale} />,
     rebuts: <PanellRebuts dades={dades} locale={locale} onVeure={setRebutObert} />,
     skills: <PanellSkills dades={dades} locale={locale} />
   }[panell.id];

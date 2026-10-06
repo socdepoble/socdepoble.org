@@ -7,6 +7,7 @@ import {
   LLINDAR_ROIG, ORDRE_TO, estatsPagina, faDies, nivellEstats, plural, liniesDescartades,
   fontLlegible, operacionsImmunitaries, registresDelDiari
 } from './consolaPagines.js';
+import { IDS_PANELLS } from './polsConsola.js';
 
 /* Correcció 261004 (verificador de la tercera passada, punt 4) · Una font
    absent no és cap zero: el middleware publica `operacions: 0` i llistes
@@ -373,23 +374,27 @@ describe('Canvis nous · signatura del resum', () => {
   });
 });
 
-describe('etiquetesPols · les cinc targetes del pols', () => {
+describe('etiquetesPols · les tres targetes del pols', () => {
   test('sense consola.json totes diuen per què', () => {
     const text = (estat) => Object.values(etiquetesPols(null, estat)).map((l) => l.map((e) => e.text));
-    expect(text('absent')).toEqual(Array(5).fill(['Sense font']));
-    expect(text('error')).toEqual(Array(5).fill(['Cal reparar']));
-    expect(text('loading')).toEqual(Array(5).fill([]));
+    expect(text('absent')).toEqual(Array(3).fill(['Sense font']));
+    expect(text('error')).toEqual(Array(3).fill(['Cal reparar']));
+    expect(text('loading')).toEqual(Array(3).fill([]));
+  });
+
+  test('els ids són els panells del pols, en el seu ordre', () => {
+    expect(Object.keys(etiquetesPols(null, 'absent'))).toEqual(IDS_PANELLS);
+    expect(Object.keys(etiquetesPols(DADES, 'ready'))).toEqual(IDS_PANELLS);
   });
 
   test('amb dades, només on hi ha base', () => {
     const text = (dades) => Object.fromEntries(Object.entries(etiquetesPols(dades, 'ready')).map(([k, l]) => [k, l.map((e) => e.text)]));
-    expect(text(DADES)).toEqual({ carrega: ['Sense font'], consums: [], credits: ['Sense font'], rebuts: [], skills: [] });
+    expect(text(DADES)).toEqual({ carrega: ['Sense font'], rebuts: [], skills: [] });
     expect(text({
       ...DADES,
       termometria: { artefactesActius: LLINDAR_SATURACIO + 10 },
-      credits: [{ proveidor: 'p', consumit: 1, limit: 2 }],
       skills: [{ nom: 'f', alDisc: false, alManifest: true, core: false }]
-    })).toEqual({ carrega: ['Important'], consums: [], credits: [], rebuts: [], skills: ['Cal reparar'] });
+    })).toEqual({ carrega: ['Important'], rebuts: [], skills: ['Cal reparar'] });
   });
 
   /* T12 (ordre del Mestre, 260930) · un diari de rebuts que fa més d'una

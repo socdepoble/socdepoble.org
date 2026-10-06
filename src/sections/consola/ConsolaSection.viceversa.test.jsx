@@ -5,7 +5,7 @@ import { act, cleanup, render, waitFor } from '@testing-library/react';
 /* Correcció 261004 (verificador de la segona passada, punt 1) · Ordre del
    Mestre, 261004: «Per a tindre pàgina pròpia has de ser una targeta (i
    viceversa).» Prova de propietat amb el router de veres: per a cada vista
-   de la Consola (el tauler, les nou pàgines, el pols i els seus cinc panells)
+   de la Consola (el tauler, les nou pàgines, el pols i els seus tres panells)
    i amb el Mapa i consola.json presents o absents (producció), els slugs de
    les targetes que es pinten al DOM són exactament els que diu el registre
    (VISTES_XIFRES), i eixes són les úniques pàgines de xifra que existixen:
@@ -77,7 +77,6 @@ const CONSOLA = {
   generat: '2026-09-25T13:00:00.000Z',
   rebuts: [{ t: '2026-09-20T01:03:39.000Z', peticio: 'ced19fcaab00ffff', protocols: ['a/b.md'], fonts: [{ ruta: 'x', sha256: 'y' }] }],
   consums: [{ agent: 'claude', entrada: 10, eixida: 5 }],
-  credits: [{ proveidor: 'Claude', consumit: 6, limit: 100 }, { proveidor: 'Recàrrega automàtica', valor: 'DESACTIVADA', tipus: 'ajust', actiu: false }],
   skills: [{ nom: 'sdp-workflow', estat: 'canonic', descripcio: 'x', core: true, alDisc: true, alManifest: true }],
   segell: { hash: 'abcdef0123456789', timestamp: '2026-10-02T07:01:17.116Z', filesCount: 2, manifest: { 'a/SKILL.md': '1111', 'b/SKILL.md': '2222' } },
   immunitari: { operacions: 3, ultima: { op: 'OP-3', tipus: 'ADOPTA', fitxer: 'x.md', data: '2026-08-03T13:43:04.716Z' } },
@@ -148,7 +147,7 @@ test.each([
   ['arnes-patata', true], ['lloc-qualsevol-cosa', true], ['agent-atomic-xyz', true], ['credit-res', true],
   ['cadencia-mes', true],
   ['arnes-claude-code', false], ['cadencia-dia', false], ['tasques-sense-llancador', false], ['lloc-wiki-de-poble-04-escriptori', false],
-  ['credit-claude', false]
+  ['credit-claude', false], ['tokens-d-entrada', false]
 ])('/consola/xifres/%s amb Mapa=%s (i sense consola.json si no n’hi ha): «Xifra no trobada»', async (slug, ambMapa) => {
   fonts.mapa = ambMapa ? MAPA : null;
   fonts.consola = null;
@@ -195,8 +194,7 @@ test('la pàgina d’una xifra del Mapa, mentre es llig: el títol de la targeta
 });
 
 test.each([
-  ['arnes-claude-code', 'Claude Code'], ['cadencia-dia', '1 tasca diària'], ['tasques-sense-llancador', '1 tasca sense llançador'],
-  ['credit-claude', 'Claude']
+  ['arnes-claude-code', 'Claude Code'], ['cadencia-dia', '1 tasca diària'], ['tasques-sense-llancador', '1 tasca sense llançador']
 ])('/consola/xifres/%s amb les dues fonts: la pàgina existix, amb el títol de la seua targeta', async (slug, titol) => {
   fonts.mapa = MAPA;
   fonts.consola = CONSOLA;

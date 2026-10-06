@@ -12,8 +12,7 @@ vi.mock('../../app/contexts/RouterContext', () => ({
 }));
 vi.mock('@/components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
 import {
-  Desplegable, Mono, Privat, PrivacitatConsola, TargetaConsola, TargetaResum, Xifra,
-  tornaAlCim, useTargetesQueObrin
+  Desplegable, Mono, Privat, PrivacitatConsola, TargetaConsola, TargetaResum, Xifra, tornaAlCim
 } from './peces.jsx';
 import { dataHoraDeBarra } from '../../components/universal/editorial.js';
 
@@ -23,8 +22,8 @@ afterEach(cleanup);
    UniversalCard «action», icona lucide de 40 px amb traç 1,5, títol h3 i la
    descripció com a subtítol. Cap variant: només `sdp-consola__quieta` quan
    la targeta no obri res, perquè no pretenga ser clicable.
-   Ordre del Mestre, 261004 (xat: cap xifra solta) · TargetaResum, Xifra i
-   useTargetesQueObrin són OBSOLETS: cap pàgina de la Consola no els pinta
+   Ordre del Mestre, 261004 (xat: cap xifra solta) · TargetaResum i Xifra
+   són OBSOLETS: cap pàgina de la Consola no els pinta
    (ConsolaSection.test.jsx · capXifraSolta ho vigila). Estes proves només
    guarden el que fan mentre es conserven al codi; no autoritzen a fer-los
    servir. */
@@ -351,26 +350,6 @@ test('T51 · TargetaConsola amb instantània més recent: mana la instantània; 
   expect(pastilla()).toEqual(['02:00', '24/09/26']);
 });
 
-test('la targeta explicativa que obri un desplegable ho diu també des del peu', () => {
-  function Graella({ obert }) {
-    const graella = React.useRef(null);
-    useTargetesQueObrin(graella, [{ controla: 'pols-rebuts', obert }]);
-    return (
-      <div className="sdp-card-grid" ref={graella}>
-        <TargetaConsola icona={Puzzle} titol="Rebuts" subtitol="Per a comprovar què ha llegit l’eixam"
-          entradilla="Cada lectura sencera deixa un rebut." dada="2 rebuts" onObri={() => {}} />
-      </div>
-    );
-  }
-  const { rerender } = render(<Graella obert={false} />);
-  for (const nom of ['Rebuts', 'Connectar amb Rebuts']) {
-    const boto = screen.getByRole('button', { name: nom });
-    expect([boto.getAttribute('aria-controls'), boto.getAttribute('aria-expanded')]).toEqual(['pols-rebuts', 'false']);
-  }
-  rerender(<Graella obert />);
-  expect(screen.getByRole('button', { name: 'Connectar amb Rebuts' }).getAttribute('aria-expanded')).toBe('true');
-});
-
 test('el mode privacitat amaga les rutes, dins i fora del codi', () => {
   render(
     <PrivacitatConsola.Provider value>
@@ -398,28 +377,6 @@ test('Desplegable: <details> natiu, amb summary de fila i xebró decoratiu', () 
   expect(cap.textContent).toBe('Veure detall de rebuts');
   expect(cap.querySelector('svg').getAttribute('aria-hidden')).toBe('true');
   expect(detall.querySelector('.sdp-consola__detall-cos').textContent).toBe('taula');
-});
-
-function GraellaAmbDesplegable({ obert }) {
-  const graella = React.useRef(null);
-  useTargetesQueObrin(graella, [{ controla: 'pols-consums', obert }, null]);
-  return (
-    <div className="sdp-card-grid" ref={graella}>
-      <TargetaResum icona={Puzzle} titol="Consums" descripcio="3" onObri={() => {}} />
-      <TargetaResum icona={Puzzle} titol="Rebuts" descripcio="0" onObri={() => {}} />
-    </div>
-  );
-}
-
-test('la targeta que obri un desplegable diu quin i si està obert', () => {
-  const { rerender } = render(<GraellaAmbDesplegable obert={false} />);
-  const consums = screen.getByRole('button', { name: 'Consums' });
-  expect(consums.getAttribute('aria-controls')).toBe('pols-consums');
-  expect(consums.getAttribute('aria-expanded')).toBe('false');
-  // La que no obri cap desplegable no en diu res.
-  expect(screen.getByRole('button', { name: 'Rebuts' }).hasAttribute('aria-expanded')).toBe(false);
-  rerender(<GraellaAmbDesplegable obert />);
-  expect(consums.getAttribute('aria-expanded')).toBe('true');
 });
 
 test('tornaAlCim torna a dalt el primer contenidor desplaçat i res més', () => {

@@ -15,8 +15,7 @@
  * Ací només hi ha el que no depén de React. El registre té tres famílies:
  *  · les deu xifres del tauler (este fitxer);
  *  · les xifres de dins de les pàgines i del pols (xifresVistes.js);
- *  · les peces del Mapa (i els proveïdors de crèdits del pols) que es pinten
- *    una a una (pecesMapa.js).
+ *  · les peces del Mapa que es pinten una a una (pecesMapa.js).
  * Totes tenen la mateixa forma (vista) i el mateix detall. Una mesura
  * absent diu «sense mesura», mai 0; el que la font no sap, la pàgina ho diu.
  *
@@ -380,7 +379,7 @@ const FIXES = new Map([...XIFRES_MAS, ...XIFRES_VISTES].map((def) => [def.slug, 
 export const SLUGS_FIXOS = Object.freeze([...FIXES.keys()]);
 /** Quines xifres pinta cada graella: el tauler i cada pàgina o panell. */
 export const GRUPS_XIFRES = Object.freeze({ mas: SLUGS_XIFRES, ...GRUPS_VISTES });
-/** Els ids de les famílies de peces (del Mapa i dels crèdits del pols). */
+/** Els ids de les famílies de peces del Mapa. */
 export const IDS_FAMILIES = Object.freeze(FAMILIES.map((f) => f.id));
 
 /**
@@ -396,14 +395,12 @@ const deGrup = (id) => Object.freeze({ grup: id });
 const deFamilia = (id) => Object.freeze({ familia: id });
 /* Correcció 261004 (verificador de la tercera passada, punt 5) · Els
    recomptes que la coberta destacava sense targeta (els agents atòmics, els
-   candats, els llocs del sòl i els proveïdors de crèdits) en tenen una,
-   davant de les peces de la seua família. */
+   candats i els llocs del sòl) en tenen una, davant de les peces de la seua
+   família. */
 export const VISTES_XIFRES = Object.freeze({
   tauler: Object.freeze([deGrup('mas')]),
   pols: Object.freeze([deGrup('pols')]),
   'pols/carrega': Object.freeze([deGrup('carrega')]),
-  'pols/consums': Object.freeze([deGrup('consums')]),
-  'pols/credits': Object.freeze([deGrup('credits-pols'), deFamilia('credit')]),
   'pols/rebuts': Object.freeze([deGrup('rebuts')]),
   'pols/skills': Object.freeze([deGrup('skills-pols')]),
   explorador: Object.freeze([deGrup('explorador')]),
@@ -502,8 +499,7 @@ function mesuresDeConsola(dades, locale = 'ca-ES') {
       ultima: dataUltimaOperacio(dades),
       op: dades.immunitari?.ultima ?? null
     }),
-    segell: () => dades.segell ?? null,
-    credits: () => dades.credits ?? []
+    segell: () => dades.segell ?? null
   });
 }
 
@@ -604,8 +600,9 @@ export function xifresDeGrup(grup, mapa = null, dades = null, locale = 'ca-ES') 
 }
 
 /**
- * Les peces d'una família ('arnes', 'candat', 'credit'…), en ordre, amb la
- * seua font: el Mapa o, per als crèdits, consola.json. Sense font, cap.
+ * Les peces d'una família ('arnes', 'candat'…), en ordre, amb la seua font:
+ * el Mapa o, per a una família d'origen 'consola', consola.json. Sense font,
+ * cap.
  */
 export function xifresDeFamilia(id, mapa = null, dades = null) {
   const fam = FAMILIES.find((f) => f.id === id);

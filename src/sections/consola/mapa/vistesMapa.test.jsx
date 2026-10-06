@@ -299,7 +299,7 @@ describe('les altres vistes del Mapa també són targetes amb boina i pàgina pr
     expect(document.body.textContent).not.toMatch(/\d+ (avisos|nodes|arestes|tasques)/);
   });
 
-  test('dins de la Consola, Avisos i salut no repetix el Refrescar de la capçalera', () => {
+  test('dins de la Consola, Avisos i salut no repetix el Refrescar del peu de la Consola', () => {
     render(<MapaConsola locale="ca-ES" font={{ estat: 'ready', mapa: MAPA, error: null, carrega: vi.fn() }} />);
     expect(screen.queryByRole('button', { name: /Refrescar/ })).toBeNull();
     expect(document.querySelectorAll('details.sdp-consola__detall')).toHaveLength(5);

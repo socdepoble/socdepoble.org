@@ -502,43 +502,43 @@ test.each(PAGINES)('/consola/%s: la molla de pa és un panell propi al cim i les
    solta): el detall en un <details> davall de la graella que la targeta
    obria, i la Càrrega documental quieta (sense botó, peu ni aparença de
    clicable) quan no hi havia termometria. */
-test('/consola/pols: cinc targetes amb boina, cada una porta a la pàgina del seu panell; cap desplegable', async () => {
+test('/consola/pols: tres targetes amb boina, cada una porta a la pàgina del seu panell; cap desplegable', async () => {
   ruta.comodi = 'pols';
   fonts.consola = {
     generat: '2026-09-25T13:00:00.000Z',
-    rebuts: [], consums: [{ agent: 'claude', entrada: 10, eixida: 5 }], credits: null,
+    rebuts: [], consums: [{ agent: 'claude', entrada: 10, eixida: 5 }],
     skills: [{ nom: 'sdp-workflow', estat: 'canonic', descripcio: 'x', core: true, alDisc: true, alManifest: true }],
     segell: null, immunitari: { operacions: 3 }
   };
   render(<ConsolaSection />);
-  await screen.findByText('1 registre');
+  await screen.findByText('0 rebuts de lectura');
 
   capXifraSolta();
   const graella = document.querySelector('.sdp-card-grid');
   const resums = targetesExplicatives(graella);
-  expect(resums.map((t) => t.querySelector('h3').textContent)).toEqual(['Càrrega documental', 'Consums', 'Crèdits', 'Rebuts', 'Skills']);
+  expect(resums.map((t) => t.querySelector('h3').textContent)).toEqual(['Càrrega documental', 'Rebuts', 'Skills']);
   // T51 · la instantània (més recent que el copy), en ISO local, a la pastilla de la boina.
   expect(datesDeLaBoina(resums[1])[0].getAttribute('datetime'))
     .toBe(dataHoraDeBarra({ modificat: '2026-09-25T13:00:00.000Z' }).dateTime);
   // Totes porten a la seua pàgina, també la Càrrega sense font, amb el peu canònic.
   expect([...graella.querySelectorAll('a.sp-card-link-overlay')].map((a) => a.getAttribute('href')))
-    .toEqual(['carrega', 'consums', 'credits', 'rebuts', 'skills'].map((id) => `/consola/pols/${id}`));
+    .toEqual(['carrega', 'rebuts', 'skills'].map((id) => `/consola/pols/${id}`));
   expect(resums.every((t) => t.querySelector('.sp-card-footer .sp-card-connect'))).toBe(true);
   expect(resums[0].querySelector('.sdp-consola__dada').textContent).toMatch(/^Recompte d’artefactes actius encara no disponible/);
   expect(etiquetesPerTargeta(graella)).toEqual({
-    'Càrrega documental': ['Sense font:neutre'], Consums: [], Crèdits: ['Sense font:neutre'], Rebuts: [], Skills: []
+    'Càrrega documental': ['Sense font:neutre'], Rebuts: [], Skills: []
   });
   // Cap desplegable ni cap botó que n'obriga: el detall és la pàgina del panell.
   expect(document.querySelector('details, [aria-controls^="pols-"]')).toBeNull();
 });
 
-test('/consola/pols sense consola.json: les cinc targetes continuen completes, amb peu, i porten a la seua pàgina', async () => {
+test('/consola/pols sense consola.json: les tres targetes continuen completes, amb peu, i porten a la seua pàgina', async () => {
   ruta.comodi = 'pols';
   render(<ConsolaSection />);
   await screen.findByText('Consola no disponible');
   const graella = document.querySelector('.sdp-card-grid');
   const resums = targetesExplicatives(graella);
-  expect(resums).toHaveLength(5);
+  expect(resums).toHaveLength(3);
   expect(resums.every((t) => esClicable(t) && t.querySelector('.sp-card-footer .sp-card-connect'))).toBe(true);
   capXifraSolta();
 });
@@ -546,7 +546,7 @@ test('/consola/pols sense consola.json: les cinc targetes continuen completes, a
 test('/consola/pols: una skill fora del manifest pinta «Cal reparar» a la seua targeta', async () => {
   ruta.comodi = 'pols';
   fonts.consola = {
-    generat: null, rebuts: [], consums: [], credits: [{ proveidor: 'x', consumit: 1, limit: 2 }],
+    generat: null, rebuts: [], consums: [],
     skills: [{ nom: 'nova', estat: null, descripcio: '', core: false, alDisc: true, alManifest: false }],
     segell: null, immunitari: { operacions: 0 }
   };
@@ -559,11 +559,11 @@ test('/consola/pols: una skill fora del manifest pinta «Cal reparar» a la seua
   expect([...skills.querySelectorAll('h5.sdp-consola__metrica')].map((h) => h.textContent))
     .toEqual(['1 skill', '1 fora del manifest', '0 sense disc']);
   expect(etiquetesPerTargeta(document.querySelector('.sdp-card-grid'))).toEqual({
-    'Càrrega documental': ['Sense font:neutre'], Consums: [], Crèdits: [], Rebuts: [], Skills: ['Cal reparar:error']
+    'Càrrega documental': ['Sense font:neutre'], Rebuts: [], Skills: ['Cal reparar:error']
   });
 });
 
-test('/consola/pols: les mètriques dels cinc panells són h5; sense mesura, el paràgraf diu per què', async () => {
+test('/consola/pols: les mètriques dels tres panells són h5; sense mesura, el paràgraf diu per què', async () => {
   ruta.comodi = 'pols';
   fonts.consola = AMB_REBUT();
   render(<ConsolaSection />);
@@ -576,19 +576,26 @@ test('/consola/pols: les mètriques dels cinc panells són h5; sense mesura, el 
   // Correcció 261004 (verificador de la segona passada, punt 3) · cada mètrica concorda.
   expect(perTargeta).toEqual({
     'Càrrega documental': ['162 artefactes actius', 'avís per damunt de 150'],
-    Consums: [],
-    Crèdits: ['1 proveïdor'],
     Rebuts: ['1 rebut de lectura'],
     Skills: ['1 skill', '0 fora del manifest', '0 sense disc']
   });
-  expect(screen.getByText('Sense mesura de tòkens').className).toBe('sdp-consola__dada');
+  // Sense el diari de sessió, Rebuts no té cap mesura: cap h5, i el paràgraf diu per què.
+  cleanup();
+  fonts.consola = { ...AMB_REBUT(), fonts: { diari: { estat: 'absent' } } };
+  render(<ConsolaSection />);
+  const dada = await screen.findByText('Sense mesura: el diari de sessió no es pot llegir');
+  expect(dada.className).toBe('sdp-consola__dada');
+  const rebuts = [...document.querySelector('.sdp-card-grid').querySelectorAll('article.sp-card')]
+    .find((t) => t.querySelector('h3').textContent === 'Rebuts');
+  expect(rebuts.contains(dada)).toBe(true);
+  expect(rebuts.querySelector('h5')).toBeNull();
 });
 
 const AMB_REBUT = () => ({
   generat: '2026-09-25T13:00:00.000Z',
   rebuts: [{ t: '2026-09-20T01:03:39.000Z', peticio: 'ced19fcaab00ffff', protocols: ['_wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonica.md'],
     fonts: [{ ruta: '.agents/BOOTSTRAP.md', sha256: 'eb1c1b03a1400000' }] }],
-  consums: [], credits: [{ proveidor: 'Claude', consumit: 6, limit: 100 }],
+  consums: [],
   skills: [{ nom: 'sdp-workflow', estat: 'canonic', descripcio: 'x', core: true, alDisc: true, alManifest: true }],
   segell: null, immunitari: { operacions: 3 },
   termometria: { artefactesActius: 162, abast: 'Escriptori i actes vives' }

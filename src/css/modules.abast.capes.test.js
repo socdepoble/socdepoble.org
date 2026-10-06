@@ -310,11 +310,10 @@ test('AAA · cap text amb opacitat per davall d’1 fora dels estats desactivats
   expect(dolentes).toEqual([]);
 });
 
-/* Sòl de lletra: 14px (--sdp-text-meta). Excepcions amb motiu:
-   · .sdp-consola__estrategia i .sdp-consola__ajust citen tokens que no
-     existixen (--sdp-text-sm, --sdp-text-xs): la declaració és invàlida i
-     la lletra s'hereta del pare. És deute anterior, documentat a l'informe. */
-const LLETRA_EXEMPTA = new Set(['.sdp-consola__estrategia', '.sdp-consola__ajust']);
+/* Sòl de lletra: 14px (--sdp-text-meta), sense cap excepció. Fase A (261006):
+   les dues que hi havia (.sdp-consola__estrategia i .sdp-consola__ajust, amb
+   tokens inexistents) s'han retirat amb el panell de Crèdits. */
+const LLETRA_EXEMPTA = new Set();
 
 function pxDe(valor) {
   const m = /^([\d.]+)(px|rem|em)$/.exec(valor.trim());

@@ -24,11 +24,11 @@
  */
 import { useContext, useId } from 'react';
 import {
-  Activity, Anchor, Bot, Box, CalendarDays, CalendarRange, CircleDashed, CircleHelp, ClipboardList, Clock, Coins,
+  Activity, Anchor, Bot, Box, CalendarDays, CalendarRange, CircleDashed, CircleHelp, ClipboardList, Clock,
   Cpu, FileStack, FileX, FolderOpen, Gauge, Ghost, GitBranch, HeartPulse, Inbox, Infinity as IconaSempre, Layers,
-  Link2, Link2Off, ListChecks, Lock, LockOpen, LogIn, LogOut, Network, OctagonAlert, Power, Puzzle, Receipt, Route,
+  Link2, Link2Off, ListChecks, Lock, LockOpen, Network, OctagonAlert, Power, Puzzle, Receipt, Route,
   ScrollText, SearchX, ShieldAlert, ShieldCheck, Shuffle, Siren, Stamp, Sun, Syringe, Timer, TimerOff, TriangleAlert,
-  Unlink, Wallet, Waypoints, Workflow, Zap, ZapOff
+  Unlink, Waypoints, Workflow, Zap, ZapOff
 } from 'lucide-react';
 import {
   Alerta, Carregant, EstatBuit, Insignia, MollaPa, PaginaApp, Taula
@@ -46,13 +46,13 @@ import { GENERADOR_CONSOLA, GENERADOR_MAPA, detallXifra, xifraDelMas, xifresDeLa
 /** La icona de cada xifra i de cada peça: la de la seua insígnia lateral (no en porten imatge). */
 export const ICONES_XIFRES = Object.freeze({
   activity: Activity, anchor: Anchor, bot: Bot, box: Box, calendarDays: CalendarDays, calendarRange: CalendarRange,
-  circleDashed: CircleDashed, circleHelp: CircleHelp, clipboardList: ClipboardList, clock: Clock, coins: Coins, cpu: Cpu,
+  circleDashed: CircleDashed, circleHelp: CircleHelp, clipboardList: ClipboardList, clock: Clock, cpu: Cpu,
   fileStack: FileStack, fileX: FileX, folderOpen: FolderOpen, gauge: Gauge, ghost: Ghost, gitBranch: GitBranch,
   heartPulse: HeartPulse, inbox: Inbox, infinity: IconaSempre, layers: Layers, link2: Link2, link2Off: Link2Off,
-  listChecks: ListChecks, lock: Lock, lockOpen: LockOpen, logIn: LogIn, logOut: LogOut, network: Network,
+  listChecks: ListChecks, lock: Lock, lockOpen: LockOpen, network: Network,
   octagonAlert: OctagonAlert, power: Power, puzzle: Puzzle, receipt: Receipt, route: Route, scrollText: ScrollText,
   shieldAlert: ShieldAlert, shieldCheck: ShieldCheck, shuffle: Shuffle, siren: Siren, stamp: Stamp, sun: Sun,
-  syringe: Syringe, timer: Timer, timerOff: TimerOff, triangleAlert: TriangleAlert, unlink: Unlink, wallet: Wallet,
+  syringe: Syringe, timer: Timer, timerOff: TimerOff, triangleAlert: TriangleAlert, unlink: Unlink,
   waypoints: Waypoints, workflow: Workflow, zap: Zap, zapOff: ZapOff
 });
 const iconaDe = (xifra) => ICONES_XIFRES[xifra.icona] ?? Puzzle;
@@ -229,9 +229,9 @@ export function PaginaXifra({ slug, fonts, creat, privat = false, peu = null, lo
 
   if (!xifra) {
     /* Correcció 261004 (verificador de la segona passada, punt 1) · Una peça
-       del Mapa o un proveïdor de crèdits només té pàgina quan la seua font diu
-       que existix: mentre es llig, la pàgina espera; després, si cap targeta
-       no la pinta, no existix. Sense alguna de les fonts (producció), ho diu. */
+       del Mapa només té pàgina quan la seua font diu que existix: mentre es
+       llig, la pàgina espera; després, si cap targeta no la pinta, no existix.
+       Sense alguna de les fonts (producció), ho diu. */
     const llegint = fontMapa.estat === 'loading' || fontConsola.estat === 'loading';
     const senseFont = !fontMapa.mapa || !fontConsola.dades;
     const molla = (darrer) => (

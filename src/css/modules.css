@@ -6079,29 +6079,6 @@ details[open] summary.accordion-header svg:last-child {
   }
   .sdp-consola__detall-cos { padding: var(--sdp-space-4); }
   .sdp-consola__detall-cos > :last-child { margin-bottom: 0; }
-
-  .sdp-consola__estrategia {
-    margin-bottom: var(--sdp-space-6);
-    white-space: pre-line;
-    font-size: var(--sdp-text-sm);
-    color: var(--sdp-text-sec);
-  }
-  .sdp-consola__ajust {
-    display: flex;
-    justify-content: space-between;
-    font-size: var(--sdp-text-xs);
-    margin-bottom: var(--sdp-space-2);
-    padding: var(--sdp-space-2);
-    background-color: var(--sdp-fons-terciari);
-    border-radius: var(--sdp-radi-m);
-  }
-  .sdp-consola__ajust-valor {
-    font-weight: 600;
-    color: var(--sdp-text-sec);
-  }
-  .sdp-consola__ajust-valor--actiu {
-    color: var(--sdp-ok);
-  }
 }
 
 /* ── EXPLORADOR · llegenda, cerca i filtres; el graf i el detall al final ── */

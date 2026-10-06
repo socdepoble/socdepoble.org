@@ -1,5 +1,5 @@
 /**
- * polsConsola.js — els cinc panells del «pols del cervell», sense React.
+ * polsConsola.js — els tres panells del «pols del cervell», sense React.
  *
  * Ordre del Mestre, 261004 (xat: cap xifra solta) · Cada panell del pols és
  * una targeta sencera amb la boina de Sóc de Poble i té pàgina pròpia,
@@ -26,16 +26,6 @@ const PANELLS = Object.freeze([
     entradilla: 'Compta els artefactes actius del cervell i avisa quan passen del llindar de saturació. No arxiva res: només diu quan cal revisar rellevància i context.'
   },
   {
-    id: 'consums', titol: 'Consums', icona: 'activity',
-    subtitol: 'Per a saber qui gasta tòkens i quants',
-    entradilla: 'Tòkens d’entrada i d’eixida que cada agent anota al diari de sessió. Si no hi ha cap registre, no vol dir consum zero: vol dir que ningú no l’ha mesurat.'
-  },
-  {
-    id: 'credits', titol: 'Crèdits', icona: 'coins',
-    subtitol: 'Per a saber quant queda de cada proveïdor',
-    entradilla: 'Saldo consumit de cada proveïdor d’IA respecte del seu límit. Mentre cap fitxer no el registre, la Consola ho diu en lloc d’inventar-lo.'
-  },
-  {
     id: 'rebuts', titol: 'Rebuts', icona: 'receipt',
     subtitol: 'Per a comprovar què ha llegit de veritat l’eixam',
     entradilla: 'Cada vegada que un agent llig senceres les fonts d’un protocol, en queda un rebut amb l’empremta de cada fitxer. Obri’l per vore quines fonts va llegir.'
@@ -56,7 +46,7 @@ export function panellPols(id) {
   return p ? { ...p, ruta: rutaPanell(p.id) } : null;
 }
 
-/** Els cinc panells, en ordre. */
+/** Els tres panells, en ordre. */
 export const panellsPols = () => IDS_PANELLS.map(panellPols);
 
 /**
@@ -81,14 +71,6 @@ export function cobertesPols(dades, estat) {
         ? [plural(recompte, 'artefacte actiu', 'artefactes actius'), `avís per damunt ${de(LLINDAR_SATURACIO)}`] : null,
       senseMesura: 'Recompte d’artefactes actius encara no disponible: les skills i els rebuts no en són cap mesura'
     },
-    consums: {
-      metriques: dades?.consums.length ? [plural(dades.consums.length, 'registre', 'registres')] : null,
-      senseMesura: dades ? 'Sense mesura de tòkens' : estatSenseDades
-    },
-    credits: {
-      metriques: dades?.credits?.length ? [plural(dades.credits.length, 'proveïdor', 'proveïdors')] : null,
-      senseMesura: dades ? 'Saldo desconegut' : estatSenseDades
-    },
     rebuts: {
       metriques: rebuts !== null ? [plural(rebuts, 'rebut de lectura', 'rebuts de lectura')] : null,
       senseMesura: dades ? 'Sense mesura: el diari de sessió no es pot llegir' : estatSenseDades
@@ -110,15 +92,13 @@ export function cobertesPols(dades, estat) {
  */
 export const XIFRES_DELS_PANELLS = Object.freeze({
   carrega: Object.freeze([['artefactes-actius'], ['artefactes-actius']]),
-  consums: Object.freeze([['registres-de-consum']]),
-  credits: Object.freeze([['proveidors-de-credits']]),
   rebuts: Object.freeze([['rebuts-de-lectura']]),
   skills: Object.freeze([['skills-del-manifest'], ['skills-fora-del-manifest'], ['skills-sense-disc']])
 });
 
 /**
  * L'id d'un panell a partir del comodí de la ruta (/consola/*):
- * 'pols/consums' (o amb barres a les vores) → 'consums'. Un id que no
+ * 'pols/rebuts' (o amb barres a les vores) → 'rebuts'. Un id que no
  * existix també es torna: la seua pàgina diu que no existix. Qualsevol altra
  * forma ('pols' sol, el tauler, una xifra), null.
  */

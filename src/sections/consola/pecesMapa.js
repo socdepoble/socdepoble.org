@@ -14,10 +14,10 @@
  * la seua adreça diu que no existix.
  *
  * Correcció 261004 (verificador de la segona passada) · `origen` diu de quina
- * font viu la família: el Mapa o, per als proveïdors de crèdits del pols,
- * consola.json. Sense la seua font no es pot saber quines peces hi ha: cap
- * targeta i cap pàgina. `pagina` (i `panell`) és on es pinten de veres: les
- * tasques i els llocs del sòl, a Actors.
+ * font viu la família: el Mapa (per defecte) o consola.json. Sense la seua
+ * font no es pot saber quines peces hi ha: cap targeta i cap pàgina.
+ * `pagina` (i `panell`) és on es pinten de veres: les tasques i els llocs
+ * del sòl, a Actors.
  */
 import { etiquetaNode } from './mapa/grafMapa.js';
 import { agentsAtomics } from './mapa/actorsMapa.js';
@@ -25,8 +25,8 @@ import { quanDe } from './mapa/calendariMapa.js';
 import { camiDe, esSenseLector } from './mapa/fluxosMapa.js';
 import { textCadencia, textLlancador } from './mapa/mapaContent.js';
 import {
-  FONT_CONSOLA, FONT_MAPA, concorda, darrer, de, etiquetaBona, etiquetaPendent, mono, normalitzaSlug, plural, siNo,
-  taulaAvisosDe, taulaDades, text
+  FONT_MAPA, concorda, darrer, etiquetaBona, etiquetaPendent, mono, normalitzaSlug, plural, taulaAvisosDe, taulaDades,
+  text
 } from './xifresComu.js';
 
 const cosDe = (id) => {
@@ -266,37 +266,6 @@ export const FAMILIES = Object.freeze([
         ]
       })
     }))
-  },
-  /* Correcció 261004 (verificador de la segona passada, punt 2) · El panell
-     de Crèdits pintava «1702 crèdits» i la barra «60 / 100» soltes: cada
-     proveïdor és ara una targeta amb pàgina pròpia. Viuen de consola.json. */
-  {
-    id: 'credit', prefix: 'credit-', origen: 'consola', pagina: 'pols', panell: 'credits', icona: 'coins',
-    nom: 'Saldo d’un proveïdor',
-    subtitolSenseFont: 'Consumit, límit o ajust del proveïdor',
-    entradeta: [
-      'Diu el saldo o l’ajust d’un proveïdor d’IA tal com el mostra el seu tauler: el consumit respecte del límit, o el valor de l’ajust.',
-      'Ix de la llista credits de `/__iaia/consola.json`, que el middleware `tooling/vite/consola-iaia.mjs` llig de `.agents/credits.json`.',
-      'Ningú no el mesura sol: és la lectura que algú hi ha anotat, i la Consola no n’inventa cap.'
-    ],
-    font: `${FONT_CONSOLA} · credits`,
-    elements: (dades) => (dades.credits ?? []).map((c) => {
-      const ajust = c.tipus === 'ajust';
-      return {
-        clau: `credit:${c.proveidor}`,
-        titol: c.proveidor,
-        // L'ajust es diu tal com el mostra el tauler del proveïdor; un número sol, amb la seua etiqueta.
-        // Correcció 261004 (verificador de la tercera passada, punt 3) · «d’8», «d’11»: «de» s'apostrofa.
-        subtitol: ajust ? (typeof c.valor === 'number' ? `Valor: ${c.valor}` : String(c.valor)) : `Consumit: ${c.consumit} ${de(c.limit)}`,
-        etiquetes: ajust ? (c.actiu ? etiquetaBona('ACTIU') : etiquetaPendent('INACTIU')) : null,
-        detall: () => ({
-          taules: [taulaDades('El proveïdor', ajust
-            ? [['Proveïdor', text(c.proveidor)], ['Valor', text(c.valor)], ['Actiu', siNo(c.actiu)]]
-            : [['Proveïdor', text(c.proveidor)], ['Consumit', text(c.consumit)], ['Límit', text(c.limit)],
-              ['Percentatge', text(`${Math.round((c.consumit / c.limit) * 100)} %`)]])]
-        })
-      };
-    })
   }
 ]);
 

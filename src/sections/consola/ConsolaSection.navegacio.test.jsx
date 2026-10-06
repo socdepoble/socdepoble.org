@@ -255,9 +255,9 @@ test('canviar de pàgina torna al cim del contenidor de scroll', async () => {
 test('/consola/pols: cada targeta porta a la pàgina del seu panell, i la molla torna al pols', async () => {
   window.history.replaceState(null, '', '/consola/pols');
   render(<Aplicacio />);
-  await screen.findByText('1 registre');
+  await screen.findByText('0 rebuts de lectura');
 
-  for (const [id, titol] of [['consums', 'Consums'], ['credits', 'Crèdits'], ['rebuts', 'Rebuts'], ['skills', 'Skills']]) {
+  for (const [id, titol] of [['rebuts', 'Rebuts'], ['skills', 'Skills']]) {
     fireEvent.click(document.querySelector(`a.sp-card-link-overlay[href="/consola/pols/${id}"]`));
     expect(window.location.pathname).toBe(`/consola/pols/${id}`);
     expect(h1Rapid()).toBe(titol);
