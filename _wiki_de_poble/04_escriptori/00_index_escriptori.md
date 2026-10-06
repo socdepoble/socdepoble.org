@@ -31,37 +31,15 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu — i
 
 ## Activitat en curs
 
+- [[261006_0224_pla_implementacio_antigravity]]
+
+- [[261006_0224_petorreta_claude_ledger]]
+
+- [[261006_0025_auditoria_opus]]
 - [[261005_1303_pla_implementacio_opus]]
-- [[261005_1303_pla_implementacio_opus.md]]
-- [[261005_1303_prompt_opus_local.md]]
-
-
-
-- [[261005_1236_acta_marmota.md]]
-
-
+- [[261005_1303_prompt_opus_local]]
 - [[261005_1236_acta_marmota]]
-
-- [[261005_1211_auditoria_fable.md]]
-
-
 - [[261005_1211_auditoria_fable]]
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 - Canal viu de Claude per a la Marató 2230 (torn torn_8ec393af): [[02_investigacio_ia/261004_2240_marato_claude/RELLEU_00_arrencada.txt]], [[02_investigacio_ia/261004_2240_marato_claude/RELLEU_01_revisor.txt]], [[02_investigacio_ia/261004_2240_marato_claude/RELLEU_02_fronts_2045.txt]], [[02_investigacio_ia/261004_2240_marato_claude/RELLEU_03_execucio_f1_f5.txt]], [[02_investigacio_ia/261004_2240_marato_claude/RELLEU_04_f1_f5_llestos.txt]], [[02_investigacio_ia/261004_2240_marato_claude/RELLEU_05_bloquejants_f2_f4.txt]], [[02_investigacio_ia/261004_2240_marato_claude/RELLEU_06_avanc_revisio.txt]], [[02_investigacio_ia/261004_2240_marato_claude/RELLEU_07_revisio_definitiva.txt]], [[02_investigacio_ia/261004_2240_marato_claude/RELLEU_08_f2_f4_bytes_i_acks.txt]], [[02_investigacio_ia/261004_2240_marato_claude/RELLEU_09_acks.txt]], [[02_investigacio_ia/261004_2240_marato_claude/RELLEU_10_acks_ronda2.txt]], [[02_investigacio_ia/261004_2240_marato_claude/RELLEU_11_acks_ronda3_i_congelacio.txt]], [[02_investigacio_ia/261004_2240_marato_claude/RELLEU_12_congelacio_i_notes.txt]], [[02_investigacio_ia/261004_2240_marato_claude/RELLEU_13_tancament.txt]] i [[02_investigacio_ia/261004_2240_marato_claude/DISSENYS_INDEPENDENTS.txt]]
 
@@ -130,6 +108,18 @@ Fitxers moguts a l'històric a mà per MarIA per a netejar l'escriptori, atès q
 ## Laboratori de tractors (codi en quarantena, pendent d'instal·lar)
 
 Una àncora per fitxer, agrupades per carpeta. La porta SCC (`tooling/gates/verificador-scc.mjs`) exigix que cada fitxer de l'Escriptori, laboratori inclòs, tinga enllaç en este índex, i un camí escrit entre accents greus no compta com a enllaç. Les àncores porten la ruta des de l'Escriptori perquè hi ha noms repetits entre subcarpetes.
+
+### 261006_0055_olivera_ancores_opus
+
+Paquet 261006 «Olivera àncores» (auditoria 261006_0025, torn torn_f2623861): arxivat per nom de qualsevol extensió i de produccio/avaluacio, --sessio, --reapunta, --repara i --renomena, i anchorDraft sense línies en blanc. Supera el 261002_1745, que no s'ha d'aplicar. S'aplica amb executor-mutacio.mjs i lease del Mestre, després de l'aprovació a la Wiki (LLEGIU_PRIMER).
+
+- [[02_investigacio_ia/261006_0055_olivera_ancores_opus/LLEGIU_PRIMER.txt]]
+- [[02_investigacio_ia/261006_0055_olivera_ancores_opus/prepara-pla.mjs]]
+- [[02_investigacio_ia/261006_0055_olivera_ancores_opus/nous/tooling/gates/porta-olivera.mjs]]
+- [[02_investigacio_ia/261006_0055_olivera_ancores_opus/nous/tooling/documental/draft-write.mjs]]
+- [[02_investigacio_ia/261006_0055_olivera_ancores_opus/nous/tests/porta-olivera-v3.test.mjs]]
+- [[02_investigacio_ia/261006_0055_olivera_ancores_opus/nous/tests/porta-olivera-diagnosi.test.mjs]]
+- [[02_investigacio_ia/261006_0055_olivera_ancores_opus/nous/tests/cognitive-preflight.test.mjs]]
 
 ### 261002_1510_tractor_fatiga_claude
 
@@ -366,6 +356,7 @@ Moguts a `90_arxiu_historic/260925_Tanda_Claude_Mati/` manualment per la IAIA Ma
 
 ## Vincles
 
+- [[../00_index]]
 
 ## Relleu arxivat (260925-26, recollit del Vincles)
 
