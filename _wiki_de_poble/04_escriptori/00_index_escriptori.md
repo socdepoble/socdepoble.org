@@ -28,16 +28,17 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu — i
 - [[01_produccio/260911_0012_agenda_futur_extensio_chrome]]
 - [[01_produccio/260911_0645_propostes_manifest_panell_control]]
 - [[01_produccio/contracte_graella]]
+- [[01_produccio/checklist-limpieza-wp-ayudawp-complet.csv]]
+- [[01_produccio/article-ayudawp.md]]
 
 ## Activitat en curs
-
-- [[261006_0300_auditoria_claude]]
-
-- [[261006_0224_pla_implementacio_antigravity]]
-
-- [[261006_0224_prompt_claude_ledger]]
+- [[261007_0030_auditoria_claude]]
+- [[261007_0012_pla_implementacio_claude]]
+- [[261006_2358_prompt_claude_gestoria_i_reparacions]]
+- [[261006_2200_contingut_el_xat.md]]
 
 
+- [[261006_1140_pla_implementacio]]
 - Canal viu de Claude per a la Marató 2230 (torn torn_8ec393af): [[02_investigacio_ia/261004_2240_marato_claude/RELLEU_00_arrencada.txt]], [[02_investigacio_ia/261004_2240_marato_claude/RELLEU_01_revisor.txt]], [[02_investigacio_ia/261004_2240_marato_claude/RELLEU_02_fronts_2045.txt]], [[02_investigacio_ia/261004_2240_marato_claude/RELLEU_03_execucio_f1_f5.txt]], [[02_investigacio_ia/261004_2240_marato_claude/RELLEU_04_f1_f5_llestos.txt]], [[02_investigacio_ia/261004_2240_marato_claude/RELLEU_05_bloquejants_f2_f4.txt]], [[02_investigacio_ia/261004_2240_marato_claude/RELLEU_06_avanc_revisio.txt]], [[02_investigacio_ia/261004_2240_marato_claude/RELLEU_07_revisio_definitiva.txt]], [[02_investigacio_ia/261004_2240_marato_claude/RELLEU_08_f2_f4_bytes_i_acks.txt]], [[02_investigacio_ia/261004_2240_marato_claude/RELLEU_09_acks.txt]], [[02_investigacio_ia/261004_2240_marato_claude/RELLEU_10_acks_ronda2.txt]], [[02_investigacio_ia/261004_2240_marato_claude/RELLEU_11_acks_ronda3_i_congelacio.txt]], [[02_investigacio_ia/261004_2240_marato_claude/RELLEU_12_congelacio_i_notes.txt]], [[02_investigacio_ia/261004_2240_marato_claude/RELLEU_13_tancament.txt]] i [[02_investigacio_ia/261004_2240_marato_claude/DISSENYS_INDEPENDENTS.txt]]
 
 
@@ -52,6 +53,24 @@ Tancament autoritzat: rutes Gestoria/Wiki, avatars i paquet 1.0.3. Els altres do
 - [[02_investigacio_ia/261004_0045_skills_kowalski_impeccable]]
 - [[01_produccio/iaia_maria_avatar.jpg]]
 - [[01_produccio/iaia_maria_portada.jpg]]
+- [[01_produccio/alergens_svg/01-GLUTEN.svg]]
+- [[01_produccio/alergens_svg/02-CRUSTÁCEOS.svg]]
+- [[01_produccio/alergens_svg/03-PESCADO.svg]]
+- [[01_produccio/alergens_svg/04-HUEVOS.svg]]
+- [[01_produccio/alergens_svg/05-CACAHUETES.svg]]
+- [[01_produccio/alergens_svg/06-SOJA.svg]]
+- [[01_produccio/alergens_svg/07-LÁCTEOS.svg]]
+- [[01_produccio/alergens_svg/08-FRUTOS DE CÁSCARA.svg]]
+- [[01_produccio/alergens_svg/09-APIO.svg]]
+- [[01_produccio/alergens_svg/10-MOSTAZA.svg]]
+- [[01_produccio/alergens_svg/11-SÉSAMO.svg]]
+- [[01_produccio/alergens_svg/12-SULFITOS.svg]]
+- [[01_produccio/alergens_svg/13-ALTRAMUCES.svg]]
+- [[01_produccio/alergens_svg/14-MOLUSCOS.svg]]
+- [[01_produccio/alergens_svg/1-0-PORCION.svg]]
+- [[01_produccio/alergens_svg/1-2-PORCION.svg]]
+- [[01_produccio/alergens_svg/CASTELLANO.svg]]
+- [[01_produccio/alergens_svg/INGLES.svg]]
 
 ## Investigació IA
 - [[02_investigacio_ia/261004_0605_nit_claude/EMPAQUETAT_1.0.3.txt]]
@@ -697,3 +716,12 @@ Enllaços a peces ja existents, verificats al disc; no s’han mogut ni editat e
 
 
 
+## Arxivat amb la Porta Olivera
+
+- [[../90_arxiu_historic/261006_1215_prompt_claude_loiverse]]
+- [[../90_arxiu_historic/261006_2250_auditoria_claude]]
+- [[../90_arxiu_historic/261006_1150_auditoria_claude]]
+- [[../90_arxiu_historic/261006_1140_prompt_claude]]
+- [[../90_arxiu_historic/261006_0300_auditoria_claude]]
+- [[../90_arxiu_historic/261006_0224_pla_implementacio_antigravity]]
+- [[../10_actes/261007_0025_acta_marmota]]
