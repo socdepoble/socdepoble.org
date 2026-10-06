@@ -16,6 +16,15 @@ beforeAll(() => {
 afterAll(() => vi.unstubAllGlobals());
 afterEach(cleanup);
 
+/* El primer import en fred paga la transformació del graf compartit (el barril
+   de Pedra Seca, que des del TPV del 261006 porta UniversalTPV i els
+   al·lèrgens) i passava dels 5 s del cas. S'escalfa ací, amb temps propi:
+   cada cas mesura la càrrega i el pintat del seu espècimen. */
+beforeAll(async () => {
+  const [primer] = Object.values(SPECIMEN_MODULES);
+  await primer?.();
+}, 60000);
+
 describe('Lazy Loaders del Catàleg', () => {
   /* T52 · paritat: cap ítem del manifest sense carregador, cap carregador orfe. */
   it('el manifest i els carregadors coincidixen', () => {
