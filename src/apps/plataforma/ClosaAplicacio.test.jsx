@@ -1,7 +1,8 @@
 /* Plataforma d'Apps Enxufables · ClosaAplicacio, l'esquelet comú (P1-R1).
    Una sola taula de rutes alimenta les tres columnes d'AppGridShell: el que
    comparteixen el TPV del bar i La Compra. S'entra per l'API pública
-   (index.js), com ho farà una app. */
+   (index.js), com ho farà una app. Des del 261006, una ruta també pot ser
+   d'àrea única (Unica): sense columnes ni AppGridShell. */
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { lazy, memo, useState } from 'react';
@@ -217,5 +218,98 @@ describe('la taula de rutes', () => {
   test('validaRutes sense columnes no canvia: una taula de camins continua valent', () => {
     expect(validaRutes([{ path: 'inici' }, { path: 'inici/:id', params: { id: esIdOpac } }])).toEqual({ ok: true, errors: [] });
     expect(validaRutes([{ path: 'inici' }], { columnes: true }).ok).toBe(false);
+  });
+});
+
+/* Àrea única (ordre del Mestre, 261006, TPV Universal): una ruta amb `Unica`
+   no munta AppGridShell; ocupa tota la caixa en una regió amb el nom de l'app. */
+function Area({ params }) {
+  const { ruta } = useApp();
+  const [comptador, setComptador] = useState(0);
+  return (
+    <div>
+      <p>Àrea {params.dia || 'oberta'}</p>
+      <button type="button" onClick={() => setComptador((n) => n + 1)}>{`Suma ${comptador}`}</button>
+      <Link to={ruta('caixa', '2026-10-02')}>Ves al dia</Link>
+    </div>
+  );
+}
+
+const RUTES_AMB_AREA = [
+  { path: 'inici', Esquerra: Grups, Mig: Llista, Detall: SenseElement },
+  { path: 'caixa', Unica: Area },
+  { path: 'caixa/:dia', params: { dia: esData }, Unica: Area }
+];
+const regio = () => document.querySelector('.sdp-app-unica');
+
+describe('àrea única (Unica)', () => {
+  test('pinta una regió amb el nom de l’app, dins del contenidor i sense AppGridShell; els params hi arriben', async () => {
+    ambAmplada(1400);
+    muntaPlataforma('/app/prova/caixa/2026-10-02', { registre: registreAmb(RUTES_AMB_AREA) });
+    expect(await screen.findByText('Àrea 2026-10-02')).toBeTruthy();
+    const area = screen.getByRole('region', { name: 'La Prova' });
+    expect(area).toBe(regio());
+    expect(area.className).toBe('sdp-app-unica');
+    expect(area.parentElement.classList.contains('sdp-app-contenidor')).toBe(true);
+    expect(within(area).getByText('Àrea 2026-10-02')).toBeTruthy();
+    expect(closca()).toBeNull();
+    expect(document.querySelector('.app-grid-page')).toBeNull();
+    expect(screen.queryByRole('separator')).toBeNull();
+  });
+
+  test('de les columnes a l’àrea i tornada, amb push; dos rutes amb el mateix Unica no la desmunten', async () => {
+    ambAmplada(1400);
+    muntaPlataforma('/app/prova/inici', { registre: registreAmb(RUTES_AMB_AREA) });
+    expect(await screen.findByText('Tria un element')).toBeTruthy();
+    expect(closca()).not.toBeNull();
+    expect(regio()).toBeNull();
+
+    fireEvent.click(screen.getByRole('link', { name: 'Ves a la caixa' }));
+    expect(await screen.findByText('Àrea oberta')).toBeTruthy();
+    expect(closca()).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Suma 0' }));
+    const llarg = window.history.length;
+
+    fireEvent.click(screen.getByRole('link', { name: 'Ves al dia' }));
+    expect(await screen.findByText('Àrea 2026-10-02')).toBeTruthy();
+    expect(window.history.length).toBe(llarg + 1);
+    expect(screen.getByRole('button', { name: 'Suma 1' })).toBeTruthy();
+
+    await act(async () => { window.history.back(); });
+    await waitFor(() => expect(screen.getByText('Àrea oberta')).toBeTruthy());
+    await act(async () => { window.history.back(); });
+    await waitFor(() => expect(screen.getByText('Tria un element')).toBeTruthy());
+    expect(closca()).not.toBeNull();
+    expect(regio()).toBeNull();
+  });
+
+  test('una taula amb Unica i Mig és invàlida: avís i consola, cap àrea ni closca', async () => {
+    const errors = vi.spyOn(console, 'error').mockImplementation(() => {});
+    muntaPlataforma('/app/prova/inici', { registre: registreAmb([{ path: 'inici', Unica: Area, Mig: Llista }]) });
+    expect(await screen.findByText('Esta app no es pot obrir')).toBeTruthy();
+    expect(regio()).toBeNull();
+    expect(closca()).toBeNull();
+    expect(errors.mock.calls.flat().flat().join(' ')).toContain('amb Unica no hi pot haver Mig, Detall, Esquerra ni estret (porta Mig)');
+  });
+
+  test('validaTaulaDeClosa: Unica és un component i va sola', () => {
+    const manifest = manifestDeProva();
+    expect(validaTaulaDeClosa(RUTES_AMB_AREA, manifest)).toEqual({ ok: true, errors: [] });
+    expect(validaTaulaDeClosa([{ path: 'caixa', Unica: memo(Area) }], manifest).ok).toBe(true);
+    expect(validaTaulaDeClosa([{ path: 'caixa', Unica: lazy(() => Promise.resolve({ default: Area })) }], manifest).ok).toBe(true);
+    const casos = [
+      [{ path: 'caixa', Unica: 'Area' }, 'Unica no és cap component'],
+      [{ path: 'caixa', Unica: undefined }, 'Unica no és cap component'],
+      [{ path: 'caixa', Unica: Area, Detall: Caixa }, '(porta Detall)'],
+      [{ path: 'caixa', Unica: Area, Esquerra: Grups }, '(porta Esquerra)'],
+      [{ path: 'caixa', Unica: Area, estret: 'mig' }, '(porta estret)'],
+      [{ path: 'caixa', Unica: Area, Mig: Llista, Detall: Caixa }, '(porta Mig, Detall)'],
+      [{ path: 'fantasma', Unica: Area }, '«fantasma» no és cap entrada del manifest']
+    ];
+    for (const [ruta, error] of casos) {
+      const { ok, errors } = validaTaulaDeClosa([ruta], manifest);
+      expect(ok, error).toBe(false);
+      expect(errors.join(' '), error).toContain(error);
+    }
   });
 });

@@ -1,9 +1,10 @@
 /* Plataforma d'Apps Enxufables · rutes i paràmetres (rutesAplicacio.js). */
 import { afterEach, describe, expect, test } from 'vitest';
 import { act, cleanup, render } from '@testing-library/react';
+import { lazy, memo } from 'react';
 import { BrowserRouter } from '../../app/contexts/RouterContext.jsx';
 import {
-  coincidixRuta, esData, esIdOpac, esSlug, esUuid, restaDeApp, tramsSegurs, useParametresConsulta, useRutaApp,
+  coincidixRuta, esData, esIdOpac, esRutaUnica, esSlug, esUuid, restaDeApp, tramsSegurs, useParametresConsulta, useRutaApp,
   validaRutes
 } from './rutesAplicacio.js';
 
@@ -120,6 +121,64 @@ describe('validaRutes i coincidixRuta', () => {
     expect(coincidixRuta(RUTES, 'taules/%2e%2e')).toBeNull();
     expect(coincidixRuta(RUTES, 'caixa')).toBeNull();
     expect(coincidixRuta(null, 'taules')).toBeNull();
+  });
+});
+
+/* Ordre del Mestre (261006, TPV Universal) · Amb { columnes: true }, una ruta
+   pot ser d'ÀREA ÚNICA: la clau `Unica` (un component) EN LLOC de les columnes. */
+describe('validaRutes amb columnes: l’àrea única', () => {
+  const Area = () => null;
+  const Llista = () => null;
+  const Detall = () => null;
+
+  test('Unica sola, memo o lazy, i barrejada amb rutes de columnes', () => {
+    expect(validaRutes([{ path: 'tpv', Unica: Area }], { columnes: true })).toEqual({ ok: true, errors: [] });
+    expect(validaRutes([{ path: 'tpv', Unica: memo(Area) }], { columnes: true }).ok).toBe(true);
+    expect(validaRutes([{ path: 'tpv', Unica: lazy(() => Promise.resolve({ default: Area })) }], { columnes: true }).ok).toBe(true);
+    expect(validaRutes([
+      { path: 'caixa', Mig: Llista, Detall },
+      { path: 'tpv', Unica: Area },
+      { path: 'tpv/:dia', params: { dia: esData }, Unica: Area }
+    ], { columnes: true })).toEqual({ ok: true, errors: [] });
+  });
+
+  test.each([
+    ['Unica no és cap component', { path: 'tpv', Unica: 'Area' }, 'rutes[0]: Unica no és cap component'],
+    ['Unica buida (un import mal escrit)', { path: 'tpv', Unica: undefined }, 'rutes[0]: Unica no és cap component'],
+    ['Unica nul·la', { path: 'tpv', Unica: null }, 'rutes[0]: Unica no és cap component'],
+    ['Unica amb Mig', { path: 'tpv', Unica: Area, Mig: Llista },
+      'rutes[0]: amb Unica no hi pot haver Mig, Detall, Esquerra ni estret (porta Mig)'],
+    ['Unica amb Detall', { path: 'tpv', Unica: Area, Detall }, 'rutes[0]: amb Unica no hi pot haver Mig, Detall, Esquerra ni estret (porta Detall)'],
+    ['Unica amb Esquerra', { path: 'tpv', Unica: Area, Esquerra: Llista },
+      'rutes[0]: amb Unica no hi pot haver Mig, Detall, Esquerra ni estret (porta Esquerra)'],
+    ['Unica amb estret', { path: 'tpv', Unica: Area, estret: 'detall' },
+      'rutes[0]: amb Unica no hi pot haver Mig, Detall, Esquerra ni estret (porta estret)'],
+    ['Unica amb les tres columnes', { path: 'tpv', Unica: Area, Esquerra: Llista, Mig: Llista, Detall },
+      'rutes[0]: amb Unica no hi pot haver Mig, Detall, Esquerra ni estret (porta Mig, Detall, Esquerra)']
+  ])('rebutja: %s', (_nom, ruta, error) => {
+    expect(validaRutes([ruta], { columnes: true })).toEqual({ ok: false, errors: [error] });
+  });
+
+  test('sense Unica, tot com abans: Mig i Detall continuen sent obligatoris', () => {
+    expect(validaRutes([{ path: 'caixa', Mig: Llista, Detall }], { columnes: true }).ok).toBe(true);
+    expect(validaRutes([{ path: 'caixa', Mig: Llista }], { columnes: true }).errors).toEqual(['rutes[0]: la columna Detall no és cap component']);
+    /* Sense { columnes: true }, validaRutes només mira els camins, com sempre. */
+    expect(validaRutes([{ path: 'tpv', Unica: 'Area', Mig: Llista }]).ok).toBe(true);
+  });
+
+  test('esRutaUnica: la clau pròpia, encara que siga undefined; mai una heretada', () => {
+    expect(esRutaUnica({ path: 'tpv', Unica: Area })).toBe(true);
+    expect(esRutaUnica({ path: 'tpv', Unica: undefined })).toBe(true);
+    expect(esRutaUnica({ path: 'caixa', Mig: Llista, Detall })).toBe(false);
+    expect(esRutaUnica(Object.create({ Unica: Area }))).toBe(false);
+    expect(esRutaUnica(null)).toBe(false);
+    expect(esRutaUnica('tpv')).toBe(false);
+  });
+
+  test('coincidixRuta torna la ruta única amb els seus paràmetres validats', () => {
+    const rutes = [{ path: 'tpv' }, { path: 'tpv/:dia', params: { dia: esData }, Unica: Area }];
+    expect(coincidixRuta(rutes, 'tpv/2026-10-06')).toEqual({ ruta: rutes[1], params: { dia: '2026-10-06' } });
+    expect(coincidixRuta(rutes, 'tpv/2026-02-30')).toBeNull();
   });
 });
 

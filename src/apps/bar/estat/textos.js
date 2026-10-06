@@ -1,9 +1,13 @@
 /**
  * El Bar · estat/textos.js — el que es diu a la persona quan una operació no
- * es fa. El text ix del `codi` de l'error (nucli, magatzem o magatzemLocal),
- * mai d'un missatge tècnic: cap valor de negoci, cap clau, cap pila.
+ * es fa. El text ix del `codi` de l'error (nucli, magatzem, magatzemLocal o
+ * la guarda del permís de ProveidorBar), mai d'un missatge tècnic: cap valor
+ * de negoci, cap clau, cap pila.
+ *
+ * També l'avís de la sessió (avisDeSessio): per què el Bar ven o no ven ara.
  */
 const TEXTOS = Object.freeze({
+  SENSE_PERMIS: 'No tens permís per a fer-ho: no s’ha desat res.',
   SENSE_TORN: 'Cal obrir el torn abans de vendre.',
   TORN_OBERT: 'Ja hi ha un torn obert.',
   TORN_TANCAT: 'Este torn ja està tancat.',
@@ -39,4 +43,35 @@ export function textError(error) {
   const codi = error?.codi;
   if (codi && Object.hasOwn(TEXTOS, codi)) return TEXTOS[codi];
   return 'No s’ha pogut fer. Torna a provar-ho.';
+}
+
+/* Un avís per motiu del pont de sessió (useSessioApp, MOTIUS). `entra`: porta
+   el botó «Entra» (rutaEntrada). 'sessio' i 'lliure' no en tenen: en línia no
+   cal dir res. 'comprovant-desada' diu el mateix que 'comprovant', però el
+   Bar ven: el servidor comprova una sessió desada que encara no ha caigut. */
+const COMPROVANT = Object.freeze({ to: 'info', text: 'Comprovant la sessió…', entra: false });
+const AVISOS_SESSIO = Object.freeze({
+  'sense-sessio': Object.freeze({ to: 'avis', text: 'Entra per a vendre.', entra: true }),
+  comprovant: COMPROVANT,
+  'comprovant-desada': COMPROVANT,
+  'sense-permis': Object.freeze({ to: 'avis', text: 'Esta sessió no pot vendre.', entra: false }),
+  'mode-proves': Object.freeze({ to: 'info', text: 'Mode de proves: les vendes no estan lligades a cap compte.', entra: false }),
+  'fora-de-linia': Object.freeze({
+    to: 'info', text: 'Sense connexió: cada venda es desa en este dispositiu. La sessió es comprovarà quan torne la xarxa.', entra: false
+  })
+});
+
+/* Amb sessió (o en una app lliure) però sense xarxa. */
+const SENSE_CONNEXIO = Object.freeze({ to: 'info', text: 'Sense connexió: cada venda es desa en este dispositiu.', entra: false });
+
+/**
+ * L'avís de la sessió del Bar a partir del permís de l'estat (ProveidorBar,
+ * `permis`: { potEscriure, motiu, enLinia, modeProves, rutaEntrada }):
+ * { to, text, entra } o null si no cal dir res ('sessio' o 'lliure' en línia).
+ * Un sol avís: el motiu ja diu el més important.
+ */
+export function avisDeSessio(permis) {
+  const motiu = permis?.motiu;
+  if (typeof motiu === 'string' && Object.hasOwn(AVISOS_SESSIO, motiu)) return AVISOS_SESSIO[motiu];
+  return permis?.enLinia === false ? SENSE_CONNEXIO : null;
 }

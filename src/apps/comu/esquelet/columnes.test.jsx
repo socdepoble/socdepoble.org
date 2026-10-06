@@ -430,6 +430,155 @@ describe('forma="targetes" (UniversalCard)', () => {
   });
 });
 
+/* Correcció F3 (261006) · L'avís de la sessió DINS del marc de columna: la prop `avis` de les
+   tres columnes va a MarcColumna, que el pinta com a primer fill del cos (davall de la capçalera
+   i de les eines). Sense la prop, el DOM de sempre: les columnes de la Nevera (forma «targetes»,
+   destacats, afegit, detall, resum i peu) no canvien ni un node (Llei del Píxel). */
+describe('la prop avis (l’avís dins del marc)', () => {
+  const descriu = (element) => [
+    element.tagName.toLowerCase(),
+    ...[...element.classList].map((classe) => `.${classe}`),
+    ...['role', 'aria-label', 'tabindex'].filter((nom) => element.hasAttribute(nom)).map((nom) => `[${nom}=${element.getAttribute(nom)}]`)
+  ].join('');
+  /* L'estructura de cada marc: els seus fills i els fills del cos (on va l'avís). */
+  const esquema = (contenidor) => [...contenidor.querySelectorAll('.sdp-marc-columna')].map((marc) => ({
+    marc: [...marc.children].map(descriu),
+    cos: [...marc.querySelector(':scope > .sdp-marc-columna__cos').children].map(descriu)
+  }));
+  const DESTACATS = [{ id: 'recents', nom: 'Recents', articles: [ARTICLES[2]] }];
+  const AUTORIA = { nom: 'Sóc de Poble', href: '/projecte' };
+  /* Les tres columnes com les munta la Nevera (vistes/Compra.jsx): La compra primer. */
+  const nevera = (props = {}) => (
+    <>
+      <ColumnaColleccions titol="Les meues llistes" colleccions={[{ id: 'casa', nom: 'Casa', comptador: 2 }]} actiu="casa"
+        hrefDe={(c) => `/app/nevera/llista/${c.id}`} onCrea={() => {}} textCrea="Crea una llista" {...props} />
+      <ColumnaColleccio forma="targetes" titol="Casa" primer="colleccio" linies={LINIES.map((l) => ({ ...l, autoria: AUTORIA }))}
+        resum={{ etiqueta: 'Per comprar', comptador: 2, textComptador: (n) => `${n} articles` }} onTria={() => {}} onEdita={() => {}}
+        peu={<p>Les dades no ixen d’este dispositiu.</p>} {...props} />
+      <ColumnaCataleg forma="targetes" titol="Catàleg" primer="colleccio" categories={CATEGORIES}
+        articles={ARTICLES.map((a) => ({ ...a, autoria: AUTORIA }))} destacats={DESTACATS} commutable
+        textosEstat={{ 'en-colleccio': 'A la llista' }} onTria={() => {}} afegit={{ etiqueta: 'Necessite…', suggeriments: ARTICLES }}
+        detall={{ ambQuantitat: false }} resum={{ etiqueta: 'Casa', comptador: 2, textComptador: (n) => `${n} articles` }} {...props} />
+    </>
+  );
+
+  test('Llei del Píxel (ample): sense avís, el marc de les columnes de la Nevera és el de sempre', () => {
+    const { container } = munta(nevera(), { ruta: '/app/nevera/llista/casa' });
+    expect(esquema(container)).toMatchInlineSnapshot(`
+      [
+        {
+          "cos": [
+            "div.sdp-targetes-colleccions",
+          ],
+          "marc": [
+            "div.sdp-marc-columna__cap",
+            "div.sdp-marc-columna__cos[role=region][aria-label=Les meues llistes][tabindex=0]",
+          ],
+        },
+        {
+          "cos": [
+            "div.sdp-card-grid[role=group][aria-label=Casa]",
+          ],
+          "marc": [
+            "div.sdp-marc-columna__cap",
+            "div.sdp-marc-columna__eines",
+            "div.sdp-marc-columna__cos[role=region][aria-label=Casa][tabindex=0]",
+            "div.sdp-marc-columna__peu",
+          ],
+        },
+        {
+          "cos": [
+            "div.sdp-seccions",
+            "dialog.sdp-dialeg.sdp-dialeg--m",
+          ],
+          "marc": [
+            "div.sdp-marc-columna__cap",
+            "div.sdp-marc-columna__eines",
+            "div.sdp-marc-columna__cos[role=region][aria-label=Catàleg][tabindex=0]",
+          ],
+        },
+      ]
+    `);
+  });
+
+  test('Llei del Píxel (estret): sense avís, el marc de les columnes de la Nevera és el de sempre (amb el peu)', () => {
+    const { container } = munta(nevera(), { ruta: '/app/nevera/llista/casa', mida: 'estret' });
+    expect(esquema(container)).toMatchInlineSnapshot(`
+      [
+        {
+          "cos": [
+            "div.sdp-targetes-colleccions",
+          ],
+          "marc": [
+            "div.sdp-marc-columna__cap",
+            "div.sdp-marc-columna__cos[role=region][aria-label=Les meues llistes][tabindex=0]",
+          ],
+        },
+        {
+          "cos": [
+            "div.sdp-card-grid[role=group][aria-label=Casa]",
+          ],
+          "marc": [
+            "div.sdp-marc-columna__cap",
+            "div.sdp-marc-columna__eines",
+            "div.sdp-marc-columna__cos[role=region][aria-label=Casa][tabindex=0]",
+            "div.sdp-marc-columna__peu",
+          ],
+        },
+        {
+          "cos": [
+            "div.sdp-seccions",
+            "dialog.sdp-dialeg.sdp-dialeg--m",
+          ],
+          "marc": [
+            "div.sdp-marc-columna__cap",
+            "div.sdp-marc-columna__eines",
+            "div.sdp-marc-columna__cos[role=region][aria-label=Catàleg][tabindex=0]",
+            "div.sdp-marc-columna__peu",
+          ],
+        },
+      ]
+    `);
+  });
+
+  /* Una còpia de l'arbre sense el número dels useId (:r4f:), que cada muntatge torna a comptar:
+     dos arbres es comparen node a node amb isEqualNode (etiquetes, atributs i text). */
+  const senseIds = (node) => {
+    const copia = node.cloneNode(true);
+    for (const element of [copia, ...copia.querySelectorAll('*')]) {
+      for (const { name, value } of [...element.attributes]) element.setAttribute(name, value.replace(/:r[0-9a-z]+:/g, ':id:'));
+    }
+    return copia;
+  };
+
+  test.each(['ample', 'estret'])('avis={null} (%s): el mateix arbre, node a node, que sense la prop', (mida) => {
+    const sempre = senseIds(munta(nevera(), { ruta: '/app/nevera/llista/casa', mida }).container);
+    cleanup();
+    const ambNull = senseIds(munta(nevera({ avis: null }), { ruta: '/app/nevera/llista/casa', mida }).container);
+    expect(ambNull.querySelectorAll('*').length).toBe(sempre.querySelectorAll('*').length);
+    expect(ambNull.isEqualNode(sempre)).toBe(true);
+  });
+
+  test.each(['ample', 'estret'])('amb avís (%s): primer fill del cos de cada columna, la capçalera sense res damunt i la resta igual', (mida) => {
+    const sempre = munta(nevera(), { ruta: '/app/nevera/llista/casa', mida }).container;
+    const marcsDeSempre = [...sempre.querySelectorAll('.sdp-marc-columna')].map(senseIds);
+    cleanup();
+    const { container } = munta(nevera({ avis: <p role="status">Mode de proves</p> }), { ruta: '/app/nevera/llista/casa', mida });
+    const marcs = [...container.querySelectorAll('.sdp-marc-columna')];
+    expect(marcs).toHaveLength(3);
+    expect(screen.getAllByText('Mode de proves')).toHaveLength(3);
+    marcs.forEach((marc, i) => {
+      expect(marc.firstElementChild.className).toBe('sdp-marc-columna__cap');
+      const avis = marc.querySelector(':scope > .sdp-marc-columna__cos').firstElementChild;
+      expect([avis.tagName, avis.getAttribute('role'), avis.textContent]).toEqual(['P', 'status', 'Mode de proves']);
+      /* L'avís és l'únic node nou: llevat (en una còpia), el marc és el de sempre. */
+      const copia = senseIds(marc);
+      copia.querySelector(':scope > .sdp-marc-columna__cos').firstElementChild.remove();
+      expect(copia.isEqualNode(marcsDeSempre[i])).toBe(true);
+    });
+  });
+});
+
 describe('ColumnaColleccions', () => {
   test('les targetes són enllaços dins de l’app; el clic navega amb push', () => {
     munta(<ColumnaColleccions titol="Tiquets oberts" colleccions={[{ id: 'barra', nom: 'Barra', comptador: 2 }, { id: 't3', nom: 'Taula 3', comptador: 5 }]}

@@ -3,13 +3,20 @@
    Bar §A.13, vistes): obrir el torn, la comanda ràpida de punta a punta
    (tocar, cobrar exacte i veure el tiquet a l'historial), les taules,
    dividir a parts, una devolució i el tancament amb diferència de caixa i
-   la lectura obligatòria del traspàs en obrir el torn següent. */
+   la lectura obligatòria del traspàs en obrir el torn següent.
+   La sessió va SEMPRE fixada a l'entorn (ProveidorPlataforma, entorn.sessio):
+   el permís «escriure: 'sessio'» és de tot el Bar (ordre del Mestre, 261006),
+   i les proves que venen ho fan amb la sessió dins i en línia. Les del
+   permís (sense sessió en mode remot, mode de proves, sense xarxa amb la
+   sessió desada i la guarda de l'estat) són a «el permís de sessió». */
 import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { muntaPlataforma, ENTORN_OBERT } from '../plataforma/__fixtures__/munta.jsx';
+import { ProveidorApp } from '../plataforma/PlataformaContext.jsx';
 import { creaRegistre } from '../plataforma/registreApps.js';
 import manifestBar from './manifest.js';
 import AppBar from './AppBar.jsx';
+import { ProveidorBar, useBar } from './estat/ProveidorBar.jsx';
 import { creaMagatzemBar } from './magatzem.js';
 import { obriTorn } from './nucli/torn.js';
 import { costEscandall } from './nucli/escandall.js';
@@ -17,7 +24,13 @@ import { ESTABLIMENT_EXEMPLE, llavorCarta } from './nucli/llavor.js';
 import { afegeixProducte, creaComanda, totals } from './nucli/comanda.js';
 import { afegeixPagament, tanca } from './nucli/cobrament.js';
 
-const ENTORN = Object.freeze({ ...ENTORN_OBERT, produccio: false });
+/* La sessió de cada prova: dins i en línia (venen), sense sessió en mode remot,
+   en mode de proves, i sense xarxa amb la sessió desada en el dispositiu. */
+const BASE = Object.freeze({ ...ENTORN_OBERT, produccio: false });
+const ENTORN = Object.freeze({ ...BASE, sessio: { estat: 'dins', enLinia: true, modeProves: false } });
+const SENSE_SESSIO = Object.freeze({ ...BASE, sessio: { estat: 'fora', enLinia: true, modeProves: false } });
+const MODE_PROVES = Object.freeze({ ...BASE, sessio: { estat: 'fora', enLinia: true, modeProves: true } });
+const FORA_DE_LINIA = Object.freeze({ ...BASE, sessio: { estat: 'fora', enLinia: false, modeProves: false, recuperable: true } });
 
 function rellotgeDeProva() {
   let ms = Date.parse('2026-10-02T08:00:00.000Z');
@@ -46,12 +59,12 @@ async function magatzemDeProva({ ambTorn = true, fons = 0 } = {}) {
   return magatzem;
 }
 
-function munta(url, magatzem) {
+function munta(url, magatzem, entorn = ENTORN) {
   const rellotge = rellotgeDeProva();
   const atzar = atzarDeProva();
   const App = () => <AppBar magatzem={magatzem} rellotge={rellotge} atzar={atzar} />;
   const registre = creaRegistre({ internes: [{ ...manifestBar, carrega: () => Promise.resolve({ default: App }) }] });
-  return muntaPlataforma(url, { registre, entorn: ENTORN });
+  return muntaPlataforma(url, { registre, entorn });
 }
 
 const columna = (id) => within(document.getElementById(id));
@@ -571,5 +584,379 @@ describe('el tancament (§A.6, flux 6)', () => {
     fireEvent.click(torn.getByRole('button', { name: 'L’he llegida' }));
     expect(await torn.findByLabelText(/Qui obri el torn/)).toBeTruthy();
     expect((await magatzem.base.obte('meta', 'traspas')).valor).toMatchObject({ llegidaPer: 'Cambrera 2' });
+  });
+});
+
+/* Ordre del Mestre, 261006: el permís «escriure: 'sessio'» és de TOT el Bar.
+   Sense sessió en mode remot es mira i no s'escriu; en mode de proves i sense
+   xarxa amb la sessió desada, es ven, i l'avís de la sessió ho diu. */
+describe('el permís de sessió (tot el Bar)', () => {
+  const ENTRA = 'Entra per a vendre.';
+  const PROVES = 'Mode de proves: les vendes no estan lligades a cap compte.';
+  const FORA_AMB_DESADA = 'Sense connexió: cada venda es desa en este dispositiu. La sessió es comprovarà quan torne la xarxa.';
+  const SENSE_CONNEXIO = 'Sense connexió: cada venda es desa en este dispositiu.';
+  const SENSE_PERMIS = 'No tens permís per a fer-ho: no s’ha desat res.';
+  const ARA = '2026-10-02T07:30:00.000Z';
+  const CAFE = llavorCarta().productes.find((p) => p.id === 'cafe-sol');
+  const ambUnCafe = (id) => afegeixProducte(creaComanda({ id, tornId: 'torn-prova', origen: { tipus: 'barra' }, ara: ARA, per: 'Cambrer 1' }),
+    { producte: CAFE, ivaPerDefecte: 10 }, { ara: ARA, idLinia: `l-${id}` });
+  const tpv = () => screen.findByRole('region', { name: 'TPV del meu bar' });
+  const rajolesDelTpv = () => within(screen.getByRole('list', { name: /^Productes/ })).getAllByRole('button');
+
+  test('amb sessió i en línia no hi ha cap avís: la pantalla és la de sempre', async () => {
+    const magatzem = await magatzemDeProva();
+    munta('/app/bar/caixa', magatzem);
+    await screen.findByRole('region', { name: 'Productes' });
+    /* L'única alerta és la de la base de sempre (este magatzem de proves no persistix). */
+    expect([...document.querySelectorAll('.sdp-alerta')].map((alerta) => alerta.textContent)).toEqual([
+      'Les dades no es guardenEste navegador no deixa guardar res: el que faces durarà fins que tanques la pestanya.'
+    ]);
+    for (const text of [ENTRA, PROVES, FORA_AMB_DESADA, SENSE_CONNEXIO, 'Comprovant la sessió…', 'Esta sessió no pot vendre.']) {
+      expect(screen.queryByText(text)).toBeNull();
+    }
+    expect(producte('Cafè sol').disabled).toBe(false);
+  });
+
+  test('sense sessió en mode remot: el torn no s’obri, l’avís ho diu una vegada i «Entra» porta a entrar', async () => {
+    const magatzem = await magatzemDeProva({ ambTorn: false });
+    munta('/app/bar/caixa', magatzem, SENSE_SESSIO);
+    expect((await screen.findAllByText('El torn està tancat')).length).toBeGreaterThanOrEqual(2);
+    /* Una sola vegada per pantalla: la columna del detall el pinta; les laterals, només en estret. */
+    expect(screen.getByText(ENTRA)).toBeTruthy();
+    expect(columna('app-grid-main').getByRole('button', { name: 'Obri el torn' }).disabled).toBe(true);
+    await ves('/app/bar/torn');
+    const detall = columna('app-grid-main');
+    fireEvent.change(await detall.findByLabelText(/Qui obri el torn/), { target: { value: 'Cambrer 1' } });
+    const obri = detall.getByRole('button', { name: 'Obri el torn' });
+    expect(obri.disabled).toBe(true);
+    fireEvent.click(obri);
+    await act(async () => {});
+    expect(await magatzem.base.totes('torns')).toEqual([]);
+    expect(screen.getByText(ENTRA)).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Entra' }));
+    expect(ubicacio()).toBe('/registre?mode=entrar&tornar=%2Fapp%2Fbar%2Ftorn');
+  });
+
+  test('sense sessió en mode remot: la Caixa, el cobrament i el TPV es miren però no venen', async () => {
+    const magatzem = await magatzemDeProva();
+    await magatzem.desaComanda(ambUnCafe('c-oberta'));
+    munta('/app/bar/caixa/c-oberta', magatzem, SENSE_SESSIO);
+    await screen.findByRole('region', { name: 'Productes' });
+    expect(screen.getByText(ENTRA)).toBeTruthy();
+    /* Les rajoles desactivades (el lector diu per què) i la comanda, de només lectura. */
+    const tallat = producte('Tallat');
+    expect(tallat.disabled).toBe(true);
+    expect(document.getElementById(tallat.getAttribute('aria-describedby').split(' ')[0]).textContent).toBe('Ara no es pot vendre');
+    fireEvent.click(tallat);
+    const llista = columna('app-grid-list');
+    expect(llista.getByText('Cafè sol')).toBeTruthy();
+    expect(llista.queryByRole('button', { name: 'Suma una unitat: Cafè sol' })).toBeNull();
+    expect(llista.getByRole('button', { name: 'Marxa' }).disabled).toBe(true);
+    expect(llista.getByRole('button', { name: 'Cobra' }).disabled).toBe(true);
+    expect(screen.queryByRole('button', { name: 'Nou tiquet de barra' })).toBeNull();
+    /* Ni per la consulta: l'editor de la línia no s'obri. */
+    await ves('/app/bar/caixa/c-oberta?linia=l-c-oberta');
+    expect(screen.queryByRole('dialog', { name: '1 × Cafè sol' })).toBeNull();
+
+    await ves('/app/bar/caixa/c-oberta/cobrar');
+    const cobrament = columna('app-grid-main');
+    expect((await cobrament.findByRole('button', { name: /^Exacte en efectiu/ })).disabled).toBe(true);
+    expect(cobrament.getByRole('button', { name: /^1,20/ }).disabled).toBe(true);
+    expect(screen.getByText(ENTRA)).toBeTruthy();
+
+    await ves('/app/bar/tpv');
+    const regio = await tpv();
+    expect(within(regio).getByText(ENTRA)).toBeTruthy();
+    expect(rajolesDelTpv().every((boto) => boto.disabled)).toBe(true);
+    fireEvent.click(within(regio).getByRole('button', { name: /^Tallat,/ }));
+    await act(async () => {});
+    expect((await magatzem.base.totes('comandes')).map((c) => [c.id, c.linies.length])).toEqual([['c-oberta', 1]]);
+    expect(await magatzem.tiquetsDelTorn('torn-prova')).toEqual([]);
+  });
+
+  /* Correcció de la revisió (261006): en una Columna (comu.jsx), l'avís va dins
+     del cos, davall de la capçalera, i la capçalera queda alineada amb les del
+     costat. Correcció F3 (261006): en les columnes de l'esquelet comú, també
+     (la prop `avis`, que MarcColumna pinta al principi del cos). */
+  test('l’avís de la sessió va dins del cos, davall de la capçalera, en la Columna i en la columna de l’esquelet', async () => {
+    const magatzem = await magatzemDeProva();
+    await magatzem.desaComanda(ambUnCafe('c-oberta'));
+    munta('/app/bar/caixa/c-oberta/cobrar', magatzem, SENSE_SESSIO);
+    await screen.findByRole('button', { name: /^Exacte en efectiu/ });
+    const detall = document.getElementById('app-grid-main');
+    const alerta = columna('app-grid-main').getByText(ENTRA).closest('.sdp-alerta');
+    /* La mateixa ranura que l'esquelet (el primer fill del cos, fora de la Pila): el mateix espai davall. */
+    expect(alerta.parentElement.className).toBe('sdp-marc-columna__cos');
+    expect(alerta.parentElement.firstElementChild).toBe(alerta);
+    expect(detall.querySelector(':scope > .sdp-alerta')).toBeNull();
+    expect(detall.firstElementChild.className).toContain('sdp-marc-columna');
+    expect(screen.getAllByText(ENTRA)).toHaveLength(1);
+    /* El catàleg de la Caixa és ColumnaCataleg: l'avís, una sola vegada, primer fill del cos. */
+    await ves('/app/bar/caixa/c-oberta');
+    const cataleg = await columna('app-grid-main').findByRole('region', { name: 'Productes' });
+    expect(document.getElementById('app-grid-main').querySelector(':scope > .sdp-alerta')).toBeNull();
+    expect(document.getElementById('app-grid-main').firstElementChild.firstElementChild.className).toBe('sdp-marc-columna__cap');
+    expect(cataleg.firstElementChild.textContent).toContain(ENTRA);
+    expect(screen.getAllByText(ENTRA)).toHaveLength(1);
+    /* I de tornada a la Columna del cobrament, continua dins del cos. */
+    await ves('/app/bar/caixa/c-oberta/cobrar');
+    await columna('app-grid-main').findByRole('button', { name: /^Exacte en efectiu/ });
+    expect(document.getElementById('app-grid-main').querySelector(':scope > .sdp-alerta')).toBeNull();
+    expect(screen.getAllByText(ENTRA)).toHaveLength(1);
+  });
+
+  test('en pantalla estreta, la comanda (la llista del mig) també porta l’avís: és l’única columna que es veu', async () => {
+    ambAmplada(375);
+    const magatzem = await magatzemDeProva();
+    munta('/app/bar/caixa/colleccio', magatzem, SENSE_SESSIO);
+    /* En estret el panell del mig tapa el detall (aria-hidden): es busca pel text, no per la regió. */
+    await waitFor(() => expect(columna('app-grid-list').getByText(ENTRA)).toBeTruthy());
+    expect(columna('app-grid-main').getByText(ENTRA)).toBeTruthy();
+  });
+
+  test('mode de proves (seed o local, on entrar és impossible): es ven i l’avís de proves hi és', async () => {
+    const magatzem = await magatzemDeProva();
+    munta('/app/bar/caixa', magatzem, MODE_PROVES);
+    await screen.findByRole('region', { name: 'Productes' });
+    expect(screen.getByText(PROVES)).toBeTruthy();
+    expect(screen.queryByText(ENTRA)).toBeNull();
+    fireEvent.click(producte('Cafè sol'));
+    await waitFor(() => expect(columna('app-grid-list').getByText('Cafè sol')).toBeTruthy());
+    fireEvent.click(columna('app-grid-list').getByRole('button', { name: 'Cobra' }));
+    fireEvent.click(await columna('app-grid-main').findByRole('button', { name: /^Exacte en efectiu/ }));
+    await screen.findByRole('dialog', { name: 'Nota de consum · no és factura' });
+    expect(await magatzem.tiquetsDelTorn('torn-prova')).toHaveLength(1);
+
+    await ves('/app/bar/tpv');
+    const regio = await tpv();
+    expect(within(regio).getByText(PROVES)).toBeTruthy();
+    fireEvent.click(within(regio).getByRole('button', { name: /^Tallat,/ }));
+    await waitFor(async () => expect((await magatzem.base.totes('comandes')).map((c) => c.linies.length)).toEqual([1]));
+  });
+
+  test('sense xarxa amb la sessió desada en este dispositiu: es ven i l’avís diu que es comprovarà', async () => {
+    const magatzem = await magatzemDeProva();
+    munta('/app/bar/caixa', magatzem, FORA_DE_LINIA);
+    await screen.findByRole('region', { name: 'Productes' });
+    expect(screen.getByText(FORA_AMB_DESADA)).toBeTruthy();
+    fireEvent.click(producte('Cafè sol'));
+    await waitFor(() => expect(columna('app-grid-list').getByText('Cafè sol')).toBeTruthy());
+    expect(await magatzem.base.totes('comandes')).toHaveLength(1);
+
+    await ves('/app/bar/tpv');
+    const regio = await tpv();
+    expect(within(regio).getByText(FORA_AMB_DESADA)).toBeTruthy();
+    expect(rajolesDelTpv().some((boto) => boto.disabled)).toBe(false);
+  });
+
+  test('sense xarxa amb sessió, ho diu i ven; sense xarxa i sense cap sessió desada, no ven', async () => {
+    const magatzem = await magatzemDeProva();
+    munta('/app/bar/caixa', magatzem, { ...BASE, sessio: { estat: 'dins', enLinia: false, modeProves: false } });
+    await screen.findByRole('region', { name: 'Productes' });
+    expect(screen.getByText(SENSE_CONNEXIO)).toBeTruthy();
+    expect(producte('Cafè sol').disabled).toBe(false);
+    cleanup();
+
+    /* Un magatzem nou: desmuntar el Bar tanca la base de l'anterior. */
+    munta('/app/bar/caixa', await magatzemDeProva(), { ...BASE, sessio: { estat: 'fora', enLinia: false, modeProves: false, recuperable: false } });
+    await screen.findByRole('region', { name: 'Productes' });
+    expect(screen.getByText(ENTRA)).toBeTruthy();
+    expect(producte('Cafè sol').disabled).toBe(true);
+  });
+
+  test('la guarda de l’estat: sense permís, cada escriptura refusa amb SENSE_PERMIS i res no canvia; les lectures, no', async () => {
+    const magatzem = await magatzemDeProva();
+    await magatzem.desaComanda(ambUnCafe('c-oberta'));
+    const sonda = { bar: null };
+    function Sonda() {
+      sonda.bar = useBar();
+      return null;
+    }
+    muntaPlataforma('/app/bar/caixa', {
+      entorn: SENSE_SESSIO,
+      fills: (
+        <ProveidorApp manifest={manifestBar}>
+          <ProveidorBar magatzem={magatzem} rellotge={rellotgeDeProva()} atzar={atzarDeProva()}><Sonda /></ProveidorBar>
+        </ProveidorApp>
+      )
+    });
+    await waitFor(() => expect(sonda.bar?.carregat).toBe(true));
+    expect(sonda.bar.permis).toEqual({
+      potEscriure: false, motiu: 'sense-sessio', enLinia: true, modeProves: false, rutaEntrada: '/registre?mode=entrar&tornar=%2Fapp%2Fbar%2Fcaixa'
+    });
+    const abans = await magatzem.bolca();
+    const { accions } = sonda.bar;
+    const escriptures = {
+      obriTorn: () => accions.obriTorn({ per: 'Cambrer 2', fonsInicialCents: 0 }),
+      llegeixTraspas: () => accions.llegeixTraspas({ per: 'Cambrer 2' }),
+      novaComanda: () => accions.novaComanda({ tipus: 'barra' }),
+      afegeix: () => accions.afegeix({ comandaId: 'c-oberta' }, { producte: CAFE }),
+      canviaQuantitat: () => accions.canviaQuantitat('c-oberta', 'l-c-oberta', 3),
+      sumaQuantitat: () => accions.sumaQuantitat('c-oberta', 'l-c-oberta', 1),
+      canviaNota: () => accions.canviaNota('c-oberta', 'l-c-oberta', 'Curt'),
+      marxa: () => accions.marxa('c-oberta'),
+      anulla: () => accions.anulla('c-oberta', 'l-c-oberta', { motiu: 'Prova', quantitat: 1 }),
+      descompte: () => accions.descompte('c-oberta', 'l-c-oberta', { tipus: 'percent', valor: 10, motiu: 'Prova' }),
+      convida: () => accions.convida('c-oberta', 'l-c-oberta', 'Prova'),
+      paga: () => accions.paga('c-oberta', { metode: 'efectiu', importCents: 120, lliuratCents: 120 }),
+      tanca: () => accions.tanca('c-oberta'),
+      descarta: () => accions.descarta('c-oberta'),
+      mou: () => accions.mou('c-oberta', { origen: { tipus: 'barra' } }, [{ liniaId: 'l-c-oberta' }]),
+      divideix: () => accions.divideix('c-oberta', [{ liniaId: 'l-c-oberta', quantitat: 1 }]),
+      retorna: () => accions.retorna('c-venuda', [], { motiu: 'Prova', metode: 'efectiu' }),
+      moviment: () => accions.moviment({ tipus: 'entrada', importCents: 100, motiu: 'Prova' }),
+      desaEsborranyTancament: () => accions.desaEsborranyTancament({ fonsDeixatCents: 500 }),
+      tancaTorn: () => accions.tancaTorn(),
+      desaCarta: () => accions.desaCarta(llavorCarta()),
+      carregaLlavor: () => accions.carregaLlavor('exemple'),
+      desaEstabliment: () => accions.desaEstabliment({ ...ESTABLIMENT_EXEMPLE, nom: 'Un altre bar' })
+    };
+    for (const [nom, escriptura] of Object.entries(escriptures)) {
+      let resultat = null;
+      await act(async () => {
+        resultat = await escriptura();
+      });
+      expect([nom, resultat.ok, resultat.error?.codi]).toEqual([nom, false, 'SENSE_PERMIS']);
+    }
+    expect(sonda.bar.avis).toBe(SENSE_PERMIS);
+    expect(await magatzem.bolca()).toEqual(abans);
+    /* Mirar sempre es pot. */
+    expect(await sonda.bar.accions.tiquetsDelTorn('torn-prova')).toEqual([]);
+    expect(await sonda.bar.accions.bolca()).toEqual(abans);
+    await act(async () => {
+      sonda.bar.accions.oblidaAvis();
+    });
+    expect(sonda.bar.avis).toBeNull();
+  });
+});
+
+describe('la Caixa no canvia de destí sense ?torna=tpv (Llei del Píxel)', () => {
+  test('cobrar a la Caixa porta a la nota, i tancar-la deixa el tiquet amb «Torna a la caixa»', async () => {
+    const magatzem = await magatzemDeProva();
+    await ambUnProducte(magatzem, 'Cafè sol');
+    fireEvent.click(columna('app-grid-list').getByRole('button', { name: 'Cobra' }));
+    expect(await columna('app-grid-main').findByRole('button', { name: 'Torna a la comanda' })).toBeTruthy();
+    fireEvent.click(await columna('app-grid-main').findByRole('button', { name: /^Exacte en efectiu/ }));
+    const nota = await screen.findByRole('dialog', { name: 'Nota de consum · no és factura' });
+    const [venut] = await magatzem.tiquetsDelTorn('torn-prova');
+    expect(ubicacio()).toBe(`/app/bar/tiquets/${venut.id}?nota=1`);
+    fireEvent.click(within(nota).getByRole('button', { name: 'Tanca la nota' }));
+    await waitFor(() => expect(ubicacio()).toBe(`/app/bar/tiquets/${venut.id}`));
+    fireEvent.click(columna('app-grid-main').getByRole('button', { name: 'Torna a la caixa' }));
+    expect(ubicacio()).toBe('/app/bar/caixa');
+  });
+
+  test('un ?torna que no és «tpv» no es llig: la Caixa fa el de sempre', async () => {
+    const magatzem = await magatzemDeProva();
+    await ambUnProducte(magatzem, 'Cafè sol');
+    const [comanda] = await comandesDe(magatzem);
+    await ves(`/app/bar/caixa/${comanda.id}/cobrar?torna=caixa`);
+    expect(await columna('app-grid-main').findByRole('button', { name: 'Torna a la comanda' })).toBeTruthy();
+    fireEvent.click(await columna('app-grid-main').findByRole('button', { name: /^Exacte en efectiu/ }));
+    await screen.findByRole('dialog', { name: 'Nota de consum · no és factura' });
+    expect(ubicacio()).toBe(`/app/bar/tiquets/${comanda.id}?nota=1`);
+  });
+});
+
+/* Correcció F3 (261006) · L'avís de la sessió DINS de les columnes de l'esquelet comú: la vista
+   el passa a la prop `avis` (AvisDeLaColumna) i MarcColumna el pinta com a primer fill del cos.
+   Cap avís és germà del marc: la capçalera de cada columna és el primer fill del seu marc i les
+   barres de capçalera de la closca continuen alineades (jsdom no mesura: es mira el DOM). */
+describe('l’avís de la sessió dins del marc de cada columna (correcció F3)', () => {
+  const PROVES = 'Mode de proves: les vendes no estan lligades a cap compte.';
+  const COLUMNES = ['app-grid-sidebar', 'app-grid-list', 'app-grid-main'];
+  const muntada = (id) => document.getElementById(id)?.firstElementChild || null;
+  const avisos = () => screen.queryAllByText(PROVES).map((text) => text.closest('.sdp-alerta'));
+  /* Cada columna muntada comença pel marc, i el marc per la capçalera; cap alerta fora d'un cos. */
+  const comprovaMarcs = (url) => {
+    for (const id of COLUMNES) {
+      const marc = muntada(id);
+      if (!marc) continue;
+      expect(marc.className, `${url} #${id}`).toContain('sdp-marc-columna');
+      expect(marc.firstElementChild.className, `${url} #${id}`).toBe('sdp-marc-columna__cap');
+      expect(document.getElementById(id).querySelector(':scope > .sdp-alerta'), `${url} #${id}`).toBeNull();
+    }
+    /* El primer fill del cos, directe, en les dues menes de columna (l'esquelet i la Columna del
+       Bar): la mateixa ranura de MarcColumna, i per tant el mateix espai davall de l'avís. */
+    for (const alerta of avisos()) {
+      const cos = alerta.closest('.sdp-marc-columna__cos');
+      expect(cos, url).toBeTruthy();
+      expect(cos.firstElementChild, url).toBe(alerta);
+    }
+  };
+
+  /* En ample, una sola vegada per pantalla: la columna del detall. També on el detall no porta
+     Preparat (Tria un tiquet, un torn, un producte): la Columna hi passa <AvisSessio />. */
+  const PANTALLES = [
+    ['/app/bar/caixa', 'app-grid-main'],
+    ['/app/bar/taules', 'app-grid-main'],
+    ['/app/bar/tiquets', 'app-grid-main'],
+    ['/app/bar/torn', 'app-grid-main'],
+    ['/app/bar/tancament', 'app-grid-main'],
+    ['/app/bar/torns', 'app-grid-main'],
+    ['/app/bar/productes', 'app-grid-main'],
+    ['/app/bar/modificadors', 'app-grid-main'],
+    ['/app/bar/escandalls', 'app-grid-main'],
+    ['/app/bar/ingredients', 'app-grid-main'],
+    ['/app/bar/ajustos', 'app-grid-main']
+  ];
+  test.each(PANTALLES)('ample, %s: l’avís dins del marc (%s), una sola vegada, mai damunt', async (url, columnaAvis) => {
+    munta(url, await magatzemDeProva(), MODE_PROVES);
+    await waitFor(() => expect(screen.queryByText('Carregant el bar…')).toBeNull());
+    await act(async () => {});
+    comprovaMarcs(url);
+    expect(avisos(), url).toHaveLength(1);
+    expect(avisos()[0].closest('.app-grid-column').id, url).toBe(columnaAvis);
+  });
+
+  /* En tauleta («mitja»: la llista i el detall), igual: la llista només el porta en estret. */
+  test.each([['/app/bar/tiquets'], ['/app/bar/torns'], ['/app/bar/productes'], ['/app/bar/ajustos']])('tauleta, %s: una sola vegada, al detall', async (url) => {
+    ambAmplada(800);
+    munta(url, await magatzemDeProva(), MODE_PROVES);
+    await waitFor(() => expect(screen.queryByText('Carregant el bar…')).toBeNull());
+    await act(async () => {});
+    comprovaMarcs(url);
+    expect(avisos().map((alerta) => alerta.closest('.app-grid-column').id), url).toEqual(['app-grid-main']);
+  });
+
+  /* Llei del Píxel: amb sessió i en línia, «Tria…» és la Columna de sempre (cap alerta, el cos comença per la Pila). */
+  test.each([['/app/bar/tiquets'], ['/app/bar/torns'], ['/app/bar/productes']])('amb sessió, %s: el detall no canvia ni un node', async (url) => {
+    munta(url, await magatzemDeProva());
+    await waitFor(() => expect(screen.queryByText('Carregant el bar…')).toBeNull());
+    await act(async () => {});
+    const detall = document.getElementById('app-grid-main');
+    expect(detall.querySelector('.sdp-alerta'), url).toBeNull();
+    const cos = detall.querySelector('.sdp-marc-columna__cos');
+    expect([...cos.children].map((fill) => [...fill.classList]), url).toEqual([['sdp-pila', 'sdp-pila--espai-4']]);
+  });
+
+  /* En estret, els apartats dels ajustos (fora de cap Preparat) el porten quan són el panell que es veu. */
+  test('estret, /app/bar/ajustos: la llista dels apartats i el detall el porten dins del seu marc', async () => {
+    ambAmplada(375);
+    munta('/app/bar/ajustos', await magatzemDeProva(), MODE_PROVES);
+    await waitFor(() => expect(columna('app-grid-list').getByText(PROVES)).toBeTruthy());
+    comprovaMarcs('/app/bar/ajustos');
+    expect(avisos().map((alerta) => alerta.closest('.app-grid-column').id).sort()).toEqual(['app-grid-list', 'app-grid-main']);
+  });
+
+  test('ample, la Caixa: les tres capçaleres sense cap germà damunt, i l’avís davall de les eines del catàleg', async () => {
+    const magatzem = await magatzemDeProva();
+    munta('/app/bar/caixa', magatzem, MODE_PROVES);
+    await screen.findByRole('region', { name: 'Productes' });
+    comprovaMarcs('/app/bar/caixa');
+    for (const id of COLUMNES) expect(muntada(id).previousElementSibling, id).toBeNull();
+    const [alerta] = avisos();
+    const marc = alerta.closest('.sdp-marc-columna');
+    expect([...marc.children].map((fill) => fill.className)).toEqual(['sdp-marc-columna__cap', 'sdp-marc-columna__eines', 'sdp-marc-columna__cos']);
+    expect(marc.querySelector('.sdp-marc-columna__cos')).toBe(screen.getByRole('region', { name: 'Productes' }));
+  });
+
+  /* En estret es veu una sola columna (o un panell): cada una el porta, com abans, ara dins del marc. */
+  test('estret: cada columna el porta dins del seu marc (els tiquets oberts, la comanda i el catàleg)', async () => {
+    ambAmplada(375);
+    munta('/app/bar/caixa/colleccio', await magatzemDeProva(), MODE_PROVES);
+    await waitFor(() => expect(columna('app-grid-list').getByText(PROVES)).toBeTruthy());
+    comprovaMarcs('/app/bar/caixa/colleccio');
+    expect(avisos().map((alerta) => alerta.closest('.app-grid-column').id).sort()).toEqual(['app-grid-list', 'app-grid-main', 'app-grid-sidebar']);
   });
 });

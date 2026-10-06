@@ -232,3 +232,13 @@ REGISTRE.push({ nom: 'PaginaApp', fitxer: 'PedraSeca/organismes/PaginaApp.jsx', 
 /* D-D (ordre del Mestre, 261004) · El selector de fitxers de Pedra Seca: CampText tipus="file"
    hi delega. Espècimen: EspecimenCamp (formularis/camp). */
 REGISTRE.push({ nom: 'CampFitxer', fitxer: 'PedraSeca/organismes/formulari.jsx', pagina: 'formularis', estat: 'viu' });
+/* Ordre del Mestre, 261006 (prompt 261006_1215 i skill sdp-clon-loiverse) · el TPV universal:
+   l'estructura de Loyverse (tiquet a l'esquerra, graella de productes a la dreta) per al Bar
+   («Cobra») i per a la Llista de la Compra o el Rebost («Afig a la llista»). Espècimen:
+   EspecimenUniversalTPV (estructura/universal-tpv). */
+REGISTRE.push({ nom: 'UniversalTPV', fitxer: 'PedraSeca/organismes/UniversalTPV.jsx', pagina: 'estructura', estat: 'viu' });
+/* Ordre del Mestre, 261006 («deixa previst en el component de la targeta de producte l'espai i el
+   codi per a renderitzar aquestes xicotetes icones d'al·lèrgens») · les icones dels 14 al·lèrgens,
+   amb els dibuixos del Mestre, per a la rajola del TPV i la targeta de la Carta Digital.
+   Espècimen: EspecimenIconesAlergens (fonaments/icones-alergens). */
+REGISTRE.push({ nom: 'IconesAlergens', fitxer: 'PedraSeca/molecules/IconesAlergens.jsx', pagina: 'fonaments', estat: 'viu' });

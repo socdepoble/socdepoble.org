@@ -16,6 +16,9 @@
  *              Bar §A.6, flux 1). El toc normal l'obri amb obriDetall només
  *              si l'app ho decidix; si no, l'app afig la variant per defecte
  *   peu        en pantalla estreta, BarraResum, que porta a la col·lecció
+ *   avis       (opcional) un avís de l'app, dins del marc (MarcColumna): el
+ *              primer fill del cos, davall de la capçalera i de les eines.
+ *              Correcció F3 (261006): la capçalera no baixa. Sense, el de sempre
  * Tot l'estat de vista viu a la URL (vistes.js). Sense categories ni
  * destacats, el catàleg és una sola peça plana, sense seccions.
  *
@@ -201,7 +204,9 @@ export function ColumnaCataleg({
   onTria, commutable = false, textosEstat, renderMedia, plegades, onPlega, textArticles,
   afegit = null, detall = null, resum = null, primer, tram, textos,
   /* Ordre del Mestre, 261004 · 'targetes': UniversalCard (TargetesArticles). Sense, les rajoles i les files de sempre. */
-  forma
+  forma,
+  /* Correcció F3 (261006) · L'avís de l'app, dins del marc (MarcColumna). Sense, el de sempre. */
+  avis = null
 }) {
   const t = { ...TEXTOS_CATALEG, ...textos };
   const { mida } = useClosaAplicacio();
@@ -305,7 +310,7 @@ export function ColumnaCataleg({
 
   return (
     <MarcColumna capcalera={<AppGridColumn titol={titol} />} eines={selector || ambVistes || afegit ? eines : null}
-      peu={peu} etiqueta={titol}>
+      peu={peu} avis={avis} etiqueta={titol}>
       {articleFitxa ? (
         <FitxaArticle
           article={articleFitxa}

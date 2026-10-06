@@ -8,6 +8,13 @@
  *
  * Editar un producte li lleva la marca «preu d'exemple». Canviar la carta
  * no toca cap comanda ni cap tiquet: les línies congelen nom, preu i IVA.
+ * Els dos canals («A la carta digital» i «Per emportar») es llegixen amb
+ * canalsDe: un producte sense `canals` els té tots dos encesos, i només
+ * passa a portar-ne quan algú en toca un.
+ * Sense permís d'escriptura (ProveidorBar, permis.potEscriure) la carta es
+ * mira: «Desa el producte» queda desactivat i les categories no es mouen ni
+ * s'amaguen. L'avís de la sessió diu per què, dins del marc de cada columna
+ * (la prop `avis` de l'esquelet; correcció F3, 261006).
  */
 import { useState } from 'react';
 import { Calculator, Coffee } from 'lucide-react';
@@ -17,12 +24,13 @@ import {
 } from '../../../components/PedraSeca/index.js';
 import { ColumnaCataleg, ColumnaColleccio, ColumnaColleccions } from '../../comu/esquelet/index.js';
 import { formatEuros, parseEuros } from '../../../utils/diners.js';
+import { canalsDe } from '../../../utils/productes/producteUniversal.js';
 import { useInterruptorsApp } from '../../plataforma/index.js';
 import { ALERGENS, NOMS_ALERGENS, ivaDe, validaCataleg, variantDe } from '../nucli/cataleg.js';
 import { MICRO_PER_CENT, costDeVenda, costEscandall, costUnitariMicro, foodCostPermil, pvpSuggerit, textPermil } from '../nucli/escandall.js';
 import { mitjaAmunt } from '../nucli/comu.js';
 import { useBar } from '../estat/ProveidorBar.jsx';
-import { AvisOperacio, Columna, NoTrobat, Preparat } from './comu.jsx';
+import { AvisDeLaColumna, AvisOperacio, AvisSessio, Columna, NoTrobat, Preparat } from './comu.jsx';
 import { useVes } from './punt.js';
 import { articlesDeCarta, categoriesVestides, euros } from './vestits.js';
 
@@ -31,7 +39,7 @@ const textProductes = (n) => `${n} ${n === 1 ? 'producte' : 'productes'}`;
 
 export function ProductesCarta({ params }) {
   return (
-    <Preparat titol="Productes" ambTorn={false}>
+    <Preparat titol="Productes" ambTorn={false} avis="estret">
       <Productes params={params} />
     </Preparat>
   );
@@ -43,13 +51,15 @@ function Productes() {
   return (
     <ColumnaCataleg titol="Productes" categories={categoriesVestides(carta)} vistaPerDefecte="llista"
       articles={articlesDeCarta(carta, { establiment, ambInactius: true })}
-      textosEstat={{ desactivat: 'No actiu' }} textArticles={textProductes} onTria={(article) => ves('productes', article.id)} />
+      textosEstat={{ desactivat: 'No actiu' }} textArticles={textProductes} onTria={(article) => ves('productes', article.id)}
+      avis={<AvisDeLaColumna />} />
   );
 }
 
+/* Sense Preparat: l'avís de la sessió hi va ell mateix (el catàleg del costat només el porta en estret). */
 export function TriaProducte() {
   return (
-    <Columna titol="Producte">
+    <Columna titol="Producte" avis={<AvisSessio />}>
       <EstatBuit icona={Coffee} titol="Tria un producte">Preus, variants, al·lèrgens i si va a la reposició de la nevera.</EstatBuit>
     </Columna>
   );
@@ -71,7 +81,7 @@ function Editor({ params }) {
 }
 
 function FormulariProducte({ producte }) {
-  const { carta, accions } = useBar();
+  const { carta, accions, permis } = useBar();
   const [esborrany, setEsborrany] = useState(() => ({
     ...structuredClone(producte),
     preus: producte.variants.map((v) => ambEuros(v.preuCents))
@@ -128,13 +138,17 @@ function FormulariProducte({ producte }) {
       <Interruptor etiqueta="Actiu a la caixa" actiu={esborrany.actiu} onCanvi={(actiu) => canvia({ actiu })} />
       <Interruptor etiqueta="Va a la reposició de la nevera" actiu={esborrany.reposaNevera} onCanvi={(reposaNevera) => canvia({ reposaNevera })} />
       <Interruptor etiqueta="Preu obert (es tecleja en vendre)" actiu={esborrany.preuObert} onCanvi={(preuObert) => canvia({ preuObert })} />
+      <Interruptor etiqueta="A la carta digital" actiu={canalsDe(esborrany).cartaDigital}
+        onCanvi={(cartaDigital) => canvia({ canals: { ...canalsDe(esborrany), cartaDigital } })} />
+      <Interruptor etiqueta="Per emportar" actiu={canalsDe(esborrany).perEmportar}
+        onCanvi={(perEmportar) => canvia({ canals: { ...canalsDe(esborrany), perEmportar } })} />
       <GrupCamps llegenda="Al·lèrgens (els manté el bar)">
         {ALERGENS.map((a) => (
           <Casella key={a} etiqueta={NOMS_ALERGENS[a]} checked={esborrany.alergens.includes(a)}
             onChange={(event) => canvia({ alergens: event.target.checked ? [...esborrany.alergens, a] : esborrany.alergens.filter((x) => x !== a) })} />
         ))}
       </GrupCamps>
-      <Boto varietat="primari" ple onClick={desa}>Desa el producte</Boto>
+      <Boto varietat="primari" ple disabled={!permis.potEscriure} onClick={desa}>Desa el producte</Boto>
     </Columna>
   );
 }
@@ -148,22 +162,23 @@ export function CategoriesCarta() {
 }
 
 function Categories() {
-  const { carta, accions } = useBar();
+  const { carta, accions, permis } = useBar();
   const desa = (categories) => accions.desaCarta({ ...carta, categories });
+  const ordena = permis.potEscriure;
   return (
     <Columna titol="Categories">
       <AvisOperacio />
       <p>L’ordre és el de la caixa. Una categoria amagada no es veu al catàleg, però els seus productes no s’esborren.</p>
       <OrdenaCategories categories={categoriesVestides(carta)}
-        onMou={(id, direccio) => desa(mouCategoria(carta.categories, id, direccio))}
-        onVisibilitat={(id, visible) => desa(carta.categories.map((c) => (c.id === id ? { ...c, visible } : c)))} />
+        onMou={ordena ? (id, direccio) => desa(mouCategoria(carta.categories, id, direccio)) : undefined}
+        onVisibilitat={ordena ? (id, visible) => desa(carta.categories.map((c) => (c.id === id ? { ...c, visible } : c))) : undefined} />
     </Columna>
   );
 }
 
 export function GrupsModificadors({ params }) {
   return (
-    <Preparat titol="Modificadors" ambTorn={false}>
+    <Preparat titol="Modificadors" ambTorn={false} avis="estret">
       <Grups params={params} />
     </Preparat>
   );
@@ -175,7 +190,7 @@ function Grups({ params }) {
   return (
     <ColumnaColleccions titol="Modificadors" actiu={params?.grup || null}
       colleccions={carta.grups.map((g) => ({ id: g.id, nom: g.nom, comptador: g.opcions.length, secundari: g.min >= 1 ? 'Obligatori' : 'Opcional' }))}
-      hrefDe={(g) => ruta('modificadors', g.id)} textComptador={(n) => `${n} opcions`} />
+      hrefDe={(g) => ruta('modificadors', g.id)} textComptador={(n) => `${n} opcions`} avis={<AvisDeLaColumna />} />
   );
 }
 
@@ -202,7 +217,7 @@ function Grup({ params }) {
     <ColumnaColleccio titol={grup.nom}
       linies={grup.opcions.map((o) => ({ id: o.id, articleId: o.id, nom: o.nom, valor: o.deltaCents ? `+${euros(o.deltaCents)}` : 'Sense suplement' }))}
       resum={{ etiqueta: grup.min >= 1 ? 'Obligatori' : 'Opcional', comptador: grup.opcions.length, textComptador: (n) => `${n} opcions` }}
-      peu={<p>{productes.length ? `El porten: ${productes.join(', ')}.` : 'Cap producte el porta.'}</p>} />
+      peu={<p>{productes.length ? `El porten: ${productes.join(', ')}.` : 'Cap producte el porta.'}</p>} avis={<AvisDeLaColumna />} />
   );
 }
 
@@ -230,7 +245,7 @@ function costDe(carta, producte) {
 
 export function EscandallsCarta({ params }) {
   return (
-    <Preparat titol="Escandalls" ambTorn={false}>
+    <Preparat titol="Escandalls" ambTorn={false} avis="estret">
       <Escandalls params={params} />
     </Preparat>
   );
@@ -253,7 +268,7 @@ function Escandalls() {
   });
   return (
     <ColumnaCataleg titol="Escandalls" categories={categoriesVestides(carta)} articles={articles} vistaPerDefecte="llista"
-      textArticles={textProductes} onTria={(article) => ves('escandalls', article.id)} />
+      textArticles={textProductes} onTria={(article) => ves('escandalls', article.id)} avis={<AvisDeLaColumna />} />
   );
 }
 
@@ -308,13 +323,13 @@ function Escandall({ params }) {
             <tr><th scope="row">{`PVP suggerit (objectiu ${objectiu} %)`}</th><td>{costCents === null ? '—' : euros(pvpSuggerit(costCents, objectiu, iva))}</td></tr>
           </tbody>
         </Taula>
-      )} />
+      )} avis={<AvisDeLaColumna />} />
   );
 }
 
 export function IngredientsCarta({ params }) {
   return (
-    <Preparat titol="Ingredients" ambTorn={false}>
+    <Preparat titol="Ingredients" ambTorn={false} avis="estret">
       <Ingredients params={params} />
     </Preparat>
   );
@@ -331,7 +346,7 @@ function Ingredients({ params }) {
         id: i.id, nom: i.nom, comptador: carta.escandalls.filter((e) => e.ingredients.some((x) => x.ingredientId === i.id)).length,
         secundari: `${euros(i.formatCompra.preuCents)} per ${i.formatCompra.quantitat} ${i.unitatBase}`
       }))}
-      hrefDe={(i) => ruta('ingredients', i.id)} textComptador={(n) => `${n} escandalls`} />
+      hrefDe={(i) => ruta('ingredients', i.id)} textComptador={(n) => `${n} escandalls`} avis={<AvisDeLaColumna />} />
   );
 }
 

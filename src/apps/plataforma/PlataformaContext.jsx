@@ -1,5 +1,5 @@
 /**
- * Plataforma d'Apps Enxufables · context i hooks.
+ * Plataforma d'Apps Enxufables · context i hooks de l'AMFITRIÓ.
  *
  * Sense <ProveidorPlataforma> tot funciona amb el registre del document i amb
  * l'entorn real (import.meta.env, la configuració de l'amfitrió i les
@@ -9,28 +9,38 @@
  *
  *   useApps()          · [{ manifest, estat, motiu, personaPotApagar }] en l'ordre del registre
  *   useAppActual()     · el manifest de l'app de la ruta actual si està 'available', o null
- *   useApp()           · DINS d'una app: { manifest, base, ruta(...trams) }
- *   useInterruptorsApp() · DINS d'una app: { avalua(id), actiu(id), apaga(id, apagat) }
+ *   useContextApps()   · el context complet dels interruptors, amb les capacitats del backend
+ *
+ * Este mòdul importa el registre (registreApps.js) i el port del backend:
+ * és ascendent de totes les apps, i cap app ni l'API pública (index.js)
+ * l'importa (fronteres.test.js). Els contexts que l'app sí que veu (useApp,
+ * useInterruptorsApp, el pont de sessió) són a ContextApp.jsx, i ací es
+ * reexporten per a la closca i les proves.
  */
 import { createContext, useCallback, useContext, useMemo, useSyncExternalStore } from 'react';
 import { useLocation } from '../../app/contexts/RouterContext';
 import { useUIState } from '../../app/contexts/UIContext';
 import { teCapacitat } from '../../data/backendPort.js';
 import { registre as registreDelDocument, analitzaRuta } from './registreApps.js';
-import { avaluaApp, avaluaInterruptor, esAmaDelDocument, personaPotApagar, sanejaAppsDeclarades } from './interruptors.js';
-import { desaAppApagada, desaInterruptorApagat, llegeixPreferencies, subscriuPreferencies } from './preferenciesApps.js';
-import { rutaDeApp } from './manifestApp.js';
+import { avaluaApp, esAmaDelDocument, personaPotApagar, sanejaAppsDeclarades } from './interruptors.js';
+import { desaAppApagada } from './preferenciesApps.js';
+import { EntornContext, produccioDe, teDretDe, usePreferenciesApps } from './ContextApp.jsx';
+
+export {
+  ProveidorApp, useApp, useInterruptorsApp, usePreferenciesApps, useSessioDeLEntorn, useSessioDeLaRuta
+} from './ContextApp.jsx';
 
 const RegistreContext = createContext(null);
-const EntornContext = createContext(null);
-const AppContext = createContext(null);
-
-const SEMPRE = () => true;
-const MAI = () => false;
 
 /**
  * `registre`: un registre de creaRegistre (per defecte, el del document).
- * `entorn`: substitucions per a proves ({ produccio, teDret, teCapacitat, amaDelDocument }).
+ * `entorn`: substitucions per a proves ({ produccio, teDret, teCapacitat, amaDelDocument, sessio }).
+ *   `sessio`: { estat, esSuperadmin?, marca?, enLinia?, modeProves?, recuperable? }.
+ *   Si hi és (un objecte), useSessioApp (sessioApp.js) la pren en lloc de la
+ *   instantània de la ruta (fontSessio.js, que llig SessionContext i
+ *   IdentitatContext), igual que teDret substituïx el dret real. enLinia,
+ *   modeProves i recuperable, si són booleans, fixen també el navegador, el
+ *   mode de dades i la sessió desada en el dispositiu.
  */
 export function ProveidorPlataforma({ registre, entorn, children }) {
   return (
@@ -46,14 +56,11 @@ export function useRegistre() {
   return useContext(RegistreContext) || registreDelDocument;
 }
 
-export function usePreferenciesApps() {
-  return useSyncExternalStore(subscriuPreferencies, llegeixPreferencies, llegeixPreferencies);
-}
-
 /**
  * El context dels interruptors (interruptors.js). En desenvolupament
  * (import.meta.env.DEV) tot dret premium es presenta concedit, per a poder
- * provar-ho; en producció cap, fins que la capa de poble (servidor) el servisca.
+ * provar-ho; en producció cap, fins que la capa de poble (servidor) el servisca
+ * (produccioDe i teDretDe, el criteri que comparteix amb useInterruptorsApp).
  */
 export function useContextApps() {
   const { externalConfig } = useUIState();
@@ -62,13 +69,13 @@ export function useContextApps() {
   const appsAmfitrio = externalConfig?.apps;
   const manageDocumentHead = externalConfig?.manageDocumentHead;
   return useMemo(() => {
-    const produccio = typeof entorn?.produccio === 'boolean' ? entorn.produccio : !import.meta.env.DEV;
+    const produccio = produccioDe(entorn);
     return Object.freeze({
       produccio,
       declaradesPerAmfitrio: sanejaAppsDeclarades(appsAmfitrio),
       preferencies,
       teCapacitat: entorn?.teCapacitat || teCapacitat,
-      teDret: entorn?.teDret || (produccio ? MAI : SEMPRE),
+      teDret: teDretDe(entorn, produccio),
       amaDelDocument: typeof entorn?.amaDelDocument === 'boolean'
         ? entorn.amaDelDocument
         : esAmaDelDocument({ manageDocumentHead })
@@ -99,33 +106,6 @@ export function useAppActual() {
   const app = useAppAvaluada(id);
   if (!app || trams === null || app.estat !== 'available') return null;
   return app.manifest;
-}
-
-/** Proveïdor intern: RutaApps el posa al voltant de cada app. */
-export function ProveidorApp({ manifest, children }) {
-  const valor = useMemo(() => Object.freeze({
-    manifest,
-    base: rutaDeApp(manifest.id),
-    ruta: (...trams) => rutaDeApp(manifest.id, ...trams)
-  }), [manifest]);
-  return <AppContext.Provider value={valor}>{children}</AppContext.Provider>;
-}
-
-/** Dins d'una app: el seu manifest i el constructor de rutes absolutes. */
-export function useApp() {
-  const valor = useContext(AppContext);
-  if (!valor) throw new Error("useApp s'ha de cridar dins d'una app de la plataforma (/app/<id>)");
-  return valor;
-}
-
-/** Dins d'una app: els seus interruptors interns (manifest.interruptors). */
-export function useInterruptorsApp() {
-  const { manifest } = useApp();
-  const ctx = useContextApps();
-  const avalua = useCallback((id) => avaluaInterruptor(manifest, id, ctx), [manifest, ctx]);
-  const actiu = useCallback((id) => avaluaInterruptor(manifest, id, ctx).actiu, [manifest, ctx]);
-  const apaga = useCallback((id, apagat) => { desaInterruptorApagat(manifest.id, id, apagat); }, [manifest]);
-  return useMemo(() => ({ avalua, actiu, apaga }), [avalua, actiu, apaga]);
 }
 
 /** La persona apaga (o torna a deixar) una app. */

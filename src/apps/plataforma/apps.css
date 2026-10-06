@@ -45,6 +45,30 @@
   padding: var(--sdp-space-6) var(--sdp-space-4);
 }
 
+/* ── Àrea única d'una app (ClosaAplicacio.jsx, ruta amb `Unica`) ──
+   Ordre del Mestre (261006, TPV Universal): una ruta sense columnes ocupa
+   tota la caixa del contingut, com .app-grid-page (AppGridShell.css):
+   absoluta, inset 0, i el que hi ha dins fa el seu propi scroll. */
+.sdp-app-unica {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  isolation: isolate;
+  background: var(--sdp-fons-app);
+}
+
+/* En compacte, la barra mòbil és fixa damunt de la caixa: l'àrea li reserva
+   l'alçada a baix (com les columnes d'AppGridShell, modules.css), perquè la
+   barra d'accions del TPV no quede tapada. El valor de recanvi de env() va
+   en rem: el full no admet px fora de les vores. */
+:where(.sdp-root.is-compact) .sdp-app-unica {
+  padding-bottom: calc(var(--sdp-alt-nav-mobil) + env(safe-area-inset-bottom, 0rem));
+}
+
 /* ── Portal /app (PortalApps.jsx) ──
    header.page-title (layout.css) s'apega a dalt com a la resta de pàgines:
    el portal no hi posa coixí al damunt, només davall i als costats de la llista. */

@@ -83,3 +83,13 @@ export {
   ESTATS_ARTICLE, ESTATS_LINIA, TEXTOS_ESTAT_LINIA, agrupaPerCategoria, categoriesEnOrdre, categoriesVisibles,
   estatLinia, filtraSuggeriments, mouCategoria, normalitzaText
 } from './organismes/articles.js';
+
+// ── TPV UNIVERSAL (ordre del Mestre, 261006: prompt 261006_1215 i skill
+//    sdp-clon-loiverse; l'estructura de Loyverse per al Bar i per a la Llista de
+//    la Compra o el Rebost; estils a tpv.css) ──
+export { UniversalTPV } from './organismes/UniversalTPV.jsx';
+
+// ── ICONES D'AL·LÈRGENS (ordre del Mestre, 261006: «vital per a la Carta
+//    Digital i el TPV»; els dibuixos del Mestre viatgen dins del paquet, sense
+//    xarxa; estils a alergens.css) ──
+export { IconesAlergens } from './molecules/IconesAlergens.jsx';

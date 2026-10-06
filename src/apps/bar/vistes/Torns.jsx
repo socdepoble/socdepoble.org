@@ -2,7 +2,8 @@
  * El Bar · vistes/Torns.jsx — l'historial de torns i «Desa el tancament»
  * (disseny del Bar §A.6, flux 6.4 i §A.11): la còpia de seguretat del dia,
  * en XLSX, CSV o JSON (sdp.bar.tancament.v1 i la nota sdp.bar.traspas.v1).
- * L'historial és la columna de col·leccions de l'esquelet comú.
+ * L'historial és la columna de col·leccions de l'esquelet comú, amb l'avís
+ * de la sessió dins del seu marc (avis, correcció F3, 261006).
  */
 import { useState } from 'react';
 import { CalendarDays, Download } from 'lucide-react';
@@ -11,7 +12,7 @@ import { ColumnaColleccions } from '../../comu/esquelet/index.js';
 import { TIPUS_MIME_CSV, TIPUS_MIME_XLSX, creaXlsx, modelACsv } from '../../../utils/fulls/index.js';
 import { exportaTancament, fullTancament } from '../nucli/fullTancament.js';
 import { useBar } from '../estat/ProveidorBar.jsx';
-import { AvisOperacio, Columna, NoTrobat, Preparat } from './comu.jsx';
+import { AvisDeLaColumna, AvisOperacio, AvisSessio, Columna, NoTrobat, Preparat } from './comu.jsx';
 import { useVes } from './punt.js';
 import { ContingutTraspas, TaulaResum } from './Torn.jsx';
 import { desaFitxer, nomFitxer } from './desa.js';
@@ -27,7 +28,7 @@ function dataCurta(moment) {
 
 export function HistorialTorns({ params }) {
   return (
-    <Preparat titol="Historial de torns" ambTorn={false}>
+    <Preparat titol="Historial de torns" ambTorn={false} avis="estret">
       <Historial params={params} />
     </Preparat>
   );
@@ -45,13 +46,14 @@ function Historial({ params }) {
         secundari: t.estat === 'obert' ? 'Obert ara' : `${euros(t.resum.totalVendesCents)} · tancat a les ${horaCurta(t.tancatA)}`
       }))}
       hrefDe={(t) => ruta('torns', t.id)} textComptador={(n) => `${n} tiquets`}
-      textos={{ buit: 'Encara no hi ha cap torn', buitText: null }} />
+      textos={{ buit: 'Encara no hi ha cap torn', buitText: null }} avis={<AvisDeLaColumna />} />
   );
 }
 
+/* Sense Preparat: l'avís de la sessió hi va ell mateix (l'historial del costat només el porta en estret). */
 export function TriaTorn() {
   return (
-    <Columna titol="Torn">
+    <Columna titol="Torn" avis={<AvisSessio />}>
       <EstatBuit icona={CalendarDays} titol="Tria un torn">De cada torn tancat es pot desar el tancament en XLSX, CSV o JSON.</EstatBuit>
     </Columna>
   );

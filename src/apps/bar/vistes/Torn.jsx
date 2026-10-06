@@ -8,6 +8,10 @@
  *   · Durant el torn: moviments de caixa amb motiu i el resum parcial.
  * Les llistes (moviments, comandes que passen, reposició) són les línies de
  * l'esquelet comú; els números, una Taula de Pedra Seca.
+ * Sense permís d'escriptura (ProveidorBar, permis.potEscriure), ni s'obri el
+ * torn, ni es marca llegida la nota, ni s'afig cap moviment: els botons es
+ * desactiven i l'avís de la sessió diu per què, dins del marc de la columna
+ * (també la dels moviments, de l'esquelet: avis, correcció F3, 261006).
  */
 import { useState } from 'react';
 import { ClipboardList } from 'lucide-react';
@@ -17,7 +21,7 @@ import {
 import { ColumnaColleccio } from '../../comu/esquelet/index.js';
 import { resumTorn } from '../nucli/torn.js';
 import { useBar } from '../estat/ProveidorBar.jsx';
-import { AvisBase, AvisOperacio, Columna, Preparat } from './comu.jsx';
+import { AvisBase, AvisDeLaColumna, AvisOperacio, Columna, Preparat } from './comu.jsx';
 import { useVes } from './punt.js';
 import { euros, horaCurta, nomOrigen } from './vestits.js';
 
@@ -83,7 +87,7 @@ export function ContingutTraspas({ nota }) {
 }
 
 function LecturaTraspas({ nota }) {
-  const { accions } = useBar();
+  const { accions, permis } = useBar();
   const [per, setPer] = useState('');
   return (
     <Columna titol="Nota de traspàs">
@@ -93,13 +97,13 @@ function LecturaTraspas({ nota }) {
       <Camp etiqueta="Qui la llig (àlies)" ajuda="Un àlies curt, com «Cambrera 2».">
         <CampText value={per} maxLength={24} onChange={(event) => setPer(event.target.value)} />
       </Camp>
-      <Boto varietat="primari" ple onClick={() => accions.llegeixTraspas({ per })}>L’he llegida</Boto>
+      <Boto varietat="primari" ple disabled={!permis.potEscriure} onClick={() => accions.llegeixTraspas({ per })}>L’he llegida</Boto>
     </Columna>
   );
 }
 
 function ObriTorn({ traspas }) {
-  const { accions } = useBar();
+  const { accions, permis } = useBar();
   const [per, setPer] = useState(traspas?.llegidaPer || '');
   const [fons, setFons] = useState(traspas ? traspas.fonsDeixatCents : 0);
   return (
@@ -111,7 +115,7 @@ function ObriTorn({ traspas }) {
       </Camp>
       <TeclatNumeric mode="import" etiqueta="Fons inicial de caixa" valor={fons} onCanvi={setFons} />
       {traspas ? <p>{`El torn anterior va deixar ${euros(traspas.fonsDeixatCents)} al calaix.`}</p> : null}
-      <Boto varietat="primari" ple mida="gran" onClick={() => accions.obriTorn({ per, fonsInicialCents: fons })}>Obri el torn</Boto>
+      <Boto varietat="primari" ple mida="gran" disabled={!permis.potEscriure} onClick={() => accions.obriTorn({ per, fonsInicialCents: fons })}>Obri el torn</Boto>
     </Columna>
   );
 }
@@ -146,14 +150,14 @@ function Torn() {
 
 export function MovimentsTorn() {
   return (
-    <Preparat titol="Moviments de caixa">
+    <Preparat titol="Moviments de caixa" avis="estret">
       <Moviments />
     </Preparat>
   );
 }
 
 function Moviments() {
-  const { tornActual, accions } = useBar();
+  const { tornActual, accions, permis } = useBar();
   const [tipus, setTipus] = useState('entrada');
   const [importCents, setImport] = useState(0);
   const [motiu, setMotiu] = useState('');
@@ -173,7 +177,7 @@ function Moviments() {
       <Camp etiqueta="Motiu" obligatori>
         <CampText value={motiu} maxLength={80} onChange={(event) => setMotiu(event.target.value)} />
       </Camp>
-      <Boto varietat="primari" icona={ClipboardList} disabled={importCents < 1 || !motiu.trim()} onClick={afig}>Afig el moviment</Boto>
+      <Boto varietat="primari" icona={ClipboardList} disabled={!permis.potEscriure || importCents < 1 || !motiu.trim()} onClick={afig}>Afig el moviment</Boto>
     </Pila>
   );
   return (
@@ -185,6 +189,7 @@ function Moviments() {
       }))}
       peu={peu}
       textos={{ buit: 'Cap moviment', buitText: 'Entrades i eixides de caixa amb el seu motiu.' }}
+      avis={<AvisDeLaColumna />}
     />
   );
 }

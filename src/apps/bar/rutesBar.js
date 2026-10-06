@@ -10,6 +10,9 @@
  *   caixa · caixa/<comanda> · taules/<taula>   ESQUELET COMÚ: rutesCatalegColleccio
  *                                              (catàleg i comanda, i /colleccio en estret)
  *   …/cobrar · …/dividir                       la comanda i el cobrament
+ *   tpv · tpv/<comanda>                        ÀREA ÚNICA: el TPV Universal (Unica,
+ *                                              ordre del Mestre, 261006); cobra a
+ *                                              caixa/<comanda>/cobrar
  *   taules · emportar · tiquets · torn · tancament · torns · carta · ajustos
  *
  * Les columnes són constants del mòdul (ClosaAplicacio no desmunta la que
@@ -30,6 +33,7 @@ import { PlanolSala } from './vistes/Taules.jsx';
 import { RetornTiquet, TiquetTriat, TiquetsTorn, TriaTiquet } from './vistes/Tiquets.jsx';
 import { MovimentsTorn, TornActual } from './vistes/Torn.jsx';
 import { DetallTorn, HistorialTorns, TriaTorn } from './vistes/Torns.jsx';
+import { TpvBar } from './vistes/Tpv.jsx';
 
 /* Les columnes de la caixa: les mateixes a la barra, a una comanda i a una taula. */
 const CAIXA = Object.freeze({ Cataleg: CatalegCaixa, Colleccio: ComandaCaixa, Esquerra: TiquetsOberts, primer: 'cataleg' });
@@ -48,6 +52,9 @@ export const RUTES_BAR = Object.freeze([
   ...rutesCatalegColleccio({ path: 'caixa', ...CAIXA, rutaColleccio: RUTA_COMANDA }),
   ...cobraIDividix('caixa'),
   ...cobraIDividix('caixa/:comanda', P_COMANDA),
+  /* El TPV: /tpv (la barra) i /tpv/<comanda>. El mateix Unica a les dues: navegar no el desmunta. */
+  { path: 'tpv', Unica: TpvBar },
+  { path: 'tpv/:comanda', params: P_COMANDA, Unica: TpvBar },
   /* Una taula: la seua comanda (o una de nova en tocar el primer producte). */
   ...rutesCatalegColleccio({ path: 'taules/:taula', params: P_TAULA, ...CAIXA }),
   ...cobraIDividix('taules/:taula', P_TAULA),

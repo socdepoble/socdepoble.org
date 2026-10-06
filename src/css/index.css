@@ -71,6 +71,14 @@
    sempre contra components.css i modules.css. */
 @import url('../components/PedraSeca/pecesApps.css');
 @import url('../components/PedraSeca/catalegColleccio.css');
+/* Icones d'al·lèrgens (ordre del Mestre, 261006: la Carta Digital i el TPV).
+   Sense layer(), per la mateixa raó, i davant de tpv.css, que hi posa la
+   cantonada de la rajola. */
+@import url('../components/PedraSeca/alergens.css');
+/* TPV Universal (ordre del Mestre, 261006: prompt 261006_1215). Sense
+   layer(), per la mateixa raó: el full ja escriu dins de `@layer components`
+   i ajusta peces de components.css i modules.css (.sdp-control, .sdp-pestanyes). */
+@import url('../components/PedraSeca/tpv.css');
 /* Ús de les amplades estretes de Noto Sans (261004). També escriu dins de
    `@layer components`: sense layer(), per la mateixa raó. */
 @import url('./tipografia-estreta.css');

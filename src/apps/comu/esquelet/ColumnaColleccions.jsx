@@ -5,6 +5,10 @@
  *
  * `hrefDe(colleccio)` torna el camí dins de l'app (useApp().ruta(...)): cada
  * targeta és un enllaç de veres i el clic normal navega amb push.
+ *
+ * Correcció F3 (261006) · `avis` (opcional): un avís de l'app dins del marc
+ * (MarcColumna), primer fill del cos, davall de la capçalera, que no baixa.
+ * Sense, el de sempre.
  */
 import AppGridColumn from '../../../components/layout/AppGridColumn.jsx';
 import { useNavigate, useRouter } from '../../../app/contexts/RouterContext';
@@ -16,14 +20,14 @@ const TEXTOS_COLLECCIONS = Object.freeze({
 });
 
 export function ColumnaColleccions({
-  titol = 'Col·leccions', colleccions = [], actiu = null, hrefDe, onTria, onCrea, textCrea, textComptador, textos
+  titol = 'Col·leccions', colleccions = [], actiu = null, hrefDe, onTria, onCrea, textCrea, textComptador, textos, avis = null
 }) {
   const t = { ...TEXTOS_COLLECCIONS, ...textos };
   const navigate = useNavigate();
   const { basename = '' } = useRouter();
   const cami = typeof hrefDe === 'function' ? hrefDe : null;
   return (
-    <MarcColumna capcalera={<AppGridColumn titol={titol} />} etiqueta={titol}>
+    <MarcColumna capcalera={<AppGridColumn titol={titol} />} avis={avis} etiqueta={titol}>
       <TargetesColleccions
         colleccions={colleccions}
         etiqueta={titol}

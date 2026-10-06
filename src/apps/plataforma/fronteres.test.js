@@ -4,7 +4,9 @@
    document» de la guarda de salut, que ha de ser el de RouteTelemetria, i el
    Model B per a TOTES les apps (regla transversal, Onada 3 · T4): cap backend,
    cap xarxa i l'emmagatzematge només per utils/magatzemLocal.js des de
-   magatzem.js. Els patrons vetats es componen a trossos perquè les portes que
+   magatzem.js. I, des del 261006, que l'API pública (plataforma/index.js) no
+   arribe a cap app ni importe els contexts de l'arrel (el desenvolupament amb
+   HMR). Els patrons vetats es componen a trossos perquè les portes que
    llegixen src/ no els troben ací (patró de src/sections/gestoria/qualitat.test.js). */
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
@@ -190,6 +192,85 @@ function infraccionsDeUtils(fitxers) {
     if (!MOTOR_LOCAL.test(ruta)) trobades.push(...EMMAGATZEMATGE.filter(([patro]) => patro.test(codi)).map(([, que]) => `${que} directe`));
     return trobades.map((que) => `${ruta}: ${que}`);
   });
+}
+
+/* ── L'API pública no arriba a cap app (correcció del 261006, HMR) ──────────
+   En desenvolupament, Vite marca com a invalidat, cada vegada que es desa un
+   fitxer, tot mòdul que hi arriba per imports, també per import(). Les apps
+   es carreguen per import() des del registre (registreApps.js), i host.js i
+   el port del backend (que importa host.js amb import()) arriben al
+   registre: són ASCENDENTS de totes les apps, com SessionContext i
+   IdentitatContext (SessionContext → sessionService → host.js; IdentitatContext
+   → backendPort → host.js). Si l'API pública (plataforma/index.js), que
+   importen les vistes, en portava algun, desar una vista el tornava a
+   carregar amb un createContext nou: React Refresh posava la implementació
+   nova al proveïdor muntat (SessionProvider i IdentitatProvider a l'arrel;
+   ProveidorApp i ProveidorBar dins de l'app) i els consumidors que no
+   s'havien tornat a executar (TopBar, CoreContentProvider, les vistes)
+   queien: «useSession ha de ser usat dins de SessionProvider», «useBar
+   s'ha de cridar dins de ProveidorBar». En producció no hi ha HMR.
+   La regla, sobre la clausura d'imports de plataforma/index.js:
+   · la clausura estàtica no importa SessionContext ni IdentitatContext (la
+     sessió entra per fontSessio.js, que només importa RutaApps.jsx);
+   · la clausura sencera (també import(), require() i import.meta.glob) no
+     arriba a cap fitxer de src/apps fora de la plataforma, ni al registre,
+     ni a host.js, ni al port del backend. RouterContext i UIContext sí que
+     hi són: no arriben a cap app. */
+const IMPORT_ESTATIC = /(?:\bfrom\s*|\bimport\s+)(['"`])([^'"`\n]+)\1/g;
+const especificadorsEstatics = (codi) => [...codi.matchAll(IMPORT_ESTATIC)].map((m) => m[2]);
+const CONTEXTS_DE_L_ARREL = new Set(['src/app/contexts/SessionContext.jsx', 'src/app/contexts/IdentitatContext.jsx']);
+const ARRIBA_A_LES_APPS = new Set(['src/apps/plataforma/registreApps.js', 'src/host.js', 'src/data/backendPort.js']);
+const esDUnaApp = (ruta) => /^src\/apps\/(?!plataforma\/)/.test(ruta);
+const existixAlDisc = (ruta) => existsSync(path.join(ARREL, ruta));
+
+/* El fitxer de codi que hi ha darrere d'un especificador relatiu o amb l'àlies
+   @/ (vite.config.js), amb extensió, sense o amb index; o null: un paquet o
+   una adreça. */
+function fitxerImportat(ruta, especificador, existix) {
+  const net = especificador.replace(/\?.*$/, '');
+  let desti = null;
+  if (net.startsWith('.')) desti = path.posix.normalize(path.posix.join(path.posix.dirname(ruta), net));
+  else if (net.startsWith('@/')) desti = `src/${net.slice(2)}`;
+  if (!desti) return null;
+  return [desti, `${desti}.js`, `${desti}.jsx`, `${desti}/index.js`, `${desti}/index.jsx`]
+    .find((candidat) => CODI.test(candidat) && existix(candidat)) || null;
+}
+
+/* La clausura d'imports des d'`inici`, com a Map fitxer → qui l'ha importat
+   primer (null, l'inici). Sense `dinamics`, només els imports estàtics i les
+   reexportacions; amb, també import(), require() i import.meta.glob. */
+function clausuraDImports(inici, { dinamics = false, llegix = llig, existix = existixAlDisc } = {}) {
+  const vistes = new Map([[inici, null]]);
+  const pendents = [inici];
+  while (pendents.length) {
+    const ruta = pendents.pop();
+    const codi = llegix(ruta);
+    for (const especificador of (dinamics ? especificadors(codi) : especificadorsEstatics(codi))) {
+      const desti = fitxerImportat(ruta, especificador, existix);
+      if (desti && !vistes.has(desti)) {
+        vistes.set(desti, ruta);
+        pendents.push(desti);
+      }
+    }
+  }
+  return vistes;
+}
+
+/* El camí d'imports des de l'inici fins a `fi`: «a > b > c». */
+function camiFins(clausura, fi) {
+  const cami = [fi];
+  for (let ruta = clausura.get(fi); ruta; ruta = clausura.get(ruta)) cami.unshift(ruta);
+  return cami.join(' > ');
+}
+
+/* Les infraccions de la regla des d'`inici`, amb el camí que hi porta. */
+function infraccionsDeLAPI(inici, opcions = {}) {
+  const estatica = clausuraDImports(inici, opcions);
+  const sencera = clausuraDImports(inici, { ...opcions, dinamics: true });
+  return [
+    ...[...estatica.keys()].filter((ruta) => CONTEXTS_DE_L_ARREL.has(ruta)).map((ruta) => `context de l'arrel: ${camiFins(estatica, ruta)}`),
+    ...[...sencera.keys()].filter((ruta) => esDUnaApp(ruta) || ARRIBA_A_LES_APPS.has(ruta)).map((ruta) => `arriba a les apps: ${camiFins(sencera, ruta)}`)
+  ];
 }
 
 const CENS = readdirSync(path.join(ARREL, 'src/apps'), { withFileTypes: true })
@@ -439,5 +520,128 @@ describe('la regla transversal detecta (casos sintètics en memòria)', () => {
     ['un comentari sobre la base local', "// Les dades viuen a l'IndexedDB d'este dispositiu."]
   ])('no confon %s amb una infracció', (_que, codi) => {
     expect(infraccionsDe(VISTA, codi)).toEqual([]);
+  });
+});
+
+describe('l’API pública no arriba a cap app (correcció del 261006, HMR)', () => {
+  const API = 'src/apps/plataforma/index.js';
+
+  test('plataforma/index.js: cap context de l’arrel a la clausura i, sencera, cap app, ni el registre, ni host.js, ni el port', () => {
+    expect(infraccionsDeLAPI(API)).toEqual([]);
+  });
+
+  test('la porta mira de veres: la clausura porta el pont, el context de l’app i la closca; la font i el context de l’amfitrió, no, i la porta els detecta', () => {
+    const estatica = clausuraDImports(API);
+    expect([...estatica.keys()]).toEqual(expect.arrayContaining([
+      'src/apps/plataforma/sessioApp.js', 'src/apps/plataforma/ContextApp.jsx', 'src/apps/plataforma/ClosaAplicacio.jsx',
+      'src/app/contexts/RouterContext.jsx', 'src/app/contexts/UIContext.jsx'
+    ]));
+    expect(estatica.has('src/apps/plataforma/fontSessio.js')).toBe(false);
+    expect(estatica.has('src/apps/plataforma/PlataformaContext.jsx')).toBe(false);
+    /* Sondes sobre fitxers reals: la font llig els contexts de l'arrel i el context de l'amfitrió porta el registre i el port. */
+    const font = infraccionsDeLAPI('src/apps/plataforma/fontSessio.js');
+    expect(font).toEqual(expect.arrayContaining([
+      "context de l'arrel: src/apps/plataforma/fontSessio.js > src/app/contexts/SessionContext.jsx",
+      "context de l'arrel: src/apps/plataforma/fontSessio.js > src/app/contexts/IdentitatContext.jsx"
+    ]));
+    expect(font.some((trobada) => trobada.startsWith('arriba a les apps: ') && trobada.endsWith(' > src/host.js'))).toBe(true);
+    expect(infraccionsDeLAPI('src/apps/plataforma/PlataformaContext.jsx')).toEqual(expect.arrayContaining([
+      'arriba a les apps: src/apps/plataforma/PlataformaContext.jsx > src/apps/plataforma/registreApps.js',
+      'arriba a les apps: src/apps/plataforma/PlataformaContext.jsx > src/data/backendPort.js'
+    ]));
+  });
+
+  test('RouterContext i UIContext, que la clausura sí que importa, no arriben a cap app', () => {
+    for (const context of ['src/app/contexts/RouterContext.jsx', 'src/app/contexts/UIContext.jsx']) {
+      expect(infraccionsDeLAPI(context), context).toEqual([]);
+    }
+  });
+
+  test('la font de la sessió (fontSessio.js) només l’importa RutaApps.jsx', () => {
+    const FONT = 'src/apps/plataforma/fontSessio.js';
+    const importadors = fitxersDe('src', CODI).filter((f) => !esProva(f) && f !== FONT)
+      .filter((f) => especificadors(llig(f)).some((e) => fitxerImportat(f, e, existixAlDisc) === FONT));
+    expect(importadors).toEqual(['src/apps/plataforma/RutaApps.jsx']);
+  });
+});
+
+describe('la porta de l’API pública detecta (grafs sintètics en memòria)', () => {
+  const API = 'src/apps/plataforma/index.js';
+  const graf = (fitxers) => ({ llegix: (ruta) => fitxers[ruta], existix: (ruta) => Object.hasOwn(fitxers, ruta) });
+  const finals = (trobades) => trobades.filter((t) => t.startsWith('arriba a les apps: ')).map((t) => t.split(' > ').pop()).sort();
+  /* La cadena de veres, en miniatura: els contexts de l'arrel arriben a host.js
+     (per import()), host.js al registre i el registre a l'app (per import()). */
+  const CADENA = Object.freeze({
+    'src/app/contexts/SessionContext.jsx': "import { getSessionState } from '../../data/sessionService.js';",
+    'src/app/contexts/IdentitatContext.jsx': "import { listMyOrganizations } from '../../data/backendPort.js';",
+    'src/data/sessionService.js': "const llest = () => import('../host.js');",
+    'src/data/backendPort.js': "export const recull = async () => (await import('../host.js')).quanLlest();",
+    'src/host.js': "import { registre } from './apps/plataforma/registreApps.js';",
+    'src/apps/plataforma/registreApps.js': "import manifestBar from '../bar/manifest.js';",
+    'src/apps/bar/manifest.js': "export default { carrega: () => import('./AppBar.jsx') };",
+    'src/apps/bar/AppBar.jsx': 'export default function AppBar() { return null; }',
+    'src/app/contexts/RouterContext.jsx': "import { resolRuta } from './politicaRouter.js';",
+    'src/app/contexts/politicaRouter.js': 'export const resolRuta = (ruta) => ruta;'
+  });
+  const TOTA_LA_CADENA = ['src/apps/bar/AppBar.jsx', 'src/apps/bar/manifest.js', 'src/apps/plataforma/registreApps.js', 'src/data/backendPort.js', 'src/host.js'];
+
+  test('el pont d’abans: index.js → sessioApp.js → els dos contexts de l’arrel, i per ells, l’app', () => {
+    const trobades = infraccionsDeLAPI(API, graf({
+      ...CADENA,
+      [API]: "export { useSessioApp } from './sessioApp.js';",
+      'src/apps/plataforma/sessioApp.js': [
+        "import { useSessioOpcional } from '../../app/contexts/SessionContext';",
+        "import { useIdentitatOpcional } from '../../app/contexts/IdentitatContext';"
+      ].join('\n')
+    }));
+    expect(trobades.filter((t) => t.startsWith("context de l'arrel"))).toEqual([
+      "context de l'arrel: src/apps/plataforma/index.js > src/apps/plataforma/sessioApp.js > src/app/contexts/SessionContext.jsx",
+      "context de l'arrel: src/apps/plataforma/index.js > src/apps/plataforma/sessioApp.js > src/app/contexts/IdentitatContext.jsx"
+    ]);
+    expect(finals(trobades)).toEqual(TOTA_LA_CADENA);
+  });
+
+  test('l’àlies @/ i un import sense extensió', () => {
+    expect(infraccionsDeLAPI(API, graf({ ...CADENA, [API]: "import { useIdentitatOpcional } from '@/app/contexts/IdentitatContext';" })))
+      .toEqual(expect.arrayContaining(["context de l'arrel: src/apps/plataforma/index.js > src/app/contexts/IdentitatContext.jsx"]));
+  });
+
+  test('una reexportació en cadena (export * from) fins a SessionContext', () => {
+    const trobades = infraccionsDeLAPI(API, graf({
+      ...CADENA,
+      [API]: "export * from './a.js';",
+      'src/apps/plataforma/a.js': "export * from './b.js';",
+      'src/apps/plataforma/b.js': "import { ESTAT } from '../../app/contexts/SessionContext.jsx';"
+    }));
+    expect(trobades).toContain("context de l'arrel: src/apps/plataforma/index.js > src/apps/plataforma/a.js > src/apps/plataforma/b.js > src/app/contexts/SessionContext.jsx");
+  });
+
+  test('el context de l’amfitrió: el port del backend arriba a host.js per import(), que la clausura estàtica no seguix i la sencera sí', () => {
+    const fitxers = graf({
+      ...CADENA,
+      [API]: "export { useApp } from './PlataformaContext.jsx';",
+      'src/apps/plataforma/PlataformaContext.jsx': "import { teCapacitat } from '../../data/backendPort.js';"
+    });
+    const trobades = infraccionsDeLAPI(API, fitxers);
+    expect(trobades.filter((t) => t.startsWith("context de l'arrel"))).toEqual([]);
+    expect(finals(trobades)).toEqual(TOTA_LA_CADENA);
+    expect(clausuraDImports(API, fitxers).has('src/host.js')).toBe(false);
+    expect(clausuraDImports(API, { ...fitxers, dinamics: true }).has('src/host.js')).toBe(true);
+  });
+
+  test('una app carregada per import() des de l’API', () => {
+    expect(infraccionsDeLAPI(API, graf({ ...CADENA, [API]: "export const carregaBar = () => import('../bar/AppBar.jsx');" })))
+      .toEqual(['arriba a les apps: src/apps/plataforma/index.js > src/apps/bar/AppBar.jsx']);
+  });
+
+  test('no confon el router, un comentari ni un text amb el nom d’un context', () => {
+    expect(infraccionsDeLAPI(API, graf({
+      ...CADENA,
+      [API]: [
+        "import { useLocation } from '../../app/contexts/RouterContext';",
+        '// La sessió la llig fontSessio.js, no SessionContext.',
+        "export const nom = 'IdentitatContext';"
+      ].join('\n')
+    }))).toEqual([]);
   });
 });

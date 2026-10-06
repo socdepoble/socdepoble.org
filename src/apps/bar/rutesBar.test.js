@@ -10,6 +10,7 @@ import { RUTES_BAR } from './rutesBar.js';
 import { CatalegCaixa, ComandaCaixa } from './vistes/Caixa.jsx';
 import { CobramentCaixa, DivisioCaixa } from './vistes/Cobrament.jsx';
 import { PasTancament } from './vistes/Tancament.jsx';
+import { TpvBar } from './vistes/Tpv.jsx';
 
 const { manifest } = validaManifestApp(manifestCru);
 
@@ -19,6 +20,12 @@ describe('manifest', () => {
     expect(manifest).toMatchObject({ id: 'bar', entradaPerDefecte: 'caixa', nivell: 'premium', dret: 'sdp.app.bar', capacitats: [], dadesPersonals: false });
     expect(manifest.grups.map((g) => g.id)).toEqual(['servei', 'carta', 'torn', 'ajustos']);
     expect(manifest.interruptors.map((i) => [i.id, i.actiuPerDefecte])).toEqual([['taules', true], ['escandalls', true], ['cuina', false]]);
+  });
+
+  test('el TPV (261006) és una entrada de servei just després de la Caixa, que continua sent la de per defecte', () => {
+    expect(manifest.entrades.slice(0, 2).map((e) => [e.slug, e.icona, e.grup])).toEqual([['caixa', 'Receipt', 'servei'], ['tpv', 'Store', 'servei']]);
+    expect(manifest.entrades.find((e) => e.slug === 'tpv').titol).toEqual({ ca: 'TPV', es: 'TPV' });
+    expect(manifest.permisos).toEqual({ veure: 'public', escriure: 'sessio' });
   });
 });
 
@@ -41,6 +48,8 @@ describe('la taula de rutes', () => {
     ['caixa/c-mga1b2c3-4f2a', { Detall: CatalegCaixa }, { comanda: 'c-mga1b2c3-4f2a' }],
     ['caixa/c-mga1b2c3-4f2a/colleccio', { Mig: ComandaCaixa, estret: 'mig' }, { comanda: 'c-mga1b2c3-4f2a' }],
     ['caixa/c-mga1b2c3-4f2a/dividir', { Detall: DivisioCaixa }, { comanda: 'c-mga1b2c3-4f2a' }],
+    ['tpv', { Unica: TpvBar }, {}],
+    ['tpv/c-mga1b2c3-4f2a', { Unica: TpvBar }, { comanda: 'c-mga1b2c3-4f2a' }],
     ['taules/t3', { Detall: CatalegCaixa }, { taula: 't3' }],
     ['taules/terrassa-2/cobrar', { Detall: CobramentCaixa }, { taula: 'terrassa-2' }],
     ['tancament/resum', { Detall: PasTancament }, { pas: 'resum' }],
@@ -58,13 +67,21 @@ describe('la taula de rutes', () => {
     for (const tram of ['cobrar', 'dividir', 'colleccio']) expect(coincidixRuta(RUTES_BAR, `caixa/${tram}`).params).toEqual({});
   });
 
+  test('el TPV és d’àrea única: cap columna, i el seu tram només admet un id de comanda', () => {
+    for (const ruta of RUTES_BAR.filter((r) => r.path.split('/')[0] === 'tpv')) {
+      expect(Object.keys(ruta).filter((clau) => ['Mig', 'Detall', 'Esquerra', 'estret'].includes(clau)), ruta.path).toEqual([]);
+      expect(ruta.Unica, ruta.path).toBe(TpvBar);
+    }
+    for (const tram of ['cobrar', 'colleccio', 't3', 'k-mga1b2c3-0000']) expect(coincidixRuta(RUTES_BAR, `tpv/${tram}`), tram).toBeNull();
+  });
+
   test('un pas del tancament o una secció dels ajustos que no existixen no casen', () => {
     expect(coincidixRuta(RUTES_BAR, 'tancament/final')).toBeNull();
     expect(coincidixRuta(RUTES_BAR, 'ajustos/secrets')).toBeNull();
   });
 
   test.each(['..', '%2e', '%2E%2E', 'T3', 'taula 3', 'taula%203', 'c-ABC'])('un paràmetre «%s» no casa amb cap ruta', (dolent) => {
-    for (const base of ['caixa', 'taules', 'tiquets', 'torns', 'tancament', 'productes', 'escandalls', 'ingredients', 'modificadors', 'ajustos']) {
+    for (const base of ['caixa', 'tpv', 'taules', 'tiquets', 'torns', 'tancament', 'productes', 'escandalls', 'ingredients', 'modificadors', 'ajustos']) {
       const coincidencia = coincidixRuta(RUTES_BAR, `${base}/${dolent}`);
       if (coincidencia) expect(Object.values(coincidencia.params), `${base}/${dolent}`).not.toContain(dolent);
     }

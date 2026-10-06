@@ -3,6 +3,7 @@
  * flux 2) fet amb la columna de catàleg de l'ESQUELET COMÚ: les zones són
  * les categories i les taules, els articles (lliure, o oberta amb el total).
  * Tocar una taula porta a /app/bar/taules/<taula>: la seua comanda.
+ * L'avís de la sessió va dins del marc del plànol (avis, correcció F3, 261006).
  */
 import { LayoutGrid } from 'lucide-react';
 import { EstatBuit } from '../../../components/PedraSeca/index.js';
@@ -11,7 +12,7 @@ import { useInterruptorsApp } from '../../plataforma/index.js';
 import { totals } from '../nucli/comanda.js';
 import { taulesEnOrdre } from '../nucli/sala.js';
 import { useBar } from '../estat/ProveidorBar.jsx';
-import { Columna, Preparat } from './comu.jsx';
+import { AvisDeLaColumna, Columna, Preparat } from './comu.jsx';
 import { useVes } from './punt.js';
 import { euros } from './vestits.js';
 
@@ -65,6 +66,7 @@ function Planol() {
       textArticles={(n) => `${n} ${n === 1 ? 'taula' : 'taules'}`}
       onTria={(taula) => ves('taules', taula.id)}
       textos={{ buit: 'Encara no hi ha cap taula', buitText: 'Les taules es definixen als ajustos de la sala.', categoria: 'Zona', totes: 'Totes' }}
+      avis={<AvisDeLaColumna />}
     />
   );
 }

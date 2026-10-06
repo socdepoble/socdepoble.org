@@ -173,3 +173,13 @@ export function useIdentitat() {
   if (!context) throw new Error('useIdentitat ha de ser usat dins de IdentitatProvider');
   return context;
 }
+
+/**
+ * La identitat si n'hi ha proveïdor, o null (una peça muntada sola: proves,
+ * catàleg). Només lectura: la font del pont de sessió de les apps
+ * (plataforma/fontSessio.js, ordre del Mestre del 261006) en llig l'actor
+ * actiu per a la marca.
+ */
+export function useIdentitatOpcional() {
+  return useContext(IdentitatContext);
+}

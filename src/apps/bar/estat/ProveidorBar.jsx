@@ -9,9 +9,33 @@
  * Les operacions tornen { ok, valor } o { ok: false, error }: mai llancen a
  * la vista. L'error queda a `avis` amb un text per a la persona.
  *
+ * EL PERMÍS DE SESSIÓ, UNA SOLA REGLA PER A TOT EL BAR (ordre del Mestre,
+ * 261006: el permís «escriure: 'sessio'» s'aplica a la Caixa, el cobrament,
+ * els torns, la carta i els ajustos, no només al TPV). L'estat llig el pont
+ * de la plataforma (useSessioApp, de només lectura) i en dona a les vistes
+ *   permis: { potEscriure, motiu, enLinia, modeProves, rutaEntrada }
+ * Sense potEscriure, TOTA operació d'escriptura (obrir i tancar el torn,
+ * vendre, cobrar, moure, dividir, retornar, moviments, l'esborrany del
+ * tancament, la carta, la llavor, l'establiment i llegir el traspàs) refusa
+ * amb SENSE_PERMIS abans de tocar res; les de lectura (tiquetsDelTorn,
+ * bolca, estatPersistencia, demanaPersistencia i oblidaAvis) no. Mirar
+ * sempre es pot.
+ *   · És una GUARDA D'EXPERIÈNCIA, no de seguretat: les dades del Bar són
+ *     locals (IndexedDB d'este dispositiu) i qui tinga el dispositiu les pot
+ *     llegir i escriure fora de l'app. Evita que algú vena sense compte quan
+ *     la sessió és obligatòria (mode remot) i que cap botó semble actiu sense
+ *     fer res; les vistes desactiven els seus botons i AvisSessio diu per què.
+ *   · El motiu el decidix el pont: en mode de proves (dades 'seed' o 'local',
+ *     on entrar és impossible per disseny) i sense xarxa amb una sessió
+ *     desada en este dispositiu, el Bar ven igualment.
+ *   · Es mira quan l'operació arriba al seu torn de la cua, amb l'últim
+ *     permís pintat (una ref): dos tocs encuats abans de perdre la sessió no
+ *     escriuen després.
+ *
  * El rellotge i l'atzar s'injecten (proves); el magatzem també.
  */
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { useSessioApp } from '../../plataforma/index.js';
 import { creaMagatzemBar } from '../magatzem.js';
 import { errorBar } from '../nucli/comu.js';
 import { nouId } from '../nucli/ids.js';
@@ -44,6 +68,15 @@ export function ProveidorBar({ magatzem: injectat = null, rellotge = araReal, at
   const [avis, setAvis] = useState(null);
   const ref = useRef(null);
   const cua = useRef(Promise.resolve());
+  const sessio = useSessioApp();
+  const { potEscriure, motiu, enLinia, modeProves, rutaEntrada } = sessio;
+  const permis = useMemo(() => Object.freeze({ potEscriure, motiu, enLinia, modeProves, rutaEntrada }),
+    [potEscriure, motiu, enLinia, modeProves, rutaEntrada]);
+  /* L'últim permís pintat, per a la guarda de la cua: les accions no canvien d'identitat. */
+  const potEscriureAra = useRef(potEscriure);
+  useEffect(() => {
+    potEscriureAra.current = potEscriure;
+  });
 
   const posa = useCallback((nou) => {
     ref.current = nou;
@@ -98,6 +131,11 @@ export function ProveidorBar({ magatzem: injectat = null, rellotge = araReal, at
   }, [posa, rellotge, atzar]);
 
   const accions = useMemo(() => {
+    /* Una operació d'ESCRIPTURA: la guarda del permís (vegeu la capçalera) i després la de sempre. */
+    const escriu = (fn) => opera((d, ctx) => {
+      if (!potEscriureAra.current) throw errorBar('SENSE_PERMIS', 'Entra per a vendre.');
+      return fn(d, ctx);
+    });
     const exigeixVenda = (d) => {
       if (!potVendre(d.tornActual)) throw errorBar('SENSE_TORN', 'Cal obrir el torn per a vendre.');
     };
@@ -111,7 +149,7 @@ export function ProveidorBar({ magatzem: injectat = null, rellotge = araReal, at
       : [...d.comandes, desada] });
 
     /* Modifica una comanda oberta amb una funció pura i la desa. */
-    const modifica = (comandaId, fn) => opera(async (d, ctx) => {
+    const modifica = (comandaId, fn) => escriu(async (d, ctx) => {
       exigeixVenda(d);
       const nova = fn(comandaDe(d, comandaId), ctx, d);
       if (nova === comandaDe(d, comandaId)) return { valor: nova };
@@ -133,7 +171,7 @@ export function ProveidorBar({ magatzem: injectat = null, rellotge = araReal, at
 
     return {
       /** Obri el torn (amb la nota anterior ja llegida) i adopta les comandes que hi passaven. */
-      obriTorn: ({ per, fonsInicialCents }) => opera(async (d, ctx) => {
+      obriTorn: ({ per, fonsInicialCents }) => escriu(async (d, ctx) => {
         if (d.tornActual) throw errorBar('TORN_OBERT', 'Ja hi ha un torn obert.');
         const torn = obriTorn({ id: ctx.id('t'), per, fonsInicialCents, ara: ctx.ara, traspasAnterior: d.traspas });
         await magatzem.desaTorn(torn);
@@ -145,7 +183,7 @@ export function ProveidorBar({ magatzem: injectat = null, rellotge = araReal, at
       }),
 
       /** La nota de traspàs del torn anterior, llegida (un toc). */
-      llegeixTraspas: ({ per }) => opera(async (d, ctx) => {
+      llegeixTraspas: ({ per }) => escriu(async (d, ctx) => {
         if (!d.traspas) return { valor: null };
         const llegida = marcaLlegida(d.traspas, { per, ara: ctx.ara });
         await magatzem.desaMeta('traspas', llegida);
@@ -153,7 +191,7 @@ export function ProveidorBar({ magatzem: injectat = null, rellotge = araReal, at
       }),
 
       /** Una comanda nova i buida (un tiquet de barra més, per emportar). */
-      novaComanda: (origen) => opera(async (d, ctx) => {
+      novaComanda: (origen) => escriu(async (d, ctx) => {
         exigeixVenda(d);
         const desada = await novaComandaA(d, ctx, origen);
         return { estat: ambComanda(d, desada), valor: desada };
@@ -164,7 +202,7 @@ export function ProveidorBar({ magatzem: injectat = null, rellotge = araReal, at
        * cap, a la de l'origen (comandaObertaDe, amb l'estat d'ara: dos tocs
        * ràpids no en creen dues) o a una de nova.
        */
-      afegeix: ({ comandaId = null, origen = { tipus: 'barra' } }, article) => opera(async (d, ctx) => {
+      afegeix: ({ comandaId = null, origen = { tipus: 'barra' } }, article) => escriu(async (d, ctx) => {
         exigeixVenda(d);
         let comanda = comandaId ? comandaDe(d, comandaId) : comandaObertaDe(d.comandes, origen);
         let estat = d;
@@ -193,7 +231,7 @@ export function ProveidorBar({ magatzem: injectat = null, rellotge = araReal, at
       convida: (comandaId, liniaId, motiu) => modifica(comandaId, (c, ctx, d) => convida(c, liniaId, { motiu, ara: ctx.ara, per: d.tornActual.obertPer })),
 
       /** Un pagament; si el pendent arriba a 0, la comanda es tanca i torna { tiquet }. */
-      paga: (comandaId, pagament) => opera(async (d, ctx) => {
+      paga: (comandaId, pagament) => escriu(async (d, ctx) => {
         exigeixVenda(d);
         const nova = afegeixPagament(comandaDe(d, comandaId), pagament, { id: ctx.id('p'), ara: ctx.ara });
         if (totals(nova).pendentCents === 0) return tancaDesada(d, ctx, nova);
@@ -202,7 +240,7 @@ export function ProveidorBar({ magatzem: injectat = null, rellotge = araReal, at
       }),
 
       /** Tanca una comanda que ja no deu res (p. ex. tota convidada). */
-      tanca: (comandaId) => opera(async (d, ctx) => {
+      tanca: (comandaId) => escriu(async (d, ctx) => {
         exigeixVenda(d);
         const comanda = comandaDe(d, comandaId);
         const pot = potTancar(comanda);
@@ -211,14 +249,14 @@ export function ProveidorBar({ magatzem: injectat = null, rellotge = araReal, at
       }),
 
       /** Descarta una comanda buida. */
-      descarta: (comandaId) => opera(async (d) => {
+      descarta: (comandaId) => escriu(async (d) => {
         const comanda = comandaDe(d, comandaId);
         await magatzem.descartaComanda(comanda);
         return { estat: { comandes: d.comandes.filter((c) => c.id !== comandaId) }, valor: null };
       }),
 
       /** Mou línies a una altra comanda o a un origen sense comanda (una taula lliure). */
-      mou: (comandaId, desti, seleccio) => opera(async (d, ctx) => {
+      mou: (comandaId, desti, seleccio) => escriu(async (d, ctx) => {
         exigeixVenda(d);
         const origen = comandaDe(d, comandaId);
         let estat = d;
@@ -239,7 +277,7 @@ export function ProveidorBar({ magatzem: injectat = null, rellotge = araReal, at
       }),
 
       /** Separa línies en una comanda filla (dividir el compte per línies). */
-      divideix: (comandaId, seleccio) => opera(async (d, ctx) => {
+      divideix: (comandaId, seleccio) => escriu(async (d, ctx) => {
         exigeixVenda(d);
         const { mare, filla } = divideixPerLinies(comandaDe(d, comandaId), seleccio, { idNova: ctx.id('c'), ara: ctx.ara, nouIdLinia: () => ctx.id('l') });
         const desadaFilla = await magatzem.desaComanda(filla);
@@ -249,7 +287,7 @@ export function ProveidorBar({ magatzem: injectat = null, rellotge = araReal, at
       }),
 
       /** Devolució enllaçada d'un tiquet del torn. */
-      retorna: (tiquetId, seleccio, { motiu, metode }) => opera(async (d, ctx) => {
+      retorna: (tiquetId, seleccio, { motiu, metode }) => escriu(async (d, ctx) => {
         exigeixVenda(d);
         const tiquet = d.tiquets.find((t) => t.id === tiquetId);
         if (!tiquet) throw errorBar('NO_TROBADA', 'Este tiquet no és del torn obert.');
@@ -262,7 +300,7 @@ export function ProveidorBar({ magatzem: injectat = null, rellotge = araReal, at
       }),
 
       /** Entrada o eixida de caixa. */
-      moviment: (moviment) => opera(async (d, ctx) => {
+      moviment: (moviment) => escriu(async (d, ctx) => {
         if (!d.tornActual) throw errorBar('SENSE_TORN', 'No hi ha cap torn obert.');
         const torn = afegeixMoviment(d.tornActual, moviment, { id: ctx.id('m'), ara: ctx.ara });
         await magatzem.desaTorn(torn);
@@ -274,7 +312,7 @@ export function ProveidorBar({ magatzem: injectat = null, rellotge = araReal, at
        * recàrrega. `canvis` és un objecte o una funció de l'esborrany d'ARA
        * (dins de la cua): els + i − de l'arqueig són relatius (BAR-R5).
        */
-      desaEsborranyTancament: (canvis) => opera(async (d) => {
+      desaEsborranyTancament: (canvis) => escriu(async (d) => {
         const actual = { perDenominacio: {}, avisos: [], fonsDeixatCents: 0, ...d.tancament };
         const tancament = { ...actual, ...(typeof canvis === 'function' ? canvis(actual) : canvis) };
         await magatzem.desaMeta('tancament', tancament);
@@ -285,7 +323,7 @@ export function ProveidorBar({ magatzem: injectat = null, rellotge = araReal, at
        * Tanca el torn: resum, reposició, nota de traspàs i congelat. Les
        * comandes buides es descarten; la resta passa al torn següent.
        */
-      tancaTorn: () => opera(async (d, ctx) => {
+      tancaTorn: () => escriu(async (d, ctx) => {
         if (!d.tornActual) throw errorBar('SENSE_TORN', 'No hi ha cap torn obert.');
         const esborrany = { perDenominacio: {}, avisos: [], fonsDeixatCents: 0, ...d.tancament };
         const buides = d.comandes.filter(esDescartable);
@@ -309,7 +347,7 @@ export function ProveidorBar({ magatzem: injectat = null, rellotge = araReal, at
         };
       }),
 
-      desaCarta: (carta) => opera(async () => ({ estat: { carta: await magatzem.desaCarta(carta) }, valor: true })),
+      desaCarta: (carta) => escriu(async () => ({ estat: { carta: await magatzem.desaCarta(carta) }, valor: true })),
 
       /**
        * Substituïx la carta per la d'una llavor (llavors/index.js). De
@@ -321,7 +359,7 @@ export function ProveidorBar({ magatzem: injectat = null, rellotge = araReal, at
        * sala, els torns i els tiquets no es toquen.
        * Torna { resum, avisos } de l'importador.
        */
-      carregaLlavor: (id) => opera(async (d) => {
+      carregaLlavor: (id) => escriu(async (d) => {
         if (d.tornActual || d.comandes.length > 0) throw errorBar('OCUPAT', 'Cal tancar el torn i les comandes obertes abans de canviar la carta.');
         const llavor = await obteLlavor(id);
         const { nom, slug } = llavor.establiment || {};
@@ -330,7 +368,7 @@ export function ProveidorBar({ magatzem: injectat = null, rellotge = araReal, at
         await magatzem.desaMeta('establiment', establiment);
         return { estat: { carta, establiment }, valor: { resum: llavor.resum, avisos: llavor.avisos } };
       }),
-      desaEstabliment: (establiment) => opera(async () => {
+      desaEstabliment: (establiment) => escriu(async () => {
         await magatzem.desaMeta('establiment', establiment);
         return { estat: { establiment }, valor: establiment };
       }),
@@ -350,8 +388,9 @@ export function ProveidorBar({ magatzem: injectat = null, rellotge = araReal, at
     ...base,
     avis,
     ...(dades || {}),
+    permis,
     accions
-  }), [dades, errorCarrega, base, avis, accions]);
+  }), [dades, errorCarrega, base, avis, permis, accions]);
 
   return <ContextBar.Provider value={valor}>{children}</ContextBar.Provider>;
 }

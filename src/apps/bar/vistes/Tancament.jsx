@@ -8,6 +8,10 @@
  *   · Resum: efectiu esperat davant del comptat i la diferència en gran.
  *   · Traspàs: les comandes que passen, la reposició, els avisos i el fons.
  *   · Confirmar: es congela el torn i es genera la nota de traspàs.
+ * Sense permís d'escriptura (ProveidorBar, permis.potEscriure) els passos es
+ * miren, però ni es compta, ni s'afig cap avís, ni es tanca: els controls que
+ * escriuen es desactiven i l'avís de la sessió diu per què, dins del marc
+ * de cada columna (avis, correcció F3, 261006).
  */
 import { useState } from 'react';
 import { Lock } from 'lucide-react';
@@ -20,7 +24,7 @@ import { arqueig, resumTorn } from '../nucli/torn.js';
 import { llistaReposicio } from '../nucli/reposicio.js';
 import { incidenciesAutomatiques } from '../nucli/traspas.js';
 import { useBar } from '../estat/ProveidorBar.jsx';
-import { AvisOperacio, Columna, Preparat } from './comu.jsx';
+import { AvisDeLaColumna, AvisOperacio, Columna, Preparat } from './comu.jsx';
 import { PASSOS, useVes } from './punt.js';
 import { TaulaResum } from './Torn.jsx';
 import { euros, nomOrigen } from './vestits.js';
@@ -37,7 +41,7 @@ function useTancament() {
 
 export function PassosTancament({ params }) {
   return (
-    <Preparat titol="Tancament">
+    <Preparat titol="Tancament" avis="estret">
       <Passos params={params} />
     </Preparat>
   );
@@ -48,7 +52,7 @@ function Passos({ params }) {
   return (
     <ColumnaColleccions titol="Tancament" actiu={params?.pas || 'arqueig'}
       colleccions={PASSOS.map((p, i) => ({ id: p.id, nom: p.nom, comptador: i + 1 }))}
-      hrefDe={(p) => ruta('tancament', p.id)} textComptador={(n) => `Pas ${n} de 4`} />
+      hrefDe={(p) => ruta('tancament', p.id)} textComptador={(n) => `Pas ${n} de 4`} avis={<AvisDeLaColumna />} />
   );
 }
 
@@ -79,6 +83,8 @@ function Arqueig() {
   const de = (cents) => esborrany.perDenominacio[cents] || 0;
   const centsDe = (linia) => Number(linia.articleId);
   const peces = bar.establiment.denominacions.reduce((suma, cents) => suma + de(cents), 0);
+  /* Sense permís, les peces es miren: cap +, − ni teclat. */
+  const compta = bar.permis.potEscriure;
   return (
     <>
       <ColumnaColleccio
@@ -88,10 +94,11 @@ function Arqueig() {
         }))}
         resum={{ etiqueta: 'Comptat', comptador: peces, textComptador: (n) => `${n} peces`, total: euros(comptat),
           accio: { text: 'Continua al resum', onClick: () => ves('tancament', 'resum') } }}
-        onSuma={(linia) => sumaPeces(centsDe(linia), 1)}
-        onResta={(linia) => sumaPeces(centsDe(linia), -1)}
-        onEdita={(linia) => { setEditant(centsDe(linia)); setUnitats(de(centsDe(linia))); }}
+        onSuma={compta ? (linia) => sumaPeces(centsDe(linia), 1) : undefined}
+        onResta={compta ? (linia) => sumaPeces(centsDe(linia), -1) : undefined}
+        onEdita={compta ? (linia) => { setEditant(centsDe(linia)); setUnitats(de(centsDe(linia))); } : undefined}
         peu={<AvisOperacio />}
+        avis={<AvisDeLaColumna />}
       />
       <Dialeg obert={editant !== null} onTanca={() => setEditant(null)} titol={editant !== null ? `Peces de ${euros(editant)}` : 'Peces'}
         accions={<Boto onClick={() => setEditant(null)}>Cancel·la</Boto>}>
@@ -130,6 +137,7 @@ function Traspas() {
   const [fons, setFons] = useState(esborrany.fonsDeixatCents);
   const ambPagaments = obertes.filter((c) => c.pagaments.length > 0);
   const reposicio = llistaReposicio(bar.tiquets, bar.carta);
+  const escriu = bar.permis.potEscriure;
   const afigAvis = () => {
     const text = avis.trim();
     if (!text) return;
@@ -164,13 +172,13 @@ function Traspas() {
         buit={<p>Cap incidència.</p>} />
       <LiniesColleccio etiqueta="Avisos per al torn següent"
         linies={esborrany.avisos.map((text, i) => ({ id: `avis-${i}`, articleId: 'avis', nom: text }))}
-        onLleva={llevaAvis}
+        onLleva={escriu ? llevaAvis : undefined}
         buit={<p>Cap avís.</p>} />
       <Camp etiqueta="Un avís curt" ajuda="Per exemple: «Falta gel».">
         <CampText value={avis} maxLength={80} onChange={(event) => setAvis(event.target.value)} />
       </Camp>
-      <Boto onClick={afigAvis} disabled={!avis.trim() || esborrany.avisos.length >= 10}>Afig l’avís</Boto>
-      <TeclatNumeric mode="import" etiqueta="Fons que es deixa al calaix" valor={fons} onCanvi={canviaFons} />
+      <Boto onClick={afigAvis} disabled={!escriu || !avis.trim() || esborrany.avisos.length >= 10}>Afig l’avís</Boto>
+      <TeclatNumeric mode="import" etiqueta="Fons que es deixa al calaix" valor={fons} onCanvi={canviaFons} desactivat={!escriu} />
       <Boto varietat="primari" ple onClick={() => ves('tancament', 'confirmar')}>Continua</Boto>
     </Columna>
   );
@@ -179,7 +187,7 @@ function Traspas() {
 function Confirmar() {
   const { bar, obertes, comptat, diferencia, resum } = useTancament();
   const { ves } = useVes();
-  const bloquejat = obertes.some((c) => c.pagaments.length > 0);
+  const bloquejat = obertes.some((c) => c.pagaments.length > 0) || !bar.permis.potEscriure;
   const tanca = async () => {
     const r = await bar.accions.tancaTorn();
     if (r.ok) ves('torns', r.valor.id);

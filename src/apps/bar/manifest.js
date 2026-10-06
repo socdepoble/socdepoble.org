@@ -7,9 +7,23 @@
  *     VITE_SDP_APP_BAR=1 al build de producció, Vite trau AppBar del paquet;
  *   · el component és l'export per defecte d'AppBar.jsx;
  *   · les entrades són la barra lateral de l'app (disseny del Bar §A.8) i
- *     el primer tram de cada ruta interna (rutesBar.js).
+ *     el primer tram de cada ruta interna (rutesBar.js). «TPV» (ordre del
+ *     Mestre, 261006) és el TPV Universal, al costat de la Caixa, que no
+ *     canvia i continua sent l'entrada per defecte.
  * Les dades són locals per disseny (IndexedDB del dispositiu, sense
  * sincronitzar): cap capacitat del backend, cap dada personal.
+ * permisos.escriure 'sessio': la plataforma el traduïx a un booleà
+ * (useSessioApp().potEscriure) que no bloqueja res per si mateix. El fa
+ * complir TOT el Bar (ordre del Mestre, 261006): l'estat (ProveidorBar)
+ * refusa cada escriptura sense el permís i les vistes ho diuen (AvisSessio).
+ * En mode de proves i amb la sessió desada que la xarxa o el servidor no han
+ * deixat comprovar, el Bar ven igualment: la sessió desada només cau quan la
+ * persona ix o el servidor rebutja el testimoni.
+ * LÍMIT CONEGUT (decisió del Mestre pendent; vegeu la capçalera de
+ * plataforma/sessioApp.js): amb una sessió de l'amfitrió (Model B), amb la
+ * política auth.persistencia 'pestanya' o amb el recurs efímer per quota, no
+ * hi ha cap sessió desada al registre persistent, i vendre sense xarxa només
+ * dura fins que caduca el JWT.
  */
 export default {
   schema: 'sdp.app.v1',
@@ -24,6 +38,7 @@ export default {
   ],
   entrades: [
     { slug: 'caixa', titol: { ca: 'Caixa', es: 'Caja' }, icona: 'Receipt', grup: 'servei' },
+    { slug: 'tpv', titol: { ca: 'TPV', es: 'TPV' }, icona: 'Store', grup: 'servei' },
     { slug: 'taules', titol: { ca: 'Taules', es: 'Mesas' }, icona: 'LayoutGrid', grup: 'servei' },
     { slug: 'emportar', titol: { ca: 'Per emportar', es: 'Para llevar' }, icona: 'Package', grup: 'servei' },
     { slug: 'tiquets', titol: { ca: 'Tiquets del torn', es: 'Tiques del turno' }, icona: 'FileText', grup: 'servei' },

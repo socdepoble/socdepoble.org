@@ -13,6 +13,9 @@
  *              text d'estat (textosLinies: «Fet», «Anul·lat», «Comprat»…) a
  *              la línia de davall, visible i al nom accessible
  *   peu        un node de l'app, si en vol (p. ex. el teclat de cobrar)
+ *   avis       (opcional) un avís de l'app, dins del marc (MarcColumna): el
+ *              primer fill del cos, davall de la capçalera i del resum.
+ *              Correcció F3 (261006): la capçalera no baixa. Sense, el de sempre
  * Presentacional: les línies arriben ja calculades i els gestos tornen a l'app.
  *
  * Ordre del Mestre, 261004 (prompt 261004_0515, «no inventar targetes») ·
@@ -64,7 +67,7 @@ const comArticle = (linia, textosEstat) => {
 
 export function ColumnaColleccio({
   titol = 'Col·lecció', linies = [], forma = 'linies', resum = null,
-  onTria, onEdita, onResta, onSuma, onLleva, textosLinies, peu = null, primer, tram, textos
+  onTria, onEdita, onResta, onSuma, onLleva, textosLinies, peu = null, primer, tram, textos, avis = null
 }) {
   const t = { ...TEXTOS_COLLECCIO, ...textos };
   const { mida } = useClosaAplicacio();
@@ -82,7 +85,7 @@ export function ColumnaColleccio({
 
   return (
     <MarcColumna capcalera={<AppGridColumn titol={titol} startActions={startActions} />}
-      eines={resum ? <BarraResum {...resum} forma="capcalera" /> : null} peu={peu} etiqueta={titol}>
+      eines={resum ? <BarraResum {...resum} forma="capcalera" /> : null} peu={peu} avis={avis} etiqueta={titol}>
       {forma === 'targetes' ? (
         <TargetesArticles
           elements={llista.map((linia) => ({

@@ -316,6 +316,23 @@ CATALOG_ITEMS.push(
     'pagina app detall noticies nevera lector traduir telemetria privada pageframe')
 );
 
+/* Ordre del Mestre, 261006 (prompt 261006_1215 i skill sdp-clon-loiverse) · el TPV universal:
+   l'estructura de Loyverse amb la pell de Pedra Seca, una sola peça per al Bar i el Rebost. */
+CATALOG_ITEMS.push(
+  especimen('estructura', 'universal-tpv', 'TPV universal', 'PedraSeca/organismes/UniversalTPV.jsx', ['organisme', 'tpv', 'cataleg'],
+    'L’estructura de Loyverse amb la pell de Pedra Seca: el tiquet a l’esquerra, la graella de productes a la dreta i la barra d’accions partida al peu. La mateixa peça cobra al Bar («Cobra») i omple la Llista de la Compra o el Rebost («Afig a la llista»); en una amplada estreta, una sola columna amb pestanyes.',
+    'tpv caixa tiquet cobra bar rebost llista compra loyverse graella productes categories tiquets oberts variants')
+);
+
+/* Ordre del Mestre, 261006 («deixa previst en el component de la targeta de producte l'espai i el
+   codi per a renderitzar aquestes xicotetes icones d'al·lèrgens») · les icones dels 14 al·lèrgens,
+   amb els dibuixos del Mestre, per al TPV i la Carta Digital. */
+CATALOG_ITEMS.push(
+  especimen('fonaments', 'icones-alergens', 'Icones d’al·lèrgens', 'PedraSeca/molecules/IconesAlergens.jsx', ['molecula', 'alergens', 'carta'],
+    'Les xicotetes icones dels 14 al·lèrgens del Reglament, amb els dibuixos del Mestre: una fila d’imatges quadrades i un sol nom per al lector («Al·lèrgens: gluten, llet»). Viatgen dins del paquet, sense xarxa. El TPV les pinta a la cantonada de la rajola i la Carta Digital, dins del cos de la targeta.',
+    'alergens al·lergens gluten crustacis ous peix cacauets soja llet fruits closca api mostassa sesam sulfits tramussos molluscs carta digital tpv icones reglament')
+);
+
 /* T52 (ordre del Mestre, 260928: «que quede clar quin és l'element universal
    pare que controla els altres») · L'ARBRE UNIVERSAL.
    `pare` és la peça universal que governa el node i `relacio` diu com (esmena

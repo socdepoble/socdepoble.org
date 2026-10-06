@@ -6,7 +6,8 @@
  *   categoria  { id (slug), nom, ordre, icona?, visible }
  *   producte   { id (slug), nom, categoriaId, variants[≥1], grupsModificadors[],
  *                ivaPercent?, alergens[], imatge: { slug, estat }, reposaNevera,
- *                desti, preuObert, actiu, ordre, exemple }
+ *                desti, preuObert, actiu, ordre, exemple,
+ *                canals?: { cartaDigital: boolean, perEmportar: boolean } }
  *   variant    { id, nom, preuCents (PVP amb IVA), ml?, costCents?, escandallId? }
  *   grup       { id, nom, min, max, opcions: [{ id, nom, deltaCents ≥ 0 }] }
  * Una carta importada de Loyverse (nucli/loyverse.js) porta, a més, el
@@ -15,20 +16,22 @@
  *
  * La primera variant és la de defecte. `min = 1, max = 1` vol dir elecció
  * obligatòria (el diàleg menut de la caixa). Els al·lèrgens són els 14 del
- * Reglament (UE) 1169/2011: informatius, els manté el bar.
+ * Reglament (UE) 1169/2011: informatius, els manté el bar. La llista
+ * (ALERGENS, NOMS_ALERGENS) i la seua validació (validaAlergens: cada id dels
+ * 14, sense repetits) són del contracte comú del producte
+ * (utils/productes/producteUniversal.js, ordre del Mestre, 261006): ací
+ * només es reexporten, amb els mateixos valors i en el mateix ordre.
+ *
+ * Els dos canals (ordre del Mestre, 261006): «a la carta digital» i «per
+ * emportar». El contracte és el del producte universal
+ * (utils/productes/producteUniversal.js): sense `canals`, el producte és als
+ * dos, i la carta d'ara no canvia. La caixa no mira els canals.
  */
+import { ALERGENS, NOMS_ALERGENS, esDelCanal, validaAlergens, validaCanals } from '../../../utils/productes/producteUniversal.js';
 import { errorBar, esSlug, textNet } from './comu.js';
 
-export const ALERGENS = Object.freeze([
-  'gluten', 'crustacis', 'ous', 'peix', 'cacauets', 'soja', 'llet',
-  'fruits-closca', 'api', 'mostassa', 'sesam', 'sulfits', 'tramussos', 'molluscs'
-]);
-
-export const NOMS_ALERGENS = Object.freeze({
-  gluten: 'Gluten', crustacis: 'Crustacis', ous: 'Ous', peix: 'Peix', cacauets: 'Cacauets', soja: 'Soja',
-  llet: 'Llet', 'fruits-closca': 'Fruits de closca', api: 'Api', mostassa: 'Mostassa', sesam: 'Sèsam',
-  sulfits: 'Diòxid de sofre i sulfits', tramussos: 'Tramussos', molluscs: 'Mol·luscs'
-});
+/* Els 14 al·lèrgens i els seus noms: els del contracte comú, reexportats perquè cap import del Bar es trenque. */
+export { ALERGENS, NOMS_ALERGENS };
 
 export const DESTINS = Object.freeze(['barra', 'cuina']);
 export const ESTATS_IMATGE = Object.freeze(['marcador', 'definitiva']);
@@ -108,13 +111,14 @@ function validaProductes(productes, categories, grups, errors) {
     if (!Array.isArray(p.grupsModificadors)) errors.push(`${on}: grupsModificadors ha de ser una llista`);
     else for (const id of p.grupsModificadors) if (!grups.has(id)) errors.push(`${on}: el grup «${String(id)}» no existix`);
     if (p.ivaPercent !== undefined && !esEnterEntre(p.ivaPercent, 0, 100)) errors.push(`${on}: ivaPercent ha de ser un enter de 0 a 100`);
-    if (!Array.isArray(p.alergens) || p.alergens.some((a) => !ALERGENS.includes(a))) errors.push(`${on}: al·lèrgens fora dels 14 del Reglament`);
+    for (const error of validaAlergens(p.alergens)) errors.push(`${on}.${error}`);
     if (!p.imatge || !esSlug(p.imatge.slug) || !ESTATS_IMATGE.includes(p.imatge.estat)) errors.push(`${on}: imatge { slug, estat: marcador | definitiva }`);
     for (const camp of ['reposaNevera', 'preuObert', 'actiu', 'exemple']) {
       if (typeof p[camp] !== 'boolean') errors.push(`${on}: ${camp} ha de ser booleà`);
     }
     if (!DESTINS.includes(p.desti)) errors.push(`${on}: desti barra | cuina`);
     if (!Number.isSafeInteger(p.ordre)) errors.push(`${on}: l'ordre ha de ser un enter`);
+    for (const error of validaCanals(p.canals)) errors.push(`${on}.${error}`);
   });
 }
 
@@ -129,6 +133,18 @@ export function validaCataleg(carta) {
   const grups = validaGrups(carta.grups, errors);
   validaProductes(carta.productes, categories, grups, errors);
   return { ok: errors.length === 0, errors };
+}
+
+/**
+ * La carta d'un canal ('carta-digital' | 'emportar'): els productes actius
+ * que hi són, en l'ordre de la carta. Un canal desconegut no en té cap.
+ * Torna una llista nova i no toca la carta. Si la categoria es mostra o no,
+ * ho decidix la vista.
+ */
+export function cartaDelCanal(carta, canal) {
+  return (carta?.productes || [])
+    .filter((p) => p?.actiu === true && esDelCanal(p, canal))
+    .sort((a, b) => a.ordre - b.ordre);
 }
 
 /** La variant d'un producte (la primera si no se'n diu cap). */

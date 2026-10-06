@@ -10,6 +10,10 @@
  *   una ruta no segura, una app desconeguda, apagada o sense dret, o una
  *   entrada que no existix · un EstatBuit que ho explica (mai un 404 mut).
  * El títol de la pestanya és el de l'app i mai s'indexa (useSEO, index: false).
+ * La sessió de l'arrel entra a l'app per ContenidorApp: passa la font
+ * (useFontSessio, fontSessio.js) a ProveidorApp, i el pont (sessioApp.js) la
+ * crida si l'app el demana. L'API pública de les apps (index.js) no importa
+ * mai SessionContext ni IdentitatContext (el perquè, a fontSessio.js).
  */
 import { Suspense } from 'react';
 import { Navigate, Route, Routes, useLocation } from '../../app/contexts/RouterContext';
@@ -19,6 +23,7 @@ import { Carregant } from '../../components/PedraSeca/atoms/estats.jsx';
 import { useSEO } from '../../hooks/useSEO';
 import { AvisApp, PAGINA_INEXISTENT } from './AvisApp.jsx';
 import { ElementExtern } from './ElementExtern.jsx';
+import { useFontSessio } from './fontSessio.js';
 import { rutaDeApp, titolDe } from './manifestApp.js';
 import { ProveidorApp, useAppAvaluada, useRegistre } from './PlataformaContext.jsx';
 import { PortalApps, textDelMotiu } from './PortalApps.jsx';
@@ -52,8 +57,10 @@ function ContenidorApp({ manifest, entrada }) {
       </Suspense>
     );
   }
+  /* La sessió de l'arrel entra a l'app per ací i només per ací: la font
+     (fontSessio.js), que el pont crida només si l'app la demana. */
   return (
-    <ProveidorApp manifest={manifest}>
+    <ProveidorApp manifest={manifest} fontSessio={useFontSessio}>
       <div className="sdp-app-contenidor" data-sdp-app={manifest.id}>
         <GuardaPermis permis={manifest.permisos.veure}>
           <GuardaPermis permis={entrada.permis}>{contingut}</GuardaPermis>

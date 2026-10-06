@@ -10,6 +10,9 @@
  *     el diàleg de confirmació destructiu a la consulta (?llavor=<id>), que
  *     diu què canvia de l'establiment i recorda desar abans una còpia, i el
  *     resum i els avisos de la importació (Onada 3).
+ * Sense permís d'escriptura (ProveidorBar, permis.potEscriure): «Desa» i les
+ * llavors queden desactivats. La còpia, la persistència i els interruptors
+ * del dispositiu no escriuen dades del Bar i continuen igual.
  */
 import { useEffect, useState } from 'react';
 import { Download, HardDrive } from 'lucide-react';
@@ -21,16 +24,18 @@ import { esSlug, titolDe, useApp, useInterruptorsApp, useParametresConsulta } fr
 import { taulesEnOrdre } from '../nucli/sala.js';
 import { useBar } from '../estat/ProveidorBar.jsx';
 import { LLAVORS, nomDeLlavor } from '../llavors/index.js';
-import { AvisBase, AvisOperacio, Columna, Preparat } from './comu.jsx';
+import { AvisBase, AvisOperacio, AvisSessioEnEstret, Columna, Preparat } from './comu.jsx';
 import { desaFitxer, nomFitxer } from './desa.js';
 import { SECCIONS_AJUSTOS, useUnaVegada, useVes } from './punt.js';
 
+/* Fora de cap Preparat: en estret, quan és el panell que es veu, porta l'avís de la sessió ella
+   mateixa; en ample i en tauleta el diu el detall del costat (AjustTriat), una sola vegada. */
 export function ApartatsAjustos({ params }) {
   const { ruta } = useVes();
   return (
     <ColumnaColleccions titol="Ajustos" actiu={params?.seccio || 'dispositiu'}
       colleccions={SECCIONS_AJUSTOS.map((s) => ({ id: s.id, nom: s.nom, comptador: 0, secundari: s.text }))}
-      hrefDe={(s) => ruta('ajustos', s.id)} textComptador={() => ''} />
+      hrefDe={(s) => ruta('ajustos', s.id)} textComptador={() => ''} avis={<AvisSessioEnEstret />} />
   );
 }
 
@@ -87,7 +92,7 @@ function Dispositiu() {
 }
 
 function Caixa() {
-  const { establiment, accions } = useBar();
+  const { establiment, accions, permis } = useBar();
   const [nom, setNom] = useState(establiment.nom);
   const [iva, setIva] = useState(String(establiment.ivaPerDefecte));
   const [desat, setDesat] = useState(false);
@@ -107,7 +112,7 @@ function Caixa() {
         error={ivaNet === null ? 'Escriu un enter de 0 a 100.' : undefined}>
         <CampText inputMode="numeric" value={iva} maxLength={3} onChange={(event) => { setIva(event.target.value); setDesat(false); }} />
       </Camp>
-      <Boto varietat="primari" disabled={ivaNet === null} onClick={desa}>Desa</Boto>
+      <Boto varietat="primari" disabled={!permis.potEscriure || ivaNet === null} onClick={desa}>Desa</Boto>
     </Columna>
   );
 }
@@ -171,11 +176,12 @@ const textEstabliment = (llavor) => (llavor.nomDelBar
   : 'El nom del bar, l’IVA per defecte i les monedes de la caixa no canvien.');
 
 function CartaLlavor() {
-  const { carta, establiment, accions } = useBar();
+  const { carta, establiment, accions, permis } = useBar();
   const [consulta, posaConsulta] = useParametresConsulta(PARAMETRES_CARTA);
   const [resultat, setResultat] = useState(null);
   const [ocupat, executa] = useUnaVegada();
-  const triada = LLAVORS.find((l) => l.id === consulta.llavor) || null;
+  /* Sense permís, cap confirmació s'obri, tampoc per la consulta. */
+  const triada = permis.potEscriure ? LLAVORS.find((l) => l.id === consulta.llavor) || null : null;
   const tria = (id) => {
     accions.oblidaAvis();
     setResultat(null);
@@ -194,7 +200,7 @@ function CartaLlavor() {
       <BarraResum etiqueta="Carta" comptador={carta.productes.length} textComptador={textProductes}
         total={nomDeLlavor(establiment.llavor)} textTotal="Llavor" />
       <p>Carregar una carta substituïx la d’ara sencera: productes, categories, modificadors, ingredients i escandalls. La sala, els torns i els tiquets no canvien. Cal tindre el torn tancat i cap comanda oberta.</p>
-      {LLAVORS.map((l) => <Boto key={l.id} onClick={() => tria(l.id)}>{l.accio}</Boto>)}
+      {LLAVORS.map((l) => <Boto key={l.id} disabled={!permis.potEscriure} onClick={() => tria(l.id)}>{l.accio}</Boto>)}
       {resultat ? <ResumLlavor resultat={resultat} /> : null}
       <DialegConfirmacio obert={Boolean(triada)} destructiu carregant={ocupat}
         titol={triada ? `Substituïx la carta per «${triada.nom}»?` : 'Substituïx la carta'}

@@ -12,6 +12,13 @@
  *   TiquetsOberts  ColumnaColleccions: la barra, les taules i per emportar.
  * Composicions primes: les dades del Bar vestides (vestits.js) i els gestos
  * cap a l'estat (ProveidorBar). Cap graella, llista ni classe pròpia.
+ *
+ * Sense permís d'escriptura (ProveidorBar, permis.potEscriure; ordre del
+ * Mestre, 261006): es mira la carta i la comanda, però les rajoles queden
+ * desactivades, les línies no s'editen i els botons que escriuen, també.
+ * L'avís de la sessió (Preparat) diu per què; l'estat ho refusaria igualment.
+ * Cada columna el porta dins del seu marc, davall de la capçalera (la prop
+ * `avis` de l'esquelet amb AvisDeLaColumna; correcció F3, 261006).
  */
 import { useEffect, useState } from 'react';
 import { ArrowRightLeft, Plus, Send, Split, Trash2 } from 'lucide-react';
@@ -25,21 +32,28 @@ import { totals } from '../nucli/comanda.js';
 import { potTancar } from '../nucli/cobrament.js';
 import { useBar } from '../estat/ProveidorBar.jsx';
 import { EditorLinia } from './EditorLinia.jsx';
-import { AvisBase, AvisOperacio, Columna, NoTrobat, Preparat } from './comu.jsx';
-import { useFixaComanda, usePunt, useVes } from './punt.js';
+import { AvisBase, AvisDeLaColumna, AvisOperacio, Columna, NoTrobat, Preparat } from './comu.jsx';
+import { ambTornada, esTornaTpv, useFixaComanda, usePunt, useVes } from './punt.js';
 import {
-  TEXTOS_LINIES_BAR, articlesDeCarta, categoriesVestides, euros, horaCurta, liniesVestides, llegixOpcio, necessitaTria, nomOrigen,
-  opcionsDetall, resumDeComanda, textLinies, triaLaVariant
+  TEXTOS_LINIES_BAR, articlesDeCarta, categoriesVestides, horaCurta, liniesVestides, llegixOpcio, necessitaTria, nomOrigen,
+  opcionsDetall, preuObertDeConsulta, resumDeComanda, textLinies, tiquetsOberts, triaLaVariant
 } from './vestits.js';
 
 /* Els diàlegs van a la consulta (Clàusula dels Slugs, BAR-R7): ?linia=<id>,
    ?mou=1 i ?preu=<producte> (amb &variant=<variant> quan el producte en té
-   més d'una). `article` és el detall de l'esquelet: només es llig. */
-const PARAMETRES_COMANDA = Object.freeze({ linia: esIdOpac, mou: (valor) => valor === '1' });
+   més d'una). `article` és el detall de l'esquelet: només es llig. `torna`:
+   la tornada al TPV (punt.js), que «Cobra» i «Dividix» passen al pas següent. */
+const PARAMETRES_COMANDA = Object.freeze({ linia: esIdOpac, mou: (valor) => valor === '1', torna: esTornaTpv });
 const PARAMETRES_CATALEG = Object.freeze({ preu: esSlug, variant: esSlug, article: esIdOpac });
 
-/* «Varis»: el preu es tecleja en vendre. La variant triada, si n'hi ha, va al títol. */
-function DialegPreuObert({ producte, variant = null, onTanca, onAfig }) {
+const CAP_PREU = Object.freeze({ producte: null, variant: null });
+/* Els textos d'estat de les rajoles: sense permís, el lector diu per què no responen. */
+const TEXTOS_ESTAT_CAIXA = Object.freeze({ 'en-colleccio': 'A la comanda' });
+const TEXTOS_ESTAT_SENSE_PERMIS = Object.freeze({ ...TEXTOS_ESTAT_CAIXA, desactivat: 'Ara no es pot vendre' });
+
+/* «Varis»: el preu es tecleja en vendre. La variant triada, si n'hi ha, va al
+   títol. També el fa servir el TPV (Tpv.jsx): un sol diàleg de preu obert. */
+export function DialegPreuObert({ producte, variant = null, onTanca, onAfig }) {
   const [preu, setPreu] = useState(0);
   const titol = producte?.nom ? [producte.nom, variant?.nom].filter(Boolean).join(' · ') : 'Preu obert';
   return (
@@ -78,14 +92,15 @@ function CatalegDelPunt({ params }) {
   }, [preuPendent, consulta.article, posaConsulta]);
   if (punt.perduda) return <NoTrobat text="Esta comanda ja no està oberta o la taula no existix." torna={{ etiqueta: 'Ves a la caixa', trams: ['caixa'] }} />;
   const { carta, establiment, accions } = bar;
+  const ven = bar.permis.potEscriure;
   const perId = new Map(carta.productes.map((p) => [p.id, p]));
   /* El preu obert de la consulta. Amb més d'una variant, només amb la variant
-     triada (?variant=): mai la primera a cegues. */
-  const ambPreu = consulta.preu ? carta.productes.find((p) => p.id === consulta.preu && p.preuObert && p.actiu !== false) || null : null;
-  const variantPreu = ambPreu && triaLaVariant(ambPreu) ? ambPreu.variants.find((v) => v.id === consulta.variant) || null : null;
-  const preuObert = ambPreu && (!triaLaVariant(ambPreu) || variantPreu) ? ambPreu : null;
+     triada (?variant=): mai la primera a cegues. Sense permís, cap teclat. */
+  const { producte: preuObert, variant: variantPreu } = ven ? preuObertDeConsulta(carta, consulta) : CAP_PREU;
   const aComanda = new Set((punt.comanda?.linies || []).filter((l) => l.estat !== 'anullada').map((l) => l.producteId));
-  const articles = articlesDeCarta(carta, { aComanda, establiment });
+  const delaCarta = articlesDeCarta(carta, { aComanda, establiment });
+  /* Sense permís, totes les rajoles desactivades: es veu la carta, però cap toc sembla vendre. */
+  const articles = ven ? delaCarta : delaCarta.map((article) => ({ ...article, estat: 'desactivat' }));
   /* A /caixa, la comanda que rep el primer producte passa al camí (BAR-R7). */
   const afig = async (producte, extra = {}) => {
     const r = await accions.afegeix({ comandaId: punt.comanda?.id || null, origen: punt.origen }, { producte, ...extra });
@@ -94,7 +109,7 @@ function CatalegDelPunt({ params }) {
   };
   const tria = (article, { obriDetall } = {}) => {
     const producte = perId.get(article.id);
-    if (!producte) return;
+    if (!ven || !producte) return;
     if (producte.preuObert && !triaLaVariant(producte)) posaConsulta({ preu: producte.id });
     else if (necessitaTria(producte, carta.grups)) obriDetall?.();
     else afig(producte);
@@ -106,7 +121,7 @@ function CatalegDelPunt({ params }) {
         primer="cataleg"
         categories={categoriesVestides(carta)}
         articles={articles}
-        textosEstat={{ 'en-colleccio': 'A la comanda' }}
+        textosEstat={ven ? TEXTOS_ESTAT_CAIXA : TEXTOS_ESTAT_SENSE_PERMIS}
         textArticles={(n) => `${n} ${n === 1 ? 'producte' : 'productes'}`}
         onTria={tria}
         afegit={{ etiqueta: 'Busca un producte', suggeriments: articles.filter((a) => a.estat !== 'desactivat') }}
@@ -122,6 +137,7 @@ function CatalegDelPunt({ params }) {
           textAccepta: 'Afig',
           onAccepta: ({ variant, quantitat, nota }, article) => {
             const producte = perId.get(article.id);
+            if (!ven || !producte) return;
             const { varianteId, opcions } = llegixOpcio(variant);
             if (producte.preuObert) {
               setPreuPendent({ preu: producte.id, variant: triaLaVariant(producte) ? varianteId || null : null });
@@ -135,6 +151,7 @@ function CatalegDelPunt({ params }) {
           }
         }}
         resum={resumDeComanda(punt.comanda)}
+        avis={<AvisDeLaColumna />}
       />
       <DialegPreuObert key={preuObert ? [preuObert.id, variantPreu?.id].filter(Boolean).join('~') : 'cap'} producte={preuObert} variant={variantPreu}
         onTanca={() => posaConsulta({ preu: null, variant: null })}
@@ -184,7 +201,7 @@ function DialegMou({ obert, comanda, onTanca }) {
 
 export function ComandaCaixa({ params }) {
   return (
-    <Preparat titol="Comanda">
+    <Preparat titol="Comanda" avis="estret">
       <ComandaDelPunt params={params} />
     </Preparat>
   );
@@ -198,6 +215,11 @@ function ComandaDelPunt({ params }) {
   if (punt.perduda) return <NoTrobat text="Esta comanda ja no està oberta." torna={{ etiqueta: 'Ves a la caixa', trams: ['caixa'] }} />;
   const { comanda } = punt;
   const { accions, sala } = bar;
+  const ven = bar.permis.potEscriure;
+  /* El cobrament que ve del TPV (?torna=tpv): cobrar o dividir des d'ací no perd la tornada. */
+  const tornaTpv = consulta.torna === 'tpv';
+  /* Sense permís, la comanda es mira: cap línia s'edita (ni per la consulta) i els botons que escriuen, desactivats. */
+  const editable = ven && Boolean(comanda);
   const titol = punt.taula ? punt.taula.nom : (comanda ? nomOrigen(comanda.origen, sala) : 'Barra');
   const t = comanda ? totals(comanda) : null;
   const perId = new Map((comanda?.linies || []).map((l) => [l.id, l]));
@@ -228,11 +250,11 @@ function ComandaDelPunt({ params }) {
       <AvisOperacio />
       {comanda ? (
         <Fila gap={2}>
-          {ambNoves ? <Boto icona={Send} onClick={() => accions.marxa(comanda.id)}>Marxa</Boto> : null}
-          {ambLinies ? <Boto icona={Split} onClick={() => ves(...punt.trams, 'dividir')}>Dividix</Boto> : null}
-          {ambLinies ? <Boto icona={ArrowRightLeft} onClick={() => posaConsulta({ mou: '1' })}>Mou</Boto> : null}
-          {comanda.linies.length === 0 ? <Boto icona={Trash2} varietat="perill" onClick={() => accions.descarta(comanda.id)}>Descarta</Boto> : null}
-          {tancable ? <Boto onClick={() => accions.tanca(comanda.id)}>Tanca sense cobrar</Boto> : null}
+          {ambNoves ? <Boto icona={Send} disabled={!ven} onClick={() => accions.marxa(comanda.id)}>Marxa</Boto> : null}
+          {ambLinies ? <Boto icona={Split} disabled={!ven} onClick={() => ves(...punt.trams, ambTornada('dividir', tornaTpv))}>Dividix</Boto> : null}
+          {ambLinies ? <Boto icona={ArrowRightLeft} disabled={!ven} onClick={() => posaConsulta({ mou: '1' })}>Mou</Boto> : null}
+          {comanda.linies.length === 0 ? <Boto icona={Trash2} varietat="perill" disabled={!ven} onClick={() => accions.descarta(comanda.id)}>Descarta</Boto> : null}
+          {tancable ? <Boto disabled={!ven} onClick={() => accions.tanca(comanda.id)}>Tanca sense cobrar</Boto> : null}
         </Fila>
       ) : null}
     </Pila>
@@ -246,42 +268,31 @@ function ComandaDelPunt({ params }) {
         textosLinies={TEXTOS_LINIES_BAR}
         resum={{
           ...resumDeComanda(comanda),
-          accio: { text: 'Cobra', desactivada: !t || t.pendentCents <= 0, onClick: () => ves(...punt.trams, 'cobrar') }
+          accio: { text: 'Cobra', desactivada: !ven || !t || t.pendentCents <= 0, onClick: () => ves(...punt.trams, ambTornada('cobrar', tornaTpv)) }
         }}
-        onEdita={comanda ? edita : undefined}
-        onResta={comanda ? resta : undefined}
-        onSuma={comanda ? suma : undefined}
-        onLleva={comanda ? lleva : undefined}
+        onEdita={editable ? edita : undefined}
+        onResta={editable ? resta : undefined}
+        onSuma={editable ? suma : undefined}
+        onLleva={editable ? lleva : undefined}
         peu={peu}
         textos={{ buit: 'La comanda és buida', buitText: 'Toca un producte per a afegir-lo.' }}
+        avis={<AvisDeLaColumna />}
       />
-      <EditorLinia comanda={comanda} liniaId={consulta.linia} onTanca={() => posaConsulta({ linia: null })} />
-      <DialegMou obert={consulta.mou === '1' && ambLinies} comanda={comanda} onTanca={() => posaConsulta({ mou: null })} />
+      <EditorLinia comanda={comanda} liniaId={ven ? consulta.linia : null} onTanca={() => posaConsulta({ linia: null })} />
+      <DialegMou obert={ven && consulta.mou === '1' && ambLinies} comanda={comanda} onTanca={() => posaConsulta({ mou: null })} />
     </>
   );
 }
 
-/** Les targetes dels tiquets oberts: la barra (encara que no en tinga cap), les taules i per emportar. */
+/** Les targetes dels tiquets oberts: la barra (encara que no en tinga cap), les taules i per emportar (vestits.js, com el TPV). */
 function useTiquetsOberts() {
   const { comandes, sala } = useBar();
-  const ordenades = [...comandes].sort((a, b) => (a.obertaA < b.obertaA ? -1 : 1));
-  const targetes = ordenades.map((c) => {
-    const t = totals(c);
-    const vives = c.linies.filter((l) => l.estat !== 'anullada').length;
-    return {
-      id: c.id,
-      nom: c.origen.tipus === 'taula' ? nomOrigen(c.origen, sala) : `${nomOrigen(c.origen, sala)} · ${horaCurta(c.obertaA)}`,
-      comptador: vives,
-      secundari: t.pagatCents > 0 ? `Pendent ${euros(t.pendentCents)}` : euros(t.totalCents)
-    };
-  });
-  if (!comandes.some((c) => c.origen.tipus === 'barra')) targetes.unshift({ id: 'barra', nom: 'Barra', comptador: 0 });
-  return targetes;
+  return tiquetsOberts(comandes, sala);
 }
 
 export function TiquetsOberts({ params }) {
   return (
-    <Preparat titol="Tiquets oberts">
+    <Preparat titol="Tiquets oberts" avis="estret">
       <TiquetsDelTorn params={params} ambActiu />
     </Preparat>
   );
@@ -290,7 +301,7 @@ export function TiquetsOberts({ params }) {
 /** Els mateixos tiquets oberts on la persona no és a cap comanda (/taules, /emportar): cap targeta és l'actual (BAR-R8). */
 export function TiquetsObertsSenseActiu() {
   return (
-    <Preparat titol="Tiquets oberts">
+    <Preparat titol="Tiquets oberts" avis="estret">
       <TiquetsDelTorn params={null} ambActiu={false} />
     </Preparat>
   );
@@ -315,9 +326,10 @@ function TiquetsDelTorn({ params, ambActiu }) {
       colleccions={targetes}
       actiu={actiu}
       hrefDe={(c) => (c.id === 'barra' ? ruta('caixa') : ruta('caixa', c.id))}
-      onCrea={nou}
+      onCrea={bar.permis.potEscriure ? nou : undefined}
       textCrea="Nou tiquet de barra"
       textComptador={textLinies}
+      avis={<AvisDeLaColumna />}
     />
   );
 }
@@ -332,7 +344,7 @@ export function EmportarInici() {
 }
 
 function EmportarNova() {
-  const { accions } = useBar();
+  const { accions, permis } = useBar();
   const { ves } = useVes();
   const crea = async () => {
     const r = await accions.novaComanda({ tipus: 'emportar' });
@@ -341,7 +353,7 @@ function EmportarNova() {
   return (
     <Columna titol="Per emportar">
       <AvisOperacio />
-      <EstatBuit icona={Plus} titol="Una comanda per emportar" accio={<Boto varietat="primari" icona={Plus} onClick={crea}>Nova comanda per emportar</Boto>}>
+      <EstatBuit icona={Plus} titol="Una comanda per emportar" accio={<Boto varietat="primari" icona={Plus} disabled={!permis.potEscriure} onClick={crea}>Nova comanda per emportar</Boto>}>
         Les comandes per emportar obertes són a la llista de tiquets oberts.
       </EstatBuit>
     </Columna>

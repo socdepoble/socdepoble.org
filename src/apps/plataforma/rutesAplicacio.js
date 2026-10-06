@@ -81,9 +81,31 @@ const esComponent = (valor) => typeof valor === 'function'
 /** Quina columna veu primer la persona en una closca «estreta» (ClosaAplicacio). */
 export const PANELLS_ESTRET = Object.freeze(['esquerra', 'mig', 'detall']);
 
-/* Les columnes d'una ruta de ClosaAplicacio: Mig i Detall sempre, Esquerra si n'hi ha. */
+/* Les claus de les columnes, que una ruta d'àrea única no pot portar. */
+const CLAUS_DE_COLUMNES = Object.freeze(['Mig', 'Detall', 'Esquerra', 'estret']);
+
+/**
+ * Cert si la ruta de ClosaAplicacio és d'ÀREA ÚNICA: porta la clau pròpia
+ * `Unica`. Clau pròpia i no valor: `Unica: undefined` (un import mal escrit)
+ * continua sent una ruta única, i la validació diu que no és cap component.
+ * validaRutes i ClosaAplicacio decidixen amb este mateix criteri.
+ */
+export function esRutaUnica(ruta) {
+  return ruta !== null && typeof ruta === 'object' && Object.hasOwn(ruta, 'Unica');
+}
+
+/* Les columnes d'una ruta de ClosaAplicacio: o una sola àrea (Unica, i cap
+   clau de columna), o Mig i Detall sempre i Esquerra si n'hi ha. */
 function errorsDeColumnes(ruta, on) {
   const errors = [];
+  if (esRutaUnica(ruta)) {
+    if (!esComponent(ruta.Unica)) errors.push(`${on}: Unica no és cap component`);
+    const sobrants = CLAUS_DE_COLUMNES.filter((clau) => ruta[clau] !== undefined);
+    if (sobrants.length) {
+      errors.push(`${on}: amb Unica no hi pot haver Mig, Detall, Esquerra ni estret (porta ${sobrants.join(', ')})`);
+    }
+    return errors;
+  }
   for (const columna of ['Mig', 'Detall']) {
     if (!esComponent(ruta[columna])) errors.push(`${on}: la columna ${columna} no és cap component`);
   }
@@ -101,8 +123,12 @@ function errorsDeColumnes(ruta, on) {
  * Camins relatius, en minúscules, trams slug o ':param', sense comodins ni
  * repetits; cada paràmetre amb el seu validador i cap validador sobrant.
  * Amb `{ columnes: true }` (la taula de ClosaAplicacio), cada ruta porta a més
- * les seues columnes: Mig i Detall (components), Esquerra opcional i
- * `estret` opcional ('esquerra' | 'mig' | 'detall').
+ * UNA de les dues formes:
+ *   · columnes · Mig i Detall (components), Esquerra opcional i `estret`
+ *                opcional ('esquerra' | 'mig' | 'detall');
+ *   · àrea única · `Unica` (component) i res més: amb Unica no hi pot haver
+ *                Mig, Detall, Esquerra ni estret (esRutaUnica).
+ * Una mateixa taula pot barrejar les dues formes.
  * @returns {{ ok: boolean, errors: string[] }}
  */
 export function validaRutes(rutes, { columnes = false } = {}) {

@@ -1,7 +1,8 @@
 // @vitest-environment node
 /* Plataforma d'Apps Enxufables · qualitat: les portes del repo sobre TOTS els
-   fitxers .js i .jsx de src/apps/ (proves i suport inclosos) i sobre els dos
-   fitxers del nucli que este lot toca (App.jsx i RouteSEO.jsx). ESLint amb la
+   fitxers .js i .jsx de src/apps/ (proves i suport inclosos) i sobre els
+   fitxers del nucli que la plataforma toca (App.jsx, RouteSEO.jsx i, des del
+   pont de sessió del 261006, IdentitatContext.jsx). ESLint amb la
    configuració del projecte i zero missatges (l'equivalent de
    --max-warnings=0), i les regles de Pedra Seca per text, també sobre
    apps.css. Els patrons vetats es componen a trossos perquè les portes que
@@ -25,7 +26,7 @@ function fitxersDe(directori, extensio = /\.jsx?$/) {
 }
 
 const APPS = fitxersDe('src/apps');
-const NUCLI_TOCAT = ['src/app/App.jsx', 'src/hooks/RouteSEO.jsx'];
+const NUCLI_TOCAT = ['src/app/App.jsx', 'src/hooks/RouteSEO.jsx', 'src/app/contexts/IdentitatContext.jsx'];
 const TOTS = [...APPS, ...NUCLI_TOCAT];
 const esProva = (f) => /\.test\.jsx?$/.test(f) || f.includes('/__fixtures__/');
 const PRODUCCIO = APPS.filter((f) => !esProva(f));
@@ -58,9 +59,11 @@ describe('el cens', () => {
     for (const esperat of [
       'plataforma/manifestApp.js', 'plataforma/registreApps.js', 'plataforma/interruptors.js', 'plataforma/rutesAplicacio.js',
       'plataforma/RutaApps.jsx', 'plataforma/BarraLateral.jsx', 'plataforma/BarraApp.jsx', 'plataforma/PortalApps.jsx',
-      'plataforma/ClosaAplicacio.jsx', 'plataforma/AvisApp.jsx',
+      'plataforma/ClosaAplicacio.jsx', 'plataforma/AvisApp.jsx', 'plataforma/sessioApp.js',
+      'plataforma/fontSessio.js', 'plataforma/ContextApp.jsx', 'plataforma/fronteres.test.js',
       'plataforma/manifestApp.test.js', 'plataforma/registreApps.test.js', 'plataforma/interruptors.test.js',
       'plataforma/RutaApps.test.jsx', 'plataforma/BarraApp.test.jsx', 'plataforma/ClosaAplicacio.test.jsx',
+      'plataforma/sessioApp.test.jsx',
       'plataforma/qualitat.test.js',
       'bar/manifest.js', 'bar/AppBar.jsx', 'salut/manifest.js', 'salut/AppSalut.jsx'
     ]) expect(APPS, esperat).toContain(`src/apps/${esperat}`);
@@ -163,6 +166,15 @@ describe('Pedra Seca · apps.css', () => {
     expect(vetat.test(css)).toBe(false);
     for (const [, valor] of css.matchAll(/(\d*\.?\d+)rem/g)) expect(Number(valor) % 0.25, `${valor}rem`).toBe(0);
     for (const [, valor] of css.matchAll(/(\d*\.?\d+)px/g)) expect(valor, `${valor}px`).toBe('1');
+  });
+
+  test('l’àrea única reserva, en compacte, l’alçada de la barra mòbil (la barra d’accions del TPV no queda tapada)', () => {
+    const reserva = regles.filter(({ selector }) => selector === ':where(.sdp-root.is-compact) .sdp-app-unica');
+    expect(reserva).toHaveLength(1);
+    expect(reserva[0].cos).toMatch(/padding-bottom:\s*calc\(var\(--sdp-alt-nav-mobil\) \+ env\(safe-area-inset-bottom, 0rem\)\)/);
+    const base = regles.find(({ selector }) => selector === '.sdp-app-unica');
+    expect(base.cos).toMatch(/position:\s*absolute/);
+    expect(base.cos).toMatch(/overflow:\s*hidden/);
   });
 
   test('index.css l’importa una sola vegada, dins de la capa components', () => {

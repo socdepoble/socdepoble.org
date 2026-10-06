@@ -1,0 +1,85 @@
+/* ═══════════════════════════════════════════════════════════════════
+   PEDRA SECA · ICONES D'AL·LÈRGENS — IconesAlergens (ordre del Mestre,
+   261006: «xicotetes icones d'al·lèrgens de forma visual. Això és vital
+   per a la Carta Digital i el TPV»). Una fila d'icones quadrades, els
+   dibuixos del Mestre (recursos/alergens.js), que fa línia nova si no hi
+   cap. No són controls: cap mida tàctil, cap :hover, cap focus.
+
+   Només tokens --sdp-*: cap hex, cap rgb, cap primitiu (els colors de cada
+   al·lergen són dins dels SVG del Mestre, no ací). Mides en rem perquè
+   creixen amb la lletra triada: 1.25rem la xicoteta i 2rem la mitjana.
+   Separació --sdp-space-1. Cap ombra, cap :has(). Les icones són 1:1 i
+   porten un fons blanc en clar i en fosc: el dibuix del Mestre és un disc de
+   color amb la figura buidada, pensat sobre blanc, i ni la foto ni el tema
+   fosc no l'han de travessar.
+
+   ENTRA PER src/css/index.css SENSE layer(), com tpv.css, i davant d'ell
+   (el TPV hi posa la cantonada de la rajola):
+     @import url('../components/PedraSeca/alergens.css');
+   Les regles ja són dins de `@layer components { }`. Amb layer(components)
+   a l'@import anirien a la subcapa components.components, que perd SEMPRE
+   contra les regles de components.css i modules.css.
+   ═══════════════════════════════════════════════════════════════════ */
+
+@layer components {
+  /* min-inline-size: 0 · dins d'una fila flex (la cantonada del TPV) es pot
+     estrényer i les icones fan línia nova, en lloc d'eixir-se'n. */
+  .sdp-alergens {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sdp-space-1);
+    min-inline-size: 0;
+    margin: 0;
+    padding: 0;
+    color: var(--sdp-text-titol);
+    line-height: 1;
+    vertical-align: middle;
+  }
+
+  /* El fons de la figura buidada: --sdp-sobre-accio, el blanc que no canvia
+     amb el tema (el mateix #fff en clar i en fosc). El de la targeta, en fosc,
+     és quasi negre, i la figura (el peix, el got de llet) quedaria a 1,7:1 del
+     seu disc. En clar és el mateix blanc que la targeta: cap píxel no canvia. */
+  .sdp-alergens__icona {
+    display: block;
+    flex: none;
+    inline-size: 1.25rem;
+    block-size: 1.25rem;
+    aspect-ratio: 1 / 1;
+    border-radius: var(--sdp-radi-pastilla);
+    background: var(--sdp-sobre-accio);
+    object-fit: contain;
+  }
+
+  /* La pastilla d'una icona que falta (l'abreviatura) i la de la resta («+N»). */
+  .sdp-alergens__abreviatura,
+  .sdp-alergens__resta {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    min-inline-size: 1.25rem;
+    block-size: 1.25rem;
+    padding: 0 var(--sdp-space-1);
+    border: 1px solid var(--sdp-vora-forta);
+    border-radius: var(--sdp-radi-pastilla);
+    background: var(--sdp-fons-targeta);
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-meta);
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .sdp-alergens--mitjana .sdp-alergens__icona {
+    inline-size: 2rem;
+    block-size: 2rem;
+  }
+  .sdp-alergens--mitjana .sdp-alergens__abreviatura,
+  .sdp-alergens--mitjana .sdp-alergens__resta {
+    min-inline-size: 2rem;
+    block-size: 2rem;
+    padding: 0 var(--sdp-space-2);
+  }
+}

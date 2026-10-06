@@ -10,7 +10,8 @@
  *   const RUTES = [
  *     { path: 'caixa', Esquerra: Categories, Mig: Productes, Detall: Comanda },
  *     { path: 'caixa/:tiquetId', params: { tiquetId: esIdOpac },
- *       Esquerra: Categories, Mig: Productes, Detall: Comanda, estret: 'detall' }
+ *       Esquerra: Categories, Mig: Productes, Detall: Comanda, estret: 'detall' },
+ *     { path: 'tpv', Unica: Tpv }
  *   ];
  *   <ClosaAplicacio rutes={RUTES} titols={{ esquerra: 'Categories', mig: 'Productes' }} />
  *
@@ -24,9 +25,20 @@
  *   · En «estret» es veu una sola columna: `estret` ('esquerra' | 'mig' |
  *     'detall', per defecte 'mig') diu quina. Mana la URL: arrere torna a la
  *     columna d'abans. useClosaAplicacio() obri i tanca els panells.
+ *   · ÀREA ÚNICA (ordre del Mestre, 261006, TPV Universal): una ruta pot
+ *     portar, EN LLOC de columnes, una sola clau `Unica` (un component; cap
+ *     Mig, Detall, Esquerra ni estret, ho vigila validaRutes). El TPV calca
+ *     l'estructura de Loyverse (tiquet a l'esquerra, graella a la dreta) i
+ *     la seua geometria és pròpia: la closca no munta AppGridShell, pinta
+ *     una regió amb el nom de l'app que ocupa tota la caixa del contingut
+ *     (.sdp-app-unica, apps.css) i, en compacte, s'aparta de la barra mòbil.
+ *     L'àrea rep { params }, igual que una columna, i dos rutes amb el
+ *     mateix Unica tampoc no la desmunten. useClosaAplicacio() és de les
+ *     columnes: dins d'una àrea única no hi ha panells i llança.
  *   · Cap ruta casa: l'avís de pàgina inexistent, mai un 404 mut. Una taula
  *     mal declarada no tomba l'App: avís i consola, com un manifest invàlid.
- *   · Cap classe pròpia ni cap píxel nou: la geometria és la d'AppGridShell.
+ *   · Les rutes de columnes no porten cap classe pròpia ni cap píxel nou: la
+ *     geometria és la d'AppGridShell. L'única classe pròpia és la de l'àrea.
  */
 import { useCallback, useEffect, useLayoutEffect, useMemo } from 'react';
 import { useLocation } from '../../app/contexts/RouterContext';
@@ -34,8 +46,8 @@ import { useUIState } from '../../app/contexts/UIContext';
 import AppGridShell, { useAppGrid } from '../../components/layout/AppGridShell.jsx';
 import { AvisApp, PAGINA_INEXISTENT } from './AvisApp.jsx';
 import { rutaDeApp, titolDe } from './manifestApp.js';
-import { useApp } from './PlataformaContext.jsx';
-import { useRutaApp, validaRutes } from './rutesAplicacio.js';
+import { useApp } from './ContextApp.jsx';
+import { esRutaUnica, useRutaApp, validaRutes } from './rutesAplicacio.js';
 
 /* La columna de ClosaAplicacio i el panell d'AppGridShell que la fa visible
    en «estret» (null: cap panell obert, es veu el detall). */
@@ -120,6 +132,15 @@ export function ClosaAplicacio({ rutes, titols = {} }) {
   }
 
   const { ruta, params } = coincidencia;
+  /* Àrea única: cap AppGridShell, una regió amb el nom de l'app. */
+  if (esRutaUnica(ruta)) {
+    const { Unica } = ruta;
+    return (
+      <div className="sdp-app-unica" role="region" aria-label={titol}>
+        <Unica params={params} />
+      </div>
+    );
+  }
   const { Esquerra, Mig, Detall } = ruta;
   return (
     <AppGridShell

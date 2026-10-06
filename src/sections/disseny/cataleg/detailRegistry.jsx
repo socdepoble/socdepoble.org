@@ -102,4 +102,8 @@ export const CATALOG_DETAIL_LOADERS = {
   /* Ordre del Mestre, 261004 (prompt 261004_0515; D-A) · la graella de targetes i la pàgina de les apps. */
   'fonaments/graella-targetes': lazyRoute(() => import('./detalls/EspecimenGraellaTargetes.jsx')),
   'estructura/pagina-app': lazyRoute(() => import('./detalls/EspecimenPaginaApp.jsx')),
+  /* Ordre del Mestre, 261006 (prompt 261006_1215) · el TPV universal, Mode Bar i Mode Rebost. */
+  'estructura/universal-tpv': lazyRoute(() => import('./detalls/EspecimenUniversalTPV.jsx')),
+  /* Ordre del Mestre, 261006 · les icones dels 14 al·lèrgens, per al TPV i la Carta Digital. */
+  'fonaments/icones-alergens': lazyRoute(() => import('./detalls/EspecimenIconesAlergens.jsx')),
 };

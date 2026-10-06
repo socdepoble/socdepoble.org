@@ -11,6 +11,15 @@
  * Clàusula dels Slugs: el mètode (?metode=targeta|altre) i el mode de divisió
  * (?mode=parts) van a la consulta; els imports i les parts teclejades, no
  * (són valors). Cada pagament és d'un sol gest (useUnaVegada).
+ *
+ * LA TORNADA AL TPV (?torna=tpv, punt.js): quan el cobrament ve del TPV, la
+ * nota del client la conserva (/tiquets/<id>?nota=1&torna=tpv) i «arrere»
+ * torna al TPV. La divisió també la conserva: «Separa i cobra» porta al
+ * cobrament de la part amb la tornada, i la part que tanca el compte, a la
+ * nota amb la tornada. Sense el paràmetre, el de sempre (Llei del Píxel).
+ *
+ * Sense permís d'escriptura (ProveidorBar, permis.potEscriure): el compte es
+ * veu, però cap botó ni teclat que cobra respon. L'avís de la sessió ho diu.
  */
 import { useState } from 'react';
 import { Banknote, CreditCard, Wallet } from 'lucide-react';
@@ -23,11 +32,11 @@ import { suggerimentsEfectiu } from '../nucli/cobrament.js';
 import { MAX_PARTS, partsIguals } from '../nucli/divisio.js';
 import { useBar } from '../estat/ProveidorBar.jsx';
 import { AvisOperacio, Columna, NoTrobat, Preparat } from './comu.jsx';
-import { useUnaVegada, usePunt, useVes } from './punt.js';
+import { ambTornada, esTornaTpv, useUnaVegada, usePunt, useVes } from './punt.js';
 import { euros, textLinies } from './vestits.js';
 
-const PARAMETRES_COBRAMENT = Object.freeze({ metode: (valor) => valor === 'targeta' || valor === 'altre' });
-const PARAMETRES_DIVISIO = Object.freeze({ mode: (valor) => valor === 'parts' });
+const PARAMETRES_COBRAMENT = Object.freeze({ metode: (valor) => valor === 'targeta' || valor === 'altre', torna: esTornaTpv });
+const PARAMETRES_DIVISIO = Object.freeze({ mode: (valor) => valor === 'parts', torna: esTornaTpv });
 
 const METODES = Object.freeze([
   { valor: 'efectiu', text: 'Efectiu', icona: <Banknote size={20} aria-hidden="true" focusable="false" /> },
@@ -35,11 +44,11 @@ const METODES = Object.freeze([
   { valor: 'altre', text: 'Altre', icona: <Wallet size={20} aria-hidden="true" focusable="false" /> }
 ]);
 
-/** Després de cobrar-ho tot: la nota del client, a la URL del tiquet. */
-function useEnTancar() {
+/** Després de cobrar-ho tot: la nota del client, a la URL del tiquet (amb la tornada al TPV, si en venia). */
+function useEnTancar(tornaTpv = false) {
   const { ves } = useVes();
   return (resultat) => {
-    if (resultat.ok && resultat.valor?.tiquet) ves('tiquets', `${resultat.valor.tiquet.id}?nota=1`);
+    if (resultat.ok && resultat.valor?.tiquet) ves('tiquets', `${resultat.valor.tiquet.id}?nota=1${tornaTpv ? '&torna=tpv' : ''}`);
   };
 }
 
@@ -52,22 +61,25 @@ export function CobramentCaixa({ params }) {
 }
 
 function Cobrament({ params }) {
-  const { accions } = useBar();
+  const { accions, permis } = useBar();
   const punt = usePunt(params);
-  const enTancar = useEnTancar();
   /* El mètode va a la consulta (?metode=targeta|altre; l'efectiu no s'escriu): BAR-R7. */
   const [consulta, posaConsulta] = useParametresConsulta(PARAMETRES_COBRAMENT);
+  const tornaTpv = consulta.torna === 'tpv';
+  const enTancar = useEnTancar(tornaTpv);
   const [ocupat, unaVegada] = useUnaVegada();
   const [lliurat, setLliurat] = useState(0);
   const [importTargeta, setImportTargeta] = useState(null);
   const metode = consulta.metode || 'efectiu';
+  const ven = permis.potEscriure;
   const { comanda } = punt;
   if (punt.perduda || !comanda) {
-    return <NoTrobat titol="Res a cobrar" text="Esta comanda ja està tancada o encara és buida." torna={{ etiqueta: 'Torna a la caixa', trams: punt.trams }} />;
+    const tornaBuit = tornaTpv ? { etiqueta: 'Torna al TPV', trams: ['tpv'] } : { etiqueta: 'Torna a la caixa', trams: punt.trams };
+    return <NoTrobat titol="Res a cobrar" text="Esta comanda ja està tancada o encara és buida." torna={tornaBuit} />;
   }
   const t = totals(comanda);
   const pendent = t.pendentCents;
-  const torna = { etiqueta: 'Torna a la comanda', trams: punt.trams };
+  const torna = tornaTpv ? { etiqueta: 'Torna al TPV', trams: ['tpv', comanda.id] } : { etiqueta: 'Torna a la comanda', trams: punt.trams };
   /* Un pagament per gest: dos tocs seguits no n'anoten dos (BAR-R5). */
   const paga = (pagament, despres) => unaVegada(async () => {
     const r = await accions.paga(comanda.id, pagament);
@@ -87,7 +99,7 @@ function Cobrament({ params }) {
   const resum = (
     <BarraResum etiqueta={t.pagatCents > 0 ? 'Pendent' : 'A cobrar'} comptador={comanda.linies.filter((l) => l.estat !== 'anullada').length}
       textComptador={textLinies} total={euros(pendent)} textTotal="Pendent"
-      accio={pendent > 0 && !altre ? { text: `Exacte en efectiu: ${euros(pendent)}`, onClick: () => cobraEfectiu(pendent) } : null} />
+      accio={pendent > 0 && !altre ? { text: `Exacte en efectiu: ${euros(pendent)}`, desactivada: !ven, onClick: () => cobraEfectiu(pendent) } : null} />
   );
   return (
     <Columna titol="Cobra" torna={torna} eines={resum}>
@@ -98,12 +110,12 @@ function Cobrament({ params }) {
         <>
           <Fila gap={2}>
             {suggerimentsEfectiu(pendent).map((cents) => (
-              <Boto key={cents} mida="gran" disabled={ocupat} onClick={() => cobraEfectiu(cents)}>{euros(cents)}</Boto>
+              <Boto key={cents} mida="gran" disabled={ocupat || !ven} onClick={() => cobraEfectiu(cents)}>{euros(cents)}</Boto>
             ))}
           </Fila>
           <TeclatNumeric mode="import" etiqueta="Lliurat" valor={lliurat} onCanvi={setLliurat}
             onAccepta={(cents) => { if (cents > 0) cobraEfectiu(cents); }}
-            textAccepta={lliurat >= pendent ? 'Cobra i torna el canvi' : 'Cobra este import (part)'} desactivat={pendent <= 0} />
+            textAccepta={lliurat >= pendent ? 'Cobra i torna el canvi' : 'Cobra este import (part)'} desactivat={pendent <= 0 || !ven} />
           {lliurat > 0 ? (
             lliurat >= pendent
               ? <BarraResum etiqueta="Canvi" comptador={0} textComptador={() => ''} total={euros(lliurat - pendent)} textTotal="Canvi" />
@@ -115,8 +127,8 @@ function Cobrament({ params }) {
           <Alerta to="info" viva={false} titol={metode === 'targeta' ? 'Cobra amb el datàfon' : 'Un altre mètode'}>
             Este TPV no cobra res: només anota el que ja s’ha cobrat fora (el datàfon del bar, una transferència…).
           </Alerta>
-          <TeclatNumeric mode="import" etiqueta="Import" valor={importAltre} maxim={pendent} onCanvi={setImportTargeta} />
-          <Boto varietat="primari" ple mida="gran" disabled={ocupat || importAltre < 1 || importAltre > pendent}
+          <TeclatNumeric mode="import" etiqueta="Import" valor={importAltre} maxim={pendent} onCanvi={setImportTargeta} desactivat={!ven} />
+          <Boto varietat="primari" ple mida="gran" disabled={ocupat || !ven || importAltre < 1 || importAltre > pendent}
             onClick={() => paga({ metode, importCents: importAltre }, () => setImportTargeta(null))}>
             {metode === 'targeta' ? `El datàfon ha cobrat ${euros(importAltre)}` : `Anota ${euros(importAltre)} cobrats`}
           </Boto>
@@ -135,12 +147,15 @@ export function DivisioCaixa({ params }) {
 }
 
 function Divisio({ params }) {
-  const { accions } = useBar();
+  const { accions, permis } = useBar();
+  const ven = permis.potEscriure;
   const { ves } = useVes();
   const punt = usePunt(params);
-  const enTancar = useEnTancar();
-  /* El mode va a la consulta (?mode=parts; per línies no s'escriu): BAR-R7. */
+  /* El mode va a la consulta (?mode=parts; per línies no s'escriu): BAR-R7. La
+     tornada al TPV (?torna=tpv) passa al cobrament de la part separada i a la nota. */
   const [consulta, posaConsulta] = useParametresConsulta(PARAMETRES_DIVISIO);
+  const tornaTpv = consulta.torna === 'tpv';
+  const enTancar = useEnTancar(tornaTpv);
   const [ocupat, unaVegada] = useUnaVegada();
   const [seleccio, setSeleccio] = useState({});
   /* Les parts es guarden tal com es teclegen (C i 3 són 3): la validesa es mira en fer el pla (BAR-R1). */
@@ -160,7 +175,7 @@ function Divisio({ params }) {
   const triades = Object.entries(seleccio).filter(([, q]) => q > 0).map(([liniaId, quantitat]) => ({ liniaId, quantitat }));
   const separa = () => unaVegada(async () => {
     const r = await accions.divideix(comanda.id, triades);
-    if (r.ok) ves('caixa', r.valor.id, 'cobrar');
+    if (r.ok) ves('caixa', r.valor.id, ambTornada('cobrar', tornaTpv));
   });
   /* Parts iguals del pendent: les ja pagades per part no es tornen a repartir. */
   const pagades = comanda.pagaments.filter((p) => Number.isSafeInteger(p.part)).length;
@@ -185,7 +200,7 @@ function Divisio({ params }) {
           <LiniesColleccio etiqueta="Unitats a separar"
             linies={vives.map((l) => ({ id: l.id, articleId: l.producteId, quantitat: seleccio[l.id] || 0, nom: l.nomCongelat, detall: `de ${l.quantitat}` }))}
             onSuma={(linia) => canvia(linia, 1)} onResta={(linia) => canvia(linia, -1)} />
-          <Boto varietat="primari" ple disabled={ocupat || triades.length === 0 || comanda.pagaments.length > 0} onClick={separa}>Separa i cobra</Boto>
+          <Boto varietat="primari" ple disabled={ocupat || !ven || triades.length === 0 || comanda.pagaments.length > 0} onClick={separa}>Separa i cobra</Boto>
           {comanda.pagaments.length > 0 ? <Alerta to="info" viva={false}>Esta comanda ja té pagaments: dividix-la a parts iguals.</Alerta> : null}
         </>
       ) : (
@@ -196,8 +211,8 @@ function Divisio({ params }) {
             linies={pla.map((importCents, i) => ({ id: `part-${seguent + i}`, articleId: 'part', quantitat: 1, nom: `Part ${seguent + i}`, valor: euros(importCents) }))} />
           {pla.length ? (
             <Fila gap={2}>
-              <Boto varietat="primari" disabled={ocupat} onClick={() => pagaPart('efectiu')}>{`Part ${seguent} en efectiu (${euros(pla[0])})`}</Boto>
-              <Boto disabled={ocupat} onClick={() => pagaPart('targeta')}>{`Part ${seguent} amb targeta`}</Boto>
+              <Boto varietat="primari" disabled={ocupat || !ven} onClick={() => pagaPart('efectiu')}>{`Part ${seguent} en efectiu (${euros(pla[0])})`}</Boto>
+              <Boto disabled={ocupat || !ven} onClick={() => pagaPart('targeta')}>{`Part ${seguent} amb targeta`}</Boto>
             </Fila>
           ) : null}
         </>

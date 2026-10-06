@@ -91,6 +91,16 @@ describe('els espècimens', () => {
     expect(arrel.querySelector('table caption').textContent).toBe('Contracte');
   });
 
+  /* Correcció F3 (261006) · el contracte de MarcColumna diu on va l'avís, i la mostra l'ensenya. */
+  it('MarcColumna: el contracte nomena la prop avis, i la mostra la porta com a primer fill del cos', () => {
+    const arrel = pinta(EspecimenMarcColumna);
+    const props = [...arrel.querySelectorAll('table tbody tr')].map((fila) => fila.firstElementChild.textContent);
+    expect(props).toEqual(['capcalera', 'eines', 'avis', 'children', 'peu', 'etiqueta']);
+    const marc = arrel.querySelector('.sdp-marc-columna');
+    expect(marc.firstElementChild.className).toBe('sdp-marc-columna__cap');
+    expect(marc.querySelector(':scope > .sdp-marc-columna__cos').firstElementChild.classList.contains('sdp-alerta')).toBe(true);
+  });
+
   it('Articles: graella i llista amb les mateixes dades; tocar i mantindre premut ho diuen', () => {
     const arrel = pinta(EspecimenArticles);
     const enGraella = [...arrel.querySelectorAll('[data-article]')].map((b) => b.dataset.article);
