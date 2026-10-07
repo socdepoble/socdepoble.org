@@ -23,6 +23,7 @@ import { Carregant } from '../../components/PedraSeca/atoms/estats.jsx';
 import { useSEO } from '../../hooks/useSEO';
 import { AvisApp, PAGINA_INEXISTENT } from './AvisApp.jsx';
 import { ElementExtern } from './ElementExtern.jsx';
+import { useEscalfamentMemoriaCau } from './escalfamentMemoriaCau.js';
 import { useFontSessio } from './fontSessio.js';
 import { rutaDeApp, titolDe } from './manifestApp.js';
 import { ProveidorApp, useAppAvaluada, useRegistre } from './PlataformaContext.jsx';
@@ -75,6 +76,7 @@ export default function RutaApps() {
   const { dins, id, trams } = analitzaRuta(pathname);
   const app = useAppAvaluada(trams === null ? null : id);
   const { language } = useUIState();
+  useEscalfamentMemoriaCau(); // closca de /app/* sense xarxa (ordre del Mestre, 261007)
 
   if (!dins) return null;
   if (pathname === '/app/') return <Navigate to="/app" replace />;
