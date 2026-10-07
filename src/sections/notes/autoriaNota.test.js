@@ -1,6 +1,8 @@
 import { expect, test } from 'vitest';
-import { AUTORIA_BENVINGUDA, ID_COPIA_PROVA, autoriaDeNota } from './autoriaNota.js';
+import { AUTORIA_BENVINGUDA, ID_COPIA_PROVA, autoriaDeNota, rutaDAutoriaDeNota, signaturaDeNota } from './autoriaNota.js';
 import { DEFAULT_AUTHOR, FORASTER } from '../../components/universal/UniversalUtils.js';
+import { RUTA_PROJECTE } from '../../config/navigation.js';
+import { ENTITAT_PILOT_ID } from '../../data/identitatsSeed.js';
 
 /* T50 (D2) · Una sola autoria per a la barra taronja de l'editor de notes i
    per a la targeta viva de la llista. */
@@ -68,4 +70,51 @@ test('T65 · una nota normal continua signant qui l’escriu: el Foraster sense 
   // Un id que només s'hi assembla no és la benvinguda.
   expect(autoriaDeNota({ notaId: 'prova-local-2' }).nom).toBe(FORASTER.name);
   expect(autoriaDeNota({ notaId: 'n10', currentUser: PEPA }).nom).toBe('Pepa');
+});
+
+/* Ordre del Mestre (261007) · «Quan isquen, les barres taronges han de portar
+   a la pàgina de l'autor que l'ha creada». La ruta segueix la mateixa tria que
+   el nom: la barra no pot dir un autor i portar a la pàgina d'un altre. */
+test('261007 · la benvinguda i la còpia de prova porten a la pàgina del projecte, signe qui signe', () => {
+  expect(RUTA_PROJECTE).toBe('/projecte');
+  expect(rutaDAutoriaDeNota({ notaId: 'n1', currentUser: PEPA })).toBe(RUTA_PROJECTE);
+  expect(rutaDAutoriaDeNota({ notaId: ID_COPIA_PROVA })).toBe(RUTA_PROJECTE);
+  expect(rutaDAutoriaDeNota({ notaId: ID_COPIA_PROVA, actor: { tipus: 'entitat', id: 'O', nom: 'Forn' }, actorId: 'O', currentUser: PEPA }))
+    .toBe(RUTA_PROJECTE);
+});
+
+test('261007 · una entitat activa porta a la seua fitxa (l’entitat pilot, a /projecte), mai a la persona', () => {
+  const actor = { tipus: 'entitat', id: 'O', nom: 'Forn & Cia' };
+  expect(rutaDAutoriaDeNota({ notaId: 'p', actor, actorId: 'O', currentUser: PEPA })).toBe('/empresa/O');
+  const pilot = { tipus: 'entitat', id: ENTITAT_PILOT_ID, nom: 'Sóc de Poble' };
+  expect(rutaDAutoriaDeNota({ notaId: 'p', actor: pilot, actorId: ENTITAT_PILOT_ID, currentUser: PEPA })).toBe(RUTA_PROJECTE);
+  // Una entitat sense nom públic no signa: signa la sessió, i la ruta també és la seua.
+  expect(rutaDAutoriaDeNota({ notaId: 'p', actor: { tipus: 'entitat', id: 'O', nom: '' }, actorId: 'O', currentUser: PEPA })).toBe('/gent/U');
+});
+
+test('261007 · un agent IA actiu porta a la seua fitxa; la persona amb sessió, a la seua; el Foraster, enlloc', () => {
+  const agents = [{ id: 'A1', name: 'IAIA', image_url: '/assets/iaia.webp', location: 'Benilloba' }];
+  expect(rutaDAutoriaDeNota({ notaId: 'p', actorId: 'A1', agents, currentUser: PEPA })).toBe('/perfil/A1');
+  expect(rutaDAutoriaDeNota({ notaId: 'p', actorId: 'U', currentUser: PEPA })).toBe('/gent/U');
+  // Un nom sense identitat coneguda no s'endevina.
+  expect(rutaDAutoriaDeNota({ notaId: 'p' })).toBeNull();
+  expect(rutaDAutoriaDeNota()).toBeNull();
+  expect(rutaDAutoriaDeNota({ notaId: 'p', currentUser: { user_metadata: { name: 'Sense id' } } })).toBeNull();
+});
+
+test('261007 · signaturaDeNota = autoriaDeNota + ruta; autoriaDeNota conserva la seua forma de tres camps', () => {
+  const casos = [
+    { notaId: 'n1', currentUser: PEPA },
+    { notaId: 'p', actor: { tipus: 'entitat', id: 'O', nom: 'Forn' }, actorId: 'O', currentUser: PEPA },
+    { notaId: 'p', actorId: 'U', currentUser: PEPA },
+    { notaId: 'p' },
+  ];
+  for (const params of casos) {
+    expect(signaturaDeNota(params)).toEqual({ ...autoriaDeNota(params), ruta: rutaDAutoriaDeNota(params) });
+    expect(Object.keys(autoriaDeNota(params)).sort()).toEqual(['avatar', 'nom', 'poble']);
+  }
+  expect(signaturaDeNota({ notaId: 'n1' })).toEqual({ ...AUTORIA_BENVINGUDA, ruta: RUTA_PROJECTE });
+  // La constant de la benvinguda no es toca (la targeta de la llista la compara per identitat).
+  expect(Object.isFrozen(AUTORIA_BENVINGUDA)).toBe(true);
+  expect(AUTORIA_BENVINGUDA).not.toHaveProperty('ruta');
 });

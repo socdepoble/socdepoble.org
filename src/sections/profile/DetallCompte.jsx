@@ -4,6 +4,7 @@ import { dataDeFila } from '../../components/universal/editorial.js';
 import { ajustosPersona, ajustosOrganitzacio } from './PerfilContext.jsx';
 import DetallAjust from './DetallAjust.jsx';
 import { BlocPerfil as Bloc } from './BlocPerfil.jsx';
+import { rutaDAutoria, rutaDePerfil } from '../../config/navigation.js';
 
 /* ═══════════════════════════════════════════════════════════════════
    EL COMPTE · el que no és la fitxa pública
@@ -17,7 +18,21 @@ import { BlocPerfil as Bloc } from './BlocPerfil.jsx';
    T43 (ordre del Mestre, 260928) · `contacte` és el correu opcional de
    l'organització tal com l'ha llegit PerfilContext (només per a qui
    l'administra). Sense ell, els ajustos del correu es pinten tancats.
+
+   Ordre del Mestre (261007) · «Quan isquen, les barres taronges han de
+   portar a la pàgina de l'autor que l'ha creada». La barra taronja d'esta
+   pàgina privada porta a la fitxa pública pròpia: la persona, per l'id de
+   la seua fila (dades.id, no 'jo'); una organització, per rutaDAutoria
+   (l'entitat pilot, /projecte); un agent IA, /perfil/:id. La mateixa tria
+   que rutaDeFitxaPublica de PerfilEditor, que no s'importa: les proves del
+   Perfil substituïxen eixe mòdul sencer.
    ═══════════════════════════════════════════════════════════════════ */
+
+function rutaDeLaFitxa(identitat) {
+  if (identitat.mena === 'persona') return rutaDePerfil('persona', identitat.dades?.id);
+  if (identitat.mena === 'agent') return rutaDePerfil('ia', identitat.id);
+  return rutaDAutoria({ tipus: identitat.mena === 'grup' ? 'grup' : 'entitat', id: identitat.id });
+}
 
 export function DetallCompte({ identitat, guardarAjust, pujaMitja, contacte = null }) {
   const persona = identitat?.mena === 'persona';
@@ -45,6 +60,7 @@ export function DetallCompte({ identitat, guardarAjust, pujaMitja, contacte = nu
         authorName: identitat.nom,
         authorAvatar: identitat.avatar || '',
         authorLocation: dades?.town_name || '',
+        authorHref: rutaDeLaFitxa(identitat),
       }}
     >
       <div className="perfil-compte">

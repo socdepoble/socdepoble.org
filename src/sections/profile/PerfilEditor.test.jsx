@@ -344,6 +344,44 @@ test('updateLocal guanya a les dades fins que es torna a obrir la fitxa', () => 
   expect(m.adapter.document.title).toBe('<em>Pere</em>');
 });
 
+/* Ordre del Mestre (261007) · «Quan isquen, les barres taronges han de portar
+   a la pàgina de l'autor que l'ha creada». La barra taronja de la fitxa porta
+   a la fitxa pública de la identitat: la persona, amb l'id de la seua fila,
+   MAI amb 'jo'. */
+test('261007 · la barra de la persona porta a la seua fitxa pública amb l’id real, no «jo»', () => {
+  render(<PerfilEditor identitat={{ ...jo, dades: { ...jo.dades, id: 'U' } }} />);
+  expect(m.adapter.barAuthorHref).toBe('/gent/U');
+  expect(m.adapter.barAuthorHref).not.toContain('jo');
+  cleanup();
+  // Sense la fila (encara no llegida), cap enllaç: la ruta no s'endevina.
+  render(<PerfilEditor identitat={jo} />);
+  expect(m.adapter.barAuthorHref).toBeNull();
+});
+
+test('261007 · una organització porta a la seua fitxa (també en lectura); un agent IA, a la seua', () => {
+  render(<PerfilEditor identitat={org('owner')} />);
+  expect(m.adapter.barAuthorHref).toBe('/empresa/O');
+  cleanup();
+  render(<PerfilEditor identitat={org('member')} />);
+  expect(m.adapter.document).toBeNull();
+  expect(m.adapter.barAuthorHref).toBe('/empresa/O');
+  cleanup();
+  render(<PerfilEditor identitat={{ id: 'A', mena: 'agent', nom: 'IAIA', rol: 'Agent IA', dades: { name: 'IAIA' } }} />);
+  expect(m.adapter.barAuthorHref).toBe('/perfil/A');
+});
+
+test('261007 · rutaDeFitxaPublica: persona per dades.id, grup a /grup, entitat pilot a /projecte, sense id null', async () => {
+  const { rutaDeFitxaPublica } = await import('./PerfilEditor.jsx');
+  const { ENTITAT_PILOT_ID } = await import('../../data/identitatsSeed.js');
+  expect(rutaDeFitxaPublica({ ...jo, dades: { id: 'U' } })).toBe('/gent/U');
+  expect(rutaDeFitxaPublica(jo)).toBeNull();
+  expect(rutaDeFitxaPublica({ id: 'G', mena: 'grup', nom: 'Colla' })).toBe('/grup/G');
+  expect(rutaDeFitxaPublica({ id: 'O', mena: 'empresa', nom: 'Forn' })).toBe('/empresa/O');
+  expect(rutaDeFitxaPublica({ id: ENTITAT_PILOT_ID, mena: 'empresa', nom: 'Sóc de Poble' })).toBe('/projecte');
+  expect(rutaDeFitxaPublica({ id: 'A', mena: 'agent', nom: 'IAIA' })).toBe('/perfil/A');
+  expect(rutaDeFitxaPublica(null)).toBeNull();
+});
+
 /* T41 (ordre del Mestre, 260928) · PUBLICAR i la bola del món obrin el
    selector de visibilitat (DocumentEditor): la fitxa posa el valor triat, no
    el commuta, i no fa cap toast d'èxit. */

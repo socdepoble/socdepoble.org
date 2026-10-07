@@ -4,7 +4,7 @@ import { dataDeFila } from '../../components/universal/editorial.js';
 import { LlistaNodes } from '../../components/universal/connexio/LlistaNodes.jsx';
 import { ESTATS_APLICACIO } from './aplicacions.js';
 import { BlocPerfil as Bloc } from './BlocPerfil.jsx';
-import { RUTA_PROJECTE } from '../../config/navigation.js';
+import { RUTA_PROJECTE, rutaDePerfil } from '../../config/navigation.js';
 
 /* ═══════════════════════════════════════════════════════════════════
    PÀGINES DE LECTURA DE L'ESPAI DE TREBALL DEL PERFIL
@@ -23,6 +23,17 @@ const AUTORIA_NODE = Object.freeze({
   authorLocation: 'Utilitat d’este node',
   authorAvatar: '',
   authorHref: RUTA_PROJECTE,
+});
+
+/* Ordre del Mestre (261007) · «Quan isquen, les barres taronges han de portar
+   a la pàgina de l'autor que l'ha creada». Les pàgines que parlen del compte
+   de la persona porten a la seua fitxa pública, per l'id de la seua fila
+   (dades.id; l'id de la identitat és 'jo'). Sense fila, cap enllaç. */
+const autoriaDeLaPersona = (persona) => ({
+  authorName: persona?.nom || 'El meu compte',
+  authorAvatar: persona?.avatar || '',
+  authorLocation: persona?.dades?.town_name || '',
+  authorHref: rutaDePerfil('persona', persona?.dades?.id),
 });
 
 import { useState, useEffect } from 'react';
@@ -82,7 +93,10 @@ export function DetallAplicacio({ aplicacio }) {
           <p className="perfil-compte__text">
             Pots fixar aquesta utilitat al teu Panell de Control perquè siga de ràpid accés.
           </p>
-          <div style={{ marginTop: 'var(--sdp-gap-md)' }}>
+          {/* Design Guard (marató del 261007, Llei del Píxel) · Fora l'estil en
+              línia: el token --sdp-gap-md no existix a cap full, el marge no
+              s'aplicava mai (0) i el bloc ja separa els fills amb el seu gap. */}
+          <div>
             <button
               type="button"
               className={`sdp-boto ${activa ? 'sdp-boto--perill' : 'sdp-boto--primari'}`}
@@ -107,11 +121,7 @@ export function DetallSenseOrganitzacions({ persona }) {
       lead="Encara no formes part de cap grup ni de cap empresa."
       /* T51 · la pàgina parla del compte de la persona: la seua data real. */
       {...dataDeFila(persona?.dades)}
-      topBarData={{
-        authorName: persona?.nom || 'El meu compte',
-        authorAvatar: persona?.avatar || '',
-        authorLocation: persona?.dades?.town_name || '',
-      }}
+      topBarData={autoriaDeLaPersona(persona)}
     >
       <div className="perfil-compte">
         <Bloc titol="Com se’n crea una">
@@ -140,11 +150,7 @@ export function DetallNodes({ persona, nodes = [], estat, etiquetaEstat }) {
       labels={[{ text: 'Connexió' }]}
       /* T51 · la pàgina parla del compte de la persona: la seua data real. */
       {...dataDeFila(persona?.dades)}
-      topBarData={{
-        authorName: persona?.nom || 'El meu compte',
-        authorAvatar: persona?.avatar || '',
-        authorLocation: persona?.dades?.town_name || '',
-      }}
+      topBarData={autoriaDeLaPersona(persona)}
     >
       <div className="perfil-compte">
         <Bloc titol="Connexió d’ara">

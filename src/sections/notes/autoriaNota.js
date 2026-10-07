@@ -10,8 +10,14 @@
  *
  * Un correu no es publica mai. IdentitatContext.nomDePersona hi cau quan la
  * persona no té cap nom; aleshores es diu «Veí».
+ *
+ * Ordre del Mestre (261007): «Quan isquen, les barres taronges han de portar
+ * a la pàgina de l'autor que l'ha creada». signaturaDeNota hi afig la `ruta`
+ * de la pàgina de qui signa; autoriaDeNota continua tornant { nom, avatar,
+ * poble }, la forma que llegix la targeta viva de la llista (NotaFitxa).
  */
 import { DEFAULT_AUTHOR, FORASTER, autorDeSessio, isSafeUrl } from '../../components/universal/UniversalUtils.js';
+import { RUTA_PROJECTE, rutaDAutoria, rutaDePerfil } from '../../config/navigation.js';
 
 export const NOM_SENSE_NOM = 'Veí';
 
@@ -75,13 +81,13 @@ export function autoriaDeLActor(actor, currentUser) {
  * (persona sense poble, entitat): `??`, perquè no es convertisca en el del Foraster.
  */
 export function autoriaDeNota({ notaId, actor, actorId, agents, currentUser } = {}) {
-  if (notaId != null && IDS_BENVINGUDA.has(String(notaId))) return AUTORIA_BENVINGUDA;
-  const autoria = autoriaDeLActor(actor, currentUser);
-  const agent = (agents || []).find((a) => String(a?.id) === String(actorId));
+  const signant = triaSignant({ notaId, actor, actorId, agents, currentUser });
+  if (signant.via === 'benvinguda') return AUTORIA_BENVINGUDA;
   let qui;
-  if (actor?.tipus === 'entitat' && autoria) {
-    qui = { nom: autoria.nom, avatar: actor.avatar, poble: autoria.poble };
-  } else if (agent) {
+  if (signant.via === 'entitat') {
+    qui = { nom: signant.autoria.nom, avatar: actor.avatar, poble: signant.autoria.poble };
+  } else if (signant.via === 'agent') {
+    const { agent } = signant;
     qui = { nom: agent.name, avatar: agent.avatar_url || agent.image_url, poble: agent.location };
   } else {
     const sessio = autorDeSessio(currentUser);
@@ -93,4 +99,44 @@ export function autoriaDeNota({ notaId, actor, actorId, agents, currentUser } = 
     avatar: qui.avatar || null,
     poble: qui.poble ?? FORASTER.location
   };
+}
+
+/* Qui signa, en l'ordre de autoriaDeNota: una sola tria per al nom i per a la
+   ruta, perquè la barra no diga un autor i porte a la pàgina d'un altre. */
+function triaSignant({ notaId, actor, actorId, agents, currentUser }) {
+  if (notaId != null && IDS_BENVINGUDA.has(String(notaId))) return { via: 'benvinguda' };
+  const autoria = autoriaDeLActor(actor, currentUser);
+  if (actor?.tipus === 'entitat' && autoria) return { via: 'entitat', autoria };
+  const agent = (agents || []).find((a) => String(a?.id) === String(actorId));
+  if (agent) return { via: 'agent', agent };
+  return { via: 'sessio' };
+}
+
+/**
+ * Ordre del Mestre (261007) · La ruta de la pàgina de qui signa una nota, o
+ * null. La mateixa tria que autoriaDeNota:
+ *   · la nota de benvinguda i la còpia de prova: Sóc de Poble, RUTA_PROJECTE;
+ *   · entitat activa: rutaDAutoria (l'entitat pilot porta a /projecte; la
+ *     resta, a la seua fitxa pública);
+ *   · agent IA actiu: la seua fitxa (rutaDePerfil 'ia');
+ *   · persona amb sessió: la seua fitxa pública (rutaDePerfil 'persona', amb
+ *     l'id de la sessió);
+ *   · el Foraster (sense sessió): null. No té pàgina, i un nom sense
+ *     identitat coneguda no s'endevina.
+ */
+export function rutaDAutoriaDeNota({ notaId, actor, actorId, agents, currentUser } = {}) {
+  const signant = triaSignant({ notaId, actor, actorId, agents, currentUser });
+  if (signant.via === 'benvinguda') return RUTA_PROJECTE;
+  if (signant.via === 'entitat') return rutaDAutoria({ tipus: 'entitat', id: actor.id });
+  if (signant.via === 'agent') return rutaDePerfil('ia', signant.agent.id);
+  return currentUser?.id == null ? null : rutaDePerfil('persona', currentUser.id);
+}
+
+/**
+ * Ordre del Mestre (261007) · { nom, avatar, poble, ruta } de qui signa: el
+ * que pinta la barra taronja de l'editor (NotesEditor), amb l'enllaç a la
+ * pàgina de l'autor. Els tres primers camps són sempre els de autoriaDeNota.
+ */
+export function signaturaDeNota(params = {}) {
+  return { ...autoriaDeNota(params), ruta: rutaDAutoriaDeNota(params) };
 }

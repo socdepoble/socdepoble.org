@@ -7,16 +7,22 @@ const m = vi.hoisted(() => ({
   estatConsentiment: vi.fn(), registra: vi.fn(), revoca: vi.fn(),
   /* T47 · La sessió de React (null: la peça muntada sola, sense proveïdor). */
   sessio: null,
+  /* Ordre del Mestre (261007) · Les props de l'última UniversalPage pintada. */
+  pagina: null,
 }));
 vi.mock('../../app/contexts/RouterContext', () => ({ useNavigate: () => m.navigate, Link: ({ to, children }) => <a href={to}>{children}</a> }));
 vi.mock('../../app/contexts/SessionContext.jsx', () => ({ useSessioOpcional: () => m.sessio }));
 vi.mock('../../components/universal/UniversalPage', () => ({
-  UniversalPage: ({ title, lead, topBarData, children }) => (
-    <main>
-      <header className="page-title"><h1>{title}</h1></header>
-      <p>{lead}</p><p>{topBarData?.authorName}</p>{children}
-    </main>
-  ),
+  UniversalPage: (props) => {
+    m.pagina = props;
+    const { title, lead, topBarData, children } = props;
+    return (
+      <main>
+        <header className="page-title"><h1>{title}</h1></header>
+        <p>{lead}</p><p>{topBarData?.authorName}</p>{children}
+      </main>
+    );
+  },
 }));
 vi.mock('../../data/backendPort.js', () => ({
   teCapacitat: (cap) => m.caps.has(cap),
@@ -73,6 +79,18 @@ test('sense capacitats, cap bloc ni cap crida al servidor, i ho diu', () => {
   expect(screen.getByText('Este node encara no oferix cap d’estes opcions.')).toBeTruthy();
   expect(m.estatBaixa).not.toHaveBeenCalled();
   expect(m.estatConsentiment).not.toHaveBeenCalled();
+});
+
+/* Ordre del Mestre (261007) · «Quan isquen, les barres taronges han de portar
+   a la pàgina de l'autor que l'ha creada». La pàgina privada porta a la fitxa
+   pública de la persona, per l'id de la seua fila. */
+test('261007 · la barra taronja porta a la fitxa pública de la persona amb l’id real, no «jo»', () => {
+  pinta({ ...jo, dades: { ...jo.dades, id: 'U' } });
+  expect(m.pagina.topBarData).toMatchObject({ authorName: 'Pep', authorHref: '/gent/U' });
+  cleanup();
+  // Sense la fila, cap ruta inventada.
+  pinta();
+  expect(m.pagina.topBarData.authorHref).toBeNull();
 });
 
 test('una organització no té pàgina de privacitat', () => {

@@ -183,6 +183,11 @@ export function UniversalEditorShell({
   barAuthorAvatar: propBarAuthorAvatar,
   barAuthorName: propBarAuthorName,
   barAuthorLocation: propBarAuthorLocation,
+  /* Ordre del Mestre (261007) · «Quan isquen, les barres taronges han de
+     portar a la pàgina de l'autor que l'ha creada». La ruta de la pàgina de
+     qui signa (DocumentEditor, clau barAuthorHref): amb ella, l'autoria de la
+     barra taronja és un enllaç. Sense, la topBarData de sempre. */
+  barAuthorHref = null,
   showStatusToggle = true,
   showLogoUpload = true,
   /* T35 · Punt d'extensió genèric: amb `onHeroEdit`, el botó de la capçalera
@@ -383,6 +388,7 @@ export function UniversalEditorShell({
               authorName: barAuthorName,
               authorLocation: barAuthorLocation,
               authorAvatar: barAuthorAvatar,
+              ...(barAuthorHref ? { authorHref: barAuthorHref } : null),
               /* T51 · La data va dins de barActions (useEditorShell), amb el
                  seu dateTime ISO quan n'hi ha. Ací abans arribava un text de
                  pantalla (formattedDate) com a dateTime. */

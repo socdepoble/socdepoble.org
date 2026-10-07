@@ -10,6 +10,7 @@ import {
 } from '../../data/backendPort.js';
 import { readableBackendError } from '../onboarding/onboardingModel.js';
 import { BlocPerfil as Bloc } from './BlocPerfil.jsx';
+import { rutaDePerfil } from '../../config/navigation.js';
 
 /* ═══════════════════════════════════════════════════════════════════
    PRIVACITAT I DADES · els drets de la persona sobre el que guardem
@@ -372,10 +373,13 @@ export function DetallPrivacitat({
       lead="Els teus drets sobre el que guardem: una còpia de les dades, el consentiment i la baixa."
       /* T51 · la data real del compte de la persona (profiles). */
       {...dataDeFila(dades)}
+      /* Ordre del Mestre (261007) · La barra taronja porta a la fitxa
+         pública de la persona, per l'id de la seua fila (no 'jo'). */
       topBarData={{
         authorName: identitat.nom,
         authorAvatar: identitat.avatar || '',
         authorLocation: dades?.town_name || '',
+        authorHref: rutaDePerfil('persona', dades?.id),
       }}
     >
       <div className="perfil-compte">

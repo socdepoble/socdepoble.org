@@ -24,7 +24,7 @@ import {
 } from './visibilitatNota.js';
 import { Alerta, Insignia } from '../../components/PedraSeca';
 import { llicenciaDeLActor } from '../../components/universal/drets/herencia.js';
-import { ID_COPIA_PROVA, ID_NOTA_BENVINGUDA, autoriaDeLActor, autoriaDeNota } from './autoriaNota.js';
+import { ID_COPIA_PROVA, ID_NOTA_BENVINGUDA, autoriaDeLActor, signaturaDeNota } from './autoriaNota.js';
 import { useNotaPreparadaDelBloc } from './notaPreparada.js';
 import { useMur } from '../mur/MurContext';
 import { cercaEntrades, deActe, dePagina, dePoble, deProducte, dePublicacio, textPla } from '../search/indexCerca.js';
@@ -324,10 +324,13 @@ export default function NotesEditor({ activeNote, onToast = null }) {
      amb una entitat activa. La nota de benvinguda (n1) és de Sóc de Poble.
      T65 (decisió del Mestre, 260928: «Editable, signa Sóc de Poble») · I
      també la còpia que en prova el Foraster (autoriaNota) i l'estat buit, que
-     pinta el text d'n1: la signa Sóc de Poble, no qui la llig. */
+     pinta el text d'n1: la signa Sóc de Poble, no qui la llig.
+     Ordre del Mestre (261007) · La signatura porta també la `ruta` de la
+     pàgina de l'autor (signaturaDeNota): la benvinguda, a /projecte; el
+     Foraster, cap. */
   const idSignatura = notaEnEdicio ? notaEnEdicio.id : ID_NOTA_BENVINGUDA;
   const signatura = useMemo(
-    () => autoriaDeNota({ notaId: idSignatura, actor, actorId, agents, currentUser }),
+    () => signaturaDeNota({ notaId: idSignatura, actor, actorId, agents, currentUser }),
     [idSignatura, actor, actorId, agents, currentUser]
   );
 
@@ -413,6 +416,9 @@ export default function NotesEditor({ activeNote, onToast = null }) {
       barAuthorAvatar: signatura.avatar,
       barAuthorName: signatura.nom,
       barAuthorLocation: signatura.poble,
+      /* Ordre del Mestre (261007) · L'autoria de la barra taronja porta a la
+         pàgina de qui signa, també a l'estat buit (la benvinguda). */
+      barAuthorHref: signatura.ruta,
       copyright: '© Sóc de Poble',
       posicioEines: 'davall-entradilla',
       /* T7 (ordre del Mestre, 261004) · Targetes incrustades al cos: l'ordre

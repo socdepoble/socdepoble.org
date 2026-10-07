@@ -16,6 +16,24 @@ import { ENTITATS_FITXA } from './perfilEscriptor.js';
 import { cuaDesament } from '../../data/autodesament/cua.js';
 import { useAutodesament } from '../../data/autodesament/useAutodesament.js';
 import { useResolvedAsset } from '../../hooks/useResolvedAsset.js';
+import { rutaDAutoria, rutaDePerfil } from '../../config/navigation.js';
+
+/* Ordre del Mestre (261007) · «Quan isquen, les barres taronges han de portar
+   a la pàgina de l'autor que l'ha creada». La fitxa pública d'una identitat
+   del Perfil, on porta l'autoria de la barra taronja:
+     · la persona, per l'id de la seua fila (dades.id): `identitat.id` és 'jo',
+       que no és cap ruta;
+     · una organització, per rutaDAutoria (l'entitat pilot porta a /projecte;
+       un grup, a /grup/:id);
+     · un agent IA, a la seua fitxa (/perfil/:id).
+   Sense id, null: la barra queda sense enllaç. DetallCompte en fa la mateixa
+   tria (no s'importen entre ells: les proves del Perfil els substituïxen). */
+export function rutaDeFitxaPublica(identitat) {
+  const mena = identitat?.mena;
+  if (mena === 'persona') return rutaDePerfil('persona', identitat.dades?.id);
+  if (mena === 'agent') return rutaDePerfil('ia', identitat.id);
+  return rutaDAutoria({ tipus: mena === 'grup' ? 'grup' : 'entitat', id: identitat?.id });
+}
 
 /* Qui pot editar la fitxa d'una organització (la RLS ho torna a dir al servidor). */
 const ROLS_QUE_EDITEN = new Set(['owner', 'admin']);
@@ -359,6 +377,8 @@ export function PerfilEditor({ identitat }) {
     () => ({ nom: identitat.nom, avatar: avatarBarra, poble }),
     [identitat.nom, avatarBarra, poble],
   );
+  /* Ordre del Mestre (261007) · La barra taronja porta a la fitxa pública. */
+  const rutaFitxa = rutaDeFitxaPublica(identitat);
   const documentViu = useMemo(
     () => ({ document: fitxa, autor: autorTargeta, etiquetes }),
     [fitxa, autorTargeta, etiquetes],
@@ -391,6 +411,9 @@ export function PerfilEditor({ identitat }) {
       barAuthorAvatar: autorTargeta.avatar,
       barAuthorName: autorTargeta.nom,
       barAuthorLocation: autorTargeta.poble,
+      /* Ordre del Mestre (261007) · L'autoria enllaça a la fitxa pública
+         d'esta identitat (rutaDeFitxaPublica), amb l'id real i no 'jo'. */
+      barAuthorHref: rutaFitxa,
       /* T47 · L'indicador de l'autodesament i els avisos en línia dels camps. */
       estatDesament,
       avisosCamps,
@@ -408,7 +431,7 @@ export function PerfilEditor({ identitat }) {
       emoticona: fitxa.icon || '',
       onObriEmoticona: ambEmoticona ? obriEmoticona : null,
     };
-  }, [esAgent, potEditar, fitxa, identitat, etiquetes, autorTargeta, updateLocal, saveRemote, visibilitat, uploadMedia, obriDialegImatge, estatDesament, avisosCamps, ambEmoticona, obriEmoticona]);
+  }, [esAgent, potEditar, fitxa, identitat, etiquetes, autorTargeta, rutaFitxa, updateLocal, saveRemote, visibilitat, uploadMedia, obriDialegImatge, estatDesament, avisosCamps, ambEmoticona, obriEmoticona]);
 
   /* Només qui pot editar la fitxa té el diàleg (T35). */
   const dialegCapcalera = potEditar ? (

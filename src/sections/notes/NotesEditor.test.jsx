@@ -504,6 +504,43 @@ test('T65 · una nota normal del Foraster (mode seed) continua signant el Forast
   expect(barra()).toEqual({ nom: 'Foraster', avatar: null, poble: 'Poble de la persona forastera' });
 });
 
+/* Ordre del Mestre (261007) · «Quan isquen, les barres taronges han de portar
+   a la pàgina de l'autor que l'ha creada». L'adaptador porta barAuthorHref,
+   la ruta de signaturaDeNota: la benvinguda, a /projecte; el Foraster, cap. */
+test('261007 · la benvinguda porta a /projecte: la còpia de prova del Foraster, l’estat buit i n1 oberta', () => {
+  mocks.session = {};
+  render(<NotesEditor />);
+  expect(mocks.adapter.document.id).toBe('prova-local');
+  expect(mocks.adapter.barAuthorHref).toBe('/projecte');
+  cleanup();
+  mocks.session = { currentUser: { id: 'U', user_metadata: { name: 'Pepa' } } };
+  render(<NotesEditor />);
+  expect(mocks.adapter.document).toBeNull();
+  expect(mocks.adapter.barAuthorHref).toBe('/projecte');
+  cleanup();
+  render(<NotesEditor activeNote={{ id: 'n1', folderId: 'f-mur', categories: ['Sistema'], tags: [] }} />);
+  expect(mocks.adapter.barAuthorHref).toBe('/projecte');
+});
+
+test('261007 · el Foraster no té pàgina: una nota seua no porta cap enllaç', () => {
+  mocks.config = { tenantId: mocks.TENANT_A, dataMode: 'seed' };
+  render(<NotesEditor activeNote={{ id: 'p', folderId: 'f-notes', categories: ['General'], tags: [] }} />);
+  expect(barra().nom).toBe('Foraster');
+  expect(mocks.adapter.barAuthorHref).toBeNull();
+});
+
+test('261007 · una nota pròpia porta a la fitxa de la persona; amb una entitat activa, a la de l’entitat', () => {
+  mocks.session = { currentUser: { id: 'U', user_metadata: { name: 'Pepa' } } };
+  render(<NotesEditor activeNote={{ id: 'p', folderId: 'f-mur', categories: ['Sistema'], tags: [] }} />);
+  expect(mocks.adapter.barAuthorName).toBe('Pepa');
+  expect(mocks.adapter.barAuthorHref).toBe('/gent/U');
+  cleanup();
+  mocks.identitat = { actorId: 'O', actor: { tipus: 'entitat', id: 'O', nom: 'Forn & Cia' } };
+  render(<NotesEditor activeNote={{ id: 'p', folderId: 'f-mur', categories: ['Sistema'], tags: [] }} />);
+  expect(mocks.adapter.barAuthorName).toBe('Forn & Cia');
+  expect(mocks.adapter.barAuthorHref).toBe('/empresa/O');
+});
+
 test('el selector no diu mai un correu: sense nom, «Veí» (el mateix que ix al Mur)', () => {
   mocks.session = { currentUser: { id: 'U', email: 'pepa@exemple.org' } };
   mocks.identitat = { actorId: 'U', actor: { tipus: 'persona', id: 'U', nom: 'pepa@exemple.org' } };

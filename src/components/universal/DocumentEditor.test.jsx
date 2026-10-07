@@ -235,6 +235,56 @@ test('T65 · l’estat buit signa a la barra taronja amb el nom, el poble i l’
   expect(barra.querySelector('.sp-card-avatar--fallback').classList.contains('sp-card-avatar--amagat')).toBe(true);
 });
 
+/* Ordre del Mestre (261007) · «Quan isquen, les barres taronges han de portar
+   a la pàgina de l'autor que l'ha creada». La clau barAuthorHref de
+   l'adaptador fa de l'autoria (avatar i nom) un enllaç, a l'editor i a
+   l'estat buit. Sense la clau (o amb null), el DOM de sempre. */
+const autoriaDe = (container) => container.querySelector('section.bar-orange > .sp-card-author');
+
+test('261007 · amb barAuthorHref, l’autoria de la barra taronja de l’editor porta a la pàgina de qui signa', () => {
+  const { container } = editor({ barAuthorName: 'Pep', barAuthorLocation: 'La Torre', barAuthorHref: '/gent/U' });
+  const autor = autoriaDe(container);
+  expect(autor.matches('a.sp-card-author.sp-card-author-link')).toBe(true);
+  expect(autor.getAttribute('href')).toBe('/gent/U');
+  expect(autor.querySelector('.sp-card-author-name').textContent).toBe('Pep');
+  expect(autor.querySelector('.sp-card-author-location').textContent).toBe('La Torre');
+  // La clau no arriba al DOM com a atribut.
+  expect(container.querySelector('[barauthorhref], [barAuthorHref]')).toBeNull();
+});
+
+test('261007 · a l’estat buit, barAuthorHref també fa de l’autoria un enllaç', () => {
+  const { container } = render(<DocumentEditor adapter={{
+    document: null, emptyDocument: { title: 'Bloc de notes' },
+    barAuthorName: 'Sóc de Poble', barAuthorLocation: 'La Torre de les Maçanes', barAuthorHref: '/projecte'
+  }} />);
+  const autor = autoriaDe(container);
+  expect(autor.matches('a.sp-card-author-link')).toBe(true);
+  expect(autor.getAttribute('href')).toBe('/projecte');
+  expect(autor.querySelector('.sp-card-author-name').textContent).toBe('Sóc de Poble');
+});
+
+test('261007 · sense barAuthorHref (o amb null), l’autoria amb nom continua sent el <div> de sempre', () => {
+  vi.useFakeTimers({ toFake: ['Date'] });
+  vi.setSystemTime(new Date(2026, 9, 7, 1, 0));
+  try {
+    const senseClau = editor({ barAuthorName: 'Pep' });
+    const autor = autoriaDe(senseClau.container);
+    expect(autor.tagName).toBe('DIV');
+    expect(autor.className).toBe('sp-card-author');
+    expect(senseClau.container.querySelector('.bar-orange a')).toBeNull();
+    const html = senseIds(senseClau.container.innerHTML);
+    cleanup();
+    const ambNull = editor({ barAuthorName: 'Pep', barAuthorHref: null });
+    expect(senseIds(ambNull.container.innerHTML)).toBe(html);
+    cleanup();
+    // L'estat buit amb nom i sense ruta tampoc s'inventa cap enllaç.
+    const buit = render(<DocumentEditor adapter={{ document: null, emptyDocument: { title: 'Fitxa' }, barAuthorName: 'Pep' }} />);
+    expect(autoriaDe(buit.container).tagName).toBe('DIV');
+  } finally {
+    vi.useRealTimers();
+  }
+});
+
 /* ── T51 (ordre del Mestre, 260928) · data sempre plena i espai central ── */
 test('T51 · l’estat buit porta la data I l’hora d’ara (abans només l’hora), en un <time> amb dateTime', () => {
   vi.useFakeTimers({ toFake: ['Date'] });

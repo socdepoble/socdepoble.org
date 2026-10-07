@@ -174,6 +174,28 @@ test('T51 · una fila sense created_at ni updated_at: cap data inventada (mai la
   expect(m.pagina).toMatchObject({ time: '', date: '', dateTime: '' });
 });
 
+/* Ordre del Mestre (261007) · «Quan isquen, les barres taronges han de portar
+   a la pàgina de l'autor que l'ha creada». La pàgina privada del compte porta
+   a la fitxa pública pròpia. */
+test('261007 · la barra taronja del compte porta a la fitxa pública pròpia (persona per l’id real, no «jo»)', async () => {
+  pinta({ ...jo, dades: { ...jo.dades, id: 'U' } });
+  expect(m.pagina.topBarData.authorHref).toBe('/gent/U');
+  cleanup();
+  // Sense la fila, cap ruta inventada.
+  pinta();
+  expect(m.pagina.topBarData.authorHref).toBeNull();
+  cleanup();
+  pinta(forn);
+  expect(m.pagina.topBarData.authorHref).toBe('/empresa/O');
+  cleanup();
+  pinta({ ...forn, id: 'G', mena: 'grup' });
+  expect(m.pagina.topBarData.authorHref).toBe('/grup/G');
+  cleanup();
+  const { ENTITAT_PILOT_ID } = await import('../../data/identitatsSeed.js');
+  pinta({ ...forn, id: ENTITAT_PILOT_ID });
+  expect(m.pagina.topBarData.authorHref).toBe('/projecte');
+});
+
 test('sense identitat no pinta res', () => {
   const { container } = render(<DetallCompte identitat={null} />);
   expect(container.innerHTML).toBe('');

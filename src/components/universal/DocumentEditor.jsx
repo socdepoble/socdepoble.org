@@ -57,6 +57,12 @@ import { LLAVOR_NOTA } from '../../sections/notes/NotesSection.jsx';
  *   statusIcon: ReactNode // Opcional. Icona del botó d'estat de la barra taronja.
  *   barAuthorAvatar, barAuthorName, barAuthorLocation: String // Opcionals. Autoria
  *                            // de la barra taronja (i de l'estat buit).
+ *   barAuthorHref: String|null // Opcional. Ordre del Mestre (261007): «Quan
+ *                            // isquen, les barres taronges han de portar a la
+ *                            // pàgina de l'autor que l'ha creada». La ruta de
+ *                            // la pàgina de qui signa: amb ella, l'avatar i el
+ *                            // nom de la barra taronja són un enllaç (també a
+ *                            // l'estat buit). Sense la clau, el DOM de sempre.
  *   seedContent: String|null // Opcional. Llavor del cos: mentre el cos és
  *                            // exactament esta llavor es pinta atenuat i es buida
  *                            // en rebre el focus. Sense la clau (undefined) val
@@ -111,8 +117,10 @@ import { LLAVOR_NOTA } from '../../sections/notes/NotesSection.jsx';
    (abans només l'hora), amb el seu dateTime: mai buida.
    T66b (sdp-pedra-seca §10) · L'estat buit és LECTURA: l'espai central porta
    l'emoticona triada que dona l'adaptador (una fitxa en baixa o de reserva)
-   i, sense, la cel·la buida. Mai el botó: onObriEmoticona no hi arriba. */
-function EmptyDocumentPage({ emptyDocument, emptyPlaceholder, barAuthorAvatar, barAuthorName, barAuthorLocation, emoticona, t }) {
+   i, sense, la cel·la buida. Mai el botó: onObriEmoticona no hi arriba.
+   Ordre del Mestre (261007) · Amb barAuthorHref, l'autoria porta a la pàgina
+   de qui signa; sense, la topBarData de sempre (cap clau authorHref). */
+function EmptyDocumentPage({ emptyDocument, emptyPlaceholder, barAuthorAvatar, barAuthorName, barAuthorLocation, barAuthorHref, emoticona, t }) {
   const doc = emptyDocument || {};
   const title = doc.title || emptyPlaceholder || t('editor.open', 'Obre un document');
   const rawHtml = doc.content || '';
@@ -135,6 +143,7 @@ function EmptyDocumentPage({ emptyDocument, emptyPlaceholder, barAuthorAvatar, b
             authorName: barAuthorName,
             authorLocation: barAuthorLocation,
             authorAvatar: barAuthorAvatar,
+            ...(barAuthorHref ? { authorHref: barAuthorHref } : null),
             emoticona,
             /* Per barActions i sense onClick: un <time>, com abans (UniversalPage
                faria de la pastilla per defecte un botó cap al Mur). */
@@ -176,6 +185,8 @@ export function DocumentEditor({ adapter, onToast }) {
     barAuthorAvatar,
     barAuthorName,
     barAuthorLocation,
+    /* Ordre del Mestre (261007) · la ruta de la pàgina de qui signa (null: sense enllaç). */
+    barAuthorHref = null,
     /* T51 · l'espai central de la barra taronja (camp cru i obertura del diàleg). */
     emoticona = '',
     onObriEmoticona = null,
@@ -359,6 +370,7 @@ export function DocumentEditor({ adapter, onToast }) {
         barAuthorAvatar={barAuthorAvatar}
         barAuthorName={barAuthorName}
         barAuthorLocation={barAuthorLocation}
+        barAuthorHref={barAuthorHref}
         emoticona={emoticona}
         t={t}
       />
@@ -435,6 +447,7 @@ export function DocumentEditor({ adapter, onToast }) {
       barAuthorAvatar={barAuthorAvatar}
       barAuthorName={barAuthorName}
       barAuthorLocation={barAuthorLocation}
+      barAuthorHref={barAuthorHref}
       statusIcon={statusIcon}
       emoticona={emoticona}
       onObriEmoticona={onObriEmoticona}

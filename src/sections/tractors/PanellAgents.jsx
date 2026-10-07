@@ -30,8 +30,11 @@ ${frontmatter ? '> **Metadades del document (Frontmatter):**\n> ' + frontmatter.
 ${cosRebaixat}
 `;
 
+  /* Design Guard (marató del 261007, Llei del Píxel) · Fora la classe
+     sdp-m-m (llei dura tailwind-visual): no té cap regla a cap full, i
+     llevar-la no canvia cap píxel. */
   return (
-    <div className="sdp-tractors-panell sdp-m-m">
+    <div className="sdp-tractors-panell">
       <div 
         className="sdp-prose sdp-prose--encoixinada"
         dangerouslySetInnerHTML={{ __html: sanitizeHtml(parseMarkdown(markdownFinal)) }} 
