@@ -17,6 +17,9 @@
 /** L'entrada del manifest que munta Aprendre; la resta, la closca. */
 export const ENTRADA_APRENDRE = 'aprendre';
 
+/** L'entrada del manifest que munta la Facturació, fora de la closca (ordre del Mestre, 261007). */
+export const ENTRADA_FACTURACIO = 'facturacio';
+
 /** L'ítem de la Wiki on s'aproven els tractors (WikiDePobleSection, modulsLocalsActius). */
 export const ITEM_PORTA_TRACTORS = 'tractors_aprovacio';
 

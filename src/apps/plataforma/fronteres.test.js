@@ -116,13 +116,17 @@ const EXCEPCIONS_EMMAGATZEMATGE = new Map();
    fitxer de src/apps que hi entra, amb ELS especificadors d'esta llista i cap
    altre, tots per import() dins de la constant de DEV. Cap altre fitxer de
    src/apps, tampoc de la mateixa app, s'hi acull; i els Tractors, mai. No
-   afebleix cap regla general: només eixos dos parells (fitxer, especificador)
+   afebleix cap regla general: només eixos parells (fitxer, especificador)
    passen, i la resta de comprovacions (xarxa, URL, emmagatzematge, backend)
    s'apliquen igual al pont. */
 const PONTS_GESTORIA = new Map([
   ['src/apps/gestoria/AppGestoria.jsx', Object.freeze({
-    especificadors: Object.freeze(['../../sections/gestoria/tauler/ShellGestoria.jsx', '../../sections/gestoria/aprendre/Aprendre.jsx']),
-    motiu: 'Ordre del Mestre, 261004: la Gestoria passa de la Wiki a /app/gestoria; el codi es queda al seu carril, amb la seua guarda.'
+    especificadors: Object.freeze([
+      '../../sections/gestoria/tauler/ShellGestoria.jsx',
+      '../../sections/gestoria/aprendre/Aprendre.jsx',
+      '../../sections/gestoria/facturar/Facturacio.jsx'
+    ]),
+    motiu: 'Ordre del Mestre, 261004: la Gestoria passa de la Wiki a /app/gestoria; el codi es queda al seu carril, amb la seua guarda. 261007: la Facturació entra pel pont i no per ShellGestoria (font del tractor gestoria.tauler).'
   })]
 ]);
 const esPont = (ruta, especificador, ponts = PONTS_GESTORIA) => Boolean(ponts.get(ruta)?.especificadors.includes(especificador));

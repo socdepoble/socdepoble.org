@@ -33,8 +33,17 @@ const WIKI = 'src/sections/wiki-de-poble/WikiDePobleSection.jsx';
 /* El pont de l'app i el seu manifest (ordre del Mestre, 261004). */
 const PONT = 'src/apps/gestoria/AppGestoria.jsx';
 const MANIFEST = 'src/apps/gestoria/manifest.js';
-/* Els dos especificadors del pont: la closca i Aprendre. Cap altre. */
-const DEL_PONT = Object.freeze(['../../sections/gestoria/tauler/ShellGestoria.jsx', '../../sections/gestoria/aprendre/Aprendre.jsx']);
+/* Els especificadors del pont: la closca, Aprendre i, des del 261007, la
+   Facturació. Cap altre. Motiu de la tercera (ordre del Mestre, 261007:
+   «tindre la facturació operativa inclús sense xarxa»): la pantalla de
+   Facturació s'endolla pel pont i no per ShellGestoria, que és font del
+   tractor gestoria.tauler; tocar-la en tornaria l'aprovació a «pendent». La
+   pantalla viu al carril de la Gestoria i passa per esta mateixa guarda. */
+const DEL_PONT = Object.freeze([
+  '../../sections/gestoria/tauler/ShellGestoria.jsx',
+  '../../sections/gestoria/aprendre/Aprendre.jsx',
+  '../../sections/gestoria/facturar/Facturacio.jsx'
+]);
 
 /* Ruta des de l'arrel del repositori: les claus del glob són relatives a este fitxer. */
 const desDeArrel = (clau) => path.posix.normalize(path.posix.join(GESTORIA, clau));
@@ -75,7 +84,9 @@ describe('el cens', () => {
       `${TRACTORS}/useTractors.js`, `${TRACTORS}/nucli/aprovacio.js`, `${TRACTORS}/nucli/magatzem.js`,
       // Onada 2, pas 1 (261004): la closca i el Tauler, i les estimacions d'impostos, també hi són.
       `${GESTORIA}/tauler/ShellGestoria.jsx`, `${GESTORIA}/tauler/nucli/tractorTauler.js`, `${GESTORIA}/impostos/nucli/impostos.js`,
-      `${GESTORIA}/fitxes/gestoria_tauler.md`
+      `${GESTORIA}/fitxes/gestoria_tauler.md`,
+      // 261007 (ordre del Mestre: facturació operativa sense xarxa): la pantalla i el perfil fiscal també.
+      `${GESTORIA}/facturar/Facturacio.jsx`, `${GESTORIA}/facturar/useFacturacio.js`, `${GESTORIA}/facturacio/magatzemPerfil.js`
     ]) expect(rutes, esperada).toContain(esperada);
     expect(rutes.filter(esProva)).toEqual([]);
     expect(CODI.length).toBeGreaterThan(40);
@@ -111,11 +122,18 @@ describe('res ix d’este ordinador', () => {
     /* Llista blanca: les aprovacions dels tractors (registres i claus públiques),
        el progrés d'Aprendre (caixes de Leitner) i, des del 261004 per aprovació
        del Mestre al xat, el llibre legal Veri*Factu: un magatzem de NOMÉS AFEGIR
-       (add, mai put ni delete) amb un sol escriptor. */
+       (add, mai put ni delete) amb un sol escriptor.
+       261007 (ordre del Mestre: «tindre la facturació operativa inclús sense
+       xarxa»; pas 1 del mapa de la Gestoria): el perfil fiscal de l'empresa
+       (la configuració, el llegat i la marca de l'última còpia del llibre),
+       base pròpia 'sdp-gestoria-perfil', separada del llibre legal i també de
+       NOMÉS AFEGIR (versions amb add). Sense IndexedDB falla (SENSE_INDEXEDDB),
+       mai passa a memòria. Res no ix d'este ordinador. */
     const idb = new RegExp(['\\bindexed', 'DB\\b'].join(''));
     expect(CODI.filter(([, codi]) => idb.test(codi)).map(([ruta]) => ruta).sort())
       .toEqual([
         `${GESTORIA}/aprendre/magatzemProgres.js`,
+        `${GESTORIA}/facturacio/magatzemPerfil.js`,
         `${GESTORIA}/facturacio/registre/portIndexedDB.js`,
         `${TRACTORS}/nucli/magatzem.js`
       ]);
@@ -261,7 +279,7 @@ describe('la frontera: la Gestoria només pel pont de la seua app, els Tractors 
     }
     expect(fora).toEqual([]);
     expect(suport).toEqual([]);
-    // El pont no és decoratiu: porta els dos especificadors, i és l'únic importador de la Gestoria.
+    // El pont no és decoratiu: porta els seus especificadors, i és l'únic importador de la Gestoria.
     expect(importadorsGestoria).toEqual(DEL_PONT.map((e) => `${PONT}: ${e}`));
   });
 
@@ -308,7 +326,8 @@ describe('la frontera: la Gestoria només pel pont de la seua app, els Tractors 
     expect(coneixGestoria.test(["'/app/", "gestoria/tauler'"].join(''))).toBe(true);
   });
 
-  test('el pont decidix amb import.meta.env.DEV: els dos lazy() dins d’una constant nul·la fora de DEV, i cap altra importació dels carrils', () => {
+  /* 261007: un lazy() per especificador del pont (ara tres, amb la Facturació). */
+  test('el pont decidix amb import.meta.env.DEV: un lazy() per especificador dins d’una constant nul·la fora de DEV, i cap altra importació dels carrils', () => {
     const inici = fontPont.indexOf('const VISTES = import.meta.env.DEV ? Object.freeze({');
     expect(inici).toBeGreaterThan(-1);
     const fi = fontPont.indexOf('}) : null;', inici);
@@ -316,7 +335,8 @@ describe('la frontera: la Gestoria només pel pont de la seua app, els Tractors 
     const bloc = fontPont.slice(inici, fi);
     expect(delsCarrils(bloc)).toEqual([...DEL_PONT]);
     expect(delsCarrils(fontPont.slice(0, inici) + fontPont.slice(fi))).toEqual([]);
-    expect([...bloc.matchAll(/lazyRoute\(\(\) => import\(/g)]).toHaveLength(2);
+    expect([...bloc.matchAll(/lazyRoute\(\(\) => import\(/g)]).toHaveLength(DEL_PONT.length);
+    expect(DEL_PONT).toHaveLength(3);
     // Els Tractors no hi entren mai, ni ContenidorGestoria directament (arriba per la closca, com abans).
     expect(fontPont).not.toMatch(/sections\/tractors\/|ContenidorGestoria\.jsx'/);
   });
@@ -378,11 +398,12 @@ describe('la frontera: la Gestoria només pel pont de la seua app, els Tractors 
      paquet de producció, com abans a la Wiki. Encara que algú compilara
      l'app en producció (VITE_SDP_APP_GESTORIA), el pont no hi porta res. */
   test('al build de producció del pont no queda cap importació de la Gestoria', async () => {
-    const gestoria = /import\(\s*["'][^"']*(?:ShellGestoria|aprendre\/Aprendre)/g;
+    // 261007: també la Facturació, que en desenvolupament és la tercera importació.
+    const gestoria = /import\(\s*["'][^"']*(?:ShellGestoria|aprendre\/Aprendre|facturar\/Facturacio)/g;
     const desenvolupament = await compila(PONT, false);
-    expect(desenvolupament.match(gestoria)).toHaveLength(2);
+    expect(desenvolupament.match(gestoria)).toHaveLength(3);
     const produccio = await compila(PONT, true);
     expect(produccio.match(gestoria)).toBeNull();
-    expect(produccio).not.toMatch(/ShellGestoria|ContenidorGestoria|Aprendre\.jsx|sections\/gestoria/);
+    expect(produccio).not.toMatch(/ShellGestoria|ContenidorGestoria|Aprendre\.jsx|Facturacio\.jsx|sections\/gestoria/);
   }, 60000);
 });

@@ -18,7 +18,20 @@
  *     porta un (el que la pantalla ha mostrat), ha de ser eixe mateix: un
  *     número ja usat en la sèrie, amb QUALSEVOL data, és NUMERO_REPETIT, i un
  *     altre salt és NUMERO_NO_CORRELATIU. La unicitat de negoci és per sèrie i
- *     número; la identitat fiscal (emissor, número i data) no la substituïx.
+ *     número; la identitat fiscal (emissor, número i data) no la substituïx;
+ *   · RECTIFICATIVES SEGURES (ordre del Mestre, 261007; pas 4 del mapa de la
+ *     Gestoria, buit G10): cada factura que una rectificativa (R1-R5)
+ *     rectifica, o que una F3 substituïx, ha de tindre el seu registre d'alta
+ *     en este llibre, en la cadena de l'empresa (el mateix NIF), i no pot
+ *     estar anul·lada. Si no, FACTURA_RECTIFICADA_INEXISTENT, amb la llista
+ *     a `detalls`. Es comprova dins de la mateixa secció que numera, sobre el
+ *     llibre llegit: una anul·lació no s'hi pot colar entremig;
+ *   · UN TIQUET, UNA SUBSTITUCIÓ (ordre del Mestre, 261007; troballa F5 de
+ *     la revisió de la Facturació): una F3 no substituïx un tiquet que ja
+ *     substituïx una altra F3 viva (no anul·lada) de la cadena. Si no, dos
+ *     factures completes per a la mateixa venda, amb l'IVA comptat dos
+ *     vegades: FACTURA_JA_SUBSTITUIDA, amb la llista a `detalls`. Anul·lada
+ *     la primera F3, el tiquet es pot tornar a substituir.
  *
  * Sense carreres: llegir el llibre, calcular el número, construir la factura
  * i el registre i afegir-lo és UNA sola secció. Les emissions d'este cas d'ús
@@ -46,6 +59,53 @@ const facturaInvalida = (motiu) => errorAmbCodi('FACTURA_INVALIDA', `Factura no 
 
 /* Els números de sèrie de les altes del llibre (una anul·lada conserva el seu: no es torna a usar). */
 const usatsDe = (registres) => registres.filter((r) => r.tipusRegistre === 'alta').map((r) => r.numSerie);
+
+/* Una factura dins de la cadena d'un emissor: el número i la data d'expedició (el NIF ja és el del llibre llegit). */
+const facturaDe = (r) => `${r.numSerie}|${r.dataExpedicio}`;
+
+/**
+ * Les factures que la factura nova rectifica o substituïx i que no es poden
+ * referir: les que no tenen alta en la cadena llegida (la de l'empresa) i les
+ * que hi estan anul·lades, amb el motiu en text. Llista buida si totes hi són.
+ * @param {object} factura la de creaFacturaEmesa (rectificades i substituides ja netes)
+ * @param {ReadonlyArray<object>} registres la cadena de l'emissor, llegida dins de la secció
+ * @returns {string[]}
+ */
+function referenciesSenseAlta(factura, registres) {
+  const referides = [...(factura.rectificades ?? []), ...(factura.substituides ?? [])];
+  if (!referides.length) return [];
+  const altes = new Set(registres.filter((r) => r.tipusRegistre === 'alta').map(facturaDe));
+  const anulades = new Set(registres.filter((r) => r.tipusRegistre === 'anulacio').map(facturaDe));
+  return referides.flatMap((ref) => {
+    const clau = facturaDe(ref);
+    if (!altes.has(clau)) return [`${ref.numSerie} del ${ref.dataExpedicio} no és al llibre d'esta empresa.`];
+    if (anulades.has(clau)) return [`${ref.numSerie} del ${ref.dataExpedicio} està anul·lada.`];
+    return [];
+  });
+}
+
+/**
+ * Els tiquets que la factura nova substituïx i que ja substituïx una altra F3
+ * viva (no anul·lada) de la cadena llegida, amb el motiu en text. Llista buida
+ * si no n'hi ha cap.
+ * @param {object} factura la de creaFacturaEmesa
+ * @param {ReadonlyArray<object>} registres la cadena de l'emissor, llegida dins de la secció
+ * @returns {string[]}
+ */
+function substitucionsRepetides(factura, registres) {
+  const substituides = factura.substituides ?? [];
+  if (!substituides.length) return [];
+  const anulades = new Set(registres.filter((r) => r.tipusRegistre === 'anulacio').map(facturaDe));
+  const perTiquet = new Map();
+  for (const r of registres) {
+    if (r.tipusRegistre !== 'alta' || r.tipusFactura !== 'F3' || anulades.has(facturaDe(r))) continue;
+    for (const tiquet of r.factura?.substituides ?? []) perTiquet.set(facturaDe(tiquet), r.numSerie);
+  }
+  return substituides.flatMap((ref) => {
+    const f3 = perTiquet.get(facturaDe(ref));
+    return f3 ? [`${ref.numSerie} del ${ref.dataExpedicio} ja el substituïx la factura ${f3}.`] : [];
+  });
+}
 
 /**
  * El cas d'ús d'emissió d'una empresa sobre un port de registre.
@@ -147,6 +207,14 @@ export function creaEmissio({ port, config, llegat, subtle, zona } = {}) {
         const factura = creaFacturaEmesa({ ...dades, numSerie: seguent, emissor: dades.emissor ?? emissorPerDefecte }, opcionsFactura);
         if (factura.emissor.nif !== empresa.nif) {
           throw errorAmbCodi('EMISSOR_ALIE', 'L\'emissor de la factura no és l\'empresa de la configuració: cada NIF emet en la seua cadena.');
+        }
+        const senseAlta = referenciesSenseAlta(factura, registres);
+        if (senseAlta.length) {
+          throw errorAmbCodi('FACTURA_RECTIFICADA_INEXISTENT', `Només es rectifica, o se substituïx, una factura emesa per esta empresa i no anul·lada: ${senseAlta.join(' ')}`, senseAlta);
+        }
+        const repetides = substitucionsRepetides(factura, registres);
+        if (repetides.length) {
+          throw errorAmbCodi('FACTURA_JA_SUBSTITUIDA', `Un tiquet només se substituïx una vegada: ${repetides.join(' ')}`, repetides);
         }
         const anterior = registres.length ? registres[registres.length - 1] : null;
         const registre = await creaRegistreAlta({ factura, anterior, instant, zona, subtle });

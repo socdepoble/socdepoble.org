@@ -6,15 +6,23 @@
  * Gestoria i Wiki»): dins de la Wiki, la Gestoria muntava una segona closca
  * sencera al detall d'un document i el seu menú es barrejava amb el de la
  * Wiki. Ara és una app pròpia: BarraApp conté tot el menú i la ruta tria
- * el mòdul de ShellGestoria. La closca es conserva entre mòduls i només
+ * el mòdul de ShellGestoria. La closca es conserva entre els seus mòduls i només
  * porta contingut central, boina personal i PaginaApp, sense rail interior.
  *   · /app/gestoria/aprendre · Aprendre, el repàs espaiat, dins d'una
  *     PaginaApp (la porta de pàgina permesa a les apps).
+ *   · /app/gestoria/facturacio · ordre del Mestre, 261007 («tindre la
+ *     facturació operativa inclús sense xarxa»): la pantalla de Facturació
+ *     (sections/gestoria/facturar), també dins d'una PaginaApp. Arriba pel
+ *     pont i no per la closca: ShellGestoria és font del tractor
+ *     gestoria.tauler, i tocar-la en tornaria l'aprovació a «pendent».
+ *     Com Aprendre, anar-hi desmunta la closca (la lectura dels bancs, que
+ *     viu en memòria, s'ha de tornar a fer en tornar al Tauler).
  *
  * EL PONT · Este fitxer és l'ÚNIC de src/apps que importa codi de
  * src/sections/gestoria: una excepció escrita i provada a la llista blanca de
- * plataforma/fronteres.test.js, amb les dues importacions dinàmiques de
- * VISTES i cap altra. VISTES és null fora de desenvolupament: Vite reemplaça
+ * plataforma/fronteres.test.js, amb les importacions dinàmiques de VISTES
+ * (la closca, Aprendre i, des del 261007, la Facturació) i cap altra.
+ * VISTES és null fora de desenvolupament: Vite reemplaça
  * el literal i en trau les importacions del build, també si algú compilara
  * l'app en producció (gestoria/privacitat.test.js ho compila). El codi de la
  * Gestoria el continua vigilant la seua guarda de privacitat.
@@ -26,16 +34,21 @@ import { Suspense } from 'react';
 import { Navigate, useLocation } from '../../app/contexts/RouterContext';
 import { Carregant, EstatBuit, PaginaApp } from '../../components/PedraSeca/index.js';
 import { useApp, lazyRoute } from '../plataforma/index.js';
-import { ENTRADA_APRENDRE, desviamentDeLaConsulta } from './rutes.js';
+import { ENTRADA_APRENDRE, ENTRADA_FACTURACIO, desviamentDeLaConsulta } from './rutes.js';
 
 const VISTES = import.meta.env.DEV ? Object.freeze({
   tauler: lazyRoute(() => import('../../sections/gestoria/tauler/ShellGestoria.jsx')),
-  aprendre: lazyRoute(() => import('../../sections/gestoria/aprendre/Aprendre.jsx'))
+  aprendre: lazyRoute(() => import('../../sections/gestoria/aprendre/Aprendre.jsx')),
+  facturacio: lazyRoute(() => import('../../sections/gestoria/facturar/Facturacio.jsx'))
 }) : null;
 
 const ETIQUETES_APRENDRE = Object.freeze([
   Object.freeze({ text: 'GESTORIA', className: 'sdp-badge-system' }),
   Object.freeze({ text: 'Aprendre', className: 'sdp-badge-category' })
+]);
+const ETIQUETES_FACTURACIO = Object.freeze([
+  Object.freeze({ text: 'GESTORIA', className: 'sdp-badge-system' }),
+  Object.freeze({ text: 'Facturació', className: 'sdp-badge-category' })
 ]);
 
 export default function AppGestoria() {
@@ -56,6 +69,17 @@ export default function AppGestoria() {
         showComment={false} showShare={false} showConnect={false}>
         <Suspense fallback={<Carregant etiqueta="Carregant Aprendre…" />}>
           <Aprendre />
+        </Suspense>
+      </PaginaApp>
+    );
+  }
+  if (entrada === ENTRADA_FACTURACIO) {
+    const Facturacio = VISTES.facturacio;
+    return (
+      <PaginaApp title="Facturació" subtitle="Factures i llibre Veri*Factu, també sense connexió" labels={ETIQUETES_FACTURACIO}
+        showComment={false} showShare={false} showConnect={false}>
+        <Suspense fallback={<Carregant etiqueta="Carregant la Facturació…" />}>
+          <Facturacio />
         </Suspense>
       </PaginaApp>
     );

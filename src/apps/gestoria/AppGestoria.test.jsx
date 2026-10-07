@@ -6,7 +6,12 @@
    que s'obri sola, sense la Wiki al voltant; que els nou mòduls i Aprendre
    s'hi arriben des de l'única barra de l'app, sense rail intern; que la closca
    conserva la memòria entre mòduls; que la porta dels Tractors porta a la Wiki, sempre a la
-   mateixa ruta fixa; i que fora de desenvolupament no s'obri ni carregue res. */
+   mateixa ruta fixa; i que fora de desenvolupament no s’obri ni carregue res.
+   Ordre del Mestre, 261007 («tindre la facturació operativa inclús sense
+   xarxa»): la Facturació ja no és un mòdul «en obres» de la closca, sinó la
+   tercera vista del pont, dins de la seua PaginaApp com Aprendre. Per això les
+   proves de la closca (enllaç directe i memòria entre mòduls) passen a ser dels
+   vuit mòduls que encara pinta ella, i la Facturació té les seues. */
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { Route, Routes } from '../../app/contexts/RouterContext';
@@ -18,7 +23,7 @@ import { CLAU_PREFERENCIES, _reiniciaPreferencies } from '../plataforma/preferen
 import { APPS_INTERNES, creaRegistre } from '../plataforma/registreApps.js';
 import RutaApps from '../plataforma/RutaApps.jsx';
 import manifestGestoria from './manifest.js';
-import { ENTRADA_APRENDRE, ITEM_PORTA_TRACTORS, RUTA_PORTA_TRACTORS, desviamentDeLaConsulta } from './rutes.js';
+import { ENTRADA_APRENDRE, ENTRADA_FACTURACIO, ITEM_PORTA_TRACTORS, RUTA_PORTA_TRACTORS, desviamentDeLaConsulta } from './rutes.js';
 
 const closca = vi.hoisted(() => ({ muntatges: 0 }));
 const MODULS = [
@@ -33,6 +38,8 @@ const MODULS = [
   ['escaner', 'Escàner Local', 'Escàner Local']
 ];
 const ENTRADES = [...MODULS.map(([slug, etiqueta]) => [slug, etiqueta]), [ENTRADA_APRENDRE, 'Aprendre']];
+/* Els mòduls que pinta la closca: tots menys la Facturació (261007), que va pel pont. */
+const MODULS_CLOSCA = MODULS.filter(([slug]) => slug !== ENTRADA_FACTURACIO);
 
 /* El doble de la closca porta, com ella, la seua pàgina (una PaginaApp de
    veres) i demana la porta dels Tractors amb la consulta relativa de
@@ -64,6 +71,8 @@ vi.mock('../../sections/gestoria/tauler/ShellGestoria.jsx', async () => {
   };
 });
 vi.mock('../../sections/gestoria/aprendre/Aprendre.jsx', () => ({ default: () => <p>Doble d’Aprendre</p> }));
+/* La pantalla de Facturació té les seues proves a src/sections/gestoria/facturar. */
+vi.mock('../../sections/gestoria/facturar/Facturacio.jsx', () => ({ default: () => <p>Doble de la Facturació</p> }));
 
 const ENTORN_DEV = Object.freeze({ ...ENTORN_OBERT, produccio: false });
 const registre = (manifest = manifestGestoria) => creaRegistre({ internes: [manifest] });
@@ -153,7 +162,26 @@ describe('en desenvolupament, una app pròpia', () => {
     expect(barra.getByRole('link', { name: 'Aprendre' }).getAttribute('aria-current')).toBe('page');
   });
 
-  test.each(MODULS)('l’enllaç directe /app/gestoria/%s obri el mòdul amb l’única barra exterior', async (slug, etiqueta, titol) => {
+  test('/app/gestoria/facturacio: la Facturació dins de la seua pàgina, amb un sol H1, sense la closca i amb l’enllaç de la barra marcat', async () => {
+    const { container } = muntaPlataforma(`/app/gestoria/${ENTRADA_FACTURACIO}`, { registre: registre(), entorn: ENTORN_DEV, fills: ambBarra });
+    expect(await screen.findByText('Doble de la Facturació')).toBeTruthy();
+    expect(ubicacio()).toBe('/app/gestoria/facturacio');
+    expect(container.querySelectorAll('h1')).toHaveLength(1);
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Facturació');
+    expect(screen.getByRole('heading', { level: 2, name: 'Factures i llibre Veri*Factu, també sense connexió' })).toBeTruthy();
+    expect(pindoles(container)).toEqual(['GESTORIA', 'Facturació']);
+    expect(screen.queryByText('Doble de la closca')).toBeNull();
+    expect(container.querySelector('.sdp-wiki-workspace')).toBeNull();
+    const barra = screen.getByRole('navigation', { name: 'Barra lateral' });
+    expect(within(barra).getByRole('link', { name: 'Facturació' }).getAttribute('aria-current')).toBe('page');
+    expect(barra.querySelectorAll('[aria-current="page"]')).toHaveLength(1);
+    // Des de la Facturació, la barra torna a la closca.
+    fireEvent.click(within(barra).getByRole('link', { name: 'Tauler d’Inici' }));
+    expect(await screen.findByText('Doble de la closca')).toBeTruthy();
+    expect(screen.queryByText('Doble de la Facturació')).toBeNull();
+  });
+
+  test.each(MODULS_CLOSCA)('l’enllaç directe /app/gestoria/%s obri el mòdul amb l’única barra exterior', async (slug, etiqueta, titol) => {
     const { container } = muntaPlataforma(`/app/gestoria/${slug}`, { registre: registre(), entorn: ENTORN_DEV, fills: ambBarra });
     await screen.findByText('Doble de la closca');
     expect(ubicacio()).toBe(`/app/gestoria/${slug}`);
@@ -168,12 +196,13 @@ describe('en desenvolupament, una app pròpia', () => {
     expect(container.querySelector('.sdp-wiki-workspace')).toBeNull();
   });
 
-  test('navegar entre els nou mòduls canvia el contingut sense remuntar la closca ni perdre la memòria', async () => {
+  test('navegar entre els mòduls de la closca canvia el contingut sense remuntar-la ni perdre la memòria', async () => {
     const { container } = muntaPlataforma('/app/gestoria/tauler', { registre: registre(), entorn: ENTORN_DEV, fills: ambBarra });
     await screen.findByText('Doble de la closca');
     fireEvent.click(screen.getByRole('button', { name: 'Incrementa la memòria de prova' }));
     const barra = screen.getByRole('navigation', { name: 'Barra lateral' });
-    for (const [slug, etiqueta, titol] of [...MODULS.slice(1), MODULS[0]]) {
+    expect(MODULS_CLOSCA).toHaveLength(8);
+    for (const [slug, etiqueta, titol] of [...MODULS_CLOSCA.slice(1), MODULS_CLOSCA[0]]) {
       fireEvent.click(within(barra).getByRole('link', { name: etiqueta }));
       expect(ubicacio()).toBe(`/app/gestoria/${slug}`);
       expect(screen.getByLabelText('Mòdul actiu de prova').textContent).toBe(slug);

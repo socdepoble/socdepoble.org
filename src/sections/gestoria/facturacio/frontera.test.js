@@ -2,16 +2,25 @@
 /* Facturació · frontera de la fase 0 (ordre del Mestre del 261004). El nucli
    és JS pur: sense React, sense DOM, sense xarxa; només importa el seu propi
    carril, dues peces del nucli de la Gestoria (nif, dates) i el resum de la
-   Porta d'Aprovació (canonic.js). I encara no està endollat: cap fitxer de
-   fora el fa servir (ni ContenidorGestoria, cosa que canviaria l'empremta
-   dels tractors, ni el backend, que és la frontera D3). Quan s'endolle, amb
-   ordre, esta prova es canvia amb el motiu escrit. */
+   Porta d'Aprovació (canonic.js). Fins al 261007 no estava endollat: cap
+   fitxer de fora el feia servir.
+   Ordre del Mestre, 261007 («tindre la facturació operativa inclús sense
+   xarxa»; pas 2 del mapa de la Gestoria): s'endolla, i esta prova canvia amb
+   el motiu escrit. L'endolla NOMÉS la pantalla de Facturació
+   (src/sections/gestoria/facturar), que el pont de l'app carrega en
+   desenvolupament. Ni ContenidorGestoria ni ShellGestoria ni cap altra font
+   dels tractors signats l'importen (les seues empremptes aprovades no
+   canvien), ni el backend, que és la frontera D3. El mateix dia hi entra el
+   perfil fiscal (magatzemPerfil.js, pas 1): JS sense DOM, com el port. */
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, test } from 'vitest';
+import { TRACTORS_GESTORIA } from '../tractors.js';
 
 const ARREL = process.cwd();
 const CARRIL = 'src/sections/gestoria/facturacio';
+/* L'única porta d'entrada al carril des de fora (261007): la pantalla de Facturació. */
+const PANTALLA = 'src/sections/gestoria/facturar';
 const PERMESOS_FORA = Object.freeze([
   'src/sections/gestoria/nucli/nif.js',
   'src/sections/gestoria/nucli/dates.js',
@@ -43,9 +52,11 @@ describe('el nucli de facturació és pur', () => {
      entren al cens, purs i sense endollar com la resta. Integració final
      (ordre del Mestre, 261004): entra emissio.js, el cas d'ús d'emissió (F02
      de l'auditoria de Codex), pur i també sense endollar. */
-  test('el cens: els mòduls de la fase 0, de l’onada 2 i de la integració final, sense cap JSX', () => {
+  /* 261007: hi entra el perfil fiscal (magatzemPerfil.js), amb la seua prova. */
+  test('el cens: els mòduls de la fase 0, de l’onada 2, de la integració final i el perfil fiscal, sense cap JSX', () => {
     expect(PRODUCCIO).toEqual([
       `${CARRIL}/comu.js`, `${CARRIL}/configEmpresa.js`, `${CARRIL}/emissio.js`, `${CARRIL}/facturaEmesa.js`, `${CARRIL}/llegat.js`,
+      `${CARRIL}/magatzemPerfil.js`,
       `${CARRIL}/pressupost.js`, `${CARRIL}/registre/cadena.js`, `${CARRIL}/registre/empremta.js`,
       `${CARRIL}/registre/port.js`, `${CARRIL}/registre/portIndexedDB.js`, `${CARRIL}/registre/qr.js`,
       `${CARRIL}/registre/registreAlta.js`, `${CARRIL}/registre/registreAnulacio.js`, `${CARRIL}/registre/validacio.js`,
@@ -81,10 +92,23 @@ describe('el nucli de facturació és pur', () => {
   });
 });
 
-describe('encara no està endollat', () => {
-  test('cap fitxer de src de fora del carril l’importa', () => {
-    const importadors = fitxersDe('src').filter((ruta) => !ruta.startsWith(`${CARRIL}/`) && !esProva(ruta))
-      .flatMap((ruta) => especificadors(llig(ruta)).filter((e) => resol(ruta, e).startsWith(`${CARRIL}/`)).map((e) => `${ruta}: ${e}`));
-    expect(importadors).toEqual([]);
+describe('endollat només per la pantalla de Facturació (261007)', () => {
+  const importadorsDe = () => fitxersDe('src').filter((ruta) => !ruta.startsWith(`${CARRIL}/`) && !esProva(ruta) && !ruta.includes('/__fixtures__/'))
+    .flatMap((ruta) => especificadors(llig(ruta)).filter((e) => resol(ruta, e).startsWith(`${CARRIL}/`)).map((e) => ({ ruta, e })));
+
+  test('fora del carril, només els fitxers de la pantalla l’importen', () => {
+    const importadors = importadorsDe();
+    expect(importadors.filter(({ ruta }) => !ruta.startsWith(`${PANTALLA}/`)).map(({ ruta, e }) => `${ruta}: ${e}`)).toEqual([]);
+    // L'endoll no és decoratiu: la pantalla fa servir l'emissió, el perfil i el llibre d'IndexedDB.
+    const usats = new Set(importadors.map(({ ruta, e }) => resol(ruta, e)));
+    for (const modul of ['emissio.js', 'magatzemPerfil.js', 'registre/portIndexedDB.js', 'registre/cadena.js']) {
+      expect(usats, modul).toContain(`${CARRIL}/${modul}`);
+    }
+  });
+
+  test('cap font dels tractors signats és del carril ni de la pantalla: les empremptes aprovades no canvien', () => {
+    const fonts = TRACTORS_GESTORIA.flatMap((manifest) => manifest.fonts);
+    expect(fonts.length).toBeGreaterThan(20);
+    expect(fonts.filter((ruta) => ruta.startsWith(`${CARRIL}/`) || ruta.startsWith(`${PANTALLA}/`))).toEqual([]);
   });
 });

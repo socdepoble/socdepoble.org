@@ -10,7 +10,7 @@ import { ESQUEMA_CONFIG_EMPRESA } from './configEmpresa.js';
 import { creaEmissio } from './emissio.js';
 import { creaFacturaEmesa } from './facturaEmesa.js';
 import { sembraLlegat } from './llegat.js';
-import { registraAlta, verificaCadena } from './registre/cadena.js';
+import { registraAlta, registraAnulacio, verificaCadena } from './registre/cadena.js';
 import { creaPortMemoria } from './registre/port.js';
 
 const CIF_EMISSOR = 'B12345674';
@@ -193,5 +193,110 @@ describe('F02 · sense carreres', () => {
     expect(resultats.map((r) => r.status).sort()).toEqual(['fulfilled', 'rejected']);
     expect(resultats.find((r) => r.status === 'rejected').reason.codi).toBe('CADENA_CANVIADA');
     expect(await numeros(altre)).toEqual(['A2026-0001']);
+  });
+});
+
+/* Pas 4 del mapa de la Gestoria (ordre del Mestre, 261007; buit G10): abans,
+   una rectificativa o una F3 podien referir una factura que no era al llibre,
+   d'un altre emissor o ja anul·lada, i la cadena eixia vàlida. */
+describe('pas 4 · rectificatives segures', () => {
+  const PER_DIFERENCIES = Object.freeze([{ concepte: 'Descompte acordat', quantitat: 1, preuUnitari: -100, tipusIva: 21 }]);
+  const rectificativa = (rectificades, canvis = {}) => dades({ tipus: 'R1', tipusRectificativa: 'I', rectificades, linies: PER_DIFERENCIES, ...canvis });
+  const simplificada = (canvis = {}) => dades({ tipus: 'F2', destinatari: null, ivaInclos: true, linies: [{ concepte: 'Cafè', quantitat: 2, preuUnitari: 150, tipusIva: 10 }], ...canvis });
+
+  test('una rectificativa d’una factura emesa i viva: s’emet en la seua sèrie i la cadena és vàlida', async () => {
+    const port = creaPortMemoria();
+    const cas = emissio({ port });
+    const original = await cas.emet(dades(), { instant: MIGDIA });
+    const rectificada = await cas.emet(rectificativa([{ numSerie: original.numSerie, dataExpedicio: original.dataExpedicio }]), { instant: MIGDIA });
+    expect(rectificada).toMatchObject({ numSerie: 'R2026-0001', tipusFactura: 'R1' });
+    expect(rectificada.factura.rectificades).toEqual([{ numSerie: 'A2026-0001', dataExpedicio: PAS }]);
+    // La rectificativa de la simplificada (R5) també: IVA inclòs i sense destinatari.
+    const tiquet = await cas.emet(simplificada(), { instant: MIGDIA });
+    const r5 = await cas.emet(simplificada({ tipus: 'R5', tipusRectificativa: 'I', rectificades: [{ numSerie: tiquet.numSerie, dataExpedicio: PAS }],
+      linies: [{ concepte: 'Cafè tornat', quantitat: 1, preuUnitari: -150, tipusIva: 10 }] }), { instant: MIGDIA });
+    expect(r5.numSerie).toBe('RT2026-0001');
+    expect((await verificaCadena(await port.llig())).valida).toBe(true);
+  });
+
+  test('una factura que no és al llibre, o amb una altra data: FACTURA_RECTIFICADA_INEXISTENT, i el llibre no canvia', async () => {
+    const port = creaPortMemoria();
+    const cas = emissio({ port });
+    await cas.emet(dades(), { instant: MIGDIA });
+    await expect(cas.emet(rectificativa([{ numSerie: 'A2026-0009', dataExpedicio: PAS }]), { instant: MIGDIA })).rejects.toMatchObject({
+      codi: 'FACTURA_RECTIFICADA_INEXISTENT', detalls: ['A2026-0009 del 2026-10-04 no és al llibre d\'esta empresa.']
+    });
+    // El número existix, però la identitat fiscal porta la data: una altra data no és la mateixa factura.
+    await expect(cas.emet(rectificativa([{ numSerie: 'A2026-0001', dataExpedicio: '2026-10-03' }]), { instant: MIGDIA }))
+      .rejects.toMatchObject({ codi: 'FACTURA_RECTIFICADA_INEXISTENT' });
+    // Una de bona i una de dolenta: tampoc. Es diu quina falla.
+    await expect(cas.emet(rectificativa([{ numSerie: 'A2026-0001', dataExpedicio: PAS }, { numSerie: 'F260001', dataExpedicio: '2026-01-10' }]), { instant: MIGDIA }))
+      .rejects.toMatchObject({ codi: 'FACTURA_RECTIFICADA_INEXISTENT', detalls: ['F260001 del 2026-01-10 no és al llibre d\'esta empresa.'] });
+    expect(await numeros(port)).toEqual(['A2026-0001']);
+  });
+
+  test('una factura anul·lada no es rectifica, tampoc si l’anul·lació arriba just abans en la mateixa fila', async () => {
+    const port = creaPortMemoria();
+    const cas = emissio({ port });
+    const [primera, segona] = [await cas.emet(dades(), { instant: MIGDIA }), await cas.emet(dades(), { instant: MIGDIA })];
+    await registraAnulacio(port, { idEmisor: CIF_EMISSOR, numSerie: primera.numSerie, dataExpedicio: PAS, motiu: 'Duplicada', instant: MIGDIA });
+    await expect(cas.emet(rectificativa([{ numSerie: primera.numSerie, dataExpedicio: PAS }]), { instant: MIGDIA })).rejects.toMatchObject({
+      codi: 'FACTURA_RECTIFICADA_INEXISTENT', detalls: ['A2026-0001 del 2026-10-04 està anul·lada.']
+    });
+    // L'anul·lació de la segona i la rectificativa, alhora: la fila les ordena i la rectificativa ja la veu anul·lada.
+    const [anulacio, rectificacio] = await Promise.allSettled([
+      registraAnulacio(port, { idEmisor: CIF_EMISSOR, numSerie: segona.numSerie, dataExpedicio: PAS, instant: MIGDIA }),
+      cas.emet(rectificativa([{ numSerie: segona.numSerie, dataExpedicio: PAS }]), { instant: MIGDIA })
+    ]);
+    expect(anulacio.status).toBe('fulfilled');
+    expect(rectificacio).toMatchObject({ status: 'rejected', reason: { codi: 'FACTURA_RECTIFICADA_INEXISTENT' } });
+    expect((await port.llig()).map((r) => r.tipusRegistre)).toEqual(['alta', 'alta', 'anulacio', 'anulacio']);
+  });
+
+  test('la factura d’un altre emissor del mateix llibre no és de la cadena de l’empresa', async () => {
+    const port = creaPortMemoria();
+    const alie = creaFacturaEmesa({ ...dades(), numSerie: 'A2026-0001', emissor: { nif: DNI_ALIE, nom: 'Una altra', domicili: DOMICILI }, destinatari: { nif: CIF_EMISSOR, nom: 'Forn', domicili: DOMICILI } });
+    await registraAlta(port, alie, { instant: MIGDIA });
+    const cas = emissio({ port });
+    await expect(cas.emet(rectificativa([{ numSerie: 'A2026-0001', dataExpedicio: PAS }]), { instant: MIGDIA }))
+      .rejects.toMatchObject({ codi: 'FACTURA_RECTIFICADA_INEXISTENT' });
+    expect(await port.llig({ idEmisor: CIF_EMISSOR })).toEqual([]);
+  });
+
+  test('una F3 només substituïx simplificades del llibre que no estiguen anul·lades', async () => {
+    const port = creaPortMemoria();
+    const cas = emissio({ port });
+    const tiquet = await cas.emet(simplificada(), { instant: MIGDIA });
+    const substitucio = (substituides) => dades({ tipus: 'F3', substituides });
+    await expect(cas.emet(substitucio([{ numSerie: 'T2026-0002', dataExpedicio: PAS }]), { instant: MIGDIA }))
+      .rejects.toMatchObject({ codi: 'FACTURA_RECTIFICADA_INEXISTENT', detalls: ['T2026-0002 del 2026-10-04 no és al llibre d\'esta empresa.'] });
+    const f3 = await cas.emet(substitucio([{ numSerie: tiquet.numSerie, dataExpedicio: PAS }]), { instant: MIGDIA });
+    expect(f3).toMatchObject({ numSerie: 'A2026-0001', tipusFactura: 'F3' });
+    expect(f3.factura.substituides).toEqual([{ numSerie: 'T2026-0001', dataExpedicio: PAS }]);
+    expect((await verificaCadena(await port.llig())).valida).toBe(true);
+  });
+
+  /* Troballa F5 de la revisió (261007): una segona F3 del mateix tiquet entrava
+     i la venda quedava amb dos factures completes, l'IVA comptat dos vegades. */
+  test('un tiquet només se substituïx una vegada: FACTURA_JA_SUBSTITUIDA; anul·lada la F3, es pot tornar a fer', async () => {
+    const port = creaPortMemoria();
+    const cas = emissio({ port });
+    const [primer, segon] = [await cas.emet(simplificada(), { instant: MIGDIA }), await cas.emet(simplificada(), { instant: MIGDIA })];
+    const substitucio = (substituides) => dades({ tipus: 'F3', substituides });
+    const ref = (tiquet) => ({ numSerie: tiquet.numSerie, dataExpedicio: PAS });
+    const f3 = await cas.emet(substitucio([ref(primer)]), { instant: MIGDIA });
+    await expect(cas.emet(substitucio([ref(primer)]), { instant: MIGDIA })).rejects.toMatchObject({
+      codi: 'FACTURA_JA_SUBSTITUIDA', detalls: ['T2026-0001 del 2026-10-04 ja el substituïx la factura A2026-0001.']
+    });
+    // Barrejat amb un tiquet lliure, tampoc: es diu quin està repetit.
+    await expect(cas.emet(substitucio([ref(segon), ref(primer)]), { instant: MIGDIA })).rejects.toMatchObject({
+      codi: 'FACTURA_JA_SUBSTITUIDA', detalls: ['T2026-0001 del 2026-10-04 ja el substituïx la factura A2026-0001.']
+    });
+    expect(await numeros(port)).toEqual(['T2026-0001', 'T2026-0002', 'A2026-0001']);
+    // Anul·lada la primera F3, el tiquet torna a estar lliure.
+    await registraAnulacio(port, { idEmisor: CIF_EMISSOR, numSerie: f3.numSerie, dataExpedicio: PAS, motiu: 'Dades del client errònies', instant: MIGDIA });
+    const nova = await cas.emet(substitucio([ref(primer), ref(segon)]), { instant: MIGDIA });
+    expect(nova).toMatchObject({ numSerie: 'A2026-0002', tipusFactura: 'F3' });
+    expect((await verificaCadena(await port.llig())).valida).toBe(true);
   });
 });
