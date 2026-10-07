@@ -198,7 +198,9 @@ function AvisosDelCalendari({ agenda, senseData }) {
 }
 
 /* Les targetes de davall, amb la MATEIXA targeta del Mur; `buit` és el que
-   diu sense cap targeta. */
+   diu sense cap targeta.
+   Ordre del Mestre (261007) · Comentar, el menú de dues vies de totes les
+   targetes (el mateix del Mur): cap gestor de llista. */
 function TargetesDeDavall({ visibles, buit }) {
   return (
     <>

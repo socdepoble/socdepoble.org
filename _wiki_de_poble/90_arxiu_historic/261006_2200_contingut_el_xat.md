@@ -42,7 +42,7 @@ Quan implementem el canvi al codi (idealment en la mateixa ronda que la neteja d
   "xat": {
     "date": "2026-10-07T00:00:00.000Z",
     "title": "El Xat",
-    "subtitle": "Parla amb el teu poble sense aprendre res de nou",
+    "subtitle": "Parla amb la teua gent amb la tecnologia de casa",
     "lead": "Hem integrat un sistema de missatgeria clavat a WhatsApp. Sense descarregar aplicacions noves, sense configuracions estranyes i amb la garantia que les teues dades es queden a casa.",
     "image": "/assets/uploads/brain/[NOM_DE_LA_IMATGE_DE_NANO_BANANA].png",
     "imageWidth": 1024,

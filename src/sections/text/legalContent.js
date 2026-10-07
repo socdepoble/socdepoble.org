@@ -49,14 +49,10 @@ export const legalContent = {
     <p>Ens reservem el dret de suspendre l'accés a qui incomplisca aquestes condicions, avisant-lo prèviament sempre que siga possible.</p>
 
     <h4>4. Propietat intel·lectual i industrial</h4>
+    <div data-sdp-targetes="" class="sdp-targetes" data-forma="sola" data-alineacio="dreta"><div data-sdp-targeta="pagina:drets-autor" class="sdp-targeta" data-ruta="/page/drets-autor" data-titol="Drets d'autor" data-subtitol="Totes les llicències, explicades amb paraules de poble" data-entradilla="Per què el que publiques naix amb CC BY-NC-SA 4.0, què vol dir cada llicència i quan convé triar-ne una altra." data-autor="Sóc de Poble" data-autor-ruta="/projecte"><a href="/page/drets-autor" rel="noopener noreferrer nofollow">Drets d'autor</a></div></div>
     <p>La infraestructura tecnològica de Sóc de Poble abraça la cultura del codi obert. En canvi, el disseny original, el concepte estètic <strong>"Pedra Seca"</strong>, els logotips, les il·lustracions i els textos generats sota la marca Sóc de Poble estan protegits per drets de propietat intel·lectual i industrial.</p>
     <p>Queda prohibida la reproducció total o parcial del sistema de disseny visual i dels elements d'interfície amb finalitats comercials alienes al projecte sense consentiment exprés de Fco. Javier Llinares García.</p>
     <p>El contingut que publiques tu continua sent teu. En publicar-lo dins de l'aplicació, ens dones permís per a mostrar-lo als altres membres del teu poble segons la visibilitat que hages triat, i només per a això.</p>
-    <div class="cc-logo-container">
-      <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.ca" target="_blank" rel="noopener noreferrer">
-        Veure Llicència Creative Commons Reconeixement-NoComercial-CompartirIgual 4.0 Internacional (CC BY-NC-SA 4.0)
-      </a>
-    </div>
 
     <h4>5. Exempció de responsabilitat: el Mercat entre veïns</h4>
     <p>El Mercat de Sóc de Poble és un <strong>tauler d'anuncis</strong>. L'aplicació <strong>no actua com a intermediària comercial, no rep comissions, no tramita pagaments i no participa en cap transacció</strong> entre usuaris.</p>

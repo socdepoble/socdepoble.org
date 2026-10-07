@@ -121,6 +121,17 @@
       "script": "tooling/wiki/reflex_petorreta.mjs",
       "arguments": ["consume-commit"],
       "nivell": "L0"
+    },
+    {
+      "id": "fatiga-cognitiva",
+      "descripcio": "Termòmetre de fatiga de MarIA a Antigravity: abans de cada invocació del model mesura la conversa (passos, pujades del Mestre i MB) i, en passar un llindar, injecta l'avís [FATIGA·N1..3] del cas 4 de core-context-panic.",
+      "llancador": { "tipus": "antigravity-hook", "esdeveniment": "PreInvocation", "hook": "sdp-fatiga" },
+      "script": "tooling/gates/fatiga-hook.mjs",
+      "arguments": [],
+      "llig": ["~/.gemini/antigravity-ide/brain/<conversationId>/"],
+      "escriu": [".agents/runtime/fatiga-hook.log"],
+      "registre": ".agents/runtime/fatiga-hook.log",
+      "nivell": "L0"
     }
   ]
 }

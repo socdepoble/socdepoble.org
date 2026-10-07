@@ -10,14 +10,20 @@
  * És la UniversalCard de la llista (variant "pla"), la mateixa anatomia que
  * la publicació: caputxa taronja, cos i peu blau. Els botons ensenyen les
  * proporcions però no connecten amb res: el clic s'intercepta i ho diu el
- * diàleg del sistema (cap navegació, cap alert()). Sense «(i)» a la caputxa
+ * diàleg del sistema (cap alert()). Sense «(i)» a la caputxa
  * (skill sdp-universal-page §1.C): l'avís apareix en clicar una acció.
+ * Revisió del 261007 (M3-11) · L'enllaç dels drets no s'intercepta: és el
+ * d'UniversalCard (EnllacDrets, sempre a «Drets d'autor») i navega, també fora
+ * de l'editor. La targeta incrustada de l'editor (TargetaIncrustadaNodeView)
+ * sí que para els enllaços. Si la previsualització ha de navegar o no és
+ * decisió pendent del Mestre (F12 de l'auditoria 0030).
  */
 import { useCallback, useLayoutEffect, useState, useSyncExternalStore } from 'react';
 import { IdCard } from 'lucide-react';
 import { UniversalCard, Dialeg, Boto } from '../PedraSeca/index.js';
 import { useImatgeResolta } from '../../hooks/useImatgeTargeta.js';
-import { propsDeTargetaViva } from './targetaViva.js';
+import { emojiDelQuadrat, propsDeTargetaViva } from './targetaViva.js';
+import { insigniaEmojiXL } from './insigniaEmoji.jsx';
 import { llegixDocumentViu, publicaDocumentViu, subscriuDocumentViu } from './documentViu.js';
 
 /* Correcció D1 (revisió de T50) · Els textos, per consumidor: cap no pot
@@ -64,7 +70,8 @@ const TELEMETRIA_PREVISUALITZACIO = Object.freeze({ mode: 'previsualitzacio' });
  * autor: { nom, avatar, poble }, el de la barra taronja. etiquetes: les píndoles.
  * onMainClick: la fitxa de la llista la torna a triar; a l'aside no fa res.
  * avis: els textos del consumidor (AVISOS_TARGETA_VIVA); sense, la reserva.
- * actual: és la fitxa triada de la llista (aria-current a UniversalCard).
+ * actual: és la fitxa triada de la llista (aria-current a UniversalCard) i,
+ *   sense imatge, porta l'emoji XL al quadrat (ordre del Mestre, 261007).
  */
 export function TargetaViva({ document, autor = null, etiquetes, className, onMainClick, avis = AVIS_PREVISUALITZACIO, actual = false }) {
   const [avisObert, setAvisObert] = useState(false);
@@ -78,6 +85,18 @@ export function TargetaViva({ document, autor = null, etiquetes, className, onMa
   const props = propsDeTargetaViva(document, { autor, etiquetes });
   const imatge = useImatgeResolta(props.imageUrl);
   const avatar = useImatgeResolta(props.avatarUrl);
+  /* Ordre del Mestre (261007) · «Aplica a TargetaViva.jsx (quan actua com a
+     ítem de llista)»: sense imatge i amb una emoticona triada, l'emoji XL
+     ocupa el quadrat (insigniaEmojiXL, la mateixa insígnia del catàleg); amb
+     imatge, cap insígnia (CardBody la pintaria igualment). Només a la fitxa de
+     la llista, que és la que porta `actual` (NotaFitxa, PerfilShell): l'aside
+     i el xip «Vista targeta» de l'editor es queden com eren (Llei del Píxel)
+     fins que el Mestre ho decidisca. L'emoticona del centre de la caputxa es
+     queda: és la llei de la barra taronja (Pedra Seca §10, «en lectura o
+     targeta, buit si no s'ha triat»), i amb imatge és l'únic lloc on es veu.
+     Revisió del 261007 (M2-08) · Sense etiqueta: la targeta ja diu el títol, i
+     el quadrat és decoratiu (no el repetix al lector). */
+  const insignia = actual ? insigniaEmojiXL(null, emojiDelQuadrat(document)) : null;
 
   return (
     <>
@@ -85,6 +104,7 @@ export function TargetaViva({ document, autor = null, etiquetes, className, onMa
         {...props}
         imageUrl={imatge}
         avatarUrl={avatar}
+        squareBadge={insignia}
         className={['sdp-targeta-viva-carta', className].filter(Boolean).join(' ')}
         variant="pla"
         hasFooter

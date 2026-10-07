@@ -15,9 +15,14 @@
  *
  * `mostra`: l'espècimen del catàleg el pinta obert i quiet, sense furtar el
  * focus ni escoltar la pàgina (Disseny no té cap barra que el tanque).
+ *
+ * Ordre del Mestre (261007) · Correcció C9 · Tot este comportament (focus,
+ * Escape consumit, clic fora a l'arrel del node, fletxes, Inici i Fi, tria i
+ * `mostra`) és el de useMenuEmergent (PedraSeca/hooks), el MATEIX del menú de
+ * Comentar. Ací només queden el marcatge i les llengües.
  */
-import { useEffect, useRef } from 'react';
 import { Check } from 'lucide-react';
+import { useMenuEmergent } from '../../PedraSeca/hooks/useMenuEmergent.js';
 
 export const NOM_MENU_TRADUIR = 'Traduir la pàgina';
 export const NOM_ORIGINAL = 'Original (valencià)';
@@ -25,55 +30,7 @@ export const NOM_ORIGINAL = 'Original (valencià)';
 const OPCIONS = '[role="menuitemradio"]';
 
 export function MenuTraduir({ opcions = [], actual = null, onTria, onTanca, botoRef = null, mostra = false }) {
-  const ref = useRef(null);
-  /* Les escoltes no es tornen a posar a cada pintat (carregant, una altra
-     llengua): el focus no ha de saltar a la primera opció a mitja tria. */
-  const tancaRef = useRef(onTanca);
-  useEffect(() => { tancaRef.current = onTanca; }, [onTanca]);
-
-  useEffect(() => {
-    if (mostra) return undefined;
-    const node = ref.current;
-    node?.querySelector(OPCIONS)?.focus();
-    const arrel = node?.getRootNode?.() || document;
-    const tancaFora = (event) => {
-      if (!node || node.contains(event.target) || botoRef?.current?.contains(event.target)) return;
-      tancaRef.current?.();
-    };
-    const tancaEsc = (event) => {
-      if (event.key !== 'Escape') return;
-      event.preventDefault();
-      event.stopPropagation();
-      tancaRef.current?.();
-      botoRef?.current?.focus();
-    };
-    arrel.addEventListener('pointerdown', tancaFora);
-    arrel.addEventListener('keydown', tancaEsc);
-    return () => {
-      arrel.removeEventListener('pointerdown', tancaFora);
-      arrel.removeEventListener('keydown', tancaEsc);
-    };
-  }, [mostra, botoRef]);
-
-  const tria = (codi) => {
-    if (mostra) return;
-    onTanca?.();
-    botoRef?.current?.focus();
-    onTria?.(codi);
-  };
-
-  const mouFocus = (event) => {
-    const passos = { ArrowDown: 1, ArrowUp: -1 };
-    if (!(event.key in passos) && event.key !== 'Home' && event.key !== 'End') return;
-    const botons = Array.from(ref.current?.querySelectorAll(OPCIONS) || []);
-    if (!botons.length) return;
-    event.preventDefault();
-    const ara = botons.indexOf(event.target);
-    let seguent = 0;
-    if (event.key === 'End') seguent = botons.length - 1;
-    else if (event.key in passos) seguent = (Math.max(ara, 0) + passos[event.key] + botons.length) % botons.length;
-    botons[seguent].focus();
-  };
+  const { ref, tria, mouFocus } = useMenuEmergent({ files: OPCIONS, onTria, onTanca, botoRef, mostra });
 
   return (
     <div ref={ref} className={`sdp-menu-traduir${mostra ? ' sdp-menu-traduir--mostra' : ''}`}

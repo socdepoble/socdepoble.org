@@ -35,7 +35,7 @@ import { sanitizeHtml } from '../../utils/sanitize.js';
 import fontApp from '../../app/App.jsx?raw';
 import fontI18n from '../../config/i18n.js?raw';
 import {
-  AUTORIA_SOCDEPOBLE, DESTINS_CONTROL, TEXTOS_PORTES, XAT_SOCDEPOBLE, contingutDe, destiDePagina, enObres, portesDe, rutaDePagina
+  AUTORIA_SOCDEPOBLE, DESTINS_CONTROL, TEXTOS_PORTES, contingutDe, destiDePagina, enObres, portesDe, rutaDePagina
 } from './destinsControl.js';
 
 /* Les rutes estàtiques de la taula d'App: sense paràmetres ni comodins, perquè
@@ -272,13 +272,14 @@ describe('destinsControl · les targetes i on porta cada porta', () => {
     }
   });
 
-  /* W4-09 · L'autoria ja no porta l'enllaç: l'id de llavor només val per al
-     xat local (XAT_SOCDEPOBLE). En remot, l'enllaç el resol xatCorporatiu.js.
+  /* W4-09 · L'autoria ja no porta l'enllaç del xat: el de la llavor té una
+     sola font (XAT_SOCDEPOBLE_DE_LLAVOR, provada a xatCorporatiu.test.jsx). En
+     remot, l'enllaç el resol el proveïdor (xatCorporatiu.js).
      Derogat per l'ordre del Mestre del 261004 (prompt 261004_0515, T6): la
      boina porta SEMPRE a la pàgina de l'autor; per a l'entitat pilot, la del
      projecte (RUTA_PROJECTE, resolta per l'id de l'entitat). El xat
      corporatiu és el de Comentar (ControlSection). */
-  test('la boina és l’entitat socdepoble, no la IAIA, i porta al projecte; el xat de la llavor és a part', () => {
+  test('la boina és l’entitat socdepoble, no la IAIA, i porta al projecte, mai al xat', () => {
     expect(AUTORIA_SOCDEPOBLE).toEqual({
       author: 'Sóc de Poble',
       location: 'La Torre de les Maçanes',
@@ -287,10 +288,8 @@ describe('destinsControl · les targetes i on porta cada porta', () => {
     });
     expect(AUTORIA_SOCDEPOBLE.authorHref).toBe(RUTA_PROJECTE);
     expect(AUTORIA_SOCDEPOBLE.authorHref).not.toContain('/xat');
+    expect(AUTORIA_SOCDEPOBLE.authorHref).not.toContain(encodeURIComponent(IAIA_ID));
     expect(rutesEstatiques().has(camiDe(AUTORIA_SOCDEPOBLE.authorHref))).toBe(true);
-    expect(XAT_SOCDEPOBLE).toBe('/xat?amb=socdepoble');
-    expect(XAT_SOCDEPOBLE).not.toContain(encodeURIComponent(IAIA_ID));
-    expect(rutesEstatiques().has(camiDe(XAT_SOCDEPOBLE))).toBe(true);
     expect(Object.isFrozen(AUTORIA_SOCDEPOBLE)).toBe(true);
   });
 

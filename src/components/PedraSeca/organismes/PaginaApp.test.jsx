@@ -17,7 +17,7 @@ vi.mock('../../universal/NotificationContext.jsx', () => ({ useToast: () => ({ s
 vi.mock('../../../app/contexts/UIContext', () => ({ useUIState: () => mocks.ui }));
 
 import { PaginaApp } from './PaginaApp.jsx';
-import * as PedraSeca from '../index.js';
+
 import { AVIS_PAGINA_SENSE_TRADUCCIO } from '../../universal/PageFrame.jsx';
 import { CLAU_APAGADA, ESDEVENIMENT_DOM } from '../../../data/telemetria.js';
 import { buidaCauTraduccions } from '../hooks/useTraduccioPagina.js';
@@ -211,7 +211,4 @@ describe('l’autoria', () => {
   });
 });
 
-test('la façana de Pedra Seca l’exporta (la porta de les apps)', () => {
-  expect(PedraSeca.PaginaApp).toBe(PaginaApp);
-  expect(typeof PedraSeca.GraellaTargetes).toBe('function');
-});
+

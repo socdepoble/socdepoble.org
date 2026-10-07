@@ -13,7 +13,8 @@
  *   onBack · onForward (sense, la fletxa no es pinta) · onIndex ·
  *   traduirVisible · comentarVisible · compartirVisible · connectarVisible ·
  *   onTranslate · onComment · onShare · onConnect · connectLabel ·
- *   comentarXat ('comu' | 'directe' | null: el nom de Comentar, T63.2) ·
+ *   comentarXat ('comu' | 'privat' | null: el menú de Comentar, ordre del
+ *     Mestre, 261007; el posa useAccions) ·
  *   accionsInoperatives + onClickInoperatiu (T36: Comentar, Compartir i
  *     Connectar es pinten igual però el clic va a onClickInoperatiu; T7 ·
  *     porten aria-disabled="true" i el clic diu quin botó és:
@@ -31,23 +32,37 @@
  * llengües abans de Comentar. Tancat, el trio té els tres botons de sempre
  * i cap píxel canvia fins que es prem Traduir (Llei del Píxel). El clic
  * continua anant a onTranslate: qui munta la barra decidix què fa.
+ *
+ * Ordre del Mestre (261007) · «COMENTARIS = XAT» · No hi ha fil de comentaris
+ * davall de cap publicació: el debat és un xat. Comentar obri un menú amb dues
+ * vies, el MATEIX patró que el de Traduir (MenuComentar, just després del
+ * botó, dins del trio):
+ *   · «En privat» · un xat privat només entre la persona i Sóc de Poble, el
+ *     missatge directe amb l'entitat;
+ *   · «En públic» · el xat públic de l'element, amb el seu títol com a nom,
+ *     com els grups «General» o «Beta testers»: hi pot entrar tothom. Sense
+ *     xat públic (comentarXat 'privat'), la fila es queda desactivada i diu
+ *     per què.
+ * La via triada va a onComment('privat' | 'public'). És la MATEIXA peça del
+ * peu de la targeta (BotoComentar, PedraSeca/organismes/Comentar.jsx: esta
+ * barra i UniversalCard l'importen d'allí), i a la targeta funciona igual.
+ * Amb comentarXat null (un handler propi, que mana, o l'editor, inoperatiu)
+ * no hi ha menú: el clic de sempre. Derogat el nom que deia on portava
+ * Comentar (NOMS_COMENTAR de T63.2): ara ho diuen les dues files del menú, i
+ * el botó diu que obri un menú.
+ * Correcció C9 · MenuComentar i TEXTOS_COMENTAR es reexporten ací per a les
+ * proves que ja els importaven d'esta barra.
  */
 import { useLayoutEffect, useRef } from 'react';
 import {
-  BackIcon, ForwardIcon, IndexIcon, TranslateIcon, CommentIcon, ShareIcon,
+  BackIcon, ForwardIcon, IndexIcon, TranslateIcon, ShareIcon,
 } from '../../PedraSeca/atoms/icones.jsx';
 import { ActionControl, IconButton } from '../../PedraSeca/atoms/controls.jsx';
+import { BotoComentar } from '../../PedraSeca/organismes/Comentar.jsx';
 import { MenuTraduir } from '../traduccio/MenuTraduir.jsx';
 
-/* T63.2 (doctrina del Mestre, 260928) · El nom accessible (i el title) de
-   Comentar diu on porta: el xat comú de la Pàgina Universal o, per a una
-   persona o una IA, el missatge directe. Sense saber-ho (un handler propi o
-   l'editor, inoperatiu), només «Comentar»: mai un xat que no existix. */
-export const NOMS_COMENTAR = Object.freeze({
-  comu: 'Comentar al xat comú',
-  directe: 'Comentar per missatge directe',
-});
-const COMENTAR = 'Comentar';
+export { MenuComentar } from '../../PedraSeca/organismes/Comentar.jsx';
+export { TEXTOS_COMENTAR } from '../../PedraSeca/organismes/textosComentar.js';
 
 export function BarraBlava({
   onBack, onForward, onIndex,
@@ -82,7 +97,6 @@ export function BarraBlava({
     if (!accionsInoperatives) return viu;
     return onClickInoperatiu ? () => onClickInoperatiu(accio) : null;
   };
-  const nomComentar = NOMS_COMENTAR[comentarXat] || COMENTAR;
   return (
     <header className="bar-blue">
       <div className="bar-blue-left">
@@ -114,10 +128,11 @@ export function BarraBlava({
           <MenuTraduir opcions={menuTraduir.opcions} actual={menuTraduir.actual}
             onTria={menuTraduir.onTria} onTanca={menuTraduir.onTanca} botoRef={botoTraduir} />
         ) : null}
+        {/* Ordre del Mestre (261007) · Inoperatiu (l'editor, T36), Comentar no
+            obri cap menú: el clic diu quin botó és. */}
         {comentarVisible && (
-          <IconButton label={nomComentar} onClick={clicDe('comentar', onComment)} className={inoperativa} presentation ariaDisabled={ariaInoperatiu}>
-            <CommentIcon className="icon" />
-          </IconButton>
+          <BotoComentar comentarXat={accionsInoperatives ? null : comentarXat} onComment={clicDe('comentar', onComment)}
+            className={inoperativa} presentation ariaDisabled={ariaInoperatiu} />
         )}
         {compartirVisible && (
           <IconButton label="Compartir" onClick={clicDe('compartir', onShare)} className={inoperativa} presentation ariaDisabled={ariaInoperatiu}>

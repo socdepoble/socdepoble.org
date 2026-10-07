@@ -19,11 +19,15 @@ test('avatar local vàlid conserva la imatge',()=>{
    Derogat en part per la norma dels logotips (ordre del Mestre, 261004): una
    pàgina que signa Sóc de Poble (l'autor per defecte) porta ara el seu
    logotip davant de l'H1 (PageFrame.logo.test.jsx). La comparació byte a byte
-   es fa amb una persona (Pepa), que no en porta, i a banda amb Sóc de Poble. */
+   es fa amb una persona (Pepa), que no en porta, i a banda amb Sóc de Poble.
+   Derogat en part (ordre del Mestre, 261007): el text del copyright és un
+   enllaç a la pàgina «Drets d'autor» (/page/drets-autor), dins del paràgraf
+   de sempre (PageFrame.copyright.test.jsx). */
 const CAPCALERA_SENSE_RANURA='<header class="page-title"><h1>Títol</h1>'
   +'<ul class="sp-card-labels page-title-labels" aria-label="Categories">'
   +'<li class="sp-card-label sdp-badge-tag">Sistema</li><li class="sp-card-label sdp-badge-system">Mur</li></ul>'
-  +'<p class="sp-card-copyright page-title-copyright">© Sóc de Poble</p></header>';
+  +'<p class="sp-card-copyright page-title-copyright">'
+  +'<a href="/page/drets-autor" class="sp-card-copyright__enllac">© Sóc de Poble</a></p></header>';
 /* Derogat en part (ordre del Mestre, 261004, correcció final del risc de
    Safari 16): cada imatge del logotip de Sóc de Poble porta al final
    width="300" height="78", la mida natural de l'SVG (PageFrame.logo.test.jsx). */

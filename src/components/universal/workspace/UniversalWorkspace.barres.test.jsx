@@ -24,6 +24,7 @@ vi.mock('../../../hooks/useResolvedAsset.js', () => ({
 }));
 
 import { UniversalWorkspace } from './UniversalWorkspace.jsx';
+import { _reiniciaCarpetesVisibles } from './carpetesVisibles.js';
 
 const MODEL = Object.freeze({
   status: 'ready',
@@ -41,7 +42,9 @@ const ETIQUETES = Object.freeze({ categories: 'CARPETES', items: 'NOTES' });
 const ICONES = Object.freeze({ categories: Folder, items: FileText });
 const detall = ({ item }) => <p data-testid="detall">{item ? item.title : 'cap'}</p>;
 
-beforeEach(() => { sessionStorage.clear(); localStorage.clear(); });
+/* Llei de la Roda Dentada · La preferència de les carpetes a la vista té
+   còpia en memòria: cada prova la torna a llegir de l'emmagatzematge buit. */
+beforeEach(() => { sessionStorage.clear(); localStorage.clear(); _reiniciaCarpetesVisibles(); });
 afterEach(() => cleanup());
 
 function entorn(ampladaInicial, prova) {
@@ -143,6 +146,26 @@ test('Barres · a 820 Expandir obri el panell amb el focus a la carpeta activa; 
     expect(enNavegacio(container, 'Replegar CARPETES')).toBeTruthy();
   });
 });
+
+/* Llei de la Roda Dentada (ordre del Mestre, 261007) · La roda del rail fix
+   de «mitja» és la mateixa de sempre: les carpetes amagades tampoc no hi
+   són, i tornar-les a la vista les torna al rail. */
+test('Barres · a 820 la roda del rail amaga i torna a mostrar una carpeta del rail fix', () => {
+  entorn(820, () => {
+    const { container } = munta();
+    const rail = () => within(navegacio(container)).getByRole('navigation', { name: 'CARPETES' });
+    const delRail = () => within(rail()).getAllByRole('button').map((b) => b.getAttribute('aria-label'));
+    expect(delRail()).toEqual(['Mur', 'Mercat']);
+    fireEvent.click(enNavegacio(container, 'Configuració de l’espai de treball'));
+    const dialeg = within(container.querySelector('dialog'));
+    fireEvent.click(dialeg.getByRole('switch', { name: 'Vull vore Mercat' }));
+    expect(delRail()).toEqual(['Mur']);
+    /* El rail continua fix i obert: amagar no toca la closca. */
+    expect([closca(container).dataset.esquerra, panell(container)]).toEqual(['rail', '']);
+    fireEvent.click(dialeg.getByRole('switch', { name: 'Vull vore Mercat' }));
+    expect(delRail()).toEqual(['Mur', 'Mercat']);
+  });
+}, 30000);
 
 test('Barres · a 820 una carpeta del rail filtra la llista i porta el focus a la llista; el rail es queda', () => {
   entorn(820, ({ buida }) => {

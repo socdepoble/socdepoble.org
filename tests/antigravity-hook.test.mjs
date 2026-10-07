@@ -316,6 +316,156 @@ test('[261006 t6] briefing: els noms que la porta no deixa eixir per nom (BUNDLE
   for (const m of [sols, mixt, art]) assert.ok(m.length < 1100, `efímer curt: ${m.length}`);
 });
 
+/* ── 261007 · Acte reflex de convocatòria, autoprotecció de la fatiga i pla de la jornada ── */
+
+/* Els literals que el hook no exporta (vegeu el comentari dels briefings). */
+const OBSERVACIONS = '.agents/runtime/antigravity-observacions.log';
+const CONTEXT_PROMPT = 'node tooling/wiki/document.mjs context --turn-id torn_x --route prompt.local --file _wiki_de_poble/04_escriptori/261007_0100_prompt_claude_x.md';
+
+test('[261007] convocatòria: demanar la plantilla d’un prompt sense haver observat la taula en esta conversa → deny amb el motiu complet', () => {
+  const vistes = [];
+  const observada = (valor) => (conversa) => { vistes.push(conversa); return valor; };
+  const p = crida('run_command', { CommandLine: CONTEXT_PROMPT });
+  const r = preTool(p, { root: ROOT, observada: observada(false) });
+  assert.equal(r.decision, 'deny');
+  for (const x of [/Acte reflex de convocatòria/, /AGENTS §0 i §0\.1/, /core-higiene-escriptori, pas 0/, /en els últims 30 minuts/,
+    /node tooling\/gates\/porta-olivera\.mjs --informe, sense res més a l'ordre/, /«🌿 Declarat viu»/,
+    /--arxiva --sec --nom NOM/, /informa el Mestre en una línia/, /torna a demanar el context/, /pregunta al Mestre/]) {
+    assert.match(r.reason, x);
+  }
+  assert.deepEqual(vistes, ['ec33ebf9-0cba-4100-8142-c61503f6c587'], 'la memòria es consulta per la conversa del payload');
+  assert.deepEqual(preTool(p, { root: ROOT, observada: observada(true) }), { decision: 'allow' });
+  // Sense conversa al payload, la clau és «sense-conversa», com la del briefing.
+  const sense = { ...p };
+  delete sense.conversationId;
+  preTool(sense, { root: ROOT, observada: observada(false) });
+  assert.equal(vistes.at(-1), 'sense-conversa');
+});
+
+test('[261007] convocatòria: prompt.consell i les ordres compostes també; el pla i les lectures no; sense memòria, cap deny', () => {
+  const mai = () => false;
+  const decidix = (CommandLine) => preTool(crida('run_command', { CommandLine }), { root: ROOT, observada: mai }).decision;
+  for (const CommandLine of [
+    'node tooling/wiki/document.mjs context --turn-id torn_x --route prompt.consell --file _wiki_de_poble/04_escriptori/261007_0100_prompt_z.md',
+    'node tooling/wiki/document.mjs context --turn-id torn_x --route=prompt.local --file _wiki_de_poble/04_escriptori/261007_0100_prompt_z.md',
+    `cd .. && ${CONTEXT_PROMPT}`,
+    'node "tooling/wiki/document.mjs" context --route "prompt.local" --turn-id torn_x --file x.md',
+  ]) {
+    assert.equal(decidix(CommandLine), 'deny', CommandLine);
+  }
+  // `create` ja no es dona per bo ací: també convoca (revisió adversarial R1, 261007; vegeu
+  // les proves «[261007 R1]» més avall).
+  for (const CommandLine of [
+    'node tooling/wiki/document.mjs context --turn-id torn_x --route pla.implementacio --file _wiki_de_poble/04_escriptori/261007_0100_pla_implementacio_x.md',
+    'node tooling/wiki/document.mjs context --turn-id torn_x --route prompt.localitat --file x.md',
+    'node tooling/gates/porta-olivera.mjs --informe',
+  ]) {
+    assert.equal(decidix(CommandLine), 'allow', CommandLine);
+  }
+  // Una lectura preaprovada que només cita l'ordre passa abans de l'acte reflex. La lectura
+  // pura es resol contra una arrel real (la del repositori), com fa el hook a l'IDE.
+  const grep = crida('run_command', { CommandLine: `grep -n "document.mjs context --route prompt.local" ${DESK}/00_index_escriptori.md` });
+  assert.equal(preTool(grep, { root: REPO, observada: mai }).decision, 'allow');
+  // Nucli pur: sense memòria injectada, el comportament d'abans.
+  assert.deepEqual(preTool(crida('run_command', { CommandLine: CONTEXT_PROMPT }), { root: ROOT }), { decision: 'allow' });
+});
+
+/* Revisió adversarial R1 (261007), verificada al codi: la CONVOCATORIA d'abans llegia un
+   prefix de text, `document.mjs` i just darrere `context`. Però la CLI documental admet les
+   banderes abans del subcomandament (tooling/documental/cli.mjs, options), `create` i
+   `import` entreguen el context pel seu compte (tooling/wiki/document.mjs, createDraft;
+   tooling/documental/import.mjs; deliverContext no exigix cap rebut previ) i
+   `npm run document` és la mateixa CLI (package.json). A l'inrevés, un `echo` o un
+   `git commit -m` que només citaven l'ordre rebien el deny. Ordre del Mestre (261007): el
+   remei llig l'argv de cada tram de l'ordre (esConvocatoria), i estes proves el fixen. */
+const PROMPT_R1 = `${DESK}/261007_0100_prompt_x.md`;
+const CONVOCATORIES_R1 = Object.freeze([
+  ['create directe, sense context', `node tooling/wiki/document.mjs create --turn-id torn_x --route prompt.local --file ${PROMPT_R1} --title T --description D`],
+  ['banderes abans del subcomandament', `node tooling/wiki/document.mjs --turn-id torn_x --route prompt.local --file ${PROMPT_R1} context`],
+  ['create amb --route= i banderes primer', `node tooling/wiki/document.mjs --route=prompt.consell --turn-id torn_x --file ${PROMPT_R1} create --title T --description D`],
+  ['àlies npm run document', `npm run document -- context --turn-id torn_x --route prompt.local --file ${PROMPT_R1}`],
+  ['àlies npm amb banderes primer i create', `npm run document -- --route prompt.consell --turn-id torn_x --file ${PROMPT_R1} create --title T --description D`],
+  ['import d’un document existent com a prompt', `node tooling/wiki/document.mjs import --turn-id torn_x --route prompt.local --file ${PROMPT_R1} --title T --description D`],
+  ['ordre composta amb banderes primer', `cd . && node tooling/wiki/document.mjs --route prompt.local --turn-id torn_x --file ${PROMPT_R1} context`],
+]);
+const CITES_R1 = Object.freeze([
+  ['un echo que només la cita', 'echo "node tooling/wiki/document.mjs context --route prompt.local --file x.md"'],
+  ['un missatge de commit que la cita', 'git commit -m "fix: document.mjs context --route prompt.local"'],
+]);
+
+for (const [cas, CommandLine] of CONVOCATORIES_R1) {
+  test(`[261007 R1] convocatòria fora del prefix canònic (${cas}) → deny sense taula observada; allow amb ella`, () => {
+    const p = crida('run_command', { CommandLine });
+    const r = preTool(p, { root: ROOT, observada: () => false });
+    assert.equal(r.decision, 'deny', CommandLine);
+    assert.match(r.reason, /^Acte reflex de convocatòria/);
+    assert.deepEqual(preTool(p, { root: ROOT, observada: () => true }), { decision: 'allow' }, CommandLine);
+  });
+}
+for (const [cas, CommandLine] of CITES_R1) {
+  test(`[261007 R1] ${cas} no executa la CLI documental: no convoca → allow`, () => {
+    assert.equal(preTool(crida('run_command', { CommandLine }), { root: ROOT, observada: () => false }).decision, 'allow', CommandLine);
+  });
+}
+
+test('[261007 R1] lectura per argv: embolcalls de shell, assignacions i expansions convoquen; les altres subordres, rutes i CLI no', () => {
+  const decidix = (CommandLine) => preTool(crida('run_command', { CommandLine }), { root: ROOT, observada: () => false }).decision;
+  const ctx = `context --turn-id torn_x --route prompt.local --file ${PROMPT_R1}`;
+  for (const CommandLine of [
+    `bash -lc "node tooling/wiki/document.mjs ${ctx}"`,
+    `sh -c 'cd . && node tooling/wiki/document.mjs ${ctx}'`,
+    `echo $(node tooling/wiki/document.mjs ${ctx})`,
+    `SDP_ARREL=. node tooling/wiki/document.mjs ${ctx}`,
+    `/usr/local/bin/node "${REPO}tooling/wiki/document.mjs" ${ctx}`,
+    `node tooling/wiki/document.mjs context --turn-id torn_x --route "$RUTA" --file ${PROMPT_R1}`,
+    `node tooling/wiki/document.mjs $ORDRE --turn-id torn_x --route prompt.consell --file ${PROMPT_R1}`,
+    `node tooling/wiki/document.mjs ${ctx} > /tmp/sdp-plantilla.json`,
+    `npm run document context --turn-id torn_x --route prompt.local --file ${PROMPT_R1}`,
+    `npm run-script document -- ${ctx}`,
+  ]) {
+    assert.equal(decidix(CommandLine), 'deny', CommandLine);
+  }
+  for (const CommandLine of [
+    `node tooling/wiki/document.mjs create --turn-id torn_x --route pla.implementacio --file ${DESK}/261007_0100_pla_implementacio_x.md --title T --description D`,
+    `node tooling/wiki/document.mjs check --file ${PROMPT_R1}`,
+    `node tooling/wiki/document.mjs plan --turn-id torn_x --file ${PROMPT_R1}`,
+    `node tooling/wiki/document.mjs own --turn-id torn_x --file ${PROMPT_R1}`,
+    'node tooling/wiki/document.mjs --help',
+    `node tooling/wiki/document.mjs context --turn-id torn_x --route prompt.localitat --file ${PROMPT_R1}`,
+    'npm run porta:olivera',
+    'npm test',
+    'node --test tests/antigravity-hook.test.mjs',
+    'git log --grep "document.mjs context --route prompt.local"',
+    "bash -c 'echo document.mjs context --route prompt.local'",
+    '',
+  ]) {
+    assert.notEqual(decidix(CommandLine), 'deny', CommandLine || '(ordre buida)');
+  }
+});
+
+test('[261007] autoprotecció de la fatiga: les peces i els interruptors de sdp-fatiga són del Mestre', () => {
+  for (const rel of ['tooling/gates/fatiga-hook.mjs', 'tooling/brain/termometre_context.mjs', '.agents/runtime/fatiga-hook.off', '.agents/runtime/fatiga-hook.fase0']) {
+    const r = preTool(crida('write_to_file', { TargetFile: path.join(ROOT, rel), CodeContent: '' }), { root: ROOT });
+    assert.equal(r.decision, 'force_ask', rel);
+    assert.match(r.reason, /governa els hooks d'Antigravity \(Olivera o fatiga\)/, rel);
+  }
+  for (const CommandLine of ['touch .agents/runtime/fatiga-hook.off', 'mkdir -p .agents/runtime && touch .agents/runtime/fatiga-hook.fase0',
+    'rm .agents/runtime/fatiga-hook.fase0', `touch ${INTERRUPTOR}`]) {
+    const r = preTool(crida('run_command', { CommandLine }), { root: ROOT });
+    assert.equal(r.decision, 'force_ask', CommandLine);
+    assert.match(r.reason, /són del Mestre: apagar o silenciar un hook \(Olivera o fatiga\)/, CommandLine);
+  }
+  assert.equal(preTool(crida('run_command', { CommandLine: 'tail -n 5 .agents/runtime/fatiga-hook.log' }), { root: ROOT }).decision, 'allow', 'llegir la traça no és tocar cap interruptor');
+});
+
+test('[261007] defecte de mitjanit: la porta Olivera rep el fitxer de la petorreta per a saber-ne la jornada', () => {
+  const rebuts = [];
+  const f = { ...portes(), olivera: (contingut, fitxer) => { rebuts.push(fitxer); return []; } };
+  const p = crida('write_to_file', { TargetFile: alTaulell('261006_2358_prompt_claude_gestoria.md'), CodeContent: '---\n---\n' });
+  assert.equal(preTool(p, { root: ROOT, portes: f }).decision, 'allow');
+  assert.deepEqual(rebuts, [`${DESK}/261006_2358_prompt_claude_gestoria.md`]);
+});
+
 /* ── Guarda de l'índex i de l'arxiu ───────────────────────────────────────── */
 
 /** Arrel de prova amb l'Escriptori i l'índex: la guarda resol rutes i llig scripts reals. */
@@ -588,6 +738,63 @@ test('[261006 t6] procés: els vius de hui també hi entren, un .md en majúscul
   assert.deepEqual(executa(arrel, 'pre-invocation', { invocationNum: 1, conversationId: 'conv-buida' }), {});
   const memoria = fs.readFileSync(path.join(arrel, BRIEFINGS), 'utf8').trim().split('\n').map((x) => JSON.parse(x).clau);
   assert.deepEqual(memoria, [`conv-artefacte:${avui()}`]);
+});
+
+const observacions = (arrel) => {
+  const f = path.join(arrel, OBSERVACIONS);
+  return fs.existsSync(f) ? fs.readFileSync(f, 'utf8').trim().split('\n').filter(Boolean).map((l) => JSON.parse(l)) : [];
+};
+
+test('[261007] procés: la convocatòria es denega fins que l’informe de la porta passa en esta conversa, i la memòria és per conversa', (t) => {
+  const arrel = mas(t);
+  const conv = (id, CommandLine) => ({ ...crida('run_command', { CommandLine }), conversationId: id });
+  const d = executa(arrel, 'pre-tool', conv('conv-a', CONTEXT_PROMPT));
+  assert.equal(d.decision, 'deny');
+  assert.match(d.reason, /^Acte reflex de convocatòria/);
+  assert.deepEqual(observacions(arrel), [], 'un deny no deixa memòria');
+  // Ni una ordre composta ni l'arxivat valen com a informe: només l'informe literal.
+  for (const CommandLine of ['cd . && node tooling/gates/porta-olivera.mjs', 'node tooling/gates/porta-olivera.mjs --arxiva --sec']) {
+    assert.equal(executa(arrel, 'pre-tool', conv('conv-a', CommandLine)).decision, 'allow', CommandLine);
+  }
+  assert.deepEqual(observacions(arrel), []);
+  assert.equal(executa(arrel, 'pre-tool', conv('conv-a', 'node tooling/gates/porta-olivera.mjs --informe')).decision, 'allow');
+  assert.deepEqual(observacions(arrel).map((o) => o.conv), ['conv-a']);
+  assert.deepEqual(executa(arrel, 'pre-tool', conv('conv-a', CONTEXT_PROMPT)), { decision: 'allow' });
+  // Una altra conversa no hereta l'observació; `npm run porta:olivera` també és l'informe.
+  assert.equal(executa(arrel, 'pre-tool', conv('conv-b', CONTEXT_PROMPT)).decision, 'deny');
+  assert.equal(executa(arrel, 'pre-tool', conv('conv-b', 'npm run porta:olivera')).decision, 'allow');
+  assert.deepEqual(executa(arrel, 'pre-tool', conv('conv-b', CONTEXT_PROMPT)), { decision: 'allow' });
+  // L'informe dit amb el camí absolut de la porta també compta.
+  executa(arrel, 'pre-tool', conv('conv-c', `node ${path.join(arrel, 'tooling/gates/porta-olivera.mjs')}`));
+  assert.deepEqual(observacions(arrel).map((o) => o.conv), ['conv-a', 'conv-b', 'conv-c']);
+  // La traça porta l'ordre retallada a 160 caràcters (261007): l'acta es pot contrastar sense la transcripció.
+  const l = traces(arrel);
+  assert.equal(l[0].ordre, CONTEXT_PROMPT.length > 160 ? `${CONTEXT_PROMPT.slice(0, 159)}…` : CONTEXT_PROMPT);
+  assert.equal(l[0].decisio, 'deny');
+  assert.ok(l.every((x) => typeof x.ordre === 'string' && x.ordre.length <= 160));
+});
+
+test('[261007] procés: una observació de fa més de 30 minuts no val, i una memòria il·legible no bloqueja', (t) => {
+  const arrel = mas(t);
+  const vella = new Date(Date.now() - 31 * 60 * 1000).toISOString();
+  fs.writeFileSync(path.join(arrel, OBSERVACIONS), `${JSON.stringify({ t: vella, conv: 'conv-a' })}\nno és json\n`);
+  const p = { ...crida('run_command', { CommandLine: CONTEXT_PROMPT }), conversationId: 'conv-a' };
+  assert.equal(executa(arrel, 'pre-tool', p).decision, 'deny');
+  fs.appendFileSync(path.join(arrel, OBSERVACIONS), `${JSON.stringify({ t: new Date(Date.now() - 29 * 60 * 1000).toISOString(), conv: 'conv-a' })}\n`);
+  assert.equal(executa(arrel, 'pre-tool', p).decision, 'allow');
+  // Una memòria que no es pot llegir (no absent) no convertix cada convocatòria en un deny.
+  fs.rmSync(path.join(arrel, OBSERVACIONS));
+  fs.mkdirSync(path.join(arrel, OBSERVACIONS));
+  assert.equal(executa(arrel, 'pre-tool', { ...p, conversationId: 'conv-z' }).decision, 'allow');
+});
+
+test('[261007] procés: amb l’interruptor del Mestre, cap acte reflex de convocatòria ni memòria', (t) => {
+  const arrel = mas(t);
+  fs.writeFileSync(path.join(arrel, INTERRUPTOR), '');
+  assert.deepEqual(executa(arrel, 'pre-tool', crida('run_command', { CommandLine: CONTEXT_PROMPT })), { decision: 'allow' });
+  executa(arrel, 'pre-tool', crida('run_command', { CommandLine: 'node tooling/gates/porta-olivera.mjs --informe' }));
+  assert.deepEqual(observacions(arrel), []);
+  assert.deepEqual(traces(arrel), []);
 });
 
 /* ── Esquema de .agents/hooks.json ────────────────────────────────────────── */

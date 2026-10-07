@@ -28,6 +28,9 @@ export { Dropdown, DropdownItem } from './molecules/Dropdown.jsx';
 
 // ── ORGANISMES (Composicions complexes) ────────────────────────────────────
 export { UniversalCard, UniversalCard as Targeta } from './organismes/UniversalCard.jsx';
+/* Ordre del Mestre, 261007 («Comentaris = xat») · el botó Comentar i el seu menú
+   de dues vies, els mateixos a la barra blava i al peu de la targeta. */
+export { BotoComentar, MenuComentar } from './organismes/Comentar.jsx';
 /* Ordre del Mestre, 261004 (prompt 261004_0515; D-A) · la graella de targetes de les
    llistes de les apps i la porta permesa de la Pàgina Universal per a les apps
    (PageFrame sense traductor ni telemetria). */
@@ -93,3 +96,8 @@ export { UniversalTPV } from './organismes/UniversalTPV.jsx';
 //    Digital i el TPV»; els dibuixos del Mestre viatgen dins del paquet, sense
 //    xarxa; estils a alergens.css) ──
 export { IconesAlergens } from './molecules/IconesAlergens.jsx';
+
+// ── CARRUSEL D'IMATGES (ordre del Mestre, 261007: «Implementa un carrusel a la
+//    imatge principal d'aquesta pàgina universal»; estils a
+//    src/css/components.css, § CARRUSEL D'IMATGES) ──
+export { CarruselImatges } from './organismes/CarruselImatges.jsx';

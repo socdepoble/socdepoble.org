@@ -1,7 +1,7 @@
 import React from 'react';
 import { UniversalCard } from './../PedraSeca';
 import { resolveAsset } from '../../config/assetResolver';
-import { dataDElement, dataHoraDeBarra } from './editorial.js';
+import { COPYRIGHT_SDP, dataDElement, dataHoraDeBarra } from './editorial.js';
 import { DEFAULT_AUTHOR } from './UniversalUtils.js';
 
 /**
@@ -97,7 +97,7 @@ export function EventCard({ item, esdeveniment = null, onConnect, objecte, autho
       date={data.date}
       time={data.time}
       dateTime={data.dateTime}
-      copyright={item.copyright || "© Sóc de Poble / Fet per la IAIA i Nano Banana"}
+      copyright={item.copyright || COPYRIGHT_SDP}
       calendarBadge={insigniaDeCalendari(esdeveniment, data.dateTime)}
       labels={labels}
       mainHref={item.mainHref || `/events/${item.id}`}

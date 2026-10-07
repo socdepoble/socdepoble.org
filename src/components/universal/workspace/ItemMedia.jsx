@@ -3,6 +3,16 @@ import {
   useResolvedAssetState
 } from '../../../hooks/useResolvedAsset.js';
 import { GlifCategoriaContext, emojiInicial, esGlif, primerGlif } from './NavGlyph.jsx';
+import { emojiSol } from '../../../utils/emoji.js';
+
+/* Ordre del Mestre (261007) · «Allà on ara hi ha emojis menuts a la columna
+   central s'han de mostrar a mida XL». Un glif que és un emoji omple el
+   quadrat: la classe de l'emoji XL (modules.css), proporcional a la mida de
+   la fitxa (96px, o 86px al Bloc de Notes). No és un element «__…» de la
+   fitxa: la porta tractor-fitxa-gestor (F8) només en coneix sis. Una icona
+   de Lucide, un text que no és cap emoji i la inicial es queden com eren. */
+const CLASSE_INICIAL = 'sdp-gestor-fitxa__inicial';
+const CLASSE_EMOJI_XL = `${CLASSE_INICIAL} sdp-fitxa-emoji-xl`;
 
 function ResolvedImage({ src, fallback }) {
   const [failed, setFailed] = useState(false);
@@ -27,6 +37,7 @@ function ResolvedImage({ src, fallback }) {
  *   3. el glif de la seua categoria (`categoryGlyph` o, dins d'un espai de
  *      treball, el que resol GlifCategoriaContext);
  *   4. la lletra inicial del títol, només si no hi ha res més.
+ * Un emoji (de 1, 2 o 3) es pinta XL (CLASSE_EMOJI_XL).
  */
 export function ItemMedia({
   item,
@@ -55,13 +66,13 @@ export function ItemMedia({
 
   let fallback;
   if (typeof glif === 'string') {
-    fallback = <span className="sdp-gestor-fitxa__inicial">{glif}</span>;
+    fallback = <span className={emojiSol(glif) ? CLASSE_EMOJI_XL : CLASSE_INICIAL}>{glif}</span>;
   } else if (glif) {
     const Icon = glif;
     fallback = <Icon size={24} />;
   } else {
     fallback = (
-      <span className="sdp-gestor-fitxa__inicial">
+      <span className={CLASSE_INICIAL}>
         {Array.from(title)[0].toLocaleUpperCase('ca')}
       </span>
     );

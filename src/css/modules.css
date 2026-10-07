@@ -134,6 +134,18 @@
   line-height: 1;
 }
 
+/* Ordre del Mestre (261007) · «Allà on ara hi ha emojis menuts a la columna
+   central s'han de mostrar a mida XL». L'emoji de la fitxa sense imatge
+   (ItemMedia) omple el quadrat: 11/16 del costat, la proporció de l'emoji XL
+   del quadrat de la targeta (sp-card-calendar-badge__emoji, 88 de 128px).
+   Ací 66px de 96. Va darrere de __inicial i guanya per ordre; la icona de
+   Lucide i la inicial no la porten. Classe pròpia i no un modificador
+   «__inicial--…»: la porta tractor-fitxa-gestor (F8) només admet sis
+   elements de fitxa. */
+.sdp-fitxa-emoji-xl {
+  font-size: calc(var(--sdp-fitxa-mida) * 11 / 16);
+}
+
 .sdp-gestor-fitxa__text {
   flex: 1 1 auto;
   min-width: 0;
@@ -450,6 +462,59 @@ aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(2) {
 :where(.sdp-root.is-compact) .sdp-workspace--universal > .app-grid-shell > .app-grid-content > .app-grid-column > .sdp-workspace-column > .sdp-workspace-column__body,
 :where(.sdp-root.is-compact) .sdp-workspace--universal > .app-grid-shell > .app-grid-content > .app-grid-column--right > .sdp-workspace-detail {
   padding-bottom: calc(var(--sdp-alt-nav-mobil) + env(safe-area-inset-bottom, 0px));
+}
+/* Llei de la Roda Dentada (ordre del Mestre, 261007) · La configuració de
+   l'espai de treball (WorkspaceSettingsDialog): «Amplada de les columnes» i
+   «Carpetes a la vista». Les carpetes són una llista d'ajustos a la manera de
+   WhatsApp (sdp-clon-whatsapp): la icona a l'esquerra, el nom, l'interruptor
+   a la dreta i un divisor fi entre files. L'interruptor és el de Pedra Seca
+   (formulari.jsx), amb la seua àrea tàctil (--sdp-touch-min). Les regles de
+   l'estat i dels valors predefinits viuen a AppGridShell.css. */
+.sdp-workspace-settings {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sdp-space-6);
+}
+.sdp-workspace-settings__seccio { margin: 0; }
+/* Revisió del 261007 (M2-11) · Sense la ratlla ni el coixí de 12px que
+   base.css (capa legacy) posa a tot h3: el títol de secció del diàleg no en
+   porta. */
+.sdp-workspace-settings__titol {
+  margin: 0 0 var(--sdp-space-2);
+  padding-bottom: 0;
+  border-bottom: 0;
+  font-size: var(--sdp-text-base);
+  font-weight: 800;
+  color: var(--sdp-text-cos);
+}
+.sdp-workspace-settings__restableix { margin-top: var(--sdp-space-3); }
+.sdp-workspace-settings__ajuda {
+  margin: 0 0 var(--sdp-space-2);
+  color: var(--sdp-text-suau);
+  font-size: var(--sdp-text-meta);
+}
+.sdp-workspace-settings__subtitol {
+  margin: var(--sdp-space-3) 0 0;
+  color: var(--sdp-text-suau);
+  font-size: var(--sdp-text-meta);
+  font-weight: 700;
+}
+.sdp-workspace-settings__carpetes { margin: 0; padding: 0; list-style: none; }
+.sdp-workspace-settings__carpetes > li { margin: 0; padding: 0; }
+.sdp-workspace-settings__carpetes > li + li { border-top: 1px solid var(--sdp-vora); }
+.sdp-workspace-settings__carpeta .sdp-interruptor__etiqueta {
+  display: flex;
+  align-items: center;
+  gap: var(--sdp-space-4);
+  min-width: 0;
+}
+.sdp-workspace-settings__glif {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: var(--sdp-space-6);
+  flex: none;
+  color: var(--sdp-text-suau);
 }
 .notes-column {
   display: flex;
@@ -3063,20 +3128,6 @@ details[open] summary.accordion-header svg:last-child {
   font-weight: 600;
 }
 
-/* --- LOGO CREATIVE COMMONS --- */
-
-.cc-logo-container {
-  display: flex;
-  justify-content: center;
-  margin: var(--sdp-space-8) 0;
-}
-
-.cc-logo-container img {
-  width: 400px;
-  max-width: 100%;
-  height: auto;
-}
-
 /* --- CERCA UNIVERSAL --- */
 
 .universal-search-wrapper {
@@ -3280,6 +3331,11 @@ details[open] summary.accordion-header svg:last-child {
     width: var(--sdp-bloc-fitxa-mida);
     height: var(--sdp-bloc-fitxa-mida);
     align-self: center;
+  }
+  /* Ordre del Mestre (261007) · L'emoji XL, proporcional al quadrat de 86px
+     del Bloc de Notes: la mateixa proporció d'11/16 que a la resta. */
+  .sdp-bloc-list--notes .sdp-fitxa-emoji-xl {
+    font-size: calc(var(--sdp-bloc-fitxa-mida) * 11 / 16);
   }
   .sdp-bloc-list--notes .sdp-gestor-fitxa__text {
     gap: 2px;
@@ -6429,8 +6485,9 @@ details[open] summary.accordion-header svg:last-child {
 @layer components {
 
   /* Glif de navegació (NavGlyph): un emoji ocupa el lloc d'una icona de la
-     mateixa mida, 18px a l'arbre i 20px al rail. Les icones de component
-     ja duen la seua mida. */
+     mateixa mida, 20px (--sdp-text-h6) a l'arbre i als rails plegats (ordre
+     del Mestre, 261007: la mida menuda de la icona de Lucide germana). Les
+     icones de component ja duen la seua mida i no es toquen. */
   .sdp-nav-glyph {
     display: inline-flex;
     align-items: center;
@@ -6548,8 +6605,16 @@ details[open] summary.accordion-header svg:last-child {
     outline: 2px solid var(--sdp-crom-focus);
     outline-offset: -2px;
   }
+  /* Ordre del Mestre (261007) · Als rails plegats, l'emoji fa la mida de la
+     icona de Lucide germana (NavGlyph size={20}: 20px de caixa), no més: 20px
+     (--sdp-text-h6). Abans --sdp-text-h5, 24px: l'esglaó amunt de P6 l'havia
+     fet més gran que la icona. A l'arbre, 20px (.sdp-nav-glyph) al costat de
+     la Lucide de 24px de caixa (.sdp-workspace-nav-item__icon svg), que en
+     dibuixa 20 (2 unitats d'aire per costat al llenç de 24). Cap emoji de la
+     navegació és XL: XL només a la fitxa (ItemMedia) i al quadrat de la
+     targeta (NavGlyph.mida.test.js). */
   .sdp-workspace-rail .sdp-nav-glyph {
-    font-size: var(--sdp-text-h5);
+    font-size: var(--sdp-text-h6);
   }
 
   /* Lliscar per recarregar (usePullToRefresh): l'indicador naix davall de
@@ -8186,6 +8251,12 @@ details[open] summary.accordion-header svg:last-child {
     margin-top: var(--sdp-space-3);
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
   }
+  .sdp-targeta-opcio--destacada {
+    grid-column: 1 / -1;
+  }
+  .sdp-targeta-opcio--destacada .sdp-targeta-opcio__titol {
+    font-size: var(--sdp-text-h5);
+  }
   /* El ràdio va damunt del label: amb opacity (targeta desactivada) el label
      fa context d'apilament, ve després en l'arbre i el tapava. isolation
      tanca el z-index dins de la targeta: no puja damunt de barres fixes. */
@@ -9815,5 +9886,78 @@ details[open] summary.accordion-header svg:last-child {
     display: inline-flex;
     align-items: center;
     gap: var(--sdp-space-2);
+  }
+}
+
+/* ── Ordre del Mestre (261007) · ASSIGNAR UN EMOJI DES DEL CATÀLEG ──────────
+   La targeta de cada emoji d'Emojis XL (EspecimenEmojisXL.jsx) porta el botó
+   de copiar i, davall, «Assignar»: un Boto primari xicotet, però de
+   --sdp-touch d'alt (Pedra Seca §6). La pell de targeta (vora, radi i fons)
+   passa del botó de copiar al seu contenidor, i el botó de copiar hi perd
+   la vora pròpia perquè no se'n vegen dues. La resta del bloc .sdp-emojis-xl
+   (components.css) no es toca.
+   La pantalla d'assignació (AssignacioEmoji.jsx) és la de «Reenviar a…» de
+   WhatsApp: reutilitza la cerca, les seccions i les files del Xat
+   (sdp-xat-*). Ací només hi ha la columna, la capçalera i el cercle amb
+   l'emoji o la icona actual de cada fila. Sense media queries ni consultes
+   de contenidor. */
+@layer components {
+  .sdp-emojis-xl__targeta {
+    display: grid;
+    justify-items: center;
+    gap: var(--sdp-space-2);
+    padding-block-end: var(--sdp-space-3);
+    border: 1px solid var(--sdp-vora-control);
+    border-radius: var(--sdp-radi-s);
+    background: var(--sdp-fons-targeta);
+  }
+  .sdp-emojis-xl__targeta > .sdp-emojis-xl__boto { border-color: transparent; }
+  .sdp-boto.sdp-emojis-xl__assigna {
+    min-height: var(--sdp-touch);
+    min-width: var(--sdp-touch);
+    padding-inline: var(--sdp-space-4);
+  }
+
+  .sdp-assigna-emoji {
+    display: grid;
+    gap: var(--sdp-space-4);
+    max-inline-size: var(--sdp-measure);
+    margin-inline: auto;
+    padding-block: var(--sdp-space-4);
+  }
+  .sdp-assigna-emoji__cap {
+    display: grid;
+    justify-items: center;
+    gap: var(--sdp-space-2);
+    text-align: center;
+  }
+  .sdp-assigna-emoji__nom {
+    margin: 0;
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-h5);
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+  }
+  .sdp-assigna-emoji__pista {
+    margin: 0;
+    color: var(--sdp-text-suau);
+  }
+  /* El lloc de l'avatar de WhatsApp: un cercle de --sdp-touch. */
+  .sdp-assigna-emoji__actual {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    inline-size: var(--sdp-touch);
+    block-size: var(--sdp-touch);
+    border-radius: var(--sdp-radi-pastilla);
+    background: var(--sdp-fons-subtil);
+    color: var(--sdp-text-suau);
+  }
+  .sdp-assigna-emoji__actual > .sdp-nav-glyph { font-size: var(--sdp-text-h5); }
+  .sdp-assigna-emoji__codi {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sdp-space-1);
   }
 }

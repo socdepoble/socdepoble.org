@@ -14,8 +14,9 @@
  *       cap prompt, auditoria, pla o bundle consumit de jornades anteriors solt
  *       damunt la taula, la Safata d'Entrada buida, cada document ancorat a
  *       l'índex i cap àncora a un document absent.
- *    2. Hi ha un Pla d'Implementació d'aquesta jornada: la pissarra compartida
- *       existix abans de convocar ningú.
+ *    2. Hi ha un Pla d'Implementació d'aquesta jornada, o de la jornada que porta
+ *       el nom de la petorreta (261007, defecte de mitjanit): la pissarra
+ *       compartida existix abans de convocar ningú.
  *    3. La petorreta porta la secció 0 i cap casella sense marcar. La secció es
  *       pot dir «0. Abans de generar» o «0. Preflight», que és el nom que du la
  *       plantilla `prompt_local.md`: un prompt fet bé des de la plantilla no pot
@@ -391,11 +392,20 @@ export function checkTaula(arrel = arrelPerDefecte(), { dia = avui() } = {}) {
   return { valid: errors.length === 0, errors };
 }
 
-/** Les tres comprovacions de la transició Pla → Petorreta: la taula, el pla i la secció 0. */
-export function checkOlivera(arrel = arrelPerDefecte(), { contingut = null, dia = avui() } = {}) {
+/** Les tres comprovacions de la transició Pla → Petorreta: la taula, el pla i la secció 0.
+ *  Amb `fitxer` (la ruta de la petorreta), també val el pla de la jornada que porta
+ *  el seu nom. Ordre del Mestre (261007), defecte de mitjanit: el prompt
+ *  261006_2358 va nàixer a les 23:59 amb el pla 261006_1140 damunt la taula, i a
+ *  les 00:11 ja no es podia editar perquè `avui()` havia canviat de jornada. Viu
+ *  per declaració, no per rellotge: la pissarra que el va fer nàixer continua
+ *  valent. Un prompt batejat amb la jornada nova continua demanant el pla d'eixa
+ *  jornada; un prompt amb data antiga només passa si el seu pla és encara al
+ *  primer nivell de la taula. */
+export function checkOlivera(arrel = arrelPerDefecte(), { contingut = null, dia = avui(), fitxer = null } = {}) {
   const errors = [...checkTaula(arrel, { dia }).errors];
 
-  if (!plaDeHui(arrel, dia).length) {
+  const jornada = typeof fitxer === 'string' ? NOM.exec(path.basename(fitxer))?.[1] ?? null : null;
+  if (!plaDeHui(arrel, dia).length && !(jornada && jornada < dia && plaDeHui(arrel, jornada).length)) {
     errors.push(`Cap Pla d'Implementació de hui (${dia}) a l'Escriptori. Les altres IAs arriben a una habitació sense pissarra. Genera'l abans: node tooling/wiki/document.mjs context --turn-id ID --route pla.implementacio --file ${ESCRIPTORI}/${dia}_HHMM_pla_implementacio_COGNOM.md`);
   }
 
@@ -457,7 +467,7 @@ export function checkPayload(payload, arrel = arrelPerDefecte()) {
   const rel = path.isAbsolute(fitxer) ? path.relative(arrel, fitxer) : fitxer;
   if (!esPetorreta(rel)) return { code: 0, errors: [] };
   if (typeof contingut !== 'string') return {code: 2, errors: ['Petorreta sense contingut complet verificable; usa escriptura documental explícita'], file: rel};
-  const r = checkOlivera(arrel, { contingut });
+  const r = checkOlivera(arrel, { contingut, fitxer: rel });
   return { code: r.valid ? 0 : (dialecte === 'claude' ? 2 : 1), errors: r.errors, file: rel };
 }
 

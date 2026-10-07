@@ -268,6 +268,44 @@ describe('EspecimenControlsBarra', () => {
     expect(connectar.querySelector('.sp-card-connect-plus').textContent).toBe('+');
   });
 
+  /* Ordre del Mestre (261007) · «COMENTARIS = XAT» (correcció C4, Pedra Seca
+     §9) · El menú de Comentar té el seu referent al catàleg: obert i quiet
+     (mostra), amb la via pública i sense; el botó a soles; i la barra de
+     l'espècimen, com la d'una pàgina, obri el menú. El contracte ja no diu
+     els noms derogats de T63.2. */
+  it('Comentar: el menú en mostra (amb la via pública i sense), el botó a soles i la barra que l’obri', () => {
+    const fora = document.createElement('button');
+    document.body.appendChild(fora);
+    fora.focus();
+    try {
+      const arrel = pinta(EspecimenControlsBarra);
+      expect(document.activeElement).toBe(fora);
+      const mostres = [...arrel.querySelectorAll('.sdp-especimen__fila > [role="menu"].sdp-menu-comentar')];
+      expect(mostres).toHaveLength(2);
+      const vies = (menu) => within(menu).getAllByRole('menuitem').map((fila) => [fila.textContent, fila.getAttribute('aria-disabled')]);
+      expect(vies(mostres[0])).toEqual([
+        ['En privatUn xat només entre tu i Sóc de Poble', null], ['En públicUn xat obert: hi pot entrar tothom', null]
+      ]);
+      expect(vies(mostres[1])).toEqual([
+        ['En privatUn xat només entre tu i Sóc de Poble', null], ['En públicAcí encara no hi ha cap xat públic.', 'true']
+      ]);
+      const sol = screen.getByRole('button', { name: 'Comentar l’espècimen (menú)' });
+      expect([sol.getAttribute('aria-haspopup'), sol.getAttribute('aria-expanded')]).toEqual(['menu', 'false']);
+      const [barra] = arrel.querySelectorAll('header.bar-blue');
+      const comentar = within(barra).getByRole('button', { name: 'Comentar' });
+      expect(comentar.getAttribute('aria-haspopup')).toBe('menu');
+      fireEvent.click(comentar);
+      expect(comentar.nextElementSibling.getAttribute('role')).toBe('menu');
+      expect(vies(comentar.nextElementSibling).map(([, desactivada]) => desactivada)).toEqual([null, null]);
+      const text = arrel.textContent;
+      expect(text).toContain("'comu' | 'privat' | null");
+      expect(text).toContain('Comentar: en privat o en públic');
+      expect(text).not.toMatch(/Comentar al xat comú|Comentar per missatge directe|'directe'/);
+    } finally {
+      fora.remove();
+    }
+  });
+
   it('diu la regla vigent de la data i de la ploma', () => {
     const text = pinta(EspecimenControlsBarra).textContent;
     expect(text).toContain('En edició, la data triada al calendari (SelectorDataHora) o, si no se n’ha triat cap, la d’ara; mai la de l’última edició.');

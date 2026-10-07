@@ -1,0 +1,97 @@
+{
+  "schema": "sdp.release.v1",
+  "producte": "soc-de-poble",
+  "versio": "1.0.5",
+  "generat": "2026-10-07T14:02:58.188Z",
+  "contracte": {
+    "marcatge": "sdp.markup.v1",
+    "element": "soc-de-poble",
+    "global": "SocDePobleConfig",
+    "claus": [
+      "nomPoble",
+      "poble"
+    ],
+    "atributs": [
+      "plugin-url",
+      "fonts-href",
+      "nom-poble",
+      "poble",
+      "ruta-inicial",
+      "base-path",
+      "traductor-url"
+    ]
+  },
+  "runtime": {
+    "amfitrio": "autonom",
+    "dependencies": []
+  },
+  "node": {
+    "origen": "https://adjlvwtxhpclgmnsvwpm.supabase.co",
+    "mode": "remote",
+    "tenant": "11111111-2222-3333-4444-555555555555",
+    "desenvolupament": false
+  },
+  "entrada": {
+    "cami": "soc-de-poble.standalone.js",
+    "mida": 4418786,
+    "sha256": "f15497570afd89059073026a0cc2b6a23f8e0ff381bac759650ba7bb58a17629",
+    "integrity": "sha384-AFeFnLqZfCo5WgdQQ5bCOdbsN+RG+PNYm/1CWIIYRlNNuj5jWeyZO+FejowdPLop"
+  },
+  "fonts": {
+    "cami": "fonts/noto-sans.css",
+    "integrity": "sha384-1pKog10G8xIectlT/i90hJfaDrMiaKg9Zp8jonCfsaFRcpvNRLyIYLiaq1w82eYO"
+  },
+  "inventari": {
+    "cami": "sdp-inventari.json",
+    "fitxers": 225,
+    "sha256": "4afb699dbc30a862d0c946c4c54b0d4c5fce2b7e6ee80df0fc2b7ffe689101d6"
+  },
+  "canal": "stable",
+  "adaptadors": {
+    "wordpress": {
+      "slug": "socdepoble-enxufe",
+      "versio": "1.0.5",
+      "requires": "6.5",
+      "requires_php": "7.4",
+      "tested": "7.1",
+      "paquet": {
+        "nom": "socdepoble-enxufe-v1.0.5-261007_1602.zip",
+        "url": "http://localhost:8881/enxufe/socdepoble-enxufe-v1.0.5-261007_1602.zip",
+        "mida": 134200833,
+        "sha256": "0b1d6296e191e662378a13800f028f70c1be14627f130ce574668371ff4fa0bf"
+      },
+      "directori": {
+        "nom": "socdepoble-enxufe-v1.0.5-261007_1602.zip",
+        "cami": "directori/socdepoble-enxufe-v1.0.5-261007_1602.zip",
+        "mida": 134140427,
+        "sha256": "e007a14c615a1723ad1f4c736dcbb8caebdea239babfb69657a2776dfba340d8",
+        "requires": "6.6",
+        "requires_php": "7.4",
+        "tested": "7.1",
+        "runtime": {
+          "amfitrio": "wordpress",
+          "dependencies": [
+            "react",
+            "react-dom",
+            "react-jsx-runtime"
+          ],
+          "wordpressMinim": "6.6"
+        },
+        "entrada": {
+          "cami": "soc-de-poble.standalone.js",
+          "mida": 4271797,
+          "sha256": "5770b21105aa298c39bd386402f3992b7d705b32e805f5fdddb4354e50f748cf",
+          "integrity": "sha384-B3BA2cWHbZ5QC6FhIXsSpk4S8Fq4WLFJNqmP5cqkU3fSYc5IwFITeAGHngPGwudu"
+        }
+      }
+    }
+  },
+  "estatic": {
+    "paquet": {
+      "nom": "socdepoble-spa-v1.0.5-261007_1602.zip",
+      "url": "http://localhost:8881/enxufe/socdepoble-spa-v1.0.5-261007_1602.zip",
+      "mida": 134142054,
+      "sha256": "f918ea953f3b54f560d029ddf540a9b274a33931e2ff2f059fc3f29c0defa7c5"
+    }
+  }
+}

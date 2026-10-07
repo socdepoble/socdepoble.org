@@ -17,21 +17,35 @@
  * backend, mode seed, i que en remot l'enllaç només porta l'id que ha tornat
  * el port, mai el de la llavor. El port, l'amfitrió i la UI se substituïxen:
  * cap xarxa (Model B).
+ *
+ * Ordre del Mestre (261007, correcció C2) · Derogats useXatCorporatiu i
+ * comentarAlXatCorporatiu, que ja no feia servir ningú: les seues proves de
+ * comportament (llavor, configuració invàlida, canvi de backend, de remot a
+ * seed) són ara del proveïdor únic, ProveidorXatSocDePoble.
  */
-import { act, renderHook, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, renderHook, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 const estat = vi.hoisted(() => ({
   ui: null,
+  accions: null,
   teCapacitat: vi.fn(),
   load: vi.fn(),
-  llest: vi.fn()
+  llest: vi.fn(),
+  navigate: vi.fn(),
+  toast: vi.fn()
 }));
+/* Ordre del Mestre (261007) · Comentar navega amb el router i avisa amb el
+   toast de l'app: tots dos, espies. `accions` són les de la interfície (el
+   traductor del proveïdor); null, fora de l'app. */
+vi.mock('../../app/contexts/RouterContext', () => ({ useNavigate: () => estat.navigate }));
+vi.mock('../../components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: estat.toast }) }));
 vi.mock('../../app/contexts/UIContext', () => ({
   useUIState: () => {
     if (!estat.ui) throw new Error('useUIState ha de ser usat dins de UIProvider');
     return estat.ui;
-  }
+  },
+  useUIActionsOpcional: () => estat.accions
 }));
 vi.mock('../../data/backendPort.js', () => ({
   teCapacitat: (...args) => estat.teCapacitat(...args),
@@ -40,11 +54,15 @@ vi.mock('../../data/backendPort.js', () => ({
 vi.mock('../../host.js', () => ({ quanLlest: (...args) => estat.llest(...args) }));
 
 import {
-  AVISOS_XAT_CORPORATIU, XAT_DE_LLAVOR, avisDelXatCorporatiu, resolXatCorporatiu, rutaXatCorporatiu, useXatCorporatiu
+  AVISOS_XAT_CORPORATIU, ProveidorXatSocDePoble, XAT_DE_LLAVOR, avisDelXatCorporatiu, resolXatCorporatiu, rutaXatCorporatiu
 } from './xatCorporatiu.js';
-import { XAT_SOCDEPOBLE } from './destinsControl.js';
+import { XAT_SOCDEPOBLE_DE_LLAVOR, useXatSocDePoble, useXatSocDePobleResolt } from '../../components/PedraSeca/hooks/xatSocDePoble.js';
+import { UniversalCard } from '../../components/PedraSeca/organismes/UniversalCard.jsx';
+import { TEXTOS_COMENTAR } from '../../components/universal/barres/BarraBlava.jsx';
 import { esRutaInterna } from '../../config/objecteConnectable.js';
+import { ESPERA_DESPRES_DE_FALLADA_MS } from '../../config/navigation.js';
 import { resolRuta } from '../../app/contexts/politicaRouter.js';
+import { IAIA_ID } from '../../data/identitatsSeed.js';
 
 const UUID = '7d1f4c2e-9a3b-4c5d-8e6f-0a1b2c3d4e5f';
 const ALTRE = '0f9e8d7c-6b5a-4c3d-9e2f-1a2b3c4d5e6f';
@@ -53,11 +71,17 @@ const ENTITAT = Object.freeze({ tipus: 'entitat', id: UUID, slug: 'soc-de-poble'
 
 beforeEach(() => {
   estat.ui = null;
+  estat.accions = null;
   estat.teCapacitat.mockReset().mockReturnValue(true);
   estat.load.mockReset().mockResolvedValue(ENTITAT);
   estat.llest.mockReset().mockResolvedValue(undefined);
+  estat.navigate.mockReset();
+  estat.toast.mockReset();
 });
-afterEach(() => { estat.ui = null; });
+afterEach(() => {
+  cleanup();
+  estat.ui = null;
+});
 
 describe('resolXatCorporatiu · pur, amb el port injectat', () => {
   const port = () => ({ teCapacitat: estat.teCapacitat, loadPerfilPublic: estat.load });
@@ -65,9 +89,9 @@ describe('resolXatCorporatiu · pur, amb el port injectat', () => {
 
   test('seed i local: el xat de la llavor, sense esperar l’amfitrió ni cridar el port', async () => {
     for (const dataMode of ['seed', 'local']) {
-      await expect(resolXatCorporatiu({ dataMode, port: port(), llest })).resolves.toEqual({ estat: 'llavor', href: XAT_SOCDEPOBLE });
+      await expect(resolXatCorporatiu({ dataMode, port: port(), llest })).resolves.toEqual({ estat: 'llavor', href: XAT_SOCDEPOBLE_DE_LLAVOR.href });
     }
-    expect(XAT_SOCDEPOBLE).toBe('/xat?amb=socdepoble');
+    expect(XAT_SOCDEPOBLE_DE_LLAVOR.href).toBe('/xat?amb=socdepoble');
     expect([estat.llest, estat.teCapacitat, estat.load].map((f) => f.mock.calls.length)).toEqual([0, 0, 0]);
   });
 
@@ -142,84 +166,7 @@ describe('resolXatCorporatiu · pur, amb el port injectat', () => {
   });
 });
 
-describe('useXatCorporatiu · el Comentar del Panell (abans, la boina)', () => {
-  test('seed: el xat de la llavor des del primer pintat, sense crides', () => {
-    estat.ui = { externalConfig: { dataMode: 'seed' } };
-    const { result } = renderHook(() => useXatCorporatiu());
-    expect(result.current).toEqual(XAT_DE_LLAVOR);
-    expect([estat.llest, estat.load].map((f) => f.mock.calls.length)).toEqual([0, 0]);
-  });
-
-  test('fora de l’app (sense UIProvider): el xat de la llavor, sense crides', () => {
-    const { result } = renderHook(() => useXatCorporatiu());
-    expect(result.current).toEqual(XAT_DE_LLAVOR);
-    expect(estat.load).not.toHaveBeenCalled();
-  });
-
-  test('remot: mentre resol, cap enllaç; després, l’UUID que torna el port, amb el senyal de cancel·lació', async () => {
-    estat.ui = { externalConfig: REMOT };
-    let resol;
-    estat.load.mockImplementation(() => new Promise((r) => { resol = r; }));
-    const { result } = renderHook(() => useXatCorporatiu());
-    expect(result.current).toEqual({ estat: 'resolent', href: null });
-    await waitFor(() => expect(estat.load).toHaveBeenCalledTimes(1));
-    const [clau, config] = estat.load.mock.calls[0];
-    expect([clau, config.supabaseUrl, config.signal instanceof AbortSignal]).toEqual(['soc-de-poble', 'https://poble.example', true]);
-    expect(estat.llest).toHaveBeenCalledWith({ signal: config.signal });
-    await act(async () => { resol(ENTITAT); });
-    expect(result.current).toEqual({ estat: 'remot', href: `/xat?amb=${UUID}` });
-  });
-
-  test('W4-10 · remot amb un backend que no és Supabase: l’autor és enllaç amb l’id opac de l’entitat', async () => {
-    estat.ui = { externalConfig: REMOT };
-    estat.load.mockResolvedValue({ tipus: 'entitat', id: 'wp:organization:42', slug: 'soc-de-poble' });
-    const { result } = renderHook(() => useXatCorporatiu());
-    await waitFor(() => expect(result.current.estat).toBe('remot'));
-    expect(result.current.href).toBe('/xat?amb=wp%3Aorganization%3A42');
-  });
-
-  test('remot sense entitat: «absent», cap enllaç', async () => {
-    estat.ui = { externalConfig: REMOT };
-    estat.load.mockResolvedValue(null);
-    const { result } = renderHook(() => useXatCorporatiu());
-    await waitFor(() => expect(result.current.estat).toBe('absent'));
-    expect(result.current.href).toBeNull();
-  });
-
-  test('remot amb error: «error», cap enllaç i cap reintent sol', async () => {
-    estat.ui = { externalConfig: REMOT };
-    estat.load.mockRejectedValue(new Error('503'));
-    const { result } = renderHook(() => useXatCorporatiu());
-    await waitFor(() => expect(result.current.estat).toBe('error'));
-    expect([result.current.href, estat.load.mock.calls.length]).toEqual([null, 1]);
-  });
-
-  test('una configuració de backend invàlida: «absent» sense cap crida', () => {
-    estat.ui = { externalConfig: { dataMode: 'remote', supabaseUrl: 'ftp://poble.example' } };
-    const { result } = renderHook(() => useXatCorporatiu());
-    expect(result.current).toEqual({ estat: 'absent', href: null });
-    expect(estat.load).not.toHaveBeenCalled();
-  });
-
-  test('canvi de backend: es torna a resoldre i la resposta del backend vell es descarta', async () => {
-    estat.ui = { externalConfig: REMOT };
-    const pendents = [];
-    estat.load.mockImplementation((_, config) => new Promise((r) => { pendents.push({ r, config }); }));
-    const { result, rerender } = renderHook(() => useXatCorporatiu());
-    await waitFor(() => expect(pendents).toHaveLength(1));
-    estat.ui = { externalConfig: { dataMode: 'remote', supabaseUrl: 'https://altre.example' } };
-    rerender();
-    /* Entre canvi i resposta, l'enllaç del backend vell no es mostra. */
-    expect(result.current).toEqual({ estat: 'resolent', href: null });
-    await waitFor(() => expect(pendents).toHaveLength(2));
-    expect(pendents[0].config.signal.aborted).toBe(true);
-    expect(pendents[1].config.supabaseUrl).toBe('https://altre.example');
-    await act(async () => { pendents[0].r({ tipus: 'entitat', id: UUID }); });
-    expect(result.current.href).toBeNull();
-    await act(async () => { pendents[1].r({ tipus: 'entitat', id: ALTRE }); });
-    expect(result.current).toEqual({ estat: 'remot', href: `/xat?amb=${ALTRE}` });
-  });
-
+describe('avisDelXatCorporatiu · l’avís quan «En privat» encara no hi pot portar', () => {
   /* T6 (ordre del Mestre, 261004, prompt 261004_0515 §5) · El xat corporatiu
      és ara el de Comentar. Sense xat on portar, Comentar avisa: mentre es
      resol, que encara es busca; sense entitat o amb error, el text de
@@ -238,16 +185,307 @@ describe('useXatCorporatiu · el Comentar del Panell (abans, la boina)', () => {
     expect(Object.isFrozen(AVISOS_XAT_CORPORATIU)).toBe(true);
   });
 
-  test('de remot a seed: el xat de la llavor a l’instant; desmuntar cancel·la la resolució', async () => {
+  /* Correcció C10 · La font de l'enllaç de la llavor és
+     XAT_SOCDEPOBLE_DE_LLAVOR (PedraSeca/hooks/xatSocDePoble.js): XAT_DE_LLAVOR
+     en deriva, i totes les esperances d'este fitxer la prenen d'ella. També
+     les que fins ara només feia destinsControl.test.js: l'enllaç no és el de
+     la IAIA i és una ruta de l'app que la targeta seguix (com els «remot»). */
+  test('C10 · XAT_DE_LLAVOR deriva de la font de l’enllaç de la llavor, que és una ruta de l’app', () => {
+    expect(XAT_DE_LLAVOR).toEqual({ estat: 'llavor', href: XAT_SOCDEPOBLE_DE_LLAVOR.href });
+    expect(Object.isFrozen(XAT_DE_LLAVOR)).toBe(true);
+    const { href } = XAT_SOCDEPOBLE_DE_LLAVOR;
+    expect(href).not.toContain(encodeURIComponent(IAIA_ID));
+    expect(esRutaInterna(href) && resolRuta(href) !== null).toBe(true);
+  });
+
+  /* Revisió R2 · C10 tancada: destinsControl.XAT_SOCDEPOBLE, l'única segona
+     font, s'ha retirat (no tenia cap ús en producció). */
+  test('C10 · cap segona font: destinsControl ja no compon l’enllaç de la llavor', async () => {
+    expect(Object.keys(await import('./destinsControl.js'))).not.toContain('XAT_SOCDEPOBLE');
+  });
+});
+
+/* Ordre del Mestre (261007) · «Comentaris = xat» · La via «En privat» del
+   menú de Comentar de totes les targetes i barres és este xat. El resol
+   ProveidorXatSocDePoble UNA sola vegada per a tota l'app (App.jsx), i només
+   quan algú el tria: l'arrencada no fa cap consulta més (l'entitat pilot ja
+   la resol AppDataLoader una vegada). Sense proveïdor, el de la llavor. */
+describe('261007 · ProveidorXatSocDePoble · una sola resolució per a tota l’app', () => {
+  const t = (clau, reserva) => `${clau}|${reserva}`;
+  const ambProveidor = ({ children }) => <ProveidorXatSocDePoble>{children}</ProveidorXatSocDePoble>;
+  const LLAVOR = Object.freeze({ estat: 'llavor', href: XAT_SOCDEPOBLE_DE_LLAVOR.href, avis: null, resol: null });
+
+  test('sense proveïdor, la llavor (XAT_SOCDEPOBLE_DE_LLAVOR), sense crides', () => {
+    const { result } = renderHook(() => useXatSocDePoble());
+    expect(result.current).toBe(XAT_SOCDEPOBLE_DE_LLAVOR);
+    expect(result.current).toEqual(LLAVOR);
+    expect(estat.load).not.toHaveBeenCalled();
+  });
+
+  test('seed i fora de l’app: el proveïdor dona la llavor des del primer pintat, sense crides', () => {
+    const { result: fora } = renderHook(() => useXatSocDePoble(), { wrapper: ambProveidor });
+    expect(fora.current).toEqual(LLAVOR);
+    estat.ui = { externalConfig: { dataMode: 'seed' } };
+    const { result } = renderHook(() => useXatSocDePoble(), { wrapper: ambProveidor });
+    expect(result.current).toEqual(LLAVOR);
+    expect([estat.llest, estat.load].map((f) => f.mock.calls.length)).toEqual([0, 0]);
+  });
+
+  test('remot: cap consulta a l’arrencada; la primera tria la demana, i les que arriben mentre, la mateixa', async () => {
     estat.ui = { externalConfig: REMOT };
-    estat.load.mockImplementation(() => new Promise(() => {}));
-    const { result, rerender, unmount } = renderHook(() => useXatCorporatiu());
+    estat.accions = { t };
+    let respon;
+    estat.load.mockImplementation(() => new Promise((r) => { respon = r; }));
+    const { result } = renderHook(() => useXatSocDePoble(), { wrapper: ambProveidor });
+    expect(result.current).toMatchObject({ estat: 'pendent', href: null, avis: t(...AVISOS_XAT_CORPORATIU.resolent) });
+    expect(typeof result.current.resol).toBe('function');
+    await Promise.resolve();
+    expect([estat.llest, estat.load].map((f) => f.mock.calls.length)).toEqual([0, 0]);
+    let primera;
+    let segona;
+    act(() => { primera = result.current.resol(); });
+    expect(result.current.estat).toBe('resolent');
+    act(() => { segona = result.current.resol(); });
     await waitFor(() => expect(estat.load).toHaveBeenCalledTimes(1));
-    const senyal = estat.load.mock.calls[0][1].signal;
+    expect(estat.load).toHaveBeenCalledWith('soc-de-poble', expect.objectContaining({ supabaseUrl: 'https://poble.example' }));
+    await act(async () => { respon(ENTITAT); });
+    const esperat = { estat: 'remot', href: `/xat?amb=${UUID}`, avis: null };
+    /* C6 · La mateixa resposta per a totes dues, però només la segona és
+       encara l'última demanda de l'app (`darrera`): una sola navegació. */
+    await expect(primera).resolves.toEqual({ ...esperat, darrera: false });
+    await expect(segona).resolves.toEqual({ ...esperat, darrera: true });
+    expect(result.current).toEqual({ ...esperat, resol: null });
+    expect(estat.load).toHaveBeenCalledTimes(1);
+  });
+
+  /* Revisió del 261007 (M4-01) · Abans, «absent» no es tornava a demanar mai
+     (resol: null). Però loadPerfilPublic convertix un tall de xarxa en null:
+     ara l'«absent» del port es torna a demanar passada l'espera
+     (ESPERA_DESPRES_DE_FALLADA_MS). Durant l'espera, cap crida nova. */
+  test('remot sense entitat: «absent», l’avís «no disponible» (sense traductor, la reserva) i cap reintent durant l’espera', async () => {
+    estat.ui = { externalConfig: REMOT };
+    estat.load.mockResolvedValue(null);
+    const { result } = renderHook(() => useXatSocDePoble(), { wrapper: ambProveidor });
+    let resultat;
+    await act(async () => { resultat = await result.current.resol(); });
+    expect(resultat).toEqual({ estat: 'absent', href: null, avis: AVISOS_XAT_CORPORATIU.noDisponible[1], darrera: true });
+    expect(result.current).toMatchObject({ estat: 'absent', href: null, avis: AVISOS_XAT_CORPORATIU.noDisponible[1] });
+    expect(typeof result.current.resol).toBe('function');
+    await act(async () => { resultat = await result.current.resol(); });
+    expect(resultat).toEqual({ estat: 'absent', href: null, avis: AVISOS_XAT_CORPORATIU.noDisponible[1], darrera: true });
+    expect(estat.load).toHaveBeenCalledTimes(1);
+  });
+
+  test('M4-01 · el port torna null en el primer «En privat» (un tall de xarxa): passada l’espera, el següent hi porta', async () => {
+    estat.ui = { externalConfig: REMOT };
+    estat.load.mockResolvedValueOnce(null).mockResolvedValueOnce(ENTITAT);
+    const T0 = 1_000_000;
+    const ara = vi.spyOn(Date, 'now').mockReturnValue(T0);
+    try {
+      render(
+        <ProveidorXatSocDePoble>
+          <UniversalCard title="Notícia" hasFooter objecte={{ tipus: 'publicacio', id: 'n1', titol: 'Notícia', ruta: '/mur/n1' }} />
+        </ProveidorXatSocDePoble>
+      );
+      const enPrivat = () => {
+        fireEvent.click(screen.getByRole('button', { name: 'Comentar Notícia' }));
+        fireEvent.click(within(screen.getByRole('menu')).getByRole('menuitem', { name: TEXTOS_COMENTAR.privat[1] }));
+      };
+      enPrivat();
+      await waitFor(() => expect(estat.load).toHaveBeenCalledTimes(1));
+      await act(async () => { await Promise.resolve(); });
+      expect(estat.navigate).not.toHaveBeenCalled();
+      expect(estat.toast).toHaveBeenLastCalledWith(AVISOS_XAT_CORPORATIU.noDisponible[1]);
+      // Abans de l'espera: l'avís, i cap crida nova al port.
+      ara.mockReturnValue(T0 + ESPERA_DESPRES_DE_FALLADA_MS - 1);
+      enPrivat();
+      await act(async () => { await Promise.resolve(); });
+      expect(estat.load).toHaveBeenCalledTimes(1);
+      expect(estat.navigate).not.toHaveBeenCalled();
+      // Passada l'espera: el port es torna a cridar i «En privat» porta al xat.
+      ara.mockReturnValue(T0 + ESPERA_DESPRES_DE_FALLADA_MS);
+      enPrivat();
+      await waitFor(() => expect(estat.navigate).toHaveBeenLastCalledWith(`/xat?amb=${UUID}`));
+      expect(estat.navigate).toHaveBeenCalledTimes(1);
+      expect(estat.load).toHaveBeenCalledTimes(2);
+    } finally {
+      ara.mockRestore();
+    }
+  });
+
+  /* Correcció C2 · Les proves de comportament del derogat useXatCorporatiu,
+     ara sobre el proveïdor únic. */
+  test('una configuració de backend invàlida: «absent» sense cap crida ni res a demanar', () => {
+    estat.ui = { externalConfig: { dataMode: 'remote', supabaseUrl: 'ftp://poble.example' } };
+    const { result } = renderHook(() => useXatSocDePoble(), { wrapper: ambProveidor });
+    expect(result.current).toEqual({ estat: 'absent', href: null, avis: AVISOS_XAT_CORPORATIU.noDisponible[1], resol: null });
+    expect([estat.llest, estat.load].map((f) => f.mock.calls.length)).toEqual([0, 0]);
+  });
+
+  test('de remot a seed amb una resolució en curs: la llavor a l’instant, i la resposta del remot no la tapa', async () => {
+    estat.ui = { externalConfig: REMOT };
+    let respon;
+    estat.load.mockImplementation(() => new Promise((r) => { respon = r; }));
+    const { result, rerender } = renderHook(() => useXatSocDePoble(), { wrapper: ambProveidor });
+    act(() => { result.current.resol(); });
+    await waitFor(() => expect(estat.load).toHaveBeenCalledTimes(1));
     estat.ui = { externalConfig: { dataMode: 'seed' } };
     rerender();
-    expect(result.current).toEqual(XAT_DE_LLAVOR);
-    expect(senyal.aborted).toBe(true);
-    unmount();
+    expect(result.current).toEqual(LLAVOR);
+    await act(async () => { respon(ENTITAT); });
+    expect(result.current).toEqual(LLAVOR);
+  });
+
+  test('canvi de backend amb una resolució en curs: la resposta del backend vell es descarta', async () => {
+    estat.ui = { externalConfig: REMOT };
+    const pendents = [];
+    estat.load.mockImplementation((_, config) => new Promise((r) => { pendents.push({ r, config }); }));
+    const { result, rerender } = renderHook(() => useXatSocDePoble(), { wrapper: ambProveidor });
+    act(() => { result.current.resol(); });
+    await waitFor(() => expect(pendents).toHaveLength(1));
+    estat.ui = { externalConfig: { dataMode: 'remote', supabaseUrl: 'https://altre.example' } };
+    rerender();
+    /* L'abast nou encara no s'ha demanat: cap enllaç del backend vell. */
+    expect(result.current).toMatchObject({ estat: 'pendent', href: null });
+    await act(async () => { pendents[0].r({ tipus: 'entitat', id: UUID }); });
+    expect(result.current).toMatchObject({ estat: 'pendent', href: null });
+    let nova;
+    act(() => { nova = result.current.resol(); });
+    await waitFor(() => expect(pendents).toHaveLength(2));
+    expect(pendents[1].config.supabaseUrl).toBe('https://altre.example');
+    await act(async () => { pendents[1].r({ tipus: 'entitat', id: ALTRE }); });
+    await expect(nova).resolves.toMatchObject({ estat: 'remot', href: `/xat?amb=${ALTRE}` });
+    expect(result.current).toEqual({ estat: 'remot', href: `/xat?amb=${ALTRE}`, avis: null, resol: null });
+  });
+
+  test('remot amb error: «error», i el clic següent ho torna a provar', async () => {
+    estat.ui = { externalConfig: REMOT };
+    estat.load.mockRejectedValueOnce(new Error('503')).mockResolvedValueOnce(ENTITAT);
+    const { result } = renderHook(() => useXatSocDePoble(), { wrapper: ambProveidor });
+    await act(async () => { await result.current.resol(); });
+    expect(result.current).toMatchObject({ estat: 'error', href: null, avis: AVISOS_XAT_CORPORATIU.noDisponible[1] });
+    await act(async () => { await result.current.resol(); });
+    expect(result.current).toEqual({ estat: 'remot', href: `/xat?amb=${UUID}`, avis: null, resol: null });
+    expect(estat.load).toHaveBeenCalledTimes(2);
+  });
+
+  test('remot: dotze targetes, UNA consulta al port, i cap fins al primer «En privat»', async () => {
+    estat.ui = { externalConfig: REMOT };
+    let respon;
+    estat.load.mockImplementation(() => new Promise((r) => { respon = r; }));
+    const titols = Array.from({ length: 12 }, (_, i) => `Notícia ${i + 1}`);
+    render(
+      <ProveidorXatSocDePoble>
+        {titols.map((titol, i) => (
+          <UniversalCard key={titol} title={titol} hasFooter objecte={{ tipus: 'publicacio', id: `n${i + 1}`, titol, ruta: `/mur/n${i + 1}` }} />
+        ))}
+      </ProveidorXatSocDePoble>
+    );
+    const tria = (titol, via) => {
+      fireEvent.click(screen.getByRole('button', { name: `Comentar ${titol}` }));
+      fireEvent.click(within(screen.getByRole('menu')).getByRole('menuitem', { name: via }));
+    };
+    // La via pública no demana res al port.
+    tria('Notícia 3', TEXTOS_COMENTAR.public[1]);
+    expect(estat.navigate).toHaveBeenLastCalledWith(expect.stringContaining('/xat?sobre=publicacio:n3&'));
+    await Promise.resolve();
+    expect(estat.load).not.toHaveBeenCalled();
+    // El primer «En privat» la demana i diu que encara es busca; quan arriba, hi va.
+    estat.navigate.mockClear();
+    tria('Notícia 1', TEXTOS_COMENTAR.privat[1]);
+    expect(estat.toast).toHaveBeenLastCalledWith(AVISOS_XAT_CORPORATIU.resolent[1]);
+    tria('Notícia 7', TEXTOS_COMENTAR.privat[1]);
+    await waitFor(() => expect(estat.load).toHaveBeenCalledTimes(1));
+    await act(async () => { respon(ENTITAT); });
+    await waitFor(() => expect(estat.navigate).toHaveBeenLastCalledWith(`/xat?amb=${UUID}`));
+    /* Correcció C6 · Dos «En privat» mentre es resolia: UNA sola navegació,
+       la de l'última tria (abans, una per clic a l'historial). */
+    await act(async () => { await Promise.resolve(); });
+    expect(estat.navigate).toHaveBeenCalledTimes(1);
+    // Resolt: les altres targetes hi van de seguida, sense cap consulta més.
+    estat.navigate.mockClear();
+    tria('Notícia 12', TEXTOS_COMENTAR.privat[1]);
+    expect(estat.navigate.mock.calls).toEqual([[`/xat?amb=${UUID}`]]);
+    expect(estat.load).toHaveBeenCalledTimes(1);
+  });
+});
+
+/* Ordre del Mestre (261007) · Correcció C2 · L'Alerta del Panell ha de saber
+   si el xat de Sóc de Poble no està disponible sense esperar cap clic:
+   useXatSocDePobleResolt demana la resolució del proveïdor en muntar, la
+   MATEIXA per a tota l'app, en lloc d'un segon useXatCorporatiu. */
+describe('261007 · useXatSocDePobleResolt · l’estat en muntar, amb la resolució de tota l’app', () => {
+  const ambProveidor = ({ children }) => <ProveidorXatSocDePoble>{children}</ProveidorXatSocDePoble>;
+
+  test('sense proveïdor, i en llavor: el xat de la llavor, sense cap crida', () => {
+    const { result: sol } = renderHook(() => useXatSocDePobleResolt());
+    expect(sol.current).toBe(XAT_SOCDEPOBLE_DE_LLAVOR);
+    estat.ui = { externalConfig: { dataMode: 'seed' } };
+    const { result } = renderHook(() => useXatSocDePobleResolt(), { wrapper: ambProveidor });
+    expect(result.current).toMatchObject({ estat: 'llavor', href: XAT_SOCDEPOBLE_DE_LLAVOR.href, resol: null });
+    expect([estat.llest, estat.load].map((f) => f.mock.calls.length)).toEqual([0, 0]);
+  });
+
+  test('remot: la demana en muntar; dues lectures i dotze targetes, UNA consulta, i «En privat» ja hi va', async () => {
+    estat.ui = { externalConfig: REMOT };
+    let respon;
+    estat.load.mockImplementation(() => new Promise((r) => { respon = r; }));
+    let panell;
+    let altra;
+    function Panell() {
+      panell = useXatSocDePobleResolt();
+      altra = useXatSocDePobleResolt();
+      return Array.from({ length: 12 }, (_, i) => (
+        <UniversalCard key={i} title={`Targeta ${i + 1}`} hasFooter objecte={{ tipus: 'publicacio', id: `t${i + 1}`, titol: `Targeta ${i + 1}`, ruta: `/mur/t${i + 1}` }} />
+      ));
+    }
+    render(<ProveidorXatSocDePoble><Panell /></ProveidorXatSocDePoble>);
+    await waitFor(() => expect(estat.load).toHaveBeenCalledTimes(1));
+    expect([panell.estat, altra.estat]).toEqual(['resolent', 'resolent']);
+    await act(async () => { respon(ENTITAT); });
+    expect(panell).toEqual({ estat: 'remot', href: `/xat?amb=${UUID}`, avis: null, resol: null });
+    fireEvent.click(screen.getByRole('button', { name: 'Comentar Targeta 5' }));
+    fireEvent.click(within(screen.getByRole('menu')).getByRole('menuitem', { name: TEXTOS_COMENTAR.privat[1] }));
+    expect(estat.navigate.mock.calls).toEqual([[`/xat?amb=${UUID}`]]);
+    expect(estat.toast).not.toHaveBeenCalled();
+    expect(estat.load).toHaveBeenCalledTimes(1);
+  });
+
+  /* M4-01 · L'«absent» del port es pot tornar a demanar (resol, passada
+     l'espera), però el hook no el demana sol: cap bucle. */
+  test('remot sense entitat: «absent» sense cap clic (l’Alerta ho pot dir), i cap reintent sol', async () => {
+    estat.ui = { externalConfig: REMOT };
+    estat.load.mockResolvedValue(null);
+    const { result, rerender } = renderHook(() => useXatSocDePobleResolt(), { wrapper: ambProveidor });
+    await waitFor(() => expect(result.current.estat).toBe('absent'));
+    rerender();
+    await act(async () => { await Promise.resolve(); });
+    expect([result.current.estat, result.current.href, estat.load.mock.calls.length]).toEqual(['absent', null, 1]);
+    expect(typeof result.current.resol).toBe('function');
+  });
+
+  test('remot amb error: «error» sense cap clic i cap reintent sol; el clic «En privat» següent ho torna a provar', async () => {
+    estat.ui = { externalConfig: REMOT };
+    estat.load.mockRejectedValueOnce(new Error('503')).mockResolvedValueOnce(ENTITAT);
+    const { result, rerender } = renderHook(() => useXatSocDePobleResolt(), { wrapper: ambProveidor });
+    await waitFor(() => expect(result.current.estat).toBe('error'));
+    rerender();
+    await act(async () => { await Promise.resolve(); });
+    expect([result.current.estat, estat.load.mock.calls.length]).toEqual(['error', 1]);
+    await act(async () => { await result.current.resol(); });
+    expect(result.current).toEqual({ estat: 'remot', href: `/xat?amb=${UUID}`, avis: null, resol: null });
+    expect(estat.load).toHaveBeenCalledTimes(2);
+  });
+
+  test('canvi de backend: el torna a demanar per a l’abast nou', async () => {
+    estat.ui = { externalConfig: REMOT };
+    estat.load.mockResolvedValueOnce(ENTITAT).mockResolvedValueOnce({ tipus: 'entitat', id: ALTRE });
+    const { result, rerender } = renderHook(() => useXatSocDePobleResolt(), { wrapper: ambProveidor });
+    await waitFor(() => expect(result.current.href).toBe(`/xat?amb=${UUID}`));
+    estat.ui = { externalConfig: { dataMode: 'remote', supabaseUrl: 'https://altre.example' } };
+    rerender();
+    await waitFor(() => expect(result.current.href).toBe(`/xat?amb=${ALTRE}`));
+    expect(estat.load).toHaveBeenCalledTimes(2);
+    expect(estat.load.mock.calls[1][1].supabaseUrl).toBe('https://altre.example');
   });
 });

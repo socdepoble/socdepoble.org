@@ -17,6 +17,12 @@ const ARREL = process.cwd();
 const DIR = 'src/components/universal/richText/extensions/targetes';
 const FITXERS = Object.freeze([
   `${DIR}/TargetesIncrustadesContext.js`,
+  /* Ordre del Mestre (261007) · «cards de veritat»: la targeta viva. */
+  `${DIR}/TargetesSincronitzadesContext.js`,
+  'src/components/universal/targetaDeLaPagina.js',
+  'src/components/universal/targetaDeLaPagina.test.js',
+  'src/sections/detail/SincronitzacioTargetes.jsx',
+  'src/sections/detail/SincronitzacioTargetes.test.jsx',
   `${DIR}/formaDelGrup.js`,
   `${DIR}/formaDelGrup.test.js`,
   `${DIR}/targetesIncrustades.js`,
@@ -140,7 +146,7 @@ describe('fronteres de les proves amb mocks tancats', () => {
   });
 
   test('la lectura no arrossega TipTap: formaDelGrup i CosAmbTargetes no l’importen', () => {
-    for (const fitxer of [`${DIR}/formaDelGrup.js`, `${DIR}/CosAmbTargetes.jsx`, `${DIR}/TargetesIncrustadesContext.js`]) {
+    for (const fitxer of [`${DIR}/formaDelGrup.js`, `${DIR}/CosAmbTargetes.jsx`, `${DIR}/TargetesIncrustadesContext.js`, `${DIR}/TargetesSincronitzadesContext.js`, 'src/components/universal/targetaDeLaPagina.js']) {
       expect(llig(fitxer), fitxer).not.toMatch(/from '@tiptap\//);
     }
   });

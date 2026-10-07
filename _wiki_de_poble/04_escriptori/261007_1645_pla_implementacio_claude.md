@@ -1,13 +1,13 @@
 ---
 type: document
 status: esborrany
-description: Pla general d'implementació per tancar les incidències actuals i preparar la gestoria offline
+description: Pla d'implementació per a l'auditoria adversarial i neteja de la Consola Termodinàmica i avatars
 tags:
   - implementacio
 visibility: private
-reflex: sdp:torn_c9d16d29-50a7-4d5a-a2d3-1fc44192a7b3:d8395088-27ab-4e44-903b-a73c61bd2939
+reflex: sdp:torn_25bffe5f-a964-4846-9254-c89a9ea0caf2:965917f4-4670-4b38-b41e-31e9e9fc7c75
 ---
-# Pla per al Relleu de Claude (Gestoria i Reparacions)
+# Auditoria Adversarial i Consola Termodinàmica
 
 **Estat del Pla:** [en elaboració | aprovat | acabat | descartat]
 
@@ -16,11 +16,11 @@ reflex: sdp:torn_c9d16d29-50a7-4d5a-a2d3-1fc44192a7b3:d8395088-27ab-4e44-903b-a7
 
 | Camp | Valor |
 | --- | --- |
-| Identificador | sdp:torn_c9d16d29-50a7-4d5a-a2d3-1fc44192a7b3:d8395088-27ab-4e44-903b-a73c61bd2939 |
+| Identificador | sdp:torn_25bffe5f-a964-4846-9254-c89a9ea0caf2:965917f4-4670-4b38-b41e-31e9e9fc7c75 |
 | Versió del document | 1.0.0 |
 | Entorn | entorn-dev-local |
-| Creació | 2026-10-06T22:11:34.969Z |
-| Modificació | 2026-10-06T22:11:34.969Z |
+| Creació | 2026-10-07T14:44:27.176Z |
+| Modificació | 2026-10-07T14:44:27.176Z |
 | Propietari | agent-local |
 | Aprovació humana | pendent |
 | Plantilla | _wiki_de_poble/03_actuar/plantilles/pla_implementacio.md (v2.0.0) |
@@ -35,7 +35,7 @@ Plantilla entregada: _wiki_de_poble/03_actuar/plantilles/pla_implementacio.md; S
 <!-- SDP:SECTION pla.implementacio.s3 -->
 ## Historial
 
-2026-10-06T22:11:34.969Z: esborrany creat; contingut i verificació pendents.
+2026-10-07T14:44:27.176Z: esborrany creat; contingut i verificació pendents.
 
 <!-- SDP:SECTION pla.implementacio.s4 -->
 ## Canvis proposats

@@ -11,7 +11,8 @@
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { MemoryRouter, useLocation, useNavigate } from '../../app/contexts/RouterContext';
-import { AVIS_SENSE_XAT } from '../../components/PedraSeca/hooks/useAccions.js';
+import { XatSocDePobleContext } from '../../components/PedraSeca/hooks/xatSocDePoble.js';
+import { TEXTOS_COMENTAR } from '../../components/PedraSeca/organismes/textosComentar.js';
 import { RouteSEO } from '../../hooks/RouteSEO';
 import { createTranslator } from '../../config/i18n';
 import { resolvePageSlugPath } from '../../config/navigation.js';
@@ -23,8 +24,11 @@ import fontControl from './ControlSection.jsx?raw';
 
 /* `traductor` (correcció de la revisió, 260930) · per defecte el t torna la
    reserva, com sempre; una prova hi posa el traductor real d'una llengua.
-   `xat` (W4-09) · null: el xat corporatiu real (xatCorporatiu.js) en mode
-   seed; un objecte { estat, href }: el que hauria resolt el port en remot. */
+   `xat` (W4-09) · null: sense proveïdor, el xat de Sóc de Poble de la llavor
+   (useXatSocDePoble); un objecte { estat, href, avis, resol }: el que el
+   proveïdor de l'app (ProveidorXatSocDePoble) dona en remot.
+   Ordre del Mestre (261007, correcció C2) · El Panell ja no fa cap
+   resolució pròpia (useXatCorporatiu, derogat): llig la del proveïdor. */
 const estat = vi.hoisted(() => ({ demana: vi.fn(), traductor: null, toast: vi.fn(), xat: null }));
 /* P5 · L'avís de les portes en obres (useToast). */
 vi.mock('../../components/universal/NotificationContext.jsx', () => ({
@@ -37,19 +41,9 @@ vi.mock('../../app/contexts/UIContext', () => ({
   }),
   /* La capçalera del document és opt-in: sense manageDocumentHead el títol
      de la pestanya no s'escriu i la prova de RouteSEO no provaria res.
-     W4-09 · dataMode 'seed': la boina porta al xat de la llavor sense xarxa. */
+     W4-09 · dataMode 'seed', sense xarxa. */
   useUIState: () => ({ externalConfig: { manageDocumentHead: true, dataMode: 'seed' } })
 }));
-vi.mock('./xatCorporatiu.js', async (importOriginal) => {
-  const real = await importOriginal();
-  return {
-    ...real,
-    useXatCorporatiu: () => {
-      const llavor = real.useXatCorporatiu();
-      return estat.xat ?? llavor;
-    }
-  };
-});
 vi.mock('../../components/universal/EixidaSegura.jsx', () => ({
   useEixidaSegura: () => ({ demana: estat.demana, ocupat: false, avis: null, error: null })
 }));
@@ -100,16 +94,33 @@ function Ubicacio() {
   return <output data-testid="ubicacio">{`${pathname}${search ? `?${search}` : ''}`}</output>;
 }
 
+/* El Panell dins del xat de Sóc de Poble que dona el proveïdor de l'app:
+   estat.xat (null, la llavor). */
 function pinta(ruta = '/control') {
   return render(
-    <MemoryRouter rutaInicial={ruta}>
-      <ControlSection />
-      <RouteSEO />
-      <Ubicacio />
-    </MemoryRouter>
+    <XatSocDePobleContext.Provider value={estat.xat}>
+      <MemoryRouter rutaInicial={ruta}>
+        <ControlSection />
+        <RouteSEO />
+        <Ubicacio />
+      </MemoryRouter>
+    </XatSocDePobleContext.Provider>
   );
 }
 const ubicacio = () => screen.getByTestId('ubicacio').textContent;
+
+/* Ordre del Mestre (261007) · «COMENTARIS = XAT» · El menú de Comentar d'una
+   targeta: obrir-lo (Comentar diu que obri un menú) i les seues dues files. */
+const PRIVAT = TEXTOS_COMENTAR.privat[1];
+const PUBLIC = TEXTOS_COMENTAR.public[1];
+function obriComentar(targeta, titol) {
+  const boto = within(targeta).getByRole('button', { name: `Comentar ${titol}` });
+  expect(boto.getAttribute('aria-haspopup'), titol).toBe('menu');
+  fireEvent.click(boto);
+  expect(boto.getAttribute('aria-expanded'), titol).toBe('true');
+  const menu = within(targeta).getByRole('menu');
+  return { privat: within(menu).getByRole('menuitem', { name: PRIVAT }), public: within(menu).getByRole('menuitem', { name: PUBLIC }) };
+}
 
 beforeEach(() => {
   estat.demana.mockReset();
@@ -391,8 +402,12 @@ test('P7-B · el peu de cada utilitat: Compartir, la seua pàgina; Traduir, el d
 
 /* T6 (ordre del Mestre, 261004, prompt 261004_0515 §5) · Comentar de cada
    utilitat (i del Snippet) és el missatge directe a l'autor, Sóc de Poble:
-   el xat corporatiu (en seed, el de la llavor). Mai l'avís de xat comú. */
-test('T6 · Comentar de cada utilitat obri el xat corporatiu de Sóc de Poble', () => {
+   el xat corporatiu (en seed, el de la llavor). Mai l'avís de xat comú.
+   Ordre del Mestre (261007) · «COMENTARIS = XAT» (correcció C2) · Ja no hi
+   va directe: Comentar obri el menú de dues vies de totes les targetes.
+   «En privat» és este xat; «En públic» es queda desactivada (/plugin/<id> i
+   la fitxa del Snippet no tenen xat públic) i el clic no fa res. */
+test('261007 · Comentar de cada utilitat obri el menú: «En privat», el xat de Sóc de Poble; «En públic», desactivada', () => {
   pinta();
   const total = targetesDUtilitats().length;
   expect(total).toBeGreaterThan(1);
@@ -402,9 +417,13 @@ test('T6 · Comentar de cada utilitat obri el xat corporatiu de Sóc de Poble', 
     pinta();
     const targeta = targetesDUtilitats()[index];
     const titol = titolDeTargeta(targeta);
-    fireEvent.click(within(targeta).getByRole('button', { name: `Comentar ${titol}` }));
+    const vies = obriComentar(targeta, titol);
+    expect(vies.public.getAttribute('aria-disabled'), titol).toBe('true');
+    fireEvent.click(vies.public);
+    expect(ubicacio(), titol).toBe('/control');
+    fireEvent.click(vies.privat);
     expect(ubicacio(), titol).toBe('/xat?amb=socdepoble');
-    expect(estat.toast, titol).not.toHaveBeenCalledWith(AVIS_SENSE_XAT);
+    expect(estat.toast, titol).not.toHaveBeenCalled();
   }
 }, 30_000);
 
@@ -799,7 +818,9 @@ test('P5 · en anglés, les portes es tradueixen i porten al mateix lloc; el con
    com a mainHref i com a objecte de Comentar, i sense Connectar. Es prova el
    resultat del clic de cada acció, no només que hi siga.
    T6 (261004) · Comentar ja no és el de l'objecte de la pàgina: és el xat
-   corporatiu (vegeu la prova de Comentar). */
+   corporatiu (vegeu la prova de Comentar).
+   Ordre del Mestre (261007) · És el menú de dues vies de totes les targetes:
+   el xat corporatiu és la via «En privat». */
 const PAGINA_DE = (index) => `/page/${PAGINES[index]}`;
 const accioDe = (targeta, verb) => within(targeta).getByRole('button', { name: `${verb} ${titolDe(targeta)}` });
 
@@ -819,15 +840,22 @@ test('P6 · Traduir de cada targeta porta al traductor de les targetes, com al M
    Derogat per l'ordre del Mestre del 261004 (prompt 261004_0515, T6):
    Comentar és el missatge directe a l'autor (skill sdp-universal-page), i
    l'autor de les targetes del Panell és Sóc de Poble: el xat corporatiu (en
-   seed, el de la llavor). Mai el xat de /control ni l'avís de xat comú. */
-test('P6 · T6 · Comentar de cada targeta de dalt obri el xat corporatiu de Sóc de Poble', () => {
+   seed, el de la llavor). Mai el xat de /control ni l'avís de xat comú.
+   Ordre del Mestre (261007) · «COMENTARIS = XAT» (correcció C2) · Comentar
+   obri el menú de dues vies, com a totes les targetes: «En privat», este
+   xat; «En públic», desactivada mentre /page/<clau> no tinga xat públic. */
+test('P6 · 261007 · Comentar de cada targeta de dalt obri el menú: «En privat», el xat de Sóc de Poble; «En públic», desactivada', () => {
   for (let index = 0; index < DESTINS_CONTROL.length; index += 1) {
     estat.toast.mockClear();
     pinta();
     const targeta = targetesDeDalt()[index];
-    fireEvent.click(accioDe(targeta, 'Comentar'));
+    const vies = obriComentar(targeta, titolDe(targeta));
+    expect(vies.public.getAttribute('aria-disabled'), titolDe(targeta)).toBe('true');
+    fireEvent.click(vies.public);
+    expect(ubicacio(), titolDe(targeta)).toBe('/control');
+    fireEvent.click(vies.privat);
     expect(ubicacio(), titolDe(targeta)).toBe('/xat?amb=socdepoble');
-    expect(estat.toast, titolDe(targeta)).not.toHaveBeenCalledWith(AVIS_SENSE_XAT);
+    expect(estat.toast, titolDe(targeta)).not.toHaveBeenCalled();
     cleanup();
   }
 });
@@ -921,68 +949,93 @@ test('W4-11 · cap utilitat porta directament al destí d’«Obrir»: el Panell
    Derogat per l'ordre del Mestre del 261004 (prompt 261004_0515, T6, deroga
    W4-09/2234 per a la boina): la boina porta SEMPRE al projecte, es resolga
    o no el xat. El xat resolt és el de Comentar; sense resoldre, Comentar
-   avisa (avisDelXatCorporatiu) i l'Alerta del Panell es conserva. */
+   avisa (avisDelXatCorporatiu) i l'Alerta del Panell es conserva.
+   Ordre del Mestre (261007, correcció C2) · El xat resolt és la via «En
+   privat» del menú, i el dona el proveïdor de l'app amb el seu avís ja
+   traduït: el Panell no en fa cap resolució pròpia. */
 const BOINES_AL_PROJECTE = () => [...targetesDeDalt(), ...targetesDUtilitats()]
   .map((targeta) => targeta.querySelector('a.sp-card-author-link')?.getAttribute('href'));
+const NO_DISPONIBLE = 'Xat de Sóc de Poble: encara no disponible en este servidor.';
+const ES_BUSCA = 'Xat de Sóc de Poble: encara s’està buscant en este servidor.';
 
-test('W4-09 · T6 · remot resolt: Comentar porta al xat de l’entitat real; la boina, al projecte; sense avís', () => {
+test('W4-09 · 261007 · remot resolt: «En privat» porta al xat de l’entitat real; la boina, al projecte; sense avís', () => {
   const href = '/xat?amb=7d1f4c2e-9a3b-4c5d-8e6f-0a1b2c3d4e5f';
-  estat.xat = { estat: 'remot', href };
+  estat.xat = { estat: 'remot', href, avis: null, resol: null };
   pinta();
   const boines = BOINES_AL_PROJECTE();
   expect(boines.length).toBeGreaterThan(DESTINS_CONTROL.length);
   expect(boines).toEqual(Array(boines.length).fill('/projecte'));
   expect(screen.queryByText(/Xat de Sóc de Poble/)).toBeNull();
-  fireEvent.click(accioDe(targetesDeDalt()[0], 'Comentar'));
+  fireEvent.click(obriComentar(targetesDeDalt()[0], titolDe(targetesDeDalt()[0])).privat);
   expect(ubicacio()).toBe(href);
   cleanup();
   pinta();
   const utilitat = targetesDUtilitats()[0];
-  fireEvent.click(within(utilitat).getByRole('button', { name: `Comentar ${titolDeTargeta(utilitat)}` }));
+  fireEvent.click(obriComentar(utilitat, titolDeTargeta(utilitat)).privat);
   expect(ubicacio()).toBe(href);
   expect(estat.toast).not.toHaveBeenCalled();
 });
 
-test('W4-09 · T6 · remot sense entitat o amb error: la boina continua al projecte, Comentar avisa i el Panell ho diu', () => {
-  for (const xat of [{ estat: 'absent', href: null }, { estat: 'error', href: null }]) {
-    estat.xat = xat;
+test('W4-09 · 261007 · remot sense entitat o amb error: la boina continua al projecte, «En privat» avisa i el Panell ho diu', () => {
+  /* Amb error, el proveïdor encara oferix tornar-ho a provar (resol); absent, no. */
+  const resolDeLError = vi.fn(() => new Promise(() => {}));
+  for (const [estatDelXat, resol] of [['absent', null], ['error', resolDeLError]]) {
+    estat.xat = { estat: estatDelXat, href: null, avis: NO_DISPONIBLE, resol };
     estat.toast.mockClear();
     pinta();
     const boines = BOINES_AL_PROJECTE();
-    expect(boines, xat.estat).toEqual(Array(boines.length).fill('/projecte'));
+    expect(boines, estatDelXat).toEqual(Array(boines.length).fill('/projecte'));
     for (const targeta of targetesDeDalt()) {
       expect(targeta.querySelector('.sp-card-author-name').textContent).toBe('Sóc de Poble');
     }
-    const avis = screen.getByText('Xat de Sóc de Poble: encara no disponible en este servidor.');
-    expect(avis.closest('[role="status"]'), xat.estat).not.toBeNull();
-    expect(document.querySelector('[href*="amb=socdepoble"]'), xat.estat).toBeNull();
-    fireEvent.click(accioDe(targetesDeDalt()[4], 'Comentar'));
-    expect(estat.toast, xat.estat).toHaveBeenLastCalledWith('Xat de Sóc de Poble: encara no disponible en este servidor.');
-    expect(ubicacio(), xat.estat).toBe('/control');
+    const avis = screen.getByText(NO_DISPONIBLE);
+    expect(avis.closest('[role="status"]'), estatDelXat).not.toBeNull();
+    expect(document.querySelector('[href*="amb=socdepoble"]'), estatDelXat).toBeNull();
+    /* Un error no es torna a demanar sol en obrir el Panell (cap bucle): ho fa el clic. */
+    expect(resolDeLError, estatDelXat).not.toHaveBeenCalled();
+    fireEvent.click(obriComentar(targetesDeDalt()[4], titolDe(targetesDeDalt()[4])).privat);
+    expect(estat.toast, estatDelXat).toHaveBeenLastCalledWith(NO_DISPONIBLE);
+    expect(ubicacio(), estatDelXat).toBe('/control');
+    expect(resolDeLError.mock.calls.length, estatDelXat).toBe(estatDelXat === 'error' ? 1 : 0);
     cleanup();
   }
 });
 
-test('W4-09 · T6 · remot resolent: la boina al projecte, cap Alerta, i Comentar diu que encara es busca', () => {
-  estat.xat = { estat: 'resolent', href: null };
+test('W4-09 · 261007 · remot resolent: la boina al projecte, cap Alerta, i «En privat» diu que encara es busca', () => {
+  estat.xat = { estat: 'resolent', href: null, avis: ES_BUSCA, resol: vi.fn(() => new Promise(() => {})) };
   pinta();
   const boines = BOINES_AL_PROJECTE();
   expect(boines).toEqual(Array(boines.length).fill('/projecte'));
   expect(screen.queryByText(/Xat de Sóc de Poble/)).toBeNull();
-  fireEvent.click(accioDe(targetesDeDalt()[0], 'Comentar'));
-  expect(estat.toast).toHaveBeenLastCalledWith('Xat de Sóc de Poble: encara s’està buscant en este servidor.');
+  /* Ja es resol: obrir el Panell no en demana cap altra. */
+  expect(estat.xat.resol).not.toHaveBeenCalled();
+  fireEvent.click(obriComentar(targetesDeDalt()[0], titolDe(targetesDeDalt()[0])).privat);
+  expect(estat.toast).toHaveBeenLastCalledWith(ES_BUSCA);
   expect(ubicacio()).toBe('/control');
 });
 
-/* En anglés, l'avís de Comentar i l'Alerta passen pel traductor (reserva en
-   valencià fins que el diccionari en porte la clau). */
-test('T6 · l’avís del xat corporatiu passa pel traductor amb la seua clau', () => {
+/* Correcció C2 · L'Alerta sap l'estat sense esperar cap clic: en obrir el
+   Panell en remot, useXatSocDePobleResolt demana UNA vegada la resolució del
+   proveïdor de l'app ('pendent'), i el Panell no en fa cap de pròpia. */
+test('261007 · remot pendent: obrir el Panell demana la resolució de l’app una sola vegada, i encara cap Alerta', () => {
+  estat.xat = { estat: 'pendent', href: null, avis: ES_BUSCA, resol: vi.fn(() => new Promise(() => {})) };
+  pinta();
+  expect(estat.xat.resol).toHaveBeenCalledTimes(1);
+  expect(screen.queryByText(/Xat de Sóc de Poble/)).toBeNull();
+  expect(estat.toast).not.toHaveBeenCalled();
+  expect(ubicacio()).toBe('/control');
+});
+
+/* En anglés, l'Alerta passa pel traductor (reserva en valencià fins que el
+   diccionari en porte la clau). L'avís de «En privat» el traduïx el proveïdor
+   de l'app (xatCorporatiu.test.jsx). */
+test('T6 · l’Alerta del xat de Sóc de Poble passa pel traductor amb la seua clau', () => {
   const claus = [];
   estat.traductor = (clau, reserva) => { claus.push(clau); return reserva; };
-  estat.xat = { estat: 'error', href: null };
+  estat.xat = { estat: 'error', href: null, avis: NO_DISPONIBLE, resol: null };
   pinta();
-  fireEvent.click(accioDe(targetesDeDalt()[0], 'Comentar'));
   expect(claus).toContain('section.control.xatCorporatiu.noDisponible');
+  expect(screen.getByText(NO_DISPONIBLE).closest('[role="status"]')).not.toBeNull();
 });
 
 test('D3 · el títol de la pàgina és «Panell de Control», i la pestanya també a /control i a /utilitats', () => {

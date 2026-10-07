@@ -10,6 +10,31 @@
  *  Tot el que escriuen va a os.tmpdir(): un brain fals d'Antigravity amb
  *  transcripcions i pujades sintètiques, i una arrel falsa (SDP_ARREL) per a la
  *  traça. Cap dada real de cap conversa.
+ *
+ *  Actualització del 261007 (ordre del Mestre: «revisa els meus tractors… i
+ *  soluciona-ho per mi»):
+ *    · El codi del tractor (termòmetre i hook) és al disc des del commit b22b168b
+ *      i hi evoluciona (reconeixement dictat «fatiga vista»). Les proves de codi
+ *      jutgen sempre els fitxers reals si hi són; el laboratori només mana sobre el
+ *      que encara no s'ha instal·lat (hooks.json, skill i registre de tasques).
+ *    · Instal·lat també vol dir registrat: si `.agents/hooks.json` ja declara
+ *      «sdp-fatiga» cap a fatiga-hook.mjs, el corredor prova els fitxers reals
+ *      encara que no hi haja transacció. Cap transacció es fabrica.
+ *    · La base porta `prioritat: 1` a la skill, i el termòmetre del disc ja no és
+ *      el del laboratori: el paquet tal com està no es pot aplicar, i prepara-pla
+ *      s'hi ha de negar. Cada deriva coneguda es verifica una per una.
+ *    · Revisió adversarial R3 (261007): eixa negativa NO és un verd. Amb el paquet
+ *      caducat el corredor no valida cap pla instal·lable (esquema, scopes, before,
+ *      Petorreta ni segell), i la prova de prepara-pla queda en skip explícit amb
+ *      el motiu fins que algú refaça `nous/` sobre el disc actual. Una deriva que
+ *      no és a la llista, o una negativa que no arriba, continuen fent-la caure.
+ *    · Ordre del Mestre (261007, P4 i P5): «sdp-fatiga» és registrat a
+ *      `.agents/hooks.json`, la skill porta el cas 4 nou i el registre de tasques
+ *      declara fatiga-cognitiva. El corredor prova la instal·lació real: la skill
+ *      conserva `prioritat: 1` i, fora del cas 4, l'original sencer (espais finals
+ *      inclosos); hooks.json deixa sdp-olivera com era al commit base; el registre
+ *      no perd ni retoca cap tasca del commit base. La prova de prepara-pla fa skip
+ *      perquè el laboratori ja no mana.
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -37,18 +62,51 @@ function transaccio() {
 }
 
 const TRANSACCIO = transaccio();
-const BASE = TRANSACCIO ? REPO : (fs.existsSync(path.join(LAB, 'nous')) ? path.join(LAB, 'nous') : null);
+const ORDRE_HOOK = 'cd .. && node tooling/gates/fatiga-hook.mjs';
+/** El hook ja és registrat a l'IDE: `.agents/hooks.json` declara «sdp-fatiga» cap al script (261007). */
+function registrat() {
+  try {
+    const ordres = JSON.parse(fs.readFileSync(path.join(REPO, '.agents/hooks.json'), 'utf8'))?.['sdp-fatiga']?.PreInvocation;
+    return Array.isArray(ordres) && ordres.some((h) => h?.command === ORDRE_HOOK);
+  } catch { return false; }
+}
+const REGISTRAT = registrat();
+const INSTALLAT = Boolean(TRANSACCIO) || REGISTRAT;
+const BASE = INSTALLAT ? REPO : (fs.existsSync(path.join(LAB, 'nous')) ? path.join(LAB, 'nous') : null);
 const DE_BASE = (rel) => path.join(BASE, rel);
 const REL_SKILL = '.agents/skills/core-context-panic/SKILL.md';
-const SKILL_BASE = TRANSACCIO ? REL_SKILL : `${REL_SKILL}.txt`;
-const HOOK = BASE ? DE_BASE('tooling/gates/fatiga-hook.mjs') : null;
-const termo = BASE ? await import(pathToFileURL(DE_BASE('tooling/brain/termometre_context.mjs')).href) : null;
-const ganxo = BASE ? await import(pathToFileURL(HOOK).href) : null;
-const pla = !TRANSACCIO && BASE ? await import(pathToFileURL(path.join(LAB, 'prepara-pla.mjs')).href) : null;
+const SKILL_BASE = INSTALLAT ? REL_SKILL : `${REL_SKILL}.txt`;
+/* El codi que l'IDE executaria: el del disc si hi és (b22b168b), si no el de la base. */
+const REL_TERMO = 'tooling/brain/termometre_context.mjs';
+const REL_HOOK = 'tooling/gates/fatiga-hook.mjs';
+const CODI = [REL_TERMO, REL_HOOK].every((rel) => fs.existsSync(path.join(REPO, rel))) ? REPO : BASE;
+const DE_CODI = (rel) => path.join(CODI, rel);
+const HOOK = CODI ? DE_CODI(REL_HOOK) : null;
+const termo = CODI ? await import(pathToFileURL(DE_CODI(REL_TERMO)).href) : null;
+const ganxo = CODI ? await import(pathToFileURL(HOOK).href) : null;
+const pla = !INSTALLAT && BASE ? await import(pathToFileURL(path.join(LAB, 'prepara-pla.mjs')).href) : null;
+/* Commit base del paquet (el mateix que COMMIT_BASE de prepara-pla.mjs). Instal·lat el
+   paquet, la instal·lació es contrasta amb ell: la història no s'arxiva amb el laboratori. */
+const COMMIT_BASE = '62b623339';
+/** Contingut d'un fitxer al commit base, o null si el clon no el porta (clon superficial). */
+function deCommitBase(rel) {
+  const r = spawnSync('git', ['cat-file', 'blob', `${COMMIT_BASE}:${rel}`], { cwd: REPO, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+  return r.status === 0 && typeof r.stdout === 'string' ? r.stdout : null;
+}
 
-function salta(t, { nomesLab = false } = {}) {
-  if (!BASE) { t.skip('laboratori 261002_1510_tractor_fatiga_claude absent i paquet sense transacció'); return true; }
-  if (nomesLab && TRANSACCIO) { t.skip(`paquet aplicat per l'executor (transacció ${TRANSACCIO.id}): el laboratori ja no mana`); return true; }
+/**
+ * Skip si no hi ha res a provar. `base`: la prova contrasta la skill, hooks.json o el
+ * registre amb el laboratori o amb la instal·lació. `nomesLab`: només té sentit mentre
+ * el laboratori mana (ni transacció ni registre).
+ */
+function salta(t, { nomesLab = false, base = false } = {}) {
+  if (!CODI || ((base || nomesLab) && !BASE)) { t.skip('laboratori 261002_1510_tractor_fatiga_claude absent i paquet sense transacció ni registre'); return true; }
+  if (nomesLab && INSTALLAT) {
+    t.skip(TRANSACCIO
+      ? `paquet aplicat per l'executor (transacció ${TRANSACCIO.id}): el laboratori ja no mana`
+      : `«sdp-fatiga» ja és registrat a .agents/hooks.json: el laboratori ja no mana`);
+    return true;
+  }
   return false;
 }
 
@@ -177,7 +235,7 @@ test('llindars per entorn: JSON parcial validat, àlies SDP_LIMIT_ARTEFACTES i v
   // El mòdul llig l'entorn en carregar-se: LLINDARS i MISSATGE porten el llindar real.
   const r = spawnSync(process.execPath, ['--input-type=module', '-e',
     'const m = await import(process.argv[1]); console.log(JSON.stringify({ n2: m.LLINDARS[2], missatge: m.MISSATGE }));',
-    pathToFileURL(DE_BASE('tooling/brain/termometre_context.mjs')).href], {
+    pathToFileURL(DE_CODI(REL_TERMO)).href], {
     env: { ...process.env, SDP_LIMIT_ARTEFACTES: '90', SDP_FATIGA_LLINDARS: '{"2":{"passos":1500}}' }, encoding: 'utf8',
   });
   assert.equal(r.status, 0, r.stderr);
@@ -265,6 +323,43 @@ test('llegixTranscript: passos fora d’ordre, línies corruptes comptades, avis
   assert.equal(r.programats, 1);
   // El recompte lleuger (regex per capçalera) diu el mateix que el parse complet.
   assert.deepEqual(termo.llegixTranscript(linies, { lleuger: true }), r);
+});
+
+/* Ordre del Mestre (261007): «el Mestre parla quasi sempre per veu». El dictat no escriu
+   el coixinet; la forma transcrita compta igual, però només dins de la seua petició. */
+test('[261007] reconeixement dictat: «fatiga vista» sense coixinet i en qualsevol caixa compta com #fatiga-vista; enganxat, partit per línia o fora de la petició, no', (t) => {
+  if (salta(t)) return;
+  assert.equal(termo.RECONEIX_VEU, 'fatiga vista');
+  const amb = (text, { lleuger = false, tipus = 'USER_INPUT', contingut = peticio(text) } = {}) => termo.llegixTranscript([
+    linia(0, 'USER_INPUT', peticio('hola'), 'USER_EXPLICIT'),
+    linia(1, 'EPHEMERAL_MESSAGE', efimer(2), 'SYSTEM_SDK'),
+    linia(2, 'PLANNER_RESPONSE', 'resposta', 'MODEL'),
+    linia(3, tipus, contingut, tipus === 'USER_INPUT' ? 'USER_EXPLICIT' : 'MODEL'),
+  ].join('\n'), { lleuger });
+  for (const lleuger of [false, true]) {
+    const mode = lleuger ? 'regex' : 'parse';
+    for (const text of ['fatiga vista', 'Fatiga vista.', 'FATIGA VISTA', "D'acord, fatiga vista, continuem", 'fatiga-vista', 'fatiga  vista', termo.RECONEIX]) {
+      assert.deepEqual(amb(text, { lleuger }).reconeixement, { pas: 3, nivell: 2 }, `${text} (${mode})`);
+    }
+    for (const text of ['antifatiga vista', 'fatiga vistes', 'fatigavista', 'fatiga_vista', 'la fatiga, vista', 'fatiga\nvista']) {
+      assert.equal(amb(text, { lleuger }).reconeixement, null, `${JSON.stringify(text)} (${mode})`);
+    }
+    const metadades = `<USER_REQUEST>\n\n</USER_REQUEST>\n<ADDITIONAL_METADATA>\n${termo.RECONEIX_VEU}\n</ADDITIONAL_METADATA>`;
+    assert.equal(amb('', { lleuger, contingut: metadades }).reconeixement, null, `fora de la petició no compta (${mode})`);
+    assert.equal(amb('', { lleuger, tipus: 'PLANNER_RESPONSE', contingut: `dic ${termo.RECONEIX_VEU}` }).reconeixement, null, `el model no el pot dir (${mode})`);
+  }
+  // Integrat: el reconeixement dictat silencia N2, però N3 continua sense poder-se silenciar.
+  const humans = Array.from({ length: 11 }, (_, i) => i * 3);
+  const dictat = { pas: 3, type: 'USER_INPUT', content: peticio('Fatiga vista.'), source: 'USER_EXPLICIT' };
+  const n2 = termo.llegixTranscript(transcriptSintetic({ passos: 40, humans, avisos: [{ pas: 1, nivell: 2 }], registres: [dictat] }));
+  assert.deepEqual(n2.reconeixement, { pas: 3, nivell: 2 });
+  assert.equal(termo.decidixAvis(n2, 2), false);
+  const n3 = termo.llegixTranscript(transcriptSintetic({ passos: 40, humans, avisos: [{ pas: 1, nivell: 3 }], registres: [dictat] }));
+  assert.equal(termo.decidixAvis(n3, 3), true);
+  // L'efímer diu les dues formes.
+  const m = { id: ID, passos: 2100, pujades: 10, imatges: 5, veu: 5, altres: 0, mb: 1, resums: 0, crons: 0, programats: 0, ultimCron: null };
+  const avis = termo.missatgeFatiga(2, m, [], ID);
+  assert.ok(avis.includes(termo.RECONEIX) && avis.includes(`«${termo.RECONEIX_VEU}»`), avis);
 });
 
 test('mesuraFatiga: per damunt de 20 MB compta per regex, i dins del pressupost', (t) => {
@@ -398,18 +493,43 @@ test('missatgeFatiga: capçalera, xifres reals, frase literal del cas 4 a N2 i N
   assert.ok(!n1.includes(termo.FRASE_CAS4), 'N1 no atura la màquina');
 });
 
-test('la frase del cas 4 és literal a la skill, el frontmatter és idèntic i la resta de la skill no canvia', (t) => {
-  if (salta(t)) return;
+test('la frase del cas 4 és literal a la skill, el frontmatter és el de la base (que ja porta prioritat: 1) i la resta de la skill no canvia', (t) => {
+  if (salta(t, { base: true })) return;
   const nova = fs.readFileSync(DE_BASE(SKILL_BASE), 'utf8');
   assert.ok(nova.includes(`*"${termo.FRASE_CAS4}"*`), 'frase literal, amb el mateix format');
   // La regla dels /schedule és una decisió que el Mestre pot llevar abans d'aplicar: no es comprova ací.
   for (const x of ['[FATIGA·N1', '[FATIGA·N3', 'sdp-fatiga', termo.RECONEIX, 'Acta Marmota', `cada ${termo.CADENCIA_VEU} torns`]) assert.ok(nova.includes(x), `falta «${x}»`);
-  if (TRANSACCIO) return;
-  const real = fs.readFileSync(path.join(REPO, REL_SKILL), 'utf8');
   const frontmatter = (x) => x.slice(0, x.indexOf('\n---\n', 4) + 5);
-  assert.equal(frontmatter(nova), frontmatter(real));
-  // Fora del cas 4, cada línia de l'original continua al mateix ordre (l'eina d'escriptura perd l'espai final).
-  const cas4 = (l) => l.startsWith('4. **Saturació') || l.startsWith('**NOU:**');
+  // La base ja porta `prioritat: 1`, afegida després del commit 62b623339 del paquet. És
+  // l'única diferència admesa al frontmatter, i la instal·lació l'ha de conservar.
+  const PRIORITAT = 'prioritat: 1';
+  const cas4 = (l) => l.startsWith('4. **Saturació') || l.startsWith('**NOU:**') || l === PRIORITAT;
+  if (INSTALLAT) {
+    // Instal·lada, la skill diu també la forma dictada que el termòmetre reconeix (261007).
+    assert.ok(nova.includes(termo.RECONEIX_VEU), `falta «${termo.RECONEIX_VEU}»`);
+    // Revisió adversarial R4 (261007): la instal·lació conserva la prioritat de la base.
+    assert.ok(frontmatter(nova).split('\n').includes(PRIORITAT), 'la skill instal·lada conserva prioritat: 1');
+    // Ordre del Mestre (261007, P5): fora del cas 4 i de la prioritat, l'original del commit
+    // base continua sencer i al mateix ordre, ara també amb els espais finals de la plantilla
+    // de pànic (cap eina d'escriptura no els ha perdut).
+    const original = deCommitBase(REL_SKILL);
+    if (original === null) { t.diagnostic(`el clon no porta el commit ${COMMIT_BASE}: la resta de la skill no s'ha contrastat`); return; }
+    assert.equal(frontmatter(nova).split('\n').filter((l) => l !== PRIORITAT).join('\n'), frontmatter(original));
+    const instal = nova.split('\n');
+    let j = 0;
+    for (const l of original.split('\n').filter((x) => !cas4(x))) {
+      while (j < instal.length && instal[j] !== l) j++;
+      assert.ok(j < instal.length, `línia original perduda o retocada: «${l}»`);
+      j++;
+    }
+    return;
+  }
+  const real = fs.readFileSync(path.join(REPO, REL_SKILL), 'utf8');
+  assert.ok(frontmatter(real).split('\n').includes(PRIORITAT), 'la base porta prioritat: 1');
+  assert.ok(!frontmatter(nova).split('\n').includes(PRIORITAT), 'el laboratori és d’abans de la prioritat');
+  assert.equal(frontmatter(nova), frontmatter(real).split('\n').filter((l) => l !== PRIORITAT).join('\n'));
+  // Fora del cas 4 i de la prioritat de la base, cada línia de l'original continua al mateix
+  // ordre (l'eina d'escriptura perd l'espai final).
   const noves = nova.split('\n').map((l) => l.trimEnd());
   let i = 0;
   for (const l of real.split('\n').map((x) => x.trimEnd()).filter((x) => !cas4(x))) {
@@ -449,13 +569,23 @@ test('compatibilitat: comptaArtefactes, avis i MISSATGE per a preflight_matrix_w
 /* ── hooks.json i registre de tasques ─────────────────────────────────────── */
 
 test('.agents/hooks.json: sdp-olivera intacte i sdp-fatiga a PreInvocation, amb la forma que valida antigravity-hook.test', (t) => {
-  if (salta(t)) return;
+  if (salta(t, { base: true })) return;
   const hooks = JSON.parse(fs.readFileSync(DE_BASE('.agents/hooks.json'), 'utf8'));
-  assert.deepEqual(hooks['sdp-fatiga'], { PreInvocation: [{ type: 'command', command: 'cd .. && node tooling/gates/fatiga-hook.mjs', timeout: 5 }] });
+  assert.deepEqual(hooks['sdp-fatiga'], { PreInvocation: [{ type: 'command', command: ORDRE_HOOK, timeout: 5 }] });
   const [h] = hooks['sdp-fatiga'].PreInvocation;
   const m = /^cd \.\. && node (\S+\.mjs)(?: (\S+))?$/.exec(h.command);
   assert.ok(m && fs.existsSync(DE_BASE(m[1])), 'l’script del hook viatja amb el paquet');
-  if (TRANSACCIO) return;
+  if (INSTALLAT) {
+    // Ordre del Mestre (261007, P4): el registre real deixa sdp-olivera com era al commit
+    // base (els dos modes d'antigravity-hook.mjs) i afig sdp-fatiga darrere, res més.
+    const original = deCommitBase('.agents/hooks.json');
+    if (original === null) { t.diagnostic(`el clon no porta el commit ${COMMIT_BASE}: sdp-olivera no s'ha contrastat`); return; }
+    const abans = JSON.parse(original);
+    assert.ok(abans['sdp-olivera'], 'el commit base ja registrava sdp-olivera');
+    assert.deepEqual(Object.fromEntries(Object.entries(hooks).filter(([nom]) => nom !== 'sdp-fatiga')), abans, 'sdp-olivera intacte');
+    assert.deepEqual(Object.keys(hooks), [...Object.keys(abans), 'sdp-fatiga']);
+    return;
+  }
   const real = JSON.parse(fs.readFileSync(path.join(REPO, '.agents/hooks.json'), 'utf8'));
   const resta = Object.fromEntries(Object.entries(hooks).filter(([nom]) => nom !== 'sdp-fatiga'));
   assert.deepEqual(resta, real, 'la resta és còpia exacta de l’actual');
@@ -463,7 +593,7 @@ test('.agents/hooks.json: sdp-olivera intacte i sdp-fatiga a PreInvocation, amb 
 });
 
 test('registre de tasques: còpia exacta i la tasca fatiga-cognitiva amb llançador antigravity-hook', (t) => {
-  if (salta(t)) return;
+  if (salta(t, { base: true })) return;
   const text = fs.readFileSync(DE_BASE('.agents/cron/registre_tasques.json'), 'utf8');
   const registre = JSON.parse(text);
   const fatiga = registre.tasques.find((x) => x.id === 'fatiga-cognitiva');
@@ -473,7 +603,15 @@ test('registre de tasques: còpia exacta i la tasca fatiga-cognitiva amb llança
   assert.equal(fatiga.registre, '.agents/runtime/fatiga-hook.log');
   assert.equal(fatiga.nivell, 'L0');
   assert.deepEqual(fatiga.arguments, []);
-  if (TRANSACCIO) return;
+  if (INSTALLAT) {
+    // Instal·lat (261007): una sola declaració, i cap tasca del commit base s'ha perdut ni retocat.
+    assert.equal(registre.tasques.filter((x) => x.id === 'fatiga-cognitiva').length, 1, 'una sola declaració de fatiga-cognitiva');
+    const original = deCommitBase('.agents/cron/registre_tasques.json');
+    if (original === null) { t.diagnostic(`el clon no porta el commit ${COMMIT_BASE}: la resta del registre no s'ha contrastat`); return; }
+    const perId = new Map(registre.tasques.map((x) => [x.id, x]));
+    for (const tasca of JSON.parse(original).tasques) assert.deepEqual(perId.get(tasca.id), tasca, `tasca del commit base: ${tasca.id}`);
+    return;
+  }
   const realText = fs.readFileSync(path.join(REPO, '.agents/cron/registre_tasques.json'), 'utf8');
   const real = JSON.parse(realText);
   assert.deepEqual({ ...registre, tasques: registre.tasques.filter((x) => x.id !== 'fatiga-cognitiva') }, real);
@@ -603,7 +741,32 @@ test('procés: un sensor que no pot llegir injecta [FATIGA·ERR] només a la pri
 
 /* ── Generador del pla ────────────────────────────────────────────────────── */
 
-test('prepara-pla: cinc fitxers contrastats amb el commit base, pla que l’executor accepta i Petorreta que el seal accepta', async (t) => {
+/* Derives del disc posteriors al commit base 62b623339, conegudes i verificades una per
+   una (261007). Amb qualsevol d'elles el paquet del laboratori no es pot aplicar tal com
+   està, perquè una còpia sencera desfaria el canvi en silenci: prepara-pla s'hi ha de
+   negar («refés el paquet, no el forces»). La negativa es comprova, però no fa verda la
+   prova: queda en skip explícit, perquè cap pla instal·lable s'ha validat (revisió
+   adversarial R3, 261007). Una deriva que no és ací fa caure la prova. */
+const DERIVES_CONEGUDES = Object.freeze({
+  // La base porta `prioritat: 1` al frontmatter; fora d'eixa línia, la skill és la del commit base.
+  '.agents/skills/core-context-panic/SKILL.md': async (f) => {
+    const base = pla.contingutBase(REPO, f.ruta)?.toString('utf8');
+    const disc = fs.readFileSync(path.join(REPO, f.ruta), 'utf8');
+    assert.ok(/^prioritat: 1\n/m.test(disc), 'la skill del disc porta prioritat: 1');
+    assert.equal(disc.replace(/^prioritat: 1\n/m, ''), base, 'l’única deriva de la skill és la prioritat: 1 de la base');
+  },
+  // El termòmetre del laboratori es va versionar al commit b22b168b i al disc ha evolucionat
+  // (261007: reconeixement dictat), sense perdre cap exportació del laboratori.
+  [REL_TERMO]: async (f) => {
+    assert.equal(pla.contingutBase(REPO, f.ruta, 'b22b168b')?.toString('utf8'), f.contingut, 'el laboratori és el que es va versionar al b22b168b');
+    const lab = await import(pathToFileURL(path.join(LAB, 'nous', f.ruta)).href);
+    const disc = await import(pathToFileURL(path.join(REPO, f.ruta)).href);
+    assert.deepEqual(Object.keys(lab).filter((k) => !(k in disc)), [], 'cap exportació del laboratori es perd');
+    assert.equal(disc.RECONEIX_VEU, 'fatiga vista');
+  },
+});
+
+test('prepara-pla: cinc fitxers contrastats amb el commit base; amb derives conegudes es nega i la prova queda en skip (paquet caducat); sense, el pla és el que l’executor accepta', async (t) => {
   if (salta(t, { nomesLab: true })) return;
   assert.deepEqual(pla.fitxersNous().map((f) => f.ruta), [
     '.agents/cron/registre_tasques.json', '.agents/hooks.json', '.agents/skills/core-context-panic/SKILL.md',
@@ -611,7 +774,20 @@ test('prepara-pla: cinc fitxers contrastats amb el commit base, pla que l’exec
   ]);
   const estat = pla.estat(REPO);
   const deriva = estat.filter((f) => f.estat === 'deriva');
-  assert.deepEqual(deriva.map((f) => `${f.ruta}: ${f.motiu}`), [], 'cap original ha canviat des del commit base');
+  assert.deepEqual(deriva.filter((f) => !Object.hasOwn(DERIVES_CONEGUDES, f.ruta)).map((f) => `${f.ruta}: ${f.motiu}`), [],
+    'cap altra deriva des del commit base');
+  for (const f of deriva) await DERIVES_CONEGUDES[f.ruta](f);
+  if (deriva.length) {
+    // La guarda contra desfer un canvi en silenci es comprova...
+    await assert.rejects(pla.preparaPla(REPO), (e) => {
+      assert.match(e.message, /refés el paquet, no el forces/);
+      for (const f of deriva) assert.ok(e.message.includes(`${f.ruta}: `), `la negativa nomena ${f.ruta}`);
+      return true;
+    });
+    // ...però no és un verd: les assercions del pla de més avall no han corregut (R3, 261007).
+    t.skip(`paquet caducat (${deriva.map((f) => f.ruta).join(', ')}): cal refer nous/ sobre el disc actual; el corredor no valida cap pla instal·lable`);
+    return;
+  }
   if (estat.every((f) => f.estat === 'aplicat')) { t.skip('tot és al disc sense transacció: aplicat a mà?'); return; }
   const { plan, scopes, targets } = await pla.preparaPla(REPO);
   assert.equal(plan.schema, 'sdp.mutation.v1');

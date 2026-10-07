@@ -31,7 +31,8 @@ const PORT = Object.freeze({
 });
 
 /* L'estat de la interfície, o null fora de l'app. La forma `return useUIState()`
-   dins d'un try és la que rules-of-hooks accepta (com useXatCorporatiu). */
+   dins d'un try és la que rules-of-hooks accepta (com useEstatDeLApp de
+   control/xatCorporatiu.js i useUbicacioApp de PedraSeca/hooks/useAccions.js). */
 function useEstatDeLApp() {
   try {
     return useUIState();

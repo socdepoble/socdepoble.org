@@ -7,6 +7,10 @@ description: ESTAT DE LA SESSIÓ
 
 <!-- SDP:ESTAT_ACTUAL -->
 
+## ESTAT_ACTUAL · 2026-10-07 16:45 · MarIA · Auditoria Consola i Preparació Claude
+
+Escriptori netejat. S'ha creat un pla d'implementació i s'ha actualitzat el prompt actiu per a Claude (`261007_1628_prompt_claude.md`) on se li demana fer una auditoria adversarial profunda de la Consola Termodinàmica, solucionar les funcionalitats trencades del Panell de Control (Bàscula, RSS), injectar els dos xats per defecte de forma sintètica (assignant l'avatar quadrat local per a Sóc de Poble, atès que l'upload en producció falla i l'slug creat és `socdepoble` sense guions), i esbrinar per què a TipTap falta el botó d'imatge damunt de l'H1. Es tanca sessió i s'espera l'obertura del torn de Claude.
+
 ## ESTAT_ACTUAL · 2026-10-06 23:45 · Claude · TPV Universal
 
 Relleu [[261006_2250_auditoria_claude]]. Fet: peça UniversalTPV (Pedra Seca), entrada /app/bar/tpv, ruta Unica i pont useSessioApp de la plataforma, sessió a tot el Bar amb mode de proves i venda offline amb sessió desada, model producteUniversal (canals i 14 al·lèrgens), icones d'al·lèrgens del Mestre, contracte sdp.vendes.v1. Res commitejat. Decisions pendents: ADR offline del service worker, auth.js sense commit (auth.persistencia.test.js, altre front), cicle d'imports de src/data, endollar la Nevera. Suite sencera de src: 3 rojos aliens al TPV. Següent: commit atòmic del TPV (sense auth.js, onboarding, identitat de la barra ni les migracions 2610061448/1450) i la Gestoria.

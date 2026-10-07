@@ -15,6 +15,12 @@
  * del node (targetesIncrustades.js · esDeLaTargeta) no deixa que l'editor
  * se'ls quede. Arrossegar, en canvi, és de ProseMirror encara que comence a
  * la boina de l'autor: la targeta es mou sencera.
+ *
+ * Ordre del Mestre (261007) · «Cards de veritat», també a l'editor: si
+ * l'original es resol, la previsualització en porta les dades vives
+ * (TargetesSincronitzadesContext · useTargetaSincronitzada), les mateixes de la
+ * lectura. Les accions continuen sent els avisos de l'editor, i l'HTML desat
+ * no canvia: la instantània continua sent la reserva.
  */
 import { useCallback } from 'react';
 import { NodeViewWrapper } from '@tiptap/react';
@@ -26,6 +32,7 @@ import { Boto } from '../../../../PedraSeca/atoms/Boto.jsx';
 import { useImatgeResolta } from '../../../../../hooks/useImatgeTargeta.js';
 import { useTargetesIncrustades } from './TargetesIncrustadesContext.js';
 import { NOM_GRUP, alineacioValida, formaDe, propsDeTargetaIncrustada } from './formaDelGrup.js';
+import { useTargetaSincronitzada } from './TargetesSincronitzadesContext.js';
 
 const senseTraductor = (_clau, text) => text;
 
@@ -56,7 +63,7 @@ export default function TargetaIncrustadaNodeView({ node, editor, getPos, select
     if (event?.target?.closest?.('a')) avisa(event);
   }, [avisa]);
 
-  const props = propsDeTargetaIncrustada(node.attrs, { mode: 'edicio', avisa });
+  const props = useTargetaSincronitzada(node.attrs, propsDeTargetaIncrustada(node.attrs, { mode: 'edicio', avisa }));
   const imatge = useImatgeResolta(props.imageUrl);
 
   const editable = Boolean(editor?.isEditable);

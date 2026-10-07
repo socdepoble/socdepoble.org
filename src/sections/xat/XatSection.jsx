@@ -73,7 +73,9 @@ import { cercaXat, FILTRES_CERCA_XAT } from './cercaXat.js';
 import { useSEO } from '../../hooks/useSEO';
 import { resolveAsset } from '../../config/assetResolver.js';
 import { rutaDEntrada } from '../../config/rutaEntrada.js';
-import { PAGE_COPY } from '../text/pageContent.js';
+import { objecteDePagina, rutaConnectarObjecte } from '../../config/objecteConnectable.js';
+/* Ordre del Mestre (261007) · La pàgina destacada de la columna dreta: es tria a paginaDestacada.js. */
+import { paginaDestacada, rutaDeLaPaginaDestacada } from './paginaDestacada.js';
 import ClosCaXat, { BotoObriRail, VISTES_XAT, entradaDeVista } from './components/ClosCaXat.jsx';
 import VistaComunitats from './components/VistaComunitats.jsx';
 import VistaEnConstruccio, { textosDeVista } from './components/VistaEnConstruccio.jsx';
@@ -1133,18 +1135,31 @@ function ConversaAPantallaCompleta() {
 
 /* ─────────────────────── La columna dreta sense conversa ─────────────────── */
 
-/* Ordre del Mestre (260927): en ample i mitjà hi viu el document per defecte
-   («L'ànima de la IAIA»); en estret no hi cap i una sola columna cada vegada
-   vol un avís sobri. Muntada dins de la closca, llig la mida amb useAppGrid(). */
+/* Ordre del Mestre (260927): en ample i mitjà hi viu el document per defecte;
+   en estret no hi cap i una sola columna cada vegada vol un avís sobri.
+   Muntada dins de la closca, llig la mida amb useAppGrid().
+   Ordre del Mestre (261007) · El document és la pàgina destacada que tria
+   l'administrador a paginaDestacada.js («El Xat»; si la clau no existix,
+   «L'ànima de la IAIA», la de sempre). Sense l'acció gran «Anar al xat»: ja
+   s'és al Xat. Comentar obri el menú de dues vies (ordre del Mestre, 261007):
+   «En privat», el xat privat amb Sóc de Poble, i «En públic», el xat públic
+   de la pàgina destacada. Connectar i «En públic» porten el MATEIX
+   descriptor (revisió del 261007, M3-10): la ruta de la pàgina que el lector
+   de connexions sap resoldre (/page/xat, /iaia…), mai /xat, que no és cap
+   pàgina (proposta P4). */
 function ColumnaDretaBuida({ t, seo }) {
   const { mida } = useAppGrid();
+  const navigate = useNavigate();
   const { pageCopy } = useCoreContent();
-  const anima = pageCopy?.anima || PAGE_COPY?.anima;
-  if (mida !== 'estret' && anima) {
+  const destacada = paginaDestacada(pageCopy);
+  if (mida !== 'estret' && destacada) {
+    const { clau, pagina } = destacada;
+    const objecte = objecteDePagina({ titol: pagina.title, ruta: rutaDeLaPaginaDestacada(clau) });
+    const connecta = () => navigate(rutaConnectarObjecte(objecte));
     return (
       <div className="sdp-xat-buit">
-        <TextSection page={{ ...anima, chrome: 'context' }} pageKey="anima" />
-        <SeoDelXat key={`${anima.title}\n${anima.subtitle || anima.lead || ''}`} {...seo} />
+        <TextSection page={{ ...pagina, chrome: 'context' }} pageKey={clau} onConnect={connecta} objecte={objecte} />
+        <SeoDelXat key={`${pagina.title}\n${pagina.subtitle || pagina.lead || ''}`} {...seo} />
       </div>
     );
   }

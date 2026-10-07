@@ -1,8 +1,11 @@
 /**
  * Tasca 5 (ordre del Mestre, 261001) · Amb les dates de prova, l'ordre per
- * defecte del Mur deixa les importants dalt de tot: primer les huit d'esta
+ * defecte del Mur deixa les importants dalt de tot: primer les nou d'esta
  * setmana, cadascuna amb la seua hora a la pastilla; després les molt
  * tècniques (del 2 al 15 de setembre) i, al final, el 2n Aplec (2023).
+ * Ordre del Mestre (261007) · «Drets d'autor» no és cap de les importants:
+ * amb la seua data real (2026-01-30, 00:00 hora local) cau avall, entre les
+ * tècniques i l'Aplec.
  *
  * El Mur de veres (MurSection) amb la llavor tal com la servix el mode seed:
  * cap ordre recalculat a la prova. Es comprova amb diversos `ara` perquè no
@@ -60,7 +63,8 @@ test.each([
   render(<MurSection />);
   const importants = IMPORTANTS_DEL_MUR.map((fila) => titolDe(llavor, fila));
   const tecniques = TECNIQUES_DEL_MUR.map((fila) => titolDe(llavor, fila));
-  expect(titols()).toEqual([...importants, ...tecniques, '2n Aplec pel Territori']);
+  const avall = [titolDe(llavor, ['pages', 'drets-autor']), '2n Aplec pel Territori'];
+  expect(titols()).toEqual([...importants, ...tecniques, ...avall]);
   // Cada targeta amb data de prova pinta l'hora i el dia (la pastilla sencera).
   for (const targeta of targetes().slice(0, importants.length + tecniques.length)) {
     const [hora, dia] = pastilla(targeta);

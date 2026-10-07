@@ -8,6 +8,9 @@ import { construeixRetall } from './retall';
 import { agrupaComunitats, mapejaFil } from './missatges.js';
 import { buidaEsborranys } from './esborranys.js';
 import { getVal, setVal, delVal } from '../../config/storage.js';
+import { PAGINA_DESTACADA_DEL_XAT } from './paginaDestacada.js';
+import { paginaDeRuta } from '../text/paginaDeText.js';
+import { PAGE_COPY } from '../text/pageContent.js';
 
 const mocks = vi.hoisted(() => ({
   creaNota: vi.fn(),
@@ -56,11 +59,18 @@ vi.mock('../../pages/NotFoundPage', () => ({ default: () => null }));
    poden buscar sense muntar tota la UniversalPage. Registra el seu SEO com
    el TextSection de veres, que és el que competix pel títol de la pestanya. */
 vi.mock('../text/TextSection', async () => {
-  const { createElement } = await import('react');
+  const { createElement, Fragment } = await import('react');
   const { useSEO } = await import('../../hooks/useSEO');
-  function DocumentPerDefecte({ page, pageKey }) {
+  /* Ordre del Mestre (261007) · El Connectar propi del document (proposta
+     P4), com un botó germà: el text de la marca continua sent la clau. */
+  function DocumentPerDefecte({ page, pageKey, onConnect, accioPrincipal, objecte }) {
     useSEO({ title: page.title, description: page.subtitle || page.lead || 'Sóc de Poble' });
-    return createElement('div', { 'data-testid': 'document-per-defecte' }, pageKey);
+    /* Revisió del 261007 (M3-10) · el descriptor que rep, per a Comentar. */
+    return createElement(Fragment, null,
+      createElement('div', {
+        'data-testid': 'document-per-defecte', 'data-accio': accioPrincipal ? 'si' : 'no', 'data-objecte': objecte ? JSON.stringify(objecte) : ''
+      }, pageKey),
+      onConnect ? createElement('button', { type: 'button', 'data-testid': 'connectar-del-document', onClick: onConnect }, 'Connectar') : null);
   }
   return { default: DocumentPerDefecte };
 });
@@ -394,12 +404,15 @@ test('la capçalera no promet trucades i la línia secundària només ix als gru
 
 /* Ordre del Mestre (260927): la columna dreta que WhatsApp deixa buida
    mostra el document per defecte només sense conversa; amb conversa, només
-   el xat, i en tornar a /xat torna el document. */
+   el xat, i en tornar a /xat torna el document.
+   Ordre del Mestre (261007) · El document és la pàgina destacada que tria
+   l'administrador a paginaDestacada.js: «El Xat» ('xat'). */
 test('sense conversa la dreta mostra el document per defecte; amb conversa, només el xat', () => {
   mocks.threadId = null;
   render(<XatSection />);
   const dreta = () => document.getElementById('app-grid-main');
-  expect(dreta().querySelector('[data-testid="document-per-defecte"]').textContent).toBe('anima');
+  expect(PAGINA_DESTACADA_DEL_XAT).toBe('xat');
+  expect(dreta().querySelector('[data-testid="document-per-defecte"]').textContent).toBe(PAGINA_DESTACADA_DEL_XAT);
   expect(dreta().querySelector('.sdp-xat-conversa')).toBeNull();
   cleanup();
 
@@ -411,6 +424,42 @@ test('sense conversa la dreta mostra el document per defecte; amb conversa, nom�
   /* Tornar a les converses (entrada «Xats» del rail) deselecciona. */
   fireEvent.click(screen.getByRole('button', { name: 'Xats' }));
   expect(mocks.navigate).toHaveBeenLastCalledWith('/xat');
+});
+
+/* Ordre del Mestre (261007) · Al document destacat de /xat:
+    · cap acció gran «Anar al xat» (ja s'és al Xat);
+    · Connectar desa la ruta de la pàgina que el lector de connexions sap
+      resoldre (/page/xat), mai /xat, que no és cap pàgina (proposta P4). */
+test('261007 · el document destacat: sense «Anar al xat», i Connectar porta la ruta /page/xat', () => {
+  mocks.threadId = null;
+  render(<XatSection />);
+  const dreta = document.getElementById('app-grid-main');
+  expect(dreta.querySelector('[data-testid="document-per-defecte"]').getAttribute('data-accio')).toBe('no');
+  mocks.navigate.mockClear();
+  fireEvent.click(dreta.querySelector('[data-testid="connectar-del-document"]'));
+  expect(mocks.navigate).toHaveBeenCalledTimes(1);
+  const [ruta] = mocks.navigate.mock.calls[0];
+  const url = new URL(ruta, 'http://localhost');
+  expect(url.pathname).toBe('/connectar');
+  expect(Object.fromEntries(url.searchParams)).toMatchObject({ objecte: 'pagina', ruta: '/page/xat', title: 'El Xat', item_id: '/page/xat' });
+  /* La ruta desada és una pàgina que el lector sap llegir: la mateixa «El Xat». */
+  expect(paginaDeRuta(url.searchParams.get('ruta'))).toEqual({ pageKey: 'xat', page: PAGE_COPY.xat });
+});
+
+/* Revisió del 261007 (M3-10) · El Comentar públic de la mateixa barra porta
+   al xat de la mateixa pàgina que Connectar: el document rep el descriptor de
+   la pàgina destacada (/page/xat), no es queda amb la ruta on està la
+   persona (/xat, que no té cap xat públic). */
+test('M3-10 · el document destacat rep el descriptor de la seua pàgina: Comentar i Connectar, el mateix destí', () => {
+  mocks.threadId = null;
+  render(<XatSection />);
+  const dreta = document.getElementById('app-grid-main');
+  const objecte = JSON.parse(dreta.querySelector('[data-testid="document-per-defecte"]').getAttribute('data-objecte'));
+  expect(objecte).toMatchObject({ tipus: 'pagina', ruta: '/page/xat', titol: 'El Xat' });
+  mocks.navigate.mockClear();
+  fireEvent.click(dreta.querySelector('[data-testid="connectar-del-document"]'));
+  const url = new URL(mocks.navigate.mock.calls[0][0], 'http://localhost');
+  expect([url.searchParams.get('ruta'), url.searchParams.get('title')]).toEqual([objecte.ruta, objecte.titol]);
 });
 
 test('en mode estret, sense conversa, la dreta no carrega cap document', async () => {
@@ -1085,8 +1134,13 @@ test('T63.2 · amb StrictMode, ?sobre= i ?amb= s’obrin una sola vegada i hi na
   expect(mocks.createThread).toHaveBeenCalledTimes(1);
 });
 
-/* El «Comentar» del document de la columna dreta torna a /xat?sobre= amb la
-   mateixa instància del Xat (/xat i /xat/ID la conserven). */
+/* Un ?sobre= (el «Comentar» d'una pàgina amb xat comú) torna a obrir-se amb
+   la mateixa instància del Xat (/xat i /xat/ID la conserven).
+   Ordre del Mestre (261007) · «COMENTARIS = XAT» · Comentar de qualsevol
+   pàgina, el document destacat inclòs, obri el menú de dues vies: «En
+   públic» porta ací (?sobre=, el xat comú de la pàgina) i «En privat», al
+   xat amb Sóc de Poble (?amb=). TextSection.test.jsx prova el menú de les
+   pàgines de text. */
 test('T63.2 · la mateixa instància torna a obrir el mateix ?sobre= després d’haver-ne eixit', async () => {
   mocks.threadId = null;
   mocks.params = new URLSearchParams({ sobre: 'pagina:/iaia' });

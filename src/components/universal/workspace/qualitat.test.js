@@ -31,6 +31,16 @@ const FITXERS = Object.freeze([
   'src/components/universal/workspace/seleccioUrl.js',
   'src/components/universal/workspace/seleccioUrl.test.js',
   'src/components/universal/workspace/qualitat.test.js',
+  /* Llei de la Roda Dentada (ordre del Mestre, 261007) · Les carpetes a la
+     vista de la roda dentada: la preferència, el barril i les proves. */
+  'src/components/universal/workspace/carpetesVisibles.js',
+  'src/components/universal/workspace/carpetesVisibles.test.js',
+  'src/components/universal/workspace/index.js',
+  'src/components/universal/workspace/UniversalWorkspace.ajustos.test.jsx',
+  'src/components/universal/workspace/UniversalWorkspace.ajustos.consumidors.test.jsx',
+  'src/components/universal/workspace/UniversalWorkspace.ajustos.seccions.test.jsx',
+  'src/components/universal/workspace/UniversalWorkspace.ajustos.notes.test.jsx',
+  'src/components/universal/workspace/UniversalWorkspace.barres.test.jsx',
   'src/sections/notes/NotesSection.jsx',
   'src/sections/notes/NotesSection.test.jsx',
   'src/sections/notes/NotesSection.url.test.jsx',
@@ -53,9 +63,34 @@ const FITXERS = Object.freeze([
      les línies d'activació de la Wiki i del Perfil. */
   'src/components/universal/workspace/nivellMestreDetall.js',
   'src/components/universal/workspace/nivellMestreDetall.test.js',
+  /* Ordre del Mestre (261007) · Emojis XL a les llistes reals i diversitat
+     d'emojis: la fitxa (ItemMedia), la targeta viva i la seua insígnia, els
+     espècimens de Disseny i les fitxes de la Wiki, amb les seues proves. */
+  'src/components/universal/workspace/ItemMedia.jsx',
+  'src/components/universal/workspace/NavGlyph.mida.test.js',
+  'src/components/universal/workspace/UniversalWorkspace.test.jsx',
+  'src/components/universal/insigniaEmoji.jsx',
+  'src/components/universal/insigniaEmoji.test.jsx',
+  /* Revisió final (261007) · la guarda única d'Unicode per a Safari 16 i la
+     prova de la revisió de la roda dentada. */
+  'src/sections/disseny/cataleg/guardaEmojisSafari16.js',
+  'src/components/universal/workspace/UniversalWorkspace.ajustos.revisio.test.jsx',
+  'src/components/universal/targetaViva.js',
+  'src/components/universal/targetaViva.test.js',
+  'src/components/universal/TargetaViva.test.jsx',
+  'src/sections/notes/NotaFitxa.test.jsx',
+  'src/sections/profile/PerfilShell.targetaViva.test.jsx',
+  'src/sections/disseny/cataleg/manifest.js',
+  'src/sections/disseny/cataleg/manifest.icones.test.js',
+  'src/sections/wiki-de-poble/iconesWiki.js',
+  'src/sections/wiki-de-poble/iconesWiki.test.js',
+  'src/sections/wiki-de-poble/WikiDePobleSection.icones.test.jsx',
   'src/sections/wiki-de-poble/WikiDePobleSection.mestreDetall.test.jsx',
   'src/sections/profile/PerfilShell.mestreDetall.test.jsx',
-  'src/sections/admin/AdminSection.jsx'
+  'src/sections/admin/AdminSection.jsx',
+  /* Ordre del Mestre (pla 261007_0012, §0.7) · Emojis a l'índex de la Wiki
+     (carpetes i portada): la prova del model que en fixa els glifs. */
+  'src/sections/wiki-de-poble/WikiDePobleSection.einesLocals.test.jsx'
 ]);
 
 const llig = (ruta) => readFileSync(path.join(ARREL, ruta), 'utf8');

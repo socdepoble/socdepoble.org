@@ -56,7 +56,7 @@ describe('accioPrincipal', () => {
      l'H1; signant Sóc de Poble, ara hi va primer el seu logotip. L'ordre de
      l'H1, les etiquetes, l'acció i el copyright no canvia. */
   test('va dins del bloc del títol: logotip, H1, etiquetes, l’acció i el copyright, en este ordre', () => {
-    const { container } = render(<PageFrame title="Publicar al Mur" labels={LABELS} copyright="© Sóc de Poble"
+    const { container } = render(<PageFrame title="Publicar al Mur" labels={LABELS} copyright="CC BY-NC-SA 4.0 Sóc de Poble"
       accioPrincipal={<a href="/notes" className="sdp-boto">Publicar</a>} />);
     const capcalera = container.querySelector('header.page-title');
     expect(fills(capcalera)).toEqual([

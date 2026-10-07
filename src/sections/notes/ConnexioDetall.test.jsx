@@ -38,7 +38,7 @@ import { ConnexioDetall } from './ConnexioDetall.jsx';
 import { PublicacioDetall } from './PublicacioDetall.jsx';
 import { publicacioComANota } from './masDeLUsuari.js';
 import { ERROR_PUBLICAR, ErrorPublicacio } from './visibilitatNota.js';
-import { AVIS_SENSE_XAT } from '../../components/PedraSeca/hooks/useAccions.js';
+import { TEXTOS_COMENTAR } from '../../components/PedraSeca/organismes/textosComentar.js';
 
 const SAMARRETA = { id: 'samarreta-socdepoble', title: 'Samarreta', image_url: '/assets/x.png', author_name: 'Sóc de Poble' };
 const ORIGEN_MERCAT = {
@@ -87,31 +87,51 @@ test('trobat: la pàgina de l’original (títol i foto), sense editor ni Connec
 });
 
 /* T63.2 (doctrina del Mestre, 260928) · Comentar una connexió és comentar
-   l'ORIGINAL: el seu xat comú (o el directe d'una persona), mai la nota. */
+   l'ORIGINAL: el seu xat comú (o el directe d'una persona), mai la nota.
+   Ordre del Mestre (261007) · «COMENTARIS = XAT» · Comentar obri el menú de
+   dues vies: «En públic» és el xat comú de l'original; «En privat», el xat
+   amb Sóc de Poble (sense proveïdor, el de la llavor). Sense xat públic,
+   «En públic» es queda desactivada i el clic no fa res. */
 const destiXat = () => {
   const url = new URL(mocks.navigate.mock.calls.at(-1)[0], 'http://localhost');
   return { cami: url.pathname, ...Object.fromEntries(url.searchParams) };
 };
 const comentarBarra = (container) => container.querySelector('header.bar-blue .sp-card-actions').children[1];
+const PUBLIC = TEXTOS_COMENTAR.public[1];
+const PRIVAT = TEXTOS_COMENTAR.privat[1];
+/* Obri el menú de Comentar de la barra i en torna la fila de la via. */
+function via(container, nom) {
+  const boto = comentarBarra(container);
+  expect(boto.getAttribute('aria-label')).toBe('Comentar');
+  expect(boto.getAttribute('aria-haspopup')).toBe('menu');
+  if (boto.getAttribute('aria-expanded') !== 'true') fireEvent.click(boto);
+  return within(container.querySelector('header.bar-blue [role="menu"]')).getByRole('menuitem', { name: nom });
+}
 
-test('T63.2 · trobat: Comentar obri el xat comú de l’original (el producte), no el de la nota', () => {
+test('T63.2 · trobat: «En públic» obri el xat comú de l’original (el producte), no el de la nota', () => {
   window.history.replaceState(null, '', '/notes?nota=n-9');
   const { container } = render(<ConnexioDetall nota={nota(ORIGEN_MERCAT)} />);
-  expect(comentarBarra(container).getAttribute('aria-label')).toBe('Comentar al xat comú');
-  fireEvent.click(comentarBarra(container));
+  fireEvent.click(via(container, PUBLIC));
   expect(destiXat()).toEqual({ cami: '/xat', sobre: 'producte:samarreta-socdepoble', titol: 'Samarreta', ruta: '/mercat/samarreta-socdepoble' });
   expect(mocks.navigate.mock.calls.at(-1)[0]).not.toMatch(/nota|n-9/);
   window.history.replaceState(null, '', '/');
 });
 
-test('T63.2 · caiguda d’un perfil: Comentar és el directe amb la persona; una pàgina de text, el xat de la seua ruta', () => {
+/* Una persona no té xat públic: «En públic» es queda desactivada, i «En
+   privat» porta hui al xat amb Sóc de Poble, no al directe amb la persona
+   (abans, /xat?amb=u1). PREGUNTA OBERTA al Mestre: per a una persona, «En
+   privat» ha de ser el directe amb ella? */
+test('T63.2 · caiguda d’un perfil: sense xat públic, «En privat» a Sóc de Poble; una pàgina de text, «En públic» al xat de la seua ruta', () => {
   const { container, unmount } = render(<ConnexioDetall nota={nota(ORIGEN_PERFIL)} />);
-  expect(comentarBarra(container).getAttribute('aria-label')).toBe('Comentar per missatge directe');
-  fireEvent.click(comentarBarra(container));
-  expect(mocks.navigate).toHaveBeenLastCalledWith('/xat?amb=u1');
+  const publica = via(container, PUBLIC);
+  expect(publica.getAttribute('aria-disabled')).toBe('true');
+  fireEvent.click(publica);
+  expect(mocks.navigate).not.toHaveBeenCalled();
+  fireEvent.click(via(container, PRIVAT));
+  expect(mocks.navigate).toHaveBeenLastCalledWith('/xat?amb=socdepoble');
   unmount();
   const anima = render(<ConnexioDetall nota={nota(ORIGEN_ANIMA)} />);
-  fireEvent.click(comentarBarra(anima.container));
+  fireEvent.click(via(anima.container, PUBLIC));
   expect(destiXat()).toMatchObject({ cami: '/xat', sobre: 'pagina:/iaia', ruta: '/iaia' });
 });
 
@@ -123,32 +143,35 @@ test('T63.2 · una connexió a una nota no té xat comú: cap Comentar a la barr
 });
 
 /* Revisió de T63.2 · Un original sense xat comú (una fitxa de la Wiki, amb
-   ?item=, que el contracte no admet): el botó es queda, amb el nom neutre, i
-   el clic ho diu. Mai el xat de la nota ni el de la ruta d'on està. */
-test('T63.2 · un original sense xat comú (la Wiki): Comentar es queda, no promet cap xat i el clic avisa', () => {
+   ?item=, que el contracte no admet): el botó es queda, amb el nom neutre.
+   Mai el xat de la nota ni el de la ruta d'on està.
+   Ordre del Mestre (261007) · «En públic» es queda desactivada, amb la raó,
+   i el clic no navega ni avisa. */
+test('T63.2 · un original sense xat comú (la Wiki): Comentar es queda, «En públic» desactivada, i el clic no fa res', () => {
   window.history.replaceState(null, '', '/notes?nota=n-9');
   const wiki = { tipus: 'connexio', sectionId: '', itemId: '/wikidepoble?item=x', ruta: '/wikidepoble?item=x', objecte: 'pagina', titol: 'Una fitxa' };
   const { container } = render(<ConnexioDetall nota={nota(wiki)} />);
-  expect(comentarBarra(container).getAttribute('aria-label')).toBe('Comentar');
-  fireEvent.click(comentarBarra(container));
+  const publica = via(container, PUBLIC);
+  expect(publica.getAttribute('aria-disabled')).toBe('true');
+  expect(publica.textContent).toBe(`${PUBLIC}${TEXTOS_COMENTAR.senseXatPublic[1]}`);
+  fireEvent.click(publica);
   expect(mocks.navigate).not.toHaveBeenCalled();
-  expect(mocks.toast).toHaveBeenCalledWith(AVIS_SENSE_XAT);
+  expect(mocks.toast).not.toHaveBeenCalled();
   window.history.replaceState(null, '', '/');
 });
 
 /* L'altre lector del MAS: una publicació pròpia (PublicacioDetall). El seu
    Comentar és el de la publicació de veres (Mur, Mercat o agenda), no el de
    la vista del MAS (/notes?nota=publicacio:…). */
-test('T63.2 · PublicacioDetall: Comentar obri el xat comú de la publicació amb el seu tipus', () => {
+test('T63.2 · PublicacioDetall: «En públic» obri el xat comú de la publicació amb el seu tipus', () => {
   window.history.replaceState(null, '', '/notes?nota=publicacio:mercat:samarreta-socdepoble');
   const { container, unmount } = render(<PublicacioDetall item={publicacioComANota({ ...SAMARRETA, created_at: '2026-09-02T10:00:00.000Z' }, 'mercat')} />);
-  expect(comentarBarra(container).getAttribute('aria-label')).toBe('Comentar al xat comú');
-  fireEvent.click(comentarBarra(container));
+  fireEvent.click(via(container, PUBLIC));
   expect(destiXat()).toEqual({ cami: '/xat', sobre: 'producte:samarreta-socdepoble', titol: 'Samarreta', ruta: '/mercat/samarreta-socdepoble' });
   unmount();
   const coca = { id: 'coca', title: 'Recepta de coca', created_at: '2026-09-01T10:00:00.000Z' };
   const mur = render(<PublicacioDetall item={publicacioComANota(coca, 'mur')} />);
-  fireEvent.click(comentarBarra(mur.container));
+  fireEvent.click(via(mur.container, PUBLIC));
   expect(destiXat().sobre).toBe('publicacio:coca');
   window.history.replaceState(null, '', '/');
 });

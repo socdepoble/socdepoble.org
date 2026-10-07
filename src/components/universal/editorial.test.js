@@ -394,7 +394,7 @@ describe('pindolesUniques', () => {
 });
 
 it('el copyright compartit és el que pintava TextSection', () => {
-  expect(COPYRIGHT_SDP).toBe('© Sóc de Poble / Fet per la IAIA i Nano Banana');
+  expect(COPYRIGHT_SDP).toBe('CC BY-NC-SA 4.0 Sóc de Poble / Fet per la IAIA i Nano Banana');
 });
 
 describe('Disseny Pedra Seca · capçalera editorial', () => {

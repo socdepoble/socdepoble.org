@@ -118,9 +118,11 @@ const RESOLUCIONS_DEL_PROJECTE = new Map();
 /* Higiene d'amfitrió (ordre del Mestre, 261004, front «amfitrio-admin») ·
    L'hora de l'última fallada per abast. Només l'èxit es guarda per a sempre:
    una fallada (false, null o error) esborra la resolució i es torna a provar
-   passat ESPERA_DESPRES_DE_FALLADA_MS. */
+   passat ESPERA_DESPRES_DE_FALLADA_MS. La mateixa espera la fa servir el xat
+   privat amb Sóc de Poble (control/xatCorporatiu.js), que resol la mateixa
+   entitat pel mateix port. */
 const FALLADES_DEL_PROJECTE = new Map();
-const ESPERA_DESPRES_DE_FALLADA_MS = 60_000;
+export const ESPERA_DESPRES_DE_FALLADA_MS = 60_000;
 
 const esIdDelProjecte = (id) => IDS_DEL_PROJECTE.has(id) || IDS_REMOTS_DEL_PROJECTE.has(id);
 

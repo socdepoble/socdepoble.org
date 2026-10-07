@@ -9,7 +9,10 @@ import { useSession } from '../../app/contexts/SessionContext';
 import { buildDetailSectionMeta } from './detailSectionMeta.jsx';
 import { useSEO } from '../../hooks/useSEO.js';
 import { autorDe, objecteDe, rutaConnectarObjecte, tipusDeSeccio } from '../../config/navigation.js';
+import { resolveAsset } from '../../config/assetResolver.js';
+import { CarruselImatges } from '../../components/PedraSeca/index.js';
 import { paginaDElement, trobaElement } from './elementDeSeccio.js';
+import { ProveidorSincronitzacioTargetes } from './SincronitzacioTargetes.jsx';
 
 export default function ItemDetailSection() {
   const { events, feedPosts, marketItems } = useMur();
@@ -41,9 +44,10 @@ export default function ItemDetailSection() {
   });
 
   if (!section || !item) {
-    /* T63.2 · Sense element no hi ha xat (ni el de la ruta, que s'enduria el
-       títol «Element no trobat»): Comentar es queda i el clic avisa. Una nota
-       (/notes/:id, també mentre es carreguen) no en té mai i no es pinta. */
+    /* T63.2 · Sense element no hi ha xat públic (ni el de la ruta, que
+       s'enduria el títol «Element no trobat»): Comentar es queda, amb el menú
+       de dues vies (261007), i «En públic» queda desactivada i diu per què. Una
+       nota (/notes/:id, també mentre es carreguen) no en té mai i no es pinta. */
     const senseElement = tipusDeSeccio(sectionId) === 'nota' ? objecteDe({ id: itemId }, sectionId) : null;
     return (
       <UniversalPage
@@ -90,18 +94,55 @@ export default function ItemDetailSection() {
   const avatarAutor = autorDe(item)?.tipus === 'persona' && avatarDeLaIdentitat
     ? { src: avatarDeLaIdentitat, alt: pagina.authorName ? `Avatar de ${pagina.authorName}` : 'Avatar de qui signa' }
     : null;
+  /* Ordre del Mestre (261007) · Un element amb més d'una foto (els productes
+     del Mercat, getImages) porta a la portada un carrusel: la ranura
+     topBarData.heroComponent de PageFrame, en lloc de la imatge sola. La
+     primera diapositiva és la mateixa portada (getImage): no es pinta dues
+     vegades (pla 261006_1140). Els src es resolen com els resol PageFrame
+     per a la portada. La clau és l'element: un altre producte comença per la
+     seua primera foto. Amb una foto o cap, cap prop nova: la portada de
+     sempre (Llei del Píxel). */
+  const fotos = typeof section.getImages === 'function' ? section.getImages(item) : [];
+  /* Revisió del 261007 (M9) · Els textos del carrusel, traduïts ací: la peça
+     és presentacional i porta la reserva en valencià. Cada foto porta el nom
+     del producte d'alt: les dades no en porten cap de propi per foto, i cada
+     diapositiva ja diu «Imatge X de N». */
+  const portadaAmbCarrusel = Array.isArray(fotos) && fotos.length > 1 ? {
+    topBarData: {
+      heroComponent: (
+        <CarruselImatges
+          key={String(item.id ?? '')}
+          imatges={fotos.map((src) => ({ src: resolveAsset(src), alt: pagina.heroAlt || '' }))}
+          etiqueta={t('carrusel.imatgesDe', 'Imatges de {titol}').replace('{titol}', () => String(pagina.title ?? ''))}
+          etiquetes={{
+            anterior: t('carrusel.anterior', 'Imatge anterior'),
+            seguent: t('carrusel.seguent', 'Imatge següent'),
+            diapositives: t('carrusel.diapositives', 'Diapositives'),
+            posicio: t('carrusel.posicio', 'Imatge {n} de {total}'),
+            carrusel: t('carrusel.rol', 'carrusel'),
+            diapositiva: t('carrusel.rolDiapositiva', 'diapositiva')
+          }}
+        />
+      )
+    }
+  } : null;
 
   return (
     <UniversalPage
       onConnect={() => navigate(rutaConnectarObjecte(objecte))}
       objecte={objecteXat}
       {...pagina}
+      {...portadaAmbCarrusel}
       avatarAutor={avatarAutor}
       chrome="full"
     >
-      <div className="content-wrapper">
-        {section.renderBody(item)}
-      </div>
+      {/* Ordre del Mestre (261007, «cards de veritat») · Les targetes
+          incrustades del cos, sincronitzades amb el seu original. */}
+      <ProveidorSincronitzacioTargetes>
+        <div className="content-wrapper">
+          {section.renderBody(item)}
+        </div>
+      </ProveidorSincronitzacioTargetes>
     </UniversalPage>
   );
 }

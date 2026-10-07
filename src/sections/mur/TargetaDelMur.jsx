@@ -9,8 +9,19 @@
  *
  * `esdeveniment` · el model de l'acte (acteAEsdeveniment) que ja té qui pinta
  * la llista, o null: la pastilla i la insígnia d'un acte són les del model.
+ *
+ * Ordre del Mestre (261007) ·
+ *  · «Comentaris = xat» · Comentar és el MATEIX a totes les targetes: el
+ *    menú de dues vies d'UniversalCard (useAccions), «En privat» (el xat
+ *    privat amb Sóc de Poble) i «En públic» (el xat públic de l'element, pel
+ *    seu objecte). Cap gestor propi: derogat `onComentarSistema`, que a les
+ *    targetes de sistema saltava la via pública.
+ *  · L'acció gran (accioDeLaPagina de systemPages.js: «Anar al xat» a la
+ *    targeta d'El Xat) va a la ranura `accio` d'UniversalCard, en lloc de les
+ *    etiquetes; la resta de la targeta continua obrint la seua pàgina.
  */
 import { UniversalCard } from '../../components/PedraSeca';
+import { PortaDePagina } from '../../components/PedraSeca/organismes/PortesTargeta.jsx';
 import { EventCard } from '../../components/universal/EventCard';
 import { useNavigate } from '../../app/contexts/RouterContext';
 import { useUIActions } from '../../app/contexts/UIContext';
@@ -19,6 +30,8 @@ import {
   getSectionItemPath, objecteDe, objecteDePagina, RUTA_PROJECTE, rutaConnectarObjecte, rutaDePerfilDAutor
 } from '../../config/navigation';
 import { COPYRIGHT_SDP, dataDElement } from '../../components/universal/editorial.js';
+import { accioDeLaPagina } from '../../config/systemPages.js';
+import { fotoDeLaTargeta } from '../mercat/imatgesDeProducte.js';
 import { useEntitatDelProjecte } from '../../hooks/useEntitatDelProjecte.js';
 
 /**
@@ -72,11 +85,21 @@ export function TargetaDelMur({ item, esdeveniment = null }) {
   const seccio = (item.type === 'market' || item.type === 'product') ? 'mercat' : 'mur';
   /* T43 (D9) · els avisos del sistema també es connecten: són pàgines
      del sistema, amb la seua ruta, i no porten cap autor inventat.
-     T63.2 · el mateix descriptor diu on porta Comentar: el xat comú
-     de la publicació, del producte o de la pàgina del sistema. */
+     T63.2 · el mateix descriptor diu quin és el xat públic de Comentar
+     (261007, la via «En públic»): el de la publicació, del producte o de la
+     pàgina del sistema, si en té. */
   const objecte = item.isSystem
     ? objecteDePagina({ titol: item.title || item.name, ruta: item.mainHref, id: item.id })
     : objecteDe(item, seccio);
+  /* Ordre del Mestre (261007) · Una targeta de sistema porta la seua acció
+     gran, si en té, en lloc de les etiquetes. */
+  const porta = item.isSystem ? accioDeLaPagina(item.id, t) : null;
+  /* Ordre del Mestre (261007) · La foto principal d'un producte és la mateixa
+     a les tres superfícies (Mercat, Mur i pàgina): imatgesDeProducte, mai el
+     logotip de qui ven. En remot, el mapejador posa el logotip a image_url
+     quan el producte no porta image_url ni image, i el Mur el pintava davant
+     de la foto. Sense cap foto pròpia, la reserva de sempre. */
+  const imatge = item.image_url || item.image || item.images?.[0] || item.imageSrc || '';
 
   return (
     <UniversalCard
@@ -86,13 +109,14 @@ export function TargetaDelMur({ item, esdeveniment = null }) {
       emoticona={item.icon}
       subtitle={item.subtitle}
       body={item.lead || <p className="sp-card-text">{item.description}</p>}
-      imageUrl={resolveAsset(item.image_url || item.image || item.images?.[0] || item.imageSrc || '')}
+      imageUrl={resolveAsset(seccio === 'mercat' ? fotoDeLaTargeta(item, imatge) : imatge)}
       imageAlt={item.imageAlt || item.title || ''}
       author={item.author_name || item.seller || "Sóc de Poble"}
       /* T6 · Derogat per l'ordre del Mestre del 261004 (prompt 261004_0515):
          el sistema ja no porta a /pobles, sinó a la pàgina de qui signa. */
       authorHref={rutaDeLaBoinaDelMur(item)}
       objecte={objecte}
+      accio={porta ? <PortaDePagina porta={porta} /> : null}
       onConnect={() => navigate(rutaConnectarObjecte(objecte))}
       avatarUrl={resolveAsset(item.author_avatar || item.avatar_url || '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg')}
       location={item.author_location || item.population || "La Torre de les Maçanes"}

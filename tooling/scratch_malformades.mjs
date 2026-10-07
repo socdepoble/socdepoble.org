@@ -1,7 +1,7 @@
 import fs from 'fs';
 const INICI_ENTRADA = /^\d{6} \|/;
 const ENTRADA_EN_LINIA = /\d{6} \|/g;
-const MARCA_HASH = /<!-- HASH: [a-f0-9]{64} -->/g;
+// const MARCA_HASH = /<!-- HASH: [a-f0-9]{64} -->/g;
 
 const cos = fs.readFileSync('.agents/LEDGER.md', 'utf8');
 const lines = cos.split('\n');

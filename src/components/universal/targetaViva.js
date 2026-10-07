@@ -15,6 +15,9 @@
  *     (T40), si n'hi ha; si no, la d'ara (barres/dataHoraBarra.js).
  *   · L'emoticona només si s'ha triat (camp cru `icon`, un sol emoji): mai la
  *     ploma per defecte de la llista (T34), que és un valor de reserva.
+ *   · Ordre del Mestre (261007) · Sense imatge, l'emoticona triada ocupa el
+ *     quadrat en XL (emojiDelQuadrat; la insígnia la pinta TargetaViva, i
+ *     només a la fitxa de la llista).
  */
 import { extractPlainText } from '../../utils/contentAdapter.js';
 import { emojiSol } from '../../utils/emoji.js';
@@ -60,4 +63,17 @@ export function propsDeTargetaViva(document, { autor = null, etiquetes = SENSE_E
     labels: Array.isArray(etiquetes) ? etiquetes : SENSE_ETIQUETES,
     copyright: d.copyright || undefined,
   };
+}
+
+/**
+ * Ordre del Mestre (261007) · «L'emoji XL ha d'ocupar el buit de la imatge o
+ * el squareBadge». L'emoji del quadrat de la targeta viva: l'emoticona
+ * triada (camp cru `icon`, un sol emoji; mai la 🪶 de reserva de la llista)
+ * quan el document no té imatge (heroImage). Amb imatge, o sense emoticona
+ * triada, '' (cap insígnia). Es mira la referència crua i no la resolta: una
+ * capçalera sdp-media:// que encara es resol no fa parpellejar l'emoji.
+ */
+export function emojiDelQuadrat(document) {
+  const d = document || {};
+  return d.heroImage ? '' : emojiSol(d.icon) || '';
 }

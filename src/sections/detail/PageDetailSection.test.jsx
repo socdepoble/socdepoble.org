@@ -61,6 +61,18 @@ test('T8 · una pàgina amb destí passa el botó Publicar dalt (accioPrincipal)
   }
 });
 
+/* Ordre del Mestre (261007) · «El Xat» (/page/xat) porta dalt el gran botó
+   «Anar al xat» (l'acció de la seua pàgina de sistema, accioDeLaPagina); es
+   decidix amb la funció pura, i la resta de pàgines no en porten. */
+test('261007 · /page/xat passa l’acció «Anar al xat» dalt (accioPrincipal)', () => {
+  visita('xat');
+  expect(m.props.pageKey).toBe('xat');
+  expect(m.props.page.title).toBe('El Xat');
+  expect(m.props.accioPrincipal).not.toBeNull();
+  expect(m.props.accioPrincipal.props).toEqual({ clau: 'xat' });
+  expect(m.props.accioPrincipal.type).not.toBe(PublicarDeLaPagina);
+});
+
 test('T8 · una pàgina sense destí no porta cap acció dalt (null, no un element que pinta null)', () => {
   visita('guia', { pages: [{ id: 'guia', title: 'Guia del poble' }] });
   expect(m.props.accioPrincipal).toBeNull();

@@ -2,7 +2,7 @@
  * datesDeProvaMur.js — les dates de prova del Mur (mode seed).
  *
  * Tasca 5 (ordre del Mestre, 261001): «Per comprovar que l'ordenació temporal
- * funciona», les huit targetes importants del Mur porten dia i hora d'ESTA
+ * funciona», les nou targetes importants del Mur porten dia i hora d'ESTA
  * setmana, i les molt tècniques, una data de fa dues setmanes (entre el 2 i
  * el 15 de setembre de 2026). L'ordre per defecte del Mur (MurSection ·
  * momentDElement, la mateixa data que pinta la pastilla) les deixa així dalt
@@ -42,8 +42,14 @@ const CAMP_DE_DATA = Object.freeze({ pages: 'date', feedPosts: 'created_at', mar
  * què és Sóc de Poble, la samarreta oficial del Mercat i el seu Bloc de notes;
  * després, les lleis, la Wiki, l'anunci d'un veí, el full de ruta i la pàgina
  * legal. [col·lecció, id]
+ *
+ * Publicació d'«El Xat» (decisions del Mestre, 261007): la seua targeta de
+ * sistema porta una data real (PAGE_COPY.xat, 07-10-2026) que, sense data de
+ * prova, la col·locava damunt o enmig de les importants. Entra com la primera,
+ * la més nova: és la publicació més recent. Amb ella en són nou.
  */
 export const IMPORTANTS_DEL_MUR = Object.freeze([
+  ['pages', 'xat'],
   ['pages', 'projecte'],
   ['marketItems', 'samarreta-socdepoble'],
   ['pages', 'notes'],

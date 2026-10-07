@@ -34,6 +34,11 @@
  *                      fitxers (també amb el camí entre cometes i amb espais,
  *                      com l'arrel «Som de Poble»): `force_ask`. L'índex el
  *                      reescriuen les ordres de la porta Olivera o l'eina d'edició;
+ *                    · `run_command` que demana la plantilla d'un prompt
+ *                      (`document.mjs context|create|import --route prompt.local|prompt.consell`,
+ *                      amb les banderes en qualsevol ordre i també per `npm run document`)
+ *                      sense haver observat la taula en esta conversa en els
+ *                      últims 30 minuts: `deny` amb l'acte reflex (261007);
  *                    · la resta: `allow`.
  *    pre-invocation  · si l'Escriptori no passa `checkTaula` (definició única,
  *                      AGENTS §0.1), injecta un missatge efímer curt amb l'ordre
@@ -71,9 +76,15 @@
  *    · Interruptor d'apagada: si existix `.agents/runtime/antigravity-hook.off`,
  *      torna `allow` (o `{}`) sense comprovar ni traçar res. És del Mestre: una
  *      escriptura de MarIA a l'interruptor, a hooks.json o a este fitxer pregunta.
+ *      Des del 261007, també les peces de l'alarma de fatiga (fatiga-hook.mjs,
+ *      termometre_context.mjs, fatiga-hook.off i fatiga-hook.fase0).
  *    · Traça d'una línia per invocació a `.agents/runtime/antigravity-hook.log`
  *      (fora de git per `*.log`): és l'única acreditació que l'IDE executa el hook.
- *      Les injeccions hi deixen el principi del missatge com a motiu.
+ *      Les injeccions hi deixen el principi del missatge com a motiu, i des del
+ *      261007 cada run_command hi deixa l'ordre retallada a 160 caràcters.
+ *    · La memòria de l'acte reflex de convocatòria és
+ *      `.agents/runtime/antigravity-observacions.log` (fora de git per `*.log`):
+ *      una línia per informe de la porta deixat passar, amb la conversa.
  *    · El briefing es recorda a `.agents/runtime/antigravity-briefing.log` (també
  *      fora de git per `*.log`): una línia per conversa i jornada. Si no es pot
  *      escriure, no hi ha briefing: un avís que no es pot recordar es repetiria a
@@ -81,8 +92,8 @@
  *    · stdin només es llig si no és un terminal: executat a mà no es penja (la
  *      lliçó de la porta Olivera antiga, que esperava un EOF que no arribava).
  *
- *  Nucli pur: `preTool` i `preInvocation` reben les portes (i la memòria del
- *  briefing) per paràmetre. Els imports reals (`./porta-olivera.mjs`,
+ *  Nucli pur: `preTool` i `preInvocation` reben les portes (i les memòries del
+ *  briefing i de la convocatòria) per paràmetre. Els imports reals (`./porta-olivera.mjs`,
  *  `./porta-reflex.mjs`, `./porta-plantilla-viva.mjs`) es fan amb `import()` dins
  *  de `main()`, i només quan la decisió els necessita: un `view_file` no paga cap
  *  càrrega, i el nucli es prova amb portes falses.
@@ -124,8 +135,15 @@ const NOM_PER_NOM = /^\d{6}_\d{4}_[a-z0-9]+(?:_[a-z0-9]+)*(?:\.[A-Za-z0-9]+)+$/;
 const ESCRIPTURA = new Set(['write_to_file', 'replace_file_content', 'multi_replace_file_content']);
 const ARGS_CONTINGUT = Object.freeze(['CodeContent', 'ReplacementChunks', 'ReplacementContent', 'TargetContent']);
 
-/* Peces que governen este mateix hook. Tocar-les és decisió del Mestre. */
-const AUTOPROTEGITS = new Set(['.agents/hooks.json', 'tooling/gates/antigravity-hook.mjs', INTERRUPTOR]);
+/* Peces que governen este mateix hook. Tocar-les és decisió del Mestre.
+   Ordre del Mestre (261007): també les de l'alarma de fatiga (hook «sdp-fatiga»),
+   el seu termòmetre i els seus dos interruptors. Abans, un `touch` de
+   `fatiga-hook.off` o `.fase0` per run_command apagava o silenciava l'alarma
+   sense preguntar (LLEGIU_PRIMER del laboratori 261002_1510, §5). */
+const INTERRUPTORS_FATIGA = Object.freeze(['.agents/runtime/fatiga-hook.off', '.agents/runtime/fatiga-hook.fase0']);
+const AUTOPROTEGITS = new Set(['.agents/hooks.json', 'tooling/gates/antigravity-hook.mjs', INTERRUPTOR,
+  'tooling/gates/fatiga-hook.mjs', 'tooling/brain/termometre_context.mjs', ...INTERRUPTORS_FATIGA]);
+const NOMENA_INTERRUPTOR = /antigravity-hook\.off|fatiga-hook\.(?:off|fase0)/;
 
 const ALLOW = Object.freeze({ decision: 'allow' });
 const ask = (reason) => ({ decision: 'ask', reason });
@@ -135,6 +153,30 @@ const MAX_ERRORS = 12;
 const VIA_OLIVERA = 'node tooling/gates/porta-olivera.mjs';
 const MOTIU_MV = `Trasllat a mà dins de l'Escriptori: deixa àncores fantasma a l'índex i no avisa cap rebut. Via canònica (AGENTS §0.1): ${VIA_OLIVERA} --arxiva [--nom aammdd_hhmm_categoria_titol.md] [--sec].`;
 const MOTIU_ARXIU = "Esborrat o trasllat dins de 90_arxiu_historic: el que ja no val es trasllada i mai s'esborra (AGENTS §5). Necessita l'ordre del Mestre.";
+
+/* Acte reflex de convocatòria. Ordre del Mestre (261007): «no sóc capaç de netejar
+   l'escriptori de forma autònoma com a acte reflex». La porta és verda per
+   construcció (`document.mjs create` declara viu cada document que naix) i el
+   briefing ix una vegada per conversa i jornada: res no saltava en el moment de
+   convocar. Ara, quan MarIA demana la plantilla d'un prompt (`document.mjs context`,
+   `create` o `import` amb la ruta prompt.local o prompt.consell), la taula s'ha d'haver observat en esta
+   conversa en els últims 30 minuts; si no, `deny` amb el motiu, que sí que arriba al
+   model. La memòria és una línia per informe vist (fora de git per `*.log`). El
+   nucli continua pur: sense `observada`, no hi ha cap deny. */
+const OBSERVACIONS = '.agents/runtime/antigravity-observacions.log';
+const FINESTRA_OBSERVACIO_MS = 30 * 60 * 1000;
+const PORTA_OLIVERA = 'tooling/gates/porta-olivera.mjs';
+/* Revisió adversarial R1 (261007): la convocatòria es llig per l'argv de cada tram,
+   no per un prefix de text. La CLI admet les banderes abans del subcomandament
+   (cli.mjs), `create` i `import` entreguen el context pel seu compte i
+   `npm run document` és la mateixa CLI. Un `echo` o un `git commit -m` que només la
+   citen no convoquen. Una ruta o un subcomandament amb expansió compten com a
+   convocatòria: el deny es recupera amb l'informe. */
+const RUTA_CONVOCA = /^prompt\.(?:local|consell)$/;
+const SUBORDRES_CONVOCA = new Set(['context', 'create', 'import']);
+const ASSIGNACIO = /^[A-Za-z_][A-Za-z0-9_]*=/;
+const SHELLS = new Set(['sh', 'bash', 'zsh']);
+const MOTIU_CONVOCATORIA = `Acte reflex de convocatòria (AGENTS §0 i §0.1; core-higiene-escriptori, pas 0): en esta conversa no s'ha observat la taula en els últims ${FINESTRA_OBSERVACIO_MS / 60000} minuts. Abans de demanar la plantilla d'un prompt: (1) observa amb ${VIA_OLIVERA} --informe, sense res més a l'ordre; (2) decidix cada «🌿 Declarat viu»: si encara el necessita algú, es queda i dius qui i per a què; si no, ${VIA_OLIVERA} --arxiva --sec --nom NOM i, si la simulació quadra, sense --sec; (3) informa el Mestre en una línia; (4) torna a demanar el context. Si després de l'informe este avís torna a eixir, pregunta al Mestre: ni mv, ni rm, ni scripts sobre l'índex.`;
 
 /* Guarda de l'índex. L'índex de l'Escriptori el reescriuen les ordres de la porta
    Olivera (la CLI ja admesa més amunt) o l'eina d'edició. Una ordre que el nomena
@@ -229,6 +271,85 @@ function redirectionWords(command) {
 }
 const redirectionTargets=command=>redirectionWords(command).map(shellLiteral).filter(Boolean);
 
+/* ── Acte reflex de convocatòria: lectura per argv (R1, 261007) ──────────── */
+
+/**
+ * Trams d'una ordre de shell, partits pels operadors de control fora de cometes
+ * (`;`, `&`, `|`, salt de línia, parèntesis i accent greu). Un `$(…)` o un
+ * `` `…` `` deixen la seua ordre en un tram propi.
+ */
+function tramsDe(ordre) {
+  const trams = [];
+  let tram = '';
+  let quote = null;
+  for (let i = 0; i < ordre.length; i++) {
+    const c = ordre[i];
+    if (c === '\\' && quote !== "'" && i + 1 < ordre.length) { tram += c + ordre[++i]; continue; }
+    if (quote) { if (c === quote) quote = null; tram += c; continue; }
+    if (c === "'" || c === '"') { quote = c; tram += c; continue; }
+    if (/[;&|\n()`]/.test(c)) { trams.push(tram); tram = ''; continue; }
+    tram += c;
+  }
+  trams.push(tram);
+  return trams;
+}
+
+/**
+ * Opcions llegides exactament com `options()` de tooling/documental/cli.mjs. Una
+ * paraula amb expansió arriba com a null: no és cap bandera, i com a valor d'una
+ * bandera es pren sencera, perquè no se'n pot saber el text.
+ */
+function opcionsCli(args) {
+  const o = { _: [] };
+  for (let i = 0; i < args.length; i++) {
+    const a = args[i];
+    if (typeof a !== 'string' || !a.startsWith('--')) { o._.push(a); continue; }
+    const [clau, ...valor] = a.slice(2).split('=');
+    const seguent = args[i + 1];
+    o[clau] = valor.length ? valor.join('=')
+      : seguent === null || (seguent && !seguent.startsWith('--')) ? args[++i] : true;
+  }
+  return o;
+}
+
+/**
+ * Un tram convoca si executa la CLI documental (`node … document.mjs` o
+ * `npm run document [--]`, amb assignacions `VAR=` davant, també dins de
+ * `sh|bash|zsh -c` fins a dos nivells) amb el subcomandament context, create o
+ * import i la ruta prompt.local o prompt.consell.
+ */
+function tramConvoca(paraules, profunditat) {
+  let i = 0;
+  while (i < paraules.length && typeof paraules[i] === 'string' && ASSIGNACIO.test(paraules[i])) i++;
+  const w = paraules.slice(i);
+  const exe = typeof w[0] === 'string' ? path.posix.basename(w[0]) : null;
+  let args = null;
+  if (exe === 'npm' && (w[1] === 'run' || w[1] === 'run-script') && w[2] === 'document') {
+    args = w.slice(3);
+    const tall = args.indexOf('--');
+    if (tall >= 0) args.splice(tall, 1);
+  } else if (exe === 'node') {
+    const k = w.findIndex((x, j) => j > 0 && typeof x === 'string' && path.posix.basename(x) === 'document.mjs');
+    if (k > 0) args = w.slice(k + 1);
+  } else if (SHELLS.has(exe) && profunditat < 2) {
+    const c = w.findIndex((x, j) => j > 0 && typeof x === 'string' && /^-[a-zA-Z]*c[a-zA-Z]*$/.test(x));
+    return c > 0 && typeof w[c + 1] === 'string' && esConvocatoria(w[c + 1], profunditat + 1);
+  }
+  if (!args) return false;
+  const o = opcionsCli(args);
+  const sub = o._[0];
+  return (sub === null || SUBORDRES_CONVOCA.has(sub))
+    && (o.route === null || (typeof o.route === 'string' && RUTA_CONVOCA.test(o.route)));
+}
+
+/** L'ordre demana la plantilla d'un prompt en algun dels seus trams? */
+function esConvocatoria(ordre, profunditat = 0) {
+  return tramsDe(ordre).some((tram) => {
+    const paraules = [...tram.matchAll(PARAULA_SHELL)].map((m) => shellLiteral(m[0]));
+    return paraules.length > 0 && tramConvoca(paraules, profunditat);
+  });
+}
+
 /** Destins de les redireccions d'una ordre que cauen al primer nivell de l'Escriptori. */
 export function redireccionsAlTaulell(ordre, root, cwd = root) {
   const out = [];
@@ -268,20 +389,40 @@ function scriptSobreIndex(ordre, root, cwd) {
 
 /* ── Nucli pur ────────────────────────────────────────────────────────────── */
 
-function preShell(args, root) {
-  const ordre = typeof args.CommandLine === 'string' ? args.CommandLine : typeof args.Command === 'string' ? args.Command : null;
+const ordreDe = (args) => (typeof args.CommandLine === 'string' ? args.CommandLine : typeof args.Command === 'string' ? args.Command : null);
+const cwdDe = (args, root) => (typeof args.Cwd === 'string' && args.Cwd ? path.resolve(root, args.Cwd) : root);
+
+/**
+ * L'ordre és l'informe de la porta Olivera, dit literalment: `node <porta> [--informe]`
+ * (el camí de la porta, relatiu o absolut, resol a l'arrel) o `npm run porta:olivera`.
+ * Una ordre composta no compta: el motiu del deny dona l'ordre exacta.
+ */
+function esInforme(ordre, root, cwd = root) {
+  let argv;
+  try { argv = documentArgv(ordre); } catch { return false; }
+  if (argv.length === 3 && argv[0] === 'npm' && argv[1] === 'run' && argv[2] === 'porta:olivera') return true;
+  return argv[0] === 'node' && relatiu(root, argv[1], cwd) === PORTA_OLIVERA
+    && (argv.length === 2 || (argv.length === 3 && argv[2] === '--informe'));
+}
+
+function preShell(args, root, { conversa = null, observada = null } = {}) {
+  const ordre = ordreDe(args);
   if (ordre === null) return ask('Hook Olivera: run_command sense CommandLine; cap comprovació feta.');
   if (typeof args.CommandLine === 'string' && typeof args.Command === 'string' && args.CommandLine !== args.Command) {
     return forceAsk('Hook Olivera: CommandLine i Command divergents; cap ordre privilegiada acreditada.');
   }
-  if (ordre.includes('antigravity-hook.off')) {
-    return forceAsk(`L'interruptor ${INTERRUPTOR} és del Mestre: apagar el hook necessita el seu permís.`);
+  if (NOMENA_INTERRUPTOR.test(ordre)) {
+    return forceAsk(`Els interruptors ${INTERRUPTOR}, ${INTERRUPTORS_FATIGA.join(' i ')} són del Mestre: apagar o silenciar un hook (Olivera o fatiga) necessita el seu permís.`);
   }
-  const cwd = typeof args.Cwd === 'string' && args.Cwd ? path.resolve(root, args.Cwd) : root;
+  const cwd = cwdDe(args, root);
   const cwdRel = (relatiu(root, cwd) ?? '').toLowerCase();
   // Les lectures elementals ja aprovades no es convertixen en preguntes perquè
   // el patró cercat diga «rm» o esmente una ruta governada.
   if (knownPureRead({tool_name:'run_command',tool_input:{command:ordre}},root)) return ALLOW;
+  // Acte reflex de convocatòria (261007): abans de cap via documental admesa.
+  if (typeof observada === 'function' && esConvocatoria(ordre) && !observada(conversa)) {
+    return { decision: 'deny', reason: MOTIU_CONVOCATORIA };
+  }
   // Un argument literal d'una CLI governada pot citar «rm .» com a text.
   // L'argv no admet composició ni expansió; l'autoritat continua a l'executor/CLI.
   try {
@@ -346,7 +487,7 @@ function preEscriptura(args, { root, portes }) {
   const rel = relatiu(root, cami);
   if (rel === null) return ALLOW; // fora del repositori: artefactes propis de l'IDE (~/.gemini/…)
   if (zonaHumana(rel)) return forceAsk(`${rel} és a la zona humana (01_produccio): només amb ordre directa i explícita del Mestre (AGENTS §12).`);
-  if (AUTOPROTEGITS.has(rel)) return forceAsk(`${rel} governa el hook d'Antigravity: canviar-lo és decisió del Mestre.`);
+  if (AUTOPROTEGITS.has(rel)) return forceAsk(`${rel} governa els hooks d'Antigravity (Olivera o fatiga): canviar-lo és decisió del Mestre.`);
   if (governat(rel)) return forceAsk(`${rel} és governança: usa executor-mutacio.mjs amb pla exacte i lease; l’eina directa no acredita autoritat.`);
   // Una àlies en src pot apuntar a governança o eixir de l'arrel. Reusa la
   // mateixa resolució física i defensa de hardlinks que la política de mutació.
@@ -372,18 +513,23 @@ function preEscriptura(args, { root, portes }) {
 
   const fitxer = op.fitxer;
   const errors = [];
-  if (portes.esPetorreta(fitxer)) errors.push(...portes.olivera(op.contingut));
+  // La petorreta viatja amb el seu nom: el pla de la seua jornada val (261007, defecte de mitjanit).
+  if (portes.esPetorreta(fitxer)) errors.push(...portes.olivera(op.contingut, fitxer));
   errors.push(...portes.plantilla(fitxer, op.contingut).map((e) => `[Plantilla viva] ${e}`));
   return errors.length ? { decision: 'deny', reason: motiuDeny(fitxer, errors) } : ALLOW;
 }
 
-/** PreToolUse. `portes` només cal quan `calenPortes` ho diu; si falta, llança i el cridador pregunta. */
-export function preTool(payload, { root, portes = null } = {}) {
+/**
+ * PreToolUse. `portes` només cal quan `calenPortes` ho diu; si falta, llança i el cridador pregunta.
+ * `observada(conversa)` diu si la taula s'ha observat en esta conversa dins de la
+ * finestra; sense ella no hi ha acte reflex de convocatòria (nucli pur).
+ */
+export function preTool(payload, { root, portes = null, observada = null } = {}) {
   const crida = payload?.toolCall;
   const nom = crida?.name;
   if (typeof nom !== 'string' || !nom) return ask('Hook Olivera: payload sense toolCall.name; cap comprovació feta.');
   const args = argsDe(crida);
-  if (nom === 'run_command') return preShell(args, root);
+  if (nom === 'run_command') return preShell(args, root, { conversa: clauConversa(payload), observada });
   if (!esEscriptura(nom, args)) return ALLOW;
   return preEscriptura(args, { root, portes });
 }
@@ -428,10 +574,14 @@ function missatgeBriefing({ dia = '', documents = [], artefactes = 0, artefactes
   return `${MARCA_BRIEFING} · AGENTS §0.1 · primera crida de la conversa] La porta Olivera és verda, però verd no vol dir consumit: ${que}.${limit} Una declaració de viu no caduca sola. Decidix-los abans de la primera tasca: si encara el necessita algú (core-higiene-escriptori, pas 0), es queda declarat i ho dius al Mestre (qui i per a què); ${via}. Si la porta no et deixa fer el gest, pregunta al Mestre: ni mv, ni rm, ni scripts sobre l'índex. Informa el Mestre en una línia.`;
 }
 
+/** Conversa del payload, o «sense-conversa»: la clau de les memòries del hook. */
+function clauConversa(payload) {
+  return typeof payload?.conversationId === 'string' && payload.conversationId ? payload.conversationId : 'sense-conversa';
+}
+
 /** Clau de la memòria del briefing: una per conversa i jornada. */
 function clauBriefing(payload, dia) {
-  const conversa = typeof payload?.conversationId === 'string' && payload.conversationId ? payload.conversationId : 'sense-conversa';
-  return `${conversa}:${dia}`;
+  return `${clauConversa(payload)}:${dia}`;
 }
 
 /**
@@ -525,7 +675,7 @@ async function carregaPortes(tipus, root) {
     esPetorreta: (rel) => olivera.esPetorreta(rel),
     vigilat: (nom) => viva.vigilat(nom),
     operacio: (payload) => reflex.normalitza(payload, root),
-    olivera: (contingut) => olivera.checkOlivera(root, { contingut }).errors,
+    olivera: (contingut, fitxer) => olivera.checkOlivera(root, { contingut, fitxer }).errors,
     plantilla: (rel, contingut) => viva.inspeccionaText(root, rel, contingut).errors,
   };
 }
@@ -545,6 +695,40 @@ function primeraDeLaJornada(root, clau) {
   } catch {
     return false;
   }
+}
+
+/**
+ * Memòria de l'acte reflex de convocatòria: una línia per informe de la porta que
+ * el hook ha deixat passar, amb la conversa. Si no es pot escriure, la convocatòria
+ * tornarà a demanar l'informe, i el motiu del deny diu que cal preguntar al Mestre.
+ */
+function anotaObservacio(root, payload) {
+  if (payload?.toolCall?.name !== 'run_command') return;
+  const args = argsDe(payload.toolCall);
+  const ordre = ordreDe(args);
+  if (ordre === null || !esInforme(ordre, root, cwdDe(args, root))) return;
+  try {
+    const fitxer = path.join(root, OBSERVACIONS);
+    fs.mkdirSync(path.dirname(fitxer), { recursive: true });
+    fs.appendFileSync(fitxer, `${JSON.stringify({ t: new Date().toISOString(), conv: clauConversa(payload) })}\n`);
+  } catch { /* sense memòria, la convocatòria tornarà a demanar l'informe */ }
+}
+
+/**
+ * S'ha observat la taula en esta conversa dins de la finestra? Una memòria absent
+ * vol dir que no; una memòria il·legible (no absent) no bloqueja mai.
+ */
+function observadaRecent(root, conversa, ara = Date.now()) {
+  let text;
+  try { text = fs.readFileSync(path.join(root, OBSERVACIONS), 'utf8'); }
+  catch (e) { return e?.code !== 'ENOENT'; }
+  return text.split('\n').some((linia) => {
+    try {
+      const o = JSON.parse(linia);
+      const t = Date.parse(o?.t);
+      return o?.conv === conversa && Number.isFinite(t) && t <= ara && ara - t < FINESTRA_OBSERVACIO_MS;
+    } catch { return false; }
+  });
 }
 
 function llegeixPayload() {
@@ -578,17 +762,27 @@ async function main(argv) {
     if (mode === 'pre-tool' && error) throw new Error(error);
     const tipus = calenPortes(mode, payload, root);
     const portes = tipus ? await carregaPortes(tipus, root) : null;
-    eixida = decidix(mode, payload, { root, portes, primera: (clau) => primeraDeLaJornada(root, clau) });
+    eixida = decidix(mode, payload, {
+      root, portes,
+      primera: (clau) => primeraDeLaJornada(root, clau),
+      observada: (conversa) => observadaRecent(root, conversa),
+    });
+    // Només un informe que el hook ha deixat passar compta com a taula observada.
+    if (mode === 'pre-tool' && eixida?.decision === 'allow') anotaObservacio(root, payload);
   } catch (e) {
     eixida = perError(mode, e);
   }
 
   const args = argsDe(payload?.toolCall);
   const missatge = eixida.injectSteps?.[0]?.ephemeralMessage;
+  const ordre = ordreDe(args);
   traca(root, {
     mode: mode ?? null,
     eina: payload?.toolCall?.name ?? null,
     fitxer: relatiu(root, args.TargetFile) ?? (args.TargetFile ? 'fora del repositori' : null),
+    // Ordre del Mestre (261007): l'ordre retallada, perquè la traça puga contrastar
+    // una acta sense llegir la transcripció privada de l'IDE.
+    ...(ordre !== null ? { ordre: retalla(ordre, 160) } : {}),
     decisio: decisioDeTraca(eixida),
     ...(eixida.reason ? { motiu: retalla(eixida.reason, 200) } : typeof missatge === 'string' ? { motiu: retalla(missatge, 200) } : {}),
   });

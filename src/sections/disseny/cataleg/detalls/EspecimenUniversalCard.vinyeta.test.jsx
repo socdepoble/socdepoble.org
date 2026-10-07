@@ -52,7 +52,13 @@ test('dues targetes de doble acció estàndard: boina de socdepoble, contingut d
     '/projecte', '/notes', '/page/publicar_mur'
   ]);
   expect(within(mapa).getByRole('button', { name: 'Publicar al Mapa (en obres)' }).getAttribute('aria-disabled')).toBe('true');
-  expect(mapa.querySelector('.sp-card-calendar-badge svg.lucide-map-pin')).not.toBeNull();
+  /* Ordre del Mestre (261007) · L'emoji XL al quadrat, en lloc de la icona
+     lineal: decoratiu, i el nom el porta l'etiqueta del quadrat. */
+  const emoji = mapa.querySelector('.sp-card-calendar-badge .sp-card-calendar-badge__emoji');
+  expect(emoji.textContent).toBe('🗺️');
+  expect(emoji.getAttribute('aria-hidden')).toBe('true');
+  expect(mapa.querySelector('.sp-card-calendar-badge svg')).toBeNull();
+  expect(mapa.querySelector('.sp-card-calendar-badge').getAttribute('aria-label')).toBe('Publicar al Mapa');
   /* P6 (directriu 2325) · Cap etiqueta («en obres» ho diu la porta) i el peu
      blau de sempre, sense Connectar, al final de cada mostra. */
   for (const targeta of targetes) {
@@ -75,7 +81,15 @@ test('les mostres del Mercat porten el preu al quadrat, també el llarg, i el co
   const quadrat = (titol) => [...arrel.querySelectorAll('article.sp-card')]
     .find((targeta) => targeta.querySelector('.sp-card-title')?.textContent === titol)
     .querySelector('.sp-card-calendar-badge [data-mida]');
-  expect([quadrat('Samarreta Sóc de Poble').textContent, quadrat('Samarreta Sóc de Poble').dataset.mida]).toEqual(['15 €', 'mitjana']);
+  /* Revisió del 261007 (M3-12) · La Samarreta és la de la llavor
+     (MARKET_ITEMS), pel camí de la llista del Mercat: el seu preu de veres
+     («15.00€», sis caràcters) i, de foto principal, la xica, com a la seua
+     pàgina. Abans, una mostra inventada amb «15 €» i una foto vella. */
+  expect([quadrat('Samarreta Sóc de Poble').textContent, quadrat('Samarreta Sóc de Poble').dataset.mida]).toEqual(['15.00€', 'menuda']);
+  const samarreta = [...arrel.querySelectorAll('article.sp-card')]
+    .find((targeta) => targeta.querySelector('.sp-card-title')?.textContent === 'Samarreta Sóc de Poble');
+  expect(samarreta.querySelector('img.sp-card-media').getAttribute('src'))
+    .toBe('/assets/uploads/empresa/soc-de-poble/mercat/samarreta-soc-de-poble/01-chica-jersey.png');
   expect([quadrat('Motocultor de segona mà').textContent, quadrat('Motocultor de segona mà').dataset.mida]).toEqual(['1.250,00 €', 'minima']);
   const props = [...arrel.querySelectorAll('table tbody tr td:first-child code')].map((c) => c.textContent);
   expect(props).toContain('price');

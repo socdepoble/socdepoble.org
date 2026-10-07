@@ -147,6 +147,56 @@ test('D5 · `actual` arriba a la targeta: el botó principal porta aria-current=
   expect(aside.container.querySelectorAll('[aria-current]')).toHaveLength(0);
 });
 
+/* Ordre del Mestre (261007) · «Aplica a TargetaViva.jsx (quan actua com a ítem
+   de llista)»: sense imatge i amb una emoticona triada, l'emoji XL ocupa el
+   quadrat de la fitxa de la llista (la que porta `actual`), amb la insígnia del
+   catàleg (insigniaEmojiXL). Amb imatge o sense emoticona, cap insígnia. */
+const quadratDe = (arrel) => arrel.querySelector('.sp-card-body > .sp-card-calendar-badge');
+const FITXA_DE_LLISTA = Object.freeze({ onMainClick: () => {}, actual: true });
+
+test('261007 · a la fitxa de la llista, sense imatge, l’emoticona triada va al quadrat en XL; amb imatge o sense emoticona, cap insígnia', () => {
+  const { container, unmount } = render(<TargetaViva document={{ ...DOC, icon: '🍅' }} autor={AUTOR} {...FITXA_DE_LLISTA} />);
+  const emoji = quadratDe(container).querySelector('.sp-card-calendar-badge__emoji');
+  expect([emoji.textContent, emoji.getAttribute('aria-hidden')]).toEqual(['🍅', 'true']);
+  /* Revisió del 261007 (M2-08) · El títol ja el diu la targeta: el quadrat
+     és decoratiu (amagat, sense nom que el repetisca). */
+  expect(quadratDe(container).getAttribute('aria-hidden')).toBe('true');
+  expect(quadratDe(container).hasAttribute('aria-label')).toBe(false);
+  expect(container.querySelector('.sp-card-body').classList.contains('has-aside')).toBe(true);
+  unmount();
+  const ambImatge = render(<TargetaViva document={{ ...DOC, icon: '🍅', heroImage: '/assets/system/ui/capcalera.webp' }} autor={AUTOR} {...FITXA_DE_LLISTA} />);
+  expect(ambImatge.container.querySelector('img.sp-card-media')).not.toBeNull();
+  expect(quadratDe(ambImatge.container)).toBeNull();
+  ambImatge.unmount();
+  const senseEmoticona = render(<TargetaViva document={DOC} autor={AUTOR} {...FITXA_DE_LLISTA} />);
+  expect(quadratDe(senseEmoticona.container)).toBeNull();
+  expect(senseEmoticona.container.querySelector('.sp-card-body').classList.contains('has-aside')).toBe(false);
+});
+
+/* Llei del Píxel · L'aside de l'editor (sense `actual`) i el diàleg del xip
+   «Vista targeta» no són ítems de llista: es queden sense quadrat, com abans,
+   i l'emoticona continua al centre de la caputxa (Pedra Seca §10). */
+test('261007 · l’aside i el xip «Vista targeta» no porten l’emoji XL al quadrat; l’emoticona continua a la caputxa', () => {
+  const aside = render(<TargetaViva document={{ ...DOC, icon: '🍅' }} autor={AUTOR} />);
+  expect(quadratDe(aside.container)).toBeNull();
+  expect(aside.container.querySelector('.sp-card-body').classList.contains('has-aside')).toBe(false);
+  expect(aside.container.querySelector('.sp-card .sdp-emoticona-barra').textContent).toBe('🍅');
+  aside.unmount();
+  render(<BotoTargetaViva document={{ ...DOC, icon: '🍅' }} autor={AUTOR} etiquetes={[]} />);
+  act(() => { fireEvent.click(screen.getByRole('button', { name: 'Vista targeta' })); });
+  const vista = screen.getByRole('dialog', { name: 'Vista targeta' });
+  expect(vista.querySelector('.sp-card')).not.toBeNull();
+  expect(quadratDe(vista)).toBeNull();
+  expect(vista.querySelector('.sp-card .sdp-emoticona-barra').textContent).toBe('🍅');
+});
+
+test('261007 · una capçalera sdp-media:// que encara es resol no fa aparéixer l’emoji del quadrat a la fitxa de la llista', () => {
+  mocks.resol.mockImplementation(() => new Promise(() => {}));
+  const { container } = render(<TargetaViva document={{ ...DOC, icon: '🍅', heroImage: 'sdp-media://mitjans/capcalera.webp' }} autor={AUTOR} {...FITXA_DE_LLISTA} />);
+  expect(container.querySelector('img.sp-card-media')).toBeNull();
+  expect(container.querySelector('.sp-card-calendar-badge')).toBeNull();
+});
+
 /* ── documentViu: el magatzem per id i els dos hooks ───────────────────── */
 test('documentViu · publicar avisa qui escolta la clau; retirar només esborra la pròpia entrada', () => {
   const oient = vi.fn();

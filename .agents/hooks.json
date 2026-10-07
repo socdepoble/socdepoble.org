@@ -19,5 +19,14 @@
         ]
       }
     ]
+  },
+  "sdp-fatiga": {
+    "PreInvocation": [
+      {
+        "type": "command",
+        "command": "cd .. && node tooling/gates/fatiga-hook.mjs",
+        "timeout": 5
+      }
+    ]
   }
 }

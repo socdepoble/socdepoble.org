@@ -831,10 +831,11 @@ Implementació humana autoritzada A1/A2/CI/T4/T5; pla2230 estable i informe26100
 Es conserva literalment TOT el fitxer anterior, inclosos HASH històrics. SHA256 dels bytes abans d’esta entrada: 4363f8450cd2921f246b66caa3c47622a3cac277c8e90528fe409e52c689ef16. Footer final anterior observat: 68ba24ea589d7eff783af6319b208cd2ad0b908a7070e46b6c89485a2bf5c59c; el verificador oficial no el reconeixia com a signatura final. El HASHnou acredita exclusivament la integritat dels bytes actuals i esta entrada; no acredita retrospectivament autoria, aprovació ni veracitat de les entrades històriques. Aplicació amb Reflexopen/seal, CAS i executor; no s’inventa WebAuthn. Bateriaglobal, portes i remesuraLighthouse encara pendents; Claude05 reté F2/F4. Sense canvis remots, paquet, commit o desplegament.
 
 
-<!-- HASH: c6eb528cbc0e44e9b6f9217e28df2426eeaee2fc37bfc5cdb1511a6d776e4421 -->261006 | auditoria | claude | 0300: T1-T6 del prompt 0224; Model B decidit i ADR-2026-09 signada; quatre paquets de laboratori; Wiki i barra mòbil verdes
+261006 | auditoria | claude | 0300: T1-T6 del prompt 0224; Model B decidit i ADR-2026-09 signada; quatre paquets de laboratori; Wiki i barra mòbil verdes
 261006 | decisió | mestre | Model B = ADR + port neutral; ADR-2026-09 signada; Maquinària de la IAIA i Telefonades fora de la barra mòbil
 261006 | incidència | core-higiene-escriptori | porta verda amb vius de la marató; neteja per mv massiu i scripts sobre l'índex
 261006 | incidència | seguretat | .env bolcat als transcripts d'Antigravity (ac48a44b i 62fa5929); revisar i rotar claus
+261007 | correcció | sdp-workflow | ordre explícita sencera; abans de crear res, integrar-ho en la maquinària existent
+261007 | correcció | sdp-universal-page | pàgina nova = SYSTEM_PAGES + PAGE_COPY + UniversalPage, cap component a mida
 
-
-<!-- HASH: c9f496d0cb0fcf77b2fe30bab510b7a7a1c625de0a9d1f110e49be2c420d1b4b -->
+<!-- HASH: ed6938b2b7128f7b14bb8f499b6033fa064cd30377b3f5f3954d8e423ba84060 -->

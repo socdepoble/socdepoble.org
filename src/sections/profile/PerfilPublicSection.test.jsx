@@ -1,5 +1,5 @@
 import React from 'react';
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
 /* T4 · la pàgina pública d'una persona, una entitat o la IAIA. */
@@ -28,7 +28,7 @@ vi.mock('../../hooks/useSEO', () => ({ useSEO: (opcions) => mocks.seo(opcions) }
 vi.mock('../../data/backendPort.js', () => ({ teCapacitat: () => mocks.capacitat, loadPerfilPublic: mocks.load }));
 vi.mock('../../host.js', () => ({ quanLlest: async () => {} }));
 import PerfilPublicSection from './PerfilPublicSection.jsx';
-import { AVIS_SENSE_XAT } from '../../components/PedraSeca/hooks/useAccions.js';
+import { TEXTOS_COMENTAR } from '../../components/PedraSeca/organismes/textosComentar.js';
 import { oblidaEntitatDelProjecte, RUTA_PROJECTE, rutaDAutoria } from '../../config/navigation.js';
 import { AGENTS_MAP } from '../../data/agentsSeed.js';
 
@@ -140,30 +140,53 @@ test('T43 · CONNECTAR d’una entitat afig organitzacio=ID per al lent d’admi
 /* ── T63.2 (doctrina del Mestre, 260928) · Comentar de la barra blava ──
    Persona i IA: el missatge directe de sempre. Entitat i grup: el xat comú
    de la seua pàgina (la Comunitat, que tria XatContext). «Escriu-li al xat»
-   continua sent el directe per a tothom. */
+   continua sent el directe per a tothom.
+   Ordre del Mestre (261007) · «COMENTARIS = XAT» · Comentar obri el menú de
+   dues vies: «En públic», el xat comú de l'entitat o del grup; «En privat»,
+   el xat amb Sóc de Poble (sense proveïdor, el de la llavor). Una persona o
+   la IAIA no tenen xat públic: «En públic» es queda desactivada. PREGUNTA
+   OBERTA al Mestre: per a una persona o la IAIA, «En privat» ha de ser el
+   directe amb ella (abans, /xat?amb=iaia o /xat?amb=u-1) en lloc de Sóc de
+   Poble? «Escriu-li al xat» continua portant al directe. */
 const comentarBarra = (container) => container.querySelector('header.bar-blue .sp-card-actions').children[1];
+const PUBLIC = TEXTOS_COMENTAR.public[1];
+const PRIVAT = TEXTOS_COMENTAR.privat[1];
+const XAT_DE_SOCDEPOBLE = '/xat?amb=socdepoble';
+/* Obri el menú de Comentar de la barra (si no ho està) i en torna la fila de la via. */
+function via(container, nom) {
+  const boto = comentarBarra(container);
+  expect(boto.getAttribute('aria-label')).toBe('Comentar');
+  expect(boto.getAttribute('aria-haspopup')).toBe('menu');
+  if (boto.getAttribute('aria-expanded') !== 'true') fireEvent.click(boto);
+  return within(container.querySelector('header.bar-blue [role="menu"]')).getByRole('menuitem', { name: nom });
+}
 
-test('T63.2 · Comentar la IAIA (o una persona) és el missatge directe', async () => {
+test('T63.2 · la IAIA (o una persona) no té xat públic: «En públic» desactivada; «En privat», Sóc de Poble', async () => {
   const { container } = render(<PerfilPublicSection agents={mocks.agents} />);
   await screen.findByRole('heading', { level: 1, name: 'IAIA MarIA' });
-  expect(comentarBarra(container).getAttribute('aria-label')).toBe('Comentar per missatge directe');
-  fireEvent.click(comentarBarra(container));
-  expect(mocks.navigate).toHaveBeenLastCalledWith('/xat?amb=iaia');
+  const publica = via(container, PUBLIC);
+  expect(publica.getAttribute('aria-disabled')).toBe('true');
+  fireEvent.click(publica);
+  expect(mocks.navigate).not.toHaveBeenCalled();
+  fireEvent.click(via(container, PRIVAT));
+  expect(mocks.navigate.mock.calls).toEqual([[XAT_DE_SOCDEPOBLE]]);
   cleanup();
+  mocks.navigate.mockClear();
   mocks.load.mockResolvedValue({ ...IAIA, tipus: 'persona', id: 'u-1', nom: 'Pepa', esIA: false });
   const persona = render(<PerfilPublicSection agents={mocks.agents} />);
   await screen.findByRole('heading', { level: 1, name: 'Pepa' });
-  fireEvent.click(comentarBarra(persona.container));
-  expect(mocks.navigate).toHaveBeenLastCalledWith('/xat?amb=u-1');
+  expect(via(persona.container, PUBLIC).getAttribute('aria-disabled')).toBe('true');
+  fireEvent.click(via(persona.container, PRIVAT));
+  expect(mocks.navigate.mock.calls).toEqual([[XAT_DE_SOCDEPOBLE]]);
+  expect(mocks.toast).not.toHaveBeenCalled();
 });
 
-test('T63.2 · Comentar una entitat obri el xat comú de la seua pàgina; «Escriu-li al xat» continua sent el directe', async () => {
+test('T63.2 · «En públic» d’una entitat obri el xat comú de la seua pàgina; «Escriu-li al xat» continua sent el directe', async () => {
   mocks.id = 'socdepoble';
   mocks.load.mockResolvedValue(ENTITAT);
   const { container } = render(<PerfilPublicSection agents={mocks.agents} />);
   await screen.findByRole('heading', { level: 1, name: 'Sóc de Poble' });
-  expect(comentarBarra(container).getAttribute('aria-label')).toBe('Comentar al xat comú');
-  fireEvent.click(comentarBarra(container));
+  fireEvent.click(via(container, PUBLIC));
   expect(destiDe(mocks.navigate.mock.calls.at(-1)[0])).toEqual({
     ruta: '/xat', params: { sobre: 'entitat:socdepoble', titol: 'Sóc de Poble', ruta: '/empresa/socdepoble' }
   });
@@ -171,35 +194,40 @@ test('T63.2 · Comentar una entitat obri el xat comú de la seua pàgina; «Escr
   expect(mocks.navigate).toHaveBeenLastCalledWith('/xat?amb=socdepoble');
 });
 
-test('T63.2 · un grup també té xat comú', async () => {
+test('T63.2 · un grup també té xat comú («En públic»)', async () => {
   mocks.id = 'colla';
   mocks.load.mockResolvedValue({ ...ENTITAT, tipus: 'grup', id: 'g-1', nom: 'Colla', propietari: false });
   const { container } = render(<PerfilPublicSection agents={mocks.agents} />);
   await screen.findByRole('heading', { level: 1, name: 'Colla' });
-  fireEvent.click(comentarBarra(container));
+  fireEvent.click(via(container, PUBLIC));
   expect(destiDe(mocks.navigate.mock.calls.at(-1)[0]).params.sobre).toBe('grup:g-1');
 });
 
 /* Revisió de T63.2 · Mentre carrega o si no el troba, encara no sabem qui és:
    ni el directe (l'id pot ser un slug) ni un xat comú de la ruta /gent/<id>.
-   Comentar es queda on era i el clic ho diu. */
-test('T63.2 · carregant o «Perfil no trobat»: Comentar no promet cap xat i el clic avisa, sense navegar', async () => {
+   Comentar es queda on era.
+   Ordre del Mestre (261007) · «En públic» es queda desactivada, amb la raó,
+   i el clic no navega ni avisa. */
+test('T63.2 · carregant o «Perfil no trobat»: Comentar no promet cap xat, «En públic» desactivada, i el clic no fa res', async () => {
   window.history.replaceState(null, '', '/gent/u-1');
   mocks.id = 'u-1';
   mocks.load.mockReturnValue(new Promise(() => {}));
   const carregant = render(<PerfilPublicSection agents={mocks.agents} />);
-  expect(comentarBarra(carregant.container).getAttribute('aria-label')).toBe('Comentar');
-  fireEvent.click(comentarBarra(carregant.container));
+  const publica = via(carregant.container, PUBLIC);
+  expect(publica.getAttribute('aria-disabled')).toBe('true');
+  expect(publica.textContent).toBe(`${PUBLIC}${TEXTOS_COMENTAR.senseXatPublic[1]}`);
+  fireEvent.click(publica);
   expect(mocks.navigate).not.toHaveBeenCalled();
-  expect(mocks.toast).toHaveBeenCalledWith(AVIS_SENSE_XAT);
+  expect(mocks.toast).not.toHaveBeenCalled();
   carregant.unmount();
   mocks.load.mockResolvedValue(null);
   const { container } = render(<PerfilPublicSection agents={mocks.agents} />);
   await screen.findByRole('heading', { level: 1, name: 'Perfil no trobat' });
-  expect(comentarBarra(container).getAttribute('aria-label')).toBe('Comentar');
-  fireEvent.click(comentarBarra(container));
+  const noTrobat = via(container, PUBLIC);
+  expect(noTrobat.getAttribute('aria-disabled')).toBe('true');
+  fireEvent.click(noTrobat);
   expect(mocks.navigate).not.toHaveBeenCalled();
-  expect(mocks.toast).toHaveBeenCalledTimes(2);
+  expect(mocks.toast).not.toHaveBeenCalled();
   window.history.replaceState(null, '', '/');
 });
 

@@ -27,6 +27,7 @@ import { CLAUS_BLOC, carpetaDeDesa, esModeDesa, escriuDesa, paramsDeLaNota } fro
 import { SnippetCurador } from './SnippetCurador.jsx';
 import { NotaPreparadaContext, TITOL_NOTA_PREPARADA, useNotaPreparada } from './notaPreparada.js';
 import { reglaDEntrada } from '../connectar/contingutExtern.js';
+import { ProveidorSincronitzacioTargetes } from '../detail/SincronitzacioTargetes.jsx';
 
 /* Pell del Bloc de Notes: tot allò que el UniversalWorkspace no ha de saber. */
 const ETIQUETES = { categories: 'CARPETES', items: 'NOTES', create: 'CREAR NOTA', search: 'Cercar notes', empty: 'No hi ha notes.' };
@@ -568,9 +569,13 @@ export default function NotesSection() {
      el remunta en canviar de mode (columnes, selecció i detall de cada un).
      Al snippet no es crea cap nota buida, i el detall és una Pàgina
      Universal que fa scroll (sense la closca de l'editor).
-     P4 · L'editor de la nota preparada escriu pel canal d'este context. */
+     P4 · L'editor de la nota preparada escriu pel canal d'este context.
+     Ordre del Mestre (261007, «cards de veritat») · Les targetes incrustades
+     de les notes, en lectura i a l'editor, sincronitzades amb el seu
+     original (SincronitzacioTargetes.jsx). */
   return (
     <NotaPreparadaContext.Provider value={contextPreparada}>
+      <ProveidorSincronitzacioTargetes>
       <UniversalWorkspace
         key={modeDesa ? 'desa' : 'bloc'}
         model={model}
@@ -599,6 +604,7 @@ export default function NotesSection() {
         listClassName="sdp-bloc-list--notes"
         detailClassName={modeDesa ? '' : 'sdp-workspace-detail--editor'}
       />
+      </ProveidorSincronitzacioTargetes>
     </NotaPreparadaContext.Provider>
   );
 }

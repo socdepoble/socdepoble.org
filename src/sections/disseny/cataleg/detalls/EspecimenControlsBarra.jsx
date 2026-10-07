@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Especimen } from '../Especimen.jsx';
 import { Llinatge } from '../Llinatge.jsx';
 import {
-  ActionControl, IconButton, DateTimeControl, SelectorDataHora,
+  ActionControl, IconButton, DateTimeControl, SelectorDataHora, BotoComentar, MenuComentar,
   BackIcon, ForwardIcon, IndexIcon, TranslateIcon, CommentIcon, ShareIcon, PinIcon, IaiaIcon
 } from '../../../../components/PedraSeca/index.js';
 import { BarraBlava } from '../../../../components/universal/barres/BarraBlava.jsx';
@@ -30,11 +30,15 @@ const DATA_LECTURA = { time: '11:00', date: '25/04/26', dateTime: '2026-04-25T11
    pastilla de data. Cap pin: el pin «Ancorar» és de la caputxa de la
    UniversalCard (showPin). Els àtoms es veuen també a soles, com els fan
    servir la barra blava i el peu de la targeta, i així la porta del
-   catàleg (C2) troba IconButton i ActionControl pintats de veres. */
+   catàleg (C2) troba IconButton i ActionControl pintats de veres.
+   Ordre del Mestre (261007) · «COMENTARIS = XAT» (correcció C4) · La barra
+   porta comentarXat 'comu', com la d'una pàgina amb xat públic: Comentar
+   obri el menú de dues vies. Tancada, cap píxel canvia. */
 const BLAVA = {
   onBack: res, onForward: res, onIndex: res,
   traduirVisible: true, comentarVisible: true, compartirVisible: true, connectarVisible: true,
   onTranslate: res, onComment: res, onShare: res, onConnect: res,
+  comentarXat: 'comu',
 };
 const AUTORIA = {
   authorName: 'Sóc de Poble',
@@ -56,10 +60,12 @@ export default function EspecimenControlsBarra() {
   return (
     <>
     <Llinatge id="barres" />
-    <Especimen id="controls-barra" nom="Controls de barra · BarraBlava · BarraTaronja · IconButton · ActionControl · DateTimeControl" fitxer="src/components/universal/barres/ · universal/EmoticonaBarra.jsx · PedraSeca/atoms/controls.jsx · atoms/icones.jsx"
+    <Especimen id="controls-barra" nom="Controls de barra · BarraBlava · BarraTaronja · IconButton · ActionControl · DateTimeControl · BotoComentar · MenuComentar" fitxer="src/components/universal/barres/ · universal/EmoticonaBarra.jsx · PedraSeca/atoms/controls.jsx · atoms/icones.jsx · PedraSeca/organismes/Comentar.jsx"
       descripcio="Les dues barres de color de PageFrame, que són components propis (T51): la blava de navegació de pàgina i la taronja d’autoria (autoria · emoticona · data). Els seus botons, i els del peu de la UniversalCard, són una sola família visual: cercles de 48px per a icones (44px, a tocar, als dos packs de la barra blava), pastilles de 48px per a text, mateix hover (vel blanc) i cap transform. A la barra blava mana l’ample de la BARRA, no el de la finestra: amb 480px o menys, CONNECTAR perd la paraula i queda el «+» en un cercle. A la taronja totes les icones són blanques dins d’un cercle de vel fosc."
       contracte={[
-        ['BarraBlava', 'onBack · onForward · onIndex · *Visible · onTranslate · onComment · onShare · onConnect · comentarXat · accionsInoperatives · menuTraduir', '—', 'Presentacional: PageFrame hi posa useAccions. Sense onBack/onForward, la fletxa no es pinta. comentarXat (T63.2) dona nom a Comentar: «Comentar al xat comú» (\'comu\'), «Comentar per missatge directe» (\'directe\') o, sense cap xat o sense saber on porta, «Comentar».'],
+        ['BarraBlava', 'onBack · onForward · onIndex · *Visible · onTranslate · onComment · onShare · onConnect · comentarXat · accionsInoperatives · menuTraduir', '—', 'Presentacional: PageFrame hi posa useAccions. Sense onBack/onForward, la fletxa no es pinta.'],
+        ['BarraBlava.comentarXat', "'comu' | 'privat' | null", 'null', 'Què oferix el menú de Comentar (BotoComentar i MenuComentar; ordre del Mestre, 261007, «Comentaris = xat»): \'comu\', les dues vies; \'privat\', «En públic» desactivada i amb la raó; null (un onComment propi o l’editor), cap menú. El botó es diu sempre «Comentar»; la via triada va a onComment(\'privat\' | \'public\').'],
+        ['MenuComentar.ambPublic / mostra', 'boolean / boolean', 'false / false', 'Sense ambPublic, la fila «En públic» porta aria-disabled i diu «Ací encara no hi ha cap xat públic.». Amb mostra, el catàleg el pinta obert i quiet: no furta el focus, no escolta la pàgina i no tria (el mateix contracte que MenuTraduir).'],
         ['BarraBlava.menuTraduir', '{ obert, opcions, actual, onTria, onTanca } | null', 'null', 'Traductor Sobirà (260930): el posa useAccions quan l’amfitrió oferix el servei (externalConfig.traductorUrl). Traduir diu que obri un menú (aria-haspopup, aria-expanded) i, obert, MenuTraduir es pinta just després del botó. Sense servei, el clic avisa «La traducció automàtica no està disponible en este servidor.» i no hi ha menú.'],
         ['BarraTaronja.author*', 'string', '—', 'Nom, poble, avatar (es resol i es valida ací) i ruta del perfil (T4).'],
         ['BarraTaronja.emoticona / onObriEmoticona', 'string / fn', "'' / null", 'L’espai central (EmoticonaBarra). Amb onObriEmoticona, botó que obri el diàleg (la ploma blanca sense emoticona); sense, lectura: l’emoticona triada o la cel·la buida.'],
@@ -103,6 +109,17 @@ export default function EspecimenControlsBarra() {
       </div>
       <AvisTraduccio llengua="ES" onOriginal={res} />
       <AvisTraduccio carregant="FR" />
+
+      <h4>Comentar: en privat o en públic</h4>
+      <p>Ordre del Mestre (261007): no hi ha fil de comentaris davall de cap publicació, el debat és un xat. Comentar és el mateix botó a la barra blava i al peu de la targeta, i obri este menú just després del botó, amb el comportament del de Traduir (focus a la primera fila, Escape, clic fora, fletxes). «En privat» porta al xat només entre la persona i Sóc de Poble; «En públic», al xat obert de l’element, amb el seu títol com a nom. Sense xat públic, la fila es queda enfocable però desactivada i diu per què. Com a WhatsApp, dues files grans amb icona i una línia que diu on porta; com a molt 300px d’ample. Ací, obert i quiet: amb la via pública i sense.</p>
+      <div className="sdp-especimen__fila">
+        <MenuComentar ambPublic onTria={res} onTanca={res} mostra />
+        <MenuComentar onTria={res} onTanca={res} mostra />
+      </div>
+      <p>El botó, a soles: tancat, només diu que obri un menú (aria-haspopup, aria-expanded).</p>
+      <div className="sdp-especimen__fila">
+        <BotoComentar label="Comentar l’espècimen (menú)" comentarXat="comu" onComment={res} />
+      </div>
 
       <h4>Barra taronja en lectura (autoria · emoticona · data)</h4>
       <p>Tres columnes. Al centre, només l’emoticona triada; sense, la cel·la queda buida i la data continua a la dreta. La data és la de creació, o la de l’última modificació si és posterior, amb l’hora si la font en té. La pastilla és un botó: porta al Calendari en el mes de la data, amb totes les targetes d’eixe mes.</p>

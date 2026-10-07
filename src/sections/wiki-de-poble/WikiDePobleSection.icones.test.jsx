@@ -12,20 +12,38 @@
    ni Tractors ni la Consola tenen ja entrada pròpia a l'arbre. La Consola, els
    Tractors, els Sentinelles i els Agents pengen de «Maquinària de la IAIA»,
    que agrupa documents i per això porta carpeta. Les seues fitxes conserven el
-   document, també la de la Consola, que abans el prenia de la seua entrada. */
+   document, també la de la Consola, que abans el prenia de la seua entrada.
+   Ordre del Mestre (261007) · Decisió presa, fins al §0.7 de baix: l'arbre
+   (carpetes i categories) continuava amb Lucide, i les fitxes porten el seu
+   emoji (iconesWiki.js), en XL
+   al quadrat de la fitxa i al seu glif del rail plegat. Ni la Consola ni les
+   eines locals porten ja el FileText, i els documents del manifest ja no
+   hereten la carpeta.
+   Ordre del Mestre (pla 261007_0012, §0.7, «Emojis a l'Índex de la Wiki
+   (Carpetes i Arrel)») · L'arbre ja no repetix la carpeta de Lucide: cada
+   carpeta i subcarpeta porta el seu emoji, menut com la icona germana
+   (NavGlyph, cap XL), i l'entrada de la portada, «Wiki de Poble», el de la
+   portada (📖). A la segona columna, la fitxa de la portada porta eixe emoji
+   en XL, no la seua imatge. Una carpeta nova sense emoji, Folder. */
 import React from 'react';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
+/* Els ids de les carpetes són els de veres (iconesWiki.js); «NOVA», una
+   carpeta que el manifest porta i la taula encara no. */
 vi.mock('../../data/wikiManifest.js', () => ({
   wikiManifest: {
     categories: [
-      { id: 'folder:ser', label: 'SER' },
-      { id: 'folder:saber', label: 'SABER' }
+      { id: 'folder:01_ser', label: 'SER' },
+      { id: 'folder:02_saber', label: 'SABER' },
+      { id: 'folder:02_saber/architecture', parentId: 'folder:02_saber', label: 'ARCHITECTURE' },
+      { id: 'folder:09_nova', label: 'NOVA' }
     ],
     items: [
-      { id: 'identitat', title: 'Identitat', categoryId: 'folder:ser', tags: [], content: '# Identitat' },
-      { id: 'coneixement', title: 'Coneixement', categoryId: 'folder:saber', tags: [], content: '# Coneixement' }
+      { id: 'identitat', title: 'Identitat', categoryId: 'folder:01_ser', tags: [], content: '# Identitat' },
+      { id: 'coneixement', title: 'Coneixement', categoryId: 'folder:02_saber', tags: [], content: '# Coneixement' },
+      { id: 'ADR-2026-08-ONLINE-FIRST', title: 'Online first', categoryId: 'folder:02_saber/architecture', tags: [], content: '# Online first' },
+      { id: 'nota_nova', title: 'Nota nova', categoryId: 'folder:09_nova', tags: [], content: '# Nota nova' }
     ]
   }
 }));
@@ -57,9 +75,13 @@ vi.mock('../consola/ConsolaSection.jsx', () => ({ ConsolaIncrustada: () => null 
 vi.mock('../tractors/PanellTractors.jsx', () => ({ default: () => <p>Doble dels Tractors</p> }));
 vi.mock('../tractors/PanellSentinelles.jsx', () => ({ default: () => <p>Doble dels Sentinelles</p> }));
 vi.mock('../tractors/PanellAgents.jsx', () => ({ default: () => <p>Doble dels Agents</p> }));
-/* Sense imatge resolta: la fitxa pinta el glif (ItemMedia). */
+/* Tota imatge que porte una fitxa es resol: si la de la portada hi arribara,
+   ItemMedia la pintaria en lloc de l'emoji. Sense imatge, la fitxa pinta el
+   glif (ItemMedia). */
 vi.mock('../../hooks/useResolvedAsset.js', () => ({
-  useResolvedAssetState: () => ({ url: null, status: 'idle', isLoading: false })
+  useResolvedAssetState: (ref) => (ref
+    ? { url: `https://exemple.test${ref}`, status: 'ready', isLoading: false }
+    : { url: null, status: 'idle', isLoading: false })
 }));
 
 import { RouterTest } from '../../app/contexts/RouterContext';
@@ -77,35 +99,92 @@ const llista = () => document.querySelector('#app-grid-list');
 const glifs = (boto) => [...boto.querySelectorAll('svg')]
   .flatMap((svg) => [...svg.classList].filter((classe) => classe.startsWith('lucide-')));
 
-/* Les fitxes de la Maquinària de la IAIA: la Consola i les tres eines locals. */
-const FITXES_MAQUINARIA = [/Consola Termodinàmica/, /Aprovació de tractors/, /Sentinelles/, /Agents \(BIOS\)/];
+/* Les fitxes de la Maquinària de la IAIA: la Consola i les tres eines locals,
+   amb el seu emoji (ordre del Mestre, 261007). */
+const FITXES_MAQUINARIA = [
+  [/Consola Termodinàmica/, '⚙️'], [/Aprovació de tractors/, '🚜'], [/Sentinelles/, '💂'], [/Agents \(BIOS\)/, '🤖']
+];
+/* El glif de la fitxa: l'emoji XL del quadrat, cap icona de Lucide i cap imatge. */
+const emojiDeLaFitxa = (boto) => {
+  const glif = boto.querySelector('.sdp-gestor-fitxa__media .sdp-fitxa-emoji-xl');
+  return { emoji: glif?.textContent ?? null, lucide: glifs(boto), imatge: boto.querySelector('img') !== null };
+};
+/* El glif d'una entrada de l'arbre: l'emoji menut de NavGlyph (.sdp-nav-glyph),
+   les icones de Lucide i quants emojis XL porta (cap). */
+const glifDeLArbre = (boto) => ({
+  emoji: boto.querySelector('.sdp-workspace-nav-item__icon .sdp-nav-glyph')?.textContent ?? null,
+  lucide: glifs(boto),
+  xl: boto.querySelectorAll('.sdp-fitxa-emoji-xl').length
+});
+const portadaDeLaLlista = () => [...llista().querySelectorAll('.sdp-gestor-fitxa')]
+  .find((fitxa) => fitxa.querySelector('.sdp-gestor-fitxa__titol')?.textContent === 'Wiki de Poble');
 
-test('arbre: Maquinària de la IAIA porta carpeta; Wiki de Poble, document; SER i SABER, carpeta; ni Tractors ni Consola hi tenen entrada pròpia', () => {
+/* Ordre del Mestre (pla 261007_0012, §0.7) · Cada carpeta i subcarpeta, el seu
+   emoji, i la portada, el seu; a l'arbre, menuts (NavGlyph), no XL. */
+const ARBRE = [
+  ['Wiki de Poble', '📖'], ['Maquinària de la IAIA', '🎛️'], ['SER', '🌱'], ['SABER', '🦉'], ['ARCHITECTURE', '📐']
+];
+
+test('arbre: la portada, la Maquinària de la IAIA i cada carpeta i subcarpeta porten el seu emoji, menut (NavGlyph) i mai XL; ni Tractors ni Consola hi tenen entrada pròpia', () => {
   render(<RouterTest><WikiDePobleSection /></RouterTest>);
   const arbre = within(nav());
-  expect(glifs(arbre.getByRole('button', { name: 'Maquinària de la IAIA' }))).toEqual(['lucide-folder']);
-  expect(glifs(arbre.getByRole('button', { name: 'Wiki de Poble' }))).toEqual(['lucide-file-text']);
-  expect(glifs(arbre.getByRole('button', { name: 'SER' }))).toEqual(['lucide-folder']);
-  expect(glifs(arbre.getByRole('button', { name: 'SABER' }))).toEqual(['lucide-folder']);
+  fireEvent.click(arbre.getByRole('button', { name: 'Desplegar SABER' }));
+  for (const [nom, emoji] of ARBRE) {
+    expect(glifDeLArbre(arbre.getByRole('button', { name: nom })), nom).toEqual({ emoji, lucide: [], xl: 0 });
+  }
+  // Distints entre germanes: cap dues entrades de l'arbre porten el mateix.
+  expect(new Set(ARBRE.map(([, emoji]) => emoji)).size).toBe(ARBRE.length);
+  // Una carpeta nova del manifest sense emoji a iconesWiki.js: la carpeta de Lucide, sense petar.
+  expect(glifDeLArbre(arbre.getByRole('button', { name: 'NOVA' }))).toEqual({ emoji: null, lucide: ['lucide-folder'], xl: 0 });
+  // Cap emoji XL a la navegació: l'XL és de la segona columna.
+  expect(nav().querySelectorAll('.sdp-fitxa-emoji-xl')).toHaveLength(0);
   expect(arbre.queryByRole('button', { name: 'Tractors' })).toBeNull();
   expect(arbre.queryByRole('button', { name: 'Consola Termodinàmica' })).toBeNull();
 });
 
-test('fitxes: la Consola i les eines locals conserven el document a «Tot» i dins de la Maquinària; els documents del manifest, la carpeta heretada', () => {
+test('fitxes: la portada, la Consola, les eines locals i els documents del manifest porten el seu emoji XL a «Tot» i dins de la Maquinària; cap carpeta heretada', () => {
   render(<RouterTest><WikiDePobleSection /></RouterTest>);
 
   fireEvent.click(screen.getByRole('button', { name: 'Tot' }));
-  for (const nom of FITXES_MAQUINARIA) {
-    expect(glifs(within(llista()).getByRole('button', { name: nom })), String(nom)).toEqual(['lucide-file-text']);
+  for (const [nom, emoji] of FITXES_MAQUINARIA) {
+    expect(emojiDeLaFitxa(within(llista()).getByRole('button', { name: nom })), String(nom)).toEqual({ emoji, lucide: [], imatge: false });
   }
-  // Estat actual dels documents del manifest (decisió del Mestre pendent): hereten la carpeta.
-  expect(glifs(within(llista()).getByRole('button', { name: /Identitat/ }))).toEqual(['lucide-folder']);
+  // Ordre del Mestre (261007) · Els documents del manifest, el seu emoji (iconesWiki.js), no la carpeta.
+  expect(emojiDeLaFitxa(within(llista()).getByRole('button', { name: /Identitat/ }))).toEqual({ emoji: '🆔', lucide: [], imatge: false });
+  expect(emojiDeLaFitxa(within(llista()).getByRole('button', { name: /Coneixement/ }))).toEqual({ emoji: '📚', lucide: [], imatge: false });
+  expect(emojiDeLaFitxa(within(llista()).getByRole('button', { name: /Online first/ }))).toEqual({ emoji: '🏛️', lucide: [], imatge: false });
 
-  // Amb la Maquinària activa, glifDeCategoria prova primer eixa carpeta: el glif propi guanya.
+  // Ordre del Mestre (pla 261007_0012, §0.7) · La portada, el seu emoji en XL a
+  // la llista, no la seua imatge (que es resoldria: vegeu el doble de dalt).
+  expect(emojiDeLaFitxa(portadaDeLaLlista())).toEqual({ emoji: '📖', lucide: [], imatge: false });
+
+  // Amb la Maquinària activa, glifDeCategoria prova primer eixa carpeta (🎛️): el glif propi guanya.
   fireEvent.click(within(nav()).getByRole('button', { name: 'Maquinària de la IAIA' }));
   expect(within(nav()).getByRole('button', { name: 'Maquinària de la IAIA' }).getAttribute('aria-current')).toBe('page');
   expect(within(llista()).queryByRole('button', { name: /Identitat/ })).toBeNull();
-  for (const nom of FITXES_MAQUINARIA) {
-    expect(glifs(within(llista()).getByRole('button', { name: nom })), String(nom)).toEqual(['lucide-file-text']);
+  for (const [nom, emoji] of FITXES_MAQUINARIA) {
+    expect(emojiDeLaFitxa(within(llista()).getByRole('button', { name: nom })), String(nom)).toEqual({ emoji, lucide: [], imatge: false });
   }
+});
+
+test('a l’entrada, «Wiki de Poble» és la triada i la seua llista porta la fitxa de la portada amb el seu emoji XL', () => {
+  render(<RouterTest><WikiDePobleSection /></RouterTest>);
+  expect(within(nav()).getByRole('button', { name: 'Wiki de Poble' }).getAttribute('aria-current')).toBe('page');
+  expect(llista().querySelectorAll('.sdp-gestor-fitxa')).toHaveLength(1);
+  expect(emojiDeLaFitxa(portadaDeLaLlista())).toEqual({ emoji: '📖', lucide: [], imatge: false });
+});
+
+test('rail de la llista plegada: la portada i els documents, el seu emoji menut (NavGlyph), mai XL', () => {
+  render(<RouterTest><WikiDePobleSection /></RouterTest>);
+  fireEvent.click(screen.getByRole('button', { name: 'Tot' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Replegar DOCUMENTS' }));
+  const rail = document.querySelector('.sdp-workspace-rail--documents');
+  const glifDelRail = (nom) => {
+    const boto = within(rail).getByRole('button', { name: nom });
+    return { emoji: boto.querySelector('.sdp-nav-glyph')?.textContent ?? null, lucide: glifs(boto) };
+  };
+  expect(glifDelRail('Wiki de Poble')).toEqual({ emoji: '📖', lucide: [] });
+  expect(glifDelRail('Identitat')).toEqual({ emoji: '🆔', lucide: [] });
+  expect(glifDelRail('Consola Termodinàmica')).toEqual({ emoji: '⚙️', lucide: [] });
+  expect(rail.querySelectorAll('.sdp-fitxa-emoji-xl')).toHaveLength(0);
 });

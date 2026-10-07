@@ -223,6 +223,36 @@ test('la secció 0 de la plantilla viva prompt_local.md, amb les caselles marcad
   assert.match(checkOlivera(arrel, { contingut: plantilla }).errors.join('\n'), /caselles sense marcar/, 'tal com naix, la plantilla porta caselles per marcar');
 });
 
+/* ── 261007 · Defecte de mitjanit ─────────────────────────────────────────── */
+
+test('[261007] defecte de mitjanit: un prompt de la vespra conserva el pla de la seua jornada; un prompt de hui sense pla de hui continua bloquejat', (t) => {
+  // El cas real: 261006_2358_prompt_claude_gestoria_i_reparacions va nàixer a les 23:59 amb
+  // 261006_1140_pla_implementacio damunt la taula, i a les 00:11 l'edició rebia «Cap Pla de hui».
+  const pla = `${VELL}_1140_pla_implementacio`;
+  const vespra = `${VELL}_2358_prompt_claude_gestoria`;
+  const arrel = mas(t, `# Índex\n\n## Activitat en curs\n\n- [[${pla}]]\n- [[${vespra}]]\n`);
+  posa(arrel, `${pla}.md`);
+  posa(arrel, `${vespra}.md`);
+  const contingut = "# Prompt\n\n## 0. Preflight (Per a l'agent orquestrador)\n\n- [x] **Escriptori net i indexat**\n\n## Registre\n";
+  assert.equal(checkTaula(arrel).valid, true, checkTaula(arrel).errors.join('\n'));
+
+  assert.deepEqual(checkOlivera(arrel, { contingut, fitxer: `${DESK}/${vespra}.md` }).errors, [], 'la pissarra que el va fer nàixer continua valent');
+  assert.deepEqual(checkOlivera(arrel, { contingut, fitxer: `${vespra}.md` }).errors, [], 'també amb el nom sol');
+  const hui = checkOlivera(arrel, { contingut, fitxer: `${DESK}/${DIA}_0010_prompt_y.md` }).errors;
+  assert.equal(hui.length, 1, hui.join('\n'));
+  assert.match(hui[0], new RegExp(`^Cap Pla d'Implementació de hui \\(${DIA}\\)`), 'un prompt batejat amb la jornada nova demana el pla d’eixa jornada');
+  assert.match(checkOlivera(arrel, { contingut }).errors.join('\n'), /^Cap Pla d'Implementació de hui/, 'sense fitxer, el comportament d’abans');
+  assert.match(checkOlivera(arrel, { contingut, fitxer: `${DESK}/241231_2358_prompt_x.md` }).errors.join('\n'), /^Cap Pla d'Implementació de hui/,
+    'un pla d’una altra jornada no acredita el prompt');
+
+  // El mateix pel camí del hook: l'edició del prompt de la vespra passa; un prompt de hui sense pla, no.
+  const vespraHook = porta(arrel, ['--hook'], { input: JSON.stringify({ tool_name: 'Write', tool_input: { file_path: `${DESK}/${vespra}.md`, content: contingut } }) });
+  assert.equal(vespraHook.status, 0, vespraHook.stderr);
+  const huiHook = porta(arrel, ['--hook'], { input: JSON.stringify({ tool_name: 'Write', tool_input: { file_path: `${DESK}/${DIA}_0010_prompt_y.md`, content: contingut } }) });
+  assert.equal(huiHook.status, 2);
+  assert.match(huiHook.stderr, /Cap Pla d'Implementació de hui/);
+});
+
 /* ── Modes de la CLI ──────────────────────────────────────────────────────── */
 
 test('sense bandera és informe i no llig stdin: acaba encara que stdin quede obert', async (t) => {

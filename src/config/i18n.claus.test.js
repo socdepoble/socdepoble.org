@@ -20,6 +20,7 @@ import { TEXTOS_MULTIMEDIA } from '../sections/xat/components/VistaMultimedia.js
 import { AVISOS_XAT_CORPORATIU } from '../sections/control/xatCorporatiu.js';
 import fontDialegTriaTargeta from '../components/universal/richText/extensions/targetes/DialegTriaTargeta.jsx?raw';
 import fontTargetaIncrustada from '../components/universal/richText/extensions/targetes/TargetaIncrustadaNodeView.jsx?raw';
+import fontItemDetail from '../sections/detail/ItemDetailSection.jsx?raw';
 
 const CLAUS = {
   'nav.panel': {
@@ -334,6 +335,30 @@ const CLAUS = {
   },
   'editor.targetes.lleva': {
     ca: 'Llevar la targeta', es: 'Quitar la tarjeta', en: 'Remove the card', eu: 'Kendu txartela', gl: 'Quitar a tarxeta'
+  },
+  /* Revisió del 261007 (M9, M2-01) · Els textos per al lector del carrusel de
+     la portada (CarruselImatges, traduïts a ItemDetailSection). Les d'eu i gl
+     són proposta a revisar per algú que les parle. */
+  'carrusel.imatgesDe': {
+    ca: 'Imatges de {titol}', es: 'Imágenes de {titol}', en: 'Images of {titol}', eu: '{titol}: irudiak', gl: 'Imaxes de {titol}'
+  },
+  'carrusel.anterior': {
+    ca: 'Imatge anterior', es: 'Imagen anterior', en: 'Previous image', eu: 'Aurreko irudia', gl: 'Imaxe anterior'
+  },
+  'carrusel.seguent': {
+    ca: 'Imatge següent', es: 'Imagen siguiente', en: 'Next image', eu: 'Hurrengo irudia', gl: 'Imaxe seguinte'
+  },
+  'carrusel.diapositives': {
+    ca: 'Diapositives', es: 'Diapositivas', en: 'Slides', eu: 'Diapositibak', gl: 'Diapositivas'
+  },
+  'carrusel.posicio': {
+    ca: 'Imatge {n} de {total}', es: 'Imagen {n} de {total}', en: 'Image {n} of {total}', eu: '{n}. irudia, {total} guztira', gl: 'Imaxe {n} de {total}'
+  },
+  'carrusel.rol': {
+    ca: 'carrusel', es: 'carrusel', en: 'carousel', eu: 'karrusela', gl: 'carrusel'
+  },
+  'carrusel.rolDiapositiva': {
+    ca: 'diapositiva', es: 'diapositiva', en: 'slide', eu: 'diapositiba', gl: 'diapositiva'
   }
 };
 
@@ -348,7 +373,10 @@ const CLAUS = {
 const IGUALS_AL_VALENCIA = Object.freeze({
   'section.notes.compartir': ['es', 'gl'],
   'section.control.porta.publicar': ['es', 'gl'],
-  'editor.targetes.dialeg.inserir': ['gl']
+  'editor.targetes.dialeg.inserir': ['gl'],
+  /* 261007 (M9) · El nom del patró de l'APG és el mateix en castellà i en gallec. */
+  'carrusel.rol': ['es', 'gl'],
+  'carrusel.rolDiapositiva': ['es', 'gl']
 });
 
 const LLENGUES = SUPPORTED_LANGUAGES.map(({ code }) => code);
@@ -444,6 +472,17 @@ describe('claus i18n del torn T1–T4', () => {
       expect([clau, font.includes(`t('${clau}', '${reserva}')`) || font.includes(`['${clau}', '${reserva}']`)]).toEqual([clau, true]);
     }
     const delFront = [...new Set([...font.matchAll(/'(editor\.targetes\.[\w.]+)'/g)].map((m) => m[1]))].sort();
+    expect(delFront).toEqual([...deLaTaula].sort());
+  });
+
+  /* Revisió del 261007 (M9) · ItemDetailSection crida cada clau del carrusel
+     amb la reserva valenciana, i cap clau carrusel.* queda fora de la taula. */
+  test('les reserves del carrusel de la portada són els valors valencians', () => {
+    const deLaTaula = Object.keys(CLAUS).filter((clau) => clau.startsWith('carrusel.'));
+    for (const clau of deLaTaula) {
+      expect([clau, fontItemDetail.includes(`t('${clau}', '${CLAUS[clau].ca}')`)]).toEqual([clau, true]);
+    }
+    const delFront = [...new Set([...fontItemDetail.matchAll(/'(carrusel\.[\w.]+)'/g)].map((m) => m[1]))].sort();
     expect(delFront).toEqual([...deLaTaula].sort());
   });
 

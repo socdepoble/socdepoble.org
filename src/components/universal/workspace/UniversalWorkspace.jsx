@@ -1,4 +1,4 @@
-import React, { useCallback, useLayoutEffect, useMemo, useRef, useState, useEffect, memo } from 'react';
+import React, { useCallback, useId, useLayoutEffect, useMemo, useRef, useState, useEffect, useSyncExternalStore, memo } from 'react';
 import { createPortal } from 'react-dom';
 import { Search, Settings, SlidersHorizontal, Inbox, Bookmark, Hash, ChevronDown, ArrowDownAZ, Folder, ArrowLeft } from 'lucide-react';
 import AppGridShell, { useAppGrid } from '../../layout/AppGridShell.jsx';
@@ -7,9 +7,16 @@ import { SlotErrorBoundary } from './SlotErrorBoundary.jsx';
 import { WorkspaceProvider, useWorkspace } from './WorkspaceContext.jsx';
 import { entradaMestreDetall, recordaNivell } from './nivellMestreDetall.js';
 import { buildWorkspaceFolderForest } from './workspaceFolderForest.js';
+import { carpetesAmagadesDe, desaCarpetaAmagada, espaiDe, subscriuCarpetesVisibles } from './carpetesVisibles.js';
+import { ALL_CATEGORY_ID } from './workspaceState.js';
 import { ItemMedia } from './ItemMedia.jsx';
 import { NavGlyph, GlifCategoriaContext, GLIF_DOCUMENT, emojiInicial, primerGlif } from './NavGlyph.jsx';
 import { Dialeg, Boto } from '../../PedraSeca/index.js';
+import { Interruptor } from '../../PedraSeca/organismes/formulari.jsx';
+/* El traductor de la interfície, o null fora de l'app (o amb una prova que
+   simula UIContext sense esta exportació): aleshores, la reserva en
+   valencià. La còpia única de Pedra Seca (revisió del 261007). */
+import { tradueix, useTraductorOpcional } from '../../PedraSeca/hooks/useTraductorOpcional.js';
 import { TEXTOS_LLAVOR } from '../textosLlavor.js';
 
 /**
@@ -75,6 +82,25 @@ import { TEXTOS_LLAVOR } from '../textosLlavor.js';
  *                       l'espai: amb esta funció, la seua capçalera porta la
  *                       fletxa ← (`labels.back`). Només en estret i amb el
  *                       mestre-detall (Admin: tornar al Tauler).
+ *   - `idEspai`      → (opcional, Llei de la Roda Dentada, ordre del Mestre
+ *                       261007) qui és l'espai de treball per a les seues
+ *                       preferències («Carpetes a la vista» de la roda
+ *                       dentada, carpetesVisibles.js). Minúscules, xifres i
+ *                       guions. Sense, la reserva estable: la clau del
+ *                       mestre-detall ({ clau } de `mestreDetall`: 'wiki',
+ *                       'notes', 'disseny', 'perfil') i, si tampoc n'hi ha,
+ *                       l'espai comú (ESPAI_COMU).
+ *
+ * La roda dentada (⚙️) de la capçalera de la navegació és el lloc estàndard
+ * de la personalització de l'espai de treball (Llei de la Roda Dentada): hi
+ * és sempre, desplegada o en rail, i obri «Amplada de les columnes» i, si la
+ * navegació té carpetes o categories, «Carpetes a la vista».
+ * Una carpeta amagada mai és l'activa (correcció R1 del verificador): si la
+ * selecció de la secció (`initialSelection`, `selection`) en porta una, o
+ * una de les seues subcarpetes, l'espai la mostra des de «Tot», amb el
+ * mateix document (seleccioALaVista): ni la selecció de la secció ni la
+ * seua URL no canvien. En mode compacte, i sense cap categoria triada per
+ * la secció, ho vigila la columna de navegació (CategoryColumn).
  *
  * Si demà cal una «Gestoria», només canvia el que s'injecta; el JSX estructural no.
  */
@@ -105,38 +131,217 @@ const DEFAULT_LABELS = {
   untitled: TEXTOS_LLAVOR.titol
 };
 
-/* Amplàries predefinides de les columnes (AppGridShell.PRESETS). */
+/* Amplàries predefinides de les columnes (AppGridShell.PRESETS), amb la seua
+   etiqueta en parell [clau i18n, reserva en valencià]: les claus són les de
+   les mateixes tres opcions als Ajustos del xat (section.xat.control.espai.*,
+   amb el mateix valor valencià). */
 const PRESETS_AMPLARIA = Object.freeze([
-  ['compacta', 'Compacta'],
-  ['defecte', 'Per defecte'],
-  ['ampla', 'Ampla']
+  ['compacta', Object.freeze(['section.xat.control.espai.compacta', 'Compacta'])],
+  ['defecte', Object.freeze(['section.xat.control.espai.defecte', 'Per defecte'])],
+  ['ampla', Object.freeze(['section.xat.control.espai.ampla', 'Ampla'])]
 ]);
+
+/* Llei de la Roda Dentada (ordre del Mestre, 261007) · Els textos de la
+   roda, en parells [clau i18n, reserva en valencià]: la reserva és el valor
+   valencià del diccionari (i18n.js). {tot} és l'etiqueta de «Tot»
+   (labels.all), {carpeta} el nom de la carpeta, i {esquerra} i {mig}
+   l'amplada de la navegació i del llistat.
+   Revisió del 261007 (M2-02, M2-09) · També «Fet», la línia d'estat i el
+   «Sí»/«No» dels interruptors, abans fixos en valencià; i l'ajuda del mode
+   compacte, que no té «Tot». */
+const TEXTOS_AJUSTOS = Object.freeze({
+  descripcio: Object.freeze(['workspace.ajustos.descripcio', 'Personalitza este espai de treball. El tema clar o fosc es tria a la barra superior.']),
+  fet: Object.freeze(['workspace.ajustos.fet', 'Fet']),
+  amplada: Object.freeze(['workspace.ajustos.amplada', 'Amplada de les columnes']),
+  ara: Object.freeze(['workspace.ajustos.ara', 'Ara: navegació {esquerra}px · llistat {mig}px']),
+  restableix: Object.freeze(['workspace.ajustos.amplada.restableix', 'Restablir l’amplada de les columnes']),
+  carpetes: Object.freeze(['workspace.ajustos.carpetes', 'Carpetes a la vista']),
+  ajuda: Object.freeze(['workspace.ajustos.carpetes.ajuda', 'Amagar una carpeta la lleva de la navegació, però no l’esborra: els seus documents continuen a «{tot}» i a la cerca.']),
+  ajudaCompacte: Object.freeze(['workspace.ajustos.carpetes.ajudaCompacte', 'Amagar una carpeta la lleva de la navegació, però no l’esborra: els seus documents continuen a la cerca.']),
+  vullVore: Object.freeze(['workspace.ajustos.carpetes.vullVore', 'Vull vore {carpeta}']),
+  ultima: Object.freeze(['workspace.ajustos.carpetes.ultima', 'Sempre n’hi ha d’haver almenys una a la vista.']),
+  si: Object.freeze(['workspace.ajustos.interruptor.si', 'Sí']),
+  no: Object.freeze(['workspace.ajustos.interruptor.no', 'No'])
+});
+
+/* Revisió del 261007 (M2-10) · Omple un text amb { marcador: valor }. El
+   reemplaçador és una funció: amb una cadena, String.replace interpretaria
+   «$&», «$$»… del nom d'una carpeta que escriu la persona. */
+const omple = (text, valors) => Object.entries(valors)
+  .reduce((acumulat, [marcador, valor]) => acumulat.replace(`{${marcador}}`, () => String(valor)), text);
+
+/* El nom d'una carpeta o categoria de la navegació. */
+const nomDe = (node) => String(node.label ?? node.nom ?? node.name ?? node.id);
+
+/* Correcció R1 del verificador (Llei de la Roda Dentada, 261007) · La
+   navegació (els grups, cadascun amb el seu bosc de carpetes) es calcula una
+   sola vegada, a UniversalWorkspace i des del model, i la columna de
+   navegació pinta eixe mateix bosc: així l'espai pot mirar la selecció de
+   la secció a través de les carpetes a la vista ABANS de donar-la al
+   WorkspaceProvider. La normalització és la del proveïdor (ids i parentId
+   en text; amb grups, cada opció porta el groupId del seu grup) i
+   l'agrupació, la que feia la columna. */
+const normalitzaCategoria = (category) => ({
+  ...category,
+  id: String(category.id),
+  parentId: category.parentId == null ? null : String(category.parentId)
+});
+
+function grupsDeNavegacio(navigationGroups, categories) {
+  const ambGrups = navigationGroups.length > 0;
+  const opcions = ambGrups
+    ? navigationGroups.flatMap((group) => (group.options || []).map((category) => ({ ...normalitzaCategoria(category), groupId: group.id })))
+    : categories.map(normalitzaCategoria);
+  const grups = ambGrups
+    ? navigationGroups.map((group) => ({ ...group, options: opcions.filter((category) => category.groupId === group.id) }))
+    : [{ id: 'default', label: null, options: opcions }];
+  return grups.map((group) => ({ ...group, tree: buildWorkspaceFolderForest(group.options) }));
+}
+
+/* La carpeta de primer nivell que conté una categoria (ella mateixa, si ho
+   és), o null si no és a la navegació. */
+function arrelDeCategoria(grups, categoryId) {
+  if (categoryId == null) return null;
+  const id = String(categoryId);
+  for (const group of grups) {
+    let node = group.tree.nodes.get(id) || null;
+    while (node?.parentId != null) node = group.tree.nodes.get(node.parentId) || null;
+    if (node) return node.id;
+  }
+  return null;
+}
+
+/* Les carpetes de primer nivell amagades (un Set d'ids), segons la
+   preferència de l'espai (carpetesAmagadesDe). Sense «Tot» (el mode
+   compacte), sempre en queda una a la vista: la primera, si la preferència
+   les amagava totes. */
+function carpetesAmagadesDeLaNavegacio(grups, preferides, compacte) {
+  const ids = new Set();
+  let totes = 0;
+  let primera = null;
+  for (const group of grups) {
+    for (const node of group.tree.roots) {
+      totes += 1;
+      if (primera === null) primera = node.id;
+      if (preferides[node.id] === false) ids.add(node.id);
+    }
+  }
+  if (compacte && totes > 0 && ids.size >= totes) ids.delete(primera);
+  return ids;
+}
+
+/* La selecció que demana la secció, vista des de la navegació: si la seua
+   categoria és una carpeta amagada (o hi viu dins), «Tot», amb el mateix
+   document. Sense categoria, o amb una a la vista, la mateixa selecció (la
+   mateixa referència). */
+function seleccioALaVista(seleccio, grups, amagades) {
+  if (!amagades.size || seleccio?.categoryId == null) return seleccio;
+  const arrel = arrelDeCategoria(grups, seleccio.categoryId);
+  return arrel != null && amagades.has(arrel) ? { ...seleccio, categoryId: ALL_CATEGORY_ID } : seleccio;
+}
+
+/* Les tornades automàtiques seguides a la vista, com a molt, sense cap tria
+   de la persona entremig (CategoryColumn): una secció que tornara a imposar
+   una carpeta amagada no fa cap bucle. */
+const TORNADES_MAXIMES = 2;
 
 /**
  * Configuració pròpia de cada espai de treball, darrere de la roda dentada.
  * La roda és SEMPRE present (sdp-app-grid-shell §2; pla 260924_1710 §3.4):
  * si la secció no injecta la seua pròpia configuració, obri esta.
+ *
+ * Llei de la Roda Dentada (ordre del Mestre, 261007) · És el lloc estàndard
+ * de la personalització de l'espai a tots els UniversalWorkspace (el Xat té
+ * el seu full «Ajustos»). Dues seccions:
+ *   · «Amplada de les columnes»: els tres valors predefinits d'AppGridShell i
+ *     «Restablir l'amplada de les columnes» (el valor per defecte).
+ *   · «Carpetes a la vista»: un interruptor per cada carpeta o categoria de
+ *     primer nivell de la navegació («Tot» no s'amaga mai), a la manera
+ *     d'una llista d'ajustos de WhatsApp (icona, nom, interruptor). Sense
+ *     carpetes (Admin), la secció no es pinta.
+ * En tancar, el Dialeg torna el focus a la roda que l'havia obert.
  */
-function WorkspaceSettingsDialog({ obert, onTanca, labels }) {
+function WorkspaceSettingsDialog({ obert, onTanca, labels, grupsDeCarpetes = CAP, amagades, onAlterna, ambTot = true }) {
   const { applyPreset, columnWidths } = useAppGrid();
+  const t = useTraductorOpcional();
+  const text = (parell) => tradueix(t, parell);
+  const id = useId();
+  const titolAmplada = text(TEXTOS_AJUSTOS.amplada);
+  /* Sense «Tot» (el mode compacte), l'última carpeta a la vista no s'amaga. */
+  const visibles = grupsDeCarpetes.reduce(
+    (suma, { arrels }) => suma + arrels.filter((node) => !amagades.has(node.id)).length, 0
+  );
+  const ultimaBloquejada = !ambTot && visibles <= 1;
+  const ambSubtitols = grupsDeCarpetes.length > 1;
+  const textosEstat = { si: text(TEXTOS_AJUSTOS.si), no: text(TEXTOS_AJUSTOS.no) };
   return (
     <Dialeg
       obert={obert}
       onTanca={onTanca}
       titol={labels.settings}
       mida="s"
-      descripcio="Amplària de les columnes de navegació i de llistat. El tema clar o fosc es tria a la barra superior."
-      accions={<Boto varietat="secundari" onClick={() => onTanca?.('boto')}>Fet</Boto>}
+      descripcio={text(TEXTOS_AJUSTOS.descripcio)}
+      accions={<Boto varietat="secundari" onClick={() => onTanca?.('boto')}>{text(TEXTOS_AJUSTOS.fet)}</Boto>}
     >
-      <div>
-        <p className="sdp-workspace-settings__estat">
-          Ara: navegació {columnWidths.left}px · llistat {columnWidths.middle}px
-        </p>
-        <div className="sdp-workspace-settings__opcions" role="group" aria-label="Amplària de columnes">
-          {PRESETS_AMPLARIA.map(([id, text]) => (
-            <Boto key={id} varietat="secundari" onClick={() => applyPreset(id)}>{text}</Boto>
-          ))}
-        </div>
+      <div className="sdp-workspace-settings">
+        <section className="sdp-workspace-settings__seccio" aria-labelledby={`${id}-amplada`}>
+          <h3 id={`${id}-amplada`} className="sdp-workspace-settings__titol">{titolAmplada}</h3>
+          <p className="sdp-workspace-settings__estat">
+            {omple(text(TEXTOS_AJUSTOS.ara), { esquerra: columnWidths.left, mig: columnWidths.middle })}
+          </p>
+          <div className="sdp-workspace-settings__opcions" role="group" aria-label={titolAmplada}>
+            {PRESETS_AMPLARIA.map(([preset, etiqueta]) => (
+              <Boto key={preset} varietat="secundari" onClick={() => applyPreset(preset)}>{text(etiqueta)}</Boto>
+            ))}
+          </div>
+          <Boto varietat="secundari" className="sdp-workspace-settings__restableix" onClick={() => applyPreset('defecte')}>
+            {text(TEXTOS_AJUSTOS.restableix)}
+          </Boto>
+        </section>
+        {grupsDeCarpetes.length ? (
+          <section className="sdp-workspace-settings__seccio" aria-labelledby={`${id}-carpetes`}>
+            <h3 id={`${id}-carpetes`} className="sdp-workspace-settings__titol">{text(TEXTOS_AJUSTOS.carpetes)}</h3>
+            {/* M2-09 · En compacte no hi ha «Tot»: l'ajuda no l'esmenta. */}
+            <p className="sdp-workspace-settings__ajuda">
+              {ambTot ? omple(text(TEXTOS_AJUSTOS.ajuda), { tot: labels.all }) : text(TEXTOS_AJUSTOS.ajudaCompacte)}
+              {ambTot ? null : ` ${text(TEXTOS_AJUSTOS.ultima)}`}
+            </p>
+            {grupsDeCarpetes.map(({ grup, arrels }) => {
+              const nomDelGrup = grup.label || labels.categories;
+              return (
+                <div key={grup.id} className="sdp-workspace-settings__grup">
+                  {ambSubtitols ? <h4 className="sdp-workspace-settings__subtitol">{nomDelGrup}</h4> : null}
+                  <ul className="sdp-workspace-settings__carpetes" aria-label={nomDelGrup}>
+                    {arrels.map((node) => {
+                      const visible = !amagades.has(node.id);
+                      const nom = nomDe(node);
+                      return (
+                        <li key={node.id}>
+                          <Interruptor
+                            className="sdp-workspace-settings__carpeta"
+                            etiqueta={(
+                              <>
+                                <span className="sdp-workspace-settings__glif" aria-hidden="true">
+                                  <NavGlyph glyph={glifDeclarat(node, grup)} size={20} />
+                                </span>
+                                <span className="sdp-sr-only">{omple(text(TEXTOS_AJUSTOS.vullVore), { carpeta: nom })}</span>
+                                <span aria-hidden="true">{nom}</span>
+                              </>
+                            )}
+                            textosEstat={textosEstat}
+                            actiu={visible}
+                            desactivat={visible && ultimaBloquejada}
+                            onCanvi={(actiu) => onAlterna?.(node.id, actiu)}
+                          />
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              );
+            })}
+          </section>
+        ) : null}
       </div>
     </Dialeg>
   );
@@ -175,9 +380,39 @@ export function UniversalWorkspace({
   inclouDescendents = false,
   compacte = false,
   mestreDetall = false,
-  tornaDeLaLlista = null
+  tornaDeLaLlista = null,
+  idEspai
 }) {
   const copy = { ...DEFAULT_LABELS, ...labels };
+  /* Llei de la Roda Dentada · Qui és l'espai per a les seues preferències:
+     idEspai i, de reserva, la clau del mestre-detall (també en mode
+     compacte: el Snippet és el mateix Bloc) o l'espai comú. */
+  const espai = espaiDe(idEspai, mestreDetall && typeof mestreDetall === 'object' ? mestreDetall.clau : null);
+  /* Correcció R1 del verificador · La navegació i les carpetes amagades
+     d'este espai, una sola vegada (la columna de navegació les rep fetes).
+     La selecció que demana la secció passa per les carpetes a la vista: una
+     carpeta amagada (o una subcarpeta seua) es mostra des de «Tot», amb el
+     mateix document, també en muntar i amb un enllaç. En mode compacte no:
+     la carpeta triada és on arriba l'enllaç i la secció ho ha de saber; la
+     columna la torna a la vista amb selectCategory, que li ho diu. */
+  const grupsNavegacio = useMemo(
+    () => grupsDeNavegacio(model.navigationGroups ?? CAP, model.categories ?? CAP),
+    [model.navigationGroups, model.categories]
+  );
+  const preferides = useSyncExternalStore(
+    subscriuCarpetesVisibles,
+    () => carpetesAmagadesDe(espai),
+    () => carpetesAmagadesDe(espai)
+  );
+  const amagades = useMemo(
+    () => carpetesAmagadesDeLaNavegacio(grupsNavegacio, preferides, compacte),
+    [grupsNavegacio, preferides, compacte]
+  );
+  const seleccioInicial = compacte ? initialSelection : seleccioALaVista(initialSelection, grupsNavegacio, amagades);
+  const seleccio = compacte ? selection : seleccioALaVista(selection, grupsNavegacio, amagades);
+  /* Sense cap categoria triada per la secció, o en compacte, la vigila la
+     columna de navegació. */
+  const vigilaAmagada = compacte || selection?.categoryId == null;
 
   /* MD · El nivell on és la persona en estret viu ací, FORA del
      WorkspaceProvider amb clau: un remuntatge per workspaceKey (la sessió
@@ -225,8 +460,8 @@ export function UniversalWorkspace({
       categories={model.categories ?? CAP}
       items={model.items ?? CAP}
       status={model.status || 'ready'}
-      initialSelection={initialSelection}
-      selection={selection}
+      initialSelection={seleccioInicial}
+      selection={seleccio}
       onSelectionChange={onSelectionChange}
       columnesInicials={columnesInicials ?? (compacte ? COLUMNES_COMPACTE : undefined)}
       inclouDescendents={inclouDescendents}
@@ -234,6 +469,10 @@ export function UniversalWorkspace({
     >
       <WorkspaceFrame
         compacte={compacte}
+        espai={espai}
+        grups={grupsNavegacio}
+        amagades={amagades}
+        vigilaAmagada={vigilaAmagada}
         declaraNavegacio={declaraNavegacio}
         mestreDetall={ambMestreDetall}
         panellEstret={panellEstret}
@@ -262,7 +501,7 @@ export function UniversalWorkspace({
 }
 
 function WorkspaceFrame({
-  compacte, declaraNavegacio, mestreDetall, panellEstret, onPanell, tornaDeLaLlista, error, onCreate, onCreateError, onManageCategories, renderItem, renderDetail,
+  compacte, espai, grups, amagades, vigilaAmagada, declaraNavegacio, mestreDetall, panellEstret, onPanell, tornaDeLaLlista, error, onCreate, onCreateError, onManageCategories, renderItem, renderDetail,
   labels, icons, tagFilter, collapsibleNavigation, replegaTotaCapcalera, sortable, canCreate, onRetry, listClassName, detailClassName, className
 }) {
   const workspace = useWorkspace();
@@ -313,6 +552,10 @@ function WorkspaceFrame({
       leftColumn={
         <CategoryColumn
           compacte={compacte}
+          espai={espai}
+          grups={grups}
+          amagades={amagades}
+          vigilaAmagada={vigilaAmagada}
           mestreDetall={mestreDetall}
           focusTarget={compacte ? detailFocusRef : listFocusRef}
           onManageCategories={onManageCategories}
@@ -372,22 +615,96 @@ function WorkspaceFrame({
 
 /* ── Columna esquerra: navegació per grups (carpetes, categories, etiquetes…) ── */
 
-function CategoryColumn({ compacte, mestreDetall = false, collapsibleNavigation, replegaTotaCapcalera, focusTarget, onManageCategories, labels, icon, collapseBtnRef, expandBtnRef }) {
-  const { navigationGroups, categories, state, selectCategory, toggleColumn } = useWorkspace();
+function CategoryColumn({
+  compacte, espai, grups: groupsToRender, amagades, vigilaAmagada = false, mestreDetall = false, collapsibleNavigation, replegaTotaCapcalera, focusTarget,
+  onManageCategories, labels, icon, collapseBtnRef, expandBtnRef
+}) {
+  const { state, status, selectCategory, toggleColumn } = useWorkspace();
   const { mida, setPanellObert, tancaPanells, obriPanell, ambRailNavegacio, navegacioEnRail } = useAppGrid();
   const [collapsedGroups, setCollapsedGroups] = useState({});
   const [expandedFolders, setExpandedFolders] = useState(new Set());
 
   const toggleGroup = (id) => setCollapsedGroups(prev => ({ ...prev, [id]: !prev[id] }));
 
-  const groupsToRender = useMemo(() => {
-    const groups = navigationGroups?.length
-      ? navigationGroups.map(group => ({
-          ...group, options: categories.filter(category => category.groupId === group.id)
-        }))
-      : [{ id: 'default', label: null, options: categories }];
-    return groups.map(group => ({ ...group, tree: buildWorkspaceFolderForest(group.options) }));
-  }, [navigationGroups, categories]);
+  /* Llei de la Roda Dentada (ordre del Mestre, 261007) · Les carpetes de
+     sistema no s'esborren mai, però la persona tria quines vol a la vista.
+     S'amaguen les carpetes o categories de PRIMER NIVELL (les arrels de cada
+     grup), amb tot el que porten dins, de l'arbre desplegat i del rail
+     plegat; els documents continuen a «Tot» i a la cerca (el filtre és de
+     la navegació, no de les dades). La preferència és de l'espai
+     (carpetesVisibles.js) i només guarda les amagades. Correcció R1 · El
+     bosc de la navegació (`grups`) i les amagades (`amagades`) venen fets
+     d'UniversalWorkspace, que hi mira la selecció de la secció. */
+  const grupsDeCarpetes = useMemo(
+    () => groupsToRender
+      .filter(group => group.tree.roots.length > 0)
+      .map(group => ({ grup: group, arrels: group.tree.roots })),
+    [groupsToRender]
+  );
+  const grupsVisibles = useMemo(() => (amagades.size ? groupsToRender.flatMap(group => {
+    if (!group.tree.roots.some(node => amagades.has(node.id))) return [group];
+    const roots = group.tree.roots.filter(node => !amagades.has(node.id));
+    /* Un grup amb totes les arrels amagades no deixa cap capçalera buida. */
+    return roots.length ? [{ ...group, tree: { ...group.tree, roots } }] : [];
+  }) : groupsToRender), [groupsToRender, amagades]);
+
+  /* La primera carpeta de primer nivell a la vista (sense comptar-ne una), o null. */
+  const primeraALaVista = (excepte = null) => grupsDeCarpetes
+    .flatMap(({ arrels }) => arrels)
+    .find(node => node.id !== excepte && !amagades.has(node.id))?.id ?? null;
+  /* On es torna si la carpeta activa s'amaga: «Tot»; sense «Tot» (el mode
+     compacte), la primera carpeta que queda a la vista. */
+  const destiALaVista = compacte ? primeraALaVista() : ALL_CATEGORY_ID;
+
+  /* Correcció R1 · Les tornades automàtiques a la vista des de l'última tria
+     de la persona (una carpeta, «Tot» o un interruptor), i si la passada
+     d'espera ja s'ha fet (vegeu l'efecte de davall). */
+  const tornadesRef = useRef(0);
+  const esperaFetaRef = useRef(false);
+  const [passada, setPassada] = useState(0);
+
+  /* Amagar no esborra res. Si la carpeta activa (o la que la conté) s'amaga,
+     es torna a «Tot»; sense «Tot» (el mode compacte), a la primera carpeta
+     que queda a la vista. */
+  const alternaCarpeta = (id, visible) => {
+    tornadesRef.current = 0;
+    desaCarpetaAmagada(espai, id, !visible);
+    if (visible || arrelDeCategoria(groupsToRender, state.activeCategoryId) !== id) return;
+    const desti = compacte ? primeraALaVista(id) : ALL_CATEGORY_ID;
+    if (desti != null) selectCategory(desti);
+  };
+
+  /* Correcció R1 del verificador · La regla de l'interruptor val també quan
+     s'hi arriba d'una altra manera: la carpeta activa mai queda amagada.
+     Quan la secció tria la categoria (selection), ja ho resol
+     UniversalWorkspace (seleccioALaVista, amb el mateix document). Ací, la
+     resta (`vigilaAmagada`): sense categoria de la secció (el Perfil,
+     l'entrada nua del Bloc), el mode compacte (la secció ha de saber on
+     arriba l'enllaç) i l'interruptor premut mentre les dades carregaven o
+     revalidaven (selectCategory no fa res fins a 'ready'). Es torna com amb
+     l'interruptor (selectCategory), però una passada després: el proveïdor
+     posa al dia els seus refs (estat i status) i aplica la selecció de la
+     secció als seus efectes, que van després dels d'esta columna. Com a molt
+     TORNADES_MAXIMES tornades seguides sense cap tria de la persona: una
+     secció que la tornara a imposar no fa cap bucle. */
+  const arrelActiva = arrelDeCategoria(groupsToRender, state.activeCategoryId);
+  const activaAmagada = arrelActiva != null && amagades.has(arrelActiva);
+  useEffect(() => {
+    if (!vigilaAmagada || status !== 'ready' || !activaAmagada || destiALaVista == null) {
+      esperaFetaRef.current = false;
+      return;
+    }
+    if (!esperaFetaRef.current) {
+      esperaFetaRef.current = true;
+      setPassada((n) => n + 1);
+      return;
+    }
+    if (tornadesRef.current >= TORNADES_MAXIMES) return;
+    tornadesRef.current += 1;
+    selectCategory(destiALaVista);
+    /* Una passada més: si la secció la torna a imposar, es veu. */
+    setPassada((n) => n + 1);
+  }, [vigilaAmagada, status, activaAmagada, destiALaVista, passada, selectCategory]);
 
   const folderKey = (groupId, id) => JSON.stringify([groupId, id]);
   useEffect(() => {
@@ -421,7 +738,10 @@ function CategoryColumn({ compacte, mestreDetall = false, collapsibleNavigation,
 
   // El primer grup sense etiqueta es plega des de la mateixa capçalera de la columna;
   // la resta tenen la seua pròpia capçalera acordió.
-  const headerGroup = groupsToRender.find((group) => !group.label) || null;
+  /* Revisió del 261007 (M2-04) · Dels grups que es pinten: si totes les
+     carpetes del grup sense etiqueta s'amaguen, el grup no es pinta i la
+     capçalera no ha de plegar res (cap aria-expanded que no controle res). */
+  const headerGroup = grupsVisibles.find((group) => !group.label) || null;
   const isGroupOpen = (id) => !collapsedGroups[id];
 
   /* Barres (ordre del Mestre, 261004) · En «mitja», amb el rail de la
@@ -430,7 +750,8 @@ function CategoryColumn({ compacte, mestreDetall = false, collapsibleNavigation,
      (collapsed.left) no es toca: és la decisió de la persona en ample. */
   const collapsed = (state.collapsed.left && mida === 'ample') || navegacioEnRail;
   // La roda dentada no depén de cap secció: sense configuració injectada,
-  // obri la de l'espai de treball (amplàries de columna).
+  // obri la de l'espai de treball (amplada de les columnes i, Llei de la Roda
+  // Dentada, carpetes a la vista).
   const [settingsOpen, setSettingsOpen] = useState(false);
   const settingsActions = [
     ...(onManageCategories ? [{
@@ -447,10 +768,19 @@ function CategoryColumn({ compacte, mestreDetall = false, collapsibleNavigation,
     }
   ];
   const settingsDialog = (
-    <WorkspaceSettingsDialog obert={settingsOpen} onTanca={() => setSettingsOpen(false)} labels={labels} />
+    <WorkspaceSettingsDialog
+      obert={settingsOpen}
+      onTanca={() => setSettingsOpen(false)}
+      labels={labels}
+      grupsDeCarpetes={grupsDeCarpetes}
+      amagades={amagades}
+      onAlterna={alternaCarpeta}
+      ambTot={!compacte}
+    />
   );
 
   const chooseCategory = (categoryId) => {
+    tornadesRef.current = 0;
     selectCategory(categoryId);
     /* T7C · En mode compacte el detall és la vista: triar torna a ell (el
        focus, `focusTarget`, és el detall), també en «estret». */
@@ -529,7 +859,7 @@ function CategoryColumn({ compacte, mestreDetall = false, collapsibleNavigation,
           }}
         >
           <CategoryRail
-            groups={groupsToRender}
+            groups={grupsVisibles}
             activeId={state.activeCategoryId}
             onChoose={chooseFromRail}
             label={labels.categories}
@@ -589,7 +919,7 @@ function CategoryColumn({ compacte, mestreDetall = false, collapsibleNavigation,
       />
       <nav className="sdp-workspace-column__body" aria-label={labels.categories}>
         <div className="sdp-workspace-groups">
-          {groupsToRender.map(group => (
+          {grupsVisibles.map(group => (
             <div
               key={group.id}
               className="sdp-workspace-group"

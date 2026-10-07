@@ -3,7 +3,7 @@ import { afterEach, expect, test, vi } from 'vitest';
 vi.mock('../../../config/assetResolver', () => ({ resolveAsset: (uri) => uri }));
 vi.mock('../../../app/contexts/RouterContext', () => ({ useNavigate: () => vi.fn(), Link: 'a' }));
 vi.mock('../NotificationContext.jsx', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
-import { BarraBlava, NOMS_COMENTAR } from './BarraBlava.jsx';
+import { BarraBlava } from './BarraBlava.jsx';
 import { UniversalPage } from '../UniversalPage.jsx';
 
 /* T51 (fase B1 de T52) · La barra blava extreta de PageFrame amb el MATEIX
@@ -23,9 +23,10 @@ const blava = (props) => render(<BarraBlava {...props} />).container.querySelect
    pàgina (UniversalPage → PageFrame) ja pinta este mateix component. */
 const marques = (el) => [...el.children].map((e) => `${e.tagName.toLowerCase()}.${e.getAttribute('class')}`);
 const noms = (el) => [...el.children].map((e) => e.getAttribute('aria-label'));
-/* T63.2 · Només canvia el nom de Comentar (aria-label i title): el marcatge és
-   el de sempre. Sense saber on porta, «Comentar»; la pàgina, el xat comú. */
-const comprovaMarcatge = (barra, nomComentar) => {
+/* Ordre del Mestre (261007) · Comentar es diu sempre «Comentar» (aria-label i
+   title): on porta ho diu el seu menú (BarraBlava.comentar.test.jsx). El
+   marcatge és el de sempre. */
+const comprovaMarcatge = (barra, nomComentar = 'Comentar') => {
   expect(marques(barra)).toEqual(['div.bar-blue-left', 'div.sp-card-actions', 'button.btn-connectar sp-card-connect']);
   const [esquerra, accions, connectar] = barra.children;
   expect(marques(esquerra)).toEqual([
@@ -46,32 +47,32 @@ const comprovaMarcatge = (barra, nomComentar) => {
 };
 
 test('D4 · amb totes les accions, el marcatge literal (T53 inclòs), també el que pinta la pàgina', () => {
-  comprovaMarcatge(blava(TOTES), 'Comentar');
+  comprovaMarcatge(blava(TOTES));
   cleanup();
   window.history.replaceState(null, '', '/constitucio');
-  comprovaMarcatge(render(<UniversalPage chrome="context" title="Pàgina" />).container.querySelector('header.bar-blue'), 'Comentar al xat comú');
+  comprovaMarcatge(render(<UniversalPage chrome="context" title="Pàgina" />).container.querySelector('header.bar-blue'));
   cleanup();
-  // Una pàgina sense xat comú (una consulta, l'arrel): el mateix marcatge i el nom neutre.
+  // Una pàgina sense xat comú (una consulta, l'arrel): el mateix marcatge.
   window.history.replaceState(null, '', '/wikidepoble?item=genoma');
-  comprovaMarcatge(render(<UniversalPage chrome="context" title="Genoma" />).container.querySelector('header.bar-blue'), 'Comentar');
+  comprovaMarcatge(render(<UniversalPage chrome="context" title="Genoma" />).container.querySelector('header.bar-blue'));
 });
 
-/* T63.2 (doctrina del Mestre, 260928) · El rètol «Comentar (Xat Privat)» era
-   fals: Comentar obri el xat comú de la Pàgina Universal, i només per a una
-   persona o una IA el missatge directe. */
-test('T63.2 · el nom de Comentar diu on porta: xat comú, missatge directe o, sense saber-ho, «Comentar»', () => {
-  const nomDe = (props) => {
-    const barra = blava({ ...TOTES, ...props });
-    const nom = barra.querySelector('.sp-card-actions').children[1].getAttribute('aria-label');
+/* Ordre del Mestre (261007) · «Comentaris = xat» · Derogat el nom que deia on
+   portava Comentar (T63.2: «Comentar al xat comú», «Comentar per missatge
+   directe»): Comentar obri un menú amb les dues vies, i el botó ho diu
+   (aria-haspopup). Sense menú (un handler propi o un valor desconegut), el
+   botó de sempre, sense cap atribut nou. */
+test('261007 · Comentar es diu «Comentar» i diu si obri el menú de les dues vies', () => {
+  const comentarDe = (props) => {
+    const boto = blava({ ...TOTES, ...props }).querySelector('.sp-card-actions').children[1];
+    const dades = [boto.getAttribute('aria-label'), boto.getAttribute('title'), boto.getAttribute('aria-haspopup')];
     cleanup();
-    return nom;
+    return dades;
   };
-  expect(nomDe({ comentarXat: 'comu' })).toBe('Comentar al xat comú');
-  expect(nomDe({ comentarXat: 'directe' })).toBe('Comentar per missatge directe');
-  expect(nomDe({ comentarXat: null })).toBe('Comentar');
-  expect(nomDe({ comentarXat: 'inventat' })).toBe('Comentar');
-  expect(NOMS_COMENTAR).toEqual({ comu: 'Comentar al xat comú', directe: 'Comentar per missatge directe' });
-  expect(Object.values(NOMS_COMENTAR).join(' ')).not.toMatch(/Privat/);
+  expect(comentarDe({ comentarXat: 'comu' })).toEqual(['Comentar', 'Comentar', 'menu']);
+  expect(comentarDe({ comentarXat: 'privat' })).toEqual(['Comentar', 'Comentar', 'menu']);
+  expect(comentarDe({ comentarXat: null })).toEqual(['Comentar', 'Comentar', null]);
+  expect(comentarDe({ comentarXat: 'directe' })).toEqual(['Comentar', 'Comentar', null]);
 });
 
 test('tres fills per a la graella (T37) i les classes de les fletxes (T53)', () => {

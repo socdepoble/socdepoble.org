@@ -23,6 +23,7 @@ export default function EspecimenOpcions() {
           ['opcions[].antetitol / icona / detall', 'string / node / node', '—', 'Només en targetes.'],
           ['GrupOpcions.textTriada', 'string', "'Triat'", 'Insígnia de l’opció marcada (només en mode controlat).'],
           ['Interruptor.actiu / onCanvi', 'boolean / (bool) => void', 'false', 'role="switch", estat en text Sí/No.'],
+          ['Interruptor.textosEstat', '{ si, no }', "{ si: 'Sí', no: 'No' }", 'El text de l’estat, ja traduït per qui el munta.'],
           ['GrupCamps.llegenda / children', 'node / node', '—', 'Fieldset amb llegenda per a camps que van junts (adreça, contacte).'],
         ]}
         a11y={['fieldset + legend: el lector llig la pregunta abans de cada opció.', 'Zona tàctil de 44px per fila.', 'L’interruptor diu «Sí/No» en text.', 'Targetes: nom = antetítol + títol (aria-labelledby); descripció = ajuda + detall (aria-describedby).', 'Targetes: la triada es llig sense color, pel punt del ràdio i la insígnia amb text.']}

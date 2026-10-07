@@ -97,7 +97,7 @@ test('pàgina sense imatge, etiquetes, data ni chrome: les reserves de sempre', 
 test('T8 · accioPrincipal passa a la UniversalPage només quan n’hi ha', () => {
   const pagina = PAGE_COPY.anima;
   render(<TextSection page={pagina} pageKey="anima" />);
-  const senseAccio = mocks.props;
+  const senseAccio = { ...mocks.props };
   expect(Object.hasOwn(senseAccio, 'accioPrincipal')).toBe(false);
   cleanup();
   render(<TextSection page={pagina} pageKey="anima" accioPrincipal={null} />);
@@ -110,6 +110,62 @@ test('T8 · accioPrincipal passa a la UniversalPage només quan n’hi ha', () =
   const resta = { ...mocks.props };
   delete resta.accioPrincipal;
   expect(resta).toEqual(senseAccio);
+});
+
+/* Ordre del Mestre (261007) · «Comentaris = xat» · Una pàgina de text no passa
+   cap Comentar propi: el de la seua barra és el menú de dues vies de totes
+   les pàgines (PageFrame i useAccions: «En privat», el xat amb Sóc de Poble;
+   «En públic», el xat comú de la ruta). Derogat el gestor propi del mateix
+   dia, que només oferia el missatge directe i saltava la via pública. */
+test('261007 · una pàgina de text no passa cap Comentar propi: la barra oferix les dues vies', () => {
+  for (const clau of ['projecte', 'xat']) {
+    render(<TextSection page={PAGE_COPY[clau]} pageKey={clau} />);
+    expect([clau, Object.hasOwn(mocks.props, 'onComment')]).toEqual([clau, false]);
+    cleanup();
+  }
+});
+
+/* Ordre del Mestre (261007), proposta P4 · `onConnect` arriba a la
+   UniversalPage NOMÉS quan n'hi ha: sense, la UniversalPage connecta la ruta
+   on està la persona, com sempre. */
+test('261007 · onConnect passa a la UniversalPage només quan n’hi ha', () => {
+  render(<TextSection page={PAGE_COPY.xat} pageKey="xat" />);
+  expect(Object.hasOwn(mocks.props, 'onConnect')).toBe(false);
+  cleanup();
+  const connecta = vi.fn();
+  render(<TextSection page={PAGE_COPY.xat} pageKey="xat" onConnect={connecta} />);
+  expect(mocks.props.onConnect).toBe(connecta);
+});
+
+/* Ordre del Mestre (261007) · «El Xat»: la portada del Mestre (1024×1024,
+   prioritat alta), el títol, el subtítol, les etiquetes del document i la
+   data que ha fixat el Mestre (01:30 hora local del 07-10-2026). */
+test('261007 · El Xat: les props de la seua UniversalPage', () => {
+  const pagina = PAGE_COPY.xat;
+  const { container } = render(<TextSection page={pagina} pageKey="xat" />);
+  expect(mocks.props).toEqual({
+    title: 'El Xat',
+    subtitle: pagina.subtitle,
+    lead: pagina.lead,
+    heroImage: '/assets/uploads/brain/xat_portada.jpg',
+    heroWidth: 1024,
+    heroHeight: 1024,
+    heroFetchPriority: 'high',
+    heroAlt: pagina.imageAlt,
+    showLogos: true,
+    labels: [
+      { text: 'Comunicació', className: 'sdp-badge-system' },
+      { text: 'Eina', className: 'sdp-badge-category' }
+    ],
+    copyright: COPYRIGHT_SDP,
+    ...dataHoraDeBarra({ creat: '2026-10-07T01:30:00+02:00' }),
+    chrome: 'full',
+    topBarData: { showPin: false }
+  });
+  expect([mocks.props.time, mocks.props.date]).toEqual(['01:30', '07/10/26']);
+  const cos = container.querySelector('[data-pagina] > article.cms-preview');
+  expect(cos.querySelector('h3').textContent).toBe('Com a casa, com a WhatsApp');
+  expect(cos.querySelector('h1, h2')).toBeNull();
 });
 
 test('el chrome del copy mana i els fills van davall del text', () => {

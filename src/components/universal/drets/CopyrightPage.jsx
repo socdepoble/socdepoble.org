@@ -8,7 +8,7 @@
  * poble i diu d'on ve la llicència de sèrie (l'herència des del Perfil).
  *
  * CONTRACTE (pur: sense contextos ni router; es pot pintar al catàleg)
- *   valor      · el copyright d'ara ('© Sóc de Poble', 'CC BY 4.0', 'x · CC0 1.0'…)
+ *   valor      · el copyright d'ara ('CC BY-NC-SA 4.0 Sóc de Poble', 'CC BY 4.0', 'x · CC0 1.0'…)
  *   autor      · el nom del text de sèrie de «Copyright (C)» (© autor)
  *   ambit      · 'publicacio' | 'perfil' | 'neutre' — quin avís d'herència es pinta
  *   perDefecte · la llicència heretada de sèrie (només àmbit 'publicacio'), o null
@@ -80,6 +80,7 @@ function opcioDe(llicencia, antetitol) {
     detall: llicencia.permisos.length ? (
       <>{llicencia.permisos.map((p) => <Insignia key={p.text} to={p.to}>{p.text}</Insignia>)}</>
     ) : undefined,
+    className: llicencia.id === 'cc-by-nc-sa' ? 'sdp-targeta-opcio--destacada' : undefined,
   };
 }
 

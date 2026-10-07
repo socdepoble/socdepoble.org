@@ -94,18 +94,41 @@
  * l'excepció a agrupacio.jsx, al Lector i al seu espècimen.
  * W4-07 · rutaDAutorSegura ja és la compartida d'UniversalUtils (la de la
  * barra taronja de les pàgines és la mateixa).
+ *
+ * Ordre del Mestre (261007) · EL COPYRIGHT ÉS UN ENLLAÇ. El text de
+ * `copyright` (siga quin siga: «CC BY-NC-SA 4.0…», «© Pepet»…) porta SEMPRE a
+ * la pàgina «Drets d'autor» (RUTA_DRETS_AUTOR, /page/drets-autor), amb el
+ * Link del router, el mateix de l'autor i de les etiquetes (EnllacDrets;
+ * sense router llegible, un <a> amb la mateixa ruta). El paràgraf
+ * .sp-card-copyright es queda (el seu lloc i el seu aire); l'enllaç va dins,
+ * amb la classe .sp-card-copyright__enllac (components.css: blau d'acció,
+ * subratllat només en passar el ratolí). Com la ranura `accio`, és un germà
+ * del vel enllaç de la targeta, no un fill, i puja damunt seu
+ * (.sp-card-copyright, z-index 2): el clic és seu i no obri la targeta.
+ *
+ * Ordre del Mestre (261007) · «COMENTARIS = XAT» · Comentar del peu és el
+ * MATEIX botó que el de la barra blava (BotoComentar, barres/BarraBlava.jsx):
+ * obri el menú de les dues vies, «En privat» (el xat privat amb Sóc de
+ * Poble) i «En públic» (el xat públic de l'element, pel seu `objecte`), i
+ * useAccions fa la triada. Sense xat públic, la fila pública es queda
+ * desactivada i diu per què. Un onComment propi (les previsualitzacions que
+ * avisen) mana i no hi ha menú. Tancat, el botó només guanya
+ * aria-haspopup i aria-expanded: cap píxel canvia. El menú penja del peu i
+ * s'obri cap amunt (components.css).
  */
 import { useId } from 'react';
 import { Link } from '../../../app/contexts/RouterContext';
 import { resolRecursPropi } from '../../../config/assetResolver.js';
+import { RUTA_DRETS_AUTOR } from '../../../config/systemPages.js';
 import { isSafeAsset, isSafeUrl, rutaDAutorSegura } from '../../universal/UniversalUtils';
 import { llevaPuntFinal } from '../../universal/editorial.js';
 import { EmoticonaBarra } from '../../universal/EmoticonaBarra.jsx';
 import { usePastillaCalendari } from '../../universal/barres/pastillaCalendari.js';
+import { BotoComentar } from './Comentar.jsx';
 import { emoticonaDeBarra } from '../../../utils/emoji.js';
 import { ActionControl, IconButton, DateTimeControl } from '../atoms/controls.jsx';
-import { PinIcon, TranslateIcon, CommentIcon, ShareIcon } from '../atoms/icones.jsx';
-import { useAccions } from '../hooks/useAccions.js';
+import { PinIcon, TranslateIcon, ShareIcon } from '../atoms/icones.jsx';
+import { useAccions, useUbicacioApp } from '../hooks/useAccions.js';
 import { PortesTargeta, normalitzaPortes } from './PortesTargeta.jsx';
 import { fontSegura } from './marca.jsx';
 import { usePulsacioLlarga } from './pulsacioLlarga.js';
@@ -197,12 +220,24 @@ function SquareBadge({ badge }) {
     );
   }
 
-  return isCalendar ? (
-    <time className="sp-card-calendar-badge" aria-label={etiqueta} dateTime={badge.dateTime}>
-      {contingut}
-    </time>
-  ) : (
-    <div className="sp-card-calendar-badge" aria-label={etiqueta}>{contingut}</div>
+  if (isCalendar) {
+    return (
+      <time className="sp-card-calendar-badge" aria-label={etiqueta} dateTime={badge.dateTime}>
+        {contingut}
+      </time>
+    );
+  }
+  /* Revisió del 261007 (M2-08) · Un quadrat personalitzat (badge.content)
+     amb `label` és una imatge amb nom (role="img"): un aria-label en un <div>
+     sense rol no el llig cap lector. Un de `decoratiu` (insigniaEmojiXL sense
+     label: la targeta viva, que ja diu el títol) no té nom i s'amaga. La
+     resta, com sempre. Cap píxel canvia. */
+  const personalitzat = !isPrice;
+  if (personalitzat && badge.decoratiu) {
+    return <div className="sp-card-calendar-badge" aria-hidden="true">{contingut}</div>;
+  }
+  return (
+    <div className="sp-card-calendar-badge" role={personalitzat && badge.label ? 'img' : undefined} aria-label={etiqueta}>{contingut}</div>
   );
 }
 
@@ -232,12 +267,29 @@ function LlistaEtiquetes({ etiquetes }) {
   );
 }
 
+/* Ordre del Mestre (261007) · L'enllaç del copyright: SEMPRE a la pàgina
+   «Drets d'autor». Amb router, el Link de l'app (el de l'autor i de les
+   etiquetes: href amb la base i navegació del router); sense, un <a> amb la
+   mateixa ruta, que l'interceptor d'App.jsx passa al router. El DOM és el
+   mateix en tots dos casos. El router llegible, o null, és el de
+   useUbicacioApp (useAccions.js, revisió del 261007: abans, una còpia ací):
+   una peça pintada fora de RouterProvider, o una prova amb un mock que només
+   porta useNavigate, no tomben la targeta. */
+function EnllacDrets({ children }) {
+  const router = useUbicacioApp();
+  if (!router) return <a href={RUTA_DRETS_AUTOR} className="sp-card-copyright__enllac">{children}</a>;
+  return <Link to={RUTA_DRETS_AUTOR} className="sp-card-copyright__enllac">{children}</Link>;
+}
+
 /* `portes` (P5) · Les portes de la targeta de doble acció, al final del cos.
    Sense, res: el DOM de sempre.
    P6 · El preu va al quadrat (SquareBadge), mai a la píndola: un sol
    indicador, i mana squareBadge, després el preu i després la data. La classe
-   has-price es conserva per a qui la mire. */
-function CardBody({ imatge, imageAlt, calendarBadge, squareBadge, price, icon, title, TitleTag, subtitle, body, etiquetes, copyright, portes = null, privada = false }) {
+   has-price es conserva per a qui la mire.
+   Ordre del Mestre (261007) · `accio`: la ranura de l'acció gran (vegeu la
+   prop a UniversalCard). Amb ella, el seu contenidor ocupa el lloc de les
+   etiquetes, que no es pinten. */
+function CardBody({ imatge, imageAlt, calendarBadge, squareBadge, price, icon, title, TitleTag, subtitle, body, etiquetes, copyright, portes = null, privada = false, accio = null }) {
   const activeBadge = squareBadge || (price ? { type: 'price', value: price } : null) || calendarBadge;
   return (
     <>
@@ -267,8 +319,12 @@ function CardBody({ imatge, imageAlt, calendarBadge, squareBadge, price, icon, t
         {body && (typeof body === 'string'
           ? <p className="sp-card-text">{body}</p>
           : <div className="sp-card-text">{body}</div>)}
-        {etiquetes.length > 0 && <LlistaEtiquetes etiquetes={etiquetes} />}
-        {copyright && <p className="sp-card-copyright">{copyright}</p>}
+        {accio ? <div className="sp-card-accio">{accio}</div> : etiquetes.length > 0 && <LlistaEtiquetes etiquetes={etiquetes} />}
+        {copyright && (
+          <p className="sp-card-copyright">
+            <EnllacDrets>{copyright}</EnllacDrets>
+          </p>
+        )}
         {portes}
       </div>
     </>
@@ -310,10 +366,11 @@ export function UniversalCard({
   mainHref,
   onMainClick,
   /* T63.2 (doctrina del Mestre, 260928) · el descriptor tipat de l'element
-     (objecteDe, objecteDePerfil…): sense onComment propi, Comentar obri el
-     seu xat; una nota no en té i no es pinta (useAccions). Sense objecte, el
-     xat de la 'pagina' del detall (mainHref), mai el de la llista; sense
-     detall, el clic avisa que no hi ha xat. */
+     (objecteDe, objecteDePerfil…): diu quin és el xat PÚBLIC del menú de
+     Comentar (ordre del Mestre, 261007: «En privat» i «En públic»); una nota
+     no en té i Comentar no es pinta (useAccions). Sense objecte, el xat de la
+     'pagina' del detall (mainHref), mai el de la llista; sense detall, cap
+     xat públic: «En públic» queda desactivada i diu per què. */
   objecte,
   copyright,
   calendarBadge = null,
@@ -352,7 +409,18 @@ export function UniversalCard({
   onAccioSecundaria,
   /* Ordre del Mestre, 261004 (regressió de la Nevera) · la descripció
      accessible de l'element principal. Sense, el DOM de sempre. */
-  descripcioAccessible
+  descripcioAccessible,
+  /* Ordre del Mestre (261007) · `accio`: una ranura genèrica per a l'acció
+     gran de la targeta, un node React (la targeta d'El Xat hi posa la
+     PortaDePagina «Anar al xat»: la pell de Boto, primària i gran). La peça
+     no en sap res: si n'hi ha, va al lloc de les etiquetes i les etiquetes
+     no es pinten. L'enllaç de tota la targeta (sp-card-link-overlay) es
+     queda: un clic a qualsevol altra part obri la pàgina (mainHref). El
+     contenidor .sp-card-accio puja damunt del vel (components.css), i el
+     botó és un germà del vel, no un fill: el seu clic no arriba a l'enllaç
+     de la targeta, i amb el teclat és una parada pròpia, després del vel.
+     Sense la prop, el DOM de sempre. */
+  accio = null
 }) {
   const idDescripcio = useId();
   const safeMainHref = mainHref && isSafeUrl(mainHref) ? mainHref : null;
@@ -379,7 +447,8 @@ export function UniversalCard({
     traduirVisible,
     comentarVisible,
     compartirVisible,
-    connectarVisible
+    connectarVisible,
+    comentarXat
   } = useAccions({
     title,
     mainHref: safeMainHref,
@@ -447,10 +516,9 @@ export function UniversalCard({
         <TranslateIcon className="icon" />
       </IconButton>
     ),
+    /* Ordre del Mestre (261007) · el menú de les dues vies, el de la barra. */
     comentarVisible && (
-      <IconButton key="comentar" label={ambTitol('Comentar')} onClick={handleComment}>
-        <CommentIcon className="icon" />
-      </IconButton>
+      <BotoComentar key="comentar" label={ambTitol('Comentar')} comentarXat={comentarXat} onComment={handleComment} />
     ),
     compartirVisible && (
       <IconButton key="compartir" label={ambTitol('Compartir')} onClick={handleShare}>
@@ -558,6 +626,7 @@ export function UniversalCard({
         copyright={copyright}
         portes={ambPortes ? <PortesTargeta portes={portesNetes} /> : null}
         privada={imatgePrivada}
+        accio={accio}
       />
 
       {/* P6 (directriu 2325, confirmació 2) · El peu es pinta amb portes o sense. */}

@@ -76,7 +76,7 @@ blockers:
   - "L'estat de 'remote' com a default en OnboardingSection bloqueja el comportament local."
 decisions_clau:
   - "Reversió voluntària del codi editat en sessió per no trencar el flux de Claude."
-  - "Afegir instrucció estricta de Desenvolupament Offline-First."
+  - "Afegir instrucció estricta de Desenvolupament desconnectat de la xarxa (històric)."
 requereix_auditoria: false
 ```
 

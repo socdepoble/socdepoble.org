@@ -1,7 +1,7 @@
 import React from 'react';
 import { act, render, screen, fireEvent, cleanup, within } from '@testing-library/react';
 import { afterEach, beforeAll, expect, test, vi } from 'vitest';
-import { NotebookPen } from 'lucide-react';
+import { FileText, NotebookPen } from 'lucide-react';
 import { DefaultItemCard, UniversalWorkspace } from './UniversalWorkspace.jsx';
 import { WorkspaceProvider, useWorkspace } from './WorkspaceContext.jsx';
 import { useAppGrid } from '../../layout/AppGridShell.jsx';
@@ -219,6 +219,10 @@ test('la roda dentada és sempre present: sense configuració pròpia obri la de
     model={{ status: 'ready', items: [{ id: 'a', title: 'A' }] }} />);
   fireEvent.click(screen.getByRole('button', { name: 'Configuració de l’espai de treball' }));
   expect(screen.getByRole('heading', { name: 'Configuració de l’espai de treball' })).toBeTruthy();
+  /* Llei de la Roda Dentada (261007) · L'amplada té el seu títol; sense cap
+     carpeta a la navegació, «Carpetes a la vista» no es pinta. */
+  expect(screen.getByRole('heading', { level: 3, name: 'Amplada de les columnes' })).toBeTruthy();
+  expect(screen.queryByRole('heading', { name: 'Carpetes a la vista' })).toBeNull();
   fireEvent.click(screen.getByRole('button', { name: 'Compacta' }));
   // PRESETS.compacta d'AppGridShell (210/250) des de 797ae271, «columnes més estretes».
   expect(container.querySelector('.app-grid-page').style.getPropertyValue('--app-grid-col-sidebar')).toBe('210px');
@@ -419,6 +423,49 @@ test('fitxa sense imatge: glif propi, després el de la categoria i la lletra no
   expect(media('Pestanyes').textContent).toBe('🧭');
   expect(media('Molla').textContent).toBe('🍞');
   expect(media('divisor').textContent).toBe('D');
+});
+
+/* Ordre del Mestre (261007) · «Allà on ara hi ha emojis menuts a la columna
+   central s'han de mostrar a mida XL». Un emoji (propi, del títol o de la
+   categoria) porta la classe de l'emoji XL; la icona de Lucide, un text que
+   no és cap emoji i la inicial, no (Llei del Píxel). */
+test('fitxa sense imatge: l’emoji, d’on vinga, va en XL; la icona de Lucide, el text i la inicial, no', () => {
+  const { container } = render(
+    <UniversalWorkspace
+      model={{
+        status: 'ready',
+        categories: [
+          { id: 'emoji', label: 'Amb emoji', icon: '🧭' },
+          { id: 'lucide', label: 'Amb Lucide', icon: FileText },
+          { id: 'sense', label: 'Sense glif' }
+        ],
+        items: [
+          { id: 'a', title: 'Pestanyes', categoryIds: ['emoji'] },
+          { id: 'b', title: 'Molla', icon: '🍞', categoryIds: ['sense'] },
+          { id: 'c', title: '🍅 Tomaques', categoryIds: ['sense'] },
+          { id: 'd', title: 'Document', categoryIds: ['lucide'] },
+          { id: 'e', title: 'Sigles', icon: 'AB', categoryIds: ['sense'] },
+          { id: 'f', title: 'divisor', categoryIds: ['sense'] }
+        ]
+      }}
+      initialSelection={{ categoryId: '__all__', itemId: 'a' }}
+      renderDetail={() => null}
+    />
+  );
+  const media = (titol) => [...container.querySelectorAll('.sdp-gestor-fitxa')]
+    .find(fitxa => fitxa.querySelector('.sdp-gestor-fitxa__titol')?.textContent === titol)
+    .querySelector('.sdp-gestor-fitxa__media');
+  const classe = (titol) => media(titol).querySelector('.sdp-gestor-fitxa__inicial')?.className ?? null;
+  for (const [titol, emoji] of [['Pestanyes', '🧭'], ['Molla', '🍞'], ['🍅 Tomaques', '🍅']]) {
+    expect(media(titol).textContent, titol).toBe(emoji);
+    expect(classe(titol), titol).toBe('sdp-gestor-fitxa__inicial sdp-fitxa-emoji-xl');
+  }
+  // La icona de Lucide de la categoria no és cap emoji: es queda com era.
+  expect(media('Document').querySelector('svg.lucide-file-text')).toBeTruthy();
+  expect(media('Document').querySelector('.sdp-fitxa-emoji-xl')).toBeNull();
+  // Un text que no és cap emoji i la inicial, la classe de sempre.
+  expect([media('Sigles').textContent, classe('Sigles')]).toEqual(['AB', 'sdp-gestor-fitxa__inicial']);
+  expect([media('divisor').textContent, classe('divisor')]).toEqual(['D', 'sdp-gestor-fitxa__inicial']);
 });
 
 test('A11Y: el títol plegable de la columna no es declara pàgina actual', () => {

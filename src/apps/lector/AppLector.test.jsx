@@ -171,17 +171,30 @@ describe('en ample: carpetes, fonts i notícies de costat', () => {
     expect(files()).toHaveLength(6);
   });
 
-  test('el Connectar de la targeta fa el de sempre però no compta a la telemetria; Comentar diu que no hi ha xat', async () => {
+  /* Ordre del Mestre (261007) · «COMENTARIS = XAT» · Comentar de la targeta
+     obri el menú de dues vies. Una notícia no té xat públic: «En públic» es
+     queda desactivada, amb la raó, i el clic no navega ni avisa. «En privat»
+     (el xat amb Sóc de Poble, fora de l'app) és una pregunta oberta al
+     Mestre per al Lector: ací no es prova. */
+  test('el Connectar de la targeta fa el de sempre però no compta a la telemetria; Comentar obri el menú sense xat públic', async () => {
     const vistos = [];
     const escolta = (event) => vistos.push(event.detail);
     window.addEventListener('sdp:telemetria', escolta);
-    /* La plataforma de proves no munta l'avisador: l'avís arriba al de reserva del context. */
+    /* La plataforma de proves no munta l'avisador: un avís arribaria al de reserva del context. */
     const avis = vi.spyOn(console, 'warn').mockImplementation(() => {});
     try {
       munta('/app/lector/noticies/hui');
       await screen.findByRole('region', { name: 'Hui' });
-      fireEvent.click(within(targetaDe(CORREFOC)).getByRole('button', { name: `Comentar ${CORREFOC}` }));
-      expect(avis).toHaveBeenCalledWith(expect.any(String), 'Ací no hi ha cap xat comú on comentar.');
+      const comentar = within(targetaDe(CORREFOC)).getByRole('button', { name: `Comentar ${CORREFOC}` });
+      expect(comentar.getAttribute('aria-haspopup')).toBe('menu');
+      fireEvent.click(comentar);
+      const menu = within(targetaDe(CORREFOC)).getByRole('menu');
+      const publica = within(menu).getByRole('menuitem', { name: 'En públic' });
+      expect(publica.getAttribute('aria-disabled')).toBe('true');
+      expect(publica.textContent).toBe('En públicAcí encara no hi ha cap xat públic.');
+      const avisosAbans = avis.mock.calls.length;
+      fireEvent.click(publica);
+      expect(avis.mock.calls.slice(avisosAbans)).toEqual([]);
       expect(ubicacio()).toBe('/app/lector/noticies/hui');
       fireEvent.click(within(targetaDe(CORREFOC)).getByRole('button', { name: `Connectar amb ${CORREFOC}` }));
       /* El clic s'ha fet (Connectar porta on sempre) i cap intent «connectar» ha eixit. */

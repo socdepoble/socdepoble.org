@@ -1417,6 +1417,15 @@ button.sp-card-calendar-badge {
   margin-top: var(--sdp-space-1);
 }
 
+/* Ordre del Mestre (261007) · L'emoji XL d'una part sense foto (Vehicle,
+   Animalets, Consola, Mapa, Gestoria), en lloc de la icona lineal: 5,5rem
+   (88px) amb línia 1, dins dels 124px interiors del quadrat. És decoratiu
+   (aria-hidden): el nom el porta l'etiqueta del quadrat. */
+.sp-card-calendar-badge__emoji {
+  font-size: 5.5rem;
+  line-height: 1;
+}
+
 .btn-taronja-fort {
   background: var(--sdp-crom-realc);
   color: var(--sdp-sobre-accent);
@@ -2105,6 +2114,62 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
   article.content-wrapper[hidden] { display: none; }
 }
 
+/* ── Ordre del Mestre (261007) · «COMENTARIS = XAT»: EL MENÚ DE COMENTAR ──
+   Components: BotoComentar i MenuComentar (PedraSeca/organismes/Comentar.jsx),
+   a la barra blava i al peu de la UniversalCard. La pell és la del menú de Traduir, de
+   més amunt (.sdp-menu-traduir i les seues files, que el menú també porta):
+   ací només hi ha el que el fa clon de WhatsApp (dues files grans, una icona
+   a l'esquerra i, davall del nom, una línia que diu on porta) i el seu lloc a
+   la targeta. Res d'ací es veu fins que es prem Comentar (Llei del Píxel).
+     · A la barra, el lloc és el de Traduir (.bar-blue .sdp-menu-traduir):
+       just davall de la barra, centrat com el trio.
+     · A la targeta, penja del peu blau (.sp-card-footer, relatiu) i s'obri
+       cap amunt, damunt del cos: la targeta retalla el que en sobreïx
+       (overflow i content-visibility). z-index 1 dins del peu, que ja puja
+       damunt del vel enllaç de la targeta.
+     · L'ample és el de les files, amb el sostre dels menús emergents (Pedra
+       Seca §12: --sdp-menu-ample-max, 300px) i, si és més estret, el de la
+       barra o el del peu de la targeta, amb aire per tancar-lo tocant fora.
+       La línia de davall fa salt; el nom, si no hi cabera, es talla amb punts
+       suspensius (el nom accessible és sencer: aria-labelledby).
+     · La fila sense xat públic (aria-disabled) es queda enfocable i
+       llegible: el text suau i cap fons en passar-hi el ratolí. */
+@layer components {
+  .sp-card-footer .sdp-menu-comentar {
+    position: absolute;
+    bottom: 100%;
+    inset-inline-start: var(--sdp-space-2);
+    z-index: 1;
+  }
+  .sdp-menu-comentar {
+    max-inline-size: min(var(--sdp-menu-ample-max), calc(100% - var(--sdp-space-4)));
+  }
+  .sdp-menu-comentar .sdp-menu-traduir__item {
+    padding-block: var(--sdp-space-2);
+  }
+  .sdp-menu-comentar__text {
+    display: flex;
+    flex-direction: column;
+    min-inline-size: 0;
+  }
+  .sdp-menu-comentar__nom {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .sdp-menu-comentar__detall {
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-meta);
+  }
+  .sdp-menu-comentar .sdp-menu-traduir__item[aria-disabled='true'] {
+    color: var(--sdp-text-suau);
+    cursor: default;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-menu-comentar .sdp-menu-traduir__item[aria-disabled='true']:hover { background: transparent; }
+  }
+}
+
 /* ── P5 · LES PORTES DE LA TARGETA DE DOBLE ACCIÓ (Onada 4, 261003) ────
    PRD «Control amb targetes il·lustrades de doble acció», aprovat pel
    Mestre, amb l'ESMENA 261003 22:34 (directrius 2234 i 2245): la targeta
@@ -2134,6 +2199,82 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
     padding-inline: var(--sdp-space-1);
     text-align: center;
     overflow-wrap: anywhere;
+  }
+}
+
+/* ── Ordre del Mestre (261007) · L'ACCIÓ GRAN DE LA TARGETA ─────────────
+   La ranura `accio` d'UniversalCard (la targeta d'El Xat: la porta gran i
+   blava «Anar al xat», PortaDePagina), al lloc de les etiquetes i amb el seu
+   mateix aire (.sp-card-labels). El contenidor puja damunt del vel enllaç
+   de la targeta (.sp-card-link-overlay, z-index 1), com la resta de peces
+   interactives: el clic al botó és del botó i no obri la pàgina. Additiu i
+   limitat a una classe nova: cap regla existent canvia (Llei del Píxel). */
+@layer components {
+  .sp-card-accio {
+    position: relative;
+    z-index: 2;
+    margin-top: var(--sdp-space-3);
+    margin-bottom: var(--sdp-space-4);
+  }
+}
+
+/* ── Ordre del Mestre (261007) · EL COPYRIGHT ÉS UN ENLLAÇ ─────────────────
+   El text del copyright de la targeta (UniversalCard) i de la capçalera de
+   la pàgina (PageFrame) porta SEMPRE a la pàgina «Drets d'autor»
+   (/page/drets-autor): .sp-card-copyright__enllac, dins del paràgraf de
+   sempre, que no canvia.
+     · Color: el blau d'acció de text, --sdp-accio-text. Contrast: 9,21:1
+       sobre la targeta i 8,11:1 sobre el fons de l'app en clar; 10,32:1 i
+       11,18:1 en fosc (AAA en tots dos). Esta regla (capa components) guanya
+       al color i al hover taronja dels enllaços de base.css (capa legacy).
+     · Subratllat: cap en repòs; només en passar el ratolí, dins de la guarda
+       de ratolí (Fase B: al tàctil no es queda enganxat), amb el gruix i la
+       separació dels enllaços de prosa (base.css).
+     · Focus visible: l'anell del sistema (--sdp-focus-*).
+     · Àrea tàctil (Llei de Vida, --sdp-touch): un inline-block amb coixí
+       vertical i el mateix marge en negatiu. Es pot tocar en 54px d'alt
+       (22,4 de línia i 2 × 16 de coixí) i la línia del text no es mou
+       (vertical-align: top; el marge negatiu torna la caixa a l'alt de la
+       línia). Amb text curt («© Pepet»), mai menys de --sdp-touch d'ample.
+     · Damunt del vel: a la targeta, el paràgraf ja hi puja
+       (.sp-card-copyright, z-index 2), com .sp-card-accio. A la capçalera,
+       el paràgraf retallava la zona tàctil (overflow: hidden, per als punts
+       suspensius de modules.css): els punts suspensius passen a l'enllaç i
+       el paràgraf deixa de retallar. Especificitat (0,2,0): guanya a la
+       regla de modules.css (0,1,0) sense dependre de l'ordre dels fulls.
+     · Ordre del Mestre (261007) · UNA SOLA LÍNIA, a totes les targetes i a
+       la capçalera: un text llarg es retalla amb punts suspensius, i el text
+       sencer continua sent el nom accessible (Pedra Seca §12). El retall va
+       a l'enllaç, no al paràgraf: un overflow: hidden al paràgraf retallaria
+       també la zona tàctil, que en sobreïx 16px per dalt i per baix.
+   Additiu: cap regla existent canvia. */
+@layer components {
+  .sp-card-copyright__enllac {
+    display: inline-block;
+    max-inline-size: 100%;
+    min-inline-size: var(--sdp-touch);
+    vertical-align: top;
+    padding-block: var(--sdp-space-4);
+    margin-block: calc(var(--sdp-space-4) * -1);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--sdp-accio-text);
+    text-decoration: none;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .sp-card-copyright__enllac:hover {
+      text-decoration: underline;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 0.18em;
+    }
+  }
+  .sp-card-copyright__enllac:focus-visible {
+    outline: var(--sdp-focus-gruix) solid var(--sdp-focus);
+    outline-offset: var(--sdp-focus-separacio);
+  }
+  .sp-card-copyright.page-title-copyright {
+    overflow: visible;
   }
 }
 
@@ -2330,4 +2471,128 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
     overflow-wrap: anywhere;
   }
   .sdp-emojis-xl__glif { font-size: 5rem; line-height: 1.2; }
+}
+
+/* ── Ordre del Mestre (261007) · CARRUSEL D'IMATGES ──────────────────────
+   La pell de CarruselImatges (PedraSeca/organismes), la portada amb més
+   d'una foto de la Pàgina Universal (ItemDetailSection, a la ranura
+   topBarData.heroComponent de PageFrame). Vivia a PedraSeca/carrusel.css,
+   que trencava la llei dura V3 «css-de-seccio» de tractor-vocabulari.mjs
+   (revisió S1). Ordre del Mestre: «Moure a components.css». Mateixes
+   regles i mateix píxel; només el centrat del comptador canvia d'escriptura
+   (ho explica la seua regla).
+     · Una pista horitzontal amb scroll-snap: cada foto, l'amplada sencera i
+       1:1 (Pedra Seca §8), retallada com el mitjà de la targeta (object-fit:
+       cover). Damunt, dos botons redons de --sdp-touch als costats i el
+       comptador centrat a baix, amb fons sòlid de targeta i vora: es lligen
+       sobre qualsevol foto, sense cap ombra.
+     · Els botons són .sdp-boto (Boto secundari). El seu :active hi posa un
+       transform: scale(); per això el centrat vertical el fa el contenidor
+       dels controls (flex), mai un transform del botó. El contenidor no rep
+       el dit (pointer-events: none): el gest de passar arriba a la pista;
+       els botons, sí.
+     · Moviment: el pas suau el demana el JS (scrollTo) i, amb moviment
+       reduït, salta. La pista no declara cap scroll-behavior i l'apagador
+       global de base.css continua manant.
+     · AL FINAL DEL FULL: .sdp-carrusel__boto pesa el mateix que .sdp-boto
+       (0,1,0), que hi posa el coixí, la separació, el radi i l'alçada (BOTÓ
+       i SETENA PASSADA, més amunt). Amb la mateixa especificitat guanya
+       l'ordre de font: davant d'elles, el botó deixaria de ser redó. Els
+       fulls que carreguen després en la mateixa capa (modules.css,
+       PerfilShell.css, tpv.css…) no disputen cap propietat a les peces del
+       carrusel allà on viu (comprovat el 261007). Només ho faria
+       :where(.perfil-pagina) .sdp-boto (PerfilShell.css), dins del Perfil,
+       on el carrusel no es munta.
+   Prova: PedraSeca/qualitat.carrusel.test.js. */
+@layer components {
+  .sdp-carrusel {
+    position: relative;
+    inline-size: 100%;
+  }
+
+  /* La pista: només ella llisca. Sense barra de desplaçament visible (els
+     botons i el comptador ja diuen on s'és); el gest no arrossega la
+     columna de dalt (overscroll-behavior-x). */
+  .sdp-carrusel__pista {
+    display: flex;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+  .sdp-carrusel__pista::-webkit-scrollbar {
+    display: none;
+  }
+  .sdp-carrusel__pista:focus-visible {
+    outline: var(--sdp-focus-gruix) solid var(--sdp-focus);
+    outline-offset: calc(-1 * var(--sdp-focus-gruix));
+  }
+
+  /* Cada diapositiva, l'amplada sencera; scroll-snap-stop: el dit passa
+     d'una en una, mai se'n bota cap. */
+  .sdp-carrusel__diapositiva {
+    flex: 0 0 100%;
+    min-inline-size: 0;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+
+  .sdp-carrusel__imatge {
+    display: block;
+    inline-size: 100%;
+    block-size: auto;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+  }
+
+  /* Els controls, damunt de la pista, centrats en vertical sense transform. */
+  .sdp-carrusel__controls {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 var(--sdp-space-3);
+    pointer-events: none;
+  }
+
+  /* El botó redó: la pell de Boto secundari (fons de targeta, vora i focus)
+     amb l'àrea tàctil de --sdp-touch en els dos sentits. */
+  .sdp-carrusel__boto {
+    inline-size: var(--sdp-touch);
+    min-inline-size: var(--sdp-touch);
+    min-block-size: var(--sdp-touch);
+    padding: 0;
+    gap: 0;
+    border-radius: var(--sdp-radi-pastilla);
+    pointer-events: auto;
+  }
+
+  /* El comptador «1 / 8»: no és cap control (el dit hi passa de llarg).
+     Centrat amb left: 50% i translateX(-50%), com .sdp-pista__bafarada i el
+     menú de Traduir. A carrusel.css era inset-inline-start: 50%, el mateix
+     píxel d'esquerra a dreta (l'app no té cap vista de dreta a esquerra),
+     però 50% no és cap espai de la reixeta i la prova d'abast d'este full
+     (components.abast.capes.test.js) només admet l'escala en inset-*. */
+  .sdp-carrusel__comptador {
+    position: absolute;
+    inset-block-end: var(--sdp-space-3);
+    left: 50%;
+    z-index: 1;
+    margin: 0;
+    padding: var(--sdp-space-1) var(--sdp-space-3);
+    border: 1px solid var(--sdp-vora-forta);
+    border-radius: var(--sdp-radi-pastilla);
+    background: var(--sdp-fons-targeta);
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-meta);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.2;
+    white-space: nowrap;
+    transform: translateX(-50%);
+    pointer-events: none;
+  }
 }

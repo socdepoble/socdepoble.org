@@ -1,5 +1,5 @@
 import { expect, test, vi } from 'vitest';
-import { dataDeTargeta, propsDeTargetaViva, textPla } from './targetaViva.js';
+import { dataDeTargeta, emojiDelQuadrat, propsDeTargetaViva, textPla } from './targetaViva.js';
 import { TEXTOS_LLAVOR } from './textosLlavor.js';
 
 /* T50 (decisió del Mestre, 260928) · El document de l'editor, dit com a
@@ -38,6 +38,21 @@ test('D4 · l’emoticona només si s’ha triat (un sol emoji del camp cru); ma
   expect(propsDeTargetaViva({ icon: '🍅 Tomaques' }, { ara: ARA }).emoticona).toBe('');
   // La targeta no rep mai la prop `icon` (el glif del títol): la ploma de la llista no hi arriba.
   expect(propsDeTargetaViva({ icon: '🍅' }, { ara: ARA })).not.toHaveProperty('icon');
+});
+
+/* Ordre del Mestre (261007) · «L'emoji XL ha d'ocupar el buit de la imatge o
+   el squareBadge»: només sense imatge i amb una emoticona triada. */
+test('261007 · l’emoji del quadrat: l’emoticona triada si no hi ha imatge; amb imatge o sense tria, res', () => {
+  expect(emojiDelQuadrat({ icon: '🍅' })).toBe('🍅');
+  expect(emojiDelQuadrat({ icon: ' 🍅 ' })).toBe('🍅');
+  expect(emojiDelQuadrat({ icon: '🍅', heroImage: 'sdp-media://mitjans/a.webp' })).toBe('');
+  expect(emojiDelQuadrat({ icon: '🍅', heroImage: '/assets/a.webp' })).toBe('');
+  // Ni un text que no és un sol emoji, ni cap tria, ni cap document.
+  expect(emojiDelQuadrat({ icon: '🍅 Tomaques' })).toBe('');
+  expect(emojiDelQuadrat({})).toBe('');
+  expect(emojiDelQuadrat(null)).toBe('');
+  // Les props de la targeta no canvien: la insígnia la posa TargetaViva.
+  expect(propsDeTargetaViva({ icon: '🍅' }, { ara: ARA })).not.toHaveProperty('squareBadge');
 });
 
 test('D3 · la data de publicació triada (T40) mana sobre la d’última edició', () => {

@@ -14,11 +14,17 @@
    «la retirada de la Consola/Tractors»): ni Tractors ni la Consola tenen ja
    carpeta pròpia. Les tres eines locals i la Consola pengen de maquinaria_cat
    («Maquinària de la IAIA»), que declara la Wiki, i modulsLocalsActius ja no
-   en torna cap categoria. */
+   en torna cap categoria.
+   Ordre del Mestre (pla 261007_0012, §0.7) · Les carpetes de la Wiki (les
+   fixes i les del manifest) i la portada porten el seu emoji
+   (iconesWiki.js); la fitxa de la portada ja no porta la imatge, i la
+   capçalera de la portada oberta, sí. */
 import React from 'react';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { FileText, Folder } from 'lucide-react';
+import { ICONA_PORTADA, ICONES_CARPETES_WIKI, ICONES_ITEMS_WIKI, glifDeCarpetaWiki } from './iconesWiki.js';
+import { PAGE_COPY } from '../text/pageContent';
 
 const fixture = vi.hoisted(() => ({ itemId: '__intro', search: '', props: null, showToast: vi.fn(), redireccions: [] }));
 vi.mock('../../components/universal/workspace/UniversalWorkspace.jsx', () => ({
@@ -93,17 +99,21 @@ describe('modulsLocalsActius: la decisió, pura', () => {
   });
 
   /* Ordre del Mestre, 261004 (pla 2045, Marató 2230, F3) · La carpeta que
-     agrupa les eines porta Folder; les seues fitxes porten FileText propi
-     perquè no hereten la carpeta (Llei del Píxel). Des del 261006 la carpeta
-     és maquinaria_cat i la declara la Wiki (en desenvolupament, avall). Es
-     compara la identitat del component, no la classe de lucide: toBe per
-     element, perquè les icones de lucide-react són objectes forwardRef i
-     toEqual només en compararia l'estructura. */
-  test('amb DEV cert: cap carpeta pròpia, i cada eina, FileText propi', () => {
+     agrupa les eines portava Folder (des del §0.7, el seu emoji: 🎛️); les
+     seues fitxes porten glif propi perquè no hereten la carpeta. Des del
+     261006 la carpeta és maquinaria_cat i la declara la Wiki (en
+     desenvolupament, avall).
+     Ordre del Mestre (261007) · El glif propi de cada eina és el seu emoji
+     (iconesWiki.js), distint per a cada una: ja no el FileText de Lucide. */
+  test('amb DEV cert: cap carpeta pròpia, i cada eina, el seu emoji propi i distint', () => {
     const { categories, items } = modulsLocalsActius({ DEV: true });
     expect(categories).toHaveLength(0);
     expect(items.map((i) => i.id)).toEqual(LOCALS.map(([id]) => id));
-    for (const item of items) expect(item.icon).toBe(FileText);
+    expect(items.map((i) => i.icon)).toEqual(['🚜', '💂', '🤖']);
+    for (const item of items) {
+      expect(item.icon, item.id).toBe(ICONES_ITEMS_WIKI[item.id]);
+      expect(item.icon, item.id).not.toBe(FileText);
+    }
   });
 
   test.each([
@@ -124,14 +134,57 @@ describe('en desenvolupament', () => {
     expect(model.categories.map((c) => c.id)).toEqual(['__intro_cat', 'maquinaria_cat', 'folder:02_saber']);
     const maquinaria = model.categories.find((c) => c.id === 'maquinaria_cat');
     expect(maquinaria.label).toBe('Maquinària de la IAIA');
-    expect(maquinaria.icon).toBe(Folder);
+    // Ordre del Mestre (pla 261007_0012, §0.7) · La carpeta, el seu emoji, ja no Folder.
+    expect(maquinaria.icon).toBe(ICONES_CARPETES_WIKI.maquinaria_cat);
+    expect(maquinaria.icon).toBe('🎛️');
     expect(model.items.filter((i) => i.categoryId === 'maquinaria_cat').map((i) => i.id))
       .toEqual(['consola_termodinamica', ...LOCALS.map(([id]) => id)]);
     for (const item of model.items.filter((i) => i.categoryId === 'maquinaria_cat')) {
       expect(item.categoryIds, item.id).toEqual(['maquinaria_cat']);
       // Regla del glif (261004): cap fitxa de la Maquinària hereta la carpeta.
-      expect(item.icon, item.id).toBe(FileText);
+      // Ordre del Mestre (261007): el glif propi és el seu emoji.
+      expect(item.icon, item.id).toBe(ICONES_ITEMS_WIKI[item.id]);
     }
+    expect(model.items.find((i) => i.id === 'consola_termodinamica').icon).toBe('⚙️');
+    // Ordre del Mestre (pla 261007_0012, §0.7) · La portada, a l'arbre i a la
+    // llista, el seu emoji (📖); ja no el FileText de la seua entrada.
+    expect(model.categories.find((c) => c.id === '__intro_cat').icon).toBe(ICONA_PORTADA);
+    expect(model.items.find((i) => i.id === '__intro').icon).toBe(ICONA_PORTADA);
+    expect(ICONA_PORTADA).toBe('📖');
+    expect(model.categories.map((c) => c.icon)).not.toContain(FileText);
+  });
+
+  /* Ordre del Mestre (261007) · Els documents del manifest porten el seu emoji
+     (iconesWiki.js · iconaDeDocument): sense camp d'icona al manifest generat,
+     «constructor» (cap tipus) és el document genèric.
+     Ordre del Mestre (pla 261007_0012, §0.7) · I cada carpeta del manifest, el
+     seu (glifDeCarpetaWiki): SABER, l'òliba. */
+  test('els documents del manifest porten el seu emoji; les carpetes del manifest, també el seu, ja no Folder', () => {
+    render(<WikiDePobleSection />);
+    const { model } = fixture.props;
+    expect(model.items.find((i) => i.id === 'constructor').icon).toBe('📄');
+    const saber = model.categories.find((c) => c.id === 'folder:02_saber');
+    expect(saber.icon).toBe('🦉');
+    expect(saber.icon).toBe(glifDeCarpetaWiki('folder:02_saber'));
+    expect(model.categories.map((c) => c.icon)).not.toContain(Folder);
+  });
+
+  /* Ordre del Mestre (pla 261007_0012, §0.7) · «sense perdre la seua imatge
+     hero quan s'obri el document»: la fitxa de la llista porta l'emoji (sense
+     imatge, ItemMedia no la pinta en lloc seu) i la portada oberta conserva la
+     imatge de la capçalera, del seu copy (UniversalPage de veres). */
+  test('la portada: la fitxa porta l’emoji i cap imatge; oberta, la imatge de la capçalera continua', () => {
+    const arrel = render(<WikiDePobleSection />).container;
+    const portada = fixture.props.model.items.find((i) => i.id === '__intro');
+    expect(portada.icon).toBe(ICONA_PORTADA);
+    expect(portada.image).toBeUndefined();
+    const page = PAGE_COPY.wikidepoble;
+    expect(page.image).toEqual(expect.any(String));
+    const hero = arrel.querySelector('.hero-image img');
+    expect(hero).not.toBeNull();
+    expect(hero.getAttribute('alt')).toBe(page.imageAlt);
+    expect(hero.getAttribute('src')).toContain(page.image);
+    expect(arrel.querySelector('header.page-title h1').textContent).toBe(page.title);
   });
 
   /* Ordre del Mestre, 261004 («contaminació crítica de rutes/estats entre

@@ -126,7 +126,11 @@ test('només valors tancats: un text lliure no entra per origen ni per mode', ()
 
 /* ── T63.2 (doctrina del Mestre, 260928) · Comentar obri el Xat comú de la
    Pàgina Universal. Abans el valor per defecte era navigate('/xat'), sense
-   cap destí. */
+   cap destí.
+   Ordre del Mestre (261007) · «Comentaris = xat» · Eixe xat comú és ara la
+   via pública del menú de Comentar (handleComment('public')); la privada, el
+   xat amb Sóc de Poble (useAccions.comentar.test.jsx). comentarXat diu què
+   oferix el menú: 'comu' o, sense xat públic, 'privat'. */
 const xat = (ruta) => {
   const url = new URL(ruta, 'http://localhost');
   return { cami: url.pathname, ...Object.fromEntries(url.searchParams) };
@@ -156,7 +160,7 @@ test('T63.2 · la barra d’una pàgina, sense handler ni objecte: el xat comú 
   const { result } = renderHook(() => useAccions({ title: 'Mur', hasFooter: true, telemetria: { origen: 'pagina' } }));
   expect(result.current.comentarVisible).toBe(true);
   expect(result.current.comentarXat).toBe('comu');
-  result.current.handleComment();
+  result.current.handleComment('public');
   expect(mocks.navigate).toHaveBeenCalledTimes(1);
   expect(mocks.navigate).not.toHaveBeenCalledWith('/xat');
   expect(xat(mocks.navigate.mock.calls[0][0])).toEqual({ cami: '/xat', sobre: 'pagina:/mur', titol: 'Mur', ruta: '/mur' });
@@ -165,12 +169,13 @@ test('T63.2 · la barra d’una pàgina, sense handler ni objecte: el xat comú 
   expect(connectars()).toHaveLength(0);
 });
 
-/* Sense xat on anar, el botó es queda (Llei del Píxel) amb el nom neutre i el
-   clic ho diu: no navega enlloc ni s'inventa cap xat. */
+/* Sense xat públic, el botó es queda (Llei del Píxel) i el menú també, amb la
+   via pública desactivada ('privat'); si algú la crida, ho diu: no navega
+   enlloc ni s'inventa cap xat. */
 const esperaAvisSenseXat = (result) => {
   expect(result.current.comentarVisible).toBe(true);
-  expect(result.current.comentarXat).toBeNull();
-  result.current.handleComment();
+  expect(result.current.comentarXat).toBe('privat');
+  result.current.handleComment('public');
   expect(mocks.navigate).not.toHaveBeenCalled();
   expect(mocks.toast).toHaveBeenCalledWith(AVIS_SENSE_XAT);
   vi.clearAllMocks();
@@ -199,23 +204,28 @@ test('T63.2 · una ruta o un descriptor que el contracte no admet: el botó es q
 test('T63.2 · amb objecte tipat, Comentar porta al seu xat: tipus i id, no una «pagina» genèrica', () => {
   const objecte = { tipus: 'producte', id: 'samarreta', titol: 'Samarreta', ruta: '/mercat/samarreta' };
   const { result } = renderHook(() => useAccions({ title: 'Samarreta', mainHref: '/mercat/samarreta', objecte, hasFooter: true }));
-  result.current.handleComment();
+  result.current.handleComment('public');
   expect(xat(mocks.navigate.mock.calls[0][0]).sobre).toBe('producte:samarreta');
   expect(result.current.comentarXat).toBe('comu');
 });
 
-test('T63.2 · una persona o una IA: el missatge directe de sempre', () => {
+/* Ordre del Mestre (261007) · Derogat per a Comentar: el missatge directe
+   d'una persona o una IA no és cap xat públic. La via pública es queda
+   desactivada i la privada és la de Sóc de Poble (la persona continua tenint
+   «Escriu-li al xat» a la seua fitxa). */
+test('T63.2 · 261007 · una persona o una IA: cap xat públic; el seu directe no ho és', () => {
   const { result } = renderHook(() => useAccions({ objecte: { tipus: 'ia', id: 'iaia' }, hasFooter: true }));
-  result.current.handleComment();
-  expect(mocks.navigate).toHaveBeenCalledWith('/xat?amb=iaia');
-  expect(result.current.comentarXat).toBe('directe');
+  expect(result.current.comentarXat).toBe('privat');
+  result.current.handleComment('public');
+  expect(mocks.navigate).not.toHaveBeenCalledWith('/xat?amb=iaia');
+  expect(mocks.toast).toHaveBeenCalledWith(AVIS_SENSE_XAT);
 });
 
 test('T63.2 · un objecte sense xat (una nota) no ofereix Comentar, encara que showComment el demane; cap navegació', () => {
   const { result } = renderHook(() => useAccions({ objecte: { tipus: 'nota', id: 'n1', ruta: '/notes?nota=n1' }, hasFooter: true, showComment: true }));
   expect(result.current.comentarVisible).toBe(false);
   expect(result.current.comentarXat).toBeNull();
-  result.current.handleComment();
+  result.current.handleComment('public');
   expect(mocks.navigate).not.toHaveBeenCalled();
 });
 
@@ -262,7 +272,7 @@ test('T43a-1 · MEMÒRIA: el Comentar de la barra d’una pàgina obri el xat de
   const barra = { title: 'Mur', hasFooter: true, telemetria: { origen: 'pagina' } };
   const mur = ambRouter(MemoryRouter, { rutaInicial: '/mur' }, () => useAccions(barra));
   expect(mur.result.current.accions.comentarXat).toBe('comu');
-  mur.result.current.accions.handleComment();
+  mur.result.current.accions.handleComment('public');
   expect(xat(navegatA())).toEqual({ cami: '/xat', sobre: 'pagina:/mur', titol: 'Mur', ruta: '/mur' });
   expect(mocks.toast).not.toHaveBeenCalled();
   // I al revés: l'amfitrió és al Mur i l'app en una ruta sense xat; el de l'amfitrió no s'hereta.
@@ -276,11 +286,11 @@ test('T43a-1 · MEMÒRIA: la ruta és la de l’entrada actual; quan l’app nav
   window.history.replaceState(null, '', '/mur');
   const barra = { title: 'Pàgina', hasFooter: true, telemetria: { origen: 'pagina' } };
   const { result } = ambRouter(MemoryRouter, { rutaInicial: '/notes' }, () => useAccions(barra));
-  expect(result.current.accions.comentarXat).toBeNull();
+  expect(result.current.accions.comentarXat).toBe('privat');
   // El navigate de veres del router (el de useNavigate és simulat).
   act(() => { result.current.router.navigate('/constitucio'); });
   expect(result.current.accions.comentarXat).toBe('comu');
-  result.current.accions.handleComment();
+  result.current.accions.handleComment('public');
   expect(xat(navegatA())).toEqual({ cami: '/xat', sobre: 'pagina:/constitucio', titol: 'Pàgina', ruta: '/constitucio' });
   act(() => { result.current.router.navigate('/mur?date=2026-09-01'); });
   expect(rutaActual(result.current.router)).toBe('/mur?date=2026-09-01');

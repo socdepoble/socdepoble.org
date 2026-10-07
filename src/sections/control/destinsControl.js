@@ -76,16 +76,15 @@ export const TEXTOS_PORTES = Object.freeze({
 
 /* La boina de les targetes de sistema: l'entitat socdepoble del padró
    (identitatsSeed.js, la taula única de correspondència).
-   W4-09 · XAT_SOCDEPOBLE és el xat de la LLAVOR: l'id 'socdepoble' només el
-   resol el xat local. En remot, el xat el resol xatCorporatiu.js amb el port
-   del backend (l'entitat real, amb UUID). Cap prova d'ací acredita atenció
-   humana del backend.
+   W4-09 · El xat de la LLAVOR amb Sóc de Poble ja no es compon ací: la seua
+   font única és XAT_SOCDEPOBLE_DE_LLAVOR (PedraSeca/hooks/xatSocDePoble.js;
+   correcció C10, ordre del Mestre 261007). En remot, el xat el resol
+   ProveidorXatSocDePoble (xatCorporatiu.js) amb el port del backend.
    T6 (ordre del Mestre, 261004, prompt 261004_0515 §5) · Derogat per l'ordre
    del Mestre del 261004 (prompt 261004_0515): la boina ja no espera el xat
    resolt. L'autor porta SEMPRE a la seua pàgina, la del projecte, resolta
    per l'identificador de l'entitat (rutaDAutoria), mai pel nom. */
 const ENTITAT = entitatSeed(ENTITAT_PILOT_ID);
-export const XAT_SOCDEPOBLE = `/xat?amb=${encodeURIComponent(ENTITAT.id)}`;
 export const AUTORIA_SOCDEPOBLE = Object.freeze({
   author: ENTITAT.name,
   location: ENTITAT.town_name,

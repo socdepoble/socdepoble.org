@@ -1,11 +1,26 @@
 import { Navigate, useParams } from '../../app/contexts/RouterContext';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
+import { useUIActions } from '../../app/contexts/UIContext';
 import { resolvePageSlugPath } from '../../config/navigation';
+import { accioDeLaPagina } from '../../config/systemPages.js';
+import { PortaDePagina } from '../../components/PedraSeca/organismes/PortesTargeta.jsx';
 import { PAGE_COPY } from '../text/pageContent.js';
 import TextSection from '../text/TextSection';
 import NotFoundPage from '../../pages/NotFoundPage';
 import { PublicarDeLaPagina } from '../control/PublicarDeLaPagina.jsx';
 import { destiDePagina } from '../control/destinsControl.js';
+
+/* Ordre del Mestre (261007) · L'acció gran d'una pàgina del sistema
+   (accioDeLaPagina de systemPages.js): «Anar al xat» a /page/xat. És la
+   MATEIXA porta que la seua targeta del Mur i del Calendari, la gran i blava
+   de Pedra Seca (PortaDePagina: sdp-boto--primari sdp-boto--gran), un Link
+   del router cap a /xat. Traduïx el verb aquí dins: només es munta quan la
+   pàgina en té. */
+function AccioDeLaPagina({ clau }) {
+  const { t } = useUIActions();
+  const porta = accioDeLaPagina(clau, t);
+  return porta ? <PortaDePagina porta={porta} /> : null;
+}
 
 /**
  * /page/:slug — pàgines de text sense ruta pròpia.
@@ -37,6 +52,11 @@ import { destiDePagina } from '../control/destinsControl.js';
  * desplaça, i App.jsx ja torna a dalt el desplaçador en una navegació de
  * router (preparaRecolocacio). Dins de WordPress, a més, consultava el
  * document de l'amfitrió i obria el shadow root des de fora.
+ *
+ * Ordre del Mestre (261007) · «El Xat» (/page/xat) porta davall de l'H1 el
+ * gran botó «Anar al xat» cap a /xat (accioPrincipal), el mateix de la seua
+ * targeta. Com el de Publicar, es decidix amb una funció pura
+ * (accioDeLaPagina), mai amb l'element.
  */
 export default function PageDetailSection() {
   const { slug = '' } = useParams();
@@ -51,7 +71,9 @@ export default function PageDetailSection() {
     || pages.find((p) => p && (String(p.slug) === slug || String(p.id) === slug))
     || propia(PAGE_COPY);
   if (page) {
-    const accioPrincipal = destiDePagina(slug) ? <PublicarDeLaPagina clau={slug} lloc="dalt" /> : null;
+    let accioPrincipal = null;
+    if (destiDePagina(slug)) accioPrincipal = <PublicarDeLaPagina clau={slug} lloc="dalt" />;
+    else if (accioDeLaPagina(slug)) accioPrincipal = <AccioDeLaPagina clau={slug} />;
     return (
       <TextSection page={page} pageKey={slug} accioPrincipal={accioPrincipal}>
         <PublicarDeLaPagina clau={slug} />

@@ -1,0 +1,47 @@
+Unnamed: 0,Unnamed: 1,Unnamed: 2,Unnamed: 3,Unnamed: 4,Unnamed: 5,Unnamed: 6
+,Checklist de limpieza de una web WordPress infectada,,,,,
+,"77 comprobaciones en 8 fases, de la primera copia de seguridad a recuperar la reputación en Google.",,,,,
+,,,,,,
+,,,,,,
+,Tu dominio,ayudawp.com,Escríbelo sin www y sin https. Los enlaces de las hojas 4 y 5 se montan solos con lo que pongas aquí.,,,
+,,,,,,
+,,,,,,
+,"Antes de empezar, cuatro cosas",,,,,
+,Esto se puede romper.,"Buena parte de la fase 3 y de la 4 consiste en borrar ficheros y tocar la base de datos. Si no has descargado antes la copia completa de la fase 1, no sigas.",,,,
+,Limpiar no es lo mismo que arreglar.,"Si no encuentras por dónde entraron, la web se vuelve a infectar en días y te preguntarás qué hiciste mal. No hiciste nada mal: dejaste la puerta abierta.",,,,
+,Vas a perder personalizaciones.,Al reinstalar el tema y los plugins desaparece lo que estuviera metido a mano dentro de esos ficheros. Por eso se copia antes.,,,,
+,"Si hay datos personales, hay plazo legal.","72 horas para notificar a la Agencia Española de Protección de Datos desde que te enteras. Eso corre desde ya, no desde que termines de limpiar.",,,,
+,,,,,,
+,Cómo se rellena,,,,,
+,Estado,Pendiente · En marcha · Hecho · No aplica. Se elige de la lista de la celda.,,,,
+,Riesgo,"Seguro, Con cuidado o Puede romper la web. Las rojas no se hacen con prisa ni sin copia previa.",,,,
+,Aplica si,Muchas comprobaciones solo tienen sentido en algunos casos. Filtra por esta columna y marca «No aplica» en lo que no sea tu caso.,,,,
+,,,,,,
+,"Una fila de ejemplo, para que se vea el formato:",,,,,
+,Comprobación,Estado,Fecha,Notas,,
+,Deja la carpeta de subidas sin un solo PHP,Hecho,10/09/2026,"Tres ficheros en uploads/2024/07, borrados y anotados",,
+,,,,,,
+,,,,,,
+,Cómo vas,,,,,
+,Fase,Comprobaciones,Hechas,No aplican,Pendientes,Avance
+,0. Antes de tocar nada,4,0,0,4,0
+,1. Contener y guardar pruebas,11,0,0,11,0
+,2. Averiguar qué ha pasado,7,0,0,7,0
+,3. Limpiar los ficheros,10,0,0,10,0
+,4. Limpiar la base de datos,10,0,0,10,0
+,5. Cerrar la puerta,13,0,0,13,0
+,6. Comprobar que está limpia,6,0,0,6,0
+,7. Recuperar la reputación,16,0,0,16,0
+,Total,77,0,0,77,0
+,,,,,,
+,,,,,,
+,De dónde sale esto,,,,,
+,"Es el protocolo que seguimos en AyudaWP para limpiar una web infectada, recortado a lo que puede hacer el dueño de la web por su cuenta. Puedes usarlo y compartirlo. Si a mitad de camino ves que se te va de las manos, escríbenos antes de tocar más.",,,,,
+,,,,,,
+,Tutoriales y guías de WordPress,https://ayudawp.com,,,,
+,Herramientas gratuitas,https://herramientas.ayudawp.com,,,,
+,Limpieza de webs infectadas,https://servicios.ayudawp.com,,,,
+,Mantenimiento mensual de WordPress,https://mantenimiento.ayudawp.com,,,,
+,"Vigilante, para que no vuelva a pasar",https://vigilante.works/,,,,
+,,,,,,
+,Versión 1.0 · 2026-09-10 · ayudawp.com,,,,,

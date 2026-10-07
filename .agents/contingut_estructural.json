@@ -25,6 +25,12 @@
       "aprovat_per": "MarIA",
       "data": "2026-10-05"
     },
+    "drets-autor": {
+      "sha256": "9eefd82bf0be394703ea914447bd3db1a25772ebad5fe9abc2507ab936fb0dae",
+      "html": 6294,
+      "aprovat_per": "Javi (delegat a Claude, 261007)",
+      "data": "2026-10-07"
+    },
     "fedivers": {
       "sha256": "042b41663bdec1b0c59b7f7e47946b765a80a29bceb80a3b6ed3e9d1b816a326",
       "html": 2452,
@@ -32,10 +38,10 @@
       "data": "2026-10-01"
     },
     "legal": {
-      "sha256": "c8a7a020869f92495d6e753135fc4a768e60a4a669e4f39458f86a62819b75eb",
-      "html": 21376,
-      "aprovat_per": "Mestre",
-      "data": "2026-09-24"
+      "sha256": "b9e4a614ba897bae57288bc7d9d4398f2738869b18da000de0f3db05e9f5258b",
+      "html": 21642,
+      "aprovat_per": "Javi (delegat a Claude, 261007)",
+      "data": "2026-10-07"
     },
     "notes": {
       "sha256": "39cf0339b0694fc1ed39bdcac47064fadb725d844e6410753a9af90e1fc4e94c",
@@ -66,6 +72,12 @@
       "html": 1658,
       "aprovat_per": "Mestre",
       "data": "2026-10-01"
+    },
+    "xat": {
+      "sha256": "43dc6234d1f9e38ed3a9114c9d81f5228608d300561c722150a364deb6725a7e",
+      "html": 1529,
+      "aprovat_per": "Javi (delegat a Claude, 261007)",
+      "data": "2026-10-07"
     }
   }
 }

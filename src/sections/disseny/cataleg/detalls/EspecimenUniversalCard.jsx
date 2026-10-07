@@ -1,22 +1,43 @@
 import { useState } from 'react';
-import { CalendarClock, Car, MapPin, PawPrint } from 'lucide-react';
 import { Especimen } from '../Especimen.jsx';
 import { Llinatge } from '../Llinatge.jsx';
 import { UniversalCard, Alerta } from '../../../../components/PedraSeca/index.js';
-import { PortesTargeta } from '../../../../components/PedraSeca/organismes/PortesTargeta.jsx';
+import { PortaDePagina, PortesTargeta } from '../../../../components/PedraSeca/organismes/PortesTargeta.jsx';
 import { BotoVisibilitat } from '../../../../components/universal/barres/BotoVisibilitat.jsx';
-import { dataHoraDeBarra } from '../../../../components/universal/editorial.js';
+import { COPYRIGHT_SDP, dataHoraDeBarra } from '../../../../components/universal/editorial.js';
+import { insigniaEmojiXL } from '../../../../components/universal/insigniaEmoji.jsx';
+import { propsDeTargetaDeLaPagina } from '../../../../components/universal/targetaDeLaPagina.js';
 import { useNavigate } from '../../../../app/contexts/RouterContext';
 import { objecteDePagina } from '../../../../config/objecteConnectable.js';
 import { RUTA_PROJECTE } from '../../../../config/navigation.js';
+import { RUTA_DRETS_AUTOR, accioDeLaPagina } from '../../../../config/systemPages.js';
 import { PAGE_COPY } from '../../../text/pageContent.js';
+import { propsDePaginaDeText } from '../../../text/paginaDeText.js';
+import { MARKET_ITEMS } from '../../../mercat/marketContent.js';
+import { propsDeTargetaDeProducte } from '../../../mercat/targetaDeProducte.js';
 
-/* Autoria i peu compartits per les variants: la targeta és una i les dades canvien. */
+/* Revisió del 261007 (M3-12) · La Samarreta de la llavor, no una còpia. */
+const SAMARRETA = MARKET_ITEMS.find((item) => item.id === 'samarreta-socdepoble') || null;
+
+/* Autoria i peu compartits per les variants: la targeta és una i les dades canvien.
+   Ordre del Mestre (261007) · Els drets de sèrie són els de l'app (COPYRIGHT_SDP,
+   CC BY-NC-SA 4.0), no una còpia que es quede vella. */
 const SDP = {
   author: 'Sóc de Poble',
   location: 'La Torre de les Maçanes',
   avatarUrl: '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg',
-  copyright: '© Sóc de Poble / Fet per la IAIA i Nano Banana'
+  copyright: COPYRIGHT_SDP
+};
+
+/* Ordre del Mestre (261007) · «Cards de veritat»: la targeta d'una pàgina és
+   la miniatura de la seua UniversalPage. Les mostres passen pel MATEIX camí
+   que la targeta incrustada sincronitzada (sections/detail/SincronitzacioTargetes.jsx):
+   propsDePaginaDeText → propsDeTargetaDeLaPagina, més l'acció gran de la
+   pàgina (accioDeLaPagina) si en té. Cap dada copiada a mà. */
+const deVeritat = (clau) => {
+  const props = propsDeTargetaDeLaPagina(propsDePaginaDeText(PAGE_COPY[clau], clau));
+  const porta = accioDeLaPagina(clau);
+  return { ...props, mainHref: `/page/${clau}`, ...(porta ? { accio: <PortaDePagina porta={porta} /> } : null) };
 };
 const PEU = { hasFooter: true, showTranslate: true, showComment: true, showShare: true, showConnect: true };
 
@@ -31,6 +52,12 @@ const PEU = { hasFooter: true, showTranslate: true, showComment: true, showShare
    T6 (ordre del Mestre, 261004; deroga W4-09) · La boina de socdepoble porta a la pàgina del
    projecte (RUTA_PROJECTE, la de rutaDAutoria), ja no al seu xat corporatiu. */
 const porta = (id, verb, nom, desti, varietat) => ({ id, verb, nom, desti, varietat });
+
+/* Ordre del Mestre (261007) · Al quadrat d'una part sense foto, un emoji XL
+   en lloc de la icona lineal (sp-card-calendar-badge__emoji, components.css).
+   Decoratiu: el nom el porta l'etiqueta del quadrat. La insígnia és la peça
+   compartida (insigniaEmojiXL, components/universal/insigniaEmoji.jsx), la
+   mateixa que porta la targeta viva sense imatge. */
 const BOINA_SDP = { author: SDP.author, location: SDP.location, avatarUrl: SDP.avatarUrl, authorHref: RUTA_PROJECTE };
 
 /* Ordre del Mestre, 261004 (prompt 261004_0515, «no inventar targetes») · Les opcionals de les
@@ -56,7 +83,7 @@ const DOBLE_ACCIO = [
   },
   {
     clau: 'mapa', ...ambLaPagina('publicar_mapa'),
-    squareBadge: { type: 'custom', label: 'Publicar al Mapa', content: <MapPin size={48} strokeWidth={1.5} aria-hidden="true" focusable="false" /> },
+    squareBadge: insigniaEmojiXL('Publicar al Mapa', '🗺️'),
     portes: [porta('publicar', 'Publicar', 'Publicar al Mapa', null, 'primari'), porta('saber', 'Saber-ne més', 'Saber-ne més sobre el Mapa', '/page/publicar_mapa', 'secundari')]
   }
 ];
@@ -75,7 +102,7 @@ export default function EspecimenUniversalCard() {
     <>
     <Llinatge id="card" />
     <Especimen id="universalcard" nom="UniversalCard · la targeta mestra" fitxer="src/components/PedraSeca/organismes/UniversalCard.jsx"
-      descripcio="L'ànima de la IAIA. Tota publicació (Mur, Mercat, Esdeveniments, Vehicles, Animalets, Gestoria) hereta la mateixa anatomia: capçalera taronja d'autoria, mitjà quadrat, cos amb títol i etiquetes, i peu blau d'accions. És una versió reduïda de PageFrame amb codi propi: fa servir els mateixos àtoms, però un canvi a les barres no hi arriba sol. No s'imita el seu DOM a mà: s'instancia el component."
+      descripcio="L'ànima de la IAIA. Tota publicació (Mur, Mercat, Esdeveniments, Vehicles, Animalets, Gestoria) hereta la mateixa anatomia: capçalera taronja d'autoria, mitjà quadrat, cos amb títol i etiquetes, i peu blau d'accions. És una versió reduïda de PageFrame amb codi propi: fa servir els mateixos àtoms, però un canvi a les barres no hi arriba sol. No s'imita el seu DOM a mà: s'instancia el component. Ordre del Mestre (261007), «cards de veritat»: la targeta d'una pàgina és la miniatura de la seua UniversalPage (targetaDeLaPagina.js), la mateixa al Mur i incrustada dins d'un text, on seguix el seu original."
       contracte={[
         ['title / subtitle / body', 'node', '—', 'Títol, subtítol h4 i text.'],
         ['headingLevel', "'h2' | 'h3' | 'h4' | 'h5' | 'h6'", "'h3'", 'L’etiqueta del títol, segons el feed on viu; qualsevol altre valor torna a h3.'],
@@ -94,9 +121,11 @@ export default function EspecimenUniversalCard() {
         ['calendarBadge', '{ dia, mes, any?, dateTime, onClick? }', 'null', 'La insígnia de data d’un esdeveniment (EventCard): un <time dateTime> amb dia, mes i any; amb onClick, un botó. Si també hi ha squareBadge, mana squareBadge.'],
         ['actual', 'boolean', 'false', 'La targeta és l’element triat d’una llista: aria-current="true" a l’element principal (o a l’article, si no n’hi ha).'],
         ['labels', "(string | { text, className, href })[]", '[]', 'Taxonomia: sdp-badge-system · category · tag · accent.'],
+        ['accio', 'node', 'null', "Ordre del Mestre (261007) · L’acció gran de la pàgina, en lloc de les etiquetes: PortaDePagina, el mateix botó primari gran que la UniversalPage pinta davall del títol. La declara la pàgina del sistema (systemPages.js · accioDeLaPagina): «Anar al xat» a la targeta d’El Xat. És germana del vel: el botó porta al seu destí i la resta de la targeta, a la pàgina."],
+        ['copyright', 'string', '—', `Ordre del Mestre (261007) · Els drets. SEMPRE és un enllaç blau (--sdp-accio-text) a la pàgina de sistema «Drets d’autor» (${RUTA_DRETS_AUTOR}), siga quin siga el text: la llicència de sèrie (COPYRIGHT_SDP, CC BY-NC-SA 4.0), «© Pepet» o una atribució. Sense subratllat, que només ix en passar-hi el ratolí. Una sola línia: un text llarg es retalla amb punts suspensius, i el text sencer continua sent el nom accessible. L’àrea tàctil és de --sdp-touch sense moure la línia. És germà del vel: el clic no obri la targeta.`],
         ['hasFooter / showTranslate / showComment / showShare / showConnect', 'boolean', '—', 'Peu blau. hasFooter=true activa les quatre accions per defecte.'],
         ['mainHref / onMainClick', 'string / fn', '—', 'Tota la targeta és un enllaç (overlay) sense tapar les accions.'],
-        ['objecte', '{ tipus, id, titol, ruta }', '—', 'T63.2 · El descriptor tipat de l’element (objecteDe, objecteDePerfil…). Sense onComment, Comentar obri el xat comú de la seua Pàgina Universal (/xat?sobre=tipus:id), o el missatge directe d’una persona o una IA. Una nota no en té: Comentar no es pinta. Sense objecte, el xat de la pàgina del detall (mainHref), mai el de la llista. Sense cap xat (objecte null, cap detall o una ruta que el contracte no admet), el botó es queda i el clic ho avisa.'],
+        ['objecte', '{ tipus, id, titol, ruta }', '—', 'T63.2 · El descriptor tipat de l’element (objecteDe, objecteDePerfil…). Ordre del Mestre (261007), «Comentaris = xat»: sense onComment, Comentar obri un menú de dues vies. «En privat» porta al xat privat amb Sóc de Poble, també per a una persona o una IA. «En públic» porta al xat comú de la seua Pàgina Universal (/xat?sobre=tipus:id), que pren el títol de l’element. Una nota no en té: Comentar no es pinta. Sense objecte, el xat de la pàgina del detall (mainHref), mai el de la llista. Sense xat públic (objecte null, una persona o una IA, cap detall o una ruta que el contracte no admet), «En públic» queda desactivada i diu per què.'],
         ['connectLabel', 'string', "'Connectar'", 'Verb de l’acció principal: «Sol·licitar plaça», «Obrir»… Nom accessible: «Connectar amb {títol}»; qualsevol altre verb, «{verb}: {títol}».'],
         ['portes', '[{ id, verb, nom, desti, varietat, avis?, enObres? }]', '—', 'P5 · Com a màxim dues portes al final del cos (PortesTargeta): «Publicar» i «Saber-ne més». Amb portes no hi ha enllaç de tota la targeta; la resta de l’anatomia és la de sempre, boina i peu blau inclosos (P6): mainHref ja no fa overlay, és la pàgina de Comentar i Compartir. desti: una ruta de l’app, validada sense mirar el protocol de la finestra (W4-07); null, o una adreça de fora, pinta la porta inerta que avisa.'],
         ['imatgePrivada', 'boolean', 'false', 'Ordre del Mestre, 261004 · La imatge i l’avatar passen pel filtre de les peces de les apps (fontSegura de marca.jsx: el mateix origen o el de mitjans) i es demanen sense referent (referrerpolicy="no-referrer"). Una imatge de fora no es pinta. Per a les llistes de les apps (Notícies, la Nevera).'],
@@ -104,15 +133,15 @@ export default function EspecimenUniversalCard() {
         ['premuda', 'boolean', '—', 'Ordre del Mestre, 261004 · aria-pressed a l’element principal quan és un botó (onMainClick): la targeta que posa i lleva de la col·lecció (la Nevera).'],
         ['onAccioSecundaria', 'fn(element)', '—', 'Ordre del Mestre, 261004 · Pulsació llarga, clic dret o Maj+F10 sobre l’element principal (pulsacioLlarga.js, com les rajoles): el detall de l’element. El clic que ve després d’una pulsació llarga no fa l’acció principal. Necessita mainHref o onMainClick.']
       ]}
-      a11y={['Cada acció del peu té nom accessible amb el títol: «Comentar Samarreta…».', 'L’overlay d’enllaç és un <a>/<button> real amb aria-label, no un div.', 'Les insígnies de calendari són <time> amb dateTime.']}
-      fes={['Un sol h3 per targeta dins d’un feed; el feed porta el seu h2 (si no, headingLevel).', 'squareBadge per a preu, data o icona: mai text llarg.', 'Sense foto, la icona de la part va a squareBadge (Consola, Vehicle, Animalets).', 'Una data que no porta al Calendari (instantània de dades): onDateTime={false}.', 'Passar a emoticona el camp cru del document: la caputxa només la mostra si s’ha triat.']}
-      noFacis={['Copiar les classes sp-card* a mà en un altre component.', 'Un peu buit: si no hi ha accions, hasFooter={false}.', 'Imatges no quadrades: el contenidor les retalla.', 'Passar la 🪶 de reserva de la llista (item.icon) com a emoticona.', 'Canviar PageFrame o les barres i donar per fet que la targeta també canvia.']}>
+      a11y={['Cada acció del peu té nom accessible amb el títol: «Comentar Samarreta…».', 'L’overlay d’enllaç és un <a>/<button> real amb aria-label, no un div.', 'Les insígnies de calendari són <time> amb dateTime.', 'L’enllaç dels drets es retalla a la vista, però el seu nom accessible és el text sencer (Pedra Seca §12).', 'L’acció gran és un enllaç real del router amb el verb visible al nom («Anar al xat»).']}
+      fes={['Un sol h3 per targeta dins d’un feed; el feed porta el seu h2 (si no, headingLevel).', 'squareBadge per a preu, data o icona: mai text llarg.', 'Sense foto, l’emoji XL de la part va a squareBadge (sp-card-calendar-badge__emoji, decoratiu: el nom el porta label): 🚗 Vehicle, 🐶 Animalets, ⚙️ Consola, 🗺️ Mapa, 🧾 Gestoria (ordre del Mestre, 261007).', 'Una data que no porta al Calendari (instantània de dades): onDateTime={false}.', 'Passar a emoticona el camp cru del document: la caputxa només la mostra si s’ha triat.', 'La targeta d’una pàgina: propsDeTargetaDeLaPagina amb les props de la seua UniversalPage, la mateixa regla d’autoria de la barra taronja.']}
+      noFacis={['Copiar les classes sp-card* a mà en un altre component.', 'Un peu buit: si no hi ha accions, hasFooter={false}.', 'Imatges no quadrades: el contenidor les retalla.', 'Passar la 🪶 de reserva de la llista (item.icon) com a emoticona.', 'Canviar PageFrame o les barres i donar per fet que la targeta també canvia.', 'Una targeta inventada: el títol, la imatge o la data d’una pàgina copiats a mà, que es queden vells.', 'Els drets en text pla o en dues línies.']}>
 
       <Alerta to="avis" titol="Contracte DOM (ordre estricte)">
         <ol>
           <li><code>.sp-card-header</code> (opcional: autoria, ancoratge i data).</li>
           <li><code>.sp-card-media-container</code> (opcional: imatge 1/1).</li>
-          <li><code>.sp-card-body</code> (obligatori: insígnia lateral, títol, subtítol, text, <code>.sp-card-labels</code>, copyright).</li>
+          <li><code>.sp-card-body</code> (obligatori: insígnia lateral, títol, subtítol, text, l’acció gran <code>.sp-card-accio</code> o les etiquetes <code>.sp-card-labels</code>, i els drets <code>.sp-card-copyright</code>, un enllaç d’una línia).</li>
           <li><code>.sp-card-footer</code> (opcional: equival a la barra blava, amb Traduir · Comentar · Compartir · Connectar).</li>
         </ol>
         <p>L’embolcall sempre porta <code>.sp-card</code>. Invocació canònica: <code>{'<UniversalCard title subtitle body imageUrl labels author location hasFooter />'}</code></p>
@@ -135,23 +164,12 @@ export default function EspecimenUniversalCard() {
         />
 
         {/* 2 · Mercat (amb preu) — la samarreta de Sóc de Poble. P6 · El preu
-            (price) va al quadrat fosc, com al Mur i al Mercat. */}
-        <UniversalCard
-          title="Samarreta Sóc de Poble"
-          subtitle="L'edició definitiva amb el logotip complet"
-          body="Dibuix del mapa del tresor. Cotó Roly de màxima qualitat."
-          price="15 €"
-          imageUrl="https://socdepoble.org/assets/uploads/brain/media__1776503825171.jpg"
-          imageAlt="Samarreta amb el logotip de Sóc de Poble"
-          labels={[
-            { text: 'Mercat', className: 'sdp-badge-system' },
-            { text: '2 variants', className: 'sdp-badge-accent' },
-            { text: 'roba', className: 'sdp-badge-category' },
-            { text: 'samarreta', className: 'sdp-badge-tag' }
-          ]}
-          time="00:29" date="23/03/22"
-          {...SDP} {...PEU}
-        />
+            (price) va al quadrat fosc, com al Mur i al Mercat.
+            Revisió del 261007 (M3-12) · De veritat: el producte de la llavor
+            (MARKET_ITEMS) pel mateix camí que la llista del Mercat
+            (propsDeTargetaDeProducte). La foto principal és la xica, com a
+            la seua pàgina. */}
+        {SAMARRETA ? <UniversalCard {...propsDeTargetaDeProducte(SAMARRETA)} {...PEU} /> : null}
 
         {/* 2b · P6 · Un preu llarg: la lletra baixa per trams i cap sencer al quadrat. */}
         <UniversalCard
@@ -180,7 +198,7 @@ export default function EspecimenUniversalCard() {
           title="Viatge a Alacant"
           subtitle="Compartir cotxe"
           body="Isc demà divendres a les 8:00 h cap a l'estació de tren d'Alacant. Tinc 3 places lliures."
-          squareBadge={{ type: 'custom', label: 'Vehicle', content: <Car size={48} strokeWidth={1.5} aria-hidden="true" focusable="false" /> }}
+          squareBadge={insigniaEmojiXL('Vehicle', '🚗')}
           labels={[{ text: 'Vehicle', className: 'sdp-badge-system' }, { text: 'Alacant', className: 'sdp-badge-category' }]}
           author="Maria" location="La Torre de les Maçanes"
           time="18:30" date="13/09/26"
@@ -193,19 +211,26 @@ export default function EspecimenUniversalCard() {
           title="Gos perdut"
           subtitle="Zona del Riu"
           body="Hem trobat un gosset xicotet prop del riu. Porta un collar roig però no té xapa. Si algú el coneix que avise."
-          squareBadge={{ type: 'custom', label: 'Animalets', content: <PawPrint size={48} strokeWidth={1.5} aria-hidden="true" focusable="false" /> }}
+          squareBadge={insigniaEmojiXL('Animalets', '🐶')}
           labels={[{ text: 'Animalets', className: 'sdp-badge-system' }, { text: 'Perdut', className: 'sdp-badge-accent' }]}
           author="Paco" location="La Torre de les Maçanes"
           time="09:15" date="13/09/26"
           {...PEU} showTranslate={false}
         />
 
-        {/* 6 · Gestoria (sense imatge ni text: només estat) */}
+        {/* 6 · Gestoria (sense imatge ni text: només estat). Ordre del Mestre
+            (261007): l'emoji XL de la part al quadrat; l'estat, a l'etiqueta.
+            Revisió del 261007 (M2-08) · «Vist» era text visible del quadrat:
+            ara és una etiqueta, que es veu i es llig. */}
         <UniversalCard
           title="Hisenda"
           subtitle="Model 303 / 130"
-          squareBadge={{ type: 'custom', label: 'Vist', content: <span className="sp-card-calendar-badge__dia" data-oversized="true">Vist</span> }}
-          labels={[{ text: 'Gestoria', className: 'sdp-badge-system' }, { text: 'Hisenda', className: 'sdp-badge-category' }]}
+          squareBadge={insigniaEmojiXL('Gestoria · Hisenda, vist', '🧾')}
+          labels={[
+            { text: 'Gestoria', className: 'sdp-badge-system' },
+            { text: 'Hisenda', className: 'sdp-badge-category' },
+            { text: 'Vist', className: 'sdp-badge-accent' }
+          ]}
           author="Javi" location="La Torre de les Maçanes"
           time="14:28" date="26/06/22"
           connectLabel="Obrir"
@@ -243,10 +268,40 @@ export default function EspecimenUniversalCard() {
               </div>
             </>
           )}
-          squareBadge={{ type: 'custom', label: 'Calendari de processos', content: <CalendarClock size={48} strokeWidth={1.5} aria-hidden="true" focusable="false" /> }}
+          squareBadge={insigniaEmojiXL('Calendari de processos', '⚙️')}
           labels={[{ text: 'Cal reparar', className: 'sdp-insignia sdp-insignia--error' }]}
           mainHref="/consola/calendari"
           hasFooter onConnect={() => navega('/consola/calendari')}
+        />
+      </div>
+
+      {/* Ordre del Mestre (261007) · «Cards de veritat», l'acció gran i els drets. */}
+      <h4>Targetes de pàgina de veritat, l’acció gran i els drets</h4>
+      <p>
+        La targeta d’una <strong>pàgina</strong> no s’inventa: és la <strong>miniatura de la seua UniversalPage</strong>,
+        amb la portada, el títol, el subtítol, l’entradilla, les etiquetes, el rellotge i la boina de qui la signa (sense
+        autor, <strong>Sóc de Poble</strong>, amb el seu avatar i La Torre de les Maçanes). És la mateixa al
+        <strong> Mur</strong> i <strong>incrustada dins d’un text</strong> (la de «Drets d’autor» dins de «Legal i
+        privacitat»), on es <strong>sincronitza amb l’original</strong>: la instantània desada a l’HTML només és la
+        reserva. Les dues primeres mostres ixen d’eixe mateix camí, amb les dades de PAGE_COPY.
+      </p>
+      <p>
+        <strong>El Xat</strong> porta la seua <strong>acció gran</strong>, «Anar al xat», en lloc de les etiquetes. Els
+        <strong> drets</strong> són sempre un <strong>enllaç blau</strong> a «Drets d’autor», en <strong>una sola
+        línia</strong>: la tercera mostra porta una atribució llarga, retallada amb punts suspensius.
+      </p>
+      <div className="sdp-card-grid" role="group" aria-label="Targetes de pàgina de veritat i drets">
+        <UniversalCard {...deVeritat('drets-autor')} {...PEU} />
+        <UniversalCard {...deVeritat('xat')} {...PEU} />
+        <UniversalCard
+          title="La Festa de Sant Antoni"
+          subtitle="Fotografies de l’arxiu de la família"
+          body="La foguera, els animals i la benedicció, tal com eren."
+          labels={[{ text: 'Publicació', className: 'sdp-badge-category' }]}
+          author="Pepet" location="La Torre de les Maçanes"
+          copyright="© Pepet Ferrandis i Ribes / Fotografies de la Festa de Sant Antoni de 1987, arxiu de la família"
+          time="19:30" date="17/01/26" dateTime="2026-01-17T19:30"
+          {...PEU}
         />
       </div>
 
@@ -313,7 +368,7 @@ export default function EspecimenUniversalCard() {
       <h5>Targeta de doble acció (portes)</h5>
       <p>
         La del <strong>Panell de Control</strong>. És la <strong>UniversalCard de sempre</strong>, sencera: la boina de
-        l’entitat <strong>socdepoble</strong> (l’autor obri el seu <strong>xat corporatiu</strong>, i la data, el
+        l’entitat <strong>socdepoble</strong> (l’autor porta a la <strong>pàgina del projecte</strong>, i la data, al
         Calendari), la il·lustració, i el <strong>títol, el subtítol i l’entradilla visibles</strong>, els mateixos de la
         seua pàgina. Al final del cos, <strong>dues portes</strong>: «Publicar», en blau, i «Saber-ne més», que obri la
         <strong> UniversalPage</strong> de la targeta.

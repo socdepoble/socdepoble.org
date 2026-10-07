@@ -10,9 +10,12 @@ import { UniversalPage } from './UniversalPage.jsx';
 import { PageFrame } from './PageFrame.jsx';
 
 /* T63.2 · A l'editor Comentar és inoperatiu (T36) i no porta a cap xat: el seu
-   nom és només «Comentar». A la lectura pública, el xat comú de la pàgina. */
+   nom és només «Comentar». A la lectura pública, el xat comú de la pàgina.
+   Ordre del Mestre (261007) · «COMENTARIS = XAT» · A la lectura pública,
+   Comentar també es diu «Comentar», però obri el menú de dues vies
+   (aria-haspopup). A l'editor no obri cap menú. */
 const INOPERATIUS = ['Comentar', 'Compartir', 'Connectar'];
-const PUBLICS = ['Comentar al xat comú', 'Compartir', 'Connectar'];
+const PUBLICS = ['Comentar', 'Compartir', 'Connectar'];
 const VIUS = ['Tornar arrere', 'Índex de secció', 'Tornar endavant', 'Traduir'];
 const CLAUS = { Comentar: 'comentar', Compartir: 'compartir', Connectar: 'connectar' };
 const barra = (container) => container.querySelector('header.bar-blue');
@@ -122,6 +125,8 @@ test('T36 · la lectura pública (UniversalPage sense editor) no canvia: cap ari
     expect(boto(container, nom).hasAttribute('aria-disabled')).toBe(false);
   }
   for (const nom of PUBLICS) expect(boto(container, nom).classList.contains('accio-inoperativa')).toBe(false);
+  // 261007 · A la lectura, Comentar obri el menú de dues vies.
+  expect(boto(container, 'Comentar').getAttribute('aria-haspopup')).toBe('menu');
   expect(barra(container).nextElementSibling.className).toBe('bar-orange');
   fireEvent.click(boto(container, 'Connectar'));
   expect(mocks.showToast).not.toHaveBeenCalled();
@@ -129,12 +134,18 @@ test('T36 · la lectura pública (UniversalPage sense editor) no canvia: cap ari
 
 /* T63.2 · El document que s'edita (una nota, una fitxa) encara no té cap xat:
    Comentar continua inoperatiu i el seu nom no n'anuncia cap. Ni un objecte
-   tipat que arribe per ...rest el fa operatiu. */
-test('T63.2 · a l’editor, Comentar no promet cap xat i no navega, ni amb un objecte tipat', () => {
+   tipat que arribe per ...rest el fa operatiu.
+   Ordre del Mestre (261007, correcció C5) · Ni anuncia cap menú: cap
+   aria-haspopup ni aria-expanded, i el clic no n'obri cap. */
+test('T63.2 · a l’editor, Comentar no promet cap xat, no obri cap menú i no navega, ni amb un objecte tipat', () => {
   const { container } = editor({ objecte: { tipus: 'publicacio', id: 'p1', titol: 'P', ruta: '/mur/p1' } });
-  expect(boto(container, 'Comentar')).not.toBeNull();
-  expect(barra(container).querySelector('[aria-label="Comentar al xat comú"]')).toBeNull();
-  fireEvent.click(boto(container, 'Comentar'));
+  const comentar = boto(container, 'Comentar');
+  expect(comentar).not.toBeNull();
+  expect(comentar.hasAttribute('aria-haspopup')).toBe(false);
+  expect(comentar.hasAttribute('aria-expanded')).toBe(false);
+  fireEvent.click(comentar);
+  expect(barra(container).querySelector('[role="menu"]')).toBeNull();
+  expect(comentar.hasAttribute('aria-expanded')).toBe(false);
   expect(mocks.navigate).not.toHaveBeenCalled();
   expect(missatges()).toEqual([AVISOS_ACCIONS_EDICIO.comentar]);
 });

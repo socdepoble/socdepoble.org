@@ -1,7 +1,7 @@
 /**
  * Tasca 5 (ordre del Mestre, 261001) · Les dates de prova del Mur.
  *
- * Les huit importants, amb dia i hora d'esta setmana (mai en el futur); les
+ * Les nou importants, amb dia i hora d'esta setmana (mai en el futur); les
  * molt tècniques, del 2 al 15 de setembre, també amb hora; els actes, amb el
  * seu dia de sempre. Cap prova depén del dia en què s'executa: `ara`
  * s'injecta i es recorren tots els dies d'una setmana, les vores (dilluns de
@@ -111,6 +111,20 @@ describe('la llavor del Mur amb les dates de prova', () => {
     // Els actes conserven el dia de l'acte (el 2n Aplec, el 29-01-2023).
     expect(llavor.events).toBe(APP_SEED.events);
     expect(ordenades.at(-1).clau).toBe('events:aplec-2023');
+  });
+
+  /* Ordre del Mestre (261007) · «Drets d'autor» no és cap de les importants:
+     amb la seua data real (2026-01-30, 00:00 hora local) cau avall, darrere
+     de les importants i de les tècniques, i les importants continuen dalt. */
+  test.each(MOMENTS)('%s: «Drets d’autor» va avall, amb la seua data de creació', (_, ara) => {
+    expect([...IMPORTANTS_DEL_MUR, ...TECNIQUES_DEL_MUR].map(clau)).not.toContain('pages:drets-autor');
+    const ordenades = targetesDelMur(llavorAmbDatesDeProva(APP_SEED, ara))
+      .map((targeta) => ({ ...targeta, moment: momentDElement(targeta.item) }))
+      .sort((a, b) => b.moment - a.moment);
+    const posicio = ordenades.findIndex(({ clau: c }) => c === 'pages:drets-autor');
+    expect(posicio).toBeGreaterThanOrEqual(N + TECNIQUES_DEL_MUR.length);
+    expect(ordenades[posicio].moment).toBe(Date.parse(PAGE_COPY['drets-autor'].date));
+    expect(ordenades[posicio].item.created_at).toBe('2026-01-30T00:00:00+01:00');
   });
 
   test('la llavor original no canvia: el copy conserva la seua data de creació', () => {

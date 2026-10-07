@@ -1,0 +1,294 @@
+
+
+# FASE: Portada
+
+Unnamed: 0,Unnamed: 1,Unnamed: 2,Unnamed: 3,Unnamed: 4,Unnamed: 5,Unnamed: 6
+,Checklist de limpieza de una web WordPress infectada,,,,,
+,"77 comprobaciones en 8 fases, de la primera copia de seguridad a recuperar la reputación en Google.",,,,,
+,,,,,,
+,,,,,,
+,Tu dominio,ayudawp.com,Escríbelo sin www y sin https. Los enlaces de las hojas 4 y 5 se montan solos con lo que pongas aquí.,,,
+,,,,,,
+,,,,,,
+,"Antes de empezar, cuatro cosas",,,,,
+,Esto se puede romper.,"Buena parte de la fase 3 y de la 4 consiste en borrar ficheros y tocar la base de datos. Si no has descargado antes la copia completa de la fase 1, no sigas.",,,,
+,Limpiar no es lo mismo que arreglar.,"Si no encuentras por dónde entraron, la web se vuelve a infectar en días y te preguntarás qué hiciste mal. No hiciste nada mal: dejaste la puerta abierta.",,,,
+,Vas a perder personalizaciones.,Al reinstalar el tema y los plugins desaparece lo que estuviera metido a mano dentro de esos ficheros. Por eso se copia antes.,,,,
+,"Si hay datos personales, hay plazo legal.","72 horas para notificar a la Agencia Española de Protección de Datos desde que te enteras. Eso corre desde ya, no desde que termines de limpiar.",,,,
+,,,,,,
+,Cómo se rellena,,,,,
+,Estado,Pendiente · En marcha · Hecho · No aplica. Se elige de la lista de la celda.,,,,
+,Riesgo,"Seguro, Con cuidado o Puede romper la web. Las rojas no se hacen con prisa ni sin copia previa.",,,,
+,Aplica si,Muchas comprobaciones solo tienen sentido en algunos casos. Filtra por esta columna y marca «No aplica» en lo que no sea tu caso.,,,,
+,,,,,,
+,"Una fila de ejemplo, para que se vea el formato:",,,,,
+,Comprobación,Estado,Fecha,Notas,,
+,Deja la carpeta de subidas sin un solo PHP,Hecho,10/09/2026,"Tres ficheros en uploads/2024/07, borrados y anotados",,
+,,,,,,
+,,,,,,
+,Cómo vas,,,,,
+,Fase,Comprobaciones,Hechas,No aplican,Pendientes,Avance
+,0. Antes de tocar nada,4,0,0,4,0
+,1. Contener y guardar pruebas,11,0,0,11,0
+,2. Averiguar qué ha pasado,7,0,0,7,0
+,3. Limpiar los ficheros,10,0,0,10,0
+,4. Limpiar la base de datos,10,0,0,10,0
+,5. Cerrar la puerta,13,0,0,13,0
+,6. Comprobar que está limpia,6,0,0,6,0
+,7. Recuperar la reputación,16,0,0,16,0
+,Total,77,0,0,77,0
+,,,,,,
+,,,,,,
+,De dónde sale esto,,,,,
+,"Es el protocolo que seguimos en AyudaWP para limpiar una web infectada, recortado a lo que puede hacer el dueño de la web por su cuenta. Puedes usarlo y compartirlo. Si a mitad de camino ves que se te va de las manos, escríbenos antes de tocar más.",,,,,
+,,,,,,
+,Tutoriales y guías de WordPress,https://ayudawp.com,,,,
+,Herramientas gratuitas,https://herramientas.ayudawp.com,,,,
+,Limpieza de webs infectadas,https://servicios.ayudawp.com,,,,
+,Mantenimiento mensual de WordPress,https://mantenimiento.ayudawp.com,,,,
+,"Vigilante, para que no vuelva a pasar",https://vigilante.works/,,,,
+,,,,,,
+,Versión 1.0 · 2026-09-10 · ayudawp.com,,,,,
+
+
+# FASE: 1 Antes de empezar
+
+Lo que necesitas tener a mano antes de empezar,Unnamed: 1,Unnamed: 2,Unnamed: 3
+Reunir esto primero te ahorra parar la limpieza a mitad para buscar una contraseña.,,,
+,,,
+Grupo,Qué necesitas,Por qué,¿Lo tienes?
+Accesos,Panel de hosting,"Panel de hosting con permiso para gestionar ficheros y copias. Si no tienes tú las claves, pídelas antes de empezar.",Pendiente
+,FTP o SFTP,"FTP o SFTP, mejor SFTP si tu hosting lo ofrece.",Pendiente
+,SSH,"SSH, si lo tienes. Acelera muchísimo el trabajo de buscar y comparar ficheros.",Pendiente
+,Base de datos,"Acceso a la base de datos por phpMyAdmin o Adminer, por si el panel no te lo da directo.",Pendiente
+,Gestor de DNS,"Gestor de DNS, para revisar los registros de correo sobre todo.",Pendiente
+,Registrador del dominio,"Registrador del dominio, solo si hay que tocar nameservers o te han secuestrado el dominio.",Pendiente
+,Google Search Console,"Google Search Console verificado. Sin esto no puedes pedir la revisión de seguridad, que es la única vía para quitar el aviso de Google.",Pendiente
+,Bing Webmaster Tools,"Bing Webmaster Tools, por la misma razón.",Pendiente
+,Correo del dominio,"Acceso al correo del dominio, para revisar cuentas y colas si hay spam saliente.",Pendiente
+,"Cloudflare, CDN o WAF","Cloudflare, CDN o cortafuegos, si tienes algo por delante. Condiciona lo que se ve desde fuera y hay cachés que purgar.",Pendiente
+,Pasarela de pago,"Pasarela de pago, si tienes tienda y te han avisado.",Pendiente
+,Sistema de copias,"El sistema de copias, sea plugin o del hosting, para ver qué hay y de qué fecha.",Pendiente
+,Un usuario administrador que sepas que es tuyo,Y comprueba que no hay otros administradores que no reconozcas antes de fiarte de nada de lo que veas en el escritorio.,Pendiente
+Información,Qué han visto y desde cuándo,"Qué has visto y desde cuándo, con tus palabras. La fecha aproximada ayuda a acotar el resto.",Pendiente
+,Qué han tocado ya,"Qué has tocado ya. Media limpieza se complica por lo que se hizo antes de pararse a pensar, así que apúntalo sin reproches.",Pendiente
+,Avisos recibidos,"Avisos que hayas recibido de Google, del hosting, de la pasarela o de tus propios clientes.",Pendiente
+,Copias disponibles y de qué fecha,"Copias disponibles y de qué fecha, sobre todo si alguna es anterior al problema.",Pendiente
+,Quién tiene acceso y desde qué equipos,"Quién tiene acceso y desde qué equipos. Si entraron con una contraseña robada, el problema puede estar en un portátil.",Pendiente
+,Qué datos personales trata la web,Qué datos personales trata la web. Es lo que decide si hay brecha que valorar y el plazo de 72 horas.,Pendiente
+,Otras webs en la misma cuenta,Otras webs en la misma cuenta de hosting.,Pendiente
+,Persona de contacto y horario para parar la web,"Cuándo puedes parar la web sin cargarte el día. En una tienda, esto no se improvisa.",Pendiente
+,Pedidos y pagos del periodo afectado,"Pedidos y pagos del periodo afectado, si tienes tienda, para valorar si hubo captura de datos de pago.",Pendiente
+,Un ordenador del que te fíes,"Si el vector fueron credenciales robadas de un equipo con malware, limpiar la web desde ese mismo equipo es empezar la casa por el tejado. Pasa un antivirus antes.",Pendiente
+
+
+# FASE: 2 Checklist
+
+El checklist,Unnamed: 1,Unnamed: 2,Unnamed: 3,Unnamed: 4,Unnamed: 5,Unnamed: 6,Unnamed: 7,Unnamed: 8
+Las fases van en orden y el orden importa. Filtra por «Aplica si» para quitarte de encima lo que no sea tu caso.,,,,,,,,
+,,,,,,,,
+Fase,Nº,Comprobación,Cómo se hace,Aplica si,Riesgo,Estado,Fecha,Notas
+0. Antes de tocar nada,1,Piensa qué datos personales guarda tu web,"Clientes, pedidos, suscriptores del boletín, formularios de contacto, comentarios con su correo. Si hay algo de eso, los dos puntos siguientes te afectan. En una tienda la respuesta es que sí, siempre.",Siempre,Seguro,Pendiente,,
+0. Antes de tocar nada,2,Valora si tienes que notificar la brecha a la AEPD (RGPD art. 33),"Si han podido acceder a datos personales, tienes 72 horas para notificarlo a la Agencia Española de Protección de Datos desde que te enteras. Que la web sea pequeña y tuya no te libra. Documenta la valoración y la decisión aunque decidas no notificar, porque lo que te van a pedir luego es el razonamiento.",Si hay datos personales,Seguro,Pendiente,,
+0. Antes de tocar nada,3,Decide si tienes que avisar también a los afectados (RGPD art. 34),"Cuando el riesgo para las personas es alto, además de notificar a la Agencia hay que avisarlas a ellas. La decisión es tuya como responsable del tratamiento, no de quien te limpie la web. Si tienes asesoría de protección de datos, esta llamada es para ellos.",Si hay datos personales,Seguro,Pendiente,,
+0. Antes de tocar nada,4,Decide cuándo puedes parar la web y por cuánto tiempo,"Vas a tener que dejarla en mantenimiento un rato largo. Si vendes, mira antes tus horas buenas y avisa a quien atienda pedidos o teléfono.",Siempre,Seguro,Pendiente,,
+1. Contener y guardar pruebas,5,Haz la foto del estado inicial desde fuera,"Antes de tocar nada, pasa la web por los escáneres de la hoja «4 Comprobaciones online» y anota lo que salga en cada uno. Es tu punto de partida, y sin él no podrás demostrar después que la has arreglado.",Siempre,Seguro,Pendiente,,
+1. Contener y guardar pruebas,6,Haz capturas de todo lo que se vea mal,"La portada como la ve un visitante, el aviso de Google si lo hay, la pantalla de Search Console y los escáneres que marquen algo. Hazlas también desde el móvil, que muchas infecciones solo se ven ahí.",Siempre,Seguro,Pendiente,,
+1. Contener y guardar pruebas,7,Descarga una copia completa de la web infectada y guárdala aparte,"Ficheros y base de datos tal como están ahora, con el bicho dentro, bajados a tu ordenador o a un disco externo. No la borres al terminar. Si más adelante aparece algo, o alguien te pregunta qué pasó, es lo único que lo prueba. Anota la fecha.",Siempre,Seguro,Pendiente,,
+1. Contener y guardar pruebas,8,Mira qué copias de seguridad tienes y de qué fecha,"Las del hosting, las del plugin de copias y las que hayas descargado alguna vez. Lo que importa es si alguna es anterior al día en que empezó esto, porque eso decide el punto siguiente.",Siempre,Seguro,Pendiente,,
+1. Contener y guardar pruebas,9,Decide si restauras una copia limpia o limpias lo que hay,"Restaurar es más rápido y más seguro, pero pierdes todo lo publicado desde esa fecha y no cierra el agujero por el que entraron. Si restauras, tendrás que hacer igualmente las fases 5 y 6 o volverás a estar donde estabas. Anota por qué has elegido lo que has elegido.",Siempre,Seguro,Pendiente,,
+1. Contener y guardar pruebas,10,Pon la web en mantenimiento mientras trabajas,"Con un aviso claro y devolviendo un código 503, que es el que le dice a Google que la parada es temporal. Si dejas la web en pie mientras limpias, sigues repartiendo malware entre tus visitantes.",Siempre,Con cuidado,Pendiente,,
+1. Contener y guardar pruebas,11,Revisa el resto de webs de la misma cuenta de hosting,"El salto de una web a otra dentro de la misma cuenta es de lo más común que hay. Si tienes tres webs en el mismo alojamiento, tienes tres webs que revisar antes de dar nada por limpio.",Si hay más webs en la misma cuenta,Seguro,Pendiente,,
+1. Contener y guardar pruebas,12,Comprueba si tu dominio está enviando spam,"Mira la cola de correo en el panel del hosting y las cuentas con envíos que no cuadran. Si sale spam, córtalo antes de pedir que te saquen de ninguna lista negra.",Siempre,Seguro,Pendiente,,
+1. Contener y guardar pruebas,13,Avisa a tu hosting y pídeles los registros,"Ellos tienen logs que tú no ves y muchas veces te dan la hora exacta del primer acceso raro. Además, si estaban a punto de suspenderte la cuenta, conviene que sepan que ya estás con ello.",Siempre,Seguro,Pendiente,,
+1. Contener y guardar pruebas,14,Corta las sesiones abiertas y limita el acceso,"Mientras limpias, quien entró puede volver y reinfectar por detrás. Cierra las sesiones activas y, si el hosting te deja, limita el acceso al escritorio a tu IP.",Siempre,Con cuidado,Pendiente,,
+1. Contener y guardar pruebas,15,Guarda tu propio código antes de tocar nada,"El de Analytics, los píxeles, las verificaciones de propiedad de Search Console, el CSS que hayas metido a mano y las funciones sueltas del functions.php. Al reinstalar el tema y los plugins se pierde todo eso, y luego cuesta acordarse de lo que había.",Siempre,Seguro,Pendiente,,
+2. Averiguar qué ha pasado,16,Revisa a mano el código que te haya salido raro,"Las búsquedas de patrones te dan candidatos, no culpables. Antes de borrar nada, abre el fichero y mira qué hace. Si es del núcleo o de un plugin del repositorio, compáralo con el original y verás la diferencia enseguida.",Siempre,Seguro,Pendiente,,
+2. Averiguar qué ha pasado,17,Averigua por dónde entraron,"Un plugin sin actualizar, un tema pirata, una contraseña filtrada, un formulario que permitía subir ficheros. Si no lo encuentras, no lo des por cerrado: trabaja como si la puerta siguiera abierta, porque limpiar sin cerrarla acaba siempre igual.",Siempre,Seguro,Pendiente,,
+2. Averiguar qué ha pasado,18,Averigua la fecha de la primera modificación rara,Ordena los ficheros por fecha de modificación y busca el más antiguo que no cuadre. Esa fecha te dice qué copias de seguridad te sirven y cuáles ya vienen con el problema dentro.,Siempre,Seguro,Pendiente,,
+2. Averiguar qué ha pasado,19,Averigua hasta dónde llegó,"Ficheros, base de datos, usuarios, correo y las otras webs de la cuenta. De esto depende el trabajo que te queda y si además tienes un problema con datos personales.",Siempre,Seguro,Pendiente,,
+2. Averiguar qué ha pasado,20,Revisa los registros del servidor,"Accesos por FTP a horas raras, peticiones POST a ficheros que en un WordPress normal no existen, picos de tráfico sin explicación. Ahí suele estar la hora del crimen y a veces también la IP.",Siempre,Seguro,Pendiente,,
+2. Averiguar qué ha pasado,21,Busca patrones de código sospechoso en los ficheros,"En la hoja «6 Patrones de código» tienes lo que hay que buscar y qué significa cada cosa. Con acceso SSH vas rápido con grep; si no lo tienes, el buscador del gestor de archivos del hosting también sirve. Son indicios y no sentencias, porque hay código legítimo que usa lo mismo.",Siempre,Seguro,Pendiente,,
+2. Averiguar qué ha pasado,22,Compara el núcleo con una copia limpia de tu misma versión,"Descarga de wordpress.org el zip de tu versión exacta y compara carpeta por carpeta. Todo lo que aparezca en wp-admin o en wp-includes y no esté en el original es candidato. Si tu hosting tiene WP-CLI, wp core verify-checksums te lo hace de una vez.",Siempre,Seguro,Pendiente,,
+3. Limpiar los ficheros,23,Reinstala el núcleo de WordPress,"Desde Escritorio, Actualizaciones, con el botón de reinstalar la versión actual. Si vas atrasado, sube a la última. Esto sustituye wp-admin y wp-includes por ficheros limpios, pero no toca wp-content ni borra los ficheros que hayan añadido.",Siempre,Con cuidado,Pendiente,,
+3. Limpiar los ficheros,24,"Reinstala plugins y temas desde el origen, no desde tu web",Bórralos e instálalos de nuevo bajándolos del repositorio de WordPress o de la web del desarrollador. Reinstalar por encima de lo que hay deja intactos los ficheros que el atacante añadió dentro de esas carpetas.,Siempre,Con cuidado,Pendiente,,
+3. Limpiar los ficheros,25,"Elimina los plugins y temas pirata, abandonados o retirados","Un plugin nulled es la vía de entrada más común que existe y no tiene arreglo posible, solo se quita. Lo mismo con lo que lleve años sin actualizarse o lo hayan retirado del repositorio. Si no puedes vivir sin esa función, busca un sustituto mantenido antes de seguir.",Siempre,Puede romper la web,Pendiente,,
+3. Limpiar los ficheros,26,Borra los ficheros que sobran en el núcleo,"Lo que aparezca en wp-admin o en wp-includes y no esté en el zip original de tu versión. En esas dos carpetas no debe haber nada tuyo, así que ahí no hay duda posible.",Siempre,Con cuidado,Pendiente,,
+3. Limpiar los ficheros,27,Elimina las puertas traseras y anota las rutas,"Guarda la lista de lo que borras y dónde estaba. Si queda una sola, en unos días vuelve todo, y esa lista es lo primero que vas a querer mirar cuando pase.",Siempre,Puede romper la web,Pendiente,,
+3. Limpiar los ficheros,28,Deja la carpeta de subidas sin un solo PHP,"En wp-content/uploads no pinta nada un fichero .php. Busca por extensión en toda la carpeta, borra lo que salga y de paso bloquea la ejecución de PHP ahí con una regla en el .htaccess.",Siempre,Con cuidado,Pendiente,,
+3. Limpiar los ficheros,29,"Revisa todos los .htaccess, no solo el de la raíz",Las reglas de redirección se esconden en carpetas donde nadie mira. Acuérdate de que son ficheros ocultos y de que tu cliente de FTP puede no estar enseñándotelos.,Siempre,Con cuidado,Pendiente,,
+3. Limpiar los ficheros,30,Mira los drop-ins de wp-content,"object-cache.php, advanced-cache.php, db.php, sunrise.php y compañía se cargan siempre y no aparecen en la lista de plugins. Si tienes alguno y no sabes qué plugin lo puso, ahí tienes algo que revisar.",Siempre,Con cuidado,Pendiente,,
+3. Limpiar los ficheros,31,Revisa wp-config.php de arriba abajo,"Código añadido al final del fichero, includes de rutas raras, constantes cambiadas. Si no tienes claro qué debería haber, compáralo con el wp-config-sample.php que viene en el zip de WordPress.",Siempre,Con cuidado,Pendiente,,
+3. Limpiar los ficheros,32,Revisa la carpeta mu-plugins,"Lo que hay ahí se activa solo, no se puede desactivar desde el escritorio y no sale en la lista de plugins, así que es de los sitios favoritos para esconderse. Si wp-content/mu-plugins existe y tú no la creaste, míralo con calma.",Siempre,Con cuidado,Pendiente,,
+4. Limpiar la base de datos,33,Haz una copia de la base de datos antes de tocarla,"Aparte de la copia completa que ya tienes guardada, esta es la de trabajo. Una limpieza masiva mal hecha se lleva contenido por delante y vas a querer poder volver atrás.",Siempre,Seguro,Pendiente,,
+4. Limpiar la base de datos,34,Limpia el contenido inyectado en entradas y páginas,"Scripts e iframes metidos dentro del contenido. Hazlo mirando lo que cambias, porque un buscar y reemplazar a ciegas sobre la base de datos se lleva por delante cosas que no tocaba.",Siempre,Puede romper la web,Pendiente,,
+4. Limpiar la base de datos,35,Revisa la tabla de opciones,"Mira siteurl y home, las opciones que lleven etiquetas script dentro, las que tengan nombres sin sentido y las que estén marcadas para cargarse siempre sin venir a cuento.",Siempre,Con cuidado,Pendiente,,
+4. Limpiar la base de datos,36,Limpia las tareas programadas,Busca hooks que no correspondan a ningún plugin que tengas instalado. Suelen ser el mecanismo con el que la web se reinfecta sola a los pocos días de darla por limpia.,Siempre,Con cuidado,Pendiente,,
+4. Limpiar la base de datos,37,Borra los administradores que no reconozcas,"Y revisa uno por uno los que quedan, porque a veces no crean un usuario nuevo: suben de rol a un suscriptor que llevaba años ahí sin molestar.",Siempre,Con cuidado,Pendiente,,
+4. Limpiar la base de datos,38,Limpia los perfiles de usuario con enlaces de spam,"Cuentas creadas en masa que llevan un enlace en el campo de la web del perfil. Eso se indexa, así que es spam publicado en tu dominio aunque tú no lo veas.",Siempre,Seguro,Pendiente,,
+4. Limpiar la base de datos,39,Borra el spam de comentarios acumulado,"Los masivos, los que llevan meses esperando moderación y los que se aprobaron y no deberían. Si son miles, bórralos por lotes o el servidor se va a quejar.",Siempre,Seguro,Pendiente,,
+4. Limpiar la base de datos,40,Purga los transients,A veces guardan la carga y la vuelven a inyectar cuando ya creías que habías terminado. Los borras desde el propio WordPress con un plugin de limpieza o directamente en la tabla de opciones.,Siempre,Seguro,Pendiente,,
+4. Limpiar la base de datos,41,Revisa las tablas huérfanas,"Las de plugins que ya no tienes y las que no corresponden a nada conocido. Antes de borrar ninguna, ábrela y mira qué hay dentro.",Siempre,Con cuidado,Pendiente,,
+4. Limpiar la base de datos,42,Valora si cambias el prefijo de las tablas,No es una medida de seguridad seria y hacerlo mal deja la web fuera de servicio. Solo tiene sentido si estabas en wp_ y la entrada fue por una inyección SQL.,Solo si la entrada fue por inyección SQL,Puede romper la web,Pendiente,,
+5. Cerrar la puerta,43,Regenera las claves de seguridad (salts),"Genera unas nuevas en la API de WordPress y sustitúyelas en wp-config.php. Con eso se cierran todas las sesiones abiertas, la tuya y la de quien estuviera dentro.",Siempre,Seguro,Pendiente,,
+5. Cerrar la puerta,44,Cambia las contraseñas de todos los administradores,"Todas, no solo la tuya, y que sean únicas de verdad, no una variación de la anterior con un número al final.",Siempre,Seguro,Pendiente,,
+5. Cerrar la puerta,45,Cambia la contraseña de la base de datos,"Desde el panel del hosting, y acuérdate de ponerla también en wp-config.php o la web se queda sin poder conectarse.",Siempre,Con cuidado,Pendiente,,
+5. Cerrar la puerta,46,Cambia los accesos de hosting y FTP,"El panel, las cuentas de FTP y las de SSH si las hay. Aprovecha para borrar las cuentas de FTP que no uses, que en una web con años suelen ser unas cuantas.",Siempre,Seguro,Pendiente,,
+5. Cerrar la puerta,47,Rota las claves de API y los tokens,"Pasarelas de pago, servicios de correo, integraciones con terceros. Si estaban en wp-config.php o en la base de datos, dalas por comprometidas.",Siempre,Seguro,Pendiente,,
+5. Cerrar la puerta,48,Activa el doble factor para los administradores,"Es lo que más ataques evita por lo poco que cuesta ponerlo. Con la contraseña sola no basta, porque las contraseñas se filtran en sitios que tú no controlas.",Siempre,Seguro,Pendiente,,
+5. Cerrar la puerta,49,Desactiva el editor de ficheros del escritorio,"Añade define('DISALLOW_FILE_EDIT', true); a wp-config.php. Así, si alguien vuelve a entrar con un usuario administrador, no puede editar plugins y temas desde el navegador.",Siempre,Seguro,Pendiente,,
+5. Cerrar la puerta,50,Corrige los permisos de ficheros y carpetas,"644 en ficheros y 755 en carpetas es lo normal. Si encuentras algo en 777, ahí puede escribir cualquiera.",Siempre,Con cuidado,Pendiente,,
+5. Cerrar la puerta,51,"Deja el núcleo, los plugins y los temas al día","Todo, incluido lo que tengas desactivado, porque un plugin desactivado sigue siendo un fichero al que se puede llamar desde fuera.",Siempre,Con cuidado,Pendiente,,
+5. Cerrar la puerta,52,Sustituye lo que ya no tenga mantenimiento,"Lo abandonado o retirado del repositorio no se va a actualizar nunca más, así que su próximo fallo de seguridad no lo va a arreglar nadie.",Siempre,Con cuidado,Pendiente,,
+5. Cerrar la puerta,53,Pon vigilancia de cambios en ficheros y de vulnerabilidades,"Es lo que te avisa la próxima vez antes de que se entere Google. Vigilante vigila los cambios en ficheros y las vulnerabilidades de lo que tienes instalado, y es gratuito.",Siempre,Seguro,Pendiente,,https://vigilante.works/
+5. Cerrar la puerta,54,Comprueba que las copias funcionan y prueba a restaurar una,"Una copia que no has restaurado nunca no es una copia, es una carpeta. Prueba la restauración en un entorno de pruebas, no encima de la web buena.",Siempre,Seguro,Pendiente,,
+5. Cerrar la puerta,55,Revoca los accesos que ya no hagan falta,"El de quien te montó la web hace tres años, el de la agencia que ya no lleva nada, el usuario que creaste para una prueba. Cada acceso que sobra es una puerta más.",Siempre,Seguro,Pendiente,,
+6. Comprobar que está limpia,56,Repite las comprobaciones de fuera y compáralas con las del principio,"Las mismas de la hoja «4 Comprobaciones online», con la misma vara de medir. Lo que siga en rojo, o lo arreglas o sabes explicar por qué está así.",Siempre,Seguro,Pendiente,,
+6. Comprobar que está limpia,57,Vuelve a buscar los patrones de código,"La segunda pasada es la que encuentra lo que se quedó a medias. Si aparece algo que no estaba en la primera, es que sigue habiendo una vía abierta y hay que volver a la fase 2.",Siempre,Seguro,Pendiente,,
+6. Comprobar que está limpia,58,Haz las capturas del estado final,"Las mismas que hiciste al empezar, para poder ponerlas al lado y ver el antes y el después.",Siempre,Seguro,Pendiente,,
+6. Comprobar que está limpia,59,Espera 72 horas y vuelve a mirar,"Si vuelve, es que queda una puerta trasera o el agujero de entrada sigue abierto. No des el trabajo por terminado el mismo día que acabas.",Siempre,Seguro,Pendiente,,
+6. Comprobar que está limpia,60,Quita el modo mantenimiento y comprueba que la portada responde 200,"Un 503 que se queda puesto se come el posicionamiento en pocos días. Comprueba también que has borrado el fichero de la página de aviso, que se olvida más de lo que parece.",Siempre,Con cuidado,Pendiente,,
+6. Comprobar que está limpia,61,Vuelve a poner tu código y comprueba que funciona,"Que la analítica registre visitas otra vez y que las verificaciones de propiedad sigan en pie. Comprobado de verdad, abriendo el panel, no dado por hecho.",Siempre,Seguro,Pendiente,,
+7. Recuperar la reputación,62,Pide la revisión de seguridad en Search Console,"En Seguridad y acciones manuales, Problemas de seguridad. Solo con la web ya limpia, porque un intento gastado con la web todavía sucia alarga la espera.",Si Google marcó la web,Seguro,Pendiente,,
+7. Recuperar la reputación,63,"Confirma que el aviso de Google ha desaparecido, y anota la fecha","En Search Console y en el informe de transparencia. Apunta el día, que es lo que le vas a decir a quien te escriba diciendo que le sale que tu web es peligrosa.",Si Google marcó la web,Seguro,Pendiente,,
+7. Recuperar la reputación,64,Pide la revisión en Bing Webmaster Tools,"Alimenta a otros buscadores y a algunos antivirus, así que no te lo saltes aunque Bing te traiga poco tráfico.",Siempre,Seguro,Pendiente,,
+7. Recuperar la reputación,65,"Sucuri SiteCheck limpio, con captura","Es el escáner que suelen mirar los clientes y del que beben bastantes otros. Si sigue marcando algo después de limpiar, es que queda algo: míralo antes de discutir con nadie.",Siempre,Seguro,Pendiente,,
+7. Recuperar la reputación,66,"VirusTotal limpio, con captura","Veredicto agregado de decenas de motores. Cada uno que te marque tiene su propio proceso para pedir la revisión, así que empieza por los que salgan en rojo en la ficha del dominio.",Siempre,Seguro,Pendiente,,
+7. Recuperar la reputación,67,"Informe de transparencia de Google en verde, con captura","Es la página pública de tu dominio en Safe Browsing, la que ven tus contactos cuando te dicen que su navegador les avisa.",Siempre,Seguro,Pendiente,,
+7. Recuperar la reputación,68,"Norton Safe Web sin marcas, con captura","Afecta a muchos antivirus de escritorio, así que puede seguir dando la lata cuando Google ya te ha quitado el aviso.",Siempre,Seguro,Pendiente,,
+7. Recuperar la reputación,69,"Quttera limpio, con captura","Segunda opinión, útil cuando SiteCheck ya está limpio y todavía hay quien te dice que le salta algo.",Siempre,Seguro,Pendiente,,
+7. Recuperar la reputación,70,"URLVoid sin marcas, con captura","Agrega listas de reputación de varios sitios. Si queda alguna encendida, te dice cuál es y así sabes a quién reclamar.",Siempre,Seguro,Pendiente,,
+7. Recuperar la reputación,71,Pide la retirada a los antivirus que te marcaban,"Cada uno tiene su formulario y sus plazos, que se cuentan en días. En la hoja «5 Reputación y retiradas» tienes dónde se pide cada cosa.",Si algún antivirus marcaba la web,Seguro,Pendiente,,
+7. Recuperar la reputación,72,Pide la salida de las listas negras de correo,"Después de cortar el envío de spam, nunca antes. Si lo pides con el servidor todavía mandando, vuelves a entrar al día siguiente y la segunda vez cuesta más salir.",Si hubo spam saliente,Seguro,Pendiente,,
+7. Recuperar la reputación,73,Retira del índice las páginas de spam y pide que se reindexe lo bueno,"Google no retira URLs porque se lo pidas. La herramienta de Retirada de Search Console solo las oculta unos seis meses y es un parche mientras el índice se refresca. Lo que las quita de verdad es que la URL devuelva 410 o 404, sin redirigirla a la portada, y esperar a que Google la vuelva a rastrear: de días a semanas si son pocas, meses si el spam generó miles. El orden es 410 en las URLs basura, sitemap limpio reenviado, retirada temporal para las que se vean en Google, y solicitud de indexación de las páginas buenas que se hayan perdido, de una en una desde Inspección de URL. En Bing sí hay bloqueo de URLs y va más rápido. Un botón para reindexar el sitio entero no existe.",Si hubo spam SEO,Con cuidado,Pendiente,,
+7. Recuperar la reputación,74,Pide al hosting que reactive la cuenta,"Con un resumen de lo que encontraste, lo que borraste y las medidas que has dejado puestas. Un ticket concreto se resuelve mucho antes que un «ya está arreglado».",Si el hosting suspendió o limitó la cuenta,Seguro,Pendiente,,
+7. Recuperar la reputación,75,Responde a la pasarela de pago,"Por escrito, con lo corregido y las medidas puestas. Si hubo datos de pago afectados, esto va de la mano de lo de la brecha.",Si tienes tienda y avisó la pasarela,Seguro,Pendiente,,
+7. Recuperar la reputación,76,Busca site:tudominio en Google hasta que no salga basura,"Y la variante con términos de spam, que la tienes montada en la hoja «4 Comprobaciones online». Mientras devuelva resultados, la retirada no ha terminado aunque la web ya esté limpia.",Si hubo spam SEO,Seguro,Pendiente,,
+7. Recuperar la reputación,77,Repite el análisis de seguridad y compáralo con el del principio,"La misma herramienta que pasaste al empezar, para ver el antes y el después con la misma vara de medir.",Siempre,Seguro,Pendiente,,https://herramientas.ayudawp.com/security-check/
+
+
+# FASE: 3 Diagnóstico
+
+Diagnóstico: qué mirar y cómo se mira,Unnamed: 1,Unnamed: 2,Unnamed: 3,Unnamed: 4,Unnamed: 5,Unnamed: 6
+"Se pasa dos veces, al principio y al terminar, y se comparan las dos columnas. Un «Mal» que sigue igual después de limpiar es trabajo sin acabar.",,,,,,
+,,,,,,
+Grupo,Comprobación,Qué significa,Cómo lo compruebas tú,Gravedad,Resultado,Notas
+Cloaking y redirecciones,¿Sirve el mismo contenido a Googlebot que a un navegador?,"Si a Googlebot le enseña otra cosa, hay spam SEO inyectado. Es la comprobación que más veces destapa el problema.","Con la Inspección de URL de Search Console, en «Ver página rastreada», comparas el HTML que ve Google con el que ves tú. También puedes cambiar el user-agent desde las herramientas de desarrollo del navegador.",alta,Sin comprobar,
+,¿Sirve el mismo contenido en móvil que en escritorio?,"Muchas campañas redirigen solo en móvil, que es donde el dueño de la web casi nunca mira.","Abre la web en el móvil con datos, no con tu wifi, y navega por varias páginas. Muchas campañas redirigen solo ahí.",alta,Sin comprobar,
+,¿Se comporta igual llegando desde Google que directamente?,"El clásico: tú entras por tu marcador y ves la web perfecta, y quien llega desde Google acaba en otra parte.","Busca tu web en Google y entra desde el resultado, no desde un marcador. Es la comprobación que más veces destapa el problema.",alta,Sin comprobar,
+,¿Termina la navegación en el mismo dominio?,Cadena de redirecciones que acaba en un dominio de terceros.,"Fíjate en la barra de direcciones después de cargar. Si acabas en otro dominio, tienes una cadena de redirecciones montada.",alta,Sin comprobar,
+Contenido inyectado,¿Está el HTML libre de bloques codificados sospechosos?,"Cadenas base64 largas, eval o atob dentro del HTML servido.","Mira el código fuente de la portada (Ctrl+U) y busca cadenas larguísimas de letras y números, o las palabras eval y atob.",alta,Sin comprobar,
+,¿Todos los scripts vienen de dominios reconocibles?,Scripts cargados desde dominios que no son ni el propio ni CDN conocidas.,"En el código fuente, revisa cada etiqueta script con src. Todo dominio que no sea el tuyo ni una CDN que reconozcas merece una mirada.",alta,Sin comprobar,
+,¿Está libre de iframes ocultos?,"Iframes de 1 píxel o con display:none, clásico para distribuir malware.",Busca la palabra iframe en el código fuente. Los de 1 píxel o con display:none no están ahí para nada bueno.,alta,Sin comprobar,
+,¿Está libre de enlaces salientes de spam?,"Enlaces a farmacia, casino, réplicas o préstamos, muchas veces ocultos con CSS.","Busca en el código fuente términos de farmacia, casino, réplicas o préstamos. Suelen ir escondidos con CSS, así que en pantalla no se ven.",alta,Sin comprobar,
+,¿La búsqueda interna está limpia de términos de spam?,"Si el buscador de tu propia web devuelve resultados con palabras de spam, tienes contenido inyectado y publicado.","Usa el buscador de tu propia web con esas mismas palabras. Si devuelve resultados, tienes contenido inyectado y publicado.",alta,Sin comprobar,
+,¿El sitemap solo tiene URLs del negocio?,URLs ajenas al negocio o un número de entradas que no cuadra.,"Abre tu sitemap.xml y mira si el número de URLs cuadra con lo que tienes publicado, y si hay direcciones que no reconoces.",media,Sin comprobar,
+,¿El título y la descripción de la portada son los del negocio?,"Cuando cambian, o hay defacement o hay dopaje de SEO.","Busca tu web en Google y mira el título y la descripción que salen. Cuando cambian, o hay defacement o hay dopaje de SEO.",media,Sin comprobar,
+Superficie y ficheros,¿No responden rutas de puertas traseras conocidas?,Se prueban nombres habituales de shells subidos por atacantes.,Prueba en el navegador nombres habituales de shells sobre tu dominio. Cualquiera que devuelva algo distinto de un 404 es un problema.,alta,Sin comprobar,
+,¿No hay PHP accesible en la carpeta de subidas?,En /uploads no debería ejecutarse nada.,Busca ficheros .php dentro de wp-content/uploads por FTP o por el gestor de archivos. No debería haber ninguno.,alta,Sin comprobar,
+,¿Están cerrados install.php y los ficheros de instalación?,Puerta de entrada para reinstalar por encima y quedarse con el sitio.,Comprueba que tudominio.com/wp-admin/install.php no deja reinstalar nada.,media,Sin comprobar,
+,¿Está inaccesible el repositorio .git?,Un .git expuesto entrega el código fuente y a veces credenciales.,"Prueba tudominio.com/.git/config en el navegador. Si te descarga algo, estás entregando el código fuente y a veces credenciales.",media,Sin comprobar,
+,¿No hay copias descargables en la raíz?,Un .zip o .sql accesible es la base de datos entera al alcance de cualquiera.,"Prueba en el navegador los nombres típicos de copias en la raíz, con extensión .zip o .sql. Un fichero así accesible es tu base de datos entera al alcance de cualquiera.",alta,Sin comprobar,
+,¿Está inaccesible debug.log?,Suele filtrar rutas y a veces datos personales.,Prueba tudominio.com/wp-content/debug.log. Suele filtrar rutas del servidor y a veces datos personales.,media,Sin comprobar,
+,¿Está inaccesible el fichero .env?,"Si existe y es accesible, entrega credenciales en texto plano.","Prueba tudominio.com/.env. Si existe y responde, estás entregando credenciales en texto plano.",alta,Sin comprobar,
+,¿No hay clones o staging públicos?,Una copia olvidada y sin actualizar es la vía de entrada perfecta.,"Busca clones olvidados en subdominios o subcarpetas del tipo /old, /dev o /copia. Una copia sin actualizar es la vía de entrada perfecta.",media,Sin comprobar,
+Infraestructura,¿Los registros MX son los que deberían?,Un MX cambiado significa correo secuestrado.,Mira los registros MX de tu dominio con cualquier consultor de DNS. Un MX cambiado significa correo secuestrado.,alta,Sin comprobar,
+,¿El SPF está bien y sin IPs ajenas?,Un SPF que autoriza servidores que no son los tuyos es spam saliente firmado por tu propio dominio.,"Consulta el registro TXT del SPF. Si autoriza servidores que no son los tuyos, es spam saliente firmado por tu propio dominio.",alta,Sin comprobar,
+,¿Hay DMARC publicado?,"Sin DMARC, cualquiera puede suplantar el dominio en el correo.","Consulta el TXT de _dmarc.tudominio.com. Sin DMARC, cualquiera puede suplantarte en el correo.",media,Sin comprobar,
+,¿Los subdominios con certificado son todos conocidos?,Por Certificate Transparency aparecen subdominios creados por el atacante.,"En crt.sh, con el enlace de la hoja 4, salen los subdominios que han pedido certificado. Ahí aparecen los que creó el atacante.",media,Sin comprobar,
+,¿Las cabeceras de seguridad están puestas?,"No detectan un compromiso, pero forman parte del endurecimiento posterior.","Con el analizador de cabeceras de la hoja 4. No detectan un compromiso, pero forman parte de dejar la web mejor de como estaba.",baja,Sin comprobar,
+,¿El certificado es válido y con la cadena completa?,Un certificado roto tras el ataque suele indicar que se tocó la configuración del servidor.,"Con SSL Labs, en la hoja 4. Un certificado roto después del ataque suele querer decir que alguien tocó la configuración del servidor.",media,Sin comprobar,
+,¿El servidor oculta su versión y la de PHP?,Facilita al siguiente elegir el exploit adecuado.,"En las cabeceras de respuesta, mira si el servidor va publicando su versión y la de PHP. Le pone fácil al siguiente elegir con qué atacarte.",baja,Sin comprobar,
+Reputación,¿La IP del servidor está en listas negras de correo?,"Si la IP de tu servidor está en una lista negra, tu correo deja de llegar a medio mundo.","Con el enlace de Spamhaus o el de MxToolbox de la hoja 4. Si sale la IP de tu servidor, tu correo está rebotando en medio mundo.",alta,Sin comprobar,
+
+
+# FASE: 4 Comprobaciones online
+
+Comprobaciones online,Unnamed: 1,Unnamed: 2,Unnamed: 3,Unnamed: 4,Unnamed: 5,Unnamed: 6
+Escribe tu dominio en la portada y los enlaces se montan solos. Guarda una captura de cada uno antes de limpiar: es la única forma de demostrar después que la web estaba mal y ya no lo está.,,,,,,
+,,,,,,
+Servicio,Para qué sirve,Cuándo se pasa,Enlace,Resultado,Fecha,Notas
+Análisis de seguridad de AyudaWP,"Cabeceras, exposición y configuración de un vistazo, sin instalar nada. Vale como foto del antes y del después.",Antes y después,Abrir,Sin comprobar,,Pega tu dominio en la herramienta. Guarda captura.
+Cabeceras de seguridad de AyudaWP,"Para la parte de dejar la web mejor de como estaba, cuando ya esté limpia.",Al terminar,Abrir,Sin comprobar,,Pega tu dominio en la herramienta.
+Auditoría del tema,"Si sospechas del tema, o si estás decidiendo si lo cambias.",Antes de limpiar,Abrir,Sin comprobar,,Pega tu dominio en la herramienta.
+Visibilidad para IA,"Después de un spam SEO, para ver cómo ha quedado la web de cara a los buscadores y a los modelos de IA.",Al terminar,Abrir,Sin comprobar,,Pega tu dominio en la herramienta.
+Límite de rastreo,Cuántas URLs ve un rastreador en tu web. Delata las páginas basura que dejó el spam.,Antes y después,Abrir,Sin comprobar,,Pega tu dominio en la herramienta.
+Auditoría SEO de AyudaWP,"Después de un spam SEO, para ver cómo ha quedado la web y tener con qué compararla dentro de unas semanas.",Al terminar,Abrir,Sin comprobar,,Pega tu dominio en la herramienta.
+Sucuri SiteCheck,Escáner del que beben bastantes otros. Suele ser el que mira quien te avisa de que tu web está rara.,Antes y después,Abrir,Sin comprobar,,Guarda captura.
+VirusTotal,Veredicto agregado de decenas de motores de antivirus.,Antes y después,Abrir,Sin comprobar,,Guarda captura.
+Informe de transparencia de Google,Estado público del dominio en Safe Browsing.,Antes y después,Abrir,Sin comprobar,,Guarda captura.
+Norton Safe Web,"Reputación de Norton, que afecta a muchos antivirus de escritorio.",Antes y después,Abrir,Sin comprobar,,Guarda captura.
+Quttera,"Segunda opinión de malware, útil cuando SiteCheck no ve nada y todavía hay quien te dice que le salta un aviso.",Antes y después,Abrir,Sin comprobar,,Guarda captura.
+URLVoid,Agregador de listas negras de reputación.,Antes y después,Abrir,Sin comprobar,,Guarda captura.
+Spamhaus,Listas negras de correo. Imprescindible si tu dominio ha estado enviando spam.,Antes y después,Abrir,Sin comprobar,,Guarda captura.
+"MxToolbox, listas negras",Barrido de listas negras de correo de una vez.,Antes y después,Abrir,Sin comprobar,,Guarda captura.
+Google: páginas indexadas,Cuántas páginas tiene indexadas y si hay basura entre ellas.,Antes y después,Abrir,Sin comprobar,,Guarda captura.
+Google: spam indexado,"Delata el spam SEO en un vistazo. Si esto devuelve resultados, hay contenido inyectado indexado.",Antes y después,Abrir,Sin comprobar,,Guarda captura.
+SSL Labs,"Certificado y cadena de confianza. Se mira al final, cuando toca dejarlo todo mejor de como estaba.",Al terminar,Abrir,Sin comprobar,,
+Security Headers,Cabeceras de seguridad tras el endurecimiento.,Al terminar,Abrir,Sin comprobar,,
+crt.sh,"Subdominios con certificado emitido, incluidos los que no debería haber.",Antes de limpiar,Abrir,Sin comprobar,,
+Archive.org,Cómo era tu web antes de todo esto. Sirve para fechar el ataque y para recuperar contenido que se haya perdido.,Antes de limpiar,Abrir,Sin comprobar,,
+
+
+# FASE: 5 Reputación y retiradas
+
+Reputación y retiradas,Unnamed: 1,Unnamed: 2,Unnamed: 3,Unnamed: 4,Unnamed: 5,Unnamed: 6
+"Estar limpio y parecerlo son dos trabajos distintos. Esta parte va después de la limpieza, nunca antes, y se cuenta en días.",,,,,,
+,,,,,,
+Servicio,Por qué importa,Mirar,Reclamar,Cómo se pide la retirada,Estado,Fecha
+Google Safe Browsing,"Si Google tiene tu web marcada, que es lo que hace salir la pantalla roja en Chrome y el aviso en los resultados de búsqueda.",Mirar,Reclamar,"La retirada se pide en Search Console, en Problemas de seguridad, y solo con la web ya limpia. Un intento gastado con la web todavía sucia alarga la espera.",Pendiente,
+Listas negras de correo (DNSBL),"Si la IP de tu servidor está en Spamhaus, Barracuda o SpamCop, tu correo rebota en medio mundo.",Mirar,Reclamar,"Cortar primero el envío de spam. Si se pide la salida con el servidor todavía enviando, se vuelve a entrar al día siguiente y la segunda vez cuesta más.",Pendiente,
+Google Search Console,Fuente autoritativa del aviso de Google y única vía oficial para pedir la revisión.,Mirar,Reclamar,"Problemas de seguridad, revisar el detalle, arreglar todo, y solicitar revisión. La respuesta suele tardar de horas a días. Anotar la fecha de solicitud.",Pendiente,
+Bing Webmaster Tools,"Equivalente de Bing, que alimenta a otros buscadores y a algunos antivirus.",Mirar,Reclamar,"Sección de seguridad de la propiedad, solicitud de revisión.",Pendiente,
+Sucuri SiteCheck,Escáner público de referencia. Guarda la captura del antes y la del después.,En la hoja 4,Reclamar,"Se actualiza volviendo a escanear. Si sigue marcando algo tras la limpieza, es que queda algo: mirarlo antes de discutir con nadie.",Pendiente,
+VirusTotal,Veredicto agregado de decenas de motores. Guarda la captura de cómo estaba y de cómo queda.,En la hoja 4,Reclamar,Cada motor que marque tiene su propio proceso. Empezar por los que aparezcan en rojo en la ficha del dominio.,Pendiente,
+Norton Safe Web,Reputación que arrastran muchos antivirus de escritorio.,En la hoja 4,Reclamar,"Solicitud de revisión desde la ficha del sitio, con la web ya limpia.",Pendiente,
+Hosting,"Si suspendió o limitó la cuenta, hay que pedir la reactivación con el detalle de lo hecho.",Tu panel o tus tickets,,"Abre un ticket con el resumen de la limpieza: qué encontraste, qué eliminaste y qué medidas has dejado puestas.",Pendiente,
+Pasarela de pago,"Si avisó la pasarela o el banco, hay que responder por escrito.",El correo de tu pasarela,,"Responde por escrito con lo corregido y las medidas puestas. Si hubo datos de pago afectados, esto va de la mano de lo de la brecha.",Pendiente,
+
+
+# FASE: 6 Patrones de código
+
+Patrones de código que conviene buscar,Unnamed: 1,Unnamed: 2,Unnamed: 3,Unnamed: 4
+"Son indicios y no sentencias, porque el PHP legítimo también usa base64 o eval de vez en cuando. Cada coincidencia se mira con su ruta y su contexto antes de decidir nada. Antes de borrar un fichero, ábrelo y mira qué hace.",,,,
+"Con SSH: grep -rEn --include=""*.php"" ""PATRÓN"" /ruta/de/tu/web · Sin SSH, el buscador del gestor de archivos del hosting también sirve, aunque tendrás que ir uno por uno.",,,,
+,,,,
+Qué buscar,Qué significa si aparece,Gravedad,¿Lo encuentras?,Dónde (rutas)
+eval\s*\(\s*base64_decode,Ejecutar código codificado en base64. Es la firma clásica de puerta trasera.,alta,Sin comprobar,
+eval\s*\(\s*gzinflate,"Código comprimido que se ejecuta al vuelo, para esquivar búsquedas.",alta,Sin comprobar,
+gzinflate\s*\(\s*str_rot13,Doble ofuscación. En código legítimo no se ve nunca.,alta,Sin comprobar,
+"preg_replace\s*\(\s*['\""][^'\""]*['\""]e",Modificador /e de preg_replace: ejecuta código. Retirado de PHP hace años y típico de shells viejos.,alta,Sin comprobar,
+assert\s*\(\s*\$,"assert con variable, otra forma de ejecutar código dinámico.",media,Sin comprobar,
+create_function\s*\(,"Función eliminada de PHP 8. En una web actual, o es código muy viejo o es malware.",media,Sin comprobar,
+\$_(POST|GET|REQUEST|COOKIE)\s*\[[^\]]*\]\s*\)?\s*\(,Ejecuta directamente lo que llega por la petición. Puerta trasera de manual.,alta,Sin comprobar,
+(shell_exec|passthru|popen|proc_open)\s*\(,Ejecución de comandos del sistema. En un plugin normal no pinta nada.,media,Sin comprobar,
+\b(system|exec)\s*\(\s*\$,Comando del sistema construido con una variable.,media,Sin comprobar,
+(FilesMan|WSO |b374k|IndoXploit|Mini Shell|c99shell|r57shell),Nombres de shells web conocidos.,alta,Sin comprobar,
+"\\x[0-9a-fA-F]{2}(\\x[0-9a-fA-F]{2}){20,}","Cadena hexadecimal larga, forma habitual de esconder texto.",media,Sin comprobar,
+"['\""][A-Za-z0-9+/]{300,}={0,2}['\""]",Base64 muy largo dentro del código. A veces es una imagen; a veces es la carga útil.,baja,Sin comprobar,
+"goto\s+[A-Za-z0-9_]{5,};",goto con etiquetas aleatorias: ofuscador automático.,media,Sin comprobar,
+"file_get_contents\s*\(\s*['\""]https?://","Descarga desde una URL. Legítimo muchas veces, sospechoso en ficheros del núcleo.",baja,Sin comprobar,
+curl_exec\s*\(,Petición saliente. Solo interesa si aparece donde no debería.,baja,Sin comprobar,
+(wp_set_auth_cookie|wp_set_current_user)\s*\(\s*1\s*\),Entrar como administrador sin contraseña.,alta,Sin comprobar,
+wp_(insert|create)_user\s*\(,"Creación de usuarios desde código. En un fichero suelto, es puerta trasera.",media,Sin comprobar,
+\beval\s*\(,eval a secas. Merece una mirada siempre.,media,Sin comprobar,
+move_uploaded_file\s*\(,"Subida de ficheros. En un fichero fuera de sitio, es un subidor del atacante.",baja,Sin comprobar,
+"<iframe[^>]*(display\s*:\s*none|width\s*=\s*['\""]?[01]['\""]?)","Iframe invisible, clásico para distribuir malware.",alta,Sin comprobar,
+
+
+# FASE: 7 No volver a pasar
+
+Para que no vuelva a pasar,Unnamed: 1,Unnamed: 2,Unnamed: 3
+"Una limpieza es una foto fija. Lo que sostiene una web en pie es lo de abajo, y casi todo se hace una vez.",,,
+,,,
+Medida,Por qué,Estado,Notas
+Doble factor para todos los administradores,"Es la medida que más ataques evita por lo poco que cuesta. Con la contraseña sola no basta, porque las contraseñas se filtran en sitios que no controlas.",Pendiente,
+Revisar quién tiene acceso y con qué rol,Casi todas las webs arrastran usuarios de gente que ya no trabaja allí. Cada uno es una puerta más.,Pendiente,
+Contraseñas únicas y un gestor de contraseñas,Reutilizar la contraseña del correo en la web significa que una filtración ajena se convierte en un problema propio.,Pendiente,
+"Actualizaciones al día, con copia previa","La mayoría de los ataques entran por agujeros ya parcheados. No es que sean listos, es que la web iba atrasada.",Pendiente,https://mantenimiento.ayudawp.com
+Copias 3-2-1 y probar la restauración,Una copia que nunca se ha restaurado no sirve. Es el punto donde falla casi todo el mundo.,Pendiente,
+Nada de plugins ni temas nulled,El que los publica gratis no lo hace por amor al arte: los distribuye con la puerta trasera dentro. Es la vía de entrada más común que hay.,Pendiente,
+Equipos limpios de quien administra la web,"Si hay un troyano en el portátil que roba contraseñas, la web se vuelve a infectar por muy bien que se limpie.",Pendiente,
+Hosting con aislamiento entre sitios,"En muchos compartidos, una web infectada contamina a las demás de la misma cuenta.",Pendiente,
+Cortafuegos o Cloudflare por delante,Filtra buena parte del ruido antes de que llegue a WordPress y frena los ataques de fuerza bruta.,Pendiente,
+Vigilancia continua de ficheros y vulnerabilidades,"Lo que se detecta en horas se arregla en horas. Lo que se detecta cuando Google te marca en rojo, cuesta semanas de reputación.",Pendiente,https://vigilante.works/

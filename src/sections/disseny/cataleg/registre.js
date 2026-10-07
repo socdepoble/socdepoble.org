@@ -242,3 +242,17 @@ REGISTRE.push({ nom: 'UniversalTPV', fitxer: 'PedraSeca/organismes/UniversalTPV.
    amb els dibuixos del Mestre, per a la rajola del TPV i la targeta de la Carta Digital.
    Espècimen: EspecimenIconesAlergens (fonaments/icones-alergens). */
 REGISTRE.push({ nom: 'IconesAlergens', fitxer: 'PedraSeca/molecules/IconesAlergens.jsx', pagina: 'fonaments', estat: 'viu' });
+/* Ordre del Mestre, 261007 («Implementa un carrusel a la imatge principal d'aquesta pàgina
+   universal perquè l'usuari puga passar les fotos») · la portada dels productes amb més d'una
+   foto. Espècimen: EspecimenCarruselImatges (fonaments/carrusel-imatges). */
+REGISTRE.push({ nom: 'CarruselImatges', fitxer: 'PedraSeca/organismes/CarruselImatges.jsx', pagina: 'fonaments', estat: 'viu' });
+/* Ordre del Mestre (261007) · L'acció gran d'una pàgina del sistema («Anar al xat»), la
+   mateixa porta a la targeta del Mur, a la incrustada i a la UniversalPage. Espècimen:
+   EspecimenUniversalCard (fonaments/universalcard), mostra «El Xat». */
+REGISTRE.push({ nom: 'PortaDePagina', fitxer: 'PedraSeca/organismes/PortesTargeta.jsx', pagina: 'fonaments', estat: 'viu' });
+/* Ordre del Mestre (261007, «Comentaris = xat») · El botó Comentar de la barra blava i del peu
+   de la targeta i el seu menú de dues vies («En privat», «En públic»), amb el comportament
+   únic dels menús emergents (useMenuEmergent). Espècimen: EspecimenControlsBarra
+   (fonaments/controls-barra). */
+REGISTRE.push({ nom: 'BotoComentar', fitxer: 'PedraSeca/organismes/Comentar.jsx', pagina: 'fonaments', estat: 'viu' });
+REGISTRE.push({ nom: 'MenuComentar', fitxer: 'PedraSeca/organismes/Comentar.jsx', pagina: 'fonaments', estat: 'viu' });

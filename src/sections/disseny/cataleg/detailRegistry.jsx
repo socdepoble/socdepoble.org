@@ -106,4 +106,6 @@ export const CATALOG_DETAIL_LOADERS = {
   'estructura/universal-tpv': lazyRoute(() => import('./detalls/EspecimenUniversalTPV.jsx')),
   /* Ordre del Mestre, 261006 · les icones dels 14 al·lèrgens, per al TPV i la Carta Digital. */
   'fonaments/icones-alergens': lazyRoute(() => import('./detalls/EspecimenIconesAlergens.jsx')),
+  /* Ordre del Mestre, 261007 · el carrusel de la portada dels productes amb més d'una foto. */
+  'fonaments/carrusel-imatges': lazyRoute(() => import('./detalls/EspecimenCarruselImatges.jsx')),
 };

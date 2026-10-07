@@ -183,7 +183,9 @@ export default function MurSection() {
           <div className="sdp-card-grid">
             {/* Ordre del Mestre, 261001 · la targeta de cada element és
                 TargetaDelMur, la mateixa de la pàgina /calendari. T5 · un acte
-                porta el seu model (el mateix del Calendari i del filtre ?date=). */}
+                porta el seu model (el mateix del Calendari i del filtre ?date=).
+                Ordre del Mestre (261007) · Comentar, el menú de dues vies de
+                totes les targetes: cap gestor de llista. */}
             {displayedItems.map((item) => (
               <TargetaDelMur key={`${item.type}-${item.id}`} item={item}
                 esdeveniment={item.type === 'event' ? modelDe(models, item) : null} />

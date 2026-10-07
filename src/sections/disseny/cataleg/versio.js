@@ -15,7 +15,14 @@
  * src/sections/disseny/cataleg/detalls`, sense comptar les proves ni este
  * fitxer). Una versió que no és la darrera és una data falsa a la pastilla.
  *
- * Darrera posada al dia: EspecimenNavMobil.jsx, 2026-10-06T05:16:25+02:00, retirada de la regla de noFacis sobre Telefonades que no havia dictat el Mestre.
+ * Darrera posada al dia: EspecimenCarruselImatges.jsx, 2026-10-07T09:37:33+02:00, la marató 261007:
+ * l'espècimen del carrusel; EspecimenUniversalCard (drets en una línia i sempre enllaç, l'acció gran,
+ * targetes de pàgina de veritat i emojis XL al quadrat), EspecimenControlsBarra (Comentar en
+ * privat o en públic), EspecimenEmojisXL (Assignar), EspecimenUniversalWorkspace (la roda dentada),
+ * EspecimenOpcions, manifest.js (un emoji propi per espècimen) i registre.js (CarruselImatges,
+ * PortaDePagina, BotoComentar i MenuComentar). Arreplega també els tocats el 261007 sense posar-la
+ * al dia (detailRegistry.jsx a les 01:42).
+ * Versió anterior: EspecimenNavMobil.jsx, 2026-10-06T05:16:25+02:00, retirada de la regla de noFacis sobre Telefonades que no havia dictat el Mestre.
  * Versió anterior: EspecimenNavMobil.jsx i manifest.js, 2026-10-06T04:42:10+02:00, la barra mòbil de cinc caselles: Telefonades n'ix per decisió del Mestre (261006).
  * Versió anterior: EspecimenEmojisXL.jsx, 2026-10-05T01:05:16+02:00, catàleg Unicode 18.0 complet i còpia accessible.
  * Versió anterior: EspecimenEmojisXL.jsx, 2026-10-04T23:38:33+02:00, marató A1 i Emojis XL.
@@ -44,4 +51,4 @@
  * Quan el manifest porte `creat` i `modificat` per espècimen, manaran eixos
  * camps i esta constant només farà de versió del conjunt.
  */
-export const VERSIO_CATALEG = '2026-10-06T05:16:25+02:00';
+export const VERSIO_CATALEG = '2026-10-07T09:37:33+02:00';

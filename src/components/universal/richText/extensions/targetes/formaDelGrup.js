@@ -14,7 +14,11 @@
  *   · Referència i instantània: cada targeta desa la clau «tipus:id», la ruta
  *     i una instantània mínima (títol, subtítol, entradilla, imatge, autor,
  *     poble i la ruta de l'autor). La lectura funciona sense permisos ni cap
- *     consulta; la instantània no seguix els canvis de l'original.
+ *     consulta.
+ *     Ordre del Mestre (261007, «cards de veritat») · La targeta SÍ que seguix
+ *     l'original: si es resol, es pinta amb les seues dades vives
+ *     (TargetesSincronitzadesContext.js), i la instantània queda de reserva per a
+ *     quan no es resol.
  *   · Només tipus públics: publicacions, actes, productes, pobles i pàgines.
  *     Mai una nota privada, una conversa ni un perfil de persona.
  *   · Una imatge només entra si el sanejador la deixaria pintar (el mateix

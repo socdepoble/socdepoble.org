@@ -16,6 +16,7 @@ import { COPYRIGHT_SDP, dataDelNom, dataHoraDeBarra } from '../../components/uni
 import { COVER_PAGE_KEYS } from '../../config/systemPages';
 import { ConsolaIncrustada } from '../consola/ConsolaSection.jsx';
 import { parseMarkdown, extreuEditorial, parseMarkdownEnLinia } from './parseMarkdown.js';
+import { ICONES_ITEMS_WIKI, glifDeCarpetaWiki, iconaDeDocument } from './iconesWiki.js';
 
 // La portada és una peça estructural: si la clau desapareix, la pàgina es
 // pinta buida. En desenvolupament ho diem en veu alta (incident del 24-09).
@@ -38,14 +39,17 @@ if (import.meta.env?.DEV && !PAGE_COPY[COVER_PAGE_KEYS.wiki]) {
 const copyDePortada = (pageCopy, clau) => pageCopy?.[clau] || PAGE_COPY[clau];
 
 /* Una eina local com a ítem de la Wiki, amb la forma dels ítems sintètics de la Consola.
-   La fitxa porta FileText propi: sense ell heretaria la carpeta de la seua
-   categoria, hui maquinaria_cat (glifDeCategoria), i canviaria un segon píxel
-   (pla 2045, Marató 2230, F3). */
+   La fitxa porta glif propi: sense ell heretaria la carpeta de la seua
+   categoria, hui maquinaria_cat (glifDeCategoria; pla 2045, Marató 2230, F3).
+   Ordre del Mestre (261007) · El glif propi ja no és el FileText de Lucide
+   sinó el seu emoji (iconesWiki.js), distint per a cada eina.
+   Revisió del 261007 (M2-15) · Una eina nova sense emoji a iconesWiki.js
+   porta FileText de reserva: mai la carpeta de la categoria. */
 const einaLocal = (id, title, subtitle, categoryId, tags) => ({
   id,
   title,
   subtitle,
-  icon: FileText,
+  icon: ICONES_ITEMS_WIKI[id] || FileText,
   categoryId,
   categoryIds: [categoryId],
   tags,
@@ -76,20 +80,23 @@ const einaLocal = (id, title, subtitle, categoryId, tags) => ({
 export function modulsLocalsActius(env) {
   if (env?.DEV !== true) return { categories: [], items: [] };
   return {
-    /* Ordre del Mestre, 261004 (pla 2045, Marató 2230, F3) · Regla del glif:
-       una categoria que agrupa documents porta Folder (Tractors i les carpetes
-       del manifest); una entrada directa a una sola pàgina, FileText (Wiki de
-       Poble, Consola); un document final, el seu glif.
+    /* Ordre del Mestre, 261004 (pla 2045, Marató 2230, F3) · Regla del glif,
+       fins al §0.7 de baix: una categoria que agrupa documents portava Folder
+       (Tractors i les carpetes del manifest); una entrada directa a una sola
+       pàgina, FileText (Wiki de Poble, Consola); un document final, el seu glif.
        261006 (MarIA; prompt 261006_0224, T6) · Ni Tractors ni la Consola tenen
        ja carpeta pròpia: les eines locals i la Consola pengen de maquinaria_cat
-       («Maquinària de la IAIA», Folder), que declara la Wiki. Ací ja no es
-       torna cap categoria, i cada fitxa conserva el FileText propi.
-       Excepció vigent: els documents del manifest no declaren icon i encara
-       hereten la carpeta de la seua categoria (ItemMedia i el rail del
-       UniversalWorkspace, via glifDeCategoria; ho fixa icones.test.jsx).
-       Posar-los FileText és decisió pendent del Mestre: opció A, només les
-       fitxes de la Maquinària de la IAIA (l'estat d'ara: Consola, Tractors,
-       Sentinelles i Agents); opció B, també els documents. */
+       («Maquinària de la IAIA»), que declara la Wiki. Ací ja no es
+       torna cap categoria, i cada fitxa conserva el glif propi.
+       Ordre del Mestre (261007) · Els ítems que nomena l'ordre porten el seu
+       emoji (iconesWiki.js): la Consola i les eines locals, el seu, i els
+       documents del manifest, el que diuen el seu id o el seu tipus
+       (icones.test.jsx).
+       Ordre del Mestre (pla 261007_0012, §0.7) · Les carpetes i subcarpetes de
+       la Wiki ja no porten Folder ni FileText: cada una, el seu emoji
+       (iconesWiki.js · glifDeCarpetaWiki), també la Maquinària de la IAIA i
+       l'entrada de la portada, «Wiki de Poble», que porta el de la portada
+       (ICONA_PORTADA). */
     categories: [],
     items: [
       einaLocal('tractors_aprovacio', 'Aprovació de tractors', 'Què fa cada tractor, la seua empremta i la teua signatura', 'maquinaria_cat', ['tractors']),
@@ -339,34 +346,43 @@ export default function WikiDePobleSection() {
       status: 'ready',
       itemsComplete: true,
       workspaceKey: 'wikidepoble',
+      /* Ordre del Mestre (pla 261007_0012, §0.7) · Cada entrada de l'arbre, el
+         seu emoji (iconesWiki.js · glifDeCarpetaWiki): menut a l'arbre i als
+         rails (NavGlyph), i el glif que heretaria a la llista una fitxa sense
+         emoji propi. Una carpeta nova del manifest sense emoji, Folder. */
       categories: [
-        { id: '__intro_cat', label: 'Wiki de Poble', icon: FileText },
-        { id: 'maquinaria_cat', label: 'Maquinària de la IAIA', icon: Folder },
+        { id: '__intro_cat', label: 'Wiki de Poble', icon: glifDeCarpetaWiki('__intro_cat') },
+        { id: 'maquinaria_cat', label: 'Maquinària de la IAIA', icon: glifDeCarpetaWiki('maquinaria_cat') },
         ...MODULS_LOCALS.categories,
         ...wikiManifest.categories.map(c => ({
           id: c.id,
           parentId: c.parentId,
           label: c.label,
-          icon: Folder
+          icon: glifDeCarpetaWiki(c.id)
         }))
       ],
       items: [
         {
           id: '__intro',
+          /* Ordre del Mestre (pla 261007_0012, §0.7) · A la llista, la portada
+             porta el seu emoji (XL a la fitxa, ItemMedia). La fitxa ja no porta
+             la imatge de la portada: ItemMedia la pintaria en lloc de l'emoji.
+             En obrir-la, la imatge de la capçalera continua igual: WikiDetail
+             la llig del copy (page.image), no de l'ítem. */
+          icon: ICONES_ITEMS_WIKI.__intro,
           title: portada?.title || 'Wiki de Poble',
           subtitle: portada?.subtitle || 'La base de coneixement',
           categoryId: '__intro_cat',
           categoryIds: ['__intro_cat'],
-          attributes: { type: 'Portada', date: portada?.date },
-          image: portada?.image || ''
+          attributes: { type: 'Portada', date: portada?.date }
         },
         {
           id: 'consola_termodinamica',
           /* 261006 · La Consola ja no té carpeta pròpia (consola_termodinamica_cat,
              FileText). Sense glif propi, la seua fitxa heretaria la carpeta de
-             maquinaria_cat. Conserva el document que portava, com les eines
-             locals (regla del glif, 261004). */
-          icon: FileText,
+             maquinaria_cat (regla del glif, 261004). Ordre del Mestre (261007):
+             el glif propi és el seu emoji, ⚙️, el de la Consola al catàleg. */
+          icon: ICONES_ITEMS_WIKI.consola_termodinamica,
           title: consola?.title || 'Consola Termodinàmica',
           subtitle: consola?.subtitle || 'Manteniment de la IAIA',
           categoryId: 'maquinaria_cat',
@@ -378,6 +394,9 @@ export default function WikiDePobleSection() {
         ...MODULS_LOCALS.items,
         ...wikiManifest.items.map(i => ({
           id: i.id,
+          /* Ordre del Mestre (261007) · L'emoji del document (iconesWiki.js): el
+             manifest és generat i no en porta cap. */
+          icon: iconaDeDocument(i),
           title: i.id === '00_index' && i.title === '00_index' ? 'Índex' : i.title,
           subtitle: i.subtitle,
           // Un fitxer de l'arrel (00_index) és un document de «Tot», no una carpeta.

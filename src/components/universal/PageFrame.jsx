@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom';
 import { useRouter } from '../../app/contexts/RouterContext';
 import { Camera } from 'lucide-react';
 import { isSafeAsset, isSafeUrl, DEFAULT_AUTHOR, PAGE_CHROME_MODES } from './UniversalUtils';
+import { RUTA_DRETS_AUTOR } from '../../config/systemPages.js';
 import { useResolvedAssetState } from '../../hooks/useResolvedAsset.js';
 import { escriuSeccio, llegixSeccio, rutaAmbConsulta, slugsDeSeccions } from './workspace/seleccioUrl.js';
 import { useAccions } from '../PedraSeca/hooks/useAccions.js';
@@ -414,9 +415,11 @@ export function PageFrame({
      Sense la prop, el de sempre: visible. */
   showConnect,
   /* T63.2 (doctrina del Mestre, 260928) · `objecte`: el descriptor tipat de
-     l'element de la pàgina. Sense onComment propi, Comentar obri el seu xat
-     (useAccions); una nota no en té i Comentar no es pinta. objecte={null}:
-     ara no hi ha cap element (carregant, no trobat), i el clic avisa.
+     l'element de la pàgina. Sense onComment propi, Comentar obri el menú de
+     dues vies (ordre del Mestre, 261007): «En privat» i «En públic», el xat
+     públic de l'objecte (useAccions); una nota no en té i Comentar no es
+     pinta. objecte={null}: ara no hi ha cap element (carregant, no trobat):
+     «En públic» queda desactivada i diu per què.
      showComment={false} l'amaga (UniversalPage el passa amb onComment={false}).
      Amb accionsInoperatives (l'editor, T36) l'objecte no hi compta: el botó
      es queda inoperatiu, amb l'avís de la closca, siga quin siga el document. */
@@ -835,8 +838,21 @@ export function PageFrame({
             </ul>
           )}
           {accioPrincipal ? <div className="page-title-accio">{accioPrincipal}</div> : null}
+          {/* Ordre del Mestre (261007) · El copyright, siga quin siga el text,
+              és SEMPRE un enllaç a la pàgina «Drets d'autor»
+              (RUTA_DRETS_AUTOR), amb el LinkComponent de les etiquetes: el
+              router de l'app (UniversalPage hi passa Link) o, sense, un <a>
+              que l'interceptor d'App.jsx passa al router. El paràgraf es
+              queda; l'enllaç va dins (.sp-card-copyright__enllac,
+              components.css). */}
           {copyright && (
-            <p className="sp-card-copyright page-title-copyright">{copyright}</p>
+            <p className="sp-card-copyright page-title-copyright">
+              {LinkComponent === 'a' ? (
+                <a href={RUTA_DRETS_AUTOR} className="sp-card-copyright__enllac">{copyright}</a>
+              ) : (
+                <LinkComponent to={RUTA_DRETS_AUTOR} className="sp-card-copyright__enllac">{copyright}</LinkComponent>
+              )}
+            </p>
           )}
         </header>
       )}

@@ -3,10 +3,13 @@
  * veres, amb la precedència de les rutes (TextRoute, PageDetailSection), i
  * les props que la pinten igual a TextSection i al lector de connexions.
  */
-import { expect, test } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { describe, expect, test } from 'vitest';
 import { PAGE_COPY } from './pageContent.js';
 import { RUTES_SENSE_PAGINA_DE_TEXT, pageKeyDeRuta, paginaDeRuta, propsDePaginaDeText } from './paginaDeText.js';
 import { COPYRIGHT_SDP, dataHoraDeBarra } from '../../components/universal/editorial.js';
+import { LLICENCIA_PER_DEFECTE, LLICENCIES, OPCIO_ACTUAL } from '../../components/universal/drets/llicencies.js';
 
 test('les rutes de text amb pageKey propi: /iaia i l’àlies /ia són «anima», amb query, fragment o barra final', () => {
   for (const ruta of ['/iaia', '/iaia?x=1', '/iaia/', '/iaia#reflexions', '/ia']) expect(pageKeyDeRuta(ruta)).toBe('anima');
@@ -40,6 +43,130 @@ test('/fedivers es resol per la ruta i per /page/fedivers, i el cos comença en 
   // La franja només ix amb poc espai (isCompact a App.jsx); amb més, la barra negra només diu el nom.
   expect(html).toContain('si té poc espai, com al mòbil, una franja davall de la barra negra');
   expect(html).toContain('si en té més, la barra negra només en diu el nom');
+});
+
+/* Ordre del Mestre (261007) · «El Xat» viu a /page/xat (PageDetailSection),
+   sense ruta pròpia: el lector de connexions la resol pel slug. /xat és el
+   Xat (XatSection), no cap pàgina de text. «L'Ànima» continua a /iaia. El
+   cos seguix l'anatomia de la UniversalPage: cap h1 ni h2, comença en h3. */
+test('261007 · /page/xat és «El Xat»; /xat no és cap pàgina; l’Ànima continua a /iaia', () => {
+  expect(pageKeyDeRuta('/page/xat')).toBe('xat');
+  expect(paginaDeRuta('/page/xat')).toEqual({ pageKey: 'xat', page: PAGE_COPY.xat });
+  expect(paginaDeRuta('/page/xat?x=1#y')).toEqual({ pageKey: 'xat', page: PAGE_COPY.xat });
+  expect(paginaDeRuta('/xat')).toBeNull();
+  expect(paginaDeRuta('/iaia')).toEqual({ pageKey: 'anima', page: PAGE_COPY.anima });
+  const { title, html, image, imageWidth, imageHeight, imageFetchPriority, date } = PAGE_COPY.xat;
+  expect([title, image, imageWidth, imageHeight, imageFetchPriority]).toEqual(['El Xat', '/assets/uploads/brain/xat_portada.jpg', 1024, 1024, 'high']);
+  // La data que fixa el Mestre: 01:30 hora local del 07-10-2026 (capçalera de pageContent.js).
+  expect(date).toBe('2026-10-07T01:30:00+02:00');
+  // Escrit com a classe [12]: design_guard llig els literals de capçalera de qualsevol .js.
+  expect(html).not.toMatch(/<h[12]\b/i);
+  expect(html.trim()).toMatch(/^<h3>/);
+  expect(propsDePaginaDeText(PAGE_COPY.xat, 'xat')).toMatchObject({ heroWidth: 1024, heroHeight: 1024, heroFetchPriority: 'high' });
+});
+
+/* Ordre del Mestre (261007) · «Drets d'autor» viu a /page/drets-autor
+   (PageDetailSection), sense ruta ni component propis: una entrada de
+   PAGE_COPY que pinta la UniversalPage de sempre. Etiqueta «Sistema», la data
+   que fixa el Mestre (2026-01-30, 00:00 hora local, perquè isca avall del
+   Mur) i un cos informatiu EXACTE: el codi és AGPL-3.0 (LICENSE), el
+   contingut naix amb CC BY-NC-SA 4.0, les dos eixides privades i la llista
+   de l'editor, que és el catàleg de llicencies.js sense cap invent. */
+describe('261007 · /page/drets-autor és «Drets d’autor»', () => {
+  const pagina = PAGE_COPY['drets-autor'];
+  const html = pagina.html;
+  const textDe = (tros) => tros.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+
+  test('es resol pel slug i porta les props de qualsevol pàgina de text', () => {
+    expect(pageKeyDeRuta('/page/drets-autor')).toBe('drets-autor');
+    expect(paginaDeRuta('/page/drets-autor?x=1#y')).toEqual({ pageKey: 'drets-autor', page: pagina });
+    expect(pageKeyDeRuta('/drets-autor')).toBeNull();
+    expect(propsDePaginaDeText(pagina, 'drets-autor')).toEqual({
+      title: "Drets d'autor",
+      subtitle: 'Totes les llicències, explicades amb paraules de poble',
+      lead: 'Per què el que publiques naix amb CC BY-NC-SA 4.0, què vol dir cada llicència i quan convé triar-ne una altra.',
+      // La portada i el seu text alternatiu, literals: la il·lustració de
+      // la pàgina, no les reserves de sempre (que també passarien).
+      heroImage: '/assets/nano_cards/drets_autor_comic.jpg',
+      heroAlt: "Un foraster intentant copiar una recepta mentre la gent del poble se'l mira rient (Còmic)",
+      labels: [{ text: 'Sistema', className: 'sdp-badge-system' }],
+      copyright: COPYRIGHT_SDP,
+      ...dataHoraDeBarra({ creat: '2026-01-30T00:00:00+01:00' })
+    });
+  });
+
+  test('la data del Mestre: 30-01-2026 a les 00:00 hora local (hivern, +01:00)', () => {
+    expect(pagina.date).toBe('2026-01-30T00:00:00+01:00');
+    expect(dataHoraDeBarra({ creat: pagina.date })).toMatchObject({ time: '00:00', date: '30/01/26' });
+  });
+
+  test('el títol, el subtítol i l’entradilla són els de la targeta incrustada a «Legal i privacitat»', () => {
+    const targeta = PAGE_COPY.legal.html.match(/<div data-sdp-targeta="pagina:drets-autor"[^>]*>/)?.[0] ?? '';
+    const atribut = (nom) => targeta.match(new RegExp(`${nom}="([^"]*)"`))?.[1];
+    expect(atribut('data-ruta')).toBe('/page/drets-autor');
+    expect([atribut('data-titol'), atribut('data-subtitol'), atribut('data-entradilla')]).toEqual([pagina.title, pagina.subtitle, pagina.lead]);
+  });
+
+  test('l’anatomia de la UniversalPage: cap h1 ni h2, títols h3 i h4 sense punt final, negretes per a escanejar', () => {
+    // Escrit com a classe [12]: design_guard llig els literals de capçalera de qualsevol .js.
+    expect(html).not.toMatch(/<h[12]\b/i);
+    expect(html.trim()).toMatch(/^<h3>/);
+    const titols = [...html.matchAll(/<h([34])>([^<]*)<\/h\1>/g)].map(([, nivell, text]) => [nivell, text]);
+    expect(titols.filter(([nivell]) => nivell === '3').map(([, text]) => text)).toEqual([
+      'Dos coses, dos llicències',
+      'El codi: AGPL-3.0, lliure i gratuït',
+      'El contingut: CC BY-NC-SA 4.0 de sèrie',
+      'Per què triar una llicència privada o el domini públic',
+      "Les llicències que pots triar a l'editor"
+    ]);
+    expect(titols.filter(([nivell]) => nivell === '4').length).toBeGreaterThanOrEqual(4);
+    for (const [, text] of titols) expect(text.trim().endsWith('.')).toBe(false);
+    expect((html.match(/<strong>/g) || []).length).toBeGreaterThan(20);
+    // Només etiquetes de prosa, i un sol enllaç: el de la pàgina legal.
+    const etiquetes = new Set([...html.matchAll(/<([a-z0-9]+)[\s>]/gi)].map((m) => m[1].toLowerCase()));
+    expect([...etiquetes].filter((e) => !['h3', 'h4', 'p', 'ul', 'li', 'strong', 'code', 'a'].includes(e))).toEqual([]);
+    expect([...html.matchAll(/<a\b[^>]*>/g)].map(([a]) => a)).toEqual(['<a href="/legal">']);
+  });
+
+  test('el codi: AGPL-3.0, el mateix que diu el fitxer LICENSE', () => {
+    const llicencia = readFileSync(resolve(process.cwd(), 'LICENSE'), 'utf8');
+    expect(llicencia).toContain('GNU Affero General Public License');
+    expect(llicencia).toContain('either version 3 of the');
+    const codi = textDe(html.slice(html.indexOf('<h3>El codi'), html.indexOf('<h3>El contingut')));
+    expect(codi).toContain('AGPL-3.0 (GNU Affero General Public License, versió 3 o posterior)');
+    expect(codi).toContain('LICENSE');
+    for (const idea of ['gratuït', 'Fedivers', 'millorar-lo entre tots', 'plugins i funcionalitats atòmiques', "l'obligació de compartir les millores"]) {
+      expect(codi, idea).toContain(idea);
+    }
+  });
+
+  test('el contingut naix de sèrie amb CC BY-NC-SA 4.0 (LLICENCIA_PER_DEFECTE), i cada lletra s’explica', () => {
+    expect(LLICENCIA_PER_DEFECTE).toBe('CC BY-NC-SA 4.0');
+    const contingut = textDe(html.slice(html.indexOf('<h3>El contingut'), html.indexOf('<h3>Per què triar')));
+    expect(contingut).toContain(`Una nota nova naix de sèrie amb la llicència ${LLICENCIA_PER_DEFECTE}`);
+    expect(contingut).toContain('BY (Reconeixement): qui la use ha de dir que és teua.');
+    expect(contingut).toContain('NC (No comercial): ningú no en pot fer negoci sense el teu permís.');
+    expect(contingut).toContain("SA (Compartir igual): qui l'adapte o la millore l'ha de tornar al poble amb esta mateixa llicència.");
+  });
+
+  test('les eixides privades: «Copyright (C)», tots els drets reservats, i el domini públic CC0', () => {
+    const privades = textDe(html.slice(html.indexOf('<h3>Per què triar'), html.indexOf('<h3>Les llicències')));
+    expect(privades).toContain('«Copyright (C)», tots els drets reservats:');
+    expect(privades).toContain('El domini públic, CC0:');
+    expect(privades).toContain('renúncia irrevocable');
+  });
+
+  test('la llista de l’editor és el catàleg de llicencies.js: mateix ordre, mateixos noms i explicacions, cap invent', () => {
+    const llista = html.slice(html.indexOf("<h3>Les llicències que pots triar a l'editor</h3>"));
+    const elements = [...llista.matchAll(/<li><strong>([^<]*):<\/strong> ([^<]*)<\/li>/g)].map(([, nom, explicacio]) => [nom, explicacio]);
+    // El catàleg escriu l'apòstrof tipogràfic; PAGE_COPY, el recte.
+    const recte = (text) => text.replace(/’/g, "'");
+    expect(elements).toEqual(LLICENCIES.map((l) => [l.codi ? `${l.codi} · ${l.nom}` : l.nom, recte(l.explicacio)]));
+    // Cap codi de llicència que no siga del catàleg.
+    const codis = new Set(LLICENCIES.map((l) => l.codi).filter(Boolean));
+    for (const [codi] of llista.matchAll(/CC(?: BY(?:-[A-Z]{2})*| ?0) \d\.\d/g)) expect(codis.has(codi), codi).toBe(true);
+    expect(llista).toContain(`«${OPCIO_ACTUAL.nom}»`);
+  });
 });
 
 test('/disseny munta DesignSection: no es resol ni per la ruta ni per /page/disseny', () => {

@@ -32,6 +32,7 @@ import { useUIActions, useUIState } from '../../app/contexts/UIContext';
 import { useSEO } from '../../hooks/useSEO';
 import { loadPerfilPublic, teCapacitat } from '../../data/backendPort.js';
 import { renderRichText } from '../detail/detailRichText.jsx';
+import { ProveidorSincronitzacioTargetes } from '../detail/SincronitzacioTargetes.jsx';
 import { tipusDAgent } from './ProfileSection.jsx';
 import { normalizeBackendConfig } from '../../config/backendConfig.js';
 /* T43 (ordre del Mestre, 260928) · Connectar una fitxa pública porta el seu
@@ -262,7 +263,11 @@ export default function PerfilPublicSection({ agents = AGENTS_BUITS }) {
           <a href={mailto}>{correuPublic}</a>
         </p>
       ) : null}
-      {perfil.presentacioHtml ? renderRichText(perfil.presentacioHtml) : null}
+      {/* Ordre del Mestre (261007, «cards de veritat») · Les targetes
+          incrustades de la presentació, sincronitzades amb el seu original. */}
+      {perfil.presentacioHtml ? (
+        <ProveidorSincronitzacioTargetes>{renderRichText(perfil.presentacioHtml)}</ProveidorSincronitzacioTargetes>
+      ) : null}
     </UniversalPage>
   );
 }

@@ -101,7 +101,8 @@ const ControlSection = lazyRoute(() => import('./ControlSection'));
 const OnboardingSection = lazyRoute(() => import('../onboarding/OnboardingSection'));
 
 const CONFIG = Object.freeze({ supabaseUrl: 'https://poble.test', supabaseAnonKey: 'anon', tenantId: '00000000-0000-4000-8000-000000000000' });
-/* La capa d'interfície en llavor: el xat corporatiu es resol sense xarxa (xatCorporatiu.js:146 i 166). */
+/* La capa d'interfície en llavor, sense xarxa. Ordre del Mestre (261007, C2) · El Panell ja no resol el xat
+   corporatiu pel seu compte: el llig del proveïdor de l'app (ací, sense proveïdor, el de la llavor). */
 const UI = Object.freeze({ dataMode: 'seed' });
 /* Un canvi que el servidor no té: cap escriptor per a l'entitat (cua.js:216). */
 const PENDENT = Object.freeze({ entitat: 'prova-sense-escriptor', id: 'jo', camps: Object.freeze(['lead']) });

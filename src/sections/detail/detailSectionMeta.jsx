@@ -5,10 +5,16 @@ import { getFirstImage } from './detailHelpers.jsx';
 import { Aplec2023Article } from '../mur/articles/Aplec2023Article.jsx';
 import { resolRecursPropi } from '../../config/assetResolver.js';
 import { rutaDePerfilPublicDAutor } from '../../config/navigation.js';
+import { imatgesDeProducte } from '../mercat/imatgesDeProducte.js';
 
 /* T5 · Les imatges del cos (variacions del Mercat, Multimèdia) es resolen en
    pintar-les: incrustat, un '/assets/…' penja del paquet. Sense base, el de
    sempre. getImage no es toca: acaba a heroImage i PageFrame ja la resol. */
+
+/* Ordre del Mestre (261007) · Les fotos d'un producte (la primera és la
+   principal, mai el logotip de qui ven) viuen a mercat/imatgesDeProducte.js,
+   un mòdul pur que també lligen les targetes del Mercat i del Mur. */
+export { imatgesDeProducte };
 
 export function buildMercatDetailSectionMeta({ marketItems = [], t }) {
   return {
@@ -19,7 +25,14 @@ export function buildMercatDetailSectionMeta({ marketItems = [], t }) {
     items: marketItems,
     getTitle: (item) => item.title || t('section.detail.mercat.itemTitle', 'Producte'),
     getSubtitle: (item) => item.subtitle || item.description || item.summary || '',
-    getImage: (item) => getFirstImage(item.imageSrc || item.image_url || item.image || item.images?.[0] || item.avatar_url) || null,
+    /* Ordre del Mestre (261007) · La portada és la primera foto del producte
+       (imatgesDeProducte), mai el logotip de qui ven. Abans,
+       imageSrc || … || avatar_url: la marca de Sóc de Poble guanyava a la
+       xica de la samarreta. Sense cap foto, cap portada. */
+    getImage: (item) => imatgesDeProducte(item)[0] || null,
+    /* Ordre del Mestre (261007) · Totes les fotos: amb més d'una, la portada
+       del detall és un carrusel (ItemDetailSection). */
+    getImages: imatgesDeProducte,
     renderBody: (item) => (
       <>
         {item.description && (

@@ -156,6 +156,38 @@ test('D5 · la targeta viva exposa que és la fitxa triada (aria-current="true")
   expect(inactiva.container.querySelectorAll('[aria-current]')).toHaveLength(0);
 });
 
+/* Ordre del Mestre (261007) · L'emoji XL ocupa el buit de la imatge: a la
+   targeta viva, el quadrat (squareBadge) amb la classe del catàleg; a la
+   fitxa compacta, el quadrat de la fitxa. Amb imatge, cap insígnia. */
+test('261007 · sense imatge, l’emoticona triada ocupa el quadrat de la targeta viva en XL; amb imatge, cap insígnia', () => {
+  const triada = nota({ id: 'n7', title: 'Prova', icon: '🍅' }, { icon: '🍅' });
+  const { container, unmount } = render(<NotaFitxa active item={triada} onSelect={vi.fn()} />);
+  const quadrat = container.querySelector('.sp-card-body.has-aside > .sp-card-calendar-badge');
+  /* Revisió del 261007 (M2-08) · El títol ja el diu la targeta: el quadrat
+     és decoratiu (amagat, sense nom que el repetisca). */
+  expect(quadrat.getAttribute('aria-hidden')).toBe('true');
+  expect(quadrat.hasAttribute('aria-label')).toBe(false);
+  const emoji = quadrat.querySelector('.sp-card-calendar-badge__emoji');
+  expect([emoji.textContent, emoji.getAttribute('aria-hidden')]).toEqual(['🍅', 'true']);
+  // La caputxa conserva l'emoticona triada (Pedra Seca §10).
+  expect(container.querySelector('.sp-card-header--amb-emoticona .sdp-emoticona-barra').textContent).toBe('🍅');
+  unmount();
+  // Amb imatge (la de la llista, coverImage || heroImage), la imatge i cap quadrat.
+  const ambImatge = render(<NotaFitxa active item={{ ...triada, image: '/assets/portada.webp' }} onSelect={vi.fn()} />);
+  expect(ambImatge.container.querySelector('img.sp-card-media')).not.toBeNull();
+  expect(ambImatge.container.querySelector('.sp-card-calendar-badge')).toBeNull();
+  ambImatge.unmount();
+  // Sense emoticona triada (la 🪶 és la reserva de la llista): cap quadrat.
+  const perDefecte = render(<NotaFitxa active item={nota({ id: 'n8', title: 'Prova' }, { icon: '🪶' })} onSelect={vi.fn()} />);
+  expect(perDefecte.container.querySelector('.sp-card-calendar-badge')).toBeNull();
+});
+
+test('261007 · la fitxa compacta sense imatge pinta l’emoji en XL', () => {
+  const { container } = render(<NotaFitxa item={nota({ id: 'n7', title: 'Prova', icon: '🍅' }, { icon: '🍅' })} onSelect={vi.fn()} />);
+  const glif = container.querySelector('.sdp-gestor-fitxa__media .sdp-gestor-fitxa__inicial');
+  expect([glif.textContent, glif.className]).toEqual(['🍅', 'sdp-gestor-fitxa__inicial sdp-fitxa-emoji-xl']);
+});
+
 test('la fitxa inactiva continua sent la compacta de sempre', () => {
   const { container } = render(<NotaFitxa item={{ ...PROVA, excerpt: 'Resum' }} onSelect={vi.fn()} />);
   const fitxa = container.querySelector('button.sdp-gestor-fitxa');

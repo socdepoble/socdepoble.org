@@ -280,7 +280,7 @@ function OpcioTargeta({ opcio: o, idOpcio, nom, controlat, triada, onCanvi, text
   const idAjuda = o.ajuda ? `${idOpcio}-ajuda` : null;
   const idDetall = o.detall ? `${idOpcio}-detall` : null;
   return (
-    <div className="sdp-targeta-opcio">
+    <div className={uneix("sdp-targeta-opcio", o.className)}>
       <input type="radio" id={idOpcio} name={nom} value={o.valor}
         className="sdp-targeta-opcio__control"
         checked={controlat ? triada : undefined}
@@ -368,12 +368,18 @@ export function GrupCamps({ llegenda, children, className }) {
   );
 }
 
+/* El text de l'estat per defecte, en valencià. */
+const ESTAT_INTERRUPTOR = Object.freeze({ si: 'Sí', no: 'No' });
+
 /**
  * Interruptor: role="switch" sobre un <button> natiu. L'estat es llig en
  * text ("Sí"/"No"), no només en la posició del botonet.
+ * `textosEstat` (opcional, revisió del 261007) · { si, no }, el text de
+ * l'estat ja traduït per qui el munta. Sense, «Sí» i «No».
  */
-export function Interruptor({ etiqueta, actiu = false, onCanvi, desactivat = false, className }) {
+export function Interruptor({ etiqueta, actiu = false, onCanvi, desactivat = false, className, textosEstat }) {
   const id = useId();
+  const textEstat = actiu ? (textosEstat?.si || ESTAT_INTERRUPTOR.si) : (textosEstat?.no || ESTAT_INTERRUPTOR.no);
   return (
     <div className={uneix('sdp-interruptor', className)}>
       <span id={`${id}-et`} className="sdp-interruptor__etiqueta">{etiqueta}</span>
@@ -381,7 +387,7 @@ export function Interruptor({ etiqueta, actiu = false, onCanvi, desactivat = fal
         className="sdp-interruptor__control" disabled={desactivat}
         onClick={() => onCanvi?.(!actiu)}>
         <span className="sdp-interruptor__carril" aria-hidden="true"><span className="sdp-interruptor__botonet" /></span>
-        <span className="sdp-interruptor__estat">{actiu ? 'Sí' : 'No'}</span>
+        <span className="sdp-interruptor__estat">{textEstat}</span>
       </button>
     </div>
   );

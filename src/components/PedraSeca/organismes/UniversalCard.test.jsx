@@ -22,7 +22,7 @@ vi.mock('../../universal/NotificationContext.jsx', () => ({
 import { UniversalCard } from './UniversalCard.jsx';
 import { EventCard } from '../../universal/EventCard.jsx';
 import SectionItemCard from '../../SectionItemCard.jsx';
-import { AVIS_SENSE_XAT } from '../hooks/useAccions.js';
+import { TEXTOS_COMENTAR } from '../../universal/barres/BarraBlava.jsx';
 import { CLAU_APAGADA, ESDEVENIMENT_DOM } from '../../../data/telemetria.js';
 
 /* Telemetria real amb `window.umami` d'amfitrió: el comptador rep l'event
@@ -94,34 +94,67 @@ test('Traduir, Comentar i Compartir no compten com a Connectar', () => {
 
 /* ── T63.2 (doctrina del Mestre, 260928) · Comentar de la targeta obri el Xat
    comú de la Pàgina Universal de l'element. Abans navegava a '/xat', sense
-   destí. El nom de la targeta no canvia: «Comentar {títol}». */
+   destí. El nom de la targeta no canvia: «Comentar {títol}».
+   Ordre del Mestre (261007) · «Comentaris = xat» · Comentar obri el menú de
+   les dues vies (el mateix de la barra blava): eixe xat comú és «En públic»,
+   i «En privat» és el xat amb Sóc de Poble. */
 const destiXat = () => {
   const url = new URL(mocks.navigate.mock.calls.at(-1)[0], 'http://localhost');
   return { cami: url.pathname, ...Object.fromEntries(url.searchParams) };
 };
+const PRIVAT = TEXTOS_COMENTAR.privat[1];
+const PUBLIC = TEXTOS_COMENTAR.public[1];
+const obriComentar = (titol) => act(() => { troba(`[aria-label="Comentar ${titol}"]`).click(); });
+const fila = (via) => [...arrel.querySelectorAll('[role="menu"] [role="menuitem"]')].find((element) => element.textContent.startsWith(via));
+/* Obri el menú de Comentar de la targeta i hi tria una via. */
+const comenta = (titol, via) => {
+  obriComentar(titol);
+  act(() => { fila(via).click(); });
+};
 
-test('T63.2 · amb objecte tipat, Comentar porta al xat comú de l’element', () => {
+test('261007 · Comentar de la targeta obri el menú de les dues vies, just després del botó', () => {
   pinta({ title: 'Fira', hasFooter: true, objecte: { tipus: 'esdeveniment', id: 'fira', titol: 'Fira', ruta: '/events/fira' } });
-  act(() => { troba('[aria-label="Comentar Fira"]').click(); });
+  const boto = troba('[aria-label="Comentar Fira"]');
+  expect([boto.getAttribute('aria-haspopup'), boto.getAttribute('aria-expanded')]).toEqual(['menu', 'false']);
+  expect(troba('[role="menu"]')).toBeNull();
+  obriComentar('Fira');
+  expect(boto.getAttribute('aria-expanded')).toBe('true');
+  expect(boto.nextElementSibling).toBe(troba('.sp-card-footer .sp-card-actions > [role="menu"].sdp-menu-comentar'));
+  expect([...arrel.querySelectorAll('[role="menuitem"]')].map((element) => element.getAttribute('aria-disabled'))).toEqual([null, null]);
+  expect(mocks.navigate).not.toHaveBeenCalled();
+});
+
+test('T63.2 · amb objecte tipat, «En públic» porta al xat comú de l’element; «En privat», al de Sóc de Poble', () => {
+  pinta({ title: 'Fira', hasFooter: true, objecte: { tipus: 'esdeveniment', id: 'fira', titol: 'Fira', ruta: '/events/fira' } });
+  comenta('Fira', PUBLIC);
   expect(destiXat()).toEqual({ cami: '/xat', sobre: 'esdeveniment:fira', titol: 'Fira', ruta: '/events/fira' });
+  expect(troba('[role="menu"]')).toBeNull();
+  comenta('Fira', PRIVAT);
+  expect(mocks.navigate).toHaveBeenLastCalledWith('/xat?amb=socdepoble');
   expect(connectars()).toHaveLength(0);
 });
 
-test('T63.2 · sense objecte, el xat comú de la pàgina del detall (mainHref); mai /xat sense destí', () => {
+test('T63.2 · sense objecte, «En públic» és el xat comú de la pàgina del detall (mainHref); mai /xat sense destí', () => {
   pinta({ title: 'Constitució', hasFooter: true, mainHref: '/constitucio' });
-  act(() => { troba('[aria-label="Comentar Constitució"]').click(); });
+  comenta('Constitució', PUBLIC);
   expect(mocks.navigate).not.toHaveBeenCalledWith('/xat');
   expect(destiXat()).toEqual({ cami: '/xat', sobre: 'pagina:/constitucio', titol: 'Constitució', ruta: '/constitucio' });
 });
 
 /* Revisió de T63.2 · Una targeta sense objecte ni detall ja no pren el xat de
-   la LLISTA on és: totes haurien compartit pagina:/mur amb títols diferents. */
-test('T63.2 · sense objecte ni detall, Comentar de la targeta avisa que no hi ha xat: ni navega ni pren el de la llista', () => {
+   la LLISTA on és: totes haurien compartit pagina:/mur amb títols diferents.
+   261007 · La via pública es queda desactivada i diu per què; la privada hi és. */
+test('T63.2 · sense objecte ni detall, «En públic» es queda desactivat, diu per què i no pren el de la llista', () => {
   window.history.replaceState(null, '', '/mur');
   pinta({ title: 'Pepa', hasFooter: true });
-  act(() => { troba('[aria-label="Comentar Pepa"]').click(); });
+  obriComentar('Pepa');
+  expect(fila(PUBLIC).getAttribute('aria-disabled')).toBe('true');
+  expect(fila(PUBLIC).textContent).toBe(`${PUBLIC}${TEXTOS_COMENTAR.senseXatPublic[1]}`);
+  act(() => { fila(PUBLIC).click(); });
   expect(mocks.navigate).not.toHaveBeenCalled();
-  expect(mocks.toast).toHaveBeenCalledWith(AVIS_SENSE_XAT);
+  expect(mocks.toast).not.toHaveBeenCalled();
+  act(() => { fila(PRIVAT).click(); });
+  expect(mocks.navigate).toHaveBeenCalledWith('/xat?amb=socdepoble');
 });
 
 test('T63.2 · una nota (objecte sense xat) no porta Comentar a la targeta, encara que showComment el demane', () => {
@@ -130,46 +163,52 @@ test('T63.2 · una nota (objecte sense xat) no porta Comentar a la targeta, enca
   expect(troba('[aria-label="Compartir Nota"]')).not.toBeNull();
 });
 
-test('T63.2 · EventCard (els actes del Mur) passa l’objecte: el xat comú de l’acte', () => {
+test('T63.2 · EventCard (els actes del Mur) passa l’objecte: «En públic» és el xat comú de l’acte', () => {
   const item = { id: 'aplec-2023', title: 'Aplec', date: '2026-08-14T09:00:00' };
   act(() => { render(<EventCard item={item} objecte={{ tipus: 'esdeveniment', id: 'aplec-2023', titol: 'Aplec', ruta: '/events/aplec-2023' }} />, { container: arrel }); });
-  act(() => { troba('[aria-label="Comentar Aplec"]').click(); });
+  comenta('Aplec', PUBLIC);
   expect(destiXat()).toEqual({ cami: '/xat', sobre: 'esdeveniment:aplec-2023', titol: 'Aplec', ruta: '/events/aplec-2023' });
 });
 
-test('T63.2 · SectionItemCard (el directori /perfil) passa l’objecte: una persona o una IA, al directe; una entitat, al xat comú', () => {
+/* 261007 · El missatge directe d'una persona o una IA no és cap xat públic:
+   a la seua targeta, «En públic» es queda desactivat i «En privat» és el xat
+   amb Sóc de Poble (el directe amb la persona continua a la seua fitxa). */
+test('T63.2 · 261007 · SectionItemCard passa l’objecte: una persona o una IA, sense xat públic; una entitat, el seu xat comú', () => {
   act(() => { render(<SectionItemCard to="/perfil/iaia" title="IAIA" objecte={{ tipus: 'ia', id: 'iaia', ruta: '/perfil/iaia' }} />, { container: arrel }); });
-  act(() => { troba('[aria-label="Comentar IAIA"]').click(); });
-  expect(mocks.navigate).toHaveBeenLastCalledWith('/xat?amb=iaia');
+  obriComentar('IAIA');
+  expect(fila(PUBLIC).getAttribute('aria-disabled')).toBe('true');
+  act(() => { fila(PRIVAT).click(); });
+  expect(mocks.navigate).toHaveBeenLastCalledWith('/xat?amb=socdepoble');
   cleanup();
   arrel = document.createElement('div');
   act(() => { render(<SectionItemCard to="/empresa/forn" title="Forn" objecte={{ tipus: 'entitat', id: 'forn', titol: 'Forn', ruta: '/empresa/forn' }} />, { container: arrel }); });
-  act(() => { troba('[aria-label="Comentar Forn"]').click(); });
+  comenta('Forn', PUBLIC);
   expect(destiXat().sobre).toBe('entitat:forn');
 });
 
 /* Revisió de T63.2 · El directori /perfil (ProfileSection) no passa l'objecte:
    cada targeta pren el de la fitxa a què porta `to` (rutaDePerfil), mai el de
    la llista. Abans totes anaven a pagina:/perfil amb el títol de cadascuna. */
-test('T63.2 · SectionItemCard sense objecte: cada targeta, el xat de la seua fitxa (per `to`), no el de la llista', () => {
+test('T63.2 · SectionItemCard sense objecte: cada targeta, el xat públic de la seua fitxa (per `to`), no el de la llista', () => {
   window.history.replaceState(null, '', '/perfil');
-  const cas = (props) => {
+  const publicaDe = (props) => {
     cleanup();
     arrel = document.createElement('div');
     act(() => { render(<SectionItemCard {...props} />, { container: arrel }); });
-    act(() => { troba(`[aria-label="Comentar ${props.title}"]`).click(); });
+    obriComentar(props.title);
+    return fila(PUBLIC);
   };
-  cas({ to: '/gent/pepa', title: 'Pepa' });
-  expect(mocks.navigate).toHaveBeenLastCalledWith('/xat?amb=pepa');
-  cas({ to: '/perfil/iaia', title: 'IAIA' });
-  expect(mocks.navigate).toHaveBeenLastCalledWith('/xat?amb=iaia');
-  cas({ to: '/empresa/forn', title: 'Forn' });
+  // Una persona, una IA o un `to` que no és cap fitxa de perfil: cap xat públic.
+  for (const props of [{ to: '/gent/pepa', title: 'Pepa' }, { to: '/perfil/iaia', title: 'IAIA' }, { to: '/mur/3', title: 'Coca' }]) {
+    const publica = publicaDe(props);
+    expect([props.title, publica.getAttribute('aria-disabled')]).toEqual([props.title, 'true']);
+    act(() => { publica.click(); });
+  }
+  expect(mocks.navigate).not.toHaveBeenCalled();
+  const deLEntitat = publicaDe({ to: '/empresa/forn', title: 'Forn' });
+  act(() => { deLEntitat.click(); });
   expect(destiXat()).toEqual({ cami: '/xat', sobre: 'entitat:forn', titol: 'Forn', ruta: '/empresa/forn' });
   expect(mocks.navigate.mock.calls.map(([ruta]) => ruta).join(' ')).not.toContain('pagina');
-  // Un `to` que no és cap fitxa de perfil: cap xat, i el clic avisa.
-  cas({ to: '/mur/3', title: 'Coca' });
-  expect(mocks.navigate).toHaveBeenCalledTimes(3);
-  expect(mocks.toast).toHaveBeenCalledWith(AVIS_SENSE_XAT);
 });
 
 test('showTranslate pinta el botó que abans es perdia, i cada acció porta el títol', () => {

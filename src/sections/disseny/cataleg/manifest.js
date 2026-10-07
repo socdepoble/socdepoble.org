@@ -12,25 +12,79 @@ export const CATALOG_CATEGORIES = [
   { id: 'emoticones', label: 'Emojis XL', order: 80, icon: '🌻' }
 ];
 
+/* Ordre del Mestre (261007) · «Substitueix el maó genèric (🧱) per emojis
+   distints i amb sentit semàntic per a cada espècimen». Cada espècimen porta
+   el seu emoji propi (`icon`): la fitxa de la llista el pinta XL (ItemMedia)
+   i el rail plegat, al seu glif. Abans tots heretaven el de la categoria.
+   Per categoria i per slug, sense repetits dins d'una categoria; les
+   categories conserven el seu (CATALOG_CATEGORIES). Tots són emojis RGI de
+   Unicode 13 o anteriors, que es veuen a Safari 16 (manifest.icones.test.js
+   ho comprova, i que cap espècimen no se'n queda sense). */
+export const ICONES_ESPECIMENS = Object.freeze({
+  fonaments: Object.freeze({
+    panell: '🎛️', contracte: '📜', color: '🎨', tipografia: '🔤', espaiat: '📏',
+    universalcard: '🃏', 'targeta-viva': '✍️', 'controls-barra': '🔘', 'emoticona-barra': '😀',
+    avatar: '👤', botonera: '🔗', taula: '🧮', indicador: '📈',
+    xat: '💬', 'xat-llista': '📇', 'xat-cerca': '🔎', 'xat-comunitats': '🏘️',
+    'cerca-filtres': '🎚️', 'tasques-fitxers': '✅', 'media-externa': '🎬', utilitats: '🧰',
+    identitat: '🎭', 'linia-del-temps': '🕰️', histograma: '📊',
+    articles: '🏷️', colleccio: '🛍️', 'imatge-apaisada': '🌄', 'graella-targetes': '🎴',
+    'icones-alergens': '🥜', 'carrusel-imatges': '🎠'
+  }),
+  estructura: Object.freeze({
+    arbre: '🌳', shell: '🐚', page: '📄', gestor: '🏛️', universalworkspace: '🖥️',
+    columnes: '📰', divisor: '↔️', composicio: '🧩', 'barra-eines': '🛠️',
+    'marc-columna': '🖼️', 'esquelet-bar': '🍺', 'esquelet-compra': '🛒', 'pagina-app': '📱',
+    'universal-tpv': '🏪'
+  }),
+  formularis: Object.freeze({
+    boto: '🆗', camp: '✏️', opcions: '☑️', pindola: '💊', cerca: '🔍',
+    'formulari-complex': '📋', calendari: '📅', 'drets-autor': '©️', classificacio: '🔖',
+    rajola: '🀄', 'teclat-numeric': '🔢', 'afegit-rapid': '➕'
+  }),
+  navegacio: Object.freeze({
+    pestanyes: '📑', molla: '🍞', paginacio: '⏭️', acordio: '🪗', 'nav-mobil': '📲',
+    'xat-rail': '🛤️', 'seccions-categoria': '↕️'
+  }),
+  retroalimentacio: Object.freeze({
+    alerta: '⚠️', insignia: '📛', buit: '📭', carrega: '⏳', progres: '🔋',
+    'estat-desament': '☁️', 'resum-connexio': '👀', connexio: '🟢'
+  }),
+  superposicions: Object.freeze({
+    dialeg: '🪟', confirmacio: '❓', calaix: '🗄️', 'pantalla-completa': '📺', pista: '💡',
+    menu: '🍽️', 'xat-nova-conversa': '🆕', 'xat-ajustos': '⚙️', visibilitat: '🌍',
+    toast: '📣', enquadrament: '✂️', impressio: '🖨️', 'detall-article': '🔬'
+  }),
+  inventari: Object.freeze({ global: '🗃️' }),
+  emoticones: Object.freeze({ xl: '🌻' })
+});
+
 /* Un espècimen del catàleg. L'id és `categoria-slug` i el carregador,
    `categoria/slug` (detailRegistry.jsx; allLoaders.test.jsx comprova que els
    dos conjunts coincidixen). Etiquetes: el nivell atòmic primer (atom,
    molecula, organisme, plantilla) i després el tema.
    `lead` és la fitxa editorial: l'entradilla de la pàgina. Sense lead,
    DesignSection diu honestament «En curs» (editorial.test.js ho fixa per al
-   Contracte i per a la Closca, que encara no en tenen). */
-const especimen = (categoria, slug, title, subtitle, tags, lead, cerca = '') => ({
-  id: `${categoria}-${slug}`,
-  categoryIds: [categoria],
-  kind: 'component-doc',
-  title,
-  subtitle,
-  tags,
-  ...(lead ? { lead } : {}),
-  searchText: `${title} ${subtitle} ${tags.join(' ')} ${cerca}`.trim().toLowerCase(),
-  detailKey: `${categoria}/${slug}`,
-  status: 'viu'
-});
+   Contracte i per a la Closca, que encara no en tenen).
+   `icon` ix d'ICONES_ESPECIMENS (ordre del Mestre, 261007); sense entrada,
+   cap (la fitxa hereta el de la categoria, i la prova ho denuncia). */
+const propia = (mapa, clau) => (mapa && Object.prototype.hasOwnProperty.call(mapa, clau) ? mapa[clau] : null);
+const especimen = (categoria, slug, title, subtitle, tags, lead, cerca = '') => {
+  const icon = propia(propia(ICONES_ESPECIMENS, categoria), slug);
+  return {
+    id: `${categoria}-${slug}`,
+    categoryIds: [categoria],
+    kind: 'component-doc',
+    title,
+    subtitle,
+    tags,
+    ...(lead ? { lead } : {}),
+    ...(icon ? { icon } : {}),
+    searchText: `${title} ${subtitle} ${tags.join(' ')} ${cerca}`.trim().toLowerCase(),
+    detailKey: `${categoria}/${slug}`,
+    status: 'viu'
+  };
+};
 
 /* Fonaments: les lleis del sistema i les peces que no són formularis ni
    navegació. L'ordre és el de lectura: contracte → color → tipografia →
@@ -253,9 +307,10 @@ const SUPERPOSICIONS = [
 
 export const CATALOG_ITEMS = [
   ...FONAMENTS,
-  { ...especimen('emoticones', 'xl', 'Emojis XL', 'Emoticones del poble per famílies', ['emoticona', 'cataleg', 'accessibilitat'],
+  /* La 🌻 que portava a mà ara ix d'ICONES_ESPECIMENS, com la de la resta. */
+  especimen('emoticones', 'xl', 'Emojis XL', 'Emoticones del poble per famílies', ['emoticona', 'cataleg', 'accessibilitat'],
     'Un directori d’emoticones grans amb el seu nom: natura, eines, persones, documents i vida al poble. Cada família es pot desplegar amb el teclat.',
-    'emoji emojis emoticones natura rural eines persones documents'), icon: '🌻' },
+    'emoji emojis emoticones natura rural eines persones documents'),
   especimen('inventari', 'global', 'Inventari Global', 'Taula de components', ['inventari', 'llista'],
     'Tots els components registrats al catàleg, on viuen i en quin estat estan. La porta del catàleg falla si un component de PedraSeca/ no hi és.',
     'components'),
@@ -331,6 +386,14 @@ CATALOG_ITEMS.push(
   especimen('fonaments', 'icones-alergens', 'Icones d’al·lèrgens', 'PedraSeca/molecules/IconesAlergens.jsx', ['molecula', 'alergens', 'carta'],
     'Les xicotetes icones dels 14 al·lèrgens del Reglament, amb els dibuixos del Mestre: una fila d’imatges quadrades i un sol nom per al lector («Al·lèrgens: gluten, llet»). Viatgen dins del paquet, sense xarxa. El TPV les pinta a la cantonada de la rajola i la Carta Digital, dins del cos de la targeta.',
     'alergens al·lergens gluten crustacis ous peix cacauets soja llet fruits closca api mostassa sesam sulfits tramussos molluscs carta digital tpv icones reglament')
+);
+
+/* Ordre del Mestre, 261007 («Implementa un carrusel a la imatge principal d'aquesta pàgina
+   universal perquè l'usuari puga passar les fotos») · la portada dels productes amb més d'una foto. */
+CATALOG_ITEMS.push(
+  especimen('fonaments', 'carrusel-imatges', 'Carrusel d’imatges', 'PedraSeca/organismes/CarruselImatges.jsx', ['organisme', 'imatge', 'portada'],
+    'Les fotos d’un element a la portada de la Pàgina Universal: es passen amb el dit, amb els botons dels costats o amb les fletxes del teclat, i el comptador diu on s’és. La primera foto és la portada, no es pinta dues vegades. Amb una sola foto, la portada de sempre.',
+    'carrusel carousel galeria fotos imatges portada hero passar diapositiva scroll snap producte mercat samarreta')
 );
 
 /* T52 (ordre del Mestre, 260928: «que quede clar quin és l'element universal

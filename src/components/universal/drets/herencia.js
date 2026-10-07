@@ -16,8 +16,15 @@
  *     servidor el rebutge) i, si no n'hi ha, el valor del servidor.
  * Sense cap de les dues, este mòdul torna null. D15 (ordre del Mestre,
  * 260930): llavors la nota nova de «CREAR NOTA» naix amb la Creative Commons
- * de sèrie (LLICENCIA_PER_DEFECTE, la posa NotesSection). Les notes velles
- * sense drets es continuen pintant «© Sóc de Poble»: res no és retroactiu.
+ * de sèrie (LLICENCIA_PER_DEFECTE, la posa NotesSection). Les dades no es
+ * migren: una nota vella sense drets continua sense `copyright`.
+ *
+ * El text que es PINTA per a un element sense drets, en canvi, encara depén
+ * de la superfície (revisió del 261007, I1 i M3-01): el Mur, el Mercat, l'acte
+ * i la pàgina de detall hi pinten COPYRIGHT_SDP (editorial.js, CC BY-NC-SA
+ * 4.0); l'editor (DocumentEditor), el lector del MAS (PublicacioDetall) i la
+ * nota de benvinguda (NotesEditor), «© Sóc de Poble». Quina és la reserva
+ * única està pendent del Mestre.
  */
 import { getVal, setVal, delVal } from '../../../config/storage.js';
 import { netejaText } from '../../../utils/sanitize.js';

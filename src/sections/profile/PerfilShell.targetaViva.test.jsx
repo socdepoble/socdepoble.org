@@ -161,6 +161,26 @@ test('T66 · sense emoticona triada, cap targeta en pinta (ni la ploma); amb una
   expect(emoticonaDe(detall(ambIcon.container).querySelector('aside.sdp-targeta-viva')).textContent).toBe('🌾');
 });
 
+/* Ordre del Mestre (261007) · «Aplica a TargetaViva.jsx (quan actua com a
+   ítem de llista)»: sense capçalera i amb una emoticona triada, l'emoji XL
+   ocupa el quadrat de «La fitxa» a la llista. L'aside de l'editor no és cap
+   ítem de llista i es queda sense quadrat (Llei del Píxel). */
+test('261007 · sense imatge, l’emoticona triada de la fitxa ocupa el quadrat en XL a la llista; l’aside, sense quadrat', () => {
+  const quadrat = (arrel) => arrel.querySelector('.sp-card-body > .sp-card-calendar-badge .sp-card-calendar-badge__emoji');
+  const { container } = render(<PerfilShell />);
+  expect(quadrat(llista(container))).toBeNull();
+  cleanup();
+  m.perfil.identitats = [{ ...jo, dades: { ...jo.dades, icon: '🌾' } }];
+  const ambIcon = render(<PerfilShell />);
+  expect(quadrat(llista(ambIcon.container)).textContent).toBe('🌾');
+  expect(quadrat(llista(ambIcon.container)).getAttribute('aria-hidden')).toBe('true');
+  const aside = detall(ambIcon.container).querySelector('aside.sdp-targeta-viva');
+  expect(aside.querySelector('.sp-card')).not.toBeNull();
+  expect(aside.querySelector('.sp-card-calendar-badge')).toBeNull();
+  // L'emoticona continua a la caputxa de l'aside (T66).
+  expect(emoticonaDe(aside).textContent).toBe('🌾');
+});
+
 test('T66 · triar l’emoticona des del botó de la barra taronja la posa a la targeta viva de seguida', () => {
   const { container } = render(<PerfilShell />);
   const boto = detall(container).querySelector('.bar-orange .sdp-emoticona-barra--boto');

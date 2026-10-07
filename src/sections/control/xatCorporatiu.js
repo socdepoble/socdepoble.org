@@ -7,13 +7,14 @@
  * T6 (ordre del Mestre, 261004, prompt 261004_0515 §5) · Derogat per l'ordre
  * del Mestre del 261004 (prompt 261004_0515): este xat ja no és l'enllaç de
  * la boina, que porta SEMPRE a la pàgina de l'autor (el projecte,
- * destinsControl.AUTORIA_SOCDEPOBLE). És on porta Comentar del peu de les
+ * destinsControl.AUTORIA_SOCDEPOBLE). Era on portava Comentar del peu de les
  * targetes del Panell: la skill sdp-universal-page diu que Comentar és el
  * missatge directe a l'autor. Mentre no hi ha xat on portar, Comentar ho diu
- * (avisDelXatCorporatiu) i el Panell conserva l'Alerta.
+ * (avisDelXatCorporatiu) i el Panell conserva l'Alerta. Des de l'ordre del
+ * 261007 (més avall), és la via «En privat» del menú de Comentar.
  *
  *  · LLAVOR ('seed' o 'local'): l'id del padró ('socdepoble',
- *    destinsControl.XAT_SOCDEPOBLE), que resol el xat local. Cap crida.
+ *    XAT_SOCDEPOBLE_DE_LLAVOR), que resol el xat local. Cap crida.
  *  · REMOT: 'socdepoble' no és cap entitat del servidor. L'entitat es resol
  *    ABANS de fer l'enllaç, pel port del backend (loadPerfilPublic, capacitat
  *    'directori'), amb el slug declarat del pilot ('soc-de-poble',
@@ -28,20 +29,48 @@
  *    entitat o amb error: cap enllaç i el Panell ho diu. Mentre es resol,
  *    tampoc (T6: Comentar ho diu amb l'avís de `resolent`).
  *  · Canvi de backend (backendScope: proveïdor, endpoint, tenant i mode): es
- *    torna a resoldre i la resposta vella es descarta (AbortController).
+ *    torna a resoldre i la resposta vella es descarta (la resolució porta
+ *    l'abast per al qual es va demanar).
  *  · Fora de l'app (sense UIProvider: l'espècimen del catàleg muntat sol) no
  *    hi ha backend: el xat de la llavor, com en mode seed.
  *
  * Model B: cap import de Supabase, només el port. El slug de l'entitat de
  * suport del desplegament l'ha de confirmar el proveïdor (Sollutia).
+ *
+ * Ordre del Mestre (261007) · «COMENTARIS = XAT» · Este missatge directe és
+ * la via «En privat» del menú de Comentar de TOTES les targetes i de TOTES les
+ * barres (useAccions): un xat privat només entre la persona i Sóc de Poble.
+ * Es resol UNA sola vegada per a tota l'app, i només quan algú el tria:
+ * ProveidorXatSocDePoble, muntat una vegada a App.jsx, ho posa al context de
+ * Pedra Seca (PedraSeca/hooks/xatSocDePoble.js), que llig useAccions. I
+ * l'arrencada no en fa cap de més: l'entitat pilot ja la resol una vegada
+ * AppDataLoader (useEntitatDelProjecte, App.entitatDelProjecte.test.jsx), i
+ * este xat no es demana fins al primer «En privat» (o fins que s'obri el
+ * Panell, que el demana per a l'Alerta: useXatSocDePobleResolt). Derogat el
+ * gestor de llista de la proposta P3 del mateix dia
+ * (useComentaAlXatCorporatiu): a les pàgines de text i a les targetes de
+ * sistema del Mur i del Calendari saltava la via pública.
+ * Correcció C2 · Derogats també useXatCorporatiu (un efecte per instància:
+ * el Panell feia la seua pròpia consulta, una segona per a la mateixa
+ * entitat) i comentarAlXatCorporatiu (el Comentar propi del Panell, que
+ * saltava la via pública). Les targetes del Panell porten el menú de totes,
+ * i l'Alerta llig la resolució única del proveïdor.
+ * Correcció C10 (revisió R2) · Una sola font per a l'enllaç de la llavor:
+ * XAT_SOCDEPOBLE_DE_LLAVOR (xatSocDePoble.js), i XAT_DE_LLAVOR en deriva.
+ * destinsControl.XAT_SOCDEPOBLE, la segona font, s'ha retirat.
  */
-import { useEffect, useRef, useState } from 'react';
+import { createElement, useCallback, useMemo, useRef, useState } from 'react';
 import { useUIState } from '../../app/contexts/UIContext';
+import { XAT_SOCDEPOBLE_DE_LLAVOR, XatSocDePobleContext } from '../../components/PedraSeca/hooks/xatSocDePoble.js';
+/* El traductor de la interfície, o null fora de l'app (o amb una prova que
+   simula UIContext sense esta exportació): aleshores, la reserva en
+   valencià. La còpia única de Pedra Seca (revisió del 261007). */
+import { useTraductorOpcional } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
 import { backendScope, normalizeBackendConfig } from '../../config/backendConfig.js';
 import { esRutaInterna } from '../../config/objecteConnectable.js';
+import { ESPERA_DESPRES_DE_FALLADA_MS } from '../../config/navigation.js';
 import { loadPerfilPublic, teCapacitat } from '../../data/backendPort.js';
 import { ENTITAT_PILOT_SLUG } from '../../data/identitatsSeed.js';
-import { XAT_SOCDEPOBLE } from './destinsControl.js';
 
 const MODES_LOCALS = new Set(['seed', 'local']);
 /* El mateix límit que l'id d'un subjecte de xat (contracte.js). */
@@ -57,8 +86,9 @@ const NO_CAP_EN_CONSULTA = /[\u0000-\u001F\u007F\s]/;
 const esIdDeConsulta = (id) => typeof id === 'string'
   && id.length > 0 && id.length <= MAXIM_ID && !NO_CAP_EN_CONSULTA.test(id);
 
-/** estat: 'llavor' | 'remot' (enllaç) · 'resolent' | 'absent' | 'error' (sense enllaç). */
-export const XAT_DE_LLAVOR = Object.freeze({ estat: 'llavor', href: XAT_SOCDEPOBLE });
+/** estat: 'llavor' | 'remot' (enllaç) · 'resolent' | 'absent' | 'error' (sense enllaç).
+    C10 · L'enllaç de la llavor és el de XAT_SOCDEPOBLE_DE_LLAVOR, no un de propi. */
+export const XAT_DE_LLAVOR = Object.freeze({ estat: 'llavor', href: XAT_SOCDEPOBLE_DE_LLAVOR.href });
 const RESOLENT = Object.freeze({ estat: 'resolent', href: null });
 const ABSENT = Object.freeze({ estat: 'absent', href: null });
 
@@ -66,7 +96,8 @@ const ABSENT = Object.freeze({ estat: 'absent', href: null });
 const PORT = Object.freeze({ teCapacitat, loadPerfilPublic });
 
 /* Com PerfilPublicSection: el backend és a punt quan l'amfitrió ha arrencat.
-   Amb el senyal, desmuntar el Panell deixa d'esperar. */
+   Amb un senyal a la configuració (config.signal), qui la crida pot deixar
+   d'esperar. */
 const hostLlest = ({ signal } = {}) => import('../../host.js').then((host) => host.quanLlest({ signal }));
 
 /** La ruta del xat corporatiu amb l'id que ha tornat el port, codificat. */
@@ -81,9 +112,9 @@ export const AVISOS_XAT_CORPORATIU = Object.freeze({
 });
 
 /**
- * L'avís de Comentar per a un { estat, href } de useXatCorporatiu: null si
- * hi ha xat on portar; mentre es resol, `resolent`; sense entitat o amb
- * error, `noDisponible`.
+ * L'avís de «En privat» per a un { estat, href } del xat: null si hi ha xat
+ * on portar; mentre es resol, `resolent`; sense entitat o amb error,
+ * `noDisponible`.
  */
 export function avisDelXatCorporatiu(xat) {
   if (xat?.href) return null;
@@ -133,37 +164,110 @@ function useEstatDeLApp() {
   }
 }
 
+/* En remot, abans que ningú no haja triat «En privat»: encara no s'ha demanat. */
+const PENDENT = Object.freeze({ estat: 'pendent', href: null });
+/* Els estats en què el clic encara pot portar al xat: es demana (o es torna a
+   demanar, després d'un error). Un «absent» que ha tornat el port també
+   (revisió del 261007, M4-01): vegeu ProveidorXatSocDePoble. */
+const PER_RESOLDRE = new Set(['pendent', 'resolent', 'error']);
+
+/* L'avís d'un { estat, href }, traduït: mentre no s'ha resolt (pendent o
+   resolent), que encara es busca; sense entitat o amb error, que no està
+   disponible; amb xat, cap. */
+function avisTraduit({ estat, href }, t) {
+  const avis = estat === 'pendent' ? AVISOS_XAT_CORPORATIU.resolent : avisDelXatCorporatiu({ estat, href });
+  if (!avis) return null;
+  return typeof t === 'function' ? t(...avis) : avis[1];
+}
+
 /**
- * { estat, href } del xat corporatiu (el Comentar de les targetes del Panell,
- * T6) per a la configuració de l'app. href és null mentre no hi ha un xat de
- * veres on portar. Fora de l'app no hi ha cap backend: el xat de la llavor,
- * sense crides.
+ * Ordre del Mestre (261007) · «Comentaris = xat» · El proveïdor del xat
+ * privat amb Sóc de Poble, la via «En privat» de totes les targetes i barres
+ * (useAccions la llig del context XatSocDePobleContext). Es munta UNA vegada,
+ * a App.jsx, dins de l'UIProvider, i resol l'entitat UNA vegada per abast de
+ * backend, i només quan cal:
+ *  · LLAVOR ('seed' o 'local', o fora de l'app): el xat de la llavor, sense
+ *    cap crida.
+ *  · REMOT: res a l'arrencada ('pendent'). El primer «En privat» crida
+ *    `resol()`, que demana l'entitat pel port (resolXatCorporatiu); els clics
+ *    que arriben mentre es resol fan servir la mateixa promesa, i el resultat
+ *    val per a tota l'app fins que l'abast canvia. Un error es torna a provar
+ *    al clic següent.
+ *    Revisió del 261007 (M4-01) · Una entitat absent que ha dit el PORT també
+ *    es torna a provar, però passada ESPERA_DESPRES_DE_FALLADA_MS (la de
+ *    navigation.js · resolEntitatDelProjecte, ordre del Mestre del 261004:
+ *    un null del port és una fallada): loadPerfilPublic convertix un tall de
+ *    xarxa en null, i abans un tall en el primer «En privat» deixava la via
+ *    privada morta tota la sessió. Durant l'espera, `resol` torna la mateixa
+ *    resposta sense cridar el port; després, el clic següent la torna a
+ *    demanar. Una configuració sense abast continua sense res a demanar.
+ * El valor és { estat, href, avis, resol }: avis ja traduït (el que Comentar
+ * diu quan encara no pot portar al xat) i resol només quan encara hi ha res
+ * a demanar; torna una promesa de { estat, href, avis, darrera }. Sense este
+ * proveïdor, useXatSocDePoble dona el xat de la llavor.
+ * Correcció C6 · `darrera` diu, quan arriba la resposta, si esta demanda és
+ * encara l'última de tota l'app: si dos «En privat» arriben mentre es resol,
+ * només el segon hi navega (useAccions).
+ * Qui en vol l'estat sense esperar cap clic (l'Alerta del Panell) fa servir
+ * useXatSocDePobleResolt (PedraSeca/hooks/xatSocDePoble.js): demana ESTA
+ * mateixa resolució en muntar, no una de pròpia.
  */
-export function useXatCorporatiu() {
+export function ProveidorXatSocDePoble({ children }) {
   const app = useEstatDeLApp();
   const externalConfig = app?.externalConfig;
   const { dataMode, abast } = llegixBackend(externalConfig);
   const local = app === null || MODES_LOCALS.has(dataMode);
   const configRef = useRef(externalConfig);
   configRef.current = externalConfig;
-  const [resolt, setResolt] = useState(() => ({ abast: null, ...RESOLENT }));
+  const t = useTraductorOpcional();
+  const [resolt, setResolt] = useState(null);
+  /* La resolució en curs (o acabada bé) i el seu abast: una per a tota l'app. */
+  const enCurs = useRef({ abast: null, promesa: null });
+  /* C6 · El compte de les demandes de tota l'app: l'última és la que mana. */
+  const demandes = useRef(0);
 
-  useEffect(() => {
-    if (local || !abast) return undefined;
-    const control = new AbortController();
-    let viu = true;
-    resolXatCorporatiu({ dataMode, config: { ...(configRef.current || {}), signal: control.signal } })
-      .then((resultat) => { if (viu) setResolt({ abast, ...resultat }); })
-      .catch((error) => {
-        if (viu && error?.name !== 'AbortError') setResolt({ abast, estat: 'error', href: null });
+  let xat = PENDENT;
+  if (local) xat = XAT_DE_LLAVOR;
+  else if (!abast) xat = ABSENT;
+  else if (resolt?.abast === abast) xat = resolt;
+  const { estat, href } = xat;
+
+  const resol = useCallback(() => {
+    const { abast: abastEnCurs, promesa: anterior, fallada } = enCurs.current;
+    /* M4-01 · Un «absent» del port val fins que passa l'espera. */
+    const caducada = typeof fallada === 'number' && Date.now() - fallada >= ESPERA_DESPRES_DE_FALLADA_MS;
+    if (abastEnCurs === abast && anterior && !caducada) return anterior;
+    setResolt({ abast, ...RESOLENT });
+    const promesa = resolXatCorporatiu({ dataMode, config: configRef.current || {} })
+      .catch(() => ({ estat: 'error', href: null }))
+      .then((resultat) => {
+        if (enCurs.current.promesa === promesa) {
+          setResolt({ abast, estat: resultat.estat, href: resultat.href });
+          if (resultat.estat === 'error') enCurs.current = { abast: null, promesa: null };
+          else if (resultat.estat === 'absent') enCurs.current = { abast, promesa, fallada: Date.now() };
+        }
+        return resultat;
       });
-    return () => {
-      viu = false;
-      control.abort();
-    };
-  }, [abast, dataMode, local]);
+    enCurs.current = { abast, promesa };
+    return promesa;
+  }, [abast, dataMode]);
 
-  if (local) return XAT_DE_LLAVOR;
-  if (!abast) return ABSENT;
-  return resolt.abast === abast ? { estat: resolt.estat, href: resolt.href } : RESOLENT;
+  /* M4-01 · L'«absent» que ha tornat el port (no el d'una configuració sense
+     abast) es pot tornar a demanar: `resol` sap si l'espera ha passat. */
+  const absentDelPort = estat === 'absent' && xat === resolt;
+  const valor = useMemo(() => Object.freeze({
+    estat,
+    href,
+    avis: avisTraduit({ estat, href }, t),
+    resol: local || !(PER_RESOLDRE.has(estat) || absentDelPort)
+      ? null
+      : () => {
+        demandes.current += 1;
+        const demanda = demandes.current;
+        return resol().then((resultat) => ({
+          ...resultat, avis: avisTraduit(resultat, t), darrera: demanda === demandes.current
+        }));
+      }
+  }), [absentDelPort, estat, href, local, resol, t]);
+  return createElement(XatSocDePobleContext.Provider, { value: valor }, children);
 }

@@ -25,6 +25,8 @@ import { legalContent } from './legalContent.js';
  *  · wikidepoble  13:37:58 · HEAD:265 57ec5684 (1790249878 +0200) «restaura PAGE_COPY.wikidepoble amb el text nou»; LEDGER 260924_1410.
  *  · fedivers     11:38:55 · HEAD:306 70ce2dfa (1790847535 +0200), tancament del torn que va lligar /fedivers i en va aprovar l'empremta (acta 261001_0850:20). Confiança mitjana: hora inferida del commit, pendent de confirmació del Mestre.
  *  · consola      2026-09-24, sense hora: huit commits aquell dia i cap la nomena. Pendent del Mestre.
+ *  · xat          01:30 · ordre del Mestre (261007, transmesa per l'orquestradora): «publicada el 2026-10-07 a la 01:30 hora local». Contingut del document 261006_2200_contingut_el_xat §2; encara no hi ha cap commit que la publique. Pendent del Mestre: confirmar-la o canviar-la per la del commit.
+ *  · drets-autor  00:00 (+01:00, hora d'hivern) · ordre del Mestre (261007, transmesa per l'orquestradora): «2026-01-30T00:00:00+01:00», perquè la seua targeta isca avall del Mur. No és l'hora de cap commit: és una data triada pel Mestre, no una evidència de publicació.
  */
 export const PAGE_COPY = {
   "projecte": {
@@ -285,5 +287,63 @@ export const PAGE_COPY = {
     "imageAlt": "Una casa rural amb les portes obertes al poble",
     "labels": [],
     "html": "\n      <h5>Obrir portes tancades</h5>\n      <p>Mantingues el poble viu anunciant eixes cases tancades que necessiten obrir de nou les portes.</p>\n      <img src=\"/assets/ui/plugins/habitatge_vinyeta.jpg\" alt=\"Habitatge\" />\n"
+  },
+  /* Ordre del Mestre (261007) · «El Xat»: la pàgina que explica el xat de
+     Sóc de Poble (el clon de WhatsApp) perquè ningú no tinga por de fer-lo
+     servir. Contingut literal del document 261006_2200_contingut_el_xat §2;
+     la portada és la il·lustració del Mestre (public/, 1024×1024). Es publica a
+     /page/xat (PageDetailSection, sense ruta nova) i la seua targeta ix al Mur
+     i al Calendari (SYSTEM_PAGES, amb el botó «Anar al xat»). «L'Ànima de la
+     IAIA» es queda: la columna dreta de /xat tria quina pàgina hi viu
+     (sections/xat/paginaDestacada.js). La data, a la capçalera d'este fitxer.
+     Frontissa de contingut: el Mestre n'ha d'aprovar l'empremta
+     (--aprova xat) abans del commit. */
+  "xat": {
+    "date": "2026-10-07T01:30:00+02:00",
+    "title": "El Xat",
+    "subtitle": "Parla amb la teua gent amb la tecnologia de casa",
+    "lead": "Hem integrat un sistema de missatgeria clavat a WhatsApp. Sense descarregar aplicacions noves, sense configuracions estranyes i amb la garantia que les teues dades es queden a casa.",
+    "image": "/assets/uploads/brain/xat_portada.jpg",
+    "imageWidth": 1024,
+    "imageHeight": 1024,
+    "imageFetchPriority": "high",
+    "imageAlt": "Il·lustració d'estil Bruguera: la plaça del poble plena de veïns que parlen pel mòbil i amb bafarades, davant de l'església i del bar del poble",
+    "labels": [
+      {
+        "text": "Comunicació",
+        "className": "sdp-badge-system"
+      },
+      {
+        "text": "Eina",
+        "className": "sdp-badge-category"
+      }
+    ],
+    "html": "\n      <h3>Com a casa, com a WhatsApp</h3>\n      <p>Sabem que la tecnologia pot ser aclaparadora. Per això, quan vam dissenyar el Xat de Sóc de Poble, vam prendre una decisió molt clara: <strong>no inventarem la roda</strong>.</p>\n      <p>El nostre xat té la mateixa estructura, els mateixos botons i el mateix funcionament que el WhatsApp que ja fas servir cada dia per parlar amb la família. Si saps enviar un missatge per WhatsApp, ja saps fer servir el Xat de Sóc de Poble.</p>\n      \n      <h4>Per què un xat propi?</h4>\n      <ul>\n        <li><strong>Privacitat absoluta:</strong> Les teues converses del poble, avisos i comunicacions amb els negocis locals es queden als servidors del projecte, no en mans de megacorporacions internacionals.</li>\n        <li><strong>Integració total:</strong> Des del xat pots reservar al bar, preguntar si la panaderia té pa, o avisar que s'ha perdut un gosset, tot sense eixir de Sóc de Poble.</li>\n        <li><strong>Evolució constant:</strong> Ara mateix tens allò bàsic per a parlar i compartir, però a poc a poc anirem implementant noves funcionalitats (notes de veu, imatges, etc.) sempre respectant l'estil que ja coneixes.</li>\n      </ul>\n\n      <h4>Entra i saluda!</h4>\n      <p>Pots parlar amb la <strong>IAIA MarIA</strong> per resoldre qualsevol dubte sobre el funcionament de la plataforma, o entrar directament al canal del teu poble per vore què s'està coent hui.</p>\n      <p>No tingues por de tocar botons, l'hem construït perquè siga indestructible. Som-hi!</p>\n    "
+  },
+  /* Ordre del Mestre (261007) · «Drets d'autor»: la pàgina on porta l'enllaç
+     del copyright de TOTES les targetes i capçaleres (UniversalCard i
+     PageFrame, RUTA_DRETS_AUTOR de systemPages.js), siga quin siga el text.
+     Informa de totes les llicències: el codi (AGPL-3.0, el fitxer LICENSE),
+     el contingut de sèrie (CC BY-NC-SA 4.0), les dos eixides privades
+     (Copyright (C) i CC0) i la llista de l'editor, que és la del catàleg
+     (components/universal/drets/llicencies.js: mateix ordre, mateixos noms i
+     les seues explicacions, sense cap llicència inventada). Es publica a
+     /page/drets-autor (PageDetailSection, sense ruta nova ni component
+     propi) i la seua targeta ix al Mur i al Calendari (SYSTEM_PAGES);
+     «Legal i privacitat» la incrusta davall de l'apartat 4 (legalContent.js).
+     Títol, subtítol i entradilla són els de la instantània d'eixa targeta
+     incrustada. La data, a la capçalera d'este fitxer. Frontissa de
+     contingut: empremta aprovada amb --aprova drets-autor. */
+  "drets-autor": {
+    "date": "2026-01-30T00:00:00+01:00",
+    "title": "Drets d'autor",
+    "subtitle": "Totes les llicències, explicades amb paraules de poble",
+    "lead": "Per què el que publiques naix amb CC BY-NC-SA 4.0, què vol dir cada llicència i quan convé triar-ne una altra.",
+    "image": "/assets/nano_cards/drets_autor_comic.jpg",
+    "imageAlt": "Un foraster intentant copiar una recepta mentre la gent del poble se'l mira rient (Còmic)",
+    "labels": [
+      { "text": "Sistema", "className": "sdp-badge-system" }
+    ],
+    "html": "\n      <h3>Dos coses, dos llicències</h3>\n      <p>A Sóc de Poble hi ha dos coses ben diferents i cadascuna porta la seua llicència: el <strong>codi</strong>, la màquina que fa funcionar l'aplicació, i el <strong>contingut</strong>, el que escriu i publica la gent del poble. Ací t'expliquem <strong>per què hem triat cada llicència</strong>, què vol dir cadascuna i <strong>quan et pot convindre triar-ne una altra</strong>.</p>\n\n      <h3>El codi: AGPL-3.0, lliure i gratuït</h3>\n      <p>El codi de Sóc de Poble es publica amb la llicència <strong>AGPL-3.0</strong> (GNU Affero General Public License, versió 3 o posterior), tal com diu el fitxer <code>LICENSE</code> del projecte. És <strong>programari lliure i gratuït</strong>: ningú ha de pagar per a usar-lo, estudiar-lo ni copiar-lo.</p>\n\n      <h4>Per què l'hem triada</h4>\n      <ul>\n        <li><strong>Per a muntar la teua xarxa social al Fedivers:</strong> qualsevol poble, associació o col·lectiu pot agafar este codi i alçar la seua pròpia xarxa social, connectada amb la resta del Fedivers, sense demanar permís a ningú.</li>\n        <li><strong>Per a millorar-lo entre tots:</strong> el que millora un poble ho pot aprofitar tota la resta.</li>\n        <li><strong>Per a afegir-hi plugins i funcionalitats atòmiques:</strong> l'aplicació està feta de peces menudes i independents, i qui necessita una cosa nova la pot afegir com una peça més, sense desmuntar les altres.</li>\n        <li><strong>Amb l'obligació de compartir les millores:</strong> qui modifica el codi i l'oferix a altres persones, també per internet com a servei, n'ha de compartir el codi font amb la mateixa llicència. Ningú no pot tancar en una caixa privada el que és de tots.</li>\n      </ul>\n\n      <h3>El contingut: CC BY-NC-SA 4.0 de sèrie</h3>\n      <p>El que publiques (textos, fotos, notes) <strong>continua sent teu</strong>. Una nota nova naix de sèrie amb la llicència <strong>CC BY-NC-SA 4.0</strong> (Creative Commons Reconeixement-NoComercial-CompartirIgual 4.0 Internacional), llevat que la teua fitxa del Perfil, o la de l'entitat amb què publiques, porte uns altres drets de sèrie: llavors hereta eixos. Les notes que ja tens no canvien mai.</p>\n\n      <h4>Què vol dir cada lletra</h4>\n      <ul>\n        <li><strong>BY (Reconeixement):</strong> qui la use ha de dir que és teua.</li>\n        <li><strong>NC (No comercial):</strong> ningú no en pot fer negoci sense el teu permís.</li>\n        <li><strong>SA (Compartir igual):</strong> qui l'adapte o la millore l'ha de tornar al poble amb esta mateixa llicència.</li>\n      </ul>\n      <p>És la mateixa idea que la del codi, portada al contingut: <strong>el que naix al poble circula lliurement, ningú no se n'aprofita per a fer negoci i les millores tornen al poble</strong>.</p>\n      <p>La marca, els logotips, les il·lustracions i el sistema de disseny «Pedra Seca» tenen una protecció pròpia: ho expliquem a <a href=\"/legal\">Legal i privacitat</a>, a l'apartat 4.</p>\n\n      <h3>Per què triar una llicència privada o el domini públic</h3>\n      <p>La llicència de sèrie és una proposta, no una obligació. Hi ha casos en què convé triar-ne una altra:</p>\n      <ul>\n        <li><strong>«Copyright (C)», tots els drets reservats:</strong> quan no vols que ningú copie, canvie ni venga la teua obra sense demanar-te permís. Per exemple, les fotos de la teua casa rural, que només vols a la teua fitxa. Escrius qui en té els drets darrere de «©», com «© Pepet».</li>\n        <li><strong>El domini públic, CC0:</strong> just al contrari. Renuncies als teus drets en la mesura que la llei ho permet, perquè la teua obra corra com més millor, sense haver de citar-te. Per exemple, el calendari de reg de la séquia. És una <strong>renúncia irrevocable</strong>: l'editor te la fa acceptar abans de desar.</li>\n      </ul>\n\n      <h3>Les llicències que pots triar a l'editor</h3>\n      <p>Al botó <strong>«Elegir drets d'autor»</strong> de l'editor, davall del títol, tries la llicència de cada nota. <strong>Res no canvia fins que prems «Desar autoria»</strong>. Estes són totes les opcions, en el mateix ordre que les veuràs:</p>\n\n      <h4>Les Creative Commons</h4>\n      <ul>\n        <li><strong>CC BY-NC-SA 4.0 · Reconeixement, no comercial i compartir igual:</strong> Es pot adaptar citant-te i sense ús comercial, i qui l'adapte l'ha de compartir amb esta mateixa llicència. És la que porten les notes noves quan no hereten uns altres drets del teu Perfil.</li>\n        <li><strong>CC BY-NC-ND 4.0 · Reconeixement, no comercial i sense obres derivades:</strong> La més tancada de les Creative Commons: només es pot compartir sencera, citant-te i sense ús comercial.</li>\n        <li><strong>CC BY-NC 4.0 · Reconeixement i no comercial:</strong> Es pot copiar i adaptar citant-te, però ningú en pot fer un ús comercial sense el teu permís.</li>\n        <li><strong>CC BY-ND 4.0 · Reconeixement i sense obres derivades:</strong> Es pot copiar i difondre, també per a guanyar diners, citant-te, però sempre sencera i sense canvis.</li>\n        <li><strong>CC BY-SA 4.0 · Reconeixement i compartir igual:</strong> Es pot copiar, adaptar i usar per a qualsevol cosa citant-te, i qui la millore ha de compartir el resultat amb esta mateixa llicència. És la de la Viquipèdia.</li>\n        <li><strong>CC BY 4.0 · Reconeixement:</strong> Qualsevol la pot copiar, adaptar i usar, també per a guanyar diners, sempre que diga que és teua.</li>\n      </ul>\n\n      <h4>El domini públic</h4>\n      <ul>\n        <li><strong>CC0 1.0 · Domini públic:</strong> Renuncies als teus drets en la mesura que la llei ho permet: qualsevol la pot usar per a qualsevol cosa, sense citar-te.</li>\n        <li><strong>Text lliure personalitzat (CC0):</strong> Escrius l'autoria amb les teues paraules i l'obra queda en domini públic (CC0).</li>\n      </ul>\n\n      <h4>Tots els drets reservats</h4>\n      <ul>\n        <li><strong>Copyright (C):</strong> Tots els drets reservats: ningú pot copiar, canviar ni vendre la teua obra sense demanar-te permís. Escrius qui en té els drets amb les teues paraules, darrere de «©».</li>\n      </ul>\n      <p>Si una nota porta uns drets d'abans que no són cap d'estos, l'editor també t'oferix <strong>«Mantindre els drets actuals»</strong>: es queden tal com estan.</p>\n    "
   }
 };

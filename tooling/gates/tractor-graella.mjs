@@ -45,8 +45,9 @@ function propsReals(fitxer) {
   const m = src.match(/export default function \w+\(\s*\{([\s\S]*?)\}\s*\)/);
   if (!m) return null;
   return m[1]
+    .replace(/\/\*[\s\S]*?\*\//g, '')
     .split('\n')
-    .map((l) => l.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/, '').trim())
+    .map((l) => l.replace(/\/\/.*$/, '').trim())
     .join(' ')
     .split(',')
     .map((t) => t.trim())

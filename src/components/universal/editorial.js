@@ -11,7 +11,7 @@
 import { dosDigits, horaDe } from '../../utils/calendari.js';
 
 /** Copyright de les pàgines de sistema. El mateix text que pintava TextSection. */
-export const COPYRIGHT_SDP = '© Sóc de Poble / Fet per la IAIA i Nano Banana';
+export const COPYRIGHT_SDP = 'CC BY-NC-SA 4.0 Sóc de Poble / Fet per la IAIA i Nano Banana';
 
 /**
  * Lleva els espais finals i UN punt final. Els punts suspensius («...» i «…»)

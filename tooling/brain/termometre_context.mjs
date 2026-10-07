@@ -16,8 +16,8 @@
  *    · MB          · bytes de les pujades més els de la transcripció, en MiB;
  *    · resums      · registres CHECKPOINT (informatius: van amb els passos);
  *    · avisos      · efímers [FATIGA·N1..3] ja injectats, reconeixements
- *                    `#fatiga-vista` escrits pel Mestre i disparaments d'un
- *                    `/schedule` de la mateixa conversa.
+ *                    `#fatiga-vista` escrits pel Mestre (o «fatiga vista» dictat,
+ *                    261007) i disparaments d'un `/schedule` de la mateixa conversa.
  *
  *  Contracte de l'IDE (2.5.5, llegit el 261002):
  *    ~/.gemini/antigravity-ide/builtin/skills/agy-customizations/docs/hooks.md
@@ -53,6 +53,8 @@ export const BRAIN = path.join(os.homedir(), '.gemini', 'antigravity-ide', 'brai
 export const MARCA = /\[FATIGA·N([1-3])\b/;
 /** El que escriu el Mestre per a reconéixer un avís. Només compta dins d'un USER_INPUT. */
 export const RECONEIX = '#fatiga-vista';
+/** La mateixa paraula dictada: el Mestre parla quasi sempre per veu (261007). */
+export const RECONEIX_VEU = 'fatiga vista';
 /** Torns del Mestre entre dos avisos de N2 sense reconeixement (cadència apta per a veu). */
 export const CADENCIA_VEU = 10;
 /** Per damunt d'esta mida la transcripció es compta per regex, sense parse complet. */
@@ -177,7 +179,14 @@ const CRON_CRU = /"content":"(?:Created At:(?:[^"\\]|\\.)*?\\n)?Tool is running 
 const REMITENT = /sender=([^\s"\\]+)/;
 const ITERACIO = /\(iteration \d+\)(?:\s|\\n)*<\/SYSTEM_MESSAGE>/;
 const PETICIO = /<USER_REQUEST>([\s\S]*?)<\/USER_REQUEST>/;
-const RECONEIX_RE = /#fatiga-vista(?![\w-])/i;
+/* Reconeixement escrit o dictat. Ordre del Mestre (261007): el Mestre parla quasi
+   sempre per veu, i el dictat no escriu el coixinet. A més de `#fatiga-vista`, compta
+   la forma transcrita «fatiga vista»: sense coixinet, en qualsevol caixa i amb
+   espai(s) o guionet entre les dues paraules, mai enganxada a una altra paraula.
+   Continua comptant només dins de la petició d'un USER_INPUT, i un salt de línia
+   entre les dues paraules no compta. En mode lleuger el text cru porta els salts
+   escapats («\n» com a dos caràcters): una lletra precedida de «\» no enganxa. */
+const RECONEIX_RE = /(?<!(?<!\\)[\p{L}\p{N}_-])#?fatiga[ \t\xa0-]+vista(?![\p{L}\p{N}_-])/iu;
 
 /**
  * Recompte d'una transcripció JSONL. Una línia que no es pot llegir es compta a
@@ -402,7 +411,7 @@ export function missatgeFatiga(nivell, m, motius, id) {
     return `${cap} Primer llindar de fatiga de context (cas 4 de core-context-panic). ${xifres} Quan acabes la tasca en curs, avisa el Mestre en una línia amb estes xifres; no cal aturar-se. Este avís només ix una vegada per conversa.`;
   }
   const frase = `Digues al Mestre, literalment, la frase del cas 4, «${FRASE_CAS4}», i, en la línia següent, les xifres reals d'este avís. ${xifres}`;
-  const vista = `Només el Mestre pot reconéixer este avís, escrivint ${RECONEIX} en el xat; tu no el pots escriure ni donar per reconegut.`;
+  const vista = `Només el Mestre pot reconéixer este avís, escrivint ${RECONEIX} en el xat o dictant «${RECONEIX_VEU}»; tu no el pots escriure ni donar per reconegut.`;
   if (nivell === 2) {
     return `${cap} Saturació de context (cas 4 de core-context-panic). Acaba el pas en curs i no n'encetes cap altre. ${frase} ${vista} Sense reconeixement, l'avís tornarà cada ${CADENCIA_VEU} torns del Mestre.`;
   }

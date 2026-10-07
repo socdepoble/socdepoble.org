@@ -27,6 +27,7 @@ import { RouteErrorBoundary } from './RouteErrorBoundary.jsx';
 export { RouteErrorBoundary } from './RouteErrorBoundary.jsx';
 import { EVENT_NIVELL_IAIA, esIaiaActiva, nivellIaiaDesat } from '../sections/realitat/nivellIaia.js';
 import { PAGE_COPY } from '../sections/text/pageContent.js';
+import { ProveidorXatSocDePoble } from '../sections/control/xatCorporatiu.js';
 import { BotoCrom } from '../components/universal/PanellCrom.jsx';
 /* T47 · Escriptors de l'autodesament des de l'arrencada (reprenen esborranys pendents). */
 import './autodesamentEscriptors.js';
@@ -706,9 +707,14 @@ export default function App({ config, targetNode }) {
   return (
     <StrictMode>
       <NotificationProvider targetNode={targetNode}>
-        <AppShell mobileNav={<MobileNav />}>
-          <AppContent config={stableConfig} />
-        </AppShell>
+        {/* Ordre del Mestre (261007) · «Comentaris = xat» · El xat privat amb
+            Sóc de Poble (la via «En privat» de Comentar) es resol ací, UNA
+            vegada per a tota l'app, no una per targeta (xatCorporatiu.js). */}
+        <ProveidorXatSocDePoble>
+          <AppShell mobileNav={<MobileNav />}>
+            <AppContent config={stableConfig} />
+          </AppShell>
+        </ProveidorXatSocDePoble>
       </NotificationProvider>
     </StrictMode>
   );

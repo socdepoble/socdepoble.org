@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { useNavigate, useRouter } from '../../../app/contexts/RouterContext';
 import { resolRuta, treuBase } from '../../../app/contexts/politicaRouter.js';
 import { useToast } from '@/components/universal/NotificationContext.jsx';
@@ -5,9 +6,11 @@ import { registraEsdeveniment, seccioActual } from '../../../data/telemetria.js'
 import {
   esPrivat, esRutaInterna, modeXat, objecteDePagina, rutaConnectarObjecte, rutaXatDePagina
 } from '../../../config/objecteConnectable.js';
+import { useXatSocDePoble } from './xatSocDePoble.js';
 
-/* T63.2 · El clic a un Comentar que ara no porta a cap xat (una pàgina sense
-   xat comú, un element que no s'ha trobat): ho diu, no navega enlloc. */
+/* T63.2 · La via pública de Comentar cridada on no hi ha cap xat públic (una
+   pàgina sense xat comú, un element que no s'ha trobat): ho diu, no navega
+   enlloc. Des del menú no passa: la fila es queda desactivada (261007). */
 export const AVIS_SENSE_XAT = 'Ací no hi ha cap xat comú on comentar.';
 
 /* Connectar substituïx el «M'agrada»: és un acte conscient i el comptem.
@@ -58,6 +61,15 @@ function partsDeMemoria(router) {
   const cami = typeof router.currentPath === 'string' ? router.currentPath : '';
   const consulta = router.searchParams ? String(router.searchParams) : '';
   return [cami, consulta ? `?${consulta}` : ''];
+}
+
+/* Correcció C6 · On és la persona ara, només per a comparar-ho amb on era
+   en un clic: l'entrada del router en MEMÒRIA o, si no, la barra d'adreces
+   tal qual (camí i consulta). */
+function ubicacioDeLApp(router) {
+  if (router?.memoria === true) return partsDeMemoria(router).join('');
+  if (typeof window === 'undefined' || !window.location) return '';
+  return `${window.location.pathname}${window.location.search}`;
 }
 
 /**
@@ -170,18 +182,39 @@ export async function compartix(titol, url, showToast) {
  * com es compta el Connectar. És l'únic lloc que el registra: UniversalPage
  * no l'embolcalla, i per això un clic a la barra de pàgina compta una vegada.
  *
- * `objecte` (T63.2) diu on porta Comentar quan no hi ha onComment propi:
+ * Comentar (ordre del Mestre, 261007, «Comentaris = xat») · No hi ha fil de
+ * comentaris: el debat és un xat. Sense onComment propi, Comentar obri SEMPRE
+ * un menú amb dues vies (BotoComentar, el mateix a la barra blava i a la
+ * targeta), i el menú crida handleComment amb la triada:
+ *   · 'privat' · el xat privat amb Sóc de Poble, el missatge directe amb
+ *     l'entitat (useXatSocDePoble: resolt UNA vegada per a tota l'app; sense
+ *     proveïdor, el de la llavor). Sense xat on portar, l'avís del proveïdor
+ *     i cap navegació.
+ *     Correcció C6 · Si encara s'ha de resoldre, la navegació espera i n'hi
+ *     ha UNA sola: la de l'última tria de tota l'app (el proveïdor diu si una
+ *     demanda és la `darrera`), i només si la persona continua on era quan
+ *     va triar (ni ha canviat de ruta ni ha desmuntat la peça).
+ *   · 'public' · el xat públic de l'element (T63.2), amb el seu títol com a
+ *     nom: hi pot entrar tothom.
+ * Sense via no fa res: Comentar sempre passa pel menú. `comentarXat` diu què
+ * oferix el menú: 'comu' (les dues vies), 'privat' (la pública, desactivada:
+ * ací no hi ha xat públic) o null (cap menú). Un onComment propi mana com
+ * sempre (les previsualitzacions que avisen) i aleshores no hi ha menú, com
+ * amb un onTranslate propi. El Panell de Control ja no en passa cap: les seues
+ * targetes porten el menú de totes.
+ *
+ * `objecte` (T63.2) diu quin és el xat PÚBLIC:
  *   · un descriptor tipat (objecteDe, objecteDePerfil, objecteDePagina…): el
- *     seu xat (rutaXatDePagina). Una nota, una carpeta, una categoria o una
- *     etiqueta no en tenen mai: Comentar no es pinta, encara que showComment
- *     el demane.
+ *     seu xat comú (rutaXatDePagina), si el contracte l'admet (subjecteDeXat).
+ *     Una persona o una IA no en tenen: el seu missatge directe no és cap xat
+ *     públic. Una nota, una carpeta, una categoria o una etiqueta tampoc, i
+ *     Comentar no es pinta, encara que showComment el demane.
  *   · null: la pàgina sap que ara no té cap element (carregant, no trobat, un
- *     contingut de fora). No hi ha xat.
+ *     contingut de fora). No hi ha xat públic.
  *   · sense (undefined): el valor per defecte, rutaXatPerDefecte (la barra
  *     d'una pàgina, `telemetria.origen === 'pagina'`, hi posa la seua ruta).
- * Quan no porta a cap xat (null, o un descriptor o una ruta que el contracte
- * no admet), el botó es queda on era, amb el nom neutre, i el clic mostra
- * AVIS_SENSE_XAT: amagar-lo canviaria píxels (Llei del Píxel).
+ * Sense xat públic, el botó es queda on era i el menú també: la fila pública
+ * diu per què, desactivada (amagar-la canviaria la forma del menú).
  * Connectar no el fa servir: continua amb onConnect.
  *
  * `traduccio` (Traductor Sobirà, ordre del Mestre, 260930 · via B) és el que
@@ -226,17 +259,57 @@ export function useAccions({
     || (traduccio ? traduccio.commutaMenu : () => navigate('/traduccions'));
   // El menú només existix si hi ha servei i ningú no ha posat el seu propi Traduir.
   const menuTraduir = !onTranslate && traduccio?.disponible ? traduccio.menu : null;
-  // T63.2 · sense handler propi, Comentar obri el xat de la Pàgina Universal:
-  // la de l'objecte tipat o, sense objecte, la del valor per defecte. La ruta
-  // d'on està la persona es llig en el clic, com la de Connectar.
+  /* Ordre del Mestre (261007) · «Comentaris = xat» · Les dues vies del menú
+     de Comentar. La pública (T63.2) és el xat comú de l'objecte tipat o, sense
+     objecte, el del valor per defecte; la ruta d'on està la persona es llig
+     en el clic, com la de Connectar. Una persona o una IA no en tenen: el seu
+     missatge directe no és cap xat públic. La privada ve del proveïdor de
+     l'app (una sola resolució per a totes les targetes i barres). */
+  const xatSocDePoble = useXatSocDePoble();
+  /* Correcció C6 · On és la persona en cada pintat i si la peça continua
+     muntada: la navegació que espera el xat ho mira quan arriba. */
+  const ubicacio = useRef(router);
+  ubicacio.current = router;
+  const muntada = useRef(true);
+  useEffect(() => {
+    muntada.current = true;
+    return () => { muntada.current = false; };
+  }, []);
   const pagina = telemetria?.origen === 'pagina';
-  const rutaXat = () => (objecte === undefined
-    ? rutaXatPerDefecte(title, mainHref, { pagina, router })
-    : rutaXatDePagina(objecte));
-  const handleComment = onComment || (() => {
-    const ruta = rutaXat();
+  const rutaXatPublic = () => {
+    if (objecte === undefined) return rutaXatPerDefecte(title, mainHref, { pagina, router });
+    return modeXat(objecte) === 'comu' ? rutaXatDePagina(objecte) : null;
+  };
+  /* Amb el xat ja resolt, hi va. Si no: diu l'avís del proveïdor (encara es
+     busca, o no està disponible) i, si encara es pot resoldre, el demana UNA
+     vegada per a tota l'app (resol) i hi va quan arriba; si no arriba, ho diu.
+     Correcció C6 · Quan arriba, només fa res si és l'última tria de l'app
+     (`darrera`: dos «En privat» mentre es resol no fan dues navegacions) i
+     si la persona no s'ha mogut des del clic. */
+  const comentaEnPrivat = () => {
+    const { href, avis, resol } = xatSocDePoble;
+    if (href) {
+      navigate(href);
+      return;
+    }
+    if (avis) showToast(avis);
+    if (typeof resol !== 'function') return;
+    const onEra = ubicacioDeLApp(ubicacio.current);
+    resol().then((xat) => {
+      const vigent = xat?.darrera !== false && muntada.current && ubicacioDeLApp(ubicacio.current) === onEra;
+      if (!vigent) return;
+      if (xat?.href) navigate(xat.href);
+      else if (xat?.avis && xat.avis !== avis) showToast(xat.avis);
+    });
+  };
+  const comentaEnPublic = () => {
+    const ruta = rutaXatPublic();
     if (ruta) navigate(ruta);
     else showToast(AVIS_SENSE_XAT);
+  };
+  const handleComment = onComment || ((via) => {
+    if (via === 'privat') comentaEnPrivat();
+    else if (via === 'public') comentaEnPublic();
   });
   const handleShare = onShare || (() => compartix(title, urlPerCompartir(mainHref, router), showToast));
 
@@ -246,10 +319,12 @@ export function useAccions({
   const comentarVisible = !privat && (showComment ?? (perDefecte || Boolean(onComment)));
   const compartirVisible = showShare ?? (perDefecte || Boolean(onShare));
   const connectarVisible = showConnect ?? (perDefecte || Boolean(onConnect));
-  /* On porta Comentar, per al nom del botó de la barra blava: 'comu' (xat
-     comú), 'directe' (persona o IA) o null (cap xat, o un handler propi
-     sense objecte, que no sabem on va). */
-  const comentarXat = objecte ? modeXat(objecte) : (onComment || !rutaXat() ? null : 'comu');
+  /* Ordre del Mestre (261007) · Què oferix el menú de Comentar (BotoComentar,
+     a la barra i a la targeta): 'comu' (les dues vies), 'privat' (la pública,
+     desactivada: ací no hi ha xat públic) o null (cap menú: un handler
+     propi, que mana, o un objecte privat, sense Comentar). Derogats els noms
+     de T63.2 ('directe'): ara les vies les diu el menú. */
+  const comentarXat = (onComment || privat) ? null : (rutaXatPublic() ? 'comu' : 'privat');
 
   return {
     handleConnect,

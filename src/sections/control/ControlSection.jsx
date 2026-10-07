@@ -51,6 +51,12 @@
  * la del projecte (AUTORIA_SOCDEPOBLE.authorHref). El xat corporatiu passa a
  * Comentar del peu (el missatge directe a l'autor, skill sdp-universal-page);
  * sense resoldre, Comentar avisa i l'Alerta del Panell es conserva.
+ * Ordre del Mestre (261007) · «COMENTARIS = XAT» (correcció C2) · Derogat el
+ * Comentar propi del Panell: les targetes no passen cap onComment i porten
+ * el menú de dues vies de totes (BotoComentar, useAccions). «En privat» és
+ * este mateix xat amb Sóc de Poble; «En públic» es queda desactivada mentre
+ * /page/<clau> i /plugin/<id> no tinguen xat públic. L'Alerta llig la
+ * resolució ÚNICA de l'app (useXatSocDePobleResolt), no una de pròpia.
  * T8 (ordre del Mestre, 261004, «imatges fantasma») · La imatge de les
  * targetes de dalt és la capçalera de la seua pàgina (contingutDe): cap
  * il·lustració escrita a mà.
@@ -92,15 +98,15 @@ import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from
 import { useLocation, useNavigate, useSearchParams } from '../../app/contexts/RouterContext';
 import { useEixidaSegura } from '../../components/universal/EixidaSegura.jsx';
 import { UniversalPage } from '../../components/universal/UniversalPage';
-import { useToast } from '../../components/universal/NotificationContext.jsx';
 import { Alerta, UniversalButton, UniversalCard } from '../../components/universal/../PedraSeca';
+import { useXatSocDePobleResolt } from '../../components/PedraSeca/hooks/xatSocDePoble.js';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { llegixUtilitatsActives, subscriuUtilitatsActives } from '../profile/utilitatsActives.js';
 import { FitxaSnippet } from './FitxaSnippet.jsx';
 import { CLAU_FITXA, FITXA_SNIPPET, rutaDeLaFitxa } from './destiSnippet.js';
 import { posicioDeLaVista, recolocaLaVista } from './vistaDeLaFitxa.js';
 import { AUTORIA_SOCDEPOBLE, DESTINS_CONTROL, TEXTOS_PORTES, contingutDe, portesDe } from './destinsControl.js';
-import { AVISOS_XAT_CORPORATIU, avisDelXatCorporatiu, useXatCorporatiu } from './xatCorporatiu.js';
+import { AVISOS_XAT_CORPORATIU } from './xatCorporatiu.js';
 import { ESPAIS_PLUGINS, PLUGINS, pluginsDeLEspai, rutaDelPlugin } from '../plugins/registrePlugins.js';
 
 /* P5 · Una targeta de doble acció: la UniversalCard de sempre amb el
@@ -110,10 +116,12 @@ import { ESPAIS_PLUGINS, PLUGINS, pluginsDeLEspai, rutaDelPlugin } from '../plug
    perquè té portes) i sense etiquetes. Connectar (showConnect) espera la
    decisió del Mestre (revisió R3).
    T6 (261004) · La boina, la d'AUTORIA_SOCDEPOBLE amb la seua ruta (el
-   projecte). `onComentar`: el xat corporatiu, el mateix per a tot el Panell.
+   projecte).
+   Ordre del Mestre (261007) · Cap onComment: Comentar és el menú de dues
+   vies de totes les targetes («En privat», el xat amb Sóc de Poble).
    T8 (261004) · La imatge i el seu text alternatiu, els de la capçalera de
    la pàgina (contingutDe): la targeta reflectix el hero. */
-function TargetaDeDesti({ desti, t, onComentar }) {
+function TargetaDeDesti({ desti, t }) {
   const contingut = contingutDe(desti);
   if (!contingut) return null;
   const Icona = desti.icona;
@@ -134,7 +142,6 @@ function TargetaDeDesti({ desti, t, onComentar }) {
       date={contingut.date}
       dateTime={contingut.dateTime}
       mainHref={desti.saberMes}
-      onComment={onComentar}
       hasFooter={true}
       showConnect={false}
       portes={portesDe(desti, t)}
@@ -152,9 +159,9 @@ function TargetaDeDesti({ desti, t, onComentar }) {
    `ruta` · la pàgina de la utilitat; és un Link del router: porta la base de
    l'amfitrió a l'href i navega dins del router en memòria de WordPress.
    `abansDObrir` · el Snippet hi recorda on era el Panell (vistaDeLaFitxa.js).
-   T6 (261004) · La boina porta al projecte i `onComentar` al xat
-   corporatiu, com dalt. */
-function TargetaDUtilitat({ titol, subtitol, entradilla, imatge, imatgeAlt = '', ruta, onComentar, abansDObrir }) {
+   T6 (261004) · La boina porta al projecte, com dalt.
+   Ordre del Mestre (261007) · Comentar, el menú de dues vies, com dalt. */
+function TargetaDUtilitat({ titol, subtitol, entradilla, imatge, imatgeAlt = '', ruta, abansDObrir }) {
   return (
     <UniversalCard
       title={titol}
@@ -165,7 +172,6 @@ function TargetaDUtilitat({ titol, subtitol, entradilla, imatge, imatgeAlt = '',
       {...AUTORIA_SOCDEPOBLE}
       mainHref={ruta}
       onMainClick={abansDObrir}
-      onComment={onComentar}
       hasFooter={true}
       showConnect={false}
     />
@@ -177,7 +183,7 @@ function TargetaDUtilitat({ titol, subtitol, entradilla, imatge, imatgeAlt = '',
    de sempre, amb les targetes canòniques de les Utilitats. Sense cap targeta
    visible (la persona les ha llevades totes a DetallEspai), no es pinta: cap
    capçalera buida. */
-function EspaiDelPanell({ espai, visibles, onComentar }) {
+function EspaiDelPanell({ espai, visibles }) {
   const plugins = pluginsDeLEspai(espai.id).filter(visibles);
   if (plugins.length === 0) return null;
   return (
@@ -194,7 +200,6 @@ function EspaiDelPanell({ espai, visibles, onComentar }) {
             imatge={plugin.imatge}
             imatgeAlt={plugin.imatgeAlt}
             ruta={rutaDelPlugin(plugin.id)}
-            onComentar={onComentar}
           />
         ))}
       </div>
@@ -263,7 +268,6 @@ function PanellControl({ vistaRef, abansDeLaFitxa }) {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const { t } = useUIActions();
-  const { showToast } = useToast();
   /* T47 (correcció de la revisió, 260928) · «Eixir del poble» és la mateixa
      eixida que «Tancar sessió»: la de SessionContext, que primer envia el
      pendent i després oblida els esborranys d'este dispositiu. C01 · Si
@@ -292,12 +296,13 @@ function PanellControl({ vistaRef, abansDeLaFitxa }) {
   const idDestins = useId();
   /* W4-09 · El xat corporatiu: en llavor, el xat de la llavor; en remot,
      l'entitat resolta pel port. Sense entitat o amb error, avís honest.
-     T6 (261004) · És on porta Comentar de totes les targetes del Panell (la
-     boina, al projecte). Mentre no hi ha xat, el clic ho diu i no navega. */
-  const xatCorporatiu = useXatCorporatiu();
-  const senseXatCorporatiu = xatCorporatiu.estat === 'absent' || xatCorporatiu.estat === 'error';
-  const avisDelXat = avisDelXatCorporatiu(xatCorporatiu);
-  const comentaAlXat = () => (avisDelXat ? showToast(t(...avisDelXat)) : navigate(xatCorporatiu.href));
+     Ordre del Mestre (261007, correcció C2) · Ja no és el Comentar propi del
+     Panell: és la via «En privat» del menú de totes les targetes, i la
+     resolució és la ÚNICA de l'app (ProveidorXatSocDePoble). L'Alerta la
+     llig amb useXatSocDePobleResolt, que la demana en obrir el Panell (sense
+     esperar cap clic) i no en fa cap de pròpia. */
+  const xatSocDePoble = useXatSocDePobleResolt();
+  const senseXatSocDePoble = xatSocDePoble.estat === 'absent' || xatSocDePoble.estat === 'error';
 
   return (
     <UniversalPage
@@ -320,10 +325,10 @@ function PanellControl({ vistaRef, abansDeLaFitxa }) {
               les sis de 2245 i, des del 261004, Treball i Habitatge. */}
           <div className="sdp-card-grid">
             {DESTINS_CONTROL.map((desti) => (
-              <TargetaDeDesti key={desti.id} desti={desti} t={t} onComentar={comentaAlXat} />
+              <TargetaDeDesti key={desti.id} desti={desti} t={t} />
             ))}
           </div>
-          {senseXatCorporatiu ? (
+          {senseXatSocDePoble ? (
             <Alerta to="info">{t(...AVISOS_XAT_CORPORATIU.noDisponible)}</Alerta>
           ) : null}
         </section>
@@ -331,7 +336,7 @@ function PanellControl({ vistaRef, abansDeLaFitxa }) {
         {/* Onada 2 de la Gestoria (261004) · «L'empresa» i «La llar», en
             l'ordre del registre (ESPAIS_PLUGINS): dos espais separats. */}
         {ESPAIS_PLUGINS.map((espai) => (
-          <EspaiDelPanell key={espai.id} espai={espai} visibles={visible(amagades)} onComentar={comentaAlXat} />
+          <EspaiDelPanell key={espai.id} espai={espai} visibles={visible(amagades)} />
         ))}
 
         <section>
@@ -352,7 +357,6 @@ function PanellControl({ vistaRef, abansDeLaFitxa }) {
                 imatge={plugin.imatge}
                 imatgeAlt={plugin.imatgeAlt}
                 ruta={rutaDelPlugin(plugin.id)}
-                onComentar={comentaAlXat}
               />
             ))}
             {amagades.has(ID_SNIPPET) ? null : (
@@ -361,7 +365,6 @@ function PanellControl({ vistaRef, abansDeLaFitxa }) {
                 subtitol={SNIPPET.subtitol}
                 imatge={SNIPPET.imatge}
                 ruta={rutaDeLaFitxa(pathname)}
-                onComentar={comentaAlXat}
                 abansDObrir={abansDeLaFitxa}
               />
             )}
@@ -388,7 +391,6 @@ function PanellControl({ vistaRef, abansDeLaFitxa }) {
                 imatge={plugin.imatge}
                 imatgeAlt={plugin.imatgeAlt}
                 ruta={rutaDelPlugin(plugin.id)}
-                onComentar={comentaAlXat}
               />
             ))}
           </div>

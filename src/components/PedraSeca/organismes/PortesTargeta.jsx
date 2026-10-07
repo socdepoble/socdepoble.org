@@ -43,8 +43,7 @@ import { Link, useNavigate } from '../../../app/contexts/RouterContext';
 import { resolRuta } from '../../../app/contexts/politicaRouter.js';
 import { esRutaInterna } from '../../../config/objecteConnectable.js';
 import { useToast } from '../../universal/NotificationContext.jsx';
-
-export const MAX_PORTES = 2;
+import { MAX_PORTES } from './limitsPortes.js';
 
 const EN_OBRES = '(en obres)';
 const VARIETATS = new Set(['primari', 'secundari']);
