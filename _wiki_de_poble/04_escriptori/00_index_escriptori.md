@@ -32,10 +32,11 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu — i
 - [[01_produccio/article-ayudawp.md]]
 
 ## Activitat en curs
-- [[261007_1645_pla_implementacio_claude]]
-- [[261007_1628_prompt_claude]]
-- Canal viu de Claude per a la Marató 2230 (torn torn_8ec393af): [[02_investigacio_ia/261004_2240_marato_claude/RELLEU_00_arrencada.txt]], [[02_investigacio_ia/261004_2240_marato_claude/RELLEU_01_revisor.txt]], [[02_investigacio_ia/261004_2240_marato_claude/RELLEU_02_fronts_2045.txt]], [[02_investigacio_ia/261004_2240_marato_claude/RELLEU_03_execucio_f1_f5.txt]], [[02_investigacio_ia/261004_2240_marato_claude/RELLEU_04_f1_f5_llestos.txt]], [[02_investigacio_ia/261004_2240_marato_claude/RELLEU_05_bloquejants_f2_f4.txt]], [[02_investigacio_ia/261004_2240_marato_claude/RELLEU_06_avanc_revisio.txt]], [[02_investigacio_ia/261004_2240_marato_claude/RELLEU_07_revisio_definitiva.txt]], [[02_investigacio_ia/261004_2240_marato_claude/RELLEU_08_f2_f4_bytes_i_acks.txt]], [[02_investigacio_ia/261004_2240_marato_claude/RELLEU_09_acks.txt]], [[02_investigacio_ia/261004_2240_marato_claude/RELLEU_10_acks_ronda2.txt]], [[02_investigacio_ia/261004_2240_marato_claude/RELLEU_11_acks_ronda3_i_congelacio.txt]], [[02_investigacio_ia/261004_2240_marato_claude/RELLEU_12_congelacio_i_notes.txt]], [[02_investigacio_ia/261004_2240_marato_claude/RELLEU_13_tancament.txt]] i [[02_investigacio_ia/261004_2240_marato_claude/DISSENYS_INDEPENDENTS.txt]]
 
+
+
+- [[261008_1201_prompt_claude]]
+- [[261008_1201_pla_implementacio_claude]]
 
 Tancament autoritzat: rutes Gestoria/Wiki, avatars i paquet 1.0.3. Els altres documents es conserven com a relleu o fronts ajornats per a la pròxima sessió.
 
@@ -713,6 +714,12 @@ Enllaços a peces ja existents, verificats al disc; no s’han mogut ni editat e
 
 ## Arxivat amb la Porta Olivera
 
+- [[../90_arxiu_historic/261007_1715_auditoria_claude]]
+- [[../90_arxiu_historic/261007_2205_pla_implementacio_claude]]
+- [[../90_arxiu_historic/261007_2205_prompt_claude]]
+- [[../90_arxiu_historic/261007_2215_auditoria_claude]]
+- [[../90_arxiu_historic/261007_1645_pla_implementacio_claude]]
+- [[../90_arxiu_historic/261007_1628_prompt_claude]]
 - [[../90_arxiu_historic/261007_0504_prompt_claude_estat]]
 - [[../90_arxiu_historic/261007_0230_prompt_copyright]]
 - [[../90_arxiu_historic/261007_0146_prompt_claude_represa]]
