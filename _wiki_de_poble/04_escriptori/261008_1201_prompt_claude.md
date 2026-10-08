@@ -63,8 +63,9 @@ Company Claude: el Mestre ha deixat instruccions clares. Ens trobem a la porta d
 <!-- SDP:SECTION prompt.local.s4 -->
 ## Tasques
 
-1. **Afegir la pujada del logotip (avatar):** 
-   Volem una modal de retall lliure, calcada a la que té Claude per als seus usuaris: la foto dins del cercle de l'avatar, que es puga arrossegar per enquadrar-la (sense vores obligatòries estranyes), amb una barra lliscant (zoom in/out amb `-` i `+`) i només tres botons clars: Restablir, Cancel·lar, Guardar. Elimina complexitat o botons que trencaven el disseny antic. (Les captures de referència de Claude són als artefactes).
+1. **Gestió d'imatges (Capçalera i Logotip):** 
+   Volem separar clarament els botons de pujada perquè l'usuari no s'embolique: posa un botó dedicat a "Capçalera" i un altre a "Avatar" o "Logotip". Cadascun ha d'obrir de forma independent una modal de retall lliure, calcada a la que té Claude per als seus usuaris: la foto es pot arrossegar per enquadrar-la (sense vores obligatòries estranyes), amb una barra lliscant per a zoom in/out (amb `-` i `+`) i només tres botons clars: Restablir, Cancel·lar, Guardar. Elimina complexitat o botons que trencaven el disseny antic. (Les captures de referència de Claude són als artefactes).
+   A més a més, posa un filtre de pes: si algú puja una foto immensa i pesada, ha d'avisar i parar-ho abans de trencar l'aplicació.
 
 2. **Lògica de `Notes Personals`:**
    En comptes de mostrar només esborranys, aquest espai de treball privat ha de mostrar totes les targetes/publicacions que l'usuari ha publicat (Mur, Mercat, etc.), mostrant el bloc visual adequat de cada post. Connecta-ho correctament perquè quan el "Sóc de Poble" estiga loguejat, veja en `Notes` tot el que ha penjat Sóc de Poble.

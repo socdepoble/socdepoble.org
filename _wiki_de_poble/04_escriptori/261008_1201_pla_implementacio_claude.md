@@ -41,11 +41,12 @@ Plantilla entregada: _wiki_de_poble/03_actuar/plantilles/pla_implementacio.md; S
 ## Canvis proposats
 
 Els canvis principals del pla es resumeixen en:
-1. Afegir el botó de pujada de logotip (avatar) a l'editor de capçaleres de perfil.
-2. Construir l'experiència de pujada de l'avatar calcant exactament la modal de Claude (senzilla, arrossegar per reposicionar, slider de zoom amb - i +, i botons Restablir/Cancel·lar/Guardar). Sense controls innecessaris.
-3. Corregir la lògica de la secció `Notes Personals` perquè l'usuari hi puga vore totes les publicacions que ha creat al Mur, Mercat, etc. en els corresponents apartats.
-4. Eliminar el camp obligatori "Empresa mare" del formulari de creació d'una nova organització, atès que no té sentit per a Grups i només confon els usuaris.
-5. Executar una auditoria extrema al xat.
+1. Independitzar els botons de pujada: un botó específic per a `Capçalera` i un altre per a `Avatar` o `Logotip`, per evitar confusions (actualment hi ha conflicte en pujar imatges).
+2. Construir l'experiència de pujada per a qualsevol imatge (siga capçalera o avatar) calcant exactament la modal de Claude de forma modular: senzilla, arrossegar per reposicionar, slider de zoom amb - i +, i botons Restablir/Cancel·lar/Guardar.
+3. Incloure un avís o control clar si l'usuari intenta pujar un arxiu molt pesat (ex. més de 10 MB) que faça fallar el servidor o el navegador.
+4. Corregir la lògica de la secció `Notes Personals` perquè l'usuari hi puga vore totes les publicacions que ha creat al Mur, Mercat, etc. en els corresponents apartats.
+5. Eliminar el camp obligatori "Empresa mare" del formulari de creació d'una nova organització.
+6. Executar una auditoria extrema al xat.
 
 ### 1. Context i Troballes (Research)
 - L'editor actual permet pujar la imatge de capçalera (ex. pomes), però falta l'opció "Penjar logotip" per a l'avatar que sí que hi era a la versió antiga.
@@ -58,7 +59,9 @@ Els canvis principals del pla es resumeixen en:
 ### 3. Canvis Proposats (Proposed Changes)
 
 #### [Acció: MODIFY] `src/features/...` (Editor de Perfil)
-- Implementar botó i modal calcant l'experiència de Claude per a pujar i centrar avatars. Cal mantindre-ho simple: arrossegar ('drag'), fer zoom i guardar.
+- Separar clarament l'acció amb dos botons: "Capçalera" i "Avatar" / "Logotip".  Així l'usuari entén ràpidament què està canviant i no hi ha conflictes.
+- Implementar la nova modal calcant l'experiència de Claude per arrossegar ('drag') i fer zoom, i fer-la independent: cada imatge puja i es retalla per separat de forma modular. 
+- Implementar validació prèvia a la pujada: mostrar un avís d'error amigable a l'usuari si l'arxiu pesa massa i la càrrega fallarà.
 
 #### [Acció: MODIFY] `src/features/...` (Notes Personals)
 - Modificar el selector/query de Notes Personals perquè reculla efectivament les publicacions creades per l'usuari als murs, presentant-les amb les seues *cards* corresponents.
