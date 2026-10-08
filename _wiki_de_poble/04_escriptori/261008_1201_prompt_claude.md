@@ -81,6 +81,9 @@ Company Claude: el Mestre ha deixat instruccions clares. Ens trobem a la porta d
 4. **Auditoria Adversarial del Xat:**
    Ara que hem aplicat a producció la migració de `obri_fil_de_pagina`, el xat hauria de rutllar. Has de posar-lo a prova buscant-hi qualsevol fissura de cicle de vida, seguretat i fluïdesa abans d'obrir la porta als betatesters. Detalla tot error que trobes.
 
+5. **Preparació i automatització per a l'Apple Store i Google Play:**
+   El Mestre recorda que hem de preparar l'aplicació per a pujar-la a les botigues d'apps (Apple Store i Play Store). Hi ha molta faena avançada; per favor investiga i revisa els documents i historials referents a la "gestoria de poble" (ja es van pagar 90 euros a Apple a principis d'any i hi ha molta documentació llesta). Utilitza les teues capacitats i el plugin d'automatització web per preparar, llegir el paperot i, si és possible, anar automatitzant la pujada de la fitxa o la gestió de les plataformes sense que el Mestre haja de barallar-se amb les pantalles innecessàriament.
+
 <!-- SDP:SECTION prompt.local.s5 -->
 ## Riscos
 
