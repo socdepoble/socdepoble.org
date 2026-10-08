@@ -47,10 +47,11 @@ Els canvis principals del pla es resumeixen en:
 4. Arreglar el botó "Elegir drets d'autor" al perfil: un colp triats, no permet canviar-los, i en fer clic et redirigeix a una altra pàgina. Aquesta lògica s'ha de solucionar perquè es puga obrir i modificar la llicència pròpia fàcilment.
 5. Permetre l'elecció del "Poble" (ex. La Torre de les Maçanes) en el perfil de l'organització, assegurant que es mostre correctament a la barra de capçalera taronja junt amb l'avatar.
 6. Reorganitzar l'editor de perfil: moure els botons "Vista A4 / PDF", "Crear portada" i "Vista targeta" a un apartat secundari (ex. un submenú o bloc lateral d'"Ajustos" o "Vistes"), ja que no influeixen en l'edició del disseny directe.
-7. Corregir la lògica de la secció `Notes Personals` perquè l'usuari hi puga vore totes les publicacions que ha creat al Mur, Mercat, etc. en els corresponents apartats.
-8. Implementar la lògica de "Membres" per a organitzacions (com ara empreses o grups), perquè usuaris (com Sóc de Poble) o fins i tot altres grups puguen ser afegits i gestionats com a membres d'aquesta organització (ex. El Rentonar).
-9. Eliminar el camp obligatori "Empresa mare" del formulari de creació d'una nova organització.
-10. Executar una auditoria extrema al xat.
+7. Millorar el feedback visual del desat automàtic: l'usuari ha de tindre la certesa que els seus canvis s'han guardat amb èxit al servidor mitjançant alguna indicació visual no intrusiva.
+8. Corregir la lògica de la secció `Notes Personals` perquè l'usuari hi puga vore totes les publicacions que ha creat al Mur, Mercat, etc. en els corresponents apartats.
+9. Implementar la lògica de "Membres" per a organitzacions (com ara empreses o grups), perquè usuaris (com Sóc de Poble) o fins i tot altres grups puguen ser afegits i gestionats com a membres d'aquesta organització (ex. El Rentonar).
+10. Eliminar el camp obligatori "Empresa mare" del formulari de creació d'una nova organització.
+11. Executar una auditoria extrema al xat.
 
 ### 1. Context i Troballes (Research)
 - L'editor actual permet pujar la imatge de capçalera (ex. pomes), però falta l'opció "Penjar logotip" per a l'avatar que sí que hi era a la versió antiga.
@@ -67,8 +68,9 @@ Els canvis principals del pla es resumeixen en:
 - Implementar la nova modal calcant l'experiència de Claude per arrossegar ('drag') i fer zoom, i fer-la independent: cada imatge puja i es retalla per separat de forma modular. 
 - Implementar validació prèvia a la pujada: mostrar un avís d'error amigable a l'usuari si l'arxiu pesa massa i la càrrega fallarà.
 - Arreglar el botó "Elegir drets d'autor": reparar la lògica per tal que no navegue cap a una altra pàgina i que òbriga el selector o la modal de forma que es puga canviar o actualitzar la llicència lliurement en qualsevol moment, sense que quede bloquejada.
-- Afegir l'opció i connexió per poder assignar el "Poble" a l'organització, assegurant que eixa dada alimente correctament la barra taronja superior.
+- Afegir l'opció i connexió per poder assignar el "Poble" a l'organització, assegurant que eixa dada alimente correctament la barra taronja superior, tal com passa amb l'avatar.
 - Moure els botons relacionats amb visualitzacions externes ("Vista A4 / PDF", "Crear portada", "Vista targeta") fora del disseny de la fitxa central, ubicar-los com a targetes o blocs independents a un menú/subapartat d'opcions secundàries de configuració (com "El Compte").
+- Implementar un sistema de resposta visual pel desat automàtic: atès que els canvis es guarden a l'instant, dissenyar un indicador visual (tipus toast, checkmark o missatge subtil) que confirme a l'usuari que el contingut s'ha desat correctament sense haver de buscar un botó de "Guardar".
 
 #### [Acció: MODIFY] `src/features/...` (Notes Personals)
 - Modificar el selector/query de Notes Personals perquè reculla efectivament les publicacions creades per l'usuari als murs, presentant-les amb les seues *cards* corresponents.
