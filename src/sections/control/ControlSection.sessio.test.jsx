@@ -40,8 +40,13 @@
    amb un segon createContext (SessionContext.jsx:11) que no és el que
    proveïx l'arbre. Per construcció, ací no es pot reproduir. Es comprova
    repetint l'eixida des de Control amb el servidor de desenvolupament fresc
-   (arrencat de nou, sense cap HMR pel mig) o amb el paquet IIFE construït
-   (vite.standalone.config.js:451), que té un sol graf. Si el crash només
+   (arrencat de nou, sense cap HMR pel mig) o amb el paquet construït
+   (vite.standalone.config.js), que té un sol graf. Decisió 5 del Mestre
+   (261007) · El paquet ja no és un sol IIFE: per defecte és trossejat (un
+   carregador clàssic i trossos ESM amb hash a trossos/), i el graf continua
+   sent un perquè cada tros s'importa per una sola URL, servit sense
+   redireccions (provisionalDelPaquet.js, comprovaUrlDelModul, ho delata si
+   no). L'IIFE d'abans és SDP_PAQUET=monolitic. Si el crash només
    apareix amb el servidor ranci o després d'un HMR, la causa és la instància
    doble i no el codi. */
 import { StrictMode, Suspense } from 'react';

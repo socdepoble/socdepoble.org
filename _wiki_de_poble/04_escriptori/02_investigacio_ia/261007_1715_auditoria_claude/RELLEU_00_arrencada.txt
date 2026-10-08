@@ -1,0 +1,24 @@
+RELLEU 00 · Claude · torn torn_162b2a6a · 261007 ~18:00 (canal viu, lliçó 261003)
+
+Encàrrec: prompt 261007_1628 (A-F) + esmenes del pla 261007_1645 (editor duplicat, històric sota l'editor de Notes, Targeta Viva del producte).
+Informe final: _wiki_de_poble/04_escriptori/261007_1715_auditoria_claude.md (el hook no el deixa desar fins que totes les seccions estiguen completes; ací va el progrés).
+
+ACABAT
+- Workflow wf_7602dd60-f58 (esmenes de l'editor): 3 investigadors, 3 revisors de pla i 23 verificadors. Conclusions:
+  1. Hi ha UN sol editor (DocumentEditor → UniversalEditorShell → useEditorShell → UniversalPage → PageFrame). La duplicació és la ranura «Editar logotip», una còpia de la de capçalera, i la zona damunt de l'H1 amb dues fonts: la ranura a l'editor i qui signa en lectura. El Perfil amaga la ranura (T35) mentre la fitxa pública pinta el logotip o l'avatar des del 261004: és l'arrel del «no hi ha botó damunt de l'H1».
+  2. L'històric sota l'editor no existix: itemsPublicatsDe només alimenta la columna de la llista.
+  3. L'«Obri al Mercat» i la «Targeta Viva» del producte són PublicacioDetall (lector del MAS): pinta el logotip quadrat com a portada (masDeLUsuari.js:96), sense carrusel, sense variacions, amb el subtítol repetit, i Compartir envia /notes?… El botó navega a /mercat/samarreta-socdepoble. L'«arrel» quadra amb el router en memòria de WordPress més tapaRuta('/mercat/*'): ho pregunte.
+
+ARBRE CONCURRENT (avís a qui edita en paral·lel)
+Hi ha canvis sense commit que no són meus, en els meus fitxers d'encàrrec:
+- src/data/identitatsSeed.js: ENTITAT_PILOT_SLUG = 'socdepoble'. El conserve: és l'ordre literal. Deixa unes 17 proves roges que fixen 'soc-de-poble' (les arregle jo).
+- src/data/supabase/xat.js: fils sintètics amb id 'socdepoble' i '/iaia'. Els substituiré. Un id que no és UUID fa petar loadMissatges i marcaLlegit en clicar, xat.test.js:168 és roig, el camp de l'avatar és 'avatar' i no 'avatarUrl', i no hi ha cap ruta de resolució.
+- src/components/universal/UniversalEditorShell.jsx: extracció d'ImageUploaderUI (DOM idèntic, 211 proves verdes). La conserve i la complete: guarda de pujada també per al logotip i els comentaris T46 recuperats.
+Si eres l'altra IA: no tornes a editar estos tres fitxers fins que aparega RELLEU_01. Deixa-hi una nota si en tens algun pla.
+
+EN MARXA
+- Workflow wf_ac5d8423-31f (auditoria del prompt 1628: xat, perfil 403, RSS, Bàscula, Panell, Consola, TipTap i 8 dimensions adversarials).
+
+SEGÜENT
+- Implementació per peces: slug i proves, xat per defecte, editor (guarda i botó damunt de l'H1), lector del MAS (portada amb carrusel, variacions i Compartir) i històric de l'actor (ranura de peu a PageFrame).
+- Després, revisió adversarial del diff i suite sencera.

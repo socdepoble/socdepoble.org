@@ -84,6 +84,10 @@ export function mapejaFil(fil, ara = Date.now()) {
        no has escrit el llegixes com a visitant (`participant: false`). */
     comunitatId: fil.comunitatId ?? null,
     subjecte: fil.subjecte ?? null,
+    /* Ordre del Mestre (261007) · La fila d'ajuda que el backend sintetitza
+       ('socdepoble' | 'iaia', xatsPerDefecte.js): no és cap fil i XatSection
+       l'obri per la seua via, mai amb obriFil. Null en una conversa de veres. */
+    perDefecte: fil.perDefecte || null,
     esComunitat: tipus === 'comunitat',
     esCanal: tipus === 'canal',
     esGrup: tipus === 'grup',
@@ -317,6 +321,41 @@ export function contactesFrequents(fils, membres, joId, n = 5) {
   return resultat;
 }
 
+/* Auditoria 261007 (B) · Dos valors d'un Fil són iguals si són el mateix o, per
+   als que l'adaptador torna nous a cada crida (`altres`, `altresNoms`,
+   `subjecte`), si tenen el mateix contingut. */
+function valorsIguals(a, b) {
+  if (Object.is(a, b)) return true;
+  if (!a || !b || typeof a !== 'object' || typeof b !== 'object') return false;
+  return JSON.stringify(a) === JSON.stringify(b);
+}
+
+/**
+ * Auditoria 261007 (B) · Cert si dos Fils JA mapejats (mapejaFil) diuen el
+ * mateix, camp a camp. Es comparen els mapejats i no la fila del backend:
+ * `silenciat` depén de l'hora (`esSilenciat`), i és el sondeig qui fa caducar
+ * un silenci encara que el servidor torne la mateixa fila.
+ */
+export function filIgual(a, b) {
+  if (a === b) return true;
+  if (!a || !b) return false;
+  const claus = Object.keys(a);
+  if (claus.length !== Object.keys(b).length) return false;
+  return claus.every((clau) => Object.hasOwn(b, clau) && valorsIguals(a[clau], b[clau]));
+}
+
+/**
+ * Auditoria 261007 (B) · Cert si dos llistes de Fils són equivalents: la
+ * mateixa llargària, el mateix ordre i cada fil igual (filIgual). El sondeig
+ * de la llista no crida setFils si no ha canviat res: cap derivat (comunitats,
+ * missatges, cerca) no es torna a calcular cada 25 s per a res.
+ */
+export function filsEquivalents(previs, nous) {
+  if (previs === nous) return true;
+  if (!Array.isArray(previs) || !Array.isArray(nous) || previs.length !== nous.length) return false;
+  return nous.every((fil, i) => filIgual(previs[i], fil));
+}
+
 /**
  * Marca local de lectura: `llegitFinsSeq` mai retrocedix i els no llegits
  * baixen abans que el servidor confirme (XAT-C08). Torna el mateix objecte si
@@ -405,44 +444,109 @@ export function retiraConfirmats(mapa, filId, confirmats) {
   return nou;
 }
 
+/**
+ * Decisió 1 del Mestre (261007) · «Bombolles del xat: S'HAN DE CONSERVAR».
+ * Una renovació del JWT avorta els enviaments en vol: les bombolles que encara
+ * eren `pendent` passen a `error`, amb el text, la cita i l'id intactes, perquè
+ * «Torna-ho a provar» les reenvie amb el MATEIX id (el servidor és idempotent
+ * per id: conformitat/kit.js, «enviaMissatge amb un id ja enviat torna el
+ * mateix missatge»). L'error és null: la bombolla diu el «No s'ha enviat» de
+ * sempre (section.xat.missatge.noEnviat), traduït. Les que ja eren en `error`
+ * es queden tal com estaven. Torna el mateix mapa si no n'hi havia cap en vol.
+ */
+export function interromEnviaments(mapa) {
+  let canviat = false;
+  const nou = {};
+  for (const [filId, llista] of Object.entries(mapa || {})) {
+    if (!llista.some((m) => m.estatEnviament === 'pendent')) {
+      nou[filId] = llista;
+      continue;
+    }
+    canviat = true;
+    nou[filId] = llista.map((m) => (m.estatEnviament === 'pendent' ? { ...m, estatEnviament: 'error', error: null } : m));
+  }
+  return canviat ? nou : mapa;
+}
+
 /* ─────────────────── Agrupador de marques (XAT-C08) ─────────────────── */
 
 /**
  * Agrupa les crides a `marcaVist` per conversa: una escriptura com a màxim
  * cada `esperaMs`, sempre amb el `seq` més alt vist, i mai cap arrere (ni per
- * davall del que ja s'ha enviat ni del que està pendent d'enviar).
+ * davall del que ja s'ha confirmat, ni del que és en vol, ni del que està
+ * pendent d'enviar).
  * `temps` s'injecta a les proves; per defecte són els temporitzadors globals.
+ *
+ * Auditoria 261007 (B) · Una marca no es dona per enviada fins que `envia`
+ * resol. Abans es consolidava en eixir: si la xarxa fallava, el sondeig
+ * tornava els no llegits del servidor i l'agrupador rebutjava per sempre la
+ * mateixa marca (la pastilla no s'apagava fins a un missatge nou). Ara la
+ * marca en vol (`enVol`) passa a confirmada (`enviats`, que mai baixa) si
+ * `envia` resol, i s'oblida si rebutja: la lectura següent la torna a enviar.
+ * `cancela` canvia de generació: una resposta tardana de l'àmbit anterior no
+ * escriu res en el nou.
  */
 export function creaAgrupadorMarques(envia, esperaMs = 2000, temps = globalThis) {
   const pendents = new Map();
+  const enVol = new Map();
   const enviats = new Map();
   const temporitzadors = new Map();
+  let generacio = 0;
+
+  const fins = (mapa, filId) => mapa.get(filId) ?? 0;
+  /* El que ja no cal tornar a enviar: confirmat o en vol. */
+  const cobert = (filId) => Math.max(fins(enviats, filId), fins(enVol, filId));
 
   const buida = (filId) => {
     temporitzadors.delete(filId);
     const seq = pendents.get(filId);
     pendents.delete(filId);
-    if (seq == null || seq <= (enviats.get(filId) ?? 0)) return;
-    enviats.set(filId, seq);
-    envia(filId, seq);
+    if (seq == null || seq <= cobert(filId)) return;
+    enVol.set(filId, seq);
+    const meua = generacio;
+    const oblida = () => { if (enVol.get(filId) === seq) enVol.delete(filId); };
+    let promesa;
+    try {
+      promesa = Promise.resolve(envia(filId, seq));
+    } catch (error) {
+      promesa = Promise.reject(error);
+    }
+    promesa.then(() => {
+      if (meua !== generacio) return;
+      enviats.set(filId, Math.max(fins(enviats, filId), seq));
+      oblida();
+    }, () => {
+      if (meua !== generacio) return;
+      oblida();
+    });
   };
 
   return {
     marca(filId, seq) {
       const s = numero(seq);
       if (!filId || s <= 0) return false;
-      if (s <= (enviats.get(filId) ?? 0) || s <= (pendents.get(filId) ?? 0)) return false;
+      if (s <= cobert(filId) || s <= fins(pendents, filId)) return false;
       pendents.set(filId, s);
       if (!temporitzadors.has(filId)) temporitzadors.set(filId, temps.setTimeout(() => buida(filId), esperaMs));
       return true;
     },
-    enviatFins(filId) {
-      return enviats.get(filId) ?? 0;
+    /**
+     * Auditoria 261007 (B) · El `seq` fins al qual la interfície ja ha marcat
+     * la lectura: pendent, en vol o confirmada. El sondeig de la llista
+     * l'aplica als fils del servidor perquè una resposta que ha eixit abans de
+     * la marca no torne a encendre la pastilla. És l'únic accessor: l'antic
+     * `enviatFins` (confirmada o en vol) no el cridava ningú fora de les
+     * proves, que ara llegixen este després de buidar el temporitzador.
+     */
+    marcatFins(filId) {
+      return Math.max(cobert(filId), fins(pendents, filId));
     },
     cancela() {
+      generacio += 1;
       for (const t of temporitzadors.values()) temps.clearTimeout(t);
       temporitzadors.clear();
       pendents.clear();
+      enVol.clear();
       enviats.clear();
     }
   };

@@ -35,12 +35,9 @@ export function rutaDAutorSegura(href) {
   return isSafeUrl(href) ? href : null;
 }
 
-export function isValidDate(dd, mm, yy) {
-  const d = new Date(yy, mm - 1, dd);
-  return d.getFullYear() === Number(yy) && 
-         d.getMonth() === Number(mm) - 1 && 
-         d.getDate() === Number(dd);
-}
+/* Auditoria 261007 (B) · S'ha retirat isValidDate(dd, mm, yy): cap
+   consumidor, ni a les proves. Les dates de la barra taronja les llig el lector
+   únic (barres/pastillaCalendari.js → editorial.js). */
 
 /* L'avatar es resol en llegir-lo, no en importar el mòdul: així hi val la
    base de recursos que l'amfitrió fixe després (config/assetResolver.js).
@@ -67,6 +64,43 @@ export const DEFAULT_AUTHOR = {
     };
   }
 };
+
+/* Relleu 261007 («Límits» §5) · Les guardes de l'avatar i de la marca de la
+   capçalera, una sola còpia. Abans vivien repetides a PageFrame.jsx (que no
+   les exportava), a detail/elementDeSeccio.js (esMarcaDeSocDePoble) i a
+   mercat/imatgesDeProducte.js (camiDeRecurs): ara les tres en lligen
+   d'ací, amb el mateix cos literal (DOM idèntic). Pures: cap React ni xarxa. */
+
+/** El descriptor d'una imatge de capçalera es pot pintar si el src és segur
+ *  (isSafeAsset, el filtre de l'avatar de la boina) abans i després de
+ *  resoldre'l: resolveAsset convertiria un «javascript:» o un «//altre.domini»
+ *  en un camí propi trencat. Un sdp-media:// no hi passa: el resol el port. */
+export const esAvatarSegur = (src) => isSafeAsset(src) && isSafeAsset(resolveAsset(src));
+
+/** El camí d'una URL o d'un camí, sense origen ni consulta (la base és
+ *  inventada: només val per a comparar camins). Si no s'analitza, el text. */
+export const camiDe = (url) => {
+  try {
+    return new URL(url, 'http://sdp.invalid').pathname;
+  } catch {
+    return String(url);
+  }
+};
+
+/**
+ * Correcció dels verificadors (ordre del Mestre, 261004; skill sdp-pedra-seca
+ * §11) · La marca de Sóc de Poble (l'avatar quadrat de la boina i el logotip
+ * rectangular, clar i fosc) no és mai l'avatar d'una persona ni de la IA: és
+ * el que porta l'avatar_url d'un producte o d'un agent de la llavor quan
+ * falta la foto. Es compara el camí resolt amb la base d'ara (SPA, WordPress
+ * amb base-camí o amb URL absoluta), sense origen ni consulta: també un src
+ * ja resolt (DEFAULT_AUTHOR.avatarUrl) o una URL absoluta del mateix fitxer.
+ */
+export function esMarcaDeLEntitat(url) {
+  const cami = camiDe(resolveAsset(url));
+  const { clar, fosc } = DEFAULT_AUTHOR.logo;
+  return [DEFAULT_AUTHOR.avatarUrl, clar, fosc].some((marca) => camiDe(marca) === cami);
+}
 
 /* T22 (Mestre, 260927) · La persona sense sessió és el Foraster, i el seu
    poble és sempre este. Nom i poble van junts: qualsevol barra taronja,

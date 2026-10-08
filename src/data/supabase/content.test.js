@@ -5,7 +5,7 @@ const mode = vi.hoisted(() => ({ actual: undefined }));
 vi.mock('./runtime.js', () => ({ request, getResolvedConfig: () => ({ hasSupabaseConfig: true, tenantId: 'town', runtimeDataMode: mode.actual }),
   APP_SEED_VERSION: 1, buildSeedAppData: vi.fn(), generateUUID: vi.fn(), getCurrentUser: vi.fn(), mapContentRowsToData: vi.fn() }));
 vi.mock('./xat.js', () => ({ enviaMissatge: vi.fn() }));
-import { appendSectionSubmissionNetworkOnly, loadMur, loadMultimedia, loadAppData, loadCoreContent } from './content.js';
+import { appendSectionSubmissionNetworkOnly, loadMur, loadMultimedia, loadCoreContent } from './content.js';
 import { getCurrentUser, buildSeedAppData, mapContentRowsToData } from './runtime.js';
 test('Mur i Multimèdia no consulten Notes ni descarreguen app_content alié', async () => {
   await loadMur('A'); await loadMultimedia('A');
@@ -31,14 +31,81 @@ test('T51 · el Mur demana updated_at de cada publicació i el passa a l’eleme
   request.mockResolvedValue([]);
 });
 
-test('un backend nou buit és un estat remot vàlid sense notes o comptes seed', async () => {
+/* Auditoria 261007 (B) · Abans ho comprovava loadAppData, codi mort retirat
+   (ningú no la cridava): ara, amb els carregadors que usa el Mur. */
+test('un backend nou buit és un estat remot vàlid sense contingut seed', async () => {
   request.mockClear();
   request.mockResolvedValue([]);
+  buildSeedAppData.mockClear();
   getCurrentUser.mockReturnValue(null);
-  mapContentRowsToData.mockReturnValue({ notes: [], agents: [], towns: [] });
-  const result = await loadAppData('A');
-  expect(result).toMatchObject({ notes: [], agents: [], towns: [] });
-  expect(result).not.toHaveProperty('seedVersion');
+  const mur = await loadMur('A');
+  expect(mur).toEqual({ feedPosts: [], events: [], marketItems: [] });
+  expect(await loadMultimedia('A')).toEqual({ mediaItems: [] });
+  expect(mur).not.toHaveProperty('seedVersion');
+  expect(buildSeedAppData).not.toHaveBeenCalled();
+});
+
+/* ───────── Auditoria 261007 (B) · el payload d'un veí no és autoritat ───────── */
+const filaDelMur = (fila) => request.mockImplementation(async (url) => (url.includes('section_submissions') && url.includes('section_id=eq.mur')
+  ? [fila] : []));
+test('una publicació amb un payload hostil no signa, no és «Sistema» ni enllaça fora', async () => {
+  request.mockReset();
+  filaDelMur({
+    id: 'p-hostil', title: 'Avís important', created_at: '2026-10-07T10:00:00+00:00', updated_at: '2026-10-07T10:00:00+00:00',
+    owner_user_id: 'U-REAL', author_org_id: null,
+    payload: {
+      title: 'Avís important', author_name: 'Sóc de Poble', isSystem: true, isAvis: true, type: 'sistema',
+      is_pinned: true, pinned_position: 0, author_org_id: 'socdepoble', authorOrgId: 'socdepoble', author_entity_id: 'socdepoble',
+      author_id: 'ALTRE', author_user_id: 'ALTRE', owner_user_id: 'ALTRE', ownerUserId: 'ALTRE',
+      mainHref: 'https://fals-poble.example/entra', slug: 'p-legitima',
+      labels: [{ text: 'Oficial', href: 'https://fals-poble.example', className: 'sdp-badge-system sp-card-link-overlay' }, 'Pla']
+    }
+  });
+  const [element] = (await loadMur('A')).feedPosts;
+  for (const clau of ['isSystem', 'isAvis', 'type', 'is_pinned', 'pinned_position', 'author_entity_id', 'author_id', 'author_user_id', 'owner_user_id', 'mainHref', 'slug']) {
+    expect(element, clau).not.toHaveProperty(clau);
+  }
+  expect(element).toMatchObject({ id: 'p-hostil', ownerUserId: 'U-REAL', author_org_id: null, authorOrgId: null, title: 'Avís important' });
+  expect(element.labels).toEqual([{ text: 'Oficial' }, 'Pla']);
+  request.mockReset();
+  request.mockResolvedValue([]);
+});
+
+test('la columna author_org_id mana i fa ombra a la clau del payload', async () => {
+  request.mockReset();
+  filaDelMur({ id: 'p-org', title: 'Pa', owner_user_id: 'U', author_org_id: 'ORG-REAL', payload: { title: 'Pa', author_org_id: 'socdepoble' } });
+  const [element] = (await loadMur('A')).feedPosts;
+  expect(element).toMatchObject({ author_org_id: 'ORG-REAL', authorOrgId: 'ORG-REAL', ownerUserId: 'U' });
+  request.mockReset();
+  request.mockResolvedValue([]);
+});
+
+test('una publicació legítima (la que escriu publishNote) arriba igual que abans', async () => {
+  request.mockReset();
+  const payload = {
+    sectionId: 'mur', type: 'feed', title: 'Fira', subtitle: 'De tardor', description: 'Entradeta', content: '<p>Cos</p>',
+    copyright: 'CC BY-SA 4.0', image: 'sdp-media://mitjans/T/U/notes/x.jpg', author_name: 'Pep', author_avatar: '/a.png',
+    author_location: 'Benilloba', publish_date: '2026-10-01', icon: '🍂', logo_image: '/logo.png',
+    labels: [{ text: 'Festes', className: 'sdp-badge-category' }, { text: 'tardor', className: 'sdp-badge-tag' }],
+    origen: { tipus: 'connexio', itemId: 'sella', titol: 'Sella', sectionId: 'pobles', ruta: '/pobles/sella', objecte: 'poble' }
+  };
+  filaDelMur({ id: 'p-legit', title: 'Fira', created_at: '2026-10-01T10:00:00+00:00', updated_at: '2026-10-02T10:00:00+00:00',
+    owner_user_id: 'U', author_org_id: null, payload });
+  const [element] = (await loadMur('A')).feedPosts;
+  expect(element).toEqual({ ...payload, id: 'p-legit', created_at: '2026-10-01T10:00:00+00:00', updated_at: '2026-10-02T10:00:00+00:00',
+    ownerUserId: 'U', author_org_id: null, authorOrgId: null });
+  request.mockReset();
+  request.mockResolvedValue([]);
+});
+
+test('el contingut d’app_content conserva la signatura del projecte dins del payload', async () => {
+  request.mockReset();
+  const samarreta = { id: 'samarreta', title: 'La samarreta', author_org_id: 'socdepoble', isSystem: false, mainHref: '/mercat/samarreta', slug: 'samarreta' };
+  request.mockImplementation(async (url) => (url.includes('app_content') ? [{ key: 'marketItems', payload: [samarreta] }] : []));
+  const { marketItems } = await loadMur('A');
+  expect(marketItems).toEqual([samarreta]);
+  request.mockReset();
+  request.mockResolvedValue([]);
 });
 
 test('el core remot conserva documents estàtics, però identitats i pobles només venen del servidor', async () => {

@@ -167,6 +167,23 @@ describe('261007 · /page/drets-autor és «Drets d’autor»', () => {
     for (const [codi] of llista.matchAll(/CC(?: BY(?:-[A-Z]{2})*| ?0) \d\.\d/g)) expect(codis.has(codi), codi).toBe(true);
     expect(llista).toContain(`«${OPCIO_ACTUAL.nom}»`);
   });
+
+  /* Línia I1 (pla 261008_1201) · El paràgraf de l'editor diu el que fa hui
+     la píndola de davall del títol (BotoDretsAutor: la llicència triada o
+     «Elegir drets d'autor») i el copyright de davall del títol (PageFrame:
+     dins de l'editor obri el selector; fora, enllaç a esta pàgina). */
+  test('el paràgraf de l’editor: la píndola mostra la llicència triada, i el copyright de davall del títol també obri el selector dins de l’editor', () => {
+    const llista = html.slice(html.indexOf("<h3>Les llicències que pots triar a l'editor</h3>"), html.indexOf('<h4>Les Creative Commons</h4>'));
+    const paragraf = textDe(llista.slice(llista.indexOf('<p>')));
+    expect(paragraf).toContain("la píndola de davall del títol mostra la llicència que has triat, o «Elegir drets d'autor» si encara no n'has triat cap");
+    expect(paragraf).toContain('la pots tornar a canviar quan vulgues');
+    expect(paragraf).toContain("Dins de l'editor, la línia del copyright de davall del títol també obri el selector");
+    expect(paragraf).toContain("fora de l'editor i a les targetes, eixa línia és un enllaç a esta pàgina");
+    expect(paragraf).toContain('Res no canvia fins que prems «Desar autoria»');
+    // Ja no parla d'un botó que sempre diu «Elegir drets d'autor», i cap enllaç nou: l'únic continua sent el de /legal.
+    expect(paragraf).not.toContain("Al botó «Elegir drets d'autor» de l'editor");
+    expect(llista).not.toMatch(/<a\b/);
+  });
 });
 
 test('/disseny munta DesignSection: no es resol ni per la ruta ni per /page/disseny', () => {

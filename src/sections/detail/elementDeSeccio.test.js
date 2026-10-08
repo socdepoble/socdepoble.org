@@ -14,7 +14,10 @@ vi.mock('../../app/contexts/CoreContentContext', () => ({ useCoreContent: () => 
 vi.mock('../multimedia/MultimediaContext', () => ({ useMultimedia: () => mocks.media }));
 vi.mock('../../app/contexts/UIContext', () => ({ useUIActions: () => ({ t: mocks.t }) }));
 import { paginaDElement, trobaElement, useElementDeSeccio, useOriginalDeConnexio } from './elementDeSeccio.js';
-import { buildMercatDetailSectionMeta, buildMurDetailSectionMeta } from './detailSectionMeta.jsx';
+import {
+  buildEventsDetailSectionMeta, buildMercatDetailSectionMeta, buildMultimediaDetailSectionMeta, buildMurDetailSectionMeta,
+  buildPoblesDetailSectionMeta
+} from './detailSectionMeta.jsx';
 import { COPYRIGHT_SDP, dataHoraDeBarra } from '../../components/universal/editorial.js';
 import { DEFAULT_AUTHOR } from '../../components/universal/UniversalUtils.js';
 import { PAGE_COPY } from '../text/pageContent.js';
@@ -41,6 +44,23 @@ test('trobaElement: per id o per slug; sense clau, o amb una clau que no hi és,
   expect(trobaElement(seccio, 'undefined')).toBeNull();
 });
 
+/* Auditoria 261007 (B) · El slug d'una publicació (ve del payload) no fa
+   ombra a l'id d'una altra: l'id mana a tota la llista, encara que la que
+   porta el slug vaja davant (les files arriben de la més nova a la més vella). */
+test('trobaElement: l’id mana a tota la llista; el slug només si cap id no hi casa', () => {
+  const intrusa = { id: 'b', slug: 'a', title: 'Intrusa' };
+  const original = { id: 'a', title: 'Original' };
+  const seccio = buildMurDetailSectionMeta({ feedPosts: [intrusa, original], t: mocks.t });
+  expect(trobaElement(seccio, 'a')).toBe(original);
+  expect(trobaElement(seccio, 'b')).toBe(intrusa);
+  // Sense cap id que hi case, el slug continua valent.
+  const nomesSlug = buildMurDetailSectionMeta({ feedPosts: [intrusa], t: mocks.t });
+  expect(trobaElement(nomesSlug, 'a')).toBe(intrusa);
+  // El mateix camí per al resolvedor dels proveïdors (detall, Connectar i MAS).
+  mocks.mur = { status: 'ready', feedPosts: [intrusa, original], events: [], marketItems: [] };
+  expect(renderHook(() => useElementDeSeccio('mur', 'a')).result.current.item).toBe(original);
+});
+
 test('paginaDElement: els drets i la data de la publicació, com el detall de la ruta', () => {
   const seccio = buildMurDetailSectionMeta({ feedPosts: [], t: mocks.t });
   const item = { id: 'cc', title: 'Recepta de coca', copyright: 'CC BY 4.0', image_url: '/assets/coca.png',
@@ -60,6 +80,81 @@ test('paginaDElement: els drets i la data de la publicació, com el detall de la
   expect(vella.copyright).toBe(COPYRIGHT_SDP);
   expect(vella).toMatchObject(dataHoraDeBarra({ creat: '2026-08-15T10:00:00.000Z' }));
   expect(vella.authorHref).toBeNull();
+});
+
+/* Decisió 3 del Mestre (261007, confirmada) · «Imatges externes al Mur:
+   PROHIBIDES (PRIVACITAT).» La portada i l'avatar de la barra taronja del
+   detall passen pel mode estricte: una de fora torna null (cap petició; null,
+   no undefined, perquè PageFrame no hi pose el logotip de Sóc de Poble), i
+   una de pròpia torna intacta. Ho hereta la targeta de l'original (Connectar
+   i el lector del MAS). */
+test('Decisió 3 · paginaDElement: la portada i l’avatar de fora no es demanen; els propis, intactes', () => {
+  const seccio = buildMurDetailSectionMeta({ feedPosts: [], t: mocks.t });
+  const deFora = paginaDElement(seccio, { id: 'f', title: 'Festa', author_name: 'Pepa',
+    image: 'https://rastreig.example/p.gif', author_avatar: 'https://lh3.googleusercontent.com/a/pepa.png' });
+  expect(deFora.heroImage).toBeNull();
+  expect(deFora.authorAvatar).toBeNull();
+  expect(paginaDElement(seccio, { id: 'g', title: 'Festa', imageSrc: '/\\rastreig.example/p.gif' }).heroImage).toBeNull();
+  expect(paginaDElement(seccio, { id: 'h', title: 'Festa', image_url: 'https://avatars.githubusercontent.com/u/1' }).heroImage).toBeNull();
+
+  const propia = paginaDElement(seccio, { id: 'p', title: 'Festa', image: '/assets/mur/festa.webp', author_avatar: '/assets/gent/pepa.webp' });
+  expect(propia).toMatchObject({ heroImage: '/assets/mur/festa.webp', authorAvatar: '/assets/gent/pepa.webp' });
+  const ref = 'sdp-media://mitjans/poble/u/general/f.webp';
+  expect(paginaDElement(seccio, { id: 's', title: 'Festa', image: ref }).heroImage).toBe(ref);
+  // Sense avatar, com sempre: undefined (PageFrame hi posa el de sèrie).
+  expect(paginaDElement(seccio, { id: 'v', title: 'Festa' }).authorAvatar).toBeUndefined();
+  // Un producte del Mercat: la portada és la primera foto, i una de fora tampoc.
+  const mercat = buildMercatDetailSectionMeta({ marketItems: [], t: mocks.t });
+  expect(paginaDElement(mercat, { id: 'm', title: 'Mel', images: ['https://rastreig.example/mel.jpg'] }).heroImage).toBeNull();
+  expect(paginaDElement(mercat, { id: 'm', title: 'Mel', images: ['/assets/mercat/mel.webp'] }).heroImage).toBe('/assets/mercat/mel.webp');
+});
+
+/* Revisió adversarial del 261007 · És una regla del Mur: les tres seccions
+   que el Mur llig (publicacions, Mercat i agenda, reconegudes per la seua
+   llista) passen pel mode estricte; Pobles i Multimèdia, com abans (Llei del
+   Píxel), fins que el Mestre diga si també hi van. */
+test('Decisió 3 · només les seccions del Mur; Pobles i Multimèdia es pinten com abans', () => {
+  const GOOGLE = 'https://lh3.googleusercontent.com/a/pepa.png';
+  const RASTREIG = 'https://rastreig.example/p.gif';
+  const delMur = [
+    [buildMurDetailSectionMeta({ feedPosts: [], t: mocks.t }), { image: RASTREIG }],
+    [buildMercatDetailSectionMeta({ marketItems: [], t: mocks.t }), { images: [RASTREIG] }],
+    [buildEventsDetailSectionMeta({ events: [], t: mocks.t }), { image_url: RASTREIG }]
+  ];
+  for (const [seccio, imatge] of delMur) {
+    const pagina = paginaDElement(seccio, { id: 'x', title: 'X', author_name: 'Pepa', author_avatar: GOOGLE, ...imatge });
+    expect([pagina.heroImage, pagina.authorAvatar], seccio.listPath).toEqual([null, null]);
+  }
+  const poble = paginaDElement(buildPoblesDetailSectionMeta({ towns: [], t: mocks.t }),
+    { id: 'sella', title: 'Sella', image_url: RASTREIG, author_avatar: GOOGLE });
+  expect([poble.heroImage, poble.authorAvatar]).toEqual([RASTREIG, GOOGLE]);
+  const media = paginaDElement(buildMultimediaDetailSectionMeta({ mediaItems: [], t: mocks.t }), { id: 'v1', title: 'Vídeo', src: RASTREIG });
+  expect(media.heroImage).toBe(RASTREIG);
+});
+
+/* Revisió adversarial del 261007 · A l'app nativa (capacitor://localhost) un
+   camí propi es resolia contra un origen 'capacitor:' i el mode estricte el
+   rebutjava: la portada PRÒPIA del detall desapareixia (abans PageFrame la
+   pintava sense filtre). Ara es pinta; una de fora, tampoc ací. */
+test('Decisió 3 · a l’app nativa (capacitor://localhost), la portada pròpia del detall es conserva', () => {
+  vi.stubGlobal('location', { origin: 'capacitor://localhost', protocol: 'capacitor:', host: 'localhost', hostname: 'localhost',
+    href: 'capacitor://localhost/mur/p', pathname: '/mur/p', search: '', hash: '' });
+  try {
+    const seccio = buildMurDetailSectionMeta({ feedPosts: [], t: mocks.t });
+    expect(paginaDElement(seccio, { id: 'p', title: 'Festa', image: '/assets/mur/festa.webp', author_avatar: '/assets/gent/pepa.webp' }))
+      .toMatchObject({ heroImage: '/assets/mur/festa.webp', authorAvatar: '/assets/gent/pepa.webp' });
+    const deFora = paginaDElement(seccio, { id: 'f', title: 'Festa', image: '//rastreig.example/p.gif', author_avatar: 'https://lh3.googleusercontent.com/a/pepa.png' });
+    expect([deFora.heroImage, deFora.authorAvatar]).toEqual([null, null]);
+  } finally {
+    vi.unstubAllGlobals();
+  }
+});
+
+test('Decisió 3 · la targeta de l’original (Connectar, MAS) no porta la portada de fora', () => {
+  const item = { id: 'f', title: 'Festa', image: 'https://rastreig.example/p.gif', author_name: 'Pepa' };
+  mocks.mur = { status: 'ready', feedPosts: [item], events: [], marketItems: [] };
+  const { result } = renderHook(() => useOriginalDeConnexio({ sectionId: 'mur', itemId: 'f' }));
+  expect(result.current.targeta.imatge).toBe('');
 });
 
 /* T51 · la regla de data de l'element viu a editorial.js (dataDElement, amb

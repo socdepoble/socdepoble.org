@@ -157,6 +157,19 @@ test('Onada 4 · K2 · opcions.pesMaxim canvia el límit només per a eixa crida
   expect(dobles.compressImage).toHaveBeenCalledTimes(2);
 });
 
+test('Onada 4 (retallador senzill) · opcions.midaMaxima fixa el costat llarg de la compressió només per a eixa crida', async () => {
+  const { result } = munta({ fieldName: 'heroImage' });
+  await act(async () => { await result.current.processaFitxer(foto(), { midaMaxima: 1600 }); });
+  expect(dobles.compressImage).toHaveBeenLastCalledWith(expect.any(File), { maxSize: 1600, format: 'image/webp', quality: 0.8 });
+  // Sense opcions, el de sempre (1.200 la capçalera); un valor absurd, també.
+  await act(async () => { await result.current.processaFitxer(foto()); });
+  expect(dobles.compressImage).toHaveBeenLastCalledWith(expect.any(File), { maxSize: 1200, format: 'image/webp', quality: 0.8 });
+  for (const midaMaxima of [0, -5, Number.NaN, 'gran', null]) {
+    await act(async () => { await result.current.processaFitxer(foto(), { midaMaxima }); });
+    expect(dobles.compressImage.mock.calls.at(-1)[1].maxSize).toBe(1200);
+  }
+});
+
 test('T46 · un error de pujada ix per onError i torna false', async () => {
   const onImageUpload = vi.fn(async () => { throw new Error('Sense xarxa.'); });
   const { result, onSaveField, onError } = munta({ onImageUpload });

@@ -18,9 +18,11 @@ defined( 'ABSPATH' ) || exit;
  *
  * Només torna les claus que el plugin usa, ja validades: versio, entrada
  * (sha256, integrity, mida), node (origen, mode, desenvolupament), contracte
- * (marcatge) i, si el paquet porta la font, fonts (integrity). El tenant del
- * node no es llig: l'abast de dades és del paquet i el plugin hi és cec
- * (Model B, decisió A1 del Mestre, 261003).
+ * (marcatge), si el paquet porta la font, fonts (integrity), inventari
+ * (sha256 de dist/sdp-inventari.json) i, si és el paquet trossejat,
+ * formatDelPaquet (format i modul). El tenant del node no es llig: l'abast de
+ * dades és del paquet i el plugin hi és cec (Model B, decisió A1 del Mestre,
+ * 261003).
  *
  * @return array|null
  */
@@ -113,6 +115,32 @@ function socdepoble_enxufe_valida_manifest( $dades ) {
 	$fonts = $dades['fonts']['integrity'] ?? null;
 	if ( is_string( $fonts ) && preg_match( '#^sha384-[A-Za-z0-9+/]{64}$#', $fonts ) ) {
 		$net['fonts'] = array( 'integrity' => $fonts );
+	}
+
+	/* Relleu 261007 · l'empremta de l'inventari, perquè la Salut del lloc
+	   llija la llista de trossos que signa este manifest i no la d'un altre
+	   build (socdepoble_enxufe_trossos_sencers). Opcional: sense ella no es
+	   pot comprovar el paquet trossejat sencer, i la Salut ho diu. */
+	$inventari = $dades['inventari']['sha256'] ?? null;
+	if ( is_string( $inventari ) && preg_match( '/^[0-9a-f]{64}$/D', $inventari ) ) {
+		$net['inventari'] = array( 'sha256' => $inventari );
+	}
+
+	/* Decisió 5 del Mestre (261007): el paquet trossejat. Clau OPCIONAL i
+	   additiva: si descriu el mòdul d'entrada ESM sota trossos/, el plugin
+	   comprova que hi és (socdepoble_enxufe_te_bundle). Absent, monolítica o
+	   invàlida, s'ignora i el manifest continua vàlid, com els d'abans. El
+	   camí no pot pujar de carpeta ni portar consulta: es casa sencer.
+	   Relleu 261007 · es diu `formatDelPaquet`, no `paquet`: al canal signat,
+	   `paquet` són els zips (adaptadors.wordpress.paquet, estatic.paquet). */
+	$paquet = $dades['formatDelPaquet'] ?? null;
+	$modul  = is_array( $paquet ) ? ( $paquet['modul'] ?? null ) : null;
+	if ( is_array( $paquet ) && 'trossos' === ( $paquet['format'] ?? null )
+		&& is_string( $modul ) && preg_match( '#^trossos/[A-Za-z0-9_-]+\.js$#D', $modul ) ) {
+		$net['formatDelPaquet'] = array(
+			'format' => 'trossos',
+			'modul'  => $modul,
+		);
 	}
 	return $net;
 }

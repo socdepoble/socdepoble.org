@@ -6,10 +6,13 @@
    privacitat. Un codi sense frase es diu pel seu nom, mai s'amaga. */
 import { Insignia } from '../../../components/PedraSeca';
 import { Mono } from '../peces.jsx';
-import { TEXTOS_AVIS } from './grafMapa.js';
+import { TEXTOS_AVIS, TO_SEVERITAT } from './grafMapa.js';
 import { evidenciesDe } from './mapaContent.js';
 
-export const TO_SEVERITAT = Object.freeze({ alta: 'error', mitjana: 'avis', baixa: 'info' });
+/* Neteja 261007 (prompt 261007_1628, peça D) · El to de la severitat és el de
+   grafMapa.js (TO_SEVERITAT), la seua única font: este mòdul en tenia una
+   còpia idèntica i l'exportava a MapaConsola.jsx i XifresMas.jsx, que ara el
+   prenen d'allà. */
 
 /** La frase d'un codi d'avís, o «Avís <codi>.» si encara no en té. */
 export const fraseAvis = (codi) => TEXTOS_AVIS[codi] ?? `Avís ${codi}.`;

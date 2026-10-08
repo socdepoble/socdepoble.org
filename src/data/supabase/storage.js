@@ -88,6 +88,15 @@ function estatHttp(valor) {
   return Number.isInteger(n) && n >= 100 && n <= 599 ? n : undefined;
 }
 
+/* Auditoria 261007 (B) · «L'objecte ja existix»: el code 'Duplicate' del servei
+   o l'estat 409, amb el del cos per davant de l'HTTP genèric com a codiDePujada
+   (el Storage antic respon HTTP 400 amb statusCode '409' al cos). Quan el cos no
+   porta statusCode, storage-js 2.112 hi copia el `code` (fetch.ts, handleError). */
+function esDuplicat(error) {
+  return error?.code === 'Duplicate' || error?.statusCode === 'Duplicate'
+    || (estatHttp(error?.statusCode) ?? estatHttp(error?.status)) === 409;
+}
+
 /* Sense resposta: el criteri de tot el port (esBackendInabastable,
    errorsBackend.js). storage-js 2.112 embolica l'error de fetch en un
    StorageUnknownError i el deixa a `originalError`. Les marques estructurades
@@ -345,6 +354,15 @@ export const promoteToPublic = async (ref, config = {}) => {
 
   // 2. El pugem al bucket públic en la mateixa ruta
   const { error: uploadError } = await uploadFile('mitjans', path, fileData, config);
+  /* Auditoria 261007 (B) · La promoció és idempotent. Republicar («Actualitzar
+     al Mur») torna a promoure la mateixa ruta, i Storage (upsert: false per
+     defecte a storage-js) contesta «Duplicate» amb un 409 al cos o a la
+     resposta. Abans es tornava la ref PRIVADA i l'upsert de section_submissions
+     la desava al payload compartit. El fitxer privat és immutable (UUID nou i
+     upsert: false a uploadToStorage), així que la còpia pública ja és idèntica:
+     el duplicat és un èxit i no avisa. Una fallada real (mida, format, permís)
+     continua tornant la ref, a l'espera de la decisió del Mestre. */
+  if (uploadError && esDuplicat(uploadError)) return `sdp-media://mitjans/${path}`;
   if (uploadError) {
     // F2 · Com la baixada: només dades validades (diagnosiDeStorage).
     console.warn("[Storage] Error pujant el fitxer al promoure'l", diagnosiDeStorage(uploadError));

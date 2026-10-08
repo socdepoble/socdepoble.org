@@ -19,10 +19,12 @@
  *
  * P5 · Onada 4 (PRD «Control amb targetes il·lustrades de doble acció»,
  * aprovat pel Mestre el 261003, que alça el W4-04 per a la presentació
- * d'este fitxer) · Les sis targetes de dalt porten dues portes, «Publicar» i
+ * d'este fitxer) · Les targetes de dalt porten dues portes, «Publicar» i
  * «Saber-ne més». Els destins viuen a destinsControl.js, l'única taula: cap
  * porta porta a una ruta que no és a App i les que no en tenen diuen que
- * estan en obres.
+ * estan en obres. Peça C (ordre del Mestre, 261007, prompt 261007_1628) ·
+ * Són vuit: les sis de P5 i, des del W4-08 (261004), Treball i Habitatge
+ * (DESTINS_CONTROL). Abans esta capçalera en deia sis.
  * ESMENA 261003 22:34 (directrius 2234 i 2245 del Mestre) · Són
  * UniversalCards estàndard, en la graella de sempre (.sdp-card-grid): boina
  * de l'entitat socdepoble (l'autor obri el seu xat corporatiu), imatge, i
@@ -62,8 +64,12 @@
  * il·lustració escrita a mà.
  *
  * P7-B · Onada 4, setena passada, bloc B (prompt 261004_0015 T3; relleu
- * PLUGINS_P7.txt) · «Utilitats i Connectors» pinta les onze utilitats de
- * registrePlugins.js (l'única taula: cap text ni ruta copiats ací) com a
+ * PLUGINS_P7.txt) · «Utilitats i Connectors» pinta les utilitats de
+ * registrePlugins.js (l'única taula: cap text ni ruta copiats ací; dotze des
+ * del W4-08 (261004), quan MarIA hi va afegir «disseny»; la peça C (261007)
+ * corregix el compte, que deia onze; onze de nou des de l'ordre del Mestre
+ * (261007) · Bàscula descartada per ara, que la lleva de la interfície i la
+ * deixa només al Full de ruta) com a
  * UniversalCards canòniques: boina de Sóc de Poble, il·lustració, títol,
  * subtítol, entradilla, l'enllaç de tota la targeta a la seua pàgina
  * (/plugin/<id>, pel router) i el peu blau de P6 cap a eixa pàgina. El
@@ -98,7 +104,7 @@ import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from
 import { useLocation, useNavigate, useSearchParams } from '../../app/contexts/RouterContext';
 import { useEixidaSegura } from '../../components/universal/EixidaSegura.jsx';
 import { UniversalPage } from '../../components/universal/UniversalPage';
-import { Alerta, UniversalButton, UniversalCard } from '../../components/universal/../PedraSeca';
+import { Alerta, UniversalButton, UniversalCard } from '../../components/PedraSeca';
 import { useXatSocDePobleResolt } from '../../components/PedraSeca/hooks/xatSocDePoble.js';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { llegixUtilitatsActives, subscriuUtilitatsActives } from '../profile/utilitatsActives.js';
@@ -214,12 +220,20 @@ function EspaiDelPanell({ espai, visibles }) {
    registre que no tenen targeta dalt (W4-08) i el Snippet.
    Higiene d'amfitrió (ordre del Mestre, 261004) · Es llig per
    utilitatsActives.js: la clau amb prefix de storage.js i, si no n'hi ha, la
-   de llegat ('sdp_utilitats_actives'). */
+   de llegat ('sdp_utilitats_actives').
+   Peça C (ordre del Mestre, 261007, prompt 261007_1628) · Les claus són els
+   ids d'esta graella: DetallEspai ja escriu amb l'id del Panell
+   (profile/aplicacions.js, camp `panell`: 'consola' i 'rss', no 'metriques'
+   ni 'lector-rss'), i el Perfil llig la mateixa regla (estaAlPanell). Una
+   preferència desada abans amb l'id vell arriba ací traduïda
+   (utilitatsActives.js, ALIES_DEL_PANELL). */
 /* L'id del Snippet a APLICACIONS (profile/aplicacions.js), el que hi guarda DetallEspai. */
 const ID_SNIPPET = 'snippet';
 /* W4-08 · Les eines d'administració i de sistema, en l'ordre del registre:
-   la secció «Maquinària i Sistema». */
-const IDS_MAQUINARIA = Object.freeze(['consola', 'cervell', 'rss', 'tpv', 'bascula', 'disseny']);
+   la secció «Maquinària i Sistema».
+   Ordre del Mestre (261007) · Bàscula descartada per ara: ja no és del
+   registre ni d'esta secció. */
+const IDS_MAQUINARIA = Object.freeze(['consola', 'cervell', 'rss', 'tpv', 'disseny']);
 /* W4-08 · Decisió del Mestre: un plugin amb targeta de publicació dalt (Mapa,
    Vehicle Compartit i Animalets) no es repetix a les graelles de baix. */
 const IDS_NOMES_DALT = new Set(DESTINS_CONTROL.map((desti) => desti.id));

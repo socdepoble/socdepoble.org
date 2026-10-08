@@ -8,7 +8,9 @@ import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testi
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { validaTaulaDeClosa } from '../plataforma/index.js';
 import { validaManifestApp } from '../plataforma/manifestApp.js';
+import { creaRegistre } from '../plataforma/registreApps.js';
 import { ARA, munta, prepara, tancats } from './__fixtures__/muntaLector.jsx';
+import AppLector from './AppLector.jsx';
 import { creaAdaptadorLlavor } from './llavor/fontLlavor.js';
 import { NOM_BASE, STORE } from './magatzem.js';
 import manifestLector from './manifest.js';
@@ -749,6 +751,30 @@ describe('en estret (375 px): una columna, la que diu la ruta', () => {
     await waitFor(() => expect(closca().dataset.layout).toBe('estret'));
     expect(detall().getByRole('link', { name: 'Fonts' }).getAttribute('href')).toBe('/app/lector/noticies/festes/fonts');
     expect(detall().getByRole('button', { name: 'Marca-ho tot com a llegit' }).disabled).toBe(false);
+  });
+});
+
+/* Peça C (ordre del Mestre, 261007, prompt 261007_1628) · «Ara» es llig una
+   vegada per ruta (camí i consulta), no a cada pintada: abans el rellotge es
+   cridava a cada render i el context de les vistes era sempre nou. Un canvi
+   d'estat sense navegar no el torna a llegir; canviar de ruta, sí. És el
+   canvi acceptat de la diagnosi: «Hui» no avança fins a una navegació. */
+describe('l’instant de la vista', () => {
+  test('el rellotge es llig en arribar a una ruta i no a cada pintada', async () => {
+    const { magatzem, font } = prepara();
+    const rellotge = vi.fn(() => ARA);
+    const App = () => <AppLector magatzem={magatzem} font={font} ara={rellotge} />;
+    munta('/app/lector/noticies/hui', { registre: creaRegistre({ internes: [{ ...manifestLector, carrega: () => Promise.resolve({ default: App }) }] }) });
+    await screen.findByRole('region', { name: 'Hui' });
+    expect(rellotge).toHaveBeenCalledTimes(1);
+    /* Un canvi d'estat sense navegar: tornar a pintar no torna a llegir el rellotge. */
+    fireEvent.click(mig().getByRole('button', { name: 'Marca-ho tot com a llegit' }));
+    expect(textDeNavegacio(esquerra().getByRole('link', { name: /^Hui/ }))).toBe('Hui 0 tot llegit');
+    expect(rellotge).toHaveBeenCalledTimes(1);
+    /* Una ruta nova, un instant nou. */
+    fireEvent.click(esquerra().getByRole('link', { name: /^Cultura i festes/ }));
+    await screen.findByRole('region', { name: 'Cultura i festes' });
+    expect(rellotge).toHaveBeenCalledTimes(2);
   });
 });
 

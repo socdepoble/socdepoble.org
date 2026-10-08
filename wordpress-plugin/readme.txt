@@ -76,7 +76,7 @@ The plugin adds no analytics of its own. When embedded, the application does not
 
 == Source code and build ==
 
-The file dist/soc-de-poble.standalone.js is compiled and minified. Human-readable source and build tools are public at https://github.com/socdepoble/socdepoble.org: the application is in src/, the build configuration in vite.standalone.config.js and this adapter in wordpress-plugin/. Each build writes dist/sdp-release.json with the version, bundle SHA-256 and integrity, and its pinned data node, so a host can verify what it serves.
+The file dist/soc-de-poble.standalone.js is compiled and minified; in the standalone package it is a small loader for the compiled and minified JavaScript modules in dist/trossos/. Human-readable source and build tools are public at https://github.com/socdepoble/socdepoble.org: the application is in src/, the build configuration in vite.standalone.config.js and this adapter in wordpress-plugin/. Each build writes dist/sdp-release.json with the version, bundle SHA-256 and integrity, and its pinned data node, and dist/sdp-inventari.json with the SHA-256 of every file, so a host can verify what it serves.
 
 To build locally, run `npm ci`, `npm run build:wp` (standalone, dist/) and `npm run build:wp:directori` (WordPress, builds/directori/dist/). For a release, set SDP_RELEASE=1 and use the same SDP_VERSIO and public configuration for both commands. The packager verifies both inventories and their dependencies before creating packages.
 

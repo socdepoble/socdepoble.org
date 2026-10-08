@@ -63,7 +63,9 @@ test('T36 · un clic als inoperatius no navega ni copia; Traduir i Índex contin
   expect(mocks.navigate).not.toHaveBeenCalled();
   expect(writeText).not.toHaveBeenCalled();
   fireEvent.click(boto(container, 'Traduir'));
-  expect(mocks.navigate).toHaveBeenCalledWith('/traduccions?item_id=page');
+  /* Auditoria 261007 (B) · Sense ?item_id=: ningú no el llegia i a l'editor
+     sempre valia 'page'. La pantalla d'arribada és la mateixa. */
+  expect(mocks.navigate).toHaveBeenCalledWith('/traduccions');
   fireEvent.click(boto(container, 'Índex de secció'));
   expect(screen.getByRole('dialog', { name: 'Taula de continguts' })).toBeTruthy();
 });

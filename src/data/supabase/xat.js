@@ -5,7 +5,9 @@
  *   canal privat de Realtime. Quan `runtimeDataMode !== 'remote'` delega al
  *   magatzem en memòria `localXat` (mode seed).
  * @contract Noms del nucli intactes; signatures ampliades de manera compatible.
- *   - loadFils(config) → Conversa[]
+ *   - loadFils(config) → Conversa[]. En remot, a la cua, les files d'ajuda
+ *     que encara falten (Conversa.perDefecte, xatsPerDefecte.js): no són fils
+ *     del servidor i el seu id no és cap UUID.
  *   - loadMissatges(filId, config { abansDeSeq | despresDeSeq, limit }) → Missatge[] per `seq` ascendent
  *   - enviaMissatge(filId, cos | { id, text, tipus, respostaA, metadades }, config) → Missatge
  *   - marcaLlegit(filId, config { llegitFinsSeq, rebutFinsSeq }) → { llegitFinsSeq, rebutFinsSeq }
@@ -27,12 +29,15 @@
  *     amb `codi: 'sense-capacitat'`.
  * @errors Tot error llançat porta `code` i `retriable`. El text del servidor es
  *   conserva quan comença per `SDP-XAT-`; xarxa, temps d'espera i cancel·lació
- *   són reintentables, els codis SDP no.
+ *   són reintentables, els codis SDP no. Excepció: els codis de
+ *   MISSATGES_SDP_HUMANS porten un text per a la persona (el `code` no
+ *   canvia i el text del servidor queda a `cause`).
  */
 
 import { getClient } from './config.js';
 import { usuariDeSessio } from '../identitat.js';
 import { subjecteDeXat } from '../contracte.js';
+import { ambXatsPerDefecte } from '../xatsPerDefecte.js';
 import { generateUUID, getResolvedConfig } from './runtime.js';
 import { handleError } from './utils.js';
 
@@ -58,27 +63,70 @@ function ambSenyal(query, config) {
 const jaNormalitzat = (error) => error instanceof Error && Object.hasOwn(error, 'retriable');
 const errorLocal = (missatge, code, retriable = false) => Object.assign(new Error(missatge), { code, retriable });
 
+/* B03 (migració 2610081543_xat_consentiment_i_metadades.sql) · Els codis SDP
+   que arriben a la persona tal qual (XatSection pinta error.message al toast
+   i al diàleg «Nova conversa») i que no li han de mostrar el codi cru.
+   SDP-XAT-016: crea_fil_directe no obri un directe NOU amb una persona sense
+   consentiment RGPD. El text no diu el motiu: el consentiment de l'altra
+   persona és seu. En valencià, com la resta de textos d'este adaptador, que
+   no coneix la llengua: és la reserva de la clau
+   'section.xat.error.noDisponible' d'i18n.js (cinc llengües), que la
+   interfície ha de traduir pel `code` (i18n.claus.test.js comprova que els
+   dos textos coincidixen). No s'exporta: index.js reexporta tot xat.js com a
+   part del backend. */
+const MISSATGES_SDP_HUMANS = Object.freeze({
+  'SDP-XAT-016': 'Esta persona no està disponible al xat.'
+});
+
+/* Auditoria 261007 (B) · El text d'un fetch que no ha arribat al servidor
+   (Chrome, Firefox, Safari i React Native), com RE_FETCH d'errorsBackend.js.
+   SENSE àncores: postgrest-js no llança el TypeError, el torna com a objecte
+   pla amb el nom davant ('TypeError: Load failed'). */
+const RE_FETCH = /Failed to fetch|NetworkError|Load failed|Network request failed/i;
+
+/**
+ * Auditoria 261007 (B) · postgrest-js torna `{ data, error, status }` i deixa
+ * l'estat HTTP a la RESPOSTA, no a l'error (0 si el fetch ha fallat, 5xx si
+ * la passarel·la o el servidor han caigut). Sense eixe estat, errorDeXat no
+ * sabia que eren reintentables i el missatge fallava a la primera. Es copia
+ * a l'error només si l'error no en porta cap.
+ */
+function ambEstat(error, status) {
+  if (error && typeof error === 'object' && error.status == null && Number.isFinite(status)) error.status = status;
+  return error;
+}
+
 /**
  * Converteix qualsevol fallada en un Error amb `code` i `retriable`.
  * `handleError` no torna `message` (torna `error` i `details`), per això el
  * text del servidor es llig directament de l'error original.
+ * Auditoria 261007 (B) · Amb el senyal de la crida ja avortat, la fallada és
+ * una cancel·lació (AbortError), com promet la capçalera, encara que
+ * postgrest-js l'haja tornada com un objecte pla amb estat 0.
  */
-function errorDeXat(error, perDefecte) {
+function errorDeXat(error, perDefecte, config = {}) {
   if (jaNormalitzat(error)) return error;
   const nom = error?.name;
   if (nom === 'AbortError' || nom === 'TimeoutError') {
     return Object.assign(new Error(error.message || perDefecte), { name: nom, code: nom, retriable: true, cause: error });
   }
+  if (config.signal?.aborted) {
+    return Object.assign(new Error('Operació cancel·lada'), { name: 'AbortError', code: 'AbortError', retriable: true, cause: error });
+  }
   const text = String(error?.message || '');
   const codiSdp = RE_CODI_SDP.exec(text)?.[0];
-  if (codiSdp) return Object.assign(new Error(text), { code: codiSdp, retriable: false, cause: error });
+  if (codiSdp) {
+    const huma = Object.hasOwn(MISSATGES_SDP_HUMANS, codiSdp) ? MISSATGES_SDP_HUMANS[codiSdp] : text;
+    return Object.assign(new Error(huma), { code: codiSdp, retriable: false, cause: error });
+  }
   if (/PGRST20[25]/.test(`${error?.code ?? ''} ${text}`)) {
     return Object.assign(new Error('L’esquema del xat no està aplicat: cal executar la migració 260927_0200_xat_f0_fonament.sql.'),
       { code: 'ESQUEMA', retriable: false, cause: error });
   }
   const detall = handleError(error);
   const categoria = CATEGORIES_CONEGUDES.has(detall?.error) ? detall.error : 'XAT';
-  const retriable = categoria === 'XARXA' || error instanceof TypeError || error?.status === 0 || Number(error?.status) >= 500;
+  const retriable = categoria === 'XARXA' || error instanceof TypeError || error?.status === 0
+    || Number(error?.status) >= 500 || RE_FETCH.test(text);
   const missatge = categoria === 'XAT' ? perDefecte : detall.details?.message || perDefecte;
   return Object.assign(new Error(missatge), { code: categoria, retriable, cause: error });
 }
@@ -228,7 +276,7 @@ export const subscribeToXat = async (filId, callback, config = {}) => {
     channelOwners.set(channel, supabase);
     return { subscription: channel, error: null };
   } catch (error) {
-    const normalitzat = errorDeXat(error, 'No s’ha pogut obrir el canal del xat.');
+    const normalitzat = errorDeXat(error, 'No s’ha pogut obrir el canal del xat.', config);
     if (viu()) callback(normalitzat, null);
     return { subscription: null, error: normalitzat };
   }
@@ -265,11 +313,11 @@ export const enviaMissatge = async (filId, cos, config = {}) => {
        és entrar-hi: l'alta és idempotent i la valida el servidor. */
     if (config.visitant) {
       const alta = await ambSenyal(supabase.rpc('xat_entra_al_fil_de_pagina', { p_fil_id: filId }), config);
-      if (alta.error) throw alta.error;
+      if (alta.error) throw ambEstat(alta.error, alta.status);
       comprovaSenyal(config);
     }
 
-    const { data, error } = await ambSenyal(supabase.rpc('xat_envia', {
+    const { data, error, status } = await ambSenyal(supabase.rpc('xat_envia', {
       p_id: entrada.id,
       p_fil_id: filId,
       p_tipus: entrada.tipus,
@@ -277,7 +325,7 @@ export const enviaMissatge = async (filId, cos, config = {}) => {
       p_resposta_a: entrada.respostaA,
       p_metadades: entrada.metadades
     }), config);
-    if (error) throw error;
+    if (error) throw ambEstat(error, status);
     const fila = primeraFila(data);
     if (!fila || fila.seq === null || fila.seq === undefined) {
       throw errorLocal('El servidor no ha confirmat el missatge.', 'SENSE_CONFIRMACIO', true);
@@ -299,7 +347,7 @@ export const enviaMissatge = async (filId, cos, config = {}) => {
       creatAl: fila.creat_al || new Date().toISOString()
     };
   } catch (error) {
-    throw errorDeXat(error, 'No s’ha pogut enviar el missatge.');
+    throw errorDeXat(error, 'No s’ha pogut enviar el missatge.', config);
   }
 };
 
@@ -319,13 +367,13 @@ export const loadMissatges = async (filId, config = {}) => {
       : opcions.despresDeSeq !== null
         ? supabase.rpc('xat_nous', { p_fil_id: filId, p_despres_de_seq: opcions.despresDeSeq })
         : supabase.rpc('xat_historial', { p_fil_id: filId, p_abans_de_seq: opcions.abansDeSeq, p_limit: opcions.limit });
-    const { data, error } = await ambSenyal(crida, config);
-    if (error) throw error;
+    const { data, error, status } = await ambSenyal(crida, config);
+    if (error) throw ambEstat(error, status);
     return (Array.isArray(data) ? data : [])
       .map((m) => mapejaMissatge(m, filId))
       .sort((a, b) => (a.seq ?? 0) - (b.seq ?? 0));
   } catch (error) {
-    throw errorDeXat(error, 'No s’han pogut carregar els missatges.');
+    throw errorDeXat(error, 'No s’han pogut carregar els missatges.', config);
   }
 };
 
@@ -336,16 +384,16 @@ export const marcaLlegit = async (filId, config = {}) => {
     if (seed) return seed.marcaLlegit(filId, config);
     const supabase = await getClient(config);
     comprovaSenyal(config);
-    const { data, error } = await ambSenyal(supabase.rpc('xat_marca', {
+    const { data, error, status } = await ambSenyal(supabase.rpc('xat_marca', {
       p_fil_id: filId,
       p_rebut_fins: config.rebutFinsSeq ?? null,
       p_llegit_fins: config.llegitFinsSeq ?? null
     }), config);
-    if (error) throw error;
+    if (error) throw ambEstat(error, status);
     const fila = primeraFila(data);
     return { llegitFinsSeq: numero(fila?.llegit_fins_seq), rebutFinsSeq: numero(fila?.rebut_fins_seq) };
   } catch (error) {
-    throw errorDeXat(error, 'No s’ha pogut marcar com a llegit.');
+    throw errorDeXat(error, 'No s’ha pogut marcar com a llegit.', config);
   }
 };
 
@@ -360,11 +408,18 @@ export const loadFils = async (config = {}) => {
     comprovaSenyal(config);
     const tenantId = getResolvedConfig(config).tenantId;
     if (!tenantId) return [];
-    const { data, error } = await ambSenyal(supabase.rpc('xat_fils_meus', { p_tenant_id: tenantId }), config);
-    if (error) throw error;
-    return (Array.isArray(data) ? data : []).map(mapejaFil);
+    const { data, error, status } = await ambSenyal(supabase.rpc('xat_fils_meus', { p_tenant_id: tenantId }), config);
+    if (error) throw ambEstat(error, status);
+    /* Ordre del Mestre (261007) · «Sóc de Poble» i la «IAIA MarIA» són a la
+       llista de tota persona, també el primer dia: si encara no en té la
+       conversa real, una fila sintètica a la cua (Conversa.perDefecte). La
+       regla és del mòdul neutre (xatsPerDefecte.js); ací només es crida, i
+       només amb la resposta del servidor: sense poble no hi ha llista, i un
+       error es propaga sense cap fila inventada. La llavor ja porta els seus
+       fils i no passa per ací. */
+    return ambXatsPerDefecte((Array.isArray(data) ? data : []).map(mapejaFil));
   } catch (error) {
-    throw errorDeXat(error, 'No s’han pogut carregar les converses.');
+    throw errorDeXat(error, 'No s’han pogut carregar les converses.', config);
   }
 };
 
@@ -386,15 +441,15 @@ export const creaFilDirecte = async (altreUsuariId, titol = null, config = {}) =
     comprovaSenyal(config);
     const tenantId = getResolvedConfig(config).tenantId;
     if (!tenantId) throw errorLocal('No s’ha seleccionat cap poble.', 'SENSE_POBLE');
-    const { data, error } = await ambSenyal(supabase.rpc('crea_fil_directe', {
+    const { data, error, status } = await ambSenyal(supabase.rpc('crea_fil_directe', {
       p_tenant_id: tenantId,
       p_altre_usuari: altreUsuariId,
       p_titol: titol
     }), config);
-    if (error) throw error;
+    if (error) throw ambEstat(error, status);
     return data;
   } catch (error) {
-    throw errorDeXat(error, 'No s’ha pogut crear la conversa.');
+    throw errorDeXat(error, 'No s’ha pogut crear la conversa.', config);
   }
 };
 
@@ -432,20 +487,20 @@ export const obriFilDePagina = async (objecte, config = {}) => {
     if (!tenantId) throw errorLocal('No s’ha seleccionat cap poble.', 'SENSE_POBLE');
     /* Cap ruta: el servidor la deriva del subjecte. El títol només li val si
        el subjecte no en té cap de propi (un contingut sense títol). */
-    const { data, error } = await ambSenyal(supabase.rpc('obri_fil_de_pagina', {
+    const { data, error, status } = await ambSenyal(supabase.rpc('obri_fil_de_pagina', {
       p_tenant_id: tenantId,
       p_tipus: subjecte.tipus,
       p_id: subjecte.id,
       p_titol: subjecte.titol
     }), config);
-    if (error) throw error;
+    if (error) throw ambEstat(error, status);
     const files = Array.isArray(data) ? data : [];
     const desti = files.find((f) => f?.desti === true);
     if (!desti?.id) throw errorLocal('El servidor no ha tornat el xat de la pàgina.', 'SENSE_CONFIRMACIO');
     return { filId: desti.id, fils: files.map(mapejaFil) };
   } catch (error) {
     if (esFuncioAbsent(error)) throw senseCapacitat(error);
-    throw errorDeXat(error, 'No s’ha pogut obrir el xat de la pàgina.');
+    throw errorDeXat(error, 'No s’ha pogut obrir el xat de la pàgina.', config);
   }
 };
 
@@ -460,13 +515,13 @@ export const carregaMembres = async (textSearch, config = {}) => {
     const tenantId = getResolvedConfig(config).tenantId;
     if (!tenantId) return [];
     const cerca = String(textSearch ?? '').trim();
-    const { data, error } = await ambSenyal(supabase.rpc('membres_del_poble', {
+    const { data, error, status } = await ambSenyal(supabase.rpc('membres_del_poble', {
       p_tenant_id: tenantId,
       p_cerca: cerca || null
     }), config);
-    if (error) throw error;
+    if (error) throw ambEstat(error, status);
     return Array.isArray(data) ? data : [];
   } catch (error) {
-    throw errorDeXat(error, 'No s’ha pogut carregar la llista del poble.');
+    throw errorDeXat(error, 'No s’ha pogut carregar la llista del poble.', config);
   }
 };

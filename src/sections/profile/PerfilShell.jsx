@@ -15,16 +15,19 @@ import { PerfilProvider, usePerfil } from './PerfilContext.jsx';
 import { PerfilEditor } from './PerfilEditor.jsx';
 import { DetallCompte } from './DetallCompte.jsx';
 import { DetallPrivacitat } from './DetallPrivacitat.jsx';
+import { DetallVistes } from './DetallVistes.jsx';
 import { DetallAplicacio, DetallNodes, DetallSenseOrganitzacions } from './DetallEspai.jsx';
 import { DialegNovaOrganitzacio } from './DialegNovaOrganitzacio.jsx';
 import { APLICACIONS, aplicacionsValides } from './aplicacions.js';
 import { nodesDelPerfil } from './nodes.js';
 import {
-  PARAM_FITXA_ORGANITZACIO, empresesMare, itemsDAplicacions, itemsDePerfil, navegacioDePerfil, seleccioInicialDePerfil,
+  PARAM_FITXA_ORGANITZACIO, itemsDAplicacions, itemsDePerfil, navegacioDePerfil, seleccioInicialDePerfil,
 } from './perfilModel.js';
 
-/* Els consumidors d'abans les importaven d'ací. */
-export { empresesMare, itemsDePerfil };
+/* Els consumidors d'abans l'importaven d'ací. Ordre del Mestre (261008) · un
+   grup ja no necessita cap empresa mare: el diàleg de NOVA ORG no la demana,
+   i empresesMare ja no ix d'este mòdul. */
+export { itemsDePerfil };
 
 /* Pell del Perfil: el mateix esquelet de tres columnes que el Bloc de Notes.
    1a: persona · GRUPS I EMPRESES · APLICACIONS (perfilModel.js).
@@ -58,8 +61,12 @@ const renderFitxa = ({ item, active, onSelect }) => <FitxaDePerfil item={item} a
 function PerfilManagerInner({ config, aplicacions, preferides, connexio }) {
   const { showToast } = useToast();
   const {
-    identitats, contactes, guardarAjust, pujaMitja, creaOrganitzacio, recarrega, carregant, error,
+    identitats, contactes, guardarAjust, pujaMitja, creaOrganitzacio, recarrega, carregant, error, ambMembres,
   } = usePerfil();
+  /* Ordre del Mestre (261008, membres) · Si el port sap llistar i gestionar
+     els membres d'una organització. Fins que el context no ho declare
+     (undefined), «El compte» es queda com era. */
+  const gestionaMembres = Boolean(ambMembres);
 
   /* `dialeg` guarda el resolve de la promesa que espera el Workspace
      (createAndSelect). `creada` espera que la identitat nova arribe al
@@ -95,6 +102,8 @@ function PerfilManagerInner({ config, aplicacions, preferides, connexio }) {
     const identitat = identitats.find((i) => i.id === item?.data?.identitatId);
     if (!identitat) return null;
     if (vista === 'fitxa') return <PerfilEditor key={identitat.id} identitat={identitat} />;
+    /* Ordre del Mestre (261008) · la vista A4, la portada i la targeta, fora de l'editor. */
+    if (vista === 'vistes') return <DetallVistes key={identitat.id} identitat={identitat} />;
     /* T9 (261001) · on està connectada la persona: nodes i estat de la connexió. */
     if (vista === 'nodes') {
       return (
@@ -117,9 +126,10 @@ function PerfilManagerInner({ config, aplicacions, preferides, connexio }) {
         guardarAjust={guardarAjust}
         pujaMitja={pujaMitja}
         contacte={contactes?.[String(identitat.id)] || null}
+        ambMembres={gestionaMembres}
       />
     );
-  }, [identitats, contactes, aplicacions, config, guardarAjust, pujaMitja, recarrega, connexio]);
+  }, [identitats, contactes, aplicacions, config, guardarAjust, pujaMitja, recarrega, connexio, gestionaMembres]);
 
   /* T43 (ordre del Mestre, 260928) · En obrir-se, el Perfil mostra
      l'organització demanada per la ruta («Edita la fitxa de {Org}») o la
@@ -201,7 +211,6 @@ function PerfilManagerInner({ config, aplicacions, preferides, connexio }) {
         obert={Boolean(dialeg)}
         onTanca={tanca}
         onCrea={crea}
-        empresesMare={empresesMare(identitats)}
       />
     </div>
   );

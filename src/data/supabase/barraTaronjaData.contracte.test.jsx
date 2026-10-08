@@ -114,6 +114,7 @@ import ItemDetailSection from '../../sections/detail/ItemDetailSection.jsx';
 import { PAGE_COPY } from '../../sections/text/pageContent.js';
 import { perfilDOrganitzacio, perfilDePersona } from './perfils.js';
 import { createLocalPerfilsAdapter } from '../../data/localPerfils.js';
+import { ENTITAT_PILOT_SLUG } from '../../data/identitatsSeed.js';
 import { dataHoraDeBarra } from '../../components/universal/editorial.js';
 import { COVER_PAGE_KEYS } from '../../config/systemPages';
 import { VERSIO_CATALEG } from '../../sections/disseny/cataleg/versio.js';
@@ -180,7 +181,7 @@ const PAGINES = [
   }} />)],
   ['PerfilPublicSection · organització del directori (perfils.js)', AMB_HORA, DE_LA_FILA, () => perfilPublic(perfilDOrganitzacio(ORG_DIRECTORI), 'Forn de la Torre')()],
   ['PerfilPublicSection · fitxa pròpia de profiles (perfils.js)', AMB_HORA, DE_LA_FILA, () => perfilPublic(perfilDePersona(FILA_PROFILES, USUARI_REMOT), 'Pepa')()],
-  ['PerfilPublicSection · entitat pilot en seed (localPerfils.js)', AMB_HORA, DEL_SEED, () => perfilPublic(seed.loadPerfilPublic('soc-de-poble', USUARI_SEED), 'Sóc de Poble')()],
+  ['PerfilPublicSection · entitat pilot en seed (localPerfils.js)', AMB_HORA, DEL_SEED, () => perfilPublic(seed.loadPerfilPublic(ENTITAT_PILOT_SLUG, USUARI_SEED), 'Sóc de Poble')()],
   ['PerfilPublicSection · persona en seed (localPerfils.js)', AMB_HORA, DEL_SEED, () => perfilPublic(seed.loadPerfilPublic(USUARI_SEED.id, USUARI_SEED), 'Pep de la llavor')()],
   ['DetallCompte (el compte, remot)', AMB_HORA, DE_LA_FILA, () => render(<DetallCompte identitat={PERSONA} guardarAjust={async () => {}} pujaMitja={() => {}} />)],
   ['DetallCompte (el compte, seed)', AMB_HORA, DEL_SEED, () => render(<DetallCompte identitat={personaSeed()} guardarAjust={async () => {}} pujaMitja={() => {}} />)],
@@ -288,7 +289,7 @@ describe('T51 · barra taronja en lectura: data i hora sempre (el dia sol, si la
     }
     const naix = NAIXEMENT_SEED.toISOString();
     const persona = await seed.loadPerfilPublic(USUARI_SEED.id, USUARI_SEED);
-    const entitat = await seed.loadPerfilPublic('soc-de-poble', USUARI_SEED);
+    const entitat = await seed.loadPerfilPublic(ENTITAT_PILOT_SLUG, USUARI_SEED);
     expect([persona.creat, persona.modificat, entitat.creat, entitat.modificat]).toEqual([naix, naix, naix, naix]);
     expect(seed.getProfile(USUARI_SEED)).toMatchObject({ created_at: naix, updated_at: naix });
   });

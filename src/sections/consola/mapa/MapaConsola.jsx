@@ -5,22 +5,15 @@ import { GraellaXifres } from '../XifresMas.jsx';
 import { xifresDeVista } from '../xifresMas.js';
 import { curt, dataLocal } from '../consolaContent.js';
 import { resumMapa, valorMetrica, textCadencia, textLlancador } from './mapaContent.js';
-import { EvidenciesAvis, TO_SEVERITAT, codiIFrase } from './AvisosMapa.jsx';
+import { EvidenciesAvis, codiIFrase } from './AvisosMapa.jsx';
+import { TEXT_ESTAT, TO_CONFIANCA, TO_ESTAT, TO_SEVERITAT } from './grafMapa.js';
 
 /* El Mapa de la Consola: qui crida qui, què corre sol i amb quina confiança.
    Contracte: _wiki_de_poble/02_saber/03_consola_termodinamica/04_contracte_de_dades.md
-   Tot el que falta es pinta (N/A, «sense llançador»), mai s'amaga. */
-
-const TO_ESTAT = Object.freeze({
-  viu: 'exit', mort: 'error', 'declarat-sense-llancador': 'neutre',
-  'llancador-sense-declaracio': 'avis', desconegut: 'neutre'
-});
-const TEXT_ESTAT = Object.freeze({
-  viu: 'viu', mort: 'mort', 'declarat-sense-llancador': 'sense llançador',
-  'llancador-sense-declaracio': 'sense declaració', desconegut: 'desconegut'
-});
-/* La confiança no és salut: només l'inferit avisa, perquè ix de la prosa. */
-const TO_CONFIANCA = Object.freeze({ declarat: 'info', derivat: 'neutre', inferit: 'avis' });
+   Tot el que falta es pinta (N/A, «sense llançador»), mai s'amaga.
+   Neteja 261007 (prompt 261007_1628, peça D) · Els tons i els textos de les
+   insígnies (estat, confiança i severitat) tenen una sola font, grafMapa.js:
+   ací n'hi havia una còpia idèntica. */
 
 /* Ordre del Mestre, 261004 (cap anomalia sense mostrar) · L'avís es diu amb
    la seua frase darrere del codi, i l'evidència, totes si n'hi ha més d'una,

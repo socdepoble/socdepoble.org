@@ -35,6 +35,7 @@ vi.mock('../../app/contexts/SessionContext.jsx', () => ({ useSession: () => mock
 vi.mock('../../app/contexts/RouterContext', () => ({ useNavigate: () => vi.fn(), Link: 'a' }));
 vi.mock('@/components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: mocks.showToast }) }));
 import NotesEditor from './NotesEditor.jsx';
+import { IconaEstatDesament, TEXTOS_ESTAT_DESAMENT } from '../../components/universal/EstatDesament.jsx';
 import { desaLlicenciaPerDefecte } from '../../components/universal/drets/herencia.js';
 import {
   ERROR_PUBLICAR, ErrorPublicacio, MOTIU_LOCAL, MOTIU_LOCAL_CONNEXIO, MOTIU_PREPARADA, MOTIU_PREPARADA_CREANT, MOTIU_PREPARADA_FALLIDA
@@ -792,6 +793,68 @@ test('T47b · una nota de veres porta a la barra taronja l’estat de la cua de 
   mocks.desament.mockReturnValue(mocks.NET);
   rerender(<NotesEditor activeNote={viva} />);
   expect(mocks.adapter.estatDesament).toEqual({ estat: 'net', detall: '' });
+});
+
+/* Línia I2 de l'Onada 4 (pla 261008_1201) · Un error temporal el gestor el
+   torna a provar sol i, quan el servidor ho confirma, passa d'eixe 'error' a
+   'net' sense dir 'enviant'. L'adaptador porta `reintentant` i la icona de
+   veres, amb el que la closca li passaria (UniversalEditorShell:
+   reintentant={Boolean(estatDesament.reintentant)}), pinta el check. Sense
+   la clau, eixe pas no deia res. */
+test('Línia I2 · error temporal → net: l’adaptador porta reintentant i la icona de la barra pinta el check', () => {
+  mocks.session = { currentUser: { id: 'u' } };
+  mocks.scopeKey = 'ambit-A';
+  const viva = { id: 'p', folderId: 'f-mur', categories: ['Sistema'], tags: [] };
+  const icona = () => {
+    const { estat, detall, accions, reintentant } = mocks.adapter.estatDesament;
+    return <IconaEstatDesament estat={estat} detall={detall} accions={accions} reintentant={Boolean(reintentant)} />;
+  };
+  mocks.desament.mockReturnValue({ estat: 'pendent', problema: null, quarantena: [] });
+  const editor = render(<NotesEditor activeNote={viva} />);
+  const barra = render(icona());
+  mocks.desament.mockReturnValue({ estat: 'error', problema: { tipus: 'temporal', missatge: 'xarxa', intents: 1 }, quarantena: [] });
+  editor.rerender(<NotesEditor activeNote={viva} />);
+  expect(mocks.adapter.estatDesament).toMatchObject({ estat: 'error', reintentant: true });
+  barra.rerender(icona());
+  expect(barra.container.querySelector('.sdp-estat-desament').dataset.estat).toBe('error');
+  expect(barra.container.querySelector('.sdp-estat-desament--desat')).toBeNull();
+  mocks.desament.mockReturnValue(mocks.NET);
+  editor.rerender(<NotesEditor activeNote={viva} />);
+  expect(mocks.adapter.estatDesament).toEqual({ estat: 'net', detall: '' });
+  barra.rerender(icona());
+  const desat = barra.container.querySelector('.sdp-estat-desament--desat');
+  expect(desat).not.toBeNull();
+  expect(desat.getAttribute('aria-label')).toBe(TEXTOS_ESTAT_DESAMENT.net);
+});
+
+/* Correcció de la revisió de la línia I2 (prova 7) · La prova d'abans
+   tornava a escriure a mà la línia de la closca. Ací l'adaptador de Notes
+   (amb la traducció de veres, estatPerAlEditor) passa a la closca de veres
+   (UniversalEditorShell, com fa DocumentEditor amb ...rest), que pinta la
+   icona a la barra taronja: de l'error temporal al net, el check. */
+test('Línia I2 · de punta a punta amb la closca de veres: error temporal → net pinta el check a section.bar-orange', async () => {
+  const { UniversalEditorShell } = await vi.importActual('../../components/universal/UniversalEditorShell.jsx');
+  mocks.session = { currentUser: { id: 'u' } };
+  mocks.scopeKey = 'ambit-A';
+  const viva = { id: 'p', folderId: 'f-mur', categories: ['Sistema'], tags: [] };
+  const closca = () => (
+    <UniversalEditorShell id="p" titleHtml="Nota" subtitleHtml="" leadHtml="" onSaveField={vi.fn()} onToast={vi.fn()}
+      estatDesament={mocks.adapter.estatDesament} />
+  );
+  mocks.desament.mockReturnValue({ estat: 'pendent', problema: null, quarantena: [] });
+  const editor = render(<NotesEditor activeNote={viva} />);
+  const pagina = render(closca());
+  mocks.desament.mockReturnValue({ estat: 'error', problema: { tipus: 'temporal', missatge: 'xarxa', intents: 1 }, quarantena: [] });
+  editor.rerender(<NotesEditor activeNote={viva} />);
+  pagina.rerender(closca());
+  expect(pagina.container.querySelector('section.bar-orange .sdp-estat-desament').dataset.estat).toBe('error');
+  expect(pagina.container.querySelector('section.bar-orange .sdp-estat-desament--desat')).toBeNull();
+  mocks.desament.mockReturnValue(mocks.NET);
+  editor.rerender(<NotesEditor activeNote={viva} />);
+  pagina.rerender(closca());
+  const desat = pagina.container.querySelector('section.bar-orange .sdp-estat-desament--desat');
+  expect(desat).not.toBeNull();
+  expect(desat.getAttribute('aria-label')).toBe(TEXTOS_ESTAT_DESAMENT.net);
 });
 
 /* T47 (ordre del Mestre, 260928) · Una nota oberta amb un esborrany D01 no té

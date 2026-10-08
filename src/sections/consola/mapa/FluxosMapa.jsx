@@ -6,7 +6,7 @@ import { concorda, de, plural } from '../concordanca.js';
 import { Mono, Privat } from '../peces.jsx';
 import { GraellaXifres } from '../XifresMas.jsx';
 import { rutaXifra, xifresDeVista } from '../xifresMas.js';
-import { NOMS_TIPUS, etiquetaNode } from './grafMapa.js';
+import { NOMS_TIPUS, TO_CONFIANCA, etiquetaNode } from './grafMapa.js';
 import { esSenseLector, fluxosDelMapa } from './fluxosMapa.js';
 
 /* Fluxos de treball (01_fluxos_skills.md): la pestanya «Flujos trabajo
@@ -18,9 +18,11 @@ import { esSenseLector, fluxosDelMapa } from './fluxosMapa.js';
    targetes compactes del Panell de Control (Xifra).
    Correcció 261004 (verificador de la segona passada, punt 2) · Els llocs
    que reben faena sense lector també són una targeta, i la frase de l'estat
-   buit que els compta hi enllaça. */
+   buit que els compta hi enllaça.
+   Neteja 261007 (prompt 261007_1628, peça D) · El to de la confiança és el
+   de grafMapa.js (TO_CONFIANCA), la seua única font: ací n'hi havia una còpia
+   idèntica. */
 
-const TO_CONFIANCA = Object.freeze({ declarat: 'info', derivat: 'neutre', inferit: 'avis' });
 const nom = (id) => etiquetaNode({ id });
 const darrer = (cami) => String(cami).split('/').filter(Boolean).pop() || String(cami);
 const llista = (ids) => (ids.length ? ids.map(nom).join(' · ') : 'ningú');

@@ -38,8 +38,10 @@ import { dataHoraDeBarra } from '../../components/universal/editorial.js';
 import { AUTORIA_SOCDEPOBLE } from '../control/destinsControl.js';
 import { RUTA_CONSOLA, copyConsola } from './consolaPagines.js';
 import { Mono, PrivacitatConsola, TargetaConsola } from './peces.jsx';
-import { EvidenciesAvis, TO_SEVERITAT, codiIFrase } from './mapa/AvisosMapa.jsx';
-import { TO_CONFIANCA, etiquetaNode } from './mapa/grafMapa.js';
+import { EvidenciesAvis, codiIFrase } from './mapa/AvisosMapa.jsx';
+import {
+  TEXT_ESTAT as TEXT_ESTAT_TASCA, TO_CONFIANCA, TO_ESTAT as TO_ESTAT_TASCA, TO_SEVERITAT, etiquetaNode
+} from './mapa/grafMapa.js';
 import { trossosEntradeta } from './xifresComu.js';
 import { GENERADOR_CONSOLA, GENERADOR_MAPA, detallXifra, xifraDelMas, xifresDeLaGraella } from './xifresMas.js';
 
@@ -121,15 +123,15 @@ export function XifresMas({ mapa = null }) {
 }
 
 /* Els estats de les tasques (els de la taula de Salut, MapaConsola.jsx) i el
-   N/A d'una mètrica sense mesura. */
-const TO_ESTAT = Object.freeze({
-  viu: 'exit', mort: 'error', 'declarat-sense-llancador': 'neutre',
-  'llancador-sense-declaracio': 'avis', desconegut: 'neutre', 'N/A': 'neutre'
-});
-const TEXT_ESTAT = Object.freeze({
-  viu: 'viu', mort: 'mort', 'declarat-sense-llancador': 'sense llançador',
-  'llancador-sense-declaracio': 'sense declaració', desconegut: 'desconegut', 'N/A': 'N/A'
-});
+   N/A d'una mètrica sense mesura.
+   Neteja 261007 (prompt 261007_1628, peça D) · Els estats de les tasques
+   són els de grafMapa.js, la seua única font. El N/A és l'única diferència i
+   es queda ací: és la cel·la d'una mètrica sense mesura (filaMetrica,
+   xifresComu.js), no un estat de tasca (ESTATS_TASCA no el porta), i la
+   taula de Salut (MapaConsola.jsx) pinta el seu N/A sense passar per l'estat.
+   Amb ell, el detall diu «N/A» en una insígnia neutra, com fins ara. */
+const TO_ESTAT = Object.freeze({ ...TO_ESTAT_TASCA, 'N/A': 'neutre' });
+const TEXT_ESTAT = Object.freeze({ ...TEXT_ESTAT_TASCA, 'N/A': 'N/A' });
 
 /* La ruta d'una peça és el seu node sense el tipus (document:.agents/LEDGER.md). */
 const rutaDelNode = (node) => String(node ?? '').replace(/^[a-z]+:/, '');
@@ -218,13 +220,18 @@ function DadaViva({ detall, font, textos: t, icona }) {
  * `creat` la data del copy, `privat` el mode privacitat i `peu` els controls
  * de la Consola (instantània, Refrescar i Privacitat). Un slug que no
  * existix no peta: la pàgina ho diu i torna a la Consola.
+ * Neteja 261007 (prompt 261007_1628, peça D) · `xifra` és la que ja ha
+ * buscat qui la crida (ConsolaSection.jsx, per al SEO i el peu), amb les
+ * mateixes fonts: null vol dir «no existix». Sense la prop, la pàgina la
+ * busca ella. El detall rep la mateixa: xifraDelMas recorre totes les vistes
+ * de la Consola i abans es feia tres vegades per pintada.
  */
-export function PaginaXifra({ slug, fonts, creat, privat = false, peu = null, locale = 'ca-ES' }) {
+export function PaginaXifra({ slug, xifra: donada, fonts, creat, privat = false, peu = null, locale = 'ca-ES' }) {
   const navigate = useNavigate();
   const id = useId();
   const copy = copyConsola();
   const { mapa: fontMapa, consola: fontConsola } = fonts;
-  const xifra = xifraDelMas(slug, fontMapa.mapa, fontConsola.dades, locale);
+  const xifra = donada === undefined ? xifraDelMas(slug, fontMapa.mapa, fontConsola.dades, locale) : donada;
   const tornar = () => navigate(RUTA_CONSOLA);
 
   if (!xifra) {
@@ -270,7 +277,7 @@ export function PaginaXifra({ slug, fonts, creat, privat = false, peu = null, lo
     ? { valor: fontConsola.dades, estat: fontConsola.estat, error: fontConsola.error }
     : { valor: fontMapa.mapa, estat: fontMapa.estat, error: fontMapa.error };
   const quan = dataHoraDeBarra({ creat, modificat: font.valor?.generat });
-  const detall = detallXifra(slug, fontMapa.mapa, fontConsola.dades, locale);
+  const detall = detallXifra(slug, fontMapa.mapa, fontConsola.dades, locale, xifra);
   const icona = iconaDe(xifra);
   const { titol, subtitol } = textos(xifra, privat);
   return (

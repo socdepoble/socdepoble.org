@@ -29,6 +29,7 @@ import EspecimenXatComunitats from './EspecimenXatComunitats.jsx';
 import EspecimenXatNovaConversa from './EspecimenXatNovaConversa.jsx';
 import EspecimenXatRail, { activaDeRuta } from './EspecimenXatRail.jsx';
 import { delVal, getVal, setVal } from '../../../../config/storage.js';
+import { CATALOG_ITEMS, nodeUniversal } from '../manifest.js';
 
 /* T52 (ordre del Mestre, 260928) · Proves de fum dels especímens que pinten
    components universals REALS: cada un munta la peça de veres, sense h1, i
@@ -144,6 +145,14 @@ describe('EspecimenImpressio', () => {
     expect(papers[1].getAttribute('sandbox')).toBe('');
     fireEvent.click(screen.getByRole('button', { name: 'Crear portada' }));
     expect(screen.getByRole('checkbox', { name: 'Incloure portada' }).checked).toBe(true);
+  });
+
+  /* Ordre del Mestre (261008) · al Perfil, els botons viuen a «Les vistes». */
+  it('diu on viuen els botons: davall del títol al Bloc de Notes; a «Les vistes» al Perfil', () => {
+    const text = pinta(EspecimenImpressio).textContent;
+    expect(text).toContain('Al Bloc de Notes viuen davall del títol de l’editor');
+    expect(text).toContain('al Perfil, a l’apartat «Les vistes», fora de l’espai d’edició');
+    expect(text).not.toContain('Davall del títol de l’editor, al costat dels drets d’autor, dos botons');
   });
 });
 
@@ -375,15 +384,34 @@ describe('EspecimenEmoticonaBarra', () => {
 });
 
 describe('Barres d’edició dels especímens · la data d’ara i la ploma', () => {
-  it('EstatDesament: els tres estats porten la ploma central i la pastilla de l’editor amb la data d’ara', () => {
+  it('EstatDesament: els quatre casos porten la ploma central i la pastilla de l’editor amb la data d’ara', () => {
     ambAra();
     pinta(EspecimenEstatDesament);
-    for (const estat of ['pendent', 'error', 'net']) {
+    for (const estat of ['pendent', 'error', 'desat', 'net']) {
       const barra = screen.getByRole('region', { name: `Autoria i data (espècimen, ${estat})` });
       expect(within(barra).getByRole('button', { name: 'Triar l’emoticona del document' }).querySelector('.lucide-feather'), estat).not.toBeNull();
       expect(within(barra).getByRole('button', { name: /^Data de publicació: sense triar/ }).textContent, estat).toBe('14:3703/10/26');
       expect(barra.textContent, estat).not.toContain('25/04/26');
     }
+  });
+
+  /* Ordre del Mestre (261008) · «confirmació o feedback visual del desat
+     automàtic»: la fila «desat» viu el pas de pendent a net amb la peça real. */
+  it('EstatDesament: «desat» porta el núvol amb el check; «net» sense cap canvi, res; «pendent», la fletxa', () => {
+    pinta(EspecimenEstatDesament);
+    const barra = (estat) => screen.getByRole('region', { name: `Autoria i data (espècimen, ${estat})` });
+    const desat = barra('desat').querySelector('.sdp-estat-desament--desat');
+    expect(desat).not.toBeNull();
+    expect(desat.getAttribute('role')).toBe('img');
+    expect(desat.getAttribute('aria-label')).toBe('Tots els canvis estan desats.');
+    expect(desat.querySelector('svg.lucide-cloud-check')).not.toBeNull();
+    expect(barra('net').querySelector('.sdp-estat-desament')).toBeNull();
+    expect(barra('pendent').querySelector('.sdp-estat-desament--desat')).toBeNull();
+    expect(barra('pendent').querySelector('svg.lucide-cloud-upload')).not.toBeNull();
+    const text = document.body.textContent;
+    expect(text).toContain('el núvol amb el check es queda fins al canvi següent');
+    expect(text).toContain('Fer desaparéixer el check amb un temporitzador');
+    expect(text).not.toContain('desapareix quan el servidor ho confirma');
   });
 
   it('Calendari: la barra de l’editor porta la ploma central i, sense tria, la data d’ara', () => {
@@ -424,14 +452,22 @@ describe('EspecimenTargetaViva', () => {
     expect(avis).not.toContain('Mur');
   });
 
-  it('els dos xips «Vista targeta» obrin la targeta amb el text de la vista del seu consumidor', () => {
-    pinta(EspecimenTargetaViva);
-    const [xipNota, xipPerfil] = screen.getAllByRole('button', { name: 'Vista targeta' });
-    fireEvent.click(xipNota);
-    expect(screen.getByRole('dialog', { name: 'Vista targeta' }).textContent).toContain(AVISOS_TARGETA_VIVA.notes.vista);
-    fireEvent.click(within(screen.getByRole('dialog', { name: 'Vista targeta' })).getByRole('button', { name: 'Tancar' }));
-    fireEvent.click(xipPerfil);
-    expect(screen.getByRole('dialog', { name: 'Vista targeta' }).textContent).toContain(AVISOS_TARGETA_VIVA.perfil.vista);
+  /* Correcció de la revisió (261008) · CONTRACTE-3: el Perfil no munta el
+     xip (PerfilEditor passa ambVistes: false i «Les vistes» pinta la targeta
+     en línia). El catàleg només ensenya el xip del consumidor que el té. */
+  it('un sol xip «Vista targeta», el del Bloc de Notes, amb el text de la seua vista; al Perfil, cap', () => {
+    const arrel = pinta(EspecimenTargetaViva);
+    const xips = screen.getAllByRole('button', { name: 'Vista targeta' });
+    expect(xips).toHaveLength(1);
+    fireEvent.click(xips[0]);
+    const dialeg = screen.getByRole('dialog', { name: 'Vista targeta' });
+    expect(dialeg.textContent).toContain(AVISOS_TARGETA_VIVA.notes.vista);
+    expect(dialeg.textContent).not.toContain(AVISOS_TARGETA_VIVA.perfil.vista);
+    const text = arrel.textContent;
+    expect(text).toContain('Al Perfil no hi ha xip: l’editor de la fitxa no el munta (ambVistes={false}) i l’apartat «Les vistes» pinta la targeta en línia');
+    expect(text).not.toContain('el xip, amb el text de la vista del Perfil');
+    const fila = [...arrel.querySelectorAll('table tbody tr')].find((tr) => tr.querySelector('td code')?.textContent === 'BotoTargetaViva');
+    expect(fila.textContent).toContain('Hui només el munta el Bloc de Notes');
   });
 
   it('diu que l’aside i el xip de l’editor reben el text del consumidor (adapter.avisTargetaViva)', () => {
@@ -456,6 +492,38 @@ describe('EspecimenTargetaViva', () => {
     const text = pinta(EspecimenTargetaViva).textContent;
     expect(text).toContain('Llista + dreta si hi cap');
     expect(text).toContain('el xip «Vista targeta» davall del títol obri el diàleg');
+  });
+
+  /* Ordre del Mestre (261008) · al Perfil, la targeta viu a «Les vistes». */
+  it('diu que al Perfil les vistes tenen apartat propi i que al Bloc de Notes continuen davall del títol', () => {
+    const arrel = pinta(EspecimenTargetaViva);
+    const text = arrel.textContent;
+    expect(text).toContain('Al Perfil, «Vista A4 / PDF», «Crear portada» i «Vista targeta» viuen a l’apartat «Les vistes»');
+    expect(text).toContain('al Bloc de Notes continuen davall del títol');
+    expect(text).toContain('Al Bloc de Notes viu davall del títol, amb «Vista A4 / PDF» i «Crear portada»');
+    const fila = [...arrel.querySelectorAll('table tbody tr')].find((tr) => tr.querySelector('td code')?.textContent === 'DetallVistes (Perfil)');
+    expect(fila.textContent).toContain('AVISOS_TARGETA_VIVA.perfil');
+  });
+});
+
+/* Correcció de la revisió (261008) · DialegCapcaleraAvatar ja no es munta
+   (decisió del Mestre: fora el diàleg intermedi). L'arbre i la fitxa del
+   catàleg diuen qui munta de veres la finestra de retall. */
+describe('Enquadrament al catàleg · al dia', () => {
+  it('l’arbre dona com a consumidors useImatgeDeFitxa (Perfil) i DetallAjust, i no DialegCapcaleraAvatar', () => {
+    const node = nodeUniversal('enquadrament');
+    const consumidors = node.consumidors.join(' · ');
+    expect(consumidors).toContain('el Perfil (useImatgeDeFitxa: capçalera, avatar i logotip)');
+    expect(consumidors).toContain('DetallAjust (useEnquadramentAvatar)');
+    expect(consumidors).not.toContain('DialegCapcaleraAvatar');
+    expect(node.rol).not.toMatch(/al Perfil, l’avatar \(només en quadrat\)/);
+    expect(node.rol).toContain('les imatges de la fitxa (finestra senzilla)');
+  });
+
+  it('la fitxa del catàleg ja no diu que l’avatar del Perfil passa només en quadrat', () => {
+    const item = CATALOG_ITEMS.find((i) => i.id === 'superposicions-enquadrament');
+    expect(item.lead).not.toContain('L’avatar del Perfil hi passa sempre, només en quadrat');
+    expect(item.lead).toContain('les imatges de la fitxa del Perfil (avatar en cercle, logotip i capçalera), per la finestra senzilla');
   });
 });
 

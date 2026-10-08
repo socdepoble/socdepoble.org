@@ -16,10 +16,16 @@
  * D'on ixen les notícies: la prop `font` (un port fet amb creaFontNoticies)
  * o, si no n'hi ha, la llavor sintètica, que només hi és en desenvolupament o
  * amb el seu literal propi (VITE_SDP_LECTOR_LLAVOR=1, el patró de
- * bar/llavors). Activar l'app en producció (VITE_SDP_APP_LECTOR, manifest.js)
- * no publica, per tant, cap notícia inventada: sense port, l'app ho diu i no
- * obri ni el magatzem. L'adaptador de producció (el connector de l'amfitrió,
- * que fa de proxy) entrarà per la plataforma o per l'amfitrió, no per ací.
+ * bar/llavors). Sense port, l'app ho diu i no obri ni el magatzem: cap notícia
+ * inventada. L'adaptador de producció (el connector de l'amfitrió, que fa de
+ * proxy) entrarà per la plataforma o per l'amfitrió, no per ací.
+ * Peça C (ordre del Mestre, 261007, prompt 261007_1628) · Correcció d'esta
+ * capçalera: VITE_SDP_APP_LECTOR=1 només la compila al paquet de producció
+ * (`carrega`, manifest.js); no l'obri. El manifest porta entorn
+ * 'desenvolupament' i la plataforma l'apaga fora de desenvolupament
+ * (interruptors.js, motiu 'entorn-desenvolupament'). Obrir-la en producció
+ * demana, a més del literal, canviar eixe entorn i un port de notícies: hui
+ * cap dels dos no hi és.
  *
  * Un enllaç a /noticies?article=<id> es canonitza (replace) a
  * /noticies/hui?article=<id>: en pantalla estreta, la ruta de les carpetes
@@ -78,7 +84,7 @@ function LectorAmbFont({ magatzem: magatzemPropi, font, rellotge }) {
   const noticies = useNoticies(font);
   const { ruta } = useApp();
   const navigate = useNavigate();
-  const { search } = useLocation();
+  const { pathname, search } = useLocation();
   const coincidencia = useRutaApp(RUTES);
   const entrada = coincidencia ? coincidencia.ruta.path.split('/')[0] : null;
 
@@ -89,7 +95,20 @@ function LectorAmbFont({ magatzem: magatzemPropi, font, rellotge }) {
     if (canonic) navigate(canonic, { replace: true });
   }, [canonic, navigate]);
 
-  const ara = rellotge();
+  /* Peça C (ordre del Mestre, 261007, prompt 261007_1628) · «Ara» és l'instant
+     en què s'arriba a una ruta (camí i consulta) i es conserva mentre s'hi està.
+     Abans es llegia el rellotge a cada pintada: `valor` canviava sempre i el
+     useMemo de davall no estalviava res (tot el context es tornava a pintar
+     amb qualsevol canvi). Canvi acceptat (diagnosi de la peça C): «Hui» i les
+     hores relatives es calculen amb l'instant d'arribada a la ruta i no
+     avancen fins a una navegació; abans, marcar com a llegit o una
+     actualització del port feien avançar la finestra de 24 h. L'instant és el
+     mateix per a totes les columnes mentre no es canvia de ruta.
+     `clau` és la clau de la memòria per ruta: ningú no la llig, només lliga
+     el camí i la consulta a les dependències (exhaustive-deps no admet una
+     dependència que el càlcul no fa servir). */
+  const instant = useMemo(() => ({ clau: `${pathname}${search}`, ara: rellotge() }), [rellotge, pathname, search]);
+  const { ara } = instant;
   /* El fus de qui llig, en minuts respecte d'UTC (+120 a l'estiu de València). */
   const desfas = -new Date(ara).getTimezoneOffset();
   const valor = useMemo(() => (lector.estat ? { lector, personals, noticies, font, ara, desfas, ruta } : null),

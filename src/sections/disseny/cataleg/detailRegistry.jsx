@@ -108,4 +108,6 @@ export const CATALOG_DETAIL_LOADERS = {
   'fonaments/icones-alergens': lazyRoute(() => import('./detalls/EspecimenIconesAlergens.jsx')),
   /* Ordre del Mestre, 261007 · el carrusel de la portada dels productes amb més d'una foto. */
   'fonaments/carrusel-imatges': lazyRoute(() => import('./detalls/EspecimenCarruselImatges.jsx')),
+  /* Esmena 2 del pla 261007_1645 · el que l'actor ja té publicat (al peu de l'editor de Notes). */
+  'fonaments/publicacions-actor': lazyRoute(() => import('./detalls/EspecimenPublicacionsDeLActor.jsx')),
 };

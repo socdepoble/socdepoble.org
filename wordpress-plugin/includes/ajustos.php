@@ -167,6 +167,13 @@ add_filter( 'plugin_action_links_' . plugin_basename( SOCDEPOBLE_ENXUFE_FITXER )
  * Files de la diagnosi del paquet: etiqueta => valor (text pla). Cap fila de
  * tenant: l'abast de dades és del paquet i el plugin no el coneix (Model B).
  *
+ * Relleu 261007 (decisió 5 del Mestre) · «Bundle SHA-256» i «Bundle
+ * integrity» són les empremtes de dist/soc-de-poble.standalone.js. En el
+ * paquet trossejat (formatDelPaquet al manifest) eixe fitxer és el carregador
+ * de 3 KB, no l'App: els trossos de dist/trossos/ els cobrix l'inventari
+ * (dist/sdp-inventari.json), que la Salut del lloc contrasta. Les etiquetes no
+ * canvien fins que el Mestre en fixe un text propi, amb traducció.
+ *
  * @return array
  */
 function socdepoble_enxufe_diagnosi() {

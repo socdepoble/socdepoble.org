@@ -20,8 +20,10 @@ import { resolveAsset, resolRecursosDeHtml } from '../../config/assetResolver.js
    de sempre, «cms-preview». Sense cap grup, el camí de sempre, byte a byte
    (Llei del Píxel). Ordre del Mestre (261007, «cards de veritat») · Les
    targetes es pinten sincronitzades amb el seu original
-   (ProveidorSincronitzacioTargetes); la instantània, de reserva. */
-function CosDeLaPagina({ html }) {
+   (ProveidorSincronitzacioTargetes); la instantània, de reserva.
+   Grup E (261008) · Exportat: el lector del MAS (notes/PublicacioDetall.jsx)
+   pinta el cos d'una pàgina del sistema pel mateix camí. */
+export function CosDeLaPagina({ html }) {
   if (String(html || '').includes(MARCA_GRUP)) {
     const segments = segmentsAmbTargetes(sanitizeHtml(resolRecursosDeHtml(html)));
     if (segments.some((segment) => segment.tipus === 'targetes')) {

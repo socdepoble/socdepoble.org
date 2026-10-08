@@ -14,8 +14,19 @@
  *  · el Panell s'assabenta per un estat compartit d'este mòdul
  *    (subscriuUtilitatsActives), dins de l'app: cap esdeveniment a window ni
  *    al document de l'amfitrió.
+ *
+ * Ordre del Mestre (261007, prompt 261007_1628, peça C) · Una sola regla i un
+ * sol id per a les dues bandes:
+ *  · la regla és la del Panell: una utilitat hi és mentre la preferència no
+ *    diga exactament false (estaAlPanell). Abans el Perfil la llegia al revés
+ *    (sense preferència, «Mostrar») i el primer clic no canviava res;
+ *  · l'id és el del Panell (aplicacions.js, camp `panell`). Una preferència
+ *    desada abans amb l'id de l'aplicació ('metriques', 'lector-rss') es
+ *    llig com la del seu id del Panell ('consola', 'rss') mentre este no en
+ *    tinga cap de pròpia (ALIES_DEL_PANELL): ningú no perd el que va triar.
  */
 import { getPreferenciaLlegat, getVal, setVal } from '../../config/storage.js';
+import { ALIES_DEL_PANELL } from './aplicacions.js';
 
 /* La clau pròpia: storage.js hi posa el prefix (STORAGE_PREFIX). */
 export const CLAU_UTILITATS_ACTIVES = 'utilitats_actives';
@@ -37,10 +48,32 @@ function delLlegat() {
   }
 }
 
-/** La preferència guardada: la clau amb prefix i, si no n'hi ha, la de llegat. Sense cap, {}. */
+/* Peça C (261007) · Les preferències d'un id vell, copiades a l'id del Panell
+   si este no en té cap. L'id vell es conserva tal qual: no s'esborra res. */
+function ambAlies(preferencia) {
+  for (const [vell, nou] of Object.entries(ALIES_DEL_PANELL)) {
+    if (Object.hasOwn(preferencia, vell) && !Object.hasOwn(preferencia, nou)) preferencia[nou] = preferencia[vell];
+  }
+  return preferencia;
+}
+
+/**
+ * La preferència guardada: la clau amb prefix i, si no n'hi ha, la de llegat,
+ * amb les preferències dels ids vells traduïdes a l'id del Panell. Sense cap, {}.
+ */
 export function llegixUtilitatsActives() {
   const propia = mapaDe(getVal(CLAU_UTILITATS_ACTIVES));
-  return { ...(propia ?? delLlegat() ?? {}) };
+  return ambAlies({ ...(propia ?? delLlegat() ?? {}) });
+}
+
+/**
+ * Peça C (261007) · Si una utilitat (per l'id del Panell) es veu al Panell de
+ * Control: la regla de ControlSection (utilitatsAmagades), que només l'amaga
+ * amb un false explícit. Sense preferència, malmesa o amb qualsevol altre
+ * valor, hi és.
+ */
+export function estaAlPanell(id) {
+  return llegixUtilitatsActives()[id] !== false;
 }
 
 /**

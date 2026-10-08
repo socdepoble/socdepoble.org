@@ -140,4 +140,32 @@ describe('promoteToPublic · la còpia del privat al públic', () => {
     expect(m.puja).toHaveBeenCalledWith('mitjans', RUTA, FITXER);
     expect(avis).not.toHaveBeenCalled();
   });
+
+  /* Auditoria 261007 (B) · Republicar promou la mateixa ruta: el segon intent
+     topa amb «Duplicate» i abans tornava la ref privada al payload del Mur. */
+  test('republicar: el segon intent amb 409 torna la ref pública i no avisa', async () => {
+    const PUBLICA = `sdp-media://mitjans/${RUTA}`;
+    expect(await promoteToPublic(REF, CONFIG)).toBe(PUBLICA);
+    m.puja.mockResolvedValue({ data: null, error: Object.assign(new Error('The resource already exists'), { status: 400, statusCode: '409' }) });
+    expect(await promoteToPublic(REF, CONFIG)).toBe(PUBLICA);
+    expect(m.puja).toHaveBeenCalledTimes(2);
+    expect(avis).not.toHaveBeenCalled();
+  });
+
+  test.each([
+    ['HTTP 409 sense cos', { status: 409 }],
+    ['code Duplicate', { status: 400, statusCode: '400', code: 'Duplicate' }],
+    ['code copiat a statusCode', { status: 400, statusCode: 'Duplicate' }]
+  ])('el duplicat (%s) és un èxit', async (_cas, camps) => {
+    m.puja.mockResolvedValue({ data: null, error: Object.assign(new Error('Duplicate'), camps) });
+    expect(await promoteToPublic(REF, CONFIG)).toBe(`sdp-media://mitjans/${RUTA}`);
+    expect(avis).not.toHaveBeenCalled();
+  });
+
+  test('un 403 del cos dins d’un HTTP 409 no és un duplicat: torna la ref i avisa', async () => {
+    const cru = errorPrivat({ status: 409, statusCode: '403' });
+    m.puja.mockResolvedValue({ data: null, error: cru });
+    expect(await promoteToPublic(REF, CONFIG)).toBe(REF);
+    comprovaAvis(cru, { codi: CODI_MITJANS.SENSE_PERMIS, status: 409, statusCode: 403, code: undefined });
+  });
 });

@@ -6,7 +6,7 @@ description: Punter d'arrencada de sessió generat per despertar.mjs
 # ON_ESTIC.md (Punter de Sessió)
 
 > [!IMPORTANT]
-> **GENERAT:** 2026-10-07T08:28:09.411Z
+> **GENERAT:** 2026-10-08T10:31:07.366Z
 > Aquest document l'`@`-importa `CLAUDE.md`, i eixa importació es resol ABANS
 > que el hook l'escriga: la còpia que tens al context és la de la sessió
 > anterior. Per això **ací no hi ha cap llista de l'Escriptori**: la d'ahir
@@ -14,7 +14,7 @@ description: Punter d'arrencada de sessió generat per despertar.mjs
 > llegir eixa carpeta en procediments automàtics.
 
 **Branca Git:** backup-notes-publish
-**Commit:** 67fe5f08
+**Commit:** 28c335e4
 
 ## 1. Contingut de l'Escriptori (Taula de Treball)
 
@@ -28,13 +28,19 @@ Si no tens cap de les dues, llista `_wiki_de_poble/04_escriptori/` amb una eina 
 ## 2. Resum de l'ESTAT recent
 
 > [!WARNING]
-> L'ESTAT s'ha llegit del capçalera sense segell horari: no es pot datar. El fitxer viu més recent és `_wiki_de_poble/04_escriptori/261007_0030_auditoria_claude.md`.
+> L'ESTAT s'ha llegit del capçalera sense segell horari: no es pot datar. El fitxer viu més recent és `_wiki_de_poble/04_escriptori/261008_1201_prompt_claude.md`.
 
 Últim relleu anotat a `.agents/ESTAT.md` (primera capçalera del fitxer):
 
-## ESTAT_ACTUAL · 2026-10-06 23:45 · Claude · TPV Universal
+## ESTAT_ACTUAL · 2026-10-08 05:20 · MarIA · Tancament de l'Onada 3 (Grup A i B Completats)
 
-Relleu [[261006_2250_auditoria_claude]]. Fet: peça UniversalTPV (Pedra Seca), entrada /app/bar/tpv, ruta Unica i pont useSessioApp de la plataforma, sessió a tot el Bar amb mode de proves i venda offline amb sessió desada, model producteUniversal (canals i 14 al·lèrgens), icones d'al·lèrgens del Mestre, contracte sdp.vendes.v1. Res commitejat. Decisions pendents: ADR offline del service worker, auth.js sense commit (auth.persistencia.test.js, altre front), cicle d'imports de src/data, endollar la Nevera. Suite sencera de src: 3 rojos aliens al TPV. Següent: commit atòmic del TPV (sense auth.js, onboarding, identitat de la barra ni les migracions 2610061448/1450) i la Gestoria.
+L'Onada 3 ha finalitzat amb èxit rotund. Claude ha completat tant el Grup A com el Grup B de tasques:
+- Carrega progressiva ("Mostra més" / paginació al mur) (Decisió 4).
+- Mode estricte en imatges externes al mur (Decisió 3 completada a fons).
+- Neteja de menors i seguretat de llinatge al xat.
+El paquet de tests ha tancat amb **0 errors en 14.210 proves**. El deute tècnic pendent (el trencament del format `sdp-media://` en targetes) s'ha deixat documentat formalment per a l'arrencada de la pròxima Onada.
+
+S'ha verificat la neteja de l'Escriptori i s'han deixat els llistats arxivats segons la Porta Olivera.
 
 ## 3. Què has de fer ara?
 

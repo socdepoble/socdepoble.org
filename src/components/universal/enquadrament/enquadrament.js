@@ -112,6 +112,14 @@ export function midaSortida(rect, maxim = MIDA_SORTIDA) {
 export const FORMAT_SORTIDA = 'image/webp';
 const FORMATS_SORTIDA = Object.freeze(['image/webp', 'image/jpeg', 'image/png']);
 
+/* Onada 4 (retallador senzill, 261008) · Una mida exacta vàlida (dos enters
+   positius) o null: una mida a mitges no s'aplica a mitges. */
+function midaExacta(mida) {
+  const amplada = Math.round(Number(mida?.amplada));
+  const alcada = Math.round(Number(mida?.alcada));
+  return amplada > 0 && alcada > 0 ? { amplada, alcada } : null;
+}
+
 /**
  * Onada 4, T3a · Les opcions de l'exportador.
  *   · Sense `sortida` (contracte T46): exactament les d'abans, 1.200 px pel
@@ -120,14 +128,20 @@ const FORMATS_SORTIDA = Object.freeze(['image/webp', 'image/jpeg', 'image/png'])
  *     d'ampladaMaxima (mai s'amplia; l'alçada seguix la forma), el format
  *     demanat (WebP de sèrie; l'exportador cau a JPEG si el navegador no el sap
  *     codificar) i la qualitat (0..1) si n'hi ha.
+ *   · Onada 4 (retallador senzill, 261008) · Amb `sortida.exacta` =
+ *     { amplada, alcada }, el fitxer fa EXACTAMENT eixa mida, també si cal
+ *     ampliar el retall: el logotip ix a 600 × 600 i la capçalera a
+ *     1.200 × 675. L'alçada no es deriva del retall (arrodonit al píxel), que
+ *     podria donar-ne un de més o de menys.
  */
 export function opcionsSortida(rect, tipusOriginal, sortida = null) {
   if (!sortida) return { ...midaSortida(rect), tipus: tipusDeSortida(tipusOriginal) };
   const maxim = Number(sortida.ampladaMaxima) > 0 ? Number(sortida.ampladaMaxima) : MIDA_SORTIDA;
   const k = Math.min(1, maxim / rect.w);
+  const exacta = midaExacta(sortida.exacta);
   const opcions = {
-    amplada: Math.max(1, Math.round(rect.w * k)),
-    alcada: Math.max(1, Math.round(rect.h * k)),
+    amplada: exacta ? exacta.amplada : Math.max(1, Math.round(rect.w * k)),
+    alcada: exacta ? exacta.alcada : Math.max(1, Math.round(rect.h * k)),
     tipus: FORMATS_SORTIDA.includes(sortida.format) ? sortida.format : FORMAT_SORTIDA,
   };
   if (Number.isFinite(sortida.qualitat) && sortida.qualitat > 0 && sortida.qualitat <= 1) opcions.qualitat = sortida.qualitat;
@@ -205,6 +219,22 @@ export function ambTecla(e, tecla, W, H, formats = FORMATS, { gran = false } = {
     case '-': case '_': case 'Subtract': return amplia(-1);
     default: return null;
   }
+}
+
+/* Onada 4 (retallador senzill, 261008) · La roda del ratolí sobre el visor:
+   un pas petit, proporcional al gir i mai més gran que el del teclat. Un
+   ratolí dona uns 100 px per osca (el pas sencer); un trackpad, molts girs
+   menuts (passos menuts). deltaMode 1 (línies, Firefox) i 2 (pàgines) es
+   passen a píxels. */
+export const PAS_ZOOM_RODA = 0.002;
+const PIXELS_PER_MODE = Object.freeze([1, 16, 800]);
+
+/** La roda → estat nou (dins dels límits), o null si el gir és nul. Cap amunt, amplia. */
+export function ambRoda(e, deltaY, W, H, formats = FORMATS, { mode = 0 } = {}) {
+  const pixels = finit(Number(deltaY), 0) * (PIXELS_PER_MODE[mode] ?? 1);
+  if (!pixels) return null;
+  const pas = entre(-pixels * PAS_ZOOM_RODA, -PAS_ZOOM_TECLAT, PAS_ZOOM_TECLAT);
+  return limita({ ...e, zoom: finit(e.zoom, 1) + pas }, W, H, formats);
 }
 
 /** El retall és la foto sencera (no cal tornar a codificar res). */

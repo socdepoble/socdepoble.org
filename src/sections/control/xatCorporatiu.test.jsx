@@ -62,12 +62,17 @@ import { TEXTOS_COMENTAR } from '../../components/universal/barres/BarraBlava.js
 import { esRutaInterna } from '../../config/objecteConnectable.js';
 import { ESPERA_DESPRES_DE_FALLADA_MS } from '../../config/navigation.js';
 import { resolRuta } from '../../app/contexts/politicaRouter.js';
-import { IAIA_ID } from '../../data/identitatsSeed.js';
+import { ENTITAT_PILOT_SLUG, IAIA_ID } from '../../data/identitatsSeed.js';
 
 const UUID = '7d1f4c2e-9a3b-4c5d-8e6f-0a1b2c3d4e5f';
 const ALTRE = '0f9e8d7c-6b5a-4c3d-9e2f-1a2b3c4d5e6f';
 const REMOT = Object.freeze({ dataMode: 'remote', supabaseUrl: 'https://poble.example' });
-const ENTITAT = Object.freeze({ tipus: 'entitat', id: UUID, slug: 'soc-de-poble', nom: 'Sóc de Poble' });
+/* Ordre del Mestre (261007) · El slug declarat és el de producció,
+   'socdepoble' (ENTITAT_PILOT_SLUG), el mateix text que l'id de la llavor:
+   les proves de remot demostren que al port es demana eixe text i que
+   l'enllaç porta l'UUID que torna el port. Si el text ve del slug o de l'id
+   de la llavor ja no ho poden distingir: tots dos valen 'socdepoble'. */
+const ENTITAT = Object.freeze({ tipus: 'entitat', id: UUID, slug: ENTITAT_PILOT_SLUG, nom: 'Sóc de Poble' });
 
 beforeEach(() => {
   estat.ui = null;
@@ -101,7 +106,7 @@ describe('resolXatCorporatiu · pur, amb el port injectat', () => {
       estat: 'remot', href: `/xat?amb=${UUID}`
     });
     expect(estat.teCapacitat).toHaveBeenCalledWith('directori');
-    expect(estat.load).toHaveBeenCalledWith('soc-de-poble', config);
+    expect(estat.load).toHaveBeenCalledWith(ENTITAT_PILOT_SLUG, config);
     expect(rutaXatCorporatiu('a b')).toBe('/xat?amb=a%20b');
   });
 
@@ -247,7 +252,7 @@ describe('261007 · ProveidorXatSocDePoble · una sola resolució per a tota l�
     expect(result.current.estat).toBe('resolent');
     act(() => { segona = result.current.resol(); });
     await waitFor(() => expect(estat.load).toHaveBeenCalledTimes(1));
-    expect(estat.load).toHaveBeenCalledWith('soc-de-poble', expect.objectContaining({ supabaseUrl: 'https://poble.example' }));
+    expect(estat.load).toHaveBeenCalledWith(ENTITAT_PILOT_SLUG, expect.objectContaining({ supabaseUrl: 'https://poble.example' }));
     await act(async () => { respon(ENTITAT); });
     const esperat = { estat: 'remot', href: `/xat?amb=${UUID}`, avis: null };
     /* C6 · La mateixa resposta per a totes dues, però només la segona és

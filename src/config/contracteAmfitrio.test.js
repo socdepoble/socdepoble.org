@@ -232,6 +232,23 @@ describe('validaDeclaracioAmfitrio', () => {
     expect(resultat.net.scripts).toEqual([]);
   });
 
+  /* Relleu 261007 (peça «netes») · Decisió 5 del Mestre (261007, paquet
+     trossejat) · La diagnosi diu la causa de veres: el que va en clàssic és el
+     carregador, i els trossos els demana ell.
+     Relleu 261007 (peça «netes», revisió) · El mateix fitxer es distribuïx
+     també monolític (la variant del directori, SDP_VARIANT=wordpress, ho és
+     sempre): la diagnosi nomena les dues formes i no presenta l'IIFE com
+     l'única. */
+  test('la diagnosi de bundle-modul nomena el carregador clàssic, els trossos i el monolític', () => {
+    const [falta] = validaDeclaracioAmfitrio({ scripts: [{ src: '/dist/soc-de-poble.standalone.js', tipus: 'module' }] }).errors;
+    expect(falta.codi).toBe('bundle-modul');
+    expect(falta.detall).toMatch(/^soc-de-poble\.standalone\.js .*<script src> clàssic, mai de mòdul/);
+    expect(falta.detall).toMatch(/carregador/);
+    expect(falta.detall).toMatch(/trossos/);
+    expect(falta.detall).toMatch(/IIFE monolític/);
+    expect(falta.detall).not.toMatch(/El paquet és un IIFE/);
+  });
+
   test.each([[null], [undefined], [[]], ['marcatge'], [42], [new Map()]])('una declaració sense forma (%j) no és conforme i no peta', (decl) => {
     const resultat = validaDeclaracioAmfitrio(decl);
     expect(resultat.ok).toBe(false);

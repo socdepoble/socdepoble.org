@@ -149,9 +149,26 @@ export function filesEntradesEixides(mapa, cerca = '') {
    relacions dites amb verbs i els avisos dits amb paraules. relacionsDe no
    canvia: EntradesEixides i actorsMapa en depenen. */
 
-/* Els tons d'Insignia de la Consola: els de la taula de Salut (MapaConsola.jsx). */
+/* Els tons d'Insignia de la Consola: els de la taula de Salut (MapaConsola.jsx).
+   Neteja 261007 (prompt 261007_1628, peça D) · Esta és la seua única font.
+   Abans TO_CONFIANCA es copiava a MapaConsola.jsx, FluxosMapa.jsx i
+   EntradesEixides.jsx, TO_SEVERITAT a AvisosMapa.jsx, i TO_ESTAT i
+   TEXT_ESTAT a MapaConsola.jsx, CalendariMapa.jsx i XifresMas.jsx; totes les
+   còpies eren iguals, llevat del N/A de les mètriques que XifresMas.jsx
+   afig damunt d'estes (vegeu-lo allà). Una prova (tonsMapa.test.js) fixa
+   que cobrixen tot el vocabulari del contracte (contracteMapa.js). */
+/* La confiança no és salut: només l'inferit avisa, perquè ix de la prosa. */
 export const TO_CONFIANCA = Object.freeze({ declarat: 'info', derivat: 'neutre', inferit: 'avis' });
 export const TO_SEVERITAT = Object.freeze({ alta: 'error', mitjana: 'avis', baixa: 'info' });
+/* L'estat d'una tasca del Mapa (ESTATS_TASCA): el to de la seua insígnia i com es diu. */
+export const TO_ESTAT = Object.freeze({
+  viu: 'exit', mort: 'error', 'declarat-sense-llancador': 'neutre',
+  'llancador-sense-declaracio': 'avis', desconegut: 'neutre'
+});
+export const TEXT_ESTAT = Object.freeze({
+  viu: 'viu', mort: 'mort', 'declarat-sense-llancador': 'sense llançador',
+  'llancador-sense-declaracio': 'sense declaració', desconegut: 'desconegut'
+});
 
 /** Què és cada tipus de peça, en una línia. */
 export const QUE_ES = Object.freeze({

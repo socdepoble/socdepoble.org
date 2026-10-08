@@ -649,3 +649,174 @@ test('T39 · en canviar de document la vista es tanca sola; sense updateLocal no
   editor({});
   expect(screen.queryByRole('button', { name: /Elegir drets d'autor/ })).toBeNull();
 });
+
+/* ── Decisió del Mestre (261008) · drets d'autor dins de l'editor ───────────
+   En edició, la línia del copyright de davall del títol obri la vista de
+   drets (no porta a /page/drets-autor, que trau la persona de l'editor), i la
+   píndola diu la llicència triada. En lectura (l'estat buit), en una
+   connexió (ranura `llicencia`) i sense updateLocal, l'enllaç de sempre. */
+const copyrightDeLaCapcalera = (container) => container.querySelector('header.page-title > p.sp-card-copyright.page-title-copyright');
+
+test('261008 · en edició, el copyright de la capçalera és un botó que obri la vista de drets i no navega', () => {
+  const { container } = editor({ updateLocal: vi.fn(), saveRemote: vi.fn() });
+  const boto = copyrightDeLaCapcalera(container).firstElementChild;
+  expect(boto.tagName).toBe('BUTTON');
+  expect(boto.className).toBe('sp-card-copyright__enllac');
+  expect(boto.hasAttribute('data-sdp-drets')).toBe(true);
+  expect(boto.hasAttribute('href')).toBe(false);
+  expect(boto.textContent).toBe('© Sóc de Poble');
+  expect(boto.getAttribute('aria-label')).toBe("© Sóc de Poble: canviar els drets d'autor");
+  expect(container.querySelector('a.sp-card-copyright__enllac')).toBeNull();
+  const ruta = window.location.pathname;
+  act(() => { fireEvent.click(boto); });
+  expect(container.querySelector('section.sdp-drets')).not.toBeNull();
+  expect(window.location.pathname).toBe(ruta);
+  // La closca s'amaga però continua muntada (el mateix camí que la píndola).
+  expect(container.querySelector('.sdp-editor-shell-atomic').classList.contains('sdp-editor-shell-atomic--amagat')).toBe(true);
+});
+
+test('261008 · en tornar de la vista oberta des del copyright, el focus torna al copyright; desar va pel camí de sempre', () => {
+  const updateLocal = vi.fn();
+  const saveRemote = vi.fn();
+  const { container } = editor({ updateLocal, saveRemote });
+  const boto = copyrightDeLaCapcalera(container).firstElementChild;
+  act(() => { fireEvent.click(boto); });
+  act(() => { fireEvent.click(screen.getByRole('button', { name: 'Tornar al document' })); });
+  expect(container.querySelector('section.sdp-drets')).toBeNull();
+  expect(document.activeElement).toBe(boto);
+  act(() => { fireEvent.click(boto); });
+  const vista = within(container.querySelector('section.sdp-drets'));
+  act(() => { fireEvent.click(vista.getByRole('radio', { name: /^CC BY 4\.0/ })); });
+  act(() => { fireEvent.click(vista.getByRole('button', { name: 'Desar autoria' })); });
+  expect(updateLocal).toHaveBeenCalledWith('d1', 'copyright', 'CC BY 4.0');
+  expect(saveRemote).toHaveBeenCalledWith('d1', 'copyright', 'CC BY 4.0');
+  expect(document.activeElement).toBe(boto);
+});
+
+test('261008 · l’estat buit (lectura) i un document sense updateLocal conserven l’enllaç a /page/drets-autor', () => {
+  const buit = render(<DocumentEditor adapter={{ document: null, emptyDocument: { title: 'Benvinguda', copyright: '© Sóc de Poble' }, updateLocal: vi.fn() }} />);
+  const enllac = copyrightDeLaCapcalera(buit.container).firstElementChild;
+  expect(enllac.tagName).toBe('A');
+  expect(enllac.getAttribute('href')).toBe('/page/drets-autor');
+  expect(buit.container.querySelector('[data-sdp-drets]')).toBeNull();
+  cleanup();
+  const senseEdicio = editor({});
+  expect(copyrightDeLaCapcalera(senseEdicio.container).firstElementChild.tagName).toBe('A');
+  expect(senseEdicio.container.querySelector('[data-sdp-drets]')).toBeNull();
+});
+
+test('261008 · una connexió (ranura llicencia, drets de l’original) conserva l’enllaç: cap botó de drets', () => {
+  const { container } = editor({ updateLocal: vi.fn(), llicencia: <p className="sdp-llicencia-original">Drets de l’original</p> });
+  const enllac = copyrightDeLaCapcalera(container).firstElementChild;
+  expect(enllac.tagName).toBe('A');
+  expect(enllac.getAttribute('href')).toBe('/page/drets-autor');
+  expect(container.querySelector('[data-sdp-drets]')).toBeNull();
+  // Un adaptador no pot colar onCanviaCopyright per ...rest: DocumentEditor mana després.
+  cleanup();
+  const colat = editor({ updateLocal: vi.fn(), llicencia: <p>Drets de l’original</p>, onCanviaCopyright: vi.fn() });
+  expect(copyrightDeLaCapcalera(colat.container).firstElementChild.tagName).toBe('A');
+});
+
+test('261008 · sense llicència triada, la píndola de sempre: «Elegir drets d’autor», buida, amb data-sdp-drets', () => {
+  const { container } = editor({ updateLocal: vi.fn() });
+  const pindola = botoDrets();
+  expect(pindola.hasAttribute('data-sdp-drets')).toBe(true);
+  expect(pindola.getAttribute('aria-label')).toBeNull();
+  expect(pindola.getAttribute('title')).toBe('© Sóc de Poble');
+  expect(pindola.querySelector('.sp-card-label').className).toBe('sp-card-label sdp-badge-buit');
+  // La reserva «© Sóc de Poble» no és cap llicència triada.
+  expect(container.querySelector('.sdp-copyright-control').textContent).not.toContain('Drets d’autor:');
+});
+
+test('261008 · amb llicència triada, la píndola la mostra plena i diu «Drets d’autor: X»; un clic torna a obrir la vista', () => {
+  const { container } = render(<DocumentEditor adapter={{ document: { ...DOC, copyright: 'CC BY 4.0' }, updateLocal: vi.fn(), saveRemote: vi.fn() }} />);
+  expect(screen.queryByRole('button', { name: /Elegir drets d'autor/ })).toBeNull();
+  const pindola = screen.getByRole('button', { name: "Drets d'autor: CC BY 4.0" });
+  expect(pindola.className).toBe('sdp-classificacio-pindola');
+  expect(pindola.hasAttribute('data-sdp-drets')).toBe(true);
+  expect(pindola.querySelector('.sp-card-label').className).toBe('sp-card-label sdp-badge-system');
+  expect(pindola.querySelector('.sdp-classificacio-pindola__text').textContent).toBe('CC BY 4.0');
+  // La línia de la capçalera també la diu, i també obri la vista.
+  expect(copyrightDeLaCapcalera(container).firstElementChild.getAttribute('aria-label')).toBe("CC BY 4.0: canviar els drets d'autor");
+  act(() => { fireEvent.click(pindola); });
+  const vista = within(container.querySelector('section.sdp-drets'));
+  expect(vista.getByRole('radio', { name: /^CC BY 4\.0/ }).checked).toBe(true);
+});
+
+/* Correcció de la revisió (261008) · Al Perfil, document.copyright porta el
+   «© Nom» de lectura (perfilCamps) encara que ningú no haja triat res, i les
+   notes noves hereten la llicència per defecte. La clau dretsTriats diu la
+   triada de veres: amb ella, la píndola no anuncia com a triat el que no ho és. */
+test('261008 · dretsTriats mana en la píndola: buit o null, «Elegir drets d’autor» encara que document.copyright porte «© Pepa»', () => {
+  const ambNom = { ...DOC, copyright: '© Pepa' };
+  for (const dretsTriats of ['', null, '   ', 7]) {
+    const { container, unmount } = render(<DocumentEditor adapter={{ document: ambNom, updateLocal: vi.fn(), dretsTriats }} />);
+    const pindola = screen.getByRole('button', { name: /Elegir drets d'autor/ });
+    expect(pindola.querySelector('.sp-card-label').className, String(dretsTriats)).toBe('sp-card-label sdp-badge-buit');
+    expect(screen.queryByRole('button', { name: /^Drets d'autor:/ })).toBeNull();
+    // La línia de la capçalera continua dient el copyright del document, i obri la vista.
+    expect(copyrightDeLaCapcalera(container).firstElementChild.textContent).toBe('© Pepa');
+    // La clau no arriba al DOM.
+    expect(container.querySelector('[dretstriats], [dretsTriats]')).toBeNull();
+    unmount();
+  }
+});
+
+test('261008 · dretsTriats amb una llicència: la píndola plena la diu, encara que document.copyright en porte una altra', () => {
+  render(<DocumentEditor adapter={{ document: { ...DOC, copyright: '© Pepa' }, updateLocal: vi.fn(), dretsTriats: 'CC BY-SA 4.0' }} />);
+  const pindola = screen.getByRole('button', { name: "Drets d'autor: CC BY-SA 4.0" });
+  expect(pindola.querySelector('.sp-card-label').className).toBe('sp-card-label sdp-badge-system');
+  expect(pindola.querySelector('.sdp-classificacio-pindola__text').textContent).toBe('CC BY-SA 4.0');
+});
+
+test('261008 · sense la clau dretsTriats (Notes), el DOM de sempre: mana document.copyright', () => {
+  vi.useFakeTimers({ toFake: ['Date'] });
+  vi.setSystemTime(new Date(2026, 9, 8, 12, 0));
+  try {
+    const doc = { ...DOC, copyright: 'CC BY 4.0' };
+    const senseClau = render(<DocumentEditor adapter={{ document: doc, updateLocal: vi.fn() }} />);
+    expect(screen.getByRole('button', { name: "Drets d'autor: CC BY 4.0" })).toBeTruthy();
+    const html = senseIds(senseClau.container.innerHTML);
+    cleanup();
+    const ambUndefined = render(<DocumentEditor adapter={{ document: doc, updateLocal: vi.fn(), dretsTriats: undefined }} />);
+    expect(senseIds(ambUndefined.container.innerHTML)).toBe(html);
+  } finally {
+    vi.useRealTimers();
+  }
+});
+
+/* ── CONTRACTE-3 (pla 261008_1201) · ambVistes ──────────────────────────── */
+const botonsDelControl = (container) => [...container.querySelectorAll('header.page-title .sdp-copyright-control button')]
+  .filter((b) => !b.closest('dialog')).map((b) => b.textContent);
+
+test('CONTRACTE-3 · ambVistes={false}: ni Vista A4, ni Crear portada, ni el xip; el botó dels drets i l’aside es queden', () => {
+  const { container } = editor({ targetaViva: true, updateLocal: vi.fn(), ambVistes: false });
+  expect(botonsDelControl(container)).toEqual(["Elegir drets d'autor"]);
+  expect(screen.queryByRole('button', { name: 'Vista A4 / PDF' })).toBeNull();
+  expect(screen.queryByRole('button', { name: 'Crear portada' })).toBeNull();
+  expect(screen.queryByRole('button', { name: 'Vista targeta' })).toBeNull();
+  expect(container.querySelector('aside.sdp-targeta-viva .sp-card')).not.toBeNull();
+  // La clau no arriba al DOM.
+  expect(container.querySelector('[ambvistes], [ambVistes]')).toBeNull();
+});
+
+test('CONTRACTE-3 · ambVistes={true} és el DOM de sempre (el de sense la clau)', () => {
+  vi.useFakeTimers({ toFake: ['Date'] });
+  vi.setSystemTime(new Date(2026, 9, 8, 12, 0));
+  try {
+    const senseClau = editor({ targetaViva: true, updateLocal: vi.fn() });
+    expect(botonsDelControl(senseClau.container).slice(-3)).toEqual(['Vista A4 / PDF', 'Crear portada', 'Vista targeta']);
+    const html = senseIds(senseClau.container.innerHTML);
+    cleanup();
+    const ambTrue = editor({ targetaViva: true, updateLocal: vi.fn(), ambVistes: true });
+    expect(senseIds(ambTrue.container.innerHTML)).toBe(html);
+  } finally {
+    vi.useRealTimers();
+  }
+});
+
+test('CONTRACTE-3 · ambVistes={false} sense targeta viva ni drets (sense updateLocal): cap control buit davall del títol', () => {
+  const { container } = editor({ ambVistes: false });
+  expect(container.querySelector('.sdp-copyright-control')).toBeNull();
+  expect(container.querySelector('.page-title-classificacio')).toBeNull();
+});

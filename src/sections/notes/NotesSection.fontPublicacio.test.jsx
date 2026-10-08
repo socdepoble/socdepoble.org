@@ -160,7 +160,9 @@ test('una foto ja oberta no es perd quan Multimèdia torna a carregar o falla: e
   const repinta = munta(ruta(FOTO_ID, 'f-media'));
   expect(detall()).toBe(FOTO_ID);
 
-  // Recàrrega (useScopedResource torna a 'loading' amb []).
+  // La font torna a 'loading' amb []. Decisió 2 del Mestre (261007) · Una
+  // recàrrega ja conserva 'ready' (useScopedResource.js); 'loading' només ix
+  // per aïllament o des d'un error, i el Bloc s'hi ha de comportar igual.
   Object.assign(dades, { mediaStatus: 'loading', media: BUIT });
   repinta();
   expect(nota()).toBe(FOTO_ID);

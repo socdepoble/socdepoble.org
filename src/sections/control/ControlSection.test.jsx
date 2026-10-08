@@ -287,8 +287,10 @@ const PLUGINS_DE_BAIX = PLUGINS.filter((plugin) => !IDS_DE_DALT.has(plugin.id));
 const TITOLS_DE_BAIX = PLUGINS_DE_BAIX.map((plugin) => plugin.titol);
 const NOMES_DALT = [['Mapa', 'mapa'], ['Vehicle Compartit', 'vehicle'], ['Animalets', 'animalets']];
 /* Les onze de l'ordre del Mestre (prompt 261004_0015 T2). El registre és la
-   font: si en porta més (MarIA hi ha afegit «disseny»), també es pinten. */
-const LES_ONZE = ['mapa', 'vehicle', 'animalets', 'gestoria', 'rebost', 'salut', 'consola', 'cervell', 'rss', 'tpv', 'bascula'];
+   font: si en porta més (MarIA hi ha afegit «disseny»), també es pinten.
+   Ordre del Mestre (261007) · Bàscula descartada per ara: en queden deu
+   d'aquelles onze; amb «disseny», el registre en porta onze. */
+const LES_DE_LORDRE = ['mapa', 'vehicle', 'animalets', 'gestoria', 'rebost', 'salut', 'consola', 'cervell', 'rss', 'tpv'];
 /* On porta cada targeta d'Utilitats, pel seu títol (el Snippet, a la seua fitxa del Panell). */
 const PAGINA_DUTILITAT = new Map([
   ...PLUGINS.map((plugin) => [plugin.titol, rutaDelPlugin(plugin.id)]),
@@ -300,7 +302,11 @@ const PAGINA_DUTILITAT = new Map([
    UniversalCards canòniques, i el Snippet al final de les Utilitats ═══ */
 test('P7-B · W4-08 · el registre sense les de dalt es veu una vegada, en l’ordre del registre, canònic; el Snippet tanca les Utilitats', () => {
   pinta();
-  expect(IDS_PLUGINS).toEqual(expect.arrayContaining(LES_ONZE));
+  expect(IDS_PLUGINS).toEqual(expect.arrayContaining(LES_DE_LORDRE));
+  /* Ordre del Mestre (261007) · Bàscula descartada per ara: cap targeta ni enllaç seu al Panell. */
+  expect(IDS_PLUGINS).not.toContain('bascula');
+  expect(document.querySelector('[href="/plugin/bascula"]')).toBeNull();
+  expect(document.querySelector('img[src*="bascula_vinyeta"]')).toBeNull();
   const targetes = targetesDUtilitats();
   expect(targetes).toHaveLength(PLUGINS_DE_BAIX.length + 1);
   /* L'ordre del DOM i del focus és el del registre, i cada una hi és una vegada. */
@@ -480,10 +486,21 @@ test('P7-B · la preferència només amaga una utilitat amb un false explícit; 
     expect(utilitats(), String(valor)).toContain('Snippet');
     cleanup();
   }
-  localStorage.setItem(CLAU_UTILITATS, JSON.stringify({ gestoria: false, mapa: false, snippet: false, metriques: false, salut: true }));
+  /* Una clau aliena (`inventada`) no amaga res. Ordre del Mestre (261007,
+     prompt 261007_1628, peça C) · `metriques` ja no és aliena: és l'id del
+     Perfil per a la Consola (aplicacions.js, camp `panell`), i una
+     preferència vella desada amb eixe id també l'amaga (ALIES_DEL_PANELL). */
+  localStorage.setItem(CLAU_UTILITATS, JSON.stringify({ gestoria: false, mapa: false, snippet: false, inventada: false, salut: true }));
   pinta();
   expect(utilitats()).toEqual(PLUGINS_DE_BAIX.filter((plugin) => plugin.id !== 'gestoria').map((plugin) => plugin.titol));
   expect(utilitats()).not.toContain('Snippet');
+  cleanup();
+  localStorage.setItem(CLAU_UTILITATS, JSON.stringify({ metriques: false }));
+  pinta();
+  expect(utilitats()).not.toContain('Consola Termodinàmica');
+  cleanup();
+  localStorage.setItem(CLAU_UTILITATS, JSON.stringify({ gestoria: false, mapa: false, snippet: false, inventada: false, salut: true }));
+  pinta();
   /* Dalt, el Mapa continua a la seua posició i el Panell, sencer. */
   expect(targetesDeDalt()[3].querySelector('.sp-card-title').textContent).toBe('Publicar al Mapa');
   expect(screen.getByRole('button', { name: /Missatges per a dubtes/ })).toBeTruthy();

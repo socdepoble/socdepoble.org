@@ -3,6 +3,8 @@
  * les rutes de Connectar porten els paràmetres de sempre més `objecte` i
  * `ruta`; sense id ni ruta segura no s'inventa res.
  */
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { expect, test } from 'vitest';
 import {
   esRutaInterna, objecteDe, objecteDePagina, objecteDePerfil, rutaConnectar, rutaConnectarObjecte, rutaConnectarPerfil
@@ -73,4 +75,40 @@ test('un tipus fora de la llista no s’escriu; els extra buits tampoc', () => {
   const ruta = rutaConnectarObjecte({ tipus: 'script', id: 'x', titol: 'X' }, { organitzacio: '', buit: null });
   expect(params(ruta)).toEqual({ item_id: 'x', title: 'X' });
   expect(rutaConnectarObjecte(null)).toBe('/connectar?');
+});
+
+/* Auditoria 261007 (B) · Codi mort retirat en un sol canvi: navigation.js ja
+   no carrega la llavor per a getSectionItems i findSectionItem (cap crida), i
+   sectionContent.js ja no calcula la cerca global ni reexporta el catàleg de
+   notes vell (notesContent.js). La llavor viva l'importa appSeed.js.
+   Relleu 261007 (revisor de dades-netes, onada 3b) · La prova s'ancora a les
+   línies d'import de navigation.js, no al text de la capçalera (que nomena
+   sectionContent.js per a explicar la retirada), i de sectionContent.js
+   només comprova que les claus retirades no hi tornen: la llista sencera
+   d'exports és de la llavor, no d'esta prova. */
+test('navigation.js sense els cercadors de la llavor; sectionContent.js, només la llavor viva', async () => {
+  const navigation = await import('./navigation.js');
+  for (const mort of ['getSectionItems', 'findSectionItem']) expect(mort in navigation, mort).toBe(false);
+  const font = readFileSync(resolve(process.cwd(), 'src/config/navigation.js'), 'utf8');
+  /* Revisió adversarial (Relleu 261007) · També les importacions de només
+     efecte (`import '…';`, sense `from`): una d'estes tornaria a carregar la
+     llavor sense importar-ne cap nom, i l'expressió de les estàtiques no la
+     veia. */
+  const especificadors = (codi) => [
+    ...[...codi.matchAll(/^[ \t]*(?:import|export)\b[^;]*?\bfrom\s*['"]([^'"]+)['"]/gm)].map((m) => m[1]),
+    ...[...codi.matchAll(/^[ \t]*import\s*['"]([^'"]+)['"]/gm)].map((m) => m[1]),
+    ...[...codi.matchAll(/\bimport\(\s*['"]([^'"]+)['"]\s*\)/g)].map((m) => m[1])
+  ];
+  /* Sonda: les expressions veuen les tres formes (la de diverses línies, la de
+     només efecte i la dinàmica) i les importacions vives de navigation.js. */
+  expect(especificadors("import {\n  a,\n  b\n} from './multi.js';\nimport './efecte.js';\nconst m = () => import('./dinamica.js');\n"))
+    .toEqual(['./multi.js', './efecte.js', './dinamica.js']);
+  const importats = especificadors(font);
+  expect(importats).toEqual(expect.arrayContaining(['../data/identitatsSeed.js', './objecteConnectable.js']));
+  expect(importats.filter((especificador) => /sectionContent/.test(especificador))).toEqual([]);
+  const contingut = await import('../data/sectionContent.js');
+  expect(Object.keys(contingut).length).toBeGreaterThan(0);
+  for (const retirada of ['GLOBAL_SEARCH_ITEMS', 'PAGE_DETAIL_LOOKUP', 'NOTES', 'NOTE_FOLDERS']) {
+    expect(retirada in contingut, retirada).toBe(false);
+  }
 });

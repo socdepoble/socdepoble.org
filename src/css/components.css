@@ -2278,6 +2278,87 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
   }
 }
 
+/* ── Decisió del Mestre (261008) · EN EDICIÓ, EL COPYRIGHT OBRI ELS DRETS ──
+   Dins de l'editor (DocumentEditor → PageFrame, onCanviaCopyright), el text
+   del copyright de la capçalera ja no trau la persona de l'editor: és un
+   <button> amb la classe de l'enllaç (.sp-card-copyright__enllac, el bloc de
+   dalt) que obri la vista de drets. Fora de l'editor, i a TOTES les
+   targetes, continua sent l'enllaç de l'ordre del 261007.
+     · Llei del Píxel: es desfà la pell de botó del navegador perquè es veja
+       i ocupe exactament com l'enllaç: cap vora ni fons, la lletra, l'espaiat
+       i l'alineació del paràgraf (el navegador hi posa letter-spacing:
+       normal; el paràgraf porta 0.05em) i cap coixí lateral. El coixí
+       vertical, el retall i el color són els de l'enllaç.
+     · Premut: el de base.css (scale) faria botar la línia del paràgraf. Dins
+       del paràgraf no escala i respon com els enllaços en línia (base.css,
+       FEEDBACK TÀCTIL GLOBAL): opacitat 0.7. Correcció de la revisió
+       (261008): abans el botó no responia gens en prémer-lo. Al Bancal,
+       cap text translúcid (SETENA PASSADA): opac.
+   Especificitat (0,1,1): guanya a .sp-card-copyright__enllac (0,1,0) només
+   en el que el botó afig. Additiu: cap regla existent canvia. */
+@layer components {
+  button.sp-card-copyright__enllac {
+    padding-inline: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    letter-spacing: inherit;
+    text-align: inherit;
+    text-transform: inherit;
+    cursor: pointer;
+  }
+  .sp-card-copyright button.sp-card-copyright__enllac:active {
+    transform: none;
+    opacity: 0.7;
+  }
+  :root[data-contrast="bancal"] .sp-card-copyright button.sp-card-copyright__enllac:active,
+  :host([data-contrast="bancal"]) .sp-card-copyright button.sp-card-copyright__enllac:active {
+    opacity: 1;
+  }
+}
+
+/* ── Contracte-1 (pla 261008_1201) · LES PÍNDOLES DE L'AVATAR ──────────────
+   Davall de l'avatar redó del bloc del títol (PageFrame, avatarAutor amb
+   etiquetaCanvia o onLleva), una fila centrada de píndoles de text
+   (.sdp-classificacio-pindola, modules.css: l'àrea tàctil de --sdp-touch i
+   la píndola buida de dins). L'avatar ja deixa el seu aire per davall
+   (.page-title-avatar, --sdp-space-4); la fila deixa el mateix abans de
+   l'H1. Sense eixes claus, el contenidor no es pinta. */
+@layer components {
+  .page-title-avatar-accions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--sdp-space-2);
+    max-width: 100%;
+    margin-block-end: var(--sdp-space-4);
+  }
+  /* Línia I1 (pla 261008_1201) · avatarAutor.ajuda: la línia d'ajuda, últim
+     fill de la fila, ocupa una línia sencera davall de les píndoles i va
+     centrada. L'aire entre les píndoles i ella és el gap de la fila. */
+  .page-title-avatar-accions > .sdp-camp__ajuda {
+    flex-basis: 100%;
+    margin: 0;
+    text-align: center;
+  }
+}
+
+/* Correcció de la revisió de la línia I1 (pla 261008_1201) · La línia
+   d'ajuda de davall del botó de la capçalera en repòs (UniversalEditorShell,
+   ajudaAmbImatge: la imatge, i després el seu camp) viu sobre el marc taronja
+   de .hero-image (layout.css, --sdp-accent). Amb el gris suau de sèrie no
+   arribava al 4,5:1 (WCAG 1.4.3); el text sobre l'accent és
+   --sdp-sobre-accent (7,12:1 en clar i en fosc, tokens.css). Només esta
+   línia: la del panell obert (Enrere, Esborrar) és de sempre, també a
+   Notes, i canviar-la és decisió del Mestre (Llei del Píxel). La capçalera
+   buida (.hero-image--buit) no té marc taronja i no hi casa: sense imatge
+   no hi ha cap <img> davant del camp. */
+@layer components {
+  .hero-image > img + .sdp-camp > .sdp-camp__ajuda {
+    color: var(--sdp-sobre-accent);
+  }
+}
+
 /* ── P6 · EL GRAN BOTÓ «PUBLICAR» DE LES SIS PÀGINES (directriu 261003_2325,
    confirmació 4) ── La porta Publicar de la targeta, al final del text de
    la seua UniversalPage (PublicarDeLaPagina.jsx), amb la pell de Boto gran i
@@ -2475,8 +2556,9 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
 
 /* ── Ordre del Mestre (261007) · CARRUSEL D'IMATGES ──────────────────────
    La pell de CarruselImatges (PedraSeca/organismes), la portada amb més
-   d'una foto de la Pàgina Universal (ItemDetailSection, a la ranura
-   topBarData.heroComponent de PageFrame). Vivia a PedraSeca/carrusel.css,
+   d'una foto de la Pàgina Universal (portadaDElement de detailSectionMeta.jsx,
+   a la ranura topBarData.heroComponent de PageFrame; Esmena 3 del pla
+   261007_1645). Vivia a PedraSeca/carrusel.css,
    que trencava la llei dura V3 «css-de-seccio» de tractor-vocabulari.mjs
    (revisió S1). Ordre del Mestre: «Moure a components.css». Mateixes
    regles i mateix píxel; només el centrat del comptador canvia d'escriptura

@@ -256,3 +256,11 @@ REGISTRE.push({ nom: 'PortaDePagina', fitxer: 'PedraSeca/organismes/PortesTarget
    (fonaments/controls-barra). */
 REGISTRE.push({ nom: 'BotoComentar', fitxer: 'PedraSeca/organismes/Comentar.jsx', pagina: 'fonaments', estat: 'viu' });
 REGISTRE.push({ nom: 'MenuComentar', fitxer: 'PedraSeca/organismes/Comentar.jsx', pagina: 'fonaments', estat: 'viu' });
+/* Esmena 2 del pla 261007_1645 (ordre del Mestre, 261007: «Esta lògica de llistar elements de
+   la categoria per a l'avatar actiu ha d'estar disponible per tot el sistema») · el que l'actor
+   ja té publicat, i la targeta del Mercat extreta de MercatSection (la mateixa a /mercat i a
+   l'històric); viuen a sections/, fora de PedraSeca. Espècimen: EspecimenPublicacionsDeLActor
+   (fonaments/publicacions-actor). */
+REGISTRE.push({ nom: 'PublicacionsDeLActor', fitxer: 'sections/mur/PublicacionsDeLActor.jsx', pagina: 'fonaments', estat: 'viu', fora: true });
+REGISTRE.push({ nom: 'VistaPublicacionsDeLActor', fitxer: 'sections/mur/PublicacionsDeLActor.jsx', pagina: 'fonaments', estat: 'viu', fora: true });
+REGISTRE.push({ nom: 'TargetaDelMercat', fitxer: 'sections/mercat/TargetaDelMercat.jsx', pagina: 'fonaments', estat: 'viu', fora: true });

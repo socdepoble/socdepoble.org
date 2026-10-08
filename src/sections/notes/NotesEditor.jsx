@@ -29,6 +29,9 @@ import { useNotaPreparadaDelBloc } from './notaPreparada.js';
 import { useMur } from '../mur/MurContext';
 import { cercaEntrades, deActe, dePagina, dePoble, deProducte, dePublicacio, textPla } from '../search/indexCerca.js';
 import { rutaDePerfilDAutor } from '../../config/navigation.js';
+/* Esmena 2 del pla 261007_1645 · el que l'actor ja té publicat, al peu. */
+import { PublicacionsDeLActor } from '../mur/PublicacionsDeLActor.jsx';
+import { potVeureHistoric, titolDeLHistoric } from '../mur/usePublicacionsDeLActor.js';
 
 /* Constants de mòdul */
 const SENSE_PARAMS = {};
@@ -126,8 +129,12 @@ function entradesDeTargetes({ publicacions, actes, productes, pobles, pagines })
 /* T7 · `onToast` és opcional: sense, els avisos de l'editor (p. ex. una
    capçalera que no s'ha pogut pujar) van al missatge ràpid de l'app
    (useToast), i no a la consola. Abans cap muntatge (NotesDetail, el
-   catàleg) el passava i la persona no veia l'error. */
-export default function NotesEditor({ activeNote, onToast = null }) {
+   catàleg) el passava i la persona no veia l'error.
+   Esmena 2 del pla 261007_1645 · `seccio` (opcional, un text): la secció de
+   la carpeta triada al Bloc. Amb una secció que en té (Mur, Mercat o
+   Esdeveniments), el peu de la pàgina llista el que l'actor ja hi té publicat
+   (PublicacionsDeLActor). Sense, el DOM de sempre. */
+export default function NotesEditor({ activeNote, onToast = null, seccio = null }) {
   const {
     saveNoteField, setLocalNoteField, publishNote, compartirNota, noteFolders, t, config, workspaceKey,
     notes = CAP, notesComplete, mouNota, esborraNota, potEsborrar = false, scopeKey
@@ -334,6 +341,30 @@ export default function NotesEditor({ activeNote, onToast = null }) {
     [idSignatura, actor, actorId, agents, currentUser]
   );
 
+  /* Esmena 2 del pla 261007_1645 (ordre del Mestre, 261007: «En seleccionar
+     la carpeta 'Mur' o 'Mercat' i el perfil 'Sóc de Poble', la part inferior
+     de la nota hauria de llistar totes les notícies/productes ja publicades en
+     eixe context per al perfil actiu») · El peu de la pàgina de l'editor, per
+     la clau d'adaptador `peuDePagina` (DocumentEditor → UniversalEditorShell →
+     PageFrame). Es memoritza sobre textos: un JSX nou a cada pintada refaria
+     notesAdapter. Fora de la seua publicació: la nota publicada al Mur ja és
+     la peça que s'edita (D2), no s'hi repetix davall. Sense secció o en una
+     secció sense targeta canònica (Multimèdia, les altres carpetes), cap
+     clau: el DOM de sempre.
+     Decisió per defecte del Mestre (261007) · el Foraster no veu cap
+     històric. Revisió adversarial del 261007 · Sense sessió l'actor no és
+     null (IdentitatContext hi posa el convidat, amb id): la regla és
+     potVeureHistoric, la mateixa que aplica PublicacionsDeLActor, més
+     `foraster` (sense currentUser). Si l'editor posara el peu i el component
+     no pintara res, PageFrame deixaria una regió amb nom, buida. */
+  const ambHistoric = potVeureHistoric(actor, seccio) && !foraster;
+  const exclouDelPeu = notaEnEdicio?.publishedSubmissionId ?? null;
+  const peuDePagina = useMemo(
+    () => (ambHistoric ? <PublicacionsDeLActor seccio={seccio} exclouId={exclouDelPeu} /> : null),
+    [ambHistoric, seccio, exclouDelPeu]
+  );
+  const etiquetaPeuDePagina = ambHistoric ? titolDeLHistoric(seccio, t) : '';
+
   const notesAdapter = useMemo(() => {
     /* T41 (ordre del Mestre, 260928) · PUBLICAR (i la bola del món) obrin el
        selector de visibilitat: publicar o compartir al Mur només en confirmar.
@@ -450,9 +481,11 @@ export default function NotesEditor({ activeNote, onToast = null }) {
           </Insignia>
         )
       } : {}),
-      ...(estatDesament ? { estatDesament } : {})
+      ...(estatDesament ? { estatDesament } : {}),
+      /* Esmena 2 (261007_1645) · el peu de la pàgina: el que l'actor ja té publicat. */
+      ...(peuDePagina ? { peuDePagina, etiquetaPeuDePagina } : {})
     };
-  }, [notaEnEdicio, documentPerAlEditor, esSandbox, esPreparada, creacioPreparada, escriuPreparada, desaPreparada, foraster, actor, actorId, autoria, memberships, actualitzaSandbox, setLocalNoteField, saveNoteField, publishNote, compartirNota, connexio, dretsReservats, dretsDeLOriginal, extern, citaOrigen, pucBorrar, obriBorrar, obriEmoticona, noteFolders, t, signatura, emptyDocument, config, classificacio, carpetes, carpetaId, estatDesament, dataNomesAlDispositiu, targetes]);
+  }, [notaEnEdicio, documentPerAlEditor, esSandbox, esPreparada, creacioPreparada, escriuPreparada, desaPreparada, foraster, actor, actorId, autoria, memberships, actualitzaSandbox, setLocalNoteField, saveNoteField, publishNote, compartirNota, connexio, dretsReservats, dretsDeLOriginal, extern, citaOrigen, pucBorrar, obriBorrar, obriEmoticona, noteFolders, t, signatura, emptyDocument, config, classificacio, carpetes, carpetaId, estatDesament, dataNomesAlDispositiu, targetes, peuDePagina, etiquetaPeuDePagina]);
 
   // Reanomenar i esborrar necessiten veure totes les notes: amb el llistat a
   // mitges, una nota no carregada es quedaria amb el nom vell.

@@ -122,7 +122,9 @@ test('el disparador és un de sol, a nivell d’app: AppDataLoader, damunt de to
   const codi = readFileSync(join(process.cwd(), 'src/app/App.jsx'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
   expect(codi.match(/\buseEntitatDelProjecte\(\)/g)).toHaveLength(1);
   const inici = codi.indexOf('function AppDataLoader()');
-  const fi = codi.indexOf('function ActorRedirect');
+  /* Auditoria 261007 (B) · ActorRedirect (codi mort) ja no existix: el tall
+     acaba en la funció que ve just després d'AppDataLoader. */
+  const fi = codi.indexOf('function RedireccioIaia');
   expect(inici).toBeGreaterThanOrEqual(0);
   expect(fi).toBeGreaterThan(inici);
   const carregador = codi.slice(inici, fi);

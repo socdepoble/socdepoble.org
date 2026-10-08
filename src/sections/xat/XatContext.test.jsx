@@ -1,8 +1,10 @@
 import React, { StrictMode, useEffect, useLayoutEffect } from 'react';
+import { flushSync } from 'react-dom';
 import { act, cleanup, render, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import '../../host.js';
 import { XatProvider, useXat } from './XatContext.jsx';
+import { ambXatsPerDefecte } from '../../data/xatsPerDefecte.js';
 
 const mock = vi.hoisted(() => ({
   session: { currentUser: { id: 'A' }, generacio: 1 }, actorKey: 'persona::A', pathname: '/xat', showToast: vi.fn(),
@@ -64,21 +66,55 @@ describe('confidencialitat del scope del Xat', () => {
     expect(mock.unsubscribeFromXat).toHaveBeenCalledWith('sub-A');
   });
 
-  it.each(['tenant', 'backend', 'config', 'actor', 'generacio'])('invalida %s mantenint el mateix usuari', async change => {
+  it.each(['tenant', 'backend', 'actor'])('invalida %s mantenint el mateix usuari', async change => {
     const view = await open();
     const signal = mock.loadMissatges.mock.calls.at(-1)[1].signal;
     let config = view.config;
     if (change === 'tenant') config = { ...config, tenantId: '00000000-0000-0000-0000-00000000000b' };
     if (change === 'backend') config = { ...config, backendId: 'altre' };
-    if (change === 'config') config = { ...config };
     if (change === 'actor') mock.actorKey = 'entitat::associacio';
-    if (change === 'generacio') mock.session = { ...mock.session, generacio: 2 };
     snapshots = []; view.rerender(tree(config));
     expect(snapshots[0].chatMessages).toEqual([]);
     expect(snapshots[0].filActiu).toBeNull();
     expect(signal.aborted).toBe(true);
     await waitFor(() => expect(value.status).toBe('ready'));
     expect(value.getThreadMessages('fil-A')).toEqual([]);
+  });
+
+  /* Decisió 1 del Mestre (261007) · «Bombolles del xat: S'HAN DE CONSERVAR.
+     La desaparició de l'historial del xat cada hora en renovar-se la sessió
+     destrossa l'experiència.» 'generacio' (la renovació del JWT) i 'config'
+     (una config nova del mateix backend) eren dos casos de la prova de dalt,
+     que fixava la purga; ja no són un altre àmbit i fixen el contrari: les
+     operacions en vol s'avorten i se'n llancen de noves amb el testimoni nou
+     (la llista, el fil obert per seq i el canal), i cap render no perd la
+     conversa ni el fil obert. */
+  it.each(['generacio', 'config'])('Decisió 1 · %s nou del mateix àmbit avorta les operacions i conserva el fil obert i els missatges', async change => {
+    const view = await open();
+    const signal = mock.loadMissatges.mock.calls.at(-1)[1].signal;
+    const subscripcions = mock.subscribeToXat.mock.calls.length;
+    const llistes = mock.loadFils.mock.calls.length;
+    let config = view.config;
+    if (change === 'config') config = { ...config };
+    if (change === 'generacio') mock.session = { ...mock.session, generacio: 2 };
+    snapshots = []; view.rerender(tree(config));
+    expect(snapshots.length).toBeGreaterThan(0);
+    for (const s of snapshots) {
+      expect(s.chatMessages.map((m) => m.text)).toEqual(['secret-A']);
+      expect(s.filActiu).toBe('fil-A');
+      expect(s.status).toBe('ready');
+      expect(s.chatThreads.map((f) => f.id)).toEqual(['fil-A']);
+    }
+    expect(signal.aborted).toBe(true);
+    await waitFor(() => expect(mock.subscribeToXat.mock.calls.length).toBeGreaterThan(subscripcions));
+    expect(mock.unsubscribeFromXat).toHaveBeenCalledWith('sub-A');
+    expect(mock.loadFils.mock.calls.length).toBeGreaterThan(llistes);
+    const darrera = mock.loadMissatges.mock.calls.at(-1);
+    expect(darrera).toEqual(['fil-A', expect.objectContaining({ despresDeSeq: 1 })]);
+    expect(darrera[1].signal).not.toBe(signal);
+    expect(darrera[1].signal.aborted).toBe(false);
+    expect(value.getThreadMessages('fil-A').map((m) => m.text)).toEqual(['secret-A']);
+    expect(value.filActiu).toBe('fil-A');
   });
 
   it('descarta lectures tardanes i no marca llegit en el scope següent', async () => {
@@ -275,6 +311,541 @@ describe('enviament fiable (F0)', () => {
     const confirmat = value.getThreadMessages('fil-A').find(m => m.id === id);
     expect(confirmat.estatEnviament).toBe('enviat');
     expect(value.getThreadMessages('fil-A').filter(m => m.id === id)).toHaveLength(1);
+  });
+});
+
+/* Decisió 1 del Mestre (261007) · «Bombolles del xat: S'HAN DE CONSERVAR. […]
+   L'estat local ha de mantenir la continuïtat de la conversa malgrat la
+   renovació del token (JWT).» Una renovació és la mateixa persona amb
+   generacio+1 (auth.js → identitat.js:versioSessio → sessionService.js). */
+describe('Decisió 1 · la conversa sobreviu a la renovació del JWT', () => {
+  const CONFIG = { backendId: 'supabase', tenantId: '00000000-0000-0000-0000-00000000000a' };
+  const renova = (view, config = view.config || CONFIG) => {
+    mock.session = { ...mock.session, generacio: (mock.session.generacio || 0) + 1 };
+    view.rerender(tree(config));
+  };
+  /* Totes les promeses ja resoltes han acabat la seua cadena. */
+  const buidaCua = () => act(async () => { await new Promise((resol) => setTimeout(resol, 0)); });
+  const avortat = () => Object.assign(new Error('The operation was aborted.'), { name: 'AbortError' });
+  /* Relleu 261007 (revisió de seguretat de la Decisió 1, problema 1) · Obri
+     la finestra entre la comprovació del relleu i la continuació de qui
+     l'espera. `senyal` és el de l'operació viva (la de la renovació): la
+     primera lectura de `aborted` que el troba viu és la de relleuViu, i en
+     eixe moment es programa, en una microtasca, l'entrada de B dins de
+     flushSync. Eixa microtasca s'executa abans que la continuació de
+     despresDelRelleu o d'enviaMarca. Torna si el canvi ja s'ha fet.
+     Relleu 261007 (revisió de la correcció de seguretat, problema 2) · El
+     canvi és `aplica`: l'entrada de B o una segona renovació. */
+  const armaCanviEnLaFinestra = (view, senyal, aplica, config = view.config || CONFIG) => {
+    let armat = true;
+    Object.defineProperty(senyal, 'aborted', {
+      configurable: true,
+      get() {
+        const real = Reflect.get(Object.getPrototypeOf(senyal), 'aborted', senyal);
+        if (armat && !real) {
+          armat = false;
+          Promise.resolve().then(() => flushSync(() => {
+            aplica();
+            view.rerender(tree(config));
+          }));
+        }
+        return real;
+      }
+    });
+    return () => !armat;
+  };
+  const armaCanviDePersona = (view, senyal, config) => armaCanviEnLaFinestra(view, senyal, () => {
+    mock.session = { currentUser: { id: 'B' }, generacio: 9 }; mock.actorKey = 'persona::B';
+  }, config);
+  const armaSegonaRenovacio = (view, senyal, config) => armaCanviEnLaFinestra(view, senyal, () => {
+    mock.session = { ...mock.session, generacio: (mock.session.generacio || 0) + 1 };
+  }, config);
+
+  it('una bombolla en error sobreviu a la renovació i «Torna-ho a provar» la reenvia amb el mateix id', async () => {
+    const view = await open();
+    mock.enviaMissatge.mockRejectedValueOnce(Object.assign(new Error('SDP-XAT-500: el servidor no respon'), { retriable: false }));
+    await act(async () => { await value.sendChatMessage({ id: 'fil-A' }, 'Demà a les 8 al bancal'); });
+    const fallit = value.getThreadMessages('fil-A').at(-1);
+    expect(fallit).toMatchObject({ estatEnviament: 'error', text: 'Demà a les 8 al bancal' });
+    renova(view);
+    await buidaCua();
+    expect(value.getThreadMessages('fil-A').find((m) => m.id === fallit.id))
+      .toMatchObject({ estatEnviament: 'error', text: 'Demà a les 8 al bancal', error: 'SDP-XAT-500: el servidor no respon' });
+    mock.enviaMissatge.mockImplementationOnce(async (_, cos) => message(cos.text, cos.id, { seq: 7 }));
+    let resultat;
+    await act(async () => { resultat = await value.reintenta(fallit.id); });
+    expect(mock.enviaMissatge).toHaveBeenCalledTimes(2);
+    expect(mock.enviaMissatge.mock.calls[1][1]).toEqual({ id: fallit.id, text: 'Demà a les 8 al bancal' });
+    expect(mock.enviaMissatge.mock.calls[1][2].signal.aborted).toBe(false);
+    expect(resultat[0]).toMatchObject({ id: fallit.id, seq: 7 });
+    expect(value.getThreadMessages('fil-A').filter((m) => m.id === fallit.id))
+      .toEqual([expect.objectContaining({ estatEnviament: 'enviat', seq: 7 })]);
+  });
+
+  it('un enviament en vol quan es renova passa a error sense desaparéixer ni un render i es reintenta amb el mateix id', async () => {
+    const view = await open();
+    const enVol = deferred(); mock.enviaMissatge.mockReturnValueOnce(enVol.promise);
+    let promesa;
+    act(() => { promesa = value.sendChatMessage({ id: 'fil-A' }, 'just ara'); });
+    const id = value.getThreadMessages('fil-A').at(-1).id;
+    const senyal = mock.enviaMissatge.mock.calls[0][2].signal;
+    snapshots = []; renova(view);
+    expect(senyal.aborted).toBe(true);
+    expect(snapshots.length).toBeGreaterThan(0);
+    expect(snapshots.every((s) => s.chatMessages.some((m) => m.id === id && m.text === 'just ara'))).toBe(true);
+    /* error: null → la bombolla diu el «No s'ha enviat» traduït de sempre. */
+    expect(value.getThreadMessages('fil-A').find((m) => m.id === id)).toMatchObject({ estatEnviament: 'error', text: 'just ara', error: null });
+    await act(async () => { enVol.reject(avortat()); expect(await promesa).toEqual([]); });
+    expect(value.getThreadMessages('fil-A').find((m) => m.id === id).estatEnviament).toBe('error');
+    mock.enviaMissatge.mockImplementationOnce(async (_, cos) => message(cos.text, cos.id, { seq: 3 }));
+    await act(async () => { await value.reintenta(id); });
+    expect(mock.enviaMissatge.mock.calls.map((c) => c[1].id)).toEqual([id, id]);
+    expect(value.getThreadMessages('fil-A').filter((m) => m.id === id))
+      .toEqual([expect.objectContaining({ estatEnviament: 'enviat', seq: 3 })]);
+  });
+
+  /* Relleu 261007 (revisió adversarial) · L'escenari dels verificadors: un
+     missatge que esperava el reintent automàtic (1-4 s, esperaReintent) quan
+     arriba la renovació. Durant l'espera la bombolla és 'pendent'; l'abort
+     talla l'espera, la bombolla passa a 'error' i ja no es reintenta sola amb
+     el testimoni vell. «Torna-ho a provar» la reenvia amb el mateix id. */
+  it('un enviament que espera el reintent automàtic quan es renova passa a error i no es reintenta sol', async () => {
+    const view = await open();
+    mock.enviaMissatge.mockRejectedValueOnce(Object.assign(new Error('xarxa'), { retriable: true }));
+    vi.useFakeTimers();
+    let promesa;
+    act(() => { promesa = value.sendChatMessage({ id: 'fil-A' }, 'esperant'); });
+    const id = value.getThreadMessages('fil-A').at(-1).id;
+    await act(async () => { await vi.advanceTimersByTimeAsync(0); });
+    expect(mock.enviaMissatge).toHaveBeenCalledTimes(1);
+    expect(value.getThreadMessages('fil-A').find((m) => m.id === id).estatEnviament).toBe('pendent');
+    renova(view);
+    expect(value.getThreadMessages('fil-A').find((m) => m.id === id))
+      .toMatchObject({ estatEnviament: 'error', text: 'esperant', error: null });
+    await act(async () => { expect(await promesa).toEqual([]); });
+    await act(async () => { await vi.advanceTimersByTimeAsync(10000); });
+    expect(mock.enviaMissatge).toHaveBeenCalledTimes(1);
+    expect(value.getThreadMessages('fil-A').find((m) => m.id === id).estatEnviament).toBe('error');
+    vi.useRealTimers();
+    mock.enviaMissatge.mockImplementationOnce(async (_, cos) => message(cos.text, cos.id, { seq: 3 }));
+    await act(async () => { await value.reintenta(id); });
+    expect(mock.enviaMissatge).toHaveBeenCalledTimes(2);
+    expect(mock.enviaMissatge.mock.calls[1][1]).toEqual({ id, text: 'esperant' });
+    expect(mock.enviaMissatge.mock.calls[1][2].signal.aborted).toBe(false);
+    expect(value.getThreadMessages('fil-A').filter((m) => m.id === id))
+      .toEqual([expect.objectContaining({ estatEnviament: 'enviat', seq: 3 })]);
+  });
+
+  it('si el servidor ja tenia l’enviament tallat, la lectura del testimoni nou retira la bombolla en error (retiraConfirmats)', async () => {
+    const view = await open();
+    const enVol = deferred(); mock.enviaMissatge.mockReturnValueOnce(enVol.promise);
+    act(() => { value.sendChatMessage({ id: 'fil-A' }, 'ja hi era'); });
+    const id = value.getThreadMessages('fil-A').at(-1).id;
+    mock.loadMissatges.mockResolvedValue([message('ja hi era', id, { seq: 2 })]);
+    renova(view);
+    await waitFor(() => expect(value.getThreadMessages('fil-A').filter((m) => m.id === id))
+      .toEqual([expect.objectContaining({ estatEnviament: 'enviat', seq: 2 })]));
+    expect(mock.loadMissatges).toHaveBeenLastCalledWith('fil-A', expect.objectContaining({ despresDeSeq: 1 }));
+    expect(value.getThreadMessages('fil-A').map((m) => m.text)).toEqual(['secret-A', 'ja hi era']);
+    await act(async () => { enVol.reject(avortat()); });
+  });
+
+  it.each(['persona', 'actor'])('un canvi de %s continua purgant-ho tot, també les bombolles en error (ARQ-H01)', async (canvi) => {
+    const view = await open();
+    mock.enviaMissatge.mockRejectedValueOnce(Object.assign(new Error('no'), { retriable: false }));
+    await act(async () => { await value.sendChatMessage({ id: 'fil-A' }, 'privat'); });
+    const fallit = value.getThreadMessages('fil-A').at(-1);
+    expect(fallit.estatEnviament).toBe('error');
+    const old = value;
+    if (canvi === 'persona') { mock.session = { currentUser: { id: 'B' }, generacio: 2 }; mock.actorKey = 'persona::B'; }
+    else mock.actorKey = 'entitat::associacio';
+    snapshots = []; view.rerender(tree(view.config));
+    expect(snapshots[0].chatMessages).toEqual([]);
+    expect(snapshots[0].chatThreads).toEqual([]);
+    expect(snapshots[0].filActiu).toBeNull();
+    expect(old.getThreadMessages('fil-A')).toEqual([]);
+    await waitFor(() => expect(value.status).toBe('ready'));
+    expect(value.getThreadMessages('fil-A')).toEqual([]);
+    expect(value.filActiu).toBeNull();
+    await act(async () => {
+      expect(await old.reintenta(fallit.id)).toEqual([]);
+      expect(await value.reintenta(fallit.id)).toEqual([]);
+    });
+    expect(mock.enviaMissatge).toHaveBeenCalledTimes(1);
+  });
+
+  it('l’historial cap arrere que la renovació talla es torna a demanar sense eixir de «carregant» i les pàgines carregades es queden', async () => {
+    const pagina = Array.from({ length: 50 }, (_, i) => message(`m${51 + i}`, `id-${51 + i}`, { seq: 51 + i }));
+    const antics = Array.from({ length: 10 }, (_, i) => message(`m${41 + i}`, `id-${41 + i}`, { seq: 41 + i }));
+    const vella = deferred(), nova = deferred();
+    const respostes = [vella.promise, nova.promise];
+    mock.loadMissatges.mockImplementation((_, o) => (o.abansDeSeq != null ? respostes.shift() : Promise.resolve(pagina)));
+    const anticsDemanats = () => mock.loadMissatges.mock.calls.filter(([, o]) => o.abansDeSeq != null).map(([, o]) => o);
+    const view = render(tree(CONFIG));
+    await waitFor(() => expect(value.status).toBe('ready'));
+    act(() => value.obriFil('fil-A'));
+    await waitFor(() => expect(value.getThreadMessages('fil-A')).toHaveLength(50));
+    act(() => { value.carregaMesAntics('fil-A'); });
+    await waitFor(() => expect(value.carregantAntics('fil-A')).toBe(true));
+    expect(anticsDemanats()).toHaveLength(1);
+    renova(view);
+    await waitFor(() => expect(anticsDemanats()).toHaveLength(2));
+    const [primera, segona] = anticsDemanats();
+    expect(primera.signal.aborted).toBe(true);
+    expect(segona).toMatchObject({ abansDeSeq: 51, limit: 50 });
+    expect(segona.signal.aborted).toBe(false);
+    expect(value.carregantAntics('fil-A')).toBe(true);
+    expect(value.getThreadMessages('fil-A')).toHaveLength(50);
+    /* La resposta tardana de l'operació avortada no entra ni apaga «carregant». */
+    await act(async () => { vella.resolve(antics.slice(0, 5)); });
+    expect(value.getThreadMessages('fil-A')).toHaveLength(50);
+    expect(value.carregantAntics('fil-A')).toBe(true);
+    await act(async () => { nova.resolve(antics); });
+    await waitFor(() => expect(value.getThreadMessages('fil-A')).toHaveLength(60));
+    expect(value.carregantAntics('fil-A')).toBe(false);
+    expect(value.hiHaMesAntics('fil-A')).toBe(false);
+  });
+
+  /* Relleu 261007 (revisió adversarial) · La cursa fràgil del canvi: al
+     navegador, el fetch avortat rebutja a l'instant i el `finally` de
+     l'operació vella no ha d'esborrar l'entrada que el relleu torna a demanar;
+     si l'esborrara abans, «carregant» es quedaria encés per sempre i no
+     eixiria cap segona petició. */
+  it('l’historial tallat que rebutja en avortar-se (com fetch) es torna a demanar, sense avís, i «carregant» s’apaga en arribar', async () => {
+    const pagina = Array.from({ length: 50 }, (_, i) => message(`m${51 + i}`, `id-${51 + i}`, { seq: 51 + i }));
+    const antics = Array.from({ length: 10 }, (_, i) => message(`m${41 + i}`, `id-${41 + i}`, { seq: 41 + i }));
+    const nova = deferred();
+    let primera = true;
+    mock.loadMissatges.mockImplementation((_, o) => {
+      if (o.abansDeSeq == null) return Promise.resolve(pagina);
+      if (!primera) return nova.promise;
+      primera = false;
+      return new Promise((_resol, rebutja) => {
+        o.signal.addEventListener('abort', () => rebutja(avortat()), { once: true });
+      });
+    });
+    const anticsDemanats = () => mock.loadMissatges.mock.calls.filter(([, o]) => o.abansDeSeq != null).map(([, o]) => o);
+    const view = render(tree(CONFIG));
+    await waitFor(() => expect(value.status).toBe('ready'));
+    act(() => value.obriFil('fil-A'));
+    await waitFor(() => expect(value.getThreadMessages('fil-A')).toHaveLength(50));
+    act(() => { value.carregaMesAntics('fil-A'); });
+    await waitFor(() => expect(anticsDemanats()).toHaveLength(1));
+    expect(value.carregantAntics('fil-A')).toBe(true);
+    renova(view);
+    await waitFor(() => expect(anticsDemanats()).toHaveLength(2));
+    await buidaCua();
+    const [primeraPeticio, segona] = anticsDemanats();
+    expect(primeraPeticio.signal.aborted).toBe(true);
+    expect(segona).toMatchObject({ abansDeSeq: 51, limit: 50 });
+    expect(segona.signal.aborted).toBe(false);
+    expect(value.carregantAntics('fil-A')).toBe(true);
+    expect(value.avis).toBeNull();
+    await act(async () => { nova.resolve(antics); });
+    await waitFor(() => expect(value.getThreadMessages('fil-A')).toHaveLength(60));
+    expect(value.carregantAntics('fil-A')).toBe(false);
+    expect(anticsDemanats()).toHaveLength(2);
+  });
+
+  it('una obertura de conversa tallada per la renovació es torna a fer amb l’operació nova i torna l’id de veres', async () => {
+    const view = await open();
+    const tallada = deferred();
+    mock.creaFilDirecte.mockReturnValueOnce(tallada.promise).mockResolvedValueOnce('fil-A');
+    let promesa;
+    act(() => { promesa = value.creaFil('X'); });
+    renova(view);
+    expect(mock.creaFilDirecte.mock.calls[0][2].signal.aborted).toBe(true);
+    await act(async () => { tallada.reject(avortat()); });
+    let filId;
+    await act(async () => { filId = await promesa; });
+    expect(filId).toBe('fil-A');
+    expect(mock.creaFilDirecte).toHaveBeenCalledTimes(2);
+    expect(mock.creaFilDirecte.mock.calls[1].slice(0, 2)).toEqual(['X', null]);
+    expect(mock.creaFilDirecte.mock.calls[1][2].signal.aborted).toBe(false);
+  });
+
+  /* ARQ-H01 · El relleu d'una renovació no és un passaport: si, abans que la
+     petició tallada acabe, entra una altra persona, l'acció no es repetix amb
+     la sessió nova. */
+  it('una obertura tallada per una renovació i després per un canvi de persona no es repetix amb la persona nova', async () => {
+    const view = await open();
+    const tallada = deferred();
+    mock.creaFilDirecte.mockReturnValueOnce(tallada.promise).mockResolvedValue('fil-de-B');
+    let promesa;
+    act(() => { promesa = value.creaFil('X'); });
+    renova(view);
+    mock.session = { currentUser: { id: 'B' }, generacio: 9 }; mock.actorKey = 'persona::B';
+    view.rerender(tree(view.config));
+    await act(async () => { tallada.reject(avortat()); });
+    let filId = 'sense resoldre';
+    await act(async () => { filId = await promesa; });
+    expect(filId).toBeNull();
+    expect(mock.creaFilDirecte).toHaveBeenCalledTimes(1);
+  });
+
+  it('una marca tallada per una renovació i després per un canvi de persona no s’envia amb la persona nova', async () => {
+    mock.loadFils.mockResolvedValue([fil({ ultimSeq: 5, noLlegits: 5 })]);
+    const view = render(tree(CONFIG));
+    await waitFor(() => expect(value.status).toBe('ready'));
+    const tallada = deferred();
+    mock.marcaLlegit.mockReturnValueOnce(tallada.promise);
+    vi.useFakeTimers();
+    act(() => value.marcaVist('fil-A', 5));
+    await act(async () => { await vi.advanceTimersByTimeAsync(2000); });
+    expect(mock.marcaLlegit).toHaveBeenCalledTimes(1);
+    renova(view);
+    mock.session = { currentUser: { id: 'B' }, generacio: 9 }; mock.actorKey = 'persona::B';
+    view.rerender(tree(CONFIG));
+    await act(async () => { tallada.reject(avortat()); await vi.advanceTimersByTimeAsync(0); });
+    expect(mock.marcaLlegit).toHaveBeenCalledTimes(1);
+    expect(value.avis).toBeNull();
+  });
+
+  it('una marca de lectura en vol que la renovació talla es torna a enviar amb l’operació nova, sense avís', async () => {
+    mock.loadFils.mockResolvedValue([fil({ ultimSeq: 5, noLlegits: 5 })]);
+    const view = render(tree(CONFIG));
+    await waitFor(() => expect(value.status).toBe('ready'));
+    const tallada = deferred();
+    mock.marcaLlegit.mockReturnValueOnce(tallada.promise).mockResolvedValueOnce({ llegitFinsSeq: 5, rebutFinsSeq: 5 });
+    vi.useFakeTimers();
+    act(() => value.marcaVist('fil-A', 5));
+    await act(async () => { await vi.advanceTimersByTimeAsync(2000); });
+    expect(mock.marcaLlegit).toHaveBeenCalledTimes(1);
+    const senyal = mock.marcaLlegit.mock.calls[0][1].signal;
+    renova(view);
+    expect(senyal.aborted).toBe(true);
+    await act(async () => { tallada.reject(avortat()); await vi.advanceTimersByTimeAsync(0); });
+    expect(mock.marcaLlegit).toHaveBeenCalledTimes(2);
+    expect(mock.marcaLlegit.mock.calls[1][0]).toBe('fil-A');
+    expect(mock.marcaLlegit.mock.calls[1][1]).toMatchObject({ llegitFinsSeq: 5 });
+    expect(mock.marcaLlegit.mock.calls[1][1].signal.aborted).toBe(false);
+    expect(value.avis).toBeNull();
+    expect(value.chatThreads[0].noLlegits).toBe(0);
+  });
+
+  /* Relleu 261007 (revisió adversarial) · El bucle en sèrie de «Connectar»
+     (useAplicaAbast.js) usa el creaFil i el sendChatMessage del render en què
+     va començar. Si la renovació arriba a mig bucle, els destinataris següents
+     no poden rebre un null o un [] sense bombolla: el seu avís diu «El
+     trobaràs al xat per a tornar-ho a provar». */
+  it('les accions guardades abans de la renovació i cridades després passen per la versió vigent', async () => {
+    const view = await open();
+    const guardat = value;
+    renova(view);
+    await buidaCua();
+    expect(value.sendChatMessage).not.toBe(guardat.sendChatMessage);
+    mock.creaFilDirecte.mockResolvedValueOnce('fil-A');
+    let filId;
+    await act(async () => { filId = await guardat.creaFil('X'); });
+    expect(filId).toBe('fil-A');
+    expect(mock.creaFilDirecte.mock.calls[0][2].signal.aborted).toBe(false);
+    const enVol = deferred(); mock.enviaMissatge.mockReturnValueOnce(enVol.promise);
+    let promesa;
+    act(() => { promesa = guardat.sendChatMessage({ id: 'fil-A' }, 'enllaç'); });
+    const bombolla = value.getThreadMessages('fil-A').at(-1);
+    expect(bombolla).toMatchObject({ text: 'enllaç', estatEnviament: 'pendent' });
+    expect(mock.enviaMissatge.mock.calls[0][1]).toEqual({ id: bombolla.id, text: 'enllaç' });
+    expect(mock.enviaMissatge.mock.calls[0][2].signal.aborted).toBe(false);
+    let enviats;
+    await act(async () => { enVol.resolve(message('enllaç', bombolla.id, { seq: 3 })); enviats = await promesa; });
+    expect(enviats).toEqual([expect.objectContaining({ id: bombolla.id, seq: 3 })]);
+    mock.obriFilDePagina.mockResolvedValueOnce({ filId: 'g-9', fils: [{ id: 'g-9', tipus: 'grup', titol: 'Festa', participant: true }] });
+    await act(async () => {
+      expect(await guardat.obriFilDePagina({ tipus: 'publicacio', id: 'p-1', titol: 'Festa', ruta: '/mur/p-1' })).toBe('g-9');
+    });
+    expect(mock.obriFilDePagina.mock.calls[0][1].signal.aborted).toBe(false);
+  });
+
+  /* ARQ-H01 · Eixir i tornar a entrar com la mateixa persona dona la mateixa
+     clau d'àmbit, però és una sessió nova (la purga ja s'ha fet): l'acció
+     guardada de la sessió anterior no hi passa. Relleu 261007 (revisió de
+     seguretat, problema 2) · La prova pinta l'estat intermedi sense sessió,
+     com fa sessionService, que notifica primer `usuari: null` (en eixir a la
+     mateixa pestanya, esborraSessio → sincronitza; entre pestanyes,
+     reconciliaAmbRegistre → sincronitza o recuperaSessio): la protecció és
+     sobre el que React ha arribat a pintar. */
+  it('eixir i tornar a entrar com la mateixa persona no és una renovació: les accions guardades de la sessió anterior no hi passen', async () => {
+    const view = await open();
+    const guardat = value;
+    mock.session = { currentUser: null, generacio: 2, estat: 'fora' };
+    view.rerender(tree(view.config));
+    mock.session = { currentUser: { id: 'A' }, generacio: 3 };
+    view.rerender(tree(view.config));
+    await waitFor(() => expect(value.status).toBe('ready'));
+    expect(value.ambitEstable).toBe(guardat.ambitEstable);
+    await act(async () => {
+      expect(await guardat.sendChatMessage({ id: 'fil-A' }, 'de la sessió d’abans')).toEqual([]);
+      expect(await guardat.creaFil('X')).toBeNull();
+      expect(await guardat.obriFilDePagina({ tipus: 'publicacio', id: 'p-1', titol: 'Festa', ruta: '/mur/p-1' })).toBeNull();
+    });
+    expect(mock.enviaMissatge).not.toHaveBeenCalled();
+    expect(mock.creaFilDirecte).not.toHaveBeenCalled();
+    expect(mock.obriFilDePagina).not.toHaveBeenCalled();
+    expect(value.getThreadMessages('fil-A').some((m) => m.text === 'de la sessió d’abans')).toBe(false);
+  });
+
+  /* Relleu 261007 (revisió de seguretat de la Decisió 1, problema 4a) · L'altre
+     camí en què l'àmbit torna a ser idèntic: una renovació i, després, l'anada
+     i tornada d'actor (persona → entitat → persona). La clau d'àmbit torna a
+     ser la de les accions guardades, però el llinatge és nou: no hi passen. */
+  it('l’anada i tornada d’actor després d’una renovació no és una renovació: les accions guardades d’abans no hi passen', async () => {
+    const view = await open();
+    const guardat = value;
+    renova(view);
+    await buidaCua();
+    mock.actorKey = 'entitat::o';
+    view.rerender(tree(view.config));
+    await waitFor(() => expect(value.status).toBe('ready'));
+    expect(value.ambitEstable).not.toBe(guardat.ambitEstable);
+    mock.actorKey = 'persona::A';
+    view.rerender(tree(view.config));
+    await waitFor(() => expect(value.status).toBe('ready'));
+    expect(value.ambitEstable).toBe(guardat.ambitEstable);
+    await act(async () => {
+      expect(await guardat.sendChatMessage({ id: 'fil-A' }, 'amb la veu d’abans')).toEqual([]);
+      expect(await guardat.creaFil('X')).toBeNull();
+      expect(await guardat.obriFilDePagina({ tipus: 'publicacio', id: 'p-1', titol: 'Festa', ruta: '/mur/p-1' })).toBeNull();
+    });
+    expect(mock.enviaMissatge).not.toHaveBeenCalled();
+    expect(mock.creaFilDirecte).not.toHaveBeenCalled();
+    expect(mock.obriFilDePagina).not.toHaveBeenCalled();
+    expect(value.getThreadMessages('fil-A').some((m) => m.text === 'amb la veu d’abans')).toBe(false);
+  });
+
+  /* Relleu 261007 (revisió de seguretat de la Decisió 1, problema 4b) · Una
+     obertura en vol, una renovació i el desmuntatge del proveïdor: el relleu
+     acaba en null i l'acció no es repetix. */
+  it('una obertura tallada per una renovació i després pel desmuntatge torna null i no es repetix', async () => {
+    const view = await open();
+    const tallada = deferred();
+    mock.creaFilDirecte.mockReturnValueOnce(tallada.promise).mockResolvedValue('fil-A');
+    let promesa;
+    act(() => { promesa = value.creaFil('X'); });
+    renova(view);
+    expect(mock.creaFilDirecte.mock.calls[0][2].signal.aborted).toBe(true);
+    view.unmount();
+    await act(async () => { tallada.reject(avortat()); });
+    let filId = 'sense resoldre';
+    await act(async () => { filId = await promesa; });
+    expect(filId).toBeNull();
+    expect(mock.creaFilDirecte).toHaveBeenCalledTimes(1);
+  });
+
+  /* Relleu 261007 (revisió de seguretat de la Decisió 1, problemes 1 i 4c) · La
+     finestra: relleuViu troba viva l'operació de la renovació, però la
+     continuació de qui l'espera s'executa una microtasca després. Si entre
+     mig React confirma l'entrada de B (flushSync), l'acció vigent ja és la
+     de B: el relleu s'ha de tornar a comprovar en el mateix tic de la crida. */
+  it('una obertura tallada per una renovació no es repetix amb la persona que entra entre la comprovació del relleu i la continuació', async () => {
+    const view = await open();
+    const tallada = deferred();
+    mock.creaFilDirecte.mockReturnValueOnce(tallada.promise).mockResolvedValue('fil-de-B');
+    let promesa;
+    act(() => { promesa = value.creaFil('X'); });
+    renova(view);
+    await buidaCua();
+    const senyal = mock.loadFils.mock.calls.at(-1)[0].signal;
+    expect(senyal).not.toBe(mock.creaFilDirecte.mock.calls[0][2].signal);
+    expect(senyal.aborted).toBe(false);
+    const canviat = armaCanviDePersona(view, senyal);
+    await act(async () => { tallada.reject(avortat()); await new Promise((resol) => setTimeout(resol, 0)); });
+    let filId = 'sense resoldre';
+    await act(async () => { filId = await promesa; });
+    expect(canviat()).toBe(true);
+    expect(senyal.aborted).toBe(true);
+    expect(value.joId).toBe('B');
+    expect(filId).toBeNull();
+    expect(mock.creaFilDirecte).toHaveBeenCalledTimes(1);
+  });
+
+  /* Relleu 261007 (revisió de seguretat de la Decisió 1, problema 1) · La
+     mateixa finestra per a la marca de lectura tallada: el relleu no la torna
+     a enviar amb la sessió de B. */
+  it('una marca tallada per una renovació no s’envia amb la persona que entra entre la comprovació del relleu i la continuació', async () => {
+    mock.loadFils.mockResolvedValue([fil({ ultimSeq: 5, noLlegits: 5 })]);
+    const view = render(tree(CONFIG));
+    await waitFor(() => expect(value.status).toBe('ready'));
+    const tallada = deferred();
+    mock.marcaLlegit.mockReturnValueOnce(tallada.promise).mockResolvedValue({ llegitFinsSeq: 5, rebutFinsSeq: 5 });
+    vi.useFakeTimers();
+    act(() => value.marcaVist('fil-A', 5));
+    await act(async () => { await vi.advanceTimersByTimeAsync(2000); });
+    vi.useRealTimers();
+    expect(mock.marcaLlegit).toHaveBeenCalledTimes(1);
+    renova(view);
+    await buidaCua();
+    const senyal = mock.loadFils.mock.calls.at(-1)[0].signal;
+    expect(senyal).not.toBe(mock.marcaLlegit.mock.calls[0][1].signal);
+    expect(senyal.aborted).toBe(false);
+    const canviat = armaCanviDePersona(view, senyal);
+    await act(async () => { tallada.reject(avortat()); await new Promise((resol) => setTimeout(resol, 0)); });
+    await buidaCua();
+    expect(canviat()).toBe(true);
+    expect(value.joId).toBe('B');
+    expect(mock.marcaLlegit).toHaveBeenCalledTimes(1);
+    expect(value.avis).toBeNull();
+  });
+
+  /* Relleu 261007 (revisió de la correcció de seguretat, problema 2) · La
+     mateixa finestra, però el que React confirma entre mig és una SEGONA
+     renovació de la mateixa persona: l'operació que relleuViu havia trobat
+     viva ja està avortada. No és cap altre àmbit, i l'obertura s'ha de tornar
+     a fer amb l'operació de la segona renovació, no tornar null. */
+  it('una obertura tallada per una renovació es fa amb l’operació d’una segona renovació confirmada entre la comprovació del relleu i la continuació', async () => {
+    const view = await open();
+    const tallada = deferred();
+    mock.creaFilDirecte.mockReturnValueOnce(tallada.promise).mockResolvedValue('fil-A');
+    let promesa;
+    act(() => { promesa = value.creaFil('X'); });
+    renova(view);
+    await buidaCua();
+    const senyal = mock.loadFils.mock.calls.at(-1)[0].signal;
+    expect(senyal).not.toBe(mock.creaFilDirecte.mock.calls[0][2].signal);
+    expect(senyal.aborted).toBe(false);
+    const canviat = armaSegonaRenovacio(view, senyal);
+    await act(async () => { tallada.reject(avortat()); await new Promise((resol) => setTimeout(resol, 0)); });
+    let filId = 'sense resoldre';
+    await act(async () => { filId = await promesa; });
+    expect(canviat()).toBe(true);
+    expect(senyal.aborted).toBe(true);
+    expect(value.joId).toBe('A');
+    expect(filId).toBe('fil-A');
+    expect(mock.creaFilDirecte).toHaveBeenCalledTimes(2);
+    expect(mock.creaFilDirecte.mock.calls[1][2].signal).not.toBe(senyal);
+    expect(mock.creaFilDirecte.mock.calls[1][2].signal.aborted).toBe(false);
+  });
+
+  /* Relleu 261007 (revisió de la correcció de seguretat, problema 2) · El
+     mateix per a la marca de lectura: una segona renovació entre mig no la
+     deixa sense enviar. */
+  it('una marca tallada per una renovació s’envia amb l’operació d’una segona renovació confirmada entre la comprovació del relleu i la continuació', async () => {
+    mock.loadFils.mockResolvedValue([fil({ ultimSeq: 5, noLlegits: 5 })]);
+    const view = render(tree(CONFIG));
+    await waitFor(() => expect(value.status).toBe('ready'));
+    const tallada = deferred();
+    mock.marcaLlegit.mockReturnValueOnce(tallada.promise).mockResolvedValue({ llegitFinsSeq: 5, rebutFinsSeq: 5 });
+    vi.useFakeTimers();
+    act(() => value.marcaVist('fil-A', 5));
+    await act(async () => { await vi.advanceTimersByTimeAsync(2000); });
+    vi.useRealTimers();
+    expect(mock.marcaLlegit).toHaveBeenCalledTimes(1);
+    renova(view);
+    await buidaCua();
+    const senyal = mock.loadFils.mock.calls.at(-1)[0].signal;
+    expect(senyal).not.toBe(mock.marcaLlegit.mock.calls[0][1].signal);
+    expect(senyal.aborted).toBe(false);
+    const canviat = armaSegonaRenovacio(view, senyal);
+    await act(async () => { tallada.reject(avortat()); await new Promise((resol) => setTimeout(resol, 0)); });
+    await buidaCua();
+    expect(canviat()).toBe(true);
+    expect(value.joId).toBe('A');
+    expect(mock.marcaLlegit).toHaveBeenCalledTimes(2);
+    expect(mock.marcaLlegit.mock.calls[1][0]).toBe('fil-A');
+    expect(mock.marcaLlegit.mock.calls[1][1]).toMatchObject({ llegitFinsSeq: 5 });
+    expect(mock.marcaLlegit.mock.calls[1][1].signal).not.toBe(senyal);
+    expect(mock.marcaLlegit.mock.calls[1][1].signal.aborted).toBe(false);
+    expect(value.avis).toBeNull();
+    expect(value.chatThreads[0].noLlegits).toBe(0);
   });
 });
 
@@ -492,6 +1063,58 @@ describe('xat de pàgina i comunitats (T63.2, T67)', () => {
     expect(value.chatThreads.some(f => f.id === 'g-1')).toBe(false);
   });
 
+  /* Decisió 1 del Mestre (261007) · Una renovació del JWT no és un altre
+     àmbit: el ?sobre= de XatSection ja no es torna a muntar i un null li feia
+     dir «Ací no hi ha cap xat comú on comentar». La crida es torna a fer amb
+     l'operació nova (obri_fil_de_pagina troba o crea: idempotent). */
+  it('Decisió 1 · una obertura tallada per la renovació es torna a fer i no torna un null fals', async () => {
+    const view = await muntat();
+    const tallada = deferred();
+    mock.obriFilDePagina.mockReturnValueOnce(tallada.promise)
+      .mockResolvedValueOnce({ filId: 'g-9', fils: [{ id: 'g-9', tipus: 'grup', titol: 'Festa', participant: true }] });
+    let promesa;
+    act(() => { promesa = value.obriFilDePagina(PUBLICACIO); });
+    mock.session = { ...mock.session, generacio: 2 };
+    view.rerender(tree(CONFIG));
+    expect(mock.obriFilDePagina.mock.calls[0][1].signal.aborted).toBe(true);
+    await act(async () => { tallada.reject(Object.assign(new Error('The operation was aborted.'), { name: 'AbortError' })); });
+    let filId;
+    await act(async () => { filId = await promesa; });
+    expect(filId).toBe('g-9');
+    expect(mock.obriFilDePagina).toHaveBeenCalledTimes(2);
+    expect(mock.obriFilDePagina.mock.calls[1][1].signal.aborted).toBe(false);
+  });
+
+  /* Decisió 1 · El comportament segur amb els VISITANTS en una renovació: es
+     conserven. Són del mateix àmbit (backend + persona + actor) i el servidor
+     continua decidint qui llig què. Purgar-los trauria de la llista el fil de
+     pàgina obert (XatSection pintaria la 404), la lectura ja no aniria com a
+     visitant i el reintent de la bombolla fallida no hi entraria. */
+  it('Decisió 1 · un fil de pàgina que llegixes com a visitant sobreviu a la renovació i la bombolla fallida s’hi reintenta com a visitant', async () => {
+    const view = await muntat();
+    mock.obriFilDePagina.mockResolvedValue(comunitatVisitada());
+    await act(async () => { await value.obriFilDePagina({ tipus: 'entitat', id: 'org-1' }); });
+    mock.loadMissatges.mockResolvedValue([message('comentari', 'm-g', { filId: 'g-1', usuariId: 'X', seq: 3 })]);
+    act(() => value.obriFil('g-1'));
+    await waitFor(() => expect(value.getThreadMessages('g-1')[0]?.text).toBe('comentari'));
+    mock.enviaMissatge.mockRejectedValueOnce(Object.assign(new Error('xarxa'), { retriable: false }));
+    await act(async () => { await value.sendChatMessage({ id: 'g-1' }, 'Hola'); });
+    const fallit = value.getThreadMessages('g-1').at(-1);
+    expect(fallit.estatEnviament).toBe('error');
+    const carregues = mock.loadMissatges.mock.calls.length;
+    mock.session = { ...mock.session, generacio: 2 };
+    view.rerender(tree(CONFIG));
+    expect(value.chatThreads.find(f => f.id === 'g-1')).toMatchObject({ participant: false });
+    expect(value.filActiu).toBe('g-1');
+    await waitFor(() => expect(mock.loadMissatges.mock.calls.length).toBeGreaterThan(carregues));
+    expect(mock.loadMissatges.mock.calls.at(-1)).toEqual(['g-1', expect.objectContaining({ visitant: true, despresDeSeq: 3 })]);
+    expect(value.getThreadMessages('g-1').find(m => m.id === fallit.id).estatEnviament).toBe('error');
+    mock.enviaMissatge.mockImplementationOnce(async (_, cos) => message(cos.text, cos.id, { filId: 'g-1', seq: 4 }));
+    await act(async () => { await value.reintenta(fallit.id); });
+    expect(mock.enviaMissatge.mock.calls.at(-1)).toEqual(['g-1', { id: fallit.id, text: 'Hola' }, expect.objectContaining({ visitant: true })]);
+    expect(value.getThreadMessages('g-1').filter(m => m.id === fallit.id)).toEqual([expect.objectContaining({ estatEnviament: 'enviat' })]);
+  });
+
   it('deriva les comunitats (Avisos primer, suma de no llegits) i els contactes freqüents dels directes', async () => {
     mock.loadFils.mockResolvedValue([
       { id: 'c-1', tipus: 'comunitat', titol: 'Coop', altresNoms: [] },
@@ -553,5 +1176,249 @@ describe('xat de pàgina i comunitats (T63.2, T67)', () => {
     mock.session = { currentUser: null, generacio: 2, estat: 'fora' };
     view.rerender(tree(CONFIG));
     expect(value.senseSessio).toBe(true);
+  });
+});
+
+/* Ordre del Mestre (261007) · Les files d'ajuda per defecte que el port
+   sintetitza en remot (xatsPerDefecte.js): el context no n'afig cap, però en
+   lleva la que ja té el seu xat real entre els visitants, i la de Sóc de Poble
+   a qui gestiona l'entitat. */
+describe('files d’ajuda per defecte', () => {
+  const CONFIG = { backendId: 'supabase', tenantId: '00000000-0000-0000-0000-00000000000a' };
+  const perDefecte = () => value.chatThreads.filter(f => f.perDefecte).map(f => f.perDefecte);
+  async function muntat() {
+    render(tree(CONFIG));
+    await waitFor(() => expect(value.status).toBe('ready'));
+  }
+
+  it('passen del port a la llista, amb la marca, sense comptar com a no llegides ni com a contactes freqüents', async () => {
+    mock.loadFils.mockResolvedValue(ambXatsPerDefecte([fil()]));
+    await muntat();
+    expect(value.chatThreads.map(f => f.id)).toEqual(['fil-A', 'sdp-per-defecte:socdepoble', 'sdp-per-defecte:iaia']);
+    expect(perDefecte()).toEqual(['socdepoble', 'iaia']);
+    expect(value.chatThreads.find(f => f.id === 'fil-A').perDefecte).toBeNull();
+    expect(value.totalNoLlegits).toBe(2);
+    expect(value.contactesFrequents).toEqual([]);
+  });
+
+  it('sense files sintètiques (la llavor), la llista no canvia', async () => {
+    mock.loadFils.mockResolvedValue([fil()]);
+    await muntat();
+    expect(value.chatThreads.map(f => f.id)).toEqual(['fil-A']);
+  });
+
+  it('qui llig el xat públic de /iaia com a visitant ja no veu la fila sintètica de la IAIA', async () => {
+    mock.loadFils.mockResolvedValue(ambXatsPerDefecte([fil()]));
+    await muntat();
+    mock.obriFilDePagina.mockResolvedValue({ filId: 'g-iaia', fils: [{ id: 'g-iaia', tipus: 'grup', titol: "L'ànima de la iaia",
+      subjecte: { tipus: 'pagina', id: '/iaia', ruta: '/iaia', titol: "L'ànima de la iaia" }, participant: false }] });
+    await act(async () => { await value.obriFilDePagina({ tipus: 'pagina', id: '/iaia', ruta: '/iaia', titol: "L'ànima de la iaia" }); });
+    expect(value.chatThreads.map(f => f.id)).toEqual(['fil-A', 'g-iaia', 'sdp-per-defecte:socdepoble']);
+  });
+
+  it('qui gestiona l’entitat pilot no veu la fila de Sóc de Poble; un membre sense rol de gestió, sí', async () => {
+    mock.loadFils.mockResolvedValue(ambXatsPerDefecte([fil()]));
+    mock.identitats = [
+      { tipus: 'persona', id: 'A', nom: 'Pepa' },
+      { tipus: 'entitat', id: '00000000-0000-4000-8000-0000000000aa', slug: 'socdepoble', rol: 'admin' }
+    ];
+    const view = render(tree(CONFIG));
+    await waitFor(() => expect(value.status).toBe('ready'));
+    expect(perDefecte()).toEqual(['iaia']);
+    mock.identitats = [{ tipus: 'persona', id: 'A', nom: 'Pepa' }];
+    view.rerender(tree(CONFIG));
+    expect(perDefecte()).toEqual(['socdepoble', 'iaia']);
+  });
+});
+
+/* Auditoria 261007 (B) · Robustesa del xat: el cursor de servidor, les marques
+   de lectura que fallen, el sondeig que no repinta per a res i la càrrega
+   superada que no espaia el sondeig. */
+describe('robustesa del xat (auditoria 261007 B)', () => {
+  const CONFIG = { backendId: 'supabase', tenantId: '00000000-0000-0000-0000-00000000000a' };
+  const deLaPepa = (seq) => message(`pepa-${seq}`, `m-pepa-${seq}`, { seq, usuariId: 'X', autorNom: 'Pepa' });
+  const seqs = () => value.getThreadMessages('fil-A').map((m) => m.seq);
+  /* Totes les promeses ja resoltes han acabat la seua cadena. */
+  const buidaCua = () => act(async () => { await new Promise((resol) => setTimeout(resol, 0)); });
+  async function obert(missatges) {
+    mock.loadMissatges.mockResolvedValue(missatges);
+    render(tree(CONFIG));
+    await waitFor(() => expect(value.status).toBe('ready'));
+    act(() => value.obriFil('fil-A'));
+    await waitFor(() => expect(mock.loadMissatges).toHaveBeenCalled());
+    await buidaCua();
+    return mock.subscribeToXat.mock.calls.at(-1)[1];
+  }
+
+  it('el missatge propi confirmat no mou el cursor: el de Pepa que s’hi ha creuat arriba', async () => {
+    const avis = await obert([deLaPepa(10)]);
+    mock.enviaMissatge.mockImplementationOnce(async (_, cos) => message(cos.text, cos.id, { seq: 12 }));
+    await act(async () => { await value.sendChatMessage({ id: 'fil-A' }, 'meu'); });
+    expect(seqs()).toEqual([10, 12]);
+    const meu = value.getThreadMessages('fil-A').find((m) => m.seq === 12);
+    mock.loadMissatges.mockResolvedValueOnce([deLaPepa(11), message('meu', meu.id, { seq: 12 })]);
+    await act(async () => { avis(null, { tipus: 'nous', filId: 'fil-A', seq: 12 }); });
+    await buidaCua();
+    expect(mock.loadMissatges).toHaveBeenLastCalledWith('fil-A', expect.objectContaining({ despresDeSeq: 10 }));
+    expect(seqs()).toEqual([10, 11, 12]);
+  });
+
+  it('una lectura superada no avança el cursor: la vigent torna a demanar el forat', async () => {
+    const avis = await obert([deLaPepa(10)]);
+    const primera = deferred(), segona = deferred();
+    mock.loadMissatges.mockReturnValueOnce(primera.promise).mockReturnValueOnce(segona.promise);
+    await act(async () => { avis(null, { tipus: 'nous', filId: 'fil-A', seq: 11 }); });
+    await waitFor(() => expect(mock.loadMissatges).toHaveBeenLastCalledWith('fil-A', expect.objectContaining({ despresDeSeq: 10 })));
+    /* Entre mig, el meu 12 confirmat: es pinta, però el cursor continua al 10. */
+    mock.enviaMissatge.mockImplementationOnce(async (_, cos) => message(cos.text, cos.id, { seq: 12 }));
+    let propi;
+    await act(async () => { [propi] = await value.sendChatMessage({ id: 'fil-A' }, 'meu'); });
+    const crides = mock.loadMissatges.mock.calls.length;
+    await act(async () => { avis(null, { tipus: 'nous', filId: 'fil-A', seq: 12 }); });
+    await waitFor(() => expect(mock.loadMissatges.mock.calls.length).toBe(crides + 1));
+    expect(mock.loadMissatges.mock.calls.at(-1)[1]).toMatchObject({ despresDeSeq: 10 });
+    await act(async () => { primera.resolve([deLaPepa(11)]); });
+    await buidaCua();
+    expect(seqs()).toEqual([10, 12]);
+    await act(async () => { segona.resolve([deLaPepa(11), message('meu', propi.id, { seq: 12 })]); });
+    await buidaCua();
+    expect(seqs()).toEqual([10, 11, 12]);
+    mock.loadMissatges.mockResolvedValueOnce([]);
+    await act(async () => { avis(null, { tipus: 'nous', filId: 'fil-A', seq: 12 }); });
+    await buidaCua();
+    expect(mock.loadMissatges).toHaveBeenLastCalledWith('fil-A', expect.objectContaining({ despresDeSeq: 12 }));
+  });
+
+  it('un fil buit queda amb el cursor a 0: la lectura següent ja és incremental', async () => {
+    const avis = await obert([]);
+    expect(mock.loadMissatges.mock.calls.at(-1)[1]).not.toHaveProperty('despresDeSeq');
+    await act(async () => { avis(null, { tipus: 'nous', filId: 'fil-A', seq: 1 }); });
+    await buidaCua();
+    expect(mock.loadMissatges.mock.calls.at(-1)[1]).toMatchObject({ despresDeSeq: 0 });
+  });
+
+  it('dos sondejos sense res nou deixen la llista i la conversa amb la mateixa referència', async () => {
+    const avis = await obert([deLaPepa(10)]);
+    const fils = value.chatThreads;
+    const missatges = value.getThreadMessages('fil-A');
+    await act(async () => { await value.recarrega(); });
+    await act(async () => { await value.recarrega(); });
+    expect(value.chatThreads).toBe(fils);
+    mock.loadMissatges.mockResolvedValueOnce([]);
+    await act(async () => { avis(null, { tipus: 'nous', filId: 'fil-A', seq: 10 }); });
+    await buidaCua();
+    expect(mock.loadMissatges).toHaveBeenLastCalledWith('fil-A', expect.objectContaining({ despresDeSeq: 10 }));
+    expect(value.getThreadMessages('fil-A')).toBe(missatges);
+    /* Un canvi de veres sí que arriba. */
+    mock.loadFils.mockResolvedValue([fil({ ultimSeq: 3, noLlegits: 3 })]);
+    await act(async () => { await value.recarrega(); });
+    expect(value.chatThreads).not.toBe(fils);
+    expect(value.chatThreads[0].noLlegits).toBe(3);
+  });
+
+  it('una marca de lectura que falla avisa com fins ara i es torna a enviar en la lectura següent', async () => {
+    mock.loadFils.mockResolvedValue([fil({ ultimSeq: 5, noLlegits: 5 })]);
+    mock.marcaLlegit.mockRejectedValueOnce(Object.assign(new Error('No s’ha pogut marcar com a llegit.'), { retriable: true }));
+    render(tree(CONFIG));
+    await waitFor(() => expect(value.status).toBe('ready'));
+    vi.useFakeTimers();
+    act(() => value.marcaVist('fil-A', 5));
+    expect(value.chatThreads[0].noLlegits).toBe(0);
+    await act(async () => { await vi.advanceTimersByTimeAsync(2000); });
+    expect(mock.marcaLlegit).toHaveBeenCalledTimes(1);
+    expect(value.avis).toBe('No s’ha pogut marcar com a llegit.');
+    /* El sondeig torna el que diu el servidor: la marca no hi ha arribat. */
+    await act(async () => { await value.recarrega(); });
+    expect(value.chatThreads[0].noLlegits).toBe(5);
+    act(() => value.marcaVist('fil-A', 5));
+    expect(value.chatThreads[0].noLlegits).toBe(0);
+    await act(async () => { await vi.advanceTimersByTimeAsync(2000); });
+    expect(mock.marcaLlegit).toHaveBeenCalledTimes(2);
+    expect(mock.marcaLlegit).toHaveBeenLastCalledWith('fil-A', expect.objectContaining({ llegitFinsSeq: 5 }));
+  });
+
+  it('un sondeig de la llista que ha eixit abans de la marca no torna a encendre els no llegits', async () => {
+    mock.loadFils.mockResolvedValue([fil({ ultimSeq: 5, noLlegits: 5 })]);
+    mock.marcaLlegit.mockResolvedValue({ llegitFinsSeq: 5, rebutFinsSeq: 5 });
+    render(tree(CONFIG));
+    await waitFor(() => expect(value.status).toBe('ready'));
+    const tard = deferred();
+    mock.loadFils.mockReturnValueOnce(tard.promise);
+    let sondeig;
+    act(() => { sondeig = value.recarrega(); });
+    vi.useFakeTimers();
+    act(() => value.marcaVist('fil-A', 5));
+    await act(async () => { await vi.advanceTimersByTimeAsync(2000); });
+    expect(mock.marcaLlegit).toHaveBeenCalledTimes(1);
+    expect(mock.loadFils).toHaveBeenLastCalledWith(expect.any(Object));
+    await act(async () => { tard.resolve([fil({ ultimSeq: 5, noLlegits: 5 })]); await sondeig; });
+    expect(value.chatThreads[0]).toMatchObject({ llegitFinsSeq: 5, noLlegits: 0 });
+    expect(value.totalNoLlegits).toBe(0);
+  });
+
+  it('una càrrega de la llista superada no espaia el sondeig: el tic següent arriba als 25 s', async () => {
+    render(tree(CONFIG));
+    await waitFor(() => expect(value.status).toBe('ready'));
+    vi.useFakeTimers();
+    /* Obrir un fil torna a armar el sondeig, ara amb els temporitzadors de la prova. */
+    act(() => value.obriFil('fil-A'));
+    await act(async () => { await vi.advanceTimersByTimeAsync(0); });
+    const tard = deferred();
+    mock.loadFils.mockReturnValueOnce(tard.promise);
+    const abans = mock.loadFils.mock.calls.length;
+    await act(async () => { await vi.advanceTimersByTimeAsync(25000); });
+    expect(mock.loadFils.mock.calls.length).toBe(abans + 1);
+    /* Connectar amb diversos destinataris, el primer missatge com a visitant
+       o el «Reintentar» de la cerca global recarreguen la llista mentre el
+       tic és en vol, sense navegar: el sondeig no es torna a armar. */
+    await act(async () => { await value.recarrega(); });
+    await act(async () => { tard.resolve([fil()]); await vi.advanceTimersByTimeAsync(0); });
+    const despres = mock.loadFils.mock.calls.length;
+    await act(async () => { await vi.advanceTimersByTimeAsync(25000); });
+    expect(mock.loadFils.mock.calls.length).toBe(despres + 1);
+  });
+
+  /* Les etiquetes «14:32», «Ahir» i «Hui» es calculen amb l'hora del render:
+     el primer sondeig del dia nou ha de repintar encara que la llista siga
+     la mateixa. Només es fingix Date: els temporitzadors continuen reals. */
+  it('el primer sondeig després de mitjanit aplica la llista equivalent; dins del mateix dia, no', async () => {
+    render(tree(CONFIG));
+    await waitFor(() => expect(value.status).toBe('ready'));
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date(2026, 9, 7, 23, 58));
+    await act(async () => { await value.recarrega(); });
+    const fils = value.chatThreads;
+    await act(async () => { await value.recarrega(); });
+    expect(value.chatThreads).toBe(fils);
+    vi.setSystemTime(new Date(2026, 9, 8, 0, 0, 30));
+    await act(async () => { await value.recarrega(); });
+    expect(value.chatThreads).not.toBe(fils);
+    expect(value.chatThreads).toEqual(fils);
+    const delDiaNou = value.chatThreads;
+    await act(async () => { await value.recarrega(); });
+    expect(value.chatThreads).toBe(delDiaNou);
+  });
+
+  /* XatSection crida obriFil(null) en eixir del Xat: ací es comprova, amb el
+     proveïdor real, que això tanca el canal i atura el sondeig del fil. */
+  it('obriFil(null) dona de baixa el canal del fil i n’atura el sondeig', async () => {
+    render(tree(CONFIG));
+    await waitFor(() => expect(value.status).toBe('ready'));
+    vi.useFakeTimers();
+    act(() => value.obriFil('fil-A'));
+    await act(async () => { await vi.advanceTimersByTimeAsync(0); });
+    expect(mock.subscribeToXat).toHaveBeenLastCalledWith('fil-A', expect.any(Function), expect.any(Object));
+    /* Obert, el sondeig del fil demana els nous als 5 s. */
+    await act(async () => { await vi.advanceTimersByTimeAsync(5000); });
+    expect(mock.loadMissatges).toHaveBeenLastCalledWith('fil-A', expect.objectContaining({ despresDeSeq: 1 }));
+    const baixes = mock.unsubscribeFromXat.mock.calls.length;
+    act(() => value.obriFil(null));
+    await act(async () => { await vi.advanceTimersByTimeAsync(0); });
+    expect(value.filActiu).toBeNull();
+    expect(mock.unsubscribeFromXat.mock.calls.length).toBe(baixes + 1);
+    expect(mock.unsubscribeFromXat).toHaveBeenLastCalledWith('sub-A');
+    const carregues = mock.loadMissatges.mock.calls.length;
+    await act(async () => { await vi.advanceTimersByTimeAsync(60000); });
+    expect(mock.loadMissatges.mock.calls.length).toBe(carregues);
   });
 });

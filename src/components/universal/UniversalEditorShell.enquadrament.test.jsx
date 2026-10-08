@@ -156,6 +156,53 @@ test('T46 · mentre la capçalera es desa, ni un altre enquadrament ni un altre 
   expect(vista.getByRole('dialog', DIALEG)).toBeTruthy();
 });
 
+/* Ordre del Mestre (261007, ordre E) i esmena 1 del pla 261007_1645 · La
+   germana de la de dalt per al logotip, que ara pinta el mateix control
+   (ImageUploaderUI): mentre puja, «Editar logotip» desactivat, l'ajuda ho diu i
+   un altre fitxer no es processa. Abans, el segon trepitjava el primer. La
+   capçalera no es bloqueja: cada control, la seua pujada. */
+const inputLogo = (container) => container.querySelector('.page-title-logo-personalitzat input[type="file"]');
+const triaLogo = async (container, fitxer) => {
+  await act(async () => { fireEvent.change(inputLogo(container), { target: { files: [fitxer] } }); });
+};
+
+test('ordre E · mentre el logotip es desa, cap altre fitxer; en acabar, tot torna', async () => {
+  let resol;
+  dobles.compressImage.mockImplementationOnce(() => new Promise((r) => { resol = r; }));
+  const vista = closca();
+  await triaLogo(vista.container, foto());
+  const editar = vista.getByRole('button', { name: 'Editar logotip' });
+  expect(editar.disabled).toBe(true);
+  expect(vista.container.querySelector('.page-title-logo-personalitzat .sdp-camp__ajuda').textContent).toMatch(/Encara s’està desant la imatge/);
+  // La capçalera no puja: el seu botó continua viu.
+  expect(vista.getByRole('button', { name: 'Editar capçalera' }).disabled).toBe(false);
+  await triaLogo(vista.container, foto());
+  expect(dobles.compressImage).toHaveBeenCalledTimes(1);
+  expect(inputLogo(vista.container).value).toBe('');
+  await act(async () => { resol(CURT); });
+  expect(vista.onSaveField).toHaveBeenCalledTimes(1);
+  expect(vista.onSaveField).toHaveBeenCalledWith('logoImage', CURT, 'd1');
+  expect(vista.getByRole('button', { name: 'Editar logotip' }).disabled).toBe(false);
+  expect(vista.queryByText(/Encara s’està desant la imatge/)).toBeNull();
+  // Acabat el desat, un fitxer nou sí que es processa.
+  await triaLogo(vista.container, foto());
+  expect(dobles.compressImage).toHaveBeenCalledTimes(2);
+});
+
+test('ordre E · amb logotip i mentre se’n desa un de nou, «Esborrar» també es desactiva', async () => {
+  let resol;
+  dobles.compressImage.mockImplementationOnce(() => new Promise((r) => { resol = r; }));
+  const vista = closca({ logoImage: '/assets/l.webp' });
+  await act(async () => {});
+  fireEvent.click(vista.container.querySelector('img.sdp-logo-personalitzat'));
+  expect(vista.getByRole('button', { name: 'Esborrar' }).disabled).toBe(false);
+  await triaLogo(vista.container, foto());
+  expect(vista.getByRole('button', { name: 'Esborrar' }).disabled).toBe(true);
+  expect(vista.getByRole('button', { name: 'Enrere' }).disabled).toBe(false);
+  await act(async () => { resol(CURT); });
+  expect(vista.onSaveField).toHaveBeenCalledWith('logoImage', CURT, 'd1');
+});
+
 test('T46 · si mentre arriba la capçalera s’escriu en un altre camp, el focus no es mou i queda desarmat', async () => {
   const vista = closca();
   await tria(vista.container, foto());

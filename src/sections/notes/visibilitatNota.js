@@ -68,6 +68,20 @@ export async function publicaAmbMotiu(publica) {
   return true;
 }
 
+/* Grup E de l'Onada 4 (prompt 261008_1201, risc «que estiga clavat el
+   comportament») · Una nota publicada s'edita com a esborrany privat i el Mur
+   només canvia amb «Actualitzar al Mur». Si la publicació la signa una altra
+   identitat que l'activa (la persona i l'entitat amb què actua són dues
+   firmes), actualitzar-la la tornaria a signar amb l'activa: publishNote no
+   l'envia i el selector diu el motiu en línia (ErrorPublicacio). */
+export const SIGNANT_DESCONEGUT = 'una altra identitat';
+
+/** Grup E (261008) · El motiu de no actualitzar una publicació que signa una altra identitat (`nom`). */
+export function motiuSignaturaAliena(nom = '') {
+  const qui = String(nom ?? '').trim() || SIGNANT_DESCONEGUT;
+  return `Esta publicació la signa ${qui}: canvia a eixa identitat per a actualitzar-la.`;
+}
+
 /** El motiu de no publicar quan el desat previ no s'ha confirmat. `detall` és
  * el de la ploma (estatPerAlEditor): diu què passa i què cal fer. */
 export function motiuDesatPendent(detall = '') {

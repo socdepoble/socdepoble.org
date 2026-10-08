@@ -60,6 +60,23 @@ test('Onada 4 · T3 · una adreça ja resolta (l’espècimen) s’obri sense va
   expect(dobles.carregaImatge).toHaveBeenCalledWith('/assets/fotos/iaia-maria.png', expect.objectContaining({ signal: expect.any(Object) }));
 });
 
+/* Onada 4 (retallador senzill, 261008) · Ara és un embolcall de
+   useEnquadramentImatge: els seus consumidors (DetallAjust, el diàleg
+   intermedi i l'espècimen) continuen veient el retallador T46, no la finestra
+   senzilla de la fitxa del Perfil. */
+test('Onada 4 · l’embolcall conserva el retallador T46: «Desar l’enquadrament», la X i la Forma; cap fila de zoom ni màscara', async () => {
+  render(<Prova font={new File(['x'], 'foto.png', { type: 'image/png' })} onEnquadrat={vi.fn()} />);
+  await obri();
+  const dialeg = screen.getByRole('dialog', { name: TITOL_ENQUADRAMENT_AVATAR });
+  expect(within(dialeg).getByRole('button', { name: 'Desar l’enquadrament' })).toBeTruthy();
+  expect(within(dialeg).getByRole('button', { name: 'Tancar' })).toBeTruthy();
+  expect(within(dialeg).getByLabelText('Posició horitzontal')).toBeTruthy();
+  expect(dialeg.querySelector('legend').textContent).toBe('Forma');
+  expect(dialeg.querySelector('.sdp-enquadrament__zoom')).toBeNull();
+  expect(dialeg.querySelector('.sdp-enquadrament__visor-caixa')).toBeNull();
+  expect(within(dialeg).queryByRole('button', { name: 'Guardar' })).toBeNull();
+});
+
 test('Onada 4 · T3 · desar passa el retall a onEnquadrat i, si acaba bé, tanca; si llança, l’avís ix dins i continua obert', async () => {
   const onEnquadrat = vi.fn().mockRejectedValueOnce(new Error('Sense xarxa.')).mockResolvedValueOnce(undefined);
   render(<Prova font={new File(['x'], 'foto.png', { type: 'image/png' })} onEnquadrat={onEnquadrat} />);

@@ -3,8 +3,11 @@
  * prompt 261004_0015 T3 i directriu 261003_2320) · La pàgina de cada
  * utilitat (plugin): /plugin/:id.
  *
- * Una UniversalPage genèrica, la mateixa per als onze, llegida del registre
- * (registrePlugins.js, l'única taula):
+ * Una UniversalPage genèrica, la mateixa per a tots els del registre
+ * (registrePlugins.js, l'única taula; dotze des del W4-08 (261004), amb el
+ * Panell de Disseny; compte corregit a la peça C de l'ordre del Mestre del
+ * 261007; onze des de l'ordre del Mestre (261007) · Bàscula descartada per
+ * ara: només és una llavor del Full de ruta, i /plugin/bascula és la 404):
  *   · Portada: la il·lustració de MarIA a sang (Hero), PLEGABLE i visible per
  *     defecte (portadaPlegable, clau 'plugin:<id>'): qui hi torna a treballar
  *     la pot amagar i la pàgina ho recorda per a eixa persona i eixe plugin.

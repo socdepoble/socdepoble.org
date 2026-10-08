@@ -19,6 +19,17 @@
  *  · L'acció gran (accioDeLaPagina de systemPages.js: «Anar al xat» a la
  *    targeta d'El Xat) va a la ranura `accio` d'UniversalCard, en lloc de les
  *    etiquetes; la resta de la targeta continua obrint la seua pàgina.
+ *
+ * Decisió 3 del Mestre (261007, confirmada) · «Imatges externes al Mur:
+ * PROHIBIDES (PRIVACITAT).» La imatge i l'avatar d'una publicació passen pel
+ * MODE ESTRICTE (fontImatgePropia de utils/sanitize.js: el mateix origen, el
+ * nostre servidor de mitjans i els recursos del paquet, data:image i
+ * sdp-media://; cap servidor de tercers, tampoc els avatars de Google,
+ * Facebook o GitHub) i es demanen sense referent (`imatgePrivada`
+ * d'UniversalCard). Una imatge de fora no es demana: sense portada, la
+ * targeta no en pinta cap, i sense avatar, la silueta de sempre
+ * (sp-card-avatar--fallback). Els actes, igual (EventCard). La mateixa
+ * targeta pinta /calendari i l'històric de l'actor (PublicacionsDeLActor).
  */
 import { UniversalCard } from '../../components/PedraSeca';
 import { PortaDePagina } from '../../components/PedraSeca/organismes/PortesTargeta.jsx';
@@ -27,12 +38,13 @@ import { useNavigate } from '../../app/contexts/RouterContext';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { resolveAsset } from '../../config/assetResolver';
 import {
-  getSectionItemPath, objecteDe, objecteDePagina, RUTA_PROJECTE, rutaConnectarObjecte, rutaDePerfilDAutor
+  esRutaInterna, getSectionItemPath, objecteDe, objecteDePagina, RUTA_PROJECTE, rutaConnectarObjecte, rutaDePerfilDAutor
 } from '../../config/navigation';
 import { COPYRIGHT_SDP, dataDElement } from '../../components/universal/editorial.js';
 import { accioDeLaPagina } from '../../config/systemPages.js';
 import { fotoDeLaTargeta } from '../mercat/imatgesDeProducte.js';
 import { useEntitatDelProjecte } from '../../hooks/useEntitatDelProjecte.js';
+import { fontImatgePropia } from '../../utils/sanitize.js';
 
 /**
  * T6 (ordre del Mestre, 261004, prompt 261004_0515 §5) · On porta la boina
@@ -109,8 +121,11 @@ export function TargetaDelMur({ item, esdeveniment = null }) {
       emoticona={item.icon}
       subtitle={item.subtitle}
       body={item.lead || <p className="sp-card-text">{item.description}</p>}
-      imageUrl={resolveAsset(seccio === 'mercat' ? fotoDeLaTargeta(item, imatge) : imatge)}
+      /* Decisió 3 (261007) · Només una imatge pròpia, resolta (la que es
+         demanaria); una de fora, null: cap petició i cap portada. */
+      imageUrl={fontImatgePropia(resolveAsset(seccio === 'mercat' ? fotoDeLaTargeta(item, imatge) : imatge))}
       imageAlt={item.imageAlt || item.title || ''}
+      imatgePrivada
       author={item.author_name || item.seller || "Sóc de Poble"}
       /* T6 · Derogat per l'ordre del Mestre del 261004 (prompt 261004_0515):
          el sistema ja no porta a /pobles, sinó a la pàgina de qui signa. */
@@ -118,7 +133,10 @@ export function TargetaDelMur({ item, esdeveniment = null }) {
       objecte={objecte}
       accio={porta ? <PortaDePagina porta={porta} /> : null}
       onConnect={() => navigate(rutaConnectarObjecte(objecte))}
-      avatarUrl={resolveAsset(item.author_avatar || item.avatar_url || '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg')}
+      /* Decisió 3 (261007) · L'avatar declarat, si és propi. Un de fora (un
+         avatar de Google) no cau al logotip de Sóc de Poble, que signaria la
+         publicació d'un veí amb la marca: null i la silueta de sempre. */
+      avatarUrl={fontImatgePropia(resolveAsset(item.author_avatar || item.avatar_url || '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg'))}
       location={item.author_location || item.population || "La Torre de les Maçanes"}
       date={data.date}
       time={data.time}
@@ -137,7 +155,11 @@ export function TargetaDelMur({ item, esdeveniment = null }) {
         (item.type === 'market' || item.type === 'product') && item.category_slug ? { text: item.category_slug, className: 'sdp-badge-category' } : null,
         (item.type === 'market' || item.type === 'product') && item.tag ? { text: item.tag, className: 'sdp-badge-tag' } : null
       ].filter(Boolean)}
-      mainHref={item.mainHref || getSectionItemPath(item.type === 'event' ? 'events' : ((item.type === 'market' || item.type === 'product') ? 'mercat' : (item.type === 'poble' ? 'pobles' : 'mur')), item.id)}
+      /* Auditoria 261007 (B) · Defensa en profunditat: només una ruta de l'app
+         (esRutaInterna). Un mainHref de fora en un payload escrit per PostgREST
+         navegava la pestanya de l'amfitrió; les pàgines de sistema
+         (targetesMur.js) ja porten rutes internes. */
+      mainHref={(esRutaInterna(item.mainHref) ? item.mainHref : null) || getSectionItemPath(item.type === 'event' ? 'events' : ((item.type === 'market' || item.type === 'product') ? 'mercat' : (item.type === 'poble' ? 'pobles' : 'mur')), item.id)}
       showPin={item.isAvis}
       hasFooter={true}
       showTranslate={true}

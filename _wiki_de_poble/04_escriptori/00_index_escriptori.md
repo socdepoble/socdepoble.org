@@ -35,8 +35,8 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu — i
 
 
 
-- [[261008_1201_prompt_claude]]
-- [[261008_1201_pla_implementacio_claude]]
+- [[261008_2032_prompt_claude]]
+- [[261008_2032_pla_implementacio_claude]]
 
 Tancament autoritzat: rutes Gestoria/Wiki, avatars i paquet 1.0.3. Els altres documents es conserven com a relleu o fronts ajornats per a la pròxima sessió.
 
@@ -714,6 +714,14 @@ Enllaços a peces ja existents, verificats al disc; no s’han mogut ni editat e
 
 ## Arxivat amb la Porta Olivera
 
+- [[../90_arxiu_historic/261008_1740_auditoria_onada4_claude]]
+- [[../90_arxiu_historic/261008_1649_informe_progres_claude]]
+- [[../90_arxiu_historic/261008_1521_informe_progres_claude]]
+- [[../90_arxiu_historic/261008_1407_auditoria_botigues_claude]]
+- [[../90_arxiu_historic/261008_1355_auditoria_claude]]
+- [[../90_arxiu_historic/261008_1352_informe_progres_claude]]
+- [[../90_arxiu_historic/261008_1201_prompt_claude]]
+- [[../90_arxiu_historic/261008_1201_pla_implementacio_claude]]
 - [[../90_arxiu_historic/261007_1715_auditoria_claude]]
 - [[../90_arxiu_historic/261007_2205_pla_implementacio_claude]]
 - [[../90_arxiu_historic/261007_2205_prompt_claude]]

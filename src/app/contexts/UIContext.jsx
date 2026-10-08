@@ -1,8 +1,8 @@
-import { createContext, useContext, useEffect, useState, useMemo, useCallback } from 'react';
+import { createContext, useContext, useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import { createTranslator, desaIdiomaTriat, esLlenguaSuportada, llegeixIdiomaTriat, resolIdioma } from '../../config/i18n';
 import {
-  ESDEVENIMENT_CONTRAST, PREFERENCIES_CONTRAST, PREFERENCIES_TEMA, readContrastPreference, readThemePreference, resolveContrast,
-  resolveTheme, sistemaDemanaContrast, subscriuContrastSistema, writeContrastPreference, writeThemePreference
+  ESDEVENIMENT_CONTRAST, ESDEVENIMENT_TEMA, PREFERENCIES_CONTRAST, PREFERENCIES_TEMA, readContrastPreference, readThemePreference,
+  resolveContrast, resolveTheme, sistemaDemanaContrast, subscriuContrastSistema, writeContrastPreference, writeThemePreference
 } from '../../config/theme';
 import { resolveAsset } from '../../config/assetResolver';
 import { normalizeSearchText } from '../../config/contentHelpers';
@@ -16,6 +16,13 @@ const LANGUAGE_LOCALES = {
   eu: 'eu-ES',
   gl: 'gl-ES'
 };
+
+/* Auditoria 261007 (B) · Avisa les altres instàncies de la pàgina de la
+   preferència de tema triada (theme.js, ESDEVENIMENT_TEMA). */
+function avisaDelTema(preferencia) {
+  if (typeof window === 'undefined') return;
+  window.dispatchEvent(new CustomEvent(ESDEVENIMENT_TEMA, { detail: { theme: preferencia } }));
+}
 
 export function UIProvider({ children, externalConfig = {} }) {
   // === LANGUAGE (T1, decisió del Mestre 260930) ===
@@ -77,13 +84,24 @@ export function UIProvider({ children, externalConfig = {} }) {
 
   const themeMode = resolveTheme(themePreference === 'system' ? (systemDark ? 'dark' : 'light') : themePreference);
 
+  /* Auditoria 261007 (B) · La preferència vigent, per a toggleTheme. L'avís a
+     les altres instàncies no pot anar dins de l'updater de setState: en
+     StrictMode els updaters s'executen dues vegades i n'eixirien dos. Per això
+     la preferència següent es calcula fora, des d'esta ref (es posa a cada
+     pintat i en cada tria, perquè dos clics seguits no partisquen del mateix
+     valor), i després es desa, es posa l'estat i s'avisa. La identitat de
+     toggleTheme continua depenent només de systemDark. */
+  const preferenciaVigent = useRef(themePreference);
+  preferenciaVigent.current = themePreference;
+
   const toggleTheme = useCallback(() => {
-    setThemePreference((prev) => {
-      const currentResolved = resolveTheme(prev === 'system' ? (systemDark ? 'dark' : 'light') : prev);
-      const next = currentResolved === 'dark' ? 'light' : 'dark';
-      writeThemePreference(next);
-      return next;
-    });
+    const prev = preferenciaVigent.current;
+    const currentResolved = resolveTheme(prev === 'system' ? (systemDark ? 'dark' : 'light') : prev);
+    const next = currentResolved === 'dark' ? 'light' : 'dark';
+    preferenciaVigent.current = next;
+    writeThemePreference(next);
+    setThemePreference(next);
+    avisaDelTema(next);
   }, [systemDark]);
 
   /* Torn 260930 (T1) · Les tres opcions de WhatsApp («Igual que el sistema»,
@@ -92,8 +110,25 @@ export function UIProvider({ children, externalConfig = {} }) {
      La barra negra continua amb toggleTheme. */
   const setTheme = useCallback((preferencia) => {
     if (!PREFERENCIES_TEMA.includes(preferencia)) return;
+    preferenciaVigent.current = preferencia;
     writeThemePreference(preferencia);
     setThemePreference(preferencia);
+    avisaDelTema(preferencia);
+  }, []);
+
+  /* Auditoria 261007 (B) · La tria d'una altra instància de la pàgina arriba
+     ací pel canal de theme.js. L'oient només posa l'estat (no desa ni reemet),
+     així que no hi ha bucle; un valor desconegut no fa res. Amb una sola
+     instància, l'avís propi torna a posar el valor que ja hi ha: la pantalla
+     és la de sempre (Llei del Píxel). */
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+    const alCanviarTema = (event) => {
+      const preferencia = event?.detail?.theme;
+      if (PREFERENCIES_TEMA.includes(preferencia)) setThemePreference(preferencia);
+    };
+    window.addEventListener(ESDEVENIMENT_TEMA, alCanviarTema);
+    return () => window.removeEventListener(ESDEVENIMENT_TEMA, alCanviarTema);
   }, []);
 
   // === CONTRAST · MODE BANCAL (D6, Q1 del Mestre, 261004) ===

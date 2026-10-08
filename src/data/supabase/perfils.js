@@ -50,7 +50,16 @@ export function perfilDOrganitzacio(org) {
   return {
     tipus: org.kind === 'group' ? 'grup' : 'entitat', id: org.id, slug: org.slug || null, nom: text(org.name),
     avatar: text(org.logo_url), hero: text(org.hero_url), lema: text(org.lema), bio: text(org.description),
-    presentacioHtml: text(org.presentacio_html), poble: '', esIA: false, publicat: true, propietari: false, copyright: '',
+    /* Ordre del Mestre (261008, grup C) · El poble de l'organització (columna
+       `town_name` de la vista, 2610081401). Sense la columna o sense tria,
+       '' com abans. */
+    presentacioHtml: text(org.presentacio_html), poble: text(org.town_name), esIA: false, publicat: true, propietari: false,
+    /* Auditoria 261007 (B) · Els drets que l'entitat ha triat (columna
+       `copyright` de la vista, 2609262232), com ja fa perfilDePersona.
+       Abans es fixava '' i, en remot, la fitxa pública signava «© nom» encara
+       que l'entitat haguera triat una llicència CC. Sense la columna o sense
+       tria, '' i PerfilPublicSection hi posa el «© nom» de sempre. */
+    copyright: text(org.copyright),
     /* T43 (ordre del Mestre, 260928) · Només el correu que l'organització ha
        fet públic (columna `public_email` de la vista, opt-in). El privat
        (`contact_email`) no té cap grant i mai arriba ací. Mentre la migració
@@ -82,13 +91,26 @@ export async function loadPerfilPublic(idOSlug, config = {}) {
   const seed = await local(config);
   if (seed) return seed.loadPerfilPublic(clau, getCurrentUser());
 
-  const { hasSupabaseConfig } = getResolvedConfig(config);
+  const { hasSupabaseConfig, tenantId } = getResolvedConfig(config);
   if (!hasSupabaseConfig) return null;
 
   const esUuid = UUID.test(clau);
+  /* Ordre del Mestre (261007, prompt 261007_1628, peça C) · Un slug només és
+     únic dins d'un poble (organizations: unique (tenant_id, slug)): sense el
+     poble, `limit=1` podia tornar l'entitat homònima d'un altre poble. Amb el
+     poble actiu a la configuració resolta, la cerca per slug s'hi limita; sense,
+     la forma d'abans. L'id no es limita: és únic a tot el servidor. Esmena de
+     la revisió adversarial de la peça C · Una clau amb forma d'UUID també pot
+     ser un slug (el check de organizations accepta «a-z0-9» i guions), i la
+     meitat `slug.eq.` de la cerca doble també s'ha de limitar al poble:
+     `or=(id.eq.X,and(slug.eq.X,tenant_id.eq.T))`.
+     Adaptador del proveïdor: el port (backendPort.js) no canvia. */
+  const poble = tenantId ? encodeURIComponent(tenantId) : '';
+  const slug = `slug.eq.${encodeURIComponent(clau)}`;
+  const slugDelPoble = poble ? `and(${slug},tenant_id.eq.${poble})` : slug;
   const filtre = esUuid
-    ? `or=(id.eq.${encodeURIComponent(clau)},slug.eq.${encodeURIComponent(clau)})`
-    : `slug=eq.${encodeURIComponent(clau)}`;
+    ? `or=(id.eq.${encodeURIComponent(clau)},${slugDelPoble})`
+    : `slug=eq.${encodeURIComponent(clau)}${poble ? `&tenant_id=eq.${poble}` : ''}`;
   try {
     const orgs = await request(`/rest/v1/organization_directory?select=*&${filtre}&limit=1`, config, { signal: config.signal });
     if (orgs?.[0]) return perfilDOrganitzacio(orgs[0]);

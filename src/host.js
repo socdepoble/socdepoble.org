@@ -10,8 +10,15 @@
  * Supabase; el contracte es congela en arrencar.
  *
  * Superfície global (tractor-enxufe E4): l’única que escriu el nucli és
- * `window.SocDePoble` (exposaGlobal). La resta són ENTRADES de l’amfitrió,
- * que el nucli llig i no assigna mai. El contracte sencer, versionat, és
+ * `window.SocDePoble` (exposaGlobal). Decisió 5 del Mestre (261007, paquet
+ * trossejat) · Abans que arribe este mòdul, el carregador clàssic
+ * (config/carregadorDelPaquet.js, protocol sdp.carregador.v1) ja hi ha deixat
+ * un SocDePoble PROVISIONAL: les mateixes claus, configurable, que encua les
+ * crides i diu estat().fase 'carregant' (o 'fallida'). embed.jsx el pren
+ * (config/provisionalDelPaquet.js, prenProvisional), exposaGlobal hi definix
+ * l’API real, no configurable, i el provisional l’adopta i reprodueix la cua.
+ * Són les dues úniques escriptures del global a src/. La resta són ENTRADES
+ * de l’amfitrió, que el nucli llig i no assigna mai. El contracte sencer, versionat, és
  * config/contracteAmfitrio.js (sdp.amfitrio.v1); els canals d’entrada són:
  *   1 · `window.SocDePobleConfig`: l’amfitrió l’escriu abans del paquet;
  *       l’element el llig a cada recàlcul (config/configAmfitrio.js), amb la
@@ -241,13 +248,17 @@ function processarCua() {
 
 /**
  * Arrencada automàtica per als entorns que no configuren res.
- * Utilitza queueMicrotask (0 timers) excepte si està indicat explícitament.
+ * Auditoria 261007 (B) · Programa el segellat amb `setTimeout(…, 0)`, al tick
+ * següent (no en una microtasca): un <script> col·locat després del paquet
+ * encara arriba a temps de cridar configura(). No fa res si ja està segellat,
+ * si algú ha cridat deferArrenca() o si algun <soc-de-poble> porta
+ * `arrencada="manual"`.
  */
 export function arrencaAuto() {
   if (fase === FASE.SEGELLAT || _deferArrenca) return;
   setTimeout(() => {
     if (_deferArrenca) return;
-    // Si després de microtaskes encara som configurables i cap <soc-de-poble arrencada="manual"> ho ha aturat
+    // Al tick següent: si encara som configurables i cap <soc-de-poble arrencada="manual"> ho ha aturat
     const tags = typeof document !== 'undefined' ? document.querySelectorAll('soc-de-poble') : [];
     let isManual = false;
     tags.forEach(tag => {

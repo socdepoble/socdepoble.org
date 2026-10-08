@@ -3554,6 +3554,15 @@ details[open] summary.accordion-header svg:last-child {
   /* L'anell de focus abraça la píndola que es veu, no l'àrea tàctil buida. */
   .sdp-classificacio-pindola:focus-visible { outline: none; }
   .sdp-classificacio-pindola:focus-visible > .sp-card-label { outline: 3px solid var(--sdp-focus); outline-offset: 2px; }
+  /* Línia I1 (pla 261008_1201) · Mentre la foto puja, les píndoles de davall
+     de l'avatar (PageFrame, filaDeLAvatar) són disabled: no han de semblar
+     actives. Sense la mà i sense el subratllat de passar-hi per damunt (la
+     regla d'amunt, dins del mateix @media). Cap color ni opacitat nous: la
+     píndola es pinta igual, i el Bancal no hi té res a tornar opac. */
+  .page-title-avatar-accions .sdp-classificacio-pindola:disabled { cursor: not-allowed; }
+  @media (hover: hover) and (pointer: fine) {
+    .page-title-avatar-accions .sdp-classificacio-pindola:disabled:hover > .sp-card-label { text-decoration: none; }
+  }
 
   /* T7 (P5) · L'arbre de DialegCarpeta: cada nivell, una sagnia de 1.5rem
      (fins al tercer nivell, el màxim del Workspace). */
@@ -8679,6 +8688,81 @@ details[open] summary.accordion-header svg:last-child {
     border: 1px solid var(--sdp-vora);
     border-radius: var(--sdp-radi-s);
   }
+
+  /* Onada 4 (retallador senzill, ordre del Mestre 261008) · La finestra de
+     Claude per a les imatges del Perfil (DialegEnquadrament senzill): el visor
+     sol i centrat, sense el marc de T46, i davall la fila de zoom. Només amb
+     estes classes: el retallador de les Notes no canvia. */
+  /* La caixa fa la mida del visor (fit-content), centrada: el cercle de la
+     màscara s'inscriu en el canvas i no en l'amplada del diàleg. Els avisos
+     continuen a tota l'amplada. */
+  .sdp-enquadrament__visor-caixa {
+    position: relative;
+    align-self: center;
+    overflow: hidden;
+    width: fit-content;
+    max-width: 100%;
+    border-radius: var(--sdp-radi-s);
+  }
+  .sdp-enquadrament__visor-caixa > .sdp-enquadrament__visor {
+    max-height: min(45vh, 22rem);
+    border: 0;
+    border-radius: 0;
+  }
+  /* mascara='cercle' · Un cercle inscrit (closest-side: el radi és mig
+     costat) transparent i, fora, el vel. Un degradat i no l'ombra de 100vmax:
+     en el panell del navegador de l'app, l'ombra no es pintava damunt del
+     canvas i el fons del pseudoelement sí (261008). Sense cap ombra. El píxel
+     de transició suavitza la vora. Els clics travessen fins al canvas. */
+  .sdp-enquadrament__visor-caixa--cercle::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle closest-side, transparent calc(100% - 1px), var(--sdp-fons-vel) 100%);
+    pointer-events: none;
+  }
+  .sdp-enquadrament__zoom {
+    display: flex;
+    align-self: center;
+    align-items: center;
+    gap: var(--sdp-space-2);
+    width: 100%;
+    max-width: 22rem;
+  }
+  .sdp-enquadrament__zoom > .sdp-enquadrament__lliscador { flex: 1; min-width: 0; }
+  /* − i +: la zona tàctil sencera i, a la vista, només la icona. */
+  .sdp-enquadrament__pas {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: var(--sdp-touch);
+    height: var(--sdp-touch);
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: var(--sdp-radi-pastilla);
+    background: transparent;
+    color: var(--sdp-text-titol);
+    cursor: pointer;
+  }
+  .sdp-enquadrament__pas:disabled { color: var(--sdp-text-suau); cursor: not-allowed; }
+  .sdp-enquadrament__pas:focus-visible { outline: 3px solid var(--sdp-focus); }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-enquadrament__pas:hover:not(:disabled) { background: var(--sdp-fons-subtil); }
+  }
+  /* «Restablir», el botó de text a l'esquerra del peu. Dins del Perfil,
+     :where(.perfil-pagina) .sdp-boto el pintaria blau (PerfilShell.css): es
+     restituïx ací, amb la vora transparent per a fer l'alçada del secundari. */
+  .sdp-dialeg__peu .sdp-enquadrament__restablir {
+    margin-inline-end: auto;
+    background: transparent;
+    color: var(--sdp-accio-text);
+    border: 2px solid transparent;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-dialeg__peu .sdp-enquadrament__restablir:hover:not(:disabled) { background: var(--sdp-fons-subtil); }
+  }
 }
 
 /* T47 · autodesament */
@@ -8706,6 +8790,15 @@ details[open] summary.accordion-header svg:last-child {
   }
   .sdp-estat-desament--pendent .icon { stroke-width: 2; }
   .sdp-estat-desament--avis .icon { stroke-width: 2.5; }
+  /* Onada 4 (261008) · «Desat» (CloudCheck): la mateixa caixa i el mateix
+     cercle de vel fosc que l'estat net i el pendent; només canvia la icona. */
+  .sdp-estat-desament--desat {
+    width: var(--sdp-touch-comode);
+    height: var(--sdp-touch-comode);
+    background: var(--sdp-crom-scroll-pista);
+    color: var(--sdp-sobre-color);
+  }
+  .sdp-estat-desament--desat .icon { stroke-width: 2; }
   /* .bar-actions .icon (layout.css) hi posa la mà de «clica'm»: l'indicador no és cap botó. */
   .bar-actions .sdp-estat-desament .icon { cursor: default; opacity: 1; }
   /* Correcció C14 (260928) · En 'error' i 'sessio' la icona és un <button>

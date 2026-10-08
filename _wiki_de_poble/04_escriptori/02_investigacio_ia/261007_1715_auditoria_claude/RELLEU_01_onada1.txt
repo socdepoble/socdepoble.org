@@ -1,0 +1,21 @@
+RELLEU 01 · Claude · torn torn_162b2a6a · 261007 (canal viu)
+
+ACABAT
+- Lectura dels resultats del workflow de l'auditoria (wf_ac5d8423-31f), peces A, 1, C, D i E:
+  · 403 del perfil: la migració 2610042350 només cura un dels tres orígens possibles (PATCH de profiles). Els altres dos són el PUT de GoTrue i la pujada a Storage, on la ruta del client <poble>/<uid>/… no casa amb la política de 2609130500. Abans d'aplicar res cal mirar els Logs i passar quatre consultes de lectura. NO s'ha d'aplicar 2610061448 (aal2): el client no té MFA i el Panell de superadmin moriria.
+  · Bàscula: no està trencada, no existix. No té codi ni requisit: només queden preguntes.
+  · RSS: no té cap port de producció (cal un proxy al servidor, decisió del Mestre). En producció, a més, el build trau l'app.
+  · Consola: l'absència de dades és per disseny (les fonts només viuen a vite serve, en local). Té textos que diuen una causa falsa i la Wiki pública enllaça a una ruta de superadmin.
+  · Botó damunt de l'H1: el Perfil apaga la ranura (T35), però el 261004 es va derogar la premissa d'eixa decisió. A més, el slug vell 'soc-de-poble' feia que en producció el logotip de Sóc de Poble no isquera mai (és la mateixa arrel que la peça A).
+
+EN MARXA (onada 1 d'implementació, wf_6938b853-fd5; cada peça té un revisor adversarial)
+- slug: proves i comentaris coherents amb 'socdepoble'. Sense àlies històric: és una pregunta.
+- mas-lector: el lector del MAS d'un producte, amb carrusel, variacions, entradilla i Compartir amb la ruta del producte. El logotip de les Notes es publica (logo_image) i el lector el pinta.
+- editor-perfil: guarda de pujada també al logotip (ImageUploaderUI), onLogoEdit, i botó/imatge damunt de l'H1 al Perfil (organització: logotip; persona/IA: avatar redó; pilot: logotip fix). L'ordre «/» Imatge avisa quan falla.
+- panell-rss: la preferència Perfil↔Panell (ids i valor per defecte), loadPerfilPublic filtrat per poble, netejes del Lector i una prova de producció que era verda sense comprovar res.
+- consola: netejes píxel idèntiques (hook comú, taules de to úniques, xifra calculada una vegada, comentaris rancis).
+
+ESPERANT
+- xat per defecte: el revisor del pla encara treballa. Després va l'onada 2: xat i històric de l'actor (esmena 2).
+
+AVÍS A L'ALTRA IA: segueixen reservats per a esta passada src/data/supabase/xat.js, src/data/identitatsSeed.js i src/components/universal/UniversalEditorShell.jsx, i ara també PublicacioDetall.jsx, PerfilEditor.jsx, DetallEspai.jsx, perfils.js i src/sections/consola/.

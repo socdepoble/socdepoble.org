@@ -5,6 +5,7 @@ import { GraellaXifres } from '../XifresMas.jsx';
 import { xifresDeVista } from '../xifresMas.js';
 import { textLlancador } from './mapaContent.js';
 import { AL_MES, GRUPS_CADENCIA, classificaTasca, quanDe, resumCalendari, tascaAEsdeveniment } from './calendariMapa.js';
+import { TEXT_ESTAT, TO_ESTAT } from './grafMapa.js';
 
 /* Calendari de processos (02_calendari.md): què corre sol, quan, qui ho
    llança i si continua viu. És el calendari d'Emowe en valencià: les caixes
@@ -17,16 +18,10 @@ import { AL_MES, GRUPS_CADENCIA, classificaTasca, quanDe, resumCalendari, tascaA
    Panell de Control (TargetaResum).
    Correcció 261004 (verificador de la segona passada) · Davant de les
    caixes, «Coses que corren soles», la xifra del tauler que es tracta ací;
-   també quan el Mapa no porta cap tasca (la vista «calendari»). */
-
-const TO_ESTAT = Object.freeze({
-  viu: 'exit', mort: 'error', 'declarat-sense-llancador': 'neutre',
-  'llancador-sense-declaracio': 'avis', desconegut: 'neutre'
-});
-const TEXT_ESTAT = Object.freeze({
-  viu: 'viu', mort: 'mort', 'declarat-sense-llancador': 'sense llançador',
-  'llancador-sense-declaracio': 'sense declaració', desconegut: 'desconegut'
-});
+   també quan el Mapa no porta cap tasca (la vista «calendari»).
+   Neteja 261007 (prompt 261007_1628, peça D) · El to i el text de l'estat
+   d'una tasca són els de grafMapa.js (TO_ESTAT, TEXT_ESTAT), la seua única
+   font: ací n'hi havia una còpia idèntica. */
 
 /* T7 (ordre del Mestre, 260930) · la píndola de la variant gran: amplària
    uniforme i vora fina. L'estat continua dit amb text. */

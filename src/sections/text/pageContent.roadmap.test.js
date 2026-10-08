@@ -44,7 +44,10 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-const ACTIVES = 39;
+/* Ordre del Mestre (261007) · Bàscula descartada per ara: «anotar-la
+   exclusivament a la fulla de ruta (roadmap)». Eren 39; la Bàscula de
+   Cooperativa és la 40a llavor activa, i porta al registre de llavors. */
+const ACTIVES = 40;
 const COMENTADES = 4;
 const ORIGEN_FICTICI = 'http://x.invalid';
 /* Cap llavor és expressament externa. Si un dia n'hi ha una, va ací amb
@@ -80,7 +83,7 @@ function ancoresComentades() {
 
 const textDe = (ancora) => ancora.textContent.trim();
 
-test('conserva les 39 llavors actives i les 4 comentades, i cap porta el domini de producció', () => {
+test(`conserva les ${ACTIVES} llavors actives i les 4 comentades, i cap porta el domini de producció`, () => {
   const actives = ancoresActives();
   const comentades = ancoresComentades();
   expect(actives).toHaveLength(ACTIVES);

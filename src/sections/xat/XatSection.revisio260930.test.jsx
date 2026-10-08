@@ -136,8 +136,20 @@ beforeEach(() => {
 test('P2 · una renovació del JWT (scopeKey nou, mateix ambitEstable) conserva el text a mig escriure', () => {
   const vista = render(<XatSection />);
   fireEvent.change(screen.getByRole('textbox', { name: 'Escriu un missatge' }), { target: { value: 'mig escrit' } });
-  /* La renovació: scopeKey canvia i XatWorkspace es torna a muntar sencer. */
+  /* La renovació: scopeKey canvia. Des de la Decisió 1 del Mestre (261007)
+     XatWorkspace ja no es torna a muntar (la clau és ambitEstable); el text
+     es queda igualment, i també es quedaria per l'esborrany si es muntara. */
   mocks.scope = 'A-renovat';
+  vista.rerender(<XatSection />);
+  expect(screen.getByRole('textbox', { name: 'Escriu un missatge' }).value).toBe('mig escrit');
+  /* Relleu 261007 (revisió adversarial) · Com que la renovació ja no torna a
+     muntar res, el text de dalt és estat de Conversa, no l'esborrany. Canviar
+     de conversa i tornar-hi dins del mateix àmbit sí que torna a muntar
+     Conversa (key=fil), i el text ha de vindre de l'esborrany `P::a`: si la
+     clau tornara a portar scopeKey, es llegiria `A-renovat::a`, buit. */
+  mocks.threadId = 'b';
+  vista.rerender(<XatSection />);
+  mocks.threadId = 'a';
   vista.rerender(<XatSection />);
   expect(screen.getByRole('textbox', { name: 'Escriu un missatge' }).value).toBe('mig escrit');
 });

@@ -1,12 +1,15 @@
-import { expect, test } from 'vitest';
+import { describe, expect, test } from 'vitest';
 import {
-  CARPETA_ALTRES, CARPETA_PER_SECCIO, ETIQUETA_NEUTRA, esIdDePublicacio, etiquetaDeSeccio, itemsPublicatsDe, pertanyALActor,
-  publicacioComANota, seccioDeCarpeta, seccioDePublicacio
+  CARPETA_ALTRES, CARPETA_PER_SECCIO, ETIQUETA_NEUTRA, esAliesDelProjecte, esIdDePublicacio, etiquetaDeSeccio, itemsPublicatsDe,
+  pertanyALActor, publicacioComANota, seccioDeCarpeta, seccioDePublicacio
 } from './masDeLUsuari.js';
-import { aliesDeLActor } from '../../data/identitatsSeed.js';
+import { ENTITAT_PILOT_ID, ENTITAT_PILOT_SLUG, aliesDeLActor } from '../../data/identitatsSeed.js';
 import { NOTE_FOLDERS_SEED } from '../../data/appSeed.js';
+import { SYSTEM_PAGES } from '../../config/systemPages.js';
 import { MOCK_MARKET_ITEMS } from '../mercat/marketSeed.js';
 import { CALENDAR_EVENTS } from '../mur/eventsSeed.js';
+import { targetesDeSistema } from '../mur/targetesMur.js';
+import { PAGE_COPY } from '../text/pageContent.js';
 
 /* T1 · el MAS ensenya només el que ha publicat l'actor. */
 const samarreta = { id: 'samarreta-socdepoble', title: 'Samarreta', author_id: 'soc-de-poble_official', author_entity_id: 'socdepoble', seller: 'Sóc de Poble', created_at: '2026-08-15T12:33:00.000Z', images: ['/a.png'], description: 'Mapa del tresor' };
@@ -15,7 +18,7 @@ const remotEntitat = { id: 'r1', title: 'Fira', ownerUserId: 'u-javi', authorOrg
 const remotPersona = { id: 'r2', title: 'Ruta', ownerUserId: 'u-javi', authorOrgId: null };
 
 test('en seed, l’entitat pilot veu la samarreta i la persona pilot el Mac Mini', () => {
-  const entitat = aliesDeLActor({ tipus: 'entitat', id: 'socdepoble', slug: 'soc-de-poble' }, { dataMode: 'seed' });
+  const entitat = aliesDeLActor({ tipus: 'entitat', id: 'socdepoble', slug: ENTITAT_PILOT_SLUG }, { dataMode: 'seed' });
   const persona = aliesDeLActor({ tipus: 'persona', id: 'u-javi', rol: 'persona' }, { dataMode: 'seed' });
   expect(itemsPublicatsDe({ marketItems: [samarreta, mac] }, entitat).map((i) => i.id)).toEqual(['publicacio:mercat:samarreta-socdepoble']);
   expect(itemsPublicatsDe({ marketItems: [samarreta, mac] }, persona).map((i) => i.title)).toEqual(['Mac Mini']);
@@ -42,8 +45,66 @@ test('l’element de l’espai de treball és de lectura: sense etiquetes, amb i
   const [item] = itemsPublicatsDe({ marketItems: [samarreta] }, new Set(['socdepoble']));
   expect(item).toMatchObject({ title: 'Samarreta', image: '/a.png', tags: [], excerpt: 'Mapa del tresor', labels: [{ text: 'Mercat', className: 'sdp-badge-system' }] });
   expect(item.subtitle).toMatch(/15\/08\/26/);
-  /* Les pàgines de sistema del Mur no són de ningú. */
+  /* Grup E (261008) · Les pàgines de sistema del Mur són de l'entitat pilot i
+     de ningú més: tampoc de qui diu que les signa (un autor no hi compta). */
   expect(itemsPublicatsDe({ feedPosts: [{ id: 'legal', isSystem: true, author_id: 'javillinares' }] }, new Set(['javillinares']))).toEqual([]);
+  expect(itemsPublicatsDe({ feedPosts: [{ id: 'legal', isSystem: true, author_id: 'javillinares' }] }, new Set(['socdepoble'])).map((i) => i.id))
+    .toEqual(['publicacio:mur:legal']);
+});
+
+/* ── Grup E de l'Onada 4 (prompt 261008_1201, tasca 2; decisió del Mestre del
+   261008: el «Sóc de Poble loguejat» és l'ENTITAT socdepoble) ── Les deu
+   pàgines del sistema que el Mur signa com a «Sóc de Poble» (targetesDeSistema
+   amb el PAGE_COPY de veres) són de l'entitat pilot, en llavor i en remot
+   (uuid de servidor + slug declarat); d'una persona, mai. */
+describe('Grup E · les pàgines del sistema al MAS', () => {
+  const SISTEMA = targetesDeSistema(PAGE_COPY);
+  const ENTITAT_LLAVOR = aliesDeLActor({ tipus: 'entitat', id: ENTITAT_PILOT_ID, slug: ENTITAT_PILOT_SLUG }, { dataMode: 'seed' });
+  const ENTITAT_REMOTA = aliesDeLActor({ tipus: 'entitat', id: 'uuid-org', slug: ENTITAT_PILOT_SLUG });
+
+  test('les deu pàgines del Mur, a «Mur» (f-mur), per a l’entitat pilot en llavor i en remot', () => {
+    expect(SISTEMA).toHaveLength(SYSTEM_PAGES.length);
+    expect(SYSTEM_PAGES).toHaveLength(10);
+    for (const alies of [ENTITAT_LLAVOR, ENTITAT_REMOTA]) {
+      expect(esAliesDelProjecte(alies)).toBe(true);
+      const items = itemsPublicatsDe({ feedPosts: SISTEMA }, alies);
+      expect(items.map((item) => item.id)).toEqual(SYSTEM_PAGES.map((pagina) => `publicacio:mur:${pagina.key}`));
+      expect(items.every((item) => item.kind === 'publicacio' && item.categoryIds[0] === 'f-mur')).toBe(true);
+    }
+  });
+
+  test('una persona (llavor, remot o amb l’slug de l’entitat), el convidat i una altra entitat: cap', () => {
+    const cap = [
+      aliesDeLActor({ tipus: 'persona', id: 'u-javi', rol: 'persona' }, { dataMode: 'seed' }),
+      aliesDeLActor({ tipus: 'persona', id: 'uuid-javi', rol: 'persona' }),
+      aliesDeLActor({ tipus: 'persona', id: 'uuid-x', rol: 'persona', slug: ENTITAT_PILOT_SLUG }),
+      aliesDeLActor({ tipus: 'persona', id: 'convidat', rol: 'convidat' }, { dataMode: 'seed' }),
+      aliesDeLActor({ tipus: 'entitat', id: 'uuid-forn', slug: 'forn-de-la-torre' }),
+      // Una entitat remota sense el slug declarat no és la pilot (no es casa pel nom).
+      aliesDeLActor({ tipus: 'entitat', id: 'uuid-org' })
+    ];
+    for (const alies of cap) {
+      expect(esAliesDelProjecte(alies)).toBe(false);
+      expect(itemsPublicatsDe({ feedPosts: SISTEMA }, alies)).toEqual([]);
+    }
+    expect([null, undefined, new Set()].map(esAliesDelProjecte)).toEqual([false, false, false]);
+  });
+
+  test('la ruta d’una pàgina del sistema és la seua (mainHref), mai /mur/:id; una de fora, la de sempre', () => {
+    const items = itemsPublicatsDe({ feedPosts: SISTEMA }, ENTITAT_REMOTA);
+    expect(items.map((item) => item.data.ruta)).toEqual(SYSTEM_PAGES.map((pagina) => pagina.href));
+    expect(items.find((item) => item.id === 'publicacio:mur:xat').data).toMatchObject({ seccio: 'mur', ruta: '/page/xat' });
+    // Defensa en profunditat (esRutaInterna, com TargetaDelMur): un mainHref de fora no és cap ruta.
+    expect(publicacioComANota({ id: 'legal', isSystem: true, mainHref: 'https://fora.example/x' }, 'mur').data.ruta).toBe('/mur/legal');
+    // Un element que no és del sistema no porta la seua ruta per mainHref.
+    expect(publicacioComANota({ id: 'p1', mainHref: '/projecte' }, 'mur').data.ruta).toBe('/mur/p1');
+  });
+
+  test('el títol i la data del copy: la de creació de la pàgina', () => {
+    const [projecte] = itemsPublicatsDe({ feedPosts: SISTEMA.filter((pagina) => pagina.id === 'projecte') }, ENTITAT_LLAVOR);
+    expect(projecte.title).toBe(PAGE_COPY.projecte.title);
+    expect(projecte.updatedAt).toBe(PAGE_COPY.projecte.date);
+  });
 });
 
 /* ── F4 (ordre del Mestre, 261004; PRD de la Marató 2230, Fase 1) ──
@@ -137,18 +198,58 @@ test('F4 · en remot, l’entitat amb l’slug declarat de la llavor reconeix la
   const samarretaDeLaLlavor = MOCK_MARKET_ITEMS.find((item) => item.id === 'samarreta-socdepoble');
   const macMini = MOCK_MARKET_ITEMS.find((item) => item.author_id === 'javillinares');
   const aplec = CALENDAR_EVENTS.find((acte) => acte.id === 'aplec-2023');
-  const dades = { marketItems: [samarretaDeLaLlavor, macMini], events: [aplec] };
+  /* Ordre del Mestre (261007) · Amb el slug declarat 'socdepoble', l'entitat
+     ja casa amb la samarreta i l'Aplec pel seu propi slug: el pont de F4 (els
+     àlies del padró, identitatsSeed · aliesDeLActor) només es veu amb un
+     element signat amb un àlies que no és cap slug. `delPont` porta només
+     author_id 'soc-de-poble_official', sense cap signatura d'entitat. */
+  const delPont = { id: 'pont-f4', title: 'Signat amb l’àlies de la llavor', author_id: 'soc-de-poble_official' };
+  const dades = { marketItems: [samarretaDeLaLlavor, macMini, delPont], events: [aplec] };
   // Sense dataMode: remot, com en producció.
-  const entitat = aliesDeLActor({ tipus: 'entitat', id: 'uuid-org', slug: 'soc-de-poble' });
+  const entitat = aliesDeLActor({ tipus: 'entitat', id: 'uuid-org', slug: ENTITAT_PILOT_SLUG });
   expect(itemsPublicatsDe(dades, entitat).map((i) => [i.id, i.categoryIds[0]])).toEqual([
-    ['publicacio:mercat:samarreta-socdepoble', 'f-mercat'], ['publicacio:events:aplec-2023', 'f-events']
+    ['publicacio:mercat:samarreta-socdepoble', 'f-mercat'], ['publicacio:mercat:pont-f4', 'f-mercat'],
+    ['publicacio:events:aplec-2023', 'f-events']
   ]);
   // Una altra entitat, no.
   expect(itemsPublicatsDe(dades, aliesDeLActor({ tipus: 'entitat', id: 'uuid-forn', slug: 'forn-de-la-torre' }))).toEqual([]);
   // La persona remota no té pont (D1): el Mac Mini de 'javillinares' no és seu.
   expect(itemsPublicatsDe(dades, aliesDeLActor({ tipus: 'persona', id: 'uuid-javi', rol: 'persona' }))).toEqual([]);
   // Una persona amb l'slug de l'entitat no és l'entitat (T6: el pont és d'entitats).
-  expect(itemsPublicatsDe(dades, aliesDeLActor({ tipus: 'persona', id: 'uuid-x', slug: 'soc-de-poble' }))).toEqual([]);
+  /* Esmena de la peça dades-netes (261007) · Amb el slug declarat
+     (ENTITAT_PILOT_SLUG) la persona no rep cap àlies: ni els del padró ni el
+     seu slug, que només és àlies d'una entitat. No veu res de l'entitat. */
+  const personaAmbSlug = aliesDeLActor({ tipus: 'persona', id: 'uuid-x', slug: ENTITAT_PILOT_SLUG });
+  expect(personaAmbSlug.has('soc-de-poble_official')).toBe(false);
+  expect(personaAmbSlug.has(ENTITAT_PILOT_SLUG)).toBe(false);
+  expect(itemsPublicatsDe(dades, personaAmbSlug)).toEqual([]);
   // El convidat, res, tampoc en llavor.
   expect(itemsPublicatsDe(dades, aliesDeLActor({ tipus: 'persona', id: 'convidat', rol: 'convidat' }, { dataMode: 'seed' }))).toEqual([]);
+});
+
+/* Esmena de la peça dades-netes (261007) · Abans era una prova [DEFECTE]: el
+   slug declarat de l'entitat pilot ('socdepoble') és el mateix text amb què
+   la llavor signa la samarreta i l'Aplec (author_entity_id), aliesDeLActor
+   afegia el slug de qualsevol actor i pertanyALActor no mira el tipus de
+   l'autor, de manera que una persona amb l'slug de l'entitat els veia com a
+   seus. Tancat a identitatsSeed.js (aliesDeLActor: el slug, només per a una
+   entitat): ara és de regressió, en remot i en llavor. L'entitat, amb el
+   mateix slug, continua veient-los. */
+test('F4 · una persona amb l’slug de l’entitat pilot no veu la samarreta ni l’Aplec; l’entitat, sí', () => {
+  const dades = {
+    marketItems: [MOCK_MARKET_ITEMS.find((item) => item.id === 'samarreta-socdepoble')],
+    events: [CALENDAR_EVENTS.find((acte) => acte.id === 'aplec-2023')]
+  };
+  const persona = { tipus: 'persona', id: 'uuid-x', rol: 'persona', slug: ENTITAT_PILOT_SLUG };
+  expect(itemsPublicatsDe(dades, aliesDeLActor(persona))).toEqual([]);
+  // En llavor, la persona rep els àlies de la persona pilot, però mai els de l'entitat.
+  expect(itemsPublicatsDe(dades, aliesDeLActor(persona, { dataMode: 'seed' }))).toEqual([]);
+  // El slug d'una entitat continua valent com a àlies.
+  const entitat = aliesDeLActor({ tipus: 'entitat', id: 'uuid-org', slug: ENTITAT_PILOT_SLUG });
+  expect(entitat.has(ENTITAT_PILOT_SLUG)).toBe(true);
+  expect(itemsPublicatsDe(dades, entitat).map((i) => i.id)).toEqual([
+    'publicacio:mercat:samarreta-socdepoble', 'publicacio:events:aplec-2023'
+  ]);
+  // Una entitat qualsevol, amb el seu slug: l'àlies hi és, encara que no signe res de la llavor.
+  expect(aliesDeLActor({ tipus: 'entitat', id: 'uuid-forn', slug: 'forn-de-la-torre' })).toEqual(new Set(['uuid-forn', 'forn-de-la-torre']));
 });

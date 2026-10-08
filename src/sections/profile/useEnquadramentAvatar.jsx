@@ -1,5 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
-import { DialegEnquadrament } from '../../components/universal/enquadrament/DialegEnquadrament.jsx';
+import { useEnquadramentImatge } from '../../components/universal/enquadrament/useEnquadramentImatge.jsx';
 import { FORMATS, MIDA_SORTIDA, tipusDeSortida } from '../../components/universal/enquadrament/enquadrament.js';
 import { PES_MAXIM_ENTRADA } from '../../components/universal/enquadrament/limits.js';
 import { validaFitxerImatge } from '../../hooks/useHeroImageHandler.js';
@@ -59,47 +58,28 @@ export const DESCRIPCIO_ENQUADRAMENT_AVATAR = 'Mou la foto i amplia-la fins que 
  *   adreça ja resolta (l'espècimen del catàleg). `dialeg` es pinta on calga.
  *   Cancel·lar no puja res, i el focus torna a qui l'ha obert
  *   (DialegEnquadrament el captura en obrir-se).
+ *
+ * Onada 4 (retallador senzill, 261008) · Ara és un embolcall de
+ * useEnquadramentImatge amb la configuració de sempre (CONFIG_AVATAR_T46):
+ * els seus consumidors (DetallAjust, el diàleg intermedi del Perfil i
+ * l'espècimen) veuen el mateix retallador T46, el mateix límit (25 MB) i la
+ * mateixa eixida. La fitxa del Perfil ja no hi passa: va per
+ * useImatgeDeFitxa, amb la finestra senzilla.
  */
+const CONFIG_AVATAR_T46 = Object.freeze({
+  senzill: false,
+  mascara: null,
+  formatInicial: FORMAT_AVATAR,
+  formats: FORMATS_AVATAR,
+  titol: TITOL_ENQUADRAMENT_AVATAR,
+  descripcio: DESCRIPCIO_ENQUADRAMENT_AVATAR,
+  valida: (font) => validaFitxerImatge(font, PES_MAXIM_FOTO_AVATAR),
+  sortida: sortidaAvatar,
+});
+
 export function useEnquadramentAvatar({ onEnquadrat, onError } = {}) {
-  /* Cada obertura és una sessió pròpia (objecte nou): un desat que acaba
-     tard tanca només la seua, mai una de més nova. */
-  const [sessio, setSessio] = useState(null);
-  const enquadratRef = useRef(onEnquadrat);
-  enquadratRef.current = onEnquadrat;
-  const errorRef = useRef(onError);
-  errorRef.current = onError;
-
-  const obri = useCallback((font) => {
-    const avis = typeof font === 'string' && font ? null : validaFitxerImatge(font, PES_MAXIM_FOTO_AVATAR);
-    if (avis) {
-      errorRef.current?.(avis);
-      return false;
-    }
-    setSessio({ font });
-    return true;
-  }, []);
-
-  const tanca = useCallback(() => setSessio(null), []);
-
-  const dialeg = sessio ? (
-    <DialegEnquadrament
-      font={sessio.font}
-      formatInicial={FORMAT_AVATAR}
-      formats={FORMATS_AVATAR}
-      sortida={sortidaAvatar(sessio.font)}
-      permetGeolocalitzacio={false}
-      titol={TITOL_ENQUADRAMENT_AVATAR}
-      descripcio={DESCRIPCIO_ENQUADRAMENT_AVATAR}
-      onTanca={tanca}
-      onDesa={async (fitxer, info) => {
-        await enquadratRef.current?.(fitxer, info);
-        setSessio((actual) => (actual === sessio ? null : actual));
-        return true;
-      }}
-    />
-  ) : null;
-
-  return { obri, obert: Boolean(sessio), dialeg };
+  const { obri, obert, dialeg } = useEnquadramentImatge({ config: CONFIG_AVATAR_T46, onEnquadrat, onError });
+  return { obri, obert, dialeg };
 }
 
 export default useEnquadramentAvatar;

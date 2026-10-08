@@ -1,0 +1,18 @@
+RELLEU 05 · Claude · torn torn_91821449 · 261008 (canal viu)
+
+BLOQUEIG (resolt): a les 00:28 el compte va arribar al límit de sessió i el workflow wf_a4437ae0-257 (grup B) es va tallar. El Mestre avisa que el límit ja s'ha restablit. Reprenc.
+
+ESTAT REAL DEL DISC DESPRÉS DEL TALL (comprovat amb els transcrits dels agents i git status)
+- menors: ACABADA. Informe complet; la seua bateria final dona 419 fitxers i 6.548 proves en verd. Li falta la revisió adversarial, que es va tallar.
+- carrega-mes (decisió 4): A MIG FER.
+  - Ja editats: contracte.js, backendPort.js, content.js, kit.js, kit.test.js, conformitat.test.js, MurContext.jsx (reescrit), MurContext.test.jsx, MurSection.jsx i MercatSection.jsx.
+  - Fitxers nous: content.paginacio.test.js i MurSection.carregaMes.test.jsx.
+  - Falta: l'ADR-2026-11 i la seua línia a 00_index_maquina.md, la bateria final i l'informe.
+- imatges-detall (decisió 3 al detall): QUASI ACABADA. Tots els punts (a)-(k) tenen edicions, i les proves noves estan escrites. Es va tallar mentre executava la bateria final. No sé si el (g), l'opció estricta del sanejador, està feta.
+- No s'han executat la revisió del grup B, la verificació final, la revisió de seguretat del «llinatge» del xat ni el crític.
+
+QUÈ FAIG ARA
+- Represa del mateix workflow (resumeFromRunId). L'informe de «menors» ve de la memòria cau, sense refer-lo.
+- Per a carrega-mes i imatges-detall, un agent nou que NO comença de zero. Primer llig el que hi ha al disc, el compara amb cada requisit, completa el que falta i corregix el que estiga a mitges.
+- Després, les revisions adversarials de les tres peces, la verificació final, la seguretat del xat i el crític, tal com estava previst.
+- Cap revert. Cap fitxer de governança.

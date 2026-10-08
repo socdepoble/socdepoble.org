@@ -74,6 +74,10 @@ export const loadCoreContent = asseguraMetode('loadCoreContent');
 export const loadMur = asseguraMetode('loadMur');
 export const loadMultimedia = asseguraMetode('loadMultimedia');
 export const loadNotesPage = asseguraMetode('loadNotesPage');
+/* Decisió 4 del Mestre (261007) · «Carregar-ne més» (capacitat
+   'paginacioSeccions'). No és nucli: MurContext pregunta abans amb
+   teCapacitat i, sense ella, no ofereix el botó. */
+export const loadSeccioPage = asseguraMetode('loadSeccioPage');
 export const loadNotes = asseguraMetode('loadNotes');
 export const appendChatMessages = asseguraMetode('appendChatMessages');
 
@@ -181,3 +185,10 @@ export const comprovaServidor = asseguraMetode('comprovaServidor');
    verifica l'enllaç pendent i definix en una sola crida (contracte.js). */
 export const demanaRecuperacioContrasenya = asseguraMetode('demanaRecuperacioContrasenya');
 export const definixContrasenyaNova = asseguraMetode('definixContrasenyaNova');
+
+/* Ordre del Mestre (261008, grup C) · Els membres d'una organització
+   (capacitat 'membresOrganitzacio'). No és nucli: el Perfil pregunta abans
+   amb teCapacitat i, sense ella, no pinta la gestió de membres ni «Eixir». */
+export const llistaMembresOrganitzacio = asseguraMetode('llistaMembresOrganitzacio');
+export const desaMembreOrganitzacio = asseguraMetode('desaMembreOrganitzacio');
+export const llevaMembreOrganitzacio = asseguraMetode('llevaMembreOrganitzacio');

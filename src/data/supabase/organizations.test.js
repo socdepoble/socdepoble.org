@@ -9,6 +9,7 @@ import {
   reiniciaMemoriaContacte
 } from './organizations.js';
 import { reiniciaLocalPerfils } from '../localPerfils.js';
+import { ENTITAT_PILOT_SLUG } from '../identitatsSeed.js';
 
 /* Pobles sintètics. backendConfig.js exigix que el tenant_id siga un UUID, i
    getResolvedConfig el torna normalitzat en minúscules: les fixtures també. */
@@ -17,9 +18,10 @@ const ALTRE_POBLE = '00000000-0000-4000-8000-0000000000ff';
 const POBLE_SENSE_RPC = '00000000-0000-4000-8000-0000000000a1';
 const POBLE_AMB_RPC = '00000000-0000-4000-8000-0000000000a2';
 
-/* Les columnes amb grant de SELECT (M01 + F1). Cap més: el RETURNING les demana totes. */
+/* Les columnes amb grant de SELECT (M01 + F1 + grup C: town_name, 2610081401).
+   Cap més: el RETURNING les demana totes. */
 const COLUMNES = ['id', 'tenant_id', 'slug', 'name', 'kind', 'parent_organization_id', 'lema', 'description',
-  'visibility', 'logo_url', 'hero_url', 'presentacio_html', 'copyright', 'created_at', 'updated_at'];
+  'visibility', 'logo_url', 'hero_url', 'presentacio_html', 'copyright', 'town_name', 'created_at', 'updated_at'];
 beforeEach(() => {
   m.user = { id: 'A' }; m.tenantId = POBLE; m.supabaseUrl = 'https://poble.test';
   m.request.mockReset(); m.request.mockResolvedValue([{ id: 'O' }]);
@@ -42,6 +44,14 @@ test('el RETURNING només demana columnes amb grant de SELECT', async () => {
   expect(url.pathname).toBe('/rest/v1/organizations');
   expect(url.searchParams.get('id')).toBe('eq.O/1');
   expect(url.searchParams.get('select').split(',')).toEqual(COLUMNES);
+});
+/* Ordre del Mestre (261008, grup C) · El poble de l'organització: el NOM del
+   poble a la columna town_name (2610081401); buit o null el lleva. */
+test('grup C · updateOrganization desa el poble a town_name, i també el buida', async () => {
+  await updateOrganization('O', { town_name: 'La Torre de les Maçanes' });
+  expect(m.request.mock.calls[0][2].body).toEqual({ town_name: 'La Torre de les Maçanes' });
+  await updateOrganization('O', { town_name: null });
+  expect(m.request.mock.calls[1][2].body).toEqual({ town_name: null });
 });
 test('un valor buit es desa; un camp absent o desconegut no viatja', async () => {
   await updateOrganization('O', { lema: '', presentacio_html: undefined, rol: 'owner' });
@@ -78,7 +88,7 @@ test('createOrganization sense sessió no crida el servidor', async () => {
   expect(m.request).not.toHaveBeenCalled();
 });
 test.each(['seed', 'local'])('crear organització en %s no escriu al servidor real', async dataMode => {
-  await expect(createOrganization({ kind: 'company', name: 'Sóc de Poble', slug: 'soc-de-poble' }, { dataMode }))
+  await expect(createOrganization({ kind: 'company', name: 'Sóc de Poble', slug: ENTITAT_PILOT_SLUG }, { dataMode }))
     .rejects.toThrow('formulari d’entrada');
   expect(m.request).not.toHaveBeenCalled();
 });
@@ -122,8 +132,22 @@ test('T47 · una columna del RETURNING que el servidor no té no bloqueja el des
   await expect(updateOrganization('O', { hero_url: 'https://x.test/h.png' })).rejects.toThrow('hero_url');
 });
 
+/* Grup C · Mentre 2610081401 no s'aplica, town_name tampoc no hi és: es
+   lleva del RETURNING i la resta de la fitxa es desa. Desar el poble mateix
+   continua sent un error (la interfície el diu amb l'avís de columna absent). */
+test('grup C · sense la columna town_name al servidor, el RETURNING la lleva; desar-la passa l’error', async () => {
+  const sense = Object.assign(new Error('Supabase 400: {"code":"42703","message":"column organizations.town_name does not exist"}'), { status: 400 });
+  m.request.mockRejectedValueOnce(sense).mockResolvedValueOnce([{ id: 'O', lema: 'Del camp' }]);
+  expect(await updateOrganization('O', { lema: 'Del camp' })).toEqual({ id: 'O', lema: 'Del camp' });
+  const select = new URL(m.request.mock.calls[1][0], 'https://example.test').searchParams.get('select').split(',');
+  expect(select).not.toContain('town_name');
+  const absent = Object.assign(new Error('Supabase 400: {"code":"PGRST204","message":"Could not find the \'town_name\' column of \'organizations\' in the schema cache"}'), { status: 400 });
+  m.request.mockRejectedValueOnce(absent);
+  await expect(updateOrganization('O', { town_name: 'Relleu' })).rejects.toBe(absent);
+});
+
 test('listMyOrganizations torna les files tal qual, amb les columnes noves', async () => {
-  const fila = { id: 'O', name: 'Forn', logo_url: 'https://x.test/l.png', hero_url: null, presentacio_html: '' };
+  const fila = { id: 'O', name: 'Forn', logo_url: 'https://x.test/l.png', hero_url: null, presentacio_html: '', town_name: 'Relleu' };
   m.request.mockResolvedValueOnce([fila]);
   expect(await listMyOrganizations()).toEqual([fila]);
   expect(m.request.mock.calls[0][2].body).toEqual({ p_tenant_id: POBLE });
@@ -310,7 +334,8 @@ test('T43 · un correu mal format no arriba al servidor', async () => {
 test.each(['seed', 'local'])('T43 · en %s tot delega a localPerfils: alta immediata i correu en memòria, sense servidor', async (dataMode) => {
   reiniciaLocalPerfils();
   m.user = { id: 'A', email: 'a@poble.test' };
-  expect(await reclamaOrganitzacio('soc-de-poble', {}, { dataMode })).toMatchObject({ estat: 'aprovada', role: 'owner', jaHiEra: true });
+  /* Ordre del Mestre (261007) · La pilot es reclama pel slug declarat, el de producció ('socdepoble'). */
+  expect(await reclamaOrganitzacio(ENTITAT_PILOT_SLUG, {}, { dataMode })).toMatchObject({ estat: 'aprovada', role: 'owner', jaHiEra: true });
   expect(await lesMevesReclamacions({ dataMode })).toEqual([]);
   expect(await desaContacteOrganitzacio('socdepoble', { correu: 'hola@socdepoble.cat', public: true }, { dataMode }))
     .toEqual({ correu: 'hola@socdepoble.cat', public: true, perDefecte: { origen: 'propietaria', correu: 'a@poble.test' } });

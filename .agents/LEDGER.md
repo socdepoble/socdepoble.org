@@ -18,6 +18,8 @@ Qualsevol IA (o humà) que modifique codi està obligada a afegir-hi una entrada
 
 ---
 
+261008 | implementacio | claude | Onada 4 finalitzada: Perfil (retall calc), Notes (publicar al Mur), Organitzacions (membres, comptes), Xat (privacitat) i Botigues.
+261008 | auditoria | claude | Onada 3 completada a fons: decisions UX (carrega mes, imatges externes), historic de l'actor, paquet trossejat i neteja de menors. Tests en verd (14.210 proves).
 261005 | recaiguda | wiki-documentacio-i-reflex | canal viu: Claude 40 min sense relleu durant el mapa inicial
 261004 | integracio | gestoria+targetes+barres+logo+ptr | integració final verificada, 1.0.3 a punt de compilar
 261004 | correccio | sdp-universal-page | rellegir el prompt sencer abans de decidir l'abast d'una norma

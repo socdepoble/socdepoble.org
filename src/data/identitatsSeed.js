@@ -10,6 +10,14 @@
  * xatSeed). Este fitxer és la taula de correspondència única. Cap altre
  * fitxer inventa identificadors nous per a estes tres identitats.
  *
+ * Ordre del Mestre (261007) · A producció l'entitat és 'socdepoble', sense
+ * guions: el slug declarat (ENTITAT_PILOT_SLUG) passa de 'soc-de-poble' a
+ * 'socdepoble' i ara és el mateix text que l'id d'agentsSeed
+ * (ENTITAT_PILOT_ID). La plantilla d'alta d'appSeed (i la de
+ * supabase/seed.sql) encara porta 'soc-de-poble', que ja no és cap àlies:
+ * una entitat creada amb ella no es reconeix com la pilot. Si l'ha de
+ * reconéixer és una decisió pendent del Mestre.
+ *
  * REGLA DEL MODE SEED: la persona que ha entrat és la persona pilot («Javi»)
  * i és propietària de l'entitat pilot («Sóc de Poble»). És l'única manera de
  * provar el canal compartit del xat, el MAS de l'entitat i la fitxa sense una
@@ -24,7 +32,7 @@ import { AGENTS_MAP } from './agentsSeed.js';
    al catàleg d'agents i al perfil. xatSeed l'importa d'ací. */
 export const IAIA_ID = AGENTS_MAP.IAIA.id;
 export const ENTITAT_PILOT_ID = AGENTS_MAP.SOCDEPOBLE.id;
-export const ENTITAT_PILOT_SLUG = 'soc-de-poble';
+export const ENTITAT_PILOT_SLUG = 'socdepoble';
 
 export const PERSONA_PILOT = Object.freeze({
   slug: 'javi',
@@ -53,8 +61,11 @@ export const ENTITATS_SEED = Object.freeze([Object.freeze({
   copyright: '',
   visibility: 'public',
   town_name: 'La Torre de les Maçanes',
-  /* Identificadors amb què la llavor signa contingut de l'entitat pilot. */
-  alies: Object.freeze(['soc-de-poble_official', ENTITAT_PILOT_SLUG, ENTITAT_PILOT_ID]),
+  /* Identificadors amb què la llavor signa contingut de l'entitat pilot.
+     Ordre del Mestre (261007) · Amb el slug declarat 'socdepoble', slug i id
+     són el mateix text: el Set en deixa una sola entrada i no en perd cap si
+     un dia tornen a ser distints. */
+  alies: Object.freeze([...new Set(['soc-de-poble_official', ENTITAT_PILOT_SLUG, ENTITAT_PILOT_ID])]),
   /* Membres amb rol declarat. T63.1 (decisió del Mestre, 260928): cap persona
      inventada, de manera que la llavor no en declara cap i hi mana qui té
      sessió (regla del mode seed, `rolALEntitat`). */
@@ -126,14 +137,27 @@ export function rolALEntitat(orgId, usuariId, { teSessio = false } = {}) {
 
 /**
  * Tots els identificadors amb què un actor pot haver signat contingut:
- * · sempre, el seu id i el seu slug declarat;
+ * · sempre, el seu id;
+ * · una entitat, a més, el seu slug declarat. Ordre del Mestre (261007) ·
+ *   El slug declarat de l'entitat pilot ('socdepoble') coincidix amb l'id
+ *   amb què la llavor signa el seu contingut (author_entity_id de la
+ *   samarreta i de l'Aplec), i pertanyALActor no mira el tipus de l'autor.
+ *   Esmena de la peça dades-netes (261007) · Abans s'afegia el slug de
+ *   qualsevol actor, i una persona amb l'slug de l'entitat heretava eixe
+ *   contingut: la invariant de T6 («una persona amb l'slug de l'entitat no és
+ *   l'entitat») quedava trencada. Una persona no signa mai per slug
+ *   (IdentitatContext el deixa a null i autorDe només en llig ids): el slug
+ *   només és àlies d'una entitat;
  * · una entitat del padró pilot (per id o per slug declarat), a més, els àlies
  *   amb què la llavor la signa, en QUALSEVOL mode (F4, ordre del Mestre,
  *   261004; PRD de la Marató 2230, Fase 1). La taula app_content de
  *   supabase/seed.sql signa la samarreta i l'Aplec amb 'socdepoble', i al
- *   servidor l'entitat és un uuid amb l'slug declarat 'soc-de-poble': sense
- *   el pont, el seu MAS remot no els veia. És la doctrina de T6
- *   (navigation.js): per id o slug declarat, mai pel nom;
+ *   servidor l'entitat és un uuid amb l'slug declarat ENTITAT_PILOT_SLUG.
+ *   Abans (slug 'soc-de-poble') el pont era l'única via perquè el seu MAS
+ *   remot els veiera; des de l'ordre del Mestre del 261007 el slug ja casa
+ *   amb 'socdepoble', i el pont hi aporta els àlies que no són cap slug
+ *   ('soc-de-poble_official'). És la doctrina de T6 (navigation.js): per id
+ *   o slug declarat, mai pel nom;
  * · una persona, només en seed, els àlies de la persona pilot. El convidat no
  *   els hereta (sense sessió, res és seu), i en remot cap persona en rep
  *   (D1: un compte no es casa per nom amb 'javillinares').
@@ -142,8 +166,8 @@ export function aliesDeLActor(actor, { dataMode = 'remote' } = {}) {
   const alies = new Set();
   if (!actor?.id) return alies;
   alies.add(String(actor.id));
-  if (actor.slug) alies.add(String(actor.slug));
   if (actor.tipus === 'entitat') {
+    if (actor.slug) alies.add(String(actor.slug));
     const entitat = entitatSeed(actor.id) || entitatSeed(actor.slug);
     entitat?.alies.forEach((a) => alies.add(a));
     return alies;

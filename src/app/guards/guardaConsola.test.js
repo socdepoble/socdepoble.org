@@ -1,9 +1,12 @@
 import { expect, test } from 'vitest';
 import { consolaDemanaSessio } from './guardaConsola.js';
 
-/* A vitest DEV sempre és true: la branca de producció només es prova passant
-   el valor. App.jsx li passa import.meta.env.DEV, que Vite substituïx per un
-   literal en construir (false tant a `vite build` com al build del plugin). */
+/* A vitest DEV és true per defecte. La funció rep el valor perquè les dues
+   branques es proven passant-lo, sense doblar l'entorn. Neteja 261007 (prompt
+   261007_1628, peça D) · No «sempre»: vi.stubEnv('DEV', false) el canvia, i
+   ConsolaSection.produccio.test.jsx ho fa per a provar la Consola fora de DEV.
+   App.jsx li passa import.meta.env.DEV, que Vite substituïx per un literal en
+   construir (false tant a `vite build` com al build del plugin). */
 
 test('a `vite serve` (DEV) la Consola s’obri sense sessió', () => {
   expect(consolaDemanaSessio(true)).toBe(false);

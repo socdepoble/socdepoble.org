@@ -22,6 +22,11 @@
  *         focus amb el camp buit i sense filtre torna la llista.
  *       - ?sobre=<tipus>:<id>&titol=…&ruta=… (el «Comentar» d'una Pàgina
  *         Universal) obri el xat comú amb obriFilDePagina i hi navega.
+ *         Auditoria 261008 (B05): la conversa conserva el descriptor a la
+ *         seua URL (/xat/<filId>?sobre=<tipus>:<id>, sense títol ni ruta) i,
+ *         si el fil no és a la llista (recarregar, un enllaç compartit), es
+ *         torna a obrir abans del 404; si la xarxa falla, la URL es queda i
+ *         es torna a provar.
  *   · Onada 3B · ?vista=<id> (les entrades del rail, ClosCaXat): la columna
  *     central pinta VistaComunitats (comunitats), VistaMultimedia (multimedia,
  *     operativa des de l'ordre del Mestre del 261004, T5) o
@@ -41,10 +46,11 @@
  *     del rail està amagada (D16) i la roda de «Menú» només replega el rail.
  *   · Sense sessió, «Entrar» (i el ?sobre= en remot) porten a l'entrada amb
  *     rutaDEntrada (T4): /registre?mode=entrar&tornar=<la ruta del Xat>.
- *   · L'àmbit el marca `scopeKey` d'useXat() (ARQ-H01): useNotesData() només
- *     queda per a `creaNota` del Retall. Els esborranys, en canvi, van per
- *     `ambitEstable` (backend + persona + actor, sense la generació del JWT):
- *     revisió adversarial 260930, P2.
+ *   · L'àmbit el marca `ambitEstable` d'useXat() (ARQ-H01: backend + persona
+ *     + actor, sense la generació del JWT): useNotesData() només queda per a
+ *     `creaNota` del Retall. Els esborranys hi penjaven ja des de la revisió
+ *     adversarial 260930 (P2); des de la Decisió 1 del Mestre (261007), també
+ *     l'espai sencer: una renovació del JWT no el torna a muntar.
  *   · Tot el text passa per t() amb claus section.xat.* (XAT-P10) i les hores
  *     es formaten amb el locale de la interfície (XAT-P11).
  *
@@ -62,7 +68,7 @@ import AppGridColumn from '../../components/layout/AppGridColumn.jsx';
 import { useAppGrid } from '../../components/layout/AppGridShell.jsx';
 import { useModeImmersiu } from '../../app/contexts/ModeImmersiuContext.jsx';
 import TextSection from '../text/TextSection';
-import { useXat } from './XatContext';
+import { esperaDeLaLlista, useXat } from './XatContext';
 import { useUIActions, useUIState } from '../../app/contexts/UIContext';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
 import { useNotesData } from '../notes/NotesDataContext';
@@ -94,6 +100,9 @@ import { esComunitat } from './components/FilaConversa.jsx';
 import FakeChatOnboarding from './components/FakeChatOnboarding.jsx';
 import EntradaDelPoble from './components/EntradaDelPoble.jsx';
 import usePobleAmfitrio from './usePobleAmfitrio.js';
+/* Ordre del Mestre (261007) · Les files d'ajuda per defecte i on porten. */
+import useObriXatPerDefecte from './useObriXatPerDefecte.js';
+import { esIdPerDefecte } from '../../data/xatsPerDefecte.js';
 import {
   anteposaPoble, avatarDelPoble, comunitatsAmbCaraDelPoble, esComunitatDelPoble, filsAmbCaraDelPoble, rutaSobreDelPoble
 } from './pobleAmfitrio.js';
@@ -110,6 +119,7 @@ const noop = () => {};
 const mai = () => false;
 const capMarcada = () => 0;
 const senseXat = async () => null;
+const senseEspera = () => null;
 const enc = (valor) => encodeURIComponent(String(valor));
 
 /* El focus s'ha perdut: l'element que el tenia s'ha desmuntat (el focus cau a
@@ -196,18 +206,60 @@ export function rutaAmbConsulta(pathname, params) {
   return `${pathname || '/xat'}${consulta ? `?${consulta}` : ''}`;
 }
 
+/**
+ * Auditoria 261008 (B05) · La consulta del subjecte d'un fil de pàgina a la
+ * URL de la conversa (/xat/<filId>?sobre=<tipus>:<id>), perquè un fil llegit
+ * com a visitant sobrevisca a recarregar, a la pestanya que iOS descarta i a
+ * l'enllaç compartit: el visitant només viu en la memòria del proveïdor, i el
+ * descriptor és l'únic camí per a tornar a obrir-lo. S'ha triat la URL i no
+ * sessionStorage perquè cobrix també l'enllaç compartit.
+ * Revisió 261008 · Només el descriptor, mai `titol` ni `ruta`: la URL de la
+ * conversa es queda a l'historial i, incrustat amb el router de navegador, a
+ * la URL de la pàgina de l'amfitrió (i a la seua analítica). El subjecte no
+ * sempre és públic (el xat comú d'una organització de membres el llig una
+ * membre), i el servidor ja en deriva la ruta i el títol: obri_fil_de_pagina
+ * només usa el títol del client per a un contingut sense títol propi, i en
+ * tornar a obrir el fil ja existix. Una 'pagina' pren la ruta del seu id
+ * (objecteDeSobre). L'identificador del subjecte sí que hi queda: és el que
+ * el torna a obrir.
+ */
+export function consultaDeSobre(sobre) {
+  return `sobre=${enc(sobre)}`;
+}
+
+/** B05 · El ?sobre= (<tipus>:<id>) del subjecte d'un fil, el que torna el servidor, o null si no en té cap amb xat. */
+export function sobreDelFil(fil) {
+  const subjecte = fil?.subjecte;
+  if (!subjecte?.tipus || subjecte.id == null || subjecte.id === '') return null;
+  const sobre = `${subjecte.tipus}:${subjecte.id}`;
+  return subjecteDeXat(objecteDeSobre(sobre)) ? sobre : null;
+}
+
+/** El text d'una fallada en obrir un directe. SDP-XAT-016 (B03: la persona no
+    ha donat el consentiment) es diu en la llengua de la interfície; l'adaptador
+    en porta la reserva valenciana al message. La resta, com sempre. */
+export function textDeFalladaDirecte(error, t) {
+  if (error?.code === 'SDP-XAT-016') return t('section.xat.error.noDisponible', error.message);
+  return error?.message || t('section.xat.obrirError', "No s'ha pogut obrir la conversa.");
+}
+
 export default function XatSection() {
   const xat = useXat();
-  // Padró, cerca i selecció pertanyen al mateix àmbit. L'esborrany del
-  // compositor no: va per `ambitEstable` i sobreviu a la renovació del JWT.
+  // Padró, cerca i selecció pertanyen al mateix àmbit, i un altre àmbit
+  // (persona, actor o backend) torna a muntar l'espai sencer.
+  // Decisió 1 del Mestre (261007) · La clau és `ambitEstable` i no `scopeKey`:
+  // una renovació del JWT (generació nova) no és un altre àmbit. Abans tornava
+  // a muntar XatWorkspace cada hora i s'enduia la cita a mitges, la posició de
+  // lectura, la cerca i el diàleg obert; ara XatContext conserva la conversa i
+  // el que la persona té a la pantalla es queda.
   if (xat.senseSessio) {
     return (
       <FakeChatOnboarding originalContext={xat}>
-        <XatWorkspace key={xat.scopeKey ?? 'xat-fake'} />
+        <XatWorkspace key={xat.ambitEstable ?? 'xat-fake'} />
       </FakeChatOnboarding>
     );
   }
-  return <XatWorkspace key={xat.scopeKey ?? 'xat'} />;
+  return <XatWorkspace key={xat.ambitEstable ?? 'xat'} />;
 }
 
 function XatWorkspace() {
@@ -257,6 +309,7 @@ function XatWorkspace() {
     totalNoLlegits = 0,
     hiHaMesAntics = mai,
     carregantAntics = mai,
+    esperaAntics = senseEspera,
     carregaMesAntics = noop,
     reintenta = noop,
     descartaFallit = noop,
@@ -268,7 +321,11 @@ function XatWorkspace() {
     joId = null,
     joNom = null,
     senseSessio = false,
-    ambitEstable = ''
+    ambitEstable = '',
+    /* Auditoria 261008 (B04) · Si l'última càrrega de la llista ha anat bé, i
+       l'avís no bloquejant d'un sondeig fallit amb la llista conservada. */
+    llistaFresca = true,
+    avisLlista = null
   } = useXat();
 
   const titolSeccio = t('section.xat.rail.titol', 'Xat');
@@ -309,9 +366,39 @@ function XatWorkspace() {
 
   const threads = useMemo(() => filsAmbCaraDelPoble(chatThreads || CAP, poble, caraDelPoble), [chatThreads, poble, caraDelPoble]);
   const comunitats = useMemo(() => comunitatsAmbCaraDelPoble(comunitatsDelXat, poble, caraDelPoble), [comunitatsDelXat, poble, caraDelPoble]);
-  const trobat = threadId ? threads.find((c) => String(c.id) === threadId) || null : null;
+  /* Auditoria 261008 (B04 i B05) · `trobatViu` és el fil de la URL tal com
+     és ara a la llista (o entre els visitants). obriFil només es crida amb
+     este: un id que no hi és (ni entre els visitants) no es demana mai a
+     xat_historial, que respondria SDP-XAT-006 a cada sondeig.
+     Revisió 261008 · Mentre la llista NO està al dia (`llistaFresca` fals:
+     una càrrega que ha fallat, o l'esquema sense aplicar, que la buida), el
+     fil que ja s'havia trobat en esta mateixa ruta es conserva (`trobat`) i
+     no es convertix en un 404. Amb una llista al dia que ja no el porta (li
+     han llevat el rol a qui representava una entitat, el fil ja no hi és),
+     no: el fil ha desaparegut de veres, i es decidix com qualsevol altre,
+     sense deixar a la vista una conversa congelada amb el compositor actiu.
+     La memòria s'escriu després de pintar i s'oblida en canviar de ruta
+     (/xat/X → /xat → /xat/X no la recupera). */
+  const trobatViu = threadId ? threads.find((c) => String(c.id) === threadId) || null : null;
+  const darrerTrobat = useRef(null);
+  useLayoutEffect(() => {
+    if (trobatViu) darrerTrobat.current = trobatViu;
+    else if (String(darrerTrobat.current?.id ?? '') !== String(threadId ?? '')) darrerTrobat.current = null;
+  });
+  const conservat = !trobatViu && !llistaFresca && darrerTrobat.current && String(darrerTrobat.current.id) === threadId
+    ? darrerTrobat.current
+    : null;
+  const trobat = trobatViu || conservat;
+  const filALaLlista = Boolean(trobatViu);
   const trobatEsComunitat = esComunitat(trobat);
-  const activeThread = trobatEsComunitat ? null : trobat;
+  /* Ordre del Mestre (261007) · Una fila d'ajuda per defecte (perDefecte,
+     data/xatsPerDefecte.js) no és cap conversa: ni es munta Conversa ni es
+     crida obriFil. Tampoc amb el seu id abans que arribe la llista (un enllaç
+     directe, una recàrrega): xat_historial rebutjaria l'id i l'avís taparia
+     la llista. */
+  const trobatPerDefecte = trobat?.perDefecte || null;
+  const idPerDefecte = Boolean(trobatPerDefecte) || esIdPerDefecte(threadId);
+  const activeThread = trobatEsComunitat || idPerDefecte ? null : trobat;
   const filActiuId = activeThread?.id ?? null;
   const comunitatOberta = comunitatId
     ? comunitats.find((c) => String(c.fil.id) === comunitatId) || null
@@ -325,14 +412,43 @@ function XatWorkspace() {
     return parts.length ? `?${parts.join('&')}` : '';
   }, [connectionContext]);
 
+  /* Auditoria 261007 (B) · En eixir del Xat el fil es tanca: XatProvider viu
+     per damunt de les rutes i, sense la neteja, el canal de temps real i el
+     sondeig del fil (cada 5 o 30 s) continuaven al Mur o al Mercat. Entre dos
+     fils, la neteja i l'efecte nou van en el mateix commit: de A a B, sense
+     cap null entremig. Una fila per defecte ja no l'obri: la neteja no hi
+     afig res.
+     Efecte que es nota: el toast «Missatge nou de…» del fil que estava obert
+     arribava a l'instant pel canal (o en 5-30 s pel sondeig del fil); ara
+     arriba amb el sondeig de la llista, en 25 s com a màxim, igual que el de
+     qualsevol altra conversa. Pendent de la decisió del Mestre. */
   useEffect(() => {
-    obriFil(threadId && !trobatEsComunitat ? threadId : null);
-  }, [threadId, trobatEsComunitat, obriFil]);
+    obriFil(threadId && filALaLlista && !trobatEsComunitat && !idPerDefecte ? threadId : null);
+    return () => obriFil(null);
+  }, [threadId, filALaLlista, trobatEsComunitat, idPerDefecte, obriFil]);
 
   /* /xat/<comunitat> porta a la seua fitxa. */
   useEffect(() => {
     if (trobatEsComunitat && threadId) navigate(`/xat${consulta(threadId)}`, { replace: true });
   }, [trobatEsComunitat, threadId, navigate, consulta]);
+
+  /* Ordre del Mestre (261007) · /xat/sdp-per-defecte:<clau> porta al xat real
+     de la fila d'ajuda (useObriXatPerDefecte): Sóc de Poble, per la via «En
+     privat»; la IAIA, al xat públic de la seua pàgina. Un sol punt per a la
+     llista, la cerca del xat, la cerca global, l'historial i un enllaç. Una
+     sola vegada per navegació: la guarda és una ref (el doble efecte de
+     StrictMode ix per ella) i porta la consulta, que és nova a cada
+     navegació. Així, si el xat encara no s'ha pogut resoldre i la persona es
+     queda ací, tornar a prémer la fila el torna a demanar. */
+  const obriPerDefecte = useObriXatPerDefecte();
+  const perDefecteTractat = useRef(null);
+  useEffect(() => {
+    if (!trobatPerDefecte) { perDefecteTractat.current = null; return; }
+    const previ = perDefecteTractat.current;
+    if (previ && previ.threadId === threadId && previ.params === params) return;
+    perDefecteTractat.current = { threadId, params };
+    obriPerDefecte(trobatPerDefecte);
+  }, [trobatPerDefecte, threadId, params, obriPerDefecte]);
 
   /* ?amb=<id>: una sola obertura per destinatari. La guarda és una ref i no
      una variable de l'efecte: amb el doble efecte de StrictMode, la segona
@@ -351,7 +467,7 @@ function XatWorkspace() {
       .then(() => creaFil(amb, null))
       .then((filId) => { if (vigent() && filId) navigate(`/xat/${enc(filId)}`, { replace: true }); })
       .catch((error) => {
-        if (vigent()) showToast(error?.message || t('section.xat.obrirError', "No s'ha pogut obrir la conversa."), 'error');
+        if (vigent()) showToast(textDeFalladaDirecte(error, t), 'error');
       });
   }, [amb, threadId, status, creaFil, navigate, showToast, t]);
 
@@ -361,9 +477,12 @@ function XatWorkspace() {
   const sobreTractat = useRef(null);
   useEffect(() => {
     /* El «Comentar» del document de la columna dreta torna a /xat?sobre= amb
-       la mateixa instància: quan la URL ja no el porta, la guarda s'oblida. */
-    if (!sobre) { sobreTractat.current = null; return; }
-    if (threadId || status !== 'ready') return;
+       la mateixa instància: quan la URL ja no el porta, la guarda s'oblida.
+       B05 · També amb una conversa oberta: des d'ara la seua URL conserva el
+       ?sobre= (/xat/<filId>?sobre=…), i el «Comentar» següent de la mateixa
+       pàgina s'ha de tornar a obrir. */
+    if (!sobre || threadId) { sobreTractat.current = null; return; }
+    if (status !== 'ready') return;
     /* En remot, mentre la sessió es comprova, no hi ha `joId` i encara no és
        `senseSessio`: obriFilDePagina tornaria null i l'avís «cap xat comú»
        seria mentida (i la URL perdria ?sobre=). S'espera: quan la sessió es
@@ -393,7 +512,8 @@ function XatWorkspace() {
       .then(() => obriFilDePagina(objecte))
       .then((filId) => {
         if (!vigent()) return;
-        if (filId) navigate(`/xat/${enc(filId)}`, { replace: true });
+        /* B05 · La conversa conserva el descriptor del subjecte. */
+        if (filId) navigate(`/xat/${enc(filId)}?${consultaDeSobre(sobre)}`, { replace: true });
         else tornaALaLlista(senseXatComu);
       })
       .catch((error) => {
@@ -403,6 +523,111 @@ function XatWorkspace() {
           : error?.message || t('section.xat.obrirError', "No s'ha pogut obrir la conversa."));
       });
   }, [sobre, titolSobre, rutaSobre, threadId, status, joId, senseSessio, params, obriFilDePagina, navigate, showToast, t]);
+
+  /* Auditoria 261008 (B05) · /xat/<filId>?sobre=… d'un fil que no és a la
+     llista carregada ni entre els visitants (s'ha recarregat la pàgina, iOS
+     ha restaurat la pestanya o arriba un enllaç compartit): es torna a obrir
+     el xat comú amb obriFilDePagina ABANS de decidir el 404. El servidor no
+     et fa participant, i el fil torna com a visitant. Una sola vegada per
+     ruta i descriptor (la guarda és una ref, com la de ?sobre=):
+       · si el fil apareix (és el General, els Avisos o el grup), la conversa;
+       · si el servidor en torna un altre (un veí d'un altre poble ha obert
+         l'enllaç), s'hi navega amb el mateix descriptor;
+       · si no n'hi ha cap, el 404 de sempre; si falla amb un error que no
+         es pot reintentar (SDP-XAT-013, sense la capacitat), l'avís i la
+         llista, com «Comentar»;
+       · revisió 261008 · si falla la xarxa (un error reintentable: 5xx,
+         temps esgotat, «Load failed»), la URL es queda: on aniria la
+         conversa, l'avís amb «Torna-ho a provar», i un reintent sol amb la
+         mateixa escala d'esperes que la llista (esperaDeLaLlista: 2, 5, 10,
+         30 i 60 s). Una sola fallada de xarxa no s'endú l'enllaç compartit
+         ni la pestanya restaurada. Cada reintent és un intent nou de la
+         mateixa clau (`intentReobertura`); l'avís es queda mentre torna a
+         provar. */
+  const objecteDeLaRuta = useMemo(
+    () => (threadId && sobre ? objecteDeSobre(sobre, titolSobre, rutaSobre) : null),
+    [threadId, sobre, titolSobre, rutaSobre]
+  );
+  const clauReobertura = objecteDeLaRuta && subjecteDeXat(objecteDeLaRuta)
+    ? JSON.stringify([threadId, sobre, titolSobre, rutaSobre])
+    : '';
+  const calReobrir = Boolean(clauReobertura) && !trobatViu && !esIdPerDefecte(threadId)
+    && status === 'ready' && llistaFresca && Boolean(joId) && !senseSessio;
+  const [reobertura, setReobertura] = useState(null);
+  const [intentReobertura, setIntentReobertura] = useState({ clau: '', n: 0 });
+  const intent = intentReobertura.clau === clauReobertura ? intentReobertura.n : 0;
+  const reobertTractat = useRef(null);
+  useEffect(() => {
+    const guarda = `${clauReobertura}\n${intent}`;
+    if (!calReobrir || reobertTractat.current === guarda) return;
+    reobertTractat.current = guarda;
+    const clau = clauReobertura;
+    const vigent = () => mounted.current && reobertTractat.current === guarda;
+    /* Un reintent conserva l'avís i el comptador; una clau nova comença de zero. */
+    setReobertura((previa) => (previa?.clau === clau
+      ? { ...previa, fet: false }
+      : { clau, fet: false, filId: null, avis: null, fallades: 0 }));
+    Promise.resolve()
+      .then(() => obriFilDePagina(objecteDeLaRuta))
+      .then((filId) => {
+        if (vigent()) setReobertura({ clau, fet: true, filId: filId ? String(filId) : null, avis: null, fallades: 0 });
+      })
+      .catch((error) => {
+        if (!vigent()) return;
+        const text = error?.codi === 'sense-capacitat'
+          ? t('section.xat.pagina.senseCapacitat', 'Este poble encara no té el xat de les pàgines.')
+          : error?.message || t('section.xat.obrirError', "No s'ha pogut obrir la conversa.");
+        if (error?.retriable === true) {
+          setReobertura((previa) => ({
+            clau, fet: true, filId: null, avis: text, fallades: (previa?.clau === clau ? previa.fallades : 0) + 1
+          }));
+          return;
+        }
+        setReobertura({ clau, fet: true, filId: null, avis: null, fallades: 0 });
+        showToast(text, 'info');
+        navigate('/xat', { replace: true });
+      });
+  }, [calReobrir, clauReobertura, intent, objecteDeLaRuta, obriFilDePagina, navigate, showToast, t]);
+  const reoberturaDeLaRuta = reobertura?.clau === clauReobertura && clauReobertura ? reobertura : null;
+  /* L'avís d'una reobertura que ha fallat per la xarxa, mentre el fil no hi és. */
+  const avisReobertura = !trobatViu && reoberturaDeLaRuta?.avis ? reoberturaDeLaRuta.avis : null;
+  const falladesReobertura = avisReobertura ? reoberturaDeLaRuta.fallades : 0;
+  const esperantReintent = Boolean(avisReobertura && reoberturaDeLaRuta.fet);
+  const reintentaReobertura = useCallback(() => {
+    setIntentReobertura((previ) => ({ clau: clauReobertura, n: (previ.clau === clauReobertura ? previ.n : 0) + 1 }));
+  }, [clauReobertura]);
+  useEffect(() => {
+    if (!esperantReintent || !falladesReobertura) return undefined;
+    const temporitzador = setTimeout(reintentaReobertura, esperaDeLaLlista(falladesReobertura, true));
+    return () => clearTimeout(temporitzador);
+  }, [esperantReintent, falladesReobertura, reintentaReobertura]);
+  /* El servidor ha tornat un altre fil per al mateix subjecte: s'hi va. */
+  const filReobertAltre = reoberturaDeLaRuta?.fet && !trobatViu && reoberturaDeLaRuta.filId
+    && reoberturaDeLaRuta.filId !== threadId ? reoberturaDeLaRuta.filId : null;
+  useEffect(() => {
+    if (filReobertAltre) navigate(`/xat/${enc(filReobertAltre)}?${consultaDeSobre(sobre)}`, { replace: true });
+  }, [filReobertAltre, sobre, navigate]);
+  /* Mentre es torna a obrir (o abans de començar, en el mateix render), o
+     amb l'avís d'una fallada de xarxa a la vista, cap 404. */
+  const reobrint = (calReobrir && !reoberturaDeLaRuta?.fet) || Boolean(avisReobertura) || Boolean(filReobertAltre);
+
+  /* B05 · Un fil de pàgina obert com a visitant des de la llista, la fitxa o
+     la cerca (/xat/<filId>, sense ?sobre=) també ha de sobreviure a
+     recarregar: la URL hi afig el descriptor del seu subjecte (només
+     ?sobre=, vegeu consultaDeSobre), amb replace i conservant la resta de la
+     consulta. Res no es torna a muntar. */
+  const sobreVisitant = !sobre && trobatViu?.participant === false && !esComunitat(trobatViu) ? sobreDelFil(trobatViu) || '' : '';
+  const visitantAnotat = useRef(null);
+  useEffect(() => {
+    if (!sobreVisitant || !threadId) { visitantAnotat.current = null; return; }
+    if (visitantAnotat.current === threadId) return;
+    visitantAnotat.current = threadId;
+    const consultaNova = new URLSearchParams(params);
+    consultaNova.set('sobre', sobreVisitant);
+    consultaNova.delete('titol');
+    consultaNova.delete('ruta');
+    navigate(`/xat/${enc(threadId)}?${consultaNova.toString()}`, { replace: true });
+  }, [sobreVisitant, threadId, params, navigate]);
 
   /* El padró per a la cerca global (grup «Persones»): al servidor, amb un
      xicotet retard, només quan hi ha terme. */
@@ -449,8 +674,11 @@ function XatWorkspace() {
        «Carregant…» i després es transformava en la de la comunitat. */
     return anteposaPoble(llista, { poble, comunitats, virtual: !senseSessio && status === 'ready' });
   }, [comunitats, threads, poble, senseSessio, status]);
-  /* La fila virtual del poble no es pot triar: fora mentre se seleccionen xats. */
-  const filesVisibles = files.filter((fila) => passaFiltre(fila, filtre) && !(modeSeleccio && fila.tipus === 'poble'));
+  /* La fila virtual del poble no es pot triar: fora mentre se seleccionen xats.
+     Ordre del Mestre (261007) · Les files d'ajuda per defecte tampoc: no són
+     converses i no tenen res a marcar. */
+  const filesVisibles = files.filter((fila) => passaFiltre(fila, filtre)
+    && !(modeSeleccio && (fila.tipus === 'poble' || fila.fil?.perDefecte)));
   const comunitatDelPoble = poble ? comunitats.find((c) => esComunitatDelPoble(c, poble)) || null : null;
 
   const carregaMes = useCallback(() => {
@@ -553,7 +781,13 @@ function XatWorkspace() {
     setTriades(new Set());
   }, [vista]);
 
-  if (threadId && !trobat && status === 'ready') {
+  /* Auditoria 261008 (B04 i B05) · El 404 només es decidix amb una llista al
+     dia (`llistaFresca`: amb l'última càrrega fallida, la conversa no es
+     tanca per un sondeig que no ha arribat) i quan no s'està tornant a obrir
+     un fil de pàgina pel seu descriptor (`reobrint`, també amb l'avís d'una
+     fallada de xarxa). Un fil que ja s'havia trobat en esta ruta només es
+     conserva mentre la llista no està al dia (`trobat`). */
+  if (threadId && !trobat && status === 'ready' && llistaFresca && !reobrint) {
     return <NotFoundPage />;
   }
 
@@ -587,7 +821,7 @@ function XatWorkspace() {
       navigate(`/xat/${enc(filId)}${consulta()}`);
     } catch (error) {
       if (!mounted.current) return;
-      const text = error?.message || t('section.xat.obrirError', "No s'ha pogut obrir la conversa.");
+      const text = textDeFalladaDirecte(error, t);
       if (desDelDialeg) setErrorObrir(text);
       else showToast(text, 'error');
     } finally {
@@ -800,7 +1034,7 @@ function XatWorkspace() {
   } else if (cercaActiva) {
     cos = <FiltresCerca ref={filtresRef} onTria={triaFiltreCerca} onBlur={alPerdreFocus} onTornaAlCamp={tornaAlCamp} t={t} />;
   } else {
-    cos = (
+    const llista = (
       <LlistaDeLaClosca
         files={filesVisibles}
         filActiuId={filActiuId}
@@ -815,6 +1049,23 @@ function XatWorkspace() {
         carregant={status !== 'ready' && !threads.length}
         seleccio={modeSeleccio ? { triades, onAlterna: alternaTria } : null}
       />
+    );
+    /* Auditoria 261008 (B04) · Un sondeig fallit amb la llista conservada:
+       l'avís va damunt de la llista i no la tapa (el de LlistaConverses és
+       per a la llista que no s'ha pogut carregar mai). El context ja hi torna
+       sol als pocs segons.
+       Revisió 261008 · La regió viva és SEMPRE muntada, buida i només per al
+       lector de pantalla quan no hi ha avís: un lector (NVDA, JAWS, sovint
+       VoiceOver) no anuncia una regió role="status" que naix amb el text ja
+       posat. Només en canvia el contingut i la classe; a la pantalla no es
+       veu res fins que hi ha avís. El mateix text repetit pel sondeig no es
+       torna a anunciar, a propòsit: seria soroll cada pocs segons. */
+    const ambAvisLlista = Boolean(avisLlista) && !avis;
+    cos = (
+      <>
+        <p className={ambAvisLlista ? 'sdp-xat-avis' : 'sdp-nomes-lector'} role="status">{ambAvisLlista ? avisLlista : ''}</p>
+        {llista}
+      </>
     );
   }
 
@@ -989,7 +1240,10 @@ function XatWorkspace() {
 
   const rightColumn = (
     <>
-      <PanellInicialMobil llistaPrimer={!threadId || trobatEsComunitat} />
+      {/* Ordre del Mestre (261007) · La ruta de pas d'una fila d'ajuda no és
+          cap conversa: en estret es queda la llista (amb l'avís, si el xat
+          encara s'ha de resoldre) fins que arriba el xat real. */}
+      <PanellInicialMobil llistaPrimer={!threadId || trobatEsComunitat || idPerDefecte} />
       <EntradaDelPoble poble={poble} comunitat={comunitatDelPoble} aLaLlista={!threadId && pathname === '/xat' && !params.toString()} />
       {activeThread ? <ConversaAPantallaCompleta /> : null}
       {activeThread ? (
@@ -1006,12 +1260,26 @@ function XatWorkspace() {
           hiHaMes={Boolean(hiHaMesAntics(activeThread.id))}
           carregantMes={Boolean(carregantAntics(activeThread.id))}
           onCarregaMes={carregaMes}
+          esperaAntics={esperaAntics(activeThread.id)}
           onReintenta={reintenta}
           onDescarta={descartaFallit}
           onMarcaVist={marcaVistActiu}
           locale={locale}
           t={t}
         />
+      ) : avisReobertura ? (
+        /* Revisió 261008 (B05) · On aniria la conversa: la reobertura ha
+           fallat per la xarxa i torna a provar sola; el botó no espera. Un
+           role="alert" que naix amb el text s'anuncia en aparéixer (a
+           diferència d'un role="status"), i és una fallada que bloqueja. */
+        <div className="sdp-xat-buit sdp-xat-buit--avis" role="alert">
+          <MessageCircle size={48} strokeWidth={1.5} aria-hidden="true" focusable="false" />
+          <p className="sdp-xat-buit__titol">{t('section.xat.obrirError', "No s'ha pogut obrir la conversa.")}</p>
+          <p>{avisReobertura}</p>
+          <button type="button" className="sdp-xat-pindola" onClick={reintentaReobertura}>
+            {t('section.xat.missatge.reintenta', 'Torna-ho a provar')}
+          </button>
+        </div>
       ) : (
         <ColumnaDretaBuida t={t} seo={seoXat} />
       )}

@@ -4,10 +4,21 @@
 import { expect, test, vi } from 'vitest';
 import {
   AVIS_DRETS_RESERVATS, ERROR_PUBLICAR, ErrorPublicacio, MOTIU_FORASTER, MOTIU_LOCAL, MOTIU_PREPARADA,
-  MOTIU_PREPARADA_CREANT, MOTIU_PREPARADA_FALLIDA, bloqueigDeNota, publicaAmbMotiu, textosAmbDrets, textosDeNota
+  MOTIU_PREPARADA_CREANT, MOTIU_PREPARADA_FALLIDA, SIGNANT_DESCONEGUT, bloqueigDeNota, motiuSignaturaAliena, publicaAmbMotiu,
+  textosAmbDrets, textosDeNota
 } from './visibilitatNota.js';
 import { cosDeConnexioPerAlMur } from './connexions.js';
 import { objecteDePagina } from '../../config/objecteConnectable.js';
+
+/* Grup E (261008) · La guarda de re-signatura (NotesContext · publishNote) diu
+   qui signa la publicació i què cal fer; sense nom, cap text buit. */
+test('Grup E · el motiu de no actualitzar una publicació que signa una altra identitat', () => {
+  expect(motiuSignaturaAliena('Forn de la Torre')).toBe('Esta publicació la signa Forn de la Torre: canvia a eixa identitat per a actualitzar-la.');
+  expect(SIGNANT_DESCONEGUT).toBe('una altra identitat');
+  for (const buit of [undefined, null, '', '   ']) {
+    expect(motiuSignaturaAliena(buit)).toBe(`Esta publicació la signa ${SIGNANT_DESCONEGUT}: canvia a eixa identitat per a actualitzar-la.`);
+  }
+});
 
 test.each([false, true])('publicar o compartir al Mur diu qui ho llig: la gent registrada del poble (connexió=%s)', (connexio) => {
   const { publica } = textosDeNota({ connexio });

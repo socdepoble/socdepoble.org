@@ -24,8 +24,8 @@ vi.mock('../../components/universal/enquadrament/imatgeCanvas.js', () => ({
   dibuixaVisor: () => true,
   exportaRetall: dobles.exportaRetall,
 }));
-import { DialegCapcaleraAvatar } from './DialegCapcaleraAvatar.jsx';
 import DetallAjust from './DetallAjust.jsx';
+import { useImatgeDeFitxa } from './useImatgeDeFitxa.jsx';
 import useHeroImageHandler from '../../hooks/useHeroImageHandler.js';
 import { DialegEnquadrament } from '../../components/universal/enquadrament/DialegEnquadrament.jsx';
 import { llegixExif, teExif } from '../../components/universal/enquadrament/exif.js';
@@ -112,51 +112,32 @@ test('la foto de prova porta de veres l’EXIF i el GPS de la Torre', () => {
   expect(llegixExif(FOTO_GPS).gps).toMatchObject({ lat: 38.5919, lng: -0.4184 });
 });
 
-/* ── La fitxa del Perfil (DialegCapcaleraAvatar) ── */
+/* ── La fitxa del Perfil, Onada 4 (retallador senzill, 261008) ──
+   Els tres botons (useImatgeDeFitxa): el retall ix SEMPRE recodificat (també
+   desat sense ampliar) i la pujada el torna a passar pel canvas. */
 
-async function fitxa(desti, { ambServidor = true } = {}) {
-  const p = {
-    onTanca: vi.fn(), onDesaCamp: vi.fn(), onError: vi.fn(),
-    onImageUpload: ambServidor ? vi.fn(async () => 'sdp-media://mitjans/t/u/avatars/a.webp') : null,
-  };
-  const vista = render(<DialegCapcaleraAvatar obert {...p} />);
-  fireEvent.click(screen.getByRole('radio', { name: desti }));
-  await act(async () => {
-    fireEvent.change(vista.container.querySelector('input[type="file"]'), { target: { files: [fotoGps()] } });
-  });
-  await act(async () => {});
-  return p;
+function Fitxa({ camp, forma, onImageUpload }) {
+  const imatge = useImatgeDeFitxa({ camp, forma, onImageUpload, onDesaCamp: vi.fn(), onError: vi.fn() });
+  return <>{imatge.input}{imatge.dialeg}</>;
 }
-const desaRetall = () => act(async () => {
-  fireEvent.click(within(screen.getByRole('dialog', RETALLADOR)).getByRole('button', { name: 'Desar l’enquadrament' }));
-});
 
-test('K3 · «Només l’avatar» desada sencera (sense ampliar): el que puja és el canvas, no l’original', async () => {
-  const p = await fitxa('Només l’avatar');
-  await desaRetall();
-  expect(p.onError).not.toHaveBeenCalled();
-  await esperaPujadesNetes(p.onImageUpload, 1);
-});
-
-test('K3 · «La mateixa per a les dues»: la capçalera (l’original) i l’avatar pugen nets', async () => {
-  const p = await fitxa('La mateixa per a les dues');
-  await desaRetall();
-  expect(p.onError).not.toHaveBeenCalled();
-  await esperaPujadesNetes(p.onImageUpload, 2);
-});
-
-test('K3 · «Només la capçalera» (sense retallador): neta', async () => {
-  const p = await fitxa('Només la capçalera');
-  expect(p.onError).not.toHaveBeenCalled();
-  await esperaPujadesNetes(p.onImageUpload, 1);
-});
-
-test('K3 · sense servidor, el data URL que es desa a la fitxa també és el del canvas', async () => {
-  const p = await fitxa('La mateixa per a les dues', { ambServidor: false });
-  await desaRetall();
-  await waitFor(() => expect(p.onDesaCamp).toHaveBeenCalledTimes(2));
-  expect(p.onDesaCamp.mock.calls.map(([camp]) => camp)).toEqual(['heroImage', 'logoImage']);
-  for (const [, valor] of p.onDesaCamp.mock.calls) esperaNet(deDataUrl(valor).bytes);
+test('K3 · Onada 4 · avatar, logotip i capçalera de la fitxa, desats sense ampliar: el que puja és el canvas, mai l’original', async () => {
+  const casos = [['logoImage', 'avatar', 'Retalla la foto'], ['logoImage', 'logotip', 'Retalla el logotip'], ['heroImage', 'capcalera', 'Retalla la capçalera']];
+  for (const [camp, forma, finestra] of casos) {
+    const onImageUpload = vi.fn(async () => 'sdp-media://mitjans/t/u/avatars/a.webp');
+    const vista = render(<Fitxa camp={camp} forma={forma} onImageUpload={onImageUpload} />);
+    await act(async () => {
+      fireEvent.change(vista.container.querySelector('input[type="file"]'), { target: { files: [fotoGps()] } });
+    });
+    await act(async () => {});
+    await act(async () => {
+      fireEvent.click(within(screen.getByRole('dialog', { name: finestra })).getByRole('button', { name: 'Guardar' }));
+    });
+    expect(dobles.exportaRetall, forma).toHaveBeenCalledTimes(1);
+    await esperaPujadesNetes(onImageUpload, 1);
+    cleanup();
+    dobles.exportaRetall.mockClear();
+  }
 });
 
 /* ── L'ajust d'imatge (DetallAjust) ── */

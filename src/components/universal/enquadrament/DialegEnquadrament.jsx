@@ -39,11 +39,24 @@
  *   lectorMetadades: injectable per a les proves.
  *   Límits (limits.js): 25 MB, 16.384 px per costat, 50 MP i HEIC, amb un
  *   avís en línia. Teclat sobre el visor: fletxes, + i −, Retorn desa.
+ *
+ * ONADA 4 (retallador senzill, ordre del Mestre 261008) · Calcat de la
+ * finestra «Retallar foto» de Claude, per a les imatges del Perfil. Sense
+ * estes dues props, el DOM i el comportament T46 són exactament els d'abans
+ * (Llei del Píxel: el retallador de les Notes no canvia).
+ *   senzill (false) · Títol curt i la línia d'ajuda davall (descripcio); el
+ *     visor sol, centrat; una fila de zoom (−, lliscador «Ampliació», +) i la
+ *     roda del ratolí; sense lliscadors de posició, sense «Forma» i sense
+ *     geolocalització. Peu: «Restablir» a l'esquerra; «Cancel·lar» i
+ *     «Guardar» a la dreta. Sense la X: Escape continua tancant.
+ *   mascara (null | 'cercle') · Amb 'cercle', el vel enfosquix el que queda
+ *     fora del cercle (l'avatar es pinta redó). El fitxer continua quadrat.
  */
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
+import { Minus, Plus } from 'lucide-react';
 import { Alerta, Boto, Camp, CampText, Carregant, Dialeg, GrupOpcions } from '../../PedraSeca/index.js';
 import {
-  FORMATS, FORMAT_PER_DEFECTE, ambLliscador, ambTecla, arrossega, esSencera, estatInicial, limita, lliscador,
+  FORMATS, FORMAT_PER_DEFECTE, ambLliscador, ambRoda, ambTecla, arrossega, esSencera, estatInicial, limita, lliscador,
   marges, midaVisor, opcionsSortida, pessic, proporcio, rectDeRetall, textAmpliacio, zoomMaxim,
 } from './enquadrament.js';
 import { llegixMetadadesImatge, senseDades } from './exif.js';
@@ -55,6 +68,9 @@ import { UbicacioImatge } from './UbicacioImatge.jsx';
 export const ERROR_CARREGA_FITXER = 'No s’ha pogut obrir esta foto. Prova amb una imatge JPEG, PNG o WebP.';
 export const ERROR_CARREGA_URL = 'No s’ha pogut obrir esta imatge per a enquadrar-la. Torna-la a pujar des del dispositiu.';
 export const ERROR_EXPORTA = 'No s’ha pogut preparar la imatge enquadrada. Torna-ho a provar.';
+
+/* Onada 4 (retallador senzill) · Un zoom «al límit» amb marge de coma flotant. */
+const EPSILON_ZOOM = 1e-6;
 
 const esFitxer = (font) => typeof Blob !== 'undefined' && font instanceof Blob;
 const distancia = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
@@ -81,6 +97,8 @@ export function DialegEnquadrament({
   onDesa,
   sortida = null,
   permetGeolocalitzacio = false,
+  senzill = false,
+  mascara = null,
   carregador = carregaImatge,
   exportador = exportaRetall,
   dibuixant = dibuixaVisor,
@@ -201,6 +219,19 @@ export function DialegEnquadrament({
     arrelRef.current?.querySelector(':scope > [role="alert"]')?.scrollIntoView?.({ block: 'nearest' });
   }, [errorDesat]);
 
+  /* Onada 4 (retallador senzill) · La roda del ratolí sobre el visor amplia.
+     React escolta 'wheel' com a passiu (no deixa fer preventDefault): s'escolta
+     ací, amb passive:false, perquè la roda no desplace el diàleg. El cos de
+     l'escoltador és rodaRef, que es renova a cada render (estat i mides vius). */
+  const rodaRef = useRef(null);
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!senzill || !imatge || !canvas) return undefined;
+    const escolta = (ev) => rodaRef.current?.(ev);
+    canvas.addEventListener('wheel', escolta, { passive: false });
+    return () => canvas.removeEventListener('wheel', escolta);
+  }, [senzill, imatge]);
+
   const fallaDesat = (text) => {
     if (!muntatRef.current) return;
     intentsFallits.current += 1;
@@ -290,6 +321,22 @@ export function DialegEnquadrament({
       : `Ampliació ${textAmpliacio(nou.zoom)}`);
   };
 
+  /* Onada 4 (retallador senzill) · La roda i els botons − i + fan el pas de
+     l'ajudant pur (ambRoda, ambTecla): els límits són els del lliscador. */
+  rodaRef.current = (ev) => {
+    ev.preventDefault();
+    if (quiet) return;
+    const nou = ambRoda(estatRef.current, ev.deltaY, W, H, formats, { mode: ev.deltaMode });
+    if (nou) actualitza(nou);
+  };
+  const pasZoom = (tecla) => {
+    if (quiet) return;
+    const nou = ambTecla(estatRef.current, tecla, W, H, formats);
+    if (nou) actualitza(nou);
+  };
+  const potAllunyar = !quiet && estat.zoom > 1 + EPSILON_ZOOM;
+  const potApropar = !quiet && estat.zoom < zMax - EPSILON_ZOOM;
+
   /* Onada 4, T3a · La ubicació que es desaria ara mateix (ja arrodonida), o null. */
   const ubicacio = geo.actiu
     ? geolocalitzacio({ lat: llegixCoordenada(geo.lat), lng: llegixCoordenada(geo.lng), precisio: geo.precisio, origen: geo.origen })
@@ -363,6 +410,77 @@ export function DialegEnquadrament({
       if (muntatRef.current) setDesant(false);
     }
   };
+
+  /* Onada 4 (retallador senzill, ordre del Mestre 261008) · La finestra de
+     Claude: títol, ajuda, el visor, la fila de zoom i tres botons. La resta
+     del cos (avisos, càrrega, teclat, arrossegament i desat) és la de T46. */
+  if (senzill) {
+    const caixa = ['sdp-enquadrament__visor-caixa', mascara === 'cercle' && 'sdp-enquadrament__visor-caixa--cercle']
+      .filter(Boolean).join(' ');
+    return (
+      <Dialeg
+        obert={obert}
+        onTanca={tanca}
+        titol={titol}
+        descripcio={descripcio}
+        mida="s"
+        className="sdp-enquadrament__dialeg sdp-enquadrament__dialeg--senzill"
+        tancaEnVel={false}
+        ambTanca={false}
+        accions={(
+          <>
+            {/* Fantasma (botó de text) amb la seua pell al peu: bloc T46 de modules.css. */}
+            <Boto varietat="fantasma" className="sdp-enquadrament__restablir" onClick={centra} disabled={quiet}>Restablir</Boto>
+            <Boto varietat="secundari" onClick={() => tanca('boto')} disabled={desant}>Cancel·lar</Boto>
+            <Boto varietat="primari" onClick={desa} carregant={desant} disabled={!imatge}>Guardar</Boto>
+          </>
+        )}
+      >
+        <div ref={arrelRef} className="sdp-enquadrament sdp-enquadrament--senzill">
+          {errorCarrega ? <Alerta to="error">{errorCarrega}</Alerta> : null}
+          {errorDesat ? <Alerta key={errorDesat.intent} to="error">{errorDesat.text}</Alerta> : null}
+          {!errorCarrega && !imatge ? <Carregant etiqueta="Obrint la imatge…" /> : null}
+          {imatge ? (
+            <>
+              <div className={caixa}>
+                <canvas
+                  ref={canvasRef}
+                  className="sdp-enquadrament__visor"
+                  width={visor.amplada}
+                  height={visor.alcada}
+                  role="img"
+                  aria-label="Previsualització del retall"
+                  tabIndex={0}
+                  aria-keyshortcuts="ArrowLeft ArrowRight ArrowUp ArrowDown Plus - Enter"
+                  onKeyDown={onTeclaVisor}
+                  onPointerDown={onPointerDown}
+                  onPointerMove={onPointerMove}
+                  onPointerUp={deixaPunter}
+                  onPointerCancel={deixaPunter}
+                  onLostPointerCapture={deixaPunter}
+                />
+              </div>
+              <p className="sdp-nomes-lector" aria-live="polite">{anunci}</p>
+              <div className="sdp-enquadrament__zoom">
+                <button type="button" className="sdp-enquadrament__pas" aria-label="Allunyar" title="Allunyar"
+                  disabled={!potAllunyar} onClick={() => pasZoom('-')}>
+                  <Minus size={20} aria-hidden="true" focusable="false" />
+                </button>
+                <input type="range" className="sdp-control sdp-enquadrament__lliscador" aria-label="Ampliació"
+                  min={1} max={zMax} step={0.01} value={estat.zoom} aria-valuetext={textAmpliacio(estat.zoom)}
+                  disabled={quiet || zMax <= 1}
+                  onChange={(ev) => actualitza(limita({ ...estatRef.current, zoom: Number(ev.target.value) }, W, H, formats))} />
+                <button type="button" className="sdp-enquadrament__pas" aria-label="Apropar" title="Apropar"
+                  disabled={!potApropar} onClick={() => pasZoom('+')}>
+                  <Plus size={20} aria-hidden="true" focusable="false" />
+                </button>
+              </div>
+            </>
+          ) : null}
+        </div>
+      </Dialeg>
+    );
+  }
 
   return (
     <Dialeg

@@ -23,28 +23,36 @@ test('l’identificador es deriva del nom i «Crear» envia una empresa', async 
   expect(onCrea).toHaveBeenCalledWith({ name: 'Forn Ca l’Àngela', slug: 'forn-ca-l-angela', kind: 'company' });
 });
 
-test('sense empreses que mane, no s’oferix «Grup» i s’explica per què', () => {
+/* Ordre del Mestre (261008) · «Un grup no té per què pertànyer a cap empresa»:
+   el camp «Empresa mare» ja no existix i «Grup» sempre s'oferix. */
+test('261008 · «Grup» sempre s’oferix, amb l’ajuda nova i sense cap camp «Empresa mare»', () => {
   obri();
-  expect(screen.queryByRole('radio', { name: /Grup/ })).toBeNull();
-  expect(screen.getByText('Per a crear un grup, primer has d’administrar una empresa.')).toBeTruthy();
+  const grup = screen.getByRole('radio', { name: /Grup/ });
+  expect(grup.closest('.sdp-casella').textContent).toContain('Una colla, una associació, un col·lectiu…');
+  expect(screen.queryByText(/empresa que ja administres/)).toBeNull();
+  expect(screen.queryByText('Per a crear un grup, primer has d’administrar una empresa.')).toBeNull();
+  fireEvent.click(grup);
+  expect(screen.queryByLabelText(/Empresa mare/)).toBeNull();
+  expect(screen.queryByRole('combobox')).toBeNull();
+  expect(screen.getByText(/Adreça pública: \/grup\//)).toBeTruthy();
 });
 
-test('un grup sense empresa mare no s’envia', async () => {
-  const { onCrea } = obri({ empresesMare: [{ valor: 'E1', etiqueta: 'Forn' }] });
+test('261008 · un grup s’envia sense mare', async () => {
+  const { onCrea } = obri();
   escriu(/^Nom/, 'Colla de dolçainers');
   fireEvent.click(screen.getByRole('radio', { name: /Grup/ }));
   await crea();
-  expect(onCrea).not.toHaveBeenCalled();
-  expect(screen.getByText('Tria l’empresa de la qual penja el grup.')).toBeTruthy();
+  expect(onCrea).toHaveBeenCalledWith({ name: 'Colla de dolçainers', slug: 'colla-de-dolcainers', kind: 'group' });
+  expect(onCrea.mock.calls[0][0]).not.toHaveProperty('parentOrganizationId');
 });
 
-test('un grup amb mare envia parentOrganizationId', async () => {
+test('261008 · una prop «empresesMare» d’abans no torna a pintar el camp ni envia cap mare', async () => {
   const { onCrea } = obri({ empresesMare: [{ valor: 'E1', etiqueta: 'Forn' }] });
   escriu(/^Nom/, 'Colla');
   fireEvent.click(screen.getByRole('radio', { name: /Grup/ }));
-  fireEvent.change(screen.getByLabelText(/Empresa mare/), { target: { value: 'E1' } });
+  expect(screen.queryByLabelText(/Empresa mare/)).toBeNull();
   await crea();
-  expect(onCrea).toHaveBeenCalledWith({ name: 'Colla', slug: 'colla', kind: 'group', parentOrganizationId: 'E1' });
+  expect(onCrea).toHaveBeenCalledWith({ name: 'Colla', slug: 'colla', kind: 'group' });
 });
 
 test('un nom massa curt es marca al camp i no s’envia', async () => {
@@ -92,7 +100,7 @@ test('Cancel·lar tanca amb el motiu «boto»', () => {
 test('un enviament pendent bloqueja doble submit, tancament i canvis de tipus', async () => {
   let resol;
   const onCrea = vi.fn(() => new Promise((resolve) => { resol = resolve; }));
-  const { onTanca } = obri({ onCrea, empresesMare: [{ valor: 'E1', etiqueta: 'Forn' }] });
+  const { onTanca } = obri({ onCrea });
   escriu(/^Nom/, 'Colla');
   const formulari = screen.getByLabelText(/^Nom/).closest('form');
   act(() => { fireEvent.submit(formulari); fireEvent.submit(formulari); });

@@ -5,7 +5,8 @@
  * fotos»). Pedra Seca §9: l'espècimen abans de la producció. Quatre fotos de
  * la samarreta de Sóc de Poble (la xica primer, com a la seua pàgina) i el cas
  * d'una sola foto, que és la portada de sempre. A l'app el munta
- * ItemDetailSection a la ranura de la portada de PageFrame.
+ * portadaDElement (detailSectionMeta.jsx, Esmena 3 del pla 261007_1645) a la
+ * ranura de la portada de PageFrame, per a /mercat/:id i el lector del MAS.
  */
 import { Especimen } from '../Especimen.jsx';
 import { CarruselImatges, Centre } from '../../../../components/PedraSeca/index.js';

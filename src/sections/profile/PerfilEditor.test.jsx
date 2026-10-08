@@ -163,6 +163,33 @@ test('T47 · un error de xarxa es reintenta sol i, quan el servidor confirma, la
   }
 });
 
+/* Línia I2 (pla 261008_1201) · Amb un error temporal, la ploma porta
+   `reintentant`: la icona sap que el pas a 'net' és la confirmació del
+   servidor (pinta el check). La clau només hi és quan és certa. */
+test('Línia I2 · estatDesament porta reintentant: true només mentre la cua torna a provar un error temporal', async () => {
+  vi.useFakeTimers();
+  try {
+    m.updateProfile.mockRejectedValueOnce(Object.assign(new Error('Error de xarxa'), { status: 0 }));
+    render(<PerfilEditor identitat={jo} />);
+    act(() => m.adapter.updateLocal('jo', 'subtitle', 'Llaurador'));
+    expect(m.adapter.estatDesament).toEqual({ estat: 'pendent', detall: '' });
+    await act(async () => { await m.adapter.saveRemote('jo', 'subtitle', 'Llaurador'); });
+    expect(m.adapter.estatDesament).toEqual({
+      estat: 'error', detall: expect.stringContaining('Es tornarà a provar sol'), reintentant: true,
+    });
+    await act(async () => { await vi.advanceTimersByTimeAsync(1000); });
+    expect(m.updateProfile).toHaveBeenCalledTimes(2);
+    expect(m.adapter.estatDesament).toEqual({ estat: 'net', detall: '' });
+    // Una fallada que no es torna a provar sola (un 4xx): error, sense la clau.
+    m.updateProfile.mockRejectedValueOnce(new Error('El perfil no s’ha confirmat al servidor.'));
+    await act(async () => { await m.adapter.saveRemote('jo', 'subtitle', 'Llauradora'); });
+    expect(m.adapter.estatDesament.estat).toBe('error');
+    expect(m.adapter.estatDesament).not.toHaveProperty('reintentant');
+  } finally {
+    vi.useRealTimers();
+  }
+});
+
 test('T47 · una fallada que no és de xarxa (l’adaptador sense status, un 4xx) no es reintenta sola: avís en línia amb les dues eixides', async () => {
   vi.useFakeTimers();
   try {
@@ -328,9 +355,19 @@ test('la fila de reserva (profiles no s’ha pogut llegir) es veu en lectura, ho
   expect(m.guardar).not.toHaveBeenCalled();
 });
 
-test('la fitxa d’una entitat porta el poble de la persona: list_my_organizations no el du', () => {
+/* Onada 4 (decisió del Mestre, 261008, per coherència amb la fitxa pública) ·
+   Una organització porta el SEU poble o cap: ja no hi entra el de la persona.
+   Un agent conserva la reserva de sempre. */
+test('Onada 4 · la fitxa d’una organització porta el seu poble i mai el de la persona; un agent, la reserva de sempre', () => {
   m.identitats = [jo, org('owner')];
   render(<PerfilEditor identitat={org('owner')} />);
+  expect(m.adapter.barAuthorLocation).toBe('');
+  cleanup();
+  const ambPoble = { ...org('owner'), dades: { ...org('owner').dades, town_name: 'Benilloba' } };
+  render(<PerfilEditor identitat={ambPoble} />);
+  expect(m.adapter.barAuthorLocation).toBe('Benilloba');
+  cleanup();
+  render(<PerfilEditor identitat={{ id: 'A', mena: 'agent', nom: 'IAIA', rol: 'Agent IA', dades: { name: 'IAIA' } }} />);
   expect(m.adapter.barAuthorLocation).toBe('La Torre');
   cleanup();
   m.identitats = [];
@@ -380,6 +417,24 @@ test('261007 · rutaDeFitxaPublica: persona per dades.id, grup a /grup, entitat 
   expect(rutaDeFitxaPublica({ id: ENTITAT_PILOT_ID, mena: 'empresa', nom: 'Sóc de Poble' })).toBe('/projecte');
   expect(rutaDeFitxaPublica({ id: 'A', mena: 'agent', nom: 'IAIA' })).toBe('/perfil/A');
   expect(rutaDeFitxaPublica(null)).toBeNull();
+});
+
+/* Auditoria 261007 (retocs de l'ordre E) · En remot, l'id de l'entitat pilot
+   és un UUID que rutaDAutoria no reconeix fins que algú el registra: la fitxa
+   la reconeix pel slug de la seua fila (list_my_organizations), mai pel nom.
+   Un grup, una persona o un agent amb eixe slug no són l'entitat pilot. */
+test('Auditoria 261007 · rutaDeFitxaPublica: una entitat amb un UUID i el slug declarat porta a /projecte; la resta, com sempre', async () => {
+  const { rutaDeFitxaPublica } = await import('./PerfilEditor.jsx');
+  const { ENTITAT_PILOT_SLUG } = await import('../../data/identitatsSeed.js');
+  const uuid = '5b0c1d2e-3f40-4a51-8b62-7c83d94ea5f6';
+  expect(rutaDeFitxaPublica({ id: uuid, mena: 'empresa', nom: 'Sóc de Poble', dades: { slug: ENTITAT_PILOT_SLUG } })).toBe('/projecte');
+  expect(rutaDeFitxaPublica({ id: uuid, mena: 'empresa', nom: 'Sóc de Poble', dades: { slug: 'forn' } })).toBe(`/empresa/${uuid}`);
+  expect(rutaDeFitxaPublica({ id: uuid, mena: 'empresa', nom: 'Sóc de Poble' })).toBe(`/empresa/${uuid}`);
+  expect(rutaDeFitxaPublica({ id: 'G', mena: 'grup', nom: 'Colla', dades: { slug: ENTITAT_PILOT_SLUG } })).toBe('/grup/G');
+  expect(rutaDeFitxaPublica({ id: 'A', mena: 'agent', nom: 'IAIA', dades: { slug: ENTITAT_PILOT_SLUG } })).toBe('/perfil/A');
+  expect(rutaDeFitxaPublica({ ...jo, dades: { id: 'U', slug: ENTITAT_PILOT_SLUG } })).toBe('/gent/U');
+  // Sense id, null, també amb el slug.
+  expect(rutaDeFitxaPublica({ mena: 'empresa', nom: 'Sóc de Poble', dades: { slug: ENTITAT_PILOT_SLUG } })).toBeNull();
 });
 
 /* T41 (ordre del Mestre, 260928) · PUBLICAR i la bola del món obrin el
@@ -456,33 +511,204 @@ test('la pujada va a la carpeta de la identitat', async () => {
   expect(m.puja.mock.calls).toEqual([['f1', 'avatars'], ['f2', 'organitzacions']]);
 });
 
-test('T35 · la fitxa demana un sol botó «Editar capçalera i avatar» i amaga el logotip damunt del nom', () => {
+/* Onada 4 (retallador senzill, ordre del Mestre 261008) · Derogat el botó únic
+   de T35: la capçalera té el seu botó, «Capçalera», que diu abans de triar què
+   s'admet; la imatge pròpia, el seu («Avatar» o «Logotip»). Una persona sense
+   avatar (jo: avatar_url buit) té la ranura de damunt de l'H1. Les vistes no
+   van al centre de la fitxa (CONTRACTE-3). */
+test('Onada 4 · dos botons separats: «Capçalera» (PNG, JPEG o WebP, fins a 10 MB) i, sense avatar, la ranura «Avatar»', () => {
   render(<PerfilEditor identitat={jo} />);
-  expect(m.adapter).toMatchObject({ heroEditLabel: 'Editar capçalera i avatar', showLogoUpload: false });
+  expect(m.adapter).toMatchObject({
+    heroEditLabel: 'Capçalera', heroEditHelp: 'PNG, JPEG o WebP, fins a 10 MB.', showLogoUpload: true, logoEditLabel: 'Avatar', ambVistes: false,
+  });
   expect(typeof m.adapter.onHeroEdit).toBe('function');
+  expect(typeof m.adapter.onLogoEdit).toBe('function');
+  expect(m.adapter.onHeroEdit).not.toBe(m.adapter.onLogoEdit);
+  expect(m.adapter).not.toHaveProperty('avatarAutor');
 });
 
-test('T35 · el botó obri el diàleg; cancel·lar no torna la closca a la imatge', () => {
+/* Línia I2 (pla 261008_1201) · Les imatges pugen fora de la closca
+   (useImatgeDeFitxa): el Perfil li diu quan n'hi ha una pujant i quin límit
+   s'ha de dir abans de triar, a la ranura i davall del botó amb imatge. */
+test('Línia I2 · la closca rep la guarda de pujada i el límit: heroPujant, ajudaAmbImatge i, amb la ranura, logoEditHelp i logoPujant', () => {
+  render(<PerfilEditor identitat={jo} />);
+  expect(m.adapter).toMatchObject({
+    heroPujant: false, ajudaAmbImatge: 'PNG, JPEG o WebP, fins a 10 MB.',
+    logoEditHelp: 'PNG, JPEG o WebP, fins a 10 MB.', logoPujant: false,
+  });
+  cleanup();
+  // Una organització que no és la pilot: la ranura del logotip, igual.
+  render(<PerfilEditor identitat={org('owner')} />);
+  expect(m.adapter).toMatchObject({ logoEditLabel: 'Logotip', logoEditHelp: 'PNG, JPEG o WebP, fins a 10 MB.', logoPujant: false, heroPujant: false });
+});
+
+/* Línia I2 (pla 261008_1201) · La píndola dels drets diu la llicència TRIADA
+   de veres: la que s'acaba de triar o, si no, la del servidor; mai el «© Nom»
+   que la fitxa porta de lectura (document.copyright). */
+test('Línia I2 · dretsTriats: buit sense llicència desada (encara que la fitxa diga «© Pep»), la del servidor, i la que s’acaba de triar', () => {
+  render(<PerfilEditor identitat={joAmbId} />);
+  expect(m.adapter.document.copyright).toBe('© Pep');
+  expect(m.adapter.dretsTriats).toBe('');
+  cleanup();
+  // Un valor del servidor que no és text no és cap llicència triada.
+  render(<PerfilEditor identitat={ambServidor(null)} />);
+  expect(m.adapter.dretsTriats).toBe('');
+  cleanup();
+  render(<PerfilEditor identitat={org('owner')} />);
+  expect(m.adapter.dretsTriats).toBe('');
+  cleanup();
+  render(<PerfilEditor identitat={ambServidor('CC BY 4.0')} />);
+  expect(m.adapter.dretsTriats).toBe('CC BY 4.0');
+  act(() => m.adapter.updateLocal('jo', 'copyright', 'CC0 1.0'));
+  expect(m.adapter.dretsTriats).toBe('CC0 1.0');
+  cleanup();
+  // L'esborrany de la cua guanya al servidor també en tornar a obrir la fitxa, com document.copyright.
+  render(<PerfilEditor identitat={ambServidor('CC BY 4.0')} />);
+  expect(m.adapter.dretsTriats).toBe('CC0 1.0');
+  expect(m.adapter.document.copyright).toBe('CC0 1.0');
+});
+
+/* Línia I2 (pla 261008_1201) · La lògica pura de la fitxa té una sola font,
+   fitxaDePerfil.js (la mateixa de «Les vistes»): el Perfil la torna a
+   exportar, no en porta cap còpia. */
+test('Línia I2 · rutaDeFitxaPublica, slugDEntitat i ETIQUETA_IA del Perfil són les de fitxaDePerfil.js', async () => {
+  const perfil = await import('./PerfilEditor.jsx');
+  const fitxa = await import('./fitxaDePerfil.js');
+  expect(perfil.rutaDeFitxaPublica).toBe(fitxa.rutaDeFitxaPublica);
+  expect(perfil.slugDEntitat).toBe(fitxa.slugDEntitat);
+  expect(perfil.ETIQUETA_IA).toBe(fitxa.ETIQUETA_IA);
+});
+
+/* Ordre del Mestre (261007, ordre E) · Damunt del nom, el mateix que la fitxa
+   pública, i a qui pot editar, el botó per a canviar-ho. */
+const ambAvatar = { ...jo, dades: { ...jo.dades, avatar_url: 'https://poble.test/a.webp' } };
+const agentAmb = (avatar_url) => ({ id: 'A', mena: 'agent', nom: 'IAIA', rol: 'Agent IA', dades: { name: 'IAIA', avatar_url } });
+
+/* Els selectors de fitxers amagats de les dues imatges (useImatgeDeFitxa). */
+const selector = (camp) => document.querySelector(`input[type="file"][data-imatge-de-fitxa="${camp}"]`);
+
+/* Línia I2 (pla 261008_1201) · I les claus de la línia I1: `ajuda` (el límit,
+   dit abans de triar) i `pujant` (false en repòs). */
+test('Onada 4 · una persona amb avatar: cap ranura; l’avatar redó porta onCanvia, «Avatar», onLleva, «Llevar l’avatar» (CONTRACTE-1), ajuda i pujant', () => {
+  render(<PerfilEditor identitat={ambAvatar} />);
+  expect(m.adapter.showLogoUpload).toBe(false);
+  expect(m.adapter).not.toHaveProperty('onLogoEdit');
+  expect(m.adapter).not.toHaveProperty('logoEditHelp');
+  expect(m.adapter).not.toHaveProperty('logoPujant');
+  expect(m.adapter.avatarAutor).toEqual({
+    src: 'https://poble.test/a.webp', alt: 'Avatar de Pep',
+    onCanvia: expect.any(Function), etiquetaCanvia: 'Avatar', onLleva: expect.any(Function), etiquetaLleva: 'Llevar l’avatar',
+    ajuda: 'PNG, JPEG o WebP, fins a 10 MB.', pujant: false,
+  });
+  // PageFrame crida onCanvia amb l'esdeveniment del clic: obri el selector de l'avatar, cap diàleg intermedi.
+  const clic = vi.spyOn(selector('logoImage'), 'click');
+  act(() => m.adapter.avatarAutor.onCanvia({ type: 'click', acaba: 'no' }));
+  expect(clic).toHaveBeenCalledTimes(1);
+  expect(screen.queryByRole('dialog')).toBeNull();
+});
+
+test('Onada 4 · la ranura buida de la persona obri el selector de l’avatar; la capçalera, el seu', () => {
+  render(<PerfilEditor identitat={jo} />);
+  const avatar = vi.spyOn(selector('logoImage'), 'click');
+  const capcalera = vi.spyOn(selector('heroImage'), 'click');
+  act(() => m.adapter.onLogoEdit({ acaba: vi.fn() }));
+  expect(avatar).toHaveBeenCalledTimes(1);
+  expect(capcalera).not.toHaveBeenCalled();
+  act(() => m.adapter.onHeroEdit({ acaba: vi.fn() }));
+  expect(capcalera).toHaveBeenCalledTimes(1);
+  expect(avatar).toHaveBeenCalledTimes(1);
+  expect(selector('heroImage').getAttribute('accept')).toBe('image/png,image/jpeg,image/webp');
+  expect(screen.queryByRole('dialog', { name: 'Capçalera i avatar' })).toBeNull();
+});
+
+test('Onada 4 · un agent IA té l’avatar redó com la persona; sense avatar, la ranura «Avatar»', () => {
+  render(<PerfilEditor identitat={agentAmb('/assets/iaia.webp')} />);
+  expect(m.adapter.showLogoUpload).toBe(false);
+  expect(m.adapter.avatarAutor).toMatchObject({ src: '/assets/iaia.webp', alt: 'Avatar de IAIA', etiquetaCanvia: 'Avatar' });
+  cleanup();
+  render(<PerfilEditor identitat={agentAmb('')} />);
+  expect(m.adapter).toMatchObject({ showLogoUpload: true, logoEditLabel: 'Avatar' });
+});
+
+test('Onada 4 · una organització que no és la pilot: la ranura «Logotip», que obri el seu selector i desa logo_url pel camí de sempre', async () => {
+  render(<PerfilEditor identitat={org('owner')} />);
+  expect(m.adapter.showLogoUpload).toBe(true);
+  expect(m.adapter.logoEditLabel).toBe('Logotip');
+  expect(m.adapter).not.toHaveProperty('avatarAutor');
+  const clic = vi.spyOn(selector('logoImage'), 'click');
+  act(() => m.adapter.onLogoEdit({ acaba: vi.fn() }));
+  expect(clic).toHaveBeenCalledTimes(1);
+  await act(() => m.adapter.saveRemote('O', 'logoImage', 'sdp-media://mitjans/t/o/organitzacions/logo.webp'));
+  expect(m.updateOrganization).toHaveBeenCalledWith('O', { logo_url: 'sdp-media://mitjans/t/o/organitzacions/logo.webp' }, CONFIG);
+  expect(m.adapter.document.logoImage).toBe('sdp-media://mitjans/t/o/organitzacions/logo.webp');
+});
+
+test('ordre E · l’entitat pilot (/projecte): cap ranura ni avatar; PageFrame hi pinta el logotip de Sóc de Poble', async () => {
+  const { ENTITAT_PILOT_ID } = await import('../../data/identitatsSeed.js');
+  render(<PerfilEditor identitat={{ ...org('owner'), id: ENTITAT_PILOT_ID, nom: 'Sóc de Poble' }} />);
+  expect(m.adapter.barAuthorHref).toBe('/projecte');
+  expect(m.adapter.showLogoUpload).toBe(false);
+  expect(m.adapter).not.toHaveProperty('avatarAutor');
+});
+
+test('ordre E · en lectura, el mateix que la fitxa pública i sense botó: logotip d’una entitat, res per a un grup, avatar sense onCanvia', () => {
+  render(<PerfilEditor identitat={{ ...org('member'), avatar: '/assets/forn.webp', dades: { ...org('member').dades, logo_url: '/assets/forn.webp' } }} />);
+  expect(m.adapter.emptyDocument.logoEntitat).toEqual({ clar: '/assets/forn.webp', alt: 'Logotip de Forn' });
+  expect(m.adapter.emptyDocument).not.toHaveProperty('avatarAutor');
+  cleanup();
+  render(<PerfilEditor identitat={{ ...org('member'), mena: 'grup', avatar: '/assets/colla.webp' }} />);
+  expect(m.adapter.emptyDocument).not.toHaveProperty('logoEntitat');
+  cleanup();
+  const enBaixa = { ...ambAvatar, dades: { ...ambAvatar.dades, baixa_demanada_at: '2026-09-26T10:00:00Z' } };
+  render(<PerfilEditor identitat={enBaixa} />);
+  expect(m.adapter.emptyDocument.avatarAutor).toEqual({ src: 'https://poble.test/a.webp', alt: 'Avatar de Pep' });
+});
+
+test('Onada 4 · «Capçalera» obri directament la finestra de retall 16:9; cancel·lar no puja res ni torna la closca a la imatge', async () => {
   const acaba = vi.fn();
   render(<PerfilEditor identitat={jo} />);
   act(() => m.adapter.onHeroEdit({ acaba }));
-  expect(screen.getByRole('dialog', { name: 'Capçalera i avatar' })).toBeTruthy();
-  fireEvent.click(screen.getByRole('button', { name: 'Cancel·lar' }));
+  await act(async () => {
+    fireEvent.change(selector('heroImage'), { target: { files: [new File(['x'], 'pomes.jpg', { type: 'image/jpeg' })] } });
+  });
+  const finestra = screen.getByRole('dialog', { name: 'Retalla la capçalera' });
+  expect(within(finestra).queryByRole('radio')).toBeNull();
+  fireEvent.click(within(finestra).getByRole('button', { name: 'Cancel·lar' }));
+  expect(screen.queryByRole('dialog', { name: 'Retalla la capçalera' })).toBeNull();
   expect(acaba).not.toHaveBeenCalled();
+  expect(m.puja).not.toHaveBeenCalled();
+  expect(m.updateProfile).not.toHaveBeenCalled();
 });
 
-test('T35 · «Llevar l’avatar» buida avatar_url per la via de la fitxa i torna la closca a la imatge', async () => {
-  const acaba = vi.fn();
+test('Onada 4 · una foto de més de 10 MB avisa amb un toast (cap finestra la tapa) i no obri res', async () => {
+  render(<PerfilEditor identitat={jo} />);
+  const gran = new File(['x'], 'gran.jpg', { type: 'image/jpeg' });
+  Object.defineProperty(gran, 'size', { value: 11 * 1024 * 1024 });
+  await act(async () => { fireEvent.change(selector('logoImage'), { target: { files: [gran] } }); });
+  expect(m.toast).toHaveBeenCalledWith('Esta foto ocupa més de 10 MB. Tria’n una de més lleugera.', 'error');
+  expect(screen.queryByRole('dialog')).toBeNull();
+});
+
+test('Onada 4 · «Llevar l’avatar» (avatarAutor.onLleva) confirma abans i buida avatar_url per la via de la fitxa; cancel·lar no toca res', async () => {
   render(<PerfilEditor identitat={{ ...jo, dades: { ...jo.dades, avatar_url: 'https://poble.test/a.webp' } }} />);
-  act(() => m.adapter.onHeroEdit({ acaba }));
-  await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Llevar l’avatar' })); });
+  expect(screen.queryByRole('dialog')).toBeNull();
+  act(() => m.adapter.avatarAutor.onLleva());
+  let confirma = screen.getByRole('dialog', { name: 'Llevar l’avatar?' });
+  fireEvent.click(within(confirma).getByRole('button', { name: 'Cancel·lar' }));
+  expect(screen.queryByRole('dialog', { name: 'Llevar l’avatar?' })).toBeNull();
+  expect(m.updateProfile).not.toHaveBeenCalled();
+  act(() => m.adapter.avatarAutor.onLleva());
+  confirma = screen.getByRole('dialog', { name: 'Llevar l’avatar?' });
+  await act(async () => { fireEvent.click(within(confirma).getByRole('button', { name: 'Llevar l’avatar' })); });
   expect(m.updateProfile).toHaveBeenCalledWith({ avatar_url: null }, CONFIG);
-  expect(acaba).toHaveBeenCalledTimes(1);
+  expect(screen.queryByRole('dialog', { name: 'Llevar l’avatar?' })).toBeNull();
+  expect(m.adapter.document.logoImage).toBe('');
 });
 
-test('T35 · un membre sense permís no té diàleg', () => {
+test('T35 · un membre sense permís no té diàleg ni selectors de fitxers', () => {
   render(<PerfilEditor identitat={org('member')} />);
   expect(document.querySelector('dialog')).toBeNull();
+  expect(document.querySelector('input[type="file"]')).toBeNull();
 });
 
 test('T35 · una foto pujada (sdp-media://) no arriba crua a la barra taronja', () => {

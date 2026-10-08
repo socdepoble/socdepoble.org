@@ -37,7 +37,20 @@ const CENS = Object.freeze([
   'src/data/supabase/storage.js',
   'src/data/supabase/storage.pujada.test.js',
   /* F2 · La privacitat de la consola de resolveAsset i promoteToPublic. */
-  'src/data/supabase/storage.privacitat.test.js'
+  'src/data/supabase/storage.privacitat.test.js',
+  /* Auditoria 261007 (B) · Els xats d'ajuda per defecte i l'adaptador del xat. */
+  'src/data/xatsPerDefecte.js',
+  'src/data/xatsPerDefecte.test.js',
+  'src/data/supabase/xat.js',
+  /* Relleu 261007 (peça «netes») · Fitxers de la capa que cap porta qualitat
+     no vigilava: el mapejador de les seccions (netejaVariacio i
+     imatgeDeVariacio) i la seua prova, i les proves noves de l'Auditoria
+     261007 (B). mapejadorSeccions.js també el lint tests/lint-sessio.test.mjs,
+     que no corre amb vitest. */
+  'src/data/mapejadorSeccions.js',
+  'src/data/mapejadorSeccions.test.js',
+  'src/data/appSeed.onboarding.test.js',
+  'src/data/supabase/utils.test.js'
 ]);
 
 describe('el cens', () => {

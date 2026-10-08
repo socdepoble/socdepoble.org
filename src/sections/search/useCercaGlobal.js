@@ -7,9 +7,14 @@
  *
  * El padró del poble és la causa arrel de «no trobe la gent registrada»:
  * /cerca no consultava mai `carregaMembres`. Ara, amb consulta i un filtre
- * que inclou persones o entitats, es demana una vegada per àmbit del xat
- * (`xat.scopeKey`) i es filtra en local plegant accents. Si torna el límit
- * de la RPC (100 files), també es pregunta al servidor per la consulta.
+ * que inclou persones o entitats, es demana una vegada per àmbit de dades del
+ * xat (`xat.ambitEstable`) i es filtra en local plegant accents. Si torna el
+ * límit de la RPC (100 files), també es pregunta al servidor per la consulta.
+ * Decisió 1 del Mestre (261007) · Abans la clau era `xat.scopeKey`, que porta
+ * `generacio`: cada renovació del JWT (cada hora) tornava a demanar el padró
+ * i el grup «Persones» passava per 'loading'. `ambitEstable` (backend, persona
+ * i actor, XatContext.jsx) només canvia amb un canvi de persona, actor o
+ * backend, i llavors sí que el torna a demanar.
  * La RPC deixa fora qui busca i les entitats que gestiona: les afegim des
  * d'IdentitatContext. Cap correu entra a l'índex.
  *
@@ -82,7 +87,7 @@ export function useCercaGlobal({ q = '', tipus = 'tot' } = {}) {
   const opcionsIdentitat = useMemo(() => ({ ...opcions, correu, nomCompte, poble }), [opcions, correu, nomCompte, poble]);
 
   /* ── El padró: una llista per àmbit del xat, més la consulta al servidor si cal ── */
-  const { cercaMembres, scopeKey: ambitXat = '', status: estatXat } = xat;
+  const { cercaMembres, ambitEstable: ambitXat = '', status: estatXat } = xat;
   const volPadroBase = Boolean(qNet) && TIPUS_PADRO.has(filtre) && !senseSessio && typeof cercaMembres === 'function';
   const volPadro = volPadroBase && !sessioPendent && estatXat === 'ready' && core.status !== 'loading';
   const errorPadro = t('section.search.errorDesconegut', 'La font no ha dit per què.');

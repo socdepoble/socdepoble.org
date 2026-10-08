@@ -175,11 +175,28 @@ export default function DevicesSection() {
     };
   }, [profile, supportsBridge, tenantId, appendMessage]);
 
+  /* Auditoria 261007 (B) · El tic de 4 s només torna un objecte nou quan algun
+     dispositiu ha creuat, des del tic anterior, el llindar de visibilitat
+     (PRESENCE_STALE_MS, que aplica visibleDevices en recalcular-se) o el
+     d'esborrat (el doble). Abans en tornava un a cada tic i la secció sencera
+     es tornava a pintar cada 4 s encara que la llista fora la mateixa. Un
+     dispositiu silenciós continua desapareixent entre 16 i 20 s. */
+  const darrerTicRef = useRef(Date.now());
   useEffect(() => {
     const timer = window.setInterval(() => {
-      setDevices((current) =>
-        Object.fromEntries(Object.entries(current).filter(([, device]) => Date.now() - (device.lastSeen || 0) < PRESENCE_STALE_MS * 2))
-      );
+      const abans = darrerTicRef.current;
+      const ara = Date.now();
+      darrerTicRef.current = ara;
+      setDevices((current) => {
+        const entrades = Object.entries(current);
+        const vius = entrades.filter(([, device]) => ara - (device.lastSeen || 0) < PRESENCE_STALE_MS * 2);
+        const amagat = entrades.some(([, device]) => {
+          const vist = device.lastSeen || 0;
+          return abans - vist < PRESENCE_STALE_MS && ara - vist >= PRESENCE_STALE_MS;
+        });
+        if (!amagat && vius.length === entrades.length) return current;
+        return Object.fromEntries(vius);
+      });
     }, 4000);
     return () => window.clearInterval(timer);
   }, []);

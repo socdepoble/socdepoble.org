@@ -58,11 +58,22 @@ test('en mode seed, el Mur i les pàgines porten les dates de prova de l’arren
   expect(perId(core.pages, 'versions').date).toBe('2026-09-03T11:50:00+02:00');
 });
 
-test('en mode seed, loadAppData diu les mateixes dates que el Mur', async () => {
+/* Auditoria 261007 (B) · Esta prova passava per loadAppData, codi mort
+   retirat (ningú no la cridava). El que vigilava (cap carregador del mode
+   seed no diu una data diferent de l'arrencada) ara ho comprova amb els que
+   s'usen: una segona càrrega del Mur, la Multimèdia i les pàgines. */
+test('en mode seed, una segona càrrega i la Multimèdia diuen les mateixes dates que el Mur', async () => {
   const esperada = prova.llavorAmbDatesDeProva(APP_SEED, ARA);
-  const dades = await content.loadAppData('A', { dataMode: 'seed' });
-  expect(dades.pages).toEqual(esperada.pages);
-  expect(dades.marketItems).toEqual(esperada.marketItems);
+  const primera = await content.loadMur('A', { dataMode: 'seed' });
+  const segona = await content.loadMur('A', { dataMode: 'seed' });
+  const multimedia = await content.loadMultimedia('A', { dataMode: 'seed' });
+  const core = await content.loadCoreContent('A', { dataMode: 'seed' });
+  expect(segona.marketItems).toEqual(primera.marketItems);
+  expect(segona.feedPosts).toEqual(primera.feedPosts);
+  expect(segona.marketItems).toEqual(esperada.marketItems);
+  expect(multimedia.mediaItems).toEqual(esperada.mediaItems || []);
+  expect(core.pages).toEqual(esperada.pages);
+  expect(xarxa.request).not.toHaveBeenCalled();
 });
 
 test('en mode local, les pàgines conserven la data de creació del copy', async () => {

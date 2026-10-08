@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react';
+import React, { createContext, useContext, useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { AvisadorEfimer } from './AvisadorEfimer.jsx';
 
@@ -36,8 +36,14 @@ export function NotificationProvider({ children, targetNode }) {
 
   const portalTarget = targetNode || (typeof document !== 'undefined' ? document.body : null);
 
+  /* Auditoria 261007 (B) · Un valor estable: `{ showToast }` en línia era un
+     objecte nou a cada setToast (en mostrar un avís i en tancar-lo) i tornava a
+     pintar tots els consumidors de useToast (cada targeta, AppShell i, per
+     ell, el TopBar). showToast ja és estable, i el valor també ho és. */
+  const valor = useMemo(() => ({ showToast }), [showToast]);
+
   return (
-    <NotificationContext.Provider value={{ showToast }}>
+    <NotificationContext.Provider value={valor}>
       {children}
       {toast && portalTarget && createPortal(
         <div className="sdp-toast-container">

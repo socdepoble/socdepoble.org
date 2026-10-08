@@ -20,7 +20,16 @@ import { TEXTOS_MULTIMEDIA } from '../sections/xat/components/VistaMultimedia.js
 import { AVISOS_XAT_CORPORATIU } from '../sections/control/xatCorporatiu.js';
 import fontDialegTriaTargeta from '../components/universal/richText/extensions/targetes/DialegTriaTargeta.jsx?raw';
 import fontTargetaIncrustada from '../components/universal/richText/extensions/targetes/TargetaIncrustadaNodeView.jsx?raw';
-import fontItemDetail from '../sections/detail/ItemDetailSection.jsx?raw';
+/* Esmena 3 del pla 261007_1645 · la portada amb carrusel (i les seues claus)
+   ha passat d'ItemDetailSection a detailSectionMeta (portadaDElement). */
+import fontPortada from '../sections/detail/detailSectionMeta.jsx?raw';
+/* Esmena 2 del pla 261007_1645 (revisió adversarial del 261007) · l'històric
+   de l'actor: els parells [clau, reserva] del hook i la fallada del component. */
+import fontHistoric from '../sections/mur/usePublicacionsDeLActor.js?raw';
+import fontPublicacionsActor from '../sections/mur/PublicacionsDeLActor.jsx?raw';
+/* B03 (revisió del 261008) · La reserva valenciana de SDP-XAT-016 viu a
+   l'adaptador del xat (MISSATGES_SDP_HUMANS), que no coneix la llengua. */
+import fontAdaptadorXat from '../data/supabase/xat.js?raw';
 
 const CLAUS = {
   'nav.panel': {
@@ -337,7 +346,8 @@ const CLAUS = {
     ca: 'Llevar la targeta', es: 'Quitar la tarjeta', en: 'Remove the card', eu: 'Kendu txartela', gl: 'Quitar a tarxeta'
   },
   /* Revisió del 261007 (M9, M2-01) · Els textos per al lector del carrusel de
-     la portada (CarruselImatges, traduïts a ItemDetailSection). Les d'eu i gl
+     la portada (CarruselImatges, traduïts a portadaDElement de
+     detailSectionMeta.jsx des de l'Esmena 3 del pla 261007_1645). Les d'eu i gl
      són proposta a revisar per algú que les parle. */
   'carrusel.imatgesDe': {
     ca: 'Imatges de {titol}', es: 'Imágenes de {titol}', en: 'Images of {titol}', eu: '{titol}: irudiak', gl: 'Imaxes de {titol}'
@@ -359,6 +369,83 @@ const CLAUS = {
   },
   'carrusel.rolDiapositiva': {
     ca: 'diapositiva', es: 'diapositiva', en: 'slide', eu: 'diapositiba', gl: 'diapositiva'
+  },
+  /* Esmena 2 del pla 261007_1645 (revisió adversarial del 261007) · «Ja
+     publicat», l'històric de l'actor (usePublicacionsDeLActor.js i
+     PublicacionsDeLActor.jsx). Les d'eu i gl són proposta a revisar per algú
+     que les parle. */
+  'section.notes.historic.mur.titol': {
+    ca: 'Ja publicat al Mur',
+    es: 'Ya publicado en el Muro',
+    en: 'Already published on the Wall',
+    eu: 'Dagoeneko Horman argitaratuta',
+    gl: 'Xa publicado no Muro'
+  },
+  'section.notes.historic.mur.buit': {
+    ca: 'Amb esta identitat encara no hi ha res publicat al Mur.',
+    es: 'Con esta identidad todavía no hay nada publicado en el Muro.',
+    en: 'Nothing has been published with this identity on the Wall yet.',
+    eu: 'Identitate honekin ez dago oraindik ezer argitaratuta Horman.',
+    gl: 'Con esta identidade aínda non hai nada publicado no Muro.'
+  },
+  'section.notes.historic.mercat.titol': {
+    ca: 'Ja publicat al Mercat',
+    es: 'Ya publicado en el Mercado',
+    en: 'Already published in the Market',
+    eu: 'Dagoeneko Merkatuan argitaratuta',
+    gl: 'Xa publicado no Mercado'
+  },
+  'section.notes.historic.mercat.buit': {
+    ca: 'Amb esta identitat encara no hi ha res publicat al Mercat.',
+    es: 'Con esta identidad todavía no hay nada publicado en el Mercado.',
+    en: 'Nothing has been published with this identity in the Market yet.',
+    eu: 'Identitate honekin ez dago oraindik ezer argitaratuta Merkatuan.',
+    gl: 'Con esta identidade aínda non hai nada publicado no Mercado.'
+  },
+  'section.notes.historic.events.titol': {
+    ca: 'Ja publicat a Esdeveniments',
+    es: 'Ya publicado en Eventos',
+    en: 'Already published in Events',
+    eu: 'Dagoeneko Ekitaldietan argitaratuta',
+    gl: 'Xa publicado en Eventos'
+  },
+  'section.notes.historic.events.buit': {
+    ca: 'Amb esta identitat encara no hi ha res publicat a Esdeveniments.',
+    es: 'Con esta identidad todavía no hay nada publicado en Eventos.',
+    en: 'Nothing has been published with this identity in Events yet.',
+    eu: 'Identitate honekin ez dago oraindik ezer argitaratuta Ekitaldietan.',
+    gl: 'Con esta identidade aínda non hai nada publicado en Eventos.'
+  },
+  'section.notes.historic.carregant': {
+    ca: 'Carregant les publicacions…',
+    es: 'Cargando las publicaciones…',
+    en: 'Loading the posts…',
+    eu: 'Argitalpenak kargatzen…',
+    gl: 'Cargando as publicacións…'
+  },
+  'section.notes.historic.error': {
+    ca: 'No s’han pogut carregar les publicacions',
+    es: 'No se han podido cargar las publicaciones',
+    en: 'The posts could not be loaded',
+    eu: 'Ezin izan dira argitalpenak kargatu',
+    gl: 'Non se puideron cargar as publicacións'
+  },
+  'section.notes.historic.fallada': {
+    ca: 'La resta de la pàgina continua com sempre.',
+    es: 'El resto de la página sigue como siempre.',
+    en: 'The rest of the page carries on as usual.',
+    eu: 'Orriaren gainerakoak ohi bezala jarraitzen du.',
+    gl: 'O resto da páxina segue coma sempre.'
+  },
+  /* B03 (migració 2610081543, revisió del 261008) · SDP-XAT-016: un directe
+     nou amb una persona sense consentiment RGPD. El text no diu el motiu. Les
+     d'eu i gl són proposta a revisar per algú que les parle. */
+  'section.xat.error.noDisponible': {
+    ca: 'Esta persona no està disponible al xat.',
+    es: 'Esta persona no está disponible en el chat.',
+    en: 'This person is not available in the chat.',
+    eu: 'Pertsona hau ez dago erabilgarri txatean.',
+    gl: 'Esta persoa non está dispoñible no chat.'
   }
 };
 
@@ -475,15 +562,42 @@ describe('claus i18n del torn T1–T4', () => {
     expect(delFront).toEqual([...deLaTaula].sort());
   });
 
-  /* Revisió del 261007 (M9) · ItemDetailSection crida cada clau del carrusel
-     amb la reserva valenciana, i cap clau carrusel.* queda fora de la taula. */
+  /* Revisió del 261007 (M9) · La portada (portadaDElement, Esmena 3 del pla
+     261007_1645) crida cada clau del carrusel amb la reserva valenciana, i cap
+     clau carrusel.* queda fora de la taula. */
   test('les reserves del carrusel de la portada són els valors valencians', () => {
     const deLaTaula = Object.keys(CLAUS).filter((clau) => clau.startsWith('carrusel.'));
     for (const clau of deLaTaula) {
-      expect([clau, fontItemDetail.includes(`t('${clau}', '${CLAUS[clau].ca}')`)]).toEqual([clau, true]);
+      expect([clau, fontPortada.includes(`t('${clau}', '${CLAUS[clau].ca}')`)]).toEqual([clau, true]);
     }
-    const delFront = [...new Set([...fontItemDetail.matchAll(/'(carrusel\.[\w.]+)'/g)].map((m) => m[1]))].sort();
+    const delFront = [...new Set([...fontPortada.matchAll(/'(carrusel\.[\w.]+)'/g)].map((m) => m[1]))].sort();
     expect(delFront).toEqual([...deLaTaula].sort());
+  });
+
+  /* Esmena 2 del pla 261007_1645 (revisió adversarial del 261007) · L'històric
+     de l'actor crida cada clau section.notes.historic.* amb la reserva
+     valenciana: el hook com a parell ['clau', 'text'] i el component com a
+     tradueix('clau', 'text'); i cap clau del front queda fora de la taula. */
+  test('les reserves de l’històric de l’actor són els valors valencians', () => {
+    const font = `${fontHistoric}\n${fontPublicacionsActor}`;
+    const deLaTaula = Object.keys(CLAUS).filter((clau) => clau.startsWith('section.notes.historic.'));
+    expect(deLaTaula).toHaveLength(9);
+    for (const clau of deLaTaula) {
+      const reserva = CLAUS[clau].ca;
+      const crida = font.includes(`['${clau}', '${reserva}']`) || font.includes(`tradueix('${clau}', '${reserva}')`);
+      expect([clau, crida]).toEqual([clau, true]);
+    }
+    const delFront = [...new Set([...font.matchAll(/'(section\.notes\.historic\.[\w.]+)'/g)].map((m) => m[1]))].sort();
+    expect(delFront).toEqual([...deLaTaula].sort());
+  });
+
+  /* B03 (revisió del 261008) · El text que l'adaptador del xat posa a l'error
+     SDP-XAT-016 (MISSATGES_SDP_HUMANS de src/data/supabase/xat.js) és el valor
+     valencià de la clau: la interfície la tradueix pel `code` amb eixe text de
+     reserva, i les dues formes no es poden desfasar. */
+  test('la reserva de SDP-XAT-016 a l’adaptador del xat és el valor valencià', () => {
+    const clau = 'section.xat.error.noDisponible';
+    expect([clau, fontAdaptadorXat.includes(`'SDP-XAT-016': '${CLAUS[clau].ca}'`)]).toEqual([clau, true]);
   });
 
   /* T7 (261001) · amfitrio.servidor («Estàs al servidor de …») queda retirada

@@ -181,6 +181,58 @@ description: "Documentació canònica de Sóc de Poble."
   **NO aplicada. Va després de 2609282100 i les seues dependències**, abans
   de publicar un client amb la nova ruta; conserva la condició de moderació.
 
+- `migrations/2610081400_grups_sense_mare.sql`
+  Ordre del Mestre (261008, grup C): un grup ja no necessita empresa mare.
+  `private.can_create_group` torna a acceptar una mare nul·la i la política
+  d'INSERT «members create organizations» ja no l'exigix al grup; amb mare,
+  la frontera de 2609272201 (mateix poble, `company`, `entity` o
+  `city_hall`, administrada per qui crida) no canvia. No redefinix
+  `create_organization`. Additiva; **no aplicada: s'aplica
+  ABANS de publicar el client, després de 2610072230**. Sense ella, un grup
+  sense mare rep «El grup necessita una empresa mare que pugues administrar».
+
+- `migrations/2610081401_organitzacions_poble.sql`
+  Ordre del Mestre (261008, grup C): el poble d'una organització.
+  `organizations.town_name` (text, `null` = sense poble, CHECK de 120
+  caràcters), permís de lectura per a `anon` i `authenticated` i
+  d'actualització per a `authenticated` (la fila la protegix la política de
+  gestores), i la columna al final de `organization_directory` i de
+  `list_my_organizations`. Additiva; **no aplicada: s'aplica
+  ABANS de publicar el client, després de 2610081400**. Abans d'aplicar-la,
+  la consulta de lectura de la capçalera ha de tornar les 14 columnes del
+  directori de 2609262232.
+
+- `migrations/2610081402_membres_organitzacio.sql`
+  Ordre del Mestre (261008, grup C): els membres d'una organització. La
+  taula `organization_member_organizations` (una organització membre d'una
+  altra del mateix poble, sense cap permís heretat) i les RPC
+  `membres_organitzacio`, `desa_membre_organitzacio` i
+  `lleva_membre_organitzacio` (alta directa, eixida pròpia, només la
+  propietària gestiona les administradores, llista només per a owner i
+  admin; codis `SDP-ORGMEM-000` a `008`). Additiva; **no aplicada: s'aplica
+  ABANS de publicar el client, després de 2610081401**. Sense ella, la
+  pestanya «Membres» diu que el servidor encara no els gestiona.
+
+- `migrations/2610081543_xat_consentiment_i_metadades.sql`
+  Auditoria del xat 261008 (B03 i B08). `membres_del_poble` torna a filtrar
+  les persones per consentiment RGPD (`consentiment_rgpd_at is not null`,
+  com 2609261500) i `crea_fil_directe` rebutja crear un directe nou amb una
+  persona sense consentiment (`SDP-XAT-016`, només dins de `if v_fil is
+  null`; les entitats no hi canvien). Un directe que ja existix es continua
+  retrobant i `xat_envia` hi continua acceptant missatges: tancar-los quan
+  algú retira el consentiment és decisió del Mestre (B03, amb B02).
+  `xat_envia` ignora `p_metadades` i guarda sempre `'{}'::jsonb`, amb la
+  mateixa signatura i els mateixos permisos. Les tres són les últimes
+  versions lletra a lletra amb eixe sol canvi. Additiva i idempotent; **NO
+  aplicada: l'aplica el Mestre, després de 2610081402**. Abans d'aplicar-la,
+  una consulta de lectura al node: `select count(*) filter (where
+  consentiment_rgpd_at is null) as sense, count(*) as total from
+  public.profiles;`. Tots els perfils de `sense` desapareixen del padró del
+  xat: si no és un recompte residual (clau antiga 'rgpd' de 2609080000, altes
+  per OAuth de 2609261500), cal un pla de reconsentiment abans d'aplicar-la.
+  La fixture `tests/fixtures/xat-entitats/regression.sql` també ha de donar
+  consentiment als perfils amb qui obri directes nous.
+
 - `seed.sql`
   Contingut inicial del portal.
 
@@ -392,7 +444,9 @@ La persona es registra amb el seu correu; després crea l’organització des de
 perfil. El nom públic «Sóc de Poble» correspon a una entitat administrada, no
 a un UUID seed ni a una contrasenya compartida. `2609272201_grups_mare.sql` fa que la RPC i la RLS rebutgen de forma coherent
 un grup sense empresa mare administrada; entitats institucionals conserven els permisos
-previs. La confirmació per correu i OAuth depenen de la configuració del node.
+previs. Des de `2610081400_grups_sense_mare.sql` (ordre del Mestre, 261008)
+la mare és opcional a les dues capes: si n'hi ha, s'ha de poder administrar.
+La confirmació per correu i OAuth depenen de la configuració del node.
 
 Prova local explícita: `node tests/integration/local-auth-chat.mjs`, amb Vite
 en 3340, API Supabase en 54321 i Docker local. Rebutja qualsevol endpoint

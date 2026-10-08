@@ -1,4 +1,5 @@
--- Prova d'integració després del bootstrap, Xat v2/correccions/F0 i T16.
+-- Prova d'integració després del bootstrap, Xat v2/correccions/F0, T16 i
+-- 2610081543 (B03): sense eixa migració, les comprovacions de B03 fallen.
 -- Tot el padró és sintètic, viu en una transacció i acaba en ROLLBACK.
 \set ON_ERROR_STOP on
 begin;
@@ -7,6 +8,19 @@ insert into public.profiles(id, full_name, avatar_url)
 select id, case right(id::text,1) when '1' then 'Client A' when '2' then 'Client B'
   when '3' then 'Propietària' when '4' then 'Administradora' when '5' then 'Membre' else 'Altre poble' end,
   '/avatar-test.png' from auth.users;
+-- 2610081543 (B03) · membres_del_poble llig consentiment_rgpd_at i
+-- crea_fil_directe rebutja un directe NOU cap a una persona sense consentiment
+-- (SDP-XAT-016). La taula mínima de bootstrap.sql no porta la columna (la real
+-- la té des de 2609080000): s'hi afig dins d'esta transacció, que acaba en
+-- ROLLBACK. Només la Propietària (…0003) hi consent: és l'única persona amb qui
+-- la prova obri un directe nou (v_directe); la resta de directes són amb
+-- entitats, que no tenen consentiment personal. Revisió del 261008 · La prova
+-- comprova també les dues garanties en negatiu: les persones sense
+-- consentiment (…0002, …0004 i …0005) no ixen al padró i un directe nou cap a
+-- …0005 rep SDP-XAT-016; i que retirar el consentiment no tanca el directe que
+-- ja existix (es retroba), però sí que trau la persona del padró.
+alter table public.profiles add column if not exists consentiment_rgpd_at timestamptz;
+update public.profiles set consentiment_rgpd_at = now() where id = '10000000-0000-0000-0000-000000000003';
 insert into public.towns values ('20000000-0000-0000-0000-000000000001'), ('20000000-0000-0000-0000-000000000002');
 insert into public.town_memberships
 select '20000000-0000-0000-0000-000000000001', id from auth.users where right(id::text,1) <> '6';
@@ -34,6 +48,16 @@ do $$ declare v_fil uuid; v_directe uuid; v_m record; v_seq bigint; begin
   if not exists (select 1 from public.membres_del_poble('20000000-0000-0000-0000-000000000001')
     where usuari_id='30000000-0000-0000-0000-000000000001' and avatar_url='/logo-test.png') then
     raise exception 'Falta ID/avatar real de l’entitat'; end if;
+  -- B03 · Al padró només hi ha les persones amb consentiment: la Propietària.
+  if (select array_agg(usuari_id order by usuari_id) from public.membres_del_poble('20000000-0000-0000-0000-000000000001')
+    where tipus='persona') is distinct from array['10000000-0000-0000-0000-000000000003'::uuid] then
+    raise exception 'B03: el padró mostra persones sense consentiment o amaga la que en té'; end if;
+  -- B03 · Cap directe nou amb una persona sense consentiment, i amb el codi propi.
+  begin perform public.crea_fil_directe('20000000-0000-0000-0000-000000000001','10000000-0000-0000-0000-000000000005');
+    raise exception 'B03: s’ha obert un directe nou amb una persona sense consentiment';
+  exception when insufficient_privilege then
+    if position('SDP-XAT-016' in sqlerrm) <> 1 then raise exception 'B03: error inesperat: %', sqlerrm; end if;
+  end;
   begin perform public.crea_fil_directe('20000000-0000-0000-0000-000000000001','30000000-0000-0000-0000-000000000002');
     raise exception 'S’ha creat conversa entre tenants'; exception when insufficient_privilege then null; end;
   begin perform * from public.membres_del_poble('20000000-0000-0000-0000-000000000002');
@@ -63,6 +87,24 @@ do $$ declare v_fil uuid; v_directe uuid; v_m record; v_seq bigint; begin
       and altres->0->>'id'='30000000-0000-0000-0000-000000000001' and altres->0->>'avatarUrl'='/logo-test.png'
       and jsonb_array_length(altres)=1) then raise exception 'El client no veu l’entitat com a interlocutora única'; end if;
 end $$;
+
+-- B03 · La Propietària retira el consentiment: el directe que ja existix es
+-- retroba (la migració no el tanca), però ja no ix al padró. Després es
+-- restaura, perquè la resta de la prova no en depenga.
+reset role;
+update public.profiles set consentiment_rgpd_at = null where id = '10000000-0000-0000-0000-000000000003';
+set local role authenticated;
+do $$ begin
+  if public.crea_fil_directe('20000000-0000-0000-0000-000000000001','10000000-0000-0000-0000-000000000003')
+    is distinct from current_setting('sdp_test.directe')::uuid then
+    raise exception 'B03: retirar el consentiment ha tancat o duplicat el directe existent'; end if;
+  if exists (select 1 from public.membres_del_poble('20000000-0000-0000-0000-000000000001')
+    where usuari_id='10000000-0000-0000-0000-000000000003') then
+    raise exception 'B03: el padró mostra una persona que ha retirat el consentiment'; end if;
+end $$;
+reset role;
+update public.profiles set consentiment_rgpd_at = now() where id = '10000000-0000-0000-0000-000000000003';
+set local role authenticated;
 
 -- El segon client no comparteix el fil, el seu contingut ni els participants.
 set local request.jwt.claim.sub = '10000000-0000-0000-0000-000000000002';
@@ -198,4 +240,4 @@ do $$ declare v_a uuid := current_setting('sdp_test.fil_a')::uuid; begin
 end $$;
 reset role;
 rollback;
-\echo 'T16: directori, dos clients privats, autoria, idempotència, tenants i revocació OK'
+\echo 'T16 i B03: directori, consentiment, dos clients privats, autoria, idempotència, tenants i revocació OK'

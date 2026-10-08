@@ -26,7 +26,7 @@ export default function EspecimenImpressio() {
     <>
       <Llinatge id="impressio" />
       <Especimen id="impressio" nom="DocumentPrintPreview · vista A4 i PDF" fitxer="src/components/universal/DocumentPrintPreview.jsx"
-        descripcio="Davall del títol de l’editor, al costat dels drets d’autor, dos botons obrin la vista prèvia: «Vista A4 / PDF» (sense portada) i «Crear portada». El document es prepara al dispositiu, dins d’un iframe aïllat amb una política de seguretat pròpia, i el navegador el pagina en A4 per a imprimir-lo o desar-lo com a PDF."
+        descripcio="Dos botons obrin la vista prèvia: «Vista A4 / PDF» (sense portada) i «Crear portada». Al Bloc de Notes viuen davall del títol de l’editor, al costat dels drets d’autor; al Perfil, a l’apartat «Les vistes», fora de l’espai d’edició (ordre del Mestre, 261008). El document es prepara al dispositiu, dins d’un iframe aïllat amb una política de seguretat pròpia, i el navegador el pagina en A4 per a imprimir-lo o desar-lo com a PDF."
         contracte={[
           ['document', '{ title, subtitle, lead, content, copyright }', '—', 'El mateix objecte en local, a Sollutia o a WordPress. lead i content són HTML i es sanegen.'],
           ['author', 'string', "''", 'El nom de la portada.'],
@@ -37,7 +37,11 @@ export default function EspecimenImpressio() {
           '«Incloure portada» és una Casella de Pedra Seca: refà el document en el moment.',
           'L’iframe porta títol («Document A4»); «Imprimir / Desar PDF» espera que el paper haja carregat.'
         ]}
-        fes={['Preparar el PDF al dispositiu, amb el motor del navegador.', 'Un sol scroll dins del diàleg: el del paper.']}
+        fes={[
+          'Preparar el PDF al dispositiu, amb el motor del navegador.',
+          'Un sol scroll dins del diàleg: el del paper.',
+          'Al Perfil («Les vistes», DetallVistes), refer el document amb documentDeFitxa i l’esborrany de la cua: l’editor ja no està muntat, i el paper ha de dir el que la persona ha escrit.'
+        ]}
         noFacis={[
           'Enviar el document a cap servei per a fer el PDF.',
           'Deute: els dos botons i «Imprimir» encara són button en brut amb classes (sdp-copyright-selector, sdp-boto), no Boto.'

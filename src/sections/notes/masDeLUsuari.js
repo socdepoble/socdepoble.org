@@ -19,9 +19,18 @@
  * seccions de publicació entren al MAS: Multimèdia a «Multimèdia» (f-media) i
  * qualsevol secció sense carpeta pròpia a «Altres notes» (CARPETA_ALTRES, D6),
  * amb l'etiqueta neutra «Publicació» (etiquetaDeSeccio).
+ *
+ * Grup E de l'Onada 4 (prompt 261008_1201, tasca 2; decisió del Mestre del
+ * 261008: el «Sóc de Poble loguejat» és l'ENTITAT socdepoble triada al
+ * selector d'identitat) · Les pàgines del sistema que el Mur signa com a «Sóc
+ * de Poble» (targetesDeSistema, TargetaDelMur · isSystem) són de l'entitat
+ * pilot: entren a la seua carpeta «Mur». Abans itemsPublicatsDe les saltava i
+ * el Bloc de Sóc de Poble no en mostrava cap.
  */
-import { autorDe, getSectionItemPath } from '../../config/navigation.js';
+import { autorDe, esRutaInterna, getSectionItemPath } from '../../config/navigation.js';
+import { ENTITAT_PILOT_ID, ENTITAT_PILOT_SLUG } from '../../data/identitatsSeed.js';
 import { extractPlainText } from '../../utils/contentAdapter.js';
+import { fotoDeLaTargeta } from '../mercat/imatgesDeProducte.js';
 
 /* La carpeta «Altres notes» del catàleg (appSeed.js · NOTE_FOLDERS_SEED). */
 export const CARPETA_ALTRES = 'f-notes';
@@ -62,9 +71,22 @@ export function seccioDeCarpeta(carpeta) {
   return Object.keys(CARPETA_PER_SECCIO).find((seccio) => CARPETA_PER_SECCIO[seccio] === String(carpeta)) ?? null;
 }
 
-/** L'element és de l'actor si qui el signa és un dels seus àlies. */
+/* Grup E (261008) · Els identificadors de l'entitat pilot que porta el seu
+   conjunt d'àlies (identitatsSeed · aliesDeLActor): l'id de la llavor i el
+   slug declarat, que en remot acompanya l'uuid de servidor. Una persona no en
+   rep mai cap (el slug i el padró només són àlies d'una entitat). */
+const ALIES_DEL_PROJECTE = Object.freeze([...new Set([ENTITAT_PILOT_SLUG, ENTITAT_PILOT_ID])]);
+
+/** Si un conjunt d'àlies és el de l'entitat pilot (Sóc de Poble), en llavor o en remot. */
+export const esAliesDelProjecte = (alies) => Boolean(alies?.size) && ALIES_DEL_PROJECTE.some((clau) => alies.has(clau));
+
+/** L'element és de l'actor si qui el signa és un dels seus àlies.
+ *  Grup E (261008) · Una pàgina del sistema (isSystem) no porta cap autor:
+ *  la signa Sóc de Poble, i només és de l'entitat pilot. Les publicacions dels
+ *  veïns no poden dir que ho són (elementDeFilaPublicada en lleva isSystem). */
 export function pertanyALActor(item, alies) {
   if (!item || !alies || !alies.size) return false;
+  if (item.isSystem) return esAliesDelProjecte(alies);
   const autor = autorDe(item);
   return Boolean(autor) && alies.has(autor.id);
 }
@@ -81,6 +103,13 @@ export function publicacioComANota(item, seccio, { locale = 'ca-ES' } = {}) {
   const data = item.date || item.publish_date || item.created_at || null;
   const titol = extractPlainText(String(item.title || item.name || ''), Infinity).trim() || 'Publicació';
   const resum = extractPlainText(String(item.summary || item.subtitle || item.post_subtitle || item.description || ''), 240).trim();
+  /* F4 · Un mitjà porta el fitxer a `src` (mediaContent.js; el normalitza
+     mapejadorSeccions.js). L'últim de la cadena, i només si és una
+     imatge: un vídeo no es pinta com a portada. Poliment de F4 · Només a
+     Multimèdia: un element del Mur o del Mercat amb `src` i sense cap camp
+     d'imatge no és cap portada. */
+  const imatge = item.imageSrc || item.image_url || item.image || item.images?.[0]
+    || (seccio === 'multimedia' && item.src && (!item.kind || item.kind === 'image') ? item.src : '');
   return {
     id: `publicacio:${seccio}:${item.id}`,
     kind: 'publicacio',
@@ -88,19 +117,26 @@ export function publicacioComANota(item, seccio, { locale = 'ca-ES' } = {}) {
     title: titol,
     subtitle: dataCurta(data, locale),
     excerpt: resum,
-    /* F4 · Un mitjà porta el fitxer a `src` (mediaContent.js; el normalitza
-       mapejadorSeccions.js). L'últim de la cadena, i només si és una
-       imatge: un vídeo no es pinta com a portada. Poliment de F4 · Només a
-       Multimèdia: un element del Mur o del Mercat amb `src` i sense cap camp
-       d'imatge no és cap portada. */
-    image: item.imageSrc || item.image_url || item.image || item.images?.[0]
-      || (seccio === 'multimedia' && item.src && (!item.kind || item.kind === 'image') ? item.src : ''),
+    /* Esmena 3 del pla 261007_1645 · Un producte porta la seua primera foto
+       (fotoDeLaTargeta, la regla de TargetaDelMur i de targetaDeProducte), no
+       l'imageSrc que per a la Samarreta és el logotip quadrat de qui ven
+       (marketContent.js). Sense cap foto pròpia, la cadena de sempre. Les
+       altres seccions no canvien. */
+    image: seccio === 'mercat' ? fotoDeLaTargeta(item, imatge) : imatge,
     tags: [],
     labels: [{ text: etiquetaDeSeccio(seccio), className: 'sdp-badge-system' }],
     searchText: `${titol} ${resum}`.toLowerCase(),
     updatedAt: data,
-    data: { seccio, item, ruta: getSectionItemPath(seccio, item.id) }
+    data: { seccio, item, ruta: rutaDeLaPublicacio(item, seccio) }
   };
+}
+
+/* Grup E (261008) · Una pàgina del sistema viu a la seua ruta (mainHref:
+   /projecte, /page/xat…), com la seua targeta del Mur; mai a /mur/:id. Només
+   una ruta de l'app (esRutaInterna, la mateixa defensa de TargetaDelMur). */
+function rutaDeLaPublicacio(item, seccio) {
+  if (item.isSystem && esRutaInterna(item.mainHref)) return item.mainHref;
+  return getSectionItemPath(seccio, item.id);
 }
 
 /**
@@ -110,6 +146,8 @@ export function publicacioComANota(item, seccio, { locale = 'ca-ES' } = {}) {
  * F4 (D2) · `opcions.publicadesDesDeNotes`, un Set d'ids: les publicacions del
  * Mur nascudes d'una nota pròpia (publishedSubmissionId) no s'emeten. La peça
  * és la nota editable, que el Bloc posa també a la carpeta «Mur».
+ * Grup E (261008) · Les pàgines del sistema ja no se salten: pertanyALActor
+ * decidix de qui són (de l'entitat pilot i de ningú més).
  */
 export function itemsPublicatsDe({ feedPosts = [], marketItems = [], events = [], mediaItems = [], fonts = [] } = {}, alies, opcions = {}) {
   const { publicadesDesDeNotes = null, ...format } = opcions;
@@ -117,7 +155,7 @@ export function itemsPublicatsDe({ feedPosts = [], marketItems = [], events = []
   const items = [];
   for (const [seccio, llista] of totes) {
     for (const item of llista || []) {
-      if (!item || item.isSystem || item.id == null) continue;
+      if (!item || item.id == null) continue;
       if (!pertanyALActor(item, alies)) continue;
       /* Publicar una nota només escriu al Mur (NotesContext · publishNote). */
       if (seccio === 'mur' && publicadesDesDeNotes?.has(String(item.id))) continue;

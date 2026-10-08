@@ -79,6 +79,33 @@ test('T47 · sense còpia al dispositiu (pestanya), la ploma no promet cap dispo
   expect(estatPerAlEditor({ estat: 'net', problema: null, quarantena: [], pestanya: true })).toEqual({ estat: 'net', detall: '' });
 });
 
+/* Línia I2 de l'Onada 4 (pla 261008_1201) · Un error temporal el gestor el
+   torna a provar sol: la ploma porta `reintentant: true` (la icona en pinta el
+   check quan passa a 'net'). Cap altra branca porta la clau: un 'error' que
+   passa a 'net' sense ella és un descart, i no ha de dir «desat». */
+test('Línia I2 · només l’error temporal porta reintentant: true', () => {
+  expect(estatPerAlEditor({ estat: 'error', problema: { tipus: 'temporal', missatge: 'sense connexió', intents: 2 }, quarantena: [] })).toEqual({
+    estat: 'error',
+    detall: 'No s’ha pogut desar (sense connexió). Es tornarà a provar sol; mentrestant, el canvi es guarda en este dispositiu.',
+    reintentant: true,
+  });
+  // També sense missatge, i sense còpia al dispositiu (pestanya).
+  expect(estatPerAlEditor({ estat: 'error', problema: { tipus: 'temporal' }, quarantena: [], pestanya: true })).toMatchObject({ estat: 'error', reintentant: true });
+  const altres = [
+    undefined,
+    { estat: 'pendent', problema: null, quarantena: [] },
+    { estat: 'enviant', problema: null, quarantena: [], pestanya: true },
+    { estat: 'sessio', problema: { tipus: 'sessio' }, quarantena: [] },
+    { estat: 'error', problema: { tipus: 'conflicte' }, quarantena: [] },
+    { estat: 'error', problema: { tipus: 'local', missatge: 'Només en esta pestanya.' }, quarantena: [] },
+    { estat: 'error', problema: { tipus: 'validacio', missatge: 'Massa llarg.' }, quarantena: [] },
+    { estat: 'error', problema: { tipus: 'servidor', missatge: 'no tens permís' }, quarantena: [] },
+    { estat: 'error', problema: null, quarantena: ['icon'] },
+  ];
+  for (const desament of altres) expect(estatPerAlEditor(desament), JSON.stringify(desament)).not.toHaveProperty('reintentant');
+  expect(estatPerAlEditor(undefined, { conflicte: true })).not.toHaveProperty('reintentant');
+});
+
 test('T47 · una nota oberta amb un esborrany D01 (draftConflict) no és «tot desat»', () => {
   expect(estatPerAlEditor(undefined, { conflicte: true })).toEqual({
     estat: 'error',

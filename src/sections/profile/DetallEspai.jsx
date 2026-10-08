@@ -37,14 +37,20 @@ const autoriaDeLaPersona = (persona) => ({
 });
 
 import { useState, useEffect } from 'react';
-import { desaUtilitatActiva, llegixUtilitatsActives, subscriuUtilitatsActives } from './utilitatsActives.js';
+import { desaUtilitatActiva, estaAlPanell, subscriuUtilitatsActives } from './utilitatsActives.js';
 
 /* T51 · Pendent: una utilitat encara no té cap data real. La seua
    declaració (aplicacions.js, aplicacionsValides) no porta cap camp de data
    i esta pàgina no se n'inventa cap: cal que la configuració en porte una. */
 export function DetallAplicacio({ aplicacio }) {
-  const [activa, setActiva] = useState(false);
-  const id = aplicacio?.id;
+  /* Ordre del Mestre (261007, prompt 261007_1628, peça C) · La preferència
+     es llig i s'escriu amb l'id del Panell (aplicacions.js, camp `panell`):
+     'consola' per a la Consola de Mètriques i 'rss' per al Lector, els que
+     amaga ControlSection. I amb la regla del Panell (estaAlPanell): sense
+     preferència, la utilitat ja hi és i el botó diu «Ocultar». Derogat:
+     l'id de l'aplicació com a clau i el Boolean() que la llegia al revés. */
+  const id = aplicacio?.panell || aplicacio?.id;
+  const [activa, setActiva] = useState(() => estaAlPanell(id));
 
   /* Higiene d'amfitrió (ordre del Mestre, 261004) · La preferència passa per
      storage.js (utilitatsActives.js), amb el llegat llegit; el Panell se
@@ -52,7 +58,7 @@ export function DetallAplicacio({ aplicacio }) {
      Mestre del 261004: l'accés directe a localStorage i el 'storage' fals a
      window, que arribava a la pàgina de l'amfitrió. */
   useEffect(() => {
-    const llig = () => setActiva(Boolean(llegixUtilitatsActives()[id]));
+    const llig = () => setActiva(estaAlPanell(id));
     llig();
     return subscriuUtilitatsActives(llig);
   }, [id]);

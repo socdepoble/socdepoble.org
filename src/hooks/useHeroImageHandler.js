@@ -63,7 +63,12 @@ export default function useHeroImageHandler({
      compressió, pujada, desat i missatges. Torna true si ha desat.
      Onada 4 · revisió (K2) · `opcions.pesMaxim` canvia el límit només per a
      esta crida: la foto ORIGINAL d'un flux amb retallador ja l'ha acceptada
-     el retallador amb el seu límit d'entrada. Sense opcions, el de sempre. */
+     el retallador amb el seu límit d'entrada. Sense opcions, el de sempre.
+     Onada 4 (retallador senzill, 261008) · `opcions.midaMaxima` és el costat
+     llarg de la compressió per a esta crida: el retall que ja ix a la mida
+     exacta (600 × 600, 1.200 × 675) no es torna a reduir encara que la
+     constant de la forma canvie. Sense, 600 el logotip i l'avatar i 1.200
+     la resta, com sempre. */
   const processaFitxer = async (file, opcions) => {
     if (!file) return false;
     const pesMaxim = Number(opcions?.pesMaxim) > 0 ? Number(opcions.pesMaxim) : maxSizeBytes;
@@ -76,7 +81,7 @@ export default function useHeroImageHandler({
     setIsUploading(true);
     try {
       const esMenut = fieldName.toLowerCase().includes('logo') || fieldName.toLowerCase().includes('avatar');
-      const maxSize = esMenut ? 600 : 1200;
+      const maxSize = Number(opcions?.midaMaxima) > 0 ? Math.round(Number(opcions.midaMaxima)) : (esMenut ? 600 : 1200);
 
       let valor = '';
       for (const { escala, qualitat } of ESGLAONS) {

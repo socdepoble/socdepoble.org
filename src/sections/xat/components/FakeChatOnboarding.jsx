@@ -14,22 +14,24 @@
  * (avatarDelPoble). Les mateixes cares a «Nova conversa» (cercaMembres). Les
  * rutes són pròpies ('/assets/…') i Avatar les resol amb la base de
  * l'amfitrió.
+ *
+ * Ordre del Mestre (261007) · El nom i la cara de les dues entrades d'ajuda
+ * venen d'AJUDA (data/xatsPerDefecte.js), la font única que també fan servir
+ * les files per defecte del xat en remot i «Nova conversa». Són els mateixos
+ * valors d'abans (el padró per a la IAIA, el compte de la marca per a Sóc de
+ * Poble): la pantalla no canvia.
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { XatContext } from '../XatContext.jsx';
-import { CONTACTES_AJUDA } from '../contactesAjuda.js';
 import { agrupaComunitats } from '../missatges.js';
 import { useUIActions } from '../../../app/contexts/UIContext.jsx';
 import { useCoreContent } from '../../../app/contexts/CoreContentContext';
-import { AGENTS_IA_SEED } from '../../../data/identitatsSeed.js';
-import { AGENTS_MAP } from '../../../data/agentsSeed.js';
+import { AJUDA, AJUDA_PER_CLAU } from '../../../data/xatsPerDefecte.js';
 import usePobleAmfitrio from '../usePobleAmfitrio.js';
 import { avatarDelPoble, nomDelPoble, objecteDelPoble } from '../pobleAmfitrio.js';
 
-const AVATAR_IAIA = AGENTS_IA_SEED[0].avatar_url;
-const AVATAR_SOC_DE_POBLE = AGENTS_MAP.SOCDEPOBLE.avatar_url;
-/* La cara de cada entrada d'ajuda (CONTACTES_AJUDA), pel seu tipus. */
-const CARA_DAJUDA = Object.freeze({ ia: AVATAR_IAIA, entitat: AVATAR_SOC_DE_POBLE });
+const IAIA = AJUDA_PER_CLAU.iaia;
+const SOC_DE_POBLE = AJUDA_PER_CLAU.socdepoble;
 
 /* Els fils de la comunitat del poble: la comunitat (sense missatges, amb la
    cara del poble si la seua fitxa en té), els Avisos (només lectura, com els
@@ -55,12 +57,12 @@ export default function FakeChatOnboarding({ originalContext, children }) {
   const [ara] = useState(() => new Date().toISOString());
   const [messages, setMessages] = useState(() => ({
     'fake-iaia': [
-      { id: 'm1', seq: 1, text: t('section.xat.fake.iaia1', "Hola, foraster! Sóc la IAIA MarIA, la intel·ligència d'este poble."), sender: 'other', author: 'IAIA MarIA', is_ai: true, creatAl: ara },
-      { id: 'm2', seq: 2, text: t('section.xat.fake.iaia2', "Si t'agrada el que veus, registra't per a entrar al xat de veritat!"), sender: 'other', author: 'IAIA MarIA', is_ai: true, creatAl: ara }
+      { id: 'm1', seq: 1, text: t('section.xat.fake.iaia1', "Hola, foraster! Sóc la IAIA MarIA, la intel·ligència d'este poble."), sender: 'other', author: IAIA.nom, is_ai: true, creatAl: ara },
+      { id: 'm2', seq: 2, text: t('section.xat.fake.iaia2', "Si t'agrada el que veus, registra't per a entrar al xat de veritat!"), sender: 'other', author: IAIA.nom, is_ai: true, creatAl: ara }
     ],
     'fake-sdp': [
-      { id: 'm3', seq: 1, text: t('section.xat.fake.sdp1', "Benvingut a Sóc de Poble. Som una xarxa de pobles connectats."), sender: 'other', author: 'Sóc de Poble', is_ai: false, creatAl: ara },
-      { id: 'm4', seq: 2, text: t('section.xat.fake.sdp2', "Registra't per a descobrir tot el que oferim."), sender: 'other', author: 'Sóc de Poble', is_ai: false, creatAl: ara }
+      { id: 'm3', seq: 1, text: t('section.xat.fake.sdp1', "Benvingut a Sóc de Poble. Som una xarxa de pobles connectats."), sender: 'other', author: SOC_DE_POBLE.nom, is_ai: false, creatAl: ara },
+      { id: 'm4', seq: 2, text: t('section.xat.fake.sdp2', "Registra't per a descobrir tot el que oferim."), sender: 'other', author: SOC_DE_POBLE.nom, is_ai: false, creatAl: ara }
     ]
   }));
   /* Les respostes pendents es cancel·len en desmuntar (abans quedaven vives). */
@@ -76,11 +78,11 @@ export default function FakeChatOnboarding({ originalContext, children }) {
     ...deLPoble,
     {
       id: 'fake-iaia',
-      name: 'IAIA MarIA',
-      title: 'IAIA MarIA',
-      avatar_url: AVATAR_IAIA,
-      tipus: 'ia',
-      participants: [{ id: 'ajuda:ia', nom: 'IAIA MarIA', tipus: 'ia' }],
+      name: IAIA.nom,
+      title: IAIA.nom,
+      avatar_url: IAIA.avatar,
+      tipus: IAIA.tipus,
+      participants: [{ id: `ajuda:${IAIA.tipus}`, nom: IAIA.nom, tipus: IAIA.tipus }],
       ultimAl: ara,
       noLlegits: 1,
       ultimSeq: 2,
@@ -89,11 +91,11 @@ export default function FakeChatOnboarding({ originalContext, children }) {
     },
     {
       id: 'fake-sdp',
-      name: 'Sóc de Poble',
-      title: 'Sóc de Poble',
-      avatar_url: AVATAR_SOC_DE_POBLE,
-      tipus: 'entitat',
-      participants: [{ id: 'ajuda:entitat', nom: 'Sóc de Poble', tipus: 'entitat' }],
+      name: SOC_DE_POBLE.nom,
+      title: SOC_DE_POBLE.nom,
+      avatar_url: SOC_DE_POBLE.avatar,
+      tipus: SOC_DE_POBLE.tipus,
+      participants: [{ id: `ajuda:${SOC_DE_POBLE.tipus}`, nom: SOC_DE_POBLE.nom, tipus: SOC_DE_POBLE.tipus }],
       ultimAl: ara,
       noLlegits: 1,
       ultimSeq: 2,
@@ -158,8 +160,8 @@ export default function FakeChatOnboarding({ originalContext, children }) {
     getThreadMessages,
     sendChatMessage,
     totalNoLlegits: 2,
-    cercaMembres: async () => CONTACTES_AJUDA.map(({ nom, tipus }) => ({
-      nom, tipus, usuari_id: `ajuda:${tipus}`, avatar_url: CARA_DAJUDA[tipus] || null, noDisponible: false
+    cercaMembres: async () => AJUDA.map(({ nom, tipus, avatar }) => ({
+      nom, tipus, usuari_id: `ajuda:${tipus}`, avatar_url: avatar || null, noDisponible: false
     })),
     creaFil: async (altreUsuariId) => {
       return altreUsuariId === 'ajuda:ia' ? 'fake-iaia' : 'fake-sdp';

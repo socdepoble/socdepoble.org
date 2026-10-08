@@ -12,7 +12,7 @@
    les seues captures reals.
    Els casos d'ESCRIPTURA (escriu: true) només corren amb
    contextDeConformitat({ escriptures: true }): creen dades. */
-import { CAPACITATS, CONTRACTE_NUCLI } from '../contracte.js';
+import { CAPACITATS, CONTRACTE_NUCLI, SECCIONS_PAGINABLES } from '../contracte.js';
 
 /* ── Ajudants de forma: cada un torna la llista de falles (buida = conforme). ── */
 
@@ -59,6 +59,27 @@ function fallesDeMissatge(missatge, filId) {
   if (!esTextNoBuit(missatge.tipus)) falles.push(`el missatge ${missatge.id} no té tipus`);
   return falles;
 }
+
+/* Decisió 4 del Mestre (261007) · El camp ADDITIU i opcional `paginacio` de
+   loadMur (capacitat 'paginacioSeccions'): absent, o un objecte amb un cursor
+   de text per a cada secció de SECCIONS_PAGINABLES que té més pàgines. */
+function fallesDePaginacio(paginacio) {
+  if (paginacio === undefined) return [];
+  if (!esObjecte(paginacio)) return [`paginacio havia de ser un objecte i és ${tipusDe(paginacio)}`];
+  return Object.entries(paginacio).flatMap(([seccio, cursor]) => [
+    ...(Object.hasOwn(SECCIONS_PAGINABLES, seccio) ? [] : [`paginacio porta una secció que no es pagina: ${seccio}`]),
+    ...(esTextNoBuit(cursor) ? [] : [`el cursor de ${seccio} havia de ser text no buit i és ${tipusDe(cursor)}`])
+  ]);
+}
+
+/* Una pàgina de loadSeccioPage: elements amb id, complete boolean i
+   nextCursor null només quan és completa. */
+const fallesDePaginaDeSeccio = (pagina) => [
+  ...exigixLlistes(pagina, ['elements']),
+  ...(typeof pagina?.complete === 'boolean' ? [] : ['complete havia de ser boolean']),
+  ...(pagina?.complete === (pagina?.nextCursor === null) ? [] : ['complete i nextCursor null han d’anar junts']),
+  ...(pagina?.nextCursor === null || esTextNoBuit(pagina?.nextCursor) ? [] : ['nextCursor havia de ser null o text no buit'])
+];
 
 /* Els fils on la interfície pot escriure: una comunitat no té missatges propis
    i al canal només hi escriuen els administradors (contracte del Xat §1-§3). */
@@ -114,10 +135,13 @@ export const CASOS = Object.freeze([
     ]
   }),
   cas({
-    metode: 'loadMur', titol: 'loadMur(ownerUserId, config) → { feedPosts[], events[], marketItems[] }',
+    metode: 'loadMur', titol: 'loadMur(ownerUserId, config) → { feedPosts[], events[], marketItems[], paginacio? }',
     requerix: ['ownerUserId'],
     arguments: (ctx) => [ctx.ownerUserId, ctx.config],
-    comprova: (valor) => exigixLlistes(valor, ['feedPosts', 'events', 'marketItems'])
+    comprova: (valor) => [
+      ...exigixLlistes(valor, ['feedPosts', 'events', 'marketItems']),
+      ...fallesDePaginacio(valor?.paginacio)
+    ]
   }),
   cas({
     metode: 'loadMultimedia', titol: 'loadMultimedia(ownerUserId, config) → { mediaItems[] }',
@@ -149,8 +173,11 @@ export const CASOS = Object.freeze([
     arguments: (ctx) => [ctx.config],
     comprova: (fils) => (Array.isArray(fils) ? fils.flatMap(fallesDeConversa) : [`havia de ser una llista i és ${tipusDe(fils)}`]),
     desa: (fils, ctx) => {
-      ctx.filId = fils[0]?.id ?? null;
-      ctx.filEscrivible = fils.find(ESCRIVIBLE)?.id ?? null;
+      /* Ordre del Mestre (261007) · Una fila sintètica (Conversa.perDefecte,
+         contracte.js) no és cap fil del servidor: ni es llig ni s'hi escriu. */
+      const reals = fils.filter((fil) => !fil.perDefecte);
+      ctx.filId = reals[0]?.id ?? null;
+      ctx.filEscrivible = reals.find(ESCRIVIBLE)?.id ?? null;
     }
   }),
   cas({
@@ -277,6 +304,19 @@ export const CASOS = Object.freeze([
       ...(pagina?.complete === (pagina?.nextCursor === null) ? [] : ['complete i nextCursor null han d’anar junts'])
     ]
   }),
+  /* Decisió 4 del Mestre (261007) · «Carregar-ne més» al Mur i al Mercat. */
+  cas({
+    metode: 'loadSeccioPage', capacitat: 'paginacioSeccions',
+    titol: "loadSeccioPage({ seccio: 'mur', cursor: null, limit }, config) → { elements[], complete, nextCursor }",
+    arguments: (ctx) => [{ seccio: 'mur', cursor: null, limit: 50 }, ctx.config],
+    comprova: fallesDePaginaDeSeccio
+  }),
+  cas({
+    metode: 'loadSeccioPage', capacitat: 'paginacioSeccions', espera: 'rebutja',
+    titol: 'loadSeccioPage d’una secció que no es pagina (notes) rebutja',
+    arguments: (ctx) => [{ seccio: 'notes', cursor: null, limit: 50 }, ctx.config],
+    comprova: (error) => (error instanceof Error ? [] : [`havia de rebutjar amb un Error: ${tipusDe(error)}`])
+  }),
   cas({
     metode: 'comprovaServidor', capacitat: 'salut', titol: 'comprovaServidor(config) → { ok: boolean }, mai rebutja',
     arguments: (ctx) => [ctx.config],
@@ -303,6 +343,19 @@ export const CASOS = Object.freeze([
     metode: 'elMeuRol', capacitat: 'sessio', titol: 'elMeuRol(config) → null sense sessió | text',
     arguments: (ctx) => [ctx.config],
     comprova: (rol) => (rol === null || esTextNoBuit(rol) ? [] : [`rol: ${JSON.stringify(rol)}`])
+  }),
+  /* Ordre del Mestre (261008, grup C) · Els membres d'una organització: la
+     llista només la veu qui l'administra, i un error del port porta sempre un
+     `code` (contracte.js, MISSATGES_MEMBRES_ORGANITZACIO). Una organització
+     que no existix no és de ningú: rebutja amb codi, sense sessió (000) o amb
+     sessió (002), i sense escriure res. */
+  cas({
+    metode: 'llistaMembresOrganitzacio', capacitat: 'membresOrganitzacio', espera: 'rebutja',
+    titol: 'llistaMembresOrganitzacio(orgId, config) d’una organització que no existix rebutja amb un code',
+    arguments: (ctx) => ['conformitat-sense-organitzacio', ctx.config],
+    comprova: (error) => (error instanceof Error && esTextNoBuit(error.code)
+      ? []
+      : [`havia de rebutjar amb un Error amb code: ${tipusDe(error)} ${JSON.stringify(error?.code ?? null)}`])
   })
 ]);
 

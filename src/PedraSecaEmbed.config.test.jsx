@@ -20,7 +20,7 @@
  * El backend de compilació es fixa abans d'avaluar l'element (vi.hoisted), així
  * que les proves no depenen del .env de qui les executa.
  */
-import { afterAll, afterEach, beforeAll, describe, expect, test, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 import fs from 'node:fs';
 import { act, cleanup, render } from '@testing-library/react';
 import {
@@ -36,6 +36,8 @@ import { CONTRACTE_AMFITRIO_V1 } from './config/contracteAmfitrio.js';
 import { registraAppExterna, retiraAppExterna } from './apps/plataforma/registreApps.js';
 import { manifestExternDeProva } from './apps/plataforma/__fixtures__/manifests.js';
 import { permetOrigenMitjans } from './utils/sanitize.js';
+import { THEME_KEY } from './config/theme.js';
+import { delVal, getVal, setVal } from './config/storage.js';
 
 const ENTORN = vi.hoisted(() => {
   const entorn = {
@@ -248,7 +250,16 @@ describe('sanejaConfig · claus tipades', () => {
     ['language', 42, undefined],
     ['language', '', undefined],
     ['language', null, undefined],
-    ['language', ['es'], undefined]
+    ['language', ['es'], undefined],
+    // Auditoria 261007 (B): només les tres preferències de theme.js.
+    ['themeMode', 'system', 'system'],
+    ['themeMode', 'light', 'light'],
+    ['themeMode', 'dark', 'dark'],
+    ['themeMode', 'fosc', undefined],
+    ['themeMode', 'Dark', undefined],
+    ['themeMode', '', undefined],
+    ['themeMode', 1, undefined],
+    ['themeMode', null, undefined]
   ])('%s = %j → %j', (clau, valor, esperat) => {
     const net = sanejaConfig({ [clau]: valor });
     if (esperat === undefined) expect(net).not.toHaveProperty(clau);
@@ -311,6 +322,94 @@ describe('llengua de l’amfitrió (T1, 260930)', () => {
     await act(async () => { element.remove(); element._desmuntaAra(); });
     window.dispatchEvent(new CustomEvent('sdp:language-changed', { detail: { language: 'gl' } }));
     expect(rebuts).toHaveLength(1);
+  });
+});
+
+/* ── Tema de l'amfitrió (Auditoria 261007 (B)) ───────────────────────── */
+
+describe('tema de l’amfitrió: setTheme(), themeMode i el mode del sistema (Auditoria 261007 (B))', () => {
+  /* Una MediaQueryList de prefers-color-scheme que la prova pot canviar; la
+     resta de consultes (el contrast) no casen mai. */
+  function sistema(foscInicial = false) {
+    const oients = new Set();
+    const tema = {
+      matches: foscInicial,
+      addEventListener: (tipus, oient) => { if (tipus === 'change') oients.add(oient); },
+      removeEventListener: (tipus, oient) => { if (tipus === 'change') oients.delete(oient); }
+    };
+    const altra = { matches: false, addEventListener() {}, removeEventListener() {} };
+    vi.stubGlobal('matchMedia', vi.fn((consulta) => (consulta === '(prefers-color-scheme: dark)' ? tema : altra)));
+    return {
+      canvia(fosc) {
+        tema.matches = fosc;
+        for (const oient of [...oients]) oient({ matches: fosc });
+      }
+    };
+  }
+
+  let temaDesat = null;
+  let temaHtml = null;
+  beforeEach(() => {
+    temaDesat = getVal(THEME_KEY);
+    delVal(THEME_KEY);
+    // readThemePreference encara mira l'<html>: cada prova comença sense tema escrit.
+    temaHtml = document.documentElement.getAttribute('data-theme');
+    document.documentElement.removeAttribute('data-theme');
+  });
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    if (temaDesat == null) delVal(THEME_KEY);
+    else setVal(THEME_KEY, temaDesat);
+    if (temaHtml == null) document.documentElement.removeAttribute('data-theme');
+    else document.documentElement.setAttribute('data-theme', temaHtml);
+  });
+
+  test('setTheme() pinta una preferència vàlida i descarta una de desconeguda, com setLanguage', async () => {
+    sistema();
+    const element = await munta();
+    expect(element.dataset.theme).toBe('light');
+    await act(async () => { element.setTheme('dark'); });
+    expect(element.dataset.theme).toBe('dark');
+    // Abans quedava data-theme="fosc", que cap selector de tokens.css reconeix.
+    await act(async () => { element.setTheme('fosc'); });
+    expect(element.dataset.theme).toBe('light');
+    expect(element._manualTheme).toBeNull();
+  });
+
+  test('descartat un setTheme() desconegut, mana el themeMode de la configuració', async () => {
+    sistema();
+    const element = await munta({ config: JSON.stringify({ themeMode: 'dark' }) });
+    expect(element.dataset.theme).toBe('dark');
+    await act(async () => { element.setTheme('light'); });
+    expect(element.dataset.theme).toBe('light');
+    await act(async () => { element.setTheme(42); });
+    expect(element.dataset.theme).toBe('dark');
+  });
+
+  test('un themeMode desconegut de l’amfitrió no arriba a la config ni a data-theme', async () => {
+    sistema();
+    const element = await munta({ config: JSON.stringify({ themeMode: 'fosc' }) });
+    expect(element.config).not.toHaveProperty('themeMode');
+    expect(element.dataset.theme).toBe('light');
+  });
+
+  test('el mode del telèfon no trepitja el tema que l’amfitrió ha fixat amb setTheme()', async () => {
+    setVal(THEME_KEY, 'system');
+    const sis = sistema(false);
+    const element = await munta();
+    expect(element.dataset.theme).toBe('light');
+    // Amb la preferència desada 'system', l'element seguix el telèfon.
+    await act(async () => { sis.canvia(true); });
+    expect(element.dataset.theme).toBe('dark');
+    // L'amfitrió fixa el clar: un canvi del telèfon ja no el trepitja.
+    await act(async () => { element.setTheme('light'); });
+    await act(async () => { sis.canvia(false); sis.canvia(true); });
+    expect(element.dataset.theme).toBe('light');
+    // Si l'amfitrió demana 'system', torna a seguir el telèfon.
+    await act(async () => { element.setTheme('system'); });
+    expect(element.dataset.theme).toBe('dark');
+    await act(async () => { sis.canvia(false); });
+    expect(element.dataset.theme).toBe('light');
   });
 });
 

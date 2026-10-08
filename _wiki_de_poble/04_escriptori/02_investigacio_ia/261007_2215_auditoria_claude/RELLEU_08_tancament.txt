@@ -1,0 +1,38 @@
+RELLEU 08 · Claude · torn torn_91821449 · 261008 ~05:20 · TANCAMENT DEL RELLEU
+
+Informe complet: _wiki_de_poble/04_escriptori/261007_2215_auditoria_claude.md (document.mjs check: valid, 0 errors).
+
+ESTAT EN UNA LÍNIA
+Fets i revisats amb revisió adversarial:
+- l'històric de l'actor;
+- les decisions 1 (bombolles), 2 (renovació silenciosa), 3 (imatges pròpies al Mur i al detall; migració escrita però NO aplicada), 4 («Mostra més» amb ADR-2026-11) i 5 (paquet trossejat; carregador de 3,4 KB i entrada del 35,4 %);
+- tots els pendents menors de «Límits» §5 i de l'onada 3b.
+
+VERIFICACIÓ FINAL
+- vitest src: 852 fitxers, 14.210 proves, 0 fallades.
+- Proves node del paquet: 40/40.
+- tractor-rls 0, tractor-enxufe 0, Olivera --informe 0.
+- design_guard 1, només per 7 identitats heretades fora del diff.
+- Navegador en seed (/mur, /mercat, detall de la Samarreta, /xat, /notes): sense errors de consola.
+
+PER A MARIA (governança; jo no hi puc escriure)
+- ESTAT, LEDGER i tancament.mjs d'este torn (torn_91821449).
+- LLEI 1 i LLEI 5 de la Wiki (paquet trossejat).
+- Propagar l'ADR-2026-11 i versionar wikiManifest.js.
+- La skill sdp-universal-editor.
+- tooling: E4, una porta de mida, design_guard amb les proves, els laboratoris 261006.
+- 261007_1845_decisions_iaia.md sense rebut.
+- context_output.json solt a l'arrel.
+
+PER AL MESTRE
+- build:wp i lint.
+- Provar el paquet a WordPress.
+- Aplicar la migració i la fila origens_mitjans_propis.
+- Proves a mà en remot.
+- Commits atòmics.
+- Preguntes (informe, Troballes §H), entre elles el punt B (IdentitatContext) i el text «Mostra més» vs «Carregar-ne més».
+
+DEUTE PROPOSAT PER A LA PROPERA ONADA
+Les imatges sdp-media:// de les targetes del Mur no es resolen pel port. Amb la decisió 3 són les úniques imatges admeses.
+
+RES COMMITEJAT. Lliure la reserva de fitxers del RELLEU_00.

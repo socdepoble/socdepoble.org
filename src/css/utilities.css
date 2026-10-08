@@ -80,6 +80,16 @@
     min-height: 0;
     overflow: visible;
   }
+  /* Esmena 2 del pla 261007_1645 · La ranura `peuDePagina` de PageFrame, germana
+     de l'article i dins del contenidor que fa scroll. No creix com l'article
+     (no és cap .content-wrapper: el flex: 1 0 auto de dalt es repartiria
+     l'espai) i porta el mateix coixí lateral i inferior que el cos
+     (base.css · article.content-wrapper). Cap punt de tall nou. */
+  .sdp-pagina-peu {
+    flex: none;
+    width: 100%;
+    padding: 0 var(--sdp-pad-contenidor) var(--sdp-pad-contenidor);
+  }
   .sdp-universal-page-container--contained > .bar-blue,
   .sdp-universal-page-container--contained > .bar-orange {
     flex: none;

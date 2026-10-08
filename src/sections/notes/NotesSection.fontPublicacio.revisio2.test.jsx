@@ -328,9 +328,11 @@ test('R4b · tornar Arrere a la foto amb la font en error (ja mostrat) no recarr
 });
 
 /* I1 · La recàrrega torna a fallar sense que el Bloc veja cap estat
-   intermedi (useScopedResource posa 'loading' i el rebuig pot arribar abans
-   de pintar): l'estat primitiu continua 'error' i només canvia l'objecte
-   d'error, que la font porta des del poliment de F4 (fontsDelMas). */
+   intermedi (des d'un error, useScopedResource posa 'loading' i el rebuig pot
+   arribar abans de pintar): l'estat primitiu continua 'error' i només canvia
+   l'objecte d'error, que la font porta des del poliment de F4 (fontsDelMas).
+   Decisió 2 del Mestre (261007) · Una recàrrega sobre dades bones conserva
+   'ready'; 'loading' només ix per aïllament o, com ací, des d'un error. */
 test('I1 · Reintentar amb la font que torna a fallar sense estat intermedi torna a l’avís, no es queda en «Carregant…»', () => {
   errorDeMultimedia('Primera fallada');
   const repinta = munta(ruta(FOTO_ID, 'f-media'));

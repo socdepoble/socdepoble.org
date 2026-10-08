@@ -11,12 +11,17 @@ import { getVal, setVal, delVal } from '../../config/storage.js';
 import { PAGINA_DESTACADA_DEL_XAT } from './paginaDestacada.js';
 import { paginaDeRuta } from '../text/paginaDeText.js';
 import { PAGE_COPY } from '../text/pageContent.js';
+import { ambXatsPerDefecte } from '../../data/xatsPerDefecte.js';
+import { RUTA_XAT_DE_LA_IAIA } from './useObriXatPerDefecte.js';
 
 const mocks = vi.hoisted(() => ({
   creaNota: vi.fn(),
   navigate: vi.fn(),
   threadId: 'a',
   scope: 'A',
+  /* Decisió 1 del Mestre (261007) · La clau de XatWorkspace. Buida per
+     defecte: sense esborranys, com fins ara en este fitxer. */
+  ambit: '',
   params: new URLSearchParams(),
   members: vi.fn(),
   createThread: vi.fn(),
@@ -95,6 +100,7 @@ vi.mock('./XatContext', async (importOriginal) => ({
   ...(await importOriginal()),
   useXat: () => ({
     scopeKey: mocks.scope,
+    ambitEstable: mocks.ambit,
     status: 'ready',
     avis: null,
     chatThreads: mocks.threads,
@@ -157,6 +163,7 @@ beforeEach(() => {
   vi.stubGlobal('ResizeObserver', class { observe() {} unobserve() {} disconnect() {} });
   mocks.threadId = 'a';
   mocks.scope = 'A';
+  mocks.ambit = '';
   mocks.params = new URLSearchParams();
   mocks.amplada = 1280;
   mocks.threads = filsDeMostra();
@@ -268,8 +275,12 @@ test('context de Connectar acompanya la tria de destinatari i no envia missatges
   expect(mocks.send).not.toHaveBeenCalled();
 });
 
-test('canviar àmbit (scopeKey) purga el padró i ignora una obertura tardana de conversa', async () => {
+/* Decisió 1 del Mestre (261007) · L'àmbit de XatWorkspace és `ambitEstable`
+   (backend + persona + actor), ja no `scopeKey`: la prova canviava només
+   scopeKey i ara canvia l'àmbit, que és el que torna a muntar l'espai. */
+test('canviar àmbit (ambitEstable) purga el padró i ignora una obertura tardana de conversa', async () => {
   mocks.threadId = null;
+  mocks.ambit = 'P';
   mocks.members.mockResolvedValue([{ usuari_id: 'B', nom: 'Privat d A' }]);
   let resolve;
   mocks.createThread.mockImplementation(() => new Promise((done) => { resolve = done; }));
@@ -278,10 +289,33 @@ test('canviar àmbit (scopeKey) purga el padró i ignora una obertura tardana de
   fireEvent.change(within(screen.getByRole('dialog')).getByRole('searchbox'), { target: { value: 'Privat' } });
   fireEvent.click(await screen.findByRole('button', { name: /Privat d A/ }));
   mocks.scope = 'B';
+  mocks.ambit = 'Q';
   view.rerender(<XatSection />);
   expect(screen.queryByText('Privat d A')).toBeNull();
   await act(async () => resolve('old-thread'));
   expect(mocks.navigate).not.toHaveBeenCalled();
+});
+
+/* Decisió 1 del Mestre (261007) · «L'estat local ha de mantenir la
+   continuïtat de la conversa malgrat la renovació del token (JWT).» Una
+   renovació canvia `scopeKey` i no `ambitEstable`: la clau de XatWorkspace no
+   canvia, res no es torna a muntar, i l'obertura que estava en curs arriba. */
+test('Decisió 1 · una renovació del JWT (scopeKey nou, mateix ambitEstable) no torna a muntar l’espai: el padró es queda i l’obertura en curs arriba', async () => {
+  mocks.threadId = null;
+  mocks.ambit = 'P';
+  mocks.members.mockResolvedValue([{ usuari_id: 'B', nom: 'Veïna del poble' }]);
+  let resolve;
+  mocks.createThread.mockImplementation(() => new Promise((done) => { resolve = done; }));
+  const view = render(<XatSection />);
+  fireEvent.click(screen.getByRole('button', { name: 'Nova conversa' }));
+  fireEvent.change(within(screen.getByRole('dialog')).getByRole('searchbox'), { target: { value: 'Veïna' } });
+  fireEvent.click(await screen.findByRole('button', { name: /Veïna del poble/ }));
+  mocks.scope = 'A-renovat';
+  view.rerender(<XatSection />);
+  expect(screen.getByText('Veïna del poble')).toBeTruthy();
+  expect(within(screen.getByRole('dialog')).getByRole('searchbox').value).toBe('Veïna');
+  await act(async () => resolve('fil-nou'));
+  expect(mocks.navigate).toHaveBeenCalledWith('/xat/fil-nou');
 });
 
 /* T12 (ordre del Mestre, 260927): els quatre filtres ja no són una fila de
@@ -1111,9 +1145,25 @@ test('T63.2 · ?sobre= obri el xat comú amb obriFilDePagina i hi navega una sol
   mocks.obriFilDePagina.mockResolvedValue('g-9');
   const view = render(<XatSection />);
   view.rerender(<XatSection />);
-  await waitFor(() => expect(mocks.navigate).toHaveBeenCalledWith('/xat/g-9', { replace: true }));
+  /* Auditoria 261008 (B05) · La conversa conserva el descriptor del subjecte.
+     Revisió 261008 · Només ?sobre=: ni el títol ni la ruta queden a la URL. */
+  await waitFor(() => expect(mocks.navigate).toHaveBeenCalledWith('/xat/g-9?sobre=publicacio%3Ap-1', { replace: true }));
   expect(mocks.obriFilDePagina).toHaveBeenCalledTimes(1);
   expect(mocks.obriFilDePagina).toHaveBeenCalledWith({ tipus: 'publicacio', id: 'p-1', titol: 'Festa', ruta: '/mur/p-1' });
+});
+
+/* Revisió 261008 · El xat comú d'una organització de membres el llig una
+   membre: el seu nom no ha de quedar a l'historial ni a la URL de l'amfitrió. */
+test('B05 · la URL de la conversa d’una organització porta només el descriptor, mai el nom ni la ruta', async () => {
+  mocks.threadId = null;
+  mocks.params = new URLSearchParams({ sobre: 'entitat:org-m', titol: 'Associació de Membres', ruta: '/empresa/assoc-membres' });
+  mocks.obriFilDePagina.mockResolvedValue('g-9');
+  render(<XatSection />);
+  await waitFor(() => expect(mocks.navigate).toHaveBeenCalled());
+  const [ruta, opcions] = mocks.navigate.mock.calls.at(-1);
+  expect(opcions).toEqual({ replace: true });
+  expect(ruta).toBe('/xat/g-9?sobre=entitat%3Aorg-m');
+  expect(decodeURIComponent(ruta)).not.toMatch(/Associació|assoc-membres/);
 });
 
 /* StrictMode munta, desmunta i torna a muntar els efectes: la guarda d'una
@@ -1123,7 +1173,7 @@ test('T63.2 · amb StrictMode, ?sobre= i ?amb= s’obrin una sola vegada i hi na
   mocks.params = new URLSearchParams({ sobre: 'publicacio:p-1', titol: 'Festa' });
   mocks.obriFilDePagina.mockResolvedValue('g-9');
   render(<StrictMode><XatSection /></StrictMode>);
-  await waitFor(() => expect(mocks.navigate).toHaveBeenCalledWith('/xat/g-9', { replace: true }));
+  await waitFor(() => expect(mocks.navigate).toHaveBeenCalledWith('/xat/g-9?sobre=publicacio%3Ap-1', { replace: true }));
   expect(mocks.obriFilDePagina).toHaveBeenCalledTimes(1);
   cleanup();
 
@@ -1218,7 +1268,7 @@ test('T63.2 · mentre la sessió es comprova, ?sobre= espera i s’obri quan arr
 
   mocks.joId = 'jo';
   view.rerender(<XatSection />);
-  await waitFor(() => expect(mocks.navigate).toHaveBeenCalledWith('/xat/g-9', { replace: true }));
+  await waitFor(() => expect(mocks.navigate).toHaveBeenCalledWith('/xat/g-9?sobre=publicacio%3Ap-1', { replace: true }));
   expect(mocks.obriFilDePagina).toHaveBeenCalledTimes(1);
   expect(mocks.showToast).not.toHaveBeenCalled();
 });
@@ -2099,4 +2149,99 @@ test('T1 · respondre a un missatge envia amb respostaA pel context i buida la b
   fireEvent.keyDown(camp, { key: 'Enter' });
   await waitFor(() => expect(mocks.send).toHaveBeenCalledWith(expect.objectContaining({ id: 'a' }), 'D’acord', { respostaA: '2' }));
   expect(screen.queryByRole('group', { name: 'Resposta a Veí' })).toBeNull();
+});
+
+/* Ordre del Mestre (261007) · Les files d'ajuda per defecte (perDefecte,
+   data/xatsPerDefecte.js): en remot, «Sóc de Poble» i la «IAIA MarIA» són a
+   la cua de la llista de tothom. No són converses: ni obriFil ni Conversa;
+   /xat/sdp-per-defecte:<clau> porta al xat real, una sola vegada. */
+function ambFilesPerDefecte() {
+  mocks.threads = [...filsDeMostra(), ...ambXatsPerDefecte([]).map((f) => mapejaFil(f))];
+}
+const textosDeLaLlista = () => within(screen.getByRole('list', { name: 'Converses' }))
+  .getAllByRole('button').map((b) => b.textContent);
+
+test('261007 · les files d’ajuda van a la cua, amb el seu nom i «Cap missatge.», sense marca de fixades', () => {
+  mocks.threadId = null;
+  ambFilesPerDefecte();
+  render(<XatSection />);
+  const files = textosDeLaLlista();
+  expect(files).toHaveLength(4);
+  expect(files[0]).toContain('Hola');
+  expect(files[1]).toContain('Adeu');
+  expect(files[2]).toContain('Sóc de Poble');
+  expect(files[3]).toContain('IAIA MarIA');
+  for (const text of files.slice(2)) {
+    expect(text).toContain('Cap missatge.');
+    expect(text).not.toContain('Fixada');
+  }
+});
+
+test('261007 · prémer la fila de Sóc de Poble porta a la via «En privat», amb replace i sense obrir cap fil', () => {
+  mocks.threadId = null;
+  ambFilesPerDefecte();
+  const view = render(<XatSection />);
+  fireEvent.click(screen.getByText('Sóc de Poble').closest('button'));
+  expect(mocks.navigate).toHaveBeenLastCalledWith('/xat/sdp-per-defecte%3Asocdepoble');
+  /* El router ja és a la ruta de pas: una consulta nova, com a cada navegació. */
+  mocks.threadId = 'sdp-per-defecte:socdepoble';
+  mocks.params = new URLSearchParams();
+  view.rerender(<XatSection />);
+  expect(mocks.navigate).toHaveBeenLastCalledWith('/xat?amb=socdepoble', { replace: true });
+  expect(mocks.openThread).not.toHaveBeenCalledWith('sdp-per-defecte:socdepoble');
+  expect(screen.queryByRole('textbox', { name: 'Escriu un missatge' })).toBeNull();
+});
+
+test('261007 · /xat/sdp-per-defecte:iaia porta al xat públic de /iaia una sola vegada, també en StrictMode', () => {
+  mocks.threadId = 'sdp-per-defecte:iaia';
+  ambFilesPerDefecte();
+  const view = render(<StrictMode><XatSection /></StrictMode>);
+  const cap = mocks.navigate.mock.calls.filter(([ruta]) => ruta === RUTA_XAT_DE_LA_IAIA);
+  expect(cap).toEqual([[RUTA_XAT_DE_LA_IAIA, { replace: true }]]);
+  const url = new URL(RUTA_XAT_DE_LA_IAIA, 'http://localhost');
+  expect(RUTA_XAT_DE_LA_IAIA.startsWith('/xat?sobre=pagina:%2Fiaia&titol=')).toBe(true);
+  expect(RUTA_XAT_DE_LA_IAIA.endsWith('&ruta=%2Fiaia')).toBe(true);
+  expect(Object.fromEntries(url.searchParams)).toEqual({ sobre: 'pagina:/iaia', titol: "L'ànima de la iaia", ruta: '/iaia' });
+  expect(mocks.openThread).not.toHaveBeenCalledWith('sdp-per-defecte:iaia');
+  expect(screen.queryByRole('textbox', { name: 'Escriu un missatge' })).toBeNull();
+  /* Un altre pintat sense navegar no hi torna; una navegació nova (la
+     persona torna a prémer la fila), sí. */
+  view.rerender(<StrictMode><XatSection /></StrictMode>);
+  expect(mocks.navigate.mock.calls.filter(([ruta]) => ruta === RUTA_XAT_DE_LA_IAIA)).toHaveLength(1);
+  mocks.params = new URLSearchParams();
+  view.rerender(<StrictMode><XatSection /></StrictMode>);
+  expect(mocks.navigate.mock.calls.filter(([ruta]) => ruta === RUTA_XAT_DE_LA_IAIA)).toHaveLength(2);
+});
+
+test('261007 · un id sintètic no s’obri mai com a fil, ni abans que arribe la llista', () => {
+  mocks.threadId = 'sdp-per-defecte:socdepoble';
+  mocks.threads = filsDeMostra();
+  render(<XatSection />);
+  expect(mocks.openThread).not.toHaveBeenCalledWith('sdp-per-defecte:socdepoble');
+  expect(mocks.openThread).toHaveBeenCalledWith(null);
+  expect(mocks.navigate).not.toHaveBeenCalled();
+});
+
+test('261007 · en «Seleccionar xats» les files d’ajuda no es poden triar', () => {
+  mocks.threadId = null;
+  ambFilesPerDefecte();
+  render(<XatSection />);
+  fireEvent.click(screen.getByRole('button', { name: 'Més opcions' }));
+  fireEvent.click(screen.getByRole('menuitem', { name: 'Seleccionar xats' }));
+  const caselles = within(screen.getByRole('list', { name: 'Converses' })).getAllByRole('checkbox');
+  expect(caselles).toHaveLength(2);
+  expect(caselles.some((c) => /Sóc de Poble|IAIA MarIA/.test(c.textContent))).toBe(false);
+});
+
+/* Auditoria 261007 (B) · En eixir del Xat el fil es tanca: el canal i el
+   sondeig del fil no continuen a la resta de l'app. Entre dos fils, l'últim
+   que es demana és el nou, mai el null de la neteja. */
+test('261007 (B) · eixir del Xat tanca el fil obert; canviar de fil obri el nou en últim lloc', () => {
+  const view = render(<StrictMode><XatSection /></StrictMode>);
+  expect(mocks.openThread).toHaveBeenLastCalledWith('a');
+  mocks.threadId = 'b';
+  view.rerender(<StrictMode><XatSection /></StrictMode>);
+  expect(mocks.openThread).toHaveBeenLastCalledWith('b');
+  view.unmount();
+  expect(mocks.openThread).toHaveBeenLastCalledWith(null);
 });

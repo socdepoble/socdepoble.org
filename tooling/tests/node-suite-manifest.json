@@ -327,12 +327,27 @@
       "reason": "F1 permanent: paritat CAMPS_PERFIL, permisos de columna i convergència segura de create_organization; SQL local sense dades de sessió."
     },
     {
+      "path": "tests/migracio-grups-sense-mare.test.mjs",
+      "suite": "primary",
+      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
+    },
+    {
       "path": "tests/migracio-identitat-f1.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
     },
     {
+      "path": "tests/migracio-membres-organitzacio.test.mjs",
+      "suite": "primary",
+      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
+    },
+    {
       "path": "tests/migracio-notes-paperera.test.mjs",
+      "suite": "primary",
+      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
+    },
+    {
+      "path": "tests/migracio-organitzacions-poble.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
     },
@@ -343,6 +358,11 @@
     },
     {
       "path": "tests/migracio-perfil-public.test.mjs",
+      "suite": "primary",
+      "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
+    },
+    {
+      "path": "tests/migracio-xat-consentiment-i-metadades.test.mjs",
       "suite": "primary",
       "reason": "Regressió portable del producte o d’una eina permanent; s’executa a la cadena primària, també quan està roja."
     },

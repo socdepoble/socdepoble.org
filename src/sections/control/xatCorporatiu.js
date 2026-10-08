@@ -15,11 +15,14 @@
  *
  *  · LLAVOR ('seed' o 'local'): l'id del padró ('socdepoble',
  *    XAT_SOCDEPOBLE_DE_LLAVOR), que resol el xat local. Cap crida.
- *  · REMOT: 'socdepoble' no és cap entitat del servidor. L'entitat es resol
- *    ABANS de fer l'enllaç, pel port del backend (loadPerfilPublic, capacitat
- *    'directori'), amb el slug declarat del pilot ('soc-de-poble',
- *    identitatsSeed.js). L'enllaç porta l'id que torna el port, siga quin
- *    siga el seu format.
+ *  · REMOT: l'id del padró no és l'id de cap entitat del servidor (allí és
+ *    el del proveïdor, un UUID a Supabase). L'entitat es resol ABANS de fer
+ *    l'enllaç, pel port del backend (loadPerfilPublic, capacitat
+ *    'directori'), amb el slug declarat del pilot (ENTITAT_PILOT_SLUG,
+ *    identitatsSeed.js). Ordre del Mestre (261007) · Eixe slug és
+ *    'socdepoble', el mateix text que l'id del padró: al port es demana el
+ *    slug, i l'enllaç porta l'id que torna el port, siga quin siga el seu
+ *    format; no el construïx amb l'id de la llavor.
  *    W4-10 (auditoria de Codex) · El format és cosa del proveïdor: ací només
  *    es comprova que el port ha resolt una entitat amb un id que cap en una
  *    consulta d'URL (esIdDeConsulta) i que l'enllaç, codificat, és una ruta

@@ -28,6 +28,16 @@ test('un grup envia p_kind group i p_parent_organization_id, sense p_lema', asyn
   expect(opcions.body).not.toHaveProperty('p_lema');
 });
 
+/* Ordre del Mestre (261008, grup C) · Un grup sense mare: la RPC rep
+   p_parent_organization_id null (2610081400 l'accepta) i res més canvia. */
+test('grup C · un grup sense mare envia p_parent_organization_id null, sense p_lema', async () => {
+  await expect(createOrganization({ kind: 'group', name: 'Colla', slug: 'colla' })).resolves.toEqual({ id: 'G' });
+  const { body } = m.request.mock.calls[0][2];
+  expect(body).toEqual({ p_tenant_id: POBLE, p_kind: 'group', p_name: 'Colla', p_slug: 'colla',
+    p_description: '', p_parent_organization_id: null });
+  expect(body).not.toHaveProperty('p_lema');
+});
+
 test('un grup amb lema i descripció els envia amb la mare', async () => {
   await createOrganization({ kind: 'group', name: 'Colla', slug: 'colla', parentOrganizationId: MARE,
     lema: 'Dolçaina i tabal', description: 'La colla del poble' });

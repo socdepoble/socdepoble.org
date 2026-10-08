@@ -31,6 +31,9 @@ import PerfilPublicSection from './PerfilPublicSection.jsx';
 import { TEXTOS_COMENTAR } from '../../components/PedraSeca/organismes/textosComentar.js';
 import { oblidaEntitatDelProjecte, RUTA_PROJECTE, rutaDAutoria } from '../../config/navigation.js';
 import { AGENTS_MAP } from '../../data/agentsSeed.js';
+/* Ordre del Mestre (261007) · La pàgina de l'entitat pilot s'obri pel seu
+   slug declarat, el de producció ('socdepoble'). */
+import { ENTITAT_PILOT_SLUG } from '../../data/identitatsSeed.js';
 
 const IAIA = { tipus: 'ia', id: 'iaia', slug: 'iaia-maria', nom: 'IAIA MarIA', avatar: '', hero: '', lema: 'Pensant en global', bio: 'Matriarca Digital', presentacioHtml: '<p>Cor antic i circuits nous.</p>', poble: 'La Torre de les Maçanes', esIA: true, publicat: true, propietari: false, copyright: '' };
 const ENTITAT = { ...IAIA, tipus: 'entitat', id: 'socdepoble', nom: 'Sóc de Poble', esIA: false, propietari: true, presentacioHtml: '' };
@@ -58,7 +61,7 @@ test('la IAIA porta avís d’intel·ligència artificial i el botó parla amb e
 });
 
 test('la fitxa pròpia d’una entitat s’edita des del Workspace i no porta avís d’IA', async () => {
-  mocks.id = 'soc-de-poble';
+  mocks.id = ENTITAT_PILOT_SLUG;
   mocks.load.mockResolvedValue(ENTITAT);
   render(<PerfilPublicSection agents={mocks.agents} />);
   expect(await screen.findByRole('heading', { level: 1, name: 'Sóc de Poble' })).toBeTruthy();
@@ -331,7 +334,7 @@ test('T66 · sense emoticona (o un DTO sense el camp) la cel·la queda buida, se
 const logosDelTitol = (container) => [...container.querySelectorAll('header.page-title img')];
 
 test('logotips · l’entitat del projecte (per identificador) porta el seu logotip rectangular, clar i fosc, davant de l’H1', async () => {
-  mocks.id = 'soc-de-poble';
+  mocks.id = ENTITAT_PILOT_SLUG;
   mocks.load.mockResolvedValue(ENTITAT);
   const { container } = render(<PerfilPublicSection agents={mocks.agents} />);
   await screen.findByRole('heading', { level: 1, name: 'Sóc de Poble' });
@@ -372,9 +375,9 @@ test('logotips · una altra entitat porta el seu logo_url, una sola imatge per a
 const UUID_DEL_PROJECTE = '5f1c2a9e-7b3d-4e8a-9c0f-1a2b3c4d5e6f';
 
 test('logotips · en remot, l’entitat del projecte (UUID amb el slug declarat) porta el rectangular des del primer render, mai l’avatar', async () => {
-  mocks.id = 'soc-de-poble';
+  mocks.id = ENTITAT_PILOT_SLUG;
   mocks.load.mockResolvedValue({
-    ...ENTITAT, id: UUID_DEL_PROJECTE, slug: 'soc-de-poble', propietari: false, avatar: '/assets/avatar-quadrat.png'
+    ...ENTITAT, id: UUID_DEL_PROJECTE, slug: ENTITAT_PILOT_SLUG, propietari: false, avatar: '/assets/avatar-quadrat.png'
   });
   /* Ningú més no l'ha registrat: ni l'app ni cap prova anterior. */
   expect(rutaDAutoria({ tipus: 'entitat', id: UUID_DEL_PROJECTE })).not.toBe(RUTA_PROJECTE);
@@ -465,7 +468,7 @@ test('avatar · una persona del catàleg amb la marca de Sóc de Poble com a ava
 });
 
 test('avatar · una entitat no porta avatar, porta el seu logotip (també la del projecte)', async () => {
-  mocks.id = 'soc-de-poble';
+  mocks.id = ENTITAT_PILOT_SLUG;
   mocks.load.mockResolvedValue(ENTITAT);
   const { container } = render(<PerfilPublicSection agents={mocks.agents} />);
   await screen.findByRole('heading', { level: 1, name: 'Sóc de Poble' });
@@ -478,4 +481,25 @@ test('fins i tot en seed una resposta nul·la del port és autoritativa', async 
   mocks.load.mockResolvedValue(null);
   render(<PerfilPublicSection agents={[{ id: 'iaia', name: 'IAIA inventada', type: 'AI' }]} />);
   expect(await screen.findByRole('heading', { level: 1, name: 'Perfil no trobat' })).toBeTruthy();
+});
+
+/* Ordre del Mestre (261008, grup C) · «Als perfils d'organització falta
+   l'opció per triar el Poble [...] perquè aparega correctament el nom del
+   poble a la barra taronja superior». La fila del directori porta town_name
+   (2610081401) i el mapejador del port en fa el `poble` de la fitxa. */
+test('grup C · el poble triat per l’organització (town_name) ix a la barra taronja de la seua fitxa pública', async () => {
+  const { perfilDOrganitzacio } = await import('../../data/supabase/perfils.js');
+  const fila = { id: 'o1', slug: 'forn', name: 'Forn de la Torre', kind: 'company', lema: 'Pa de llenya', description: '' };
+  mocks.id = 'forn';
+  mocks.load.mockResolvedValue(perfilDOrganitzacio({ ...fila, town_name: 'Benilloba' }));
+  const { container } = render(<PerfilPublicSection agents={mocks.agents} />);
+  await screen.findByRole('heading', { level: 1, name: 'Forn de la Torre' });
+  expect(container.querySelector('section.bar-orange .sp-card-author-location').textContent).toBe('Benilloba');
+  cleanup();
+  // Sense poble (o sense la columna, abans de la migració), la barra no s'inventa cap poble.
+  mocks.load.mockResolvedValue(perfilDOrganitzacio(fila));
+  const sense = render(<PerfilPublicSection agents={mocks.agents} />);
+  await screen.findByRole('heading', { level: 1, name: 'Forn de la Torre' });
+  expect(sense.container.querySelector('section.bar-orange .sp-card-author-location')?.textContent || '').toBe('');
+  expect(sense.container.textContent).not.toContain('Benilloba');
 });

@@ -42,9 +42,78 @@
     // ?compilat prova el mateix JS distribuït a WordPress, sense HMR.
     const compilat = new URLSearchParams(location.search).has('compilat');
     const pluginUrl = compilat ? '/wordpress-plugin/dist/' : '/';
+    /* Relleu 261007 (peça «netes», revisió) · En compilat, les fonts del
+       paquet, com les passa WordPress (fonts-href = dist/fonts/noto-sans.css,
+       marcatge.php): /fonts/ només existix al 3340, que servix public/, i el
+       paquet trossejat s'obri des d'un servidor estàtic (vegeu més avall). */
+    const fontsHref = compilat ? `${pluginUrl}fonts/noto-sans.css` : '/fonts/noto-sans.css';
     document.querySelector('soc-de-poble').setAttribute('plugin-url', pluginUrl);
+    document.querySelector('soc-de-poble').setAttribute('fonts-href', fontsHref);
     const entrada = compilat ? '/wordpress-plugin/dist/soc-de-poble.standalone.js' : '/src/embed.jsx';
-    await import(/* @vite-ignore */ entrada);
+    /* Relleu 261007 (peça «netes») · Decisió 5 del Mestre (261007, paquet
+       trossejat) · El paquet compilat és un CARREGADOR clàssic
+       (src/config/carregadorDelPaquet.js) que troba la seua carpeta amb
+       document.currentScript, i eixe valor només existix dins d'un script
+       clàssic: des d'un import() de mòdul és null, i el banc ?compilat pintava
+       la fallada «no sap on viu». Ara s'hi insereix un <script src> clàssic,
+       com el que imprimix WordPress (wp_enqueue_script, marcatge.php). També
+       val per al paquet monolític (un IIFE). En desenvolupament, l'entrada ESM
+       de sempre.
+       Relleu 261007 (peça «netes», revisió) · On viu el banc importa. El
+       servidor de desenvolupament de Vite (3340) transforma tota petició .js,
+       també la d'un <script> clàssic. El carregador acaba en
+       (url) => import(url) (codiDelCarregador, vite.standalone.config.js), un
+       import() no literal, i vite:import-analysis el reescriu amb
+       __vite__injectQuery i li afig al principi un import estàtic de
+       /@vite/client. En un script clàssic això és un SyntaxError: el carregador
+       no s'executa, no hi ha cap SocDePoble provisional i no es pinta cap
+       .sdp-arranc-fallida. Per tant:
+         · el paquet TROSSEJAT amb ?compilat s'obri des d'un servidor estàtic
+           sobre l'arrel del repositori, sense transformacions (per exemple,
+           `python3 -m http.server 8000` a l'arrel i
+           http://localhost:8000/tests/manual/enxufe-responsive.html?compilat);
+           ací el carregador demana ell els trossos de dist/trossos/;
+         · el 3340 servix l'entrada ESM de desenvolupament i el paquet
+           MONOLÍTIC, que no porta cap import() real i Vite el deixa intacte.
+       Si l'script es carrega però no deixa cap window.SocDePoble (el carregador
+       i el monolític el definixen en executar-se), el banc ho diu a #resultat
+       en lloc de quedar-se en blanc. Un SyntaxError no dispara l'event error de
+       l'element <script>, només el load: per això es mira el global. */
+    const avisa = (text) => {
+      document.querySelector('#resultat').textContent = text;
+      throw new Error(text);
+    };
+    /* Els primers bytes del fitxer, tal com els servix este servidor. */
+    const principiDe = async (url) => {
+      try {
+        const lector = (await fetch(url)).body.getReader();
+        const { value } = await lector.read();
+        await lector.cancel();
+        return new TextDecoder().decode(value);
+      } catch {
+        return '';
+      }
+    };
+    if (compilat) {
+      try {
+        await new Promise((resolve, reject) => {
+          const script = document.createElement('script');
+          script.src = entrada;
+          script.addEventListener('load', resolve, { once: true });
+          script.addEventListener('error', () => reject(new Error(`No s’ha pogut carregar ${entrada}`)), { once: true });
+          document.head.append(script);
+        });
+      } catch (motiu) {
+        avisa(motiu.message);
+      }
+      if (!Object.prototype.hasOwnProperty.call(window, 'SocDePoble')) {
+        avisa(/^\s*import[\s{]/.test(await principiDe(entrada))
+          ? `${entrada} arriba reescrit amb un import estàtic: el servidor de desenvolupament de Vite transforma el carregador del paquet trossejat i, en un <script> clàssic, és un SyntaxError. Obri el banc ?compilat des d’un servidor estàtic sobre l’arrel del repositori (per exemple, python3 -m http.server 8000 i http://localhost:8000/tests/manual/enxufe-responsive.html?compilat).`
+          : `${entrada} s’ha carregat però no s’ha executat: no hi ha cap window.SocDePoble. Mira la consola.`);
+      }
+    } else {
+      await import(/* @vite-ignore */ entrada);
+    }
     const primer = document.querySelector('#primer');
     const desti = document.querySelector('#destinacio');
     const ample = document.querySelector('#ample');
@@ -77,7 +146,7 @@
       if (document.querySelector('#segon')) return;
       const caixa = document.createElement('div'); caixa.className = 'marc'; caixa.id = 'segon';
       const el = document.createElement('soc-de-poble');
-      el.setAttribute('plugin-url',pluginUrl); el.setAttribute('fonts-href','/fonts/noto-sans.css');
+      el.setAttribute('plugin-url',pluginUrl); el.setAttribute('fonts-href',fontsHref);
       el.setAttribute('ruta-inicial','/legal'); caixa.append(el); desti.append(caixa);
       event.target.disabled = true; ajusta();
     });

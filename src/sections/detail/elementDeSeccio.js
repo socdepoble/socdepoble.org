@@ -19,17 +19,24 @@
  * `targeta` amb les dades de l'original (títol, imatge, autor, data) per a
  * la fitxa del Bloc i la mini-card de Connectar: quan l'original es resol,
  * manen estes dades, mai les que l'URL de Connectar va escriure a l'origen.
+ *
+ * Ordre E del Mestre (261007, prompt 261007_1628) · El logotip propi d'un
+ * element (logo_image, el que la persona puja damunt de l'H1 a l'editor de
+ * Notes): logoEntitatDElement, pur, per als que es pinten sense el port, i
+ * useLogoEntitatDElement, que hi afig els sdp-media:// resolts pel port.
  */
 import { useMemo } from 'react';
 import { useMur } from '../mur/MurContext';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
 import { useMultimedia } from '../multimedia/MultimediaContext';
 import { useUIActions } from '../../app/contexts/UIContext';
-import { buildDetailSectionMeta } from './detailSectionMeta.jsx';
+import { buildDetailSectionMeta, imatgePropiaDelDetall } from './detailSectionMeta.jsx';
 import { rutaDePerfilDAutor } from '../../config/navigation.js';
 import { resolveAsset } from '../../config/assetResolver.js';
 import { COPYRIGHT_SDP, dataDElement } from '../../components/universal/editorial.js';
-import { DEFAULT_AUTHOR } from '../../components/universal/UniversalUtils.js';
+import { DEFAULT_AUTHOR, esAvatarSegur, esMarcaDeLEntitat } from '../../components/universal/UniversalUtils.js';
+import { useResolvedAssetState } from '../../hooks/useResolvedAsset.js';
+import { esFontImatgePropia } from '../../utils/sanitize.js';
 import { pageKeyDeRuta, paginaDeRuta, propsDePaginaDeText } from '../text/paginaDeText.js';
 
 const CAP = Object.freeze([]);
@@ -42,19 +49,111 @@ const FONT_DE_SECCIO = new Map([
   ['mur', 'mur'], ['mercat', 'mur'], ['events', 'mur'], ['pobles', 'core'], ['multimedia', 'media']
 ]);
 
-/** L'element d'una secció per id o per slug; null si no hi és. */
+/** L'element d'una secció per id o, si cap id no casa, per slug; null si no hi és.
+ *  Auditoria 261007 (B) · Abans es tornava el PRIMER element que casava per
+ *  id O per slug. El `slug` d'una fila de section_submissions ve del payload
+ *  (content.js l'estén sencer) i les files arriben de la més nova a la més
+ *  vella: una publicació posterior amb slug igual a l'id d'una altra li feia
+ *  ombra i en segrestava el detall, Connectar i el lector del MAS. L'id mana
+ *  a tota la llista; el slug només es mira si cap id no hi casa. */
 export function trobaElement(section, itemId) {
   if (!Array.isArray(section?.items) || itemId == null || itemId === '') return null;
   const clau = String(itemId);
-  return section.items.find((item) => (item?.id != null && String(item.id) === clau)
-    || (item?.slug != null && String(item.slug) === clau)) || null;
+  return section.items.find((item) => item?.id != null && String(item.id) === clau)
+    || section.items.find((item) => item?.slug != null && String(item.slug) === clau)
+    || null;
 }
+
+/* Ordre E del Mestre (261007, prompt 261007_1628: «no es pot posar el
+   logotip damunt de l'H1») · El logotip que la persona puja des de l'editor
+   de Notes («Editar logotip», logoImage) arriba a la publicació com a
+   `logo_image` (NotesContext · publishNote) i la pàgina publicada el pinta
+   per la via c) de PageFrame (logoEntitat), davant de la marca de sèrie (via
+   d) i de l'avatar redó (via f). El filtre és el de l'avatar de capçalera de
+   PageFrame (esAvatarSegur i esMarcaDeLEntitat): isSafeAsset abans i després
+   de resoldre'l (i, des de la Decisió 3 del Mestre del 261007, també el
+   mode estricte del Mur: vegeu logoDeSrc), i mai la marca de Sóc de Poble,
+   que ja té la seua via amb el clar i el fosc (sola, la negra es perdria en
+   el tema fosc).
+   Relleu 261007 («Límits» §5) · Ací hi havia còpies de camiDe i de
+   esMarcaDeLEntitat (esMarcaDeSocDePoble), perquè PageFrame no les exportava.
+   Ara totes dues guardes són d'UniversalUtils.js, amb el mateix cos, i el
+   detall, PageFrame i mercat/imatgesDeProducte.js en lligen la mateixa.
+   El logoDescrit de PageFrame no valida res: el filtre va abans. */
+const DEL_PORT = 'sdp-media://';
+const textNet = (valor) => (typeof valor === 'string' ? valor.trim() : '');
+
+/* El descriptor logoEntitat d'un src que ja es pot pintar, o null.
+   Decisió 3 del Mestre (261007, confirmada) · «Imatges externes al Mur:
+   PROHIBIDES (PRIVACITAT).» Revisió adversarial del 261007 · El logotip
+   també és una imatge del Mur (logo_image només el porta una publicació:
+   NotesContext · publishNote, sectionId 'mur'), i isSafeAsset admet qualsevol
+   https: un logo_image d'un servidor de fora (o un avatar de Google) es
+   demanava des de /mur/:id, el lector del MAS i ConnexioDetall. Ara, a més del
+   filtre de sempre, el mode estricte (esFontImatgePropia de utils/sanitize.js)
+   abans i després de resoldre'l. Tots dos: el que no hi passa queda com abans
+   (null i la capçalera de sempre), i un sdp-media:// el continua resolent el
+   port (useLogoEntitatDElement). Ho hereten paginaDElement i
+   useLogoEntitatDElement, perquè els dos passen per ací. */
+function logoDeSrc(valor) {
+  const src = textNet(valor);
+  if (!src || esMarcaDeLEntitat(src)) return null;
+  const resolt = resolveAsset(src);
+  if (!esAvatarSegur(src) || !esFontImatgePropia(src) || !esFontImatgePropia(resolt)) return null;
+  return { clar: resolt, alt: '' };
+}
+
+/** El logotip propi d'un element (logo_image) com a logoEntitat de PageFrame
+ *  ({ clar, alt }), o null. Un sdp-media:// no es pot pintar sense el port:
+ *  ací torna null i el resol useLogoEntitatDElement. */
+export function logoEntitatDElement(item) {
+  return logoDeSrc(item?.logo_image);
+}
+
+/** logoEntitatDElement, també per a un logo_image sdp-media:// (el resol el
+ *  port, useResolvedAssetState, i la URL resolta passa pel mateix filtre):
+ *  { logo, carregant }. `logo`, el descriptor o null: mentre es resol, o si
+ *  no es pot resoldre, null i la capçalera de sempre. `carregant`, cert només
+ *  mentre el port resol un sdp-media://.
+ *  Revisió adversarial del 261007 · Sense `carregant`, un lector pintava
+ *  l'avatar redó de qui signa (PageFrame, via f) mentre el port resolia el
+ *  logotip, i el canviava pel logotip en arribar: la capçalera mostrava una
+ *  identitat que no era la triada. Amb `carregant`, el lector calla l'avatar
+ *  fins que se sap si hi ha logotip (ItemDetailSection, PublicacioDetall). */
+export function useLogoEntitatDElement(item) {
+  const valor = textNet(item?.logo_image);
+  const delPort = valor.startsWith(DEL_PORT);
+  const { url, isLoading } = useResolvedAssetState(delPort ? valor : '');
+  return { logo: logoDeSrc(delPort ? url : valor), carregant: delPort && isLoading };
+}
+
+/* Decisió 3 del Mestre (261007, confirmada) · «Imatges externes al Mur:
+   PROHIBIDES (PRIVACITAT).» La portada i l'avatar de la barra taronja del
+   detall passen pel mode estricte del Mur (esFontImatgePropia de
+   utils/sanitize.js: cap servidor de tercers, tampoc els avatars OAuth), tant
+   el valor que arriba com el resolt (resolveAsset), que és el que demanaria
+   la pàgina. El que hi passa torna intacte: es pinta com abans. Un valor buit
+   torna tal qual (sense avatar, PageFrame posa el de sèrie, com sempre). Un
+   de fora torna null, no undefined: PageFrame no hi posa el logotip de Sóc de
+   Poble (signaria amb la marca la publicació d'un veí) i la barra pinta la
+   silueta de sempre; sense portada, cap. Ho hereten tots els que lligen estes
+   props: ItemDetailSection, el lector del MAS (ConnexioDetall), Connectar i
+   les targetes incrustades (targetaDElement, SincronitzacioTargetes).
+   Revisió adversarial del 261007 · És una regla del Mur: només les seccions
+   que el Mur llig (section_submissions 'mur', 'mercat' i 'events', loadMur de
+   data/supabase/content.js). Pobles i Multimèdia queden com abans (Llei del
+   Píxel) fins que el Mestre diga si també hi van.
+   Relleu 261007 (peça «imatges-detall») · La regla (imatgePropiaDelDetall) és
+   ara de detailSectionMeta.jsx, una sola vegada: la lligen també l'avatar redó
+   de davant de l'H1, el carrusel, les variacions, og:image i el lector del
+   MAS (PublicacioDetall). */
 
 /** Les props de la UniversalPage d'un element: les de la pàgina de detall
  *  (ItemDetailSection), sense les accions ni chrome. L'autoria aporta el logotip. */
 export function paginaDElement(section, item) {
   const titol = section.getTitle(item);
   const rutaDAutoria = rutaDePerfilDAutor(item);
+  const logoPropi = logoEntitatDElement(item);
   let authorName = item.author_name;
   let authorLocation = item.author_location || item.location;
   let authorAvatar = item.author_avatar || item.avatar_url || item.avatarUrl;
@@ -72,7 +171,7 @@ export function paginaDElement(section, item) {
     title: titol,
     subtitle: section.getSubtitle(item),
     lead: item.entradilla,
-    heroImage: section.getImage(item),
+    heroImage: imatgePropiaDelDetall(section, section.getImage(item)),
     heroAlt: titol,
     labels: [
       { text: section.label, className: 'sdp-badge-system' },
@@ -82,10 +181,13 @@ export function paginaDElement(section, item) {
     copyright: item.copyright || COPYRIGHT_SDP,
     authorName,
     authorLocation,
-    authorAvatar,
+    authorAvatar: imatgePropiaDelDetall(section, authorAvatar),
     /* La marca depén de la identitat declarada, encara que la boina del
-       Mercat porte al perfil públic. Cap nom visible dona un logotip. */
-    ...(rutaDAutoria === DEFAULT_AUTHOR.href ? { logoEntitat: DEFAULT_AUTHOR.logo } : {}),
+       Mercat porte al perfil públic. Cap nom visible dona un logotip.
+       Ordre E (261007) · El logotip propi de l'element (logo_image) hi passa
+       davant: el que va triar qui publica. */
+    ...(logoPropi ? { logoEntitat: logoPropi }
+      : rutaDAutoria === DEFAULT_AUTHOR.href ? { logoEntitat: DEFAULT_AUTHOR.logo } : {}),
     /* T4: l'autoria de la barra taronja enllaça al perfil públic de qui signa. */
     authorHref: section.getAuthorHref ? section.getAuthorHref(item) : rutaDAutoria,
     /* T51 · la regla de data viu a editorial.js (pura, sense React). */

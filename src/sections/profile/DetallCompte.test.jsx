@@ -3,7 +3,14 @@ import { act, cleanup, fireEvent, render, screen, within } from '@testing-librar
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 const m = vi.hoisted(() => ({
   navigate: vi.fn(), logout: vi.fn(), estatBaixa: vi.fn(), estatConsentiment: vi.fn(), exporta: vi.fn(), pagina: null,
+  /* Grup C (261008) · els pobles del contingut core i el context del Perfil (null: sense proveïdor). */
+  towns: [], perfil: null,
+  /* Correcció 261008 · l'avís efímer de l'App (la confirmació d'«Eixir»). */
+  toast: vi.fn(),
 }));
+vi.mock('@/components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: m.toast }) }));
+vi.mock('../../app/contexts/CoreContentContext.jsx', () => ({ useCoreContent: () => ({ status: 'ready', towns: m.towns }) }));
+vi.mock('./PerfilContext.jsx', async (importOriginal) => ({ ...(await importOriginal()), usePerfilOpcional: () => m.perfil }));
 vi.mock('../../app/contexts/RouterContext', () => ({ useNavigate: () => m.navigate, Link: ({ to, children }) => <a href={to}>{children}</a> }));
 vi.mock('../../app/contexts/SessionContext', () => ({ useSession: () => ({ logout: m.logout }) }));
 vi.mock('../../components/universal/UniversalPage', () => ({
@@ -37,7 +44,9 @@ function pinta(identitat = jo, extra = {}) {
 const seccio = (titol) => screen.getByRole('heading', { level: 2, name: titol }).closest('section');
 
 beforeEach(() => {
-  for (const f of [m.navigate, m.logout, m.estatBaixa, m.estatConsentiment, m.exporta]) f.mockReset();
+  for (const f of [m.navigate, m.logout, m.estatBaixa, m.estatConsentiment, m.exporta, m.toast]) f.mockReset();
+  m.towns = [];
+  m.perfil = null;
 });
 afterEach(() => { cleanup(); vi.restoreAllMocks(); });
 
@@ -98,13 +107,17 @@ test('amb una baixa en curs, «Estat del perfil» no es pot desar i diu per què
   expect(within(bloc).getByText(/Privacitat i dades/)).toBeTruthy();
 });
 
-test('una organització mostra el correu, l’identificador i les accions pendents', () => {
+test('una organització mostra el poble, el correu, l’identificador i les accions pendents', () => {
   pinta(forn);
   const titols = screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent);
-  /* T43 (ordre del Mestre, 260928) · el correu opcional de l'organització va primer. */
-  expect(titols).toEqual(['Correu de l’organització', 'Correu a la fitxa pública', 'Membres', 'Identificador', 'Fitxa pública', 'Eixir de l’organització']);
+  /* T43 (ordre del Mestre, 260928) · el correu opcional de l'organització;
+     grup C (ordre del Mestre, 261008) · el poble, abans. */
+  expect(titols).toEqual(['Poble', 'Correu de l’organització', 'Correu a la fitxa pública', 'Membres', 'Identificador', 'Fitxa pública', 'Eixir de l’organització']);
   expect(within(seccio('Identificador')).getByText('forn')).toBeTruthy();
-  expect(screen.getByText('Correu, identificador, membres i eixida de Forn.')).toBeTruthy();
+  expect(screen.getByText('Poble, correu, identificador, membres i eixida de Forn.')).toBeTruthy();
+  /* Sense el port de membres (ni el context del Perfil), «Membres» és pendent, com abans. */
+  expect(within(seccio('Membres')).getByRole('button', { name: 'Membres' }).disabled).toBe(true);
+  expect(within(seccio('Membres')).getByText('Aquesta acció encara no està implementada en aquesta versió.')).toBeTruthy();
   /* Sense el correu llegit encara, els dos ajustos es pinten tancats i ho diuen. */
   expect(within(seccio('Correu de l’organització')).queryByRole('textbox')).toBeNull();
   expect(within(seccio('Correu de l’organització')).getByText('Carregant el correu de l’organització…')).toBeTruthy();
@@ -194,6 +207,116 @@ test('261007 · la barra taronja del compte porta a la fitxa pública pròpia (p
   const { ENTITAT_PILOT_ID } = await import('../../data/identitatsSeed.js');
   pinta({ ...forn, id: ENTITAT_PILOT_ID });
   expect(m.pagina.topBarData.authorHref).toBe('/projecte');
+});
+
+/* ── Grup C (ordre del Mestre, 261008) · el poble i els membres ── */
+
+test('grup C · qui administra tria el poble entre els del node; es desa pel nom i la barra taronja el porta', async () => {
+  m.towns = [{ id: 'b', title: 'Benilloba' }, { id: 'a', title: 'Alcoi' }];
+  pinta({ ...forn, dades: { ...forn.dades, town_name: 'Sella' } });
+  expect(m.pagina.topBarData.authorLocation).toBe('Sella');
+  const bloc = seccio('Poble');
+  const selector = within(bloc).getByLabelText('Nou valor per a poble:');
+  expect(selector.tagName).toBe('SELECT');
+  expect([...selector.options].map((o) => o.textContent)).toEqual(['Tria un poble…', 'Alcoi', 'Benilloba', 'Sella']);
+  expect(selector.value).toBe('Sella');
+  fireEvent.change(selector, { target: { value: 'Benilloba' } });
+  await act(async () => { fireEvent.submit(selector.closest('form')); });
+  expect(props.guardarAjust).toHaveBeenCalledWith('O', 'poble', 'Benilloba');
+  expect(within(bloc).getByRole('status').textContent).toBe('Desat correctament.');
+});
+
+/* Correcció 261008 · Integració amb el catàleg de veres: com PerfilContext
+   (aplicaColumnes), el pare porta el poble desat a identitat.dades i «El
+   compte» refà l'ajust amb el valor nou. «Desat correctament.» es queda. */
+function ArnesCompte() {
+  const [identitat, setIdentitat] = React.useState({ ...forn, dades: { ...forn.dades, town_name: 'Sella' } });
+  const guardarAjust = vi.fn(async (_id, _ajust, valor) => {
+    setIdentitat((previ) => ({ ...previ, dades: { ...previ.dades, town_name: valor } }));
+  });
+  return <DetallCompte identitat={identitat} guardarAjust={guardarAjust} pujaMitja={vi.fn()} />;
+}
+
+test('grup C · desar el poble amb el pare que el torna: el selector i la barra taronja porten el nou, i el missatge es veu', async () => {
+  m.towns = [{ id: 'b', title: 'Benilloba' }, { id: 's', title: 'Sella' }];
+  render(<ArnesCompte />);
+  const selector = within(seccio('Poble')).getByLabelText('Nou valor per a poble:');
+  fireEvent.change(selector, { target: { value: 'Benilloba' } });
+  await act(async () => { fireEvent.submit(selector.closest('form')); });
+  expect(m.pagina.topBarData.authorLocation).toBe('Benilloba');
+  expect(within(seccio('Poble')).getByLabelText('Nou valor per a poble:').value).toBe('Benilloba');
+  expect(within(seccio('Poble')).getByRole('status').textContent).toBe('Desat correctament.');
+});
+
+test('grup C · sense cap poble al node, el selector continua obert (l’opció buida i el desat)', () => {
+  pinta(forn);
+  const selector = within(seccio('Poble')).getByLabelText('Nou valor per a poble:');
+  expect([...selector.options].map((o) => o.value)).toEqual(['']);
+  expect(within(seccio('Poble')).getByRole('button', { name: 'Guardar' })).toBeTruthy();
+});
+
+test('grup C · un membre veu el poble però no el canvia', () => {
+  m.towns = [{ id: 'b', title: 'Benilloba' }];
+  pinta({ ...forn, dades: { ...forn.dades, role: 'member', town_name: 'Benilloba' } });
+  const bloc = seccio('Poble');
+  expect(within(bloc).queryByRole('combobox')).toBeNull();
+  expect(within(bloc).getByText('Benilloba')).toBeTruthy();
+  expect(within(bloc).getByText('Només qui administra aquesta organització ho pot canviar.')).toBeTruthy();
+});
+
+test('grup C · sense la migració (PGRST204), desar el poble ho diu en valencià, no amb el text cru', async () => {
+  m.towns = [{ id: 'b', title: 'Benilloba' }];
+  pinta(forn);
+  props.guardarAjust.mockRejectedValueOnce(new Error('Supabase 400: {"code":"PGRST204","message":"Could not find the \'town_name\' column of \'organizations\' in the schema cache"}'));
+  const selector = within(seccio('Poble')).getByLabelText('Nou valor per a poble:');
+  fireEvent.change(selector, { target: { value: 'Benilloba' } });
+  await act(async () => { fireEvent.submit(selector.closest('form')); });
+  const avis = within(seccio('Poble')).getByRole('alert').textContent;
+  expect(avis).toBe('Este camp encara no té columna al servidor («town_name»): no s’ha desat. Cal aplicar al servidor la migració pendent.');
+  expect(avis).not.toContain('Could not find');
+});
+
+const accionsDeMembres = () => ({
+  ambMembres: true,
+  usuari: { id: 'U' },
+  llistaMembres: vi.fn(async () => [
+    { tipus: 'persona', id: 'P', nom: 'Pepa', avatar: '', rol: 'owner', desDe: null },
+    { tipus: 'persona', id: 'U', nom: 'Jo', avatar: '', rol: 'admin', desDe: null },
+  ]),
+  desaMembre: vi.fn(), llevaMembre: vi.fn(async () => ({ llevat: true })), cercaCandidats: vi.fn(async () => []),
+});
+
+test('grup C · amb ambMembres i el context del Perfil, «Membres» pinta la gestió i «Eixir» demana confirmació', async () => {
+  m.perfil = accionsDeMembres();
+  pinta({ ...forn, dades: { ...forn.dades, role: 'admin' } }, { ambMembres: true });
+  expect(await within(seccio('Membres')).findByRole('region', { name: 'Membres de Forn' })).toBeTruthy();
+  expect(m.perfil.llistaMembres).toHaveBeenCalledWith('O', expect.objectContaining({ signal: expect.any(AbortSignal) }));
+  const eixir = within(seccio('Eixir de l’organització')).getByRole('button', { name: 'Eixir de l’organització' });
+  expect(eixir.disabled).toBe(false);
+  fireEvent.click(eixir);
+  const dialeg = screen.getByRole('dialog', { name: 'Eixir de Forn?' });
+  expect(m.perfil.llevaMembre).not.toHaveBeenCalled();
+  await act(async () => { fireEvent.click(within(dialeg).getByRole('button', { name: 'Eixir' })); });
+  expect(m.perfil.llevaMembre).toHaveBeenCalledWith('O', { tipus: 'persona', id: 'U' });
+  // Correcció 261008 · la confirmació va a l'avís efímer de l'App, que sobreviu a esta pàgina.
+  expect(m.toast).toHaveBeenCalledWith('Ja no formes part de Forn.', 'success');
+});
+
+test('grup C · ambMembres sense el context del Perfil, o amb un port que no en sap, continua pendent', () => {
+  pinta({ ...forn, dades: { ...forn.dades, role: 'admin' } }, { ambMembres: true });
+  expect(within(seccio('Membres')).getByRole('button', { name: 'Membres' }).disabled).toBe(true);
+  expect(within(seccio('Eixir de l’organització')).getByRole('button', { name: 'Eixir de l’organització' }).disabled).toBe(true);
+  cleanup();
+  m.perfil = { ...accionsDeMembres(), ambMembres: false };
+  pinta({ ...forn, dades: { ...forn.dades, role: 'admin' } }, { ambMembres: true });
+  expect(within(seccio('Membres')).getByRole('button', { name: 'Membres' }).disabled).toBe(true);
+  expect(m.perfil.llistaMembres).not.toHaveBeenCalled();
+  cleanup();
+  /* I el context amb capacitat, però sense que PerfilShell ho declare (undefined), tampoc. */
+  m.perfil = accionsDeMembres();
+  pinta({ ...forn, dades: { ...forn.dades, role: 'admin' } });
+  expect(within(seccio('Membres')).getByRole('button', { name: 'Membres' }).disabled).toBe(true);
+  expect(m.perfil.llistaMembres).not.toHaveBeenCalled();
 });
 
 test('sense identitat no pinta res', () => {

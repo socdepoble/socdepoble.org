@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import { CircleUserRound, Crop, ImageUp, MapPin } from 'lucide-react';
+import { Circle, CircleUserRound, Crop, ImageUp, MapPin, RectangleHorizontal, Square } from 'lucide-react';
 import { Especimen } from '../Especimen.jsx';
 import { Alerta, Avatar, Boto } from '../../../../components/PedraSeca/index.js';
 import { DialegEnquadrament } from '../../../../components/universal/enquadrament/DialegEnquadrament.jsx';
-import { midaSortida } from '../../../../components/universal/enquadrament/enquadrament.js';
+import { midaSortida, opcionsSortida } from '../../../../components/universal/enquadrament/enquadrament.js';
+import { AJUDA_FOTO, FORMES, useEnquadramentImatge } from '../../../../components/universal/enquadrament/useEnquadramentImatge.jsx';
 import { PRECISIONS, textUbicacio } from '../../../../components/universal/enquadrament/geolocalitzacio.js';
 import { useEnquadramentAvatar } from '../../../profile/useEnquadramentAvatar.jsx';
 import { resolRecursPropi } from '../../../../config/assetResolver';
@@ -50,6 +51,16 @@ function textMetadades(meta) {
     : 'Cap coordenada: el fitxer no en porta o no has marcat l’opció.';
 }
 
+/* Onada 4 (retallador senzill, ordre del Mestre 261008) · El text del fitxer
+   que ix de la finestra senzilla: la mida la decidix la forma (exacta per al
+   logotip i la capçalera; fins a 600 px per a l'avatar). */
+const NOMS_FORMA = Object.freeze({ avatar: 'avatar en cercle', logotip: 'logotip quadrat', capcalera: 'capçalera' });
+function descriuSenzill(forma, fitxer, { rect }) {
+  const f = FORMES[forma];
+  const mida = opcionsSortida(rect, fitxer.type, { ampladaMaxima: f.midaSortida, ...(f.exacta ? { exacta: f.exacta } : null) });
+  return `${mida.amplada} × ${mida.alcada} px${f.exacta ? ' exactes' : ''}, ${NOMS_FORMA[forma]}, ${Math.max(1, Math.round(fitxer.size / 1024))} KB`;
+}
+
 /** Un resultat amb la seua vista (objectURL), que es revoca en canviar-lo i en eixir. */
 function useResultat() {
   const [resultat, setResultat] = useState(null);
@@ -69,6 +80,20 @@ export default function EspecimenEnquadrament() {
   const [fontGeo, setFontGeo] = useState(null);
   const [resultatGeo, setResultatGeo] = useResultat();
   const inputGeo = useRef(null);
+
+  /* Onada 4 (retallador senzill) · Les tres imatges de la fitxa del Perfil,
+     pel mateix camí (useEnquadramentImatge): només canvien la proporció i la
+     màscara. L'espècimen no puja res. */
+  const [resultatSenzill, setResultatSenzill] = useResultat();
+  const senzill = (forma) => ({
+    forma,
+    onEnquadrat: async (fitxer, info) => {
+      setResultatSenzill({ url: urlDe(fitxer), text: descriuSenzill(forma, fitxer, info), redo: forma === 'avatar' });
+    },
+  });
+  const avatarSenzill = useEnquadramentImatge(senzill('avatar'));
+  const logotipSenzill = useEnquadramentImatge(senzill('logotip'));
+  const capcaleraSenzill = useEnquadramentImatge(senzill('capcalera'));
 
   /* L'avatar, pel mateix camí que el Perfil: només quadrat i sense geolocalitzar. */
   const avatar = useEnquadramentAvatar({
@@ -114,8 +139,8 @@ export default function EspecimenEnquadrament() {
     <>
     <Llinatge id="enquadrament" />
     <Especimen id="enquadrament" nom="DialegEnquadrament · re-enquadrar una foto"
-      fitxer="src/components/universal/enquadrament/DialegEnquadrament.jsx · src/sections/profile/useEnquadramentAvatar.jsx"
-      descripcio="La foto de capçalera d’una nota és també la miniatura del llistat i la targeta del Mur. Abans de desar-la, este diàleg deixa triar la forma (quadrat de sèrie) i moure-la perquè el que importa no quede tallat. El retall es guarda dins de l’arxiu: la resta de la foto no es conserva. Si la nota ja és al Mur, la targeta no canvia fins que es torna a publicar. L’avatar del Perfil hi passa sempre amb una sola forma, el quadrat, i sense l’opció de geolocalitzar."
+      fitxer="src/components/universal/enquadrament/DialegEnquadrament.jsx · src/components/universal/enquadrament/useEnquadramentImatge.jsx · src/sections/profile/useEnquadramentAvatar.jsx"
+      descripcio="La foto de capçalera d’una nota és també la miniatura del llistat i la targeta del Mur. Abans de desar-la, este diàleg deixa triar la forma (quadrat de sèrie) i moure-la perquè el que importa no quede tallat. El retall es guarda dins de l’arxiu: la resta de la foto no es conserva. Si la nota ja és al Mur, la targeta no canvia fins que es torna a publicar. L’avatar de l’ajust d’imatge hi passa sempre amb una sola forma, el quadrat, i sense l’opció de geolocalitzar. Les imatges de la fitxa del Perfil (avatar en cercle, logotip i capçalera) passen per la finestra senzilla, calcada de la de Claude."
       contracte={[
         ['obert', 'boolean', 'true', 'El pare el sol muntar només quan cal (la closca, l’espècimen).'],
         ['font', 'File | string', '—', 'Una foto nova (File) o l’adreça ja resolta de la capçalera existent.'],
@@ -126,6 +151,9 @@ export default function EspecimenEnquadrament() {
         ['sortida', '{ ampladaMaxima, format, qualitat } | null', 'null', 'Onada 4 · Amb sortida, el diàleg sempre recodifica (mai torna l’original). L’avatar en passa una per a cada foto nova (sortidaAvatar).'],
         ['onDesa', '(fitxer, { format, rect, sencera }, metadades) => Promise<boolean>', '—', 'El pare el tanca. Si llança, el missatge ix dins del diàleg i continua obert. metadades, sempre present: { geolocalitzacio: { lat, lng, precisio_m, origen } | null, dataCaptura | null }.'],
         ['carregador / exportador / dibuixant', 'funcions', 'imatgeCanvas.js', 'Injectables per a les proves (jsdom no té canvas).'],
+        ['senzill', 'boolean', 'false', 'Onada 4 · La finestra de Claude per a les imatges de la fitxa: el visor sol, la fila de zoom (−, lliscador, +) i la roda, i Restablir, Cancel·lar i Guardar. Sense lliscadors de posició, sense Forma, sense geolocalització i sense la X (Escape tanca). Sense la prop, el T46 de sempre.'],
+        ['mascara', "null | 'cercle'", 'null', 'Onada 4 · Amb el mode senzill, el vel enfosquix el que queda fora del cercle (l’avatar). El fitxer continua quadrat.'],
+        ['sortida.exacta', '{ amplada, alcada } | absent', '—', 'Onada 4 · El fitxer fa exactament eixa mida: el logotip, 600 × 600; la capçalera, 1.200 × 675.'],
       ]}
       a11y={[
         'Tres lliscadors natius amb etiqueta (ampliació en percentatge, posició horitzontal i vertical): tot es fa amb teclat.',
@@ -134,16 +162,18 @@ export default function EspecimenEnquadrament() {
         'Forma en ràdios natius dins d’un fieldset; errors en línia amb role="alert".',
         'Escape tanca sempre; el focus torna al botó que l’ha obert o, després de desar, a la capçalera nova.',
         'L’avatar: cancel·lar no puja res i el focus torna a «Triar la imatge» (o al selector de fitxers de l’ajust).',
+        'La finestra senzilla: − i + són botons amb nom («Allunyar», «Apropar») i zona tàctil sencera, i es desactiven als límits; el lliscador «Ampliació» diu el percentatge; les fletxes, + i − i Retorn funcionen sobre el visor; la roda no desplaça el diàleg. Sense la X, Escape tanca.',
       ]}
       fes={[
         'El quadrat de sèrie: capçalera, miniatura i targeta ensenyen el mateix enquadrament (la targeta del Mur d’una nota ja publicada, quan es torna a publicar).',
         'Ensenyar el resultat exacte abans de desar (el visor és el retall).',
         'Una sola imatge per diàleg.',
         'L’avatar, sempre per useEnquadramentAvatar: un sol lloc decidix la forma (1:1), el títol i la privacitat.',
+        'Les imatges de la fitxa del Perfil, per useEnquadramentImatge (la taula FORMES): avatar en cercle, logotip quadrat de 600 × 600 i capçalera 16:9 de 1.200 × 675, amb 10 MB d’entrada dits abans de triar.',
       ]}
       noFacis={[
         'Retallar sense ensenyar el resultat.',
-        'Fer-lo servir per a la capçalera del Perfil: T46 la deixa com estava (al Perfil només s’enquadra l’avatar).',
+        'Tornar a posar un diàleg intermedi entre el botó i la finestra: cada imatge té el seu botó.',
         'Oferir a l’avatar una altra forma que el quadrat, o geolocalitzar-lo.',
         'Prometre que es pot recuperar la part retallada: no es guarda.',
       ]}>
@@ -207,9 +237,37 @@ export default function EspecimenEnquadrament() {
         </figure>
       ) : null}
 
+      <h4>Les imatges de la fitxa: la finestra senzilla</h4>
+      <p className="sdp-camp__ajuda">
+        Al Perfil, «Capçalera» i «Avatar» (o «Logotip») són dos botons separats i obrin la mateixa finestra, calcada de la de Claude: arrossegar, el zoom amb − i +, el lliscador o la roda, i Restablir, Cancel·lar i Guardar. Abans de triar la foto es diu què s’admet: {AJUDA_FOTO}
+      </p>
+      <div className="sdp-alerta__accions">
+        {/* Encastat, '/assets/…' va per la base del paquet (resolRecursPropi). */}
+        <Boto icona={Circle} aria-haspopup="dialog" onClick={() => avatarSenzill.obri(resolRecursPropi(MOSTRA_AVATAR))}>Avatar en cercle</Boto>
+        <Boto icona={Square} aria-haspopup="dialog" onClick={() => logotipSenzill.obri(resolRecursPropi(MOSTRA_AVATAR))}>Logotip quadrat (600 × 600)</Boto>
+        <Boto icona={RectangleHorizontal} aria-haspopup="dialog" onClick={() => capcaleraSenzill.obri(resolRecursPropi(MOSTRA))}>Capçalera 16:9 (1.200 × 675)</Boto>
+      </div>
+      {resultatSenzill ? (
+        <figure className="sdp-enquadrament__resultat">
+          {resultatSenzill.url ? (
+            resultatSenzill.redo ? (
+              <div className="sdp-avatar sdp-avatar--xl">
+                <img src={resultatSenzill.url} alt="El resultat de la finestra senzilla" className="sdp-avatar__imatge" />
+              </div>
+            ) : <img src={resultatSenzill.url} alt="El resultat de la finestra senzilla" />
+          ) : null}
+          <figcaption className="sdp-camp__ajuda">
+            Ha eixit un fitxer de {resultatSenzill.text}. Al Perfil puja com un sol fitxer, sense tornar-lo a reduir.
+          </figcaption>
+        </figure>
+      ) : null}
+
       {font ? <DialegEnquadrament font={font} onTanca={() => setFont(null)} onDesa={desa} /> : null}
       {avatar.dialeg}
       {fontGeo ? <DialegEnquadrament font={fontGeo} permetGeolocalitzacio onTanca={() => setFontGeo(null)} onDesa={desaGeo} /> : null}
+      {avatarSenzill.dialeg}
+      {logotipSenzill.dialeg}
+      {capcaleraSenzill.dialeg}
     </Especimen>
     </>
   );

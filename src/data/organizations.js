@@ -6,10 +6,11 @@ const TIPUS = new Set(['company', 'group']);
 const ROLS = new Set(['owner', 'admin', 'member']);
 /* F5 (ordre del Mestre, 261004; pla 2045, Marató 2230) · Els tipus que poden
    ser mare d'un grup: el mateix conjunt que private.can_create_group
-   (2609272201_grups_mare.sql:26), que és l'autoritat de seguretat. Abans el
-   client només admetia 'company' i rebutjava una associació o un ajuntament
-   que el servidor sí accepta. No amplia cap permís; organizations.test.js
-   vigila que les dues capes no divergisquen. */
+   (2609272201_grups_mare.sql:26; des del grup C, 261008, l'última definició
+   és 2610081400_grups_sense_mare.sql), que és l'autoritat de seguretat.
+   Abans el client només admetia 'company' i rebutjava una associació o un
+   ajuntament que el servidor sí accepta. No amplia cap permís;
+   organizations.test.js vigila que les dues capes no divergisquen. */
 export const TIPUS_MARE = new Set(['company', 'entity', 'city_hall']);
 
 /** Alta d'entitats del domini. El proveïdor, la persistència i els seus errors
@@ -27,17 +28,20 @@ export async function creaOrganitzacio(dades, config = {}, organitzacions = []) 
   if (!TIPUS.has(kind)) throw new Error('Tipus d’organització no vàlid.');
   const parentOrganizationId = typeof input.parentOrganizationId === 'string'
     ? input.parentOrganizationId.trim() : '';
+  /* Ordre del Mestre (261008, grup C) · «Un grup no té per què pertànyer a
+     cap empresa»: la mare és OPCIONAL (2610081400_grups_sense_mare.sql). Si
+     ve, es valida com abans: una organització de TIPUS_MARE que la persona
+     administra. Sense mare, el payload no la porta. */
   if (kind === 'group') {
-    if (!parentOrganizationId) throw new Error('Un grup necessita una empresa mare.');
-    if (!organitzacions.some((org) => org.id === parentOrganizationId && TIPUS_MARE.has(org.kind)
-      && ['owner', 'admin'].includes(org.role))) {
+    if (parentOrganizationId && !organitzacions.some((org) => org.id === parentOrganizationId
+      && TIPUS_MARE.has(org.kind) && ['owner', 'admin'].includes(org.role))) {
       throw new Error('Tria una empresa que pugues administrar.');
     }
   } else if (parentOrganizationId) {
     throw new Error('Una empresa no pot tindre una organització mare.');
   }
   const payload = { name, slug, kind };
-  if (kind === 'group') payload.parentOrganizationId = parentOrganizationId;
+  if (kind === 'group' && parentOrganizationId) payload.parentOrganizationId = parentOrganizationId;
   /* T49 · En caràcters de veres, com char_length del CHECK: «🌾» és 1, no 2. */
   for (const [camp, limit] of [['description', 500], ['lema', MAXIM_LEMA]]) {
     if (input[camp] === undefined) continue;

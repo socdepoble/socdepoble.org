@@ -29,7 +29,9 @@ export const ICONES_ESPECIMENS = Object.freeze({
     'cerca-filtres': '🎚️', 'tasques-fitxers': '✅', 'media-externa': '🎬', utilitats: '🧰',
     identitat: '🎭', 'linia-del-temps': '🕰️', histograma: '📊',
     articles: '🏷️', colleccio: '🛍️', 'imatge-apaisada': '🌄', 'graella-targetes': '🎴',
-    'icones-alergens': '🥜', 'carrusel-imatges': '🎠'
+    'icones-alergens': '🥜', 'carrusel-imatges': '🎠',
+    /* Esmena 2 del pla 261007_1645 · el que l'actor ja té publicat. */
+    'publicacions-actor': '📚'
   }),
   estructura: Object.freeze({
     arbre: '🌳', shell: '🐚', page: '📄', gestor: '🏛️', universalworkspace: '🖥️',
@@ -107,8 +109,8 @@ const FONAMENTS = [
     'targeta plana pla emoticona ancorar pin avis portes porta doble accio publicar saber mes control obres socdepoble xat'),
   /* T50 (decisió del Mestre, 260928: «Llista + dreta si hi cap») · la targeta del document que s'escriu. */
   especimen('fonaments', 'targeta-viva', 'Targeta viva', 'TargetaViva · BotoTargetaViva (T50)', ['organisme', 'targeta', 'editor'],
-    'La targeta del document mentre s’escriu, amb la mateixa anatomia que tindrà publicada: a la llista, a la dreta de l’editor si hi cap i, si no, darrere del xip «Vista targeta». Els botons no fan res: ho diu un avís.',
-    'previsualitzacio vista targeta xip aside llista dreta notes perfil'),
+    'La targeta del document mentre s’escriu, amb la mateixa anatomia que tindrà publicada: a la llista, a la dreta de l’editor si hi cap i, si no, darrere del xip «Vista targeta». Al Perfil, també en línia a l’apartat «Les vistes». Els botons no fan res: ho diu un avís.',
+    'previsualitzacio vista targeta xip aside llista dreta notes perfil vistes'),
   especimen('fonaments', 'controls-barra', 'Controls de barra', 'BarraBlava · BarraTaronja · IconButton · ActionControl · DateTimeControl', ['atom', 'barra', 'icona'],
     'Les dues barres de color de PageFrame, ja components propis (BarraBlava i BarraTaronja), i els àtoms que les omplin. La capçalera i el peu de la UniversalCard fan servir els mateixos àtoms.',
     'pin ancorar data hora pastilla'),
@@ -253,8 +255,8 @@ const RETROALIMENTACIO = [
   especimen('retroalimentacio', 'progres', 'Progres', 'PedraSeca/atoms/estats.jsx', ['atom'],
     'El progrés d’una tasca llarga amb l’element natiu. Sense valor és indeterminat: no s’inventen percentatges.'),
   especimen('retroalimentacio', 'estat-desament', 'EstatDesament', 'L’estat de l’autodesament (T47)', ['organisme', 'editor'],
-    'L’editor no té botó «Guardar»: tot es desa sol. La barra taronja diu si hi ha canvis que el servidor encara no té, i avisa si alguna cosa falla.',
-    'estat desament núvol pujar pendent autodesament desat esborrany'),
+    'L’editor no té botó «Guardar»: tot es desa sol. La barra taronja diu si hi ha canvis que el servidor encara no té, avisa si alguna cosa falla i, quan el servidor ho confirma, ho diu amb un check que es queda fins al canvi següent.',
+    'estat desament núvol pujar pendent autodesament desat esborrany check confirmat'),
   /* T43 (ordre del Mestre, 260928) · visibilitat d'una connexió i resum per destinatari. */
   especimen('retroalimentacio', 'resum-connexio', 'ResumConnexio', 'Qui ho pot vore i què s’ha fet (T43)', ['organisme', 'connectar'],
     'El resum de Connectar per a cada destinatari: qui ho pot vore i què s’ha fet.',
@@ -295,14 +297,15 @@ const SUPERPOSICIONS = [
   especimen('superposicions', 'toast', 'Toast', 'useToast · AvisadorEfimer', ['organisme'],
     'Confirmació que no demana cap acció. Si cal actuar, és una Alerta en línia o un Dialeg.'),
   /* T46 (ordre del Mestre, 260928) · re-enquadrar la capçalera, quadrat de sèrie.
-     Onada 4 · T3 · també l'avatar del Perfil, només en quadrat. */
+     Onada 4 · T3 · també l'avatar de l'ajust d'imatge, només en quadrat; les
+     imatges de la fitxa del Perfil, per la finestra senzilla (retallador, 261008). */
   especimen('superposicions', 'enquadrament', 'Enquadrament', 'Re-enquadrar una foto, quadrat de sèrie (T46)', ['superposicio', 'imatge', 'retall'],
-    'Re-enquadrar la foto de capçalera abans de desar-la: quadrat de sèrie i la part important dins del marc. L’avatar del Perfil hi passa sempre, només en quadrat.',
+    'Re-enquadrar la foto de capçalera abans de desar-la: quadrat de sèrie i la part important dins del marc. L’avatar de l’ajust d’imatge hi passa sempre, només en quadrat; les imatges de la fitxa del Perfil (avatar en cercle, logotip i capçalera), per la finestra senzilla.',
     'enquadrar retallar foto crop quadrat capcalera hero miniatura dialeg avatar perfil retallador'),
   /* T52 (ordre del Mestre, 260928) · la vista A4 de l'editor. */
   especimen('superposicions', 'impressio', 'Impressió', 'DocumentPrintPreview · A4 i PDF', ['organisme', 'editor'],
-    'La vista A4 del document, amb portada o sense, preparada al dispositiu per a imprimir o desar com a PDF. Viu davall del títol de l’editor, al costat dels drets d’autor.',
-    'imprimir pdf portada paper')
+    'La vista A4 del document, amb portada o sense, preparada al dispositiu per a imprimir o desar com a PDF. Al Bloc de Notes viu davall del títol de l’editor, al costat dels drets d’autor; al Perfil, a l’apartat «Les vistes», fora de l’editor.',
+    'imprimir pdf portada paper vistes perfil')
 ];
 
 export const CATALOG_ITEMS = [
@@ -396,6 +399,16 @@ CATALOG_ITEMS.push(
     'carrusel carousel galeria fotos imatges portada hero passar diapositiva scroll snap producte mercat samarreta')
 );
 
+/* Esmena 2 del pla 261007_1645 (ordre del Mestre, 261007: «Esta lògica de llistar elements de
+   la categoria per a l'avatar actiu ha d'estar disponible per tot el sistema») · el que l'actor
+   actiu ja té publicat, amb la targeta canònica de cada secció, i la ranura peuDePagina de
+   PageFrame on va al Bloc de Notes. Pedra Seca §9: l'espècimen abans d'endollar-lo. */
+CATALOG_ITEMS.push(
+  especimen('fonaments', 'publicacions-actor', 'Publicacions de l’actor', 'PublicacionsDeLActor · TargetaDelMercat · la ranura peuDePagina', ['organisme', 'targeta', 'historic'],
+    'El que la persona, o l’entitat amb què actua, ja té publicat en una secció (Mur, Mercat o Esdeveniments), amb la targeta de sempre de cada secció dins de la graella. Al Bloc de Notes va davall de l’editor, dins del mateix scroll i fora de l’Índex de la nota.',
+    'historic ja publicat actor avatar identitat entitat socdepoble samarreta aplec mur mercat esdeveniments notes peu pagina ranura graella targeta')
+);
+
 /* T52 (ordre del Mestre, 260928: «que quede clar quin és l'element universal
    pare que controla els altres») · L'ARBRE UNIVERSAL.
    `pare` és la peça universal que governa el node i `relacio` diu com (esmena
@@ -454,7 +467,7 @@ export const ARBRE_UNIVERSAL = Object.freeze([
     ] },
   { id: 'targeta-viva', nom: 'TargetaViva', fitxer: 'src/components/universal/TargetaViva.jsx', pare: 'card', relacio: 'instancia', item: 'fonaments-targeta-viva',
     rol: 'La UniversalCard (variant pla) del document que s’escriu: la fitxa activa del llistat, l’aside de l’editor si hi cap i el diàleg del xip «Vista targeta».',
-    consumidors: ['NotaFitxa (Notes)', 'PerfilShell (Perfil)', 'DocumentEditor (aside i xip)'] },
+    consumidors: ['NotaFitxa (Notes)', 'PerfilShell (Perfil)', 'DocumentEditor (aside i xip)', 'DetallVistes (Perfil, «Les vistes»)'] },
   { id: 'editor', nom: 'DocumentEditor → UniversalEditorShell', fitxer: 'src/components/universal/DocumentEditor.jsx', pare: 'page', relacio: 'instancia', item: null,
     rol: 'PageFrame en edició: la closca de l’editor pinta una UniversalPage amb ranures.' },
   { id: 'barra-eines', nom: 'UniversalToolbar', fitxer: 'src/components/universal/UniversalToolbar.jsx', pare: 'editor', item: 'estructura-barra-eines',
@@ -470,10 +483,13 @@ export const ARBRE_UNIVERSAL = Object.freeze([
   { id: 'drets', nom: 'BotoDretsAutor → CopyrightPage', fitxer: 'src/components/universal/drets/CopyrightPage.jsx', pare: 'editor', item: 'formularis-drets-autor',
     rol: 'Els drets d’autor, a pantalla completa dins de la columna.', usa: ['boto'] },
   { id: 'impressio', nom: 'DocumentPrintPreview', fitxer: 'src/components/universal/DocumentPrintPreview.jsx', pare: 'editor', item: 'superposicions-impressio',
-    rol: 'La vista A4 i el PDF, al costat dels drets d’autor.', usa: ['dialeg'] },
+    rol: 'La vista A4 i el PDF, al costat dels drets d’autor (Bloc de Notes).', usa: ['dialeg'],
+    consumidors: ['DetallVistes (Perfil, «Les vistes»)'] },
   { id: 'enquadrament', nom: 'DialegEnquadrament', fitxer: 'src/components/universal/enquadrament/DialegEnquadrament.jsx', pare: 'editor', item: 'superposicions-enquadrament',
-    rol: 'Re-enquadrar la foto de capçalera; al Perfil, l’avatar (només en quadrat).', usa: ['dialeg', 'boto'],
-    consumidors: ['el Perfil (DialegCapcaleraAvatar i DetallAjust, per useEnquadramentAvatar)'] },
+    /* Onada 4 (retallador senzill, 261008) · DialegCapcaleraAvatar ja no es
+       munta: les tres imatges de la fitxa passen per useImatgeDeFitxa. */
+    rol: 'Re-enquadrar la foto de capçalera; al Perfil, les imatges de la fitxa (finestra senzilla) i l’avatar de l’ajust d’imatge (només en quadrat).', usa: ['dialeg', 'boto'],
+    consumidors: ['el Perfil (useImatgeDeFitxa: capçalera, avatar i logotip)', 'DetallAjust (useEnquadramentAvatar)'] },
   { id: 'resum-connexio', nom: 'ResumConnexio', fitxer: 'src/sections/connectar/ResumConnexio.jsx', pare: 'page', item: 'retroalimentacio-resum-connexio',
     muntadaPer: 'ConnectarSection',
     rol: 'El resum de Connectar per a cada destinatari, dins de l’article de la pàgina de Connectar, quan la connexió ja s’ha guardat.' },

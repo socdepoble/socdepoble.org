@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { localXat, reiniciaLocalXat } from './localXat.js';
 import { XAT_SEED_IDS } from './xatSeed.js';
+import { ENTITAT_PILOT_SLUG } from './identitatsSeed.js';
 
 /* T63.2 i T67 · El magatzem local del Xat: fils de pàgina i comunitats.
    La sessió es controla des d'ací: amb sessió, qui mira és propietari de
@@ -102,7 +103,12 @@ describe('obriFilDePagina · comunitat (T67)', () => {
 
 describe('la comunitat «Sóc de Poble» de la llavor', () => {
   it('obrir la pàgina de l’entitat (per slug o per id) porta al General de la llavor, sense crear-ne cap', async () => {
-    const perSlug = await localXat.obriFilDePagina({ tipus: 'entitat', id: 'soc-de-poble', titol: 'Sóc de Poble' }, SEED);
+    /* Ordre del Mestre (261007) · El slug declarat ('socdepoble') és ara el
+       mateix text que l'id: localXat busca per id o per slug al padró
+       (identitatsSeed.js), i la clau del fil continua sent l'id. Les dues
+       crides d'esta prova casen ja per id i exercitzen el mateix camí; la
+       cerca per slug la cobrix la prova següent, amb un padró de prova. */
+    const perSlug = await localXat.obriFilDePagina({ tipus: 'entitat', id: ENTITAT_PILOT_SLUG, titol: 'Sóc de Poble' }, SEED);
     expect(perSlug.filId).toBe(XAT_SEED_IDS.filGeneral);
     expect(perSlug.fils.map((f) => f.id)).toEqual([XAT_SEED_IDS.filComunitat, XAT_SEED_IDS.filAvisos, XAT_SEED_IDS.filGeneral]);
     expect((await localXat.obriFilDePagina({ tipus: 'entitat', id: XAT_SEED_IDS.entitat }, SEED)).filId).toBe(XAT_SEED_IDS.filGeneral);
@@ -111,6 +117,31 @@ describe('la comunitat «Sóc de Poble» de la llavor', () => {
     expect(fils.find((f) => f.id === XAT_SEED_IDS.filBetaTesters)).toMatchObject({
       tipus: 'grup', titol: 'Beta testers', comunitatId: XAT_SEED_IDS.filComunitat, subjecte: { tipus: 'entitat', id: XAT_SEED_IDS.entitat }
     });
+  });
+
+  /* Ordre del Mestre (261007) · Amb slug i id iguals, cap prova no passa per
+     la cerca per slug de localXat (obriFilDePagina: `e.slug ===
+     subjecte.id`). Un padró de prova, idèntic al de la llavor tret del slug,
+     la torna a exercitar: si la branca es perdera, el slug obriria una
+     comunitat nova en lloc del General de la llavor. El mòdul es carrega de
+     nou només per a esta prova, i la resta continua amb el padró real. */
+  it('amb un slug distint de l’id, obrir la pàgina de l’entitat pel slug porta al mateix General', async () => {
+    vi.resetModules();
+    vi.doMock('./identitatsSeed.js', async (importOriginal) => {
+      const original = await importOriginal();
+      return { ...original, ENTITATS_SEED: Object.freeze(original.ENTITATS_SEED.map((e) => ({ ...e, slug: 'slug-de-prova' }))) };
+    });
+    try {
+      const { localXat: ambPadroDeProva, reiniciaLocalXat: reinicia } = await import('./localXat.js');
+      reinicia();
+      const perSlug = await ambPadroDeProva.obriFilDePagina({ tipus: 'entitat', id: 'slug-de-prova' }, SEED);
+      expect(perSlug.filId).toBe(XAT_SEED_IDS.filGeneral);
+      expect(perSlug.fils.map((f) => f.id)).toEqual([XAT_SEED_IDS.filComunitat, XAT_SEED_IDS.filAvisos, XAT_SEED_IDS.filGeneral]);
+      expect(await ambPadroDeProva.loadFils(SEED)).toHaveLength(5);
+    } finally {
+      vi.doUnmock('./identitatsSeed.js');
+      vi.resetModules();
+    }
   });
 
   it('els fils de la llavor conserven comunitatId i subjecte; un fil de pàgina no llista les persones', async () => {

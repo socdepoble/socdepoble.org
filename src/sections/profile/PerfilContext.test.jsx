@@ -1,12 +1,15 @@
 import React, { StrictMode, useLayoutEffect } from 'react';
 import { act, cleanup, render, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { PerfilProvider, usePerfil, ajustosPersona, ajustosOrganitzacio } from './PerfilContext.jsx';
+import { PerfilProvider, usePerfil, ajustosPersona, ajustosOrganitzacio, opcionsDePoble } from './PerfilContext.jsx';
 const mock = vi.hoisted(() => ({ user: { id: 'A' }, epoch: 1, generation: 1, entrada: 1,
   getProfile: vi.fn(), listMyOrganizations: vi.fn(), updateProfile: vi.fn(), updateOrganization: vi.fn(),
   updateUserPassword: vi.fn(), createOrganization: vi.fn(), uploadToStorage: vi.fn(),
   /* T43 · el correu opcional de l'organització (capacitat 'contacteOrganitzacio'). */
-  llegeixContacteOrganitzacio: vi.fn(), desaContacteOrganitzacio: vi.fn()
+  llegeixContacteOrganitzacio: vi.fn(), desaContacteOrganitzacio: vi.fn(),
+  /* Grup C (261008) · els membres (capacitat 'membresOrganitzacio') i el padró del nucli. */
+  llistaMembresOrganitzacio: vi.fn(), desaMembreOrganitzacio: vi.fn(), llevaMembreOrganitzacio: vi.fn(), carregaMembres: vi.fn(),
+  senseCapacitats: new Set()
 }));
 vi.mock('../../app/contexts/SessionContext.jsx', () => ({ useSession: () => ({ currentUser: mock.user, generacio: mock.generation }) }));
 /* Com identitat.js: l'entrada només es mou en eixir o tornar a entrar; la renovació mou epoch i generació. */
@@ -19,7 +22,7 @@ vi.mock('../../data/identitat.js', () => ({
   },
 }));
 /* `portSenseUsuari`: el JWT ha caducat i es renova. El port diu «ningú», però la sessió de React continua dins. */
-vi.mock('../../data/backendPort.js', () => ({ ...mock, getCurrentUser: () => (mock.portSenseUsuari ? null : mock.user), teCapacitat: () => true }));
+vi.mock('../../data/backendPort.js', () => ({ ...mock, getCurrentUser: () => (mock.portSenseUsuari ? null : mock.user), teCapacitat: (nom) => !mock.senseCapacitats.has(nom) }));
 import { cuaDesament } from '../../data/autodesament/cua.js';
 import { ambitDe } from '../../data/autodesament/ambit.js';
 const deferred = () => { let resolve; const promise = new Promise(r => { resolve = r; }); return { promise, resolve }; };
@@ -32,6 +35,7 @@ beforeEach(async () => {
   await cuaDesament.reinicia();
   vi.clearAllMocks(); snapshots = []; avis = undefined; mock.user = { id: 'A' }; mock.epoch = 1; mock.generation = 1; mock.entrada = 1;
   mock.portSenseUsuari = false;
+  mock.senseCapacitats = new Set();
   mock.getProfile.mockImplementation(async () => ({ id: mock.user?.id, full_name: `Perfil ${mock.user?.id}` }));
   mock.listMyOrganizations.mockImplementation(async () => [{ id: `org-${mock.user?.id}`, name: `Org ${mock.user?.id}` }]);
   mock.llegeixContacteOrganitzacio.mockImplementation(async () => ({ correu: '', public: false, perDefecte: { origen: 'cap', correu: null } }));
@@ -147,9 +151,177 @@ it('cada ajust del catàleg diu si viu a la fitxa o al compte', () => {
     ['correu', 'compte'], ['privacitat', 'compte'], ['contrasenya', 'compte'], ['sessio', 'compte']]);
   const org = ajustosOrganitzacio({ role: 'owner', slug: 'forn' });
   expect(org.filter(a => a.lloc === 'fitxa').map(a => a.id)).toEqual(['nom', 'avatar', 'lema', 'descripcio']);
-  /* T43 (ordre del Mestre, 260928) · el correu opcional va primer al compte. */
-  expect(org.filter(a => a.lloc === 'compte').map(a => a.id)).toEqual(['correu', 'correu-public', 'membres', 'identificador', 'fitxa', 'eixir']);
+  /* T43 (ordre del Mestre, 260928) · el correu opcional va al compte; grup C
+     (ordre del Mestre, 261008) · el poble, abans del correu. */
+  expect(org.filter(a => a.lloc === 'compte').map(a => a.id)).toEqual(['poble', 'correu', 'correu-public', 'membres', 'identificador', 'fitxa', 'eixir']);
   expect(org.find(a => a.id === 'fitxa').pendent).toBe(true);
+});
+
+/* ── Grup C (ordre del Mestre, 261008) · el poble i els membres de l'organització ── */
+
+it('grup C · opcionsDePoble: l’opció buida primer, els pobles per nom (ca) i el desat encara que ja no hi siga', () => {
+  const towns = [{ id: 'b', title: 'Benilloba' }, { id: 't', title: 'La Torre de les Maçanes' }, { id: 'a', title: 'Alcoi' },
+    { id: 'e', title: 'Èrcol' }, { id: 'x', title: '  ' }, null, { id: 'z' }, { id: 'b2', title: 'Benilloba' }];
+  expect(opcionsDePoble(towns)).toEqual([
+    { valor: '', etiqueta: 'Tria un poble…' },
+    { valor: 'Alcoi', etiqueta: 'Alcoi' },
+    { valor: 'Benilloba', etiqueta: 'Benilloba' },
+    { valor: 'Èrcol', etiqueta: 'Èrcol' },
+    { valor: 'La Torre de les Maçanes', etiqueta: 'La Torre de les Maçanes' },
+  ]);
+  /* El valor desat que ja no és a la llista es conserva (i no es repetix si hi és). */
+  expect(opcionsDePoble(towns, 'Penàguila').map(o => o.valor)).toEqual(['', 'Alcoi', 'Benilloba', 'Èrcol', 'La Torre de les Maçanes', 'Penàguila']);
+  expect(opcionsDePoble(towns, 'Alcoi').filter(o => o.valor === 'Alcoi')).toHaveLength(1);
+  /* Sense llista (sense contingut core), només la buida i el desat. */
+  expect(opcionsDePoble(undefined, 'Sella')).toEqual([{ valor: '', etiqueta: 'Tria un poble…' }, { valor: 'Sella', etiqueta: 'Sella' }]);
+  expect(opcionsDePoble()).toEqual([{ valor: '', etiqueta: 'Tria un poble…' }]);
+});
+
+it('grup C · l’ajust «Poble» és un selector obert segons el rol (no segons la llista), amb el valor desat', () => {
+  const pobles = [{ title: 'Benilloba' }];
+  const owner = ajustosOrganitzacio({ role: 'owner', town_name: 'Sella' }, null, { pobles }).find(a => a.id === 'poble');
+  expect(owner).toMatchObject({ lloc: 'compte', titol: 'Poble', camp: 'town_name', tipus: 'selector', valor: 'Sella', obert: true });
+  expect(owner.opcions.map(o => o.valor)).toEqual(['', 'Benilloba', 'Sella']);
+  /* Sense cap poble al node, qui administra el pot triar igualment (o deixar-lo buit). */
+  expect(ajustosOrganitzacio({ role: 'admin' }).find(a => a.id === 'poble')).toMatchObject({ obert: true, valor: '' });
+  /* Un membre no el canvia, encara que hi haja pobles. */
+  expect(ajustosOrganitzacio({ role: 'member', town_name: 'Sella' }, null, { pobles }).find(a => a.id === 'poble'))
+    .toMatchObject({ obert: false, valor: 'Sella', motiu: 'Només qui administra aquesta organització ho pot canviar.' });
+});
+
+it('grup C · «Membres» i «Eixir» només deixen de ser pendents si el port gestiona els membres', () => {
+  const sense = ajustosOrganitzacio({ role: 'admin' });
+  expect(sense.find(a => a.id === 'membres')).toMatchObject({ pendent: true, obert: true });
+  expect(sense.find(a => a.id === 'eixir')).toMatchObject({ pendent: true, obert: true });
+  const amb = ajustosOrganitzacio({ role: 'admin' }, null, { ambMembres: true });
+  expect(amb.find(a => a.id === 'membres')).toMatchObject({ pendent: false, obert: true });
+  expect(amb.find(a => a.id === 'eixir')).toMatchObject({ pendent: false, obert: true });
+  /* La llista només la veuen owner i admin; la propietària no se'n pot anar. */
+  expect(ajustosOrganitzacio({ role: 'member' }, null, { ambMembres: true }).find(a => a.id === 'membres').obert).toBe(false);
+  expect(ajustosOrganitzacio({ role: 'member' }, null, { ambMembres: true }).find(a => a.id === 'eixir').obert).toBe(true);
+  expect(ajustosOrganitzacio({ role: 'owner' }, null, { ambMembres: true }).find(a => a.id === 'eixir').obert).toBe(false);
+  /* La fitxa pública continua pendent (I7). */
+  expect(amb.find(a => a.id === 'fitxa').pendent).toBe(true);
+});
+
+it('grup C · desar el poble envia el NOM a town_name; l’opció buida, null; un membre no el desa', async () => {
+  mock.listMyOrganizations.mockResolvedValue([
+    { id: 'O', name: 'Forn', kind: 'company', role: 'owner' },
+    { id: 'M', name: 'Colla', kind: 'group', role: 'member' }
+  ]);
+  mock.updateOrganization.mockImplementation(async (id, canvis) => ({ id, ...canvis }));
+  await open();
+  await act(async () => value.guardarAjust('O', 'poble', '  Benilloba '));
+  expect(mock.updateOrganization).toHaveBeenLastCalledWith('O', { town_name: 'Benilloba' }, expect.any(Object));
+  expect(value.identitats.find(i => i.id === 'O').dades.town_name).toBe('Benilloba');
+  await act(async () => value.guardarAjust('O', 'poble', ''));
+  expect(mock.updateOrganization).toHaveBeenLastCalledWith('O', { town_name: null }, expect.any(Object));
+  expect(value.identitats.find(i => i.id === 'O').dades.town_name).toBeNull();
+  await expect(value.guardarAjust('O', 'poble', 'x'.repeat(121))).rejects.toThrow('com a màxim 120 caràcters');
+  await expect(value.guardarAjust('M', 'poble', 'Benilloba')).rejects.toThrow('Només qui administra');
+  expect(mock.updateOrganization).toHaveBeenCalledTimes(2);
+});
+
+it('grup C · amb la capacitat, ambMembres i les accions criden el port amb la configuració (i el senyal)', async () => {
+  const { config } = await open();
+  expect(value.ambMembres).toBe(true);
+  const membre = { tipus: 'persona', id: 'P', nom: 'Pepa', avatar: '', rol: 'member', desDe: null };
+  mock.llistaMembresOrganitzacio.mockResolvedValue([membre]);
+  const control = new AbortController();
+  await expect(value.llistaMembres('O', { signal: control.signal })).resolves.toEqual([membre]);
+  expect(mock.llistaMembresOrganitzacio).toHaveBeenCalledWith('O', { ...config, signal: control.signal });
+  /* Un port que no torna cap llista no fa caure la pantalla. */
+  mock.llistaMembresOrganitzacio.mockResolvedValue(null);
+  await expect(value.llistaMembres('O')).resolves.toEqual([]);
+  expect(mock.llistaMembresOrganitzacio).toHaveBeenLastCalledWith('O', config);
+  mock.desaMembreOrganitzacio.mockResolvedValue({ ...membre, rol: 'admin' });
+  await expect(value.desaMembre('O', { tipus: 'persona', id: 'P', rol: 'admin' })).resolves.toMatchObject({ rol: 'admin' });
+  expect(mock.desaMembreOrganitzacio).toHaveBeenCalledWith('O', { tipus: 'persona', id: 'P', rol: 'admin' }, config);
+  /* Els errors del port (amb el seu code) arriben tal qual. */
+  mock.desaMembreOrganitzacio.mockRejectedValue(Object.assign(new Error('Només la propietària nomena, degrada o lleva administradores.'), { code: 'SDP-ORGMEM-006' }));
+  await expect(value.desaMembre('O', { tipus: 'persona', id: 'P', rol: 'admin' })).rejects.toMatchObject({ code: 'SDP-ORGMEM-006' });
+});
+
+it('grup C · sense la capacitat, ambMembres és false i cap acció arriba al port', async () => {
+  mock.senseCapacitats = new Set(['membresOrganitzacio']);
+  await open();
+  expect(value.ambMembres).toBe(false);
+  await expect(value.llistaMembres('O')).rejects.toMatchObject({ code: 'NO-DISPONIBLE' });
+  await expect(value.desaMembre('O', { tipus: 'persona', id: 'P' })).rejects.toMatchObject({ code: 'NO-DISPONIBLE' });
+  await expect(value.llevaMembre('O', { tipus: 'persona', id: 'A' })).rejects.toMatchObject({ code: 'NO-DISPONIBLE' });
+  await expect(value.cercaCandidats('O', 'pe')).rejects.toMatchObject({ code: 'NO-DISPONIBLE' });
+  expect(mock.llistaMembresOrganitzacio).not.toHaveBeenCalled();
+  expect(mock.desaMembreOrganitzacio).not.toHaveBeenCalled();
+  expect(mock.llevaMembreOrganitzacio).not.toHaveBeenCalled();
+  expect(mock.carregaMembres).not.toHaveBeenCalled();
+});
+
+it('grup C · «Eixir» (el propi id) lleva l’organització del Perfil i avisa el selector; llevar una altra persona, no', async () => {
+  avis = vi.fn();
+  mock.listMyOrganizations.mockResolvedValue([
+    { id: 'O', name: 'Forn', kind: 'company', role: 'admin' },
+    { id: 'G', name: 'Colla', kind: 'group', role: 'member' }
+  ]);
+  mock.llevaMembreOrganitzacio.mockResolvedValue({ llevat: true });
+  const { config } = await open();
+  await act(async () => { await value.llevaMembre('O', { tipus: 'persona', id: 'P' }); });
+  expect(mock.llevaMembreOrganitzacio).toHaveBeenCalledWith('O', { tipus: 'persona', id: 'P' }, config);
+  expect(value.identitats.map(i => i.id)).toEqual(['jo', 'O', 'G']);
+  expect(avis).not.toHaveBeenCalled();
+  let resultat;
+  await act(async () => { resultat = await value.llevaMembre('G', { tipus: 'persona', id: 'A' }); });
+  expect(resultat).toEqual({ llevat: true });
+  expect(value.identitats.map(i => i.id)).toEqual(['jo', 'O']);
+  expect(avis).toHaveBeenCalledTimes(1);
+  /* Si el servidor rebutja l'eixida (la propietària), l'organització es queda. */
+  mock.llevaMembreOrganitzacio.mockRejectedValue(Object.assign(new Error('La propietària no es canvia ni es lleva.'), { code: 'SDP-ORGMEM-005' }));
+  await expect(value.llevaMembre('O', { tipus: 'persona', id: 'A' })).rejects.toMatchObject({ code: 'SDP-ORGMEM-005' });
+  expect(value.identitats.map(i => i.id)).toEqual(['jo', 'O']);
+});
+
+it('grup C · cercaCandidats: persones del padró (carregaMembres) i organitzacions que també administra, sense membres ni ella mateixa', async () => {
+  mock.listMyOrganizations.mockResolvedValue([
+    { id: 'O', name: 'Forn', kind: 'company', role: 'owner' },
+    { id: 'G', name: 'Colla del Forn', kind: 'group', role: 'admin', logo_url: '/logo-g.png' },
+    { id: 'H', name: 'Forners units', kind: 'group', role: 'member' },
+    { id: 'K', name: 'Cooperativa', kind: 'company', role: 'owner' }
+  ]);
+  mock.carregaMembres.mockResolvedValue([
+    { usuari_id: 'P', nom: 'Pepa Forner', tipus: 'persona', avatar_url: '/p.png', fil_id: null },
+    { usuari_id: 'Q', nom: 'Quique Forner', tipus: 'persona', avatar_url: null, fil_id: 'f' },
+    { usuari_id: 'E', nom: 'Forn Vell', tipus: 'entitat', avatar_url: null, fil_id: null },
+    { usuari_id: 'A', nom: 'Jo mateixa', tipus: 'persona', avatar_url: null, fil_id: null }
+  ]);
+  const { config } = await open();
+  const control = new AbortController();
+  const candidats = await value.cercaCandidats('O', '  forn ', { signal: control.signal, membres: [{ tipus: 'persona', id: 'Q' }] });
+  expect(mock.carregaMembres).toHaveBeenCalledWith('forn', { ...config, signal: control.signal });
+  expect(candidats).toEqual([
+    { tipus: 'persona', id: 'P', nom: 'Pepa Forner', avatar: '/p.png' },
+    { tipus: 'organitzacio', id: 'G', nom: 'Colla del Forn', avatar: '/logo-g.png' }
+  ]);
+});
+
+it('grup C · una acció de membres d’una sessió antiga rebutja sense arribar al port', async () => {
+  const view = await open(), old = value;
+  switchToB(); view.rerender(tree(view.config));
+  await expect(old.llistaMembres('O')).rejects.toMatchObject({ name: 'AbortError' });
+  await expect(old.desaMembre('O', { tipus: 'persona', id: 'P' })).rejects.toMatchObject({ name: 'AbortError' });
+  await expect(old.llevaMembre('O', { tipus: 'persona', id: 'A' })).rejects.toMatchObject({ name: 'AbortError' });
+  await expect(old.cercaCandidats('O', 'pe')).rejects.toMatchObject({ name: 'AbortError' });
+  expect(mock.llistaMembresOrganitzacio).not.toHaveBeenCalled();
+  expect(mock.desaMembreOrganitzacio).not.toHaveBeenCalled();
+  expect(mock.llevaMembreOrganitzacio).not.toHaveBeenCalled();
+  expect(mock.carregaMembres).not.toHaveBeenCalled();
+});
+
+it('grup C · una resposta del port que arriba després de canviar de sessió no es dona per bona', async () => {
+  const view = await open(), pendent = deferred();
+  mock.llistaMembresOrganitzacio.mockReturnValueOnce(pendent.promise);
+  const llista = value.llistaMembres('O');
+  const comprova = expect(llista).rejects.toMatchObject({ name: 'AbortError' });
+  switchToB(); view.rerender(tree(view.config));
+  await act(async () => { pendent.resolve([{ tipus: 'persona', id: 'A', nom: 'A', rol: 'owner' }]); await comprova; });
 });
 
 /* ── T43 (ordre del Mestre, 260928) · el correu opcional de l'organització ── */
@@ -214,9 +386,15 @@ it('T43 · un esquema absent es diu amb el motiu de l’adaptador, sense error c
   expect(value.error).toBeNull();
 });
 
-it('un grup sense empresa mare no arriba al servidor', async () => {
+/* Ordre del Mestre (261008, grup C) · «Un grup no té per què pertànyer a cap
+   empresa»: sense mare, el grup arriba al servidor sense la clau de la mare
+   (2610081400). Un ajuntament continua sense crear-se: es reclama. */
+it('grup C · un grup sense empresa mare arriba al servidor sense mare; un ajuntament no es crea', async () => {
   await open();
-  await expect(value.creaOrganitzacio({ name: 'Colla', slug: 'colla', kind: 'group' })).rejects.toThrow('Un grup necessita una empresa mare.');
+  mock.createOrganization.mockResolvedValue({ id: 'G', name: 'Colla', slug: 'colla', kind: 'group' });
+  await act(async () => { await value.creaOrganitzacio({ name: 'Colla', slug: 'colla', kind: 'group' }); });
+  expect(mock.createOrganization).toHaveBeenCalledWith({ name: 'Colla', slug: 'colla', kind: 'group' }, expect.any(Object));
+  mock.createOrganization.mockClear();
   await expect(value.creaOrganitzacio({ name: 'Ajuntament', slug: 'ajuntament', kind: 'city_hall' })).rejects.toThrow('Tipus d’organització no vàlid.');
   expect(mock.createOrganization).not.toHaveBeenCalled();
 });

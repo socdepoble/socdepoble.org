@@ -1,9 +1,19 @@
 /**
  * registrePlugins.js — P7-A · Onada 4, setena passada (ordre del Mestre,
- * 261004; prompt 261004_0015 T2/T3 i directriu 261003_2320) · Les onze
- * utilitats (plugins) del Panell de Control en UNA sola taula: la font de
- * veritat de la seua pàgina (/plugin/<id>, PluginPage.jsx) i de la graella
- * del Control (bloc B, que només la llig).
+ * 261004; prompt 261004_0015 T2/T3 i directriu 261003_2320) · Les utilitats
+ * (plugins) del Panell de Control en UNA sola taula: la font de veritat de la
+ * seua pàgina (/plugin/<id>, PluginPage.jsx) i de la graella del Control
+ * (bloc B, que només la llig). Peça C (ordre del Mestre, 261007, prompt
+ * 261007_1628) · Eren dotze: les onze de l'ordre del 261004 i el Panell de
+ * Disseny ('disseny'), que MarIA hi va afegir després.
+ * Ordre del Mestre (261007) · Bàscula descartada: «LA BÀSCULA: Queda
+ * descartada per ara. No té sentit en aquest moment. Llévala de la interfície
+ * actual i descarta la seua implementació. Limita't a anotar-la
+ * exclusivament a la fulla de ruta (roadmap) per al futur.» Ara són onze, i
+ * la Bàscula de Cooperativa és una llavor del Full de ruta (PAGE_COPY.roadmap
+ * i 02_saber/00_full_de_ruta.md). La seua il·lustració,
+ * public/assets/ui/plugins/bascula_vinyeta.jpg, es conserva al disc: cap
+ * esborrat. /plugin/bascula ja és la 404 de sempre.
  *
  * Cada plugin: { id, titol, subtitol, entradilla, imatge, imatgeAlt, obrir,
  * entorn, espai, etiquetaObrir }.
@@ -35,7 +45,15 @@
  *   consola i cervell porten entorn 'desenvolupament': les seues dades
  *             (/__iaia/*) només les servix `vite serve` (consola-iaia.mjs:13).
  *   rss     → /app/lector · apps/lector/manifest.js:17 (Notícies del Poble).
+ *             Peça C (261007) · El manifest del Lector porta entorn
+ *             'desenvolupament' (:29): fora de DEV la plataforma l'apaga
+ *             encara que el build el compile (VITE_SDP_APP_LECTOR=1), i sense
+ *             el literal no és al paquet ('no-compilada'). Este plugin no
+ *             porta `entorn`: el decidix l'app.
  *   tpv     → /app/bar · apps/bar/manifest.js:16 (El Bar, TPV d'hostaleria).
+ *   disseny → /disseny · Peça C (261007) · App.jsx, ActorRoutes,
+ *             <Route path="disseny"> (DesignSection, sections/disseny/). Una
+ *             secció d'App, no una app de la plataforma: cap interruptor.
  *   gestoria → /app/gestoria · apps/gestoria/manifest.js (id 'gestoria',
  *             entrades 'tauler' i 'aprendre'). Ordre del Mestre, 261004
  *             («contaminació crítica de rutes/estats entre Gestoria i Wiki»):
@@ -45,9 +63,8 @@
  *             useDestiDelPlugin deixa el botó inert («(no disponible ací)»)
  *             i la pàgina diu que està en obres. Cap consulta ni dada a la
  *             ruta (MAPA §2.2, R4).
- *   bascula, mapa, vehicle, animalets → null. Mapa, Vehicle Compartit i
- *     Animalets no tenen secció (control/destinsControl.js:29-31); la Bàscula
- *     no té cap codi.
+ *   mapa, vehicle, animalets → null. Mapa, Vehicle Compartit i Animalets no
+ *     tenen secció (control/destinsControl.js:29-31).
  *
  * Pur: sense React ni xarxa. Les rutes d'app es fan amb rutaDeApp (la mateixa
  * de la plataforma), que ja és al paquet principal (PlataformaContext). La de
@@ -214,15 +231,9 @@ export const PLUGINS = Object.freeze([
     imatgeAlt: 'El cambrer apunta comandes a la barra del Bar Casino, ple de veïns, entrepans i embotits penjats',
     obrir: rutaDeApp('bar'),
     etiquetaObrir: 'Obrir el Bar'
-  }),
-  plugin({
-    id: 'bascula',
-    titol: 'Bàscula de Cooperativa',
-    subtitol: 'Les pesades de la collita',
-    entradilla: 'Eina en obres: encara no pesa ni guarda res.',
-    imatgeAlt: 'Un llaurador pesa un cove de collita en la bàscula gegant de la cooperativa, i una iaia ho apunta en una llibreta',
-    etiquetaObrir: 'Obrir la Bàscula'
   })
+  /* Ordre del Mestre (261007) · Bàscula descartada per ara: ja no és cap
+     plugin. Viu només com a llavor del Full de ruta (vegeu la capçalera). */
 ]);
 
 /** Els ids, en l'ordre de la taula. */

@@ -150,8 +150,10 @@ test('el port especial de capçalera i showLogoUpload=false mantenen les capacit
   const port = adapter({ document: { ...DOC, heroImage: '/assets/logotip-negre.webp', logoImage: '/assets/logotip-negre.webp' }, onHeroEdit, heroEditLabel: 'Editar capçalera i avatar', showLogoUpload: false });
   const vista = pinta(port);
   expect(vista.queryByRole('button', { name: 'Editar logotip' })).toBeNull();
+  /* Pla 261008_1201 (un sol clic) · Amb imatge desada, el primer clic ja
+     crida el pare (abans calien dos: el primer només obria el panell). */
   fireEvent.click(vista.getByRole('button', { name: 'Editar capçalera i avatar' }));
-  fireEvent.click(vista.getByRole('button', { name: 'Editar capçalera i avatar' }));
+  expect(onHeroEdit).toHaveBeenCalledTimes(1);
   expect(onHeroEdit).toHaveBeenCalledWith({ acaba: expect.any(Function) });
   expect(port.uploadMedia).not.toHaveBeenCalled();
   expect(vista.queryByRole('button', { name: 'Enquadrar' })).toBeNull();

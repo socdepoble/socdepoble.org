@@ -1,24 +1,11 @@
-import { EVENTS, FEED_POSTS, MARKET_ITEMS, MEDIA_ITEMS, NOTES, TOWNS } from '../data/sectionContent.js';
+/* Auditoria 261007 (B) · Ja no s'importa el contingut de llavor
+   (data/sectionContent.js): només l'usaven SECTION_ITEMS,
+   SECTION_ITEM_LOOKUPS, getSectionItems i findSectionItem, i cap pantalla,
+   eina ni prova no els cridava. La llavor arriba a l'app per appSeed.js. */
 import { ENTITAT_PILOT_ID, ENTITAT_PILOT_SLUG, ENTITATS_SEED } from '../data/identitatsSeed.js';
 import {
   esRutaInterna, objecteDePagina, rutaConnectarObjecte, rutaXatDePagina, TIPUS_OBJECTE, tipusDeSeccio
 } from './objecteConnectable.js';
-
-const SECTION_ITEMS = {
-  mur: FEED_POSTS,
-  mercat: MARKET_ITEMS,
-  events: EVENTS,
-  pobles: TOWNS,
-  multimedia: MEDIA_ITEMS,
-  notes: NOTES,
-};
-
-const SECTION_ITEM_LOOKUPS = Object.fromEntries(
-  Object.entries(SECTION_ITEMS).map(([sectionId, items]) => [
-    sectionId,
-    new Map(items.map((item) => [String(item.id), item]))
-  ])
-);
 
 const PAGE_ROUTE_MAP = {
   'el-projecte': '/projecte',
@@ -97,13 +84,15 @@ const IDS_DEL_PROJECTE = new Set([
    l'entitat no és l'entitat: només una entitat (o qui no diu el tipus) hi va. */
 const TIPUS_D_ENTITAT = new Set(['entitat', 'empresa', '', undefined, null]);
 
-/* T6 en remot (revisió del front «nucli», 261004) · Al servidor, l'entitat
-   pilot no és 'socdepoble' (xatCorporatiu.js): és l'id que li dona el
-   proveïdor, un UUID a Supabase (section_submissions.author_org_id). La
-   llavor no el pot saber. La font única és el slug declarat
-   (ENTITAT_PILOT_SLUG, identitatsSeed.js): quan el backend torna una entitat
-   amb eixe slug, el seu id passa a ser un identificador del projecte. Mai pel
-   nom. Qui pinta boines i vol tornar a pintar quan l'id arriba, escolta
+/* T6 en remot (revisió del front «nucli», 261004) · Al servidor, l'id de
+   l'entitat pilot no és el de la llavor (xatCorporatiu.js): és el que li
+   dona el proveïdor, un UUID a Supabase (section_submissions.author_org_id).
+   La llavor no el pot saber. La font única és el slug declarat
+   (ENTITAT_PILOT_SLUG, identitatsSeed.js; ordre del Mestre del 261007:
+   'socdepoble', el mateix text que l'id de la llavor): quan el backend
+   torna una entitat amb eixe slug, el seu id passa a ser un identificador
+   del projecte. Mai pel nom. Qui pinta boines i vol tornar a pintar quan
+   l'id arriba, escolta
    (subscriuEntitatDelProjecte: hooks/useEntitatDelProjecte.js). */
 const IDS_REMOTS_DEL_PROJECTE = new Set();
 const ESCOLTES_DEL_PROJECTE = new Set();
@@ -310,11 +299,6 @@ export function rutaConnectarPerfil(perfil) {
 export function rutaConnectar(item, sectionId) {
   return rutaConnectarObjecte(objecteDe(item, sectionId));
 }
-
-export const getSectionItems = (sectionId) => SECTION_ITEMS[sectionId] || [];
-
-export const findSectionItem = (sectionId, itemId) =>
-  SECTION_ITEM_LOOKUPS[sectionId]?.get(String(itemId)) || null;
 
 export const resolveItemPath = (item) => {
   if (!item) return null;

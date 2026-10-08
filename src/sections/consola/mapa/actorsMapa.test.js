@@ -76,7 +76,9 @@ describe('capesActors', () => {
   });
 
   test('els candats són els hooks dels arnesos i els hooks de git del registre de tasques', () => {
-    // El Mapa no llig .husky/: d'un hook de git no se sap si està instal·lat.
+    // Neteja 261007 (prompt 261007_1628, peça D) · El Mapa sí que llig .husky/
+    // (fonts.hooksGit), però este no en porta el text: sense el node
+    // hook:git:pre-commit, el candat de la tasca git-hook queda sense acreditar.
     expect(capes.candats.map((c) => `${c.arnes}|${c.esdeveniment}|${c.acreditat}`)).toEqual([
       'Antigravity|PreToolUse|false',
       'Claude Code|PreToolUse|true',

@@ -1,8 +1,11 @@
 /* Revisió adversarial 260930 · Els dos àmbits del XatContext.
    `scopeKey` porta la generació de la sessió, que puja a CADA renovació del
-   JWT: és la clau de les dades. L'entrada del poble (P1) i els esborranys
-   (P2) penjaven d'ella i es perdien (o es repetien) cada hora. Ací es prova
-   la guarda de veres del proveïdor, no una guarda simulada. */
+   JWT. L'entrada del poble (P1) i els esborranys (P2) penjaven d'ella i es
+   perdien (o es repetien) cada hora. Ací es prova la guarda de veres del
+   proveïdor, no una guarda simulada.
+   Decisió 1 del Mestre (261007) · `scopeKey` ja no és la clau de les dades:
+   ho és `ambitEstable`, i una renovació conserva la conversa sencera (vegeu
+   el bloc «Decisió 1» de XatContext.test.jsx). */
 import { StrictMode } from 'react';
 import { cleanup, render, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -61,9 +64,13 @@ describe('P1 · l’entrada del poble, una sola vegada per sessió', () => {
     expect(value.consumixEntrada('poble:la-torre')).toBe(true);
     expect(value.consumixEntrada('poble:la-torre')).toBe(false);
     const scopeAbans = value.scopeKey;
+    const ambitAbans = value.ambitEstable;
     renova(vista);
-    /* La prova només val si la renovació ha mogut de veres l'àmbit de les dades. */
+    /* La prova només val si la renovació ha mogut de veres el testimoni
+       d'operació (scopeKey); l'àmbit de dades, ambitEstable, no es mou
+       (Decisió 1 del Mestre, 261007). */
     expect(value.scopeKey).not.toBe(scopeAbans);
+    expect(value.ambitEstable).toBe(ambitAbans);
     expect(value.consumixEntrada('poble:la-torre')).toBe(false);
   });
 

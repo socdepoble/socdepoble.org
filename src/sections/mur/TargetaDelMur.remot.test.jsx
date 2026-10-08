@@ -83,6 +83,21 @@ describe('T6 en remot · la boina de l’entitat pilot pel seu id de servidor', 
     expect(hrefDe(arrel, 'a')).toBe(`/empresa/${UUID_PILOT}`);
   });
 
+  /* Auditoria 261007 (B) · Defensa en profunditat: l'enllaç de tota la targeta
+     només és una ruta de l'app. Un mainHref de fora en un payload escrit per
+     PostgREST navegava la pestanya de l'amfitrió. */
+  test('l’enllaç de tota la targeta: una ruta interna es conserva i una adreça de fora cau al detall', () => {
+    const overlay = (arrel, id) => arrel.querySelector(`[data-prova="${id}"] a.sp-card-link-overlay`)?.getAttribute('href') ?? null;
+    const arrel = pinta([
+      { ...publicacio('fora', UUID_ALTRA), mainHref: 'https://fals-poble.example/entra' },
+      { ...publicacio('relativa', UUID_ALTRA), mainHref: '//fals-poble.example' },
+      { id: 'projecte', isSystem: true, type: 'sistema', title: 'El projecte', mainHref: '/projecte' }
+    ]);
+    expect(overlay(arrel, 'fora')).toBe('/mur/fora');
+    expect(overlay(arrel, 'relativa')).toBe('/mur/relativa');
+    expect(overlay(arrel, 'projecte')).toBe('/projecte');
+  });
+
   test('en llavor o sense la capacitat del directori, cap crida al port', () => {
     estat.ui = { externalConfig: { dataMode: 'seed' } };
     const llavor = pinta([publicacio('a', UUID_PILOT)]);

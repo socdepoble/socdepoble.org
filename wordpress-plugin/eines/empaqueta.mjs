@@ -7,6 +7,13 @@
  * i build:wp:directori a wordpress-plugin/builds/directori/dist:
  *   · verifica l'inventari del build: cap resta de builds anteriors entra al
  *     paquet i cap fitxer no pot haver canviat després de compilar;
+ *   · verifica el format del paquet (decisió 5 del Mestre, 261007): en el
+ *     trossejat, el carregador soc-de-poble.standalone.js demana el mòdul
+ *     d'entrada que declara `formatDelPaquet` i tots els trossos de dist/trossos/ són
+ *     a l'inventari, de manera que entren als dos zips (l'estàtic i el de
+ *     WordPress) com qualsevol altre fitxer; la variant del directori és
+ *     sempre monolítica. Els trossos orfes de builds anteriors ixen com a
+ *     restes i no s'empaqueten;
  *   · soc-de-poble-X.zip              l'arbre estàtic, per a Sollutia o per a
  *                                     qualsevol amfitrió, amb el manifest;
  *   · socdepoble-enxufe-X.zip         el MATEIX arbre dins de l'adaptador de
@@ -380,6 +387,43 @@ export function verificaInventari(dist, release) {
   return { camins: [...camins].sort(), restes };
 }
 
+/* Decisió 5 del Mestre (261007): la carpeta dels mòduls del paquet trossejat
+   i la forma del seu mòdul d'entrada (vite.standalone.config.js). */
+export const CARPETA_DE_TROSSOS = 'trossos';
+const MODUL_DE_TROSSOS = /^trossos\/[A-Za-z0-9_-]+\.js$/;
+
+/**
+ * Contrasta la clau `formatDelPaquet` del manifest amb el que l'inventari
+ * porta de veritat (`camins`, de verificaInventari) i torna { format, trossos }:
+ *   · sense `formatDelPaquet`, o monolític: res sota trossos/ (un tros dins
+ *     d'un paquet monolític seria una barreja de builds);
+ *   · trossos: el mòdul d'entrada és vàlid i és a l'inventari, el carregador
+ *     el nomena (si no, en demanaria un altre), tot el que hi ha sota
+ *     trossos/ és .js i en són exactament `formatDelPaquet.trossos`.
+ * Un format desconegut no s'empaqueta. Relleu 261007 · la clau no es diu
+ * `paquet`: al canal, `paquet` són els zips (`estatic.paquet` i
+ * `adaptadors.wordpress.paquet`).
+ */
+export function verificaPaquet(dist, release, camins) {
+  const paquet = release.formatDelPaquet;
+  const deTrossos = camins.filter((cami) => cami.startsWith(`${CARPETA_DE_TROSSOS}/`));
+  if (paquet === undefined || paquet?.format === 'monolitic') {
+    if (deTrossos.length) throw new Error(`Un paquet monolític no porta ${CARPETA_DE_TROSSOS}/: ${deTrossos[0]}`);
+    return { format: 'monolitic', trossos: 0 };
+  }
+  if (paquet?.format !== 'trossos') throw new Error(`Format de paquet desconegut: ${paquet?.format}`);
+  if (typeof paquet.modul !== 'string' || !MODUL_DE_TROSSOS.test(paquet.modul) || !camins.includes(paquet.modul)) {
+    throw new Error(`El mòdul d'entrada del paquet no és a l'inventari: ${paquet.modul}`);
+  }
+  if (!fs.readFileSync(path.join(dist, ENTRADA), 'utf8').includes(paquet.modul)) throw new Error(`${ENTRADA} no demana ${paquet.modul}.`);
+  const noJs = deTrossos.find((cami) => !cami.endsWith('.js'));
+  if (noJs) throw new Error(`Sota ${CARPETA_DE_TROSSOS}/ només hi van mòduls .js: ${noJs}`);
+  if (deTrossos.length !== paquet.trossos) {
+    throw new Error(`El manifest diu ${paquet.trossos} trossos i l'inventari en porta ${deTrossos.length}.`);
+  }
+  return { format: 'trossos', trossos: deTrossos.length };
+}
+
 /** Fitxers de l'adaptador (llista blanca), sense ocults. */
 export function fitxersAdaptador(arrelPlugin = ARREL_PLUGIN) {
   const rels = [...ADAPTADOR.fitxers];
@@ -434,6 +478,7 @@ export function empaqueta({ arrelPlugin = ARREL_PLUGIN, sortida, urlBase, clauPe
   if (errors.length) throw new Error(`Este build no es pot empaquetar:\n- ${errors.join('\n- ')}`);
   const { versio } = release;
   const { camins, restes } = verificaInventari(dist, release);
+  verificaPaquet(dist, release, camins);
   // Cap substitució silenciosa, tampoc en --prova: els dos builds són obligatoris.
   const distDirectori = path.join(arrelPlugin, 'builds/directori/dist');
   const manifestDirectori = path.join(distDirectori, FITXER_RELEASE);
@@ -455,6 +500,11 @@ export function empaqueta({ arrelPlugin = ARREL_PLUGIN, sortida, urlBase, clauPe
     throw new Error('Les dues variants han de compartir versió, node i contracte.');
   }
   const inventariDirectori = verificaInventari(distDirectori, releaseDirectori);
+  /* Decisió 5 (261007): el directori usa el React del nucli i no trosseja. */
+  if (releaseDirectori.formatDelPaquet !== undefined && releaseDirectori.formatDelPaquet?.format !== 'monolitic') {
+    throw new Error('La variant del directori ha de ser monolítica: SDP_VARIANT=wordpress no trosseja.');
+  }
+  verificaPaquet(distDirectori, releaseDirectori, inventariDirectori.camins);
 
   if (!urlBase) throw new Error('Cal --url-base: la URL des d’on es podran baixar els zips.');
   validaUrlBase(urlBase, { prova });
@@ -622,6 +672,8 @@ export const AJUDA = `Empaquetador de l'enxufe (sdp.release.v1)
 Una release, en ordre:
   1. SDP_RELEASE=1 SDP_VERSIO=0.2.0 npm run build:wp   (VITE_* de producció a .env.production.local)
      SDP_RELEASE=1 SDP_VERSIO=0.2.0 npm run build:wp:directori
+     L'autònom ix trossejat (carregador + dist/trossos/); SDP_PAQUET=monolitic torna a l'IIFE
+     d'un sol fitxer. El directori és sempre monolític.
   2. node wordpress-plugin/eines/empaqueta.mjs \\
        --url-base https://github.com/socdepoble/socdepoble.org/releases/download/enxufe-v{versio}/ \\
        --clau ~/.sdp/enxufe-ed25519.pem

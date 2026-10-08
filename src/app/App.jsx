@@ -250,13 +250,19 @@ function AppShell({ children, mobileNav }) {
     return () => setPeticionsImmersiu((n) => n - 1);
   }, []);
   const immersiu = isCompact && peticionsImmersiu > 0;
-  const toggleSidebar = () => {
+  /* Auditoria 261007 (B) · Estable entre pintats: una fletxa nova a cada pintat
+     d'AppShell desfeia el memo() de SidebarContent, que es tornava a pintar
+     sencer quan AppShell es repintava per l'status global, un avís, la sessió
+     o l'amplària. En navegar no s'estalvia res (SidebarContent llig el
+     router), i TopBar es continua pintant per UIContext i pel router, que
+     consumix directament. */
+  const toggleSidebar = useCallback(() => {
     if (isCompact) {
       setIsMobileSidebarOpen(v => !v);
     } else {
       setIsDesktopSidebarClosed(v => !v);
     }
-  };
+  }, [isCompact]);
 
   useEffect(() => {
     if (!rootRef.current) return;
@@ -759,11 +765,17 @@ function AppDataLoader() {
   // Eliminar el bloqueig global per a error o loading del Core permet a Sóc de Poble
   // mantindre l'accessibilitat a les seccions independents (Xat, Mur, Notes)
   // i delegar la degradació del contingut base a cada component afectat.
+  /* Decisió 2 del Mestre (261007) · Una revalidació en segon pla que falla
+     conserva el contingut en 'ready' i deixa l'error a banda
+     (errorRevalidacio, useScopedResource.js): també és un contingut base
+     degradat (pot ser ranci) i també ho diu la consola. */
   useEffect(() => {
     if (core.status === 'error') {
       console.warn("CoreContent degradat: l'aplicació arranca amb dades parcials o sense catàleg.", core.error);
+    } else if (core.errorRevalidacio) {
+      console.warn("CoreContent degradat: la revalidació en segon pla ha fallat; es conserva l'últim contingut bo.", core.errorRevalidacio);
     }
-  }, [core.status, core.error]);
+  }, [core.status, core.error, core.errorRevalidacio]);
 
   return (
     <>
@@ -785,10 +797,6 @@ function RedireccioIaia() {
   const { search } = useLocation();
   const consulta = new URLSearchParams(search).toString();
   return <Navigate to={consulta ? `/iaia?${consulta}` : '/iaia'} replace />;
-}
-
-function ActorRedirect({ to }) {
-  return <Navigate to={`/${to}`} replace />;
 }
 
 /* T4 (ordre del Mestre, 260930) · Els àlies d'entrada (/login, /accedir,
@@ -854,10 +862,12 @@ function AppRoutes() {
 }
 
 function ActorRoutes({ agents }) {
-  // Aquestes rutes són la resta de rutes (antics /jo i /e/:slug)
+  /* La resta de rutes de l'app, sota el comodí final d'AppRoutes. Auditoria
+     261007 (B) · «/» i «/control» els resol AppRoutes abans del comodí (el
+     Routes propi es queda amb el primer fill que casa): les seues còpies d'ací
+     no s'assolien mai i s'han llevat. */
   return (
     <Routes>
-      <Route path="/" element={<ActorRedirect to="xat" />} />
       <Route path="xat" element={<XatSection />} />
       <Route path="control-xat" element={<XatControlSection />} />
       <Route path="xat/:threadId" element={<XatSection />} />
@@ -869,8 +879,6 @@ function ActorRoutes({ agents }) {
       <Route path="poblacio" element={<PoblacioSection />} />
       <Route path="notes" element={<NotesSection />} />
       <Route path="dispositius" element={<DevicesSection />} />
-      {/* Globals: sota /jo queien a NotFoundPage (el botó central del mòbil). */}
-      <Route path="control" element={<Navigate to="/control" replace />} />
       {/* Sense sessió, els formularis del perfil fallarien en desar: a /registre i tornar. */}
       <Route path="el-meu-perfil" element={<RequireAuth><PerfilShell /></RequireAuth>} />
       <Route path="perfil" element={<ProfileSection agents={agents} />} />

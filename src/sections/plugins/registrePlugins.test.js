@@ -7,6 +7,9 @@
  * inventada.
  * W4-08 (261004) · Dotze: MarIA hi ha afegit el Panell de Disseny
  * («disseny», després del Cervell), que obri /disseny (DesignSection).
+ * Ordre del Mestre (261007) · Bàscula descartada per ara: «Llévala de la
+ * interfície actual i descarta la seua implementació». Onze: la Bàscula ja
+ * no és del registre, només una llavor del Full de ruta.
  */
 import { existsSync } from 'node:fs';
 import path from 'node:path';
@@ -20,7 +23,7 @@ import {
   rutaDelPlugin
 } from './registrePlugins.js';
 
-const ORDRE = ['mapa', 'vehicle', 'animalets', 'gestoria', 'rebost', 'salut', 'consola', 'cervell', 'disseny', 'rss', 'tpv', 'bascula'];
+const ORDRE = ['mapa', 'vehicle', 'animalets', 'gestoria', 'rebost', 'salut', 'consola', 'cervell', 'disseny', 'rss', 'tpv'];
 
 /* Les rutes de la taula d'App (App.jsx), amb el seu element. */
 const rutesDApp = () => [...fontApp.matchAll(/<Route\s+path="([^"]+)"/g)].map((m) => m[1]);
@@ -48,10 +51,20 @@ function esRutaDeVeres(ruta) {
 }
 
 describe('registre de plugins', () => {
-  test('dotze ids, en l’ordre del Mestre, sense repetits', () => {
+  test('onze ids, en l’ordre del Mestre, sense repetits', () => {
     expect(IDS_PLUGINS).toEqual(ORDRE);
     expect(PLUGINS.map((p) => p.id)).toEqual(ORDRE);
-    expect(new Set(IDS_PLUGINS).size).toBe(12);
+    expect(new Set(IDS_PLUGINS).size).toBe(11);
+  });
+
+  /* Ordre del Mestre (261007) · Bàscula descartada per ara: cap plugin, cap
+     pàgina, cap targeta. La il·lustració es conserva al disc (cap esborrat),
+     però cap entrada del registre la fa servir. */
+  test('la Bàscula ja no és del registre: ni id, ni títol, ni il·lustració en ús', () => {
+    expect(IDS_PLUGINS).not.toContain('bascula');
+    expect(pluginPerId('bascula')).toBeNull();
+    expect(PLUGINS.filter((p) => /b[aà]scula/i.test([p.titol, p.subtitol, p.entradilla, p.imatgeAlt, p.etiquetaObrir, p.imatge].join(' ')))).toEqual([]);
+    expect(existsSync(path.join(process.cwd(), 'public/assets/ui/plugins/bascula_vinyeta.jpg'))).toBe(true);
   });
 
   test('la taula és immutable', () => {
@@ -92,8 +105,7 @@ describe('registre de plugins', () => {
       cervell: '/consola/explorador',
       disseny: '/disseny',
       rss: '/app/lector',
-      tpv: '/app/bar',
-      bascula: null
+      tpv: '/app/bar'
     });
   });
 
@@ -139,7 +151,7 @@ describe('registre de plugins', () => {
   test('la Consola, el Cervell i la Gestoria només s’obrin en desenvolupament', () => {
     expect(Object.fromEntries(PLUGINS.map((p) => [p.id, p.entorn]))).toEqual({
       mapa: null, vehicle: null, animalets: null, gestoria: 'desenvolupament',
-      rebost: null, salut: null, consola: 'desenvolupament', cervell: 'desenvolupament', disseny: null, rss: null, tpv: null, bascula: null
+      rebost: null, salut: null, consola: 'desenvolupament', cervell: 'desenvolupament', disseny: null, rss: null, tpv: null
     });
     // Cap entradilla promet un accés en producció que no existix.
     expect(pluginPerId('consola').entradilla).not.toMatch(/superadministraci/);
@@ -162,7 +174,7 @@ describe('registre de plugins', () => {
     }
     expect(Object.fromEntries(PLUGINS.map((p) => [p.id, p.espai]))).toEqual({
       mapa: null, vehicle: null, animalets: null, gestoria: 'empresa',
-      rebost: 'llar', salut: 'llar', consola: null, cervell: null, disseny: null, rss: null, tpv: null, bascula: null
+      rebost: 'llar', salut: 'llar', consola: null, cervell: null, disseny: null, rss: null, tpv: null
     });
     expect(pluginsDeLEspai('empresa').map((p) => p.id)).toEqual(['gestoria']);
     expect(pluginsDeLEspai('llar').map((p) => p.id)).toEqual(['rebost', 'salut']);
@@ -188,7 +200,7 @@ describe('registre de plugins', () => {
   test('appDelPlugin diu de quina app de la plataforma és l’«Obrir» (per als interruptors), o null', () => {
     expect(Object.fromEntries(PLUGINS.map((p) => [p.id, appDelPlugin(p)]))).toEqual({
       mapa: null, vehicle: null, animalets: null, gestoria: 'gestoria',
-      rebost: 'nevera', salut: 'salut', consola: null, cervell: null, disseny: null, rss: 'lector', tpv: 'bar', bascula: null
+      rebost: 'nevera', salut: 'salut', consola: null, cervell: null, disseny: null, rss: 'lector', tpv: 'bar'
     });
     expect(appDelPlugin(null)).toBeNull();
   });

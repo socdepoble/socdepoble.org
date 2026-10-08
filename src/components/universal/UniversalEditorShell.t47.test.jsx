@@ -8,6 +8,7 @@ vi.mock('../../app/contexts/RouterContext', () => ({ useNavigate: () => vi.fn(),
 vi.mock('./NotificationContext.jsx', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
 vi.mock('../../config/assetResolver', () => ({ resolveAsset: (uri) => uri, resolRecursPropi: (valor) => valor }));
 import { UniversalEditorShell } from './UniversalEditorShell.jsx';
+import { BotoDretsAutor } from './CopyrightSelector.jsx';
 import { ContentProvider } from './ContentProvider.jsx';
 import { sanitizeHtml } from '../../utils/sanitize.js';
 
@@ -28,16 +29,23 @@ test('sense estatDesament ni avisosCamps, el DOM és el de sempre', () => {
     .toEqual(['page-intro', 'cos']);
 });
 
-test('l’indicador de l’autodesament és el PRIMER element de les accions de la barra taronja i desapareix quan tot és desat', () => {
+/* Derogat en part per l'ordre del Mestre (261008, «confirmació o feedback
+   visual del desat automàtic», EstatDesament.jsx) · Quan tot és desat, el
+   núvol dels canvis pendents ja no desapareix sense més: dona pas al check de
+   desat, que es queda fins al canvi següent. La closca no en sap res: pinta
+   l'indicador el primer de les accions, siga quin siga l'estat. */
+test('l’indicador de l’autodesament és el PRIMER element de les accions de la barra taronja i, quan tot és desat, el pendent dona pas al desat', () => {
   const { container, rerender } = closca({ estatDesament: { estat: 'pendent' } });
   const accions = container.querySelector('.bar-orange .bar-actions');
   expect(accions.firstElementChild.classList.contains('sdp-estat-desament')).toBe(true);
+  expect(accions.firstElementChild.dataset.estat).toBe('pendent');
   rerender(
     <UniversalEditorShell id="d1" titleHtml="Títol" subtitleHtml="" leadHtml="" estatDesament={{ estat: 'net' }}>
       <div data-testid="cos" />
     </UniversalEditorShell>
   );
-  expect(container.querySelector('.sdp-estat-desament')).toBeNull();
+  expect(container.querySelector('.sdp-estat-desament--pendent')).toBeNull();
+  expect(container.querySelector('.bar-orange .bar-actions').firstElementChild.dataset.estat).toBe('net');
   expect(container.querySelector('[role="status"][aria-live="polite"]').textContent).toBe('Tots els canvis estan desats.');
 });
 
@@ -138,11 +146,28 @@ test('després d’una acció d’avís de la capçalera, el focus va a la capç
   expect(document.activeElement).toBe(container.querySelector('.hero-image img.sdp-hero__imatge'));
 });
 
-test('després d’una acció d’avís dels drets, el focus va al disparador dels drets', () => {
-  const classificacio = <button type="button" className="sdp-copyright-selector">Drets</button>;
-  const { container } = render(<AmbAvis camp="copyright" classificacio={classificacio} />);
+/* Decisió del Mestre (261008) · El disparador de veres (BotoDretsAutor, amb
+   data-sdp-drets), no un botó inventat amb una classe que ja no porta ningú:
+   abans el focus d'esta acció queia al títol a l'editor de veres. */
+test('després d’una acció d’avís dels drets, el focus va al disparador dels drets (la píndola de veres)', () => {
+  const classificacio = (
+    <div className="sdp-copyright-control">
+      <BotoDretsAutor valor="© Sóc de Poble" onClick={vi.fn()} />
+    </div>
+  );
+  const { container } = render(<AmbAvis camp="copyright" classificacio={classificacio} copyright="© Sóc de Poble" />);
   premAccio(container);
-  expect(document.activeElement).toBe(container.querySelector('.sdp-copyright-selector'));
+  const pindola = container.querySelector('.sdp-copyright-control > button.sdp-classificacio-pindola');
+  expect(pindola.hasAttribute('data-sdp-drets')).toBe(true);
+  expect(document.activeElement).toBe(pindola);
+});
+
+test('sense píndola, el focus de l’avís dels drets va al copyright de la capçalera en edició (el botó)', () => {
+  const { container } = render(<AmbAvis camp="copyright" copyright="CC BY 4.0" onCanviaCopyright={vi.fn()} />);
+  premAccio(container);
+  const boto = container.querySelector('header.page-title p.page-title-copyright > button.sp-card-copyright__enllac');
+  expect(boto).not.toBeNull();
+  expect(document.activeElement).toBe(boto);
 });
 
 test('sense el destí propi (cap avatar editable), el focus va al títol, mai al body', () => {

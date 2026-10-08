@@ -29,6 +29,7 @@ vi.mock('./PerfilContext.jsx', () => ({ PerfilProvider: ({ children }) => childr
 vi.mock('./PerfilEditor.jsx', () => ({ PerfilEditor: ({ identitat }) => <p>{`fitxa de ${identitat.nom}`}</p> }));
 vi.mock('./DetallCompte.jsx', () => ({ DetallCompte: ({ identitat }) => <p>{`compte de ${identitat.nom}`}</p> }));
 vi.mock('./DetallPrivacitat.jsx', () => ({ DetallPrivacitat: ({ identitat }) => <p>{`privacitat de ${identitat.nom}`}</p> }));
+vi.mock('./DetallVistes.jsx', () => ({ DetallVistes: ({ identitat }) => <p>{`vistes de ${identitat.nom}`}</p> }));
 vi.mock('./DialegNovaOrganitzacio.jsx', () => ({
   DialegNovaOrganitzacio: ({ obert }) => (obert ? <div role="dialog" aria-label="Nova organització" /> : null),
 }));
@@ -71,8 +72,9 @@ test('la primera columna, en ordre: la persona pel seu nom, GRUPS I EMPRESES i A
   expect(within(navegacio()).getByRole('button', { name: 'GRUPS I EMPRESES' }).getAttribute('aria-expanded')).toBe('true');
   // En entrar: la persona activa, els seus apartats i la fitxa oberta.
   expect(within(navegacio()).getByRole('button', { name: 'Javi Llinares' }).getAttribute('aria-current')).toBe('page');
-  /* T9 (261001) · «Els nodes» és l'últim apartat de la persona. */
-  expect(apartats(container)).toEqual(['La fitxa', 'El compte', 'Els nodes']);
+  /* T9 (261001) · «Els nodes» és l'últim apartat de la persona.
+     Ordre del Mestre (261008) · «Les vistes», just després de «La fitxa». */
+  expect(apartats(container)).toEqual(['La fitxa', 'Les vistes', 'El compte', 'Els nodes']);
   expect(within(detall(container)).getByText('fitxa de Javi Llinares')).toBeTruthy();
   expect(container.querySelector('.perfil-espai .perfil-espai__detall')).toBe(detall(container));
 });
@@ -80,9 +82,13 @@ test('la primera columna, en ordre: la persona pel seu nom, GRUPS I EMPRESES i A
 test('cada element de l’esquerra obri els seus apartats i el primer al detall', () => {
   m.caps = new Set(['compte']);
   const { container } = render(<PerfilShell />);
-  expect(apartats(container)).toEqual(['La fitxa', 'El compte', 'Privacitat i dades', 'Els nodes']);
+  expect(apartats(container)).toEqual(['La fitxa', 'Les vistes', 'El compte', 'Privacitat i dades', 'Els nodes']);
   fireEvent.click(within(container).getByRole('button', { name: /Privacitat i dades/ }));
   expect(within(detall(container)).getByText('privacitat de Javi Llinares')).toBeTruthy();
+
+  /* 261008 · «Les vistes» obri la seua pàgina, fora de l'editor. */
+  fireEvent.click(within(container).getByRole('button', { name: /Les vistes/ }));
+  expect(within(detall(container)).getByText('vistes de Javi Llinares')).toBeTruthy();
 
   /* T9 · «Els nodes» obri la seua pàgina de lectura: sense amfitrió, només Sóc de Poble. */
   fireEvent.click(within(container).getByRole('button', { name: /Els nodes/ }));
@@ -93,7 +99,7 @@ test('cada element de l’esquerra obri els seus apartats i el primer al detall'
   expect(within(nodes).queryAllByRole('button')).toEqual([]);
 
   fireEvent.click(within(navegacio()).getByRole('button', { name: 'Forn' }));
-  expect(apartats(container)).toEqual(['La fitxa', 'El compte']);
+  expect(apartats(container)).toEqual(['La fitxa', 'Les vistes', 'El compte']);
   expect(within(detall(container)).getByText('fitxa de Forn')).toBeTruthy();
 
   fireEvent.click(within(navegacio()).getByRole('button', { name: 'Gestoria de Poble' }));
@@ -101,7 +107,10 @@ test('cada element de l’esquerra obri els seus apartats i el primer al detall'
   const pagina = detall(container);
   expect(within(pagina).getByRole('heading', { level: 1, name: 'Gestoria de Poble' })).toBeTruthy();
   expect(within(pagina).getByText('Pendent de connectar en este node')).toBeTruthy();
-  expect(within(pagina).getAllByRole('button').map((b) => b.textContent)).toEqual(['Mostrar al Panell de Control']);
+  /* Ordre del Mestre (261007, prompt 261007_1628, peça C) · Sense preferència
+     la utilitat ja és al Panell (la mateixa regla que ControlSection: només
+     l'amaga un false explícit), i el botó ho diu. */
+  expect(within(pagina).getAllByRole('button').map((b) => b.textContent)).toEqual(['Ocultar del Panell de Control']);
   expect(within(pagina).queryAllByRole('link')).toEqual([]);
 });
 

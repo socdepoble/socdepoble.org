@@ -3,7 +3,7 @@
 
    L'estat de desament d'una nota (GlobalSaveManager) llegit amb
    useSyncExternalStore, i traduït a la prop `estatDesament` = { estat,
-   detall } que UniversalEditorShell pinta amb EstatDesament (skill
+   detall, reintentant? } que UniversalEditorShell pinta amb EstatDesament (skill
    sdp-universal-editor §1): la ploma apareix amb canvis pendents i
    desapareix quan el servidor ho ha confirmat.
 
@@ -55,12 +55,20 @@ const lloc = (pestanya) => (pestanya ? 'només es guarda en esta pestanya' : 'es
 
 /** { estat, problema, quarantena, pestanya } del gestor → { estat, detall } per a la barra taronja.
  * `conflicte`: la nota s'ha obert amb un esborrany D01 (draftConflict) que el
- * gestor encara no ha tocat; no és «tot desat», espera una decisió (T47). */
+ * gestor encara no ha tocat; no és «tot desat», espera una decisió (T47).
+ * Línia I2 de l'Onada 4 (pla 261008_1201) · Un error temporal (sense xarxa,
+ * 5xx) el gestor el torna a provar sol: porta també `reintentant: true`, i
+ * el seu pas a 'net' és la confirmació del servidor (la icona hi pinta el
+ * check). Cap altra branca porta la clau. */
 export function estatPerAlEditor(desament = NET, { conflicte = false } = {}) {
   const { estat = 'net', problema = null, quarantena = [], pestanya = false } = desament;
   if (problema?.tipus === 'temporal') {
     const motiu = problema.missatge ? ` (${problema.missatge})` : '';
-    return { estat: 'error', detall: `No s’ha pogut desar${motiu}. Es tornarà a provar sol; mentrestant, el canvi ${lloc(pestanya)}.` };
+    return {
+      estat: 'error',
+      detall: `No s’ha pogut desar${motiu}. Es tornarà a provar sol; mentrestant, el canvi ${lloc(pestanya)}.`,
+      reintentant: true,
+    };
   }
   if (problema?.tipus === 'conflicte' || (conflicte && estat === 'net')) {
     return { estat: 'error', detall: `Hi ha una versió més recent d’esta nota. El teu esborrany ${lloc(pestanya)} fins que tries quina vols conservar.` };

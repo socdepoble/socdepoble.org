@@ -18,6 +18,7 @@ import {
 } from '../../components/PedraSeca/index.js';
 import { Link, useSearchParams } from '../../app/contexts/RouterContext';
 import { useUIActions } from '../../app/contexts/UIContext';
+import { rutaDEntrada } from '../../config/rutaEntrada.js';
 import { TIPUS_CERCA, extracteDeResultat, partsRessaltades, tipusValid } from './indexCerca.js';
 import { useCercaGlobal } from './useCercaGlobal.js';
 
@@ -156,7 +157,11 @@ export default function SearchSection() {
       ? t('section.search.recompteU', "S'ha trobat 1 resultat per a «{q}»")
       : t('section.search.recompte', "S'han trobat {n} resultats per a «{q}»"), { n: total, q });
 
-  const rutaEntra = `/registre?tornar=${encodeURIComponent(q ? `/cerca?q=${encodeURIComponent(q)}` : '/cerca')}`;
+  /* Auditoria 261007 (B) · El botó diu «Entra»: obri /registre en el mode
+     d'entrar, per la forma única de totes les portes (rutaEntrada.js). Abans
+     l'enllaç es construïa a mà, sense mode, i OnboardingSection obria «Crear
+     compte». La tornada es valida allà (tornadaSegura). */
+  const rutaEntra = rutaDEntrada({ mode: 'entrar', tornar: q ? `/cerca?q=${encodeURIComponent(q)}` : '/cerca' });
   const enllacEntra = (
     <Link className="sdp-boto sdp-boto--secundari" to={rutaEntra}>
       {t('section.search.entra', 'Entra per a buscar gent del poble')}

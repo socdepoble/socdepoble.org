@@ -4,8 +4,10 @@ import {
   updateUserPassword, getProfile, teCapacitat, uploadToStorage,
   listMyAgents, updateAgent,
   llegeixContacteOrganitzacio, desaContacteOrganitzacio,
+  llistaMembresOrganitzacio, desaMembreOrganitzacio, llevaMembreOrganitzacio, carregaMembres,
 } from '../../data/backendPort.js';
 import { creaOrganitzacio as creaOrganitzacioAlServei } from '../../data/organizations.js';
+import { candidatsDeMembre } from './membresModel.js';
 
 import { useSession } from '../../app/contexts/SessionContext.jsx';
 import { backendScope } from '../../config/backendConfig.js';
@@ -37,6 +39,40 @@ function contacteDelPort() {
   } catch { return null; }
 }
 
+/* Ordre del Mestre (261008, grup C) · Els membres d'una organització són una
+   capacitat opcional ('membresOrganitzacio'). Sense ella, o amb un mock
+   parcial del port a les proves, cap crida: «Membres» i «Eixir» es pinten
+   pendents. Mateix blindatge que el correu. Els candidats a persona membre
+   ixen de carregaMembres, del nucli (el padró del poble). */
+function membresDelPort() {
+  try {
+    if (!teCapacitat('membresOrganitzacio')) return null;
+    return typeof llistaMembresOrganitzacio === 'function' && typeof desaMembreOrganitzacio === 'function'
+      && typeof llevaMembreOrganitzacio === 'function' && typeof carregaMembres === 'function'
+      ? { llista: llistaMembresOrganitzacio, desa: desaMembreOrganitzacio, lleva: llevaMembreOrganitzacio, cerca: carregaMembres }
+      : null;
+  } catch { return null; }
+}
+
+/* Com l'adaptador quan el servidor no té l'esquema: el mateix `code`. */
+const errorSenseMembres = () => Object.assign(
+  new Error('El servidor d’este poble encara no gestiona els membres de les organitzacions.'),
+  { code: 'NO-DISPONIBLE' },
+);
+
+/* La configuració del port amb el senyal de cancel·lació, si n'hi ha. */
+const ambSenyal = (config, signal) => (signal ? { ...config, signal } : config);
+
+/* Ordre del Mestre (261008, grup C) · El poble d'una organització
+   (organizations.town_name, 2610081401): el NOM del poble, o null sense
+   poble. El mateix límit que el CHECK del servidor. */
+const MAXIM_NOM_POBLE = 120;
+function valorDePoble(valor) {
+  const nom = String(valor ?? '').trim();
+  if (nom.length > MAXIM_NOM_POBLE) throw new Error(`El nom del poble pot tindre com a màxim ${MAXIM_NOM_POBLE} caràcters.`);
+  return nom || null;
+}
+
 /* L'estat del correu d'una organització quan la lectura falla. Un esquema
    absent (NO-DISPONIBLE) es diu amb el motiu de l'adaptador, mai l'error cru. */
 function contacteFallat(error) {
@@ -51,6 +87,13 @@ export function usePerfil() {
   return ctx;
 }
 
+/* Grup C (261008) · El context, o null fora de PerfilProvider: «El compte» també
+   es pinta sense el Perfil (proves de la barra taronja), i llavors la gestió
+   de membres es queda pendent. */
+export function usePerfilOpcional() {
+  return useContext(PerfilContext);
+}
+
 /* ═══════════════════════════════════════════════════════════════════
    CATÀLEG D'AJUSTOS
 
@@ -60,8 +103,9 @@ export function usePerfil() {
    que una fila desactivada amb el motiu escrit.
 
    `tipus` diu QUIN giny pinta DetallAjust ('text' | 'area' |
-   'password' | 'imatge' | 'boolean' | 'accio'). La UI mai més
-   endevina per l'id: afegir un ajust nou no requereix tocar DetallAjust.
+   'password' | 'imatge' | 'boolean' | 'correu' | 'selector' | 'accio').
+   La UI mai més endevina per l'id: afegir un ajust nou no requereix
+   tocar DetallAjust. Un 'selector' porta les seues `opcions`.
 
    `pendent` (només accions) = el backend encara no la té: es pinta
    desactivada i honesta, mai prometuda.
@@ -116,7 +160,34 @@ function ajustosCorreu(mana, contacte) {
   ];
 }
 
-export function ajustosOrganitzacio(org = {}, contacte = org.contacte) {
+/**
+ * Ordre del Mestre (261008, grup C) · Les opcions del selector del poble
+ * d'una organització: l'opció buida (sense poble), els pobles del node
+ * (`towns` del contingut core, pel `title`) per ordre alfabètic, i el valor
+ * desat (`actual`) encara que ja no siga a la llista, perquè desar un altre
+ * ajust no el perda. El valor de cada opció és el NOM del poble, el que es
+ * desa a organizations.town_name. Pura.
+ */
+export function opcionsDePoble(towns = [], actual = '') {
+  const noms = new Set();
+  for (const town of Array.isArray(towns) ? towns : []) {
+    const nom = typeof town?.title === 'string' ? town.title.trim() : '';
+    if (nom) noms.add(nom);
+  }
+  const desat = typeof actual === 'string' ? actual.trim() : '';
+  if (desat) noms.add(desat);
+  return [
+    { valor: '', etiqueta: 'Tria un poble…' },
+    ...[...noms].sort((a, b) => a.localeCompare(b, 'ca')).map((nom) => ({ valor: nom, etiqueta: nom })),
+  ];
+}
+
+/**
+ * Grup C (261008) · `pobles`: els pobles del node per al selector del poble.
+ * `ambMembres`: si el port gestiona els membres ('membresOrganitzacio');
+ * sense, «Membres» i «Eixir» es pinten pendents, com abans.
+ */
+export function ajustosOrganitzacio(org = {}, contacte = org.contacte, { pobles = [], ambMembres = false } = {}) {
   const mana = esRolQueMana(org.role);
   const tancat = 'Només qui administra aquesta organització ho pot canviar.';
   return [
@@ -124,14 +195,18 @@ export function ajustosOrganitzacio(org = {}, contacte = org.contacte) {
     { id: 'avatar', lloc: 'fitxa', titol: 'Foto / Logotip', camp: 'logo_url', tipus: 'imatge', valor: org.logo_url || '', obert: mana, motiu: tancat },
     { id: 'lema', lloc: 'fitxa', titol: 'Lema', camp: 'lema', tipus: 'text', valor: org.lema || '', obert: mana, motiu: tancat },
     { id: 'descripcio', lloc: 'fitxa', titol: 'Descripció', camp: 'description', tipus: 'area', valor: org.description || '', obert: mana, motiu: tancat },
+    /* Ordre del Mestre (261008) · el poble de l'organització, el que porta la
+       barra taronja. Obert segons el rol, no segons la llista de pobles. */
+    { id: 'poble', lloc: 'compte', titol: 'Poble', camp: 'town_name', tipus: 'selector', valor: org.town_name || '',
+      opcions: opcionsDePoble(pobles, org.town_name), obert: mana, motiu: tancat },
     ...ajustosCorreu(mana, contacte),
-    { id: 'membres', lloc: 'compte', titol: 'Membres', tipus: 'accio', accio: 'membres', pendent: true, obert: mana, motiu: tancat },
+    { id: 'membres', lloc: 'compte', titol: 'Membres', tipus: 'accio', accio: 'membres', pendent: !ambMembres, obert: mana, motiu: tancat },
     { id: 'identificador', lloc: 'compte', titol: 'Identificador', tipus: 'text', valor: org.slug || '', obert: false,
       motiu: 'L’identificador és permanent: hi ha enllaços publicats que hi apunten.' },
     /* Pendent fins a I7: hui la ruta pública no troba cap organització real. */
     { id: 'fitxa', lloc: 'compte', titol: 'Fitxa pública', tipus: 'accio', accio: 'obrir-fitxa', pendent: true,
       valor: `/${org.kind === 'group' ? 'grup' : 'empresa'}/${org.slug}`, obert: true },
-    { id: 'eixir', lloc: 'compte', titol: 'Eixir de l’organització', tipus: 'accio', accio: 'eixir', pendent: true,
+    { id: 'eixir', lloc: 'compte', titol: 'Eixir de l’organització', tipus: 'accio', accio: 'eixir', pendent: !ambMembres,
       obert: org.role !== 'owner',
       motiu: 'Qui és propietari no pot eixir-se’n: primer ha de traspassar la propietat.' },
   ];
@@ -187,6 +262,10 @@ function PerfilScope({ children, config, usuariId, usuariSessio, onCanviOrganitz
      persona administra: { [orgId]: { estat, correu, public, perDefecte, motiu } }.
      Viu a banda de les identitats: la fitxa (l'editor) no canvia quan arriba. */
   const [contactes, setContactes] = useState({});
+  /* Grup C (261008) · Els membres de les organitzacions: el port, si en sap
+     (una vegada per àmbit; el PerfilProvider el remunta si canvia el backend). */
+  const [portMembres] = useState(membresDelPort);
+  const ambMembres = Boolean(portMembres);
   const [carregant, setCarregant] = useState(true);
   const [error, setError] = useState(null);
 
@@ -203,6 +282,12 @@ function PerfilScope({ children, config, usuariId, usuariSessio, onCanviOrganitz
      compte» mostra el correu sense esperar la pròxima lectura. */
   const usuariSessioRef = useRef(usuariSessio);
   usuariSessioRef.current = usuariSessio;
+  /* Grup C · Les organitzacions i la persona d'ara, per a les accions de
+     membres sense fer-les inestables a cada lectura. */
+  const organitzacionsRef = useRef(organitzacions);
+  organitzacionsRef.current = organitzacions;
+  const usuariRef = useRef(usuari);
+  usuariRef.current = usuari;
   const avisaOrganitzacions = useCallback(() => {
     try { avisaRef.current?.(); } catch (e) { console.warn('[PerfilContext] Avís d’organitzacions:', e); }
   }, []);
@@ -424,7 +509,7 @@ function PerfilScope({ children, config, usuariId, usuariSessio, onCanviOrganitz
     const cataleg =
       objectiu.mena === 'persona'
         ? ajustosPersona(objectiu.dades || {})
-        : ajustosOrganitzacio(objectiu.dades || {}, contacte);
+        : ajustosOrganitzacio(objectiu.dades || {}, contacte, { ambMembres });
     const ajust = cataleg.find((a) => a.id === ajustId);
     if (!ajust) throw new Error(`Ajust desconegut: ${String(ajustId)}`);
     if (!ajust.obert) throw new Error(ajust.motiu || 'Aquest ajust no es pot modificar.');
@@ -452,8 +537,11 @@ function PerfilScope({ children, config, usuariId, usuariSessio, onCanviOrganitz
     if (!ajust.camp) {
       throw new Error(`L'ajust "${ajust.id}" no té camp associat al catàleg.`);
     }
-    await guardarCampPerfil(ajust.camp, valor, objectiu.id);
-  }, [identitats, contactes, guardarCampPerfil, assertCurrent]);
+    /* Grup C (261008) · El poble d'una organització es desa pel nom, i
+       l'opció buida és «sense poble» (null), no un text buit. */
+    const valorDesat = objectiu.mena !== 'persona' && ajust.id === 'poble' ? valorDePoble(valor) : valor;
+    await guardarCampPerfil(ajust.camp, valorDesat, objectiu.id);
+  }, [identitats, contactes, guardarCampPerfil, assertCurrent, ambMembres]);
 
   const creaOrganitzacio = useCallback(async (dades) => {
     assertCurrent();
@@ -478,6 +566,56 @@ function PerfilScope({ children, config, usuariId, usuariSessio, onCanviOrganitz
     return res.url;
   }, [assertCurrent]);
 
+  /* ═══ Grup C (ordre del Mestre, 261008) · ELS MEMBRES D'UNA ORGANITZACIÓ ═══
+     Alta directa (sense invitació); la persona pot «Eixir»; una organització
+     membre no hereta cap permís i només l'afig qui administra totes dues;
+     només la propietària nomena, degrada o lleva administradores; la llista
+     només la veuen owner i admin. Les regles les fa complir el port; ací,
+     la sessió vigent (assertCurrent) abans i després de cada crida. */
+  const llistaMembres = useCallback(async (orgId, { signal } = {}) => {
+    assertCurrent();
+    if (!portMembres) throw errorSenseMembres();
+    const llista = await portMembres.llista(orgId, ambSenyal(configRef.current, signal));
+    assertCurrent();
+    return Array.isArray(llista) ? llista : [];
+  }, [assertCurrent, portMembres]);
+
+  const desaMembre = useCallback(async (orgId, membre) => {
+    assertCurrent();
+    if (!portMembres) throw errorSenseMembres();
+    const desat = await portMembres.desa(orgId, membre, configRef.current);
+    assertCurrent();
+    return desat;
+  }, [assertCurrent, portMembres]);
+
+  const llevaMembre = useCallback(async (orgId, membre) => {
+    assertCurrent();
+    if (!portMembres) throw errorSenseMembres();
+    const resultat = await portMembres.lleva(orgId, membre, configRef.current);
+    assertCurrent();
+    /* «Eixir» (el propi id): ja no n'és membre, i l'organització deixa el
+       Perfil i el selector d'identitat sense esperar cap recàrrega. */
+    const jo = usuariRef.current?.id;
+    if (membre?.tipus === 'persona' && jo != null && String(membre.id) === String(jo)) {
+      setOrganitzacions((prev) => prev.filter((o) => String(o.id) !== String(orgId)));
+      avisaOrganitzacions();
+    }
+    return resultat;
+  }, [assertCurrent, portMembres, avisaOrganitzacions]);
+
+  /* Persones del poble (carregaMembres, el padró del nucli) i organitzacions
+     que la persona també administra, sense les que ja en són membres. */
+  const cercaCandidats = useCallback(async (orgId, text, { signal, membres = [] } = {}) => {
+    assertCurrent();
+    if (!portMembres) throw errorSenseMembres();
+    const cerca = String(text ?? '').trim();
+    const persones = await portMembres.cerca(cerca || null, ambSenyal(configRef.current, signal));
+    assertCurrent();
+    return candidatsDeMembre({
+      persones, organitzacions: organitzacionsRef.current, membres, orgId, text: cerca, jo: usuariRef.current?.id ?? null,
+    });
+  }, [assertCurrent, portMembres]);
+
   /* Valor memoitzat + callbacks estables: els consumidors (i els
      useCallback que en depenguin) només es mouen quan canvien DADES,
      no quan canvia la identitat d'una funció. */
@@ -485,10 +623,14 @@ function PerfilScope({ children, config, usuariId, usuariSessio, onCanviOrganitz
      configuració amb què la cua els enviarà (només en memòria). */
   const autodesament = useMemo(() => (ambit ? { ambit, context: config } : null), [ambit, config]);
 
+  /* Grup C · `ambMembres`: si el port gestiona els membres (CONTRACTE-4:
+     PerfilShell el passa a «El compte»). */
   const valor = useMemo(() => ({
     usuari, identitats, contactes, carregant, error, autodesament,
     guardarCampPerfil, guardarAjust, creaOrganitzacio, pujaMitja, recarrega,
-  }), [usuari, identitats, contactes, carregant, error, autodesament, guardarCampPerfil, guardarAjust, creaOrganitzacio, pujaMitja, recarrega]);
+    ambMembres, llistaMembres, desaMembre, llevaMembre, cercaCandidats,
+  }), [usuari, identitats, contactes, carregant, error, autodesament, guardarCampPerfil, guardarAjust, creaOrganitzacio, pujaMitja, recarrega,
+    ambMembres, llistaMembres, desaMembre, llevaMembre, cercaCandidats]);
 
   return <PerfilContext.Provider value={valor}>{children}</PerfilContext.Provider>;
 }

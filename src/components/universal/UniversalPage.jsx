@@ -17,7 +17,8 @@ import { STORAGE_PREFIX, delVal, getVal, setVal } from '../../config/storage';
    Capacitat genèrica i OPCIONAL de la Pàgina Universal: amb
    portadaPlegable={{ clau, etiquetes? }} la portada (heroImage) es veu per
    defecte i un botó amb nom la plega i la desplega, per a guanyar espai
-   vertical quan la pàgina és una eina de treball (Gestoria, Bàscula…).
+   vertical quan la pàgina és una eina de treball (Gestoria, TPV del Bar…;
+   la Bàscula es va retirar per ordre del Mestre, 261007).
      · El botó va dins del marc de la portada (.hero-image), ABANS de la
        imatge: dalt a la dreta, damunt de la il·lustració quan es veu, i en una
        franja pròpia quan està plegada. No es mou de lloc, és el primer que
@@ -183,9 +184,12 @@ export function UniversalPage(props) {
      handler propi, Traduir obri el menú de llengües: ho decidix PageFrame →
      useAccions (useTraduccioPagina). Només l'editor (accionsInoperatives,
      T36) continua portant a /traduccions: traduir-lo substituiria el cos que
-     s'està escrivint. */
+     s'està escrivint.
+     Auditoria 261007 (B) · Sense cap consulta: el ?item_id= que s'hi posava no
+     el llig ningú (TranslationsSection no mira la URL) i, a l'editor, el títol
+     és un element i no un text, així que sempre valia 'page'. */
   const handleTranslate = props.onTranslate || (props.accionsInoperatives
-    ? () => navigate('/traduccions?item_id=' + encodeURIComponent(actualTitleText || 'page'))
+    ? () => navigate('/traduccions')
     : undefined);
   const handleShare = props.onShare || (() => {
     // En memòria, la URL de la ruta de l'app; fora de memòria, la barra d'adreces com sempre.

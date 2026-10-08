@@ -6,6 +6,9 @@
 import { cleanup, render } from '@testing-library/react';
 import { afterEach, expect, test, vi } from 'vitest';
 import { MOCK_MARKET_ITEMS } from '../mercat/marketSeed.js';
+import { ENTITAT_PILOT_ID, ENTITAT_PILOT_SLUG } from '../../data/identitatsSeed.js';
+import { SYSTEM_PAGES } from '../../config/systemPages.js';
+import { PAGE_COPY } from '../text/pageContent.js';
 
 const PERSONA = { tipus: 'persona', id: 'uuid-pep', rol: 'persona' };
 const mocks = vi.hoisted(() => ({
@@ -16,7 +19,9 @@ const mocks = vi.hoisted(() => ({
   feed: [],
   mercat: [],
   events: [],
-  media: []
+  media: [],
+  /* null: sense CoreContentProvider (la reserva de veres: un objecte nou a cada crida). */
+  core: null
 }));
 vi.mock('./NotesContext', async (importOriginal) => ({ ...await importOriginal(), useNotes: () => ({
   notes: mocks.notes, noteFolders: [{ id: 'f-mur', name: 'Mur' }], status: 'ready', canCreate: true, teSessio: true,
@@ -30,6 +35,9 @@ vi.mock('../../app/contexts/IdentitatContext.jsx', () => ({ useIdentitat: () => 
    i amagaria el que prova la identitat estable. */
 vi.mock('../mur/MurContext', () => ({ useMur: () => ({ sortedFeedPosts: mocks.feed, sortedEvents: mocks.events, sortedMarketItems: mocks.mercat }) }));
 vi.mock('../multimedia/MultimediaContext.jsx', () => ({ useMultimedia: () => ({ status: 'ready', mediaItems: mocks.media }) }));
+vi.mock('../../app/contexts/CoreContentContext', () => ({
+  useCoreContent: () => mocks.core ?? { status: 'loading', towns: [], pages: [], pageCopy: {}, agents: [], sortedTowns: [], featuredTowns: [] }
+}));
 /* Només el model: el Workspace, el detall i les fitxes tenen les seues proves. */
 vi.mock('../../components/universal/workspace/UniversalWorkspace', () => ({ UniversalWorkspace: (props) => {
   mocks.model = props.model;
@@ -43,7 +51,7 @@ import NotesSection from './NotesSection.jsx';
 
 afterEach(() => {
   cleanup();
-  Object.assign(mocks, { model: null, actor: null, config: { dataMode: 'remote' }, notes: [], feed: [], mercat: [], events: [], media: [] });
+  Object.assign(mocks, { model: null, actor: null, config: { dataMode: 'remote' }, notes: [], feed: [], mercat: [], events: [], media: [], core: null });
 });
 
 const pinta = (estat) => {
@@ -93,14 +101,20 @@ test('F4 (D2) · una nota publicada al Mur és una sola peça: la nota, a la seu
   expect(items.find((item) => item.id === 'n1').categoryIds).toEqual(['f-mur', 'cat_Sistema', 'tag_Tutorial']);
 });
 
-test('F4 · en remot, l’entitat amb l’slug declarat «soc-de-poble» veu la Samarreta a «Mercat»', () => {
+/* Ordre del Mestre (261007) · El slug declarat és el de producció,
+   'socdepoble' (ENTITAT_PILOT_SLUG); abans, 'soc-de-poble'. Amb el nou,
+   l'entitat ja casa amb la Samarreta pel seu propi slug: el pont de F4 només
+   es veu amb un article signat amb un àlies que no és cap slug
+   ('soc-de-poble_official', sense signatura d'entitat). */
+test('F4 · en remot, l’entitat amb l’slug declarat (ENTITAT_PILOT_SLUG) veu la Samarreta a «Mercat»', () => {
+  const delPont = { id: 'pont-f4', title: 'Signat amb l’àlies de la llavor', author_id: 'soc-de-poble_official' };
   const items = pinta({
-    actor: { tipus: 'entitat', id: 'uuid-org', slug: 'soc-de-poble', rol: 'owner' },
+    actor: { tipus: 'entitat', id: 'uuid-org', slug: ENTITAT_PILOT_SLUG, rol: 'owner' },
     config: { dataMode: 'remote' },
-    mercat: MOCK_MARKET_ITEMS
+    mercat: [...MOCK_MARKET_ITEMS, delPont]
   });
   expect(publicacions(items).map((item) => [item.id, item.categoryIds])).toEqual([
-    ['publicacio:mercat:samarreta-socdepoble', ['f-mercat']]
+    ['publicacio:mercat:samarreta-socdepoble', ['f-mercat']], ['publicacio:mercat:pont-f4', ['f-mercat']]
   ]);
 });
 
@@ -138,4 +152,65 @@ test('F4 · editar una nota no refà les publicacions: els objectes són els mat
   mocks.notes = [...mocks.notes, { id: 'n-nova', title: 'Bancal', isPublished: true, publishedSubmissionId: 'p4' }];
   rerender(<NotesSection />);
   expect(publicacions(mocks.model.items).map((item) => item.id)).toEqual(['publicacio:mur:p2', 'publicacio:multimedia:m1']);
+});
+
+/* ── Grup E de l'Onada 4 (prompt 261008_1201, tasca 2; decisió del Mestre del
+   261008: el «Sóc de Poble loguejat» és l'ENTITAT socdepoble triada al
+   selector d'identitat) ── Les deu pàgines del sistema que el Mur signa com a
+   «Sóc de Poble» no són a MurContext: les construïx MurSection des del
+   contingut core (targetesDeSistema). Ara també entren al Bloc de l'entitat. */
+const NUCLI = Object.freeze({ status: 'ready', pageCopy: PAGE_COPY, refresh: () => {} });
+const SISTEMA = SYSTEM_PAGES.map((pagina) => `publicacio:mur:${pagina.key}`);
+const delMur = (items) => publicacions(items).filter((item) => item.categoryIds.includes('f-mur'));
+
+test('Grup E · amb el contingut core, l’entitat Sóc de Poble veu les deu pàgines del sistema a «Mur», darrere de les seues publicacions', () => {
+  const items = pinta({
+    actor: { tipus: 'entitat', id: ENTITAT_PILOT_ID, slug: ENTITAT_PILOT_SLUG, rol: 'owner' },
+    config: { dataMode: 'seed' },
+    core: NUCLI,
+    feed: [{ id: 'p1', title: 'Directa', author_org_id: ENTITAT_PILOT_ID }]
+  });
+  expect(SISTEMA).toHaveLength(10);
+  expect(delMur(items).map((item) => item.id)).toEqual(['publicacio:mur:p1', ...SISTEMA]);
+  const xat = items.find((item) => item.id === 'publicacio:mur:xat');
+  expect(xat.data).toMatchObject({ seccio: 'mur', ruta: '/page/xat', item: { isSystem: true } });
+});
+
+test('Grup E · en remot, l’entitat amb l’uuid de servidor i l’slug declarat també les veu', () => {
+  const items = pinta({ actor: { tipus: 'entitat', id: 'uuid-org', slug: ENTITAT_PILOT_SLUG, rol: 'owner' }, core: NUCLI });
+  expect(delMur(items).map((item) => item.id)).toEqual(SISTEMA);
+});
+
+test('Grup E · una persona, o una altra entitat, no en veu cap', () => {
+  expect(publicacions(pinta({ actor: PERSONA, core: NUCLI }))).toEqual([]);
+  cleanup();
+  expect(publicacions(pinta({ actor: { tipus: 'entitat', id: 'uuid-forn', slug: 'forn-de-la-torre', rol: 'owner' }, core: NUCLI }))).toEqual([]);
+});
+
+test('Grup E · sense proveïdor del core, ni pàgines ni llistes noves a cada pintada (identitat estable)', () => {
+  Object.assign(mocks, {
+    actor: { tipus: 'entitat', id: 'uuid-org', slug: ENTITAT_PILOT_SLUG, rol: 'owner' },
+    feed: [{ id: 'p1', title: 'Directa', author_org_id: 'uuid-org' }]
+  });
+  const { rerender } = render(<NotesSection />);
+  const abans = publicacions(mocks.model.items);
+  expect(abans.map((item) => item.id)).toEqual(['publicacio:mur:p1']);
+  mocks.notes = [{ id: 'n-esb', title: 'Reg' }];
+  rerender(<NotesSection />);
+  const despres = publicacions(mocks.model.items);
+  expect(despres).toHaveLength(1);
+  expect(despres[0]).toBe(abans[0]);
+});
+
+test('Grup E · amb les pàgines, editar una nota no refà les publicacions: els objectes són els mateixos', () => {
+  Object.assign(mocks, { actor: { tipus: 'entitat', id: 'uuid-org', slug: ENTITAT_PILOT_SLUG, rol: 'owner' }, core: NUCLI, notes: [{ id: 'n-esb', title: 'Reg' }] });
+  const { rerender } = render(<NotesSection />);
+  const abans = publicacions(mocks.model.items);
+  expect(abans).toHaveLength(10);
+  mocks.notes = [{ id: 'n-esb', title: 'Reg a goteig' }];
+  // Un valor nou del proveïdor amb el mateix pageCopy, com en cada revalidació.
+  mocks.core = { ...NUCLI };
+  rerender(<NotesSection />);
+  const despres = publicacions(mocks.model.items);
+  despres.forEach((item, posicio) => expect(item).toBe(abans[posicio]));
 });

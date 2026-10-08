@@ -3,6 +3,8 @@ import { UniversalCard } from './../PedraSeca';
 import { resolveAsset } from '../../config/assetResolver';
 import { COPYRIGHT_SDP, dataDElement, dataHoraDeBarra } from './editorial.js';
 import { DEFAULT_AUTHOR } from './UniversalUtils.js';
+import { esRutaInterna } from '../../config/objecteConnectable.js';
+import { fontImatgePropia } from '../../utils/sanitize.js';
 
 /**
  * T5 (ordre del Mestre, 260930) · Les fonts de la pastilla d'un acte del
@@ -68,7 +70,13 @@ export function rutaDeLaBoinaDeLActe(item, deQuiSigna) {
    T5 · `esdeveniment`: el model de l'acte (acteAEsdeveniment), que fa qui
    pinta la targeta (MurSection): components/ no importa de sections/.
    T6 · `authorHref`: la pàgina de qui signa (rutaDePerfilDAutor), que fa qui
-   pinta la targeta pel mateix motiu: navigation.js arrossega la llavor. */
+   pinta la targeta pel mateix motiu: navigation.js arrossega la llavor.
+   Decisió 3 del Mestre (261007, confirmada) · «Imatges externes al Mur:
+   PROHIBIDES (PRIVACITAT).» La imatge i l'avatar d'un acte, com els d'una
+   publicació (TargetaDelMur): el mode estricte (fontImatgePropia de
+   utils/sanitize.js, cap servidor de tercers, tampoc els avatars OAuth) i
+   sense referent (`imatgePrivada`). Una de fora no es demana: cap portada, i
+   la silueta de sempre en lloc de l'avatar. */
 export function EventCard({ item, esdeveniment = null, onConnect, objecte, authorHref }) {
   const data = dataDeLActe(esdeveniment, item);
 
@@ -86,13 +94,14 @@ export function EventCard({ item, esdeveniment = null, onConnect, objecte, autho
       title={item.title || item.name}
       subtitle={item.subtitle}
       body={bodyContent}
-      imageUrl={resolveAsset((typeof item.image_url === 'string' ? item.image_url : null) || (typeof item.image === 'string' ? item.image : null) || '')}
+      imageUrl={fontImatgePropia(resolveAsset((typeof item.image_url === 'string' ? item.image_url : null) || (typeof item.image === 'string' ? item.image : null) || ''))}
       imageAlt={item.imageAlt || item.title || item.name || ''}
+      imatgePrivada
       author={item.author_name || item.author || "Sóc de Poble"}
       /* T6 · Derogat per l'ordre del Mestre del 261004 (prompt 261004_0515):
          el sistema ja no porta a /pobles, i qui signa ja té enllaç. */
       authorHref={rutaDeLaBoinaDeLActe(item, authorHref)}
-      avatarUrl={resolveAsset((typeof item.author_avatar === 'string' ? item.author_avatar : null) || '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg')}
+      avatarUrl={fontImatgePropia(resolveAsset((typeof item.author_avatar === 'string' ? item.author_avatar : null) || '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg'))}
       location={item.author_location || item.location || item.population || "La Torre de les Maçanes"}
       date={data.date}
       time={data.time}
@@ -100,7 +109,11 @@ export function EventCard({ item, esdeveniment = null, onConnect, objecte, autho
       copyright={item.copyright || COPYRIGHT_SDP}
       calendarBadge={insigniaDeCalendari(esdeveniment, data.dateTime)}
       labels={labels}
-      mainHref={item.mainHref || `/events/${item.id}`}
+      /* Auditoria 261007 (B) · Defensa en profunditat: l'enllaç de tota la
+         targeta només és una ruta de l'app (esRutaInterna). Un mainHref de
+         fora (un payload escrit per PostgREST) navegava la pestanya de
+         l'amfitrió; el de les pàgines de sistema ja és intern. */
+      mainHref={esRutaInterna(item.mainHref) ? item.mainHref : `/events/${item.id}`}
       showPin={item.isAvis || false}
       hasFooter={true}
       showTranslate={true}

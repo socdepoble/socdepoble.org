@@ -1,5 +1,6 @@
 import { getCurrentUser, getResolvedConfig, request } from './runtime.js';
 import { normalitzaContacte, normalitzaCorreu, validaCorreu } from '../correuOrganitzacio.js';
+import { errorDeMembre, membreDOrganitzacio } from '../contracte.js';
 
 /* Lògica d'Usuari · en seed i local les organitzacions on la persona mana són
    les del padró pilot (localPerfils). Comprovació explícita: sense mode, remot. */
@@ -48,8 +49,11 @@ export async function createOrganization(organization, config = {}) {
 }
 /* Només columnes amb grant de SELECT: el RETURNING de return=representation
    exigix SELECT sobre cada columna que torna, i una sola sense grant fa fallar
-   tot el PATCH amb 42501. */
-const COLUMNES_ORG = 'id,tenant_id,slug,name,kind,parent_organization_id,lema,description,visibility,logo_url,hero_url,presentacio_html,copyright,created_at,updated_at';
+   tot el PATCH amb 42501.
+   Ordre del Mestre (261008, grup C) · `town_name`, el poble de l'organització
+   (2610081401). Mentre la migració no s'aplica, el reintent de T47 la lleva
+   del select; desar-la torna l'error de columna absent (PGRST204). */
+const COLUMNES_ORG = 'id,tenant_id,slug,name,kind,parent_organization_id,lema,description,visibility,logo_url,hero_url,presentacio_html,copyright,town_name,created_at,updated_at';
 
 /* T47 (ordre del Mestre, 260928) · Una columna del RETURNING que el servidor
    encara no té (p. ex. `copyright` mentre 2609262232 no s'aplica) feia fallar
@@ -70,7 +74,8 @@ export async function updateOrganization(id, updates, config = {}) {
   const payload = {};
   const camps = { name: 'name', slug: 'slug', description: 'description', kind: 'kind',
     parentOrganizationId: 'parent_organization_id', lema: 'lema', logo_url: 'logo_url',
-    visibility: 'visibility', presentacio_html: 'presentacio_html', hero_url: 'hero_url', copyright: 'copyright' };
+    visibility: 'visibility', presentacio_html: 'presentacio_html', hero_url: 'hero_url', copyright: 'copyright',
+    town_name: 'town_name' };
   for (const [origen, desti] of Object.entries(camps)) if (updates?.[origen] !== undefined) payload[desti] = updates[origen];
   if (!Object.keys(payload).length) throw new Error('Cap camp de l’organització per desar.');
   if (esModeLocal(config)) return (await perfilsLocals()).updateOrganization(id, payload);
@@ -120,7 +125,7 @@ const RE_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 const LIMIT_JUSTIFICACIO = 1000;
 const RE_CODI_CLAIM = /SDP-CLAIM-\d{3}/;
 const RE_CODI_ORGMAIL = /SDP-ORGMAIL-\d{3}/;
-const CODIS_NORMALITZATS = /^(SDP-CLAIM-\d{3}|SDP-ORGMAIL-\d{3}|JA-PENDENT|NO-DISPONIBLE|CORREU-INVALID|ESQUEMA-DESFASAT)$/;
+const CODIS_NORMALITZATS = /^(SDP-CLAIM-\d{3}|SDP-ORGMAIL-\d{3}|SDP-ORGMEM-\d{3}|JA-PENDENT|NO-DISPONIBLE|CORREU-INVALID|ESQUEMA-DESFASAT)$/;
 
 const MISSATGES_CLAIM = Object.freeze({
   'SDP-CLAIM-000': 'Cal iniciar sessió per a administrar una organització.',
@@ -320,4 +325,127 @@ export async function desaContacteOrganitzacio(orgId, { correu = '', public: esP
   if (!id) throw errorAmbCodi(MISSATGES_ORGMAIL['SDP-ORGMAIL-002'], 'SDP-ORGMAIL-002');
   return rpcDeContacte('desa_contacte_organitzacio',
     { p_organization_id: id, p_correu: net || null, p_public: Boolean(esPublic) && Boolean(net) }, config);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Ordre del Mestre (261008, grup C) · ELS MEMBRES D'UNA ORGANITZACIÓ
+
+   Capacitat OPCIONAL 'membresOrganitzacio' (contracte.js), mai del nucli:
+     · llistaMembresOrganitzacio(orgId, config) → Membre[]
+     · desaMembreOrganitzacio(orgId, { tipus, id, rol }, config) → Membre
+     · llevaMembreOrganitzacio(orgId, { tipus, id }, config) → { llevat }
+   Membre: { tipus: 'persona' | 'organitzacio', id, nom, avatar,
+   rol: 'owner' | 'admin' | 'member', desDe }. En remot, les RPC de
+   2610081402 (membres_organitzacio, desa_membre_organitzacio i
+   lleva_membre_organitzacio); en seed i local, localPerfils amb les MATEIXES
+   regles. Decisions del Mestre: alta directa, la persona pot eixir-se'n, una
+   organització membre no hereta cap permís i només l'afig qui administra
+   totes dues, només la propietària gestiona les administradores, i la llista
+   només la veuen owner i admin.
+   Els errors porten `code` (SDP-ORGMEM-000..008 de
+   MISSATGES_MEMBRES_ORGANITZACIO, contracte.js, o NO-DISPONIBLE) i un
+   missatge en valencià; es llig del prefix SDP del missatge, mai de l'estat
+   HTTP. L'entrada la normalitza membreDOrganitzacio (contracte.js), la
+   mateixa regla que localPerfils, i els identificadors es validen ABANS de
+   la xarxa: un id que no és cap UUID no arriba mai a Postgres (22P02).
+   ═══════════════════════════════════════════════════════════════════ */
+const RE_CODI_ORGMEM = /SDP-ORGMEM-\d{3}/;
+const SENSE_MEMBRES = 'El servidor d’este poble encara no gestiona els membres de les organitzacions.';
+const TIPUS_MEMBRE = new Set(['persona', 'organitzacio']);
+const ROLS_MEMBRE = new Set(['owner', 'admin', 'member']);
+
+function errorDeMembres(error) {
+  if (jaNormalitzat(error) || esCancel(error)) return error;
+  const codi = RE_CODI_ORGMEM.exec(String(error?.message || ''))?.[0];
+  if (codi) return errorDeMembre(codi, error);
+  if (esquemaAbsent(error)) return errorAmbCodi(SENSE_MEMBRES, 'NO-DISPONIBLE', error);
+  return error;
+}
+
+/* La fila de les RPC: { tipus, membre_id, nom, avatar_url, role, created_at }.
+   Un rol desconegut es mostra com a 'member', el que menys permet. */
+function membreDeFila(fila) {
+  if (!fila || typeof fila !== 'object' || !TIPUS_MEMBRE.has(fila.tipus)) return null;
+  const id = String(fila.membre_id ?? '').trim();
+  if (!id) return null;
+  return {
+    tipus: fila.tipus,
+    id,
+    nom: typeof fila.nom === 'string' ? fila.nom : '',
+    avatar: typeof fila.avatar_url === 'string' ? fila.avatar_url : '',
+    rol: ROLS_MEMBRE.has(fila.role) ? fila.role : 'member',
+    desDe: typeof fila.created_at === 'string' && fila.created_at ? fila.created_at : null
+  };
+}
+
+/* Sessió, mode i servidor, en el mateix ordre a les tres crides. */
+function contextDeMembres(config) {
+  const usuari = getCurrentUser();
+  if (!usuari?.id) throw errorDeMembre('SDP-ORGMEM-000');
+  return { usuari, local: esModeLocal(config) };
+}
+function idsRemots(orgId, membre, config) {
+  if (!getResolvedConfig(config).hasSupabaseConfig) throw errorAmbCodi(SENSE_MEMBRES, 'NO-DISPONIBLE');
+  /* Una organització que no és cap UUID no la pot administrar ningú: com el servidor, 002. */
+  const id = idOrganitzacio(orgId);
+  if (!id) throw errorDeMembre('SDP-ORGMEM-002');
+  if (!membre) return { id };
+  const membreId = idOrganitzacio(membre.id);
+  if (!membreId) throw errorDeMembre(membre.tipus === 'persona' ? 'SDP-ORGMEM-003' : 'SDP-ORGMEM-007');
+  return { id, membreId };
+}
+
+export async function llistaMembresOrganitzacio(orgId, config = {}) {
+  const { usuari, local } = contextDeMembres(config);
+  if (local) return (await perfilsLocals()).llistaMembresOrganitzacio(orgId, usuari);
+  const { id } = idsRemots(orgId, null, config);
+  let files;
+  try {
+    files = await request('/rest/v1/rpc/membres_organitzacio', config, {
+      method: 'POST', body: { p_organization_id: id }, signal: config.signal
+    });
+  } catch (error) {
+    throw errorDeMembres(error);
+  }
+  return (Array.isArray(files) ? files : []).map(membreDeFila).filter(Boolean);
+}
+
+export async function desaMembreOrganitzacio(orgId, dades = {}, config = {}) {
+  const { usuari, local } = contextDeMembres(config);
+  const membre = membreDOrganitzacio(dades);
+  if (local) return (await perfilsLocals()).desaMembreOrganitzacio(orgId, membre, usuari);
+  const { id, membreId } = idsRemots(orgId, membre, config);
+  let resposta;
+  try {
+    resposta = await request('/rest/v1/rpc/desa_membre_organitzacio', config, {
+      method: 'POST', signal: config.signal,
+      body: { p_organization_id: id, p_membre_id: membreId, p_tipus: membre.tipus, p_role: membre.rol }
+    });
+  } catch (error) {
+    throw errorDeMembres(error);
+  }
+  const desat = membreDeFila(Array.isArray(resposta) ? resposta[0] : resposta);
+  /* Sense la fila no s'anuncia cap èxit: la interfície torna a llegir la llista. */
+  if (!desat || desat.id !== membreId || desat.tipus !== membre.tipus) {
+    throw new Error('El servidor no ha confirmat el membre. Torna a carregar la llista.');
+  }
+  return desat;
+}
+
+export async function llevaMembreOrganitzacio(orgId, dades = {}, config = {}) {
+  const { usuari, local } = contextDeMembres(config);
+  const membre = membreDOrganitzacio(dades, { ambRol: false });
+  if (local) return (await perfilsLocals()).llevaMembreOrganitzacio(orgId, membre, usuari);
+  const { id, membreId } = idsRemots(orgId, membre, config);
+  let resposta;
+  try {
+    resposta = await request('/rest/v1/rpc/lleva_membre_organitzacio', config, {
+      method: 'POST', signal: config.signal,
+      body: { p_organization_id: id, p_membre_id: membreId, p_tipus: membre.tipus }
+    });
+  } catch (error) {
+    throw errorDeMembres(error);
+  }
+  /* La RPC torna un booleà: true si hi era, false si ja no hi era (idempotent). */
+  return { llevat: (Array.isArray(resposta) ? resposta[0] : resposta) === true };
 }

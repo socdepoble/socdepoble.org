@@ -134,6 +134,31 @@ test('Enxufe · dos embeds amb nomPoble, poble i rutaInicial diferents compartei
   } finally { second?.(); release(); }
 });
 
+/* Auditoria 261007 (B) · ruta-a-url (només la primera instància, segons el
+   contracte), apps i traductor-url són claus de l'amfitrió: no identifiquen la
+   sessió. Abans la segona instància petava amb «Dos instàncies…». */
+test('Enxufe · dos embeds amb rutaAUrl, apps i traductorUrl diferents comparteixen sessió', async () => {
+  mocks.user = { id: 'A' };
+  mocks.role.mockResolvedValue('usuari');
+  const comuna = { backendId: 'supabase', backendUrl: 'https://poble.test', tenantId: '00000000-0000-4000-8000-000000000000' };
+  const owner = Symbol();
+  const release = setSessionConfig({ ...comuna, rutaAUrl: 'fragment', apps: ['bar'],
+    traductorUrl: 'https://poble.test/wp-json/sdp/v1/traductor' }, owner);
+  let second, calenta;
+  try {
+    await vi.dynamicImportSettled(); await flush();
+    const generacio = getSessionState().generacio;
+    expect(() => { second = setSessionConfig({ ...comuna }, Symbol()); }).not.toThrow();
+    expect(getSessionState()).toMatchObject({ generacio, rol: 'usuari' });
+    // Una app registrada en calent (la mateixa instància) no mou la generació.
+    calenta = setSessionConfig({ ...comuna, rutaAUrl: 'fragment', apps: ['bar', 'nevera'],
+      traductorUrl: 'https://poble.test/wp-json/sdp/v1/traductor' }, owner);
+    expect(getSessionState().generacio).toBe(generacio);
+    // Una opció desconeguda continua sent identitat.
+    expect(() => setSessionConfig({ ...comuna, transport: 'bearer' }, Symbol())).toThrow('Dos instàncies');
+  } finally { second?.(); calenta?.(); release(); }
+});
+
 test.each([
   { transport: 'bearer' },
   { authOptions: { audience: 'altre-poble' } },
@@ -200,4 +225,49 @@ test('D6: sense refresh token no hi ha res a recuperar: fora de seguida i cap cr
   expect(getSessionState()).toMatchObject({ estat: 'fora' });
   expect(mocks.refresh).not.toHaveBeenCalled();
   buida();
+});
+
+/* Auditoria 261007 (B) · getCurrentUser torna un JSON.parse nou a cada crida i
+   el temporitzador sincronitza cada ≤10 min: sense canvis, cap avís ni cap
+   referència nova; un canvi de contingut amb el mateix id (actualitzaUsuari)
+   sí que avisa. */
+test('una sincronització sense canvis no avisa ni canvia la referència de l’usuari', async () => {
+  buida(); await flush();
+  mocks.role.mockResolvedValue('usuari');
+  mocks.user = { id: 'A', nom: 'Anna' };
+  sincronitza(); await flush();
+  expect(getSessionState()).toMatchObject({ estat: 'dins', rol: 'usuari', usuari: { id: 'A', nom: 'Anna' } });
+  const abans = getSessionState();
+  const avisos = [];
+  const deixa = subscribeSession(s => avisos.push(s));
+  avisos.length = 0;   // subscribeSession avisa de seguida amb l'estat actual
+  try {
+    const consultes = mocks.role.mock.calls.length;
+    mocks.user = { id: 'A', nom: 'Anna' };   // objecte nou, mateix contingut
+    sincronitza(); await flush();
+    // El rol es torna a consultar (un rol revocat s'ha de vore), però el mateix rol no avisa.
+    expect(mocks.role.mock.calls.length).toBe(consultes + 1);
+    expect(avisos).toEqual([]);
+    expect(getSessionState()).toBe(abans);
+    mocks.user = { id: 'A', nom: 'Anna Maria' };   // mateix id, nom nou
+    sincronitza(); await flush();
+    expect(avisos).toHaveLength(1);
+    expect(getSessionState().usuari).toEqual({ id: 'A', nom: 'Anna Maria' });
+    expect(getSessionState().generacio).toBe(abans.generacio);
+  } finally { deixa(); buida(); }
+});
+
+test('un rol nou sí que avisa, una sola vegada', async () => {
+  buida(); await flush();
+  mocks.role.mockResolvedValue('usuari');
+  mocks.user = { id: 'A' };
+  sincronitza(); await flush();
+  const avisos = [];
+  const deixa = subscribeSession(s => avisos.push(s.rol));
+  avisos.length = 0;
+  try {
+    mocks.role.mockResolvedValue('superadmin');
+    sincronitza(); await flush();
+    expect(avisos).toEqual(['superadmin']);
+  } finally { deixa(); buida(); }
 });

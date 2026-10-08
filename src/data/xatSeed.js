@@ -8,10 +8,11 @@
  *   · la conversa de benvinguda de la IAIA (T3): un fil de tipus 'iaia' on
  *     ella respon sola amb la frase fixa d'identitatsSeed;
  *   · la COMUNITAT «Sóc de Poble», que naix de la Pàgina Universal de
- *     l'entitat pilot (el camp `subjecte` la nomena), amb dos fills: el canal
- *     «Avisos», on només escriu l'entitat, i el grup «General». La comunitat
- *     és un contenidor sense missatges propis (ultimSeq 0); els fills la
- *     porten a `comunitatId`.
+ *     l'entitat pilot (el camp `subjecte` la nomena), amb tres fills: el canal
+ *     «Avisos», on només escriu l'entitat, el grup «General» i el grup «Beta
+ *     testers» (FIL_BETA_TESTERS; Auditoria 261007 (B): la capçalera en
+ *     comptava dos). La comunitat és un contenidor sense missatges propis
+ *     (ultimSeq 0); els fills la porten a `comunitatId`.
  * Tots els fils porten `comunitatId` i `subjecte` (null si no en tenen), com
  * mana el contracte del Xat.
  *

@@ -1,51 +1,42 @@
 import { useRef, useState } from 'react';
-import { Dialeg, Boto, Camp, CampText, GrupOpcions, Selector } from '../../components/PedraSeca';
+import { Dialeg, Boto, Camp, CampText, GrupOpcions } from '../../components/PedraSeca';
 import { normalizeSlug, validateOrganization, readableBackendError } from '../onboarding/onboardingModel.js';
 
 const TIPUS = Object.freeze([
   { valor: 'company', etiqueta: 'Empresa o negoci', ajuda: 'Una botiga, un taller, una cooperativa…' },
-  { valor: 'group', etiqueta: 'Grup', ajuda: 'Penja d’una empresa que ja administres.' },
+  { valor: 'group', etiqueta: 'Grup', ajuda: 'Una colla, una associació, un col·lectiu…' },
 ]);
 
 /**
  * Crear una organització des del Perfil (I10). Abans el botó «NOVA ORG»
- * creava «Organització nova» sense preguntar res; ara es tria nom, tipus i,
- * per a un grup, l'empresa mare (sense mare, la política d'INSERT el
- * rebutjaria amb un error opac).
+ * creava «Organització nova» sense preguntar res; ara es tria nom i tipus.
+ *
+ * Ordre del Mestre (261008) · «Un grup no té per què pertànyer a cap
+ * empresa»: el camp «Empresa mare» ja no existix i «Grup» sempre s'oferix.
+ * El servidor ja accepta un grup sense mare (2610081400) i el domini només
+ * envia la mare si en ve una (organizations.js).
  *
  * L'identificador es deriva del nom fins que la persona el toca. Els errors
  * del servidor van al camp que toca: l'identificador repetit, a
  * «Identificador»; la resta, damunt del formulari.
  *
  * `onCrea(dades)` és una promesa: si falla, el diàleg continua obert.
- * `empresesMare`: [{ valor, etiqueta }] de les empreses que la persona mana.
  */
-export function DialegNovaOrganitzacio({ obert, onTanca, onCrea, empresesMare = [] }) {
+export function DialegNovaOrganitzacio({ obert, onTanca, onCrea }) {
   const [nom, setNom] = useState('');
   const [slug, setSlug] = useState(null); // null = derivat del nom
   const [kind, setKind] = useState('company');
-  const [mare, setMare] = useState('');
   const [errors, setErrors] = useState({});
   const [desant, setDesant] = useState(false);
   const enviant = useRef(false);
 
   const slugVisible = slug ?? normalizeSlug(nom);
-  /* Un grup sempre penja d'una mare que la persona mana: creaOrganitzacio el
-     rebutja sense parentOrganizationId (organizations.js:31) i la política
-     d'INSERT també. Sense cap mare possible, «Grup» no s'oferix i s'explica. */
-  const potCrearGrup = empresesMare.length > 0;
 
   const envia = async (e) => {
     e?.preventDefault?.();
     if (enviant.current) return;
-    const dades = {
-      name: nom.trim(),
-      slug: normalizeSlug(slugVisible),
-      kind,
-      ...(kind === 'group' ? { parentOrganizationId: mare } : {}),
-    };
+    const dades = { name: nom.trim(), slug: normalizeSlug(slugVisible), kind };
     const nous = validateOrganization(dades);
-    if (kind === 'group' && !mare) nous.mare = 'Tria l’empresa de la qual penja el grup.';
     setErrors(nous);
     if (Object.keys(nous).length) return;
 
@@ -95,24 +86,11 @@ export function DialegNovaOrganitzacio({ obert, onTanca, onCrea, empresesMare = 
         </Camp>
         <GrupOpcions
           llegenda="Tipus"
-          opcions={potCrearGrup ? TIPUS : TIPUS.slice(0, 1)}
+          opcions={TIPUS}
           valor={kind}
           onCanvi={setKind}
           disabled={desant}
         />
-        {potCrearGrup ? null : (
-          <p className="sdp-camp__ajuda">Per a crear un grup, primer has d’administrar una empresa.</p>
-        )}
-        {kind === 'group' ? (
-          <Camp etiqueta="Empresa mare" error={errors.mare} obligatori>
-            <Selector
-              value={mare}
-              onChange={(e) => setMare(e.target.value)}
-              opcions={[{ valor: '', etiqueta: 'Tria una empresa…' }, ...empresesMare]}
-              disabled={desant}
-            />
-          </Camp>
-        ) : null}
         <Camp
           etiqueta="Identificador"
           error={errors.slug}

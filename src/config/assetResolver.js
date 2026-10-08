@@ -83,15 +83,23 @@ export function baseRecursos() {
 }
 
 /* ── La base des de l'script que ens carrega ──────────────────────────
-   El paquet autònom (IIFE) es carrega amb un <script src> clàssic, i les
+   El paquet de l'amfitrió es carrega amb un <script src> clàssic, i les
    seues imatges viuen al costat d'eixe fitxer (dist/assets/…). Hi ha mòduls
    que resolen imatges EN IMPORTAR-SE (townsContent.js, marketContent.js),
-   abans que l'element <soc-de-poble> puga fixar cap base. Com que tots
-   importen este fitxer, dins de l'IIFE s'avalua abans que ells: ací és l'únic
-   lloc on la base arriba a temps. document.currentScript només val durant
-   l'execució síncrona d'un script clàssic; en un mòdul (el Vite de
-   socdepoble.org, en desenvolupament i en producció) i a les proves és null,
-   la base es queda buida i res no canvia (Llei del Píxel). */
+   abans que l'element <soc-de-poble> puga fixar cap base.
+   Decisió 5 del Mestre (261007, paquet trossejat) · Per defecte el paquet ja
+   no és un IIFE: el <script src> és el carregador clàssic
+   (carregadorDelPaquet.js), que captura la base, i l'app arriba com a mòdul
+   ESM, on document.currentScript és null. Ara la base la fixa
+   provisionalDelPaquet.js, el PRIMER import d'embed.jsx, amb la del
+   carregador, abans que s'avaluen host.js i els mòduls d'imatges. Esta via
+   només val per al paquet MONOLÍTIC (SDP_PAQUET=monolitic i la variant del
+   directori de WordPress, un IIFE): com que tots els mòduls importen este
+   fitxer, dins de l'IIFE s'avalua abans que ells i la base hi arriba a temps.
+   document.currentScript només val durant l'execució síncrona d'un script
+   clàssic; en un mòdul (el trossejat, el Vite de socdepoble.org en
+   desenvolupament i en producció) i a les proves és null, i ací la base es
+   queda buida i res no canvia (Llei del Píxel). */
 function baseDeLScriptActual() {
   if (typeof document === 'undefined' || typeof HTMLScriptElement === 'undefined') return '';
   const script = document.currentScript;

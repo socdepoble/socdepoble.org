@@ -1,14 +1,16 @@
-import { defineConfig, loadEnv } from 'vite';
+import { defineConfig, loadEnv, transformWithEsbuild } from 'vite';
 import react from '@vitejs/plugin-react';
 import { createHash } from 'crypto';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import vm from 'vm';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 import { validatePublicCredentials } from './src/config/publicCredentials.js';
+import { CONTRACTE_AMFITRIO_V1 } from './src/config/contracteAmfitrio.js';
 
 /**
  * El que hi ha a public/ i és del SERVIDOR de socdepoble.org, no de l'app.
@@ -167,7 +169,18 @@ export function recursosPublicsDelPlugin({ directori } = {}) {
    emés. L'adaptador de WordPress la llig per a la memòria cau i l'atribut
    integrity; Sollutia, per a fixar la versió i l'integrity del seu <script>;
    el canal d'actualitzacions en signa una còpia. Cap clau ni credencial: del
-   node només viatja l'origen públic, que el bundle ja porta segellat. */
+   node només viatja l'origen públic, que el bundle ja porta segellat.
+   Decisió 5 del Mestre (261007) · en el paquet trossejat, `entrada` és el
+   carregador clàssic (2-4 KB): el sha256 i l'SRI el cobrixen a ell, i ell
+   porta dins el nom amb hash del mòdul d'entrada (Rollup encadena els hash
+   de cada tros amb els dels que referencia), de manera que qualsevol canvi de
+   codi canvia el carregador i el `ver` de WordPress. Cada tros entra a
+   l'inventari amb el seu sha256; la clau additiva `formatDelPaquet` diu quin
+   format s'ha emés ({format:'trossos', modul, trossos} o {format:'monolitic'}).
+   Relleu 261007 · abans es deia `paquet`, però el canal signat (stable.json =
+   el manifest més els adaptadors) ja té `estatic.paquet` i
+   `adaptadors.wordpress.paquet`, que són els zips: tres `paquet` amb tres
+   significats. Cap release no l'havia publicada, i canviar-li el nom era gratis. */
 
 export const ESQUEMA_RELEASE = 'sdp.release.v1';
 export const FITXER_RELEASE = 'sdp-release.json';
@@ -175,7 +188,9 @@ export const FITXER_INVENTARI = 'sdp-inventari.json';
 export const ENTRADA_DEL_PAQUET = 'soc-de-poble.standalone.js';
 const FONTS_DEL_PAQUET = 'fonts/noto-sans.css';
 
-// El directori usa les biblioteques del nucli WP; Sollutia conserva l'IIFE autònom.
+/* El directori usa les biblioteques del nucli WP (sempre monolític: vegeu
+   formatDelPaquet); Sollutia i el canal propi reben el paquet autònom, que
+   per defecte és el carregador amb els seus trossos (decisió 5, 261007). */
 export const GLOBALS_WORDPRESS = Object.freeze({
   react: 'React', 'react-dom': 'ReactDOM', 'react-dom/client': 'ReactDOM',
   'react/jsx-runtime': 'ReactJSXRuntime'
@@ -278,8 +293,12 @@ const sri384 = (dades) => `sha384-${createHash('sha384').update(dades).digest('b
  * Manifest i inventari d'un build a partir dels fitxers que ha emés.
  * `fitxers`: [{ cami, contingut: Buffer }], amb camins POSIX relatius a
  * l'outDir, que és la base de plugin-url en qualsevol amfitrió.
+ * `paquet` (decisió 5 del Mestre, 261007): la descripció additiva del format
+ * (descripcioDelPaquet), que el manifest publica com a `formatDelPaquet`.
+ * Sense ella, el manifest és idèntic al d'abans. No va dins de `contracte`,
+ * que l'empaquetador exigix igual en les dues variants.
  */
-export function manifestDeRelease({ versio, node, fitxers, generat, variant = 'autonom' }) {
+export function manifestDeRelease({ versio, node, fitxers, generat, variant = 'autonom', paquet }) {
   const ordenats = [...fitxers].sort((a, b) => (a.cami < b.cami ? -1 : a.cami > b.cami ? 1 : 0));
   const entrada = ordenats.find((f) => f.cami === ENTRADA_DEL_PAQUET);
   if (!entrada) throw new Error(`[sdp-manifest-release] El build no ha emés ${ENTRADA_DEL_PAQUET}.`);
@@ -301,7 +320,8 @@ export function manifestDeRelease({ versio, node, fitxers, generat, variant = 'a
       integrity: sri384(entrada.contingut)
     },
     ...(fonts ? { fonts: { cami: FONTS_DEL_PAQUET, integrity: sri384(fonts.contingut) } } : {}),
-    inventari: { cami: FITXER_INVENTARI, fitxers: inventari.length, sha256: sha256(inventariText) }
+    inventari: { cami: FITXER_INVENTARI, fitxers: inventari.length, sha256: sha256(inventariText) },
+    ...(paquet ? { formatDelPaquet: paquet } : {})
   };
   return { manifest, manifestText: `${JSON.stringify(manifest, null, 2)}\n`, inventariText };
 }
@@ -312,8 +332,11 @@ export function manifestDeRelease({ versio, node, fitxers, generat, variant = 'a
  * disc: les restes de builds anteriors no entren mai a l'inventari, i
  * l'empaquetador només copia el que l'inventari nomena. El manifest de Vite
  * (.vite/) és una traça de compilació i en queda fora.
+ * `format` (decisió 5, 261007): el de formatDelPaquet; amb ell, el manifest
+ * porta la clau `formatDelPaquet`, deduïda del mateix `bundle` (el mòdul
+ * d'entrada i els trossos que s'han emés de veritat).
  */
-export function manifestDeReleasePlugin({ versio, node, generat, variant = 'autonom' } = {}) {
+export function manifestDeReleasePlugin({ versio, node, generat, variant = 'autonom', format } = {}) {
   let outDir;
   let registre = console;
   return {
@@ -331,13 +354,151 @@ export function manifestDeReleasePlugin({ versio, node, generat, variant = 'auto
         .filter((f) => !f.fileName.startsWith(`${DIRECTORI_DE_VITE}/`) && f.fileName !== FITXER_RELEASE && f.fileName !== FITXER_INVENTARI)
         .map((f) => ({ cami: f.fileName, contingut: Buffer.from(f.type === 'chunk' ? f.code : f.source) }));
       const { manifest, manifestText, inventariText } = manifestDeRelease({
-        versio, node, fitxers, variant, generat: generat ?? new Date().toISOString()
+        versio, node, fitxers, variant, generat: generat ?? new Date().toISOString(),
+        paquet: descripcioDelPaquet(format, paquet)
       });
       fs.writeFileSync(path.join(eixida, FITXER_INVENTARI), inventariText);
       fs.writeFileSync(path.join(eixida, FITXER_RELEASE), manifestText);
       registre.info(`[sdp-manifest-release] ${manifest.versio} · ${manifest.inventari.fitxers} fitxers · node ${manifest.node.origen ?? 'sense origen'} (${manifest.node.mode})${manifest.node.desenvolupament ? ' · DESENVOLUPAMENT: no es pot publicar' : ''}`);
     }
   };
+}
+
+/* ─────────── Paquet trossejat (decisió 5 del Mestre, 261007) ───────────
+   «Paquet WordPress de 4,4 MB: CODE SPLITTING OBLIGATORI.» En format IIFE,
+   Vite força inlineDynamicImports (buildOutputOptions de
+   node_modules/vite/dist/node/chunks/config.js): les import() i els
+   React.lazy viatjaven dins del fitxer, i posar-ne més no reduïa res. Cal
+   canviar el format de l'eixida:
+     · soc-de-poble.standalone.js, amb el MATEIX nom (marcatge.php, salut.php,
+       manifest.php i els amfitrions no canvien), és un carregador clàssic
+       menut compilat des de src/config/carregadorDelPaquet.js;
+     · src/embed.jsx ix com a mòdul ESM a trossos/soc-de-poble-<hash>.js, i els
+       seus trossos amb hash, al costat, a trossos/. En lib, Vite deixa els
+       trossos a l'arrel de l'outDir (on xocarien amb assets/ de public/) i
+       posa hoistTransitiveImports:false: ací es fixen tots dos.
+   Interruptor SDP_PAQUET (el mateix loadEnv que SDP_RELEASE i SDP_VARIANT):
+   `trossos` (el defecte de l'autònom), `monolitic` (l'IIFE d'abans, per a
+   tornar enrere o per a un amfitrió sense CORS) o buit (el defecte de la
+   variant). La variant del directori de WordPress és SEMPRE monolítica: amb
+   format 'es' els externs de React ixen com a importacions nues ('react'),
+   que el navegador no resol sense un import map, output.globals només val
+   per a iife i umd, i al nucli de WordPress React són scripts clàssics. */
+export const FORMATS_DEL_PAQUET = Object.freeze(['trossos', 'monolitic']);
+export const CARPETA_DE_TROSSOS = 'trossos';
+export const MODUL_DELS_TROSSOS = `${CARPETA_DE_TROSSOS}/soc-de-poble-[hash].js`;
+/* Sostre del carregador: si creix, que siga a posta i amb la prova al davant. */
+export const LIMIT_DEL_CARREGADOR = 4096;
+const FONT_DEL_CARREGADOR = path.join(__dirname, 'src/config/carregadorDelPaquet.js');
+const MODUL_VALID = new RegExp(`^${CARPETA_DE_TROSSOS}/[A-Za-z0-9_-]+\\.js$`);
+
+/**
+ * El format del paquet segons SDP_PAQUET i la variant. Es valida ABANS de
+ * compilar, com runtimeDelBuild: cap fallback per a errades tipogràfiques.
+ */
+export function formatDelPaquet(valor, variant = 'autonom') {
+  const demanat = String(valor ?? '').trim();
+  const format = demanat || (variant === 'wordpress' ? 'monolitic' : 'trossos');
+  if (!FORMATS_DEL_PAQUET.includes(format)) {
+    throw new Error(`SDP_PAQUET desconegut: «${demanat}». Admet ${FORMATS_DEL_PAQUET.join(' o ')}, o buit per al defecte de la variant.`);
+  }
+  if (variant === 'wordpress' && format !== 'monolitic') {
+    throw new Error('SDP_VARIANT=wordpress és sempre monolítica: el React del nucli no es pot importar des d’un mòdul ESM sense import map.');
+  }
+  return format;
+}
+
+/**
+ * El codi del carregador per a un mòdul d'entrada concret: la font pura més
+ * UNA crida que llig document.currentScript en la primera línia que
+ * s'executa, compilat per esbuild en un IIFE minificat. El charset ASCII per
+ * defecte és intencionat: un script clàssic es descodifica amb el charset de
+ * la pàgina, i així cap accent dels missatges no en depén. Es comprova que és
+ * un script clàssic (vm.Script: cap import ni export de nivell superior) i
+ * que no passa de LIMIT_DEL_CARREGADOR. No llig process.env ni cap valor de
+ * l'entorn: només el camí del mòdul, les claus de l'API i el nom del fitxer.
+ */
+export async function codiDelCarregador({ modul, claus = CONTRACTE_AMFITRIO_V1.api.claus } = {}) {
+  if (typeof modul !== 'string' || !MODUL_VALID.test(modul)) {
+    throw new Error(`[sdp-carregador] Mòdul d'entrada no vàlid: ${modul}`);
+  }
+  const opcions = JSON.stringify({ modul, claus: [...claus], fitxer: ENTRADA_DEL_PAQUET });
+  const font = `${fs.readFileSync(FONT_DEL_CARREGADOR, 'utf8')}\n`
+    + `instalaCarregador(window, document, document.currentScript, ${opcions}, (url) => import(url));\n`;
+  const { code } = await transformWithEsbuild(font, FONT_DEL_CARREGADOR, {
+    format: 'iife', minify: true, target: 'es2020', legalComments: 'none'
+  });
+  new vm.Script(code, { filename: ENTRADA_DEL_PAQUET });
+  const mida = Buffer.byteLength(code);
+  if (mida > LIMIT_DEL_CARREGADOR) {
+    throw new Error(`[sdp-carregador] El carregador fa ${mida} B i el sostre és ${LIMIT_DEL_CARREGADOR} B.`);
+  }
+  return code;
+}
+
+/**
+ * Emet el carregador per al mòdul d'entrada que ha escrit Rollup: a
+ * generateBundle els noms amb hash ja són els definitius. Exigix un sol chunk
+ * d'entrada. És un asset SENSE `name`: el manifest de Vite (.vite/) continua
+ * amb una sola entrada, la ESM, i tractor-build-previ la troba.
+ */
+export function carregadorDelPaquetPlugin({ claus = CONTRACTE_AMFITRIO_V1.api.claus } = {}) {
+  return {
+    name: 'sdp-carregador',
+    apply: 'build',
+    async generateBundle(_opcions, paquet) {
+      const entrades = Object.values(paquet).filter((f) => f.type === 'chunk' && f.isEntry);
+      if (entrades.length !== 1) this.error(`El paquet trossejat necessita un sol mòdul d'entrada i n'hi ha ${entrades.length}.`);
+      if (paquet[ENTRADA_DEL_PAQUET]) this.error(`${ENTRADA_DEL_PAQUET} ja l'ha emés una altra peça del build.`);
+      const source = await codiDelCarregador({ modul: entrades[0].fileName, claus });
+      this.emitFile({ type: 'asset', fileName: ENTRADA_DEL_PAQUET, source });
+    }
+  };
+}
+
+/**
+ * En lib amb format 'es', Vite minifica identificadors i sintaxi però NO els
+ * espais (resolveEsbuildTranspileOptions, isEsLibBuild): conserva el format
+ * per als empaquetadors que consumixen una llibreria. Este paquet no el
+ * consumix cap empaquetador, el servix un navegador; sense esta passada, els
+ * trossos pesen més que l'IIFE minificat. Només espais, amb les mateixes
+ * opcions de Vite (charset utf8, sense comentaris legals), després de la seua
+ * transpilació (order 'post'): ni sintaxi ni identificadors no canvien, i els
+ * marcadors dels hash de Rollup, que són dins de cadenes, queden intactes.
+ */
+export function espaisDelPaquetPlugin() {
+  return {
+    name: 'sdp-espais',
+    apply: 'build',
+    renderChunk: {
+      order: 'post',
+      async handler(code, chunk, opcions) {
+        if (opcions.format !== 'es') return null;
+        const { code: compacte } = await transformWithEsbuild(code, chunk.fileName, {
+          loader: 'js', format: 'esm', minifyWhitespace: true, charset: 'utf8', legalComments: 'none', sourcemap: false
+        });
+        return compacte;
+      }
+    }
+  };
+}
+
+/**
+ * La clau additiva `formatDelPaquet` del manifest a partir del que el build ha emés.
+ * Sense format, undefined (el manifest d'abans). En trossos: el mòdul
+ * d'entrada (el chunk isEntry) i quants .js hi ha sota trossos/.
+ */
+export function descripcioDelPaquet(format, paquet) {
+  if (!format) return undefined;
+  if (format === 'monolitic') return { format };
+  if (format !== 'trossos') throw new Error(`[sdp-manifest-release] Format de paquet desconegut: ${format}`);
+  const fitxers = Object.values(paquet || {}).filter((f) => f && typeof f.fileName === 'string');
+  const entrades = fitxers.filter((f) => f.type === 'chunk' && f.isEntry);
+  if (entrades.length !== 1 || !MODUL_VALID.test(entrades[0].fileName)) {
+    throw new Error(`[sdp-manifest-release] El paquet trossejat no té un sol mòdul d'entrada sota ${CARPETA_DE_TROSSOS}/.`);
+  }
+  const trossos = fitxers.filter((f) => f.fileName.startsWith(`${CARPETA_DE_TROSSOS}/`) && f.fileName.endsWith('.js')).length;
+  return { format, modul: entrades[0].fileName, trossos };
 }
 
 const versioDePackageJson = () => JSON.parse(fs.readFileSync(path.join(__dirname, 'package.json'), 'utf8')).version;
@@ -357,6 +518,10 @@ export default defineConfig(({ mode }) => {
   const variant = env.SDP_VARIANT || 'autonom';
   runtimeDelBuild(variant); // Valida abans de compilar; cap fallback per a errades tipogràfiques.
   const perWordPress = variant === 'wordpress';
+  /* Decisió 5 del Mestre (261007): trossejat per defecte; SDP_PAQUET=monolitic
+     torna a l'IIFE d'abans. Valida abans de compilar, com la variant. */
+  const format = formatDelPaquet(env.SDP_PAQUET, variant);
+  const trossejat = format === 'trossos';
   const versio = versioDelBuild(env, versioDePackageJson());
   /* El node és el que Vite segella de veritat al bundle (import.meta.env surt
      de les mateixes VITE_*), no la reserva de CI, que només servix per a
@@ -372,8 +537,9 @@ export default defineConfig(({ mode }) => {
     plugins: [
     react(),
     recursosPublicsDelPlugin(),
-    manifestDeReleasePlugin({ versio, node, generat, variant }),
+    manifestDeReleasePlugin({ versio, node, generat, variant, format }),
     ...(perWordPress ? [senseReactIncrustat()] : []),
+    ...(trossejat ? [carregadorDelPaquetPlugin(), espaisDelPaquetPlugin()] : []),
     {
       name: 'sdp-port-canonic',
       configResolved(config) {
@@ -385,10 +551,12 @@ export default defineConfig(({ mode }) => {
     },
     {
       /* T14 · Guarda dins del build: un amfitrió (WordPress, Sollutia, una pàgina
-         estàtica) carrega l'IIFE com a <script> clàssic i no té `process`. Si una
-         dependència nova en llig una clau que el define no cobrix, el build falla
-         ací en lloc de pintar una pantalla en blanc a l'amfitrió. Mira l'AST i no
-         el text: la Wiki viatja dins del paquet i pot parlar de `process.env`. */
+         estàtica) carrega el paquet amb un <script> clàssic (l'IIFE monolític o,
+         des de la decisió 5 del Mestre, 261007, el carregador i els seus trossos
+         ESM) i no té `process`. Si una dependència nova en llig una clau que el
+         define no cobrix, el build falla ací, en qualsevol tros, en lloc de
+         pintar una pantalla en blanc a l'amfitrió. Mira l'AST i no el text: la
+         Wiki viatja dins del paquet i pot parlar de `process.env`. */
       name: 'sdp-sense-process',
       apply: 'build',
       generateBundle(_opcions, paquet) {
@@ -445,11 +613,29 @@ export default defineConfig(({ mode }) => {
     manifest: true,
     cssCodeSplit: false,
     ...(perWordPress ? { rollupOptions: { external: externDeWordPress, output: { globals: GLOBALS_WORDPRESS } } } : {}),
+    /* Decisió 5 del Mestre (261007) · trossejat: entrada ESM i trossos amb
+       hash sota trossos/, amb les importacions transitives elevades perquè el
+       navegador demane en paral·lel. WordPress mai arriba ací (formatDelPaquet).
+       preserveEntrySignatures: en lib, Vite posa 'strict', i com que els
+       trossos importen de l'entrada (host.js també s'importa dinàmicament),
+       Rollup hi interposava una façana de 30 B: una anada i tornada més abans
+       del codi. embed.jsx no exporta res i ningú no en consumix la signatura:
+       'allow-extension' deixa que l'entrada siga el mòdul que porta el codi. */
+    ...(trossejat ? {
+      rollupOptions: {
+        preserveEntrySignatures: 'allow-extension',
+        output: {
+          entryFileNames: MODUL_DELS_TROSSOS,
+          chunkFileNames: `${CARPETA_DE_TROSSOS}/[name]-[hash].js`,
+          hoistTransitiveImports: true
+        }
+      }
+    } : {}),
     lib: {
       entry: path.resolve(__dirname, 'src/embed.jsx'),
       name: 'SocDePoble',
-      formats: ['iife'],
-      fileName: () => 'soc-de-poble.standalone.js'
+      formats: trossejat ? ['es'] : ['iife'],
+      fileName: () => (trossejat ? MODUL_DELS_TROSSOS : ENTRADA_DEL_PAQUET)
     }
   }
   };

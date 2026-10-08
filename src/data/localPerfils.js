@@ -22,13 +22,28 @@
  *
  * T43 (ordre del Mestre, 260928) · Administrar organitzacions i correu de
  * l'entitat, també en memòria:
- *   · `connexions` (orgId::usuariId → rol): qui s'hi connecta per a
- *     administrar-la hi entra a l'instant com a 'admin' (en remot, la
+ *   · `connexions` (orgId → usuariId → { rol, desDe }): qui s'hi connecta
+ *     per a administrar-la hi entra a l'instant com a 'admin' (en remot, la
  *     petició la revisa l'equip de Sóc de Poble). La regla de la llavor no
  *     canvia (D1): qui té sessió ja és propietària de l'entitat pilot.
  *   · `contactes` (orgId → { correu, public }): el correu privat de
  *     l'organització i si es mostra a la fitxa pública. Només el llig i
  *     l'escriu qui l'administra; la fitxa pública només rep el públic.
+ *
+ * Ordre del Mestre (261008, grup C) · El poble i els membres d'una
+ * organització, amb les MATEIXES regles que les RPC de 2610081402:
+ *   · `town_name` és un camp més de la fitxa de l'organització (CAMPS_ORG);
+ *   · les persones membres són les `connexions` (alta directa, sense
+ *     invitació, amb rol 'member' o 'admin'), i han de ser del padró local
+ *     de persones (`persones`, el mateix id que torna carregaMembres);
+ *   · `organitzacionsMembre` (orgId → membreOrgId → desDe): una organització
+ *     membre d'una altra, que no hereta cap permís (rolDe no la llig mai) i
+ *     que només afig qui administra totes dues. En local només hi ha un
+ *     poble: no hi ha cap frontera de poble a comprovar.
+ *   · la propietària és la de la regla de la llavor i és intocable; només
+ *     ella nomena, degrada o lleva administradores; qualsevol que no siga la
+ *     propietària pot eixir-se'n; la llista només la veuen owner i admin.
+ *   Els errors porten els codis de MISSATGES_MEMBRES_ORGANITZACIO (contracte.js).
  *
  * T51 (regla del Mestre, 260928: cap document sense data) · Cada fitxa en
  * memòria porta `created_at` i `updated_at` com les files del servidor, amb
@@ -48,13 +63,15 @@ import {
   AGENTS_IA_SEED, ENTITATS_SEED, PERSONA_PILOT, agentIASeed, entitatSeed, esIAIA, rolALEntitat
 } from './identitatsSeed.js';
 import { normalitzaCorreu, validaCorreu } from './correuOrganitzacio.js';
+import { errorDeMembre, membreDOrganitzacio } from './contracte.js';
 import { emojiSol } from '../utils/emoji.js';
 
 const ROLS_QUE_MANEN = new Set(['owner', 'admin']);
 /* T66 · `icon`: l'emoticona de la fitxa de la persona (profiles.icon). Còpia de
    la llista blanca de supabase/auth.js: totes dues han de dir el mateix. */
 const CAMPS_PERFIL = ['full_name', 'avatar_url', 'visibility', 'town_name', 'bio', 'is_public', 'lema', 'presentacio_html', 'hero_url', 'copyright', 'icon'];
-const CAMPS_ORG = ['name', 'slug', 'description', 'kind', 'parent_organization_id', 'lema', 'logo_url', 'visibility', 'presentacio_html', 'hero_url', 'copyright'];
+/* Grup C (261008) · `town_name`: el poble de l'organització (2610081401). */
+const CAMPS_ORG = ['name', 'slug', 'description', 'kind', 'parent_organization_id', 'lema', 'logo_url', 'visibility', 'presentacio_html', 'hero_url', 'copyright', 'town_name'];
 const CAMPS_AGENT = ['name', 'role', 'lema', 'short_bio', 'avatar_url', 'hero_url', 'presentacio_html', 'copyright', 'town_name'];
 
 const TIPUS_AGENT = Object.freeze({ AI: 'ia', COMPANY: 'entitat' });
@@ -77,6 +94,14 @@ function avatarDeSessio(usuari) {
    del padró, no el logo de l'entitat que porta el catàleg. */
 const esLaPilot = (id) => PERSONA_PILOT.alies.includes(String(id ?? ''));
 
+/* Grup C (261008) · El padró local de persones del poble: les de tipus
+   'persona' del padró del xat (XAT_SEED_MEMBRES, xatSeed.js), amb el mateix id
+   que torna carregaMembres. Hui només la persona pilot. No s'importa xatSeed
+   (porta navigation.js): localPerfils.test.js vigila que diguen el mateix. */
+export const PERSONES_SEED = Object.freeze([
+  Object.freeze({ id: AGENTS_MAP.JAVI.id, nom: PERSONA_PILOT.nom, avatar: PERSONA_PILOT.avatar })
+]);
+
 /* T51 · `naixement` (ISO): el moment en què el magatzem crea les fitxes del
    padró. Una fitxa que ja porta les seues dates les conserva. */
 function creaMagatzem(entitats, naixement) {
@@ -86,9 +111,11 @@ function creaMagatzem(entitats, naixement) {
     perfils: new Map(),
     organitzacions: new Map(entitats.map((e) => [e.id, { ...dates, ...e, membres: undefined, alies: undefined }])),
     agents: new Map(AGENTS_IA_SEED.map((a) => [a.id, { ...dates, ...a }])),
-    /* T43 · orgId::usuariId → rol, i orgId → { correu, public }. */
+    /* T43 · orgId → usuariId → { rol, desDe }, i orgId → { correu, public }. */
     connexions: new Map(),
-    contactes: new Map()
+    contactes: new Map(),
+    /* Grup C · orgId → membreOrgId → desDe. */
+    organitzacionsMembre: new Map()
   };
 }
 
@@ -105,14 +132,15 @@ function actualitza(fitxa, updates, camps, moment) {
 /* T43 · Els errors porten el mateix `code` que l'adaptador remot, perquè la
    interfície no depenga mai del text. */
 const errorAmbCodi = (missatge, code) => Object.assign(new Error(missatge), { code });
-const clauConnexio = (orgId, usuariId) => `${String(orgId)}::${String(usuariId)}`;
 
 /**
  * `entitats` (opcional, per a les proves): les organitzacions del padró. Per
  * defecte, les de la llavor. Una organització que no és de la llavor no té
  * cap propietària implícita, i així es pot provar l'alta com a admin.
+ * `persones` (opcional, grup C): el padró local de persones del poble que es
+ * poden fer membres d'una organització. Per defecte, PERSONES_SEED.
  */
-export function createLocalPerfilsAdapter({ entitats = ENTITATS_SEED, ara = () => new Date() } = {}) {
+export function createLocalPerfilsAdapter({ entitats = ENTITATS_SEED, persones = PERSONES_SEED, ara = () => new Date() } = {}) {
   /* T51 · El rellotge del servidor local (injectable a les proves). */
   const moment = () => ara().toISOString();
   let estat = creaMagatzem(entitats, moment());
@@ -134,12 +162,23 @@ export function createLocalPerfilsAdapter({ entitats = ENTITATS_SEED, ara = () =
     return estat.perfils.get(usuari.id);
   };
 
+  /* T43 · Les pertinences explícites d'una organització (orgId → usuariId →
+     { rol, desDe }): les connexions de Connectar i, des del grup C, els
+     membres que hi afig qui l'administra. */
+  const connexionsDe = (orgId) => {
+    const clau = String(orgId);
+    if (!estat.connexions.has(clau)) estat.connexions.set(clau, new Map());
+    return estat.connexions.get(clau);
+  };
+  const connexio = (orgId, usuariId) => estat.connexions.get(String(orgId))?.get(String(usuariId)) || null;
+
   /* T43 · El rol de la llavor mana si ja administra; si no, una connexió
-     feta des de Connectar. Mai es degrada una propietària. */
+     feta des de Connectar (o una alta de membre). Mai es degrada una
+     propietària. Les organitzacions membres no hi compten mai: no hereten. */
   const rolDe = (orgId, usuari) => {
     const base = rolALEntitat(orgId, usuari?.id, { teSessio: Boolean(usuari?.id) });
     if (ROLS_QUE_MANEN.has(base) || !usuari?.id) return base;
-    return estat.connexions.get(clauConnexio(orgId, usuari.id)) || base;
+    return connexio(orgId, usuari.id)?.rol || base;
   };
   const orgsOnMana = (usuari) => [...estat.organitzacions.values()]
     .filter((org) => ROLS_QUE_MANEN.has(rolDe(org.id, usuari)));
@@ -167,6 +206,32 @@ export function createLocalPerfilsAdapter({ entitats = ENTITATS_SEED, ara = () =
     const propi = rol === 'owner' && typeof usuari?.email === 'string' && usuari.email.trim() ? usuari.email.trim() : null;
     return { correu, public: esPublic && Boolean(correu), perDefecte: { origen: 'propietaria', correu: propi } };
   };
+
+  /* ── Grup C (261008) · Els membres d'una organització ── */
+  /* Qui l'administra, o SDP-ORGMEM-002, també si no existix (com el servidor). */
+  const orgQueGestiona = (orgId, usuari) => {
+    const org = trobaOrg(orgId);
+    if (!org || !ROLS_QUE_MANEN.has(rolDe(org.id, usuari))) throw errorDeMembre('SDP-ORGMEM-002');
+    return org;
+  };
+  const delPadro = (id) => persones.find((p) => String(p.id) === String(id)) || null;
+  const membreDePersona = (personaId, rol, desDe, usuari) => {
+    const persona = usuari?.id && String(personaId) === String(usuari.id)
+      ? { nom: perfilDe(usuari).full_name, avatar: perfilDe(usuari).avatar_url }
+      : delPadro(personaId);
+    return { tipus: 'persona', id: String(personaId), nom: persona?.nom || 'Veí/na', avatar: persona?.avatar || '', rol, desDe: desDe ?? null };
+  };
+  const membreDOrg = (org, desDe) => ({
+    tipus: 'organitzacio', id: org.id, nom: org.name || '', avatar: org.logo_url || '', rol: 'member', desDe: desDe ?? null
+  });
+  const organitzacionsMembreDe = (orgId) => {
+    const clau = String(orgId);
+    if (!estat.organitzacionsMembre.has(clau)) estat.organitzacionsMembre.set(clau, new Map());
+    return estat.organitzacionsMembre.get(clau);
+  };
+  /* L'ordre de membres_organitzacio: les persones primer, i per nom i id. */
+  const ordenaMembres = (llista) => llista.sort((a, b) => (a.tipus === b.tipus ? 0 : a.tipus === 'persona' ? -1 : 1)
+    || a.nom.localeCompare(b.nom, 'ca') || a.id.localeCompare(b.id));
 
   const publicDePersona = (perfil, usuari) => ({
     tipus: 'persona', id: perfil.id, slug: perfil.slug || null, nom: perfil.full_name, avatar: perfil.avatar_url || '',
@@ -274,8 +339,9 @@ export function createLocalPerfilsAdapter({ entitats = ENTITATS_SEED, ara = () =
       if (ROLS_QUE_MANEN.has(actual)) {
         return { id: null, organitzacioId: org.id, estat: 'aprovada', role: actual, data: null, jaHiEra: true };
       }
-      estat.connexions.set(clauConnexio(org.id, usuari.id), 'admin');
-      return { id: null, organitzacioId: org.id, estat: 'aprovada', role: 'admin', data: new Date().toISOString(), jaHiEra: false };
+      const desDe = moment();
+      connexionsDe(org.id).set(String(usuari.id), { rol: 'admin', desDe });
+      return { id: null, organitzacioId: org.id, estat: 'aprovada', role: 'admin', data: desDe, jaHiEra: false };
     },
 
     /** Sense revisió no hi ha peticions pendents. */
@@ -295,6 +361,86 @@ export function createLocalPerfilsAdapter({ entitats = ENTITATS_SEED, ara = () =
       if (correu && !validaCorreu(correu)) throw errorAmbCodi('Escriu un correu vàlid, com ara forn@exemple.cat.', 'CORREU-INVALID');
       estat.contactes.set(String(org.id), { correu, public: Boolean(dades.public) && Boolean(correu) });
       return contacteVist(org, rol, usuari);
+    },
+
+    /**
+     * Grup C · Els membres d'una organització, només per a qui l'administra:
+     * la propietària de la regla de la llavor, les persones membres i les
+     * organitzacions membres (sempre 'member').
+     */
+    llistaMembresOrganitzacio(orgId, usuari) {
+      if (!usuari?.id) throw errorDeMembre('SDP-ORGMEM-000');
+      const org = orgQueGestiona(orgId, usuari);
+      const llista = [];
+      if (rolALEntitat(org.id, usuari.id, { teSessio: true }) === 'owner') {
+        llista.push(membreDePersona(usuari.id, 'owner', estat.naixement, usuari));
+      }
+      for (const [personaId, { rol, desDe }] of estat.connexions.get(String(org.id)) || []) {
+        llista.push(membreDePersona(personaId, rol, desDe, usuari));
+      }
+      for (const [membreId, desDe] of estat.organitzacionsMembre.get(String(org.id)) || []) {
+        const membreOrg = estat.organitzacions.get(membreId);
+        if (membreOrg) llista.push(membreDOrg(membreOrg, desDe));
+      }
+      return ordenaMembres(llista);
+    },
+
+    /**
+     * Grup C · Alta directa (sense invitació) o canvi de rol, amb les regles de
+     * desa_membre_organitzacio (2610081402). Idempotent: el mateix rol no és
+     * cap canvi i no demana ser la propietària.
+     */
+    desaMembreOrganitzacio(orgId, dades = {}, usuari) {
+      if (!usuari?.id) throw errorDeMembre('SDP-ORGMEM-000');
+      const membre = membreDOrganitzacio(dades);
+      const org = orgQueGestiona(orgId, usuari);
+      if (membre.tipus === 'persona') {
+        if (membre.id === String(usuari.id)) throw errorDeMembre('SDP-ORGMEM-004');
+        if (!delPadro(membre.id)) throw errorDeMembre('SDP-ORGMEM-003');
+        const actual = connexio(org.id, membre.id);
+        /* En local cap altra persona no és propietària; la guarda és la del servidor. */
+        if (actual?.rol === 'owner') throw errorDeMembre('SDP-ORGMEM-005');
+        if (actual?.rol !== membre.rol) {
+          if ((membre.rol === 'admin' || actual?.rol === 'admin') && rolDe(org.id, usuari) !== 'owner') {
+            throw errorDeMembre('SDP-ORGMEM-006');
+          }
+          connexionsDe(org.id).set(membre.id, { rol: membre.rol, desDe: actual?.desDe || moment() });
+        }
+        const desat = connexio(org.id, membre.id);
+        return membreDePersona(membre.id, desat.rol, desat.desDe, usuari);
+      }
+      const membreOrg = trobaOrg(membre.id);
+      if (!membreOrg || membreOrg.id === org.id) throw errorDeMembre('SDP-ORGMEM-007');
+      if (!ROLS_QUE_MANEN.has(rolDe(membreOrg.id, usuari))) throw errorDeMembre('SDP-ORGMEM-008');
+      const delOrg = organitzacionsMembreDe(org.id);
+      if (!delOrg.has(membreOrg.id)) delOrg.set(membreOrg.id, moment());
+      return membreDOrg(membreOrg, delOrg.get(membreOrg.id));
+    },
+
+    /**
+     * Grup C · Baixa d'un membre, o «Eixir» amb el propi id. Idempotent: qui
+     * no hi és torna { llevat: false }. La propietària no se'n va ni es lleva.
+     */
+    llevaMembreOrganitzacio(orgId, dades = {}, usuari) {
+      if (!usuari?.id) throw errorDeMembre('SDP-ORGMEM-000');
+      const membre = membreDOrganitzacio(dades, { ambRol: false });
+      if (membre.tipus === 'persona' && membre.id === String(usuari.id)) {
+        const org = trobaOrg(orgId);
+        const actual = org ? rolDe(org.id, usuari) : null;
+        if (!actual) return { llevat: false };
+        if (actual === 'owner') throw errorDeMembre('SDP-ORGMEM-005');
+        return { llevat: estat.connexions.get(String(org.id))?.delete(membre.id) === true };
+      }
+      const org = orgQueGestiona(orgId, usuari);
+      if (membre.tipus === 'persona') {
+        const actual = connexio(org.id, membre.id);
+        if (!actual) return { llevat: false };
+        if (actual.rol === 'owner') throw errorDeMembre('SDP-ORGMEM-005');
+        if (actual.rol === 'admin' && rolDe(org.id, usuari) !== 'owner') throw errorDeMembre('SDP-ORGMEM-006');
+        return { llevat: estat.connexions.get(String(org.id)).delete(membre.id) };
+      }
+      const membreOrg = trobaOrg(membre.id);
+      return { llevat: Boolean(membreOrg) && estat.organitzacionsMembre.get(String(org.id))?.delete(membreOrg.id) === true };
     },
 
     /** Per a les proves: oblida els canvis. */

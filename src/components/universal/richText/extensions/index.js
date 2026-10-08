@@ -2,6 +2,7 @@ import Image, { inputRegex as regexImatgeMarkdown } from '@tiptap/extension-imag
 import { nodeInputRule } from '@tiptap/core';
 import { ReactNodeViewRenderer } from '@tiptap/react';
 import { compressImage } from '../../../../utils/imageUtils.js';
+import { validaFitxerImatge } from '../../../../hooks/useHeroImageHandler.js';
 import { netejaFontImatge } from '../../enquadrament/netejaMetadades.js';
 import { netejaHtmlEnganxat } from './imatgesEnganxades.js';
 import SlashMenu from './slash.js';
@@ -88,8 +89,15 @@ async function aFitxerWebp(dataUrl, nom = 'imatge.webp') {
  * @param {boolean} [opcions.ambTargetes] T7 (ordre del Mestre, 261004) · Afig
  *        l'ordre «Targeta», que obri el selector del consumidor. Només amb
  *        l'extensió de targetes (extensionsRiques amb ambTargetes).
+ * @param {(missatge: string, tipus: string) => void} [opcions.onToast] Ordre
+ *        del Mestre (261007, ordre E) · El canal d'avisos de la capçalera
+ *        (DocumentEditor el passa estable). L'ordre «Imatge» hi diu per què no
+ *        ha inserit res: el fitxer no és una imatge o la pujada s'ha
+ *        rebutjat. Sense, com sempre: cap avís per a un fitxer que no és una
+ *        imatge i un console.warn per a la pujada.
  */
-export function creaOrdres({ onImageUpload = null, ambTargetes = false } = {}) {
+export function creaOrdres({ onImageUpload = null, ambTargetes = false, onToast = null } = {}) {
+  const avisa = typeof onToast === 'function' ? (missatge) => onToast(missatge, 'error') : null;
   const ordreTargeta = {
     id: 'targeta',
     titol: 'Targeta',
@@ -176,7 +184,14 @@ export function creaOrdres({ onImageUpload = null, ambTargetes = false } = {}) {
 
         const original = await triaFitxer();
         if (!original) return;
-        if (!original.type.startsWith('image/')) return;
+        /* El mateix avís que la capçalera per a un fitxer que no és una imatge
+           (validaFitxerImatge). Sense límit de pes: el cos no en tenia cap i
+           la compressió el deixa en 1.200 px, com sempre. */
+        const noEsImatge = validaFitxerImatge(original, Infinity);
+        if (noEsImatge) {
+          avisa?.(noEsImatge);
+          return;
+        }
 
         try {
           const dataUrl = await compressImage(original, {
@@ -195,7 +210,10 @@ export function creaOrdres({ onImageUpload = null, ambTargetes = false } = {}) {
             alt: original.name || 'Imatge'
           }).run();
         } catch (err) {
-          console.warn('[slash] No s\'ha pogut inserir la imatge:', err?.message);
+          /* La pujada (o la compressió) rebutjada ja no falla en silenci: el
+             missatge del port o, sense, el de la capçalera (useHeroImageHandler). */
+          if (avisa) avisa(err?.message || "No s'ha pogut processar la imatge.");
+          else console.warn('[slash] No s\'ha pogut inserir la imatge:', err?.message);
         }
       }
     },
@@ -212,15 +230,17 @@ export function creaOrdres({ onImageUpload = null, ambTargetes = false } = {}) {
  * incrustades (targetes/targetesIncrustades.js) i la seua ordre «/». Ha de
  * ser CONSTANT durant la vida de l'editor: l'esquema es fixa en crear-lo.
  * Sense, les mateixes extensions de sempre.
+ * Ordre del Mestre (261007, ordre E) · `onToast` arriba a l'ordre «Imatge»
+ * (creaOrdres). També ha de ser estable: forma part del que es memoritza.
  */
-export function extensionsRiques({ onImageUpload = null, ambTargetes = false } = {}) {
+export function extensionsRiques({ onImageUpload = null, ambTargetes = false, onToast = null } = {}) {
   return [
     SdpImage.configure({
       inline: false,
       allowBase64: true,
       HTMLAttributes: { class: 'sdp-imatge-cos', loading: 'lazy', decoding: 'async' }
     }),
-    SlashMenu.configure({ ordres: creaOrdres({ onImageUpload, ambTargetes }) }),
+    SlashMenu.configure({ ordres: creaOrdres({ onImageUpload, ambTargetes, onToast }) }),
     ...(ambTargetes ? [TargetesIncrustades] : [])
   ];
 }

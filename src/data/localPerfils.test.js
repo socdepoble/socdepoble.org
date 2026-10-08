@@ -1,6 +1,7 @@
 import { beforeEach, expect, test } from 'vitest';
-import { createLocalPerfilsAdapter } from './localPerfils.js';
-import { ENTITAT_PILOT_ID, ENTITATS_SEED, IAIA_ID } from './identitatsSeed.js';
+import { createLocalPerfilsAdapter, PERSONES_SEED } from './localPerfils.js';
+import { ENTITAT_PILOT_ID, ENTITAT_PILOT_SLUG, ENTITATS_SEED, IAIA_ID } from './identitatsSeed.js';
+import { XAT_SEED_MEMBRES } from './xatSeed.js';
 
 /* Lògica d'Usuari · el padró pilot del mode seed: qui ha entrat és la persona
    pilot i mana a «Sóc de Poble»; la IAIA és l'agent que eixa entitat administra. */
@@ -64,7 +65,7 @@ test('T66 · el perfil públic de la persona porta l’emoticona triada (neta); 
   // Un valor que no és un sol emoji no es pinta mai.
   adapter.updateProfile(USUARI, { icon: '🌾 i text' });
   expect(adapter.loadPerfilPublic(USUARI.id, USUARI).emoticona).toBe('');
-  for (const clau of ['soc-de-poble', IAIA_ID, '0001']) {
+  for (const clau of [ENTITAT_PILOT_SLUG, IAIA_ID, '0001']) {
     expect(adapter.loadPerfilPublic(clau, USUARI)).toHaveProperty('emoticona', '');
   }
 });
@@ -72,7 +73,9 @@ test('T66 · el perfil públic de la persona porta l’emoticona triada (neta); 
 test('perfil públic: la IAIA es diu, l’entitat per slug, la persona pilot, el catàleg i ningú', () => {
   expect(adapter.loadPerfilPublic('iaia-maria', USUARI)).toMatchObject({ tipus: 'ia', esIA: true, nom: 'IAIA MarIA', propietari: true, publicat: true });
   expect(adapter.loadPerfilPublic(IAIA_ID, null)).toMatchObject({ tipus: 'ia', esIA: true, propietari: false });
-  expect(adapter.loadPerfilPublic('soc-de-poble', USUARI)).toMatchObject({ tipus: 'entitat', id: ENTITAT_PILOT_ID, nom: 'Sóc de Poble', propietari: true, esIA: false });
+  /* Ordre del Mestre (261007) · El slug declarat ('socdepoble') és ara el
+     mateix text que l'id: per slug i per id es resol la mateixa fitxa. */
+  expect(adapter.loadPerfilPublic(ENTITAT_PILOT_SLUG, USUARI)).toMatchObject({ tipus: 'entitat', id: ENTITAT_PILOT_ID, nom: 'Sóc de Poble', propietari: true, esIA: false });
   expect(adapter.loadPerfilPublic(ENTITAT_PILOT_ID, null)).toMatchObject({ tipus: 'entitat', propietari: false });
   expect(adapter.loadPerfilPublic(USUARI.id, USUARI)).toMatchObject({ tipus: 'persona', nom: 'Javi Pilot', propietari: true });
   expect(adapter.loadPerfilPublic('javillinares', USUARI)).toMatchObject({ tipus: 'persona', propietari: true });
@@ -131,7 +134,7 @@ test('T51 · cada actualització amb camps del contracte renova updated_at; sens
 test('T51 · el perfil públic porta creat i modificat de la fitxa; les de només lectura, el naixement del magatzem', () => {
   const ambRellotge = createLocalPerfilsAdapter({ ara: rellotge() });
   ambRellotge.updateOrganization(ENTITAT_PILOT_ID, { lema: 'Fem xarxa' });
-  expect(ambRellotge.loadPerfilPublic('soc-de-poble', USUARI)).toMatchObject({ creat: minut(0), modificat: minut(1) });
+  expect(ambRellotge.loadPerfilPublic(ENTITAT_PILOT_SLUG, USUARI)).toMatchObject({ creat: minut(0), modificat: minut(1) });
   expect(ambRellotge.loadPerfilPublic(IAIA_ID, USUARI)).toMatchObject({ creat: minut(0), modificat: minut(0) });
   expect(ambRellotge.loadPerfilPublic(USUARI.id, USUARI)).toMatchObject({ creat: minut(2), modificat: minut(2) });
   expect(ambRellotge.loadPerfilPublic('0001', null)).toMatchObject({ creat: minut(0), modificat: minut(0) });
@@ -178,7 +181,7 @@ test('T43 · el correu de l’organització és privat per a qui l’administra;
   expect(JSON.stringify(adapter.listMyOrganizations(USUARI))).not.toContain('hola@socdepoble.cat');
 
   adapter.desaContacteOrganitzacio(ENTITAT_PILOT_ID, { correu: 'hola@socdepoble.cat', public: true }, USUARI);
-  expect(adapter.loadPerfilPublic('soc-de-poble', null).correu).toBe('hola@socdepoble.cat');
+  expect(adapter.loadPerfilPublic(ENTITAT_PILOT_SLUG, null).correu).toBe('hola@socdepoble.cat');
   /* Sense correu no hi ha res a publicar. */
   expect(adapter.desaContacteOrganitzacio(ENTITAT_PILOT_ID, { correu: '', public: true }, USUARI)).toMatchObject({ correu: '', public: false });
   expect(adapter.loadPerfilPublic(ENTITAT_PILOT_ID, null).correu).toBe('');
@@ -191,4 +194,110 @@ test('T43 · qui no administra (o no té sessió) no llig ni escriu el correu', 
   expect(codiDe(() => ambForn.desaContacteOrganitzacio('forn-proves', { correu: 'a@b.cat' }, VEI_USUARI))).toBe('SDP-ORGMAIL-001');
   expect(codiDe(() => ambForn.llegeixContacteOrganitzacio(ENTITAT_PILOT_ID, null))).toBe('SDP-ORGMAIL-000');
   expect(codiDe(() => ambForn.llegeixContacteOrganitzacio('cap', USUARI))).toBe('SDP-ORGMAIL-002');
+});
+
+/* ── Ordre del Mestre (261008, grup C) · el poble i els membres d'una organització ── */
+
+test('grup C · el poble de l’organització (town_name) es desa i arriba a la fitxa pública', () => {
+  adapter.updateOrganization(ENTITAT_PILOT_ID, { town_name: 'Relleu' });
+  expect(adapter.listMyOrganizations(USUARI)[0]).toMatchObject({ town_name: 'Relleu' });
+  expect(adapter.loadPerfilPublic(ENTITAT_PILOT_SLUG, null)).toMatchObject({ tipus: 'entitat', poble: 'Relleu' });
+  adapter.updateOrganization(ENTITAT_PILOT_ID, { town_name: null });
+  expect(adapter.loadPerfilPublic(ENTITAT_PILOT_ID, null).poble).toBe('');
+});
+
+test('grup C · el padró local de persones és el de les persones del padró del xat, amb el mateix id i nom', () => {
+  const delXat = XAT_SEED_MEMBRES.filter((membre) => membre.tipus === 'persona');
+  expect(PERSONES_SEED.map((p) => [p.id, p.nom])).toEqual(delXat.map((membre) => [membre.usuariId, membre.nom]));
+});
+
+const PEPA = Object.freeze({ id: 'pepa', nom: 'Pepa Soler', avatar: '/assets/fotos/pepa.jpg' });
+const TONI = Object.freeze({ id: 'toni', nom: 'Toni Ferri', avatar: '' });
+const GRUP = Object.freeze({ id: 'colla-proves', slug: 'colla', kind: 'group', name: 'Colla de proves', visibility: 'public', logo_url: '/assets/colla.png' });
+const ambMembres = (opcions = {}) => createLocalPerfilsAdapter({ entitats: [...ENTITATS_SEED, FORN, GRUP], persones: [PEPA, TONI], ...opcions });
+const ALTRA = { id: 'altra-de-proves', email: 'altra@poble.test' };
+
+test('grup C · la llista només la veu qui administra; sense sessió, 000; una organització inexistent, 002', () => {
+  const local = ambMembres();
+  expect(local.llistaMembresOrganitzacio(ENTITAT_PILOT_SLUG, USUARI)).toEqual([
+    { tipus: 'persona', id: USUARI.id, nom: 'Javi Pilot', avatar: 'https://x.test/j.png', rol: 'owner', desDe: expect.any(String) }
+  ]);
+  expect(codiDe(() => local.llistaMembresOrganitzacio(ENTITAT_PILOT_ID, null))).toBe('SDP-ORGMEM-000');
+  expect(codiDe(() => local.llistaMembresOrganitzacio('forn-proves', VEI_USUARI))).toBe('SDP-ORGMEM-002');
+  expect(codiDe(() => local.llistaMembresOrganitzacio('cap', USUARI))).toBe('SDP-ORGMEM-002');
+});
+
+test('grup C · alta directa d’una persona del padró, canvi de rol per la propietària i baixa idempotent', () => {
+  const local = ambMembres({ ara: rellotge() });
+  expect(local.desaMembreOrganitzacio(ENTITAT_PILOT_ID, { tipus: 'persona', id: 'pepa' }, USUARI))
+    .toEqual({ tipus: 'persona', id: 'pepa', nom: 'Pepa Soler', avatar: '/assets/fotos/pepa.jpg', rol: 'member', desDe: minut(1) });
+  // El mateix rol no és cap canvi: conserva la data d'alta.
+  expect(local.desaMembreOrganitzacio(ENTITAT_PILOT_ID, { tipus: 'persona', id: 'pepa', rol: 'member' }, USUARI).desDe).toBe(minut(1));
+  expect(local.desaMembreOrganitzacio(ENTITAT_PILOT_ID, { tipus: 'persona', id: 'pepa', rol: 'admin' }, USUARI))
+    .toMatchObject({ rol: 'admin', desDe: minut(1) });
+  expect(local.llistaMembresOrganitzacio(ENTITAT_PILOT_ID, USUARI).map((m) => [m.id, m.rol])).toEqual([[USUARI.id, 'owner'], ['pepa', 'admin']]);
+  expect(local.llevaMembreOrganitzacio(ENTITAT_PILOT_ID, { tipus: 'persona', id: 'pepa' }, USUARI)).toEqual({ llevat: true });
+  expect(local.llevaMembreOrganitzacio(ENTITAT_PILOT_ID, { tipus: 'persona', id: 'pepa' }, USUARI)).toEqual({ llevat: false });
+  expect(local.llistaMembresOrganitzacio(ENTITAT_PILOT_ID, USUARI)).toHaveLength(1);
+});
+
+test('grup C · fora del padró (003), un mateix (004), rol de propietària o tipus inventat (001)', () => {
+  const local = ambMembres();
+  expect(codiDe(() => local.desaMembreOrganitzacio(ENTITAT_PILOT_ID, { tipus: 'persona', id: 'ningu' }, USUARI))).toBe('SDP-ORGMEM-003');
+  expect(codiDe(() => local.desaMembreOrganitzacio(ENTITAT_PILOT_ID, { tipus: 'persona', id: USUARI.id, rol: 'admin' }, USUARI))).toBe('SDP-ORGMEM-004');
+  expect(codiDe(() => local.desaMembreOrganitzacio(ENTITAT_PILOT_ID, { tipus: 'persona', id: 'pepa', rol: 'owner' }, USUARI))).toBe('SDP-ORGMEM-001');
+  expect(codiDe(() => local.desaMembreOrganitzacio(ENTITAT_PILOT_ID, { tipus: 'ia', id: IAIA_ID }, USUARI))).toBe('SDP-ORGMEM-001');
+  expect(codiDe(() => local.desaMembreOrganitzacio(ENTITAT_PILOT_ID, { tipus: 'persona', id: 'pepa' }, null))).toBe('SDP-ORGMEM-000');
+  expect(local.llistaMembresOrganitzacio(ENTITAT_PILOT_ID, USUARI)).toHaveLength(1);
+});
+
+test('grup C · una admin que no és la propietària afig membres, però no nomena, ni degrada, ni lleva cap admin (006)', () => {
+  const local = ambMembres();
+  local.reclamaOrganitzacio('forn', VEI_USUARI); // VEI és admin del Forn, que no té propietària.
+  expect(local.desaMembreOrganitzacio('forn-proves', { tipus: 'persona', id: 'pepa' }, VEI_USUARI)).toMatchObject({ rol: 'member' });
+  expect(codiDe(() => local.desaMembreOrganitzacio('forn-proves', { tipus: 'persona', id: 'pepa', rol: 'admin' }, VEI_USUARI))).toBe('SDP-ORGMEM-006');
+  expect(local.llevaMembreOrganitzacio('forn-proves', { tipus: 'persona', id: 'pepa' }, VEI_USUARI)).toEqual({ llevat: true });
+  /* Una admin que ja hi era (la connexió d'una altra persona) no la toca qui no és propietària. */
+  local.reclamaOrganitzacio('forn', { id: 'toni' });
+  expect(codiDe(() => local.desaMembreOrganitzacio('forn-proves', { tipus: 'persona', id: 'toni', rol: 'member' }, VEI_USUARI))).toBe('SDP-ORGMEM-006');
+  expect(codiDe(() => local.llevaMembreOrganitzacio('forn-proves', { tipus: 'persona', id: 'toni' }, VEI_USUARI))).toBe('SDP-ORGMEM-006');
+  // Per nom: VEI no porta nom de sessió i pren el de la persona pilot («Javi»).
+  expect(local.llistaMembresOrganitzacio('forn-proves', VEI_USUARI).map((m) => [m.id, m.nom, m.rol]))
+    .toEqual([[VEI, 'Javi', 'admin'], ['toni', 'Toni Ferri', 'admin']]);
+});
+
+test('grup C · «Eixir»: qualsevol que no siga la propietària se’n va; la propietària no (005); idempotent', () => {
+  const local = ambMembres();
+  local.reclamaOrganitzacio('forn', VEI_USUARI);
+  expect(local.llevaMembreOrganitzacio('forn-proves', { tipus: 'persona', id: VEI }, VEI_USUARI)).toEqual({ llevat: true });
+  expect(local.listMyOrganizations(VEI_USUARI).map((o) => o.id)).not.toContain('forn-proves');
+  expect(local.llevaMembreOrganitzacio('forn-proves', { tipus: 'persona', id: VEI }, VEI_USUARI)).toEqual({ llevat: false });
+  expect(local.llevaMembreOrganitzacio('cap', { tipus: 'persona', id: VEI }, VEI_USUARI)).toEqual({ llevat: false });
+  expect(codiDe(() => local.llevaMembreOrganitzacio(ENTITAT_PILOT_ID, { tipus: 'persona', id: USUARI.id }, USUARI))).toBe('SDP-ORGMEM-005');
+});
+
+test('grup C · una organització membre: l’afig qui administra totes dues, mai ella mateixa, i no hereta cap permís', () => {
+  const local = ambMembres({ ara: rellotge() });
+  // ALTRA administra el Forn, però no la Colla: no la pot afegir enlloc on no mana (002) ni afegir-la sense manar-hi (008).
+  local.reclamaOrganitzacio('forn', ALTRA);
+  expect(codiDe(() => local.desaMembreOrganitzacio('colla-proves', { tipus: 'organitzacio', id: 'forn-proves' }, ALTRA))).toBe('SDP-ORGMEM-002');
+  local.reclamaOrganitzacio('colla', VEI_USUARI);
+  expect(codiDe(() => local.desaMembreOrganitzacio('colla-proves', { tipus: 'organitzacio', id: 'forn-proves' }, VEI_USUARI))).toBe('SDP-ORGMEM-008');
+  local.reclamaOrganitzacio('forn', VEI_USUARI);
+  expect(local.desaMembreOrganitzacio('colla', { tipus: 'organitzacio', id: 'forn' }, VEI_USUARI)).toEqual(
+    { tipus: 'organitzacio', id: 'forn-proves', nom: 'Forn de proves', avatar: '', rol: 'member', desDe: expect.any(String) });
+  expect(codiDe(() => local.desaMembreOrganitzacio('colla-proves', { tipus: 'organitzacio', id: 'colla-proves' }, VEI_USUARI))).toBe('SDP-ORGMEM-007');
+  expect(codiDe(() => local.desaMembreOrganitzacio('colla-proves', { tipus: 'organitzacio', id: 'cap' }, VEI_USUARI))).toBe('SDP-ORGMEM-007');
+  expect(codiDe(() => local.desaMembreOrganitzacio('colla-proves', { tipus: 'organitzacio', id: 'forn-proves', rol: 'admin' }, VEI_USUARI))).toBe('SDP-ORGMEM-001');
+  // Les persones primer, les organitzacions després.
+  expect(local.llistaMembresOrganitzacio('colla-proves', VEI_USUARI).map((m) => [m.tipus, m.id]))
+    .toEqual([['persona', VEI], ['organitzacio', 'forn-proves']]);
+  // No hereta: qui administra el Forn no veu ni gestiona la Colla, ni la té entre les seues.
+  expect(codiDe(() => local.llistaMembresOrganitzacio('colla-proves', ALTRA))).toBe('SDP-ORGMEM-002');
+  expect(local.listMyOrganizations(ALTRA).map((o) => o.id)).not.toContain('colla-proves');
+  expect(local.loadPerfilPublic('colla-proves', ALTRA).propietari).toBe(false);
+  expect(local.llevaMembreOrganitzacio('colla-proves', { tipus: 'organitzacio', id: 'forn' }, VEI_USUARI)).toEqual({ llevat: true });
+  expect(local.llevaMembreOrganitzacio('colla-proves', { tipus: 'organitzacio', id: 'forn' }, VEI_USUARI)).toEqual({ llevat: false });
+  local.reinicia();
+  expect(codiDe(() => local.llistaMembresOrganitzacio('colla-proves', VEI_USUARI))).toBe('SDP-ORGMEM-002');
 });

@@ -20,6 +20,9 @@
  *   En mode local, sense-marc delega el scroll en el contingut del consumidor.
  *   info = { forcat: true } quan el navegador ja ha tancat el <dialog> pel
  *   seu compte (dos Escape seguits): el pare l'ha de donar per tancat.
+ *   ambTanca (true) · Onada 4 (retallador senzill, 261008) · Amb false, la
+ *   capçalera no porta la X: el peu ja diu com eixir i Escape continua
+ *   tancant. Sense la prop, el DOM de sempre.
  *
  * LLEI DE LA POR ORGÀNICA: en <DialegConfirmacio destructiu> el focus inicial
  * va a «Cancel·lar». Un Intro distret no esborra res.
@@ -56,6 +59,7 @@ export function Dialeg(props) {
 function ContingutDialeg({
   obert, onTanca, titol, descripcio, accions = null, mida = 'm', costat = null,
   tancaEnVel = true, variant = 'nadiu', lloc = 'centre', className, children, local, arrelModal, nodeRef, onObert,
+  ambTanca = true,
 }) {
   const ref = useRef(null);
   const retorn = useRef(null);
@@ -152,9 +156,11 @@ function ContingutDialeg({
       <div className="sdp-dialeg__marc">
         <header className="sdp-dialeg__cap">
           <h2 id={`${id}-titol`} className="sdp-dialeg__titol">{titol}</h2>
-          <button type="button" className="sdp-dialeg__tanca" onClick={() => onTanca?.('boto')} aria-label="Tancar">
-            <X size={22} aria-hidden="true" focusable="false" />
-          </button>
+          {ambTanca ? (
+            <button type="button" className="sdp-dialeg__tanca" onClick={() => onTanca?.('boto')} aria-label="Tancar">
+              <X size={22} aria-hidden="true" focusable="false" />
+            </button>
+          ) : null}
         </header>
         {descripcio ? <p id={`${id}-desc`} className="sdp-dialeg__descripcio">{descripcio}</p> : null}
         {children ? <div className="sdp-dialeg__cos">{children}</div> : null}

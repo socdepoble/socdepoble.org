@@ -8,7 +8,7 @@ import { buildMapEmbedUrl } from './mapConfig';
 import { useMur } from './MurContext';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
 import { useUIActions } from '../../app/contexts/UIContext';
-import { PillToggle, Carregant } from '../../components/PedraSeca/index.js';
+import { PillToggle, Carregant, Boto } from '../../components/PedraSeca/index.js';
 import { dataDElement } from '../../components/universal/editorial.js';
 /* Ordre del Mestre, 261001 · el calendari del Mur es diu CalendariMur (abans
    AgendaMur); la targeta, les pàgines del sistema i l'ordre viuen fora
@@ -24,8 +24,21 @@ import { EstatErrorDades } from './EstatErrorDades.jsx';
 /* T5 · El model de l'acte d'un element: el de la llista o, si no hi és, fet ara. */
 const modelDe = (models, item) => (models.has(item) ? models.get(item) : acteAEsdeveniment(item));
 
+/* Decisió 4 del Mestre (261007) · «Carregar-ne més». Les seccions que pinta
+   cada filtre del Mur: «Mostra més» només carrega les que es veuen (amb
+   «Mostrar tot», les tres). Sense cap secció pendent no es pinta res: el DOM
+   és el de sempre. Un useMur sense paginació (un doble d'abans de la
+   Decisió 4) no en porta, i tampoc pinta cap botó. */
+const SECCIONS_DEL_FILTRE = Object.freeze({ all: ['mur', 'events', 'mercat'], events: ['events'], mercat: ['mercat'], sistema: [] });
+const SENSE_MES = () => false;
+const SENSE_ERROR = () => null;
+const SENSE_CARREGA = async () => false;
+
 export default function MurSection() {
-  const { status: estatMur, error: errorMur, refresh: recarregaMur, sortedEvents, sortedFeedPosts, sortedMarketItems } = useMur();
+  const {
+    status: estatMur, error: errorMur, refresh: recarregaMur, sortedEvents, sortedFeedPosts, sortedMarketItems,
+    carregaMes = SENSE_CARREGA, hiHaMes = SENSE_MES, carregantMes = SENSE_MES, errorMes = SENSE_ERROR
+  } = useMur();
   const { pageCopy, status: estatContingut } = useCoreContent();
   const { t } = useUIActions();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -80,6 +93,7 @@ export default function MurSection() {
     if (filterType === 'events') items = items.filter(i => i.type === 'event');
     if (filterType === 'sistema') items = items.filter(i => i.type === 'sistema');
     if (filterType === 'mercat') items = items.filter(i => i.type === 'market' || i.type === 'product');
+    if (filterType === 'sdp') items = items.filter(i => i.author?.nom === 'Sóc de Poble' || i.author?.name === 'Sóc de Poble' || i.organization?.nom === 'Sóc de Poble' || i.organization?.name === 'Sóc de Poble' || i.autoria?.nom === 'Sóc de Poble' || i.isSystem);
 
     if (dateFilter) {
       /* T51 · El filtre llig el MATEIX dia que pinta la pastilla (dateTime local
@@ -118,6 +132,20 @@ export default function MurSection() {
      ruta canònica: els filtres (?date=, ?category=) no en fan un altre. */
   const paginaMur = objecteDePagina({ titol: config.title, ruta: getSectionListPath('mur') });
 
+  /* Decisió 4 · hiHaMes ja inclou teCapacitat('paginacioSeccions'): un
+     backend sense la capacitat no en té cap i el botó no ix. Si la càrrega
+     falla, l'avís és el de sempre (EstatErrorDades) i «Torna-ho a provar»
+     torna a demanar la mateixa pàgina.
+     Relleu 261008 (revisió adversarial) · Només la de les seccions que han
+     fallat: amb «Mostrar tot», les que sí que han carregat no avancen una
+     pàgina més sense que la persona ho haja demanat. */
+  const seccionsVisibles = SECCIONS_DEL_FILTRE[filterType] || [];
+  const seccionsAmbMes = seccionsVisibles.filter((seccio) => hiHaMes(seccio));
+  const carregantMesSeccions = seccionsVisibles.some((seccio) => carregantMes(seccio));
+  const errorDeMes = seccionsVisibles.map((seccio) => errorMes(seccio)).find(Boolean) || null;
+  const mostraMes = () => Promise.all(seccionsAmbMes.map((seccio) => carregaMes(seccio)));
+  const reintentaMes = () => Promise.all(seccionsVisibles.filter((seccio) => errorMes(seccio)).map((seccio) => carregaMes(seccio)));
+
   /* L'error del Mur es queda dins del Mur: el portal no cau amb ell. */
   if (estatMur === 'loading' || estatMur === 'error') {
     return (
@@ -154,6 +182,7 @@ export default function MurSection() {
                viatja a cap URL i els actes són el que filtra. */
             opcions={[
               { valor: 'all', text: 'Mostrar tot' },
+              { valor: 'sdp', text: 'Sóc de Poble' },
               { valor: 'mercat', text: 'Mercat' },
               { valor: 'events', text: 'Calendari' },
               { valor: 'mapa', text: 'Mapa' },
@@ -191,6 +220,19 @@ export default function MurSection() {
                 esdeveniment={item.type === 'event' ? modelDe(models, item) : null} />
             ))}
           </div>
+
+          {/* Decisió 4 del Mestre (261007) · «Carregar-ne més», al final de la
+              llista i només amb més pàgines. Boto desactiva i anuncia la
+              càrrega (aria-busy) mentre treballa. */}
+          {errorDeMes
+            ? <EstatErrorDades titol={t('section.mur.error', "No s'ha pogut carregar el Mur")} error={errorDeMes} onReintenta={reintentaMes} />
+            : seccionsAmbMes.length
+              ? (
+                <div className="sdp-camp sdp-camp--centrat">
+                  <Boto carregant={carregantMesSeccions} onClick={mostraMes}>{t('section.mur.loadMore', 'Mostra més')}</Boto>
+                </div>
+              )
+              : null}
         </div>
       </UniversalPage>
     </ContentProvider>

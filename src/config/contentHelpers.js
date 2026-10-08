@@ -1,11 +1,6 @@
-export const stripAccents = (value) =>
-  String(value || '')
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
-
+/* Auditoria 261007 (B) \u00b7 S'han retirat stripAccents (malgrat el nom, feia un
+   slug: \u00abS\u00f3c de Poble\u00bb \u2192 \u00absoc-de-poble\u00bb) i formatMonthLabel: cap consumidor,
+   ni a les proves. Per a la cerca, normalizeSearchText. */
 export const normalizeSearchText = (value) =>
   String(value || '')
     .toLowerCase()
@@ -47,10 +42,4 @@ export const sortPinnedContent = (items) =>
 export const sortDateValue = (value) => {
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? 0 : date.getTime();
-};
-
-export const formatMonthLabel = (value) => {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return 'Sense data';
-  return date.toLocaleDateString('ca-ES', { month: 'long', year: 'numeric' });
 };

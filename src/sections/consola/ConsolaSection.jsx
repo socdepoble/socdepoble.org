@@ -10,6 +10,7 @@ import { useSEO } from '../../hooks/useSEO';
 import { useUIState } from '../../app/contexts/UIContext';
 import { Link, Navigate, useParams } from '../../app/contexts/RouterContext';
 import { carregaConsola, dataLocal } from './consolaContent.js';
+import { useFontDev } from './useFontDev.js';
 import {
   RUTA_CONSOLA, avisosDeVigilancia, copyConsola, desaPrivacitat,
   estatsPagina, etiquetesPagina, llegixPrivacitat, llegixVistes, marcaVista, mesuresPagina,
@@ -63,48 +64,17 @@ const ICONES = Object.freeze({
    instantània (TargetaConsola). */
 const dataDelCopy = () => copyConsola().date;
 
-/* Higiene d'amfitrió (ordre del Mestre, 261004, front «amfitrio-admin») ·
-   consola.json només el servix el middleware de desenvolupament
-   (tooling/vite/consola-iaia.mjs, apply: 'serve'). Fora de DEV no es fa cap
-   petició a /__iaia/*: l'estat és 'absent' des del principi, com useMapa. Es
-   llig en cada crida perquè les proves puguen canviar l'entorn. */
-const ambMiddleware = () => import.meta.env.DEV === true;
-
 /** Una lectura de /__iaia/consola.json. Un error conserva l'última instantània bona.
-    `actiu: false` (o fora de DEV) no llig res, ni en muntar ni amb `carrega`. */
+    `actiu: false` (o fora de DEV) no llig res, ni en muntar ni amb `carrega`.
+    Higiene d'amfitrió (ordre del Mestre, 261004, front «amfitrio-admin») ·
+    consola.json només el servix el middleware de desenvolupament: fora de DEV
+    l'estat és 'absent' des del principi, com useMapa.
+    Neteja 261007 (prompt 261007_1628, peça D) · La lectura és la de
+    useFontDev (useFontDev.js), la mateixa del Mapa: ací només es diu `dades`
+    el que el hook genèric diu `valor`. */
 function useConsola({ actiu = true } = {}) {
-  const llig = actiu && ambMiddleware();
-  const [estat, setEstat] = useState(llig ? 'loading' : 'absent');
-  const [dades, setDades] = useState(null);
-  const [error, setError] = useState(null);
-  const enCurs = useRef(null);
-
-  const carrega = useCallback(() => {
-    if (!ambMiddleware()) return;
-    enCurs.current?.abort();
-    const ac = new AbortController();
-    enCurs.current = ac;
-    setEstat('loading');
-    setError(null);
-    carregaConsola(ac.signal)
-      .then((d) => {
-        if (ac.signal.aborted) return;
-        setDades(d);
-        setEstat(d ? 'ready' : 'absent');
-      })
-      .catch((e) => {
-        if (ac.signal.aborted) return;
-        setError(e);
-        setEstat('error');
-      });
-  }, []);
-  useEffect(() => {
-    if (!llig) return undefined;
-    carrega();
-    return () => enCurs.current?.abort();
-  }, [llig, carrega]);
-
-  return { estat, dades, error, carrega };
+  const { valor: dades, ...font } = useFontDev(carregaConsola, { actiu });
+  return { ...font, dades };
 }
 
 /* Les pàgines que viuen del Mapa diuen per què no hi ha dades, mai n'inventen.
@@ -348,9 +318,12 @@ export default function ConsolaSection() {
     <ControlsConsola pagina={quina} consola={consola} mapa={mapa} privat={privat} onPrivat={setPrivat} locale={locale} cimRef={cim} />
   );
 
+  /* Neteja 261007 (prompt 261007_1628, peça D) · La xifra es busca una sola
+     vegada per pintada (xifraDelMas recorre totes les vistes de la Consola):
+     la mateixa del SEO i del peu passa a la pàgina, i la pàgina al detall. */
   if (slugXifra !== null) {
     return (
-      <PaginaXifra slug={slugXifra} fonts={{ mapa, consola }} creat={dataDelCopy()} privat={privat} locale={locale}
+      <PaginaXifra slug={slugXifra} xifra={xifra} fonts={{ mapa, consola }} creat={dataDelCopy()} privat={privat} locale={locale}
         peu={peu(xifra?.origen === 'consola' ? 'pols' : 'xifra')} />
     );
   }

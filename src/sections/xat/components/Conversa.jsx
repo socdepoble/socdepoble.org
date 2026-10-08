@@ -87,7 +87,7 @@ function coixiDalt(ol) {
 
 export default function Conversa({
   initialText = '', clauEsborrany = null, fil, messages, onSendMessage, onBack, onEnviaAlBloc, onCopia,
-  hiHaMes, carregantMes, onCarregaMes, onReintenta, onDescarta, onMarcaVist, locale, t
+  hiHaMes, carregantMes, onCarregaMes, esperaAntics = null, onReintenta, onDescarta, onMarcaVist, locale, t
 }) {
   const [text, setText] = useState(() => initialText || llegixEsborrany(clauEsborrany));
   const [modeSeleccio, setModeSeleccio] = useState(false);
@@ -267,16 +267,32 @@ export default function Conversa({
     onCarregaMes?.();
   }, [llesta, fase, anticsEsgotats, carregantMes, messages, onCarregaMes]);
 
-  /* Carrega automàtica de l'historial en arribar a dalt (XAT-A23). */
+  /* Carrega automàtica de l'historial en arribar a dalt (XAT-A23).
+     Auditoria 261008 (B09) · Un observador nou notifica de seguida si el
+     sentinella és a la vista: quan una càrrega fallava, `carregantMes` tornava
+     a false, l'observador es tornava a crear i la tornava a demanar a
+     l'instant (sense xarxa, un bucle de peticions). Amb `esperaAntics` (el
+     context, esperaDeLHistorial) no es crea cap observador dins de l'espera
+     (`fins`) i, amb `manual`, gens: només el botó «Carrega'n més» o la xarxa
+     que torna. Passada l'espera, `despertaAntics` el torna a crear. Sense
+     `esperaAntics`, com sempre. */
+  const anticsManual = Boolean(esperaAntics?.manual);
+  const anticsFins = Number(esperaAntics?.fins) || 0;
+  const [despertaAntics, setDespertaAntics] = useState(0);
   useEffect(() => {
     const node = sentinellaRef.current;
-    if (!node || !hiHaMes || carregantMes || typeof IntersectionObserver === 'undefined') return undefined;
+    if (!node || !hiHaMes || carregantMes || anticsManual || typeof IntersectionObserver === 'undefined') return undefined;
+    const resta = anticsFins - Date.now();
+    if (resta > 0) {
+      const temporitzador = setTimeout(() => setDespertaAntics((n) => n + 1), resta);
+      return () => clearTimeout(temporitzador);
+    }
     const observador = new IntersectionObserver((entrades) => {
       if (entrades.some((e) => e.isIntersecting)) onCarregaMes();
     }, { root: llistaRef.current });
     observador.observe(node);
     return () => observador.disconnect();
-  }, [hiHaMes, carregantMes, onCarregaMes]);
+  }, [hiHaMes, carregantMes, onCarregaMes, anticsManual, anticsFins, despertaAntics]);
 
   /* Marcar com a llegit només el que ha entrat en pantalla amb la pestanya
      visible (XAT-C08). El context agrupa i mai fa retrocedir la marca. Res

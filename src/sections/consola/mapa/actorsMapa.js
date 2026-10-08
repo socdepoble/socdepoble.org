@@ -65,7 +65,12 @@ export function capesActors(mapa) {
     }));
 
   // Candats: els hooks dels arnesos i els hooks de git que declara el registre
-  // de tasques. D'un hook de git el Mapa no sap si està instal·lat (no llig .husky/).
+  // de tasques. Neteja 261007 (prompt 261007_1628, peça D) · El Mapa sí que llig
+  // .husky/: la closca (tooling/brain/mapa-consola.mjs) passa el text de cada
+  // hook a `fonts.hooksGit`, i amb ell construeixMapa.js crea el node
+  // hook:git:<esdeveniment> acreditat, que entra pel pas 1. Només quan no hi ha
+  // el text del hook (fora de git, o sense el fitxer .husky/<esdeveniment>), el
+  // pas 2 en fa un candat sense acreditar (null).
   const mapCandats = new Map();
   
   // 1. Hooks existents (nodes 'hook')

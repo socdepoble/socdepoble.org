@@ -63,7 +63,9 @@ test('sense la clau, les extensions de sempre i cap diàleg de targetes: el DOM 
   onTestFinished(() => vi.useRealTimers());
   const sense = editor();
   const html = senseIds(sense.container.innerHTML);
-  expect(mocks.extensions).toHaveBeenLastCalledWith({ onImageUpload: undefined, ambTargetes: false });
+  /* Ordre del Mestre (261007, ordre E) · Les extensions reben també el canal
+     d'avisos de l'ordre «/» Imatge (onToast, estable): DocumentEditor.logotip.test.jsx. */
+  expect(mocks.extensions).toHaveBeenLastCalledWith({ onImageUpload: undefined, ambTargetes: false, onToast: expect.any(Function) });
   expect(dialegDe('Inserir una targeta')).toBeNull();
   expect(dialegDe('Esta targeta és una previsualització')).toBeNull();
   expect(screen.queryByRole('button', { name: 'Acció de la targeta' })).toBeNull();
@@ -75,7 +77,7 @@ test('sense la clau, les extensions de sempre i cap diàleg de targetes: el DOM 
 
 test('amb targetes, les extensions les reben i el selector i l’avís es munten tancats, darrere de la closca', () => {
   const { container } = editor({ targetes: { cerca: () => [] } });
-  expect(mocks.extensions).toHaveBeenLastCalledWith({ onImageUpload: undefined, ambTargetes: true });
+  expect(mocks.extensions).toHaveBeenLastCalledWith({ onImageUpload: undefined, ambTargetes: true, onToast: expect.any(Function) });
   const selector = dialegDe('Inserir una targeta');
   const avis = dialegDe('Esta targeta és una previsualització');
   expect(container.querySelectorAll('dialog')).toHaveLength(3);

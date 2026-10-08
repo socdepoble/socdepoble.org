@@ -4,6 +4,7 @@
 import { describe, expect, test } from 'vitest';
 import { RUTA_PROJECTE, rutaDAutoria } from '../../config/navigation.js';
 import { ENTITAT_PROJECTE, autoriaDe } from './index.js';
+import { ENTITAT_PILOT_SLUG } from '../../data/identitatsSeed.js';
 
 describe('autoriaDe', () => {
   test('l’entitat del projecte: «Sóc de Poble», el seu poble i el seu logo, i porta a la pàgina del projecte', () => {
@@ -22,7 +23,9 @@ describe('autoriaDe', () => {
   });
 
   test('es resol per identificador (també per l’slug), mai pel nom que es veu', () => {
-    expect(autoriaDe({ tipus: 'entitat', id: 'soc-de-poble' })?.href).toBe('/projecte');
+    /* Ordre del Mestre (261007) · El slug declarat és 'socdepoble', el mateix
+       text que l'id de la llavor. */
+    expect(autoriaDe({ tipus: 'entitat', id: ENTITAT_PILOT_SLUG })?.href).toBe('/projecte');
     expect(autoriaDe({ tipus: 'entitat', id: 'Sóc de Poble' })).toBeNull();
   });
 

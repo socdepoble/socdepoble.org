@@ -29,6 +29,51 @@ function validaUrl(url) {
   }
 }
 
+/* Relleu 261007 · «Límits» §5 · Abans, variations.map(netejaText) i
+   tags.map(netejaText): Array.prototype.map passa (element, índex), i l'índex
+   queia al segon paràmetre de netejaText(valor, maxim) i retallava cada element
+   a la seua posició (el primer quedava buit, el segon d'un caràcter). Ara
+   cada element passa per una fletxa i el màxim és el de sèrie.
+   Una variació, a més, no és una cadena: és un objecte amb name, price,
+   description, image i stock_status (marketSeed.js, seed.sql), i el detall en
+   llig els camps (detailSectionMeta.jsx). netejaText la convertia en
+   «[object Object]». Es neteja camp a camp: el text amb netejaText, la imatge
+   amb validaUrl com la resta d'imatges d'este mapejador. Una cadena es
+   conserva neta (el compte de «N variants» de la targeta la inclou); qualsevol
+   altra cosa (null, un número, un array) no és una variació i no viatja. */
+const CAMPS_DE_TEXT_DE_VARIACIO = Object.freeze(['name', 'price', 'description', 'stock_status']);
+
+/* Revisió adversarial (Relleu 261007) · validaUrl només admet http(s), camins
+   relatius i data:image, i una pujada pròpia es guarda com a referència opaca
+   sdp-media:// (storage.js), que és justament la forma que vol la Decisió 3 del
+   Mestre (261007, «només imatges allotjades localment o pujades al nostre
+   servidor»). Per validaUrl, la foto pròpia d'una variació es perdia en
+   escriure. Es conserva amb la mateixa regla dels dos buckets d'admetFont
+   (sanitize.js); la resta passa per validaUrl com abans.
+   Relleu 261007 (peça «netes» i verificació final) · Conservar-la no vol dir
+   que ja es pinte. El detall (detailSectionMeta.jsx, variacions del Mercat)
+   descarta la referència opaca sdp-media:// (REFERENCIA_OPACA) abans
+   d'esImatgePropiaDelDetall: una variació amb sdp-media:// es pinta com sense
+   foto. Ningú no la resol encara pel port de mitjans; fer-ho demana un
+   component nou amb espècimen i és una pregunta oberta al Mestre (Decisió 3). */
+const REFERENCIA_DE_MITJANS = /^sdp-media:\/\/(?:mitjans_privats|mitjans)\//i;
+
+function imatgeDeVariacio(image) {
+  const s = String(image).trim();
+  return REFERENCIA_DE_MITJANS.test(s) ? s : validaUrl(s);
+}
+
+function netejaVariacio(variacio) {
+  if (typeof variacio === 'string') return netejaText(variacio);
+  if (!variacio || typeof variacio !== 'object' || Array.isArray(variacio)) return null;
+  const neta = {};
+  for (const camp of CAMPS_DE_TEXT_DE_VARIACIO) {
+    if (variacio[camp] != null) neta[camp] = netejaText(variacio[camp]);
+  }
+  if (variacio.image != null) neta.image = imatgeDeVariacio(variacio.image);
+  return neta;
+}
+
 export function mapSectionSubmissionToItem(submission) {
   const payload = submission?.payload && typeof submission.payload === 'object' ? submission.payload : {};
   const sectionId = netejaText(submission?.sectionId || payload.sectionId || '');
@@ -86,7 +131,7 @@ export function mapSectionSubmissionToItem(submission) {
       image: validaUrl(baseItem.image || imageSrc),
       category_slug: netejaText(baseItem.category_slug || 'connectat'),
       tag: netejaText(baseItem.tag || 'Connectat'),
-      variations: Array.isArray(baseItem.variations) ? baseItem.variations.map(netejaText) : [],
+      variations: Array.isArray(baseItem.variations) ? baseItem.variations.map((v) => netejaVariacio(v)).filter((v) => v !== null) : [],
       searchText: netejaText(baseItem.searchText || buildSearchText([
         baseItem.title, baseItem.description, baseItem.seller, baseItem.tag, baseItem.sectionId
       ]))
@@ -141,7 +186,9 @@ export function mapSectionSubmissionToItem(submission) {
       content: sanitizeHtml(baseItem.content || baseItem.description || baseItem.summary || ''),
       plainText: netejaText(baseItem.plainText || baseItem.description || baseItem.summary || ''),
       category: netejaText(baseItem.category || 'General'),
-      tags: Array.isArray(baseItem.tags) ? baseItem.tags.map(netejaText) : [],
+      /* Relleu 261007 · Amb una fletxa: l'índex del map no fa de màxim (vegeu
+         netejaVariacio, a dalt). */
+      tags: Array.isArray(baseItem.tags) ? baseItem.tags.map((v) => netejaText(v)) : [],
       folderId: netejaText(baseItem.folderId || 'f-root'),
       updatedAt: netejaText(baseItem.updatedAt || baseItem.created_at || createdAt),
       searchText: netejaText(baseItem.searchText || buildSearchText([
@@ -151,6 +198,77 @@ export function mapSectionSubmissionToItem(submission) {
   }
 
   return baseItem;
+}
+
+/* Auditoria 261007 (B) · Claus d'autoritat que una publicació d'un veí no pot
+   dir de si mateixa. El payload d'una publicació és un jsonb que qualsevol
+   membre del poble escriu directament per l'API (la clau pública és al
+   paquet), i el servidor només en lleva id, created_at i author. Amb estes
+   claus una publicació signava com a entitat (author_org_id fa ombra a la
+   columna en autorDe, navigation.js), com a «Sistema» (isSystem, isAvis,
+   type 'sistema'), es clavava dalt de tot (is_pinned, pinned_position),
+   enllaçava la targeta a una web de fora (mainHref) o feia ombra a l'id d'una
+   altra publicació (slug, trobaElement d'elementDeSeccio.js). L'únic
+   escriptor legítim (NotesContext · publishNote) no n'escriu cap: la neteja
+   és idèntica al píxel per al contingut real. */
+const CLAUS_D_AUTORITAT = Object.freeze([
+  'author_org_id', 'authorOrgId', 'author_entity_id', 'author_id', 'author_user_id',
+  'owner_user_id', 'ownerUserId', 'isSystem', 'isAvis', 'is_pinned', 'pinned_position',
+  'mainHref', 'slug'
+]);
+
+/* La insígnia «Sistema» (sdp-badge-system) és de les pàgines del sistema i de
+   la reserva del Mercat que pinta la targeta, mai d'una etiqueta que porta una
+   publicació. De la resta de classes, només la família sdp-badge-*: un nom de
+   classe de maquetació (l'overlay de la targeta, per exemple) no hi té lloc. */
+const CLASSE_DE_SISTEMA = 'sdp-badge-system';
+const RE_CLASSE_D_ETIQUETA = /^sdp-badge-[a-z0-9-]+$/;
+
+function classeDEtiqueta(className) {
+  if (typeof className !== 'string') return '';
+  return className.split(/\s+/)
+    .filter((classe) => RE_CLASSE_D_ETIQUETA.test(classe) && classe !== CLASSE_DE_SISTEMA)
+    .join(' ');
+}
+
+/* Una etiqueta d'una publicació és text i, com a molt, una classe: sense href
+   (un enllaç a fora amb aparença d'etiqueta oficial). Un text pla es queda
+   igual. Sense classe admesa, la targeta hi posa la de sèrie (sdp-badge-tag). */
+function etiquetaDePublicacio(label) {
+  if (!label || typeof label !== 'object') return label;
+  const classe = classeDEtiqueta(label.className);
+  return { text: label.text, ...(classe ? { className: classe } : {}) };
+}
+
+/**
+ * Auditoria 261007 (B) · L'element del Mur (o del Mercat, o de l'agenda) que fa
+ * una publicació d'un veí, amb l'autoria de les COLUMNES que valida el
+ * servidor (qui és propietari i l'entitat que signa) i mai del payload que el
+ * client mateix ha escrit. Funció neutra: l'adaptador hi passa els camps de la
+ * seua fila amb noms del port; una regla de producte no es tanca dins d'un
+ * adaptador. Només per a publicacions dels veïns: el contingut de
+ * l'administració (app_content) signa legítimament dins del payload.
+ * @param {{ id: string, payload?: object, titol?: string, createdAt?: string,
+ *   updatedAt?: string, ownerUserId?: string|null, authorOrgId?: string|null }} fila
+ * @returns {object}
+ */
+export function elementDeFilaPublicada({ id, payload, titol, createdAt, updatedAt, ownerUserId = null, authorOrgId = null } = {}) {
+  const dades = payload && typeof payload === 'object' && !Array.isArray(payload) ? { ...payload } : {};
+  for (const clau of CLAUS_D_AUTORITAT) delete dades[clau];
+  if (dades.type === 'sistema') delete dades.type;
+  if (Array.isArray(dades.labels)) dades.labels = dades.labels.map(etiquetaDePublicacio);
+  return {
+    ...dades,
+    id,
+    created_at: createdAt,
+    updated_at: updatedAt,
+    author_name: dades.author_name || titol,
+    ownerUserId: ownerUserId ?? null,
+    /* Després de l'escampat i amb un null explícit: autorDe (navigation.js)
+       llig primer author_org_id, i un null talla el `??` cap a cap altra clau. */
+    author_org_id: authorOrgId ?? null,
+    authorOrgId: authorOrgId ?? null
+  };
 }
 
 export function mergeById(primary = [], secondary = []) {

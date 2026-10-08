@@ -435,8 +435,6 @@ const FITXERS = [
   /* T3 · integració: Perfil, imatge principal i catàleg. */
   'src/sections/profile/useEnquadramentAvatar.jsx',
   'src/sections/profile/useEnquadramentAvatar.test.jsx',
-  'src/sections/profile/DialegCapcaleraAvatar.jsx',
-  'src/sections/profile/DialegCapcaleraAvatar.test.jsx',
   'src/sections/profile/DetallAjust.enquadrament.test.jsx',
   'src/sections/profile/PerfilEditor.enquadramentAvatar.test.jsx',
   'src/sections/profile/enquadramentAvatar.limits.test.jsx',
@@ -527,7 +525,27 @@ const FITXERS = [
   'src/sections/notes/NotesEditor.targetes.test.jsx',
   'src/sections/detail/detailRichText.jsx',
   'src/sections/detail/detailRichText.test.jsx',
-  'src/utils/sanitize.test.js'
+  'src/utils/sanitize.test.js',
+  /* Onada 4 (261008) · retallador senzill, línies I1 i I2 i «Les vistes»:
+     els .js i .jsx nous que encara no hi eren. useImatgeDeFitxa (i la seua
+     prova), useEnquadramentImatge, PerfilEditor.imatges i
+     DialegEnquadrament.senzill també els linta
+     src/sections/profile/qualitat.logotip.test.js; la closca
+     (UniversalEditorShell.jsx) ja és dalt. */
+  'src/components/universal/UniversalEditorShell.consumidors.test.jsx',
+  'src/components/universal/PageFrame.avatarAjuda.test.jsx',
+  'src/sections/profile/PerfilEditor.imatges.test.jsx',
+  'src/components/universal/enquadrament/useEnquadramentImatge.jsx',
+  'src/components/universal/enquadrament/DialegEnquadrament.senzill.test.jsx',
+  'src/sections/profile/useImatgeDeFitxa.jsx',
+  'src/sections/profile/useImatgeDeFitxa.test.jsx',
+  'src/sections/profile/DetallVistes.jsx',
+  'src/sections/profile/fitxaDePerfil.js',
+  'src/sections/profile/GestioMembres.jsx',
+  'src/sections/profile/membresModel.js',
+  /* Les píndoles de l'avatar desactivades i SDP-XAT-016 (B03). */
+  'src/css/pindolaAvatarDesactivada.capes.test.js',
+  'src/data/supabase/xat.consentiment.test.js'
 ];
 
 test('lint dels fitxers de la sessió (lectura)', async () => {

@@ -10,7 +10,10 @@ import { extractPlainText } from '../../utils/contentAdapter.js';
 import { promoteToPublic, teCapacitat } from '../../data/backendPort.js';
 import { dataIsoONull } from '../../utils/calendari.js';
 import { estatPerAlEditor } from './useEstatDesamentNota.js';
-import { ErrorPublicacio, MOTIU_LOCAL, MOTIU_LOCAL_CONNEXIO, motiuDesatPendent } from './visibilitatNota.js';
+import { ErrorPublicacio, MOTIU_LOCAL, MOTIU_LOCAL_CONNEXIO, motiuDesatPendent, motiuSignaturaAliena } from './visibilitatNota.js';
+import { autorDe } from '../../config/navigation.js';
+import { aliesDeLActor } from '../../data/identitatsSeed.js';
+import { pertanyALActor } from './masDeLUsuari.js';
 import { useIdentitat } from '../../app/contexts/IdentitatContext.jsx';
 import { useSession } from '../../app/contexts/SessionContext.jsx';
 import { autoriaDeLActor } from './autoriaNota.js';
@@ -51,12 +54,18 @@ export function NotesProvider({ children }) {
   const { locale, externalConfig } = useUIState();
   const { normalizeSearchText, t } = useUIActions();
   const { noteFolders, notes: rawNotes, creaNota, updateNote: updateNoteContext, mouNota: mouNotaContext, esborraNota: esborraNotaContext, status, error, scopeKey, workspaceKey, notesComplete, resolveNote, refresh, config, canCreate } = useNotesData();
-  const { sendSectionSubmission } = useMur();
+  const { sendSectionSubmission, feedPosts } = useMur();
   /* Poliment T41/T43 · Qui signa la publicació: l'actor que MurContext envia
      com a author_org_id, també al nom, la foto i el poble del payload. */
   const { actor } = useIdentitat();
   const { currentUser } = useSession();
   const autoria = useMemo(() => autoriaDeLActor(actor, currentUser), [actor, currentUser]);
+  /* Grup E (261008) · Les publicacions del Mur que ja hi ha carregades, per a
+     la guarda de re-signatura de publishNote. En una referència: el Mur es
+     refresca després de cada publicació i publishNote no ha de canviar per
+     això (el valor del context es tornaria a fer a cada refresc). */
+  const publicacionsDelMur = useRef(feedPosts);
+  useLayoutEffect(() => { publicacionsDelMur.current = feedPosts; }, [feedPosts]);
 
   const parsedNotesCache = useRef(new Map());
 
@@ -201,6 +210,24 @@ export function NotesProvider({ children }) {
       showToast(motiu, 'info');
       return Promise.reject(new ErrorPublicacio(motiu));
     }
+    /* Grup E de l'Onada 4 (prompt 261008_1201, risc «que estiga clavat el
+       comportament») · La guarda de re-signatura. Una nota ja publicada
+       s'edita com a esborrany privat, i el Mur només canvia amb «Actualitzar
+       al Mur», que fa un upsert amb el mateix id signat per l'actor actiu
+       (MurContext). Si la publicació (la del Mur amb publishedSubmissionId)
+       la signa una altra identitat, no s'envia res: el motiu va pel canal de
+       sempre (ErrorPublicacio, que el selector diu en línia). Si no és entre
+       les carregades (el port en porta una finestra), o no se sap qui la
+       signa, o no hi ha actor, com abans. */
+    if (activeNote.isPublished && activeNote.publishedSubmissionId != null && actor?.id) {
+      const idPublicat = String(activeNote.publishedSubmissionId);
+      const publicada = (publicacionsDelMur.current || []).find((element) => element && String(element.id) === idPublicat);
+      if (publicada && autorDe(publicada) && !pertanyALActor(publicada, aliesDeLActor(actor, { dataMode: config?.dataMode }))) {
+        const motiu = motiuSignaturaAliena(publicada.author_name || publicada.seller);
+        showToast(motiu, 'info');
+        return Promise.reject(new ErrorPublicacio(motiu));
+      }
+    }
     const key = `${workspaceKey}:${activeNote.id}`;
     if (publishing.current.has(key)) return publishing.current.get(key);
     // Capture and persist the exact visible document, including editor changes
@@ -227,6 +254,13 @@ export function NotesProvider({ children }) {
          la resol en pintar-la (MurSection); desar-la resolta hi gravaria la
          carpeta del paquet de l'amfitrió on s'ha publicat. */
       let finalHeroImage = netejaCamp('heroImage', activeNote.coverImage) || externalConfig?.fallbackLogoUrl || '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg';
+      /* Ordre E del Mestre (261007, prompt 261007_1628: «no es pot posar el
+         logotip damunt de l'H1») · El logotip que la persona puja amb
+         «Editar logotip» (logoImage) es desava a la nota i no arribava enlloc:
+         ara viatja al Mur com a logo_image i la pàgina publicada el pinta
+         damunt de l'H1 (elementDeSeccio.js · logoEntitatDElement). Net pel
+         mateix sanejador del canal; sense reserva: sense logotip, cap clau. */
+      let finalLogo = netejaCamp('logoImage', activeNote.logoImage);
       /* D4 (excepció del Mestre, 260930; desfà T54) · Una connexió és una
          còpia editable: ix el cos EDITAT, sense els paràgrafs fixos que el
          sistema li escriu a qui la té, i la presentació de l'original (enllaç
@@ -255,6 +289,11 @@ export function NotesProvider({ children }) {
             finalHeroImage = publicHero;
 
           }
+        }
+        /* Ordre E (261007) · El logotip, com la capçalera: el Mur el llig tot
+           el poble i un mitjà privat no s'hi veuria. */
+        if (finalLogo.startsWith('sdp-media://mitjans_privats/')) {
+          finalLogo = (await promoteToPublic(finalLogo, config)) || finalLogo;
         }
 
         const imgRegex = /sdp-media:\/\/mitjans_privats\/[^\s"']+/g;
@@ -303,7 +342,10 @@ export function NotesProvider({ children }) {
          flexible (section_submissions.payload): cap canvi d'esquema. Com la
          data, sense emoticona no s'envia la clau (l'upsert reemplaça el
          payload: llevar-la i republicar la lleva també del Mur). */
-      ...(emojiSol(activeNote.icon) ? { icon: emojiSol(activeNote.icon) } : {})
+      ...(emojiSol(activeNote.icon) ? { icon: emojiSol(activeNote.icon) } : {}),
+      /* Ordre E (261007) · Com l'emoticona: sense logotip no s'envia la clau,
+         i llevar-lo i republicar el lleva també de la pàgina publicada. */
+      ...(finalLogo ? { logo_image: finalLogo } : {})
     };
 
     assertCurrent();
@@ -345,7 +387,7 @@ export function NotesProvider({ children }) {
     }).finally(() => publishing.current.delete(key));
     publishing.current.set(key, result);
     return result;
-  }, [noteFolders, sendSectionSubmission, saveNoteField, externalConfig, autoria, config, workspaceKey, scopeKey, operation, updateNoteContext, clearLocalNoteFields, showToast]);
+  }, [noteFolders, sendSectionSubmission, saveNoteField, externalConfig, autoria, actor, config, workspaceKey, scopeKey, operation, updateNoteContext, clearLocalNoteFields, showToast]);
 
   const compartirNota = useCallback((note) => publishNote(note, { mode: 'compartir' }), [publishNote]);
 

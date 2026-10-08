@@ -8,6 +8,13 @@ import { ancoraDelClic, desplacadorDelClic, fragmentDelDesti, hrefInternDeClic, 
 
 afterEach(() => { document.body.replaceChildren(); });
 
+/* Auditoria 261007 (B) · L'enllaç d'exemple és l'article de l'Aplec, una
+   ruta que existix ('aplec-2023', eventsSeed.js). Abans era
+   /events/manifest-de-poble, un acte que cap font no té: les proves
+   conservaven un enllaç mort com a exemple canònic. On viu el Manifest és
+   pregunta al Mestre. */
+const ACTE_DE_LA_LLAVOR = '/events/aplec-2023';
+
 function ancora(atributs = {}) {
   const a = document.createElement('a');
   for (const [nom, valor] of Object.entries(atributs)) a.setAttribute(nom, valor);
@@ -21,7 +28,7 @@ describe('hrefInternDeClic · quins href passen al router', () => {
   it.each([
     ['?item=x', '?item=x'],
     ['?vista=comunitats&x=1', '?vista=comunitats&x=1'],
-    ['/events/manifest-de-poble', '/events/manifest-de-poble'],
+    [ACTE_DE_LA_LLAVOR, ACTE_DE_LA_LLAVOR],
     ['/xat?vista=comunitats', '/xat?vista=comunitats'],
     ['/', '/'],
     ['/mercat/samarreta#preu', '/mercat/samarreta#preu']
@@ -114,7 +121,7 @@ describe('hrefInternDeClic · amb base declarada, la base no es dobla', () => {
     ['/comunitat/', '/'],
     ['/comunitat/xat?vista=comunitats', '/xat?vista=comunitats'],
     ['/comunitat/mercat/samarreta#preu', '/mercat/samarreta#preu'],
-    ['/comunitat/events/manifest-de-poble', '/events/manifest-de-poble'],
+    [`/comunitat${ACTE_DE_LA_LLAVOR}`, ACTE_DE_LA_LLAVOR],
     // Els punts es resolen com ho faria el navegador: el destí és el mateix lloc.
     ['/comunitat/pobles/../xat', '/xat']
   ])('%s → %s (sense la base)', (href, esperat) => {
@@ -135,7 +142,7 @@ describe('hrefInternDeClic · amb base declarada, la base no es dobla', () => {
     ['la base amb una altra caixa no és la base', '/Comunitat/xat', '/Comunitat/xat'],
     ['punts que ixen de la base', '/comunitat/../pobles', '/pobles'],
     ['%2e que ix de la base', '/comunitat/%2e%2e/pobles', '/pobles'],
-    ['l’article de l’Aplec', '/events/manifest-de-poble', '/events/manifest-de-poble']
+    ['l’article de l’Aplec', ACTE_DE_LA_LLAVOR, ACTE_DE_LA_LLAVOR]
   ])('%s (%s) → %s: ruta de l’app, el router hi posa la base', (_, href, esperat) => {
     expect(hrefInternDeClic(clic(), ancora({ href }), BASE)).toBe(esperat);
   });
@@ -222,7 +229,7 @@ describe('ancoraDelClic · l’<a> del clic, sense eixir de l’arrel', () => {
     document.body.append(host);
     const ombra = host.attachShadow({ mode: 'open' });
     const arrel = document.createElement('div');
-    const a = ancora({ href: '/events/manifest-de-poble' });
+    const a = ancora({ href: ACTE_DE_LA_LLAVOR });
     const text = document.createElement('strong');
     a.append(text);
     arrel.append(a);

@@ -29,7 +29,14 @@
  *     Mai fingix que l'ha canviat. L'avís va dins de la pantalla: un toast
  *     quedaria davall del <dialog> modal.
  * La Wiki compilada (src/data/wikiManifest.js, uns 350 kB) es demana en obrir
- * la pantalla, no amb l'espècimen.
+ * la pantalla, no amb l'espècimen. Decisió 5 del Mestre (261007, paquet
+ * trossejat) · Ara és a demanda també al paquet autònom de l'amfitrió
+ * (vite.standalone.config.js, SDP_PAQUET=trossos, el defecte): ja no viatja
+ * inlinada, va en un tros propi de trossos/ que el navegador demana en obrir
+ * la pantalla, com al lloc propi (ESM, main.jsx). Només el paquet monolític
+ * (SDP_PAQUET=monolitic i la variant del directori de WordPress, en format
+ * IIFE amb inlineDynamicImports) la porta encara dins i l'avalua en carregar;
+ * allà l'import() d'ací només ajorna el pintat.
  */
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { CircleX, Construction, Search } from 'lucide-react';

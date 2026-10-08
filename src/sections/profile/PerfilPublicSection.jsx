@@ -135,8 +135,8 @@ export default function PerfilPublicSection({ agents = AGENTS_BUITS }) {
      persona o la IA (ents de carboni o de silici) no porten logotip: porten
      el seu avatar redó, centrat davant de l'H1 (PageFrame, avatarAutor, que
      també resol un sdp-media://). Si la fitxa és de qui mira, l'avatar és
-     un botó que porta al canvi d'imatge que ja existix: el Perfil, on
-     «Editar capçalera i avatar» obri DialegCapcaleraAvatar. */
+     un botó que porta al canvi d'imatge que ja existix: el Perfil, on el
+     botó «Avatar» obri la finestra de retall (useImatgeDeFitxa, Onada 4). */
   const esPersonaOIA = perfil?.tipus === 'persona' || perfil?.tipus === 'ia';
 
   useSEO({

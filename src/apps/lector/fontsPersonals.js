@@ -23,6 +23,16 @@
  *                          categories(), afig() → { id, nom, trams } }; els
  *                          trams porten a la gestió de fonts, on es veu.
  *                          AppLector l'exporta com a `destinacioEnllac`
+ *   llevaDelMagatzem(magatzem, id) → { llevada, registre }
+ *                          Peça C (ordre del Mestre, 261007, prompt
+ *                          261007_1628) · L'ÚNICA implementació de llevar
+ *                          una font personal. La fan servir
+ *                          llevaFontPersonal (amb un magatzem de pas, després
+ *                          d'exigir el disc) i useFontsPersonals (amb el
+ *                          magatzem de l'app). Abans cadascun en tenia una
+ *                          còpia. La guarda del disc no hi va dins: el
+ *                          magatzem de l'app no la necessita (vegeu
+ *                          useFontsPersonals.js)
  *
  * `obriMagatzem()`: un magatzem nou (magatzem.js) per a cada operació, que es
  * tanca en acabar. No demana el bloqueig d'escriptura: les fonts personals
@@ -44,6 +54,22 @@ export const TRAMS_GESTIO = Object.freeze(['fonts', 'colleccio']);
 function errorDe(codi) {
   const motiu = MOTIUS_PERSONAL[codi];
   return Object.assign(new Error(motiu.text), { codi, camp: motiu.camp });
+}
+
+/**
+ * Peça C (261007) · Lleva la font `id` en UNA transacció de lectura i
+ * escriptura (actualitzaPersonals). Torna si l'ha llevada i el registre net
+ * tal com ha quedat al disc (o a la memòria del magatzem). No mira el disc:
+ * qui la crida sap quin magatzem té.
+ */
+export async function llevaDelMagatzem(magatzem, id) {
+  let llevada = false;
+  const registre = await magatzem.actualitzaPersonals((actual) => {
+    const despres = llevaPersonal(actual, id);
+    llevada = despres !== actual;
+    return despres;
+  });
+  return { llevada, registre };
 }
 
 export function creaFontsPersonals({ obriMagatzem, font = () => null } = {}) {
@@ -105,13 +131,7 @@ export function creaFontsPersonals({ obriMagatzem, font = () => null } = {}) {
 
     llevaFontPersonal: (id) => amb(async (magatzem) => {
       await exigixDisc(magatzem);
-      let llevada = false;
-      await magatzem.actualitzaPersonals((registre) => {
-        const despres = llevaPersonal(registre, id);
-        llevada = despres !== registre;
-        return despres;
-      });
-      return llevada;
+      return (await llevaDelMagatzem(magatzem, id)).llevada;
     })
   });
 }

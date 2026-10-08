@@ -6,7 +6,7 @@ import { afterEach, expect, test, vi } from 'vitest';
 vi.mock('../../app/contexts/RouterContext', () => ({ useNavigate: () => vi.fn(), Link: 'a' }));
 vi.mock('./NotificationContext.jsx', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
 vi.mock('../../config/assetResolver', () => ({ resolveAsset: (uri) => uri, resolRecursPropi: (valor) => valor }));
-import { EditableField, UniversalEditorShell } from './UniversalEditorShell.jsx';
+import { EditableField, NOM_OPCIONS_CAPCALERA, UniversalEditorShell } from './UniversalEditorShell.jsx';
 import { sanitizeHtml } from '../../utils/sanitize.js';
 import { FORASTER } from './UniversalUtils.js';
 
@@ -74,6 +74,51 @@ test('T35 · amb onHeroEdit, el botó porta l’etiqueta del pare i li passa «a
   expect(onHeroEdit).toHaveBeenCalledWith({ acaba: expect.any(Function) });
   act(() => onHeroEdit.mock.calls[0][0].acaba());
   expect(container.querySelector('img.sdp-hero__imatge')).not.toBeNull();
+});
+
+/* Pla 261008_1201 (un sol clic) · El mirall a la capçalera: amb onHeroEdit
+   el botó en repòs crida el pare al primer clic; la imatge obri el panell. */
+test('un sol clic · amb capçalera i onHeroEdit, el botó en repòs crida el pare directament', () => {
+  const onHeroEdit = vi.fn();
+  const { container, getByRole, queryByRole } = closca({ heroImage: '/assets/h.webp', heroEditLabel: 'Editar capçalera i avatar', onHeroEdit });
+  fireEvent.click(getByRole('button', { name: 'Editar capçalera i avatar' }));
+  expect(onHeroEdit).toHaveBeenCalledTimes(1);
+  expect(onHeroEdit).toHaveBeenCalledWith({ acaba: expect.any(Function) });
+  expect(container.querySelector('img.sdp-hero__imatge')).not.toBeNull();
+  expect(queryByRole('button', { name: 'Esborrar' })).toBeNull();
+  fireEvent.click(container.querySelector('img.sdp-hero__imatge'));
+  expect(onHeroEdit).toHaveBeenCalledTimes(1);
+  expect(getByRole('button', { name: 'Esborrar' })).toBeTruthy();
+});
+
+test('un sol clic · sense onHeroEdit (Notes), el botó en repòs obri el panell de sempre', () => {
+  const { container, getByRole } = closca({ heroImage: '/assets/h.webp' });
+  fireEvent.click(getByRole('button', { name: 'Editar capçalera' }));
+  expect(container.querySelector('img.sdp-hero__imatge')).toBeNull();
+  expect(getByRole('button', { name: 'Enrere' })).toBeTruthy();
+  expect(getByRole('button', { name: 'Esborrar' })).toBeTruthy();
+});
+
+/* Correcció de la revisió (261008) · Al Perfil, el botó es diu «Capçalera»
+   (heroEditLabel) i la imatge, pel seu alt, també: dos botons amb el mateix
+   nom i accions diferents (WCAG 2.4.6). Amb onHeroEdit la imatge diu què obri. */
+test('un sol clic · amb onHeroEdit, la imatge i el botó no es diuen igual: la imatge obri les opcions', () => {
+  const onHeroEdit = vi.fn();
+  const { container, getAllByRole, getByRole } = closca({ heroImage: '/assets/h.webp', heroEditLabel: 'Capçalera', onHeroEdit });
+  expect(getAllByRole('button', { name: 'Capçalera' })).toHaveLength(1);
+  const imatge = getByRole('button', { name: NOM_OPCIONS_CAPCALERA });
+  expect(imatge).toBe(container.querySelector('img.sdp-hero__imatge'));
+  expect(NOM_OPCIONS_CAPCALERA).toBe('Opcions de la capçalera');
+  // L'alt es queda: el nom el dona aria-label.
+  expect(imatge.getAttribute('alt')).toBe('Capçalera');
+  fireEvent.click(imatge);
+  expect(onHeroEdit).not.toHaveBeenCalled();
+  expect(getByRole('button', { name: 'Esborrar' })).toBeTruthy();
+});
+
+test('un sol clic · sense onHeroEdit (Notes), la imatge no porta cap aria-label: el DOM de sempre', () => {
+  const { container } = closca({ heroImage: '/assets/h.webp' });
+  expect(container.querySelector('img.sdp-hero__imatge').hasAttribute('aria-label')).toBe(false);
 });
 
 /* Simula una tecla: el navegador ja ha escrit al DOM quan arriba l'«input».

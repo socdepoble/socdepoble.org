@@ -28,6 +28,13 @@
  *       aigües avall veia el valor vell. Ara cada canvi crea un objecte nou.
  *       Llevar un atribut tampoc no netejava mai el valor: ara sí.
  *
+ *  P0-7 AVISOS DELS GERMANS (260831; nota històrica, Auditoria 261007 (B)).
+ *       Desmuntar una instància apagava els avisos de totes les altres, que
+ *       compartien un sistema d'avisos global. Este element ja no en té cap
+ *       de compartit: cada instància munta el seu NotificationProvider
+ *       (App.jsx) amb el portal dins del seu shadow root, i desmuntar-ne una
+ *       no toca les altres. (P0-6 viu a connectedCallback.)
+ *
  *  260929 ENXUFE UNIVERSAL. L'element no sap quin amfitrió té davant
  *       (Sollutia, WordPress de proves, MediaWiki demà): tres polítiques que
  *       valen per a tots.
@@ -35,9 +42,11 @@
  *         amfitrió l'app es feia ama de la URL: a /comunitat/ pintava «no
  *         trobat» i escrivia a l'historial de l'amfitrió. Ara tria
  *         politicaRouter.js:triaRouter(). El navegador només s'usa si algú el
- *         declara (routerType 'browser', com fa embed.jsx al #root, o una base
- *         `base-path`); sense declaració, memòria, que aterra a `rutaInicial`
- *         o, si l'amfitrió diu el poble, a /pobles/<poble>.
+ *         declara (routerType 'browser', com fa main.jsx al #root de
+ *         socdepoble.org, o una base `base-path`; el paquet, embed.jsx, ja no
+ *         munta res al #root des de W4-01); sense declaració, memòria, que
+ *         aterra a `rutaInicial` o, si l'amfitrió diu el poble i cap ruta, al
+ *         xat (/xat, sanejaConfig()).
  *       · CAPÇALERA. `manageDocumentHead` és opt-in estricte: només el booleà
  *         true. Penjar de #root ja no és cap declaració: el <title> i el
  *         canonical són de l'amfitrió fins que ell diga el contrari.
@@ -52,7 +61,8 @@
  *         guanyava.
  *       · DEFECTES DEL PAQUET (Model B). Sóc de Poble tria i segella el
  *         backend: amb el marcatge universal de tres peces l'element pren el
- *         backend de compilació, el mateix que embed.jsx dona al #root.
+ *         backend de compilació, el que les entrades pròpies (main.jsx,
+ *         embed.jsx) fixen a la capa del paquet (config/capaDelPaquet.js).
  *       Les claus noves passen per un sanejador tipat a sanejaConfig().
  *
  *  261002 T2b ENXUFABILITAT (contracte sdp.amfitrio.v1, config/contracteAmfitrio.js).
@@ -93,7 +103,7 @@ import { SessionProvider } from './app/contexts/SessionContext.jsx';
 import { UIProvider } from './app/contexts/UIContext.jsx';
 import { IdentitatProvider } from './app/contexts/IdentitatContext.jsx';
 import styles from './css/index.css?inline';
-import { aplicaContrast, readContrastPreference, readThemePreference, resolveContrast, resolveTheme } from './config/theme';
+import { PREFERENCIES_TEMA, aplicaContrast, readContrastPreference, readThemePreference, resolveContrast, resolveTheme } from './config/theme';
 import { ErrorBoundary } from './components/ErrorBoundary.jsx';
 import { normalizeBackendConfig } from './config/backendConfig.js';
 import { getRuntimePolicy } from './config/runtimePolicy.js';
@@ -449,6 +459,10 @@ const SANEJADORS_TIPATS = Object.freeze({
   /* T1 (260930): només els codis exactes del selector (ca, es, en, eu, gl).
      'en-US', 'fr', 42 o '' desapareixen i l'app es queda en valencià. */
   language: (valor) => (esLlenguaSuportada(valor) ? valor : undefined),
+  /* Auditoria 261007 (B) · Només les tres preferències (theme.js,
+     PREFERENCIES_TEMA). Abans un 'fosc' arribava cru a `data-theme` i cap
+     selector de tokens.css hi casava. */
+  themeMode: (valor) => (PREFERENCIES_TEMA.includes(valor) ? valor : undefined),
   apps: (valor) => sanejaApps(valor),
   rutaAUrl: (valor) => (MODES_RUTA.includes(valor) ? valor : undefined)
 });
@@ -620,6 +634,7 @@ class SocDePobleElement extends BaseElement {
     this._pendingUnmount = false;
     this._graceTimer = null;
     this._hasMountedReact = false;
+    this._manualTheme = null;
     this._manualLanguage = null;
   }
 
@@ -842,6 +857,22 @@ class SocDePobleElement extends BaseElement {
        altre origen: sense açò, sanitize.js les bloquejaria com a far de tercers. */
     const origen = origenAbsolut(base);
     if (origen && typeof window !== 'undefined' && origen !== window.location.origin) permetOrigenMitjans(base);
+
+    /* Decisió 3 del Mestre (261007, confirmada: «Imatges externes al Mur:
+       PROHIBIDES (PRIVACITAT)») · Relleu 261007 (peça «imatges-detall») · Les
+       llavors que resolen imatges EN IMPORTAR-SE (marketContent.js,
+       townsContent.js) porten l'origen de l'script que ens ha carregat
+       (ORIGEN_DEL_PAQUET), no el del plugin-url, i el mode estricte del Mur
+       (esFontImatgePropia) només admet els orígens registrats: amb un
+       plugin-url d'un altre origen, les fotos de la llavor deixaven de
+       pintar-se. També es registra el del paquet. Amb el paquet trossejat,
+       provisionalDelPaquet.js (el primer import d'embed.jsx) fixa la base del
+       carregador abans que s'avalue este mòdul: ORIGEN_DEL_PAQUET és el del
+       carregador, el mateix dels trossos. Sense paquet de fora
+       (socdepoble.org, les proves) és buit i no es registra res. */
+    if (ORIGEN_DEL_PAQUET && typeof window !== 'undefined' && ORIGEN_DEL_PAQUET !== window.location.origin) {
+      permetOrigenMitjans(ORIGEN_DEL_PAQUET);
+    }
   }
 
   _render() {
@@ -874,8 +905,12 @@ class SocDePobleElement extends BaseElement {
   }
 
   setTheme(theme) {
-    this._manualTheme = theme;
-    this.dataset.theme = resolveTheme(theme);
+    /* Auditoria 261007 (B) · Com setLanguage: el que no és una de les tres
+       preferències (PREFERENCIES_TEMA) es descarta, i manen la config o la
+       preferència de sempre. Abans `setTheme('fosc')` deixava
+       data-theme="fosc", que cap selector de tokens.css reconeix. */
+    this._manualTheme = PREFERENCIES_TEMA.includes(theme) ? theme : null;
+    this.dataset.theme = resolveTheme(this._manualTheme ?? this._config?.themeMode ?? readThemePreference());
     this._pintaAmfitrio();
     this._render();
   }
@@ -952,7 +987,9 @@ class SocDePobleElement extends BaseElement {
     if (this._mqTema) return;
     const mq = window.matchMedia('(prefers-color-scheme: dark)');
     const alCanviar = () => {
-      const mode = this._config.themeMode ?? readThemePreference();
+      /* Auditoria 261007 (B) · El tema que l'amfitrió ha fixat amb setTheme()
+         mana: un canvi de mode del telèfon ja no el trepitja si no és 'system'. */
+      const mode = this._manualTheme ?? this._config?.themeMode ?? readThemePreference();
       if (mode !== 'system') return;
       this.dataset.theme = resolveTheme('system');
       this._pintaAmfitrio();
@@ -1014,17 +1051,6 @@ class SocDePobleElement extends BaseElement {
 
     activeElements.delete(this);
 
-    /*
-     * P0-7 AVISOS APAGATS ALS GERMANS (260831, Seient Núm. 5).
-     *
-     * `destroyToastSystem()` és global: hi ha un sol `sharedRoot` per document.
-     * Cridar-lo en desmuntar UNA instància apagava els avisos de totes les
-     * altres que encara estaven vives. La usuària de l'altre bloc deixava de
-     * rebre confirmacions i errors sense cap senyal.
-     *
-     * El sistema d'avisos és compartit, així que només es destruïx quan se'n va
-     * l'última instància.
-     */
     this._paraDEscoltarTema();
 
     SocDePobleElement._despintaAmfitrio(this);

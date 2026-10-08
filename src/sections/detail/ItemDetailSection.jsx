@@ -6,12 +6,10 @@ import { useNotesData } from '../../sections/notes/NotesDataContext';
 import { useMultimedia } from '../../sections/multimedia/MultimediaContext';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { useSession } from '../../app/contexts/SessionContext';
-import { buildDetailSectionMeta } from './detailSectionMeta.jsx';
+import { avatarAutorDElement, buildDetailSectionMeta, portadaDElement } from './detailSectionMeta.jsx';
 import { useSEO } from '../../hooks/useSEO.js';
-import { autorDe, objecteDe, rutaConnectarObjecte, tipusDeSeccio } from '../../config/navigation.js';
-import { resolveAsset } from '../../config/assetResolver.js';
-import { CarruselImatges } from '../../components/PedraSeca/index.js';
-import { paginaDElement, trobaElement } from './elementDeSeccio.js';
+import { objecteDe, rutaConnectarObjecte, tipusDeSeccio } from '../../config/navigation.js';
+import { paginaDElement, trobaElement, useLogoEntitatDElement } from './elementDeSeccio.js';
 import { ProveidorSincronitzacioTargetes } from './SincronitzacioTargetes.jsx';
 
 export default function ItemDetailSection() {
@@ -29,6 +27,12 @@ export default function ItemDetailSection() {
   /* T54 · el mateix resolvedor que el diàleg Connectar i el lector del MAS. */
   const fallbackItem = trobaElement(section, itemId);
   const item = location.state?.preloadedItem || fallbackItem;
+  /* Ordre E del Mestre (261007, prompt 261007_1628) · El logotip que la
+     persona va pujar damunt de l'H1 a l'editor de Notes (logo_image), també
+     quan és un sdp-media:// que només resol el port. Abans del retorn
+     anticipat: és un hook. Sense logo_image, null i cap prop nova.
+     `logoEnCami`: el port encara el resol (revisió adversarial del 261007). */
+  const { logo: logoPropi, carregant: logoEnCami } = useLogoEntitatDElement(item);
 
   /* Enxufe universal (260929) · Ací hi havia window.scrollTo({ top: 0 }). A
      Sóc de Poble el document no llisca mai (base.css: html, body, #root i
@@ -37,10 +41,22 @@ export default function ItemDetailSection() {
      pujava la finestra de l'amfitrió. Tornar a dalt la columna en canviar
      d'element seria un comportament nou a socdepoble.org (Llei del Píxel). */
 
+  /* T54 · títol, foto, drets (T39), autoria (T4) i data (T40): les mateixes
+     props que pinta el lector de connexions del MAS (elementDeSeccio.js).
+     Pura: es calcula abans del retorn anticipat perquè també la llig useSEO. */
+  const pagina = section && item ? paginaDElement(section, item) : null;
+
+  /* Decisió 3 del Mestre (261007, confirmada) · «Imatges externes al Mur:
+     PROHIBIDES (PRIVACITAT).» Relleu 261007 (peça «imatges-detall») · og:image
+     i twitter:image (seoHead.js; el detall no passa cap jsonLd) porten la
+     portada ja filtrada (pagina.heroImage, el mode estricte de les seccions
+     del Mur), mai section.getImage(item) cru: una URL de tercers no acaba al
+     <head>. null cau a la imatge base de useSEO.
+     Fora del Mur (Pobles, Multimèdia), la mateixa imatge que abans. */
   useSEO({
     title: item ? section?.getTitle?.(item) : 'No trobat',
     description: item ? item.entradilla || section?.getSubtitle?.(item) : '',
-    image: item ? section?.getImage?.(item) : null
+    image: pagina ? pagina.heroImage : null
   });
 
   if (!section || !item) {
@@ -74,58 +90,18 @@ export default function ItemDetailSection() {
      no «Gent de Sella», entre per on s'entre. */
   const objecte = objecteDe({ ...item, title: section.getTitle(item) || item.title }, sectionId);
   const objecteXat = { ...objecte, titol: objecteDe(item, sectionId).titol || objecte.titol };
-  /* T54 · títol, foto, drets (T39), autoria (T4) i data (T40): les mateixes
-     props que pinta el lector de connexions del MAS (elementDeSeccio.js). */
-  const pagina = paginaDElement(section, item);
-  /* Norma del Mestre, 261004 (prompt 261004_1108, línies 66-69 i T2) · Qui
-     signa decidix la capçalera. Una persona (o la IA), reconeguda per
-     identificador (autorDe), porta el seu avatar redó davant de l'H1, mai el
-     logotip de Sóc de Poble. L'entitat del projecte el porta perquè la seua
-     boina va a /projecte (PageFrame, via d). Derogat el showLogos={true}
-     (ordre del Mestre, 261004): pintava el logotip de Sóc de Poble a la
-     fitxa de qualsevol persona.
-     Correcció dels verificadors (ordre del Mestre, 261004) · L'avatar de
-     capçalera és només el de la identitat de qui signa (author_avatar, T3
-     de 261001), mai l'avatar_url de l'element: eixe camp no és l'autoria i
-     al Mercat porta la marca de Sóc de Poble (marketSeed.js). Sense
-     author_avatar, el bloc del títol comença per l'H1. La boina continua
-     amb el seu avatar (pagina.authorAvatar). */
-  const avatarDeLaIdentitat = typeof item.author_avatar === 'string' ? item.author_avatar : '';
-  const avatarAutor = autorDe(item)?.tipus === 'persona' && avatarDeLaIdentitat
-    ? { src: avatarDeLaIdentitat, alt: pagina.authorName ? `Avatar de ${pagina.authorName}` : 'Avatar de qui signa' }
-    : null;
-  /* Ordre del Mestre (261007) · Un element amb més d'una foto (els productes
-     del Mercat, getImages) porta a la portada un carrusel: la ranura
-     topBarData.heroComponent de PageFrame, en lloc de la imatge sola. La
-     primera diapositiva és la mateixa portada (getImage): no es pinta dues
-     vegades (pla 261006_1140). Els src es resolen com els resol PageFrame
-     per a la portada. La clau és l'element: un altre producte comença per la
-     seua primera foto. Amb una foto o cap, cap prop nova: la portada de
-     sempre (Llei del Píxel). */
-  const fotos = typeof section.getImages === 'function' ? section.getImages(item) : [];
-  /* Revisió del 261007 (M9) · Els textos del carrusel, traduïts ací: la peça
-     és presentacional i porta la reserva en valencià. Cada foto porta el nom
-     del producte d'alt: les dades no en porten cap de propi per foto, i cada
-     diapositiva ja diu «Imatge X de N». */
-  const portadaAmbCarrusel = Array.isArray(fotos) && fotos.length > 1 ? {
-    topBarData: {
-      heroComponent: (
-        <CarruselImatges
-          key={String(item.id ?? '')}
-          imatges={fotos.map((src) => ({ src: resolveAsset(src), alt: pagina.heroAlt || '' }))}
-          etiqueta={t('carrusel.imatgesDe', 'Imatges de {titol}').replace('{titol}', () => String(pagina.title ?? ''))}
-          etiquetes={{
-            anterior: t('carrusel.anterior', 'Imatge anterior'),
-            seguent: t('carrusel.seguent', 'Imatge següent'),
-            diapositives: t('carrusel.diapositives', 'Diapositives'),
-            posicio: t('carrusel.posicio', 'Imatge {n} de {total}'),
-            carrusel: t('carrusel.rol', 'carrusel'),
-            diapositiva: t('carrusel.rolDiapositiva', 'diapositiva')
-          }}
-        />
-      )
-    }
-  } : null;
+  /* Esmena 3 del pla 261007_1645 · L'avatar redó de qui signa i el carrusel
+     de la portada viuen a detailSectionMeta.jsx (avatarAutorDElement i
+     portadaDElement, amb les seues regles escrites al costat): els comparteix
+     el lector del MAS (notes/PublicacioDetall.jsx). Derogat el
+     showLogos={true} (ordre del Mestre, 261004): pintava el logotip de Sóc de
+     Poble a la fitxa de qualsevol persona. La boina continua amb el seu
+     avatar (pagina.authorAvatar).
+     Decisió 3 (261007) · La secció decidix el mode estricte de l'avatar redó:
+     al Mur, un avatar de fora no es pinta i l'H1 va sol, com la silueta de
+     la barra taronja de la mateixa pàgina. */
+  const avatarAutor = avatarAutorDElement(item, pagina.authorName, section);
+  const portadaAmbCarrusel = portadaDElement(section, item, pagina, t);
 
   return (
     <UniversalPage
@@ -133,7 +109,13 @@ export default function ItemDetailSection() {
       objecte={objecteXat}
       {...pagina}
       {...portadaAmbCarrusel}
-      avatarAutor={avatarAutor}
+      /* Ordre E (261007) · El logotip propi resolt pel port mana sobre el de
+         paginaDElement, que només coneix els que es pinten sense el port. */
+      {...(logoPropi ? { logoEntitat: logoPropi } : null)}
+      /* Revisió adversarial del 261007 · Mentre el port resol el logotip, cap
+         avatar: la capçalera no pinta una identitat que el logotip llevarà en
+         arribar. Si no es resol, l'avatar torna (la capçalera de sempre). */
+      avatarAutor={logoEnCami ? null : avatarAutor}
       chrome="full"
     >
       {/* Ordre del Mestre (261007, «cards de veritat») · Les targetes

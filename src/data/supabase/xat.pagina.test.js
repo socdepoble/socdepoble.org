@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { enviaMissatge, loadFils, loadMissatges, obriFilDePagina } from './xat.js';
 import { reiniciaLocalXat } from '../localXat.js';
 import { XAT_SEED_IDS } from '../xatSeed.js';
+import { ENTITAT_PILOT_SLUG } from '../identitatsSeed.js';
 
 /* T63.2 i T67 · La capacitat opcional 'xatDePagina' de l'adaptador Supabase,
    amb el client simulat com a xat.test.js (que és d'un altre torn). */
@@ -71,6 +72,10 @@ describe('obriFilDePagina en remot', () => {
     await expect(obriFilDePagina(PUBLICACIO, REMOT)).rejects.toMatchObject({ codi: 'sense-capacitat', code: 'SENSE_CAPACITAT', retriable: false });
     client.rpc.mockReturnValueOnce(resposta(null, { message: 'Not Found', status: 404 }));
     await expect(obriFilDePagina(PUBLICACIO, REMOT)).rejects.toMatchObject({ codi: 'sense-capacitat' });
+    /* Auditoria 261007 (B) · Amb la forma real de postgrest-js, el 404 és a la
+       resposta i no a l'error: l'adaptador el copia abans de decidir. */
+    client.rpc.mockReturnValueOnce({ ...resposta(null, { message: 'Not Found', code: '', details: null, hint: null }), status: 404 });
+    await expect(obriFilDePagina(PUBLICACIO, REMOT)).rejects.toMatchObject({ codi: 'sense-capacitat' });
   });
 
   it('els errors del servidor conserven el codi SDP i no són sense-capacitat', async () => {
@@ -91,7 +96,7 @@ describe('obriFilDePagina en remot', () => {
   });
 
   it('en mode seed delega a la llavor i no toca Supabase', async () => {
-    const obert = await obriFilDePagina({ tipus: 'entitat', id: 'soc-de-poble' }, SEED);
+    const obert = await obriFilDePagina({ tipus: 'entitat', id: ENTITAT_PILOT_SLUG }, SEED);
     expect(obert.filId).toBe(XAT_SEED_IDS.filGeneral);
     const grup = await obriFilDePagina(PUBLICACIO, SEED);
     expect(grup.fils[0]).toMatchObject({ tipus: 'grup', participant: true, subjecte: { tipus: 'publicacio', id: 'p-1' } });

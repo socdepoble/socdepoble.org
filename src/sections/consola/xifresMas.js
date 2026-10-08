@@ -477,13 +477,34 @@ function mesuresDelMapa(mapa) {
   return memoria.get(mapa);
 }
 
+/* Neteja 261007 (prompt 261007_1628, peça D) · Les mesures de consola.json
+   també es guarden per lectura, com les del Mapa: abans cada xifra en
+   tornava a fer el joc sencer. Com que el format dels números i de les dates
+   depén de l'idioma, la clau és la lectura i, dins, l'idioma. Una lectura
+   nova (Refrescar) és un objecte nou i torna a mesurar-ho tot.
+   Esmena del revisor adversarial (peça D, problema bloquejant) · Tot es
+   guarda llevat del rellotge: cada crida porta el seu `ara`, com abans de la
+   memòria, damunt de les mesures guardades (el prototip). Així «Últim rebut
+   fa N dies» i l'etiqueta dels rebuts rancis es tornen a comptar en cada
+   pintada, igual que el tauler (ConsolaSection.jsx) i el panell del pols
+   (etiquetesPols, PolsConsola.jsx), i la pàgina no es contradiu quan passa
+   el llindar sense una lectura nova. Els getters de `peresos` són clausures
+   i s'hereten; ningú no fa spread de les mesures (xifresVistes.js,
+   xifresMas.js, pecesMapa.js), i la desestructuració llig el prototip. */
+const memoriaConsola = new WeakMap();
 function mesuresDeConsola(dades, locale = 'ca-ES') {
   if (!dades) return null;
+  if (!memoriaConsola.has(dades)) memoriaConsola.set(dades, new Map());
+  const perIdioma = memoriaConsola.get(dades);
+  if (!perIdioma.has(locale)) perIdioma.set(locale, mesuraConsola(dades, locale));
+  // Un sol rellotge per crida: el títol i les etiquetes d'una xifra (l'últim rebut) compten amb el mateix.
+  return Object.create(perIdioma.get(locale), { ara: { value: Date.now(), enumerable: true } });
+}
+
+function mesuraConsola(dades, locale) {
   return peresos({
     n: () => (x) => Number(x).toLocaleString(locale),
     data: () => (iso) => dataLocal(iso, locale),
-    // Un sol rellotge per a totes les xifres d'una mateixa lectura (l'últim rebut).
-    ara: () => Date.now(),
     /* Correcció 261004 (verificador de la tercera passada, punt 4) · Sense el
        diari de sessió (fonts.diari.estat 'absent'), els registres i els rebuts
        no tenen mesura: null, mai 0. Sense el journal, les operacions tampoc. */
@@ -649,9 +670,13 @@ export function xifraDelMas(slug, mapa = null, dades = null, locale = 'ca-ES') {
  * mesura, taules: [{ titol, columnes, files: [{ clau, celes }], buit }], nota,
  * font, prova, generador }. Sense la seua font, o per a un slug sense pàgina,
  * null.
+ * Neteja 261007 (prompt 261007_1628, peça D) · `xifra` és la de
+ * xifraDelMas amb les mateixes fonts, si qui crida ja l'ha buscada
+ * (PaginaXifra): recórrer totes les vistes una altra vegada no canvia res.
+ * Sense ella, es busca ací.
  */
-export function detallXifra(slug, mapa = null, dades = null, locale = 'ca-ES') {
-  if (!xifraDelMas(slug, mapa, dades, locale)) return null;
+export function detallXifra(slug, mapa = null, dades = null, locale = 'ca-ES', xifra = xifraDelMas(slug, mapa, dades, locale)) {
+  if (!xifra) return null;
   const def = FIXES.get(slug);
   if (def) {
     const font = deConsola(def) ? dades : mapa;

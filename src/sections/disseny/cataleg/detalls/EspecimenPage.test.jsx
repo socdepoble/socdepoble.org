@@ -131,7 +131,39 @@ describe('EspecimenPage · el bloc del títol: avatar o logotip', () => {
     const props = files.map((tr) => tr.querySelector('td code').textContent);
     for (const prop of ['logoEntitat', 'senseLogo', 'avatarAutor']) expect(props, prop).toContain(prop);
     const fila = files.find((tr) => tr.querySelector('td code').textContent === 'avatarAutor');
-    expect(fila.textContent).toContain('{ src, alt, onCanvia? }');
+    /* Contracte-1 (261008) · el tipus porta les claus noves de les píndoles.
+       Línia I1 (pla 261008_1201) · i les de l'ajuda i la pujada. */
+    expect(fila.textContent).toContain('{ src, alt, onCanvia?, etiquetaCanvia?, onLleva?, etiquetaLleva?, ajuda?, pujant? }');
     expect(fila.textContent).toContain('--sdp-avatar-capcalera (300px)');
+    expect(fila.textContent).toContain('Llevar l’avatar');
+    // Correcció de la revisió (261008) · una referència que no es pot pintar conserva el control.
+    expect(fila.textContent).toContain('les píndoles es pinten soles');
+    // Línia I1 · què fan ajuda i pujant, i que només compten amb fila de píndoles.
+    expect(fila.textContent).toContain('ajuda (text) pinta una línia .sdp-camp__ajuda sencera davall de les píndoles');
+    expect(fila.textContent).toContain('pujant (només true) les deixa disabled i aria-busy');
+    expect(fila.textContent).toContain('Amb fila de píndoles');
+  });
+
+  /* Decisió del Mestre (261008) · drets d'autor dins de l'editor: el contracte
+     de PageFrame documenta onCanviaCopyright i diu que fora de l'editor és
+     l'enllaç de sempre. */
+  it('el contracte documenta onCanviaCopyright: botó a l’editor, enllaç a la resta', () => {
+    const arrel = pinta();
+    const fila = [...arrel.querySelectorAll('table tbody tr')].find((tr) => tr.querySelector('td code').textContent === 'onCanviaCopyright');
+    expect(fila).toBeTruthy();
+    expect(fila.textContent).toContain('data-sdp-drets');
+    expect(fila.textContent).toContain('/page/drets-autor');
+    expect(fila.textContent).toContain('totes les targetes');
+  });
+
+  /* Relleu 261007 (històric de l'actor, esmena 2 del pla 261007_1645) · El
+     contracte també documenta la ranura del peu i el seu nom accessible. */
+  it('el contracte documenta peuDePagina i etiquetaPeuDePagina', () => {
+    const arrel = pinta();
+    const files = [...arrel.querySelectorAll('table tbody tr')];
+    const fila = (prop) => files.find((tr) => tr.querySelector('td code').textContent === prop);
+    expect(fila('peuDePagina')?.textContent).toContain('dins del contenidor que fa scroll i fora de l’Índex');
+    expect(fila('peuDePagina').textContent).toContain('node');
+    expect(fila('etiquetaPeuDePagina')?.textContent).toContain('El nom accessible del section del peu');
   });
 });

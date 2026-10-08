@@ -11,9 +11,21 @@
  * el d'una altra i el del Snippet Curador, que les afig des del Bloc. Una
  * lectura que arriba després d'una altra més nova no la xafa.
  * El magatzem el tanca useLector (el mateix objecte): ací només s'escolta.
+ *
+ * Peça C (ordre del Mestre, 261007, prompt 261007_1628) · `lleva` és
+ * llevaDelMagatzem (fontsPersonals.js), l'única implementació de llevar una
+ * font personal: abans n'hi havia una còpia ací. Sense la guarda del disc de
+ * llevaFontPersonal, i a propòsit: eixa guarda és per al magatzem de pas, que
+ * es crea, escriu i es tanca i podia caure en una memòria que es llançava. El
+ * d'ací és el de l'app, i el motor (utils/magatzemLocal.js) ja no passa mai a
+ * memòria en silenci després d'haver obert la base (llança NO_DISPONIBLE,
+ * que arriba a `error`). Si treballa en memòria des del principi, no hi pot
+ * haver cap font personal: només s'afigen amb el disc. Afegir-hi la guarda
+ * seria una obertura més de la base a cada paperera, per a un cas que no pot
+ * passar.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { llevaPersonal } from './nucli/index.js';
+import { llevaDelMagatzem } from './fontsPersonals.js';
 
 const CAP = Object.freeze([]);
 const codiDe = (error) => (typeof error?.codi === 'string' ? error.codi : 'DESCONEGUT');
@@ -55,12 +67,7 @@ export function useFontsPersonals(magatzem) {
     rondaRef.current += 1;
     const ronda = rondaRef.current;
     try {
-      let llevada = false;
-      const registre = await magatzem.actualitzaPersonals((actual) => {
-        const despres = llevaPersonal(actual, id);
-        llevada = despres !== actual;
-        return despres;
-      });
+      const { llevada, registre } = await llevaDelMagatzem(magatzem, id);
       posa(ronda, registre);
       return llevada;
     } catch (motiu) {

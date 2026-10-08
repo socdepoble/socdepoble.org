@@ -177,6 +177,15 @@ export function NotesDataProvider({ children, config }) {
   const entrada = entradaSessio();
   const workspaceKey = JSON.stringify([scopeKey, entrada]);
 
+  /* Auditoria 261007 (B) · La càrrega espera la sessió resolta, però no la
+     consulta del rol. L'`estat` efectiu de useSession passa a 'comprovant'
+     també amb la persona ja dins i el rol 'desconegut' (cada renovació del
+     JWT): com a dependència, la càrrega s'avortava i tornava a recórrer totes
+     les pàgines en cada renovació. Sense usuari (la restauració de D6)
+     continua esperant; quan arriba, l'entrada i el token canvien igual que
+     abans. */
+  const sessioResolta = estat !== 'comprovant' || Boolean(currentUser?.id);
+
   // Una resposta antiga no pot entrar en una sessió nova,
   // encara que després tornem al mateix tenant i actor.
   const token = useMemo(
@@ -194,6 +203,22 @@ export function NotesDataProvider({ children, config }) {
     setConsumers(value => value + 1);
     return () => setConsumers(value => value - 1);
   }, []);
+  /* Auditoria 261007 (B) · Qui mira el Bloc (/notes) no és dependència de la
+     càrrega: com a dependència, eixir de /notes tornava a demanar la pàgina 0
+     perquè no la mirara ningú. La càrrega llig el nombre de consumidors per
+     una ref (per a saber si seguix paginant) i, de qui mira el Bloc, només
+     depén d'`activacions`, que puja quan es passa de cap consumidor a algun
+     (el flanc de baixada no la toca). Entrar a /notes, doncs, continua
+     revalidant des de la pàgina 0 i recorrent-les totes, com abans (el
+     «Carregant…» del Bloc buit i el que ha canviat en un altre dispositiu es
+     continuen veient); eixir-ne ja no demana res. */
+  const consumersRef = useRef(0);
+  const [activacions, setActivacions] = useState(0);
+  const ambConsumidors = consumers > 0;
+  useLayoutEffect(() => { consumersRef.current = consumers; }, [consumers]);
+  useEffect(() => {
+    if (ambConsumidors) setActivacions(value => value + 1);
+  }, [ambConsumidors]);
 
   const [data, setData] = useState({
     token: null,
@@ -250,8 +275,58 @@ export function NotesDataProvider({ children, config }) {
       payload: previous.token === token ? previous.payload : null
     }));
 
+    const informa = (error) => {
+      // Una càrrega cancel·lada (doble muntatge de StrictMode, canvi d'àmbit) no és cap error.
+      if (error?.name === 'AbortError') return;
+      console.error("LOAD ERROR", error);
+      if (!isCurrent()) { return; }
+
+      setData((previous) => previous.token === token
+        ? { ...previous, status: 'error', error }
+        : previous
+      );
+    };
+
+    let ownerId = null;
+    let drafts = null;
+    let collected = [];
+    let pagines = 0;
+    const seen = new Set();
+
+    /* Recorre les pàgines des de la 0 mentre algú mire el Bloc. Sense cap
+       consumidor s'atura després de la pàgina rebuda (Auditoria 261007 (B):
+       ho llig de consumersRef, no d'una dependència de l'efecte). */
+    async function recorre() {
+      let cursor = null;
+      for (;;) {
+        if (cursor !== null) {
+          if (seen.has(cursor)) throw new Error('El cursor de Notes no avança.');
+          seen.add(cursor);
+        }
+        // Pressupost de recorregut: 1.024 pàgines, mai un bucle sense final.
+        if (pagines >= 1024) throw new Error('S’ha arribat al límit de pàgines de Notes; cal acotar la consulta.');
+        pagines += 1;
+        const payload = await loadNotes(ownerId, {
+          ...config, ...(cursor === null ? {} : { cursor }), signal: controller.signal
+        });
+        if (!isCurrent()) return;
+        if (!Array.isArray(payload?.notes)) throw new Error('Resposta de Notes amb un format inesperat.');
+        collected = mergeNotes(collected, payload.notes.map(note => applyDraft(note, drafts)));
+        setData(previous => {
+          if (!isCurrent() || previous.token !== token) return previous;
+          return { token, status: 'ready', error: null, payload: {
+            ...payload,
+            notes: mergeNotes(previous.payload?.notes || [], collected, payload.notesComplete === true)
+          } };
+        });
+        reprenEsborranys(payload.notes, drafts);
+        if (payload.notesComplete === true || payload.nextCursor == null || !consumersRef.current) return;
+        cursor = payload.nextCursor;
+      }
+    }
+
     async function load() {
-      if (estat === 'comprovant') return; // wait until resolved
+      if (!sessioResolta) return; // espera la sessió (D6), no el rol
 
       try {
         await assegurarHost(controller.signal);
@@ -260,7 +335,7 @@ export function NotesDataProvider({ children, config }) {
 
         // El cami `seed` serveix contingut d'exemple sense mirar la sessio.
         // El guarda d'aci baix nomes te sentit quan les dades son remotes.
-        const ownerId = getCurrentUser()?.id
+        ownerId = getCurrentUser()?.id
           || (getRuntimeDataMode(config) !== 'remote' ? getDefaultUserId() : null);
         if (!ownerId) {
           setData((previous) => {
@@ -275,50 +350,17 @@ export function NotesDataProvider({ children, config }) {
           return;
         }
 
-        const drafts = await getDraftsForScope(scopeKey);
+        drafts = await getDraftsForScope(scopeKey);
         if (!isCurrent()) return;
-        let cursor = null;
-        let collected = [];
-        const seen = new Set();
-        // Pressupost de recorregut: 1.024 pàgines, mai un bucle sense final.
-        for (let pageNumber = 0; pageNumber < 1024; pageNumber++) {
-          const payload = await loadNotes(ownerId, {
-            ...config, ...(cursor === null ? {} : { cursor }), signal: controller.signal
-          });
-          if (!isCurrent()) return;
-          if (!Array.isArray(payload?.notes)) throw new Error('Resposta de Notes amb un format inesperat.');
-          collected = mergeNotes(collected, payload.notes.map(note => applyDraft(note, drafts)));
-          setData(previous => {
-            if (!isCurrent() || previous.token !== token) return previous;
-            return { token, status: 'ready', error: null, payload: {
-              ...payload,
-              notes: mergeNotes(previous.payload?.notes || [], collected, payload.notesComplete === true)
-            } };
-          });
-          reprenEsborranys(payload.notes, drafts);
-          if (payload.notesComplete === true || payload.nextCursor == null || !consumers) return;
-          if (seen.has(payload.nextCursor)) throw new Error('El cursor de Notes no avança.');
-          seen.add(payload.nextCursor);
-          cursor = payload.nextCursor;
-        }
-        throw new Error('S’ha arribat al límit de pàgines de Notes; cal acotar la consulta.');
-
+        await recorre();
       } catch (error) {
-        // Una càrrega cancel·lada (doble muntatge de StrictMode, canvi d'àmbit) no és cap error.
-        if (error?.name === 'AbortError') return;
-        console.error("LOAD ERROR", error);
-        if (!isCurrent()) { return; }
-
-        setData((previous) => previous.token === token
-          ? { ...previous, status: 'error', error }
-          : previous
-        );
+        informa(error);
       }
     }
 
     void load();
     return () => controller.abort();
-  }, [token, tick, config, scopeKey, estat, consumers]);
+  }, [token, tick, activacions, config, scopeKey, sessioResolta]);
 
   const refresh = useCallback(() => {
     if (operationRef.current?.token !== token) return;

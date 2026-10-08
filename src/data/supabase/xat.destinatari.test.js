@@ -23,6 +23,7 @@ import { reiniciaLocalXat } from '../localXat.js';
 import { CONTRACTE_NUCLI } from '../contracte.js';
 import { setBackendImplementation } from '../backendPort.js';
 import { resolXatCorporatiu } from '../../sections/control/xatCorporatiu.js';
+import { ENTITAT_PILOT_SLUG } from '../identitatsSeed.js';
 
 const TENANT = '00000000-0000-4000-8000-000000000000';
 const ENTITAT_UUID = '7d1f4c2e-9a3b-4c5d-8e6f-0a1b2c3d4e5f';
@@ -115,12 +116,12 @@ describe('W4-10 · la reproducció de Codex amb el backendPort real', () => {
 
     const uuid = await resol();
     expect(uuid).toEqual({ estat: 'remot', href: '/xat?amb=00000000-0000-4000-8000-000000000042' });
-    expect(consultes[0].clau).toBe('soc-de-poble');
+    expect(consultes[0].clau).toBe(ENTITAT_PILOT_SLUG);
     await creaFilDirecte(new URL(uuid.href, 'https://test.invalid').searchParams.get('amb'), null, config);
     expect(client.rpc).toHaveBeenCalledWith('crea_fil_directe', { p_tenant_id: TENANT, p_altre_usuari: perfil.id, p_titol: null });
 
     for (const [id, href] of [['42', '/xat?amb=42'], ['wp:organization:42', '/xat?amb=wp%3Aorganization%3A42']]) {
-      perfil = { tipus: 'entitat', id, slug: 'soc-de-poble' };
+      perfil = { tipus: 'entitat', id, slug: ENTITAT_PILOT_SLUG };
       await expect(resol()).resolves.toEqual({ estat: 'remot', href });
     }
     perfil = null;

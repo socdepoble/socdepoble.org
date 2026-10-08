@@ -107,8 +107,8 @@ test('T50 · la fitxa activa de la llista és la targeta viva; la resta d’apar
   expect(targeta.querySelector('.sp-card-author-name').textContent).toBe('Javi Llinares');
   expect(targeta.querySelector('.sp-card-author-location').textContent).toBe('La Torre');
   expect(within(targeta).getByText('Persona')).toBeTruthy();
-  // El compte (i, des de T9, «Els nodes») continuen sent fitxes compactes.
-  expect([...llista(container).querySelectorAll('.sdp-gestor-fitxa__titol')].map((e) => e.textContent)).toEqual(['El compte', 'Els nodes']);
+  // El compte (i, des de T9, «Els nodes»; des del 261008, «Les vistes») continuen sent fitxes compactes.
+  expect([...llista(container).querySelectorAll('.sdp-gestor-fitxa__titol')].map((e) => e.textContent)).toEqual(['Les vistes', 'El compte', 'Els nodes']);
   // L'editor porta la mateixa targeta a la seua dreta.
   expect(detall(container).querySelector('aside.sdp-targeta-viva .sp-card-title').textContent).toBe('Javi Llinares');
 });
@@ -135,10 +135,29 @@ test('T50 · canviar d’apartat desmunta l’editor: l’entrada viva es retira
   expect(within(detall(container)).getByText('compte de Javi Llinares')).toBeTruthy();
   expect(llegixDocumentViu('jo')).toBeNull();
   expect(llista(container).querySelector('.sp-card')).toBeNull();
-  expect([...llista(container).querySelectorAll('.sdp-gestor-fitxa__titol')].map((e) => e.textContent)).toEqual(['La fitxa', 'El compte', 'Els nodes']);
+  expect([...llista(container).querySelectorAll('.sdp-gestor-fitxa__titol')].map((e) => e.textContent)).toEqual(['La fitxa', 'Les vistes', 'El compte', 'Els nodes']);
   // I en tornar a la fitxa, torna la targeta viva.
   fireEvent.click(within(llista(container)).getByRole('button', { name: /La fitxa/ }));
   expect(llista(container).querySelector('.sp-card-title').textContent).toBe('Javi Llinares');
+});
+
+/* Ordre del Mestre (261008) · «Les vistes», de punta a punta: l'editor es
+   desmunta (cap entrada viva) i la pàgina refà la targeta de la fitxa, amb
+   la mateixa autoria i l'avís del Perfil. Ací no hi ha cua d'autodesament:
+   la fitxa del servidor. */
+test('261008 · «Les vistes» porta la targeta de la fitxa fora de l’editor, amb l’autoria i l’avís del Perfil', () => {
+  const { container } = render(<PerfilShell />);
+  fireEvent.click(within(llista(container)).getByRole('button', { name: /Les vistes/ }));
+  expect(llegixDocumentViu('jo')).toBeNull();
+  const pagina = detall(container);
+  expect(within(pagina).getByRole('heading', { level: 1, name: 'Les vistes' })).toBeTruthy();
+  expect(pagina.querySelector('.sdp-editor-document')).toBeNull();
+  const carta = within(pagina).getByRole('heading', { level: 2, name: 'Vista targeta' }).closest('section').querySelector('article.sdp-targeta-viva-carta');
+  expect(carta.querySelector('.sp-card-title').textContent).toBe('Javi Llinares');
+  expect(carta.querySelector('.sp-card-subtitle').textContent).toBe('Llaurador');
+  expect(carta.querySelector('.sp-card-author-location').textContent).toBe('La Torre');
+  fireEvent.click(within(carta).getByRole('button', { name: /Comentar Javi Llinares/ }));
+  expect(screen.getByRole('dialog', { name: 'Això és una previsualització' }).textContent).toContain('Així es veu esta fitxa en format targeta.');
 });
 
 test('T50 · els botons de la targeta de la llista no naveguen: avís de previsualització', () => {
@@ -214,11 +233,13 @@ test('D5 · la targeta viva exposa que és la fitxa triada; D4 · la compacta é
   expect(actuals()[0].getAttribute('aria-label')).toBe('Javi Llinares');
   fireEvent.click(within(llista(container)).getByRole('button', { name: /El compte/ }));
   // Ara les dues són compactes, amb el DOM de DefaultItemCard, i la triada ho diu.
-  const [fitxa, compte] = [...llista(container).querySelectorAll('li > button')];
-  for (const boto of [fitxa, compte]) {
+  // 261008 · «Les vistes» va entre «La fitxa» i «El compte».
+  const [fitxa, vistes, compte] = [...llista(container).querySelectorAll('li > button')];
+  for (const boto of [fitxa, vistes, compte]) {
     expect(boto.className).toBe('sdp-gestor-fitxa');
     expect([...boto.children].map((e) => e.className).at(-1)).toBe('sdp-gestor-fitxa__text');
   }
   expect(fitxa.hasAttribute('aria-current')).toBe(false);
+  expect(vistes.hasAttribute('aria-current')).toBe(false);
   expect(compte.getAttribute('aria-current')).toBe('true');
 });

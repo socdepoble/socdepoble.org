@@ -7,6 +7,39 @@ description: ESTAT DE LA SESSIÓ
 
 <!-- SDP:ESTAT_ACTUAL -->
 
+## ESTAT_ACTUAL · 2026-10-08 19:19 · MarIA · Tancament de l'Onada 4 i esborrats
+
+L'Onada 4 ha finalitzat amb èxit. Claude ha completat els 5 fronts d'implementació:
+- Editor de Perfil: retallador calc, 10MB, botons separats i Vistes (A4/Targeta) en menú lateral.
+- Notes Personals: publicacions de l'entitat, botó unificat de desa/publica al Mur.
+- Organitzacions: suport de membres (alta, rols, eixir) i eliminada la mare. Selector de "El compte".
+- Xat (Auditoria adversarial): defectes de resiliència corregits, missatge d'error de privacitat implementat (SDP-XAT-016), protecció de metadades.
+- App Stores: preparació de la fitxa sense codi natiu per ara. 
+
+Les migracions SQL (`2610081400`, `2610081401`, `2610081402`, `2610081543`) han estat categoritzades a `node-suite-manifest.json`. L'empremta de drets d'autor s'ha aprovat a la frontissa. Els codis morts relacionats amb `DialegCapcaleraAvatar` han estat eliminats completament i els tests migrats cap a `DetallAjust`.
+El paquet de tests passa la política (14.599 tests en verd). Queda el tancament final i preparar Acta Marmota per al Mestre.
+
+## ESTAT_ACTUAL · 2026-10-08 05:20 · MarIA · Tancament de l'Onada 3 (Grup A i B Completats)
+
+L'Onada 3 ha finalitzat amb èxit rotund. Claude ha completat tant el Grup A com el Grup B de tasques:
+- Carrega progressiva ("Mostra més" / paginació al mur) (Decisió 4).
+- Mode estricte en imatges externes al mur (Decisió 3 completada a fons).
+- Neteja de menors i seguretat de llinatge al xat.
+El paquet de tests ha tancat amb **0 errors en 14.210 proves**. El deute tècnic pendent (el trencament del format `sdp-media://` en targetes) s'ha deixat documentat formalment per a l'arrencada de la pròxima Onada.
+
+S'ha verificat la neteja de l'Escriptori i s'han deixat els llistats arxivats segons la Porta Olivera.
+
+## ESTAT_ACTUAL · 2026-10-07 19:55 · Claude/MarIA · Tancament d'Emergència Termodinàmica
+
+Claude ha aturat l'Onada 3 a causa d'una alerta termodinàmica (Límit de compte al 96%). Ha completat i validat els següents fronts: Xat per defecte (amb avatars locals/entitat/Sóc de Poble resolts), Slug `socdepoble`, Botó d'imatge damunt l'H1 al Perfil i Notes, Lector de producte a Notes (carrusel/foto/compartir), Interruptor del Panell i neteja de Bàscula/Consola. Tots els tests relacionats en verd (47/47).
+
+Fronts ajornats per al Relleu (nou compte):
+- Històric de publicacions davall de l'editor de Notes (feta però pendent de revisor).
+- El minicarregador de WordPress (ESM amb Code Splitting, en disseny).
+- Les 4 decisions UX de l'arxiu de decisions (Bombolles persistents, Mur silenciós, Bloqueig Imatges Externes, Load More).
+
+L'auditoria final i el pla de relleu s'han empaquetat a `_wiki_de_poble/04_escriptori/261007_1715_auditoria_claude.md` (apartat «Límits» preparat per a la sessió del Rentonar). Llestos per a tancar sessió.
+
 ## ESTAT_ACTUAL · 2026-10-07 16:45 · MarIA · Auditoria Consola i Preparació Claude
 
 Escriptori netejat. S'ha creat un pla d'implementació i s'ha actualitzat el prompt actiu per a Claude (`261007_1628_prompt_claude.md`) on se li demana fer una auditoria adversarial profunda de la Consola Termodinàmica, solucionar les funcionalitats trencades del Panell de Control (Bàscula, RSS), injectar els dos xats per defecte de forma sintètica (assignant l'avatar quadrat local per a Sóc de Poble, atès que l'upload en producció falla i l'slug creat és `socdepoble` sense guions), i esbrinar per què a TipTap falta el botó d'imatge damunt de l'H1. Es tanca sessió i s'espera l'obertura del torn de Claude.

@@ -25,7 +25,18 @@ describe('rutaDAutoria', () => {
   test('l’entitat pilot va a la pàgina del projecte per l’id, l’slug o qualsevol dels seus àlies', () => {
     const [pilot] = ENTITATS_SEED.filter((entitat) => entitat.id === ENTITAT_PILOT_ID);
     const ids = new Set([ENTITAT_PILOT_ID, ENTITAT_PILOT_SLUG, ...pilot.alies]);
-    expect(ids.size).toBeGreaterThanOrEqual(3);
+    /* Ordre del Mestre (261007) · El slug declarat és 'socdepoble', el mateix
+       text que l'id de la llavor: id i slug són una sola entrada, i queda
+       l'àlies amb què la llavor signa la samarreta. Abans, tres. */
+    /* Ordre del Mestre (261007) · A producció l'entitat és 'socdepoble',
+       sense guions. La resta de proves llig la constant: esta en fixa el
+       literal, i un retorn a 'soc-de-poble' es veu ací. */
+    expect(ENTITAT_PILOT_SLUG).toBe('socdepoble');
+    expect(ids.size).toBeGreaterThanOrEqual(2);
+    expect(ids.has('soc-de-poble_official')).toBe(true);
+    /* Cap àlies repetit a la llavor, i cap identificador perdut. */
+    expect(pilot.alies).toHaveLength(new Set(pilot.alies).size);
+    expect(pilot.alies).toEqual(expect.arrayContaining([ENTITAT_PILOT_ID, ENTITAT_PILOT_SLUG]));
     for (const id of ids) {
       expect([id, rutaDAutoria({ tipus: 'entitat', id })]).toEqual([id, RUTA_PROJECTE]);
       expect([id, rutaDAutoria({ tipus: 'empresa', id })]).toEqual([id, RUTA_PROJECTE]);

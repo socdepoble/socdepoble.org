@@ -1,0 +1,16 @@
+RELLEU 06 · Claude · torn torn_91821449 · 261008 (canal viu)
+
+DESVIACIÓ CORREGIDA: la represa del workflow wf_a4437ae0-257 no va recuperar de la memòria cau l'informe de «menors». La clau de l'agent no va coincidir, i va tornar a llançar la peça sencera, cosa que haguera redoblat faena ja feta. L'he aturada al cap d'un minut (TaskStop). He comprovat als tres transcrits que cap agent de la represa havia editat res.
+
+EN MARXA · Workflow NOU wf_2ff6115b-d8f (grup B, segona represa)
+- carrega-mes (decisió 4) i imatges-detall (decisió 3 al detall): agents de REPRESA.
+  - Partixen del disc, sense començar de zero ni revertir.
+  - Contrasten cada requisit amb el codi que hi ha.
+  - Completen el que falta: com a mínim l'ADR-2026-11 i la línia de l'índex, les proves de MercatSection, i el (g) del sanejador si es pot fer net.
+  - Executen la bateria.
+- menors: NOMÉS REVISIÓ. L'informe de l'agent aa9e1c82858f50f8a, del diari de wf_a4437ae0-257, ja diu que tot està fet i en verd (419 fitxers, 6.548 proves).
+- Després, igual que abans:
+  - la verificació final: vitest src sencer, proves node, portes de lectura;
+  - la revisió de SEGURETAT del «llinatge» del xat;
+  - la reparació, si cal;
+  - el crític de completesa.

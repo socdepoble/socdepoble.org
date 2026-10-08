@@ -147,7 +147,10 @@ const textSenseFont = (id, { estatDades, estatMapa }) => (id === 'pols'
   ? TEXT_SENSE_DADES[estatDades] ?? TEXT_SENSE_DADES.absent
   : TEXT_SENSE_MAPA[estatMapa] ?? TEXT_SENSE_MAPA.absent);
 
-/** Copy de la Consola. Si la clau falta, la pàgina es pinta amb el mínim i ho diu en desenvolupament. */
+/** Copy de la Consola. Si la clau falta, la pàgina es pinta amb el mínim: el títol d'ací, sense subtítol,
+    entradeta ni data, i les pàgines amb COPY_PROVISIONAL i SUBTITOLS (paginaConsola) o el seu id.
+    Neteja 261007 (prompt 261007_1628, peça D) · No avisa de res, tampoc en desenvolupament: este
+    comentari prometia un avís que el codi no ha tingut mai. La clau hi és (src/sections/text/pageContent.js). */
 export function copyConsola() {
   return PAGE_COPY.consola ?? { title: 'Consola Termodinàmica', pagines: [] };
 }

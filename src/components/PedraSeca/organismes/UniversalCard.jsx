@@ -72,9 +72,16 @@
  * props OPCIONALS per a fer-ho sense perdre res del que ja feien; sense
  * elles, el DOM de sempre, byte a byte (UniversalCard.vinyeta.test.jsx):
  *  · `imatgePrivada` · la imatge i l'avatar passen pel filtre de les peces de
- *    les apps (fontSegura de marca.jsx, esFontImatgeSegura: el mateix origen
- *    o el de mitjans, mai un servidor de fora) i es demanen sense referent
- *    (referrerPolicy="no-referrer"). Una imatge que no hi passa no es pinta.
+ *    les apps (fontSegura de marca.jsx, esFontImatgeSegura: el mateix origen,
+ *    el nostre servidor de mitjans o un avatar dels proveïdors d'entrada) i es
+ *    demanen sense referent (referrerPolicy="no-referrer"). Una imatge que no
+ *    hi passa no es pinta.
+ *    Decisió 3 del Mestre (261007) · Ja no és només de les apps: la porten
+ *    també les targetes del Mur, dels actes i del Mercat (TargetaDelMur,
+ *    EventCard, TargetaDelMercat), que abans de passar-li la imatge i l'avatar
+ *    hi apliquen el MODE ESTRICTE (fontImatgePropia de utils/sanitize.js: cap
+ *    servidor de tercers, tampoc els avatars de Google, Facebook o GitHub).
+ *    La prop no canvia.
  *  · `idElement` · data-element a l'element principal: la llista hi torna el
  *    focus quan es tanca el detall.
  *  · `premuda` · aria-pressed a l'element principal quan és un botó

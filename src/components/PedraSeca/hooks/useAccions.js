@@ -156,6 +156,56 @@ export function urlPerCompartir(href, router = null) {
   try { return new URL(`${base}${href}`, window.location.origin).href; } catch { return window.location.href; }
 }
 
+/**
+ * Ordre del Mestre (261007) · «Comentaris = xat» · La via «En privat»: el xat
+ * privat amb Sóc de Poble (useXatSocDePoble). Torna la funció del clic, amb
+ * la lògica de sempre de Comentar, ara també per a la fila d'ajuda per
+ * defecte del Xat (sections/xat/useObriXatPerDefecte.js), sense cap còpia.
+ * Viu ací i no a xatSocDePoble.js, que este fitxer ja importa (cap cicle).
+ *
+ * Amb el xat ja resolt, hi va. Si no: diu l'avís del proveïdor (encara es
+ * busca, o no està disponible) i, si encara es pot resoldre, el demana UNA
+ * vegada per a tota l'app (resol) i hi va quan arriba; si no arriba, ho diu.
+ * Correcció C6 · Quan arriba, només fa res si és l'última tria de l'app
+ * (`darrera`: dos «En privat» mentre es resol no fan dues navegacions) i si
+ * la persona no s'ha mogut des del clic.
+ * `opcions` (opcional) són les de navigate: la fila del xat hi passa
+ * `{ replace: true }`, perquè la seua ruta de pas no quede a l'historial.
+ * Sense opcions, la navegació és la de sempre, navigate(href).
+ */
+export function useComentaEnPrivat() {
+  const { showToast } = useToast();
+  const navigate = useNavigate();
+  const router = useUbicacioApp();
+  const xatSocDePoble = useXatSocDePoble();
+  /* Correcció C6 · On és la persona en cada pintat i si la peça continua
+     muntada: la navegació que espera el xat ho mira quan arriba. */
+  const ubicacio = useRef(router);
+  ubicacio.current = router;
+  const muntada = useRef(true);
+  useEffect(() => {
+    muntada.current = true;
+    return () => { muntada.current = false; };
+  }, []);
+  return (opcions) => {
+    const ves = (ruta) => (opcions ? navigate(ruta, opcions) : navigate(ruta));
+    const { href, avis, resol } = xatSocDePoble;
+    if (href) {
+      ves(href);
+      return;
+    }
+    if (avis) showToast(avis);
+    if (typeof resol !== 'function') return;
+    const onEra = ubicacioDeLApp(ubicacio.current);
+    resol().then((xat) => {
+      const vigent = xat?.darrera !== false && muntada.current && ubicacioDeLApp(ubicacio.current) === onEra;
+      if (!vigent) return;
+      if (xat?.href) ves(xat.href);
+      else if (xat?.avis && xat.avis !== avis) showToast(xat.avis);
+    });
+  };
+}
+
 export async function compartix(titol, url, showToast) {
   if (navigator.share) {
     try {
@@ -265,42 +315,13 @@ export function useAccions({
      en el clic, com la de Connectar. Una persona o una IA no en tenen: el seu
      missatge directe no és cap xat públic. La privada ve del proveïdor de
      l'app (una sola resolució per a totes les targetes i barres). */
-  const xatSocDePoble = useXatSocDePoble();
-  /* Correcció C6 · On és la persona en cada pintat i si la peça continua
-     muntada: la navegació que espera el xat ho mira quan arriba. */
-  const ubicacio = useRef(router);
-  ubicacio.current = router;
-  const muntada = useRef(true);
-  useEffect(() => {
-    muntada.current = true;
-    return () => { muntada.current = false; };
-  }, []);
+  /* La via «En privat», la mateixa peça que fa servir la fila d'ajuda del
+     xat (useComentaEnPrivat, més amunt). */
+  const comentaEnPrivat = useComentaEnPrivat();
   const pagina = telemetria?.origen === 'pagina';
   const rutaXatPublic = () => {
     if (objecte === undefined) return rutaXatPerDefecte(title, mainHref, { pagina, router });
     return modeXat(objecte) === 'comu' ? rutaXatDePagina(objecte) : null;
-  };
-  /* Amb el xat ja resolt, hi va. Si no: diu l'avís del proveïdor (encara es
-     busca, o no està disponible) i, si encara es pot resoldre, el demana UNA
-     vegada per a tota l'app (resol) i hi va quan arriba; si no arriba, ho diu.
-     Correcció C6 · Quan arriba, només fa res si és l'última tria de l'app
-     (`darrera`: dos «En privat» mentre es resol no fan dues navegacions) i
-     si la persona no s'ha mogut des del clic. */
-  const comentaEnPrivat = () => {
-    const { href, avis, resol } = xatSocDePoble;
-    if (href) {
-      navigate(href);
-      return;
-    }
-    if (avis) showToast(avis);
-    if (typeof resol !== 'function') return;
-    const onEra = ubicacioDeLApp(ubicacio.current);
-    resol().then((xat) => {
-      const vigent = xat?.darrera !== false && muntada.current && ubicacioDeLApp(ubicacio.current) === onEra;
-      if (!vigent) return;
-      if (xat?.href) navigate(xat.href);
-      else if (xat?.avis && xat.avis !== avis) showToast(xat.avis);
-    });
   };
   const comentaEnPublic = () => {
     const ruta = rutaXatPublic();

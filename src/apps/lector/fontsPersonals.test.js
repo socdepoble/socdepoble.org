@@ -2,10 +2,12 @@
 /* Lector de notícies · l'API pública mínima de les fonts personals (SN,
    261003) sobre el magatzem de veres i el navegador fals de P2, amb el port
    de la llavor per a les categories. Adreces d'example.org: cap dada personal. */
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import { afterEach, describe, expect, test } from 'vitest';
 import { creaCanalFals, creaIdbFals, creaLocksFals } from '../../utils/__fixtures__/navegadorFals.js';
 import { creaFontNoticies } from './fontNoticies.js';
-import { TRAMS_GESTIO, creaFontsPersonals, destinacioDe } from './fontsPersonals.js';
+import { TRAMS_GESTIO, creaFontsPersonals, destinacioDe, llevaDelMagatzem } from './fontsPersonals.js';
 import { creaAdaptadorLlavor } from './llavor/fontLlavor.js';
 import { creaMagatzemLector } from './magatzem.js';
 import { idFontPersonal } from './nucli/index.js';
@@ -126,6 +128,33 @@ describe('creaFontsPersonals', () => {
     expect(avisos).toContainEqual({ tipus: 'canvi', store: 'lector', local: false });
     expect(JSON.stringify(canal.enviats)).not.toMatch(/example|Veu/);
     expect((await lector.llegixPersonals()).fonts.map((f) => f.nom)).toEqual(['La Veu']);
+  });
+});
+
+/* Peça C (ordre del Mestre, 261007, prompt 261007_1628) · Una sola
+   implementació de llevar una font personal (llevaDelMagatzem): la de l'API
+   (llevaFontPersonal, amb la guarda del disc) i la de la vista
+   (useFontsPersonals.lleva) hi passen. Abans cadascuna en portava una còpia. */
+describe('llevaDelMagatzem: l’única manera de llevar una font personal', () => {
+  test('lleva en una transacció i torna si l’ha llevada i el registre net', async () => {
+    const { api, obriMagatzem } = prepara();
+    const font = await api.afigFontPersonal({ url: URL_FONT, nom: 'La Veu' });
+    const magatzem = obriMagatzem();
+    vius.push(magatzem);
+    expect(await llevaDelMagatzem(magatzem, font.id)).toMatchObject({ llevada: true, registre: { fonts: [] } });
+    expect(await llevaDelMagatzem(magatzem, font.id)).toMatchObject({ llevada: false, registre: { fonts: [] } });
+    expect(await api.llistaFontsPersonals()).toEqual([]);
+  });
+
+  test('l’API i el hook de la vista la fan servir; cap còpia de la lògica', () => {
+    const llig = (fitxer) => readFileSync(path.join(process.cwd(), 'src/apps/lector', fitxer), 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+    const api = llig('fontsPersonals.js');
+    const vista = llig('useFontsPersonals.js');
+    expect(api.match(/llevaPersonal\(/g)).toHaveLength(1);
+    expect(api).toMatch(/return \(await llevaDelMagatzem\(magatzem, id\)\)\.llevada;/);
+    expect(vista).not.toMatch(/llevaPersonal|actualitzaPersonals/);
+    expect(vista).toMatch(/await llevaDelMagatzem\(magatzem, id\)/);
   });
 });
 

@@ -35,6 +35,12 @@ const PROVES = [
   'src/sections/consola/ConsolaSection.produccio.test.jsx',
   'src/components/universal/richText/extensions/slash.test.js',
   'src/config/navigation.autoria.test.js',
+  /* Relleu 261007 (peça «netes») · Les proves de src/config que cap porta
+     qualitat no vigilava: la de les connexions de navigation.js (al costat
+     de la d'autoria; també la lint tests/lint-sessio.test.mjs, que no corre
+     amb vitest) i la neteja d'exports morts de l'Auditoria 261007 (B). */
+  'src/config/navigation.connectar.test.js',
+  'src/config/contentHelpers.neteja.test.js',
   'src/sections/xat/XatSection.test.jsx',
   'src/sections/admin/AdminSection.amfitrio.test.jsx',
   'src/config/qualitat.amfitrioAdmin.test.js'

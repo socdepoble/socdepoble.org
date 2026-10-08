@@ -6,7 +6,20 @@
  *     hi ha canvis que el servidor encara no té.
  *   · 'sessio'  → el mateix núvol, i el text diu que cal tornar a entrar per a desar-los.
  *   · 'error'   → un avís (triangle): alguna cosa no s'ha pogut desar.
- *   · 'net'     → DESAPAREIX: el servidor ho ha confirmat tot.
+ *   · 'net'     → el servidor ho ha confirmat tot. Ordre del Mestre (261008,
+ *     «confirmació o feedback visual del desat automàtic») · Si abans hi havia
+ *     canvis en camí ('pendent', 'enviant' o 'sessio'), el núvol amb el check
+ *     (CloudCheck), que ES QUEDA fins al canvi següent: la persona té la
+ *     certesa en qualsevol moment, com el «Desat a Drive» de Google Docs. Sense
+ *     cap desat d'esta peça (muntada ja en 'net', o després d'un 'error'
+ *     resolt sense passar per 'enviant'), no pinta res, com abans. Cap
+ *     temporitzador: el check se'n va quan torna un canvi, mai pel rellotge.
+ *     Correcció de la revisió (261008) · Un error temporal (sense xarxa, 5xx)
+ *     el torna a provar la cua sola, i les dues cues passen d'eixe 'error' a
+ *     'net' sense dir mai 'enviant': l'estat sol no distingix eixa confirmació
+ *     d'un descart («Tornar al que hi ha desat», «conservar el remot»). Ho diu
+ *     el consumidor amb `reintentant`: amb ell, eixe 'error' compta com a
+ *     canvis en camí i el pas a 'net' pinta el check; sense, res, com abans.
  * T51 (ordre del Mestre, 260928) · Abans era la ploma (Feather). La ploma
  * queda reservada al botó d'emoticona de l'espai central (EmoticonaBarra):
  * dues plomes alhora a la barra deien dues coses diferents.
@@ -24,10 +37,12 @@
  * EstatDesament les pinta juntes (catàleg de Disseny).
  *
  * CONTRACTE: estat · detall (text; buit = el de l'estat) · accions
- *   [{ text, onClick }] (opcional: les eixides del detall; sense, només «Entesos»).
+ *   [{ text, onClick }] (opcional: les eixides del detall; sense, només «Entesos»)
+ *   · reintentant (opcional, false) · en 'error', la cua el torna a provar sola:
+ *   el pas a 'net' és la confirmació del servidor. No canvia el DOM de l'avís.
  */
 import { useEffect, useRef, useState } from 'react';
-import { CloudUpload, TriangleAlert } from 'lucide-react';
+import { CloudCheck, CloudUpload, TriangleAlert } from 'lucide-react';
 import { Boto } from '../PedraSeca/atoms/Boto.jsx';
 import { Dialeg } from '../PedraSeca/organismes/Dialeg.jsx';
 
@@ -46,6 +61,11 @@ export const TITOL_DETALL_DESAMENT = 'Estat del desament';
 /* Els estats que porten detall: la icona hi és un botó. */
 const AMB_DETALL = Object.freeze(['error', 'sessio']);
 
+/* Ordre del Mestre (261008) · Les fases amb canvis en camí: passar d'una
+   d'elles a 'net' és la confirmació del servidor que pinta el check.
+   'reintent' és un 'error' que la cua torna a provar sola (`reintentant`). */
+const EN_CAMI = Object.freeze(['pendent', 'enviant', 'sessio', 'reintent']);
+
 const estatConegut = (estat) => (Object.hasOwn(TEXTOS_ESTAT_DESAMENT, estat) ? estat : 'pendent');
 const textDe = (estat, detall) => detall || TEXTOS_ESTAT_DESAMENT[estatConegut(estat)];
 
@@ -61,11 +81,23 @@ function controlSeguent(boto) {
     && Boolean(boto.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING)) || null;
 }
 
-/** El que es veu a la barra taronja: el núvol dels canvis pendents, l'avís o res. */
-export function IconaEstatDesament({ estat = 'net', detall = '', accions = null }) {
+/** El que es veu a la barra taronja: el núvol dels canvis pendents, l'avís, el check de desat o res. */
+export function IconaEstatDesament({ estat = 'net', detall = '', accions = null, reintentant = false }) {
   const clau = estatConegut(estat);
   const text = textDe(clau, detall);
   const ambDetall = AMB_DETALL.includes(clau);
+  /* Ordre del Mestre (261008) · La fase anterior i si ja s'ha confirmat un
+     desat. Es deriven en el render (el patró de React per a «l'estat
+     anterior d'una prop»), sense efecte ni temporitzador: el check apareix en
+     el mateix pintat que diu 'net' i se'n va en el mateix que diu 'pendent'.
+     La fase és l'estat, llevat d'un 'error' que es torna a provar sol. */
+  const fase = clau === 'error' && reintentant ? 'reintent' : clau;
+  const [anterior, setAnterior] = useState(fase);
+  const [desat, setDesat] = useState(false);
+  if (anterior !== fase) {
+    setAnterior(fase);
+    setDesat(fase === 'net' && EN_CAMI.includes(anterior));
+  }
   const [obert, setObert] = useState(false);
   /* El botó es queda muntat fins que el focus hi ha tornat, encara que
      l'estat canvie amb el detall obert (p. ex. el reintent arriba i tot és desat). */
@@ -98,6 +130,18 @@ export function IconaEstatDesament({ estat = 'net', detall = '', accions = null 
   }, [obert, retingut, ambDetall]);
 
   const esBoto = ambDetall || obert || retingut;
+  /* Desat i confirmat: el núvol amb el check, amb nom propi (role="img") per
+     a qui recorre la barra amb el lector. La regió viva ja l'ha anunciat.
+     Mentre la classe --desat no tinga regla pròpia, la base el pinta com les
+     altres icones (mateix cercle i mateix blanc). */
+  if (clau === 'net' && !esBoto && desat) {
+    const textDesat = TEXTOS_ESTAT_DESAMENT.net;
+    return (
+      <span className="sdp-estat-desament sdp-estat-desament--desat" role="img" aria-label={textDesat} title={textDesat} data-estat={clau}>
+        <CloudCheck className="icon" aria-hidden="true" focusable="false" />
+      </span>
+    );
+  }
   if (clau === 'net' && !esBoto) return null;
   const Icona = clau === 'error' ? TriangleAlert : CloudUpload;
   const to = clau === 'error' ? 'sdp-estat-desament--avis' : 'sdp-estat-desament--pendent';
@@ -132,11 +176,11 @@ export function IconaEstatDesament({ estat = 'net', detall = '', accions = null 
 }
 
 /** Les dues peces juntes (catàleg). La closca les separa: regió a l'arrel, icona a la barra. */
-export function EstatDesament({ estat = 'net', detall = '', accions = null }) {
+export function EstatDesament({ estat = 'net', detall = '', accions = null, reintentant = false }) {
   return (
     <>
       <RegioEstatDesament estat={estat} detall={detall} />
-      <IconaEstatDesament estat={estat} detall={detall} accions={accions} />
+      <IconaEstatDesament estat={estat} detall={detall} accions={accions} reintentant={reintentant} />
     </>
   );
 }

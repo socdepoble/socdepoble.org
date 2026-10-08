@@ -44,14 +44,18 @@
  * la pista para, diu la foto que es veu.
  *
  * ON VA. A la portada de la Pàgina Universal (PageFrame, ranura
- * topBarData.heroComponent): ItemDetailSection el munta per als productes
- * amb més d'una foto. La primera diapositiva ÉS la portada: no es pinta dues
- * vegades (pla 261006_1140).
+ * topBarData.heroComponent): la munta portadaDElement
+ * (src/sections/detail/detailSectionMeta.jsx) per als productes amb més d'una
+ * foto, des de l'Esmena 3 del pla 261007_1645, i la criden /mercat/:id i el
+ * lector del MAS (PublicacioDetall). La primera diapositiva ÉS la portada: no
+ * es pinta dues vegades (pla 261006_1140).
  *
  * Dins de PedraSeca/, esta peça importa per camí directe (mai per index.js):
- * la porta de dependències circulars de Pedra Seca ho exigix. Qui la munta
- * des de fora de PedraSeca/ (ItemDetailSection, l'espècimen) la pren de la
- * façana, index.js, com qualsevol altra peça.
+ * la porta de dependències circulars de Pedra Seca ho exigix. Des de fora,
+ * l'espècimen la pren de la façana, index.js, com qualsevol altra peça; la
+ * portada (detailSectionMeta.jsx) la importa directa de l'organisme, perquè
+ * elementDeSeccio.js i els seus consumidors no arrosseguen el barril de Pedra
+ * Seca (Esmena 3, qualitat.carrusel.test.js).
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';

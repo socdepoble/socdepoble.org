@@ -15,6 +15,15 @@
    De l'element al model, una sola funció pura (acteAEsdeveniment,
    src/sections/mur/agendaMur.js): qualsevol backend que torne este payload
    funciona igual, i la interfície no llig cap columna com a dia de l'acte. */
+/* Ordre del Mestre (261007) · Forma de loadFils()[], una Conversa del Xat:
+   camp opcional `perDefecte` ('socdepoble' | 'iaia'; absent o null en una
+   conversa de veres). Marca una fila que el backend SINTETITZA perquè tota
+   persona tinga amb qui parlar el primer dia (src/data/xatsPerDefecte.js):
+   no és cap fil del servidor, no té missatges ni marques, el seu id porta el
+   prefix 'sdp-per-defecte:' i no s'ha de passar mai a loadMissatges,
+   enviaMissatge, marcaLlegit ni subscribeToXat. La interfície l'obri per la
+   via de la seua clau, i la fila desapareix quan arriba la conversa real. El
+   kit de conformitat (conformitat/kit.js) no l'usa com a fil. */
 export const CONTRACTE_NUCLI = Object.freeze([
   'loadCoreContent',
   'loadMur',
@@ -50,9 +59,47 @@ export const CONTRACTE_NUCLI = Object.freeze([
   'unsubscribeFromXat'
 ]);
 
+/* Decisió 4 del Mestre (261007) · «Tall de 50 publicacions: CARREGA
+   PROGRESSIVA (LOAD MORE).» Les seccions de loadMur que es paginen, amb la
+   clau de la llista que omplin a la seua resposta. Una sola font per a
+   l'adaptador, el kit de conformitat i MurContext. Multimèdia i Notes no hi
+   són: Notes té la seua capacitat (paginacioNotes) i Multimèdia no és d'esta
+   ordre. */
+export const SECCIONS_PAGINABLES = Object.freeze({
+  mur: 'feedPosts',
+  events: 'events',
+  mercat: 'marketItems'
+});
+
 export const CAPACITATS = Object.freeze({
   sessioExterna: Object.freeze(['adoptaSessioExterna']),
   paginacioNotes: Object.freeze(['loadNotesPage']),
+  /* Decisió 4 del Mestre (261007) · «Carregar-ne més» al Mur i al Mercat
+     (ADR-2026-11-PAGINACIO-SECCIONS). Opcional a posta: un backend sense ella
+     continua sent vàlid, loadMur torna la primera pàgina com sempre i la
+     interfície no pinta el botó. La interfície ho pregunta amb
+     teCapacitat('paginacioSeccions'). Formes:
+       loadMur(ownerUserId, config) → { feedPosts[], events[], marketItems[],
+         paginacio? }. `paginacio` és ADDITIU i opcional: { [seccio]: cursor }
+         només per a les seccions de SECCIONS_PAGINABLES que tenen més files
+         després de la primera pàgina. L'absència del camp o de la clau vol
+         dir que la secció és completa. El cursor és opac: només l'adaptador
+         que l'ha emés el sap llegir.
+       loadSeccioPage({ seccio, cursor, limit, signal }, config) →
+         { elements[], complete, nextCursor }. La pàgina següent de les
+         publicacions dels veïns de la secció, amb el mateix mapatge que la
+         primera pàgina de loadMur i en el mateix ordre (de més nova a més
+         vella, estable amb empats). `limit` ≤ 50 (per defecte, 50). El
+         contingut de l'administració només va a la primera pàgina. complete
+         i nextCursor null van junts. Sense servidor (mode de proves), cap
+         pàgina més: { elements: [], complete: true, nextCursor: null }.
+         Relleu 261008 (revisió adversarial) · `cursor: null` vol dir des de
+         la publicació més nova dels veïns de la secció, sense el contingut
+         de l'administració: pot solapar-se amb la primera pàgina de loadMur,
+         i la interfície fusiona per id. Una
+         `seccio` que no és de SECCIONS_PAGINABLES rebutja amb un Error. El
+         kit de conformitat comprova tots dos casos. */
+  paginacioSeccions: Object.freeze(['loadSeccioPage']),
   admin: Object.freeze([
     'adminListUsers',
     'adminListOrganizations'
@@ -170,6 +217,33 @@ export const CAPACITATS = Object.freeze({
   recuperacioContrasenya: Object.freeze([
     'demanaRecuperacioContrasenya',
     'definixContrasenyaNova'
+  ]),
+  /* Ordre del Mestre (261008, grup C) · Els membres d'una organització.
+     Opcional a posta: un backend sense ella continua sent vàlid i el Perfil
+     no pinta la gestió de membres ni «Eixir». La interfície ho pregunta amb
+     teCapacitat('membresOrganitzacio'). Formes (config sempre l'últim):
+       llistaMembresOrganitzacio(orgId, config) → Promise<Membre[]>
+         Només per a qui administra l'organització (owner o admin).
+       desaMembreOrganitzacio(orgId, { tipus, id, rol }, config) → Promise<Membre>
+         Alta directa (sense invitació) o canvi de rol. rol per defecte
+         'member'; una persona pot ser 'member' o 'admin', mai 'owner'; una
+         organització, només 'member'.
+       llevaMembreOrganitzacio(orgId, { tipus, id }, config) → Promise<{ llevat }>
+         Idempotent: llevat false si ja no hi era. Amb el propi id i tipus
+         'persona', és «Eixir», també per a qui només és membre.
+     Membre: { tipus: 'persona' | 'organitzacio', id, nom, avatar,
+     rol: 'owner' | 'admin' | 'member', desDe (ISO o null) }.
+     Regles (decisions del Mestre, 261008), iguals a tots els adaptadors: la
+     persona és del poble i no ha demanat la baixa; ningú canvia el seu propi
+     rol; la propietària no es canvia ni es lleva; només ella nomena, degrada
+     o lleva administradores; una organització membre és del mateix poble, no
+     és ella mateixa, l'afig qui administra totes dues i no hereta cap permís.
+     Els errors porten `code`: els de MISSATGES_MEMBRES_ORGANITZACIO, o
+     NO-DISPONIBLE si el servidor encara no té l'esquema. */
+  membresOrganitzacio: Object.freeze([
+    'llistaMembresOrganitzacio',
+    'desaMembreOrganitzacio',
+    'llevaMembreOrganitzacio'
   ])
 });
 
@@ -278,4 +352,45 @@ export function subjecteDeXat(objecte) {
   if (tipus === 'pagina' && !(ruta === id && Object.hasOwn(PAGINES_AMB_XAT, id))) return null;
   const titol = String(objecte.titol ?? '').trim().slice(0, MAXIM_TITOL_FIL) || null;
   return { tipus, id, ruta, titol, classe };
+}
+
+/* ── Ordre del Mestre (261008, grup C) · Els membres d'una organització ──
+   Una sola taula de codis i una sola regla d'entrada per a tots els
+   adaptadors de 'membresOrganitzacio' (Supabase, la llavor i qualsevol node
+   federat), com TIPUS_SUBJECTE_XAT: la interfície decidix pel `code`, mai
+   pel text. Els codis són els de les RPC de
+   supabase/migrations/2610081402_membres_organitzacio.sql, i
+   tests/migracio-membres-organitzacio.test.mjs els contrasta. */
+export const MISSATGES_MEMBRES_ORGANITZACIO = Object.freeze({
+  'SDP-ORGMEM-000': 'Cal iniciar sessió.',
+  'SDP-ORGMEM-001': 'El tipus de membre o el rol no és vàlid.',
+  'SDP-ORGMEM-002': 'Només qui administra l’organització en veu i en gestiona els membres.',
+  'SDP-ORGMEM-003': 'Esta persona no és del poble de l’organització o ha demanat la baixa.',
+  'SDP-ORGMEM-004': 'No pots canviar el teu propi rol.',
+  'SDP-ORGMEM-005': 'La propietària no es canvia ni es lleva.',
+  'SDP-ORGMEM-006': 'Només la propietària nomena, degrada o lleva administradores.',
+  'SDP-ORGMEM-007': 'Una organització no pot ser membre d’ella mateixa ni d’una d’un altre poble.',
+  'SDP-ORGMEM-008': 'Per a afegir una organització com a membre, cal que també l’administres.'
+});
+
+/** Un Error amb el `code` i el missatge de MISSATGES_MEMBRES_ORGANITZACIO. Pura. */
+export function errorDeMembre(codi, cause) {
+  return Object.assign(new Error(MISSATGES_MEMBRES_ORGANITZACIO[codi] || 'No s’han pogut desar els membres.'),
+    { code: codi, ...(cause ? { cause } : {}) });
+}
+
+/**
+ * El membre que es vol desar ({ tipus, id, rol }) o llevar ({ tipus, id },
+ * amb `ambRol: false`), normalitzat; si no és vàlid, llança SDP-ORGMEM-001.
+ * El rol per defecte és 'member'; una persona pot ser 'member' o 'admin' (mai
+ * 'owner': la propietària no es nomena ací) i una organització, només 'member'.
+ * No valida la forma de l'id: cada adaptador sap quins ids són seus. Pura.
+ */
+export function membreDOrganitzacio(dades, { ambRol = true } = {}) {
+  const tipus = String(dades?.tipus ?? '').trim();
+  const id = String(dades?.id ?? '').trim();
+  const rol = String(dades?.rol ?? '').trim() || 'member';
+  const rolValid = !ambRol || (tipus === 'persona' ? rol === 'member' || rol === 'admin' : rol === 'member');
+  if ((tipus !== 'persona' && tipus !== 'organitzacio') || !id || !rolValid) throw errorDeMembre('SDP-ORGMEM-001');
+  return ambRol ? { tipus, id, rol } : { tipus, id };
 }

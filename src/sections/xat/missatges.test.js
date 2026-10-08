@@ -14,8 +14,11 @@ import {
   esSilenciat,
   esperaReintent,
   estatDeLUltim,
+  filIgual,
+  filsEquivalents,
   fusionaPerSeq,
   generaId,
+  interromEnviaments,
   mapejaFil,
   mapejaMissatge,
   retiraConfirmats,
@@ -303,8 +306,29 @@ describe('pendents', () => {
     expect(retiraConfirmats(sense, 'f', [m('altre', 8)])).toBe(sense);
     expect(retiraConfirmats(sense, 'g', [m('p2', 8)])).toBe(sense);
   });
+
+  /* Decisió 1 del Mestre (261007) · «Bombolles del xat: S'HAN DE CONSERVAR».
+     Una renovació del JWT avorta els enviaments en vol: passen a error amb el
+     text i l'id intactes, i les que ja eren en error no es toquen. */
+  it('interromEnviaments passa a error els pendents en vol i deixa la resta tal com estava', () => {
+    let mapa = afigPendent({}, 'f', m('p1', null, { estatEnviament: 'pendent', text: 'en vol', respostaA: 'm-0', error: null }));
+    mapa = afigPendent(mapa, 'f', m('p2', null, { estatEnviament: 'error', text: 'ja fallit', error: 'xarxa' }));
+    mapa = afigPendent(mapa, 'g', m('p3', null, { estatEnviament: 'error', text: 'altre fil', error: 'xarxa' }));
+    const interromput = interromEnviaments(mapa);
+    expect(interromput.f[0]).toEqual({ ...mapa.f[0], estatEnviament: 'error', error: null });
+    expect(interromput.f[1]).toBe(mapa.f[1]);
+    expect(interromput.g).toBe(mapa.g);
+    expect(trobaPendent(interromput, 'p1').missatge).toMatchObject({ id: 'p1', text: 'en vol', respostaA: 'm-0' });
+    /* Sense cap en vol, el mateix mapa: cap render per a res. */
+    expect(interromEnviaments(interromput)).toBe(interromput);
+    expect(interromEnviaments({})).toEqual({});
+  });
 });
 
+/* Auditoria 261007 (B) · Les comprovacions de «fins on» llegixen marcatFins
+   (pendent, en vol o confirmada) després de buidar el temporitzador: amb cap
+   marca pendent, és el valor confirmat o en vol que llegia `enviatFins`, un
+   accessor que només cridaven estes proves i s'ha llevat. */
 describe('creaAgrupadorMarques', () => {
   function rellotge() {
     const cua = [];
@@ -333,7 +357,7 @@ describe('creaAgrupadorMarques', () => {
     r.dispara();
     expect(envia).toHaveBeenCalledTimes(1);
     expect(envia).toHaveBeenCalledWith('f', 5);
-    expect(agrupador.enviatFins('f')).toBe(5);
+    expect(agrupador.marcatFins('f')).toBe(5);
     expect(agrupador.marca('f', 2)).toBe(false);
     expect(agrupador.marca('f', 5)).toBe(false);
     expect(r.quants()).toBe(0);
@@ -356,6 +380,109 @@ describe('creaAgrupadorMarques', () => {
     expect(r.quants()).toBe(0);
     r.dispara();
     expect(envia).not.toHaveBeenCalled();
-    expect(agrupador.enviatFins('f')).toBe(0);
+    expect(agrupador.marcatFins('f')).toBe(0);
+  });
+
+  /* Auditoria 261007 (B) · Una marca fallida no queda com a enviada. */
+  it('una marca que falla s’oblida: la mateixa lectura es torna a acceptar i a enviar', async () => {
+    const envia = vi.fn().mockRejectedValueOnce(new Error('xarxa')).mockResolvedValue({ llegitFinsSeq: 15 });
+    const r = rellotge();
+    const agrupador = creaAgrupadorMarques(envia, 2000, r.temps);
+    expect(agrupador.marca('f', 15)).toBe(true);
+    expect(agrupador.marcatFins('f')).toBe(15);
+    r.dispara();
+    /* En vol: ni es repetix ni es deixa caure. */
+    expect(agrupador.marca('f', 15)).toBe(false);
+    expect(agrupador.marcatFins('f')).toBe(15);
+    await Promise.resolve(); await Promise.resolve();
+    expect(agrupador.marcatFins('f')).toBe(0);
+    expect(agrupador.marca('f', 15)).toBe(true);
+    r.dispara();
+    expect(envia).toHaveBeenCalledTimes(2);
+    expect(envia).toHaveBeenLastCalledWith('f', 15);
+    await Promise.resolve(); await Promise.resolve();
+    expect(agrupador.marcatFins('f')).toBe(15);
+    expect(agrupador.marca('f', 15)).toBe(false);
+  });
+
+  it('una marca en vol que falla no esborra la confirmada ni una de més alta que ja vola', async () => {
+    let falla;
+    const envia = vi.fn()
+      .mockResolvedValueOnce({})
+      .mockReturnValueOnce(new Promise((_, rebutja) => { falla = rebutja; }))
+      .mockResolvedValueOnce({});
+    const r = rellotge();
+    const agrupador = creaAgrupadorMarques(envia, 2000, r.temps);
+    agrupador.marca('f', 5); r.dispara();
+    await Promise.resolve(); await Promise.resolve();
+    expect(agrupador.marcatFins('f')).toBe(5);
+    agrupador.marca('f', 8); r.dispara();
+    agrupador.marca('f', 9); r.dispara();
+    falla(new Error('xarxa'));
+    await Promise.resolve(); await Promise.resolve();
+    expect(agrupador.marcatFins('f')).toBe(9);
+    expect(agrupador.marca('f', 6)).toBe(false);
+  });
+
+  it('una resposta tardana d’abans de cancela no escriu res en l’àmbit nou', async () => {
+    let resol;
+    const envia = vi.fn().mockReturnValueOnce(new Promise((ok) => { resol = ok; }));
+    const r = rellotge();
+    const agrupador = creaAgrupadorMarques(envia, 2000, r.temps);
+    agrupador.marca('f', 7); r.dispara();
+    agrupador.cancela();
+    resol({});
+    await Promise.resolve(); await Promise.resolve();
+    expect(agrupador.marcatFins('f')).toBe(0);
+    expect(agrupador.marca('f', 7)).toBe(true);
+  });
+
+  it('un envia que llança de manera síncrona compta com a fallada', async () => {
+    const envia = vi.fn(() => { throw new Error('síncron'); });
+    const r = rellotge();
+    const agrupador = creaAgrupadorMarques(envia, 2000, r.temps);
+    agrupador.marca('f', 4); r.dispara();
+    await Promise.resolve(); await Promise.resolve();
+    expect(agrupador.marcatFins('f')).toBe(0);
+    expect(agrupador.marca('f', 4)).toBe(true);
+  });
+});
+
+/* Auditoria 261007 (B) · El sondeig de la llista no crida setFils si res no ha canviat. */
+describe('filIgual i filsEquivalents', () => {
+  const brut = (extra = {}) => ({
+    id: 'f', titol: 'Pepa', altresNoms: ['Pepa'], altres: [{ id: 'P', nom: 'Pepa' }], subjecte: { tipus: 'pagina', id: '/mur' },
+    ultimSeq: 3, llegitFinsSeq: 1, ...extra
+  });
+
+  it('dos mapejos de la mateixa fila són iguals encara que les llistes i el subjecte siguen objectes nous', () => {
+    const ara = Date.UTC(2026, 9, 7);
+    const a = mapejaFil(brut(), ara);
+    const b = mapejaFil(brut(), ara);
+    expect(a.altres).not.toBe(b.altres);
+    expect(filIgual(a, b)).toBe(true);
+    expect(filsEquivalents([a], [b])).toBe(true);
+  });
+
+  it('qualsevol camp que es pinta els fa diferents, també el silenci que caduca amb l’hora', () => {
+    const ara = Date.UTC(2026, 9, 7);
+    const base = mapejaFil(brut(), ara);
+    expect(filIgual(base, mapejaFil(brut({ ultimSeq: 4 }), ara))).toBe(false);
+    expect(filIgual(base, mapejaFil(brut({ altres: [{ id: 'P', nom: 'Pepa Soler' }] }), ara))).toBe(false);
+    expect(filIgual(base, mapejaFil(brut({ subjecte: { tipus: 'pagina', id: '/mercat' } }), ara))).toBe(false);
+    const silenciat = brut({ silenciatFinsAl: new Date(ara + 1000).toISOString() });
+    expect(filIgual(mapejaFil(silenciat, ara), mapejaFil(silenciat, ara + 2000))).toBe(false);
+    expect(filIgual(base, { ...base, extra: true })).toBe(false);
+  });
+
+  it('l’ordre i la llargària compten', () => {
+    const ara = Date.UTC(2026, 9, 7);
+    const a = mapejaFil(brut({ id: 'a' }), ara);
+    const b = mapejaFil(brut({ id: 'b' }), ara);
+    expect(filsEquivalents([a, b], [a, b])).toBe(true);
+    expect(filsEquivalents([a, b], [b, a])).toBe(false);
+    expect(filsEquivalents([a], [a, b])).toBe(false);
+    expect(filsEquivalents([], [])).toBe(true);
+    expect(filsEquivalents(null, [])).toBe(false);
   });
 });

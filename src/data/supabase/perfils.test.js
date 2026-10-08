@@ -16,6 +16,49 @@ test('només una organització confirmada pel servidor proporciona la identitat 
   expect(await loadPerfilPublic('soc-de-poble')).toMatchObject({ id: 'org-real', nom: 'Sóc de Poble', tipus: 'entitat' });
 });
 
+/* Ordre del Mestre (261007, prompt 261007_1628, peça C) · Un slug és únic dins
+   d'un poble, no entre pobles: amb el poble actiu a la configuració, la cerca
+   per slug s'hi limita; sense, la forma d'abans. L'id no es limita. */
+const POBLE = '33333333-3c3c-4000-8000-000000000000';
+const rutesDelDirectori = () => m.request.mock.calls.map(([ruta]) => ruta).filter((ruta) => ruta.includes('organization_directory'));
+
+test('peça C · amb el poble actiu, la cerca per slug filtra per tenant_id', async () => {
+  m.request.mockResolvedValue([{ id: 'org-real', name: 'Sóc de Poble', slug: 'socdepoble', kind: 'company' }]);
+  expect(await loadPerfilPublic('socdepoble', { tenantId: POBLE })).toMatchObject({ id: 'org-real', tipus: 'entitat' });
+  expect(rutesDelDirectori()).toEqual([`/rest/v1/organization_directory?select=*&slug=eq.socdepoble&tenant_id=eq.${POBLE}&limit=1`]);
+});
+
+test('peça C · sense poble a la configuració, la cerca per slug és la d’abans', async () => {
+  await loadPerfilPublic('socdepoble');
+  expect(rutesDelDirectori()).toEqual(['/rest/v1/organization_directory?select=*&slug=eq.socdepoble&limit=1']);
+});
+
+test('peça C · el poble i el slug van codificats: res no s’escapa de la consulta', async () => {
+  await loadPerfilPublic('forn&tenant_id=eq.x', { tenantId: 'poble&slug=eq.y' });
+  expect(rutesDelDirectori()).toEqual([
+    '/rest/v1/organization_directory?select=*&slug=eq.forn%26tenant_id%3Deq.x&tenant_id=eq.poble%26slug%3Deq.y&limit=1'
+  ]);
+});
+
+/* Esmena de la revisió adversarial de la peça C · Amb una clau en forma
+   d'UUID, l'id continua sense límit (és únic a tot el servidor), però la
+   meitat del slug sí que es limita al poble: el check de organizations admet
+   un slug amb forma d'UUID en minúscules, i `limit=1` podia tornar l'homònim
+   d'un altre poble. */
+test('peça C · la cerca per id no es limita al poble; la meitat del slug, sí', async () => {
+  const id = '44444444-4d4d-4000-8000-000000000000';
+  await loadPerfilPublic(id, { tenantId: POBLE });
+  expect(rutesDelDirectori()).toEqual([
+    `/rest/v1/organization_directory?select=*&or=(id.eq.${id},and(slug.eq.${id},tenant_id.eq.${POBLE}))&limit=1`
+  ]);
+});
+
+test('peça C · clau en forma d’UUID sense poble a la configuració: la cerca doble d’abans', async () => {
+  const id = '44444444-4d4d-4000-8000-000000000000';
+  await loadPerfilPublic(id);
+  expect(rutesDelDirectori()).toEqual([`/rest/v1/organization_directory?select=*&or=(id.eq.${id},slug.eq.${id})&limit=1`]);
+});
+
 /* T51 · Cap document sense data: la fitxa pública porta la creació i l'última
    modificació de la fila (la vista i la taula les tenen). */
 test('T51 · una organització del directori porta created_at i updated_at com a creat i modificat', async () => {
@@ -24,6 +67,30 @@ test('T51 · una organització del directori porta created_at i updated_at com a
   expect(await loadPerfilPublic('forn')).toMatchObject({ creat: '2026-08-01T09:00:00+00:00', modificat: '2026-09-27T17:30:00+00:00' });
   // Sense les columnes (una vista d'abans), res inventat.
   expect(perfilDOrganitzacio({ id: 'o', name: 'Forn' })).toMatchObject({ creat: null, modificat: null });
+});
+
+/* Auditoria 261007 (B) · El copyright d'una entitat es desa (organizations.js)
+   i la vista el porta: la fitxa pública remota l'ha de llegir. Sense la
+   columna (vista d'abans) o sense tria, buit, i la pàgina hi posa «© nom». */
+test('contracte · una organització del directori porta el copyright triat; sense columna o sense tria, buit', async () => {
+  const drets = 'CC BY-SA 4.0 · Forn de la Torre';
+  expect(perfilDOrganitzacio({ id: 'o', name: 'Forn', copyright: drets }).copyright).toBe(drets);
+  expect(perfilDOrganitzacio({ id: 'o', name: 'Forn' }).copyright).toBe('');
+  expect(perfilDOrganitzacio({ id: 'o', name: 'Forn', copyright: null }).copyright).toBe('');
+  expect(perfilDOrganitzacio({ id: 'o', name: 'Forn', copyright: '' }).copyright).toBe('');
+  m.request.mockResolvedValue([{ id: 'org-real', name: 'Forn', slug: 'forn', kind: 'company', copyright: drets }]);
+  expect(await loadPerfilPublic('forn')).toMatchObject({ tipus: 'entitat', copyright: drets });
+});
+
+/* Ordre del Mestre (261008, grup C) · El poble d'una organització (columna
+   town_name de la vista, 2610081401): la fitxa pública el porta. Sense la
+   columna (vista d'abans) o sense tria, buit com abans. */
+test('grup C · una organització del directori porta el seu poble; sense columna o sense tria, buit', async () => {
+  expect(perfilDOrganitzacio({ id: 'o', name: 'El Rentonar', town_name: 'La Torre de les Maçanes' }).poble).toBe('La Torre de les Maçanes');
+  expect(perfilDOrganitzacio({ id: 'o', name: 'El Rentonar' }).poble).toBe('');
+  expect(perfilDOrganitzacio({ id: 'o', name: 'El Rentonar', town_name: null }).poble).toBe('');
+  m.request.mockResolvedValue([{ id: 'org-real', name: 'El Rentonar', slug: 'rentonar', kind: 'group', town_name: 'Relleu' }]);
+  expect(await loadPerfilPublic('rentonar')).toMatchObject({ tipus: 'grup', poble: 'Relleu' });
 });
 
 test('T51 · la fitxa pròpia (profiles) porta created_at i updated_at com a creat i modificat', async () => {

@@ -3,7 +3,9 @@ import { act, cleanup, render } from '@testing-library/react';
 import { afterEach, expect, test, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({ model: null, props: null, obri: () => {}, creaNota: null, memberships: undefined, params: new URLSearchParams('nota=n1'), note: { id: 'n1', folderId: 'f-mur', categories: ['Sistema'], tags: ['Tutorial'], formattedDate: '02/01/26', formattedTime: '09:37', updatedAt: '2026-01-02T08:37:00Z' },
   noteFolders: [{ id: 'f-mur', name: 'Mur' }],
-  actor: { tipus: 'entitat', id: 'socdepoble', slug: 'soc-de-poble', rol: 'owner' },
+  /* L'entitat pilot amb el seu slug declarat: vi.hoisted no veu els imports,
+     i l'actor el posa actorEntitatPilot() (ENTITAT_PILOT_SLUG), més avall. */
+  actor: null,
   /* P4 · la sessió i el mode de dades de la regla d'entrada; el canal de la nota preparada. */
   config: { dataMode: 'seed' }, teSessio: undefined, canCreate: true, preparada: null,
   mercat: [
@@ -47,6 +49,12 @@ import { PublicacioFitxa } from './PublicacioDetall.jsx';
 import { etiquetesDeNota } from './NotesContext';
 import { desaLlicenciaPerDefecte } from '../../components/universal/drets/herencia.js';
 import { LLICENCIA_PER_DEFECTE } from '../../components/universal/drets/llicencies.js';
+import { ENTITAT_PILOT_SLUG } from '../../data/identitatsSeed.js';
+/* Esmena de la peça dades-netes (261007) · El slug de l'entitat pilot ve de
+   la font única (ENTITAT_PILOT_SLUG, 'socdepoble' des de l'ordre del Mestre
+   del 261007), no d'un literal que ja no és cap slug declarat. */
+const actorEntitatPilot = () => ({ tipus: 'entitat', id: 'socdepoble', slug: ENTITAT_PILOT_SLUG, rol: 'owner' });
+mocks.actor = actorEntitatPilot();
 afterEach(cleanup);
 test('el model de la llista comparteix labels editorials i data amb la nota de l’editor', () => {
   render(<NotesSection />);
@@ -85,7 +93,7 @@ test('T1 · com a persona, l’article de l’entitat no és seu i el de la pers
     render(<NotesSection />);
     expect(mocks.model.items.filter((item) => item.kind === 'publicacio').map((item) => item.title)).toEqual(['Mac Mini']);
   } finally {
-    mocks.actor = { tipus: 'entitat', id: 'socdepoble', slug: 'soc-de-poble', rol: 'owner' };
+    mocks.actor = actorEntitatPilot();
   }
 });
 

@@ -7,10 +7,11 @@
  *    d'emmagatzematge, com una pestanya duplicada: han de resoldre l'id
  *    repetit, vore's, connectar, parlar-se i desconnectar-se. El canal és el
  *    doble en memòria de BroadcastChannel. */
-import { cleanup, fireEvent, render, waitFor, within } from '@testing-library/react';
+import { Profiler } from 'react';
+import { act, cleanup, fireEvent, render, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { getVal, setVal } from '../../config/storage.js';
-import { CanalFals } from './__fixtures__/canalFals.js';
+import { CanalFals, buida } from './__fixtures__/canalFals.js';
 import { loadDeviceChats } from './devicesRuntime.js';
 import DevicesSection from './DevicesSection';
 
@@ -55,6 +56,7 @@ beforeEach(() => {
 
 afterEach(() => {
   cleanup();
+  vi.useRealTimers();
   vi.unstubAllGlobals();
 });
 
@@ -177,4 +179,42 @@ test('dues instàncies (pestanya duplicada): resolen l’id, es veuen, connecten
   expect(within(targetaDeD).getByRole('button', { name: /Connectar/ })).toBeTruthy();
   await waitFor(() => expect(within(targetaDeU).getByText('Disponible')).toBeTruthy());
   expect(loadDeviceChats('t-prova', idComplet(idD))[idComplet(idU)].at(-1).text).toBe('La connexió s’ha tancat.');
+});
+
+/* Auditoria 261007 (B) · El tic de 4 s només torna a pintar quan algun
+   dispositiu creua un llindar: sense canvis, cap pintat; un dispositiu que
+   calla continua desapareixent entre 16 i 20 s (PRESENCE_STALE_MS). */
+test('un dispositiu silenciós desapareix entre 16 i 20 s, i el tic no pinta si no canvia res', async () => {
+  vi.useFakeTimers();
+  let pintats = 0;
+  const { container } = render(
+    <Profiler id="dispositius" onRender={() => { pintats += 1; }}>
+      <DevicesSection />
+    </Profiler>
+  );
+  await act(async () => { await buida(); });
+
+  // Sense cap dispositiu, els tics no tornen a pintar.
+  const abansBuit = pintats;
+  await act(async () => { vi.advanceTimersByTime(8000); await buida(); });
+  expect(pintats).toBe(abansBuit);
+
+  const alie = new CanalFals('socdepoble-device-bridge-v1::t-prova');
+  await act(async () => {
+    alie.postMessage({ type: 'presence:announce', device: { id: 'alie-0001-silencios', name: 'Tauleta silenciosa', kind: 'portal' } });
+    await buida();
+  });
+  expect(within(container).getByText('Tauleta silenciosa')).toBeTruthy();
+
+  // Fins als 15 s continua visible i els tics no tornen a pintar res.
+  const abansVisible = pintats;
+  await act(async () => { vi.advanceTimersByTime(15000); await buida(); });
+  expect(within(container).queryByText('Tauleta silenciosa')).not.toBeNull();
+  expect(pintats).toBe(abansVisible);
+
+  // Als 20 s ja no hi és.
+  await act(async () => { vi.advanceTimersByTime(5000); await buida(); });
+  expect(within(container).queryByText('Tauleta silenciosa')).toBeNull();
+  expect(within(container).getByText(BUIT)).toBeTruthy();
+  alie.close();
 });

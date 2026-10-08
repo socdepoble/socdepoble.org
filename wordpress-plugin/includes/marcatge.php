@@ -211,6 +211,12 @@ function socdepoble_enxufe_declara_amfitrio() {
  * respon que el bundle es servix amb Access-Control-Allow-Origin. L'empremta
  * és al manifest per a qualsevol amfitrió, WordPress inclòs.
  *
+ * Decisió 5 del Mestre (261007): en el paquet trossejat, l'empremta i este
+ * atribut fixen NOMÉS el carregador. Els trossos de dist/trossos/ es demanen
+ * com a mòduls JavaScript (sempre en mode CORS: si canvien d'origen, cal
+ * Access-Control-Allow-Origin) i el navegador no en verifica el contingut;
+ * l'inventari signat de la release els cobrix en el desplegament.
+ *
  * @param string $etiqueta HTML de l'etiqueta (pot portar abans l'script en línia).
  * @param string $handle   Handle de l'script.
  * @param string $src      URL de l'script.
@@ -266,12 +272,24 @@ function socdepoble_enxufe_element( $instancia = array(), $amb_serveis = true ) 
 }
 
 /**
- * Cert si el bundle és al paquet.
+ * Cert si el paquet és sencer: el bundle i, si el manifest declara el paquet
+ * trossejat (decisió 5 del Mestre, 261007), també el seu mòdul d'entrada ESM.
+ * Ara el bundle és el carregador clàssic, i sense el mòdul que demana l'App
+ * no arrenca: un paquet sense els seus trossos dona el mateix avís d'edició
+ * i la mateixa Salut crítica que un paquet sense bundle.
  *
  * @return bool
  */
 function socdepoble_enxufe_te_bundle() {
-	return file_exists( plugin_dir_path( SOCDEPOBLE_ENXUFE_FITXER ) . SOCDEPOBLE_ENXUFE_BUNDLE );
+	$arrel = plugin_dir_path( SOCDEPOBLE_ENXUFE_FITXER );
+	if ( ! file_exists( $arrel . SOCDEPOBLE_ENXUFE_BUNDLE ) ) {
+		return false;
+	}
+	$manifest = socdepoble_enxufe_manifest_local();
+	if ( ! isset( $manifest['formatDelPaquet']['modul'] ) ) {
+		return true;
+	}
+	return file_exists( $arrel . dirname( SOCDEPOBLE_ENXUFE_BUNDLE ) . '/' . $manifest['formatDelPaquet']['modul'] );
 }
 
 /**
@@ -371,9 +389,15 @@ add_action( 'init', 'socdepoble_enxufe_registra_entrades' );
  * El marcatge de referència per a qualsevol altre amfitrió, amb la
  * configuració actual: les tres peces que este plugin fa arribar a la pàgina
  * (WordPress hi afig ?ver=). La pàgina d'ajustos el mostra per a copiar-lo
- * (Sollutia, pàgina estàtica). Sense integrity ni crossorigin: qui el copia
- * pot servir el bundle des d'un altre origen sense CORS; l'empremta és a la
- * diagnosi i al manifest.
+ * (Sollutia, pàgina estàtica). Sense integrity ni crossorigin: l'etiqueta del
+ * paquet monolític es pot servir des d'un altre origen sense CORS; l'empremta
+ * és a la diagnosi i al manifest. Decisió 5 del Mestre (261007): el paquet
+ * trossejat demana dist/trossos/ com a mòduls, i un altre origen sí que
+ * necessita CORS; ho diu una sola línia de comentari HTML, en anglés com la
+ * de WordPress. Les tres peces del marcatge no canvien. Relleu 261007 · la
+ * mateixa línia demana servir dist/ sense redireccions: si el mòdul d'entrada
+ * es redirigix, els trossos el tornen a avaluar i la pàgina acaba amb dues Apps
+ * (comprovaUrlDelModul, src/config/provisionalDelPaquet.js, ho diu a la consola).
  *
  * @return string Text pla (s'ha d'escapar en imprimir-lo).
  */
@@ -382,7 +406,10 @@ function socdepoble_enxufe_marcatge_de_referencia() {
 	if ( 'wordpress' === ( $manifest['runtime']['amfitrio'] ?? null ) ) {
 		return '<!-- WordPress runtime: React, ReactDOM, ReactJSXRuntime. For other hosts, use the autonomous distribution for version ' . $manifest['versio'] . ' and its release manifest. -->';
 	}
-	$linies     = array();
+	$linies = array();
+	if ( 'trossos' === ( $manifest['formatDelPaquet']['format'] ?? null ) ) {
+		$linies[] = '<!-- dist/trossos/ loads as JavaScript modules: serve dist/ without redirects, from the page origin or with Access-Control-Allow-Origin. -->';
+	}
 	$declaracio = socdepoble_enxufe_declaracio_amfitrio();
 	if ( '' !== $declaracio ) {
 		$linies[] = '<script>' . $declaracio . '</script>';

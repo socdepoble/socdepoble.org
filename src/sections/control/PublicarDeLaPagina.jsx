@@ -1,15 +1,18 @@
 /**
  * PublicarDeLaPagina.jsx — P6 · Onada 4, sisena passada (directriu
  * 261003_2325 del Mestre, confirmació 4) · El gran botó blau «Publicar» al
- * final de les sis UniversalPage de la doble acció (/page/publicar_mur,
- * publicar_mercat, publicar_calendari, publicar_mapa, vehicle_compartit i
- * animalets). Qui ja ha llegit què passarà si publica, publica d'ací mateix.
+ * final de les UniversalPage de la doble acció (/page/publicar_mur,
+ * publicar_mercat, publicar_calendari, publicar_mapa, vehicle_compartit,
+ * animalets, treball i habitatge). Qui ja ha llegit què passarà si publica,
+ * publica d'ací mateix. Peça C (ordre del Mestre, 261007, prompt
+ * 261007_1628) · Són vuit (DESTINS_CONTROL): les sis de P6 i, des del W4-08
+ * (261004), Treball i Habitatge. Abans esta capçalera en deia sis.
  *
  *  · Una sola font: el destí és el de la porta «Publicar» de la targeta
  *    (destinsControl.js · destiDePagina i portesDe), amb el mateix nom
  *    accessible i el mateix avís. Cap segona taula ni cap ruta fictícia.
  *  · El Mur porta al Bloc (/notes) amb el router de l'app (Link, amb la base
- *    de l'amfitrió); les altres cinc encara no tenen editor: el botó és inert
+ *    de l'amfitrió); les altres set encara no tenen editor: el botó és inert
  *    (aria-disabled, «(en obres)» al nom) i en prémer-lo ho diu amb el toast.
  *  · TextSection el pinta davall del text (children): és React, no HTML, i
  *    cap handler viatja dins de la cadena sanejada.

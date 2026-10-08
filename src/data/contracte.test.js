@@ -1,7 +1,8 @@
 import { describe, expect, it, test } from 'vitest';
 import * as port from './backendPort.js';
 import {
-  CAPACITATS, CONTRACTE_BACKEND, CONTRACTE_NUCLI, PAGINES_AMB_XAT, TIPUS_SUBJECTE_XAT, rutaDeSubjecte, subjecteDeXat
+  CAPACITATS, CONTRACTE_BACKEND, CONTRACTE_NUCLI, MISSATGES_MEMBRES_ORGANITZACIO, PAGINES_AMB_XAT, TIPUS_SUBJECTE_XAT,
+  errorDeMembre, membreDOrganitzacio, rutaDeSubjecte, subjecteDeXat
 } from './contracte.js';
 import { SECTION_ORDER, SECTIONS } from '../config/sections.js';
 /* L'adaptador Supabase sencer es valida a supabase/index.test.js: E1 de
@@ -214,6 +215,62 @@ test('R · un backend injectat sense recuperacioContrasenya continua sent vàlid
   expect(port.teCapacitat('recuperacioContrasenya')).toBe(true);
   expect(port.demanaRecuperacioContrasenya('a@poble.test')).toBe('demanaRecuperacioContrasenya');
   expect(port.definixContrasenyaNova('contrasenya-nova')).toBe('definixContrasenyaNova');
+});
+
+/* Ordre del Mestre (261008, grup C) · Els membres d'una organització. */
+test('grup C · membresOrganitzacio és una capacitat opcional de tres mètodes, fora del nucli i congelada', () => {
+  expect(CAPACITATS.membresOrganitzacio).toEqual(['llistaMembresOrganitzacio', 'desaMembreOrganitzacio', 'llevaMembreOrganitzacio']);
+  expect(Object.isFrozen(CAPACITATS.membresOrganitzacio)).toBe(true);
+  for (const nom of CAPACITATS.membresOrganitzacio) {
+    expect(CONTRACTE_NUCLI).not.toContain(nom);
+    expect(CONTRACTE_BACKEND).toContain(nom);
+  }
+  /* El nucli no creix. */
+  expect(CONTRACTE_NUCLI).toHaveLength(32);
+  for (const quants of [1, 2]) {
+    expect(() => port.validaBackendImplementation({ ...nucli(), ...capacitat('membresOrganitzacio', quants) }))
+      .toThrow('Capacitat parcial: membresOrganitzacio');
+  }
+});
+
+test('grup C · un backend sense membresOrganitzacio continua sent vàlid i no la pot cridar', () => {
+  port.setBackendImplementation(nucli());
+  expect(port.teCapacitat('membresOrganitzacio')).toBe(false);
+  expect(() => port.llistaMembresOrganitzacio('o')).toThrow('no està implementat');
+  expect(() => port.desaMembreOrganitzacio('o', { tipus: 'persona', id: 'p' })).toThrow('no està implementat');
+  expect(() => port.llevaMembreOrganitzacio('o', { tipus: 'persona', id: 'p' })).toThrow('no està implementat');
+  port.setBackendImplementation({ ...nucli(), ...capacitat('membresOrganitzacio') });
+  expect(port.teCapacitat('membresOrganitzacio')).toBe(true);
+  expect(port.llevaMembreOrganitzacio('o', { tipus: 'persona', id: 'p' })).toBe('llevaMembreOrganitzacio');
+});
+
+describe('grup C · membreDOrganitzacio i els codis SDP-ORGMEM', () => {
+  it('normalitza: rol member per defecte; una persona pot ser admin; una organització, només member', () => {
+    expect(membreDOrganitzacio({ tipus: ' persona ', id: ' p1 ' })).toEqual({ tipus: 'persona', id: 'p1', rol: 'member' });
+    expect(membreDOrganitzacio({ tipus: 'persona', id: 'p1', rol: 'admin' })).toEqual({ tipus: 'persona', id: 'p1', rol: 'admin' });
+    expect(membreDOrganitzacio({ tipus: 'organitzacio', id: 'o1', rol: '' })).toEqual({ tipus: 'organitzacio', id: 'o1', rol: 'member' });
+    expect(membreDOrganitzacio({ tipus: 'organitzacio', id: 'o1', rol: 'admin' }, { ambRol: false })).toEqual({ tipus: 'organitzacio', id: 'o1' });
+  });
+
+  it('rebutja amb SDP-ORGMEM-001 un tipus inventat, un id buit, owner o un rol que no toca', () => {
+    for (const dades of [null, {}, { tipus: 'persona' }, { tipus: 'persona', id: '  ' }, { tipus: 'grup', id: 'g' },
+      { tipus: 'persona', id: 'p', rol: 'owner' }, { tipus: 'persona', id: 'p', rol: 'Admin' }, { tipus: 'organitzacio', id: 'o', rol: 'admin' }]) {
+      let error = null;
+      try { membreDOrganitzacio(dades); } catch (e) { error = e; }
+      expect(error, JSON.stringify(dades)).toMatchObject({ code: 'SDP-ORGMEM-001', message: MISSATGES_MEMBRES_ORGANITZACIO['SDP-ORGMEM-001'] });
+    }
+    expect(() => membreDOrganitzacio({ tipus: 'grup', id: 'g' }, { ambRol: false })).toThrow(MISSATGES_MEMBRES_ORGANITZACIO['SDP-ORGMEM-001']);
+  });
+
+  it('els nou codis tenen missatge en valencià; un error porta el code i, si n’hi ha, la causa', () => {
+    expect(Object.keys(MISSATGES_MEMBRES_ORGANITZACIO)).toEqual(Array.from({ length: 9 }, (_, i) => `SDP-ORGMEM-00${i}`));
+    expect(Object.isFrozen(MISSATGES_MEMBRES_ORGANITZACIO)).toBe(true);
+    for (const missatge of Object.values(MISSATGES_MEMBRES_ORGANITZACIO)) expect(missatge).toMatch(/^[A-ZÀ-Ú].*\.$/);
+    const causa = new Error('cru');
+    expect(errorDeMembre('SDP-ORGMEM-006', causa)).toMatchObject({ code: 'SDP-ORGMEM-006', cause: causa,
+      message: 'Només la propietària nomena, degrada o lleva administradores.' });
+    expect(errorDeMembre('SDP-ORGMEM-000')).not.toHaveProperty('cause');
+  });
 });
 
 test('un node amb el nucli sol continua sent vàlid, sense compte ni consentiment', () => {

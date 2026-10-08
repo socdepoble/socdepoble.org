@@ -11,7 +11,11 @@ vi.mock('./PerfilContext.jsx', () => ({
   usePerfil: () => m.perfil,
 }));
 vi.mock('./PerfilEditor.jsx', () => ({ PerfilEditor: ({ identitat }) => <p>{`fitxa de ${identitat.nom}`}</p> }));
-vi.mock('./DetallCompte.jsx', () => ({ DetallCompte: ({ identitat }) => <p>{`compte de ${identitat.nom}`}</p> }));
+vi.mock('./DetallCompte.jsx', () => ({
+  DetallCompte: ({ identitat, ambMembres }) => <p data-membres={String(ambMembres)}>{`compte de ${identitat.nom}`}</p>,
+}));
+/* Ordre del Mestre (261008) · «Les vistes»: la seua pàgina té proves pròpies (DetallVistes.test.jsx). */
+vi.mock('./DetallVistes.jsx', () => ({ DetallVistes: ({ identitat }) => <p>{`vistes de ${identitat.nom}`}</p> }));
 vi.mock('./DetallPrivacitat.jsx', () => ({
   DetallPrivacitat: ({ identitat, config, onPerfilCanviat }) => (
     <p data-recarrega={String(onPerfilCanviat === m.perfil.recarrega)} data-tenant={config?.tenantId}>{`privacitat de ${identitat.nom}`}</p>
@@ -39,7 +43,9 @@ vi.mock('../../components/universal/UniversalPage', () => ({
 }));
 vi.mock('@/components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: m.toast }) }));
 vi.mock('../../data/backendPort.js', () => ({ teCapacitat: (cap) => m.caps.has(cap) }));
-import PerfilShell, { empresesMare, itemsDePerfil } from './PerfilShell.jsx';
+import PerfilShell, * as modulShell from './PerfilShell.jsx';
+
+const { itemsDePerfil } = modulShell;
 
 const jo = { id: 'jo', mena: 'persona', nom: 'Pep', avatar: 'a.webp', dades: {} };
 const forn = { id: 'O', mena: 'empresa', nom: 'Forn', dades: { role: 'owner' } };
@@ -97,9 +103,11 @@ test('sense organitzacions el grup es mostra igualment, amb una opció que expli
 test('segona columna: els fills de cada element segons el tipus', () => {
   m.caps = new Set(['compte']);
   render(<PerfilShell />);
-  /* T9 (261001) · «Els nodes» és l'últim apartat de la persona; una organització no en té. */
-  expect(filsDe('jo')).toEqual(['jo-fitxa', 'jo-compte', 'jo-privacitat', 'jo-nodes']);
-  expect(filsDe('O')).toEqual(['O-fitxa', 'O-compte']);
+  /* T9 (261001) · «Els nodes» és l'últim apartat de la persona; una organització no en té.
+     Ordre del Mestre (261008) · «Les vistes» just després de «La fitxa», només
+     per a qui la pot editar: la Colla (membre) no en té. */
+  expect(filsDe('jo')).toEqual(['jo-fitxa', 'jo-vistes', 'jo-compte', 'jo-privacitat', 'jo-nodes']);
+  expect(filsDe('O')).toEqual(['O-fitxa', 'O-vistes', 'O-compte']);
   expect(filsDe('G')).toEqual(['G-fitxa', 'G-compte']);
   expect(filsDe('app-gestoria')).toEqual(['app-gestoria-sobre']);
   for (const id of ['metriques', 'lector-rss', 'cervell', 'snippet']) {
@@ -111,9 +119,37 @@ test('segona columna: els fills de cada element segons el tipus', () => {
   expect(itemsDePerfil([jo])[0]).toMatchObject({ title: 'La fitxa', subtitle: 'Pep', image: 'a.webp', categoryIds: ['jo'] });
 });
 
+/* Ordre del Mestre (261008) · «Vista A4 / PDF», «Crear portada» i «Vista
+   targeta» ixen de l'espai d'edició i fan un apartat més, com «El compte». */
+test('261008 · «Les vistes»: l’apartat, la icona de l’ull i la seua pàgina; per a la persona, l’organització que mana i els agents', async () => {
+  const { Eye } = await import('lucide-react');
+  render(<PerfilShell />);
+  expect(item('jo-vistes')).toMatchObject({
+    title: 'Les vistes', subtitle: 'Vista A4 / PDF, portada i targeta', categoryIds: ['jo'],
+    data: { vista: 'vistes', identitatId: 'jo' },
+  });
+  expect(item('jo-vistes').icon).toBe(Eye);
+  expect(item('jo-vistes').searchText).toContain('portada');
+  render(m.workspace.renderDetail({ item: item('jo-vistes') }));
+  render(m.workspace.renderDetail({ item: item('O-vistes') }));
+  expect(screen.getByText('vistes de Pep')).toBeTruthy();
+  expect(screen.getByText('vistes de Forn')).toBeTruthy();
+  // Un agent IA només té fitxa i les seues vistes.
+  const agent = { id: 'A', mena: 'agent', nom: 'IAIA', dades: {} };
+  expect(itemsDePerfil([jo, agent]).filter((i) => i.categoryIds.includes('A')).map((i) => i.id)).toEqual(['A-fitxa', 'A-vistes']);
+});
+
+test('261008 · «Les vistes» no hi és per a qui no pot editar la fitxa: un membre, una baixa en curs o la fila de reserva', () => {
+  const ids = (identitats) => itemsDePerfil(identitats).map((i) => i.id);
+  expect(ids([colla, botiga])).toEqual(['G-fitxa', 'G-compte', 'B-fitxa', 'B-compte']);
+  expect(ids([{ ...forn, dades: { role: 'admin' } }])).toEqual(['O-fitxa', 'O-vistes', 'O-compte']);
+  expect(ids([{ ...jo, dades: { baixa_demanada_at: '2026-09-26T10:00:00Z' } }])).not.toContain('jo-vistes');
+  expect(ids([{ ...jo, dades: { reserva: true } }])).not.toContain('jo-vistes');
+});
+
 test('«Privacitat i dades» només apareix si el backend declara «compte» o «consentiment»', () => {
   const vista = render(<PerfilShell />);
-  expect(filsDe('jo')).toEqual(['jo-fitxa', 'jo-compte', 'jo-nodes']);
+  expect(filsDe('jo')).toEqual(['jo-fitxa', 'jo-vistes', 'jo-compte', 'jo-nodes']);
   m.caps = new Set(['consentiment']);
   vista.rerender(<PerfilShell />);
   expect(filsDe('jo')).toContain('jo-privacitat');
@@ -143,7 +179,9 @@ test('una aplicació pendent: estat honest, només la preferència del Panell i 
     const vista = render(m.workspace.renderDetail({ item: item(`app-${id}-sobre`) }));
     expect(screen.getByRole('heading', { level: 1, name: nom })).toBeTruthy();
     expect(screen.getByText('Pendent de connectar en este node')).toBeTruthy();
-    expect(screen.getAllByRole('button').map((b) => b.textContent)).toEqual(['Mostrar al Panell de Control']);
+    /* Ordre del Mestre (261007, prompt 261007_1628, peça C) · Sense
+       preferència la utilitat ja és al Panell: el botó diu «Ocultar». */
+    expect(screen.getAllByRole('button').map((b) => b.textContent)).toEqual(['Ocultar del Panell de Control']);
     expect(screen.queryAllByRole('link')).toEqual([]);
     vista.unmount();
   }
@@ -195,9 +233,26 @@ test('el proveïdor rep el refresh d’IdentitatContext i la configuració', () 
   expect(m.proveidor.config).toEqual({ tenantId: '00000000-0000-4000-8000-000000000000' });
 });
 
-test('només les empreses que la persona mana poden ser mare', () => {
-  expect(empresesMare([jo, forn, botiga, { id: 'G', mena: 'grup', nom: 'Colla', dades: { role: 'owner' } }]))
-    .toEqual([{ valor: 'O', etiqueta: 'Forn' }]);
+/* Ordre del Mestre (261008) · «un grup no té per què pertànyer a cap empresa»:
+   el diàleg de NOVA ORG ja no rep cap llista de mares, i PerfilShell ja no la
+   reexporta (perfilModel.mare.test.js continua vigilant empresesMare). */
+test('261008 · el diàleg de NOVA ORG ja no rep empresesMare, i PerfilShell ja no la reexporta', () => {
+  render(<PerfilShell />);
+  act(() => { m.workspace.onCreate(); });
+  expect(m.dialeg).not.toHaveProperty('empresesMare');
+  expect(Object.hasOwn(modulShell, 'empresesMare')).toBe(false);
+});
+
+/* Contracte amb el grup de les organitzacions (261008) · «El compte» rep
+   ambMembres del context del Perfil; sense declarar-ho (undefined), false. */
+test('261008 · «El compte» rep ambMembres del context; sense, false', () => {
+  render(<PerfilShell />);
+  expect(m.workspace.renderDetail({ item: item('O-compte') }).props.ambMembres).toBe(false);
+  cleanup();
+  m.perfil = { ...m.perfil, ambMembres: true };
+  render(<PerfilShell />);
+  const detall = render(m.workspace.renderDetail({ item: item('O-compte') }));
+  expect(detall.getByText('compte de Forn').dataset.membres).toBe('true');
 });
 
 test('onCreate obri el diàleg; cancel·lar resol la promesa amb null', async () => {
@@ -205,7 +260,6 @@ test('onCreate obri el diàleg; cancel·lar resol la promesa amb null', async ()
   let promesa;
   act(() => { promesa = m.workspace.onCreate(); });
   expect(screen.getByRole('dialog', { name: 'Nova organització' })).toBeTruthy();
-  expect(m.dialeg.empresesMare).toEqual([{ valor: 'O', etiqueta: 'Forn' }]);
   act(() => m.dialeg.onTanca('boto'));
   await expect(promesa).resolves.toBeNull();
   expect(screen.queryByRole('dialog')).toBeNull();
@@ -236,10 +290,10 @@ test('crear resol la promesa amb la fitxa nova quan la identitat ja és al model
 });
 
 test('si crear falla, l’error torna al diàleg i la promesa espera', async () => {
-  m.perfil.creaOrganitzacio.mockRejectedValue(new Error('Un grup necessita una empresa mare.'));
+  m.perfil.creaOrganitzacio.mockRejectedValue(new Error('Eixe identificador ja és d’una altra organització.'));
   render(<PerfilShell />);
   act(() => { m.workspace.onCreate(); });
-  await expect(m.dialeg.onCrea({ name: 'Colla', slug: 'colla', kind: 'group' })).rejects.toThrow('empresa mare');
+  await expect(m.dialeg.onCrea({ name: 'Colla', slug: 'colla', kind: 'group' })).rejects.toThrow('identificador');
   expect(screen.getByRole('dialog')).toBeTruthy();
 });
 

@@ -135,6 +135,23 @@
   color: var(--sdp-text-cos);
 }
 
+/* ── Les vistes (DetallVistes, ordre del Mestre 261008) ──
+   Els dos botons de la vista A4 (les píndoles de sempre, .sdp-classificacio-
+   pindola) en fila i, si no hi caben, en una altra; la targeta viva, amb
+   l'amplària de l'aside de l'editor (--sdp-targeta-viva-ample), arrambada a
+   l'esquerra com la resta dels blocs. */
+.perfil-vistes__botons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sdp-space-2);
+}
+
+.perfil-vistes__targeta {
+  width: 100%;
+  max-width: var(--sdp-targeta-viva-ample);
+  min-width: 0;
+}
+
 /* Dins d'un bloc del compte, el formulari no porta marge propi. */
 .perfil-compte__bloc .perfil-detall {
   padding: 0;

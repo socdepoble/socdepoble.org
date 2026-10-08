@@ -3,6 +3,7 @@ import { resolve } from 'node:path';
 import { describe, expect, test } from 'vitest';
 import { CAPACITATS, CONTRACTE_NUCLI } from '../contracte.js';
 import { CASOS, contextDeConformitat, executaCas, metodesSenseCas } from './kit.js';
+import { ambXatsPerDefecte } from '../xatsPerDefecte.js';
 
 /* El kit mateix: pur, lligat al contracte i capaç de vore una falla. Cap
    adaptador real: els dobles d'ací són mínims a posta. */
@@ -114,6 +115,116 @@ describe('el kit veu una falla', () => {
   test('un cas que no és del contracte falla abans de cridar', async () => {
     const inventat = { ...cas('getProfile'), metode: 'getProfileInventat' };
     expect((await executaCas(inventat, { getProfileInventat: async () => null }, ctx())).estat).toBe('falla');
+  });
+
+  /* Ordre del Mestre (261007) · Les files d'ajuda per defecte (Conversa.perDefecte)
+     tenen la forma d'una Conversa, però no són cap fil: el kit no les llig
+     ni hi escriu, i els casos que en dependrien s'ometen sense fallar. */
+  test('amb només files per defecte, loadFils és conforme i no deixa cap fil per als casos següents', async () => {
+    const c = ctx();
+    const sintetiques = ambXatsPerDefecte([]);
+    expect(sintetiques).toHaveLength(2);
+    expect(await executaCas(cas('loadFils'), { loadFils: async () => sintetiques }, c)).toMatchObject({ estat: 'ok', falles: [] });
+    expect([c.filId, c.filEscrivible]).toEqual([null, null]);
+    let cridat = false;
+    const adaptador = {
+      loadMissatges: async () => { cridat = true; return []; },
+      subscribeToXat: async () => { cridat = true; return { subscription: null, error: null }; },
+      unsubscribeFromXat: async () => { cridat = true; },
+      enviaMissatge: async () => { cridat = true; },
+      marcaLlegit: async () => { cridat = true; }
+    };
+    for (const [metode, titol] of [['loadMissatges'], ['subscribeToXat'], ['unsubscribeFromXat'], ['enviaMissatge', 'el mateix id no duplica'], ['marcaLlegit']]) {
+      expect((await executaCas(cas(metode, titol), adaptador, c)).estat, metode).toBe('omés');
+    }
+    expect(cridat).toBe(false);
+  });
+
+  test('amb una conversa real i les files per defecte, el fil del kit és el real', async () => {
+    const c = ctx();
+    const real = { id: 'f-real', tipus: 'grup', ultimSeq: 1, llegitFinsSeq: 1, rebutFinsSeq: 1, noLlegits: 0, altres: [] };
+    const fils = [...ambXatsPerDefecte([]), real];
+    expect((await executaCas(cas('loadFils'), { loadFils: async () => fils }, c)).estat).toBe('ok');
+    expect([c.filId, c.filEscrivible]).toEqual(['f-real', 'f-real']);
+  });
+
+  /* ── Decisió 4 del Mestre (261007) · «Carregar-ne més» (capacitat
+     'paginacioSeccions', ADR-2026-11-PAGINACIO-SECCIONS) ── */
+  const murBuit = { feedPosts: [], events: [], marketItems: [] };
+  test('Decisió 4 · loadMur sense paginacio, o amb un cursor per secció pendent, és conforme', async () => {
+    const c = { ...ctx(), ownerUserId: 'u' };
+    for (const valor of [murBuit, { ...murBuit, paginacio: { mur: 'c1', mercat: 'c2' } }, { ...murBuit, paginacio: {} }]) {
+      expect(await executaCas(cas('loadMur'), { loadMur: async () => valor }, c), JSON.stringify(valor))
+        .toMatchObject({ estat: 'ok', falles: [] });
+    }
+  });
+
+  test('Decisió 4 · una paginacio mal formada a loadMur és una falla amb el seu motiu', async () => {
+    const c = { ...ctx(), ownerUserId: 'u' };
+    const amb = (paginacio) => executaCas(cas('loadMur'), { loadMur: async () => ({ ...murBuit, paginacio }) }, c);
+    expect(await amb(['c1'])).toMatchObject({ estat: 'falla', falles: ['paginacio havia de ser un objecte i és array'] });
+    expect(await amb({ notes: 'c1' })).toMatchObject({ estat: 'falla', falles: ['paginacio porta una secció que no es pagina: notes'] });
+    expect(await amb({ mur: '' })).toMatchObject({ estat: 'falla', falles: ['el cursor de mur havia de ser text no buit i és string'] });
+    expect(await amb({ events: null })).toMatchObject({ estat: 'falla', falles: ['el cursor de events havia de ser text no buit i és null'] });
+  });
+
+  test('Decisió 4 · loadSeccioPage conforme: la crida és la del contracte i complete va amb nextCursor', async () => {
+    const crides = [];
+    const loadSeccioPage = async (...args) => { crides.push(args); return { elements: [{ id: 'p51' }], complete: false, nextCursor: 'c2' }; };
+    expect(await executaCas(cas('loadSeccioPage', "seccio: 'mur'"), { loadSeccioPage }, ctx())).toMatchObject({ estat: 'ok', falles: [] });
+    expect(crides).toEqual([[{ seccio: 'mur', cursor: null, limit: 50 }, { dataMode: 'seed' }]]);
+    const darrera = async () => ({ elements: [], complete: true, nextCursor: null });
+    expect(await executaCas(cas('loadSeccioPage', "seccio: 'mur'"), { loadSeccioPage: darrera }, ctx())).toMatchObject({ estat: 'ok' });
+  });
+
+  test('Decisió 4 · una pàgina de secció mal formada és una falla', async () => {
+    const amb = (pagina) => executaCas(cas('loadSeccioPage', "seccio: 'mur'"), { loadSeccioPage: async () => pagina }, ctx());
+    expect(await amb({ elements: [{ id: 'p1' }], complete: true, nextCursor: 'c2' }))
+      .toMatchObject({ estat: 'falla', falles: ['complete i nextCursor null han d’anar junts'] });
+    expect(await amb({ elements: [{ titol: 'sense id' }], complete: true, nextCursor: null }))
+      .toMatchObject({ estat: 'falla', falles: ['elements té elements sense id'] });
+    expect(await amb({ elements: [], complete: false, nextCursor: '' }))
+      .toMatchObject({ estat: 'falla', falles: ['nextCursor havia de ser null o text no buit'] });
+    expect((await amb({ notes: [], complete: true, nextCursor: null })).estat).toBe('falla');
+  });
+
+  test('Decisió 4 · una secció que no es pagina ha de rebutjar; resoldre-la és una falla', async () => {
+    const rebutja = cas('loadSeccioPage', 'no es pagina');
+    expect(await executaCas(rebutja, { loadSeccioPage: async () => { throw new Error('Esta secció no es pagina.'); } }, ctx()))
+      .toMatchObject({ estat: 'ok', falles: [] });
+    expect(await executaCas(rebutja, { loadSeccioPage: async () => ({ elements: [], complete: true, nextCursor: null }) }, ctx()))
+      .toMatchObject({ estat: 'falla', falles: ['ha resolt i havia de rebutjar'] });
+  });
+
+  test('Decisió 4 · sense la capacitat, els casos de paginació s’ometen i l’adaptador continua sent vàlid', async () => {
+    for (const c of CASOS.filter((cs) => cs.capacitat === 'paginacioSeccions')) {
+      expect(await executaCas(c, {}, ctx())).toMatchObject({ estat: 'omés', motiu: 'capacitat paginacioSeccions absent' });
+    }
+    expect(CASOS.filter((cs) => cs.capacitat === 'paginacioSeccions')).toHaveLength(2);
+    expect(CAPACITATS.paginacioSeccions).toEqual(['loadSeccioPage']);
+    expect(CONTRACTE_NUCLI).not.toContain('loadSeccioPage');
+  });
+
+  /* ── Ordre del Mestre (261008, grup C) · Els membres d'una organització
+     (capacitat 'membresOrganitzacio') ── */
+  test('grup C · llistaMembresOrganitzacio d’una organització que no existix: rebutjar amb code és conforme', async () => {
+    const membres = cas('llistaMembresOrganitzacio');
+    expect(membres).toMatchObject({ capacitat: 'membresOrganitzacio', espera: 'rebutja', escriu: false });
+    const crides = [];
+    const amb = (codi) => async (...args) => { crides.push(args); throw Object.assign(new Error('No l’administres.'), { code: codi }); };
+    expect(await executaCas(membres, { llistaMembresOrganitzacio: amb('SDP-ORGMEM-002') }, ctx())).toMatchObject({ estat: 'ok', falles: [] });
+    expect(crides).toEqual([['conformitat-sense-organitzacio', { dataMode: 'seed' }]]);
+  });
+
+  test('grup C · resoldre-la, o rebutjar sense code, és una falla; sense la capacitat s’omet', async () => {
+    const membres = cas('llistaMembresOrganitzacio');
+    expect(await executaCas(membres, { llistaMembresOrganitzacio: async () => [] }, ctx()))
+      .toMatchObject({ estat: 'falla', falles: ['ha resolt i havia de rebutjar'] });
+    const senseCodi = await executaCas(membres, { llistaMembresOrganitzacio: async () => { throw new Error('Sense codi'); } }, ctx());
+    expect(senseCodi.estat).toBe('falla');
+    expect(senseCodi.falles[0]).toMatch(/^havia de rebutjar amb un Error amb code/);
+    expect(await executaCas(membres, {}, ctx())).toMatchObject({ estat: 'omés', motiu: 'capacitat membresOrganitzacio absent' });
+    expect(CAPACITATS.membresOrganitzacio).toEqual(['llistaMembresOrganitzacio', 'desaMembreOrganitzacio', 'llevaMembreOrganitzacio']);
   });
 
   test('el temps real sense canal és vàlid i el desat passa al cas següent', async () => {

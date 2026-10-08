@@ -4,7 +4,7 @@
    --max-warnings=0), i comprovacions per text. Patró de
    src/sections/gestoria/qualitat.test.js: els patrons vetats es componen a
    trossos perquè les portes que llegixen src/ no els troben ací. */
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { ESLint } from 'eslint';
 import { describe, expect, test } from 'vitest';
@@ -22,9 +22,15 @@ const PRODUCCIO = [
   'src/config/capaDelPaquet.js',
   'src/config/runtimePolicy.js',
   'src/main.jsx',
-  'src/embed.jsx'
+  'src/embed.jsx',
+  /* Decisió 5 del Mestre (261007): el carregador clàssic del paquet trossejat
+     i el costat ESM que en pren el control. */
+  'src/config/carregadorDelPaquet.js',
+  'src/config/provisionalDelPaquet.js'
 ];
-const PURS = ['src/config/contracteAmfitrio.js', 'src/config/origensSollutia.js'];
+/* El carregador és PUR: vite.standalone.config.js el compila tal qual en un
+   script clàssic; la finestra, el document i l'script li arriben per paràmetre. */
+const PURS = ['src/config/contracteAmfitrio.js', 'src/config/origensSollutia.js', 'src/config/carregadorDelPaquet.js'];
 const PROVES = [
   'src/config/contracteAmfitrio.test.js',
   'src/config/contracteAmfitrio.paritat.test.js',
@@ -36,6 +42,8 @@ const PROVES = [
   'src/config/hostIframeAdapter.test.js',
   'src/PedraSecaEmbed.config.test.jsx',
   'src/entrades.capaDelPaquet.test.jsx',
+  'src/config/carregadorDelPaquet.test.js',
+  'src/embed.carregador.test.jsx',
   'tests/host.test.js',
   'tests/conformitat-amfitrio.test.mjs',
   'tests/fixtures/amfitrio-sollutia.mjs'
@@ -64,7 +72,7 @@ describe('per text', () => {
     for (const fitxer of TOTS) expect(re.test(llig(fitxer)), fitxer).toBe(false);
   });
 
-  test('el contracte i la llista d’orígens són purs: sense import.meta, window, document ni globalThis', () => {
+  test('el contracte, la llista d’orígens i el carregador són purs: sense import.meta, window, document ni globalThis', () => {
     const impurs = new RegExp(['import\\.', 'meta|\\bwin', 'dow\\.|\\bdocu', 'ment\\.|\\bglobal', 'This\\b'].join(''));
     const senseComentaris = (codi) => codi.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
     for (const fitxer of PURS) expect(impurs.test(senseComentaris(llig(fitxer))), fitxer).toBe(false);
@@ -86,9 +94,29 @@ describe('per text', () => {
   test('l’element no escriu cap global nova (tractor-enxufe E4): només window.SocDePoble, des de host.js', () => {
     const assignacio = /\b(?:window|globalThis)(?:\.([A-Za-z_$][\w$]*)|\[['"`]([A-Za-z_$][\w$]*)['"`]\])\s*=(?!=)/g;
     const permeses = /^__SDP_(?:REACT_MOUNTED|GLOBAL_ERRORS_BOUND|OUTBOX_QUARANTINED)__$/;
-    for (const fitxer of ['src/PedraSecaEmbed.jsx', 'src/app/contexts/RouterContext.jsx', 'src/config/capaDelPaquet.js', 'src/main.jsx', 'src/embed.jsx', ...PURS]) {
+    for (const fitxer of ['src/PedraSecaEmbed.jsx', 'src/app/contexts/RouterContext.jsx', 'src/config/capaDelPaquet.js', 'src/main.jsx', 'src/embed.jsx',
+      'src/config/provisionalDelPaquet.js', ...PURS]) {
       const noves = [...llig(fitxer).matchAll(assignacio)].map((m) => m[1] || m[2]).filter((nom) => !permeses.test(nom));
       expect(noves, fitxer).toEqual([]);
     }
+  });
+
+  /* Decisió 5 del Mestre (261007) · declaració explícita del que E4 de
+     tooling/gates/tractor-enxufe.mjs no veu: el carregador definix el
+     SocDePoble PROVISIONAL amb defineProperty sobre un paràmetre (`finestra`),
+     com exposaGlobal ho fa sobre `objectiu`, i la porta només mira window i
+     globalThis. A src/ només ho fan eixos dos fitxers (wikiManifest.js és
+     generat i en pot citar el text). El carregador no importa res: el compila
+     tal qual vite.standalone.config.js, i un import el trauria de script
+     clàssic. Ensenyar-ho a E4 necessita una lease. */
+  test('només host.js i carregadorDelPaquet.js definixen SocDePoble, i el carregador no importa res', () => {
+    const definicio = new RegExp(['define', 'Property\\(\\s*[\\w$.]+\\s*,\\s*[\'"`]SocDe', 'Poble[\'"`]'].join(''));
+    const fonts = readdirSync(path.join(ARREL, 'src'), { recursive: true })
+      .map((rel) => `src/${String(rel).split(path.sep).join('/')}`)
+      .filter((rel) => /\.(?:js|jsx|mjs)$/.test(rel) && !/\.(?:test|spec)\.[cm]?jsx?$/.test(rel) && rel !== 'src/data/wikiManifest.js');
+    expect(fonts.filter((rel) => definicio.test(llig(rel))).sort()).toEqual(['src/config/carregadorDelPaquet.js', 'src/host.js']);
+    const carregador = llig('src/config/carregadorDelPaquet.js').replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+    expect(carregador).not.toMatch(/\bimport\b/);
+    expect(carregador).toMatch(/^export function instalaCarregador\(/m);
   });
 });

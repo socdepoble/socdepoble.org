@@ -14,6 +14,7 @@ El codi executable viu fora de la Wiki, a `src/` i `tooling/`; ací només hi ha
 - [[ADR-2026-08-ONLINE-FIRST]] · online-first amb Supabase com a font de veritat; la PWA, Dexie i la reconciliació offline són història superada.
 - [[02_saber/architecture/ADR-2026-09-SOLLUTIA-MODEL-B|ADR-2026-09-SOLLUTIA-MODEL-B]] · Model B: el frontend, 100% modular, s'endolla a Sollutia sense que Sollutia l'injecte ni el governe.
 - [[02_saber/architecture/ADR-2026-10-APPS-DEL-DISPOSITIU|ADR-2026-10-APPS-DEL-DISPOSITIU]] · esmena de l'ADR-2026-08 (pendent de signatura): dades del dispositiu amb deures d'exportació i la closca de /app/* al service worker del lloc propi.
+- [[02_saber/architecture/ADR-2026-11-PAGINACIO-SECCIONS|ADR-2026-11-PAGINACIO-SECCIONS]] · capacitat opcional del port (pendent de signatura): «Mostra més» al Mur i al Mercat després de les 50 primeres publicacions, amb un cursor (created_at, id).
 - [[00_arquitectura_tecnica_unificada]]
 
 ## Estàndards del codi

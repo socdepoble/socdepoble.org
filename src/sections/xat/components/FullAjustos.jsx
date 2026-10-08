@@ -193,8 +193,10 @@ export default function FullAjustos({ obert = false, onTanca = noop, onRetornFoc
    window.location.reload() recarregava la pàgina sencera de l'amfitrió.
    No cal: tancar la sessió mou la generació del servei (sessionService,
    sincronitza) i els proveïdors de la persona es buiden per àmbit (Xat,
-   Mur, Multimèdia i el contingut base per `generacio`; Notes, Perfil i la
-   Identitat per l'usuari i l'entrada). La ruta nova desmunta el Xat, i el
+   Mur, Multimèdia i el contingut base per la persona i l'actor
+   (currentUser.id i actorKey a la clau d'àmbit, sense `generacio` des de la
+   Decisió 2, 261007; el Xat, per ambitEstable des de la Decisió 1); Notes,
+   Perfil i la Identitat per l'usuari i l'entrada). La ruta nova desmunta el Xat, i el
    full amb ell. El text a mig escriure del xat (esborranys.js, en memòria)
    l'oblida XatProvider quan canvia la persona (XatContext, clauPersona).
 

@@ -11,29 +11,41 @@ const MultimediaContext = createContext(null);
 
 export function MultimediaProvider({ children, config }) {
   const { actorId, actorKey } = useIdentitat();
-  const { generacio, currentUser } = useSession();
+  const { currentUser } = useSession();
+  /* Decisió 2 del Mestre (261007) · Renovació silenciosa. La clau d'àmbit és
+     la d'AÏLLAMENT (backend, persona, actor), sense `generacio`: renovar el
+     JWT ja no buida la Multimèdia. La frescor per generació la porta
+     useScopedResource. */
   const scopeKey = JSON.stringify([backendScope(config),
-    currentUser?.id, actorKey, generacio]);
+    currentUser?.id, actorKey]);
   const data = useScopedResource(loadMultimedia, actorId, scopeKey, config);
+  const { status, payload, error, errorRevalidacio, refresh } = data;
 
+  /* Decisió 2 del Mestre (261007) · El valor es memoritza sobre camps i no
+     sobre `data`: la marca `revalidant` fa un `data` nou en cada renovació i
+     cada refresh, i amb `[data]` es tornava a pintar cada consumidor de
+     useMultimedia sense cap dada nova. `revalidant` no s'exposa (cap
+     consumidor no la llig); `errorRevalidacio` sí, a banda de `status`. */
   const value = useMemo(() => {
-    if (data.status !== 'ready' || !data.payload) return { 
-      status: data.status, 
-      error: data.error, 
-      mediaItems: [], 
+    if (status !== 'ready' || !payload) return {
+      status,
+      error,
+      errorRevalidacio,
+      mediaItems: [],
       mediaTimelineGroups: [],
-      refresh: data.refresh
+      refresh
     };
     return {
-      status: data.status,
-      error: data.error,
-      mediaItems: data.payload.mediaItems || [],
-      mediaTimelineGroups: data.payload.mediaTimelineGroups || [],
-      refresh: data.refresh
+      status,
+      error,
+      errorRevalidacio,
+      mediaItems: payload.mediaItems || [],
+      mediaTimelineGroups: payload.mediaTimelineGroups || [],
+      refresh
     };
-  }, [data]);
+  }, [status, payload, error, errorRevalidacio, refresh]);
 
-  useRecarregaExterna(data.refresh);
+  useRecarregaExterna(refresh);
 
   return <MultimediaContext.Provider value={value}>{children}</MultimediaContext.Provider>;
 }

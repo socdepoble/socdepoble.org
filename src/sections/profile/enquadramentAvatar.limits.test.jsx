@@ -5,6 +5,10 @@
  *   · l'entrada d'un flux amb retallador es valida amb el límit del retallador;
  *   · el que ix del retallador continua passant pels 5 MB de sempre;
  *   · «Només la capçalera» (sense retallador) no canvia: 5 MB.
+ * Onada 4 (retallador senzill, 261008) · La fitxa del Perfil ja no munta
+ * DialegCapcaleraAvatar: els seus botons (useImatgeDeFitxa) admeten 10 MB i
+ * el retall que ix, també. DialegCapcaleraAvatar i DetallAjust conserven els
+ * seus límits (les proves de dalt i de davall).
  * useHeroImageHandler, useEnquadramentAvatar, DialegEnquadrament i
  * DialegCapcaleraAvatar són reals; jsdom no té canvas: la frontera
  * (imatgeCanvas.js), compressImage i el fetch del data URL se simulen. */
@@ -24,8 +28,10 @@ vi.mock('../../components/universal/enquadrament/imatgeCanvas.js', () => ({
 vi.mock('../../utils/imageUtils.js', () => ({ compressImage: dobles.compressImage }));
 import { DialegCapcaleraAvatar } from './DialegCapcaleraAvatar.jsx';
 import DetallAjust from './DetallAjust.jsx';
+import { useImatgeDeFitxa } from './useImatgeDeFitxa.jsx';
 import { MIDA_MAXIMA_IMATGE } from '../../hooks/useHeroImageHandler.js';
 import { PES_MAXIM_ENTRADA } from '../../components/universal/enquadrament/limits.js';
+import { AJUDA_FOTO, ERROR_PES_FOTO, PES_MAXIM_FOTO } from '../../components/universal/enquadrament/useEnquadramentImatge.jsx';
 
 const MB = 1024 * 1024;
 const RETALLADOR = { name: 'Enquadrar l’avatar' };
@@ -159,6 +165,71 @@ test('K2 · el que IX del retallador continua limitat a 5 MB: un retall de 6 MB 
   expect(dobles.compressImage).not.toHaveBeenCalled();
   expect(vista.onImageUpload).not.toHaveBeenCalled();
   expect(vista.onDesaCamp).not.toHaveBeenCalled();
+});
+
+/* ── La fitxa del Perfil, Onada 4 (retallador senzill, 261008) ──
+   Ja no passa pel diàleg intermedi: cada botó (useImatgeDeFitxa) admet fins a
+   10 MB i el retall que ix passa pel mateix límit, no pels 5 MB de sempre.
+   Correcció de la revisió (261008) · Ací només es comprova que el límit i el
+   text que el diu (AJUDA_FOTO) coincidixen. Que cada botó el diga abans de
+   triar es comprova botó a botó a PerfilEditor.imatges.test.jsx (amb les
+   proves [DEFECTE] dels que encara no el diuen). */
+
+function Fitxa({ camp, forma, ...p }) {
+  const imatge = useImatgeDeFitxa({ camp, forma, ...p });
+  return <>{imatge.input}{imatge.dialeg}</>;
+}
+function obriFitxaNova(camp = 'logoImage', forma = 'avatar') {
+  const p = { onDesaCamp: vi.fn(), onError: vi.fn(), onImageUpload: vi.fn(async () => URL_MITJA) };
+  const vista = render(<Fitxa camp={camp} forma={forma} {...p} />);
+  return { ...vista, ...p };
+}
+async function triaNova(vista, fitxer) {
+  await act(async () => {
+    fireEvent.change(vista.container.querySelector('input[type="file"]'), { target: { files: [fitxer] } });
+  });
+  await act(async () => {});
+}
+
+test('Onada 4 · el límit de la fitxa és de 10 MB i el text d’ajuda (AJUDA_FOTO) diu el mateix límit i els mateixos formats', () => {
+  expect(PES_MAXIM_FOTO).toBe(10 * MB);
+  expect(AJUDA_FOTO).toBe('PNG, JPEG o WebP, fins a 10 MB.');
+  expect(AJUDA_FOTO).toContain(`${PES_MAXIM_FOTO / MB} MB`);
+});
+
+test('Onada 4 · una foto de mòbil de 9 MB arriba al retall de l’avatar i en puja UN fitxer, el retallat', async () => {
+  const vista = obriFitxaNova();
+  const original = foto(9);
+  await triaNova(vista, original);
+  expect(vista.onError).not.toHaveBeenCalled();
+  await act(async () => {
+    fireEvent.click(within(screen.getByRole('dialog', { name: 'Retalla la foto' })).getByRole('button', { name: 'Guardar' }));
+  });
+  const ix = await dobles.exportaRetall.mock.results[0].value;
+  expect(dobles.compressImage.mock.calls.map(([f, o]) => [f, o.maxSize])).toEqual([[ix, 600]]);
+  expect(dobles.compressImage.mock.calls[0][0]).not.toBe(original);
+  expect(vista.onImageUpload).toHaveBeenCalledTimes(1);
+  expect(vista.onDesaCamp.mock.calls).toEqual([['logoImage', URL_MITJA]]);
+});
+
+test('Onada 4 · més de 10 MB (11 MB, que abans el retallador admetia): l’avís de la fitxa i cap retall', async () => {
+  const vista = obriFitxaNova('heroImage', 'capcalera');
+  await triaNova(vista, foto(11));
+  expect(vista.onError).toHaveBeenCalledWith(ERROR_PES_FOTO);
+  expect(screen.queryByRole('dialog')).toBeNull();
+  expect(dobles.carregaImatge).not.toHaveBeenCalled();
+});
+
+test('Onada 4 · el retall que ix de la fitxa passa pel límit de 10 MB, no pels 5 de sempre: un de 6 MB puja', async () => {
+  dobles.exportaRetall.mockImplementation(async () => retallat(6));
+  const vista = obriFitxaNova('heroImage', 'capcalera');
+  await triaNova(vista, foto(8));
+  await act(async () => {
+    fireEvent.click(within(screen.getByRole('dialog', { name: 'Retalla la capçalera' })).getByRole('button', { name: 'Guardar' }));
+  });
+  expect(screen.queryByRole('alert')).toBeNull();
+  expect(vista.onImageUpload).toHaveBeenCalledTimes(1);
+  expect(vista.onDesaCamp.mock.calls).toEqual([['heroImage', URL_MITJA]]);
 });
 
 /* ── L'ajust d'imatge (DetallAjust) ── */

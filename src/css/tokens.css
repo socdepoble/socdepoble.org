@@ -508,9 +508,14 @@
    mai, per això l'escala pedra continua sent monòtona i res no es
    torna invisible.
 
-   La resolució de la preferència del sistema la fa el script mínim
-   del <head>, que escriu data-theme a l'<html> abans del primer
-   pintat. Per això ACÍ NO hi ha cap @media (prefers-color-scheme):
+   La resolució de la preferència del sistema la fa el JavaScript,
+   que escriu data-theme: config/theme.js (resolveTheme) i
+   UIContext.jsx, amb l'efecte d'App.jsx sobre l'<html> o sobre
+   l'element <soc-de-poble>; dins de l'element, PedraSecaEmbed.jsx
+   l'escriu ja abans del primer pintat de React. No hi ha cap script
+   inline al <head>: la CSP d'index.html és script-src 'self'
+   (Auditoria 261007 (B): este comentari en citava un que no
+   existix). Per això ACÍ NO hi ha cap @media (prefers-color-scheme):
    duplicar-lo seria dos fonts de veritat per al mateix fet.
 
    IDENTITAT ESTABLE: el taronja continua sent el taronja i el blau

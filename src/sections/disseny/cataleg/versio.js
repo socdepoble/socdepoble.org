@@ -15,7 +15,16 @@
  * src/sections/disseny/cataleg/detalls`, sense comptar les proves ni este
  * fitxer). Una versió que no és la darrera és una data falsa a la pastilla.
  *
- * Darrera posada al dia: EspecimenCarruselImatges.jsx, 2026-10-07T09:37:33+02:00, la marató 261007:
+ * Darrera posada al dia: AssignacioEmoji.jsx, 2026-10-08T00:17:37+02:00, el relleu 261007 (Onada 3,
+ * peça «netes»): l'espècimen nou EspecimenPublicacionsDeLActor (l'històric de l'actor), amb les
+ * entrades noves de registre.js (PublicacionsDeLActor, VistaPublicacionsDeLActor i TargetaDelMercat),
+ * manifest.js (fonaments/publicacions-actor) i detailRegistry.jsx; EspecimenPage (la ranura
+ * peuDePagina i etiquetaPeuDePagina al contracte); EspecimenUniversalCard (imatgePrivada també a les
+ * targetes del Mur i dels actes, Decisió 3 del Mestre); EspecimenCarruselImatges (el munta
+ * portadaDElement per a /mercat/:id i el lector del MAS); i AssignacioEmoji (la Wiki compilada va
+ * en un tros a demanda del paquet trossejat, Decisió 5 del Mestre). Arreplega també destinsEmoji.js
+ * (10:28:53) i guardaEmojisSafari16.js (09:43:20), tocats el 261007 sense posar-la al dia.
+ * Versió anterior: EspecimenCarruselImatges.jsx, 2026-10-07T09:37:33+02:00, la marató 261007:
  * l'espècimen del carrusel; EspecimenUniversalCard (drets en una línia i sempre enllaç, l'acció gran,
  * targetes de pàgina de veritat i emojis XL al quadrat), EspecimenControlsBarra (Comentar en
  * privat o en públic), EspecimenEmojisXL (Assignar), EspecimenUniversalWorkspace (la roda dentada),
@@ -51,4 +60,4 @@
  * Quan el manifest porte `creat` i `modificat` per espècimen, manaran eixos
  * camps i esta constant només farà de versió del conjunt.
  */
-export const VERSIO_CATALEG = '2026-10-07T09:37:33+02:00';
+export const VERSIO_CATALEG = '2026-10-08T00:17:37+02:00';

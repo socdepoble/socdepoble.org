@@ -3,11 +3,32 @@ import { useNavigate } from '../../app/contexts/RouterContext';
 import { compressImage } from '../../utils/imageUtils.js';
 import { isSafeUrl } from '../../components/universal/UniversalUtils';
 import { useEixidaSegura } from '../../components/universal/EixidaSegura.jsx';
+import { useToast } from '../../components/universal/NotificationContext.jsx';
+import { Camp, DialegConfirmacio, Selector } from '../../components/PedraSeca';
+import { classificaError } from '../../data/autodesament/errors.js';
 import { ERROR_CORREU_INVALID, validaCorreu } from './contacteOrganitzacio.js';
 import { useEnquadramentAvatar } from './useEnquadramentAvatar.jsx';
+import { GestioMembres } from './GestioMembres.jsx';
 
 /* Indirecció per a les proves: jsdom no deixa substituir location.reload. */
 export const pagina = { recarrega: () => window.location.reload() };
+
+/* Grup C (261008) · El mateix avís que la fitxa (AVIS_SENSE_COLUMNA de
+   PerfilEditor.jsx, que no s'importa: les proves del Perfil substituïxen eixe
+   mòdul, i DetallAjust.test.jsx vigila que diguen el mateix). PostgREST diu
+   PGRST204 (o Postgres 42703) mentre la migració no s'ha aplicat: abans es
+   pintava el text cru, en anglés. Ací no hi ha cua: el canvi no s'ha desat. */
+export const AVIS_SENSE_COLUMNA = 'Este camp encara no té columna al servidor';
+
+/** El text d'un desat que ha fallat: la columna absent, traduïda; la resta, el missatge del port. */
+function textDeDesat(error) {
+  const classificat = classificaError(error);
+  if (classificat.tipus === 'columna') {
+    const columna = classificat.columna ? ` («${classificat.columna}»)` : '';
+    return `${AVIS_SENSE_COLUMNA}${columna}: no s’ha desat. Cal aplicar al servidor la migració pendent.`;
+  }
+  return error?.message || 'Error en desar.';
+}
 
 /** Un data URL comprimit tornat a Blob, per a pujar-lo com a fitxer. */
 async function aBlob(dataUrl) {
@@ -31,12 +52,17 @@ const ERROR_CONNEXIO = 'S\'ha produït un error al pujar la imatge. Comprova la 
  * El formulari d'un ajust del catàleg. Ja no porta la closca de l'editor
  * (I8): la fitxa l'edita PerfilEditor i ací només queden els formularis
  * del compte, dins de DetallCompte.
+ *
+ * Grup C (261008) · `membres` (opcional): les accions de membres del context
+ * del Perfil ({ usuariId, llistaMembres, desaMembre, llevaMembre,
+ * cercaCandidats }). Sense, «Membres» i «Eixir» es pinten pendents.
  */
 export default function DetallAjust({
   ajust,
   identitat,
   guardarAjust,
   pujaMitja,
+  membres = null,
 }) {
   const navigate = useNavigate();
   /* T47 (correcció de la revisió C01, 260928) · «Confirmar eixida» pregunta
@@ -53,6 +79,25 @@ export default function DetallAjust({
   const [pujant, setPujant] = useState(false);
   const [missatge, setMissatge] = useState(null);
   const timeoutMissatge = useRef(null);
+  /* Grup C (261008) · «Eixir de l'organització»: la confirmació, la guarda de
+     doble enviament i l'error (l'èxit el diu l'avís efímer de l'App). */
+  const { showToast } = useToast();
+  const [confirmaEixir, setConfirmaEixir] = useState(false);
+  const [eixint, setEixint] = useState(false);
+  const [errorEixir, setErrorEixir] = useState(null);
+  const eixintRef = useRef(false);
+  const muntat = useRef(true);
+  useEffect(() => { muntat.current = true; return () => { muntat.current = false; }; }, []);
+  /* Correcció 261008 · L'error d'«Eixir» es pinta quan la confirmació ja
+     s'ha tancat: el <dialog> el tanca el seu efecte (el del fill, abans que
+     este), i un avís nascut amb el modal obert naix en una pàgina inert i el
+     lector no l'anuncia. */
+  const errorEixirPendent = useRef(null);
+  useEffect(() => {
+    if (confirmaEixir || errorEixirPendent.current == null) return;
+    setErrorEixir(errorEixirPendent.current);
+    errorEixirPendent.current = null;
+  }, [confirmaEixir]);
 
   /* ── Tots els hooks ABANS de cap return condicional ── */
   const isPersona = identitat?.mena === 'persona';
@@ -61,8 +106,9 @@ export default function DetallAjust({
   /* Onada 4 · T3 (RETALLADOR.txt §3) · Una foto d'avatar passa abans pel
      retallador en quadrat, el mateix del Perfil (useEnquadramentAvatar).
      Cancel·lar no puja res i el focus torna al selector de fitxers. Avui cap
-     ajust de «compte» és una imatge (l'avatar s'edita a la fitxa, amb
-     DialegCapcaleraAvatar): esta branca espera el dia que el catàleg en porte. */
+     ajust de «compte» és una imatge (l'avatar s'edita a la fitxa, amb el
+     botó «Avatar» i la seua finestra de retall, useImatgeDeFitxa): esta
+     branca espera el dia que el catàleg en porte. */
   const enquadrament = useEnquadramentAvatar({
     onEnquadrat: pujaImatge,
     onError: (text) => setMissatge({ tipus: 'error', text }),
@@ -71,8 +117,18 @@ export default function DetallAjust({
   /* El timeout del missatge de "Desat" es neteja en desmuntar. */
   useEffect(() => () => clearTimeout(timeoutMissatge.current), []);
 
+  /* Grup C (correcció 261008) · Mentre dura el «Desat correctament.», el canvi
+     de valor que porta el nostre desat (el Perfil refà l'ajust amb el valor
+     nou: PerfilContext.aplicaColumnes) només sincronitza el control; abans
+     esborrava el missatge al commit següent. Un altre ajust o una altra
+     identitat sí que l'esborren, i un canvi de valor sense desat nostre també. */
+  const acabaDeDesar = useRef(false);
+
   useEffect(() => {
-    clearTimeout(timeoutMissatge.current);
+    acabaDeDesar.current = false;
+  }, [ajust?.id, identitat?.id, ajust?.tipus]);
+
+  useEffect(() => {
     const valorInicial =
       ajust?.tipus === 'password'
         ? ''
@@ -80,6 +136,8 @@ export default function DetallAjust({
           ? Boolean(ajust?.valor)
           : ajust?.valor ?? '';
     setValorTemp(valorInicial);
+    if (acabaDeDesar.current) return;
+    clearTimeout(timeoutMissatge.current);
     setMissatge(null);
   }, [ajust?.id, identitat?.id, ajust?.tipus, ajust?.valor]);
 
@@ -162,15 +220,22 @@ export default function DetallAjust({
 
     setDesant(true);
     setMissatge(null);
+    /* Abans de la crida: el Perfil pot aplicar el valor nou (i tornar a pintar
+       este ajust) abans que la promesa es resolga. */
+    acabaDeDesar.current = true;
     try {
       /* Identitat EXPLÍCITA: este era el forat que escrivia a
          l'entitat equivocada. */
       await guardarAjust(identitat.id, ajust.id, valorTemp);
       setMissatge({ tipus: 'exit', text: 'Desat correctament.' });
       clearTimeout(timeoutMissatge.current);
-      timeoutMissatge.current = setTimeout(() => setMissatge(null), 3000);
+      timeoutMissatge.current = setTimeout(() => {
+        acabaDeDesar.current = false;
+        setMissatge(null);
+      }, 3000);
     } catch (error) {
-      setMissatge({ tipus: 'error', text: error?.message || 'Error en desar.' });
+      acabaDeDesar.current = false;
+      setMissatge({ tipus: 'error', text: textDeDesat(error) });
     } finally {
       setDesant(false);
     }
@@ -180,10 +245,45 @@ export default function DetallAjust({
     if (ajust?.valor && isSafeUrl(ajust.valor)) navigate(ajust.valor);
   }
 
+  /* Grup C (261008) · La persona se'n va: es lleva ella mateixa (el seu id de
+     persona). Si ix bé, el Perfil ja no porta l'organització i esta pàgina es
+     desmunta; si no, l'error es diu en línia i la persona continua dins.
+     Correcció 261008 · Per això la confirmació no és un text d'esta pàgina
+     (no es veia mai): és l'avís efímer de l'App (useToast), el mateix que
+     confirma una organització nova a PerfilShell, que sobreviu al desmuntatge. */
+  async function eixDeLOrganitzacio() {
+    if (eixintRef.current) return;
+    if (membres?.usuariId == null) {
+      errorEixirPendent.current = 'Cal iniciar sessió.';
+      setConfirmaEixir(false);
+      return;
+    }
+    const nom = identitat.nom;
+    eixintRef.current = true;
+    setEixint(true);
+    setErrorEixir(null);
+    try {
+      await membres.llevaMembre(identitat.id, { tipus: 'persona', id: membres.usuariId });
+      showToast(`Ja no formes part de ${nom}.`, 'success');
+    } catch (error) {
+      if (muntat.current && error?.name !== 'AbortError') {
+        errorEixirPendent.current = error?.message || 'No s’ha pogut eixir de l’organització.';
+      }
+    } finally {
+      eixintRef.current = false;
+      if (muntat.current) {
+        setEixint(false);
+        setConfirmaEixir(false);
+      }
+    }
+  }
+
   /* ── Render: el CATÀLEG mana, la UI obedeix ── */
 
   function renderitzaAccio() {
-    if (ajust.pendent) {
+    /* Grup C · «Membres» i «Eixir» necessiten les accions del Perfil. */
+    const senseMembres = (ajust.accio === 'membres' || ajust.accio === 'eixir') && !membres;
+    if (ajust.pendent || senseMembres) {
       /* Honestedat abans que promeses: acció declarada però sense
          backend = botó desactivat + explicació, mai "permission
          denied" en silenci. */
@@ -219,6 +319,21 @@ export default function DetallAjust({
         </div>
       );
     }
+    /* Ordre del Mestre (261008, grup C) · La gestió dels membres. */
+    if (ajust.accio === 'membres') {
+      return <GestioMembres organitzacio={identitat} accions={membres} />;
+    }
+    if (ajust.accio === 'eixir') {
+      return (
+        <div className="sdp-buit">
+          <button type="button" className="sdp-boto sdp-boto--perill"
+            onClick={() => { setErrorEixir(null); setConfirmaEixir(true); }} disabled={eixint}>
+            Eixir de l’organització
+          </button>
+          {errorEixir ? <p className="sdp-camp__error" role="alert">{errorEixir}</p> : null}
+        </div>
+      );
+    }
     /* Acció declarada però sense despachar: que el catàleg i la UI no
        tornen a divergir en silenci. */
     if (import.meta.env.DEV) {
@@ -230,8 +345,8 @@ export default function DetallAjust({
   function renderitzaFormulari() {
     if (!ajust.obert) {
       /* Un ajust tancat amb valor (el correu, l'identificador) el mostra:
-         saber-lo també és part del compte. */
-      const valorVisible = ajust.tipus === 'text' && typeof ajust.valor === 'string' ? ajust.valor : '';
+         saber-lo també és part del compte. Grup C · també el poble triat. */
+      const valorVisible = (ajust.tipus === 'text' || ajust.tipus === 'selector') && typeof ajust.valor === 'string' ? ajust.valor : '';
       return (
         <>
           {valorVisible ? <p className="perfil-ajust__valor">{valorVisible}</p> : null}
@@ -248,6 +363,42 @@ export default function DetallAjust({
     /* T43 · L'ajuda del catàleg (p. ex. d'on ix el correu per defecte) es
        llig amb el control (aria-describedby). */
     const idAjuda = ajust.ajuda ? `ajust-${ajust.id}-ajuda` : undefined;
+
+    const blocMissatge = missatge && (
+      <p
+        className={missatge.tipus === 'exit' ? 'sdp-text-exit' : 'sdp-camp__error'}
+        role={missatge.tipus === 'exit' ? 'status' : 'alert'}
+      >
+        {missatge.text}
+      </p>
+    );
+    const blocGuardar = (
+      <div className="sdp-alerta__accions">
+        <button type="submit" className="sdp-boto sdp-boto--primari" disabled={desant || pujant}>
+          {desant ? 'Desant...' : 'Guardar'}
+        </button>
+      </div>
+    );
+
+    /* Grup C (261008) · Un ajust amb opcions (el poble de l'organització):
+       Camp i Selector de Pedra Seca, amb el mateix missatge i el mateix
+       Guardar. Camp ja porta l'etiqueta, l'ajuda i l'aria-describedby. */
+    if (tipus === 'selector') {
+      return (
+        <form onSubmit={handleSubmit}>
+          <Camp etiqueta={`Nou valor per a ${ajust.titol.toLowerCase()}:`} ajuda={ajust.ajuda}>
+            <Selector
+              value={valorTemp}
+              onChange={(e) => setValorTemp(e.target.value)}
+              opcions={Array.isArray(ajust.opcions) ? ajust.opcions : []}
+              disabled={desant}
+            />
+            {blocMissatge}
+            {blocGuardar}
+          </Camp>
+        </form>
+      );
+    }
 
     return (
       <form onSubmit={handleSubmit} className="sdp-form">
@@ -323,20 +474,9 @@ export default function DetallAjust({
             />
           )}
 
-          {missatge && (
-            <p
-              className={missatge.tipus === 'exit' ? 'sdp-text-exit' : 'sdp-camp__error'}
-              role={missatge.tipus === 'exit' ? 'status' : 'alert'}
-            >
-              {missatge.text}
-            </p>
-          )}
+          {blocMissatge}
 
-          <div className="sdp-alerta__accions">
-            <button type="submit" className="sdp-boto sdp-boto--primari" disabled={desant || pujant}>
-              {desant ? 'Desant...' : 'Guardar'}
-            </button>
-          </div>
+          {blocGuardar}
         </div>
       </form>
     );
@@ -359,6 +499,19 @@ export default function DetallAjust({
       )}
       {/* Fora del <form>: els controls del retallador no l'han d'enviar. */}
       {enquadrament.dialeg}
+      {/* Grup C (261008) · La confirmació d'«Eixir de l'organització». */}
+      {ajust?.accio === 'eixir' && membres ? (
+        <DialegConfirmacio
+          obert={confirmaEixir}
+          onTanca={() => { if (!eixintRef.current) setConfirmaEixir(false); }}
+          onConfirma={eixDeLOrganitzacio}
+          titol={`Eixir de ${identitat.nom}?`}
+          descripcio="Deixaràs de ser-ne membre i ja no la veuràs al teu perfil. Per a tornar-hi, algú que l’administre t’hi haurà d’afegir."
+          etiquetaConfirma="Eixir"
+          destructiu
+          carregant={eixint}
+        />
+      ) : null}
     </div>
   );
 }

@@ -49,7 +49,10 @@ export const CONTRACTE_AMFITRIO_V1 = congela({
   /* ── Entrades: de l'amfitrió al nucli ─────────────────────────────── */
 
   /* El marcatge universal de tres peces (sdp.markup.v1): el global abans del
-     paquet, l'element i el paquet com a <script src> clàssic. */
+     paquet, l'element i el paquet com a <script src> clàssic. Decisió 5 del
+     Mestre (261007) · El marcatge no canvia amb el paquet trossejat: el
+     <script src> continua sent soc-de-poble.standalone.js, ara un carregador
+     clàssic que demana els trossos ESM de dist/trossos/ (vegeu `api`). */
   marcatge: 'sdp.markup.v1',
   element: 'soc-de-poble',
   global: 'SocDePobleConfig',
@@ -94,7 +97,25 @@ export const CONTRACTE_AMFITRIO_V1 = congela({
     verbs: { sessio: 'amfitrio', configura: 'api' }
   },
 
-  /* window.SocDePoble, congelat: l'única global que escriu el nucli. */
+  /* window.SocDePoble, congelat: l'única global que escriu el nucli.
+     Decisió 5 del Mestre (261007, paquet trossejat) · Amb el paquet trossejat
+     (el defecte de l'autònom), l'API és PROVISIONAL fins a l'adopció: el
+     carregador clàssic (carregadorDelPaquet.js, protocol sdp.carregador.v1)
+     hi deixa, abans que arribe cap mòdul, un objecte congelat i configurable
+     amb estes mateixes `claus` i en el mateix ordre. Mentrestant:
+       · cada verb s'encua en ordre i torna una promesa amb el resultat o
+         l'error REALS (el <script> de l'amfitrió posat després del paquet,
+         `if (window.SocDePoble) { configura(…) }`, ja hi troba l'objecte);
+       · `isReady` val false i `CONTRACTE_BACKEND`, undefined;
+       · estat() respon de seguida amb `fase` 'carregant' (configurable: true)
+         o, si el mòdul d'entrada no ha pogut carregar, 'fallida'
+         (configurable: false), dos valors que l'API real no dona mai (la
+         seua fase és 'configurable', 'arrencant' o 'segellat', host.js).
+     En adoptar, el mòdul d'entrada (embed.jsx) hi definix l'API real, no
+     configurable (exposaGlobal), i el mateix objecte provisional reenvia
+     cada crida de manera síncrona a qui n'haja guardat la referència. Amb
+     el paquet monolític (SDP_PAQUET=monolitic, la variant del directori de
+     WordPress) no hi ha provisional: l'API real ix en avaluar-se el paquet. */
   api: {
     global: 'SocDePoble',
     claus: ['configura', 'arrenca', 'arrencaAuto', 'deferArrenca', 'estat', 'CONTRACTE_BACKEND',
@@ -451,8 +472,19 @@ export function validaDeclaracioAmfitrio(decl) {
           error('declaracio-invalida', 'script', undefined, 'Cada script porta un src.');
           continue;
         }
+        /* Relleu 261007 (peça «netes») · Decisió 5 del Mestre (261007, paquet
+           trossejat) · El que ha de ser clàssic és el CARREGADOR: troba la seua
+           carpeta amb document.currentScript, que en un script de mòdul és null
+           (carregadorDelPaquet.js). Els trossos ESM els demana ell. El codi de
+           la diagnosi (bundle-modul) no canvia.
+           Relleu 261007 (peça «netes», revisió) · El mateix nom de fitxer també
+           es distribuïx monolític: la variant del directori (SDP_VARIANT=wordpress)
+           ho és sempre i SDP_PAQUET=monolitic ho tria per a l'autònom
+           (formatDelPaquet, vite.standalone.config.js). Eixe fitxer és l'IIFE
+           sencer, sense carregador ni trossos, i també va en clàssic: el text
+           que llig l'amfitrió nomena totes dues formes. */
         if (script.tipus !== 'classic') {
-          error('bundle-modul', 'script', script.src, 'El paquet és un IIFE: <script src> clàssic, mai de mòdul.');
+          error('bundle-modul', 'script', script.src, 'soc-de-poble.standalone.js (el carregador o l’IIFE monolític) va en un <script src> clàssic, mai de mòdul; si és el carregador, els trossos els demana ell.');
           continue;
         }
         scripts.push(Object.freeze({ src: script.src, tipus: 'classic' }));

@@ -1,9 +1,11 @@
 import React from 'react';
 import { renderHook, act, cleanup } from '@testing-library/react';
-import { afterEach, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({
   update: vi.fn(), send: vi.fn(), toast: vi.fn(), mou: vi.fn(), esborra: vi.fn(), notes: [],
-  scopeKey: 'tenant-user', workspaceKey: 'session'
+  scopeKey: 'tenant-user', workspaceKey: 'session',
+  /* Grup E (261008) · la guarda de re-signatura: l'actor actiu i les publicacions del Mur carregades. */
+  actor: null, feed: undefined
 }));
 vi.mock('./NotesDataContext', () => ({ useNotesData: () => ({
   notes: mocks.notes, noteFolders: [], scopeKey: mocks.scopeKey, workspaceKey: mocks.workspaceKey, config: { tenantId: 'tenant' },
@@ -14,9 +16,9 @@ vi.mock('../../app/contexts/UIContext', () => ({
   useUIActions: () => ({ normalizeSearchText: s => s, t: (_key, fallback) => fallback })
 }));
 vi.mock('@/components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: mocks.toast }) }));
-vi.mock('../mur/MurContext', () => ({ useMur: () => ({ sendSectionSubmission: mocks.send }) }));
+vi.mock('../mur/MurContext', () => ({ useMur: () => ({ sendSectionSubmission: mocks.send, feedPosts: mocks.feed }) }));
 /* Poliment T41/T43 · qui signa: l'actor d'IdentitatContext (proves a NotesContext.dataPublicacio). */
-vi.mock('../../app/contexts/IdentitatContext.jsx', () => ({ useIdentitat: () => ({ actor: null }) }));
+vi.mock('../../app/contexts/IdentitatContext.jsx', () => ({ useIdentitat: () => ({ actor: mocks.actor }) }));
 vi.mock('../../app/contexts/SessionContext.jsx', () => ({ useSession: () => ({ currentUser: null }) }));
 vi.mock('../../data/backendPort.js', () => ({ promoteToPublic: vi.fn(), teCapacitat: () => false }));
 vi.mock('./GlobalSaveManager.js', async importOriginal => {
@@ -28,6 +30,7 @@ vi.mock('./GlobalSaveManager.js', async importOriginal => {
 });
 import { NotesProvider, useNotes, etiquetesDeNota } from './NotesContext';
 import { bgSaveManager, draftFields } from './GlobalSaveManager.js';
+import { motiuSignaturaAliena, publicaAmbMotiu } from './visibilitatNota.js';
 afterEach(cleanup);
 test('doble clic i reintent després de POST confirmat reutilitzen el mateix ID', async () => {
   let revision = 1;
@@ -217,4 +220,79 @@ test('les etiquetes editorials compartides no incorporen la carpeta i respecten 
 test('notes legacy sense categories conserven els labels explícits, sense perdre els de la llavor', () => {
   const labels = ['Sistema', 'Productivitat', 'Tutorial', 'Sóc de Poble'];
   expect(etiquetesDeNota({ folderId: 'f-mur', labels, tags: ['Tutorial'] }, [{ id: 'f-mur', name: 'Mur' }]).map(label => label.text)).toEqual(labels);
+});
+
+/* ── Grup E de l'Onada 4 (prompt 261008_1201, risc «que estiga clavat el
+   comportament») ── Una nota publicada s'edita com a esborrany privat i el Mur
+   només canvia amb «Actualitzar al Mur» (un upsert amb el mateix id signat
+   per l'actor actiu). La guarda de re-signatura: si la publicació carregada
+   la signa una altra identitat, no s'envia res i el motiu va en línia pel
+   canal de sempre (ErrorPublicacio → publicaAmbMotiu). */
+describe('Grup E · la guarda de re-signatura de publishNote', () => {
+  const PEP = Object.freeze({ tipus: 'persona', id: 'u-pep', rol: 'persona' });
+  const FORN = Object.freeze({ tipus: 'entitat', id: 'org-forn', slug: 'forn-de-la-torre', rol: 'owner' });
+  const publicada = (id) => ({ id, title: 'Pa de cada dia', content: '<p>Cos</p>', revision: 1, isPublished: true, publishedSubmissionId: id });
+  /* Com elementDeFilaPublicada (mapejadorSeccions.js): l'autoria, de les columnes. */
+  const delForn = (id) => ({ id, title: 'Pa de cada dia', ownerUserId: 'u-pep', author_org_id: 'org-forn', authorOrgId: 'org-forn', author_name: 'Forn de la Torre' });
+  const dePep = (id) => ({ id, title: 'Pa de cada dia', ownerUserId: 'u-pep', author_org_id: null, authorOrgId: null, author_name: 'Pep' });
+
+  beforeEach(() => {
+    mocks.toast.mockReset();
+    mocks.send.mockReset().mockResolvedValue(undefined);
+    mocks.update.mockReset().mockImplementation(async (id, changes, revision) => ({ id, ...changes, revision: (revision ?? 1) + 1 }));
+  });
+  afterEach(() => {
+    mocks.actor = null;
+    mocks.feed = undefined;
+  });
+
+  test('la signa l’entitat i l’actor és la persona: no s’envia res i el motiu diu qui la signa', async () => {
+    Object.assign(mocks, { actor: PEP, feed: [delForn('g-1')] });
+    const { result } = renderHook(useNotes, { wrapper: NotesProvider });
+    let error;
+    await act(async () => { error = await result.current.publishNote(publicada('g-1')).catch((motiu) => motiu); });
+    const motiu = motiuSignaturaAliena('Forn de la Torre');
+    expect(motiu).toBe('Esta publicació la signa Forn de la Torre: canvia a eixa identitat per a actualitzar-la.');
+    expect(error).toMatchObject({ name: 'ErrorPublicacio', message: motiu });
+    expect(mocks.send).not.toHaveBeenCalled();
+    expect(mocks.update).not.toHaveBeenCalled();
+    expect(mocks.toast).toHaveBeenCalledWith(motiu, 'info');
+    // El canal en línia del selector (NotesEditor · publicaAmbMotiu) diu el motiu, no «torna-ho a provar».
+    await act(async () => {
+      await expect(publicaAmbMotiu(() => result.current.publishNote(publicada('g-1')))).rejects.toThrow(motiu);
+    });
+  });
+
+  test('la signa la persona i l’actor és l’entitat: tampoc', async () => {
+    Object.assign(mocks, { actor: FORN, feed: [dePep('g-2')] });
+    const { result } = renderHook(useNotes, { wrapper: NotesProvider });
+    let error;
+    await act(async () => { error = await result.current.publishNote(publicada('g-2')).catch((motiu) => motiu); });
+    expect(error).toMatchObject({ name: 'ErrorPublicacio', message: motiuSignaturaAliena('Pep') });
+    expect(mocks.send).not.toHaveBeenCalled();
+  });
+
+  test('la signa la mateixa identitat: s’actualitza com sempre (el mateix id)', async () => {
+    Object.assign(mocks, { actor: FORN, feed: [delForn('g-3')] });
+    const { result } = renderHook(useNotes, { wrapper: NotesProvider });
+    await act(async () => { expect(await result.current.publishNote(publicada('g-3'))).toBe(true); });
+    expect(mocks.send.mock.calls.map(([submission]) => submission.id)).toEqual(['g-3']);
+  });
+
+  test('fora de la finestra carregada, sense signatura coneguda, sense actor o encara no publicada: com abans', async () => {
+    const casos = [
+      { actor: PEP, feed: [], nota: publicada('g-4') },
+      { actor: PEP, feed: [{ id: 'g-5', title: 'Sense autor' }], nota: publicada('g-5') },
+      { actor: null, feed: [delForn('g-6')], nota: publicada('g-6') },
+      { actor: PEP, feed: [delForn('g-7')], nota: { ...publicada('g-7'), isPublished: false, publishedSubmissionId: null } }
+    ];
+    for (const { actor, feed, nota } of casos) {
+      Object.assign(mocks, { actor, feed });
+      const { result, unmount } = renderHook(useNotes, { wrapper: NotesProvider });
+      await act(async () => { expect(await result.current.publishNote(nota)).toBe(true); });
+      unmount();
+    }
+    expect(mocks.send.mock.calls.map(([submission]) => submission.id)).toEqual(['g-4', 'g-5', 'g-6', 'g-7']);
+    expect(mocks.toast.mock.calls.filter(([, tipus]) => tipus === 'info')).toEqual([]);
+  });
 });

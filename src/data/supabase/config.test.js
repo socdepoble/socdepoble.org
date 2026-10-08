@@ -66,19 +66,17 @@ test('T48 · desar el nom (mateix JWT) no reinicia el client; un JWT nou sí', a
   expect(primer.removeAllChannels).toHaveBeenCalled();
 });
 
-test('T48 · donar de baixa, tancar i reautenticar el temps real mai creen un client', async () => {
-  const { tancaRealtime, reautenticaRealtime, unsubscribe } = await import('./realtime.js');
-  await tancaRealtime(); await reautenticaRealtime(); await unsubscribe({ canal: 'x' });
+/* Auditoria 261007 (B) · `unsubscribe` i `reautenticaRealtime` eren codi mort
+   (només els cridava esta prova) i s'han retirat de realtime.js: la prova
+   continua vigilant l'única operació viva, tancar, i que no crea cap client. */
+test('T48 · tancar el temps real mai crea un client', async () => {
+  const realtime = await import('./realtime.js');
+  expect(Object.keys(realtime)).toEqual(['tancaRealtime']);
+  await realtime.tancaRealtime();
   expect(state.calls).toHaveLength(0);
   const { getClient } = await import('./config.js');
   const client = await getClient(TENANT_A);
-  Object.assign(client, { removeChannel: vi.fn() });
-  Object.assign(client.realtime, { disconnect: vi.fn(), connect: vi.fn() });
-  await unsubscribe('canal');
-  expect(client.removeChannel).toHaveBeenCalledWith('canal');
-  await reautenticaRealtime();
-  expect(client.realtime.connect).toHaveBeenCalled();
-  await tancaRealtime();
+  await realtime.tancaRealtime();
   expect(client.removeAllChannels).toHaveBeenCalled();
   expect(state.calls).toHaveLength(1);
 });

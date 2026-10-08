@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { Camp, CampText, Insignia, Taula } from '../../../components/PedraSeca';
 import { GraellaXifres } from '../XifresMas.jsx';
 import { xifresDeVista } from '../xifresMas.js';
-import { etiquetaNode, filesEntradesEixides } from './grafMapa.js';
+import { TO_CONFIANCA, etiquetaNode, filesEntradesEixides } from './grafMapa.js';
 
 /* Entrades i eixides (la pestanya «Entradas y salidas» d'Emowe): per a cada
    skill i cada ruta, què llig, què escriu, qui la crida i a qui crida.
@@ -12,9 +12,10 @@ import { etiquetaNode, filesEntradesEixides } from './grafMapa.js';
    dependre d'un filtre que no viatja amb l'adreça. La taula sí que filtra.
    Derogat per l'ordre del Mestre del 261004 (xat: cap xifra solta): les
    xifres «Skills mostrades» i «Caixes opaques» com a targetes del Panell de
-   Control, que comptaven només el que casava amb la cerca. */
-
-const TO_CONFIANCA = Object.freeze({ declarat: 'info', derivat: 'neutre', inferit: 'avis' });
+   Control, que comptaven només el que casava amb la cerca.
+   Neteja 261007 (prompt 261007_1628, peça D) · El to de la confiança és el
+   de grafMapa.js (TO_CONFIANCA), la seua única font: ací n'hi havia una còpia
+   idèntica. */
 
 function Llista({ arestes, cap }) {
   if (!arestes.length) return '—';

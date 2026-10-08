@@ -100,13 +100,66 @@ describe('enviament idempotent per RPC', () => {
     expect(error.code).toBe('SDP-XAT-006');
     expect(error.retriable).toBe(false);
   });
-  it('marca com a reintentables la xarxa i els errors del servidor', async () => {
-    query.error = new TypeError('Failed to fetch');
-    await expect(enviaMissatge('fil', 'Hola', REMOT)).rejects.toMatchObject({ retriable: true, message: 'No s’ha pogut enviar el missatge.' });
-    query.error = { message: 'upstream', status: 503 };
+  /* Auditoria 261007 (B) · Amb la forma REAL de postgrest-js: no llança, torna
+     { data: null, error: objecte pla, status } i l'estat HTTP és a la
+     resposta, no a l'error (node_modules/@supabase/postgrest-js, 420-431 i
+     486-509). La prova d'abans simulava un TypeError i un error amb `status`
+     dins, que postgrest-js no produïx mai, i passava sense provar res. */
+  it('marca com a reintentables la xarxa i els errors del servidor, amb la forma real de postgrest-js', async () => {
+    const respon = (error, status) => { query.error = error; query.status = status; };
+    /* Safari (iOS 16, el baseline): un fetch que no arriba. */
+    respon({ message: 'TypeError: Load failed', details: '', hint: '', code: '' }, 0);
+    const safari = await enviaMissatge('fil', 'Hola', REMOT).catch((e) => e);
+    expect(safari).toMatchObject({ retriable: true, code: 'XAT', message: 'No s’ha pogut enviar el missatge.' });
+    expect(safari.cause).toMatchObject({ status: 0 });
+    respon({ message: 'TypeError: Failed to fetch', details: '', hint: '', code: '' }, 0);
     await expect(enviaMissatge('fil', 'Hola', REMOT)).rejects.toMatchObject({ retriable: true });
-    query.error = { message: 'Could not find the function public.xat_envia', code: 'PGRST202' };
+    /* La passarel·la o PostgREST sense la memòria de l'esquema: 5xx. */
+    respon({ message: 'Could not query the database for the schema cache. Retrying.', code: 'PGRST002', details: null, hint: null }, 503);
+    await expect(enviaMissatge('fil', 'Hola', REMOT)).rejects.toMatchObject({ retriable: true });
+    respon({ message: '<html>502 Bad Gateway</html>' }, 502);
+    await expect(loadMissatges('fil', REMOT)).rejects.toMatchObject({ retriable: true });
+    /* Sense estat (un altre client), el text del fetch caigut encara es reconeix. */
+    respon({ message: 'TypeError: Load failed' }, undefined);
+    await expect(loadFils(REMOT)).rejects.toMatchObject({ retriable: true });
+    /* Una regla del servidor o l'esquema absent no es reintenten mai. */
+    respon({ message: 'SDP-XAT-006: no eres membre actiu d’este fil.', code: '42501', details: null, hint: null }, 403);
+    await expect(enviaMissatge('fil', 'Hola', REMOT)).rejects.toMatchObject({ code: 'SDP-XAT-006', retriable: false });
+    respon({ message: 'Could not find the function public.xat_envia', code: 'PGRST202', details: null, hint: null }, 404);
     await expect(enviaMissatge('fil', 'Hola', REMOT)).rejects.toMatchObject({ code: 'ESQUEMA', retriable: false });
+    respon({ message: 'permís', code: '42501' }, 400);
+    await expect(marcaLlegit('fil', REMOT)).rejects.toMatchObject({ code: 'XAT', retriable: false });
+  });
+
+  /* Auditoria 261007 (B) · Un TypeError LLANÇAT de veres (no tornat per
+     postgrest-js) encara pot arribar a errorDeXat: un fetch que llança dins
+     de getClient o del client. El de Safari el reconeix també el text; el
+     d'undici («fetch failed», Node) només la branca `instanceof TypeError`. */
+  it('un TypeError llançat sense estat és reintentable', async () => {
+    client.rpc.mockImplementationOnce(() => { throw new TypeError('Load failed'); });
+    await expect(enviaMissatge('fil', 'Hola', REMOT)).rejects.toMatchObject({ retriable: true, code: 'XAT' });
+    client.rpc.mockImplementationOnce(() => { throw new TypeError('fetch failed'); });
+    const error = await enviaMissatge('fil', 'Hola', REMOT).catch((e) => e);
+    expect(error).toMatchObject({ retriable: true, code: 'XAT', message: 'No s’ha pogut enviar el missatge.' });
+    expect(error.cause).toBeInstanceOf(TypeError);
+    expect(error.cause.status).toBeUndefined();
+  });
+
+  it('un estat que ja porta l’error no se sobreescriu amb el de la resposta', async () => {
+    query.error = { message: 'upstream', status: 503 };
+    query.status = 0;
+    const error = await enviaMissatge('fil', 'Hola', REMOT).catch((e) => e);
+    expect(error.cause.status).toBe(503);
+    expect(error.retriable).toBe(true);
+  });
+
+  it('una crida avortada mentre era en vol ix com a AbortError, no com a error del xat', async () => {
+    const controller = new AbortController();
+    query.abortSignal = vi.fn(function avorta() { controller.abort(); return this; });
+    query.error = { message: 'AbortError: The user aborted a request.', details: '', hint: 'Request was aborted (timeout or manual cancellation)', code: '' };
+    query.status = 0;
+    const error = await loadMissatges('fil', { ...REMOT, signal: controller.signal }).catch((e) => e);
+    expect(error).toMatchObject({ name: 'AbortError', code: 'AbortError' });
   });
 });
 
@@ -165,8 +218,50 @@ describe('historial per cursor i marques', () => {
     expect(await carregaMembres('Sóc', REMOT)).toEqual([org]);
     query.data = [{ id: 'fil-org', org_id: 'org-real', entitat_nom: 'Sóc de Poble', com_entitat: true,
       altres: [{ id: 'client-real', nom: 'Client', tipus: 'persona', avatarUrl: null }] }];
-    expect(await loadFils(REMOT)).toEqual([expect.objectContaining({ entitatId: 'org-real', entitatNom: 'Sóc de Poble', comEntitat: true,
+    /* Ordre del Mestre (261007) · Les files d'ajuda per defecte van a la cua:
+       es comparen les converses de veres. */
+    expect((await loadFils(REMOT)).filter(f => !f.perDefecte)).toEqual([expect.objectContaining({ entitatId: 'org-real', entitatNom: 'Sóc de Poble', comEntitat: true,
       altres: [{ id: 'client-real', nom: 'Client', tipus: 'persona', avatarUrl: null }] })]);
+  });
+});
+
+/* Ordre del Mestre (261007) · «Sóc de Poble» i la «IAIA MarIA» a la llista de
+   tota persona en remot: la regla és de xatsPerDefecte.js i l'adaptador només
+   la crida amb la resposta del servidor. */
+describe('xats d’ajuda per defecte en remot', () => {
+  const LOGO_QUADRAT = '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg';
+  const UUID_ENTITAT = '00000000-0000-4000-8000-0000000000aa';
+  it('sense cap conversa, les dues files a la cua, amb el logo quadrat de Sóc de Poble', async () => {
+    query.data = [];
+    const fils = await loadFils(REMOT);
+    expect(fils.map(f => [f.id, f.perDefecte, f.imatgeUrl])).toEqual([
+      ['sdp-per-defecte:socdepoble', 'socdepoble', LOGO_QUADRAT],
+      ['sdp-per-defecte:iaia', 'iaia', AGENTS_MAP.IAIA.avatar_url]
+    ]);
+    expect(client.rpc).toHaveBeenCalledTimes(1);
+  });
+  it('amb el missatge directe real amb l’entitat (xat_fils_meus porta el seu slug), només la IAIA', async () => {
+    query.data = [{ id: 'f-real', tipus: 'directe', titol: null, org_id: UUID_ENTITAT, entitat_nom: 'Sóc de Poble', com_entitat: false,
+      altres: [{ id: UUID_ENTITAT, nom: 'Sóc de Poble', tipus: 'entitat', avatarUrl: null, slug: 'socdepoble' }], ultim_seq: 2 }];
+    expect((await loadFils(REMOT)).map(f => f.perDefecte ?? f.id)).toEqual(['f-real', 'iaia']);
+  });
+  it('la comunitat de l’entitat (amb subjecte) no és el xat privat: Sóc de Poble es queda', async () => {
+    query.data = [{ id: 'f-av', tipus: 'canal', org_id: UUID_ENTITAT, subjecte_tipus: 'entitat', subjecte_id: UUID_ENTITAT,
+      altres: [{ id: UUID_ENTITAT, nom: 'Sóc de Poble', tipus: 'entitat', avatarUrl: null, slug: 'socdepoble' }] }];
+    expect((await loadFils(REMOT)).map(f => f.perDefecte ?? f.id)).toEqual(['f-av', 'socdepoble', 'iaia']);
+  });
+  it('en seed, cap fila sintètica: la llavor ja porta els seus fils', async () => {
+    const fils = await loadFils(SEED);
+    expect(fils.some(f => f.perDefecte)).toBe(false);
+    expect(mock.getClient).not.toHaveBeenCalled();
+  });
+  it('sense poble, cap llista ni cap fila sintètica', async () => {
+    expect(await loadFils({})).toEqual([]);
+    expect(client.rpc).not.toHaveBeenCalled();
+  });
+  it('un error del servidor es propaga sense injectar res', async () => {
+    query.error = { message: 'SDP-XAT-003: no eres membre d’aquest poble.' };
+    await expect(loadFils(REMOT)).rejects.toMatchObject({ code: 'SDP-XAT-003' });
   });
 });
 

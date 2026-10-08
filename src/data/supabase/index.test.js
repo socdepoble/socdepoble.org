@@ -29,6 +29,10 @@ test('l’adaptador Supabase sencer valida i ofereix compte i consentiment', () 
   expect(presents).toEqual(expect.arrayContaining(['recuperacioContrasenya']));
   expect(teCapacitat('recuperacioContrasenya')).toBe(true);
   for (const nom of CAPACITATS.recuperacioContrasenya) expect(typeof supabase[nom], nom).toBe('function');
+  /* Ordre del Mestre (261008, grup C) · els membres d'una organització (migració 2610081402). */
+  expect(presents).toEqual(expect.arrayContaining(['membresOrganitzacio']));
+  expect(teCapacitat('membresOrganitzacio')).toBe(true);
+  for (const nom of CAPACITATS.membresOrganitzacio) expect(typeof supabase[nom], nom).toBe('function');
 });
 
 test('cap mètode de compte o consentiment es perd per ambigüitat entre mòduls', () => {

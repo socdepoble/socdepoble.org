@@ -21,6 +21,10 @@ export default function EspecimenDretsAutor() {
   const [cas, setCas] = useState(CASOS[0].valor);
   const [obert, setObert] = useState(false);
   const [valor, setValor] = useState('© Sóc de Poble');
+  /* Decisió del Mestre (261008) · La llicència triada de veres (la que s'ha
+     desat a l'espècimen): amb ella la píndola la mostra, com a l'editor. La
+     reserva «© Sóc de Poble» no és cap tria. */
+  const [triada, setTriada] = useState('');
   const actual = CASOS.find((c) => c.valor === cas) || CASOS[0];
   /* Com DocumentEditor: en tancar la vista, el focus torna al botó. */
   const botoRef = useRef(null);
@@ -37,7 +41,7 @@ export default function EspecimenDretsAutor() {
     <Llinatge id="drets" />
     <Especimen id="drets-autor" nom="CopyrightPage · drets d’autor dins de l’editor"
       fitxer="src/components/universal/drets/CopyrightPage.jsx"
-      descripcio="«Elegir drets d’autor» ja no obri un diàleg xicotet: la columna de l’editor passa a la vista de drets, que explica cada llicència amb un exemple de poble i diu d’on ve la de sèrie. L’editor s’amaga però continua muntat (el text i l’autodesament no es perden). Res no canvia fins a «Desar autoria»; CC0 i el text lliure demanen l’acceptació irrevocable."
+      descripcio="«Elegir drets d’autor» ja no obri un diàleg xicotet: la columna de l’editor passa a la vista de drets, que explica cada llicència amb un exemple de poble i diu d’on ve la de sèrie. L’editor s’amaga però continua muntat (el text i l’autodesament no es perden). Res no canvia fins a «Desar autoria»; CC0 i el text lliure demanen l’acceptació irrevocable. Decisió del Mestre (261008): triada una llicència, la píndola la mostra i un clic la torna a obrir per a canviar-la; dins de l’editor, la línia del copyright de davall del títol també obri esta vista (PageFrame, onCanviaCopyright). En lectura i a totes les targetes, el copyright continua sent l’enllaç a /page/drets-autor."
       contracte={[
         ['valor', 'string', "''", 'Els drets d’ara. Preselecciona la llicència; un valor desconegut es pot «Mantindre».'],
         ['autor', 'string', "''", 'El text de sèrie de «Copyright (C)» (© autor), l’última opció. Buit: «Sóc de Poble».'],
@@ -45,7 +49,7 @@ export default function EspecimenDretsAutor() {
         ['perDefecte', 'string | null', 'null', 'Els drets de sèrie que hereten les notes noves (àmbit publicacio).'],
         ['onDesa', '(valor: string) => void', '—', 'Desar: el pare ho envia pel camí de sempre (desaLocal + desaCamp).'],
         ['onTanca', "(motiu: 'esc'|'tornar'|'boto') => void", '—', 'Tornar al document sense desar.'],
-        ['BotoDretsAutor', '{ valor, onClick }', '—', 'El disparador (CopyrightSelector.jsx): el marcatge de sempre, sense aria-haspopup.'],
+        ['BotoDretsAutor', '{ valor, triada?, onClick }', '—', 'El disparador (CopyrightSelector.jsx), amb data-sdp-drets (el destí del focus de l’editor). Sense triada, el marcatge de sempre, sense aria-haspopup: «Elegir drets d’autor». Amb triada (la llicència desada de veres, mai la reserva «© Sóc de Poble»), la píndola plena la mostra i es diu «Drets d’autor: X» (decisió del Mestre, 261008). A l’editor, la triada és document.copyright o, si l’adaptador porta la clau dretsTriats (el Perfil, on el copyright de lectura és el «© Nom» de sèrie), esta clau.'],
       ]}
       a11y={[
         'En obrir, el focus va al títol (h2, tabIndex -1); en tancar, torna al botó que l’ha oberta i la pàgina recupera el scroll.',
@@ -69,11 +73,11 @@ export default function EspecimenDretsAutor() {
       {obert ? (
         <div className="sdp-especimen__columna">
           <CopyrightPage key={cas} valor={valor} autor="Pep del Mas" ambit={actual.ambit} perDefecte={actual.perDefecte}
-            onDesa={(nou) => { setValor(nou); tanca(); }} onTanca={tanca} />
+            onDesa={(nou) => { setValor(nou); setTriada(nou); tanca(); }} onTanca={tanca} />
         </div>
       ) : (
         <div className="sdp-copyright-control" ref={botoRef}>
-          <BotoDretsAutor valor={valor} onClick={() => setObert(true)} />
+          <BotoDretsAutor valor={valor} triada={triada} onClick={() => setObert(true)} />
         </div>
       )}
       <p>Drets desats en l’espècimen: <code>{valor}</code></p>

@@ -4,6 +4,7 @@ import { useSearchParams } from '../../app/contexts/RouterContext';
 import { useIdentitat } from '../../app/contexts/IdentitatContext.jsx';
 import { useNotes, etiquetesDeNota } from './NotesContext';
 import { useMur } from '../mur/MurContext';
+import { usePaginesDelSistema } from '../mur/usePublicacionsDeLActor.js';
 import { useMultimedia } from '../multimedia/MultimediaContext.jsx';
 import { UniversalWorkspace } from '../../components/universal/workspace/UniversalWorkspace';
 import NotesDetail from './NotesDetail.jsx';
@@ -43,11 +44,18 @@ const COLUMNES_INICIALS = Object.freeze({ left: true });
 /* F4 (bloquejant de Codex, relleus 16, 17 i 21 de l'auditoria 261004_2240) ·
    Les fonts de les publicacions del MAS: el Mur porta Mur, Mercat i agenda
    (MurContext) i Multimèdia, els mitjans (MultimediaContext). Totes dues
-   exposen [] fora de 'ready' (useScopedResource torna a 'loading' amb cada
-   recàrrega). 'revalidating' encara no l'emet cap font: es llig si arriba.
-   Un estat absent (una font sense eixa informació) compta com a llest. */
+   exposen [] fora de 'ready'. Decisió 2 del Mestre (261007) · Una
+   recàrrega (renovació de la sessió o refresh) conserva 'ready' i les dades,
+   amb la marca `revalidant`; 'loading' només ix per aïllament (un altre
+   àmbit: persona, actor o backend) o des d'un error, com el «Torna-ho a
+   provar» (useScopedResource.js). 'revalidating' no l'emet cap font: es llig
+   si arriba. Un estat absent (una font sense eixa informació) compta com a
+   llest. */
 const ESTATS_PENDENTS = new Set(['loading', 'revalidating', 'error']);
-const FONT_DE_SECCIO = Object.freeze({ mur: 'mur', mercat: 'mur', events: 'mur', multimedia: 'multimedia' });
+/* Grup E (261008) · La secció Mur també porta les pàgines del sistema, que
+   arriben del contingut core: la seua font (murAmbPagines) espera el Mur i el
+   core. Mercat i agenda continuen esperant només el Mur. */
+const FONT_DE_SECCIO = Object.freeze({ mur: 'murAmbPagines', mercat: 'mur', events: 'mur', multimedia: 'multimedia' });
 const fontDe = (fonts, seccio) => (seccio == null ? null : fonts[FONT_DE_SECCIO[seccio]] ?? null);
 /* Els mateixos textos que l'espai de treball pinta quan carrega o falla
    (UniversalWorkspace · DEFAULT_LABELS.loading i .error). */
@@ -111,10 +119,13 @@ const renderNota = ({ item, active, onSelect }) => {
   if (item?.kind === 'connexio') return <ConnexioFitxa item={item} active={active} onSelect={onSelect} />;
   return <NotaFitxa item={item} active={active} onSelect={onSelect} />;
 };
-const renderDetall = ({ item }) => (
+/* Esmena 2 del pla 261007_1645 · `seccio`: la secció de la carpeta triada
+   (seccioDelPeu), per al peu de l'editor (el que l'actor ja hi té publicat).
+   Una publicació oberta en pren la seua (PublicacioDetall · item.data.seccio). */
+const renderDetall = ({ item }, seccio = null) => (
   item?.kind === 'publicacio'
     ? <PublicacioDetall item={item} />
-    : <NotesDetail activeNote={item?.data} />
+    : <NotesDetail activeNote={item?.data} seccio={seccio} />
 );
 
 /* Llavor del cos d'una nota nova. Inclou Heading 3, 4, 5 i 6 perquè
@@ -162,12 +173,37 @@ export default function NotesSection() {
      mitjans de l'actor, a «Multimèdia». Ja passen pel port (MultimediaContext ·
      loadMultimedia): cap petició nova. Sense proveïdor, cap mitjà. */
   const { mediaItems = CAP, status: estatMultimedia, error: errorMultimedia, refresh: refrescaMultimedia } = useMultimedia();
+  /* Grup E de l'Onada 4 (prompt 261008_1201, tasca 2; decisió del Mestre del
+     261008: el «Sóc de Poble loguejat» és l'entitat socdepoble) · Les pàgines
+     del sistema que el Mur signa com a «Sóc de Poble» (targetesDeSistema, del
+     contingut core: les construïx MurSection i no són a MurContext) també
+     entren a la carpeta «Mur» de l'entitat pilot (masDeLUsuari ·
+     pertanyALActor). Sense cap pàgina, la constant buida: les llistes no es
+     refan a cada pintada. La font de la secció Mur (murAmbPagines) és
+     pendent mentre el Mur O el contingut core carreguen: una URL
+     ?nota=publicacio:mur:projecte espera, no diu «No s'ha pogut obrir
+     l'element». Un error del core no fa caure la font: les publicacions del
+     Mur continuen, sense les pàgines.
+     Revisió del grup E (troballa 1) · I al revés: les pàgines són de la font
+     del Mur i, com les seues publicacions (MurContext exposa [] fora de
+     'ready'), no hi entren mentre el Mur carrega o falla. Si no, amb el core
+     llest abans que el Mur, l'espai de treball en triava una per a «Mur» i,
+     quan el Mur arribava, la publicació més nova ja no s'obria; amb el Mur
+     caigut, el detall pintava una pàgina en lloc de l'error amb Reintentar
+     (relleu 21: la tria no pot dependre de l'ordre de la xarxa). */
+  const { targetes: paginesDelSistema, carregant: paginesCarregant } = usePaginesDelSistema();
+  const murPendent = ESTATS_PENDENTS.has(estatMur);
+  const feedDelMas = useMemo(
+    () => (paginesDelSistema.length && !murPendent ? [...sortedFeedPosts, ...paginesDelSistema] : sortedFeedPosts),
+    [sortedFeedPosts, paginesDelSistema, murPendent]
+  );
+  const estatFontMur = paginesCarregant && !murPendent ? 'loading' : estatMur;
   /* F4 (bloquejant de Codex) · L'estat de cada font, sobre valors primitius:
      el valor de reserva dels contextos sense proveïdor és un objecte nou a
      cada crida, i la resolució per ID no s'ha de refer a cada pintada.
      Revisió de F4 (ronda 1, I1) · I l'error de cada font. useScopedResource
      en guarda el rebuig capturat, un objecte nou a cada fallada
-     (useScopedResource.js:28), i MurContext i MultimediaContext l'exposen tal
+     (useScopedResource.js, catch de la càrrega), i MurContext i MultimediaContext l'exposen tal
      qual. Si una recàrrega passa d'error a error sense que el Bloc pinte cap
      'loading' entremig (el rebuig arriba abans de la pintada), l'estat
      primitiu no canvia: sense l'error, la font era la mateixa, la clau de
@@ -176,8 +212,9 @@ export default function NotesSection() {
      amb la mateixa instància d'error encara no canviaria res. */
   const fontsDelMas = useMemo(() => ({
     mur: { status: estatMur, error: errorMur, refresh: refrescaMur },
+    murAmbPagines: { status: estatFontMur, error: errorMur, refresh: refrescaMur },
     multimedia: { status: estatMultimedia, error: errorMultimedia, refresh: refrescaMultimedia }
-  }), [estatMur, errorMur, refrescaMur, estatMultimedia, errorMultimedia, refrescaMultimedia]);
+  }), [estatMur, estatFontMur, errorMur, refrescaMur, estatMultimedia, errorMultimedia, refrescaMultimedia]);
   const alies = useMemo(() => aliesDeLActor(actor, { dataMode: config?.dataMode }), [actor, config?.dataMode]);
   const {
     status, error, notes, noteFolders, creaNota, setLocalNoteField, updateNote,
@@ -200,10 +237,10 @@ export default function NotesSection() {
   const publicadesDesDeNotes = useMemo(() => new Set(JSON.parse(clauPublicades)), [clauPublicades]);
   const publicacions = useMemo(
     () => itemsPublicatsDe(
-      { feedPosts: sortedFeedPosts, marketItems: sortedMarketItems, events: sortedEvents, mediaItems },
+      { feedPosts: feedDelMas, marketItems: sortedMarketItems, events: sortedEvents, mediaItems },
       alies, { publicadesDesDeNotes }
     ),
-    [sortedFeedPosts, sortedMarketItems, sortedEvents, mediaItems, alies, publicadesDesDeNotes]
+    [feedDelMas, sortedMarketItems, sortedEvents, mediaItems, alies, publicadesDesDeNotes]
   );
   const [params, setParams] = useSearchParams();
   /* T7C (P1) · ?mode=desa obri el Snippet Curador (modeDesa.js): el mateix
@@ -496,8 +533,16 @@ export default function NotesSection() {
      cap element triat: el detall diu que carrega, o que ha fallat amb
      Reintentar (recarrega eixa font), no l'editor buit (que pinta la nota de
      benvinguda). El marcatge és el dels estats propis del detall. */
+  /* Esmena 2 del pla 261007_1645 (ordre del Mestre, 261007: «En seleccionar la
+     carpeta 'Mur' o 'Mercat' i el perfil 'Sóc de Poble', la part inferior de
+     la nota hauria de llistar totes les notícies/productes ja publicades en
+     eixe context») · La secció de la carpeta triada (la mateixa que la nota
+     preparada, categoriaBase) va al detall, que en fa el peu de l'editor. Una
+     altra carpeta, una categoria o una etiqueta: null, i el DOM de sempre. Al
+     snippet (mode desa) no hi ha editor: cap secció. */
+  const seccioDelPeu = modeDesa ? null : seccioDeCarpeta(categoriaBase);
   const renderDetallBloc = useCallback((props) => {
-    if (!esperaCarpeta || props?.item) return renderDetall(props);
+    if (!esperaCarpeta || props?.item) return renderDetall(props, seccioDelPeu);
     if (estatEntrada !== 'error') return <p role="status">{TEXT_CARREGANT}</p>;
     return (
       <div role="alert">
@@ -505,7 +550,7 @@ export default function NotesSection() {
         {typeof refrescaEntrada === 'function' ? <> <button type="button" onClick={refrescaEntrada}>Reintentar</button></> : null}
       </div>
     );
-  }, [esperaCarpeta, estatEntrada, refrescaEntrada]);
+  }, [esperaCarpeta, estatEntrada, refrescaEntrada, seccioDelPeu]);
 
   const handleSelectionChange = useCallback(({ categoryId, itemId }, meta) => {
     // push si és acció de l'usuari directa (per poder tirar enrere)

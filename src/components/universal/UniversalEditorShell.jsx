@@ -7,7 +7,7 @@ import { extractPlainText } from '../../utils/contentAdapter.js';
 import useHeroImageHandler, { validaFitxerImatge } from '../../hooks/useHeroImageHandler.js';
 import { useResolvedAsset } from '../../hooks/useResolvedAsset.js';
 import { resolRecursPropi } from '../../config/assetResolver.js';
-import React, { Component, useRef, useCallback, useEffect, useLayoutEffect, useState } from 'react';
+import React, { Component, useRef, useCallback, useEffect, useId, useLayoutEffect, useState } from 'react';
 import { useContent } from './ContentProvider.jsx';
 import { useToast } from './NotificationContext.jsx';
 import { IconaEstatDesament, RegioEstatDesament } from './EstatDesament.jsx';
@@ -83,15 +83,22 @@ const CAMPS_AMB_AVIS = Object.keys(ETIQUETES_CAMP);
    del cos, la capçalera, l'avatar, el disparador dels drets); si no n'hi ha
    cap, el títol, que és el primer camp del document. T66b · L'emoticona torna
    al botó de l'espai central de la barra taronja (EmoticonaBarra), que és
-   dins de la closca; en lectura no hi ha botó i el focus va al títol. */
+   dins de la closca; en lectura no hi ha botó i el focus va al títol.
+   Ordre del Mestre (261007, ordre E) · L'avatar redó del Perfil (PageFrame,
+   avatarAutor amb onCanvia) és el botó de l'avatar quan no hi ha ranura.
+   Decisió del Mestre (261008) · El disparador dels drets és el que porta
+   data-sdp-drets: la píndola de davall del títol (BotoDretsAutor) i, en
+   edició, el copyright de la capçalera (PageFrame). La píndola va primer al
+   DOM. La classe d'abans (.sdp-copyright-selector) ja no la porta cap
+   disparador: el focus queia al títol. */
 const DESTINS_FOCUS = Object.freeze({
   title: '.editor-title-input',
   subtitle: '.editor-subtitle-input',
   lead: '.editor-lead-input',
   content: '.ProseMirror[contenteditable="true"]',
   heroImage: '.hero-image [role="button"], .hero-image button:not(:disabled)',
-  logoImage: '.page-title-logo-personalitzat [role="button"], .page-title-logo-personalitzat button:not(:disabled)',
-  copyright: '.sdp-copyright-selector',
+  logoImage: '.page-title-logo-personalitzat [role="button"], .page-title-logo-personalitzat button:not(:disabled), .page-title .page-title-avatar--canvia',
+  copyright: '[data-sdp-drets]',
   icon: '.bar-orange > button.sdp-emoticona-barra--boto',
 });
 
@@ -159,6 +166,13 @@ export function EditableField({ html, placeholder, onChange, onBlur, className }
   );
 }
 
+/* Línia I1 de l'Onada 4 (pla 261008_1201) · El text d'ajuda de sèrie de les
+   dues ranures d'imatge (capçalera i logotip). Abans era escrit dues voltes
+   al codi; ara n'és la reserva de heroEditHelp i de logoEditHelp. */
+export const AJUDA_IMATGE_PER_DEFECTE = "Pots pujar qualsevol tipus d'imatge o arxiu multimèdia.";
+/* L'ajuda d'una ranura sense imatge mentre la seua imatge encara puja. */
+export const AJUDA_IMATGE_PUJANT = 'Encara s’està desant la imatge. Quan acabe, la podràs tornar a canviar.';
+
 export function UniversalEditorShell({
   id,
   titleHtml,
@@ -194,8 +208,35 @@ export function UniversalEditorShell({
      crida el pare ({ acaba }) en lloc d'obrir el selector de fitxers. Només
      el Perfil el passa (PerfilEditor); la resta de seccions no canvien. */
   heroEditLabel = 'Editar capçalera',
-  heroEditHelp = "Pots pujar qualsevol tipus d'imatge o arxiu multimèdia.",
+  heroEditHelp = AJUDA_IMATGE_PER_DEFECTE,
   onHeroEdit = null,
+  /* Esmena 1 del pla 261007_1645 i ordre del Mestre (261007, ordre E) · El
+     mirall exacte d'onHeroEdit per al logotip damunt de l'H1: amb
+     `onLogoEdit`, el botó de la ranura crida el pare ({ acaba }) en lloc
+     d'obrir el selector de fitxers, i `logoEditLabel` en dona el nom. Només
+     el Perfil els passa (l'avatar d'una persona o d'un agent IA, que
+     s'enquadra al diàleg); el Bloc de Notes continua amb «Editar logotip». */
+  logoEditLabel = 'Editar logotip',
+  onLogoEdit = null,
+  /* Línia I1 de l'Onada 4 (pla 261008_1201) · Props opcionals que demanen
+     els consumidors (el Perfil, que puja les imatges pel seu camí,
+     useImatgeDeFitxa). Cap té efecte quan falta: el DOM de sempre.
+     · `logoPujant` / `heroPujant`: la imatge de la fitxa puja fora del
+       handler de la closca. Mentre puja, el control es bloqueja com amb la
+       guarda pròpia (botó, «Esborrar» i «Enquadrar» desactivats, cap fitxer
+       nou ni cap enquadrament). Quan acaba, si el focus s'ha perdut (Escape
+       a mitja pujada), torna al botó (useFocusEnAcabarLaPujada).
+     · `logoEditHelp`: el text d'ajuda de la ranura del logotip; per
+       defecte, el de sempre (AJUDA_IMATGE_PER_DEFECTE).
+     · `ajudaAmbImatge`: amb una imatge desada (capçalera o logotip) i
+       onHeroEdit o onLogoEdit, una línia .sdp-camp__ajuda davall del botó en
+       repòs, dins del seu mateix camp (el límit, dit abans de triar), i
+       lligada al botó (aria-describedby). Mentre puja, AJUDA_IMATGE_PUJANT.
+       Sense la prop, res. */
+  logoPujant = false,
+  heroPujant = false,
+  logoEditHelp = AJUDA_IMATGE_PER_DEFECTE,
+  ajudaAmbImatge = null,
   statusIcon = null,
   /* T41 (ordre del Mestre, 260928) · La bola del món (o el cadenat) de la
      barra taronja és un <button> que obri el selector de visibilitat del
@@ -215,8 +256,10 @@ export function UniversalEditorShell({
   onToast = (msg, type) => console.log(`[Toast ${type}] ${msg}`),
   className = '',
   /* T47 (ordre del Mestre, 260928) · Opcionals. `estatDesament` = { estat,
-     detall, accions? } pinta l'indicador de l'autodesament (EstatDesament) com a PRIMER element de la barra
-     taronja; `avisosCamps` = { [camp]: { error?: { missatge, accions }, comptador? } }
+     detall, accions?, reintentant? } pinta l'indicador de l'autodesament (EstatDesament) com a PRIMER element de la barra
+     taronja (línia I1, pla 261008_1201: `reintentant` arriba a la icona, que
+     pinta el check quan un error que la cua torna a provar passa a 'net');
+     `avisosCamps` = { [camp]: { error?: { missatge, accions }, comptador? } }
      pinta els avisos en línia davall de l'entradilla. Sense elles, el DOM
      és el de sempre. */
   estatDesament = null,
@@ -327,6 +370,12 @@ export function UniversalEditorShell({
     heroEditLabel,
     heroEditHelp,
     onHeroEdit,
+    logoEditLabel,
+    onLogoEdit,
+    logoPujant,
+    heroPujant,
+    logoEditHelp,
+    ajudaAmbImatge,
     statusIcon,
     onObriVisibilitat,
     etiquetaVisibilitat,
@@ -445,6 +494,154 @@ export function UniversalEditorShell({
   );
 }
 
+/* Correcció de la revisió (261008) · El nom de la imatge desada quan el botó
+   de davall crida el pare (onEdit): diu que obri les opcions (Enrere,
+   Esborrar), no el canvi. */
+export const NOM_OPCIONS_CAPCALERA = 'Opcions de la capçalera';
+export const NOM_OPCIONS_LOGOTIP = 'Opcions del logotip';
+
+/* Esmena 1 del pla 261007_1645 (un sol editor) · La capçalera i el logotip
+   damunt de l'H1 pinten el MATEIX control: la imatge clicable amb el seu
+   botó i, en edició, el selector, l'ajuda i les accions. Només canvien els
+   textos, la classe de la imatge, «Enquadrar» (només la capçalera, T46) i
+   qui rep el clic del botó: amb `onEdit` (onHeroEdit o onLogoEdit, T35) el
+   pare, en lloc del selector de fitxers.
+   Ordre del Mestre (261007, ordre E) · La guarda de pujada de T46 val per als
+   dos controls: mentre la imatge puja, el botó i «Esborrar» es desactiven,
+   l'ajuda ho diu i un altre fitxer no es processa. Abans el logotip no la
+   tenia i un segon fitxer triat a mitja pujada trepitjava el primer (el
+   desat que acaba l'últim mana, useHeroImageHandler). En repòs, el DOM de
+   sempre.
+   Pla 261008_1201 (un sol clic) · Amb `onEdit`, el botó de davall de la
+   imatge desada crida el pare directament: abans calia un primer clic que
+   només obria el panell i un segon per a canviar-la. Clicar la imatge
+   continua obrint el panell (Enrere, Esborrar). Sense `onEdit` (Notes), el
+   botó obri el panell, com sempre.
+   Correcció de la revisió (261008) · Amb `onEdit`, la imatge i el botó ja no
+   fan el mateix, i al Perfil tots dos es deien «Capçalera» (o «Logotip»): la
+   imatge porta un nom que diu què obri (NOM_OPCIONS_*, WCAG 2.4.6). Sense
+   `onEdit`, cap atribut nou.
+   Línia I1 de l'Onada 4 (pla 261008_1201) · Amb `onEdit` i `ajudaAmbImatge`
+   (un text no buit), el camp en repòs porta davall del botó la mateixa
+   línia .sdp-camp__ajuda que el camp sense imatge: el que s'admet es diu
+   abans de triar, també quan ja n'hi ha una. El text és el que passa el
+   consumidor; mentre la imatge puja, AJUDA_IMATGE_PUJANT, el mateix
+   criteri que la línia del camp sense imatge (correcció de la revisió de
+   la línia I1: la línia no deia res de la pujada en curs).
+   Sense `onEdit` o sense el text, el DOM de sempre.
+   Correcció de la revisió de la línia I1 · Amb `onEdit` (només el Perfil),
+   la línia d'ajuda va lligada al botó amb aria-describedby, com el Camp de
+   Pedra Seca (formulari.jsx: `${id}-ajuda`): el lector diu el límit en
+   arribar al botó, abans de triar. Val per a la línia de sempre i per a la
+   de repòs. Sense `onEdit` (Notes), cap id ni cap atribut nou.
+   `botoRef` és el botó que crida el pare o obri el selector (n'hi ha un de
+   muntat cada vegada): la closca hi torna el focus quan acaba la pujada del
+   consumidor (useFocusEnAcabarLaPujada). Un ref no canvia el DOM. */
+function ImageUploaderUI({
+  image, handler, resolvedImage, isLogo,
+  editLabel, editHelp, imgRef, potEnquadrar,
+  triaFitxer, pujant = false, fontExistent, obriEnquadrament, onEdit,
+  ajudaAmbImatge = null, botoRef = null
+}) {
+  const idBase = useId();
+  const altText = isLogo ? "Logotip" : "Capçalera";
+  const nomDeLaImatge = onEdit ? (isLogo ? NOM_OPCIONS_LOGOTIP : NOM_OPCIONS_CAPCALERA) : undefined;
+  const cssImgClass = isLogo ? "sdp-logo-personalitzat sdp-logo-personalitzat--editable" : "sdp-hero__imatge";
+  const titleText = isLogo ? "Clica per canviar el logotip" : "Clica per canviar la imatge";
+  const uploadText = pujant ? AJUDA_IMATGE_PUJANT : editHelp;
+  const ajudaEnRepos = onEdit && typeof ajudaAmbImatge === 'string' && ajudaAmbImatge.trim()
+    ? (pujant ? AJUDA_IMATGE_PUJANT : ajudaAmbImatge) : null;
+  const idAjuda = onEdit ? `${idBase}-ajuda` : undefined;
+  /* Un fitxer triat mentre l'anterior encara puja no es processa: l'input es
+     buida i el desat en curs continua sent l'únic. La capçalera amb
+     enquadrament ja té la seua guarda (triaHero). */
+  const triaSenseTrepitjar = (e) => {
+    if (pujant) {
+      e.target.value = '';
+      return undefined;
+    }
+    return handler.handleFileChange(e);
+  };
+  const changeHandler = !isLogo && potEnquadrar ? triaFitxer : triaSenseTrepitjar;
+
+  if (image && !handler.isEditing) {
+    return (
+      <>
+        <img
+          ref={imgRef}
+          src={resolvedImage || (image.startsWith('sdp-media://') ? undefined : resolRecursPropi(image))}
+          alt={altText}
+          aria-label={nomDeLaImatge}
+          className={cssImgClass}
+          role="button"
+          tabIndex="0"
+          onClick={handler.startEdit}
+          onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), handler.startEdit())}
+          title={titleText}
+        />
+        <div className="sdp-alerta__accions sdp-camp sdp-camp--centrat">
+          <button ref={botoRef} type="button" className="sdp-boto sdp-boto--secundari" disabled={pujant}
+            aria-describedby={ajudaEnRepos ? idAjuda : undefined}
+            onClick={onEdit ? () => onEdit({ acaba: handler.cancelEdit }) : handler.startEdit}>
+            <ImageIcon size={16} aria-hidden="true" /> {editLabel}
+          </button>
+          {ajudaEnRepos ? <p id={idAjuda} className="sdp-camp__ajuda">{ajudaEnRepos}</p> : null}
+        </div>
+      </>
+    );
+  }
+
+  return (
+    <div className="sdp-alerta__accions sdp-camp sdp-camp--centrat">
+      <input type="file" accept="image/*,video/*,audio/*,.pdf,.doc,.docx" ref={handler.fileInputRef} onChange={changeHandler} className="sdp-nomes-lector" />
+      <button ref={botoRef} type="button" className="sdp-boto sdp-boto--secundari" disabled={pujant} aria-describedby={idAjuda}
+        onClick={() => (onEdit ? onEdit({ acaba: handler.cancelEdit }) : handler.fileInputRef.current?.click())}>
+        <ImageIcon size={16} /> {editLabel}
+      </button>
+      <p id={idAjuda} className="sdp-camp__ajuda">{uploadText}</p>
+      {image && (
+        <div className="sdp-alerta__accions">
+          {/* T46 · Sense una font que es puga llegir (sdp-media sense resoldre), cap botó. */}
+          {!isLogo && potEnquadrar && fontExistent ? (
+            <button type="button" className="sdp-boto sdp-boto--secundari" aria-haspopup="dialog" disabled={pujant} onClick={() => obriEnquadrament(fontExistent)}>
+              <Crop size={16} aria-hidden="true" focusable="false" /> Enquadrar
+            </button>
+          ) : null}
+          <button type="button" className="sdp-boto sdp-boto--fantasma" onClick={handler.cancelEdit}>Enrere</button>
+          {/* Esborrar mentre puja: la foto que arribara després la tornaria a posar. */}
+          <button type="button" className="sdp-boto sdp-boto--perill" disabled={pujant} onClick={handler.handleDelete}>Esborrar</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* Correcció de la revisió de la línia I1 (pla 261008_1201) · Escape a mitja
+   pujada. El consumidor (el Perfil, useImatgeDeFitxa) deixa tancar la
+   finestra de retall mentre la imatge puja; la finestra torna el focus a qui
+   l'havia oberta, el botó de la closca, que en eixe moment està desactivat
+   (heroPujant o logoPujant): focus() no fa res i el focus cau al body. Quan
+   la pujada del consumidor acaba (la prop passa de true a false), si el
+   focus encara és perdut (al body, o enlloc), torna al botó. Si la persona
+   ja és en un altre lloc, no se li roba. Només compta la pujada que diu el
+   consumidor: sense heroPujant ni logoPujant (Notes), res no canvia. Un
+   botó desmuntat (la ranura que dona lloc a l'avatar redó) no fa res: allí
+   el focus el porta el consumidor. Torna el ref del botó. */
+function useFocusEnAcabarLaPujada(pujantDeFora) {
+  const botoRef = useRef(null);
+  const pujava = useRef(false);
+  useEffect(() => {
+    const acabada = pujava.current && !pujantDeFora;
+    pujava.current = pujantDeFora;
+    const boto = botoRef.current;
+    if (!acabada || !boto?.isConnected || boto.disabled) return;
+    // Dins del Web Component, l'arrel és el shadow root: és qui sap on és el focus.
+    const actiu = boto.getRootNode().activeElement ?? document.activeElement;
+    if (!actiu || actiu === document.body) boto.focus();
+  }, [pujantDeFora]);
+  return botoRef;
+}
+
 export function useEditorShell({
   onSaveField,
   onImageUpload = null,
@@ -456,8 +653,14 @@ export function useEditorShell({
   showStatusToggle = true,
   showLogoUpload = true,
   heroEditLabel = 'Editar capçalera',
-  heroEditHelp = "Pots pujar qualsevol tipus d'imatge o arxiu multimèdia.",
+  heroEditHelp = AJUDA_IMATGE_PER_DEFECTE,
   onHeroEdit = null,
+  logoEditLabel = 'Editar logotip',
+  onLogoEdit = null,
+  logoPujant = false,
+  heroPujant = false,
+  logoEditHelp = AJUDA_IMATGE_PER_DEFECTE,
+  ajudaAmbImatge = null,
   statusIcon = null,
   onObriVisibilitat = null,
   etiquetaVisibilitat = '',
@@ -518,8 +721,15 @@ export function useEditorShell({
   /* Poliment T46 (ordre del Mestre, 260928) · Escape tanca el diàleg encara
      que estiga desant, i el desat continua. Mentre la capçalera puja no s'obri
      cap altre enquadrament ni es tria cap fitxer (els botons es desactiven i
-     l'ajuda ho diu): un desat antic no pot trepitjar-ne un de més nou. */
-  const pujant = heroHandler.isUploading;
+     l'ajuda ho diu): un desat antic no pot trepitjar-ne un de més nou.
+     Línia I1 (pla 261008_1201) · `heroPujant` hi suma la pujada que el
+     consumidor fa pel seu camí: el botó, triaHero i obriEnquadrament
+     respecten la mateixa guarda. */
+  const pujant = heroHandler.isUploading || Boolean(heroPujant);
+  /* Correcció de la revisió de la línia I1 · El focus torna al botó de la
+     capçalera o del logotip quan acaba la pujada del consumidor. */
+  const heroBotoRef = useFocusEnAcabarLaPujada(Boolean(heroPujant));
+  const logoBotoRef = useFocusEnAcabarLaPujada(Boolean(logoPujant));
 
   /* T51 (decisió del Mestre, 260928) · En EDICIÓ la pastilla mai queda buida:
      la data de publicació triada al calendari (T40, publishDate) si n'hi ha;
@@ -578,86 +788,34 @@ export function useEditorShell({
     formattedTime,
     formattedDate,
     topBarData: {
-      logoComponent: showLogoUpload ? ((logoImage && !logoHandler.isEditing) ? (
-        <>
-          <img
-            src={resolvedLogoImage || (logoImage.startsWith('sdp-media://') ? undefined : resolRecursPropi(logoImage))}
-            alt="Logotip"
-            className="sdp-logo-personalitzat sdp-logo-personalitzat--editable"
-            role="button"
-            tabIndex="0"
-            onClick={logoHandler.startEdit}
-            onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), logoHandler.startEdit())}
-            title="Clica per canviar el logotip"
-          />
-          <div className="sdp-alerta__accions sdp-camp sdp-camp--centrat">
-            <button type="button" className="sdp-boto sdp-boto--secundari" onClick={logoHandler.startEdit}>
-              <ImageIcon size={16} aria-hidden="true" /> Editar logotip
-            </button>
-          </div>
-        </>
-      ) : (
-        <div className="sdp-alerta__accions sdp-camp sdp-camp--centrat">
-          <input type="file" accept="image/*,video/*,audio/*,.pdf,.doc,.docx" ref={logoHandler.fileInputRef} onChange={logoHandler.handleFileChange} className="sdp-nomes-lector" />
-          <button type="button" className="sdp-boto sdp-boto--secundari" onClick={() => logoHandler.fileInputRef.current?.click()}>
-            <ImageIcon size={16} /> Editar logotip
-          </button>
-          <p className="sdp-camp__ajuda">Pots pujar qualsevol tipus d'imatge o arxiu multimèdia.</p>
-          {logoImage && (
-            <div className="sdp-alerta__accions">
-              <button type="button" className="sdp-boto sdp-boto--fantasma" onClick={logoHandler.cancelEdit}>Enrere</button>
-              <button type="button" className="sdp-boto sdp-boto--perill" onClick={logoHandler.handleDelete}>Esborrar</button>
-            </div>
-          )}
-        </div>
-      )) : null,
-      heroComponent: (heroImage && !heroHandler.isEditing) ? (
-        <>
-          <img
-            ref={heroImgRef}
-            src={resolvedHeroImage || (heroImage.startsWith('sdp-media://') ? undefined : resolRecursPropi(heroImage))}
-            alt="Capçalera"
-            className="sdp-hero__imatge"
-            role="button"
-            tabIndex="0"
-            onClick={heroHandler.startEdit}
-            onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), heroHandler.startEdit())}
-            title="Clica per canviar la imatge"
-          />
-          <div className="sdp-alerta__accions sdp-camp sdp-camp--centrat">
-            <button type="button" className="sdp-boto sdp-boto--secundari" disabled={pujant} onClick={heroHandler.startEdit}>
-              <ImageIcon size={16} aria-hidden="true" /> {heroEditLabel}
-            </button>
-          </div>
-        </>
-      ) : (
-        <div className="sdp-alerta__accions sdp-camp sdp-camp--centrat">
-          <input type="file" accept="image/*,video/*,audio/*,.pdf,.doc,.docx" ref={heroHandler.fileInputRef} onChange={potEnquadrar ? triaHero : heroHandler.handleFileChange} className="sdp-nomes-lector" />
-          <button type="button" className="sdp-boto sdp-boto--secundari" disabled={pujant} onClick={() => (onHeroEdit ? onHeroEdit({ acaba: heroHandler.cancelEdit }) : heroHandler.fileInputRef.current?.click())}>
-            <ImageIcon size={16} /> {heroEditLabel}
-          </button>
-          <p className="sdp-camp__ajuda">{pujant ? 'Encara s’està desant la imatge. Quan acabe, la podràs tornar a canviar.' : heroEditHelp}</p>
-          {heroImage && (
-            <div className="sdp-alerta__accions">
-              {/* T46 · Sense una font que es puga llegir (sdp-media sense resoldre), cap botó. */}
-              {potEnquadrar && fontExistent ? (
-                <button type="button" className="sdp-boto sdp-boto--secundari" aria-haspopup="dialog" disabled={pujant} onClick={() => obriEnquadrament(fontExistent)}>
-                  <Crop size={16} aria-hidden="true" focusable="false" /> Enquadrar
-                </button>
-              ) : null}
-              <button type="button" className="sdp-boto sdp-boto--fantasma" onClick={heroHandler.cancelEdit}>Enrere</button>
-              {/* Esborrar mentre puja: la foto que arribara després la tornaria a posar. */}
-              <button type="button" className="sdp-boto sdp-boto--perill" disabled={pujant} onClick={heroHandler.handleDelete}>Esborrar</button>
-            </div>
-          )}
-        </div>
-      ),
+      /* Ordre del Mestre (261007, ordre E) · El logotip porta la seua pròpia
+         guarda de pujada (logoHandler.isUploading), independent de la de la
+         capçalera: cada control només es bloqueja mentre puja la seua imatge.
+         Línia I1 (pla 261008_1201) · `logoPujant` hi suma la pujada del
+         consumidor, i `logoEditHelp` en dona l'ajuda (la de sempre per defecte). */
+      logoComponent: showLogoUpload ? <ImageUploaderUI
+        image={logoImage} handler={logoHandler} resolvedImage={resolvedLogoImage}
+        isLogo={true} editLabel={logoEditLabel} editHelp={logoEditHelp}
+        pujant={logoHandler.isUploading || Boolean(logoPujant)} onEdit={onLogoEdit}
+        ajudaAmbImatge={ajudaAmbImatge} botoRef={logoBotoRef}
+      /> : null,
+      heroComponent: <ImageUploaderUI
+        image={heroImage} handler={heroHandler} resolvedImage={resolvedHeroImage}
+        isLogo={false} editLabel={heroEditLabel} editHelp={heroEditHelp} imgRef={heroImgRef}
+        potEnquadrar={potEnquadrar} triaFitxer={triaHero} pujant={pujant}
+        fontExistent={fontExistent} obriEnquadrament={obriEnquadrament} onEdit={onHeroEdit}
+        ajudaAmbImatge={ajudaAmbImatge} botoRef={heroBotoRef}
+      />,
       barActions: (
         <>
           {/* T47 · L'indicador de l'autodesament, primer i a part (T51: ja no és
               una ploma, que queda per al botó d'emoticona de l'espai central).
-              Només la icona: la regió viva és a l'arrel de la closca (C13). */}
-          {estatDesament ? <IconaEstatDesament estat={estatDesament.estat} detall={estatDesament.detall} accions={estatDesament.accions} /> : null}
+              Només la icona: la regió viva és a l'arrel de la closca (C13).
+              Línia I1 (pla 261008_1201) · `reintentant` (un error que la cua
+              torna a provar sola) arriba a la icona: el seu pas a 'net' pinta
+              el check. Sense la clau, false, com abans. */}
+          {estatDesament ? <IconaEstatDesament estat={estatDesament.estat} detall={estatDesament.detall} accions={estatDesament.accions}
+            reintentant={Boolean(estatDesament.reintentant)} /> : null}
           {/* T41 (ordre del Mestre, 260928) · Un sol <button> real (sense el
               Dropdown informatiu ni interactius niats): obri el selector de
               visibilitat, el mateix que obri PUBLICAR (barres/BotoVisibilitat). */}

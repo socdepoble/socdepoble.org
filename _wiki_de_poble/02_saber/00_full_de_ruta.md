@@ -26,6 +26,8 @@ Cada llavor porta el trimestre previst i la seua categoria. La direcció general
 
 Les idees que depenen de xarxes sense internet (Bluetooth, malles locals o IA sense núvol) són recerca: no formen part de l'arquitectura online-first.
 
+- **Bàscula de Cooperativa** (sense data) [Cooperatives]: les pesades de la collita de cada soci a la cooperativa (pes brut, tara i net) i l'albarà. Descartada per ara el 261007 per ordre del Mestre («No té sentit en aquest moment»): s'ha llevat de la interfície i no té cap implementació; es conserva només com a llavor.
+
 
 ## 🍂 Retirades per l'ADR-2026-08 (història superada)
 

@@ -21,7 +21,9 @@ const mocks = vi.hoisted(() => ({
   getDraftsForScope: vi.fn(),
   repren: vi.fn(),
   generacio: 1,
-  entrada: 0
+  entrada: 0,
+  usuari: { id: 'user' },
+  estat: 'dins'
 }));
 
 vi.mock('../../app/contexts/UIContext', () => ({ useUIState: () => ({ locale: 'ca', externalConfig: {} }), useUIActions: () => ({ normalizeSearchText: s => s, t: (_key, fallback) => fallback }) }));
@@ -42,7 +44,7 @@ vi.mock('../../app/contexts/IdentitatContext.jsx', () => ({
   useIdentitat: () => ({ actorId: 'user', actorKey: 'user' })
 }));
 vi.mock('../../app/contexts/SessionContext.jsx', () => ({
-  useSession: () => ({ generacio: mocks.generacio, currentUser: { id: 'user' } })
+  useSession: () => ({ generacio: mocks.generacio, currentUser: mocks.usuari, estat: mocks.estat })
 }));
 vi.mock('../../host.js', () => ({ quanLlest: mocks.quanLlest }));
 vi.mock('./GlobalSaveManager.js', () => ({
@@ -61,6 +63,8 @@ beforeEach(() => {
   vi.resetAllMocks();
   mocks.generacio = 1;
   mocks.entrada = 0;
+  mocks.usuari = { id: 'user' };
+  mocks.estat = 'dins';
   mocks.getCurrentUser.mockReturnValue({ id: 'user' });
   mocks.getDefaultUserId.mockReturnValue('usuari-seed');
   mocks.getRuntimeDataMode.mockReturnValue('remote');
@@ -316,4 +320,133 @@ test('sense sessió i amb dades remotes no es demanen notes', async () => {
   await waitFor(() => expect(result.current.status).toBe('ready'));
   expect(mocks.loadNotes).not.toHaveBeenCalled();
   expect(result.current.notes).toEqual([]);
+});
+
+/* ───────── Auditoria 261007 (B) · Peticions de Notes ───────── */
+
+const CONFIG_RENDIMENT = { tenantId: TENANT };
+const ambProveidor = ({ children }) => <NotesDataProvider config={CONFIG_RENDIMENT}>{children}</NotesDataProvider>;
+const deixaCorrer = () => act(async () => { await Promise.resolve(); });
+const PAGINA_0 = { notes: [{ id: 'a', revision: 1 }], noteFolders: [], notesComplete: false, nextCursor: 'c1' };
+const PAGINA_1 = { notes: [{ id: 'b', revision: 1 }], noteFolders: [], notesComplete: true };
+
+/* Entrar a /notes (de cap consumidor a algun) revalida des de la pàgina 0 i
+   les recorre totes, com abans; només eixir-ne (d'algun a cap) deixa de
+   demanar res. La represa des del cursor desat és una pregunta al Mestre:
+   canviaria la pantalla (Llei del Píxel). */
+const cursorsDemanats = () => mocks.loadNotes.mock.calls.map(([, cfg]) => cfg.cursor ?? null);
+
+test('entrar al Bloc revalida des de la pàgina 0 i les recorre totes; eixir-ne no demana res', async () => {
+  mocks.loadNotes.mockImplementation(async (_owner, cfg) => (cfg.cursor === 'c1' ? PAGINA_1 : PAGINA_0));
+  const { result } = renderHook(useNotesData, { wrapper: ambProveidor });
+  await waitFor(() => expect(result.current.status).toBe('ready'));
+  // Sense ningú al Bloc, només la primera pàgina.
+  expect(cursorsDemanats()).toEqual([null]);
+  expect(result.current.notesComplete).toBe(false);
+
+  let deixa;
+  act(() => { deixa = result.current.activate(); });
+  await waitFor(() => expect(result.current.notesComplete).toBe(true));
+  expect(cursorsDemanats()).toEqual([null, null, 'c1']);
+  expect(result.current.notes.map(n => n.id).sort()).toEqual(['a', 'b']);
+
+  // Eixir: cap petició.
+  act(() => deixa());
+  await deixaCorrer();
+  expect(cursorsDemanats()).toEqual([null, null, 'c1']);
+  expect(result.current.notesComplete).toBe(true);
+
+  // Tornar a entrar amb la llista completa torna a demanar la pàgina 0 i les següents.
+  act(() => { deixa = result.current.activate(); });
+  await waitFor(() => expect(cursorsDemanats()).toEqual([null, null, 'c1', null, 'c1']));
+  await waitFor(() => expect(result.current.status).toBe('ready'));
+  act(() => deixa());
+  await deixaCorrer();
+  expect(mocks.loadNotes).toHaveBeenCalledTimes(5);
+});
+
+test('entrar al Bloc buit torna a passar per «revalidating» (el «Carregant…» del Workspace)', async () => {
+  const BUIDA = { notes: [], noteFolders: [], notesComplete: true };
+  let segona;
+  mocks.loadNotes
+    .mockResolvedValueOnce(BUIDA)
+    .mockImplementationOnce(() => new Promise(resolve => { segona = resolve; }));
+  const { result } = renderHook(useNotesData, { wrapper: ambProveidor });
+  await waitFor(() => expect(result.current.status).toBe('ready'));
+  expect(mocks.loadNotes).toHaveBeenCalledTimes(1);
+
+  let deixa;
+  act(() => { deixa = result.current.activate(); });
+  await waitFor(() => expect(result.current.status).toBe('revalidating'));
+  expect(mocks.loadNotes).toHaveBeenCalledTimes(2);
+  await act(async () => { segona(BUIDA); });
+  await waitFor(() => expect(result.current.status).toBe('ready'));
+  act(() => deixa());
+});
+
+test('si algú entra mentre viatja la primera pàgina, la càrrega torna a començar i les recorre totes', async () => {
+  let primera;
+  mocks.loadNotes
+    .mockImplementationOnce(() => new Promise(resolve => { primera = resolve; }))
+    .mockResolvedValueOnce(PAGINA_0)
+    .mockResolvedValueOnce(PAGINA_1);
+  const { result } = renderHook(useNotesData, { wrapper: ambProveidor });
+  await waitFor(() => expect(mocks.loadNotes).toHaveBeenCalledTimes(1));
+  let deixa;
+  act(() => { deixa = result.current.activate(); });
+  await waitFor(() => expect(result.current.notesComplete).toBe(true));
+  expect(cursorsDemanats()).toEqual([null, null, 'c1']);
+  // La resposta de la càrrega avortada ja no entra.
+  await act(async () => { primera(PAGINA_0); });
+  expect(result.current.notesComplete).toBe(true);
+  expect(mocks.loadNotes).toHaveBeenCalledTimes(3);
+  act(() => deixa());
+});
+
+test('eixir del Bloc mentre pagina s’atura després de la pàgina en curs, sense tornar a la 0', async () => {
+  let tercera;
+  mocks.loadNotes
+    .mockResolvedValueOnce(PAGINA_0)
+    .mockResolvedValueOnce(PAGINA_0)
+    .mockImplementationOnce(() => new Promise(resolve => { tercera = resolve; }));
+  const { result } = renderHook(useNotesData, { wrapper: ambProveidor });
+  await waitFor(() => expect(result.current.status).toBe('ready'));
+  let deixa;
+  act(() => { deixa = result.current.activate(); });
+  await waitFor(() => expect(cursorsDemanats()).toEqual([null, null, 'c1']));
+  act(() => deixa());
+  await act(async () => {
+    tercera({ notes: [{ id: 'b', revision: 1 }], noteFolders: [], notesComplete: false, nextCursor: 'c2' });
+  });
+  await deixaCorrer();
+  expect(cursorsDemanats()).toEqual([null, null, 'c1']);
+  expect(result.current.notes.map(n => n.id).sort()).toEqual(['a', 'b']);
+});
+
+test('la comprovació del rol d’una renovació (comprovant amb la persona dins) no torna a carregar', async () => {
+  const { result, rerender } = renderHook(useNotesData, { wrapper: ambProveidor });
+  await waitFor(() => expect(result.current.status).toBe('ready'));
+  expect(mocks.loadNotes).toHaveBeenCalledTimes(1);
+  mocks.estat = 'comprovant';
+  rerender();
+  mocks.estat = 'dins';
+  rerender();
+  await deixaCorrer();
+  expect(mocks.loadNotes).toHaveBeenCalledTimes(1);
+  expect(result.current.status).toBe('ready');
+});
+
+test('mentre es restaura la sessió (comprovant sense usuari) no es demana res; amb la persona, sí', async () => {
+  mocks.usuari = null;
+  mocks.estat = 'comprovant';
+  const { result, rerender } = renderHook(useNotesData, { wrapper: ambProveidor });
+  await deixaCorrer();
+  expect(mocks.loadNotes).not.toHaveBeenCalled();
+  expect(result.current.status).toBe('loading');
+  // Ja hi ha persona, però el rol encara és 'desconegut': l'estat efectiu continua 'comprovant'.
+  mocks.usuari = { id: 'user' };
+  mocks.entrada++;
+  rerender();
+  await waitFor(() => expect(result.current.status).toBe('ready'));
+  expect(mocks.loadNotes).toHaveBeenCalledTimes(1);
 });

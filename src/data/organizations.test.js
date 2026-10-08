@@ -36,6 +36,28 @@ test.each([
   expect(m.createOrganization).toHaveBeenCalledWith(grup, {});
 });
 
+/* Ordre del Mestre (261008, grup C) · «Un grup no té per què pertànyer a cap
+   empresa»: sense mare (absent, buida o d'espais), el grup arriba al port
+   sense la clau parentOrganizationId, i no cal administrar res. */
+test.each([
+  [{ name: 'Colla', slug: 'colla', kind: 'group' }],
+  [{ ...grup, parentOrganizationId: '' }],
+  [{ ...grup, parentOrganizationId: '   ' }],
+  [{ ...grup, parentOrganizationId: undefined }],
+])('un grup sense mare es crea i el payload no porta mare (%#)', async (dades) => {
+  const resultat = await creaOrganitzacio(dades, {}, []);
+  expect(m.createOrganization).toHaveBeenCalledWith({ name: 'Colla', slug: 'colla', kind: 'group' }, {});
+  expect(m.createOrganization.mock.calls[0][0]).not.toHaveProperty('parentOrganizationId');
+  expect(resultat).toEqual({ name: 'Colla', slug: 'colla', kind: 'group', id: 'N' });
+});
+
+test('un grup sense mare no confirma una resposta que en porte una', async () => {
+  m.createOrganization.mockResolvedValue({ id: 'N', kind: 'group', parent_organization_id: 'O' });
+  await expect(creaOrganitzacio({ name: 'Colla', slug: 'colla', kind: 'group' })).rejects.toThrow('organització incoherent');
+  m.createOrganization.mockResolvedValue({ id: 'N', kind: 'group', parent_organization_id: null });
+  await expect(creaOrganitzacio({ name: 'Colla', slug: 'colla', kind: 'group' })).resolves.toMatchObject({ id: 'N' });
+});
+
 /* F5 · poliment · Amb només les dades al títol, les cinc altes de `grup`
    es deien igual i una roja no deia quina mare l'havia provocada: el títol
    porta l'índex (%#) i també la llista d'organitzacions. */
@@ -45,7 +67,6 @@ test.each([
   [{ ...empresa, slug: '' }, [], 'Nom o identificador'],
   [{ ...empresa, kind: 'city_hall' }, [], 'Tipus'],
   [{ ...empresa, parentOrganizationId: 'O' }, [], 'mare'],
-  [{ ...grup, parentOrganizationId: '' }, [mare], 'mare'],
   [grup, [], 'administrar'],
   [grup, [{ ...mare, role: 'member' }], 'administrar'],
   [grup, [{ ...mare, kind: 'group' }], 'administrar'],

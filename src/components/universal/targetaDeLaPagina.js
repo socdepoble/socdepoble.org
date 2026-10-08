@@ -17,8 +17,12 @@
  *     defecte dels paràmetres de PageFrame, que no s'apliquen a un null.
  * Cap acció: qui pinta la targeta hi posa les seues (Connectar, Comentar, la
  * navegació o els avisos de l'editor). La imatge ve de les dades de l'app,
- * no d'una instantània desada: el filtre de sempre (imatgePrivada: false),
- * com la targeta del Mur.
+ * no d'una instantània desada: el filtre de sempre (imatgePrivada: false).
+ * Decisió 3 del Mestre (261007) · Ja no és «com la targeta del Mur», que ara
+ * porta imatgePrivada i el mode estricte (fontImatgePropia). Per a un element
+ * del Mur, del Mercat o de l'agenda, el mode estricte ja l'aplica
+ * paginaDElement abans d'arribar ací: una portada o un avatar de fora hi
+ * arriben com a null (cap imatge, i l'avatar no cau al de sèrie).
  */
 import { DEFAULT_AUTHOR } from './UniversalUtils.js';
 

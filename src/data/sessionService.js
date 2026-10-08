@@ -33,16 +33,31 @@ export function subscribeSession(listener) {
 function notify() { listeners.forEach(listener => listener(estatActual)); }
 function clearTimer() { clearTimeout(temporitzador); temporitzador = null; }
 
+/* Auditoria 261007 (B) · Els camps de l'estat que veuen els oients: l'usuari
+   (per referència), l'estat, el rol i la generació. */
+const CAMPS_ESTAT = Object.freeze(['usuari', 'estat', 'rol', 'generacio']);
+const mateixContingut = (a, b) => a === b || JSON.stringify(a) === JSON.stringify(b);
+
 // Opcions de presentació/rutes de PedraSecaEmbed i àlies ja normalitzats.
 // Les opcions desconegudes continuen identificant la sessió: poden governar
 // transport, credencials o autenticació d'un adaptador alternatiu.
 // nomPoble, poble i rutaInicial (canal de l'amfitrió) són presentació i ruta
 // inicial: `poble` és l'id de l'element de Pobles, no el tenantId.
+// Auditoria 261007 (B) · rutaAUrl, apps i traductorUrl (T2b, 261002) també són
+// claus `amfitrio` de presentació i de servei (contracteAmfitrio.js,
+// clausDeConfig.amfitrio): cap adaptador de src/data les llig. Fora d'esta
+// llista, dos <soc-de-poble> amb `ruta-a-url` només en la primera instància
+// (com preveu el contracte), `apps` o `traductor-url` diferents feien petar la
+// segona a l'ErrorBoundary amb «Dos instàncies…», i un `apps` registrat en
+// calent movia la generació i purgava els proveïdors. snippetChromeUrl NO hi
+// va: és un servei propi que només posa el paquet (igual a totes les
+// instàncies), com oauthRelayUrl, que sí que identifica la sessió.
 const CAMPS_FORA_IDENTITAT = new Set([
   'basePath', 'fontsHref', 'pluginUrl', 'routerType', 'basename',
   'language', 'themeMode', 'manageDocumentHead', 'version',
   'backend_url', 'supabaseUrl', 'tenant_id',
-  'nomPoble', 'poble', 'rutaInicial'
+  'nomPoble', 'poble', 'rutaInicial',
+  'rutaAUrl', 'apps', 'traductorUrl'
 ]);
 
 function clauConfiguracio(config) {
@@ -105,6 +120,13 @@ export function sincronitza() {
   if (user) recuperacioGastada = false;
   else if (recuperaSessio()) return;
   else if (!sessioRecuperable()) recuperacioGastada = false;
+  /* Auditoria 261007 (B) · getCurrentUser torna un JSON.parse nou a cada crida i
+     el temporitzador sincronitza cada ≤10 min: un usuari idèntic amb una
+     referència nova refeia useSession, useIdentitat i useNotes sense cap canvi.
+     Es compara per contingut, no per id: actualitzaUsuari desa nom o avatar
+     amb el mateix id i eixe canvi sí que ha d'arribar a la interfície. */
+  if (user && estatActual.usuari && mateixContingut(user, estatActual.usuari)) user = estatActual.usuari;
+  const abans = estatActual;
   if (estatActual.usuari?.id !== user?.id || epoch !== versioSessio) {
     generacio++;
     epoch = versioSessio;
@@ -118,12 +140,18 @@ export function sincronitza() {
     const config = currentConfig;
     const aplicaRol = rol => {
       if (myGen !== generacio || requestId !== roleRequest) return;
+      // El mateix rol de la consulta periòdica no és cap canvi: ni objecte nou ni avís.
+      if ((rol || 'usuari') === estatActual.rol) return;
       estatActual = { ...estatActual, rol: rol || 'usuari' };
       notify();
     };
     Promise.resolve().then(() => elMeuRol(config)).then(aplicaRol, () => aplicaRol('usuari'));
   } else estatActual = { ...estatActual, rol: 'usuari' };
-  notify();
+  /* Només s'avisa si canvia algun camp; si no, es conserva l'objecte d'abans
+     (getSessionState torna el mateix que ja tenen els oients). El temporitzador
+     es torna a armar sempre. */
+  if (CAMPS_ESTAT.some(camp => estatActual[camp] !== abans[camp])) notify();
+  else estatActual = abans;
   gestionaTemporitzador();
 }
 

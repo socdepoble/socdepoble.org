@@ -18,6 +18,7 @@ import { NotificationProvider } from '../../components/universal/NotificationCon
 import { CLAU_PORTADES, _reiniciaPortades } from '../../components/universal/UniversalPage.jsx';
 import { ProveidorPlataforma } from '../../apps/plataforma/PlataformaContext.jsx';
 import { _reiniciaPreferencies, CLAU_PREFERENCIES } from '../../apps/plataforma/preferenciesApps.js';
+import { creaRegistre, MANIFESTS_INTERNS } from '../../apps/plataforma/registreApps.js';
 import { baseRecursos, fixaBaseRecursos } from '../../config/assetResolver';
 import { createTranslator, SUPPORTED_LANGUAGES } from '../../config/i18n';
 import { STORAGE_PREFIX } from '../../config/storage.js';
@@ -36,7 +37,14 @@ function Ubicacio() {
   return <p data-testid="ubicacio">{pathname}</p>;
 }
 
-function munta(ruta, { entorn = ENTORN_OBERT, basename = '', externalConfig = {} } = {}) {
+/* Peça C (ordre del Mestre, 261007, prompt 261007_1628) · Un build de
+   producció de veres sense cap VITE_SDP_APP_*: Vite hi deixa `carrega` a null
+   (el literal de compilació de cada manifest). Vitest corre amb DEV=true i
+   el registre del document les porta compilades totes; este registre
+   reprodueix el paquet de producció. */
+const registreDeProduccio = () => creaRegistre({ internes: MANIFESTS_INTERNS.map((m) => ({ ...m, carrega: null })) });
+
+function munta(ruta, { entorn = ENTORN_OBERT, basename = '', externalConfig = {}, registre } = {}) {
   vi.stubGlobal('matchMedia', vi.fn((query) => ({
     matches: false, media: query, onchange: null,
     addListener: vi.fn(), removeListener: vi.fn(),
@@ -47,7 +55,7 @@ function munta(ruta, { entorn = ENTORN_OBERT, basename = '', externalConfig = {}
     <UIProvider externalConfig={externalConfig}>
       <NotificationProvider>
         <MemoryRouter rutaInicial={ruta} basename={basename}>
-          <ProveidorPlataforma entorn={entorn}>
+          <ProveidorPlataforma entorn={entorn} registre={registre}>
             <Routes>
               <Route path="/plugin/:id" element={<PluginPage />} />
               <Route path="*" element={<p>Fora de la pàgina</p>} />
@@ -122,6 +130,15 @@ test('un id que no és del registre és la 404 de sempre', () => {
   expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Ací no hi ha res');
 });
 
+/* Ordre del Mestre (261007) · Bàscula descartada per ara: ja no és del
+   registre, i /plugin/bascula és la 404 de sempre, sense cap botó «Obrir». */
+test('la Bàscula, descartada, ja no té pàgina: /plugin/bascula és la 404 de sempre', () => {
+  munta('/plugin/bascula');
+  expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Ací no hi ha res');
+  expect(screen.queryByRole('button', { name: /Bàscula/ })).toBeNull();
+  expect(screen.queryByRole('link', { name: /Bàscula/ })).toBeNull();
+});
+
 describe('el botó Obrir', () => {
   test('amb destí és un enllaç del router: porta a la secció de veres sense eixir de l’app', () => {
     munta('/plugin/consola');
@@ -150,18 +167,20 @@ describe('el botó Obrir', () => {
   });
 
   /* Onada 2 de la Gestoria (261004) · La Gestoria ja té destí (la seua app,
-     només en desenvolupament): l'exemple de «sense destí» és ara la Bàscula,
-     que no té cap codi. */
+     només en desenvolupament).
+     Ordre del Mestre (261007) · Bàscula descartada per ara: l'exemple de
+     «sense destí» és ara Animalets, que tampoc té secció
+     (control/destinsControl.js). */
   test('sense destí (en obres): botó inert, avís en text i toast, i no navega', () => {
-    const { container } = munta('/plugin/bascula');
-    expect(screen.queryByRole('link', { name: /Obrir la Bàscula/ })).toBeNull();
-    const boto = screen.getByRole('button', { name: 'Obrir la Bàscula (en obres)' });
+    const { container } = munta('/plugin/animalets');
+    expect(screen.queryByRole('link', { name: /Obrir Animalets/ })).toBeNull();
+    const boto = screen.getByRole('button', { name: 'Obrir Animalets (en obres)' });
     expect(boto.getAttribute('aria-disabled')).toBe('true');
     expect(boto.getAttribute('type')).toBe('button');
     expect(within(accio(container).parentElement).getByText('Esta eina encara està en obres.')).toBeTruthy();
     fireEvent.click(boto);
-    expect(ubicacio()).toBe('/plugin/bascula');
-    expect(screen.getByText('“Obrir la Bàscula” encara està en obres.')).toBeTruthy();
+    expect(ubicacio()).toBe('/plugin/animalets');
+    expect(screen.getByText('“Obrir Animalets” encara està en obres.')).toBeTruthy();
   });
 
   /* Ordre del Mestre, 261004 («contaminació crítica de rutes/estats entre
@@ -197,7 +216,8 @@ describe('el botó Obrir', () => {
     expect(container.querySelector('.hero-image img').getAttribute('src')).toBe('/assets/ui/plugins/gestoria_vinyeta.jpg');
   });
 
-  test.each([['mapa', 'Obrir el Mapa'], ['vehicle', 'Obrir Vehicle Compartit'], ['animalets', 'Obrir Animalets'], ['bascula', 'Obrir la Bàscula']])(
+  /* Ordre del Mestre (261007) · Bàscula descartada per ara: fora d'esta llista. */
+  test.each([['mapa', 'Obrir el Mapa'], ['vehicle', 'Obrir Vehicle Compartit'], ['animalets', 'Obrir Animalets']])(
     '%s: en obres, inert', (id, nom) => {
       munta(`/plugin/${id}`);
       expect(screen.getByRole('button', { name: `${nom} (en obres)` }).getAttribute('aria-disabled')).toBe('true');
@@ -205,7 +225,12 @@ describe('el botó Obrir', () => {
     }
   );
 
-  test('una app apagada en este build (producció sense VITE_SDP_APP_*) no fa cap enllaç mort: inert i diu per què', () => {
+  /* Peça C (ordre del Mestre, 261007, prompt 261007_1628) · Esta prova es
+     deia «producció sense VITE_SDP_APP_*», però vitest corre amb DEV=true:
+     el Lector hi és compilat i només l'apaga la capa d'entorn (manifest amb
+     entorn 'desenvolupament' i produccio: true). Es conserva, amb el nom del
+     que comprova de veres; el build real és la prova de davall. */
+  test('capa d’entorn: una app compilada amb entorn «desenvolupament», en producció, no fa cap enllaç mort: inert i diu per què', () => {
     munta('/plugin/rss', { entorn: ENTORN_PRODUCCIO });
     expect(screen.queryByRole('link', { name: /Obrir el Lector/ })).toBeNull();
     const boto = screen.getByRole('button', { name: 'Obrir el Lector (no disponible ací)' });
@@ -215,6 +240,39 @@ describe('el botó Obrir', () => {
     fireEvent.click(boto);
     expect(ubicacio()).toBe('/plugin/rss');
     expect(screen.getAllByText(motiu)).toHaveLength(2);
+  });
+
+  /* Peça C (261007) · El build de producció de veres sense VITE_SDP_APP_*:
+     el Lector no és al paquet (carrega null) i la plataforma ho diu abans que
+     l'entorn ('no-compilada', interruptors.js). Este és el text que veu
+     producció, no el de la capa d'entorn. */
+  test('build de producció sense VITE_SDP_APP_* (carrega null): inert, «Este node no porta esta app.» i no navega', () => {
+    const registre = registreDeProduccio();
+    // El registre simulat és el de producció: el Lector hi és, però sense compilar.
+    expect(registre.appPerId('lector')).toMatchObject({ id: 'lector', origen: 'interna', carrega: null });
+    expect(registre.componentDe('lector')).toBeNull();
+    munta('/plugin/rss', { entorn: ENTORN_PRODUCCIO, registre });
+    expect(screen.queryByRole('link', { name: /Obrir el Lector/ })).toBeNull();
+    const boto = screen.getByRole('button', { name: 'Obrir el Lector (no disponible ací)' });
+    expect(boto.getAttribute('aria-disabled')).toBe('true');
+    const motiu = 'Este node no porta esta app.';
+    expect(screen.getByRole('status').textContent).toBe(motiu);
+    fireEvent.click(boto);
+    expect(ubicacio()).toBe('/plugin/rss');
+    expect(screen.getAllByText(motiu)).toHaveLength(2);
+  });
+
+  test('build de producció: cap app de la plataforma fa enllaç, i les seccions d’App no hi depenen', () => {
+    const registre = registreDeProduccio();
+    for (const [id, nom] of [['tpv', 'Obrir el Bar'], ['rebost', 'Obrir el Rebost'], ['salut', 'Obrir Salut'], ['gestoria', 'Obrir la Gestoria']]) {
+      munta(`/plugin/${id}`, { entorn: ENTORN_PRODUCCIO, registre });
+      expect(screen.queryByRole('link', { name: new RegExp(nom) }), id).toBeNull();
+      expect(screen.getByRole('button', { name: `${nom} (no disponible ací)` }).getAttribute('aria-disabled'), id).toBe('true');
+      cleanup();
+    }
+    /* El Panell de Disseny no és cap app de la plataforma: el seu enllaç no depén del build. */
+    munta('/plugin/disseny', { entorn: ENTORN_PRODUCCIO, registre });
+    expect(screen.getByRole('link', { name: 'Obrir el Panell de Disseny' }).getAttribute('href')).toBe('/disseny');
   });
 
   /* Revisió P7-A · La Consola (i l'Explorador del Cervell) viu de
@@ -263,11 +321,12 @@ test('portaDelPlugin (la que pot reutilitzar la graella del Control): oberta, en
     avis: null,
     porta: { id: 'obrir', verb: 'Obrir el Bar', nom: 'Obrir el Bar', varietat: 'primari', desti: '/app/bar' }
   });
-  expect(portaDelPlugin(pluginPerId('bascula'), { estat: 'en-obres', ruta: null, motiu: null }, t)).toEqual({
+  /* Ordre del Mestre (261007) · Bàscula descartada per ara: l'exemple en obres és Animalets. */
+  expect(portaDelPlugin(pluginPerId('animalets'), { estat: 'en-obres', ruta: null, motiu: null }, t)).toEqual({
     avis: 'Esta eina encara està en obres.',
     porta: {
-      id: 'obrir', verb: 'Obrir la Bàscula', nom: 'Obrir la Bàscula', varietat: 'primari', desti: null,
-      enObres: '(en obres)', avis: '“Obrir la Bàscula” encara està en obres.'
+      id: 'obrir', verb: 'Obrir Animalets', nom: 'Obrir Animalets', varietat: 'primari', desti: null,
+      enObres: '(en obres)', avis: '“Obrir Animalets” encara està en obres.'
     }
   });
   const apagada = portaDelPlugin(bar, { estat: 'no-disponible', ruta: null, motiu: 'persona-apagada' }, t);
@@ -307,12 +366,13 @@ describe('textos nous de la UI en les cinc llengües', () => {
     }
   });
 
+  /* Ordre del Mestre (261007) · Bàscula descartada per ara: el plugin en obres d'esta prova és Animalets. */
   test('amb l’amfitrió en castellà, la portada i l’avís d’obres parlen castellà', () => {
     const es = createTranslator('es');
-    munta('/plugin/bascula', { externalConfig: { language: 'es' } });
-    expect(pluginPerId('bascula')).not.toBeNull();
+    munta('/plugin/animalets', { externalConfig: { language: 'es' } });
+    expect(pluginPerId('animalets')).not.toBeNull();
     expect(screen.getByRole('button', { name: es('pagina.portada.amaga') })).toBeTruthy();
     expect(screen.getByText(es('section.plugin.enObres'))).toBeTruthy();
-    expect(screen.getByRole('button', { name: `Obrir la Bàscula ${es('section.control.porta.enObres')}` })).toBeTruthy();
+    expect(screen.getByRole('button', { name: `Obrir Animalets ${es('section.control.porta.enObres')}` })).toBeTruthy();
   });
 });

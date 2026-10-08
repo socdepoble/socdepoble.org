@@ -23,6 +23,8 @@ import { DEFAULT_AUTHOR } from './UniversalUtils.js';
 import { acteAEsdeveniment } from '../../sections/mur/agendaMur.js';
 import { CALENDAR_EVENTS } from '../../sections/mur/eventsSeed.js';
 import { ocorreElDia } from '../../utils/esdeveniment.js';
+import { permetOrigenMitjans } from '../../utils/sanitize.js';
+import { resolveAsset } from '../../config/assetResolver.js';
 
 let arrel;
 beforeEach(() => {
@@ -140,6 +142,72 @@ describe('T6 · la boina de l’acte', () => {
     expect(rutaDeLaBoinaDeLActe({ author: 'Associació' }, undefined)).toBeUndefined();
     expect(rutaDeLaBoinaDeLActe({ author_name: 'Pepa' }, '')).toBeUndefined();
     expect(rutaDeLaBoinaDeLActe(null)).toBe('/projecte');
+  });
+});
+
+/* Auditoria 261007 (B) · L'enllaç de tota la targeta només és una ruta de
+   l'app: un mainHref de fora (un payload escrit per PostgREST) navegava la
+   pestanya de l'amfitrió. */
+describe('l’enllaç de tota la targeta', () => {
+  const enllac = () => arrel.querySelector('a.sp-card-link-overlay')?.getAttribute('href') ?? null;
+
+  test('sense mainHref, el detall de l’acte com sempre', () => {
+    pinta({ id: 'fira', title: 'Fira', date: '2026-11-14' });
+    expect(enllac()).toBe('/events/fira');
+  });
+
+  test('una ruta interna es conserva', () => {
+    pinta({ id: 'fira', title: 'Fira', date: '2026-11-14', mainHref: '/page/xat' });
+    expect(enllac()).toBe('/page/xat');
+  });
+
+  test.each(['https://fals-poble.example/entra', '//fals-poble.example', 'javascript:alert(1)'])('una adreça de fora (%s) cau al detall de l’acte', (mainHref) => {
+    pinta({ id: 'fira', title: 'Fira', date: '2026-11-14', mainHref });
+    expect(enllac()).toBe('/events/fira');
+  });
+});
+
+/* Decisió 3 del Mestre (261007, confirmada) · «Imatges externes al Mur:
+   PROHIBIDES (PRIVACITAT).» La imatge i l'avatar d'un acte passen pel mode
+   estricte (fontImatgePropia) i es demanen sense referent: una de fora no es
+   demana (cap portada; la silueta en lloc de l'avatar); una de pròpia, com
+   abans. */
+describe('Decisió 3 · només imatges pròpies', () => {
+  const fonts = () => [...arrel.querySelectorAll('img')].map((img) => img.getAttribute('src'));
+
+  test('una imatge o un avatar de tercers (també de Google) no es demanen', () => {
+    pinta({ id: 'fira', title: 'Fira', date: '2026-11-14', image_url: 'https://lh3.googleusercontent.com/a/x.png', author_avatar: 'https://rastreig.example/p.gif' });
+    expect(fonts()).toEqual([]);
+    expect(arrel.querySelector('.sp-card-media-container')).toBeNull();
+    expect(arrel.querySelector('.sp-card-avatar--fallback')).not.toBeNull();
+    pinta({ id: 'fira', title: 'Fira', date: '2026-11-14', image: 'https://rastreig.example/p.gif', author_avatar: 'https://lh3.googleusercontent.com/a/x.png' });
+    expect(fonts()).toEqual([]);
+  });
+
+  test('les pròpies es pinten amb la mateixa font, sense referent; sense avatar, el logotip de reserva', () => {
+    pinta({ id: 'fira', title: 'Fira', date: '2026-11-14', image_url: '/assets/agenda/fira.webp', author_avatar: '/assets/gent/associacio.webp' });
+    expect(fonts()).toEqual(['/assets/gent/associacio.webp', '/assets/agenda/fira.webp']);
+    expect([...arrel.querySelectorAll('img')].map((img) => img.getAttribute('referrerpolicy'))).toEqual(['no-referrer', 'no-referrer']);
+    pinta({ id: 'fira', title: 'Fira', date: '2026-11-14' });
+    expect(fonts()).toEqual(['/assets/system/ui/logo-socdepoble-cuadrat-verd.svg']);
+  });
+
+  /* Revisió adversarial del 261007 · Les altres fonts pròpies d'un acte, com
+     les d'una publicació: el nostre Storage quan la configuració el registra
+     (runtime.js; un origen sintètic d'esta prova) i una referència sdp-media://,
+     que fa el camí de sempre (resolveAsset, sense filtre de més). */
+  test('el nostre Storage registrat i una referència sdp-media:// es pinten com abans', () => {
+    const STORAGE = 'https://projecte-acte.supabase.co';
+    const foto = `${STORAGE}/storage/v1/object/public/mitjans/poble/u/agenda/fira.webp`;
+    const avatar = `${STORAGE}/storage/v1/object/public/mitjans/poble/u/perfil/a.webp`;
+    pinta({ id: 'fira', title: 'Fira', date: '2026-11-14', image_url: foto, author_avatar: avatar });
+    expect(fonts()).toEqual([]);
+    permetOrigenMitjans(STORAGE);
+    pinta({ id: 'fira', title: 'Fira', date: '2026-11-14', image_url: foto, author_avatar: avatar });
+    expect(fonts()).toEqual([avatar, foto]);
+    const ref = 'sdp-media://mitjans/poble/u/agenda/fira.webp';
+    pinta({ id: 'fira', title: 'Fira', date: '2026-11-14', image: ref });
+    expect(arrel.querySelector('img.sp-card-media').getAttribute('src')).toBe(resolveAsset(ref));
   });
 });
 

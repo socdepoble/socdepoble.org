@@ -44,7 +44,10 @@ import { LLAVOR_NOTA } from '../../sections/notes/NotesSection.jsx';
  *   labels: Array, // Etiquetes visuals del document (ex: estat, lloc).
  *   emptyPlaceholder: String, // Text per a l'estat buit (títol de reserva).
  *   emptyDocument: Object, // Opcional. Document de benvinguda per a l'estat buit
- *                          // ({ title, subtitle, lead, heroImage, content, labels, copyright }).
+ *                          // ({ title, subtitle, lead, heroImage, content, labels, copyright,
+ *                          //    logoEntitat?, avatarAutor? }). Ordre del Mestre (261007,
+ *                          // ordre E): logoEntitat i avatarAutor ({ src, alt }) pinten
+ *                          // damunt de l'H1 el mateix que la fitxa pública, en lectura.
  *   classificacio: ReactNode // Opcional. Botonera de classificació (Carpetes, Categories,
  *                            // Etiquetes) davall del títol, al lloc de les píndoles.
  *   llicencia: ReactNode // Opcional. Ranura del botó de llicència, davall de la botonera.
@@ -54,6 +57,15 @@ import { LLAVOR_NOTA } from '../../sections/notes/NotesSection.jsx';
  *                            // (per defecte) tria l'avís d'herència; perDefecte, la
  *                            // llicència heretada; autor (per defecte barAuthorName),
  *                            // el nom de «© autor». Es desa pel camí de sempre.
+ *   dretsTriats: String|null // Opcional (correcció de la revisió, 261008). La
+ *                            // llicència TRIADA de veres, per a la píndola dels
+ *                            // drets, quan document.copyright no ho és: el Perfil hi
+ *                            // posa el «© Nom» de lectura encara que no se n'haja
+ *                            // triat cap. Amb la clau mana ella (null o '' = cap
+ *                            // triada: «Elegir drets d'autor»); la línia de la
+ *                            // capçalera i la vista de drets continuen amb
+ *                            // document.copyright. Sense la clau, document.copyright
+ *                            // (Notes i el catàleg, el DOM de sempre).
  *   statusIcon: ReactNode // Opcional. Icona del botó d'estat de la barra taronja.
  *   barAuthorAvatar, barAuthorName, barAuthorLocation: String // Opcionals. Autoria
  *                            // de la barra taronja (i de l'estat buit).
@@ -88,6 +100,14 @@ import { LLAVOR_NOTA } from '../../sections/notes/NotesSection.jsx';
  *                            // és el de sempre. Ha de ser CONSTANT durant la vida
  *                            // de l'adaptador: canviar-la canvia el pare de la
  *                            // closca i remunta TipTap.
+ *   ambVistes: Boolean       // Opcional (CONTRACTE-3, pla 261008_1201; true). Amb
+ *                            // false, davall del títol (.sdp-copyright-control) no es
+ *                            // pinten «Vista A4 / PDF» i «Crear portada»
+ *                            // (DocumentPrintPreview) ni el xip «Vista targeta»
+ *                            // (BotoTargetaViva): el consumidor les porta a un altre
+ *                            // apartat. El botó dels drets i l'aside de la targeta
+ *                            // viva es queden. Sense la clau, el DOM de sempre (Notes
+ *                            // i el catàleg).
  *   avisTargetaViva: { titol, descripcio, vista } // Opcional (T50). Els textos
  *                            // del consumidor per a l'aside i el xip de la
  *                            // targeta viva (AVISOS_TARGETA_VIVA de TargetaViva.jsx).
@@ -98,7 +118,25 @@ import { LLAVOR_NOTA } from '../../sections/notes/NotesSection.jsx';
  *                            // Ha de ser CONSTANT durant la vida de l'adaptador:
  *                            // l'esquema de TipTap es fixa en crear l'editor.
  *                            // Sense la clau, el DOM és el de sempre.
+ *   peuDePagina: ReactNode   // Opcional. Esmena 2 del pla 261007_1645 (ordre del
+ *   etiquetaPeuDePagina: String // Mestre, 261007: llistar el que l'avatar actiu ja
+ *                            // té publicat «per tot el sistema»). El peu de la
+ *                            // pàgina de l'editor: no es desestructura ací, passa
+ *                            // per ...rest a UniversalEditorShell i d'ací a la
+ *                            // UniversalPage i a PageFrame, que el pinta després
+ *                            // de l'article, dins del contenidor que fa scroll, en
+ *                            // un section amb nom (etiquetaPeuDePagina). Fora de
+ *                            // l'article: l'Índex de la nota no el recull. Va
+ *                            // l'últim i sempre en la mateixa posició: aparéixer o
+ *                            // canviar no remunta TipTap. L'estat buit
+ *                            // (EmptyDocumentPage) no el rep. Ha de ser un node
+ *                            // memoritzat pel consumidor (NotesEditor ·
+ *                            // useMemo): un JSX nou a cada pintada refaria
+ *                            // l'adaptador. Sense la clau, el DOM de sempre.
  *   ...rest // La resta (heroEditLabel, estatDesament…) passa a UniversalEditorShell.
+ *           // Ordre del Mestre (261007, ordre E): també onLogoEdit i logoEditLabel
+ *           // (la ranura del logotip, mirall d'onHeroEdit) i avatarAutor, que
+ *           // la closca deixa passar fins a PageFrame (l'avatar redó damunt de l'H1).
  *
  * T40 (ordre del Mestre, 260928) · La identitat ja no va a la barra taronja
  * (cap `identityActions`): viu a la barra negra (TopBar).
@@ -119,11 +157,21 @@ import { LLAVOR_NOTA } from '../../sections/notes/NotesSection.jsx';
    l'emoticona triada que dona l'adaptador (una fitxa en baixa o de reserva)
    i, sense, la cel·la buida. Mai el botó: onObriEmoticona no hi arriba.
    Ordre del Mestre (261007) · Amb barAuthorHref, l'autoria porta a la pàgina
-   de qui signa; sense, la topBarData de sempre (cap clau authorHref). */
+   de qui signa; sense, la topBarData de sempre (cap clau authorHref).
+   Ordre del Mestre (261007, ordre E) · Damunt de l'H1, el mateix que la fitxa
+   pública (PerfilPublicSection; derogació del showLogos={false}, 261004):
+   `logoEntitat` (el logotip d'una entitat) o `avatarAutor` (l'avatar redó
+   d'una persona o d'un agent IA), les claus de PageFrame. És LECTURA: de
+   l'avatar només passen src i alt, mai onCanvia. Sense les claus, cap prop
+   nova i el DOM de sempre. */
 function EmptyDocumentPage({ emptyDocument, emptyPlaceholder, barAuthorAvatar, barAuthorName, barAuthorLocation, barAuthorHref, emoticona, t }) {
   const doc = emptyDocument || {};
   const title = doc.title || emptyPlaceholder || t('editor.open', 'Obre un document');
   const rawHtml = doc.content || '';
+  const capDeLectura = {
+    ...(doc.logoEntitat ? { logoEntitat: doc.logoEntitat } : null),
+    ...(doc.avatarAutor ? { avatarAutor: { src: doc.avatarAutor.src, alt: doc.avatarAutor.alt } } : null),
+  };
 
   return (
     <div className="sdp-editor-shell-atomic">
@@ -137,6 +185,7 @@ function EmptyDocumentPage({ emptyDocument, emptyPlaceholder, barAuthorAvatar, b
           heroImage={doc.heroImage}
           heroAlt={doc.heroAlt || ''}
           showLogos={Boolean(doc.showLogos)}
+          {...capDeLectura}
           labels={doc.labels || []}
           copyright={doc.copyright}
           topBarData={{
@@ -179,6 +228,8 @@ export function DocumentEditor({ adapter, onToast }) {
     llicencia = null,
     /* T39 · la vista de drets d'autor (null: sense avís d'herència). */
     dretsAutor = null,
+    /* Correcció de la revisió (261008) · la llicència triada de veres (undefined: document.copyright). */
+    dretsTriats = undefined,
     seedContent = LLAVOR_NOTA,
     posicioEines = 'dalt',
     statusIcon,
@@ -194,15 +245,30 @@ export function DocumentEditor({ adapter, onToast }) {
     targetaViva = false,
     /* Els textos de l'avís de la targeta viva (sense: la reserva de TargetaViva). */
     avisTargetaViva = null,
+    /* CONTRACTE-3 (261008) · false: les vistes (A4, portada i targeta) no van davall del títol. */
+    ambVistes = true,
     /* T7 · la font de les targetes incrustades (null: el cos de sempre). */
     targetes = null,
     ...rest
   } = adapter;
 
   const ambTargetes = Boolean(targetes);
+  /* Ordre del Mestre (261007, ordre E) · L'ordre «/» Imatge avisa pel mateix
+     canal que la capçalera (onToast) quan la pujada es rebutja o el fitxer no
+     és una imatge. Per una ref: les extensions han de ser CONSTANTS (useMemo,
+     richText/extensions) i un onToast nou a cada render reconstruiria TipTap.
+     Auditoria 261007 (retocs de l'ordre E) · Sense onToast, un console.warn
+     amb el mateix missatge de l'avís (també per a un fitxer que no és una
+     imatge). */
+  const onToastRef = useRef(onToast);
+  onToastRef.current = onToast;
+  const avisaDelCos = useCallback((missatge, tipus) => {
+    if (typeof onToastRef.current === 'function') onToastRef.current(missatge, tipus);
+    else console.warn(`[slash] ${missatge}`);
+  }, []);
   const extensions = useMemo(
-    () => extensionsRiques({ onImageUpload: uploadMedia, ambTargetes }),
-    [uploadMedia, ambTargetes],
+    () => extensionsRiques({ onImageUpload: uploadMedia, ambTargetes, onToast: avisaDelCos }),
+    [uploadMedia, ambTargetes, avisaDelCos],
   );
 
   const desaLocal = useCallback(
@@ -402,20 +468,36 @@ export function DocumentEditor({ adapter, onToast }) {
   const copyrightValue = document.copyright || '© Sóc de Poble';
 
   /* Davall del títol: la botonera de classificació i, davall d'ella, la
-     ranura de la llicència. Sense botonera, PageFrame pinta les píndoles. */
-  const copyrightSelector = llicencia || (updateLocal ? <BotoDretsAutor valor={copyrightValue} onClick={obreDrets} /> : null);
+     ranura de la llicència. Sense botonera, PageFrame pinta les píndoles.
+     Decisió del Mestre (261008) · potTriarDrets és la condició de la
+     píndola (cap ranura pròpia de llicència i un document que es pot
+     editar): amb ella, també el copyright de la capçalera obri la vista de
+     drets (onCanviaCopyright de PageFrame) en lloc de portar a /page/drets-autor.
+     La píndola rep la llicència triada de veres (document.copyright), mai
+     la reserva «© Sóc de Poble».
+     Correcció de la revisió (261008) · Amb la clau dretsTriats, mana ella:
+     el Perfil hi posa el «© Nom» de lectura (perfilCamps) encara que ningú
+     no n'haja triat cap, i la píndola el donava per triat. Un valor que no
+     és text (null) és «cap triada». */
+  const potTriarDrets = !llicencia && Boolean(updateLocal);
+  const llicenciaTriada = dretsTriats === undefined
+    ? (document.copyright || '')
+    : (typeof dretsTriats === 'string' ? dretsTriats : '');
+  const copyrightSelector = llicencia || (potTriarDrets ? <BotoDretsAutor valor={copyrightValue} triada={llicenciaTriada} onClick={obreDrets} /> : null);
   /* T50 · El xip «Vista targeta», germà de Vista A4 i Crear portada. El CSS
      l'amaga quan l'aside de la dreta ja es veu. L'avís, el del consumidor
-     (avisTargetaViva); undefined deixa la reserva de TargetaViva. */
+     (avisTargetaViva); undefined deixa la reserva de TargetaViva.
+     CONTRACTE-3 (261008) · Amb ambVistes={false} ni el xip ni Vista A4 /
+     Crear portada: el botó dels drets i l'aside es queden. */
   const avisTargeta = avisTargetaViva || undefined;
-  const botoTargeta = targetaViva ? <BotoTargetaViva document={document} autor={autorTargeta} etiquetes={labels || []} avis={avisTargeta} /> : null;
+  const botoTargeta = targetaViva && ambVistes ? <BotoTargetaViva document={document} autor={autorTargeta} etiquetes={labels || []} avis={avisTargeta} /> : null;
   const ranuraClassificacio = classificacio || copyrightSelector || botoTargeta ? (
     <>
       {classificacio}
       {copyrightSelector || botoTargeta ? (
         <div className="sdp-copyright-control">
           {copyrightSelector}
-          {copyrightSelector ? <DocumentPrintPreview document={document} author={barAuthorName} /> : null}
+          {copyrightSelector && ambVistes ? <DocumentPrintPreview document={document} author={barAuthorName} /> : null}
           {botoTargeta}
         </div>
       ) : null}
@@ -461,6 +543,10 @@ export function DocumentEditor({ adapter, onToast }) {
       className={classeCloscat}
       classificacio={ranuraClassificacio}
       copyright={copyrightValue}
+      /* Decisió del Mestre (261008) · Després de ...rest: cap adaptador ho
+         desfà. Sense potTriarDrets (una connexió, sense updateLocal), el
+         copyright continua sent l'enllaç de lectura. */
+      onCanviaCopyright={potTriarDrets ? obreDrets : undefined}
     >
       {/* T7 · Els NodeViews de les targetes es munten com a portals dins del
           cos i llegixen este context (avisa i t). Sense targetes, el cos de sempre. */}

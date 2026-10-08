@@ -1,6 +1,6 @@
-import { Bot, Building2, Lock, Network, ShieldCheck, UserRound, Users } from 'lucide-react';
-import { TIPUS_MARE } from '../../data/organizations.js';
+import { Bot, Building2, Eye, Lock, Network, ShieldCheck, UserRound, Users } from 'lucide-react';
 import { ESTATS_APLICACIO } from './aplicacions.js';
+import { potEditarFitxa } from './fitxaDePerfil.js';
 
 /* ═══════════════════════════════════════════════════════════════════
    MODEL DE L'ESPAI DE TREBALL DEL PERFIL · funcions pures
@@ -14,8 +14,6 @@ import { ESTATS_APLICACIO } from './aplicacions.js';
         missatge dins d'un grup buit).
      3. APLICACIONS: les utilitats d'aplicacions.js.
    ═══════════════════════════════════════════════════════════════════ */
-
-const ROLS_QUE_MANEN = new Set(['owner', 'admin']);
 
 /** Opció i element de «GRUPS I EMPRESES» quan la persona no en té cap. */
 export const SENSE_ORGANITZACIONS = 'sense-organitzacions';
@@ -94,10 +92,11 @@ export function navegacioDePerfil(identitats, aplicacions = []) {
 }
 
 /**
- * Segona columna, identitats. Persona: «La fitxa», «El compte», si el
- * backend declara algun dels drets «Privacitat i dades» i, l'últim, «Els
- * nodes» (T9, 261001: on està connectada). Organització: «La fitxa» i
- * «El compte».
+ * Segona columna, identitats. Persona: «La fitxa», «Les vistes», «El
+ * compte», si el backend declara algun dels drets «Privacitat i dades» i,
+ * l'últim, «Els nodes» (T9, 261001: on està connectada). Organització: «La
+ * fitxa», «Les vistes» i «El compte». Agent IA: «La fitxa» i «Les vistes».
+ * «Les vistes», només per a qui pot editar la fitxa (potEditarFitxa).
  */
 export function itemsDePerfil(identitats, { ambPrivacitat = false } = {}) {
   const items = identitats.flatMap((identitat) => {
@@ -114,10 +113,24 @@ export function itemsDePerfil(identitats, { ambPrivacitat = false } = {}) {
       searchText: `fitxa ${nom}`,
       data: { vista: 'fitxa', identitatId: identitat.id },
     };
-    /* Un agent IA només té fitxa: ni compte ni privacitat que administrar. */
-    if (esAgent(identitat)) return [fitxa];
+    /* Ordre del Mestre (261008) · «Vista A4 / PDF», «Crear portada» i «Vista
+       targeta» ixen de l'espai d'edició central i fan un apartat més, com «El
+       compte», just després de «La fitxa». Els veu qui avui veu eixos botons
+       a l'editor: qui la pot editar. Qui només en és membre no en té. */
+    const vistes = potEditarFitxa(identitat) ? [{
+      id: `${identitat.id}-vistes`,
+      categoryIds,
+      title: 'Les vistes',
+      subtitle: 'Vista A4 / PDF, portada i targeta',
+      icon: Eye,
+      searchText: `vistes vista a4 pdf imprimir portada targeta ${nom}`,
+      data: { vista: 'vistes', identitatId: identitat.id },
+    }] : [];
+    /* Un agent IA només té fitxa (i les seues vistes): ni compte ni privacitat que administrar. */
+    if (esAgent(identitat)) return [fitxa, ...vistes];
     const fills = [
       fitxa,
+      ...vistes,
       {
         id: `${identitat.id}-compte`,
         categoryIds,
@@ -180,25 +193,4 @@ export function itemsDAplicacions(aplicacions = []) {
   }));
 }
 
-/* F5 · poliment (ordre del Mestre, 261004; Marató 2230) · Qui pot ser mare
-   d'un grup es decidix amb la mateixa llista blanca que el domini (TIPUS_MARE,
-   organizations.js), no amb «tot el que no és grup»: el diàleg no ha
-   d'oferir una mare que creaOrganitzacio rebutjaria. El kind ve de la fila
-   del port: identitat.dades és la fila de listMyOrganizations
-   (PerfilContext.jsx:326-333), la RPC el torna sempre (columna NOT NULL,
-   2609080000_initial_schema.sql:78) i l'adaptador local també. Hui no canvia
-   res visible: el CHECK només admet els quatre kinds i els tres de mare ja
-   eren «empresa». Una identitat sense kind (un port que no el declare o un
-   doble de proves com el de PerfilShell.test.jsx) conserva el criteri
-   d'abans, i el domini la rebutja com abans: cap opció no desapareix per
-   una dada absent. */
-const potSerMare = (identitat) => {
-  if (!esOrganitzacio(identitat)) return false;
-  const kind = identitat.dades?.kind;
-  return kind == null ? identitat.mena === 'empresa' : TIPUS_MARE.has(kind);
-};
 
-/** Organitzacions que la persona mana i que poden ser mare d'un grup. */
-export const empresesMare = (identitats) => identitats
-  .filter((identitat) => potSerMare(identitat) && ROLS_QUE_MANEN.has(identitat.dades?.role))
-  .map((identitat) => ({ valor: String(identitat.id), etiqueta: identitat.nom }));

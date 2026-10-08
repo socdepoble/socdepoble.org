@@ -2,7 +2,9 @@
 /* Carrusel d'imatges (ordre del Mestre, 261007: «Implementa un carrusel a la
    imatge principal d'aquesta pàgina universal perquè l'usuari puga passar les
    fotos») · qualitat de CarruselImatges, del seu bloc a src/css/components.css,
-   de l'espècimen i del detall que el munta. Calcada, en menut, de
+   de l'espècimen i de la portada que el munta (portadaDElement de
+   detailSectionMeta.jsx des de l'Esmena 3 del pla 261007_1645: la criden
+   /mercat/:id i el lector del MAS). Calcada, en menut, de
    qualitat.alergens.test.js.
    · ESLint amb la configuració del projecte i zero missatges.
    · Pedra Seca per text: cap style=, cap h1/h2, cap import de CSS ni :has();
@@ -215,7 +217,7 @@ describe('Pedra Seca · JSX', () => {
       [/^\s*import\s+[^;]*\.css['"]/m, 'import de CSS'],
       [new RegExp([':ha', 's\\('].join('')), ':has()']
     ];
-    const trobats = [...JSX, DETALL].flatMap((f) => vetats.filter(([patro]) => patro.test(llig(f))).map(([, que]) => `${f}: ${que}`));
+    const trobats = [...JSX, DETALL, META].flatMap((f) => vetats.filter(([patro]) => patro.test(llig(f))).map(([, que]) => `${f}: ${que}`));
     expect(trobats).toEqual([]);
   });
 
@@ -346,9 +348,11 @@ describe('el lloc a la cascada (ordre del Mestre, 261007: «Moure a components.c
       .filter((r) => capaDe(capa, r.context) === 'components')
       .flatMap((r) => r.selectors.filter(empataAmbElBoto).map((s) => `${fitxer} · ${s}`)));
     expect(empats).toEqual(['src/sections/profile/PerfilShell.css · :where(.perfil-pagina) .sdp-boto']);
-    /* El carrusel només el munten el detall i l'espècimen, fora del Perfil. */
+    /* El carrusel només el munten la portada compartida i l'espècimen, fora
+       del Perfil. Esmena 3 del pla 261007_1645 · la portada ha passat
+       d'ItemDetailSection a detailSectionMeta (portadaDElement). */
     const munten = fitxersDe('src', '.jsx').filter((f) => !/\.test\.jsx$/.test(f) && llig(f).includes(`<${NOM}`));
-    expect(munten.sort()).toEqual([DETALL, ESPECIMEN].sort());
+    expect(munten.sort()).toEqual([META, ESPECIMEN].sort());
     expect(munten.filter((f) => llig(f).includes('perfil-pagina'))).toEqual([]);
   });
 });
@@ -383,11 +387,16 @@ describe('la porta del catàleg (tooling/gates/tractor-cataleg.mjs) per a Carrus
     expect(llig(ESPECIMEN)).toMatch(new RegExp(`<${NOM}\\b`));
   });
 
-  test('la façana l’exporta, el catàleg en té l’ítem i el carregador, i el detall el munta per la façana', () => {
+  /* Esmena 3 del pla 261007_1645 · La portada amb carrusel viu a
+     detailSectionMeta.jsx (portadaDElement), que la importa directa de
+     l'organisme: elementDeSeccio.js i els seus consumidors no arrosseguen el
+     barril de Pedra Seca. El detall ja no el munta. */
+  test('la façana l’exporta, el catàleg en té l’ítem i el carregador, i la portada compartida el munta amb import directe', () => {
     expect(llig(`${PS}/index.js`)).toContain(`export { ${NOM} } from './organismes/CarruselImatges.jsx';`);
     expect(llig(`${CAT}/manifest.js`)).toMatch(/especimen\('fonaments', 'carrusel-imatges',/);
     expect(llig(`${CAT}/detailRegistry.jsx`)).toContain("'fonaments/carrusel-imatges': lazyRoute(() => import('./detalls/EspecimenCarruselImatges.jsx')),");
-    expect(llig(DETALL)).toContain("import { CarruselImatges } from '../../components/PedraSeca/index.js';");
+    expect(llig(META)).toContain("import { CarruselImatges } from '../../components/PedraSeca/organismes/CarruselImatges.jsx';");
+    expect(llig(DETALL)).not.toMatch(/CarruselImatges/);
   });
 });
 

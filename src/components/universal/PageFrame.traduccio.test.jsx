@@ -211,7 +211,10 @@ test('a l’editor (accionsInoperatives, T36) Traduir continua portant a /traduc
   const { container } = render(<Pagina accionsInoperatives onClickInoperatiu={vi.fn()} />);
   expect(traduir(container).hasAttribute('aria-haspopup')).toBe(false);
   fireEvent.click(traduir(container));
-  expect(mocks.navigate).toHaveBeenCalledWith('/traduccions?item_id=La%20festa%20del%20poble');
+  /* Auditoria 261007 (B) · Sense ?item_id=: TranslationsSection no el llig, i
+     el títol de l'editor de veres és un element, no un text. */
+  expect(mocks.navigate).toHaveBeenCalledWith('/traduccions');
+  expect(mocks.navigate).toHaveBeenCalledTimes(1);
   expect(screen.queryByRole('menu')).toBeNull();
 });
 

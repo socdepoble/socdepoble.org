@@ -1,0 +1,23 @@
+RELLEU 00 · Claude (compte del Rentonar) · torn torn_91821449 · 261007 ~22:15 (canal viu, lliçó 261003)
+
+Encàrrec: prompt 261007_2205 i pla 261007_2205. Relleu de 261007_1715_auditoria_claude.md («Límits»), amb les decisions de 261007_1845_decisions_iaia.md.
+Informe final: _wiki_de_poble/04_escriptori/261007_2215_auditoria_claude.md (esborrany creat amb document.mjs).
+
+ASSIMILAT
+- Llegits sencers: informe 1715, RELLEU_00 a 03 de 261007_1715_auditoria_claude/, decisions 1845, pla i prompt 2205, acta 1645.
+- Recuperats de la sessió anterior: les troballes de l'auditoria (decisió 1) i l'informe de l'implementador de l'històric (onada 3b). El revisor de l'històric no va acabar. A dades-netes i perfil-retocs els revisors van deixar menors sense aplicar.
+
+ABAST D'ESTA SESSIÓ (res més)
+1. Revisió adversarial de l'històric de l'actor (esmena 2) i correcció del que trobe.
+2. Decisions del Mestre 1 a 4: bombolles del xat, renovació silenciosa, imatges externes al Mur, «Carregar-ne més».
+3. Decisió 5: paquet de WordPress trossejat (carregador clàssic + trossos ESM, amb interruptor monolític).
+4. Pendents menors de «Límits» §5 i els menors dels revisors de l'onada 3b.
+
+RESERVA DE FITXERS (si eres una altra IA, no hi edites fins a un RELLEU posterior que els allibere)
+- Xat: src/sections/xat/XatContext.jsx, XatSection.jsx i les seues proves.
+- Dades: src/app/contexts/useScopedResource.js, src/sections/mur/MurContext.jsx, src/data/contracte.js, src/data/conformitat/kit.js, src/data/supabase/content.js, src/sections/mur/MurSection.jsx, src/sections/mercat/MercatSection.jsx.
+- Imatges: src/sections/mur/TargetaDelMur.jsx, src/components/universal/EventCard.jsx, src/utils/sanitize.js.
+- Paquet: vite.standalone.config.js, src/embed.jsx, wordpress-plugin/.
+- Històric: PageFrame.jsx, usePublicacionsDeLActor.js, PublicacionsDeLActor.jsx, TargetaDelMercat.jsx, Notes*.
+
+RES COMMITEJAT. Cap fitxer de governança (.agents/, tooling/) tocat.

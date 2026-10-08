@@ -20,6 +20,12 @@ const FRONT = [
   'src/components/PedraSeca/hooks/useAccions.js',
   'src/components/PedraSeca/hooks/useAccions.test.jsx',
   'src/components/PedraSeca/hooks/useAccions.comentar.test.jsx',
+  /* Relleu 261007 (peça «netes») · La prova de useComentaEnPrivat (la via
+     «En privat», que viu a useAccions.js) i la de l'avís estable de
+     NotificationProvider (useToast, que fa servir Comentar): cap porta
+     qualitat no les vigilava. */
+  'src/components/PedraSeca/hooks/useComentaEnPrivat.test.jsx',
+  'src/components/universal/NotificationContext.test.jsx',
   'src/components/PedraSeca/hooks/xatSocDePoble.js',
   /* Correcció C9 · la peça de Pedra Seca i el comportament comú dels menús. */
   'src/components/PedraSeca/hooks/useMenuEmergent.js',

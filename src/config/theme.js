@@ -42,6 +42,15 @@ export function writeThemePreference(preference) {
   setVal(THEME_KEY, preference);
 }
 
+/* Auditoria 261007 (B) · Dues instàncies a la mateixa pàgina no divergixen
+   tampoc en el tema: setTheme i toggleTheme (UIContext) avisen les altres per
+   este canal, amb el mateix patró que ESDEVENIMENT_CONTRAST (més avall) i
+   `sdp:language-changed`. El detall és { theme: preferència } ('system',
+   'light' o 'dark'). L'oient només posa l'estat (no desa ni reemet): cap
+   bucle. Abans, passar a fosc des d'un bloc deixava l'altre en clar fins a
+   recarregar la pàgina. */
+export const ESDEVENIMENT_TEMA = 'sdp:theme-changed';
+
 /* ════════════════ CONTRAST · MODE BANCAL (D6, Q1 del Mestre, 261004) ════════════════
  *
  * Tres preferències, per persona i dispositiu (storage.js, Model B: res al

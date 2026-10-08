@@ -14,6 +14,18 @@ import { BookOpen, Landmark, Receipt } from 'lucide-react';
      · icona       component de lucide-react (opcional)
      · estat       'pendent' (este node no té la secció) o 'connectada'
      · ruta        només amb 'connectada': la ruta interna de la secció
+     · panell      l'id amb què el Panell de Control llig la preferència
+                   «Mostrar al Panell» d'esta utilitat: el del registre de
+                   plugins (sections/plugins/registrePlugins.js) o 'snippet'.
+                   Sense, el mateix id (opcional)
+
+   Ordre del Mestre (261007, prompt 261007_1628, peça C) · El Perfil escrivia
+   la preferència amb l'id de l'aplicació i el Panell l'amagava per l'id del
+   registre: «Ocultar del Panell» de la Consola de Mètriques ('metriques') i
+   del Lector RSS ('lector-rss') no feia res. La correspondència viu NOMÉS
+   ací (`panell`): DetallEspai llig i escriu amb ella, i utilitatsActives.js
+   tradueix les preferències desades abans amb l'id vell (ALIES_DEL_PANELL).
+   L'id de l'aplicació no canvia: és el de la navegació del Perfil.
 
    Estes cinc utilitats encara no tenen una ruta connectada des del Perfil.
    Totes són 'pendent'; la seua fitxa permet triar si apareixen al Panell,
@@ -39,6 +51,7 @@ export const APLICACIONS = Object.freeze([
     descripcio: 'Monitorització i auditoria de la IA.',
     icona: Landmark, // TODO proper icon
     estat: 'pendent',
+    panell: 'consola',
   }),
   Object.freeze({
     id: 'lector-rss',
@@ -46,6 +59,7 @@ export const APLICACIONS = Object.freeze([
     descripcio: 'Agregador de notícies i resums intel·ligents.',
     icona: BookOpen,
     estat: 'pendent',
+    panell: 'rss',
   }),
   Object.freeze({
     id: 'cervell',
@@ -72,6 +86,8 @@ const esComponent = (icona) => typeof icona === 'function' || (typeof icona === 
  * La llista que el Perfil pot pintar sense prometre res: fora les entrades
  * sense id vàlid o sense nom i els ids repetits (guanya la primera). Una
  * utilitat 'connectada' sense ruta interna es pinta com a 'pendent'.
+ * Peça C (261007) · `panell` sempre hi és: el declarat si és un id vàlid i,
+ * si no, el mateix id. DetallEspai no ha de saber-ne la regla.
  */
 export function aplicacionsValides(llista) {
   if (!Array.isArray(llista)) return [];
@@ -88,7 +104,20 @@ export function aplicacionsValides(llista) {
       icona: esComponent(entrada.icona) ? entrada.icona : null,
       estat: connectada ? 'connectada' : 'pendent',
       ruta: connectada ? entrada.ruta : null,
+      panell: ID_VALID.test(String(entrada.panell ?? '')) ? entrada.panell : entrada.id,
     }));
   }
   return valides;
 }
+
+/**
+ * Peça C (ordre del Mestre, 261007) · Les preferències desades abans amb l'id
+ * de l'aplicació en lloc del del Panell: { 'metriques': 'consola',
+ * 'lector-rss': 'rss' }. Ix de la mateixa taula (APLICACIONS), cap segona
+ * font; utilitatsActives.js les respecta mentre l'id del Panell no en tinga
+ * cap de pròpia.
+ */
+export const ALIES_DEL_PANELL = Object.freeze(Object.fromEntries(
+  aplicacionsValides(APLICACIONS).filter((aplicacio) => aplicacio.panell !== aplicacio.id)
+    .map((aplicacio) => [aplicacio.id, aplicacio.panell])
+));

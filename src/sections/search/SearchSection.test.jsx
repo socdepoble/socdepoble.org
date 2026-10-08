@@ -81,7 +81,7 @@ beforeEach(() => {
   mocks.media = { status: 'ready', error: null, refresh: vi.fn(), mediaItems: BUIT };
   mocks.notes = { status: 'ready', error: null, refresh: vi.fn(), notes: BUIT };
   mocks.xat = {
-    status: 'ready', scopeKey: 'A', chatThreads: BUIT, recarrega: vi.fn(),
+    status: 'ready', scopeKey: 'A#1', ambitEstable: 'A', chatThreads: BUIT, recarrega: vi.fn(),
     cercaMembres: vi.fn(async () => [{ usuari_id: 'u-pepa', nom: 'Javi Ferrer', tipus: 'persona', avatar_url: null, fil_id: null }])
   };
   mocks.identitat = { identitats: [{ tipus: 'persona', id: 'jo', nom: 'Javi Llinares', avatar: null }] };
@@ -118,6 +118,32 @@ test('?q=javi&tipus=persones inicia la caixa i el filtre, i troba el padró i la
   expect(screen.getByRole('link', { name: 'Javi Llinares' }).getAttribute('href')).toBe('/el-meu-perfil');
   expect(screen.getByRole('link', { name: 'Mestre Javi' }).getAttribute('href')).toBe('/gent/0001');
   expect(document.body.textContent).not.toContain('jo@exemple.org');
+});
+
+/* Decisió 1 del Mestre (261007) · El padró es demana per àmbit de DADES del
+   xat (ambitEstable: backend, persona i actor), no per la clau d'operació
+   (scopeKey, que porta la generació i canvia a cada renovació del JWT). */
+test('Decisió 1 · una renovació de la sessió no torna a demanar el padró ni passa «Persones» per carregant; un canvi d’actor sí', async () => {
+  mocks.url = '?q=javi&tipus=persones';
+  let pintat;
+  await act(async () => { pintat = render(<SearchSection />); });
+  await waitFor(() => expect(screen.getByRole('heading', { name: 'Javi Ferrer' })).toBeTruthy());
+  expect(mocks.xat.cercaMembres).toHaveBeenCalledTimes(1);
+
+  // Renovació del JWT: la clau d'operació canvia, l'àmbit de dades no.
+  mocks.xat = { ...mocks.xat, scopeKey: 'A#2' };
+  await act(async () => { pintat.rerender(<SearchSection />); });
+  expect(mocks.xat.cercaMembres).toHaveBeenCalledTimes(1);
+  expect(screen.getByRole('heading', { name: 'Javi Ferrer' })).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Persones 3' })).toBeTruthy();
+  expect(screen.queryByText("Encara arriben resultats d'algunes fonts…")).toBeNull();
+  expect(estat().textContent).not.toBe('Buscant…');
+
+  // Un altre actor (o una altra persona): l'àmbit de dades és un altre i el padró es torna a demanar.
+  mocks.xat = { ...mocks.xat, scopeKey: 'B#2', ambitEstable: 'B' };
+  await act(async () => { pintat.rerender(<SearchSection />); });
+  await waitFor(() => expect(mocks.xat.cercaMembres).toHaveBeenCalledTimes(2));
+  expect(mocks.xat.cercaMembres).toHaveBeenLastCalledWith(null);
 });
 
 test('en seed (o local), que sí que obri les fitxes, la persona del padró enllaça a /gent/:id', async () => {
@@ -257,9 +283,27 @@ test('sense sessió en remot avisa d’entrar i no crida el padró', async () =>
   mocks.url = '?q=javi';
   await pinta();
   const enllac = screen.getByRole('link', { name: 'Entra per a buscar gent del poble' });
-  expect(enllac.getAttribute('href')).toBe(`/registre?tornar=${encodeURIComponent('/cerca?q=javi')}`);
+  /* Auditoria 261007 (B) · El botó diu «Entra»: /registre en el mode d'entrar,
+     per rutaDEntrada (mode i després tornar). Abans no portava mode i
+     OnboardingSection obria «Crear compte». */
+  expect(enllac.getAttribute('href')).toBe('/registre?mode=entrar&tornar=%2Fcerca%3Fq%3Djavi');
   expect(screen.getByText('Sense entrar, la cerca no veu la gent registrada al poble.')).toBeTruthy();
   expect(mocks.xat.cercaMembres).not.toHaveBeenCalled();
+});
+
+test('Auditoria 261007 (B) · sense sessió i sense consulta, «Entra» de l’estat inicial també obri l’entrada en mode entrar', async () => {
+  mocks.session = { currentUser: null, estat: 'fora' };
+  mocks.identitat = { identitats: BUIT };
+  await pinta();
+  const enllac = screen.getByRole('link', { name: 'Entra per a buscar gent del poble' });
+  expect(enllac.getAttribute('href')).toBe('/registre?mode=entrar&tornar=%2Fcerca');
+  // La consulta viatja codificada dins de la tornada, sense cap espai cru.
+  cleanup();
+  mocks.url = '?q=pepa%20ferrer';
+  await pinta();
+  const ambEspai = screen.getByRole('link', { name: 'Entra per a buscar gent del poble' }).getAttribute('href');
+  expect(new URLSearchParams(ambEspai.split('?')[1]).get('tornar')).toBe('/cerca?q=pepa%20ferrer');
+  expect(new URLSearchParams(ambEspai.split('?')[1]).get('mode')).toBe('entrar');
 });
 
 test('les notes pròpies surten marcades com a privades', async () => {
