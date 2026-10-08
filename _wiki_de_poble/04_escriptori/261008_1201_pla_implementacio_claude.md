@@ -44,9 +44,10 @@ Els canvis principals del pla es resumeixen en:
 1. Independitzar els botons de pujada: un botó específic per a `Capçalera` i un altre per a `Avatar` o `Logotip`, per evitar confusions (actualment hi ha conflicte en pujar imatges).
 2. Construir l'experiència de pujada per a qualsevol imatge (siga capçalera o avatar) calcant exactament la modal de Claude de forma modular: senzilla, arrossegar per reposicionar, slider de zoom amb - i +, i botons Restablir/Cancel·lar/Guardar.
 3. Incloure un avís o control clar si l'usuari intenta pujar un arxiu molt pesat (ex. més de 10 MB) que faça fallar el servidor o el navegador.
-4. Corregir la lògica de la secció `Notes Personals` perquè l'usuari hi puga vore totes les publicacions que ha creat al Mur, Mercat, etc. en els corresponents apartats.
-5. Eliminar el camp obligatori "Empresa mare" del formulari de creació d'una nova organització.
-6. Executar una auditoria extrema al xat.
+4. Arreglar el botó "Elegir drets d'autor" al perfil: un colp triats, no permet canviar-los, i en fer clic et redirigeix a una altra pàgina. Aquesta lògica s'ha de solucionar perquè es puga obrir i modificar la llicència pròpia fàcilment.
+5. Corregir la lògica de la secció `Notes Personals` perquè l'usuari hi puga vore totes les publicacions que ha creat al Mur, Mercat, etc. en els corresponents apartats.
+6. Eliminar el camp obligatori "Empresa mare" del formulari de creació d'una nova organització.
+7. Executar una auditoria extrema al xat.
 
 ### 1. Context i Troballes (Research)
 - L'editor actual permet pujar la imatge de capçalera (ex. pomes), però falta l'opció "Penjar logotip" per a l'avatar que sí que hi era a la versió antiga.
@@ -62,6 +63,7 @@ Els canvis principals del pla es resumeixen en:
 - Separar clarament l'acció amb dos botons: "Capçalera" i "Avatar" / "Logotip".  Així l'usuari entén ràpidament què està canviant i no hi ha conflictes.
 - Implementar la nova modal calcant l'experiència de Claude per arrossegar ('drag') i fer zoom, i fer-la independent: cada imatge puja i es retalla per separat de forma modular. 
 - Implementar validació prèvia a la pujada: mostrar un avís d'error amigable a l'usuari si l'arxiu pesa massa i la càrrega fallarà.
+- Arreglar el botó "Elegir drets d'autor": reparar la lògica per tal que no navegue cap a una altra pàgina i que òbriga el selector o la modal de forma que es puga canviar o actualitzar la llicència lliurement en qualsevol moment, sense que quede bloquejada.
 
 #### [Acció: MODIFY] `src/features/...` (Notes Personals)
 - Modificar el selector/query de Notes Personals perquè reculla efectivament les publicacions creades per l'usuari als murs, presentant-les amb les seues *cards* corresponents.

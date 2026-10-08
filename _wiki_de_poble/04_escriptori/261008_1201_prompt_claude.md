@@ -63,9 +63,10 @@ Company Claude: el Mestre ha deixat instruccions clares. Ens trobem a la porta d
 <!-- SDP:SECTION prompt.local.s4 -->
 ## Tasques
 
-1. **Gestió d'imatges (Capçalera i Logotip):** 
+1. **Gestió d'imatges i elements de l'Editor de Perfil:** 
    Volem separar clarament els botons de pujada perquè l'usuari no s'embolique: posa un botó dedicat a "Capçalera" i un altre a "Avatar" o "Logotip". Cadascun ha d'obrir de forma independent una modal de retall lliure, calcada a la que té Claude per als seus usuaris: la foto es pot arrossegar per enquadrar-la (sense vores obligatòries estranyes), amb una barra lliscant per a zoom in/out (amb `-` i `+`) i només tres botons clars: Restablir, Cancel·lar, Guardar. Elimina complexitat o botons que trencaven el disseny antic. (Les captures de referència de Claude són als artefactes).
    A més a més, posa un filtre de pes: si algú puja una foto immensa i pesada, ha d'avisar i parar-ho abans de trencar l'aplicació.
+   Per altra banda, has d'arreglar el botó d'"Elegir drets d'autor". Actualment té problemes de lògica: una vegada es trien els drets, ja no es poden tornar a canviar, i en fer clic damunt del botó et redirigeix a una altra pàgina en comptes d'obrir de nou el selector. Usa les teues habilitats per reconstruir aquesta lògica perquè l'usuari puga triar, veure i modificar la seua llicència de forma intuïtiva dins de l'editor. Fes servir la teua experiència per optimitzar la lògica i usabilitat general d'aquest *backend* d'usuari.
 
 2. **Lògica de `Notes Personals`:**
    En comptes de mostrar només esborranys, aquest espai de treball privat ha de mostrar totes les targetes/publicacions que l'usuari ha publicat (Mur, Mercat, etc.), mostrant el bloc visual adequat de cada post. Connecta-ho correctament perquè quan el "Sóc de Poble" estiga loguejat, veja en `Notes` tot el que ha penjat Sóc de Poble.
