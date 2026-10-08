@@ -46,8 +46,9 @@ Els canvis principals del pla es resumeixen en:
 3. Incloure un avís o control clar si l'usuari intenta pujar un arxiu molt pesat (ex. més de 10 MB) que faça fallar el servidor o el navegador.
 4. Arreglar el botó "Elegir drets d'autor" al perfil: un colp triats, no permet canviar-los, i en fer clic et redirigeix a una altra pàgina. Aquesta lògica s'ha de solucionar perquè es puga obrir i modificar la llicència pròpia fàcilment.
 5. Corregir la lògica de la secció `Notes Personals` perquè l'usuari hi puga vore totes les publicacions que ha creat al Mur, Mercat, etc. en els corresponents apartats.
-6. Eliminar el camp obligatori "Empresa mare" del formulari de creació d'una nova organització.
-7. Executar una auditoria extrema al xat.
+6. Implementar la lògica de "Membres" per a organitzacions (com ara empreses o grups), perquè usuaris (com Sóc de Poble) o fins i tot altres grups puguen ser afegits i gestionats com a membres d'aquesta organització (ex. El Rentonar).
+7. Eliminar el camp obligatori "Empresa mare" del formulari de creació d'una nova organització.
+8. Executar una auditoria extrema al xat.
 
 ### 1. Context i Troballes (Research)
 - L'editor actual permet pujar la imatge de capçalera (ex. pomes), però falta l'opció "Penjar logotip" per a l'avatar que sí que hi era a la versió antiga.
@@ -68,8 +69,9 @@ Els canvis principals del pla es resumeixen en:
 #### [Acció: MODIFY] `src/features/...` (Notes Personals)
 - Modificar el selector/query de Notes Personals perquè reculla efectivament les publicacions creades per l'usuari als murs, presentant-les amb les seues *cards* corresponents.
 
-#### [Acció: MODIFY] `src/features/...` (Formulari de Nova Organització)
+#### [Acció: MODIFY] `src/features/...` (Formulari de Nova Organització i Perfil)
 - Eliminar el camp "Empresa mare" (obligatori) de la modal de creació de nova organització, o amagar-lo per a grups, atès que un grup no té per què dependre d'una empresa. Mantenir l'UX senzilla.
+- Implementar la pestanya i lògica de "Membres" per a les organitzacions, de manera que el propietari puga afegir, veure i gestionar els usuaris o grups que formen part de l'organització (ex: l'usuari Sóc de Poble pertanyent al grup El Rentonar). Mantenir-ho coherent amb la resta de l'experiència del *backend* d'usuari.
 
 #### [Acció: NEW] Auditoria Extrema del Xat
 - S'efectuarà una auditoria extrema (adversarial) per a trobar forats en el xat (seguretat, lògica i UI) abans de l'entrada dels betatesters, de manera que quan s'aborde, funcione perfectament.

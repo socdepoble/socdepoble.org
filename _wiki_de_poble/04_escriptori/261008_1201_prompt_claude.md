@@ -71,8 +71,9 @@ Company Claude: el Mestre ha deixat instruccions clares. Ens trobem a la porta d
 2. **Lògica de `Notes Personals`:**
    En comptes de mostrar només esborranys, aquest espai de treball privat ha de mostrar totes les targetes/publicacions que l'usuari ha publicat (Mur, Mercat, etc.), mostrant el bloc visual adequat de cada post. Connecta-ho correctament perquè quan el "Sóc de Poble" estiga loguejat, veja en `Notes` tot el que ha penjat Sóc de Poble.
 
-3. **Formulari de Nova Organització:**
+3. **Formulari de Nova Organització i Membres:**
    Elimina d'una vegada el camp "Empresa mare (obligatori)" del modal de nova organització. Com bé diu el Mestre, "un grup no té per què pertànyer a cap empresa", això només embolica a la gent. Llevat!
+   Però a més, aprofita per anar implementant la lògica de la pestanya de "Membres" al perfil de les organitzacions: cal que un propietari puga gestionar, afegir i visualitzar usuaris o altres grups que en siguen membres (ex: l'usuari "Sóc de Poble" essent membre de "El Rentonar"). Manten la lògica de *backend d'usuari* robusta.
 
 4. **Auditoria Adversarial del Xat:**
    Ara que hem aplicat a producció la migració de `obri_fil_de_pagina`, el xat hauria de rutllar. Has de posar-lo a prova buscant-hi qualsevol fissura de cicle de vida, seguretat i fluïdesa abans d'obrir la porta als betatesters. Detalla tot error que trobes.
