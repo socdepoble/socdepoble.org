@@ -4,9 +4,9 @@
   "actor": "Claude",
   "scope": "documents",
   "state": "context_loaded",
-  "revision": 6,
+  "revision": 8,
   "createdAt": "2026-10-09T00:29:07.991Z",
-  "updatedAt": "2026-10-09T00:45:45.784Z",
+  "updatedAt": "2026-10-09T10:50:47.210Z",
   "expiresAt": "2026-10-10T00:29:07.992Z",
   "contractHash": "2b09edd15b17e4d3f835b8943e7a7eea42ec351afc53905f67410c7f9fb32949",
   "humanInventoryVersion": 1,
@@ -3353,17 +3353,29 @@
       "id": "6530bba2-c49e-443e-8466-2e0ff3ddb61d",
       "route": "prompt.local",
       "routeVersion": "3.4.0",
-      "file": "_wiki_de_poble/04_escriptori/261009_0230_prompt_claude_onada6.md",
+      "file": "_wiki_de_poble/90_arxiu_historic/261009_0230_prompt_claude_onada6.md",
       "contractSnapshot": "1217dd55ccae9a6b6dbf5b651085e2821b3c87717157b8f22319e3f9c342c362",
       "template": "_wiki_de_poble/03_actuar/plantilles/prompt_local.md",
       "templateHash": "69997976f6e4d34f9041b9e54c4bdf3e2cd7dd4ebb9fe0864b6828cbcb32bb34",
-      "issuedAt": "2026-10-09T00:29:24.721Z"
+      "issuedAt": "2026-10-09T00:29:24.721Z",
+      "moves": [
+        {
+          "from": "_wiki_de_poble/04_escriptori/261009_0230_prompt_claude_onada6.md",
+          "to": "_wiki_de_poble/90_arxiu_historic/261009_0230_prompt_claude_onada6.md",
+          "hash": "3c88a04004cfac6d05f034dd31f84547dca8c57e0504e9b871dc938d03646702",
+          "at": "2026-10-09T10:50:45.987Z",
+          "receiptIds": [
+            "6530bba2-c49e-443e-8466-2e0ff3ddb61d",
+            "b67048af-e757-4ddd-9d6f-1fec83988622"
+          ]
+        }
+      ]
     },
     "b67048af-e757-4ddd-9d6f-1fec83988622": {
       "id": "b67048af-e757-4ddd-9d6f-1fec83988622",
       "route": "prompt.local",
       "routeVersion": "3.4.0",
-      "file": "_wiki_de_poble/04_escriptori/261009_0230_prompt_claude_onada6.md",
+      "file": "_wiki_de_poble/90_arxiu_historic/261009_0230_prompt_claude_onada6.md",
       "contractSnapshot": "1217dd55ccae9a6b6dbf5b651085e2821b3c87717157b8f22319e3f9c342c362",
       "template": "_wiki_de_poble/03_actuar/plantilles/prompt_local.md",
       "templateHash": "69997976f6e4d34f9041b9e54c4bdf3e2cd7dd4ebb9fe0864b6828cbcb32bb34",
@@ -3373,23 +3385,47 @@
         "preparedAt": "2026-10-09T00:30:33.333Z",
         "committedAt": "2026-10-09T00:30:33.353Z",
         "documentHash": "eb83e1347530c45b77fa418a0793e7371102cc81062bfcd2cc19a7c085318284"
-      }
+      },
+      "moves": [
+        {
+          "from": "_wiki_de_poble/04_escriptori/261009_0230_prompt_claude_onada6.md",
+          "to": "_wiki_de_poble/90_arxiu_historic/261009_0230_prompt_claude_onada6.md",
+          "hash": "3c88a04004cfac6d05f034dd31f84547dca8c57e0504e9b871dc938d03646702",
+          "at": "2026-10-09T10:50:45.988Z",
+          "receiptIds": [
+            "6530bba2-c49e-443e-8466-2e0ff3ddb61d",
+            "b67048af-e757-4ddd-9d6f-1fec83988622"
+          ]
+        }
+      ]
     },
     "f4a89a7a-c9fd-45ce-9714-b472f0a51797": {
       "id": "f4a89a7a-c9fd-45ce-9714-b472f0a51797",
       "route": "pla.implementacio",
       "routeVersion": "2.0.0",
-      "file": "_wiki_de_poble/04_escriptori/261009_0245_pla_implementacio_onada6.md",
+      "file": "_wiki_de_poble/90_arxiu_historic/261009_0245_pla_implementacio_onada6.md",
       "contractSnapshot": "33c3dff4c21c8f4ba8c23c8696c37a2c40d87e530db53214c0c1530e276e241a",
       "template": "_wiki_de_poble/03_actuar/plantilles/pla_implementacio.md",
       "templateHash": "d05074ef89d1ec60596509565d7ac7a1e02b0e2bed1b304311b7fa651b0d23d0",
-      "issuedAt": "2026-10-09T00:45:23.263Z"
+      "issuedAt": "2026-10-09T00:45:23.263Z",
+      "moves": [
+        {
+          "from": "_wiki_de_poble/04_escriptori/261009_0245_pla_implementacio_onada6.md",
+          "to": "_wiki_de_poble/90_arxiu_historic/261009_0245_pla_implementacio_onada6.md",
+          "hash": "7695073be84870a04de9cdb581481d9c40ece414d314a601cc64b4053a21e7b3",
+          "at": "2026-10-09T10:50:47.208Z",
+          "receiptIds": [
+            "f4a89a7a-c9fd-45ce-9714-b472f0a51797",
+            "2d6b2e20-74a8-4bc0-8df5-83a83b14a725"
+          ]
+        }
+      ]
     },
     "2d6b2e20-74a8-4bc0-8df5-83a83b14a725": {
       "id": "2d6b2e20-74a8-4bc0-8df5-83a83b14a725",
       "route": "pla.implementacio",
       "routeVersion": "2.0.0",
-      "file": "_wiki_de_poble/04_escriptori/261009_0245_pla_implementacio_onada6.md",
+      "file": "_wiki_de_poble/90_arxiu_historic/261009_0245_pla_implementacio_onada6.md",
       "contractSnapshot": "33c3dff4c21c8f4ba8c23c8696c37a2c40d87e530db53214c0c1530e276e241a",
       "template": "_wiki_de_poble/03_actuar/plantilles/pla_implementacio.md",
       "templateHash": "d05074ef89d1ec60596509565d7ac7a1e02b0e2bed1b304311b7fa651b0d23d0",
@@ -3399,7 +3435,19 @@
         "preparedAt": "2026-10-09T00:45:45.759Z",
         "committedAt": "2026-10-09T00:45:45.784Z",
         "documentHash": "d9d6f68c487bcf20d4c92eda90c597745bf5efffec407ee61ed465e2e4dd144a"
-      }
+      },
+      "moves": [
+        {
+          "from": "_wiki_de_poble/04_escriptori/261009_0245_pla_implementacio_onada6.md",
+          "to": "_wiki_de_poble/90_arxiu_historic/261009_0245_pla_implementacio_onada6.md",
+          "hash": "7695073be84870a04de9cdb581481d9c40ece414d314a601cc64b4053a21e7b3",
+          "at": "2026-10-09T10:50:47.210Z",
+          "receiptIds": [
+            "f4a89a7a-c9fd-45ce-9714-b472f0a51797",
+            "2d6b2e20-74a8-4bc0-8df5-83a83b14a725"
+          ]
+        }
+      ]
     }
   },
   "plan": null,
@@ -3443,6 +3491,24 @@
       "file": "_wiki_de_poble/04_escriptori/261009_0245_pla_implementacio_onada6.md",
       "at": "2026-10-09T00:45:45.784Z",
       "hash": "d9d6f68c487bcf20d4c92eda90c597745bf5efffec407ee61ed465e2e4dd144a"
+    },
+    {
+      "state": "context_loaded",
+      "action": "handoff",
+      "at": "2026-10-09T10:50:45.988Z"
+    },
+    {
+      "state": "context_loaded",
+      "action": "handoff",
+      "at": "2026-10-09T10:50:47.210Z"
     }
+  ],
+  "ownedPaths": [
+    "_wiki_de_poble/90_arxiu_historic/261009_0230_prompt_claude_onada6.md",
+    "_wiki_de_poble/90_arxiu_historic/261009_0245_pla_implementacio_onada6.md"
+  ],
+  "relocated": [
+    "_wiki_de_poble/04_escriptori/261009_0230_prompt_claude_onada6.md",
+    "_wiki_de_poble/04_escriptori/261009_0245_pla_implementacio_onada6.md"
   ]
 }

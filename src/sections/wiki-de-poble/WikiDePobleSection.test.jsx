@@ -33,7 +33,9 @@ vi.mock('../../data/wikiManifest.js', () => ({
 vi.mock('../../app/contexts/RouterContext', () => ({ useNavigate: () => vi.fn(), useLocation: () => ({ search: fixture.search }), Link: 'a' }));
 vi.mock('../../components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
 vi.mock('../../config/assetResolver', async (importOriginal) => ({ ...(await importOriginal()), resolveAsset: (uri) => uri }));
-vi.mock('../consola/ConsolaSection.jsx', () => ({ ConsolaIncrustada: () => null }));
+/* Onada 7 (261009) · La Consola arriba a demanda (lazyRoute): el doble pinta
+   una marca perquè la prova veja quan ha arribat. */
+vi.mock('../consola/ConsolaSection.jsx', () => ({ ConsolaIncrustada: () => <p>Doble de la Consola</p> }));
 import WikiDePobleSection, { dataDeDocumentWiki } from './WikiDePobleSection';
 import { PAGE_COPY } from '../text/pageContent';
 import { COPYRIGHT_SDP, dataHoraDeBarra, formatDate, formatTime } from '../../components/universal/editorial.js';
@@ -164,19 +166,40 @@ test('T43 · la portada i els documents porten CONNECTAR a la barra blava', () =
   expect(obri('doc_llarg').querySelector('header.bar-blue .btn-connectar')).not.toBeNull();
 });
 
-test('Consola incrustada: capçalera amb logo, píndoles, copyright i la data de PAGE_COPY', () => {
+/* Onada 7 (261009) · La capçalera es pinta de seguida, abans que arribe el
+   tros de la Consola; el cos espera amb «Carregant la Consola…» i, quan
+   arriba, la capçalera és la mateixa. */
+test('Consola incrustada: capçalera amb logo, píndoles, copyright i la data de PAGE_COPY, de seguida; el tauler, quan arriba', async () => {
   const consola = PAGE_COPY.consola;
   const arrel = obri('consola_termodinamica');
-  expect(arrel.querySelector('header.page-title h1').textContent).toBe(consola.title);
-  expect(arrel.querySelectorAll('header.page-title .page-title-logo')).toHaveLength(2);
-  expect(pindoles(arrel)).toEqual([
-    ['WIKI DE POBLE', 'sdp-badge-system'],
-    ['Eina Interactiva', 'sdp-badge-category'],
-    ['consola', 'sdp-badge-tag'],
-    ['ia', 'sdp-badge-tag']
-  ]);
-  expect(arrel.querySelector('.page-title-copyright').textContent).toBe(COPYRIGHT_SDP);
-  expect(arrel.querySelector('.bar-orange .btn-date-time').textContent).toBe(`${formatTime(consola.date)}${formatDate(consola.date)}`);
+  const capcalera = () => {
+    expect(arrel.querySelector('header.page-title h1').textContent).toBe(consola.title);
+    expect(arrel.querySelectorAll('header.page-title .page-title-logo')).toHaveLength(2);
+    expect(pindoles(arrel)).toEqual([
+      ['WIKI DE POBLE', 'sdp-badge-system'],
+      ['Eina Interactiva', 'sdp-badge-category'],
+      ['consola', 'sdp-badge-tag'],
+      ['ia', 'sdp-badge-tag']
+    ]);
+    expect(arrel.querySelector('.page-title-copyright').textContent).toBe(COPYRIGHT_SDP);
+    expect(arrel.querySelector('.bar-orange .btn-date-time').textContent).toBe(`${formatTime(consola.date)}${formatDate(consola.date)}`);
+  };
+  capcalera();
+  // És l'única prova del fitxer que obri la Consola: el tros encara no hi és.
+  const espera = screen.getByText('Carregant la Consola…').closest('[role="status"]');
+  expect(espera.className).toBe('sdp-carregant');
+  expect(espera.closest('header.page-title')).toBeNull();
+  expect(screen.queryByText('Doble de la Consola')).toBeNull();
+  const cos = espera.parentElement;
+  const tauler = await screen.findByText('Doble de la Consola');
+  expect(screen.queryByText('Carregant la Consola…')).toBeNull();
+  /* Revisió adversarial de l'Onada 7 · La barrera de la Consola no pinta cap
+     element quan el tros arriba: el tauler ocupa el lloc de l'espera, al
+     mateix pare, i no hi ha cap avís. */
+  expect(tauler.parentElement).toBe(cos);
+  expect(arrel.querySelector('.sdp-alerta')).toBeNull();
+  capcalera();
+  expect(arrel.querySelectorAll('h1')).toHaveLength(1);
 });
 
 test('T26.2 · en entrar sense res a la URL la portada és el detall i la primera carpeta («Wiki de Poble») és la triada', () => {

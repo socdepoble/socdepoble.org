@@ -49,10 +49,11 @@ const RELEASE = HI_HA_BUILD ? llig(FITXER_RELEASE) : null;
 if (!HI_HA_BUILD) console.warn('[pesDelNucli] No hi ha wordpress-plugin/dist: el pressupost de pes no s’ha mesurat.');
 
 /* El sostre del tros d'entrada: el del build del 261008 a les 22:01
-   (sdp-inventari.json, trossos/soc-de-poble-f0sDoqpe.js). El build de l'arbre
-   del 261009 ja el passa (tests/standalone-build.test.mjs en mesura més de
-   1,62 MB): el Mestre decidix si s'apuja, amb el motiu escrit ací, o si
-   s'aprima el nucli (ADR-2026-12, pregunta 8). */
+   (sdp-inventari.json, trossos/soc-de-poble-f0sDoqpe.js). No s'apuja
+   (ADR-2026-12, pregunta 8, resolta a l'Onada 7): el 261009 l'arbre en feia
+   1.628.974 B, i amb el logotip negre de BrandMark fora de l'entrada en fa
+   1.491.764 B. tests/standalone-build.test.mjs llig esta mateixa constant, i
+   així el trinquet es comprova en cada build real, no només sobre el dist vell. */
 const SOSTRE_DEL_TROS_D_ENTRADA = 1591855;
 
 /* Les apps opcionals: el seu codi no ha de ser cap tros del nucli. */

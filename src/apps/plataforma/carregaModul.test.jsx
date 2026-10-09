@@ -11,17 +11,18 @@ import { RouteErrorBoundary } from '../../app/RouteErrorBoundary.jsx';
 import { INTEGRITAT_DE_PROVA, manifestModulDeProva } from './__fixtures__/manifests.js';
 import { muntaPlataforma } from './__fixtures__/munta.jsx';
 import { TEMPS_LIMIT_DEL_COS, carregadorDelDocument, creaCarregadorDeModuls } from './carregaModul.js';
+import { VERSIO_NUCLI } from './contracteNucli.js';
 import { LazyRouteError } from './lazyRoute.js';
 import { validaManifestApp } from './manifestApp.js';
 import { creaRegistre } from './registreApps.js';
 import RutaApps from './RutaApps.jsx';
 import { useApp } from './index.js';
 
-const NUCLI_DE_PROVA = Object.freeze({ versio: '1.0.0', marca: 'nucli de prova' });
+/* La versió és la del contracte: el carregador només admet el nucli d'esta pàgina (Onada 7, 261009: l'1.1.0). */
+const NUCLI_DE_PROVA = Object.freeze({ versio: VERSIO_NUCLI, marca: 'nucli de prova' });
 const importaNucliDeProva = () => Promise.resolve({ NUCLI: NUCLI_DE_PROVA });
 const manifestDe = (canvis) => validaManifestApp(manifestModulDeProva(canvis), { origen: 'modul' }).manifest;
 const scriptsDelModul = () => [...document.querySelectorAll('script[data-sdp-modul]')];
-const tick = () => new Promise((resol) => { setTimeout(resol, 0); });
 
 /* El que faria el navegador: executa el script injectat (currentScript) i el
    cos crida lliuraCos. */
@@ -34,11 +35,24 @@ function executaComSiFora(script, accio) {
   }
 }
 
-/* Espera que el carregador haja injectat el script (després del nucli). */
-async function scriptInjectat() {
-  for (let i = 0; i < 20 && !scriptsDelModul().length; i += 1) await tick();
-  const [script] = scriptsDelModul();
-  return script;
+/* Espera que el carregador haja injectat el script (després del nucli). No
+   compta voltes del rellotge: el nucli real és un import() que tarda el que
+   tarda, i sota càrrega una espera de 20 voltes hi anava en carrera (Onada 7,
+   261009). Espera que el script aparega al document; si no arriba mai, la
+   prova cau pel seu temps límit. */
+function scriptInjectat() {
+  const [ja] = scriptsDelModul();
+  if (ja) return Promise.resolve(ja);
+  return new Promise((resol) => {
+    const observador = new MutationObserver(() => {
+      const [script] = scriptsDelModul();
+      if (!script) return;
+      observador.disconnect();
+      resol(script);
+    });
+    observador.observe(document, { childList: true, subtree: true });
+    onTestFinished(() => observador.disconnect());
+  });
 }
 
 function CosDeProva() {
@@ -77,6 +91,25 @@ describe('carregaCos · el camí bo', () => {
     expect(executaComSiFora(script, () => carregador.lliuraCos('llibreta', fabrica))).toBe(false);
   });
 
+  /* Onada 7 (261009) · el nucli tarda el que tarda: el script no s'injecta
+     abans, i l'espera de la prova tampoc no es cansa. El nucli només arriba
+     quan la prova el lliura: cap carrera amb el rellotge. */
+  test('amb un nucli lent, el script no s’injecta fins que el nucli arriba', async () => {
+    let lliuraNucli;
+    const carregador = creaCarregadorDeModuls({ importaNucli: () => new Promise((resol) => { lliuraNucli = resol; }) });
+    const promesa = carregador.carregaCos(manifestDe());
+    const esperat = scriptInjectat();
+    await new Promise((resol) => { setTimeout(resol, 50); });
+    expect(scriptsDelModul()).toEqual([]);
+    expect(carregador.nucli()).toBeNull();
+    lliuraNucli({ NUCLI: NUCLI_DE_PROVA });
+    const script = await esperat;
+    expect(script.getAttribute('data-sdp-modul')).toBe('llibreta');
+    expect(carregador.nucli()).toBe(NUCLI_DE_PROVA);
+    expect(executaComSiFora(script, () => carregador.lliuraCos('llibreta', () => CosDeProva))).toBe(true);
+    await expect(promesa).resolves.toEqual({ default: CosDeProva });
+  });
+
   test('la mateixa promesa per al mateix id; oblida en fa una de nova', async () => {
     const carregador = creaCarregadorDeModuls({ importaNucli: importaNucliDeProva, tempsLimit: 20 });
     const manifest = manifestDe();
@@ -104,15 +137,19 @@ describe('carregaCos · el camí bo', () => {
     expect(screen.getByText('Cos del mòdul')).toBeTruthy();
   });
 
+  /* L'importador per defecte, de veritat: el primer import() del nucli
+     transforma tota la Pedra Seca que porta. Després, el mateix mòdul que
+     importaria qualsevol altre, no una còpia. */
   test('el nucli real (nucliModuls.js) es carrega a soles, congelat i versionat', async () => {
     const carregador = creaCarregadorDeModuls();
     const promesa = carregador.carregaCos(manifestDe());
     const script = await scriptInjectat();
-    expect(carregador.nucli()).toMatchObject({ versio: '1.0.0' });
+    expect(carregador.nucli()).toMatchObject({ versio: '1.1.0' });
     expect(Object.isFrozen(carregador.nucli())).toBe(true);
+    expect(carregador.nucli()).toBe((await import('./nucliModuls.js')).NUCLI);
     expect(executaComSiFora(script, () => carregador.lliuraCos('llibreta', (nucli) => nucli.pedraSeca.Boto))).toBe(true);
     await expect(promesa).resolves.toMatchObject({ default: expect.any(Function) });
-  });
+  }, 60000); // com a modulDeBuild.test.jsx: amb la suite sencera en paral·lel, importar el nucli passa dels 5 s
 
   test('el temps límit per defecte és de 2 minuts: només ha de tallar un fitxer penjat, no una baixada lenta', () => {
     expect(TEMPS_LIMIT_DEL_COS).toBe(120000);
@@ -168,9 +205,15 @@ describe('carregaCos · el que no passa (LazyRouteError, mai una recàrrega)', (
     expect(error.cause.message).toContain(missatge);
   });
 
-  test('un nucli que no és el 1.0.0 congelat', async () => {
-    const error = await carregaAmbFallada(null, null, { importaNucli: () => Promise.resolve({ NUCLI: { versio: '1.0.0' } }) });
-    expect(error.cause.message).toContain('no és el 1.0.0 congelat');
+  test('un nucli que no és el 1.1.0 congelat', async () => {
+    const error = await carregaAmbFallada(null, null, { importaNucli: () => Promise.resolve({ NUCLI: { versio: VERSIO_NUCLI } }) });
+    expect(error.cause.message).toContain('no és el 1.1.0 congelat');
+  });
+
+  /* Onada 7 (261009) · un nucli congelat d'una altra versió (l'1.0.0 d'abans) tampoc no passa. */
+  test('un nucli congelat d’una altra versió', async () => {
+    const error = await carregaAmbFallada(null, null, { importaNucli: () => Promise.resolve({ NUCLI: Object.freeze({ versio: '1.0.0' }) }) });
+    expect(error.cause.message).toContain('no és el 1.1.0 congelat');
   });
 
   test('una app que no és un mòdul', async () => {

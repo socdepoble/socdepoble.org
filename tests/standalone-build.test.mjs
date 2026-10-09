@@ -536,11 +536,23 @@ const SRC_DEL_CARREGADOR = `${DIST_AMFITRIO}${ENTRADA_DEL_PAQUET}?ver=1.0.5.abc`
 /* La mida de l'IIFE monolític al build del 261007 (sdp-release.json, mode
    remote): la xifra de la decisió del Mestre. */
 const MIDA_IIFE_DE_LA_DECISIO = 4418786;
-/* Trinquet de l'entrada ESM: la primera mesura del build real (261007,
-   1.574.642 B amb sdp-espais) més un 5 %. Només pot baixar: si una peça nova
-   la fa créixer, que siga a posta (i amb React.lazy, si no és del primer
-   renderitzat). */
-const SOSTRE_DE_L_ENTRADA = 1653374;
+/* Trinquet de l'entrada ESM. Només pot baixar: si una peça nova la fa
+   créixer, que siga a posta (i amb React.lazy, si no és del primer
+   renderitzat). Era la primera mesura del build real (261007, 1.574.642 B
+   amb sdp-espais) més un 5 %, 1.653.374 B.
+   Onada 7 (261009) · El mateix sostre que src/apps/plataforma/pesDelNucli.test.js
+   (SOSTRE_DEL_TROS_D_ENTRADA, el del build del 261008, 1.591.855 B): el build
+   real de l'arbre ja hi cap (1.491.760 B, amb el logotip negre fora de
+   l'entrada, BrandMark.jsx), i ara el trinquet es comprova en cada build
+   real, no només sobre el dist vell. Es llig d'allí, com pesDelNucli llig les
+   constants de vite.standalone.config.js: una sola font, i si algú el mou,
+   els dos trinquets es mouen junts. No s'importa: és un fitxer de vitest. */
+const SOSTRE_DE_L_ENTRADA = (() => {
+  const font = fs.readFileSync(path.join(ARREL, 'src/apps/plataforma/pesDelNucli.test.js'), 'utf8');
+  const trobada = font.match(/^const SOSTRE_DEL_TROS_D_ENTRADA = (\d+);/m);
+  if (!trobada) throw new Error('src/apps/plataforma/pesDelNucli.test.js ja no declara SOSTRE_DEL_TROS_D_ENTRADA');
+  return Number(trobada[1]);
+})();
 
 /** Tots els nodes d'un AST ESTree (Rollup), sense recursió. */
 function nodesDe(arrel) {

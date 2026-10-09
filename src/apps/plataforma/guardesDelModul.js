@@ -76,12 +76,26 @@ export const ADRECES_DE_TOTS = Object.freeze(['www.w3.org']);
    guardesDelModul.test.js comprova que la llista és exactament eixa, i el
    build de la Gestoria sencera (modulDeBuild.test.jsx), que el cos no en
    porta cap més. Magatzem: només IndexedDB ('idb'), als magatzems que la
-   guarda de privacitat declara. */
+   guarda de privacitat declara.
+   Onada 7 (261009) · el Bar, Salut, la Nevera i el Lector, la fase 1 de
+   l'ADR-2026-12. Les quatre guarden les dades a IndexedDB pel motor
+   compartit (creaMagatzemIdb de src/utils/magatzemLocal.js, des del seu
+   magatzem.js). El Bar i Salut exporten fulls d'Excel: els espais de noms
+   d'OOXML de src/utils/fulls/xlsx.js viatgen dins del cos com a dada.
+   guardesDelModul.test.js comprova que cada declaració és exactament el que
+   porta la clausura del cos, i els builds reals de modulDeBuild.test.jsx, que
+   el cos compilat no en porta cap més.
+   Estes declaracions, com la de la Gestoria, queden pendents de la signatura
+   del Mestre (Onada 7, 261009). */
 export const DECLARACIONS_DELS_MODULS = congela({
   gestoria: {
     adreces: ['localhost:3340', 'mail.google.com', 'prewww2.aeat.es', 'purl.org', 'schemas.openxmlformats.org', 'www2.agenciatributaria.gob.es'],
     magatzems: ['idb']
-  }
+  },
+  bar: { adreces: ['schemas.openxmlformats.org'], magatzems: ['idb'] },
+  salut: { adreces: ['schemas.openxmlformats.org'], magatzems: ['idb'] },
+  nevera: { adreces: [], magatzems: ['idb'] },
+  lector: { adreces: [], magatzems: ['idb'] }
 });
 
 const SENSE_DECLARACIO = Object.freeze({ adreces: Object.freeze([]), magatzems: Object.freeze([]) });

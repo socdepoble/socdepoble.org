@@ -194,8 +194,9 @@ describe('creaRegistre', () => {
     expect(registre.registraModul(manifestModulDeProva({ cos: { cami: '/cos.js', integrity: 'sha384-curt' } })).ok).toBe(false);
     expect(registre.registraModul(manifestExternDeProva()).ok).toBe(false);
     const futur = registre.registraModul(manifestModulDeProva({ nucli: '^2' }));
-    expect(futur).toEqual({ ok: false, errors: ['nucli: este nucli és el 1.0.0 i el mòdul demana ^2'], manifest: null });
+    expect(futur).toEqual({ ok: false, errors: ['nucli: este nucli és el 1.1.0 i el mòdul demana ^2'], manifest: null });
     expect(registre.registraModul(manifestModulDeProva({ nucli: '^1.9' })).ok).toBe(false);
+    expect(registre.registraModul(manifestModulDeProva({ nucli: '^1.2' })).ok).toBe(false);
     expect(registre.llista()).toEqual([]);
   });
 

@@ -13,9 +13,16 @@
        fora de lucide-react (React és del nucli); cap xarxa, magatzem ni
        adreça que no declare;
    4 · cap fitxer de producció de la Gestoria ni dels Tractors importa Pedra
-       Seca de fora del nucli, encara que el pont encara no l'arribe.
-   El build de veritat de la Gestoria sencera és a modulDeBuild.test.jsx. Els
-   patrons de les sondes es componen a trossos (patró de fronteres.test.js). */
+       Seca de fora del nucli, encara que el pont encara no l'arribe;
+   5 · Onada 7 (261009): la clausura del Bar, la Nevera, Salut i el Lector
+       passa les mateixes guardes amb la declaració de cada una, que és
+       exactament el que porta; la llavor de DEV del Lector, fora i amb motiu;
+   6 · Onada 7: cap fitxer de producció d'estes quatre apps ni de l'esquelet
+       comú importa Pedra Seca o el router de fora del nucli 1.1.0, i cada
+       nom que l'1.1.0 afig el fa servir algú.
+   Els builds de veritat de la Gestoria sencera i de les quatre apps són a
+   modulDeBuild.test.jsx. Els patrons de les sondes es componen a trossos
+   (patró de fronteres.test.js). */
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, test } from 'vitest';
@@ -23,6 +30,7 @@ import { NOMS_PER_FITXER_DE_PEDRA_SECA, VERSIO_NUCLI, exposaElNom, portaDeLaFont
 import {
   ADRECES_DE_TOTS, DECLARACIONS_DELS_MODULS, MAGATZEMS, XARXA, declaracioDe, hostsDe, infraccionsDelText
 } from './guardesDelModul.js';
+import { NOMS_DEL_NUCLI_1_1 } from './__fixtures__/nomsDelNucli.js';
 
 const ARREL = process.cwd();
 const PONT = 'src/apps/gestoria/AppGestoria.jsx';
@@ -112,13 +120,16 @@ function resol(origen, especificador) {
 }
 
 /* La clausura del cos d'un mòdul, com la faria Rollup: s'atura a les fonts del nucli (externes) i
-   als paquets. `fitxers`: ruta → text, el codi que s'executa i el text que viatja (?raw i globs). */
-function clausura(entrada) {
+   als paquets. `fitxers`: ruta → text, el codi que s'executa i el text que viatja (?raw i globs).
+   `deixa` (Onada 7, 261009): ruta → motiu dels fitxers que no se seguixen, codi que l'app només
+   fa servir darrere d'un literal de DEV; `deixats` diu a quins s'hi ha arribat de veres. */
+function clausura(entrada, deixa = new Map()) {
   const fitxers = new Map();
   const comText = new Set();
   const delNucli = [];
   const paquets = [];
   const noEntesos = [];
+  const deixats = new Set();
   const pendents = [entrada];
   while (pendents.length) {
     const ruta = pendents.pop();
@@ -132,6 +143,7 @@ function clausura(entrada) {
       const font = desti ?? especificador.replace(/\?.*$/, '');
       if (portaDeLaFont(font)) delNucli.push({ origen: ruta, font, noms });
       else if (desti === null) paquets.push({ origen: ruta, paquet: font });
+      else if (deixa.has(desti)) deixats.add(desti);
       else if (/\?raw$/.test(especificador)) {
         if (!fitxers.has(desti)) { fitxers.set(desti, llig(desti)); comText.add(desti); }
       } else pendents.push(desti);
@@ -140,7 +152,7 @@ function clausura(entrada) {
     noEntesos.push(...glob.noEntesos);
     for (const fitxer of glob.fitxers) if (!fitxers.has(fitxer)) { fitxers.set(fitxer, llig(fitxer)); comText.add(fitxer); }
   }
-  return { fitxers, comText, delNucli, paquets, noEntesos };
+  return { fitxers, comText, delNucli, paquets, noEntesos, deixats };
 }
 
 /* Les guardes del build (infraccionsDelCos de vite.modul.config.js) sobre una clausura de fonts.
@@ -205,9 +217,11 @@ describe('1 · les guardes del text (guardesDelModul.js)', () => {
     const text = t('const u="https:', '//MAIL.google.com/mail/?to=a";const b=indexed', 'DB;');
     expect(hostsDe(text)).toEqual(['mail.google.com']);
     expect(infraccionsDelText(text, { id: 'gestoria' })).toEqual([]);
-    expect(infraccionsDelText(text, { id: 'bar' })).toEqual([
+    expect(infraccionsDelText(text, { id: 'llibreta' })).toEqual([
       'fa servir un magatzem que no declara: IndexedDB', 'porta una URL externa que no declara: mail.google.com'
     ]);
+    /* Onada 7 (261009) · host per host i magatzem per magatzem: el Bar declara IndexedDB, però no Gmail. */
+    expect(infraccionsDelText(text, { id: 'bar' })).toEqual(['porta una URL externa que no declara: mail.google.com']);
     expect(declaracioDe('inexistent')).toEqual({ adreces: [], magatzems: [] });
     expect(declaracioDe('toString')).toEqual({ adreces: [], magatzems: [] });
     expect(Object.isFrozen(DECLARACIONS_DELS_MODULS.gestoria.adreces)).toBe(true);
@@ -313,5 +327,116 @@ describe('4 · Pedra Seca a tot l’arbre de la Gestoria i dels Tractors: només
     }
     expect([...fitxers].filter((fitxer) => !Object.hasOwn(NOMS_PER_FITXER_DE_PEDRA_SECA, fitxer))).toEqual([]);
     expect([...fitxers]).toEqual(expect.arrayContaining([`${PEDRA_SECA}organismes/Pestanyes.jsx`, `${PEDRA_SECA}atoms/ControlContrasenya.jsx`]));
+  });
+});
+
+/* ── Onada 7 (261009) · el Bar, la Nevera, Salut i el Lector com a mòduls ──
+   La fase 1 de l'ADR-2026-12 per a les quatre apps de la recepta. L'entrada
+   de cada cos és el component del manifest (el `import('./AppX.jsx')` de
+   `carrega`). La clausura s'atura, a més, als fitxers de NOMES_EN_DEV: codi
+   que l'app només fa servir darrere d'un literal de DEV, que el build d'un
+   mòdul deixa en fals (mode production i cap VITE_* a l'envPrefix). Cada
+   exclusió porta el seu motiu, una prova que la clausura hi arriba de veres i
+   el build real (modulDeBuild.test.jsx), que diu que no és al cos.
+   La carta de La Parròquia (bar/llavors/laParroquia.js, amb el seu CSV) també
+   és de DEV, però no s'exclou: no porta cap adreça ni magatzem, i mirar-la és
+   més estricte. El build real prova que tampoc no és al cos. */
+const APPS_DE_LA_FASE_1 = Object.freeze({
+  bar: 'src/apps/bar/AppBar.jsx',
+  nevera: 'src/apps/nevera/AppNevera.jsx',
+  salut: 'src/apps/salut/AppSalut.jsx',
+  lector: 'src/apps/lector/AppLector.jsx'
+});
+const NOMES_EN_DEV = new Map([
+  ['src/apps/lector/llavor/fontLlavor.js', t('La llavor sintètica del Lector. AppLector.jsx només la fa servir darrere de LLAVOR_ACTIVA ',
+    '(import.meta.env.DEV o VITE_SDP_LECTOR_LLAVOR), que el build d’un mòdul deixa en fals. Porta com a text feeds ',
+    'd’example.org amb els espais de noms de purl.org i search.yahoo.com: cap és una dada del Lector de producció.')]
+]);
+const CLAUSURES_DE_LA_FASE_1 = Object.freeze(Object.fromEntries(
+  Object.entries(APPS_DE_LA_FASE_1).map(([id, entrada]) => [id, clausura(entrada, NOMES_EN_DEV)])
+));
+/* Els magatzems que nomena un conjunt de textos (les claus de la declaració). */
+const magatzemsDe = (textos) => MAGATZEMS.filter(([, patro]) => textos.some((text) => patro.test(text))).map(([clau]) => clau);
+
+describe('5 · Onada 7: la clausura de cada app de la fase 1 passa les guardes del build amb la seua declaració', () => {
+  test.each(Object.keys(APPS_DE_LA_FASE_1))('%s: l’entrada és el component del manifest i la clausura mira de veres', (id) => {
+    const entrada = APPS_DE_LA_FASE_1[id];
+    expect(llig(`src/apps/${id}/manifest.js`)).toContain(`import('./${path.posix.basename(entrada)}')`);
+    const { fitxers, delNucli } = CLAUSURES_DE_LA_FASE_1[id];
+    expect([...fitxers.keys()]).toEqual(expect.arrayContaining([entrada, `src/apps/${id}/magatzem.js`, 'src/utils/magatzemLocal.js']));
+    expect(fitxers.size).toBeGreaterThan(15);
+    expect(delNucli.map(({ font }) => font)).toEqual(expect.arrayContaining([
+      'react', 'src/app/contexts/RouterContext.jsx', 'src/apps/plataforma/index.js', `${PEDRA_SECA}index.js`
+    ]));
+  });
+
+  test.each(Object.keys(APPS_DE_LA_FASE_1))('%s: cap infracció amb la seua declaració; sense, el magatzem i les adreces no passarien', (id) => {
+    expect(infraccionsDeLaClausula(CLAUSURES_DE_LA_FASE_1[id], id)).toEqual([]);
+    const sense = infraccionsDeLaClausula(CLAUSURES_DE_LA_FASE_1[id], null).join('\n');
+    expect(sense).toContain('fa servir un magatzem que no declara: IndexedDB');
+    for (const host of DECLARACIONS_DELS_MODULS[id].adreces) expect(sense, host).toContain(`porta una URL externa que no declara: ${host}`);
+  });
+
+  test('cada declaració és exactament el que porta la clausura: les adreces de fora del W3C i els magatzems', () => {
+    for (const [id, { fitxers }] of Object.entries(CLAUSURES_DE_LA_FASE_1)) {
+      const textos = [...fitxers.values()];
+      const hosts = [...new Set(textos.flatMap(hostsDe))].filter((host) => !ADRECES_DE_TOTS.includes(host)).sort();
+      expect(hosts, id).toEqual([...DECLARACIONS_DELS_MODULS[id].adreces].sort());
+      expect(magatzemsDe(textos), id).toEqual([...DECLARACIONS_DELS_MODULS[id].magatzems]);
+    }
+    expect(DECLARACIONS_DELS_MODULS.bar.adreces).toEqual(['schemas.openxmlformats.org']);
+    expect(DECLARACIONS_DELS_MODULS.salut.adreces).toEqual(['schemas.openxmlformats.org']);
+  });
+
+  test('les exclusions de DEV són reals: la clausura hi arriba, el literal hi és, i amb la llavor hi entrarien adreces que el Lector no declara', () => {
+    const deixats = new Set(Object.values(CLAUSURES_DE_LA_FASE_1).flatMap(({ deixats: d }) => [...d]));
+    expect([...NOMES_EN_DEV.keys()].filter((fitxer) => !deixats.has(fitxer))).toEqual([]);
+    expect([...CLAUSURES_DE_LA_FASE_1.lector.deixats]).toEqual(['src/apps/lector/llavor/fontLlavor.js']);
+    /* L'únic ús de l'adaptador de la llavor és darrere del literal de DEV. */
+    const lector = llig(APPS_DE_LA_FASE_1.lector);
+    expect(lector).toContain("const LLAVOR_ACTIVA = import.meta.env.DEV || import.meta.env.VITE_SDP_LECTOR_LLAVOR === '1';");
+    expect(lector.match(/\bcreaAdaptadorLlavor\b/g)).toHaveLength(2);
+    expect(lector).toContain('(LLAVOR_ACTIVA ? creaFontNoticies(creaAdaptadorLlavor(');
+    const ambLlavor = infraccionsDeLaClausula(clausura(APPS_DE_LA_FASE_1.lector), 'lector').join('\n');
+    for (const host of ['example.org', 'purl.org']) expect(ambLlavor, host).toContain(`porta una URL externa que no declara: ${host}`);
+  });
+});
+
+describe('6 · Onada 7: Pedra Seca i el router a tot l’arbre de les quatre apps i de l’esquelet comú, només del nucli', () => {
+  const CARRILS_DE_LES_APPS = Object.freeze(['src/apps/bar', 'src/apps/nevera', 'src/apps/salut', 'src/apps/lector', 'src/apps/comu']);
+  /* Els noms que el nucli 1.1.0 afig al 1.0.0 són NOMS_DEL_NUCLI_1_1 (__fixtures__/nomsDelNucli.js):
+     nucliModuls.test.js diu que són exactament els que el contracte afig, i ací es prova que estan en ús. */
+  const fora = [];
+  const usats = { router: new Set(), pedraSeca: new Set() };
+  let vistes = 0;
+  for (const carril of CARRILS_DE_LES_APPS) {
+    for (const ruta of fitxersDe(carril)) {
+      for (const { especificador, noms } of importacions(llig(ruta))) {
+        const desti = resol(ruta, especificador);
+        if (!desti) continue;
+        const porta = portaDeLaFont(desti);
+        if (!porta) {
+          if (desti.startsWith(PEDRA_SECA) || desti.startsWith('src/app/contexts/')) fora.push(`${ruta}: ${desti} no és del nucli ${VERSIO_NUCLI}`);
+          continue;
+        }
+        if (!Object.hasOwn(usats, porta.clau)) continue;
+        vistes += 1;
+        for (const nom of noms) {
+          if (!exposaElNom(porta, nom)) fora.push(`${ruta}: ${nom} de ${desti}`);
+          usats[porta.clau].add(nom);
+        }
+      }
+    }
+  }
+
+  test('cada import de Pedra Seca i del router és d’un fitxer del nucli i d’un nom que exposa', () => {
+    expect(fora).toEqual([]);
+    expect(vistes).toBeGreaterThan(50); // 58 importacions del router i de Pedra Seca el 261009
+  });
+
+  test('la porta mira de veres: cada nom que el nucli 1.1.0 afig el fa servir alguna d’estes apps o l’esquelet comú', () => {
+    for (const [clau, noms] of Object.entries(NOMS_DEL_NUCLI_1_1)) {
+      expect(noms.filter((nom) => !usats[clau].has(nom)), clau).toEqual([]);
+    }
   });
 });

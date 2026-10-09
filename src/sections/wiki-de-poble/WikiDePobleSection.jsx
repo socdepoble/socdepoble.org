@@ -1,10 +1,11 @@
-import { lazyRoute } from '../../apps/plataforma/lazyRoute.js';
+import { esErrorLazy, lazyRoute } from '../../apps/plataforma/lazyRoute.js';
 import React, { Suspense, useMemo } from 'react';
 import { UniversalWorkspace } from '../../components/universal/workspace/UniversalWorkspace.jsx';
 import { ALL_CATEGORY_ID } from '../../components/universal/workspace/workspaceState.js';
 import { UniversalPage } from '../../components/universal/UniversalPage.jsx';
 import { useToast } from '../../components/universal/NotificationContext.jsx';
 import { Carregant } from '../../components/PedraSeca/atoms/estats.jsx';
+import { Alerta } from '../../components/PedraSeca/molecules/Alerta.jsx';
 import { wikiManifest } from '../../data/wikiManifest.js';
 import { sanitizeHtml } from '../../utils/sanitize.js';
 import { resolRecursosDeHtml } from '../../config/assetResolver.js';
@@ -14,7 +15,6 @@ import { useCoreContent } from '../../app/contexts/CoreContentContext';
 import { PAGE_COPY } from '../text/pageContent';
 import { COPYRIGHT_SDP, dataDelNom, dataHoraDeBarra } from '../../components/universal/editorial.js';
 import { COVER_PAGE_KEYS } from '../../config/systemPages';
-import { ConsolaIncrustada } from '../consola/ConsolaSection.jsx';
 import { parseMarkdown, extreuEditorial, parseMarkdownEnLinia } from './parseMarkdown.js';
 import { ICONES_ITEMS_WIKI, glifDeCarpetaWiki, iconaDeDocument } from './iconesWiki.js';
 
@@ -116,6 +116,46 @@ const EINES_LOCALS = import.meta.env.DEV ? {
   sentinelles_panell: lazyRoute(() => import('../tractors/PanellSentinelles.jsx')),
   agents_panell: lazyRoute(() => import('../tractors/PanellAgents.jsx'))
 } : null;
+
+/* Onada 7 (261009) · La Consola, a demanda. Amb l'import estàtic, el tros de
+   la Wiki arrossegava el de la Consola (197.067 B al build real del 261009)
+   a cada visita, l'obrira algú o no. Ara es carrega quan s'obri la seua
+   fitxa, amb lazyRoute i un Suspense només sobre el cos, com les eines
+   locals. Una fallada és un LazyRouteError, i la recull BarreraDeLaConsola
+   (ací baix), no la ruta. lazyRoute espera un mòdul amb default, i
+   ConsolaIncrustada és una exportació amb nom. */
+const ConsolaIncrustada = lazyRoute(() => import('../consola/ConsolaSection.jsx')
+  .then((modul) => ({ default: modul.ConsolaIncrustada })));
+
+/* Revisió adversarial de l'Onada 7 · Si el tros de la Consola no arriba (una
+   connexió rural que cau, o sense connexió i sense haver-la oberta abans),
+   la fallada es queda dins del cos, com la del panell del poble
+   (BarreraDelPanellDelPoble, detailSectionMeta.jsx). Sense esta barrera
+   pujava a RouteErrorBoundary, que substituïx la ruta sencera: arbre, llista
+   i detall. I com que la seua clau és el camí i la Wiki només canvia ?item=,
+   cap altre document s'obria fins eixir pel menú. Abans, amb l'import
+   estàtic, la Consola no podia fallar així: no s'havia d'empitjorar res.
+   Sense botó de reintent: un import fallit continua fallit a la memòria de
+   React (lazyRoute.js), i recarregar és cosa de qui navega. Qualsevol altre
+   error puja com sempre. No s'importa la del poble perquè portaria
+   detailSectionMeta.jsx sencer al tros de la Wiki. */
+export class BarreraDeLaConsola extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { error };
+  }
+
+  render() {
+    const { error } = this.state;
+    if (!error) return this.props.children;
+    if (!esErrorLazy(error)) throw error;
+    return this.props.fallback;
+  }
+}
 
 /* Traduir enviaria el text de la pàgina al servei de traducció de l'amfitrió
    (useTraduccioPagina), i el que mostren les eines locals no ix d'este
@@ -225,7 +265,20 @@ function WikiDetail({ item }) {
         ]}
         copyright={COPYRIGHT_SDP}
       >
-        <ConsolaIncrustada />
+        {/* Onada 7 (261009) · La capçalera, el títol, les etiquetes i el
+            copyright es pinten de seguida; només el tauler espera el seu tros
+            i, si no arriba, només el tauler ho diu. */}
+        <BarreraDeLaConsola
+          fallback={(
+            <Alerta to="error" titol="No s’ha pogut carregar la Consola">
+              La resta de la Wiki continua com sempre.
+            </Alerta>
+          )}
+        >
+          <Suspense fallback={<Carregant etiqueta="Carregant la Consola…" />}>
+            <ConsolaIncrustada />
+          </Suspense>
+        </BarreraDeLaConsola>
       </UniversalPage>
     );
   }

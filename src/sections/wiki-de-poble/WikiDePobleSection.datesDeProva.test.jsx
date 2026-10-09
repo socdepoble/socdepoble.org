@@ -12,7 +12,7 @@
  * el Mur (targetesDeSistema): cap data recalculada a la prova.
  */
 import React from 'react';
-import { cleanup, fireEvent, render } from '@testing-library/react';
+import { cleanup, findByText, fireEvent, render } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({ navigate: vi.fn(), core: { status: 'ready', pageCopy: {} }, itemId: '__intro' }));
@@ -28,7 +28,9 @@ vi.mock('../../app/contexts/UIContext', () => ({
   useUIState: () => ({ externalConfig: {}, locale: 'ca-ES', language: 'ca' })
 }));
 vi.mock('../../app/contexts/CoreContentContext', () => ({ useCoreContent: () => mocks.core }));
-vi.mock('../consola/ConsolaSection.jsx', () => ({ ConsolaIncrustada: () => null }));
+/* Onada 7 (261009) · La Consola arriba a demanda: el doble pinta una marca
+   perquè la prova n'espere la càrrega. */
+vi.mock('../consola/ConsolaSection.jsx', () => ({ ConsolaIncrustada: () => <p>Doble de la Consola</p> }));
 vi.mock('../../data/wikiManifest.js', () => ({ wikiManifest: { categories: [], items: [] } }));
 vi.mock('../../components/universal/workspace/UniversalWorkspace.jsx', () => ({
   UniversalWorkspace: ({ model, renderDetail }) => renderDetail({ item: model.items.find((item) => item.id === mocks.itemId) })
@@ -109,7 +111,7 @@ test('mentre el contingut core carrega (pageCopy buit) o sense la pàgina, mana 
   expect(textos(pastillaDeLaPagina(render(<WikiDePobleSection />).container))).toEqual([time, date]);
 });
 
-test('el copy del core mana també en el títol de la portada i de la Consola incrustada', () => {
+test('el copy del core mana també en el títol de la portada i de la Consola incrustada', async () => {
   mocks.core = {
     status: 'ready',
     pageCopy: {
@@ -123,5 +125,9 @@ test('el copy del core mana també en el títol de la portada i de la Consola in
   const arrel = render(<WikiDePobleSection />).container;
   expect(arrel.querySelector('header.page-title h1').textContent).toBe('Consola del core');
   const { time, date } = dataHoraDeBarra({ creat: '2026-09-29T10:30:00Z' });
+  expect(textos(pastillaDeLaPagina(arrel))).toEqual([time, date]);
+  // Quan el tauler arriba, la capçalera del core continua igual.
+  expect(await findByText(arrel, 'Doble de la Consola')).toBeTruthy();
+  expect(arrel.querySelector('header.page-title h1').textContent).toBe('Consola del core');
   expect(textos(pastillaDeLaPagina(arrel))).toEqual([time, date]);
 });

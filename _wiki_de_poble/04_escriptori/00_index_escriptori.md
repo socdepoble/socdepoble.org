@@ -35,12 +35,14 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu — i
 
 
 
+- [[261009_1245_auditoria_claude]] · Mestre 261009: Claude reporta l'estat de l'Onada 7
+- [[261009_1216_prompt_claude_onada7]]
+- [[261009_1216_pla_implementacio_onada7]]
+- [[261009_1238_missatge_maria_a_claude]] · Mestre 261009: Co-working a Tres Bandes per al pont
+- [[261009_1255_resposta_maria_a_claude]] · Mestre 261009: Llum verda de MarIA a Claude
+- [[261009_1300_requeriments_onada8]] · Mestre 261009: Requeriments gravats per a la pròxima Onada
+- [[261009_1330_requeriments_onada9_neteja]] · Mestre 261009: Directrius absolutes d'escombrada
 - [[../10_actes/261009_0745_acta_marmota]]
-- [[261009_0310_auditoria_claude]]
-- [[261009_0245_pla_implementacio_onada6]]
-- [[261009_0245_pla_implementacio_onada6]]
-- [[261009_0230_prompt_claude_onada6]]
-- [[261008_2345_pla_implementacio_onada5]]
 
 Tancament autoritzat: rutes Gestoria/Wiki, avatars i paquet 1.0.3. Els altres documents es conserven com a relleu o fronts ajornats per a la pròxima sessió.
 
@@ -749,6 +751,10 @@ Enllaços a peces ja existents, verificats al disc; no s’han mogut ni editat e
 
 ## Arxivat amb la Porta Olivera
 
+- [[../90_arxiu_historic/261008_2345_pla_implementacio_onada5]]
+- [[../90_arxiu_historic/261009_0230_prompt_claude_onada6]]
+- [[../90_arxiu_historic/261009_0245_pla_implementacio_onada6]]
+- [[../90_arxiu_historic/261009_0310_auditoria_claude]]
 - [[../90_arxiu_historic/261009_0032_auditoria_claude_onada5]]
 - [[../90_arxiu_historic/261008_2345_prompt_claude_onada5]]
 - [[../90_arxiu_historic/261008_2032_pla_implementacio_claude]]
@@ -781,3 +787,4 @@ Enllaços a peces ja existents, verificats al disc; no s’han mogut ni editat e
 - [[../90_arxiu_historic/261006_0224_pla_implementacio_antigravity]]
 - [[../10_actes/261007_0025_acta_marmota]]
 - [[../10_actes/261007_1645_acta_marmota]]
+- [[../10_actes/261009_1216_acta_marmota]]

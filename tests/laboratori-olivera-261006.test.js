@@ -12,7 +12,8 @@
  *  prepara-pla.mjs no veu deriva.
  *
  *  Fa skip si el laboratori no hi és o si els fitxers instal·lats ja són els de
- *  nous/: llavors manen les proves reals i este corredor s'ha de retirar.
+ *  nous/: llavors manen les proves reals i este corredor s'ha de retirar. També
+ *  si l'executor n'ha deixat la transacció (Onada 7).
  *  Cap prova escriu al repositori; de 90_arxiu_historic no es copia res.
  */
 import { describe, expect, test } from 'vitest';
@@ -44,7 +45,36 @@ function fitxersDe(dir, rel = '') {
 
 const PAQUET = fitxersDe(NOUS).map((nou) => ({ nou, ruta: nou.endsWith('.md.txt') ? nou.slice(0, -'.txt'.length) : nou }));
 const APLICAT = PAQUET.length > 0 && PAQUET.every((f) => fs.existsSync(path.join(REPO, f.ruta)) && llig(path.join(REPO, f.ruta)) === llig(path.join(NOUS, f.nou)));
-const ACTIU = PAQUET.length > 0 && !APLICAT;
+
+/**
+ * Primera transacció acceptada de .agents/seal-transactions/ amb un prefix d'operationId, o
+ * null. Mateix criteri que transaccio() de prepara-pla.mjs; un registre il·legible no compta.
+ */
+function transaccioAmb(prefix) {
+  const dir = path.join(REPO, '.agents/seal-transactions');
+  if (!fs.existsSync(dir)) return null;
+  for (const nom of fs.readdirSync(dir).filter((n) => n.endsWith('.json')).sort()) {
+    let t;
+    try { t = JSON.parse(llig(path.join(dir, nom))); } catch { continue; }
+    if (t?.state === 'accepted' && typeof t.operationId === 'string' && t.operationId.startsWith(prefix) && Array.isArray(t.files)) return t;
+  }
+  return null;
+}
+
+/*
+ * Onada 7 (261009): eixida per aplicació. L'executor ja va aplicar este paquet (operationId
+ * `sdp-olivera-ancores-261006-*`), i la transacció porta cada fitxer de nous/ amb el sha que hi
+ * va deixar (`after`). El corredor no ho veia perquè només mirava APLICAT, els bytes iguals als
+ * de nous/: el paquet 261009_0400_higiene_claude ha reescrit després draft-write.mjs i la porta
+ * Olivera sobre els que este va deixar, i APLICAT ja no pot ser cert. prepara-pla.mjs, a més,
+ * es nega per la transacció. Sense transacció, el corredor comprova com fins ara.
+ */
+const APLICACIO = (() => {
+  const t = transaccioAmb('sdp-olivera-ancores-261006-');
+  const deixat = (f) => t.files.some((x) => x.path === f.ruta && x.after === sha(fs.readFileSync(path.join(NOUS, f.nou))));
+  return t && PAQUET.length > 0 && PAQUET.every(deixat) ? t : null;
+})();
+const ACTIU = PAQUET.length > 0 && !APLICAT && !APLICACIO;
 
 /** Bateria fixa: tot el que importa la porta o draft-write, directament o pel circuit documental. */
 const FIXES = ['porta-olivera-v3', 'porta-olivera-diagnosi', 'cognitive-preflight', 'cognitive-hook-safety', 'tractor-fortification',
@@ -189,7 +219,7 @@ function compara(f, b, p, ambProvesNoves) {
   return out;
 }
 
-describe.skipIf(!ACTIU)('laboratori 261006_0055_olivera_ancores_opus', () => {
+describe.skipIf(!ACTIU)(`laboratori 261006_0055_olivera_ancores_opus${APLICACIO ? ` · retirat: aplicat per la transacció ${APLICACIO.id}` : ''}`, () => {
   test('el codi del paquet, el generador del pla i este corredor passen l’ESLint del repositori sense cap missatge', async () => {
     const { ESLint } = await import('eslint');
     const eslint = new ESLint({ cwd: REPO });

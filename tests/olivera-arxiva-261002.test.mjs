@@ -12,7 +12,8 @@
  *  nous superposats i s'importen d'allí. Quan l'executor ja ha deixat la
  *  transacció acceptada del paquet (operationId `sdp-olivera-arxiva-261002-*` a
  *  `.agents/seal-transactions/`), s'importen els fitxers reals. Sense laboratori
- *  ni transacció, skip.
+ *  ni transacció, skip. Superat pel 261006_0055 (la seua transacció acceptada),
+ *  skip sencer (Onada 7).
  *
  *  Totes les fixtures viuen a os.tmpdir(), amb noms i dades sintètics: cap prova
  *  toca l'Escriptori real ni cap torn real.
@@ -39,17 +40,34 @@ const VELL = '250101';
 const sha = (valor) => createHash('sha256').update(valor).digest('hex');
 const llig = (abs) => fs.readFileSync(abs, 'utf8');
 
-/** Transacció acceptada del paquet, o null (mateix criteri que prepara-pla.mjs). */
-function transaccio() {
+/** Transacció acceptada amb un prefix d'operationId, o null (mateix criteri que prepara-pla.mjs). */
+function transaccio(prefix = OPERACIO) {
   const dir = path.join(REPO, '.agents/seal-transactions');
   if (!fs.existsSync(dir)) return null;
   for (const nom of fs.readdirSync(dir).filter((n) => n.endsWith('.json')).sort()) {
     let t;
     try { t = JSON.parse(llig(path.join(dir, nom))); } catch { continue; }
-    if (t?.state === 'accepted' && typeof t.operationId === 'string' && t.operationId.startsWith(OPERACIO) && Array.isArray(t.files)) return t;
+    if (t?.state === 'accepted' && typeof t.operationId === 'string' && t.operationId.startsWith(prefix) && Array.isArray(t.files)) return t;
   }
   return null;
 }
+
+/*
+ * Onada 7 (261009): eixida per superació. El paquet 261006_0055_olivera_ancores_opus el supera
+ * (el seu LLEGIU_PRIMER, §4: «no es fa el rebase») i l'executor ja l'ha aplicat (operationId
+ * `sdp-olivera-ancores-261006-*`) amb una porta Olivera nova. Esta còpia superposava la porta del
+ * 261002, que no exporta `ancoresDe`, sobre un draft-write.mjs que l'importa: el corredor petava
+ * en carregar. Superat, salta sencer i no munta l'arbre. Sense eixa transacció, comprova com fins ara.
+ * L'O13 (noms `planificacio_*`) no el supera el 0055, que no el va prendre (LLEGIU §4): el reprén el
+ * paquet 261009_1245_onada7_claude (paranyDelNom). La seua prova salta només mentre eixe paquet hi
+ * siga o l'haja aplicat; si no, ix roja i ho diu.
+ */
+const SUPERACIO = (() => {
+  const t = transaccio('sdp-olivera-ancores-261006-');
+  return t && t.files.some((f) => f.path === 'tooling/gates/porta-olivera.mjs') ? t : null;
+})();
+const ONADA7_LAB = path.join(REPO, '_wiki_de_poble/04_escriptori/02_investigacio_ia/261009_1245_onada7_claude/prepara-pla.mjs');
+const ONADA7_OPERACIO = 'sdp-onada7-taxonomia-261009-';
 
 /** Fitxers d'un directori, recursiu, amb camí relatiu posix. El `.DS_Store` del Finder no compta. */
 function fitxersDe(dir, rel = '') {
@@ -98,9 +116,9 @@ function construeixArbre() {
   return dir;
 }
 
-const ARBRE = !TRANSACCIO && HI_HA_LAB ? construeixArbre() : null;
+const ARBRE = !SUPERACIO && !TRANSACCIO && HI_HA_LAB ? construeixArbre() : null;
 after(() => { if (ARBRE) fs.rmSync(ARBRE, { recursive: true, force: true }); });
-const BASE = TRANSACCIO ? REPO : ARBRE;
+const BASE = SUPERACIO ? null : TRANSACCIO ? REPO : ARBRE;
 const importa = async (rel) => (BASE ? import(pathToFileURL(path.join(BASE, rel)).href) : null);
 const olivera = await importa('tooling/gates/porta-olivera.mjs');
 const hook = await importa('tooling/gates/antigravity-hook.mjs');
@@ -111,12 +129,23 @@ const viva = await importa('tooling/gates/porta-plantilla-viva.mjs');
 const context = await importa('tooling/brain/context-local.mjs');
 const documentCli = await importa('tooling/wiki/document.mjs');
 const ajuda = await importa('tests/helpers/documental.mjs');
-const pla = !TRANSACCIO && HI_HA_LAB ? await import(pathToFileURL(path.join(LAB, 'prepara-pla.mjs')).href) : null;
+const pla = !SUPERACIO && !TRANSACCIO && HI_HA_LAB ? await import(pathToFileURL(path.join(LAB, 'prepara-pla.mjs')).href) : null;
 const PORTA = BASE ? path.join(BASE, 'tooling/gates/porta-olivera.mjs') : null;
 const HOOK = BASE ? path.join(BASE, 'tooling/gates/antigravity-hook.mjs') : null;
 const DIA = olivera ? olivera.avui() : '000000';
 
-function salta(t, { nomesLab = false } = {}) {
+/** `nomesFonts`: la prova només llig el laboratori (ESLint, guardes), no cap arbre. `o13`: la del parany. */
+function salta(t, { nomesLab = false, nomesFonts = false, o13 = false } = {}) {
+  if (SUPERACIO && o13) {
+    const aplicat = transaccio(ONADA7_OPERACIO);
+    assert.ok(aplicat || fs.existsSync(ONADA7_LAB), 'O13 no el pren el 261006_0055 i cap paquet el reprén: el laboratori 261009_1245_onada7_claude no hi és ni té transacció');
+    t.skip(aplicat
+      ? `O13: el va aplicar el paquet de l'Onada 7 (transacció ${aplicat.id}, ${aplicat.operationId})`
+      : 'O13 no el pren el 261006_0055 (LLEGIU §4): el reprén el paquet 261009_1245_onada7_claude, pendent d’aplicar (tests/laboratori-onada7-261009.test.js)');
+    return true;
+  }
+  if (SUPERACIO) { t.skip(`paquet superat pel 261006_0055 (transacció ${SUPERACIO.id}, ${SUPERACIO.operationId}): el laboratori ja no mana`); return true; }
+  if (nomesFonts) { if (!HI_HA_LAB) t.skip('laboratori absent'); return !HI_HA_LAB; }
   if (!BASE) { t.skip('laboratori 261002_1745_olivera_arxiva_claude absent i paquet sense transacció'); return true; }
   if (nomesLab && !ARBRE) { t.skip(`paquet aplicat per l'executor (transacció ${TRANSACCIO.id}): el laboratori ja no mana`); return true; }
   return false;
@@ -148,7 +177,7 @@ const fixture = (t) => fs.realpathSync(ajuda.fixture(t));
 /* ── 0. El codi que entra ─────────────────────────────────────────────────── */
 
 test('el codi del paquet, el generador del pla i este corredor passen l’ESLint del repositori sense cap missatge', async (t) => {
-  if (!HI_HA_LAB) return t.skip('laboratori absent');
+  if (salta(t, { nomesFonts: true })) return;
   const { ESLint } = await import('eslint');
   const eslint = new ESLint({ cwd: REPO });
   const fitxers = [
@@ -701,7 +730,7 @@ test('D11 invertit: editar una petorreta ja nascuda no la bloqueja un document n
 /* ── 9. Plantilla viva: noms parany i el prefix al missatge ───────────────── */
 
 test('O13 invertit: un nom planificacio_* es vigila, i el missatge diu el prefix pla_implementacio_ en lloc de la id de la ruta', (t) => {
-  if (salta(t)) return;
+  if (salta(t, { o13: true })) return;
   assert.equal(viva.vigilat(`${DIA}_1635_planificacio_claude.md`), true);
   assert.equal(viva.vigilat(`${DIA}_0310_visio_arquitectonica_expansio.md`), false);
   assert.match(viva.suggeriment(`${DIA}_1635_planificacio_claude.md`), /«planificacio» és l'identificador d'una ruta, no una categoria: el nom ha de començar per «aammdd_hhmm_pla_implementacio_…» o «aammdd_hhmm_pla_…»/);
@@ -954,7 +983,7 @@ test('OLIV-R5: --arxiva, amb --sec o sense, no diu «Res a arxivar» ni ix amb 0
 });
 
 test('OLIV-R6: cap prova d’este corredor passa en verd sense mirar res: totes comencen amb la guarda que salta', (t) => {
-  if (!HI_HA_LAB) return t.skip('laboratori absent');
+  if (salta(t, { nomesFonts: true })) return;
   const font = llig(fileURLToPath(import.meta.url));
   const proves = font.split(/^test\(/m).slice(1);
   assert.ok(proves.length >= 30, `${proves.length} proves`);

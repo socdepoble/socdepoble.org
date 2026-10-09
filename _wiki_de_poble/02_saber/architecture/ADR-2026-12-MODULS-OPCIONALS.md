@@ -8,7 +8,7 @@ tags:
 ---
 # ADR-2026-12 — Mòduls opcionals i nucli ultralleuger
 
-Esta ADR fixa com una app de la Plataforma d'Apps Enxufables viu fora del paquet del nucli: es compila a banda, l'amfitrió la registra i la plataforma en carrega el codi quan algú l'obri. La Gestoria és el primer mòdul. La recepta és la mateixa per al Rebost, el TPV, Salut i l'RSS, però d'eixes quatre només se n'ha comprovat que el manifest val com a mòdul: el cos de cada una passarà les guardes quan es compile.
+Esta ADR fixa com una app de la Plataforma d'Apps Enxufables viu fora del paquet del nucli: es compila a banda, l'amfitrió la registra i la plataforma en carrega el codi quan algú l'obri. La Gestoria és el primer mòdul. La recepta és la mateixa per al Rebost (la Nevera), el TPV (el Bar), Salut i l'RSS (el Lector). Amb el nucli 1.0.0, el cos d'eixes quatre no passava les guardes del build: l'esquelet comú demana `useRouter`, i les vistes, 21 peces de Pedra Seca que el nucli no exposava. Amb l'1.1.0 sí, i ho proven builds reals (Onada 7, més avall).
 
 ## Estat
 
@@ -19,6 +19,29 @@ L'ordre del Mestre, al punt 5 del prompt `261009_0230_prompt_claude_onada6` (lí
 > «La Gestoria no pot lastrar el pes de l'app de WordPress. Fes l'arquitectura de plugins perquè siga un mòdul opcional de GitHub. Aquesta filosofia hipermodular d'enxufes s'ha d'aplicar a la resta de funcionalitats secundàries (Rebost, TPV, Salut, RSS, etc.). El nucli ha de ser ultralleuger i la resta s'ha de poder connectar o desconnectar.»
 
 Esta nit no s'ha llevat el doble pany de desenvolupament de la Gestoria ni s'ha mogut el seu CSS: la Gestoria del Mestre per a dilluns no canvia. Això és la fase 2 (més avall).
+
+## Onada 7 (261009)
+
+La fase 1 per a les quatre apps de la recepta: el Bar (TPV), la Nevera (Rebost), Salut i el Lector (RSS). Cap app ni cap pantalla canvia.
+
+Fet:
+
+- El nucli passa a l'1.1.0: `useRouter` i 21 noms de Pedra Seca (§4). Només s'afig, i un mòdul de `'^1.0'` continua entrant.
+- Cada app declara el que porta (`DECLARACIONS_DELS_MODULS` de `src/apps/plataforma/guardesDelModul.js`). Les quatre, IndexedDB, pel motor compartit (`creaMagatzemIdb` de `src/utils/magatzemLocal.js`). El Bar i Salut, a més, els espais de noms d'OOXML (`schemas.openxmlformats.org`) de `src/utils/fulls/xlsx.js`, que viatgen com a dada dins de l'XLSX que exporten. La Nevera i el Lector no declaren cap adreça.
+- `modulDeBuild.test.jsx` compila les quatre de veritat, en memòria i sense cap literal forçat:
+  - un sol cos IIFE i ASCII, amb cada importació mapejada a `SocDePoble.nucli`;
+  - la base d'IndexedDB de l'app dins i cap infracció amb la seua declaració; sense la declaració, el build s'aturaria amb exactament el que declara;
+  - cap CSS importat: no hi ha `estils-<hash>.css`;
+  - executats amb el nucli real, els quatre cossos lliuren el seu component, i el Lector es pinta amb l'`EstatBuit` de la pàgina.
+- La llavor sintètica del Lector (`src/apps/lector/llavor/`) i la carta de La Parròquia del Bar (`src/apps/bar/llavors/laParroquia.js`) només són de DEV, i el build no les porta. La clausura estàtica de `guardesDelModul.test.js` deixa fora la del Lector amb el motiu escrit: porta com a text feeds d'`example.org`.
+- Mida dels cossos el 261009: el Bar 184.600 B, la Nevera 158.718 B, Salut 190.952 B i el Lector 74.579 B. Cada cos porta la seua còpia d'`AppGridColumn.jsx` (fora de Pedra Seca) i de les icones de `lucide-react` que fa servir.
+
+Queda:
+
+- Les quatre declaracions, com la de la Gestoria, són pendents de la signatura del Mestre.
+- Cap de les quatre es publica encara com a mòdul: continuen sent apps internes, i el lloc propi i WordPress són els punts 4 i 5 de la fase 2.
+- Salut i la Gestoria porten dades sensibles (`'salut'` i `'financeres'`): mai a WordPress (fase 2, punt 5).
+- Si `AppGridColumn.jsx` ha d'entrar al nucli en lloc de viatjar dins de cada cos, és un altre canvi menor i una decisió pròpia.
 
 ## Context
 
@@ -42,7 +65,7 @@ Un mòdul és un manifest `sdp.app.v1` amb un tercer origen, «modul» (`src/app
 
 - `cos: { cami, integrity }`. El script del cos. `cami` és un camí des de l'arrel (`/…`, mai `//…`) o una URL http(s) absoluta sense credencials, d'un fitxer `.js`, sense espais ni barres invertides. `integrity` és un SRI sha384.
 - `estils: { cami, integrity }`, opcional, d'un fitxer `.css`.
-- `nucli: '^1'` o `'^1.0'`: el rang del nucli que necessita.
+- `nucli: '^1'` o `'^1.<menor>'`: el rang del nucli que necessita. El build hi posa el de la versió contra la qual compila: amb l'1.1.0, `'^1.1'`.
 
 No admet `carrega` ni `element`. Les capacitats són de `CAPACITATS`, com per a tota app. Un rang que este nucli no satisfà no entra al registre (`registraModul` de `registreApps.js`).
 
@@ -73,17 +96,27 @@ Com tota ruta lazy (`lazyRoute.js`), una fallada es queda fins que es recarrega 
 
 Els estils es pinten com un `<link rel="stylesheet" integrity>` dins del mateix arbre que el cos, perquè arriben també dins d'un Shadow DOM.
 
-### 4 · El nucli (`SocDePoble.nucli`, v1.0.0)
+### 4 · El nucli (`SocDePoble.nucli`, v1.1.0)
 
 Un objecte congelat i versionat amb semver (`src/apps/plataforma/nucliModuls.js`). Les portes i els noms els fixa `src/apps/plataforma/contracteNucli.js`:
 
 - `React`: el React de la pàgina, sencer;
 - `jsxRuntime`: `jsx`, `jsxs` i `Fragment`;
-- `router`: `useLocation`, `useNavigate`, `useParams`, `useSearchParams`, `Link`, `NavLink`, `Navigate`, `Routes`, `Route` i `matchPath`;
+- `router`: `useLocation`, `useNavigate`, `useParams`, `useSearchParams`, `useRouter`, `Link`, `NavLink`, `Navigate`, `Routes`, `Route` i `matchPath`;
 - `plataforma`: l'API pública sencera de les apps (`plataforma/index.js`), també `useSessioApp`, el pont de sessió de només lectura;
-- `pedraSeca`: tot el que importen la Gestoria i els Tractors que arrossega (Boto, Insignia, els estats, Alerta, Dialeg, Taula, formulari, controls, PaginaApp, UniversalCard, Pestanyes i Accordion de l'Històric i ControlContrasenya del Cofre) i les dues peces de gràfics de les apps (Histograma i LiniaDelTemps).
+- `pedraSeca`: tot el que importen la Gestoria i els Tractors que arrossega (Boto, Insignia, els estats, Alerta, Dialeg, Taula, formulari, controls, PaginaApp, UniversalCard, Pestanyes i Accordion de l'Històric i ControlContrasenya del Cofre) i les dues peces de gràfics de les apps (Histograma i LiniaDelTemps). Des de l'1.1.0, també el que importen el Bar, la Nevera, Salut, el Lector i l'esquelet comú (`src/apps/comu`):
+  - de composició, `Fila` i `Pila`, i la molècula `PillToggle`;
+  - els organismes `AfegitRapid`, `BarraResum`, `DetallArticle`, `GraellaArticles`, `GraellaTargetes`, `LiniesColleccio`, `LlistaArticles`, `MarcColumna`, `NavegacioPeriode`, `OrdenaCategories`, `SelectorCategoria`, `TargetesColleccions`, `TeclatNumeric` i `UniversalTPV`;
+  - d'`organismes/articles.js`, `ESTATS_ARTICLE`, `TEXTOS_ESTAT_LINIA`, `estatLinia` i `mouCategoria`.
 
-`src/apps/plataforma/guardesDelModul.test.js` contrasta esta llista amb l'arbre de veritat: un import nou de Pedra Seca a la Gestoria o als Tractors que no siga del nucli el posa en roig abans que el build del mòdul s'ature.
+Les versions:
+
+- 1.0.0 (Onada 6): la Gestoria i els Tractors.
+- 1.1.0 (Onada 7): `useRouter` i la Pedra Seca de les quatre apps de la recepta. Només s'afig.
+
+`useRouter` torna el valor del router de la pàgina: el camí i la consulta de l'app, `navigate`, la base dels href, si el router és en memòria i l'estat de l'entrada. És el que ja donen `useLocation`, `useNavigate` i `Link`, que pinta la base a cada href. Cap dada del backend, de la sessió ni de l'amfitrió fora de la ruta. Les peces noves de Pedra Seca pinten o són funcions pures; cap no toca el backend ni un context de la pàgina.
+
+`src/apps/plataforma/guardesDelModul.test.js` contrasta esta llista amb l'arbre de veritat: un import nou de Pedra Seca o del router a la Gestoria, als Tractors o, des de l'1.1.0, a les quatre apps i a l'esquelet comú, que no siga del nucli, el posa en roig abans que el build del mòdul s'ature.
 
 Mai hi ha el port del backend, `SessionContext` ni `IdentitatContext`.
 
@@ -121,6 +154,8 @@ Les guardes del text viuen a `src/apps/plataforma/guardesDelModul.js`, un fitxer
 La Gestoria declara els hosts de la llista blanca de `src/sections/gestoria/privacitat.test.js`, aprovada pel Mestre, i `localhost:3340`. Este últim surt de la fitxa signada del tractor `gestoria.factures`, que diu a la persona que òbriga la Wiki ací per a signar amb WebAuthn. La Gestoria només declara IndexedDB.
 
 `guardesDelModul.test.js` comprova que la declaració és exactament eixa llista més les adreces de les fitxes. També passa totes les guardes a la clausura del pont, amb les quatre vistes, des del codi font i sense compilar.
+
+Des de l'Onada 7, el Bar i Salut declaren `schemas.openxmlformats.org`, i la Nevera i el Lector, cap adreça. Les quatre declaren només IndexedDB. Cada declaració és exactament el que porta la clausura del cos, i el build real ho torna a comprovar. Com la de la Gestoria, són pendents de la signatura del Mestre.
 
 Cap `VITE_*` del projecte entra al cos (`envPrefix` sense cap variable).
 
@@ -203,7 +238,7 @@ No es pot fer sense cap canvi visible ni risc per a les preferències: queda com
 5. Qui genera i on es custodia la clau privada Ed25519 dels mòduls?
 6. Les targetes del Panell i les pàgines `/plugin/<id>` d'un mòdul no instal·lat han de desaparéixer a WordPress? És un canvi visible.
 7. Unifiquem els tres registres amb l'id de l'app com a únic identificador, i migrem les preferències amb els àlies?
-8. El sostre del tros d'entrada: el build real de l'arbre del 261009 ja el passa, i creix amb la feina concurrent de l'Onada 6 (1.619.768 B a les 04:10 i 1.626.651 B a les 04:56, `node --test tests/standalone-build.test.mjs`). S'apuja a posta o s'aprima el nucli abans del pròxim build?
+8. El sostre del tros d'entrada: el build real de l'arbre del 261009 ja el passava, i creixia amb la feina concurrent de l'Onada 6 (1.619.768 B a les 04:10 i 1.626.651 B a les 04:56, `node --test tests/standalone-build.test.mjs`). S'apuja a posta o s'aprima el nucli abans del pròxim build? **Resolta a l'Onada 7 (261009, MarIA amb l'autoritat delegada del Mestre): no s'apuja.** El logotip negre de `BrandMark`, que no pintava cap pantalla, ix de l'entrada i es carrega sota demanda: l'entrada passa de 1.628.974 B a 1.491.764 B.
 9. El cos de la Gestoria porta el text font dels dos carrils per a l'empremta dels tractors (fase 2, punt 8). Es precalcula l'empremta al build del mòdul o es manté el text dins del cos?
 
 ## Límits coneguts
@@ -212,7 +247,8 @@ No es pot fer sense cap canvi visible ni risc per a les preferències: queda com
   - El mòdul de prova, executat amb el `SocDePoble.nucli` real.
   - La Gestoria amb el seu pany, que només dona el taló.
   - La Gestoria sencera amb el literal de DEV forçat només en la prova. Esta passa les guardes, i el pany del producte no canvia.
-- **El sostre caurà.** `pesDelNucli.test.js` llig l'inventari del 261008. Quan es torne a construir el paquet, el sostre de 1.591.855 B fallarà amb la feina de l'Onada 6. És el trinquet: s'ha de decidir (pregunta 8).
+  - Onada 7: el Bar, la Nevera, Salut i el Lector, de producció i executats amb el nucli real. Cap s'ha carregat com a mòdul en un navegador.
+- **El sostre es comprova en cada build real.** `pesDelNucli.test.js` llig l'inventari del dist, que no es reconstruïx sol; des de l'Onada 7, `tests/standalone-build.test.mjs` llig el mateix sostre (1.591.855 B) i el contrasta amb el build real de l'arbre, que el 261009 fa 1.491.764 B (pregunta 8).
 - **Cap navegador real.** jsdom no executa scripts amb `src`: l'SRI i la càrrega real d'un cos no s'han provat en un navegador. El camí que falla (un cos que no existix) sí que s'ha vist al navegador.
 - **Cap amfitrió carrega encara cap `modul.js`.** No hi ha connector de WordPress ni res al lloc propi: `registraModul`, `lliuraCos` i el carregador només s'abasten des de la consola o des de les proves. El camí del lloc propi és el punt 4 de la fase 2.
 - **Un sol carregador per pàgina.** Si la pàgina té dues instàncies de `<soc-de-poble>`, totes dues compartixen el registre i el carregador del document, com fins ara amb les apps externes.
@@ -228,17 +264,20 @@ No es pot fer sense cap canvi visible ni risc per a les preferències: queda com
   - `error`, `load` sense lliurament, el temps límit, la fàbrica dolenta i els estils;
   - el nucli real, carregat a soles;
   - de punta a punta a `/app/<id>`, amb `RouteErrorBoundary` quan falla.
-- `src/apps/plataforma/nucliModuls.test.js`: l'objecte i el contracte diuen el mateix, les instàncies són les de la pàgina i cap porta dona backend ni sessió.
+- `src/apps/plataforma/nucliModuls.test.js`: l'objecte i el contracte diuen el mateix, les instàncies són les de la pàgina, cap porta dona backend ni sessió, i l'1.1.0 admet un mòdul de `'^1.0'`. A més, l'1.1.0 conserva cada porta i cada nom de l'1.0.0 i només afig els seus: les dues llistes, congelades, són a `src/apps/plataforma/__fixtures__/nomsDelNucli.js`.
 - `src/apps/plataforma/guardesDelModul.test.js`:
   - les guardes del text, amb una sonda per patró;
   - la declaració de la Gestoria contra la llista blanca de `privacitat.test.js`;
   - la clausura del pont amb les quatre vistes, també el text que porta per `?raw` i `import.meta.glob`, passada per les guardes del build;
-  - cada import de Pedra Seca de la Gestoria i dels Tractors, contra el nucli.
+  - cada import de Pedra Seca de la Gestoria i dels Tractors, contra el nucli;
+  - Onada 7: la clausura del Bar, la Nevera, Salut i el Lector amb la seua declaració, que és exactament el que porta; la llavor de DEV del Lector, fora i amb motiu;
+  - Onada 7: cada import de Pedra Seca i del router de les quatre apps i de l'esquelet comú, contra el nucli, i cada nom de l'1.1.0 en ús.
 - `src/apps/plataforma/modulDeBuild.test.jsx`:
   - els manifests reals de les cinc apps com a mòduls;
   - les guardes del cos, amb chunks sintètics;
   - el registre;
-  - builds reals en memòria: el mòdul de prova (també executat amb el nucli real), la Gestoria amb el pany i la Gestoria sencera.
+  - builds reals en memòria: el mòdul de prova (també executat amb el nucli real), la Gestoria amb el pany i la Gestoria sencera;
+  - Onada 7: el Bar, la Nevera, Salut i el Lector, cadascun amb la prova inversa (sense declaració, el build s'aturaria) i executat amb el nucli real.
 - `src/apps/plataforma/fronteres.test.js`: el nucli només importa React, el router, l'API pública i Pedra Seca; sense contexts de sessió; només el carregador l'importa, per `import()`.
 - `src/apps/plataforma/pesDelNucli.test.js`: les marques de les apps, el pressupost de pes i els dos `[DEFECTE]`.
 - `src/config/contracteAmfitrio.paritat.test.js`: les claus noves, l'ordre, `nucli` com a lectura i el provisional que encua `registraModul` i `lliuraCos`.

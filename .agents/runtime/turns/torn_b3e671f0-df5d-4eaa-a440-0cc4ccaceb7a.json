@@ -4,9 +4,9 @@
   "actor": "maria",
   "scope": "documents",
   "state": "context_loaded",
-  "revision": 2,
+  "revision": 3,
   "createdAt": "2026-10-08T21:45:22.753Z",
-  "updatedAt": "2026-10-08T21:45:23.004Z",
+  "updatedAt": "2026-10-09T10:50:44.690Z",
   "expiresAt": "2026-10-09T21:45:22.758Z",
   "contractHash": "2b09edd15b17e4d3f835b8943e7a7eea42ec351afc53905f67410c7f9fb32949",
   "humanInventoryVersion": 1,
@@ -3328,7 +3328,7 @@
       "id": "a7334093-ed0b-4031-b75a-66bceb003349",
       "route": "pla.implementacio",
       "routeVersion": "2.0.0",
-      "file": "_wiki_de_poble/04_escriptori/261008_2345_pla_implementacio_onada5.md",
+      "file": "_wiki_de_poble/90_arxiu_historic/261008_2345_pla_implementacio_onada5.md",
       "contractSnapshot": "33c3dff4c21c8f4ba8c23c8696c37a2c40d87e530db53214c0c1530e276e241a",
       "template": "_wiki_de_poble/03_actuar/plantilles/pla_implementacio.md",
       "templateHash": "d05074ef89d1ec60596509565d7ac7a1e02b0e2bed1b304311b7fa651b0d23d0",
@@ -3338,7 +3338,18 @@
         "preparedAt": "2026-10-08T21:45:22.984Z",
         "committedAt": "2026-10-08T21:45:23.004Z",
         "documentHash": "83240a8ccfbf3903880e84abd45b5aa917abac9a30e2f6e8eb59437ba0902666"
-      }
+      },
+      "moves": [
+        {
+          "from": "_wiki_de_poble/04_escriptori/261008_2345_pla_implementacio_onada5.md",
+          "to": "_wiki_de_poble/90_arxiu_historic/261008_2345_pla_implementacio_onada5.md",
+          "hash": "ba7c1587cf9cd03dd2283fdd72694c15902f9854f82ad944a5ce8a41269f90e0",
+          "at": "2026-10-09T10:50:44.689Z",
+          "receiptIds": [
+            "a7334093-ed0b-4031-b75a-66bceb003349"
+          ]
+        }
+      ]
     }
   },
   "plan": null,
@@ -3360,6 +3371,17 @@
       "file": "_wiki_de_poble/04_escriptori/261008_2345_pla_implementacio_onada5.md",
       "at": "2026-10-08T21:45:23.004Z",
       "hash": "83240a8ccfbf3903880e84abd45b5aa917abac9a30e2f6e8eb59437ba0902666"
+    },
+    {
+      "state": "context_loaded",
+      "action": "handoff",
+      "at": "2026-10-09T10:50:44.690Z"
     }
+  ],
+  "ownedPaths": [
+    "_wiki_de_poble/90_arxiu_historic/261008_2345_pla_implementacio_onada5.md"
+  ],
+  "relocated": [
+    "_wiki_de_poble/04_escriptori/261008_2345_pla_implementacio_onada5.md"
   ]
 }

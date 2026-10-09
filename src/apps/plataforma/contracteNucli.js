@@ -17,6 +17,10 @@
  * VERSIO_NUCLI segueix semver. Afegir una porta o un nom és un canvi menor;
  * llevar-ne o canviar-ne un és major i trenca els mòduls publicats.
  * nucliModuls.test.js vigila que l'objecte i esta llista diguen el mateix.
+ *   1.0.0 · Onada 6 (261009): la Gestoria i els Tractors.
+ *   1.1.0 · Onada 7 (261009): useRouter i la Pedra Seca que importen el Bar,
+ *           la Nevera, Salut, el Lector i l'esquelet comú. Només s'afig: un
+ *           mòdul compilat contra l'1.0 ('^1.0') continua valent.
  *
  * MAI hi entren el port del backend, SessionContext ni IdentitatContext
  * (Model B i Llei de l'Enxufabilitat): un mòdul només sap si té dades del
@@ -24,7 +28,7 @@
  */
 
 export const ESQUEMA_MODUL = 'sdp.modul.v1';
-export const VERSIO_NUCLI = '1.0.0';
+export const VERSIO_NUCLI = '1.1.0';
 /* L'expressió global de l'objecte: el build dels mòduls hi penja cada porta. */
 export const GLOBAL_DEL_NUCLI = 'SocDePoble.nucli';
 
@@ -46,10 +50,11 @@ const PEDRA_SECA = 'src/components/PedraSeca';
    AccordionItem, i el Cofre, amb ControlContrasenya), i les peces de
    gràfics de les apps (Histograma i LiniaDelTemps). guardesDelModul.test.js
    ho contrasta amb l'arbre de veritat: un import nou de Pedra Seca a la
-   Gestoria que no siga ací el posa en roig abans que el build del mòdul
-   s'ature. Mentre el nucli no es publique, s'hi afig; després, cada nom nou
-   és un canvi menor de VERSIO_NUCLI. Cada fitxer porta els seus noms; la
-   façana (index.js) els porta tots. */
+   Gestoria o a una app de la fase 1 que no siga ací el posa en roig abans
+   que el build del mòdul s'ature. Cada nom nou és un canvi menor de
+   VERSIO_NUCLI (l'1.1.0, Onada 7, 261009), i llevar-ne un és major:
+   nucliModuls.test.js guarda els noms de l'1.0.0. Cada fitxer porta els
+   seus noms; la façana (index.js) els porta tots. */
 const PEDRA_SECA_V1 = Object.freeze([
   ['atoms/Boto.jsx', ['Boto']],
   ['atoms/Insignia.jsx', ['Insignia']],
@@ -65,7 +70,27 @@ const PEDRA_SECA_V1 = Object.freeze([
   ['organismes/Pestanyes.jsx', ['Pestanyes']],
   ['organismes/UniversalCard.jsx', ['UniversalCard']],
   ['organismes/Histograma.jsx', ['Histograma', 'nivellHistograma']],
-  ['organismes/LiniaDelTemps.jsx', ['LiniaDelTemps']]
+  ['organismes/LiniaDelTemps.jsx', ['LiniaDelTemps']],
+  /* Nucli 1.1.0 (Onada 7, 261009): el Bar, la Nevera, Salut, el Lector i
+     l'esquelet comú (src/apps/comu), que arrosseguen el Bar, la Nevera i el
+     Lector. Només peces de pintar i funcions pures: cap toca el backend, la
+     sessió ni un context de la pàgina. */
+  ['composicio/index.jsx', ['Fila', 'Pila']],
+  ['molecules/PillToggle.jsx', ['PillToggle']],
+  ['organismes/AfegitRapid.jsx', ['AfegitRapid']],
+  ['organismes/BarraResum.jsx', ['BarraResum']],
+  ['organismes/DetallArticle.jsx', ['DetallArticle']],
+  ['organismes/GraellaArticles.jsx', ['GraellaArticles']],
+  ['organismes/GraellaTargetes.jsx', ['GraellaTargetes']],
+  ['organismes/LiniesColleccio.jsx', ['LiniesColleccio']],
+  ['organismes/LlistaArticles.jsx', ['LlistaArticles']],
+  ['organismes/MarcColumna.jsx', ['MarcColumna']],
+  ['organismes/NavegacioPeriode.jsx', ['NavegacioPeriode']],
+  ['organismes/SeccionsCategoria.jsx', ['OrdenaCategories', 'SelectorCategoria']],
+  ['organismes/TargetesColleccions.jsx', ['TargetesColleccions']],
+  ['organismes/TeclatNumeric.jsx', ['TeclatNumeric']],
+  ['organismes/UniversalTPV.jsx', ['UniversalTPV']],
+  ['organismes/articles.js', ['ESTATS_ARTICLE', 'TEXTOS_ESTAT_LINIA', 'estatLinia', 'mouCategoria']]
 ]);
 
 /**
@@ -78,10 +103,16 @@ const PEDRA_SECA_V1 = Object.freeze([
 export const PORTES_DEL_NUCLI = congela([
   { clau: 'React', fonts: ['react'], noms: '*' },
   { clau: 'jsxRuntime', fonts: ['react/jsx-runtime'], noms: ['Fragment', 'jsx', 'jsxs'] },
+  /* useRouter (1.1.0, el fa servir l'esquelet comú) torna el valor del
+     router de la pàgina: el camí i la consulta de l'app, navigate, la base
+     dels href, si és en memòria i l'estat de l'entrada. És el que ja donen
+     useLocation, useNavigate i Link (la base és a cada href pintat): cap
+     dada del backend, de la sessió ni de l'amfitrió fora de la ruta. */
   {
     clau: 'router',
     fonts: ['src/app/contexts/RouterContext.jsx'],
-    noms: ['Link', 'NavLink', 'Navigate', 'Route', 'Routes', 'matchPath', 'useLocation', 'useNavigate', 'useParams', 'useSearchParams']
+    noms: ['Link', 'NavLink', 'Navigate', 'Route', 'Routes', 'matchPath', 'useLocation', 'useNavigate', 'useParams', 'useRouter',
+      'useSearchParams']
   },
   {
     clau: 'plataforma',

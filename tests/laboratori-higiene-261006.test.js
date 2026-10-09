@@ -20,7 +20,8 @@
  *
  *  Patró: tests/laboratori-olivera-261006.test.js (paquet 261006_0055).
  *  Fa skip si el laboratori no hi és o si els fitxers instal·lats ja són els de
- *  nous/: llavors manen les proves reals i este corredor s'ha de retirar.
+ *  nous/: llavors manen les proves reals i este corredor s'ha de retirar. També
+ *  si l'executor n'ha deixat la transacció o la d'un paquet que el supera (Onada 7).
  *  Cap prova escriu al repositori, llevat de la de `--mode genera`, que només
  *  reescriu nous/.agents/skills/core-identitat/SKILL.md.txt; de
  *  90_arxiu_historic no es copia res.
@@ -54,7 +55,44 @@ function fitxersDe(dir, rel = '') {
 
 const PAQUET = fitxersDe(NOUS).map((nou) => ({ nou, ruta: nou.endsWith('.md.txt') ? nou.slice(0, -'.txt'.length) : nou }));
 const APLICAT = PAQUET.length > 0 && PAQUET.every((f) => fs.existsSync(path.join(REPO, f.ruta)) && llig(path.join(REPO, f.ruta)) === llig(path.join(NOUS, f.nou)));
-const ACTIU = PAQUET.length > 0 && !APLICAT;
+
+/**
+ * Primera transacció acceptada de .agents/seal-transactions/ amb un prefix d'operationId, o
+ * null. Mateix criteri que transaccioAmb de prepara-pla.mjs; un registre il·legible no compta.
+ */
+function transaccioAmb(prefix) {
+  const dir = path.join(REPO, '.agents/seal-transactions');
+  if (!fs.existsSync(dir)) return null;
+  for (const nom of fs.readdirSync(dir).filter((n) => n.endsWith('.json')).sort()) {
+    let t;
+    try { t = JSON.parse(llig(path.join(dir, nom))); } catch { continue; }
+    if (t?.state === 'accepted' && typeof t.operationId === 'string' && t.operationId.startsWith(prefix) && Array.isArray(t.files)) return t;
+  }
+  return null;
+}
+
+/*
+ * Onada 7 (261009): eixides per aplicació i per superació, totes dues amb una transacció.
+ *  · Aplicació: l'executor ja va aplicar este paquet (operationId `sdp-higiene-t6-261006-*`), i
+ *    la transacció porta cada fitxer de nous/ amb el sha que hi va deixar (`after`).
+ *  · Superació: el paquet 261009_0400_higiene_claude (`sdp-higiene-261009-paquet-*`) reescriu
+ *    sobre este core-higiene-escriptori (4.0.0) i el hook d'Antigravity.
+ * Per això APLICAT (bytes iguals als de nous/) ja no pot ser cert, i prepara-pla.mjs es nega per
+ * la transacció pròpia: el corredor provava un paquet que no es pot tornar a aplicar. Sense cap
+ * de les dues transaccions, el corredor comprova com fins ara.
+ */
+const APLICACIO = (() => {
+  const t = transaccioAmb('sdp-higiene-t6-261006-');
+  const deixat = (f) => t.files.some((x) => x.path === f.ruta && x.after === sha(fs.readFileSync(path.join(NOUS, f.nou))));
+  return t && PAQUET.length > 0 && PAQUET.every(deixat) ? t : null;
+})();
+const SUPERACIO = (() => {
+  const t = transaccioAmb('sdp-higiene-261009-paquet-');
+  return t && t.files.some((x) => PAQUET.some((f) => f.ruta === x.path)) ? t : null;
+})();
+const RETIR = APLICACIO ? ` · retirat: aplicat per la transacció ${APLICACIO.id}${SUPERACIO ? ` i superat per la ${SUPERACIO.id}` : ''}`
+  : SUPERACIO ? ` · retirat: superat per la transacció ${SUPERACIO.id} (${SUPERACIO.operationId})` : '';
+const ACTIU = PAQUET.length > 0 && !APLICAT && !APLICACIO && !SUPERACIO;
 
 /** Bateria fixa: el hook, les dues skills, el segell i la cadena de seguretat. */
 const FIXES = ['antigravity-hook', 'porta-olivera-diagnosi', 'cognitive-hook-safety', 'governanca-260930-olivera', 'backend_consolidacio',
@@ -208,7 +246,7 @@ const PAS4_IDENTITAT = "4. Inspeccionar VISUALMENT l'escriptori (`_wiki_de_poble
 const pas5Identitat = () => llig(path.join(NOUS, '.agents/skills/core-identitat/SKILL.md.txt')).split('\n').find((l) => l.startsWith('5. '));
 const identitatEsperada = (ara, pas5) => ara.replace(PAS4_IDENTITAT, `${PAS4_IDENTITAT}${pas5}\n`);
 
-describe.skipIf(!ACTIU)('laboratori 261006_0300_ledger_claude/t6_higiene', () => {
+describe.skipIf(!ACTIU)(`laboratori 261006_0300_ledger_claude/t6_higiene${RETIR}`, () => {
   // L'única prova que escriu, i només dins de nous/: `npx vitest run tests/laboratori-higiene-261006.test.js --mode genera`.
   // Precedent: tests/laboratori-model-b-261006.test.js. Una còpia a mà no conserva l'espai final de la línia 20.
   test.runIf(import.meta.env.MODE === 'genera')('genera nous/.agents/skills/core-identitat/SKILL.md.txt des de HEAD i el pas 5', () => {

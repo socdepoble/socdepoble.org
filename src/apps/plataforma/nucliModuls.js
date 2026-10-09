@@ -18,25 +18,41 @@
 import * as ReactDelNucli from 'react';
 import { Fragment, jsx, jsxs } from 'react/jsx-runtime';
 import {
-  Link, NavLink, Navigate, Route, Routes, matchPath, useLocation, useNavigate, useParams, useSearchParams
+  Link, NavLink, Navigate, Route, Routes, matchPath, useLocation, useNavigate, useParams, useRouter, useSearchParams
 } from '../../app/contexts/RouterContext';
 import { Boto } from '../../components/PedraSeca/atoms/Boto.jsx';
 import { ControlContrasenya } from '../../components/PedraSeca/atoms/ControlContrasenya.jsx';
 import { ActionControl, DateTimeControl, IconButton } from '../../components/PedraSeca/atoms/controls.jsx';
 import { Carregant, EstatBuit, Esquelet, Progres } from '../../components/PedraSeca/atoms/estats.jsx';
 import { Insignia } from '../../components/PedraSeca/atoms/Insignia.jsx';
+import { Fila, Pila } from '../../components/PedraSeca/composicio/index.jsx';
 import { Alerta } from '../../components/PedraSeca/molecules/Alerta.jsx';
+import { PillToggle } from '../../components/PedraSeca/molecules/PillToggle.jsx';
 import { Accordion, AccordionItem } from '../../components/PedraSeca/organismes/Accordion.jsx';
+import { AfegitRapid } from '../../components/PedraSeca/organismes/AfegitRapid.jsx';
+import { ESTATS_ARTICLE, TEXTOS_ESTAT_LINIA, estatLinia, mouCategoria } from '../../components/PedraSeca/organismes/articles.js';
+import { BarraResum } from '../../components/PedraSeca/organismes/BarraResum.jsx';
+import { DetallArticle } from '../../components/PedraSeca/organismes/DetallArticle.jsx';
 import { Dialeg, DialegConfirmacio } from '../../components/PedraSeca/organismes/Dialeg.jsx';
 import {
   AreaText, Camp, CampFitxer, CampText, Casella, GrupCamps, GrupOpcions, Interruptor, Selector
 } from '../../components/PedraSeca/organismes/formulari.jsx';
+import { GraellaArticles } from '../../components/PedraSeca/organismes/GraellaArticles.jsx';
+import { GraellaTargetes } from '../../components/PedraSeca/organismes/GraellaTargetes.jsx';
 import { Histograma, nivellHistograma } from '../../components/PedraSeca/organismes/Histograma.jsx';
 import { LiniaDelTemps } from '../../components/PedraSeca/organismes/LiniaDelTemps.jsx';
+import { LiniesColleccio } from '../../components/PedraSeca/organismes/LiniesColleccio.jsx';
+import { LlistaArticles } from '../../components/PedraSeca/organismes/LlistaArticles.jsx';
+import { MarcColumna } from '../../components/PedraSeca/organismes/MarcColumna.jsx';
+import { NavegacioPeriode } from '../../components/PedraSeca/organismes/NavegacioPeriode.jsx';
 import { PaginaApp } from '../../components/PedraSeca/organismes/PaginaApp.jsx';
 import { Pestanyes } from '../../components/PedraSeca/organismes/Pestanyes.jsx';
+import { OrdenaCategories, SelectorCategoria } from '../../components/PedraSeca/organismes/SeccionsCategoria.jsx';
+import { TargetesColleccions } from '../../components/PedraSeca/organismes/TargetesColleccions.jsx';
 import { Taula } from '../../components/PedraSeca/organismes/Taula.jsx';
+import { TeclatNumeric } from '../../components/PedraSeca/organismes/TeclatNumeric.jsx';
 import { UniversalCard } from '../../components/PedraSeca/organismes/UniversalCard.jsx';
+import { UniversalTPV } from '../../components/PedraSeca/organismes/UniversalTPV.jsx';
 import * as plataformaDelNucli from './index.js';
 import { VERSIO_NUCLI } from './contracteNucli.js';
 
@@ -49,12 +65,15 @@ export const NUCLI = Object.freeze({
   React: copiaCongelada(ReactDelNucli),
   jsxRuntime: Object.freeze({ Fragment, jsx, jsxs }),
   router: Object.freeze({
-    Link, NavLink, Navigate, Route, Routes, matchPath, useLocation, useNavigate, useParams, useSearchParams
+    Link, NavLink, Navigate, Route, Routes, matchPath, useLocation, useNavigate, useParams, useRouter, useSearchParams
   }),
   plataforma: copiaCongelada(plataformaDelNucli),
   pedraSeca: Object.freeze({
-    Accordion, AccordionItem, ActionControl, Alerta, AreaText, Boto, Camp, CampFitxer, CampText, Carregant, Casella, ControlContrasenya,
-    DateTimeControl, Dialeg, DialegConfirmacio, EstatBuit, Esquelet, GrupCamps, GrupOpcions, Histograma, IconButton,
-    Insignia, Interruptor, LiniaDelTemps, PaginaApp, Pestanyes, Progres, Selector, Taula, UniversalCard, nivellHistograma
+    Accordion, AccordionItem, ActionControl, AfegitRapid, Alerta, AreaText, BarraResum, Boto, Camp, CampFitxer, CampText, Carregant,
+    Casella, ControlContrasenya, DateTimeControl, DetallArticle, Dialeg, DialegConfirmacio, ESTATS_ARTICLE, EstatBuit, Esquelet,
+    Fila, GraellaArticles, GraellaTargetes, GrupCamps, GrupOpcions, Histograma, IconButton, Insignia, Interruptor, LiniaDelTemps,
+    LiniesColleccio, LlistaArticles, MarcColumna, NavegacioPeriode, OrdenaCategories, PaginaApp, Pestanyes, Pila, PillToggle,
+    Progres, Selector, SelectorCategoria, TEXTOS_ESTAT_LINIA, TargetesColleccions, Taula, TeclatNumeric, UniversalCard,
+    UniversalTPV, estatLinia, mouCategoria, nivellHistograma
   })
 });

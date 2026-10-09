@@ -14,6 +14,11 @@
        · la Gestoria SENCERA, amb les quatre vistes: el literal de DEV es
          força a cert NOMÉS dins d'esta prova, per a passar-li les guardes
          del build. El pany del producte no canvia (privacitat.test.js).
+       · Onada 7 (261009): el Bar, la Nevera, Salut i el Lector, cadascun
+         amb la seua declaració (guardesDelModul.js) i contra el nucli
+         1.1.0; sense la declaració, el build s'aturaria. Els quatre cossos,
+         executats amb el SocDePoble.nucli REAL, lliuren el seu component, i
+         el del Lector es pinta amb la Pedra Seca de la pàgina.
    El JSX el transforma l'esbuild de Vite (el default del config hi posa
    @vitejs/plugin-react, que vitest no carrega: server.deps.inline /react/).
    Entorn node: esbuild no funciona dins de jsdom. Cap prova d'ací carrega el
@@ -34,6 +39,7 @@ import {
 import { MemoryRouter } from '../../app/contexts/RouterContext.jsx';
 import { INTEGRITAT_DE_PROVA } from './__fixtures__/manifests.js';
 import { ProveidorApp } from './ContextApp.jsx';
+import { VERSIO_NUCLI, exposaElNom, globalDeLaPorta, portaDeLaFont } from './contracteNucli.js';
 import { DECLARACIONS_DELS_MODULS, infraccionsDelText } from './guardesDelModul.js';
 import { validaManifestApp } from './manifestApp.js';
 import { creaRegistre } from './registreApps.js';
@@ -42,6 +48,8 @@ const ARREL = process.cwd();
 const CARPETA_DE_PROVA = path.join(ARREL, 'src/apps/plataforma/__fixtures__/modulDeProva');
 const sri384 = (text) => `sha384-${createHash('sha384').update(text).digest('base64')}`;
 const NOMES_ASCII = /^[\u0000-~]*$/;
+/* El rang que demana un mòdul compilat contra este nucli (Onada 7, 261009: l'1.1.0). */
+const RANG = '^1.1';
 
 describe('el manifest d’una app com a mòdul (llegixManifestDelModul)', () => {
   test.each(['gestoria', 'bar', 'salut', 'nevera', 'lector'])('%s: dada pura, sense carrega, i el manifest de mòdul és vàlid', (id) => {
@@ -59,7 +67,8 @@ describe('el manifest d’una app com a mòdul (llegixManifestDelModul)', () => 
   });
 
   test('el rang del nucli és el de la versió contra la qual es compila', () => {
-    expect(rangDelNucli()).toBe('^1.0');
+    expect(VERSIO_NUCLI).toBe('1.1.0');
+    expect(rangDelNucli()).toBe(RANG);
     expect(rangDelNucli('1.4.2')).toBe('^1.4');
   });
 
@@ -131,7 +140,7 @@ describe('el registre (modul.js) i nomesAscii', () => {
     expect(manifest.cos).toEqual({
       cami: 'https://poble.invalid/wp-content/plugins/socdepoble-modul-gestoria/dist/cos-Ab12Cd34.js', integrity: INTEGRITAT_DE_PROVA
     });
-    expect(manifest.nucli).toBe('^1.0');
+    expect(manifest.nucli).toBe(RANG);
     expect(manifest.titol.ca).toBe('Gestoria de Poble');
     expect(validaManifestApp(JSON.parse(JSON.stringify(manifest)), { origen: 'modul' }).ok).toBe(true);
   });
@@ -152,7 +161,9 @@ describe('el registre (modul.js) i nomesAscii', () => {
    mentre dura (sota vitest val 'test', i Vite deixaria import.meta.env.DEV a
    cert i triaria jsx-dev-runtime). El JSX, amb l'esbuild de Vite.
    `definicions`: substitucions de compilació NOMÉS d'esta prova (la Gestoria
-   sencera força el literal de DEV a cert per a passar-li les guardes). */
+   sencera força el literal de DEV a cert per a passar-li les guardes).
+   Torna `fitxers` (nom → text) i `cos`, el chunk de Rollup del cos (Onada 7,
+   261009): els mòduls i les importacions que el build ha mirat. */
 async function compilaEnMemoria({ id, carpeta, definicions = {} }) {
   const abans = process.env.NODE_ENV;
   process.env.NODE_ENV = 'production';
@@ -168,10 +179,14 @@ async function compilaEnMemoria({ id, carpeta, definicions = {} }) {
       build: { ...config.build, write: false, emptyOutDir: false }
     });
     const fitxers = {};
+    let cos = null;
     for (const resultat of [].concat(sortida)) {
-      for (const fitxer of resultat.output) fitxers[fitxer.fileName] = fitxer.type === 'chunk' ? fitxer.code : String(fitxer.source);
+      for (const fitxer of resultat.output) {
+        fitxers[fitxer.fileName] = fitxer.type === 'chunk' ? fitxer.code : String(fitxer.source);
+        if (fitxer.type === 'chunk' && fitxer.isEntry) cos = fitxer;
+      }
     }
-    return fitxers;
+    return { fitxers, cos };
   } finally {
     process.env.NODE_ENV = abans;
   }
@@ -187,7 +202,7 @@ const cosDe = (fitxers) => Object.keys(fitxers).find((nom) => /^cos-[A-Za-z0-9_-
 describe('la Gestoria compilada com a mòdul (amb el doble pany DEV)', () => {
   let fitxers = {};
   beforeAll(async () => {
-    fitxers = await compilaEnMemoria({ id: 'gestoria', carpeta: path.join(ARREL, 'src/apps/gestoria') });
+    ({ fitxers } = await compilaEnMemoria({ id: 'gestoria', carpeta: path.join(ARREL, 'src/apps/gestoria') }));
   }, 120000);
 
   test('passa les guardes i només porta el pont: cap vista ni nucli de la Gestoria, cap React propi', () => {
@@ -202,7 +217,7 @@ describe('la Gestoria compilada com a mòdul (amb el doble pany DEV)', () => {
 
   test('la fitxa i el registre porten les dades financeres i el rang del nucli', () => {
     const fitxa = JSON.parse(fitxers[FITXER_FITXA]);
-    expect(fitxa).toMatchObject({ schema: 'sdp.modul.v1', id: 'gestoria', nucli: '^1.0', manifest: { dadesPersonals: 'financeres' } });
+    expect(fitxa).toMatchObject({ schema: 'sdp.modul.v1', id: 'gestoria', nucli: RANG, manifest: { dadesPersonals: 'financeres' } });
     expect(fitxa.cos.integrity).toBe(sri384(fitxers[cosDe(fitxers)]));
   });
 });
@@ -218,9 +233,9 @@ describe('la Gestoria sencera compilada com a mòdul (DEV forçat només en esta
   const BASES_DE_LA_GESTORIA = Object.freeze(['sdp-facturacio', 'sdp-gestoria-perfil', 'sdp-gestoria-cofre', 'sdp-aprendre']);
   let fitxers = {};
   beforeAll(async () => {
-    fitxers = await compilaEnMemoria({
+    ({ fitxers } = await compilaEnMemoria({
       id: 'gestoria', carpeta: path.join(ARREL, 'src/apps/gestoria'), definicions: { 'import.meta.env.DEV': 'true' }
-    });
+    }));
   }, 180000);
 
   test('passa totes les guardes del build: cap React propi, cap context ni dada, Pedra Seca del nucli, cap xarxa', () => {
@@ -257,7 +272,7 @@ describe('un mòdul compilat de veritat (vite build, write: false)', () => {
   const nomDelCos = () => cosDe(fitxers);
 
   beforeAll(async () => {
-    Object.assign(fitxers, await compilaEnMemoria({ id: 'modul-de-prova', carpeta: CARPETA_DE_PROVA }));
+    Object.assign(fitxers, (await compilaEnMemoria({ id: 'modul-de-prova', carpeta: CARPETA_DE_PROVA })).fitxers);
   }, 120000);
 
   test('emet el cos, el registre i la fitxa, res més', () => {
@@ -277,7 +292,7 @@ describe('un mòdul compilat de veritat (vite build, write: false)', () => {
 
   test('la fitxa diu l’esquema, el rang del nucli i les integritats de veritat', () => {
     const fitxa = JSON.parse(fitxers[FITXER_FITXA]);
-    expect(fitxa).toMatchObject({ schema: 'sdp.modul.v1', id: 'modul-de-prova', versio: '0.0.0-prova', nucli: '^1.0', generat: '2026-10-09T00:00:00.000Z' });
+    expect(fitxa).toMatchObject({ schema: 'sdp.modul.v1', id: 'modul-de-prova', versio: '0.0.0-prova', nucli: RANG, generat: '2026-10-09T00:00:00.000Z' });
     expect(fitxa.cos).toMatchObject({ cami: nomDelCos(), integrity: sri384(fitxers[nomDelCos()]) });
     expect(fitxa.registre).toMatchObject({ cami: FITXER_REGISTRE, integrity: sri384(fitxers[FITXER_REGISTRE]) });
     expect(fitxa.manifest).toMatchObject({ id: 'modul-de-prova', titol: { ca: 'Mòdul de Prova' } });
@@ -293,7 +308,7 @@ describe('un mòdul compilat de veritat (vite build, write: false)', () => {
       console, Promise, URL
     });
     expect(registre.appPerId('modul-de-prova')).toMatchObject({
-      origen: 'modul', nucli: '^1.0',
+      origen: 'modul', nucli: RANG,
       cos: { cami: `https://poble.invalid/moduls/modul-de-prova/${nomDelCos()}`, integrity: sri384(fitxers[nomDelCos()]) }
     });
   });
@@ -301,7 +316,7 @@ describe('un mòdul compilat de veritat (vite build, write: false)', () => {
   test('el cos, executat amb un SocDePoble.nucli, lliura un component que es pinta amb el React de la pàgina', () => {
     const lliurats = [];
     const nucli = Object.freeze({
-      versio: '1.0.0',
+      versio: VERSIO_NUCLI,
       React: Object.freeze({ ...React }),
       jsxRuntime: Object.freeze({ Fragment: jsxRuntime.Fragment, jsx: jsxRuntime.jsx, jsxs: jsxRuntime.jsxs }),
       router: Object.freeze({ useLocation: () => ({ pathname: '/app/modul-de-prova/inici' }) }),
@@ -345,4 +360,157 @@ describe('un mòdul compilat de veritat (vite build, write: false)', () => {
       vi.unstubAllGlobals();
     }
   }, 60000); // importar el nucli transforma tota la Pedra Seca: amb la suite sencera en paral·lel, passa dels 5 s
+});
+
+/* ── Onada 7 (261009) · el Bar, la Nevera, Salut i el Lector compilats com a mòduls ──
+   La fase 1 de l'ADR-2026-12 per a les quatre apps de la recepta, de veritat.
+   Amb el nucli 1.0.0 cap d'estos cossos passava les guardes: l'esquelet comú
+   demana useRouter, i les vistes, 21 peces de Pedra Seca que no exposava. Amb
+   l'1.1.0, sí. Cada build és el de producció, sense cap literal forçat: les
+   llavors de DEV (la carta de La Parròquia del Bar i els feeds del Lector)
+   no hi han de ser: ni els seus fitxers entre els mòduls que Rollup hi posa,
+   ni un tros del seu text. La marca del cos és el nom de la seua base
+   d'IndexedDB, un contracte de dades estable (el criteri de pesDelNucli.test.js). */
+/* `viatja`: el veí de la llavor que sí que hi és (la carta genèrica del Bar, la de la primera
+   càrrega; el pont del Lector, que importa la llavor): la prova mira de veres eixa part de l'arbre.
+   `nous`: noms que el cos compilat importa i que el nucli 1.0.0 no exposava (per això no passava). */
+const APPS_DE_LA_FASE_1 = Object.freeze({
+  bar: Object.freeze({
+    base: 'sdp-bar',
+    nous: { router: ['useRouter'], pedraSeca: ['BarraResum', 'MarcColumna', 'TeclatNumeric', 'UniversalTPV'] },
+    llavor: {
+      fitxers: ['src/apps/bar/llavors/laParroquia.js', 'src/apps/bar/llavors/la-parroquia-loyverse.csv'],
+      textos: ['Vendido por peso', 'b5-malibu'],
+      viatja: ['src/apps/bar/llavors/index.js', 'src/apps/bar/nucli/llavor.js']
+    }
+  }),
+  nevera: Object.freeze({
+    base: 'sdp-nevera',
+    nous: { router: ['useRouter'], pedraSeca: ['MarcColumna', 'NavegacioPeriode', 'OrdenaCategories'] },
+    llavor: { fitxers: [], textos: [], viatja: [] }
+  }),
+  salut: Object.freeze({
+    base: 'sdp-salut',
+    nous: { router: [], pedraSeca: ['Fila', 'GraellaArticles', 'LlistaArticles', 'Pila'] },
+    llavor: { fitxers: [], textos: [], viatja: [] }
+  }),
+  lector: Object.freeze({
+    base: 'sdp-lector',
+    nous: { router: ['useRouter'], pedraSeca: ['GraellaTargetes', 'LiniesColleccio', 'MarcColumna'] },
+    llavor: {
+      fitxers: ['src/apps/lector/llavor/'],
+      textos: ['example.org', 'Club de Pilota del Trinquet', 'Colla de Dimonis'],
+      viatja: ['src/apps/lector/AppLector.jsx']
+    }
+  })
+});
+/* Les infraccions que el build trobaria sense cap declaració: exactament el que declara l'app. */
+const senseDeclarar = (id) => [
+  ...DECLARACIONS_DELS_MODULS[id].adreces.map((host) => `porta una URL externa que no declara: ${host}`),
+  'fa servir un magatzem que no declara: IndexedDB'
+].sort();
+
+describe.each(Object.keys(APPS_DE_LA_FASE_1))('Onada 7 · %s compilat com a mòdul contra el nucli 1.1.0', (id) => {
+  const { base, nous, llavor } = APPS_DE_LA_FASE_1[id];
+  const carpeta = path.join(ARREL, 'src/apps', id);
+  let fitxers = {};
+  let cos = null;
+  const codi = () => fitxers[cos.fileName];
+  /* Els mòduls que Rollup ha posat dins del cos, des de l'arrel (sense els virtuals). */
+  const moduls = () => Object.keys(cos.modules).filter((modul) => !modul.startsWith('\0'))
+    .map((modul) => path.relative(ARREL, modul).split(path.sep).join('/'));
+
+  beforeAll(async () => {
+    ({ fitxers, cos } = await compilaEnMemoria({ id, carpeta }));
+  }, 180000);
+
+  test('un sol cos IIFE amb el registre i la fitxa; ASCII; crida lliuraCos amb el seu id; cap import() ni import.meta', () => {
+    expect(Object.keys(fitxers).sort()).toEqual([cos.fileName, FITXER_REGISTRE, FITXER_FITXA].sort());
+    expect(cos.fileName).toBe(cosDe(fitxers));
+    expect(() => new vm.Script(codi())).not.toThrow();
+    expect(codi()).toMatch(NOMES_ASCII);
+    expect(codi()).toMatch(new RegExp(`SocDePoble\\.lliuraCos\\(["']${id}["']`));
+    /* La forma minificada, sense espai: el text de la UI en té («Cobra este import (part)», al Bar).
+       La prova de veres és la de Rollup: cap import() que no s'haja inlinat. */
+    expect(codi()).not.toMatch(/(?:^|[^\w$.])(?:import|require)\(|\bimport\.meta\b/);
+    expect(cos.dynamicImports).toEqual([]);
+  });
+
+  test('cada importació és una porta del nucli, i el cos les rep com a SocDePoble.nucli.<porta>', () => {
+    expect(cos.imports.filter((font) => !portaDeLaFont(font))).toEqual([]);
+    expect(Object.keys(cos.importedBindings).sort()).toEqual([...cos.imports].sort());
+    expect(cos.imports).toEqual(expect.arrayContaining([
+      'react', 'src/app/contexts/RouterContext.jsx', 'src/apps/plataforma/index.js', 'src/components/PedraSeca/index.js'
+    ]));
+    /* La crida de l'IIFE: un argument per importació, en el mateix ordre. */
+    const crida = codi().match(/\}\)\(([\w$.,]*)\);?\s*$/);
+    expect(crida, 'la crida final de l’IIFE').not.toBeNull();
+    expect(crida[1].split(',')).toEqual(cos.imports.map((font) => globalDeLaPorta(portaDeLaFont(font))));
+    /* Res del nucli de la pàgina viatja dins: ni React, ni Pedra Seca, ni la plataforma, ni cap context o dada. */
+    expect(moduls().filter((font) => /node_modules\/(?:react|react-dom|scheduler)\/|^src\/(?:components\/PedraSeca|apps\/plataforma|app\/contexts|data)\//.test(font))).toEqual([]);
+    expect(moduls()).toEqual(expect.arrayContaining([`src/apps/${id}/magatzem.js`, 'src/utils/magatzemLocal.js']));
+  });
+
+  test('la porta mira de veres: el cos importa noms que l’1.1.0 afig al nucli, i el nucli els exposa', () => {
+    for (const [font, noms] of [['src/app/contexts/RouterContext.jsx', nous.router], ['src/components/PedraSeca/index.js', nous.pedraSeca]]) {
+      expect(cos.importedBindings[font] || [], font).toEqual(expect.arrayContaining(noms));
+      for (const nom of noms) expect(exposaElNom(portaDeLaFont(font), nom), nom).toBe(true);
+    }
+  });
+
+  test('porta la seua base d’IndexedDB i cap llavor de DEV', () => {
+    expect(codi()).toMatch(new RegExp(`["'\`]${base}["'\`]`));
+    expect(moduls().filter((font) => llavor.fitxers.some((fitxer) => font.startsWith(fitxer)))).toEqual([]);
+    expect(moduls()).toEqual(expect.arrayContaining(llavor.viatja));
+    for (const tros of llavor.textos) expect(codi(), tros).not.toContain(tros);
+  });
+
+  test('passa les guardes amb la seua declaració; sense, el build s’aturaria amb exactament el que declara', () => {
+    expect(infraccionsDelCos(cos, ARREL, carpeta, id)).toEqual([]);
+    expect(infraccionsDelText(codi(), { id })).toEqual([]);
+    expect(infraccionsDelCos(cos, ARREL, carpeta, null).sort()).toEqual(senseDeclarar(id));
+  });
+
+  test('la fitxa i el registre porten el rang del nucli 1.1.0, les dades del manifest i les integritats de veritat', () => {
+    const fitxa = JSON.parse(fitxers[FITXER_FITXA]);
+    expect(fitxa).toMatchObject({ schema: 'sdp.modul.v1', id, nucli: RANG, manifest: { id } });
+    expect(fitxa.cos).toMatchObject({ cami: cos.fileName, integrity: sri384(codi()) });
+    expect(fitxa.registre).toMatchObject({ cami: FITXER_REGISTRE, integrity: sri384(fitxers[FITXER_REGISTRE]) });
+    const registre = creaRegistre({ internes: [], carregador: { carregaCos: vi.fn(), oblida: vi.fn() } });
+    vm.runInNewContext(fitxers[FITXER_REGISTRE], {
+      document: { currentScript: { src: `https://poble.invalid/moduls/${id}/modul.js?ver=0.0.0` } },
+      window: { SocDePoble: { registraModul: (manifest) => registre.registraModul(JSON.parse(JSON.stringify(manifest))) } },
+      console, Promise, URL
+    });
+    expect(registre.appPerId(id)).toMatchObject({
+      origen: 'modul', nucli: RANG, cos: { cami: `https://poble.invalid/moduls/${id}/${cos.fileName}`, integrity: sri384(codi()) }
+    });
+  });
+
+  /* El cos amb el SocDePoble.nucli REAL (nucliModuls.js), com el del mòdul de prova. */
+  test('executat amb el SocDePoble.nucli real, lliura un component', async () => {
+    const { JSDOM } = await import('jsdom');
+    const { window: finestra } = new JSDOM('<!doctype html><html><body></body></html>', { url: 'https://poble.invalid/' });
+    vi.stubGlobal('window', finestra);
+    vi.stubGlobal('document', finestra.document);
+    try {
+      const { NUCLI } = await import('./nucliModuls.js');
+      expect(NUCLI.versio).toBe(VERSIO_NUCLI);
+      const lliurats = [];
+      vm.runInNewContext(codi(), { SocDePoble: { nucli: NUCLI, lliuraCos: (lliurat, fabrica) => lliurats.push([lliurat, fabrica(NUCLI)]) } });
+      expect(lliurats.map(([lliurat]) => lliurat)).toEqual([id]);
+      expect(typeof lliurats[0][1]).toBe('function');
+      if (id === 'lector') {
+        /* Sense port de notícies (la llavor és de DEV), el Lector ho diu amb l'EstatBuit de la Pedra Seca de la pàgina. */
+        const [[, Component]] = lliurats;
+        const html = renderToStaticMarkup(React.createElement(MemoryRouter, { rutaInicial: '/app/lector/noticies' },
+          React.createElement(ProveidorApp, { manifest: { id: 'lector' } }, React.createElement(Component))));
+        expect(html).toContain('Encara no hi ha cap font connectada');
+        expect(html).toBe(renderToStaticMarkup(React.createElement(NUCLI.pedraSeca.EstatBuit, { titol: 'Encara no hi ha cap font connectada' },
+          'Quan el poble connecte les seues fonts de notícies, les llegiràs ací.')));
+      }
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  }, 60000);
 });
