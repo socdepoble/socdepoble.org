@@ -39,6 +39,7 @@ The project is developed with AI assistance and is designed to remain understand
 * The application script loads only on pages that use it. Subresource Integrity is optional through `socdepoble_enxufe_integritat`; CDN plugins that rewrite output can otherwise prevent the script from loading.
 * An optional full-screen page template supports classic and block themes.
 * The `socdepoble_enxufe_config` filter sets the default display name and village identifier.
+* Shareable addresses: the application writes its current route to the page address as `#sdp=/route` (for example `#sdp=/xat`), so a copied or reloaded address opens the same view. The `socdepoble_enxufe_ruta_a_url` filter selects `fragment` (default) or `parametre`; any other value turns the feature off. Portable embedding code for other hosts does not include it.
 * Optional DeepL translation sends selected text through the server, where the API key is configured.
 * Valencian (Catalan) translations are included for the plugin and block editor.
 
@@ -73,6 +74,8 @@ Translation limits must be integer constants, without quotes. Requests without a
 == Privacy ==
 
 The plugin adds no analytics of its own. When embedded, the application does not send visit statistics to Sóc de Poble. If the host already loads Umami as window.umami, the application forwards its events to that host's Umami instance.
+
+Shareable addresses place the application route, including any search text or item identifier, in the page address, the browser history and copied links. In the default `fragment` mode the route stays in the browser and is not sent to the web server. The `parametre` mode sends it to the server as a query parameter, where it can appear in server logs and caches.
 
 == Source code and build ==
 

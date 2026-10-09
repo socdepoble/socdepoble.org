@@ -362,3 +362,61 @@ test('sense onTriaDia, el DOM de sempre: cap rol de graella, cap ajuda, cap tabI
   expect(container.querySelector('[role], [tabindex], [data-clau]')).toBeNull();
   expect(container.querySelector('.sdp-cal-mes > .sdp-sr-only')).toBeNull();
 });
+
+/* ── Onada 6 (prompt 261009_0230, punt 1; pla de l'Onada 5, tasca 16) ─────
+   «Si es fa clic a l'enllaç de l'esdeveniment dins del calendari, portarà a
+   la pàgina de la publicació; si es fa clic al quadre del dia (fora de
+   l'enllaç), es mostraran les targetes d'eixe dia.» */
+const RUTES = new Map([[festes, '/events/festes'], [cinc[0], '/mur/a0']]);
+const rutaDe = (esd) => RUTES.get(esd) ?? null;
+/* Els ids de useId canvien d'un muntatge a l'altre: no són part del DOM que es compara. */
+const senseIds = (html) => html.replace(/\s(id|aria-describedby)="[^"]*"/g, ' $1="·"');
+
+test('Onada 6 · Llei del Píxel: sense rutaDeLEsdeveniment, o sense cap ruta, el DOM de sempre', () => {
+  const sense = senseIds(pinta({ onTriaDia: () => {} }).container.innerHTML);
+  cleanup();
+  const senseRuta = senseIds(pinta({ onTriaDia: () => {}, rutaDeLEsdeveniment: () => null }).container.innerHTML);
+  expect(senseRuta).toBe(sense);
+  expect(sense).not.toContain('sdp-cal-enllac');
+});
+
+test('Onada 6 · amb ruta, la peça porta l’enllaç del router (tabIndex -1, dins de la capa aria-hidden); clicar-lo no tria el dia', () => {
+  const [triats, navegats] = [[], []];
+  const Enllac = ({ to, children, ...resta }) => (
+    <a href={to} {...resta} onClick={(event) => { event.preventDefault(); navegats.push(to); }}>{children}</a>
+  );
+  const { container } = pinta({ onTriaDia: (clau) => triats.push(clau), rutaDeLEsdeveniment: rutaDe, LinkComponent: Enllac });
+  const enllacos = [...container.querySelectorAll('a.sdp-cal-enllac')];
+  // Festes (la barra de la primera fila) i l'Acte 0 («● 10:00 Acte 0»); l'Exposició no té ruta.
+  expect(enllacos.map((a) => [a.getAttribute('href'), a.textContent])).toEqual([['/events/festes', 'Festes'], ['/mur/a0', '10:00 Acte 0']]);
+  for (const a of enllacos) {
+    expect(a.tabIndex).toBe(-1);
+    expect(a.closest('.sdp-cal-mes__barres').getAttribute('aria-hidden')).toBe('true');
+    expect(a.closest('button')).toBeNull();
+    expect(a.parentElement.classList.contains('sdp-cal-barra--enllac')).toBe(true);
+  }
+  const exposicio = [...container.querySelectorAll('.sdp-cal-barra')].filter((b) => b.textContent === 'Exposició');
+  expect(exposicio).toHaveLength(2);
+  expect(exposicio.every((b) => !b.querySelector('a') && !b.classList.contains('sdp-cal-barra--enllac'))).toBe(true);
+  // El text de cada peça (el que llegixen les proves de /calendari) no canvia.
+  expect(container.querySelector('.sdp-cal-barra').textContent).toBe('Festes');
+  fireEvent.click(enllacos[0]);
+  expect(navegats).toEqual(['/events/festes']);
+  expect(triats).toEqual([]);
+  // Clicar el dia (fora de l'enllaç) el tria; la graella continua sent un sol punt de tabulació.
+  fireEvent.click(container.querySelector('[data-clau="2026-10-02"]'));
+  expect(triats).toEqual(['2026-10-02']);
+  expect(tabulables(container)).toHaveLength(1);
+});
+
+test('Onada 6 · sense LinkComponent, un <a href> de sempre', () => {
+  const { container } = pinta({ rutaDeLEsdeveniment: rutaDe });
+  expect([...container.querySelectorAll('a.sdp-cal-enllac')].map((a) => a.getAttribute('href'))).toEqual(['/events/festes', '/mur/a0']);
+});
+
+test('Onada 6 · en mode compacte (tires i punts sense text) cap enllaç: el toc tria el dia', () => {
+  ambAmplada(360);
+  const { container } = pinta({ onTriaDia: () => {}, rutaDeLEsdeveniment: rutaDe });
+  expect(container.querySelector('.sdp-cal-mes--compacte')).not.toBeNull();
+  expect(container.querySelector('.sdp-cal-enllac, .sdp-cal-barra--enllac')).toBeNull();
+});

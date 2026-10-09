@@ -15,10 +15,21 @@ import { resumSkills } from './consolaContent.js';
 import { compteOMesura, plural } from './concordanca.js';
 import { esSenseLector, fluxosDelMapa, puntsDeTrobada } from './mapa/fluxosMapa.js';
 import { TITOLS_PECES_AGENTS, agentsAtomics, capesActors, pecesAgents, xifresDelMas } from './mapa/actorsMapa.js';
-import { LLINDAR_ROIG, resumInventari } from './mapa/inventariMapa.js';
+import { resumInventari } from './mapa/inventariMapa.js';
 import { recomptePer, resumMapa } from './mapa/mapaContent.js';
+import { relacionsDe } from './mapa/grafMapa.js';
+import { camiDe } from './mapa/fluxosMapa.js';
+import {
+  problemaDeSkill, problemaLloc, problemaTasca, problemaText, problemesDAvisos, problemesDeCandats, problemesDeTasques
+} from './problemesConsola.js';
+import { colorDAvisos, toDEstat, toDeColor } from './semafor.js';
 
 export const RUTA_CONSOLA = '/consola';
+
+/** Onada 6 (requisit 11) · El paràmetre de l'Explorador amb la peça triada: /consola/explorador?peca=skill:NOM. */
+export const CLAU_PECA = 'peca';
+/** L'adreça de l'Explorador amb una peça triada (el botó «Veure al graf» de l'Inventari). */
+export const rutaPecaAlGraf = (id) => `${RUTA_CONSOLA}/explorador?${CLAU_PECA}=${encodeURIComponent(id)}`;
 
 /**
  * Ordre del tauler: el pols i l'explorador, i després les pestanyes del «Mapa
@@ -197,20 +208,40 @@ export function segmentPagina(comodi) {
 
 /* ── Etiquetes d'un colp d'ull ────────────────────────────────────────────
    Cada targeta del tauler en porta com a molt dues: el nivell de la seua
-   font (Cal reparar o Important, mai les dues; Sense font si no n'hi ha) i
-   Canvis nous si el resum és diferent del que este visitant va vore l'última
-   vegada que va obrir la pàgina. El `to` és el vocabulari d'Insignia. */
+   font, amb el semàfor (Cal reparar en roig, Important en taronja o En ordre
+   en verd, només una; Sense font si no n'hi ha) i Canvis nous si el resum és
+   diferent del que este visitant va vore l'última vegada que va obrir la
+   pàgina. El `to` és el vocabulari d'Insignia.
+   Onada 6 (requisit 8) · El verd existix: una font llegida sense cap estat
+   greu diu «En ordre». Canvis nous no és cap gravetat: neutre. Derogat per
+   l'Onada 6: el mig semàfor sense verd i «Canvis nous» en blau ('info'). */
 
 export const ETIQUETES = Object.freeze({
-  reparar: Object.freeze({ text: 'Cal reparar', to: 'error' }),
-  important: Object.freeze({ text: 'Important', to: 'avis' }),
-  nou: Object.freeze({ text: 'Canvis nous', to: 'info' }),
+  reparar: Object.freeze({ text: 'Cal reparar', to: toDeColor('roig') }),
+  important: Object.freeze({ text: 'Important', to: toDeColor('taronja') }),
+  enOrdre: Object.freeze({ text: 'En ordre', to: toDeColor('verd') }),
+  nou: Object.freeze({ text: 'Canvis nous', to: 'neutre' }),
   senseFont: Object.freeze({ text: 'Sense font', to: 'neutre' })
 });
 
-/* Semàfor de l'inventari (03_inventari_skills.md): 3 avisos o més, roig; 1 o
-   2, ambre. Viu amb la resta de l'inventari (mapa/inventariMapa.js). */
-export { LLINDAR_ROIG };
+/* Les pàgines el verd de les quals demana més que la font: el pols jutja la
+   càrrega (termometria) i els rebuts, i sense eixes mesures no es pot dir que
+   tot vaja bé. Correcció de l'Onada 6 (revisió adversarial: «es fabrica un
+   verd») · Avisos i salut tampoc no diu «En ordre» amb cap mètrica N/A (ni
+   sense cap mètrica): una mètrica sense mesura no diu que tot vaja bé, diu
+   que ningú no ho ha mirat. Agents atòmics, tampoc amb cap peça SENSE MESURA.
+   Les altres pàgines del Mapa en tenen prou amb el Mapa: el que jutgen ho
+   mesura el compilador sencer. */
+const BASE_DEL_VERD = Object.freeze({
+  pols: (dades) => recompteArtefactes(dades) !== null && fontLlegible(dades, 'diari') && ultimRebut(dades.rebuts) !== null,
+  salut: (mapa) => mapa.salut.length > 0 && mapa.salut.every((m) => m.valor !== 'N/A'),
+  agents: (mapa) => Object.values(pecesAgents(mapa)).every((p) => p.estat !== 'SENSE MESURA')
+});
+
+/** L'etiqueta del semàfor per a un nivell: 'error' → Cal reparar; 'avis' → Important; cap → En ordre. */
+export const etiquetaDeNivell = (nivell) => (nivell === 'error' ? ETIQUETES.reparar
+  : nivell === 'avis' ? ETIQUETES.important : ETIQUETES.enOrdre);
+
 /** Artefactes actius per damunt dels quals el pols avisa de saturació. */
 export const LLINDAR_SATURACIO = 150;
 /** El recompte d'artefactes (recompteArtefactes) passa del llindar de saturació. */
@@ -337,8 +368,18 @@ export { plural };
 /** Dies des d'una data, com es diuen: «avui», «fa 1 dia», «fa 8 dies». */
 export const faDies = (dies) => (dies === 0 ? 'avui' : `fa ${plural(dies, 'dia', 'dies')}`);
 
-/** Ordre de la coberta: el que falla primer al capdavant. */
-export const ORDRE_TO = Object.freeze({ error: 0, avis: 1, info: 2 });
+/** Ordre de la coberta: el que falla primer al capdavant; el que només informa, al final. */
+export const ORDRE_TO = Object.freeze({ error: 0, avis: 1, info: 2, neutre: 3, exit: 4 });
+
+/* Onada 6 (requisit 8) · Els tons de la coberta són els del semàfor
+   (semafor.js): roig el que falla, taronja el que no consta o va a mitges, i
+   neutre el que només informa. Derogat per l'Onada 6: el blau ('info') de les
+   relacions inferides, les tasques d'estat desconegut, els candats per
+   acreditar, les tasques sense llançador d'Actors, els llocs del sòl sense
+   lector, les peces dels agents i les mètriques sense mesura. */
+const ROIG = toDeColor('roig');
+const TARONJA = toDeColor('taronja');
+const NEUTRE = 'neutre';
 
 const compte = (clau, n, un, molts, to) => (n > 0 ? { clau, n, text: plural(n, un, molts), to } : null);
 const perClau = (llista, clau) => new Map(recomptePer(llista, clau));
@@ -353,10 +394,14 @@ function estatRebuts(rebuts, ara) {
 
 /* Enllaços trencats (cap a un script, una font, un fitxer o una skill que no
    hi són, o una menció a una skill inexistent) i peces òrfenes, del
-   compilador, en ordre de severitat. Per a l'explorador tots són fallades
-   («enllaços trencats o orfes», encàrrec de la llesca), encara que el Mapa en
-   gradue uns quants de mitjans. L2 (260930): el compilador ja diu «fitxer
-   absent» del fitxer que un contracte declara i no és al disc. */
+   compilador, en ordre de severitat. L2 (260930): el compilador ja diu
+   «fitxer absent» del fitxer que un contracte declara i no és al disc.
+   Correcció de l'Onada 6 (revisió adversarial: el semàfor es contradeia) ·
+   cada codi es pinta amb la gravetat dels seus avisos (semafor.js ·
+   colorDAvisos): una òrfena o una crida inexistent, mitjanes al Mapa, són
+   taronja, com a Avisos i salut, a l'Inventari i a la xifra «skills òrfenes».
+   Derogat per l'Onada 6: «per a l'explorador tots són fallades, encara que el
+   Mapa en gradue uns quants de mitjans» (tots en roig). */
 export const CODIS_TRENCATS = Object.freeze([
   ['script-absent', 'script absent', 'scripts absents'],
   ['font-absent', 'font absent', 'fonts absents'],
@@ -372,70 +417,78 @@ const ESTATS = Object.freeze({
     const recompte = recompteArtefactes(dades);
     return [
       // Ordre del Mestre, 261004 · el vocabulari del pols ja no xoca amb el del Mapa (MESURES.pols).
-      compte('orfes', orfes.length, 'skill al disc fora del manifest', 'skills al disc fora del manifest', 'error'),
-      compte('fantasmes', fantasmes.length, 'skill al manifest sense disc', 'skills al manifest sense disc', 'error'),
+      compte('orfes', orfes.length, 'skill al disc fora del manifest', 'skills al disc fora del manifest', ROIG),
+      compte('fantasmes', fantasmes.length, 'skill al manifest sense disc', 'skills al manifest sense disc', ROIG),
       saturat(recompte)
-        ? compte('saturacio', recompte - LLINDAR_SATURACIO, 'artefacte per damunt del llindar', 'artefactes per damunt del llindar', 'avis')
+        ? compte('saturacio', recompte - LLINDAR_SATURACIO, 'artefacte per damunt del llindar', 'artefactes per damunt del llindar', TARONJA)
         : null,
       estatRebuts(dades.rebuts, ara)
     ];
   },
   explorador: (mapa) => {
-    const perCodi = perClau(mapa.avisos, 'codi');
+    const delCodi = (codi) => mapa.avisos.filter((a) => a.codi === codi);
     return [
-      ...CODIS_TRENCATS.map(([codi, un, molts]) => compte(codi, perCodi.get(codi) ?? 0, un, molts, 'error')),
+      ...CODIS_TRENCATS.map(([codi, un, molts]) => {
+        const avisos = delCodi(codi);
+        return compte(codi, avisos.length, un, molts, toDeColor(colorDAvisos(avisos)));
+      }),
       compte('inferides', perClau(mapa.arestes, 'confianca').get('inferit') ?? 0,
-        'relació inferida de la prosa', 'relacions inferides de la prosa', 'info')
+        'relació inferida de la prosa', 'relacions inferides de la prosa', NEUTRE)
     ];
   },
   fluxos: (mapa) => [
-    compte('sense-lector', puntsDeTrobada(mapa).filter(esSenseLector).length, 'lloc amb faena i cap lector', 'llocs amb faena i cap lector', 'avis')
+    compte('sense-lector', puntsDeTrobada(mapa).filter(esSenseLector).length, 'lloc amb faena i cap lector', 'llocs amb faena i cap lector', TARONJA)
   ],
   calendari: (mapa) => {
     const perEstat = perClau(mapa.tasques, 'estat');
     return [
-      compte('mort', perEstat.get('mort') ?? 0, 'tasca morta', 'tasques mortes', 'error'),
-      compte('sense-llancador', perEstat.get('declarat-sense-llancador') ?? 0, 'tasca sense llançador', 'tasques sense llançador', 'avis'),
-      compte('sense-declaracio', perEstat.get('llancador-sense-declaracio') ?? 0, 'tasca sense declaració', 'tasques sense declaració', 'avis'),
-      compte('desconegut', perEstat.get('desconegut') ?? 0, 'tasca d’estat desconegut', 'tasques d’estat desconegut', 'info')
+      compte('mort', perEstat.get('mort') ?? 0, 'tasca morta', 'tasques mortes', ROIG),
+      compte('sense-llancador', perEstat.get('declarat-sense-llancador') ?? 0, 'tasca sense llançador', 'tasques sense llançador', TARONJA),
+      compte('sense-declaracio', perEstat.get('llancador-sense-declaracio') ?? 0, 'tasca sense declaració', 'tasques sense declaració', TARONJA),
+      compte('desconegut', perEstat.get('desconegut') ?? 0, 'tasca d’estat desconegut', 'tasques d’estat desconegut', TARONJA)
     ];
   },
-  /* Mana el semàfor de la pàgina, no la severitat del codi: un fora-segell
-     (alt al Mapa) en una skill amb un sol avís és ambre, i «Important». */
+  /* Onada 6 (requisit 8) · El semàfor de la pàgina ja és el de la gravetat
+     (inventariMapa.js · semaforDe): una skill amb un avís alt és roja, i «Cal
+     reparar». Derogat per l'Onada 6: «Mana el semàfor de la pàgina, no la
+     severitat del codi» (un fora-segell, alt, en una skill amb un sol avís era
+     ambre). */
   inventari: (mapa) => {
     const r = resumInventari(mapa);
     return [
-      compte('roig', r.roges, 'skill amb semàfor roig', 'skills amb semàfor roig', 'error'),
-      compte('ambre', r.ambres, 'skill amb semàfor ambre', 'skills amb semàfor ambre', 'avis'),
-      compte('orfenes', r.orfenes, 'skill òrfena', 'skills òrfenes', 'avis'),
-      compte('fora-cens', r.foraDeCens, 'skill fora del cens', 'skills fora del cens', 'avis'),
-      compte('sense-disparador', r.senseDisparador, 'skill sense disparador útil', 'skills sense disparador útil', 'avis')
+      compte('roig', r.roges, 'skill amb semàfor roig', 'skills amb semàfor roig', ROIG),
+      compte('ambre', r.ambres, 'skill amb semàfor ambre', 'skills amb semàfor ambre', TARONJA),
+      compte('orfenes', r.orfenes, 'skill òrfena', 'skills òrfenes', TARONJA),
+      compte('fora-cens', r.foraDeCens, 'skill fora del cens', 'skills fora del cens', TARONJA),
+      compte('sense-disparador', r.senseDisparador, 'skill sense disparador útil', 'skills sense disparador útil', TARONJA)
     ];
   },
-  entrades: (mapa) => [compte('opaques', xifresDelMas(mapa).opaques, 'skill opaca', 'skills opaques', 'avis')],
-  // Informació: les seues quatre peces ja avisen a fluxos, calendari, actors i salut.
+  entrades: (mapa) => [compte('opaques', xifresDelMas(mapa).opaques, 'skill opaca', 'skills opaques', TARONJA)],
+  /* Les seues quatre peces, amb el color de la seua etiqueta a la pàgina
+     (semafor.js · COLOR_D_ESTAT): FALTA i PARCIAL, taronja; SENSE MESURA, neutre. */
   agents: (mapa) => Object.entries(pecesAgents(mapa))
     .filter(([, peca]) => peca.estat !== 'EN MARXA')
-    .map(([id, peca]) => ({ clau: id, n: 1, text: `${TITOLS_PECES_AGENTS[id]}: ${peca.estat.toLocaleLowerCase('ca')}`, to: 'info' })),
+    .map(([id, peca]) => ({ clau: id, n: 1, text: `${TITOLS_PECES_AGENTS[id]}: ${peca.estat.toLocaleLowerCase('ca')}`, to: toDEstat(peca.estat) })),
   actors: (mapa) => {
     const { programades, candats, senseLlancador, sol } = capesActors(mapa);
     return [
-      compte('launchd-morta', programades.filter((t) => t.estat === 'mort').length, 'tasca de launchd morta', 'tasques de launchd mortes', 'error'),
-      compte('sense-consumidor', candats.filter((c) => c.acreditat === false).length, 'candat sense consumidor', 'candats sense consumidor', 'avis'),
-      compte('per-acreditar', candats.filter((c) => c.acreditat === null).length, 'candat per acreditar', 'candats per acreditar', 'info'),
-      compte('sense-llancador', senseLlancador.length, 'tasca sense llançador', 'tasques sense llançador', 'info'),
-      compte('sol-sense-lector', sol.filter(esSenseLector).length, 'lloc sense lector', 'llocs sense lector', 'info')
+      compte('launchd-morta', programades.filter((t) => t.estat === 'mort').length, 'tasca de launchd morta', 'tasques de launchd mortes', ROIG),
+      // SENSE CONSUMIDOR és roig a l'etiqueta del candat: el mateix color a la coberta.
+      compte('sense-consumidor', candats.filter((c) => c.acreditat === false).length, 'candat sense consumidor', 'candats sense consumidor', ROIG),
+      compte('per-acreditar', candats.filter((c) => c.acreditat === null).length, 'candat per acreditar', 'candats per acreditar', TARONJA),
+      compte('sense-llancador', senseLlancador.length, 'tasca sense llançador', 'tasques sense llançador', TARONJA),
+      compte('sol-sense-lector', sol.filter(esSenseLector).length, 'lloc sense lector', 'llocs sense lector', TARONJA)
     ];
   },
-  // Les severitats del Mapa ja són el criteri (TO_SEVERITAT de les vistes del Mapa).
+  // Les severitats del Mapa ja són el criteri (TO_SEVERITAT: alta roig; mitjana i baixa taronja).
   salut: (mapa) => {
     const resum = resumMapa(mapa);
     const perSeveritat = new Map(resum.perSeveritat);
     return [
-      compte('alta', perSeveritat.get('alta') ?? 0, 'avís alt', 'avisos alts', 'error'),
-      compte('mitjana', perSeveritat.get('mitjana') ?? 0, 'avís mitjà', 'avisos mitjans', 'avis'),
-      compte('baixa', perSeveritat.get('baixa') ?? 0, 'avís baix', 'avisos baixos', 'info'),
-      compte('sense-mesura', mapa.salut.length - resum.mesurades, 'mètrica sense mesura (N/A)', 'mètriques sense mesura (N/A)', 'info')
+      compte('alta', perSeveritat.get('alta') ?? 0, 'avís alt', 'avisos alts', ROIG),
+      compte('mitjana', perSeveritat.get('mitjana') ?? 0, 'avís mitjà', 'avisos mitjans', TARONJA),
+      compte('baixa', perSeveritat.get('baixa') ?? 0, 'avís baix', 'avisos baixos', TARONJA),
+      compte('sense-mesura', mapa.salut.length - resum.mesurades, 'mètrica sense mesura (N/A)', 'mètriques sense mesura (N/A)', NEUTRE)
     ];
   }
 });
@@ -456,6 +509,60 @@ export function estatsPagina(id, fonts = {}, ara = Date.now()) {
 export function nivellEstats(estats) {
   const to = estats?.[0]?.to;
   return to === 'error' || to === 'avis' ? to : null;
+}
+
+/* ── Els problemes de cada targeta, a la vista (Onada 6, requisit 9) ───────
+   La coberta diu quants n'hi ha (ESTATS); ací, quins són, el més greu primer,
+   perquè la targeta els diga sense entrar (problemesConsola.js). Cada regla
+   rep la mateixa dada que la seua coberta. Viu a part de MESURES: la
+   signatura de «Canvis nous» (resumPagina) no en sap res.
+   Correcció de l'Onada 6 (revisió adversarial) · cada problema porta la seua
+   marca amb el color del semàfor (problemesConsola.js): la severitat de
+   l'avís, l'estat de la tasca, el color de la skill a l'Inventari o el que li
+   falta al lloc o al candat. Abans l'estat anava dins del text, sense color. */
+const lloc = (clau, p) => problemaLloc(clau, camiDe(p.node));
+/** Les skills del pols fora del manifest o sense disc, pel seu nom: roig, com a la coberta. */
+function problemesSkillsPols(dades) {
+  const { orfes, fantasmes } = resumSkills(dades.skills);
+  return [
+    ...orfes.map((s) => problemaText(`orfe|${s.nom}`, s.nom, 'fora del manifest', ROIG)),
+    ...fantasmes.map((s) => problemaText(`fantasma|${s.nom}`, s.nom, 'sense disc', ROIG))
+  ];
+}
+const PROBLEMES = Object.freeze({
+  pols: problemesSkillsPols,
+  explorador: (mapa) => problemesDAvisos(mapa.avisos.filter((a) => CODIS_TRENCATS.some(([codi]) => codi === a.codi))),
+  fluxos: (mapa) => puntsDeTrobada(mapa).filter(esSenseLector).map((p) => lloc(p.node.id, p)),
+  calendari: (mapa) => problemesDeTasques(mapa.tasques),
+  inventari: (mapa) => resumInventari(mapa).skills.filter((s) => s.semafor !== 'verd').map((s) => problemaDeSkill(s)),
+  // Les mateixes que compta la coberta (xifresDelMas · opaques).
+  entrades: (mapa) => mapa.nodes.filter((n) => n.tipus === 'skill' && relacionsDe(mapa, n.id).opaca)
+    .sort((x, y) => x.id.localeCompare(y.id))
+    .map((n) => problemaText(n.id, n.id.slice('skill:'.length), 'opaca', TARONJA)),
+  // Les peces que no van ja les diu la coberta pel seu nom: cap llista més.
+  agents: () => [],
+  actors: (mapa) => {
+    const { programades, candats, senseLlancador, sol } = capesActors(mapa);
+    return [
+      ...programades.filter((t) => t.estat === 'mort').map((t) => problemaTasca(t, `mort|${t.id}`)),
+      ...problemesDeCandats(candats, 'candat|'),
+      ...senseLlancador.map((t) => problemaTasca(t, `sl|${t.id}`)),
+      ...sol.filter(esSenseLector).map((p) => lloc(`sol|${p.node.id}`, p))
+    ];
+  },
+  salut: (mapa) => problemesDAvisos(mapa.avisos)
+});
+
+/**
+ * Quins problemes diu la targeta d'una pàgina, el més greu primer: [{ clau,
+ * text, ruta? }]. Llista buida si no n'hi ha; null sense font o per a una
+ * pàgina desconeguda.
+ */
+export function problemesPagina(id, fonts = {}) {
+  const regla = PROBLEMES[id];
+  const { dada } = regla ? fontDe(id, fonts) : {};
+  if (!dada) return null;
+  return regla(dada);
 }
 
 /**
@@ -534,11 +641,12 @@ export function etiquetesPagina(id, fonts, vist, ara = Date.now()) {
     if (estat === 'loading') return [];
     return [estat === 'error' ? ETIQUETES.reparar : ETIQUETES.senseFont];
   }
-  const etiquetes = [];
   // Una lectura fallida amb l'última instantània bona també és una fallada.
   const nivell = estat === 'error' ? 'error' : nivellEstats(estatsPagina(id, fonts, ara));
-  if (nivell === 'error') etiquetes.push(ETIQUETES.reparar);
-  else if (nivell === 'avis') etiquetes.push(ETIQUETES.important);
+  /* Onada 6 · amb font i cap estat greu, el verd: «En ordre». Només si la
+     pàgina ho pot mesurar tot (BASE_DEL_VERD): el pols sense termometria o
+     sense cap rebut datat no diu ni verd ni roig. */
+  const etiquetes = nivell || (BASE_DEL_VERD[id]?.(dada) ?? true) ? [etiquetaDeNivell(nivell)] : [];
   if (typeof vist === 'string' && vist !== signaturaPagina(id, fonts)) etiquetes.push(ETIQUETES.nou);
   return etiquetes;
 }
@@ -558,10 +666,34 @@ export function etiquetesPols(dades, estat, ara = Date.now()) {
   }
   const recompte = recompteArtefactes(dades);
   const { orfes, fantasmes } = resumSkills(dades.skills);
+  /* Onada 6 (requisit 8) · El verd només on hi ha base per a dir-lo: la
+     càrrega amb recompte, els rebuts amb un rebut datat i un diari llegible, i
+     les skills de consola.json. Sense base, cap etiqueta (mai un verd). */
+  const ambRebutDatat = fontLlegible(dades, 'diari') && ultimRebut(dades.rebuts) !== null;
   return {
-    carrega: recompte === null ? [ETIQUETES.senseFont] : saturat(recompte) ? [ETIQUETES.important] : [],
-    rebuts: rebutsRancis(dades.rebuts, ara) ? [ETIQUETES.important] : [],
-    skills: orfes.length || fantasmes.length ? [ETIQUETES.reparar] : []
+    carrega: recompte === null ? [ETIQUETES.senseFont] : saturat(recompte) ? [ETIQUETES.important] : [ETIQUETES.enOrdre],
+    rebuts: rebutsRancis(dades.rebuts, ara) ? [ETIQUETES.important] : ambRebutDatat ? [ETIQUETES.enOrdre] : [],
+    skills: orfes.length || fantasmes.length ? [ETIQUETES.reparar] : [ETIQUETES.enOrdre]
+  };
+}
+
+/**
+ * Correcció de l'Onada 6 (revisió adversarial: requisit 9 als panells del
+ * pols) · Els problemes que diu cada targeta del pols, amb la mateixa llei que
+ * les seues etiquetes: la saturació, el diari de rebuts ranci i les skills
+ * fora del manifest o sense disc. Sense consola.json, null (cap llista).
+ */
+export function problemesPols(dades, ara = Date.now()) {
+  const IDS = ['carrega', 'rebuts', 'skills'];
+  if (!dades) return Object.fromEntries(IDS.map((id) => [id, null]));
+  const recompte = recompteArtefactes(dades);
+  const rancis = rebutsRancis(dades.rebuts, ara);
+  return {
+    carrega: saturat(recompte)
+      ? [problemaText('saturacio', plural(recompte - LLINDAR_SATURACIO, 'artefacte per damunt del llindar', 'artefactes per damunt del llindar'), 'saturat', TARONJA)]
+      : [],
+    rebuts: rancis ? [problemaText('rebuts-rancis', `Últim rebut ${faDies(diesDes(ultimRebut(dades.rebuts), ara))}`, 'ranci', TARONJA)] : [],
+    skills: problemesSkillsPols(dades)
   };
 }
 

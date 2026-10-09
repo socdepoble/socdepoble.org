@@ -29,6 +29,7 @@
  */
 import { BENVINGUDA_IAIA, ENTITAT_PILOT_ID, ENTITATS_SEED, IAIA_ID } from './identitatsSeed.js';
 import { AGENTS_MAP } from './agentsSeed.js';
+import { ID_FIL_BETA_TESTERS_LLAVOR } from './xatsPerDefecte.js';
 import { rutaDePerfil } from '../config/navigation.js';
 
 const DIA_MS = 86400000;
@@ -42,7 +43,9 @@ const FIL_IAIA = '7c2a1d9e-3b4f-4a5c-9d6e-1f2a3b4c5d04';
 const FIL_COMUNITAT = '7c2a1d9e-3b4f-4a5c-9d6e-1f2a3b4c5d06';
 const FIL_AVISOS = '7c2a1d9e-3b4f-4a5c-9d6e-1f2a3b4c5d07';
 const FIL_GENERAL = '7c2a1d9e-3b4f-4a5c-9d6e-1f2a3b4c5d08';
-const FIL_BETA_TESTERS = '7c2a1d9e-3b4f-4a5c-9d6e-1f2a3b4c5d09';
+/* Onada 6 · L'id viu a xatsPerDefecte.js: «Informa d'un error» el reconeix
+   sense importar esta llavor. */
+const FIL_BETA_TESTERS = ID_FIL_BETA_TESTERS_LLAVOR;
 
 /* Marcador de la persona que mira; es substituïx en construir la llavor. */
 const JO = 'jo';

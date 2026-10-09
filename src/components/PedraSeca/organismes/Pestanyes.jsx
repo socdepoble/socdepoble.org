@@ -6,10 +6,14 @@
  * per teclat. No ho eren: un div no rep focus.
  *
  * pestanyes: [{ id, etiqueta, icona?, contingut }] · activa/onCanvi (opcional: controlat)
+ * centrades: la barra centrada (Onada 6, la pàgina del poble). El modificador
+ *   sdp-pestanyes--centrades centra amb marges automàtics: quan les pestanyes
+ *   no caben, els marges valen 0 i la llista llisca sense tallar la primera
+ *   (justify-content: safe center no és del Baseline 2022). Sense, com sempre.
  */
 import { useId, useRef, useState } from 'react';
 
-export function Pestanyes({ pestanyes = [], activa, onCanvi, etiqueta, className }) {
+export function Pestanyes({ pestanyes = [], activa, onCanvi, etiqueta, className, centrades = false }) {
   const [interna, setInterna] = useState(pestanyes[0]?.id);
   const actual = activa ?? interna;
   const base = useId();
@@ -31,7 +35,7 @@ export function Pestanyes({ pestanyes = [], activa, onCanvi, etiqueta, className
   };
 
   return (
-    <div className={['sdp-pestanyes', className].filter(Boolean).join(' ')}>
+    <div className={['sdp-pestanyes', centrades ? 'sdp-pestanyes--centrades' : null, className].filter(Boolean).join(' ')}>
       <div role="tablist" aria-label={etiqueta} className="sdp-pestanyes__llista">
         {pestanyes.map((p, i) => {
           const Icona = p.icona;

@@ -64,6 +64,18 @@ describe('Clàusula dels Slugs', () => {
     expect(document.querySelector('.sdp-app-contenidor').getAttribute('data-sdp-app')).toBe('prova');
   });
 
+  /* Onada 6 (revisió de seguretat): la traducció de pàgina del navegador envia
+     el text a un servei de fora; una app amb dades personals no s'hi deixa. */
+  test('una app amb dades personals no es deixa traduir; una sense, sí', async () => {
+    muntaPlataforma('/app/prova/inici', { registre: registreDeProva({ dadesPersonals: 'salut' }) });
+    expect(await screen.findByText('Vista inici')).toBeTruthy();
+    expect(document.querySelector('.sdp-app-contenidor').getAttribute('translate')).toBe('no');
+    cleanup();
+    muntaPlataforma('/app/prova/inici', { registre: registreDeProva() });
+    expect(await screen.findByText('Vista inici')).toBeTruthy();
+    expect(document.querySelector('.sdp-app-contenidor').hasAttribute('translate')).toBe(false);
+  });
+
   test('/app/<id> es canonitza amb replace a l’entrada per defecte', async () => {
     window.history.replaceState(null, '', '/');
     const llarg = window.history.length;

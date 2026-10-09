@@ -3,8 +3,10 @@
  *
  * T10 (ordre del Mestre, 261001) · NavegacioMes (CalendariMes.jsx) porta
  * mouMes escrit dins i no servix per a moure setmanes; tampoc es pot tocar,
- * perquè la fan servir el Mur, la Consola i el selector de l'editor (Llei del
- * Píxel). Esta navegació no sap què és un període: qui la munta li diu què fan
+ * perquè la fan servir la Consola (CalendariMapa, per CalendariEsdeveniments)
+ * i el selector de l'editor (Llei del Píxel). Des de l'Onada 6 el Mur ja no:
+ * munta el mateix calendari que /calendari, amb esta navegació. Esta
+ * navegació no sap què és un període: qui la munta li diu què fan
  * les fletxes i «Hui», i quin text té cada una.
  *
  * Fase visual (prompt 261001_0445) · L'ordre i la pintura de les captures del
@@ -21,6 +23,10 @@
  *     les que falten, les per defecte).
  *   titol · el període que es veu, en text («octubre de 2026»), o res. És un
  *     <p aria-live="polite">: no és cap encapçalament de la pàgina.
+ *   nivellTitol · 2–6 o res (Onada 6, prompt 261009_0230: el títol a la
+ *     mateixa fila que «Hui ‹ ›», com a Google Calendar). Amb nivell, el títol
+ *     és un encapçalament d'eixe nivell (/calendari i el Mur hi posen el seu
+ *     h3) amb la mateixa classe i aria-live; sense, el <p> de sempre.
  *   vista / onCanviaVista · el selector (PillToggle: role="group" i botons amb
  *     aria-pressed): sense onCanviaVista, no n'hi ha. vistes · [{ valor, text }]
  *     (per defecte, les cinc del calendari); etiquetaVistes · el nom del grup
@@ -45,12 +51,14 @@ const VISTES_PER_DEFECTE = Object.freeze([
   Object.freeze({ valor: 'any', text: 'Any' }),
   Object.freeze({ valor: 'agenda', text: 'Agenda' })
 ]);
+const NIVELLS = Object.freeze([2, 3, 4, 5, 6]);
 
 export function NavegacioPeriode({
-  onAnterior, onHui, onSeguent, etiquetes, titol,
+  onAnterior, onHui, onSeguent, etiquetes, titol, nivellTitol,
   vista, onCanviaVista, vistes = VISTES_PER_DEFECTE, etiquetaVistes = 'Vista', className, accions
 }) {
   const text = { ...ETIQUETES_PER_DEFECTE, ...etiquetes };
+  const Titol = NIVELLS.includes(nivellTitol) ? `h${nivellTitol}` : 'p';
   return (
     <div className={['sdp-cal-navegacio', className].filter(Boolean).join(' ')}>
       <Boto varietat="secundari" onClick={() => onHui?.()}>{text.hui}</Boto>
@@ -58,7 +66,7 @@ export function NavegacioPeriode({
         onClick={() => onAnterior?.()} aria-label={text.anterior} />
       <Boto varietat="fantasma" className="sdp-cal-navegacio__fletxa" icona={ChevronRight}
         onClick={() => onSeguent?.()} aria-label={text.seguent} />
-      {titol ? <p className="sdp-cal-navegacio__titol" aria-live="polite">{titol}</p> : null}
+      {titol ? <Titol className="sdp-cal-navegacio__titol" aria-live="polite">{titol}</Titol> : null}
       {accions ?? null}
       {onCanviaVista ? (
         <PillToggle className="sdp-cal-vistes" opcions={vistes} valor={vista} onCanvi={onCanviaVista} etiqueta={etiquetaVistes} />

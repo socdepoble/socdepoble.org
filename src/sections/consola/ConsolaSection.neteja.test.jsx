@@ -56,14 +56,17 @@ const FONTS = Object.freeze({
   consola: { dades: null, estat: 'absent', error: null }
 });
 
-/* Les còpies d'abans, tal com es pintaven. */
+/* El que es pinta. Onada 6 (requisit 8, semàfor; semafor.js) · Canvi
+   intencionat: sense llançador i desconegut passen a taronja, la confiança
+   declarada a neutre i la severitat baixa a taronja (cap blau). Els textos no
+   canvien. Derogat per l'Onada 6: les classes d'abans (neutre, neutre, info, info). */
 const ABANS = Object.freeze({
   estat: {
-    viu: ['exit', 'viu'], mort: ['error', 'mort'], 'declarat-sense-llancador': ['neutre', 'sense llançador'],
-    'llancador-sense-declaracio': ['avis', 'sense declaració'], desconegut: ['neutre', 'desconegut']
+    viu: ['exit', 'viu'], mort: ['error', 'mort'], 'declarat-sense-llancador': ['avis', 'sense llançador'],
+    'llancador-sense-declaracio': ['avis', 'sense declaració'], desconegut: ['avis', 'desconegut']
   },
-  confianca: { declarat: 'info', derivat: 'neutre', inferit: 'avis' },
-  severitat: { alta: 'error', mitjana: 'avis', baixa: 'info' }
+  confianca: { declarat: 'neutre', derivat: 'neutre', inferit: 'avis' },
+  severitat: { alta: 'error', mitjana: 'avis', baixa: 'avis' }
 });
 
 /* Les insígnies d'una taula (Taula és una regió amb el seu títol), com

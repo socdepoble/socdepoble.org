@@ -1,0 +1,6 @@
+{
+  "captureId": "viquipedia-etiquetes-la-torre-de-les-macanes-261009",
+  "capturedAt": "2026-10-08T23:02:50.071Z",
+  "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&format=json&formatversion=2&origin=*&maxlag=5&ids=Q54936%7CQ2046431&props=labels&languages=ca",
+  "body": {"entities":{"Q54936":{"type":"item","id":"Q54936","labels":{"ca":{"language":"ca","value":"província d'Alacant"}}},"Q2046431":{"type":"item","id":"Q2046431","labels":{"ca":{"language":"ca","value":"l'Alacantí"}}}},"success":1}
+}

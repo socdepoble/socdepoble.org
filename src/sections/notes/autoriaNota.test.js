@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { AUTORIA_BENVINGUDA, ID_COPIA_PROVA, autoriaDeNota, rutaDAutoriaDeNota, signaturaDeNota } from './autoriaNota.js';
+import { AUTORIA_BENVINGUDA, ID_COPIA_PROVA, actorAmbPobleDeLEntitat, autoriaDeNota, rutaDAutoriaDeNota, signaturaDeNota } from './autoriaNota.js';
 import { DEFAULT_AUTHOR, FORASTER } from '../../components/universal/UniversalUtils.js';
 import { RUTA_PROJECTE } from '../../config/navigation.js';
 import { ENTITAT_PILOT_ID } from '../../data/identitatsSeed.js';
@@ -19,6 +19,35 @@ test('amb una entitat activa signa l’entitat (nom i logo), mai la persona; el 
     .toEqual({ nom: 'Forn & Cia', avatar: 'https://exemple.org/forn.png', poble: '' });
   // Sense logo, cap imatge: la barra i la targeta pinten la silueta de reserva.
   expect(autoriaDeNota({ notaId: 'p', actor: { ...actor, avatar: '' }, actorId: 'O', currentUser: PEPA }).avatar).toBeNull();
+});
+
+/* Onada 6 (decisió 2 de la nit del 261009) · Si l'actor de l'entitat porta el
+   poble de l'organització (town_name, 2610081401), el poble és el seu; mai el
+   de la persona. */
+test('Onada 6 · una entitat amb el seu poble (poble o town_name de l’actor) signa des d’ell', () => {
+  const actor = { tipus: 'entitat', id: 'O', nom: 'Forn de Relleu', avatar: '' };
+  expect(autoriaDeNota({ notaId: 'p', actor: { ...actor, poble: 'Relleu' }, actorId: 'O', currentUser: PEPA }).poble).toBe('Relleu');
+  expect(autoriaDeNota({ notaId: 'p', actor: { ...actor, town_name: ' Sella ' }, actorId: 'O', currentUser: PEPA }).poble).toBe('Sella');
+  expect(autoriaDeNota({ notaId: 'p', actor, actorId: 'O', currentUser: PEPA }).poble).toBe('');
+});
+
+/* Revisió adversarial de l'Onada 6 · L'actor entitat d'IdentitatContext no
+   porta el poble: es pren del town_name de la seua fila de pertinença. */
+test('Onada 6 · actorAmbPobleDeLEntitat: el poble de la fila de pertinença; si no, el mateix actor', () => {
+  const actor = Object.freeze({ tipus: 'entitat', id: 'O', nom: 'Forn de Relleu', avatar: null, rol: 'owner', slug: 'forn', kind: 'company' });
+  const files = [{ id: 'X', town_name: 'Sella' }, { id: 'O', town_name: ' Relleu ' }];
+  expect(actorAmbPobleDeLEntitat(actor, files)).toEqual({ ...actor, poble: 'Relleu' });
+  expect(autoriaDeNota({ notaId: 'p', actor: actorAmbPobleDeLEntitat(actor, files), actorId: 'O', currentUser: PEPA }).poble).toBe('Relleu');
+  // Sense fila, sense town_name o sense llista: el mateix actor.
+  expect(actorAmbPobleDeLEntitat(actor, [{ id: 'X', town_name: 'Sella' }])).toBe(actor);
+  expect(actorAmbPobleDeLEntitat(actor, [{ id: 'O', town_name: '  ' }])).toBe(actor);
+  expect(actorAmbPobleDeLEntitat(actor, undefined)).toBe(actor);
+  // L'actor que ja el porta mana; una persona o cap actor, intactes.
+  const ambPoble = { ...actor, poble: 'Tibi' };
+  expect(actorAmbPobleDeLEntitat(ambPoble, files)).toBe(ambPoble);
+  const persona = { tipus: 'persona', id: 'O', nom: 'Pepa' };
+  expect(actorAmbPobleDeLEntitat(persona, files)).toBe(persona);
+  expect(actorAmbPobleDeLEntitat(null, files)).toBeNull();
 });
 
 test('un agent IA actiu signa amb el seu nom, la seua foto i el seu poble', () => {

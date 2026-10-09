@@ -12,7 +12,8 @@ import { Llinatge } from '../Llinatge.jsx';
 /* T40 (ordre del Mestre, 260928) · Un sol mes per a la Consola i per a
    l'editor. T6-T8 (260930) · CalendariEsdeveniments hi posa esdeveniments
    del model únic (utils/esdeveniment.js): l'Agenda del Mur, amb els dies
-   triables, i la Consola (CalendariMapa), amb la píndola d'estat de cada
+   triables (fins a l'Onada 6: ara el Mur munta les vistes, com /calendari),
+   i la Consola (CalendariMapa), amb la píndola d'estat de cada
    tasca. Després, la peça de base (NavegacioMes i GraellaMes) i, baix, la
    pastilla de data de la barra taronja, que obri el mateix mes en xicotet
    dins de la finestra de la barra (Dialeg lloc="barra"). */
@@ -110,6 +111,18 @@ const MOSTRES_DEL_MES = Object.freeze([
 const ETIQUETES_DUES_SETMANES = Object.freeze({ anterior: 'Dues setmanes abans', hui: 'Hui', seguent: 'Dues setmanes després' });
 const dataCurta = (data) => data.toLocaleDateString('ca-ES', { day: 'numeric', month: 'short', year: 'numeric' });
 
+/* Onada 6 (prompt 261009_0230, punt 1) · Clicar un esdeveniment porta a la
+   pàgina de la seua publicació (rutaDeLEsdeveniment i LinkComponent). A
+   l'espècimen, la ruta és de mostra i l'enllaç no navega: diu on portaria. */
+const rutaDeMostra = (esd) => (esd.font?.tipus === 'agenda' ? null : `/events/${esd.id}`);
+function useEnllacDeMostra() {
+  const [desti, setDesti] = useState(null);
+  const Enllac = useMemo(() => function EnllacDeMostra({ to, children, ...resta }) {
+    return <a href={to} {...resta} onClick={(event) => { event.preventDefault(); setDesti(to); }}>{children}</a>;
+  }, []);
+  return [desti, Enllac];
+}
+
 function MostraVistaMes() {
   const avui = useMemo(() => new Date(), []);
   const [cursor, setCursor] = useState(OCTUBRE_2026);
@@ -117,15 +130,17 @@ function MostraVistaMes() {
   const [diaAmple, setDiaAmple] = useState(null);
   const [diaEstret, setDiaEstret] = useState(null);
   const [diaSetmanes, setDiaSetmanes] = useState(null);
+  const [desti, Enllac] = useEnllacDeMostra();
   const nomMes = new Date(cursor.any, cursor.mes, 1).toLocaleDateString('ca-ES', { month: 'long', year: 'numeric' });
   return (
     <>
       <h4>Vista mes (octubre de 2026: cinc files)</h4>
-      <p>{diaAmple ? `Dia triat: ${diaAmple}. El «+N més» és el mateix botó del dia.` : 'Cap dia triat: el «+N més» és el botó del dia.'} Tot el mes és un sol punt de tabulació: les fletxes es mouen pels dies i Inici i Fi, a la vora de la setmana. És la vista per defecte de /calendari.</p>
+      <p>{diaAmple ? `Dia triat: ${diaAmple}. El «+N més» és el mateix botó del dia.` : 'Cap dia triat: el «+N més» és el botó del dia.'} Tot el mes és un sol punt de tabulació: les fletxes es mouen pels dies i Inici i Fi, a la vora de la setmana. És la vista per defecte de /calendari i de la pestanya Calendari del Mur.</p>
+      <p>{desti ? `L’esdeveniment portaria a ${desti}.` : 'Amb ratolí, clicar un esdeveniment porta a la pàgina de la seua publicació (l’acte de l’agenda de fora no en té); clicar el dia, fora de l’enllaç, el tria.'}</p>
       <NavegacioPeriode titol={nomMes} onAnterior={() => setCursor((c) => mouMes(c, -1))} onHui={() => setCursor(cursorDe(avui))}
         onSeguent={() => setCursor((c) => mouMes(c, 1))} />
       <VistaMes esdeveniments={MOSTRES_DEL_MES} cursor={cursor} avui={avui} locale="ca-ES" titol="Mes del poble (espècimen)"
-        diaTriat={diaAmple} onTriaDia={triaOLleva(setDiaAmple)} />
+        diaTriat={diaAmple} onTriaDia={triaOLleva(setDiaAmple)} rutaDeLEsdeveniment={rutaDeMostra} LinkComponent={Enllac} />
 
       <h4>Vista mes en un contenidor estret (mode compacte)</h4>
       <p>Per davall de 41,5em del contenidor: tires i punts sense text i «+N». La cel·la sencera continua sent el botó del dia.</p>
@@ -159,15 +174,17 @@ function MostraVistes() {
   const [diaTira, setDiaTira] = useState(() => clauDeData(sumaDies(dillunsDe(avui), 5)));
   const [diaCompacta, setDiaCompacta] = useState(null);
   const [vista, setVista] = useState('setmana');
+  const [desti, Enllac] = useEnllacDeMostra();
   return (
     <>
       <h4>Vista setmana · ampla</h4>
       <p>{diaSetmana ? `Dia triat: ${diaSetmana}. Torna’l a clicar per a llevar-lo.` : 'Cap dia triat.'} La cadena de solapaments és el dilluns; els actes sense fi, el dimarts; el que creua la mitjanit, de dimecres a dijous (per això la graella va de 0 a 24); els colors de cada font, el dijous, que acaba amb una publicació sense fi a les 23:56, pintada des de les 23:30 perquè faça l’alçada mínima (el text diu l’hora real); el de diversos dies, a la franja des del divendres.</p>
+      <p>{desti ? `L’esdeveniment portaria a ${desti}.` : 'Amb ratolí, el títol de cada bloc i de cada barra porta a la pàgina de la seua publicació (els de l’agenda de fora, no).'}</p>
       <NavegacioPeriode etiquetes={ETIQUETES_SETMANA} titol={`Setmana del ${dilluns.toLocaleDateString('ca-ES', { day: 'numeric', month: 'long', year: 'numeric' })}`}
         onAnterior={() => setDilluns((d) => mouSetmana(d, -1))} onHui={() => setDilluns(dillunsDe(avui))}
         onSeguent={() => setDilluns((d) => mouSetmana(d, 1))} />
       <VistaSetmana esdeveniments={ambFonts} dilluns={dilluns} avui={avui} locale="ca-ES" titol="Setmana del poble (espècimen)"
-        diaTriat={diaSetmana} onTriaDia={triaOLleva(setDiaSetmana)} />
+        diaTriat={diaSetmana} onTriaDia={triaOLleva(setDiaSetmana)} rutaDeLEsdeveniment={rutaDeMostra} LinkComponent={Enllac} />
 
       <h4>Vista setmana · tira estreta (mòbil)</h4>
       <p>La mateixa setmana en un contenidor estret: el component mesura la seua amplada i, per davall de 41,5em, pinta la tira (set botons de dia enganxosos, un punt als dies amb actes i la graella d’un sol dia). Ix el dissabte, amb la barra de diversos dies oberta pels dos costats; tocar el dia mostrat no el lleva.</p>
@@ -243,11 +260,14 @@ function MostraAgendaIAny() {
   const fins = useMemo(() => sumaDies(avui, 21), [avui]);
   const [any, setAny] = useState(() => avui.getFullYear());
   const [diaObert, setDiaObert] = useState(null);
+  const [desti, Enllac] = useEnllacDeMostra();
   return (
     <>
       <h4>Vista agenda</h4>
-      <p>Tres setmanes des de hui (a /calendari, el mes, des de hui si és el mes en curs). Només els dies amb actes; hui en cercle invers i, dins del seu grup, la línia d’«ara»; el punt de cada fila porta el color de la seua font (l’agenda de Sollutia, en anell).</p>
-      <VistaAgenda esdeveniments={mostres} desde={desde} fins={fins} avui={avui} locale="ca-ES" titol="Agenda del poble (espècimen)" />
+      <p>Tres setmanes des de hui (a /calendari, el mes, des de hui si és el mes en curs). Només els dies amb actes; hui en el cercle d’acció, com a Google Calendar, i, dins del seu grup, la línia d’«ara»; el punt de cada fila porta el color de la seua font (l’agenda de Sollutia, en anell).</p>
+      <p>{desti ? `L’esdeveniment portaria a ${desti}.` : 'Amb ratolí, el títol de cada fila porta a la pàgina de la seua publicació (els de l’agenda de fora, no).'}</p>
+      <VistaAgenda esdeveniments={mostres} desde={desde} fins={fins} avui={avui} locale="ca-ES" titol="Agenda del poble (espècimen)"
+        rutaDeLEsdeveniment={rutaDeMostra} LinkComponent={Enllac} />
 
       <h4>Vista agenda en un contenidor estret</h4>
       <p>La mateixa llista. Quan no hi caben la data (7rem) i les files (16rem), la data passa damunt sense cap media query: en un mòbil de 375px passa sempre; en esta mostra de 28rem encara hi caben.</p>
@@ -283,11 +303,11 @@ export default function EspecimenCalendari() {
     <Llinatge id="calendari" />
     <Especimen id="calendari" nom="Calendari · CalendariEsdeveniments, NavegacioMes, GraellaMes i SelectorDataHora"
       fitxer="src/components/PedraSeca/organismes/CalendariEsdeveniments.jsx · CalendariMes.jsx · SelectorDataHora.jsx"
-      descripcio="El mes de calendari de Pedra Seca. CalendariEsdeveniments el pinta gran amb esdeveniments del model únic (compatible amb iCalendar i Google Calendar): l’Agenda del Mur, amb els dies triables, i la Consola, amb les tasques de cada dia. L’editor el pinta en xicotet dins de la finestra flotant de la barra taronja per a triar el dia i l’hora de publicació. El marcatge és el mateix: una taula amb nom, caption i dies de la setmana abreujats (abbr amb el nom llarg)."
+      descripcio="El mes de calendari de Pedra Seca. CalendariEsdeveniments el pinta gran amb esdeveniments del model únic (compatible amb iCalendar i Google Calendar): la Consola, amb les tasques de cada dia (fins a l’Onada 6, també la pestanya Calendari del Mur, que ara munta les vistes de davall, com /calendari). L’editor el pinta en xicotet dins de la finestra flotant de la barra taronja per a triar el dia i l’hora de publicació. El marcatge és el mateix: una taula amb nom, caption i dies de la setmana abreujats (abbr amb el nom llarg)."
       contracte={[
         ['CalendariEsdeveniments.esdeveniments', 'Esdeveniment[] (creaEsdeveniment)', '—','Qualsevol font (el Mur, el Mapa, Google, un .ics) passa pel mateix model; l’organisme no sap d’on ve.'],
         ['CalendariEsdeveniments.cursor / onCanviaCursor / cursorInicial', '{ any, mes } / (cursor) => void / { any, mes }', 'el mes d’avui', 'Controlat o no: sense cursor, porta el mes sol.'],
-        ['CalendariEsdeveniments.diaTriat / onTriaDia', '\'AAAA-MM-DD\' | null / (clau) => void', 'null', 'Amb onTriaDia, cada dia és un botó (l’Agenda del Mur el porta a ?date=); sense, la cel·la és quieta (la Consola).'],
+        ['CalendariEsdeveniments.diaTriat / onTriaDia', '\'AAAA-MM-DD\' | null / (clau) => void', 'null', 'Amb onTriaDia, cada dia és un botó (fins a l’Onada 6, l’Agenda del Mur el portava a ?date=); sense, la cel·la és quieta (la Consola).'],
         ['CalendariEsdeveniments.renderEsdeveniment', '(esd) => node', 'la píndola amb el títol', 'La Consola hi posa la seua Insignia d’estat amb la classe sdp-calendari__pindola.'],
         ['CalendariEsdeveniments.navegacioClassName / children', 'string / node', '—', 'La barra «‹ Hui ›» i la ranura entre la barra i la graella (l’avís de mes buit).'],
         ['NavegacioMes.cursor / onCanvia', '{ any, mes } / (cursor) => void', '—', '«‹ Hui ›»: mes anterior, el de hui i el següent.'],
@@ -303,17 +323,17 @@ export default function EspecimenCalendari() {
       ]}
       a11y={[
         'La graella és una taula de veres: regió amb nom, caption i capçaleres amb abbr.',
-        'A l’Agenda, cada dia és un botó que ocupa la cel·la (almenys 44px), amb aria-pressed i un nom amb la data llarga, el recompte i els títols; les píndoles no són interactives.',
+        'Amb dies triables, cada dia és un botó que ocupa la cel·la (almenys 44px), amb aria-pressed i un nom amb la data llarga, el recompte i els títols; les píndoles no són interactives.',
         'En pantalla estreta les píndoles es fan punts: el text s’amaga a la vista però el lector de pantalla el continua llegint.',
         'Al selector, cada dia és un botó de 44px amb el nom llarg (dilluns, 28 de setembre de 2026); el triat porta aria-pressed i hui, aria-current="date".',
         'La pastilla és un <button aria-haspopup="dialog"> amb nom complet; Escape tanca i el focus torna a la pastilla.',
         'Si la barra que conté la pastilla s’amaga amb la finestra oberta (mòbil, columna estreta), la finestra es tanca: cap modal sense caixa deixa la pàgina inert.',
         'El camp d’hora té etiqueta visible i és un input type="time" natiu (roda nativa en iOS).',
       ]}
-      fes={['Un sol mes per a tota l’app: la Consola, l’Agenda i l’editor fan servir les mateixes peces.', 'Passar cada font pel model d’esdeveniment abans de pintar-la.', 'Dir que una data futura no programa la publicació.']}
-      noFacis={['Portar les tasques del Mapa (dades de la màquina del Mestre) a l’Agenda del Mur: es reaprofita l’organisme, mai les dades.', 'Un popover que es tanca en clicar dins (el Dropdown ho fa): per a contingut interactiu, la finestra de la barra.', 'Prometre que la publicació ixirà sola a l’hora triada.']}>
+      fes={['Un sol mes per a la Consola i l’editor: fan servir les mateixes peces (el Mur i /calendari munten les vistes de davall).', 'Passar cada font pel model d’esdeveniment abans de pintar-la.', 'Dir que una data futura no programa la publicació.']}
+      noFacis={['Portar les tasques del Mapa (dades de la màquina del Mestre) al calendari del Mur: es reaprofita l’organisme, mai les dades.', 'Un popover que es tanca en clicar dins (el Dropdown ho fa): per a contingut interactiu, la finestra de la barra.', 'Prometre que la publicació ixirà sola a l’hora triada.']}>
 
-      <h4>Agenda del Mur (dies triables)</h4>
+      <h4>Dies triables (la pestanya Calendari del Mur fins a l’Onada 6)</h4>
       <p>{diaTriat ? `Dia triat: ${diaTriat}. Torna’l a clicar per a llevar-lo.` : 'Cap dia triat: les targetes de davall serien totes les de l’agenda.'}</p>
       <CalendariEsdeveniments esdeveniments={mostres.agenda} locale="ca-ES" titol="Agenda del poble (espècimen)"
         navegacioClassName="sdp-calendari__barra" recompte={recompteActes}
@@ -354,7 +374,7 @@ export default function EspecimenCalendari() {
       descripcio="L’esquelet de les vistes de Google Calendar. La setmana: set dies, la franja de tot el dia i la graella de 24 h amb cada acte al seu minut, en columnes quan se solapen i amb una alçada mínima quan no té fi. El mes: les setmanes justes (de 4 a 6) o N setmanes des d’un dilluns (la vista 2 setmanes), una barra per setmana per als actes de diversos dies, «● HH:MM Títol» per als actes amb hora i «+N més» quan un dia no hi cap; en un contenidor estret, tires i punts sense text. Les ocurrències surten de la mateixa regla que el calendari del Mur (ocurrenciesEnRang), i el posicionament, de propietats CSS escrites des d’una ref: cap style en JSX."
       contracte={[
         ['VistaSetmana.esdeveniments / dilluns', 'Esdeveniment[] / Date', '—', 'Els actes del model i qualsevol dia de la setmana que es pinta.'],
-        ['VistaSetmana.diaTriat / onTriaDia', '\'AAAA-MM-DD\' | null / (clau) => void', 'null', 'Amb onTriaDia, cada capçalera de dia és un botó (a /calendari, el ?date=); sense, és quieta. En la tira, el dia triat de la setmana és el que es mostra, i tornar-lo a tocar no el lleva.'],
+        ['VistaSetmana.diaTriat / onTriaDia', '\'AAAA-MM-DD\' | null / (clau) => void', 'null', 'Amb onTriaDia, cada capçalera de dia és un botó (a /calendari, el ?date=); sense, és quieta. En la tira, el dia triat de la setmana és el que es mostra, i tornar-lo a tocar no el lleva. Onada 6 · Clicar la columna d’un dia fora de l’enllaç d’un esdeveniment (en tàctil, també tocar-hi un bloc) el tria, com el quadre del Mes; una barra de la franja tria el seu primer dia. Així no es lleva el triat.'],
         ['VistaSetmana.densitat', '\'responsiva\' | \'normal\' | \'compacta\'', '\'responsiva\'', 'Responsiva i normal: hora de 3rem. Compacta: hora de 2,5rem i blocs sense farciment, només amb ratolí (@media (pointer: fine)); la forma dels blocs seguix els seus llindars (formaDelBloc: 54, 78 i 102 minuts en lloc de 50, 70 i 90).'],
         ['VistaSetmana (mode)', 'l’amplada del contenidor', 'set columnes', 'Per davall de 41,5em del contenidor (useAmpladaContenidor), la tira: set botons de dia enganxosos i la graella d’un sol dia (el triat, hui o el dilluns). Cap media query de viewport.'],
         ['VistaSetmana.minimMinuts', 'number', '30', 'L’alçada mínima d’un acte sense fi (publicacions i productes); el solapament es calcula amb ella. Un acte massa tardà per a fer-la abans de mitjanit es pinta pujat (encaixaFinalDelDia), amb l’hora real.'],
@@ -366,7 +386,9 @@ export default function EspecimenCalendari() {
         ['VistaMes.maxCarrils', 'number', '3 (6 amb dilluns)', 'Els carrils que caben en un dia; si no hi cap, l’últim diu «+N més».'],
         ['VistaMes.densitat', '\'responsiva\' | \'normal\' | \'compacta\'', '\'responsiva\'', 'Responsiva: compacte en un contenidor de menys de 41,5em (tires i punts sense text, «+N»). Normal: mai compacte. Compacta: com la responsiva i, amb ratolí, cel·les més baixes.'],
         ['VistaAgenda.esdeveniments / desde / fins', 'Esdeveniment[] / Date / Date', '—', 'L’agenda del rang [desde, fins): només els dies amb actes. A /calendari, el mes, des de hui si és el mes en curs (o des del dia triat, si és anterior). Un acte de 24 h o més diu «Tot el dia» a cada dia, com la franja de VistaSetmana.'],
-        ['VistaAgenda.avui / ara', 'Date / Date | null', 'hui / el rellotge', 'Hui en cercle invers; la línia d’«ara», davant del primer acte del dia que encara no ha començat (useAra si no se’n passa cap).'],
+        ['VistaAgenda.avui / ara', 'Date / Date | null', 'hui / el rellotge', 'Hui en el cercle d’acció (Onada 6, com a Google Calendar; abans, invers); la línia d’«ara», davant del primer acte del dia que encara no ha començat (useAra si no se’n passa cap).'],
+        ['VistaMes / VistaSetmana / VistaAgenda.rutaDeLEsdeveniment', '(esd) => string | null', '—', 'Onada 6 (prompt 261009_0230, punt 1) · La ruta de l’app de la publicació de cada esdeveniment (la valida qui munta la vista: a /calendari i al Mur, calendariGlobal.js · rutaDeLEntrada). Amb ruta, la peça porta un enllaç (.sdp-cal-enllac) que hereta el color de la peça. Al mes i a la setmana només es clica amb ratolí (@media (pointer: fine)): en tàctil el toc tria el dia. A l’agenda, que no tria cap dia, en tàctil (@media (pointer: coarse)) la fila creix fins a --sdp-touch i el toc és de l’enllaç. Al mes, fora del compacte i amb tabIndex -1 (la capa és aria-hidden). Sense, el DOM de sempre.'],
+        ['VistaMes / VistaSetmana / VistaAgenda.LinkComponent', 'component | \'a\'', '\'a\'', 'El Link del router de qui munta la vista (com BarraTaronja): dins d’un amfitrió, un <a> cru navegaria la seua pàgina.'],
         ['VistaAgenda.buit / nivellTitol', 'string / 2–6', 'avís honest / 3', 'El text sense cap acte i el nivell de l’encapçalament de cada dia.'],
         ['VistaAny.esdeveniments / any', 'Esdeveniment[] / number', '—', 'Dotze mesos de sis setmanes; un punt als dies amb actes (ocurrenciesDeLaLlista de tot l’any).'],
         ['VistaAny.onTriaDia / diaTriat', '(clau) => void / \'AAAA-MM-DD\' | null', '—', 'Amb onTriaDia, cada dia és un botó (a /calendari obri la setmana del dia: ?vista=setmana&date=…); el triat es marca. Sense, quiets.'],
@@ -374,20 +396,22 @@ export default function EspecimenCalendari() {
         ['NavegacioPeriode.onAnterior / onHui / onSeguent / etiquetes', '() => void / { anterior, hui, seguent }', 'les del mes', 'Les fletxes no saben què és un període: ho diu qui la munta. L’ordre és el de les captures: «Hui», ‹, ›, títol i vista.'],
         ['NavegacioPeriode.vista / onCanviaVista / vistes / etiquetaVistes', 'string / (valor) => void / [{ valor, text }] / string', 'les cinc vistes / «Vista»', 'El selector (PillToggle): Setmana, Dues setmanes, Mes, Any i Agenda; sense onCanviaVista no n’hi ha.'],
         ['NavegacioPeriode.accions', 'node', '—', 'Entre el títol i el selector, sense embolcall: a /calendari, el botó de pantalla completa. Sense, el DOM de sempre.'],
+        ['NavegacioPeriode.nivellTitol', '2–6 | —', '—', 'Onada 6 · El títol és un encapçalament d’eixe nivell, a la mateixa fila que «Hui ‹ ›», com a Google Calendar (/calendari i el Mur hi posen el seu h3). Sense, el <p> de sempre.'],
       ]}
       a11y={[
         'La setmana: cada dia és una llista ordenada amb el nom del dia, i cada acte diu l’hora i el títol (en este ordre per al lector, encara que a la vista vaja primer el títol; un bloc curt només mostra l’inici i la fi queda per al lector); la franja és la llista «Tot el dia».',
         'A la tira de la setmana, el dia mostrat és el botó premut (aria-pressed) i la llista de la graella porta el seu nom; el punt de «té actes» és aria-hidden, perquè el nom del botó ja diu el recompte.',
         'Les capçaleres de dia (setmana) i els dies (mes) són botons d’almenys 44px amb aria-pressed, aria-current="date" per a hui i un nom amb la data llarga, el recompte i els títols; al mes, també el «+N més» que es veu (el nom conté el text visible, WCAG 2.5.3).',
-        'Les barres del mes són aria-hidden: ho diu el nom del dia o, sense onTriaDia, el text per al lector de cada dia. Els blocs i les barres no són interactius (el clic travessa la barra i tria el dia); els enllaços viuen a les targetes.',
+        'Les barres del mes són aria-hidden: ho diu el nom del dia o, sense onTriaDia, el text per al lector de cada dia. Sense rutaDeLEsdeveniment, els blocs i les barres no porten enllaç (al mes, el clic travessa la barra i tria el dia; a la setmana, el clic a la columna o a la barra tria el dia, una drecera del punter: al teclat, la capçalera); els enllaços viuen a les targetes.',
+        'Onada 6 · Amb rutaDeLEsdeveniment, cada peça porta l’enllaç a la seua publicació. Al mes, dins de la capa aria-hidden i amb tabIndex -1: la graella continua sent un sol punt de tabulació i el lector arriba a l’acte pel dia i per la targeta de davall. A la setmana i a l’agenda, l’enllaç és al lector i al teclat (el títol és el seu nom). Al mes i a la setmana només es clica amb ratolí: les peces fan 24px i en tàctil el toc passa al dia (Pedra Seca §6). A l’agenda, en tàctil, la fila fa --sdp-touch i el toc és de l’enllaç.',
         'El mes, amb onTriaDia, és una graella (role="grid" amb el seu nom, «Dies d’octubre del 2026», distint del de la regió perquè el lector no el repetisca; una fila role="row" per setmana i una cel·la role="gridcell" per dia) i un sol punt de tabulació: ← → un dia, ↑ ↓ una setmana, Inici i Fi al dilluns i al diumenge, Ctrl+Inici i Ctrl+Fi a la primera i a l’última cel·la; mai ix de la graella. El punt és el dia enfocat (o clicat) d’eixa mateixa graella, el triat, hui o l’1 del mes: en canviar de període no es queda en un dia veí. Una ajuda per al lector (aria-describedby) ho explica. Sense onTriaDia, llistes quietes.',
         'La línia d’«ara» és aria-hidden; el títol del període de la navegació és aria-live="polite".',
-        'L’agenda: cada dia és un encapçalament amb la data llarga (la curta, «oct., dj.», és aria-hidden) i una llista ordenada que s’hi referix; hui porta aria-current="date" i « (hui)» per al lector. Les files no són interactives.',
+        'L’agenda: cada dia és un encapçalament amb la data llarga (la curta, «oct., dj.», és aria-hidden) i una llista ordenada que s’hi referix; hui porta aria-current="date" i « (hui)» per al lector. Sense rutaDeLEsdeveniment, les files no són interactives.',
         'L’any: cada mes és una taula amb el seu nom; els dies dels mesos veïns són aria-hidden i no són botons. Tot l’any és un sol punt de tabulació i les fletxes es mouen pels dies (el lector ho sap per la descripció de la regió); el nom de cada dia diu la data llarga, el recompte i, si escau, «dia triat».',
         'La navegació: les fletxes són botons d’icona de 44×44 amb el nom del pas («Any anterior»); al selector, la vista premuda porta aria-pressed i, a més del color, el subratllat.',
       ]}
       fes={['Passar cada font pel model d’esdeveniment i per ocurrenciesEnRang: la graella i la llista no poden discrepar.', 'Posicionar amb propietats CSS des d’una ref (usePropietatsCss).', 'Deixar que la graella de 24 h cresca dins del visor.']}
-      noFacis={['Tocar GraellaMes, NavegacioMes o CalendariEsdeveniments per a fer estes vistes: el Mur, la Consola i l’editor no han de canviar ni un píxel.', 'Un scroll propi a la graella de 24 h.', 'Sumar 86400000 per a passar de dia: el canvi d’hora en fa de 23 i de 25 hores.']}>
+      noFacis={['Tocar GraellaMes, NavegacioMes o CalendariEsdeveniments per a fer estes vistes: la Consola i l’editor no han de canviar ni un píxel (el Mur, des de l’Onada 6, munta estes vistes).', 'Un scroll propi a la graella de 24 h.', 'Sumar 86400000 per a passar de dia: el canvi d’hora en fa de 23 i de 25 hores.', 'Fer clicables amb el dit les peces de 24px: en tàctil, el dia.']}>
       <MostraVistes />
     </Especimen>
     </>

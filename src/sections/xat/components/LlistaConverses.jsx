@@ -14,53 +14,74 @@
  * Torn 260930 (T1) · Una fila { tipus: 'poble', poble } és el grup del poble
  * de l'amfitrió que encara no existix a les dades (pobleAmfitrio.js): la pinta
  * FilaPoble i `onObriPoble(poble)` l'obri.
+ *
+ * Onada 6 (beta testers) · `peu`: un node que va darrere de la llista, FORA
+ * de la <ul> (no és cap conversa: el lector de pantalla no el compta com a
+ * fila). El porta «Informa d'un error». Revisió 261009 · També es pinta
+ * davall de l'avís d'una llista que no s'ha pogut carregar i de l'estat buit:
+ * és just quan cal informar de l'error. Mentre carrega, no. En compacte la
+ * reserva de la barra mòbil passa de la llista al peu (sdp-xat-llista--amb-peu,
+ * modules.css), i el botó queda per damunt de la barra. Sense `peu`, la
+ * llista de sempre.
  */
 import FilaConversa, { FilaComunitat } from './FilaConversa.jsx';
 import FilaPoble from './FilaPoble.jsx';
 
 export default function LlistaConverses({
   files = null, fils = [], filActiuId = null, onSelect, onObriComunitat, onObriPoble = null, locale, t,
-  estatBuit = null, avis = null, carregant = false, seleccio = null, joId = null
+  estatBuit = null, avis = null, carregant = false, seleccio = null, joId = null, peu = null
 }) {
   const llista = Array.isArray(files) ? files : fils.map((fil) => ({ clau: String(fil.id), tipus: 'fil', fil }));
+  const peuDeLaLlista = peu ? <div className="sdp-xat-llista__peu">{peu}</div> : null;
   if (avis) {
     return (
-      <div className="sdp-workspace-state" role="alert">
-        <strong>{t('section.xat.error.llista', "No s'ha pogut carregar el xat")}</strong>
-        <p>{avis}</p>
-      </div>
+      <>
+        <div className="sdp-workspace-state" role="alert">
+          <strong>{t('section.xat.error.llista', "No s'ha pogut carregar el xat")}</strong>
+          <p>{avis}</p>
+        </div>
+        {peuDeLaLlista}
+      </>
     );
   }
   if (!llista.length) {
     if (carregant) {
       return <p className="sdp-workspace-state" role="status" aria-live="polite">{t('section.xat.carregant', 'Carregant…')}</p>;
     }
-    return <div className="sdp-workspace-state" role="status">{estatBuit}</div>;
+    return (
+      <>
+        <div className="sdp-workspace-state" role="status">{estatBuit}</div>
+        {peuDeLaLlista}
+      </>
+    );
   }
   const triaDe = (clau) => (seleccio
     ? { triada: seleccio.triades.has(clau), onAlterna: () => seleccio.onAlterna(clau) }
     : null);
   return (
-    <ul className="sdp-xat-llista" aria-label={t('section.xat.llista.titol', 'Converses')}>
-      {llista.map((fila) => (
-        <li key={fila.clau} data-clau={fila.clau}>
-          {fila.tipus === 'poble' ? (
-            <FilaPoble poble={fila.poble} onObri={onObriPoble || (() => {})} t={t} />
-          ) : fila.tipus === 'comunitat' ? (
-            <FilaComunitat comunitat={fila.comunitat} onObri={onObriComunitat} t={t} seleccio={triaDe(fila.clau)} />
-          ) : (
-            <FilaConversa
-              fil={fila.fil}
-              activa={filActiuId != null && String(fila.fil.id) === String(filActiuId)}
-              onSelect={onSelect}
-              locale={locale}
-              t={t}
-              joId={joId}
-              seleccio={triaDe(fila.clau)}
-            />
-          )}
-        </li>
-      ))}
-    </ul>
+    <>
+      <ul className={peu ? 'sdp-xat-llista sdp-xat-llista--amb-peu' : 'sdp-xat-llista'} aria-label={t('section.xat.llista.titol', 'Converses')}>
+        {llista.map((fila) => (
+          <li key={fila.clau} data-clau={fila.clau}>
+            {fila.tipus === 'poble' ? (
+              <FilaPoble poble={fila.poble} onObri={onObriPoble || (() => {})} t={t} />
+            ) : fila.tipus === 'comunitat' ? (
+              <FilaComunitat comunitat={fila.comunitat} onObri={onObriComunitat} t={t} seleccio={triaDe(fila.clau)} />
+            ) : (
+              <FilaConversa
+                fil={fila.fil}
+                activa={filActiuId != null && String(fila.fil.id) === String(filActiuId)}
+                onSelect={onSelect}
+                locale={locale}
+                t={t}
+                joId={joId}
+                seleccio={triaDe(fila.clau)}
+              />
+            )}
+          </li>
+        ))}
+      </ul>
+      {peuDeLaLlista}
+    </>
   );
 }

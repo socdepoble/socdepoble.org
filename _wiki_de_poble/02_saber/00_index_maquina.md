@@ -15,6 +15,7 @@ El codi executable viu fora de la Wiki, a `src/` i `tooling/`; ací només hi ha
 - [[02_saber/architecture/ADR-2026-09-SOLLUTIA-MODEL-B|ADR-2026-09-SOLLUTIA-MODEL-B]] · Model B: el frontend, 100% modular, s'endolla a Sollutia sense que Sollutia l'injecte ni el governe.
 - [[02_saber/architecture/ADR-2026-10-APPS-DEL-DISPOSITIU|ADR-2026-10-APPS-DEL-DISPOSITIU]] · esmena de l'ADR-2026-08 (pendent de signatura): dades del dispositiu amb deures d'exportació i la closca de /app/* al service worker del lloc propi.
 - [[02_saber/architecture/ADR-2026-11-PAGINACIO-SECCIONS|ADR-2026-11-PAGINACIO-SECCIONS]] · capacitat opcional del port (pendent de signatura): «Mostra més» al Mur i al Mercat després de les 50 primeres publicacions, amb un cursor (created_at, id).
+- [[02_saber/architecture/ADR-2026-12-MODULS-OPCIONALS|ADR-2026-12-MODULS-OPCIONALS]] · mòduls opcionals (pendent de signatura): el contracte sdp.modul.v1, el nucli SocDePoble.nucli, la guarda financera i el pressupost de pes; la Gestoria, primer mòdul.
 - [[00_arquitectura_tecnica_unificada]]
 
 ## Estàndards del codi

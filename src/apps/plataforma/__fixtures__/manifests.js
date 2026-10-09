@@ -37,3 +37,18 @@ export function manifestExternDeProva(canvis = {}) {
   delete base.carrega;
   return { ...base, ...canvis };
 }
+
+/* Una integritat sintètica amb la forma de l'SRI sha384 (64 caràcters de base64). */
+export const INTEGRITAT_DE_PROVA = `sha384-${'A'.repeat(63)}B`;
+
+/** Un manifest de mòdul (sdp.modul.v1) mínim i vàlid: cos del mateix origen i nucli ^1. */
+export function manifestModulDeProva(canvis = {}) {
+  const base = manifestDeProva({
+    id: 'llibreta',
+    titol: { ca: 'La Llibreta' },
+    cos: { cami: '/moduls/llibreta/cos-Ab12Cd34.js', integrity: INTEGRITAT_DE_PROVA },
+    nucli: '^1'
+  });
+  delete base.carrega;
+  return { ...base, ...canvis };
+}

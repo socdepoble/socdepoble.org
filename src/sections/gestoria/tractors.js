@@ -154,4 +154,76 @@ export const TRACTOR_TAULER = Object.freeze({
   caducitatDies: 90
 });
 
-export const TRACTORS_GESTORIA = Object.freeze([TRACTOR_FACTURES, TRACTOR_CORREUS, TRACTOR_TAULER]);
+/* Onada 6, ordre del Mestre (261009): «importar tot l'històric (des de l'any
+   passat fins al trimestre passat)», «calcular les despeses massives en IA»,
+   «fer simulacions» i «descarregar-se un full de càlcul per a la gestora».
+   Tractor NOU (decisió per defecte 6 de la nit del 261009), separat dels tres
+   d'abans: les seues fonts són la vista de l'Històric, el seu nucli i les
+   peces del Tauler que reutilitza (lectors del banc, lectura reduïda, unió de
+   comptes i targetes), que només s'importen. Cap font dels altres tres canvia,
+   i per això les seues empremtes aprovades continuen valent. El que el
+   tractor llig ho classifica dins: només en torna dates, imports, categoria i
+   proveïdor, mai el text dels conceptes. */
+const UI_HISTORIC = [
+  'src/sections/gestoria/historic/Historic.jsx',
+  'src/sections/gestoria/historic/PanellSimulacio.jsx',
+  'src/sections/gestoria/historic/useHistoric.js'
+];
+
+const NUCLI_HISTORIC = [
+  'src/sections/gestoria/despeses/nucli/categories.js',
+  'src/sections/gestoria/despeses/nucli/serieHistorica.js',
+  'src/sections/gestoria/historic/nucli/llibreGestora.js',
+  'src/sections/gestoria/historic/nucli/operacions.js',
+  'src/sections/gestoria/historic/nucli/targetesHistoric.js',
+  'src/sections/gestoria/historic/nucli/tractorHistoric.js',
+  'src/sections/gestoria/impostos/nucli/simulacio.js'
+];
+
+/* Les peces de la UI del Tauler que la vista reutilitza (targetes, pàgina
+   de targeta, xifra amagada i ull): també són fonts d'este tractor. */
+const PECES_TAULER_HISTORIC = [
+  'src/sections/gestoria/tauler/Tauler.jsx',
+  'src/sections/gestoria/tauler/TargetaTauler.jsx'
+];
+
+/* Integració de l'Onada 6, ordre del Mestre (261009): «xifra-ho i protegeix-ho
+   perquè el Mestre puga provar amb dades reals». La vista es pinta darrere del
+   cofre xifrat i hi desa, xifrada, la configuració de la persona: el cofre
+   sencer (la porta, el hook, l'autobloqueig, el magatzem i el nucli
+   criptogràfic) és part del que s'executa amb les dades, i per això entra a
+   l'empremta d'este tractor (tractors/clausura.test.js ho exigix). Cap
+   d'estos fitxers és font dels altres tres. */
+const COFRE_HISTORIC = [
+  'src/sections/gestoria/cofre/PortaCofre.jsx',
+  'src/sections/gestoria/cofre/autobloqueig.js',
+  'src/sections/gestoria/cofre/cofre.js',
+  'src/sections/gestoria/cofre/magatzemCofre.js',
+  'src/sections/gestoria/cofre/nucli/cripto.js',
+  'src/sections/gestoria/cofre/useCofre.js'
+];
+
+export const TRACTOR_HISTORIC = Object.freeze({
+  schema: 'sdp.tractor.v1',
+  id: 'gestoria.historic',
+  nom: 'Gestoria · Històric del banc i despesa en IA',
+  versio: '1.0.0',
+  descripcio: 'Llig només en este ordinador els extractes del banc que tries (fins a 60, Norma 43 o el CSV de moviments), classifica cada moviment per categoria i proveïdor sense guardar-ne el text, i en calcula l’històric per mes, trimestre i any, la despesa en IA, les estimacions d’impostos i el llibre per a la gestora.',
+  fitxa: 'src/sections/gestoria/fitxes/gestoria_historic.md',
+  fonts: Object.freeze([...PORTA_APROVACIO, ...UI_HISTORIC, ...NUCLI_HISTORIC, ...PECES_TAULER_HISTORIC, ...NUCLI_TAULER, ...COFRE_HISTORIC].sort()),
+  llig: Object.freeze([
+    'Els extractes del banc que tries amb el selector del sistema: Norma 43 (.n43, .aeb, .c43, .q43, .txt, .dat) o el CSV de moviments, fins a 60 fitxers de 10 MB',
+    'Amb el cofre obert, la teua configuració desada (regles, reclassificacions, paràmetres, suposicions i escenari)'
+  ]),
+  escriu: Object.freeze([
+    'Res durant la lectura',
+    'Cada canvi de la teua configuració, xifrat al cofre d’este navegador (AES-GCM-256); mai els moviments del banc, que es tornen a llegir dels extractes',
+    'Si ho demanes i ho confirmes: el llibre XLSX per a la gestora (sense xifrar), descarregat'
+  ]),
+  xarxa: 'cap',
+  dadesPersonals: true,
+  nivellMinim: 'signatura',
+  caducitatDies: 90
+});
+
+export const TRACTORS_GESTORIA = Object.freeze([TRACTOR_FACTURES, TRACTOR_CORREUS, TRACTOR_TAULER, TRACTOR_HISTORIC]);

@@ -10,11 +10,13 @@ import { useCoreContent } from '../../app/contexts/CoreContentContext';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { PillToggle, Carregant, Boto } from '../../components/PedraSeca/index.js';
 import { dataDElement } from '../../components/universal/editorial.js';
-/* Ordre del Mestre, 261001 · el calendari del Mur es diu CalendariMur (abans
-   AgendaMur); la targeta, les pàgines del sistema i l'ordre viuen fora
-   (TargetaDelMur, targetesMur.js) perquè la pàgina /calendari pinte les
-   MATEIXES targetes amb la MATEIXA data. */
-import { CalendariMur } from './CalendariMur.jsx';
+/* Ordre del Mestre, 261001 · la targeta, les pàgines del sistema i l'ordre
+   viuen fora (TargetaDelMur, targetesMur.js) perquè la pàgina /calendari pinte
+   les MATEIXES targetes amb la MATEIXA data.
+   Onada 6 (prompt 261009_0230, punt 1) · i la pestanya Calendari munta el
+   MATEIX calendari que /calendari (CalendariDelMur → CalendariDelPoble);
+   CalendariMur queda sense importador. */
+import { CalendariDelMur } from './CalendariDelMur.jsx';
 import { TargetaDelMur } from './TargetaDelMur.jsx';
 import { momentDeLaTargeta, perMomentDescendent, targetesDeSistema } from './targetesMur.js';
 import { acteAEsdeveniment, acteOcorreElDia } from './agendaMur.js';
@@ -33,6 +35,19 @@ const SECCIONS_DEL_FILTRE = Object.freeze({ all: ['mur', 'events', 'mercat'], ev
 const SENSE_MES = () => false;
 const SENSE_ERROR = () => null;
 const SENSE_CARREGA = async () => false;
+/* Onada 6 · Els paràmetres de la URL que escriu el calendari de la pestanya
+   (useEstatCalendari), menys el ?date=, que és el filtre comú del Mur. */
+const PARAMS_DEL_CALENDARI = Object.freeze(['vista', 'setmana', 'mes', 'any']);
+
+/* El filtre ?category= (les etiquetes de cada element), el mateix per a la
+   graella i per al calendari de la pestanya. */
+function perCategoria(items, categoria) {
+  if (!categoria) return items;
+  return items.filter(i => {
+    const labels = i.labels || [{ text: i.isSystem ? 'Sistema' : (i.type || 'Publicació') }];
+    return labels.some(l => l.text.toLowerCase() === categoria.toLowerCase());
+  });
+}
 
 export default function MurSection() {
   const {
@@ -111,15 +126,24 @@ export default function MurSection() {
       });
     }
     
-    if (categoryFilter) {
-      items = items.filter(i => {
-        const labels = i.labels || [{ text: i.isSystem ? 'Sistema' : (i.type || 'Publicació') }];
-        return labels.some(l => l.text.toLowerCase() === categoryFilter.toLowerCase());
-      });
-    }
-
-    return items;
+    return perCategoria(items, categoryFilter);
   }, [allItems, filterType, dateFilter, categoryFilter, models]);
+
+  /* Onada 6 · Els actes del calendari de la pestanya: tots els del Mur (amb
+     el ?category=, com la graella), sense el filtre ?date=: el dia triat el
+     filtra el mateix calendari, amb la mateixa regla (acteOcorreElDia). */
+  const actesDelCalendari = useMemo(
+    () => perCategoria(allItems.filter((i) => i.type === 'event'), categoryFilter),
+    [allItems, categoryFilter]
+  );
+
+  /* Onada 6 · En eixir de la pestanya Calendari es lleven la vista i el
+     període que hi ha escrit el calendari; el ?date= es queda (el filtre de
+     sempre de la graella). */
+  const deixaElCalendari = () => {
+    if (filterType !== 'events' || !PARAMS_DEL_CALENDARI.some((clau) => searchParams.has(clau))) return;
+    setSearchParams(Object.fromEntries(PARAMS_DEL_CALENDARI.map((clau) => [clau, null])));
+  };
 
   const config = {
     title: t('section.mur.kicker', 'Mur'),
@@ -169,10 +193,11 @@ export default function MurSection() {
             etiqueta="Filtres del mur"
             valor={isMapOpen ? 'mapa' : filterType}
             onCanvi={(v) => {
-              if (v === 'mapa') { 
-                setIsMapOpen((obert) => !obert); 
+              if (v !== 'events') deixaElCalendari();
+              if (v === 'mapa') {
+                setIsMapOpen((obert) => !obert);
                 setFilterType('all');
-                return; 
+                return;
               }
               setFilterType(v);
               setIsMapOpen(false);
@@ -202,24 +227,26 @@ export default function MurSection() {
           )}
 
           {/* T6 (ordre del Mestre, 260930) · el Calendari porta el seu mes damunt
-              de les targetes. Clicar un dia és el filtre ?date= de sempre (les
-              targetes de davall ja s'hi filtren); un null el lleva. Només els
-              actes del Mur: mai les tasques del Mapa de la Consola. */}
-          {filterType === 'events' && (
-            <CalendariMur actes={sortedEvents} diaTriat={dateFilter} onTriaDia={(dia) => setSearchParams({ date: dia })} />
+              de les targetes. Clicar un dia és el filtre ?date= de sempre; un
+              null el lleva. Només els actes del Mur: mai les tasques del Mapa
+              de la Consola.
+              Onada 6 (prompt 261009_0230, punt 1) · El MATEIX calendari que
+              /calendari (CalendariDelMur), amb les seues targetes de davall
+              (el dia triat o el període que es veu, amb TargetaDelMur i
+              .sdp-card-grid): en esta pestanya, la graella general no es pinta. */}
+          {filterType === 'events' ? <CalendariDelMur actes={actesDelCalendari} /> : (
+            <div className="sdp-card-grid">
+              {/* Ordre del Mestre, 261001 · la targeta de cada element és
+                  TargetaDelMur, la mateixa de la pàgina /calendari. T5 · un acte
+                  porta el seu model (el mateix del Calendari i del filtre ?date=).
+                  Ordre del Mestre (261007) · Comentar, el menú de dues vies de
+                  totes les targetes: cap gestor de llista. */}
+              {displayedItems.map((item) => (
+                <TargetaDelMur key={`${item.type}-${item.id}`} item={item}
+                  esdeveniment={item.type === 'event' ? modelDe(models, item) : null} />
+              ))}
+            </div>
           )}
-
-          <div className="sdp-card-grid">
-            {/* Ordre del Mestre, 261001 · la targeta de cada element és
-                TargetaDelMur, la mateixa de la pàgina /calendari. T5 · un acte
-                porta el seu model (el mateix del Calendari i del filtre ?date=).
-                Ordre del Mestre (261007) · Comentar, el menú de dues vies de
-                totes les targetes: cap gestor de llista. */}
-            {displayedItems.map((item) => (
-              <TargetaDelMur key={`${item.type}-${item.id}`} item={item}
-                esdeveniment={item.type === 'event' ? modelDe(models, item) : null} />
-            ))}
-          </div>
 
           {/* Decisió 4 del Mestre (261007) · «Carregar-ne més», al final de la
               llista i només amb més pàgines. Boto desactiva i anuncia la

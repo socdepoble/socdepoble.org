@@ -31,7 +31,13 @@
  *     substituïx una altra F3 viva (no anul·lada) de la cadena. Si no, dos
  *     factures completes per a la mateixa venda, amb l'IVA comptat dos
  *     vegades: FACTURA_JA_SUBSTITUIDA, amb la llista a `detalls`. Anul·lada
- *     la primera F3, el tiquet es pot tornar a substituir.
+ *     la primera F3, el tiquet es pot tornar a substituir;
+ *   · UN DESTINATARI PER RECTIFICATIVA (Onada 6, 261009; correcció de la
+ *     revisió del front de facturació): les factures que corregix una
+ *     rectificativa són totes del mateix destinatari (el mateix NIF, o cap si
+ *     són tiquets). Si no, RECTIFICADES_DE_DIVERSOS_CLIENTS, amb els números
+ *     a `detalls`. El destinatari de la rectificativa pot ser un altre: és la
+ *     manera de corregir-ne les dades.
  *
  * Sense carreres: llegir el llibre, calcular el número, construir la factura
  * i el registre i afegir-lo és UNA sola secció. Les emissions d'este cas d'ús
@@ -82,6 +88,24 @@ function referenciesSenseAlta(factura, registres) {
     if (anulades.has(clau)) return [`${ref.numSerie} del ${ref.dataExpedicio} està anul·lada.`];
     return [];
   });
+}
+
+/**
+ * Els números de les factures que rectifica la factura nova quan no són totes
+ * del mateix destinatari (per NIF; una simplificada no en té): una factura té
+ * un sol destinatari, i la rectificativa que en corregix diverses també.
+ * Llista buida si n'és un, o si en rectifica una o cap. Correcció de la
+ * revisió del front de facturació (261009).
+ * @param {object} factura la de creaFacturaEmesa
+ * @param {ReadonlyArray<object>} registres la cadena de l'emissor, llegida dins de la secció
+ * @returns {string[]}
+ */
+function destinatarisDiversos(factura, registres) {
+  const rectificades = factura.rectificades ?? [];
+  if (rectificades.length < 2) return [];
+  const altes = new Map(registres.filter((r) => r.tipusRegistre === 'alta').map((r) => [facturaDe(r), r]));
+  const nifs = new Set(rectificades.map((ref) => altes.get(facturaDe(ref))?.factura?.destinatari?.nif ?? ''));
+  return nifs.size > 1 ? rectificades.map((ref) => ref.numSerie) : [];
 }
 
 /**
@@ -211,6 +235,10 @@ export function creaEmissio({ port, config, llegat, subtle, zona } = {}) {
         const senseAlta = referenciesSenseAlta(factura, registres);
         if (senseAlta.length) {
           throw errorAmbCodi('FACTURA_RECTIFICADA_INEXISTENT', `Només es rectifica, o se substituïx, una factura emesa per esta empresa i no anul·lada: ${senseAlta.join(' ')}`, senseAlta);
+        }
+        const diverses = destinatarisDiversos(factura, registres);
+        if (diverses.length) {
+          throw errorAmbCodi('RECTIFICADES_DE_DIVERSOS_CLIENTS', `Una rectificativa corregix factures d'un sol destinatari, i estes no ho són: ${diverses.join(', ')}.`, diverses);
         }
         const repetides = substitucionsRepetides(factura, registres);
         if (repetides.length) {

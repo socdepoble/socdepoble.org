@@ -17,6 +17,10 @@
  *     gestoria.tauler, i tocar-la en tornaria l'aprovació a «pendent».
  *     Com Aprendre, anar-hi desmunta la closca (la lectura dels bancs, que
  *     viu en memòria, s'ha de tornar a fer en tornar al Tauler).
+ *   · /app/gestoria/historic · Onada 6, ordre del Mestre (261009): l'històric
+ *     del banc, la despesa en IA, les simulacions i el llibre per a la
+ *     gestora (sections/gestoria/historic), amb el seu tractor propi
+ *     ('gestoria.historic'). També pel pont i amb la seua PaginaApp.
  *
  * EL PONT · Este fitxer és l'ÚNIC de src/apps que importa codi de
  * src/sections/gestoria: una excepció escrita i provada a la llista blanca de
@@ -39,8 +43,14 @@ import { ENTRADA_APRENDRE, ENTRADA_FACTURACIO, desviamentDeLaConsulta } from './
 const VISTES = import.meta.env.DEV ? Object.freeze({
   tauler: lazyRoute(() => import('../../sections/gestoria/tauler/ShellGestoria.jsx')),
   aprendre: lazyRoute(() => import('../../sections/gestoria/aprendre/Aprendre.jsx')),
-  facturacio: lazyRoute(() => import('../../sections/gestoria/facturar/Facturacio.jsx'))
+  facturacio: lazyRoute(() => import('../../sections/gestoria/facturar/Facturacio.jsx')),
+  historic: lazyRoute(() => import('../../sections/gestoria/historic/Historic.jsx'))
 }) : null;
+
+/* Onada 6, ordre del Mestre (261009): «Històric i IA» entra pel pont, com la
+   Facturació, i porta la seua pròpia PaginaApp (la boina amb l'ull de
+   privacitat). */
+const ENTRADA_HISTORIC = 'historic';
 
 const ETIQUETES_APRENDRE = Object.freeze([
   Object.freeze({ text: 'GESTORIA', className: 'sdp-badge-system' }),
@@ -82,6 +92,14 @@ export default function AppGestoria() {
           <Facturacio />
         </Suspense>
       </PaginaApp>
+    );
+  }
+  if (entrada === ENTRADA_HISTORIC) {
+    const Historic = VISTES.historic;
+    return (
+      <Suspense fallback={<Carregant etiqueta="Carregant l’Històric…" />}>
+        <Historic />
+      </Suspense>
     );
   }
   const Closca = VISTES.tauler;

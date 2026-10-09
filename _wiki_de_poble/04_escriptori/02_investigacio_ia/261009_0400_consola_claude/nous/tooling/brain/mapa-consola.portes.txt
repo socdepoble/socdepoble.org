@@ -1,0 +1,73 @@
+Proposta per a la closca del Mapa (tooling/brain/mapa-consola.mjs) · paquet 261009_0400 Consola a zero avisos
+
+NO ÉS AL PLA. És governança (tooling/) i no s'ha executat: el hook d'esta sessió no deixa córrer node sobre
+tooling/. No lleva cap avís: substituïx dos N/A fixos per una mesura quan la porta té resultat.
+
+Context. Fins a l'Onada 6, construeixMapa.js posava conformitat-documental i cadena-portes a N/A dins del codi,
+encara que tooling/gates/porta-documents.mjs i tooling/gates/run-portes.mjs existixen (lector de l'Onada 6,
+construeixMapa.js:809-810 abans del canvi). Des de l'Onada 6, el compilador (src/, ja aplicat) accepta dues
+fonts noves i les mesura (metricaDePorta, construeixMapa.js):
+  · fonts.portaDocuments = l'eixida de checkDocuments(root) (porta-documents.mjs:11-46): { valid, checked, errors }
+  · fonts.cadenaPortes = l'eixida de run-portes.mjs --diagnostic (run-portes.mjs:135): { valid, failures }, i
+    `total` (passos) si la closca el sap. Amb total i failures: passos verds sobre el total; si no, 1/1 o 0/1.
+Sense la font, la mètrica continua N/A (mai un verd).
+
+1) Porta de documents (tots els .md de l'Escriptori fora de la zona humana)
+
+   L'ABAST, primer (correcció de la revisió adversarial, 261009). Per defecte, checkDocuments(arrel) només
+   valida els .md canviats respecte de HEAD o sense seguiment (porta-documents.mjs:25). Amb l'arbre net torna
+   { valid: true, checked: 0, errors: [] }: no ha comprovat res. El compilador ja ho tracta així
+   (construeixMapa.js · metricaDePorta): checked 0 és N/A, mai 1/1. Però una mètrica que només val quan
+   l'arbre és brut no diu la conformitat de l'Escriptori. Per això la closca la crida amb { all: true }:
+   recorre sencer _wiki_de_poble/04_escriptori (porta-documents.mjs:15-22), llevat de la zona humana, i
+   la mètrica es llig «documents de l'Escriptori sense cap error, sobre els comprovats». Si el Mestre vol
+   la conformitat dels canvis (el que mira el pre-commit), cal llevar { all: true } i acceptar el N/A amb
+   l'arbre net.
+
+   a. Import, després de la línia de fonts-vigilancia.mjs:
+        import { checkDocuments } from '../gates/porta-documents.mjs';
+      porta-documents.mjs importa ../documental/cli.mjs (ROOT); la closca ja carrega eixa cadena per
+      context-local.mjs (comentari de capçalera de mapa-consola.mjs, punt 1), així que no afig cap risc nou de càrrega.
+
+   b. Funció nova, al costat de frontissa():
+        /** El resultat de la porta de documents sobre tot l'Escriptori; null si no s'ha pogut mesurar (mai un verd). */
+        function portaDocuments(arrel) {
+          try {
+            const r = checkDocuments(arrel, { all: true });
+            return { valid: r.valid === true, checked: r.checked, errors: Array.isArray(r.errors) ? r.errors : [] };
+          } catch { return null; }
+        }
+      Com ho mesura el compilador: cada document amb algun error («RUTA.md: …» o «Sense àncora: RUTA.md») compta
+      una vegada; un error que no és de cap document compta com un document més que falla; valid false sense
+      cap error en resta almenys un. Resultat: (checked − fallits) / checked.
+
+   c. A l'objecte que torna recullFonts, després de `estat: resumEstat(arrel)`:
+        portaDocuments: portaDocuments(arrel),
+
+   Risc: el middleware (tooling/vite/consola-iaia.mjs) recompila el Mapa a cada petició de /__iaia/mapa.json.
+   Amb { all: true }, checkDocuments valida tots els documents de l'Escriptori en cada lectura. Si es nota,
+   la mateixa funció pot guardar el resultat per HEAD i per l'empremta de `git status --porcelain`.
+
+2) Cadena de portes (cara: executa totes les portes i les proves; MAI a cada petició)
+
+   a. run-portes.mjs, en acabar (amb --diagnostic i sense), escriu .agents/runtime/portes-ultim.json:
+        { "data": ISO, "mode": "diagnostic" | "normal" | "nomes-portes", "valid": bool, "failures": n, "total": passos }
+      (`total` és seleccionats.length, run-portes.mjs:116; `failures`, el comptador de la línia 119).
+      Atenció: sense --diagnostic, la cadena fa process.exit(1) a la primera porta roja (run-portes.mjs:129):
+      cal escriure el fitxer abans d'eixe exit, amb failures 1 i el total de passos seleccionats.
+   b. La closca el llig com a font opcional i només el passa si és d'avui (si és més vell, null):
+        cadenaPortes: (() => {
+          const u = json('.agents/runtime/portes-ultim.json', { opcional: true });
+          const t = Date.parse(u?.data);
+          return Number.isFinite(t) && ara - t < 24 * 3600 * 1000 ? u : null;
+        })(),
+      (recullFonts ja rep `ara`, mapa-consola.mjs:232.)
+
+Comprovació després d'aplicar-ho (Mestre):
+   node tooling/brain/mapa-consola.mjs
+     · conformitat-documental ha de dir «documents sense error / documents comprovats» de l'Escriptori
+       (N/A només si l'Escriptori no té cap document comprovable o la porta no s'ha pogut executar);
+     · cadena-portes, N/A fins a la primera execució de la cadena del dia, i després passos verds sobre el total.
+   npx vitest run src/sections/consola/mapa/construeixMapa.test.js (proves «les portes de documents i de la
+   cadena es mesuren quan la closca en passa el resultat; si no, N/A» i «la porta de documents que no ha
+   comprovat cap document és N/A, mai un verd», ja verdes).

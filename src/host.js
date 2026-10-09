@@ -51,7 +51,8 @@ import { normalizeBackendConfig, backendScope } from './config/backendConfig.js'
 import { setRuntimePolicy, getRuntimePolicy, esOrigenParePermes } from './config/runtimePolicy.js';
 import { avisaClausDescartades, capaDelPaquet, separaClausDelPaquet } from './config/capaDelPaquet.js';
 import { sanitizeHtml } from './utils/sanitize.js';
-import { registraAppExterna } from './apps/plataforma/registreApps.js';
+import { registraAppExterna, registraModul as registraModulAlRegistre } from './apps/plataforma/registreApps.js';
+import { carregadorDelDocument } from './apps/plataforma/carregaModul.js';
 
 /* ═══════════════════════ Estat de l'arrencada ═══════════════════════ */
 
@@ -357,6 +358,30 @@ export function registraApp(manifest) {
   return registraAppExterna(manifest);
 }
 
+/**
+ * Mòduls opcionals (contracte sdp.modul.v1, ADR-2026-12). Un mòdul és una
+ * app que no viatja dins del paquet: el seu fitxer de registre (modul.js)
+ * crida registraModul(manifest), amb el cos ({ cami, integrity }) i el rang
+ * del nucli. Es pot cridar abans d'adoptar (el provisional l'encua) o
+ * després: el registre és viu. Delega en registraModul del registre
+ * (apps/plataforma/registreApps.js), que el valida.
+ *
+ * @returns {{ ok: boolean, errors: string[], manifest: object|null }}
+ */
+export function registraModul(manifest) {
+  return registraModulAlRegistre(manifest);
+}
+
+/**
+ * El cos d'un mòdul es lliura des del seu script, mentre s'executa:
+ * SocDePoble.lliuraCos(id, (nucli) => Component). Només val per a un mòdul
+ * que la plataforma està carregant i des del script que hi ha injectat
+ * (apps/plataforma/carregaModul.js); la resta s'ignora i torna false.
+ */
+export function lliuraCos(id, fabrica) {
+  return carregadorDelDocument.lliuraCos(id, fabrica);
+}
+
 /* Ordres del pont d'iframe (`SDP_HOST_CMD`), les mateixes que atén el
    gestor de missatges de baix. contracteAmfitrio.js · ordresIframe. */
 export const ORDRES_IFRAME = Object.freeze(['SDP_PING', 'injectaSessio', 'expulsaSessio', 'arrenca']);
@@ -372,7 +397,15 @@ export function exposaGlobal(objectiu = (typeof window !== 'undefined' ? window 
     return existent.value ?? null;
   }
 
-  const api = Object.freeze({ configura, arrenca, arrencaAuto, deferArrenca, estat, CONTRACTE_BACKEND, injectaSessio, expulsaSessio, quanLlest, isReady: true, registraApp });
+  /* `nucli` (sdp.modul.v1): React, la plataforma, la Pedra Seca del contracte
+     i el router, congelats i versionats (apps/plataforma/nucliModuls.js). Val
+     null fins que un mòdul el demana: el paquet no el porta fins llavors.
+     Mai hi ha el port del backend ni els contexts de sessió i d'identitat. */
+  const api = Object.freeze({
+    configura, arrenca, arrencaAuto, deferArrenca, estat, CONTRACTE_BACKEND, injectaSessio, expulsaSessio, quanLlest, isReady: true,
+    registraApp, registraModul, lliuraCos,
+    get nucli() { return carregadorDelDocument.nucli(); }
+  });
   Object.defineProperty(objectiu, 'SocDePoble', { value: api, writable: false, configurable: false });
   
   processarCua();

@@ -25,9 +25,16 @@ import { quanDe } from './mapa/calendariMapa.js';
 import { camiDe, esSenseLector } from './mapa/fluxosMapa.js';
 import { textCadencia, textLlancador } from './mapa/mapaContent.js';
 import {
-  FONT_MAPA, concorda, darrer, etiquetaBona, etiquetaPendent, mono, normalitzaSlug, plural, taulaAvisosDe, taulaDades,
+  FONT_MAPA, concorda, darrer, etiquetaDEstat, mono, normalitzaSlug, plural, taulaAvisosDe, taulaDades,
   text
 } from './xifresComu.js';
+import { problemesDAvisos } from './problemesConsola.js';
+
+/* Correcció de l'Onada 6 (revisió adversarial: requisit 9, «cada targeta») ·
+   Cada peça diu a la vista els avisos que el Mapa en fa, el més greu primer i
+   amb la marca de la seua severitat: els mateixos de la taula «Avisos de la
+   peça» de la seua pàgina. */
+const problemesDe = (mapa, id) => problemesDAvisos(mapa.avisos.filter((a) => a.node === id));
 
 const cosDe = (id) => {
   const tall = String(id).indexOf(':');
@@ -36,28 +43,38 @@ const cosDe = (id) => {
 const noms = (nodes) => nodes.map((n) => n.atributs?.arnes ?? etiquetaNode(n)).join(', ');
 const peca = (id) => ({ node: id });
 
-/* ── Els estats, amb les classes del Panell de Control ───────────────── */
+/* ── Els estats, amb els colors del semàfor ──────────────────────────────
+   Onada 6 (requisit 8) · VIU i ACTIU, verd; MORT i SENSE CONSUMIDOR, roig;
+   la resta (SENSE LLANÇADOR, PARCIAL, DESCONEGUT…), taronja: semafor.js ·
+   COLOR_D_ESTAT, l'única taula. Derogat per l'Onada 6: les classes del Panell
+   de Control (ACTIU en blau i MORT en el mateix to pàl·lid que DESCONEGUT). */
 
 export const ESTAT_TASCA = Object.freeze({
-  viu: etiquetaBona('VIU'),
-  mort: etiquetaPendent('MORT'),
-  'declarat-sense-llancador': etiquetaPendent('SENSE LLANÇADOR'),
-  'llancador-sense-declaracio': etiquetaPendent('SENSE DECLARACIÓ'),
-  desconegut: etiquetaPendent('DESCONEGUT')
+  viu: etiquetaDEstat('VIU'),
+  mort: etiquetaDEstat('MORT'),
+  'declarat-sense-llancador': etiquetaDEstat('SENSE LLANÇADOR'),
+  'llancador-sense-declaracio': etiquetaDEstat('SENSE DECLARACIÓ'),
+  desconegut: etiquetaDEstat('DESCONEGUT')
 });
 
-export function estatArnes(a) {
-  if (!a.candats) return etiquetaPendent('SENSE CANDATS');
-  if (a.acreditats === a.candats) return etiquetaBona('ACTIU');
-  if (a.acreditats) return etiquetaPendent('PARCIAL');
+/** El text de l'estat d'un arnés: ACTIU, PARCIAL, DESCONEGUT, SENSE CONSUMIDOR o SENSE CANDATS. */
+export function textEstatArnes(a) {
+  if (!a.candats) return 'SENSE CANDATS';
+  if (a.acreditats === a.candats) return 'ACTIU';
+  if (a.acreditats) return 'PARCIAL';
   // T10 (ordre del Mestre, 260930): candats per acreditar, com els de Codex.
-  return a.desconeguts === a.candats ? etiquetaPendent('DESCONEGUT') : etiquetaPendent('SENSE CONSUMIDOR');
+  return a.desconeguts === a.candats ? 'DESCONEGUT' : 'SENSE CONSUMIDOR';
 }
 
-export function estatCandat(c) {
-  if (c.acreditat === true) return etiquetaBona('ACTIU');
-  return c.acreditat === false ? etiquetaPendent('SENSE CONSUMIDOR') : etiquetaPendent('DESCONEGUT');
+export const estatArnes = (a) => etiquetaDEstat(textEstatArnes(a));
+
+/** El text de l'estat d'un candat: ACTIU, SENSE CONSUMIDOR o DESCONEGUT. */
+export function textEstatCandat(c) {
+  if (c.acreditat === true) return 'ACTIU';
+  return c.acreditat === false ? 'SENSE CONSUMIDOR' : 'DESCONEGUT';
 }
+
+export const estatCandat = (c) => etiquetaDEstat(textEstatCandat(c));
 
 /** La icona d'un candat: acreditat, desmentit, de git o per acreditar. */
 export const iconaCandat = (c) => (c.acreditat === true ? 'lock' : c.acreditat === false ? 'lockOpen' : c.arnes === 'git' ? 'gitBranch' : 'circleDashed');
@@ -102,6 +119,7 @@ export const FAMILIES = Object.freeze([
       titol: a.nom,
       subtitol: `${plural(a.candats, 'candat', 'candats')} · ${arrencada(a.arrencada)}`,
       etiquetes: estatArnes(a),
+      problemes: problemesDe(mapa, a.node.id),
       detall: () => ({
         taules: [
           {
@@ -140,6 +158,7 @@ export const FAMILIES = Object.freeze([
         titol: etiquetaNode(c.node),
         titolPrivat: 'Carregador d’arrencada',
         subtitol: `carrega ${plural(docs, 'document', 'documents')} i ${plural(skills, 'skill', 'skills')} · ${c.perQui.length ? `el carrega ${noms(c.perQui)}` : 'cap arnés declara que el carrega'}`,
+        problemes: problemesDe(mapa, c.node.id),
         detall: () => ({
           taules: [
             taulaDades('El carregador', [['Ruta', mono(camiDe(c.node))]]),
@@ -177,6 +196,7 @@ export const FAMILIES = Object.freeze([
       subtitol: c.scripts.length ? `${c.arnes} · dispara ${c.scripts.map(darrer).join(', ')}` : `${c.arnes} · sense script declarat`,
       subtitolPrivat: c.scripts.length ? `${c.arnes} · dispara ${plural(c.scripts.length, 'script', 'scripts')}` : null,
       etiquetes: estatCandat(c),
+      problemes: problemesDe(mapa, c.id),
       detall: () => ({
         taules: [
           taulaDades('El candat', [
@@ -206,6 +226,7 @@ export const FAMILIES = Object.freeze([
       subtitol: t.script ? `${quanDe(t)} · ${darrer(t.script)}` : quanDe(t),
       subtitolPrivat: t.script ? quanDe(t) : null,
       etiquetes: ESTAT_TASCA[t.estat],
+      problemes: problemesDe(mapa, `tasca:${t.id}`),
       detall: () => ({
         taules: [
           taulaDades('La tasca', [
@@ -235,7 +256,8 @@ export const FAMILIES = Object.freeze([
       titol: etiquetaNode(p.node),
       titolPrivat: 'Lloc del sòl',
       subtitol: `hi ${concorda(p.escriuen.length, 'escriu', 'escriuen')} ${p.escriuen.length} · el ${concorda(p.lligen.length, 'llig', 'lligen')} ${p.lligen.length}`,
-      etiquetes: esSenseLector(p) ? etiquetaPendent('SENSE LECTOR') : null,
+      etiquetes: esSenseLector(p) ? etiquetaDEstat('SENSE LECTOR') : null,
+      problemes: problemesDe(mapa, p.node.id),
       detall: () => ({
         taules: [
           taulaDades('El lloc', [['Ruta', mono(camiDe(p.node))]]),
@@ -259,6 +281,7 @@ export const FAMILIES = Object.freeze([
       clau: a.node.id,
       titol: a.node.atributs?.arnes ?? etiquetaNode(a.node),
       subtitol: `llig ${a.llig.length} · deixa ${a.escriu.length}`,
+      problemes: problemesDe(mapa, a.node.id),
       detall: () => ({
         taules: [
           { titol: 'Què llig', columnes: ['Peça', 'Confiança'], files: a.llig.map((r, i) => ({ clau: `${r.a}|${r.confianca}|${i}`, celes: [peca(r.a), { confianca: r.confianca }] })), buit: 'No declara què llig.' },

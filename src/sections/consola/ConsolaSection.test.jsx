@@ -206,17 +206,20 @@ test('/consola amb Mapa: etiquetes d’un colp d’ull calculades amb les dades,
   await screen.findByText('Dades no disponibles en este entorn');
   const nav = screen.getByRole('navigation', { name: 'Pàgines de la Consola' });
 
-  // L'únic avís del Mapa és un orfe (mitjana): per a l'explorador és una
-  // fallada (enllaços trencats o orfes); per a la resta, Important on es veu.
+  // L'únic avís del Mapa és un orfe (mitjana): Important on es veu.
+  // Onada 6 (semàfor) · on no hi ha res greu, el verd («En ordre»); Agents
+  // atòmics pren el color de les seues peces (FALTA és taronja). Correcció de
+  // l'Onada 6 (revisió adversarial) · també a l'Explorador: l'orfe és mitjà,
+  // taronja a totes les targetes. Derogat: «per a l'explorador és una fallada».
   expect(etiquetesPerTargeta(nav)).toEqual({
     'El pols del cervell': ['Sense font:neutre'],
-    'Explorador del cervell': ['Cal reparar:error'],
-    'Fluxos de treball': [],
-    'Calendari de processos': [],
+    'Explorador del cervell': ['Important:avis'],
+    'Fluxos de treball': ['En ordre:exit'],
+    'Calendari de processos': ['En ordre:exit'],
     'Inventari de skills': ['Important:avis'],
     'Entrades i eixides': ['Important:avis'],
-    'Agents atòmics': [],
-    'Actors del Mas': [],
+    'Agents atòmics': ['Important:avis'],
+    'Actors del Mas': ['En ordre:exit'],
     'Avisos i salut': ['Important:avis']
   });
 });
@@ -237,12 +240,14 @@ test('T3 · /consola amb Mapa: cada coberta desglossa la seua pàgina, el més g
   const nav = screen.getByRole('navigation', { name: 'Pàgines de la Consola' });
   expect(estatsPerTargeta(nav)).toEqual({
     'El pols del cervell': null,
-    'Explorador del cervell': ['1 peça òrfena:error'],
+    // Correcció de l'Onada 6 (revisió adversarial) · el color de la severitat de l'avís (mitjana, taronja).
+    'Explorador del cervell': ['1 peça òrfena:avis'],
     'Fluxos de treball': null,
     'Calendari de processos': null,
     'Inventari de skills': ['1 skill amb semàfor ambre:avis', '1 skill òrfena:avis'],
     'Entrades i eixides': ['2 skills opaques:avis'],
-    'Agents atòmics': ['Fluxos de treball: falta:info', 'Tauler: falta:info', 'Qui avisa quan algo es trenca: sense mesura:info'],
+    // Onada 6 · FALTA, taronja com l'etiqueta de la peça; SENSE MESURA, neutre.
+    'Agents atòmics': ['Fluxos de treball: falta:avis', 'Tauler: falta:avis', 'Qui avisa quan algo es trenca: sense mesura:neutre'],
     'Actors del Mas': null,
     'Avisos i salut': ['1 avís mitjà:avis']
   });
@@ -253,6 +258,50 @@ test('T3 · /consola amb Mapa: cada coberta desglossa la seua pàgina, el més g
     expect(llista.closest('.sp-card-text')).not.toBeNull();
     expect(llista.querySelector('h1, h2, h3, h4, h5, h6, .sp-card-label')).toBeNull();
   }
+});
+
+/* Onada 6 (requisit 9: informació en superfície) · Cada targeta del tauler
+   diu quins són els seus problemes, no només quants, sense entrar; i continua
+   portant a la seua pàgina (ordre del Mestre, 261004). */
+const problemesPerTargeta = (contenidor) => Object.fromEntries([...contenidor.querySelectorAll('article.sp-card')].map((t) => {
+  const llista = t.querySelector('.sdp-consola__problemes');
+  return [t.querySelector('h3').textContent, llista ? [...llista.children].map((li) => li.textContent) : null];
+}));
+
+test('Onada 6 · /consola amb Mapa: cada targeta diu quins problemes té, a la vista i sense deixar de ser clicable', async () => {
+  fonts.mapa = MAPA;
+  render(<ConsolaSection />);
+  await screen.findByText('Dades no disponibles en este entorn');
+  const nav = screen.getByRole('navigation', { name: 'Pàgines de la Consola' });
+  /* Correcció de l'Onada 6 (revisió adversarial) · cada problema porta davant
+     la seua marca, una Insignia amb el color del semàfor: la severitat de
+     l'avís, el color de la skill a l'Inventari o el que li passa. */
+  expect(problemesPerTargeta(nav)).toEqual({
+    'El pols del cervell': null,
+    'Explorador del cervell': ['mitjana core-identitat · orfe'],
+    'Fluxos de treball': null,
+    'Calendari de processos': null,
+    'Inventari de skills': ['ambre core-identitat · orfe'],
+    'Entrades i eixides': ['opaca core-identitat', 'opaca sdp-workflow'],
+    'Agents atòmics': null,
+    'Actors del Mas': null,
+    'Avisos i salut': ['mitjana core-identitat · orfe']
+  });
+  const marques = (contenidor) => [...contenidor.querySelectorAll('.sdp-consola__problemes li > .sdp-insignia')]
+    .map((i) => `${i.textContent}:${[...i.classList].find((c) => c.startsWith('sdp-insignia--')).slice(14)}`);
+  expect(marques(nav)).toEqual(['mitjana:avis', 'ambre:avis', 'opaca:avis', 'opaca:avis', 'mitjana:avis']);
+  for (const llista of nav.querySelectorAll('.sdp-consola__problemes')) {
+    expect(llista.tagName).toBe('UL');
+    expect(llista.closest('.sp-card-text')).not.toBeNull();
+    expect(llista.getAttribute('aria-label')).toBe('Quins problemes hi ha');
+    // Darrere dels estats de la coberta.
+    expect(llista.previousElementSibling.className).toBe('sdp-consola__estats');
+  }
+  // Totes continuen portant a la seua pàgina.
+  expect([...nav.querySelectorAll('article.sp-card')].every(esClicable)).toBe(true);
+  // I «El Mas en xifres» també: la xifra de les òrfenes diu quina.
+  const xifres = screen.getByRole('heading', { level: 2, name: 'El Mas en xifres' }).closest('section');
+  expect(problemesPerTargeta(xifres)['1 skill òrfena']).toEqual(['mitjana core-identitat · orfe']);
 });
 
 test('T3 · /consola amb Mapa: el to del primer estat és el de l’etiqueta de nivell', async () => {
@@ -292,7 +341,7 @@ test('T3 · /consola: la coberta no fa saltar «Canvis nous», perquè la signat
   await screen.findByText('Dades no disponibles en este entorn');
   const nav = screen.getByRole('navigation', { name: 'Pàgines de la Consola' });
   expect(nav.querySelectorAll('.sdp-consola__estats').length).toBeGreaterThan(0);
-  expect(Object.values(etiquetesPerTargeta(nav)).flat()).not.toContain('Canvis nous:info');
+  expect(Object.values(etiquetesPerTargeta(nav)).flat()).not.toContain('Canvis nous:neutre');
 });
 
 test('/consola: «Canvis nous» quan el resum ha canviat des de l’última visita d’este visitant', async () => {
@@ -301,9 +350,10 @@ test('/consola: «Canvis nous» quan el resum ha canviat des de l’última visi
   render(<ConsolaSection />);
   await screen.findByText('Dades no disponibles en este entorn');
   const etiquetes = etiquetesPerTargeta(screen.getByRole('navigation', { name: 'Pàgines de la Consola' }));
-  expect(etiquetes['Explorador del cervell']).toEqual(['Cal reparar:error', 'Canvis nous:info']);
-  expect(etiquetes['Calendari de processos']).toEqual([]);           // el mateix resum que va vore
-  expect(etiquetes['Fluxos de treball']).toEqual([]);                // mai vista: no hi ha base
+  // Onada 6 · «Canvis nous» no és cap gravetat: neutre, darrere del nivell del semàfor.
+  expect(etiquetes['Explorador del cervell']).toEqual(['Important:avis', 'Canvis nous:neutre']);
+  expect(etiquetes['Calendari de processos']).toEqual(['En ordre:exit']);   // el mateix resum que va vore
+  expect(etiquetes['Fluxos de treball']).toEqual(['En ordre:exit']);        // mai vista: no hi ha base per al «nou»
 });
 
 test('obrir una subpàgina amb la font carregada la marca com a vista', async () => {
@@ -525,8 +575,9 @@ test('/consola/pols: tres targetes amb boina, cada una porta a la pàgina del se
     .toEqual(['carrega', 'rebuts', 'skills'].map((id) => `/consola/pols/${id}`));
   expect(resums.every((t) => t.querySelector('.sp-card-footer .sp-card-connect'))).toBe(true);
   expect(resums[0].querySelector('.sdp-consola__dada').textContent).toMatch(/^Recompte d’artefactes actius encara no disponible/);
+  // Onada 6 · les skills de consola.json es poden jutjar (verd); els rebuts sense cap rebut datat, no.
   expect(etiquetesPerTargeta(graella)).toEqual({
-    'Càrrega documental': ['Sense font:neutre'], Rebuts: [], Skills: []
+    'Càrrega documental': ['Sense font:neutre'], Rebuts: [], Skills: ['En ordre:exit']
   });
   // Cap desplegable ni cap botó que n'obriga: el detall és la pàgina del panell.
   expect(document.querySelector('details, [aria-controls^="pols-"]')).toBeNull();
@@ -649,7 +700,8 @@ test('/consola/pols: rebuts de més de 7 dies porten «Important»; de 7 o menys
   fonts.consola = ambRebutDe(7, -60 * 1000);       // un minut abans del llindar
   render(<ConsolaSection />);
   await screen.findByText('2 rebuts de lectura');
-  expect(etiquetaRebuts()).toEqual([]);
+  // Onada 6 (semàfor) · amb un rebut datat i fresc, el verd.
+  expect(etiquetaRebuts()).toEqual(['En ordre:exit']);
 });
 
 /* Correcció 261004 (verificador de la segona passada, punt 2) · El recompte
@@ -740,10 +792,17 @@ test('/consola: una alerta al cim quan el Mapa porta un codi de vigilància, amb
      del LEDGER»), pel títol de la targeta. Derogat per l'ordre del Mestre del
      261004 (xat: cap xifra solta): «sense porta pròpia: a Avisos i salut
      s'entra per la seua targeta». */
+  /* Onada 6 (contradiccions) · La frase del LEDGER ja no en fa la causa els
+     fòssils ni les línies mal formades (es compten a part i poden ser zero), i
+     la seua xifra ho diu: «LEDGER amb la signatura trencada», no «0 línies
+     del LEDGER per revisar». Derogat: «té segells fòssils o línies mal formades».
+     Correcció de l'Onada 6 (revisió adversarial) · i diu les dues causes de
+     l'evidència: editat sense tornar-lo a segellar, o sense segell. */
+  const FRASE_LEDGER = 'La signatura del LEDGER no és vàlida: el cos del Llibre d’Obra no quadra amb el seu segell (s’ha editat sense tornar-lo a segellar) o li falta el segell. Els segells fòssils i les línies mal formades es compten a part.';
   expect([...alerta.querySelectorAll('li')].map((li) => li.textContent)).toEqual([
     `El segell no quadra amb el disc: hi ha skills fora del segell o divergents, i cal reconciliar-lo abans de confiar en cap empremta. On: .agents/SKILLS_SEAL.json · Evidència: ${EVIDENCIA_SEGELL} · La seua xifra: Segell sense mesura`,
-    `La signatura del LEDGER no és vàlida: el Llibre d’Obra té segells fòssils o línies mal formades. On: .agents/LEDGER.md · Evidència: ${EVIDENCIA_LEDGER} · La seua xifra: LEDGER sense mesura`,
-    'La signatura del LEDGER no és vàlida: el Llibre d’Obra té segells fòssils o línies mal formades. On: .agents/LEDGER.md · La seua xifra: LEDGER sense mesura'
+    `${FRASE_LEDGER} On: .agents/LEDGER.md · Evidència: ${EVIDENCIA_LEDGER} · La seua xifra: LEDGER amb la signatura trencada`,
+    `${FRASE_LEDGER} On: .agents/LEDGER.md · La seua xifra: LEDGER amb la signatura trencada`
   ]);
   // La ruta va en tipografia de màquina.
   expect([...alerta.querySelectorAll('li > code.sdp-consola__mono')].map((c) => c.textContent))
@@ -870,12 +929,14 @@ test('/consola/salut amb Mapa: els detalls són desplegables de la Consola', asy
   render(<ConsolaSection />);
   await screen.findAllByText(/^Instantània del Mapa: /);
   const detalls = [...document.querySelectorAll('details')];
-  expect(detalls.map((d) => d.className)).toEqual(Array(5).fill('sdp-consola__detall'));
+  // Onada 6 (requisit 10) · un desplegable més, el primer: els avisos agrupats per causa arrel.
+  expect(detalls.map((d) => d.className)).toEqual(Array(6).fill('sdp-consola__detall'));
   /* Correcció 261004 (verificador de la segona passada, punt 2) · cap
      recompte al títol del desplegable: la xifra és a la seua targeta.
      Derogat per l'ordre del Mestre del 261004 (xat: cap xifra solta): «Veure
      els 1 avisos». */
-  expect(detalls[0].querySelector('summary').textContent).toBe('Veure els avisos, el més greu primer');
+  expect(detalls[0].querySelector('summary').textContent).toBe('Veure els avisos agrupats per causa arrel');
+  expect(detalls[1].querySelector('summary').textContent).toBe('Veure els avisos, el més greu primer');
   expect(detalls.every((d) => d.querySelector('summary > svg[aria-hidden="true"]'))).toBe(true);
 });
 

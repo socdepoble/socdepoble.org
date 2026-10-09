@@ -68,9 +68,17 @@ function NavegacioDeProva() {
   );
 }
 
-function munta(ruta, { basename = '' } = {}) {
+/* Onada 6 (261009): la guarda financera d'interruptors.js només obri la
+   Gestoria quan Sóc de Poble és l'ama del document. Este muntatge és el lloc
+   propi, com src/main.jsx (manageDocumentHead: true, fora d'iframe i sense
+   __SDP_EMBEDDED__), i el criteri el calcula esAmaDelDocument de veres: cap
+   `amaDelDocument` forçat per l'entorn. Un amfitrió no declara la capçalera
+   (externalConfig buit). */
+const DEL_LLOC = Object.freeze({ manageDocumentHead: true });
+
+function munta(ruta, { basename = '', externalConfig = DEL_LLOC } = {}) {
   return render(
-    <UIProvider>
+    <UIProvider externalConfig={externalConfig}>
       <MemoryRouter rutaInicial={ruta} basename={basename}>
         <ProveidorPlataforma entorn={{ produccio: false }}>
           <Routes>
@@ -193,13 +201,28 @@ test('la fletxa real de la barra conserva el document de la Wiki i la seua consu
   expect(container.querySelector('.sdp-gestoria-closca')).toBeNull();
 });
 
+/* La guarda financera (Onada 6, 261009) és de la Gestoria, no de la Wiki:
+   dins d'un amfitrió que no declara manageDocumentHead, la Wiki s'obri igual
+   i la Gestoria diu per què no s'obri, sense pintar-ne res. */
+test('dins d’un amfitrió, la Wiki s’obri i la Gestoria explica que només s’obri a la pàgina pròpia', async () => {
+  const { container } = munta('/wikidepoble?item=identitat', { externalConfig: {} });
+  await screen.findByRole('heading', { level: 1, name: 'Identitat' });
+  expect(container.querySelector('.sdp-wiki-workspace')).toBeTruthy();
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  navega('Ves a la Gestoria');
+  expect(await screen.findByText('Esta app no es pot obrir ací')).toBeTruthy();
+  expect(screen.getByText(/Guarda dades financeres/)).toBeTruthy();
+  expect(ruta()).toBe('/app/gestoria/tauler');
+  senseGestoria(container);
+});
+
 test('en memòria i amb base WordPress: l’enllaç antic es queda a la Wiki i no toca la URL ni l’historial de l’amfitrió', async () => {
   const push = vi.spyOn(window.history, 'pushState');
   const replace = vi.spyOn(window.history, 'replaceState');
   const urlAbans = window.location.href;
   const estatAbans = window.history.state;
   const llargariaAbans = window.history.length;
-  const { container } = munta('/wikidepoble?item=gestoria_aprendre', { basename: '/poble' });
+  const { container } = munta('/wikidepoble?item=gestoria_aprendre', { basename: '/poble', externalConfig: {} });
   await screen.findByRole('heading', { level: 1, name: 'Wiki de Poble' });
   await new Promise((resolve) => setTimeout(resolve, 0));
   expect(ruta()).toMatch(/^\/wikidepoble(?:\?|$)/);

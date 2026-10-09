@@ -52,15 +52,19 @@ describe('el nucli de facturació és pur', () => {
      entren al cens, purs i sense endollar com la resta. Integració final
      (ordre del Mestre, 261004): entra emissio.js, el cas d'ús d'emissió (F02
      de l'auditoria de Codex), pur i també sense endollar. */
-  /* 261007: hi entra el perfil fiscal (magatzemPerfil.js), amb la seua prova. */
-  test('el cens: els mòduls de la fase 0, de l’onada 2, de la integració final i el perfil fiscal, sense cap JSX', () => {
+  /* 261007: hi entra el perfil fiscal (magatzemPerfil.js), amb la seua prova.
+     Onada 6 (261009, front gestoria-facturació): hi entren el dibuix del QR
+     (qrDibuix.js, que només importa comu.js) i l'XML de prova dels registres
+     (registre/xmlAeat.js, que només importa comu.js i empremta.js), purs i
+     amb les seues proves. */
+  test('el cens: els mòduls de la fase 0, de l’onada 2, de la integració final, el perfil fiscal i el dibuix del QR, sense cap JSX', () => {
     expect(PRODUCCIO).toEqual([
       `${CARRIL}/comu.js`, `${CARRIL}/configEmpresa.js`, `${CARRIL}/emissio.js`, `${CARRIL}/facturaEmesa.js`, `${CARRIL}/llegat.js`,
       `${CARRIL}/magatzemPerfil.js`,
-      `${CARRIL}/pressupost.js`, `${CARRIL}/registre/cadena.js`, `${CARRIL}/registre/empremta.js`,
+      `${CARRIL}/pressupost.js`, `${CARRIL}/qrDibuix.js`, `${CARRIL}/registre/cadena.js`, `${CARRIL}/registre/empremta.js`,
       `${CARRIL}/registre/port.js`, `${CARRIL}/registre/portIndexedDB.js`, `${CARRIL}/registre/qr.js`,
       `${CARRIL}/registre/registreAlta.js`, `${CARRIL}/registre/registreAnulacio.js`, `${CARRIL}/registre/validacio.js`,
-      `${CARRIL}/serie.js`
+      `${CARRIL}/registre/xmlAeat.js`, `${CARRIL}/serie.js`
     ]);
   });
 

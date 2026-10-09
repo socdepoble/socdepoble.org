@@ -29,6 +29,7 @@ import { buidaEsborranys } from './esborranys.js';
 import { fixaBaseRecursos } from '../../config/assetResolver.js';
 import { permetOrigenMitjans } from '../../utils/sanitize.js';
 import { AGENTS_MAP } from '../../data/agentsSeed.js';
+import { CARA_DE_LA_IAIA } from '../../data/xatsPerDefecte.js';
 
 const mocks = vi.hoisted(() => ({
   navigate: vi.fn(),
@@ -83,7 +84,11 @@ const NODE = 'https://node.example';
 const POBLE = { id: 'la-torre-de-les-macanes', nom: 'Gent de la Torre' };
 const CARA = '/assets/towns/la-torre-de-les-macanes/2.jpg';
 const TORRE = { id: POBLE.id, title: 'La Torre de les Maçanes', image_url: '/assets/towns/la-torre-de-les-macanes/1.jpg', avatar_url: CARA };
-const IAIA = AGENTS_MAP.IAIA.avatar_url;
+/* Onada 6 (tasca 12) · La IAIA arriba amb l'avatar del padró i el xat pinta la
+   seua cara: la il·lustració «Festa del Poble», retallada per l'enquadrament
+   'iaia' d'Avatar (CaraXat). */
+const IAIA_PADRO = AGENTS_MAP.IAIA.avatar_url;
+const IAIA = CARA_DE_LA_IAIA.src;
 const LOGO = '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg';
 const COLLA = '/assets/uploads/avatars/mixa-comic.png';
 const GOOGLE = 'https://lh3.googleusercontent.com/a/pepa=s96-c';
@@ -141,7 +146,7 @@ function ambSessio({ titolComunitat = POBLE.nom } = {}) {
     { id: 'c-torre', tipus: 'comunitat', titol: titolComunitat, subjecte, imatgeUrl: null },
     { id: 'a-torre', tipus: 'canal', titol: 'Avisos', comunitatId: 'c-torre', subjecte, rol: 'membre', ultimAl: ara },
     { id: 'g-torre', tipus: 'grup', titol: 'General', comunitatId: 'c-torre', subjecte, rol: 'membre', ultimAl: ara },
-    { id: 'f-iaia', tipus: 'directe', titol: 'IAIA MarIA', imatgeUrl: IAIA, ultimAl: ara },
+    { id: 'f-iaia', tipus: 'directe', titol: 'IAIA MarIA', imatgeUrl: IAIA_PADRO, ultimAl: ara },
     { id: 'f-sdp', tipus: 'directe', titol: 'Sóc de Poble', imatgeUrl: LOGO, ultimAl: ara },
     { id: 'g-colla', tipus: 'grup', titol: 'Colla de la Font', imatgeUrl: COLLA, ultimAl: ara },
     { id: 'f-pepa', tipus: 'directe', titol: 'Pepa', imatgeUrl: GOOGLE, ultimAl: ara },
@@ -212,6 +217,17 @@ test('sense sessió i sense base (dev): les mateixes cares, amb la ruta de sempr
   munta(senseSessio());
   expect(caresDe(llista())).toEqual({ [POBLE.nom]: CARA, 'IAIA MarIA': IAIA, 'Sóc de Poble': LOGO });
   expect(totesLesImatges().every((src) => src.startsWith('/assets/'))).toBe(true);
+});
+
+/* Onada 6 (tasca 12) · Només la IAIA porta l'enquadrament de la cara. */
+test('la cara de la IAIA porta l’enquadrament «iaia», a la llista amb sessió i sense; cap altra cara', () => {
+  for (const valor of [senseSessio(), ambSessio()]) {
+    munta(valor);
+    const enquadrats = [...llista().querySelectorAll('.sdp-avatar--enquadrat')].map((a) => a.getAttribute('title'));
+    expect(enquadrats).toEqual(['IAIA MarIA']);
+    expect(llista().querySelector('.sdp-avatar[title="IAIA MarIA"]').classList.contains('sdp-avatar--enquadrat-iaia')).toBe(true);
+    cleanup();
+  }
 });
 
 test('amb sessió a un amfitrió: cada font porta la seua cara; els recursos propis, amb la base; la resta, intacta', async () => {

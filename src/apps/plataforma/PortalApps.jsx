@@ -34,6 +34,7 @@ const TEXT_MOTIU = Object.freeze({
   'persona-apagada': 'L’has apagada tu. La pots tornar a encendre quan vulgues.',
   'sense-capacitat': 'El servidor d’este node encara no té el que esta app necessita.',
   'document-no-propi': 'Guarda dades de salut: només s’obri a la pàgina pròpia de Sóc de Poble, mai dins d’una altra web.',
+  'document-no-propi-financeres': 'Guarda dades financeres: només s’obri a la pàgina pròpia de Sóc de Poble, mai dins d’una altra web.',
   'sense-dret': 'És una app premium i este node encara no en té el dret. Sóc de Poble és un projecte lliure: el premium paga el servei, no el codi.'
 });
 

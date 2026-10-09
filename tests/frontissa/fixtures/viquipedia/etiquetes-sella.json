@@ -1,0 +1,6 @@
+{
+  "captureId": "viquipedia-etiquetes-sella-261009",
+  "capturedAt": "2026-10-08T23:02:50.782Z",
+  "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&format=json&formatversion=2&origin=*&maxlag=5&ids=Q2247607%7CQ54936&props=labels&languages=ca",
+  "body": {"entities":{"Q2247607":{"type":"item","id":"Q2247607","labels":{"ca":{"language":"ca","value":"la Marina Baixa"}}},"Q54936":{"type":"item","id":"Q54936","labels":{"ca":{"language":"ca","value":"província d'Alacant"}}}},"success":1}
+}

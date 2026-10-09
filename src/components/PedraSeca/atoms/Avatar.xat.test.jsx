@@ -15,9 +15,11 @@ import FilaConversa, { FilaComunitat } from '../../../sections/xat/components/Fi
 import { agrupaComunitats, mapejaFil } from '../../../sections/xat/missatges.js';
 import { localXat, reiniciaLocalXat } from '../../../data/localXat.js';
 import { fixaBaseRecursos } from '../../../config/assetResolver.js';
-import { AGENTS_MAP } from '../../../data/agentsSeed.js';
+import { CARA_DE_LA_IAIA } from '../../../data/xatsPerDefecte.js';
 
-const IAIA = AGENTS_MAP.IAIA.avatar_url;
+/* Onada 6 (tasca 12) · La IAIA arriba amb l'avatar d'AGENTS_MAP i el xat en
+   pinta la cara: «Festa del Poble», enquadrada (CaraXat). */
+const IAIA = CARA_DE_LA_IAIA.src;
 const LOGO = '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg';
 /* Mateix origen que la pàgina, com el plugin-url de WordPress. */
 const PAQUET = `${window.location.origin}/wp-content/plugins/socdepoble-enxufe/dist`;

@@ -35,8 +35,12 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu — i
 
 
 
-- [[261008_2032_prompt_claude]]
-- [[261008_2032_pla_implementacio_claude]]
+- [[../10_actes/261009_0745_acta_marmota]]
+- [[261009_0310_auditoria_claude]]
+- [[261009_0245_pla_implementacio_onada6]]
+- [[261009_0245_pla_implementacio_onada6]]
+- [[261009_0230_prompt_claude_onada6]]
+- [[261008_2345_pla_implementacio_onada5]]
 
 Tancament autoritzat: rutes Gestoria/Wiki, avatars i paquet 1.0.3. Els altres documents es conserven com a relleu o fronts ajornats per a la pròxima sessió.
 
@@ -120,6 +124,37 @@ Fitxers moguts a l'històric a mà per MarIA per a netejar l'escriptori, atès q
 ## Laboratori de tractors (codi en quarantena, pendent d'instal·lar)
 
 Una àncora per fitxer, agrupades per carpeta. La porta SCC (`tooling/gates/verificador-scc.mjs`) exigix que cada fitxer de l'Escriptori, laboratori inclòs, tinga enllaç en este índex, i un camí escrit entre accents greus no compta com a enllaç. Les àncores porten la ruta des de l'Escriptori perquè hi ha noms repetits entre subcarpetes.
+
+### 261009_0400_higiene_claude
+
+Onada 6, torn torn_fc4dc922 de Claude: motor de l'Escriptori net (porta Olivera v4 amb «convocatòria»), tancament i despertar amb la porta, cron d'higiene L0/L1/L2 amb launchd, Plaquetes sense receptes duplicades, tres skills i inventari de brossa verificat. Res d'este laboratori està aplicat: s'aplica amb executor-mutacio.mjs i lease del Mestre després de l'aprovació a la Wiki (FLUX_APROVACIO).
+
+- [[02_investigacio_ia/261009_0400_higiene_claude/LLEGIU_PRIMER.txt]]
+- [[02_investigacio_ia/261009_0400_higiene_claude/FLUX_APROVACIO.txt]]
+- [[02_investigacio_ia/261009_0400_higiene_claude/INVENTARI_BROSSA.txt]]
+- [[02_investigacio_ia/261009_0400_higiene_claude/PECES.txt]]
+- [[02_investigacio_ia/261009_0400_higiene_claude/prepara-pla.mjs]]
+- [[02_investigacio_ia/261009_0400_higiene_claude/substitucions.json]]
+- [[02_investigacio_ia/261009_0400_higiene_claude/lectura/core-empaquetat-wp.SKILL.md.txt]]
+- [[02_investigacio_ia/261009_0400_higiene_claude/lectura/core-higiene-escriptori.SKILL.md.txt]]
+- [[02_investigacio_ia/261009_0400_higiene_claude/lectura/wiki-documentacio-i-reflex.SKILL.md.txt]]
+- [[02_investigacio_ia/261009_0400_higiene_claude/nous/.agents/olivera-fase.json]]
+- [[02_investigacio_ia/261009_0400_higiene_claude/nous/scripts/immunitari/org.socdepoble.higiene.plist.txt]]
+- [[02_investigacio_ia/261009_0400_higiene_claude/nous/tooling/higiene/cron_higiene.mjs]]
+
+### 261009_0400_consola_claude
+
+Onada 6, torn torn_fc4dc922 de Claude: paquet de governança per a dur la Consola de 36 a 3 avisos (catàleg de Claude, LEDGER, core-llegibilitat-text, sdp-clon-loiverse, core-higiene-escriptori, core-maquetacio-markdown i les dues portes de la closca). Res d'este laboratori està aplicat (LLEGIU_PRIMER, decisions D1-D5).
+
+- [[02_investigacio_ia/261009_0400_consola_claude/LLEGIU_PRIMER.txt]]
+- [[02_investigacio_ia/261009_0400_consola_claude/prepara-pla.mjs]]
+- [[02_investigacio_ia/261009_0400_consola_claude/nous/substitucions.json]]
+- [[02_investigacio_ia/261009_0400_consola_claude/nous/claude_skills_enllacos.txt]]
+- [[02_investigacio_ia/261009_0400_consola_claude/nous/tooling/brain/mapa-consola.portes.txt]]
+- [[02_investigacio_ia/261009_0400_consola_claude/nous/.agents/skills/core-higiene-escriptori/SKILL.md.txt]]
+- [[02_investigacio_ia/261009_0400_consola_claude/nous/.agents/skills/core-llegibilitat-text/SKILL.md.txt]]
+- [[02_investigacio_ia/261009_0400_consola_claude/nous/.agents/skills/core-maquetacio-markdown/SKILL.md.txt]]
+- [[02_investigacio_ia/261009_0400_consola_claude/nous/.agents/skills/sdp-clon-loiverse/SKILL.md.txt]]
 
 ### 261006_0300_ledger_claude
 
@@ -714,6 +749,10 @@ Enllaços a peces ja existents, verificats al disc; no s’han mogut ni editat e
 
 ## Arxivat amb la Porta Olivera
 
+- [[../90_arxiu_historic/261009_0032_auditoria_claude_onada5]]
+- [[../90_arxiu_historic/261008_2345_prompt_claude_onada5]]
+- [[../90_arxiu_historic/261008_2032_pla_implementacio_claude]]
+- [[../90_arxiu_historic/261008_2032_prompt_claude]]
 - [[../90_arxiu_historic/261008_1740_auditoria_onada4_claude]]
 - [[../90_arxiu_historic/261008_1649_informe_progres_claude]]
 - [[../90_arxiu_historic/261008_1521_informe_progres_claude]]

@@ -14,6 +14,17 @@
  *     refusa i se'n mostra el nou;
  *   · abans d'emetre, la confirmació: una factura emesa no s'esborra (es
  *     rectifica o s'anul·la), i això es diu.
+ * Onada 6 (261009, front «gestoria-facturació»: emetre de veres):
+ *   · la retenció d'IRPF (cap, 7 % o 15 %) a les factures amb client, i el
+ *     total a pagar que en resulta;
+ *   · la data de l'operació, si és d'un altre dia que la factura;
+ *   · l'exempció de l'article 20 de la Llei de l'IVA, al selector de l'IVA;
+ *   · la rectificativa: quines factures del llibre corregix, la causa (R1 a
+ *     R4) o R5 si són tiquets, i si les substituïx senceres o només porta la
+ *     diferència. El client es copia de la primera factura triada i va
+ *     darrere de la tria mentre no s'escriu a mà; si el que hi ha no és el de
+ *     la factura, ho diu i el deixa copiar. Les triades han de ser d'un sol
+ *     client (correccions de la revisió, 261009).
  * Sense xarxa: tot passa per emissio.emet sobre el llibre d'este ordinador.
  */
 import { useEffect, useMemo, useState } from 'react';
@@ -22,21 +33,23 @@ import { Alerta } from '../../../components/PedraSeca/molecules/Alerta.jsx';
 import { DialegConfirmacio } from '../../../components/PedraSeca/organismes/Dialeg.jsx';
 import { Camp, CampText, Casella, GrupCamps, GrupOpcions, Selector } from '../../../components/PedraSeca/organismes/formulari.jsx';
 import {
-  OPCIONS_IVA, OPCIONS_TIPUS, dadesDeFactura, errorsDeFactura, euros, facturaBuida, liniaBuida, tiquetsSubstituibles, totalsDeFactura
+  OPCIONS_CAUSA, OPCIONS_IVA, OPCIONS_MODALITAT, OPCIONS_RETENCIO, OPCIONS_TIPUS, avisDelClient, commutaRectificada, dadesDeFactura,
+  errorsDeFactura, euros, facturaBuida, liniaBuida, rectificables, tipusEfectiu, tiquetsSubstituibles, totalsDeFactura
 } from './nucli/formulari.js';
 import { AvisDeZona, ErrorsDelFormulari } from './peces.jsx';
 
-function Linia({ linia, numero, ivaInclos, onCanvia, onLleva }) {
+function Linia({ linia, numero, ivaInclos, diferencies, onCanvia, onLleva }) {
   const canvia = (camp) => (event) => onCanvia(camp, event.target.value);
   return (
     <GrupCamps llegenda={`Línia ${numero}`}>
       <Camp etiqueta="Concepte" obligatori>
-        <CampText value={linia.concepte} onChange={canvia('concepte')} />
+        <CampText value={linia.concepte} spellCheck={false} onChange={canvia('concepte')} />
       </Camp>
       <Camp etiqueta="Quantitat" obligatori>
         <CampText value={linia.quantitat} inputMode="decimal" onChange={canvia('quantitat')} />
       </Camp>
-      <Camp etiqueta={ivaInclos ? 'Preu per unitat, amb l’IVA' : 'Preu per unitat, sense l’IVA'} obligatori ajuda="En euros, amb coma per als cèntims: 12,50.">
+      <Camp etiqueta={ivaInclos ? 'Preu per unitat, amb l’IVA' : 'Preu per unitat, sense l’IVA'} obligatori
+        ajuda={diferencies ? 'En euros, amb coma per als cèntims; el que resta, en negatiu: -12,50.' : 'En euros, amb coma per als cèntims: 12,50.'}>
         <CampText value={linia.preu} inputMode="decimal" onChange={canvia('preu')} />
       </Camp>
       <Camp etiqueta="IVA">
@@ -55,25 +68,32 @@ export function FormulariFactura({ f }) {
   const [refresc, setRefresc] = useState(0);
   const { seguentNumero } = f;
   const registres = f.tots.length;
+  const tipus = tipusEfectiu(formulari, f.cadena);
 
   /* El número que tindria ara la factura: es torna a demanar quan canvien el tipus, la data o el llibre. */
   useEffect(() => {
     let actual = true;
-    seguentNumero({ tipus: formulari.tipus, dataExpedicio: formulari.dataExpedicio }).then((r) => {
+    seguentNumero({ tipus, dataExpedicio: formulari.dataExpedicio }).then((r) => {
       if (actual) setNumero(r);
     });
     return () => {
       actual = false;
     };
-  }, [seguentNumero, formulari.tipus, formulari.dataExpedicio, registres, refresc]);
+  }, [seguentNumero, tipus, formulari.dataExpedicio, registres, refresc]);
 
-  const lectura = useMemo(() => dadesDeFactura(formulari), [formulari]);
+  const lectura = useMemo(() => dadesDeFactura(formulari, f.cadena), [formulari, f.cadena]);
   const totals = useMemo(() => totalsDeFactura(lectura.dades, f.config, numero.numero ?? undefined), [lectura, f.config, numero.numero]);
   const tiquets = useMemo(() => tiquetsSubstituibles(f.cadena), [f.cadena]);
-  const ambClient = formulari.tipus !== 'F2';
+  const corregibles = useMemo(() => rectificables(f.cadena), [f.cadena]);
+  const avisClient = useMemo(() => avisDelClient(formulari, f.cadena), [formulari, f.cadena]);
+  const ambClient = tipus !== 'F2' && tipus !== 'R5';
+  const rectificativa = formulari.tipus === 'R';
 
   const posa = (camp, valor) => setFormulari((abans) => ({ ...abans, [camp]: valor }));
-  const posaClient = (camp) => (event) => setFormulari((abans) => ({ ...abans, client: { ...abans.client, [camp]: event.target.value } }));
+  /* El client escrit a mà ja no és el copiat: deixa d'anar darrere de la tria de factures a corregir. */
+  const posaClient = (camp) => (event) => setFormulari((abans) => ({
+    ...abans, client: { ...abans.client, [camp]: event.target.value }, clientCopiat: false
+  }));
   const posaLinia = (i) => (camp, valor) => setFormulari((abans) => ({
     ...abans, linies: abans.linies.map((l, j) => (j === i ? { ...l, [camp]: valor } : l))
   }));
@@ -81,6 +101,9 @@ export function FormulariFactura({ f }) {
   const commutaTiquet = (clau) => setFormulari((abans) => ({
     ...abans, substituides: abans.substituides.includes(clau) ? abans.substituides.filter((c) => c !== clau) : [...abans.substituides, clau]
   }));
+  /* Triar una factura a corregir: el client copiat (o buit) va darrere de la tria (commutaRectificada). */
+  const triaRectificada = (clau) => setFormulari((abans) => commutaRectificada(abans, clau, f.cadena));
+  const copiaClient = (client) => setFormulari((abans) => ({ ...abans, client, clientCopiat: true }));
 
   function revisa(event) {
     event.preventDefault();
@@ -95,7 +118,7 @@ export function FormulariFactura({ f }) {
     const delNucli = errorsDeFactura(lectura.dades, f.config, numero.numero);
     setErrors(delNucli);
     if (delNucli.length) return;
-    setConfirmant({ dades: lectura.dades, numero: numero.numero, total: totals?.importTotal ?? null });
+    setConfirmant({ dades: lectura.dades, numero: numero.numero, total: totals?.importTotal ?? null, liquid: totals?.retencio ? totals.liquid : null });
   }
 
   async function emet() {
@@ -127,10 +150,13 @@ export function FormulariFactura({ f }) {
   return (
     <form className="sdp-gestoria-panell__bloc" noValidate onSubmit={revisa}>
       <GrupOpcions llegenda="Quina factura fas?" valor={formulari.tipus} aspecte="targetes" textTriada="Triada"
-        opcions={OPCIONS_TIPUS} onCanvi={(valor) => setFormulari((abans) => ({ ...abans, tipus: valor, substituides: [] }))} />
+        opcions={OPCIONS_TIPUS} onCanvi={(valor) => setFormulari((abans) => ({ ...abans, tipus: valor, substituides: [], rectificades: [] }))} />
       <Camp etiqueta="Data de la factura" obligatori ajuda="Com a molt, la d’avui.">
         <CampText tipus="date" value={formulari.dataExpedicio} min={f.config.facturacio.dataPas} max={f.dataDeHui()}
           onChange={(event) => posa('dataExpedicio', event.target.value)} />
+      </Camp>
+      <Camp etiqueta="Data de l’operació (opcional)" ajuda="Només si la venda o el servei és d’un altre dia que la factura.">
+        <CampText tipus="date" value={formulari.dataOperacio} onChange={(event) => posa('dataOperacio', event.target.value)} />
       </Camp>
       <dl className="sdp-gestoria-panell__dades">
         <div>
@@ -140,28 +166,57 @@ export function FormulariFactura({ f }) {
       </dl>
       {numero.error ? <ErrorsDelFormulari titol="Amb esta data no es pot emetre" errors={[numero.error.message]} /> : null}
 
+      {rectificativa ? (
+        corregibles.length ? (
+          <>
+            <GrupCamps llegenda="Quina factura corregix">
+              {corregibles.map((opcio) => (
+                <Casella key={opcio.clau} etiqueta={opcio.etiqueta} checked={formulari.rectificades.includes(opcio.clau)}
+                  onChange={() => triaRectificada(opcio.clau)} />
+              ))}
+            </GrupCamps>
+            {tipus === 'R5' ? (
+              <p className="sdp-gestoria-panell__nota">Corregix tiquets: serà una rectificativa de factura simplificada (R5).</p>
+            ) : (
+              <Camp etiqueta="Per què la corregixes">
+                <Selector value={formulari.causa} opcions={OPCIONS_CAUSA} onChange={(event) => posa('causa', event.target.value)} />
+              </Camp>
+            )}
+            <GrupOpcions llegenda="Com la corregixes?" valor={formulari.modalitat} opcions={OPCIONS_MODALITAT}
+              onCanvi={(valor) => posa('modalitat', valor)} />
+          </>
+        ) : <p>No hi ha cap factura al llibre que es puga rectificar.</p>
+      ) : null}
+
       {ambClient ? (
         <GrupCamps llegenda="El client">
           <Camp etiqueta="NIF del client" obligatori>
-            <CampText value={formulari.client.nif} autoComplete="off" onChange={posaClient('nif')} />
+            <CampText value={formulari.client.nif} autoComplete="off" spellCheck={false} onChange={posaClient('nif')} />
           </Camp>
           <Camp etiqueta="Nom o raó social" obligatori>
-            <CampText value={formulari.client.nom} autoComplete="off" onChange={posaClient('nom')} />
+            <CampText value={formulari.client.nom} autoComplete="off" spellCheck={false} onChange={posaClient('nom')} />
           </Camp>
           <Camp etiqueta="Adreça" obligatori>
-            <CampText value={formulari.client.adreca} autoComplete="off" onChange={posaClient('adreca')} />
+            <CampText value={formulari.client.adreca} autoComplete="off" spellCheck={false} onChange={posaClient('adreca')} />
           </Camp>
           <Camp etiqueta="Codi postal" obligatori>
-            <CampText value={formulari.client.codiPostal} inputMode="numeric" autoComplete="off" onChange={posaClient('codiPostal')} />
+            <CampText value={formulari.client.codiPostal} inputMode="numeric" autoComplete="off" spellCheck={false} onChange={posaClient('codiPostal')} />
           </Camp>
           <Camp etiqueta="Població" obligatori>
-            <CampText value={formulari.client.poblacio} autoComplete="off" onChange={posaClient('poblacio')} />
+            <CampText value={formulari.client.poblacio} autoComplete="off" spellCheck={false} onChange={posaClient('poblacio')} />
           </Camp>
         </GrupCamps>
       ) : (
         <Casella etiqueta="Els preus ja porten l’IVA (com en un tiquet de caixa)" checked={formulari.ivaInclos}
           onChange={(event) => posa('ivaInclos', event.target.checked)} />
       )}
+      {/* Davall dels camps, perquè no els moga mentre s'escriu (correcció de la revisió, 261009). */}
+      {ambClient && avisClient ? (
+        <Alerta to="avis" titol="Este client no és el de la factura que corregixes"
+          accions={<Boto varietat="secundari" onClick={() => copiaClient(avisClient.client)}>Copia el client de la factura</Boto>}>
+          <p>{avisClient.text}</p>
+        </Alerta>
+      ) : null}
 
       {formulari.tipus === 'F3' ? (
         tiquets.length ? (
@@ -174,21 +229,29 @@ export function FormulariFactura({ f }) {
       ) : null}
 
       {formulari.linies.map((linia, i) => (
-        <Linia key={i} linia={linia} numero={i + 1} ivaInclos={formulari.tipus === 'F2' && formulari.ivaInclos}
+        <Linia key={i} linia={linia} numero={i + 1} ivaInclos={!ambClient && formulari.ivaInclos}
+          diferencies={rectificativa && formulari.modalitat === 'I'}
           onCanvia={posaLinia(i)} onLleva={formulari.linies.length > 1 ? llevaLinia(i) : null} />
       ))}
       <div className="sdp-gestoria-panell__accions-fila">
         <Boto varietat="secundari" onClick={() => posa('linies', [...formulari.linies, liniaBuida()])}>Afig una línia</Boto>
       </div>
       <Camp etiqueta="Descripció de l’operació (opcional)" ajuda="Si la deixes buida, és el concepte de la primera línia.">
-        <CampText value={formulari.descripcio} onChange={(event) => posa('descripcio', event.target.value)} />
+        <CampText value={formulari.descripcio} spellCheck={false} onChange={(event) => posa('descripcio', event.target.value)} />
       </Camp>
+      {ambClient ? (
+        <Camp etiqueta="Retenció d’IRPF" ajuda="Si factures una activitat professional a una empresa o a un professional, et retenen una part.">
+          <Selector value={formulari.retencio} opcions={OPCIONS_RETENCIO} onChange={(event) => posa('retencio', event.target.value)} />
+        </Camp>
+      ) : null}
 
       {totals ? (
         <dl className="sdp-gestoria-panell__dades">
           <div><dt>Base imposable</dt><dd>{euros(totals.baseTotal)}</dd></div>
           <div><dt>IVA</dt><dd>{euros(totals.quotaTotal)}</dd></div>
           <div><dt>Total</dt><dd>{euros(totals.importTotal)}</dd></div>
+          {totals.retencio ? <div><dt>{`Retenció d’IRPF (${totals.retencio.percentatge} %)`}</dt><dd>{euros(-totals.retencio.import)}</dd></div> : null}
+          {totals.retencio ? <div><dt>Total a pagar</dt><dd>{euros(totals.liquid)}</dd></div> : null}
         </dl>
       ) : <p className="sdp-gestoria-panell__nota">El total apareix quan la factura està completa.</p>}
 
@@ -203,6 +266,7 @@ export function FormulariFactura({ f }) {
         descripcio="Una factura emesa entra al llibre i ja no s’esborra: si cal, es rectifica o s’anul·la."
         etiquetaConfirma="Sí, emet-la" etiquetaCancela="Encara no" carregant={f.ocupat === 'emetent'}>
         {confirmant?.total !== null && confirmant?.total !== undefined ? <p>{`Total: ${euros(confirmant.total)}.`}</p> : null}
+        {confirmant?.liquid !== null && confirmant?.liquid !== undefined ? <p>{`A pagar, amb la retenció: ${euros(confirmant.liquid)}.`}</p> : null}
       </DialegConfirmacio>
     </form>
   );

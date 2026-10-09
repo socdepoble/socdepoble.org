@@ -317,3 +317,95 @@ test('densitat: compacta posa el seu modificador; normal i responsiva, cap', () 
     expect(regio(getByRole).className).toBe('sdp-cal-setmana');
   }
 });
+
+/* ── Onada 6 (prompt 261009_0230, punt 1; pla de l'Onada 5, tasca 16) ─────
+   Clicar un esdeveniment porta a la pàgina de la seua publicació. Fora de la
+   capa aria-hidden del mes, l'enllaç és al lector i al teclat. */
+const RUTES = new Map([[concert, '/events/concert'], [festes, '/events/festes']]);
+const rutaDe = (esd) => RUTES.get(esd) ?? null;
+
+test('Onada 6 · Llei del Píxel: sense rutaDeLEsdeveniment, o sense cap ruta, el DOM de sempre', () => {
+  const sense = pinta({ onTriaDia: () => {} }).container.innerHTML.replace(/\s(id|aria-labelledby)="[^"]*"/g, ' $1="·"');
+  cleanup();
+  const senseRuta = pinta({ onTriaDia: () => {}, rutaDeLEsdeveniment: () => null }).container.innerHTML.replace(/\s(id|aria-labelledby)="[^"]*"/g, ' $1="·"');
+  expect(senseRuta).toBe(sense);
+  expect(sense).not.toContain('sdp-cal-enllac');
+});
+
+test('Onada 6 · amb ruta, el títol del bloc i de la barra de la franja és l’enllaç a la publicació (Link del router); el text no canvia', () => {
+  const triats = [];
+  const Enllac = ({ to, children, ...resta }) => <a href={to} data-router="si" {...resta} onClick={(event) => event.preventDefault()}>{children}</a>;
+  const { getByRole, container } = pinta({ onTriaDia: (clau) => triats.push(clau), rutaDeLEsdeveniment: rutaDe, LinkComponent: Enllac });
+  const dimarts = getByRole('list', { name: dataLlarga(new Date(2026, 8, 29)) });
+  expect(within(dimarts).getAllByRole('listitem').map((li) => li.textContent)).toEqual(['10:00–11:30 Concert', '10:30–12:00 Assaig']);
+  const concertEnllac = within(dimarts).getByRole('link', { name: 'Concert' });
+  expect([concertEnllac.getAttribute('href'), concertEnllac.dataset.router, concertEnllac.className]).toEqual(['/events/concert', 'si', 'sdp-cal-enllac']);
+  expect(concertEnllac.parentElement.className).toBe('sdp-cal-setmana__titol');
+  // L'Assaig no té ruta: cap enllaç.
+  expect(within(dimarts).queryByRole('link', { name: 'Assaig' })).toBeNull();
+  // La franja de tot el dia: la barra de les Festes porta el seu enllaç i el modificador.
+  const franja = container.querySelector('.sdp-cal-setmana__barres');
+  const barra = within(franja).getByRole('link', { name: 'Festes' });
+  expect(barra.getAttribute('href')).toBe('/events/festes');
+  expect(barra.parentElement.classList.contains('sdp-cal-barra--enllac')).toBe(true);
+  // Clicar l'enllaç no tria cap dia.
+  act(() => barra.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true })));
+  expect(triats).toEqual([]);
+});
+
+/* Revisió del front calendari · En pantalla tàctil l'enllaç no rep el toc
+   (pointer-events, que jsdom no aplica: el toc arriba al bloc, no a l'enllaç).
+   Tocar un bloc, o clicar la columna fora de l'enllaç, tria el dia, com el
+   quadre del Mes; una barra de la franja tria el seu primer dia de la
+   setmana. El dia triat no es lleva així. */
+const clica = (el) => act(() => { el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true })); });
+
+test('Revisió · tocar un bloc (fora de l’enllaç) o la columna tria el seu dia; el triat no es lleva; l’enllaç no tria', () => {
+  const triats = [];
+  const Enllac = ({ to, children, ...resta }) => <a href={to} {...resta} onClick={(event) => event.preventDefault()}>{children}</a>;
+  const { getByRole, container, rerender } = pinta({ onTriaDia: (clau) => triats.push(clau), rutaDeLEsdeveniment: rutaDe, LinkComponent: Enllac });
+  const dimarts = getByRole('list', { name: dataLlarga(new Date(2026, 8, 29)) });
+  const [blocConcert, blocAssaig] = within(dimarts).getAllByRole('listitem');
+  clica(blocConcert.querySelector('.sdp-cal-setmana__quan'));
+  clica(blocAssaig.querySelector('.sdp-cal-setmana__titol'));
+  expect(triats).toEqual(['2026-09-29', '2026-09-29']);
+  // La columna buida d'un altre dia (el divendres).
+  clica(getByRole('list', { name: dataLlarga(new Date(2026, 9, 2)) }).closest('.sdp-cal-setmana__columna'));
+  expect(triats.at(-1)).toBe('2026-10-02');
+  // L'enllaç és de l'enllaç: cap dia.
+  const abans = triats.length;
+  clica(within(dimarts).getByRole('link', { name: 'Concert' }));
+  expect(triats).toHaveLength(abans);
+  // El dia que ja està triat no es lleva tocant-ne un bloc.
+  rerender(<VistaSetmana esdeveniments={ESDEVENIMENTS} dilluns={DILLUNS} avui={AVUI} ara={ARA} locale="ca-ES" titol="Setmana del poble"
+    diaTriat="2026-09-29" onTriaDia={(clau) => triats.push(clau)} rutaDeLEsdeveniment={rutaDe} LinkComponent={Enllac} />);
+  clica(container.querySelector('.sdp-cal-setmana__bloc .sdp-cal-setmana__quan'));
+  expect(triats).toHaveLength(abans);
+});
+
+test('Revisió · tocar una barra de la franja tria el seu primer dia de la setmana; sense dia triable, res', () => {
+  const triats = [];
+  const { container } = pinta({ onTriaDia: (clau) => triats.push(clau) });
+  const barres = [...container.querySelectorAll('.sdp-cal-setmana__barres > li')];
+  const festes = barres.find((li) => li.textContent === 'Festes');
+  clica(festes);
+  expect(triats).toEqual(['2026-09-28']);
+  cleanup();
+  // Sense onTriaDia (i fora de la tira), els blocs i les columnes són quiets.
+  const quiet = pinta();
+  clica(quiet.container.querySelector('.sdp-cal-setmana__bloc'));
+  clica(quiet.container.querySelector('.sdp-cal-setmana__columna'));
+  expect(quiet.container.querySelector('[aria-pressed="true"]')).toBeNull();
+});
+
+test('Revisió · a la tira, tocar un bloc tria el dia mostrat (hui, si no n’hi havia cap de triat)', () => {
+  simulaAmplada(352);
+  const triats = [];
+  const { container } = render(
+    <VistaSetmana esdeveniments={ESDEVENIMENTS} dilluns={DILLUNS} avui={new Date(2026, 8, 29, 9, 0)} ara={ARA} locale="ca-ES"
+      titol="Setmana del poble" onTriaDia={(clau) => triats.push(clau)} />
+  );
+  expect(columnes(container)).toEqual([dataLlarga(new Date(2026, 8, 29))]);
+  clica(container.querySelector('.sdp-cal-setmana__bloc'));
+  expect(triats).toEqual(['2026-09-29']);
+});

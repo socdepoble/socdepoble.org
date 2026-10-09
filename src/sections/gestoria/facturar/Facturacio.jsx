@@ -9,8 +9,10 @@
  * Cinc passos, en targetes clares i amb textos per a qui no és del ram:
  *   1. Les dades de l'empresa · el perfil fiscal, desat en este ordinador.
  *   2. Les factures d'abans · el llegat de l'eina externa, que queda tancat.
- *   3. Factura nova · F1, F2 o F3, amb el número i el total abans d'emetre.
- *   4. El llibre · la cadena verificada a la vista, i l'anul·lació.
+ *   3. Factura nova · F1, F2, F3 o rectificativa (R1-R5; Onada 6), amb el
+ *      número, la retenció d'IRPF i el total abans d'emetre.
+ *   4. El llibre · la cadena verificada a la vista, l'anul·lació, la factura
+ *      en paper i l'XML de prova per a l'AEAT (Onada 6).
  *   5. Còpia del llibre · desar-la o descarregar-la, i restaurar-ne una.
  * Dalt, si el navegador pot esborrar el llibre, es diu (demanaPersistencia).
  * Amb incidències greus a la cadena, el pas 3 queda «Aturada» i la via és
@@ -19,7 +21,7 @@
  * tractor gestoria.tauler i tocar-la en tornaria l'aprovació a «pendent».
  * Cap crida de xarxa; la remissió a l'AEAT encara no existix i es diu.
  * Proves: totes les props van a useFacturacio (port, perfil, subtle, idb,
- * locks, emmagatzematge, rellotge, entorn, descarrega).
+ * locks, emmagatzematge, rellotge, entorn, descarrega, imprimix).
  */
 import { Boto } from '../../../components/PedraSeca/atoms/Boto.jsx';
 import { Carregant } from '../../../components/PedraSeca/atoms/estats.jsx';

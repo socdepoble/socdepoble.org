@@ -5,8 +5,18 @@
  * no pinten cap calendari.
  *
  * Ordre del Mestre, 261001 · La pestanya es deia «Agenda» i ara es diu
- * «Calendari» (CalendariMur); els avisos de mes buit també diuen «calendari».
- * Les proves canvien només eixos textos: el comportament és el mateix.
+ * «Calendari».
+ *
+ * Onada 6 (prompt 261009_0230, punt 1: «El Mur i el Calendari gastaven
+ * components diferents; s'han d'unificar absolutament sota l'estètica i
+ * funcionalitat de Google Calendar») · La pestanya munta el MATEIX calendari
+ * que /calendari (CalendariDelMur → CalendariDelPoble): «Hui ‹ ›» amb el títol
+ * a la mateixa fila, les cinc vistes, l'estat a la URL (useEstatCalendari,
+ * amb replace), l'enllaç de cada acte a la seua pàgina i, davall, les
+ * targetes del dia triat o del període que es veu, amb la regla de
+ * /calendari. Estes proves canvien amb ell: abans, la taula vella
+ * (.sdp-calendari--gran, caption, píndoles) i un mes propi en un useState.
+ * Les de T5 (les dades del Mur, a «Mostrar tot») no canvien.
  */
 import React from 'react';
 import { act, cleanup, render, screen, within } from '@testing-library/react';
@@ -39,9 +49,23 @@ const ACTES = [
 /* T5 · Un acte sense dia real: només porta la data de publicació. */
 const SENSE_DIA = { id: 'sense-dia', type: 'event', title: 'Ball sense dia', created_at: '2026-09-20T08:15:00+00:00' };
 const nomMes = (any, mes) => new Date(any, mes, 1).toLocaleDateString('ca-ES', { month: 'long', year: 'numeric' });
-const calendari = () => document.querySelector('.sdp-calendari--gran');
+/* «de setembre de 2026», «d’octubre de 2026». */
+const ambDe = (text) => (/^[aeiouàèéíòóú]/i.test(text) ? `d’${text}` : `de ${text}`);
+const nomMesLlarg = (any, mes) => {
+  const nom = nomMes(any, mes);
+  return nom.charAt(0).toUpperCase() + nom.slice(1);
+};
+const dataLlarga = (d) => d.toLocaleDateString('ca-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+/* La vista Mes del calendari únic (VistaMes): la regió amb el nom del mes. */
+const calendari = () => document.querySelector('.sdp-cal-mes');
+const regioMes = (any, mes) => screen.getByRole('region', { name: `Calendari ${ambDe(nomMes(any, mes))}` });
+const dia = (data) => within(calendari()).getByRole('button', { name: (nom) => nom.startsWith(`${dataLlarga(data)} · `) });
+const peces = () => [...calendari().querySelectorAll('.sdp-cal-barra')].map((peca) => peca.textContent);
 const titolsDeTargetes = () => [...document.querySelectorAll('.sdp-card-grid .sp-card-title')].map((t) => t.textContent);
 const agenda = () => act(() => screen.getByRole('button', { name: 'Calendari' }).click());
+const filtre = (nom) => act(() => within(screen.getByRole('group', { name: 'Filtres del mur' })).getByRole('button', { name: nom }).click());
+/* El que escriu el calendari a la URL (useEstatCalendari: paramsDeLEstat, amb replace). */
+const URL_DEL_CALENDARI = (canvis) => [{ vista: 'mes', setmana: null, mes: null, any: null, date: null, ...canvis }, { replace: true }];
 /* La targeta d'un títol: la pastilla (hora i dia) i la insígnia (dia, mes, any). */
 const targeta = (titol) => [...document.querySelectorAll('.sdp-card-grid .sp-card-title')]
   .find((t) => t.textContent === titol).closest('article');
@@ -51,12 +75,16 @@ const insignia = (titol) => {
   return badge && ['dia', 'mes', 'any'].map((peca) => badge.querySelector(`.sp-card-calendar-badge__${peca}`)?.textContent ?? null);
 };
 
+let avis;
 afterEach(() => {
   cleanup();
   vi.useRealTimers();
+  avis.mockRestore();
 });
 beforeEach(() => {
   vi.clearAllMocks();
+  // Sense PAGE_COPY, el Mur avisa en desenvolupament de cada pàgina de sistema: no és d'esta prova.
+  avis = vi.spyOn(console, 'warn').mockImplementation(() => {});
   vi.useFakeTimers({ toFake: ['Date'] });
   vi.setSystemTime(new Date(2026, 8, 30, 12, 0));
   mocks.params = new URLSearchParams();
@@ -70,6 +98,7 @@ beforeEach(() => {
 test('Mostrar tot, Mercat i Mapa no pinten cap calendari', () => {
   render(<MurSection />);
   expect(calendari()).toBeNull();
+  expect(document.querySelector('.sdp-cal-navegacio')).toBeNull();
   expect(titolsDeTargetes()).toContain('Crònica');
   act(() => screen.getByRole('button', { name: 'Mercat' }).click());
   expect(calendari()).toBeNull();
@@ -77,53 +106,124 @@ test('Mostrar tot, Mercat i Mapa no pinten cap calendari', () => {
   expect(calendari()).toBeNull();
 });
 
-test('el Calendari porta el mes damunt de les targetes, obert al mes de l’acte que ve més prompte', () => {
+test('Onada 6 · la pestanya munta el calendari de /calendari: «Hui ‹ ›» i el títol a la mateixa fila, les cinc vistes i el mes de l’acte que ve més prompte', () => {
   render(<MurSection />);
   agenda();
-  const graella = calendari();
-  expect(graella).not.toBeNull();
-  expect(graella.compareDocumentPosition(document.querySelector('.sdp-card-grid')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-  expect(graella.querySelector('caption').textContent).toBe(nomMes(2026, 10));
-  expect(within(graella).getByText('Fira de tardor').className).toBe('sdp-calendari__pindola');
-  expect(titolsDeTargetes()).toEqual(['Concert de primavera', 'Fira de tardor', '2n Aplec pel Territori']);
+  // El calendari vell (la taula de CalendariEsdeveniments) ja no es munta.
+  expect(document.querySelector('.sdp-calendari--gran, .sdp-calendari__barra')).toBeNull();
+  const regio = regioMes(2026, 10);
+  expect(regio).toBe(calendari());
+  const navegacio = document.querySelector('.sdp-cal-navegacio');
+  expect([...navegacio.children].filter((n) => n.tagName === 'BUTTON').map((b) => b.getAttribute('aria-label') ?? b.textContent))
+    .toEqual(['Hui', 'Mes anterior', 'Mes següent']);
+  // El títol del període és l'h3 de la barra, entre les fletxes i el selector (com a Google Calendar).
+  const titol = screen.getByRole('heading', { level: 3, name: nomMesLlarg(2026, 10) });
+  expect(titol.parentElement).toBe(navegacio);
+  expect(titol.previousElementSibling.getAttribute('aria-label')).toBe('Mes següent');
+  expect(titol.nextElementSibling).toBe(screen.getByRole('group', { name: 'Vista' }));
+  expect([...screen.getByRole('group', { name: 'Vista' }).querySelectorAll('button')].map((b) => b.textContent))
+    .toEqual(['Setmana', 'Dues setmanes', 'Mes', 'Any', 'Agenda']);
+  expect(screen.getByRole('button', { name: 'Mes', pressed: true })).toBeTruthy();
+  // Davall del calendari, les targetes del mes que es veu (abans, tots els actes de tots els mesos).
+  expect(regio.compareDocumentPosition(document.querySelector('.sdp-card-grid')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(peces()).toEqual(['Fira de tardor']);
+  expect(titolsDeTargetes()).toEqual(['Fira de tardor']);
+  expect(document.querySelector('h4[role="status"]').textContent).toBe('1 publicació');
+  // Obrir la pestanya no escriu res a la URL.
+  expect(mocks.setSearchParams).not.toHaveBeenCalled();
 });
 
-test('sense cap acte per vindre, el mes del més recent; un mes sense actes ho diu', () => {
-  mocks.mur.sortedEvents = [ACTES[0]];
+test('Onada 6 · clicar l’esdeveniment porta a la seua pàgina: un enllaç del router a /events/fira, fora del botó del dia', () => {
   render(<MurSection />);
   agenda();
-  expect(calendari().querySelector('caption').textContent).toBe(nomMes(2023, 0));
-  expect(screen.queryByText(/Cap acte al calendari/)).toBeNull();
-  act(() => screen.getByRole('button', { name: 'Mes següent' }).click());
-  expect(screen.getByText(`Cap acte al calendari de ${nomMes(2023, 1)}. N’hi ha en altres mesos: passa de mes amb les fletxes.`)).toBeTruthy();
+  const enllac = calendari().querySelector('a.sdp-cal-enllac');
+  expect(enllac.getAttribute('href')).toBe('/events/fira');
+  expect(enllac.textContent).toBe('Fira de tardor');
+  // La capa de les peces continua aria-hidden i la graella, un sol punt de tabulació.
+  expect(enllac.tabIndex).toBe(-1);
+  expect(enllac.closest('ol').getAttribute('aria-hidden')).toBe('true');
+  expect(enllac.closest('button')).toBeNull();
+  expect(enllac.closest('li').classList.contains('sdp-cal-barra--enllac')).toBe(true);
 });
 
-test('clicar un dia posa ?date=; amb el dia a la URL, s’obri al seu mes i tornar-lo a clicar el lleva', () => {
+test('clicar un dia (fora de l’enllaç) posa ?date=; amb el dia a la URL, s’obri al seu mes amb les seues targetes i tornar-lo a clicar el lleva', () => {
   render(<MurSection />);
   agenda();
-  const catorze = within(calendari()).getAllByRole('button')[13];
-  expect(catorze.getAttribute('aria-label')).toMatch(/ · 1 acte: Fira de tardor$/);
+  const catorze = dia(new Date(2026, 10, 14));
+  expect(catorze.getAttribute('aria-label')).toMatch(/ · 1 publicació: Fira de tardor$/);
   act(() => catorze.click());
-  expect(mocks.setSearchParams).toHaveBeenLastCalledWith({ date: '2026-11-14' });
+  expect(mocks.setSearchParams).toHaveBeenLastCalledWith(...URL_DEL_CALENDARI({ date: '2026-11-14' }));
   cleanup();
 
   mocks.params = new URLSearchParams('date=2023-01-29');
   render(<MurSection />);
   agenda();
-  expect(calendari().querySelector('caption').textContent).toBe(nomMes(2023, 0));
+  expect(regioMes(2023, 0)).toBeTruthy();
   const triat = within(calendari()).getByRole('button', { pressed: true });
   expect(triat.getAttribute('aria-label')).toMatch(/2n Aplec pel Territori$/);
-  // Les targetes de davall, filtrades pel mateix dia.
+  // Les targetes de davall, les del mateix dia (entradesDelDia, la regla d'acteOcorreElDia).
   expect(titolsDeTargetes()).toEqual(['2n Aplec pel Territori']);
   act(() => triat.click());
-  expect(mocks.setSearchParams).toHaveBeenLastCalledWith({ date: null });
+  expect(mocks.setSearchParams).toHaveBeenLastCalledWith(...URL_DEL_CALENDARI({ mes: '2023-01' }));
 });
 
-test('un calendari buit ho diu', () => {
+test('sense cap acte per vindre, el mes del més recent; les fletxes escriuen ?mes= i un mes sense actes ho diu', () => {
+  mocks.mur.sortedEvents = [ACTES[0]];
+  render(<MurSection />);
+  agenda();
+  expect(regioMes(2023, 0)).toBeTruthy();
+  expect(titolsDeTargetes()).toEqual(['2n Aplec pel Territori']);
+  act(() => screen.getByRole('button', { name: 'Mes següent' }).click());
+  expect(mocks.setSearchParams).toHaveBeenLastCalledWith(...URL_DEL_CALENDARI({ mes: '2023-02' }));
+  cleanup();
+
+  mocks.params = new URLSearchParams('vista=mes&mes=2023-02');
+  render(<MurSection />);
+  agenda();
+  expect(regioMes(2023, 1)).toBeTruthy();
+  expect(titolsDeTargetes()).toEqual([]);
+  expect(screen.getByText('Cap publicació este mes.')).toBeTruthy();
+});
+
+test('un calendari buit ho diu, al mes de hui', () => {
   mocks.mur.sortedEvents = [];
   render(<MurSection />);
   agenda();
-  expect(screen.getByText(`Cap acte al calendari de ${nomMes(2026, 8)}. El calendari encara no en té cap.`)).toBeTruthy();
+  expect(regioMes(2026, 8)).toBeTruthy();
+  expect(screen.getByText('Cap publicació este mes.')).toBeTruthy();
+});
+
+test('Onada 6 · les cinc vistes: l’Agenda del Mur, amb l’enllaç de cada acte a la seua pàgina', () => {
+  mocks.params = new URLSearchParams('vista=agenda&mes=2026-11');
+  render(<MurSection />);
+  agenda();
+  const regio = screen.getByRole('region', { name: `Agenda ${ambDe(nomMes(2026, 10))}` });
+  const enllac = within(regio).getByRole('link', { name: 'Fira de tardor' });
+  expect(enllac.getAttribute('href')).toBe('/events/fira');
+  expect(screen.getByRole('button', { name: 'Agenda', pressed: true })).toBeTruthy();
+  expect(titolsDeTargetes()).toEqual(['Fira de tardor']);
+});
+
+test('Onada 6 · en eixir de la pestanya es lleven la vista i el període; el ?date= es queda', () => {
+  mocks.params = new URLSearchParams('vista=setmana&setmana=2026-W46&date=2026-11-14');
+  render(<MurSection />);
+  agenda();
+  expect(document.querySelector('.sdp-cal-setmana')).not.toBeNull();
+  filtre('Mostrar tot');
+  expect(mocks.setSearchParams).toHaveBeenLastCalledWith({ vista: null, setmana: null, mes: null, any: null });
+  expect(document.querySelector('.sdp-cal-navegacio')).toBeNull();
+  // La graella general hi torna, filtrada pel ?date= de sempre.
+  expect(titolsDeTargetes()).toEqual(['Fira de tardor']);
+  cleanup();
+
+  // Sense cap paràmetre del calendari, eixir no escriu res.
+  mocks.setSearchParams.mockClear();
+  mocks.params = new URLSearchParams('date=2026-11-14');
+  render(<MurSection />);
+  agenda();
+  filtre('Mercat');
+  filtre('Mapa');
+  expect(mocks.setSearchParams).not.toHaveBeenCalled();
 });
 
 /* ── T5 (ordre del Mestre, 260930) · Les dades del Mur ───────────────────── */
@@ -137,17 +237,23 @@ test('T5 · Llei del Píxel: l’Aplec es pinta com sempre i la Fira, sense cap 
   expect(insignia('Fira de tardor')).toEqual(['14', 'NOVEMBRE', '2026']);
 });
 
-test('T5 · un acte sense dia real no porta insígnia ni ix al calendari; el troba el dia de la seua pastilla', () => {
+/* Onada 6 · Un sol calendari, una sola regla: la de /calendari
+   (calendariGlobal.js), on un acte sense dia real va el dia de la seua
+   pastilla, com el filtre ?date= del Mur (abans, el calendari del Mur no el
+   pintava). */
+test('T5 · un acte sense dia real no porta insígnia; el calendari i el filtre el troben el dia de la seua pastilla', () => {
   mocks.mur.sortedEvents = [...ACTES, SENSE_DIA];
   render(<MurSection />);
-  agenda();
   expect(insignia('Ball sense dia')).toBeNull();
   expect(pastilla('Ball sense dia')).toEqual(['10:15', '20/09/26']);
-  expect(within(calendari()).queryByText('Ball sense dia')).toBeNull();
   cleanup();
 
   mocks.params = new URLSearchParams('date=2026-09-20');
   render(<MurSection />);
+  expect(titolsDeTargetes()).toEqual(['Ball sense dia']);
+  agenda();
+  expect(regioMes(2026, 8)).toBeTruthy();
+  expect(peces()).toEqual(['10:15 Ball sense dia']);
   expect(titolsDeTargetes()).toEqual(['Ball sense dia']);
 });
 
@@ -155,10 +261,11 @@ test('T5 · el filtre ?date= troba un acte de diversos dies cada dia que el pint
   mocks.mur.sortedEvents = [...ACTES, { ...acte('festes', '2026-10-01', 'Festes'), fi: { data: '2026-10-04' } }];
   mocks.params = new URLSearchParams('date=2026-10-02');
   render(<MurSection />);
+  expect(titolsDeTargetes()).toEqual(['Festes']);
   agenda();
   expect(titolsDeTargetes()).toEqual(['Festes']);
   const triat = within(calendari()).getByRole('button', { pressed: true });
-  expect(triat.getAttribute('aria-label')).toMatch(/ · 1 acte: Festes$/);
+  expect(triat.getAttribute('aria-label')).toMatch(/ · 1 publicació: Festes$/);
 });
 
 test('T5 · amb un inici al payload, el filtre el troba el dia de l’inici (el que pinta el Calendari), no el de date', () => {
@@ -218,30 +325,34 @@ test('T5 · D5: una clau que no existix no troba cap acte (el 30 de febrer no de
   expect(titolsDeTargetes()).toEqual([]);
 });
 
+/* calendari-1 · Amb l'estat a la URL (Onada 6), el mes seguix el ?date= que
+   canvia amb el Calendari obert (la pastilla d'una targeta, o tornar arrere),
+   i el ?mes= que hi escriu llevar el dia el manté. */
 test('calendari-1 · el mes seguix el ?date= que canvia amb el Calendari obert (la pastilla d’una targeta, o tornar arrere)', () => {
   const { rerender } = render(<MurSection />);
   agenda();
-  expect(calendari().querySelector('caption').textContent).toBe(nomMes(2026, 10));
+  expect(regioMes(2026, 10)).toBeTruthy();
 
   mocks.params = new URLSearchParams('date=2027-03-01');
   rerender(<MurSection />);
-  expect(calendari().querySelector('caption').textContent).toBe(nomMes(2027, 2));
+  expect(regioMes(2027, 2)).toBeTruthy();
   expect(within(calendari()).getByRole('button', { pressed: true }).getAttribute('aria-label')).toMatch(/Concert de primavera$/);
   expect(titolsDeTargetes()).toEqual(['Concert de primavera']);
 
-  // Llevar el dia no mou el mes.
-  mocks.params = new URLSearchParams();
+  // Llevar el dia (la URL que escriu el calendari) no mou el mes.
+  mocks.params = new URLSearchParams('vista=mes&mes=2027-03');
   rerender(<MurSection />);
-  expect(calendari().querySelector('caption').textContent).toBe(nomMes(2027, 2));
+  expect(regioMes(2027, 2)).toBeTruthy();
   expect(within(calendari()).queryByRole('button', { pressed: true })).toBeNull();
+  expect(titolsDeTargetes()).toEqual(['Concert de primavera']);
 });
 
-test('calendari-4 · amb només actes que el calendari no sap pintar, el mes no promet cap altre mes', () => {
+test('calendari-4 · amb només actes que el calendari no sap pintar, s’obri al mes de hui i ho diu', () => {
   mocks.mur.sortedEvents = [{ ...acte('festes', '2026-12-05', 'Festes'), recurrencia: ['RRULE:FREQ=YEARLY'] }];
   render(<MurSection />);
   agenda();
-  expect(calendari().querySelector('caption').textContent).toBe(nomMes(2026, 8));
-  const avis = screen.getByText(/^Cap acte al calendari de/);
-  expect(avis.textContent).toBe(`Cap acte al calendari de ${nomMes(2026, 8)}.`);
+  expect(regioMes(2026, 8)).toBeTruthy();
+  expect(peces()).toEqual([]);
+  expect(screen.getByText('Cap publicació este mes.')).toBeTruthy();
   expect(screen.getByText(/^Un acte es repetix d’una manera que el calendari encara no sap pintar/)).toBeTruthy();
 });

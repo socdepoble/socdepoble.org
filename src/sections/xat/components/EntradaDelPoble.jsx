@@ -22,6 +22,11 @@
  * La mida de la closca arriba mesurada un commit després del muntatge
  * (AppGridShell naix «ample» i mesura en fase de layout): la decisió es pren
  * en diferit i llig la mida d'una ref, mai la del primer render.
+ *
+ * Onada 6 (integració Xat i Pobles) · `towns` (opcional, les fitxes de
+ * useCoreContent que ja té XatSection): el grup que es crea es diu com la
+ * gent del poble si l'amfitrió no n'ha declarat el nom (pobleAmfitrio.js,
+ * nomDelPoble). Es llig d'una ref: que arriben les fitxes no torna a decidir.
  */
 import { useEffect, useRef } from 'react';
 import { useNavigate } from '../../../app/contexts/RouterContext';
@@ -31,7 +36,7 @@ import { generalDeComunitat, rutaSobreDelPoble } from '../pobleAmfitrio.js';
 
 const enc = (valor) => encodeURIComponent(String(valor));
 
-export default function EntradaDelPoble({ poble, comunitat = null, aLaLlista = false }) {
+export default function EntradaDelPoble({ poble, comunitat = null, towns = null, aLaLlista = false }) {
   const { mida } = useAppGrid();
   const navigate = useNavigate();
   const { status, senseSessio, modeDades = 'remote', consumixEntrada } = useXat();
@@ -39,6 +44,8 @@ export default function EntradaDelPoble({ poble, comunitat = null, aLaLlista = f
   midaRef.current = mida;
   const comunitatRef = useRef(comunitat);
   comunitatRef.current = comunitat;
+  const townsRef = useRef(towns);
+  townsRef.current = towns;
 
   const llesta = Boolean(poble) && aLaLlista && status === 'ready' && !senseSessio && typeof consumixEntrada === 'function';
 
@@ -51,7 +58,7 @@ export default function EntradaDelPoble({ poble, comunitat = null, aLaLlista = f
       if (midaRef.current !== 'ample') return;
       const general = generalDeComunitat(comunitatRef.current);
       if (general) navigate(`/xat/${enc(general.id)}`, { replace: true });
-      else if (!comunitatRef.current && modeDades !== 'remote') navigate(rutaSobreDelPoble(poble), { replace: true });
+      else if (!comunitatRef.current && modeDades !== 'remote') navigate(rutaSobreDelPoble(poble, townsRef.current), { replace: true });
     }, 0);
     return () => clearTimeout(temporitzador);
   }, [llesta, poble, modeDades, consumixEntrada, navigate]);

@@ -1,0 +1,107 @@
+{
+  "id": "40cb84ef-df5a-4f43-9aa5-3d864734b7e5",
+  "session": "e0f519eb-5494-498a-8d95-81ce3c084b1c",
+  "operationId": "sdp-higiene-261009-paquet-e0f519eb",
+  "claim": "e0f519eb-5494-498a-8d95-81ce3c084b1c:governance-write",
+  "planHash": "45e437db2cb63b5bc33efadde4274b3cca95855c8b9f946c46d800d12bada202",
+  "beforeSeal": "da8eaa714ba6bed29f437f22907eee5a24920b02aeeaf137a789e91f657ced33",
+  "files": [
+    {
+      "path": ".agents/olivera-fase.json",
+      "before": null,
+      "after": "1b2e7eb3397d3145cda81792514fb65dcdb855341b71ba2e1a7996c6424061d4"
+    },
+    {
+      "path": "scripts/immunitari/org.socdepoble.higiene.plist",
+      "before": null,
+      "after": "a413d6d684972ebdd77b76d9a7720fc0e67db1514e35a1601bb94d28041fb3e7"
+    },
+    {
+      "path": "tooling/higiene/cron_higiene.mjs",
+      "before": null,
+      "after": "df4c979b83dcd919b8071ecb13ec27d38deb0e19d6d5e9cf5a9c93a4329056d7"
+    },
+    {
+      "path": "tooling/gates/porta-olivera.mjs",
+      "before": "1fc3a9406994216ba0c98a66c98d20ed9eeaf9f954b293d98768be3064cb6f51",
+      "after": "6d03e2d7cb40cb08838ba104ee9eb0c58512c77ffa0eb557b5879cf00ade6d05"
+    },
+    {
+      "path": "tooling/documental/draft-write.mjs",
+      "before": "81c52f55645358ef10aabca8098fb7977f7c6e9cefd0381a3b64064ebc066186",
+      "after": "a42b8957049f7a76a796651322f4939a6cc40cc8c08572b98b163714cf1972c5"
+    },
+    {
+      "path": "tooling/documental/turns.mjs",
+      "before": "502d839a69eb806700130e25a260a5b6b3f0f2e2f5744ac2ea29678a6942d6cf",
+      "after": "c4a06f00f185402298221ff711d7ca007ab83cad2e99ceec2b5f08c91f292825"
+    },
+    {
+      "path": "tooling/wiki/document.mjs",
+      "before": "8acb0f92087f1eb65309101b68000a2b334b79837c4b90e45ed170e43da12810",
+      "after": "04f3ef4c46472da8e932130465cdd13017eda59ca51e55f52171cfa462363291"
+    },
+    {
+      "path": "tooling/gates/antigravity-hook.mjs",
+      "before": "99c2d2e67e96bf96ff0da25a8be355f6f96a3c9214bcd28aefccb4fd46ae2901",
+      "after": "052e874d79f97be35b81d45fb4dd2e68ed4df5d0666bd569712ea4c367640aba"
+    },
+    {
+      "path": "tooling/gates/tancament.mjs",
+      "before": "1a47c5a7d0ffd350ab3d02c0198b7f82142be1f7710beb32ca1d9e5471811872",
+      "after": "19c233b0a787e1308a60fef0698d31b47ff63be31c2a569b0c61184ef0844d91"
+    },
+    {
+      "path": "tooling/brain/despertar.mjs",
+      "before": "609bee9f89b501ca4101fd8c9f00adf79f416a899c468ae663f08a8889d21544",
+      "after": "1588d3678f9c4a62960b5fb0efa822c7ec523cec63a8433e17a4c4aa72d0260c"
+    },
+    {
+      "path": "tooling/brain/mapa-consola.mjs",
+      "before": "cea65b97395a55a5a611bbd5ffc0dd698244b9cdcd59d05ed8dff9c027c29b98",
+      "after": "99729ba0fbd23e5f8ecbb455d317a958e3c0a49df2c7b5b33c5192610864382c"
+    },
+    {
+      "path": "scripts/immunitari/plaquetes.mjs",
+      "before": "f33b8349ce3f5d578a3afb351e814d52452ab03801441bbd6ec96e112de28654",
+      "after": "4294eb67bdcb8aa04b9faee1f4b96d4e71d8c1422ee6e86c07fd712975e63501"
+    },
+    {
+      "path": ".agents/cron/registre_tasques.json",
+      "before": "b78dc8561dc947f8174482d874174fdcf50daa4ab98559b42663840a91031725",
+      "after": "02325586b58edfcc601b7c932eca47b95839a854121c98f612e5935aabd91aba"
+    },
+    {
+      "path": ".agents/skills/core-higiene-escriptori/SKILL.md",
+      "before": "c63fa69802559b09be0c1f271b307e54a572bf928c15a9bc13d54d521930a704",
+      "after": "50958b81a2b92d747ef0a8fc022cf023e2a6b026a4e0b0c529eae1bdcaeb8a77"
+    },
+    {
+      "path": ".agents/skills/wiki-documentacio-i-reflex/SKILL.md",
+      "before": "e9c8be43a0e6dd68338eab3fa90da430a7514c79e7df2ec92ceecc34360fc4fe",
+      "after": "eacf7d36ecadc50e1cf9ee97abba1f70e1c5304cc74878be647f59b85ad3bd39"
+    },
+    {
+      "path": ".agents/skills/core-empaquetat-wp/SKILL.md",
+      "before": "eb540fd752126dac0a5885be77708d4b4b30cf3c83ebd65649d14318fdf503c1",
+      "after": "6047d1c916279b077a2450b903644b8722c08c0bfbc66cf7cbfa70b33706a73e"
+    },
+    {
+      "path": "tests/backend_consolidacio.test.mjs",
+      "before": "0ad633ef976d63e4fad5dc4b748e4064489792ce41802c583133e050a569d618",
+      "after": "8e4dbffe06443b2f9ecd795e4b55365018899c53f20a1c738f19958fc5692669"
+    },
+    {
+      "path": "package.json",
+      "before": "e3369a47848c4bb712f53f5a18eb468cf667d39cbd8d1b2853279bf806371e27",
+      "after": "30ccff14442a9e91a6650ac15d4e1d001bc22a5ba9cd5de6ae6813c724640aaf"
+    },
+    {
+      "path": ".gitignore",
+      "before": "cba384cf305578e61a6274afc3988936e685d826afb9580a665f39bb79349df9",
+      "after": "a5ea33a7a23c122ccb63e692c4531bd52c51d56160358341e6f02fa2f57f3a3a"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "939b31012e255cc31e98c6d4259cb1030a2bd7bb18ad9ed0027b07cd624e63e6"
+}

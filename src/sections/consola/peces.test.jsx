@@ -391,3 +391,77 @@ test('tornaAlCim torna a dalt el primer contenidor desplaçat i res més', () =>
   expect(tornaAlCim({ parentElement: pagina })).toBeNull();
   expect(tornaAlCim(null)).toBeNull();
 });
+
+/* Onada 6 (requisit 9: informació en superfície) · La targeta diu quins
+   problemes té, sense entrar: com a molt cinc i «i N més»; la ruta en <Mono>,
+   que el mode privacitat amaga; i continua portant a la seua pàgina. */
+const PROBLEMES = Array.from({ length: 7 }, (_, i) => (i % 2
+  ? { clau: `p${i}`, text: `skill-${i} · orfe` }
+  : { clau: `p${i}`, text: 'fitxer-absent', ruta: `_wiki_de_poble/${i}.md` }));
+
+test('Onada 6 · TargetaConsola: els problemes a la vista, com a molt cinc, i «i N més»', () => {
+  render(<TargetaConsola icona={Puzzle} titol="Avisos i salut" subtitol="Per a saber què està trencat"
+    entradilla="Els avisos del Mapa." metriques={['7 avisos']} estats={[{ clau: 'alta', text: '7 avisos alts', to: 'error' }]}
+    problemes={PROBLEMES} a="/consola/salut" />);
+  const llista = document.querySelector('ul.sdp-consola__problemes');
+  expect(llista.className).toBe('sdp-consola__evidencies sdp-consola__problemes');
+  expect(llista.getAttribute('aria-label')).toBe('Quins problemes hi ha');
+  expect([...llista.children].map((li) => li.textContent)).toEqual([
+    'fitxer-absent · _wiki_de_poble/0.md', 'skill-1 · orfe', 'fitxer-absent · _wiki_de_poble/2.md', 'skill-3 · orfe',
+    'fitxer-absent · _wiki_de_poble/4.md', 'i 2 més'
+  ]);
+  // La ruta, en tipografia de màquina; el text, tal qual.
+  expect([...llista.querySelectorAll('code.sdp-consola__mono')].map((c) => c.textContent))
+    .toEqual(['_wiki_de_poble/0.md', '_wiki_de_poble/2.md', '_wiki_de_poble/4.md']);
+  // Darrere dels estats, dins del cos; la targeta continua portant a la seua pàgina.
+  expect(llista.previousElementSibling.className).toBe('sdp-consola__estats');
+  expect(llista.closest('.sp-card-text')).not.toBeNull();
+  expect(screen.getByRole('article').querySelector('a.sp-card-link-overlay').getAttribute('href')).toBe('/consola/salut');
+});
+
+test('Onada 6 · TargetaConsola: amb el mode privacitat, les rutes dels problemes s’amaguen i els noms es lligen', () => {
+  render(
+    <PrivacitatConsola.Provider value>
+      <TargetaConsola icona={Puzzle} titol="Avisos i salut" subtitol="Per a saber què està trencat"
+        entradilla="Els avisos del Mapa." problemes={PROBLEMES.slice(0, 2)} a="/consola/salut" />
+    </PrivacitatConsola.Provider>
+  );
+  const llista = document.querySelector('.sdp-consola__problemes');
+  expect(llista.textContent).not.toContain('_wiki_de_poble/');
+  expect(llista.textContent).toContain('skill-1 · orfe');
+  expect(llista.querySelector('code').textContent).toBe('••••••dada amagada pel mode privacitat');
+});
+
+/* Correcció de l'Onada 6 (revisió adversarial: «dins de la llista, els avisos
+   alts i els mitjans tenen el mateix to») · la marca de cada problema va
+   davant, en una Insignia amb el color del semàfor: la llista també fa de
+   semàfor. Un problema sense marca es pinta com sempre. */
+test('Correcció Onada 6 · TargetaConsola: cada problema amb marca porta la seua Insignia del semàfor', () => {
+  const problemes = [
+    { clau: 'a', text: 'tasca-morta', ruta: 'tooling/x.mjs', marca: 'alta', to: 'error' },
+    { clau: 'b', text: 'skill-1 · orfe', marca: 'mitjana', to: 'avis' },
+    { clau: 'c', text: '', ruta: '_wiki_de_poble/04_escriptori', marca: 'sense lector', to: 'avis' },
+    { clau: 'd', text: 'sense marca' }
+  ];
+  render(<TargetaConsola icona={Puzzle} titol="Avisos i salut" subtitol="Per a saber què està trencat"
+    entradilla="Els avisos del Mapa." problemes={problemes} a="/consola/salut" />);
+  const files = [...document.querySelectorAll('.sdp-consola__problemes li')];
+  expect(files.map((li) => li.textContent)).toEqual([
+    'alta tasca-morta · tooling/x.mjs', 'mitjana skill-1 · orfe', 'sense lector _wiki_de_poble/04_escriptori', 'sense marca'
+  ]);
+  expect(files.map((li) => li.querySelector('.sdp-insignia')?.className ?? null)).toEqual([
+    'sdp-insignia sdp-insignia--error', 'sdp-insignia sdp-insignia--avis', 'sdp-insignia sdp-insignia--avis', null
+  ]);
+  // La marca és la primera peça de la fila; la ruta continua en <Mono>.
+  expect(files[0].firstElementChild.className).toBe('sdp-insignia sdp-insignia--error');
+  expect(files[2].querySelector('code.sdp-consola__mono').textContent).toBe('_wiki_de_poble/04_escriptori');
+});
+
+test('Onada 6 · TargetaConsola: sense problemes (null o cap), el cos és el de sempre', () => {
+  for (const problemes of [null, undefined, []]) {
+    render(<TargetaConsola icona={Puzzle} titol="Fluxos" subtitol="Per a trobar les cadenes" entradilla="Les cadenes declarades."
+      problemes={problemes} a="/consola/fluxos" />);
+    expect(document.querySelector('.sdp-consola__problemes')).toBeNull();
+    cleanup();
+  }
+});

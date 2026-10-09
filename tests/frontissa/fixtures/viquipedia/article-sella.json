@@ -1,0 +1,6 @@
+{
+  "captureId": "viquipedia-article-sella-261009",
+  "capturedAt": "2026-10-08T23:01:50.351Z",
+  "url": "https://ca.wikipedia.org/w/api.php?action=query&format=json&formatversion=2&origin=*&maxlag=5&prop=extracts%7Cpageimages%7Cpageprops%7Cimages%7Ccoordinates&exintro=1&explaintext=1&piprop=original%7Cname&imlimit=50&redirects=1&titles=Sella",
+  "body": {"batchcomplete":true,"query":{"pages":[{"pageid":20557,"ns":0,"title":"Sella","extract":"«Sella o la Sella» té aquests significats:\n\nToponímia:\nSella (Marina Baixa), municipi del País Valencià\nRiu Sella (País Valencià), riu de la Marina Baixa, al País Valencià.\nRiu Sella (Astúries), riu del Principat d'Astúries\nLa Sella (Llagostera), muntanya al municipi de Llagostera (Gironès).\nLa Sella (Ulldemolins), muntanya al municipi d'Ulldemolins (Priorat).\nLa Sella (la Palma d'Ebre), muntanya als municipis de la Bisbal de Montsant (Priorat) i de la Palma d'Ebre (Ribera d'Ebre).\nGrup Sella, massís en forma d'altiplà a les Dolomites\nSella, seient de cuir utilitzat per a muntar a cavall.\nPunt de sella, tipus de punt estacionari en una superfície multidimensional.","pageprops":{"disambiguation":"","wikibase_item":"Q299778"},"images":[{"ns":6,"title":"Fitxer:Confusion grey.svg"},{"ns":6,"title":"Fitxer:Disambig.svg"}]}]}}
+}

@@ -18,6 +18,7 @@
  *   · la unió dels atributs → ATRIBUTS i observedAttributes de PedraSecaEmbed.jsx;
  *   · `clausDeConfig` → CLAUS_PERMESES de PedraSecaEmbed.jsx;
  *   · `cua.verbs`, `api.claus` i `ordresIframe` → host.js;
+ *   · `moduls` → ESQUEMA_MODUL de apps/plataforma/contracteNucli.js i les claus de l'API;
  *   · `esdeveniments.element` → els que l'element reemet;
  *   · `elementApi` → la propietat i els mètodes públics de l'element;
  *   · tapaRuta() → la ruta tapada de la telemetria (data/telemetria.js).
@@ -60,7 +61,10 @@ export const CONTRACTE_AMFITRIO_V1 = congela({
   atributs: ['plugin-url', 'fonts-href', 'nom-poble', 'poble', 'ruta-inicial', 'base-path', 'traductor-url'],
   /* Declaracions opt-in de l'amfitrió que encara no són a sdp.markup.v1:
      entraran a la versió següent del marcatge quan el Mestre ho decidisca.
-     Cap amfitrió no les ha d'emetre per defecte (WordPress no les emet). */
+     Cap amfitrió no les ha d'emetre per defecte. Excepció per ordre del
+     Mestre (Onada 5, 261009): WordPress declara ruta-a-url="fragment" a la
+     seua instància pròpia; el marcatge de referència per a altres amfitrions,
+     no (marcatge.php, socdepoble_enxufe_element). */
   atributsOptIn: ['ruta-a-url'],
   /* Configuració en JSON (atribut o <script type="application/json">). */
   atributsDeConfig: ['config', 'config-id'],
@@ -115,11 +119,31 @@ export const CONTRACTE_AMFITRIO_V1 = congela({
      configurable (exposaGlobal), i el mateix objecte provisional reenvia
      cada crida de manera síncrona a qui n'haja guardat la referència. Amb
      el paquet monolític (SDP_PAQUET=monolitic, la variant del directori de
-     WordPress) no hi ha provisional: l'API real ix en avaluar-se el paquet. */
+     WordPress) no hi ha provisional: l'API real ix en avaluar-se el paquet.
+     Onada 6 (261009, ADR-2026-12) · tres claus additives per als mòduls
+     opcionals (vegeu `moduls`): `registraModul` i `lliuraCos`, que el
+     provisional encua com la resta de verbs, i `nucli`, que és una lectura
+     com `isReady` (en el provisional val undefined fins a l'adopció; en
+     l'API real, null fins que un mòdul el demana). */
   api: {
     global: 'SocDePoble',
     claus: ['configura', 'arrenca', 'arrencaAuto', 'deferArrenca', 'estat', 'CONTRACTE_BACKEND',
-      'injectaSessio', 'expulsaSessio', 'quanLlest', 'isReady', 'registraApp']
+      'injectaSessio', 'expulsaSessio', 'quanLlest', 'isReady', 'registraApp', 'registraModul', 'lliuraCos', 'nucli']
+  },
+
+  /* Mòduls opcionals (sdp.modul.v1, ADR-2026-12): una app que no viatja
+     dins del paquet. Un fitxer de registre de l'amfitrió crida
+     `registra` amb el manifest (sdp.app.v1 més `cos`, `estils` opcionals i
+     el rang `nucli`); el cos, un <script> clàssic del MATEIX origen amb
+     `integrity` que la plataforma injecta quan s'obri l'app, crida `lliura`
+     mentre s'executa i pren React, la plataforma i Pedra Seca de `nucli`
+     (src/apps/plataforma/contracteNucli.js). Cap mòdul porta backend ni
+     sessió: el Model B no canvia. */
+  moduls: {
+    esquema: 'sdp.modul.v1',
+    registra: 'registraModul',
+    lliura: 'lliuraCos',
+    nucli: 'nucli'
   },
 
   /* configura(opcions): claus de primer nivell. `auth` és la política de

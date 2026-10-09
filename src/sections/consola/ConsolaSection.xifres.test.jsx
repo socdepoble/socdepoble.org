@@ -188,7 +188,11 @@ test('la dada viva detallada: torns un a un, línies del LEDGER, segell, avisos 
   cleanup();
 
   await obri('/consola/xifres/linies-ledger');
-  expect(h1()).toBe('10 línies del LEDGER per revisar');
+  /* Onada 6 (contradiccions) · El Mapa d'esta prova porta ledger-invalid: la
+     xifra ho diu al títol (els recomptes, al subtítol). Derogat «10 línies del
+     LEDGER per revisar» amb la signatura trencada. */
+  expect(h1()).toBe('LEDGER amb la signatura trencada');
+  expect(screen.getByText('8 segells fòssils · 2 línies mal formades')).toBeTruthy();
   const metriques = screen.getByRole('region', { name: 'Mètriques del LEDGER' });
   expect([...metriques.querySelectorAll('tbody th')].map((th) => th.textContent)).toEqual(['ledger-fossils', 'ledger-mal-formades']);
   expect(within(screen.getByRole('region', { name: 'Avisos del LEDGER' })).getByText(/node tooling\/verify-ledger\.mjs/)).toBeTruthy();

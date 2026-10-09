@@ -48,8 +48,11 @@ function useTraductor() {
 }
 
 /* La targeta canònica de cada secció. Revisió adversarial del 261007 · La
-   key la posa esta funció: GraellaTargetes només fa llista.map(pinta). */
-const targetaDe = (seccio) => ({ id, item, esdeveniment }) => (seccio === 'mercat'
+   key la posa esta funció: GraellaTargetes només fa llista.map(pinta).
+   Onada 6 (pàgina del poble) · Una llista que barreja seccions (les targetes
+   d'un poble: Mur, Agenda i Mercat) porta la secció a cada entrada, i mana
+   sobre la de la regió. Sense, la de la regió, com sempre. */
+const targetaDe = (seccio) => ({ id, item, esdeveniment, seccio: propia }) => ((propia ?? seccio) === 'mercat'
   ? <TargetaDelMercat key={id} item={item} />
   : <TargetaDelMur key={id} item={item} esdeveniment={esdeveniment} />);
 
@@ -57,10 +60,14 @@ const targetaDe = (seccio) => ({ id, item, esdeveniment }) => (seccio === 'merca
  * La vista, sense dades pròpies: el que pinta la regió per a una font
  * ({ elements, estat, error, refresh }). La munten PublicacionsDeLActor i
  * l'espècimen del catàleg. Una secció sense històric no pinta res.
+ * Onada 6 (pàgina del poble) · `textos` ({ titol, buit, carregant, error })
+ * substituïx els de l'històric de la secció: la mateixa vista per a una altra
+ * font (les publicacions d'un poble, pobles/PublicacionsDelPoble.jsx).
+ * Un `titol` buit no pinta cap capçalera. Sense `textos`, com sempre.
  */
-export function VistaPublicacionsDeLActor({ seccio, elements = CAP, estat = 'ready', error = null, refresh = null, nivell = 'h2' }) {
+export function VistaPublicacionsDeLActor({ seccio, elements = CAP, estat = 'ready', error = null, refresh = null, nivell = 'h2', textos: textosPropis = null }) {
   const t = useTraductor();
-  const textos = textosDeLHistoric(seccio, t);
+  const textos = textosPropis || textosDeLHistoric(seccio, t);
   if (!textos) return null;
   const Titol = NIVELLS.has(nivell) ? nivell : 'h2';
   const llista = Array.isArray(elements) ? elements : CAP;
@@ -71,7 +78,7 @@ export function VistaPublicacionsDeLActor({ seccio, elements = CAP, estat = 'rea
   else cos = <GraellaTargetes elements={llista}>{targetaDe(seccio)}</GraellaTargetes>;
   return (
     <>
-      <Titol>{textos.titol}</Titol>
+      {textos.titol ? <Titol>{textos.titol}</Titol> : null}
       {cos}
     </>
   );
@@ -81,15 +88,17 @@ export function VistaPublicacionsDeLActor({ seccio, elements = CAP, estat = 'rea
    l'acte, el moment de cada targeta), peta amb un element remot malformat, la
    regió ho diu i deixa tornar-ho a provar; la pàgina de damunt, i a l'editor
    el cos que s'escriu, continuen (sense, l'EditorErrorBoundary de la closca
-   s'enduria l'editor sencer). Res fora de Pedra Seca: Alerta i Boto. */
-function FalladaDeLHistoric({ seccio, t, nivell, reinicia }) {
-  const textos = textosDeLHistoric(seccio, t);
+   s'enduria l'editor sencer). Res fora de Pedra Seca: Alerta i Boto.
+   Onada 6 · Exportada, amb els `textos` propis de qui la munta (la pestanya
+   d'un poble); sense, els de l'històric de la secció. */
+export function FalladaDeLHistoric({ seccio, t, nivell, reinicia, textos: textosPropis = null }) {
+  const textos = textosPropis || textosDeLHistoric(seccio, t);
   if (!textos) return null;
   const tradueix = typeof t === 'function' ? t : (_clau, reserva) => reserva;
   const Titol = NIVELLS.has(nivell) ? nivell : 'h2';
   return (
     <>
-      <Titol>{textos.titol}</Titol>
+      {textos.titol ? <Titol>{textos.titol}</Titol> : null}
       <Alerta to="error" titol={textos.error} accions={<Boto onClick={reinicia}>{tradueix('common.reintenta', 'Torna-ho a provar')}</Boto>}>
         {tradueix('section.notes.historic.fallada', 'La resta de la pàgina continua com sempre.')}
       </Alerta>

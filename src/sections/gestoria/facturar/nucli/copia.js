@@ -39,6 +39,20 @@ export function nomFitxerCopia(instant, { incidencia = false } = {}) {
   return `llibre-veri-factu-${incidencia ? 'incidencia-' : ''}${iso.slice(0, 10)}-${iso.slice(11, 19).split(':').join('')}.json`;
 }
 
+/** El tipus de l'XML de prova dels registres (Onada 6, 261009). */
+export const TIPUS_XML = 'application/xml';
+
+/**
+ * El nom de l'XML de prova dels registres per a l'AEAT: «registres-aeat-prova-2026-10-07-034512.xml».
+ * Porta «prova» al nom: no s'envia enlloc i encara li falta el bloc del sistema informàtic.
+ * @param {number|Date} instant
+ * @returns {string}
+ */
+export function nomFitxerXml(instant) {
+  const iso = dataHoraAmbHus(instant);
+  return `registres-aeat-prova-${iso.slice(0, 10)}-${iso.slice(11, 19).split(':').join('')}.xml`;
+}
+
 /**
  * La marca d'una còpia: l'últim registre de cada cadena del llibre exportat.
  * @param {ReadonlyArray<object>} registres els del llibre exportat (llibreDesDeJson), en l'ordre del llibre

@@ -438,6 +438,194 @@ describe('el camí sencer, sense xarxa', () => {
   });
 });
 
+/* Onada 6 (261009, front «gestoria-facturació»): emetre de veres. */
+describe('emetre de veres: retenció, factura en paper i rectificativa', () => {
+  test('una factura amb retenció del 15 %: el total a pagar, el full amb el QR i la impressió del mateix document', async () => {
+    const imprimix = vi.fn();
+    munta({ imprimix });
+    await configura();
+    await waitFor(() => expect(numeroQueTindra()).toBe('A2026-0001'));
+    omplClient();
+    omplLinia();
+    fireEvent.change(screen.getByLabelText('Retenció d’IRPF'), { target: { value: '15' } });
+    // 5,00 € de base al 4 %: 5,20 € de total; el 15 % de la base, 0,75 €; a pagar, 4,45 €.
+    expect(screen.getByText('Retenció d’IRPF (15 %)').nextElementSibling.textContent).toBe('-0,75 €');
+    expect(screen.getByText('Total a pagar').nextElementSibling.textContent).toBe('4,45 €');
+    await emet('A2026-0001');
+
+    fireEvent.click(boto('Mostra la factura A2026-0001'));
+    const titol = await screen.findByRole('heading', { name: 'La factura A2026-0001', level: 3 });
+    expect(document.activeElement).toBe(titol);
+    const vista = within(titol.closest('section'));
+    const full = within(vista.getByRole('article', { name: 'Factura A2026-0001' }));
+    expect(full.getByText('QR tributario:')).toBeTruthy();
+    expect(full.getByRole('img', { name: 'Codi QR de cotejo de la factura a l’AEAT' })).toBeTruthy();
+    expect(full.getByText('https://www2.agenciatributaria.gob.es/wlpl/TIKE-CONT/ValidarQR?nif=B12345674&numserie=A2026-0001&fecha=07-10-2026&importe=5.20'))
+      .toBeTruthy();
+    expect(full.getByText('Retenció d’IRPF (15 %)').nextElementSibling.textContent).toBe('-0,75 €');
+    expect(full.getByText('Total a pagar').nextElementSibling.textContent).toBe('4,45 €');
+    expect(full.getByText(`NIF ${CIF_EMISSOR}`)).toBeTruthy();
+    expect(full.getByText(`NIF ${DNI_CLIENT}`)).toBeTruthy();
+    expect(full.queryByText(/VERI\*FACTU/)).toBeNull();
+    // Correcció de la revisió (261009): qui rep la factura llig al paper que la seu de l'AEAT encara no la trobarà.
+    expect(full.getByText(/^Este programa encara no envia les factures a l’AEAT: si llegiu el QR/)).toBeTruthy();
+    // La menció VERI*FACTU: apagada i sense poder-la encendre, amb el perquè.
+    const mencio = vista.getByRole('switch', { name: 'La menció «VERI*FACTU»' });
+    expect([mencio.getAttribute('aria-checked'), mencio.disabled]).toEqual(['false', true]);
+    expect(vista.getByText(/només es podrà posar quan el programa envie cada registre a l’AEAT/)).toBeTruthy();
+    // La còpia per a imprimir penja del <body> i l'<html> ho sap; imprimir és el mateix document.
+    expect(document.documentElement.classList.contains('sdp-gestoria-imprimint')).toBe(true);
+    const copia = document.body.querySelector(':scope > .sdp-gestoria-factura-impresa');
+    expect(copia?.getAttribute('aria-hidden')).toBe('true');
+    // `hidden`: si el full de la Gestoria no arriba al <body> (l'encastament), la còpia no es veu mai.
+    expect(copia.hidden).toBe(true);
+    expect(copia.textContent).toContain('A2026-0001');
+    expect(copia.textContent).toContain('la seu electrònica de l’AEAT no hi trobarà esta factura.');
+    fireEvent.click(vista.getByRole('button', { name: 'Imprimeix o desa en PDF' }));
+    expect(imprimix).toHaveBeenCalledTimes(1);
+    // El QR es pot llevar de la factura.
+    fireEvent.click(vista.getByRole('switch', { name: 'El QR tributari a la factura' }));
+    expect(full.queryByRole('img')).toBeNull();
+    expect(copia.textContent).not.toContain('QR tributario:');
+    expect(copia.textContent).not.toContain('no hi trobarà esta factura');
+    // Tancar-la deixa el document com estava, i el focus torna al botó que l'ha oberta (correcció de la revisió, 261009).
+    fireEvent.click(vista.getByRole('button', { name: 'Tanca la factura' }));
+    expect(screen.queryByRole('heading', { name: 'La factura A2026-0001' })).toBeNull();
+    expect(document.activeElement).toBe(boto('Mostra la factura A2026-0001'));
+    expect(document.documentElement.classList.contains('sdp-gestoria-imprimint')).toBe(false);
+    expect(document.body.querySelector('.sdp-gestoria-factura-impresa')).toBeNull();
+    expect(xarxa).not.toHaveBeenCalled();
+  });
+
+  test('una rectificativa per diferències: tria la factura, en copia el client i ix com a R1 al llibre', async () => {
+    const { idb } = munta();
+    await configura();
+    await waitFor(() => expect(numeroQueTindra()).toBe('A2026-0001'));
+    omplClient();
+    omplLinia();
+    await emet('A2026-0001');
+
+    fireEvent.click(screen.getByRole('radio', { name: 'Factura rectificativa' }));
+    await waitFor(() => expect(numeroQueTindra()).toBe('R2026-0001'));
+    // El client es copia de la factura triada.
+    expect(screen.getByLabelText('NIF del client (obligatori)').value).toBe('');
+    fireEvent.click(screen.getByLabelText('A2026-0001 · 07/10/2026 · Bar de la Plaça · 5,20 €'));
+    expect(screen.getByLabelText('NIF del client (obligatori)').value).toBe(DNI_CLIENT);
+    expect(screen.getByLabelText('Per què la corregixes').value).toBe('R1');
+    fireEvent.click(screen.getByRole('radio', { name: /^Només la diferència/ }));
+    omplLinia({ concepte: 'Descompte', quantitat: '1', preu: '-1,00', iva: '4' });
+    expect(screen.getByText('Total', { selector: 'dt' }).nextElementSibling.textContent).toBe('-1,04 €');
+    await emet('R2026-0001');
+    const [, r1] = files(idb, NOM_BD, 'registres').map((f) => f.registre);
+    expect(r1).toMatchObject({ tipusFactura: 'R1', numSerie: 'R2026-0001', importTotal: -104 });
+    expect(r1.factura).toMatchObject({ tipusRectificativa: 'I', rectificades: [{ numSerie: 'A2026-0001', dataExpedicio: '2026-10-07' }] });
+    expect(taula().getByText('Rectificativa')).toBeTruthy();
+    // En paper: la condició de rectificativa, la causa i la factura que corregix.
+    fireEvent.click(boto('Mostra la factura R2026-0001'));
+    const full = within(await screen.findByRole('article', { name: 'Factura rectificativa R2026-0001' }));
+    expect(full.getByText('Factura rectificada: A2026-0001 (07/10/2026).')).toBeTruthy();
+    expect(full.getByText('Per diferències: esta factura porta només el que canvia.')).toBeTruthy();
+    expect(xarxa).not.toHaveBeenCalled();
+  });
+
+  /* Correcció de la revisió (261009): triar A, desfer-la i triar B deixava el client d'A; i es podien
+     rectificar en una sola factura les de dos clients. */
+  test('una rectificativa: el client va darrere de la tria, avisa si s’escriu un altre i no barreja clients', async () => {
+    const { idb } = munta();
+    await configura();
+    await waitFor(() => expect(numeroQueTindra()).toBe('A2026-0001'));
+    omplClient();
+    omplLinia();
+    await emet('A2026-0001');
+    await waitFor(() => expect(numeroQueTindra()).toBe('A2026-0002'));
+    const altreNif = ['8765', '4321', 'X'].join('');
+    escriu('NIF del client (obligatori)', altreNif);
+    escriu('Nom o raó social (obligatori)', 'Casino del Poble');
+    escriu('Adreça (obligatori)', 'Plaça Major, 9');
+    escriu('Codi postal (obligatori)', '46998');
+    escriu('Població (obligatori)', 'Poble de Prova');
+    omplLinia({ concepte: 'Coca', quantitat: '1', preu: '10,00', iva: '10' });
+    await emet('A2026-0002');
+
+    fireEvent.click(screen.getByRole('radio', { name: 'Factura rectificativa' }));
+    await waitFor(() => expect(numeroQueTindra()).toBe('R2026-0001'));
+    const nif = () => screen.getByLabelText('NIF del client (obligatori)').value;
+    const casellaA = () => screen.getByLabelText('A2026-0001 · 07/10/2026 · Bar de la Plaça · 5,20 €');
+    const casellaB = () => screen.getByLabelText('A2026-0002 · 07/10/2026 · Casino del Poble · 11,00 €');
+    fireEvent.click(casellaA());
+    expect(nif()).toBe(DNI_CLIENT);
+    fireEvent.click(casellaA());
+    expect(nif()).toBe('');
+    fireEvent.click(casellaB());
+    expect(nif()).toBe(altreNif);
+    expect(screen.getByLabelText('Nom o raó social (obligatori)').value).toBe('Casino del Poble');
+    expect(screen.queryByText('Este client no és el de la factura que corregixes')).toBeNull();
+
+    // Les dues alhora: no s'emet, i es diu per què.
+    fireEvent.click(casellaA());
+    omplLinia({ concepte: 'Descompte', quantitat: '1', preu: '-1,00', iva: '10' });
+    fireEvent.click(boto('Revisa i emet la factura'));
+    expect(await screen.findByText(/^Una rectificativa corregix factures d’un sol client/)).toBeTruthy();
+    expect(screen.queryByRole('dialog')).toBeNull();
+
+    // Un client escrit a mà no es toca, i s'avisa que no és el de la factura; el botó el torna a copiar.
+    fireEvent.click(casellaA());
+    escriu('Nom o raó social (obligatori)', 'Casino del Poble, SL');
+    expect(await screen.findByText('Este client no és el de la factura que corregixes')).toBeTruthy();
+    expect(screen.getByText(`La factura que corregixes és de Casino del Poble (NIF ${altreNif}). Deixa el client així només si el que corregixes són les seues dades.`)).toBeTruthy();
+    fireEvent.click(boto('Copia el client de la factura'));
+    expect(screen.getByLabelText('Nom o raó social (obligatori)').value).toBe('Casino del Poble');
+    expect(screen.queryByText('Este client no és el de la factura que corregixes')).toBeNull();
+    fireEvent.click(screen.getByRole('radio', { name: /^Només la diferència/ }));
+    await emet('R2026-0001');
+    const r1 = files(idb, NOM_BD, 'registres').map((f) => f.registre).find((r) => r.numSerie === 'R2026-0001');
+    expect(r1.factura).toMatchObject({ destinatari: { nif: altreNif, nom: 'Casino del Poble' }, rectificades: [{ numSerie: 'A2026-0002' }] });
+    expect(xarxa).not.toHaveBeenCalled();
+  });
+
+  test('l’XML de prova dels registres per a l’AEAT: es descarrega, diu que és de prova i no s’envia res', async () => {
+    const { descarrega } = munta();
+    await configura();
+    expect(screen.queryByRole('button', { name: 'Descarrega l’XML de prova per a l’AEAT' })).toBeNull();
+    await waitFor(() => expect(numeroQueTindra()).toBe('A2026-0001'));
+    omplClient();
+    omplLinia();
+    await emet('A2026-0001');
+    fireEvent.click(boto('Descarrega l’XML de prova per a l’AEAT'));
+    expect(await screen.findByText('XML de prova descarregat')).toBeTruthy();
+    expect(descarrega).toHaveBeenCalledTimes(1);
+    const [{ nom, tipus, dades }] = descarrega.mock.calls[0];
+    expect([nom, tipus]).toEqual(['registres-aeat-prova-2026-10-07-120000.xml', 'application/xml']);
+    const xml = new TextDecoder().decode(dades);
+    expect(xml).toMatch(/^<\?xml version="1\.0" encoding="UTF-8"\?>/);
+    expect(xml).toContain('<sum1:NumSerieFactura>A2026-0001</sum1:NumSerieFactura>');
+    expect(xml).toContain('<sum1:ImporteTotal>5.20</sum1:ImporteTotal>');
+    expect(xml).toContain('<!-- PENDENT: SistemaInformatico');
+    expect(screen.getByText(/porta un registre\. No s’ha enviat res a l’AEAT/)).toBeTruthy();
+    expect(xarxa).not.toHaveBeenCalled();
+  });
+
+  test('una factura triada per a rectificar que s’anul·la entremig: no s’emet, i es diu', async () => {
+    munta();
+    await configura();
+    await waitFor(() => expect(numeroQueTindra()).toBe('A2026-0001'));
+    omplClient();
+    omplLinia();
+    await emet('A2026-0001');
+    fireEvent.click(screen.getByRole('radio', { name: 'Factura rectificativa' }));
+    fireEvent.click(screen.getByLabelText('A2026-0001 · 07/10/2026 · Bar de la Plaça · 5,20 €'));
+    omplLinia({ concepte: 'Pa de llenya', quantitat: '2', preu: '2,40', iva: '4' });
+    fireEvent.click(boto('Anul·la la factura A2026-0001'));
+    const dialeg = await screen.findByRole('dialog', { name: 'Anul·les la factura A2026-0001?' });
+    fireEvent.click(within(dialeg).getByRole('button', { name: 'Sí, anul·la-la' }));
+    expect(await screen.findByText('Factura A2026-0001 anul·lada')).toBeTruthy();
+    expect(await screen.findByText('No hi ha cap factura al llibre que es puga rectificar.')).toBeTruthy();
+    fireEvent.click(boto('Revisa i emet la factura'));
+    expect(await screen.findByText(/^Alguna de les factures triades ja no es pot rectificar/)).toBeTruthy();
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+});
+
 describe('la cadena i la còpia', () => {
   test('una còpia que en sabia més: el llibre truncat es veu, amb el seu motiu', async () => {
     const idb = creaIdbFals();

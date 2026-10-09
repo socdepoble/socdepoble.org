@@ -8,7 +8,8 @@
  *   · la targeta «Nou grup» · «Nova comunitat»: cap RPC en crea cap, i per
  *     això obrin, DINS del diàleg, un panell honest que diu d'on naixen (una
  *     Pàgina Universal i «Comentar») amb el camí al Mur i a Pobles;
- *   · sense cerca, només «Sóc de Poble» i «IAIA MarIA»;
+ *   · sense cerca, només «Sóc de Poble» i «IAIA MarIA» (la IAIA, no, amb
+ *     `senseIAIA`: el nivell d'IA a 0, Onada 6);
  *   · amb cerca, freqüents, un mateix i padró en seccions alfabètiques.
  * Els contactes d'ajuda sense destinatari connectat es mostren inactius.
  * El cercador filtra totes les seccions amb el plegat de /cerca (indexCerca):
@@ -34,7 +35,7 @@ import { Avatar } from '../../../components/PedraSeca/index.js';
 import { rutaDEntrada } from '../../../config/rutaEntrada.js';
 import { fitxes as fitxesDeConsulta, plega } from '../../search/indexCerca.js';
 import FilaPersona from './FilaPersona.jsx';
-import { contactesDAjuda } from '../contactesAjuda.js';
+import { contactesDAjuda, senseContacteDeLaIAIA } from '../contactesAjuda.js';
 
 const CAP = Object.freeze([]);
 const idDe = (membre) => String(membre?.usuari_id ?? membre?.usuariId ?? '');
@@ -82,7 +83,8 @@ export default function DialegNovaConversa(props) {
 
 function Contingut({
   t, cercaMembres, contactesFrequents = CAP, joId = null, joNom = null, filPersonal = null,
-  onTriaMembre, obrintAmb = null, onObriFil, onVes, campRef, errorObrir = null, senseSessio = false, tornar
+  onTriaMembre, obrintAmb = null, onObriFil, onVes, campRef, errorObrir = null, senseSessio = false, tornar,
+  senseIAIA = false
 }) {
   const [terme, setTerme] = useState('');
   const [perId, setPerId] = useState(() => new Map());
@@ -137,8 +139,11 @@ function Contingut({
     [contactesFrequents, jo, llistaFitxes, cercant]
   );
 
+  /* Onada 6 (tasca 12) · Amb el nivell d'IA a 0, la IAIA no és enlloc: ni
+     entre els contactes d'ajuda ni en el padró que es cerca. */
   const seccions = useMemo(() => {
-    const candidates = cercant ? [...perId.values()] : contactesDAjuda([...perId.values()]);
+    const padro = senseIAIA ? senseContacteDeLaIAIA([...perId.values()]) : [...perId.values()];
+    const candidates = cercant ? padro : contactesDAjuda(padro, { senseIAIA });
     const persones = candidates
       .filter((m) => idDe(m) !== jo && typeof m.nom === 'string' && m.nom.trim() && casa(m.nom, llistaFitxes))
       .sort((a, b) => a.nom.localeCompare(b.nom, 'ca'));
@@ -149,7 +154,7 @@ function Contingut({
       perLletra.get(lletra).push(membre);
     }
     return [...perLletra.entries()];
-  }, [perId, jo, llistaFitxes, cercant]);
+  }, [perId, jo, llistaFitxes, cercant, senseIAIA]);
 
   const nomJo = joNom || t('section.xat.nou.jo', 'Jo');
   const etiquetaTu = t('section.xat.nou.tu', '{nom} (Tu)').replace('{nom}', nomJo);

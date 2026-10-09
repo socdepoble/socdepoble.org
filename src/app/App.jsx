@@ -3,7 +3,7 @@ import { RouteTelemetria } from '../hooks/RouteTelemetria';
 import { usePullToRefresh } from '../hooks/usePullToRefresh.js';
 import { useEntitatDelProjecte } from '../hooks/useEntitatDelProjecte.js';
 import React, { Suspense, useCallback, useEffect, useRef, memo, StrictMode, useMemo, useState } from 'react';
-import { Navigate, NavLink, Route, Routes, useNavigate, useLocation, useRouter } from './contexts/RouterContext';
+import { Navigate, NavLink, Route, Routes, useNavigate, useLocation, useParams, useRouter } from './contexts/RouterContext';
 import { MoonStar, Search, Settings, Sun, Globe } from '../icons.jsx';
 import { ChevronDown, LayoutGrid, PanelLeftClose } from 'lucide-react';
 import { IaiaIcon } from '../components/PedraSeca/atoms/icones';
@@ -113,14 +113,17 @@ const casaSeccio = (pathname, section) => [section.path, ...(section.subrutes ||
 const AMPLE_MAXIM_COMPACTE = 1023;
 
 /* T3 (ordre del Mestre, 260930; esmena del 261006) · La barra inferior mòbil
-   porta cinc caselles en un ordre explícit: Xat, Mur, [Panell de Control],
-   Pobles i Mercat. Ja no ix de tallar SECTIONS, que continua manant l'ordre de
-   la barra lateral. Telefonades n'ha eixit per decisió del Mestre (261006,
-   «Sí, fora de la barra»): l'avís de D17 viu a la vista Telefonades del rail
-   del Xat (/xat?vista=telefonades). */
+   porta cinc caselles en un ordre explícit. Ja no ix de tallar SECTIONS, que
+   continua manant l'ordre de la barra lateral. Telefonades n'ha eixit per
+   decisió del Mestre (261006, «Sí, fora de la barra»): l'avís de D17 viu a la
+   vista Telefonades del rail del Xat (/xat?vista=telefonades).
+   Onada 5 (ordre del Mestre, 261008) · Xat, Mur, [Panell de Control], Mercat
+   i Pobles: el mateix ordre que les quatre primeres de la barra lateral (ho
+   lliga la prova T3). Pobles va l'última perquè no s'hi publica: les dues
+   seccions on es publica (Mur i Mercat) flanquegen el botó central. */
 const seccioDeLaBarraMobil = (id) => NAV_SECTIONS.find((section) => section.id === id);
 const MOBILE_NAV_LEADING = ['xat', 'mur'].map(seccioDeLaBarraMobil).filter(Boolean);
-const MOBILE_NAV_TRAILING = ['pobles', 'mercat'].map(seccioDeLaBarraMobil).filter(Boolean);
+const MOBILE_NAV_TRAILING = ['mercat', 'pobles'].map(seccioDeLaBarraMobil).filter(Boolean);
 
 function RouteFallback() {
   return (
@@ -799,6 +802,17 @@ function RedireccioIaia() {
   return <Navigate to={consulta ? `/iaia?${consulta}` : '/iaia'} replace />;
 }
 
+/* Onada 5 (ordre del Mestre, 261008) · Àlies «chat» → «xat»: un enllaç
+   copiat amb la paraula anglesa (/chat, /chat/<fil>) aterra al Xat i
+   conserva la consulta. useParams descodifica: el fil es torna a codificar. */
+function RedireccioXat() {
+  const { threadId } = useParams();
+  const { search } = useLocation();
+  const consulta = new URLSearchParams(search).toString();
+  const desti = threadId ? `/xat/${encodeURIComponent(threadId)}` : '/xat';
+  return <Navigate to={consulta ? `${desti}?${consulta}` : desti} replace />;
+}
+
 /* T4 (ordre del Mestre, 260930) · Els àlies d'entrada (/login, /accedir,
    /entrar, /crear-compte) porten a /registre amb el mode que obrin i
    conserven la consulta rebuda. El ?tornar només passa si és intern i no
@@ -871,6 +885,10 @@ function ActorRoutes({ agents }) {
       <Route path="xat" element={<XatSection />} />
       <Route path="control-xat" element={<XatControlSection />} />
       <Route path="xat/:threadId" element={<XatSection />} />
+      {/* Àlies chat → xat (Onada 5): abans del comodí ':sectionId/:itemId',
+          que faria de /chat/<fil> un «Element no trobat». */}
+      <Route path="chat" element={<RedireccioXat />} />
+      <Route path="chat/:threadId" element={<RedireccioXat />} />
       <Route path="mur" element={<MurSection />} />
       <Route path="mercat" element={<MercatSection />} />
       <Route path="calendari" element={<CalendariSection />} />

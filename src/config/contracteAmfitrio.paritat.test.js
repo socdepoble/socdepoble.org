@@ -18,6 +18,10 @@ vi.mock('../data/identitat.js', () => ({ adoptaSessioExterna: vi.fn(() => true),
 import { ATRIBUTS, CLAUS_PERMESES, ESDEVENIMENTS_REEMESOS, defineCustomElement } from '../PedraSecaEmbed.jsx';
 import { ORDRES_IFRAME, VERBS_CUA, exposaGlobal } from '../host.js';
 import { _reiniciaTelemetria, registraEsdeveniment } from '../data/telemetria.js';
+import { manifestModulDeProva } from '../apps/plataforma/__fixtures__/manifests.js';
+import { ESQUEMA_MODUL } from '../apps/plataforma/contracteNucli.js';
+import { llistaApps, retiraAppExterna } from '../apps/plataforma/registreApps.js';
+import { MARCA_DEL_CARREGADOR, instalaCarregador } from './carregadorDelPaquet.js';
 import { CONTRACTE_AMFITRIO_V1 as C, tapaRuta } from './contracteAmfitrio.js';
 
 const ordenat = (llista) => [...llista].sort();
@@ -93,5 +97,60 @@ describe('l’arrencada (host.js)', () => {
     const api = exposaGlobal({});
     expect(Object.isFrozen(api)).toBe(true);
     expect(ordenat(Object.keys(api))).toEqual(ordenat(C.api.claus));
+  });
+
+  /* Onada 6 (261009, ADR-2026-12) · els mòduls opcionals: claus additives,
+     al final i en este ordre (el provisional les reproduïx tal qual). */
+  test('mòduls: el contracte nomena les claus de l’API, l’esquema és el del nucli i el Model B no canvia', () => {
+    expect(C.moduls).toEqual({ esquema: ESQUEMA_MODUL, registra: 'registraModul', lliura: 'lliuraCos', nucli: 'nucli' });
+    expect(C.api.claus.slice(-3)).toEqual([C.moduls.registra, C.moduls.lliura, C.moduls.nucli]);
+    expect(C.api.claus.slice(0, 11)).toEqual(['configura', 'arrenca', 'arrencaAuto', 'deferArrenca', 'estat', 'CONTRACTE_BACKEND',
+      'injectaSessio', 'expulsaSessio', 'quanLlest', 'isReady', 'registraApp']);
+    expect(Object.keys(exposaGlobal({}))).toEqual([...C.api.claus]);
+    /* Cap verb nou a la cua ni al pont d'iframe: els mòduls només parlen per l'API. */
+    expect(Object.keys(C.cua.verbs)).toEqual(['sessio', 'configura']);
+    expect(C.ordresIframe).not.toContain('registraModul');
+  });
+
+  test('mòduls: registraModul delega en el registre, lliuraCos ignora un id sense càrrega i nucli és una lectura (null fins que un mòdul el demana)', () => {
+    const api = exposaGlobal({});
+    expect(Object.getOwnPropertyDescriptor(api, 'nucli').get).toBeTypeOf('function');
+    expect(api.nucli).toBeNull();
+    expect(api.lliuraCos('llibreta', () => () => null)).toBe(false);
+    try {
+      expect(api.registraModul(manifestModulDeProva())).toMatchObject({ ok: true, manifest: { id: 'llibreta', origen: 'modul' } });
+      expect(llistaApps().some((app) => app.id === 'llibreta' && app.origen === 'modul')).toBe(true);
+      expect(api.registraModul(manifestModulDeProva({ nucli: '^2' })).ok).toBe(false);
+    } finally {
+      retiraAppExterna('llibreta');
+    }
+  });
+
+  test('el provisional del paquet encua registraModul i lliuraCos, i nucli hi és una lectura: undefined fins a l’adopció', async () => {
+    const finestra = { location: { origin: 'https://pagina.invalid' } };
+    const script = document.createElement('script');
+    script.setAttribute('src', 'https://pagina.invalid/dist/soc-de-poble.standalone.js');
+    const provisional = instalaCarregador(finestra, document, script,
+      { modul: 'trossos/soc-de-poble-Prova.js', claus: C.api.claus, fitxer: 'soc-de-poble.standalone.js' }, () => new Promise(() => {}));
+    expect(Object.keys(provisional)).toEqual([...C.api.claus]);
+    expect(provisional.nucli).toBeUndefined();
+    const registrat = provisional.registraModul({ id: 'llibreta' });
+    expect(registrat).toBeInstanceOf(Promise);
+    const fabrica = () => () => null;
+    const lliurat = provisional.lliuraCos('llibreta', fabrica);
+    expect(lliurat).toBeInstanceOf(Promise);
+    const lliuraCos = vi.fn(() => false);
+    const real = Object.freeze({
+      registraModul: (manifest) => ({ ok: true, manifest }), lliuraCos, isReady: true, nucli: Object.freeze({ versio: '1.0.0' })
+    });
+    delete finestra.SocDePoble;
+    Object.defineProperty(finestra, 'SocDePoble', { value: real, writable: false, configurable: false });
+    expect(provisional[Symbol.for(MARCA_DEL_CARREGADOR)].adopta(real)).toBe(true);
+    await expect(registrat).resolves.toEqual({ ok: true, manifest: { id: 'llibreta' } });
+    /* Encuat, arriba a l'API real amb els mateixos arguments; fora del script
+       que s'està carregant, la real l'ignora (false), com qualsevol lliurament tardà. */
+    await expect(lliurat).resolves.toBe(false);
+    expect(lliuraCos).toHaveBeenCalledWith('llibreta', fabrica);
+    expect(provisional.nucli).toBe(real.nucli);
   });
 });

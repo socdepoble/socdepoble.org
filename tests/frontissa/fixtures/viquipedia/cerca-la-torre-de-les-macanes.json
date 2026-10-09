@@ -1,0 +1,6 @@
+{
+  "captureId": "viquipedia-cerca-la-torre-de-les-macanes-261009",
+  "capturedAt": "2026-10-08T23:02:45.778Z",
+  "url": "https://www.wikidata.org/w/api.php?action=query&format=json&formatversion=2&origin=*&maxlag=5&list=search&srsearch=La+Torre+de+les+Ma%C3%A7anes+haswbstatement%3AP31%3DQ2074737&srlimit=5",
+  "body": {"batchcomplete":true,"query":{"searchinfo":{"totalhits":1},"search":[{"ns":0,"title":"Q1641908","pageid":1576031,"size":null,"wordcount":0,"snippet":"municipality of Spain","timestamp":"2026-09-05T12:10:13Z"}]}}
+}

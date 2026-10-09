@@ -111,6 +111,10 @@ REGISTRE.push({ nom: 'CalendariEsdeveniments', fitxer: 'PedraSeca/organismes/Cal
    a EspecimenCalendari, sense colors definitius fins a les captures del Mestre (maqueta). */
 REGISTRE.push({ nom: 'VistaSetmana', fitxer: 'PedraSeca/organismes/VistaSetmana.jsx', pagina: 'formularis', estat: 'maqueta' });
 REGISTRE.push({ nom: 'VistaMes', fitxer: 'PedraSeca/organismes/VistaMes.jsx', pagina: 'formularis', estat: 'maqueta' });
+/* Onada 6 (prompt 261009_0230, punt 1) · l'enllaç d'un esdeveniment a la pàgina de la seua
+   publicació, exportat per VistaMes i compartit amb VistaSetmana i VistaAgenda. Viu dins de
+   les tres vistes, i té el mateix estat que elles (maqueta, a EspecimenCalendari). */
+REGISTRE.push({ nom: 'EnllacDeLEsdeveniment', fitxer: 'PedraSeca/organismes/VistaMes.jsx', pagina: 'formularis', estat: 'maqueta' });
 REGISTRE.push({ nom: 'NavegacioPeriode', fitxer: 'PedraSeca/organismes/NavegacioPeriode.jsx', pagina: 'formularis', estat: 'maqueta' });
 /* Fase visual (prompt 261001_0445) · les vistes Agenda i Any, amb espècimen a EspecimenCalendari (maqueta). */
 REGISTRE.push({ nom: 'VistaAgenda', fitxer: 'PedraSeca/organismes/VistaAgenda.jsx', pagina: 'formularis', estat: 'maqueta' });

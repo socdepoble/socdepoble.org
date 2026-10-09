@@ -6,7 +6,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { CAMINS } from '../lib/arrel.mjs';
-import { checkTaula, prosaIndex, ancoresDe, apuntaA, insereixLlista, nomsSolts } from '../gates/porta-olivera.mjs';
+import { checkTaula, checkConvocatoria, prosaIndex, ancoresDe, apuntaA, insereixLlista, nomsSolts } from '../gates/porta-olivera.mjs';
 
 const same = (a, b) => a.dev === b.dev && a.ino === b.ino;
 const regular = stat => stat.isFile() && stat.nlink === 1;
@@ -90,14 +90,20 @@ export function writeIndexedDraft(root, file, content, { requireCleanTable = fal
   const lockFd = fs.openSync(lock, fs.constants.O_WRONLY | fs.constants.O_CREAT | fs.constants.O_EXCL | fs.constants.O_NOFOLLOW, 0o600);
   const lockStat = fs.fstatSync(lockFd);
   let index, created, temporary, committed = false;
+  let avisos = [];
   try {
     assertOwned(root, lock, lockStat, lockFd);
     index = openIndex(root);
     // Revalida dins del lock: context pot haver emés el rebut abans que un
     // altre actor deixe un document nou sense classificar. No es mou res.
     if (requireCleanTable) {
-      const taula = checkTaula(root);
-      if (!taula.valid) throw new Error(`Convocatòria amb Escriptori brut:\n${taula.errors.join('\n')}`);
+      // 261009: la convocatòria v4 (vida justificada, trinitat, pla complet) es revalida ací, dins del lock.
+      // En fase «avis» les troballes tornen com a avisos, i document.mjs les escriu per stderr.
+      const rel = path.relative(root, file).split(path.sep).join('/');
+      const conv = checkConvocatoria(root, { fitxer: rel });
+      const errors = [...checkTaula(root).errors, ...conv.errors];
+      if (errors.length) throw new Error(`Convocatòria amb Escriptori brut:\n${errors.join('\n')}`);
+      avisos = conv.avisos;
     }
     parents(root, file, true);
     const fd = fs.openSync(file, fs.constants.O_WRONLY | fs.constants.O_CREAT | fs.constants.O_EXCL | fs.constants.O_NOFOLLOW, 0o600);
@@ -142,4 +148,5 @@ export function writeIndexedDraft(root, file, content, { requireCleanTable = fal
     if (temporary) { fs.closeSync(temporary.fd); removeOwned(root, temporary.file, temporary.stat); }
     fs.closeSync(lockFd); removeOwned(root, lock, lockStat);
   }
+  return { avisos };
 }

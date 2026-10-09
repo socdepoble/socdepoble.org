@@ -1,0 +1,342 @@
+LLEGIU PRIMER · laboratori 261009_0400_higiene_claude
+Onada 6 · front d'higiene (punts 2 i 3 del prompt 261009_0230_prompt_claude_onada6)
+Claude (Opus 5.5), 2026-10-09 de matinada, sense humans. Res d'este laboratori està aplicat.
+Corregit a les 05:55 després de la revisió adversarial (vegeu §2, D16-D22, i §7).
+
+======================================================================
+0. QUÈ ÉS
+======================================================================
+
+Tot el front és governança (tooling/, scripts/, .agents/, package.json, .gitignore): esta
+sessió no hi pot escriure ni té rm, mv ni git commit. Per això s'entrega com a paquet llest
+per aplicar amb executor-mutacio.mjs i una lease del Mestre, construït sobre els fitxers
+instal·lats ara (no sobre laboratoris vells).
+
+Diferència amb els paquets del 261006: els fitxers instal·lats no es copien sencers. Cada
+canvi és una substitució exacta (substitucions.json, amb el text literal a PECES.txt), i
+cada fitxer porta el sha256 que tenia quan es va preparar (bases). Així una mà que haja
+tocat el fitxer després es veu (deriva) i el que no toca el paquet es conserva byte a byte.
+Per a llegir un fitxer tal com quedaria:
+  node _wiki_de_poble/04_escriptori/02_investigacio_ia/261009_0400_higiene_claude/prepara-pla.mjs mostra RUTA
+Les tres skills finals, que són el que el Mestre aprova a la Wiki, es poden llegir sense node
+a lectura/ (el corredor comprova que són el que deixarà el paquet, llevat dels espais en blanc
+al final de línia, que l'editor d'esta sessió no conserva; el paquet no aplica estes còpies,
+aplica PECES.txt). El codi de la
+porta no té còpia sencera: la seua part nova és literal a PECES.txt (porta.*) i el flux està
+explicat a FLUX_APROVACIO.txt.
+
+Peces del laboratori:
+  LLEGIU_PRIMER.txt     este document
+  FLUX_APROVACIO.txt    el flux per a l'aprovació a la Wiki (lliçó 261002), amb l'excepció D1; porta frontmatter per a promoure'l
+  INVENTARI_BROSSA.txt  inventari de brossa verificat, amb veredicte i ordres per al Mestre
+  substitucions.json    els canvis exactes sobre 16 fitxers instal·lats
+  PECES.txt             el text literal dels canvis (codi, JSON i skills)
+  prepara-pla.mjs       pla sdp.mutation.v1, Petorreta i manifest del Reflex; mostra; fase 2
+  nous/                 tres fitxers nous amb la ruta real (.plist.txt → .plist)
+  lectura/              les tres skills tal com quedaran (NOM.SKILL.md.txt), només per a llegir
+  Corredor: tests/laboratori-higiene-261009.test.js
+
+======================================================================
+1. QUÈ FA CADA PEÇA
+======================================================================
+
+Motor de l'Escriptori net (punt 3)
+  tooling/gates/porta-olivera.mjs
+    · checkConvocatoria(arrel, { fitxer, contingut }): troballes CONV-00 (bandera il·legible),
+      CONV-01 (àncora repetida a «Activitat en curs»), CONV-02 (viu sense motiu, o només en prosa
+      o com a consumidor), CONV-03 (motiu que no es comprova: consumidor fora de la taula o sense
+      vida, torn tancat, caducat o inexistent, retenció del Mestre sense motiu o amb data futura,
+      motiu desconegut), CONV-04 (trinitat: cap pla de la jornada nascut abans; avís si no
+      comparteix el HHMM), CONV-05 (secció 0 sense fer), CONV-06 (pla incomplet) i CONV-07
+      (sediment de l'índex: més de 300 línies, seccions buides, bloc «Fix Automàtic»; sempre avís).
+      Motius vàlids: «· per a [[consumidor]]», «· torn_ID» (també prefix de 8 xifres),
+      «· Mestre aammdd: motiu» i el rebut del frontmatter com a torn implícit (D1). Exempts: el
+      prompt que es convoca, els plans de la seua trinitat i els germans de la mateixa hora.
+    · Vida en dos temps (vidaTaula, D16): primer la pròpia (torn, Mestre, rebut) i després la que
+      dona un consumidor que ja és viu, fins que no canvia res. Un cicle de «per a» sense
+      ancoratge no sosté ningú.
+    · faseConvocatoria, declaracions, trinitat, completesaPla, seccioZeroFeta, sediment.
+    · El paràmetre «fase» de checkConvocatoria, checkOlivera, checkEscriptori i checkTancament
+      només endurix: amb la bandera en «bloqueig», un «avis» del cridador no l'afluixa (D18).
+    · checkEscriptori (checkTaula + convocatòria de la taula): l'usen l'informe, el hook de MarIA
+      i el tancament. checkTaula NO canvia (la definició d'AGENTS §0.1 continua igual en fase avís).
+    · checkOlivera (els hooks de Claude, Codex i MarIA) suma la convocatòria i torna `avisos`;
+      checkPayload conserva la forma { code, errors, file }.
+    · checkTancament i el mode --tancament [--torn ID]: la taula, la convocatòria i els vius que
+      es quedarien sense vida en tancar el torn, també els que en penjaven per «per a» (CONV-08).
+    · L'informe mostra cada viu amb el seu motiu (🌿) o 🍂, les troballes i el sediment.
+    · --arxiva se'n du la línia de declaració amb motiu sencera, i el consumidor arxivat passa a
+      apuntar a l'arxiu (abans el motiu quedava solt a l'índex: reproduït com a [DEFECTE]).
+  tooling/documental/turns.mjs (deliverContext) i tooling/documental/draft-write.mjs
+  (writeIndexedDraft): context i create de prompt.local i prompt.consell passen per la
+    convocatòria; el missatge d'error continua començant per «Convocatòria amb Escriptori brut».
+    En fase «avis» tornen els avisos (deliverContext dins del retorn; writeIndexedDraft, que
+    abans no tornava res, torna { avisos }) (D17).
+  tooling/wiki/document.mjs: createDraft afig «avisos» al seu retorn quan n'hi ha, i la CLI
+    escriu cada avís per stderr com «[Convocatòria v4 · avís] …» a context i create. El JSON de
+    stdout de context no canvia; el de create porta «avisos» només quan n'hi ha.
+  tooling/gates/antigravity-hook.mjs: el briefing diu «Qui els necessita (porta v4)», els
+    rancis primer, i amb la vida de la v4 diu «Una declaració caduca amb el seu motiu» en lloc
+    de «no caduca sola»; la taula de pre-invocation és checkEscriptori. Cap exportació nova (el
+    comentari del hook ho demana). Sense `vida` (portes falses de les proves), el text d'abans.
+  .agents/olivera-fase.json (nou): {"fase": "avis"}.
+
+Tancament i arrencada
+  tooling/gates/tancament.mjs: environmentChecks comença per ['olivera', porta-olivera.mjs
+    --tancament --torn ID]; checkClosure li passa el torn.
+  tooling/brain/despertar.mjs: segellDe accepta «2026-10-08 19:19» (el format que escriuen de
+    veres els agents) a més de «261008_1919», i l'avís d'ESTAT ranci torna a saltar;
+    informeOlivera posa la secció «1b. Porta Olivera» al canal fresc (stdout). L'ON_ESTIC
+    continua sense noms de l'Escriptori.
+
+Cron d'higiene (punt 2)
+  tooling/higiene/cron_higiene.mjs (nou): L0, L1 i L2 (vegeu FLUX_APROVACIO §2). Reutilitza
+    candidats() i neteja() de neteja_brossa_arrel.mjs i checkTaula (i, amb la v4,
+    checkConvocatoria) de la porta Olivera. Sospitosos versionats que llista: .bak, .tmp, .orig,
+    .rej, ~, .old i .abans-aammdd (D19). Retenció dels logs rotats: tres per log (D20). La purga
+    L2 només toca .sdp-paperera/quarantena-*: els ZIP retirats no s'esborren mai (D21).
+  scripts/immunitari/org.socdepoble.higiene.plist (nou): 05:30 cada dia, --aplica, sense
+    RunAtLoad; eixides a .immunitari/higiene-cron.out i .err.
+  .agents/cron/registre_tasques.json: tasca higiene-diaria (launchd org.socdepoble.higiene,
+    cadència de 86400 s); higiene-basica reassignada a higiene-diaria, amb el seu script
+    (tooling/higiene/cron_higiene.mjs) i descrita com el que fa de veres (L1, mai esborra);
+    refresc-tokens passa a «retirades» amb el motiu. Les tasques d'abans no es toquen
+    (tests/fatiga-261002.test.mjs ho exigix).
+  tooling/brain/mapa-consola.mjs: llegeixPlist també traurà l'interval d'un StartCalendarInterval
+    (dict o llista; un diari compta 86400 s). Sense, higiene-diaria quedava «desconegut» per sempre
+    i la mètrica vigilants-vius passava a N/A (D22).
+  scripts/immunitari/plaquetes.mjs: empremta de les operacions; si la darrera recepta té la
+    mateixa, no n'escriu cap de nova i ho diu. La recepta nova porta el camp «empremta».
+  package.json: script higiene:cron (L0; npm run higiene:cron -- --aplica fa L1).
+  .gitignore: comentari de /release/ corregit; .immunitari/higiene/, higiene-cron.*, cron.out,
+    cron.err i receptes/ fora de git (ignorar no desversiona: INVENTARI §2), i les quarantenes
+    del circuit (/.sdp-paperera/quarantena-*/), perquè el que s'hi mou no torne a git (D21).
+
+Skills (motor cognitiu)
+  core-higiene-escriptori 4.0.0: description de 197 caràcters; com es declara un viu (també
+    que un consumidor ha de tindre vida); pas 2 amb motiu; procediment nou «Convocatòria (Onada
+    nova)» (absorbir els ítems vius al pla nou, arxivar el pla vell, cada viu amb motiu, el pla
+    naix primer amb el mateix HHMM i complet, secció 0 marcada, verificar llevat de CONV-07);
+    preflight mecànic i tancament. Lliçons intactes.
+  wiki-documentacio-i-reflex: lliçó 261009 en positiu («Les tasques de l'Onada següent naixen
+    al seu pla»). Cap altra línia canvia.
+  core-empaquetat-wp: §3 sense 01_produccio/builds ni rm -rf (destinació única
+    wordpress-plugin/builds/), §4 Retenció (la del cron; cap ZIP s'esborra), §5 Constància i
+    «## Vincles».
+
+Prova adaptada
+  tests/backend_consolidacio.test.mjs: la prova del cablejat del tancament ja aïllava les altres
+    comprovacions de l'entorn; ara aïlla també la nova «olivera».
+
+======================================================================
+2. DECISIONS PER DEFECTE D'ESTA NIT (reversibles)
+======================================================================
+
+  D1  Format del motiu: «· per a [[X]]», «· torn_ID» o «· Mestre aammdd: motiu», i el rebut del
+      frontmatter com a torn implícit. Implícit perquè document.mjs create declara viu cada
+      document que naix sense motiu, i canviar el format de l'àncora que escriu trencava
+      tests/cognitive-preflight.test.mjs (ANC-W6) sense guanyar res. És una excepció al
+      requisit literal «sense motiu = ranci» (un viu sense motiu escrit té vida mentre el torn
+      del seu rebut siga obert, 24 h): FLUX_APROVACIO §1 la demana aprovar expressament.
+  D2  Fase «avis» primer, amb la bandera .agents/olivera-fase.json (fora de .agents/runtime,
+      que l'executor no pot escriure). Il·legible = «bloqueig» (falla tancat).
+  D3  checkTaula no canvia: tota la cadena que la crida (portes, proves, hooks) es comporta igual
+      en fase avís. La convocatòria va a part (checkConvocatoria i checkEscriptori).
+  D4  Trinitat: la jornada és la del nom del prompt; un HHMM més tard és «després»; amb el mateix
+      HHMM, la «Creació» del Registre. El HHMM diferent és un avís, no una troballa.
+  D5  Secció 0 feta = almenys una casella marcada i cap sense marcar.
+  D6  Pla complet = «Estat del Pla» triat (no el text [a | b | c] de la plantilla), Verificació i
+      Riscos amb text que no siga [pendent].
+  D7  Sediment: llindar de 300 línies (l'índex en té 751). Sempre avís; el pas 6 de la
+      «Convocatòria» l'exclou de la verificació perquè no hi haja bucle.
+  D8  El tancament passa la porta Olivera primer. Efecte nou: tancament.mjs --check (i el seu pas
+      dins del pre-commit, git-staged.mjs:40) ix amb 1 si l'Escriptori és brut, també en fase
+      avís. El pre-commit ja ixia amb 1 amb l'Escriptori brut abans del paquet, per run-portes.mjs
+      (porta-olivera --informe, run-portes.mjs:85). En fase «bloqueig», també les troballes de
+      la convocatòria fan eixir amb 1 l'informe i el tancament, i per tant el pre-commit.
+  D9  El cron corre a les 05:30, amb L1 al launchd; L2 només amb codi i terminal; paperera dels
+      ZIP germana del repositori (../.sdp-paperera-builds/); purga de quarantenes de més de 30
+      dies que porten MANIFEST.json i cap fitxer versionat.
+  D10 Logs que es roten: només antigravity-hook.log i fatiga-hook.log (traces), a partir d'1 MiB,
+      reanomenats a NOM.aammdd_hhmm.log (continuen fora de git per *.log). segell.log és el diari
+      de l'executor i les memòries del briefing i de les observacions no es toquen.
+  D11 Receptes: es queda la més nova de cada empremta, tota recepta aprovada i tota la
+      versionada (fins que el Mestre les desversione).
+  D12 Retenció de ZIP: estable (stable.json), el més recent per producte i carpeta, els que cita
+      l'última acta (per nom) i tot nom no canònic. Sense stable.json llegible, cap proposta.
+  D13 core-higiene-escriptori: la description accepta com a base la d'ara o la del paquet
+      261009_0400_consola_claude (G4); qualsevol ordre d'aplicació funciona (provat).
+  D14 .gitignore i package.json: sense base fixada, només manen els ancoratges (altres fronts
+      d'esta nit no hi poden escriure, però el Mestre sí).
+  D15 Enllaços de .claude/skills: el paquet de la Consola (G1) ja porta core-higiene-escriptori i
+      core-neteja-brossa entre els 24; este paquet no en duplica cap. Si el Mestre tria el catàleg
+      curat (D1 de la Consola), estes dos s'hi han de quedar.
+  D16 Un consumidor només sosté si té vida (correcció de la revisió): abans bastava que fora a la
+      taula, i dos documents que es declaraven l'un per a l'altre (el cas natural d'un pla i el
+      seu prompt) vivien per sempre. La vida es calcula en dos temps i el tancament (CONV-08) usa
+      el mateix càlcul amb el torn que es tanca ja tancat.
+  D17 La fase «avis» avisa en convocar: els avisos tornen amb deliverContext i writeIndexedDraft,
+      i document.mjs els escriu per stderr. Els hooks de Claude i de Codex continuen sense
+      mostrar-los (Claude Code només llig stderr en un bloqueig).
+  D18 El paràmetre «fase» només endurix (proves i tancaments estrictes); la bandera mana.
+  D19 Sospitosos versionats: s'hi afigen .old i .abans-aammdd (la revisió en va trobar cinc més
+      de versionats que l'inventari no tenia). Només es llisten.
+  D20 Retenció dels logs rotats: es queden els tres més nous de cada log; els altres van a
+      quarantena amb MANIFEST (L1, reversible) i la L2 els purga als 30 dies.
+  D21 Quarantenes fora de git (/.sdp-paperera/quarantena-*/ al .gitignore) i cap ZIP esborrat:
+      la paperera germana ../.sdp-paperera-builds/ no entra a la purga L2.
+  D22 El Mapa de la Consola llig StartCalendarInterval (substitució a tooling/brain/mapa-consola.mjs
+      dins d'este paquet: cap altre front la toca; el paquet de la Consola només hi proposa
+      portes, a mapa-consola.portes.txt, sense substitucions). higiene-basica porta el seu script.
+
+======================================================================
+3. ORDRE D'APLICACIÓ (Mestre i MarIA, des de l'arrel)
+======================================================================
+
+  0. Aprovació a la Wiki: MarIA promou FLUX_APROVACIO.txt i el Mestre l'aprova, amb l'excepció D1
+     dita expressament (lliçó 261002).
+  1. Comprovació sense sessió:
+       node _wiki_de_poble/04_escriptori/02_investigacio_ia/261009_0400_higiene_claude/prepara-pla.mjs comprova
+     Ha de dir «Pla vàlid» amb 19 fitxers (16 M i 3 A) més les projeccions del catàleg si
+     carrega. Si diu deriva, no es força: algú ha tocat un fitxer, i es refà el paquet (o, si el
+     Mestre ho veu bé, --sobre-base-nova).
+  2. Flux de lease del model del 261006 (261006_0300_ledger_claude/t2_t5_skills/LLEGIU_PRIMER.txt,
+     §3, passos 2-4): l'ordre d'open que imprimix `comprova`, `comprova --session=SESSIÓ` i les
+     ordres que imprimix, en eixe ordre (pla, Petorreta, manifest, seal i executor).
+  3. Si el catàleg de skills no carregava (avís de `comprova`): quan carregue,
+       node tooling/brain/cataleg_skills.mjs --escriu   (amb una lease)
+  4. Comprovació:
+       npm run porta:olivera                    (fase «avis», cada viu amb el seu motiu)
+       node tooling/higiene/cron_higiene.mjs    (escriu .immunitari/higiene/AAMMDD.json)
+       node tooling/gates/segella.mjs           (segell intacte; l'ha recalculat l'executor)
+       npx vitest run tests/laboratori-higiene-261009.test.js   (ha de fer skip: ja aplicat)
+  5. Instal·lar el launchd (només el Mestre, fora del repositori), just després del pas 4: fins
+     que no hi és, la Consola mostra higiene-diaria i higiene-basica com a tasques sense
+     llançador (dos avisos de transició).
+       cp scripts/immunitari/org.socdepoble.higiene.plist ~/Library/LaunchAgents/
+       launchctl load ~/Library/LaunchAgents/org.socdepoble.higiene.plist
+  6. Desversionar l'estat de Plaquetes (INVENTARI §2) i, si el Mestre ho decidix, la resta de
+     l'INVENTARI, en un commit revisat.
+  7. Sanejar la taula (MarIA, amb l'informe de la porta davant):
+       · deixar una sola línia de 261009_0245_pla_implementacio_onada6 a «Activitat en curs»;
+       · donar motiu a cada viu (els d'esta Onada, «· torn_ID» o «· per a [[…]]» cap a un
+         document que tinga vida pròpia);
+       · traspassar al pla de l'Onada 6 els ítems vius de 261008_2345_pla_implementacio_onada5
+         (tasques futures 8-18) i arxivar-lo amb --arxiva --sec --nom i després sense --sec;
+       · retirar de l'índex la prosa «Tancament autoritzat…», les seccions buides, «Tasques
+         pendents (Pròxima sessió)» i el bloc «Fix Automàtic d'Àncores» (amb l'eina d'edició).
+  8. Una Onada després, si els avisos han estat útils i cap no és fals: fase 2, amb el mateix
+     flux de lease:
+       node …/prepara-pla.mjs comprova --fase                    (ordre d'open de la fase 2)
+       node …/prepara-pla.mjs comprova --fase --session=SESSIÓ   (ordres del pla, la Petorreta, el seal i l'executor)
+     O, sense lease, el Mestre canvia «avis» per «bloqueig» a .agents/olivera-fase.json.
+  9. LEDGER i ESTAT (MarIA). Línies proposades:
+       261009 | implementacio | core-higiene-escriptori | porta Olivera v4, convocatòria, cron d'higiene i tancament amb la porta
+       261009 | lliçó | wiki-documentacio-i-reflex | les tasques de l'Onada següent naixen al seu pla
+     I arxivar este laboratori quan el corredor faça skip.
+
+  Àncores per a 00_index_escriptori.md (la porta SCC exigix una àncora per fitxer de l'Escriptori,
+  laboratori inclòs; les carpetes amb punt no hi compten). Davall de «## Laboratori de tractors»:
+    ### 261009_0400_higiene_claude
+    - [[02_investigacio_ia/261009_0400_higiene_claude/LLEGIU_PRIMER.txt]]
+    - [[02_investigacio_ia/261009_0400_higiene_claude/FLUX_APROVACIO.txt]]
+    - [[02_investigacio_ia/261009_0400_higiene_claude/INVENTARI_BROSSA.txt]]
+    - [[02_investigacio_ia/261009_0400_higiene_claude/substitucions.json]]
+    - [[02_investigacio_ia/261009_0400_higiene_claude/PECES.txt]]
+    - [[02_investigacio_ia/261009_0400_higiene_claude/prepara-pla.mjs]]
+    - [[02_investigacio_ia/261009_0400_higiene_claude/nous/tooling/higiene/cron_higiene.mjs]]
+    - [[02_investigacio_ia/261009_0400_higiene_claude/nous/scripts/immunitari/org.socdepoble.higiene.plist.txt]]
+    - [[02_investigacio_ia/261009_0400_higiene_claude/lectura/core-higiene-escriptori.SKILL.md.txt]]
+    - [[02_investigacio_ia/261009_0400_higiene_claude/lectura/wiki-documentacio-i-reflex.SKILL.md.txt]]
+    - [[02_investigacio_ia/261009_0400_higiene_claude/lectura/core-empaquetat-wp.SKILL.md.txt]]
+
+======================================================================
+4. COM ES DESFÀ
+======================================================================
+
+  · Fase: la bandera torna a «avis», o el fitxer se'n va (absent = «avis»).
+  · Cron: launchctl unload ~/Library/LaunchAgents/org.socdepoble.higiene.plist.
+  · Trasllats del cron: cada quarantena porta MANIFEST.json amb l'origen de cada fitxer; els ZIP
+    retirats porten el sha256. Tornar-los és moure'ls al seu origen.
+  · Logs rotats: són NOM.aammdd_hhmm.log al mateix directori, o a la quarantena -logs.
+  · Paquet: la transacció de .agents/seal-transactions/ (operationId sdp-higiene-261009-paquet-*)
+    diu cada fitxer amb el seu sha d'abans i de després; el revers és un pla amb els originals
+    (git show HEAD:RUTA) i la mateixa via de lease, o un git revert del commit que el porte.
+
+======================================================================
+5. PROVES (vegeu §7 per als resultats d'esta nit)
+======================================================================
+
+  npx vitest run tests/laboratori-higiene-261009.test.js
+    · el paquet: peces, bases, idempotència, pla de l'executor, Petorreta, manifest, ESLint,
+      skills (i les còpies de lectura/), registre i coordinació amb el paquet de la Consola;
+    · [DEFECTE] (passen amb el codi instal·lat perquè reproduïxen el deute): porta que no veu
+      l'àncora repetida, el viu sense motiu, la secció 0 en [pendent] ni el pla nascut després;
+      cicle de «per a» que la porta dona per viu; --arxiva que deixa el motiu solt; tancament
+      sense porta; segell llarg sense data; Mapa sense interval per a StartCalendarInterval;
+      Plaquetes amb receptes idèntiques;
+    · reparacions al taller (tooling/ amb el paquet a os.tmpdir()): fases (i que el paràmetre
+      només endurix), vida i cicles de consumidors, tancament transitiu, trinitat, secció 0,
+      sediment, bandera, --arxiva, informe i --tancament com a processos, context i create de
+      prompt (també els avisos per stderr de la CLI), despertar, hook real, Mapa, prepara-pla
+      «comprova --fase», Plaquetes real, el cron L0 (sospitosos .old i .abans-), L1 (retenció
+      dels rotats), abstencions i L2 (sense purgar la paperera dels ZIP), i el .gitignore amb
+      git check-ignore;
+    · bateria: les proves de tests/ que nomenen les peces tocades, en dues còpies del repositori
+      (base i paquet), sense cap fallada nova.
+    · amb deriva (un fitxer del paquet tocat per una altra mà), el corredor fa skip amb un avís
+      que diu quins fitxers i el seu sha: la deriva es resol refent el paquet.
+
+======================================================================
+6. LÍMITS
+======================================================================
+
+  · Res aplicat: ni el motor, ni el cron, ni el launchd, ni cap retirada de l'INVENTARI.
+  · Les ordres de l'INVENTARI no s'han executat (no hi ha rm, mv ni commit en esta sessió).
+  · config.js.bak, .env*, .wwebjs_auth, wordpress-plugin/supabase/.temp i whatsapp_bot.mjs.old no
+    s'han llegit.
+  · Fins que el plist no s'instal·la, la Consola mostra dos avisos de transició (pas 5).
+  · L'avís CONV-08 del tancament depén del torn: avui quasi cap torn arriba a closed (Consola, G8).
+  · El hook de Claude (hooks-local) i el de porta-olivera --hook no mostren els avisos de la fase
+    avís (Claude Code només llig stderr en un bloqueig): els avisos es veuen a la CLI de context i
+    create, a l'informe, al despertar, al briefing de MarIA i al tancament.
+  · La trinitat només mira els plans del primer nivell de l'Escriptori.
+  · La porta no té còpia sencera a lectura/: només les skills (§0).
+  · Conflicte conegut: tests/governanca-260930b-torns.test.mjs («despertar.mjs i mapa-consola.mjs
+    conserven l'original…») exigix que despertar.mjs i mapa-consola.mjs instal·lats siguen un
+    subconjunt de les còpies del laboratori 260930_0400_governanca_claude, que no s'ha aplicat mai
+    (només hi afig «## Vincles» a l'ON_ESTIC). Qualsevol canvi a qualsevol dels dos la fa caure, i
+    este paquet els toca tots dos. El corredor la declara com a conflicte conegut; es resol
+    arxivant eixe laboratori (INVENTARI §3.17), i llavors la prova fa skip.
+  · tests/laboratori-higiene-261006.test.js ja cau sense este paquet (5 proves): el paquet t6 que
+    prova es va aplicar per la transacció 712ae5b5 (sdp-higiene-t6-261006) i després el hook ha
+    evolucionat; el corredor només sap fer skip per igualtat de fitxers. S'ha de retirar amb el seu
+    laboratori.
+
+======================================================================
+7. RESULTATS D'ESTA NIT
+======================================================================
+
+  npx vitest run tests/laboratori-higiene-261009.test.js  → 41 proves en verd i 1 skip (el
+  d'avís de deriva, que només corre si n'hi ha), 2026-10-09 cap a les 05:55.
+  Bateria (33 fitxers de tests/, base i paquet clonats del mateix arbre):
+    base 413 pass · 56 fail · 15 skip; paquet 412 pass · 57 fail · 15 skip.
+    L'única diferència és el conflicte conegut amb el laboratori 260930_0400 (§6). Les 56
+    fallades de la base ja hi són sense el paquet (laboratoris vells, el catàleg que no carrega
+    per sdp-clon-loiverse i olivera-arxiva-261002, que munta una porta antiga sense ancoresDe).
+    tests/mapa-consola.test.mjs (10/0/0) i les proves documentals (documental, cognitive-preflight,
+    document-command-policy, document-create-race, cognitive-document-handoff) donen igual a la
+    base i al paquet. El resum queda a os.tmpdir()/sdp-laboratori-higiene-261009-bateria.txt.
+  backend_consolidacio amb la G5 de la Consola a les dues còpies: «dos cicles d'arrancada i
+    tancament» passa a la base i al paquet (la comprovació «olivera» queda aïllada).
+  Diagnosi de la taula real amb la porta v4 (només lectura; os.tmpdir()/
+  sdp-laboratori-higiene-261009-taula-real.txt):
+    · fase avís; CONV-01: 261009_0245_pla_implementacio_onada6 hi és dues vegades (línies 39 i 40);
+    · els quatre vius tenen vida pel rebut del seu torn (el del pla de l'Onada 5 caduca el
+      2026-10-09T21:45Z; des d'eixe moment el pla es veurà 🍂 si ningú no li dona motiu);
+    · sediment: 751 línies i 12 seccions buides;
+    · la convocatòria del prompt 261009_0230 hauria donat CONV-01, CONV-04 (el pla 0245 naix
+      després) i CONV-05 (secció 0 en [pendent]): els forats que va trobar el mapa de lectura.
+  tests/laboratori-higiene-261006.test.js: cau sense este paquet (vegeu §6).
+
+Vincles: [[00_index_escriptori]]

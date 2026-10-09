@@ -280,6 +280,29 @@ describe('enviament fiable (F0)', () => {
     expect(value.getThreadMessages('fil-A').some(m => m.id === fallit.id)).toBe(false);
   });
 
+  /* Onada 6 · Revisió 261009 · La bombolla en error porta el codi SDP
+     (codiError) perquè Bombolla el diga en la llengua de la interfície
+     (errorsXat.js); el reintent manual el neteja amb l'error. */
+  it('deixa el codi SDP a la bombolla en error (codiError) i el reintent manual el neteja', async () => {
+    await open();
+    const error = Object.assign(new Error('Esta pàgina ja no existix o no la pots vore.'), { code: 'SDP-XAT-013', retriable: false });
+    mock.enviaMissatge.mockRejectedValueOnce(error);
+    await act(async () => { await value.sendChatMessage({ id: 'fil-A' }, 'hola'); });
+    const fallit = value.getThreadMessages('fil-A').at(-1);
+    expect(fallit).toMatchObject({ estatEnviament: 'error', codiError: 'SDP-XAT-013', error: 'Esta pàgina ja no existix o no la pots vore.' });
+    /* Un error sense codi no n'inventa cap. */
+    mock.enviaMissatge.mockRejectedValueOnce(Object.assign(new Error('xarxa'), { retriable: false }));
+    await act(async () => { await value.sendChatMessage({ id: 'fil-A' }, 'adeu'); });
+    expect(value.getThreadMessages('fil-A').at(-1)).toMatchObject({ estatEnviament: 'error', codiError: null, error: 'xarxa' });
+    const pendent = deferred();
+    mock.enviaMissatge.mockReturnValueOnce(pendent.promise);
+    let reintent;
+    act(() => { reintent = value.reintenta(fallit.id); });
+    expect(value.getThreadMessages('fil-A').find(m => m.id === fallit.id)).toMatchObject({ estatEnviament: 'pendent', codiError: null, error: null });
+    await act(async () => { pendent.resolve(message('hola', fallit.id, { seq: 5 })); await reintent; });
+    expect(value.getThreadMessages('fil-A').find(m => m.id === fallit.id).estatEnviament).toBe('enviat');
+  });
+
   it('reintenta tres vegades amb espera 1 s, 2 s, 4 s quan l\'error és retriable i després admet el reintent manual', async () => {
     await open();
     const xarxa = Object.assign(new Error('xarxa'), { retriable: true });

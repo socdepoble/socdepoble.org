@@ -556,20 +556,30 @@ nav.mobile-nav { display: none; }
   .sdp-root[data-sdp-immersiu] nav.mobile-nav { display: none; }
 
   /* Barra inferior: FIXA a baix, sempre visible, z-index alt.
-     T3 (ordre del Mestre, 260930; esmena del 261006) · Cinc caselles (Xat,
-     Mur, Panell de Control, Pobles i Mercat) han de cabre a 360-375px:
-     marges, coixins i radis de l'escala, cap px nou. Telefonades n'ha eixit
-     per decisió del Mestre (261006) sense tocar cap regla. El pressupost es
-     va fer per a sis caselles (estimat, es mesura al navegador): a 375px
-     queden 375 − 2×4 (marge) − 2×4 (coixí) − 48 (botó central) = 311px per a
-     les cinc del voltant, que en demanaven ≈290; a 360px, 296. Amb quatre,
-     en sobra. Alçada: 8 + 55 + 8 = 71px, més 8 de separació = 79 ≤ 96
-     (--sdp-alt-nav-mobil, la reserva del visor, no canvia). */
+     T3 (ordre del Mestre, 260930; esmena del 261006) · Cinc caselles han de
+     cabre a 360-375px: marges, coixins i radis de l'escala, cap px nou.
+     Telefonades n'ha eixit per decisió del Mestre (261006) sense tocar cap
+     regla. El pressupost es va fer per a sis caselles (estimat, es mesura al
+     navegador): a 375px queden 375 − 2×4 (marge) − 2×4 (coixí) − 48 (botó
+     central) = 311px per a les cinc del voltant, que en demanaven ≈290; a
+     360px, 296. Amb quatre, en sobra. Alçada: 8 + 55 + 8 = 71px, més 8 de
+     separació = 79 ≤ 96 (--sdp-alt-nav-mobil, la reserva del visor, no
+     canvia).
+     Onada 5 (ordre del Mestre, 261008) · Xat, Mur, Panell de Control, Mercat
+     i Pobles, en cinc pistes d'ample igual que ocupen tota la barra: els
+     centres de les icones cauen a pas constant (1/10, 3/10, 5/10, 7/10 i
+     9/10), el botó central sempre al centre exacte i cap espai negre sobrant
+     als costats. Abans les caselles s'apinyaven al centre amb un gap en vw,
+     que a l'encastament mesurava la pàgina amfitriona i no l'app; les pistes
+     fr mesuren la barra. justify-items: center deixa cada casella amb el seu
+     ample (la píndola activa no s'estira). */
   :where(.sdp-root.is-compact) nav.mobile-nav {
-    display: flex;
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+    justify-items: center;
     align-items: center;
-    justify-content: center;
-    gap: clamp(8px, 3vw, 24px);
+    gap: 0;
     position: fixed;
     left: 0;
     right: 0;
@@ -594,7 +604,10 @@ nav.mobile-nav { display: none; }
      conserven perquè llevar-les és un canvi de CSS fora d'abast. La lletra ja
      la posa .nav-item (--sdp-font-barra).
      Text en repòs: --sdp-crom-text-suau, el mateix blanc al 78 % que abans
-     donava l'opacitat 0,78, però sense opacitat sobre el text (11,8:1, AAA). */
+     donava l'opacitat 0,78, però sense opacitat sobre el text (11,8:1, AAA).
+     Onada 5 · max-width: 100%: la casella no passa mai de la seua pista; si
+     el rètol no hi cap, es retalla (.nav-item__text) i el nom sencer queda
+     al nom accessible. min-width conserva l'objectiu tàctil. */
   :where(.sdp-root.is-compact) .mobile-nav .nav-item {
     display: flex;
     flex-direction: column;
@@ -602,6 +615,7 @@ nav.mobile-nav { display: none; }
     justify-content: center;
     gap: var(--sdp-space-1);
     min-width: var(--sdp-touch);
+    max-width: 100%;
     min-height: var(--sdp-touch);
     margin: 0;
     padding: var(--sdp-space-1);
@@ -725,8 +739,12 @@ nav.mobile-nav { display: none; }
 /* ══ MÒBIL ESTRET · ≤480px ════════════════════════════════════ */
 /* Cinc accions (sis fins al 261006, amb Telefonades): quatre objectius de
    48px i el control de 60px necessiten 252px abans dels coixins (amb sis,
-   300px). En una caixa estreta repartim l’aire disponible sense un gap
-   mínim que expulse Xat o Mercat fora de la pantalla. */
+   300px). En una caixa estreta la barra lleva el coixí lateral perquè les
+   cinc pistes tinguen tot l’ample (a 360px, 72px cadascuna).
+   Onada 5 · Amb les pistes iguals (minmax(0, 1fr), a la regla base) el
+   justify-content: space-evenly ja no reparteix res: les pistes fr no
+   deixen espai lliure. Queda inert però literal, perquè graella.capes.test.js
+   exigix el text exacte d’esta regla; la faena que fa és el padding-inline: 0. */
 @container sdp-arrel (max-width: 400px) {
   :where(.sdp-root.is-compact) nav.mobile-nav {
     gap: 0;

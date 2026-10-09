@@ -359,7 +359,12 @@ test('si profiles no respon, la fila de reserva ho diu (reserva: true); la de ve
   try {
     m.request.mockReset(); m.user = { id: 'A', user_metadata: { full_name: 'Pep' } };
     m.request.mockRejectedValueOnce(Object.assign(new Error('La petició ha trigat massa temps.'), { name: 'TimeoutError' }));
-    expect(await getProfile()).toMatchObject({ reserva: true, id: 'A', full_name: 'Pep' });
+    /* Onada 6 (decisió 2 de la nit del 261009) · La reserva no s'inventa cap
+       poble: el de la sessió o cap. */
+    expect(await getProfile()).toMatchObject({ reserva: true, id: 'A', full_name: 'Pep', town_name: '' });
+    m.request.mockRejectedValueOnce(Object.assign(new Error('La petició ha trigat massa temps.'), { name: 'TimeoutError' }));
+    m.user = { id: 'A', user_metadata: { full_name: 'Pep', town_name: 'Tibi' } };
+    expect(await getProfile()).toMatchObject({ reserva: true, town_name: 'Tibi' });
     m.request.mockResolvedValueOnce([{ id: 'A', full_name: 'Pep', lema: 'Del Mas' }]);
     expect(await getProfile()).toEqual({ id: 'A', full_name: 'Pep', lema: 'Del Mas' });
   } finally { avis.mockRestore(); m.user = { id: 'A' }; }

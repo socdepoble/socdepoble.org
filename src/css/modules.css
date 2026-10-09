@@ -867,6 +867,24 @@ aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(2) {
 
 /* ── Arrel i errors de ruta · App.jsx, Avatar.jsx ────────────────── */
 .sdp-avatar__imatge { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+/* Onada 6 (tasca 12) · Variant additiva d'enquadrament (Avatar.jsx, prop
+   `enquadrament`): el cercle talla i la imatge, ampliada i desplaçada,
+   n'ensenya només un tros quadrat. Sense object-view-box, fora del Baseline
+   2022 (Safari 16). Les xifres de cada enquadrament són la seua geometria. */
+.sdp-avatar--enquadrat { position: relative; overflow: hidden; }
+.sdp-avatar--enquadrat .sdp-avatar__imatge {
+  position: absolute; top: 0; left: 0;
+  max-width: none;
+  border-radius: 0;
+}
+/* La IAIA MarIA: la iaia del mocador roig amb el mòbil a la mà, al centre de
+   baix de «Festa del Poble» (xat_portada.jpg, 1024 × 1024). El quadrat de
+   184 px que comença a x 312, y 712: 1024 / 184 = 556,5 %; 312 / 1024 =
+   30,5 %; 712 / 1024 = 69,5 % (translate es mesura sobre la mateixa imatge). */
+.sdp-avatar--enquadrat-iaia .sdp-avatar__imatge {
+  width: 556.5%; height: 556.5%;
+  transform: translate(-30.5%, -69.5%);
+}
 .sdp-app-error { padding: var(--sdp-space-8); color: var(--sdp-error-text); }
 .sdp-route-error {
   padding: var(--sdp-space-8);
@@ -4801,7 +4819,12 @@ details[open] summary.accordion-header svg:last-child {
   .sdp-xat-avatar--quadrat,
   .sdp-xat-avatar--quadrat .sdp-avatar__imatge { border-radius: var(--sdp-radi-s); }
   .sdp-xat-fila--comunitat .sdp-xat-fila__nom { font-weight: 800; }
-  .sdp-xat-fila__xebro { flex: none; color: var(--sdp-text-suau); }
+  /* Correcció de l'Onada 6 (QA visual: /xat a 1280×900, «Gent de la
+     Torre» feia 161px en una caixa de 156) · La icona de 20px porta
+     6,67px d'aire transparent a cada costat (el traç de lucide va de 8 a 16
+     sobre 24). Els marges negatius de --sdp-space-1 donen 8px al nom: el
+     glif es mou 4px a la dreta i no ix de la caixa de la fila. */
+  .sdp-xat-fila__xebro { flex: none; color: var(--sdp-text-suau); margin-inline: calc(var(--sdp-space-1) * -1); }
 
   /* Cerca global (T69): el filtre triat és una fitxa dins del camp. El botó
      fa --sdp-touch d'alt; la píndola de dins és el que es veu. */
@@ -4957,6 +4980,28 @@ details[open] summary.accordion-header svg:last-child {
   @media (hover: hover) and (pointer: fine) {
     .sdp-xat-pindola--secundaria:hover { background: var(--sdp-fons-subtil); }
   }
+  /* Onada 6 (beta testers) · «Informa d'un error» al peu de la llista de
+     converses: la píndola secundària, separada de l'última fila. Mentre obri
+     la conversa, apagada.
+     Revisió 261009 · El peu va FORA de la <ul> (no és cap conversa) i també
+     davall de l'avís d'una llista que no s'ha pogut carregar. En compacte, la
+     reserva de la barra mòbil (la de .sdp-xat-llista, més amunt) passa de la
+     llista al peu: el botó queda per damunt de la barra, com abans dins de la
+     llista. Si la conversa no s'obri, la nota i les dues eixides de reserva
+     (copiar l'informe o enviar-lo per correu), una davall de l'altra. */
+  .sdp-xat-llista__peu { padding: var(--sdp-space-4); }
+  :where(.sdp-root.is-compact) .app-grid-shell .sdp-xat-llista.sdp-xat-llista--amb-peu { padding-bottom: 0; }
+  :where(.sdp-root.is-compact) .app-grid-shell .sdp-xat-llista__peu {
+    padding-bottom: calc(var(--sdp-space-4) + var(--sdp-alt-nav-mobil) + env(safe-area-inset-bottom, 0px));
+  }
+  .sdp-xat-informe:disabled { opacity: 0.6; cursor: progress; }
+  .sdp-xat-informe__nota {
+    margin: var(--sdp-space-3) 0 0;
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-meta);
+    line-height: 1.4;
+  }
+  .sdp-xat-informe__reserva { display: grid; gap: var(--sdp-space-2); margin-top: var(--sdp-space-2); }
 
   /* El diàleg «Nova conversa» (captura 19.12.49): títol centrat, creu
      rodona, fons subtil i targetes blanques (la d'accions, la de cada
@@ -6083,6 +6128,13 @@ details[open] summary.accordion-header svg:last-child {
     padding: 0 0 0 var(--sdp-space-5);
   }
   .sdp-consola__evidencies > li { margin: 0; padding: 0; }
+  /* Onada 6 (requisit 9) · Els problemes d'una targeta, a la vista: la llista
+     de les evidències, darrere dels estats i sense tocar la insígnia lateral. */
+  .sdp-consola__problemes {
+    clear: both;
+    margin-top: var(--sdp-space-2);
+    overflow-wrap: anywhere;
+  }
 
   /* Desplegables «Veure detall de…» (peces.jsx · Desplegable): una fila
      sencera de com a mínim --sdp-touch, amb vora i radi del sistema. El
@@ -6404,6 +6456,27 @@ details[open] summary.accordion-header svg:last-child {
     display: flex;
     flex-wrap: wrap;
     gap: var(--sdp-space-2);
+  }
+
+  /* Correcció de l'Onada 6 (QA visual: /consola/inventari a 1280×900, la
+     taula feia 1.341px dins de 925 i «Accions» començava a x=1.481, fora de
+     la finestra) · Des de 721px, la columna d'accions de l'Inventari
+     s'enganxa a la dreta de la taula que es desplaça: es veu sense desplaçar
+     i la resta de columnes passa per davall. Porta el fons de la seua fila
+     (el de la pàgina, el subtil de les files parells i el del hover, com
+     sdp.css) i una vora la separa; cap ombra. En mòbil, com fins ara. */
+  @media (min-width: 721px) {
+    .sdp-inventari__accions {
+      position: sticky;
+      inset-inline-end: 0;
+      z-index: 1;
+      background: var(--sdp-fons-app);
+      border-inline-start: 1px solid var(--sdp-vora);
+    }
+    tbody tr:nth-child(even) > .sdp-inventari__accions { background: var(--sdp-fons-subtil); }
+  }
+  @media (min-width: 721px) and (hover: hover) and (pointer: fine) {
+    tbody tr:hover > .sdp-inventari__accions { background: var(--sdp-accent-subtil); }
   }
 
   /* Dades: etiqueta i valor en dues columnes; en el panell estret caben. */
@@ -7074,12 +7147,16 @@ details[open] summary.accordion-header svg:last-child {
      les vistes noves, derivats de tokens semàntics existents. Es declaren dins
      de l'App (.sdp-root): el tema fosc els resol sol, sense cap redefinició.
      Cap hex ni primitiu. */
+  /* Onada 6 (decisió 8, aspecte Google) · Hui, en el cercle del color
+     d'acció com a Google Calendar (abans, invers): --sdp-accio-text fa 9,21:1
+     en clar i 10,32:1 en fosc sobre la targeta, i el número hi va amb
+     --sdp-text-invers (tests/contrast_calendari_mes i _setmana ho mesuren). */
   .sdp-cal-setmana,
   .sdp-cal-mes,
   .sdp-cal-agenda,
   .sdp-cal-any,
   .sdp-cal-navegacio {
-    --sdp-cal-hui-fons: var(--sdp-fons-invers);
+    --sdp-cal-hui-fons: var(--sdp-accio-text);
     --sdp-cal-hui-text: var(--sdp-text-invers);
     --sdp-cal-ara: var(--sdp-accent-text);
     --sdp-cal-separacio: var(--sdp-space-1);
@@ -7114,8 +7191,11 @@ details[open] summary.accordion-header svg:last-child {
   }
   .sdp-cal-navegacio .sdp-cal-navegacio__fletxa { padding: 0; }
   /* El títol del període, gran i de pes normal com a les captures
-     (--sdp-text-titol: 19,42:1 en clar i 17,91:1 en fosc). */
-  .sdp-cal-navegacio__titol { flex: 1 1 12rem; min-inline-size: 0; margin: 0; font-size: var(--sdp-text-h5); font-weight: 400; line-height: 1.2; color: var(--sdp-text-titol); }
+     (--sdp-text-titol: 19,42:1 en clar i 17,91:1 en fosc). Onada 6 · A
+     /calendari i al Mur és l'h3 de la pàgina, a la mateixa fila que «Hui ‹ ›»
+     (NavegacioPeriode · nivellTitol): desfà la ratlla i el coixí de baix que
+     base.css posa a tot h3. */
+  .sdp-cal-navegacio__titol { flex: 1 1 12rem; min-inline-size: 0; margin: 0; padding-block-end: 0; border-block-end: 0; font-size: var(--sdp-text-h5); font-weight: 400; line-height: 1.2; color: var(--sdp-text-titol); }
   /* El selector de vista: el PillToggle de sèrie sense ombra ni marge,
      alineat a l'inici i amb radi de targeta (en estret s'apila en dues files).
      La premuda va en --sdp-accio-control (text blanc a 9,21:1; el --sdp-accio
@@ -7153,8 +7233,9 @@ details[open] summary.accordion-header svg:last-child {
     padding: var(--sdp-space-3) var(--sdp-space-4);
   }
   .sdp-cal-agenda__dia + .sdp-cal-agenda__dia { border-block-start: 1px solid var(--sdp-vora); }
-  /* La data: el número en un cercle que només es pinta hui (invers: 19,42:1
-     en clar i 18,01:1 en fosc) i «oct., dj.» en --sdp-text-suau (9,09:1 i
+  /* La data: el número en un cercle que només es pinta hui (el d'acció,
+     --sdp-cal-hui-fons: el número fa 9,21:1 en clar i 11,18:1 en fosc) i
+     «oct., dj.» en --sdp-text-suau (9,09:1 i
      12,49:1, des del 261004). Reinicia l'encapçalament editorial, també la ratlla i el
      coixí de baix que base.css posa a tot h3. */
   .sdp-cal-agenda__cap {
@@ -7186,7 +7267,8 @@ details[open] summary.accordion-header svg:last-child {
   .sdp-cal-agenda__data { white-space: nowrap; }
   .sdp-cal-agenda__dia[aria-current="date"] .sdp-cal-agenda__numero { background: var(--sdp-cal-hui-fons); color: var(--sdp-cal-hui-text); font-weight: 700; }
   .sdp-cal-agenda__dia[aria-current="date"] .sdp-cal-agenda__data { color: var(--sdp-text-titol); font-weight: 700; }
-  /* Les files (no interactives): el punt, l'hora en una columna fixa amb
+  /* Les files (amb ruta, l'enllaç del títol en cobrix tota la fila: vegeu
+     .sdp-cal-enllac): el punt, l'hora en una columna fixa amb
      xifres tabulars (--sdp-text-cos: 11,20:1 i 15,20:1) i el títol
      (--sdp-text-titol: 19,42:1 i 17,91:1). */
   .sdp-cal-agenda__actes { flex: 1 1 16rem; min-inline-size: 0; margin: 0; padding: 0; list-style: none; }
@@ -7286,7 +7368,7 @@ details[open] summary.accordion-header svg:last-child {
   .sdp-cal-any__graella th { padding-block-end: var(--sdp-space-1); color: var(--sdp-text-suau); font-size: var(--sdp-text-meta); font-weight: 400; line-height: 1.2; }
   .sdp-cal-any__graella abbr { text-decoration: none; }
   /* El dia: tota la cel·la és el botó (≥ --sdp-cal-any-dia) i el número va
-     dins d'un cercle que només es pinta hui (invers) o al triat (el fons i la
+     dins d'un cercle que només es pinta hui (el d'acció) o al triat (el fons i la
      vora d'acció de la setmana i del mes). Els veïns, en --sdp-text-suau.
      L'amplada la decidix la cel·la: sense el min-width de 44px que base.css
      posa a tot botó, que amb ratolí desbordaria la cel·la de 2rem i taparia
@@ -7409,6 +7491,35 @@ details[open] summary.accordion-header svg:last-child {
   /* Un acte amb hora d'un sol dia, al mes: l'hora i el títol, sense caixa. */
   .sdp-cal-barra--punt { border-color: transparent; background: transparent; font-weight: 400; }
 
+  /* Onada 6 (prompt 261009_0230, punt 1; pla de l'Onada 5, tasca 16) · Clicar
+     un esdeveniment porta a la pàgina de la seua publicació (VistaMes,
+     VistaSetmana i VistaAgenda amb rutaDeLEsdeveniment). L'enllaç hereta el
+     color i la lletra de la peça (cap token nou) i el seu ::after cobrix tota
+     la peça (la barra i la fila de l'agenda en són el bloc posicionat; el
+     bloc de la setmana ja ho és). Al Mes i a la Setmana, només amb ratolí:
+     les peces fan 24px i Pedra Seca §6 vol --sdp-touch; en pantalla tàctil
+     el toc passa al dia (el botó del Mes, la columna o la barra de la
+     Setmana), que el tria i en mostra les targetes davall (que obrin la
+     publicació). L'Agenda no tria cap dia: en tàctil cada fila creix fins a
+     --sdp-touch i el toc és de l'enllaç, com a Google. El subratllat, amb la
+     guarda de ratolí de tot :hover (Fase B, modules.abast.capes.test.js). */
+  .sdp-cal-barra--enllac,
+  .sdp-cal-agenda__acte--enllac { position: relative; }
+  .sdp-cal-enllac { color: inherit; text-decoration: none; pointer-events: none; }
+  .sdp-cal-enllac::after { content: ''; position: absolute; inset: 0; }
+  .sdp-cal-enllac:focus-visible { outline: none; }
+  .sdp-cal-enllac:focus-visible::after { outline: 3px solid var(--sdp-focus); outline-offset: -3px; border-radius: var(--sdp-radi-s); }
+  @media (pointer: fine) {
+    .sdp-cal-enllac { pointer-events: auto; cursor: pointer; }
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-cal-enllac:hover { text-decoration: underline; }
+  }
+  @media (pointer: coarse) {
+    .sdp-cal-agenda__acte { min-block-size: var(--sdp-touch); }
+    .sdp-cal-agenda__acte--enllac .sdp-cal-enllac { pointer-events: auto; }
+  }
+
   /* Setmana (VistaSetmana). Fase visual (prompt 261001_0445) · Una superfície
      de targeta amb la capçalera de dies enganxosa, la franja de tot el dia i
      la graella d'hores. El mode el decidix l'amplada del contenidor (el JS hi
@@ -7459,8 +7570,9 @@ details[open] summary.accordion-header svg:last-child {
   }
   .sdp-cal-setmana__cap { margin: 0; padding: 0; }
   /* La capçalera del dia: l'abreviatura xicoteta i suau i, davall, el número
-     gran dins d'un cercle que només es pinta hui (invers: 19,42:1 en clar i
-     18,01:1 en fosc). El triat porta el fons i la vora d'acció de la base. */
+     gran dins d'un cercle que només es pinta hui (el d'acció: el número fa
+     9,21:1 en clar i 11,18:1 en fosc). El triat porta el fons i la vora
+     d'acció de la base. */
   .sdp-cal-setmana .sdp-cal-dia { gap: var(--sdp-space-1); padding-block: var(--sdp-space-2); border-radius: var(--sdp-radi-s); }
   .sdp-cal-setmana .sdp-cal-dia__nom { font-weight: 700; line-height: 1.2; }
   .sdp-cal-setmana .sdp-cal-dia__numero {
@@ -7719,7 +7831,8 @@ details[open] summary.accordion-header svg:last-child {
     line-height: 1;
     white-space: nowrap;
   }
-  /* Hui, un cercle invers xicotet (19,42:1 en clar i 18,01:1 en fosc). El dia
+  /* Hui, un cercle xicotet del color d'acció (el número fa 9,21:1 en clar i
+     11,18:1 en fosc; el cercle, 9,21:1 i 10,32:1 sobre la cel·la). El dia
      triat porta el fons i la vora d'acció de la base (.sdp-cal-dia). */
   .sdp-cal-mes .sdp-cal-dia[aria-current="date"] .sdp-cal-dia__numero {
     inline-size: var(--sdp-cal-cercle);
@@ -9251,7 +9364,8 @@ details[open] summary.accordion-header svg:last-child {
 /* ── GESTORIA PANELL (261002) ── */
 @layer components {
   /* PanellGestoria.jsx: el full trimestral per a la gestoria, en cinc passos
-     numerats. Sense media queries (viu també dins de l'encastament): els
+     numerats. Sense media queries (viu també dins de l'encastament), llevat
+     del @media print de la factura en paper (Onada 6, més avall): els
      blocs es pleguen amb flex-wrap i les taules es desplacen en horitzontal
      dins de la seua caixa (mai en vertical: taules.capes.test.js). L'estat
      de cada pas el diu la insígnia amb text; la vora només l'acompanya. */
@@ -9528,6 +9642,168 @@ details[open] summary.accordion-header svg:last-child {
   .sdp-gestoria-full__buida > td {
     padding-block: var(--sdp-space-2);
     border-inline: 0;
+  }
+
+  /* Onada 6 (261009) · ImpressioFactura.jsx: la factura emesa en paper. El
+     paper i la tinta són els tokens de la roca, que no canvien amb el tema:
+     el full es veu i s'imprimix igual en clar i en fosc (com el full de la
+     gestoria de dalt). El QR fa 35 mm (l'AEAT en demana de 30 a 40). Sense
+     media queries per a la pantalla: les parts es pleguen amb flex-wrap. */
+  .sdp-gestoria-factura {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-4);
+    padding-block-start: var(--sdp-space-4);
+    border-block-start: 1px solid var(--sdp-vora);
+  }
+  .sdp-gestoria-factura__barra {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-3);
+  }
+  .sdp-gestoria-factura__full {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-4);
+    max-width: 52rem;
+    padding: var(--sdp-space-6);
+    border: 1px solid var(--sdp-fons-roca);
+    border-radius: var(--sdp-radi-s);
+    background: var(--sdp-sobre-roca);
+    color: var(--sdp-fons-roca);
+    font-size: var(--sdp-text-small);
+    line-height: 1.6;
+    overflow-x: auto;
+  }
+  .sdp-gestoria-factura__full p { margin: 0; }
+  /* Els textos del full no prenen el color del tema (p i dt en porten un de les capes de base). */
+  .sdp-gestoria-factura__full :where(p, dt, dd, li, figcaption, span) { color: var(--sdp-fons-roca); }
+  .sdp-gestoria-factura__cap,
+  .sdp-gestoria-factura__parts {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: var(--sdp-space-6);
+  }
+  .sdp-gestoria-factura__qr {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-1);
+    margin: 0;
+  }
+  .sdp-gestoria-factura__qr-dibuix {
+    display: block;
+    width: 35mm;
+    height: 35mm;
+  }
+  .sdp-gestoria-factura__qr-paper { fill: var(--sdp-sobre-roca); }
+  .sdp-gestoria-factura__qr-tinta { fill: var(--sdp-fons-roca); }
+  .sdp-gestoria-factura__identitat,
+  .sdp-gestoria-factura__part {
+    display: flex;
+    flex: 1 1 14rem;
+    flex-direction: column;
+    gap: var(--sdp-space-1);
+  }
+  .sdp-gestoria-factura__titol {
+    font-size: var(--sdp-text-h4);
+    font-weight: 700;
+    line-height: 1.2;
+  }
+  .sdp-gestoria-factura__etiqueta,
+  .sdp-gestoria-factura__nom,
+  .sdp-gestoria-factura__anulada { font-weight: 700; }
+  .sdp-gestoria-factura__claus,
+  .sdp-gestoria-factura__totals {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--sdp-space-1);
+    margin: 0;
+  }
+  .sdp-gestoria-factura__totals {
+    align-self: flex-end;
+    min-width: min(100%, 20rem);
+  }
+  .sdp-gestoria-factura__claus > div,
+  .sdp-gestoria-factura__totals > div {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--sdp-space-4);
+  }
+  .sdp-gestoria-factura__claus dt { font-weight: 700; }
+  .sdp-gestoria-factura__claus dd,
+  .sdp-gestoria-factura__totals dd {
+    margin: 0;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .sdp-gestoria-factura__totals > div[data-principal="true"] {
+    padding-block-start: var(--sdp-space-1);
+    border-block-start: 2px solid var(--sdp-fons-roca);
+    font-size: var(--sdp-text-base);
+    font-weight: 700;
+  }
+  .sdp-gestoria-factura__taula {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .sdp-gestoria-factura__taula :where(th, td) {
+    padding: var(--sdp-space-1) var(--sdp-space-2);
+    border-block-end: 1px solid var(--sdp-fons-roca);
+    background: none;
+    color: var(--sdp-fons-roca);
+    text-align: start;
+    vertical-align: top;
+  }
+  .sdp-gestoria-factura__taula th { font-weight: 700; }
+  .sdp-gestoria-factura__taula [data-tipus="xifra"] {
+    font-variant-numeric: tabular-nums;
+    text-align: end;
+    white-space: nowrap;
+  }
+  .sdp-gestoria-factura__detall {
+    display: block;
+    white-space: pre-line;
+  }
+  .sdp-gestoria-factura__mencions {
+    margin: 0;
+    padding-inline-start: var(--sdp-space-5);
+  }
+  .sdp-gestoria-factura__url {
+    font-family: var(--sdp-font-mono);
+    overflow-wrap: anywhere;
+  }
+  /* Davall de l'adreça del QR, mentre el programa no envia res a l'AEAT. */
+  .sdp-gestoria-factura__avis-qr { font-weight: 700; }
+  /* La còpia per a imprimir (penjada del <body>): amagada a la pantalla. Mentre
+     hi ha una factura oberta, l'<html> porta sdp-gestoria-imprimint i en
+     imprimir només ix esta còpia, sense l'scroll ni l'alçada fixa de la closca.
+     L'alçada porta !important perquè index.html fixa l'alçada del 100 % a
+     html, body i #root en un <style> sense capa, que guanya a qualsevol
+     declaració normal d'una capa (també a esta); una declaració !important de
+     capa sí que li guanya. El body és un flex amb contenidor (.sdp-root,
+     base.css): en paper torna a ser un bloc que es partix en pàgines. */
+  .sdp-gestoria-factura-impresa { display: none; }
+  @media print {
+    html.sdp-gestoria-imprimint,
+    html.sdp-gestoria-imprimint body {
+      display: block;
+      height: auto !important;
+      overflow: visible;
+      container-type: normal;
+      background: none;
+    }
+    html.sdp-gestoria-imprimint body > :not(.sdp-gestoria-factura-impresa) { display: none; }
+    .sdp-gestoria-factura-impresa { display: block; }
+    .sdp-gestoria-factura-impresa .sdp-gestoria-factura__full {
+      max-width: none;
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      overflow: visible;
+    }
+    .sdp-gestoria-factura__taula tr,
+    .sdp-gestoria-factura__totals { break-inside: avoid; }
   }
 }
 
@@ -9979,6 +10255,197 @@ details[open] summary.accordion-header svg:last-child {
     display: inline-flex;
     align-items: center;
     gap: var(--sdp-space-2);
+  }
+}
+
+/* ── GESTORIA COFRE (261009) ── */
+@layer components {
+  /* PortaCofre.jsx (Onada 6, ordre del Mestre, 261009: cofre xifrat). Una
+     targeta clara amb vora, sense ombra ni media queries: els blocs es
+     pleguen amb flex-wrap. Els camps, els botons, les alertes i les
+     insígnies són els de Pedra Seca; ací només la disposició, el títol i el
+     codi de recuperació, que es llig en lletra monoespaiada i gran. */
+  .sdp-gestoria-cofre {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-4);
+    max-width: 48rem;
+    /* Integració (261009): la porta torna la targeta, el contingut i la gestió com a germans; l'espai el porta la targeta. */
+    margin-block-end: var(--sdp-space-6);
+    padding: var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-g);
+    background: var(--sdp-fons-targeta);
+    color: var(--sdp-text-cos);
+  }
+  .sdp-gestoria-cofre__cap,
+  .sdp-gestoria-cofre__accions,
+  .sdp-gestoria-cofre__robustesa {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sdp-space-3);
+  }
+  .sdp-gestoria-cofre__titol,
+  .sdp-gestoria-cofre__subtitol {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    line-height: 1.2;
+    text-align: left;
+  }
+  /* --sdp-text-titol només per al h2 (Pedra Seca §2); els h3 i el codi, amb el color del cos. */
+  .sdp-gestoria-cofre__titol {
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-h4);
+  }
+  .sdp-gestoria-cofre__subtitol {
+    color: var(--sdp-text-cos);
+    font-size: var(--sdp-text-h5);
+  }
+  .sdp-gestoria-cofre__formulari,
+  .sdp-gestoria-cofre__seccio {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-4);
+    min-width: 0;
+  }
+  .sdp-gestoria-cofre__formulari > p,
+  .sdp-gestoria-cofre__seccio > p { margin: 0; }
+  .sdp-gestoria-cofre__seccio {
+    padding-block-start: var(--sdp-space-4);
+    border-block-start: 1px solid var(--sdp-vora);
+  }
+  .sdp-gestoria-cofre__robustesa {
+    gap: var(--sdp-space-2);
+    margin: 0;
+    font-size: var(--sdp-text-small);
+  }
+  .sdp-gestoria-cofre__codi {
+    margin: 0;
+    padding: var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora-control);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-subtil);
+    color: var(--sdp-text-cos);
+    font-family: var(--sdp-font-mono);
+    font-size: var(--sdp-text-h5);
+    font-weight: 700;
+    text-align: center;
+    overflow-wrap: anywhere;
+  }
+  .sdp-gestoria-cofre__nota {
+    margin: 0;
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-small);
+  }
+}
+
+/* ── GESTORIA HISTÒRIC (261009) ── */
+@layer components {
+  /* Historic.jsx i PanellSimulacio.jsx (Onada 6, ordre del Mestre, 261009:
+     l'històric del banc, la despesa en IA, les simulacions i el llibre per a
+     la gestora). Les targetes, les taules, el gràfic, els camps i els
+     diàlegs són els de Pedra Seca i del Tauler; ací només la disposició de
+     les seccions, els títols i les xifres alineades. Sense ombres ni media
+     queries: els blocs es pleguen amb flex-wrap i la graella de camps amb
+     auto-fill. */
+  .sdp-gestoria-historic__porta,
+  .sdp-gestoria-historic__any {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-3);
+    margin-block-end: var(--sdp-space-6);
+  }
+  .sdp-gestoria-historic__seccio { margin-block: var(--sdp-space-8); }
+  .sdp-gestoria-historic__titol {
+    margin: 0 0 var(--sdp-space-4);
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-h4);
+    line-height: 1.2;
+    text-transform: uppercase;
+  }
+  .sdp-gestoria-historic__subtitol {
+    margin: 0;
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-h5);
+    line-height: 1.2;
+  }
+  .sdp-gestoria-historic__nota {
+    margin: 0 0 var(--sdp-space-3);
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-small);
+  }
+  .sdp-gestoria-historic__avisos,
+  .sdp-gestoria-historic__regles {
+    margin: 0;
+    padding-inline-start: var(--sdp-space-5);
+    color: var(--sdp-text-cos);
+  }
+  .sdp-gestoria-historic__regles > li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sdp-space-2);
+  }
+  .sdp-gestoria-historic__accions,
+  .sdp-gestoria-historic__reclassifica {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: var(--sdp-space-3);
+  }
+  .sdp-gestoria-historic__camp-curt { min-width: 12rem; margin: 0; }
+  .sdp-gestoria-historic__regla,
+  .sdp-gestoria-historic__graella {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr));
+    align-items: end;
+    gap: var(--sdp-space-4);
+    margin-block: var(--sdp-space-4);
+  }
+  .sdp-gestoria-historic__xifra {
+    text-align: end;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .sdp-gestoria-historic__grafic { margin-block: var(--sdp-space-4); }
+  .sdp-gestoria-historic__escala {
+    grid-column: 1 / -1;
+    padding: var(--sdp-space-3);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-targeta);
+  }
+  .sdp-gestoria-historic__escala > p { margin: 0 0 var(--sdp-space-2); }
+  /* L'editor dels trams d'una escala (PanellSimulacio.jsx): una fila per tram, que es plega en pantalla estreta. */
+  .sdp-gestoria-historic__trams {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-3);
+  }
+  .sdp-gestoria-historic__tram {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 12rem), 1fr));
+    align-items: end;
+    gap: var(--sdp-space-3);
+  }
+  .sdp-gestoria-historic__tram > .sdp-camp { margin: 0; }
+  .sdp-gestoria-historic__escala-nom {
+    color: var(--sdp-text-titol);
+    font-weight: 700;
+  }
+  .sdp-gestoria-historic__dades {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: var(--sdp-space-2) var(--sdp-space-4);
+    margin: 0;
+  }
+  .sdp-gestoria-historic__dades dt { font-weight: 700; }
+  .sdp-gestoria-historic__dades dd { margin: 0; min-width: 0; }
+  .sdp-gestoria-historic__empremta {
+    font-family: var(--sdp-font-mono);
+    overflow-wrap: anywhere;
   }
 }
 

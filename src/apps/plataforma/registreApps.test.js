@@ -1,8 +1,8 @@
 /* Plataforma d'Apps Enxufables · el registre (registreApps.js). */
 import { afterEach, describe, expect, test, vi } from 'vitest';
-import { manifestDeProva, manifestExternDeProva } from './__fixtures__/manifests.js';
+import { manifestDeProva, manifestExternDeProva, manifestModulDeProva } from './__fixtures__/manifests.js';
 import {
-  APPS_INTERNES, MANIFESTS_INTERNS, analitzaRuta, appDeRuta, creaRegistre, entradaActiva, llistaApps,
+  APPS_INTERNES, DADES_RESERVADES, MANIFESTS_INTERNS, analitzaRuta, appDeRuta, creaRegistre, entradaActiva, llistaApps,
   registraAppExterna, retiraAppExterna, subscriu
 } from './registreApps.js';
 import { validaManifestApp } from './manifestApp.js';
@@ -156,6 +156,62 @@ describe('creaRegistre', () => {
     expect(registre.componentDe('sense-build')).toBeNull();
     expect(registre.componentDe('reserves')).toBeNull();
     expect(registre.componentDe('fantasma')).toBeNull();
+  });
+
+  /* Onada 6 (261009, ADR-2026-12) · sdp.modul.v1. */
+  test('registraModul: valida, avisa i el mòdul entra amb origen «modul»; mai sobre un id ocupat, tampoc el d’una interna', () => {
+    const registre = creaRegistre({ internes: [manifestDeProva()] });
+    const avis = vi.fn();
+    registre.subscriu(avis);
+    const resultat = registre.registraModul(manifestModulDeProva());
+    expect(resultat).toMatchObject({ ok: true, errors: [], manifest: { id: 'llibreta', origen: 'modul', nucli: '^1' } });
+    expect(avis).toHaveBeenCalledTimes(1);
+    expect(registre.llista().map((app) => [app.id, app.origen])).toEqual([['prova', 'interna'], ['llibreta', 'modul']]);
+    const ocupat = registre.registraModul(manifestModulDeProva({ id: 'prova' }));
+    expect(ocupat.ok).toBe(false);
+    expect(ocupat.errors.join(' ')).toContain('ja hi ha una app «prova»');
+    expect(registre.registraModul(manifestModulDeProva()).errors.join(' ')).toContain('ja hi ha una app «llibreta»');
+    expect(registre.registraAppExterna(manifestExternDeProva({ id: 'llibreta' })).ok).toBe(false);
+    expect(avis).toHaveBeenCalledTimes(1);
+  });
+
+  test('un id amb dades sensibles reservades (la Gestoria, Salut) només entra declarant-les igual, també fora de les internes', () => {
+    for (const { id, dadesPersonals } of MANIFESTS_INTERNS) {
+      if (dadesPersonals) expect(DADES_RESERVADES[id], id).toBe(dadesPersonals);
+    }
+    const registre = creaRegistre({ internes: [] });
+    const fluix = registre.registraModul(manifestModulDeProva({ id: 'gestoria', dadesPersonals: false }));
+    expect(fluix).toEqual({ ok: false, errors: ['dadesPersonals: «gestoria» guarda dades financeres i ho ha de declarar'], manifest: null });
+    expect(registre.registraModul(manifestModulDeProva({ id: 'gestoria', dadesPersonals: 'salut' })).ok).toBe(false);
+    expect(registre.registraAppExterna(manifestExternDeProva({ id: 'salut', dadesPersonals: false })).ok).toBe(false);
+    expect(registre.llista()).toEqual([]);
+    expect(registre.registraModul(manifestModulDeProva({ id: 'gestoria', dadesPersonals: 'financeres' })).ok).toBe(true);
+    expect(registre.appPerId('gestoria')).toMatchObject({ origen: 'modul', dadesPersonals: 'financeres' });
+  });
+
+  test('registraModul rebutja un manifest mal format, d’un altre origen o que demana un nucli que este no satisfà', () => {
+    const registre = creaRegistre({ internes: [] });
+    expect(registre.registraModul(manifestModulDeProva({ cos: { cami: '/cos.js', integrity: 'sha384-curt' } })).ok).toBe(false);
+    expect(registre.registraModul(manifestExternDeProva()).ok).toBe(false);
+    const futur = registre.registraModul(manifestModulDeProva({ nucli: '^2' }));
+    expect(futur).toEqual({ ok: false, errors: ['nucli: este nucli és el 1.0.0 i el mòdul demana ^2'], manifest: null });
+    expect(registre.registraModul(manifestModulDeProva({ nucli: '^1.9' })).ok).toBe(false);
+    expect(registre.llista()).toEqual([]);
+  });
+
+  test('componentDe d’un mòdul: un lazy per id que demana el cos al carregador; retirar-lo l’oblida', () => {
+    const carregador = { carregaCos: vi.fn(() => Promise.resolve({ default: () => null })), oblida: vi.fn() };
+    const registre = creaRegistre({ internes: [], carregador });
+    registre.registraModul(manifestModulDeProva());
+    const component = registre.componentDe('llibreta');
+    expect(component).toBeTruthy();
+    expect(registre.componentDe('llibreta')).toBe(component);
+    expect(carregador.carregaCos).not.toHaveBeenCalled();
+    expect(registre.retiraAppExterna('llibreta')).toBe(true);
+    expect(carregador.oblida).toHaveBeenCalledWith('llibreta');
+    expect(registre.componentDe('llibreta')).toBeNull();
+    registre.registraModul(manifestModulDeProva());
+    expect(registre.componentDe('llibreta')).not.toBe(component);
   });
 
   test('les funcions del registre del document funcionen sense nucli nou', () => {

@@ -112,6 +112,42 @@ contracte:
 | `tooling/wiki/schema.json` | validesa del frontmatter |
 | `src/sections/text/pageContent.js` i consumidors | claus estructurals que vigila la frontissa de contingut ([[05_actors_i_salut]]) |
 
+## Semàfor, problemes a la vista i honestedat (Onada 6)
+
+La interfície pinta la gravetat amb tres colors, i el compilador no fabrica cap verd. El codi és a `src/sections/consola/semafor.js` i `src/sections/consola/mapa/construeixMapa.js`.
+
+- **Semàfor.** Un avís `alta` és roig, i un `mitjana` o `baixa` és taronja. Sense cap avís, la targeta és verda i diu «En ordre». El que només informa (una relació inferida, una mètrica `N/A`, «Canvis nous») és neutre. Cap to de salut no és blau.
+- **Un sol criteri a tot arreu.** Un avís té el mateix color a totes les targetes. Per exemple, una skill òrfena (`orfe`, mitjana) és taronja a l'Explorador, a Avisos i salut, a l'Inventari i a la xifra «skills òrfenes». Cada enllaç trencat de la coberta de l'Explorador pren la gravetat dels seus avisos.
+- **Etiquetes de les peces.** `VIU`, `ACTIU` i `EN MARXA` van en verd; `MORT` i `SENSE CONSUMIDOR`, en roig; la resta (`SENSE LLANÇADOR`, `PARCIAL`, `DESCONEGUT`, `FALTA`), en taronja.
+- **Inventari.** El semàfor d'una skill és el de l'avís més greu, no el del recompte. Un sol avís alt ja la fa roja.
+- **Verd amb base.** Una targeta només diu «En ordre» si la seua font es pot llegir i ho mesura tot:
+  - el pols, amb la termometria i un rebut datat;
+  - Avisos i salut, amb totes les mètriques mesurades (cap `N/A` i almenys una mètrica);
+  - Agents atòmics, amb cap peça `SENSE MESURA`.
+
+  Sense base, la targeta no porta ni verd ni roig. Un avís alt sí que la fa roja, perquè el roig té base.
+- **Les xifres.** Les xifres del tauler i les de dins de les pàgines i del pols porten la mateixa etiqueta que el tauler: «Cal reparar», «Important» o «En ordre».
+  - Una xifra que compta avisos pren el color del més greu.
+  - Una que compta tasques pren el del pitjor estat: viva, verd; morta, roig; la resta, taronja; sense cap tasca, cap color.
+  - Una que compta el que falta (llocs sense lector, candats per acreditar, skills fora del manifest) és taronja o roja si n'hi ha, i verda si no n'hi ha cap.
+  - Les que només diuen una mida (nodes, arestes, rutes documentals, cadenes, suggeriments, punts de trobada, agents atòmics, registres de consum, skills del manifest i del nucli, rebuts de lectura, operacions immunitàries) informen i no porten cap etiqueta.
+- **Problemes a la vista.** Cada targeta diu quins problemes té: com a molt cinc, i «i N més». Ho fan les cobertes del tauler, els tres panells del pols, les xifres i les peces del Mapa (cada peça, els seus avisos). Cada problema porta davant una marca amb el color del semàfor: la severitat d'un avís, l'estat d'una tasca, el color d'una skill a l'Inventari o el que falta. Les rutes van en `<Mono>`, que el mode privacitat amaga. La targeta continua portant a la seua pàgina.
+- **Ordre de reparació.** El botó de l'Inventari i de l'Explorador només copia. Cada línia diu, en un comentari de shell, quin avís repara. El segell no es torna a segellar des d'ací: es copia el diagnòstic (`node tooling/gates/segella.mjs`, sense `--update`), i el segell nou passa per l'executor de mutacions amb una lease.
+
+Codis i fonts noves del compilador:
+
+| Canvi | Què fa |
+|---|---|
+| `frontissa-roja` (alta) | Un avís per cada error de `fonts.frontissa.errors`, sobre la seua clau dins del registre d'empremtes: el node és `document:.agents/contingut_estructural.json#CLAU`. Sense clau, porta el número de l'error; una clau repetida porta `-2`, `-3`… Es repara amb una aprovació humana (`--aprova CLAU --per NOM`). |
+| `ledger-invalid` | L'evidència diu la causa: el cos s'ha editat sense tornar-lo a segellar, o falta el segell. Els segells fòssils i les línies mal formades es compten a part. |
+| `crida-inexistent` | No compta el nom d'un hook declarat a `.agents/hooks.json` (per exemple `sdp-fatiga`). |
+| `fora-cataleg-claude` | Si `CLAUDE.md` importa la skill amb `@`, l'avís continua però baixa a `baixa`, i l'evidència ho diu. |
+| Subtasques (`llancador.tipus: tasca`) | Una subtasca sense `script` propi i amb la mare viva és `desconegut`, mai `viu`. |
+| `fonts.portaDocuments` | Rep l'eixida de `checkDocuments` (`{ valid, checked, errors }`) i mesura `conformitat-documental` com a documents sense cap error sobre els comprovats. Un error que no és de cap document compta com un document més que falla. Amb `checked: 0` és `N/A`: per defecte la porta només comprova els documents canviats, i amb l'arbre net no en comprova cap. |
+| `fonts.cadenaPortes` | Rep l'eixida de `run-portes.mjs --diagnostic` (`{ valid, failures, total? }`) i mesura `cadena-portes`. |
+
+Sense alguna d'estes dues fonts, la mètrica continua en `N/A`. La closca (`tooling/brain/mapa-consola.mjs`) encara no les passa: és governança, i el canvi va en el paquet de laboratori `04_escriptori/02_investigacio_ia/261009_0400_consola_claude/`.
+
 ## On viu l'eixida
 
 El mapa descriu la maquinària interna, així que **no ha d'entrar** al manifest públic de la Wiki, ni a `public/rag-index.json`, ni al paquet de WordPress. Queda pendent una decisió humana:

@@ -22,12 +22,20 @@
  * seguretat. Incrustat, el paquet no viu a l'arrel del domini i el xat
  * demanava la IAIA i el logo a l'arrel (404). Sense base, el mateix valor;
  * un valor ja resolt (AvatarResolt, RealitatSection) passa intacte.
+ *
+ * Onada 6 (tasca 12) · `enquadrament`, variant ADDITIVA: un dels noms de
+ * ENQUADRAMENTS_AVATAR. Amb imatge, el cercle talla i la imatge s'amplia i es
+ * desplaça fins al tros que diu el nom (modules.css, .sdp-avatar--enquadrat-*):
+ * la cara d'una il·lustració sense cap fitxer nou. Sense la prop, o amb un nom
+ * que no és de la llista, l'Avatar de sempre.
  */
 import { esFontImatgeSegura } from '../../../utils/sanitize.js';
 import { resolRecursPropi } from '../../../config/assetResolver.js';
 
 const MIDES = ['xs', 'sm', 'md', 'lg', 'xl'];
 const TONS = 6;
+/** Els enquadraments que té el full d'estils: 'iaia', la cara de la IAIA a «Festa del Poble». */
+export const ENQUADRAMENTS_AVATAR = Object.freeze(['iaia']);
 
 /** Enter d'1 a 6 derivat de la llavor; sense llavor, cap to (classe base). */
 export function toDeLlavor(llavor) {
@@ -38,7 +46,7 @@ export function toDeLlavor(llavor) {
   return (h % TONS) + 1;
 }
 
-export function Avatar({ nom, src = null, mida = 'md', className, llavor = null, alt, titol }) {
+export function Avatar({ nom, src = null, mida = 'md', className, llavor = null, alt, titol, enquadrament = null }) {
   const m = MIDES.includes(mida) ? mida : 'md';
   const inicials = (nom || '?')
     .trim().split(/\s+/).slice(0, 2)
@@ -52,10 +60,14 @@ export function Avatar({ nom, src = null, mida = 'md', className, llavor = null,
 
   const to = toDeLlavor(llavor);
   const textLector = alt === undefined ? (nom || '') : alt;
+  const enquadrat = safeSrc && ENQUADRAMENTS_AVATAR.includes(enquadrament) ? enquadrament : null;
 
   return (
     <span
-      className={['sdp-avatar', `sdp-avatar--${m}`, to ? `sdp-avatar--to-${to}` : null, className].filter(Boolean).join(' ')}
+      className={[
+        'sdp-avatar', `sdp-avatar--${m}`, to ? `sdp-avatar--to-${to}` : null,
+        enquadrat ? 'sdp-avatar--enquadrat' : null, enquadrat ? `sdp-avatar--enquadrat-${enquadrat}` : null, className
+      ].filter(Boolean).join(' ')}
       title={(titol === undefined ? nom : titol) || undefined}
     >
       {safeSrc

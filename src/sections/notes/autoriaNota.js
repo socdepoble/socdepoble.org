@@ -46,14 +46,20 @@ const fotoPublica = (valor) => (isSafeUrl(net(valor)) ? net(valor) : null);
 /**
  * { nom, avatar, poble } de qui signa, o null sense actor (mode incrustat sense
  * identitat: qui publica decidix la reserva).
- *   · entitat: el seu nom i el seu logo; el poble no se sap (cadena buida);
+ *   · entitat: el seu nom, el seu logo i el seu poble (el town_name de
+ *     l'organització, 2610081401) si l'actor el porta; si no, cadena buida;
  *   · persona: el nom de l'actor (mai un correu), la foto i el poble de la sessió.
+ * Onada 6 (decisió 2 de la nit del 261009: «l'entitat porta el town_name de
+ * l'organització si l'actor el té») · Es llig `poble` o `town_name` de
+ * l'actor; sense, continua sent buit, com abans. L'actor d'IdentitatContext
+ * no el porta: qui publica l'hi posa abans amb actorAmbPobleDeLEntitat (la
+ * fila de la pertinença, baix).
  */
 export function autoriaDeLActor(actor, currentUser) {
   if (!actor) return null;
   if (actor.tipus === 'entitat') {
     const nom = nomPublic(actor.nom, actor.slug);
-    return nom ? { nom, avatar: fotoPublica(actor.avatar), poble: '' } : null;
+    return nom ? { nom, avatar: fotoPublica(actor.avatar), poble: net(actor.poble) || net(actor.town_name) } : null;
   }
   if (!actor.nom && !currentUser) return null;
   const meta = currentUser?.user_metadata || {};
@@ -62,6 +68,24 @@ export function autoriaDeLActor(actor, currentUser) {
     avatar: fotoPublica(actor.avatar),
     poble: net(meta.town_name)
   };
+}
+
+/**
+ * Revisió adversarial de l'Onada 6 · L'actor entitat d'IdentitatContext porta
+ * { tipus, id, nom, avatar, rol, slug, kind }, sense el poble de
+ * l'organització, i les seues publicacions eixien sense poble: cap pestanya
+ * «Gent de …» les trobava (el requisit diu «persones o grups locals»). El
+ * poble ja viatja a la fila de la pertinença (`memberships` del mateix
+ * context: list_my_organizations torna town_name des de 2610081401, i el
+ * mode seed des de localPerfils.js). Torna l'actor amb `poble` = el
+ * town_name de la seua fila; si l'actor ja en porta, si no és una entitat o
+ * si la fila no en té, el MATEIX actor. Pur.
+ */
+export function actorAmbPobleDeLEntitat(actor, memberships) {
+  if (actor?.tipus !== 'entitat' || net(actor.poble) || net(actor.town_name)) return actor;
+  const fila = (Array.isArray(memberships) ? memberships : []).find((org) => org && String(org.id) === String(actor.id));
+  const poble = net(fila?.town_name);
+  return poble ? { ...actor, poble } : actor;
 }
 
 /**

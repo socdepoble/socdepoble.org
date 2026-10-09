@@ -37,7 +37,27 @@ const FITXERS = Object.freeze([
      Xat (ordre del Mestre, 261007): cap porta qualitat no el vigilava. La
      prova de l'avís de revalidació d'App.jsx (App.revalidacio.test.jsx) ja
      viu a la seua porta natural, src/app/contexts/qualitat.renovacio.test.js. */
-  'src/sections/xat/useObriXatPerDefecte.js'
+  'src/sections/xat/useObriXatPerDefecte.js',
+  /* Onada 6 · El xat per als beta testers i la identitat de la IAIA: el
+     nivell d'IA viu, «Informa d'un error», els errors SDP traduïts i les
+     seues proves. */
+  'src/sections/realitat/useNivellIaia.js',
+  'src/sections/realitat/useNivellIaia.test.jsx',
+  'src/sections/xat/contactesAjuda.js',
+  'src/sections/xat/errorsXat.js',
+  'src/sections/xat/errorsXat.test.js',
+  'src/sections/xat/informeDError.js',
+  'src/sections/xat/informeDError.test.js',
+  'src/sections/xat/useInformaDUnError.js',
+  'src/sections/xat/XatContext.nivellIaia.test.jsx',
+  'src/sections/xat/XatSection.onada6.test.jsx',
+  'src/sections/xat/components/BotoInformaDUnError.jsx',
+  'src/sections/xat/components/DialegNovaConversa.iaia.test.jsx',
+  'src/sections/xat/components/FakeChatOnboarding.iaia.test.jsx',
+  'src/data/supabase/xat.iaia.test.js',
+  'src/components/PedraSeca/atoms/Avatar.enquadrament.test.jsx',
+  /* Revisió 261009 · La bombolla en error amb el codi SDP traduït. */
+  'src/sections/xat/components/Bombolla.codiError.test.jsx'
 ]);
 
 const llig = (ruta) => readFileSync(path.join(ARREL, ruta), 'utf8');

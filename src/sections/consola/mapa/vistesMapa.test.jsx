@@ -302,7 +302,8 @@ describe('les altres vistes del Mapa també són targetes amb boina i pàgina pr
   test('dins de la Consola, Avisos i salut no repetix el Refrescar del peu de la Consola', () => {
     render(<MapaConsola locale="ca-ES" font={{ estat: 'ready', mapa: MAPA, error: null, carrega: vi.fn() }} />);
     expect(screen.queryByRole('button', { name: /Refrescar/ })).toBeNull();
-    expect(document.querySelectorAll('details.sdp-consola__detall')).toHaveLength(5);
+    // Onada 6 · i un desplegable més: els avisos per causa arrel.
+    expect(document.querySelectorAll('details.sdp-consola__detall')).toHaveLength(6);
   });
 
   /* T9 (ordre del Mestre, 260930): cap taula de la Consola porta el modificador
@@ -369,14 +370,50 @@ describe('Llei del Píxel · les vistes no canvien quan els seus càlculs ixen a
     expect([...avis.children].map((el) => `${el.tagName}.${el.className}`))
       .toEqual(['SPAN.sdp-insignia sdp-insignia--avis', 'P.', 'CODE.sdp-consola__mono']);
     const filtres = screen.getByRole('group', { name: 'Quines skills es mostren' });
+    // Onada 6 (requisit 11) · filtres per semàfor, sense disparador útil i frontmatter invàlid.
     expect(within(filtres).getAllByRole('button').map((b) => b.textContent))
-      .toEqual(['Totes', 'Amb avisos', 'Òrfenes', 'Fora d’algun cens', 'Nucli']);
+      .toEqual(['Totes', 'Amb avisos', 'Roig', 'Ambre', 'Verd', 'Òrfenes', 'Fora d’algun cens', 'Sense disparador útil',
+        'Frontmatter invàlid', 'Nucli']);
     fireEvent.click(within(filtres).getByRole('button', { name: 'Òrfenes' }));
     expect(files().map(([nom]) => nom)).toEqual(['wiki-busca-skills']);
     fireEvent.click(within(filtres).getByRole('button', { name: 'Fora d’algun cens' }));
     expect(taula.querySelector('tbody').textContent).toBe('Cap skill casa amb el filtre.');
     fireEvent.click(within(filtres).getByRole('button', { name: 'Nucli' }));
     expect(files().map(([nom]) => nom)).toEqual(['sdp-workflow']);
+    fireEvent.click(within(filtres).getByRole('button', { name: 'Ambre' }));
+    expect(files().map(([nom]) => nom)).toEqual(['wiki-busca-skills']);
+    fireEvent.click(within(filtres).getByRole('button', { name: 'Verd' }));
+    expect(files().map(([nom]) => nom)).toEqual(['sdp-workflow']);
+    for (const nom of ['Roig', 'Sense disparador útil', 'Frontmatter invàlid']) {
+      fireEvent.click(within(filtres).getByRole('button', { name: nom }));
+      expect(taula.querySelector('tbody').textContent, nom).toBe('Cap skill casa amb el filtre.');
+    }
+  });
+
+  /* Onada 6 (requisit 11) · Cada fila porta els botons de la peça de
+     l'Explorador (DetallPeca.jsx · AccionsFitxer): veure-la al graf, obrir-la a
+     l'editor (en desenvolupament), copiar-ne la ruta i, si un avís té
+     reparació mecànica, copiar-ne l'ordre. Els noms accessibles diuen de quina skill. */
+  test('Inventari: cada fila, els botons de la seua skill', () => {
+    const fora = {
+      ...MAPA,
+      avisos: [...MAPA.avisos, { node: 'skill:sdp-workflow', codi: 'fora-cataleg-claude', severitat: 'mitjana', evidencia: '.claude/skills/' }]
+    };
+    render(<InventariMapa mapa={fora} locale="ca-ES" />);
+    const taula = screen.getByRole('region', { name: 'Inventari de skills' });
+    const botons = (nom) => [...within(taula).getByRole('rowheader', { name: nom }).closest('tr').querySelectorAll('button')]
+      .map((b) => b.textContent);
+    // Correcció de l'Onada 6 (revisió adversarial) · l'ordre diu quin avís tracta.
+    expect(botons('sdp-workflow')).toEqual([
+      'Veure al graf de sdp-workflow', 'Obrir a l’editor de sdp-workflow', 'Copiar la ruta de sdp-workflow',
+      'Copiar l’ordre de reparació de sdp-workflow per a fora-cataleg-claude'
+    ]);
+    // Sense cap avís amb reparació mecànica, cap ordre per copiar.
+    expect(botons('wiki-busca-skills')).toEqual([
+      'Veure al graf de wiki-busca-skills', 'Obrir a l’editor de wiki-busca-skills', 'Copiar la ruta de wiki-busca-skills'
+    ]);
+    // Una fila de taula no porta cap acció principal: tots fantasma.
+    expect([...taula.querySelectorAll('tbody button')].every((b) => b.classList.contains('sdp-boto--fantasma'))).toBe(true);
   });
 
   test('Fluxos: el buit diu quants llocs reben faena i ningú no la replega', () => {
@@ -399,18 +436,24 @@ describe('Llei del Píxel · les vistes no canvien quan els seus càlculs ixen a
       ['Agents que treballen sols', '1 de 2 tasques que llança launchd és viva'],
       ['Qui avisa quan algo es trenca', 'Vigilants vius: 1 / 2 · 1 avís alt al Mapa']
     ]);
+    // Onada 6 (semàfor) · FALTA, SENSE LECTOR i PARCIAL, taronja. Derogat: les quatre en `sdp-badge-tag`.
     expect([...document.querySelectorAll('.sp-card-label')].map((l) => l.className))
-      .toEqual(['sp-card-label sdp-badge-tag', 'sp-card-label sdp-badge-tag', 'sp-card-label sdp-badge-tag', 'sp-card-label sdp-badge-tag']);
+      .toEqual(Array(4).fill('sp-card-label sdp-insignia sdp-insignia--avis'));
   });
 
   test('Actors: al sòl, només el lloc amb faena i cap lector porta SENSE LECTOR', () => {
     render(<ActorsMapa mapa={MAPA} />);
     const sol = screen.getByRole('heading', { level: 3, name: 'El sòl' }).closest('section');
     // Correcció 261004 (verificador de la tercera passada, punt 5) · davant, el recompte del sòl, que diu quants no tenen lector.
+    /* Correcció de l'Onada 6 (revisió adversarial: el semàfor a les xifres de
+       les pàgines) · el recompte del sòl du el seu color (un lloc sense lector,
+       taronja) i diu quin és, a la vista. */
     expect([...sol.querySelectorAll('article.sp-card')].map((t) => [
       t.querySelector('h3').textContent, [...t.querySelectorAll('.sp-card-label')].map((l) => l.textContent)
-    ])).toEqual([['2 llocs del sòl', []], ['04_escriptori', ['SENSE LECTOR']], ['AGENTS.md', []]]);
+    ])).toEqual([['2 llocs del sòl', ['Important']], ['04_escriptori', ['SENSE LECTOR']], ['AGENTS.md', []]]);
     expect(sol.querySelector('article h4').textContent).toBe('Documents i plantilles on treballen · 1 sense lector');
+    expect([...sol.querySelector('article.sp-card').querySelectorAll('.sdp-consola__problemes li')].map((li) => li.textContent))
+      .toEqual(['sense lector _wiki_de_poble/04_escriptori']);
   });
 
   /* Derogat per l'ordre del Mestre del 261004 (xat: cap xifra solta): les
@@ -437,8 +480,32 @@ describe('Llei del Píxel · les vistes no canvien quan els seus càlculs ixen a
       ['avisos', 'avisos-alts', 'metriques-amb-mesura', 'linies-ledger', 'torns-caducats', 'skills-fora-del-segell', 'tasques-del-mapa']
         .map((s) => `/consola/xifres/${s}`));
     expect([...document.querySelectorAll('details > summary')].map((s) => s.textContent)).toEqual([
+      'Veure els avisos agrupats per causa arrel',
       'Veure els avisos, el més greu primer', 'Veure les tasques i els seus llançadors', 'Veure la funció de salut',
       'Veure els nodes per tipus i les arestes per confiança', 'Veure totes les arestes'
+    ]);
+  });
+
+  /* Onada 6 (requisit 10: duplicitats) · Una sola causa, una fila: quants
+     avisos fa i quines peces toca (en <Mono>, el mode privacitat les amaga). */
+  test('Avisos i salut: els avisos agrupats per causa arrel, la més greu primer', () => {
+    const ambCauses = {
+      ...MAPA,
+      nodes: [...MAPA.nodes, n('document:x.md', 'document'), n('skill:core-llegibilitat-text', 'skill')],
+      avisos: [...MAPA.avisos,
+        { node: 'skill:core-llegibilitat-text', codi: 'contracte-absent', severitat: 'alta', evidencia: 'a → x.md' },
+        { node: 'document:x.md', codi: 'fitxer-absent', severitat: 'alta', evidencia: 'a → x.md' }]
+    };
+    render(<MapaConsola locale="ca-ES" font={{ estat: 'ready', mapa: ambCauses, error: null, carrega: vi.fn() }} />);
+    const taula = screen.getByRole('region', { name: 'Avisos per causa arrel', hidden: true });
+    const files = [...taula.querySelectorAll('tbody tr')].map((tr) => [
+      tr.querySelector('th').textContent.split(':')[0], tr.children[1].textContent, tr.children[2].textContent,
+      [...tr.children[3].querySelectorAll('code')].map((c) => c.textContent)
+    ]);
+    expect(files).toEqual([
+      ['contracte-absent', 'alta', '2', ['skill:core-llegibilitat-text', 'document:x.md']],
+      ['tasca-morta', 'alta', '1', ['tasca:reflex-daemon']],
+      ['orfe', 'mitjana', '1', ['skill:wiki-busca-skills']]
     ]);
   });
 });

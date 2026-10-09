@@ -1,0 +1,81 @@
+---
+type: document
+status: esborrany
+description: Flux de la porta Olivera v4 (convocatòria) i del cron d'higiene perquè el Mestre l'aprove des de la Wiki abans que siguen efectius.
+tags:
+  - tractors
+  - escriptori
+---
+# Flux d'aprovació de la porta Olivera v4 i del cron d'higiene
+
+Este document explica què faran els dos tractors nous de l'Onada 6, quan actuen, què no fan i com es paren. La lliçó 261002 de `wiki-documentacio-i-reflex` exigix que el Mestre l'aprove des de la Wiki abans que siguen efectius. El paquet és al laboratori `02_investigacio_ia/261009_0400_higiene_claude/` i ningú no l'ha aplicat. Les tres skills tal com quedaran es poden llegir senceres a `lectura/` del mateix laboratori.
+
+## 1. Què fa la porta Olivera v4 (motor de l'Escriptori net)
+
+La porta d'ara diu «verd» a tot el que està declarat a «## Activitat en curs», i la declaració no caduca mai. La v4 hi afig la **convocatòria**: el que ha de ser cert abans de convocar una IA.
+
+- **Vida justificada.** Cada línia d'«Activitat en curs» porta el document i, darrere de «·», per què continua: `per a [[consumidor]]` (un document de la taula que el necessita), `torn_ID` (un torn obert i vigent) o `Mestre aammdd: motiu` (una retenció que decidix el Mestre). Sense motiu, amb el consumidor arxivat o amb el torn tancat o caducat, el document és ranci per a la convocatòria encara que siga d'avui.
+- **Un consumidor només sosté si té vida.** Dos documents que es declaren l'un per a l'altre, sense cap torn, retenció ni rebut, no sostenen ningú: un cicle de «per a» sense ancoratge és ranci sencer. Amb una retenció o un torn en un dels dos, tota la cadena té vida.
+- **Àncora repetida.** Un document declarat dues vegades és una troballa.
+- **Trinitat.** Un prompt necessita un `pla_implementacio` de la seua jornada nascut abans (pel nom; amb el mateix HHMM, per la «Creació» del Registre). Si no comparteix el HHMM, ho avisa.
+- **Pla complet.** El pla de la trinitat ha de tindre l'«Estat del Pla» triat i la Verificació i els Riscos escrits.
+- **Secció 0 feta.** La secció 0 del prompt ha de tindre caselles marcades; «[pendent]» sol no compta.
+- **Sediment de l'índex.** Línies, seccions buides i blocs fets per scripts. Només és una mètrica: mai bloqueja.
+
+`--arxiva` se'n du la línia de declaració sencera, amb el motiu, i quan s'arxiva un consumidor, la línia que el citava passa a apuntar a l'arxiu (i aquella declaració es veu rància).
+
+En tancar un torn, la porta diu quins documents es quedarien sense vida: els que només sostenia eixe torn i els que en penjaven per «per a».
+
+### Excepció al requisit literal que has d'aprovar (decisió D1)
+
+El requisit diu «sense motiu = ranci». La porta v4 compta el rebut de torn del frontmatter (`reflex: sdp:torn_…`, el que escriu `document.mjs create`) com un `torn_ID` implícit: un document nascut pel circuit i declarat viu sense cap motiu escrit té vida mentre el seu torn siga obert (24 hores). Passat eixe termini, és ranci com qualsevol altre. El motiu és que `create` escriu l'àncora sola, i canviar-ho trencava el contracte d'ancoratge de les proves (ANC-W6). A la taula d'ara, els quatre vius ho són per eixe rebut. Si no aproves l'excepció, el paquet s'ha de refer perquè `create` escriga el motiu.
+
+## 2. Què fa el cron d'higiene
+
+`tooling/higiene/cron_higiene.mjs`, llançat per launchd (`org.socdepoble.higiene`) cada dia a les 05:30.
+
+- **L0, sempre:** escriu l'informe del dia a `.immunitari/higiene/aammdd.json` (fora de git): brossa de l'arrel, fitxers sospitosos versionats (`.bak`, `.tmp`, `.orig`, `.rej`, `~`, `.old` i `.abans-aammdd`, que només llista), ZIP fora de la retenció, mida dels logs, receptes repetides de Plaquetes i l'estat de la porta Olivera.
+- **L1, el que es pot desfer:** mou a `.sdp-paperera/quarantena-ISO/` (amb `MANIFEST.json`) la brossa no versionada de l'arrel i les receptes repetides no versionades, reanomena els dos logs de traça dels hooks quan passen d'1 MiB i, dels logs rotats, se'n queda els tres més nous de cada un (els altres van també a quarantena). Git ignora estes quarantenes: el que s'hi mou no torna al repositori per una altra ruta.
+- **L2, amb la teua mà:** retirar ZIP antics de `wordpress-plugin/builds/` (fora del repositori, a `../.sdp-paperera-builds/`) i purgar quarantenes de `.sdp-paperera/` de més de 30 dies. Només amb `--l2 --confirma CODI` des d'un terminal; el launchd no ho fa mai. Els ZIP només es traslladen: el cron no esborra mai cap ZIP, i la paperera germana la buides tu quan vulgues.
+- Plaquetes deixa d'escriure una recepta nova quan les operacions són les mateixes.
+
+## 3. Quan actuen
+
+- La convocatòria: en demanar la plantilla d'un prompt (`document.mjs context` i `create` amb `prompt.local` o `prompt.consell`, que en fase «avis» escriuen els avisos per stderr abans de redactar), en escriure una petorreta (hooks de Claude, Codex i MarIA), a l'informe (`npm run porta:olivera`), al tancament de torn (`tancament.mjs`, també al pre-commit) i a l'arrencada (canal fresc de `despertar.mjs`). El briefing de MarIA diu qui necessita cada document viu.
+- El cron: a les 05:30, si no hi ha cap escriptura documental en curs ni cap torn obert tocat en les dues últimes hores.
+- La Consola: el Mapa llegirà la cadència del plist nou (un `StartCalendarInterval` diari compta com 86400 s). Fins que instal·les el plist, `higiene-diaria` i `higiene-basica` hi apareixen com a tasques sense llançador (dos avisos de transició).
+
+## 4. Les dues fases
+
+La bandera `.agents/olivera-fase.json` decidix la força de la convocatòria.
+
+1. **Fase «avis» (la que s'aplica):** les troballes ixen com a avisos a la convocatòria (context i create), a l'informe, al briefing, al despertar i al tancament. Res no es bloqueja per la convocatòria. La taula neta de sempre (`checkTaula`) continua igual.
+2. **Fase «bloqueig» (una Onada després, decisió teua):** les troballes tanquen la convocatòria de prompts, els hooks d'escriptura de petorretes, l'informe i el tancament.
+
+Una bandera il·legible es llig com a «bloqueig»: una bandera que ningú entén no pot afluixar la porta. Cap programa no pot afluixar-la per paràmetre: només pot demanar més rigor.
+
+## 5. Què no fan
+
+- No esborren res, llevat de la purga L2 de quarantenes de `.sdp-paperera/` que tu confirmes. Cap ZIP.
+- No toquen mai `04_escriptori/` (arxivar és decisió de MarIA), `01_produccio/`, `02_investigacio_ia/`, `90_arxiu_historic/`, `.iaia_auth/` ni `.env*`.
+- No toquen cap fitxer versionat ni cap entrada que comence per punt, llevat de tres camins exactes del mateix circuit (els dos logs de traça de `.agents/runtime/` i els seus rotats, les receptes de `.immunitari/receptes/` i les quarantenes amb manifest).
+- No reescriuen l'índex de l'Escriptori pel seu compte.
+
+## 6. Com es para i com es desfà
+
+1. **Afluixar:** la bandera torna a «avis» (o se'n va el fitxer).
+2. **Parar el cron:** `launchctl unload ~/Library/LaunchAgents/org.socdepoble.higiene.plist`.
+3. **Desfer un trasllat:** cada quarantena porta `MANIFEST.json` amb l'origen de cada fitxer; els ZIP retirats porten també el seu sha256.
+4. **Desfer el paquet:** el commit que el porta es reverteix amb el circuit de sempre (pla de l'executor amb lease); la transacció de `.agents/seal-transactions/` diu quins fitxers va tocar i amb quina empremta.
+
+## 7. Com s'aprova
+
+1. MarIA promou este esborrany a la Wiki com a document propi.
+2. El Mestre el llig a la pàgina i l'aprova, amb l'excepció D1 de la secció 1 dita expressament (aprovada o rebutjada).
+3. Només llavors es fa l'open de la lease de `prepara-pla.mjs` (LLEGIU_PRIMER del laboratori, §3).
+
+Avui la Wiki no té cap superfície que aprove skills ni crons: el Panell de Tractors aprova tractors per empremta (`src/sections/tractors/nucli/aprovacio.js`). Com queda registrada l'aprovació és decisió del Mestre.
+
+## Vincles
+
+- [[00_index_escriptori]]

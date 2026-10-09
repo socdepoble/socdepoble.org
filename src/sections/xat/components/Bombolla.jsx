@@ -43,6 +43,8 @@ import CitaResposta from './CitaResposta.jsx';
 import EnllacSegur from './EnllacSegur.jsx';
 import { etiquetaHora } from '../temps.js';
 import { segmentaEnllacos } from '../enllacos.js';
+/* Onada 6 · Un codi SDP traduït (SDP-XAT-429, el límit de missatges) en lloc del text cru. */
+import { textDErrorDelXat } from '../errorsXat.js';
 import { rutaDePerfil } from '../../../config/navigation.js';
 
 /**
@@ -190,7 +192,7 @@ export default function Bombolla({
           {enError ? (
             <div className="sdp-xat-bombolla__error" role="alert">
               <AlertTriangle size={16} aria-hidden="true" focusable="false" />
-              <span>{missatge.error || t('section.xat.missatge.noEnviat', "No s'ha enviat")}</span>
+              <span>{textDErrorDelXat({ code: missatge.codiError, message: missatge.error }, t, t('section.xat.missatge.noEnviat', "No s'ha enviat"))}</span>
               <button type="button" className="sdp-xat-bombolla__accio" onClick={() => onReintenta?.(missatge.id)}>
                 {t('section.xat.missatge.reintenta', 'Torna-ho a provar')}
               </button>

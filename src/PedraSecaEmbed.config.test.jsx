@@ -73,14 +73,20 @@ vi.mock('./apps/plataforma/registreApps.js', async (importOriginal) => {
 });
 vi.mock('./css/index.css?inline', () => ({ default: '.sdp-root { display: flex; }' }));
 /* L'App no pinta res: només deixa a mà el navigate del router de cada
-   element, per a les proves de la ruta cap a l'amfitrió (P1-c). */
+   element, per a les proves de la ruta cap a l'amfitrió (P1-c). Una prova
+   que necessita un àlies de l'App (Onada 5: /chat → /xat) el declara a
+   `alies` i el doble el resol amb el <Navigate replace> del router propi,
+   com RedireccioXat (App.jsx). Buit, no fa res. */
 const navegadors = vi.hoisted(() => new Map());
+const alies = vi.hoisted(() => new Map());
 vi.mock('./app/App.jsx', async () => {
-  const { useNavigate } = await import('./app/contexts/RouterContext.jsx');
+  const { createElement } = await import('react');
+  const { Navigate, useLocation, useNavigate } = await import('./app/contexts/RouterContext.jsx');
   return {
     default: function AppDeProva({ targetNode }) {
       navegadors.set(targetNode?.host, useNavigate());
-      return null;
+      const desti = alies.get(useLocation().pathname);
+      return desti ? createElement(Navigate, { to: desti, replace: true }) : null;
     }
   };
 });
@@ -122,6 +128,7 @@ afterEach(async () => {
     }
   });
   navegadors.clear();
+  alies.clear();
   subscripcions.length = 0;
   window.history.replaceState(null, '', '/');
   document.body.replaceChildren();
@@ -1181,6 +1188,31 @@ describe('la ruta de l’app cap a l’amfitrió (clàusula dels slugs)', () => 
       expect(sentit.rutes()).toEqual(['/pobles/*']);
       expect(onEs()).toBe('/pagina#sdp=/pobles/sella');
     } finally {
+      sentit.para();
+    }
+  });
+
+  /* Onada 5 (ordre del Mestre, 261009) · Apegar a WordPress un enllaç amb la
+     paraula anglesa. El plugin declara ruta-a-url="fragment" i sempre un
+     poble, que sense ruta duria a /xat: per això cal veure que l'app munta a
+     /chat (la URL guanya) i que és l'àlies qui la porta a /xat. L'App d'este
+     fitxer és un doble; l'àlies de veritat (RedireccioXat) el prova
+     App.test.jsx, i ací se'n reprodueix el <Navigate replace>. */
+  test('fase 2 · apegar «#sdp=/chat» amb un poble declarat: l’àlies porta l’app a /xat i la URL queda en «#sdp=/xat»', async () => {
+    window.history.replaceState(null, '', '/pagina#sdp=/chat');
+    alies.set('/chat', '/xat');
+    const push = vi.spyOn(window.history, 'pushState');
+    const sentit = escolta();
+    try {
+      const element = await munta({ 'ruta-a-url': 'fragment', poble: 'la-torre-de-les-macanes' });
+      expect(element.config.rutaAUrl).toBe('fragment');
+      expect(sentit.rutes()).toEqual(['/chat', '/xat']);
+      expect(onEs()).toBe('/pagina#sdp=/xat');
+      expect(llegeixRutaDeLaUrl('fragment')).toBe('/xat');
+      // replaceState del reflex: l'enllaç apegat no deixa cap entrada nova a l'historial.
+      expect(push).not.toHaveBeenCalled();
+    } finally {
+      push.mockRestore();
       sentit.para();
     }
   });

@@ -10,9 +10,10 @@ import { describe, expect, test } from 'vitest';
 import { ESQUEMA_CONFIG_EMPRESA, llegixConfigEmpresa } from '../../facturacio/configEmpresa.js';
 import { sembraLlegat } from '../../facturacio/llegat.js';
 import {
-  OPCIONS_IVA, OPCIONS_TIPUS, configDeFormulari, configDeJson, dadesDeFactura, dataCurta, errorsDeFactura, errorsDelPerfil,
-  estatDeLaCadena, euros, facturaBuida, filesDelLlibre, formulariDeConfig, formulariImportat, llegixQuantitat, numerosDelText,
-  resumDelLlegat, tiquetsSubstituibles, totalsDeFactura
+  OPCIONS_CAUSA, OPCIONS_IVA, OPCIONS_RETENCIO, OPCIONS_TIPUS, avisDelClient, clientBuit, clientDeDestinatari, commutaRectificada,
+  configDeFormulari, configDeJson, dadesDeFactura, dataCurta, errorsDeFactura,
+  errorsDelPerfil, estatDeLaCadena, euros, facturaBuida, filesDelLlibre, formulariDeConfig, formulariImportat, llegixQuantitat,
+  numerosDelText, rectificables, resumDelLlegat, tipusEfectiu, tiquetsSubstituibles, totalsDeFactura
 } from './formulari.js';
 
 const CIF_EMISSOR = 'B12345674';
@@ -114,9 +115,27 @@ describe('el llegat', () => {
 });
 
 describe('la factura', () => {
-  test('les opcions del formulari: tres tipus i els tipus d’IVA del nucli', () => {
-    expect(OPCIONS_TIPUS.map((o) => o.valor)).toEqual(['F1', 'F2', 'F3']);
-    expect(OPCIONS_IVA.map((o) => o.valor)).toEqual(['4', '10', '21']);
+  /* Onada 6 (261009): la rectificativa, l'exempció E1 i la retenció d'IRPF entren al formulari. */
+  test('les opcions del formulari: quatre tipus, els tipus d’IVA del nucli i l’exempció E1, la retenció i la causa', () => {
+    expect(OPCIONS_TIPUS.map((o) => o.valor)).toEqual(['F1', 'F2', 'F3', 'R']);
+    expect(OPCIONS_IVA.map((o) => o.valor)).toEqual(['4', '10', '21', 'E1']);
+    expect(OPCIONS_RETENCIO.map((o) => o.valor)).toEqual(['', '7', '15']);
+    expect(OPCIONS_CAUSA.map((o) => o.valor)).toEqual(['R1', 'R2', 'R3', 'R4']);
+  });
+
+  test('la retenció d’IRPF, la data de l’operació i l’exempció arriben al nucli; la simplificada no porta retenció', () => {
+    const config = llegixConfigEmpresa(configDeFormulari(formulariBo()));
+    const { dades } = dadesDeFactura(facturaBona({ retencio: '15', dataOperacio: '2026-10-05' }));
+    expect(dades).toMatchObject({ retencio: { percentatge: 15 }, dataOperacio: '2026-10-05' });
+    // 2 × 2,50 € al 4 %: base 5,00, IVA 0,20, total 5,20; retenció del 15 % de la base, 0,75; a pagar, 4,45.
+    expect(totalsDeFactura(dades, config)).toMatchObject({ importTotal: 520, retencio: { percentatge: 15, import: 75 }, liquid: 445 });
+    // La mateixa data que la factura no es repetix.
+    expect('dataOperacio' in dadesDeFactura(facturaBona({ dataOperacio: PAS })).dades).toBe(false);
+    expect('retencio' in dadesDeFactura(facturaBona({ tipus: 'F2', retencio: '15' })).dades).toBe(false);
+    expect(dadesDeFactura(facturaBona({ retencio: '19' })).errors).toEqual(['Tria la retenció d’IRPF de la llista.']);
+    const exempta = dadesDeFactura(facturaBona({ linies: [{ concepte: 'Classe', quantitat: '1', preu: '30,00', tipusIva: 'E1' }] })).dades;
+    expect(exempta.linies).toEqual([{ concepte: 'Classe', quantitat: 1, preuUnitari: 3000, exempcio: 'E1' }]);
+    expect(totalsDeFactura(exempta, config)).toMatchObject({ baseTotal: 3000, quotaTotal: 0, importTotal: 3000 });
   });
 
   test('una completa: client amb domicili, cèntims i mil·lèsimes', () => {
@@ -201,6 +220,102 @@ describe('el llibre', () => {
     const llibre = [alta('T2026-0001', 'F2'), alta('T2026-0002', 'F2'), f3];
     expect(tiquetsSubstituibles(llibre).map((t) => t.clau)).toEqual(['T2026-0002|2026-10-07']);
     expect(tiquetsSubstituibles([...llibre, anulacio('A2026-0002')]).map((t) => t.clau)).toEqual(['T2026-0002|2026-10-07', 'T2026-0001|2026-10-07']);
+  });
+
+  /* Onada 6 (261009): la rectificativa des del formulari. */
+  test('la rectificativa: les factures vives, R5 si són tiquets o la causa si no, i l’import rectificat de les triades', () => {
+    const domicili = { adreca: 'Carrer Major, 2', codiPostal: '46998', poblacio: 'Poble de Prova' };
+    const f1 = alta('A2026-0001', 'F1', { factura: { destinatari: { nif: DNI_CLIENT, nom: 'Bar de la Plaça', domicili }, baseTotal: 500, quotaTotal: 20 } });
+    const t1 = alta('T2026-0001', 'F2', { factura: { destinatari: null, baseTotal: 300, quotaTotal: 30 } });
+    const llibre = [f1, t1, alta('A2026-0002'), anulacio('A2026-0002')];
+    expect(rectificables(llibre).map((r) => [r.clau, r.simplificada])).toEqual([['T2026-0001|2026-10-07', true], ['A2026-0001|2026-10-07', false]]);
+    expect(rectificables(llibre)[1]).toMatchObject({ etiqueta: 'A2026-0001 · 07/10/2026 · Bar de la Plaça · 5,20 €', base: 500, quota: 20 });
+
+    const rect = (canvis) => facturaBona({ tipus: 'R', ...canvis });
+    const A1 = 'A2026-0001|2026-10-07';
+    const T1 = 'T2026-0001|2026-10-07';
+    expect(tipusEfectiu(rect(), llibre)).toBe('R1');
+    expect(tipusEfectiu(rect({ causa: 'R3', rectificades: [A1] }), llibre)).toBe('R3');
+    expect(tipusEfectiu(rect({ causa: 'R3', rectificades: [T1] }), llibre)).toBe('R5');
+    expect(tipusEfectiu(facturaBona(), llibre)).toBe('F1');
+
+    // Per substitució: l'import de la rectificada viatja, i el nucli l'accepta amb l'emissor de la configuració.
+    const config = llegixConfigEmpresa(configDeFormulari(formulariBo()));
+    const perSubstitucio = dadesDeFactura(rect({ rectificades: [A1] }), llibre).dades;
+    expect(perSubstitucio).toMatchObject({
+      tipus: 'R1', tipusRectificativa: 'S', rectificades: [{ numSerie: 'A2026-0001', dataExpedicio: PAS }], importRectificat: { base: 500, quota: 20 }
+    });
+    expect(errorsDeFactura(perSubstitucio, config, 'R2026-0001')).toEqual([]);
+    // Per diferències: el que resta, amb el preu en negatiu; sense import rectificat.
+    const perDiferencies = dadesDeFactura(rect({
+      modalitat: 'I', rectificades: [A1], linies: [{ concepte: 'Descompte', quantitat: '1', preu: '-1,00', tipusIva: '4' }]
+    }), llibre).dades;
+    expect(perDiferencies).toMatchObject({ tipus: 'R1', tipusRectificativa: 'I', linies: [{ preuUnitari: -100 }] });
+    expect('importRectificat' in perDiferencies).toBe(false);
+    expect(totalsDeFactura(perDiferencies, config)).toMatchObject({ baseTotal: -100, quotaTotal: -4, importTotal: -104 });
+    // La R5 corregix tiquets: sense client i, si es vol, amb l'IVA inclòs.
+    const r5 = dadesDeFactura(rect({ rectificades: [T1] }), llibre).dades;
+    expect(r5).toMatchObject({ tipus: 'R5', ivaInclos: true, importRectificat: { base: 300, quota: 30 } });
+    expect('destinatari' in r5).toBe(false);
+
+    // Els errors, en llenguatge planer.
+    expect(dadesDeFactura(rect(), llibre).errors).toEqual(['Tria quina factura corregix esta rectificativa.']);
+    expect(dadesDeFactura(rect({ rectificades: ['A2026-0002|2026-10-07'] }), llibre).errors[0]).toMatch(/^Alguna de les factures triades ja no es pot rectificar/);
+    expect(dadesDeFactura(rect({ rectificades: [A1, T1] }), llibre).errors)
+      .toEqual(['Una rectificativa corregix tiquets o factures completes, no les dues coses alhora.']);
+    expect(dadesDeFactura(rect({ modalitat: 'X', rectificades: [A1] }), llibre).errors[0]).toMatch(/^Tria si la rectificativa/);
+  });
+
+  /* Correcció de la revisió (261009): triar A, desfer-la i triar B deixava el client d'A, i es podien
+     triar factures de clients diferents en una sola rectificativa. */
+  test('la rectificativa: el client copiat va darrere de la tria, el que s’escriu a mà no, i un sol client', () => {
+    const domicili = { adreca: 'Carrer Major, 2', codiPostal: '46998', poblacio: 'Poble de Prova' };
+    const altreNif = ['8765', '4321', 'X'].join('');
+    const bar = { nif: DNI_CLIENT, nom: 'Bar de la Plaça', domicili };
+    const casino = { nif: altreNif, nom: 'Casino del Poble', domicili: { ...domicili, adreca: 'Plaça Major, 9' } };
+    const llibre = [
+      alta('A2026-0001', 'F1', { factura: { destinatari: bar, baseTotal: 500, quotaTotal: 20 } }),
+      alta('A2026-0002', 'F1', { factura: { destinatari: casino, baseTotal: 700, quotaTotal: 70 } }),
+      alta('A2026-0003', 'F1', { factura: { destinatari: bar, baseTotal: 100, quotaTotal: 10 } }),
+      alta('T2026-0001', 'F2', { factura: { destinatari: null, baseTotal: 300, quotaTotal: 30 } })
+    ];
+    const [A1, A2, A3, T1] = ['A2026-0001', 'A2026-0002', 'A2026-0003', 'T2026-0001'].map((n) => `${n}|${PAS}`);
+    const buit = { ...facturaBuida(PAS), tipus: 'R', linies: facturaBona().linies };
+    expect(buit.client).toEqual(clientBuit());
+
+    // Tria A: es copia el seu client. Desfà-la: el client torna a ser buit. Tria B: el de B.
+    const ambA = commutaRectificada(buit, A1, llibre);
+    expect(ambA).toMatchObject({ rectificades: [A1], client: clientDeDestinatari(bar), clientCopiat: true });
+    const senseRes = commutaRectificada(ambA, A1, llibre);
+    expect(senseRes).toMatchObject({ rectificades: [], client: clientBuit(), clientCopiat: false });
+    const ambB = commutaRectificada(senseRes, A2, llibre);
+    expect(ambB).toMatchObject({ rectificades: [A2], client: clientDeDestinatari(casino), clientCopiat: true });
+    expect(avisDelClient(ambB, llibre)).toBeNull();
+    // Tria A i, damunt, B: el client és el de la primera, i no s'emet (clients diferents).
+    const ambAiB = commutaRectificada(ambA, A2, llibre);
+    expect(ambAiB).toMatchObject({ rectificades: [A1, A2], client: clientDeDestinatari(bar) });
+    expect(dadesDeFactura(ambAiB, llibre).errors)
+      .toEqual(['Una rectificativa corregix factures d’un sol client, i les triades són de clients diferents: fes-ne una per a cada client.']);
+    // Dues del mateix client, sí; i un tiquet sense client no arrossega cap client.
+    expect(dadesDeFactura(commutaRectificada(ambA, A3, llibre), llibre).errors).toEqual([]);
+    expect(commutaRectificada(buit, T1, llibre)).toMatchObject({ client: clientBuit(), clientCopiat: false });
+
+    // Un client escrit a mà (corregir-ne les dades) no es toca en canviar la tria, i es diu que no és el de la factura.
+    const corregit = { ...ambA, client: { ...ambA.client, nom: 'Bar de la Plaça SL' }, clientCopiat: false };
+    const avis = avisDelClient(corregit, llibre);
+    expect(avis).toEqual({
+      text: `La factura que corregixes és de Bar de la Plaça (NIF ${DNI_CLIENT}). Deixa el client així només si el que corregixes són les seues dades.`,
+      client: clientDeDestinatari(bar)
+    });
+    const desfeta = commutaRectificada(corregit, A1, llibre);
+    expect(desfeta).toMatchObject({ rectificades: [], client: corregit.client });
+    expect(commutaRectificada(desfeta, A2, llibre).client).toEqual(corregit.client);
+    expect(avisDelClient(commutaRectificada(desfeta, A2, llibre), llibre)?.client).toEqual(clientDeDestinatari(casino));
+    // El NIF es compara net: espais, guions i minúscules no fan un altre client.
+    expect(avisDelClient({ ...ambA, client: { ...ambA.client, nif: ` ${DNI_CLIENT.slice(0, 8)}-${DNI_CLIENT.slice(8).toLowerCase()} ` } }, llibre)).toBeNull();
+    // Fora d'una rectificativa, o sense cap factura triada, no hi ha avís.
+    expect(avisDelClient({ ...corregit, tipus: 'F1' }, llibre)).toBeNull();
+    expect(avisDelClient(buit, llibre)).toBeNull();
   });
 
   test('l’estat de la cadena, sempre amb text', () => {

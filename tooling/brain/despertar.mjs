@@ -77,7 +77,7 @@ export function estatActual(content) {
     return {
       origen: 'capcalera',
       titol,
-      segell: (/·\s*(\d{6}_\d{4})/.exec(titol) || [])[1] || null,
+      segell: segellDe(titol),
       text: `## ESTAT_ACTUAL${capcalera[1]}\n${capcalera[2]}`.trim()
     };
   }
@@ -86,6 +86,18 @@ export function estatActual(content) {
     return { origen: 'bloc', titol: '', segell: null, text: bloc[1].trim() };
   }
   throw new Error('ESTAT no disponible: ni capçalera ESTAT_ACTUAL ni bloc delimitat');
+}
+
+/**
+ * Segell del títol d'una capçalera d'ESTAT, normalitzat a `aammdd_hhmm`. Accepta el format
+ * curt (`261008_1919`) i el que escriuen de veres els agents des del 261004
+ * (`2026-10-08 19:19`); sense el segon, l'avís d'ESTAT ranci no saltava mai (261009).
+ */
+export function segellDe(titol) {
+  const curt = /·\s*(\d{6}_\d{4})/.exec(titol || '');
+  if (curt) return curt[1];
+  const llarg = /·\s*(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/.exec(titol || '');
+  return llarg ? `${llarg[1].slice(2)}${llarg[2]}${llarg[3]}_${llarg[4]}${llarg[5]}` : null;
 }
 
 /** Fitxer viu més recent de les carpetes de treball, per detectar un ESTAT ranci. */
@@ -104,7 +116,7 @@ function darreraActivitat() {
   return max;
 }
 
-function avisRanci(estat, activitat) {
+export function avisRanci(estat, activitat) {
   if (!activitat) return null;
   const quan = segellATemps(estat.segell);
   if (!quan) {
@@ -128,7 +140,7 @@ export function fotografia() {
 }
 
 /** Canal fresc: entra al context després de generar-se. Ací sí que hi ha noms. */
-function textFresc({ branch, hash, ara, estat, taula, avis }) {
+function textFresc({ branch, hash, ara, estat, taula, avis, olivera = '' }) {
   return `# ON_ESTIC · fotografia viva (${ara})
 
 **Branca Git:** ${branch}
@@ -139,7 +151,7 @@ ${avis ? `\n> [!WARNING]\n> ${avis}\n` : ''}
 Aquesta llista s'ha llegit del disc fa un instant, en aquesta mateixa arrencada. És la bona.
 
 ${taula.text}
-
+${olivera ? `\n${olivera}\n` : ''}
 ## 2. Últim relleu de \`.agents/ESTAT.md\`
 
 ${estat.text}
@@ -198,10 +210,32 @@ ${estat.text}
 `;
 }
 
-function main() {
+/**
+ * Informe de la porta Olivera per al canal fresc (261009): verda o roja, el motiu de cada
+ * declarat viu i els avisos de la convocatòria. Mai llança: una porta que no es pot passar
+ * es diu, no s'amaga. Només va a stdout; l'ON_ESTIC continua sense noms de l'Escriptori.
+ */
+export async function informeOlivera(arrel = rootDir) {
+  try {
+    const olivera = await import('../gates/porta-olivera.mjs');
+    const r = typeof olivera.checkEscriptori === 'function'
+      ? olivera.checkEscriptori(arrel)
+      : { ...olivera.checkTaula(arrel), avisos: [], convocatoria: null };
+    const linies = [`## 1b. Porta Olivera (${r.valid ? 'verda' : 'roja'}${r.convocatoria ? `, convocatòria en fase «${r.convocatoria.fase}»` : ''})`, ''];
+    for (const e of r.errors) linies.push(`- ❌ ${e}`);
+    for (const v of r.convocatoria?.vida ?? []) linies.push(`- ${v.valid ? '🌿' : '🍂'} ${v.nom.replace(/\.md$/, '')} ← ${v.motiu}`);
+    for (const a of r.avisos) linies.push(`- ⚠️ ${a}`);
+    if (linies.length === 2) linies.push('- Taula neta i sense declarats vius.');
+    return linies.join('\n');
+  } catch (error) {
+    return `## 1b. Porta Olivera\n\n- No s'ha pogut passar la porta (${error.message}). Passa-la a mà: npm run porta:olivera`;
+  }
+}
+
+async function main() {
   const foto = fotografia();
   fs.writeFileSync(path.join(rootDir, '.agents/ON_ESTIC.md'), textFitxer(foto), 'utf-8');
-  process.stdout.write(textFresc(foto));
+  process.stdout.write(textFresc({ ...foto, olivera: await informeOlivera(rootDir) }));
   if (foto.avis) console.error(`[despertar.mjs] ⚠️ ${foto.avis}`);
 }
 

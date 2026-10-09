@@ -12,6 +12,10 @@
  * Onada 3 (P2) · Porta la cara del poble, la de la seua fitxa de Pobles
  * (avatarDelPoble), com la comunitat del Xat de mostra. Sense fitxa, les
  * inicials de sempre.
+ *
+ * Onada 6 (integració Xat i Pobles) · Amb la mateixa fitxa, i si l'amfitrió
+ * no n'ha declarat el nom, es diu com la gent del poble (nomDelPoble amb
+ * `towns`), el nom que tindrà el grup quan existisca.
  */
 import { ChevronRight, Pin } from 'lucide-react';
 import { AvatarComunitat } from './FilaConversa.jsx';
@@ -19,8 +23,8 @@ import { useCoreContent } from '../../../app/contexts/CoreContentContext';
 import { avatarDelPoble, nomDelPoble } from '../pobleAmfitrio.js';
 
 export default function FilaPoble({ poble, onObri, t }) {
-  const nom = nomDelPoble(poble);
   const { towns } = useCoreContent();
+  const nom = nomDelPoble(poble, towns);
   return (
     <button type="button" className="sdp-xat-fila sdp-xat-fila--comunitat" onClick={() => onObri(poble)}>
       <AvatarComunitat fil={{ id: `poble:${poble.id}`, avatar_url: avatarDelPoble(poble, towns) }} nom={nom} />

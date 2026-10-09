@@ -6,7 +6,7 @@
    a ser GD per a qualsevol persona amb sessió. Ara la comunitat porta la cara
    del poble a la llista i a la seua fitxa; el General continua amb la seua
    icona, i una imatge pròpia del fil mana. Sense poble, res no canvia. */
-import { render, screen, cleanup } from '@testing-library/react';
+import { render, screen, cleanup, fireEvent } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import XatSection from './XatSection';
 import { agrupaComunitats, mapejaFil } from './missatges.js';
@@ -158,4 +158,19 @@ test('sense poble declarat (socdepoble.org), la comunitat d’un poble no canvia
   ambComunitatDelPoble();
   render(<XatSection />);
   expect(caraDe(llista().querySelector('li[data-clau="comunitat:c-torre"]'))).toBeNull();
+});
+
+/* Integració Xat i Pobles (Onada 6, pla 261009_0245, ítem 4) · Un amfitrió
+   que declara el poble sense el seu nom: la fila virtual i el grup que crea en
+   prémer-la es diuen com la gent de la fitxa, també d'un poble inventat. */
+test('sense nomPoble, la fila virtual i el grup que crea es diuen com la gent del poble de la fitxa', () => {
+  mocks.externalConfig = { poble: 'olivera-inventada' };
+  mocks.towns = [{ id: 'olivera-inventada', title: "L'Olivera Inventada" }];
+  render(<XatSection />);
+  const fila = llista().querySelector('li[data-clau="poble:olivera-inventada"]');
+  expect(fila.querySelector('.sdp-xat-fila__nom').textContent).toBe("Gent de l'Olivera Inventada, Grup del poble");
+  fireEvent.click(fila.querySelector('button'));
+  const url = new URL(mocks.navigate.mock.calls.at(-1)[0], 'https://x.invalid');
+  expect(url.searchParams.get('sobre')).toBe('poble:olivera-inventada');
+  expect(url.searchParams.get('titol')).toBe("Gent de l'Olivera Inventada");
 });

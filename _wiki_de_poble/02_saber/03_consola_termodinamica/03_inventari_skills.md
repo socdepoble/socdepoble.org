@@ -39,6 +39,8 @@ Esta peça de la Consola respon a una pregunta: **quines skills tenim de veres i
 
   Tres avisos o més pinten roig; un o dos, ambre; cap, verd. Estima els tokens com a paraules × 1,3.
 
+  La Consola de Sóc de Poble no compta els avisos des de l'Onada 6: mira el més greu. Un avís alt pinta roig; només mitjans o baixos, ambre; cap, verd (vegeu [[04_contracte_de_dades]]).
+
 ## Què passa si l'apliquem al nostre cens (lectura del 24-09-2026)
 
 - **Etiqueta equivocada.** Emowe classifica `.agents/skills` dins de «Cursor / otros»: les nostres skills eixirien com si foren de Cursor.

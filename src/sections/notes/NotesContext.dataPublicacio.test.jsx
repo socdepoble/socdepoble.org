@@ -6,7 +6,7 @@ import { renderHook, act, cleanup } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({
   update: vi.fn(), send: vi.fn(), toast: vi.fn(), notes: [], scopeKey: 'tenant-user', workspaceKey: 'session',
-  actor: null, user: null, externalConfig: {}
+  actor: null, user: null, externalConfig: {}, memberships: []
 }));
 vi.mock('./NotesDataContext', () => ({ useNotesData: () => ({
   notes: mocks.notes, noteFolders: [], scopeKey: mocks.scopeKey, workspaceKey: mocks.workspaceKey, config: { tenantId: 'tenant' },
@@ -18,7 +18,7 @@ vi.mock('../../app/contexts/UIContext', () => ({
 }));
 vi.mock('@/components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: mocks.toast }) }));
 vi.mock('../mur/MurContext', () => ({ useMur: () => ({ sendSectionSubmission: mocks.send }) }));
-vi.mock('../../app/contexts/IdentitatContext.jsx', () => ({ useIdentitat: () => ({ actor: mocks.actor }) }));
+vi.mock('../../app/contexts/IdentitatContext.jsx', () => ({ useIdentitat: () => ({ actor: mocks.actor, memberships: mocks.memberships }) }));
 vi.mock('../../app/contexts/SessionContext.jsx', () => ({ useSession: () => ({ currentUser: mocks.user }) }));
 vi.mock('../../data/backendPort.js', () => ({ promoteToPublic: vi.fn(), teCapacitat: () => false }));
 vi.mock('./GlobalSaveManager.js', async importOriginal => {
@@ -38,6 +38,7 @@ beforeEach(() => {
   mocks.actor = null;
   mocks.user = null;
   mocks.externalConfig = {};
+  mocks.memberships = [];
 });
 afterEach(cleanup);
 
@@ -94,8 +95,37 @@ test('amb una entitat activa, el payload signa amb el seu nom i el seu logo', as
   const { result } = renderHook(useNotes, { wrapper: NotesProvider });
   await act(async () => { await result.current.publishNote({ id: 'forn', title: 'Pa', content: '', revision: 1 }); });
   expect(payloadEnviat()).toMatchObject({ author_name: 'Forn de la Torre', author_avatar: 'https://exemple.org/forn.png' });
-  // El poble de la persona no és el de l'entitat: es queda el del poble on es publica.
-  expect(payloadEnviat().author_location).toBe('La Torre de les Maçanes');
+  /* El poble de la persona no és el de l'entitat.
+     Onada 6 (decisió 2 de la nit del 261009, ordre del pla 261009_0245,
+     ítems 2 i 11) · Abans hi anava «La Torre de les Maçanes» per defecte, un
+     poble que ningú havia triat. Ara, sense poble conegut, cap clau: ni
+     author_location ni poble_id (la targeta pinta la seua reserva). */
+  expect(payloadEnviat()).not.toHaveProperty('author_location');
+  expect(payloadEnviat()).not.toHaveProperty('poble_id');
+});
+
+/* Revisió adversarial de l'Onada 6 · L'actor entitat d'IdentitatContext no
+   porta el poble: el pren de la seua fila de pertinença (memberships, el
+   town_name de list_my_organizations), la forma real del context. */
+test('Onada 6 · una entitat signa des del poble de la seua organització (la fila de pertinença) i porta poble_id', async () => {
+  mocks.user = { id: 'u-1', user_metadata: { full_name: 'Pepa Soler', town_name: 'Benifallim' } };
+  mocks.actor = { tipus: 'entitat', id: 'o-1', nom: 'Forn de Relleu', avatar: null, rol: 'owner', slug: 'forn-de-relleu', kind: 'company' };
+  mocks.memberships = [
+    { id: 'o-2', name: 'Una altra', town_name: 'Sella', role: 'owner' },
+    { id: 'o-1', name: 'Forn de Relleu', town_name: 'Relleu', role: 'owner' }
+  ];
+  const { result } = renderHook(useNotes, { wrapper: NotesProvider });
+  await act(async () => { await result.current.publishNote({ id: 'forn-relleu', title: 'Pa', content: '', revision: 1 }); });
+  expect(payloadEnviat()).toMatchObject({ author_name: 'Forn de Relleu', author_location: 'Relleu', poble_id: 'relleu' });
+});
+
+test('Onada 6 · una entitat que ja porta el seu poble a l’actor el conserva', async () => {
+  mocks.user = { id: 'u-1', user_metadata: { full_name: 'Pepa Soler', town_name: 'Benifallim' } };
+  mocks.actor = { tipus: 'entitat', id: 'o-1', nom: 'Forn de Relleu', poble: 'Relleu' };
+  mocks.memberships = [{ id: 'o-1', name: 'Forn de Relleu', town_name: 'Sella' }];
+  const { result } = renderHook(useNotes, { wrapper: NotesProvider });
+  await act(async () => { await result.current.publishNote({ id: 'forn-relleu', title: 'Pa', content: '', revision: 1 }); });
+  expect(payloadEnviat()).toMatchObject({ author_location: 'Relleu', poble_id: 'relleu' });
 });
 
 test('una persona signa amb el seu nom i el seu poble; un correu no es publica mai', async () => {
@@ -106,6 +136,8 @@ test('una persona signa amb el seu nom i el seu poble; un correu no es publica m
   const payload = payloadEnviat();
   expect(payload.author_name).toBe('Veí');
   expect(payload.author_location).toBe('Benifallim');
+  // Onada 6 · La clau del poble per a la pestanya «Gent de …» (pobles/clauDelPoble.js).
+  expect(payload.poble_id).toBe('benifallim');
   // Una referència privada (sdp-media://) no viatja al Mur.
   expect(payload).not.toHaveProperty('author_avatar');
   expect(JSON.stringify(payload)).not.toContain('pepa@exemple.org');
@@ -115,5 +147,21 @@ test('sense actor (incrustat), el nom de l’app queda de reserva', async () => 
   mocks.externalConfig = { appName: 'Poble Amfitrió', appLocation: 'Sella' };
   const { result } = renderHook(useNotes, { wrapper: NotesProvider });
   await act(async () => { await result.current.publishNote({ id: 'amfitrio', title: 'T', content: '', revision: 1 }); });
-  expect(payloadEnviat()).toMatchObject({ author_name: 'Poble Amfitrió', author_location: 'Sella' });
+  expect(payloadEnviat()).toMatchObject({ author_name: 'Poble Amfitrió', author_location: 'Sella', poble_id: 'sella' });
+});
+
+test('Onada 6 · sense poble de qui signa, el poble que declara l’amfitrió (el seu id), sense inventar-ne el nom', async () => {
+  mocks.externalConfig = { appName: 'Poble Amfitrió', poble: 'sella', nomPoble: 'Gent de Sella' };
+  const { result } = renderHook(useNotes, { wrapper: NotesProvider });
+  await act(async () => { await result.current.publishNote({ id: 'amfitrio-poble', title: 'T', content: '', revision: 1 }); });
+  expect(payloadEnviat()).toMatchObject({ poble_id: 'sella' });
+  expect(payloadEnviat()).not.toHaveProperty('author_location');
+});
+
+test('Onada 6 · sense actor ni poble de l’amfitrió: cap poble inventat a les dades', async () => {
+  const { result } = renderHook(useNotes, { wrapper: NotesProvider });
+  await act(async () => { await result.current.publishNote({ id: 'sense-poble', title: 'T', content: '', revision: 1 }); });
+  expect(payloadEnviat()).not.toHaveProperty('author_location');
+  expect(payloadEnviat()).not.toHaveProperty('poble_id');
+  expect(JSON.stringify(payloadEnviat())).not.toContain('La Torre de les Maçanes');
 });

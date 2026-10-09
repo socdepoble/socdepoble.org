@@ -52,6 +52,20 @@ describe('layout.css', () => {
     expect(css).toContain(`@supports not (container-type: inline-size) { @media (max-width: 400px) { ${barra} } }`);
     expect(vegades(css, 'max-width: 400px)')).toBe(2);
   });
+
+  /* Onada 5 (ordre del Mestre, 261008) · La barra inferior reparteix les
+     cinc caselles en pistes d'ample igual de vora a vora. Abans s'apinyaven
+     al centre amb un gap en vw i el defecte de 600px passava totes les
+     portes: esta prova evita que una escombrada les torne a centrar. */
+  test('la barra inferior compacta són cinc pistes iguals, sense gap en vw', () => {
+    const inici = css.indexOf(':where(.sdp-root.is-compact) nav.mobile-nav {');
+    expect(inici).toBeGreaterThan(-1);
+    const regla = css.slice(inici, css.indexOf('}', inici));
+    expect(regla).toContain('display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); justify-items: center;');
+    expect(regla).toContain('gap: 0;');
+    expect(regla).not.toContain('justify-content');
+    expect(css).not.toContain('clamp(8px, 3vw, 24px)');
+  });
 });
 
 describe('App.jsx (només lectura: el T7 no el toca)', () => {

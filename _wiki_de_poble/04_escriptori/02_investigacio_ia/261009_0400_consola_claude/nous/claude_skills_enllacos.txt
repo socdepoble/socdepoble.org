@@ -1,0 +1,47 @@
+Enllaços del catàleg de Claude Code (.claude/skills/) · paquet 261009_0400 Consola a zero avisos
+
+Lleva: 24 avisos fora-cataleg-claude (23 de severitat mitjana i el de sdp-workflow, que des de l'Onada 6 és baixa
+perquè CLAUDE.md:6 la importa amb @). Llegit del Mapa viu (GET /__iaia/mapa.json, generat 2026-10-09T02:12:38Z).
+
+Per què no va per executor-mutacio: l'executor només escriu fitxers regulars i rebutja qualsevol ruta amb symlink
+(tooling/gates/executor-mutacio.mjs:33-34, «Target no regular o hardlink» i «Target amb symlink»). Els enllaços els crea el Mestre a mà, des de
+l'arrel, amb la mateixa forma que els deu que ja hi ha (ls -la .claude/skills: «core-empaquetat-wp ->
+../../.agents/skills/core-empaquetat-wp»). .claude/ no és dins de la superfície segellada
+(tooling/gates/segella.mjs només segella .agents/skills/**/*.md): no cal resegellar res.
+
+Abans de fer-ho, decidiu la D1 del LLEGIU_PRIMER (catàleg sencer o curat). Si trieu el catàleg sencer, estes són
+les 24 ordres, una per skill, en l'ordre del Mapa:
+
+ln -s ../../.agents/skills/core-automillora .claude/skills/core-automillora
+ln -s ../../.agents/skills/core-comprensio-reflexiva .claude/skills/core-comprensio-reflexiva
+ln -s ../../.agents/skills/core-consell-i-colmena .claude/skills/core-consell-i-colmena
+ln -s ../../.agents/skills/core-context-panic .claude/skills/core-context-panic
+ln -s ../../.agents/skills/core-edicio-segura .claude/skills/core-edicio-segura
+ln -s ../../.agents/skills/core-estrategia-ia .claude/skills/core-estrategia-ia
+ln -s ../../.agents/skills/core-higiene-escriptori .claude/skills/core-higiene-escriptori
+ln -s ../../.agents/skills/core-identitat .claude/skills/core-identitat
+ln -s ../../.agents/skills/core-llegibilitat-text .claude/skills/core-llegibilitat-text
+ln -s ../../.agents/skills/core-memoria-historica .claude/skills/core-memoria-historica
+ln -s ../../.agents/skills/core-neteja-brossa .claude/skills/core-neteja-brossa
+ln -s ../../.agents/skills/core-restauracio-segellada .claude/skills/core-restauracio-segellada
+ln -s ../../.agents/skills/core-taxonomia-estricta .claude/skills/core-taxonomia-estricta
+ln -s ../../.agents/skills/core-tecniques-investigacio .claude/skills/core-tecniques-investigacio
+ln -s ../../.agents/skills/core-telemetria-huma .claude/skills/core-telemetria-huma
+ln -s ../../.agents/skills/sdp-app-grid-shell .claude/skills/sdp-app-grid-shell
+ln -s ../../.agents/skills/sdp-calendari-agricola .claude/skills/sdp-calendari-agricola
+ln -s ../../.agents/skills/sdp-casos-us-essencials .claude/skills/sdp-casos-us-essencials
+ln -s ../../.agents/skills/sdp-clon-loiverse .claude/skills/sdp-clon-loiverse
+ln -s ../../.agents/skills/sdp-estudi-mercat .claude/skills/sdp-estudi-mercat
+ln -s ../../.agents/skills/sdp-pedra-seca .claude/skills/sdp-pedra-seca
+ln -s ../../.agents/skills/sdp-universal-editor .claude/skills/sdp-universal-editor
+ln -s ../../.agents/skills/sdp-universal-page .claude/skills/sdp-universal-page
+ln -s ../../.agents/skills/sdp-workflow .claude/skills/sdp-workflow
+
+Comprovació després: ls .claude/skills ha de llistar 34 entrades (les 10 d'ara i estes 24), i el Mapa viu
+(/consola/salut, «Veure els avisos agrupats per causa arrel») ja no ha de portar cap fila fora-cataleg-claude.
+La mètrica cens-skills-coherent passa de 10/34 a 34/34 si l'índex i el segell també hi són.
+
+Si trieu el catàleg curat (D1, opció b), no creeu cap enllaç: cal una decisió escrita amb la llista de skills
+que Claude Code no ha de carregar i un canvi del compilador perquè la llegisca (avui construeixMapa.js no té cap
+font per a eixa llista: seria una font nova de la closca, tooling/brain/mapa-consola.mjs). Sense eixa
+declaració, silenciar l'avís seria fabricar un verd.

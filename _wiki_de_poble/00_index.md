@@ -135,5 +135,6 @@ D'ací pengen la identitat, el saber, les eines, les actes i l'Escriptori de Só
 - [[10_actes/261006_1910_acta_marmota_capacitat_offline.md]]
 - [[10_actes/261007_0140_acta_marmota_fatiga_artefactes.md]]
 - [[10_actes/261008_1105_acta_tancament_onada_3.md]]
+- [[10_actes/261008_2300_acta_marmota.md]]
 - [[10_metriques/11_grafica_consum.md]]
 - [[10_metriques/12_esforc_huma_sessions.md]]

@@ -10,9 +10,12 @@ import { ROOT, options } from '../documental/cli.mjs';
 import { checkTurn, sealTurn, inventory, changes } from '../documental/turns.mjs';
 import { checkDocuments } from './porta-documents.mjs';
 
-export async function environmentChecks(root,scope='documents') {
+// 261009: la porta Olivera de tancament va primer. Una Onada no deixa residus a la següent:
+// amb --torn, la porta també avisa (o bloqueja, en fase «bloqueig») dels vius que només sosté el torn.
+export async function environmentChecks(root,scope='documents',{turnId=null}={}) {
   const checks=[],errors=[];
-  const commands=[['plantilles',['tooling/gates/porta-plantilles.mjs']],
+  const commands=[['olivera',['tooling/gates/porta-olivera.mjs','--tancament',...(turnId?['--torn',turnId]:[])]],
+    ['plantilles',['tooling/gates/porta-plantilles.mjs']],
     ['autoritat',['tooling/gates/porta-autoritat.mjs']],
     ['ledger',['tooling/verify-ledger.mjs']],
     ['segell',['tooling/gates/segella.mjs']],
@@ -32,7 +35,7 @@ export async function environmentChecks(root,scope='documents') {
 export async function checkClosure(root,id) {
   const before=inventory(root);
   const turnCheck=id?checkTurn(root,id):checkDocuments(root);
-  const environment=await environmentChecks(root,turnCheck.turn?.scope||'documents');
+  const environment=await environmentChecks(root,turnCheck.turn?.scope||'documents',{turnId:id||null});
   const after=inventory(root);
   const errors=[...turnCheck.errors,...environment.errors];
   if(changes(before,after).length) errors.push('Escriptura concurrent o comprovació amb efectes laterals');

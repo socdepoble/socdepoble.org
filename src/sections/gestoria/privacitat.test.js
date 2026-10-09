@@ -39,10 +39,16 @@ const MANIFEST = 'src/apps/gestoria/manifest.js';
    Facturació s'endolla pel pont i no per ShellGestoria, que és font del
    tractor gestoria.tauler; tocar-la en tornaria l'aprovació a «pendent». La
    pantalla viu al carril de la Gestoria i passa per esta mateixa guarda. */
+/* Onada 6, ordre del Mestre (261009): «importar tot l'històric», «calcular les
+   despeses massives en IA», «fer simulacions» i «descarregar-se un full de
+   càlcul per a la gestora». La quarta, «Històric i IA», entra pel pont com la
+   Facturació, pel mateix motiu (ShellGestoria no es toca), i passa per esta
+   mateixa guarda. */
 const DEL_PONT = Object.freeze([
   '../../sections/gestoria/tauler/ShellGestoria.jsx',
   '../../sections/gestoria/aprendre/Aprendre.jsx',
-  '../../sections/gestoria/facturar/Facturacio.jsx'
+  '../../sections/gestoria/facturar/Facturacio.jsx',
+  '../../sections/gestoria/historic/Historic.jsx'
 ]);
 
 /* Ruta des de l'arrel del repositori: les claus del glob són relatives a este fitxer. */
@@ -86,7 +92,10 @@ describe('el cens', () => {
       `${GESTORIA}/tauler/ShellGestoria.jsx`, `${GESTORIA}/tauler/nucli/tractorTauler.js`, `${GESTORIA}/impostos/nucli/impostos.js`,
       `${GESTORIA}/fitxes/gestoria_tauler.md`,
       // 261007 (ordre del Mestre: facturació operativa sense xarxa): la pantalla i el perfil fiscal també.
-      `${GESTORIA}/facturar/Facturacio.jsx`, `${GESTORIA}/facturar/useFacturacio.js`, `${GESTORIA}/facturacio/magatzemPerfil.js`
+      `${GESTORIA}/facturar/Facturacio.jsx`, `${GESTORIA}/facturar/useFacturacio.js`, `${GESTORIA}/facturacio/magatzemPerfil.js`,
+      // Onada 6, ordre del Mestre (261009): l'Històric, el seu tractor, les categories i la simulació també.
+      `${GESTORIA}/historic/Historic.jsx`, `${GESTORIA}/historic/nucli/tractorHistoric.js`, `${GESTORIA}/despeses/nucli/categories.js`,
+      `${GESTORIA}/impostos/nucli/simulacio.js`, `${GESTORIA}/fitxes/gestoria_historic.md`
     ]) expect(rutes, esperada).toContain(esperada);
     expect(rutes.filter(esProva)).toEqual([]);
     expect(CODI.length).toBeGreaterThan(40);
@@ -128,11 +137,18 @@ describe('res ix d’este ordinador', () => {
        (la configuració, el llegat i la marca de l'última còpia del llibre),
        base pròpia 'sdp-gestoria-perfil', separada del llibre legal i també de
        NOMÉS AFEGIR (versions amb add). Sense IndexedDB falla (SENSE_INDEXEDDB),
-       mai passa a memòria. Res no ix d'este ordinador. */
+       mai passa a memòria. Res no ix d'este ordinador.
+       Onada 6, ordre del Mestre (261009): cofre xifrat. Base pròpia
+       'sdp-gestoria-cofre' (cofre/magatzemCofre.js), que només rep bytes
+       xifrats amb AES-GCM-256 (cofre/nucli/cripto.js): la DEK embolcallada
+       i els registres. Desar hi reescriu i esborrar hi esborra: d'un cofre de
+       dades personals, el que es lleva no s'ha de quedar. Tampoc passa mai a
+       memòria (SENSE_INDEXEDDB). */
     const idb = new RegExp(['\\bindexed', 'DB\\b'].join(''));
     expect(CODI.filter(([, codi]) => idb.test(codi)).map(([ruta]) => ruta).sort())
       .toEqual([
         `${GESTORIA}/aprendre/magatzemProgres.js`,
+        `${GESTORIA}/cofre/magatzemCofre.js`,
         `${GESTORIA}/facturacio/magatzemPerfil.js`,
         `${GESTORIA}/facturacio/registre/portIndexedDB.js`,
         `${TRACTORS}/nucli/magatzem.js`
@@ -153,7 +169,16 @@ describe('res ix d’este ordinador', () => {
          com a text i només en desenvolupament (EINES_LOCALS de la Wiki). El
          permís val només per a eixe fitxer i des d'eixe component, i res no
          ix d'este ordinador. */
-      (r, origen) => origen === `${TRACTORS}/PanellAgents.jsx` && r === 'AGENTS.md?raw'
+      (r, origen) => origen === `${TRACTORS}/PanellAgents.jsx` && r === 'AGENTS.md?raw',
+      /* Onada 6, ordre del Mestre (261009): «si src/utils/fulls/xlsx.js (creaXlsx)
+         és pur i sense xarxa, amplia la llista blanca d'imports per a usar-lo».
+         Ho és: JS pur, sense xarxa ni emmagatzematge, i les seues úniques
+         adreces són els espais de noms d'OOXML. El permís val només per a
+         l'escriptor (no el lector) i només des del llibre de l'Històric, que
+         rep les xifres ja reduïdes, sense cap text del banc. L'escriptor porta
+         tres fitxers més (model.js, zip.js i inflate.js): la prova de la
+         clausura, més avall, els llig i hi aplica les mateixes guardes. */
+      (r, origen) => origen === `${GESTORIA}/historic/nucli/llibreGestora.js` && r === 'src/utils/fulls/xlsx.js'
     ];
     const ambBackend = [];
     const fora = [];
@@ -168,6 +193,42 @@ describe('res ix d’este ordinador', () => {
     expect(fora).toEqual([]);
   });
 
+  /* Onada 6, ordre del Mestre (261009): «si src/utils/fulls/xlsx.js (creaXlsx) és
+     pur i sense xarxa, amplia la llista blanca d'imports per a usar-lo». El permís
+     de llibreGestora.js porta, de fet, la clausura de l'escriptor (xlsx.js,
+     model.js, zip.js i inflate.js), que el glob dels carrils no llig ni l'empremta
+     del tractor cobrix. Es llig ací, seguint les importacions relatives, amb les
+     mateixes guardes: cap xarxa, cap emmagatzematge, cap importació de fora de
+     src/utils/fulls i cap URL que no siga un espai de noms d'OOXML. */
+  test('la clausura de l’escriptor XLSX del llibre de l’Històric: quatre fitxers purs, sense xarxa ni emmagatzematge', () => {
+    const clausura = new Map();
+    const pendents = ['src/utils/fulls/xlsx.js'];
+    const deFora = [];
+    while (pendents.length) {
+      const ruta = pendents.pop();
+      if (clausura.has(ruta)) continue;
+      const codi = readFileSync(path.join(ARREL, ruta), 'utf8');
+      clausura.set(ruta, codi);
+      for (const especificador of especificadors(codi)) {
+        const desti = resol(ruta, especificador);
+        if (!desti.startsWith('src/utils/fulls/')) deFora.push(`${ruta}: ${especificador}`);
+        else pendents.push(desti.endsWith('.js') ? desti : `${desti}.js`);
+      }
+    }
+    expect(deFora).toEqual([]);
+    expect([...clausura.keys()].sort()).toEqual(['src/utils/fulls/inflate.js', 'src/utils/fulls/model.js', 'src/utils/fulls/xlsx.js', 'src/utils/fulls/zip.js']);
+    const vetats = [
+      new RegExp(['\\bfet', 'ch\\s*\\('].join('')), new RegExp(['XMLHttp', 'Request'].join('')), new RegExp(['\\bWebSo', 'cket\\b'].join('')),
+      new RegExp(['\\bEventSo', 'urce\\b'].join('')), new RegExp(['sendBea', 'con'].join('')), new RegExp(['\\bimport', 'Scripts\\s*\\('].join('')),
+      new RegExp(['\\blocal', 'Storage\\b'].join('')), new RegExp(['\\bsession', 'Storage\\b'].join('')), new RegExp(['\\bindexed', 'DB\\b'].join('')),
+      new RegExp(['document\\.coo', 'kie'].join('')), new RegExp(['\\bcaches\\.', 'open\\b'].join('')), /\bimport\s*\(/
+    ];
+    const trobats = [...clausura].flatMap(([ruta, codi]) => vetats.filter((patro) => patro.test(codi)).map((patro) => `${ruta}: ${patro}`));
+    expect(trobats).toEqual([]);
+    const hosts = new Set([...clausura.values()].flatMap((codi) => [...codi.matchAll(/\bhttps?:\/\/([^/\s'"`)]+)/g)].map((m) => m[1])));
+    expect([...hosts]).toEqual(['schemas.openxmlformats.org']);
+  });
+
   test('cap URL de fora: només la redacció de Gmail i els espais de noms de l’XLSX', () => {
     /* Llista blanca EXPLÍCITA i mínima, amb el perquè:
        · correuGestoria.js compon l'adreça de redacció de Gmail, que obri la
@@ -176,10 +237,16 @@ describe('res ix d’este ordinador', () => {
          identificadors dins del fitxer i el navegador no s'hi connecta mai.
        · qr.js compon el TEXT de l'URL de cotejo de l'AEAT que va dins del QR
          de cada factura (Orde HAC/1177/2024). Ningú s'hi connecta des d'ací.
-         Aprovat pel Mestre al xat el 261004. */
+         Aprovat pel Mestre al xat el 261004.
+       · xmlAeat.js (Onada 6, 261009, decisió per defecte de la nit, a revisar
+         pel Mestre) escriu els dos espais de noms XML de l'esquema de l'AEAT
+         (SuministroLR i SuministroInformacion) a l'XML de PROVA dels
+         registres: són identificadors dins del fitxer, com els de l'XLSX, i
+         no s'envia res. */
     const PERMESES = {
       [`${GESTORIA}/enviament/correuGestoria.js`]: ['mail.google.com'],
       [`${GESTORIA}/facturacio/registre/qr.js`]: ['prewww2.aeat.es', 'www2.agenciatributaria.gob.es'],
+      [`${GESTORIA}/facturacio/registre/xmlAeat.js`]: ['www2.agenciatributaria.gob.es'],
       [`${GESTORIA}/nucli/xlsx.js`]: ['purl.org', 'schemas.openxmlformats.org']
     };
     const hosts = Object.fromEntries(CODI.map(([ruta, codi]) => [
@@ -231,8 +298,11 @@ describe('res ix d’este ordinador', () => {
     /* Tercer manifest, 'gestoria.tauler': llegir els bancs des del Tauler és
        una lectura nova de dades personals, amb tractor propi (MAPA §4, pas 1,
        decisió A2). Aprovat pel Mestre al xat el 261004. Els dos d'abans no
-       canvien ni tornen a «pendent». */
-    expect(TRACTORS_GESTORIA.map((m) => m.id)).toEqual(['gestoria.factures', 'gestoria.correus', 'gestoria.tauler']);
+       canvien ni tornen a «pendent».
+       Onada 6, ordre del Mestre (261009): quart manifest, 'gestoria.historic'
+       (l'històric del banc i la despesa en IA), també de signatura i sense
+       xarxa; els tres d'abans no canvien. */
+    expect(TRACTORS_GESTORIA.map((m) => m.id)).toEqual(['gestoria.factures', 'gestoria.correus', 'gestoria.tauler', 'gestoria.historic']);
     for (const manifest of TRACTORS_GESTORIA) {
       expect(manifest, manifest.id).toMatchObject({ dadesPersonals: true, nivellMinim: 'signatura', xarxa: 'cap' });
     }
@@ -336,7 +406,8 @@ describe('la frontera: la Gestoria només pel pont de la seua app, els Tractors 
     expect(delsCarrils(bloc)).toEqual([...DEL_PONT]);
     expect(delsCarrils(fontPont.slice(0, inici) + fontPont.slice(fi))).toEqual([]);
     expect([...bloc.matchAll(/lazyRoute\(\(\) => import\(/g)]).toHaveLength(DEL_PONT.length);
-    expect(DEL_PONT).toHaveLength(3);
+    // Onada 6, ordre del Mestre (261009): quatre, amb «Històric i IA».
+    expect(DEL_PONT).toHaveLength(4);
     // Els Tractors no hi entren mai, ni ContenidorGestoria directament (arriba per la closca, com abans).
     expect(fontPont).not.toMatch(/sections\/tractors\/|ContenidorGestoria\.jsx'/);
   });
@@ -399,11 +470,12 @@ describe('la frontera: la Gestoria només pel pont de la seua app, els Tractors 
      l'app en producció (VITE_SDP_APP_GESTORIA), el pont no hi porta res. */
   test('al build de producció del pont no queda cap importació de la Gestoria', async () => {
     // 261007: també la Facturació, que en desenvolupament és la tercera importació.
-    const gestoria = /import\(\s*["'][^"']*(?:ShellGestoria|aprendre\/Aprendre|facturar\/Facturacio)/g;
+    // Onada 6, ordre del Mestre (261009): i «Històric i IA», la quarta.
+    const gestoria = /import\(\s*["'][^"']*(?:ShellGestoria|aprendre\/Aprendre|facturar\/Facturacio|historic\/Historic)/g;
     const desenvolupament = await compila(PONT, false);
-    expect(desenvolupament.match(gestoria)).toHaveLength(3);
+    expect(desenvolupament.match(gestoria)).toHaveLength(4);
     const produccio = await compila(PONT, true);
     expect(produccio.match(gestoria)).toBeNull();
-    expect(produccio).not.toMatch(/ShellGestoria|ContenidorGestoria|Aprendre\.jsx|Facturacio\.jsx|sections\/gestoria/);
+    expect(produccio).not.toMatch(/ShellGestoria|ContenidorGestoria|Aprendre\.jsx|Facturacio\.jsx|Historic\.jsx|sections\/gestoria/);
   }, 60000);
 });

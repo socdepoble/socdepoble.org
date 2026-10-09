@@ -253,6 +253,32 @@ describe('pas 4 · rectificatives segures', () => {
     expect((await port.llig()).map((r) => r.tipusRegistre)).toEqual(['alta', 'alta', 'anulacio', 'anulacio']);
   });
 
+  /* Correcció de la revisió del front de facturació (261009): cap capa refusava una rectificativa de
+     factures de clients diferents, i el llibre és de només afegir. */
+  test('una rectificativa de factures de clients diferents: RECTIFICADES_DE_DIVERSOS_CLIENTS, i el llibre no canvia', async () => {
+    const port = creaPortMemoria();
+    const cas = emissio({ port });
+    const altre = { nif: DNI_ALIE, nom: 'Un altre client', domicili: OBRADOR };
+    const [a, b, c] = [
+      await cas.emet(dades(), { instant: MIGDIA }),
+      await cas.emet(dades({ destinatari: altre }), { instant: MIGDIA }),
+      await cas.emet(dades(), { instant: MIGDIA })
+    ];
+    const ref = (r) => ({ numSerie: r.numSerie, dataExpedicio: r.dataExpedicio });
+    await expect(cas.emet(rectificativa([ref(a), ref(b)]), { instant: MIGDIA })).rejects.toMatchObject({
+      codi: 'RECTIFICADES_DE_DIVERSOS_CLIENTS', detalls: ['A2026-0001', 'A2026-0002']
+    });
+    // Un tiquet i una factura completa tampoc no són del mateix destinatari.
+    const tiquet = await cas.emet(simplificada(), { instant: MIGDIA });
+    await expect(cas.emet(rectificativa([ref(a), ref(tiquet)]), { instant: MIGDIA }))
+      .rejects.toMatchObject({ codi: 'RECTIFICADES_DE_DIVERSOS_CLIENTS' });
+    expect(await numeros(port)).toEqual(['A2026-0001', 'A2026-0002', 'A2026-0003', 'T2026-0001']);
+    // Dos factures del mateix client, sí; i la rectificativa pot anar a nom d'unes altres dades (és corregir-les).
+    const r = await cas.emet(rectificativa([ref(a), ref(c)], { destinatari: { nif: DNI_CLIENT, nom: 'Client corregit', domicili: OBRADOR } }), { instant: MIGDIA });
+    expect(r).toMatchObject({ numSerie: 'R2026-0001', tipusFactura: 'R1' });
+    expect((await verificaCadena(await port.llig())).valida).toBe(true);
+  });
+
   test('la factura d’un altre emissor del mateix llibre no és de la cadena de l’empresa', async () => {
     const port = creaPortMemoria();
     const alie = creaFacturaEmesa({ ...dades(), numSerie: 'A2026-0001', emissor: { nif: DNI_ALIE, nom: 'Una altra', domicili: DOMICILI }, destinatari: { nif: CIF_EMISSOR, nom: 'Forn', domicili: DOMICILI } });

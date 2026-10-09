@@ -1,0 +1,315 @@
+INVENTARI DE BROSSA VERIFICAT · Onada 6, punt 2 · laboratori 261009_0400_higiene_claude
+Claude (Opus 5.5), 2026-10-09 de matinada, sobre l'arbre de backup-notes-publish (e9776630 amb canvis sense commit).
+Corregit després de la revisió adversarial (05:50): còpies velles que faltaven (1.5), quarantena
+del Mestre fora del repositori (1.7-1.9), referència de requirements (3.11) i ordres exactes a
+totes les entrades.
+
+Este document no ha esborrat ni mogut res: esta sessió no té rm, mv ni git commit, i la zona
+humana i la governança només les toca el Mestre (o un executor amb lease). Cada línia porta
+la prova que la sosté i l'ordre exacta per a qui la puga executar.
+
+Com s'ha verificat:
+  · Versionat: rg -a sobre .git/index (git ls-files està bloquejat al hook d'esta sessió). Les
+    còpies velles, amb rg -a -o sobre .git/index buscant «abans-260830» i «.old».
+  · Referències: rg sobre package.json, .husky, .github, tooling, tests, scripts, src,
+    wordpress-plugin, bot, vite.config.js, Dockerfile i vercel.json (wikiManifest.js, que és
+    text compilat de la Wiki, no compta com a ús).
+  · Mides i dates: ls -la.
+  · El contingut de config.js.bak, de .env*, de .wwebjs_auth, de wordpress-plugin/supabase/.temp
+    i de .immunitari/quarantena/whatsapp_bot.mjs.old NO s'ha llegit.
+
+Veredictes:
+  SEGUR          brossa clara: cap referència viva. Es retira.
+  DESVERSIONAR   estat local que no ha d'anar a git: git rm --cached i .gitignore; el fitxer es queda al disc.
+  PREGUNTAR      pot tindre un ús o un valor que no es veu des del codi: decidix el Mestre.
+  NOMÉS EL MESTRE  zona humana (01_produccio) o laboratori permanent (02_investigacio_ia).
+  ES QUEDA       no és brossa: té un lector viu.
+
+Totes les ordres, des de l'arrel del repositori. Els git rm van en UN sol commit revisat pel
+Mestre (el pre-commit continua actiu). Els trasllats de fitxers no versionats van a una
+quarantena FORA del repositori, mai a rm i mai a .sdp-paperera/: esta carpeta es versiona en
+part i, fins que s'aplique el .gitignore del paquet, un git add -A s'enduria el que s'hi mou
+(i allí ja no valen regles de ruta com «wordpress-plugin/supabase/»).
+  mkdir -p ../.sdp-paperera-mestre/261009
+
+
+1. SEGUR
+--------
+
+1.1  fix_anchors.mjs                               937 B · versionat · cap referència
+     Script ad hoc que afig àncores a l'índex a cegues: és el que va fabricar el bloc
+     «Fix Automàtic d'Àncores» de 00_index_escriptori.md.
+       git rm fix_anchors.mjs
+
+1.2  scratch-banner.py                             476 B · versionat · cap referència
+       git rm scratch-banner.py
+
+1.3  src/sections/consola/mapa/MapaConsola.jsx.tmp   0 B · versionat · cap referència
+     (El front de la Consola d'esta Onada també el cita: és una sola retirada.)
+       git rm src/sections/consola/mapa/MapaConsola.jsx.tmp
+
+1.4  tooling/scratch_malformades.mjs               932 B · versionat · cap referència
+     És a tooling/ (governança): la retirada és del Mestre.
+       git rm tooling/scratch_malformades.mjs
+
+1.5  Còpies velles versionades (.abans-260830 i .old). Cap referència al codi: l'única cadena
+     «abans-260830» de tooling/ és una fixture sintètica de tractor-psicopatia.test.mjs:53
+     (src/architecture.md.abans-260830, un altre fitxer). Els originals continuen vius.
+     .agents/pageContent_old.js                    106 KB · només el citen informes de laboratori
+     .agents/ESTAT.md.abans-260830                 891 B
+     .agents/manifest.yaml.abans-260830            145 B
+     tooling/wiki/core/edge_rag.mjs.abans-260830   5,9 KB · l'original és tooling/wiki/core/edge_rag.mjs
+     tooling/wiki/generar_petorreta_inversa.mjs.abans-260830   6,4 KB · original al costat
+     tooling/wiki/rules/trellat-rules.json.abans-260830        3,7 KB · original al costat
+     tooling/wiki/tractor-cognitiu.mjs.abans-260830            17,6 KB · original al costat
+     .immunitari/quarantena/whatsapp_bot.mjs.old   7,2 KB · bot de la llibreria abandonada (1.6);
+                                                   cap script llig .immunitari/quarantena/; no s'ha llegit
+       git rm .agents/pageContent_old.js .agents/ESTAT.md.abans-260830 .agents/manifest.yaml.abans-260830
+       git rm tooling/wiki/core/edge_rag.mjs.abans-260830 tooling/wiki/generar_petorreta_inversa.mjs.abans-260830
+       git rm tooling/wiki/rules/trellat-rules.json.abans-260830 tooling/wiki/tractor-cognitiu.mjs.abans-260830
+       git rm .immunitari/quarantena/whatsapp_bot.mjs.old
+     (Si el Mestre vol conservar el bot vell fora de git: git rm --cached en lloc de git rm, i
+     mv .immunitari/quarantena/whatsapp_bot.mjs.old ../.sdp-paperera-mestre/261009/)
+     El cron d'higiene les llista des d'ara (L0, «sospitososVersionats»: .old i .abans-aammdd).
+
+1.6  .wwebjs_cache/                                2 HTML, unes 1,15 MB · versionat
+     La llibreria whatsapp-web.js ja no s'usa: el bot va amb baileys (bot/package.json:11).
+     Les úniques mencions són llistes de denegats (vite.config.js:79, time-machine.mjs:50).
+       git rm -r .wwebjs_cache
+
+1.7  release/                                      només un .DS_Store · no versionat
+     L'empaquetador escriu a wordpress-plugin/builds/ (empaqueta.mjs:614 i 645-651).
+       mv release ../.sdp-paperera-mestre/261009/release
+
+1.8  dist/ (de l'arrel)                            build del 2026-10-04 · ignorat · regenerable
+     Porta un rag-index.json d'1 MB (un dels canals de fuita del cervell). Cap prova el llig
+     (dist-secrets.test.mjs usa funcions pures). Es torna a fer amb npm run build.
+       mv dist ../.sdp-paperera-mestre/261009/dist
+
+1.9  (Retirada d'esta llista: wordpress-plugin/supabase/ passa a 3.18, PREGUNTAR.)
+
+1.10 .DS_Store                                     a l'arrel, a assets/, docs/, release/, scripts/, wordpress-plugin/…
+     Ignorats per .gitignore. El cron d'higiene només els compta (són entrades amb punt).
+       Els retira el Finder o el Mestre; cap agent.
+
+
+2. DESVERSIONAR (es queda al disc, fora de git)
+-----------------------------------------------
+
+2.1  .immunitari/receptes/                         unes 500 al disc (el mapa en comptava 503 i unes 497
+                                                   versionades) · git status en mostra 7 de noves sense versionar
+     Plaquetes n'escriu una per execució amb les mateixes operacions. El paquet en deduplica
+     les noves (plaquetes.mjs) i el cron mou a quarantena les repetides no versionades; el
+     .gitignore del paquet ignora també les quarantenes del circuit (/.sdp-paperera/quarantena-*/),
+     de manera que les receptes mogudes no tornen a entrar a git per una altra ruta.
+2.2  .immunitari/cron.out                          versionat · canvia cada hora (git status: M)
+2.3  .immunitari/cron.err                          versionat · error ranci del 2026-09-23
+     El paquet afig les tres rutes, i .immunitari/higiene/ i higiene-cron.*, al .gitignore.
+     Després d'aplicar-lo:
+       git rm -r --cached .immunitari/receptes .immunitari/cron.out .immunitari/cron.err
+     Risc a mirar abans: la Consola llig l'activitat de Plaquetes per la data de cron.out
+     (tooling/brain/mapa-consola.mjs, llancadors), i el fitxer es continua escrivint al disc.
+
+2.4  scratch/                                      37 entrades al disc (ls -A), 34 a l'índex de git (rg -a);
+                                                   acta.json, add_badge_buit.js i payload.json no s'hi veuen
+     .gitignore:46 ja la ignora per ordre del Mestre del 261002 («ignorar no desversiona»).
+       git rm -r --cached scratch
+
+
+3. PREGUNTAR AL MESTRE
+----------------------
+
+3.1  src/data/supabase/config.js.bak              4,2 KB · versionat · cap referència
+     Pot portar configuració de Supabase. NO s'ha llegit. Si porta claus, són a l'historial
+     de git i s'han de rotar; el git rm no les esborra de l'historial.
+       (després de revisar-lo) git rm src/data/supabase/config.js.bak
+
+3.2  .wwebjs_auth/                                 sessió de la llibreria abandonada · ignorada
+     Encara és a l'historial pel commit 5a5d7023 (memòria del projecte). Esborrar-la del disc
+     no la trau de l'historial: cal git filter-repo, i és decisió del Mestre.
+       mv .wwebjs_auth ../.sdp-paperera-mestre/261009/wwebjs_auth
+
+3.3  .snapshots/                                   backup_prepoda_260906.tar.gz (47 MB) i
+                                                   socdepoble_beta_backup_20260908_053038.tar.gz (331 MB) · ignorats
+3.4  .wiki-safety/                                 5 instantànies del 2026-07-14 · ignorades
+     Còpies de seguretat antigues: es poden traure del repositori, però potser es volen conservar.
+       mv .snapshots ../.sdp-paperera-mestre/261009/snapshots
+       mv .wiki-safety ../.sdp-paperera-mestre/261009/wiki-safety
+
+3.5  .sdp-paperera/                                quarantenes del 2026-08-26, 260913, 260923 i 2026-09-29
+     Versionada en part i sense purga. El paquet ja ignora les quarantenes noves del circuit
+     (/.sdp-paperera/quarantena-*/). El cron L2 només purga quarantenes amb MANIFEST.json, de
+     més de 30 dies i sense cap fitxer versionat. Si el Mestre vol desversionar-la sencera:
+       git rm -r --cached .sdp-paperera
+       i una línia «/.sdp-paperera/» al .gitignore (en el mateix commit).
+     Quina retenció vol per a les quarantenes antigues sense manifest és decisió seua.
+
+3.6  ZIP de wordpress-plugin/builds/ fora de la retenció (core-empaquetat-wp §4)
+     Es conserven: socdepoble-enxufe-v1.0.5-261007_1602.zip i socdepoble-spa-v1.0.5-261007_1602.zip
+     (stable.json:58 i 91), socdepoble-enxufe-v1.0.6-261008_2330.zip (el més recent),
+     socdepoble-enxufe-v1.0.6-261008_2036.zip (Acta Marmota 261008_2300, línia 13) i
+     directori/socdepoble-enxufe-v1.0.5-261007_1602.zip (stable.json, directori.cami).
+     Fora de la retenció a builds/ (8, unes 1,06 GB):
+       socdepoble-enxufe-v1.0.2-261004_0527.zip   socdepoble-spa-v1.0.2-261004_0527.zip
+       socdepoble-enxufe-v1.0.3-261004_1916.zip   socdepoble-spa-v1.0.3-261004_1916.zip
+       socdepoble-enxufe-v1.0.3-261006_2357.zip   socdepoble-spa-v1.0.3-261006_2357.zip
+       socdepoble-enxufe-v1.0.5-261008_1133.zip   socdepoble-spa-v1.0.4-261005_0442.zip
+     Fora de la retenció a builds/directori/ (9, unes 1,15 GB; el mapa no els comptava):
+       v1.0.1-261003_1324, v1.0.2-261004_0421, v1.0.2-261004_0527, v1.0.3-261004_1459,
+       v1.0.3-261004_1514, v1.0.3-261004_1545, v1.0.3-261004_1916, v1.0.3-261006_2357,
+       v1.0.4-261005_0442 (tots socdepoble-enxufe-…zip)
+     Els *.zip no es versionen. Amb el paquet aplicat:
+       node tooling/higiene/cron_higiene.mjs --l2                 (mostra la proposta i el seu codi)
+       node tooling/higiene/cron_higiene.mjs --l2 --confirma CODI (des d'un terminal; trasllada a
+                                                                    ../.sdp-paperera-builds/retencio-ISO amb MANIFEST)
+     El cron no esborra mai cap ZIP: la paperera germana la buida el Mestre a mà quan vulga.
+
+3.7  wordpress-plugin/builds/1.0.1.json … 1.0.5.json   versionats · manifests de canal per versió
+     empaqueta.mjs:615 escriu el canal i «X.json» de cada versió. El canal viu és stable.json
+     (versió 1.0.5). Els antics poden servir per a fixar una versió anterior. Si es retiren,
+     es conserva 1.0.5.json, la del canal estable:
+       git rm wordpress-plugin/builds/1.0.1.json wordpress-plugin/builds/1.0.2.json wordpress-plugin/builds/1.0.3.json wordpress-plugin/builds/1.0.4.json
+
+3.8  wordpress-plugin/builds/migracions_pendents.sql   153 KB · 2026-10-08 11:47 · versionat · cap referència
+     Pot haver quedat enrere respecte de la llista de supabase/README.md, que el front de
+     Pobles i Xat d'esta Onada ha tornat a tocar. Risc: que s'aplique un lot vell.
+     Proposta: regenerar-lo des del README en el moment d'aplicar migracions, o retirar-lo:
+       git rm wordpress-plugin/builds/migracions_pendents.sql
+
+3.9  docs/auditories/260915_0436_AUDITORIA_purga_vigencia.md   3,2 KB · versionat
+     docs/govern/paradigmes.json                                4,5 KB · versionat
+     Els llig scripts/portes/porta-vigencia.mjs (línies 40, 212, 352 i 399), però ningú no crida
+     eixa porta (cap script de package.json, .husky ni tooling). Van junts: o es retiren els tres
+     o es torna a endollar la porta.
+       git rm -r docs scripts/portes/porta-vigencia.mjs   (si es retira)
+
+3.10 assets/img/                                   15 imatges · versionades
+     NO és brossa morta: src/config/assetResolver.js (línies 10-18 i 172-184) i
+     src/sections/text/pageContent.js en citen nou com a /assets/img/…, que només servix el
+     servidor de dev (paginaDeText.js:36). En producció ixen de public/assets/img (7 fitxers;
+     només que-es-socdepoble-1…4.jpg són a totes dues carpetes).
+     Proposta: portar a public/assets/img les 11 que hi falten i retirar la carpeta. Retirar-la
+     sense això trencaria imatges al dev. Ordres, en este ordre:
+       git mv assets/img/aplec_danses_1774952191348.png assets/img/art_trellat_farmer_1774708525806.png assets/img/art_trellat_v2_1774708257858.png public/assets/img/
+       git mv assets/img/hero_panoramic_landscape_1774710654078.png assets/img/hero_panoramic_rural_view_1774720664221.png assets/img/hero_serrella_comic_1774709602282.png public/assets/img/
+       git mv assets/img/ibanez_pedra_seca_design_1780873465211.png assets/img/logo-socdepoble-rect-negre.svg assets/img/nano_mel_font_roja_1774216345755.png public/assets/img/
+       git mv assets/img/nano_mercat_llaurador_1774197050578.png assets/img/nano_oli_oliva_1774198089084.png public/assets/img/
+       cmp assets/img/que-es-socdepoble-1.jpg public/assets/img/que-es-socdepoble-1.jpg   (i el mateix amb 2, 3 i 4)
+       git rm assets/img/que-es-socdepoble-1.jpg assets/img/que-es-socdepoble-2.jpg assets/img/que-es-socdepoble-3.jpg assets/img/que-es-socdepoble-4.jpg   (només si cmp no diu res)
+     Després, una passada visual al dev de les pàgines que les usen (Llei del Píxel).
+
+3.11 (Corregit: no era brossa.) requirements/requirement-gate.schema.json ES QUEDA: és el
+     «$schema» de requirements/online-first.json (línia 2) i el llista INTEGRACIO.md:11, que
+     lligen crear_bundle.mjs i tooling/lib/document-corpus.mjs. Vegeu §5.
+
+3.12 Dockerfile, docker-compose.yml, .dockerignore   versionats · desplegament del bot de la IAIA
+     pnpm-workspace.yaml                            versionat · configuració de pnpm amb valors «set this to true or false»
+     El Dockerfile instal·la el bot amb pnpm des de bot/ (no llig pnpm-workspace.yaml de l'arrel)
+     i docker-compose porta .iaia_auth i .env.bot. No és brossa si el bot es desplega amb Docker;
+     ho és si no. Si no:
+       git rm Dockerfile docker-compose.yml .dockerignore
+     pnpm-workspace.yaml no el llig cap script, ni el Dockerfile:
+       git rm pnpm-workspace.yaml
+
+3.13 tools/*.py                                    5 scripts del 2026-08-23 · cap referència
+       git rm tools/build_mega_bundle.py tools/fix_jsx.py tools/fix_props.py tools/html_to_jsx.py tools/update_mur.py
+
+3.14 scripts/ sense referències (només s'anomenen a si mateixos). Viuen: generate-supabase-seed.*
+     (package.json i proves), enllacat-intelligent-wiki.mjs (reflex_petorreta.mjs i
+     schema-cutover.lock.json) i immunitari/. És governança (scripts/): els retira el Mestre, un
+     per un si vol revisar-los:
+       git rm scripts/audit-accessibility.sh scripts/audit-performance.sh scripts/generate-bundle-v3.sh scripts/generate-bundle-v4.sh
+       git rm scripts/generate-prompt.sh scripts/migrate-component.sh scripts/refactor_router.mjs scripts/sync_brain_to_wiki.sh
+       git rm scripts/poda.mjs scripts/teixidor-backlinks.mjs scripts/fetch_town_media.mjs
+
+3.15 _templates/gestoria_base/                     plantilla de carpetes de la Gestoria · versionada · cap referència
+     (tooling/gates/verificador-scc.mjs:29 només la salta en el seu recorregut.)
+     Pot ser la base de la Gestoria d'esta Onada: la decidix el front de la Gestoria. Si no:
+       git rm -r _templates/gestoria_base
+
+3.16 tooling/higiene/tractor_cognitiu.mjs          interactiu, amb una opció d'esborrat (unlinkSync)
+     No es pot usar com a cron: el cron d'higiene no el crida, i cap script ni prova el nomena.
+       git rm tooling/higiene/tractor_cognitiu.mjs
+
+3.17 Laboratoris de 02_investigacio_ia aplicats o superats (només MarIA o el Mestre els arxiven):
+       · 261006_0055_olivera_ancores_opus: aplicat (transacció 6fd365e1, sdp-olivera-ancores-261006)
+       · 261006_0300_ledger_claude/t6_higiene: aplicat (transacció 712ae5b5, sdp-higiene-t6-261006)
+       · 260930_0400_governanca_claude i 261002_1745_olivera_arxiva_claude: superats, sense transacció
+     Tots són versionats. Ordres:
+       mkdir -p _wiki_de_poble/90_arxiu_historic/261009_laboratoris_aplicats
+       git mv _wiki_de_poble/04_escriptori/02_investigacio_ia/261006_0055_olivera_ancores_opus _wiki_de_poble/90_arxiu_historic/261009_laboratoris_aplicats/
+       git mv _wiki_de_poble/04_escriptori/02_investigacio_ia/261006_0300_ledger_claude/t6_higiene _wiki_de_poble/90_arxiu_historic/261009_laboratoris_aplicats/261006_0300_t6_higiene
+       git mv _wiki_de_poble/04_escriptori/02_investigacio_ia/260930_0400_governanca_claude _wiki_de_poble/90_arxiu_historic/261009_laboratoris_aplicats/
+       git mv _wiki_de_poble/04_escriptori/02_investigacio_ia/261002_1745_olivera_arxiva_claude _wiki_de_poble/90_arxiu_historic/261009_laboratoris_aplicats/
+     Els seus corredors: tests/laboratori-olivera-261006.test.js i tests/laboratori-higiene-261006.test.js
+     (vitest) es retiren amb ells (git rm). tests/governanca-260930*.test.mjs i
+     tests/olivera-arxiva-261002.test.mjs són de node-suite: retirar-los demana també la seua
+     entrada a tooling/tests/node-suite-manifest.json (governança, amb lease). Les àncores del
+     laboratori a 00_index_escriptori.md les reapunta MarIA.
+
+3.18 wordpress-plugin/supabase/                    còpia de la CLI de Supabase · ignorada només per la
+                                                   regla de ruta «wordpress-plugin/supabase/» (.gitignore:49)
+     Conté .temp/ (drwx------) i .branches/, que poden portar estat de l'edge runtime i secrets:
+     NO s'ha llegit, i per això no és SEGUR. Abans de res, el Mestre en revisa el contingut. Si
+     es retira, fora del repositori (dins de .sdp-paperera/ deixaria de valdre la regla de ruta):
+       mv wordpress-plugin/supabase ../.sdp-paperera-mestre/261009/wordpress-plugin-supabase
+
+
+4. NOMÉS EL MESTRE
+------------------
+
+Zona humana i laboratori permanent: cap agent hi toca. Les ordres són per al Mestre, si decidix
+retirar-ho.
+
+4.1  _wiki_de_poble/04_escriptori/01_produccio/Alergenos-ES_COPIA-ES_POT_BORRAR/   versionada
+       git rm -r "_wiki_de_poble/04_escriptori/01_produccio/Alergenos-ES_COPIA-ES_POT_BORRAR"
+4.2  _wiki_de_poble/04_escriptori/01_produccio/checklist-limpieza-wp-ayudawp.md (0 B) i els seus
+     duplicats .csv, .txt i .xlsx (el -complet.csv és el que l'índex ancora i es queda)   versionats
+       git rm _wiki_de_poble/04_escriptori/01_produccio/checklist-limpieza-wp-ayudawp.md _wiki_de_poble/04_escriptori/01_produccio/checklist-limpieza-wp-ayudawp.csv
+       git rm _wiki_de_poble/04_escriptori/01_produccio/checklist-limpieza-wp-ayudawp.txt _wiki_de_poble/04_escriptori/01_produccio/checklist-limpieza-wp-ayudawp.xlsx
+     (i les àncores que en quedaren a l'índex)
+4.3  _wiki_de_poble/04_escriptori/01_produccio/builds/socdepoble-enxufe-v1.0.0-261001_0320.zip
+     (108 MB dins de la Wiki; no versionat, *.zip). Contradiu la destinació única de
+     core-empaquetat-wp; la versió 1.0.0 ja no és a cap canal.
+       mv _wiki_de_poble/04_escriptori/01_produccio/builds/socdepoble-enxufe-v1.0.0-261001_0320.zip ../.sdp-paperera-builds/
+4.4  _wiki_de_poble/04_escriptori/02_investigacio_ia/vigilante/ (plugin de seguretat de tercers en
+     estudi i quatre wf_*.json d'unes 5,3 MB) · versionat; vigilante_plugin/ (buit).
+       git mv _wiki_de_poble/04_escriptori/02_investigacio_ia/vigilante _wiki_de_poble/90_arxiu_historic/261009_laboratoris_aplicats/vigilante
+       rmdir _wiki_de_poble/04_escriptori/02_investigacio_ia/vigilante_plugin   (només si és buida)
+
+
+5. ES QUEDEN (no són brossa)
+----------------------------
+
+  .escriptori-arrel            el sentinella de tooling/scripts/canonada.mjs:9
+  .agents/codi-congelat.txt    el llig tooling/brain/crear_bundle.mjs:150
+  .iaia_auth/                  sessió de Baileys del bot (bot/arrels.mjs:52)
+  INTEGRACIO.md                el lligen crear_bundle.mjs i tooling/lib/document-corpus.mjs
+  requirements/online-first.json         tractor-psicopatia.mjs
+  requirements/requirement-gate.schema.json   el «$schema» d'online-first.json (línia 2) i INTEGRACIO.md:11
+  wordpress-plugin/builds/directori/dist/   font de build:wp:directori, la llig empaqueta.mjs:483
+  var/, .env*, .sdp-reflex, .claude, .codex, .immunitari (llevat de 1.5 i 2.1-2.3)
+
+
+6. «BROSSA DE SOLLUTIA» (ítem 17 del pla de l'Onada 5)
+------------------------------------------------------
+
+  No s'ha trobat cap fitxer solt de Sollutia fora dels vius: l'adaptador
+  (src/data/adaptadors/sollutia/: client.js, creaFrontissa.js, recursos.js i les seues proves) i
+  l'enxufe (wordpress-plugin/includes/*.php i socdepoble-enxufe.php) són codi en ús. Les restes
+  de l'ecosistema WordPress són les de 3.18 (còpia de la CLI), 3.6 (ZIP antics), 3.7 i 3.8 (canals
+  i lot SQL) i 4.3-4.4 (zona humana i laboratori). Si el Mestre en coneix alguna altra, el cron
+  d'higiene la veurà a l'informe L0 només si cau dins de la seua llista negra.
+
+
+7. DESPRÉS DE LA NETEJA
+-----------------------
+
+  git status --short              net de les rutes retirades
+  npm run porta:olivera           eixida 0
+  npm run porta:orfandat          cap orfe nou
+  npx vitest run src/sections/consola
+  node --test tests/natiu-build.test.mjs tests/mapa-consola.test.mjs tests/tractor-arrel.test.mjs
+  node tooling/higiene/cron_higiene.mjs   (L0: l'informe del dia no ha de llistar res de 1)
+
+Vincles: [[00_index_escriptori]]

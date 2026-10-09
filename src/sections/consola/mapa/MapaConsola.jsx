@@ -4,7 +4,7 @@ import { Desplegable, Mono } from '../peces.jsx';
 import { GraellaXifres } from '../XifresMas.jsx';
 import { xifresDeVista } from '../xifresMas.js';
 import { curt, dataLocal } from '../consolaContent.js';
-import { resumMapa, valorMetrica, textCadencia, textLlancador } from './mapaContent.js';
+import { avisosPerCausa, resumMapa, valorMetrica, textCadencia, textLlancador } from './mapaContent.js';
 import { EvidenciesAvis, codiIFrase } from './AvisosMapa.jsx';
 import { TEXT_ESTAT, TO_CONFIANCA, TO_ESTAT, TO_SEVERITAT } from './grafMapa.js';
 
@@ -31,6 +31,39 @@ function TaulaAvisos({ avisos }) {
             <td>{codiIFrase(a.codi)}</td>
             <td><Insignia to={TO_SEVERITAT[a.severitat]}>{a.severitat}</Insignia></td>
             <td><EvidenciesAvis avis={a} /></td>
+          </tr>
+        ))}
+      </tbody>
+    </Taula>
+  );
+}
+
+/* Onada 6 (requisit 10: duplicitats) · Els avisos per causa arrel
+   (mapaContent.js · avisosPerCausa): una fila per causa, amb quants avisos
+   en fa i quines peces toca. Les peces van en <Mono> (el mode privacitat les
+   amaga); la llista sencera és la taula d'avisos, davall. */
+const MAX_PECES_CAUSA = 5;
+function TaulaCauses({ causes }) {
+  return (
+    <Taula titol="Avisos per causa arrel" densa>
+      <thead>
+        <tr><th scope="col">Causa</th><th scope="col">Severitat</th><th scope="col">Avisos</th><th scope="col">Peces</th></tr>
+      </thead>
+      <tbody>
+        {causes.map((c) => (
+          <tr key={c.causa}>
+            <th scope="row">
+              {codiIFrase(c.causa)}
+              {c.codis.length > 1 ? ` (${c.codis.join(', ')})` : null}
+            </th>
+            <td><Insignia to={TO_SEVERITAT[c.severitat] ?? 'neutre'}>{c.severitat}</Insignia></td>
+            <td>{c.avisos.length}</td>
+            <td>
+              <ul className="sdp-consola__evidencies">
+                {c.peces.slice(0, MAX_PECES_CAUSA).map((p) => <li key={p}><Mono>{p}</Mono></li>)}
+                {c.peces.length > MAX_PECES_CAUSA && <li>{`i ${c.peces.length - MAX_PECES_CAUSA} més`}</li>}
+              </ul>
+            </td>
           </tr>
         ))}
       </tbody>
@@ -162,6 +195,9 @@ export function MapaConsola({ locale, font }) {
           {` · Generat: ${dataLocal(mapa.generat, locale)}`}
         </p>
         <GraellaXifres xifres={xifresDeVista('salut', mapa)} generat={mapa.generat} />
+        <Desplegable titol="Veure els avisos agrupats per causa arrel">
+          <TaulaCauses causes={avisosPerCausa(mapa.avisos)} />
+        </Desplegable>
         <Desplegable titol="Veure els avisos, el més greu primer">
           <TaulaAvisos avisos={resum.avisosOrdenats} />
         </Desplegable>

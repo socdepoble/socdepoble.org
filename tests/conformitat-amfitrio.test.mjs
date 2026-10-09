@@ -83,16 +83,21 @@ function declaracioDe(html) {
 
 /* ─────────────────────────── La bateria comuna ─────────────────────────── */
 
-/** El mateix judici per a qualsevol amfitrió conforme. */
-function bateria(decl, amfitrio) {
+/** El mateix judici per a qualsevol amfitrió conforme. `optIn` són els
+    atributs opcionals que eixe amfitrió declara a posta (Onada 5: la
+    instància pròpia de WordPress emet ruta-a-url); per defecte, cap. */
+function bateria(decl, amfitrio, { optIn = [] } = {}) {
   const resultat = validaDeclaracioAmfitrio(decl);
   assert.deepEqual(resultat.errors, [], `${amfitrio}: ${JSON.stringify(resultat.errors)}`);
   assert.equal(resultat.ok, true);
 
-  // Una instància, només amb atributs del marcatge universal.
+  // Una instància, només amb atributs del marcatge universal i els opcionals declarats.
   assert.equal(decl.elements.length, 1, `${amfitrio}: un sol <soc-de-poble>`);
   const { atributs } = decl.elements[0];
-  for (const nom of Object.keys(atributs)) assert.ok(C.atributs.includes(nom), `${amfitrio}: atribut ${nom} fora de ${C.marcatge}`);
+  for (const nom of Object.keys(atributs)) {
+    assert.ok(C.atributs.includes(nom) || optIn.includes(nom), `${amfitrio}: atribut ${nom} fora de ${C.marcatge}`);
+  }
+  if (atributs['ruta-a-url'] !== undefined) assert.ok(C.rutaAUrl.modes.includes(atributs['ruta-a-url']), `${amfitrio}: mode de ruta-a-url`);
   assert.ok(atributs['plugin-url'] && atributs['fonts-href'], `${amfitrio}: plugin-url i fonts-href`);
 
   // El global, si n'hi ha, només amb les claus declarades.
@@ -283,8 +288,10 @@ describe('WordPress (marcatge.php real, PHP local)', () => {
   test('per defecte: el global del banc de proves, l’element i el paquet; conforme', ambPhp, (t) => {
     const eixida = wordpress({}, t);
     const decl = declaracioDe(paginaDeWordpress(eixida));
-    bateria(decl, 'WordPress');
+    bateria(decl, 'WordPress', { optIn: C.atributsOptIn });
     assert.deepEqual(decl.global, { nomPoble: 'Gent de la Torre', poble: 'la-torre-de-les-macanes' });
+    // Onada 5: la instància pròpia porta les URL copiables (#sdp=/ruta).
+    assert.equal(decl.elements[0].atributs['ruta-a-url'], 'fragment');
   });
 
   test('ajustos i instància (nom, poble i ruta) i el servei de traducció: conforme', ambPhp, (t) => {
@@ -294,14 +301,15 @@ describe('WordPress (marcatge.php real, PHP local)', () => {
       deepl: 'clau-sintetica-de-prova'
     }, t);
     const decl = declaracioDe(paginaDeWordpress(eixida));
-    bateria(decl, 'WordPress');
+    bateria(decl, 'WordPress', { optIn: C.atributsOptIn });
     assert.deepEqual(decl.elements[0].atributs, {
       'fonts-href': 'https://amfitrio.test/wp-content/plugins/socdepoble-enxufe/dist/fonts/noto-sans.css',
       'plugin-url': 'https://amfitrio.test/wp-content/plugins/socdepoble-enxufe/dist/',
       'traductor-url': 'https://amfitrio.test/wp-json/socdepoble/v1/traduir',
       'nom-poble': 'Penàguila',
       poble: 'penaguila',
-      'ruta-inicial': '/pobles/penaguila?vista=mapa'
+      'ruta-inicial': '/pobles/penaguila?vista=mapa',
+      'ruta-a-url': 'fragment'
     });
   });
 
@@ -309,13 +317,15 @@ describe('WordPress (marcatge.php real, PHP local)', () => {
     const eixida = wordpress({ opcio: { nomPoble: 'Gent de Sella', poble: 'sella', tenantId: UUID_SINTETIC } }, t);
     const decl = declaracioDe(eixida.referencia);
     bateria(decl, 'WordPress (referència)');
+    // El marcatge per a copiar en un altre amfitrió no porta cap opcional.
+    assert.equal(decl.elements[0].atributs['ruta-a-url'], undefined);
   });
 
   test('A1 · amb un tenantId heretat a l’opció, WordPress no l’emet per cap canal: conforme, i sense cua', ambPhp, (t) => {
     const eixida = wordpress({ opcio: { nomPoble: 'Gent de Sella', poble: 'sella', tenantId: UUID_SINTETIC } }, t);
     const pagina = paginaDeWordpress(eixida);
     const decl = declaracioDe(pagina);
-    const resultat = bateria(decl, 'WordPress amb una opció heretada');
+    const resultat = bateria(decl, 'WordPress amb una opció heretada', { optIn: C.atributsOptIn });
     assert.deepEqual(resultat.errors, []);
     assert.deepEqual(decl.global, { nomPoble: 'Gent de Sella', poble: 'sella' });
     // Cap cua: el configura() del nucli, que només es pot cridar una vegada, queda per a l'amfitrió.

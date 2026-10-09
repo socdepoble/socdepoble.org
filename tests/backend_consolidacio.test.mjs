@@ -265,7 +265,7 @@ test('dos cicles d’arrancada i tancament no recreen espills; SCC aïllat', t =
   // Aïlla la resta d’auditories: esta prova és del cablejat del tancament.
   fs.cpSync(path.join(ROOT, 'tooling'), path.join(root, 'tooling'), {recursive: true});
   fs.writeFileSync(path.join(root,'tooling/gates/verificador-scc.mjs'), 'export class VerificadorSCC { async runAudits() { return {valid:true,errors:[]}; } }');
-  for (const rel of ['tooling/gates/porta-plantilles.mjs', 'tooling/gates/porta-autoritat.mjs', 'tooling/verify-ledger.mjs', 'tooling/gates/segella.mjs', 'tooling/wiki/compile-wiki-to-app.mjs', 'tooling/brain/cataleg_skills.mjs']) {
+  for (const rel of ['tooling/gates/porta-olivera.mjs', 'tooling/gates/porta-plantilles.mjs', 'tooling/gates/porta-autoritat.mjs', 'tooling/verify-ledger.mjs', 'tooling/gates/segella.mjs', 'tooling/wiki/compile-wiki-to-app.mjs', 'tooling/brain/cataleg_skills.mjs']) {
     fs.mkdirSync(path.dirname(path.join(root, rel)), {recursive:true});
     fs.writeFileSync(path.join(root, rel), 'process.exit(0);');
   }

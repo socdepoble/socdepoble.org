@@ -108,6 +108,51 @@ function metrica(nom, { numerador = null, denominador = null, valor, unitat = 'f
   };
 }
 
+/* El document d'un error de la porta de documents (porta-documents.mjs ·
+   checkDocuments): «RUTA.md: motiu» o «Sense àncora: RUTA.md»; null si
+   l'error no és d'un document (el contracte de l'índex, per exemple). */
+const documentDeLError = (e) => {
+  if (typeof e !== 'string') return null;
+  const ancora = /^Sense àncora: (.+\.md)$/.exec(e);
+  if (ancora) return ancora[1];
+  const propi = /^(.+?\.md): /.exec(e);
+  return propi ? propi[1] : null;
+};
+
+/**
+ * La mètrica d'una porta a partir del seu resultat (Onada 6). Sense
+ * resultat, o amb un de mal format, N/A: mai un verd.
+ *  · Amb `total` i `failures` (la cadena de portes): passos verds sobre el total.
+ *  · Amb `checked` i `errors` (la porta de documents): documents sense cap
+ *    error sobre els comprovats. Cada document amb errors compta una vegada;
+ *    un error que no és de cap document compta com un document més que falla
+ *    (cota pessimista); una porta que diu `valid: false` sense cap error en
+ *    resta almenys un. Correcció de l'Onada 6 (revisió adversarial: «una porta
+ *    verda que no ha comprovat res») · `checked: 0` és N/A: per defecte la
+ *    porta només comprova els documents canviats, i amb l'arbre net no en
+ *    comprova cap. Derogat: { valid: true, checked: 0 } → 1/1.
+ *  · Només amb `valid`: 1/1 (verda) o 0/1 (roja).
+ */
+export function metricaDePorta(nom, porta, font, prova) {
+  const p = porta && typeof porta === 'object' && !Array.isArray(porta) ? porta : null;
+  if (p && Number.isInteger(p.total) && p.total > 0 && Number.isInteger(p.failures) && p.failures >= 0 && p.failures <= p.total) {
+    return metrica(nom, { numerador: p.total - p.failures, denominador: p.total, font, prova });
+  }
+  if (p && Number.isInteger(p.checked) && p.checked >= 0 && typeof p.valid === 'boolean') {
+    if (p.checked === 0) return metrica(nom, { font });
+    const documents = new Set();
+    let solts = 0;
+    for (const e of Array.isArray(p.errors) ? p.errors : []) {
+      const doc = documentDeLError(e);
+      if (doc) documents.add(doc); else solts += 1;
+    }
+    const fallits = Math.min(p.checked, Math.max(documents.size + solts, p.valid === false ? 1 : 0));
+    return metrica(nom, { numerador: p.checked - fallits, denominador: p.checked, font, prova });
+  }
+  if (p && typeof p.valid === 'boolean') return metrica(nom, { numerador: p.valid ? 1 : 0, denominador: 1, font, prova });
+  return metrica(nom, { font });
+}
+
 /**
  * @param {object} fonts   fonts ja llegides; qualsevol pot ser null (absent)
  * @param {object} [opcions]
@@ -269,6 +314,10 @@ export function construeixMapa(fonts = {}, { existeix = null, ara = null } = {})
   const hooksAgNomenats = hooksAg && typeof hooksAg === 'object' && !Array.isArray(hooksAg) && !Array.isArray(hooksAg.hooks)
     ? Object.entries(hooksAg).filter(([, esdeveniments]) => esdeveniments && typeof esdeveniments === 'object' && !Array.isArray(esdeveniments))
     : [];
+  /* Onada 6 (honestedat dels avisos) · Els noms dels hooks declarats
+     (sdp-olivera, sdp-fatiga): una skill que en cita un parla d'un hook, no
+     crida cap skill inexistent. */
+  const nomsHooks = new Set(hooksAgNomenats.map(([nom]) => nom));
   if (hooksAgNomenats.length) {
     /* T13-T14 (ordre del Mestre, 260930) · Format que documenta Antigravity
        IDE: cada clau de primer nivell és el nom d'un hook, i dins, cada
@@ -360,6 +409,9 @@ export function construeixMapa(fonts = {}, { existeix = null, ara = null } = {})
     ...(manifestSegell ? Object.keys(manifestSegell).map((r) => RUTA_SKILL.exec(r)?.[1]).filter(Boolean) : [])
   ]);
   const perNom = new Map((disc || []).map((s) => [s.nom, s]));
+  /* Les skills que CLAUDE.md importa amb @ (claudeImports): Claude Code les llig senceres en arrencar. */
+  const importadesClaude = new Set((Array.isArray(fonts.claudeImports) ? fonts.claudeImports : [])
+    .map((ruta) => RUTA_SKILL.exec(String(ruta))?.[1]).filter(Boolean));
 
   if (index) node('script:tooling/session/persona_router.mjs', 'script', '.agents/skills_index.json', { rol: 'router cognitiu' });
 
@@ -385,7 +437,14 @@ export function construeixMapa(fonts = {}, { existeix = null, ara = null } = {})
       if (s.errorsFrontmatter?.length) avis(id, 'frontmatter-invalid', 'alta', `tooling/wiki/schema.json: ${s.errorsFrontmatter.join('; ')}`);
       if (s.frontmatter?.name && s.frontmatter.name !== nom) avis(id, 'nom-diferent-carpeta', 'mitjana', ruta);
       if (index && !entrada) avis(id, 'fora-index', 'mitjana', '.agents/skills_index.json');
-      if (cataleg && !cataleg.has(nom)) avis(id, 'fora-cataleg-claude', 'mitjana', '.claude/skills/');
+      /* Onada 6 · Una skill que CLAUDE.md importa amb @ també és fora del
+         catàleg, però Claude Code la carrega sencera a cada sessió: l'avís ho
+         diu i baixa de severitat. No es calla: el catàleg continua sense ella. */
+      if (cataleg && !cataleg.has(nom)) {
+        if (importadesClaude.has(nom)) {
+          avis(id, 'fora-cataleg-claude', 'baixa', '.claude/skills/ · CLAUDE.md la importa amb @: Claude Code la carrega sencera a cada sessió, però no la pot triar a demanda');
+        } else avis(id, 'fora-cataleg-claude', 'mitjana', '.claude/skills/');
+      }
       if (manifestSegell && !alSegell) avis(id, 'fora-segell', 'alta', '.agents/SKILLS_SEAL.json');
       if (manifestSegell && alSegell && s.sha256 && manifestSegell[ruta] !== s.sha256) avis(id, 'segell-divergent', 'alta', '.agents/SKILLS_SEAL.json');
       const tokens = Number.isInteger(s.paraules) ? Math.round(s.paraules * TOKENS_PER_PARAULA) : null;
@@ -431,8 +490,10 @@ export function construeixMapa(fonts = {}, { existeix = null, ara = null } = {})
       // no es duplica en suggeriment el que el contracte ja declara.
       for (const citada of s.mencions || []) {
         if (citada === nom) continue;
-        if (!perNom.has(citada)) avis(id, 'crida-inexistent', 'mitjana', `${ruta} → ${citada}`);
-        else if (!llegides.has(`skill:${citada}`)) aresta(id, `skill:${citada}`, 'crida', 'inferit', ruta);
+        if (!perNom.has(citada)) {
+          // El nom d'un hook declarat no és cap skill que falte (Onada 6).
+          if (!nomsHooks.has(citada)) avis(id, 'crida-inexistent', 'mitjana', `${ruta} → ${citada}`);
+        } else if (!llegides.has(`skill:${citada}`)) aresta(id, `skill:${citada}`, 'crida', 'inferit', ruta);
       }
     }
     if (entrada) {
@@ -502,12 +563,20 @@ export function construeixMapa(fonts = {}, { existeix = null, ara = null } = {})
     const tipus = t.llancador?.tipus ?? null;
     let estat;
     if (tipus === 'tasca') {
-      // Subtasca: la llança una altra tasca declarada (Plaquetes en executa
+      // Subtasca: la llança una altra tasca declarada (Plaquetes en declara
       // cinc dins del seu diagnòstic horari). Hereta l'estat de la mare.
+      /* Onada 6 (honestedat dels avisos) · Llevat d'un cas: una subtasca sense
+         script propi amb la mare viva. Que la mare corra no diu que execute
+         esta subtasca (Plaquetes «diagnostica i no aplica mai», i dues de les
+         cinc no les implementa cap script): desconegut, mai viu. Si la mare
+         és morta, desconeguda o sense llançador, la subtasca ho és igual. */
       const mare = mareDe(t);
       if (!mare || pila.has(mare.id)) estat = 'declarat-sense-llancador';
       else if (t.script && existeix && !existeix(t.script)) estat = 'mort';
-      else estat = resol(mare, pila);
+      else {
+        const deMare = resol(mare, pila);
+        estat = deMare === 'viu' && !t.script ? 'desconegut' : deMare;
+      }
     } else if (tipus === 'git-hook' || tipus === 'hook') {
       const text = hooksGit?.[t.llancador?.esdeveniment];
       if (t.script && existeix && !existeix(t.script)) estat = 'mort';
@@ -639,6 +708,29 @@ export function construeixMapa(fonts = {}, { existeix = null, ara = null } = {})
     font: 'tooling/gates/frontissa-contingut.mjs',
     prova: 'node tooling/gates/frontissa-contingut.mjs --json'
   } : { font: 'tooling/gates/frontissa-contingut.mjs' }));
+  /* Onada 6 (portes verdes sense comprovar) · Una frontissa roja (12/13)
+     només era una fracció de la salut, sense cap avís, i para el pre-commit.
+     Correcció de l'Onada 6 (revisió adversarial: «un avís per cada error de
+     la frontissa», l'abast literal) · Cada error és un avís alt
+     'frontissa-roja' propi, sobre la seua clau dins del registre d'empremtes,
+     que és on es repara (--aprova CLAU --per NOM, una decisió humana): el
+     node és `document:.agents/contingut_estructural.json#CLAU` (sense clau,
+     el número de l'error). Dos errors de la mateixa clau són dos avisos
+     (#CLAU i #CLAU-2). Així el recompte d'avisos alts diu quants errors hi ha.
+     Derogat: un sol avís sobre el registre amb una evidència per error. */
+  const errorsFrontissa = Array.isArray(frontissa?.errors) ? frontissa.errors.filter((e) => e && typeof e === 'object') : [];
+  const clausVistes = new Map();
+  errorsFrontissa.forEach((e, i) => {
+    const base = typeof e.clau === 'string' && e.clau.trim() ? e.clau.trim() : `error-${i + 1}`;
+    const n = (clausVistes.get(base) ?? 0) + 1;
+    clausVistes.set(base, n);
+    const clau = n === 1 ? base : `${base}-${n}`;
+    const doc = nodeRuta(`.agents/contingut_estructural.json#${clau}`);
+    const evidencia = [typeof e.codi === 'string' ? e.codi : null,
+      typeof e.missatge === 'string' && e.missatge ? e.missatge : (typeof e.clau === 'string' ? `«${e.clau}»` : null)]
+      .filter(Boolean).join(' · ');
+    avis(doc.id, 'frontissa-roja', 'alta', evidencia || 'node tooling/gates/frontissa-contingut.mjs --json');
+  });
 
   const instantania = fonts.timeMachine?.ultima ? Date.parse(fonts.timeMachine.ultima) : NaN;
   salut.push(metrica('frescor-instantania', Number.isFinite(instantania) && Number.isFinite(ara) ? {
@@ -787,8 +879,13 @@ export function construeixMapa(fonts = {}, { existeix = null, ara = null } = {})
   recompteLedger('ledger-mal-formades', 'malformades', 'línies mal formades');
   if (ledger?.valid === false) {
     const doc = nodeRuta('.agents/LEDGER.md');
+    /* Onada 6 · La signatura és l'empremta del cos (analitzaLedger): si no
+       quadra, el cos s'ha editat sense tornar-lo a segellar, o el segell
+       falta. L'evidència ho diu, i els fòssils i les línies mal formades van
+       a part, també quan són zero (no en són la causa). */
     const detall = [
       'signatura del LEDGER no vàlida',
+      'el cos no quadra amb el seu segell: editat sense tornar-lo a segellar, o sense segell',
       Number.isInteger(ledger.fossils) ? plural(ledger.fossils, 'segell fòssil', 'segells fòssils') : null,
       Number.isInteger(ledger.malformades) ? plural(ledger.malformades, 'línia mal formada', 'línies mal formades') : null
     ].filter(Boolean);
@@ -806,8 +903,18 @@ export function construeixMapa(fonts = {}, { existeix = null, ara = null } = {})
     valor: horesDes(relleu), unitat: 'hores', font: '.agents/ESTAT.md', prova: PROVA_MAPA
   } : { unitat: 'hores', font: '.agents/ESTAT.md' }));
 
-  salut.push(metrica('conformitat-documental', { font: 'tooling/gates/porta-documents.mjs' }));
-  salut.push(metrica('cadena-portes', { font: 'tooling/gates/run-portes.mjs' }));
+  /* Onada 6 (portes verdes sense comprovar) · Abans eren N/A fixos encara que
+     les dues portes existixen. Ara es mesuren quan la closca passa el seu
+     resultat; mentre no arriba, continuen N/A (el que falta es pinta):
+     · fonts.portaDocuments: l'eixida de checkDocuments (porta-documents.mjs),
+       { valid, checked, errors }.
+     · fonts.cadenaPortes: l'eixida de run-portes.mjs --diagnostic,
+       { valid, failures }, i `total` (passos) si la closca el sap.
+     Amb `total` i `failures`, passos verds sobre el total; si no, 1/1 o 0/1. */
+  salut.push(metricaDePorta('conformitat-documental', fonts.portaDocuments,
+    'tooling/gates/porta-documents.mjs', 'node tooling/gates/porta-documents.mjs'));
+  salut.push(metricaDePorta('cadena-portes', fonts.cadenaPortes,
+    'tooling/gates/run-portes.mjs', 'node tooling/gates/run-portes.mjs --diagnostic'));
 
   const perId = (a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
   const perAresta = (a, b) => `${a.de}|${a.a}|${a.tipus}`.localeCompare(`${b.de}|${b.a}|${b.tipus}`);

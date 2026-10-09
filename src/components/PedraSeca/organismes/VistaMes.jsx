@@ -11,8 +11,8 @@
  * (vistes Mes i 2 setmanes): només les setmanes que toquen el mes (de 4 a 6
  * files, graellaDelMes amb setmanes: 'justes') o N setmanes des d'un dilluns
  * (graellaDeSetmanes), totes de la mateixa alçada; l'abreviatura del dia,
- * només a dalt; el número centrat dalt de cada cel·la, hui en un cercle invers
- * i el primer dia d'un mes veí amb el nom curt del mes («1 de nov.»). Dins de
+ * només a dalt; el número centrat dalt de cada cel·la, hui en un cercle (el
+ * d'acció des de l'Onada 6) i el primer dia d'un mes veí amb el nom curt del mes («1 de nov.»). Dins de
  * la cel·la, primer les barres de tot el dia o de diversos dies (plenes, amb el
  * color de la font: classeDeFont) i després les línies «● HH:MM Títol» dels
  * actes amb hora.
@@ -23,8 +23,10 @@
  * cel·la sencera continua sent el botó del dia (≥ --sdp-touch); el nom del
  * botó ho diu tot.
  *
- * No toca GraellaMes ni CalendariEsdeveniments: el Mur, la Consola i el
- * selector de l'editor continuen amb el mes d'ara (Llei del Píxel).
+ * No toca GraellaMes ni CalendariEsdeveniments: la Consola i el selector de
+ * l'editor continuen amb el mes d'ara (Llei del Píxel). Des de l'Onada 6, la
+ * pestanya Calendari del Mur munta esta vista (CalendariDelPoble), com
+ * /calendari.
  *
  * TECLAT I ROLS (ordre del Mestre, 261003 · P6: des d'ara és la vista per
  * defecte de /calendari, el clon de Google Calendar). Amb onTriaDia, la
@@ -78,6 +80,22 @@
  * Les barres són aria-hidden: cada dia ja diu els seus actes, al nom del botó
  * o, en el mode quiet, al text per al lector (sdp-sr-only).
  *
+ * ENLLAÇ DE L'ESDEVENIMENT (Onada 6, prompt 261009_0230, punt 1; pla de
+ * l'Onada 5, tasca 16: «si es fa clic a l'enllaç de l'esdeveniment dins del
+ * calendari, portarà a la pàgina de la publicació; si es fa clic al quadre del
+ * dia (fora de l'enllaç), es mostraran les targetes d'eixe dia»).
+ *   rutaDeLEsdeveniment · (esd) => string | null: la ruta de l'app de la
+ *     publicació (la valida qui munta la vista). Amb ruta i fora del mode
+ *     compacte, la peça porta un enllaç (.sdp-cal-enllac) amb tabIndex -1: la
+ *     capa continua aria-hidden i la graella, un sol punt de tabulació (el
+ *     teclat i el lector arriben a l'acte pel dia i per la targeta de davall).
+ *     El full només el fa clicable amb ratolí (@media (pointer: fine)): en
+ *     tàctil la peça fa 24px (Pedra Seca §6) i el toc passa al dia.
+ *   LinkComponent · el Link del router de qui munta la vista (com
+ *     BarraTaronja): dins d'un amfitrió, un <a> cru navegaria la seua pàgina.
+ *     Per defecte, 'a'.
+ * Sense rutaDeLEsdeveniment, el DOM de sempre.
+ *
  * Importa per camí directe (mai per index.js): la porta de dependències
  * circulars de Pedra Seca ho exigix.
  */
@@ -116,7 +134,7 @@ const recompteEsdeveniments = (n) => (n === 1 ? '1 esdeveniment' : `${n} esdeven
 const dataLlarga = (data, locale) => data.toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 const dataDelPeriode = (data, locale) => data.toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' });
 /* «de setembre de 2026», «d’octubre de 2026»: la preposició s'apostrofa
-   davant de vocal (la mateixa regla que ambDe de CalendariSection). */
+   davant de vocal (la mateixa regla que ambDe de CalendariDelPoble). */
 const ambDe = (text) => (/^[aeiouàèéíòóú]/i.test(text) ? `d’${text}` : `de ${text}`);
 /* El recompte i els títols d'un dia: el nom del botó o el text per al lector. */
 const actesDelDia = (delDia, recompte) => `${recompte(delDia.length)}${delDia.length ? `: ${delDia.map((esd) => esd.titol).join(', ')}` : ''}`;
@@ -129,19 +147,30 @@ function graellaDeLaVista(cursor, setmanes, tempsDilluns) {
   return graellaDeSetmanes(new Date(cursor.any, cursor.mes, 1), setmanes, { mes: cursor });
 }
 
+/* Onada 6 · L'enllaç d'un esdeveniment a la pàgina de la seua publicació: el
+   Link del router de qui munta la vista (LinkComponent, com BarraTaronja) o
+   un <a>. És l'únic de les tres vistes (VistaSetmana i VistaAgenda
+   l'importen per camí directe); `resta` hi passa, per exemple, el tabIndex. */
+export function EnllacDeLEsdeveniment({ ruta, LinkComponent = 'a', children, ...resta }) {
+  const desti = LinkComponent === 'a' ? { href: ruta } : { to: ruta };
+  return <LinkComponent className="sdp-cal-enllac" {...desti} {...resta}>{children}</LinkComponent>;
+}
+
 /* Una barra (o un punt amb l'hora, si és d'un sol dia) d'una fila de setmana.
-   En compacte, la tira o el punt sols: el nom del dia ja diu el títol. */
-function PecaDelMes({ peca, compacte }) {
+   En compacte, la tira o el punt sols: el nom del dia ja diu el títol.
+   Onada 6 · Amb `ruta` i fora del compacte, el contingut és l'enllaç a la
+   publicació (tabIndex -1: la capa és aria-hidden). */
+function PecaDelMes({ peca, compacte, ruta = null, LinkComponent }) {
   const ref = useRef(null);
   usePropietatsCss(ref, { '--sdp-cal-col-inici': peca.colInici + 1, '--sdp-cal-col-fi': peca.colFi + 1, '--sdp-cal-carril': peca.carril + 1 });
   const { ocurrencia, tipus } = peca.segment;
+  const enllac = compacte ? null : ruta;
   const classe = [
     'sdp-cal-barra', classeDeFont(ocurrencia.esd), tipus === 'punt' && 'sdp-cal-barra--punt',
-    peca.continuaAbans && 'sdp-cal-barra--abans', peca.continuaDespres && 'sdp-cal-barra--despres'
+    peca.continuaAbans && 'sdp-cal-barra--abans', peca.continuaDespres && 'sdp-cal-barra--despres', enllac && 'sdp-cal-barra--enllac'
   ].filter(Boolean).join(' ');
-  if (tipus !== 'punt') return <li ref={ref} className={classe}>{compacte ? null : ocurrencia.esd.titol}</li>;
-  return (
-    <li ref={ref} className={classe}>
+  const contingut = tipus !== 'punt' ? (compacte ? null : ocurrencia.esd.titol) : (
+    <>
       <span className="sdp-cal-mes__punt" />
       {compacte ? null : (
         <>
@@ -149,6 +178,11 @@ function PecaDelMes({ peca, compacte }) {
           {` ${ocurrencia.esd.titol}`}
         </>
       )}
+    </>
+  );
+  return (
+    <li ref={ref} className={classe}>
+      {enllac ? <EnllacDeLEsdeveniment ruta={enllac} LinkComponent={LinkComponent} tabIndex={-1}>{contingut}</EnllacDeLEsdeveniment> : contingut}
     </li>
   );
 }
@@ -156,7 +190,7 @@ function PecaDelMes({ peca, compacte }) {
 export function VistaMes({
   esdeveniments, cursor, avui = new Date(), diaTriat = null, onTriaDia, maxCarrils,
   setmanes = 'justes', dilluns = null, densitat = 'responsiva',
-  recompte = recompteEsdeveniments, titol, locale, className
+  recompte = recompteEsdeveniments, titol, locale, className, rutaDeLEsdeveniment, LinkComponent = 'a'
 }) {
   const arrel = useRef(null);
   // Un número primitiu per a les dependències: un Date nou a cada pintada no recalcula res.
@@ -260,7 +294,10 @@ export function VistaMes({
               })}
             </ol>
             <ol className="sdp-cal-mes__barres" aria-hidden="true">
-              {fila.peces.map((peca) => <PecaDelMes key={`${peca.segment.ocurrencia.clau}·${peca.colInici}`} peca={peca} compacte={compacte} />)}
+              {fila.peces.map((peca) => (
+                <PecaDelMes key={`${peca.segment.ocurrencia.clau}·${peca.colInici}`} peca={peca} compacte={compacte}
+                  ruta={rutaDeLEsdeveniment?.(peca.segment.ocurrencia.esd) ?? null} LinkComponent={LinkComponent} />
+              ))}
             </ol>
           </li>
         ))}

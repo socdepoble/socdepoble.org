@@ -5,7 +5,8 @@
  * esta persona i en este document:
  *   'disabled'     · apagada (pel build, per l'entorn, per l'amfitrió o per la persona);
  *   'unavailable'  · encesa, però el node no la pot servir (capacitat del
- *                    backend absent, o dades de salut en un document que no és nostre);
+ *                    backend absent, o dades de salut o financeres en un
+ *                    document que no és nostre);
  *   'unsubscribed' · premium i este node no en té el dret;
  *   'available'    · es pot obrir.
  * avaluaApp torna el mateix estat i el `motiu`, per a explicar-lo a la persona.
@@ -14,6 +15,8 @@
  *   0. Build      · una app interna amb `carrega` null no és al paquet. El
  *                   literal de compilació viu al manifest (import.meta.env.DEV ||
  *                   import.meta.env.VITE_SDP_APP_<ID> === '1'): Vite la trau del build.
+ *                   Una externa o un mòdul (sdp.modul.v1) no hi passen: el
+ *                   seu codi no és del paquet, el porta l'amfitrió.
  *      Entorn     · 'desenvolupament' no es carrega mai en producció.
  *   1. Poble      · FUTURA. L'autoritat és el servidor (una capacitat `apps`
  *                   del contracte, servida amb RLS per tenant UUID). És l'única
@@ -35,13 +38,23 @@ export const ESTATS_APP = Object.freeze(['disabled', 'unavailable', 'unsubscribe
 const CAP = () => false;
 const BUIDES = Object.freeze({ apps: Object.freeze({}), interruptors: Object.freeze({}) });
 
+/* Dades personals que només s'obrin quan l'App és l'ama del document, i el
+   motiu que ho explica. Dins d'un WordPress o de l'iframe d'un tercer,
+   l'IndexedDB és de l'origen de l'amfitrió i la poden llegir tots els seus
+   connectors i scripts. Les financeres, des de l'Onada 6 (261009): la
+   Gestoria mai dins d'una web d'un altre. */
+const NOMES_AL_DOCUMENT_PROPI = Object.freeze({
+  salut: 'document-no-propi',
+  financeres: 'document-no-propi-financeres'
+});
+
 function valor(estat, motiu) {
   return Object.freeze({ estat, motiu });
 }
 
 /** Encesa abans de la persona: build, entorn i amfitrió. */
 function base(manifest, ctx) {
-  if (manifest.origen !== 'externa' && typeof manifest.carrega !== 'function') return 'no-compilada';
+  if (manifest.origen === 'interna' && typeof manifest.carrega !== 'function') return 'no-compilada';
   if (manifest.entorn === 'desenvolupament' && ctx.produccio !== false) return 'entorn-desenvolupament';
   if (Array.isArray(ctx.declaradesPerAmfitrio)) {
     return ctx.declaradesPerAmfitrio.includes(manifest.id) ? null : 'amfitrio-no-la-declara';
@@ -64,7 +77,9 @@ export function avaluaApp(manifest, ctx = {}) {
   if (preferencies.apps?.[manifest.id] === false) return valor('disabled', 'persona-apagada');
   const teCapacitat = typeof ctx.teCapacitat === 'function' ? ctx.teCapacitat : CAP;
   if (!manifest.capacitats.every((capacitat) => teCapacitat(capacitat))) return valor('unavailable', 'sense-capacitat');
-  if (manifest.dadesPersonals === 'salut' && ctx.amaDelDocument !== true) return valor('unavailable', 'document-no-propi');
+  const nomesAlDocumentPropi = Object.hasOwn(NOMES_AL_DOCUMENT_PROPI, manifest.dadesPersonals)
+    ? NOMES_AL_DOCUMENT_PROPI[manifest.dadesPersonals] : null;
+  if (nomesAlDocumentPropi && ctx.amaDelDocument !== true) return valor('unavailable', nomesAlDocumentPropi);
   const teDret = typeof ctx.teDret === 'function' ? ctx.teDret : CAP;
   if (manifest.nivell === 'premium' && !teDret(manifest.dret)) return valor('unsubscribed', 'sense-dret');
   return valor('available', null);

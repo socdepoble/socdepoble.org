@@ -72,7 +72,7 @@ Proposta: ampliar `.agents/cron/registre_tasques.json`, que és la còpia declar
 
 - Tipus de `llancador`: `launchd`, `cron`, `hook` (amb el camp `esdeveniment`), `git-hook` (amb `esdeveniment`), `tasca` (amb el camp `tasca`: l'id de la tasca declarada que la llança) i `manual`.
 - `cadencia` s'expressa en segons o amb una expressió cron de cinc camps. Els esdeveniments no tenen hora: es pinten a part, no al mes.
-- Una **subtasca** (`llancador.tipus: "tasca"`) no té plist propi: la llança una altra tasca del registre. Hereta l'estat i, si no en declara, la cadència de la mare. Així les cinc tasques de Plaquetes deixen de ser promeses buides: les executa `plaquetes-diagnostic` cada hora. Una mare absent o un cicle (dos tasques que es llancen l'una a l'altra) deixen la subtasca «declarada sense llançador».
+- Una **subtasca** (`llancador.tipus: "tasca"`) no té plist propi: la llança una altra tasca del registre. Hereta l'estat i, si no en declara, la cadència de la mare. Des de l'Onada 6, una subtasca sense `script` propi no hereta el «viu»: que la mare corra no demostra que l'execute, i queda «desconegut». És el cas de les cinc tasques de Plaquetes, perquè `plaquetes-diagnostic` diagnostica i no aplica mai. Una mare absent o un cicle (dos tasques que es llancen l'una a l'altra) deixen la subtasca «declarada sense llançador».
 - Un **hook de git** es jutja pel text del hook instal·lat (`.husky/<esdeveniment>`, que el compilador llig del disc): viu si cita l'script de la tasca, mort si el hook existix i no el cita, desconegut si el compilador no ha pogut llegir el hook. Els hooks de git viuen a `.husky/`, no a `.git/hooks/`: `git config core.hooksPath` apunta a `.husky/_`, i és eixa configuració la que els activa.
 
 ## Com calcula l'estat la Consola

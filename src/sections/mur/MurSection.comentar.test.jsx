@@ -111,9 +111,12 @@ test('Mercat · un producte, al xat comú del producte', () => {
   expect(desti()).toEqual({ cami: '/xat', sobre: 'producte:samarreta', titol: 'Samarreta', ruta: '/mercat/samarreta' });
 });
 
-test('Pobles · un poble, al seu xat (la seua Comunitat)', () => {
+/* Onada 6 (pla 261009_0245, ítem 4: «El fil de xat específic també es dirà
+   'Gent de la Torre'») · El mateix xat (poble:sella), amb el nom de la gent:
+   abans el títol era «Sella». */
+test('Pobles · un poble, al seu xat (la seua Comunitat), amb el nom de la seua gent', () => {
   mocks.core = { ...mocks.core, sortedTowns: [{ id: 'sella', title: 'Sella', comarca: 'Marina Baixa', content: 'Poble.' }] };
   render(<PoblesSection />);
   comenta('Sella');
-  expect(desti()).toEqual({ cami: '/xat', sobre: 'poble:sella', titol: 'Sella', ruta: '/pobles/sella' });
+  expect(desti()).toEqual({ cami: '/xat', sobre: 'poble:sella', titol: 'Gent de Sella', ruta: '/pobles/sella' });
 });

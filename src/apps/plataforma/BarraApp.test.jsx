@@ -158,6 +158,8 @@ describe('dins d’una app', () => {
     act(() => {
       const resultat = retardat.registraAppExterna(manifestExternDeProva({
         id: 'gestoria',
+        /* L'id és reservat a les dades financeres (registreApps.js, DADES_RESERVADES). */
+        dadesPersonals: 'financeres',
         titol: { ca: 'Gestoria de prova' },
         entrades: [{ slug: 'aprendre', titol: { ca: 'Aprendre' }, icona: 'NotebookPen' }],
         entradaPerDefecte: 'aprendre'

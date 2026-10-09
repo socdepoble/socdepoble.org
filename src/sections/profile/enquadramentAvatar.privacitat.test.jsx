@@ -10,7 +10,14 @@
  * toDataURL s'emulen. El «codificador» torna uns bytes nets i propis
  * (SORTIDA_CANVAS); el retallador simulat en torna uns altres (SORTIDA_RETALL):
  * si un camí pujara l'original o el retall sense passar per compressImage, el
- * que arriba al servidor no seria SORTIDA_CANVAS. */
+ * que arriba al servidor no seria SORTIDA_CANVAS.
+ *
+ * Onada 6 (verificació, 261009) · Des del 261008 el diàleg intermedi del
+ * Perfil («Només l’avatar», «La mateixa per a les dues», «Només la capçalera»
+ * i el seu mode sense servidor) ja no existix: la fitxa puja cada imatge amb
+ * el seu botó (useImatgeDeFitxa). Els camins vigents que es comproven ací són
+ * els tres botons de la fitxa, l'ajust d'imatge (DetallAjust) i el contracte
+ * T46. */
 import React, { useRef } from 'react';
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
@@ -141,6 +148,14 @@ test('K3 · Onada 4 · avatar, logotip i capçalera de la fitxa, desats sense am
 });
 
 /* ── L'ajust d'imatge (DetallAjust) ── */
+
+/* Onada 6 (verificació, 261009) · `desaRetall` es cridava sense definir des
+   que el diàleg intermedi del Perfil va desaparéixer (261008) amb els seus
+   ajudants. És el botó de desar del retallador T46 de l'avatar
+   (useEnquadramentAvatar), el que DetallAjust munta. */
+const desaRetall = () => act(async () => {
+  fireEvent.click(within(screen.getByRole('dialog', RETALLADOR)).getByRole('button', { name: 'Desar l’enquadrament' }));
+});
 
 test('K3 · DetallAjust: l’avatar que puja és el del canvas', async () => {
   const ajust = { id: 'avatar', lloc: 'fitxa', titol: 'Foto de perfil', camp: 'avatar_url', tipus: 'imatge', valor: '', obert: true };

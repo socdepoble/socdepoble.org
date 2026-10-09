@@ -17,8 +17,16 @@
  * navegació (configAmfitrio.js): mai `tenantId`.
  */
 import { sanejaEtiqueta, sanejaIdentificador } from '../../config/configAmfitrio.js';
+import { nomDeLaGentDelPoble } from '../pobles/nomsDelPoble.js';
 
 const enc = (valor) => encodeURIComponent(String(valor));
+
+/* La fitxa de /pobles del poble de l'amfitrió (towns del contingut del node,
+   useCoreContent), per id o per slug. null si no hi és o no se'n passen. */
+function fitxaDelPoble(poble, towns) {
+  if (!poble || !Array.isArray(towns)) return null;
+  return towns.find((town) => town && (String(town.id) === poble.id || (town.slug != null && String(town.slug) === poble.id))) || null;
+}
 
 /** { id, nom } del poble de l'amfitrió, o null si no n'ha declarat cap vàlid. */
 export function pobleDeConfig(externalConfig) {
@@ -38,26 +46,35 @@ export const rutaDelPobleXat = (poble) => `/pobles/${enc(poble.id)}`;
  * imatge inventada ni cap llavor en remot. Pura: qui la crida passa les fitxes.
  */
 export function avatarDelPoble(poble, towns) {
-  if (!poble || !Array.isArray(towns)) return null;
-  const fitxa = towns.find((town) => town && (String(town.id) === poble.id || (town.slug != null && String(town.slug) === poble.id)));
+  const fitxa = fitxaDelPoble(poble, towns);
   return fitxa?.avatar_url || fitxa?.image_url || fitxa?.imageSrc || null;
 }
 
-/** El nom que es pinta: el que declara l'amfitrió o, sense, l'id. */
-export const nomDelPoble = (poble) => poble?.nom || poble?.id || '';
+/**
+ * El nom que es pinta: el que declara l'amfitrió o, sense, l'id.
+ * Onada 6 (pla 261009_0245, ítem 4: el xat del poble es diu «Gent de …») ·
+ * Amb les fitxes (`towns`, opcional) i sense nomPoble declarat, el nom de la
+ * gent de la fitxa (pobles/nomsDelPoble.js · nomDeLaGentDelPoble: l'`author`
+ * o nomDeLaGent del seu nom), el mateix de la pàgina del poble. Sense
+ * fitxes, com sempre.
+ */
+export const nomDelPoble = (poble, towns) => poble?.nom
+  || nomDeLaGentDelPoble(fitxaDelPoble(poble, towns))
+  || poble?.id || '';
 
 /**
  * El subjecte connectable del poble, com el que construïx la seua targeta
  * (objecteConnectable.js). En seed/local el títol del grup és este `titol`; en
  * remot el posa el servidor (towns.name), vegeu el pla 2135, P1.
+ * Onada 6 · `towns` (opcional), com nomDelPoble.
  */
-export function objecteDelPoble(poble) {
-  return { tipus: 'poble', id: poble.id, titol: nomDelPoble(poble), ruta: rutaDelPobleXat(poble) };
+export function objecteDelPoble(poble, towns) {
+  return { tipus: 'poble', id: poble.id, titol: nomDelPoble(poble, towns), ruta: rutaDelPobleXat(poble) };
 }
 
 /** /xat?sobre=poble:<id>&titol=…&ruta=…: el mateix camí que el «Comentar» del poble. */
-export function rutaSobreDelPoble(poble) {
-  const objecte = objecteDelPoble(poble);
+export function rutaSobreDelPoble(poble, towns) {
+  const objecte = objecteDelPoble(poble, towns);
   return `/xat?sobre=${enc(`poble:${objecte.id}`)}&titol=${enc(objecte.titol)}&ruta=${enc(objecte.ruta)}`;
 }
 

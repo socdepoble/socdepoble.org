@@ -17,7 +17,7 @@
  * amb la UniversalPage i el PageFrame de veres.
  */
 import React from 'react';
-import { cleanup, render } from '@testing-library/react';
+import { cleanup, render, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
@@ -60,6 +60,9 @@ import {
 import { renderRichText } from './detailRichText.jsx';
 import { fixaBaseRecursos, resolveAsset } from '../../config/assetResolver.js';
 import { permetOrigenMitjans } from '../../utils/sanitize.js';
+import { rutaXatDePagina } from '../../config/navigation.js';
+import { objecteDelPobleXat } from '../pobles/xatDelPoble.js';
+import { COPYRIGHT_VIQUIPEDIA } from '../../components/universal/editorial.js';
 
 const GOOGLE = 'https://lh3.googleusercontent.com/a/pepa.png';
 const RASTREIG = 'https://rastreig.example/p.gif?campanya=1';
@@ -339,12 +342,26 @@ describe('(g) el cos HTML de la publicació, del producte i de l’acte', () => 
     expect(cosAmbImatgesPropies('Text pla <img sense tancar')).toBe('Text pla <img sense tancar');
   });
 
-  test('Pobles i Multimèdia, com abans: el cos admet el que admetia el sanejador de sempre', () => {
+  test('Multimèdia, com abans: el cos admet el que admetia el sanejador de sempre', () => {
     const { container } = render(<>
-      {buildPoblesDetailSectionMeta({ t }).renderBody({ title: 'Sella', content: cosAmb(GOOGLE) })}
       {buildMultimediaDetailSectionMeta({ t }).renderBody({ title: 'Era', description: cosAmb(GOOGLE) })}
     </>);
-    expect(fonts(container)).toEqual([GOOGLE, GOOGLE]);
+    expect(fonts(container)).toEqual([GOOGLE]);
+  });
+
+  /* Onada 5 (ordre del Mestre, 261008) · El content d'un poble (el text de la
+     Viquipèdia) ja no és el cos: és l'entradilla (paginaDElement), un text pla
+     dins de <p class="lead">. El cos no el pinta, i cap <img> que hi vinguera
+     es demana. */
+  test('Pobles: el content va a l’entradilla com a text pla; el cos no el pinta', () => {
+    const html = cosAmb(GOOGLE);
+    const { container } = render(<>{buildPoblesDetailSectionMeta({ t }).renderBody({ id: 'sella', title: 'Sella', content: html })}</>);
+    expect(fonts(container)).toEqual([]);
+    expect(container.textContent).not.toContain('Hola');
+    cleanup();
+    const pagina = pinta('pobles', { id: 'sella', title: 'Sella', content: html });
+    expect(pagina.querySelector('.page-intro .lead').textContent).toBe(html);
+    expect(fonts(pagina)).not.toContain(GOOGLE);
   });
 
   /* Revisió adversarial del 261008 · Una targeta incrustada al cos l'original
@@ -366,9 +383,12 @@ describe('(g) el cos HTML de la publicació, del producte i de l’acte', () => 
     expect(fonts(container)).not.toContain(GOOGLE);
   });
 
-  test('la instantània d’una targeta del cos, a Pobles, com abans', () => {
-    const { container } = render(<>{buildPoblesDetailSectionMeta({ t }).renderBody({ title: 'Sella', content: grup(GOOGLE) })}</>);
-    expect(fonts(container)).toContain(GOOGLE);
+  /* Onada 5 · El content d'un poble no passa pel cos: una targeta que hi
+     vinguera no es pinta, ni la seua instantània. */
+  test('Pobles: una targeta del content no es pinta al cos, ni la seua instantània', () => {
+    const { container } = render(<>{buildPoblesDetailSectionMeta({ t }).renderBody({ id: 'sella', title: 'Sella', content: grup(GOOGLE) })}</>);
+    expect(container.querySelector('.sdp-targeta')).toBeNull();
+    expect(fonts(container)).not.toContain(GOOGLE);
   });
 
   test('un cos amb targetes pròpies, sense imatge o amb la imatge buida es pinta byte a byte com abans (Llei del Píxel)', () => {
@@ -411,6 +431,152 @@ describe('data:image/svg+xml al detall del Mur', () => {
     expect([...portada(container).querySelectorAll('img')].map((img) => img.getAttribute('src'))).toEqual(['/assets/mercat/a.png', '/assets/mercat/b.png']);
     expect(container.querySelector('.note-card img')).toBeNull();
     expect(fonts(container)).not.toContain(SVG);
+  });
+});
+
+/* Onada 5 (ordre del Mestre, 261008) · L'anatomia de la pàgina d'un poble
+   (/pobles/<slug>): el logotip de Sóc de Poble damunt de l'H1, l'H1 és la gent
+   del poble i l'H2 el poble, la província i la comarca són etiquetes de la
+   capçalera, l'entradilla és el text de la Viquipèdia i, davall, el botó blau
+   gros cap al xat de la gent del poble. Una llavor pròpia: MOCK_TOWNS és d'un
+   altre paquet. */
+describe('Onada 5 · la pàgina d’un poble', () => {
+  const POBLE = Object.freeze({
+    id: 'la-torre-de-les-macanes', type: 'town', author: 'Gent de la Torre', title: 'La Torre de les Maçanes',
+    provincia: 'Alacant', comarca: 'L’Alacantí', population: '700 hab',
+    content: 'La Torre de les Maçanes és una vila i municipi del País Valencià.'
+  });
+  /* Onada 6 (pla 261009_0245, ítem 4) · El xat del poble porta el nom de la
+     gent (objecteDelPobleXat): el mateix subjecte poble:<id>. */
+  const XAT = rutaXatDePagina(objecteDelPobleXat(POBLE));
+
+  test('logotip damunt de l’H1, H1 la gent, H2 el poble, l’entradilla i les etiquetes província i comarca', () => {
+    const container = pinta('pobles', POBLE);
+    const ordre = fills(container);
+    expect(ordre[0]).toMatch(/^IMG\.page-title-logo/);
+    expect(ordre.indexOf('H1.')).toBeGreaterThan(0);
+    expect(capcalera(container).querySelector('h1').textContent).toBe('Gent de la Torre');
+    expect(container.querySelector('.page-intro h2').textContent).toBe('La Torre de les Maçanes');
+    expect(container.querySelector('.page-intro .lead').textContent).toBe(POBLE.content);
+    expect([...capcalera(container).querySelectorAll('li.sp-card-label')].map((li) => [li.textContent, li.className]))
+      .toEqual([
+        ['Poble', 'sp-card-label sdp-badge-system'],
+        ['Alacant', 'sp-card-label sdp-badge-category'],
+        ['L’Alacantí', 'sp-card-label sdp-badge-tag']
+      ]);
+    expect(capcalera(container).querySelector('.page-title-copyright').textContent).toBe(COPYRIGHT_VIQUIPEDIA);
+  });
+
+  test('la barra taronja signa amb la gent i el poble, i porta al seu xat', () => {
+    const barra = pinta('pobles', POBLE).querySelector('section.bar-orange');
+    expect(barra.querySelector('.sp-card-author-name').textContent).toBe('Gent de la Torre');
+    expect(barra.querySelector('.sp-card-author-location').textContent).toBe('La Torre de les Maçanes');
+    expect(barra.querySelector('a.sp-card-author-link').getAttribute('href')).toBe(XAT);
+  });
+
+  test('davall de l’entradilla, el botó blau gros cap al xat; el cos no repetix la província ni la comarca', () => {
+    const container = pinta('pobles', POBLE);
+    expect(XAT).toMatch(/^\/xat\?sobre=poble:la-torre-de-les-macanes&titol=Gent%20de%20la%20Torre&/);
+    const boto = container.querySelector('.sdp-pagina-accio > a');
+    expect(boto.className).toBe('sdp-boto sdp-boto--primari sdp-boto--gran sdp-boto--ple');
+    expect(boto.getAttribute('href')).toBe(XAT);
+    expect(boto.textContent).toBe('Parlar amb la Gent de la Torre');
+    // El primer del cos, just després de l'entradilla.
+    expect(container.querySelector('.page-intro').nextElementSibling.firstElementChild.className).toBe('sdp-pagina-accio');
+    const pindoles = [...container.querySelectorAll('.page-intro ~ * .pill')].map((pill) => pill.textContent.trim());
+    expect(pindoles).toEqual(['700 hab', 'La Torre de les Maçanes']);
+  });
+
+  test('una entitat que no és «Gent …»: el verb de la porta d’El Xat', () => {
+    const { container } = render(<>{buildPoblesDetailSectionMeta({ t }).renderBody({ ...POBLE, author: 'Ajuntament de Sella' })}</>);
+    expect(container.querySelector('.sdp-pagina-accio > a').textContent).toBe('Anar al xat');
+  });
+
+  /* Onada 6 (pla 261009_0245, ítem 5; prompt 261009_0230, punt 6) · Davall
+     del botó blau i de les píndoles, la barra de pestanyes centrada. La
+     primera, «Gent de …» (l'H1), amb les targetes publicades des del poble
+     (Mur, Agenda i Mercat), casades per dades: poble_id o el nom del poble. */
+  const pintaAmbMur = (poble, mur) => {
+    mocks.sectionId = 'pobles';
+    mocks.itemId = poble.id;
+    mocks.core = { towns: [poble] };
+    mocks.mur = { status: 'ready', error: null, feedPosts: [], marketItems: [], events: [], ...mur };
+    return render(<ItemDetailSection />).container;
+  };
+
+  test('Onada 6 · la barra de pestanyes centrada, després del botó blau i de les píndoles, amb «Gent de la Torre» seleccionada', () => {
+    const container = pinta('pobles', POBLE);
+    const barra = container.querySelector('.sdp-pestanyes');
+    expect(barra.className).toBe('sdp-pestanyes sdp-pestanyes--centrades');
+    const llista = barra.querySelector('[role="tablist"]');
+    expect(llista.getAttribute('aria-label')).toBe('Continguts del poble');
+    expect([...llista.querySelectorAll('[role="tab"]')].map((p) => [p.textContent, p.getAttribute('aria-selected')]))
+      .toEqual([['Gent de la Torre', 'true']]);
+    expect(container.querySelector('.page-intro').nextElementSibling.firstElementChild.className).toBe('sdp-pagina-accio');
+    expect(container.querySelector('.content-wrapper > .badge-row').nextElementSibling).toBe(barra);
+  });
+
+  test('Onada 6 · el panell porta les targetes del poble en l’ordre del Mur, i cap d’un altre poble ni del sistema', async () => {
+    const container = pintaAmbMur(POBLE, {
+      feedPosts: [
+        { id: 'f1', type: 'feed', title: 'Festa de la Torre', author_location: 'La Torre de les Maçanes', created_at: '2026-09-02T10:00:00Z' },
+        { id: 'f2', type: 'feed', title: 'Festa de Sella', author_location: 'Sella', created_at: '2026-09-03T10:00:00Z' },
+        { id: 'f3', type: 'feed', title: 'Declarada', poble_id: 'la-torre-de-les-macanes', author_location: 'Alacant', created_at: '2026-09-01T10:00:00Z' },
+        { id: 'pagina', type: 'sistema', isSystem: true, title: 'Pàgina del sistema', author_location: 'La Torre de les Maçanes' }
+      ],
+      marketItems: [{ id: 'm1', type: 'product', title: 'Mel de romer', population: 'La Torre de les Maçanes', created_at: '2026-09-04T10:00:00Z' }]
+    });
+    const panell = container.querySelector('[role="tabpanel"]');
+    await waitFor(() => expect(panell.querySelectorAll('article.sp-card')).toHaveLength(3));
+    expect([...panell.querySelectorAll('.sp-card-title')].map((e) => e.textContent)).toEqual(['Mel de romer', 'Festa de la Torre', 'Declarada']);
+    // Només les targetes: cap capçalera dins del panell (la pestanya ja el nomena).
+    expect(panell.querySelector('h2')).toBeNull();
+  });
+
+  test('Onada 6 · un poble inventat funciona sense tocar codi: «Gent del Campello» i les seues targetes', async () => {
+    const campello = { id: 'el-campello', title: 'El Campello', content: 'Vila de l’Alacantí.' };
+    const container = pintaAmbMur(campello, {
+      feedPosts: [
+        { id: 'c1', type: 'feed', title: 'Peix fresc', author_location: 'El Campello', created_at: '2026-09-02T10:00:00Z' },
+        { id: 't1', type: 'feed', title: 'De la Torre', author_location: 'La Torre de les Maçanes', created_at: '2026-09-03T10:00:00Z' }
+      ]
+    });
+    expect(container.querySelector('[role="tab"]').textContent).toBe('Gent del Campello');
+    const panell = container.querySelector('[role="tabpanel"]');
+    await waitFor(() => expect(panell.querySelectorAll('article.sp-card')).toHaveLength(1));
+    expect(panell.querySelector('.sp-card-title').textContent).toBe('Peix fresc');
+  });
+
+  test('Onada 6 · sense cap publicació del poble, el text buit (role=status)', async () => {
+    const container = pintaAmbMur(POBLE, {});
+    const panell = container.querySelector('[role="tabpanel"]');
+    await waitFor(() => expect(panell.querySelector('p[role="status"]')).not.toBeNull());
+    expect(panell.querySelector('p[role="status"]').textContent).toBe('Encara no hi ha cap publicació des d’este poble.');
+  });
+
+  /* Requisit 15 de l'Onada 5 · La pastilla del poble és el seu naixement: si
+     una publicació que DECLARA el poble (poble_id) és anterior a la fitxa, la
+     seua data. Revisió adversarial · Una casada només pel text del lloc no el
+     data (clauDelPoble.js): la barra diu la fitxa, com abans. */
+  test('Onada 6 · la barra taronja de la pàgina del poble diu el naixement: la primera publicació declarada, si és anterior a la fitxa', () => {
+    const pastillaDe = (container) => [...container.querySelectorAll('section.bar-orange .btn-date-time span')].map((s) => s.textContent);
+    const ambDeclarada = pintaAmbMur({ ...POBLE, created_at: '2026-08-20T08:00:00.000Z' }, {
+      feedPosts: [{ id: 'vella', type: 'feed', title: 'La primera', poble_id: 'la-torre-de-les-macanes', created_at: '2026-08-02T08:00:00.000Z' }]
+    });
+    expect(pastillaDe(ambDeclarada)).toEqual(['10:00', '02/08/26']);
+    cleanup();
+    const nomesText = pintaAmbMur({ ...POBLE, created_at: '2026-08-20T08:00:00.000Z' }, {
+      marketItems: [{ id: 'mac', type: 'product', title: 'Mac', population: 'La Torre de les Maçanes', created_at: '2026-02-15T12:00:00.000Z' }]
+    });
+    expect(pastillaDe(nomesText)).toEqual(['10:00', '20/08/26']);
+  });
+
+  /* Ull del pla · renderBody també el pinta el lector de connexions del MAS
+     (ConnexioDetall), que no passa { detall: true }: allà, cap pestanya. */
+  test('Onada 6 · sense { detall: true } (el lector del MAS), cap barra de pestanyes', () => {
+    const { container } = render(<>{buildPoblesDetailSectionMeta({ t }).renderBody(POBLE)}</>);
+    expect(container.querySelector('.sdp-pestanyes')).toBeNull();
+    expect(container.querySelector('.sdp-pagina-accio')).not.toBeNull();
   });
 });
 

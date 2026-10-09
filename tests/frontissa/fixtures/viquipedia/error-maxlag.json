@@ -1,0 +1,12 @@
+{
+  "captureId": "viquipedia-error-maxlag-261009",
+  "capturedAt": "2026-10-08T23:15:02.941Z",
+  "url": "https://ca.wikipedia.org/w/api.php?action=query&format=json&formatversion=2&origin=*&maxlag=-1&meta=siteinfo",
+  "status": 200,
+  "headers": {
+    "content-type": "application/json; charset=utf-8",
+    "mediawiki-api-error": "maxlag",
+    "retry-after": "5"
+  },
+  "body": {"error":{"code":"maxlag","info":"Waiting for 10.64.16.206: 0.522315 seconds lagged.","host":"10.64.16.206","lag":0.522315,"type":"db","docref":"See https://ca.wikipedia.org/w/api.php for API usage. Subscribe to the mediawiki-api-announce mailing list at &lt;https://lists.wikimedia.org/postorius/lists/mediawiki-api-announce.lists.wikimedia.org/&gt; for notice of API deprecations and breaking changes."},"servedby":"mw-api-ext.eqiad.main-649f4df6ff-fhr2m"}
+}

@@ -352,6 +352,17 @@
   .sdp-pestanyes__pestanya[aria-selected="true"] { color: var(--sdp-text-titol); border-bottom-color: var(--sdp-accent-text); }
   .sdp-pestanyes__pestanya:focus-visible, .sdp-pestanyes__panell:focus-visible { outline: 3px solid var(--sdp-focus); outline-offset: -3px; }
   .sdp-pestanyes__panell { padding: var(--sdp-space-4) 0; }
+  /* Onada 6 (pàgina del poble) · La barra centrada (Pestanyes centrades):
+     marges automàtics a les puntes. Quan la llista desborda valen 0 i llisca
+     sense tallar la primera pestanya; justify-content: safe center no és del
+     Baseline 2022 (Safari 16). */
+  .sdp-pestanyes--centrades .sdp-pestanyes__pestanya:first-child { margin-inline-start: auto; }
+  .sdp-pestanyes--centrades .sdp-pestanyes__pestanya:last-child { margin-inline-end: auto; }
+  /* La pestanya de sèrie encavalca 2px la vora de la llista (margin-bottom
+     -2px): dins d'una llista amb overflow-x: auto, eixos 2px desborden en
+     vertical i Chrome hi pinta una barra de desplaçament. Ací la pestanya
+     s'assenta damunt de la vora, sense desbordar. */
+  .sdp-pestanyes--centrades .sdp-pestanyes__pestanya { margin-bottom: 0; }
 
   /* ── MOLLA DE PA · PAGINACIÓ ──────────────────────────────────────── */
   /* El separador és l'únic espai entre passos: el mateix marge als dos costats
@@ -847,6 +858,47 @@
   position: absolute;
   inset-block: calc((100% - var(--sdp-touch)) / 2);
   inset-inline: 0;
+}
+
+/* Onada 6 (prompt 261009_0230, punt 1; pla de l'Onada 5, tasca 16) ·
+   L'etiqueta «Agenda» d'un acte porta al dia de l'acte al Calendari
+   (EventCard i el detall): un enllaç dins de la píndola, que també porta
+   .sp-card-label (UniversalCard i PageFrame). Sense esta regla, el li i
+   l'enllaç sumaven els dos coixins i l'enllaç prenia el color dels enllaços
+   de base.css: la píndola canviava. Ací el coixí és el de l'enllaç (la
+   píndola visible fa el mateix: 24px d'alt i --sdp-space-3 per costat), el
+   color és el de la píndola i el ::after allarga la diana fins a
+   --sdp-touch. Només .sp-card-label--enllac: les etiquetes enllaçades
+   d'altres targetes no canvien de píxels.
+   Revisió del front · La diana creix només cap amunt (24px damunt de la
+   píndola): davall hi ha el copyright, que va després al DOM i la seua zona
+   tàctil (.sp-card-copyright__enllac) puja 16px, tot el marge que les
+   separa. Allargada per dalt i per baix, com --amb-accio, el copyright en
+   tapava els 12px de baix i l'etiqueta només rebia el clic en 36px. Damunt
+   hi ha el text o el títol, sense cap control. */
+.sp-card-label.sp-card-label--enllac {
+  padding: 0;
+}
+
+.sp-card-label--enllac > .sp-card-label {
+  position: relative;
+  padding: 0 var(--sdp-space-3);
+  border-radius: inherit;
+  color: inherit;
+  text-decoration: none;
+}
+
+.sp-card-label--enllac > .sp-card-label::after {
+  content: '';
+  position: absolute;
+  inset-block: calc(100% - var(--sdp-touch)) 0;
+  inset-inline: 0;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .sp-card-label--enllac > .sp-card-label:hover {
+    text-decoration: underline;
+  }
 }
 
 .sp-card-label__action {
@@ -1907,6 +1959,15 @@ section.bar-orange {
 .bar-orange > .sp-card-author { grid-column: 1; min-width: 0; }
 .bar-orange > .sdp-emoticona-barra { grid-column: 2; justify-self: center; }
 .bar-orange > .bar-actions { grid-column: 3; justify-self: end; }
+/* Correcció de l'Onada 6 (QA visual, 375×812: l'autoria es tallava a 100px
+   amb uns 100px lliures fins a la data; «Gent de la Torre» 127/100, «La
+   Torre de les Maçanes» 157/100) · Sense emoticona (BarraTaronja:
+   data-centre="buit") no hi ha res a centrar: les accions ocupen el seu
+   contingut i l'autoria la resta. L'enllaç de l'autoria no creix més enllà
+   del que es veu (justify-self: start i max-width: 100%). Amb emoticona o
+   en edició, la graella de T51 de sempre. */
+section.bar-orange[data-centre="buit"] { grid-template-columns: minmax(0, 1fr) auto max-content; }
+section.bar-orange[data-centre="buit"] > .sp-card-author { justify-self: start; max-width: 100%; }
 /* Poliment T51 (260928) · El botó d'emoticona penja directament de la barra,
    fora de .bar-actions: la correcció C15 (modules.css) no l'abastava i en
    tema fosc heretava l'anell general, ≈1,26:1 damunt del taronja (WCAG 2.4.7

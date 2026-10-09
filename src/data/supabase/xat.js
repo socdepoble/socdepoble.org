@@ -26,10 +26,13 @@
  *     sense ser-ne participant (xat_llig_fil_de_pagina) i que enviaMissatge hi
  *     entre abans del primer missatge (xat_entra_al_fil_de_pagina).
  *   - Sense la migració, la funció no existix (PGRST202 o 404) i es rebutja
- *     amb `codi: 'sense-capacitat'`.
+ *     amb `codi: 'sense-capacitat'`. L'absència es recorda per node i poble
+ *     fins que es torna a carregar la pàgina: les crides següents ja no van
+ *     al servidor (reiniciaMemoriaXatDePagina, per a les proves).
  * @errors Tot error llançat porta `code` i `retriable`. El text del servidor es
  *   conserva quan comença per `SDP-XAT-`; xarxa, temps d'espera i cancel·lació
- *   són reintentables, els codis SDP no. Excepció: els codis de
+ *   són reintentables, els codis SDP no (llevat de SDP-XAT-429, el límit de
+ *   missatges, que es buida als 5 s). Excepció: els codis de
  *   MISSATGES_SDP_HUMANS porten un text per a la persona (el `code` no
  *   canvia i el text del servidor queda a `cause`).
  */
@@ -37,7 +40,7 @@
 import { getClient } from './config.js';
 import { usuariDeSessio } from '../identitat.js';
 import { subjecteDeXat } from '../contracte.js';
-import { ambXatsPerDefecte } from '../xatsPerDefecte.js';
+import { ambXatsPerDefecte, vestixLaIAIA } from '../xatsPerDefecte.js';
 import { generateUUID, getResolvedConfig } from './runtime.js';
 import { handleError } from './utils.js';
 
@@ -73,10 +76,23 @@ const errorLocal = (missatge, code, retriable = false) => Object.assign(new Erro
    'section.xat.error.noDisponible' d'i18n.js (cinc llengües), que la
    interfície ha de traduir pel `code` (i18n.claus.test.js comprova que els
    dos textos coincidixen). No s'exporta: index.js reexporta tot xat.js com a
-   part del backend. */
+   part del backend.
+   Onada 6 (xat per als beta testers) · Tres codis més que una persona es pot
+   trobar el primer dia, amb la seua clau d'i18n (section.xat.error.*):
+   SDP-XAT-003 (encara no consta com a membre del poble: noMembre), SDP-XAT-013
+   (la pàgina no existix o no la pot vore: paginaNoVisible) i SDP-XAT-429 (el
+   límit de 15 missatges cada 5 s de 2609080200: massaMissatges). */
 const MISSATGES_SDP_HUMANS = Object.freeze({
-  'SDP-XAT-016': 'Esta persona no està disponible al xat.'
+  'SDP-XAT-003': 'Encara no consta que sigues d’este poble, i el xat és per a la gent del poble. Prova d’eixir i tornar a entrar.',
+  'SDP-XAT-013': 'Esta pàgina ja no existix o no la pots vore.',
+  'SDP-XAT-016': 'Esta persona no està disponible al xat.',
+  'SDP-XAT-429': 'Has enviat molts missatges en poc de temps. Espera uns segons i torna-ho a provar.'
 });
+
+/* Onada 6 · L'únic codi SDP que es pot tornar a provar: el límit de
+   missatges es buida als 5 s, i els reintents de XatContext (1, 2 i 4 s) ja
+   hi arriben. La resta de codis SDP són definitius. */
+const CODIS_SDP_REINTENTABLES = new Set(['SDP-XAT-429']);
 
 /* Auditoria 261007 (B) · El text d'un fetch que no ha arribat al servidor
    (Chrome, Firefox, Safari i React Native), com RE_FETCH d'errorsBackend.js.
@@ -117,10 +133,10 @@ function errorDeXat(error, perDefecte, config = {}) {
   const codiSdp = RE_CODI_SDP.exec(text)?.[0];
   if (codiSdp) {
     const huma = Object.hasOwn(MISSATGES_SDP_HUMANS, codiSdp) ? MISSATGES_SDP_HUMANS[codiSdp] : text;
-    return Object.assign(new Error(huma), { code: codiSdp, retriable: false, cause: error });
+    return Object.assign(new Error(huma), { code: codiSdp, retriable: CODIS_SDP_REINTENTABLES.has(codiSdp), cause: error });
   }
   if (/PGRST20[25]/.test(`${error?.code ?? ''} ${text}`)) {
-    return Object.assign(new Error('L’esquema del xat no està aplicat: cal executar la migració 260927_0200_xat_f0_fonament.sql.'),
+    return Object.assign(new Error('L’esquema del xat no està aplicat: cal executar la migració 2609270200_xat_f0_fonament.sql.'),
       { code: 'ESQUEMA', retriable: false, cause: error });
   }
   const detall = handleError(error);
@@ -416,8 +432,12 @@ export const loadFils = async (config = {}) => {
        regla és del mòdul neutre (xatsPerDefecte.js); ací només es crida, i
        només amb la resposta del servidor: sense poble no hi ha llista, i un
        error es propaga sense cap fila inventada. La llavor ja porta els seus
-       fils i no passa per ací. */
-    return ambXatsPerDefecte((Array.isArray(data) ? data : []).map(mapejaFil));
+       fils i no passa per ací.
+       Onada 6 (tasca 12) · El xat de la IAIA es diu «IAIA MarIA» i porta la
+       seua cara (vestixLaIAIA): el xat públic de /iaia que la fila obri ja no
+       la canvia de nom. La llavor no en necessita: el seu fil 'iaia' ja es
+       diu així, i el xat públic de la pàgina hi és un altre xat. */
+    return ambXatsPerDefecte((Array.isArray(data) ? data : []).map((f) => vestixLaIAIA(mapejaFil(f))));
   } catch (error) {
     throw errorDeXat(error, 'No s’han pogut carregar les converses.', config);
   }
@@ -461,9 +481,21 @@ const esFuncioAbsent = (error) => !jaNormalitzat(error)
   && (/PGRST202/.test(`${error?.code ?? ''} ${error?.message ?? ''}`) || Number(error?.status) === 404);
 
 const senseCapacitat = (error) => Object.assign(
-  new Error('Este node encara no té el xat de les pàgines (falta la migració 2609282100_xat_de_pagina.sql).'),
+  new Error('Este node encara no té el xat de les pàgines (falten les migracions 2609282100_xat_de_pagina.sql i 2610042330_xat_pagina_iaia.sql).'),
   { codi: 'sense-capacitat', code: 'SENSE_CAPACITAT', retriable: false, cause: error }
 );
+
+/* F6 (Onada 5) · Memòria de la RPC absent en esta càrrega de pàgina, per node
+   i poble, com la de contacte (T48, organizations.js). Una RPC que ha tornat
+   PGRST202 o 404 ja no es torna a cridar: cada clic deixava un altre 404 a la
+   consola. Només compta l'esquema absent, mai un SDP-XAT-0xx, la xarxa, la
+   cancel·lació ni un 5xx. Aplicada la migració, cal tornar a carregar. */
+const xatDePaginaAbsent = new Set();
+
+/* Per a les proves: la memòria és del mòdul i duraria d'una prova a l'altra. */
+export function reiniciaMemoriaXatDePagina() {
+  xatDePaginaAbsent.clear();
+}
 
 /**
  * Troba o crea el xat comú d'una Pàgina Universal. Una entitat, un poble o
@@ -472,6 +504,7 @@ const senseCapacitat = (error) => Object.assign(
  * servidor no et fa participant: ho seràs quan hi escrigues.
  */
 export const obriFilDePagina = async (objecte, config = {}) => {
+  let clau = '';
   try {
     comprovaSenyal(config);
     const seed = await local(config);
@@ -483,8 +516,11 @@ export const obriFilDePagina = async (objecte, config = {}) => {
     const supabase = await getClient(config);
     comprovaSenyal(config);
     if (usuariDeSessio()?.id !== user.id) throw errorLocal('La sessió ha canviat.', 'SESSIO');
-    const tenantId = getResolvedConfig(config).tenantId;
+    const { tenantId, supabaseUrl } = getResolvedConfig(config);
     if (!tenantId) throw errorLocal('No s’ha seleccionat cap poble.', 'SENSE_POBLE');
+    /* Entre la consulta de la memòria i la crida no hi ha cap await. */
+    clau = JSON.stringify(['obri_fil_de_pagina', supabaseUrl || '', tenantId]);
+    if (xatDePaginaAbsent.has(clau)) throw senseCapacitat();
     /* Cap ruta: el servidor la deriva del subjecte. El títol només li val si
        el subjecte no en té cap de propi (un contingut sense títol). */
     const { data, error, status } = await ambSenyal(supabase.rpc('obri_fil_de_pagina', {
@@ -497,9 +533,13 @@ export const obriFilDePagina = async (objecte, config = {}) => {
     const files = Array.isArray(data) ? data : [];
     const desti = files.find((f) => f?.desti === true);
     if (!desti?.id) throw errorLocal('El servidor no ha tornat el xat de la pàgina.', 'SENSE_CONFIRMACIO');
-    return { filId: desti.id, fils: files.map(mapejaFil) };
+    /* Onada 6 (tasca 12) · El mateix vestit que loadFils: obrir-lo no el reanomena. */
+    return { filId: desti.id, fils: files.map((f) => vestixLaIAIA(mapejaFil(f))) };
   } catch (error) {
-    if (esFuncioAbsent(error)) throw senseCapacitat(error);
+    if (esFuncioAbsent(error)) {
+      if (clau) xatDePaginaAbsent.add(clau);
+      throw senseCapacitat(error);
+    }
     throw errorDeXat(error, 'No s’ha pogut obrir el xat de la pàgina.', config);
   }
 };

@@ -33,11 +33,15 @@ import { useUIActions } from '../../app/contexts/UIContext';
 import { buildDetailSectionMeta, imatgePropiaDelDetall } from './detailSectionMeta.jsx';
 import { rutaDePerfilDAutor } from '../../config/navigation.js';
 import { resolveAsset } from '../../config/assetResolver.js';
-import { COPYRIGHT_SDP, dataDElement } from '../../components/universal/editorial.js';
+import {
+  COPYRIGHT_SDP, COPYRIGHT_VIQUIPEDIA, RUTA_CALENDARI, dataDElement, dataHoraDeBarra, rutaCalendariDeLaData
+} from '../../components/universal/editorial.js';
+import { acteAEsdeveniment } from '../mur/agendaMur.js';
 import { DEFAULT_AUTHOR, esAvatarSegur, esMarcaDeLEntitat } from '../../components/universal/UniversalUtils.js';
 import { useResolvedAssetState } from '../../hooks/useResolvedAsset.js';
 import { esFontImatgePropia } from '../../utils/sanitize.js';
 import { pageKeyDeRuta, paginaDeRuta, propsDePaginaDeText } from '../text/paginaDeText.js';
+import { nomDeLaGent } from '../pobles/nomsDelPoble.js';
 
 const CAP = Object.freeze([]);
 
@@ -148,46 +152,90 @@ export function useLogoEntitatDElement(item) {
    de davant de l'H1, el carrusel, les variacions, og:image i el lector del
    MAS (PublicacioDetall). */
 
+/* Onada 6 (prompt 261009_0230, punt 1; pla de l'Onada 5, tasca 16) · La
+   primera etiqueta del detall és la de la secció. La d'un acte («Agenda»: la
+   meta dels actes té per llista /calendari) porta al dia de l'acte al
+   Calendari, la vista Mes amb el dia triat, com la de la seua targeta
+   (EventCard · etiquetaAgendaDelDia). El dia és el de la insígnia i la
+   pastilla de l'acte (EventCard · fontsDeLActe, llegit en hora local amb
+   dataHoraDeBarra); EventCard no s'importa ací per no arrossegar el barril de
+   Pedra Seca (Esmena 3 del pla 261007_1645). Sense acte vàlid, l'etiqueta de
+   sempre. */
+function etiquetaDeLaSeccio(section, item) {
+  const etiqueta = { text: section.label, className: 'sdp-badge-system' };
+  const esdeveniment = section?.listPath === RUTA_CALENDARI ? acteAEsdeveniment(item) : null;
+  if (!esdeveniment) return etiqueta;
+  const { dateTime } = dataHoraDeBarra({ publicat: esdeveniment.totElDia ? esdeveniment.inici.data : esdeveniment.inici.dataHora });
+  const ruta = rutaCalendariDeLaData(typeof dateTime === 'string' ? dateTime.slice(0, 10) : null);
+  return ruta === RUTA_CALENDARI ? etiqueta : { ...etiqueta, className: 'sdp-badge-system sp-card-label--enllac', href: ruta };
+}
+
 /** Les props de la UniversalPage d'un element: les de la pàgina de detall
  *  (ItemDetailSection), sense les accions ni chrome. L'autoria aporta el logotip. */
 export function paginaDElement(section, item) {
   const titol = section.getTitle(item);
   const rutaDAutoria = rutaDePerfilDAutor(item);
   const logoPropi = logoEntitatDElement(item);
+  /* Onada 5 (ordre del Mestre, 261008) · Les metes no porten id: un poble es
+     reconeix per la seua llista (listPath), com esSeccioDelMur. Abans es
+     mirava section.id === 'pobles', que no era cert mai, i la barra taronja
+     d'un poble signava amb l'autor de sèrie. */
+  const esPoble = section?.listPath === '/pobles';
   let authorName = item.author_name;
   let authorLocation = item.author_location || item.location;
   let authorAvatar = item.author_avatar || item.avatar_url || item.avatarUrl;
 
-  if (section.id === 'pobles' && !authorName) {
-    if (titol === 'La Torre de les Maçanes') authorName = 'Gent de La Torre';
-    else if (/^[aeiouhàèéíòóú]/i.test(titol)) authorName = `Gent d'${titol}`;
-    else authorName = `Gent de ${titol}`;
-    
-    if (!authorLocation) authorLocation = titol;
+  if (esPoble) {
+    /* La barra signa com la targeta: l'entitat (la gent del poble) i el
+       poble. Les dades manen (l'`author` de la fitxa: la llavor porta el nom
+       curt «Gent de la Torre»); si no en porta, la regla única de
+       nomsDelPoble.js sobre el nom del poble, no sobre l'H1 (getTitle ja és
+       «Gent de …»). Sense nom de poble, l'H1. */
+    const nomDelPoble = item.title || item.name || '';
+    authorName = authorName || item.author || nomDeLaGent(nomDelPoble) || titol;
+
+    if (!authorLocation) authorLocation = nomDelPoble || titol;
     if (!authorAvatar) authorAvatar = item.avatar_url || item.image_url;
   }
 
   return {
     title: titol,
     subtitle: section.getSubtitle(item),
-    lead: item.entradilla,
+    /* Revisió de l'Onada 5 · L'entradilla és la de l'element. Només un poble
+       hi posa el seu text (content, el de la Viquipèdia) quan no en porta:
+       el content d'una publicació, d'una nota o d'un acte és el cos HTML, que
+       ja es pinta davall. */
+    lead: esPoble ? (item.entradilla || item.content) : item.entradilla,
     heroImage: imatgePropiaDelDetall(section, section.getImage(item)),
     heroAlt: titol,
-    labels: [
-      { text: section.label, className: 'sdp-badge-system' },
-      { text: item.id, className: 'sdp-badge-category' }
-    ],
-    /* T39 · els drets triats a la publicació; el text de sèrie, només si no en porta. */
-    copyright: item.copyright || COPYRIGHT_SDP,
+    /* Onada 5 (ordre del Mestre, 261008) · Un poble es classifica per la
+       província (categoria) i la comarca (etiqueta); la que no porta, no es
+       pinta. */
+    labels: esPoble
+      ? [
+        { text: section.label, className: 'sdp-badge-system' },
+        { text: textNet(item.provincia), className: 'sdp-badge-category' },
+        { text: textNet(item.comarca), className: 'sdp-badge-tag' }
+      ].filter((label) => label.text)
+      : [
+        etiquetaDeLaSeccio(section, item),
+        { text: item.id, className: 'sdp-badge-category' }
+      ],
+    /* T39 · els drets triats a la publicació; el text de sèrie, només si no en porta.
+       Onada 5 · El d'un poble és el de la Viquipèdia (CC BY-SA), el de la seua targeta. */
+    copyright: item.copyright || (esPoble ? COPYRIGHT_VIQUIPEDIA : COPYRIGHT_SDP),
     authorName,
     authorLocation,
     authorAvatar: imatgePropiaDelDetall(section, authorAvatar),
     /* La marca depén de la identitat declarada, encara que la boina del
        Mercat porte al perfil públic. Cap nom visible dona un logotip.
        Ordre E (261007) · El logotip propi de l'element (logo_image) hi passa
-       davant: el que va triar qui publica. */
+       davant: el que va triar qui publica.
+       Onada 5 (ordre del Mestre, 261008) · Un poble porta el logotip de Sóc
+       de Poble damunt de l'H1. La barra ja signa amb la gent del poble, i
+       PageFrame només el posa sol quan signa Sóc de Poble: cal dir-ho ací. */
     ...(logoPropi ? { logoEntitat: logoPropi }
-      : rutaDAutoria === DEFAULT_AUTHOR.href ? { logoEntitat: DEFAULT_AUTHOR.logo } : {}),
+      : esPoble || rutaDAutoria === DEFAULT_AUTHOR.href ? { logoEntitat: DEFAULT_AUTHOR.logo } : {}),
     /* T4: l'autoria de la barra taronja enllaça al perfil públic de qui signa. */
     authorHref: section.getAuthorHref ? section.getAuthorHref(item) : rutaDAutoria,
     /* T51 · la regla de data viu a editorial.js (pura, sense React). */

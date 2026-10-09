@@ -168,3 +168,32 @@ describe('elementDeFilaPublicada · el payload d’un veí no és autoritat', ()
     expect(fila(['x'])).not.toHaveProperty('0');
   });
 });
+
+/* Onada 6 (decisió 2 de la nit del 261009) · El mapejador d'escriptura ja no
+   persistix «La Torre de les Maçanes» com a poble d'una publicació del Mur
+   que no en porta; i el poble declarat (poble_id) només viatja amb la forma
+   d'un id de poble. */
+describe('mapSectionSubmissionToItem · el poble de la publicació', () => {
+  const publicacio = (payload) => mapSectionSubmissionToItem({ id: 'p1', sectionId: 'mur', createdAt: PUBLICAT, payload: { title: 'Fira', ...payload } });
+
+  test('sense poble al payload, cap town_name inventat', () => {
+    const item = publicacio({});
+    expect(item).not.toHaveProperty('town_name');
+    expect(JSON.stringify(item)).not.toContain('La Torre de les Maçanes');
+  });
+
+  test('el town_name del payload es conserva net', () => {
+    expect(publicacio({ town_name: ' Relleu ' }).town_name).toBe('Relleu');
+  });
+
+  test('poble_id: un slug viatja (en minúscules); qualsevol altra cosa, no', () => {
+    expect(publicacio({ poble_id: 'la-torre-de-les-macanes' }).poble_id).toBe('la-torre-de-les-macanes');
+    expect(publicacio({ poble_id: ' Sella ' }).poble_id).toBe('sella');
+    for (const brossa of ['La Torre de les Maçanes', '../../x', 'a--b', '', { id: 'sella' }, 'x'.repeat(81)]) {
+      expect(publicacio({ poble_id: brossa }), JSON.stringify(brossa)).not.toHaveProperty('poble_id');
+    }
+    // També al Mercat i a l'agenda.
+    expect(mapSectionSubmissionToItem({ id: 'm1', sectionId: 'mercat', createdAt: PUBLICAT, payload: { poble_id: 'orxeta' } }).poble_id).toBe('orxeta');
+    expect(acte({ poble_id: 'tibi' }).poble_id).toBe('tibi');
+  });
+});

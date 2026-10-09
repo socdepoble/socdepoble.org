@@ -4,32 +4,49 @@ import { useSearchParams } from '../../../app/contexts/RouterContext';
 import { GraellaXifres } from '../XifresMas.jsx';
 import { xifresDeVista } from '../xifresMas.js';
 import { AvisDeSkill } from './AvisosMapa.jsx';
-import { esForaDeCens, esOrfena, resumInventari, semaforDe } from './inventariMapa.js';
+import { rutaPecaAlGraf } from '../consolaPagines.js';
+import { AccionsFitxer } from './DetallPeca.jsx';
+import { fitxerDelNode } from './grafMapa.js';
+import {
+  codisReparats, esForaDeCens, esFrontmatterInvalid, esOrfena, esSenseDisparador, ordreReparacio, resumInventari
+} from './inventariMapa.js';
 
 /* Inventari de skills (03_inventari_skills.md): quines skills tenim de veres
-   i en quin estat estan. És la pestanya «Skills» d'Emowe amb el semàfor
-   adaptat: 3 avisos o més, roig; 1 o 2, ambre; cap, verd. El semàfor i els
-   filtres viuen a inventariMapa.js, i la targeta del tauler compta amb ells:
-   el que pinta «Cal reparar» és el mateix roig d'esta taula.
+   i en quin estat estan. És la pestanya «Skills» d'Emowe amb el semàfor de la
+   Consola: un avís alt, roig; només mitjans o baixos, ambre; cap, verd (Onada
+   6: per gravetat, no per recompte). El semàfor i els filtres viuen a
+   inventariMapa.js, i la targeta del tauler compta amb ells: el que pinta
+   «Cal reparar» és el mateix roig d'esta taula.
    Ordre del Mestre, 261004 (xat: cap xifra solta) · Les xifres de la pàgina
    (les de la vista «inventari», VISTES_XIFRES) són targetes senceres amb
    boina i pàgina pròpia (XifresMas.jsx).
    Derogat per l'ordre del Mestre del 261004 (xat: cap xifra solta): les
-   xifres com a targetes compactes del Panell de Control (Xifra). */
+   xifres com a targetes compactes del Panell de Control (Xifra).
+   Onada 6 (requisit 11: comprovació de botons) · Filtres per semàfor (roig,
+   ambre, verd), sense disparador útil i frontmatter invàlid, i a cada fila
+   els botons de la peça de l'Explorador (DetallPeca.jsx · AccionsFitxer):
+   Veure al graf, Obrir a l'editor (només en desenvolupament), Copiar la ruta
+   i Copiar l'ordre de reparació, que només copia. */
 
-const FILTRES = Object.freeze([
+export const FILTRES = Object.freeze([
   { valor: 'totes', text: 'Totes', f: () => true },
   { valor: 'avisos', text: 'Amb avisos', f: (s) => s.avisos.length > 0 },
+  { valor: 'roig', text: 'Roig', f: (s) => s.semafor === 'roig' },
+  { valor: 'ambre', text: 'Ambre', f: (s) => s.semafor === 'ambre' },
+  { valor: 'verd', text: 'Verd', f: (s) => s.semafor === 'verd' },
   { valor: 'orfes', text: 'Òrfenes', f: esOrfena },
   { valor: 'cens', text: 'Fora d’algun cens', f: esForaDeCens },
+  { valor: 'sense-disparador', text: 'Sense disparador útil', f: esSenseDisparador },
+  { valor: 'frontmatter', text: 'Frontmatter invàlid', f: esFrontmatterInvalid },
   { valor: 'nucli', text: 'Nucli', f: (s) => s.atributs.core === true }
 ]);
-/* Ordre del Mestre, 261004 · El filtre viu a la URL (?filtre=avisos|orfes|
-   cens|nucli), com el sentinella triat de PanellSentinelles: una xifra d'«El
-   Mas en xifres» hi porta, i el que es comparteix és el que es veu. «Totes»
-   no escriu res. Sense un router llegible (un amfitrió o una prova sense
-   RouterProvider), el filtre és estat local, com abans. La forma
-   `return useSearchParams()` és la que rules-of-hooks accepta dins d'un try. */
+/* Ordre del Mestre, 261004 · El filtre viu a la URL (?filtre=avisos|roig|
+   ambre|verd|orfes|cens|sense-disparador|frontmatter|nucli), com el sentinella
+   triat de PanellSentinelles: una xifra d'«El Mas en xifres» hi porta, i el
+   que es comparteix és el que es veu. «Totes» no escriu res. Sense un router
+   llegible (un amfitrió o una prova sense RouterProvider), el filtre és estat
+   local, com abans. La forma `return useSearchParams()` és la que
+   rules-of-hooks accepta dins d'un try. */
 export const CLAU_FILTRE = 'filtre';
 function useConsultaApp() {
   try {
@@ -40,10 +57,10 @@ function useConsultaApp() {
 }
 const filtreValid = (valor) => (FILTRES.some((x) => x.valor === valor) ? valor : null);
 
-function semafor(n) {
-  const color = semaforDe(n);
-  if (color === 'roig') return <Insignia to="error">roig · {n}</Insignia>;
-  if (color === 'ambre') return <Insignia to="avis">ambre · {n}</Insignia>;
+function semafor(s) {
+  const n = s.avisos.length;
+  if (s.semafor === 'roig') return <Insignia to="error">roig · {n}</Insignia>;
+  if (s.semafor === 'ambre') return <Insignia to="avis">ambre · {n}</Insignia>;
   return <Insignia to="exit">verd</Insignia>;
 }
 const siNo = (v) => (v === null || v === undefined ? '—' : v ? 'sí' : 'no');
@@ -79,18 +96,23 @@ export function InventariMapa({ mapa, locale }) {
       </Camp>
       <PillToggle etiqueta="Quines skills es mostren" opcions={FILTRES.map(({ valor, text }) => ({ valor, text }))}
         valor={filtre} onCanvi={setFiltre} />
+      {/* Correcció de l'Onada 6 (QA visual) · en escriptori la taula és més
+          ampla que la pàgina: la columna d'accions es queda a la vista,
+          enganxada a la dreta (modules.css · .sdp-inventari__accions). La
+          caixa de la taula no porta cap classe pròpia (T9, vistesMapa.test). */}
       <Taula titol="Inventari de skills" densa>
         <thead>
           <tr>
             <th scope="col">Semàfor</th><th scope="col">Skill</th><th scope="col">Estat</th>
             <th scope="col">Nucli</th><th scope="col">Paraules</th><th scope="col">Tokens ≈</th>
             <th scope="col">Lliçons</th><th scope="col">Disc · índex · Claude · segell</th><th scope="col">Avisos</th>
+            <th scope="col" className="sdp-inventari__accions">Accions</th>
           </tr>
         </thead>
         <tbody>
           {files.length ? files.map((s) => (
             <tr key={s.id}>
-              <td>{semafor(s.avisos.length)}</td>
+              <td>{semafor(s)}</td>
               <th scope="row">{s.atributs.core ? <strong>{s.nom}</strong> : s.nom}</th>
               <td>{s.atributs.status ?? 'sense estat'}</td>
               <td>{siNo(s.atributs.core)}</td>
@@ -100,8 +122,12 @@ export function InventariMapa({ mapa, locale }) {
               <td>{[s.atributs.al_disc, s.atributs.al_index, s.atributs.al_cataleg_claude, s.atributs.al_segell].map(siNo).join(' · ')}</td>
               {/* Ordre del Mestre, 261004 · el codi, la frase i les evidències, no només el codi cru. */}
               <td>{s.avisos.length ? s.avisos.map((a) => <AvisDeSkill key={a.codi} avis={a} />) : 'cap'}</td>
+              <td className="sdp-inventari__accions">
+                <AccionsFitxer ruta={fitxerDelNode(s).ruta} avisos={s.avisos} graf={rutaPecaAlGraf(s.id)}
+                  ordre={ordreReparacio(s)} repara={codisReparats(s)} nom={s.nom} discret />
+              </td>
             </tr>
-          )) : <tr><td colSpan={9}>Cap skill casa amb el filtre.</td></tr>}
+          )) : <tr><td colSpan={10}>Cap skill casa amb el filtre.</td></tr>}
         </tbody>
       </Taula>
     </>

@@ -14,7 +14,7 @@ import { useFontDev } from './useFontDev.js';
 import {
   RUTA_CONSOLA, avisosDeVigilancia, copyConsola, desaPrivacitat,
   estatsPagina, etiquetesPagina, llegixPrivacitat, llegixVistes, marcaVista, mesuresPagina,
-  paginaConsola, paginesConsola, resumPagina, segmentPagina, signaturaPagina
+  paginaConsola, paginesConsola, problemesPagina, resumPagina, segmentPagina, signaturaPagina
 } from './consolaPagines.js';
 import { Mono, Privat, PrivacitatConsola, TargetaConsola, tornaAlCim } from './peces.jsx';
 import { PaginaPanellPols, PaginaPols } from './PolsConsola.jsx';
@@ -22,6 +22,7 @@ import { panellPols, segmentPols } from './polsConsola.js';
 import { GraellaXifres, PaginaXifra, XifresMas } from './XifresMas.jsx';
 import { XIFRA_DE_CODI, segmentXifra, xifraDelMas, xifresDeLaGraella, xifresDeVista } from './xifresMas.js';
 import { entradetaPlana } from './xifresComu.js';
+import { rutaDelNode } from './problemesConsola.js';
 import { MapaConsola } from './mapa/MapaConsola.jsx';
 import { useMapa } from './mapa/useMapa.js';
 import { ExploradorMapa } from './mapa/ExploradorMapa.jsx';
@@ -118,8 +119,8 @@ function AmbMapa({ font, vista, children }) {
 /* ── Tauler i peces compartides ─────────────────────────────────────────── */
 
 /* T12 (ordre del Mestre, 260930) · La ruta de l'avís és el seu node sense el
-   tipus (document:.agents/SKILLS_SEAL.json). */
-const rutaDelNode = (node) => String(node ?? '').replace(/^[a-z]+:/, '');
+   tipus (document:.agents/SKILLS_SEAL.json): problemesConsola.js · rutaDelNode,
+   l'única còpia (correcció de l'Onada 6, revisió adversarial). */
 
 /**
  * Quan la vigilància mateixa està trencada (CODIS_VIGILANCIA, consolaPagines.js),
@@ -187,6 +188,7 @@ export function ConsolaTauler({ consola, mapa, cimRef }) {
             <TargetaConsola key={p.id} icona={ICONES[p.id]} titol={p.title} subtitol={p.subtitle}
               entradilla={p.lead} metriques={mesuresPagina(p.id, fonts)} dada={resumPagina(p.id, fonts)} a={p.ruta}
               estats={estatsPagina(p.id, fonts, ara)}
+              problemes={problemesPagina(p.id, fonts)}
               creat={dataDelCopy()}
               generat={delMapa ? mapa.mapa?.generat : consola.dades?.generat}
               etiquetes={etiquetesPagina(p.id, fonts, vistes?.[p.id], ara)} />

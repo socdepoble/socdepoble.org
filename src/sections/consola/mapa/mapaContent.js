@@ -174,6 +174,38 @@ export function resumMapa(mapa) {
   };
 }
 
+/* ── Avisos per causa arrel (Onada 6, requisit 10: duplicitats) ────────────
+   Una sola causa es comptava com a molts avisos: el catàleg de Claude
+   desquadrat en fa un per skill; el contracte que llig un fitxer absent, dos
+   (la skill i el fitxer); el segell, un per skill més el del segell sencer.
+   Els avisos no canvien (cada peça conserva el seu); ací s'agrupen per la
+   causa que els repara d'un colp. CAUSA_DE_CODI diu quins codis comparteixen
+   causa; la resta, un codi és una causa. */
+export const CAUSA_DE_CODI = Object.freeze({
+  'fitxer-absent': 'contracte-absent',
+  'segell-divergent': 'fora-segell',
+  'segell-trencat': 'fora-segell'
+});
+
+/**
+ * Els avisos agrupats per causa: [{ causa, codis, severitat (la més greu),
+ * avisos, peces }], la més greu primer i, a igualtat, la que en toca més.
+ */
+export function avisosPerCausa(avisos) {
+  const grups = new Map();
+  for (const a of avisos ?? []) {
+    const causa = CAUSA_DE_CODI[a.codi] ?? a.codi;
+    if (!grups.has(causa)) grups.set(causa, { causa, codis: [], severitat: a.severitat, avisos: [], peces: [] });
+    const g = grups.get(causa);
+    g.avisos.push(a);
+    if (!g.codis.includes(a.codi)) g.codis.push(a.codi);
+    if (!g.peces.includes(a.node)) g.peces.push(a.node);
+    if ((ORDRE_SEVERITAT[a.severitat] ?? 3) < (ORDRE_SEVERITAT[g.severitat] ?? 3)) g.severitat = a.severitat;
+  }
+  return [...grups.values()].sort((x, y) => (ORDRE_SEVERITAT[x.severitat] ?? 3) - (ORDRE_SEVERITAT[y.severitat] ?? 3)
+    || y.avisos.length - x.avisos.length || x.causa.localeCompare(y.causa));
+}
+
 /** Totes les evidències d'un avís, en ordre: la llista sencera si n'hi ha més d'una, la sola, o cap. */
 export function evidenciesDe(avis) {
   if (Array.isArray(avis?.evidencies) && avis.evidencies.length) return avis.evidencies;

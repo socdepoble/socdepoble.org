@@ -2,11 +2,12 @@
    de la persona (preferenciesApps.js, sobre getVal/setVal de storage.js). */
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import { delVal, getVal, setVal } from '../../config/storage.js';
-import { manifestDeProva, manifestExternDeProva } from './__fixtures__/manifests.js';
+import { manifestDeProva, manifestExternDeProva, manifestModulDeProva } from './__fixtures__/manifests.js';
 import {
   ESTATS_APP, avaluaApp, avaluaInterruptor, esAmaDelDocument, estatApp, personaPotApagar, sanejaAppsDeclarades
 } from './interruptors.js';
 import { validaManifestApp } from './manifestApp.js';
+import { APPS_INTERNES } from './registreApps.js';
 import {
   CLAU_PREFERENCIES, _reiniciaPreferencies, desaAppApagada, desaInterruptorApagat, llegeixPreferencies,
   normalitzaPreferencies, subscriuPreferencies
@@ -78,8 +79,44 @@ describe('estatApp · les capes', () => {
       .toEqual({ estat: 'unavailable', motiu: 'document-no-propi' });
     expect(avaluaApp(salut, { ...PRODUCCIO, amaDelDocument: undefined }).motiu).toBe('document-no-propi');
     expect(estatApp(salut, PRODUCCIO)).toBe('available');
-    /* Les financeres no porten esta guarda. */
-    expect(estatApp(app({ dadesPersonals: 'financeres' }), { ...PRODUCCIO, amaDelDocument: false })).toBe('available');
+  });
+
+  /* Onada 6 (261009) · la guarda financera, com la de salut: la Gestoria mai
+     dins d'un WordPress ni de l'iframe d'un tercer, on l'IndexedDB és de
+     l'origen de l'amfitrió. Amb el seu motiu, que diu «financeres». */
+  test('financeres: només si l’App és l’ama del document, amb el seu motiu', () => {
+    const financera = app({ dadesPersonals: 'financeres' });
+    expect(avaluaApp(financera, { ...PRODUCCIO, amaDelDocument: false }))
+      .toEqual({ estat: 'unavailable', motiu: 'document-no-propi-financeres' });
+    expect(avaluaApp(financera, { ...PRODUCCIO, amaDelDocument: undefined }).motiu).toBe('document-no-propi-financeres');
+    expect(avaluaApp(financera, { ...PRODUCCIO, amaDelDocument: 'true' }).estat).toBe('unavailable');
+    expect(avaluaApp(financera, PRODUCCIO)).toEqual({ estat: 'available', motiu: null });
+    /* Un mòdul financer (sdp.modul.v1) porta la mateixa guarda. */
+    const modul = validaManifestApp(manifestModulDeProva({ dadesPersonals: 'financeres' }), { origen: 'modul' }).manifest;
+    expect(avaluaApp(modul, { ...PRODUCCIO, amaDelDocument: false }).motiu).toBe('document-no-propi-financeres');
+    /* Sense dades personals, cap guarda de document. */
+    expect(estatApp(app({ dadesPersonals: false }), { ...PRODUCCIO, amaDelDocument: false })).toBe('available');
+  });
+
+  test('la Gestoria real (dadesPersonals financeres) no s’obri dins d’una altra web, ni encesa per l’amfitrió', () => {
+    const gestoria = APPS_INTERNES.find((candidata) => candidata.id === 'gestoria');
+    expect(gestoria.dadesPersonals).toBe('financeres');
+    const dinsDUnWordPress = { ...PRODUCCIO, produccio: false, declaradesPerAmfitrio: ['gestoria'], amaDelDocument: false };
+    expect(avaluaApp(gestoria, dinsDUnWordPress)).toEqual({ estat: 'unavailable', motiu: 'document-no-propi-financeres' });
+    /* Dins d'un iframe: esAmaDelDocument diu que no, encara que l'amfitrió declare manageDocumentHead. */
+    const iframe = { self: 1, top: 2 };
+    expect(avaluaApp(gestoria, { ...dinsDUnWordPress, amaDelDocument: esAmaDelDocument({ manageDocumentHead: true }, iframe) }).motiu)
+      .toBe('document-no-propi-financeres');
+    /* Al lloc propi, en desenvolupament: com fins ara. */
+    expect(estatApp(gestoria, { ...dinsDUnWordPress, amaDelDocument: true })).toBe('available');
+  });
+
+  test('un mòdul no passa per la capa de build: el seu codi no és del paquet', () => {
+    const modul = validaManifestApp(manifestModulDeProva(), { origen: 'modul' }).manifest;
+    expect(avaluaApp(modul, PRODUCCIO)).toEqual({ estat: 'available', motiu: null });
+    expect(personaPotApagar(modul, PRODUCCIO)).toBe(true);
+    expect(avaluaApp(validaManifestApp(manifestModulDeProva({ entorn: 'desenvolupament' }), { origen: 'modul' }).manifest, PRODUCCIO).motiu)
+      .toBe('entorn-desenvolupament');
   });
 
   test('premium: sense dret, unsubscribed i ho diu', () => {

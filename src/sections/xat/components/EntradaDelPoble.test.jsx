@@ -62,6 +62,22 @@ test('en seed, sense comunitat, la crea pel camí del «Comentar» (?sobre=poble
   expect(url.searchParams.get('titol')).toBe('Gent de la Torre');
 });
 
+/* Integració Xat i Pobles (Onada 6) · Sense nom declarat, el grup que es crea
+   es diu com la gent del poble de la fitxa (towns), també un poble inventat;
+   que arriben les fitxes després no torna a decidir. */
+test('en seed, sense nom declarat i amb les fitxes, el grup nou es diu com la gent', () => {
+  const towns = [{ id: 'olivera-inventada', title: "L'Olivera Inventada" }];
+  const poble = { id: 'olivera-inventada', nom: '' };
+  const { rerender } = render(<EntradaDelPoble poble={poble} comunitat={null} towns={null} aLaLlista />);
+  rerender(<EntradaDelPoble poble={poble} comunitat={null} towns={towns} aLaLlista />);
+  decidix();
+  expect(mocks.navigate).toHaveBeenCalledTimes(1);
+  const url = new URL(mocks.navigate.mock.calls[0][0], 'https://x.invalid');
+  expect(url.searchParams.get('sobre')).toBe('poble:olivera-inventada');
+  expect(url.searchParams.get('titol')).toBe("Gent de l'Olivera Inventada");
+  expect(url.searchParams.get('ruta')).toBe('/pobles/olivera-inventada');
+});
+
 test('en remot, sense comunitat, no crea res (pla 2135, P2) però consumix l\'entrada', () => {
   mocks.xat.modeDades = 'remote';
   render(<EntradaDelPoble poble={POBLE} comunitat={null} aLaLlista />);

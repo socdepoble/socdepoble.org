@@ -184,10 +184,12 @@ export function instalaCarregador(finestra, doc, script, { modul, claus, fitxer 
     else pinta();
   }
 
-  /* Les mateixes claus i el mateix ordre que l'API real: Object.keys hi coincidix. */
+  /* Les mateixes claus i el mateix ordre que l'API real: Object.keys hi coincidix.
+     Les lectures (isReady, CONTRACTE_BACKEND i, des de l'Onada 6, el `nucli`
+     dels mòduls) no s'encuen: fins a l'adopció valen false o undefined. */
   const provisional = {};
   for (const clau of claus) {
-    if (clau === 'isReady' || clau === 'CONTRACTE_BACKEND') {
+    if (clau === 'isReady' || clau === 'CONTRACTE_BACKEND' || clau === 'nucli') {
       Object.defineProperty(provisional, clau, {
         enumerable: true,
         get: () => (api ? api[clau] : clau === 'isReady' ? false : undefined)

@@ -22,6 +22,10 @@ const FITXERS = [
   'src/components/universal/barres/pastillaCalendari.test.jsx',
   'src/components/PedraSeca/organismes/UniversalCard.test.jsx',
   'src/components/universal/EventCard.test.jsx',
+  // Onada 6 (prompt 261009_0230, punt 1) · l'etiqueta «Agenda» porta al dia (rutaCalendariDeLaData).
+  'src/components/universal/EventCard.jsx',
+  'src/components/universal/editorial.rutaCalendariDeLaData.test.js',
+  'src/sections/detail/elementDeSeccio.agenda.test.jsx',
   'src/sections/disseny/cataleg/detalls/EspecimenControlsBarra.jsx',
   'src/sections/disseny/cataleg/detalls/EspecimenUniversalCard.jsx',
   'src/sections/disseny/cataleg/detalls/EspecimenEmoticonaBarra.jsx',

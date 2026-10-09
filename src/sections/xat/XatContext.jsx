@@ -148,9 +148,12 @@ import {
   teCapacitat
 } from '../../data/backendPort.js';
 import { subjecteDeXat } from '../../data/contracte.js';
-import { ambXatsPerDefecte, gestionaLEntitatPilot, senseXatPerDefecte } from '../../data/xatsPerDefecte.js';
+import { ambXatsPerDefecte, esXatDeLaIAIA, gestionaLEntitatPilot, senseLaIAIA, senseXatPerDefecte } from '../../data/xatsPerDefecte.js';
+import useNivellIaia from '../realitat/useNivellIaia.js';
 import { useSession } from '../../app/contexts/SessionContext';
 import { useIdentitat } from '../../app/contexts/IdentitatContext.jsx';
+import { useCoreContent } from '../../app/contexts/CoreContentContext';
+import { filsAmbLaGentDelPoble } from '../pobles/xatDelPoble.js';
 import { normalizeBackendConfig, backendScope } from '../../config/backendConfig.js';
 import { getDefaultUserId } from '../../data/appSeed.js';
 import { useLocation } from '../../app/contexts/RouterContext';
@@ -182,6 +185,7 @@ import {
   trobaPendent
 } from './missatges.js';
 import { buidaEsborranys } from './esborranys.js';
+import { recordaRutaForaDelXat } from './informeDError.js';
 import { clauDia } from './temps.js';
 
 export const XatContext = createContext(null);
@@ -340,7 +344,9 @@ const BUIT = {
   contactesFrequents: CAP,
   marcaLlegides: () => 0,
   modeDades: 'remote',
-  consumixEntrada: () => false
+  consumixEntrada: () => false,
+  iaiaApagada: false,
+  esFilAmagat: () => false
 };
 
 /** Espera `ms` o fins que el senyal s'aborte. Torna `false` si s'ha abortat. */
@@ -367,6 +373,9 @@ function AvisadorXat({ registra }) {
   const { pathname } = useLocation();
   const { showToast } = useToast();
   const { t } = useUIActions();
+  /* Onada 6 · On era la persona abans d'entrar al Xat: la ruta (sense dades)
+     de l'informe de «Informa d'un error» (informeDError.js). */
+  useEffect(() => { recordaRutaForaDelXat(pathname); }, [pathname]);
   useEffect(() => {
     registra((nom) => {
       if (RUTA_XAT.test(String(pathname || ''))) return;
@@ -388,6 +397,13 @@ export function XatProvider({ children, config }) {
   const persona = Array.isArray(identitats) ? identitats.find((i) => i?.tipus === 'persona' && i.id === usuari?.id) : null;
   const joNom = persona?.nom || null;
   const joAvatar = persona?.avatar || null;
+  /* Onada 6 (tasca 12) · Amb el nivell d'IA a 0 (Apagada) la IAIA no apareix
+     al xat: ni a la llista (i, per tant, a les cerques i a les comunitats),
+     ni als no llegits, ni als contactes freqüents, ni als avisos. Les dades
+     no es toquen: només el que es veu. En tornar a 1 o més, reapareix. */
+  const iaiaApagada = useNivellIaia() === 0;
+  const iaiaApagadaRef = useRef(iaiaApagada);
+  iaiaApagadaRef.current = iaiaApagada;
   /* Sense sessió, el xat només existix en mode seed/local (l'adaptador ja escriu
      com a convidat amb el mateix identificador); en remot cal la sessió. Es llig
      de la configuració i no del port, que encara no està segellat al primer render. */
@@ -551,14 +567,21 @@ export function XatProvider({ children, config }) {
   const registraAvisador = useCallback((fn) => { avisadorRef.current = fn; }, []);
 
   /* Avisa una sola vegada per seq nou d'una altra persona (XAT-J01). El primer
-     valor d'un fil és la línia base: en arrencar no s'avisa de res. */
+     valor d'un fil és la línia base: en arrencar no s'avisa de res.
+     Onada 6 (tasca 12) · Amb la IAIA apagada, el seu xat no avisa: la línia
+     base avança igual, i en tornar-la a encendre no arriba cap avís vell. */
   const avisaSiCal = useCallback((filId, seq, autorId, nom) => {
     const s = Number(seq) || 0;
     const previ = ultimSeqAvisat.current[filId];
     if (previ === undefined) { ultimSeqAvisat.current[filId] = s; return; }
     if (s <= previ) return;
     ultimSeqAvisat.current[filId] = s;
-    if (autorId && autorId !== joId) avisadorRef.current?.(nom);
+    if (!autorId || autorId === joId) return;
+    if (iaiaApagadaRef.current) {
+      const fil = filsRef.current.find((f) => f.id === filId) || visitantsRef.current[filId];
+      if (esXatDeLaIAIA(fil)) return;
+    }
+    avisadorRef.current?.(nom);
   }, [joId]);
 
   /* Decisió 1 · Desmuntar tanca l'àmbit: els getters guardats tornen buit i
@@ -1046,9 +1069,12 @@ export function XatProvider({ children, config }) {
           if (!seguir || !vigent(op)) return [];
           continue;
         }
+        /* Onada 6 · `codiError` deixa que la bombolla diga en la llengua de
+           la interfície els codis SDP que té traduïts (errorsXat.js). */
         mutaPendents((previs) => actualitzaPendent(previs, id, {
           estatEnviament: 'error',
-          error: error?.message || 'No s\'ha enviat.'
+          error: error?.message || 'No s\'ha enviat.',
+          codiError: error?.code || null
         }));
         return [];
       }
@@ -1101,7 +1127,7 @@ export function XatProvider({ children, config }) {
     if (!joId || !vigent(captura())) return [];
     const trobat = trobaPendent(pendentsRef.current, missatgeId);
     if (!trobat || trobat.missatge.estatEnviament !== 'error') return [];
-    mutaPendents((previs) => actualitzaPendent(previs, missatgeId, { estatEnviament: 'pendent', error: null }));
+    mutaPendents((previs) => actualitzaPendent(previs, missatgeId, { estatEnviament: 'pendent', error: null, codiError: null }));
     return executaEnviament(trobat.filId, missatgeId, trobat.missatge.text, trobat.missatge.respostaA || null);
   }, [joId, captura, vigent, mutaPendents, executaEnviament]);
 
@@ -1276,12 +1302,35 @@ export function XatProvider({ children, config }) {
          la cerca global i la del xat lligen esta mateixa llista.
      En llavor no n'hi ha cap: la mateixa referència i la mateixa pantalla. */
   const gestionaSocDePoble = gestionaLEntitatPilot(identitats);
-  const filsVisibles = useMemo(() => {
+  /* Onada 6 (tasca 12) · Amb la IAIA apagada, cap xat seu (senseLaIAIA): la
+     llista, les dues cerques i les comunitats lligen d'ací. */
+  const filsDeLaLlista = useMemo(() => {
     const ids = new Set(fils.map((f) => f.id));
     const extra = Object.values(visitants).filter((f) => !ids.has(f.id));
     const ambAjuda = ambXatsPerDefecte(extra.length ? [...fils, ...extra] : fils, { afig: false });
-    return gestionaSocDePoble ? senseXatPerDefecte(ambAjuda, 'socdepoble') : ambAjuda;
-  }, [fils, visitants, gestionaSocDePoble]);
+    const llista = gestionaSocDePoble ? senseXatPerDefecte(ambAjuda, 'socdepoble') : ambAjuda;
+    return iaiaApagada ? senseLaIAIA(llista) : llista;
+  }, [fils, visitants, gestionaSocDePoble, iaiaApagada]);
+  /* Integració Xat i Pobles (Onada 6, pla 261009_0245, ítem 4: «El fil de
+     xat específic també es dirà 'Gent de la Torre'») · El xat d'un poble que
+     és a les fitxes (useCoreContent) es diu com la seua gent a la llista, a
+     les comunitats, a les cerques i a la capçalera de la conversa («Sobre:
+     …»), també els fils que el servidor ja ha creat amb el nom del poble
+     (pobles/xatDelPoble.js, filsAmbLaGentDelPoble). Presentació: les dades i
+     el que va al servidor no es toquen. Sense fitxes, la mateixa llista. */
+  const { towns } = useCoreContent();
+  const filsVisibles = useMemo(() => filsAmbLaGentDelPoble(filsDeLaLlista, towns), [filsDeLaLlista, towns]);
+  /* Els fils de la persona sense els de la IAIA, si està apagada: els no
+     llegits i els contactes freqüents. La mateixa referència si no n'hi ha. */
+  const filsComptats = useMemo(() => (iaiaApagada ? senseLaIAIA(fils) : fils), [fils, iaiaApagada]);
+  /* Onada 6 (tasca 12) · Cert si `filId` és un xat de la IAIA que s'amaga
+     perquè està apagada: XatSection en trau qui hi era dins, en lloc d'un 404. */
+  const esFilAmagat = useCallback((filId) => {
+    if (!iaiaApagada || filId == null || filId === '') return false;
+    const id = String(filId);
+    const fil = fils.find((f) => String(f.id) === id) || visitants[id];
+    return esXatDeLaIAIA(fil);
+  }, [iaiaApagada, fils, visitants]);
 
   const missatgesDerivats = useMemo(() => {
     const ids = new Set([...Object.keys(missatgesPerFil), ...Object.keys(pendentsPerFil)]);
@@ -1360,9 +1409,10 @@ export function XatProvider({ children, config }) {
     (filId) => (dins() ? paginacio[filId]?.espera || null : null),
     [paginacio, dins]
   );
-  const totalNoLlegits = useMemo(() => (visible ? sumaNoLlegits(fils) : 0), [visible, fils]);
+  const totalNoLlegits = useMemo(() => (visible ? sumaNoLlegits(filsComptats) : 0), [visible, filsComptats]);
   const comunitats = useMemo(() => (visible ? agrupaComunitats(filsVisibles) : CAP), [visible, filsVisibles]);
-  const contactesFrequents = useMemo(() => (visible ? calculaContactesFrequents(fils, null, joId) : CAP), [visible, fils, joId]);
+  const contactesFrequents = useMemo(() => (visible ? calculaContactesFrequents(filsComptats, null, joId) : CAP), [visible, filsComptats, joId]);
+  const filAmagat = useCallback((filId) => (dins() ? esFilAmagat(filId) : false), [dins, esFilAmagat]);
 
   const value = useMemo(() => ({
     status: visible ? estat : joId ? 'loading' : 'ready',
@@ -1410,11 +1460,15 @@ export function XatProvider({ children, config }) {
     /* 'seed' | 'local' | 'remote': qui decidix si crear el grup del poble
        en entrar (en remot, només quan la persona hi prem). */
     modeDades,
-    consumixEntrada
+    consumixEntrada,
+    /* Onada 6 (tasca 12) · El nivell d'IA és 0 i la IAIA no apareix; i si un
+       fil és un xat seu amagat per això. */
+    iaiaApagada,
+    esFilAmagat: filAmagat
   }), [visible, joId, joNom, joAvatar, estatSessio, estat, avis, llistaFresca, avisLlista, scopeKey, ambitEstable, filsVisibles, missatgesDerivats,
     totalNoLlegits, filActiu, getThreadMessages, hiHaMesAntics, carregantAntics, esperaAntics, carregaMesAntics, sendChatMessage, reintenta, descartaFallit, marcaVist,
     obriFil, creaFil, cercaMembres, carregaFils, obriFilDePagina, comunitats, contactesFrequents, marcaLlegides,
-    modeDades, consumixEntrada]);
+    modeDades, consumixEntrada, iaiaApagada, filAmagat]);
 
   return (
     <XatContext.Provider value={value}>

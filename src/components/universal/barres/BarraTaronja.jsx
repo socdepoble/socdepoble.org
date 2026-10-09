@@ -42,6 +42,7 @@ import { resolveAsset } from '../../../config/assetResolver';
 import { DateTimeControl } from '../../PedraSeca/atoms/controls.jsx';
 import { isSafeAsset, rutaDAutorSegura } from '../UniversalUtils';
 import { EmoticonaBarra } from '../EmoticonaBarra.jsx';
+import { emoticonaDeBarra } from '../../../utils/emoji.js';
 
 export function BarraTaronja({
   authorName, authorLocation, authorAvatar, authorHref = null, LinkComponent = 'a',
@@ -55,9 +56,17 @@ export function BarraTaronja({
   const href = rutaDAutorSegura(authorHref);
   const Autor = href ? (LinkComponent === 'a' ? 'a' : LinkComponent) : 'div';
   const propsAutor = href ? (LinkComponent === 'a' ? { href } : { to: href }) : {};
+  /* Correcció de l'Onada 6 (QA visual, 375px: «Gent de la Torre» i «La
+     Torre de les Maçanes» es tallaven a 100px amb 100px lliures fins a la
+     data) · En lectura sense emoticona l'espai central és buit i no hi ha
+     res a centrar: la barra ho diu amb data-centre="buit" i l'autoria pot
+     ocupar l'ample que deixa la data (components.css). Amb emoticona o en
+     edició, la graella de T51 de sempre. */
+  const { mostra } = emoticonaDeBarra({ mode: typeof onObriEmoticona === 'function' ? 'edicio' : 'lectura', icon: emoticona });
+  const centreBuit = mostra !== 'boto' && mostra !== 'glif';
 
   return (
-    <section className="bar-orange" aria-label={etiqueta}>
+    <section className="bar-orange" aria-label={etiqueta} data-centre={centreBuit ? 'buit' : undefined}>
       <Autor className={href ? 'sp-card-author sp-card-author-link' : 'sp-card-author'} {...propsAutor}>
         {avatar ? (
           <img

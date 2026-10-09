@@ -1,7 +1,7 @@
 import React from 'react';
 import { UniversalCard } from './../PedraSeca';
 import { resolveAsset } from '../../config/assetResolver';
-import { COPYRIGHT_SDP, dataDElement, dataHoraDeBarra } from './editorial.js';
+import { COPYRIGHT_SDP, RUTA_CALENDARI, dataDElement, dataHoraDeBarra, rutaCalendariDeLaData } from './editorial.js';
 import { DEFAULT_AUTHOR } from './UniversalUtils.js';
 import { esRutaInterna } from '../../config/objecteConnectable.js';
 import { fontImatgePropia } from '../../utils/sanitize.js';
@@ -49,6 +49,29 @@ function insigniaDeCalendari(esdeveniment, dateTime) {
   };
 }
 
+/* Onada 6 · La classe de l'etiqueta que porta a una pàgina: la píndola fa
+   24px i l'enllaç de dins l'ompli i allarga la diana fins a --sdp-touch
+   (components.css). Només la porten les etiquetes «Agenda» d'un acte (ací i
+   al detall, elementDeSeccio.js): les etiquetes enllaçades d'altres targetes
+   no canvien de píxels. */
+const CLASSE_ETIQUETA_ENLLACADA = 'sp-card-label--enllac';
+
+/**
+ * Onada 6 (prompt 261009_0230, punt 1; pla de l'Onada 5, tasca 16: «El botó
+ * "Agenda" de la targeta portarà a la data específica del Calendari») ·
+ * L'etiqueta «Agenda» d'un acte porta al Calendari en el dia de l'acte (el de
+ * la seua insígnia, `dia` 'AAAA-MM-DD'): la vista Mes amb el dia triat i les
+ * seues targetes davall (editorial.js · rutaCalendariDeLaData). Sense dia (cap
+ * acte vàlid), l'etiqueta de sempre, sense enllaç. La pastilla de data
+ * continua portant al mes (ordre del Mestre, 261001, carril A).
+ */
+export function etiquetaAgendaDelDia(dia) {
+  const ruta = rutaCalendariDeLaData(dia);
+  return ruta !== RUTA_CALENDARI
+    ? { text: 'Agenda', className: `sdp-badge-category ${CLASSE_ETIQUETA_ENLLACADA}`, href: ruta }
+    : { text: 'Agenda', className: 'sdp-badge-category' };
+}
+
 /**
  * T6 (ordre del Mestre, 261004, prompt 261004_0515 §5) · On porta la boina
  * d'un acte: la pàgina de qui signa (`deQuiSigna`, la ruta que en fa qui
@@ -79,13 +102,15 @@ export function rutaDeLaBoinaDeLActe(item, deQuiSigna) {
    la silueta de sempre en lloc de l'avatar. */
 export function EventCard({ item, esdeveniment = null, onConnect, objecte, authorHref }) {
   const data = dataDeLActe(esdeveniment, item);
+  const insignia = insigniaDeCalendari(esdeveniment, data.dateTime);
 
   // Use entradilla if available, then lead, then description
   const bodyContent = item.entradilla || item.lead || (item.description ? <p className="sp-card-text">{item.description}</p> : null);
-  
+
   // Custom badges for event
+  /* Onada 6 · «Agenda» porta al dia de l'acte al Calendari (el de la insígnia). */
   const labels = item.labels || [
-    { text: 'Agenda', className: 'sdp-badge-category' },
+    etiquetaAgendaDelDia(insignia?.dateTime),
     item.id === 'aplec-2023' || item?.title?.toLowerCase().includes('aplec') ? { text: 'Aplec', className: 'sdp-badge-category' } : null
   ].filter(Boolean);
 
@@ -107,7 +132,7 @@ export function EventCard({ item, esdeveniment = null, onConnect, objecte, autho
       time={data.time}
       dateTime={data.dateTime}
       copyright={item.copyright || COPYRIGHT_SDP}
-      calendarBadge={insigniaDeCalendari(esdeveniment, data.dateTime)}
+      calendarBadge={insignia}
       labels={labels}
       /* Auditoria 261007 (B) · Defensa en profunditat: l'enllaç de tota la
          targeta només és una ruta de l'app (esRutaInterna). Un mainHref de

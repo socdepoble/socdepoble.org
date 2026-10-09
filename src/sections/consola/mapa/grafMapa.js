@@ -7,6 +7,7 @@
  * que el «Mapa de mis agentes» d'Emowe deia en castellà.
  */
 import { TIPUS_NODE, TIPUS_ARESTA, CONFIANCES } from './contracteMapa.js';
+import { COLOR_DE_SEVERITAT, toDeColor } from '../semafor.js';
 
 export const NOMS_TIPUS = Object.freeze({
   skill: 'Skill', plantilla: 'Plantilla', ruta: 'Ruta documental', script: 'Script',
@@ -157,13 +158,22 @@ export function filesEntradesEixides(mapa, cerca = '') {
    còpies eren iguals, llevat del N/A de les mètriques que XifresMas.jsx
    afig damunt d'estes (vegeu-lo allà). Una prova (tonsMapa.test.js) fixa
    que cobrixen tot el vocabulari del contracte (contracteMapa.js). */
-/* La confiança no és salut: només l'inferit avisa, perquè ix de la prosa. */
-export const TO_CONFIANCA = Object.freeze({ declarat: 'info', derivat: 'neutre', inferit: 'avis' });
-export const TO_SEVERITAT = Object.freeze({ alta: 'error', mitjana: 'avis', baixa: 'info' });
-/* L'estat d'una tasca del Mapa (ESTATS_TASCA): el to de la seua insígnia i com es diu. */
+/* Onada 6, requisit 8 (semàfor) · Els tons són els del semàfor de la
+   Consola (semafor.js): verd, taronja i roig segons la gravetat, i neutre per
+   al que només informa. Cap blau ('info'): abans el portaven la confiança
+   declarada i la severitat baixa, un quart color que no deia cap gravetat.
+   La confiança no és salut: només l'inferit avisa, perquè ix de la prosa. */
+export const TO_CONFIANCA = Object.freeze({ declarat: 'neutre', derivat: 'neutre', inferit: 'avis' });
+/* Alta → roig; mitjana i baixa → taronja (COLOR_DE_SEVERITAT, semafor.js). */
+export const TO_SEVERITAT = Object.freeze(Object.fromEntries(
+  Object.entries(COLOR_DE_SEVERITAT).map(([severitat, color]) => [severitat, toDeColor(color)])
+));
+/* L'estat d'una tasca del Mapa (ESTATS_TASCA): el to de la seua insígnia i com es diu.
+   VIU verd; MORT roig; sense llançador, sense declaració i desconegut, taronja:
+   el que no consta que corra no es pot dir bo (Onada 6). */
 export const TO_ESTAT = Object.freeze({
-  viu: 'exit', mort: 'error', 'declarat-sense-llancador': 'neutre',
-  'llancador-sense-declaracio': 'avis', desconegut: 'neutre'
+  viu: 'exit', mort: 'error', 'declarat-sense-llancador': 'avis',
+  'llancador-sense-declaracio': 'avis', desconegut: 'avis'
 });
 export const TEXT_ESTAT = Object.freeze({
   viu: 'viu', mort: 'mort', 'declarat-sense-llancador': 'sense llançador',
@@ -206,7 +216,9 @@ export const TEXTOS_AVIS = Object.freeze({
   'frontmatter-invalid': 'El frontmatter no passa l’esquema de la Wiki (tooling/wiki/schema.json).',
   'nom-diferent-carpeta': 'El camp name del frontmatter no coincidix amb el nom de la carpeta.',
   'fora-index': 'No és a l’índex de skills (.agents/skills_index.json): el router no la pot disparar.',
-  'fora-cataleg-claude': 'No és al catàleg de Claude (.claude/skills/): Claude Code no la pot carregar.',
+  /* Onada 6 · Una skill que CLAUDE.md importa amb @ sí que la veu Claude Code
+     (sencera, a cada sessió): la frase ja no ho nega, i l'evidència ho diu. */
+  'fora-cataleg-claude': 'No és al catàleg de Claude (.claude/skills/): Claude Code no la pot triar ni carregar a demanda com a skill.',
   'fora-segell': 'No és al segell de skills: el seu contingut no està acreditat.',
   'segell-divergent': 'El contingut ha canviat des de l’últim segellat: l’empremta no coincidix amb la del segell.',
   pes: 'Passa del llindar de pes (3.000 paraules o uns 4.000 tokens): embossa el context de qui la carrega.',
@@ -225,7 +237,16 @@ export const TEXTOS_AVIS = Object.freeze({
   'escriptori-sense-ancora': 'Este document de l’Escriptori no té cap enllaç des de l’índex actiu (00_index_escriptori.md).',
   // Ordre del Mestre, 261004 · el document ancorat sense rebut ja no s'escapa.
   'escriptori-sense-rebut': 'Este document de l’Escriptori no té el rebut de cap torn: no consta quin torn el va crear ni amb quina plantilla.',
-  'ledger-invalid': 'La signatura del LEDGER no és vàlida: el Llibre d’Obra té segells fòssils o línies mal formades.',
+  /* Onada 6 · La signatura és l'empremta del cos (fonts-vigilancia.mjs ·
+     analitzaLedger): quan no quadra, el cos s'ha editat sense tornar-lo a
+     segellar. Els fòssils i les línies mal formades es compten a part i poden
+     ser zero: la frase d'abans en feia la causa i contradeia l'evidència.
+     Correcció de l'Onada 6 (revisió adversarial) · analitzaLedger també el
+     dona per invàlid quan falta algun dels dos segells: la frase diu les dues
+     causes, com l'evidència del compilador. */
+  'ledger-invalid': 'La signatura del LEDGER no és vàlida: el cos del Llibre d’Obra no quadra amb el seu segell (s’ha editat sense tornar-lo a segellar) o li falta el segell. Els segells fòssils i les línies mal formades es compten a part.',
+  // Onada 6 · La frontissa roja ja no és només una fracció de la salut: un avís per clau que falla.
+  'frontissa-roja': 'La frontissa de contingut està roja: esta clau estructural de PAGE_COPY falta o no té l’empremta aprovada, i el pre-commit es para.',
   'recaiguda-recent': 'El LEDGER anota una recaiguda recent d’esta skill: una correcció del Mestre que ja estava apresa s’ha tornat a trencar.'
 });
 
@@ -271,11 +292,14 @@ export function queEs(node) {
  * On és la peça. Una skill, una plantilla, un script o un document són el
  * seu fitxer (rol «fitxer», l'identificador du la ruta). La resta viuen
  * dins del fitxer que les declara (rol «declarat»: `font`). Sense cap dels
- * dos, el Mapa no ho sap i no s'inventa.
+ * dos, el Mapa no ho sap i no s'inventa. Un document amb #CLAU és una clau
+ * dins del seu fitxer (els errors de la frontissa, Onada 6): el fitxer és el
+ * de davant del #, rol «declarat».
  */
 export function fitxerDelNode(node) {
   const { tipus, cos } = parts(node?.id);
   if (tipus === 'skill' && cos) return { ruta: `.agents/skills/${cos}/SKILL.md`, rol: 'fitxer' };
+  if (tipus === 'document' && cos && cos.includes('#')) return { ruta: cos.slice(0, cos.indexOf('#')), rol: 'declarat' };
   if (['plantilla', 'script', 'document'].includes(tipus) && cos && !cos.startsWith('npm:')) return { ruta: cos, rol: 'fitxer' };
   if (typeof node?.font === 'string' && node.font) return { ruta: node.font, rol: 'declarat' };
   return { ruta: null, rol: null };
@@ -380,7 +404,8 @@ export function dadesDelNode(node) {
     if (valor == null) text = 'sense dada';
     else if (typeof valor === 'boolean') text = valor ? 'sí' : 'no';
     else if (typeof valor === 'object') text = JSON.stringify(valor);
-    return { clau, etiqueta: meta?.etiqueta ?? clau, text, boolea, mono: Boolean(meta?.mono), to: valor === true ? 'info' : 'neutre' };
+    // Un atribut només informa (Onada 6, semàfor): neutre, també quan és «sí».
+    return { clau, etiqueta: meta?.etiqueta ?? clau, text, boolea, mono: Boolean(meta?.mono), to: 'neutre' };
   });
 }
 

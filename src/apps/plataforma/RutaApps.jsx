@@ -45,7 +45,8 @@ function ContenidorApp({ manifest, entrada }) {
   const registre = useRegistre();
   const { language } = useUIState();
   useSEO({ title: titolDe(manifest.titol, language), index: false });
-  const Component = manifest.origen === 'interna' ? registre.componentDe(manifest.id) : null;
+  /* Una interna o un mòdul (sdp.modul.v1): el component lazy del registre. */
+  const Component = manifest.origen === 'externa' ? null : registre.componentDe(manifest.id);
   let contingut = null;
   if (manifest.origen === 'externa') {
     contingut = <ElementExtern manifest={manifest} />;
@@ -59,10 +60,13 @@ function ContenidorApp({ manifest, entrada }) {
     );
   }
   /* La sessió de l'arrel entra a l'app per ací i només per ací: la font
-     (fontSessio.js), que el pont crida només si l'app la demana. */
+     (fontSessio.js), que el pont crida només si l'app la demana.
+     Una app amb dades personals (salut, financeres) no es deixa traduir pel
+     navegador: la traducció de pàgina envia el text visible a un servei de
+     fora (Onada 6, revisió de seguretat de la Gestoria). */
   return (
     <ProveidorApp manifest={manifest} fontSessio={useFontSessio}>
-      <div className="sdp-app-contenidor" data-sdp-app={manifest.id}>
+      <div className="sdp-app-contenidor" data-sdp-app={manifest.id} translate={manifest.dadesPersonals ? 'no' : undefined}>
         <GuardaPermis permis={manifest.permisos.veure}>
           <GuardaPermis permis={entrada.permis}>{contingut}</GuardaPermis>
         </GuardaPermis>

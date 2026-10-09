@@ -90,6 +90,7 @@
     "test:documental": "node --test tests/documental.test.mjs tests/porta-reflex.test.mjs",
     "porta:olivera": "node tooling/gates/porta-olivera.mjs --informe",
     "olivera:arxiva": "node tooling/gates/porta-olivera.mjs --arxiva",
+    "higiene:cron": "node tooling/higiene/cron_higiene.mjs",
     "skills:index": "node tooling/brain/build_skills_index.mjs",
     "router": "node tooling/session/persona_router.mjs --punters",
     "porta:segella:update": "node tooling/gates/segella.mjs --update",

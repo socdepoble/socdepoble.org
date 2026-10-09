@@ -1,15 +1,20 @@
 import React from 'react';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { UniversalCard } from '../../components/universal/../PedraSeca';
-import { getSectionItemPath, objecteDe, rutaConnectarObjecte } from '../../config/navigation';
+import { getSectionItemPath, objecteDe, rutaConnectarObjecte, rutaXatDePagina } from '../../config/navigation';
 import { useNavigate } from '../../app/contexts/RouterContext';
 import { useSEO } from '../../hooks/useSEO';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
 import { useUIActions } from '../../app/contexts/UIContext';
-import { dataDElement, momentDElement } from '../../components/universal/editorial.js';
+import { useMur } from '../mur/MurContext';
+import { COPYRIGHT_VIQUIPEDIA, dataDElement, momentDElement } from '../../components/universal/editorial.js';
+import { nomDeLaGent } from './nomsDelPoble.js';
+import { poblesAmbNaixement } from './clauDelPoble.js';
+import { objecteDelPobleXat } from './xatDelPoble.js';
 
 export default function PoblesSection() {
   const { sortedTowns, status, error } = useCoreContent();
+  const { feedPosts, marketItems, events } = useMur();
   const { t } = useUIActions();
   const navigate = useNavigate();
 
@@ -17,14 +22,28 @@ export default function PoblesSection() {
      (editorial.js · dataDElement / momentDElement, la regla de Pedra Seca
      §10): la de creació del poble, o la de l'última versió si és posterior.
      Abans es llegien `dynamic_time` i `dynamic_date`, que no escriu cap codi:
-     la targeta quedava sense pastilla i l'ordre, a mercé d'un text. Quan el
-     model porte l'última publicació del poble al Mur, entrarà per ací.
+     la targeta quedava sense pastilla i l'ordre, a mercé d'un text.
+     Onada 6 (requisit 15 de l'Onada 5: «En crear un poble per primera vegada,
+     s'hi assignarà la data i hora d'aquella primera publicació de naixement
+     del poble») · La data de creació és el NAIXEMENT del poble: la més antiga
+     entre la de la fitxa i el created_at de la primera publicació que el
+     DECLARA (poble_id; clauDelPoble.js · poblesAmbNaixement, sobre les dades
+     del Mur). Les publicacions casades només pel text del lloc no el daten
+     (vegeu-ne el perquè a clauDelPoble.js): amb la llavor, també la de
+     supabase/seed.sql, cap fitxa canvia. La mateixa regla la llig la seua
+     pàgina (buildPoblesDetailSectionMeta): pastilla, ordre i barra taronja
+     diuen la mateixa data (T51). Sense cap publicació declarada anterior a
+     la fitxa, la de la fitxa, com abans.
      DEUTE CONEGUT (revisió de T2, 261001) · La pastilla porta al Calendari
      d'eixe mes, però el Calendari encara no rep els pobles
      (CalendariSection · entradesDelCalendari; type 'town', no 'poble'): el
      poble no hi ix. Pendent de decisió del Mestre. */
+  const pobles = React.useMemo(
+    () => poblesAmbNaixement(sortedTowns, { feedPosts, marketItems, events }),
+    [sortedTowns, feedPosts, marketItems, events]
+  );
   const sortedAndActiveTowns = React.useMemo(() => {
-    return [...sortedTowns].sort((a, b) => {
+    return [...pobles].sort((a, b) => {
       const dateA = momentDElement(a);
       const dateB = momentDElement(b);
       if (dateA === null && dateB === null) return 0;
@@ -32,8 +51,8 @@ export default function PoblesSection() {
       if (dateB === null) return -1;
       return dateB - dateA;
     });
-  }, [sortedTowns]);
-  
+  }, [pobles]);
+
   useSEO({
     title: t('section.pobles.kicker', 'Pobles'),
     description: t('section.pobles.subtitle', 'Explora els pobles i el seu context territorial.')
@@ -49,6 +68,14 @@ export default function PoblesSection() {
    * automàticament puja a dalt de tot en aquesta llista.
    * La resta de pobles apareixen aleatòriament per ara.
    * =========================================================================
+   * Onada 6 (estat real, no aplicada encara) · La pastilla diu el NAIXEMENT
+   * del poble (requisit 15 i decisió 3 de la nit del 261009) i T51 mana que
+   * l'ordre llija la mateixa data que la pastilla: la llista s'ordena pel
+   * naixement, del més recent al més antic. Fer pujar dalt el poble que
+   * publica obligaria la pastilla a dir l'última activitat (o una excepció
+   * a T51): pregunta oberta al Mestre a l'informe de l'Onada 6. Mentre el Mur
+   * carrega, l'ordre és el de les fitxes; si una publicació declarada és
+   * anterior a una fitxa, eixe poble canvia de lloc quan arriba el Mur.
    */
 
   return (
@@ -79,21 +106,38 @@ export default function PoblesSection() {
         )}
         {status === 'ready' && sortedAndActiveTowns.map((town) => {
           /* T63.2 · el descriptor del poble ('poble', id i ruta): Connectar se
-             l'emporta i Comentar obri el xat del poble (la seua Comunitat). */
+             l'emporta, com sempre. */
           const poble = objecteDe(town, 'pobles');
+          /* Onada 5 (ordre del Mestre, 261008) · La caputxa és l'entitat
+             («Gent de la Torre») i el seu poble, no la comarca, i porta al xat
+             comú del poble: el mateix subjecte poble:<id> que «Comentar · En
+             públic» i la pàgina de detall (T63.2). El cos i la foto continuen
+             portant a la pàgina del poble (mainHref).
+             Onada 6 (pla 261009_0245, ítem 4) · La caputxa i «Comentar» obrin el
+             xat amb el nom de la gent (objecteDelPobleXat, el mateix de la
+             pàgina del poble): el fil es diu «Gent de la Torre». */
+          const xatDelPobleObjecte = objecteDelPobleXat(town);
+          const xatDelPoble = rutaXatDePagina(xatDelPobleObjecte);
           const data = dataDElement(town);
+          /* Onada 5 (F5, fase 3) · Les dades manen: l'`author` de la fitxa
+             (la llavor porta el nom curt «Gent de la Torre») i, si no en porta,
+             la regla única de nomsDelPoble.js, la mateixa de l'H1 i de la barra
+             taronja de la seua pàgina. Igual amb l'article de la Viquipèdia i
+             els drets: els de la fitxa, si en porta; si no, el títol del poble
+             i el copyright de la Viquipèdia d'editorial.js.
+             Onada 6 (prompt 261009_0230, punt 6: cap poble escrit al codi) · Les
+             desambiguacions de Sella i Relleu ja són dades (wikipedia_title de
+             townsSeed.js i de supabase/seed.sql): ací només queda la regla
+             general. */
+          const articleDeViquipedia = encodeURIComponent(String(town.wikipedia_title || town.title || town.name || '').replace(/ /g, '_'));
 
           return (
             <UniversalCard
               key={town.id}
-              author={(() => {
-                if (town.title === 'La Torre de les Maçanes') return 'Gent de La Torre';
-                if (/^[aeiouhàèéíòóú]/i.test(town.title)) return `Gent d'${town.title}`;
-                return `Gent de ${town.title}`;
-              })()}
-              authorHref={getSectionItemPath('pobles', town.id)}
+              author={town.author || nomDeLaGent(town.title || town.name)}
+              authorHref={xatDelPoble || undefined}
               avatarUrl={town.avatar_url || town.image_url || town.imageSrc}
-              location={town.comarca}
+              location={town.title || town.name}
               time={data.time}
               date={data.date}
               dateTime={data.dateTime}
@@ -106,16 +150,20 @@ export default function PoblesSection() {
                   <p className="sp-card-text">{town.content}</p>
                 </div>
               }
+              /* Onada 5 · Categorització de la targeta (skill sdp-universal-page
+                 §4): la província és la categoria i la comarca, l'etiqueta. */
               labels={[
                 { text: t('section.pobles.kicker', 'Pobles'), className: 'sdp-badge-system', href: '/pobles' },
+                ...(town.provincia ? [{ text: town.provincia, className: 'sdp-badge-category' }] : []),
+                ...(town.comarca ? [{ text: town.comarca, className: 'sdp-badge-tag' }] : []),
                 ...(town.population ? [{ text: town.population, className: 'sdp-badge-accent', href: '/poblacio' }] : []),
                 { 
                   text: t('section.pobles.wikipedia_link', "Publicat a la Viquipèdia"), 
                   className: 'sdp-badge-neutral', 
-                  href: `https://ca.wikipedia.org/wiki/${town.id === 'sella' ? 'Sella_(Marina_Baixa)' : town.id === 'relleu' ? 'Relleu_(municipi)' : encodeURIComponent(town.title.replace(/ /g, '_'))}` 
+                  href: `https://ca.wikipedia.org/wiki/${articleDeViquipedia}`
                 }
               ]}
-              copyright="© Viquipèdia / Wikimedia Commons (CC BY-SA)"
+              copyright={town.copyright || COPYRIGHT_VIQUIPEDIA}
               mainHref={getSectionItemPath('pobles', town.id)}
               hasFooter={true}
               showTranslate={true}
@@ -123,8 +171,11 @@ export default function PoblesSection() {
               showShare={true}
               showConnect={true}
               /* T43 (ordre del Mestre, 260928) · es connecta el poble (objecte
-                 'poble', id i ruta), no un títol solt. */
-              objecte={poble}
+                 'poble', id i ruta), no un títol solt.
+                 Onada 6 · L'objecte de la targeta diu on porta «Comentar · En
+                 públic»: el xat de la gent (el mateix subjecte poble:<id>).
+                 Connectar continua amb el descriptor de sempre (onConnect). */
+              objecte={xatDelPobleObjecte}
               onConnect={() => navigate(rutaConnectarObjecte(poble))}
             />
           );

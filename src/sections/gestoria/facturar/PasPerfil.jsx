@@ -123,27 +123,27 @@ export function PasPerfil({ f }) {
       <GrupCamps llegenda="L’empresa">
         <Camp etiqueta="NIF" obligatori
           ajuda={fixada ? 'Ja hi ha factures emeses amb este NIF: no es pot canviar.' : 'El DNI, el NIE o el CIF de qui factura.'}>
-          <CampText value={formulari.nif} autoComplete="off" readOnly={Boolean(fixada)} onChange={canvia('nif')} />
+          <CampText value={formulari.nif} autoComplete="off" spellCheck={false} readOnly={Boolean(fixada)} onChange={canvia('nif')} />
         </Camp>
         <Camp etiqueta="Nom legal" obligatori ajuda="La raó social, o el nom i els cognoms si eres autònom.">
-          <CampText value={formulari.nom} autoComplete="organization" onChange={canvia('nom')} />
+          <CampText value={formulari.nom} autoComplete="organization" spellCheck={false} onChange={canvia('nom')} />
         </Camp>
         <Camp etiqueta="Nom comercial (opcional)" ajuda="El nom amb què et coneix la gent, si no és el legal.">
-          <CampText value={formulari.nomComercial} onChange={canvia('nomComercial')} />
+          <CampText value={formulari.nomComercial} spellCheck={false} onChange={canvia('nomComercial')} />
         </Camp>
       </GrupCamps>
       <GrupCamps llegenda="Domicili fiscal">
         <Camp etiqueta="Adreça" obligatori>
-          <CampText value={formulari.adreca} autoComplete="street-address" onChange={canvia('adreca')} />
+          <CampText value={formulari.adreca} autoComplete="street-address" spellCheck={false} onChange={canvia('adreca')} />
         </Camp>
         <Camp etiqueta="Codi postal" obligatori>
-          <CampText value={formulari.codiPostal} inputMode="numeric" autoComplete="postal-code" onChange={canvia('codiPostal')} />
+          <CampText value={formulari.codiPostal} inputMode="numeric" autoComplete="postal-code" spellCheck={false} onChange={canvia('codiPostal')} />
         </Camp>
         <Camp etiqueta="Població" obligatori>
-          <CampText value={formulari.poblacio} onChange={canvia('poblacio')} />
+          <CampText value={formulari.poblacio} spellCheck={false} onChange={canvia('poblacio')} />
         </Camp>
         <Camp etiqueta="Província (opcional)">
-          <CampText value={formulari.provincia} onChange={canvia('provincia')} />
+          <CampText value={formulari.provincia} spellCheck={false} onChange={canvia('provincia')} />
         </Camp>
       </GrupCamps>
       <Camp etiqueta="Data de pas" obligatori

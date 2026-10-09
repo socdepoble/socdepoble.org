@@ -42,8 +42,9 @@ import { registraAnulacio, verificaCadena } from '../facturacio/registre/cadena.
 import { dataHoraAmbHus } from '../facturacio/registre/empremta.js';
 import { llibreDesDeJson, restauraCopia } from '../facturacio/registre/port.js';
 import { creaPortIndexedDB } from '../facturacio/registre/portIndexedDB.js';
+import { xmlDeRegistres } from '../facturacio/registre/xmlAeat.js';
 import { demanaCarpeta, fontDesDeHandle, oblidaFont, potTriarCarpeta } from '../font/fontNavegador.js';
-import { TIPUS_COPIA, marcaDeCopia, nomFitxerCopia, ultimsConegutsDe } from './nucli/copia.js';
+import { TIPUS_COPIA, TIPUS_XML, marcaDeCopia, nomFitxerCopia, nomFitxerXml, ultimsConegutsDe } from './nucli/copia.js';
 import { euros } from './nucli/formulari.js';
 
 const PERFIL_BUIT = Object.freeze({ config: null, llegat: null, copia: null });
@@ -63,6 +64,7 @@ const TITOLS_ERROR = Object.freeze({
   SERIE_AMB_FORATS: 'La sèrie té forats',
   FACTURA_RECTIFICADA_INEXISTENT: 'Eixa factura no es pot referir',
   FACTURA_JA_SUBSTITUIDA: 'Eixe tiquet ja té la seua factura',
+  RECTIFICADES_DE_DIVERSOS_CLIENTS: 'Eixes factures són de clients diferents',
   FACTURA_INEXISTENT: 'Eixa factura no és al llibre',
   CADENA_AMB_INCIDENCIES: 'El llibre té incidències',
   PERFIL_FIXAT: 'Ja hi ha factures emeses',
@@ -144,7 +146,7 @@ const quantsRegistres = (n) => (n === 1 ? 'un registre' : `${n} registres`);
  */
 export function useFacturacio({
   port: portDonat, perfil: perfilDonat, subtle: subtleDonat, idb, locks, emmagatzematge,
-  rellotge = Date.now, entorn = globalThis, descarrega = descarregaPerDefecte
+  rellotge = Date.now, entorn = globalThis, descarrega = descarregaPerDefecte, imprimix
 } = {}) {
   /* El rellotge de l'última pintada: un rellotge nou a cada pintada no ha de tornar a llegir el llibre. */
   const ara = useRef(rellotge);
@@ -354,6 +356,25 @@ export function useFacturacio({
     return r;
   }, [executa, exit, entorn, port, descarrega, perfil, subtle, recarrega]);
 
+  /* Onada 6 (261009): l'XML de prova dels registres de l'empresa, descarregat. No s'envia enlloc;
+     només d'una cadena correcta, perquè una cadena amb incidències no es podria remetre. */
+  const exportaXml = useCallback(async () => {
+    const r = await executa('xml', 'llibre', async () => {
+      if (informeActual.current?.valida !== true) {
+        throw errorAmbCodi('CADENA_AMB_INCIDENCIES', 'Mentre la cadena tinga incidències (pas 4), no es fa l’XML: primer s’ha d’arreglar el llibre.');
+      }
+      const { xml, registres: quants } = xmlDeRegistres(cadena, { obligat: { nom: config?.nom, nif: config?.nif } });
+      const nomFitxer = nomFitxerXml(ara.current());
+      descarrega({ nom: nomFitxer, tipus: TIPUS_XML, dades: new TextEncoder().encode(xml) });
+      return { nomFitxer, quants };
+    });
+    if (r.ok) {
+      exit('llibre', 'XML de prova descarregat', `«${r.resultat.nomFitxer}» porta ${quantsRegistres(r.resultat.quants)}. No s’ha enviat res a l’AEAT, `
+        + 'i li falta el bloc del sistema informàtic: és per a provar-lo, no per a presentar-lo.', 'info');
+    }
+    return r;
+  }, [executa, exit, cadena, config, descarrega]);
+
   const restaura = useCallback(async (text) => {
     const r = await executa('restaurant', 'copia', async () => {
       const resultat = await restauraCopia(port, text, { verifica: (registres) => verificaCadena(registres, { subtle }) });
@@ -389,6 +410,8 @@ export function useFacturacio({
     ocupat,
     avis,
     potTriarCarpeta: potTriarCarpeta(entorn),
+    /* Onada 6: qui imprimix la factura (per defecte, window.print a ImpressioFactura); les proves l'injecten. */
+    imprimix,
     dataDeHui: () => dataDeHui(ara.current()),
     tancaAvis: () => setAvis(null),
     desaConfig,
@@ -398,6 +421,7 @@ export function useFacturacio({
     anulla,
     verifica,
     exporta,
+    exportaXml,
     restaura,
     demanaPersistencia
   };

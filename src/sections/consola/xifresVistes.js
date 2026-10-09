@@ -37,16 +37,40 @@ import {
   CODIS_TRENCATS, LLINDAR_REBUTS_RANCIS_DIES, LLINDAR_SATURACIO, diesDes, faDies, rebutsRancis, saturat
 } from './consolaPagines.js';
 import {
-  COLUMNES_AVIS, COLUMNES_METRICA, FONT_CONSOLA, FONT_MAPA, ambCodi, ambMajuscula, concorda, de, etiquetaBona,
-  etiquetaPendent, filaMetrica, filesAvisos, mono, plural, senseMesura, siNo, taulaDades, text
+  COLUMNES_AVIS, COLUMNES_METRICA, FONT_CONSOLA, FONT_MAPA, ambCodi, ambMajuscula, colorDe, concorda, de,
+  etiquetaDAvisos, etiquetaDEstat, etiquetaDeColor, etiquetaPendent, filaMetrica, filesAvisos, mesurada, mono, plural,
+  senseMesura, siNo, taulaDades, text
 } from './xifresComu.js';
+import {
+  problemaDeSkill, problemaLloc, problemaRuta, problemaTasca, problemaText, problemesDAvisos, problemesDeCandats,
+  problemesDeTasques
+} from './problemesConsola.js';
+import { colorDeTasques, toDeColor } from './semafor.js';
 
 const nomDe = (id) => etiquetaNode({ id });
 const llistaDeNoms = (ids) => (ids.length ? ids.map(nomDe).join(' · ') : 'ningú');
 
-/* L'estat de cada peça dels agents (pecesAgents, actorsMapa.js) amb les
-   classes del Panell de Control: el que funciona, bo; la resta, pendent. */
-export const etiquetaDePeca = (estat) => (estat === 'EN MARXA' ? etiquetaBona(estat) : etiquetaPendent(estat));
+/* ── El semàfor i els problemes de les xifres de les pàgines ─────────────
+   Correcció de l'Onada 6 (revisió adversarial: els requisits 8 i 9 només
+   s'havien aplicat a les deu xifres del tauler) · Cada xifra que compta
+   coses que fallen o falten du l'etiqueta del semàfor segons el seu valor
+   (xifresComu.js · etiquetaDeColor) i diu a la vista quines són
+   (problemesConsola.js), amb la marca del seu color. Les que compten avisos
+   prenen el color del més greu; les que compten tasques, el del pitjor estat;
+   sense mesura, cap etiqueta (mai un verd sense base). Les que només diuen una
+   mida (nodes, arestes, rutes documentals, cadenes, suggeriments, punts de
+   trobada, agents atòmics, registres de consum, skills del manifest i del
+   nucli, rebuts de lectura, operacions immunitàries) informen: cap etiqueta. */
+const ROIG = toDeColor('roig');
+/* Els avisos del cens d'una skill (CODIS_CENS). */
+const avisosDelCens = (s) => s.avisos.filter((a) => CODIS_CENS.includes(a.codi));
+/* Un lloc sense lector, amb la seua ruta (el mode privacitat l'amaga). */
+const llocSenseLector = (p) => problemaLloc(p.node.id, camiDe(p.node));
+
+/* L'estat de cada peça dels agents (pecesAgents, actorsMapa.js) amb el color
+   del semàfor (Onada 6): EN MARXA verd; PARCIAL, FALTA i SENSE LECTOR
+   taronja; SENSE MESURA, neutre (semafor.js · COLOR_D_ESTAT). */
+export const etiquetaDePeca = (estat) => etiquetaDEstat(estat);
 
 /* ── Les taules que comparteixen diverses xifres ──────────────────────── */
 
@@ -129,6 +153,9 @@ const INVENTARI = [
       'És la xifra de salut de l’Inventari: skills sense cap avís entre les skills del cens, no un percentatge d’ànim.'
     ],
     font: `${FONT_MAPA} · nodes de tipus skill i avisos`,
+    // El color del cens sencer (el de la skill més greu) i, a la vista, les que no són verdes.
+    etiquetes: ({ inv }) => (inv.total ? etiquetaDAvisos(inv.skills.flatMap((s) => s.avisos)) : null),
+    problemes: ({ inv }) => inv.skills.filter((s) => s.semafor !== 'verd').map((s) => problemaDeSkill(s)),
     detall: (_mapa, { inv }) => ({
       taules: [{
         titol: 'Skills sense cap avís',
@@ -151,6 +178,9 @@ const INVENTARI = [
       'Una skill que falta en una llista no la pot disparar el router, carregar Claude o acreditar el segell.'
     ],
     font: `${FONT_MAPA} · avisos ${CODIS_CENS.join(', ')}`,
+    // La gravetat dels avisos del cens: una fantasma o una fora del segell (altes), roig; la resta, taronja.
+    etiquetes: ({ inv }) => etiquetaDAvisos(inv.skills.flatMap(avisosDelCens)),
+    problemes: ({ inv }) => inv.skills.filter((s) => avisosDelCens(s).length).map((s) => problemaDeSkill(s, avisosDelCens(s))),
     // Una fila per skill (el títol compta skills), amb els codis del cens que en falten.
     detall: (_mapa, { inv }) => ({
       taules: [{
@@ -168,7 +198,9 @@ const INVENTARI = [
      coberta de l'Inventari destacava «N skills sense disparador útil» sense
      cap targeta que les comptara. */
   {
-    slug: 'skills-sense-disparador', origen: 'mapa', pagina: 'inventari', icona: 'zapOff', nom: 'Skills sense disparador útil',
+    // Onada 6 (requisit 11) · la targeta porta a l'Inventari amb el seu filtre.
+    slug: 'skills-sense-disparador', origen: 'mapa', pagina: 'inventari', consulta: '?filtre=sense-disparador', icona: 'zapOff',
+    nom: 'Skills sense disparador útil',
     titol: ({ inv }) => plural(inv.senseDisparador, 'skill sense disparador útil', 'skills sense disparador útil'),
     subtitol: () => 'El router no les pot triar soles',
     entradeta: [
@@ -177,6 +209,8 @@ const INVENTARI = [
       'Una skill que el router no pot disparar només s’executa si algú la demana pel seu nom.'
     ],
     font: `${FONT_MAPA} · avisos disparador-decoratiu`,
+    etiquetes: ({ mapa }) => etiquetaDAvisos(ambCodi(mapa, 'disparador-decoratiu')),
+    problemes: ({ mapa }) => problemesDAvisos(ambCodi(mapa, 'disparador-decoratiu')),
     detall: (mapa) => ({
       taules: [{
         titol: 'Skills sense disparador útil',
@@ -208,6 +242,9 @@ const SALUT = [
       'Cada avís és una peça que, tal com està, pot fallar, no carregar-se o no deixar rastre.'
     ],
     font: `${FONT_MAPA} · avisos`,
+    // El color del més greu: un sol avís alt ja és roig.
+    etiquetes: ({ mapa }) => etiquetaDAvisos(mapa.avisos),
+    problemes: ({ mapa }) => problemesDAvisos(mapa.avisos),
     detall: (_mapa, { resum }) => ({
       taules: [{ titol: 'Avisos del Mapa, el més greu primer', columnes: COLUMNES_AVIS, files: filesAvisos(resum.avisosOrdenats), buit: 'El Mapa no fa cap avís.' }]
     })
@@ -226,6 +263,11 @@ const SALUT = [
       'Una mètrica sense mesura no diu que tot vaja bé: diu que ningú no ho ha mirat.'
     ],
     font: `${FONT_MAPA} · salut`,
+    /* Una mètrica N/A no és cap gravetat (neutre), però tampoc deixa dir que
+       tot vaja bé: el verd només quan totes tenen mesura; si no, cap etiqueta,
+       i a la vista quines no en tenen. */
+    etiquetes: ({ mapa }) => (mapa.salut.length && mapa.salut.every(mesurada) ? etiquetaDeColor('verd') : null),
+    problemes: ({ mapa }) => mapa.salut.filter((m) => !mesurada(m)).map((m) => problemaText(m.metrica, m.metrica, 'N/A')),
     detall: (mapa) => ({
       taules: [{ titol: 'Funció de salut', columnes: COLUMNES_METRICA, files: mapa.salut.map(filaMetrica), buit: 'El Mapa no porta cap mètrica de salut.' }]
     })
@@ -244,6 +286,9 @@ const SALUT = [
       'Una tasca morta, sense llançador o sense declaració és una vigilància que no fa el que promet.'
     ],
     font: `${FONT_MAPA} · tasques`,
+    // El pitjor estat: una morta, roig; una que no consta que corra, taronja; cap tasca, cap etiqueta.
+    etiquetes: ({ mapa }) => etiquetaDeColor(colorDeTasques(mapa.tasques)),
+    problemes: ({ mapa }) => problemesDeTasques(mapa.tasques),
     detall: (mapa) => ({ taules: [taulaTasques('Tasques i llançadors', mapa.tasques, 'El Mapa no porta cap tasca.')] })
   }
 ];
@@ -328,6 +373,10 @@ const EXPLORADOR = [
       'Al graf són fils que no porten enlloc: qui els seguix falla o no troba res.'
     ],
     font: `${FONT_MAPA} · avisos ${CODIS_TRENCATS.map(([codi]) => codi).join(', ')}`,
+    /* La gravetat dels seus avisos, com la coberta de l'Explorador: un script o
+       una skill que falten (alts), roig; una òrfena (mitjana), taronja. */
+    etiquetes: ({ mapa }) => etiquetaDAvisos(ambCodi(mapa, ...CODIS_TRENCATS.map(([codi]) => codi))),
+    problemes: ({ mapa }) => problemesDAvisos(ambCodi(mapa, ...CODIS_TRENCATS.map(([codi]) => codi))),
     detall: (mapa) => ({
       taules: [{
         titol: 'Enllaços trencats i peces òrfenes',
@@ -427,6 +476,9 @@ const FLUXOS = [
       'Un lloc sense lector és una cadena a mitges: la faena hi queda i ningú no la continua.'
     ],
     font: `${FONT_MAPA} · arestes escriu i llig`,
+    // Una cadena a mitges no trenca res: taronja; cap, verd (com la coberta de Fluxos).
+    etiquetes: ({ fl }) => etiquetaDeColor(colorDe(true, false, fl.punts.some(esSenseLector))),
+    problemes: ({ fl }) => fl.punts.filter(esSenseLector).map(llocSenseLector),
     detall: (_mapa, { fl }) => ({
       taules: [taulaPunts('Llocs sense lector', fl.punts.filter(esSenseLector), 'Cap lloc rep faena sense que algú declare que la llig.')]
     })
@@ -474,6 +526,8 @@ const PECES = [
     },
     subtitolSenseFont: 'On deixen la faena les peces',
     etiquetes: ({ peces }) => etiquetaDePeca(peces.tauler.estat),
+    // Un tauler sense lector diu quin és, a la vista.
+    problemes: ({ peces }) => (peces.tauler.desti && esSenseLector(peces.tauler.desti) ? [llocSenseLector(peces.tauler.desti)] : []),
     entradeta: [
       'Diu on deixen la faena les peces i si algú la replega: el lloc on més peces escriuen.',
       'Ix dels punts de trobada de `mapa.json`: les relacions «escriu» i «llig» declarades o derivades.',
@@ -492,6 +546,7 @@ const PECES = [
       : 'Cap tasca programada: res no arranca sol'),
     subtitolSenseFont: 'Tasques que llança launchd',
     etiquetes: ({ peces }) => etiquetaDePeca(peces.sols.estat),
+    problemes: ({ capes }) => problemesDeTasques(capes.programades),
     entradeta: [
       'Diu quantes de les tasques que llança launchd són vives.',
       ORIGEN_TASQUES,
@@ -508,6 +563,7 @@ const PECES = [
     subtitol: ({ peces, an }) => `Vigilants vius: ${peces.vigilants.metrica ? valorMetrica(peces.vigilants.metrica) : 'N/A'} · ${plural(an.alts, 'avís alt', 'avisos alts')} al Mapa`,
     subtitolSenseFont: 'Vigilants vius i avisos alts',
     etiquetes: ({ peces }) => etiquetaDePeca(peces.vigilants.estat),
+    problemes: ({ mapa }) => problemesDAvisos(mapa.avisos.filter((a) => a.severitat === 'alta')),
     entradeta: [
       'Diu si els vigilants del Mas són vius i quants avisos alts hi ha.',
       'Ix de la mètrica vigilants-vius i dels avisos de severitat alta de `mapa.json`.',
@@ -556,6 +612,9 @@ const CADENCIES = GRUPS_CADENCIA.map(([k, etiqueta]) => {
     titol: ({ cad }) => plural(cad[k].length, un, molts),
     subtitol: ({ cad }) => cad[k].map((t) => t.id).join(' · '),
     subtitolSenseFont: etiqueta,
+    // El pitjor estat de les seues tasques, i quines no consten vives.
+    etiquetes: ({ cad }) => etiquetaDeColor(colorDeTasques(cad[k])),
+    problemes: ({ cad }) => problemesDeTasques(cad[k]),
     entradeta: [
       `Compta les tasques del Mapa que ${frase}.`,
       ORIGEN_TASQUES,
@@ -575,6 +634,7 @@ const SENSE_LLANCADOR = [
     subtitol: ({ capes }) => capes.senseLlancador.map((t) => t.id).join(' · '),
     subtitolSenseFont: 'Declarades al registre i ningú no les llança',
     etiquetes: () => etiquetaPendent('FALTA'),
+    problemes: ({ capes }) => capes.senseLlancador.map((t) => problemaTasca(t)),
     entradeta: [
       'Compta les tasques que el registre de tasques declara i cap llançador executa.',
       ORIGEN_TASQUES,
@@ -634,6 +694,10 @@ const RECOMPTES = [
       ].join(' · ');
     },
     subtitolSenseFont: 'Acreditats, sense consumidor o per acreditar',
+    // Sense consumidor, roig (com SENSE CONSUMIDOR); per acreditar, taronja; tots acreditats, verd; cap candat, cap etiqueta.
+    etiquetes: ({ capes }) => etiquetaDeColor(colorDe(capes.candats.length > 0,
+      capes.candats.some((c) => c.acreditat === false), capes.candats.some((c) => c.acreditat === null))),
+    problemes: ({ capes }) => problemesDeCandats(capes.candats),
     entradeta: [
       'Compta els candats (hooks) del Mas, els que disparen els arnesos i els hooks de git del registre de tasques, i diu quants tenen el consumidor acreditat.',
       'Ix dels nodes de tipus hook de `mapa.json` i dels hooks de git de `.agents/cron/registre_tasques.json`.',
@@ -656,6 +720,8 @@ const RECOMPTES = [
     titol: ({ capes }) => plural(capes.sol.length, 'lloc del sòl', 'llocs del sòl'),
     subtitol: ({ capes }) => `Documents i plantilles on treballen · ${plural(capes.sol.filter(esSenseLector).length, 'sense lector', 'sense lector')}`,
     subtitolSenseFont: 'Documents i plantilles on treballen',
+    etiquetes: ({ capes }) => etiquetaDeColor(colorDe(capes.sol.length > 0, false, capes.sol.some(esSenseLector))),
+    problemes: ({ capes }) => capes.sol.filter(esSenseLector).map(llocSenseLector),
     entradeta: [
       'Compta els documents i les plantilles on les peces deixen la faena o la lligen: el sòl sobre el qual treballen els agents.',
       'Ix de les relacions «escriu» i «llig» declarades o derivades de `mapa.json`.',
@@ -754,6 +820,9 @@ const POLS = [
       'Una skill fora del manifest existix però el sistema no la declara: ningú no sap que l’ha de cuidar.'
     ],
     font: `${FONT_CONSOLA} · skills`,
+    // Roig, com la coberta del pols i el panell Skills; cap, verd.
+    etiquetes: ({ skills }) => etiquetaDeColor(colorDe(true, skills.orfes.length > 0)),
+    problemes: ({ skills }) => skills.orfes.map((s) => problemaText(s.nom, s.nom, 'fora del manifest', ROIG)),
     detall: taulaSkillsPols('Skills fora del manifest', (s) => s.orfes, 'Totes les skills del disc són al manifest.')
   },
   {
@@ -766,6 +835,8 @@ const POLS = [
       'Qui la carregue no la trobarà: el manifest promet un procediment que no hi és.'
     ],
     font: `${FONT_CONSOLA} · skills`,
+    etiquetes: ({ skills }) => etiquetaDeColor(colorDe(true, skills.fantasmes.length > 0)),
+    problemes: ({ skills }) => skills.fantasmes.map((s) => problemaText(s.nom, s.nom, 'sense disc', ROIG)),
     detall: taulaSkillsPols('Skills sense disc', (s) => s.fantasmes, 'Totes les skills del manifest són al disc.')
   },
   /* Correcció 261004 (verificador de la segona passada, punt 2) · La línia
@@ -777,6 +848,8 @@ const POLS = [
     // L'empremta és una dada de màquina: el mode privacitat la lleva i deixa la data.
     subtitolPrivat: ({ segell, data }) => (segell ? `Segellat el ${data(segell.timestamp)}` : null),
     subtitolSenseFont: 'Empremta i data del segell',
+    // Sense segell, FALTA (taronja). Amb segell, només informa: la coherència amb el disc la jutja Avisos i salut.
+    etiquetes: ({ segell }) => (segell ? null : etiquetaDEstat('FALTA')),
     entradeta: [
       'Compta els fitxers que acredita el segell de skills i en diu l’empremta i la data.',
       'Ix de `.agents/SKILLS_SEAL.json`, que el middleware `tooling/vite/consola-iaia.mjs` llig i servix a `/__iaia/consola.json`.',
@@ -812,7 +885,8 @@ const POLS = [
         : `Dins del llindar d’avís, ${LLINDAR_SATURACIO}`;
     },
     subtitolSenseFont: `Llindar d’avís: ${LLINDAR_SATURACIO}`,
-    etiquetes: ({ recompte }) => (saturat(recompte) ? etiquetaPendent('SATURAT') : null),
+    // Dins del llindar, verd (com el panell Càrrega documental); sense termometria, cap etiqueta.
+    etiquetes: ({ recompte }) => (saturat(recompte) ? etiquetaPendent('SATURAT') : recompte === null ? null : etiquetaDeColor('verd')),
     entradeta: [
       'Compta els artefactes actius del cervell i els compara amb el llindar de saturació, on el context s’embossa.',
       'Ix del camp termometria de `/__iaia/consola.json`, que servix el middleware `tooling/vite/consola-iaia.mjs`; mentre no el publique, no hi ha mesura.',
@@ -869,8 +943,9 @@ const POLS = [
       return rebuts.length ? 'Cap rebut porta una data llegible' : 'El diari de sessió no té cap rebut';
     },
     subtitolSenseFont: 'Quan va entrar l’últim rebut de lectura',
-    etiquetes: ({ rebuts, ara }) => (rebutsRancis(rebuts, ara)
-      ? etiquetaPendent(`FA MÉS ${MES_DE_DIES}`.toLocaleUpperCase('ca')) : null),
+    // Amb un rebut datat i recent, verd (com el panell Rebuts); sense cap rebut datat, cap etiqueta.
+    etiquetes: ({ rebuts, ultim, ara }) => (rebutsRancis(rebuts, ara)
+      ? etiquetaPendent(`FA MÉS ${MES_DE_DIES}`.toLocaleUpperCase('ca')) : ultim ? etiquetaDeColor('verd') : null),
     entradeta: [
       'Diu quan va entrar l’últim rebut de lectura Matrix al diari de sessió.',
       ORIGEN_REBUTS,
@@ -938,7 +1013,13 @@ const POLS = [
       ? `Diari de sessió: ${liniesDe(desc.diari)} · journal immunitari: ${liniesDe(desc.immunitari)}`
       : 'consola.json no porta el recompte'),
     subtitolSenseFont: 'Del diari de sessió i del journal immunitari',
-    etiquetes: ({ desc }) => ((desc?.diari ?? 0) + (desc?.immunitari ?? 0) > 0 ? etiquetaPendent('JSON NO VÀLID') : null),
+    // Amb les dues fonts mesurades i cap línia perduda, verd; amb una sola mesura, cap etiqueta (no hi ha base).
+    etiquetes: ({ desc }) => ((desc?.diari ?? 0) + (desc?.immunitari ?? 0) > 0 ? etiquetaPendent('JSON NO VÀLID')
+      : desc && desc.diari !== null && desc.immunitari !== null ? etiquetaDeColor('verd') : null),
+    problemes: ({ desc }) => [
+      ['diari', '.agents/.diari_sessio.jsonl', desc?.diari], ['immunitari', '.immunitari/journal.ndjson', desc?.immunitari]
+    ].filter(([, , n]) => n > 0)
+      .map(([clau, ruta, n]) => problemaRuta(clau, plural(n, 'línia descartada', 'línies descartades'), ruta, 'JSON no vàlid', toDeColor('taronja'))),
     entradeta: [
       'Compta les línies del diari de sessió i del journal immunitari que no són JSON vàlid i que el middleware descarta.',
       'Ix del camp fonts de `/__iaia/consola.json`: `tooling/vite/consola-iaia.mjs` compta les que no pot llegir de `.agents/.diari_sessio.jsonl` i de `.immunitari/journal.ndjson`.',

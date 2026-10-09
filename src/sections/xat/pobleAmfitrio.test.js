@@ -40,6 +40,18 @@ describe('el subjecte i la ruta del poble', () => {
   it('sense nom, el títol és l\'id', () => {
     expect(objecteDelPoble({ id: 'sella', nom: '' }).titol).toBe('sella');
   });
+
+  /* Onada 6 (pla 261009_0245, ítem 4) · Amb les fitxes i sense nomPoble, el
+     nom de la gent de la fitxa (author, o nomDeLaGent del seu nom). */
+  it('Onada 6 · amb les fitxes i sense nomPoble declarat, el nom de la gent de la fitxa', () => {
+    const towns = [{ id: 'sella', title: 'Sella', author: 'Gent de Sella' }, { id: 'el-campello', title: 'El Campello' }];
+    expect(objecteDelPoble({ id: 'sella', nom: '' }, towns).titol).toBe('Gent de Sella');
+    expect(objecteDelPoble({ id: 'el-campello', nom: '' }, towns).titol).toBe('Gent del Campello');
+    expect(new URL(rutaSobreDelPoble({ id: 'sella', nom: '' }, towns), 'https://x.invalid').searchParams.get('titol')).toBe('Gent de Sella');
+    // El nom declarat per l'amfitrió mana; un poble que no és a les fitxes, l'id.
+    expect(objecteDelPoble(POBLE, towns).titol).toBe('Gent de la Torre');
+    expect(objecteDelPoble({ id: 'enlloc', nom: '' }, towns).titol).toBe('enlloc');
+  });
 });
 
 describe('avatarDelPoble (Onada 3, P2)', () => {

@@ -43,6 +43,7 @@ import {
   TEXT_ESTAT as TEXT_ESTAT_TASCA, TO_CONFIANCA, TO_ESTAT as TO_ESTAT_TASCA, TO_SEVERITAT, etiquetaNode
 } from './mapa/grafMapa.js';
 import { trossosEntradeta } from './xifresComu.js';
+import { rutaDelNode } from './problemesConsola.js';
 import { GENERADOR_CONSOLA, GENERADOR_MAPA, detallXifra, xifraDelMas, xifresDeLaGraella } from './xifresMas.js';
 
 /** La icona de cada xifra i de cada peça: la de la seua insígnia lateral (no en porten imatge). */
@@ -93,6 +94,7 @@ export function TargetaXifra({ xifra, generat = null, creat = copyConsola().date
     <TargetaConsola icona={iconaDe(xifra)} titol={titol} subtitol={subtitol}
       entradilla={<Entradeta marcada={xifra.entradetaMarcada} />}
       imatge={xifra.imatge} imatgeAlt={xifra.imatgeAlt} etiquetes={xifra.etiquetes ?? undefined}
+      problemes={xifra.problemes ?? undefined}
       creat={creat} generat={generat} a={xifra.ruta} />
   );
 }
@@ -133,8 +135,8 @@ export function XifresMas({ mapa = null }) {
 const TO_ESTAT = Object.freeze({ ...TO_ESTAT_TASCA, 'N/A': 'neutre' });
 const TEXT_ESTAT = Object.freeze({ ...TEXT_ESTAT_TASCA, 'N/A': 'N/A' });
 
-/* La ruta d'una peça és el seu node sense el tipus (document:.agents/LEDGER.md). */
-const rutaDelNode = (node) => String(node ?? '').replace(/^[a-z]+:/, '');
+/* La ruta d'una peça és el seu node sense el tipus (document:.agents/LEDGER.md):
+   problemesConsola.js · rutaDelNode, l'única còpia. */
 
 /** Una cel·la del detall (xifresMas.js): el que és ruta, ordre o empremta va en <Mono>. */
 function Cela({ cela }) {

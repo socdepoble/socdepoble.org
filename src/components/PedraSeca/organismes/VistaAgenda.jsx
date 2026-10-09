@@ -4,7 +4,8 @@
  *
  * Fase visual (prompt 261001_0445) · La captura de la vista Agenda del
  * Mestre: només els dies que tenen actes; a l'esquerra de cada dia, el número
- * gran i «oct., dj.» en xicotet (hui, el número en un cercle invers); a la
+ * gran i «oct., dj.» en xicotet (hui, el número en el cercle d'acció des de
+ * l'Onada 6); a la
  * dreta, una fila per acte amb el punt del color de la seua font
  * (classeDeFont), l'hora en una columna fixa («Tot el dia» o «HH:MM–HH:MM»,
  * xifres tabulars) i el títol. Un separador fi entre dies i, dins del grup de
@@ -33,9 +34,18 @@
  *   nivellTitol · el nivell de l'encapçalament de cada dia (3 per defecte).
  *   titol · nom de la regió; locale; className.
  *
- * Les files no són interactives: els enllaços viuen a les targetes de davall.
  * Cada dia és un encapçalament amb la data llarga per al lector (la curta es
  * veu, aria-hidden) i una llista ordenada que s'hi referix (aria-labelledby).
+ *
+ * ENLLAÇ DE L'ESDEVENIMENT (Onada 6, prompt 261009_0230, punt 1; pla de
+ * l'Onada 5, tasca 16) · rutaDeLEsdeveniment · (esd) => string | null i
+ * LinkComponent (per defecte 'a'), com a VistaMes: amb ruta, el títol de la
+ * fila és un enllaç a la pàgina de la publicació (.sdp-cal-enllac) i el seu
+ * ::after cobrix la fila. L'Agenda no tria cap dia: en pantalla tàctil
+ * (@media (pointer: coarse)) cada fila creix fins a --sdp-touch i el toc és
+ * de l'enllaç, com a Google; amb ratolí, la fila de sempre. Sense
+ * rutaDeLEsdeveniment, les files no són interactives (els enllaços viuen a
+ * les targetes de davall) i el DOM és el de sempre.
  *
  * Importa per camí directe (mai per index.js): la porta de dependències
  * circulars de Pedra Seca ho exigix.
@@ -45,6 +55,8 @@ import { DIES_CURTS, horaDe } from '../../../utils/calendari.js';
 import { classeDeFont, ocurrenciaCobrix, ocurrenciesDeLaLlista, separaFranja } from '../../../utils/disposicioCalendari.js';
 import { clauDeData, diaDeLaSetmana, sumaDies } from '../../../utils/periodes.js';
 import { useAra } from '../../../hooks/useAra.js';
+// Onada 6 · L'enllaç d'un esdeveniment, el mateix de les tres vistes.
+import { EnllacDeLEsdeveniment } from './VistaMes.jsx';
 
 const TOT_EL_DIA = 'Tot el dia';
 const NIVELLS = Object.freeze([2, 3, 4, 5, 6]);
@@ -94,7 +106,7 @@ const LiniaAra = () => <li className="sdp-cal-agenda__ara" aria-hidden="true" />
 
 export function VistaAgenda({
   esdeveniments, desde, fins, avui = new Date(), ara = null, buit = 'Cap acte en este període.',
-  nivellTitol = 3, titol, locale, className
+  nivellTitol = 3, titol, locale, className, rutaDeLEsdeveniment, LinkComponent = 'a'
 }) {
   const idBase = useId();
   // Números primitius per a les dependències: un Date nou a cada pintada no recalcula res.
@@ -128,16 +140,21 @@ export function VistaAgenda({
                   <span className="sdp-sr-only">{`${dataLlarga(data, locale)}${esHui ? ' (hui)' : ''}`}</span>
                 </Titol>
                 <ol className="sdp-cal-agenda__actes" aria-labelledby={idDia}>
-                  {files.map((fila, i) => (
-                    <Fragment key={fila.clau}>
-                      {i === linia ? <LiniaAra /> : null}
-                      <li className={`sdp-cal-agenda__acte ${classeDeFont(fila.esd)}`}>
-                        <span className="sdp-cal-agenda__punt" aria-hidden="true" />
-                        <span className="sdp-cal-agenda__hora">{fila.hora}</span>{' '}
-                        <span className="sdp-cal-agenda__titol">{fila.titol}</span>
-                      </li>
-                    </Fragment>
-                  ))}
+                  {files.map((fila, i) => {
+                    const ruta = rutaDeLEsdeveniment?.(fila.esd) ?? null;
+                    return (
+                      <Fragment key={fila.clau}>
+                        {i === linia ? <LiniaAra /> : null}
+                        <li className={`sdp-cal-agenda__acte ${classeDeFont(fila.esd)}${ruta ? ' sdp-cal-agenda__acte--enllac' : ''}`}>
+                          <span className="sdp-cal-agenda__punt" aria-hidden="true" />
+                          <span className="sdp-cal-agenda__hora">{fila.hora}</span>{' '}
+                          <span className="sdp-cal-agenda__titol">
+                            {ruta ? <EnllacDeLEsdeveniment ruta={ruta} LinkComponent={LinkComponent}>{fila.titol}</EnllacDeLEsdeveniment> : fila.titol}
+                          </span>
+                        </li>
+                      </Fragment>
+                    );
+                  })}
                   {linia === files.length ? <LiniaAra /> : null}
                 </ol>
               </li>

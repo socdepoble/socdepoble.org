@@ -140,6 +140,31 @@ test('un acte que es repetix massa sovint ho diu', () => {
   expect(getByText('Algun acte es repetix massa sovint per a pintar-lo sencer: el trobaràs a les targetes.')).toBeTruthy();
 });
 
+/* Onada 6 (prompt 261009_0230, punt 1; pla de l'Onada 5, tasca 16) · Clicar
+   un esdeveniment de l'agenda porta a la pàgina de la seua publicació. */
+test('Onada 6 · sense rutaDeLEsdeveniment, o sense cap ruta, el DOM de sempre (Llei del Píxel)', () => {
+  const senseIds = (html) => html.replace(/\s(id|aria-labelledby)="[^"]*"/g, ' $1="·"');
+  const sense = senseIds(pinta().container.innerHTML);
+  cleanup();
+  expect(senseIds(pinta({ rutaDeLEsdeveniment: () => null }).container.innerHTML)).toBe(sense);
+  expect(sense).not.toContain('sdp-cal-enllac');
+});
+
+test('Onada 6 · amb ruta, el títol de la fila és l’enllaç a la publicació; la fila diu el mateix text i l’agenda de fora no en porta', () => {
+  const RUTES = new Map([[acteA, '/events/a'], [fira, '/events/fira']]);
+  const Enllac = ({ to, children, ...resta }) => <a href={to} data-router="si" {...resta}>{children}</a>;
+  const { getByRole } = pinta({ rutaDeLEsdeveniment: (esd) => RUTES.get(esd) ?? null, LinkComponent: Enllac });
+  const hui = getByRole('list', { name: `${dataLlarga(new Date(2026, 9, 1))} (hui)` });
+  expect(textos(hui)).toEqual(['Tot el dia Acte C', '09:00–10:30 Acte A', '— ara —', '16:00 Acte B']);
+  const enllac = within(hui).getByRole('link', { name: 'Acte A' });
+  expect([enllac.getAttribute('href'), enllac.dataset.router, enllac.className]).toEqual(['/events/a', 'si', 'sdp-cal-enllac']);
+  expect(enllac.closest('li').className).toBe('sdp-cal-agenda__acte sdp-cal-font--esdeveniment sdp-cal-agenda__acte--enllac');
+  expect(within(hui).getAllByRole('link')).toHaveLength(1);
+  // La Fira, a cada dia que toca, amb el seu enllaç; el Ball (l'agenda de Sollutia), sense.
+  expect(within(getByRole('list', { name: dataLlarga(new Date(2026, 9, 17)) })).getByRole('link', { name: 'Fira de tardor' }).getAttribute('href')).toBe('/events/fira');
+  expect(within(getByRole('list', { name: dataLlarga(new Date(2026, 9, 2)) })).queryByRole('link')).toBeNull();
+});
+
 /* ── Contrast WCAG 2.x, en clar i en fosc ─────────────────────────────────
    Els tokens es resolen des de tokens.css (i els cànons de design-tokens.css):
    el tema clar, les declaracions abans del bloc fosc; el fosc, les mateixes

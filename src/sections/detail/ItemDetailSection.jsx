@@ -9,13 +9,14 @@ import { useSession } from '../../app/contexts/SessionContext';
 import { avatarAutorDElement, buildDetailSectionMeta, portadaDElement } from './detailSectionMeta.jsx';
 import { useSEO } from '../../hooks/useSEO.js';
 import { objecteDe, rutaConnectarObjecte, tipusDeSeccio } from '../../config/navigation.js';
-import { paginaDElement, trobaElement, useLogoEntitatDElement } from './elementDeSeccio.js';
+import { paginaDElement, trobaElement, useElementDeSeccio, useLogoEntitatDElement } from './elementDeSeccio.js';
 import { ProveidorSincronitzacioTargetes } from './SincronitzacioTargetes.jsx';
+import { Carregant } from '../../components/PedraSeca/atoms/estats.jsx';
 
 export default function ItemDetailSection() {
   const { events, feedPosts, marketItems } = useMur();
   const { towns } = useCoreContent();
-  const { notes } = useNotesData();
+  const { notes, status: estatNotes } = useNotesData();
   const { mediaItems } = useMultimedia();
   const { t } = useUIActions();
   const { rol } = useSession();
@@ -27,6 +28,15 @@ export default function ItemDetailSection() {
   /* T54 · el mateix resolvedor que el diàleg Connectar i el lector del MAS. */
   const fallbackItem = trobaElement(section, itemId);
   const item = location.state?.preloadedItem || fallbackItem;
+  /* Onada 5 (F1, hidratació) · En entrar en fred a /pobles/<slug>, /mur/<id>,
+     /mercat/<id>… els proveïdors encara carreguen amb les llistes buides, i el
+     detall pintava «Element no trobat» amb la píndola Error. Ara espera amb la
+     regla de useElementDeSeccio (la del lector del MAS): només 'loading' és
+     carregar; un estat absent no ho és. Les notes (/notes/:id) no són a la
+     seua taula de fonts: les mira el seu proveïdor (useNotesData). Quan la
+     font acaba ('ready' o 'error') i no hi és, «Element no trobat», com abans. */
+  const { estat: estatElement } = useElementDeSeccio(sectionId, itemId);
+  const esperant = !item && (estatElement === 'carregant' || (sectionId === 'notes' && estatNotes === 'loading'));
   /* Ordre E del Mestre (261007, prompt 261007_1628) · El logotip que la
      persona va pujar damunt de l'H1 a l'editor de Notes (logo_image), també
      quan és un sdp-media:// que només resol el port. Abans del retorn
@@ -52,18 +62,24 @@ export default function ItemDetailSection() {
      portada ja filtrada (pagina.heroImage, el mode estricte de les seccions
      del Mur), mai section.getImage(item) cru: una URL de tercers no acaba al
      <head>. null cau a la imatge base de useSEO.
-     Fora del Mur (Pobles, Multimèdia), la mateixa imatge que abans. */
+     Fora del Mur (Pobles, Multimèdia), la mateixa imatge que abans.
+     Onada 5 · Mentre s'espera, cap títol (el de sèrie): «No trobat» només quan
+     la font ha acabat. La descripció és l'entradilla que pinta la pàgina
+     (pagina.lead: la de Viquipèdia d'un poble, que el getSubtitle de Pobles ja
+     no porta) i, sense, el subtítol. */
   useSEO({
-    title: item ? section?.getTitle?.(item) : 'No trobat',
-    description: item ? item.entradilla || section?.getSubtitle?.(item) : '',
+    title: item ? section?.getTitle?.(item) : (esperant ? null : 'No trobat'),
+    description: item ? (pagina?.lead || section?.getSubtitle?.(item)) : '',
     image: pagina ? pagina.heroImage : null
   });
+
+  if (esperant) return <Carregant etiqueta={t('loading.content', 'Carregant contingut del poble...')} />;
 
   if (!section || !item) {
     /* T63.2 · Sense element no hi ha xat públic (ni el de la ruta, que
        s'enduria el títol «Element no trobat»): Comentar es queda, amb el menú
        de dues vies (261007), i «En públic» queda desactivada i diu per què. Una
-       nota (/notes/:id, també mentre es carreguen) no en té mai i no es pinta. */
+       nota (/notes/:id) no en té mai i no es pinta. */
     const senseElement = tipusDeSeccio(sectionId) === 'nota' ? objecteDe({ id: itemId }, sectionId) : null;
     return (
       <UniversalPage
@@ -86,10 +102,16 @@ export default function ItemDetailSection() {
      perquè la nota del MAS sàpia d'on ve. T63.2 · el mateix descriptor diu on
      porta Comentar: el xat comú de l'element; una nota (/notes/:id) no en té
      i el botó no es pinta. El xat porta el nom propi de l'element (el de la
-     seua targeta), no l'encapçalament de la pàgina: el d'un poble és «Sella»,
-     no «Gent de Sella», entre per on s'entre. */
+     seua targeta), no l'encapçalament de la pàgina.
+     Onada 6 (pla 261009_0245, ítem 4: «El fil de xat específic també es dirà
+     'Gent de la Torre'») · Derogat per a Pobles: una secció pot declarar el
+     descriptor del seu xat (getObjecteXat), i la de Pobles hi posa el de la
+     gent (pobles/xatDelPoble.js · objecteDelPobleXat), el mateix de la
+     targeta de /pobles: «Gent de Sella», entre per on s'entre. La resta, com
+     abans. */
   const objecte = objecteDe({ ...item, title: section.getTitle(item) || item.title }, sectionId);
-  const objecteXat = { ...objecte, titol: objecteDe(item, sectionId).titol || objecte.titol };
+  const objecteXat = section.getObjecteXat?.(item)
+    || { ...objecte, titol: objecteDe(item, sectionId).titol || objecte.titol };
   /* Esmena 3 del pla 261007_1645 · L'avatar redó de qui signa i el carrusel
      de la portada viuen a detailSectionMeta.jsx (avatarAutorDElement i
      portadaDElement, amb les seues regles escrites al costat): els comparteix
@@ -122,7 +144,10 @@ export default function ItemDetailSection() {
           incrustades del cos, sincronitzades amb el seu original. */}
       <ProveidorSincronitzacioTargetes>
         <div className="content-wrapper">
-          {section.renderBody(item)}
+          {/* Onada 6 · { detall: true }: el cos de la pàgina de la ruta. La
+              meta de Pobles hi afig la barra de pestanyes, que el lector de
+              connexions del MAS (ConnexioDetall, sense l'opció) no pinta. */}
+          {section.renderBody(item, { detall: true })}
         </div>
       </ProveidorSincronitzacioTargetes>
     </UniversalPage>

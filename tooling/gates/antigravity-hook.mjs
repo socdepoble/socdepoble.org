@@ -52,6 +52,12 @@
  *                      BUNDLE, PROMPT i ABSENTS de crear_bundle) no reben l'ordre
  *                      `--nom`: per a eixos, preguntar. És un avís, mai un bloqueig.
  *
+ *  Porta v4 (261009, laboratori 261009_0400_higiene_claude): el briefing diu també qui
+ *  necessita cada declarat viu, els rancis primer, amb checkConvocatoria de la porta; i
+ *  la taula de pre-invocation és checkEscriptori, que en fase «bloqueig» (bandera
+ *  .agents/olivera-fase.json) suma la convocatòria als errors. Amb una porta sense eixes
+ *  funcions, el comportament d'abans, byte a byte.
+ *
  *  Per què (laboratori 261006_0300_ledger_claude/t6_higiene, DIAGNOSI.txt): la
  *  porta dona verd a tot el que està declarat viu, i la declaració no caduca. El
  *  2026-10-05 a les 11:39 (hora local) MarIA va passar la porta en arrencar, per
@@ -549,7 +555,7 @@ export function missatgeTaula(errors = []) {
  * (NOM_PER_NOM) es diuen a banda i no reben l'ordre --nom: si cap no hi cap, el
  * briefing no la dona. Null si no hi ha res a dir.
  */
-function missatgeBriefing({ dia = '', documents = [], artefactes = 0, artefactesSenseNom = 0 } = {}) {
+function missatgeBriefing({ dia = '', documents = [], artefactes = 0, artefactesSenseNom = 0, vida = null } = {}) {
   const parells = Array.isArray(documents)
     ? documents.filter((n) => typeof n === 'string' && n).map((n) => ({ nom: n, curt: n.replace(/\.md$/i, '') })).sort((a, b) => (a.curt < b.curt ? -1 : a.curt > b.curt ? 1 : 0))
     : [];
@@ -571,7 +577,19 @@ function missatgeBriefing({ dia = '', documents = [], artefactes = 0, artefactes
   const via = senseNom < docs.length + art
     ? `si no, ${VIA_OLIVERA} --arxiva --sec --nom NOM i, si la simulació quadra, sense --sec`
     : 'si no, pregunta al Mestre, perquè la porta no els deixa eixir per nom';
-  return `${MARCA_BRIEFING} · AGENTS §0.1 · primera crida de la conversa] La porta Olivera és verda, però verd no vol dir consumit: ${que}.${limit} Una declaració de viu no caduca sola. Decidix-los abans de la primera tasca: si encara el necessita algú (core-higiene-escriptori, pas 0), es queda declarat i ho dius al Mestre (qui i per a què); ${via}. Si la porta no et deixa fer el gest, pregunta al Mestre: ni mv, ni rm, ni scripts sobre l'índex. Informa el Mestre en una línia.`;
+  return `${MARCA_BRIEFING} · AGENTS §0.1 · primera crida de la conversa] La porta Olivera és verda, però verd no vol dir consumit: ${que}.${limit}${Array.isArray(vida) && vida.length ? ' Una declaració caduca amb el seu motiu: un RANCI ja no en té cap que es comprove.' : ' Una declaració de viu no caduca sola.'} Decidix-los abans de la primera tasca: si encara el necessita algú (core-higiene-escriptori, pas 0), es queda declarat i ho dius al Mestre (qui i per a què); ${via}. Si la porta no et deixa fer el gest, pregunta al Mestre: ni mv, ni rm, ni scripts sobre l'índex. Informa el Mestre en una línia.${frasesVida(vida)}`;
+}
+
+/**
+ * 261009 · Porta v4: qui necessita cada declarat viu, els rancis primer. Sense `vida`
+ * (porta v3, o proves amb portes falses), res: el text d'abans, byte a byte.
+ */
+function frasesVida(vida) {
+  if (!Array.isArray(vida) || !vida.length) return '';
+  const ordre = [...vida].sort((a, b) => Number(Boolean(a.valid)) - Number(Boolean(b.valid)));
+  const trossos = ordre.slice(0, MAX_NOMS_BRIEFING).map((v) => `${String(v.nom).replace(/\.md$/i, '')} ← ${v.valid ? retalla(v.motiu, 70) : `RANCI, ${retalla(v.motiu, 70)}`}`);
+  const mes = ordre.length > MAX_NOMS_BRIEFING ? ` +${ordre.length - MAX_NOMS_BRIEFING}` : '';
+  return ` Qui els necessita (porta v4): ${trossos.join('; ')}${mes}.`;
 }
 
 /** Conversa del payload, o «sense-conversa»: la clau de les memòries del hook. */
@@ -625,7 +643,11 @@ function heretatsDe(root, olivera, dia = typeof olivera?.avui === 'function' ? o
   const declarat = (nom) => viu.has(nom.replace(/\.md$/, ''));
   const documents = solts.filter(declarat).sort();
   const vells = solts.filter((n) => !declarat(n) && !termodinamics.has(n) && /^\d{6}_/.test(n) && n.slice(0, 6) < dia);
-  return { dia, documents, artefactes: vells.length, artefactesSenseNom: vells.filter((n) => !NOM_PER_NOM.test(n)).length };
+  // 261009: qui necessita cada declarat viu (porta v4). Sense checkConvocatoria, el briefing d'abans.
+  const vida = typeof olivera.checkConvocatoria === 'function'
+    ? olivera.checkConvocatoria(root).vida.filter((v) => documents.includes(v.nom)).map((v) => ({ nom: v.nom, valid: v.valid, motiu: v.motiu }))
+    : null;
+  return { dia, documents, artefactes: vells.length, artefactesSenseNom: vells.filter((n) => !NOM_PER_NOM.test(n)).length, ...(vida && { vida }) };
 }
 
 /** Quines portes cal carregar abans de decidir: 'taula', 'escriptura' o null. */
@@ -668,7 +690,9 @@ async function carregaPortes(tipus, root) {
   const olivera = await import('./porta-olivera.mjs');
   if (tipus === 'taula') {
     if (typeof olivera.checkTaula !== 'function') throw new Error('porta-olivera.mjs no exporta checkTaula: cal la porta v3');
-    return { taula: () => olivera.checkTaula(root), heretats: () => heretatsDe(root, olivera) };
+    // 261009: amb la porta v4, la taula és checkEscriptori (en fase «bloqueig», també la convocatòria).
+    const taula = typeof olivera.checkEscriptori === 'function' ? () => olivera.checkEscriptori(root) : () => olivera.checkTaula(root);
+    return { taula, heretats: () => heretatsDe(root, olivera) };
   }
   const [reflex, viva] = await Promise.all([import('./porta-reflex.mjs'), import('./porta-plantilla-viva.mjs')]);
   return {

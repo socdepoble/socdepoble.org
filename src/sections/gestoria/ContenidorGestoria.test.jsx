@@ -12,7 +12,7 @@ import { preparaRegistre } from '../tractors/nucli/aprovacio.js';
 import { crearMagatzemMemoria } from '../tractors/nucli/magatzem.js';
 import { TRACTORS, empremtaDe } from '../tractors/registreTractors.js';
 import ContenidorGestoria, { CONSULTA_TRACTORS } from './ContenidorGestoria.jsx';
-import { TRACTOR_CORREUS, TRACTOR_FACTURES, TRACTOR_TAULER } from './tractors.js';
+import { TRACTOR_CORREUS, TRACTOR_FACTURES, TRACTOR_HISTORIC, TRACTOR_TAULER } from './tractors.js';
 
 afterEach(() => {
   cleanup();
@@ -121,8 +121,10 @@ describe('la porta d’aprovació, endollada', () => {
   test('el catàleg real té empremta: cap font absent', () => {
     /* El tercer tractor, el del Tauler ('gestoria.tauler'), aprovat pel Mestre
        al xat el 261004: el catàleg el porta i el panell de la Gestoria no el
-       compta (estatTractorsDe només mira els seus dos). */
-    expect(Object.keys(INFO).sort()).toEqual([TRACTOR_CORREUS.id, TRACTOR_FACTURES.id, TRACTOR_TAULER.id].sort());
+       compta (estatTractorsDe només mira els seus dos).
+       Onada 6, ordre del Mestre (261009): el quart, el de l'Històric
+       ('gestoria.historic'), també és al catàleg i el panell tampoc el compta. */
+    expect(Object.keys(INFO).sort()).toEqual([TRACTOR_CORREUS.id, TRACTOR_FACTURES.id, TRACTOR_TAULER.id, TRACTOR_HISTORIC.id].sort());
     for (const info of Object.values(INFO)) expect(info).toMatchObject({ estat: 'ok', fontsAbsents: [] });
   });
 

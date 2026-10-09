@@ -10,11 +10,12 @@
  * definitiu es verifica el dia de l'alta al sistema, i qui el canvie passa
  * `base`, sense tocar el codi. Preproducció és l'entorn de proves de l'AEAT.
  *
- * El dibuix del QR és PENDENT: ISO/IEC 18004, nivell de correcció M, de 30 a
- * 40 mm, a la primera pàgina de la factura. No hi ha cap llibreria de QR al
- * projecte (afegir-ne una és un npm install amb aprovació) i un codificador
- * propi només entrarà quan es puga verificar, com a mínim, amb el vector
- * Reed-Solomon de «HELLO WORLD» en versió 1-M i amb una lectura real.
+ * El dibuix del QR (ISO/IEC 18004, nivell de correcció M, de 30 a 40 mm, a
+ * la primera pàgina de la factura) el fa ../qrDibuix.js des de l'Onada 6
+ * (261009): un codificador propi, sense dependències, verificat amb el vector
+ * Reed-Solomon de «HELLO WORLD» 1-M, el de l'annex I de la norma, un lector
+ * escrit dins de la seua prova i una lectura real (el BarcodeDetector del
+ * navegador). La factura impresa és facturar/ImpressioFactura.jsx.
  * JS pur: sense DOM, React ni xarxa.
  */
 import { errorAmbCodi } from '../comu.js';
@@ -26,7 +27,7 @@ export const URL_COTEJO = Object.freeze({
   preproduccio: 'https://prewww2.aeat.es/wlpl/TIKE-CONT/ValidarQR'
 });
 
-/* El que ha de complir el dibuix (PENDENT): ho llig la maqueta de la factura. */
+/* El que complix el dibuix (qrDibuix.js i la regla de la factura a modules.css: 35 mm). */
 export const ESPECIFICACIO_QR = Object.freeze({
   norma: 'ISO/IEC 18004',
   correccio: 'M',

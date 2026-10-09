@@ -1,6 +1,6 @@
 /** Persistent per-turn records. Locks never silently recover; failed writes leave the prior record intact. */
 import { CAMINS } from '../lib/arrel.mjs';
-import { checkTaula } from '../gates/porta-olivera.mjs';
+import { checkTaula, checkConvocatoria } from '../gates/porta-olivera.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
@@ -171,9 +171,14 @@ export function deliverContext(root, id, {route:routeId, file, creation = false}
   if (!/^\d{6}_\d{4}_[a-z0-9_]+\.md$/.test(path.basename(rel))) throw new Error('Nom termodinàmic invàlid');
   // Convocar agents exigix taula neta també fora d'un hook; una auditoria pot
   // documentar una taula bruta. create revalida ací, encara que ja tinga context.
+  let avisos = [];
   if (['prompt.local', 'prompt.consell'].includes(route.id)) {
-    const taula = checkTaula(root);
-    if (!taula.valid) throw new Error(`Convocatòria amb Escriptori brut:\n${taula.errors.join('\n')}`);
+    // 261009: també la convocatòria v4 de la porta Olivera. En fase «avis» no bloqueja: els
+    // avisos tornen amb el context i document.mjs els escriu per stderr abans de redactar.
+    const conv = checkConvocatoria(root, { fitxer: rel });
+    const errors = [...checkTaula(root).errors, ...conv.errors];
+    if (errors.length) throw new Error(`Convocatòria amb Escriptori brut:\n${errors.join('\n')}`);
+    avisos = conv.avisos;
   }
   return mutateTurn(root, id, turn => {
     const receiptId = randomUUID();
@@ -184,7 +189,7 @@ export function deliverContext(root, id, {route:routeId, file, creation = false}
     // New context invalidates verification, but retains an already bound plan.
     turn.verification = null;
     move(turn, turn.plan ? 'planned' : 'context_loaded', 'context');
-    return {reflex:`sdp:${id}:${receiptId}`, route, template:route.templateText};
+    return {reflex:`sdp:${id}:${receiptId}`, route, template:route.templateText, avisos};
   });
 }
 export function validateDocument(root, content, file, { closed = false, readRecord, readSnapshot } = {}) {

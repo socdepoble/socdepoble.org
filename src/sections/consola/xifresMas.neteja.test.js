@@ -89,12 +89,15 @@ describe('les mesures de consola.json, una vegada per lectura', () => {
     vi.setSystemTime(Date.parse(REBUT) + 2 * DIA + 60 * 60 * 1000);
     const lectura = consola();
     expect(xifraDelMas('ultim-rebut', null, lectura).titol).toBe('Últim rebut fa 2 dies');
-    expect(xifraDelMas('ultim-rebut', null, lectura).etiquetes).toBeNull();
+    /* Correcció de l'Onada 6 (revisió adversarial: el semàfor a les xifres de
+       les pàgines) · un rebut datat i recent és verd, com el panell Rebuts.
+       Derogat: cap etiqueta abans del llindar. */
+    expect(xifraDelMas('ultim-rebut', null, lectura).etiquetes).toEqual([{ text: 'En ordre', to: 'exit' }]);
     vi.setSystemTime(Date.parse(REBUT) + 12 * DIA + 60 * 60 * 1000);
     // La mateixa lectura, amb les mesures ja guardades, compta amb el rellotge d'ara.
     expect(xifraDelMas('ultim-rebut', null, lectura).titol).toBe('Últim rebut fa 12 dies');
-    // Passat el llindar dels rebuts rancis (7 dies), l'etiqueta també ix sense una lectura nova.
-    expect(xifraDelMas('ultim-rebut', null, lectura).etiquetes).not.toBeNull();
+    // Passat el llindar dels rebuts rancis (7 dies), l'etiqueta canvia sense una lectura nova.
+    expect(xifraDelMas('ultim-rebut', null, lectura).etiquetes).toEqual([{ text: 'FA MÉS DE 7 DIES', to: 'avis' }]);
     const quan = detallXifra('ultim-rebut', null, lectura).taules[0].files.find((f) => f.clau === 'Quan');
     expect(quan.celes[1]).toEqual({ text: 'fa 12 dies' });
   });

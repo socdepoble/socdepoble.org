@@ -4,10 +4,11 @@ import {
   CLAU_VISTES, CODIS_VIGILANCIA, ETIQUETES, IDS_PAGINES, LLINDAR_REBUTS_RANCIS_DIES, LLINDAR_SATURACIO, RUTA_CONSOLA,
   avisosDeVigilancia, dataUltimaOperacio, diesDes, etiquetesPagina, etiquetesPols, llegixVistes, marcaVista,
   mesuresPagina, paginaConsola, paginesConsola, rebutsRancis, resumPagina, segmentPagina, signaturaPagina, ultimRebut,
-  LLINDAR_ROIG, ORDRE_TO, estatsPagina, faDies, nivellEstats, plural, liniesDescartades,
-  fontLlegible, operacionsImmunitaries, registresDelDiari
+  ORDRE_TO, estatsPagina, faDies, nivellEstats, plural, liniesDescartades, problemesPagina, rutaPecaAlGraf,
+  fontLlegible, operacionsImmunitaries, registresDelDiari, problemesPols
 } from './consolaPagines.js';
 import { IDS_PANELLS } from './polsConsola.js';
+import { pecesAgents } from './mapa/actorsMapa.js';
 
 /* Correcció 261004 (verificador de la tercera passada, punt 4) · Una font
    absent no és cap zero: el middleware publica `operacions: 0` i llistes
@@ -230,11 +231,14 @@ const DADES = Object.freeze({
 });
 
 describe('etiquetesPagina · de quina font parla i quan no n’hi ha', () => {
+  /* Onada 6 (requisit 8) · El semàfor sencer: roig, taronja i verd; el que no
+     és gravetat (Canvis nous, Sense font), neutre. Cap blau. */
   test('cada etiqueta porta el to d’Insignia que li toca', () => {
     expect(ETIQUETES).toEqual({
       reparar: { text: 'Cal reparar', to: 'error' },
       important: { text: 'Important', to: 'avis' },
-      nou: { text: 'Canvis nous', to: 'info' },
+      enOrdre: { text: 'En ordre', to: 'exit' },
+      nou: { text: 'Canvis nous', to: 'neutre' },
       senseFont: { text: 'Sense font', to: 'neutre' }
     });
   });
@@ -249,11 +253,23 @@ describe('etiquetesPagina · de quina font parla i quan no n’hi ha', () => {
     }
   });
 
-  test('un Mapa net no porta cap etiqueta: no hi ha base per a dir res', () => {
-    for (const id of IDS_PAGINES.filter((p) => p !== 'pols')) {
-      expect(textos(id, ambMapa(MAPA_BUIT)), id).toEqual([]);
+  /* Onada 6 (requisit 8) · Derogat «un Mapa net no porta cap etiqueta»: amb
+     la font llegida i cap estat greu, el verd («En ordre»). Les peces dels
+     agents que falten són taronja (FALTA), també amb el Mapa buit. El pols
+     sense termometria ni cap rebut datat no té base per al verd. */
+  /* Correcció de l'Onada 6 (revisió adversarial: «es fabrica un verd») ·
+     Avisos i salut tampoc no té base per al verd sense cap mètrica mesurada:
+     el Mapa buit no en porta cap. */
+  test('un Mapa net diu «En ordre»; el pols i Avisos i salut, només si ho poden mesurar tot', () => {
+    for (const id of IDS_PAGINES.filter((p) => !['pols', 'agents', 'salut'].includes(p))) {
+      expect(textos(id, ambMapa(MAPA_BUIT)), id).toEqual(['En ordre']);
     }
+    expect(textos('agents', ambMapa(MAPA_BUIT))).toEqual(['Important']);
+    expect(textos('salut', ambMapa(MAPA_BUIT))).toEqual([]);
     expect(textos('pols', { dades: DADES, estatDades: 'ready' })).toEqual([]);
+    const ara = Date.parse('2026-09-30T12:00:00.000Z');
+    const mesurat = { ...DADES, termometria: { artefactesActius: 10 }, rebuts: [{ t: '2026-09-29T12:00:00.000Z', peticio: null, protocols: [], fonts: [] }] };
+    expect(etiquetesPagina('pols', { dades: mesurat, estatDades: 'ready' }, undefined, ara).map((e) => e.text)).toEqual(['En ordre']);
   });
 
   test('una lectura fallida que conserva l’última instantània bona també és una fallada', () => {
@@ -278,18 +294,26 @@ describe('etiquetesPagina · regles per pàgina, amb les severitats del Mapa', (
     const alLlindar = { ...DADES, termometria: { artefactesActius: LLINDAR_SATURACIO } };
     const brossa = { ...DADES, termometria: { artefactesActius: '999' } };
     expect(textos('pols', { dades: satura, estatDades: 'ready' })).toEqual(['Important']);
+    // Al llindar no és saturació; però el pols sense cap rebut datat no té base per al verd.
     expect(textos('pols', { dades: alLlindar, estatDades: 'ready' })).toEqual([]);
     expect(textos('pols', { dades: brossa, estatDades: 'ready' })).toEqual([]);
   });
 
-  test('explorador: enllaços trencats o orfes, reparar (també els que el Mapa gradua de mitjans); la resta no hi compta', () => {
+  /* Correcció de l'Onada 6 (revisió adversarial: el semàfor es contradeia) ·
+     cada enllaç trencat amb la gravetat del seu avís: els alts, reparar; els
+     mitjans (l'orfe, la crida inexistent), importants, com a la resta de
+     targetes. Derogat: «també els que el Mapa gradua de mitjans», en roig. */
+  test('explorador: enllaços trencats o orfes amb la gravetat del seu avís; la resta no hi compta', () => {
     expect(textos('explorador', ambMapa(mapaAmb({ avisos: [avis('script:x.mjs', 'script-absent', 'alta')] })))).toEqual(['Cal reparar']);
     expect(textos('explorador', ambMapa(mapaAmb({ avisos: [avis('skill:a', 'skill-fantasma', 'alta')] })))).toEqual(['Cal reparar']);
     expect(textos('explorador', ambMapa(mapaAmb({ avisos: [avis('document:x.md', 'font-absent', 'alta')] })))).toEqual(['Cal reparar']);
-    expect(textos('explorador', ambMapa(mapaAmb({ avisos: [avis('skill:a', 'orfe', 'mitjana')] })))).toEqual(['Cal reparar']);
-    expect(textos('explorador', ambMapa(mapaAmb({ avisos: [avis('skill:a', 'crida-inexistent', 'mitjana')] })))).toEqual(['Cal reparar']);
-    expect(textos('explorador', ambMapa(mapaAmb({ avisos: [avis('skill:a', 'fora-index', 'mitjana')] })))).toEqual([]);
-    expect(textos('explorador', ambMapa(mapaAmb({ avisos: [avis('tasca:t', 'tasca-morta', 'alta')] })))).toEqual([]);
+    expect(textos('explorador', ambMapa(mapaAmb({ avisos: [avis('skill:a', 'orfe', 'mitjana')] })))).toEqual(['Important']);
+    expect(textos('explorador', ambMapa(mapaAmb({ avisos: [avis('skill:a', 'crida-inexistent', 'mitjana')] })))).toEqual(['Important']);
+    // Un alt i un mitjà del mateix codi: mana el més greu.
+    expect(textos('explorador', ambMapa(mapaAmb({ avisos: [avis('skill:a', 'orfe', 'mitjana'), avis('skill:b', 'orfe', 'alta')] }))))
+      .toEqual(['Cal reparar']);
+    expect(textos('explorador', ambMapa(mapaAmb({ avisos: [avis('skill:a', 'fora-index', 'mitjana')] })))).toEqual(['En ordre']);
+    expect(textos('explorador', ambMapa(mapaAmb({ avisos: [avis('tasca:t', 'tasca-morta', 'alta')] })))).toEqual(['En ordre']);
   });
 
   test('fluxos: un lloc on s’escriu i ningú no llig és una cadena a mitges', () => {
@@ -297,52 +321,99 @@ describe('etiquetesPagina · regles per pàgina, amb les severitats del Mapa', (
     const escriu = { de: 'ruta:acta', a: 'document:04', tipus: 'escriu', confianca: 'declarat' };
     const llig = { de: 'ruta:prompt', a: 'document:04', tipus: 'llig', confianca: 'declarat' };
     expect(textos('fluxos', ambMapa(mapaAmb({ nodes, arestes: [escriu] })))).toEqual(['Important']);
-    expect(textos('fluxos', ambMapa(mapaAmb({ nodes, arestes: [escriu, llig] })))).toEqual([]);
+    expect(textos('fluxos', ambMapa(mapaAmb({ nodes, arestes: [escriu, llig] })))).toEqual(['En ordre']);
   });
 
-  test('calendari: una tasca morta demana reparar; una sense llançador o sense declaració, important', () => {
+  /* Onada 6 (requisit 8) · una tasca d'estat desconegut no es pot dir bona:
+     taronja, com DESCONEGUT a la seua targeta. */
+  test('calendari: una tasca morta demana reparar; una sense llançador, sense declaració o desconeguda, important', () => {
     // No s'anomena `t`: la Porta Consell (L6) llig `t('…')` com una clau d'i18n.
     const ambEstat = (estat) => ({ id: estat, estat, llancador: null, cadencia: null, script: null, font: null });
     expect(textos('calendari', ambMapa(mapaAmb({ tasques: [ambEstat('viu'), ambEstat('mort')] })))).toEqual(['Cal reparar']);
     expect(textos('calendari', ambMapa(mapaAmb({ tasques: [ambEstat('declarat-sense-llancador')] })))).toEqual(['Important']);
     expect(textos('calendari', ambMapa(mapaAmb({ tasques: [ambEstat('llancador-sense-declaracio')] })))).toEqual(['Important']);
-    expect(textos('calendari', ambMapa(mapaAmb({ tasques: [ambEstat('viu'), ambEstat('desconegut')] })))).toEqual([]);
+    expect(textos('calendari', ambMapa(mapaAmb({ tasques: [ambEstat('viu'), ambEstat('desconegut')] })))).toEqual(['Important']);
+    expect(textos('calendari', ambMapa(mapaAmb({ tasques: [ambEstat('viu')] })))).toEqual(['En ordre']);
   });
 
-  test('inventari: el semàfor de la pàgina, roig a partir de 3 avisos per skill', () => {
+  /* Onada 6 (requisit 8: «segons la seua gravetat») · Derogat «roig a partir de
+     3 avisos per skill»: un sol avís alt ja és roig; tres de baixos, ambre. */
+  test('inventari: el semàfor de la pàgina és el de la gravetat, no el del recompte', () => {
     const nodes = [skill('a'), skill('b'), { id: 'tasca:t', tipus: 'tasca', atributs: {} }];
     const tres = ['orfe', 'fora-index', 'pes'].map((c) => avis('skill:a', c, 'baixa'));
-    expect(textos('inventari', ambMapa(mapaAmb({ nodes, avisos: tres })))).toEqual(['Cal reparar']);
-    expect(textos('inventari', ambMapa(mapaAmb({ nodes, avisos: tres.slice(0, 2) })))).toEqual(['Important']);
+    expect(textos('inventari', ambMapa(mapaAmb({ nodes, avisos: tres })))).toEqual(['Important']);
+    expect(textos('inventari', ambMapa(mapaAmb({ nodes, avisos: [avis('skill:a', 'fora-segell', 'alta')] })))).toEqual(['Cal reparar']);
     // Els avisos d'una peça que no és skill no pinten l'inventari.
-    expect(textos('inventari', ambMapa(mapaAmb({ nodes, avisos: [avis('tasca:t', 'tasca-morta', 'alta')] })))).toEqual([]);
+    expect(textos('inventari', ambMapa(mapaAmb({ nodes, avisos: [avis('tasca:t', 'tasca-morta', 'alta')] })))).toEqual(['En ordre']);
   });
 
   test('entrades: una skill opaca és important; una que declara què llig, no', () => {
     const nodes = [skill('a'), { id: 'document:d', tipus: 'document', atributs: {} }];
     expect(textos('entrades', ambMapa(mapaAmb({ nodes })))).toEqual(['Important']);
     const arestes = [{ de: 'skill:a', a: 'document:d', tipus: 'llig', confianca: 'declarat' }];
-    expect(textos('entrades', ambMapa(mapaAmb({ nodes, arestes })))).toEqual([]);
+    expect(textos('entrades', ambMapa(mapaAmb({ nodes, arestes })))).toEqual(['En ordre']);
   });
 
-  test('actors: un vigilant de launchd mort demana reparar; un candat sense consumidor, important', () => {
+  /* Onada 6 · SENSE CONSUMIDOR és roig a la targeta del candat: la coberta diu el mateix. */
+  test('actors: un vigilant de launchd mort o un candat sense consumidor demanen reparar', () => {
     const tasca = (estat) => ({ id: 'v', estat, llancador: { tipus: 'launchd' }, cadencia: null, script: null, font: null });
     expect(textos('actors', ambMapa(mapaAmb({ tasques: [tasca('mort')] })))).toEqual(['Cal reparar']);
-    expect(textos('actors', ambMapa(mapaAmb({ tasques: [tasca('viu')] })))).toEqual([]);
+    expect(textos('actors', ambMapa(mapaAmb({ tasques: [tasca('viu')] })))).toEqual(['En ordre']);
     const hook = { id: 'hook:ag:Post', tipus: 'hook', atributs: { consumidor_acreditat: false } };
-    expect(textos('actors', ambMapa(mapaAmb({ nodes: [hook] })))).toEqual(['Important']);
+    expect(textos('actors', ambMapa(mapaAmb({ nodes: [hook] })))).toEqual(['Cal reparar']);
+    const perAcreditar = { ...hook, atributs: { consumidor_acreditat: null } };
+    expect(textos('actors', ambMapa(mapaAmb({ nodes: [perAcreditar] })))).toEqual(['Important']);
     const acreditat = { ...hook, atributs: { consumidor_acreditat: true } };
-    expect(textos('actors', ambMapa(mapaAmb({ nodes: [acreditat] })))).toEqual([]);
+    expect(textos('actors', ambMapa(mapaAmb({ nodes: [acreditat] })))).toEqual(['En ordre']);
   });
 
-  test('salut: avisos alts, reparar; mitjans, important; baixos, res', () => {
+  /* Onada 6 · alta → roig; mitjana i baixa → taronja; cap → verd. */
+  /* Correcció de l'Onada 6 (revisió adversarial: «es fabrica un verd») · cap
+     avís no basta: «En ordre» només amb totes les mètriques mesurades. Amb una
+     N/A (avui, conformitat-documental i cadena-portes) la targeta no diu ni
+     verd ni roig. */
+  test('salut: avisos alts, reparar; mitjans i baixos, important; cap, en ordre només si tot té mesura', () => {
+    const mesurada = { metrica: 'vigilants-vius', valor: 1, unitat: 'fraccio', numerador: 1, denominador: 1, font: 'f', prova: 'p' };
+    const na = { metrica: 'cadena-portes', valor: 'N/A', unitat: 'fraccio', numerador: null, denominador: null, font: 'f', prova: null };
     expect(textos('salut', ambMapa(mapaAmb({ avisos: [avis('a', 'x', 'baixa'), avis('b', 'y', 'alta')] })))).toEqual(['Cal reparar']);
     expect(textos('salut', ambMapa(mapaAmb({ avisos: [avis('a', 'x', 'mitjana')] })))).toEqual(['Important']);
-    expect(textos('salut', ambMapa(mapaAmb({ avisos: [avis('a', 'x', 'baixa')] })))).toEqual([]);
+    expect(textos('salut', ambMapa(mapaAmb({ avisos: [avis('a', 'x', 'baixa')] })))).toEqual(['Important']);
+    expect(textos('salut', ambMapa(mapaAmb({ salut: [mesurada] })))).toEqual(['En ordre']);
+    expect(textos('salut', ambMapa(mapaAmb({ salut: [mesurada, na] })))).toEqual([]);
+    expect(textos('salut', ambMapa(mapaAmb({ salut: [mesurada, na] })), 'abans')).toEqual(['Canvis nous']);
+    expect(textos('salut', ambMapa(MAPA_BUIT))).toEqual([]);
+    // Un avís alt continua dient «Cal reparar» encara que hi haja N/A: el roig sí que té base.
+    expect(textos('salut', ambMapa(mapaAmb({ salut: [na], avisos: [avis('b', 'y', 'alta')] })))).toEqual(['Cal reparar']);
   });
 
-  test('agents: cap regla pròpia, el nivell el diuen les pàgines que en mesuren les peces', () => {
-    expect(textos('agents', ambMapa(mapaAmb({ avisos: [avis('a', 'x', 'alta')] })))).toEqual([]);
+  test('agents: cap regla pròpia d’avisos; el nivell el diuen les seues quatre peces', () => {
+    // Amb el Mapa buit, les peces falten (taronja) encara que hi haja un avís alt d'una altra peça.
+    expect(textos('agents', ambMapa(mapaAmb({ avisos: [avis('a', 'x', 'alta')] })))).toEqual(['Important']);
+  });
+
+  /* Correcció de l'Onada 6 (revisió adversarial: «es fabrica un verd») · les
+     quatre peces en marxa diuen «En ordre»; si la dels vigilants és SENSE
+     MESURA, no hi ha base per al verd. */
+  test('agents: el verd només amb les quatre peces mesurades', () => {
+    // Una cadena declarada (la ruta deixa el que la skill llig), amb el seu tauler i el seu lector.
+    const nodes = [
+      { id: 'ruta:r', tipus: 'ruta', atributs: {} }, { id: 'document:d', tipus: 'document', atributs: {} },
+      { id: 'skill:s', tipus: 'skill', atributs: {} }
+    ];
+    const arestes = [
+      { de: 'ruta:r', a: 'document:d', tipus: 'escriu', confianca: 'declarat' },
+      { de: 'skill:s', a: 'document:d', tipus: 'llig', confianca: 'declarat' }
+    ];
+    const tasques = [{ id: 'v', estat: 'viu', llancador: { tipus: 'launchd' }, cadencia: null, script: null, font: null }];
+    const vigilants = (valor) => ({
+      metrica: 'vigilants-vius', valor, unitat: 'fraccio', numerador: valor === 'N/A' ? null : 1, denominador: valor === 'N/A' ? null : 1, font: 'f', prova: null
+    });
+    const enMarxa = mapaAmb({ nodes, arestes, tasques, salut: [vigilants(1)] });
+    const senseMesura = mapaAmb({ nodes, arestes, tasques, salut: [vigilants('N/A')] });
+    expect(Object.values(pecesAgents(enMarxa)).map((p) => p.estat)).toEqual(['EN MARXA', 'EN MARXA', 'EN MARXA', 'EN MARXA']);
+    expect(textos('agents', ambMapa(enMarxa))).toEqual(['En ordre']);
+    expect(pecesAgents(senseMesura).vigilants.estat).toBe('SENSE MESURA');
+    expect(textos('agents', ambMapa(senseMesura))).toEqual([]);
   });
 });
 
@@ -360,13 +431,14 @@ describe('Canvis nous · signatura del resum', () => {
   });
 
   test('«Canvis nous» només si el resum és diferent del que es va vore', () => {
-    expect(textos('explorador', ambMapa(mapa), '0 nodes · 0 arestes')).toEqual(['Canvis nous']);
-    expect(textos('explorador', ambMapa(mapa), '1 node · 0 arestes')).toEqual([]);
-    expect(textos('explorador', ambMapa(mapa), undefined)).toEqual([]);
-    expect(textos('explorador', ambMapa(mapa), null)).toEqual([]);
+    // Onada 6 · darrere del verd: el nivell va sempre primer, també «En ordre».
+    expect(textos('explorador', ambMapa(mapa), '0 nodes · 0 arestes')).toEqual(['En ordre', 'Canvis nous']);
+    expect(textos('explorador', ambMapa(mapa), '1 node · 0 arestes')).toEqual(['En ordre']);
+    expect(textos('explorador', ambMapa(mapa), undefined)).toEqual(['En ordre']);
+    expect(textos('explorador', ambMapa(mapa), null)).toEqual(['En ordre']);
     // Va després del nivell i no el substituïx.
     const ambAvis = mapaAmb({ nodes: [skill('a')], avisos: [avis('skill:a', 'orfe', 'mitjana')] });
-    expect(textos('explorador', ambMapa(ambAvis), 'abans')).toEqual(['Cal reparar', 'Canvis nous']);
+    expect(textos('explorador', ambMapa(ambAvis), 'abans')).toEqual(['Important', 'Canvis nous']);
     const ambAvisMitja = mapaAmb({ nodes: [skill('a')], tasques: [{ id: 't', estat: 'declarat-sense-llancador' }] });
     expect(textos('calendari', ambMapa(ambAvisMitja), 'abans')).toEqual(['Important', 'Canvis nous']);
     // Sense font no hi ha res a comparar.
@@ -387,9 +459,12 @@ describe('etiquetesPols · les tres targetes del pols', () => {
     expect(Object.keys(etiquetesPols(DADES, 'ready'))).toEqual(IDS_PANELLS);
   });
 
+  /* Onada 6 · i el verd, també només on hi ha base: les skills de consola.json
+     es poden jutjar; els rebuts sense cap rebut datat, no. */
   test('amb dades, només on hi ha base', () => {
     const text = (dades) => Object.fromEntries(Object.entries(etiquetesPols(dades, 'ready')).map(([k, l]) => [k, l.map((e) => e.text)]));
-    expect(text(DADES)).toEqual({ carrega: ['Sense font'], rebuts: [], skills: [] });
+    expect(text(DADES)).toEqual({ carrega: ['Sense font'], rebuts: [], skills: ['En ordre'] });
+    expect(text({ ...DADES, termometria: { artefactesActius: LLINDAR_SATURACIO } }).carrega).toEqual(['En ordre']);
     expect(text({
       ...DADES,
       termometria: { artefactesActius: LLINDAR_SATURACIO + 10 },
@@ -408,9 +483,10 @@ describe('etiquetesPols · les tres targetes del pols', () => {
     expect(rebuts([rebut(8 * DIA)])).toEqual(['Important']);
     // Mana l'instant, no els dies sencers: 7 dies i un mil·lisegon ja en són més de 7.
     expect(rebuts([rebut(7 * DIA + 1)])).toEqual(['Important']);
-    expect(rebuts([rebut(7 * DIA)])).toEqual([]);                      // al llindar, encara no
+    expect(rebuts([rebut(7 * DIA)])).toEqual(['En ordre']);            // al llindar, encara no
     // Mana el més recent, no el primer de la llista.
-    expect(rebuts([rebut(20 * DIA), rebut(2 * DIA)])).toEqual([]);
+    expect(rebuts([rebut(20 * DIA), rebut(2 * DIA)])).toEqual(['En ordre']);
+    // Sense cap rebut datat no hi ha base: ni taronja ni verd.
     expect(rebuts([])).toEqual([]);
     expect(rebuts([{ t: null, peticio: null, protocols: [], fonts: [] }])).toEqual([]);
     expect(etiquetesPols({ ...DADES, rebuts: [rebut(8 * DIA)] }, 'ready', ARA).rebuts).toEqual([ETIQUETES.important]);
@@ -647,41 +723,48 @@ describe('T3 · estatsPagina: el desglossament de la coberta', () => {
       expect(estatsPagina(id, ambMapa(MAPA_BUIT), ARA_T3), id).toEqual([]);
     }
     expect(estatsPagina('pols', { dades: DADES, estatDades: 'ready' }, ARA_T3)).toEqual([]);
-    // Un Mapa buit no té cap de les quatre peces en marxa: la pàgina ho diu, i la coberta també (sense nivell).
+    /* Un Mapa buit no té cap de les quatre peces en marxa: la pàgina ho diu, i
+       la coberta també. Onada 6 (semàfor) · FALTA és taronja, com l'etiqueta
+       de la peça; SENSE MESURA, neutre. Derogat: les quatre en blau i sense nivell. */
     expect(estatsT3('agents', ambMapa(MAPA_BUIT))).toEqual([
-      ['info', 'Fluxos de treball: falta'], ['info', 'Tauler: falta'],
-      ['info', 'Agents que treballen sols: falta'], ['info', 'Qui avisa quan algo es trenca: sense mesura']
+      ['avis', 'Fluxos de treball: falta'], ['avis', 'Tauler: falta'],
+      ['avis', 'Agents que treballen sols: falta'], ['neutre', 'Qui avisa quan algo es trenca: sense mesura']
     ]);
-    expect(nivellEstats(estatsPagina('agents', ambMapa(MAPA_BUIT), ARA_T3))).toBeNull();
+    expect(nivellEstats(estatsPagina('agents', ambMapa(MAPA_BUIT), ARA_T3))).toBe('avis');
   });
 
+  /* Onada 6 (requisit 8) · Els tons són els del semàfor: cap blau ('info').
+     El que només informa (les relacions inferides, les mètriques N/A), neutre;
+     el que no consta (desconegut, per acreditar, sense llançador, sense
+     lector), taronja; el candat sense consumidor, roig com la seua etiqueta. */
   test('la forma del Mapa real, pàgina per pàgina', () => {
     const f = ambMapa(MAPA_REAL);
-    expect(estatsT3('explorador', f)).toEqual([['error', '1 peça òrfena'], ['info', '1 relació inferida de la prosa']]);
+    // Correcció de l'Onada 6 (revisió adversarial) · l'orfe és mitjà al Mapa: taronja, com a la resta de targetes.
+    expect(estatsT3('explorador', f)).toEqual([['avis', '1 peça òrfena'], ['neutre', '1 relació inferida de la prosa']]);
     expect(estatsT3('fluxos', f)).toEqual([['avis', '1 lloc amb faena i cap lector']]);
     expect(estatsT3('calendari', f)).toEqual([
-      ['error', '1 tasca morta'], ['avis', '1 tasca sense llançador'], ['info', '1 tasca d’estat desconegut']
+      ['error', '1 tasca morta'], ['avis', '1 tasca sense llançador'], ['avis', '1 tasca d’estat desconegut']
     ]);
     expect(estatsT3('inventari', f)).toEqual([['avis', '1 skill amb semàfor ambre'], ['avis', '1 skill òrfena']]);
     expect(estatsT3('entrades', f)).toEqual([['avis', '2 skills opaques']]);
     expect(estatsT3('agents', f)).toEqual([
-      ['info', 'Fluxos de treball: falta'], ['info', 'Tauler: sense lector'],
-      ['info', 'Agents que treballen sols: parcial'], ['info', 'Qui avisa quan algo es trenca: parcial']
+      ['avis', 'Fluxos de treball: falta'], ['avis', 'Tauler: sense lector'],
+      ['avis', 'Agents que treballen sols: parcial'], ['avis', 'Qui avisa quan algo es trenca: parcial']
     ]);
     expect(estatsT3('actors', f)).toEqual([
-      ['error', '1 tasca de launchd morta'], ['avis', '1 candat sense consumidor'], ['info', '1 candat per acreditar'],
-      ['info', '1 tasca sense llançador'], ['info', '1 lloc sense lector']
+      ['error', '1 tasca de launchd morta'], ['error', '1 candat sense consumidor'], ['avis', '1 candat per acreditar'],
+      ['avis', '1 tasca sense llançador'], ['avis', '1 lloc sense lector']
     ]);
     expect(estatsT3('salut', f)).toEqual([
-      ['error', '1 avís alt'], ['avis', '1 avís mitjà'], ['info', '1 mètrica sense mesura (N/A)']
+      ['error', '1 avís alt'], ['avis', '1 avís mitjà'], ['neutre', '1 mètrica sense mesura (N/A)']
     ]);
   });
 
   test('cada estat porta una clau única dins de la seua targeta i el recompte que el text diu', () => {
     const e = estatsPagina('explorador', ambMapa(MAPA_REAL), ARA_T3);
     expect(e).toEqual([
-      { clau: 'orfe', n: 1, text: '1 peça òrfena', to: 'error' },
-      { clau: 'inferides', n: 1, text: '1 relació inferida de la prosa', to: 'info' }
+      { clau: 'orfe', n: 1, text: '1 peça òrfena', to: 'avis' },
+      { clau: 'inferides', n: 1, text: '1 relació inferida de la prosa', to: 'neutre' }
     ]);
     for (const [id, fonts] of casosDeNivell()) {
       const estats = estatsPagina(id, fonts, ARA_T3) ?? [];
@@ -711,20 +794,25 @@ describe('T3 · estatsPagina: el desglossament de la coberta', () => {
     expect(textosT3('explorador', absent)).toEqual(['Cal reparar']);
   });
 
-  test('l’exemple del Mestre a l’inventari: el semàfor mana, no la severitat del codi', () => {
+  /* Onada 6 (requisit 8: «segons la seua gravetat») · Derogat «el semàfor
+     mana, no la severitat del codi» (LLINDAR_ROIG, 3 avisos): ara el semàfor
+     ÉS la gravetat. La skill a, amb tres avisos mitjans, és ambre; la b, amb
+     un sol fora-segell (alt), és roja i «Cal reparar». */
+  test('l’exemple del Mestre a l’inventari: el semàfor és la gravetat dels avisos, no el seu nombre', () => {
     const nodes = [skill('a'), skill('b'), skill('c')];
     const avisos = [
       avis('skill:a', 'orfe', 'mitjana'), avis('skill:a', 'fora-index', 'mitjana'), avis('skill:a', 'disparador-decoratiu', 'mitjana'),
       avis('skill:b', 'fora-segell', 'alta')
     ];
-    expect(LLINDAR_ROIG).toBe(3);
     expect(estatsT3('inventari', ambMapa(mapaAmb({ nodes, avisos })))).toEqual([
       ['error', '1 skill amb semàfor roig'], ['avis', '1 skill amb semàfor ambre'], ['avis', '1 skill òrfena'],
       ['avis', '2 skills fora del cens'], ['avis', '1 skill sense disparador útil']
     ]);
+    const nomesA = ambMapa(mapaAmb({ nodes, avisos: avisos.slice(0, 3) }));
+    expect(estatsT3('inventari', nomesA)[0]).toEqual(['avis', '1 skill amb semàfor ambre']);
     const nomesB = ambMapa(mapaAmb({ nodes, avisos: avisos.slice(3) }));
-    expect(estatsT3('inventari', nomesB)).toEqual([['avis', '1 skill amb semàfor ambre'], ['avis', '1 skill fora del cens']]);
-    expect(textosT3('inventari', nomesB)).toEqual(['Important']);
+    expect(estatsT3('inventari', nomesB)).toEqual([['error', '1 skill amb semàfor roig'], ['avis', '1 skill fora del cens']]);
+    expect(textosT3('inventari', nomesB)).toEqual(['Cal reparar']);
   });
 
   /* Ordre del Mestre, 261004 · El vocabulari del pols ja no xoca amb el del
@@ -747,7 +835,7 @@ describe('T3 · estatsPagina: el desglossament de la coberta', () => {
   });
 
   test('el més greu primer: el to no afluixa mai dins d’una coberta', () => {
-    expect(ORDRE_TO).toEqual({ error: 0, avis: 1, info: 2 });
+    expect(ORDRE_TO).toEqual({ error: 0, avis: 1, info: 2, neutre: 3, exit: 4 });
     for (const [id, fonts] of casosDeNivell()) {
       const ordres = (estatsPagina(id, fonts, ARA_T3) ?? []).map((e) => ORDRE_TO[e.to]);
       expect(ordres, id).toEqual([...ordres].sort((x, y) => x - y));
@@ -758,6 +846,7 @@ describe('T3 · estatsPagina: el desglossament de la coberta', () => {
     expect(nivellEstats(null)).toBeNull();
     expect(nivellEstats([])).toBeNull();
     expect(nivellEstats([{ to: 'info' }])).toBeNull();
+    expect(nivellEstats([{ to: 'neutre' }])).toBeNull();
     expect(nivellEstats([{ to: 'avis' }, { to: 'info' }])).toBe('avis');
     expect(nivellEstats([{ to: 'error' }, { to: 'avis' }])).toBe('error');
   });
@@ -782,16 +871,20 @@ describe('T3 · estatsPagina: el desglossament de la coberta', () => {
      pintaven a cada targeta (el del tauler, el mateix que «etiquetes d'un colp
      d'ull» de ConsolaSection.test.jsx). Cap dels dos no porta fitxer-absent ni
      rebuts, els dos casos que el Mestre ha fet canviar. */
-  test('els dos Mapes de forma real porten, targeta per targeta, el nivell de les regles d’abans', () => {
+  /* Onada 6 (requisit 8) · Amb el semàfor sencer: on abans no hi havia cap
+     etiqueta, ara hi ha el verd («En ordre»), i Agents atòmics pren el color de
+     les seues peces (FALTA, PARCIAL i SENSE LECTOR són taronja). */
+  test('els dos Mapes de forma real porten, targeta per targeta, el nivell del semàfor', () => {
     const nivells = (mapa) => Object.fromEntries(IDS_PAGINES.filter((id) => id !== 'pols')
       .map((id) => [id, textosT3(id, ambMapa(mapa))]));
+    // Correcció de l'Onada 6 (revisió adversarial) · l'únic enllaç trencat dels dos és un orfe mitjà: Important.
     expect(nivells(MAPA_REAL)).toEqual({
-      explorador: ['Cal reparar'], fluxos: ['Important'], calendari: ['Cal reparar'], inventari: ['Important'],
-      entrades: ['Important'], agents: [], actors: ['Cal reparar'], salut: ['Cal reparar']
+      explorador: ['Important'], fluxos: ['Important'], calendari: ['Cal reparar'], inventari: ['Important'],
+      entrades: ['Important'], agents: ['Important'], actors: ['Cal reparar'], salut: ['Cal reparar']
     });
     expect(nivells(MAPA_TAULER)).toEqual({
-      explorador: ['Cal reparar'], fluxos: [], calendari: [], inventari: ['Important'],
-      entrades: ['Important'], agents: [], actors: [], salut: ['Important']
+      explorador: ['Important'], fluxos: ['En ordre'], calendari: ['En ordre'], inventari: ['Important'],
+      entrades: ['Important'], agents: ['Important'], actors: ['En ordre'], salut: ['Important']
     });
   });
 
@@ -829,5 +922,77 @@ describe('T3 · estatsPagina: el desglossament de la coberta', () => {
     expect(faDies(0)).toBe('avui');
     expect(faDies(1)).toBe('fa 1 dia');
     expect(faDies(8)).toBe('fa 8 dies');
+  });
+});
+
+/* Onada 6 (requisit 9: informació en superfície) · Cada targeta del tauler
+   diu quins són els seus problemes, no només quants: la mateixa dada que la
+   seua coberta, el més greu primer. */
+describe('Onada 6 · problemesPagina', () => {
+  /* Correcció de l'Onada 6 (revisió adversarial) · cada problema porta la seua
+     marca amb el to del semàfor: «[marca:to] text|ruta». */
+  const unProblema = (p) => `${p.marca ? `[${p.marca}:${p.to}] ` : ''}${p.ruta ? `${p.text}|${p.ruta}` : p.text}`;
+  const textosP = (id, fonts) => problemesPagina(id, fonts)?.map(unProblema) ?? null;
+
+  test('sense font, null; amb una font neta, cap problema', () => {
+    for (const id of IDS_PAGINES) {
+      expect(problemesPagina(id, {}), id).toBeNull();
+      expect(problemesPagina(id, { estatMapa: 'loading', estatDades: 'loading' }), id).toBeNull();
+    }
+    for (const id of IDS_PAGINES.filter((p) => p !== 'pols')) expect(problemesPagina(id, ambMapa(MAPA_BUIT)), id).toEqual([]);
+    expect(problemesPagina('pols', { dades: DADES, estatDades: 'ready' })).toEqual([]);
+    expect(problemesPagina('pestanyes', ambMapa(MAPA_BUIT))).toBeNull();
+  });
+
+  test('el Mapa de forma real, pàgina per pàgina: quins són, amb la ruta a part', () => {
+    const f = ambMapa(MAPA_REAL);
+    expect(textosP('explorador', f)).toEqual(['[mitjana:avis] wiki-busca-skills · orfe']);
+    expect(textosP('fluxos', f)).toEqual(['[sense lector:avis] |_wiki_de_poble/04_escriptori']);
+    expect(textosP('calendari', f)).toEqual([
+      '[mort:error] reflex-daemon', '[sense llançador:avis] higiene-basica', '[desconegut:avis] frontissa-contingut'
+    ]);
+    expect(textosP('inventari', f)).toEqual(['[ambre:avis] wiki-busca-skills · orfe']);
+    expect(textosP('entrades', f)).toEqual(['[opaca:avis] sdp-workflow', '[opaca:avis] wiki-busca-skills']);
+    expect(textosP('agents', f)).toEqual([]);
+    expect(textosP('actors', f)).toEqual([
+      '[mort:error] reflex-daemon', '[sense consumidor:error] Antigravity · PostToolUse', '[per acreditar:avis] git · pre-commit',
+      '[sense llançador:avis] higiene-basica', '[sense lector:avis] |_wiki_de_poble/04_escriptori'
+    ]);
+    // El més greu primer: l'alt (la tasca morta) davant del mitjà (l'orfe), cada un amb la seua severitat.
+    expect(textosP('salut', f)).toEqual(['[alta:error] tasca-morta|reflex-daemon', '[mitjana:avis] wiki-busca-skills · orfe']);
+  });
+
+  test('pols: les skills fora del manifest i les que falten al disc, pel seu nom i en roig', () => {
+    expect(textosP('pols', ambDades({ skills: [orfeDisc, fantasma('f')] }))).toEqual([
+      '[fora del manifest:error] o', '[sense disc:error] f'
+    ]);
+  });
+
+  /* Correcció de l'Onada 6 (revisió adversarial: requisit 9 als panells del
+     pols) · les tres targetes del pols diuen també quins problemes tenen. */
+  test('problemesPols: saturació, rebuts rancis i skills, amb la llei de les etiquetes', () => {
+    const tots = (dades) => Object.fromEntries(Object.entries(problemesPols(dades, ARA_T3)).map(([k, l]) => [k, l?.map(unProblema) ?? null]));
+    expect(tots(null)).toEqual({ carrega: null, rebuts: null, skills: null });
+    expect(tots(DADES)).toEqual({ carrega: [], rebuts: [], skills: [] });
+    expect(tots({
+      ...DADES, termometria: { artefactesActius: LLINDAR_SATURACIO + 3 }, rebuts: [rebutDeFa(9 * DIA_T3)], skills: [orfeDisc]
+    })).toEqual({
+      carrega: ['[saturat:avis] 3 artefactes per damunt del llindar'],
+      rebuts: ['[ranci:avis] Últim rebut fa 9 dies'],
+      skills: ['[fora del manifest:error] o']
+    });
+    // Al llindar, o amb el rebut de fa 7 dies, cap problema: el mateix que diuen les etiquetes.
+    expect(tots({ ...DADES, termometria: { artefactesActius: LLINDAR_SATURACIO }, rebuts: [rebutDeFa(7 * DIA_T3)] }))
+      .toEqual({ carrega: [], rebuts: [], skills: [] });
+    expect(Object.keys(problemesPols(DADES))).toEqual(IDS_PANELLS);
+  });
+
+  test('cap problema canvia la signatura de «Canvis nous»', () => {
+    expect(signaturaPagina('salut', ambMapa(MAPA_REAL))).toBe(resumPagina('salut', ambMapa(MAPA_REAL)));
+    expect(resumPagina('salut', ambMapa(MAPA_REAL))).not.toMatch(/orfe|reflex/);
+  });
+
+  test('«Veure al graf» porta a l’Explorador amb la peça a la URL', () => {
+    expect(rutaPecaAlGraf('skill:sdp-workflow')).toBe('/consola/explorador?peca=skill%3Asdp-workflow');
   });
 });

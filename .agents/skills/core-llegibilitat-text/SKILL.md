@@ -4,9 +4,7 @@ status: actiu
 description: Tractor documental per garantir el format llegible (jerarquia H1-H6) i l'escaneig ràpid amb negretes en tots els textos del sistema.
 name: core-llegibilitat-text
 tags:
-  - format
-  - accessibilitat
-  - text
+  - disseny
   - tractors
 triggers_on:
   - redactar text
@@ -14,7 +12,7 @@ triggers_on:
   - revisar pàgina
   - copy
 contracte.llig:
-  - _wiki_de_poble/04_arquitectura_disseny/pedra_seca.md
+  - .agents/skills/sdp-pedra-seca/SKILL.md
 ---
 # Tractor de Llegibilitat i Flux de Text (Pedra Seca)
 

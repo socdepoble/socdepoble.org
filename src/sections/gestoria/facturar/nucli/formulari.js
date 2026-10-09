@@ -16,6 +16,15 @@
  *     només a la simplificada; els errors de lectura en llenguatge planer i,
  *     si la lectura és bona, els totals que calcularà el nucli (els mateixos
  *     de creaFacturaEmesa, perquè es calculen amb la seua anàlisi);
+ *   · Onada 6 (261009): la data de l'operació si és una altra, la retenció
+ *     d'IRPF (cap, 7 % o 15 %), l'exempció de l'article 20 (E1) i la
+ *     rectificativa: R1-R4 per la causa, o R5 si corregix tiquets, per
+ *     substitució (amb l'import de les rectificades, tret del llibre) o per
+ *     diferències. Que les rectificades siguen del llibre i vives ho torna a
+ *     comprovar el nucli dins de l'emissió (FACTURA_RECTIFICADA_INEXISTENT).
+ *     Correcció de la revisió (261009): les triades han de ser d'un sol
+ *     client, el client copiat va darrere de la tria (commutaRectificada) i,
+ *     si el client escrit no és el de la factura, es diu (avisDelClient);
  *   · el llibre: cada alta amb el seu estat (emesa o anul·lada) i els textos
  *     de la verificació de la cadena.
  * Sense DOM, React ni xarxa.
@@ -28,18 +37,48 @@ import { formatImport, parseImport } from '../../nucli/diners.js';
 /** L'id del domicili fiscal d'una configuració feta des de la pantalla. */
 export const ID_DOMICILI_FISCAL = 'fiscal';
 
-/** Els tres tipus que emet la pantalla, amb el text per a qui no és del ram. */
+/** Els tipus que emet la pantalla, amb el text per a qui no és del ram. La
+    rectificativa (Onada 6, 261009) és R1-R4 o, si corregix tiquets, R5: el
+    tipus exacte el decidix tipusEfectiu. */
 export const OPCIONS_TIPUS = Object.freeze([
   Object.freeze({ valor: 'F1', etiqueta: 'Factura completa', ajuda: 'La de sempre: porta les dades del client.' }),
   Object.freeze({ valor: 'F2', etiqueta: 'Factura simplificada (tiquet)', ajuda: 'Sense dades del client, fins a 400 € amb l’IVA inclòs.' }),
   Object.freeze({
     valor: 'F3', etiqueta: 'Factura completa en lloc de tiquets',
     ajuda: 'Quan un client et demana la factura d’uns tiquets que ja li havies fet.'
+  }),
+  Object.freeze({
+    valor: 'R', etiqueta: 'Factura rectificativa',
+    ajuda: 'Per a corregir una factura que ja has emés: la del llibre no es toca, esta la corregix.'
   })
 ]);
 
-/** Els tipus d'IVA del selector, com a text («21»). */
-export const OPCIONS_IVA = Object.freeze(TIPUS_IVA.map((t) => Object.freeze({ valor: String(t), etiqueta: `${t} %` })));
+/** Els tipus d'IVA del selector, com a text («21»), i l'exempció de l'article 20 de la Llei 37/1992 (E1). */
+export const OPCIONS_IVA = Object.freeze([
+  ...TIPUS_IVA.map((t) => Object.freeze({ valor: String(t), etiqueta: `${t} %` })),
+  Object.freeze({ valor: 'E1', etiqueta: 'Exempta (art. 20 de la Llei de l’IVA)' })
+]);
+
+/** La retenció d'IRPF de qui factura una activitat professional (Onada 6, 261009). */
+export const OPCIONS_RETENCIO = Object.freeze([
+  Object.freeze({ valor: '', etiqueta: 'Sense retenció' }),
+  Object.freeze({ valor: '7', etiqueta: '7 % (inici d’activitat: l’any d’alta i els dos següents)' }),
+  Object.freeze({ valor: '15', etiqueta: '15 % (activitat professional)' })
+]);
+
+/** La causa d'una rectificativa d'una factura completa (art. 80 de la Llei 37/1992). */
+export const OPCIONS_CAUSA = Object.freeze([
+  Object.freeze({ valor: 'R1', etiqueta: 'Un error, un descompte, una devolució o un canvi del preu' }),
+  Object.freeze({ valor: 'R2', etiqueta: 'El client és en concurs de creditors' }),
+  Object.freeze({ valor: 'R3', etiqueta: 'Un cobrament que ja no es podrà fer (crèdit incobrable)' }),
+  Object.freeze({ valor: 'R4', etiqueta: 'Una altra causa' })
+]);
+
+/** Com corregix: per substitució (S) o per diferències (I). */
+export const OPCIONS_MODALITAT = Object.freeze([
+  Object.freeze({ valor: 'S', etiqueta: 'La substituïx sencera', ajuda: 'Escrius la factura com havia de ser, amb totes les línies.' }),
+  Object.freeze({ valor: 'I', etiqueta: 'Només la diferència', ajuda: 'Escrius només el que canvia; el que resta, amb el preu en negatiu (-12,50).' })
+]);
 
 /* Els noms dels tipus de factura per a la llista del llibre. */
 const NOM_TIPUS = Object.freeze({
@@ -205,6 +244,28 @@ export function resumDelLlegat(llegat) {
 /** Una línia buida del formulari. */
 export const liniaBuida = () => ({ concepte: '', quantitat: '1', preu: '', tipusIva: '21' });
 
+/** El client buit del formulari. */
+export const clientBuit = () => ({ nif: '', nom: '', adreca: '', codiPostal: '', poblacio: '' });
+
+/**
+ * El client d'una factura del llibre (el seu destinatari), en la forma del formulari.
+ * @param {object|null} destinatari
+ * @returns {{ nif: string, nom: string, adreca: string, codiPostal: string, poblacio: string }}
+ */
+export function clientDeDestinatari(destinatari) {
+  return {
+    nif: destinatari?.nif ?? '', nom: destinatari?.nom ?? '', adreca: destinatari?.domicili?.adreca ?? '',
+    codiPostal: destinatari?.domicili?.codiPostal ?? '', poblacio: destinatari?.domicili?.poblacio ?? ''
+  };
+}
+
+/* El NIF com es compara: sense espais ni guions, en majúscules. */
+const nifNet = (nif) => net(nif).replace(/[\s-]/g, '').toUpperCase();
+/* Dos clients del formulari són el mateix si coincidixen tots els camps (el NIF, net). */
+const mateixClient = (a, b) => Object.keys(clientBuit())
+  .every((camp) => (camp === 'nif' ? nifNet(a?.nif) === nifNet(b?.nif) : net(a?.[camp]) === net(b?.[camp])));
+const esClientBuit = (client) => Object.keys(clientBuit()).every((camp) => !net(client?.[camp]));
+
 /**
  * El formulari d'una factura nova.
  * @param {string} dataExpedicio la d'avui, «aaaa-mm-dd»
@@ -212,10 +273,11 @@ export const liniaBuida = () => ({ concepte: '', quantitat: '1', preu: '', tipus
  */
 export function facturaBuida(dataExpedicio, tipus = 'F1') {
   return {
-    tipus, dataExpedicio, ivaInclos: true, descripcio: '',
-    client: { nif: '', nom: '', adreca: '', codiPostal: '', poblacio: '' },
+    tipus, dataExpedicio, dataOperacio: '', ivaInclos: true, descripcio: '', retencio: '',
+    client: clientBuit(), clientCopiat: false,
     linies: [liniaBuida()],
-    substituides: []
+    substituides: [],
+    rectificades: [], causa: 'R1', modalitat: 'S'
   };
 }
 
@@ -234,26 +296,165 @@ const deClau = (clau) => {
   return { numSerie, dataExpedicio };
 };
 
+/* Els tipus sense destinatari: la simplificada i la seua rectificativa. */
+const SENSE_CLIENT = Object.freeze(['F2', 'R5']);
+const esSimplificada = (tipusFactura) => SENSE_CLIENT.includes(tipusFactura);
+
+/**
+ * Les factures del llibre que una rectificativa pot corregir: les altes no
+ * anul·lades, de la més nova a la més antiga, amb el que en cal saber.
+ * @param {ReadonlyArray<object>} registres la cadena d'un emissor
+ * @returns {{ clau: string, etiqueta: string, simplificada: boolean, base: number, quota: number, destinatari: object|null }[]}
+ */
+export function rectificables(registres) {
+  return filesDelLlibre(registres).filter((f) => !f.anulada).map((f) => ({
+    clau: clauDeFactura(f.registre),
+    etiqueta: `${f.numSerie} · ${f.data} · ${f.client} · ${f.total}`,
+    simplificada: esSimplificada(f.registre.tipusFactura),
+    base: f.registre.factura?.baseTotal ?? 0,
+    quota: f.registre.factura?.quotaTotal ?? 0,
+    destinatari: f.registre.factura?.destinatari ?? null
+  }));
+}
+
+/**
+ * El TipoFactura que tindrà la factura del formulari: el triat, o, per a una
+ * rectificativa, R5 si corregix tiquets (simplificades) i, si no, el de la
+ * causa (R1 per defecte).
+ * @param {object} formulari
+ * @param {ReadonlyArray<object>} [registres]
+ * @returns {string|null}
+ */
+export function tipusEfectiu(formulari, registres = []) {
+  if (formulari?.tipus !== 'R') return formulari?.tipus ?? null;
+  const claus = Array.isArray(formulari.rectificades) ? formulari.rectificades : [];
+  const triades = rectificables(registres).filter((r) => claus.includes(r.clau));
+  if (triades.length && triades.every((r) => r.simplificada)) return 'R5';
+  return OPCIONS_CAUSA.some((o) => o.valor === formulari.causa) ? formulari.causa : 'R1';
+}
+
+/* Les factures triades del llibre, en l'ordre en què s'han triat (les que ja no hi són, fora). */
+function triadesDe(claus, registres) {
+  const llista = rectificables(registres);
+  return (Array.isArray(claus) ? claus : []).map((clau) => llista.find((r) => r.clau === clau)).filter(Boolean);
+}
+
+/**
+ * Tria o desfà la tria d'una factura a corregir. El client va darrere de la
+ * tria mentre la persona no l'ha escrit (és buit, o és el copiat:
+ * `clientCopiat`): passa a ser el de la primera factura triada amb client, o
+ * buit si ja no en queda cap. Un client escrit o corregit a mà no es toca, i
+ * si no és el de la factura ho diu avisDelClient. Correcció de la revisió
+ * (261009): triar A, desfer-la i triar B deixava el client d'A.
+ * @param {object} formulari el de facturaBuida
+ * @param {string} clau la de clauDeFactura
+ * @param {ReadonlyArray<object>} [registres] la cadena de l'emissor
+ * @returns {object} el formulari nou
+ */
+export function commutaRectificada(formulari, clau, registres = []) {
+  const abans = Array.isArray(formulari?.rectificades) ? formulari.rectificades : [];
+  const rectificades = abans.includes(clau) ? abans.filter((c) => c !== clau) : [...abans, clau];
+  if (!esClientBuit(formulari?.client) && formulari?.clientCopiat !== true) return { ...formulari, rectificades };
+  const primera = triadesDe(rectificades, registres).find((r) => !r.simplificada && r.destinatari);
+  return {
+    ...formulari, rectificades,
+    client: primera ? clientDeDestinatari(primera.destinatari) : clientBuit(),
+    clientCopiat: Boolean(primera)
+  };
+}
+
+/**
+ * L'avís quan el client d'una rectificativa no és el de la factura que
+ * corregix, amb el client de la factura per a copiar-lo. Pot ser a propòsit
+ * (corregir el NIF o el domicili del client), i per això avisa i no refusa.
+ * null si coincidix, si encara no s'ha triat cap factura amb client o si no és
+ * una rectificativa.
+ * @param {object} formulari
+ * @param {ReadonlyArray<object>} [registres]
+ * @returns {{ text: string, client: object }|null}
+ */
+export function avisDelClient(formulari, registres = []) {
+  if (formulari?.tipus !== 'R') return null;
+  const primera = triadesDe(formulari.rectificades, registres).find((r) => !r.simplificada && r.destinatari);
+  if (!primera) return null;
+  const client = clientDeDestinatari(primera.destinatari);
+  if (mateixClient(client, formulari.client)) return null;
+  return {
+    text: `La factura que corregixes és de ${client.nom} (NIF ${client.nif}). Deixa el client així només si el que corregixes són les seues dades.`,
+    client
+  };
+}
+
+/* La part de rectificativa de les dades: el tipus, la manera, les factures i, per substitució, l'import rectificat. */
+function llegixRectificacio(formulari, registres, errors) {
+  const claus = Array.isArray(formulari.rectificades) ? formulari.rectificades : [];
+  if (!claus.length) {
+    errors.push('Tria quina factura corregix esta rectificativa.');
+    return null;
+  }
+  const llista = rectificables(registres);
+  const triades = claus.map((clau) => llista.find((r) => r.clau === clau) ?? null);
+  if (triades.some((r) => !r)) {
+    errors.push('Alguna de les factures triades ja no es pot rectificar (no és al llibre o està anul·lada): torna-les a triar.');
+    return null;
+  }
+  const simplificades = triades.filter((r) => r.simplificada).length;
+  if (simplificades && simplificades !== triades.length) {
+    errors.push('Una rectificativa corregix tiquets o factures completes, no les dues coses alhora.');
+    return null;
+  }
+  /* Correcció de la revisió (261009): una factura té un sol client, i la rectificativa que en corregix
+     diverses també. El nucli ho torna a refusar dins de l'emissió (RECTIFICADES_DE_DIVERSOS_CLIENTS). */
+  if (new Set(triades.filter((r) => !r.simplificada).map((r) => nifNet(r.destinatari?.nif))).size > 1) {
+    errors.push('Una rectificativa corregix factures d’un sol client, i les triades són de clients diferents: fes-ne una per a cada client.');
+    return null;
+  }
+  if (!OPCIONS_MODALITAT.some((o) => o.valor === formulari.modalitat)) {
+    errors.push('Tria si la rectificativa substituïx la factura sencera o només porta la diferència.');
+    return null;
+  }
+  const tipus = tipusEfectiu(formulari, registres);
+  return {
+    tipus,
+    dades: {
+      tipusRectificativa: formulari.modalitat,
+      rectificades: triades.map((r) => deClau(r.clau)),
+      ...(formulari.modalitat === 'S' ? {
+        importRectificat: { base: triades.reduce((s, r) => s + r.base, 0), quota: triades.reduce((s, r) => s + r.quota, 0) }
+      } : {})
+    }
+  };
+}
+
 /**
  * Les dades per a emissio.emet, o els errors de lectura en llenguatge planer.
  * No valida la factura: això ho fa el nucli (FACTURA_INVALIDA, amb la llista).
+ * Una rectificativa necessita la cadena del llibre, on són les factures que corregix.
  * @param {object} formulari el de facturaBuida
+ * @param {ReadonlyArray<object>} [registres] la cadena de l'emissor
  * @returns {{ dades: object|null, errors: string[] }}
  */
-export function dadesDeFactura(formulari) {
+export function dadesDeFactura(formulari, registres = []) {
   const errors = [];
-  const tipus = formulari?.tipus;
-  if (!OPCIONS_TIPUS.some((o) => o.valor === tipus)) errors.push('Tria el tipus de factura.');
+  const triat = formulari?.tipus;
+  if (!OPCIONS_TIPUS.some((o) => o.valor === triat)) errors.push('Tria el tipus de factura.');
+  const rectificacio = triat === 'R' ? llegixRectificacio(formulari, registres, errors) : null;
+  const tipus = rectificacio ? rectificacio.tipus : triat;
+  const senseClient = esSimplificada(tipus);
   const linies = (Array.isArray(formulari?.linies) ? formulari.linies : []).map((l, i) => {
     const quantitat = llegixQuantitat(l.quantitat);
     if (quantitat === null) errors.push(`Línia ${i + 1}: la quantitat ha de ser un número més gran que zero (per exemple 1 o 2,5).`);
     const preuUnitari = parseImport(net(l.preu));
     if (preuUnitari === null) errors.push(`Línia ${i + 1}: el preu no s’entén; escriu-lo amb coma per als cèntims, com 12,50.`);
-    return { concepte: net(l.concepte), quantitat, preuUnitari, tipusIva: Number(l.tipusIva) };
+    const exempta = typeof l.tipusIva === 'string' && l.tipusIva.startsWith('E');
+    return { concepte: net(l.concepte), quantitat, preuUnitari, ...(exempta ? { exempcio: l.tipusIva } : { tipusIva: Number(l.tipusIva) }) };
   });
   if (!linies.length) errors.push('Afig almenys una línia.');
   const substituides = Array.isArray(formulari?.substituides) ? formulari.substituides : [];
   if (tipus === 'F3' && !substituides.length) errors.push('Tria quins tiquets substituïx esta factura.');
+  const retencio = senseClient ? '' : net(formulari?.retencio);
+  if (retencio && !OPCIONS_RETENCIO.some((o) => o.valor === retencio)) errors.push('Tria la retenció d’IRPF de la llista.');
+  const dataOperacio = net(formulari?.dataOperacio);
   if (errors.length) return { dades: null, errors };
   const client = formulari.client ?? {};
   return {
@@ -261,13 +462,16 @@ export function dadesDeFactura(formulari) {
     dades: {
       tipus,
       dataExpedicio: formulari.dataExpedicio,
-      ...(tipus === 'F2' ? {} : {
+      ...(dataOperacio && dataOperacio !== formulari.dataExpedicio ? { dataOperacio } : {}),
+      ...(senseClient ? {} : {
         destinatari: { nif: net(client.nif), nom: net(client.nom), domicili: { adreca: net(client.adreca), codiPostal: net(client.codiPostal), poblacio: net(client.poblacio) } }
       }),
-      ...(tipus === 'F2' && formulari.ivaInclos ? { ivaInclos: true } : {}),
+      ...(senseClient && formulari.ivaInclos ? { ivaInclos: true } : {}),
       ...(net(formulari.descripcio) ? { descripcio: net(formulari.descripcio) } : {}),
       linies,
-      ...(tipus === 'F3' ? { substituides: substituides.map(deClau) } : {})
+      ...(retencio ? { retencio: { percentatge: Number(retencio) } } : {}),
+      ...(tipus === 'F3' ? { substituides: substituides.map(deClau) } : {}),
+      ...(rectificacio ? rectificacio.dades : {})
     }
   };
 }
@@ -278,15 +482,16 @@ export function dadesDeFactura(formulari) {
  * @param {object} dades les de dadesDeFactura
  * @param {object} config la configuració vigent (l'emissor)
  * @param {string} [numSerie] el número que es mostra (no afecta el càlcul)
- * @returns {{ baseTotal: number, quotaTotal: number, importTotal: number, desglossament: object[] }|null}
+ * @returns {{ baseTotal: number, quotaTotal: number, importTotal: number, desglossament: object[],
+ *   retencio: { percentatge: number, import: number }|null, liquid: number }|null}
  */
 export function totalsDeFactura(dades, config, numSerie = 'A2000-0001') {
   if (!dades || !config) return null;
   try {
     const { errors, factura } = analitza({ ...dades, numSerie, emissor: emissorDe(config) });
     if (errors.length) return null;
-    const { baseTotal, quotaTotal, importTotal, desglossament } = factura;
-    return { baseTotal, quotaTotal, importTotal, desglossament };
+    const { baseTotal, quotaTotal, importTotal, desglossament, retencio, liquid } = factura;
+    return { baseTotal, quotaTotal, importTotal, desglossament, retencio: retencio ?? null, liquid };
   } catch {
     return null;
   }

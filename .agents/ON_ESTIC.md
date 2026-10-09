@@ -6,7 +6,7 @@ description: Punter d'arrencada de sessió generat per despertar.mjs
 # ON_ESTIC.md (Punter de Sessió)
 
 > [!IMPORTANT]
-> **GENERAT:** 2026-10-08T10:31:07.366Z
+> **GENERAT:** 2026-10-09T05:41:02.124Z
 > Aquest document l'`@`-importa `CLAUDE.md`, i eixa importació es resol ABANS
 > que el hook l'escriga: la còpia que tens al context és la de la sessió
 > anterior. Per això **ací no hi ha cap llista de l'Escriptori**: la d'ahir
@@ -14,7 +14,7 @@ description: Punter d'arrencada de sessió generat per despertar.mjs
 > llegir eixa carpeta en procediments automàtics.
 
 **Branca Git:** backup-notes-publish
-**Commit:** 28c335e4
+**Commit:** e9776630
 
 ## 1. Contingut de l'Escriptori (Taula de Treball)
 
@@ -28,19 +28,21 @@ Si no tens cap de les dues, llista `_wiki_de_poble/04_escriptori/` amb una eina 
 ## 2. Resum de l'ESTAT recent
 
 > [!WARNING]
-> L'ESTAT s'ha llegit del capçalera sense segell horari: no es pot datar. El fitxer viu més recent és `_wiki_de_poble/04_escriptori/261008_1201_prompt_claude.md`.
+> L'ESTAT s'ha llegit del capçalera sense segell horari: no es pot datar. El fitxer viu més recent és `_wiki_de_poble/04_escriptori/261009_0310_auditoria_claude.md`.
 
 Últim relleu anotat a `.agents/ESTAT.md` (primera capçalera del fitxer):
 
-## ESTAT_ACTUAL · 2026-10-08 05:20 · MarIA · Tancament de l'Onada 3 (Grup A i B Completats)
+## ESTAT_ACTUAL · 2026-10-08 19:19 · MarIA · Tancament de l'Onada 4 i esborrats
 
-L'Onada 3 ha finalitzat amb èxit rotund. Claude ha completat tant el Grup A com el Grup B de tasques:
-- Carrega progressiva ("Mostra més" / paginació al mur) (Decisió 4).
-- Mode estricte en imatges externes al mur (Decisió 3 completada a fons).
-- Neteja de menors i seguretat de llinatge al xat.
-El paquet de tests ha tancat amb **0 errors en 14.210 proves**. El deute tècnic pendent (el trencament del format `sdp-media://` en targetes) s'ha deixat documentat formalment per a l'arrencada de la pròxima Onada.
+L'Onada 4 ha finalitzat amb èxit. Claude ha completat els 5 fronts d'implementació:
+- Editor de Perfil: retallador calc, 10MB, botons separats i Vistes (A4/Targeta) en menú lateral.
+- Notes Personals: publicacions de l'entitat, botó unificat de desa/publica al Mur.
+- Organitzacions: suport de membres (alta, rols, eixir) i eliminada la mare. Selector de "El compte".
+- Xat (Auditoria adversarial): defectes de resiliència corregits, missatge d'error de privacitat implementat (SDP-XAT-016), protecció de metadades.
+- App Stores: preparació de la fitxa sense codi natiu per ara. 
 
-S'ha verificat la neteja de l'Escriptori i s'han deixat els llistats arxivats segons la Porta Olivera.
+Les migracions SQL (`2610081400`, `2610081401`, `2610081402`, `2610081543`) han estat categoritzades a `node-suite-manifest.json`. L'empremta de drets d'autor s'ha aprovat a la frontissa. Els codis morts relacionats amb `DialegCapcaleraAvatar` han estat eliminats completament i els tests migrats cap a `DetallAjust`.
+El paquet de tests passa la política (14.599 tests en verd). Queda el tancament final i preparar Acta Marmota per al Mestre.
 
 ## 3. Què has de fer ara?
 

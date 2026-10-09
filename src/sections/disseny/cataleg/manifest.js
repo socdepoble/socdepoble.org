@@ -207,7 +207,7 @@ const FORMULARIS = [
      T10 (261001) · i l'esquelet de les vistes Setmana i Mes a l'estil Google Calendar.
      Fase visual (prompt 261001_0445) · i les vistes Agenda i Any. */
   especimen('formularis', 'calendari', 'Calendari', 'NavegacioMes · GraellaMes · CalendariEsdeveniments · SelectorDataHora · VistaSetmana · VistaMes · VistaAgenda · VistaAny · NavegacioPeriode (T40, T6-T8, T10)', ['organisme', 'calendari', 'data'],
-    'El mes compartit de tota l’app: CalendariEsdeveniments el pinta gran, amb els actes de l’Agenda del Mur o les tasques de la Consola (un sol model d’esdeveniment, compatible amb iCalendar i Google Calendar), i l’editor el pinta xicotet dins de la finestra de la barra taronja per a triar el dia i l’hora de publicació. Davall, les vistes a l’estil Google Calendar (Setmana, Dues setmanes, Mes, Any i Agenda), les de /calendari: sense ?vista=, la vista Mes.',
+    'El mes compartit de tota l’app: CalendariEsdeveniments el pinta gran, amb les tasques de la Consola (un sol model d’esdeveniment, compatible amb iCalendar i Google Calendar), i l’editor el pinta xicotet dins de la finestra de la barra taronja per a triar el dia i l’hora de publicació. Davall, les vistes a l’estil Google Calendar (Setmana, Dues setmanes, Mes, Any i Agenda), les de /calendari i, des de l’Onada 6, també les de la pestanya Calendari del Mur: sense ?vista=, la vista Mes, i amb ratolí cada esdeveniment porta a la seua publicació.',
     'mes hora publicacio consola barra taronja pastilla selector agenda mur esdeveniment acte ics google setmana vista graella solapament carril any dues setmanes llista'),
   /* T39 (ordre del Mestre, 260928) · drets d'autor a pantalla completa dins de l'editor. */
   especimen('formularis', 'drets-autor', 'Drets d’autor', 'CopyrightPage · BotoDretsAutor (T39)', ['organisme', 'llicencia', 'copyright', 'editor'],
@@ -236,7 +236,7 @@ const NAVEGACIO = [
   especimen('navegacio', 'acordio', 'Acordio', 'PedraSeca/organismes/Accordion.jsx', ['organisme'],
     'Contingut plegable per a preguntes freqüents i ajustos llargs.'),
   especimen('navegacio', 'nav-mobil', 'Nav Mobil', 'App.jsx · nav.mobile-nav', ['plantilla', 'mobil'],
-    'Fins a 1023px d’ample, la barra inferior fixa amb cinc caselles: Xat, Mur, el Panell de Control com a botó central, Pobles i Mercat. La barra lateral passa a calaix.'),
+    'Fins a 1023px d’ample, la barra inferior fixa amb cinc caselles: Xat, Mur, el Panell de Control com a botó central, Mercat i Pobles, en pistes d’ample igual. La barra lateral passa a calaix.'),
   /* Onada 3B (Pedra Seca §9) · el rail del Xat i les vistes que obri. */
   especimen('navegacio', 'xat-rail', 'Xat · rail i vistes', 'RailXat · VistaEnConstruccio', ['organisme', 'xat', 'rail'],
     'El menú de l’esquerra del Xat, calcat del de WhatsApp per a Mac, desplegat i plegat, amb les seccions «Més» i «Comunitats» i el peu amb l’avatar propi; i les vistes que encara no fan res i ho diuen.',

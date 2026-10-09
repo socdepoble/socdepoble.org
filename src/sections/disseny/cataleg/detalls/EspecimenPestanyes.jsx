@@ -9,6 +9,7 @@ export default function EspecimenPestanyes() {
         contracte={[           ['pestanyes', '{ id, etiqueta, icona?, contingut }[]', '[]', 'Pestanyes i panells.'],
           ['activa / onCanvi', 'string / (id) => void', 'primera', 'Opcional: mode controlat.'],
           ['etiqueta', 'string', '—', 'Nom del tablist.'],
+          ['centrades', 'boolean', 'false', 'Barra centrada (sdp-pestanyes--centrades): marges automàtics a les puntes, que valen 0 quan no hi cap i la llista llisca sense tallar la primera. La de la pàgina d’un poble.'],
         ]}
         a11y={['role tablist/tab/tabpanel amb aria-controls.', '←/→ i Inici/Fi; focus itinerant (només l’activa és tabulable).', 'Indicador de 4px, no només color.']}
         fes={['2–6 pestanyes curtes.']} noFacis={['Pestanyes per a passos seqüencials (usa un assistent).', 'Pestanyes que naveguen a altres rutes (usa enllaços).']}>
@@ -16,6 +17,10 @@ export default function EspecimenPestanyes() {
           { id: 'general', etiqueta: 'General', icona: FileText, contingut: <p>La Torre de les Maçanes, l’Alcoià. 700 habitants.</p> },
           { id: 'fotos', etiqueta: 'Fotografies', icona: Images, contingut: <p>Fototeca del poble.</p> },
           { id: 'historia', etiqueta: 'Història', icona: History, contingut: <p>Memòria dels Fadrins i de l’èxode.</p> },
+        ]} />
+        {/* Onada 6 · La variant centrada, la de la pàgina d'un poble (davall del botó blau). */}
+        <Pestanyes etiqueta="Continguts del poble" centrades pestanyes={[
+          { id: 'gent', etiqueta: 'Gent de la Torre', contingut: <p>Les targetes publicades des del poble.</p> },
         ]} />
     </Especimen>
   );

@@ -32,7 +32,7 @@ import { AUTORIA_SOCDEPOBLE } from '../control/destinsControl.js';
 import { curt, dataLocal } from './consolaContent.js';
 import {
   LLINDAR_SATURACIO, RUTA_CONSOLA, copyConsola, etiquetesPols, fontLlegible, liniesDescartades, plural,
-  recompteArtefactes, saturat
+  problemesPols, recompteArtefactes, saturat
 } from './consolaPagines.js';
 import { concorda } from './concordanca.js';
 import { Mono, Privat, PrivacitatConsola, TargetaConsola } from './peces.jsx';
@@ -200,7 +200,11 @@ function PanellCarrega({ dades, locale }) {
    consola.json (amb el seu nom). */
 export function PaginaPols({ consola, locale = 'ca-ES' }) {
   const { estat, dades, error } = consola;
-  const etiquetes = etiquetesPols(dades, estat);
+  // Un sol rellotge per pintada: l'etiqueta i els problemes dels rebuts diuen el mateix.
+  const ara = Date.now();
+  const etiquetes = etiquetesPols(dades, estat, ara);
+  // Correcció de l'Onada 6 (revisió adversarial) · cada panell diu també quins problemes té, a la vista.
+  const problemes = problemesPols(dades, ara);
   const cobertes = cobertesPols(dades, estat);
   return (
     <>
@@ -218,6 +222,7 @@ export function PaginaPols({ consola, locale = 'ca-ES' }) {
           <TargetaConsola key={p.id} icona={ICONES_PANELLS[p.icona]} titol={p.titol} subtitol={p.subtitol}
             entradilla={<Entradeta marcada={p.entradilla} />}
             metriques={cobertes[p.id].metriques} dada={cobertes[p.id].senseMesura}
+            problemes={problemes[p.id]}
             creat={dataDelCopy()} generat={dades?.generat} etiquetes={etiquetes[p.id]} a={p.ruta} />
         ))}
       </div>

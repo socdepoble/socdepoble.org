@@ -4,14 +4,29 @@ import { renderRichText, renderPostContent } from './detailRichText.jsx';
 import { getFirstImage } from './detailHelpers.jsx';
 import { Aplec2023Article } from '../mur/articles/Aplec2023Article.jsx';
 import { resolRecursPropi, resolRecursosDeHtml, resolveAsset } from '../../config/assetResolver.js';
-import { autorDe, rutaDePerfilPublicDAutor } from '../../config/navigation.js';
+import { autorDe, rutaDePerfilPublicDAutor, rutaXatDePagina } from '../../config/navigation.js';
 import { imatgesDeProducte } from '../mercat/imatgesDeProducte.js';
+import { nomDeLaGent } from '../pobles/nomsDelPoble.js';
 import { esFontImatgePropia, sanitizeHtml } from '../../utils/sanitize.js';
 import { MARCA_GRUP } from '../../components/universal/richText/extensions/targetes/formaDelGrup.js';
 /* Esmena 3 del pla 261007_1645 · Pel camí directe, mai per la façana de
    PedraSeca: este mòdul el llegixen elementDeSeccio.js, el diàleg Connectar i
    el lector del MAS, i la façana hi arrossegaria la biblioteca sencera. */
 import { CarruselImatges } from '../../components/PedraSeca/organismes/CarruselImatges.jsx';
+import { PortaDePagina } from '../../components/PedraSeca/organismes/PortesTargeta.jsx';
+/* Onada 6 (pàgina del poble) · Les pestanyes i el Carregant, també pel camí
+   directe. El panell de la gent del poble (les seues targetes) arrossega les
+   targetes del Mur i la façana: es carrega en diferit (lazyRoute), només quan
+   es pinta la pàgina d'un poble. La clau i el naixement del poble
+   (clauDelPoble.js) i el xat (xatDelPoble.js) no porten cap targeta. */
+import { Carregant } from '../../components/PedraSeca/atoms/estats.jsx';
+import { Alerta } from '../../components/PedraSeca/molecules/Alerta.jsx';
+import { Pestanyes } from '../../components/PedraSeca/organismes/Pestanyes.jsx';
+import { esErrorLazy, lazyRoute } from '../../apps/plataforma/lazyRoute.js';
+import { poblesAmbNaixement } from '../pobles/clauDelPoble.js';
+import { objecteDelPobleXat } from '../pobles/xatDelPoble.js';
+
+const PublicacionsDelPoble = lazyRoute(() => import('../pobles/PublicacionsDelPoble.jsx'));
 
 /* T5 · Les imatges del cos (variacions del Mercat, Multimèdia) es resolen en
    pintar-les: incrustat, un '/assets/…' penja del paquet. Sense base, el de
@@ -267,22 +282,136 @@ export function buildMercatDetailSectionMeta({ marketItems = [], t }) {
   };
 }
 
-export function buildPoblesDetailSectionMeta({ towns = [], t }) {
+/* Onada 5 (ordre del Mestre, 261008) · El xat de la gent d'un poble: el
+   mateix fil que obri «Comentar» i la caputxa de la seua targeta
+   (rutaXatDePagina sobre el descriptor del poble).
+   Onada 6 (pla 261009_0245, ítem 4: «El fil de xat específic també es dirà
+   'Gent de la Torre'») · El descriptor és el d'objecteDelPobleXat
+   (pobles/xatDelPoble.js), el mateix de la targeta de /pobles: el fil porta el
+   nom de la gent, no el del poble. */
+const rutaXatDelPoble = (item) => rutaXatDePagina(objecteDelPobleXat(item));
+
+/* Revisió adversarial de l'Onada 6 · Si el tros diferit del panell no es pot
+   descarregar (una connexió rural que cau), lazyRoute llança LazyRouteError.
+   El SlotErrorBoundary el deixa passar a propòsit (la recuperació d'un import
+   és de la barrera de la ruta, RouteErrorBoundary: recarregar), i sense esta
+   barrera la pàgina sencera del poble (capçalera, botó blau i pestanya)
+   quedava substituïda per l'error de la ruta. El panell és un complement de
+   la pàgina: esta barrera només es queda la fallada de l'import dins de la
+   pestanya, amb l'Alerta d'error de Pedra Seca. Sense botó de reintent: un
+   import fallit continua fallit a la memòria cau de React i del navegador, i
+   un «Torna-ho a provar» seria fals; recarregar és cosa de qui navega.
+   Qualsevol altre error puja com sempre (el de les targetes ja el recull el
+   SlotErrorBoundary del panell, PublicacionsDelPoble.jsx). */
+export class BarreraDelPanellDelPoble extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { error };
+  }
+
+  componentDidUpdate(anteriors) {
+    if (this.state.error && anteriors.resetKey !== this.props.resetKey) this.setState({ error: null });
+  }
+
+  render() {
+    const { error } = this.state;
+    if (!error) return this.props.children;
+    if (!esErrorLazy(error)) throw error;
+    return this.props.fallback;
+  }
+}
+
+/* Onada 6 (pla 261009_0245, ítem 5; prompt 261009_0230, punt 6) · La barra
+   de pestanyes centrada de la pàgina d'un poble, davall del botó blau. La
+   primera, «Gent de …» (l'H1), amb totes les targetes publicades des del
+   poble (Mur, Agenda i Mercat), casades per dades: cap nom de poble al codi.
+   El panell es carrega en diferit; mentre arriba, el Carregant de Pedra Seca,
+   i si no arriba, l'avís dins de la pestanya (BarreraDelPanellDelPoble). */
+function PestanyesDelPoble({ poble, gent, t }) {
+  return (
+    <Pestanyes
+      centrades
+      etiqueta={t('section.detail.pobles.pestanyes', 'Continguts del poble')}
+      pestanyes={[{
+        id: 'gent',
+        etiqueta: gent,
+        contingut: (
+          <BarreraDelPanellDelPoble
+            resetKey={String(poble?.id ?? '')}
+            fallback={(
+              <Alerta to="error" titol={t('section.detail.pobles.gent.error', 'No s’han pogut carregar les publicacions del poble')}>
+                {t('section.notes.historic.fallada', 'La resta de la pàgina continua com sempre.')}
+              </Alerta>
+            )}
+          >
+            <React.Suspense fallback={<Carregant etiqueta={t('section.detail.pobles.gent.carregant', 'Carregant les publicacions del poble…')} />}>
+              <PublicacionsDelPoble poble={poble} />
+            </React.Suspense>
+          </BarreraDelPanellDelPoble>
+        )
+      }]}
+    />
+  );
+}
+
+export function buildPoblesDetailSectionMeta({ towns = [], t, publicacions = null }) {
+  /* Onada 5 (F5, fase 3) · L'H1 és l'`author` de la fitxa i, si no en porta,
+     la regla única de nomsDelPoble.js (la de la targeta i la barra taronja:
+     «Gent d'Orxeta», amb l'elisió). Sense nom de poble, el de sempre. */
+  const getTitle = (item) => item.author || nomDeLaGent(item.title || item.name)
+    || `Gent de ${t('section.detail.pobles.itemTitle', 'Poble')}`;
+  /* Onada 5 (ordre del Mestre, 261008: «Parlar amb la Gent de la Torre») ·
+     El verb del botó blau nomena l'entitat de l'H1 quan és «Gent …»; si no,
+     el de la porta d'El Xat. */
+  const verbDelXat = (item) => {
+    const gent = String(getTitle(item) || '').trim();
+    return gent.startsWith('Gent ')
+      ? t('section.detail.pobles.parlarAmb', 'Parlar amb la {gent}').replace('{gent}', () => gent)
+      : t('section.xat.anarAlXat', 'Anar al xat');
+  };
   return {
     title: t('section.detail.pobles.title', 'Pobles'),
     label: t('section.detail.pobles.label', 'Poble'),
     listPath: '/pobles',
-    items: towns,
-    getTitle: (item) => item.author || `Gent de ${item.title || item.name || t('section.detail.pobles.itemTitle', 'Poble')}`,
-    getSubtitle: (item) => item.post_subtitle || item.content || '',
+    /* Onada 5 · L'autoria de la barra taronja porta al xat de la gent del
+       poble, com la caputxa de la targeta. */
+    getAuthorHref: rutaXatDelPoble,
+    /* Onada 6 (pla 261009_0245, ítem 4) · El xat que obri «Comentar» a la
+       pàgina del poble (ItemDetailSection · objecteXat): el de la gent. */
+    getObjecteXat: objecteDelPobleXat,
+    /* Onada 6 (requisit 15 de l'Onada 5) · Amb les publicacions del Mur, cada
+       fitxa porta el seu naixement a created_at (clauDelPoble.js ·
+       poblesAmbNaixement: només les publicacions que declaren el poble amb
+       poble_id el poden avançar): la barra taronja de la pàgina i el lector
+       del MAS diuen la mateixa data que la pastilla de /pobles. Sense, les
+       fitxes tal qual. */
+    items: publicacions ? poblesAmbNaixement(towns, publicacions) : towns,
+    getTitle,
+    getSubtitle: (item) => item.title || item.name || '',
     getImage: (item) => item.image_url || null,
-    renderBody: (item) => (
+    /* Onada 5 (ordre del Mestre, 261008) · Davall de l'entradilla (el text de
+       la Viquipèdia, que paginaDElement passa a lead), el botó blau gros cap
+       al xat: PortaDePagina, la porta d'«Anar al xat» d'El Xat. La província
+       i la comarca ja són etiquetes de la capçalera (paginaDElement): ací no
+       es repetixen (sdp-universal-page §4).
+       Onada 6 · Davall, la barra de pestanyes (PestanyesDelPoble), només a la
+       pàgina del poble ({ detall: true }, ItemDetailSection): el lector de
+       connexions del MAS (ConnexioDetall) crida renderBody(item) i no la
+       pinta. */
+    renderBody: (item, { detall = false } = {}) => (
       <>
+        <div className="sdp-pagina-accio">
+          <PortaDePagina porta={{ id: 'xat-del-poble', verb: verbDelXat(item), desti: rutaXatDelPoble(item), varietat: 'primari' }} />
+        </div>
         <div className="badge-row">
           <span className="pill">{item.population || item.type || t('section.detail.pobles.itemTitle', 'Poble')}</span>
           <span className="pill"><MapPin size={14} /> {item.town_name || item.title || ''}</span>
         </div>
-        {renderRichText(item.content || item.description)}
+        {detall ? <PestanyesDelPoble poble={item} gent={getTitle(item)} t={t} /> : null}
       </>
     )
   };
@@ -408,7 +537,8 @@ export function buildDetailSectionMeta({ events, feedPosts, marketItems, mediaIt
     mur: buildMurDetailSectionMeta({ feedPosts, t }),
     mercat: buildMercatDetailSectionMeta({ marketItems, t }),
     events: buildEventsDetailSectionMeta({ events, t }),
-    pobles: buildPoblesDetailSectionMeta({ towns, t }),
+    /* Onada 6 · Les publicacions del Mur, per al naixement de cada poble. */
+    pobles: buildPoblesDetailSectionMeta({ towns, t, publicacions: { feedPosts, marketItems, events } }),
     multimedia: buildMultimediaDetailSectionMeta({ mediaItems, t, rol }),
     notes: buildNotesDetailSectionMeta({ notes, t })
   };

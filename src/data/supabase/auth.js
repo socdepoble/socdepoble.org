@@ -183,11 +183,14 @@ export async function getProfile(config = {}) {
   } catch (error) { console.warn('[supabase] Avís consultant profiles:', error?.message); }
   /* Fila de RESERVA, feta amb la sessió: no porta bio, lema ni presentació. `reserva`
      ho diu perquè cap editor la prenga per la de veres i hi trepitge els camps.
-     Només per als errors (també una reparació que falla o que no deixa fila). */
+     Només per als errors (també una reparació que falla o que no deixa fila).
+     Onada 6 (decisió 2 de la nit del 261009) · El poble és el de la sessió o
+     cap: abans s'hi inventava «La Torre de les Maçanes», un poble que la
+     persona no havia triat i que un editor podia acabar desant. */
   return { reserva: true, id: user.id, full_name: user.user_metadata?.full_name || user.user_metadata?.name || '',
     avatar_url: user.user_metadata?.avatar_url || user.avatar_url || '',
     visibility: user.user_metadata?.visibility || 'private',
-    town_name: user.user_metadata?.town_name || 'La Torre de les Maçanes' };
+    town_name: user.user_metadata?.town_name || '' };
 }
 
 /* Fase 1 · Perfil (D2). Columnes de profiles que el PATCH pot escriure (i que la RLS admet).

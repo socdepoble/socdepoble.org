@@ -9,6 +9,12 @@ function generateUUID() {
   });
 }
 
+/* Onada 6 · La forma d'un id de poble (nomsDelPoble.js · SLUG_DE_POBLE) i la
+   seua llargària màxima (la d'un slug, seleccioUrl.js · LLARGARIA_SLUG). Ací
+   no s'importa res de les seccions: el mapejador és de la capa de dades. */
+const SLUG_DE_POBLE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const MAXIM_POBLE_ID = 80;
+
 const normalizeText = (value) =>
   String(value || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim();
 
@@ -94,6 +100,17 @@ export function mapSectionSubmissionToItem(submission) {
     if (origen) baseItem.origen = origen;
     else delete baseItem.origen;
   }
+  /* Onada 6 (decisió 2 de la nit del 261009) · El poble des d'on es publica
+     (poble_id, el slug que escriu NotesContext · publishNote) viatja net:
+     només la forma d'un id de poble (minúscules ASCII i xifres separades per
+     guions, la de nomsDelPoble.js · slugDelPoble). Qualsevol altra cosa no
+     viatja. És una declaració de qui publica: val per a mostrar (la pestanya
+     «Gent de …»), mai per a permisos. */
+  if (Object.hasOwn(baseItem, 'poble_id')) {
+    const poble = netejaText(baseItem.poble_id).toLowerCase();
+    if (poble.length <= MAXIM_POBLE_ID && SLUG_DE_POBLE.test(poble)) baseItem.poble_id = poble;
+    else delete baseItem.poble_id;
+  }
 
   if (sectionId === 'mur') {
     return {
@@ -106,7 +123,12 @@ export function mapSectionSubmissionToItem(submission) {
       author: netejaText(baseItem.author || baseItem.author_name || 'Foraster'),
       author_name: netejaText(baseItem.author_name || baseItem.author || 'Foraster'),
       author_avatar: validaUrl(baseItem.author_avatar || baseItem.avatar_url),
-      town_name: netejaText(baseItem.town_name || 'La Torre de les Maçanes'),
+      /* Onada 6 (decisió 2 de la nit del 261009) · Abans s'hi escrivia «La
+         Torre de les Maçanes» quan el payload no en portava: un poble que
+         ningú havia triat, persistit a section_submissions. Ara, sense poble,
+         cap clau. Les reserves de PINTURA (TargetaDelMur, el detall del Mur)
+         es queden: la targeta es veu igual (Llei del Píxel). */
+      ...(baseItem.town_name ? { town_name: netejaText(baseItem.town_name) } : {}),
       imageSrc: validaUrl(baseItem.imageSrc || firstAsset(baseItem.image_url || baseItem.image || baseItem.avatar_url)),
       image_url: validaUrl(baseItem.image_url || baseItem.image || baseItem.imageSrc),
       searchText: netejaText(baseItem.searchText || buildSearchText([

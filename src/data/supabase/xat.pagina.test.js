@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { enviaMissatge, loadFils, loadMissatges, obriFilDePagina } from './xat.js';
+import { enviaMissatge, loadFils, loadMissatges, obriFilDePagina, reiniciaMemoriaXatDePagina } from './xat.js';
 import { reiniciaLocalXat } from '../localXat.js';
 import { XAT_SEED_IDS } from '../xatSeed.js';
 import { ENTITAT_PILOT_SLUG } from '../identitatsSeed.js';
@@ -27,7 +27,7 @@ const resposta = (data, error = null) => ({ data, error, abortSignal: vi.fn().mo
 let client;
 
 beforeEach(() => {
-  vi.clearAllMocks(); mock.user = { id: 'A' }; reiniciaLocalXat();
+  vi.clearAllMocks(); mock.user = { id: 'A' }; reiniciaLocalXat(); reiniciaMemoriaXatDePagina();
   client = { rpc: vi.fn().mockReturnValue(resposta([])) };
   mock.getClient.mockResolvedValue(client);
 });
@@ -70,12 +70,66 @@ describe('obriFilDePagina en remot', () => {
   it('sense la migració (PGRST202 o 404) rebutja amb codi sense-capacitat', async () => {
     client.rpc.mockReturnValueOnce(resposta(null, { code: 'PGRST202', message: 'Could not find the function public.obri_fil_de_pagina' }));
     await expect(obriFilDePagina(PUBLICACIO, REMOT)).rejects.toMatchObject({ codi: 'sense-capacitat', code: 'SENSE_CAPACITAT', retriable: false });
+    /* Cada forma, amb la memòria buida: si no, la segona no aniria al servidor. */
+    reiniciaMemoriaXatDePagina();
     client.rpc.mockReturnValueOnce(resposta(null, { message: 'Not Found', status: 404 }));
     await expect(obriFilDePagina(PUBLICACIO, REMOT)).rejects.toMatchObject({ codi: 'sense-capacitat' });
+    reiniciaMemoriaXatDePagina();
     /* Auditoria 261007 (B) · Amb la forma real de postgrest-js, el 404 és a la
        resposta i no a l'error: l'adaptador el copia abans de decidir. */
     client.rpc.mockReturnValueOnce({ ...resposta(null, { message: 'Not Found', code: '', details: null, hint: null }), status: 404 });
     await expect(obriFilDePagina(PUBLICACIO, REMOT)).rejects.toMatchObject({ codi: 'sense-capacitat' });
+    expect(client.rpc).toHaveBeenCalledTimes(3);
+  });
+
+  /* F6 (Onada 5) · La memòria d'absència, calcada de la de contacte (T48). */
+  it('després d’un 404, el mateix node i poble rebutgen sense-capacitat sense tornar a cridar la RPC', async () => {
+    client.rpc.mockReturnValueOnce({ ...resposta(null, { message: 'Not Found', code: '', details: null, hint: null }), status: 404 });
+    await expect(obriFilDePagina(PUBLICACIO, REMOT)).rejects.toMatchObject({ codi: 'sense-capacitat' });
+    expect(client.rpc).toHaveBeenCalledTimes(1);
+    const segon = await obriFilDePagina({ tipus: 'entitat', id: 'org-1' }, REMOT).catch((e) => e);
+    expect(segon).toMatchObject({ codi: 'sense-capacitat', code: 'SENSE_CAPACITAT', retriable: false });
+    expect(client.rpc).toHaveBeenCalledTimes(1);
+    /* Un subjecte sense xat continua tornant null, sense memòria ni servidor. */
+    expect(await obriFilDePagina({ tipus: 'nota', id: 'n' }, REMOT)).toBeNull();
+  });
+
+  it('un altre poble o un altre node tornen a preguntar al servidor', async () => {
+    client.rpc.mockReturnValueOnce(resposta(null, { code: 'PGRST202', message: 'Could not find the function public.obri_fil_de_pagina' }));
+    await expect(obriFilDePagina(PUBLICACIO, REMOT)).rejects.toMatchObject({ codi: 'sense-capacitat' });
+    client.rpc.mockReturnValueOnce(resposta([fila('g-2', 'grup', { desti: true })]));
+    const altrePoble = await obriFilDePagina(PUBLICACIO, { tenantId: '00000000-0000-4000-8000-000000000001' });
+    expect(altrePoble.filId).toBe('g-2');
+    client.rpc.mockReturnValueOnce(resposta([fila('g-3', 'grup', { desti: true })]));
+    const altreNode = await obriFilDePagina(PUBLICACIO, { ...REMOT, supabaseUrl: 'https://altre-node.test' });
+    expect(altreNode.filId).toBe('g-3');
+    expect(client.rpc.mock.calls.map(([nom, args]) => [nom, args.p_tenant_id])).toEqual([
+      ['obri_fil_de_pagina', REMOT.tenantId], ['obri_fil_de_pagina', '00000000-0000-4000-8000-000000000001'],
+      ['obri_fil_de_pagina', REMOT.tenantId]
+    ]);
+  });
+
+  it('un error SDP del servidor no es recorda: la RPC hi és', async () => {
+    client.rpc.mockReturnValueOnce(resposta(null, { message: 'SDP-XAT-013: la pàgina no existix o no la pots vore.', code: '42501' }));
+    await expect(obriFilDePagina(PUBLICACIO, REMOT)).rejects.toMatchObject({ code: 'SDP-XAT-013' });
+    client.rpc.mockReturnValueOnce(resposta([fila('g-1', 'grup', { desti: true })]));
+    expect((await obriFilDePagina(PUBLICACIO, REMOT)).filId).toBe('g-1');
+    expect(client.rpc).toHaveBeenCalledTimes(2);
+  });
+
+  it('la cancel·lació, la xarxa i un 5xx no es recorden', async () => {
+    client.rpc
+      .mockReturnValueOnce(resposta(null, { name: 'AbortError', message: 'The operation was aborted.' }))
+      .mockReturnValueOnce({ ...resposta(null, { message: 'TypeError: Failed to fetch', code: '', details: null, hint: null }), status: 0 })
+      .mockReturnValueOnce({ ...resposta(null, { message: 'Service Unavailable', code: '', details: null, hint: null }), status: 503 });
+    await expect(obriFilDePagina(PUBLICACIO, REMOT)).rejects.toMatchObject({ code: 'AbortError', retriable: true });
+    await expect(obriFilDePagina(PUBLICACIO, REMOT)).rejects.toMatchObject({ retriable: true });
+    const caigut = await obriFilDePagina(PUBLICACIO, REMOT).catch((e) => e);
+    expect(caigut).toMatchObject({ retriable: true });
+    expect(caigut.codi).toBeUndefined();
+    client.rpc.mockReturnValueOnce(resposta([fila('g-1', 'grup', { desti: true })]));
+    expect((await obriFilDePagina(PUBLICACIO, REMOT)).filId).toBe('g-1');
+    expect(client.rpc).toHaveBeenCalledTimes(4);
   });
 
   it('els errors del servidor conserven el codi SDP i no són sense-capacitat', async () => {

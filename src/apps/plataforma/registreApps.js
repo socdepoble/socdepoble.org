@@ -4,6 +4,9 @@
  *   APPS_INTERNES       · els manifests de src/apps/<id>/manifest.js, validats.
  *   registraAppExterna  · un amfitrió (WordPress, Sollutia) registra una app
  *                         declarativa (`element`) sense tocar el nucli.
+ *   registraModul       · un amfitrió registra un mòdul (sdp.modul.v1,
+ *                         ADR-2026-12): una app compilada a banda, el cos de
+ *                         la qual carregaModul.js porta quan s'obri.
  *   subscriu / llista   · per a useSyncExternalStore: la llista és una
  *                         instantània congelada que només canvia quan canvia el registre.
  *   appDeRuta           · el manifest de /app/<id>/…, o null.
@@ -23,11 +26,21 @@ import manifestLector from '../lector/manifest.js';
    Gestoria i Wiki»): la Gestoria ix de la Wiki i és una app més, només en
    desenvolupament (el seu manifest). */
 import manifestGestoria from '../gestoria/manifest.js';
+import { carregadorDelDocument } from './carregaModul.js';
+import { VERSIO_NUCLI, nucliSatisfa } from './contracteNucli.js';
 import { esIdApp, validaManifestApp } from './manifestApp.js';
 import { tramsSegurs } from './rutesAplicacio.js';
 
 /** Les apps internes, en l'ordre del portal. */
 export const MANIFESTS_INTERNS = Object.freeze([manifestBar, manifestSalut, manifestNevera, manifestLector, manifestGestoria]);
+
+/* Els ids de les apps amb dades sensibles, i les dades que hi van lligades.
+   La guarda de document propi (interruptors.js) depén del dadesPersonals
+   del manifest, i el d'un mòdul o d'una app externa el posa l'amfitrió que
+   el registra: amb un d'estos ids l'ha de declarar igual, mai més fluix. La
+   reserva es conserva encara que l'app isca de les internes (fase 2 de
+   l'ADR-2026-12). */
+export const DADES_RESERVADES = Object.freeze({ gestoria: 'financeres', salut: 'salut' });
 
 function validaInternes(manifests) {
   const valides = [];
@@ -66,8 +79,11 @@ export function entradaActiva(app, pathname) {
   return app.entrades.find((entrada) => entrada.slug === trams[0]) || null;
 }
 
-/** `internes`: manifests crus (com els de src/apps/<id>/manifest.js); sense, els del paquet. */
-export function creaRegistre({ internes } = {}) {
+/**
+ * `internes`: manifests crus (com els de src/apps/<id>/manifest.js); sense, els del paquet.
+ * `carregador`: el dels mòduls (carregaModul.js); sense, el de la pàgina.
+ */
+export function creaRegistre({ internes, carregador = carregadorDelDocument } = {}) {
   const propies = internes === undefined ? APPS_INTERNES : validaInternes(internes);
   const externes = new Map();
   const components = new Map();
@@ -80,6 +96,21 @@ export function creaRegistre({ internes } = {}) {
   };
 
   const appPerId = (id) => instantania.find((app) => app.id === id) || null;
+
+  /* Una app de l'amfitrió (externa o mòdul), ja validada: mai sobre un id
+     ocupat, ni amb unes dades més fluixes que les reservades a eixe id. */
+  const afigForana = (resultat) => {
+    const { id, dadesPersonals } = resultat.manifest;
+    if (appPerId(id)) {
+      return { ok: false, errors: [`id: ja hi ha una app «${id}»`], manifest: null };
+    }
+    if (Object.hasOwn(DADES_RESERVADES, id) && dadesPersonals !== DADES_RESERVADES[id]) {
+      return { ok: false, errors: [`dadesPersonals: «${id}» guarda dades ${DADES_RESERVADES[id]} i ho ha de declarar`], manifest: null };
+    }
+    externes.set(resultat.manifest.id, resultat.manifest);
+    avisa();
+    return resultat;
+  };
 
   return Object.freeze({
     llista: () => instantania,
@@ -95,25 +126,38 @@ export function creaRegistre({ internes } = {}) {
     /** @returns {{ ok: boolean, errors: string[], manifest: object|null }} */
     registraAppExterna(cru) {
       const resultat = validaManifestApp(cru, { origen: 'externa' });
-      if (!resultat.ok) return resultat;
-      if (appPerId(resultat.manifest.id)) {
-        return { ok: false, errors: [`id: ja hi ha una app «${resultat.manifest.id}»`], manifest: null };
-      }
-      externes.set(resultat.manifest.id, resultat.manifest);
-      avisa();
-      return resultat;
+      return resultat.ok ? afigForana(resultat) : resultat;
     },
-    /** Només les externes es poden retirar: les internes són del paquet. */
+    /**
+     * Un mòdul (sdp.modul.v1): el manifest, amb el cos i el rang del nucli
+     * que necessita. Un rang que este nucli no satisfà no entra.
+     * @returns {{ ok: boolean, errors: string[], manifest: object|null }}
+     */
+    registraModul(cru) {
+      const resultat = validaManifestApp(cru, { origen: 'modul' });
+      if (!resultat.ok) return resultat;
+      if (!nucliSatisfa(resultat.manifest.nucli, VERSIO_NUCLI)) {
+        return { ok: false, errors: [`nucli: este nucli és el ${VERSIO_NUCLI} i el mòdul demana ${resultat.manifest.nucli}`], manifest: null };
+      }
+      return afigForana(resultat);
+    },
+    /** Només les de l'amfitrió (externes i mòduls) es poden retirar: les internes són del paquet. */
     retiraAppExterna(id) {
       if (!externes.delete(id)) return false;
+      components.delete(id);
+      carregador.oblida(id);
       avisa();
       return true;
     },
-    /** El component lazy d'una app interna, un per id (no es recrea mai). */
+    /** El component lazy d'una app interna o d'un mòdul, un per id (no es recrea mai). */
     componentDe(id) {
       const app = appPerId(id);
-      if (!app || app.origen !== 'interna' || typeof app.carrega !== 'function') return null;
-      if (!components.has(id)) components.set(id, lazyRoute(app.carrega));
+      if (!app) return null;
+      if (!components.has(id)) {
+        if (app.origen === 'interna' && typeof app.carrega === 'function') components.set(id, lazyRoute(app.carrega));
+        else if (app.origen === 'modul') components.set(id, lazyRoute(() => carregador.carregaCos(app)));
+        else return null;
+      }
       return components.get(id);
     }
   });
@@ -123,6 +167,7 @@ export function creaRegistre({ internes } = {}) {
 export const registre = creaRegistre();
 
 export const registraAppExterna = (manifest) => registre.registraAppExterna(manifest);
+export const registraModul = (manifest) => registre.registraModul(manifest);
 export const retiraAppExterna = (id) => registre.retiraAppExterna(id);
 export const subscriu = (oient) => registre.subscriu(oient);
 export const llistaApps = () => registre.llista();

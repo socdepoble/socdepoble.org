@@ -18,9 +18,13 @@ import {
   buildEventsDetailSectionMeta, buildMercatDetailSectionMeta, buildMultimediaDetailSectionMeta, buildMurDetailSectionMeta,
   buildPoblesDetailSectionMeta
 } from './detailSectionMeta.jsx';
-import { COPYRIGHT_SDP, dataHoraDeBarra } from '../../components/universal/editorial.js';
+import { COPYRIGHT_SDP, COPYRIGHT_VIQUIPEDIA, dataHoraDeBarra } from '../../components/universal/editorial.js';
 import { DEFAULT_AUTHOR } from '../../components/universal/UniversalUtils.js';
+import { rutaXatDePagina } from '../../config/navigation.js';
+import { objecteDelPobleXat } from '../pobles/xatDelPoble.js';
 import { PAGE_COPY } from '../text/pageContent.js';
+import { MOCK_TOWNS } from '../pobles/townsSeed.js';
+import { nomDeLaGent } from '../pobles/nomsDelPoble.js';
 
 const SAMARRETA = { id: 'samarreta-socdepoble', slug: 'samarreta', title: 'Samarreta', image_url: '/assets/x.png', author_name: 'Sóc de Poble' };
 
@@ -80,6 +84,96 @@ test('paginaDElement: els drets i la data de la publicació, com el detall de la
   expect(vella.copyright).toBe(COPYRIGHT_SDP);
   expect(vella).toMatchObject(dataHoraDeBarra({ creat: '2026-08-15T10:00:00.000Z' }));
   expect(vella.authorHref).toBeNull();
+});
+
+/* Revisió de l'Onada 5 · L'entradilla és la de l'element: el content d'una
+   publicació és el cos HTML, que ja es pinta davall, i no es repetix com a
+   <p class="lead"> (ni a l'entradilla de la seua targeta incrustada). */
+test('Onada 5 · una publicació del Mur amb content HTML i sense entradilla no porta lead', () => {
+  const seccio = buildMurDetailSectionMeta({ feedPosts: [], t: mocks.t });
+  const item = { id: 'h', title: 'Festa', content: '<p>Hola <strong>poble</strong></p>', created_at: '2026-09-01T10:00:00.000Z' };
+  expect(paginaDElement(seccio, item).lead).toBeUndefined();
+  expect(paginaDElement(seccio, { ...item, entradilla: 'La festa major' }).lead).toBe('La festa major');
+  mocks.mur = { status: 'ready', feedPosts: [item], events: [], marketItems: [] };
+  expect(renderHook(() => useOriginalDeConnexio({ sectionId: 'mur', itemId: 'h' })).result.current.targeta.entradilla).toBe('');
+});
+
+/* Onada 5 (ordre del Mestre, 261008) · La pàgina d'un poble: les metes no
+   porten id i el poble es reconeix per la seua llista (/pobles). La barra
+   taronja signa amb la gent i el poble i porta al seu xat; l'entradilla és el
+   text de la Viquipèdia; la província i la comarca, etiquetes; el logotip de
+   Sóc de Poble damunt de l'H1; i el copyright, el de la Viquipèdia. Una llavor
+   pròpia per a l'anatomia; la paritat amb MOCK_TOWNS té la seua prova, més
+   avall. */
+const POBLE = Object.freeze({
+  id: 'la-torre-de-les-macanes', type: 'town', author: 'Gent de la Torre', title: 'La Torre de les Maçanes',
+  provincia: 'Alacant', comarca: 'L’Alacantí', population: '700 hab', image_url: '/assets/towns/torre/hero.webp',
+  content: 'La Torre de les Maçanes és una vila i municipi del País Valencià.'
+});
+
+test('Onada 5 · paginaDElement d’un poble: la gent, el poble, l’entradilla, les etiquetes, el logotip i el copyright', () => {
+  const seccio = buildPoblesDetailSectionMeta({ towns: [], t: mocks.t });
+  const pagina = paginaDElement(seccio, POBLE);
+  expect(pagina).toMatchObject({
+    title: 'Gent de la Torre',
+    subtitle: 'La Torre de les Maçanes',
+    lead: POBLE.content,
+    authorName: POBLE.author,
+    authorLocation: 'La Torre de les Maçanes',
+    /* Onada 6 (pla 261009_0245, ítem 4) · El xat de la gent: el descriptor
+       d'objecteDelPobleXat, amb el nom de la gent com a títol. */
+    authorHref: rutaXatDePagina(objecteDelPobleXat(POBLE)),
+    labels: [
+      { text: 'Poble', className: 'sdp-badge-system' },
+      { text: 'Alacant', className: 'sdp-badge-category' },
+      { text: 'L’Alacantí', className: 'sdp-badge-tag' }
+    ],
+    copyright: COPYRIGHT_VIQUIPEDIA
+  });
+  expect(pagina.authorHref).toMatch(/^\/xat\?sobre=poble:la-torre-de-les-macanes&/);
+  expect(pagina.logoEntitat).toEqual(DEFAULT_AUTHOR.logo);
+  // Sense província ni comarca, només la de sistema; uns drets propis manen.
+  const sense = paginaDElement(seccio, { ...POBLE, provincia: ' ', comarca: undefined, copyright: 'CC BY 4.0' });
+  expect(sense.labels).toEqual([{ text: 'Poble', className: 'sdp-badge-system' }]);
+  expect(sense.copyright).toBe('CC BY 4.0');
+  // Una entradilla pròpia mana sobre el content.
+  expect(paginaDElement(seccio, { ...POBLE, entradilla: 'Vila de l’Alacantí' }).lead).toBe('Vila de l’Alacantí');
+});
+
+/* Onada 5 (F5, fase 3) · Sense author, l'H1 (getTitle) i la barra taronja
+   signen amb la mateixa regla, nomDeLaGent de nomsDelPoble.js (la de la
+   targeta de /pobles), sobre el nom del poble i no sobre l'H1. El nom curt
+   «Gent de la Torre» és una dada de la llavor, no un literal del codi. */
+test('Onada 5 · sense author, la barra i l’H1 deriven la gent del nom del poble amb nomDeLaGent', () => {
+  const seccio = buildPoblesDetailSectionMeta({ towns: [], t: mocks.t });
+  const pagina = (item) => paginaDElement(seccio, item);
+  for (const [nom, gent] of [
+    ['La Torre de les Maçanes', 'Gent de la Torre de les Maçanes'],
+    ['Orxeta', "Gent d'Orxeta"],
+    ['Sella', 'Gent de Sella'],
+    ['El Campello', 'Gent del Campello']
+  ]) {
+    expect(nomDeLaGent(nom)).toBe(gent);
+    expect(pagina({ id: 'p', title: nom })).toMatchObject({ title: gent, authorName: gent, authorLocation: nom });
+  }
+  // Un poble remot que només porta `name`.
+  expect(pagina({ id: 'i', name: 'Ibi' })).toMatchObject({ title: "Gent d'Ibi", authorName: "Gent d'Ibi", authorLocation: 'Ibi' });
+  // Sense cap nom, el de sempre.
+  expect(pagina({ id: 'x' })).toMatchObject({ title: 'Gent de Poble', authorName: 'Gent de Poble' });
+  // Un author de la fitxa mana sobre la regla, a l'H1 i a la barra.
+  expect(pagina({ id: 't', title: 'La Torre de les Maçanes', author: 'Gent de la Torre' }))
+    .toMatchObject({ title: 'Gent de la Torre', authorName: 'Gent de la Torre' });
+});
+
+/* Llei del Píxel · Els 9 pobles de la llavor porten author: l'H1 i la barra
+   taronja de la seua pàgina són exactament els d'abans de la fase 3. */
+test('Onada 5 · la llavor es pinta idèntica: l’H1 i la barra del poble són el seu author', () => {
+  const seccio = buildPoblesDetailSectionMeta({ towns: MOCK_TOWNS, t: mocks.t });
+  for (const town of MOCK_TOWNS) {
+    expect(town.author).toBeTruthy();
+    expect(paginaDElement(seccio, town)).toMatchObject({ title: town.author, authorName: town.author, authorLocation: town.title });
+  }
+  expect(paginaDElement(seccio, trobaElement(seccio, 'la-torre-de-les-macanes')).title).toBe('Gent de la Torre');
 });
 
 /* Decisió 3 del Mestre (261007, confirmada) · «Imatges externes al Mur:

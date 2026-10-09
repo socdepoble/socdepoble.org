@@ -240,7 +240,12 @@ add_filter( 'script_loader_tag', 'socdepoble_enxufe_integritat', 10, 3 );
  * L'etiqueta <soc-de-poble> amb els atributs del contracte. Una instància pot
  * trepitjar nomPoble, poble i rutaInicial; els buits no s'emeten.
  *
- * @param array $instancia Claus opcionals nomPoble, poble i rutaInicial.
+ * Només la instància pròpia de WordPress porta el servei de traducció i
+ * l'opt-in ruta-a-url (atributsOptIn de sdp.amfitrio.v1). El marcatge de
+ * referència per a altres amfitrions es queda en el marcatge universal.
+ *
+ * @param array $instancia   Claus opcionals nomPoble, poble i rutaInicial.
+ * @param bool  $amb_serveis Cert per a la pàgina de WordPress; fals per a la referència copiable.
  * @return string HTML escapat.
  */
 function socdepoble_enxufe_element( $instancia = array(), $amb_serveis = true ) {
@@ -267,7 +272,19 @@ function socdepoble_enxufe_element( $instancia = array(), $amb_serveis = true ) 
 	if ( '' !== $ruta ) {
 		$atributs .= ' ruta-inicial="' . esc_attr( $ruta ) . '"';
 	}
-	
+
+	/* Clàusula dels slugs (ordre del Mestre, Onada 5, 261009): la ruta de
+	   l'app viu al fragment de la pàgina (#sdp=/xat), i un enllaç copiat o una
+	   recàrrega hi tornen. El fragment no arriba al servidor ni a les memòries
+	   cau. El filtre socdepoble_enxufe_ruta_a_url pot triar 'parametre' (?sdp=,
+	   que sí que arriba al servidor) o apagar-la amb qualsevol altre valor. */
+	if ( $amb_serveis ) {
+		$ruta_a_url = apply_filters( 'socdepoble_enxufe_ruta_a_url', 'fragment' );
+		if ( in_array( $ruta_a_url, array( 'fragment', 'parametre' ), true ) ) {
+			$atributs .= ' ruta-a-url="' . esc_attr( $ruta_a_url ) . '"';
+		}
+	}
+
 	return '<soc-de-poble' . $atributs . '></soc-de-poble>';
 }
 
@@ -338,6 +355,7 @@ function socdepoble_enxufe_html_permes() {
 			'nom-poble'    => true,
 			'poble'        => true,
 			'ruta-inicial' => true,
+			'ruta-a-url'   => true,
 			'traductor-url' => true,
 		),
 	);

@@ -16,7 +16,9 @@ import { aliesDeLActor } from '../../data/identitatsSeed.js';
 import { pertanyALActor } from './masDeLUsuari.js';
 import { useIdentitat } from '../../app/contexts/IdentitatContext.jsx';
 import { useSession } from '../../app/contexts/SessionContext.jsx';
-import { autoriaDeLActor } from './autoriaNota.js';
+import { actorAmbPobleDeLEntitat, autoriaDeLActor } from './autoriaNota.js';
+import { slugDelPoble } from '../pobles/nomsDelPoble.js';
+import { pobleDeConfig } from '../xat/pobleAmfitrio.js';
 import { esConnexio, esExtern, netejaDrets } from '../../data/origenNota.js';
 import { cosDeConnexioEditadaPerAlMur } from './connexions.js';
 import { cosDeLExternPerAlMur } from '../connectar/contingutExtern.js';
@@ -57,9 +59,13 @@ export function NotesProvider({ children }) {
   const { sendSectionSubmission, feedPosts } = useMur();
   /* Poliment T41/T43 · Qui signa la publicació: l'actor que MurContext envia
      com a author_org_id, també al nom, la foto i el poble del payload. */
-  const { actor } = useIdentitat();
+  const { actor, memberships } = useIdentitat();
   const { currentUser } = useSession();
-  const autoria = useMemo(() => autoriaDeLActor(actor, currentUser), [actor, currentUser]);
+  /* Onada 6 (revisió adversarial) · Una entitat signa des del poble de la
+     seua organització (el town_name de la seua fila de pertinença): sense,
+     les seues publicacions no arribaven a cap pestanya «Gent de …». */
+  const actorQueSigna = useMemo(() => actorAmbPobleDeLEntitat(actor, memberships), [actor, memberships]);
+  const autoria = useMemo(() => autoriaDeLActor(actorQueSigna, currentUser), [actorQueSigna, currentUser]);
   /* Grup E (261008) · Les publicacions del Mur que ja hi ha carregades, per a
      la guarda de re-signatura de publishNote. En una referència: el Mur es
      refresca després de cada publicació i publishNote no ha de canviar per
@@ -313,6 +319,11 @@ export function NotesProvider({ children }) {
       }
 
       const dataTriada = dataIsoONull(activeNote.publishDate);
+      /* Onada 6 · El poble des d'on es publica (vegeu author_location, baix):
+         el de qui signa; si no, el poble que declara l'amfitrió (el seu id,
+         pobleDeConfig, el mateix que llig el Xat), sense inventar-ne el nom. */
+      const llocDePublicacio = String(autoria?.poble || externalConfig?.appLocation || '').trim();
+      const pobleDePublicacio = slugDelPoble(llocDePublicacio) || pobleDeConfig(externalConfig)?.id || null;
       const payload = {
         sectionId: 'mur',
         type: compartir ? 'compartit' : 'feed',
@@ -326,10 +337,21 @@ export function NotesProvider({ children }) {
         labels,
       /* Poliment T41/T43 · el nom, la foto i el poble de l'actor que signa (mai
          un correu). El de l'app només queda de reserva sense actor (incrustat);
-         sense poble conegut, el del poble on es publica. */
+         sense poble conegut, el del poble on es publica.
+         Onada 6 (decisió 2 de la nit del 261009: «les publicacions noves
+         porten poble_id i ja no s'escriu "La Torre de les Maçanes" per
+         defecte a les dades») · Sense poble conegut (ni el de qui signa ni
+         el de l'amfitrió), cap clau: la targeta continua pintant la seua
+         reserva (TargetaDelMur, Llei del Píxel), però la dada ja no diu un
+         poble que ningú ha triat. Amb poble, també poble_id (el seu slug,
+         nomsDelPoble.js): la clau per la qual la pestanya «Gent de …» de la
+         pàgina del poble la troba (pobles/clauDelPoble.js). Com publish_date
+         i icon, l'upsert reemplaça el payload: republicar sense poble el
+         lleva. */
       author_name: autoria?.nom || externalConfig?.appName || 'Sóc de Poble',
       ...(autoria?.avatar ? { author_avatar: autoria.avatar } : {}),
-      author_location: autoria?.poble || externalConfig?.appLocation || 'La Torre de les Maçanes',
+      ...(llocDePublicacio ? { author_location: llocDePublicacio } : {}),
+      ...(pobleDePublicacio ? { poble_id: pobleDePublicacio } : {}),
       /* T40 (ordre del Mestre, 260928) · la data triada al calendari de la
          barra taronja. No programa res: el Mur l'ordena amb esta data. Sense
          data triada no s'envia la clau: l'upsert reemplaça el payload i el Mur

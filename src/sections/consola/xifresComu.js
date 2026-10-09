@@ -9,9 +9,10 @@
  * del detall i les etiquetes d'estat, perquè les tres famílies diguen el
  * mateix de la mateixa manera.
  */
-import { RUTA_CONSOLA } from './consolaPagines.js';
+import { RUTA_CONSOLA, etiquetaDeNivell } from './consolaPagines.js';
 import { ambMajuscula, compteOMesura, concorda, de, plural, senseMesura } from './concordanca.js';
 import { valorMetrica } from './mapa/mapaContent.js';
+import { colorDAvisos, etiquetaDeTo, toDEstat, toDeColor } from './semafor.js';
 
 export { ambMajuscula, compteOMesura, concorda, de, plural, senseMesura };
 
@@ -102,7 +103,28 @@ export const ambCodi = (mapa, ...codis) => mapa.avisos.filter((a) => codis.inclu
 /** El darrer tram d'un camí: el nom del fitxer. */
 export const darrer = (cami) => String(cami).split('/').filter(Boolean).pop() || String(cami);
 
-/* Etiquetes d'estat de les targetes, amb les classes del Panell de Control:
-   el que funciona, en `sdp-badge-system` (ACTIU); la resta, en `sdp-badge-tag`. */
-export const etiquetaBona = (text) => [{ text, className: 'sdp-badge-system' }];
-export const etiquetaPendent = (text) => [{ text, className: 'sdp-badge-tag' }];
+/* Etiquetes d'estat de les targetes, amb els colors del semàfor (Onada 6,
+   requisit 8; semafor.js): el que funciona, verd; el que falta o va a mitges,
+   taronja; el que falla del tot, roig. Derogat per l'Onada 6: les classes del
+   Panell de Control (`sdp-badge-system` blau per a ACTIU i `sdp-badge-tag`
+   pàl·lid per a tota la resta, MORT inclòs), que no deien cap gravetat. */
+export const etiquetaPendent = (text) => [etiquetaDeTo(text, toDeColor('taronja'))];
+/** L'etiqueta d'un text d'estat (VIU, MORT, FALTA…) amb el color que li toca (COLOR_D_ESTAT). */
+export const etiquetaDEstat = (text) => [etiquetaDeTo(text, toDEstat(text))];
+
+/* ── El semàfor de les xifres (Onada 6, requisits 8 i 9) ───────────────────
+   Cada xifra que compta coses que fallen o falten du l'etiqueta del tauler
+   (consolaPagines.js · ETIQUETES) segons el seu valor: Cal reparar en roig,
+   Important en taronja i En ordre en verd. Sense mesura, cap etiqueta: mai un
+   verd sense base. Una xifra que compta avisos pren el color del més greu
+   (semafor.js · colorDAvisos), la mateixa regla de l'Inventari i de la llista
+   d'Avisos i salut. Les xifres que només diuen una mida (nodes, arestes,
+   rutes, registres…) informen: cap etiqueta. Correcció de l'Onada 6 (revisió
+   adversarial) · abans només les deu xifres del tauler en portaven. */
+const NIVELL_DE_COLOR = Object.freeze({ roig: 'error', taronja: 'avis', verd: null });
+/** L'etiqueta del tauler per a un color del semàfor; sense color (null), cap. */
+export const etiquetaDeColor = (color) => (Object.hasOwn(NIVELL_DE_COLOR, color ?? '') ? [etiquetaDeNivell(NIVELL_DE_COLOR[color])] : null);
+/** Roig si `greu`, taronja si `pendent`, i verd si cap dels dos; sense mesura (`mesurat` fals), cap color. */
+export const colorDe = (mesurat, greu, pendent = false) => (!mesurat ? null : greu ? 'roig' : pendent ? 'taronja' : 'verd');
+/** L'etiqueta d'una xifra que compta avisos: el color del més greu; cap avís, En ordre. */
+export const etiquetaDAvisos = (avisos) => etiquetaDeColor(colorDAvisos(avisos));

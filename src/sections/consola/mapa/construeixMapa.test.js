@@ -200,10 +200,17 @@ describe('construeixMapa · tasques', () => {
   /* Les cinc tasques d'higiene no tenen plist propi: les executa el diagnòstic
      horari de Plaquetes. Declarar-ho («la llança la tasca X») és el que fa que
      el Calendari deixe de dir «sense llançador» i que hereten la cadència. */
-  it('una subtasca hereta l’estat i la cadència de la tasca que la llança', () => {
+  /* Onada 6 (honestedat dels avisos) · Una subtasca sense script propi no
+     hereta el «viu» de la mare: que Plaquetes corra no diu que execute esta
+     subtasca (diagnostica i no aplica mai). Desconeguda, mai viva. Amb un
+     script propi que hi és, sí que n'hereta l'estat. */
+  it('una subtasca hereta l’estat i la cadència de la tasca que la llança; sense script, el viu es queda en desconegut', () => {
     const fonts = fontsBase();
     fonts.registreTasques = {
-      plaquetes: [{ id: 'higiene-basica', nivell: 'L0', llancador: { tipus: 'tasca', tasca: 'plaquetes-diagnostic' } }],
+      plaquetes: [
+        { id: 'higiene-basica', nivell: 'L0', llancador: { tipus: 'tasca', tasca: 'plaquetes-diagnostic' } },
+        { id: 'adopta-orfes', nivell: 'L1', script: 'scripts/immunitari/adopta.mjs', llancador: { tipus: 'tasca', tasca: 'plaquetes-diagnostic' } }
+      ],
       tasques: [{
         id: 'plaquetes-diagnostic', nivell: 'L0', script: 'scripts/immunitari/plaquetes.mjs',
         llancador: { tipus: 'launchd', etiqueta: 'org.socdepoble.plaquetes' },
@@ -211,8 +218,10 @@ describe('construeixMapa · tasques', () => {
       }]
     };
     const m = construeixMapa(fonts, { existeix, ara: ARA });
+    expect(m.tasques.find((t) => t.id === 'plaquetes-diagnostic').estat).toBe('viu');
+    expect(m.tasques.find((t) => t.id === 'adopta-orfes').estat).toBe('viu');
     const higiene = m.tasques.find((t) => t.id === 'higiene-basica');
-    expect(higiene.estat).toBe('viu');
+    expect(higiene.estat).toBe('desconegut');
     expect(higiene.cadencia).toEqual({ cada_segons: 3600, en_arrencar: true });
     expect(higiene.llancador).toEqual({ tipus: 'tasca', tasca: 'plaquetes-diagnostic' });
     expect(te(m, 'tasca:plaquetes-diagnostic', 'tasca:higiene-basica', 'dispara', 'declarat')).toBe(true);
@@ -658,9 +667,10 @@ describe('construeixMapa · vigilància (fonts noves de la closca)', () => {
     // La signatura es reproduïx amb la porta del pas 0, no només amb el Mapa.
     expect(metrica(m, 'integritat-ledger')).toMatchObject({ numerador: 0, denominador: 1, valor: 0, prova: 'node tooling/verify-ledger.mjs' });
     expect(avisosDe(m, 'document:.agents/LEDGER.md')).toEqual(['ledger-invalid']);
+    // Onada 6 · l'evidència diu la causa de la signatura trencada, i els recomptes a part.
     expect(m.avisos.find((x) => x.codi === 'ledger-invalid')).toMatchObject({
       severitat: 'alta',
-      evidencia: 'signatura del LEDGER no vàlida · 8 segells fòssils · 2 línies mal formades · node tooling/verify-ledger.mjs'
+      evidencia: 'signatura del LEDGER no vàlida · el cos no quadra amb el seu segell: editat sense tornar-lo a segellar, o sense segell · 8 segells fòssils · 2 línies mal formades · node tooling/verify-ledger.mjs'
     });
     expect(avisosDe(m, 'skill:wiki-cicle-de-vida')).toContain('recaiguda-recent');
     expect(m.avisos.find((x) => x.codi === 'recaiguda-recent')).toMatchObject({ severitat: 'mitjana', evidencia: '.agents/LEDGER.md · 260923 · arxiu sense preguntar' });
@@ -800,5 +810,133 @@ describe('construeixMapa · vigilància (fonts noves de la closca)', () => {
     expect(m.avisos.find((x) => x.codi === 'torns-caducats').evidencia).toBe('1 d’1 torn caducat sense tancar');
     expect(m.avisos.find((x) => x.codi === 'segell-trencat').evidencia).toMatch(/^1 d’1 skill fora del segell o divergent · /);
     expect(m.avisos.flatMap((x) => [x.evidencia, ...(x.evidencies ?? [])]).filter((e) => /\bde 1\b/.test(e ?? ''))).toEqual([]);
+  });
+});
+
+/* Onada 6 (requisit 10: auditoria profunda) · Honestedat del compilador:
+   cap avís fals, cap porta verda sense comprovar res, i res de fabricar un verd. */
+describe('construeixMapa · Onada 6, honestedat dels avisos', () => {
+  /* Correcció de l'Onada 6 (revisió adversarial: l'abast diu «un avís per
+     cada error de la frontissa») · cada error és un avís alt propi, sobre la
+     seua clau dins del registre d'empremtes. Derogat: un sol avís amb una
+     evidència per error. */
+  it('la frontissa roja fa un avís alt per error, sobre la seua clau del registre d’empremtes', () => {
+    const frontissa = {
+      valid: false, requerides: 13, correctes: 11,
+      errors: [
+        { clau: 'roadmap', codi: 'empremta-divergent', missatge: 'La clau «roadmap» ha canviat des de l’última aprovació (Mestre, 261001).' },
+        { clau: 'consola', codi: 'absent', missatge: 'La clau «consola» falta a PAGE_COPY i un consumidor la demana (o el registre la protegix).' }
+      ]
+    };
+    const m = construeixMapa({ ...fontsBase(), frontissa }, { existeix, ara: ARA });
+    const avisos = m.avisos.filter((x) => x.codi === 'frontissa-roja');
+    expect(avisos).toEqual([
+      {
+        node: 'document:.agents/contingut_estructural.json#consola', codi: 'frontissa-roja', severitat: 'alta',
+        evidencia: 'absent · La clau «consola» falta a PAGE_COPY i un consumidor la demana (o el registre la protegix).'
+      },
+      {
+        node: 'document:.agents/contingut_estructural.json#roadmap', codi: 'frontissa-roja', severitat: 'alta',
+        evidencia: 'empremta-divergent · La clau «roadmap» ha canviat des de l’última aprovació (Mestre, 261001).'
+      }
+    ]);
+    // Cada avís té el seu node (sense, mapaContent.js rebutjaria el Mapa).
+    for (const a of avisos) expect(m.nodes.find((n) => n.id === a.node)?.tipus).toBe('document');
+    expect(metrica(m, 'integritat-contingut')).toMatchObject({ numerador: 11, denominador: 13 });
+    expect(() => normalitzaMapa(m)).not.toThrow();
+  });
+
+  it('dos errors de la mateixa clau, o sense clau, també són un avís cada un', () => {
+    const frontissa = {
+      valid: false, requerides: 13, correctes: 12,
+      errors: [{ clau: 'roadmap', codi: 'a' }, { clau: 'roadmap', codi: 'b' }, { codi: 'c', missatge: 'sense clau' }]
+    };
+    const m = construeixMapa({ ...fontsBase(), frontissa }, { existeix, ara: ARA });
+    expect(m.avisos.filter((x) => x.codi === 'frontissa-roja').map((x) => [x.node, x.evidencia])
+      .sort(([x], [y]) => (x < y ? -1 : x > y ? 1 : 0))).toEqual([
+      ['document:.agents/contingut_estructural.json#error-3', 'c · sense clau'],
+      ['document:.agents/contingut_estructural.json#roadmap', 'a · «roadmap»'],
+      ['document:.agents/contingut_estructural.json#roadmap-2', 'b · «roadmap»']
+    ]);
+  });
+
+  it('una frontissa verda, o sense font, no avisa', () => {
+    const verda = construeixMapa({ ...fontsBase(), frontissa: { valid: true, requerides: 13, correctes: 13, errors: [] } }, { existeix, ara: ARA });
+    expect(verda.avisos.some((x) => x.codi === 'frontissa-roja')).toBe(false);
+    expect(mapa().avisos.some((x) => x.codi === 'frontissa-roja')).toBe(false);
+  });
+
+  it('el nom d’un hook declarat a .agents/hooks.json no és cap crida a una skill inexistent', () => {
+    const f = fontsBase();
+    f.hooksAntigravity = { 'sdp-fatiga': { PreInvocation: [{ type: 'command', command: 'cd .. && node tooling/gates/fatiga-hook.mjs' }] } };
+    f.skillsDisc[0] = { ...f.skillsDisc[0], mencions: ['sdp-fatiga', 'core-inexistent'] };
+    const m = construeixMapa(f, { existeix, ara: ARA });
+    const crides = m.avisos.filter((x) => x.codi === 'crida-inexistent');
+    expect(crides).toHaveLength(1);
+    expect(crides[0].evidencia).toBe('.agents/skills/sdp-workflow/SKILL.md → core-inexistent');
+    expect(crides[0]).not.toHaveProperty('evidencies');
+  });
+
+  it('una skill que CLAUDE.md importa amb @ i és fora del catàleg avisa en baixa, sense dir que no es pot carregar', () => {
+    const f = fontsBase();
+    f.skillsClaude = ['wiki-cicle-de-vida', 'wiki-documentacio-i-reflex'];
+    const m = construeixMapa(f, { existeix, ara: ARA });
+    const importada = m.avisos.find((x) => x.node === 'skill:sdp-workflow' && x.codi === 'fora-cataleg-claude');
+    expect(importada.severitat).toBe('baixa');
+    expect(importada.evidencia).toMatch(/CLAUDE\.md la importa amb @/);
+    // La que no s'importa continua en mitjana.
+    expect(m.avisos.find((x) => x.node === 'skill:core-taxonomia-estricta' && x.codi === 'fora-cataleg-claude').severitat).toBe('mitjana');
+    // El cens ho continua comptant: no es fabrica cap verd.
+    expect(metrica(m, 'cens-skills-coherent').numerador).toBeLessThan(metrica(m, 'cens-skills-coherent').denominador);
+  });
+
+  it('les portes de documents i de la cadena es mesuren quan la closca en passa el resultat; si no, N/A', () => {
+    const sense = mapa();
+    expect(metrica(sense, 'conformitat-documental').valor).toBe('N/A');
+    expect(metrica(sense, 'cadena-portes').valor).toBe('N/A');
+    const amb = construeixMapa({
+      ...fontsBase(),
+      portaDocuments: { valid: false, checked: 4, errors: ['x.md: falta el rebut'] },
+      cadenaPortes: { valid: false, failures: 2, total: 9 }
+    }, { existeix, ara: ARA });
+    // Correcció de l'Onada 6 (revisió adversarial) · documents sense error sobre els comprovats. Derogat: 0/1.
+    expect(metrica(amb, 'conformitat-documental')).toMatchObject({ numerador: 3, denominador: 4, valor: 0.75, prova: 'node tooling/gates/porta-documents.mjs' });
+    expect(metrica(amb, 'cadena-portes')).toMatchObject({ numerador: 7, denominador: 9, prova: 'node tooling/gates/run-portes.mjs --diagnostic' });
+    // Només `valid`: 1/1 o 0/1. Un resultat mal format no és cap verd.
+    const nomesValid = construeixMapa({ ...fontsBase(), cadenaPortes: { valid: true } }, { existeix, ara: ARA });
+    expect(metrica(nomesValid, 'cadena-portes')).toMatchObject({ numerador: 1, denominador: 1, valor: 1 });
+    const brossa = construeixMapa({ ...fontsBase(), cadenaPortes: { failures: 'cap' }, portaDocuments: [] }, { existeix, ara: ARA });
+    expect(metrica(brossa, 'cadena-portes').valor).toBe('N/A');
+    expect(metrica(brossa, 'conformitat-documental').valor).toBe('N/A');
+    expect(() => normalitzaMapa(amb)).not.toThrow();
+  });
+
+  /* Correcció de l'Onada 6 (revisió adversarial: «una porta verda que no ha
+     comprovat res») · Per defecte, checkDocuments només valida els .md
+     canviats o sense seguiment: amb l'arbre net torna { valid: true,
+     checked: 0 }, i això no és cap 1/1. */
+  it('la porta de documents que no ha comprovat cap document és N/A, mai un verd', () => {
+    const conformitat = (portaDocuments) => metrica(construeixMapa({ ...fontsBase(), portaDocuments }, { existeix, ara: ARA }), 'conformitat-documental');
+    expect(conformitat({ valid: true, checked: 0, errors: [] })).toMatchObject({ valor: 'N/A', numerador: null, denominador: null, prova: null });
+    expect(conformitat({ valid: false, checked: 0, errors: ['Contracte de l’índex diferent del disc: x'] }).valor).toBe('N/A');
+    expect(conformitat({ valid: true, checked: 5, errors: [] })).toMatchObject({ numerador: 5, denominador: 5, valor: 1 });
+    // Cada document amb errors compta una vegada, també «Sense àncora»; un error que no és de cap document, un més.
+    expect(conformitat({
+      valid: false, checked: 6,
+      errors: ['a.md: falta el rebut', 'a.md: falta el títol', 'Sense àncora: b.md', 'Contracte de l’índex diferent del disc: .agents/protocolledge.json']
+    })).toMatchObject({ numerador: 3, denominador: 6 });
+    // `valid: false` sense cap error: almenys un document falla (cota pessimista, mai un verd).
+    expect(conformitat({ valid: false, checked: 3, errors: [] })).toMatchObject({ numerador: 2, denominador: 3 });
+    // Més errors que documents: mai negatiu.
+    expect(conformitat({ valid: false, checked: 1, errors: ['a.md: x', 'b.md: y'] })).toMatchObject({ numerador: 0, denominador: 1 });
+    // Sense `valid`, mal format: N/A.
+    expect(conformitat({ checked: 3, errors: [] }).valor).toBe('N/A');
+  });
+
+  it('el LEDGER invàlid sense fòssils ni línies mal formades ho diu, i no els en fa la causa', () => {
+    const m = construeixMapa({ ...fontsBase(), ledger: { valid: false, entrades: [], fossils: 0, malformades: 0 } }, { existeix, ara: ARA });
+    expect(m.avisos.find((x) => x.codi === 'ledger-invalid').evidencia).toBe(
+      'signatura del LEDGER no vàlida · el cos no quadra amb el seu segell: editat sense tornar-lo a segellar, o sense segell · 0 segells fòssils · 0 línies mal formades · node tooling/verify-ledger.mjs'
+    );
   });
 });

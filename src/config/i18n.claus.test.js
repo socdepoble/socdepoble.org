@@ -30,6 +30,9 @@ import fontPublicacionsActor from '../sections/mur/PublicacionsDeLActor.jsx?raw'
 /* B03 (revisió del 261008) · La reserva valenciana de SDP-XAT-016 viu a
    l'adaptador del xat (MISSATGES_SDP_HUMANS), que no coneix la llengua. */
 import fontAdaptadorXat from '../data/supabase/xat.js?raw';
+/* Onada 6 (pla 261009_0245, ítem 5) · Els textos del panell «Gent de …» de la
+   pàgina d'un poble. */
+import fontTextosDelPoble from '../sections/pobles/usePublicacionsDelPoble.js?raw';
 
 const CLAUS = {
   'nav.panel': {
@@ -446,6 +449,128 @@ const CLAUS = {
     en: 'This person is not available in the chat.',
     eu: 'Pertsona hau ez dago erabilgarri txatean.',
     gl: 'Esta persoa non está dispoñible no chat.'
+  },
+  /* Onada 6 (xat per als beta testers, decisió 5) · Tres codis SDP més que
+     arriben a la persona amb text propi (MISSATGES_SDP_HUMANS) i es diuen en
+     la llengua de la interfície (errorsXat.js). Les d'eu i gl són proposta a
+     revisar per algú que les parle. */
+  'section.xat.error.noMembre': {
+    ca: 'Encara no consta que sigues d’este poble, i el xat és per a la gent del poble. Prova d’eixir i tornar a entrar.',
+    es: 'Todavía no constas como vecino o vecina de este pueblo, y el chat es para la gente del pueblo. Prueba a salir y volver a entrar.',
+    en: 'You are not registered as part of this town yet, and the chat is for the people of the town. Try signing out and back in.',
+    eu: 'Oraindik ez zaude herri honetako kide gisa erregistratuta, eta txata herriko jendearentzat da. Saiatu irten eta berriro sartzen.',
+    gl: 'Aínda non constas como veciño ou veciña desta vila, e o chat é para a xente da vila. Proba a saír e volver entrar.'
+  },
+  'section.xat.error.paginaNoVisible': {
+    ca: 'Esta pàgina ja no existix o no la pots vore.',
+    es: 'Esta página ya no existe o no puedes verla.',
+    en: 'This page no longer exists or you cannot see it.',
+    eu: 'Orri hau ez dago jada edo ezin duzu ikusi.',
+    gl: 'Esta páxina xa non existe ou non a podes ver.'
+  },
+  'section.xat.error.massaMissatges': {
+    ca: 'Has enviat molts missatges en poc de temps. Espera uns segons i torna-ho a provar.',
+    es: 'Has enviado muchos mensajes en poco tiempo. Espera unos segundos y vuelve a intentarlo.',
+    en: 'You have sent many messages in a short time. Wait a few seconds and try again.',
+    eu: 'Mezu asko bidali dituzu denbora gutxian. Itxaron segundo batzuk eta saiatu berriro.',
+    gl: 'Enviaches moitas mensaxes en pouco tempo. Agarda uns segundos e téntao de novo.'
+  },
+  /* Onada 6 (prompt 261009_0230, punt 4) · «Informa d'un error» i la seua
+     plantilla; tasca 12 · l'avís de la IAIA apagada (nivell d'IA 0). */
+  'section.xat.informe.boto': {
+    ca: "Informa d'un error",
+    es: 'Informa de un error',
+    en: 'Report a bug',
+    eu: 'Jakinarazi akats bat',
+    gl: 'Informa dun erro'
+  },
+  'section.xat.informe.plantilla': {
+    ca: 'Què ha passat: \nOn: \nQuè esperaves: \n\n— Dades tècniques, sense dades personals —\nRuta: {ruta}\nVersió: {versio}\nNavegador: {navegador}\nPantalla: {pantalla}',
+    es: 'Qué ha pasado: \nDónde: \nQué esperabas: \n\n— Datos técnicos, sin datos personales —\nRuta: {ruta}\nVersión: {versio}\nNavegador: {navegador}\nPantalla: {pantalla}',
+    en: 'What happened: \nWhere: \nWhat you expected: \n\n— Technical details, no personal data —\nRoute: {ruta}\nVersion: {versio}\nBrowser: {navegador}\nScreen: {pantalla}',
+    eu: 'Zer gertatu da: \nNon: \nZer espero zenuen: \n\n— Datu teknikoak, datu pertsonalik gabe —\nBidea: {ruta}\nBertsioa: {versio}\nNabigatzailea: {navegador}\nPantaila: {pantalla}',
+    gl: 'Que pasou: \nOnde: \nQue esperabas: \n\n— Datos técnicos, sen datos persoais —\nRuta: {ruta}\nVersión: {versio}\nNavegador: {navegador}\nPantalla: {pantalla}'
+  },
+  /* Revisió 261009 · Si el xat de feedback no s'obri (SDP-XAT-003, l'entitat
+     absent, la xarxa), la reserva: copiar l'informe o enviar-lo per correu
+     ({correu}, l'adreça pública de l'Avís legal) amb l'assumpte. Les d'eu i
+     gl són proposta a revisar per algú que les parle. */
+  'section.xat.informe.reserva': {
+    ca: "No s'ha pogut obrir el xat. Copia l'informe o envia'l per correu a {correu}.",
+    es: 'No se ha podido abrir el chat. Copia el informe o envíalo por correo a {correu}.',
+    en: 'The chat could not be opened. Copy the report or send it by email to {correu}.',
+    eu: 'Ezin izan da txata ireki. Kopiatu txostena edo bidali posta elektronikoz helbide honetara: {correu}.',
+    gl: 'Non se puido abrir o chat. Copia o informe ou envíao por correo a {correu}.'
+  },
+  'section.xat.informe.copia': {
+    ca: "Copia l'informe",
+    es: 'Copia el informe',
+    en: 'Copy the report',
+    eu: 'Kopiatu txostena',
+    gl: 'Copia o informe'
+  },
+  'section.xat.informe.correu': {
+    ca: "Envia'l per correu",
+    es: 'Envíalo por correo',
+    en: 'Send it by email',
+    eu: 'Bidali posta elektronikoz',
+    gl: 'Envíao por correo'
+  },
+  'section.xat.informe.assumpte': {
+    ca: "Informe d'un error a Sóc de Poble",
+    es: 'Informe de un error en Sóc de Poble',
+    en: 'Bug report for Sóc de Poble',
+    eu: 'Akats-txostena: Sóc de Poble',
+    gl: 'Informe dun erro en Sóc de Poble'
+  },
+  'section.xat.iaia.apagada': {
+    ca: "La IAIA està apagada (nivell d'IA 0). La pots tornar a encendre a «Realitat».",
+    es: 'La IAIA está apagada (nivel de IA 0). Puedes volver a encenderla en «Realitat».',
+    en: 'IAIA is switched off (AI level 0). You can switch her back on in «Realitat».',
+    eu: 'IAIA itzalita dago (IA maila 0). «Realitat» atalean piztu dezakezu berriro.',
+    gl: 'A IAIA está apagada (nivel de IA 0). Podes volver acendela en «Realitat».'
+  },
+  /* Onada 5 (ordre del Mestre, 261008) · El botó blau de la pàgina d'un poble
+     ({gent}, l'entitat de l'H1: «Parlar amb la Gent de la Torre»). Les d'eu i
+     gl són proposta a revisar per algú que les parle; en basc, el nom no porta
+     el sufix de companyia (-rekin) enganxat. */
+  'section.detail.pobles.parlarAmb': {
+    ca: 'Parlar amb la {gent}',
+    es: 'Hablar con la {gent}',
+    en: 'Talk with {gent}',
+    eu: 'Hitz egin {gent} komunitatearekin',
+    gl: 'Falar coa {gent}'
+  },
+  /* Onada 6 (pla 261009_0245, ítem 5) · La barra de pestanyes de la pàgina
+     d'un poble (el nom del tablist) i el panell «Gent de …» (buit, carregant
+     i error). Les d'eu i gl són proposta a revisar per algú que les parle. */
+  'section.detail.pobles.pestanyes': {
+    ca: 'Continguts del poble',
+    es: 'Contenidos del pueblo',
+    en: 'Town content',
+    eu: 'Herriko edukiak',
+    gl: 'Contidos do pobo'
+  },
+  'section.detail.pobles.gent.buit': {
+    ca: 'Encara no hi ha cap publicació des d’este poble.',
+    es: 'Todavía no hay ninguna publicación desde este pueblo.',
+    en: 'There are no posts from this town yet.',
+    eu: 'Oraindik ez dago herri honetako argitalpenik.',
+    gl: 'Aínda non hai ningunha publicación dende este pobo.'
+  },
+  'section.detail.pobles.gent.carregant': {
+    ca: 'Carregant les publicacions del poble…',
+    es: 'Cargando las publicaciones del pueblo…',
+    en: 'Loading the town’s posts…',
+    eu: 'Herriko argitalpenak kargatzen…',
+    gl: 'Cargando as publicacións do pobo…'
+  },
+  'section.detail.pobles.gent.error': {
+    ca: 'No s’han pogut carregar les publicacions del poble',
+    es: 'No se han podido cargar las publicaciones del pueblo',
+    en: 'The town’s posts could not be loaded',
+    eu: 'Ezin izan dira herriko argitalpenak kargatu',
+    gl: 'Non se puideron cargar as publicacións do pobo'
   }
 };
 
@@ -598,6 +723,41 @@ describe('claus i18n del torn T1–T4', () => {
   test('la reserva de SDP-XAT-016 a l’adaptador del xat és el valor valencià', () => {
     const clau = 'section.xat.error.noDisponible';
     expect([clau, fontAdaptadorXat.includes(`'SDP-XAT-016': '${CLAUS[clau].ca}'`)]).toEqual([clau, true]);
+  });
+
+  /* Onada 6 (decisió 5) · Els tres codis nous: la reserva de l'adaptador és
+     el valor valencià de la seua clau. */
+  test.each([
+    ['SDP-XAT-003', 'section.xat.error.noMembre'],
+    ['SDP-XAT-013', 'section.xat.error.paginaNoVisible'],
+    ['SDP-XAT-429', 'section.xat.error.massaMissatges']
+  ])('la reserva de %s a l’adaptador del xat és el valor valencià de %s', (codi, clau) => {
+    expect([clau, fontAdaptadorXat.includes(`'${codi}': '${CLAUS[clau].ca}'`)]).toEqual([clau, true]);
+  });
+
+  /* Onada 5 (ordre del Mestre, 261008) · El botó del xat de la pàgina d'un
+     poble (buildPoblesDetailSectionMeta de detailSectionMeta.jsx) crida la
+     clau amb la reserva valenciana. */
+  test('la reserva del botó del xat del poble és el valor valencià', () => {
+    const clau = 'section.detail.pobles.parlarAmb';
+    expect([clau, fontPortada.includes(`t('${clau}', '${CLAUS[clau].ca}')`)]).toEqual([clau, true]);
+  });
+
+  /* Onada 6 (pla 261009_0245, ítem 5) · Les pestanyes de la pàgina d'un poble
+     (detailSectionMeta.jsx) i els textos del panell «Gent de …»
+     (pobles/usePublicacionsDelPoble.js · textosDelPoble) criden cada clau amb
+     la reserva valenciana; cap clau del front queda fora de la taula. */
+  test('les reserves de les pestanyes del poble són els valors valencians', () => {
+    const font = `${fontPortada}\n${fontTextosDelPoble}`;
+    const deLaTaula = Object.keys(CLAUS).filter((clau) => clau.startsWith('section.detail.pobles.') && clau !== 'section.detail.pobles.parlarAmb');
+    expect(deLaTaula).toHaveLength(4);
+    for (const clau of deLaTaula) {
+      const reserva = CLAUS[clau].ca;
+      const crida = font.includes(`t('${clau}', '${reserva}')`) || font.includes(`tradueix('${clau}', '${reserva}')`);
+      expect([clau, crida]).toEqual([clau, true]);
+    }
+    const delFront = [...new Set([...fontTextosDelPoble.matchAll(/'(section\.detail\.pobles\.[\w.]+)'/g)].map((m) => m[1]))].sort();
+    expect(delFront.every((clau) => deLaTaula.includes(clau))).toBe(true);
   });
 
   /* T7 (261001) · amfitrio.servidor («Estàs al servidor de …») queda retirada

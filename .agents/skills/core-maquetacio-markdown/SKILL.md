@@ -31,7 +31,7 @@ Esta secció diu on s'aplica la skill i on comença la feina d'una altra.
 - **Com es convertix:** el compilador de la Wiki passa la `description` a Subtítol (H2), `extreuEditorial` passa l'entradeta de R5 a Entradilla i `parseMarkdown` pinta cada `##` del font com a H3 del cos. Per això el Subtítol no s'escriu com a `##` davall de l'H1: incompliria R5 i la pàgina quedaria sense Entradilla.
 - **Frontera amb les plantilles:** quan el document naix de `document.mjs create`, l'ordre i el nom de les seccions els posa la plantilla de `.agents/protocolledge.json`. Esta skill ordena el que va dins de cada secció. Si la plantilla porta un element que una regla prohibix, el document el conserva com a excepció declarada i la plantilla s'anota amb ruta:línia.
 - **Fitxers generats:** `00_INDEX_SKILLS.md`, `manifest.yaml` i les àncores que escriuen les eines no es retoquen a mà. Si la seua forma incomplix una regla, es corregix l'eina pel seu circuit.
-- **Origen:** correcció del Mestre del 261006 sobre la maquetació d'AGENTS.md (encàrrec T5 del prompt 261006_0224), amb idees de l'esborrany `core-redaccio` del laboratori 260924_1700, que no es va instal·lar.
+- **Origen:** correcció del Mestre del 261006 sobre la maquetació d'AGENTS.md (encàrrec T5 del prompt 261006_0224), amb idees de l'esborrany de redacció del laboratori 260924_1700 (`skill_core_redaccio.txt`), que no es va instal·lar.
 
 ## 2. Regles
 

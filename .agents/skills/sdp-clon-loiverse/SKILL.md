@@ -3,6 +3,12 @@ type: skill
 status: actiu
 name: sdp-clon-loiverse
 description: Directriu arquitectònica i visual obligatòria per a desenvolupar el TPV (Mode Bar i Mode Rebost). Cal calcar la interfície de Loiverse al mil·límetre.
+triggers_on:
+  - loiverse
+  - punt de venda
+  - mode bar
+  - mode rebost
+  - llista de la compra
 ---
 
 # Clonació Visual de Loiverse (El TPV Universal)

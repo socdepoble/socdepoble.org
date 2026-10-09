@@ -52,6 +52,24 @@ function escriuAtomic(targetPath, content) {
   fs.renameSync(tmpPath, targetPath);
 }
 
+/** Empremta d'una llista d'operacions: el que fan, no quan s'han calculat (261009, cron d'higiene). */
+function empremtaOperacions(ops) {
+  return crypto.createHash('sha256').update(JSON.stringify((Array.isArray(ops) ? ops : []).map(({ tipus, fitxer, objectius, hashFont }) => ({ tipus, fitxer, objectius, hashFont })))).digest('hex');
+}
+
+/** Recepta més recent amb la seua empremta (la calcula si la recepta és d'abans del 261009), o null. */
+function darreraRecepta() {
+  let noms;
+  try { noms = fs.readdirSync(RECEPTES_DIR).filter((n) => /^\d+_RECEPTA\.json$/.test(n)); } catch { return null; }
+  noms.sort((a, b) => Number(a.split('_')[0]) - Number(b.split('_')[0]));
+  const nom = noms.at(-1);
+  if (!nom) return null;
+  try {
+    const r = JSON.parse(fs.readFileSync(path.join(RECEPTES_DIR, nom), 'utf8'));
+    return { id: nom.replace(/\.json$/, ''), empremta: typeof r.empremta === 'string' ? r.empremta : empremtaOperacions(r.operacions) };
+  } catch { return null; }
+}
+
 function arbreNet() {
   try { return execFileSync('git', ['status', '--porcelain'], {cwd: REPO_ROOT, encoding: 'utf8', shell: false}).trim() === ''; }
   catch { return false; }
@@ -261,7 +279,15 @@ if (cmd === 'diagnostic') {
     process.exit(0);
   }
 
-  const recepta = { id: `R-${Date.now()}`, data: new Date().toISOString(), operacions: ops };
+  // 261009: una recepta nova només quan canvia l'empremta de les operacions. Abans se n'escrivia
+  // una per execució encara que les operacions foren les mateixes (cron d'higiene, Onada 6).
+  const empremta = empremtaOperacions(ops);
+  const darrera = darreraRecepta();
+  if (darrera && darrera.empremta === empremta) {
+    console.log(`🩸 Recepta idèntica a ${darrera.id} (${ops.length} operacions): no se n'escriu cap de nova.`);
+    process.exit(0);
+  }
+  const recepta = { id: `R-${Date.now()}`, data: new Date().toISOString(), empremta, operacions: ops };
   const receptaId = `${Date.now()}_RECEPTA`;
   escriuAtomic(path.join(RECEPTES_DIR, `${receptaId}.json`), JSON.stringify(recepta, null, 2));
   console.log(`🩸 Recepta ${receptaId} generada amb ${ops.length} operacions.`);

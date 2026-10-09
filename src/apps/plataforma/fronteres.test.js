@@ -124,9 +124,11 @@ const PONTS_GESTORIA = new Map([
     especificadors: Object.freeze([
       '../../sections/gestoria/tauler/ShellGestoria.jsx',
       '../../sections/gestoria/aprendre/Aprendre.jsx',
-      '../../sections/gestoria/facturar/Facturacio.jsx'
+      '../../sections/gestoria/facturar/Facturacio.jsx',
+      /* Onada 6, ordre del Mestre (261009): «Històric i IA» (el banc, la despesa en IA, les simulacions i el llibre per a la gestora). */
+      '../../sections/gestoria/historic/Historic.jsx'
     ]),
-    motiu: 'Ordre del Mestre, 261004: la Gestoria passa de la Wiki a /app/gestoria; el codi es queda al seu carril, amb la seua guarda. 261007: la Facturació entra pel pont i no per ShellGestoria (font del tractor gestoria.tauler).'
+    motiu: 'Ordre del Mestre, 261004: la Gestoria passa de la Wiki a /app/gestoria; el codi es queda al seu carril, amb la seua guarda. 261007: la Facturació entra pel pont i no per ShellGestoria (font del tractor gestoria.tauler). Onada 6, ordre del Mestre (261009): l’Històric i IA, pel mateix motiu.'
   })]
 ]);
 const esPont = (ruta, especificador, ponts = PONTS_GESTORIA) => Boolean(ponts.get(ruta)?.especificadors.includes(especificador));
@@ -566,6 +568,59 @@ describe('l’API pública no arriba a cap app (correcció del 261006, HMR)', ()
     const importadors = fitxersDe('src', CODI).filter((f) => !esProva(f) && f !== FONT)
       .filter((f) => especificadors(llig(f)).some((e) => fitxerImportat(f, e, existixAlDisc) === FONT));
     expect(importadors).toEqual(['src/apps/plataforma/RutaApps.jsx']);
+  });
+});
+
+/* Onada 6 (261009, ADR-2026-12) · el nucli dels mòduls (SocDePoble.nucli,
+   sdp.modul.v1). Un mòdul el rep sencer, i és un contracte públic:
+   · el nucli només importa React, el router, l'API pública de la
+     plataforma, el seu contracte i la Pedra Seca del contracte: cap mòdul hi
+     troba el port del backend, el registre, host.js ni els contexts de
+     sessió i d'identitat (els noms que exposa, a nucliModuls.test.js);
+   · la clausura estàtica no porta SessionContext ni IdentitatContext (el
+     mateix criteri que l'API pública, correcció del 261006);
+   · la Pedra Seca no es mira per dins, com per a les apps internes
+     (PERMESOS_DE_FORA): PaginaApp hi arriba al port per PageFrame i
+     useResolvedAsset, que resol les imatges del paquet. El mòdul no en rep
+     cap mànec; ho diu l'ADR.
+   I el paquet no el paga fins que un mòdul el demana: només l'importa el
+   carregador, per import(), i el carregador (que importen host.js i el
+   registre) és lleuger. */
+describe('el nucli dels mòduls (sdp.modul.v1)', () => {
+  const NUCLI = 'src/apps/plataforma/nucliModuls.js';
+  const CARREGADOR = 'src/apps/plataforma/carregaModul.js';
+  const PEDRA_SECA = /^src\/components\/PedraSeca\//;
+
+  test('nucliModuls.js només importa React, el router, l’API pública, el seu contracte i Pedra Seca', () => {
+    const directes = especificadors(llig(NUCLI)).map((e) => fitxerImportat(NUCLI, e, existixAlDisc) || e);
+    const fora = directes.filter((desti) => !['react', 'react/jsx-runtime', 'src/app/contexts/RouterContext.jsx',
+      'src/apps/plataforma/index.js', 'src/apps/plataforma/contracteNucli.js'].includes(desti) && !PEDRA_SECA.test(desti));
+    expect(fora).toEqual([]);
+    expect(directes.filter((desti) => PEDRA_SECA.test(desti)).length).toBeGreaterThan(10);
+  });
+
+  test('la clausura estàtica del nucli no porta SessionContext ni IdentitatContext', () => {
+    const estatica = clausuraDImports(NUCLI);
+    const contexts = [...estatica.keys()].filter((ruta) => CONTEXTS_DE_L_ARREL.has(ruta)).map((ruta) => camiFins(estatica, ruta));
+    expect(contexts).toEqual([]);
+  });
+
+  test('la porta mira de veres: la clausura del nucli porta la plataforma, el router i la Pedra Seca del contracte', () => {
+    const estatica = clausuraDImports(NUCLI);
+    expect([...estatica.keys()]).toEqual(expect.arrayContaining([
+      'src/apps/plataforma/index.js', 'src/apps/plataforma/contracteNucli.js', 'src/app/contexts/RouterContext.jsx',
+      'src/components/PedraSeca/atoms/Boto.jsx', 'src/components/PedraSeca/organismes/PaginaApp.jsx'
+    ]));
+  });
+
+  test('només el carregador importa el nucli, i per import(); el carregador no arrossega cap component', () => {
+    const importadors = fitxersDe('src', CODI).filter((f) => !esProva(f) && f !== NUCLI)
+      .filter((f) => especificadors(llig(f)).some((e) => fitxerImportat(f, e, existixAlDisc) === NUCLI));
+    expect(importadors).toEqual([CARREGADOR]);
+    expect(especificadorsEstatics(llig(CARREGADOR)).map((e) => fitxerImportat(CARREGADOR, e, existixAlDisc)))
+      .not.toContain(NUCLI);
+    expect([...clausuraDImports(CARREGADOR).keys()].sort())
+      .toEqual([CARREGADOR, 'src/apps/plataforma/contracteNucli.js', 'src/apps/plataforma/lazyRoute.js'].sort());
   });
 });
 

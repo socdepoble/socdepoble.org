@@ -2,8 +2,9 @@ import { useMemo, useRef, useState } from 'react';
 import { RotateCcw } from 'lucide-react';
 import { Boto, Camp, CampText, Interruptor, PillToggle } from '../../../components/PedraSeca';
 import BrainGraph from '../../../components/universal/graph/BrainGraph';
-import { Link } from '../../../app/contexts/RouterContext';
+import { Link, useSearchParams } from '../../../app/contexts/RouterContext';
 import { de, plural } from '../concordanca.js';
+import { CLAU_PECA } from '../consolaPagines.js';
 import { GraellaXifres } from '../XifresMas.jsx';
 import { rutaXifra, xifresDeVista } from '../xifresMas.js';
 import { TIPUS_NODE, CONFIANCES } from './contracteMapa.js';
@@ -26,6 +27,17 @@ import {
    el que mostren els filtres i enllaça amb les dues targetes, i els recomptes
    dels interruptors de tipus també hi porten. La concordança és la comuna
    (concordanca.js). */
+
+/* El paràmetre de la URL amb la peça triada (CLAU_PECA) i l'adreça que hi
+   porta (rutaPecaAlGraf) viuen a consolaPagines.js, amb la resta de rutes.
+   La mateixa forma que l'Inventari: `return useSearchParams()` dins d'un try. */
+function useConsultaApp() {
+  try {
+    return useSearchParams();
+  } catch {
+    return null;
+  }
+}
 
 const OPCIONS_FORCES = Object.freeze([
   { valor: 'compacte', text: 'Compacte' },
@@ -73,8 +85,21 @@ export function ExploradorMapa({ mapa }) {
   const [filtres, setFiltres] = useState(filtresInicials);
   const [densitat, setDensitat] = useState(DENSITAT_INICIAL);
   /* T4 · la peça triada és de l'Explorador: el graf la marca (mode
-     controlat de BrainGraph) i el detall la pinta. '' = cap. */
-  const [seleccio, setSeleccio] = useState('');
+     controlat de BrainGraph) i el detall la pinta. '' = cap.
+     Onada 6 (requisit 11) · i viu a la URL (?peca=skill:NOM), com el filtre
+     de l'Inventari: «Veure al graf» d'una fila de l'Inventari hi porta, i el
+     que es comparteix és el que es veu. Arribant per un enllaç, el focus va
+     al nom de la peça (el detall és davall del graf). Sense un router
+     llegible, estat local, com abans. */
+  const consulta = useConsultaApp();
+  const pecaUrl = consulta ? (consulta[0]?.get?.(CLAU_PECA) ?? '') : null;
+  const [seleccioLocal, setSeleccioLocal] = useState('');
+  const [arribaPerEnllac] = useState(() => Boolean(pecaUrl));
+  const seleccio = consulta ? pecaUrl : seleccioLocal;
+  const setSeleccio = (id) => {
+    if (!consulta) setSeleccioLocal(id);
+    else consulta[1]({ [CLAU_PECA]: id || null }, { replace: true });
+  };
   const graf = useMemo(() => grafDelMapa(mapa, filtres), [mapa, filtres]);
   const commuta = (grup, clau) => setFiltres((f) => ({ ...f, [grup]: { ...f[grup], [clau]: !f[grup][clau] } }));
   const posa = (clau, valor) => setFiltres((f) => ({ ...f, [clau]: valor }));
@@ -172,7 +197,8 @@ export function ExploradorMapa({ mapa }) {
             </div>
           )}
         </div>
-        <DetallPeca mapa={mapa} graf={graf} seleccio={seleccio} onSeleccio={setSeleccio} onRestablir={restableix} />
+        <DetallPeca mapa={mapa} graf={graf} seleccio={seleccio} onSeleccio={setSeleccio} onRestablir={restableix}
+          enfoca={arribaPerEnllac} />
       </div>
     </section>
   );

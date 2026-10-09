@@ -23,6 +23,12 @@
  * existix a les dades (FilaPoble): avatar de comunitat, nom, xebró, «Avisos,
  * General» i la xinxeta de fixada. No es registra a registre.js: les peces
  * del Xat hi van amb `fora: true` i la porta no les vigila.
+ *
+ * Onada 6 · Revisió 261009 (Pedra Seca §9) · El peu de la llista amb
+ * «Informa d'un error» (LlistaConverses `peu` i BotoInformaDUnError): darrere
+ * de la llista i fora de la <ul>, davall de l'avís d'una llista que no s'ha
+ * pogut carregar, i la reserva quan el xat no s'obri (copiar l'informe o
+ * enviar-lo per correu).
  */
 import { useEffect, useRef, useState } from 'react';
 import { MessageCircle } from 'lucide-react';
@@ -32,7 +38,10 @@ import MenuLlista from '../../../xat/components/MenuLlista.jsx';
 import BarraSeleccio from '../../../xat/components/BarraSeleccio.jsx';
 import FilaConversa, { FilaComunitat } from '../../../xat/components/FilaConversa.jsx';
 import FilaPoble from '../../../xat/components/FilaPoble.jsx';
+import LlistaConverses from '../../../xat/components/LlistaConverses.jsx';
+import BotoInformaDUnError from '../../../xat/components/BotoInformaDUnError.jsx';
 import { agrupaComunitats, mapejaFil } from '../../../xat/missatges.js';
+import { composaInforme, enllacDeCorreu } from '../../../xat/informeDError.js';
 
 /* Traductor mínim: les alternatives ja són el text en valencià. */
 const t = (clau, alternativa) => alternativa;
@@ -138,6 +147,22 @@ function MenuObert({ onSeleccionar }) {
   );
 }
 
+/* L'informe de mostra de la reserva: l'entorn s'injecta, cap lectura del navegador. */
+const INFORME_DE_MOSTRA = composaInforme({
+  t, rutaActual: '/xat', rutaAnterior: '/mur', versio: 'production · XatSection-mostra.js',
+  entorn: { ua: 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) Version/16.6 Mobile/15E148 Safari/604.1', amplada: 375, alcada: 812, densitat: 3 }
+});
+const RESERVA_DE_MOSTRA = { informe: INFORME_DE_MOSTRA, correu: enllacDeCorreu(INFORME_DE_MOSTRA, "Informe d'un error a Sóc de Poble") };
+
+/* Una columna de llista de mostra amb el seu peu. */
+function ColumnaAmbPeu({ etiqueta, children }) {
+  return (
+    <div className="sdp-especimen__mostra sdp-especimen__mostra--columna">
+      <aside className="sdp-workspace-column" aria-label={etiqueta}>{children}</aside>
+    </div>
+  );
+}
+
 function Barra({ quants, etiqueta, avisa }) {
   return (
     <div className="sdp-especimen__mostra sdp-especimen__mostra--columna">
@@ -166,8 +191,12 @@ export default function EspecimenXatLlista() {
     return noves;
   });
 
+  const peu = (extra = {}) => (
+    <BotoInformaDUnError onPrem={avisa('Obriria el xat de feedback amb l’esborrany de l’informe.')} onCopia={avisa('Copiaria l’informe al porta-retalls.')} t={t} {...extra} />
+  );
+
   return (
-    <Especimen id="xat-llista" nom="Xat · llista de converses" fitxer="src/sections/xat/components/ (MenuLlista, BarraSeleccio, FilaConversa, FilaPoble)"
+    <Especimen id="xat-llista" nom="Xat · llista de converses" fitxer="src/sections/xat/components/ (MenuLlista, BarraSeleccio, FilaConversa, FilaPoble, LlistaConverses, BotoInformaDUnError)"
       descripcio="La columna de llista calcada de WhatsApp Desktop (onada 3): el «…» redó de la fila de títol amb «Seleccionar xats», la barra que el substituïx mentre es trien xats i les files. Un grup porta la icona de persones i l’avanç «Nom: text»; el General d’una comunitat, la bafarada; un canal («Avisos»), sempre el megàfon, tinga o no imatge. Si l’últim missatge és teu, la previsualització comença amb les marques (✓ enviat, ✓✓ blau llegit) i, en un grup o un canal, amb «Tu: »; el ✓✓ gris (entregat) espera que el contracte porte el rebut dels altres. Un fil silenciat porta la pastilla grisa i l’hora sense ressaltar; un fil marcat a mà com a no llegit, el punt. Una comunitat és UNA fila, amb l’avatar quadrat i les targetes apilades, que obri la seua fitxa. En un amfitrió que declara el seu poble, el grup del poble va el primer; mentre encara no existix, el pinta FilaPoble, fixada, i prémer-la l’obri o el crea."
       contracte={[
         ['MenuLlista', '{ onSeleccionar, t, refBoto? }', '—', 'El «…» de la fila de títol; una sola opció, «Seleccionar xats». Escape el tanca i torna el focus al botó.'],
@@ -175,14 +204,17 @@ export default function EspecimenXatLlista() {
         ['FilaConversa', '{ fil, activa, onSelect, locale, t, seleccio?, joId? }', '—', 'Amb seleccio ({ triada, onAlterna }) és una casella: role="checkbox" amb el cercle. Amb joId, si l’últim missatge és teu: les marques d’estatDeLUltim i, en grups i canals, «Tu: ».'],
         ['FilaComunitat', '{ comunitat, onObri, t, seleccio? }', '—', 'comunitat és una entrada d’useXat().comunitats; la pastilla suma els no llegits dels fills. No porta ni el punt ni la pastilla grisa.'],
         ['FilaPoble', '{ poble, onObri, t }', '—', 'poble és { id, nom } de l’amfitrió (pobleDeConfig). El grup del poble que encara no existix: l’anatomia de FilaComunitat, «Avisos, General» i la xinxeta de fixada. onObri(poble) fa el camí del «Comentar» de la pàgina del poble. Mai en selecció ni mentre la llista carrega.'],
-        ['PastillaNoLlegits', '{ quants, t, manual?, silenciada? }', '0 · false · false', 'Res amb 0 si no és manual; manual i 0, el punt amb «Marcada com a no llegida»; silenciada, grisa. Amb recompte, mana el número.']
+        ['PastillaNoLlegits', '{ quants, t, manual?, silenciada? }', '0 · false · false', 'Res amb 0 si no és manual; manual i 0, el punt amb «Marcada com a no llegida»; silenciada, grisa. Amb recompte, mana el número.'],
+        ['LlistaConverses · peu', '{ …, avis?, estatBuit?, carregant?, peu? }', 'null', 'Onada 6 · El node del peu va darrere de la llista, FORA de la <ul> (no és cap conversa), i també davall de l’avís (avis) i de l’estat buit; mentre carrega, no. En compacte la reserva de la barra mòbil passa de la llista al peu.'],
+        ['BotoInformaDUnError', '{ onPrem, obrint?, reserva?, onCopia?, t }', 'false · null', 'La píndola secundària «Informa d’un error» (aria-busy i desactivada mentre obri). Amb reserva ({ informe, correu }), la nota i dues eixides: «Copia l’informe» (onCopia) i «Envia’l per correu» (mailto: a l’adreça pública).']
       ]}
       a11y={[
         'Cada fila diu el seu tipus en text per a lectors de pantalla («, Grup», «, Canal d’avisos», «, Comunitat»): mai només un dibuix.',
         'Les marques diuen l’estat en text («Enviat», «Llegit»), a més de la forma (una marca o dos): mai només el color.',
         'El punt no és només un color: porta el text «Marcada com a no llegida». La pastilla grisa fa 9,50:1 en clar i 11,51:1 en fosc; el punt gris, 3:1 o més sobre la fila (WCAG 1.4.11).',
         'En selecció, la fila és role="checkbox" amb aria-checked; la barra anuncia el recompte (aria-live).',
-        'El menú és role="menu" amb menuitem; en obrir-lo el focus entra a l’opció i Escape el torna al «…».'
+        'El menú és role="menu" amb menuitem; en obrir-lo el focus entra a l’opció i Escape el torna al «…».',
+        'El peu «Informa d’un error» no és un listitem: el lector de pantalla compta només les converses. La nota de la reserva viu en una regió role="status" sempre muntada, que s’anuncia en aparéixer.'
       ]}
       fes={['Passar les comunitats d’useXat() tal qual: la llista no torna a agrupar.', 'Una sola acció a la barra de selecció: la que té RPC darrere.']}
       noFacis={['Pintar els Avisos i el General com a files soltes: viuen dins de la seua comunitat.', 'Obrir una comunitat com si fóra una conversa.']}>
@@ -231,6 +263,17 @@ export default function EspecimenXatLlista() {
           <FilaPoble poble={POBLE_DE_MOSTRA} onObri={(p) => setAvis(`Obriria o crearia el grup de ${p.nom}.`)} t={t} />
         </li>
       </ul>
+
+      <h4>Peu «Informa d’un error» (beta testers)</h4>
+      <ColumnaAmbPeu etiqueta="Llista de mostra amb el peu">
+        <LlistaConverses fils={[per['dir-vicent']]} onSelect={(id) => setAvis(`Obriria la conversa ${id}.`)} locale={LOCALE} t={t} joId="jo" peu={peu()} />
+      </ColumnaAmbPeu>
+      <ColumnaAmbPeu etiqueta="Llista que no s’ha pogut carregar, amb el peu">
+        <LlistaConverses fils={[]} locale={LOCALE} t={t} avis="Encara no consta que sigues d’este poble, i el xat és per a la gent del poble." peu={peu()} />
+      </ColumnaAmbPeu>
+      <ColumnaAmbPeu etiqueta="El xat no s’ha pogut obrir: la reserva">
+        <LlistaConverses fils={[]} locale={LOCALE} t={t} estatBuit="Encara no tens cap conversa" peu={peu({ reserva: RESERVA_DE_MOSTRA })} />
+      </ColumnaAmbPeu>
       <p role="status">{avis}</p>
     </Especimen>
   );

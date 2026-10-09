@@ -34,7 +34,7 @@ const CARRIL = [
   'src/components/PedraSeca/organismes/CalendariEsdeveniments.test.jsx',
   'src/components/PedraSeca/organismes/NavegacioPeriode.jsx',
   'src/components/PedraSeca/organismes/NavegacioPeriode.test.jsx',
-  'src/sections/mur/CalendariMur.jsx',
+  // Onada 6 · CalendariMur.jsx ja no té importador (el Mur munta CalendariDelMur): el lint, lint_calendari.
   'src/sections/disseny/cataleg/registre.js',
   'src/sections/disseny/cataleg/manifest.js',
   'src/sections/disseny/cataleg/detailRegistry.jsx',

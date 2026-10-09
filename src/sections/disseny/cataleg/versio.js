@@ -15,7 +15,23 @@
  * src/sections/disseny/cataleg/detalls`, sense comptar les proves ni este
  * fitxer). Una versió que no és la darrera és una data falsa a la pastilla.
  *
- * Darrera posada al dia: AssignacioEmoji.jsx, 2026-10-08T00:17:37+02:00, el relleu 261007 (Onada 3,
+ * Darrera posada al dia: EspecimenXatLlista.jsx, 2026-10-09T04:59:44+02:00, Onada 6 (front «xat»,
+ * revisió 261009): el peu «Informa d'un error» de la llista de converses (LlistaConverses `peu` i
+ * BotoInformaDUnError), fora de la <ul>, davall de l'avís d'una llista que no carrega i amb la reserva
+ * (copiar l'informe o enviar-lo per correu). Arreplega també EspecimenCalendari.jsx (04:44:01, Onada 6,
+ * front «calendari»), tocat sense posar-la al dia.
+ * Versió anterior: EspecimenAvatar.jsx, 2026-10-09T04:13:12+02:00, Onada 6 (tasca 12): la
+ * variant additiva `enquadrament` d'Avatar, amb la cara de la IAIA a «Festa del Poble» (sm, md, lg i xl).
+ * Arreplega també EspecimenPestanyes.jsx (04:01:46, Onada 6, front «pobles»: la variant `centrades`
+ * de Pestanyes, la de la pàgina d'un poble).
+ * Versió anterior: manifest.js, 2026-10-09T01:00:28+02:00, Onada 5 (ordre del Mestre, 261008):
+ * la barra inferior mòbil passa a Xat, Mur, el Panell de Control, Mercat i Pobles, en cinc pistes
+ * d'ample igual (EspecimenNavMobil.jsx a les 01:00:27 i l'entrada nav-mobil de manifest.js).
+ * Arreplega també els tocats el 261008 sense posar-la al dia: manifest.js (14:46:58),
+ * EspecimenImpressio.jsx (14:06:17), EspecimenEnquadrament.jsx (14:39:15),
+ * EspecimenTargetaViva.jsx (14:46:38), EspecimenDretsAutor.jsx (14:55:34), EspecimenPage.jsx i
+ * EspecimenEstatDesament.jsx (15:26:40).
+ * Versió anterior: AssignacioEmoji.jsx, 2026-10-08T00:17:37+02:00, el relleu 261007 (Onada 3,
  * peça «netes»): l'espècimen nou EspecimenPublicacionsDeLActor (l'històric de l'actor), amb les
  * entrades noves de registre.js (PublicacionsDeLActor, VistaPublicacionsDeLActor i TargetaDelMercat),
  * manifest.js (fonaments/publicacions-actor) i detailRegistry.jsx; EspecimenPage (la ranura
@@ -60,4 +76,4 @@
  * Quan el manifest porte `creat` i `modificat` per espècimen, manaran eixos
  * camps i esta constant només farà de versió del conjunt.
  */
-export const VERSIO_CATALEG = '2026-10-08T00:17:37+02:00';
+export const VERSIO_CATALEG = '2026-10-09T04:59:44+02:00';

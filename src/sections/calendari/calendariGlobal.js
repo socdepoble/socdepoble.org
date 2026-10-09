@@ -36,7 +36,7 @@
  * (mesDObertura). Ací en viuen les peces: cursorDeMes, clauDeMes i diaDeLaClau.
  */
 import { dataDElement } from '../../components/universal/editorial.js';
-import { getSectionItemPath, tipusDeSeccio } from '../../config/navigation.js';
+import { esRutaInterna, getSectionItemPath, tipusDeSeccio } from '../../config/navigation.js';
 import { cursorDe, dosDigits } from '../../utils/calendari.js';
 import { clauDia, creaEsdeveniment, llegixDataHora } from '../../utils/esdeveniment.js';
 import { clauDeData, sumaDies } from '../../utils/periodes.js';
@@ -61,6 +61,23 @@ export function seccioDeLaTargeta(item) {
 /** On porta la targeta: la ruta d'una pàgina del sistema o la de l'element. */
 export function rutaDeLaTargeta(item) {
   return item?.mainHref || getSectionItemPath(seccioDeLaTargeta(item), item?.id);
+}
+
+/**
+ * Onada 6 (prompt 261009_0230, punt 1; pla de l'Onada 5, tasca 16) · On porta
+ * un esdeveniment de la graella: la pàgina de la seua publicació, la mateixa
+ * on porta la seua targeta (TargetaDelMur i EventCard: un mainHref de l'app o
+ * el detall de la seua secció), o null. Una entrada sense targeta (l'agenda de
+ * Sollutia, les fonts de Google) o sense esdeveniment no en té cap: no té
+ * pàgina a Sóc de Poble. Tota ruta passa per esRutaInterna: un mainHref de
+ * fora (un payload escrit per PostgREST) no navega la pestanya de l'amfitrió.
+ */
+export function rutaDeLEntrada(entrada) {
+  const item = entrada?.esdeveniment ? entrada.item : null;
+  if (!item || typeof item !== 'object') return null;
+  if (esRutaInterna(item.mainHref)) return item.mainHref;
+  const ruta = getSectionItemPath(seccioDeLaTargeta(item), item.id);
+  return esRutaInterna(ruta) ? ruta : null;
 }
 
 /** El tipus de la targeta, el de l'objecte connectable (publicacio, producte, esdeveniment, poble; pagina, el sistema). */

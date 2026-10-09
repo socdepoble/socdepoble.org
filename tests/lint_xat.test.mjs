@@ -31,7 +31,9 @@ const COMPONENTS_XAT = [
   'Conversa', 'SeparadorNoLlegits', 'BotoBaixar', 'BarraResposta', 'CitaResposta',
   'FilaPoble', 'EntradaDelPoble', 'FakeChatOnboarding', 'FullAjustos',
   /* Onada 3 (AV, 261003): l'únic punt on el Xat pinta una cara. */
-  'CaraXat'
+  'CaraXat',
+  /* Onada 6: «Informa d'un error», l'accés dels beta testers. */
+  'BotoInformaDUnError'
 ].map((nom) => `src/sections/xat/components/${nom}.jsx`);
 
 /* Les proves dels components de l'onada 3 (també la de les files, T67), de
@@ -116,7 +118,25 @@ const JS_TORN = [
   'src/components/layout/AppGridColumn.jsx',
   'src/config/i18n.js',
   'tests/xat_f0_migracio.test.mjs',
-  'tests/lint_xat.test.mjs'
+  'tests/lint_xat.test.mjs',
+  /* Onada 6: el xat per als beta testers i la identitat de la IAIA. */
+  'src/data/xatsPerDefecte.js',
+  'src/data/xatsPerDefecte.test.js',
+  'src/data/supabase/xat.iaia.test.js',
+  'src/sections/realitat/useNivellIaia.js',
+  'src/sections/xat/contactesAjuda.js',
+  'src/sections/xat/errorsXat.js',
+  'src/sections/xat/informeDError.js',
+  'src/sections/xat/useInformaDUnError.js',
+  'src/sections/xat/XatContext.nivellIaia.test.jsx',
+  'src/sections/xat/XatSection.onada6.test.jsx',
+  /* Revisió 261009: la reserva de l'informe i el codi SDP de la bombolla. */
+  'src/sections/xat/informeDError.test.js',
+  'src/sections/xat/components/Bombolla.codiError.test.jsx',
+  /* Onada 6 · Integració Xat i Pobles: el xat del poble es diu «Gent de …». */
+  'src/sections/xat/XatContext.gentDelPoble.test.jsx',
+  'src/sections/xat/XatSection.caraDelPoble.test.jsx',
+  'src/sections/xat/components/FakeChatOnboarding.gentDelPoble.test.jsx'
 ];
 
 /* Fitxers de l'arbre compartit tocats per un altre actor (MarIA) durant el torn:

@@ -1,9 +1,14 @@
 // @vitest-environment node
 /* Plataforma d'Apps Enxufables · el manifest sdp.app.v1 (manifestApp.js). */
 import { describe, expect, test } from 'vitest';
-import { carregaDeProva, manifestDeProva, manifestExternDeProva } from './__fixtures__/manifests.js';
+import {
+  INTEGRITAT_DE_PROVA, carregaDeProva, manifestDeProva, manifestExternDeProva, manifestModulDeProva
+} from './__fixtures__/manifests.js';
 import { ICONES_APP, iconaDe } from './iconesApp.js';
-import { NOMS_ICONES, PREFIXOS_ELEMENT, esElementPermes, rutaDeApp, titolDe, validaManifestApp } from './manifestApp.js';
+import {
+  NOMS_ICONES, ORIGENS_APP, PATRO_INTEGRITAT, PREFIXOS_ELEMENT, esCamiDeRecurs, esElementPermes, rutaDeApp, titolDe,
+  validaManifestApp
+} from './manifestApp.js';
 
 const errorsDe = (m, opcions) => validaManifestApp(m, opcions).errors.join(' | ');
 
@@ -117,6 +122,81 @@ describe('apps externes', () => {
     expect(PREFIXOS_ELEMENT).toEqual(['sollutia-', 'sdp-ext-']);
     expect(esElementPermes('sdp-ext-reserves')).toBe(true);
     expect(esElementPermes('wp-reserves')).toBe(false);
+  });
+});
+
+/* Onada 6 (261009, ADR-2026-12) · el contracte sdp.modul.v1. */
+describe('mòduls (origen «modul»)', () => {
+  const modul = (canvis) => validaManifestApp(manifestModulDeProva(canvis), { origen: 'modul' });
+
+  test('un mòdul porta cos amb integritat sha384 i el rang del nucli; cap carrega ni element', () => {
+    const { ok, errors, manifest } = modul();
+    expect(errors).toEqual([]);
+    expect(ok).toBe(true);
+    expect(manifest).toMatchObject({ origen: 'modul', nucli: '^1', cos: { cami: '/moduls/llibreta/cos-Ab12Cd34.js', integrity: INTEGRITAT_DE_PROVA } });
+    expect('carrega' in manifest).toBe(false);
+    expect('element' in manifest).toBe(false);
+    expect('estils' in manifest).toBe(false);
+    expect(Object.isFrozen(manifest.cos)).toBe(true);
+    expect(ORIGENS_APP).toEqual(['interna', 'externa', 'modul']);
+  });
+
+  test('estils opcionals amb la mateixa forma, i URL http(s) absolutes', () => {
+    const { ok, manifest } = modul({
+      cos: { cami: 'https://poble.invalid/wp-content/plugins/socdepoble-modul-llibreta/dist/cos-Ab12Cd34.js?ver=1', integrity: INTEGRITAT_DE_PROVA },
+      estils: { cami: '/moduls/llibreta/estils-Ab12Cd34.css', integrity: INTEGRITAT_DE_PROVA },
+      nucli: '^1.0'
+    });
+    expect(ok).toBe(true);
+    expect(manifest.estils).toEqual({ cami: '/moduls/llibreta/estils-Ab12Cd34.css', integrity: INTEGRITAT_DE_PROVA });
+    expect(Object.isFrozen(manifest.estils)).toBe(true);
+  });
+
+  test.each([
+    ['sense cos', { cos: undefined }, 'cos: cal { cami, integrity }'],
+    ['cos protocol-relatiu', { cos: { cami: '//cdn.invalid/cos.js', integrity: INTEGRITAT_DE_PROVA } }, 'cos.cami'],
+    ['cos amb barra invertida (un altre domini per al navegador)', { cos: { cami: '/\\cdn.invalid/cos.js', integrity: INTEGRITAT_DE_PROVA } }, 'cos.cami'],
+    ['cos relatiu sense arrel', { cos: { cami: 'cos.js', integrity: INTEGRITAT_DE_PROVA } }, 'cos.cami'],
+    ['cos en javascript:', { cos: { cami: 'javascript:alert(1)//.js', integrity: INTEGRITAT_DE_PROVA } }, 'cos.cami'],
+    ['cos en data:', { cos: { cami: 'data:text/javascript,1;.js', integrity: INTEGRITAT_DE_PROVA } }, 'cos.cami'],
+    ['cos amb credencials', { cos: { cami: 'https://u:p@poble.invalid/cos.js', integrity: INTEGRITAT_DE_PROVA } }, 'cos.cami'],
+    ['cos que no és .js', { cos: { cami: '/moduls/llibreta/cos.css', integrity: INTEGRITAT_DE_PROVA } }, 'cos.cami'],
+    ['cos amb espais', { cos: { cami: '/moduls/lli breta/cos.js', integrity: INTEGRITAT_DE_PROVA } }, 'cos.cami'],
+    ['integritat sha256', { cos: { cami: '/cos.js', integrity: `sha256-${'A'.repeat(43)}=` } }, 'cos.integrity'],
+    ['integritat curta', { cos: { cami: '/cos.js', integrity: 'sha384-abc' } }, 'cos.integrity'],
+    ['clau desconeguda al cos', { cos: { cami: '/cos.js', integrity: INTEGRITAT_DE_PROVA, type: 'module' } }, 'cos: clau desconeguda «type»'],
+    ['estils que no són .css', { estils: { cami: '/estils.js', integrity: INTEGRITAT_DE_PROVA } }, 'estils.cami'],
+    ['sense nucli', { nucli: undefined }, 'nucli'],
+    ['nucli sense rang', { nucli: '1' }, 'nucli'],
+    ['nucli amb comodí', { nucli: '*' }, 'nucli'],
+    ['carrega en un mòdul', { carrega: carregaDeProva }, 'clau desconeguda «carrega»'],
+    ['element en un mòdul', { element: 'sdp-ext-llibreta' }, 'clau desconeguda «element»'],
+    ['capacitat inventada', { capacitats: ['teletransport'] }, 'no és cap capacitat del contracte']
+  ])('%s', (_nom, canvis, missatge) => {
+    const { ok, manifest, errors } = modul(canvis);
+    expect(ok).toBe(false);
+    expect(manifest).toBeNull();
+    expect(errors.join(' | ')).toContain(missatge);
+  });
+
+  test('una interna ni una externa no poden portar cos ni nucli', () => {
+    expect(errorsDe(manifestDeProva({ cos: { cami: '/cos.js', integrity: INTEGRITAT_DE_PROVA } }))).toContain('clau desconeguda «cos»');
+    expect(errorsDe(manifestExternDeProva({ nucli: '^1' }), { origen: 'externa' })).toContain('clau desconeguda «nucli»');
+  });
+
+  test('esCamiDeRecurs: des de l’arrel o http(s) absolut, amb l’extensió demanada', () => {
+    expect(esCamiDeRecurs('/a/cos-1.js', '.js')).toBe(true);
+    expect(esCamiDeRecurs('/a/cos-1.js?ver=2', '.js')).toBe(true);
+    expect(esCamiDeRecurs('http://localhost:3340/moduls/cos.js', '.js')).toBe(true);
+    expect(esCamiDeRecurs('/a/cos-1.js', '.css')).toBe(false);
+    expect(esCamiDeRecurs(`/${'a'.repeat(2050)}.js`, '.js')).toBe(false);
+    expect(esCamiDeRecurs(null, '.js')).toBe(false);
+    expect(esCamiDeRecurs('ftp://poble.invalid/cos.js', '.js')).toBe(false);
+  });
+
+  test('PATRO_INTEGRITAT és l’SRI sha384 en base64', () => {
+    expect(PATRO_INTEGRITAT.test(INTEGRITAT_DE_PROVA)).toBe(true);
+    expect(PATRO_INTEGRITAT.test(`${INTEGRITAT_DE_PROVA} sha384-x`)).toBe(false);
   });
 });
 

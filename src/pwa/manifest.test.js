@@ -122,6 +122,24 @@ describe('index.html', () => {
     expect(colors[1].content).not.toBe(MANIFEST.theme_color);
   });
 
+  test('imatge social per defecte (Onada 5): la panoràmica verda de useSEO, amb mides reals i text alternatiu', () => {
+    const propietat = (p) => metes.find((m) => m.property === p)?.content;
+    const nom = (n) => metes.find((m) => m.name === n)?.content;
+    const imatge = new URL(propietat('og:image'));
+    expect(imatge.origin).toBe('https://socdepoble.org');
+    // El mateix camí que IMATGE_BASE: la vista sense imatge pròpia conserva este conjunt.
+    expect(llig('src/hooks/useSEO.js')).toContain(`const IMATGE_BASE = '${imatge.pathname}';`);
+    expect(imatge.pathname).toMatch(/\.png$/);
+    expect(propietat('og:image:type')).toBe('image/png');
+    const { amplaria, alcaria } = midesPng(path.join(ARREL, 'public', imatge.pathname));
+    expect(propietat('og:image:width')).toBe(String(amplaria));
+    expect(propietat('og:image:height')).toBe(String(alcaria));
+    expect(propietat('og:image:alt')).toBeTruthy();
+    expect(nom('twitter:image')).toBe(imatge.href);
+    expect(nom('twitter:image:alt')).toBe(propietat('og:image:alt'));
+    expect(nom('twitter:card')).toBe('summary_large_image');
+  });
+
   test('la CSP de index.html i la de vercel.json admeten el worker i el manifest propis', () => {
     const vercel = JSON.parse(llig('vercel.json'));
     const capcalera = vercel.headers.flatMap((h) => h.headers).find((h) => h.key === 'Content-Security-Policy');

@@ -1,5 +1,5 @@
 import { useContext, useEffect, useMemo, useRef } from 'react';
-import { BookOpen, Copy, FileCode, RotateCcw } from 'lucide-react';
+import { BookOpen, ClipboardCopy, Copy, FileCode, Network, RotateCcw } from 'lucide-react';
 import { Alerta, Boto, Camp, Insignia, Selector } from '../../../components/PedraSeca';
 import { useNavigate } from '../../../app/contexts/RouterContext';
 import { useToast } from '@/components/universal/NotificationContext.jsx';
@@ -10,6 +10,7 @@ import {
   dadesDelNode, documentWiki, etiquetaNode, fitxerAbsent, fitxerDelNode,
   notaEixides, opcionsPeces, queEs, relacionsPerVerb, rutaEditable
 } from './grafMapa.js';
+import { codisReparats, ordreReparacio } from './inventariMapa.js';
 
 /* T4 (ordre del Mestre, 260930) · el detall d'una peça de l'Explorador.
    Substituïx l'inspector superposat de BrainGraph, que la Wiki conserva
@@ -98,19 +99,94 @@ function Avisos({ avisos }) {
 }
 
 /**
+ * Els botons d'una peça que és (o viu dins d')un fitxer: Veure al graf, Obrir
+ * a la Wiki, Obrir a l'editor (només en desenvolupament i si el fitxer hi és),
+ * Copiar la ruta i Copiar l'ordre de reparació. Els pinta el detall de
+ * l'Explorador i, Onada 6 (requisit 11), cada fila de l'Inventari: els
+ * mateixos botons, no uns de nous (lliçó 261007). Copiar l'ordre només la
+ * copia: la Consola no executa res.
+ *
+ * ruta     el fitxer (fitxerDelNode); sense, cap botó de fitxer
+ * avisos   els avisos del fitxer propi de la peça: diuen si falta (no s'obri a l'editor)
+ * doc      el document publicat a la Wiki (documentWiki), o null
+ * graf     l'adreça de l'Explorador amb la peça triada, o null
+ * ordre    l'ordre de reparació (inventariMapa.js · ordreReparacio), o null
+ * repara   els codis d'avís que l'ordre tracta (inventariMapa.js · codisReparats): el nom
+ *          accessible i el toast ho diuen, perquè no semble que repara el que no repara
+ * nom      el nom de la peça, per al lector de pantalla quan n'hi ha moltes en una taula
+ * discret  tots els botons fantasma (una fila de taula no porta cap acció principal)
+ */
+export function AccionsFitxer({ ruta, avisos = [], doc = null, graf = null, ordre = null, repara = [], nom = null, discret = false }) {
+  const navigate = useNavigate();
+  const { showToast } = useToast();
+  const privat = useContext(PrivacitatConsola);
+  const editable = rutaEditable(ruta, import.meta.env.DEV, avisos);
+  const deQui = nom ? <span className="sdp-nomes-lector">{` de ${nom}`}</span> : null;
+  /* Correcció de l'Onada 6 (revisió adversarial: «pot enganyar») · quins
+     avisos tracta l'ordre. L'espai va fora del text amagat: el nom accessible
+     no l'enganxa a la paraula d'abans. */
+  const perA = repara.length ? ` per a ${repara.join(', ')}` : '';
+  const perALector = perA ? <>{' '}<span className="sdp-nomes-lector">{perA.trim()}</span></> : null;
+
+  const obriEditor = async () => {
+    // El mode privacitat també val per al toast: la ruta no ix a la pantalla.
+    const quin = privat ? 'el fitxer' : ruta;
+    try {
+      const resposta = await fetch(`/__open-in-editor?file=${encodeURIComponent(ruta)}`);
+      if (!resposta.ok) throw new Error(`HTTP ${resposta.status}`);
+      showToast(`S’ha demanat a l’editor que obriga ${quin}.`, 'info');
+    } catch {
+      showToast('No s’ha pogut fer la petició a l’editor: el servidor de desenvolupament no ha respost.', 'error');
+    }
+  };
+  const copia = async (text, fet, motiu) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      showToast(fet, 'success');
+    } catch {
+      showToast(`No s’ha pogut copiar ${motiu}: el navegador no ha donat accés al porta-retalls.`, 'error');
+    }
+  };
+
+  return (
+    <div className="sdp-explorador__accions">
+      {graf && (
+        <Boto varietat={discret ? 'fantasma' : 'secundari'} icona={Network} onClick={() => navigate(graf)}>Veure al graf{deQui}</Boto>
+      )}
+      {doc && (
+        <Boto varietat={discret ? 'fantasma' : 'primari'} icona={BookOpen} onClick={() => navigate(doc.href)}>Obrir a la Wiki{deQui}</Boto>
+      )}
+      {ruta && editable && (
+        <Boto varietat={discret ? 'fantasma' : doc ? 'secundari' : 'primari'} icona={FileCode} onClick={obriEditor}>Obrir a l’editor{deQui}</Boto>
+      )}
+      {ruta && (
+        <Boto varietat="fantasma" icona={Copy}
+          onClick={() => copia(ruta, 'Ruta copiada al porta-retalls.', 'la ruta')}>Copiar la ruta{deQui}</Boto>
+      )}
+      {ordre && (
+        <Boto varietat="fantasma" icona={ClipboardCopy}
+          onClick={() => copia(ordre, `Ordre de reparació${perA} copiada al porta-retalls: no s’ha executat res.`, 'l’ordre')}>
+          Copiar l’ordre de reparació{deQui}{perALector}
+        </Boto>
+      )}
+    </div>
+  );
+}
+
+/**
  * mapa        el Mapa sencer (sdp.mapa.v1): la peça es busca ací, no al graf
  * graf        el graf filtrat de l'Explorador: diu si la peça es veu
  * seleccio    id de la peça triada ('' si cap); el comparteix BrainGraph
  * onSeleccio  (id) => tria una altra peça
  * onRestablir (seguent) => torna els filtres a l'inici i enfoca `seguent`
+ * enfoca      Onada 6 · s'hi arriba per un enllaç (?peca=): en muntar, el focus
+ *             va al nom de la peça, que queda a la vista (el detall és davall del graf)
  */
-export function DetallPeca({ mapa, graf, seleccio, onSeleccio, onRestablir }) {
-  const navigate = useNavigate();
-  const { showToast } = useToast();
+export function DetallPeca({ mapa, graf, seleccio, onSeleccio, onRestablir, enfoca = false }) {
   const privat = useContext(PrivacitatConsola);
   const panell = useRef(null);
   const titol = useRef(null);
-  const enfocaTitol = useRef(false);
+  const enfocaTitol = useRef(enfoca);
   const node = useMemo(() => mapa.nodes.find((n) => n.id === seleccio) ?? null, [mapa, seleccio]);
   const visible = Boolean(node) && graf.nodes.some((n) => n.id === node.id);
   const opcions = useMemo(
@@ -158,28 +234,10 @@ export function DetallPeca({ mapa, graf, seleccio, onSeleccio, onRestablir }) {
      declarada porta 'script-absent', però el seu package.json sí que hi és. */
   const avisosDelFitxer = rol === 'fitxer' ? avisos : [];
   const absent = fitxerAbsent(avisosDelFitxer);
-  const editable = rutaEditable(ruta, dev, avisosDelFitxer);
   const nota = notaEixides(node, ixen);
-
-  const obriEditor = async () => {
-    // El mode privacitat també val per al toast: la ruta no ix a la pantalla.
-    const quin = privat ? 'el fitxer' : ruta;
-    try {
-      const resposta = await fetch(`/__open-in-editor?file=${encodeURIComponent(ruta)}`);
-      if (!resposta.ok) throw new Error(`HTTP ${resposta.status}`);
-      showToast(`S’ha demanat a l’editor que obriga ${quin}.`, 'info');
-    } catch {
-      showToast('No s’ha pogut fer la petició a l’editor: el servidor de desenvolupament no ha respost.', 'error');
-    }
-  };
-  const copia = async () => {
-    try {
-      await navigator.clipboard.writeText(ruta);
-      showToast('Ruta copiada al porta-retalls.', 'success');
-    } catch {
-      showToast('No s’ha pogut copiar la ruta: el navegador no ha donat accés al porta-retalls.', 'error');
-    }
-  };
+  // Onada 6 · Una skill amb un avís que té reparació mecànica la diu (només es copia).
+  const ordre = node.tipus === 'skill' ? ordreReparacio({ ...node, nom: etiquetaNode(node), avisos }) : null;
+  const repara = node.tipus === 'skill' ? codisReparats({ avisos }) : [];
 
   return (
     <aside className="sdp-explorador__detall" aria-label="Detall de la peça" ref={panell}>
@@ -212,15 +270,7 @@ export function DetallPeca({ mapa, graf, seleccio, onSeleccio, onRestablir }) {
             {rol === 'declarat' && (
               <p className="sdp-explorador__suau">Esta peça no és un fitxer propi: viu dins d’este fitxer.</p>
             )}
-            <div className="sdp-explorador__accions">
-              {doc && (
-                <Boto varietat="primari" icona={BookOpen} onClick={() => navigate(doc.href)}>Obrir a la Wiki</Boto>
-              )}
-              {editable && (
-                <Boto varietat={doc ? 'secundari' : 'primari'} icona={FileCode} onClick={obriEditor}>Obrir a l’editor</Boto>
-              )}
-              <Boto varietat="fantasma" icona={Copy} onClick={copia}>Copiar la ruta</Boto>
-            </div>
+            <AccionsFitxer ruta={ruta} avisos={avisosDelFitxer} doc={doc} ordre={ordre} repara={repara} />
             {dev && absent && rutaEditable(ruta, dev) && (
               <p className="sdp-explorador__suau">El fitxer no és al disc: no es pot obrir a l’editor.</p>
             )}

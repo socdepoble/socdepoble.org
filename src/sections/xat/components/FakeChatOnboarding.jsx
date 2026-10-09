@@ -20,6 +20,10 @@
  * les files per defecte del xat en remot i «Nova conversa». Són els mateixos
  * valors d'abans (el padró per a la IAIA, el compte de la marca per a Sóc de
  * Poble): la pantalla no canvia.
+ *
+ * Onada 6 (tasca 12) · Amb el nivell d'IA a 0 (`iaiaApagada` del xat de
+ * veres) la IAIA tampoc no és al xat de mostra: ni la seua conversa, ni el
+ * seu no llegit, ni a «Nova conversa». La seua cara la retalla CaraXat.
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { XatContext } from '../XatContext.jsx';
@@ -36,14 +40,19 @@ const SOC_DE_POBLE = AJUDA_PER_CLAU.socdepoble;
 /* Els fils de la comunitat del poble: la comunitat (sense missatges, amb la
    cara del poble si la seua fitxa en té), els Avisos (només lectura, com els
    de veritat per a qui no n'és administrador; sempre el megàfon) i el General
-   (la icona de grup, com a la llavor). */
-function filsDelPoble(poble, t, ara, avatar) {
+   (la icona de grup, com a la llavor).
+   Onada 6 (integració Xat i Pobles) · `nom` és nomDelPoble(poble, towns):
+   amb les fitxes i sense nom declarat per l'amfitrió, la comunitat es diu com
+   la gent del poble, com el xat de veres. El títol del subjecte és el mateix
+   que posaria objecteDelPoble(poble, towns). Arriba com a text (memoritzat a
+   FakeChatOnboarding) perquè unes fitxes noves amb el mateix nom no refacen
+   els fils de mostra. */
+function filsDelPoble(poble, t, ara, avatar, nom) {
   if (!poble) return [];
-  const nom = nomDelPoble(poble);
   const benvinguda = t('section.xat.fake.poble1', "Benvinguts al xat de {nom}. Registra't per a parlar amb la gent del poble.").replace('{nom}', nom);
   const comuna = { comunitatId: 'fake-poble', ultimAl: ara, llegitFinsSeq: 0 };
   return [
-    { id: 'fake-poble', tipus: 'comunitat', esComunitat: true, name: nom, title: nom, avatar_url: avatar, subjecte: objecteDelPoble(poble), ultimAl: ara, noLlegits: 0 },
+    { id: 'fake-poble', tipus: 'comunitat', esComunitat: true, name: nom, title: nom, avatar_url: avatar, subjecte: { ...objecteDelPoble(poble), titol: nom }, ultimAl: ara, noLlegits: 0 },
     { ...comuna, id: 'fake-poble-avisos', tipus: 'canal', esCanal: true, potEscriure: false, name: t('section.xat.fake.avisos', 'Avisos'), title: t('section.xat.fake.avisos', 'Avisos'), noLlegits: 1, ultimSeq: 1, ultimText: benvinguda },
     { ...comuna, id: 'fake-poble-general', tipus: 'grup', esGrup: true, name: t('section.xat.fake.general', 'General'), title: t('section.xat.fake.general', 'General'), noLlegits: 0, ultimSeq: 0, ultimText: '' }
   ];
@@ -72,11 +81,13 @@ export default function FakeChatOnboarding({ originalContext, children }) {
     temporitzadors.current.clear();
   }, []);
 
-  const deLPoble = useMemo(() => filsDelPoble(poble, t, ara, avatarPoble), [poble, t, ara, avatarPoble]);
+  const nomPoble = useMemo(() => (poble ? nomDelPoble(poble, towns) : ''), [poble, towns]);
+  const deLPoble = useMemo(() => filsDelPoble(poble, t, ara, avatarPoble, nomPoble), [poble, t, ara, avatarPoble, nomPoble]);
+  const iaiaApagada = Boolean(originalContext?.iaiaApagada);
 
   const fakeThreads = useMemo(() => [
     ...deLPoble,
-    {
+    ...(iaiaApagada ? [] : [{
       id: 'fake-iaia',
       name: IAIA.nom,
       title: IAIA.nom,
@@ -88,7 +99,7 @@ export default function FakeChatOnboarding({ originalContext, children }) {
       ultimSeq: 2,
       llegitFinsSeq: 0,
       ultimText: t('section.xat.fake.iaia2', "Si t'agrada el que veus, registra't per a entrar al xat de veritat!")
-    },
+    }]),
     {
       id: 'fake-sdp',
       name: SOC_DE_POBLE.nom,
@@ -102,7 +113,7 @@ export default function FakeChatOnboarding({ originalContext, children }) {
       llegitFinsSeq: 0,
       ultimText: t('section.xat.fake.sdp2', "Registra't per a descobrir tot el que oferim.")
     }
-  ], [t, ara, deLPoble]);
+  ], [t, ara, deLPoble, iaiaApagada]);
 
   const comunitats = useMemo(() => agrupaComunitats(fakeThreads), [fakeThreads]);
 
@@ -110,8 +121,8 @@ export default function FakeChatOnboarding({ originalContext, children }) {
     if (messages[filId]) return messages[filId];
     /* Els Avisos del poble porten la benvinguda com a primer missatge. */
     const avisos = deLPoble.find((f) => f.id === filId && f.tipus === 'canal');
-    return avisos ? [{ id: `${filId}-1`, seq: 1, text: avisos.ultimText, sender: 'other', author: nomDelPoble(poble), is_ai: false, creatAl: ara }] : [];
-  }, [messages, deLPoble, poble, ara]);
+    return avisos ? [{ id: `${filId}-1`, seq: 1, text: avisos.ultimText, sender: 'other', author: nomPoble, is_ai: false, creatAl: ara }] : [];
+  }, [messages, deLPoble, nomPoble, ara]);
 
   /* El `seq` el porta un comptador per fil (abans es calculava sobre un
      tancament ranci i dos enviaments ràpids el repetien). */
@@ -159,14 +170,16 @@ export default function FakeChatOnboarding({ originalContext, children }) {
     comunitats,
     getThreadMessages,
     sendChatMessage,
-    totalNoLlegits: 2,
-    cercaMembres: async () => AJUDA.map(({ nom, tipus, avatar }) => ({
+    /* Els no llegits de les dues entrades d'ajuda: un cadascuna. */
+    totalNoLlegits: iaiaApagada ? 1 : 2,
+    cercaMembres: async () => AJUDA.filter(({ clau }) => !(iaiaApagada && clau === 'iaia')).map(({ nom, tipus, avatar }) => ({
       nom, tipus, usuari_id: `ajuda:${tipus}`, avatar_url: avatar || null, noDisponible: false
     })),
     creaFil: async (altreUsuariId) => {
-      return altreUsuariId === 'ajuda:ia' ? 'fake-iaia' : 'fake-sdp';
-    }
-  }), [originalContext, fakeThreads, comunitats, getThreadMessages, sendChatMessage]);
+      return altreUsuariId === 'ajuda:ia' && !iaiaApagada ? 'fake-iaia' : 'fake-sdp';
+    },
+    esFilAmagat: (filId) => iaiaApagada && filId === 'fake-iaia'
+  }), [originalContext, fakeThreads, comunitats, getThreadMessages, sendChatMessage, iaiaApagada]);
 
   return <XatContext.Provider value={fakeContext}>{children}</XatContext.Provider>;
 }

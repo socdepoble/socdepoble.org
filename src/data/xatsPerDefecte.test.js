@@ -3,10 +3,11 @@
    del xat torna a aplicar sense afegir. */
 import { describe, expect, test, vi } from 'vitest';
 import {
-  AJUDA, AJUDA_PER_CLAU, PREFIX_PER_DEFECTE, ambXatsPerDefecte, esIdPerDefecte, esLaIdentitatDAjuda,
-  gestionaLEntitatPilot, jaTeElXat, senseXatPerDefecte
+  AJUDA, AJUDA_PER_CLAU, CARA_DE_LA_IAIA, PREFIX_PER_DEFECTE, ambXatsPerDefecte, caraDeLaIAIA, esIdPerDefecte, esLaIdentitatDAjuda,
+  esXatDeLaIAIA, gestionaLEntitatPilot, jaTeElXat, senseLaIAIA, senseXatPerDefecte, vestixLaIAIA
 } from './xatsPerDefecte.js';
 import { AGENTS_IA_SEED, ENTITAT_PILOT_ID, IAIA_ID } from './identitatsSeed.js';
+import { AGENTS_MAP } from './agentsSeed.js';
 import { PAGINES_AMB_XAT } from './contracte.js';
 
 /* El literal de l'ordre del Mestre: el logo quadrat, a foc. */
@@ -187,5 +188,78 @@ describe('senseXatPerDefecte i gestionaLEntitatPilot', () => {
     expect(gestionaLEntitatPilot([entitat({ slug: 'cooperativa' })])).toBe(false);
     expect(gestionaLEntitatPilot([{ tipus: 'persona', id: ENTITAT_PILOT_ID, slug: 'socdepoble', rol: 'owner' }])).toBe(false);
     expect(gestionaLEntitatPilot(undefined)).toBe(false);
+  });
+});
+
+/* Onada 6 · Tasca 12 del pla 261009_0245: «Canviar el nom del xat de "L'ànima
+   de la iaia" per "IAIA MarIA". Crear-li un avatar propi retallant la cara
+   d'una de les iaies amb mòbil de la il·lustració "Festa del Poble". Si el
+   nivell d'IA és 0 (apagada), la IAIA no hauria d'aparéixer al llistat de xats.» */
+const PAGINA_IAIA = { tipus: 'pagina', id: '/iaia', ruta: '/iaia', titol: "L'ànima de la iaia" };
+
+describe('tasca 12 · la cara de la IAIA', () => {
+  test('el seu avatar del padró es pinta amb la cara retallada de «Festa del Poble»; cap altra font', () => {
+    expect(CARA_DE_LA_IAIA).toEqual({ src: '/assets/uploads/brain/xat_portada.jpg', enquadrament: 'iaia' });
+    expect(Object.isFrozen(CARA_DE_LA_IAIA)).toBe(true);
+    expect(caraDeLaIAIA(AJUDA_PER_CLAU.iaia.avatar)).toBe(CARA_DE_LA_IAIA);
+    expect(caraDeLaIAIA(AGENTS_MAP.IAIA.avatar_url)).toBe(CARA_DE_LA_IAIA);
+    expect(caraDeLaIAIA(` ${AGENTS_MAP.IAIA.avatar_url} `)).toBe(CARA_DE_LA_IAIA);
+    for (const altra of [AJUDA_PER_CLAU.socdepoble.avatar, '/assets/fotos/iaia-maria.png', CARA_DE_LA_IAIA.src, '', null, undefined, 7]) {
+      expect(caraDeLaIAIA(altra)).toBeNull();
+    }
+  });
+});
+
+describe('tasca 12 · el xat de la IAIA es diu «IAIA MarIA»', () => {
+  test('el xat públic de /iaia (el que obri la fila en remot) porta el nom i la cara d’AJUDA; el subjecte no es toca', () => {
+    const fil = real({ id: 'p-iaia', tipus: 'grup', titol: "L'ànima de la iaia", imatgeUrl: null, subjecte: PAGINA_IAIA });
+    const vestit = vestixLaIAIA(fil);
+    expect(vestit).not.toBe(fil);
+    expect(vestit).toEqual({ ...fil, titol: 'IAIA MarIA', imatgeUrl: AJUDA_PER_CLAU.iaia.avatar });
+    expect(vestit.subjecte).toBe(fil.subjecte);
+    expect(fil.titol).toBe("L'ànima de la iaia");
+    /* La clau antiga de la llista del servidor, també. */
+    expect(vestixLaIAIA(real({ tipus: 'grup', titol: 'x', subjecte: { tipus: 'pagina', id: '/ia' } })).titol).toBe('IAIA MarIA');
+  });
+
+  test('el fil de la llavor i un directe amb ella també; ja vestit, la mateixa referència', () => {
+    expect(vestixLaIAIA(real({ tipus: 'iaia', titol: null })).titol).toBe('IAIA MarIA');
+    expect(vestixLaIAIA(real({ altres: [{ id: IAIA_ID, tipus: 'ia' }] })).imatgeUrl).toBe(AJUDA_PER_CLAU.iaia.avatar);
+    const vestit = vestixLaIAIA(real({ tipus: 'iaia' }));
+    expect(vestixLaIAIA(vestit)).toBe(vestit);
+  });
+
+  test('una altra conversa, un grup on la IAIA és una més, la fila per defecte i null no canvien', () => {
+    const altra = real({ titol: 'Pepa' });
+    expect(vestixLaIAIA(altra)).toBe(altra);
+    const grup = real({ tipus: 'grup', titol: 'Colla', altres: [{ id: IAIA_ID, tipus: 'ia' }] });
+    expect(vestixLaIAIA(grup)).toBe(grup);
+    const mur = real({ tipus: 'grup', titol: 'Mur', subjecte: { tipus: 'pagina', id: '/mur' } });
+    expect(vestixLaIAIA(mur)).toBe(mur);
+    const [, fila] = ambXatsPerDefecte([]);
+    expect(vestixLaIAIA(fila)).toBe(fila);
+    expect(vestixLaIAIA(null)).toBeNull();
+  });
+});
+
+describe('tasca 12 · amb el nivell d’IA a 0 la IAIA no apareix', () => {
+  test('esXatDeLaIAIA: la fila per defecte, la llavor, el directe i el xat de /iaia; no un grup on és una més', () => {
+    const [sdp, iaia] = ambXatsPerDefecte([]);
+    expect(esXatDeLaIAIA(iaia)).toBe(true);
+    expect(esXatDeLaIAIA(sdp)).toBe(false);
+    expect(esXatDeLaIAIA(real({ tipus: 'iaia' }))).toBe(true);
+    expect(esXatDeLaIAIA(real({ altres: [{ id: IAIA_ID, tipus: 'ia' }] }))).toBe(true);
+    expect(esXatDeLaIAIA(real({ tipus: 'grup', subjecte: PAGINA_IAIA }))).toBe(true);
+    expect(esXatDeLaIAIA(real({ tipus: 'grup', altres: [{ id: IAIA_ID, tipus: 'ia' }] }))).toBe(false);
+    expect(esXatDeLaIAIA(real())).toBe(false);
+    expect(esXatDeLaIAIA(null)).toBe(false);
+  });
+
+  test('senseLaIAIA lleva totes les seues files i, si no n’hi ha cap, torna la mateixa referència', () => {
+    const fils = [real({ id: 'a' }), real({ id: 'i', tipus: 'iaia' }), real({ id: 'p', tipus: 'grup', subjecte: PAGINA_IAIA }), ...ambXatsPerDefecte([])];
+    expect(claus(senseLaIAIA(fils))).toEqual(['a', 'socdepoble']);
+    const sense = [real({ id: 'a' })];
+    expect(senseLaIAIA(sense)).toBe(sense);
+    expect(senseLaIAIA(null)).toBeNull();
   });
 });

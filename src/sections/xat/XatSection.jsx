@@ -102,7 +102,13 @@ import EntradaDelPoble from './components/EntradaDelPoble.jsx';
 import usePobleAmfitrio from './usePobleAmfitrio.js';
 /* Ordre del Mestre (261007) · Les files d'ajuda per defecte i on porten. */
 import useObriXatPerDefecte from './useObriXatPerDefecte.js';
-import { esIdPerDefecte } from '../../data/xatsPerDefecte.js';
+import { PREFIX_PER_DEFECTE, esIdPerDefecte, esXatDeLaIAIA } from '../../data/xatsPerDefecte.js';
+/* Onada 6 · La IAIA apagada (nivell d'IA 0), els errors SDP traduïts i
+   «Informa d'un error» per als beta testers. */
+import { senseContacteDeLaIAIA } from './contactesAjuda.js';
+import { textDErrorDelXat, textDeFalladaDirecte } from './errorsXat.js';
+import useInformaDUnError from './useInformaDUnError.js';
+import BotoInformaDUnError from './components/BotoInformaDUnError.jsx';
 import {
   anteposaPoble, avatarDelPoble, comunitatsAmbCaraDelPoble, esComunitatDelPoble, filsAmbCaraDelPoble, rutaSobreDelPoble
 } from './pobleAmfitrio.js';
@@ -237,11 +243,14 @@ export function sobreDelFil(fil) {
 
 /** El text d'una fallada en obrir un directe. SDP-XAT-016 (B03: la persona no
     ha donat el consentiment) es diu en la llengua de la interfície; l'adaptador
-    en porta la reserva valenciana al message. La resta, com sempre. */
-export function textDeFalladaDirecte(error, t) {
-  if (error?.code === 'SDP-XAT-016') return t('section.xat.error.noDisponible', error.message);
-  return error?.message || t('section.xat.obrirError', "No s'ha pogut obrir la conversa.");
-}
+    en porta la reserva valenciana al message. La resta, com sempre.
+    Onada 6 · Viu a errorsXat.js, amb els altres codis SDP traduïts (003, 013
+    i 429), i es reexporta ací. */
+export { textDeFalladaDirecte };
+
+/* Onada 6 (tasca 12) · El descriptor d'un xat de pàgina és el de la IAIA. */
+const esPaginaDeLaIAIA = (objecte) => Boolean(objecte) && esXatDeLaIAIA({ tipus: 'grup', subjecte: objecte });
+const ID_FILA_DE_LA_IAIA = `${PREFIX_PER_DEFECTE}iaia`;
 
 export default function XatSection() {
   const xat = useXat();
@@ -325,7 +334,10 @@ function XatWorkspace() {
     /* Auditoria 261008 (B04) · Si l'última càrrega de la llista ha anat bé, i
        l'avís no bloquejant d'un sondeig fallit amb la llista conservada. */
     llistaFresca = true,
-    avisLlista = null
+    avisLlista = null,
+    /* Onada 6 (tasca 12) · Nivell d'IA 0: la IAIA no apareix. */
+    iaiaApagada = false,
+    esFilAmagat = mai
   } = useXat();
 
   const titolSeccio = t('section.xat.rail.titol', 'Xat');
@@ -398,7 +410,14 @@ function XatWorkspace() {
      la llista. */
   const trobatPerDefecte = trobat?.perDefecte || null;
   const idPerDefecte = Boolean(trobatPerDefecte) || esIdPerDefecte(threadId);
-  const activeThread = trobatEsComunitat || idPerDefecte ? null : trobat;
+  /* Onada 6 (tasca 12) · Amb el nivell d'IA a 0 la IAIA no apareix: qui és
+     dins d'un xat seu (la fila per defecte, el fil de la llista que el
+     context ja amaga, o el xat públic de /iaia pel seu descriptor) torna a
+     la llista amb un avís, en lloc d'un 404. */
+  const dinsDeLaIAIA = iaiaApagada && Boolean(threadId) && (
+    threadId === ID_FILA_DE_LA_IAIA || esFilAmagat(threadId) || esPaginaDeLaIAIA(sobre ? objecteDeSobre(sobre) : null)
+  );
+  const activeThread = trobatEsComunitat || idPerDefecte || dinsDeLaIAIA ? null : trobat;
   const filActiuId = activeThread?.id ?? null;
   const comunitatOberta = comunitatId
     ? comunitats.find((c) => String(c.fil.id) === comunitatId) || null
@@ -449,6 +468,33 @@ function XatWorkspace() {
     perDefecteTractat.current = { threadId, params };
     obriPerDefecte(trobatPerDefecte);
   }, [trobatPerDefecte, threadId, params, obriPerDefecte]);
+
+  /* Onada 6 (tasca 12) · La IAIA s'ha apagat (o ja ho estava) amb la persona
+     dins d'un xat seu: a la llista, amb replace i l'avís de per què. */
+  const sortidaDeLaIAIA = useRef(null);
+  useEffect(() => {
+    if (!dinsDeLaIAIA) { sortidaDeLaIAIA.current = null; return; }
+    /* Una sola vegada per ruta: el doble efecte de StrictMode ix per la guarda. */
+    if (sortidaDeLaIAIA.current === threadId) return;
+    sortidaDeLaIAIA.current = threadId;
+    showToast(t('section.xat.iaia.apagada', "La IAIA està apagada (nivell d'IA 0). La pots tornar a encendre a «Realitat»."), 'info');
+    navigate('/xat', { replace: true });
+  }, [dinsDeLaIAIA, threadId, navigate, showToast, t]);
+
+  /* Onada 6 (beta testers) · «Informa d'un error», al peu de la llista (també
+     davall de l'avís d'una llista que no s'ha pogut carregar): obri el xat de
+     feedback amb l'esborrany de l'informe (useInformaDUnError). Si eixa
+     conversa ja és la que està oberta, Conversa es torna a muntar
+     (`revisioEsborrany`) perquè el compositor llija l'esborrany nou. Si no
+     s'ha pogut obrir, la reserva: copiar l'informe o enviar-lo per correu. */
+  const informe = useInformaDUnError({ t, navigate, showToast, pathname });
+  const [revisioEsborrany, setRevisioEsborrany] = useState(0);
+  const informaDUnError = async () => {
+    const obert = String(threadId ?? '');
+    const filId = await informe.informa();
+    if (mounted.current && filId && filId === obert) setRevisioEsborrany((n) => n + 1);
+    return filId;
+  };
 
   /* ?amb=<id>: una sola obertura per destinatari. La guarda és una ref i no
      una variable de l'efecte: amb el doble efecte de StrictMode, la segona
@@ -508,6 +554,11 @@ function XatWorkspace() {
     const senseXatComu = t('section.xat.pagina.senseXat', 'Ací no hi ha cap xat comú on comentar.');
     const objecte = objecteDeSobre(sobre, titolSobre, rutaSobre);
     if (!subjecteDeXat(objecte)) { tornaALaLlista(senseXatComu); return; }
+    /* Onada 6 (tasca 12) · Amb la IAIA apagada, el seu xat públic no s'obri. */
+    if (iaiaApagada && esPaginaDeLaIAIA(objecte)) {
+      tornaALaLlista(t('section.xat.iaia.apagada', "La IAIA està apagada (nivell d'IA 0). La pots tornar a encendre a «Realitat»."));
+      return;
+    }
     Promise.resolve()
       .then(() => obriFilDePagina(objecte))
       .then((filId) => {
@@ -518,11 +569,12 @@ function XatWorkspace() {
       })
       .catch((error) => {
         if (!vigent()) return;
+        /* Onada 6 · Un codi SDP (003, 013, 016) es diu en la llengua de la interfície. */
         tornaALaLlista(error?.codi === 'sense-capacitat'
           ? t('section.xat.pagina.senseCapacitat', 'Este poble encara no té el xat de les pàgines.')
-          : error?.message || t('section.xat.obrirError', "No s'ha pogut obrir la conversa."));
+          : textDErrorDelXat(error, t, t('section.xat.obrirError', "No s'ha pogut obrir la conversa.")));
       });
-  }, [sobre, titolSobre, rutaSobre, threadId, status, joId, senseSessio, params, obriFilDePagina, navigate, showToast, t]);
+  }, [sobre, titolSobre, rutaSobre, threadId, status, joId, senseSessio, params, obriFilDePagina, navigate, showToast, t, iaiaApagada]);
 
   /* Auditoria 261008 (B05) · /xat/<filId>?sobre=… d'un fil que no és a la
      llista carregada ni entre els visitants (s'ha recarregat la pàgina, iOS
@@ -552,7 +604,7 @@ function XatWorkspace() {
     ? JSON.stringify([threadId, sobre, titolSobre, rutaSobre])
     : '';
   const calReobrir = Boolean(clauReobertura) && !trobatViu && !esIdPerDefecte(threadId)
-    && status === 'ready' && llistaFresca && Boolean(joId) && !senseSessio;
+    && status === 'ready' && llistaFresca && Boolean(joId) && !senseSessio && !dinsDeLaIAIA;
   const [reobertura, setReobertura] = useState(null);
   const [intentReobertura, setIntentReobertura] = useState({ clau: '', n: 0 });
   const intent = intentReobertura.clau === clauReobertura ? intentReobertura.n : 0;
@@ -576,7 +628,7 @@ function XatWorkspace() {
         if (!vigent()) return;
         const text = error?.codi === 'sense-capacitat'
           ? t('section.xat.pagina.senseCapacitat', 'Este poble encara no té el xat de les pàgines.')
-          : error?.message || t('section.xat.obrirError', "No s'ha pogut obrir la conversa.");
+          : textDErrorDelXat(error, t, t('section.xat.obrirError', "No s'ha pogut obrir la conversa."));
         if (error?.retriable === true) {
           setReobertura((previa) => ({
             clau, fet: true, filId: null, avis: text, fallades: (previa?.clau === clau ? previa.fallades : 0) + 1
@@ -645,9 +697,11 @@ function XatWorkspace() {
   }, [terme, cercaMembres]);
 
   const cercant = terme !== '' || filtreCerca != null;
+  /* Onada 6 (tasca 12) · Amb la IAIA apagada, la cerca tampoc no la troba al padró. */
+  const membresVisibles = useMemo(() => (iaiaApagada ? senseContacteDeLaIAIA(membresCerca) : membresCerca), [iaiaApagada, membresCerca]);
   const resultat = useMemo(() => (cercant
-    ? cercaXat({ terme, filtre: filtreCerca, fils: threads, membres: membresCerca, missatgesPerFil: getThreadMessages, joId })
-    : null), [cercant, terme, filtreCerca, threads, membresCerca, getThreadMessages, joId]);
+    ? cercaXat({ terme, filtre: filtreCerca, fils: threads, membres: membresVisibles, missatgesPerFil: getThreadMessages, joId })
+    : null), [cercant, terme, filtreCerca, threads, membresVisibles, getThreadMessages, joId]);
 
   /* Les files de la llista (T67): cada comunitat és una sola fila i els seus
      fills no es pinten sols. Per activitat, les fixades primer. */
@@ -787,7 +841,7 @@ function XatWorkspace() {
      un fil de pàgina pel seu descriptor (`reobrint`, també amb l'avís d'una
      fallada de xarxa). Un fil que ja s'havia trobat en esta ruta només es
      conserva mentre la llista no està al dia (`trobat`). */
-  if (threadId && !trobat && status === 'ready' && llistaFresca && !reobrint) {
+  if (threadId && !trobat && status === 'ready' && llistaFresca && !reobrint && !dinsDeLaIAIA) {
     return <NotFoundPage />;
   }
 
@@ -834,10 +888,12 @@ function XatWorkspace() {
   /* T1 · La fila del poble que encara no existix fa el camí del «Comentar»
      de la pàgina del poble: l'efecte ?sobre= l'obri o el crea i porta al
      seu General. La marca `pobleDemanat` deixa que el focus seguisca la fila
-     quan es convertix en la de la comunitat. */
+     quan es convertix en la de la comunitat.
+     Onada 6 · Amb les fitxes (`towns`), el grup nou es diu com la gent del
+     poble si l'amfitrió no n'ha declarat el nom (pobleAmfitrio.js). */
   const obriPoble = (p) => {
     pobleDemanat.current = true;
-    navigate(rutaSobreDelPoble(p));
+    navigate(rutaSobreDelPoble(p, towns));
   };
 
   /* Onada 3B · «Veure-ho tot ›» de la vista de comunitats obri la fitxa i
@@ -1048,6 +1104,7 @@ function XatWorkspace() {
         avis={avis}
         carregant={status !== 'ready' && !threads.length}
         seleccio={modeSeleccio ? { triades, onAlterna: alternaTria } : null}
+        informe={informe.disponible && !modeSeleccio ? { onPrem: informaDUnError, obrint: informe.obrint, reserva: informe.reserva, onCopia: informe.copiaInforme } : null}
       />
     );
     /* Auditoria 261008 (B04) · Un sondeig fallit amb la llista conservada:
@@ -1234,6 +1291,7 @@ function XatWorkspace() {
         onObriFil={(id) => { tancaDialegNou(); navigate(`/xat/${enc(id)}${consulta()}`); }}
         onVes={(ruta) => { tancaDialegNou(); navigate(ruta); }}
         tornar={rutaActual}
+        senseIAIA={iaiaApagada}
       />
     </aside>
   );
@@ -1244,11 +1302,11 @@ function XatWorkspace() {
           cap conversa: en estret es queda la llista (amb l'avís, si el xat
           encara s'ha de resoldre) fins que arriba el xat real. */}
       <PanellInicialMobil llistaPrimer={!threadId || trobatEsComunitat || idPerDefecte} />
-      <EntradaDelPoble poble={poble} comunitat={comunitatDelPoble} aLaLlista={!threadId && pathname === '/xat' && !params.toString()} />
+      <EntradaDelPoble poble={poble} comunitat={comunitatDelPoble} towns={towns} aLaLlista={!threadId && pathname === '/xat' && !params.toString()} />
       {activeThread ? <ConversaAPantallaCompleta /> : null}
       {activeThread ? (
         <Conversa
-          key={activeThread.id}
+          key={`${activeThread.id}\n${revisioEsborrany}`}
           clauEsborrany={ambitEstable ? `${ambitEstable}::${activeThread.id}` : null}
           initialText={connectionContext}
           fil={activeThread}
@@ -1355,9 +1413,19 @@ function useApartaEnEstret(fn) {
   };
 }
 
-function LlistaDeLaClosca({ onSelect, ...resta }) {
+function LlistaDeLaClosca({ onSelect, informe = null, ...resta }) {
   const tria = useApartaEnEstret(onSelect);
-  return <LlistaConverses {...resta} onSelect={tria} />;
+  /* Onada 6 · «Informa d'un error»: en estret, la llista s'aparta quan la
+     conversa ja és a punt (en remot, després de crear-la), no abans. */
+  const { mida, tancaPanells } = useAppGrid();
+  const informa = async () => {
+    const filId = await informe?.onPrem?.();
+    if (filId && mida === 'estret') tancaPanells();
+  };
+  const peu = informe ? (
+    <BotoInformaDUnError onPrem={informa} obrint={informe.obrint} reserva={informe.reserva} onCopia={informe.onCopia} t={resta.t} />
+  ) : null;
+  return <LlistaConverses {...resta} onSelect={tria} peu={peu} />;
 }
 
 function ResultatsDeLaClosca({ onObriFil, ...resta }) {

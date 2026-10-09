@@ -979,7 +979,8 @@ test('T67 · la comunitat és una sola fila, amb els grups de dins i la suma de 
   ambComunitat();
   render(<XatSection />);
   const llista = screen.getByRole('list', { name: 'Converses' });
-  const files = within(llista).getAllByRole('button');
+  /* Onada 6 · Les files de conversa; el peu («Informa d'un error») no n'és cap. */
+  const files = within(llista).getAllByRole('button').filter((b) => !b.closest('.sdp-xat-llista__peu'));
   expect(files).toHaveLength(3);
   const fila = files.find((b) => b.textContent.includes('Sóc de Poble'));
   expect(files.indexOf(fila)).toBe(1);
@@ -1002,7 +1003,9 @@ test('T67 · la comunitat és una sola fila, amb els grups de dins i la suma de 
   /* «Grups» inclou les comunitats. */
   fireEvent.click(screen.getByRole('button', { name: /^Filtra les converses/ }));
   fireEvent.click(screen.getByRole('menuitemradio', { name: 'Grups' }));
-  expect(within(screen.getByRole('list', { name: 'Converses' })).getAllByRole('button').map((b) => b.textContent.includes('Sóc de Poble') || b.textContent.includes('Adeu')))
+  expect(within(screen.getByRole('list', { name: 'Converses' })).getAllByRole('button')
+    .filter((b) => !b.closest('.sdp-xat-llista__peu'))
+    .map((b) => b.textContent.includes('Sóc de Poble') || b.textContent.includes('Adeu')))
     .toEqual([true, true]);
 });
 
@@ -2158,8 +2161,9 @@ test('T1 · respondre a un missatge envia amb respostaA pel context i buida la b
 function ambFilesPerDefecte() {
   mocks.threads = [...filsDeMostra(), ...ambXatsPerDefecte([]).map((f) => mapejaFil(f))];
 }
+/* Onada 6 · Només les files: el peu («Informa d'un error») no és cap conversa. */
 const textosDeLaLlista = () => within(screen.getByRole('list', { name: 'Converses' }))
-  .getAllByRole('button').map((b) => b.textContent);
+  .getAllByRole('button').filter((b) => !b.closest('.sdp-xat-llista__peu')).map((b) => b.textContent);
 
 test('261007 · les files d’ajuda van a la cua, amb el seu nom i «Cap missatge.», sense marca de fixades', () => {
   mocks.threadId = null;

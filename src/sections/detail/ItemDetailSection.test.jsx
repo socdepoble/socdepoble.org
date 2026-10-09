@@ -3,21 +3,24 @@
  * targeta del Mur: els drets que porta (payload.copyright) i la data triada al
  * calendari (publish_date); el text de sèrie i created_at, només si no en porta.
  */
-import { cleanup, render } from '@testing-library/react';
+import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({ pagina: null, item: null, itemId: null, sectionId: 'mur', navigate: vi.fn(), t: (_, alternativa) => alternativa,
-  sessio: { currentUser: null, estat: 'fora', rol: null, esSuperadmin: false } }));
+  sessio: { currentUser: null, estat: 'fora', rol: null, esSuperadmin: false }, status: undefined, seo: vi.fn() }));
 vi.mock('../../app/contexts/RouterContext', () => ({
   useParams: () => ({ sectionId: mocks.sectionId, itemId: mocks.itemId ?? mocks.item?.id }),
   useNavigate: () => mocks.navigate,
   useLocation: () => ({ pathname: `/${mocks.sectionId}/${mocks.item?.id}`, state: { preloadedItem: mocks.item } })
 }));
 vi.mock('../../components/universal/UniversalPage', () => ({ UniversalPage: (props) => { mocks.pagina = props; return null; } }));
-vi.mock('../../sections/mur/MurContext', () => ({ useMur: () => ({ events: [], feedPosts: [], marketItems: [] }) }));
-vi.mock('../../app/contexts/CoreContentContext', () => ({ useCoreContent: () => ({ towns: [] }) }));
-vi.mock('../../sections/notes/NotesDataContext', () => ({ useNotesData: () => ({ notes: [] }) }));
-vi.mock('../../sections/multimedia/MultimediaContext', () => ({ useMultimedia: () => ({ mediaItems: [] }) }));
+/* Onada 5 (F1, hidratació) · Els quatre proveïdors porten el mateix `status`
+   (mocks.status). Per defecte undefined, com els dobles d'abans: un estat
+   absent no és cap càrrega i les proves de sempre no canvien. */
+vi.mock('../../sections/mur/MurContext', () => ({ useMur: () => ({ events: [], feedPosts: [], marketItems: [], status: mocks.status }) }));
+vi.mock('../../app/contexts/CoreContentContext', () => ({ useCoreContent: () => ({ towns: [], status: mocks.status }) }));
+vi.mock('../../sections/notes/NotesDataContext', () => ({ useNotesData: () => ({ notes: [], status: mocks.status }) }));
+vi.mock('../../sections/multimedia/MultimediaContext', () => ({ useMultimedia: () => ({ mediaItems: [], status: mocks.status }) }));
 vi.mock('../../app/contexts/UIContext', () => ({ useUIActions: () => ({ t: mocks.t }) }));
 /* Marató 2230 · P4 (petició de Codex, 261004_2240_auditoria_codex.md:134) · El
    detall viu dins del SessionProvider de PedraSecaEmbed i en llig el rol
@@ -36,13 +39,17 @@ vi.mock('../../app/contexts/SessionContext', () => ({
   useSession: () => mocks.sessio,
   useSessioOpcional: () => mocks.sessio
 }));
-vi.mock('../../hooks/useSEO.js', () => ({ useSEO: () => {} }));
+vi.mock('../../hooks/useSEO.js', () => ({ useSEO: (opcions) => mocks.seo(opcions) }));
 import ItemDetailSection from './ItemDetailSection.jsx';
 import { COPYRIGHT_SDP, dataHoraDeBarra } from '../../components/universal/editorial.js';
 import { rutaXatDePagina } from '../../config/objecteConnectable.js';
 import { objecteDe } from '../../config/navigation.js';
+import { objecteDelPobleXat } from '../pobles/xatDelPoble.js';
 
-beforeEach(() => { mocks.pagina = null; mocks.itemId = null; mocks.sectionId = 'mur'; mocks.navigate.mockReset(); window.scrollTo = vi.fn(); });
+beforeEach(() => {
+  mocks.pagina = null; mocks.itemId = null; mocks.sectionId = 'mur'; mocks.status = undefined;
+  mocks.navigate.mockReset(); mocks.seo.mockReset(); window.scrollTo = vi.fn();
+});
 afterEach(cleanup);
 
 test('el detall porta els drets de la publicació i la data triada al calendari', () => {
@@ -93,7 +100,8 @@ test('T63.2 · una nota personal (/notes/:id) no té xat comú: el seu objecte n
   expect(rutaXatDePagina(mocks.pagina.objecte)).toBeNull();
 });
 
-/* Revisió de T63.2 · «Element no trobat» (també mentre es carrega) no té cap
+/* Revisió de T63.2 · «Element no trobat» (quan la font ja ha acabat: mentre
+   carrega, el detall espera; vegeu les proves de l'Onada 5) no té cap
    element: ni el xat de la ruta, que s'enduria el títol «Element no trobat».
    objecte null deixa el botó on era i el clic avisa. Una nota, ni es pinta. */
 test('T63.2 · «Element no trobat»: objecte null (cap xat); a /notes/:id, l’objecte és una nota, sense xat', () => {
@@ -128,15 +136,113 @@ test('el detall no mou mai la finestra de l’amfitrió', () => {
   expect(window.scrollTo).not.toHaveBeenCalled();
 });
 
-test('T63.2 · el xat porta el nom propi de l’element, el de la seua targeta: «Sella», no «Gent de Sella»', () => {
+/* Onada 6 (pla 261009_0245, ítem 4: «El fil de xat específic també es dirà
+   'Gent de la Torre'») · Esta prova fixava el contrari (T63.2: el xat d'un
+   poble era «Sella», no «Gent de Sella»). L'ordre del Mestre la inverteix:
+   el xat del poble porta el nom de la seua gent, el de l'H1, entre per on
+   s'entre (objecteDelPobleXat, el mateix de la targeta de /pobles). El
+   subjecte no canvia (poble:sella): és el mateix fil. */
+test('Onada 6 · el xat del poble es diu com la seua gent: «Gent de Sella», com l’H1 i la targeta de /pobles', () => {
   mocks.sectionId = 'pobles';
   mocks.item = { id: 'sella', title: 'Sella', created_at: '2026-09-01T10:00:00.000Z' };
   render(<ItemDetailSection />);
   expect(mocks.pagina.title).toBe('Gent de Sella');
-  expect(mocks.pagina.objecte.titol).toBe('Sella');
-  // La targeta de Pobles (objecteDe(town, 'pobles')) i el detall obrin el mateix xat, amb el mateix nom.
-  expect(rutaXatDePagina(mocks.pagina.objecte)).toBe(rutaXatDePagina(objecteDe(mocks.item, 'pobles')));
+  expect(mocks.pagina.objecte.titol).toBe('Gent de Sella');
+  expect(mocks.pagina.objecte).toMatchObject({ tipus: 'poble', id: 'sella', ruta: '/pobles/sella' });
+  // La targeta de Pobles (objecteDelPobleXat(town)) i el detall obrin el mateix xat, amb el mateix nom.
+  expect(rutaXatDePagina(mocks.pagina.objecte)).toBe(rutaXatDePagina(objecteDelPobleXat(mocks.item)));
+  expect(new URL(rutaXatDePagina(mocks.pagina.objecte), 'http://localhost').searchParams.get('sobre')).toBe('poble:sella');
   // Connectar no canvia: el títol de la pàgina, com abans.
   mocks.pagina.onConnect();
   expect(new URL(mocks.navigate.mock.calls[0][0], 'http://localhost').searchParams.get('title')).toBe('Gent de Sella');
+});
+
+test('Onada 6 · amb l’author de la fitxa, el xat porta el nom curt: «Gent de la Torre»', () => {
+  mocks.sectionId = 'pobles';
+  mocks.item = { id: 'la-torre-de-les-macanes', title: 'La Torre de les Maçanes', author: 'Gent de la Torre', created_at: '2026-08-20T08:00:00.000Z' };
+  render(<ItemDetailSection />);
+  expect(mocks.pagina.objecte.titol).toBe('Gent de la Torre');
+  expect(new URL(rutaXatDePagina(mocks.pagina.objecte), 'http://localhost').searchParams.get('titol')).toBe('Gent de la Torre');
+});
+
+test('Onada 6 · fora de Pobles, el xat continua portant el nom propi de l’element', () => {
+  mocks.item = { id: 'cc', type: 'feed', title: 'Recepta de coca', created_at: '2026-09-01T10:00:00.000Z' };
+  render(<ItemDetailSection />);
+  expect(mocks.pagina.objecte.titol).toBe(objecteDe(mocks.item, 'mur').titol);
+});
+
+/* Onada 5 (F1, hidratació) · Una URL directa en fred (/pobles/<slug>,
+   /mur/<id>…) arriba sense preloadedItem i amb el proveïdor encara en
+   'loading' i la llista buida. El detall espera amb l'àtom Carregant de Pedra
+   Seca (role=status): cap «Element no trobat», cap píndola Error i, a useSEO,
+   cap títol (el de sèrie) en lloc de «No trobat». */
+test('Onada 5 · en fred, mentre la font carrega: Carregant (role=status), sense «Element no trobat» ni el títol «No trobat»', () => {
+  for (const seccio of ['pobles', 'mur', 'mercat', 'events', 'multimedia', 'notes']) {
+    mocks.sectionId = seccio;
+    mocks.item = null;
+    mocks.itemId = 'la-torre-de-les-macanes';
+    mocks.status = 'loading';
+    mocks.pagina = null;
+    mocks.seo.mockReset();
+    render(<ItemDetailSection />);
+    expect(mocks.pagina, seccio).toBeNull();
+    expect(screen.queryByText('Element no trobat'), seccio).toBeNull();
+    expect(screen.getByRole('status').textContent, seccio).toContain('Carregant contingut del poble...');
+    expect(mocks.seo, seccio).toHaveBeenLastCalledWith(expect.objectContaining({ title: null, description: '' }));
+    cleanup();
+  }
+});
+
+/* El límit: acabada la font ('ready' o 'error'), si l'element no hi és, el no
+   trobat de sempre (amb el títol SEO «No trobat»). Error no és carregar. */
+test('Onada 5 · acabada la font (ready o error) i sense l’element: «Element no trobat», com abans', () => {
+  for (const status of ['ready', 'error']) {
+    for (const seccio of ['pobles', 'notes']) {
+      mocks.sectionId = seccio;
+      mocks.item = null;
+      mocks.itemId = 'x9';
+      mocks.status = status;
+      mocks.pagina = null;
+      mocks.seo.mockReset();
+      render(<ItemDetailSection />);
+      expect(mocks.pagina?.title, `${seccio} · ${status}`).toBe('Element no trobat');
+      expect(screen.queryByRole('status'), `${seccio} · ${status}`).toBeNull();
+      expect(mocks.seo, `${seccio} · ${status}`).toHaveBeenLastCalledWith(expect.objectContaining({ title: 'No trobat' }));
+      cleanup();
+    }
+  }
+});
+
+/* Amb l'element a la mà (el clic des d'una targeta, preloadedItem), el detall
+   no espera ningú: es pinta encara que la font carregue. */
+test('Onada 5 · amb preloadedItem, el detall es pinta encara que la font carregue', () => {
+  mocks.status = 'loading';
+  mocks.item = { id: 'cc', type: 'feed', title: 'Recepta de coca', created_at: '2026-09-01T10:00:00.000Z' };
+  render(<ItemDetailSection />);
+  expect(mocks.pagina.title).toBe('Recepta de coca');
+  expect(screen.queryByRole('status')).toBeNull();
+  expect(mocks.seo).toHaveBeenLastCalledWith(expect.objectContaining({ title: 'Recepta de coca' }));
+});
+
+/* Onada 5 (F4) · La meta description és l'entradilla que pinta la pàgina
+   (pagina.lead): la de Viquipèdia d'un poble, no el seu nom (el getSubtitle de
+   Pobles ara és el títol, l'H2). Una publicació, la seua entradilla, com
+   abans; sense entradilla ni lead, el subtítol. */
+test('Onada 5 · la meta description és l’entradilla de la pàgina; sense, el subtítol', () => {
+  const VIQUIPEDIA = 'Sella és un municipi del País Valencià a la comarca de la Marina Baixa.';
+  mocks.sectionId = 'pobles';
+  mocks.item = { id: 'sella', title: 'Sella', author: 'Gent de Sella', content: VIQUIPEDIA };
+  render(<ItemDetailSection />);
+  expect(mocks.pagina.lead).toBe(VIQUIPEDIA);
+  expect(mocks.seo).toHaveBeenLastCalledWith(expect.objectContaining({ description: VIQUIPEDIA }));
+  cleanup();
+  mocks.sectionId = 'mur';
+  mocks.item = { id: 'cc', type: 'feed', title: 'Recepta de coca', entradilla: 'La de la iaia, pas a pas.', created_at: '2026-09-01T10:00:00.000Z' };
+  render(<ItemDetailSection />);
+  expect(mocks.seo).toHaveBeenLastCalledWith(expect.objectContaining({ description: 'La de la iaia, pas a pas.' }));
+  cleanup();
+  mocks.item = { id: 'dd', type: 'feed', title: 'Coca de llanda', description: 'Per a berenar.', created_at: '2026-09-01T10:00:00.000Z' };
+  render(<ItemDetailSection />);
+  expect(mocks.pagina.lead).toBeFalsy();
+  expect(mocks.seo).toHaveBeenLastCalledWith(expect.objectContaining({ description: 'Per a berenar.' }));
 });

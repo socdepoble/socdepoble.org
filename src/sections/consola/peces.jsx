@@ -6,6 +6,7 @@ import { Insignia, UniversalCard } from '../../components/PedraSeca';
 import { useNavigate } from '../../app/contexts/RouterContext';
 import { dataHoraDeBarra } from '../../components/universal/editorial.js';
 import { AUTORIA_SOCDEPOBLE } from '../control/destinsControl.js';
+import { retallaProblemes } from './problemesConsola.js';
 
 /* Mode privacitat (l'interruptor d'Emowe): amaga rutes, ordres i empremtes
    per a gravar o compartir pantalla sense repassar-la abans. Tot el que la
@@ -104,9 +105,18 @@ export function Xifra({ etiqueta, valor, icona, a }) {
    ({ clau, text, to }, el més greu primer; consolaPagines.js · estatsPagina),
    en una llista d'insígnies darrere de les mètriques. Ni capçaleres (l'Índex
    no s'empastra) ni etiquetes de la targeta (el nivell i «Canvis nous» van a
-   part). Sense estats, el cos és el de sempre. */
+   part). Sense estats, el cos és el de sempre.
+   Onada 6 (requisit 9: informació en superfície) · `problemes`: quins són,
+   no només quants ({ clau, text, ruta? }, problemesConsola.js), en una llista
+   darrere dels estats. Com a molt MAX_PROBLEMES_TARGETA i «i N més»: la llista
+   sencera és a la pàgina. La ruta va en <Mono> i el mode privacitat l'amaga.
+   La targeta continua portant a la seua pàgina (ordre del Mestre, 261004).
+   Sense problemes (null o buida), el cos és el de sempre. Correcció de
+   l'Onada 6 (revisió adversarial) · la `marca` de cada problema (la severitat
+   d'un avís, l'estat d'una tasca, el color d'una skill) va davant, en una
+   Insignia amb el color del semàfor: la llista també fa de semàfor. */
 export function TargetaConsola({
-  icona: Icona, titol, subtitol, entradilla, dada, metriques, estats, creat, generat, a, onObri, etiquetes,
+  icona: Icona, titol, subtitol, entradilla, dada, metriques, estats, problemes, creat, generat, a, onObri, etiquetes,
   imatge = null, imatgeAlt = ''
 }) {
   const navigate = useNavigate();
@@ -114,6 +124,7 @@ export function TargetaConsola({
   const obri = a ? () => navigate(a) : onObri;
   const ambMetriques = Array.isArray(metriques) && metriques.length > 0;
   const ambEstats = Array.isArray(estats) && estats.length > 0;
+  const { visibles, resta } = retallaProblemes(problemes);
   const quan = dataHoraDeBarra({ creat, modificat: generat });
   return (
     <UniversalCard
@@ -145,6 +156,17 @@ export function TargetaConsola({
               {estats.map((e) => <li key={e.clau}><Insignia to={e.to}>{e.text}</Insignia></li>)}
             </ul>
           )}
+          {visibles.length > 0 && (
+            <ul className="sdp-consola__evidencies sdp-consola__problemes" aria-label="Quins problemes hi ha">
+              {visibles.map((p) => (
+                <li key={p.clau}>
+                  {p.marca ? <><Insignia to={p.to ?? 'neutre'}>{p.marca}</Insignia>{' '}</> : null}
+                  {p.text}{p.text && p.ruta ? ' · ' : null}{p.ruta ? <Mono>{p.ruta}</Mono> : null}
+                </li>
+              ))}
+              {resta > 0 && <li>{`i ${resta} més`}</li>}
+            </ul>
+          )}
         </>
       )}
       labels={Array.isArray(etiquetes) ? etiquetes.map(aEtiqueta) : etiquetes}
@@ -156,10 +178,12 @@ export function TargetaConsola({
   );
 }
 
-/* Etiquetes d'estat de les targetes, amb les classes del Panell de Control:
-   el que funciona, en `sdp-badge-system` (ACTIU); la resta, en `sdp-badge-tag`.
-   Viuen a xifresComu.js (sense React), perquè les peces del Mapa les calculen. */
-export { etiquetaBona, etiquetaPendent } from './xifresComu.js';
+/* Etiquetes d'estat de les targetes, amb els colors del semàfor (Onada 6):
+   el que falta, taronja. Viuen a xifresComu.js (sense React), perquè les
+   peces del Mapa les calculen. Correcció de l'Onada 6 (revisió adversarial) ·
+   derogades etiquetaBona i etiquetaGreu: ningú no les cridava (el verd i el
+   roig de les xifres els posa xifresComu.js · etiquetaDeColor). */
+export { etiquetaPendent } from './xifresComu.js';
 
 /* ── Desplegables «Veure detall de…» ─────────────────────────────────────
    <details> natiu: s'obri i es tanca sense JavaScript i el lector de

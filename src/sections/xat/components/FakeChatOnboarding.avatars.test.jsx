@@ -27,7 +27,7 @@ import LlistaConverses from './LlistaConverses.jsx';
 import { XatContext } from '../XatContext.jsx';
 import { fixaBaseRecursos } from '../../../config/assetResolver.js';
 import { permetOrigenMitjans } from '../../../utils/sanitize.js';
-import { AGENTS_MAP } from '../../../data/agentsSeed.js';
+import { AJUDA_PER_CLAU, CARA_DE_LA_IAIA } from '../../../data/xatsPerDefecte.js';
 
 const t = (_, alternativa) => alternativa;
 const PAQUET = 'https://amfitrio.example/wp-content/plugins/socdepoble-enxufe/dist';
@@ -36,7 +36,9 @@ const TORRE = {
   id: POBLE.id, title: 'La Torre de les Maçanes',
   image_url: '/assets/towns/la-torre-de-les-macanes/1.jpg', avatar_url: '/assets/towns/la-torre-de-les-macanes/2.jpg'
 };
-const IAIA = AGENTS_MAP.IAIA.avatar_url;
+/* Onada 6 (tasca 12) · La fila de la IAIA arriba amb l'avatar del padró
+   (AJUDA) i el xat en pinta la cara retallada de «Festa del Poble» (CaraXat). */
+const IAIA = CARA_DE_LA_IAIA.src;
 const LOGO = '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg';
 
 /* La llista de mostra amb les files de veres: les comunitats i els fils solts. */
@@ -98,7 +100,8 @@ test('«Nova conversa» de la mostra (cercaMembres) porta les mateixes cares que
   function Captura() { xat = useContext(XatContext); return null; }
   render(<FakeChatOnboarding originalContext={{ senseSessio: true, comunitats: [] }}><Captura /></FakeChatOnboarding>);
   const membres = await xat.cercaMembres('');
-  expect(Object.fromEntries(membres.map((m) => [m.nom, m.avatar_url]))).toEqual({ 'Sóc de Poble': LOGO, 'IAIA MarIA': IAIA });
+  /* Les dades porten l'avatar del padró (AJUDA); CaraXat en pinta la cara, com a la llista. */
+  expect(Object.fromEntries(membres.map((m) => [m.nom, m.avatar_url]))).toEqual({ 'Sóc de Poble': LOGO, 'IAIA MarIA': AJUDA_PER_CLAU.iaia.avatar });
 });
 
 test('la fila virtual del poble (FilaPoble) porta la mateixa cara, resolta amb la base', () => {

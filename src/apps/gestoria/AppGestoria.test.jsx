@@ -34,12 +34,14 @@ const MODULS = [
   ['bancs', 'Bancs', 'Bancs i Tresoreria'],
   ['impostos', 'Impostos', 'Impostos'],
   ['full', 'Full trimestral', 'Full trimestral'],
+  /* Onada 6, ordre del Mestre (261009): l'Històric i IA, pel pont com la Facturació. */
+  ['historic', 'Històric i IA', 'Històric i IA'],
   ['informes', 'Informes', 'Informes'],
   ['escaner', 'Escàner Local', 'Escàner Local']
 ];
 const ENTRADES = [...MODULS.map(([slug, etiqueta]) => [slug, etiqueta]), [ENTRADA_APRENDRE, 'Aprendre']];
-/* Els mòduls que pinta la closca: tots menys la Facturació (261007), que va pel pont. */
-const MODULS_CLOSCA = MODULS.filter(([slug]) => slug !== ENTRADA_FACTURACIO);
+/* Els mòduls que pinta la closca: tots menys la Facturació (261007) i l'Històric (Onada 6), que van pel pont. */
+const MODULS_CLOSCA = MODULS.filter(([slug]) => slug !== ENTRADA_FACTURACIO && slug !== 'historic');
 
 /* El doble de la closca porta, com ella, la seua pàgina (una PaginaApp de
    veres) i demana la porta dels Tractors amb la consulta relativa de
@@ -73,6 +75,17 @@ vi.mock('../../sections/gestoria/tauler/ShellGestoria.jsx', async () => {
 vi.mock('../../sections/gestoria/aprendre/Aprendre.jsx', () => ({ default: () => <p>Doble d’Aprendre</p> }));
 /* La pantalla de Facturació té les seues proves a src/sections/gestoria/facturar. */
 vi.mock('../../sections/gestoria/facturar/Facturacio.jsx', () => ({ default: () => <p>Doble de la Facturació</p> }));
+/* L'Històric té les seues proves a src/sections/gestoria/historic; el doble porta, com ell, la seua PaginaApp. */
+vi.mock('../../sections/gestoria/historic/Historic.jsx', async () => {
+  const { PaginaApp } = await import('../../components/PedraSeca/index.js');
+  return {
+    default: () => (
+      <PaginaApp title="Històric i IA" subtitle="El banc, la IA i les simulacions" showComment={false} showShare={false} showConnect={false}>
+        <p>Doble de l’Històric</p>
+      </PaginaApp>
+    )
+  };
+});
 
 const ENTORN_DEV = Object.freeze({ ...ENTORN_OBERT, produccio: false });
 const registre = (manifest = manifestGestoria) => creaRegistre({ internes: [manifest] });
@@ -107,7 +120,7 @@ afterEach(() => {
 });
 
 describe('el manifest', () => {
-  test('vàlid, només en desenvolupament, apagat per defecte, amb dades financeres i les deu entrades; registrat a la plataforma', () => {
+  test('vàlid, només en desenvolupament, apagat per defecte, amb dades financeres i les onze entrades; registrat a la plataforma', () => {
     const { errors, manifest } = validaManifestApp(manifestGestoria);
     expect(errors).toEqual([]);
     expect(manifest).toMatchObject({
@@ -179,6 +192,22 @@ describe('en desenvolupament, una app pròpia', () => {
     fireEvent.click(within(barra).getByRole('link', { name: 'Tauler d’Inici' }));
     expect(await screen.findByText('Doble de la closca')).toBeTruthy();
     expect(screen.queryByText('Doble de la Facturació')).toBeNull();
+  });
+
+  /* Onada 6, ordre del Mestre (261009): l'Històric i IA, la quarta vista del pont, amb la seua PaginaApp. */
+  test('/app/gestoria/historic: l’Històric amb la seua pàgina, un sol H1, sense la closca i amb l’enllaç de la barra marcat', async () => {
+    const { container } = muntaPlataforma('/app/gestoria/historic', { registre: registre(), entorn: ENTORN_DEV, fills: ambBarra });
+    expect(await screen.findByText('Doble de l’Històric')).toBeTruthy();
+    expect(ubicacio()).toBe('/app/gestoria/historic');
+    expect(container.querySelectorAll('h1')).toHaveLength(1);
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Històric i IA');
+    expect(screen.queryByText('Doble de la closca')).toBeNull();
+    const barra = screen.getByRole('navigation', { name: 'Barra lateral' });
+    expect(within(barra).getByRole('link', { name: 'Històric i IA' }).getAttribute('aria-current')).toBe('page');
+    expect(barra.querySelectorAll('[aria-current="page"]')).toHaveLength(1);
+    fireEvent.click(within(barra).getByRole('link', { name: 'Tauler d’Inici' }));
+    expect(await screen.findByText('Doble de la closca')).toBeTruthy();
+    expect(screen.queryByText('Doble de l’Històric')).toBeNull();
   });
 
   test.each(MODULS_CLOSCA)('l’enllaç directe /app/gestoria/%s obri el mòdul amb l’única barra exterior', async (slug, etiqueta, titol) => {

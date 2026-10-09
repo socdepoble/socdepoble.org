@@ -20,7 +20,9 @@ const llig = (ruta) => fs.readFileSync(path.join(ARREL, ruta), 'utf8');
 
 const JSX_NOU = [
   'src/sections/calendari/CalendariSection.jsx',
-  'src/sections/mur/CalendariMur.jsx',
+  // Onada 6 (prompt 261009_0230, punt 1) · el calendari únic i la pestanya del Mur que el munta (CalendariMur, sense importador).
+  'src/sections/calendari/CalendariDelPoble.jsx',
+  'src/sections/mur/CalendariDelMur.jsx',
   'src/sections/mur/TargetaDelMur.jsx',
   // T10 (ordre del Mestre, 261001) · les vistes Setmana i Mes (esquelet).
   'src/components/PedraSeca/organismes/VistaSetmana.jsx',
@@ -35,7 +37,7 @@ const JS_CARRIL = [
   'src/sections/calendari/calendariGlobal.js',
   'src/sections/calendari/calendariGlobal.test.js',
   'src/sections/calendari/CalendariSection.test.jsx',
-  'src/sections/mur/CalendariMur.test.jsx',
+  'src/sections/calendari/CalendariDelPoble.test.jsx',
   'src/sections/mur/MurSection.jsx',
   'src/sections/mur/MurSection.agenda.test.jsx',
   'src/sections/mur/agendaMur.js',
@@ -136,5 +138,19 @@ test('taxonomia: la pestanya del Mur diu «Calendari» i conserva el valor inter
   const mur = llig('src/sections/mur/MurSection.jsx');
   assert.match(mur, /\{ valor: 'events', text: 'Calendari' \}/);
   assert.doesNotMatch(mur, /text: 'Agenda'/);
-  assert.match(mur, /<CalendariMur actes=\{sortedEvents\}/);
+  // Onada 6 (prompt 261009_0230, punt 1) · un sol calendari: la pestanya munta el de /calendari.
+  assert.match(mur, /<CalendariDelMur actes=\{actesDelCalendari\} \/>/);
+});
+
+/* Onada 6 (prompt 261009_0230, punt 1) · El Mur i /calendari munten el MATEIX
+   calendari (CalendariDelPoble). CalendariMur.jsx i la seua prova queden sense
+   cap importador (els esborra el Mestre, com AgendaMur): esta porta no en
+   depén, i no falla quan ja no hi siguen. */
+test('taxonomia: un sol calendari; CalendariMur.jsx no té cap importador', () => {
+  const importadors = fitxersDeSrc()
+    .filter((f) => !f.endsWith('/CalendariMur.jsx') && !f.endsWith('/CalendariMur.test.jsx'))
+    .filter((f) => /['"][^'"]*\/CalendariMur(\.jsx)?['"]/.test(llig(f)));
+  assert.deepEqual(importadors, []);
+  assert.match(llig('src/sections/calendari/CalendariSection.jsx'), /<CalendariDelPoble /);
+  assert.match(llig('src/sections/mur/CalendariDelMur.jsx'), /<CalendariDelPoble /);
 });

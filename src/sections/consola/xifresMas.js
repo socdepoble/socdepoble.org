@@ -31,9 +31,13 @@
  * família obria una pàgina sense targeta).
  */
 import {
-  dataUltimaOperacio, fontLlegible, liniesDescartades, operacionsImmunitaries, paginaConsola, recompteArtefactes,
-  registresDelDiari, ultimRebut
+  dataUltimaOperacio, fontLlegible, liniesDescartades, operacionsImmunitaries, paginaConsola,
+  recompteArtefactes, registresDelDiari, ultimRebut
 } from './consolaPagines.js';
+import { COLOR_D_ESTAT, pitjor, toDEstat, toDeColor } from './semafor.js';
+import {
+  problemaDeSkill, problemaRuta, problemaText, problemesDAvisos, problemesDeTasques
+} from './problemesConsola.js';
 import { dataLocal, resumConsums, resumSkills } from './consolaContent.js';
 import { panellPols } from './polsConsola.js';
 import { anomaliesDelMas, capesActors, pecesAgents, xifresDelMas } from './mapa/actorsMapa.js';
@@ -41,15 +45,15 @@ import { resumCalendari } from './mapa/calendariMapa.js';
 import { PROVA_MAPA } from './mapa/construeixMapa.js';
 import { fluxosDelMapa } from './mapa/fluxosMapa.js';
 import { etiquetaNode, relacionsDe } from './mapa/grafMapa.js';
-import { resumInventari } from './mapa/inventariMapa.js';
+import { CODIS_CENS, esForaDeCens, resumInventari } from './mapa/inventariMapa.js';
 import { evidenciesDe, resumMapa, textCadencia } from './mapa/mapaContent.js';
 import {
-  COLUMNES_AVIS, COLUMNES_METRICA, FONT_MAPA, GENERADOR_CONSOLA, GENERADOR_MAPA, RUTA_XIFRES, ambCodi,
-  compteOMesura, concorda, de, entradetaPlana, filaMetrica, filesAvisos, mesura, mesurada, mono, perId, plural,
-  rutaXifra, senseMesura, text
+  COLUMNES_AVIS, COLUMNES_METRICA, FONT_MAPA, GENERADOR_CONSOLA, GENERADOR_MAPA, RUTA_XIFRES, ambCodi, colorDe,
+  compteOMesura, concorda, de, entradetaPlana, etiquetaDAvisos, etiquetaDeColor, filaMetrica, filesAvisos, mesura,
+  mesurada, mono, perId, plural, rutaXifra, senseMesura, text
 } from './xifresComu.js';
 import { GRUPS_VISTES, XIFRES_VISTES } from './xifresVistes.js';
-import { FAMILIES, pecesDeFamilia } from './pecesMapa.js';
+import { FAMILIES, pecesDeFamilia, textEstatArnes } from './pecesMapa.js';
 
 export { GENERADOR_CONSOLA, GENERADOR_MAPA, RUTA_XIFRES, rutaXifra };
 
@@ -75,8 +79,20 @@ export const CODIS_ALTS = Object.freeze({
   'contracte-absent': 'contractes que lligen fitxers absents',
   'fitxer-absent': 'fitxers declarats i absents',
   'tasca-morta': 'tasques mortes',
-  'ledger-invalid': 'el LEDGER invàlid'
+  'ledger-invalid': 'el LEDGER invàlid',
+  // Onada 6 · la frontissa de contingut roja ja és un avís, no només una fracció.
+  'frontissa-roja': 'la frontissa de contingut roja'
 });
+
+/* ── El semàfor i els problemes de les deu xifres (Onada 6, requisits 8 i 9)
+   Cada xifra del tauler du una etiqueta del semàfor segons el seu valor
+   (Cal reparar en roig, Important en taronja, En ordre en verd) i diu a la
+   vista quins són els seus problemes (problemesConsola.js). Sense mesura, cap
+   etiqueta: mai un verd sense base. Les peces del semàfor (etiquetaDeColor,
+   colorDe, etiquetaDAvisos) viuen a xifresComu.js: les xifres de dins de les
+   pàgines (xifresVistes.js) diuen el mateix de la mateixa manera. */
+/* Els avisos del cens d'una skill (CODIS_CENS). */
+const avisosDelCens = (s) => s.avisos.filter((a) => CODIS_CENS.includes(a.codi));
 const nomsAlts = Object.values(CODIS_ALTS);
 const LLISTA_ALTS = `${nomsAlts.slice(0, -1).join(', ')} i ${nomsAlts.at(-1)}`;
 
@@ -100,6 +116,13 @@ const XIFRES_MAS = Object.freeze([
       'És la base de totes les altres xifres: el que no és al cens no ho vigila ningú.'
     ],
     font: `${FONT_MAPA} · nodes de tipus skill`,
+    /* El cens sencer, per la gravetat dels avisos del cens (una fantasma o una
+       fora del segell, altes, roig; la que només falta a l'índex o al catàleg,
+       taronja). Correcció de l'Onada 6 (revisió adversarial) · la mateixa regla
+       que «Skills fora d'algun cens» i l'Inventari; derogat «només la fantasma
+       és roja». */
+    etiquetes: ({ inv }) => etiquetaDAvisos(inv.skills.flatMap(avisosDelCens)),
+    problemes: ({ inv }) => inv.skills.filter(esForaDeCens).map((s) => problemaDeSkill(s, avisosDelCens(s))),
     detall: (mapa) => ({
       taules: [{
         titol: 'Skills del cens',
@@ -122,6 +145,11 @@ const XIFRES_MAS = Object.freeze([
       'Cada arnés carrega la seua memòria i dispara els seus candats: un que no hi és no està vigilat.'
     ],
     font: `${FONT_MAPA} · nodes de tipus agent`,
+    // El pitjor estat dels arnesos (pecesMapa.js · textEstatArnes): el mateix color que la seua targeta a Actors.
+    etiquetes: ({ capes }) => etiquetaDeColor(capes.arnesos.length
+      ? pitjor(capes.arnesos.map((a) => COLOR_D_ESTAT[textEstatArnes(a)] ?? 'taronja')) : null),
+    problemes: ({ capes }) => capes.arnesos.filter((a) => textEstatArnes(a) !== 'ACTIU')
+      .map((a) => problemaText(a.node.id, a.nom, textEstatArnes(a).toLocaleLowerCase('ca'), toDEstat(textEstatArnes(a)))),
     detall: (mapa) => ({
       taules: [{
         titol: 'Arnesos del Mas',
@@ -143,6 +171,9 @@ const XIFRES_MAS = Object.freeze([
       'Una skill opaca no es pot encadenar en cap flux de treball i ningú no sap què toca quan corre.'
     ],
     font: `${FONT_MAPA} · arestes llig i escriu`,
+    etiquetes: ({ x }) => etiquetaDeColor(colorDe(true, false, x.opaques > 0)),
+    problemes: ({ mapa }) => mapa.nodes.filter((n) => n.tipus === 'skill' && relacionsDe(mapa, n.id).opaca).sort(perId)
+      .map((n) => problemaText(n.id, etiquetaNode(n), 'opaca', toDeColor('taronja'))),
     detall: (mapa) => ({
       taules: [{
         titol: 'Skills opaques',
@@ -171,6 +202,11 @@ const XIFRES_MAS = Object.freeze([
       'Una tasca morta no avisa ningú: sense esta xifra, la vigilància automàtica podria estar parada sense que ningú ho sàpia.'
     ],
     font: `${FONT_MAPA} · tasques`,
+    // Una morta, roig; una que no consta viva (o cap tasca: ningú vigila sol), taronja.
+    etiquetes: ({ capes }) => etiquetaDeColor(colorDe(true,
+      capes.programades.some((t) => t.estat === 'mort'),
+      !capes.programades.length || capes.programades.some((t) => t.estat !== 'viu'))),
+    problemes: ({ capes }) => problemesDeTasques(capes.programades),
     detall: (mapa, { capes }) => ({
       taules: [{
         titol: 'Tasques que llança launchd',
@@ -196,6 +232,8 @@ const XIFRES_MAS = Object.freeze([
       'Cada una és un procediment que, tal com està, pot fallar o no carregar-se quan toca.'
     ],
     font: `${FONT_MAPA} · avisos de les skills`,
+    etiquetes: ({ inv }) => etiquetaDeColor(colorDe(true, inv.roges > 0, inv.ambres > 0)),
+    problemes: ({ inv }) => inv.skills.filter((s) => s.semafor !== 'verd').map((s) => problemaDeSkill(s)),
     detall: (mapa) => {
       const skills = new Set(mapa.nodes.filter((n) => n.tipus === 'skill').map((n) => n.id));
       return {
@@ -219,6 +257,8 @@ const XIFRES_MAS = Object.freeze([
       'Són les fallades que trenquen la cadena o la confiança, i es reparen abans que cap altra cosa.'
     ],
     font: `${FONT_MAPA} · avisos de severitat alta`,
+    etiquetes: ({ an }) => etiquetaDeColor(colorDe(true, an.alts > 0)),
+    problemes: ({ mapa }) => problemesDAvisos(mapa.avisos.filter((a) => a.severitat === 'alta')),
     detall: (mapa) => ({
       taules: [{
         titol: 'Avisos alts',
@@ -231,8 +271,12 @@ const XIFRES_MAS = Object.freeze([
   {
     slug: 'linies-ledger', origen: 'mapa', pagina: 'salut', icona: 'scrollText', nom: 'Línies del LEDGER',
     /* Correcció 261004 (verificador, punt 5) · una mesura absent no es compta
-       com a 0: amb les dues, la suma; amb una sola, només eixa, i ho diu. */
-    titol: ({ an }) => {
+       com a 0: amb les dues, la suma; amb una sola, només eixa, i ho diu.
+       Onada 6 (contradiccions) · Amb la signatura trencada, el títol ho diu:
+       l'alerta del tauler enllaça ací i abans hi llegia «0 línies del LEDGER
+       per revisar», que la desmentia. Els recomptes continuen al subtítol. */
+    titol: ({ an, mapa }) => {
+      if (ambCodi(mapa, 'ledger-invalid').length) return 'LEDGER amb la signatura trencada';
       if (an.fossils === null && an.malFormades === null) return 'LEDGER sense mesura';
       if (an.malFormades === null) return `${plural(an.fossils, 'segell fòssil', 'segells fòssils')} al LEDGER per revisar`;
       if (an.fossils === null) return `${plural(an.malFormades, 'línia mal formada', 'línies mal formades')} al LEDGER per revisar`;
@@ -244,12 +288,18 @@ const XIFRES_MAS = Object.freeze([
       : `${compteOMesura(an.fossils, 'segell fòssil', 'segells fòssils')} · ${compteOMesura(an.malFormades, 'línia mal formada', 'línies mal formades')}`),
     subtitolSenseFont: 'Segells fòssils i línies mal formades',
     entradeta: [
-      'Suma els segells fòssils i les línies mal formades del Llibre d’Obra (`.agents/LEDGER.md`).',
-      'Ix de les mètriques ledger-fossils i ledger-mal-formades de `mapa.json`, que `tooling/brain/mapa-consola.mjs` compta en llegir el LEDGER.',
-      'Un LEDGER amb línies que no quadren no pot acreditar què s’ha fet ni quan, i la seua signatura deixa de valdre.'
+      'Suma els segells fòssils i les línies mal formades del Llibre d’Obra (`.agents/LEDGER.md`) i diu si la seua signatura és vàlida.',
+      'Ix de les mètriques ledger-fossils i ledger-mal-formades i de l’avís ledger-invalid de `mapa.json`, que `tooling/brain/mapa-consola.mjs` calcula en llegir el LEDGER.',
+      'Un LEDGER editat sense tornar-lo a segellar, o amb línies que no quadren, no pot acreditar què s’ha fet ni quan.'
     ],
     font: '.agents/LEDGER.md',
     metrica: 'ledger-fossils',
+    etiquetes: ({ an, mapa }) => {
+      const invalid = ambCodi(mapa, 'ledger-invalid').length > 0;
+      const mesurat = invalid || an.fossils !== null || an.malFormades !== null;
+      return etiquetaDeColor(colorDe(mesurat, invalid, (an.fossils ?? 0) + (an.malFormades ?? 0) > 0));
+    },
+    problemes: ({ mapa }) => problemesDAvisos(ambCodi(mapa, 'ledger-invalid')),
     detall: (mapa, { an }) => ({
       senseMesura: an.fossils === null && an.malFormades === null
         ? 'El Mapa no porta cap recompte del LEDGER (ledger-fossils ni ledger-mal-formades): la closca no l’ha llegit.'
@@ -286,6 +336,10 @@ const XIFRES_MAS = Object.freeze([
     ],
     font: '.agents/runtime/turns',
     metrica: 'torns-caducats-oberts',
+    etiquetes: ({ an }) => etiquetaDeColor(colorDe(an.tornsCaducats !== null, false, an.tornsCaducats > 0)),
+    // Un torn per evidència (el que va caducar abans, primer): tot en <Mono>, porta ids i actors.
+    problemes: ({ mapa }) => ambCodi(mapa, 'torns-caducats').flatMap(evidenciesDe).filter((e) => !RECOMPTE_TORNS.test(e))
+      .map((e, i) => problemaRuta(`${i}|${e}`, '', e)),
     detall: (mapa, { an }) => {
       const m = mesura(mapa, 'torns-caducats-oberts');
       const torns = ambCodi(mapa, 'torns-caducats').flatMap(evidenciesDe).filter((e) => !RECOMPTE_TORNS.test(e));
@@ -317,6 +371,8 @@ const XIFRES_MAS = Object.freeze([
     ],
     font: '.agents/SKILLS_SEAL.json (només SKILL.md) · disc',
     metrica: 'segell-skills-coherent',
+    etiquetes: ({ an }) => etiquetaDeColor(colorDe(an.foraDelSegell !== null, an.foraDelSegell > 0)),
+    problemes: ({ mapa }) => problemesDAvisos(ambCodi(mapa, 'fora-segell', 'segell-divergent')),
     detall: (mapa, { an }) => {
       const m = mesura(mapa, 'segell-skills-coherent');
       return {
@@ -361,6 +417,9 @@ const XIFRES_MAS = Object.freeze([
       'Una òrfena no s’executarà mai, i una fantasma fa fallar qui la crida.'
     ],
     font: `${FONT_MAPA} · avisos orfe i skill-fantasma`,
+    // Una fantasma fa fallar qui la crida: roig; una òrfena no s'executa mai: taronja.
+    etiquetes: ({ an }) => etiquetaDeColor(colorDe(true, an.fantasmes > 0, an.orfes > 0)),
+    problemes: ({ mapa }) => problemesDAvisos(ambCodi(mapa, 'skill-fantasma', 'orfe')),
     detall: (mapa) => ({
       taules: [
         { titol: 'Skills òrfenes', columnes: COLUMNES_AVIS, files: filesAvisos(ambCodi(mapa, 'orfe')), buit: 'Cap skill òrfena.' },
@@ -562,7 +621,10 @@ const comu = (def, slug, origen) => {
 function vista(def, m) {
   const base = comu(def, def.slug, def.origen);
   if (!m) {
-    return { ...base, titol: def.nom, subtitol: def.subtitolSenseFont ?? def.subtitol({}), titolPrivat: null, subtitolPrivat: null, etiquetes: null };
+    return {
+      ...base, titol: def.nom, subtitol: def.subtitolSenseFont ?? def.subtitol({}), titolPrivat: null, subtitolPrivat: null,
+      etiquetes: null, problemes: null
+    };
   }
   return {
     ...base,
@@ -570,7 +632,9 @@ function vista(def, m) {
     subtitol: def.subtitol(m),
     titolPrivat: def.titolPrivat?.(m) ?? null,
     subtitolPrivat: def.subtitolPrivat?.(m) ?? null,
-    etiquetes: def.etiquetes?.(m) ?? null
+    etiquetes: def.etiquetes?.(m) ?? null,
+    // Onada 6 (requisit 9) · quins problemes diu la targeta a la vista; null si la xifra no en calcula.
+    problemes: def.problemes?.(m) ?? null
   };
 }
 
@@ -582,7 +646,8 @@ const vistaPeca = (familia, el) => ({
   subtitol: el.subtitol,
   titolPrivat: el.titolPrivat ?? null,
   subtitolPrivat: el.subtitolPrivat ?? null,
-  etiquetes: el.etiquetes ?? null
+  etiquetes: el.etiquetes ?? null,
+  problemes: el.problemes ?? null
 });
 
 const deConsola = (def) => def.origen === 'consola';

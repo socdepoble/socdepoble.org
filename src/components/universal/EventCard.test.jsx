@@ -18,7 +18,7 @@ vi.mock('../../app/contexts/RouterContext', async () => {
 });
 vi.mock('./NotificationContext.jsx', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
 
-import { EventCard, rutaDeLaBoinaDeLActe } from './EventCard.jsx';
+import { EventCard, etiquetaAgendaDelDia, rutaDeLaBoinaDeLActe } from './EventCard.jsx';
 import { DEFAULT_AUTHOR } from './UniversalUtils.js';
 import { acteAEsdeveniment } from '../../sections/mur/agendaMur.js';
 import { CALENDAR_EVENTS } from '../../sections/mur/eventsSeed.js';
@@ -164,6 +164,59 @@ describe('l’enllaç de tota la targeta', () => {
   test.each(['https://fals-poble.example/entra', '//fals-poble.example', 'javascript:alert(1)'])('una adreça de fora (%s) cau al detall de l’acte', (mainHref) => {
     pinta({ id: 'fira', title: 'Fira', date: '2026-11-14', mainHref });
     expect(enllac()).toBe('/events/fira');
+  });
+});
+
+/* Onada 6 (prompt 261009_0230, punt 1; pla de l'Onada 5, tasca 16: «El botó
+   "Agenda" de la targeta portarà a la data específica del Calendari») ·
+   L'etiqueta «Agenda» d'un acte porta a la vista Mes del Calendari amb el dia
+   de l'acte triat (el de la seua insígnia), amb el Link del router. La
+   pastilla continua portant al mes (ordre del Mestre, 261001, carril A). */
+describe('Onada 6 · l’etiqueta «Agenda» porta al dia de l’acte', () => {
+  const agenda = () => [...arrel.querySelectorAll('.sp-card-labels li')].find((li) => li.textContent === 'Agenda');
+
+  test('un acte de tot el dia: /calendari?vista=mes&date=2026-11-14, amb la diana de l’etiqueta enllaçada', () => {
+    vi.stubEnv('TZ', 'Europe/Madrid');
+    pinta({ id: 'fira', title: 'Fira', date: '2026-11-14' });
+    const li = agenda();
+    expect(li.className).toBe('sp-card-label sdp-badge-category sp-card-label--enllac');
+    const enllac = li.querySelector('a');
+    expect([enllac.getAttribute('href'), enllac.className, enllac.textContent]).toEqual(['/calendari?vista=mes&date=2026-11-14', 'sp-card-label', 'Agenda']);
+    // La pastilla no canvia: el mes.
+    act(() => { arrel.querySelector('.btn-date-time').click(); });
+    expect(mocks.navigate).toHaveBeenLastCalledWith('/calendari?mes=2026-11');
+  });
+
+  test('el dia és el de la insígnia, en hora local, també a la vora de la mitjanit', () => {
+    vi.stubEnv('TZ', 'Europe/Madrid');
+    pinta({ id: 'b', title: 'Ball', date: '2026-08-14', time: '00:30' });
+    expect(insignia().getAttribute('datetime')).toBe('2026-08-14');
+    expect(agenda().querySelector('a').getAttribute('href')).toBe('/calendari?vista=mes&date=2026-08-14');
+  });
+
+  test('sense acte vàlid (cap dia real o cap model), l’etiqueta de sempre, sense enllaç', () => {
+    vi.stubEnv('TZ', 'Europe/Madrid');
+    pinta({ id: 'x', title: 'Ball', created_at: '2026-09-30T22:30:00+00:00' });
+    expect(agenda().className).toBe('sp-card-label sdp-badge-category');
+    expect(agenda().querySelector('a')).toBeNull();
+    cleanup();
+    arrel = document.createElement('div');
+    act(() => { render(<EventCard item={{ id: 'f', title: 'Fira', date: '2026-11-14' }} />, { container: arrel }); });
+    expect(agenda().querySelector('a')).toBeNull();
+  });
+
+  test('un acte amb etiquetes pròpies les conserva tal qual', () => {
+    pinta({ id: 'fira', title: 'Fira', date: '2026-11-14', labels: [{ text: 'Festa', className: 'sdp-badge-tag' }] });
+    expect([...arrel.querySelectorAll('.sp-card-labels li')].map((li) => [li.textContent, li.className, li.querySelector('a')])).toEqual([
+      ['Festa', 'sp-card-label sdp-badge-tag', null]
+    ]);
+  });
+
+  test('etiquetaAgendaDelDia: un dia que existix porta l’enllaç; la brossa, l’etiqueta de sempre', () => {
+    expect(etiquetaAgendaDelDia('2026-11-14')).toEqual({ text: 'Agenda', className: 'sdp-badge-category sp-card-label--enllac', href: '/calendari?vista=mes&date=2026-11-14' });
+    for (const brossa of [null, undefined, '', '2026-02-30', '0026-01-01', '2026-11-14T10:00', 'demà']) {
+      expect(etiquetaAgendaDelDia(brossa), String(brossa)).toEqual({ text: 'Agenda', className: 'sdp-badge-category' });
+    }
   });
 });
 

@@ -173,6 +173,76 @@ export function senseXatPerDefecte(converses, clau) {
   return converses.filter((conversa) => conversa?.perDefecte !== clau);
 }
 
+/* ─────────────── Onada 6 · La IAIA al xat (tasca 12 del pla 261009_0245) ─────────────── */
+
+/**
+ * La cara de la IAIA al xat: la iaia del mocador roig i el mòbil, al centre de
+ * baix de la il·lustració «Festa del Poble» (xat_portada.jpg, 1024 × 1024).
+ * Cap fitxer nou: Avatar la retalla amb la variant d'enquadrament 'iaia'
+ * (modules.css). El padró i el perfil conserven el seu avatar de sempre
+ * (agentsSeed.js): només el xat la pinta així (CaraXat).
+ */
+export const CARA_DE_LA_IAIA = Object.freeze({ src: '/assets/uploads/brain/xat_portada.jpg', enquadrament: 'iaia' });
+
+/* Els avatars amb què arriba la IAIA al xat: el d'AJUDA (el del padró) i el
+   del catàleg d'agents, que avui són el mateix fitxer. */
+const AVATARS_DE_LA_IAIA = new Set([AJUDA_PER_CLAU.iaia.avatar, AGENTS_MAP.IAIA.avatar_url].filter(Boolean));
+
+/** { src, enquadrament } de la cara de la IAIA si `src` és el seu avatar; si no, null. */
+export function caraDeLaIAIA(src) {
+  return typeof src === 'string' && AVATARS_DE_LA_IAIA.has(src.trim()) ? CARA_DE_LA_IAIA : null;
+}
+
+/* Un fil de diverses persones on la IAIA és una més no és el seu xat. */
+const GRUPALS = new Set(['grup', 'canal', 'comunitat']);
+
+/**
+ * Cert si `conversa` és el xat de la IAIA: la seua fila per defecte, el fil
+ * de la llavor, un directe amb ella o el xat públic de la seua pàgina (/iaia,
+ * on porta la fila en remot). Un grup on la IAIA és una participant més, no.
+ */
+export function esXatDeLaIAIA(conversa) {
+  if (!conversa) return false;
+  if (conversa.perDefecte) return conversa.perDefecte === 'iaia';
+  if (!jaTeElXat(conversa, 'iaia')) return false;
+  return conversa.subjecte?.tipus === 'pagina' || !GRUPALS.has(conversa.tipus);
+}
+
+/**
+ * Tasca 12 · El xat de la IAIA es diu «IAIA MarIA» i porta la seua cara,
+ * també el xat públic de la seua pàgina, que el servidor titula «L'ànima de
+ * la iaia» (2610042330_xat_pagina_iaia.sql) i abans substituïa la fila
+ * sintètica en obrir-la. Només la fila: el subjecte no es toca, i la
+ * capçalera continua dient «Sobre: L'ànima de la iaia», que és la pàgina.
+ * Capa de presentació, sense migració. Pura: la mateixa referència si no és
+ * el xat de la IAIA o si ja va vestida.
+ */
+export function vestixLaIAIA(conversa) {
+  if (!conversa || conversa.perDefecte || !esXatDeLaIAIA(conversa)) return conversa;
+  const { nom, avatar } = AJUDA_PER_CLAU.iaia;
+  if (conversa.titol === nom && conversa.imatgeUrl === avatar) return conversa;
+  return { ...conversa, titol: nom, imatgeUrl: avatar };
+}
+
+/**
+ * Tasca 12 · Amb el nivell d'IA a 0 (Apagada, sections/realitat/nivellIaia.js)
+ * la IAIA no apareix al xat: les converses sense la seua fila per defecte ni
+ * cap xat seu (esXatDeLaIAIA). La mateixa referència si no en lleva cap.
+ */
+export function senseLaIAIA(converses) {
+  if (!Array.isArray(converses) || !converses.some(esXatDeLaIAIA)) return converses;
+  return converses.filter((conversa) => !esXatDeLaIAIA(conversa));
+}
+
+/**
+ * Onada 6 (beta testers) · L'id del grup «Beta testers» de la llavor
+ * (xatSeed.js), on porta «Informa d'un error» en mode seed. Viu en este mòdul
+ * lleuger perquè la interfície el reconega sense importar la llavor sencera
+ * (que porta navigation.js i les converses de mostra); xatSeed.js l'importa
+ * d'ací. Només la llavor: en remot no hi ha cap fil amb este id.
+ */
+export const ID_FIL_BETA_TESTERS_LLAVOR = '7c2a1d9e-3b4f-4a5c-9d6e-1f2a3b4c5d09';
+
 /* Els rols que manen en una entitat: els de ROLS_QUE_SIGNEN
    (IdentitatContext.jsx), que este mòdul neutre no importa.
    Auditoria 261007 (B) · No s'importa: IdentitatContext.jsx porta React, el

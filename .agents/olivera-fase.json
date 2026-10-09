@@ -1,0 +1,4 @@
+{
+  "$comment": "Fase de la convocatòria v4 de la porta Olivera (tooling/gates/porta-olivera.mjs, faseConvocatoria). «avis»: les troballes (àncora repetida, viu sense motiu, trinitat, secció 0, pla incomplet) ixen com a avisos i no tanquen cap porta. «bloqueig»: tanquen la convocatòria (document.mjs context i create de prompt), els hooks d'escriptura de petorretes, l'informe i el tancament. El canvi de fase és decisió del Mestre (laboratori 261009_0400_higiene_claude, LLEGIU_PRIMER §3, pas 8). Cap programa no la pot afluixar per paràmetre. Un fitxer il·legible o amb un altre valor es llig com a «bloqueig».",
+  "fase": "avis"
+}

@@ -1,0 +1,164 @@
+{
+  "schema": "sdp.higiene.substitucions.v1",
+  "$comment": "Paquet 261009_0400_higiene_claude (Onada 6). Cada fitxer instal·lat que canvia ho fa amb substitucions exactes sobre els seus bytes: «abans» (o el text de la peça «abansPeca» de PECES.txt) ha d'aparéixer exactament una vegada; «despres» el substituïx, o la «peca» de PECES.txt amb el «mode» (substituix, davant o darrere). Si el resultat ja hi és, el canvi està aplicat. «bases» són els sha256 dels originals quan es va preparar el paquet: un altre sha és deriva i prepara-pla.mjs es nega, llevat de --sobre-base-nova. «bases»: null vol dir que només manen els ancoratges (fitxers de l'arrel). Preparat per Claude (Opus 5.5) el 261009 sobre l'arbre de backup-notes-publish (e9776630 amb canvis sense commit).",
+  "fitxers": [
+    {
+      "ruta": "tooling/gates/porta-olivera.mjs",
+      "bases": ["1fc3a9406994216ba0c98a66c98d20ed9eeaf9f954b293d98768be3064cb6f51"],
+      "canvis": [
+        { "motiu": "Capçalera: què és la convocatòria v4 i qui la crida.", "abans": " *  Ús:\n", "mode": "davant", "peca": "porta.capcalera" },
+        { "motiu": "Bandera de fase i llindar del sediment.", "abans": "const MARGE_RELLEU = 10 * 60 * 1000;\n", "mode": "darrere", "peca": "porta.constants" },
+        { "motiu": "Motor de la convocatòria v4: vida justificada, àncores repetides, trinitat, secció 0, pla complet, sediment, Escriptori net de la fase i tancament.", "abans": "/** Les tres comprovacions de la transició Pla → Petorreta: la taula, el pla i la secció 0.\n", "mode": "davant", "peca": "porta.convocatoria" },
+        { "motiu": "checkOlivera admet l'hora i la fase (proves).", "abans": "export function checkOlivera(arrel = arrelPerDefecte(), { contingut = null, dia = avui(), fitxer = null } = {}) {\n", "despres": "export function checkOlivera(arrel = arrelPerDefecte(), { contingut = null, dia = avui(), fitxer = null, ara = Date.now(), fase = null } = {}) {\n" },
+        { "motiu": "Els hooks (checkPayload i antigravity-hook) passen per la convocatòria v4.", "abans": "      errors.push('La secció 0 té caselles sense marcar. Cap petorreta ix del Mas amb la llista a mitges.');\n    }\n  }\n\n  return { valid: errors.length === 0, errors };\n}\n", "peca": "porta.checkolivera.fi" },
+        { "motiu": "--arxiva se'n du la línia de declaració sencera (motiu inclòs) i reapunta a l'arxiu el consumidor citat.", "abans": "  const canvis = [];\n  const reapuntats = new Set();\n  for (const a of ancoresDe(text)) {\n    const nom = resolAncora(a.raw, presentsAbans);\n    if (!nom || !perNom.has(nom)) continue;\n    const viu = actives.some(([inici, final]) => a.inici >= inici && a.inici < final);\n", "peca": "porta.despenja" },
+        { "motiu": "L'informe mostra el motiu de cada viu, les troballes i el sediment; en fase «bloqueig» les troballes el fan eixir amb 1.", "abans": "  return checkTaula(arrel, { dia }).valid ? 0 : 1;\n}\n", "peca": "porta.informe.fi" },
+        { "motiu": "Opcions noves: --tancament i --torn.", "abans": "  const o = { informe: false, hook: false, arxiva: false, repara: false, renomena: null, a: null, sec: false, reapunta: false, sessio: null, noms: [] };\n", "despres": "  const o = { informe: false, hook: false, arxiva: false, repara: false, renomena: null, a: null, sec: false, reapunta: false, sessio: null, noms: [], tancament: false, torn: null };\n" },
+        { "motiu": "Lectura de --tancament i --torn.", "abans": "    else if (a === '--repara') o.repara = true;\n", "peca": "porta.opcions" },
+        { "motiu": "--tancament és un mode; --torn només hi val.", "abans": "  if ([o.informe, o.hook, o.arxiva, o.repara, o.renomena !== null].filter(Boolean).length > 1) throw new Error(`Tria un sol mode. ${US}`);\n", "peca": "porta.mode" },
+        { "motiu": "Ús amb el mode nou.", "abans": "| --renomena VELL --a NOU [--sec]';\n", "despres": "| --renomena VELL --a NOU [--sec] | --tancament [--torn ID]';\n" },
+        { "motiu": "Mode --tancament (el crida tancament.mjs).", "abans": "  if (!o.hook) { process.exitCode = informe(arrel); return; }\n", "mode": "davant", "peca": "porta.main" }
+      ]
+    },
+    {
+      "ruta": "tooling/documental/draft-write.mjs",
+      "bases": ["81c52f55645358ef10aabca8098fb7977f7c6e9cefd0381a3b64064ebc066186"],
+      "canvis": [
+        { "motiu": "Importa la convocatòria v4.", "abans": "import { checkTaula, prosaIndex, ancoresDe, apuntaA, insereixLlista, nomsSolts } from '../gates/porta-olivera.mjs';\n", "despres": "import { checkTaula, checkConvocatoria, prosaIndex, ancoresDe, apuntaA, insereixLlista, nomsSolts } from '../gates/porta-olivera.mjs';\n" },
+        { "motiu": "Els avisos de la convocatòria (fase «avis») es guarden per a tornar-los.", "abans": "  let index, created, temporary, committed = false;\n", "despres": "  let index, created, temporary, committed = false;\n  let avisos = [];\n" },
+        { "motiu": "create d'un prompt revalida també la convocatòria dins del lock i en guarda els avisos.", "abansPeca": "draft.abans", "peca": "draft.despres" },
+        { "motiu": "writeIndexedDraft torna els avisos (abans no tornava res).", "abans": "    fs.closeSync(lockFd); removeOwned(root, lock, lockStat);\n  }\n}", "despres": "    fs.closeSync(lockFd); removeOwned(root, lock, lockStat);\n  }\n  return { avisos };\n}" }
+      ]
+    },
+    {
+      "ruta": "tooling/documental/turns.mjs",
+      "bases": ["502d839a69eb806700130e25a260a5b6b3f0f2e2f5744ac2ea29678a6942d6cf"],
+      "canvis": [
+        { "motiu": "Importa la convocatòria v4.", "abans": "import { checkTaula } from '../gates/porta-olivera.mjs';\n", "despres": "import { checkTaula, checkConvocatoria } from '../gates/porta-olivera.mjs';\n" },
+        { "motiu": "context d'un prompt passa per la convocatòria v4 i en guarda els avisos.", "abansPeca": "turns.abans", "peca": "turns.despres" },
+        { "motiu": "deliverContext torna els avisos de la fase «avis» amb el rebut.", "abans": "    return {reflex:`sdp:${id}:${receiptId}`, route, template:route.templateText};\n", "despres": "    return {reflex:`sdp:${id}:${receiptId}`, route, template:route.templateText, avisos};\n" }
+      ]
+    },
+    {
+      "ruta": "tooling/wiki/document.mjs",
+      "bases": ["8acb0f92087f1eb65309101b68000a2b334b79837c4b90e45ed170e43da12810"],
+      "canvis": [
+        { "motiu": "create torna els avisos de la convocatòria quan n'hi ha.", "abansPeca": "document.create.abans", "peca": "document.create.despres" },
+        { "motiu": "Els avisos van per stderr.", "abans": "async function main() {\n", "mode": "davant", "peca": "document.avisa" },
+        { "motiu": "context escriu els avisos de la fase «avis» abans de redactar el prompt.", "abans": "    result={reflex:d.reflex,route:d.route.id,template:d.template};\n", "despres": "    result={reflex:d.reflex,route:d.route.id,template:d.template};\n    avisa(d.avisos);\n" },
+        { "motiu": "create també els escriu.", "abans": "  } else if(command==='create') result=createDraft(root,o['turn-id'],{route:o.route,file:o.file,title:o.title,description:o.description,actor:o.actor});\n", "despres": "  } else if(command==='create') { result=createDraft(root,o['turn-id'],{route:o.route,file:o.file,title:o.title,description:o.description,actor:o.actor}); avisa(result.avisos); }\n" }
+      ]
+    },
+    {
+      "ruta": "tooling/gates/antigravity-hook.mjs",
+      "bases": ["99c2d2e67e96bf96ff0da25a8be355f6f96a3c9214bcd28aefccb4fd46ae2901"],
+      "canvis": [
+        { "motiu": "Capçalera: què canvia amb la porta v4.", "abans": " *  Per què (laboratori 261006_0300_ledger_claude/t6_higiene, DIAGNOSI.txt): la\n", "mode": "davant", "peca": "hook.capcalera" },
+        { "motiu": "La taula de pre-invocation és checkEscriptori quan la porta la té.", "abans": "    return { taula: () => olivera.checkTaula(root), heretats: () => heretatsDe(root, olivera) };\n", "peca": "hook.carrega" },
+        { "motiu": "Els heretats porten el motiu de cada viu.", "abans": "  return { dia, documents, artefactes: vells.length, artefactesSenseNom: vells.filter((n) => !NOM_PER_NOM.test(n)).length };\n", "peca": "hook.heretats" },
+        { "motiu": "El briefing rep la vida.", "abans": "function missatgeBriefing({ dia = '', documents = [], artefactes = 0, artefactesSenseNom = 0 } = {}) {\n", "despres": "function missatgeBriefing({ dia = '', documents = [], artefactes = 0, artefactesSenseNom = 0, vida = null } = {}) {\n" },
+        { "motiu": "Amb la porta v4 la declaració caduca amb el seu motiu: el briefing no ho contradiu. Sense vida, el text d'abans.", "abans": "${limit} Una declaració de viu no caduca sola. Decidix-los", "despres": "${limit}${Array.isArray(vida) && vida.length ? ' Una declaració caduca amb el seu motiu: un RANCI ja no en té cap que es comprove.' : ' Una declaració de viu no caduca sola.'} Decidix-los" },
+        { "motiu": "El briefing diu qui necessita cada viu, els rancis primer.", "abans": "Informa el Mestre en una línia.`;\n}\n", "peca": "hook.briefing.fi" }
+      ]
+    },
+    {
+      "ruta": "tooling/gates/tancament.mjs",
+      "bases": ["1a47c5a7d0ffd350ab3d02c0198b7f82142be1f7710beb32ca1d9e5471811872"],
+      "canvis": [
+        { "motiu": "Comprovació «olivera» a environmentChecks, amb el torn que es tanca.", "abans": "export async function environmentChecks(root,scope='documents') {\n  const checks=[],errors=[];\n  const commands=[['plantilles',['tooling/gates/porta-plantilles.mjs']],\n", "peca": "tanc.env" },
+        { "motiu": "checkClosure passa el torn a environmentChecks.", "abans": "  const environment=await environmentChecks(root,turnCheck.turn?.scope||'documents');\n", "despres": "  const environment=await environmentChecks(root,turnCheck.turn?.scope||'documents',{turnId:id||null});\n" }
+      ]
+    },
+    {
+      "ruta": "tooling/brain/despertar.mjs",
+      "bases": ["609bee9f89b501ca4101fd8c9f00adf79f416a899c468ae663f08a8889d21544"],
+      "canvis": [
+        { "motiu": "El segell de l'ESTAT accepta també AAAA-MM-DD HH:MM.", "abansPeca": "despertar.segell.abans", "despres": "      segell: segellDe(titol),\n" },
+        { "motiu": "segellDe, exportada.", "abans": "  throw new Error('ESTAT no disponible: ni capçalera ESTAT_ACTUAL ni bloc delimitat');\n}\n", "mode": "darrere", "peca": "despertar.segellDe" },
+        { "motiu": "avisRanci exportada per a les proves.", "abans": "function avisRanci(estat, activitat) {\n", "despres": "export function avisRanci(estat, activitat) {\n" },
+        { "motiu": "El canal fresc rep l'informe Olivera.", "abans": "function textFresc({ branch, hash, ara, estat, taula, avis }) {\n", "despres": "function textFresc({ branch, hash, ara, estat, taula, avis, olivera = '' }) {\n" },
+        { "motiu": "Secció 1b del canal fresc.", "abansPeca": "despertar.fresc.abans", "peca": "despertar.fresc.despres" },
+        { "motiu": "informeOlivera i main asíncron.", "abans": "function main() {\n  const foto = fotografia();\n", "peca": "despertar.main" },
+        { "motiu": "main passa l'informe Olivera al canal fresc.", "abans": "  process.stdout.write(textFresc(foto));\n", "despres": "  process.stdout.write(textFresc({ ...foto, olivera: await informeOlivera(rootDir) }));\n" }
+      ]
+    },
+    {
+      "ruta": "tooling/brain/mapa-consola.mjs",
+      "bases": ["cea65b97395a55a5a611bbd5ffc0dd698244b9cdcd59d05ed8dff9c027c29b98"],
+      "canvis": [
+        { "motiu": "Període d'un StartCalendarInterval (el plist del cron d'higiene corre a les 05:30, sense StartInterval).", "abans": "/** Lectura mínima d'un plist d'Apple: només les claus que usa el calendari. */\n", "mode": "davant", "peca": "mapa.calendari" },
+        { "motiu": "L'interval del llançador també ix d'un StartCalendarInterval: sense, la tasca quedava «desconegut» per sempre i vigilants-vius passava a N/A.", "abans": "    interval: enter('StartInterval'),\n", "despres": "    interval: enter('StartInterval') ?? intervalCalendari(xml),\n" }
+      ]
+    },
+    {
+      "ruta": "scripts/immunitari/plaquetes.mjs",
+      "bases": ["f33b8349ce3f5d578a3afb351e814d52452ab03801441bbd6ec96e112de28654"],
+      "canvis": [
+        { "motiu": "Empremta de les operacions i darrera recepta.", "abans": "function arbreNet() {\n", "mode": "davant", "peca": "plaquetes.empremta" },
+        { "motiu": "Una recepta nova només si l'empremta canvia.", "abans": "  const recepta = { id: `R-${Date.now()}`, data: new Date().toISOString(), operacions: ops };\n", "peca": "plaquetes.recepta" }
+      ]
+    },
+    {
+      "ruta": ".agents/cron/registre_tasques.json",
+      "bases": ["b78dc8561dc947f8174482d874174fdcf50daa4ab98559b42663840a91031725"],
+      "canvis": [
+        { "motiu": "higiene-basica: el que fa de veres el nivell L1 del cron.", "abansPeca": "reg.hb.abans", "peca": "reg.hb.despres" },
+        { "motiu": "higiene-basica la llança higiene-diaria.", "abansPeca": "reg.hb.llanc.abans", "peca": "reg.hb.llanc.despres" },
+        { "motiu": "refresc-tokens es retira amb motiu.", "abansPeca": "reg.refresc.abans", "peca": "reg.refresc.despres" },
+        { "motiu": "Tasca nova higiene-diaria (launchd org.socdepoble.higiene, 05:30).", "abansPeca": "reg.diaria.abans", "mode": "darrere", "peca": "reg.diaria" }
+      ]
+    },
+    {
+      "ruta": ".agents/skills/core-higiene-escriptori/SKILL.md",
+      "bases": ["c63fa69802559b09be0c1f271b307e54a572bf928c15a9bc13d54d521930a704", "b84d0d1b36fc1c7ddd81898205df71f8605f3b908a3c1ae38bbc2fc7f921b114"],
+      "canvis": [
+        { "motiu": "description de 197 caràcters, sense «: » (schema.json:48). Accepta també la del paquet 261009_0400_consola_claude (G4) si s'ha aplicat abans.", "abans": ["description: Usa-la en arrencar cada conversa (abans de la primera resposta al Mestre), quan el hook injecte un briefing de taula o l'Escriptori estiga brut, abans de crear un prompt, una petorreta, un pla o una auditoria, i abans de tancar la sessió. L'orquestradora decidix cada document declarat viu i arxiva el consumit amb les ordres de la porta Olivera.\n", "description: Usa-la en arrencar cada conversa, quan el hook injecte un briefing o l'Escriptori estiga brut, abans de crear un prompt, un pla o una auditoria i abans de tancar. Decidix què és viu i arxiva el consumit.\n"], "despres": "description: Usa-la en arrencar, quan el hook avise o l'Escriptori estiga brut, abans de convocar (pla primer, prompt després) i abans de tancar. Cada viu porta motiu; el consumit s'arxiva amb la porta Olivera.\n" },
+        { "motiu": "Versió 4.0.0.", "abans": "version: 3.4.0\n", "despres": "version: 4.0.0\n" },
+        { "motiu": "La declaració porta motiu i caduca amb ell.", "abans": "La declaració no caduca sola: si ningú la revisa, el document es queda a la taula amb la porta en verd, i `npm run olivera:arxiva` respon «Res a arxivar» perquè només s'emporta el que no està declarat.", "despres": "Des de la porta v4 (261009), la declaració porta el seu motiu i caduca amb ell: si ningú la revisa, el document es queda a la taula, però l'informe el marca 🍂 quan el motiu ja no es comprova, i `npm run olivera:arxiva` continua responent «Res a arxivar» perquè només s'emporta el que no està declarat." },
+        { "motiu": "Com es declara un viu.", "abans": "Per això la neteja té moments fixos i es fa amb les ordres de la porta.\n", "mode": "darrere", "peca": "higiene.paragraf" },
+        { "motiu": "Abans de convocar, el procediment nou.", "abans": "3. **Abans de convocar**: abans de crear un prompt, una petorreta, un pla o una auditoria.\n", "despres": "3. **Abans de convocar**: abans de crear un prompt, una petorreta, un pla o una auditoria, amb el procediment «Convocatòria» d'ací baix.\n" },
+        { "motiu": "Decidix el que viu: una línia per document amb el seu motiu.", "abans": "2. **Decidix el que viu:** tot document que ha de continuar s'ancora a `00_index_escriptori.md` davall d'una capçalera `## Activitat en curs`, amb la seua àncora sola a la línia. La porta el conserva siga del dia que siga, i l'informe llista els declarats vius.\n", "despres": "2. **Decidix el que viu:** tot document que ha de continuar s'ancora a `00_index_escriptori.md` davall d'una capçalera `## Activitat en curs`, una línia per document i amb el seu motiu darrere de «·» (procediment «Convocatòria», pas 3). L'informe llista cada declarat viu amb el seu motiu, i `--arxiva` se'n du la línia sencera.\n" },
+        { "motiu": "Procediment «Convocatòria».", "abans": "## Límits\n", "mode": "davant", "peca": "higiene.convocatoria" },
+        { "motiu": "El preflight mecànic comprova també la convocatòria v4.", "abans": "`document.mjs context` i `create` per a `prompt.local` o `prompt.consell` comproven la taula abans d'emetre un rebut nou.", "despres": "`document.mjs context` i `create` per a `prompt.local` o `prompt.consell` comproven la taula i la convocatòria v4 (vida justificada, àncores sense repetir, trinitat i pla complet) abans d'emetre un rebut nou; en fase «avis» la convocatòria només avisa." },
+        { "motiu": "Qui sosté un document nascut pel circuit, i el tancament.", "abans": "Un document solt creat pel circuit queda declarat viu a «## Activitat en curs» fins que l'orquestradora decidisca el seu relleu.", "despres": "Un document solt creat pel circuit queda declarat viu a «## Activitat en curs», i el sosté el torn del seu rebut mentre el torn siga obert; després necessita un consumidor o una retenció del Mestre. `tancament.mjs` passa la porta i avisa dels vius que només sosté el torn que es tanca." }
+      ]
+    },
+    {
+      "ruta": ".agents/skills/wiki-documentacio-i-reflex/SKILL.md",
+      "bases": ["e9c8be43a0e6dd68338eab3fa90da430a7514c79e7df2ec92ceecc34360fc4fe"],
+      "canvis": [
+        { "motiu": "Lliçó 261009 en positiu: les tasques de l'Onada següent naixen al seu pla.", "abans": "amb el que ha acabat, el que està en marxa i les preguntes obertes.\n", "mode": "darrere", "peca": "reflex.llico" }
+      ]
+    },
+    {
+      "ruta": ".agents/skills/core-empaquetat-wp/SKILL.md",
+      "bases": ["eb540fd752126dac0a5885be77708d4b4b30cf3c83ebd65649d14318fdf503c1"],
+      "canvis": [
+        { "motiu": "Destinació única wordpress-plugin/builds/ i cap esborrat a mà.", "abans": "Després de generar i moure l'arxiu ZIP a `01_produccio/builds/`, l'agent TÉ L'OBLIGACIÓ absoluta d'esborrar (`rm -rf`) completament qualsevol directori temporal o subproducte intermedi utilitzat durant la generació de la versió. Si deixes rastre a l'arrel, estàs contravenint el BIOS i seràs auditat amb penalització.\n", "peca": "empaquetat.s3" },
+        { "motiu": "Retenció, constància i Vincles.", "abansPeca": "empaquetat.s4.abans", "peca": "empaquetat.s4" }
+      ]
+    },
+    {
+      "ruta": "tests/backend_consolidacio.test.mjs",
+      "bases": ["0ad633ef976d63e4fad5dc4b748e4064489792ce41802c583133e050a569d618"],
+      "canvis": [
+        { "motiu": "La prova del cablejat del tancament aïlla també la comprovació nova «olivera».", "abans": "  for (const rel of ['tooling/gates/porta-plantilles.mjs', 'tooling/gates/porta-autoritat.mjs', 'tooling/verify-ledger.mjs', 'tooling/gates/segella.mjs', 'tooling/wiki/compile-wiki-to-app.mjs', 'tooling/brain/cataleg_skills.mjs']) {\n", "despres": "  for (const rel of ['tooling/gates/porta-olivera.mjs', 'tooling/gates/porta-plantilles.mjs', 'tooling/gates/porta-autoritat.mjs', 'tooling/verify-ledger.mjs', 'tooling/gates/segella.mjs', 'tooling/wiki/compile-wiki-to-app.mjs', 'tooling/brain/cataleg_skills.mjs']) {\n" }
+      ]
+    },
+    {
+      "ruta": "package.json",
+      "bases": null,
+      "canvis": [
+        { "motiu": "Script higiene:cron (L0; amb -- --aplica, L1).", "abans": "    \"olivera:arxiva\": \"node tooling/gates/porta-olivera.mjs --arxiva\",\n", "despres": "    \"olivera:arxiva\": \"node tooling/gates/porta-olivera.mjs --arxiva\",\n    \"higiene:cron\": \"node tooling/higiene/cron_higiene.mjs\",\n" }
+      ]
+    },
+    {
+      "ruta": ".gitignore",
+      "bases": null,
+      "canvis": [
+        { "motiu": "El comentari de /release/ deia una destinació que l'empaquetador no usa.", "abans": "# Paquets de release de l'enxufe (wordpress-plugin/eines/empaqueta.mjs): van a GitHub Releases, no al repositori.\n", "despres": "# Carpeta antiga de paquets (buida). wordpress-plugin/eines/empaqueta.mjs escriu a wordpress-plugin/builds/\n# (destinació única, skill core-empaquetat-wp), i els *.zip queden fora per la regla de més avall.\n" },
+        { "motiu": "Informes i registres del cron d'higiene, l'estat local de Plaquetes i les quarantenes noves del circuit.", "abans": "/_multimedia_de_poble/", "despres": "/_multimedia_de_poble/\n\n# Cron d'higiene (261009) i Plaquetes: informes, registres i receptes són estat local de la màquina.\n# Ignorar no desversiona: el que ja és a l'índex (receptes, cron.out, cron.err) ho retira el Mestre\n# amb git rm --cached (INVENTARI_BROSSA del laboratori 261009_0400_higiene_claude).\n.immunitari/higiene/\n.immunitari/higiene-cron.out\n.immunitari/higiene-cron.err\n.immunitari/cron.out\n.immunitari/cron.err\n.immunitari/receptes/\n# Quarantenes del circuit (cron_higiene.mjs i neteja_brossa_arrel.mjs): el que s'hi mou no torna a\n# entrar a git per una altra ruta. Les quarantenes que ja són a l'índex hi continuen (INVENTARI §3.5).\n/.sdp-paperera/quarantena-*/" }
+      ]
+    }
+  ]
+}

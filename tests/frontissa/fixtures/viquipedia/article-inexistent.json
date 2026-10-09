@@ -1,0 +1,6 @@
+{
+  "captureId": "viquipedia-article-inexistent-261009",
+  "capturedAt": "2026-10-08T23:01:51.008Z",
+  "url": "https://ca.wikipedia.org/w/api.php?action=query&format=json&formatversion=2&origin=*&maxlag=5&prop=extracts%7Cpageimages%7Cpageprops%7Cimages%7Ccoordinates&exintro=1&explaintext=1&piprop=original%7Cname&imlimit=50&redirects=1&titles=Poble+Inexistent+de+Prova+SdP",
+  "body": {"batchcomplete":true,"query":{"pages":[{"ns":0,"title":"Poble Inexistent de Prova SdP","missing":true}]}}
+}

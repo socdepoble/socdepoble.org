@@ -531,21 +531,22 @@ test('T61 · no-regressió: a /control l’únic actiu és el botó CONTROL de l
 });
 
 /* ── T3 (ordre del Mestre, 260930; esmena del 261006) · Barra inferior mòbil ──
-   Ordre explícit (ja no ix de tallar SECTIONS): Xat, Mur, el botó central
-   «Panell de Control», Pobles i Mercat. Telefonades n'ha eixit per decisió
-   del Mestre (261006, «Sí, fora de la barra»): l'avís de D17 viu a la vista
-   Telefonades del rail del Xat (/xat?vista=telefonades), no a la barra. La
-   barra lateral conserva el seu ordre. */
+   Ordre explícit (ja no ix de tallar SECTIONS). Telefonades n'ha eixit per
+   decisió del Mestre (261006, «Sí, fora de la barra»): l'avís de D17 viu a
+   la vista Telefonades del rail del Xat (/xat?vista=telefonades), no a la
+   barra. Onada 5 (ordre del Mestre, 261008): Xat, Mur, el botó central
+   «Panell de Control», Mercat i Pobles, el mateix ordre que les quatre
+   primeres de la barra lateral, que conserva el seu. */
 const AVIS_D17 = 'Aquest és un projecte lliure CC. Aquesta funció està prevista per a quan puguem mantenir-la econòmicament.';
 const casellaMobil = (el) => el.getAttribute('href') ?? el.getAttribute('aria-label') ?? el.textContent;
 
-test('T3 · la barra mòbil porta Xat, Mur, Panell de Control, Pobles i Mercat, en eixe ordre, i res més', async () => {
+test('T3 · la barra mòbil porta Xat, Mur, Panell de Control, Mercat i Pobles, en eixe ordre, i res més', async () => {
   vi.stubGlobal('innerWidth', 1024);
   await muntaSenseSessio('/mur', async () => {
     const [principal, mobil] = await barres();
-    expect([...mobil.children].map(casellaMobil)).toEqual(['/xat', '/mur', 'Panell de Control', '/pobles', '/mercat']);
+    expect([...mobil.children].map(casellaMobil)).toEqual(['/xat', '/mur', 'Panell de Control', '/mercat', '/pobles']);
     expect([...mobil.children].map((el) => el.getAttribute('aria-label') ?? el.textContent))
-      .toEqual(['Xat', 'Mur', 'Panell de Control', 'Pobles', 'Mercat']);
+      .toEqual(['Xat', 'Mur', 'Panell de Control', 'Mercat', 'Pobles']);
     expect([...mobil.children].map((el) => el.tagName)).toEqual(['A', 'A', 'BUTTON', 'A', 'A']);
     /* La barra mòbil és germana directa del <main> i l'últim node de la
        closca: cap embolcall ni cap node buit al voltant (MobileNav). */
@@ -554,6 +555,11 @@ test('T3 · la barra mòbil porta Xat, Mur, Panell de Control, Pobles i Mercat, 
     /* La barra lateral no canvia: continua amb l'ordre de SECTIONS. */
     expect([...principal.querySelectorAll('a.nav-item')].slice(0, 4).map((a) => a.getAttribute('href')))
       .toEqual(['/xat', '/mur', '/mercat', '/pobles']);
+    /* Onada 5 · Coherència: els enllaços de la barra mòbil són, en el mateix
+       ordre, les quatre primeres de la lateral. Els arrays continuen separats
+       (T3): si algú en canvia un sense l'altre, ho diu esta línia. */
+    expect([...mobil.querySelectorAll('a.nav-item')].map((a) => a.getAttribute('href')))
+      .toEqual([...principal.querySelectorAll('a.nav-item')].slice(0, 4).map((a) => a.getAttribute('href')));
     /* Telefonades no és cap ruta, ni a la barra mòbil ni a la lateral. */
     for (const nav of [principal, mobil]) expect(nav.querySelector('a[href*="telefonades"]')).toBeNull();
     expect(actius(mobil)).toEqual(['/mur']);
@@ -664,6 +670,23 @@ test('T4 · el mode de l’àlies mana sobre un ?mode rebut i la resta de la con
   await muntaSenseSessio('/crear-compte?mode=entrar&tornar=%2Fmur&origen=cartell', async () => {
     await waitFor(() => expect(window.location.pathname).toBe('/registre'));
     expect(consulta()).toEqual({ mode: 'crear', tornar: '/mur', origen: 'cartell' });
+  });
+});
+
+/* Onada 5 (ordre del Mestre, 261008) · Àlies «chat» → «xat», amb el patró
+   de /ia → /iaia: un enllaç copiat amb la paraula anglesa aterra al Xat i
+   conserva la consulta. Abans /chat era NotFound i /chat/<fil>, «Element no
+   trobat». El fil es torna a codificar: una barra dins de l'identificador
+   no talla la ruta en dos. */
+test.each([
+  ['/chat', '/xat', {}],
+  ['/chat?vista=comunitats', '/xat', { vista: 'comunitats' }],
+  ['/chat/abc', '/xat/abc', {}],
+  ['/chat/fil%2F1?vista=comunitats', '/xat/fil%2F1', { vista: 'comunitats' }]
+])('Onada 5 · l’àlies %s porta a %s i conserva la consulta', async (ruta, desti, esperat) => {
+  await muntaSenseSessio(ruta, async () => {
+    await waitFor(() => expect(window.location.pathname).toBe(desti));
+    expect(consulta()).toEqual(esperat);
   });
 });
 

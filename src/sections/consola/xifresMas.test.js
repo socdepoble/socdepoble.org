@@ -268,8 +268,9 @@ describe('les peces del Mapa, una a una', () => {
 
   test('cada família dona un slug estable derivat de l’id, i la pàgina diu el mateix', () => {
     expect(IDS_FAMILIES).toEqual(['arnes', 'carregador', 'candat', 'tasca', 'lloc', 'agent-atomic']);
+    // Onada 6 (semàfor) · ACTIU en verd i SENSE LECTOR en taronja, amb el vocabulari d'Insignia.
     expect(xifresDeFamilia('arnes', ACTORS).map((x) => [x.slug, x.titol, x.subtitol, x.etiquetes])).toEqual([
-      ['arnes-claude-code', 'Claude Code', '1 candat · en arrencar carrega 1 document i 1 skill', [{ text: 'ACTIU', className: 'sdp-badge-system' }]]
+      ['arnes-claude-code', 'Claude Code', '1 candat · en arrencar carrega 1 document i 1 skill', [{ text: 'ACTIU', to: 'exit' }]]
     ]);
     expect(xifresDeFamilia('candat', ACTORS).map((x) => [x.slug, x.titol, x.subtitol, x.subtitolPrivat, x.icona])).toEqual([
       ['candat-claude-pretooluse', 'PreToolUse', 'Claude Code · dispara hooks-local.mjs', 'Claude Code · dispara 1 script', 'lock']
@@ -281,7 +282,7 @@ describe('les peces del Mapa, una a una', () => {
       ['tasca-plaquetes', 'cada hora · x.mjs', 'cada hora']
     ]);
     expect(xifresDeFamilia('lloc', ACTORS).map((x) => [x.slug, x.titol, x.etiquetes])).toEqual([
-      ['lloc-wiki-de-poble-04-escriptori', '04_escriptori', [{ text: 'SENSE LECTOR', className: 'sdp-badge-tag' }]]
+      ['lloc-wiki-de-poble-04-escriptori', '04_escriptori', [{ text: 'SENSE LECTOR', to: 'avis' }]]
     ]);
     for (const id of IDS_FAMILIES) {
       for (const x of xifresDeFamilia(id, ACTORS)) {
@@ -569,5 +570,196 @@ describe('una mesura absent no es compta com a 0', () => {
     expect(xifraDelMas('rebuts-de-lectura', null, AMB_FONTS).titol).toBe('0 rebuts de lectura');
     expect(xifraDelMas('registres-de-consum', null, AMB_FONTS).titol).toBe('0 registres de consum');
     expect(detallXifra('operacions-immunitaries', null, AMB_FONTS).senseMesura).toBeNull();
+  });
+});
+
+/* Onada 6 (requisits 8 i 9) · Les deu xifres del tauler porten el semàfor
+   segons el seu valor (Cal reparar en roig, Important en taronja, En ordre en
+   verd; sense mesura, cap) i diuen a la vista quins són els seus problemes. */
+describe('Onada 6 · el semàfor i els problemes d’«El Mas en xifres»', () => {
+  const etiqueta = (x) => (x.etiquetes ? x.etiquetes.map((e) => `${e.text}:${e.to}`) : null);
+  /* Correcció de l'Onada 6 (revisió adversarial) · cada problema porta la seua
+     marca amb el to del semàfor: «[marca:to] text|ruta». */
+  const problemes = (x) => (x.problemes
+    ? x.problemes.map((p) => `${p.marca ? `[${p.marca}:${p.to}] ` : ''}${p.ruta ? `${p.text}|${p.ruta}` : p.text}`)
+    : null);
+  const perSlug = (mapa) => Object.fromEntries(xifresDeLaGraella(mapa).map((x) => [x.slug, [etiqueta(x), problemes(x)]]));
+
+  test('un Mapa amb una òrfena: cada xifra, el seu color i els seus problemes', () => {
+    expect(perSlug(MAPA)).toEqual({
+      skills: [['En ordre:exit'], []],
+      agents: [['Important:avis'], ['[sense candats:avis] Claude Code']],
+      'skills-opaques': [['Important:avis'], ['[opaca:avis] core-identitat', '[opaca:avis] sdp-workflow']],
+      'coses-que-corren-soles': [['En ordre:exit'], []],
+      'skills-amb-avisos': [['Important:avis'], ['[ambre:avis] core-identitat · orfe']],
+      'avisos-alts': [['En ordre:exit'], []],
+      // Sense cap mesura del LEDGER, dels torns ni del segell: cap color, mai un verd.
+      'linies-ledger': [null, []],
+      'torns-caducats': [null, []],
+      'skills-fora-del-segell': [null, []],
+      'skills-orfenes': [['Important:avis'], ['[mitjana:avis] core-identitat · orfe']]
+    });
+  });
+
+  test('avisos alts i torns caducats: roig i taronja, i quins són (les rutes, a part)', () => {
+    const x = perSlug(AMB_SALUT);
+    expect(x['avisos-alts']).toEqual([['Cal reparar:error'], [
+      '[alta:error] sdp-workflow · segell-divergent', '[alta:error] segell-trencat|.agents/SKILLS_SEAL.json'
+    ]]);
+    expect(x['torns-caducats']).toEqual([['Important:avis'], [
+      '|t1 · claude · open · caducat el 2026-10-01T00:00:00Z', '|t2 · codex · sense estat · sense caducitat llegible'
+    ]]);
+    expect(x['skills-fora-del-segell']).toEqual([['Cal reparar:error'], ['[alta:error] sdp-workflow · segell-divergent']]);
+    expect(x['linies-ledger']).toEqual([['Important:avis'], []]);
+  });
+
+  /* Correcció de l'Onada 6 (revisió adversarial) · la xifra del cens pren el
+     color de la gravetat dels avisos del cens, com «Skills fora d'algun cens»
+     i l'Inventari: una skill fora del segell (alta) ja és roja. Derogat:
+     «només la fantasma és roja». */
+  test('skills: el cens pel més greu dels seus avisos, i quines en falten', () => {
+    const skill = (nom) => ({ id: `skill:${nom}`, tipus: 'skill', font: null, atributs: {} });
+    const amb = (avisos) => ({ ...MAPA, nodes: [...MAPA.nodes, skill('x'), skill('y')], avisos });
+    const fora = (node, codi, severitat) => ({ node, codi, severitat, evidencia: null });
+    // La marca és la severitat dels avisos del cens: «ambre» o «roig» són el color de la skill sencera a l'Inventari.
+    expect(perSlug(amb([fora('skill:x', 'fora-cataleg-claude', 'mitjana')])).skills)
+      .toEqual([['Important:avis'], ['[mitjana:avis] x · fora-cataleg-claude']]);
+    expect(perSlug(amb([fora('skill:x', 'fora-cataleg-claude', 'mitjana'), fora('skill:y', 'fora-segell', 'alta')])).skills)
+      // La roja primer, com a l'Inventari.
+      .toEqual([['Cal reparar:error'], ['[alta:error] y · fora-segell', '[mitjana:avis] x · fora-cataleg-claude']]);
+    /* Una skill roja a l'Inventari per un avís que no és del cens no es diu
+       «ambre» ací: la marca només parla dels avisos del cens. */
+    const roja = amb([fora('skill:x', 'fora-cataleg-claude', 'mitjana'), fora('skill:x', 'frontmatter-invalid', 'alta')]);
+    expect(perSlug(roja).skills).toEqual([['Important:avis'], ['[mitjana:avis] x · fora-cataleg-claude']]);
+    expect(perSlug(roja)['skills-amb-avisos'][1]).toEqual(['[roig:error] x · fora-cataleg-claude, frontmatter-invalid']);
+    // Un avís que no és del cens (l'orfe) no hi compta.
+    expect(perSlug(amb([fora('skill:x', 'orfe', 'mitjana')])).skills).toEqual([['En ordre:exit'], []]);
+  });
+
+  /* Onada 6 (contradiccions) · L'alerta del tauler enllaça amb esta xifra: amb
+     la signatura trencada, el títol ho diu (abans: «0 línies del LEDGER per revisar»). */
+  test('el LEDGER amb la signatura trencada ho diu al títol i va en roig', () => {
+    const invalid = {
+      ...AMB_SALUT,
+      nodes: [...AMB_SALUT.nodes, { id: 'document:.agents/LEDGER.md', tipus: 'document', font: null, atributs: {} }],
+      avisos: [...AMB_SALUT.avisos, { node: 'document:.agents/LEDGER.md', codi: 'ledger-invalid', severitat: 'alta', evidencia: 'x' }],
+      salut: AMB_SALUT.salut.map((m) => (m.metrica.startsWith('ledger-') ? { ...m, valor: 0 } : m))
+    };
+    const x = xifraDelMas('linies-ledger', invalid);
+    expect(x.titol).toBe('LEDGER amb la signatura trencada');
+    expect(x.subtitol).toBe('0 segells fòssils · 0 línies mal formades');
+    expect(etiqueta(x)).toEqual(['Cal reparar:error']);
+    expect(problemes(x)).toEqual(['[alta:error] ledger-invalid|.agents/LEDGER.md']);
+    expect(XIFRA_DE_CODI['ledger-invalid']).toBe('linies-ledger');
+  });
+
+  test('sense Mapa, cap color i cap problema', () => {
+    for (const x of xifresDeLaGraella(null)) {
+      expect(x.etiquetes, x.slug).toBeNull();
+      expect(x.problemes, x.slug).toBeNull();
+    }
+  });
+
+  test('cada xifra amb font porta com a molt una etiqueta, i sempre del semàfor', () => {
+    for (const mapa of [MAPA, AMB_SALUT]) {
+      for (const x of xifresDeLaGraella(mapa)) {
+        if (!x.etiquetes) continue;
+        expect(x.etiquetes, x.slug).toHaveLength(1);
+        expect(['error', 'avis', 'exit'], x.slug).toContain(x.etiquetes[0].to);
+      }
+    }
+  });
+});
+
+/* Correcció de l'Onada 6 (revisió adversarial, problema alt: «els requisits 8
+   i 9 només s'han aplicat a les 9 cobertes i a les 10 xifres del tauler») ·
+   Les xifres de dins de les pàgines i del pols també porten el semàfor segons
+   el seu valor i diuen a la vista quins són els seus problemes, amb la marca
+   del seu color. Les que només diuen una mida informen: cap etiqueta. */
+describe('Correcció Onada 6 · el semàfor i els problemes de les xifres de les pàgines', () => {
+  const etiqueta = (x) => (x?.etiquetes ? x.etiquetes.map((e) => `${e.text}:${e.to}`) : null);
+  const problemes = (x) => (x?.problemes
+    ? x.problemes.map((p) => `${p.marca ? `[${p.marca}:${p.to}] ` : ''}${p.ruta ? `${p.text}|${p.ruta}` : p.text}`)
+    : null);
+  const de = (slug, mapa, dades = null) => {
+    const x = xifraDelMas(slug, mapa, dades);
+    return [etiqueta(x), problemes(x)];
+  };
+  const fora = (node, codi, severitat) => ({ node, codi, severitat, evidencia: null });
+  const skill = (nom) => ({ id: `skill:${nom}`, tipus: 'skill', font: null, atributs: {} });
+
+  test('Avisos i salut: els avisos pel més greu, les mètriques i les tasques', () => {
+    expect(de('avisos', MAPA)).toEqual([['Important:avis'], ['[mitjana:avis] core-identitat · orfe']]);
+    expect(de('avisos', AMB_SALUT)).toEqual([['Cal reparar:error'], [
+      '[alta:error] sdp-workflow · segell-divergent', '[alta:error] segell-trencat|.agents/SKILLS_SEAL.json',
+      '[mitjana:avis] core-identitat · orfe', '[mitjana:avis] torns-caducats|.agents/runtime/turns'
+    ]]);
+    // Les mètriques: verd només amb totes mesurades; amb una N/A, cap etiqueta i quina és.
+    expect(de('metriques-amb-mesura', MAPA)).toEqual([null, []]);
+    expect(de('metriques-amb-mesura', AMB_SALUT)).toEqual([['En ordre:exit'], []]);
+    const ambNA = { ...AMB_SALUT, salut: [...AMB_SALUT.salut, metrica('cadena-portes', { valor: 'N/A', prova: null })] };
+    expect(de('metriques-amb-mesura', ambNA)).toEqual([null, ['[N/A:neutre] cadena-portes']]);
+    // Les tasques, pel pitjor estat.
+    expect(de('tasques-del-mapa', MAPA)).toEqual([['En ordre:exit'], []]);
+    const ambMorta = { ...MAPA, tasques: [...MAPA.tasques, { id: 'reflex', estat: 'mort', llancador: null, cadencia: null, script: null, font: null }] };
+    expect(de('tasques-del-mapa', ambMorta)).toEqual([['Cal reparar:error'], ['[mort:error] reflex']]);
+    expect(de('tasques-del-mapa', { ...MAPA, tasques: [] })).toEqual([null, []]);
+  });
+
+  test('Inventari: el cens, els disparadors i les skills sense avís, per gravetat', () => {
+    const mapa = {
+      ...MAPA,
+      nodes: [...MAPA.nodes, skill('x'), skill('y')],
+      avisos: [...MAPA.avisos, fora('skill:x', 'fora-cataleg-claude', 'mitjana'), fora('skill:y', 'disparador-decoratiu', 'mitjana')]
+    };
+    expect(de('skills-fora-d-algun-cens', mapa)).toEqual([['Important:avis'], ['[mitjana:avis] x · fora-cataleg-claude']]);
+    expect(de('skills-fora-d-algun-cens', MAPA)).toEqual([['En ordre:exit'], []]);
+    expect(de('skills-sense-disparador', mapa)).toEqual([['Important:avis'], ['[mitjana:avis] y · disparador-decoratiu']]);
+    // La xifra de les netes diu el color del cens sencer i quines no ho són.
+    expect(de('skills-sense-avisos', mapa)).toEqual([['Important:avis'], [
+      '[ambre:avis] core-identitat · orfe', '[ambre:avis] x · fora-cataleg-claude', '[ambre:avis] y · disparador-decoratiu'
+    ]]);
+    const ambAlt = { ...mapa, avisos: [...mapa.avisos, fora('skill:x', 'fora-segell', 'alta')] };
+    expect(de('skills-fora-d-algun-cens', ambAlt)[0]).toEqual(['Cal reparar:error']);
+  });
+
+  test('Explorador: els enllaços trencats amb la gravetat del seu avís; la mida, cap etiqueta', () => {
+    expect(de('enllacos-trencats', MAPA)).toEqual([['Important:avis'], ['[mitjana:avis] core-identitat · orfe']]);
+    const ambScript = { ...MAPA, nodes: [...MAPA.nodes, { id: 'script:tooling/x.mjs', tipus: 'script', font: null, atributs: {} }],
+      avisos: [...MAPA.avisos, fora('script:tooling/x.mjs', 'script-absent', 'alta')] };
+    expect(de('enllacos-trencats', ambScript)).toEqual([['Cal reparar:error'], [
+      '[alta:error] script-absent|tooling/x.mjs', '[mitjana:avis] core-identitat · orfe'
+    ]]);
+    expect(de('enllacos-trencats', { ...MAPA, avisos: [] })).toEqual([['En ordre:exit'], []]);
+    for (const slug of ['nodes', 'arestes', 'rutes-documentals', 'cadenes-declarades', 'suggeriments-de-la-prosa', 'punts-de-trobada', 'agents-atomics']) {
+      expect(xifraDelMas(slug, MAPA).etiquetes, slug).toBeNull();
+    }
+  });
+
+  test('el pols: les skills fora del manifest o sense disc, en roig; la mida, cap etiqueta', () => {
+    expect(de('skills-fora-del-manifest', null, CONSOLA)).toEqual([['Cal reparar:error'], ['[fora del manifest:error] nova']]);
+    expect(de('skills-sense-disc', null, CONSOLA)).toEqual([['En ordre:exit'], []]);
+    // Sense segell, FALTA (taronja).
+    expect(de('segell-de-skills', null, CONSOLA)).toEqual([['FALTA:avis'], null]);
+    for (const slug of ['registres-de-consum', 'skills-del-manifest', 'skills-del-nucli']) {
+      expect(xifraDelMas(slug, null, CONSOLA).etiquetes, slug).toBeNull();
+    }
+  });
+
+  test('cap targeta verda diu cap problema, i sense font cap color ni cap problema', () => {
+    const ambNA = { ...AMB_SALUT, salut: [...AMB_SALUT.salut, metrica('cadena-portes', { valor: 'N/A', prova: null })] };
+    for (const [mapa, dades] of [[MAPA, CONSOLA], [AMB_SALUT, CONSOLA], [ambNA, null]]) {
+      for (const x of targetesDeLaConsola(mapa, dades).values()) {
+        if (!SLUGS_FIXOS.includes(x.slug) || !x.etiquetes) continue;
+        expect(x.etiquetes, x.slug).toHaveLength(1);
+        if (x.etiquetes[0].to === 'exit') expect(x.problemes ?? [], x.slug).toEqual([]);
+      }
+    }
+    for (const vista of IDS_VISTES) {
+      for (const x of xifresDeVista(vista, null, null)) {
+        expect(x.etiquetes, `${vista}:${x.slug}`).toBeNull();
+        expect(x.problemes, `${vista}:${x.slug}`).toBeNull();
+      }
+    }
   });
 });

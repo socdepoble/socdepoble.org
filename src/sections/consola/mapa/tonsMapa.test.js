@@ -13,13 +13,16 @@ import { describe, expect, test } from 'vitest';
 import { CONFIANCES, ESTATS_TASCA, SEVERITATS } from './contracteMapa.js';
 import { TEXT_ESTAT, TO_CONFIANCA, TO_ESTAT, TO_SEVERITAT } from './grafMapa.js';
 
-/* Les còpies d'abans, tal com eren: el que es pintava. */
+/* El que es pinta. Onada 6 (requisit 8, semàfor; semafor.js) · Canvi
+   intencionat, no una regressió: alta roig, mitjana i baixa taronja, i cap
+   blau ('info'). Derogat per l'Onada 6: declarat i baixa en 'info', i sense
+   llançador i desconegut en 'neutre' (abans es fixaven ací tal com eren). */
 const ABANS = Object.freeze({
-  confianca: { declarat: 'info', derivat: 'neutre', inferit: 'avis' },
-  severitat: { alta: 'error', mitjana: 'avis', baixa: 'info' },
+  confianca: { declarat: 'neutre', derivat: 'neutre', inferit: 'avis' },
+  severitat: { alta: 'error', mitjana: 'avis', baixa: 'avis' },
   estat: {
-    viu: 'exit', mort: 'error', 'declarat-sense-llancador': 'neutre',
-    'llancador-sense-declaracio': 'avis', desconegut: 'neutre'
+    viu: 'exit', mort: 'error', 'declarat-sense-llancador': 'avis',
+    'llancador-sense-declaracio': 'avis', desconegut: 'avis'
   },
   text: {
     viu: 'viu', mort: 'mort', 'declarat-sense-llancador': 'sense llançador',
@@ -44,6 +47,10 @@ describe('una sola font per als tons de la Consola', () => {
     for (const to of [TO_CONFIANCA, TO_SEVERITAT, TO_ESTAT].flatMap(Object.values)) {
       expect(TONS_INSIGNIA, to).toContain(to);
     }
+  });
+
+  test('Onada 6 · el semàfor: cap to de salut en blau', () => {
+    for (const to of [TO_CONFIANCA, TO_SEVERITAT, TO_ESTAT].flatMap(Object.values)) expect(to).not.toBe('info');
   });
 
   test('són immutables', () => {

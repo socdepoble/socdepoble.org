@@ -23,6 +23,8 @@ import FilaPersona from './FilaPersona.jsx';
 import { Avatar } from '../../../components/PedraSeca/index.js';
 import { fixaBaseRecursos } from '../../../config/assetResolver.js';
 import { permetOrigenMitjans } from '../../../utils/sanitize.js';
+import { AGENTS_MAP } from '../../../data/agentsSeed.js';
+import { CARA_DE_LA_IAIA } from '../../../data/xatsPerDefecte.js';
 
 const PAQUET = 'https://amfitrio.example/wp-content/plugins/socdepoble-enxufe/dist';
 const NODE = 'https://node.example';
@@ -115,6 +117,26 @@ test('si el port torna una referència encara opaca, inicials (cap <img src="sdp
     expect(container.textContent).toContain('MP');
     cleanup();
   }
+});
+
+/* Onada 6 (tasca 12) · La IAIA té cara pròpia al xat: el seu avatar del
+   padró es pinta amb la iaia del mocador roig de «Festa del Poble», retallada
+   per l'enquadrament 'iaia' d'Avatar (cap fitxer nou). Amb la base del paquet,
+   com qualsevol recurs propi. */
+test('l’avatar del padró de la IAIA es pinta amb la seua cara de «Festa del Poble», enquadrada', () => {
+  const PADRO = AGENTS_MAP.IAIA.avatar_url;
+  const { container } = render(<CaraXat nom="IAIA MarIA" src={PADRO} mida="md" llavor="f-iaia" alt="" />);
+  const avatar = container.querySelector('.sdp-avatar');
+  expect([...avatar.classList]).toEqual(['sdp-avatar', 'sdp-avatar--md', expect.stringMatching(/^sdp-avatar--to-\d$/), 'sdp-avatar--enquadrat', 'sdp-avatar--enquadrat-iaia']);
+  expect(srcDe(container)).toBe(CARA_DE_LA_IAIA.src);
+  cleanup();
+  fixaBaseRecursos(PAQUET);
+  permetOrigenMitjans(PAQUET);
+  expect(srcDe(render(<CaraXat nom="IAIA MarIA" src={PADRO} alt="" />).container)).toBe(`${PAQUET}${CARA_DE_LA_IAIA.src}`);
+  cleanup();
+  /* Una altra cara (o una altra imatge de la IAIA) continua igual que Avatar, sense enquadrament. */
+  const altra = render(<CaraXat nom="IAIA MarIA" src={IAIA} alt="" />);
+  expect(altra.container.querySelector('.sdp-avatar--enquadrat')).toBeNull();
 });
 
 test('el padró (FilaPersona) pinta la foto pujada resolta, i la de la IAIA amb la base', async () => {

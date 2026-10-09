@@ -48,6 +48,23 @@
  *  d'arxivar-lo, perquè el handoff que imprimix la porta deixe el torn tancable;
  *  i no es reanomena si eixe handoff ja no és possible.
  *
+ *  Convocatòria v4 (261009, Onada 6). Verd no vol dir consumit: la declaració de
+ *  viu porta el seu motiu i la porta el comprova. Cada línia d'«Activitat en curs» és
+ *  `- [[document]] · motiu`, amb un d'estos tres motius: `per a [[consumidor]]` (un
+ *  document de la taula que té vida: un cicle de «per a» sense torn, retenció ni rebut
+ *  no sosté ningú), `torn_ID` (un torn obert i vigent) o `Mestre aammdd: motiu` (una
+ *  retenció humana). El rebut de torn del frontmatter compta com a `torn_ID` implícit.
+ *  Sense motiu, amb el consumidor arxivat o sense vida, o amb el torn tancat o caducat,
+ *  el document és ranci per a la convocatòria encara que siga d'avui. Una
+ *  convocatòria (un prompt) exigix també la trinitat (un pla de la seua jornada nascut
+ *  abans, millor amb el mateix HHMM), el pla complet i la secció 0 feta; l'àncora
+ *  repetida és una troballa i el sediment de l'índex, una mètrica. La bandera
+ *  `.agents/olivera-fase.json` decidix la fase: «avis» (la primera Onada) o
+ *  «bloqueig». `--arxiva` se'n du la línia de declaració sencera, motiu inclòs.
+ *  La criden `deliverContext` i `writeIndexedDraft` (rutes de prompt; en fase «avis»
+ *  tornen els avisos i `document.mjs` els escriu per stderr), `checkOlivera` (els hooks)
+ *  i `--tancament [--torn ID]` (tancament.mjs, environmentChecks).
+ *
  *  Ús:
  *    porta-olivera.mjs [--informe]          # auditoria de l'Escriptori (eixida 1 si brut); mai llig stdin
  *    porta-olivera.mjs --hook               # hook: llig el payload per stdin
@@ -88,6 +105,10 @@ const LOCK = `${CAMINS.agents}/runtime/document-create.lock`;
 const TORNS = `${CAMINS.agents}/runtime/turns`;
 /** Marge perquè el torn no caduque entre l'ordre i el handoff que imprimix. */
 const MARGE_RELLEU = 10 * 60 * 1000;
+/** Bandera de la fase de la convocatòria v4 (261009): absent o «avis» avisa; «bloqueig» bloqueja. */
+export const BANDERA_FASE = `${CAMINS.agents}/olivera-fase.json`;
+/** Línies de l'índex a partir de les quals el sediment ix com a avís. És una mètrica: mai bloqueja. */
+export const LLINDAR_SEDIMENT = 300;
 
 /** Categories de treball d'un torn: naixen, servixen i se'n van a l'arxiu. */
 export const TRANSITORIES = /^(prompt|macro_prompt|micro_prompt|petorreta|auditoria|informe|bundle|macro_bundle|micro_bundle|pla|acta|tasques)$/;
@@ -392,6 +413,371 @@ export function checkTaula(arrel = arrelPerDefecte(), { dia = avui() } = {}) {
   return { valid: errors.length === 0, errors };
 }
 
+/* ── Convocatòria v4 (261009, Onada 6) ────────────────────────────────────── */
+
+const VIA_PORTA = 'node tooling/gates/porta-olivera.mjs';
+/** Línia de llista d'«Activitat en curs» fins a la primera àncora. */
+const INICI_DECLARACIO = /^[ \t]*[-*][ \t]+$/;
+/** Primera àncora d'una línia: el text cru, sense la marca d'incrustació. */
+const PRIMERA_ANCORA = /!?\[\[([^[\]\n]+)\]\]/;
+const CREACIO = /^\|[ \t]*Creació[ \t]*\|[ \t]*([^|\n]+?)[ \t]*\|/m;
+const ESTAT_PLA = /^\*\*Estat del Pla:\*\*[ \t]*(.*)$/m;
+const tall = (text, max = 80) => (String(text).length > max ? `${String(text).slice(0, max - 1)}…` : String(text));
+const curt = (torn) => String(torn).slice(0, 13);
+
+function textIndex(arrel) {
+  try { return fs.readFileSync(path.join(arrel, INDEX), 'utf8'); }
+  catch (error) { if (error.code === 'ENOENT') return ''; throw error; }
+}
+function llegeixSiPots(abs) {
+  try { return fs.readFileSync(abs, 'utf8'); } catch { return null; }
+}
+
+/**
+ * Fase de la convocatòria segons la bandera del Mestre. Absent: «avis». Il·legible o amb
+ * un altre valor: «bloqueig» i l'error, perquè una bandera que ningú entén no pot afluixar
+ * la porta.
+ */
+export function faseConvocatoria(arrel = arrelPerDefecte()) {
+  let text;
+  try { text = fs.readFileSync(path.join(arrel, BANDERA_FASE), 'utf8'); }
+  catch (error) {
+    if (error.code === 'ENOENT') return { fase: 'avis', error: null };
+    return { fase: 'bloqueig', error: `${BANDERA_FASE} il·legible (${error.code}): es llig com a «bloqueig»` };
+  }
+  let fase;
+  try { fase = JSON.parse(text)?.fase; } catch { fase = undefined; }
+  return fase === 'avis' || fase === 'bloqueig'
+    ? { fase, error: null }
+    : { fase: 'bloqueig', error: `${BANDERA_FASE} no diu «avis» ni «bloqueig»: es llig com a «bloqueig»` };
+}
+
+/**
+ * Torn per identificador o prefix (`torn_` i almenys huit xifres): obert i vigent, o per què
+ * no. Amb `tanca` (el torn que tanca tancament.mjs), eixe torn ja no sosté res. Només llig.
+ */
+function estatTorn(arrel, token, ara, tanca = null) {
+  let noms = [];
+  try { noms = fs.readdirSync(path.join(arrel, TORNS)).filter((n) => /^torn_[0-9a-f-]+\.json$/.test(n)).map((n) => n.slice(0, -'.json'.length)); }
+  catch { /* sense registres de torn */ }
+  const candidats = noms.filter((n) => n.startsWith(token));
+  if (candidats.length !== 1) return { valid: false, torn: token, motiu: candidats.length ? `${curt(token)} és ambigu (${candidats.length} torns)` : `${curt(token)} no és a ${TORNS}/` };
+  const [torn] = candidats;
+  let registre;
+  try { registre = JSON.parse(fs.readFileSync(path.join(arrel, TORNS, `${torn}.json`), 'utf8')); }
+  catch { return { valid: false, torn, motiu: `el registre de ${curt(torn)} és il·legible` }; }
+  if (registre?.turn_id !== torn || registre.schema !== 'sdp.turn.v1') return { valid: false, torn, motiu: `el registre de ${curt(torn)} no és vàlid` };
+  if (registre.state === 'closed') return { valid: false, torn, motiu: `${curt(torn)} ja està tancat` };
+  if (!(Date.parse(registre.expiresAt) > ara)) return { valid: false, torn, motiu: `${curt(torn)} ha caducat (${registre.expiresAt})` };
+  if (typeof tanca === 'string' && tanca && torn.startsWith(tanca)) return { valid: false, torn, motiu: `${curt(torn)} es tanca ara` };
+  return { valid: true, torn, expiresAt: registre.expiresAt };
+}
+
+/**
+ * Motius d'una declaració: els trossos de darrere de «·». Un tros que només és una àncora
+ * no és cap motiu: és un altre document declarat a la mateixa línia (`- [[D]] · [[E]]`).
+ */
+function motiusDe(resta, presents) {
+  return resta.split('·').map((tros) => tros.trim()).filter(Boolean).map((tros) => {
+    const sola = /^!?\[\[([^[\]\n]+)\]\]$/.exec(tros);
+    if (sola) return { tipus: 'codeclaracio', text: tros, raw: sola[1], nom: resolAncora(sola[1], presents) };
+    if (/^per a\b/i.test(tros)) {
+      return { tipus: 'consumidor', text: tros, consumidors: [...tros.matchAll(ANCORA)].map((a) => ({ raw: a[2], nom: resolAncora(a[2], presents) })) };
+    }
+    const torn = /^(torn_[0-9a-f][0-9a-f-]{7,})$/i.exec(tros);
+    if (torn) return { tipus: 'torn', text: tros, torn: torn[1].toLowerCase() };
+    const mestre = /^Mestre[ \t]+(\d{6})[ \t]*:[ \t]*(.*)$/.exec(tros);
+    if (mestre) return { tipus: 'mestre', text: tros, data: mestre[1], motiu: mestre[2].trim() };
+    return { tipus: 'desconegut', text: tros };
+  });
+}
+
+/**
+ * Declaracions de vida d'«## Activitat en curs»: cada línia de llista que comença per una
+ * àncora d'un document del primer nivell, amb els seus motius i el seu número de línia.
+ * Comentaris i codi no compten (prosaIndex).
+ */
+export function declaracions(arrel = arrelPerDefecte()) {
+  const text = textIndex(arrel);
+  const prosa = prosaIndex(text);
+  const presents = nomsSolts(arrel);
+  const out = [];
+  for (const bloc of prosa.matchAll(ACTIVITAT)) {
+    let pos = bloc.index + bloc[0].length - bloc[1].length;
+    for (const linia of bloc[1].split(/(?<=\n)/)) {
+      const inici = pos;
+      pos += linia.length;
+      const a = PRIMERA_ANCORA.exec(linia);
+      if (!a || !INICI_DECLARACIO.test(linia.slice(0, a.index))) continue;
+      const nom = resolAncora(a[1], presents);
+      if (!nom) continue;
+      const numero = text.slice(0, inici).split('\n').length;
+      const motius = motiusDe(linia.slice(a.index + a[0].length).replace(/\r?\n$/, ''), presents);
+      out.push({ nom, linia: numero, motius: motius.filter((m) => m.tipus !== 'codeclaracio') });
+      for (const m of motius.filter((x) => x.tipus === 'codeclaracio' && x.nom)) out.push({ nom: m.nom, linia: numero, motius: [] });
+    }
+  }
+  return out;
+}
+
+/** Darrere de la primera àncora només hi ha motius: cap àncora fora d'un «per a». */
+const nomesMotius = (resta) => resta.split('·').every((tros) => !tros.includes('[[') || /^\s*per a\b/i.test(tros));
+
+/**
+ * Línies de declaració amb motiu dins d'«Activitat en curs»: llista, primera àncora i «·»
+ * darrere, i res més que motius (una línia que declara dos documents no hi entra).
+ */
+function liniesDeDeclaracio(text, ancores, actives) {
+  const prosa = prosaIndex(text);
+  const out = [];
+  for (const [inici, final] of actives) {
+    let pos = inici;
+    while (pos < final) {
+      const salt = text.indexOf('\n', pos);
+      const fi = salt < 0 ? text.length : salt;
+      const primera = ancores.find((a) => a.inici >= pos && a.inici < fi);
+      const resta = primera ? prosa.slice(primera.final, fi) : '';
+      if (primera && INICI_DECLARACIO.test(prosa.slice(pos, primera.inici)) && /^[ \t]*·/.test(resta) && nomesMotius(resta)) {
+        out.push({ inici: pos, final: fi, primera });
+      }
+      pos = fi + 1;
+    }
+  }
+  return out;
+}
+
+/**
+ * Vida d'un document declarat viu: vàlida si algun motiu es comprova. Un consumidor només
+ * sosté si és a `vius`, el conjunt dels que ja tenen vida (vidaTaula): dos documents que es
+ * declaren l'un per a l'altre, sense cap torn, retenció del Mestre ni rebut, no sostenen
+ * ningú. Torna tots els motius vàlids, per a l'informe i el tancament.
+ */
+function vidaDe(arrel, nom, linies, { dia, ara, vius = new Set(), tanca = null }) {
+  const valids = [];
+  const raons = [];
+  const motius = linies.flatMap((d) => d.motius);
+  for (const m of motius) {
+    if (m.tipus === 'consumidor') {
+      const presents = m.consumidors.filter((c) => c.nom && c.nom !== nom);
+      const vivents = presents.filter((c) => vius.has(c.nom));
+      if (vivents.length) valids.push({ tipus: 'consumidor', consumidors: vivents.map((c) => c.nom), text: `per a ${vivents.map((c) => senseMd(c.nom)).join(', ')}` });
+      else if (presents.length) raons.push(`el consumidor ${presents.map((c) => senseMd(c.nom)).join(', ')} no té vida (cap torn, retenció del Mestre, rebut ni consumidor viu el sosté): un cicle de «per a» no sosté ningú`);
+      else if (m.consumidors.some((c) => !c.nom)) raons.push(`el consumidor ${m.consumidors.filter((c) => !c.nom).map((c) => c.raw).join(', ')} ja no és a la taula`);
+      else raons.push(m.consumidors.length ? '«per a» que només el cita a ell mateix' : '«per a» sense cap [[consumidor]]');
+    } else if (m.tipus === 'torn') {
+      const t = estatTorn(arrel, m.torn, ara, tanca);
+      if (t.valid) valids.push({ tipus: 'torn', torn: t.torn, text: `${curt(t.torn)} obert fins a ${t.expiresAt}` });
+      else raons.push(t.motiu);
+    } else if (m.tipus === 'mestre') {
+      if (m.data <= dia && m.motiu.length >= 3) valids.push({ tipus: 'mestre', text: `Mestre ${m.data}: ${tall(m.motiu)}` });
+      else raons.push(`retenció del Mestre sense motiu o amb data futura (${m.data})`);
+    } else raons.push(`motiu desconegut «${tall(m.text, 60)}»`);
+  }
+  // El rebut del frontmatter és un «· torn_ID» implícit.
+  const reflex = reflexDe(path.join(arrel, ESCRIPTORI, nom));
+  if (reflex) {
+    const t = estatTorn(arrel, reflex.torn, ara, tanca);
+    if (t.valid) valids.push({ tipus: 'torn', torn: t.torn, implicit: true, text: `rebut de ${curt(t.torn)}, obert fins a ${t.expiresAt}` });
+    else raons.push(`el torn del seu rebut: ${t.motiu}`);
+  }
+  if (valids.length) return { nom, valid: true, motiu: valids.map((v) => v.text).join('; '), valids };
+  if (!linies.length) return { nom, valid: false, codi: 'CONV-02', motiu: `viu sense línia de declaració pròpia (en prosa o només com a consumidor)${raons.length ? `; ${raons.join('; ')}` : ''}`, valids };
+  if (!motius.length && !reflex) return { nom, valid: false, codi: 'CONV-02', motiu: 'sense motiu', valids };
+  return { nom, valid: false, codi: 'CONV-03', motiu: raons.join('; '), valids };
+}
+
+/** Declaracions agrupades per document. */
+function perNomDe(arrel) {
+  const perNom = new Map();
+  for (const d of declaracions(arrel)) perNom.set(d.nom, [...(perNom.get(d.nom) ?? []), d]);
+  return perNom;
+}
+
+/**
+ * Vida de cada declarat viu, en dos temps: primer la pròpia (torn, retenció del Mestre o
+ * rebut; els exempts de la trinitat ja en tenen) i després la que dona un consumidor que ja
+ * és viu, fins que no canvia res. Un consumidor només sosté si ell té vida, i un cicle de
+ * «per a» sense ancoratge no en té. Amb `tanca`, la vida que quedaria en tancar eixe torn.
+ */
+function vidaTaula(arrel, perNom, { dia, ara, exempts = new Set(), prompt = null, tanca = null }) {
+  const noms = [...viusExactes(arrel)].sort();
+  const de = (nom, vius) => vidaDe(arrel, nom, perNom.get(nom) ?? [], { dia, ara, vius, tanca });
+  const vius = new Set(noms.filter((nom) => exempts.has(nom)));
+  for (const nom of noms) if (!vius.has(nom) && de(nom, new Set()).valid) vius.add(nom);
+  for (let canvi = true; canvi;) {
+    canvi = false;
+    for (const nom of noms) {
+      if (!vius.has(nom) && de(nom, vius).valid) { vius.add(nom); canvi = true; }
+    }
+  }
+  return noms.map((nom) => (exempts.has(nom) ? { nom, valid: true, motiu: `trinitat de ${senseMd(prompt)}`, valids: [] } : de(nom, vius)));
+}
+
+function creacioDe(text) {
+  const m = typeof text === 'string' ? CREACIO.exec(text) : null;
+  const t = m ? Date.parse(m[1]) : NaN;
+  return Number.isFinite(t) ? t : null;
+}
+
+/**
+ * Trinitat (lliçó 261002 de wiki-documentacio-i-reflex): els plans de la jornada del prompt
+ * nascuts abans que ell. Pel nom, un HHMM posterior naix després; amb el mateix HHMM
+ * decidix la «Creació» del Registre, si els dos la porten. Els germans són els documents
+ * de la mateixa jornada i hora (el prompt de l'altra IA).
+ */
+export function trinitat(arrel, prompt, { contingut = null } = {}) {
+  const m = NOM.exec(prompt);
+  if (!m) return null;
+  const [, jornada, hora] = m;
+  const docs = inventari(arrel);
+  const plans = docs.filter((d) => /^pla_implementacio(?:_|$)/.test(d.resta) && d.data === jornada)
+    .sort((a, b) => (a.hora < b.hora ? -1 : a.hora > b.hora ? 1 : 0));
+  const creacioPrompt = creacioDe(contingut ?? llegeixSiPots(path.join(arrel, ESCRIPTORI, prompt)));
+  const abans = plans.filter((p) => {
+    if (p.hora !== hora) return p.hora < hora;
+    const c = creacioDe(llegeixSiPots(path.join(arrel, p.rel)));
+    return creacioPrompt === null || c === null || c <= creacioPrompt;
+  });
+  const mateixa = abans.filter((p) => p.hora === hora);
+  const triat = mateixa.at(-1) ?? abans.at(-1) ?? null;
+  return {
+    jornada,
+    hora,
+    plans: abans.map((p) => p.nom),
+    despres: plans.filter((p) => !abans.includes(p)).map((p) => p.nom),
+    mateixaHora: mateixa.length > 0,
+    triat: triat ? triat.nom : null,
+    germans: docs.filter((d) => d.data === jornada && d.hora === hora && d.nom !== prompt).map((d) => d.nom),
+  };
+}
+
+function cosDeSeccio(text, titol) {
+  const m = new RegExp(`^##[ \\t]+${titol}[ \\t]*\\r?\\n([\\s\\S]*?)(?=^##[ \\t]|(?![\\s\\S]))`, 'm').exec(text);
+  return m ? m[1] : null;
+}
+
+/** Què li falta al pla de la trinitat per a convocar: «Estat del Pla» triat, Verificació i Riscos escrits. */
+export function completesaPla(text) {
+  const faltes = [];
+  const estat = ESTAT_PLA.exec(text);
+  if (!estat || !estat[1].trim() || /\[[^\]]*\|[^\]]*\]/.test(estat[1])) faltes.push('«Estat del Pla» sense triar');
+  for (const titol of ['Verificació', 'Riscos']) {
+    const cos = cosDeSeccio(text, titol);
+    if (cos === null) faltes.push(`sense «## ${titol}»`);
+    else if (!cos.replace(/<!--[\s\S]*?-->/g, '').replace(/\[pendent\]/gi, '').trim()) faltes.push(`«${titol}» en [pendent]`);
+  }
+  return faltes;
+}
+
+/** Secció 0 feta de veres: almenys una casella marcada i cap sense marcar. Només «[pendent]», o prosa sense caselles, no compta. */
+export function seccioZeroFeta(contingut) {
+  const s = SECCIO_ZERO.exec(String(contingut ?? ''));
+  if (!s) return false;
+  const cos = s[1].replace(/<!--[\s\S]*?-->/g, '');
+  return /^[ \t]*[-*+][ \t]+\[[xX]\]/m.test(cos) && !/^[ \t]*[-*+][ \t]+\[[ \t]\]/m.test(cos);
+}
+
+/** Sediment de l'índex que tota IA llig sencer: mida, seccions buides i blocs fets per scripts. Mètrica: mai bloqueja. */
+export function sediment(arrel = arrelPerDefecte(), { llindar = LLINDAR_SEDIMENT } = {}) {
+  const text = textIndex(arrel);
+  const prosa = prosaIndex(text);
+  const linies = text ? text.split('\n').length - (text.endsWith('\n') ? 1 : 0) : 0;
+  const seccionsBuides = [...prosa.matchAll(/^##[ \t]+([^\n]*)\n([\s\S]*?)(?=^##[ \t]|(?![\s\S]))/gm)]
+    .filter((m) => !m[2].trim()).map((m) => m[1].trim());
+  const fixAutomatic = /^##[ \t]+Fix Automàtic/im.test(prosa);
+  const avisos = [];
+  if (linies > llindar) avisos.push(`${linies} línies (llindar ${llindar})`);
+  if (seccionsBuides.length) avisos.push(`${seccionsBuides.length} secció(ns) buides (${seccionsBuides.slice(0, 3).join(', ')}${seccionsBuides.length > 3 ? '…' : ''})`);
+  if (fixAutomatic) avisos.push("bloc «Fix Automàtic d'Àncores» fet per un script");
+  return { linies, bytes: Buffer.byteLength(text), seccionsBuides, fixAutomatic, avisos };
+}
+
+/**
+ * Convocatòria v4: el que ha de ser cert abans de convocar una IA. Sense `fitxer`, la
+ * taula: àncores repetides i vida justificada de cada declarat viu. Amb una petorreta,
+ * també la trinitat i el pla complet i, amb el `contingut`, la secció 0. En fase
+ * «bloqueig» les troballes són errors; en fase «avis», avisos. El sediment de l'índex i
+ * el HHMM del pla són sempre avisos. `fase` només pot endurir la bandera, mai afluixar-la.
+ */
+export function checkConvocatoria(arrel = arrelPerDefecte(), { fitxer = null, contingut = null, dia = avui(), ara = Date.now(), fase = null } = {}) {
+  const bandera = faseConvocatoria(arrel);
+  // Un cridador pot demanar «bloqueig» (proves, tancament estricte); un «avis» no afluixa una bandera en «bloqueig».
+  const f = bandera.fase === 'bloqueig' || fase === 'bloqueig' ? 'bloqueig' : 'avis';
+  if (errorsEstructura(arrel).length) return { valid: true, fase: f, errors: [], avisos: [], troballes: [], vida: [], trinitat: null, sediment: null };
+  const troballes = [];
+  const avisos = [];
+  if (bandera.error) troballes.push({ codi: 'CONV-00', nom: null, missatge: bandera.error });
+  const rel = typeof fitxer === 'string' && fitxer ? (path.isAbsolute(fitxer) ? path.relative(arrel, fitxer) : fitxer).split(path.sep).join('/') : null;
+  const prompt = rel && esPetorreta(rel) ? path.posix.basename(rel) : null;
+  const tri = prompt ? trinitat(arrel, prompt, { contingut }) : null;
+  const exempts = new Set([prompt, ...(tri ? [...tri.plans, ...tri.germans] : [])].filter(Boolean));
+
+  const perNom = perNomDe(arrel);
+  for (const [nom, ds] of perNom) {
+    if (ds.length > 1) troballes.push({ codi: 'CONV-01', nom, missatge: `Àncora repetida a «## Activitat en curs»: ${senseMd(nom)} hi és ${ds.length} vegades (línies ${ds.map((d) => d.linia).join(', ')} de ${INDEX}). Deixa'n una, amb el seu motiu.` });
+  }
+  const vida = vidaTaula(arrel, perNom, { dia, ara, exempts, prompt });
+  for (const v of vida.filter((x) => !x.valid)) {
+    troballes.push({ codi: v.codi, nom: v.nom, missatge: `Viu sense vida justificada: ${senseMd(v.nom)} (${v.motiu}). Dona-li motiu a la seua línia (· per a [[consumidor]], · torn_ID o · Mestre aammdd: motiu) o arxiva'l: ${VIA_PORTA} --arxiva --sec --nom ${v.nom}` });
+  }
+
+  if (tri) {
+    if (!tri.plans.length) {
+      troballes.push({ codi: 'CONV-04', nom: prompt, missatge: `Trinitat: ${senseMd(prompt)} necessita un pla_implementacio de la jornada ${tri.jornada} nascut abans${tri.despres.length ? ` (${tri.despres.map((n) => senseMd(n)).join(', ')} naix després)` : ''}. El pla naix primer, amb el mateix HHMM: node tooling/wiki/document.mjs context --turn-id ID --route pla.implementacio --file ${ESCRIPTORI}/${tri.jornada}_${tri.hora}_pla_implementacio_COGNOM.md` });
+    } else {
+      if (!tri.mateixaHora) avisos.push(`[CONV-04] Trinitat: el pla ${senseMd(tri.triat)} no comparteix l'hora ${tri.hora} de ${senseMd(prompt)} (lliçó 261002, «La Trinitat Termodinàmica»).`);
+      const faltes = completesaPla(llegeixSiPots(path.join(arrel, ESCRIPTORI, tri.triat)) ?? '');
+      if (faltes.length) troballes.push({ codi: 'CONV-06', nom: tri.triat, missatge: `Pla incomplet per a convocar: ${senseMd(tri.triat)} (${faltes.join('; ')}).` });
+    }
+  }
+  if (prompt && typeof contingut === 'string' && SECCIO_ZERO.test(contingut) && !seccioZeroFeta(contingut)) {
+    troballes.push({ codi: 'CONV-05', nom: prompt, missatge: 'Secció 0 sense fer: només diu [pendent] o no té cap casella marcada. Marca el Preflight (taula neta, pla, rebut) abans de convocar.' });
+  }
+
+  const sed = sediment(arrel);
+  for (const a of sed.avisos) avisos.push(`[CONV-07] Sediment de l'índex: ${a}.`);
+  const text = (t) => `[${t.codi}] ${t.missatge}`;
+  const errors = f === 'bloqueig' ? troballes.map(text) : [];
+  return { valid: errors.length === 0, fase: f, errors, avisos: [...(f === 'avis' ? troballes.map(text) : []), ...avisos], troballes, vida, trinitat: tri, sediment: sed };
+}
+
+/** Escriptori net de la fase: checkTaula més la convocatòria de la taula (sense petorreta). Per a l'informe, el hook i el tancament. */
+export function checkEscriptori(arrel = arrelPerDefecte(), { dia = avui(), ara = Date.now(), fase = null } = {}) {
+  const taula = checkTaula(arrel, { dia });
+  const conv = checkConvocatoria(arrel, { dia, ara, fase });
+  const errors = [...taula.errors, ...conv.errors];
+  return { valid: errors.length === 0, errors, avisos: conv.avisos, convocatoria: conv };
+}
+
+/**
+ * Tancament (tancament.mjs, environmentChecks): l'Escriptori net de la fase i, amb `torn`,
+ * els vius que es quedarien sense vida en tancar eixe torn: els que només sosté ell i els
+ * que només sostenen, per «per a», documents que penjaven d'ell. Una Onada no deixa
+ * residus a la següent.
+ */
+export function checkTancament(arrel = arrelPerDefecte(), { torn = null, dia = avui(), ara = Date.now(), fase = null } = {}) {
+  const r = checkEscriptori(arrel, { dia, ara, fase });
+  const errors = [...r.errors];
+  const avisos = [...r.avisos];
+  if (typeof torn === 'string' && torn && r.convocatoria.vida.length) {
+    const despres = new Map(vidaTaula(arrel, perNomDe(arrel), { dia, ara, tanca: torn }).map((v) => [v.nom, v]));
+    for (const v of r.convocatoria.vida) {
+      if (!v.valid || despres.get(v.nom)?.valid !== false) continue;
+      const missatge = `[CONV-08] En tancar ${curt(torn)}, ${senseMd(v.nom)} es queda sense vida: dona-li un consumidor (· per a [[…]]) o una retenció del Mestre, o arxiva'l.`;
+      (r.convocatoria.fase === 'bloqueig' ? errors : avisos).push(missatge);
+    }
+  }
+  return { valid: errors.length === 0, fase: r.convocatoria.fase, errors, avisos };
+}
+
+function informeTancament(arrel, torn) {
+  const r = checkTancament(arrel, { torn });
+  for (const e of r.errors) console.error(`[Porta Olivera · tancament] ${e}`);
+  for (const a of r.avisos) console.log(`[Porta Olivera · tancament] avís: ${a}`);
+  if (r.valid) console.log(`[Porta Olivera · tancament] Escriptori net per a tancar (fase «${r.fase}»).`);
+  return r.valid ? 0 : 1;
+}
+
 /** Les tres comprovacions de la transició Pla → Petorreta: la taula, el pla i la secció 0.
  *  Amb `fitxer` (la ruta de la petorreta), també val el pla de la jornada que porta
  *  el seu nom. Ordre del Mestre (261007), defecte de mitjanit: el prompt
@@ -401,7 +787,7 @@ export function checkTaula(arrel = arrelPerDefecte(), { dia = avui() } = {}) {
  *  valent. Un prompt batejat amb la jornada nova continua demanant el pla d'eixa
  *  jornada; un prompt amb data antiga només passa si el seu pla és encara al
  *  primer nivell de la taula. */
-export function checkOlivera(arrel = arrelPerDefecte(), { contingut = null, dia = avui(), fitxer = null } = {}) {
+export function checkOlivera(arrel = arrelPerDefecte(), { contingut = null, dia = avui(), fitxer = null, ara = Date.now(), fase = null } = {}) {
   const errors = [...checkTaula(arrel, { dia }).errors];
 
   const jornada = typeof fitxer === 'string' ? NOM.exec(path.basename(fitxer))?.[1] ?? null : null;
@@ -418,7 +804,10 @@ export function checkOlivera(arrel = arrelPerDefecte(), { contingut = null, dia 
     }
   }
 
-  return { valid: errors.length === 0, errors };
+  // Convocatòria v4 (261009): en fase «avis» les troballes van a `avisos` i no tanquen la porta.
+  const conv = checkConvocatoria(arrel, { fitxer, contingut, dia, ara, fase });
+  errors.push(...conv.errors);
+  return { valid: errors.length === 0, errors, avisos: conv.avisos };
 }
 
 /** És una petorreta de l'Escriptori? Només eixe cas dispara la porta. */
@@ -707,10 +1096,22 @@ function despenja(text, moguts, presentsAbans, { reapunta, carpeta }) {
   const relCarpeta = path.posix.relative(ESCRIPTORI, carpeta);
   const canvis = [];
   const reapuntats = new Set();
-  for (const a of ancoresDe(text)) {
+  const totes = ancoresDe(text);
+  // 261009: la línia de declaració amb motiu («- [[doc]] · …») d'un document mogut se'n va
+  // sencera, motiu inclòs; el token sol deixaria el motiu solt a l'índex.
+  const ambMotiu = liniesDeDeclaracio(text, totes, actives);
+  for (const a of totes) {
+    const linia = ambMotiu.find((d) => a.inici >= d.inici && a.inici < d.final);
+    if (linia && perNom.has(resolAncora(linia.primera.raw, presentsAbans))) {
+      if (linia.primera === a) canvis.push({ ...a, final: linia.final, text: '' });
+      continue;
+    }
     const nom = resolAncora(a.raw, presentsAbans);
     if (!nom || !perNom.has(nom)) continue;
     const viu = actives.some(([inici, final]) => a.inici >= inici && a.inici < final);
+    // Un consumidor arxivat («· per a [[X]]») passa a apuntar a l'arxiu: la declaració que el
+    // cita es veu rància a la porta, i ningú no perd el fil.
+    if (linia) { canvis.push({ ...a, text: `${a.marca}[[${relCarpeta}/${senseMd(nom)}${sufixDe(a.raw)}]]` }); continue; }
     if (!reapunta || viu) { canvis.push({ ...a, text: '' }); continue; }
     canvis.push({ ...a, text: `${a.marca}[[${relCarpeta}/${senseMd(nom)}${sufixDe(a.raw)}]]` });
     reapuntats.add(nom);
@@ -883,11 +1284,11 @@ export function renomena(arrel = arrelPerDefecte(), { vell, nou, sec = false } =
 
 /* ── CLI ──────────────────────────────────────────────────────────────────── */
 
-const US = 'Ús: porta-olivera.mjs [--informe] | --hook | --arxiva [--nom FITXER]... [--sessio aammdd_Nom] [--reapunta] [--sec] | --repara [--sec] | --renomena VELL --a NOU [--sec]';
+const US = 'Ús: porta-olivera.mjs [--informe] | --hook | --arxiva [--nom FITXER]... [--sessio aammdd_Nom] [--reapunta] [--sec] | --repara [--sec] | --renomena VELL --a NOU [--sec] | --tancament [--torn ID]';
 
 /** Banderes de la línia d'ordres. Una bandera desconeguda no es llig com a informe: falla. */
 function opcions(argv) {
-  const o = { informe: false, hook: false, arxiva: false, repara: false, renomena: null, a: null, sec: false, reapunta: false, sessio: null, noms: [] };
+  const o = { informe: false, hook: false, arxiva: false, repara: false, renomena: null, a: null, sec: false, reapunta: false, sessio: null, noms: [], tancament: false, torn: null };
   const valor = (i, nom, que) => {
     const a = argv[i];
     const v = a === nom ? argv[i + 1] : a.slice(nom.length + 1);
@@ -902,6 +1303,8 @@ function opcions(argv) {
     else if (a === '--hook') o.hook = true;
     else if (a === '--arxiva') o.arxiva = true;
     else if (a === '--repara') o.repara = true;
+    else if (a === '--tancament') o.tancament = true;
+    else if (amb('--torn')) { una(o.torn, '--torn'); o.torn = valor(i, '--torn', "l'identificador del torn"); if (a === '--torn') i++; }
     else if (a === '--sec') o.sec = true;
     else if (a === '--reapunta') o.reapunta = true;
     else if (amb('--nom')) { o.noms.push(valor(i, '--nom', "el nom d'un document")); if (a === '--nom') i++; }
@@ -910,7 +1313,8 @@ function opcions(argv) {
     else if (amb('--a')) { una(o.a, '--a'); o.a = valor(i, '--a', 'el nom nou del document'); if (a === '--a') i++; }
     else throw new Error(`Argument desconegut: ${a}. ${US}`);
   }
-  if ([o.informe, o.hook, o.arxiva, o.repara, o.renomena !== null].filter(Boolean).length > 1) throw new Error(`Tria un sol mode. ${US}`);
+  if ([o.informe, o.hook, o.arxiva, o.repara, o.renomena !== null, o.tancament].filter(Boolean).length > 1) throw new Error(`Tria un sol mode. ${US}`);
+  if (o.torn !== null && !o.tancament) throw new Error(`--torn només val amb --tancament. ${US}`);
   const mal = 'només valen amb --arxiva; --sec també amb --repara i --renomena';
   if ((o.noms.length || o.sessio !== null || o.reapunta) && !o.arxiva) throw new Error(`--nom, --sessio, --reapunta i --sec ${mal}. ${US}`);
   if (o.sec && !o.arxiva && !o.repara && o.renomena === null) throw new Error(`--nom, --sessio, --reapunta i --sec ${mal}. ${US}`);
@@ -949,7 +1353,14 @@ function informe(arrel, dia = avui()) {
   console.log(pla.length
     ? `ℹ️ Pla d'Implementació de hui: ${pla.map((d) => d.nom).join(', ')}`
     : "ℹ️ Cap Pla d'Implementació de hui: el demana l'escriptura d'una petorreta, no l'Escriptori net.");
-  return checkTaula(arrel, { dia }).valid ? 0 : 1;
+  // Convocatòria v4 (261009): el motiu de cada viu, les troballes i el sediment de l'índex.
+  const conv = checkConvocatoria(arrel, { dia });
+  console.log(`[Porta Olivera] Convocatòria v4 · fase «${conv.fase}» (${BANDERA_FASE}).`);
+  for (const v of conv.vida) console.log(`   ${v.valid ? '🌿' : '🍂'} ${senseMd(v.nom)} ← ${v.motiu}`);
+  for (const e of conv.errors) console.log(`❌ ${e}`);
+  for (const a of conv.avisos) console.log(`⚠️ ${a}`);
+  if (conv.sediment) console.log(`ℹ️ Sediment de l'índex: ${conv.sediment.linies} línies, ${conv.sediment.bytes} B, ${conv.sediment.seccionsBuides.length} secció(ns) buides${conv.sediment.fixAutomatic ? ", bloc «Fix Automàtic d'Àncores»" : ''}.`);
+  return checkTaula(arrel, { dia }).valid && conv.valid ? 0 : 1;
 }
 
 function main(argv = process.argv.slice(2)) {
@@ -999,6 +1410,7 @@ function main(argv = process.argv.slice(2)) {
     return;
   }
 
+  if (o.tancament) { process.exitCode = informeTancament(arrel, o.torn); return; }
   if (!o.hook) { process.exitCode = informe(arrel); return; }
 
   // Mode hook: sense payload no hi ha res a jutjar, i no es pot fingir un verd.

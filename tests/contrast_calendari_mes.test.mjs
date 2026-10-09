@@ -162,6 +162,34 @@ test('les regles del mes pinten amb eixes parelles', () => {
   assert.equal(regla('.sdp-cal-dia--fora').color, 'var(--sdp-text-suau)');
 });
 
+/* Onada 6 (prompt 261009_0230, punt 1; pla de l'Onada 5, tasca 16) · L'enllaç
+   de cada esdeveniment hereta el color i la lletra de la seua peça: cap
+   parella de colors nova que mesurar (les d'amunt ja ho són). Al Mes i a la
+   Setmana només es pot clicar amb ratolí: les peces fan 24px i en tàctil
+   (Pedra Seca §6) el toc passa al dia. A l'Agenda, que no tria cap dia, la
+   fila fa --sdp-touch en tàctil i el toc és de l'enllaç. */
+test('Onada 6 · l’enllaç de l’esdeveniment hereta el color, cobrix la peça i en tàctil només el toca l’Agenda, de --sdp-touch', () => {
+  const enllac = regla('.sdp-cal-enllac');
+  assert.deepEqual([enllac.color, enllac['text-decoration'], enllac['pointer-events']], ['inherit', 'none', 'none']);
+  assert.deepEqual([regla('.sdp-cal-enllac::after').position, regla('.sdp-cal-enllac::after').inset], ['absolute', '0']);
+  const posicionades = /(?:^|\n)\s*\.sdp-cal-barra--enllac,\s*\.sdp-cal-agenda__acte--enllac\s*\{([^{}]*)\}/.exec(modules)?.[1] ?? '';
+  assert.match(posicionades, /position:\s*relative/);
+  const ratoli = /@media \(pointer: fine\) \{\s*\.sdp-cal-enllac \{([^{}]*)\}/.exec(modules)?.[1] ?? '';
+  assert.match(ratoli, /pointer-events:\s*auto/);
+  // El subratllat, amb la guarda de ratolí de tot :hover (modules.abast.capes.test.js, Fase B).
+  assert.match(modules, /@media \(hover: hover\) and \(pointer: fine\) \{\s*\.sdp-cal-enllac:hover \{[^{}]*text-decoration:\s*underline/);
+  // Revisió · L'Agenda no tria cap dia: en tàctil la fila fa --sdp-touch i el toc és de l'enllaç.
+  const tactil = /@media \(pointer: coarse\) \{\s*\.sdp-cal-agenda__acte \{([^{}]*)\}\s*\.sdp-cal-agenda__acte--enllac \.sdp-cal-enllac \{([^{}]*)\}/.exec(modules);
+  assert(tactil, 'no trobe la regla tàctil de l’Agenda');
+  assert.match(tactil[1], /min-block-size:\s*var\(--sdp-touch\)/);
+  assert.match(tactil[2], /pointer-events:\s*auto/);
+  // Fora d'eixos dos blocs, cap regla torna a encendre el punter de l'enllaç (el Mes i la Setmana, en tàctil, passen el toc al dia).
+  const encenen = [...modules.matchAll(/[{}]([^{}]*\.sdp-cal-enllac[^{}]*)\{[^{}]*pointer-events:\s*auto/g)].map(([, prelud]) => prelud.trim().replace(/\s+/g, ' '));
+  assert.deepEqual(encenen, ['.sdp-cal-enllac', '.sdp-cal-agenda__acte--enllac .sdp-cal-enllac']);
+  // La capa del mes continua sense rebre el clic: el rep el dia de davall.
+  assert.match(modules, /\.sdp-cal-mes__barres \{[^{}]*pointer-events:\s*none/);
+});
+
 test('Pedra Seca a les regles del mes: cap hex ni primitiu, radis de l’escala, espais de 0,25rem, cap ombra ni scroll', () => {
   const inici = modules.indexOf('/* Mes i 2 setmanes (VistaMes).');
   const fi = modules.indexOf('.sdp-cal-mes--compacte .sdp-cal-mes__punt', inici);

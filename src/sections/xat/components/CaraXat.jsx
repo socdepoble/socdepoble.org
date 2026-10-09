@@ -23,9 +23,16 @@
  *
  * Qualsevol altre valor pinta EL MATEIX Avatar que abans, amb les mateixes
  * props (Llei del Píxel). Model B: el Xat no toca Supabase; resol el port.
+ *
+ * Onada 6 (tasca 12) · La IAIA té cara pròpia al xat: quan arriba amb el seu
+ * avatar del padró (caraDeLaIAIA, data/xatsPerDefecte.js), es pinta la iaia
+ * del mocador roig de «Festa del Poble», retallada per l'enquadrament 'iaia'
+ * d'Avatar. Ho veuen igual la llista, la capçalera de la conversa, «Nova
+ * conversa», la cerca i el xat de mostra: totes les cares passen per ací.
  */
 import { Avatar } from '../../../components/PedraSeca/index.js';
 import { useResolvedAsset } from '../../../hooks/useResolvedAsset.js';
+import { caraDeLaIAIA } from '../../../data/xatsPerDefecte.js';
 
 /** Una referència opaca del port de mitjans ('sdp-media://…'). */
 export const esMitjaOpac = (src) => typeof src === 'string' && src.trim().startsWith('sdp-media://');
@@ -39,6 +46,10 @@ function CaraPujada({ nom, src, mida, llavor, alt, className }) {
 }
 
 export default function CaraXat({ nom, src = null, mida = 'md', llavor = null, alt, className }) {
+  const iaia = caraDeLaIAIA(src);
+  if (iaia) {
+    return <Avatar nom={nom} src={iaia.src} mida={mida} llavor={llavor} alt={alt} className={className} enquadrament={iaia.enquadrament} />;
+  }
   const Cara = esMitjaOpac(src) ? CaraPujada : Avatar;
   return <Cara nom={nom} src={src} mida={mida} llavor={llavor} alt={alt} className={className} />;
 }

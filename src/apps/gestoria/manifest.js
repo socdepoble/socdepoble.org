@@ -34,6 +34,8 @@ export default {
     { slug: 'bancs', titol: { ca: 'Bancs', es: 'Bancos' }, icona: 'Building2' },
     { slug: 'impostos', titol: { ca: 'Impostos', es: 'Impuestos' }, icona: 'Percent' },
     { slug: 'full', titol: { ca: 'Full trimestral', es: 'Hoja trimestral' }, icona: 'FileSpreadsheet' },
+    /* Onada 6, ordre del Mestre (261009): l'històric del banc, la despesa en IA, les simulacions i el llibre per a la gestora. */
+    { slug: 'historic', titol: { ca: 'Històric i IA', es: 'Histórico e IA' }, icona: 'Activity' },
     { slug: 'informes', titol: { ca: 'Informes', es: 'Informes' }, icona: 'ChartColumn' },
     { slug: 'escaner', titol: { ca: 'Escàner Local', es: 'Escáner Local' }, icona: 'ScanLine' },
     { slug: 'aprendre', titol: { ca: 'Aprendre', es: 'Aprender' }, icona: 'NotebookPen' }

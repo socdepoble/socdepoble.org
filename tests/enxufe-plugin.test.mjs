@@ -5,8 +5,9 @@
  *     parèntesis, claudàtors i claus equilibrats fora de cadenes i comentaris);
  *   · cap funció ni constant del plugin cridada sense definir ni definida dues
  *     vegades, i cap identificador de callback sense funció;
- *   · el contracte d'amfitrió: només els atributs universals a l'element, només
- *     nomPoble i poble al global, cap atribut ni clau de backend;
+ *   · el contracte d'amfitrió: només els atributs universals a l'element (i,
+ *     a la instància de WordPress, l'opt-in ruta-a-url), només nomPoble i
+ *     poble al global, cap atribut ni clau de backend;
  *   · capçaleres (plugin, readme, block.json) coherents entre elles i amb el
  *     filtre update_plugins_{host};
  *   · text domain únic i traducció valenciana completa;
@@ -20,6 +21,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { ESLint } from 'eslint';
 import { CONTRACTE_AMFITRIO } from '../vite.standalone.config.js';
+import { CONTRACTE_AMFITRIO_V1 } from '../src/config/contracteAmfitrio.js';
 import { patronsActualitzadorEn, requisitsDe, variantDirectoriReadme } from '../wordpress-plugin/eines/empaqueta.mjs';
 
 const ARREL = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -136,7 +138,7 @@ test('cap funció del plugin es crida sense definir ni es definix dues vegades',
      declarats ací (opcions, seccions, proves, codis d'error, nonces, filtres). */
   const NO_FUNCIONS = new Set([
     'socdepoble_enxufe_amfitrio', 'socdepoble_enxufe_nompoble', 'socdepoble_enxufe_poble', // secció i camps d'ajustos
-    'socdepoble_enxufe_config',                                                              // filtre públic
+    'socdepoble_enxufe_config', 'socdepoble_enxufe_ruta_a_url',                            // filtres públics
     'socdepoble_enxufe_canal', 'socdepoble_enxufe_paquet',                                  // opció i proves de Salut
     'socdepoble_enxufe_comprova',                                                            // acció i nonce
     'socdepoble_enxufe_http', 'socdepoble_enxufe_url', 'socdepoble_enxufe_temporal', 'socdepoble_enxufe_arrel', 'socdepoble_enxufe_bloqueig' // codis d'error
@@ -176,12 +178,27 @@ test('cap constant del plugin s\'usa sense definir ni es definix dues vegades', 
 
 const ATRIBUTS_DE_BACKEND = /\b(supabase-url|supabase-anon-key|backend-url|tenant-id|data-mode|bot-api-url|oauth-relay-url|sollutia-issuer|config-id)\b/;
 
-test('l\'element només porta atributs del contracte universal, i el global només nomPoble i poble', () => {
+test('l\'element només porta atributs del contracte (universals i l\'opt-in ruta-a-url), i el global només nomPoble i poble', () => {
   const marcatge = llig('includes/marcatge.php');
   const cos = marcatge.slice(marcatge.indexOf('function socdepoble_enxufe_element('), marcatge.indexOf('function socdepoble_enxufe_te_bundle('));
   const emesos = [...cos.matchAll(/ ([a-z-]+)="/g)].map((m) => m[1]).sort();
-  assert.deepEqual(emesos, ['fonts-href', 'nom-poble', 'plugin-url', 'poble', 'ruta-inicial', 'traductor-url']);
-  for (const atribut of emesos) assert.ok(CONTRACTE_AMFITRIO.atributs.includes(atribut), atribut);
+  assert.deepEqual(emesos, ['fonts-href', 'nom-poble', 'plugin-url', 'poble', 'ruta-a-url', 'ruta-inicial', 'traductor-url']);
+  for (const atribut of emesos) {
+    assert.ok(CONTRACTE_AMFITRIO.atributs.includes(atribut) || CONTRACTE_AMFITRIO_V1.atributsOptIn.includes(atribut), atribut);
+  }
+
+  /* Onada 5 (ordre del Mestre, 261009): la instància pròpia de WordPress
+     declara la clàusula dels slugs, per defecte al fragment i només amb un
+     mode del contracte. El marcatge de referència crida l'element sense
+     serveis i es queda en sdp.markup.v1, sense cap opt-in. */
+  const nomesWordpress = cos.match(/\n\tif \( \$amb_serveis \) \{\n([^]*?)\n\t\}\n/)?.[1] ?? '';
+  assert.match(nomesWordpress, / ruta-a-url="/, 'l\'opt-in només a la instància pròpia de WordPress');
+  assert.match(nomesWordpress, /apply_filters\(\s*'socdepoble_enxufe_ruta_a_url',\s*'fragment'\s*\)/, 'per defecte, el fragment: no arriba al servidor');
+  const modes = nomesWordpress.match(/in_array\(\s*\$ruta_a_url,\s*array\(([^)]*)\),\s*true\s*\)/)?.[1];
+  assert.ok(modes, 'comparació estricta amb in_array');
+  assert.deepEqual([...modes.matchAll(/'([a-z]+)'/g)].map((m) => m[1]), [...CONTRACTE_AMFITRIO_V1.rutaAUrl.modes], 'els modes del contracte');
+  const referencia = marcatge.slice(marcatge.indexOf('function socdepoble_enxufe_marcatge_de_referencia('), marcatge.indexOf('function socdepoble_enxufe_afig_plantilla('));
+  assert.match(referencia, /socdepoble_enxufe_element\( array\(\), false \)/, 'la referència copiable no porta l\'opt-in');
 
   const permesos = marcatge.slice(marcatge.indexOf("'soc-de-poble' => array("), marcatge.indexOf('function socdepoble_enxufe_shortcode('));
   assert.deepEqual([...permesos.matchAll(/'([a-z-]+)'\s*=>\s*true/g)].map((m) => m[1]).sort(), emesos, 'wp_kses ha de deixar passar exactament els atributs emesos');

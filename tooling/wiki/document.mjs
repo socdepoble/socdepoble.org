@@ -37,9 +37,11 @@ export function createDraft(root, id, opts) {
     const contract = loadContract(root,{templates:false});
     const errors = validateSchema({...delivery.route.output,description:opts.description,visibility:'private',reflex:delivery.reflex},contract.schema);
     if (errors.length) throw new Error(errors.join('\n'));
-    writeIndexedDraft(root, file, raw, { requireCleanTable: ['prompt.local', 'prompt.consell'].includes(delivery.route.id) });
+    const escrit = writeIndexedDraft(root, file, raw, { requireCleanTable: ['prompt.local', 'prompt.consell'].includes(delivery.route.id) });
     commitCreation(root,id,delivery.reflex,raw);
-    return {file:opts.file,reflex:delivery.reflex,state:'draft',note:'Completa les seccions [pendent] abans de validar.'};
+    // 261009: en fase «avis» la convocatòria v4 avisa; els de dins del lock són els més recents.
+    const avisos = escrit?.avisos ?? delivery.avisos ?? [];
+    return {file:opts.file,reflex:delivery.reflex,state:'draft',note:'Completa les seccions [pendent] abans de validar.',...(avisos.length ? {avisos} : {})};
   } catch (error) {
     // Si hi ha un fitxer parcial/concurrent o falla la metadata, el rebut queda
     // preparat i visible per a recuperació. Mai certifiquem una absència falsa.
@@ -47,6 +49,11 @@ export function createDraft(root, id, opts) {
     throw error;
   }
 }
+/** 261009: els avisos de la convocatòria v4 (fase «avis») van per stderr; el JSON de stdout es conserva. */
+function avisa(avisos) {
+  for (const a of Array.isArray(avisos) ? avisos : []) console.error(`[Convocatòria v4 · avís] ${a}`);
+}
+
 async function main() {
   const o=options(), root=path.resolve(o.arrel || ROOT), command=o._[0];
   let result;
@@ -60,7 +67,8 @@ async function main() {
   else if (command==='context') {
     const d=deliverContext(root,o['turn-id'],{route:o.route,file:o.file});
     result={reflex:d.reflex,route:d.route.id,template:d.template};
-  } else if(command==='create') result=createDraft(root,o['turn-id'],{route:o.route,file:o.file,title:o.title,description:o.description,actor:o.actor});
+    avisa(d.avisos);
+  } else if(command==='create') { result=createDraft(root,o['turn-id'],{route:o.route,file:o.file,title:o.title,description:o.description,actor:o.actor}); avisa(result.avisos); }
   else if(command==='plan') {const t=bindPlan(root,o['turn-id'],o.file);result={turn_id:t.turn_id,state:t.state,plan:t.plan};}
   else if(command==='check') {const errors=validateDocument(root,fs.readFileSync(path.join(root,o.file),'utf8'),o.file,{closed:true});result={valid:!errors.length,errors};process.exitCode=errors.length?1:0;}
   else throw new Error('Ús: document.mjs context|create|plan|check --turn-id ID --route ID --file CAMÍ');

@@ -14,6 +14,14 @@ import { dosDigits, horaDe } from '../../utils/calendari.js';
 export const COPYRIGHT_SDP = 'CC BY-NC-SA 4.0 Sóc de Poble / Fet per la IAIA i Nano Banana';
 
 /**
+ * Onada 5 (ordre del Mestre, 261008) · Copyright d'un poble: l'entradilla i
+ * les fotos són de la Viquipèdia i de Wikimedia Commons, amb CC BY-SA. El
+ * mateix text que pinta la targeta de /pobles. No porta NC: afegir-lo a un
+ * text BY-SA no és compatible amb la llicència.
+ */
+export const COPYRIGHT_VIQUIPEDIA = '© Viquipèdia / Wikimedia Commons (CC BY-SA)';
+
+/**
  * Lleva els espais finals i UN punt final. Els punts suspensius («...» i «…»)
  * es conserven: són part del text, no la puntuació que el tanca. Si no rep
  * text (un node de React, null, un número…), el torna tal qual.
@@ -242,6 +250,23 @@ export function mesDeLaPastilla({ dateTime, date } = {}) {
     Calendari tal qual (que s'obri en el seu mes d'obertura). */
 export function rutaCalendariDelMes(mes) {
   return esMesIso(mes) ? `${RUTA_CALENDARI}?mes=${encodeURIComponent(mes)}` : RUTA_CALENDARI;
+}
+
+/**
+ * Onada 6 (prompt 261009_0230, punt 1; pla de l'Onada 5, tasca 16) · On porta
+ * l'etiqueta «Agenda» d'un acte: el Calendari en la vista Mes amb eixe dia
+ * triat (?date=), que en mostra les targetes davall. És una clau «AAAA-MM-DD»
+ * que existix al calendari, amb la regla del ?date= (agendaMur.js ·
+ * cursorDeClau, calendari-5: any de quatre xifres a partir del 1000; el 30 de
+ * febrer no és el 2 de març). Sense una clau vàlida, el Calendari tal qual.
+ * La pastilla de data no la fa servir: continua portant al MES (ordre del
+ * Mestre, 261001, carril A).
+ */
+export function rutaCalendariDeLaData(clau) {
+  const parts = typeof clau === 'string' ? DIA_ISO.exec(clau) : null;
+  const [any, mes, dia] = parts ? parts.slice(1).map(Number) : [];
+  const existix = Boolean(parts) && any >= 1000 && mes >= 1 && mes <= 12 && dia >= 1 && dia <= new Date(any, mes, 0).getDate();
+  return existix ? `${RUTA_CALENDARI}?vista=mes&date=${clau}` : RUTA_CALENDARI;
 }
 
 /**

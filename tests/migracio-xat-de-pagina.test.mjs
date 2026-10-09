@@ -513,12 +513,175 @@ test('el CHECK impedeix recrear /ia encara que una RPC antiga estiga en vol', ()
   assert.ok(STS_CANONICA.indexOf(add) < STS_CANONICA.indexOf(subjecteVigent().st));
 });
 
-test('el README documenta dependència, àlies, identitat estable i conflicte sense dir que està aplicada', () => {
+/* Les capçaleres dels SQL es conserven tal com es van aplicar; l'estat viu
+   el porta el README. El Mestre va aplicar la cadena al node remot el 261009. */
+const APLICADA = 'Aplicada al node remot pel Mestre el 261009';
+
+test('el README documenta dependència, àlies, identitat estable i conflicte, i que ja està aplicada', () => {
   const entry = readme.indexOf(`\`migrations/${path.basename(CANONICA)}\``);
   assert.ok(entry > readme.indexOf(`\`migrations/${path.basename(MIGRACIO)}\``));
   const docs = readme.slice(entry, readme.indexOf('- `seed.sql`', entry));
-  for (const text of ['/iaia', '/ia', 'SDP-XAT-014', 'id', 'missatges', 'participants', 'NO aplicada']) {
+  for (const text of ['/iaia', '/ia', 'SDP-XAT-014', 'id', 'missatges', 'participants']) {
     assert.ok(docs.includes(text), `${text} absent`);
   }
+  for (const migracio of [MIGRACIO, CANONICA]) {
+    const posicio = readme.indexOf(`\`migrations/${path.basename(migracio)}\``);
+    const entrada = readme.slice(posicio).split('\n\n')[0].replace(/\s+/g, ' ');
+    assert.ok(entrada.includes(APLICADA), `${path.basename(migracio)}: falta l'estat aplicat`);
+    assert.ok(!/NO aplicada|No està aplicada/.test(entrada), `${path.basename(migracio)}: encara es diu pendent`);
+  }
   assert.ok(sqlCanonica.endsWith('\n') && !sqlCanonica.endsWith('\n\n'));
+});
+
+
+// ── Convergència del node remot (F6, Onada 5): cap còpia de la funció ─────────
+/* El 404 de POST /rest/v1/rpc/obri_fil_de_pagina es cura aplicant la cadena
+   pendent; la convergència només comprova, esborra sobrecàrregues i torna a
+   donar permisos. Si definira la funció, en faria una segona font. */
+const CONVERGENCIA = 'supabase/migrations/2610090100_convergencia_xat_de_pagina.sql';
+const sqlConvergencia = llig(CONVERGENCIA);
+const STS_CONVERGENCIA = sentencies(sqlConvergencia);
+const CODI_CONVERGENCIA = STS_CONVERGENCIA.join(';\n').toLowerCase();
+const capcaleraConvergencia = sqlConvergencia.slice(0, sqlConvergencia.indexOf('begin;'));
+const FIRMA = 'public.obri_fil_de_pagina(uuid, text, text, text)';
+const MIGRACIONS = fs.readdirSync(path.join(REPO, 'supabase/migrations')).filter((f) => f.endsWith('.sql')).sort();
+/* El codi d'una migració, sense comentaris i en minúscules, pel prefix de versió. */
+const codiDeVersio = (versio) => {
+  const nom = MIGRACIONS.find((f) => f.startsWith(`${versio}_`));
+  assert.ok(nom, `cap migració ${versio}`);
+  return sentencies(llig(`supabase/migrations/${nom}`)).join(';\n').toLowerCase();
+};
+const espais = (text) => text.replace(/\s+/g, ' ');
+/* Les cinc consultes de lectura, a la capçalera i al README. */
+const DIAGNOSTIC = [
+  "pg_catalog.pg_proc where proname = 'obri_fil_de_pagina'",
+  'select version from supabase_migrations.schema_migrations',
+  "table_schema = 'public' and table_name = 'xat_fils'",
+  "has_function_privilege('authenticated', p.oid, 'execute')",
+  "pg_catalog.pg_constraint where conname = 'xat_fils_pagina_iaia_canonica'"
+];
+
+test('la convergència no crea ni redefinix cap funció, ni toca taules o polítiques', () => {
+  assert.deepEqual(funcionsDe(STS_CONVERGENCIA), []);
+  assert.doesNotMatch(CODI_CONVERGENCIA, /create\s+(or\s+replace\s+)?function/);
+  assert.doesNotMatch(CODI_CONVERGENCIA, /drop function (if exists )?public\.obri_fil_de_pagina/, 'la canònica no s’esborra mai');
+  assert.doesNotMatch(CODI_CONVERGENCIA, /create (table|policy|index|unique index|trigger)|alter table|drop table|truncate|insert into|update public\.|delete from/);
+});
+
+test('la convergència és una transacció amb esperes, recarrega PostgREST i acaba amb commit', () => {
+  assert.equal(STS_CONVERGENCIA[0].trim().toLowerCase(), 'begin');
+  assert.match(STS_CONVERGENCIA[1], /^\s*set local lock_timeout = '5s'\s*$/i);
+  assert.match(STS_CONVERGENCIA[2], /^\s*set local statement_timeout = '60s'\s*$/i);
+  assert.match(STS_CONVERGENCIA.at(-2), /^\s*notify pgrst, 'reload schema'\s*$/i);
+  assert.equal(STS_CONVERGENCIA.at(-1).trim().toLowerCase(), 'commit');
+});
+
+test('la canònica es busca per la signatura exacta de 2609282100 i ha de ser security definer amb search_path buit', () => {
+  assert.ok(CODI_CONVERGENCIA.includes(`to_regprocedure('${FIRMA}')`), 'to_regprocedure de la canònica absent');
+  assert.ok(CODI.includes(`revoke execute on function ${FIRMA} from public, anon`), 'la firma no és la de 2609282100');
+  assert.match(CODI_CONVERGENCIA, /p\.prosecdef\s+and 'search_path=""' = any \(coalesce\(p\.proconfig, '\{\}'::text\[\]\)\)\) then\s+raise exception 'sdp-conv-005: /);
+  /* El client envia els noms de la signatura canònica: la deriva no és la causa. */
+  const params = /obri_fil_de_pagina\(([^)]*)\)/.exec(funcio('obri_fil_de_pagina').capcalera)[1]
+    .split(',').map((p) => p.trim().replace(/\s+default\s+.*$/, '').split(/\s+/));
+  assert.equal(params.map(([, tipus]) => tipus).join(', '), /\(([^)]*)\)/.exec(FIRMA)[1]);
+  const client = /rpc\('obri_fil_de_pagina', \{([\s\S]*?)\}\)/.exec(llig('src/data/supabase/xat.js'));
+  assert.ok(client, 'la crida del client a obri_fil_de_pagina absent');
+  assert.deepEqual([...client[1].matchAll(/(p_[a-z_]+):/g)].map((m) => m[1]).sort(), params.map(([nom]) => nom).sort());
+});
+
+test('cada dependència que comprova SDP-CONV-004 existix amb eixe nom i eixos tipus a la migració que nomena', () => {
+  const DEPENDENCIES = STS_CONVERGENCIA.find((st) => /sdp-conv-004/i.test(st));
+  assert.ok(DEPENDENCIES, 'el bloc de dependències absent');
+  const codi = DEPENDENCIES.toLowerCase();
+  assert.ok(STS_CONVERGENCIA.indexOf(DEPENDENCIES) < STS_CONVERGENCIA.findIndex((st) => /sdp-conv-005/i.test(st)),
+    'les dependències es comproven abans que la canònica');
+  /* Columnes: (taula, columna, migració) creades per eixa migració. */
+  const columnes = [...codi.matchAll(/\('([a-z_]+)', '([a-z_]+)', '(\d{10})'\)/g)];
+  assert.ok(columnes.length >= 10, 'massa poques columnes');
+  for (const [, taula, columna, versio] of columnes) {
+    const origen = codiDeVersio(versio);
+    const creada = new RegExp(`alter table public\\.${taula}\\s+add column if not exists ${columna}\\b`).test(origen)
+      || new RegExp(`create table if not exists public\\.${taula} \\([^;]*\\b${columna}\\s+\\w`).test(origen);
+    assert.ok(creada, `public.${taula}.${columna} no la crea ${versio}`);
+  }
+  for (const [taula, columna] of [['xat_fils', 'ultim_seq'], ['xat_fils', 'comunitat_id'], ['xat_fils', 'interlocutor_id'],
+    ['xat_fils', 'subjecte_tipus'], ['towns', 'slug'], ['organizations', 'logo_url']]) {
+    assert.ok(columnes.some(([, t, c]) => t === taula && c === columna), `${taula}.${columna} no es comprova`);
+  }
+  /* to_regprocedure necessita els tipus exactes: els de les revoke i grant de les migracions. */
+  const firmes = [...codi.matchAll(/to_regprocedure\('(private\.[a-z_]+\([^)]*\))'\)/g)].map((m) => m[1]);
+  assert.deepEqual(firmes.map((f) => f.slice(0, f.indexOf('('))).sort(), [
+    'private.is_organization_member', 'private.is_town_member', 'private.xat_fil_del_subjecte',
+    'private.xat_participant_vigent', 'private.xat_subjecte'
+  ]);
+  const totes = MIGRACIONS.filter((f) => f !== path.basename(CONVERGENCIA))
+    .map((f) => espais(sentencies(llig(`supabase/migrations/${f}`)).join(';\n').toLowerCase())).join('\n');
+  for (const firma of firmes) assert.ok(totes.includes(`on function ${firma}`), `${firma}: cap migració la definix amb eixos tipus`);
+  /* Cada etiqueta «private.x (versió)» del missatge apunta a la migració que la crea. */
+  const etiquetes = [...codi.matchAll(/'private\.([a-z_]+) \((\d{10})\)'/g)];
+  assert.equal(etiquetes.length, 6);
+  for (const [, nom, versio] of etiquetes) {
+    assert.match(codiDeVersio(versio), new RegExp(`create (or replace function|table if not exists) private\\.${nom}\\b`),
+      `private.${nom} no la crea ${versio}`);
+  }
+});
+
+test('sense la correcció /iaia avorta amb SDP-CONV-007, amb el CHECK que crea 2610042330', () => {
+  assert.match(CODI_CONVERGENCIA, /conrelid = 'public\.xat_fils'::regclass and conname = 'xat_fils_pagina_iaia_canonica'\) then\s+raise exception 'sdp-conv-007: /);
+  assert.match(sqlCanonica, /add constraint xat_fils_pagina_iaia_canonica check/);
+});
+
+test('les altres sobrecàrregues s’esborren dins del bucle, només funcions i sense CASCADE', () => {
+  const bucle = /for v_sobrecarrega in([\s\S]*?)\bloop([\s\S]*?)end loop/.exec(CODI_CONVERGENCIA);
+  assert.ok(bucle, 'bucle de sobrecàrregues absent');
+  assert.match(bucle[1], /n\.nspname = 'public' and p\.proname = 'obri_fil_de_pagina' and p\.prokind = 'f'\s+and p\.oid <> v_canonica::oid/);
+  assert.match(bucle[2], /raise notice 'sdp-conv-006: public\.obri_fil_de_pagina\(%\) no és la canònica i s''esborra\.', v_sobrecarrega\.arguments;/);
+  assert.match(bucle[2], /execute format\('drop function public\.%i\(%s\)', v_sobrecarrega\.proname, v_sobrecarrega\.arguments\);/);
+  assert.doesNotMatch(CODI_CONVERGENCIA, /cascade/);
+  assert.equal((CODI_CONVERGENCIA.match(/drop function/g) ?? []).length, 1, 'un sol drop, el del bucle');
+});
+
+test('els permisos són els de 2609282100: revoke de public i anon, grant a authenticated, i cap altre', () => {
+  const permisos = (sts) => sts.map(normalitza).filter((s) => /^(revoke|grant)\b/.test(s));
+  assert.deepEqual(permisos(STS_CONVERGENCIA), [
+    `revoke execute on function ${FIRMA} from public, anon`,
+    `grant execute on function ${FIRMA} to authenticated`
+  ]);
+  const originals = permisos(STS).filter((s) => s.includes('public.obri_fil_de_pagina('));
+  assert.deepEqual(permisos(STS_CONVERGENCIA), originals);
+});
+
+test('els codis SDP-CONV-004 a 007 són d’esta convergència i el README els cita', () => {
+  assert.match(CODI_CONVERGENCIA, /raise exception 'sdp-conv-004: /);
+  assert.match(CODI_CONVERGENCIA, /raise exception 'sdp-conv-005: /);
+  assert.match(CODI_CONVERGENCIA, /raise notice 'sdp-conv-006: /);
+  assert.match(CODI_CONVERGENCIA, /raise exception 'sdp-conv-007: /);
+  const nom = `\`migrations/${path.basename(CONVERGENCIA)}\``;
+  const posicio = readme.indexOf(nom);
+  assert.ok(posicio > readme.indexOf('`migrations/2610081543_xat_consentiment_i_metadades.sql`'), 'fora d’ordre o absent del README');
+  const entrada = espais(readme.slice(posicio).split('\n\n')[0]);
+  for (const codi of ['SDP-CONV-004', 'SDP-CONV-005', 'SDP-CONV-006', 'SDP-CONV-007']) {
+    assert.ok(capcaleraConvergencia.includes(codi), `${codi} absent de la capçalera`);
+    assert.ok(entrada.includes(codi), `${codi} absent del README`);
+    for (const altra of MIGRACIONS.filter((f) => f !== path.basename(CONVERGENCIA))) {
+      assert.ok(!llig(`supabase/migrations/${altra}`).includes(codi), `${codi} repetit a ${altra}`);
+    }
+  }
+  for (const text of [APLICADA, 'Mestre', 'INFERÈNCIA', 'ordre alfabètic', 'moderació', '404', 'PGRST202', '42501', ...DIAGNOSTIC]) {
+    assert.ok(entrada.includes(text), `${text} absent del README`);
+  }
+  assert.doesNotMatch(entrada, /NO aplicada/);
+});
+
+test('la capçalera de la convergència diu que no està aplicada, qui l’aplica, l’ordre, la inferència i el diagnòstic', () => {
+  const capcalera = espais(capcaleraConvergencia.replace(/^--\s?/gm, ''));
+  for (const text of ['NO aplicada', 'Mestre', 'mai un agent', 'ordre alfabètic', 'INFERÈNCIA', 'MODERACIÓ', '404', 'PGRST202',
+    '2609270200', '2609272200', '2609282100', '2610042330', ...DIAGNOSTIC]) {
+    assert.ok(capcalera.includes(text), `${text} absent de la capçalera`);
+  }
+  /* S'aplica després de la cadena pendent: l'ordre alfabètic la posa darrere. */
+  assert.ok(path.basename(CONVERGENCIA) > path.basename(CANONICA));
+  assert.ok(path.basename(CONVERGENCIA) > '2610081543_xat_consentiment_i_metadades.sql');
+  assert.ok(sqlConvergencia.endsWith('\n') && !sqlConvergencia.endsWith('\n\n'));
+  assert.doesNotMatch(sqlConvergencia, /offline-first|local-first/i);
 });

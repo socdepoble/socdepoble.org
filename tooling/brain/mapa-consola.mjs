@@ -106,6 +106,27 @@ export function mencionsDeSkills(cos) {
   return [...new Set([...viu.matchAll(MENCIO_SKILL)].map((m) => m[1]))].sort();
 }
 
+/**
+ * Període d'un StartCalendarInterval (261009, cron d'higiene a les 05:30): mana la clau
+ * més gran que fixa el dict (Month, un any; Day, un mes; Weekday, una setmana; Hour, un
+ * dia; Minute, una hora; cap, un minut). Amb una llista de dicts, el més curt. Sense la
+ * clau, null: el llançador continua sense interval, com abans.
+ */
+function intervalCalendari(xml) {
+  const m = /<key>StartCalendarInterval<\/key>\s*(<dict>[\s\S]*?<\/dict>|<array>[\s\S]*?<\/array>)/.exec(xml);
+  if (!m) return null;
+  const dicts = [...m[1].matchAll(/<dict>([\s\S]*?)<\/dict>/g)].map((d) => d[1]);
+  const periode = (dict) => {
+    const te = (clau) => new RegExp(`<key>${clau}</key>\\s*<integer>\\d+</integer>`).test(dict);
+    if (te('Month')) return 365 * 86400;
+    if (te('Day')) return 31 * 86400;
+    if (te('Weekday')) return 7 * 86400;
+    if (te('Hour')) return 86400;
+    return te('Minute') ? 3600 : 60;
+  };
+  return dicts.length ? Math.min(...dicts.map(periode)) : null;
+}
+
 /** Lectura mínima d'un plist d'Apple: només les claus que usa el calendari. */
 export function llegeixPlist(xml) {
   const cadena = (clau) => new RegExp(`<key>${clau}</key>\\s*<string>([^<]*)</string>`).exec(xml)?.[1] ?? null;
@@ -118,7 +139,7 @@ export function llegeixPlist(xml) {
   return {
     etiqueta: cadena('Label'),
     programa: [...args.matchAll(/<string>([^<]*)<\/string>/g)].map((m) => m[1]),
-    interval: enter('StartInterval'),
+    interval: enter('StartInterval') ?? intervalCalendari(xml),
     keepAlive: cert('KeepAlive'),
     enArrencar: cert('RunAtLoad'),
     directori: cadena('WorkingDirectory'),

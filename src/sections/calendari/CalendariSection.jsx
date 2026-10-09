@@ -47,8 +47,21 @@
  * de l'app duia a les vistes noves. Ara /calendari obri SEMPRE les vistes
  * noves, i sense ?vista= (o amb un valor que no és cap vista) la vista Mes:
  * el clon d'estructura de Google Calendar amb la pell de Pedra Seca. Les URL
- * d'abans (?mes= de la pastilla, ?date=) obrin el mateix mes. CalendariMur
- * continua a la pestanya Calendari del Mur, que no canvia.
+ * d'abans (?mes= de la pastilla, ?date=) obrin el mateix mes. (Llavors
+ * CalendariMur es quedava a la pestanya Calendari del Mur; des de l'Onada 6,
+ * vegeu davall, ja no.)
+ *
+ * Onada 6 (prompt 261009_0230, punt 1) · Un sol calendari: el cos (la
+ * navegació amb el títol a la mateixa fila, les vistes, els avisos i les
+ * targetes de davall) és CalendariDelPoble, que munta també la pestanya
+ * Calendari del Mur (CalendariMur queda sense importador). Clicar un
+ * esdeveniment porta a la pàgina de la seua publicació (al Mes i a la
+ * Setmana, amb ratolí; a l'Agenda, també amb el dit); clicar el dia, fora de
+ * l'enllaç, en mostra les targetes davall (en tàctil, també tocar un
+ * esdeveniment del Mes o de la Setmana). Ací queden el
+ * contenidor i el que és només de la pàgina: l'estat de la URL, l'agenda de
+ * Sollutia, les fonts de Google, la pantalla completa i la pastilla dins del
+ * Calendari.
  *
  * Fase visual (prompt 261001_0445) · Cinc vistes: Setmana, Dues setmanes
  * (VistaMes amb dos files des d'un dilluns), Mes, Any (VistaAny: un dia obri
@@ -80,36 +93,28 @@ import { useUIActions } from '../../app/contexts/UIContext';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { ContentProvider } from '../../components/universal/ContentProvider';
 import {
-  Alerta, Boto, BotoPantallaCompleta, Carregant, NavegacioPeriode, PantallaCompleta, UniversalCard, VistaAgenda, VistaAny, VistaMes, VistaSetmana,
-  usePantallaCompleta
+  Alerta, Boto, BotoPantallaCompleta, Carregant, PantallaCompleta, usePantallaCompleta
 } from '../../components/PedraSeca/index.js';
-import { fontsDeLActe } from '../../components/universal/EventCard.jsx';
 import { DinsDelCalendari } from '../../components/universal/barres/pastillaCalendari.js';
-import { RUTA_CALENDARI, dataHoraDeBarra, diaIso } from '../../components/universal/editorial.js';
+import { RUTA_CALENDARI, diaIso } from '../../components/universal/editorial.js';
 import { getSectionListPath, objecteDePagina } from '../../config/navigation';
 import { loadActesAgenda, teCapacitat } from '../../data/backendPort.js';
 import { useSEO } from '../../hooks/useSEO';
-import { recurrenciaSuportada } from '../../utils/esdeveniment.js';
-import { clauDeData, sumaDies } from '../../utils/periodes.js';
 import { EstatErrorDades } from '../mur/EstatErrorDades.jsx';
 import { useMur } from '../mur/MurContext';
-import { TargetaDelMur } from '../mur/TargetaDelMur.jsx';
 import { perMomentDescendent, targetesDeSistema } from '../mur/targetesMur.js';
+import { CalendariDelPoble } from './CalendariDelPoble.jsx';
 import {
-  TEXTOS_TARGETES, cursorDeMes, diaDeLaClau, entradaDeLAgenda, entradesDelCalendari, entradesDelDia, entradesDelMes,
-  entradesDelRang, mesDObertura, recompteTargetes
+  cursorDeMes, diaDeLaClau, entradaDeLAgenda, entradesDelCalendari, mesDObertura
 } from './calendariGlobal.js';
-import { SETMANES_DEL_MES, rangDeLaVista } from './estatCalendari.js';
+import { rangDeLaVista } from './estatCalendari.js';
 import { PanellFontsCalendari } from './fonts/PanellFontsCalendari.jsx';
 import { useFontsCalendari } from './fonts/useFontsCalendari.js';
 import { useEstatCalendari } from './useEstatCalendari.js';
 
-const LOCALE = 'ca-ES';
 const SENSE_AGENDA = Object.freeze({ fase: 'inactiu', entrades: Object.freeze([]) });
 /* El nom accessible del diàleg de la pantalla completa. */
 const TITOL_PANTALLA = 'Calendari a pantalla completa';
-
-const nomDelMes = ({ any, mes }) => new Date(any, mes, 1).toLocaleDateString(LOCALE, { month: 'long', year: 'numeric' });
 
 /**
  * Els actes de l'agenda de Sollutia del període que es veu ({ desde, fins },
@@ -158,61 +163,17 @@ function useActesDeLAgenda({ desde: dataDesde, fins: dataFins }) {
   return { ...(disponible ? estat : SENSE_AGENDA), reintenta: () => setIntent((i) => i + 1) };
 }
 
-/* Un acte de l'agenda de Sollutia: la targeta universal amb el títol, el lloc
-   i la pastilla del seu inici (la regla de la barra taronja: sempre plena).
-   No porta cap enllaç: l'acte no té pàgina a Sóc de Poble. */
-function TargetaDeLAgenda({ entrada }) {
-  const esdeveniment = entrada.acte;
-  const data = dataHoraDeBarra(fontsDeLActe(esdeveniment));
+/* L'avís de davall del calendari quan l'agenda de Sollutia no respon. T10
+   (261001) · El DOM és el mateix que abans d'extraure'l. Onada 6 · L'avís de
+   les targetes que no es poden situar, que anava al costat, el pinta
+   CalendariDelPoble: és el mateix al Mur. */
+function AvisDeLAgenda({ agenda }) {
+  if (agenda.fase !== 'error') return null;
   return (
-    <UniversalCard title={esdeveniment.titol} body={esdeveniment.lloc || undefined}
-      date={data.date} time={data.time} dateTime={data.dateTime} />
-  );
-}
-
-/* Els avisos de davall del calendari: l'agenda que no respon i les targetes
-   que no es poden situar. T10 (261001) · El DOM és el mateix que abans
-   d'extraure-la. */
-function AvisosDelCalendari({ agenda, senseData }) {
-  return (
-    <>
-      {agenda.fase === 'error' ? (
-        <p role="status">
-          Ara mateix no podem consultar els actes de l’agenda: el calendari mostra només les targetes del poble.{' '}
-          <Boto varietat="fantasma" onClick={agenda.reintenta}>Torna a provar</Boto>
-        </p>
-      ) : null}
-      {/* Revisió del carril A (ordre del Mestre, 261001) · Una targeta sense
-          esdeveniment no ix ni a la graella ni a la llista, i l'avís diu la
-          veritat: pot ser que no porte data o que no tinga identificador
-          (abans deia «no porta cap data», fals per a la segona). */}
-      {senseData ? (
-        <p>
-          {senseData === 1
-            ? 'Una publicació no es pot situar al calendari perquè no porta cap data o no té identificador: la trobaràs al Mur.'
-            : `${senseData} publicacions no es poden situar al calendari perquè no porten cap data o no tenen identificador: les trobaràs al Mur.`}
-        </p>
-      ) : null}
-    </>
-  );
-}
-
-/* Les targetes de davall, amb la MATEIXA targeta del Mur; `buit` és el que
-   diu sense cap targeta.
-   Ordre del Mestre (261007) · Comentar, el menú de dues vies de totes les
-   targetes (el mateix del Mur): cap gestor de llista. */
-function TargetesDeDavall({ visibles, buit }) {
-  return (
-    <>
-      <h4 role="status">
-        {visibles.length ? recompteTargetes(visibles.length) : buit}
-      </h4>
-      <div className="sdp-card-grid">
-        {visibles.map((entrada) => (entrada.agenda
-          ? <TargetaDeLAgenda key={entrada.clau} entrada={entrada} />
-          : <TargetaDelMur key={entrada.clau} item={entrada.item} esdeveniment={entrada.acte} />))}
-      </div>
-    </>
+    <p role="status">
+      Ara mateix no podem consultar els actes de l’agenda: el calendari mostra només les targetes del poble.{' '}
+      <Boto varietat="fantasma" onClick={agenda.reintenta}>Torna a provar</Boto>
+    </p>
   );
 }
 
@@ -251,51 +212,10 @@ function AmbLesFonts({ calendaris, children }) {
   );
 }
 
-const MES_PER_PAS = Object.freeze({ anterior: 'Mes anterior', hui: 'Hui', seguent: 'Mes següent' });
-const ETIQUETES_PERIODE = Object.freeze({
-  setmana: Object.freeze({ anterior: 'Setmana anterior', hui: 'Hui', seguent: 'Setmana següent' }),
-  'dues-setmanes': Object.freeze({ anterior: 'Dues setmanes anteriors', hui: 'Hui', seguent: 'Dues setmanes següents' }),
-  mes: MES_PER_PAS,
-  any: Object.freeze({ anterior: 'Any anterior', hui: 'Hui', seguent: 'Any següent' }),
-  agenda: MES_PER_PAS
-});
-/* Fase visual · La densitat de Setmana, Dues setmanes i Mes: la responsiva
-   (decisió per defecte; la compacta només amb ratolí). */
-const DENSITAT = 'responsiva';
-const dataSenseDiaDeLaSetmana = (data) => data.toLocaleDateString(LOCALE, { day: 'numeric', month: 'long', year: 'numeric' });
-/* Un rang semiobert [desde, fins) en text: «28 de setembre – 4 d’octubre de 2026». */
-const nomDelRang = ({ desde, fins }) => `${dataSenseDiaDeLaSetmana(desde)} – ${dataSenseDiaDeLaSetmana(sumaDies(fins, -1))}`;
-/* «de setembre de 2026», «d’octubre de 2026»: la preposició s'apostrofa davant de vocal. */
-const ambDe = (text) => (/^[aeiouàèéíòóú]/i.test(text) ? `d’${text}` : `de ${text}`);
-
 /* Fase visual · Dins del Calendari, la pastilla de les targetes porta a la
    vista Mes d'eixe mes (pastillaCalendari.js), també des de les altres vistes.
    Sense un mes vàlid, a la vista Mes sense mes (el d'obertura). */
 const rutaDeLaPastilla = (mes) => (cursorDeMes(mes) ? `${RUTA_CALENDARI}?vista=mes&mes=${mes}` : `${RUTA_CALENDARI}?vista=mes`);
-
-/* Els textos de cada vista: el títol de la navegació, el nom de la regió i
-   el títol i el buit de la llista de davall (sense dia triat). */
-function textosDeLaVista(vista, cursor, rang) {
-  if (vista === 'setmana') {
-    const periode = nomDelRang(rang);
-    return { periode, regio: `Calendari de la setmana del ${periode}`, llista: `Publicacions de la setmana · ${periode}`, buit: 'Cap publicació esta setmana.' };
-  }
-  if (vista === 'dues-setmanes') {
-    const periode = nomDelRang(rang);
-    return { periode, regio: `Calendari de les dues setmanes del ${periode}`, llista: `Publicacions de les dues setmanes · ${periode}`, buit: 'Cap publicació estes dues setmanes.' };
-  }
-  if (vista === 'any') {
-    const periode = String(cursor.any);
-    return { periode, regio: `Calendari de l’any ${periode}`, llista: `Publicacions de l’any · ${periode}`, buit: 'Cap publicació este any.' };
-  }
-  const periode = nomDelMes(cursor);
-  if (vista === 'agenda') {
-    return { periode, regio: `Agenda ${ambDe(periode)}`, llista: `Publicacions de l’agenda · ${nomDelRang(rang)}`, buit: 'Cap publicació en este període.' };
-  }
-  const nomMesLlarg = new Date(cursor.any, cursor.mes, 1).toLocaleDateString(LOCALE, { month: 'long' });
-  const llistaMes = nomMesLlarg.charAt(0).toUpperCase() + nomMesLlarg.slice(1);
-  return { periode, regio: `Calendari ${ambDe(periode)}`, llista: llistaMes, buit: 'Cap publicació este mes.' };
-}
 
 /* T10 (ordre del Mestre, 261001) · Les vistes a l'estil Google Calendar; P6
    (261003) · sense ?vista=, la vista Mes. La URL governa l'estat
@@ -305,70 +225,32 @@ function textosDeLaVista(vista, cursor, rang) {
    el mes, l'any o l'agenda (estatCalendari.js · rangDeLaVista). Es munta quan
    les dades del Mur ja han arribat: el mes d'obertura (mesDObertura) es tria
    amb totes les targetes, no amb la llista buida del carregant, i depén del
-   dia (`hui`), no de l'instant. */
+   dia (`hui`), no de l'instant.
+   Onada 6 (prompt 261009_0230, punt 1) · Ara és el contenidor: l'estat de la
+   URL, l'agenda de Sollutia, les fonts de Google i la pantalla completa. El
+   calendari (navegació, vistes, avisos i targetes de davall) és
+   CalendariDelPoble, el mateix que munta la pestanya Calendari del Mur. */
 function CalendariDeLesVistes({ targetes, pantalla, avisError }) {
   const hui = diaIso(new Date());
   const avui = useMemo(() => diaDeLaClau(hui), [hui]);
   const obertura = useMemo(() => mesDObertura(targetes, avui), [targetes, avui]);
   const { estat, navega, canviaVista, triaDia, obriDia } = useEstatCalendari({ obertura, avui });
-  const { vista, diaTriat, cursor, dilluns } = estat;
   const rang = useMemo(() => rangDeLaVista(estat, avui), [estat, avui]);
   const agenda = useActesDeLAgenda(rang);
   const calendaris = useFontsCalendari(rang);
   const entrades = useEntradesBarrejades(targetes, agenda, calendaris);
-  const esdeveniments = useMemo(() => entrades.map((entrada) => entrada.esdeveniment).filter(Boolean), [entrades]);
-  /* Revisió de T10 · Un acte amb una recurrència que no es pinta (FALLA) no
-     té cap ocurrència a la graella, però la llista de davall el du el dia que
-     comença: es diu, amb el mateix paràgraf que el calendari del Mur
-     (CalendariMur), perquè la graella i la llista no discrepen en silenci. */
-  const sensePintar = useMemo(() => esdeveniments.filter((esd) => !recurrenciaSuportada(esd)).length, [esdeveniments]);
-  /* La llista de davall: el dia triat; el mes natural a la vista Mes (com
-     sempre); i a la resta, el rang que pinta la vista. L'Agenda no marca ni
-     deixa llevar el dia triat que hereta de Mes o de Setmana: la llista diu
-     el seu rang, que ja el conté (rangDeLaVista). */
-  const delDia = vista === 'agenda' ? null : diaTriat;
-  const visibles = useMemo(() => {
-    if (delDia) return entradesDelDia(entrades, delDia);
-    if (vista === 'mes') return entradesDelMes(entrades, cursor);
-    return entradesDelRang(entrades, { desde: clauDeData(rang.desde), fins: clauDeData(rang.fins) });
-  }, [entrades, delDia, vista, cursor, rang]);
   const senseData = targetes.filter((entrada) => !entrada.esdeveniment).length;
-
-  const textos = textosDeLaVista(vista, cursor, rang);
-  const buit = delDia ? 'Cap publicació este dia.' : textos.buit;
-  const comunes = { esdeveniments, avui, recompte: recompteTargetes, locale: LOCALE, titol: textos.regio };
   /* Pantalla completa · entre el títol i el selector, amb la pell de les
      fletxes (fantasma). L'estat de la URL i l'agenda queden per damunt:
      entrar o eixir no torna a demanar res. */
   const boto = pantalla.oberta ? null : <BotoPantallaCompleta id={pantalla.idObridor} onClick={pantalla.obri} />;
 
-  const titolSuperior = textos.periode.charAt(0).toUpperCase() + textos.periode.slice(1);
-
   return (
     <PantallaCompleta oberta={pantalla.oberta} onTanca={pantalla.tanca} titol={TITOL_PANTALLA}>
       <AmbLesFonts calendaris={calendaris}>
-        {avisError}
-        {/* P6 · Sense classe: «sdp-cal-titol-superior» no tenia cap regla als
-            fulls canònics (porta de tests/lint_calendari.test.mjs en roig) i
-            el títol ja es pintava amb l'estil de l'h3; els píxels no canvien. */}
-        <h3 aria-live="polite">{titolSuperior}</h3>
-        <NavegacioPeriode titol={null} etiquetes={ETIQUETES_PERIODE[vista]}
-          onAnterior={() => navega('anterior')} onHui={() => navega('hui')} onSeguent={() => navega('seguent')}
-          vista={vista} onCanviaVista={canviaVista} accions={boto} />
-        {vista === 'setmana' ? (
-          <VistaSetmana {...comunes} dilluns={dilluns} diaTriat={diaTriat} onTriaDia={triaDia} densitat={DENSITAT} />
-        ) : null}
-        {/* Mes i Dues setmanes: la mateixa anatomia (VistaMes); Dues setmanes, dos files des del dilluns. */}
-        {vista === 'mes' || vista === 'dues-setmanes' ? (
-          <VistaMes {...comunes} cursor={cursor} dilluns={vista === 'dues-setmanes' ? dilluns : null}
-            setmanes={vista === 'dues-setmanes' ? 2 : SETMANES_DEL_MES} diaTriat={diaTriat} onTriaDia={triaDia} densitat={DENSITAT} />
-        ) : null}
-        {/* Any: clicar un dia obri la seua setmana, amb el dia triat (obriDia). */}
-        {vista === 'any' ? <VistaAny {...comunes} any={cursor.any} diaTriat={diaTriat} onTriaDia={obriDia} /> : null}
-        {vista === 'agenda' ? <VistaAgenda {...comunes} desde={rang.desde} fins={rang.fins} buit="Cap publicació en este període." /> : null}
-        {sensePintar ? <p>{TEXTOS_TARGETES.sensePintar(sensePintar)}</p> : null}
-        <AvisosDelCalendari agenda={agenda} senseData={senseData} />
-        <TargetesDeDavall visibles={visibles} buit={buit} />
+        <CalendariDelPoble estat={estat} navega={navega} canviaVista={canviaVista} triaDia={triaDia} obriDia={obriDia}
+          entrades={entrades} avui={avui} senseData={senseData} avisos={avisError}
+          avisAgenda={<AvisDeLAgenda agenda={agenda} />} accions={boto} />
       </AmbLesFonts>
     </PantallaCompleta>
   );

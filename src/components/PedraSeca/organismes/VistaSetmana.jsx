@@ -9,8 +9,8 @@
  *
  * Fase visual (prompt 261001_0445) · La pintura de les captures del Mestre
  * (setmana clara i fosca, vista dia), amb tokens de Pedra Seca: capçalera amb
- * l'abreviatura xicoteta i el número gran (hui, en cercle invers; el triat,
- * amb el color d'acció), etiquetes HH:00 centrades sobre la línia de cada hora
+ * l'abreviatura xicoteta i el número gran (hui, en el cercle d'acció des de
+ * l'Onada 6; el triat, amb el fons i la vora d'acció), etiquetes HH:00 centrades sobre la línia de cada hora
  * en punt (la primera no es rotula), barres i blocs amb el color de la seua
  * font (classeDeFont) i vora d'inici, i la línia d'«ara» amb un punt. Un bloc
  * de menys de 50 minuts visibles (formaDelBloc; 54 en densitat compacta) és
@@ -48,6 +48,11 @@
  *     onTriaDia, cada capçalera és un botó amb aria-pressed i un nom amb la
  *     data llarga, el recompte i els títols; sense, és quieta (en la tira, on
  *     no es podria canviar de dia, els botons porten el dia ells mateixos).
+ *     Amb dia triable, clicar la columna d'un dia fora de l'enllaç d'un
+ *     esdeveniment (o tocar-hi un bloc, en tàctil) també el tria, i una barra
+ *     de la franja tria el seu primer dia: és el quadre del dia del Mes. El
+ *     dia triat no es lleva així. És una drecera del punter: al teclat, la
+ *     capçalera.
  *   densitat · 'responsiva' | 'normal' | 'compacta' ('responsiva').
  *   recompte · (n) => text del nom del dia («1 esdeveniment»).
  *   minimMinuts · l'alçada mínima d'un acte sense fi (30 per defecte).
@@ -55,10 +60,20 @@
  *     proves); sense, el rellotge.
  *   titol · nom de la regió; locale; className.
  *
- * Els blocs no són interactius, com les píndoles de CalendariEsdeveniments:
- * els enllaços viuen a les targetes de davall. Cada dia és una llista ordenada
- * amb el nom del dia, i cada bloc diu l'hora i el títol (en este ordre per al
- * lector, encara que a la vista el títol vaja primer).
+ * Cada dia és una llista ordenada amb el nom del dia, i cada bloc diu l'hora i
+ * el títol (en este ordre per al lector, encara que a la vista el títol vaja
+ * primer).
+ *
+ * ENLLAÇ DE L'ESDEVENIMENT (Onada 6, prompt 261009_0230, punt 1; pla de
+ * l'Onada 5, tasca 16) · rutaDeLEsdeveniment · (esd) => string | null i
+ * LinkComponent (per defecte 'a'), com a VistaMes: amb ruta, el títol de cada
+ * bloc i de cada barra de la franja és un enllaç a la pàgina de la publicació
+ * (.sdp-cal-enllac), el seu ::after cobrix la peça i el full només el fa
+ * clicable amb ratolí (@media (pointer: fine)): en tàctil el toc passa a la
+ * columna o a la barra, que trien el dia. Fora de la capa aria-hidden del
+ * mes, el teclat hi arriba. Sense rutaDeLEsdeveniment, els blocs no porten
+ * enllaç (els enllaços viuen a les targetes de davall) i el DOM és el de
+ * sempre.
  *
  * Importa per camí directe (mai per index.js): la porta de dependències
  * circulars de Pedra Seca ho exigix.
@@ -72,6 +87,8 @@ import { clauDeData, diesDeLaSetmana, rangDeLaSetmana } from '../../../utils/per
 import { esEstret, useAmpladaContenidor } from '../../../hooks/useAmpladaContenidor.js';
 import { useAra } from '../../../hooks/useAra.js';
 import { usePropietatsCss } from '../../../hooks/usePropietatsCss.js';
+// Onada 6 · L'enllaç d'un esdeveniment, el mateix de les tres vistes.
+import { EnllacDeLEsdeveniment } from './VistaMes.jsx';
 
 /* Per davall d'esta amplada (en em del contenidor) no caben set columnes de
    5,5em més el marge de les hores: la tira d'un dia. */
@@ -83,7 +100,7 @@ const dataLlarga = (data, locale) => data.toLocaleDateString(locale, { weekday: 
    «10:00–11:30», o «10:00» si no té durada; un acte que passa de mitjanit diu
    les dos hores. Un bloc curt només mostra l'inici, i la fi queda per al
    lector (sdp-sr-only): el text sencer és el mateix en totes les formes. */
-function BlocSetmana({ disposat, densitat }) {
+function BlocSetmana({ disposat, densitat, ruta = null, LinkComponent }) {
   const ref = useRef(null);
   const { segment, columna, columnes, amplada, iniciVisualMin, fiVisualMin } = disposat;
   usePropietatsCss(ref, {
@@ -102,20 +119,29 @@ function BlocSetmana({ disposat, densitat }) {
         {horaDe(new Date(ocurrencia.inici))}
         {fi && forma === 'curt' ? <span className="sdp-sr-only">{fi}</span> : fi}
       </span>{' '}
-      <span className="sdp-cal-setmana__titol">{ocurrencia.esd.titol}</span>
+      <span className="sdp-cal-setmana__titol">
+        {ruta ? <EnllacDeLEsdeveniment ruta={ruta} LinkComponent={LinkComponent}>{ocurrencia.esd.titol}</EnllacDeLEsdeveniment> : ocurrencia.esd.titol}
+      </span>
     </li>
   );
 }
 
-/* Una barra de la franja de tot el dia: les línies de graella són 1-based. */
-function BarraDeLaFranja({ peca }) {
+/* Una barra de la franja de tot el dia: les línies de graella són 1-based.
+   onClick · tocar-la tria el seu primer dia de la setmana (vegeu
+   triaDesDeLaGraella). */
+function BarraDeLaFranja({ peca, ruta = null, LinkComponent, onClick }) {
   const ref = useRef(null);
   usePropietatsCss(ref, { '--sdp-cal-col-inici': peca.colInici + 1, '--sdp-cal-col-fi': peca.colFi + 1, '--sdp-cal-carril': peca.carril + 1 });
   const { esd } = peca.segment.ocurrencia;
   const classe = [
-    'sdp-cal-barra', classeDeFont(esd), peca.continuaAbans && 'sdp-cal-barra--abans', peca.continuaDespres && 'sdp-cal-barra--despres'
+    'sdp-cal-barra', classeDeFont(esd), peca.continuaAbans && 'sdp-cal-barra--abans', peca.continuaDespres && 'sdp-cal-barra--despres',
+    ruta && 'sdp-cal-barra--enllac'
   ].filter(Boolean).join(' ');
-  return <li ref={ref} className={classe}>{esd.titol}</li>;
+  return (
+    <li ref={ref} className={classe} onClick={onClick}>
+      {ruta ? <EnllacDeLEsdeveniment ruta={ruta} LinkComponent={LinkComponent}>{esd.titol}</EnllacDeLEsdeveniment> : esd.titol}
+    </li>
+  );
 }
 
 function LiniaAra({ minut }) {
@@ -126,8 +152,10 @@ function LiniaAra({ minut }) {
 
 export function VistaSetmana({
   esdeveniments, dilluns, avui = new Date(), ara = null, diaTriat = null, onTriaDia,
-  recompte = recompteEsdeveniments, minimMinuts = 30, densitat = 'responsiva', titol, locale, className
+  recompte = recompteEsdeveniments, minimMinuts = 30, densitat = 'responsiva', titol, locale, className,
+  rutaDeLEsdeveniment, LinkComponent = 'a'
 }) {
+  const rutaDe = (esd) => rutaDeLEsdeveniment?.(esd) ?? null;
   const idFranja = useId();
   const arrel = useRef(null);
   const graella = useRef(null);
@@ -178,6 +206,18 @@ export function VistaSetmana({
     if (onTriaDia) onTriaDia(clau);
     else setDiaPropi(clau);
   };
+  /* Onada 6 (revisió del front calendari) · El quadre del dia de la setmana és
+     la seua columna: clicar-la fora de l'enllaç d'un esdeveniment, o tocar un
+     bloc o una barra en pantalla tàctil (on l'enllaç no rep el toc: les peces
+     no arriben a --sdp-touch), tria el dia, com el quadre del Mes, i les
+     targetes de davall obrin la publicació. Una barra tria el seu primer dia
+     de la setmana. El dia que ja està triat no es lleva (això és cosa de la
+     capçalera); el clic a l'enllaç és de l'enllaç. */
+  const triaDesDeLaGraella = (event, clau) => {
+    if (!clau || clau === triat || event.target.closest?.('a')) return;
+    tria(clau);
+  };
+  const clicDelDia = (clau) => (triable ? (event) => triaDesDeLaGraella(event, clau) : undefined);
   const classe = [
     'sdp-cal-setmana', tira && 'sdp-cal-setmana--tira', densitat === 'compacta' && 'sdp-cal-setmana--compacta', className
   ].filter(Boolean).join(' ');
@@ -214,7 +254,8 @@ export function VistaSetmana({
         <p className="sdp-cal-setmana__etiqueta" id={idFranja}>Tot el dia</p>
         <ol className="sdp-cal-setmana__barres" aria-labelledby={idFranja}>
           {franja.peces.map((peca) => (
-            <BarraDeLaFranja key={`${peca.segment.ocurrencia.clau}·${peca.colInici}`} peca={peca} />
+            <BarraDeLaFranja key={`${peca.segment.ocurrencia.clau}·${peca.colInici}`} peca={peca}
+              ruta={rutaDe(peca.segment.ocurrencia.esd)} LinkComponent={LinkComponent} onClick={clicDelDia(diesGraella[peca.colInici]?.clau)} />
           ))}
         </ol>
       </div>
@@ -228,10 +269,11 @@ export function VistaSetmana({
           ))}
         </ol>
         {diesGraella.map((dia) => (
-          <div key={dia.clau} className="sdp-cal-setmana__columna">
+          <div key={dia.clau} className="sdp-cal-setmana__columna" onClick={clicDelDia(dia.clau)}>
             <ol className="sdp-cal-setmana__blocs" aria-label={dataLlarga(dia.data, locale)}>
               {perDia.get(dia.clau).map((disposat) => (
-                <BlocSetmana key={disposat.segment.ocurrencia.clau} disposat={disposat} densitat={densitat} />
+                <BlocSetmana key={disposat.segment.ocurrencia.clau} disposat={disposat} densitat={densitat}
+                  ruta={rutaDe(disposat.segment.ocurrencia.esd)} LinkComponent={LinkComponent} />
               ))}
             </ol>
             {posicio?.clau === dia.clau ? <LiniaAra minut={posicio.minut} /> : null}

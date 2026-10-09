@@ -1,0 +1,6 @@
+{
+  "captureId": "viquipedia-cerca-inexistent-261009",
+  "capturedAt": "2026-10-08T23:02:47.194Z",
+  "url": "https://www.wikidata.org/w/api.php?action=query&format=json&formatversion=2&origin=*&maxlag=5&list=search&srsearch=Poble+Inexistent+de+Prova+SdP+haswbstatement%3AP31%3DQ2074737&srlimit=5",
+  "body": {"batchcomplete":true,"query":{"searchinfo":{"totalhits":0},"search":[]}}
+}

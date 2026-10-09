@@ -1,6 +1,7 @@
 node_modules
 dist
-# Paquets de release de l'enxufe (wordpress-plugin/eines/empaqueta.mjs): van a GitHub Releases, no al repositori.
+# Carpeta antiga de paquets (buida). wordpress-plugin/eines/empaqueta.mjs escriu a wordpress-plugin/builds/
+# (destinació única, skill core-empaquetat-wp), i els *.zip queden fora per la regla de més avall.
 /release/
 .DS_Store
 *DS_Store*
@@ -53,3 +54,16 @@ docker.env
 # unflar el repositori. La secció Multimèdia (T6) el servirà des de la carpeta
 # que llegisca l'app; vegeu el requisit al pla de la marató 261007.
 /_multimedia_de_poble/
+
+# Cron d'higiene (261009) i Plaquetes: informes, registres i receptes són estat local de la màquina.
+# Ignorar no desversiona: el que ja és a l'índex (receptes, cron.out, cron.err) ho retira el Mestre
+# amb git rm --cached (INVENTARI_BROSSA del laboratori 261009_0400_higiene_claude).
+.immunitari/higiene/
+.immunitari/higiene-cron.out
+.immunitari/higiene-cron.err
+.immunitari/cron.out
+.immunitari/cron.err
+.immunitari/receptes/
+# Quarantenes del circuit (cron_higiene.mjs i neteja_brossa_arrel.mjs): el que s'hi mou no torna a
+# entrar a git per una altra ruta. Les quarantenes que ja són a l'índex hi continuen (INVENTARI §3.5).
+/.sdp-paperera/quarantena-*/

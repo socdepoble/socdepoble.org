@@ -3,14 +3,15 @@
   "plaquetes": [
     {
       "id": "higiene-basica",
-      "descripcio": "Esborra fitxers temporals (.orig, .rej, ~, .DS_Store) i directoris orfes sense sentit.",
-      "nivell": "L0",
+      "descripcio": "Nivell L1 del cron d'higiene: mou a .sdp-paperera/quarantena-ISO, amb MANIFEST, la brossa no versionada de l'arrel (.orig, .rej, .tmp, ~, logs i sondes). Mai esborra res; els .DS_Store només es compten a l'informe.",
+      "nivell": "L1",
       "idempotent": true,
       "pressupost_ms": 5000,
       "fusible": {
         "max_ko_consecutius": 3
       },
-      "llancador": { "tipus": "tasca", "tasca": "plaquetes-diagnostic" }
+      "script": "tooling/higiene/cron_higiene.mjs",
+      "llancador": { "tipus": "tasca", "tasca": "higiene-diaria" }
     },
     {
       "id": "adopta-orfes",
@@ -44,17 +45,13 @@
         "max_ko_consecutius": 2
       },
       "llancador": { "tipus": "tasca", "tasca": "plaquetes-diagnostic" }
-    },
+    }
+  ],
+  "retirades": [
     {
       "id": "refresc-tokens",
-      "descripcio": "Comprova i refresca els tokens d'accés abans de caducar.",
-      "nivell": "L1",
-      "idempotent": true,
-      "pressupost_ms": 5000,
-      "fusible": {
-        "max_ko_consecutius": 3
-      },
-      "llancador": { "tipus": "tasca", "tasca": "plaquetes-diagnostic" }
+      "data": "261009",
+      "motiu": "Declarada com a subtasca de plaquetes-diagnostic, però plaquetes.mjs no la consulta (getNivell només es crida per a lapida-fantasmes, adopta-orfes i quarantena-brossa) i cap tasca d'este registre no l'implementa. La Consola la pintava com a llançada. Si un dia cal, naix amb el seu script i les seues proves."
     }
   ],
   "tasques": [
@@ -69,6 +66,18 @@
       "escriu": [".immunitari/receptes/", ".immunitari/cron.out"],
       "registre": ".immunitari/cron.out",
       "nivell": "L0"
+    },
+    {
+      "id": "higiene-diaria",
+      "descripcio": "Cron d'higiene (Onada 6, 261009): L0 informe a .immunitari/higiene/aammdd.json; L1 reversible (quarantena de la brossa de l'arrel, rotació dels logs de traça de .agents/runtime i receptes repetides de Plaquetes); L2 només amb confirmació humana (retenció dels ZIP i purga de quarantenes). S'absté amb un lock d'escriptura o un torn obert recent.",
+      "llancador": { "tipus": "launchd", "etiqueta": "org.socdepoble.higiene" },
+      "cadencia": { "cada_segons": 86400, "en_arrencar": false, "hora": "05:30" },
+      "script": "tooling/higiene/cron_higiene.mjs",
+      "arguments": ["--aplica"],
+      "llig": ["."],
+      "escriu": [".immunitari/higiene/", ".sdp-paperera/", ".agents/runtime/"],
+      "registre": ".immunitari/higiene-cron.out",
+      "nivell": "L1"
     },
     {
       "id": "time-machine",

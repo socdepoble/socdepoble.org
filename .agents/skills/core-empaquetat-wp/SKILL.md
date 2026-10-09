@@ -32,7 +32,13 @@ Està **ESTRICTAMENT PROHIBIT** guardar arxius `.zip`, `.tar.gz` o carpetes de c
 - `_wiki_de_poble/04_escriptori/00_bandeja_d_entrada/`
 
 ## 3. Neteja de Brossa Temporal (Acte Reflex)
-Després de generar i moure l'arxiu ZIP a `01_produccio/builds/`, l'agent TÉ L'OBLIGACIÓ absoluta d'esborrar (`rm -rf`) completament qualsevol directori temporal o subproducte intermedi utilitzat durant la generació de la versió. Si deixes rastre a l'arrel, estàs contravenint el BIOS i seràs auditat amb penalització.
+El ZIP es queda on el deixa `wordpress-plugin/eines/empaqueta.mjs`: `wordpress-plugin/builds/`, i la variant del directori a `wordpress-plugin/builds/directori/`. No se'n fa cap còpia a `01_produccio/`, que és zona humana. Si la generació deixa directoris o fitxers temporals fora de `builds/`, es diu al Mestre a l'informe de la sessió: els retira ell o el cron d'higiene (`node tooling/higiene/cron_higiene.mjs`), i cap agent no esborra res.
 
-## 4. Evitar l'Orfandat
-Tot fitxer desat a `01_produccio/` necessita una àncora. Quan generes un ZIP nou i el deses, recorda enllaçar-lo o deixar-ne constància documental als índexs (p. ex., en un informe d'auditoria de la sessió, o al 00_index de producció) perquè no quede orbitant com un satèl·lit fantasma a l'arquitectura.
+## 4. Retenció
+A `wordpress-plugin/builds/` i a `wordpress-plugin/builds/directori/` es conserven sempre: els paquets que nomena `stable.json` (el canal estable), el més recent de cada producte i carpeta, i els que cita l'última Acta Marmota de `_wiki_de_poble/10_actes/`. La resta són candidats a retirar. El cron d'higiene els llista cada dia a `.immunitari/higiene/aammdd.json` (L0) i només els trasllada a una paperera germana del repositori (`../.sdp-paperera-builds/retencio-ISO/`, amb `MANIFEST.json` i el sha256 de cada paquet) quan el Mestre confirma la proposta des d'un terminal: `node tooling/higiene/cron_higiene.mjs --l2` mostra la proposta i el seu codi, i `--l2 --confirma CODI` l'aplica (L2). El cron no esborra mai cap ZIP: la paperera germana no entra a cap purga, i la buida el Mestre a mà quan vulga. Els `*.zip` no es versionen (`.gitignore`).
+
+## 5. Constància
+El paquet que es lliura es cita amb el seu nom exacte a l'informe o a l'Acta Marmota de la sessió: és el que la retenció conserva.
+
+## Vincles
+- [[00_INDEX_SKILLS]]

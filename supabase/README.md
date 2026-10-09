@@ -167,10 +167,12 @@ description: "Documentació canònica de Sóc de Poble."
   `xat_entra_al_fil_de_pagina`, el disparador dels Avisos i la v4 de
   `xat_fils_meus`. Redefinix, amb una sola condició més cadascuna,
   `private.xat_participant_vigent`, `private.xat_pot_veure_participant`
-  (2609272200) i `private.purga_una_baixa` (2609261500). **No està aplicada,
-  com tampoc F0 (2609270200) ni `xat_entitats` (2609272200), de les quals
-  depén: va després de les dos i de 2609282035.** Sense moderació: vegeu «Xat
-  de pàgina i comunitats».
+  (2609272200) i `private.purga_una_baixa` (2609261500). Va després de F0
+  (2609270200), de `xat_entitats` (2609272200) i de 2609282035. **Aplicada
+  al node remot pel Mestre el 261009**, a mà a l'editor SQL i en l'ordre
+  2609282100 → 2610042330 → 2610090100, amb «Success» a totes tres. Les
+  dependències ja hi eren: l'èxit de la convergència (`SDP-CONV-004`) ho
+  acredita. Sense moderació: vegeu «Xat de pàgina i comunitats».
 
 - `migrations/2610042330_xat_pagina_iaia.sql`
   Correcció posterior al xat de pàgina: `/iaia` és la clau i ruta canòniques;
@@ -178,8 +180,9 @@ description: "Documentació canònica de Sóc de Poble."
   del subjecte preservant id, missatges, seq, participants i permisos. Un
   CHECK impedeix recrear la clau antiga. Si un poble ja té les dos files,
   `SDP-XAT-014` avorta tota la transacció; no fusiona ni esborra històries.
-  **NO aplicada. Va després de 2609282100 i les seues dependències**, abans
-  de publicar un client amb la nova ruta; conserva la condició de moderació.
+  Va després de 2609282100 i les seues dependències, abans de publicar un
+  client amb la nova ruta; conserva la condició de moderació. **Aplicada al
+  node remot pel Mestre el 261009**, just després de 2609282100.
 
 - `migrations/2610081400_grups_sense_mare.sql`
   Ordre del Mestre (261008, grup C): un grup ja no necessita empresa mare.
@@ -232,6 +235,43 @@ description: "Documentació canònica de Sóc de Poble."
   per OAuth de 2609261500), cal un pla de reconsentiment abans d'aplicar-la.
   La fixture `tests/fixtures/xat-entitats/regression.sql` també ha de donar
   consentiment als perfils amb qui obri directes nous.
+
+- `migrations/2610090100_convergencia_xat_de_pagina.sql`
+  Onada 5 (261009, F6): convergència del xat de pàgina. Error real: `POST
+  /rest/v1/rpc/obri_fil_de_pagina` → 404 (PGRST202). El client ja envia els
+  noms de l'única signatura de 2609282100 (`p_tenant_id`, `p_tipus`, `p_id`,
+  `p_titol`); que al node li falte la cadena 2609270200 → 2609272200 →
+  2609282100 → 2610042330 és una INFERÈNCIA. No crea ni redefinix la funció:
+  avorta sencera si falten les dependències de la RPC (`SDP-CONV-004`, amb la
+  llista i la migració que les crea), si falta la canònica
+  `obri_fil_de_pagina(uuid, text, text, text)` security definer amb
+  `search_path` buit (`SDP-CONV-005`) o si falta el CHECK
+  `xat_fils_pagina_iaia_canonica` de 2610042330 (`SDP-CONV-007`); esborra,
+  sense CASCADE, tota altra sobrecàrrega (`SDP-CONV-006`), torna a donar els
+  permisos de 2609282100 (revoke de `public` i `anon`, grant a
+  `authenticated`) i recarrega l'esquema. Cap taula, política ni funció
+  nova. L'aplica el Mestre, després de les pendents d'esta llista en ordre
+  alfabètic (com a mínim la cadena de dalt); no en substituïx cap. **Aplicada
+  al node remot pel Mestre el 261009**, després de 2609282100 i 2610042330,
+  amb «Success»: com que avorta si falta res, el seu èxit acredita la cadena
+  sencera. Verificació sense efectes del mateix dia, amb la clau anònima
+  pública: `rpc/obri_fil_de_pagina` torna 401 `42501` («permission denied»),
+  ja no 404 `PGRST202`. El fitxer es conserva byte a byte tal com es va
+  aplicar. Per a reaplicar-la en un altre node, primer cinc consultes de
+  només lectura, amb el resultat guardat: (1) `select oid::regprocedure, prosecdef,
+  proconfig from pg_catalog.pg_proc where proname = 'obri_fil_de_pagina' and
+  pronamespace = 'public'::regnamespace;` (buit confirma la inferència);
+  (2) `select version from supabase_migrations.schema_migrations order by
+  1;`; (3) `select column_name from information_schema.columns where
+  table_schema = 'public' and table_name = 'xat_fils' order by
+  ordinal_position;`; (4) `select p.oid::regprocedure,
+  has_function_privilege('authenticated', p.oid, 'execute') from
+  pg_catalog.pg_proc p where p.proname in ('obri_fil_de_pagina',
+  'xat_historial', 'xat_envia', 'xat_fils_meus');`; (5) `select conname from
+  pg_catalog.pg_constraint where conname = 'xat_fils_pagina_iaia_canonica';`.
+  **Avís:** 2609282100 obri els fils de pàgina a tot el poble sense la
+  moderació que ella mateixa posa com a condició prèvia (vegeu «Xat de pàgina
+  i comunitats»): aplicar la cadena és una decisió del Mestre.
 
 - `seed.sql`
   Contingut inicial del portal.

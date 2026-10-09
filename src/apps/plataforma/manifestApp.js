@@ -6,21 +6,30 @@
  * declarables: la ruta es deriva de l'id (/app/<id>), i les icones són noms
  * d'una llista tancada de lucide (iconesApp.js les resol).
  *
- * Dos orígens:
+ * Tres orígens:
  *   · interna  · viu a src/apps/<id>/manifest.js i porta `carrega`
  *                (() => import('./AppX.jsx') darrere del literal de compilació,
  *                o null quan el build no la inclou);
  *   · externa  · la registra un amfitrió (WordPress, Sollutia) amb
  *                registraAppExterna: porta `element`, l'etiqueta d'un custom
- *                element amb un prefix de PREFIXOS_ELEMENT, i cap `carrega`.
+ *                element amb un prefix de PREFIXOS_ELEMENT, i cap `carrega`;
+ *   · modul    · contracte sdp.modul.v1 (ADR-2026-12): una app compilada a
+ *                banda del paquet que l'amfitrió registra amb registraModul.
+ *                Porta `cos` ({ cami, integrity sha384 }: el script que la
+ *                lliura), `estils` opcionals amb la mateixa forma i `nucli`,
+ *                el rang del nucli que necessita ('^1'). Ni `carrega` ni
+ *                `element`: el cos el carrega carregaModul.js, del mateix
+ *                origen que la pàgina i amb la seua integritat.
  *
  * validaManifestApp torna { ok, errors, manifest }: el manifest normalitzat i
  * congelat, o null. L'esquema és tancat: una clau desconeguda és un error,
  * perquè ningú hi puga colar res que la plataforma no sàpia llegir.
  */
 import { CAPACITATS } from '../../data/contracte.js';
+import { PATRO_RANG_NUCLI } from './contracteNucli.js';
 
 export const ESQUEMA_APP = 'sdp.app.v1';
+export const ORIGENS_APP = Object.freeze(['interna', 'externa', 'modul']);
 export const LLENGUES_APP = Object.freeze(['ca', 'es', 'en', 'eu', 'gl']);
 
 /* Llista tancada d'icones (noms de lucide-react). Afegir-ne una és una decisió
@@ -60,6 +69,14 @@ const CLAUS_COMUNES = ['schema', 'id', 'titol', 'icona', 'entrades', 'grups', 'e
   'capacitats', 'nivell', 'dret', 'actiuPerDefecte', 'entorn', 'dadesPersonals', 'interruptors'];
 const CLAUS_INTERNA = new Set([...CLAUS_COMUNES, 'carrega']);
 const CLAUS_EXTERNA = new Set([...CLAUS_COMUNES, 'element']);
+const CLAUS_MODUL = new Set([...CLAUS_COMUNES, 'cos', 'estils', 'nucli']);
+const CLAUS_RECURS = new Set(['cami', 'integrity']);
+/* SRI d'un recurs d'un mòdul: sha384 en base64 (48 octets, 64 caràcters). */
+export const PATRO_INTEGRITAT = /^sha384-[A-Za-z0-9+/]{64}$/;
+const MAX_CAMI = 2048;
+/* Ni espais, ni barres invertides (el navegador les llig com a «/» i
+   '/\x' seria un altre domini), ni cometes, ni caràcters de control. */
+const PATRO_CAMI_PROHIBIT = /[\s\\"'<>`\u0000-\u001F\u007F-\u009F]/;
 const CLAUS_ENTRADA = new Set(['slug', 'titol', 'icona', 'grup', 'permis']);
 const CLAUS_GRUP = new Set(['id', 'titol']);
 const CLAUS_INTERRUPTOR = new Set(['id', 'titol', 'nivell', 'dret', 'actiuPerDefecte']);
@@ -192,6 +209,32 @@ function validaCapacitats(capacitats, errors) {
   return Object.freeze([...capacitats]);
 }
 
+/**
+ * Cert si `cami` pot ser el camí d'un recurs d'un mòdul amb l'extensió
+ * donada: un camí des de l'arrel ('/…', mai '//…') o una URL http(s) absoluta
+ * sense credencials. El mateix origen que la pàgina el comprova el
+ * carregador (carregaModul.js) en carregar: ací no hi ha cap pàgina.
+ */
+export function esCamiDeRecurs(cami, extensio) {
+  if (typeof cami !== 'string' || !cami || cami.length > MAX_CAMI || PATRO_CAMI_PROHIBIT.test(cami)) return false;
+  let url;
+  try {
+    url = cami.startsWith('/') ? (cami.startsWith('//') ? null : new URL(cami, 'https://amfitrio.invalid')) : new URL(cami);
+  } catch {
+    return false;
+  }
+  if (!url || (url.protocol !== 'https:' && url.protocol !== 'http:') || url.username || url.password) return false;
+  return url.pathname.endsWith(extensio);
+}
+
+function validaRecurs(recurs, on, extensio, errors) {
+  if (!esObjecte(recurs)) { errors.push(`${on}: cal { cami, integrity }`); return null; }
+  clausDesconegudes(recurs, CLAUS_RECURS, on, errors);
+  if (!esCamiDeRecurs(recurs.cami, extensio)) errors.push(`${on}.cami: camí des de l'arrel o URL http(s) d'un fitxer ${extensio}`);
+  if (!(typeof recurs.integrity === 'string' && PATRO_INTEGRITAT.test(recurs.integrity))) errors.push(`${on}.integrity: sha384-<base64>`);
+  return Object.freeze({ cami: recurs.cami, integrity: recurs.integrity });
+}
+
 /** Valida l'element d'una app externa (custom element amb prefix permés). */
 export function esElementPermes(element) {
   return typeof element === 'string' && element.length <= 60 && PATRO_ELEMENT.test(element)
@@ -199,14 +242,16 @@ export function esElementPermes(element) {
 }
 
 /**
- * Valida i normalitza un manifest. `origen`: 'interna' (per defecte) o 'externa'.
+ * Valida i normalitza un manifest. `origen`: 'interna' (per defecte),
+ * 'externa' o 'modul'.
  * @returns {{ ok: boolean, errors: string[], manifest: object|null }}
  */
 export function validaManifestApp(m, { origen = 'interna' } = {}) {
   const errors = [];
   if (!esObjecte(m)) return { ok: false, errors: ['el manifest ha de ser un objecte'], manifest: null };
   const externa = origen === 'externa';
-  clausDesconegudes(m, externa ? CLAUS_EXTERNA : CLAUS_INTERNA, 'manifest', errors);
+  const modul = origen === 'modul';
+  clausDesconegudes(m, externa ? CLAUS_EXTERNA : modul ? CLAUS_MODUL : CLAUS_INTERNA, 'manifest', errors);
   if (m.schema !== ESQUEMA_APP) errors.push(`schema: ha de ser «${ESQUEMA_APP}»`);
   if (!esIdApp(m.id)) errors.push('id: slug /^[a-z][a-z0-9-]{1,30}$/ sense guions al final ni dobles');
   const titol = validaTitol(m.titol, 'titol', errors);
@@ -227,8 +272,14 @@ export function validaManifestApp(m, { origen = 'interna' } = {}) {
   if (!DADES_PERSONALS.includes(m.dadesPersonals)) errors.push("dadesPersonals: false | 'salut' | 'financeres'");
   const interruptors = validaInterruptors(m.interruptors, errors);
 
+  let delModul = null;
   if (externa) {
     if (!esElementPermes(m.element)) errors.push(`element: custom element amb prefix ${PREFIXOS_ELEMENT.join(' o ')}`);
+  } else if (modul) {
+    const cos = validaRecurs(m.cos, 'cos', '.js', errors);
+    const estils = m.estils === undefined ? null : validaRecurs(m.estils, 'estils', '.css', errors);
+    if (!(typeof m.nucli === 'string' && PATRO_RANG_NUCLI.test(m.nucli))) errors.push("nucli: el rang del nucli, '^<major>' (p. ex. '^1')");
+    delModul = { cos, ...(estils ? { estils } : {}), nucli: m.nucli };
   } else if (!(m.carrega === null || typeof m.carrega === 'function')) {
     errors.push('carrega: () => import(…) darrere del literal de compilació, o null');
   }
@@ -240,7 +291,7 @@ export function validaManifestApp(m, { origen = 'interna' } = {}) {
     manifest: Object.freeze({
       schema: ESQUEMA_APP,
       id: m.id,
-      origen: externa ? 'externa' : 'interna',
+      origen: externa ? 'externa' : modul ? 'modul' : 'interna',
       titol,
       icona: m.icona,
       entrades,
@@ -254,7 +305,7 @@ export function validaManifestApp(m, { origen = 'interna' } = {}) {
       entorn: m.entorn,
       dadesPersonals: m.dadesPersonals,
       interruptors,
-      ...(externa ? { element: m.element } : { carrega: m.carrega })
+      ...(externa ? { element: m.element } : modul ? delModul : { carrega: m.carrega })
     })
   };
 }
