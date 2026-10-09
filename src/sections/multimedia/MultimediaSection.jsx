@@ -6,7 +6,7 @@ import { useMultimedia } from './MultimediaContext';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { PillToggle } from '../../components/PedraSeca/index.js';
 import { useSEO } from '../../hooks/useSEO';
-import { resolRecursPropi, resolveAsset } from '../../config/assetResolver.js';
+import { resolRecursPropi } from '../../config/assetResolver.js';
 
 export default function MultimediaSection() {
   const { mediaItems, mediaTimelineGroups } = useMultimedia();
@@ -15,10 +15,11 @@ export default function MultimediaSection() {
   const featured = useMemo(() => mediaItems?.[0] || null, [mediaItems]);
   const timelineGroups = useMemo(() => mediaTimelineGroups || [], [mediaTimelineGroups]);
 
+  /* Onada 8 (261009) · Sense `image`: useSEO no passa cap SVG a les xarxes i
+     ja hi posava la imatge base. El <head> és el mateix. */
   useSEO({
     title: t('section.multimedia.title', 'Arxiu visual'),
-    description: t('section.multimedia.subtitle', 'Galeria d’imatges i cronologia visual del projecte.'),
-    image: resolveAsset('/assets/system/ui/logo-socdepoble-cuadrat-verd.svg')
+    description: t('section.multimedia.subtitle', 'Galeria d’imatges i cronologia visual del projecte.')
   });
 
   return (

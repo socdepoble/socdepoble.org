@@ -6,8 +6,9 @@
  *
  * T6 (ordre del Mestre, 261004, prompt 261004_0515 §5) · Derogat per l'ordre
  * del Mestre del 261004 (prompt 261004_0515): este xat ja no és l'enllaç de
- * la boina, que porta SEMPRE a la pàgina de l'autor (el projecte,
- * destinsControl.AUTORIA_SOCDEPOBLE). Era on portava Comentar del peu de les
+ * la boina, que porta SEMPRE a la pàgina de l'autor (destinsControl.
+ * AUTORIA_SOCDEPOBLE; Onada 8, 261009: el perfil de l'entitat,
+ * /empresa/socdepoble, ja no /projecte). Era on portava Comentar del peu de les
  * targetes del Panell: la skill sdp-universal-page diu que Comentar és el
  * missatge directe a l'autor. Mentre no hi ha xat on portar, Comentar ho diu
  * (avisDelXatCorporatiu) i el Panell conserva l'Alerta. Des de l'ordre del
@@ -64,6 +65,7 @@
  */
 import { createElement, useCallback, useMemo, useRef, useState } from 'react';
 import { useUIState } from '../../app/contexts/UIContext';
+import { useIdentitatOpcional } from '../../app/contexts/IdentitatContext.jsx';
 import { XAT_SOCDEPOBLE_DE_LLAVOR, XatSocDePobleContext } from '../../components/PedraSeca/hooks/xatSocDePoble.js';
 /* El traductor de la interfície, o null fora de l'app (o amb una prova que
    simula UIContext sense esta exportació): aleshores, la reserva en
@@ -73,9 +75,34 @@ import { backendScope, normalizeBackendConfig } from '../../config/backendConfig
 import { esRutaInterna } from '../../config/objecteConnectable.js';
 import { ESPERA_DESPRES_DE_FALLADA_MS } from '../../config/navigation.js';
 import { loadPerfilPublic, teCapacitat } from '../../data/backendPort.js';
-import { ENTITAT_PILOT_SLUG } from '../../data/identitatsSeed.js';
+import { AGENTS_MAP } from '../../data/agentsSeed.js';
+import { ENTITAT_PILOT_ID, ENTITAT_PILOT_SLUG, IAIA_ID, PERSONA_PILOT, aliesDeLActor } from '../../data/identitatsSeed.js';
 
 const MODES_LOCALS = new Set(['seed', 'local']);
+
+/* Onada 8 (261009) · El padró del xat de la llavor: amb qui pot obrir un
+   directe «En privat» quan no hi ha servidor. localXat.creaFilDirecte rebutja
+   la resta («Esta persona no és del poble»). Són els usuariId de
+   XAT_SEED_MEMBRES (data/xatSeed.js): la persona pilot, l'entitat pilot i la
+   IAIA. No s'importa xatSeed, que porta les converses de mostra (com
+   PERSONES_SEED de localPerfils.js): xatCorporatiu.test.jsx vigila que diguen
+   el mateix. */
+const ID_PERSONA_PILOT = AGENTS_MAP.JAVI.id;
+const PADRO_DEL_XAT_DE_LLAVOR = Object.freeze([ID_PERSONA_PILOT, ENTITAT_PILOT_ID, IAIA_ID]);
+
+/**
+ * Onada 8 (261009) · L'id amb què el xat de la llavor obri el directe amb un
+ * interlocutor ({ tipus, id }), o null si no el pot obrir: aleshores «En
+ * privat» va al xat amb Sóc de Poble, com abans de l'Onada 8, i no a un error.
+ * Una persona que signa amb un àlies de la persona pilot (el Mac Mini de
+ * 'javillinares': PERSONA_PILOT.alies) és el seu usuariId del padró. En remot
+ * no es fa servir: qui decidix és crea_fil_directe.
+ */
+export function directeDeLlavor(interlocutor) {
+  const id = String(interlocutor?.id ?? '');
+  const delPadro = interlocutor?.tipus === 'persona' && PERSONA_PILOT.alies.includes(id) ? ID_PERSONA_PILOT : id;
+  return PADRO_DEL_XAT_DE_LLAVOR.includes(delPadro) ? delPadro : null;
+}
 /* El mateix límit que l'id d'un subjecte de xat (contracte.js). */
 const MAXIM_ID = 200;
 const NO_CAP_EN_CONSULTA = /[\u0000-\u001F\u007F\s]/;
@@ -167,6 +194,34 @@ function useEstatDeLApp() {
   }
 }
 
+/* Onada 8 (261009) · Qui mira, o null fora de l'app (sense IdentitatProvider)
+   o amb una prova que simula IdentitatContext sense esta exportació: el mock
+   llança en llegir-la, i això passa dins del try (el patró de
+   useEstatDeLApp). */
+function useIdentitatDeLApp() {
+  try {
+    return useIdentitatOpcional();
+  } catch {
+    return null;
+  }
+}
+
+/* Onada 8 (261009) · Els identificadors amb què pot signar qui mira: l'actor
+   actiu, la persona i les organitzacions on mana (les `identitats`
+   d'IdentitatContext, les mateixes amb què pot publicar), cadascuna amb els
+   àlies de la llavor (aliesDeLActor, la regla del MAS). «En privat» sobre una
+   publicació d'un d'ells va al xat amb Sóc de Poble: el servidor no obri cap
+   xat amb tu mateix ni amb una entitat que representes (SDP-XAT-002). */
+function idsDeQuiMira(identitat, dataMode) {
+  const ids = new Set();
+  const actor = identitat?.actor;
+  const identitats = Array.isArray(identitat?.identitats) ? identitat.identitats : [];
+  for (const qui of [actor, ...identitats]) {
+    if (qui?.id != null) aliesDeLActor(qui, { dataMode }).forEach((id) => ids.add(id));
+  }
+  return ids;
+}
+
 /* En remot, abans que ningú no haja triat «En privat»: encara no s'ha demanat. */
 const PENDENT = Object.freeze({ estat: 'pendent', href: null });
 /* Els estats en què el clic encara pot portar al xat: es demana (o es torna a
@@ -214,11 +269,18 @@ function avisTraduit({ estat, href }, t) {
  * Qui en vol l'estat sense esperar cap clic (l'Alerta del Panell) fa servir
  * useXatSocDePobleResolt (PedraSeca/hooks/xatSocDePoble.js): demana ESTA
  * mateixa resolució en muntar, no una de pròpia.
+ * Onada 8 (261009) · «En privat» obri el xat amb l'autor, i este és el xat
+ * de quan l'autor és qui mira (useAccions): el valor hi afig esDeQuiMira(id)
+ * quan coneix la identitat de l'app (idsDeQuiMira). Sense, cap camp nou.
+ * En LLAVOR hi afig també directeAmb (directeDeLlavor): el xat local només
+ * obri directes amb el seu padró, i la resta d'autors van a este xat.
  */
 export function ProveidorXatSocDePoble({ children }) {
   const app = useEstatDeLApp();
   const externalConfig = app?.externalConfig;
   const { dataMode, abast } = llegixBackend(externalConfig);
+  const identitat = useIdentitatDeLApp();
+  const quiMira = useMemo(() => idsDeQuiMira(identitat, dataMode), [identitat, dataMode]);
   const local = app === null || MODES_LOCALS.has(dataMode);
   const configRef = useRef(externalConfig);
   configRef.current = externalConfig;
@@ -270,7 +332,9 @@ export function ProveidorXatSocDePoble({ children }) {
         return resol().then((resultat) => ({
           ...resultat, avis: avisTraduit(resultat, t), darrera: demanda === demandes.current
         }));
-      }
-  }), [absentDelPort, estat, href, local, resol, t]);
+      },
+    ...(quiMira.size ? { esDeQuiMira: (id) => quiMira.has(String(id ?? '')) } : null),
+    ...(local ? { directeAmb: directeDeLlavor } : null)
+  }), [absentDelPort, estat, href, local, quiMira, resol, t]);
   return createElement(XatSocDePobleContext.Provider, { value: valor }, children);
 }

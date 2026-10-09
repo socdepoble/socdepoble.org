@@ -41,7 +41,10 @@ export function dataDeTargeta(document, ara = new Date()) {
 
 /**
  * Props de UniversalCard per al document viu.
- *   autor: { nom, avatar, poble } — el mateix de la barra taronja de l'editor.
+ *   autor: { nom, avatar, poble, ruta } — el mateix de la barra taronja de
+ *     l'editor. Onada 8 (261009) · «Un clic a QUALSEVOL boina taronja porta
+ *     SEMPRE al perfil públic de qui signa»: `ruta` és la de la barra
+ *     (authorHref). Sense, la boina continua sent text.
  *   etiquetes: les píndoles del document (les mateixes de l'editor).
  *   ara: només per a les proves (la reserva de data).
  * `imageUrl` i `avatarUrl` van crus: qui pinta resol les referències
@@ -57,6 +60,7 @@ export function propsDeTargetaViva(document, { autor = null, etiquetes = SENSE_E
     imageUrl: d.heroImage || undefined,
     emoticona: emojiSol(d.icon) || '',
     author: qui.nom || undefined,
+    authorHref: qui.ruta || undefined,
     avatarUrl: qui.avatar || undefined,
     location: qui.poble || undefined,
     ...dataDeTargeta(d, ara),

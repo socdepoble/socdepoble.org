@@ -23,6 +23,28 @@ const ANAR_AL_XAT = Object.freeze({
   desti: '/xat'
 });
 
+/* Onada 8 (261009; requeriments 261009_1300, punt 2) · La Consola i el
+   Cervell són pàgines del sistema, no plugins: la seua targeta i la seua
+   pàgina porten el botó gran cap a l'eina, com El Xat. Les rutes són
+   literals perquè este mòdul no importa res; systemPages.test.js les
+   confronta amb RUTA_CONSOLA i amb les pàgines de la Consola. Fora de
+   desenvolupament, /consola demana el rol de superadmin (App.jsx,
+   RutaConsola).
+   Pendent de decisió (MarIA o el Mestre) · Esta porta no mira l'entorn. Quan
+   eren plugins, la revisió P7-A deixava inert el seu «Obrir» fora de
+   desenvolupament (useDestiDelPlugin), perquè les dades de la Consola
+   (/__iaia/*) només les servix `vite serve`. Cap ordre ho ha derogat. */
+const OBRIR_CONSOLA = Object.freeze({
+  id: 'obrir-consola',
+  text: Object.freeze(['section.consola.obrir', 'Obrir la Consola']),
+  desti: '/consola'
+});
+const OBRIR_CERVELL = Object.freeze({
+  id: 'obrir-cervell',
+  text: Object.freeze(['section.cervell.obrir', 'Obrir el Cervell']),
+  desti: '/consola/explorador'
+});
+
 /**
  * Pàgines de sistema que el Mur barreja amb les publicacions.
  * Ordre del Mestre (261007) · «El Xat» viu a /page/xat (PageDetailSection,
@@ -30,6 +52,11 @@ const ANAR_AL_XAT = Object.freeze({
  * Ordre del Mestre (261007) · «Drets d'autor» viu a /page/drets-autor
  * (PageDetailSection, sense ruta nova ni component propi): la pàgina on porta
  * l'enllaç del copyright de totes les targetes i capçaleres (RUTA_DRETS_AUTOR).
+ * Onada 8 (261009; requeriments 261009_1300, punt 2) · «Consola Termodinàmica»
+ * i «El Cervell» ja no són plugins del Panell: viuen a /page/consola i
+ * /page/cervell (PageDetailSection, sense ruta nova), darrere de Disseny, i
+ * porten el seu botó «Obrir…» cap a l'eina. El Panell pinta les tres a
+ * «Maquinària i Sistema» amb la targeta del Mur (ControlSection.jsx).
  */
 export const SYSTEM_PAGES = Object.freeze([
   { key: 'projecte', isAvis: false, href: '/projecte' },
@@ -38,6 +65,8 @@ export const SYSTEM_PAGES = Object.freeze([
   { key: 'roadmap', isAvis: false, href: '/roadmap' },
   { key: 'notes', isAvis: false, href: '/notes' },
   { key: 'disseny', isAvis: false, href: '/disseny' },
+  { key: 'consola', isAvis: false, href: '/page/consola', accio: OBRIR_CONSOLA },
+  { key: 'cervell', isAvis: false, href: '/page/cervell', accio: OBRIR_CERVELL },
   { key: 'versions', isAvis: false, href: '/versions' },
   { key: 'legal', isAvis: false, href: '/legal' },
   { key: 'xat', isAvis: false, href: '/page/xat', accio: ANAR_AL_XAT },

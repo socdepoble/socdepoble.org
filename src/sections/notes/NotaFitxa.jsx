@@ -5,7 +5,7 @@ import { useSession } from "../../app/contexts/SessionContext.jsx";
 import { useMemo } from 'react';
 import { TEXTOS_LLAVOR } from '../../components/universal/textosLlavor.js';
 import { AVISOS_TARGETA_VIVA, TargetaViva } from '../../components/universal/TargetaViva.jsx';
-import { autoriaDeNota } from './autoriaNota.js';
+import { signaturaDeNota } from './autoriaNota.js';
 
 const EMPTY_AGENTS = Object.freeze([]);
 const CAP = Object.freeze([]);
@@ -22,6 +22,8 @@ const CAP = Object.freeze([]);
  *   · D4 · només l'emoticona triada (item.data.icon), mai la 🪶 de la llista.
  * Poliment T50 · l'avís parla de la publicació al Mur (AVISOS_TARGETA_VIVA)
  * i la targeta exposa que és la fitxa triada (aria-current), com la compacta.
+ * Onada 8 (261009) · La boina porta a la pàgina de qui signa, la mateixa de
+ * la barra taronja (signaturaDeNota: { nom, avatar, poble, ruta }).
  */
 export function NotaFitxa({ item, active, onSelect }) {
   const identitatCtx = useIdentitat();
@@ -35,7 +37,7 @@ export function NotaFitxa({ item, active, onSelect }) {
   const currentUser = sessionCtx ? sessionCtx.currentUser : null;
 
   const autor = useMemo(
-    () => autoriaDeNota({ notaId: item?.id, actor, actorId, agents, currentUser }),
+    () => signaturaDeNota({ notaId: item?.id, actor, actorId, agents, currentUser }),
     [item?.id, actor, actorId, agents, currentUser]
   );
 

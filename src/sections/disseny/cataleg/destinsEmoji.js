@@ -194,10 +194,11 @@ export function destinsDelDisseny(categories, items, portada) {
  * la navegació que no hi són (SECTIONS amb pageKey: L'Ànima de la IAIA, Nodes
  * i Fedivers). `copyDe(clau)` torna el copy de la pàgina (el carregat primer i
  * PAGE_COPY de reserva); una clau sense copy no es pinta, com al Mur
- * (targetesDeSistema). Les portades que ja encapçalen el seu grup
- * (`jaLlistades`: la Wiki i Disseny) no es repetixen. El glif és el de la
+ * (targetesDeSistema). Les pàgines que ja són a un altre grup
+ * (`jaLlistades`: les portades de la Wiki i de Disseny i, des de l'Onada 8,
+ * la Consola, que la Wiki ja llista) no es repetixen. El glif és el de la
  * barra lateral (SECTIONS, per ruta) o, si la pàgina no hi té entrada (El Xat,
- * Drets d'autor), el document.
+ * Drets d'autor, El Cervell), el document.
  */
 export function destinsDelSistema(pagines, seccions, copyDe, jaLlistades = CAP) {
   const perRuta = new Map((seccions || CAP).map((seccio) => [seccio.path, seccio]));

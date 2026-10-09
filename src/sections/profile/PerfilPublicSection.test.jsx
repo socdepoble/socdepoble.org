@@ -29,7 +29,8 @@ vi.mock('../../data/backendPort.js', () => ({ teCapacitat: () => mocks.capacitat
 vi.mock('../../host.js', () => ({ quanLlest: async () => {} }));
 import PerfilPublicSection from './PerfilPublicSection.jsx';
 import { TEXTOS_COMENTAR } from '../../components/PedraSeca/organismes/textosComentar.js';
-import { oblidaEntitatDelProjecte, RUTA_PROJECTE, rutaDAutoria } from '../../config/navigation.js';
+/* Onada 8 (261009) · El pilot porta al seu perfil (RUTA_PERFIL_PROJECTE), ja no a /projecte. */
+import { oblidaEntitatDelProjecte, RUTA_PERFIL_PROJECTE, rutaDAutoria } from '../../config/navigation.js';
 import { AGENTS_MAP } from '../../data/agentsSeed.js';
 /* Ordre del Mestre (261007) · La pàgina de l'entitat pilot s'obri pel seu
    slug declarat, el de producció ('socdepoble'). */
@@ -150,7 +151,10 @@ test('T43 · CONNECTAR d’una entitat afig organitzacio=ID per al lent d’admi
    la IAIA no tenen xat públic: «En públic» es queda desactivada. PREGUNTA
    OBERTA al Mestre: per a una persona o la IAIA, «En privat» ha de ser el
    directe amb ella (abans, /xat?amb=iaia o /xat?amb=u-1) en lloc de Sóc de
-   Poble? «Escriu-li al xat» continua portant al directe. */
+   Poble? «Escriu-li al xat» continua portant al directe.
+   Onada 8 (261009; requeriments, punt 3) · Resposta: sí. «En privat» obri el
+   xat amb la identitat del perfil (el directe, com «Escriu-li al xat»); el de
+   l'entitat pilot continua sent el xat amb Sóc de Poble. */
 const comentarBarra = (container) => container.querySelector('header.bar-blue .sp-card-actions').children[1];
 const PUBLIC = TEXTOS_COMENTAR.public[1];
 const PRIVAT = TEXTOS_COMENTAR.privat[1];
@@ -164,15 +168,16 @@ function via(container, nom) {
   return within(container.querySelector('header.bar-blue [role="menu"]')).getByRole('menuitem', { name: nom });
 }
 
-test('T63.2 · la IAIA (o una persona) no té xat públic: «En públic» desactivada; «En privat», Sóc de Poble', async () => {
+test('T63.2 · la IAIA (o una persona) no té xat públic: «En públic» desactivada; «En privat», el seu xat (Onada 8)', async () => {
   const { container } = render(<PerfilPublicSection agents={mocks.agents} />);
   await screen.findByRole('heading', { level: 1, name: 'IAIA MarIA' });
   const publica = via(container, PUBLIC);
   expect(publica.getAttribute('aria-disabled')).toBe('true');
   fireEvent.click(publica);
   expect(mocks.navigate).not.toHaveBeenCalled();
+  expect(via(container, PRIVAT).textContent).toBe(`${PRIVAT}Un xat només entre tu i IAIA MarIA`);
   fireEvent.click(via(container, PRIVAT));
-  expect(mocks.navigate.mock.calls).toEqual([[XAT_DE_SOCDEPOBLE]]);
+  expect(mocks.navigate.mock.calls).toEqual([['/xat?amb=iaia']]);
   cleanup();
   mocks.navigate.mockClear();
   mocks.load.mockResolvedValue({ ...IAIA, tipus: 'persona', id: 'u-1', nom: 'Pepa', esIA: false });
@@ -180,8 +185,32 @@ test('T63.2 · la IAIA (o una persona) no té xat públic: «En públic» desact
   await screen.findByRole('heading', { level: 1, name: 'Pepa' });
   expect(via(persona.container, PUBLIC).getAttribute('aria-disabled')).toBe('true');
   fireEvent.click(via(persona.container, PRIVAT));
-  expect(mocks.navigate.mock.calls).toEqual([[XAT_DE_SOCDEPOBLE]]);
+  expect(mocks.navigate.mock.calls).toEqual([['/xat?amb=u-1']]);
   expect(mocks.toast).not.toHaveBeenCalled();
+});
+
+test('Onada 8 · el perfil de l’entitat pilot: «En privat» continua sent el xat amb Sóc de Poble, i el menú, el de sempre', async () => {
+  mocks.id = 'socdepoble';
+  mocks.load.mockResolvedValue(ENTITAT);
+  const { container } = render(<PerfilPublicSection agents={mocks.agents} />);
+  await screen.findByRole('heading', { level: 1, name: 'Sóc de Poble' });
+  expect(via(container, PRIVAT).textContent).toBe(`${PRIVAT}${TEXTOS_COMENTAR.privatDetall[1]}`);
+  fireEvent.click(via(container, PRIVAT));
+  expect(mocks.navigate).toHaveBeenLastCalledWith(XAT_DE_SOCDEPOBLE);
+});
+
+test('Onada 8 · la boina de la fitxa porta a la fitxa mateixa, per la seua ruta canònica; mai al xat', async () => {
+  const { container } = render(<PerfilPublicSection agents={mocks.agents} />);
+  await screen.findByRole('heading', { level: 1, name: 'IAIA MarIA' });
+  const boina = container.querySelector('section.bar-orange .sp-card-author');
+  expect(boina.matches('a.sp-card-author-link')).toBe(true);
+  expect(boina.getAttribute('href')).toBe('/perfil/iaia');
+  cleanup();
+  mocks.id = 'socdepoble';
+  mocks.load.mockResolvedValue(ENTITAT);
+  const pilot = render(<PerfilPublicSection agents={mocks.agents} />);
+  await screen.findByRole('heading', { level: 1, name: 'Sóc de Poble' });
+  expect(pilot.container.querySelector('section.bar-orange .sp-card-author').getAttribute('href')).toBe('/empresa/socdepoble');
 });
 
 test('T63.2 · «En públic» d’una entitat obri el xat comú de la seua pàgina; «Escriu-li al xat» continua sent el directe', async () => {
@@ -332,6 +361,8 @@ test('T66 · sense emoticona (o un DTO sense el camp) la cel·la queda buida, se
    entitat porta dalt de l'H1 el seu logotip; la d'una persona, res. Abans,
    showLogos={false} el llevava a totes, sense cap ordre escrita. */
 const logosDelTitol = (container) => [...container.querySelectorAll('header.page-title img')];
+/* Onada 8 (261009) · El logotip rectangular de Sóc de Poble, clar i fosc: els PNG de 985x256 (abans, els SVG). */
+const LOGOTIP_SDP = ['/assets/system/ui/logo-socdepoble-rect-negre-985x256.png', '/assets/system/ui/logo-socdepoble-rect-blanc-985x256.png'];
 
 test('logotips · l’entitat del projecte (per identificador) porta el seu logotip rectangular, clar i fosc, davant de l’H1', async () => {
   mocks.id = ENTITAT_PILOT_SLUG;
@@ -342,9 +373,7 @@ test('logotips · l’entitat del projecte (per identificador) porta el seu logo
   expect([...capcalera.children].slice(0, 3).map((e) => `${e.tagName}.${e.className}`)).toEqual([
     'IMG.page-title-logo light-only', 'IMG.page-title-logo dark-only', 'H1.'
   ]);
-  expect(logosDelTitol(container).map((img) => img.getAttribute('src'))).toEqual([
-    '/assets/system/ui/logo-socdepoble-rect-negre.svg', '/assets/system/ui/logo-socdepoble-rect-blanc.svg'
-  ]);
+  expect(logosDelTitol(container).map((img) => img.getAttribute('src'))).toEqual(LOGOTIP_SDP);
   expect(logosDelTitol(container).map((img) => img.getAttribute('alt'))).toEqual(['Logotip Sóc de Poble', 'Logotip Sóc de Poble']);
 });
 
@@ -380,16 +409,16 @@ test('logotips · en remot, l’entitat del projecte (UUID amb el slug declarat)
     ...ENTITAT, id: UUID_DEL_PROJECTE, slug: ENTITAT_PILOT_SLUG, propietari: false, avatar: '/assets/avatar-quadrat.png'
   });
   /* Ningú més no l'ha registrat: ni l'app ni cap prova anterior. */
-  expect(rutaDAutoria({ tipus: 'entitat', id: UUID_DEL_PROJECTE })).not.toBe(RUTA_PROJECTE);
+  expect(rutaDAutoria({ tipus: 'entitat', id: UUID_DEL_PROJECTE })).not.toBe(RUTA_PERFIL_PROJECTE);
   const { container } = render(<PerfilPublicSection agents={mocks.agents} />);
   await screen.findByRole('heading', { level: 1, name: 'Sóc de Poble' });
   const srcs = () => logosDelTitol(container).map((img) => img.getAttribute('src'));
-  expect(srcs()).toEqual(['/assets/system/ui/logo-socdepoble-rect-negre.svg', '/assets/system/ui/logo-socdepoble-rect-blanc.svg']);
+  expect(srcs()).toEqual(LOGOTIP_SDP);
   expect(container.querySelector('.page-title-logo--entitat')).toBeNull();
   /* Ni després que l'avatar s'haja pogut resoldre. */
   await new Promise((resol) => { setTimeout(resol, 0); });
   expect(srcs()).not.toContain('/assets/avatar-quadrat.png');
-  expect(rutaDAutoria({ tipus: 'entitat', id: UUID_DEL_PROJECTE })).toBe(RUTA_PROJECTE);
+  expect(rutaDAutoria({ tipus: 'entitat', id: UUID_DEL_PROJECTE })).toBe(RUTA_PERFIL_PROJECTE);
 });
 
 test('logotips · el nom no fa l’entitat del projecte: una altra que es diga «Sóc de Poble» porta el seu', async () => {

@@ -15,6 +15,9 @@ import {
   Desplegable, Mono, Privat, PrivacitatConsola, TargetaConsola, TargetaResum, Xifra, tornaAlCim
 } from './peces.jsx';
 import { dataHoraDeBarra } from '../../components/universal/editorial.js';
+/* Onada 8 (261009) · La boina de Sóc de Poble porta al seu perfil
+   (RUTA_PERFIL_PROJECTE), ja no a /projecte. */
+import { RUTA_PERFIL_PROJECTE } from '../../config/navigation.js';
 
 afterEach(cleanup);
 
@@ -83,7 +86,8 @@ test('Xifra és una targeta de Control amb la xifra de títol i l’etiqueta de 
 
 /* Ordre del Mestre, 261004 (xat: tota targeta amb boina i pàgina pròpia) ·
    La targeta explicativa porta la boina de l'autor real, l'entitat Sóc de
-   Poble (logo, nom i poble; l'autor porta a /projecte), mai «Consola
+   Poble (logo, nom i poble; l'autor porta al seu perfil, Onada 8; abans,
+   /projecte), mai «Consola
    Termodinàmica» ni «Font: …», i la data a la pastilla de la boina (T51):
    un <time> sense clic, perquè una instantània de dades no és cap
    publicació del Calendari. Icona a la insígnia lateral en lloc de foto,
@@ -102,10 +106,10 @@ test('TargetaConsola amb destí: boina de Sóc de Poble amb la data, tota clicab
   expect(article.className).toBe('sp-card sdp-consola__targeta');
   const ordre = [...article.children].map((el) => el.className.split(' ')[0]);
   expect(ordre).toEqual(['sp-card-header', 'sp-card-link-overlay', 'sp-card-body', 'sp-card-footer']);
-  // La boina és la de l'entitat: enllaç a la pàgina del projecte, logo, nom i poble.
+  // La boina és la de l'entitat: enllaç al seu perfil (Onada 8; abans, la pàgina del projecte), logo (el PNG, Onada 8), nom i poble.
   const autor = article.querySelector('.sp-card-header > a.sp-card-author-link');
-  expect(autor.getAttribute('href')).toBe('/projecte');
-  expect(autor.querySelector('img.sp-card-avatar').getAttribute('src')).toBe('/assets/system/ui/logo-socdepoble-cuadrat-verd.svg');
+  expect(autor.getAttribute('href')).toBe(RUTA_PERFIL_PROJECTE);
+  expect(autor.querySelector('img.sp-card-avatar').getAttribute('src')).toBe('/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png');
   expect(autor.querySelector('.sp-card-author-name').textContent).toBe('Sóc de Poble');
   expect(autor.querySelector('.sp-card-author-location').textContent).toBe('La Torre de les Maçanes');
   expect(screen.getByRole('link', { name: /Sóc de Poble/ })).toBe(autor);
@@ -280,7 +284,7 @@ test('TargetaConsola amb onObri: tota la targeta obri el detall, i Connectar tam
     entradilla="Tòkens d’entrada i d’eixida que cada agent anota al diari de sessió." dada="3 registres"
     onObri={onObri} />);
   // Cap enllaç de tota la targeta: és un botó. L'únic enllaç és el de l'autor de la boina.
-  expect(screen.getAllByRole('link').map((a) => a.getAttribute('href'))).toEqual(['/projecte']);
+  expect(screen.getAllByRole('link').map((a) => a.getAttribute('href'))).toEqual([RUTA_PERFIL_PROJECTE]);
   expect([...document.querySelectorAll('.sp-card-footer button')].map((b) => b.getAttribute('aria-label')))
     .toEqual(['Traduir Consums', 'Comentar Consums', 'Compartir Consums', 'Connectar amb Consums']);
   // Sense `creat` ni instantània la targeta no té cap data, i no se n'inventa
@@ -306,7 +310,7 @@ test('TargetaConsola sense acció: explicació quieta, sense peu buit; la boina 
   expect(article.querySelector('.sp-card-link-overlay')).toBeNull();
   expect(screen.queryByRole('button')).toBeNull();
   // L'únic enllaç és el de l'autor (la boina de sempre), mai la targeta sencera.
-  expect(screen.getAllByRole('link').map((a) => a.getAttribute('href'))).toEqual(['/projecte']);
+  expect(screen.getAllByRole('link').map((a) => a.getAttribute('href'))).toEqual([RUTA_PERFIL_PROJECTE]);
 });
 
 /* T51 · Regla del Mestre (260928): cap document sense data. La targeta porta

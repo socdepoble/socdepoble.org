@@ -39,9 +39,9 @@ import { normalizeBackendConfig } from '../../config/backendConfig.js';
    descriptor i, per a una entitat o un grup, `organitzacio=ID`. La funció viu
    a config/navigation.js: el directori (ProfileSection) fa el mateix camí. */
 import {
-  objecteDePerfil, registraEntitatDelProjecte, rutaConnectarPerfil, RUTA_PROJECTE, rutaDAutoria
+  objecteDePerfil, registraEntitatDelProjecte, rutaConnectarPerfil, rutaDAutoria
 } from '../../config/navigation.js';
-import { DEFAULT_AUTHOR } from '../../components/universal/UniversalUtils';
+import { DEFAULT_AUTHOR, esRutaDelProjecte } from '../../components/universal/UniversalUtils';
 import { useResolvedAsset } from '../../hooks/useResolvedAsset.js';
 import { resolveAsset } from '../../config/assetResolver.js';
 
@@ -115,7 +115,8 @@ export default function PerfilPublicSection({ agents = AGENTS_BUITS }) {
 
   /* Norma del Mestre, 261004 (prompt 261004_1108, logotips) · La pàgina
      d'una entitat porta dalt el seu logotip. L'entitat del projecte es
-     reconeix per l'identificador (rutaDAutoria torna /projecte; l'id remot
+     reconeix per l'identificador (rutaDAutoria torna la seua ruta,
+     esRutaDelProjecte; des de l'Onada 8, el seu perfil; l'id remot
      el registra la mateixa càrrega d'esta fitxa, a més de l'AppDataLoader),
      mai pel nom: el seu logotip
      rectangular, clar i fosc. Una altra entitat, el seu logo_url (l'avatar
@@ -127,7 +128,7 @@ export default function PerfilPublicSection({ agents = AGENTS_BUITS }) {
      primer render: el logotip entrava un commit més tard i la fitxa saltava
      fins a 600px. El hook va abans de les eixides primerenques. */
   const esEntitat = perfil?.tipus === 'entitat';
-  const esElProjecte = esEntitat && rutaDAutoria({ tipus: perfil.tipus, id: perfil.id }) === RUTA_PROJECTE;
+  const esElProjecte = esEntitat && esRutaDelProjecte(rutaDAutoria({ tipus: perfil.tipus, id: perfil.id }));
   const logoCru = esEntitat && !esElProjecte && typeof perfil.avatar === 'string' ? perfil.avatar.trim() : '';
   const logoDelPort = useResolvedAsset(logoCru.startsWith('sdp-media://') ? logoCru : '');
   const logoPropi = logoCru.startsWith('sdp-media://') ? logoDelPort : (logoCru ? resolveAsset(logoCru) : '');
@@ -227,8 +228,15 @@ export default function PerfilPublicSection({ agents = AGENTS_BUITS }) {
          localPerfils.js ja passen). Sense ells no hi ha pastilla: mai la d'ara. */
       {...dataHoraDeBarra({ creat: perfil.creat, modificat: perfil.modificat })}
       /* T66 · L'espai central de la barra taronja, en lectura: l'emoticona
-         triada (DTO PerfilPublic.emoticona) o la cel·la buida. Mai la ploma. */
-      topBarData={{ authorName: perfil.nom, authorAvatar: perfil.avatar || '', authorLocation: perfil.poble || '', emoticona: perfil.emoticona || '' }}
+         triada (DTO PerfilPublic.emoticona) o la cel·la buida. Mai la ploma.
+         Onada 8 (261009) · «Un clic a QUALSEVOL boina taronja porta SEMPRE al
+         perfil públic»: la boina de la fitxa porta a la fitxa mateixa, per la
+         seua ruta canònica (rutaDAutoria: el pilot, a /empresa/socdepoble).
+         Abans no era cap enllaç. */
+      topBarData={{
+        authorName: perfil.nom, authorAvatar: perfil.avatar || '', authorLocation: perfil.poble || '', emoticona: perfil.emoticona || '',
+        authorHref: rutaDAutoria({ tipus: perfil.tipus, id: perfil.id })
+      }}
       onConnect={rutaConnectarPerfil(perfil) ? () => navigate(rutaConnectarPerfil(perfil)) : false}
       /* T63.2 (doctrina del Mestre, 260928) · Comentar d'una persona o d'una IA
          és el missatge directe de sempre (/xat?amb=); d'una entitat o d'un

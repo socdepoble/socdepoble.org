@@ -6,7 +6,6 @@ import { useUIState } from '../../app/contexts/UIContext';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
 import { useSessioOpcional } from '../../app/contexts/SessionContext';
 import { useSEO } from '../../hooks/useSEO';
-import { resolveAsset } from '../../config/assetResolver.js';
 import {
   PRESENCE_STALE_MS,
   ambNomSuggerit,
@@ -48,10 +47,11 @@ export default function DevicesSection() {
   const tenantId = externalConfig?.tenantId || 'default-tenant';
   const nomPersona = useMemo(() => nomDePersona(currentUser, agents), [currentUser, agents]);
 
+  /* Onada 8 (261009) · Sense `image`: useSEO no passa cap SVG a les xarxes i
+     ja hi posava la imatge base. El <head> és el mateix. */
   useSEO({
     title: 'Dispositius',
-    description: 'Gestió de dispositius i connexions',
-    image: resolveAsset('/assets/system/ui/logo-socdepoble-cuadrat-verd.svg')
+    description: 'Gestió de dispositius i connexions'
   });
 
   const [profile, setProfile] = useState(() => loadDeviceProfile(tenantId, nomPersona));

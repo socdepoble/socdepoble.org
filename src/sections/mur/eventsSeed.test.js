@@ -12,7 +12,7 @@ import { describe, expect, test } from 'vitest';
 import { CALENDAR_EVENTS } from './eventsSeed.js';
 import { EVENTS } from './eventsContent.js';
 import { MOCK_MARKET_ITEMS } from '../mercat/marketSeed.js';
-import { autorDe, objecteDe, rutaConnectarObjecte, rutaDePerfilDAutor, RUTA_PROJECTE } from '../../config/navigation.js';
+import { autorDe, objecteDe, rutaConnectarObjecte, rutaDePerfilDAutor, RUTA_PERFIL_PROJECTE } from '../../config/navigation.js';
 import { CARPETA_PER_SECCIO, itemsPublicatsDe, pertanyALActor } from '../notes/masDeLUsuari.js';
 import { ENTITAT_PILOT_ID, ENTITAT_PILOT_SLUG, PERSONA_PILOT, aliesDeLActor, autoriaSeed } from '../../data/identitatsSeed.js';
 
@@ -34,15 +34,16 @@ describe('l’Aplec és de l’entitat pilot', () => {
     expect(autorDe(SAMARRETA)?.id).toBe(autorDe(APLEC).id);
   });
 
-  test('la boina porta al projecte per l’id; sense id, el nom sol no porta enlloc', () => {
-    expect(rutaDePerfilDAutor(APLEC)).toBe(RUTA_PROJECTE);
+  /* Onada 8 (261009) · Al perfil de Sóc de Poble, ja no a /projecte. */
+  test('la boina porta al perfil del pilot per l’id; sense id, el nom sol no porta enlloc', () => {
+    expect(rutaDePerfilDAutor(APLEC)).toBe(RUTA_PERFIL_PROJECTE);
     expect(rutaDePerfilDAutor({ ...APLEC, author_entity_id: undefined })).toBeNull();
   });
 
   test('l’acte del Mur (eventsContent) conserva l’autoria de la llavor', () => {
     const acte = EVENTS.find((item) => item.id === APLEC.id);
     expect(acte.author_entity_id).toBe(ENTITAT_PILOT_ID);
-    expect(rutaDePerfilDAutor(acte)).toBe(RUTA_PROJECTE);
+    expect(rutaDePerfilDAutor(acte)).toBe(RUTA_PERFIL_PROJECTE);
   });
 });
 

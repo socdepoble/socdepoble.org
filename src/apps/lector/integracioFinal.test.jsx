@@ -22,6 +22,7 @@ import RutaApps from '../plataforma/RutaApps.jsx';
 import { ARA, ENTORN, munta, prepara, tancats } from './__fixtures__/muntaLector.jsx';
 import { creaAdaptadorLlavor } from './llavor/fontLlavor.js';
 import { focusLliure } from './vistes/Lector.jsx';
+import { RUTA_PERFIL_PROJECTE } from '../../config/navigation.js';
 
 const CORREFOC = 'El correfoc de les festes passarà pel barranc';
 const detall = () => within(document.getElementById('app-grid-main'));
@@ -273,9 +274,9 @@ describe('Arreglo 6 · les columnes de navegació són UniversalCard', () => {
        fons, no s'hi llegia (comprovat al navegador). */
     expect(targeta.className).toBe('sp-card');
     expect([...targeta.children].map((e) => e.className)).toEqual(['sp-card-header', 'sp-card-link-overlay', 'sp-card-body', 'sp-card-footer']);
-    /* La boina: les carpetes són de l'app, que signa Sóc de Poble (porta a la pàgina del projecte). */
+    /* La boina: les carpetes són de l'app, que signa Sóc de Poble (Onada 8: porta al seu perfil). */
     const boina = within(targeta.querySelector('header.sp-card-header'));
-    expect(boina.getByRole('link', { name: /^Sóc de Poble/ }).getAttribute('href')).toBe('/projecte');
+    expect(boina.getByRole('link', { name: /^Sóc de Poble/ }).getAttribute('href')).toBe(RUTA_PERFIL_PROJECTE);
     expect(text(targeta, '.sp-card-title')).toBe('Hui');
     expect(text(targeta, '.sp-card-subtitle')).toBe('6 sense llegir');
     expect(text(targeta, '.sp-card-text')).toBe('Les notícies de les últimes 24 hores de les fonts que seguixes');

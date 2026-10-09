@@ -20,6 +20,8 @@ import {
 } from './nucli/index.js';
 import { RUTES } from './rutes.js';
 import { detallDeProducte } from './vistes/vestits.js';
+/* Onada 8 (261009) · La boina de Sóc de Poble porta al seu perfil, ja no a /projecte. */
+import { RUTA_PERFIL_PROJECTE } from '../../config/navigation.js';
 
 const ENTORN = Object.freeze({ ...ENTORN_OBERT, produccio: false });
 const tancats = [];
@@ -176,12 +178,12 @@ describe('La compra en ample: llistes, la llista i el catàleg de costat', () =>
       expect(descripcio(mig().getByRole('button', { name: 'Llet' }))).toBe('Per comprar');
       expect(enLlista.querySelector('.sp-card-calendar-badge').getAttribute('aria-label')).toBeTruthy();
       /* Cap foto: les úniques imatges són el logo de Sóc de Poble a l'avatar de la boina (un recurs
-         propi, sense referent). */
+         propi, sense referent). Onada 8 (261009) · El logo és el PNG (abans, l'SVG). */
       const imatges = [...document.querySelectorAll('#app-grid-main img, #app-grid-list img')];
       expect(imatges.length).toBeGreaterThan(0);
       for (const img of imatges) {
         expect(img.className).toBe('sp-card-avatar');
-        expect(img.getAttribute('src')).toBe('/assets/system/ui/logo-socdepoble-cuadrat-verd.svg');
+        expect(img.getAttribute('src')).toBe('/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png');
         expect(img.getAttribute('referrerpolicy')).toBe('no-referrer');
       }
       const peu = targeta.querySelector('footer.sp-card-footer');
@@ -197,17 +199,18 @@ describe('La compra en ample: llistes, la llista i el catàleg de costat', () =>
 
   /* REGLA D'OR 1 (ordre del Mestre, 261004) · Tota targeta porta la boina taronja amb l'autor real,
      enllaçat a la seua pàgina. El catàleg de la Nevera (els articles de base, els productes de botiga
-     i els «Recents») és de l'entitat Sóc de Poble, que porta a la pàgina del projecte (resolt per
-     identificador a la plataforma). Un article propi és de la persona, que la plataforma no dona a
-     les apps: «Tu», sense enllaç ni perfil inventat. Munta el catàleg sencer i el recorre targeta a
-     targeta: més temps que els 5 s per defecte. */
-  test('REGLA D’OR 1: tota targeta porta la boina; el catàleg signa Sóc de Poble (porta a /projecte) i un article propi, «Tu»', async () => {
+     i els «Recents») és de l'entitat Sóc de Poble, que porta al seu perfil (Onada 8, 261009; abans,
+     a la pàgina del projecte; resolt per identificador a la plataforma). Un article propi és de la
+     persona, que la plataforma no dona a les apps: «Tu», sense enllaç ni perfil inventat (Onada 8,
+     261009: l'enllaç a la pàgina de qui mira és pendent de MarIA, vistes/autoria.js). Munta el
+     catàleg sencer i el recorre targeta a targeta: més temps que els 5 s per defecte. */
+  test('REGLA D’OR 1: tota targeta porta la boina; el catàleg signa Sóc de Poble (porta al seu perfil) i un article propi, «Tu»', async () => {
     const boinaDe = (boto) => boto.closest('article.sp-card').querySelector('header.sp-card-header');
     const delProjecte = (boto) => {
       const boina = boinaDe(boto);
       expect(boina.querySelector('.sp-card-author-name').textContent).toBe('Sóc de Poble');
       expect(boina.querySelector('.sp-card-author-location').textContent).toBe('La Torre de les Maçanes');
-      expect(within(boina).getByRole('link', { name: /^Sóc de Poble/ }).getAttribute('href')).toBe('/projecte');
+      expect(within(boina).getByRole('link', { name: /^Sóc de Poble/ }).getAttribute('href')).toBe(RUTA_PERFIL_PROJECTE);
     };
     const entorn = prepara();
     await entorn.magatzem.desa(afig(afig(estatInicial(), 'casa', 'pa'), 'casa', PRODUCTE.id));
@@ -402,7 +405,7 @@ describe('A casa', () => {
     /* REGLA D'OR 1 (261004) · A «El que tens a casa» i a la seua secció, la boina del catàleg: Sóc de Poble. */
     for (const boto of botonsDetall(PRODUCTE.id, PRODUCTE.nom)) {
       const boina = boto.closest('article.sp-card').querySelector('header.sp-card-header');
-      expect(within(boina).getByRole('link', { name: /^Sóc de Poble/ }).getAttribute('href')).toBe('/projecte');
+      expect(within(boina).getByRole('link', { name: /^Sóc de Poble/ }).getAttribute('href')).toBe(RUTA_PERFIL_PROJECTE);
     }
     for (const targeta of document.querySelectorAll('#app-grid-main article.sp-card')) {
       expect(targeta.querySelector('header.sp-card-header .sp-card-author-name'), targeta.textContent).not.toBeNull();
@@ -449,7 +452,7 @@ describe('Llistes, Catàleg i Ajustos', () => {
     const boinaDe = (boto) => boto.closest('article.sp-card').querySelector('header.sp-card-header');
     expect(boinaDe(botoDetall('p-1', 'Tofu')).querySelector('.sp-card-author-name').textContent).toBe('Tu');
     expect(within(boinaDe(botoDetall('p-1', 'Tofu'))).queryByRole('link')).toBeNull();
-    expect(within(boinaDe(botoDetall('llet', 'Llet'))).getByRole('link', { name: /^Sóc de Poble/ }).getAttribute('href')).toBe('/projecte');
+    expect(within(boinaDe(botoDetall('llet', 'Llet'))).getByRole('link', { name: /^Sóc de Poble/ }).getAttribute('href')).toBe(RUTA_PERFIL_PROJECTE);
     const propis = mig();
     fireEvent.click(propis.getByRole('button', { name: 'Tofu' }));
     expect(ubicacio()).toBe('/app/nevera/cataleg/casa?article=p-1');

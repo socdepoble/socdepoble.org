@@ -205,8 +205,10 @@ test('261007 · la barra taronja del compte porta a la fitxa pública pròpia (p
   expect(m.pagina.topBarData.authorHref).toBe('/grup/G');
   cleanup();
   const { ENTITAT_PILOT_ID } = await import('../../data/identitatsSeed.js');
+  const { RUTA_PERFIL_PROJECTE } = await import('../../config/navigation.js');
   pinta({ ...forn, id: ENTITAT_PILOT_ID });
-  expect(m.pagina.topBarData.authorHref).toBe('/projecte');
+  /* Onada 8 (261009) · El pilot, al seu perfil, ja no a /projecte. */
+  expect(m.pagina.topBarData.authorHref).toBe(RUTA_PERFIL_PROJECTE);
 });
 
 /* ── Grup C (ordre del Mestre, 261008) · el poble i els membres ── */

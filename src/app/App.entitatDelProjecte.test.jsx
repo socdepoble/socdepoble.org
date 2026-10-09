@@ -1,7 +1,8 @@
 /* T6 en remot (verificació del front «autoria», 261004) · L'app sencera, en
    mode remot i amb el router del navegador, resol l'id de servidor de
    l'entitat pilot UNA sola vegada i a nivell d'app (AppDataLoader,
-   useEntitatDelProjecte): /mur/:id conserva l’enllaç editorial /projecte;
+   useEntitatDelProjecte): /mur/:id porta al perfil de l'entitat
+   (RUTA_PERFIL_PROJECTE; Onada 8, 261009: abans, l’enllaç editorial /projecte);
    /mercat i /mercat/:id porten al perfil real (Pla 261004_2045), també directament, sense passar pel Mur
    ni per una publicació del MAS. Una altra entitat del servidor continua
    portant al seu perfil. En llavor, cap crida. Els UUID i els continguts són
@@ -12,7 +13,7 @@ import PedraSecaEmbed from '../PedraSecaEmbed';
 import { CONTRACTE_NUCLI } from '../data/contracte.js';
 import { getBackendImplementation, setBackendImplementation } from '../data/backendPort.js';
 import { getSessionState } from '../data/sessionService.js';
-import { oblidaEntitatDelProjecte, RUTA_PROJECTE } from '../config/navigation.js';
+import { oblidaEntitatDelProjecte, RUTA_PERFIL_PROJECTE } from '../config/navigation.js';
 import { ENTITAT_PILOT_SLUG } from '../data/identitatsSeed.js';
 
 vi.mock('../host.js', () => ({ quanLlest: async () => undefined }));
@@ -102,9 +103,9 @@ test('/mercat/:id, entrant directament: la barra taronja del detall porta al per
   });
 });
 
-test('/mur/:id, entrant directament: la barra taronja del detall porta a /projecte', async () => {
+test('/mur/:id, entrant directament: la barra taronja del detall porta al perfil de Sóc de Poble', async () => {
   await munta(`/mur/${AVIS_PILOT.id}`, async ({ container, loadPerfilPublic }) => {
-    await waitFor(() => expect(autoriaDeLaBarra(container)).toBe(RUTA_PROJECTE));
+    await waitFor(() => expect(autoriaDeLaBarra(container)).toBe(RUTA_PERFIL_PROJECTE));
     expect(cridesDelPilot(loadPerfilPublic)).toBe(1);
   });
 });

@@ -152,12 +152,16 @@ describe('si la pàgina és de qui mira (onCanvia), l’avatar és un botó que 
 describe('va després de les vies del logotip: amb logotip, cap avatar', () => {
   const imatgesDe = (container) => [...capcalera(container).querySelectorAll('img')].map((img) => img.className);
 
-  test('signa Sóc de Poble (la boina va a /projecte): el seu logotip, cap avatar', () => {
+  /* Onada 8 (261009) · La boina de Sóc de Poble va al seu perfil
+     (DEFAULT_AUTHOR.href); la ruta vella /projecte continua valent. */
+  test('signa Sóc de Poble (la boina va al seu perfil, o a la vella /projecte): el seu logotip, cap avatar', () => {
     let { container } = render(<PageFrame chrome="system" title="Consola" avatarAutor={AVATAR} />);
     expect(imatgesDe(container)).toEqual(['page-title-logo light-only', 'page-title-logo dark-only']);
-    cleanup();
-    ({ container } = render(<PageFrame chrome="full" title="T" authorName="Sóc de Poble" authorHref="/projecte" avatarAutor={AVATAR} />));
-    expect(container.querySelector('.page-title-avatar')).toBeNull();
+    for (const ruta of [DEFAULT_AUTHOR.href, '/projecte']) {
+      cleanup();
+      ({ container } = render(<PageFrame chrome="full" title="T" authorName="Sóc de Poble" authorHref={ruta} avatarAutor={AVATAR} />));
+      expect([ruta, container.querySelector('.page-title-avatar')]).toEqual([ruta, null]);
+    }
   });
 
   test('logoEntitat i la compatibilitat showLogos manen sobre l’avatar', () => {

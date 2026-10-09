@@ -134,7 +134,7 @@
  *     reinjecció a identitat.js; després n'hi ha prou que `renovacio` exigisca
  *     també la mateixa entrada. Fora de l'abast d'este fitxer: pendent.
  */
-import React, { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   loadFils,
   loadMissatges,

@@ -1,6 +1,7 @@
 import React from 'react';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { UniversalCard } from '../../components/universal/../PedraSeca';
+import { PortaDePagina } from '../../components/PedraSeca/organismes/PortesTargeta.jsx';
 import { getSectionItemPath, objecteDe, rutaConnectarObjecte, rutaXatDePagina } from '../../config/navigation';
 import { useNavigate } from '../../app/contexts/RouterContext';
 import { useSEO } from '../../hooks/useSEO';
@@ -89,7 +90,6 @@ export default function PoblesSection() {
       <div className="sdp-card-grid">
         {status === 'loading' && (
           <div>
-            <div></div>
             <p>{t('section.pobles.loading', 'Carregant els pobles...')}</p>
           </div>
         )}
@@ -115,9 +115,21 @@ export default function PoblesSection() {
              portant a la pàgina del poble (mainHref).
              Onada 6 (pla 261009_0245, ítem 4) · La caputxa i «Comentar» obrin el
              xat amb el nom de la gent (objecteDelPobleXat, el mateix de la
-             pàgina del poble): el fil es diu «Gent de la Torre». */
+             pàgina del poble): el fil es diu «Gent de la Torre».
+             Onada 8 (261009; requeriments, punt 4: «Zero excepcions») ·
+             Derogada la caputxa cap al xat: la boina porta a la fitxa del
+             poble (la ruta del seu descriptor, `poble`: /pobles/<id>), com el
+             cos de la targeta. Al xat de la gent s'hi entra pel botó gran «Anar al
+             xat» de dins de la targeta (la ranura `accio` d'UniversalCard, el
+             mateix botó de la targeta d'El Xat) i per «Comentar · En públic».
+             El requeriment diu «afegir»: amb etiquetesAmbAccio, la targeta
+             conserva les seues etiquetes (la província, la comarca i la
+             Viquipèdia, Onada 5) i el botó va just després (Llei del Píxel). */
           const xatDelPobleObjecte = objecteDelPobleXat(town);
           const xatDelPoble = rutaXatDePagina(xatDelPobleObjecte);
+          const portaDelXat = xatDelPoble
+            ? { id: 'xat-del-poble', verb: t('section.xat.anarAlXat', 'Anar al xat'), desti: xatDelPoble, varietat: 'primari' }
+            : null;
           const data = dataDElement(town);
           /* Onada 5 (F5, fase 3) · Les dades manen: l'`author` de la fitxa
              (la llavor porta el nom curt «Gent de la Torre») i, si no en porta,
@@ -135,7 +147,9 @@ export default function PoblesSection() {
             <UniversalCard
               key={town.id}
               author={town.author || nomDeLaGent(town.title || town.name)}
-              authorHref={xatDelPoble || undefined}
+              authorHref={poble?.ruta || undefined}
+              accio={portaDelXat ? <PortaDePagina porta={portaDelXat} /> : null}
+              etiquetesAmbAccio
               avatarUrl={town.avatar_url || town.image_url || town.imageSrc}
               location={town.title || town.name}
               time={data.time}
@@ -145,11 +159,11 @@ export default function PoblesSection() {
               imageAlt={town.title}
               title={town.title}
               subtitle={town.comarca}
-              body={
-                <div>
-                  <p className="sp-card-text">{town.content}</p>
-                </div>
-              }
+              /* Onada 8 (261009) · Sense el <div> del mig: CardBody ja
+                 l'embolcalla amb div.sp-card-text, i els marges es fusionen
+                 igual. El <p> es queda: amb body={town.content}, un poble sense
+                 text perdria el paràgraf i el seu marge. */
+              body={<p className="sp-card-text">{town.content}</p>}
               /* Onada 5 · Categorització de la targeta (skill sdp-universal-page
                  §4): la província és la categoria i la comarca, l'etiqueta. */
               labels={[

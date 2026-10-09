@@ -16,7 +16,9 @@
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { MemoryRouter, useLocation } from '../../app/contexts/RouterContext';
-import { rutaDAutoria } from '../../config/navigation.js';
+import { RUTA_PERFIL_PROJECTE, rutaDAutoria } from '../../config/navigation.js';
+import { RUTA_DRETS_AUTOR } from '../../config/systemPages.js';
+import { COPYRIGHT_SDP } from '../../components/universal/editorial.js';
 import { STORAGE_PREFIX } from '../../config/storage.js';
 import { CLAU_UTILITATS_ACTIVES, desaUtilitatActiva } from '../profile/utilitatsActives.js';
 import { ESPAIS_PLUGINS, PLUGINS, pluginsDeLEspai, rutaDelPlugin } from '../plugins/registrePlugins.js';
@@ -124,12 +126,16 @@ test('R3 · separats: «L’empresa» porta la Gestoria i «La llar» el Rebost 
   expect(targetesDe(seccioDe('La llar')).map(titolDe).filter((titol) => empresa.has(titol))).toEqual([]);
 });
 
-test('regla d’or 1 · cada targeta: boina de Sóc de Poble cap a /projecte, cos sencer, peu canònic i cap a la seua pàgina', () => {
+/* Onada 8 (261009) · La boina de Sóc de Poble porta al seu perfil
+   (RUTA_PERFIL_PROJECTE, que servix la ruta empresa/:agentId d'App), ja no a
+   /projecte. Només canvien les assercions de la ruta de la boina. */
+test('regla d’or 1 · cada targeta: boina de Sóc de Poble cap al seu perfil, cos sencer, peu canònic i cap a la seua pàgina', () => {
   pinta();
   const targetes = targetesDelsEspais();
   expect(targetes).toHaveLength(PLUGINS.filter((p) => p.espai).length);
   expect(AUTORIA_SOCDEPOBLE.authorHref).toBe(rutaDAutoria({ tipus: 'entitat', id: 'socdepoble' }));
-  expect(AUTORIA_SOCDEPOBLE.authorHref).toBe('/projecte');
+  expect(AUTORIA_SOCDEPOBLE.authorHref).toBe(RUTA_PERFIL_PROJECTE);
+  expect(fontApp.includes('<Route path="empresa/:agentId"')).toBe(true);
   expect(rutesEstatiques().has('projecte')).toBe(true);
   expect(fontApp.includes('<Route path="/plugin/:id"')).toBe(true);
   for (const [targeta, plugin] of targetes) {
@@ -145,7 +151,7 @@ test('regla d’or 1 · cada targeta: boina de Sóc de Poble cap a /projecte, co
     const capcal = targeta.querySelector('header.sp-card-header');
     expect(capcal.querySelector('.sp-card-author-name').textContent, titol).toBe(AUTORIA_SOCDEPOBLE.author);
     expect(capcal.querySelector('.sp-card-author-location').textContent, titol).toBe(AUTORIA_SOCDEPOBLE.location);
-    expect(capcal.querySelector('a.sp-card-author-link').getAttribute('href'), titol).toBe('/projecte');
+    expect(capcal.querySelector('a.sp-card-author-link').getAttribute('href'), titol).toBe(RUTA_PERFIL_PROJECTE);
     /* La imatge de la targeta és la portada de la seua pàgina (PluginPage). */
     const imatge = targeta.querySelector('img.sp-card-media');
     expect([imatge.getAttribute('src'), imatge.getAttribute('alt')], titol).toEqual([plugin.imatge, plugin.imatgeAlt]);
@@ -157,13 +163,16 @@ test('regla d’or 1 · cada targeta: boina de Sóc de Poble cap a /projecte, co
     const enllac = targeta.querySelector('a.sp-card-link-overlay');
     expect([enllac.getAttribute('href'), enllac.getAttribute('aria-label')], titol).toEqual([rutaDelPlugin(plugin.id), titol]);
     /* El peu canònic, al final: Traduir, Comentar i Compartir. El Connectar
-       espera la decisió del Mestre (revisió R3): no es fixa ací. */
+       esperava la decisió del Mestre (revisió R3). Onada 8 (261009) · El
+       Mestre ho ha decidit (requeriments 261009_1300, punt 2): Universal
+       Card sencera, amb Connectar al peu i el copyright cap a «Drets d'autor». */
     const botons = [...targeta.querySelectorAll('.sp-card-footer button')].map((boto) => boto.getAttribute('aria-label'));
-    expect(botons, titol).toEqual(expect.arrayContaining([`Traduir ${titol}`, `Comentar ${titol}`, `Compartir ${titol}`]));
+    expect(botons, titol).toEqual([`Traduir ${titol}`, `Comentar ${titol}`, `Compartir ${titol}`, `Connectar amb ${titol}`]);
+    expect(targeta.querySelector('.sp-card-copyright__enllac').getAttribute('href'), titol).toBe(RUTA_DRETS_AUTOR);
   }
 });
 
-test('regla d’or 1 · el clic de cada targeta obri /plugin/<id> i el de la boina, /projecte', () => {
+test('regla d’or 1 · el clic de cada targeta obri /plugin/<id> i el de la boina, el perfil de Sóc de Poble', () => {
   pinta();
   const total = targetesDelsEspais().length;
   expect(total).toBeGreaterThan(0);
@@ -176,17 +185,28 @@ test('regla d’or 1 · el clic de cada targeta obri /plugin/<id> i el de la boi
     cleanup();
     pinta();
     fireEvent.click(targetesDelsEspais()[index][0].querySelector('a.sp-card-author-link'));
-    expect(ubicacio(), plugin.id).toBe('/projecte');
+    expect(ubicacio(), plugin.id).toBe(RUTA_PERFIL_PROJECTE);
   }
 });
 
 /* R1 · Targetes estàtiques: cap xifra, comptador, data ni avís que isca de
-   les dades. El Panell també es munta dins de l'amfitrió. */
+   les dades. El Panell també es munta dins de l'amfitrió.
+   Onada 8 (261009) · El copyright de les targetes (COPYRIGHT_SDP, «CC
+   BY-NC-SA 4.0…») porta el número de versió de la llicència, que no és cap
+   dada: es comprova que és exactament eixe text i es deixa fora de la
+   comprovació de xifres. La resta de la targeta, com abans. */
 test('R1 · cap xifra als dos espais: ni al text, ni a la boina, ni al quadrat de la targeta', () => {
   pinta();
   for (const espai of ESPAIS_PLUGINS) {
     const seccio = seccioDe(espai.titol);
-    expect([espai.id, /\d/.test(seccio.textContent)]).toEqual([espai.id, false]);
+    const senseDrets = seccio.cloneNode(true);
+    const drets = [...senseDrets.querySelectorAll('.sp-card-copyright')];
+    expect([espai.id, drets.length]).toEqual([espai.id, targetesDe(seccio).length]);
+    for (const paragraf of drets) {
+      expect([espai.id, paragraf.textContent]).toEqual([espai.id, COPYRIGHT_SDP]);
+      paragraf.remove();
+    }
+    expect([espai.id, /\d/.test(senseDrets.textContent)]).toEqual([espai.id, false]);
     expect([espai.id, [...seccio.querySelectorAll('[aria-label]')].filter((el) => /\d/.test(el.getAttribute('aria-label')))])
       .toEqual([espai.id, []]);
     expect(seccio.querySelector('.btn-date-time'), espai.id).toBeNull();
@@ -204,7 +224,8 @@ test('D3 · cap targeta dels espais porta a l’eina local, a /gestoria ni direc
   const hrefs = ESPAIS_PLUGINS.flatMap((espai) => [...seccioDe(espai.titol).querySelectorAll('[href]')].map((el) => el.getAttribute('href')));
   expect(hrefs.length).toBeGreaterThan(0);
   expect(hrefs.filter((href) => /wikidepoble|gestoria_|^\/gestoria$|^\/app\//.test(href))).toEqual([]);
-  expect(hrefs.every((href) => href === '/projecte' || /^\/plugin\/[a-z]+$/.test(href))).toBe(true);
+  /* Onada 8 (261009) · I el copyright, que porta a «Drets d'autor». */
+  expect(hrefs.every((href) => href === RUTA_PERFIL_PROJECTE || href === RUTA_DRETS_AUTOR || /^\/plugin\/[a-z]+$/.test(href))).toBe(true);
 });
 
 /* R2 · Compartir d'una targeta del Panell comparteix la seua pàgina pública

@@ -43,7 +43,7 @@ import {
 } from '../detail/detailSectionMeta.jsx';
 import { paginaDElement, useLogoEntitatDElement } from '../detail/elementDeSeccio.js';
 import { dataDElement } from '../../components/universal/editorial.js';
-import { objecteDe, objecteDePagina, RUTA_PROJECTE, rutaDePerfilDAutor } from '../../config/navigation.js';
+import { objecteDe, objecteDePagina, RUTA_PERFIL_PROJECTE, rutaDePerfilDAutor } from '../../config/navigation.js';
 import { accioDeLaPagina } from '../../config/systemPages.js';
 import { useEntitatDelProjecte } from '../../hooks/useEntitatDelProjecte.js';
 import { pageKeyDeRuta, propsDePaginaDeText } from '../text/paginaDeText.js';
@@ -56,14 +56,15 @@ import { titolDeLHistoric, useVeuHistoric } from '../mur/usePublicacionsDeLActor
 /**
  * T6 (ordre del Mestre, 261004, prompt 261004_0515 §5) · On porta la barra
  * taronja d'una publicació: la pàgina de qui la signa (rutaDePerfilDAutor,
- * que porta l'entitat pilot al projecte); sense nom propi, la reserva «Sóc de
- * Poble» va al projecte. Un nom sense identitat coneguda no s'endevina: sense
- * enllaç, com a la targeta del Mur.
+ * que porta l'entitat pilot al seu perfil); sense nom propi, la reserva «Sóc
+ * de Poble» va al perfil de Sóc de Poble (RUTA_PERFIL_PROJECTE; Onada 8,
+ * 261009: abans, al projecte). Un nom sense identitat coneguda no
+ * s'endevina: sense enllaç, com a la targeta del Mur.
  */
 export function rutaDeLaBarraDeLaPublicacio(publicacio) {
   const deQuiSigna = rutaDePerfilDAutor(publicacio);
   if (deQuiSigna) return deQuiSigna;
-  return publicacio?.author_name || publicacio?.seller ? undefined : RUTA_PROJECTE;
+  return publicacio?.author_name || publicacio?.seller ? undefined : RUTA_PERFIL_PROJECTE;
 }
 
 /** La fitxa del llistat: la mateixa forma que qualsevol fitxa del gestor.
@@ -157,7 +158,7 @@ export function PublicacioDetall({ item }) {
   const { showToast } = useToast();
   const { t } = useUIActions();
   /* T6 en remot · l'id de servidor de l'entitat pilot: quan arriba, la barra
-     de les seues publicacions torna a pintar-se i porta al projecte. */
+     de les seues publicacions torna a pintar-se i porta al seu perfil. */
   useEntitatDelProjecte();
   const { seccio, item: publicacio, ruta } = item?.data || {};
   /* Esmena 3 (261007_1645) · La secció del Mercat de detail/, només per a
@@ -189,7 +190,7 @@ export function PublicacioDetall({ item }) {
   /* Norma del Mestre, 261004 (prompt 261004_1108, línies 66-69 i T2) · Si la
      signa una persona (o la IA), reconeguda per identificador, la capçalera
      porta el seu avatar redó davant de l'H1, el mateix de la boina; l'entitat
-     del projecte porta el seu logotip per la boina (/projecte, PageFrame).
+     del projecte porta el seu logotip per la boina (el seu perfil, PageFrame).
      La regla, una per als dos lectors: avatarAutorDElement (detailSectionMeta).
      Decisió 3 del Mestre (261007, confirmada: «Imatges externes al Mur:
      PROHIBIDES (PRIVACITAT)») · Relleu 261007 (peça «imatges-detall») · El

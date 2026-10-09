@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest';
 import { AUTORIA_BENVINGUDA, ID_COPIA_PROVA, actorAmbPobleDeLEntitat, autoriaDeNota, rutaDAutoriaDeNota, signaturaDeNota } from './autoriaNota.js';
 import { DEFAULT_AUTHOR, FORASTER } from '../../components/universal/UniversalUtils.js';
-import { RUTA_PROJECTE } from '../../config/navigation.js';
+import { RUTA_PERFIL_PROJECTE } from '../../config/navigation.js';
 import { ENTITAT_PILOT_ID } from '../../data/identitatsSeed.js';
 
 /* T50 (D2) · Una sola autoria per a la barra taronja de l'editor de notes i
@@ -73,7 +73,8 @@ test('sense sessió, una nota normal: el Foraster sencer, nom i poble junts', ()
 test('T65 · l’autoria de la benvinguda és Sóc de Poble amb el seu avatar oficial, la de les pàgines de sistema', () => {
   expect(AUTORIA_BENVINGUDA).toEqual({
     nom: 'Sóc de Poble',
-    avatar: '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg',
+    // Onada 8 (261009) · L'avatar oficial és el PNG de 256x256 (abans, l'SVG).
+    avatar: '/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png',
     poble: 'La Torre de les Maçanes'
   });
   expect(AUTORIA_BENVINGUDA).toEqual({ nom: DEFAULT_AUTHOR.name, avatar: DEFAULT_AUTHOR.avatarUrl, poble: DEFAULT_AUTHOR.location });
@@ -104,19 +105,21 @@ test('T65 · una nota normal continua signant qui l’escriu: el Foraster sense 
 /* Ordre del Mestre (261007) · «Quan isquen, les barres taronges han de portar
    a la pàgina de l'autor que l'ha creada». La ruta segueix la mateixa tria que
    el nom: la barra no pot dir un autor i portar a la pàgina d'un altre. */
-test('261007 · la benvinguda i la còpia de prova porten a la pàgina del projecte, signe qui signe', () => {
-  expect(RUTA_PROJECTE).toBe('/projecte');
-  expect(rutaDAutoriaDeNota({ notaId: 'n1', currentUser: PEPA })).toBe(RUTA_PROJECTE);
-  expect(rutaDAutoriaDeNota({ notaId: ID_COPIA_PROVA })).toBe(RUTA_PROJECTE);
+/* Onada 8 (261009) · «La pàgina del projecte» és ara el perfil de Sóc de
+   Poble (RUTA_PERFIL_PROJECTE), mai /projecte. */
+test('261007 · la benvinguda i la còpia de prova porten al perfil de Sóc de Poble, signe qui signe', () => {
+  expect(RUTA_PERFIL_PROJECTE).toBe('/empresa/socdepoble');
+  expect(rutaDAutoriaDeNota({ notaId: 'n1', currentUser: PEPA })).toBe(RUTA_PERFIL_PROJECTE);
+  expect(rutaDAutoriaDeNota({ notaId: ID_COPIA_PROVA })).toBe(RUTA_PERFIL_PROJECTE);
   expect(rutaDAutoriaDeNota({ notaId: ID_COPIA_PROVA, actor: { tipus: 'entitat', id: 'O', nom: 'Forn' }, actorId: 'O', currentUser: PEPA }))
-    .toBe(RUTA_PROJECTE);
+    .toBe(RUTA_PERFIL_PROJECTE);
 });
 
-test('261007 · una entitat activa porta a la seua fitxa (l’entitat pilot, a /projecte), mai a la persona', () => {
+test('261007 · una entitat activa porta a la seua fitxa (l’entitat pilot, al seu perfil), mai a la persona', () => {
   const actor = { tipus: 'entitat', id: 'O', nom: 'Forn & Cia' };
   expect(rutaDAutoriaDeNota({ notaId: 'p', actor, actorId: 'O', currentUser: PEPA })).toBe('/empresa/O');
   const pilot = { tipus: 'entitat', id: ENTITAT_PILOT_ID, nom: 'Sóc de Poble' };
-  expect(rutaDAutoriaDeNota({ notaId: 'p', actor: pilot, actorId: ENTITAT_PILOT_ID, currentUser: PEPA })).toBe(RUTA_PROJECTE);
+  expect(rutaDAutoriaDeNota({ notaId: 'p', actor: pilot, actorId: ENTITAT_PILOT_ID, currentUser: PEPA })).toBe(RUTA_PERFIL_PROJECTE);
   // Una entitat sense nom públic no signa: signa la sessió, i la ruta també és la seua.
   expect(rutaDAutoriaDeNota({ notaId: 'p', actor: { tipus: 'entitat', id: 'O', nom: '' }, actorId: 'O', currentUser: PEPA })).toBe('/gent/U');
 });
@@ -142,7 +145,7 @@ test('261007 · signaturaDeNota = autoriaDeNota + ruta; autoriaDeNota conserva l
     expect(signaturaDeNota(params)).toEqual({ ...autoriaDeNota(params), ruta: rutaDAutoriaDeNota(params) });
     expect(Object.keys(autoriaDeNota(params)).sort()).toEqual(['avatar', 'nom', 'poble']);
   }
-  expect(signaturaDeNota({ notaId: 'n1' })).toEqual({ ...AUTORIA_BENVINGUDA, ruta: RUTA_PROJECTE });
+  expect(signaturaDeNota({ notaId: 'n1' })).toEqual({ ...AUTORIA_BENVINGUDA, ruta: RUTA_PERFIL_PROJECTE });
   // La constant de la benvinguda no es toca (la targeta de la llista la compara per identitat).
   expect(Object.isFrozen(AUTORIA_BENVINGUDA)).toBe(true);
   expect(AUTORIA_BENVINGUDA).not.toHaveProperty('ruta');

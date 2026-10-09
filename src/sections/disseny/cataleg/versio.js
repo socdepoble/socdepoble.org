@@ -15,7 +15,13 @@
  * src/sections/disseny/cataleg/detalls`, sense comptar les proves ni este
  * fitxer). Una versió que no és la darrera és una data falsa a la pastilla.
  *
- * Darrera posada al dia: EspecimenXatLlista.jsx, 2026-10-09T04:59:44+02:00, Onada 6 (front «xat»,
+ * Darrera posada al dia: EspecimenTargetaViva.jsx, 2026-10-09T16:43:08+02:00, Onada 8 (front 8A,
+ * revisió adversarial): la boina de la targeta viva porta al perfil de qui signa (autor.ruta). Arreplega
+ * els espècimens del mateix front tocats sense posar-la al dia: EspecimenPage.jsx (15:25:02),
+ * EspecimenPaginaApp.jsx (15:25:07), EspecimenControlsBarra.jsx (15:25:17) i EspecimenUniversalCard.jsx
+ * (15:29:42), la boina de Sóc de Poble al seu perfil i el menú «En privat» amb l'autor; i registre.js
+ * (06:37:25), tocat el 261009 sense posar-la al dia.
+ * Versió anterior: EspecimenXatLlista.jsx, 2026-10-09T04:59:44+02:00, Onada 6 (front «xat»,
  * revisió 261009): el peu «Informa d'un error» de la llista de converses (LlistaConverses `peu` i
  * BotoInformaDUnError), fora de la <ul>, davall de l'avís d'una llista que no carrega i amb la reserva
  * (copiar l'informe o enviar-lo per correu). Arreplega també EspecimenCalendari.jsx (04:44:01, Onada 6,
@@ -76,4 +82,4 @@
  * Quan el manifest porte `creat` i `modificat` per espècimen, manaran eixos
  * camps i esta constant només farà de versió del conjunt.
  */
-export const VERSIO_CATALEG = '2026-10-09T04:59:44+02:00';
+export const VERSIO_CATALEG = '2026-10-09T16:43:08+02:00';

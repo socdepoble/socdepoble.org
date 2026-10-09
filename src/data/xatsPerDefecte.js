@@ -37,9 +37,10 @@ export const PREFIX_PER_DEFECTE = 'sdp-per-defecte:';
  * llista del xat (les files per defecte), «Nova conversa» (contactesAjuda.js)
  * i el xat de mostra sense sessió (FakeChatOnboarding.jsx). L'avatar de Sóc
  * de Poble és el logo quadrat que el Mestre ha fixat a foc
- * ('/assets/system/ui/logo-socdepoble-cuadrat-verd.svg'): el del compte de la
- * marca, el mateix de la llavor. El de la IAIA, el del padró, que en remot
- * n'és l'única identitat perquè viu al paquet.
+ * ('/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png'; Onada 8,
+ * 261009: abans, l'SVG): el del compte de la marca, el mateix de la llavor.
+ * El de la IAIA, el del padró, que en remot n'és l'única identitat perquè
+ * viu al paquet.
  */
 export const AJUDA = Object.freeze([
   Object.freeze({ clau: 'socdepoble', nom: AGENTS_MAP.SOCDEPOBLE.name, tipus: 'entitat', avatar: AGENTS_MAP.SOCDEPOBLE.avatar_url }),

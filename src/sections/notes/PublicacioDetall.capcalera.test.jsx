@@ -3,7 +3,8 @@
  * publicació pròpia vista des del MAS (PublicacioDetall): si la signa una
  * persona (o la IA), per identificador, la capçalera porta el seu avatar redó
  * davant de l'H1, el mateix de la boina; l'entitat del projecte, el seu
- * logotip (la boina va a /projecte). Mai el logotip de Sóc de Poble a una
+ * logotip (la boina va al seu perfil; Onada 8, 261009: abans, a /projecte).
+ * Mai el logotip de Sóc de Poble a una
  * persona.
  */
 import React from 'react';

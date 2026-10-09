@@ -290,7 +290,8 @@ describe('EspecimenControlsBarra', () => {
       const arrel = pinta(EspecimenControlsBarra);
       expect(document.activeElement).toBe(fora);
       const mostres = [...arrel.querySelectorAll('.sdp-especimen__fila > [role="menu"].sdp-menu-comentar')];
-      expect(mostres).toHaveLength(2);
+      /* Onada 8 (261009) · Una tercera mostra: «En privat» amb una autora, que la línia nomena. */
+      expect(mostres).toHaveLength(3);
       const vies = (menu) => within(menu).getAllByRole('menuitem').map((fila) => [fila.textContent, fila.getAttribute('aria-disabled')]);
       expect(vies(mostres[0])).toEqual([
         ['En privatUn xat només entre tu i Sóc de Poble', null], ['En públicUn xat obert: hi pot entrar tothom', null]
@@ -298,6 +299,10 @@ describe('EspecimenControlsBarra', () => {
       expect(vies(mostres[1])).toEqual([
         ['En privatUn xat només entre tu i Sóc de Poble', null], ['En públicAcí encara no hi ha cap xat públic.', 'true']
       ]);
+      expect(vies(mostres[2])).toEqual([
+        ['En privatUn xat només entre tu i Maria', null], ['En públicUn xat obert: hi pot entrar tothom', null]
+      ]);
+      expect(arrel.textContent).toContain('«En privat» porta al xat només entre la persona i l’autor de l’element');
       const sol = screen.getByRole('button', { name: 'Comentar l’espècimen (menú)' });
       expect([sol.getAttribute('aria-haspopup'), sol.getAttribute('aria-expanded')]).toEqual(['menu', 'false']);
       const [barra] = arrel.querySelectorAll('header.bar-blue');
@@ -554,7 +559,8 @@ describe('EspecimenUniversalCard · al dia', () => {
     expect(pin.classList.contains('btn-icon-orange')).toBe(true);
     const bola = within(avis).getByRole('button', { name: 'Pública: canviar la visibilitat' });
     expect(bola.closest('.sp-card-meta')).not.toBeNull();
-    expect(within(avis).getByRole('link', { name: /La Torre de les Maçanes/ }).getAttribute('href')).toBe('/pobles');
+    /* Onada 8 (261009) · La boina d'un poble porta a la pàgina del poble, no al llistat. */
+    expect(within(avis).getByRole('link', { name: /La Torre de les Maçanes/ }).getAttribute('href')).toBe('/pobles/la-torre-de-les-macanes');
     expect(within(avis).getByRole('heading', { level: 3, name: 'Tall d’aigua dimarts' })).toBeTruthy();
     fireEvent.click(pin);
     expect(screen.getByText(/^Has premut «Ancorar»/).getAttribute('role')).toBe('status');

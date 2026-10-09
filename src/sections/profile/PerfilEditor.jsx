@@ -18,7 +18,8 @@ import { ENTITATS_FITXA } from './perfilEscriptor.js';
 import { cuaDesament } from '../../data/autodesament/cua.js';
 import { useAutodesament } from '../../data/autodesament/useAutodesament.js';
 import { useResolvedAsset } from '../../hooks/useResolvedAsset.js';
-import { RUTA_PROJECTE, registraEntitatDelProjecte } from '../../config/navigation.js';
+import { registraEntitatDelProjecte } from '../../config/navigation.js';
+import { esRutaDelProjecte } from '../../components/universal/UniversalUtils.js';
 import { ETIQUETA_IA, etiquetesDeFitxa, potEditarFitxa, rutaDeFitxaPublica, slugDEntitat } from './fitxaDePerfil.js';
 
 /* Línia I2 de l'Onada 4 (pla 261008_1201) · La lògica pura de la fitxa viu
@@ -35,8 +36,8 @@ import { ETIQUETA_IA, etiquetesDeFitxa, potEditarFitxa, rutaDeFitxaPublica, slug
    Auditoria 261007 (retocs de l'ordre E) · En remot, l'id de l'entitat pilot
    és un UUID que rutaDAutoria no reconeix fins que algú el registra
    (useEntitatDelProjecte a App.jsx). La fila de list_my_organizations porta
-   el slug: amb el declarat (ENTITAT_PILOT_SLUG), /projecte des del primer
-   render, pel slug i mai pel nom. Un grup, una persona o un agent no poden
+   el slug: amb el declarat (ENTITAT_PILOT_SLUG), el seu perfil (Onada 8;
+   abans, /projecte) des del primer render, pel slug i mai pel nom. Un grup, una persona o un agent no poden
    ser l'entitat pilot (slugDEntitat torna ''). */
 export { ETIQUETA_IA, rutaDeFitxaPublica, slugDEntitat };
 
@@ -557,12 +558,13 @@ export function PerfilEditor({ identitat }) {
      s'escriu (`fitxa`, amb `local`) es publica per a la llista (documentViu,
      clau = id de la identitat), amb la mateixa autoria de la barra taronja i
      les mateixes píndoles. Per a qui només la llig, la fitxa del servidor. */
-  const autorTargeta = useMemo(
-    () => ({ nom: identitat.nom, avatar: avatarBarra, poble }),
-    [identitat.nom, avatarBarra, poble],
-  );
-  /* Ordre del Mestre (261007) · La barra taronja porta a la fitxa pública. */
+  /* Ordre del Mestre (261007) · La barra taronja porta a la fitxa pública.
+     Onada 8 (261009) · La boina de la targeta viva també (autorTargeta.ruta). */
   const rutaFitxa = rutaDeFitxaPublica(identitat);
+  const autorTargeta = useMemo(
+    () => ({ nom: identitat.nom, avatar: avatarBarra, poble, ruta: rutaFitxa }),
+    [identitat.nom, avatarBarra, poble, rutaFitxa],
+  );
   /* Auditoria 261007 (retocs de l'ordre E) · Com PerfilPublicSection, la
      fitxa registra ella mateixa l'organització que té davant: si el seu slug
      és el declarat, el seu id (en remot, un UUID) passa a ser un identificador
@@ -585,7 +587,7 @@ export function PerfilEditor({ identitat }) {
      fitxa pública (PerfilPublicSection: el 261004 el Mestre va derogar el
      showLogos={false} en què es recolzava T35) i, a qui pot editar, el botó
      per a canviar-ho:
-       · l'entitat pilot (la seua fitxa és /projecte): cap ranura, PageFrame
+       · l'entitat pilot (la seua fitxa és el seu perfil, esRutaDelProjecte): cap ranura, PageFrame
          hi pinta el logotip rectangular de Sóc de Poble (via d);
        · una altra organització: la ranura del logotip de la closca, que desa
          logoImage → logo_url pel camí de sempre (uploadMedia, carpeta
@@ -614,7 +616,9 @@ export function PerfilEditor({ identitat }) {
      Correcció de la revisió de la línia I2 · Mentre puja, l'ajuda ho diu
      (AJUDA_IMATGE_PUJANT, el text de la closca): unes píndoles desactivades
      sense cap motiu a la vista no fan res i no diuen per què. */
-  const esPilot = rutaFitxa === RUTA_PROJECTE;
+  /* Onada 8 (261009) · La fitxa del pilot és el seu perfil
+     (RUTA_PERFIL_PROJECTE): es reconeix per esRutaDelProjecte. */
+  const esPilot = esRutaDelProjecte(rutaFitxa);
   const ambAvatarRedo = mena !== 'organitzacio';
   const imatgeDeLaFitxa = fitxa.logoImage || '';
   const ranuraDelLogo = potEditar && !esPilot && (!ambAvatarRedo || !imatgeDeLaFitxa);

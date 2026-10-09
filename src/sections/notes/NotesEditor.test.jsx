@@ -41,6 +41,7 @@ import {
   ERROR_PUBLICAR, ErrorPublicacio, MOTIU_LOCAL, MOTIU_LOCAL_CONNEXIO, MOTIU_PREPARADA, MOTIU_PREPARADA_CREANT, MOTIU_PREPARADA_FALLIDA
 } from './visibilitatNota.js';
 import { NotaPreparadaContext } from './notaPreparada.js';
+import { RUTA_PERFIL_PROJECTE } from '../../config/navigation.js';
 
 beforeEach(() => {
   mocks.notes = [];
@@ -464,7 +465,8 @@ test('T50 · D2 · la barra taronja diu el que diu autoriaDeNota (la nota de ben
    de benvinguda la signa sempre Sóc de Poble, amb el seu avatar oficial, siga
    qui siga qui la llija o l'edite. Continua editable i desada al dispositiu. */
 const barra = () => ({ nom: mocks.adapter.barAuthorName, avatar: mocks.adapter.barAuthorAvatar, poble: mocks.adapter.barAuthorLocation });
-const SOC_DE_POBLE = { nom: 'Sóc de Poble', avatar: '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg', poble: 'La Torre de les Maçanes' };
+// Onada 8 (261009) · L'avatar oficial és el PNG de 256x256 (abans, l'SVG).
+const SOC_DE_POBLE = { nom: 'Sóc de Poble', avatar: '/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png', poble: 'La Torre de les Maçanes' };
 
 test('T65 · el Foraster edita la benvinguda i la barra continua signant Sóc de Poble', () => {
   const { rerender } = render(<NotesEditor />);
@@ -507,20 +509,22 @@ test('T65 · una nota normal del Foraster (mode seed) continua signant el Forast
 
 /* Ordre del Mestre (261007) · «Quan isquen, les barres taronges han de portar
    a la pàgina de l'autor que l'ha creada». L'adaptador porta barAuthorHref,
-   la ruta de signaturaDeNota: la benvinguda, a /projecte; el Foraster, cap. */
-test('261007 · la benvinguda porta a /projecte: la còpia de prova del Foraster, l’estat buit i n1 oberta', () => {
+   la ruta de signaturaDeNota: la benvinguda, a /projecte; el Foraster, cap.
+   Onada 8 (261009) · La benvinguda porta al perfil de Sóc de Poble
+   (RUTA_PERFIL_PROJECTE), ja no a /projecte. */
+test('261007 · la benvinguda porta al perfil de Sóc de Poble: la còpia de prova del Foraster, l’estat buit i n1 oberta', () => {
   mocks.session = {};
   render(<NotesEditor />);
   expect(mocks.adapter.document.id).toBe('prova-local');
-  expect(mocks.adapter.barAuthorHref).toBe('/projecte');
+  expect(mocks.adapter.barAuthorHref).toBe(RUTA_PERFIL_PROJECTE);
   cleanup();
   mocks.session = { currentUser: { id: 'U', user_metadata: { name: 'Pepa' } } };
   render(<NotesEditor />);
   expect(mocks.adapter.document).toBeNull();
-  expect(mocks.adapter.barAuthorHref).toBe('/projecte');
+  expect(mocks.adapter.barAuthorHref).toBe(RUTA_PERFIL_PROJECTE);
   cleanup();
   render(<NotesEditor activeNote={{ id: 'n1', folderId: 'f-mur', categories: ['Sistema'], tags: [] }} />);
-  expect(mocks.adapter.barAuthorHref).toBe('/projecte');
+  expect(mocks.adapter.barAuthorHref).toBe(RUTA_PERFIL_PROJECTE);
 });
 
 test('261007 · el Foraster no té pàgina: una nota seua no porta cap enllaç', () => {

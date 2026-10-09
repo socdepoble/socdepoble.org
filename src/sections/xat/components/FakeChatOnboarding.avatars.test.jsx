@@ -39,7 +39,8 @@ const TORRE = {
 /* Onada 6 (tasca 12) · La fila de la IAIA arriba amb l'avatar del padró
    (AJUDA) i el xat en pinta la cara retallada de «Festa del Poble» (CaraXat). */
 const IAIA = CARA_DE_LA_IAIA.src;
-const LOGO = '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg';
+/* Onada 8 (261009) · El logo de Sóc de Poble del padró (AJUDA) és el PNG (abans, l'SVG). */
+const LOGO = '/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png';
 
 /* La llista de mostra amb les files de veres: les comunitats i els fils solts. */
 function Llista() {

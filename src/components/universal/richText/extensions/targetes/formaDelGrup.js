@@ -31,11 +31,15 @@
  * REGLA D'OR 1 DEL MESTRE (261004) · La boina porta sempre l'autor real
  *   enllaçat a la seua pàgina, també a l'editor. Sense autor a la
  *   instantània (un poble, una pàgina, una publicació del sistema), signa
- *   l'entitat Sóc de Poble i porta al projecte (DEFAULT_AUTHOR, el mateix
+ *   l'entitat Sóc de Poble i porta al seu perfil (DEFAULT_AUTHOR, el mateix
  *   del Mur i d'EventCard). Un nom sense la seua pàgina no s'endevina.
  *   Revisió del front (261004): la ruta del projecte sense nom també signa
  *   Sóc de Poble; la ruta d'una altra persona sense el seu nom no s'insereix
  *   (teAutoriaCompleta), perquè la boina eixiria buida.
+ *   Onada 8 (261009) · La ruta del projecte és la del perfil de Sóc de Poble
+ *   (DEFAULT_AUTHOR.href) o la vella '/projecte', que hi ha desada a l'HTML
+ *   (data-autor-ruta): totes dues signen Sóc de Poble i la boina porta al
+ *   perfil (esRutaDelProjecte). Cap targeta d'abans perd la signatura.
  *
  * Tot atribut es neteja ací: sanitizeHtml(getHTML()) ha de ser getHTML(),
  * o l'efecte de sincronia de useUniversalRichText faria setContent i el
@@ -44,7 +48,7 @@
  */
 import { esRutaInterna } from '../../../../../config/objecteConnectable.js';
 import { esFontImatgeSegura } from '../../../../../utils/sanitize.js';
-import { DEFAULT_AUTHOR } from '../../../UniversalUtils.js';
+import { DEFAULT_AUTHOR, esRutaDelProjecte } from '../../../UniversalUtils.js';
 
 /* Els noms dels dos nodes de TipTap: el grup (contenidor) i la targeta (àtom). */
 export const NOM_GRUP = 'sdpTargetes';
@@ -165,7 +169,7 @@ export const esTargetaValida = (attrs) => Boolean(attrs && llegeixClau(attrs.cla
  */
 export function teAutoriaCompleta(attrs) {
   const net = netejaAtributs(attrs);
-  return Boolean(net.autor) || !net.autorRuta || net.autorRuta === DEFAULT_AUTHOR.href;
+  return Boolean(net.autor) || !net.autorRuta || esRutaDelProjecte(net.autorRuta);
 }
 
 /**
@@ -212,10 +216,14 @@ export function objecteDeTargeta(attrs) {
    sense ningú, o amb la ruta del projecte i sense nom, l'entitat Sóc de
    Poble i el projecte. La ruta d'una altra persona sense el seu nom ja no
    s'insereix (teAutoriaCompleta); si arriba d'un HTML anterior o enganxat,
-   no s'endevina qui és ni se signa per ell: es queda com estava. */
+   no s'endevina qui és ni se signa per ell: es queda com estava.
+   Onada 8 (261009) · La ruta del projecte (la nova o la vella '/projecte')
+   es llig com el pilot i s'escriu amb la nova: la boina porta al perfil de
+   Sóc de Poble, també amb el nom que la instantània ja porta. */
 function autoriaDe(net) {
-  if (net.autor) return { author: net.autor, authorHref: net.autorRuta || undefined };
-  if (!net.autorRuta || net.autorRuta === DEFAULT_AUTHOR.href) {
+  const delProjecte = esRutaDelProjecte(net.autorRuta);
+  if (net.autor) return { author: net.autor, authorHref: delProjecte ? DEFAULT_AUTHOR.href : (net.autorRuta || undefined) };
+  if (!net.autorRuta || delProjecte) {
     return { author: DEFAULT_AUTHOR.name, authorHref: DEFAULT_AUTHOR.href };
   }
   return { author: undefined, authorHref: net.autorRuta };

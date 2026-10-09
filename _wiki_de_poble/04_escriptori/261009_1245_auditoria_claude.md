@@ -37,6 +37,7 @@ Plantilla entregada: _wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonic
 
 2026-10-09T10:46:30.479Z: esborrany creat; contingut i verificació pendents.
 2026-10-09T10:47:00.000Z: primer relleu per a MarIA (comprensió acabada, decisions per defecte, bloquejos).
+2026-10-09T18:30:00.000Z: relleu final; l'Onada 8 s'ha acabat i verificat, amb l'Acta Final a 261009_2005_acta_marmota_onada8.md.
 
 <!-- SDP:SECTION auditoria.s4 -->
 ## Troballes
@@ -237,6 +238,28 @@ Els fitxers que són teus (`.agents/ON_ESTIC.md`, els torns dels relleus, `core-
 
 **Avís de temps per al commit 1.** Si el fas, fes-lo ara, abans de l'etapa 3: el front 8C tornarà a tocar `src/components/BrandMark.jsx` i `BrandMark.test.jsx`, i el commit de l'Onada 7 portaria canvis de la 8 a mitges. Si no arribes a temps, ajunta-ho tot en un sol commit al final, que ja et deixaré amb la llista sencera.
 
+**Relleu 20:30 · MARIA: HE ACABAT L'ONADA 8. JA POTS APAGAR EL CRON I PREPARAR EL BUNDLE FINAL PER AL MESTRE.**
+
+Verificació final, a l'arbre de les 20:00:
+- `npx vitest run src tests`: 15.643 proves verdes, **0 roges**, 89 saltades.
+- Suites primàries de node: 933 verdes, **0 roges**.
+- Build real: entrada d'**1.361.290 B**, per davall del sostre d'1.591.855 B.
+- `lint-sessio`: net, ara també sobre els 66 fitxers dels fronts 8A i 8D.
+- Navegador (3340, pestanya de fons):
+  - els PNG es veuen nítids;
+  - la boina porta al perfil;
+  - Consola, Cervell i Disseny tenen Connectar i les dates 8, 9 i 10 de setembre;
+  - Comentar ofereix «En privat»;
+  - «Anar al xat» és a les targetes de poble;
+  - la Viquipèdia surt a Drets d'autor.
+
+Tres documents nous, amb la mateixa hora:
+- `261009_2005_acta_marmota_onada8.md`: l'**Acta Final**. Porta les ordres de la frontissa, la llista de `git add`, el missatge del commit de l'Onada 8, el que et toca de governança i les 13 decisions per al Mestre.
+- `261009_2005_auditoria_inventari_onada9.md`: l'inventari de l'Onada 9, que recomana **trasllat a paperera** i no `rm`. El ZIP `2036` i el bloc B queden per al Mestre.
+- `261009_2005_brainstorming_panell_superadmin.md`: el disseny del panell. Està bloquejat pel segon factor, que el servidor exigix i que el client no té.
+
+Ordre: frontissa → `npm run lint` → commit → ESTAT, LEDGER i handoff de l'acta → `tancament.mjs` → apagar el cron → BUNDLE → Onada 9.
+
 <!-- SDP:SECTION auditoria.s5 -->
 ## Verificació
 
@@ -249,7 +272,7 @@ Línia de base, abans de cap canvi:
 <!-- SDP:SECTION auditoria.s6 -->
 ## Límits
 
-Informe en curs. Res de `tooling/`, `.agents/`, `scripts/` ni `package.json` es pot escriure des d'este agent sense lease del Mestre (`tooling/gates/mutation-policy.mjs:6`). Tampoc puc moure ni esborrar fitxers, ni fer commits.
+Informe tancat el 261009 a les 20:30; el relleu final és el de les 20:30. Res de `tooling/`, `.agents/`, `scripts/` ni `package.json` es pot escriure des d'este agent sense lease del Mestre (`tooling/gates/mutation-policy.mjs:6`). Tampoc puc moure ni esborrar fitxers, ni fer commits.
 
 <!-- SDP:SECTION auditoria.s7 -->
 ## Vincles

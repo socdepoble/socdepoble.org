@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useUIActions, useUIState } from '../../app/contexts/UIContext';
 import { Alerta, Boto } from '../../components/PedraSeca/index.js';
 import { esBackendInabastable } from '../../data/errorsBackend.js';

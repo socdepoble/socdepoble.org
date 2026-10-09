@@ -12,6 +12,7 @@ vi.mock('../../../../../app/contexts/RouterContext', () => ({ useNavigate: () =>
 vi.mock('../../../NotificationContext.jsx', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
 import { TargetesIncrustades } from './targetesIncrustades.js';
 import { TargetesIncrustadesContext } from './TargetesIncrustadesContext.js';
+import { DEFAULT_AUTHOR } from '../../../UniversalUtils.js';
 
 /* jsdom no mesura rangs: el focus() de les eines desplaça fins a la selecció
    en el fotograma següent i ProseMirror en demana els rectangles. Cada fitxer
@@ -125,11 +126,22 @@ test('arrossegar per la boina de l’autor mou la targeta sencera, no l’enlla�
   expect(dades.setData).toHaveBeenCalledWith('text/html', expect.stringContaining('data-sdp-targeta="publicacio:1"'));
 });
 
-test('sense autor a la instantània, la boina és de Sóc de Poble i porta a /projecte', async () => {
+/* Onada 8 (261009) · La boina de Sóc de Poble porta al seu perfil
+   (DEFAULT_AUTHOR.href), mai a /projecte: també una instantània desada amb la
+   ruta vella. */
+test('sense autor a la instantània, la boina és de Sóc de Poble i porta al seu perfil', async () => {
   const poble = '<p>Intro</p><div data-sdp-targetes=""><div data-sdp-targeta="poble:7" data-titol="La Torre de les Maçanes"></div></div><p>Text</p>';
   const { container } = await munta(poble);
   const boina = container.querySelector('.sdp-targeta .sp-card-header a.sp-card-author-link');
-  expect(boina.getAttribute('to')).toBe('/projecte');
+  expect(boina.getAttribute('to')).toBe(DEFAULT_AUTHOR.href);
+  expect(boina.textContent).toContain('Sóc de Poble');
+});
+
+test('Onada 8 · amb data-autor-ruta="/projecte" desat, la boina signa Sóc de Poble i porta al perfil', async () => {
+  const vella = '<p>Intro</p><div data-sdp-targetes=""><div data-sdp-targeta="pagina:drets-autor" data-ruta="/page/drets-autor" data-titol="Drets d’autor" data-autor="Sóc de Poble" data-autor-ruta="/projecte"></div></div><p>Text</p>';
+  const { container } = await munta(vella);
+  const boina = container.querySelector('.sdp-targeta .sp-card-header a.sp-card-author-link');
+  expect(boina.getAttribute('to')).toBe(DEFAULT_AUTHOR.href);
   expect(boina.textContent).toContain('Sóc de Poble');
 });
 

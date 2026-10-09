@@ -92,19 +92,24 @@ test('T51 · un document sense cap data (la fitxa del Perfil) porta la data i l�
   expect(dataDeTargeta({}, ARA)).toEqual(ARA_DE_LA_PASTILLA);
 });
 
+/* Onada 8 (261009, revisió) · `autor.ruta` (la de la barra taronja) és
+   l'enllaç de la boina: cap boina sense el perfil de qui signa. */
 test('autor, imatge, etiquetes i copyright passen tal qual (la imatge crua: la resol qui pinta)', () => {
   const etiquetes = [{ text: 'Sistema', className: 'sdp-badge-category' }];
   const props = propsDeTargetaViva(
     { heroImage: 'sdp-media://mitjans/a.webp', copyright: '© Pep' },
-    { autor: { nom: 'Pep', avatar: 'https://poble.test/p.webp', poble: 'La Torre' }, etiquetes, ara: ARA },
+    { autor: { nom: 'Pep', avatar: 'https://poble.test/p.webp', poble: 'La Torre', ruta: '/gent/pep' }, etiquetes, ara: ARA },
   );
   expect(props).toMatchObject({
-    imageUrl: 'sdp-media://mitjans/a.webp', author: 'Pep', avatarUrl: 'https://poble.test/p.webp',
+    imageUrl: 'sdp-media://mitjans/a.webp', author: 'Pep', authorHref: '/gent/pep', avatarUrl: 'https://poble.test/p.webp',
     location: 'La Torre', labels: etiquetes, copyright: '© Pep',
   });
+  // Sense ruta (el Foraster), la boina continua sent text.
+  expect(propsDeTargetaViva({}, { autor: { nom: 'Foraster' }, ara: ARA }).authorHref).toBeUndefined();
   // Sense autor ni copyright: res inventat.
   const buida = propsDeTargetaViva({}, { ara: ARA });
   expect(buida.author).toBeUndefined();
+  expect(buida.authorHref).toBeUndefined();
   expect(buida.copyright).toBeUndefined();
   expect(buida.labels).toEqual([]);
 });

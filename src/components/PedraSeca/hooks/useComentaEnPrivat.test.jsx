@@ -48,6 +48,20 @@ describe('261007 · useComentaEnPrivat', () => {
     await vi.waitFor(() => expect(mocks.navigate).toHaveBeenCalledWith(`/xat?amb=${UUID}`, { replace: true }));
   });
 
+  /* Onada 8 (261009) · Amb un interlocutor (l'autor de l'objecte), el seu xat,
+     sense esperar cap resolució del de Sóc de Poble. */
+  test('Onada 8 · amb un interlocutor, el seu xat directament, també amb opcions', () => {
+    const resol = vi.fn();
+    const { result } = renderHook(() => useComentaEnPrivat({ tipus: 'persona', id: 'pepa', nom: 'Pepa' }), {
+      wrapper: ({ children }) => <XatSocDePobleContext.Provider value={{ estat: 'pendent', href: null, avis: 'Encara es busca.', resol }}>{children}</XatSocDePobleContext.Provider>
+    });
+    result.current();
+    result.current({ replace: true });
+    expect(mocks.navigate.mock.calls).toEqual([['/xat?amb=pepa'], ['/xat?amb=pepa', { replace: true }]]);
+    expect(resol).not.toHaveBeenCalled();
+    expect(mocks.toast).not.toHaveBeenCalled();
+  });
+
   test('sense xat on portar ni res a resoldre: només l’avís, cap navegació', () => {
     const { result } = ambXat({ estat: 'absent', href: null, avis: 'No disponible.', resol: null });
     result.current({ replace: true });

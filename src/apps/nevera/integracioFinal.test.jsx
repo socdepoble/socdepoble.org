@@ -17,6 +17,8 @@ import { creaRegistre } from '../plataforma/registreApps.js';
 import AppNevera from './AppNevera.jsx';
 import { creaMagatzemNevera } from './magatzem.js';
 import manifestNevera from './manifest.js';
+/* Onada 8 (261009) · La boina de Sóc de Poble porta al seu perfil, ja no a /projecte. */
+import { RUTA_PERFIL_PROJECTE } from '../../config/navigation.js';
 
 const ENTORN = Object.freeze({ ...ENTORN_OBERT, produccio: false });
 const tancats = [];
@@ -102,7 +104,7 @@ describe('F04 · la fitxa de l’article, pàgina pròpia sense perdre la commut
     const pagina = titol.closest('.sdp-universal-page-container');
     /* La boina de qui signa (el projecte, enllaçat), el subtítol, l'entradeta i l'estat. */
     const boina = pagina.querySelector('section.bar-orange');
-    expect(within(boina).getByRole('link', { name: /^Sóc de Poble/ }).getAttribute('href')).toBe('/projecte');
+    expect(within(boina).getByRole('link', { name: /^Sóc de Poble/ }).getAttribute('href')).toBe(RUTA_PERFIL_PROJECTE);
     expect(pagina.textContent).toContain('Llet i formatge');
     expect(pagina.textContent).toContain('Article de base del catàleg');
     expect(within(pagina).getByText('A la llista', { selector: '.sp-card-label' })).toBeTruthy();

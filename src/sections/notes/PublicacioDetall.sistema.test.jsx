@@ -132,17 +132,39 @@ describe('PublicacioDetall · una pàgina del sistema', () => {
      paginaDeText.js ja les deixa fora del lector de connexions perquè «el
      lector mostraria una pàgina que no és la de la ruta». Ací, igual: la
      capçalera de la seua targeta del Mur i «Obri la pàgina», sense cos. Les
-     altres set són pàgines de text de la seua ruta i porten el cos. */
+     altres set són pàgines de text de la seua ruta i porten el cos, amb text.
+     Onada 8 (261009) · Nou: la Consola i el Cervell hi entren com a pàgines
+     de text (/page/consola i /page/cervell). Abans, deu pàgines. No tenen cap
+     cos (PAGE_COPY sense html): no entren en esta comprovació, i la prova
+     [DEFECTE] de davall reproduïx el que pinten hui. */
+  const SENSE_COS = ['disseny', 'notes', 'wikidepoble'];
+  const COS_BUIT = ['consola', 'cervell'];
   test('una pàgina del sistema que no és de text (Disseny, Notes, Wiki) no pinta cap cos: la capçalera i «Obri la pàgina»', () => {
-    const SENSE_COS = ['disseny', 'notes', 'wikidepoble'];
-    expect(SISTEMA).toHaveLength(10);
+    expect(SISTEMA).toHaveLength(12);
     for (const targeta of SISTEMA) {
       const { container, unmount } = render(<PublicacioDetall item={pagina(targeta.id)} />);
-      const ambCos = !SENSE_COS.includes(targeta.id);
-      expect([targeta.id, Boolean(container.querySelector('article.cms-preview'))]).toEqual([targeta.id, ambCos]);
+      const cos = container.querySelector('article.cms-preview');
+      if (SENSE_COS.includes(targeta.id)) expect([targeta.id, cos]).toEqual([targeta.id, null]);
+      else if (!COS_BUIT.includes(targeta.id)) expect([targeta.id, cos.textContent.trim().length > 0]).toEqual([targeta.id, true]);
       expect(container.querySelector('header.page-title h1').textContent).toContain(PAGE_COPY[targeta.id].title);
       fireEvent.click(screen.getByRole('button', { name: 'Obri la pàgina' }));
       expect(mocks.navigate).toHaveBeenLastCalledWith(targeta.mainHref);
+      unmount();
+    }
+  });
+
+  /* [DEFECTE] Deute conegut (Onada 8, 261009; requeriments 261009_1300, punt
+     1: «fantasmes») · La Consola i el Cervell no tenen cos (PAGE_COPY sense
+     html), i el camí de sempre (CosDeLaPagina) pinta igualment un
+     <article class="cms-preview"> buit, el mateix que /page/consola i
+     /page/cervell. No és el comportament volgut: quan el front 8D o el
+     Mestre el resolguen (un cos per a cada pàgina, o cap article sense
+     html), esta prova s'ha de girar. */
+  test('[DEFECTE] la Consola i el Cervell, sense html, encara pinten un article.cms-preview buit', () => {
+    for (const clau of COS_BUIT) {
+      expect([clau, Object.hasOwn(PAGE_COPY[clau], 'html')]).toEqual([clau, false]);
+      const { container, unmount } = render(<PublicacioDetall item={pagina(clau)} />);
+      expect([clau, container.querySelector('article.cms-preview')?.innerHTML]).toEqual([clau, '']);
       unmount();
     }
   });

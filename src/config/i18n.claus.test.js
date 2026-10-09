@@ -33,6 +33,8 @@ import fontAdaptadorXat from '../data/supabase/xat.js?raw';
 /* Onada 6 (pla 261009_0245, ítem 5) · Els textos del panell «Gent de …» de la
    pàgina d'un poble. */
 import fontTextosDelPoble from '../sections/pobles/usePublicacionsDelPoble.js?raw';
+/* Onada 8 (261009) · El botó gran de la Consola i del Cervell. */
+import fontSystemPages from './systemPages.js?raw';
 
 const CLAUS = {
   'nav.panel': {
@@ -475,6 +477,34 @@ const CLAUS = {
     eu: 'Mezu asko bidali dituzu denbora gutxian. Itxaron segundo batzuk eta saiatu berriro.',
     gl: 'Enviaches moitas mensaxes en pouco tempo. Agarda uns segundos e téntao de novo.'
   },
+  /* Onada 8 (261009) · SDP-XAT-002: cap xat privat amb tu mateix ni amb una
+     entitat que representes; i la línia de «En privat» amb el nom de l'autor
+     (textosComentar.js). Les d'eu i gl són proposta a revisar per algú que
+     les parle. */
+  'section.xat.error.ambTuMateix': {
+    ca: 'No pots obrir un xat privat amb tu mateix ni amb una entitat que representes.',
+    es: 'No puedes abrir un chat privado contigo mismo ni con una entidad que representas.',
+    en: 'You cannot open a private chat with yourself or with an organisation you represent.',
+    eu: 'Ezin duzu txat pribatu bat ireki zeure buruarekin edo ordezkatzen duzun erakunde batekin.',
+    gl: 'Non podes abrir un chat privado contigo mesmo nin cunha entidade que representas.'
+  },
+  /* Onada 8 (261009, revisió) · SDP-XAT-004: «En privat» amb algú que no és
+     d'este poble. El text no diu el motiu. Les d'eu i gl són proposta a
+     revisar per algú que les parle. */
+  'section.xat.error.noDelPoble': {
+    ca: 'Esta persona no està disponible en este poble.',
+    es: 'Esta persona no está disponible en este pueblo.',
+    en: 'This person is not available in this town.',
+    eu: 'Pertsona hau ez dago erabilgarri herri honetan.',
+    gl: 'Esta persoa non está dispoñible nesta vila.'
+  },
+  'section.xat.comentar.privat.detallAmb': {
+    ca: 'Un xat només entre tu i {nom}',
+    es: 'Un chat solo entre tú y {nom}',
+    en: 'A chat just between you and {nom}',
+    eu: 'Zure eta {nom}-ren arteko txat bat',
+    gl: 'Un chat só entre ti e {nom}'
+  },
   /* Onada 6 (prompt 261009_0230, punt 4) · «Informa d'un error» i la seua
      plantilla; tasca 12 · l'avís de la IAIA apagada (nivell d'IA 0). */
   'section.xat.informe.boto': {
@@ -571,6 +601,15 @@ const CLAUS = {
     en: 'The town’s posts could not be loaded',
     eu: 'Ezin izan dira herriko argitalpenak kargatu',
     gl: 'Non se puideron cargar as publicacións do pobo'
+  },
+  /* Onada 8 (261009; requeriments 261009_1300, punt 2) · El botó gran de la
+     Consola i del Cervell, pàgines del sistema (systemPages.js). Les d'eu i
+     gl són proposta a revisar per algú que les parle. */
+  'section.consola.obrir': {
+    ca: 'Obrir la Consola', es: 'Abrir la Consola', en: 'Open the Console', eu: 'Ireki Kontsola', gl: 'Abrir a Consola'
+  },
+  'section.cervell.obrir': {
+    ca: 'Obrir el Cervell', es: 'Abrir el Cerebro', en: 'Open the Brain', eu: 'Ireki Garuna', gl: 'Abrir o Cerebro'
   }
 };
 
@@ -728,7 +767,9 @@ describe('claus i18n del torn T1–T4', () => {
   /* Onada 6 (decisió 5) · Els tres codis nous: la reserva de l'adaptador és
      el valor valencià de la seua clau. */
   test.each([
+    ['SDP-XAT-002', 'section.xat.error.ambTuMateix'],
     ['SDP-XAT-003', 'section.xat.error.noMembre'],
+    ['SDP-XAT-004', 'section.xat.error.noDelPoble'],
     ['SDP-XAT-013', 'section.xat.error.paginaNoVisible'],
     ['SDP-XAT-429', 'section.xat.error.massaMissatges']
   ])('la reserva de %s a l’adaptador del xat és el valor valencià de %s', (codi, clau) => {
@@ -758,6 +799,13 @@ describe('claus i18n del torn T1–T4', () => {
     }
     const delFront = [...new Set([...fontTextosDelPoble.matchAll(/'(section\.detail\.pobles\.[\w.]+)'/g)].map((m) => m[1]))].sort();
     expect(delFront.every((clau) => deLaTaula.includes(clau))).toBe(true);
+  });
+
+  /* Onada 8 (261009) · El botó «Obrir…» de la Consola i del Cervell
+     (systemPages.js) crida cada clau com a parell ['clau', 'reserva'], i la
+     reserva és el valor valencià. */
+  test.each([['section.consola.obrir'], ['section.cervell.obrir']])('%s: la reserva de systemPages.js és el valor valencià', (clau) => {
+    expect([clau, fontSystemPages.includes(`['${clau}', '${CLAUS[clau].ca}']`)]).toEqual([clau, true]);
   });
 
   /* T7 (261001) · amfitrio.servidor («Estàs al servidor de …») queda retirada

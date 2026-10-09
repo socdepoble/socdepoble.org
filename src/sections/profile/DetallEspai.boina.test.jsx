@@ -1,7 +1,8 @@
 /**
  * T6 (ordre del Mestre, 261004, prompt 261004_0515 §5) · La pàgina d'una
  * utilitat del node (DetallAplicacio) signa Sóc de Poble, el sistema, i la
- * boina de la barra taronja porta a la pàgina del projecte. Llei del Píxel:
+ * boina de la barra taronja porta al seu perfil (Onada 8, 261009; abans, a la
+ * pàgina del projecte). Llei del Píxel:
  * el nom, el poble («Utilitat d'este node») i l'avatar no canvien.
  */
 import React from 'react';
@@ -28,17 +29,18 @@ vi.mock('../multimedia/MultimediaContext', () => ({ useMultimedia: () => mocks.m
 
 import { DetallAplicacio, DetallNodes, DetallSenseOrganitzacions } from './DetallEspai.jsx';
 import { APLICACIONS, aplicacionsValides } from './aplicacions.js';
-import { RUTA_PROJECTE } from '../../config/navigation.js';
+import { RUTA_PERFIL_PROJECTE } from '../../config/navigation.js';
 
 afterEach(cleanup);
 
 describe('T6 · la barra taronja d’una utilitat del node', () => {
-  test('signa Sóc de Poble i porta a la pàgina del projecte', () => {
+  /* Onada 8 (261009) · Al perfil de Sóc de Poble, ja no a /projecte. */
+  test('signa Sóc de Poble i porta al seu perfil', () => {
     const [aplicacio] = aplicacionsValides(APLICACIONS);
     const { container } = render(<DetallAplicacio aplicacio={aplicacio} />);
     const autor = container.querySelector('section.bar-orange .sp-card-author');
     expect(autor.matches('a.sp-card-author-link')).toBe(true);
-    expect(autor.getAttribute('href')).toBe(RUTA_PROJECTE);
+    expect(autor.getAttribute('href')).toBe(RUTA_PERFIL_PROJECTE);
     expect(autor.querySelector('.sp-card-author-name').textContent).toBe('Sóc de Poble');
     expect(autor.querySelector('.sp-card-author-location').textContent).toBe('Utilitat d’este node');
   });

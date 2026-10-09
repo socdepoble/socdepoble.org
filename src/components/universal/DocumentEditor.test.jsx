@@ -30,6 +30,7 @@ vi.mock('./NotificationContext.jsx', () => ({ useToast: () => ({ showToast: vi.f
 vi.mock('../../config/assetResolver', async (importOriginal) => ({ ...(await importOriginal()), resolveAsset: (uri) => uri }));
 import { DocumentEditor } from './DocumentEditor.jsx';
 import { AVIS_PREVISUALITZACIO, AVISOS_TARGETA_VIVA } from './TargetaViva.jsx';
+import { DEFAULT_AUTHOR } from './UniversalUtils.js';
 
 afterEach(() => {
   cleanup();
@@ -255,11 +256,12 @@ test('261007 · amb barAuthorHref, l’autoria de la barra taronja de l’editor
 test('261007 · a l’estat buit, barAuthorHref també fa de l’autoria un enllaç', () => {
   const { container } = render(<DocumentEditor adapter={{
     document: null, emptyDocument: { title: 'Bloc de notes' },
-    barAuthorName: 'Sóc de Poble', barAuthorLocation: 'La Torre de les Maçanes', barAuthorHref: '/projecte'
+    barAuthorName: 'Sóc de Poble', barAuthorLocation: 'La Torre de les Maçanes', barAuthorHref: DEFAULT_AUTHOR.href
   }} />);
   const autor = autoriaDe(container);
   expect(autor.matches('a.sp-card-author-link')).toBe(true);
-  expect(autor.getAttribute('href')).toBe('/projecte');
+  /* Onada 8 (261009) · La boina de Sóc de Poble és el seu perfil. */
+  expect(autor.getAttribute('href')).toBe(DEFAULT_AUTHOR.href);
   expect(autor.querySelector('.sp-card-author-name').textContent).toBe('Sóc de Poble');
 });
 
@@ -328,7 +330,8 @@ test('T66b · l’estat buit pinta en lectura l’emoticona de l’adaptador, se
   const { container } = buitAmb({ emoticona: '🌾', onObriEmoticona });
   const barra = container.querySelector('section.bar-orange');
   /* Derogat per l'ordre del Mestre del 261004 (prompt 261004_0515) · T6: l'autor per
-     defecte de l'estat buit enllaça a /projecte, i l'autoria porta la classe de l'enllaç. */
+     defecte de l'estat buit enllaça a /projecte, i l'autoria porta la classe de l'enllaç.
+     Onada 8 (261009) · Ara, al perfil de Sóc de Poble. */
   expect([...barra.children].map((e) => e.className)).toEqual(['sp-card-author sp-card-author-link', 'sdp-emoticona-barra sdp-emoticona-barra--glif', 'bar-actions']);
   const glif = barra.querySelector('.sdp-emoticona-barra--glif');
   expect(glif.getAttribute('role')).toBe('img');

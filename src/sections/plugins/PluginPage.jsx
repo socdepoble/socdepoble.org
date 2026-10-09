@@ -7,7 +7,9 @@
  * (registrePlugins.js, l'única taula; dotze des del W4-08 (261004), amb el
  * Panell de Disseny; compte corregit a la peça C de l'ordre del Mestre del
  * 261007; onze des de l'ordre del Mestre (261007) · Bàscula descartada per
- * ara: només és una llavor del Full de ruta, i /plugin/bascula és la 404):
+ * ara: només és una llavor del Full de ruta, i /plugin/bascula és la 404;
+ * huit des de l'Onada 8 (261009), que en trau la Consola, el Cervell i el
+ * Panell de Disseny, pàgines del sistema: /plugin/<id> també és la 404):
  *   · Portada: la il·lustració de MarIA a sang (Hero), PLEGABLE i visible per
  *     defecte (portadaPlegable, clau 'plugin:<id>'): qui hi torna a treballar
  *     la pot amagar i la pàgina ho recorda per a eixa persona i eixe plugin.

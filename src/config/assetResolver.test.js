@@ -34,7 +34,8 @@ import { Aplec2023Article } from '../sections/mur/articles/Aplec2023Article.jsx'
 import TextSection from '../sections/text/TextSection.jsx';
 import { PAGE_COPY } from '../sections/text/pageContent.js';
 
-const LOGO = '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg';
+/* Onada 8 (261009) · L'avatar de Sóc de Poble és el PNG (abans, l'SVG). */
+const LOGO = '/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png';
 const PAQUET = 'https://wp.example/wp-content/plugins/socdepoble-enxufe/dist';
 
 afterEach(() => {
@@ -242,7 +243,8 @@ test('la boina de les targetes de la Consola és la de Sóc de Poble, i el seu l
   const avatar = (container) => container.querySelector('.sp-card-header img.sp-card-avatar').getAttribute('src');
   const sense = render(targeta());
   expect(avatar(sense.container)).toBe(LOGO);
-  expect(sense.container.querySelector('.sp-card-header a.sp-card-author-link').getAttribute('href')).toBe('/projecte');
+  /* Onada 8 (261009) · La boina porta al perfil de Sóc de Poble. */
+  expect(sense.container.querySelector('.sp-card-header a.sp-card-author-link').getAttribute('href')).toBe(DEFAULT_AUTHOR.href);
   cleanup();
   fixaBaseRecursos(PAQUET);
   expect(avatar(render(targeta()).container)).toBe(`${PAQUET}${LOGO}`);

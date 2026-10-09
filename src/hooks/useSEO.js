@@ -2,6 +2,7 @@ import { useLayoutEffect, useMemo, useRef } from 'react';
 import { useUIActions, useUIState } from '../app/contexts/UIContext';
 import { useLocation, useRouter } from '../app/contexts/RouterContext';
 import { registerSeo } from './seoHead.js';
+import { esMarcaDeLEntitat } from '../components/universal/UniversalUtils.js';
 
 // Gestoria i tractors tracten fitxers personals: mai indexables. Robots no és
 // autorització; només evita que un cercador les llistes.
@@ -20,12 +21,16 @@ function imatgeServible(url, type) {
 }
 /* La imatge d'una vista (URL o { url, alt, width, height, type }) és un conjunt.
    Sense imatge pròpia, amb la base o amb una que les xarxes no pinten val el
-   conjunt base; les mides només viatgen en parella d'enters positius. */
+   conjunt base; les mides només viatgen en parella d'enters positius.
+   Onada 8 (261009) · La marca de Sóc de Poble (el quadrat o el logotip, PNG
+   o SVG d'abans) tampoc és imatge social: abans era sempre SVG i les xarxes
+   rebien la base de 1200x630. Ara és PNG i, sense esta guarda, la fitxa de
+   l'entitat (/empresa/socdepoble) publicaria el quadrat de 256x256. */
 function imatgeSocial(image, urlBase, origin) {
   const propia = typeof image === 'string' ? { url: image } : image || {};
   const base = new URL(urlBase, origin).href;
   const url = propia.url ? new URL(propia.url, origin).href : null;
-  if (!url || url === base || !imatgeServible(url, propia.type)) return { url: base, base: true };
+  if (!url || url === base || !imatgeServible(url, propia.type) || esMarcaDeLEntitat(url)) return { url: base, base: true };
   const mida = valor => (Number.isInteger(Number(valor)) && Number(valor) > 0 ? String(Number(valor)) : null);
   const text = valor => (typeof valor === 'string' && valor.trim() ? valor.trim() : null);
   const [width, height] = [mida(propia.width), mida(propia.height)];

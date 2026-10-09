@@ -62,9 +62,11 @@ describe('Grup E · les pàgines del sistema al MAS', () => {
   const ENTITAT_LLAVOR = aliesDeLActor({ tipus: 'entitat', id: ENTITAT_PILOT_ID, slug: ENTITAT_PILOT_SLUG }, { dataMode: 'seed' });
   const ENTITAT_REMOTA = aliesDeLActor({ tipus: 'entitat', id: 'uuid-org', slug: ENTITAT_PILOT_SLUG });
 
-  test('les deu pàgines del Mur, a «Mur» (f-mur), per a l’entitat pilot en llavor i en remot', () => {
+  /* Onada 8 (261009) · Dotze: la Consola i el Cervell hi entren com a
+     pàgines del sistema. Abans, deu. */
+  test('les dotze pàgines del Mur, a «Mur» (f-mur), per a l’entitat pilot en llavor i en remot', () => {
     expect(SISTEMA).toHaveLength(SYSTEM_PAGES.length);
-    expect(SYSTEM_PAGES).toHaveLength(10);
+    expect(SYSTEM_PAGES).toHaveLength(12);
     for (const alies of [ENTITAT_LLAVOR, ENTITAT_REMOTA]) {
       expect(esAliesDelProjecte(alies)).toBe(true);
       const items = itemsPublicatsDe({ feedPosts: SISTEMA }, alies);

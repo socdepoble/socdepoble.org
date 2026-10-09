@@ -110,17 +110,19 @@ test('sense la prop esdeveniment, la regla T51 de qualsevol element i cap insíg
    (authorHref, TargetaDelMur); sense, el sistema i la reserva «Sóc de Poble»
    van al projecte. Derogat per l'ordre del Mestre del 261004 (prompt
    261004_0515): el sistema ja no porta a /pobles. Un nom sense identitat
-   coneguda queda sense enllaç. */
+   coneguda queda sense enllaç.
+   Onada 8 (261009) · «Al projecte» és ara el perfil de Sóc de Poble
+   (DEFAULT_AUTHOR.href, '/empresa/socdepoble'), mai /projecte. */
 describe('T6 · la boina de l’acte', () => {
   const enllacDeLAutor = () => arrel.querySelector('.sp-card-header a.sp-card-author-link')?.getAttribute('href') ?? null;
   const nomDeLAutor = () => arrel.querySelector('.sp-card-header .sp-card-author-name').textContent;
 
-  test('el sistema i la reserva «Sóc de Poble» porten a la pàgina del projecte', () => {
+  test('el sistema i la reserva «Sóc de Poble» porten al perfil de Sóc de Poble', () => {
     pinta({ id: 's', title: 'Avís del sistema', isSystem: true, date: '2026-11-14' });
-    expect([nomDeLAutor(), enllacDeLAutor()]).toEqual(['Sóc de Poble', '/projecte']);
+    expect([nomDeLAutor(), enllacDeLAutor()]).toEqual(['Sóc de Poble', DEFAULT_AUTHOR.href]);
     pinta({ id: 'r', title: 'Sense autor', date: '2026-11-14' });
-    expect([nomDeLAutor(), enllacDeLAutor()]).toEqual(['Sóc de Poble', '/projecte']);
-    expect(DEFAULT_AUTHOR.href).toBe('/projecte');
+    expect([nomDeLAutor(), enllacDeLAutor()]).toEqual(['Sóc de Poble', DEFAULT_AUTHOR.href]);
+    expect(DEFAULT_AUTHOR.href).toBe('/empresa/socdepoble');
   });
 
   test('una persona o una entitat porta a la seua pàgina; un nom sense identitat, sense enllaç', () => {
@@ -137,11 +139,11 @@ describe('T6 · la boina de l’acte', () => {
 
   test('rutaDeLaBoinaDeLActe: qui signa mana; després, el sistema i la reserva', () => {
     expect(rutaDeLaBoinaDeLActe({ isSystem: true, author_name: 'Javi' }, '/gent/javillinares')).toBe('/gent/javillinares');
-    expect(rutaDeLaBoinaDeLActe({ isSystem: true }, undefined)).toBe('/projecte');
-    expect(rutaDeLaBoinaDeLActe({}, null)).toBe('/projecte');
+    expect(rutaDeLaBoinaDeLActe({ isSystem: true }, undefined)).toBe(DEFAULT_AUTHOR.href);
+    expect(rutaDeLaBoinaDeLActe({}, null)).toBe(DEFAULT_AUTHOR.href);
     expect(rutaDeLaBoinaDeLActe({ author: 'Associació' }, undefined)).toBeUndefined();
     expect(rutaDeLaBoinaDeLActe({ author_name: 'Pepa' }, '')).toBeUndefined();
-    expect(rutaDeLaBoinaDeLActe(null)).toBe('/projecte');
+    expect(rutaDeLaBoinaDeLActe(null)).toBe(DEFAULT_AUTHOR.href);
   });
 });
 
@@ -242,7 +244,8 @@ describe('Decisió 3 · només imatges pròpies', () => {
     expect(fonts()).toEqual(['/assets/gent/associacio.webp', '/assets/agenda/fira.webp']);
     expect([...arrel.querySelectorAll('img')].map((img) => img.getAttribute('referrerpolicy'))).toEqual(['no-referrer', 'no-referrer']);
     pinta({ id: 'fira', title: 'Fira', date: '2026-11-14' });
-    expect(fonts()).toEqual(['/assets/system/ui/logo-socdepoble-cuadrat-verd.svg']);
+    // Onada 8 (261009) · La reserva és l'avatar de Sóc de Poble, ara el PNG.
+    expect(fonts()).toEqual(['/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png']);
   });
 
   /* Revisió adversarial del 261007 · Les altres fonts pròpies d'un acte, com

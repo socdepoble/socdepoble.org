@@ -55,6 +55,9 @@ import { createTranslator } from '../../config/i18n.js';
 const CARPETA = '/assets/uploads/empresa/soc-de-poble/mercat/samarreta-soc-de-poble';
 const XICA = `${CARPETA}/01-chica-jersey.png`;
 const QUADRAT_VERD = '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg';
+/* Onada 8 (261009) · El quadrat de la llavor és ara el PNG; l'SVG d'abans
+   (el de dalt) continua arribant de les files del servidor. */
+const QUADRAT_VERD_PNG = '/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png';
 const HUIT = [
   '01-chica-jersey.png',
   '02-samarreta-socdepoble-roly-plom-oscur-1024px.png',
@@ -105,6 +108,7 @@ describe('/mercat/samarreta-socdepoble: la portada és un carrusel de huit fotos
     expect(srcs).toEqual(HUIT);
     expect(srcs[0]).toBe(XICA);
     expect(srcs).not.toContain(QUADRAT_VERD);
+    expect(srcs).not.toContain(QUADRAT_VERD_PNG);
     const diapositives = within(within(carrusel).getByRole('group', { name: 'Diapositives' })).getAllByRole('group');
     expect(diapositives.map((d) => d.getAttribute('aria-label')))
       .toEqual(HUIT.map((_, i) => `Imatge ${i + 1} de 8`));
@@ -183,6 +187,17 @@ describe('imatgesDeProducte i la secció del Mercat', () => {
     expect(imatgesDeProducte({ imageSrc: '/logo.svg', avatar_url: '/logo.svg' })).toEqual([]);
     expect(imatgesDeProducte({ images: ['<p><img src="/dins.png"></p>'] })).toEqual(['/dins.png']);
     expect(imatgesDeProducte(null)).toEqual([]);
+  });
+
+  /* Onada 8 (261009) · L'avatar de la identitat ja és el PNG, però una fila
+     del servidor encara porta l'SVG a la imatge del producte (o al revés): el
+     logotip no ix com a foto del producte. Una altra foto, sí. */
+  test('el logotip en SVG i en PNG és el mateix recurs: mai ix com a foto, mescle com mescle', () => {
+    expect(imatgesDeProducte({ author_avatar: QUADRAT_VERD_PNG, image: QUADRAT_VERD })).toEqual([]);
+    expect(imatgesDeProducte({ avatar_url: QUADRAT_VERD, imageSrc: QUADRAT_VERD_PNG })).toEqual([]);
+    expect(imatgesDeProducte({ author_avatar: QUADRAT_VERD_PNG, images: [QUADRAT_VERD, '/assets/mel.png'] })).toEqual(['/assets/mel.png']);
+    // Sense cap avatar de la marca, el logotip continua sent una imatge com qualsevol altra (com abans).
+    expect(imatgesDeProducte({ author_avatar: '/assets/gent/pepa.webp', image: QUADRAT_VERD })).toEqual([QUADRAT_VERD]);
   });
 
   test('getImage és la primera foto (o null) i getImages, totes', () => {

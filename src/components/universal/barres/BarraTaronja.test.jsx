@@ -6,7 +6,7 @@ vi.mock('../../../config/assetResolver', () => ({ resolveAsset: (uri) => uri }))
 vi.mock('../../../app/contexts/RouterContext', () => ({ useNavigate: () => vi.fn(), Link: 'a' }));
 vi.mock('../NotificationContext.jsx', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
 import { BarraTaronja } from './BarraTaronja.jsx';
-import { isSafeUrl, rutaDAutorSegura } from '../UniversalUtils.js';
+import { DEFAULT_AUTHOR, isSafeUrl, rutaDAutorSegura } from '../UniversalUtils.js';
 import { BotoVisibilitat } from './BotoVisibilitat.jsx';
 import { PageFrame } from '../PageFrame.jsx';
 import { IconaEstatDesament } from '../EstatDesament.jsx';
@@ -186,12 +186,17 @@ for (const [nom, origen] of Object.entries(ORIGENS)) {
     vi.stubGlobal('location', origen);
     try {
       expect(isSafeUrl('/projecte')).toBe(nom !== 'capacitor');
-      for (const ruta of ['/projecte', '/gent/javillinares', '/empresa/forn?x=1']) {
+      for (const ruta of [DEFAULT_AUTHOR.href, '/gent/javillinares', '/empresa/forn?x=1']) {
         expect([ruta, rutaDAutorSegura(ruta)]).toEqual([ruta, ruta]);
         const autor = barra({ authorHref: ruta }).firstElementChild;
         expect([ruta, autor.tagName, autor.getAttribute('href')]).toEqual([ruta, 'A', ruta]);
         cleanup();
       }
+      /* Onada 8 (261009) · La ruta vella del projecte (dades d'abans) enllaça
+         al perfil de Sóc de Poble, mai a /projecte. */
+      expect(rutaDAutorSegura('/projecte')).toBe(DEFAULT_AUTHOR.href);
+      expect(barra({ authorHref: '/projecte' }).firstElementChild.getAttribute('href')).toBe(DEFAULT_AUTHOR.href);
+      cleanup();
       for (const dolenta of ['/\\altra.example/x', '//altra.example/x', '/mur x', 'javascript:alert(1)', '', null, 42]) {
         expect([dolenta, rutaDAutorSegura(dolenta)]).toEqual([dolenta, null]);
         expect(barra({ authorHref: dolenta }).firstElementChild.tagName).toBe('DIV');

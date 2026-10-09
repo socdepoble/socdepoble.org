@@ -4,7 +4,7 @@ import { resolRuta, treuBase } from '../../../app/contexts/politicaRouter.js';
 import { useToast } from '@/components/universal/NotificationContext.jsx';
 import { registraEsdeveniment, seccioActual } from '../../../data/telemetria.js';
 import {
-  esPrivat, esRutaInterna, modeXat, objecteDePagina, rutaConnectarObjecte, rutaXatDePagina
+  esPrivat, esRutaInterna, interlocutorDe, modeXat, objecteDePagina, rutaConnectarObjecte, rutaXatDePagina, rutaXatPrivat
 } from '../../../config/objecteConnectable.js';
 import { useXatSocDePoble } from './xatSocDePoble.js';
 
@@ -157,11 +157,45 @@ export function urlPerCompartir(href, router = null) {
 }
 
 /**
+ * Onada 8 (261009) · Amb qui obri el xat «En privat» un descriptor, o null:
+ * aleshores, el xat amb Sóc de Poble. L'autor de l'element o el mateix perfil
+ * (interlocutorDe), encara que qui mira no el conega: el backend ja el pot
+ * obrir (crea_fil_directe). Van al xat amb Sóc de Poble, com abans:
+ *  · el pilot (la marca `projecte` de navigation.js: id, àlies o UUID
+ *    registrat), perquè este xat ja és el seu;
+ *  · un element sense autor conegut (una pàgina, un poble, un nom sense id);
+ *  · una publicació pròpia (`esDeQuiMira`, del proveïdor de l'app): el
+ *    servidor no obri cap xat amb tu mateix (SDP-XAT-002);
+ *  · un autor sense nom: el menú diria «entre tu i Sóc de Poble» i portaria a
+ *    un altre xat;
+ *  · en llavor, un autor que el xat local no pot obrir (`directeAmb`, del
+ *    proveïdor): abans de l'Onada 8 anava a Sóc de Poble, i no ha de caure en
+ *    «Esta persona no és del poble». Amb un àlies (el Mac Mini de
+ *    'javillinares'), l'id del padró que torna directeAmb;
+ *  · una ruta que el contracte no admet (esRutaInterna).
+ * `xat` és el valor de useXatSocDePoble: { esDeQuiMira?, directeAmb? }.
+ */
+export function interlocutorDelPrivat(objecte, xat = null) {
+  const interlocutor = interlocutorDe(objecte);
+  if (!interlocutor || interlocutor.projecte || !interlocutor.nom.trim()) return null;
+  const esDeQuiMira = typeof xat?.esDeQuiMira === 'function' ? xat.esDeQuiMira : () => false;
+  if (esDeQuiMira(interlocutor.id)) return null;
+  const id = typeof xat?.directeAmb === 'function' ? xat.directeAmb(interlocutor) : interlocutor.id;
+  if (!id) return null;
+  const amb = id === interlocutor.id ? interlocutor : { ...interlocutor, id: String(id) };
+  if (amb !== interlocutor && esDeQuiMira(amb.id)) return null;
+  return esRutaInterna(rutaXatPrivat(amb)) ? amb : null;
+}
+
+/**
  * Ordre del Mestre (261007) · «Comentaris = xat» · La via «En privat»: el xat
  * privat amb Sóc de Poble (useXatSocDePoble). Torna la funció del clic, amb
  * la lògica de sempre de Comentar, ara també per a la fila d'ajuda per
  * defecte del Xat (sections/xat/useObriXatPerDefecte.js), sense cap còpia.
  * Viu ací i no a xatSocDePoble.js, que este fitxer ja importa (cap cicle).
+ * Onada 8 (261009) · Amb un `interlocutor` (interlocutorDelPrivat), el clic
+ * obri el xat amb ell (/xat?amb=<id>), sense esperar cap resolució. Sense
+ * (la fila del Xat, el pilot, una pàgina), el de Sóc de Poble, com sempre.
  *
  * Amb el xat ja resolt, hi va. Si no: diu l'avís del proveïdor (encara es
  * busca, o no està disponible) i, si encara es pot resoldre, el demana UNA
@@ -173,7 +207,7 @@ export function urlPerCompartir(href, router = null) {
  * `{ replace: true }`, perquè la seua ruta de pas no quede a l'historial.
  * Sense opcions, la navegació és la de sempre, navigate(href).
  */
-export function useComentaEnPrivat() {
+export function useComentaEnPrivat(interlocutor = null) {
   const { showToast } = useToast();
   const navigate = useNavigate();
   const router = useUbicacioApp();
@@ -189,6 +223,10 @@ export function useComentaEnPrivat() {
   }, []);
   return (opcions) => {
     const ves = (ruta) => (opcions ? navigate(ruta, opcions) : navigate(ruta));
+    if (interlocutor) {
+      ves(rutaXatPrivat(interlocutor));
+      return;
+    }
     const { href, avis, resol } = xatSocDePoble;
     if (href) {
       ves(href);
@@ -236,10 +274,14 @@ export async function compartix(titol, url, showToast) {
  * comentaris: el debat és un xat. Sense onComment propi, Comentar obri SEMPRE
  * un menú amb dues vies (BotoComentar, el mateix a la barra blava i a la
  * targeta), i el menú crida handleComment amb la triada:
- *   · 'privat' · el xat privat amb Sóc de Poble, el missatge directe amb
- *     l'entitat (useXatSocDePoble: resolt UNA vegada per a tota l'app; sense
+ *   · 'privat' · Onada 8 (261009) · el xat amb l'autor de l'objecte
+ *     (interlocutorDelPrivat: /xat?amb=<id>, encara que no el conegues). Si
+ *     no n'hi ha cap que valga (el pilot, cap autor, una publicació pròpia
+ *     o, en llavor, un autor fora del padró del xat local), el xat privat
+ *     amb Sóc de Poble, el missatge directe amb l'entitat
+ *     (useXatSocDePoble: resolt UNA vegada per a tota l'app; sense
  *     proveïdor, el de la llavor). Sense xat on portar, l'avís del proveïdor
- *     i cap navegació.
+ *     i cap navegació. `comentarPrivatAmb` és el nom per al menú.
  *     Correcció C6 · Si encara s'ha de resoldre, la navegació espera i n'hi
  *     ha UNA sola: la de l'última tria de tota l'app (el proveïdor diu si una
  *     demanda és la `darrera`), i només si la persona continua on era quan
@@ -316,8 +358,12 @@ export function useAccions({
      missatge directe no és cap xat públic. La privada ve del proveïdor de
      l'app (una sola resolució per a totes les targetes i barres). */
   /* La via «En privat», la mateixa peça que fa servir la fila d'ajuda del
-     xat (useComentaEnPrivat, més amunt). */
-  const comentaEnPrivat = useComentaEnPrivat();
+     xat (useComentaEnPrivat, més amunt).
+     Onada 8 (261009) · Amb l'autor de l'objecte (interlocutorDelPrivat), o
+     amb Sóc de Poble si no n'hi ha cap que valga. El nom va al menú. */
+  const xatSocDePoble = useXatSocDePoble();
+  const ambQui = interlocutorDelPrivat(objecte, xatSocDePoble);
+  const comentaEnPrivat = useComentaEnPrivat(ambQui);
   const pagina = telemetria?.origen === 'pagina';
   const rutaXatPublic = () => {
     if (objecte === undefined) return rutaXatPerDefecte(title, mainHref, { pagina, router });
@@ -357,6 +403,9 @@ export function useAccions({
     compartirVisible,
     connectarVisible,
     comentarXat,
+    /* Onada 8 (261009) · El nom de l'interlocutor de «En privat», o null:
+       el menú diu «Un xat només entre tu i Sóc de Poble», el de sempre. */
+    comentarPrivatAmb: ambQui ? ambQui.nom : null,
     menuTraduir
   };
 }

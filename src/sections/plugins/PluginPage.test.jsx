@@ -139,20 +139,34 @@ test('la Bàscula, descartada, ja no té pàgina: /plugin/bascula és la 404 de 
   expect(screen.queryByRole('link', { name: /Bàscula/ })).toBeNull();
 });
 
+/* Onada 8 (261009; requeriments 261009_1300, punt 2: «són pàgines, no
+   plugins») · La Consola, el Cervell i el Panell de Disseny ixen del
+   registre, com la Bàscula: /plugin/<id> és la 404 de sempre, sense cap botó
+   «Obrir». Les seues pàgines són /page/consola, /page/cervell i /disseny
+   (systemPages.test.js). */
+test.each([['consola', /Consola/], ['cervell', /Cervell/], ['disseny', /Disseny/]])(
+  'la pàgina del sistema «%s» ja no és un plugin: /plugin/<id> és la 404 de sempre', (id, nom) => {
+    munta(`/plugin/${id}`);
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Ací no hi ha res');
+    expect(screen.queryByRole('button', { name: nom })).toBeNull();
+    expect(screen.queryByRole('link', { name: nom })).toBeNull();
+  }
+);
+
 describe('el botó Obrir', () => {
+  /* Onada 8 (261009) · Abans, amb la Consola (/consola), que ja no és un
+     plugin: ara, amb el TPV del Bar, en un node on tot està encés. */
   test('amb destí és un enllaç del router: porta a la secció de veres sense eixir de l’app', () => {
-    munta('/plugin/consola');
-    const enllac = screen.getByRole('link', { name: 'Obrir la Consola' });
-    expect(enllac.getAttribute('href')).toBe('/consola');
+    munta('/plugin/tpv');
+    const enllac = screen.getByRole('link', { name: 'Obrir el Bar' });
+    expect(enllac.getAttribute('href')).toBe('/app/bar');
     fireEvent.click(enllac);
-    expect(ubicacio()).toBe('/consola');
+    expect(ubicacio()).toBe('/app/bar');
   });
 
-  test('el Cervell obri l’Explorador de la Consola, i el Rebost l’entrada «A casa» de la Nevera', () => {
-    munta('/plugin/cervell');
-    fireEvent.click(screen.getByRole('link', { name: 'Obrir el Cervell' }));
-    expect(ubicacio()).toBe('/consola/explorador');
-    cleanup();
+  /* Onada 8 (261009) · Abans també el Cervell (/consola/explorador), que ja no
+     és un plugin. */
+  test('el Rebost obri l’entrada «A casa» de la Nevera', () => {
     munta('/plugin/rebost');
     fireEvent.click(screen.getByRole('link', { name: 'Obrir el Rebost' }));
     expect(ubicacio()).toBe('/app/nevera/casa');
@@ -262,7 +276,9 @@ describe('el botó Obrir', () => {
     expect(screen.getAllByText(motiu)).toHaveLength(2);
   });
 
-  test('build de producció: cap app de la plataforma fa enllaç, i les seccions d’App no hi depenen', () => {
+  /* Onada 8 (261009) · Abans, darrere, el Panell de Disseny (cap app de la
+     plataforma, el seu enllaç no depenia del build): ja no és un plugin. */
+  test('build de producció: cap app de la plataforma fa enllaç', () => {
     const registre = registreDeProduccio();
     for (const [id, nom] of [['tpv', 'Obrir el Bar'], ['rebost', 'Obrir el Rebost'], ['salut', 'Obrir Salut'], ['gestoria', 'Obrir la Gestoria']]) {
       munta(`/plugin/${id}`, { entorn: ENTORN_PRODUCCIO, registre });
@@ -270,33 +286,21 @@ describe('el botó Obrir', () => {
       expect(screen.getByRole('button', { name: `${nom} (no disponible ací)` }).getAttribute('aria-disabled'), id).toBe('true');
       cleanup();
     }
-    /* El Panell de Disseny no és cap app de la plataforma: el seu enllaç no depén del build. */
-    munta('/plugin/disseny', { entorn: ENTORN_PRODUCCIO, registre });
-    expect(screen.getByRole('link', { name: 'Obrir el Panell de Disseny' }).getAttribute('href')).toBe('/disseny');
   });
 
   /* Revisió P7-A · La Consola (i l'Explorador del Cervell) viu de
      /__iaia/consola.json i /__iaia/mapa.json, que només servix el middleware
-     de desenvolupament (tooling/vite/consola-iaia.mjs, `apply: 'serve'`). En
-     producció l'enllaç portava a «Entrar», a «Accés restringit» o a una
-     Consola sense dades: un enllaç que en dev va i en producció mor. */
-  test.each([['consola', 'Obrir la Consola'], ['cervell', 'Obrir el Cervell']])(
-    '%s en producció: no fa cap enllaç mort, és inert i diu per què', (id, nom) => {
-      munta(`/plugin/${id}`, { entorn: ENTORN_PRODUCCIO });
-      expect(screen.queryByRole('link', { name: new RegExp(nom) })).toBeNull();
-      const boto = screen.getByRole('button', { name: `${nom} (no disponible ací)` });
-      expect(boto.getAttribute('aria-disabled')).toBe('true');
-      const motiu = 'Encara està en obres: només es pot provar en desenvolupament.';
-      expect(screen.getByRole('status').textContent).toBe(motiu);
-      fireEvent.click(boto);
-      expect(ubicacio()).toBe(`/plugin/${id}`);
-    }
-  );
-
-  test('la Consola en desenvolupament continua sent un enllaç a /consola', () => {
-    munta('/plugin/consola', { entorn: ENTORN_OBERT });
-    expect(screen.getByRole('link', { name: 'Obrir la Consola' }).getAttribute('href')).toBe('/consola');
-  });
+     de desenvolupament (tooling/vite/consola-iaia.mjs, `apply: 'serve'`).
+     Derogades per l'ordre del Mestre del 261009 (requeriments 261009_1300,
+     punt 2; decisió D3 de MarIA) les proves «consola/cervell en producció:
+     inert» i «la Consola en desenvolupament, un enllaç a /consola»: ja no són
+     plugins, i /plugin/consola i /plugin/cervell són la 404. El seu botó
+     «Obrir…» és el de la seua pàgina del sistema (/page/consola i
+     /page/cervell), i la barrera de producció és la de la ruta, el rol de
+     superadmin (RutaConsola d'App.jsx; systemPages.test.js). El que cau amb
+     les proves és la superfície, no la regla: el botó de la pàgina no mira
+     l'entorn, i si fora de desenvolupament ha de ser inert és una decisió
+     pendent de MarIA o del Mestre (systemPages.js, OBRIR_CONSOLA). */
 
   test('si la persona apaga l’app al portal, el botó deixa de portar-hi', () => {
     window.localStorage.setItem(STORAGE_PREFIX + CLAU_PREFERENCIES, JSON.stringify({ v: 1, apps: { bar: false }, interruptors: {} }));

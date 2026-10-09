@@ -11,7 +11,8 @@ import { TargetaConsola } from '../../../consola/peces.jsx';
    Derogat per l'ordre del Mestre del 261004 (xat: tota targeta amb boina i
    pàgina pròpia): la targeta de sistema sense boina i amb la data a l'última
    línia del cos (prompt 261004_0515, §6/T8). Ara, la boina de Sóc de Poble
-   (l'autor porta a /projecte) i la data a la pastilla, un <time> sense clic;
+   (l'autor porta al seu perfil; Onada 8, 261009: abans, a /projecte) i la
+   data a la pastilla, un <time> sense clic;
    tota clicable i el peu de la barra blava. */
 afterEach(cleanup);
 
@@ -64,11 +65,12 @@ test('l’espècimen 7 té la mateixa anatomia que la TargetaConsola: boina, cos
     peu: ['Traduir Calendari de processos', 'Comentar Calendari de processos', 'Compartir Calendari de processos',
       'Connectar amb Calendari de processos']
   });
-  // La boina: Sóc de Poble, que porta a /projecte, i la data en un <time> sense clic.
+  // La boina: Sóc de Poble, que porta al seu perfil públic (Onada 8, 261009; abans /projecte), i la data en un <time> sense clic.
+  // Onada 8 (261009) · L'avatar és el PNG de 256x256 (abans, l'SVG).
   expect(boina(especimen)).toEqual(boinaReal);
   expect(boinaReal).toEqual({
-    autor: '/projecte', nom: 'Sóc de Poble', poble: 'La Torre de les Maçanes',
-    avatar: '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg', pastilla: ['TIME', '01:42', '26/09/26']
+    autor: '/empresa/socdepoble', nom: 'Sóc de Poble', poble: 'La Torre de les Maçanes',
+    avatar: '/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png', pastilla: ['TIME', '01:42', '26/09/26']
   });
   expect(especimen.querySelector('.sp-card-header time.btn-date-time').getAttribute('datetime')).toBe('2026-09-26T01:42:00');
   // Cap línia de data al cos: la data és a la boina.

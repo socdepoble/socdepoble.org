@@ -2,7 +2,8 @@
    Norma del Mestre, 261004 (logotips; «SÍ A TOT») · Abans el portal pintava
    el bloc del títol a mà, fora de la Pàgina Universal: sense barra blava, ni
    taronja, ni logotip. Ara és una PaginaApp: doble barra, la boina de Sóc de
-   Poble enllaçada a /projecte i el seu logotip dalt de l'H1, amb el contingut
+   Poble enllaçada al seu perfil (Onada 8, 261009; abans, a /projecte) i el
+   seu logotip dalt de l'H1, amb el contingut
    i l'ordre de sempre (l'H1, l'entradeta i la llista). */
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { cleanup, fireEvent, screen, within } from '@testing-library/react';
@@ -11,6 +12,8 @@ import { muntaPlataforma } from './__fixtures__/munta.jsx';
 import { manifestDeProva } from './__fixtures__/manifests.js';
 import { CLAU_PREFERENCIES, _reiniciaPreferencies } from './preferenciesApps.js';
 import { creaRegistre } from './registreApps.js';
+/* Onada 8 (261009) · La boina de Sóc de Poble porta al seu perfil, ja no a /projecte. */
+import { RUTA_PERFIL_PROJECTE } from '../../config/navigation.js';
 
 const carrega = vi.fn(() => Promise.resolve({ default: () => null }));
 const registre = () => creaRegistre({ internes: [manifestDeProva({ carrega })] });
@@ -30,13 +33,13 @@ afterEach(() => {
 const fills = (element) => [...element.children].map((e) => e.className);
 
 describe('el portal /app és una Pàgina Universal de sistema', () => {
-  test('doble barra, la boina de Sóc de Poble enllaçada a /projecte, i el bloc del títol dins de la pàgina', () => {
+  test('doble barra, la boina de Sóc de Poble enllaçada al seu perfil, i el bloc del títol dins de la pàgina', () => {
     const { container } = muntaPlataforma('/app', { registre: registre() });
     const pagina = container.querySelector('.sdp-universal-page-container');
     expect(pagina).not.toBeNull();
     expect(fills(pagina)).toEqual(['bar-blue', 'bar-orange', 'page-title', 'content-wrapper']);
     const autor = pagina.querySelector('section.bar-orange').firstElementChild;
-    expect(autor.getAttribute('href')).toBe('/projecte');
+    expect(autor.getAttribute('href')).toBe(RUTA_PERFIL_PROJECTE);
     expect(autor.querySelector('.sp-card-author-name').textContent).toBe('Sóc de Poble');
     expect(container.querySelectorAll('header.page-title')).toHaveLength(1);
     expect(container.querySelectorAll('h1')).toHaveLength(1);
@@ -48,8 +51,9 @@ describe('el portal /app és una Pàgina Universal de sistema', () => {
     expect([...capcalera.children].map((e) => `${e.tagName}.${e.className}`)).toEqual([
       'IMG.page-title-logo light-only', 'IMG.page-title-logo dark-only', 'H1.'
     ]);
+    // Onada 8 (261009) · Els PNG de 985x256 (abans, els SVG).
     expect([...capcalera.querySelectorAll('img')].map((img) => img.getAttribute('src'))).toEqual([
-      '/assets/system/ui/logo-socdepoble-rect-negre.svg', '/assets/system/ui/logo-socdepoble-rect-blanc.svg'
+      '/assets/system/ui/logo-socdepoble-rect-negre-985x256.png', '/assets/system/ui/logo-socdepoble-rect-blanc-985x256.png'
     ]);
     expect(screen.getByRole('heading', { level: 1, name: 'Apps' })).toBe(capcalera.querySelector('h1'));
   });

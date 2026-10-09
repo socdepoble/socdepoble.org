@@ -179,7 +179,7 @@ const FIL_PAGINA = mapejaFil({
 });
 const FIL_AVISOS = mapejaFil({
   id: 'a-sdp', tipus: 'canal', titol: 'Avisos', comunitatId: 'c-sdp', rol: 'membre', altresNoms: ['Javi', 'Maria', 'Pep'],
-  imatgeUrl: '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg'
+  imatgeUrl: '/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png'
 });
 
 function CapcaleresDeMostra() {

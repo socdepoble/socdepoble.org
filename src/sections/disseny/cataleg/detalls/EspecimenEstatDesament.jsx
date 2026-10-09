@@ -60,7 +60,7 @@ export default function EspecimenEstatDesament() {
           <h4>{estat}</h4>
           <p>{text}</p>
           <div className="sdp-especimen__barres">
-            <BarraTaronja authorName="Sóc de Poble" authorLocation="La Torre de les Maçanes" authorAvatar="/assets/system/ui/logo-socdepoble-cuadrat-verd.svg"
+            <BarraTaronja authorName="Sóc de Poble" authorLocation="La Torre de les Maçanes" authorAvatar="/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png"
               etiqueta={`Autoria i data (espècimen, ${estat})`} onObriEmoticona={res}
               barActions={(
                 <>

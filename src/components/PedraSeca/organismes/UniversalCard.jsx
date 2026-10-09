@@ -115,9 +115,9 @@
  *
  * Ordre del Mestre (261007) · «COMENTARIS = XAT» · Comentar del peu és el
  * MATEIX botó que el de la barra blava (BotoComentar, barres/BarraBlava.jsx):
- * obri el menú de les dues vies, «En privat» (el xat privat amb Sóc de
- * Poble) i «En públic» (el xat públic de l'element, pel seu `objecte`), i
- * useAccions fa la triada. Sense xat públic, la fila pública es queda
+ * obri el menú de les dues vies, «En privat» (el xat privat amb l'autor
+ * de l'element, Onada 8; sense autor, amb Sóc de Poble) i «En públic» (el
+ * xat públic de l'element, pel seu `objecte`), i useAccions fa la triada. Sense xat públic, la fila pública es queda
  * desactivada i diu per què. Un onComment propi (les previsualitzacions que
  * avisen) mana i no hi ha menú. Tancat, el botó només guanya
  * aria-haspopup i aria-expanded: cap píxel canvia. El menú penja del peu i
@@ -295,8 +295,9 @@ function EnllacDrets({ children }) {
    has-price es conserva per a qui la mire.
    Ordre del Mestre (261007) · `accio`: la ranura de l'acció gran (vegeu la
    prop a UniversalCard). Amb ella, el seu contenidor ocupa el lloc de les
-   etiquetes, que no es pinten. */
-function CardBody({ imatge, imageAlt, calendarBadge, squareBadge, price, icon, title, TitleTag, subtitle, body, etiquetes, copyright, portes = null, privada = false, accio = null }) {
+   etiquetes, que no es pinten. Onada 8 (261009) · Amb `etiquetesAmbAccio`,
+   les etiquetes es queden al seu lloc i el botó va just després. */
+function CardBody({ imatge, imageAlt, calendarBadge, squareBadge, price, icon, title, TitleTag, subtitle, body, etiquetes, copyright, portes = null, privada = false, accio = null, etiquetesAmbAccio = false }) {
   const activeBadge = squareBadge || (price ? { type: 'price', value: price } : null) || calendarBadge;
   return (
     <>
@@ -326,7 +327,8 @@ function CardBody({ imatge, imageAlt, calendarBadge, squareBadge, price, icon, t
         {body && (typeof body === 'string'
           ? <p className="sp-card-text">{body}</p>
           : <div className="sp-card-text">{body}</div>)}
-        {accio ? <div className="sp-card-accio">{accio}</div> : etiquetes.length > 0 && <LlistaEtiquetes etiquetes={etiquetes} />}
+        {(!accio || etiquetesAmbAccio) && etiquetes.length > 0 && <LlistaEtiquetes etiquetes={etiquetes} />}
+        {accio ? <div className="sp-card-accio">{accio}</div> : null}
         {copyright && (
           <p className="sp-card-copyright">
             <EnllacDrets>{copyright}</EnllacDrets>
@@ -427,7 +429,14 @@ export function UniversalCard({
      botó és un germà del vel, no un fill: el seu clic no arriba a l'enllaç
      de la targeta, i amb el teclat és una parada pròpia, després del vel.
      Sense la prop, el DOM de sempre. */
-  accio = null
+  accio = null,
+  /* Onada 8 (261009; requeriments, punt 4: «s'ha d'afegir un botó gran …
+     dins de la mateixa targeta») · `etiquetesAmbAccio`: amb `accio`, les
+     etiquetes també es pinten, al seu lloc, i el botó va just després. La
+     targeta d'un poble hi afig «Anar al xat» sense perdre la seua
+     classificació ni l'enllaç a la Viquipèdia (Llei del Píxel). Sense la prop,
+     la ranura ocupa el lloc de les etiquetes, com a la targeta d'El Xat. */
+  etiquetesAmbAccio = false
 }) {
   const idDescripcio = useId();
   const safeMainHref = mainHref && isSafeUrl(mainHref) ? mainHref : null;
@@ -455,7 +464,8 @@ export function UniversalCard({
     comentarVisible,
     compartirVisible,
     connectarVisible,
-    comentarXat
+    comentarXat,
+    comentarPrivatAmb
   } = useAccions({
     title,
     mainHref: safeMainHref,
@@ -523,9 +533,10 @@ export function UniversalCard({
         <TranslateIcon className="icon" />
       </IconButton>
     ),
-    /* Ordre del Mestre (261007) · el menú de les dues vies, el de la barra. */
+    /* Ordre del Mestre (261007) · el menú de les dues vies, el de la barra.
+       Onada 8 (261009) · «En privat» diu amb qui (l'autor, comentarPrivatAmb). */
     comentarVisible && (
-      <BotoComentar key="comentar" label={ambTitol('Comentar')} comentarXat={comentarXat} onComment={handleComment} />
+      <BotoComentar key="comentar" label={ambTitol('Comentar')} comentarXat={comentarXat} privatAmb={comentarPrivatAmb} onComment={handleComment} />
     ),
     compartirVisible && (
       <IconButton key="compartir" label={ambTitol('Compartir')} onClick={handleShare}>
@@ -634,6 +645,7 @@ export function UniversalCard({
         portes={ambPortes ? <PortesTargeta portes={portesNetes} /> : null}
         privada={imatgePrivada}
         accio={accio}
+        etiquetesAmbAccio={etiquetesAmbAccio === true}
       />
 
       {/* P6 (directriu 2325, confirmació 2) · El peu es pinta amb portes o sense. */}

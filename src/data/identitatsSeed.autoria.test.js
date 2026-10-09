@@ -10,7 +10,8 @@ import { expect, test } from 'vitest';
 import { ENTITATS_SEED, PERSONA_PILOT, autoriaSeed } from './identitatsSeed.js';
 import { createLocalPerfilsAdapter } from './localPerfils.js';
 
-const LOGO = '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg';
+/* Onada 8 (261009) · El logo de l'entitat pilot és el PNG (abans, l'SVG). */
+const LOGO = '/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png';
 const FOTO = '/assets/fotos/javi-llinares-perfil-1200px.jpg';
 /* Des de l'arrel del repositori (on corre vitest): en jsdom, import.meta.url no és file://. */
 const fitxerDe = (carpeta, ruta) => join(process.cwd(), carpeta, ruta);

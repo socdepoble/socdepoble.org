@@ -19,6 +19,7 @@ vi.mock('../../../app/contexts/UIContext', () => ({ useUIState: () => mocks.ui }
 import { PaginaApp } from './PaginaApp.jsx';
 
 import { AVIS_PAGINA_SENSE_TRADUCCIO } from '../../universal/PageFrame.jsx';
+import { DEFAULT_AUTHOR } from '../../universal/UniversalUtils.js';
 import { CLAU_APAGADA, ESDEVENIMENT_DOM } from '../../../data/telemetria.js';
 import { buidaCauTraduccions } from '../hooks/useTraduccioPagina.js';
 
@@ -181,9 +182,11 @@ describe('l’autoria', () => {
     expect(autor.querySelector('.sp-card-author-location').textContent).toBe('La Torre de les Maçanes');
   });
 
-  test('sense autor, signa Sóc de Poble i porta a la pàgina del projecte (T6)', () => {
+  /* Onada 8 (261009) · Al perfil de Sóc de Poble (DEFAULT_AUTHOR.href), ja no
+     a la pàgina del projecte. */
+  test('sense autor, signa Sóc de Poble i porta al seu perfil (T6, Onada 8)', () => {
     const autor = pinta({ author: null }).querySelector('section.bar-orange').firstElementChild;
-    expect(autor.getAttribute('href')).toBe('/projecte');
+    expect(autor.getAttribute('href')).toBe(DEFAULT_AUTHOR.href);
     expect(autor.querySelector('.sp-card-author-name').textContent).toBe('Sóc de Poble');
   });
 

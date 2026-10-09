@@ -36,6 +36,9 @@ import ConsolaSection, { ConsolaIncrustada } from './ConsolaSection.jsx';
 import { CLAU_PRIVACITAT, CLAU_VISTES } from './consolaPagines.js';
 import { PAGE_COPY } from '../text/pageContent.js';
 import { dataHoraDeBarra } from '../../components/universal/editorial.js';
+/* Onada 8 (261009) · La boina de Sóc de Poble porta al seu perfil
+   (RUTA_PERFIL_PROJECTE), ja no a /projecte. */
+import { RUTA_PERFIL_PROJECTE } from '../../config/navigation.js';
 
 afterEach(() => {
   cleanup();
@@ -61,7 +64,8 @@ const MAPA = {
 /* Una sola recepta de targeta, cap d'inventada: TargetaConsola (tauler, pols,
    les xifres del Mas, les de dins de les pàgines i les peces del Mapa), la
    UniversalCard sencera del Mur, amb la boina de Sóc de Poble (l'autor porta
-   a /projecte) i la data a la seua pastilla, icona a la insígnia lateral,
+   al seu perfil; Onada 8, 261009: abans, a /projecte) i la data a la seua
+   pastilla, icona a la insígnia lateral,
    entradilla i el peu de la barra blava; tota la targeta porta a la seua
    pàgina pròpia.
    Derogat per l'ordre del Mestre del 261004 (xat: cap xifra solta): la
@@ -79,15 +83,15 @@ function capXifraSolta(contenidor = document) {
   expect([...contenidor.querySelectorAll('article.sp-card')].filter((t) => !t.querySelector(':scope > .sp-card-header'))).toEqual([]);
   expect(document.querySelector('.sdp-consola__tauler, .sdp-consola__resum, .sdp-consola__xifra')).toBeNull();
 }
-/** La boina de Sóc de Poble: l'autor enllaçat a la pàgina del projecte, amb logo i poble. */
+/** La boina de Sóc de Poble: l'autor enllaçat al seu perfil (Onada 8, 261009), amb logo (el PNG, Onada 8) i poble. */
 function teBoinaDeSocDePoble(t) {
   const capcal = t.firstElementChild;
   expect(capcal.className).toBe('sp-card-header');
   const autor = capcal.querySelector('a.sp-card-author-link');
-  expect(autor.getAttribute('href')).toBe('/projecte');
+  expect(autor.getAttribute('href')).toBe(RUTA_PERFIL_PROJECTE);
   expect(autor.querySelector('.sp-card-author-name').textContent).toBe('Sóc de Poble');
   expect(autor.querySelector('.sp-card-author-location').textContent).toBe('La Torre de les Maçanes');
-  expect(autor.querySelector('img.sp-card-avatar').getAttribute('src')).toBe('/assets/system/ui/logo-socdepoble-cuadrat-verd.svg');
+  expect(autor.querySelector('img.sp-card-avatar').getAttribute('src')).toBe('/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png');
 }
 function targetesExplicatives(contenidor = document, { perA = true } = {}) {
   const targetes = [...contenidor.querySelectorAll('article.sp-card.sdp-consola__targeta')];
@@ -143,9 +147,9 @@ test('/consola: el tauler són nou targetes universals que expliquen cada pàgin
   const nav = screen.getByRole('navigation', { name: 'Pàgines de la Consola' });
   expect(targetesExplicatives(nav)).toHaveLength(9);
   expect(nav.className).toBe('sdp-card-grid sdp-consola__graella');
-  // Tota la targeta porta a la seua pàgina; l'autor de la boina, a /projecte.
+  // Tota la targeta porta a la seua pàgina; l'autor de la boina, al seu perfil (Onada 8; abans, /projecte).
   expect([...nav.querySelectorAll('a.sp-card-link-overlay')].map((a) => a.getAttribute('href'))).toEqual(PAGINES.map((id) => `/consola/${id}`));
-  expect([...nav.querySelectorAll('a.sp-card-author-link')].map((a) => a.getAttribute('href'))).toEqual(Array(9).fill('/projecte'));
+  expect([...nav.querySelectorAll('a.sp-card-author-link')].map((a) => a.getAttribute('href'))).toEqual(Array(9).fill(RUTA_PERFIL_PROJECTE));
   // Ordre del Mestre, 261004 · el peu de la barra blava, amb el títol al nom
   // accessible. Derogat per l'ordre del Mestre del 261004 (prompt
   // 261004_0515): «Compartir + Obrir».
@@ -387,7 +391,8 @@ test.each(PAGINES)('/consola/%s: H1, H2 d’introducció sense punt final i entr
 
 /* Ordre del Mestre, 261004 (xat: tota targeta amb boina i pàgina pròpia) ·
    Cap xifra solta: cada una és una UniversalCard sencera, amb la boina de
-   Sóc de Poble (autor a /projecte, la data de la mesura a la pastilla),
+   Sóc de Poble (autor al seu perfil, Onada 8; abans, /projecte; la data de
+   la mesura a la pastilla),
    títol amb la xifra, subtítol, entradeta que explica què compta, d'on ix i
    per què importa, la icona a la insígnia lateral i el peu canònic. Tota la
    targeta porta a la seua pàgina pròpia, /consola/xifres/<slug>.
@@ -439,10 +444,10 @@ test('/consola amb Mapa: cada xifra del Mas és una targeta pura amb boina, cos 
     expect([...t.querySelectorAll('.sp-card-footer button')].map((b) => b.getAttribute('aria-label')), titol)
       .toEqual([`Traduir ${titol}`, `Comentar ${titol}`, `Compartir ${titol}`, `Connectar amb ${titol}`]);
   }
-  // Tota la targeta porta a la pàgina pròpia de la xifra; l'autor, a /projecte.
+  // Tota la targeta porta a la pàgina pròpia de la xifra; l'autor, al seu perfil (Onada 8; abans, /projecte).
   expect([...xifres.querySelectorAll('a.sp-card-link-overlay')].map((a) => a.getAttribute('href')))
     .toEqual(SLUGS.map((slug) => `/consola/xifres/${slug}`));
-  expect([...xifres.querySelectorAll('a.sp-card-author-link')].map((a) => a.getAttribute('href'))).toEqual(Array(10).fill('/projecte'));
+  expect([...xifres.querySelectorAll('a.sp-card-author-link')].map((a) => a.getAttribute('href'))).toEqual(Array(10).fill(RUTA_PERFIL_PROJECTE));
   expect(targetes.some((t) => t.classList.contains('sdp-consola__quieta'))).toBe(false);
   // Cap peça del tauler sense boina.
   expect([...document.querySelectorAll('main article.sp-card')].filter((t) => !t.querySelector(':scope > .sp-card-header'))).toEqual([]);

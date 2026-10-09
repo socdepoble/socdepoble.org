@@ -16,6 +16,9 @@ import { InventariMapa } from './InventariMapa.jsx';
 import { EntradesEixides } from './EntradesEixides.jsx';
 import { MapaConsola } from './MapaConsola.jsx';
 import { TEXTOS_AVIS } from './grafMapa.js';
+/* Onada 8 (261009) · La boina de Sóc de Poble porta al seu perfil
+   (RUTA_PERFIL_PROJECTE), ja no a /projecte. */
+import { RUTA_PERFIL_PROJECTE } from '../../../config/navigation.js';
 
 afterEach(cleanup);
 
@@ -76,7 +79,8 @@ const MAPA = Object.freeze({
 
 /* Ordre del Mestre, 261004 (xat: cap xifra solta) · Tota targeta de les
    vistes del Mapa és una UniversalCard sencera: la boina de Sóc de Poble
-   (l'autor porta a /projecte, la data a la pastilla), la icona a la
+   (l'autor porta al seu perfil, Onada 8; abans, /projecte; la data a la
+   pastilla), la icona a la
    insígnia lateral, títol, subtítol, entradeta, tota la targeta porta a la
    seua pàgina pròpia (/consola/xifres/<slug>) i el peu canònic.
    Derogat per l'ordre del Mestre del 261004 (xat: cap xifra solta): «tota
@@ -90,7 +94,7 @@ function totesAmbBoina() {
     expect(t.className, titol).toBe('sp-card sdp-consola__targeta');
     expect(t.parentElement.className).toBe('sdp-card-grid sdp-consola__graella');
     expect(t.firstElementChild.className).toBe('sp-card-header');
-    expect(t.querySelector('.sp-card-header a.sp-card-author-link').getAttribute('href')).toBe('/projecte');
+    expect(t.querySelector('.sp-card-header a.sp-card-author-link').getAttribute('href')).toBe(RUTA_PERFIL_PROJECTE);
     expect(t.querySelector('.sp-card-header .sp-card-author-name').textContent).toBe('Sóc de Poble');
     expect(t.querySelector('.sp-card-header time.btn-date-time')).not.toBeNull();
     expect(t.querySelector('.sp-card-calendar-badge svg').getAttribute('width')).toBe('48');

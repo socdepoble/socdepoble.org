@@ -1,5 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { ENTITAT_PILOT_ID, ENTITAT_PILOT_SLUG } from '../../data/identitatsSeed.js';
+/* Onada 8 (261009) · El pilot porta al seu perfil (RUTA_PERFIL_PROJECTE), ja no a /projecte. */
+import { RUTA_PERFIL_PROJECTE } from '../../config/navigation.js';
 import {
   ETIQUETA_IA, etiquetesDeFitxa, pobleDeFitxa, potEditarFitxa, rutaDeFitxaPublica, slugDEntitat,
 } from './fitxaDePerfil.js';
@@ -14,19 +16,19 @@ const org = (role, dades = {}) => ({ id: 'O', mena: 'empresa', nom: 'Forn', rol:
 const agent = { id: 'A', mena: 'agent', nom: 'IAIA', rol: 'Agent IA', dades: { name: 'IAIA' } };
 
 describe('rutaDeFitxaPublica', () => {
-  test('persona per dades.id, grup a /grup, entitat a /empresa, pilot a /projecte, agent a /perfil, sense id null', () => {
+  test('persona per dades.id, grup a /grup, entitat a /empresa, pilot al seu perfil, agent a /perfil, sense id null', () => {
     expect(rutaDeFitxaPublica({ ...jo, dades: { id: 'U' } })).toBe('/gent/U');
     expect(rutaDeFitxaPublica(jo)).toBeNull();
     expect(rutaDeFitxaPublica({ id: 'G', mena: 'grup', nom: 'Colla' })).toBe('/grup/G');
     expect(rutaDeFitxaPublica({ id: 'O', mena: 'empresa', nom: 'Forn' })).toBe('/empresa/O');
-    expect(rutaDeFitxaPublica({ id: ENTITAT_PILOT_ID, mena: 'empresa', nom: 'Sóc de Poble' })).toBe('/projecte');
+    expect(rutaDeFitxaPublica({ id: ENTITAT_PILOT_ID, mena: 'empresa', nom: 'Sóc de Poble' })).toBe(RUTA_PERFIL_PROJECTE);
     expect(rutaDeFitxaPublica(agent)).toBe('/perfil/A');
     expect(rutaDeFitxaPublica(null)).toBeNull();
   });
 
   test('l’entitat pilot es reconeix pel slug (un UUID en remot), mai un grup, una persona ni un agent', () => {
     const uuid = '5b0c1d2e-3f40-4a51-8b62-7c83d94ea5f6';
-    expect(rutaDeFitxaPublica({ id: uuid, mena: 'empresa', nom: 'X', dades: { slug: ENTITAT_PILOT_SLUG } })).toBe('/projecte');
+    expect(rutaDeFitxaPublica({ id: uuid, mena: 'empresa', nom: 'X', dades: { slug: ENTITAT_PILOT_SLUG } })).toBe(RUTA_PERFIL_PROJECTE);
     expect(rutaDeFitxaPublica({ id: uuid, mena: 'empresa', nom: 'X', dades: { slug: 'forn' } })).toBe(`/empresa/${uuid}`);
     expect(rutaDeFitxaPublica({ id: 'G', mena: 'grup', nom: 'Colla', dades: { slug: ENTITAT_PILOT_SLUG } })).toBe('/grup/G');
     expect(rutaDeFitxaPublica({ ...agent, dades: { slug: ENTITAT_PILOT_SLUG } })).toBe('/perfil/A');

@@ -4,8 +4,9 @@
  * llavor ('socdepoble') arribava literal a crea_fil_directe, que exigix un
  * UUID: ara l'entitat es resol pel port del backend abans de fer l'enllaç.
  * Derogat per l'ordre del Mestre del 261004 (prompt 261004_0515, T6), per a
- * la boina: l'autor porta a la pàgina del projecte, i este xat és el de
- * Comentar del peu de les targetes del Panell. La resolució no canvia.
+ * la boina: l'autor porta a la pàgina del projecte (Onada 8, 261009: al seu
+ * perfil), i este xat és el de Comentar del peu de les targetes del Panell.
+ * La resolució no canvia.
  *
  * W4-10 · El format de l'id és cosa del proveïdor: la interfície fa l'enllaç
  * amb l'id que torna el port («42», «wp:organization:42» o un UUID), només si
@@ -29,6 +30,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 const estat = vi.hoisted(() => ({
   ui: null,
   accions: null,
+  identitat: null,
   teCapacitat: vi.fn(),
   load: vi.fn(),
   llest: vi.fn(),
@@ -52,17 +54,23 @@ vi.mock('../../data/backendPort.js', () => ({
   loadPerfilPublic: (...args) => estat.load(...args)
 }));
 vi.mock('../../host.js', () => ({ quanLlest: (...args) => estat.llest(...args) }));
+/* Onada 8 (261009, revisió) · Qui mira, la identitat de l'app que llig el
+   proveïdor (useIdentitatOpcional); null, sense IdentitatProvider. */
+vi.mock('../../app/contexts/IdentitatContext.jsx', () => ({ useIdentitatOpcional: () => estat.identitat }));
 
 import {
-  AVISOS_XAT_CORPORATIU, ProveidorXatSocDePoble, XAT_DE_LLAVOR, avisDelXatCorporatiu, resolXatCorporatiu, rutaXatCorporatiu
+  AVISOS_XAT_CORPORATIU, ProveidorXatSocDePoble, XAT_DE_LLAVOR, avisDelXatCorporatiu, directeDeLlavor, resolXatCorporatiu, rutaXatCorporatiu
 } from './xatCorporatiu.js';
 import { XAT_SOCDEPOBLE_DE_LLAVOR, useXatSocDePoble, useXatSocDePobleResolt } from '../../components/PedraSeca/hooks/xatSocDePoble.js';
 import { UniversalCard } from '../../components/PedraSeca/organismes/UniversalCard.jsx';
 import { TEXTOS_COMENTAR } from '../../components/universal/barres/BarraBlava.jsx';
 import { esRutaInterna } from '../../config/objecteConnectable.js';
-import { ESPERA_DESPRES_DE_FALLADA_MS } from '../../config/navigation.js';
+import { ESPERA_DESPRES_DE_FALLADA_MS, objecteDe, objecteDePerfil } from '../../config/navigation.js';
 import { resolRuta } from '../../app/contexts/politicaRouter.js';
-import { ENTITAT_PILOT_SLUG, IAIA_ID } from '../../data/identitatsSeed.js';
+import { ENTITAT_PILOT_SLUG, IAIA_ID, PERSONA_PILOT } from '../../data/identitatsSeed.js';
+import { AGENTS_MAP } from '../../data/agentsSeed.js';
+import { XAT_SEED_IDS, XAT_SEED_MEMBRES } from '../../data/xatSeed.js';
+import { localXat } from '../../data/localXat.js';
 
 const UUID = '7d1f4c2e-9a3b-4c5d-8e6f-0a1b2c3d4e5f';
 const ALTRE = '0f9e8d7c-6b5a-4c3d-9e2f-1a2b3c4d5e6f';
@@ -77,6 +85,7 @@ const ENTITAT = Object.freeze({ tipus: 'entitat', id: UUID, slug: ENTITAT_PILOT_
 beforeEach(() => {
   estat.ui = null;
   estat.accions = null;
+  estat.identitat = null;
   estat.teCapacitat.mockReset().mockReturnValue(true);
   estat.load.mockReset().mockResolvedValue(ENTITAT);
   estat.llest.mockReset().mockResolvedValue(undefined);
@@ -219,6 +228,9 @@ describe('261007 · ProveidorXatSocDePoble · una sola resolució per a tota l�
   const t = (clau, reserva) => `${clau}|${reserva}`;
   const ambProveidor = ({ children }) => <ProveidorXatSocDePoble>{children}</ProveidorXatSocDePoble>;
   const LLAVOR = Object.freeze({ estat: 'llavor', href: XAT_SOCDEPOBLE_DE_LLAVOR.href, avis: null, resol: null });
+  /* Onada 8 (261009, revisió) · En llavor, el proveïdor hi afig directeAmb:
+     el xat local només obri directes amb el seu padró. Sense proveïdor, no. */
+  const LLAVOR_DEL_PROVEIDOR = Object.freeze({ ...LLAVOR, directeAmb: directeDeLlavor });
 
   test('sense proveïdor, la llavor (XAT_SOCDEPOBLE_DE_LLAVOR), sense crides', () => {
     const { result } = renderHook(() => useXatSocDePoble());
@@ -229,10 +241,10 @@ describe('261007 · ProveidorXatSocDePoble · una sola resolució per a tota l�
 
   test('seed i fora de l’app: el proveïdor dona la llavor des del primer pintat, sense crides', () => {
     const { result: fora } = renderHook(() => useXatSocDePoble(), { wrapper: ambProveidor });
-    expect(fora.current).toEqual(LLAVOR);
+    expect(fora.current).toEqual(LLAVOR_DEL_PROVEIDOR);
     estat.ui = { externalConfig: { dataMode: 'seed' } };
     const { result } = renderHook(() => useXatSocDePoble(), { wrapper: ambProveidor });
-    expect(result.current).toEqual(LLAVOR);
+    expect(result.current).toEqual(LLAVOR_DEL_PROVEIDOR);
     expect([estat.llest, estat.load].map((f) => f.mock.calls.length)).toEqual([0, 0]);
   });
 
@@ -336,9 +348,9 @@ describe('261007 · ProveidorXatSocDePoble · una sola resolució per a tota l�
     await waitFor(() => expect(estat.load).toHaveBeenCalledTimes(1));
     estat.ui = { externalConfig: { dataMode: 'seed' } };
     rerender();
-    expect(result.current).toEqual(LLAVOR);
+    expect(result.current).toEqual(LLAVOR_DEL_PROVEIDOR);
     await act(async () => { respon(ENTITAT); });
-    expect(result.current).toEqual(LLAVOR);
+    expect(result.current).toEqual(LLAVOR_DEL_PROVEIDOR);
   });
 
   test('canvi de backend amb una resolució en curs: la resposta del backend vell es descarta', async () => {
@@ -492,5 +504,98 @@ describe('261007 · useXatSocDePobleResolt · l’estat en muntar, amb la resolu
     await waitFor(() => expect(result.current.href).toBe(`/xat?amb=${ALTRE}`));
     expect(estat.load).toHaveBeenCalledTimes(2);
     expect(estat.load.mock.calls[1][1].supabaseUrl).toBe('https://altre.example');
+  });
+});
+
+/* Onada 8 (261009, revisió adversarial) · «En privat» obri el xat amb
+   l'autor, i el proveïdor de veres li diu dues coses a useAccions:
+   esDeQuiMira (una publicació pròpia va al xat amb Sóc de Poble) i, en
+   llavor, directeAmb (el xat local només obri directes amb el seu padró:
+   la resta d'autors van a Sóc de Poble, mai a «Esta persona no és del
+   poble»). Abans cap prova muntava el proveïdor amb una identitat ni amb el
+   xat local de veres: el camí real no es provava. */
+describe('Onada 8 · el proveïdor de veres: qui mira i el padró de la llavor', () => {
+  const ambProveidor = ({ children }) => <ProveidorXatSocDePoble>{children}</ProveidorXatSocDePoble>;
+  const PERSONA = Object.freeze({ tipus: 'persona', id: 'sessio-pepa', rol: 'persona' });
+  const COOP = Object.freeze({ tipus: 'entitat', id: 'org-coop', slug: 'coop', rol: 'owner' });
+  const AMB_SESSIO = Object.freeze({ actor: PERSONA, identitats: [PERSONA, COOP] });
+  const CONVIDAT = Object.freeze({ actor: { tipus: 'persona', id: 'convidat-1', rol: 'convidat' }, identitats: [] });
+  const SEED = Object.freeze({ externalConfig: { dataMode: 'seed' } });
+  /* Un agent del catàleg que no és al padró del xat (com els 11111111-… de /perfil). */
+  const FORA_DEL_PADRO = Object.values(AGENTS_MAP).find((a) => !XAT_SEED_MEMBRES.some((m) => m.usuariId === a.id));
+
+  test('esDeQuiMira: l’actor, les organitzacions on mana (id i slug) i, en llavor, els àlies de la persona pilot', () => {
+    estat.ui = SEED;
+    estat.identitat = AMB_SESSIO;
+    const { result } = renderHook(() => useXatSocDePoble(), { wrapper: ambProveidor });
+    const { esDeQuiMira } = result.current;
+    for (const id of ['sessio-pepa', 'org-coop', 'coop', ...PERSONA_PILOT.alies]) expect([id, esDeQuiMira(id)]).toEqual([id, true]);
+    for (const id of ['jordi', ENTITAT_PILOT_SLUG, IAIA_ID, '', null]) expect([id, esDeQuiMira(id)]).toEqual([id, false]);
+  });
+
+  test('en remot la persona no hereta els àlies de la llavor; un convidat tampoc; sense identitat, cap esDeQuiMira', () => {
+    estat.ui = { externalConfig: REMOT };
+    estat.identitat = AMB_SESSIO;
+    const remot = renderHook(() => useXatSocDePoble(), { wrapper: ambProveidor });
+    expect([remot.result.current.esDeQuiMira('sessio-pepa'), remot.result.current.esDeQuiMira('javillinares')]).toEqual([true, false]);
+    expect('directeAmb' in remot.result.current).toBe(false);
+    remot.unmount();
+    estat.ui = SEED;
+    estat.identitat = CONVIDAT;
+    const convidat = renderHook(() => useXatSocDePoble(), { wrapper: ambProveidor });
+    expect([convidat.result.current.esDeQuiMira('convidat-1'), convidat.result.current.esDeQuiMira('javillinares')]).toEqual([true, false]);
+    convidat.unmount();
+    estat.identitat = null;
+    const sense = renderHook(() => useXatSocDePoble(), { wrapper: ambProveidor });
+    expect('esDeQuiMira' in sense.result.current).toBe(false);
+  });
+
+  test('directeDeLlavor: el padró de XAT_SEED_MEMBRES; els àlies de la persona pilot, al seu usuariId; la resta, cap', () => {
+    for (const membre of XAT_SEED_MEMBRES) {
+      expect([membre.usuariId, directeDeLlavor({ tipus: membre.tipus, id: membre.usuariId })]).toEqual([membre.usuariId, membre.usuariId]);
+    }
+    for (const alies of PERSONA_PILOT.alies) expect([alies, directeDeLlavor({ tipus: 'persona', id: alies })]).toEqual([alies, XAT_SEED_IDS.javi]);
+    expect(FORA_DEL_PADRO).toBeTruthy();
+    expect(directeDeLlavor({ tipus: 'persona', id: FORA_DEL_PADRO.id })).toBeNull();
+    /* Un àlies de persona en una entitat no és la persona; res inventat. */
+    for (const qui of [{ tipus: 'entitat', id: 'javillinares' }, { tipus: 'persona', id: 'u-1' }, {}, null]) {
+      expect([qui, directeDeLlavor(qui)]).toEqual([qui, null]);
+    }
+  });
+
+  test('directeDeLlavor i el localXat de veres: el que torna, s’obri; el que rebutja, el xat local també', async () => {
+    const config = { dataMode: 'seed' };
+    for (const qui of [{ tipus: 'persona', id: 'javillinares' }, { tipus: 'ia', id: IAIA_ID }, { tipus: 'persona', id: XAT_SEED_IDS.javi }]) {
+      await expect(localXat.creaFilDirecte(directeDeLlavor(qui), null, config)).resolves.toEqual(expect.any(String));
+    }
+    for (const id of ['javillinares', FORA_DEL_PADRO.id]) {
+      await expect(localXat.creaFilDirecte(id, null, config)).rejects.toThrow('Esta persona no és del poble.');
+    }
+  });
+
+  test('integració: una publicació pròpia, un autor de fora del padró i el Mac Mini de Javi, amb el proveïdor i les targetes de veres', () => {
+    estat.ui = SEED;
+    estat.identitat = { ...CONVIDAT, actor: { tipus: 'entitat', id: 'org-coop', slug: 'coop', rol: 'owner' } };
+    const PROPIA = objecteDe({ id: 'p1', title: 'Pa de la coop', author_org_id: 'org-coop', author_name: 'La Coop' }, 'mur');
+    const ANDREU = objecteDePerfil({ tipus: 'persona', id: FORA_DEL_PADRO.id, nom: 'Andreu Soler' });
+    const MAC = objecteDe({ id: 'mac', title: 'Mac Mini', author_id: 'javillinares', author_name: 'Javi' }, 'mercat');
+    render(
+      <ProveidorXatSocDePoble>
+        <UniversalCard title="Pa de la coop" hasFooter objecte={PROPIA} />
+        <UniversalCard title="Andreu Soler" hasFooter objecte={ANDREU} />
+        <UniversalCard title="Mac Mini" hasFooter objecte={MAC} />
+      </ProveidorXatSocDePoble>
+    );
+    const enPrivat = (titol) => {
+      fireEvent.click(screen.getByRole('button', { name: `Comentar ${titol}` }));
+      const fila = within(screen.getByRole('menu')).getByRole('menuitem', { name: TEXTOS_COMENTAR.privat[1] });
+      const detall = fila.querySelector('.sdp-menu-comentar__detall').textContent;
+      fireEvent.click(fila);
+      return [detall, estat.navigate.mock.calls.at(-1)?.[0]];
+    };
+    expect(enPrivat('Pa de la coop')).toEqual([TEXTOS_COMENTAR.privatDetall[1], XAT_SOCDEPOBLE_DE_LLAVOR.href]);
+    expect(enPrivat('Andreu Soler')).toEqual([TEXTOS_COMENTAR.privatDetall[1], XAT_SOCDEPOBLE_DE_LLAVOR.href]);
+    expect(enPrivat('Mac Mini')).toEqual(['Un xat només entre tu i Javi', `/xat?amb=${XAT_SEED_IDS.javi}`]);
+    expect(estat.toast).not.toHaveBeenCalled();
   });
 });

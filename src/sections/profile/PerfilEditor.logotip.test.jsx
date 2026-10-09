@@ -49,7 +49,7 @@ vi.mock('../../components/universal/DocumentPrintPreview.jsx', () => ({ default:
 
 import { PerfilEditor } from './PerfilEditor.jsx';
 import { ENTITAT_PILOT_ID, ENTITAT_PILOT_SLUG } from '../../data/identitatsSeed.js';
-import { oblidaEntitatDelProjecte, rutaDAutoria } from '../../config/navigation.js';
+import { oblidaEntitatDelProjecte, RUTA_PERFIL_PROJECTE, rutaDAutoria } from '../../config/navigation.js';
 
 const jo = { id: 'jo', mena: 'persona', nom: 'Pep', rol: 'Persona', dades: { id: 'U', full_name: 'Pep', town_name: 'La Torre' } };
 const ambAvatar = { ...jo, avatar: '/assets/a.webp', dades: { ...jo.dades, avatar_url: '/assets/a.webp' } };
@@ -152,8 +152,8 @@ test('Auditoria 261007 · l’entitat pilot amb un id UUID i el slug declarat: c
   expect(abansDe(logos[0], titol())).toBe(true);
   // La capçalera conserva el seu botó.
   expect(screen.getByRole('button', { name: 'Capçalera' })).toBeTruthy();
-  // El registre (com a PerfilPublicSection): les boines del pilot ja porten a /projecte.
-  expect(rutaDAutoria({ tipus: 'entitat', id: uuid })).toBe('/projecte');
+  // El registre (com a PerfilPublicSection): les boines del pilot ja porten al seu perfil (Onada 8).
+  expect(rutaDAutoria({ tipus: 'entitat', id: uuid })).toBe(RUTA_PERFIL_PROJECTE);
 });
 
 test('Auditoria 261007 · el slug només val per a una entitat: un altre slug o un grup amb el del pilot conserven la ranura i no es registren', () => {

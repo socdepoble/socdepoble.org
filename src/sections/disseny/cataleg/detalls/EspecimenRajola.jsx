@@ -44,7 +44,7 @@ export default function EspecimenRajola() {
         {PRODUCTES.map((p) => (
           <li key={p.id}><Rajola titol={p.titol} secundari={formatEuros(p.cents)} onClick={() => afig(p.id)} /></li>
         ))}
-        <li><Rajola titol="Sóc de Poble" secundari="Amb imatge" imatge="/assets/system/ui/logo-socdepoble-cuadrat-verd.svg" onClick={() => afig('cafe')} /></li>
+        <li><Rajola titol="Sóc de Poble" secundari="Amb imatge" imatge="/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png" onClick={() => afig('cafe')} /></li>
         <li><Rajola titol="Croissant" secundari="Esgotat" desactivada /></li>
       </ul>
       <p role="status">{linies.length ? `Comanda de mostra: ${linies.join(', ')} · ${formatEuros(total)}` : 'Toca una rajola per a afegir-la a la comanda de mostra.'}</p>

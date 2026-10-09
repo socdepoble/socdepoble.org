@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useLayoutEffect } from 'react';
+import { useState, useEffect, useLayoutEffect } from 'react';
 import { User, Building2, ServerCog, ArrowLeft } from 'lucide-react';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import AppGridShell, { useAppGrid } from '../../components/layout/AppGridShell';
@@ -137,7 +137,8 @@ function TornaALaLlista() {
    ací dins, mai al voltant del Workspace. Sense barra blava (chrome 'page',
    ordre del Mestre 261003): la capçalera de la columna, amb la fletxa ← en
    estret, és la d'abans, i davall la barra taronja signa Sóc de Poble
-   (DEFAULT_AUTHOR de PageFrame, enllaçat a /projecte). El logotip de qui
+   (DEFAULT_AUTHOR de PageFrame, enllaçat al seu perfil; Onada 8, 261009:
+   abans, a /projecte). El logotip de qui
    signa (norma del Mestre, 261004) queda així dins del detall, en el flux de
    la columna: cap graella absoluta el tapa. */
 function PaginaDelDetall({ titol, children }) {

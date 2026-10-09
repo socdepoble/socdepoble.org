@@ -10,8 +10,9 @@
  * Control (TargetaResum, «action»), sense boina ni peu, també les de dins dels
  * panells i de les vistes del Mapa. Ara cada xifra és una targeta pura:
  *  · TargetaXifra → TargetaConsola (peces.jsx): la UniversalCard sencera, amb
- *    la boina de Sóc de Poble (autor enllaçat a /projecte i la pastilla de la
- *    data de la mesura), títol amb la xifra, subtítol, entradeta que explica
+ *    la boina de Sóc de Poble (autor enllaçat al seu perfil, Onada 8, 261009;
+ *    abans, a /projecte; i la pastilla de la data de la mesura), títol amb
+ *    la xifra, subtítol, entradeta que explica
  *    què compta, d'on ix i per què importa (els noms de fitxer en <Mono>), la
  *    icona a la insígnia lateral (sense imatge), les etiquetes d'estat i el
  *    peu canònic. Tota la targeta, i Connectar, porten a la seua pàgina.

@@ -467,11 +467,15 @@ describe('Onada 5 · la pàgina d’un poble', () => {
     expect(capcalera(container).querySelector('.page-title-copyright').textContent).toBe(COPYRIGHT_VIQUIPEDIA);
   });
 
-  test('la barra taronja signa amb la gent i el poble, i porta al seu xat', () => {
+  /* Onada 8 (261009) · Derogat el «porta al seu xat»: la boina porta a la
+     fitxa del poble (s'hi enllaça a si mateixa), mai al xat; el xat es queda
+     al botó blau i a «Comentar · En públic». */
+  test('la barra taronja signa amb la gent i el poble, i porta a la fitxa del poble, mai al xat', () => {
     const barra = pinta('pobles', POBLE).querySelector('section.bar-orange');
     expect(barra.querySelector('.sp-card-author-name').textContent).toBe('Gent de la Torre');
     expect(barra.querySelector('.sp-card-author-location').textContent).toBe('La Torre de les Maçanes');
-    expect(barra.querySelector('a.sp-card-author-link').getAttribute('href')).toBe(XAT);
+    expect(barra.querySelector('a.sp-card-author-link').getAttribute('href')).toBe('/pobles/la-torre-de-les-macanes');
+    expect(barra.querySelector('a.sp-card-author-link').getAttribute('href')).not.toBe(XAT);
   });
 
   test('davall de l’entradilla, el botó blau gros cap al xat; el cos no repetix la província ni la comarca', () => {

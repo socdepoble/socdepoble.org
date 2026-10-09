@@ -16,8 +16,10 @@ import { BookOpen, Landmark, Receipt } from 'lucide-react';
      · ruta        només amb 'connectada': la ruta interna de la secció
      · panell      l'id amb què el Panell de Control llig la preferència
                    «Mostrar al Panell» d'esta utilitat: el del registre de
-                   plugins (sections/plugins/registrePlugins.js) o 'snippet'.
-                   Sense, el mateix id (opcional)
+                   plugins (sections/plugins/registrePlugins.js), el d'una
+                   pàgina de la maquinària (PAGINES_MAQUINARIA de
+                   control/destinsControl.js: la Consola i el Cervell, des
+                   de l'Onada 8) o 'snippet'. Sense, el mateix id (opcional)
 
    Ordre del Mestre (261007, prompt 261007_1628, peça C) · El Perfil escrivia
    la preferència amb l'id de l'aplicació i el Panell l'amagava per l'id del

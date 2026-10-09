@@ -10,8 +10,7 @@
  * Aplec2023Article al Mur i al Mercat. detailSectionMeta el torna a exportar.
  */
 import { getFirstImage } from '../detail/detailHelpers.jsx';
-import { resolveAsset } from '../../config/assetResolver.js';
-import { camiDe } from '../../components/universal/UniversalUtils.js';
+import { camiDeLaMarca } from '../../components/universal/UniversalUtils.js';
 
 /* El camí d'un recurs, sense origen ni consulta, resolt amb la base d'ara:
    el mateix fitxer escrit com a camí o ja resolt (o com a URL absoluta) és
@@ -24,8 +23,13 @@ import { camiDe } from '../../components/universal/UniversalUtils.js';
    les entrades que new URL() no analitza ni amb base (per exemple, barres
    inverses que fan un host buit), que sempre són brossa. La deduplicació
    continua sent coherent: les marques i les candidates passen per la mateixa
-   funció. Cap efecte al DOM. */
-const camiDeRecurs = (valor) => camiDe(resolveAsset(valor));
+   funció. Cap efecte al DOM.
+   Onada 8 (261009) · El logotip de Sóc de Poble és un PNG, però les files del
+   servidor encara porten l'SVG d'abans. Si en un producte convivien (l'avatar
+   de la identitat en PNG i la imatge desada en SVG), el logotip eixia com a
+   foto del producte. camiDeLaMarca els llig com el mateix recurs; per a la
+   resta de camins és el camiDe(resolveAsset(valor)) d'abans. */
+const camiDeRecurs = camiDeLaMarca;
 
 /**
  * Ordre del Mestre (261007) · Les fotos d'un producte, en ordre: la primera

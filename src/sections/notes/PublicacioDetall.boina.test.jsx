@@ -7,6 +7,8 @@
  *  · sense nom propi, la reserva «Sóc de Poble» va al projecte;
  *  · un nom sense identitat coneguda no s'endevina: sense enllaç.
  * Llei del Píxel: el nom, l'avatar i el poble de la barra no canvien.
+ * Onada 8 (261009) · «Al projecte» és ara el perfil de Sóc de Poble
+ * (RUTA_PERFIL_PROJECTE), mai /projecte.
  */
 import React from 'react';
 import { cleanup, render, waitFor } from '@testing-library/react';
@@ -45,7 +47,7 @@ vi.mock('../multimedia/MultimediaContext', () => ({ useMultimedia: () => mocks.m
 
 import { PublicacioDetall, rutaDeLaBarraDeLaPublicacio } from './PublicacioDetall.jsx';
 import { publicacioComANota } from './masDeLUsuari.js';
-import { oblidaEntitatDelProjecte, RUTA_PROJECTE } from '../../config/navigation.js';
+import { oblidaEntitatDelProjecte, RUTA_PERFIL_PROJECTE } from '../../config/navigation.js';
 import { ENTITAT_PILOT_SLUG } from '../../data/identitatsSeed.js';
 
 const CREAT = '2026-09-20T09:15:00Z';
@@ -69,7 +71,7 @@ afterEach(() => {
 
 describe('T6 · la barra taronja de PublicacioDetall porta a la pàgina de qui signa', () => {
   test('sense nom propi, la reserva «Sóc de Poble» porta al projecte', () => {
-    expect(barra({ id: 'coca', title: 'Recepta de coca' })).toEqual({ nom: 'Sóc de Poble', href: RUTA_PROJECTE });
+    expect(barra({ id: 'coca', title: 'Recepta de coca' })).toEqual({ nom: 'Sóc de Poble', href: RUTA_PERFIL_PROJECTE });
   });
 
   test('una persona, al seu perfil; l’entitat pilot, al projecte; una altra entitat, al seu perfil', () => {
@@ -77,7 +79,7 @@ describe('T6 · la barra taronja de PublicacioDetall porta a la pàgina de qui s
       .toEqual({ nom: 'Javi', href: '/gent/javillinares' });
     cleanup();
     expect(barra({ id: 'samarreta', title: 'Samarreta', seller: 'Sóc de Poble', author_entity_id: 'socdepoble' }, 'mercat'))
-      .toEqual({ nom: 'Sóc de Poble', href: RUTA_PROJECTE });
+      .toEqual({ nom: 'Sóc de Poble', href: RUTA_PERFIL_PROJECTE });
     cleanup();
     expect(barra({ id: 'pa', title: 'Pa', author_name: 'Forn', author_org_id: 'forn' }))
       .toEqual({ nom: 'Forn', href: '/empresa/forn' });
@@ -101,14 +103,14 @@ describe('T6 · la barra taronja de PublicacioDetall porta a la pàgina de qui s
       id: 'avis', title: 'Avís', created_at: CREAT, author_name: 'Sóc de Poble', author_org_id: UUID_PILOT
     }, 'mur')} />);
     const href = () => container.querySelector('section.bar-orange a.sp-card-author-link')?.getAttribute('href') ?? null;
-    await waitFor(() => expect(href()).toBe(RUTA_PROJECTE));
+    await waitFor(() => expect(href()).toBe(RUTA_PERFIL_PROJECTE));
     expect(mocks.loadPerfilPublic).toHaveBeenCalledTimes(1);
     expect(mocks.loadPerfilPublic.mock.calls[0][0]).toBe(ENTITAT_PILOT_SLUG);
   });
 
   test('rutaDeLaBarraDeLaPublicacio: qui signa mana; després, la reserva', () => {
     expect(rutaDeLaBarraDeLaPublicacio({ author_name: 'Javi', owner_user_id: 'javillinares' })).toBe('/gent/javillinares');
-    expect(rutaDeLaBarraDeLaPublicacio({})).toBe(RUTA_PROJECTE);
+    expect(rutaDeLaBarraDeLaPublicacio({})).toBe(RUTA_PERFIL_PROJECTE);
     expect(rutaDeLaBarraDeLaPublicacio({ seller: 'Pepa' })).toBeUndefined();
     expect(rutaDeLaBarraDeLaPublicacio({ author_name: 'Pepa' })).toBeUndefined();
   });

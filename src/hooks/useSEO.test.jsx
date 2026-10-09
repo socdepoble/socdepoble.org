@@ -5,6 +5,8 @@ import { MemoryRouter, useRouter } from '../app/contexts/RouterContext';
 import { routeAllowsIndex, useSEO } from './useSEO';
 import { RouteSEO } from './RouteSEO';
 import { RouteTelemetria } from './RouteTelemetria';
+import { DEFAULT_AUTHOR, MARQUES_SVG_ANTIGUES } from '../components/universal/UniversalUtils.js';
+import { ENTITATS_SEED } from '../data/identitatsSeed.js';
 const AMA = Object.freeze({ manageDocumentHead: true });
 const state = vi.hoisted(() => ({ config: {}, asset: (path) => path, foraDeBase: false, registraVisita: vi.fn(), declaraEncastada: vi.fn() }));
 vi.mock('../app/contexts/UIContext', () => ({ useUIState: () => ({ externalConfig: state.config }), useUIActions: () => ({ resolveAsset: state.asset }) }));
@@ -165,6 +167,26 @@ test.each(['/assets/system/ui/logo-socdepoble-cuadrat-verd.svg', '/media/dibuix.
     expect(conjuntImatge()).toEqual(CONJUNT_BASE);
     expect(valor('twitter:card')).toBe('summary_large_image');
   });
+/* Onada 8 (261009) · La marca de Sóc de Poble no és mai imatge social. Abans
+   era SVG i ja eixia el conjunt base; ara és PNG i ha de continuar eixint.
+   El logo_url de l'entitat pilot és el que la fitxa /empresa/socdepoble passa
+   a useSEO (identitatsSeed.js → localPerfils.js → PerfilPublicSection.jsx). */
+test.each([ENTITATS_SEED[0].logo_url, DEFAULT_AUTHOR.avatarUrl, DEFAULT_AUTHOR.logo.clar, DEFAULT_AUTHOR.logo.fosc,
+  ...Object.values(MARQUES_SVG_ANTIGUES), 'https://example.org/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png',
+  { url: '/assets/system/ui/logo-socdepoble-rect-blanc-985x256.png', width: 985, height: 256, type: 'image/png', alt: 'Logotip' }])(
+  'Onada 8 · la marca de l’entitat (%j) no és imatge social: queda el conjunt base', imatge => {
+    ambConjuntBase();
+    imatgeDeLaVista = imatge;
+    render(tree());
+    act(() => navigate('/foto/1'));
+    expect(conjuntImatge()).toEqual(CONJUNT_BASE);
+    expect(valor('og:image:type')).toBeNull();
+  });
+/* Si tornara a ser SVG, la prova d'amunt la passaria el filtre dels SVG i no
+   la guarda de la marca. */
+test('Onada 8 · el logo_url de l’entitat pilot és la marca en PNG', () => {
+  expect(ENTITATS_SEED[0].logo_url).toBe('/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png');
+});
 test('S6 · la imatge base passada a mà (TextSection) conserva el conjunt base', () => {
   ambConjuntBase();
   imatgeDeLaVista = '/assets/system/ui/og-socdepoble-1200x630.png';

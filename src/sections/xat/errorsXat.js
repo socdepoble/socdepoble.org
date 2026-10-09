@@ -7,9 +7,12 @@
  * Pur: no sap res de React ni del backend.
  */
 
-/** Codi SDP → clau d'i18n. */
+/** Codi SDP → clau d'i18n. Onada 8 (261009) · SDP-XAT-002: cap xat amb tu
+ *  mateix; SDP-XAT-004: l'altra persona no és d'este poble. */
 export const CLAUS_ERROR_SDP = Object.freeze({
+  'SDP-XAT-002': 'section.xat.error.ambTuMateix',
   'SDP-XAT-003': 'section.xat.error.noMembre',
+  'SDP-XAT-004': 'section.xat.error.noDelPoble',
   'SDP-XAT-013': 'section.xat.error.paginaNoVisible',
   'SDP-XAT-016': 'section.xat.error.noDisponible',
   'SDP-XAT-429': 'section.xat.error.massaMissatges'

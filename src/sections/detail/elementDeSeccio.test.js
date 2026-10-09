@@ -120,9 +120,10 @@ test('Onada 5 · paginaDElement d’un poble: la gent, el poble, l’entradilla,
     lead: POBLE.content,
     authorName: POBLE.author,
     authorLocation: 'La Torre de les Maçanes',
-    /* Onada 6 (pla 261009_0245, ítem 4) · El xat de la gent: el descriptor
-       d'objecteDelPobleXat, amb el nom de la gent com a títol. */
-    authorHref: rutaXatDePagina(objecteDelPobleXat(POBLE)),
+    /* Onada 8 (261009) · Derogat el xat de la gent a la boina: la boina d'un
+       poble porta a la seua fitxa (/pobles/<id>), mai al xat. El xat es queda
+       al botó blau (renderBody) i a «Comentar · En públic». */
+    authorHref: '/pobles/la-torre-de-les-macanes',
     labels: [
       { text: 'Poble', className: 'sdp-badge-system' },
       { text: 'Alacant', className: 'sdp-badge-category' },
@@ -130,7 +131,10 @@ test('Onada 5 · paginaDElement d’un poble: la gent, el poble, l’entradilla,
     ],
     copyright: COPYRIGHT_VIQUIPEDIA
   });
-  expect(pagina.authorHref).toMatch(/^\/xat\?sobre=poble:la-torre-de-les-macanes&/);
+  expect(pagina.authorHref.startsWith('/xat')).toBe(false);
+  expect(pagina.authorHref).toBe(objecteDelPobleXat(POBLE).ruta);
+  /* El xat de la gent continua al seu descriptor (el botó blau i «En públic»). */
+  expect(rutaXatDePagina(objecteDelPobleXat(POBLE))).toMatch(/^\/xat\?sobre=poble:la-torre-de-les-macanes&/);
   expect(pagina.logoEntitat).toEqual(DEFAULT_AUTHOR.logo);
   // Sense província ni comarca, només la de sistema; uns drets propis manen.
   const sense = paginaDElement(seccio, { ...POBLE, provincia: ' ', comarca: undefined, copyright: 'CC BY 4.0' });
@@ -315,7 +319,8 @@ test('T71 · una pàgina de text (/iaia): L’Ànima de la IAIA amb la seua foto
      que la barra taronja de la pàgina (PageFrame, DEFAULT_AUTHOR.href). */
   expect(result.current.targeta).toMatchObject({
     titol: "L'Ànima de la IAIA", subtitol: PAGE_COPY.anima.subtitle, entradilla: PAGE_COPY.anima.lead,
-    imatge: ANIMA_IMATGE, autor: { nom: DEFAULT_AUTHOR.name, propi: false, ruta: '/projecte' }
+    /* Onada 8 (261009) · El perfil de Sóc de Poble, ja no /projecte. */
+    imatge: ANIMA_IMATGE, autor: { nom: DEFAULT_AUTHOR.name, propi: false, ruta: DEFAULT_AUTHOR.href }
   });
   expect(result.current.targeta.autor.ruta).toBe(DEFAULT_AUTHOR.href);
   expect(result.current.targeta.data).toEqual(dataHoraDeBarra({ creat: PAGE_COPY.anima.date }));
@@ -331,7 +336,8 @@ test('T6 · la ruta de l’autor de la targeta d’un element és la de la barra
     mocks.mur = { status: 'ready', feedPosts: [], events: [], marketItems: [item] };
     return renderHook(() => useOriginalDeConnexio({ sectionId: 'mercat', itemId: item.id })).result.current.targeta.autor;
   };
-  expect(ruta({ id: 'a', title: 'Sense autor' })).toEqual({ nom: DEFAULT_AUTHOR.name, propi: false, ruta: '/projecte' });
+  /* Onada 8 (261009) · L'autor de sèrie, al perfil de Sóc de Poble. */
+  expect(ruta({ id: 'a', title: 'Sense autor' })).toEqual({ nom: DEFAULT_AUTHOR.name, propi: false, ruta: DEFAULT_AUTHOR.href });
   expect(ruta({ id: 'b', title: 'Del forn', author_name: 'Forn', author_org_id: 'forn' })).toEqual({ nom: 'Forn', propi: true, ruta: '/empresa/forn' });
   expect(ruta({ id: 'c', title: 'Del projecte', author_name: 'Sóc de Poble', author_org_id: 'socdepoble' })).toMatchObject({ ruta: '/empresa/socdepoble' });
   expect(ruta({ id: 'd', title: 'Sense identitat', author_name: 'Pepa' })).toEqual({ nom: 'Pepa', propi: true, ruta: null });

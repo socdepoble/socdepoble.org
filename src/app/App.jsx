@@ -760,7 +760,8 @@ function AppDataLoader() {
      MAS: qui entrava directament a /mercat, /mur/:id o /mercat/:id veia la
      boina del pilot portar a /empresa/<uuid> tota la sessió. Quan l'id
      arriba, este component torna a pintar les rutes i les boines que usen
-     rutaDAutoria porten a /projecte. Al Mercat, rutaDePerfilPublicDAutor
+     rutaDAutoria porten al perfil del pilot (Onada 8, 261009:
+     /empresa/socdepoble; abans, /projecte). Al Mercat, rutaDePerfilPublicDAutor
      conserva el perfil públic de qui ven, també per a l'entitat pilot
      (Marató 2230, pla 2045). */
   useEntitatDelProjecte();

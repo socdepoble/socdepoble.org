@@ -22,7 +22,7 @@ export default function EspecimenAvatar() {
         <Avatar nom="Vicent Ferris" mida="md" />
         <Avatar nom="Pepica la Vall" mida="lg" />
         <Avatar nom="IAIA MarIA" mida="xl" />
-        <Avatar nom="Sóc de Poble" mida="xl" src="/assets/system/ui/logo-socdepoble-cuadrat-verd.svg" />
+        <Avatar nom="Sóc de Poble" mida="xl" src="/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png" />
       </div>
       <h4>Enquadrament: la cara de la IAIA al xat</h4>
       <div className="sdp-especimen__fila">

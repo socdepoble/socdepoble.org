@@ -84,7 +84,6 @@ export default function PageDetailSection() {
   if (status !== 'ready' && status !== 'error') {
     return (
       <div role="status" aria-live="polite">
-        <div />
         <span className="sr-only">S'està carregant el contingut...</span>
       </div>
     );

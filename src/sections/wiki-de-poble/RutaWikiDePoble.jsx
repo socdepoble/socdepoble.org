@@ -1,4 +1,3 @@
-import React from 'react';
 import { lazyRoute } from '../../apps/plataforma/lazyRoute.js';
 
 const WikiDePobleSection = lazyRoute(() => import('./WikiDePobleSection.jsx'));

@@ -77,8 +77,9 @@ export function Xifra({ etiqueta, valor, icona, a }) {
    línia del cos (prompt 261004_0515, §6/T8). El que no es podia fer era
    inventar l'autor «Consola Termodinàmica»; l'autor real és l'entitat:
     · LA BOINA DE SÓC DE POBLE (AUTORIA_SOCDEPOBLE, destinsControl.js): el
-      logo, el nom i el poble, i l'autor porta a la pàgina del projecte
-      (/projecte, rutaDAutoria per l'id de l'entitat, mai pel nom).
+      logo, el nom i el poble, i l'autor porta al perfil de l'entitat
+      (rutaDAutoria per l'id de l'entitat, mai pel nom; Onada 8, 261009:
+      /empresa/socdepoble, abans la pàgina del projecte, /projecte).
     · LA DATA, A LA PASTILLA DE LA BOINA (T51, regla del Mestre: cap document
       sense data). `creat` és la data de redacció del seu text (el copy de la
       Consola) i `generat`, la de la instantània: es pinta la més recent

@@ -1,4 +1,4 @@
-import React, { useEffect, useId, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import { Lightbulb, MessagesSquare, Network, PowerOff } from 'lucide-react';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { Avatar, Casella, GrupAvatars, GrupOpcions, IaiaIcon } from '../../components/PedraSeca/index.js';

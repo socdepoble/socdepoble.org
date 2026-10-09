@@ -9,6 +9,7 @@ vi.mock('../../app/contexts/RouterContext', () => ({ useNavigate: () => mocks.na
 vi.mock('../../components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
 import { renderRichText } from './detailRichText.jsx';
 import { sanitizeHtml } from '../../utils/sanitize';
+import { DEFAULT_AUTHOR } from '../../components/universal/UniversalUtils.js';
 
 afterEach(() => {
   cleanup();
@@ -72,12 +73,13 @@ test('la imatge de la targeta es demana sense referent (referrerpolicy no-referr
 });
 
 /* Regla d'or 1 del Mestre (261004) · Sense autor a la instantània, la boina
-   la signa l'entitat Sóc de Poble i porta a la pàgina del projecte. */
-test('una targeta sense autor porta la boina de Sóc de Poble enllaçada a /projecte', () => {
+   la signa l'entitat Sóc de Poble i porta a la pàgina del projecte.
+   Onada 8 (261009) · Al seu perfil (DEFAULT_AUTHOR.href), ja no a /projecte. */
+test('una targeta sense autor porta la boina de Sóc de Poble enllaçada al seu perfil', () => {
   const poble = '<div data-sdp-targeta="poble:7" data-ruta="/pobles/7" data-titol="La Torre de les Maçanes"></div>';
   const { container } = render(renderRichText(grup('esquerra', poble)));
   const boina = container.querySelector('.sdp-targeta .sp-card-header a.sp-card-author-link');
-  expect(boina.getAttribute('to')).toBe('/projecte');
+  expect(boina.getAttribute('to')).toBe(DEFAULT_AUTHOR.href);
   expect(boina.querySelector('.sp-card-author-name').textContent).toBe('Sóc de Poble');
 });
 

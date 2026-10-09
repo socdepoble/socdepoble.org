@@ -9,11 +9,18 @@
  * etiqueta; el preu va al quadrat.
  * Derogat per l'ordre del Mestre del 261004 (prompt 261004_0515) · T6: la
  * boina de socdepoble porta a la pàgina del projecte (/projecte), ja no al seu
- * xat corporatiu (W4-09).
+ * xat corporatiu (W4-09). Onada 8 (261009) · Ara, al seu perfil
+ * (/empresa/socdepoble), mai a /projecte ni al xat.
+ * Derogat per l'ordre del Mestre del 261009 (revisió R3; requeriments
+ * 261009_1300, punt 2) · El peu de les mostres de portes ja no és «sense
+ * Connectar»: com al Panell, porta Connectar, i el cos, els drets
+ * (COPYRIGHT_SDP cap a «Drets d'autor»).
  */
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, expect, test } from 'vitest';
 import { MemoryRouter, useLocation } from '../../../../app/contexts/RouterContext.jsx';
+import { COPYRIGHT_SDP } from '../../../../components/universal/editorial.js';
+import { RUTA_DRETS_AUTOR } from '../../../../config/systemPages.js';
 import { PAGE_COPY } from '../../../text/pageContent.js';
 import EspecimenUniversalCard from './EspecimenUniversalCard.jsx';
 
@@ -40,16 +47,18 @@ test('dues targetes de doble acció estàndard: boina de socdepoble, contingut d
   const [mur, mapa] = targetes;
   for (const [targeta, clau] of [[mur, 'publicar_mur'], [mapa, 'publicar_mapa']]) {
     expect(targeta.className).toBe('sp-card');
-    /* Derogat per l'ordre del Mestre del 261004 (prompt 261004_0515): abans '/xat?amb=socdepoble' (W4-09). */
-    expect(targeta.querySelector('a.sp-card-author-link').getAttribute('href')).toBe('/projecte');
+    /* Derogat per l'ordre del Mestre del 261004 (prompt 261004_0515): abans '/xat?amb=socdepoble' (W4-09).
+       Onada 8 (261009) · Ja no /projecte: el perfil públic de Sóc de Poble. */
+    expect(targeta.querySelector('a.sp-card-author-link').getAttribute('href')).toBe('/empresa/socdepoble');
     expect(within(targeta).getByRole('heading', { level: 3 }).textContent).toBe(PAGE_COPY[clau].title);
     expect(targeta.querySelector('p.sp-card-text').textContent).toBe(PAGE_COPY[clau].lead);
     expect(targeta.querySelector('.sp-card-body').lastElementChild.className).toBe('sp-card-portes');
     expect(targeta.querySelector('.sp-card-link-overlay')).toBeNull();
   }
   expect(mur.querySelector('img.sp-card-media').getAttribute('alt')).toBe('');
+  /* Onada 8 (261009; revisió R3 derogada) · Entre la boina i les portes, els drets. */
   expect(within(mur).getAllByRole('link').map((enllac) => enllac.getAttribute('href'))).toEqual([
-    '/projecte', '/notes', '/page/publicar_mur'
+    '/empresa/socdepoble', RUTA_DRETS_AUTOR, '/notes', '/page/publicar_mur'
   ]);
   expect(within(mapa).getByRole('button', { name: 'Publicar al Mapa (en obres)' }).getAttribute('aria-disabled')).toBe('true');
   /* Ordre del Mestre (261007) · L'emoji XL al quadrat, en lloc de la icona
@@ -60,12 +69,17 @@ test('dues targetes de doble acció estàndard: boina de socdepoble, contingut d
   expect(mapa.querySelector('.sp-card-calendar-badge svg')).toBeNull();
   expect(mapa.querySelector('.sp-card-calendar-badge').getAttribute('aria-label')).toBe('Publicar al Mapa');
   /* P6 (directriu 2325) · Cap etiqueta («en obres» ho diu la porta) i el peu
-     blau de sempre, sense Connectar, al final de cada mostra. */
+     blau de sempre al final de cada mostra.
+     Derogat per l'ordre del Mestre del 261009 (revisió R3): abans, el peu de
+     tres accions, sense Connectar, i cap drets. Ara, el de quatre i els drets,
+     com les targetes del Panell. */
   for (const targeta of targetes) {
     expect(targeta.querySelector('.sp-card-labels')).toBeNull();
     expect(targeta.lastElementChild.className).toBe('sp-card-footer');
     expect([...targeta.querySelectorAll('.sp-card-footer button')].map((boto) => boto.getAttribute('aria-label').split(' ')[0]))
-      .toEqual(['Traduir', 'Comentar', 'Compartir']);
+      .toEqual(['Traduir', 'Comentar', 'Compartir', 'Connectar']);
+    const drets = targeta.querySelector('.sp-card-body > .sp-card-copyright > a.sp-card-copyright__enllac');
+    expect([drets.textContent, drets.getAttribute('href')]).toEqual([COPYRIGHT_SDP, RUTA_DRETS_AUTOR]);
   }
   /* Les mostres d'abans: les mateixes, sense portes, i cap rastre de la variant compacta. */
   expect(arrel.querySelectorAll('.sdp-especimen__targetes article.sp-card')).toHaveLength(3);
@@ -115,8 +129,9 @@ test('les portes de la mostra naveguen amb el router; PortesTargeta sola pinta l
   cleanup();
   pinta();
   fireEvent.click(screen.getByRole('group', { name: 'Targetes de doble acció de mostra' }).querySelector('a.sp-card-author-link'));
-  /* Derogat per l'ordre del Mestre del 261004 (prompt 261004_0515): abans '/xat?amb=socdepoble'. */
-  expect(ubicacio()).toBe('/projecte');
+  /* Derogat per l'ordre del Mestre del 261004 (prompt 261004_0515): abans '/xat?amb=socdepoble'.
+     Onada 8 (261009) · Ja no /projecte: el perfil públic de Sóc de Poble. */
+  expect(ubicacio()).toBe('/empresa/socdepoble');
   cleanup();
   const arrel = pinta();
   const soles = [...arrel.querySelectorAll('.sp-card-portes')].find((portes) => !portes.closest('article'));

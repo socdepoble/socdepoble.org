@@ -19,9 +19,20 @@ describe('textDeFalladaDirecte', () => {
     expect(textDeFalladaDirecte(error, createTranslator('es'))).not.toBe(RESERVA_CA);
   });
 
+  /* Onada 8 (261009, revisió) · SDP-XAT-004 ja té clau (noDelPoble): l'exemple
+     d'un altre error passa a ser SDP-XAT-006. */
   it('un altre error conserva el seu missatge', () => {
     const t = createTranslator('ca');
-    expect(textDeFalladaDirecte({ code: 'SDP-XAT-004', message: 'SDP-XAT-004: no.' }, t)).toBe('SDP-XAT-004: no.');
+    expect(textDeFalladaDirecte({ code: 'SDP-XAT-006', message: 'SDP-XAT-006: no.' }, t)).toBe('SDP-XAT-006: no.');
+  });
+
+  it('Onada 8 · SDP-XAT-004 ix traduït a cada llengua i sense el codi', () => {
+    const error = { code: 'SDP-XAT-004', message: createTranslator('ca')('section.xat.error.noDelPoble') };
+    for (const { code } of SUPPORTED_LANGUAGES) {
+      const t = createTranslator(code);
+      expect([code, textDeFalladaDirecte(error, t)]).toEqual([code, t('section.xat.error.noDelPoble')]);
+      expect(textDeFalladaDirecte(error, t)).not.toMatch(/SDP-XAT/);
+    }
   });
 
   it('sense missatge, el text genèric d’obrir la conversa', () => {

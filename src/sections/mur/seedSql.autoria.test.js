@@ -13,7 +13,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, test } from 'vitest';
 import { APP_CONTENT_ROWS } from '../../data/appSeed.js';
-import { autorDe, RUTA_PROJECTE, rutaDAutoria } from '../../config/navigation.js';
+import { autorDe, RUTA_PERFIL_PROJECTE, rutaDAutoria } from '../../config/navigation.js';
 
 const SQL = readFileSync(path.join(process.cwd(), 'supabase/seed.sql'), 'utf8');
 
@@ -54,10 +54,11 @@ describe('el seed.sql signa com les llavors', () => {
     expect(divergencies).toEqual([]);
   });
 
-  test('l’Aplec pel Territori i la samarreta, sembrats, porten la boina a /projecte (per identificador, mai pel nom)', () => {
+  /* Onada 8 (261009) · La boina del pilot porta al seu perfil, ja no a /projecte. */
+  test('l’Aplec pel Territori i la samarreta, sembrats, porten la boina al perfil de Sóc de Poble (per identificador, mai pel nom)', () => {
     const aplec = sql.get('events').find((item) => item.id === 'aplec-2023');
     const samarreta = sql.get('marketItems').find((item) => item.id === 'samarreta-socdepoble');
-    expect(rutaDAutoria(autorDe(aplec))).toBe(RUTA_PROJECTE);
-    expect(rutaDAutoria(autorDe(samarreta))).toBe(RUTA_PROJECTE);
+    expect(rutaDAutoria(autorDe(aplec))).toBe(RUTA_PERFIL_PROJECTE);
+    expect(rutaDAutoria(autorDe(samarreta))).toBe(RUTA_PERFIL_PROJECTE);
   });
 });

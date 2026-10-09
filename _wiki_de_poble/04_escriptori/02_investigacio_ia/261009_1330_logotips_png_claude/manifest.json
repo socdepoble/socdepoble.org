@@ -1,0 +1,43 @@
+{
+  "schema": "sdp.logotips-png.v1",
+  "$comment": "Onada 8 (261009). Tres PNG rasteritzats amb el canvas del navegador integrat (Chromium, OffscreenCanvas, imageSmoothingQuality high) des dels SVG que el servidor de desenvolupament servix a /assets/system/ui/. Els bytes viatgen com a base64 en trossos de 20.000 caracters perque l'agent no pot escriure binaris. Hashes calculats al navegador: sha256 del PNG, sha256 del base64 sencer i els 16 primers hex del sha256 de cada tros.",
+  "midaDelTros": 20000,
+  "fitxers": [
+    {
+      "clau": "quadrat",
+      "font": "public/assets/system/ui/logo-socdepoble-cuadrat-verd.svg",
+      "desti": "public/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png",
+      "amplada": 256,
+      "alcada": 256,
+      "mida": 20182,
+      "sha256": "57ed7f7f13ef6bd835cec445908985c1e603cab9fcf3fa4eaa4b2f7a4ef1b209",
+      "llargadaB64": 26912,
+      "sha256B64": "410779d50757c48efe02206d3d6876da00c10435e4df72c9f439f3f9136f83bd",
+      "trossos": ["9035d90db61bff74", "118fe5325b34010d"]
+    },
+    {
+      "clau": "blanc",
+      "font": "public/assets/system/ui/logo-socdepoble-rect-blanc.svg",
+      "desti": "public/assets/system/ui/logo-socdepoble-rect-blanc-985x256.png",
+      "amplada": 985,
+      "alcada": 256,
+      "mida": 39122,
+      "sha256": "ab5457c8eede94a30f02535acddf6778717fcc9929a1ced2ae1d763a9c9d2820",
+      "llargadaB64": 52164,
+      "sha256B64": "1c0b8d01b2810c51d6a35813f25272d60d31641e5ec24cac79ed733a318f0ef7",
+      "trossos": ["4f36259f1357fe49", "0e919c63dbd6b126", "1b7e0c71e43c1de9"]
+    },
+    {
+      "clau": "negre",
+      "font": "public/assets/system/ui/logo-socdepoble-rect-negre.svg",
+      "desti": "public/assets/system/ui/logo-socdepoble-rect-negre-985x256.png",
+      "amplada": 985,
+      "alcada": 256,
+      "mida": 35043,
+      "sha256": "6382b64ed7c135a4ac4af23810b6e2c9ed10514b7c02a924ef13f7e8cfcb49d8",
+      "llargadaB64": 46724,
+      "sha256B64": "f51833bcd734228e915a54f124b34f51efa00d0a8573e7c4850a5819bb4a331b",
+      "trossos": ["61eb4b35bc0aaa04", "c91237d3c498d172", "2df21485b0d6f915"]
+    }
+  ]
+}

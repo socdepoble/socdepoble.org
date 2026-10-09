@@ -17,7 +17,7 @@ const ARTICLES = [
   { id: 'gasosa', nom: 'Gasosa', categoriaId: 'begudes', secundari: 'Esgotat', estat: 'desactivat' },
   { id: 'llet', nom: 'Llet', categoriaId: 'lactics', secundari: 'Sense lactosa', valor: '2 l' },
   { id: 'formatge', nom: 'Formatge fresc', categoriaId: 'lactics', insignia: 'NOU' },
-  { id: 'logo', nom: 'Sóc de Poble', categoriaId: 'lactics', imatge: '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg', secundari: 'Amb foto 1:1' }
+  { id: 'logo', nom: 'Sóc de Poble', categoriaId: 'lactics', imatge: '/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png', secundari: 'Amb foto 1:1' }
 ];
 const VISTES = [
   { valor: 'graella', text: 'Graella', icona: <LayoutGrid size={20} aria-hidden="true" focusable="false" /> },

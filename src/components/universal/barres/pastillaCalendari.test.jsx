@@ -22,6 +22,7 @@ import {
   mesDeLaPastilla, rutaCalendariDelMes
 } from '../editorial.js';
 import { UniversalCard } from '../../PedraSeca/organismes/UniversalCard.jsx';
+import { DEFAULT_AUTHOR } from '../UniversalUtils.js';
 import { BarraTaronja } from './BarraTaronja.jsx';
 import { DinsDelCalendari } from './pastillaCalendari.js';
 import { UniversalPage } from '../UniversalPage.jsx';
@@ -326,7 +327,8 @@ describe('Espècimens del catàleg · la pastilla amb hora i clicable', () => {
        la targeta de sistema sense boina, amb la data a l'última línia del cos. */
     const consola = [...container.querySelectorAll('article.sp-card')].find((a) => a.textContent.includes('Calendari de processos'));
     expect(consola.querySelector('.sp-card-header time.btn-date-time').getAttribute('datetime')).toBe('2026-09-26T01:42:00');
-    expect(consola.querySelector('.sp-card-header a.sp-card-author-link').getAttribute('href')).toBe('/projecte');
+    /* Onada 8 (261009) · La boina de Sóc de Poble porta al seu perfil. */
+    expect(consola.querySelector('.sp-card-header a.sp-card-author-link').getAttribute('href')).toBe(DEFAULT_AUTHOR.href);
     expect(consola.querySelector('.sp-card-header button.btn-date-time, .sdp-consola__data')).toBeNull();
     // Cap targeta de lectura sense nom de destí: totes les que tenen clic diuen on porten.
     const ambClic = [...container.querySelectorAll('.sp-card-header button.btn-date-time')];

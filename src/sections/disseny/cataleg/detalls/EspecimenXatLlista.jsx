@@ -46,7 +46,7 @@ import { composaInforme, enllacDeCorreu } from '../../../xat/informeDError.js';
 /* Traductor mínim: les alternatives ja són el text en valencià. */
 const t = (clau, alternativa) => alternativa;
 const LOCALE = 'ca-ES';
-const LOGO = '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg';
+const LOGO = '/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png';
 /* El poble que declararia l'amfitrió (window.SocDePobleConfig, pobleDeConfig). */
 const POBLE_DE_MOSTRA = { id: 'la-torre-de-les-macanes', nom: 'Gent de la Torre' };
 

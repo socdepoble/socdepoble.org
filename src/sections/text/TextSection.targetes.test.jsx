@@ -32,6 +32,7 @@ import { PAGE_COPY } from './pageContent.js';
 import { MARCA_GRUP } from '../../components/universal/richText/extensions/targetes/formaDelGrup.js';
 import { sanitizeHtml } from '../../utils/sanitize';
 import { resolRecursosDeHtml } from '../../config/assetResolver.js';
+import { DEFAULT_AUTHOR } from '../../components/universal/UniversalUtils.js';
 
 afterEach(() => {
   cleanup();
@@ -67,8 +68,11 @@ describe('«Legal i privacitat»: la targeta de «Drets d’autor» incrustada a
     expect(carta.querySelector('.sp-card-subtitle').textContent).toBe(PAGE_COPY['drets-autor'].subtitle);
     expect(carta.querySelector('.sp-card-text').textContent).toBe(PAGE_COPY['drets-autor'].lead);
     expect(carta.querySelector('a.sp-card-link-overlay').getAttribute('to')).toBe('/page/drets-autor');
+    /* Onada 8 (261009) · L'HTML desat (legalContent.js) porta
+       data-autor-ruta="/projecte": es llig com el pilot i la boina porta al
+       perfil de Sóc de Poble, mai a /projecte. */
     const boina = carta.querySelector('.sp-card-header a.sp-card-author-link');
-    expect(boina.getAttribute('to')).toBe('/projecte');
+    expect(boina.getAttribute('to')).toBe(DEFAULT_AUTHOR.href);
     expect(boina.textContent).toContain('Sóc de Poble');
   });
 

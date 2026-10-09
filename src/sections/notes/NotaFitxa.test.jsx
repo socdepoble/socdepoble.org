@@ -4,10 +4,12 @@ const mocks=vi.hoisted(()=>({navigate:vi.fn(),identitat:{actorId:null},session:{
 vi.mock('../../app/contexts/IdentitatContext.jsx',()=>({useIdentitat:()=>mocks.identitat}));
 vi.mock('../../app/contexts/CoreContentContext.jsx',()=>({useCoreContent:()=>({agents:[]})}));
 vi.mock('../../app/contexts/SessionContext.jsx',()=>({useSession:()=>mocks.session}));
-vi.mock('../../app/contexts/RouterContext',()=>({useNavigate:()=>mocks.navigate}));
+/* Onada 8 (261009, revisió) · La boina de la targeta viva és un Link quan se sap qui signa. */
+vi.mock('../../app/contexts/RouterContext',()=>({useNavigate:()=>mocks.navigate,Link:({to,children,...rest})=><a href={to} {...rest}>{children}</a>}));
 vi.mock('../../components/universal/NotificationContext.jsx',()=>({useToast:()=>({showToast:vi.fn()})}));
 import {NotaFitxa} from './NotaFitxa.jsx';
-import {autoriaDeNota} from './autoriaNota.js';
+import {ID_NOTA_BENVINGUDA,autoriaDeNota,signaturaDeNota} from './autoriaNota.js';
+import {RUTA_PERFIL_PROJECTE} from '../../config/navigation.js';
 import {AVISOS_TARGETA_VIVA} from '../../components/universal/TargetaViva.jsx';
 import {CLAU_APAGADA,ESDEVENIMENT_DOM} from '../../data/telemetria.js';
 /* `window.umami` d'amfitrió: el Connectar compta sense backend i cap prova toca la xarxa. */
@@ -112,6 +114,26 @@ test('D2 · amb una entitat activa, la targeta signa com la barra taronja de l�
   expect(container.querySelector('img.sp-card-avatar').getAttribute('src')).toBe('https://exemple.org/forn.png');
   expect(container.querySelector('.sp-card-author-location')).toBeNull();
   expect(container.textContent).not.toContain('Pepa');
+});
+
+/* Onada 8 (261009, revisió) · La boina de la targeta viva porta on la barra
+   taronja de l'editor (signaturaDeNota): l'entitat activa, a la seua fitxa;
+   la benvinguda, al perfil de Sóc de Poble; el Foraster, cap enllaç. */
+test('Onada 8 · la boina de la targeta viva porta a la pàgina de qui signa, la mateixa de la barra taronja', () => {
+  mocks.session = { currentUser: { id: 'U', user_metadata: { name: 'Pepa' } } };
+  mocks.identitat = { actorId: 'O', actor: { tipus: 'entitat', id: 'O', nom: 'Forn & Cia' } };
+  const { container, unmount } = render(<NotaFitxa active item={PROVA} onSelect={vi.fn()} />);
+  const ruta = signaturaDeNota({ notaId: 'n7', actor: mocks.identitat.actor, actorId: 'O', agents: [], currentUser: mocks.session.currentUser }).ruta;
+  expect(ruta).toBe('/empresa/O');
+  expect(container.querySelector('.sp-card-header a.sp-card-author-link').getAttribute('href')).toBe(ruta);
+  unmount();
+  const benvinguda = render(<NotaFitxa active item={nota({ id: ID_NOTA_BENVINGUDA, title: 'Benvinguda' })} onSelect={vi.fn()} />);
+  expect(benvinguda.container.querySelector('.sp-card-header a.sp-card-author-link').getAttribute('href')).toBe(RUTA_PERFIL_PROJECTE);
+  benvinguda.unmount();
+  mocks.session = { currentUser: null };
+  mocks.identitat = { actorId: null };
+  const foraster = render(<NotaFitxa active item={PROVA} onSelect={vi.fn()} />);
+  expect(foraster.container.querySelector('.sp-card-header a.sp-card-author-link')).toBeNull();
 });
 
 test('D3 · la data de la targeta és la de publicació triada (T40), no la d’última edició', () => {

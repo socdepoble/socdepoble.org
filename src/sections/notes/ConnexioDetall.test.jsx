@@ -39,6 +39,8 @@ import { PublicacioDetall } from './PublicacioDetall.jsx';
 import { publicacioComANota } from './masDeLUsuari.js';
 import { ERROR_PUBLICAR, ErrorPublicacio } from './visibilitatNota.js';
 import { TEXTOS_COMENTAR } from '../../components/PedraSeca/organismes/textosComentar.js';
+import { DEFAULT_AUTHOR } from '../../components/universal/UniversalUtils.js';
+import { RUTA_PERFIL_PROJECTE } from '../../config/navigation.js';
 
 const SAMARRETA = { id: 'samarreta-socdepoble', title: 'Samarreta', image_url: '/assets/x.png', author_name: 'Sóc de Poble' };
 const ORIGEN_MERCAT = {
@@ -117,18 +119,19 @@ test('T63.2 · trobat: «En públic» obri el xat comú de l’original (el prod
   window.history.replaceState(null, '', '/');
 });
 
-/* Una persona no té xat públic: «En públic» es queda desactivada, i «En
-   privat» porta hui al xat amb Sóc de Poble, no al directe amb la persona
-   (abans, /xat?amb=u1). PREGUNTA OBERTA al Mestre: per a una persona, «En
-   privat» ha de ser el directe amb ella? */
-test('T63.2 · caiguda d’un perfil: sense xat públic, «En privat» a Sóc de Poble; una pàgina de text, «En públic» al xat de la seua ruta', () => {
+/* Una persona no té xat públic: «En públic» es queda desactivada.
+   Onada 8 (261009; requeriments, punt 3) · Resposta a la pregunta oberta
+   («per a una persona, “En privat” ha de ser el directe amb ella?»): sí.
+   «En privat» obri el xat amb la persona (/xat?amb=u1), encara que no la
+   conegues; abans, el xat amb Sóc de Poble. */
+test('T63.2 · caiguda d’un perfil: sense xat públic, «En privat» amb la persona; una pàgina de text, «En públic» al xat de la seua ruta', () => {
   const { container, unmount } = render(<ConnexioDetall nota={nota(ORIGEN_PERFIL)} />);
   const publica = via(container, PUBLIC);
   expect(publica.getAttribute('aria-disabled')).toBe('true');
   fireEvent.click(publica);
   expect(mocks.navigate).not.toHaveBeenCalled();
   fireEvent.click(via(container, PRIVAT));
-  expect(mocks.navigate).toHaveBeenLastCalledWith('/xat?amb=socdepoble');
+  expect(mocks.navigate).toHaveBeenLastCalledWith('/xat?amb=u1');
   unmount();
   const anima = render(<ConnexioDetall nota={nota(ORIGEN_ANIMA)} />);
   fireEvent.click(via(anima.container, PUBLIC));
@@ -249,6 +252,30 @@ test('T71 · a la caiguda ningú s’inventa l’autor: un perfil es signa ell m
   expect(screen.getByText('L’original no es pot mostrar ací')).toBeTruthy();
   expect(autorDeLaBarra(caiguda)).toBe('');
   expect(caiguda.querySelector('.bar-orange').textContent).not.toMatch(/Sóc de Poble|Foraster/);
+});
+
+/* Onada 8 (261009, revisió adversarial) · Una connexió al perfil de Sóc de
+   Poble que no es resol: la caiguda la signa l'entitat (el perfil es signa ell
+   mateix) i la boina porta al seu perfil (RUTA_PERFIL_PROJECTE). Des de
+   l'Onada 8 eixa és la ruta del projecte (esRutaDelProjecte de PageFrame) i la
+   pàgina porta el logotip de Sóc de Poble dalt de l'H1, com tota pàgina que
+   signa l'entitat (norma del Mestre, 261004). Abans la ruta no casava amb
+   /projecte i la caiguda en quedava sense: és un canvi visible fora de
+   l'ordre, PENDENT de confirmar per MarIA. Si no s'accepta, esta prova és la
+   que canvia. Una persona continua sense logotip. */
+test('Onada 8 · la caiguda del perfil de Sóc de Poble signa l’entitat, porta al seu perfil i en pinta el logotip; la d’una persona, cap', () => {
+  const ORIGEN_PILOT = {
+    tipus: 'connexio', sectionId: 'perfil', itemId: 'socdepoble', titol: 'Sóc de Poble', autorTipus: 'entitat', ruta: RUTA_PERFIL_PROJECTE, objecte: 'entitat'
+  };
+  const logos = (container) => [...container.querySelectorAll('header.page-title img.page-title-logo')].map((img) => img.getAttribute('alt'));
+  const { container, unmount } = render(<ConnexioDetall nota={nota(ORIGEN_PILOT)} />);
+  expect(screen.getByText('L’original no es pot mostrar ací')).toBeTruthy();
+  expect(autorDeLaBarra(container)).toBe('Sóc de Poble');
+  expect(container.querySelector('.bar-orange a.sp-card-author-link').getAttribute('href')).toBe(RUTA_PERFIL_PROJECTE);
+  expect(logos(container)).toEqual([DEFAULT_AUTHOR.logo.alt, DEFAULT_AUTHOR.logo.alt]);
+  unmount();
+  const persona = render(<ConnexioDetall nota={nota(ORIGEN_PERFIL)} />);
+  expect(logos(persona.container)).toEqual([]);
 });
 
 test('mentre el Mur carrega diu que l’original carrega; sense ruta, cap «Obri l’original» i Compartir ho explica', () => {

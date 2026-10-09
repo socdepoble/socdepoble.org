@@ -23,9 +23,17 @@
  *    que ha dit el port (M4-01: torna a cridar el port passada l'espera de
  *    navigation.js; abans, la mateixa resposta). `darrera` diu si la
  *    demanda continua sent l'última de l'app quan arriba la resposta (C6).
+ *  · esDeQuiMira (Onada 8, 261009; opcional) · fn(id) → cert si l'autor és
+ *    qui mira o una entitat que representa: «En privat» sobre una publicació
+ *    pròpia va a este xat, no al de l'autor (useAccions). Només hi és quan el
+ *    proveïdor coneix la identitat de l'app.
+ *  · directeAmb (Onada 8, 261009; opcional) · fn({ tipus, id }) → l'id amb què
+ *    el xat obri el directe amb l'autor, o null si no el pot obrir: aleshores
+ *    «En privat» va a este xat. Només en llavor, on el xat local coneix un
+ *    padró tancat; en remot no hi és i decidix el servidor.
  * Sense proveïdor (una peça muntada sola, un espècimen del catàleg, una
  * prova) es comporta com en llavor: el xat de l'entitat pilot del padró,
- * /xat?amb=socdepoble, sense cap crida al port.
+ * /xat?amb=socdepoble, sense cap crida al port, i sense esDeQuiMira.
  *
  * Qui n'ha de saber l'estat sense esperar cap clic (l'Alerta del Panell, que
  * diu si el xat no està disponible) fa servir useXatSocDePobleResolt: la

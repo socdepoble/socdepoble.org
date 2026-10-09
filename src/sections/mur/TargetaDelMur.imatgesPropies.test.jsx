@@ -38,7 +38,8 @@ const GOOGLE = 'https://lh3.googleusercontent.com/a/pepa.png';
 const RASTREIG = 'https://rastreig.example/p.gif?campanya=1';
 const STORAGE = 'https://projecte-sdp.supabase.co';
 const PAQUET = 'https://wp.example/wp-content/plugins/soc-de-poble/dist';
-const LOGO_SDP = '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg';
+/* Onada 8 (261009) · El logotip de reserva és l'avatar de Sóc de Poble, el PNG (abans, l'SVG). */
+const LOGO_SDP = '/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png';
 
 const pinta = (item) => render(<TargetaDelMur item={item} />).container.querySelector('article');
 const portada = (article) => article.querySelector('img.sp-card-media');

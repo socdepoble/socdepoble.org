@@ -17,6 +17,8 @@ import { NOM_BASE, STORE, creaMagatzemNevera } from './magatzem.js';
 import manifestNevera from './manifest.js';
 import { ARTICLES_BASE, ARTICLES_PRODUCTES, afig, afigPerNom, estatInicial } from './nucli/index.js';
 import { mesVei, nomDelMes, titolDeTemporada } from './vistes/perTemporada.js';
+/* Onada 8 (261009) · La boina de Sóc de Poble porta al seu perfil, ja no a /projecte. */
+import { RUTA_PERFIL_PROJECTE } from '../../config/navigation.js';
 
 const ENTORN = Object.freeze({ ...ENTORN_OBERT, produccio: false });
 const tancats = [];
@@ -296,15 +298,16 @@ describe('De temporada a… (el detall)', () => {
 });
 
 /* REGLA D'OR 1 (ordre del Mestre, 261004) · Tota targeta porta la boina taronja amb l'autor real:
-   els articles del catàleg i els suggeriments del calendari, l'entitat Sóc de Poble (a la pàgina
-   del projecte); un article propi, «Tu», sense enllaç (la plataforma no dona a les apps la identitat
-   de la persona, i no se n'inventa cap). */
+   els articles del catàleg i els suggeriments del calendari, l'entitat Sóc de Poble (al seu perfil;
+   Onada 8, 261009: abans, a la pàgina del projecte); un article propi, «Tu», sense enllaç (la
+   plataforma no dona a les apps la identitat de la persona, i no se n'inventa cap; l'enllaç a la
+   pàgina de qui mira és pendent de MarIA, vistes/autoria.js). */
 describe('la boina de totes les targetes (REGLA D’OR 1)', () => {
   const boinaDe = (boto) => boto.closest('article.sp-card').querySelector('header.sp-card-header');
   const delProjecte = (boto) => {
     const boina = boinaDe(boto);
     expect(boina.querySelector('.sp-card-author-name').textContent).toBe('Sóc de Poble');
-    expect(within(boina).getByRole('link', { name: /^Sóc de Poble/ }).getAttribute('href')).toBe('/projecte');
+    expect(within(boina).getByRole('link', { name: /^Sóc de Poble/ }).getAttribute('href')).toBe(RUTA_PERFIL_PROJECTE);
   };
   const propia = (boto) => {
     const boina = boinaDe(boto);

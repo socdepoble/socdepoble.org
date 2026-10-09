@@ -78,14 +78,21 @@ test('T50 · el document en curs es publica per a la llista, amb l’autoria de 
   const vista = render(<PerfilEditor identitat={jo} />);
   const viu = llegixDocumentViu('jo');
   expect(viu.document).toBe(m.adapter.document);
-  expect(viu.autor).toEqual({ nom: 'Pep', avatar: 'a.webp', poble: 'La Torre' });
-  expect(viu.autor).toEqual({ nom: m.adapter.barAuthorName, avatar: m.adapter.barAuthorAvatar, poble: m.adapter.barAuthorLocation });
+  /* Onada 8 (261009, revisió) · També la ruta de la barra (la boina de la
+     targeta viva porta on la barra). Ací la persona no porta dades.id: cap. */
+  expect(viu.autor).toEqual({ nom: 'Pep', avatar: 'a.webp', poble: 'La Torre', ruta: null });
+  expect(viu.autor).toEqual({ nom: m.adapter.barAuthorName, avatar: m.adapter.barAuthorAvatar, poble: m.adapter.barAuthorLocation, ruta: m.adapter.barAuthorHref });
   expect(viu.etiquetes).toBe(m.adapter.labels);
   // El que s'escriu arriba a l'entrada, sense esperar el servidor.
   act(() => m.adapter.updateLocal('jo', 'title', 'Pep &amp; Maria'));
   expect(llegixDocumentViu('jo').document.title).toBe('Pep &amp; Maria');
   vista.unmount();
   expect(llegixDocumentViu('jo')).toBeNull();
+  /* Una organització: la seua fitxa pública, la mateixa de la barra. */
+  const deLOrg = render(<PerfilEditor identitat={org('owner')} />);
+  expect(llegixDocumentViu('O').autor.ruta).toBe('/empresa/O');
+  expect(llegixDocumentViu('O').autor.ruta).toBe(m.adapter.barAuthorHref);
+  deLOrg.unmount();
 });
 
 test('el títol es desa com a text pla a full_name', async () => {
@@ -407,14 +414,16 @@ test('261007 · una organització porta a la seua fitxa (també en lectura); un 
   expect(m.adapter.barAuthorHref).toBe('/perfil/A');
 });
 
-test('261007 · rutaDeFitxaPublica: persona per dades.id, grup a /grup, entitat pilot a /projecte, sense id null', async () => {
+/* Onada 8 (261009) · L'entitat pilot porta al seu perfil (RUTA_PERFIL_PROJECTE), ja no a /projecte. */
+test('261007 · rutaDeFitxaPublica: persona per dades.id, grup a /grup, entitat pilot al seu perfil, sense id null', async () => {
   const { rutaDeFitxaPublica } = await import('./PerfilEditor.jsx');
   const { ENTITAT_PILOT_ID } = await import('../../data/identitatsSeed.js');
+  const { RUTA_PERFIL_PROJECTE } = await import('../../config/navigation.js');
   expect(rutaDeFitxaPublica({ ...jo, dades: { id: 'U' } })).toBe('/gent/U');
   expect(rutaDeFitxaPublica(jo)).toBeNull();
   expect(rutaDeFitxaPublica({ id: 'G', mena: 'grup', nom: 'Colla' })).toBe('/grup/G');
   expect(rutaDeFitxaPublica({ id: 'O', mena: 'empresa', nom: 'Forn' })).toBe('/empresa/O');
-  expect(rutaDeFitxaPublica({ id: ENTITAT_PILOT_ID, mena: 'empresa', nom: 'Sóc de Poble' })).toBe('/projecte');
+  expect(rutaDeFitxaPublica({ id: ENTITAT_PILOT_ID, mena: 'empresa', nom: 'Sóc de Poble' })).toBe(RUTA_PERFIL_PROJECTE);
   expect(rutaDeFitxaPublica({ id: 'A', mena: 'agent', nom: 'IAIA' })).toBe('/perfil/A');
   expect(rutaDeFitxaPublica(null)).toBeNull();
 });
@@ -423,11 +432,13 @@ test('261007 · rutaDeFitxaPublica: persona per dades.id, grup a /grup, entitat 
    és un UUID que rutaDAutoria no reconeix fins que algú el registra: la fitxa
    la reconeix pel slug de la seua fila (list_my_organizations), mai pel nom.
    Un grup, una persona o un agent amb eixe slug no són l'entitat pilot. */
-test('Auditoria 261007 · rutaDeFitxaPublica: una entitat amb un UUID i el slug declarat porta a /projecte; la resta, com sempre', async () => {
+test('Auditoria 261007 · rutaDeFitxaPublica: una entitat amb un UUID i el slug declarat porta al perfil del pilot; la resta, com sempre', async () => {
   const { rutaDeFitxaPublica } = await import('./PerfilEditor.jsx');
   const { ENTITAT_PILOT_SLUG } = await import('../../data/identitatsSeed.js');
+  const { RUTA_PERFIL_PROJECTE } = await import('../../config/navigation.js');
   const uuid = '5b0c1d2e-3f40-4a51-8b62-7c83d94ea5f6';
-  expect(rutaDeFitxaPublica({ id: uuid, mena: 'empresa', nom: 'Sóc de Poble', dades: { slug: ENTITAT_PILOT_SLUG } })).toBe('/projecte');
+  /* Onada 8 (261009) · Al perfil pel slug (RUTA_PERFIL_PROJECTE), ja no a /projecte. */
+  expect(rutaDeFitxaPublica({ id: uuid, mena: 'empresa', nom: 'Sóc de Poble', dades: { slug: ENTITAT_PILOT_SLUG } })).toBe(RUTA_PERFIL_PROJECTE);
   expect(rutaDeFitxaPublica({ id: uuid, mena: 'empresa', nom: 'Sóc de Poble', dades: { slug: 'forn' } })).toBe(`/empresa/${uuid}`);
   expect(rutaDeFitxaPublica({ id: uuid, mena: 'empresa', nom: 'Sóc de Poble' })).toBe(`/empresa/${uuid}`);
   expect(rutaDeFitxaPublica({ id: 'G', mena: 'grup', nom: 'Colla', dades: { slug: ENTITAT_PILOT_SLUG } })).toBe('/grup/G');
@@ -643,10 +654,12 @@ test('Onada 4 · una organització que no és la pilot: la ranura «Logotip», q
   expect(m.adapter.document.logoImage).toBe('sdp-media://mitjans/t/o/organitzacions/logo.webp');
 });
 
-test('ordre E · l’entitat pilot (/projecte): cap ranura ni avatar; PageFrame hi pinta el logotip de Sóc de Poble', async () => {
+/* Onada 8 (261009) · La fitxa del pilot és el seu perfil (RUTA_PERFIL_PROJECTE), ja no /projecte. */
+test('ordre E · l’entitat pilot (el seu perfil): cap ranura ni avatar; PageFrame hi pinta el logotip de Sóc de Poble', async () => {
   const { ENTITAT_PILOT_ID } = await import('../../data/identitatsSeed.js');
+  const { RUTA_PERFIL_PROJECTE } = await import('../../config/navigation.js');
   render(<PerfilEditor identitat={{ ...org('owner'), id: ENTITAT_PILOT_ID, nom: 'Sóc de Poble' }} />);
-  expect(m.adapter.barAuthorHref).toBe('/projecte');
+  expect(m.adapter.barAuthorHref).toBe(RUTA_PERFIL_PROJECTE);
   expect(m.adapter.showLogoUpload).toBe(false);
   expect(m.adapter).not.toHaveProperty('avatarAutor');
 });

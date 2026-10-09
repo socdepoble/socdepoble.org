@@ -57,10 +57,32 @@ beforeEach(() => {
   mocks.core = { status: 'ready', pageCopy: {} };
 });
 
-test('en seed, la portada de Disseny pinta el mateix dia i la mateixa hora que la seua targeta del Mur, i porten al mateix lloc del Calendari', () => {
+/* Onada 8 (261009; requeriments 261009_1300, punt 2) · Disseny ja no porta
+   data de prova: en seed, el pageCopy del core diu la data del Mestre (la de
+   PAGE_COPY, 2026-09-10). Perquè la prova continue distingint les dues
+   fonts, el core porta ací una altra data per a Disseny (la de prova
+   d'abans, 2026-09-14T18:25:00+02:00), com un node que en tinguera una de
+   pròpia: la portada i la targeta han de dir la del core. */
+const DATA_DEL_CORE = '2026-09-14T18:25:00+02:00';
+
+test('en seed, la portada de Disseny pinta la data del Mestre, la mateixa que la seua targeta del Mur', () => {
   const pageCopy = Object.fromEntries(
     llavorAmbDatesDeProva(APP_SEED, new Date(2026, 9, 1, 11, 15)).pages.map((pagina) => [pagina.id, { ...pagina }])
   );
+  expect(pageCopy.disseny.date).toBe(PAGE_COPY.disseny.date);
+  mocks.core = { status: 'ready', pageCopy };
+  const pagina = pastillaDeLaPagina(render(<DesignSection />).container);
+  const targeta = render(<TargetaDelMur item={targetesDeSistema(pageCopy).find((item) => item.id === 'disseny')} />)
+    .container.querySelector('.sp-card-header .btn-date-time');
+  expect(textos(pagina)).toEqual(['00:00', '10/09/26']);
+  expect(textos(targeta)).toEqual(textos(pagina));
+});
+
+test('amb un core que diu una altra data, la portada de Disseny pinta el mateix dia i la mateixa hora que la seua targeta del Mur, i porten al mateix lloc del Calendari', () => {
+  const pageCopy = Object.fromEntries(
+    llavorAmbDatesDeProva(APP_SEED, new Date(2026, 9, 1, 11, 15)).pages.map((pagina) => [pagina.id, { ...pagina }])
+  );
+  pageCopy.disseny = { ...pageCopy.disseny, date: DATA_DEL_CORE };
   mocks.core = { status: 'ready', pageCopy };
 
   const pagina = pastillaDeLaPagina(render(<DesignSection />).container);

@@ -43,8 +43,9 @@
  * obres la porta Publicar inerta (aria-disabled, «(en obres)» al nom i el
  * toast). El peu porta a la pàgina de la targeta, la de «Saber-ne més»:
  * Comentar, al seu objecte; Compartir, la seua adreça; Traduir, el de totes
- * les targetes. La directriu 2325 diu el peu sense Connectar; el codi d'ara
- * el pinta (vegeu la Revisió R3, al final d'esta capçalera).
+ * les targetes. La directriu 2325 diu el peu sense Connectar; derogat per
+ * l'ordre del Mestre del 261009 (vegeu la Revisió R3, al final d'esta
+ * capçalera).
  * W4-09 · L'autor porta al xat corporatiu resolt pel port del backend
  * (xatCorporatiu.js); sense resoldre, no és enllaç i el Panell ho diu.
  * T6 (ordre del Mestre, 261004, prompt 261004_0515 §5) · Derogat per l'ordre
@@ -69,7 +70,8 @@
  * del W4-08 (261004), quan MarIA hi va afegir «disseny»; la peça C (261007)
  * corregix el compte, que deia onze; onze de nou des de l'ordre del Mestre
  * (261007) · Bàscula descartada per ara, que la lleva de la interfície i la
- * deixa només al Full de ruta) com a
+ * deixa només al Full de ruta; huit des de l'Onada 8 (261009), que en trau
+ * la Consola, el Cervell i Disseny) com a
  * UniversalCards canòniques: boina de Sóc de Poble, il·lustració, títol,
  * subtítol, entradilla, l'enllaç de tota la targeta a la seua pàgina
  * (/plugin/<id>, pel router) i el peu blau de P6 cap a eixa pàgina. El
@@ -82,9 +84,28 @@
  * (DESTINS_CONTROL) es repetix baix. Les eines d'administració van a la seua
  * secció, «Maquinària i Sistema» (IDS_MAQUINARIA). Cada targeta de baix
  * navega a /plugin/<id> (W4-11): «Obrir» el decidix la pàgina del plugin amb
- * useDestiDelPlugin, mai esta graella.
- * Revisió R3 · El Connectar del peu (showConnect) espera la decisió del
- * Mestre: la prova R3 de ControlSection.test.jsx en fa de fusible.
+ * useDestiDelPlugin, mai esta graella. Derogat per a les tres pàgines del
+ * sistema per l'ordre del Mestre del 261009 (decisions D3 i D7 de MarIA):
+ * la graella hi pinta la targeta del Mur, amb el botó «Obrir…» de la seua
+ * pàgina (accioDeLaPagina), que no passa per useDestiDelPlugin. Per a les
+ * eines del registre, W4-11 continua vigent.
+ * Revisió R3 · Derogada per l'ordre del Mestre del 261009 (requeriments
+ * 261009_1300, punt 2: les targetes del Panell «no poden perdre elements» i
+ * «han de ser autèntiques Universal Cards»; decisió D1 de MarIA): totes les
+ * targetes del Panell, dalt i baix, porten Connectar i el copyright. Abans,
+ * showConnect={false} i cap copyright. La prova R3 vigila ara el peu de
+ * quatre accions.
+ *
+ * Onada 8 (261009; requeriments 261009_1300, punt 2; decisions D2, D4, D5 i
+ * D7 de MarIA) · «Consola Termodinàmica», «El Cervell» i «Panell de Disseny»
+ * són pàgines, no plugins: ixen del registre i «Maquinària i Sistema» les
+ * pinta primer (PAGINES_MAQUINARIA de destinsControl.js) amb la MATEIXA
+ * targeta del Mur (TargetaDelMur) i el mateix element (targetesDeSistema):
+ * la data de la seua pàgina (8, 9 i 10 de setembre), les etiquetes o el botó
+ * «Obrir…», el copyright i Connectar. Són l'única excepció a la P6 (cap
+ * etiqueta al Panell), i no naveguen a /plugin/<id>: obrin la seua pàgina
+ * (/page/consola, /page/cervell i /disseny). La preferència de DetallEspai
+ * les amaga igual, per la seua clau.
  *
  * Onada 2 de la Gestoria (ordre del Mestre, 261004; MAPA_EMPRESA_GESTORIA.txt
  * §2.2; decisió A11: només les targetes que ja funcionen) · Dos espais nous,
@@ -100,18 +121,23 @@ import {
   LogOut,
   MessageSquare
 } from 'lucide-react';
-import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate, useSearchParams } from '../../app/contexts/RouterContext';
+import { useCoreContent } from '../../app/contexts/CoreContentContext';
 import { useEixidaSegura } from '../../components/universal/EixidaSegura.jsx';
 import { UniversalPage } from '../../components/universal/UniversalPage';
+import { COPYRIGHT_SDP } from '../../components/universal/editorial.js';
 import { Alerta, UniversalButton, UniversalCard } from '../../components/PedraSeca';
 import { useXatSocDePobleResolt } from '../../components/PedraSeca/hooks/xatSocDePoble.js';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { llegixUtilitatsActives, subscriuUtilitatsActives } from '../profile/utilitatsActives.js';
+import { TargetaDelMur } from '../mur/TargetaDelMur.jsx';
+import { targetesDeSistema } from '../mur/targetesMur.js';
+import { PAGE_COPY } from '../text/pageContent.js';
 import { FitxaSnippet } from './FitxaSnippet.jsx';
 import { CLAU_FITXA, FITXA_SNIPPET, rutaDeLaFitxa } from './destiSnippet.js';
 import { posicioDeLaVista, recolocaLaVista } from './vistaDeLaFitxa.js';
-import { AUTORIA_SOCDEPOBLE, DESTINS_CONTROL, TEXTOS_PORTES, contingutDe, portesDe } from './destinsControl.js';
+import { AUTORIA_SOCDEPOBLE, DESTINS_CONTROL, PAGINES_MAQUINARIA, TEXTOS_PORTES, contingutDe, portesDe } from './destinsControl.js';
 import { AVISOS_XAT_CORPORATIU } from './xatCorporatiu.js';
 import { ESPAIS_PLUGINS, PLUGINS, pluginsDeLEspai, rutaDelPlugin } from '../plugins/registrePlugins.js';
 
@@ -119,8 +145,10 @@ import { ESPAIS_PLUGINS, PLUGINS, pluginsDeLEspai, rutaDelPlugin } from '../plug
    contingut de la seua pàgina i les dues portes. Sense il·lustració, la
    icona va a la insígnia lateral.
    P6 · Amb el peu de sempre cap a la seua pàgina (mainHref, sense overlay
-   perquè té portes) i sense etiquetes. Connectar (showConnect) espera la
-   decisió del Mestre (revisió R3).
+   perquè té portes) i sense etiquetes.
+   Ordre del Mestre (261009; revisió R3 derogada) · Universal Card sencera:
+   Connectar (el de sempre de useAccions, cap a la seua pàgina) i el
+   copyright de les pàgines del sistema.
    T6 (261004) · La boina, la d'AUTORIA_SOCDEPOBLE amb la seua ruta (el
    projecte).
    Ordre del Mestre (261007) · Cap onComment: Comentar és el menú de dues
@@ -149,7 +177,7 @@ function TargetaDeDesti({ desti, t }) {
       dateTime={contingut.dateTime}
       mainHref={desti.saberMes}
       hasFooter={true}
-      showConnect={false}
+      copyright={COPYRIGHT_SDP}
       portes={portesDe(desti, t)}
     />
   );
@@ -160,8 +188,9 @@ function TargetaDeDesti({ desti, t }) {
    Boina de Sóc de Poble sense data (el registre no en porta cap i no se
    n'inventa cap, com la seua pàgina), la il·lustració, títol, subtítol i
    entradilla, cap etiqueta, i el peu blau de P6 cap a la mateixa pàgina que
-   obri la targeta: Traduir, Comentar i Compartir (Connectar, com dalt,
-   espera la decisió del Mestre).
+   obri la targeta: Traduir, Comentar i Compartir.
+   Ordre del Mestre (261009; revisió R3 derogada) · I Connectar i el
+   copyright, com dalt.
    `ruta` · la pàgina de la utilitat; és un Link del router: porta la base de
    l'amfitrió a l'href i navega dins del router en memòria de WordPress.
    `abansDObrir` · el Snippet hi recorda on era el Panell (vistaDeLaFitxa.js).
@@ -179,7 +208,7 @@ function TargetaDUtilitat({ titol, subtitol, entradilla, imatge, imatgeAlt = '',
       mainHref={ruta}
       onMainClick={abansDObrir}
       hasFooter={true}
-      showConnect={false}
+      copyright={COPYRIGHT_SDP}
     />
   );
 }
@@ -232,8 +261,11 @@ const ID_SNIPPET = 'snippet';
 /* W4-08 · Les eines d'administració i de sistema, en l'ordre del registre:
    la secció «Maquinària i Sistema».
    Ordre del Mestre (261007) · Bàscula descartada per ara: ja no és del
-   registre ni d'esta secció. */
-const IDS_MAQUINARIA = Object.freeze(['consola', 'cervell', 'rss', 'tpv', 'disseny']);
+   registre ni d'esta secció.
+   Onada 8 (261009) · La Consola, el Cervell i Disseny ja no són del
+   registre: són pàgines del sistema, i la secció les pinta primer
+   (paginesDeMaquinaria). Del registre hi queden l'RSS i el TPV. */
+const IDS_MAQUINARIA = Object.freeze(['rss', 'tpv']);
 /* W4-08 · Decisió del Mestre: un plugin amb targeta de publicació dalt (Mapa,
    Vehicle Compartit i Animalets) no es repetix a les graelles de baix. */
 const IDS_NOMES_DALT = new Set(DESTINS_CONTROL.map((desti) => desti.id));
@@ -254,6 +286,21 @@ const SNIPPET = Object.freeze({
 /* La preferència ja arriba sanejada (un objecte pla o {}): només compta el false explícit. */
 function utilitatsAmagades(preferencia) {
   return new Set(Object.keys(preferencia).filter((id) => preferencia[id] === false));
+}
+
+/* Onada 8 (261009) · Les pàgines del sistema de «Maquinària i Sistema»,
+   fetes targeta del Mur amb el mateix element que el Mur
+   (targetesDeSistema), en l'ordre de PAGINES_MAQUINARIA. El copy carregat
+   mana i PAGE_COPY fa de reserva clau per clau, com la portada de la Wiki:
+   mentre el core carrega (pageCopy buit), la secció ja les pinta i no hi ha
+   cap salt. Les que la persona ha llevat a DetallEspai no hi són. */
+function paginesDeMaquinaria(pageCopy, amagades) {
+  const copy = Object.fromEntries(PAGINES_MAQUINARIA.map((clau) => [clau, pageCopy?.[clau] || PAGE_COPY[clau]]));
+  const targetes = targetesDeSistema(copy);
+  return PAGINES_MAQUINARIA
+    .filter((clau) => !amagades.has(clau))
+    .map((clau) => targetes.find((targeta) => targeta.id === clau))
+    .filter(Boolean);
 }
 
 export default function ControlSection() {
@@ -305,6 +352,9 @@ function PanellControl({ vistaRef, abansDeLaFitxa }) {
     () => subscriuUtilitatsActives(() => setAmagades(utilitatsAmagades(llegixUtilitatsActives()))),
     []
   );
+  /* Onada 8 (261009) · La Consola, el Cervell i Disseny, amb el copy del core. */
+  const { pageCopy } = useCoreContent();
+  const paginesMaquinaria = useMemo(() => paginesDeMaquinaria(pageCopy, amagades), [pageCopy, amagades]);
 
   /* P5 · El títol de la graella, per a lector: les targetes h3 pengen d'un h2. */
   const idDestins = useId();
@@ -396,6 +446,11 @@ function PanellControl({ vistaRef, abansDeLaFitxa }) {
           </p>
 
           <div className="sdp-card-grid">
+            {/* Onada 8 (261009) · Primer, les tres pàgines del sistema, amb la
+                targeta del Mur; després, les eines del registre. */}
+            {paginesMaquinaria.map((item) => (
+              <TargetaDelMur key={`sistema-${item.id}`} item={item} />
+            ))}
             {PLUGINS_MAQUINARIA.filter(visible(amagades)).map((plugin) => (
               <TargetaDUtilitat
                 key={plugin.id}

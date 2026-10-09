@@ -3,9 +3,11 @@
    entrades de la cerca, props de la targeta i la lectura hidratada. */
 import { describe, expect, test } from 'vitest';
 import {
-  TIPUS_INCRUSTABLES, alineacioValida, attrsDeEntrada, clauDe, esTargetaValida, formaDe, llegeixClau,
+  MARCA_GRUP, MARCA_TARGETA, TIPUS_INCRUSTABLES, alineacioValida, attrsDeEntrada, clauDe, esTargetaValida, formaDe, llegeixClau,
   netejaAtributs, objecteDeTargeta, propsDeTargetaIncrustada, segmentsAmbTargetes, teAutoriaCompleta
 } from './formaDelGrup.js';
+import { DEFAULT_AUTHOR } from '../../../UniversalUtils.js';
+import { RUTA_PERFIL_PROJECTE } from '../../../../../config/navigation.js';
 
 const PUBLICACIO = Object.freeze({
   clau: 'publicacions:42', tipus: 'publicacions', id: '42', titol: 'La festa de la Torre',
@@ -146,12 +148,36 @@ describe('propsDeTargetaIncrustada', () => {
 
   /* Regla d'or 1 del Mestre (261004) · La boina porta sempre l'autor real
      enllaçat a la seua pàgina; el sistema és l'entitat Sóc de Poble i porta
-     al projecte. Un nom sense pàgina coneguda no s'endevina. */
-  test('sense autor a la instantània (un poble, una pàgina), signa Sóc de Poble i la boina porta a /projecte', () => {
+     al projecte. Un nom sense pàgina coneguda no s'endevina.
+     Onada 8 (261009) · La de Sóc de Poble porta al seu perfil
+     (RUTA_PERFIL_PROJECTE), mai a /projecte. */
+  test('sense autor a la instantània (un poble, una pàgina), signa Sóc de Poble i la boina porta al seu perfil', () => {
     const poble = attrsDeEntrada({ tipus: 'pobles', id: '7', titol: 'La Torre de les Maçanes', href: '/pobles/7', poble: 'L’Alacantí' });
     for (const mode of ['lectura', 'edicio']) {
-      expect(propsDeTargetaIncrustada(poble, { mode, avisa: () => {} }), mode).toMatchObject({ author: 'Sóc de Poble', authorHref: '/projecte', location: 'L’Alacantí' });
+      expect(propsDeTargetaIncrustada(poble, { mode, avisa: () => {} }), mode).toMatchObject({ author: 'Sóc de Poble', authorHref: RUTA_PERFIL_PROJECTE, location: 'L’Alacantí' });
     }
+  });
+
+  /* Onada 8 (261009) · Hi ha HTML desat amb data-autor-ruta="/projecte"
+     (legalContent.js en porta una, i les notes d'abans també): es llig com
+     el pilot. Signa Sóc de Poble i la boina porta al seu perfil, amb el nom
+     de la instantània o sense. */
+  test('Onada 8 · una targeta incrustada amb data-autor-ruta="/projecte" signa Sóc de Poble i enllaça al perfil', () => {
+    const html = `<div ${MARCA_GRUP}="" data-alineacio="dreta"><div ${MARCA_TARGETA}="pagina:drets-autor" data-ruta="/page/drets-autor"`
+      + ' data-titol="Drets d’autor" data-autor="Sóc de Poble" data-autor-ruta="/projecte"></div>'
+      + `<div ${MARCA_TARGETA}="pagina:legal" data-ruta="/legal" data-titol="Legal" data-autor-ruta="/projecte"></div></div>`;
+    const [grup] = segmentsAmbTargetes(html);
+    expect(grup.targetes.map((t) => [t.autor, t.autorRuta])).toEqual([['Sóc de Poble', '/projecte'], ['', '/projecte']]);
+    for (const targeta of grup.targetes) {
+      for (const mode of ['lectura', 'edicio']) {
+        const props = propsDeTargetaIncrustada(targeta, { mode, avisa: () => {} });
+        expect([targeta.clau, mode, props.author, props.authorHref]).toEqual([targeta.clau, mode, DEFAULT_AUTHOR.name, RUTA_PERFIL_PROJECTE]);
+      }
+      expect(teAutoriaCompleta(targeta)).toBe(true);
+    }
+    /* La ruta nova també és la del projecte; la d'una altra entitat, no. */
+    expect(teAutoriaCompleta({ autor: '', autorRuta: RUTA_PERFIL_PROJECTE })).toBe(true);
+    expect(teAutoriaCompleta({ autor: '', autorRuta: '/empresa/forn' })).toBe(false);
   });
 
   test('un autor amb nom i sense la seua pàgina es pinta sense enllaç: no s’endevina pel nom', () => {
@@ -168,7 +194,8 @@ describe('propsDeTargetaIncrustada', () => {
     const delProjecte = attrsDeEntrada({ ...PUBLICACIO, autor: '', autorRuta: '/projecte' });
     expect(delProjecte).toMatchObject({ autor: '', autorRuta: '/projecte' });
     for (const mode of ['lectura', 'edicio']) {
-      expect(propsDeTargetaIncrustada(delProjecte, { mode, avisa: () => {} }), mode).toMatchObject({ author: 'Sóc de Poble', authorHref: '/projecte' });
+      /* Onada 8 (261009) · La boina porta al perfil de Sóc de Poble. */
+      expect(propsDeTargetaIncrustada(delProjecte, { mode, avisa: () => {} }), mode).toMatchObject({ author: 'Sóc de Poble', authorHref: RUTA_PERFIL_PROJECTE });
     }
   });
 

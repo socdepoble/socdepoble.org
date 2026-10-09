@@ -75,7 +75,8 @@ describe('useDadesDeLOriginal: una pàgina, la miniatura de la seua UniversalPag
       date: '30/01/26',
       dateTime: expect.stringMatching(/^2026-01-30/),
       author: 'Sóc de Poble',
-      authorHref: '/projecte',
+      /* Onada 8 (261009) · El perfil de Sóc de Poble, ja no /projecte. */
+      authorHref: DEFAULT_AUTHOR.href,
       avatarUrl: DEFAULT_AUTHOR.avatarUrl,
       location: 'La Torre de les Maçanes'
     });
@@ -133,7 +134,7 @@ describe('propsDeLOriginal: un element d’una secció, la miniatura de la seua 
   test('sense autor: signa Sóc de Poble, amb el seu avatar i el seu poble (la regla de la barra taronja)', () => {
     const item = { id: 'oli', name: 'Oli', images: ['/assets/oli.png'] };
     expect(propsDeLOriginal({ tipus: 'seccio', section: MERCAT, item }, mocks.t)).toMatchObject({
-      author: 'Sóc de Poble', authorHref: '/projecte', avatarUrl: DEFAULT_AUTHOR.avatarUrl, location: 'La Torre de les Maçanes'
+      author: 'Sóc de Poble', authorHref: DEFAULT_AUTHOR.href, avatarUrl: DEFAULT_AUTHOR.avatarUrl, location: 'La Torre de les Maçanes'
     });
   });
 
@@ -162,9 +163,9 @@ describe('lectura: «Drets d’autor» dins de «Legal i privacitat», una targe
     expect(carta.querySelector('.sp-card-meta').textContent).toContain('30/01/26');
     expect([...carta.querySelectorAll('.sp-card-label')].map((etiqueta) => etiqueta.textContent)).toEqual(['Sistema']);
     expect(carta.querySelector('.sp-card-copyright').textContent).toBe(COPYRIGHT_SDP);
-    // La targeta continua portant a la seua pàgina, i la boina al projecte.
+    // La targeta continua portant a la seua pàgina, i la boina al perfil de Sóc de Poble (Onada 8).
     expect(carta.querySelector('a.sp-card-link-overlay').getAttribute('to')).toBe('/page/drets-autor');
-    expect(carta.querySelector('.sp-card-header a.sp-card-author-link').getAttribute('to')).toBe('/projecte');
+    expect(carta.querySelector('.sp-card-header a.sp-card-author-link').getAttribute('to')).toBe(DEFAULT_AUTHOR.href);
   });
 
   test('TextSection ja porta el proveïdor: «Legal» es pinta sincronitzada sense res més', () => {

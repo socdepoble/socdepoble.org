@@ -1,14 +1,18 @@
 /* T6 (ordre del Mestre, 261004, prompt 261004_0515 §5) · La boina taronja
    d'autor enllaça SEMPRE a la pàgina de qui signa: Sóc de Poble, a la pàgina
    del projecte; el Javi i qualsevol altra persona o entitat, al seu perfil. Es
-   resol per identificador (id, slug o àlies de la llavor), mai pel nom. */
+   resol per identificador (id, slug o àlies de la llavor), mai pel nom.
+   Onada 8 (261009) · Derogat el /projecte de la boina: Sóc de Poble també
+   porta al seu perfil públic, RUTA_PERFIL_PROJECTE ('/empresa/socdepoble').
+   /projecte continua sent la pàgina editorial (RUTA_PROJECTE). Les proves de
+   la boina lligen la constant. */
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import {
-  oblidaEntitatDelProjecte, registraEntitatDelProjecte, resolEntitatDelProjecte, RUTA_PROJECTE, rutaDAutoria,
+  oblidaEntitatDelProjecte, registraEntitatDelProjecte, resolEntitatDelProjecte, RUTA_PERFIL_PROJECTE, RUTA_PROJECTE, rutaDAutoria,
   rutaDePerfil, rutaDePerfilDAutor, resolvePageSlugPath, subscriuEntitatDelProjecte, versioEntitatDelProjecte
 } from './navigation.js';
 import { ENTITAT_PILOT_ID, ENTITAT_PILOT_SLUG, ENTITATS_SEED, PERSONA_PILOT } from '../data/identitatsSeed.js';
-import { DEFAULT_AUTHOR } from '../components/universal/UniversalUtils.js';
+import { DEFAULT_AUTHOR, esRutaDelProjecte, rutaDAutorSegura } from '../components/universal/UniversalUtils.js';
 
 describe('la ruta del projecte', () => {
   test('RUTA_PROJECTE és la ruta canònica de la pàgina del projecte', () => {
@@ -16,13 +20,43 @@ describe('la ruta del projecte', () => {
     expect(resolvePageSlugPath('projecte')).toBe(RUTA_PROJECTE);
   });
 
-  test('l’autor per defecte de les pàgines (DEFAULT_AUTHOR) porta a la mateixa ruta', () => {
-    expect(DEFAULT_AUTHOR.href).toBe(RUTA_PROJECTE);
+  /* Onada 8 (261009) · La boina de Sóc de Poble és el seu perfil, pel slug
+     declarat; DEFAULT_AUTHOR l'escriu en literal i ací se'n fixa la igualtat. */
+  test('Onada 8 · RUTA_PERFIL_PROJECTE és el perfil de l’entitat pel slug declarat, i DEFAULT_AUTHOR hi porta', () => {
+    expect(RUTA_PERFIL_PROJECTE).toBe('/empresa/socdepoble');
+    expect(RUTA_PERFIL_PROJECTE).toBe(rutaDePerfil('entitat', ENTITAT_PILOT_SLUG));
+    expect(DEFAULT_AUTHOR.href).toBe(RUTA_PERFIL_PROJECTE);
+    expect(RUTA_PERFIL_PROJECTE).not.toBe(RUTA_PROJECTE);
+  });
+
+  test('Onada 8 · esRutaDelProjecte accepta la ruta nova i la vella (HTML desat), i res més', () => {
+    expect(esRutaDelProjecte(RUTA_PERFIL_PROJECTE)).toBe(true);
+    expect(esRutaDelProjecte(RUTA_PROJECTE)).toBe(true);
+    for (const ruta of ['/empresa/forn', '/gent/socdepoble', '/grup/socdepoble', '/xat?amb=socdepoble', '/projecte/', '', null, undefined]) {
+      expect([ruta, esRutaDelProjecte(ruta)]).toEqual([ruta, false]);
+    }
+  });
+
+  test('Onada 8 · cap autoria no torna /projecte ni el xat: tothom, al seu perfil', () => {
+    for (const autor of [
+      { tipus: 'entitat', id: ENTITAT_PILOT_ID }, { tipus: 'entitat', id: 'soc-de-poble_official' }, { id: ENTITAT_PILOT_SLUG },
+      { tipus: 'persona', id: 'pepa' }, { tipus: 'grup', id: 'colla' }, { tipus: 'ia', id: 'iaia' }, { tipus: 'entitat', id: 'forn' }
+    ]) {
+      const ruta = rutaDAutoria(autor);
+      expect([autor, ruta === RUTA_PROJECTE, ruta.startsWith('/xat')]).toEqual([autor, false, false]);
+      expect([autor, /^\/(empresa|gent|grup|perfil)\//.test(ruta)]).toEqual([autor, true]);
+    }
+  });
+
+  test('Onada 8 · una boina amb la ruta vella /projecte enllaça al perfil, mai a /projecte', () => {
+    expect(rutaDAutorSegura(RUTA_PROJECTE)).toBe(RUTA_PERFIL_PROJECTE);
+    expect(rutaDAutorSegura(RUTA_PERFIL_PROJECTE)).toBe(RUTA_PERFIL_PROJECTE);
+    expect(rutaDAutorSegura('/gent/pepa')).toBe('/gent/pepa');
   });
 });
 
 describe('rutaDAutoria', () => {
-  test('l’entitat pilot va a la pàgina del projecte per l’id, l’slug o qualsevol dels seus àlies', () => {
+  test('l’entitat pilot va al seu perfil (Onada 8) per l’id, l’slug o qualsevol dels seus àlies', () => {
     const [pilot] = ENTITATS_SEED.filter((entitat) => entitat.id === ENTITAT_PILOT_ID);
     const ids = new Set([ENTITAT_PILOT_ID, ENTITAT_PILOT_SLUG, ...pilot.alies]);
     /* Ordre del Mestre (261007) · El slug declarat és 'socdepoble', el mateix
@@ -38,10 +72,10 @@ describe('rutaDAutoria', () => {
     expect(pilot.alies).toHaveLength(new Set(pilot.alies).size);
     expect(pilot.alies).toEqual(expect.arrayContaining([ENTITAT_PILOT_ID, ENTITAT_PILOT_SLUG]));
     for (const id of ids) {
-      expect([id, rutaDAutoria({ tipus: 'entitat', id })]).toEqual([id, RUTA_PROJECTE]);
-      expect([id, rutaDAutoria({ tipus: 'empresa', id })]).toEqual([id, RUTA_PROJECTE]);
+      expect([id, rutaDAutoria({ tipus: 'entitat', id })]).toEqual([id, RUTA_PERFIL_PROJECTE]);
+      expect([id, rutaDAutoria({ tipus: 'empresa', id })]).toEqual([id, RUTA_PERFIL_PROJECTE]);
       /* Qui no diu el tipus també: l'àlies ja és de l'entitat. */
-      expect([id, rutaDAutoria({ id })]).toEqual([id, RUTA_PROJECTE]);
+      expect([id, rutaDAutoria({ id })]).toEqual([id, RUTA_PERFIL_PROJECTE]);
     }
   });
 
@@ -78,9 +112,9 @@ describe('rutaDAutoria', () => {
 });
 
 describe('rutaDePerfilDAutor passa per rutaDAutoria', () => {
-  test('una publicació signada per l’entitat pilot porta al projecte; una del Javi, al seu perfil', () => {
-    expect(rutaDePerfilDAutor({ author_org_id: 'soc-de-poble_official' })).toBe(RUTA_PROJECTE);
-    expect(rutaDePerfilDAutor({ authorOrgId: ENTITAT_PILOT_ID })).toBe(RUTA_PROJECTE);
+  test('una publicació signada per l’entitat pilot porta al seu perfil; una del Javi, al seu', () => {
+    expect(rutaDePerfilDAutor({ author_org_id: 'soc-de-poble_official' })).toBe(RUTA_PERFIL_PROJECTE);
+    expect(rutaDePerfilDAutor({ authorOrgId: ENTITAT_PILOT_ID })).toBe(RUTA_PERFIL_PROJECTE);
     expect(rutaDePerfilDAutor({ ownerUserId: 'javillinares' })).toBe('/gent/javillinares');
     expect(rutaDePerfilDAutor({ author_entity_id: 'forn' })).toBe('/empresa/forn');
   });
@@ -107,18 +141,18 @@ describe('T6 en remot: l’entitat pilot pel seu id de servidor', () => {
 
   afterEach(() => { oblidaEntitatDelProjecte(); });
 
-  test('abans de saber-lo, el UUID del pilot és una entitat qualsevol; després, porta al projecte', () => {
+  test('abans de saber-lo, el UUID del pilot és una entitat qualsevol; després, porta al perfil pel slug', () => {
     expect(rutaDAutoria({ tipus: 'entitat', id: UUID_PILOT })).toBe(`/empresa/${UUID_PILOT}`);
     expect(rutaDePerfilDAutor({ author_org_id: UUID_PILOT })).toBe(`/empresa/${UUID_PILOT}`);
     expect(registraEntitatDelProjecte(PERFIL_PILOT)).toBe(true);
-    expect(rutaDAutoria({ tipus: 'entitat', id: UUID_PILOT })).toBe(RUTA_PROJECTE);
-    expect(rutaDePerfilDAutor({ author_org_id: UUID_PILOT })).toBe(RUTA_PROJECTE);
-    expect(rutaDePerfilDAutor({ authorOrgId: UUID_PILOT })).toBe(RUTA_PROJECTE);
+    expect(rutaDAutoria({ tipus: 'entitat', id: UUID_PILOT })).toBe(RUTA_PERFIL_PROJECTE);
+    expect(rutaDePerfilDAutor({ author_org_id: UUID_PILOT })).toBe(RUTA_PERFIL_PROJECTE);
+    expect(rutaDePerfilDAutor({ authorOrgId: UUID_PILOT })).toBe(RUTA_PERFIL_PROJECTE);
     /* Una altra entitat del servidor, al seu perfil; una persona amb el mateix id, a la seua fitxa. */
     expect(rutaDePerfilDAutor({ author_org_id: UUID_ALTRA })).toBe(`/empresa/${UUID_ALTRA}`);
     expect(rutaDAutoria({ tipus: 'persona', id: UUID_PILOT })).toBe(`/gent/${UUID_PILOT}`);
     /* Els ids de la llavor continuen valent. */
-    expect(rutaDePerfilDAutor({ author_entity_id: ENTITAT_PILOT_ID })).toBe(RUTA_PROJECTE);
+    expect(rutaDePerfilDAutor({ author_entity_id: ENTITAT_PILOT_ID })).toBe(RUTA_PERFIL_PROJECTE);
   });
 
   test('només una entitat amb el slug declarat: mai pel nom, mai una persona ni un grup', () => {
@@ -151,7 +185,7 @@ describe('T6 en remot: l’entitat pilot pel seu id de servidor', () => {
     await expect(primera).resolves.toBe(true);
     expect(port.loadPerfilPublic).toHaveBeenCalledTimes(1);
     expect(port.loadPerfilPublic).toHaveBeenCalledWith(ENTITAT_PILOT_SLUG, config);
-    expect(rutaDePerfilDAutor({ author_org_id: UUID_PILOT })).toBe(RUTA_PROJECTE);
+    expect(rutaDePerfilDAutor({ author_org_id: UUID_PILOT })).toBe(RUTA_PERFIL_PROJECTE);
   });
 
   test('en llavor, sense abast o sense la capacitat, cap crida (i sense la capacitat, ho torna a provar)', async () => {
@@ -204,7 +238,7 @@ describe('T6 en remot: l’entitat pilot pel seu id de servidor', () => {
       ara('10:01:00');
       await expect(resolEntitatDelProjecte({ abast: ABAST, dataMode: 'remote', port })).resolves.toBe(true);
       expect(port.loadPerfilPublic).toHaveBeenCalledTimes(2);
-      expect(rutaDePerfilDAutor({ author_org_id: UUID_PILOT })).toBe(RUTA_PROJECTE);
+      expect(rutaDePerfilDAutor({ author_org_id: UUID_PILOT })).toBe(RUTA_PERFIL_PROJECTE);
       // L'èxit sí que es guarda: ni una hora després es torna a cridar.
       ara('11:01:00');
       await expect(resolEntitatDelProjecte({ abast: ABAST, dataMode: 'remote', port })).resolves.toBe(true);

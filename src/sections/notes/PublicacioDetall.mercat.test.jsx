@@ -47,12 +47,15 @@ vi.mock('../multimedia/MultimediaContext', () => ({ useMultimedia: () => mocks.m
 import { PublicacioDetall } from './PublicacioDetall.jsx';
 import { publicacioComANota } from './masDeLUsuari.js';
 import { MARKET_ITEMS } from '../../data/sectionContent.js';
-import { RUTA_PROJECTE } from '../../config/navigation.js';
+import { RUTA_PERFIL_PROJECTE } from '../../config/navigation.js';
 import { permetOrigenMitjans } from '../../utils/sanitize.js';
 
 const CARPETA = '/assets/uploads/empresa/soc-de-poble/mercat/samarreta-soc-de-poble';
 const XICA = `${CARPETA}/01-chica-jersey.png`;
 const QUADRAT_VERD = '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg';
+/* Onada 8 (261009) · El quadrat de la llavor és ara el PNG; l'SVG d'abans
+   (el de dalt) continua arribant de les files del servidor. */
+const QUADRAT_VERD_PNG = '/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png';
 const LOGO_NEGRE = '/assets/system/ui/logo-socdepoble-rect-negre.svg';
 const CREAT = '2026-09-20T09:15:00Z';
 const escriu = vi.fn();
@@ -99,6 +102,7 @@ describe('Esmena 3 · la Samarreta al lector del MAS, com la seua pàgina', () =
     expect(srcs).toEqual(element.images);
     expect(srcs[0]).toBe(XICA);
     expect(srcs).not.toContain(QUADRAT_VERD);
+    expect(srcs).not.toContain(QUADRAT_VERD_PNG);
   });
 
   test('les variacions, amb el seu preu, davall de «Obri al Mercat»; la descripció una vegada', () => {
@@ -128,8 +132,9 @@ describe('Esmena 3 · la Samarreta al lector del MAS, com la seua pàgina', () =
   test('la boina continua on la porta T6, amb l’etiqueta i els drets de reserva de sempre', () => {
     const element = samarreta();
     const container = pinta(element);
-    expect(RUTA_PROJECTE).toBe('/projecte');
-    expect(barra(container)).toEqual({ nom: 'Sóc de Poble', href: RUTA_PROJECTE });
+    /* Onada 8 (261009) · El perfil de Sóc de Poble, ja no /projecte. */
+    expect(RUTA_PERFIL_PROJECTE).toBe('/empresa/socdepoble');
+    expect(barra(container)).toEqual({ nom: 'Sóc de Poble', href: RUTA_PERFIL_PROJECTE });
     expect(container.querySelector('.sdp-badge-system').textContent).toBe('Mercat');
     expect(container.textContent).toContain('© Sóc de Poble');
   });

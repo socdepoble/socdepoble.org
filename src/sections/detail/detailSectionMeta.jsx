@@ -4,7 +4,7 @@ import { renderRichText, renderPostContent } from './detailRichText.jsx';
 import { getFirstImage } from './detailHelpers.jsx';
 import { Aplec2023Article } from '../mur/articles/Aplec2023Article.jsx';
 import { resolRecursPropi, resolRecursosDeHtml, resolveAsset } from '../../config/assetResolver.js';
-import { autorDe, rutaDePerfilPublicDAutor, rutaXatDePagina } from '../../config/navigation.js';
+import { autorDe, objecteDe, rutaDePerfilPublicDAutor, rutaXatDePagina } from '../../config/navigation.js';
 import { imatgesDeProducte } from '../mercat/imatgesDeProducte.js';
 import { nomDeLaGent } from '../pobles/nomsDelPoble.js';
 import { esFontImatgePropia, sanitizeHtml } from '../../utils/sanitize.js';
@@ -179,7 +179,7 @@ export function portadaDElement(section, item, pagina, t) {
  * signa decidix la capçalera. Una persona (o la IA), reconeguda per
  * identificador (autorDe), porta el seu avatar redó davant de l'H1, mai el
  * logotip de Sóc de Poble. L'entitat del projecte el porta perquè la seua
- * boina va a /projecte (PageFrame, via d).
+ * boina va al seu perfil (esRutaDelProjecte; PageFrame, via d).
  * Correcció dels verificadors (ordre del Mestre, 261004) · L'avatar de
  * capçalera és només el de la identitat de qui signa (author_avatar, T3 de
  * 261001), mai l'avatar_url de l'element: eixe camp no és l'autoria i al
@@ -283,8 +283,9 @@ export function buildMercatDetailSectionMeta({ marketItems = [], t }) {
 }
 
 /* Onada 5 (ordre del Mestre, 261008) · El xat de la gent d'un poble: el
-   mateix fil que obri «Comentar» i la caputxa de la seua targeta
-   (rutaXatDePagina sobre el descriptor del poble).
+   mateix fil que obri «Comentar · En públic» i el botó gran de la seua
+   targeta (rutaXatDePagina sobre el descriptor del poble). Onada 8 · La
+   caputxa ja no hi porta: porta a la fitxa del poble.
    Onada 6 (pla 261009_0245, ítem 4: «El fil de xat específic també es dirà
    'Gent de la Torre'») · El descriptor és el d'objecteDelPobleXat
    (pobles/xatDelPoble.js), el mateix de la targeta de /pobles: el fil porta el
@@ -377,9 +378,14 @@ export function buildPoblesDetailSectionMeta({ towns = [], t, publicacions = nul
     title: t('section.detail.pobles.title', 'Pobles'),
     label: t('section.detail.pobles.label', 'Poble'),
     listPath: '/pobles',
-    /* Onada 5 · L'autoria de la barra taronja porta al xat de la gent del
-       poble, com la caputxa de la targeta. */
-    getAuthorHref: rutaXatDelPoble,
+    /* Onada 5 · L'autoria de la barra taronja portava al xat de la gent del
+       poble. Derogat per l'Onada 8 (261009): «un clic a QUALSEVOL boina
+       taronja porta SEMPRE al perfil públic», mai al xat. La boina d'un poble
+       porta a la seua fitxa (/pobles/<id>), la mateixa de la caputxa de la
+       targeta: ací s'enllaça a si mateixa. És la ruta del seu descriptor
+       (objecteDe, validada; sense id, cap enllaç). El xat continua al botó
+       blau i a «Comentar · En públic». */
+    getAuthorHref: (item) => objecteDe(item, 'pobles')?.ruta || null,
     /* Onada 6 (pla 261009_0245, ítem 4) · El xat que obri «Comentar» a la
        pàgina del poble (ItemDetailSection · objecteXat): el de la gent. */
     getObjecteXat: objecteDelPobleXat,

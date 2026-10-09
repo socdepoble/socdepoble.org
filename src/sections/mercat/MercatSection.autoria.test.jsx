@@ -39,7 +39,8 @@ import { createLocalPerfilsAdapter } from '../../data/localPerfils.js';
 import { autorDe, rutaDePerfil } from '../../config/navigation.js';
 import { FORASTER } from '../../components/universal/UniversalUtils.js';
 
-const LOGO = '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg';
+/* Onada 8 (261009) · El logo de l'entitat a la llavor és el PNG (abans, l'SVG). */
+const LOGO = '/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png';
 const MAC = MARKET_ITEMS.find((item) => item.id === 'mac-mini-m4');
 const SAMARRETA = MARKET_ITEMS.find((item) => item.id === 'samarreta-socdepoble');
 const t = (_, alternativa) => alternativa;

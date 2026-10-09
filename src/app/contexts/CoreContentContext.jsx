@@ -1,6 +1,6 @@
 import { backendScope } from '../../config/backendConfig.js';
 import { useScopedResource } from './useScopedResource.js';
-import React, { createContext, useContext, useEffect, useMemo } from 'react';
+import { createContext, useContext, useEffect, useMemo } from 'react';
 import { loadCoreContent } from '../../data/backendPort.js';
 import { byId } from '../../config/contentHelpers';
 import { useIdentitat } from './IdentitatContext.jsx';

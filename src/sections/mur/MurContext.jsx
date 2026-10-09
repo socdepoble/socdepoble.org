@@ -1,6 +1,6 @@
 import { backendScope } from '../../config/backendConfig.js';
 import { useScopedResource } from '../../app/contexts/useScopedResource.js';
-import React, { createContext, useCallback, useContext, useMemo, useLayoutEffect, useRef, useState } from 'react';
+import { createContext, useCallback, useContext, useMemo, useLayoutEffect, useRef, useState } from 'react';
 import { loadMur, loadSeccioPage, appendSectionSubmissionNetworkOnly, teCapacitat } from '../../data/backendPort.js';
 import { SECCIONS_PAGINABLES } from '../../data/contracte.js';
 import { sortPinnedContent } from '../../config/contentHelpers';

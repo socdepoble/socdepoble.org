@@ -1,7 +1,7 @@
 /* D3 (barra taronja universal, ordre del Mestre 261004) · El Tauler
    d'administració munta una AppGridShell dins d'una Pàgina Universal sense
    chrome (cau a 'page': sense barra blava). La barra taronja hi és, signada
-   per Sóc de Poble i enllaçada a /projecte, i la graella absoluta ha de
+   per Sóc de Poble i enllaçada al seu perfil (Onada 8; abans, a /projecte), i la graella absoluta ha de
    començar davall d'ella: la regla de modules.css
    (.sdp-universal-page-container--sense-blava > .content-wrapper >
    .app-grid-page, PageFrame.capes.test.js) casa amb el DOM de veres de
@@ -21,6 +21,8 @@ vi.mock('../../data/backendPort.js', () => ({
   adminListOrganizations: (...args) => m.entitats(...args)
 }));
 import AdminSection from './AdminSection.jsx';
+/* Onada 8 (261009) · La boina de Sóc de Poble porta al seu perfil, ja no a /projecte. */
+import { DEFAULT_AUTHOR } from '../../components/universal/UniversalUtils.js';
 
 const SELECTOR_DE_LA_REGLA = '.sdp-universal-page-container--sense-blava > .content-wrapper > .app-grid-page';
 
@@ -42,14 +44,14 @@ beforeEach(() => {
 });
 afterEach(cleanup);
 
-test('el Tauler porta la barra taronja de Sóc de Poble, enllaçada a /projecte, sense barra blava', () => {
+test('el Tauler porta la barra taronja de Sóc de Poble, enllaçada al seu perfil, sense barra blava', () => {
   const { container } = render(<AdminSection />);
   const pagina = container.querySelector('.sdp-universal-page-container');
   expect(pagina.classList.contains('sdp-universal-page-container--sense-blava')).toBe(true);
   expect(container.querySelector('header.bar-blue')).toBeNull();
   const barra = pagina.querySelector(':scope > section.bar-orange');
   expect(barra).not.toBeNull();
-  expect(barra.firstElementChild.getAttribute('href')).toBe('/projecte');
+  expect(barra.firstElementChild.getAttribute('href')).toBe(DEFAULT_AUTHOR.href);
   expect(barra.querySelector('.sp-card-author-name').textContent).toBe('Sóc de Poble');
 });
 

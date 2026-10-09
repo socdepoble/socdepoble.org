@@ -1,4 +1,3 @@
-import React from 'react';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { ContentProvider } from '../../components/universal/ContentProvider';
 

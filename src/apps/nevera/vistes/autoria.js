@@ -7,12 +7,19 @@
  *     botiga del tall que publica el projecte i els suggeriments del
  *     calendari de temporada) és de l'entitat Sóc de Poble, que el publica:
  *     autoriaDe(ENTITAT_PROJECTE) de la plataforma, resolta per identificador
- *     (porta a la pàgina del projecte);
+ *     (porta al perfil de l'entitat, /empresa/socdepoble: Onada 8, 261009;
+ *     abans, a la pàgina del projecte);
  *   · un article propi (el que la persona ha creat en este dispositiu) és de
  *     la persona. La plataforma no dona a les apps la seua identitat ni el seu
  *     perfil (cap sessió travessa la frontera), i no se n'inventa cap: la
  *     boina diu «Tu», que és cert, sense enllaç. Quan la plataforma oferisca
  *     la identitat de la persona, és ací on es canvia.
+ *     Onada 8 (261009) · PENDENT de MarIA: «un clic a QUALSEVOL boina taronja
+ *     porta SEMPRE al perfil de l'autor» demana que «Tu» porte a la pàgina de
+ *     qui mira (/el-meu-perfil, com la boina de la Gestoria). Una app no pot
+ *     escriure rutes de l'amfitrió: la plataforma l'hauria de donar, i un nom
+ *     nou a l'API és un canvi menor del contracte del nucli dels mòduls
+ *     (sdp.modul.v1, VERSIO_NUCLI de contracteNucli.js), que no és d'este front.
  * La forma és la de l'autoria de PaginaApp ({ nom, href, avatar, poble }), la
  * que llig l'esquelet (TargetesArticles) des de `article.autoria`.
  */

@@ -1,8 +1,9 @@
 /**
  * useEntitatDelProjecte.js — T6 en remot (revisió del front «nucli», 261004).
  *
- * La boina d'una publicació de l'entitat pilot porta a la pàgina del projecte
- * (rutaDAutoria, config/navigation.js). En remot, l'id d'eixa entitat és el
+ * La boina d'una publicació de l'entitat pilot porta al seu perfil
+ * (rutaDAutoria, config/navigation.js; Onada 8, 261009: /empresa/socdepoble,
+ * abans la pàgina del projecte). En remot, l'id d'eixa entitat és el
  * del servidor i la llavor no el sap: este hook el demana al port una sola
  * vegada per abast de backend (resolEntitatDelProjecte: loadPerfilPublic amb
  * el slug declarat) i torna a pintar qui el crida quan arriba.

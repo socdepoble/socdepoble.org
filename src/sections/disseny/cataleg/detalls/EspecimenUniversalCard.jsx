@@ -9,25 +9,35 @@ import { insigniaEmojiXL } from '../../../../components/universal/insigniaEmoji.
 import { propsDeTargetaDeLaPagina } from '../../../../components/universal/targetaDeLaPagina.js';
 import { useNavigate } from '../../../../app/contexts/RouterContext';
 import { objecteDePagina } from '../../../../config/objecteConnectable.js';
-import { RUTA_PROJECTE } from '../../../../config/navigation.js';
+import { getSectionItemPath, RUTA_PERFIL_PROJECTE } from '../../../../config/navigation.js';
 import { RUTA_DRETS_AUTOR, accioDeLaPagina } from '../../../../config/systemPages.js';
 import { PAGE_COPY } from '../../../text/pageContent.js';
 import { propsDePaginaDeText } from '../../../text/paginaDeText.js';
 import { MARKET_ITEMS } from '../../../mercat/marketContent.js';
 import { propsDeTargetaDeProducte } from '../../../mercat/targetaDeProducte.js';
+import { TOWNS } from '../../../pobles/townsContent.js';
 
 /* Revisió del 261007 (M3-12) · La Samarreta de la llavor, no una còpia. */
 const SAMARRETA = MARKET_ITEMS.find((item) => item.id === 'samarreta-socdepoble') || null;
 
 /* Autoria i peu compartits per les variants: la targeta és una i les dades canvien.
    Ordre del Mestre (261007) · Els drets de sèrie són els de l'app (COPYRIGHT_SDP,
-   CC BY-NC-SA 4.0), no una còpia que es quede vella. */
+   CC BY-NC-SA 4.0), no una còpia que es quede vella.
+   Onada 8 (261009) · «Un clic a QUALSEVOL boina taronja porta SEMPRE al perfil
+   públic»: la boina de Sóc de Poble de les mostres porta al seu perfil
+   (RUTA_PERFIL_PROJECTE), com al Mur. */
 const SDP = {
   author: 'Sóc de Poble',
   location: 'La Torre de les Maçanes',
-  avatarUrl: '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg',
+  avatarUrl: '/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png',
+  authorHref: RUTA_PERFIL_PROJECTE,
   copyright: COPYRIGHT_SDP
 };
+
+/* Onada 8 (261009) · L'avís que signa el poble: la boina porta a la fitxa del
+   poble, la del contingut de llavor (cap poble escrit al codi). Sense, cap
+   enllaç. */
+const POBLE_DE_L_AVIS = TOWNS.find((poble) => poble.title === SDP.location) || null;
 
 /* Ordre del Mestre (261007) · «Cards de veritat»: la targeta d'una pàgina és
    la miniatura de la seua UniversalPage. Les mostres passen pel MATEIX camí
@@ -47,10 +57,13 @@ const PEU = { hasFooter: true, showTranslate: true, showComment: true, showShare
    estàndard: la boina de socdepoble (l'autor obri el seu xat corporatiu), la il·lustració, i
    títol, subtítol i entradilla visibles, els de la seua pàgina (PAGE_COPY). Dues mostres: una
    amb les dues portes obertes (el Mur) i una amb Publicar en obres i sense il·lustració (el Mapa).
-   P6 (directriu 2325) · Amb el peu blau de sempre cap a la seua pàgina (sense Connectar) i cap
-   etiqueta: «en obres» ho diu la porta inerta.
+   P6 (directriu 2325) · Amb el peu blau de sempre cap a la seua pàgina i cap etiqueta: «en
+   obres» ho diu la porta inerta. La directriu deia el peu sense Connectar; derogat per l'ordre
+   del Mestre del 261009 (revisió R3; requeriments 261009_1300, punt 2): com al Panell, el peu
+   porta Connectar i el cos, els drets de les pàgines del sistema (COPYRIGHT_SDP).
    T6 (ordre del Mestre, 261004; deroga W4-09) · La boina de socdepoble porta a la pàgina del
-   projecte (RUTA_PROJECTE, la de rutaDAutoria), ja no al seu xat corporatiu. */
+   projecte, ja no al seu xat corporatiu. Onada 8 (261009) · Al seu perfil
+   (RUTA_PERFIL_PROJECTE, la de rutaDAutoria), ja no a /projecte. */
 const porta = (id, verb, nom, desti, varietat) => ({ id, verb, nom, desti, varietat });
 
 /* Ordre del Mestre (261007) · Al quadrat d'una part sense foto, un emoji XL
@@ -58,7 +71,7 @@ const porta = (id, verb, nom, desti, varietat) => ({ id, verb, nom, desti, varie
    Decoratiu: el nom el porta l'etiqueta del quadrat. La insígnia és la peça
    compartida (insigniaEmojiXL, components/universal/insigniaEmoji.jsx), la
    mateixa que porta la targeta viva sense imatge. */
-const BOINA_SDP = { author: SDP.author, location: SDP.location, avatarUrl: SDP.avatarUrl, authorHref: RUTA_PROJECTE };
+const BOINA_SDP = { author: SDP.author, location: SDP.location, avatarUrl: SDP.avatarUrl, authorHref: SDP.authorHref };
 
 /* Ordre del Mestre, 261004 (prompt 261004_0515, «no inventar targetes») · Les opcionals de les
    llistes de les apps (Notícies, la Nevera): imatgePrivada, idElement, premuda i
@@ -72,7 +85,7 @@ const ambLaPagina = (clau) => {
   const ruta = `/page/${clau}`;
   return {
     title: pagina.title, subtitle: pagina.subtitle, body: pagina.lead, ...dataHoraDeBarra({ creat: pagina.date }),
-    mainHref: ruta, objecte: objecteDePagina({ titol: pagina.title, ruta, id: ruta }), hasFooter: true, showConnect: false
+    mainHref: ruta, objecte: objecteDePagina({ titol: pagina.title, ruta, id: ruta }), hasFooter: true, copyright: COPYRIGHT_SDP
   };
 };
 const DOBLE_ACCIO = [
@@ -108,7 +121,7 @@ export default function EspecimenUniversalCard() {
         ['headingLevel', "'h2' | 'h3' | 'h4' | 'h5' | 'h6'", "'h3'", 'L’etiqueta del títol, segons el feed on viu; qualsevol altre valor torna a h3.'],
         ['variant', "'default' | 'pla'", "'default'", "'pla' (sp-card--pla): sense marc, radi ni ombra, per a viure dins d’una llista. És la targeta viva del Bloc de Notes i del Perfil."],
         ['author / location / avatarUrl', 'string', '—', 'Capçalera taronja. Si no hi ha cap dels tres, no es pinta.'],
-        ['authorHref', 'string', '—', 'Amb una ruta segura, l’autoria de la caputxa és un enllaç a la pàgina de qui signa (T6, ordre del Mestre, 261004): una persona o una entitat, al seu perfil; Sóc de Poble (el sistema), a la pàgina del projecte, /projecte. La ruta ix de rutaDAutoria (config/navigation.js), que resol per id, slug o àlies, mai pel nom. Un poble, a /pobles. Una ruta de l’app enllaça també a l’app nativa (rutaDAutorSegura, W4-07).'],
+        ['authorHref', 'string', '—', 'Amb una ruta segura, l’autoria de la caputxa és un enllaç a la pàgina de qui signa (T6, ordre del Mestre, 261004): una persona o una entitat, al seu perfil; Sóc de Poble (el sistema), al seu perfil, /empresa/socdepoble (Onada 8: mai a /projecte ni al xat; una ruta vella /projecte es llig com la nova). La ruta ix de rutaDAutoria (config/navigation.js), que resol per id, slug o àlies, mai pel nom. Un poble, a la seua fitxa (/pobles/<id>). Una ruta de l’app enllaça també a l’app nativa (rutaDAutorSegura, W4-07).'],
         ['emoticona', 'string', "''", 'El camp cru d’emoticona del document. Només amb una emoticona triada la caputxa passa a tres columnes, amb l’emoticona al centre (EmoticonaBarra en lectura). Mai la ploma.'],
         ['time / date / dateTime', 'string', '—', 'DateTimeControl a la capçalera, amb l’hora si la font en té (un dia sol, sense hora). El clic obri el Calendari en el mes de la data, amb totes les targetes d’eixe mes (/calendari?mes=AAAA-MM, mes local, mai UTC), i no arriba a l’enllaç de la targeta; el nom accessible diu l’hora, el dia (en l’ordre en què es veuen) i on porta (ordre del Mestre, 261001).'],
         ['onDateTime', 'fn | false', '—', 'Un clic propi per a la pastilla (la previsualització que avisa); false, un <time> sense clic. Sense, el Calendari.'],
@@ -122,10 +135,11 @@ export default function EspecimenUniversalCard() {
         ['actual', 'boolean', 'false', 'La targeta és l’element triat d’una llista: aria-current="true" a l’element principal (o a l’article, si no n’hi ha).'],
         ['labels', "(string | { text, className, href })[]", '[]', 'Taxonomia: sdp-badge-system · category · tag · accent.'],
         ['accio', 'node', 'null', "Ordre del Mestre (261007) · L’acció gran de la pàgina, en lloc de les etiquetes: PortaDePagina, el mateix botó primari gran que la UniversalPage pinta davall del títol. La declara la pàgina del sistema (systemPages.js · accioDeLaPagina): «Anar al xat» a la targeta d’El Xat. És germana del vel: el botó porta al seu destí i la resta de la targeta, a la pàgina."],
+        ['etiquetesAmbAccio', 'boolean', 'false', 'Onada 8 (261009) · Amb accio, les etiquetes també es pinten, al seu lloc, i el botó va just després: la targeta d’un poble afig «Anar al xat» (el xat de la seua gent) sense perdre la província, la comarca ni l’enllaç a la Viquipèdia. Sense, la ranura ocupa el lloc de les etiquetes, com a El Xat.'],
         ['copyright', 'string', '—', `Ordre del Mestre (261007) · Els drets. SEMPRE és un enllaç blau (--sdp-accio-text) a la pàgina de sistema «Drets d’autor» (${RUTA_DRETS_AUTOR}), siga quin siga el text: la llicència de sèrie (COPYRIGHT_SDP, CC BY-NC-SA 4.0), «© Pepet» o una atribució. Sense subratllat, que només ix en passar-hi el ratolí. Una sola línia: un text llarg es retalla amb punts suspensius, i el text sencer continua sent el nom accessible. L’àrea tàctil és de --sdp-touch sense moure la línia. És germà del vel: el clic no obri la targeta.`],
         ['hasFooter / showTranslate / showComment / showShare / showConnect', 'boolean', '—', 'Peu blau. hasFooter=true activa les quatre accions per defecte.'],
         ['mainHref / onMainClick', 'string / fn', '—', 'Tota la targeta és un enllaç (overlay) sense tapar les accions.'],
-        ['objecte', '{ tipus, id, titol, ruta }', '—', 'T63.2 · El descriptor tipat de l’element (objecteDe, objecteDePerfil…). Ordre del Mestre (261007), «Comentaris = xat»: sense onComment, Comentar obri un menú de dues vies. «En privat» porta al xat privat amb Sóc de Poble, també per a una persona o una IA. «En públic» porta al xat comú de la seua Pàgina Universal (/xat?sobre=tipus:id), que pren el títol de l’element. Una nota no en té: Comentar no es pinta. Sense objecte, el xat de la pàgina del detall (mainHref), mai el de la llista. Sense xat públic (objecte null, una persona o una IA, cap detall o una ruta que el contracte no admet), «En públic» queda desactivada i diu per què.'],
+        ['objecte', '{ tipus, id, titol, ruta }', '—', 'T63.2 · El descriptor tipat de l’element (objecteDe, objecteDePerfil…). Ordre del Mestre (261007), «Comentaris = xat»: sense onComment, Comentar obri un menú de dues vies. «En privat» porta al xat privat amb l’autor de l’element (Onada 8: /xat?amb=<id>, encara que no el conegues; el menú en diu el nom) o amb la persona, l’entitat o la IA del perfil; amb el pilot, sense autor o amb una publicació pròpia, al xat amb Sóc de Poble. «En públic» porta al xat comú de la seua Pàgina Universal (/xat?sobre=tipus:id), que pren el títol de l’element. Una nota no en té: Comentar no es pinta. Sense objecte, el xat de la pàgina del detall (mainHref), mai el de la llista. Sense xat públic (objecte null, una persona o una IA, cap detall o una ruta que el contracte no admet), «En públic» queda desactivada i diu per què.'],
         ['connectLabel', 'string', "'Connectar'", 'Verb de l’acció principal: «Sol·licitar plaça», «Obrir»… Nom accessible: «Connectar amb {títol}»; qualsevol altre verb, «{verb}: {títol}».'],
         ['portes', '[{ id, verb, nom, desti, varietat, avis?, enObres? }]', '—', 'P5 · Com a màxim dues portes al final del cos (PortesTargeta): «Publicar» i «Saber-ne més». Amb portes no hi ha enllaç de tota la targeta; la resta de l’anatomia és la de sempre, boina i peu blau inclosos (P6): mainHref ja no fa overlay, és la pàgina de Comentar i Compartir. desti: una ruta de l’app, validada sense mirar el protocol de la finestra (W4-07); null, o una adreça de fora, pinta la porta inerta que avisa.'],
         ['imatgePrivada', 'boolean', 'false', 'Ordre del Mestre, 261004 · La imatge i l’avatar passen pel filtre de les peces de les apps (fontSegura de marca.jsx: el mateix origen o el de mitjans) i es demanen sense referent (referrerpolicy="no-referrer"). Una imatge de fora no es pinta. Per a les llistes de les apps (Notícies, la Nevera). Decisió 3 del Mestre (261007) · També la porten les targetes del Mur i dels actes (TargetaDelMur, EventCard), que abans hi passen la imatge i l’avatar pel mode estricte (fontImatgePropia de utils/sanitize.js): cap servidor de tercers, tampoc els avatars de Google, Facebook o GitHub. Una de fora no es demana: sense portada, cap; sense avatar, la silueta.'],
@@ -242,7 +256,7 @@ export default function EspecimenUniversalCard() {
             Derogat per l'ordre del Mestre del 261004 (xat: tota targeta amb
             boina i pàgina pròpia): la targeta de sistema sense boina i amb la
             data a l'última línia del cos. Ara porta la boina de Sóc de Poble
-            (l'autor porta a /projecte) i la data a la pastilla, un <time>
+            (l'autor porta al seu perfil, Onada 8) i la data a la pastilla, un <time>
             sense clic (instantània de dades, onDateTime={false}); tota
             clicable i el peu de la barra blava, amb Connectar cap a la seua
             pàgina. Ordre del Mestre, 261004 (xat: cap xifra solta) · totes
@@ -334,7 +348,8 @@ export default function EspecimenUniversalCard() {
           headerAction={<BotoVisibilitat publicat etiqueta="Pública: canviar la visibilitat" onObri={() => setAvis('Has premut la bola del món: obriria el selector de visibilitat.')} />}
           title="Tall d’aigua dimarts" subtitle="De 9:00 a 13:00, tot el poble"
           body="L’Ajuntament canvia una canonada del carrer Major. Ompliu garrafes la vespra."
-          author="La Torre de les Maçanes" location="Avís del poble" avatarUrl={SDP.avatarUrl} authorHref="/pobles"
+          author="La Torre de les Maçanes" location="Avís del poble" avatarUrl={SDP.avatarUrl}
+          authorHref={POBLE_DE_L_AVIS ? getSectionItemPath('pobles', POBLE_DE_L_AVIS.id) : undefined}
           labels={[{ text: 'Avís', className: 'sdp-badge-accent' }]}
           time="08:00" date="29/09/26" dateTime="2026-09-29T08:00" onDateTime={false}
           {...PEU}
@@ -364,18 +379,20 @@ export default function EspecimenUniversalCard() {
       <p role="status">{detall}</p>
 
       {/* P5 · Onada 4 · Pedra Seca §9: l'espècimen abans de la producció (el Panell de Control),
-          amb l'ESMENA 261003 22:34 (directrius 2234 i 2245): la targeta estàndard, sencera. */}
+          amb l'ESMENA 261003 22:34 (directrius 2234 i 2245): la targeta estàndard, sencera.
+          Onada 8 (261009; revisió R3 derogada) · Connectar i els drets, com al Panell. */}
       <h5>Targeta de doble acció (portes)</h5>
       <p>
         La del <strong>Panell de Control</strong>. És la <strong>UniversalCard de sempre</strong>, sencera: la boina de
-        l’entitat <strong>socdepoble</strong> (l’autor porta a la <strong>pàgina del projecte</strong>, i la data, al
+        l’entitat <strong>socdepoble</strong> (l’autor porta al <strong>seu perfil</strong>, i la data, al
         Calendari), la il·lustració, i el <strong>títol, el subtítol i l’entradilla visibles</strong>, els mateixos de la
         seua pàgina. Al final del cos, <strong>dues portes</strong>: «Publicar», en blau, i «Saber-ne més», que obri la
         <strong> UniversalPage</strong> de la targeta.
       </p>
       <p>
         Amb <code>portes</code>, la targeta sencera <strong>no és cap enllaç</strong>, però conserva el
-        <strong> peu blau</strong> de sempre (Traduir, Comentar i Compartir), cap a la seua pàgina. És
+        <strong> peu blau</strong> de sempre (Traduir, Comentar, Compartir i Connectar), cap a la seua
+        pàgina, i els <strong>drets</strong>, l’enllaç blau a «Drets d’autor». És
         l’<strong>única variació</strong>: dues portes al cos i <strong>cap etiqueta</strong>. Una porta sense destí,
         o amb un destí que <strong>no és una ruta de l’app</strong>, queda <strong>inerta</strong>: diu que està en
         obres i no navega. La ruta es valida <strong> sense mirar el protocol de la finestra</strong>, i val igual a

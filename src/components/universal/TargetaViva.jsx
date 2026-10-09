@@ -17,6 +17,10 @@
  * de l'editor. La targeta incrustada de l'editor (TargetaIncrustadaNodeView)
  * sí que para els enllaços. Si la previsualització ha de navegar o no és
  * decisió pendent del Mestre (F12 de l'auditoria 0030).
+ * Onada 8 (261009) · La boina tampoc no s'intercepta: «un clic a QUALSEVOL
+ * boina taronja porta SEMPRE al perfil públic de qui signa». Amb `autor.ruta`
+ * (la de la barra taronja de l'editor) és l'enllaç d'UniversalCard i navega,
+ * com el dels drets; sense, text, com abans.
  */
 import { useCallback, useLayoutEffect, useState, useSyncExternalStore } from 'react';
 import { IdCard } from 'lucide-react';
@@ -67,7 +71,7 @@ const TELEMETRIA_PREVISUALITZACIO = Object.freeze({ mode: 'previsualitzacio' });
 
 /**
  * document: el de l'editor (HTML sanejat als camps de text).
- * autor: { nom, avatar, poble }, el de la barra taronja. etiquetes: les píndoles.
+ * autor: { nom, avatar, poble, ruta }, el de la barra taronja. etiquetes: les píndoles.
  * onMainClick: la fitxa de la llista la torna a triar; a l'aside no fa res.
  * avis: els textos del consumidor (AVISOS_TARGETA_VIVA); sense, la reserva.
  * actual: és la fitxa triada de la llista (aria-current a UniversalCard) i,

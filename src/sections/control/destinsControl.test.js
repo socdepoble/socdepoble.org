@@ -28,7 +28,7 @@ import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, test } from 'vitest';
 import { SUPPORTED_LANGUAGES, createTranslator } from '../../config/i18n.js';
-import { RUTA_PROJECTE, resolvePageSlugPath } from '../../config/navigation.js';
+import { RUTA_PERFIL_PROJECTE, resolvePageSlugPath } from '../../config/navigation.js';
 import { IAIA_ID } from '../../data/identitatsSeed.js';
 import { PAGE_COPY } from '../text/pageContent.js';
 import { sanitizeHtml } from '../../utils/sanitize.js';
@@ -279,17 +279,22 @@ describe('destinsControl · les targetes i on porta cada porta', () => {
      boina porta SEMPRE a la pàgina de l'autor; per a l'entitat pilot, la del
      projecte (RUTA_PROJECTE, resolta per l'id de l'entitat). El xat
      corporatiu és el de Comentar (ControlSection). */
-  test('la boina és l’entitat socdepoble, no la IAIA, i porta al projecte, mai al xat', () => {
+  /* Onada 8 (261009) · La boina porta al perfil de l'entitat
+     (RUTA_PERFIL_PROJECTE, la ruta empresa/:agentId d'App), ja no a /projecte.
+     Només canvien les assercions de la ruta de la boina. */
+  test('la boina és l’entitat socdepoble, no la IAIA, i porta al seu perfil, mai al xat', () => {
     expect(AUTORIA_SOCDEPOBLE).toEqual({
       author: 'Sóc de Poble',
       location: 'La Torre de les Maçanes',
-      avatarUrl: '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg',
-      authorHref: '/projecte'
+      // Onada 8 (261009, front 8C) · El logo de la llavor és el PNG (abans, l'SVG).
+      avatarUrl: '/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png',
+      authorHref: '/empresa/socdepoble'
     });
-    expect(AUTORIA_SOCDEPOBLE.authorHref).toBe(RUTA_PROJECTE);
+    expect(AUTORIA_SOCDEPOBLE.authorHref).toBe(RUTA_PERFIL_PROJECTE);
     expect(AUTORIA_SOCDEPOBLE.authorHref).not.toContain('/xat');
     expect(AUTORIA_SOCDEPOBLE.authorHref).not.toContain(encodeURIComponent(IAIA_ID));
-    expect(rutesEstatiques().has(camiDe(AUTORIA_SOCDEPOBLE.authorHref))).toBe(true);
+    expect(camiDe(AUTORIA_SOCDEPOBLE.authorHref).startsWith('empresa/')).toBe(true);
+    expect(fontApp.includes('<Route path="empresa/:agentId"')).toBe(true);
     expect(Object.isFrozen(AUTORIA_SOCDEPOBLE)).toBe(true);
   });
 

@@ -90,6 +90,9 @@ const TORRE = { id: POBLE.id, title: 'La Torre de les Maçanes', image_url: '/as
 const IAIA_PADRO = AGENTS_MAP.IAIA.avatar_url;
 const IAIA = CARA_DE_LA_IAIA.src;
 const LOGO = '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg';
+/* Onada 8 (261009) · El logo de la llavor (AJUDA, sense sessió) és el PNG.
+   LOGO, l'SVG d'abans, continua sent la dada que porta una fila del servidor. */
+const LOGO_PNG = '/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png';
 const COLLA = '/assets/uploads/avatars/mixa-comic.png';
 const GOOGLE = 'https://lh3.googleusercontent.com/a/pepa=s96-c';
 const DADA = 'data:image/png;base64,iVBORw0KGgo=';
@@ -208,14 +211,14 @@ test('sense sessió a un amfitrió (el cas del Mestre): les tres files porten la
   expect(caresDe(llista())).toEqual({
     [POBLE.nom]: `${PAQUET}${CARA}`,
     'IAIA MarIA': `${PAQUET}${IAIA}`,
-    'Sóc de Poble': `${PAQUET}${LOGO}`
+    'Sóc de Poble': `${PAQUET}${LOGO_PNG}`
   });
   capImatgeTrencada();
 });
 
 test('sense sessió i sense base (dev): les mateixes cares, amb la ruta de sempre', () => {
   munta(senseSessio());
-  expect(caresDe(llista())).toEqual({ [POBLE.nom]: CARA, 'IAIA MarIA': IAIA, 'Sóc de Poble': LOGO });
+  expect(caresDe(llista())).toEqual({ [POBLE.nom]: CARA, 'IAIA MarIA': IAIA, 'Sóc de Poble': LOGO_PNG });
   expect(totesLesImatges().every((src) => src.startsWith('/assets/'))).toBe(true);
 });
 

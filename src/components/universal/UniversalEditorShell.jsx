@@ -7,7 +7,7 @@ import { extractPlainText } from '../../utils/contentAdapter.js';
 import useHeroImageHandler, { validaFitxerImatge } from '../../hooks/useHeroImageHandler.js';
 import { useResolvedAsset } from '../../hooks/useResolvedAsset.js';
 import { resolRecursPropi } from '../../config/assetResolver.js';
-import React, { Component, useRef, useCallback, useEffect, useId, useLayoutEffect, useState } from 'react';
+import { Component, useRef, useCallback, useEffect, useId, useLayoutEffect, useState } from 'react';
 import { useContent } from './ContentProvider.jsx';
 import { useToast } from './NotificationContext.jsx';
 import { IconaEstatDesament, RegioEstatDesament } from './EstatDesament.jsx';

@@ -9,7 +9,7 @@
  * (vite.config.js), i per això les hores literals són les de València.
  */
 import React from 'react';
-import { cleanup, render, screen, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({ navigate: vi.fn(), t: (_, alternativa) => alternativa, core: {}, mur: {} }));
@@ -126,9 +126,9 @@ test('T2 · incrustat en un amfitrió, l’avatar del poble penja del paquet (re
   const [sella] = targetes(container);
   expect(sella.querySelector('.sp-card-author img.sp-card-avatar').getAttribute('src'))
     .toBe('https://amfitrio.example/wp-content/plugins/soc-de-poble/dist/assets/towns/sella/2.jpg');
-  // La barra de la pàgina també penja del paquet.
+  // La barra de la pàgina també penja del paquet (Onada 8, 261009: el logo és el PNG).
   expect(container.querySelector('section.bar-orange img.sp-card-avatar').getAttribute('src'))
-    .toBe('https://amfitrio.example/wp-content/plugins/soc-de-poble/dist/assets/system/ui/logo-socdepoble-cuadrat-verd.svg');
+    .toBe('https://amfitrio.example/wp-content/plugins/soc-de-poble/dist/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png');
 });
 
 /*
@@ -138,6 +138,8 @@ test('T2 · incrustat en un amfitrió, l’avatar del poble penja del paquet (re
  * al xat comú del poble (el mateix subjecte poble:<id> que «Comentar · En
  * públic», T63.2) i el cos o la foto, a la pàgina del poble. La targeta es
  * classifica per província (categoria) i comarca (etiqueta).
+ * Onada 8 (261009) · La caputxa porta a la fitxa del poble; el xat, al botó
+ * «Anar al xat» de dins de la targeta.
  */
 test('Onada 5 · la caputxa de La Torre diu «Gent de la Torre» i el seu poble, no la comarca', () => {
   const { container } = render(<PoblesSection />);
@@ -148,20 +150,45 @@ test('Onada 5 · la caputxa de La Torre diu «Gent de la Torre» i el seu poble,
   expect(torre.querySelector('.sp-card-subtitle').textContent).toBe('L\'Alacantí');
 });
 
-test('Onada 5 · la caputxa porta al xat comú del poble i el cos, a la pàgina del poble', () => {
+/* Onada 8 (261009; requeriments, punts 3 i 4: «Zero excepcions») · Derogat
+   per l'Onada 8: la caputxa ja no porta al xat. La boina porta a la fitxa del
+   poble (/pobles/<id>), com el cos; al xat de la gent s'hi entra pel botó gran
+   «Anar al xat» de dins de la targeta (la ranura `accio` d'UniversalCard). */
+test('Onada 8 · la caputxa i el cos porten a la fitxa del poble; el botó «Anar al xat», al xat comú del poble', () => {
   const { container } = render(<PoblesSection />);
   const town = TOWNS.find((t) => t.id === 'la-torre-de-les-macanes');
   const torre = targetaDe(container, town.title);
   const autor = torre.querySelector('a.sp-card-author-link');
   const vel = torre.querySelector('a.sp-card-link-overlay');
-  /* Onada 6 (pla 261009_0245, ítem 4) · El fil es diu com la gent del poble. */
-  expect(autor.getAttribute('href')).toBe(rutaXatDePagina(objecteDelPobleXat(town)));
-  expect(autor.getAttribute('href')).toMatch(/^\/xat\?sobre=poble:la-torre-de-les-macanes&titol=Gent%20de%20la%20Torre&/);
+  expect(autor.getAttribute('href')).toBe('/pobles/la-torre-de-les-macanes');
+  expect(autor.getAttribute('href')).toBe(objecteDelPobleXat(town).ruta);
   expect(vel.getAttribute('href')).toBe('/pobles/la-torre-de-les-macanes');
   // Dos objectius germans: la caputxa no està dins del vel, ni el vel dins de la caputxa.
   expect(autor.closest('.sp-card-link-overlay')).toBeNull();
   expect(vel.contains(autor)).toBe(false);
   expect(autor.contains(vel)).toBe(false);
+  /* El botó gran, d'una banda a l'altra (la porta de Pedra Seca, ple), dins
+     de la targeta. Onada 6 (pla 261009_0245, ítem 4) · El fil es diu com la
+     gent del poble. */
+  const boto = within(torre).getByRole('link', { name: 'Anar al xat' });
+  expect(boto.getAttribute('href')).toBe(rutaXatDePagina(objecteDelPobleXat(town)));
+  expect(boto.getAttribute('href')).toMatch(/^\/xat\?sobre=poble:la-torre-de-les-macanes&titol=Gent%20de%20la%20Torre&/);
+  expect(boto.className.split(' ')).toEqual(expect.arrayContaining(['sdp-boto', 'sdp-boto--primari', 'sdp-boto--gran', 'sdp-boto--ple']));
+  expect(boto.closest('.sp-card-accio')).not.toBeNull();
+  expect(vel.contains(boto)).toBe(false);
+});
+
+test('Onada 8 · cap boina de poble porta al xat: totes a la seua fitxa, i cada targeta porta el seu «Anar al xat»', () => {
+  const { container } = render(<PoblesSection />);
+  const llista = targetes(container);
+  expect(llista).toHaveLength(TOWNS.length);
+  for (const targeta of llista) {
+    const town = TOWNS.find((t) => t.title === titol(targeta));
+    const boina = targeta.querySelector('a.sp-card-author-link').getAttribute('href');
+    expect([town.id, boina]).toEqual([town.id, `/pobles/${encodeURIComponent(town.id)}`]);
+    expect(boina.startsWith('/xat')).toBe(false);
+    expect(within(targeta).getByRole('link', { name: 'Anar al xat' }).getAttribute('href')).toBe(rutaXatDePagina(objecteDelPobleXat(town)));
+  }
 });
 
 /* Onada 5 (F5, fase 3) · Sense author, la caputxa signa amb la regla única
@@ -178,9 +205,11 @@ test('Onada 5 · un poble remot sense author rep nomDeLaGent del seu nom i obri 
   expect(autor(targetaOrxeta)).toBe(nomDeLaGent('Orxeta'));
   expect(autor(targetaOrxeta)).toBe('Gent d\'Orxeta');
   expect(targetaOrxeta.querySelector('.sp-card-author-location').textContent).toBe('Orxeta');
-  expect(targetaOrxeta.querySelector('a.sp-card-author-link').getAttribute('href'))
+  /* Onada 8 (261009) · El xat, pel botó «Anar al xat»; la caputxa, a la fitxa. */
+  expect(within(targetaOrxeta).getByRole('link', { name: 'Anar al xat' }).getAttribute('href'))
     .toBe(rutaXatDePagina(objecteDelPobleXat(orxeta)));
-  expect(targetaOrxeta.querySelector('a.sp-card-author-link').getAttribute('href')).toMatch(/^\/xat\?sobre=poble:orxeta&/);
+  expect(within(targetaOrxeta).getByRole('link', { name: 'Anar al xat' }).getAttribute('href')).toMatch(/^\/xat\?sobre=poble:orxeta&/);
+  expect(targetaOrxeta.querySelector('a.sp-card-author-link').getAttribute('href')).toBe('/pobles/orxeta');
   expect(autor(targetaTorre)).toBe('Gent de la Torre de les Maçanes');
   // L'article del topònim es contrau: «del Campello», no «de El Campello».
   expect(autor(targetaCampello)).toBe('Gent del Campello');
@@ -339,7 +368,13 @@ test('Onada 6 · «Comentar · En públic» de la targeta porta al xat de la gen
   mocks.core = llavor([TOWNS.find((t) => t.id === 'sella')]);
   const { container } = render(<PoblesSection />);
   const [sella] = targetes(container);
-  expect(sella.querySelector('a.sp-card-author-link').getAttribute('href')).toContain('titol=Gent%20de%20Sella');
+  /* Onada 8 (261009) · La caputxa ja no és el xat: es mira «Comentar · En
+     públic» de veres, i el botó «Anar al xat», que porta al mateix fil. */
+  fireEvent.click(within(sella).getByRole('button', { name: /^Comentar/ }));
+  fireEvent.click(within(sella).getByRole('menuitem', { name: 'En públic' }));
+  expect(mocks.navigate.mock.calls.at(-1)[0]).toContain('titol=Gent%20de%20Sella');
+  expect(within(sella).getByRole('link', { name: 'Anar al xat' }).getAttribute('href')).toBe(mocks.navigate.mock.calls.at(-1)[0]);
+  mocks.navigate.mockClear();
   within(sella).getByRole('button', { name: /Connectar/ }).click();
   const connectar = new URL(mocks.navigate.mock.calls[0][0], 'http://localhost');
   expect(connectar.searchParams.get('title')).toBe('Sella');

@@ -23,9 +23,12 @@ vi.mock('../../../app/contexts/CoreContentContext.jsx', () => ({
 vi.mock('../../../app/contexts/SessionContext.jsx', () => ({
   useSession: () => ({ currentUser: null, estat: 'fora' })
 }));
+/* Onada 8 (261009, revisió) · La boina de la targeta viva (NotaFitxa) és un
+   Link quan se sap qui signa: la nota de benvinguda porta al perfil de Sóc de Poble. */
 vi.mock('../../../app/contexts/RouterContext.jsx', () => ({
   useRouter: () => ({ navigate: vi.fn(), location: { pathname: '/' } }),
-  useNavigate: () => vi.fn()
+  useNavigate: () => vi.fn(),
+  Link: ({ to, children, ...rest }) => <a href={to} {...rest}>{children}</a>
 }));
 
 beforeAll(() => {

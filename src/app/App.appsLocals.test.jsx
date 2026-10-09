@@ -12,7 +12,7 @@
      ho són totes les internes: Gestoria, El Bar (el TPV de la llavor La
      Parròquia), La Nevera de Casa, Notícies del Poble i Salut. Salut, a més,
      només s'obri si l'App és l'ama del document (interruptors.js:67): ací es
-     munta amb manageDocumentHead, com el lloc propi (main.jsx:29).
+     munta amb manageDocumentHead, com el lloc propi (main.jsx:28).
    · Cap app importa el backend ni useSession (plataforma/fronteres.test.js,
      Model B); la Gestoria tampoc (gestoria/privacitat.test.js): llig
      IndexedDB local i els fitxers que tria la persona.
@@ -77,7 +77,7 @@ vi.mock('./guards/guardaConsola.js', async (importOriginal) => {
    paquet sense VITE_DATA_MODE (backendConfig.js:19); 'seed' i 'local' són els
    modes locals (dataMode.js:4), el «Mode Local» de la Fase 4: la closca s'obri
    en local i sense connexió de xarxa al backend. Al lloc propi el mode arriba
-   per la capa del paquet (main.jsx:21-26); ací, amb host.js simulat, per la
+   per la capa del paquet (main.jsx:20-25); ací, amb host.js simulat, per la
    config del muntatge, com App.test.jsx:673-685. */
 const MODES = Object.freeze(['remote', 'seed', 'local']);
 
@@ -109,7 +109,7 @@ const esPublic = (permis) => !permis || permis === 'public';
 const entradaPerDefecte = (app) => app.entrades.find((entrada) => entrada.slug === app.entradaPerDefecte);
 const APPS_LOCALS = APPS_INTERNES.filter((app) => esPublic(app.permisos.veure) && esPublic(entradaPerDefecte(app).permis));
 
-/* El lloc propi (main.jsx:27-31): router de navegador i ama del document. */
+/* El lloc propi (main.jsx:26-30): router de navegador i ama del document. */
 const DEL_LLOC = Object.freeze({ routerType: 'browser', manageDocumentHead: true });
 const USUARI = Object.freeze({ id: 'u-t3', user_metadata: Object.freeze({ full_name: 'Pepa Soler' }) });
 

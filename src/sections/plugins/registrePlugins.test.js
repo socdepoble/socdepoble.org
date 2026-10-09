@@ -10,6 +10,10 @@
  * Ordre del Mestre (261007) · Bàscula descartada per ara: «Llévala de la
  * interfície actual i descarta la seua implementació». Onze: la Bàscula ja
  * no és del registre, només una llavor del Full de ruta.
+ * Onada 8 (261009; requeriments 261009_1300, punt 2) · Huit: la Consola, el
+ * Cervell i el Panell de Disseny «són pàgines, no plugins» i ixen del
+ * registre, com la Bàscula. Les seues rutes i el seu botó «Obrir…» els prova
+ * systemPages.test.js.
  */
 import { existsSync } from 'node:fs';
 import path from 'node:path';
@@ -17,13 +21,13 @@ import { describe, expect, test } from 'vitest';
 import fontApp from '../../app/App.jsx?raw';
 import { MANIFESTS_INTERNS, analitzaRuta } from '../../apps/plataforma/registreApps.js';
 import { rutaDeApp } from '../../apps/plataforma/manifestApp.js';
-import { RUTA_CONSOLA, segmentPagina } from '../consola/consolaPagines.js';
+import { segmentPagina } from '../consola/consolaPagines.js';
 import {
   ESPAIS_PLUGINS, IDS_PLUGINS, IMATGES_PLUGINS, PLUGINS, appDelPlugin, clauPortadaDelPlugin, pluginPerId, pluginsDeLEspai,
   rutaDelPlugin
 } from './registrePlugins.js';
 
-const ORDRE = ['mapa', 'vehicle', 'animalets', 'gestoria', 'rebost', 'salut', 'consola', 'cervell', 'disseny', 'rss', 'tpv'];
+const ORDRE = ['mapa', 'vehicle', 'animalets', 'gestoria', 'rebost', 'salut', 'rss', 'tpv'];
 
 /* Les rutes de la taula d'App (App.jsx), amb el seu element. */
 const rutesDApp = () => [...fontApp.matchAll(/<Route\s+path="([^"]+)"/g)].map((m) => m[1]);
@@ -51,10 +55,21 @@ function esRutaDeVeres(ruta) {
 }
 
 describe('registre de plugins', () => {
-  test('onze ids, en l’ordre del Mestre, sense repetits', () => {
+  test('huit ids, en l’ordre del Mestre, sense repetits', () => {
     expect(IDS_PLUGINS).toEqual(ORDRE);
     expect(PLUGINS.map((p) => p.id)).toEqual(ORDRE);
-    expect(new Set(IDS_PLUGINS).size).toBe(11);
+    expect(new Set(IDS_PLUGINS).size).toBe(8);
+  });
+
+  /* Onada 8 (261009) · La Consola, el Cervell i el Panell de Disseny ja no
+     són plugins: cap id ni cap títol seu al registre (/plugin/<id> és la
+     404). Les il·lustracions es conserven al disc (cap esborrat). */
+  test('la Consola, el Cervell i el Panell de Disseny ja no són del registre; les il·lustracions continuen al disc', () => {
+    for (const id of ['consola', 'cervell', 'disseny']) {
+      expect([id, IDS_PLUGINS.includes(id), pluginPerId(id)]).toEqual([id, false, null]);
+      expect([id, existsSync(path.join(process.cwd(), 'public', IMATGES_PLUGINS, `${id}_vinyeta.jpg`))]).toEqual([id, true]);
+    }
+    expect(PLUGINS.filter((p) => /Consola|Cervell|Disseny/.test([p.titol, p.etiquetaObrir].join(' ')))).toEqual([]);
   });
 
   /* Ordre del Mestre (261007) · Bàscula descartada per ara: cap plugin, cap
@@ -101,18 +116,14 @@ describe('registre de plugins', () => {
       gestoria: '/app/gestoria',
       rebost: '/app/nevera/casa',
       salut: '/app/salut',
-      consola: '/consola',
-      cervell: '/consola/explorador',
-      disseny: '/disseny',
       rss: '/app/lector',
       tpv: '/app/bar'
     });
   });
 
-  test('la Consola i el Cervell porten a la ruta de la Consola (RUTA_CONSOLA), no a una còpia que divergisca', () => {
-    expect(pluginPerId('consola').obrir).toBe(RUTA_CONSOLA);
-    expect(pluginPerId('cervell').obrir).toBe(`${RUTA_CONSOLA}/explorador`);
-  });
+  /* Onada 8 (261009) · Derogada «la Consola i el Cervell porten a la ruta de
+     la Consola (RUTA_CONSOLA)»: ja no són del registre. El seu botó «Obrir…»
+     el confronta amb RUTA_CONSOLA systemPages.test.js. */
 
   /* Ordre del Mestre, 261004 («contaminació crítica de rutes/estats entre
      Gestoria i Wiki») · La Gestoria porta a la seua app, amb la ruta que fa
@@ -147,15 +158,14 @@ describe('registre de plugins', () => {
   });
 
   /* Onada 2 de la Gestoria (261004) · I la Gestoria: la seua app només
-     s'obri en desenvolupament (ordre del Mestre, 261004). */
-  test('la Consola, el Cervell i la Gestoria només s’obrin en desenvolupament', () => {
+     s'obri en desenvolupament (ordre del Mestre, 261004).
+     Onada 8 (261009) · La Consola i el Cervell, que també hi eren, ja no són
+     del registre: hui només la Gestoria porta entorn. */
+  test('la Gestoria només s’obri en desenvolupament', () => {
     expect(Object.fromEntries(PLUGINS.map((p) => [p.id, p.entorn]))).toEqual({
       mapa: null, vehicle: null, animalets: null, gestoria: 'desenvolupament',
-      rebost: null, salut: null, consola: 'desenvolupament', cervell: 'desenvolupament', disseny: null, rss: null, tpv: null
+      rebost: null, salut: null, rss: null, tpv: null
     });
-    // Cap entradilla promet un accés en producció que no existix.
-    expect(pluginPerId('consola').entradilla).not.toMatch(/superadministraci/);
-    expect(pluginPerId('consola').entradilla).toMatch(/desenvolupament/);
     // La Gestoria diu, honestament, que està en obres i on s'obri (ja no «dins de la Wiki»).
     expect(pluginPerId('gestoria').entradilla).toMatch(/en obres/);
     expect(pluginPerId('gestoria').entradilla).toMatch(/desenvolupament/);
@@ -174,7 +184,7 @@ describe('registre de plugins', () => {
     }
     expect(Object.fromEntries(PLUGINS.map((p) => [p.id, p.espai]))).toEqual({
       mapa: null, vehicle: null, animalets: null, gestoria: 'empresa',
-      rebost: 'llar', salut: 'llar', consola: null, cervell: null, disseny: null, rss: null, tpv: null
+      rebost: 'llar', salut: 'llar', rss: null, tpv: null
     });
     expect(pluginsDeLEspai('empresa').map((p) => p.id)).toEqual(['gestoria']);
     expect(pluginsDeLEspai('llar').map((p) => p.id)).toEqual(['rebost', 'salut']);
@@ -200,7 +210,7 @@ describe('registre de plugins', () => {
   test('appDelPlugin diu de quina app de la plataforma és l’«Obrir» (per als interruptors), o null', () => {
     expect(Object.fromEntries(PLUGINS.map((p) => [p.id, appDelPlugin(p)]))).toEqual({
       mapa: null, vehicle: null, animalets: null, gestoria: 'gestoria',
-      rebost: 'nevera', salut: 'salut', consola: null, cervell: null, disseny: null, rss: 'lector', tpv: 'bar'
+      rebost: 'nevera', salut: 'salut', rss: 'lector', tpv: 'bar'
     });
     expect(appDelPlugin(null)).toBeNull();
   });

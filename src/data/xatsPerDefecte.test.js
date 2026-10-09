@@ -10,8 +10,9 @@ import { AGENTS_IA_SEED, ENTITAT_PILOT_ID, IAIA_ID } from './identitatsSeed.js';
 import { AGENTS_MAP } from './agentsSeed.js';
 import { PAGINES_AMB_XAT } from './contracte.js';
 
-/* El literal de l'ordre del Mestre: el logo quadrat, a foc. */
-const LOGO_QUADRAT = '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg';
+/* El literal de l'ordre del Mestre: el logo quadrat, a foc.
+   Onada 8 (261009) · En PNG de 256x256 (requeriments, punt 1; abans, l'SVG). */
+const LOGO_QUADRAT = '/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png';
 /* El mateix patró que l'adaptador (supabase/xat.js, W4-10). */
 const RE_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const UUID_ENTITAT = '7d1e5c2a-0000-4000-8000-0000000000aa';

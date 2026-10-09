@@ -1,0 +1,50 @@
+LLEGIU_PRIMER · Laboratori 261009_1330_logotips_png_claude
+Onada 8, punt 1 (requeriments de MarIA 261009_1300): els logotips de SVG a PNG de 256 px.
+Preparat per Claude (Opus 5.5) el 261009, amb el Mestre fora. Res d'este laboratori està aplicat.
+
+======================================================================
+0. QUÈ ÉS, EN TRES LÍNIES
+======================================================================
+
+Tres PNG rasteritzats amb el canvas del navegador integrat (Chromium), des dels SVG que es pinten hui. Claude no
+pot escriure binaris, i per això els bytes viatgen com a base64 en trossos/, amb el hash de cada tros i del PNG
+sencer a manifest.json. escriu-png.mjs els reconstruïx, els contrasta i, amb --escriu, els desa a public/.
+
+======================================================================
+1. ELS TRES PNG
+======================================================================
+
+  font (SVG que es pinta hui)                         destí                                                  mida
+  public/assets/system/ui/logo-socdepoble-cuadrat-verd.svg   public/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png   20.182 B (l'SVG en fa 213.730)
+  public/assets/system/ui/logo-socdepoble-rect-blanc.svg     public/assets/system/ui/logo-socdepoble-rect-blanc-985x256.png     39.122 B (125.585)
+  public/assets/system/ui/logo-socdepoble-rect-negre.svg     public/assets/system/ui/logo-socdepoble-rect-negre-985x256.png     35.043 B (153.894)
+
+  · «256 px» és l'alçada. El rectangular es pinta fins a 600 px CSS d'ample (logotip de pàgina, layout.css:477):
+    a 256 px d'ample es veuria borrós. Amb 985×256 és nítid a 180 px CSS en pantalles 3× i a 600 px en 1×.
+    El quadrat, a 256×256, servix fins a 3× en tots els avatars (32-80 px CSS).
+  · Comprovat a ull al navegador: transparència bona, blanc sobre fosc i negre sobre clar.
+  · Els noms seguixen el precedent de og-socdepoble-1200x630.png.
+
+======================================================================
+2. COM S'APLICA (MarIA, des de l'arrel)
+======================================================================
+
+  1. node _wiki_de_poble/04_escriptori/02_investigacio_ia/261009_1330_logotips_png_claude/escriu-png.mjs
+     Ha de dir «pendent» per als tres i «Tot quadra». Si diu «error», no es força: avisa Claude.
+  2. node _wiki_de_poble/04_escriptori/02_investigacio_ia/261009_1330_logotips_png_claude/escriu-png.mjs --escriu
+     Escriu els tres PNG. Mai sobreescriu un fitxer existent (flag wx).
+  3. Comprovació: npx vitest run tests/laboratori-logotips-261009.test.js
+     Passa a les proves «aplicat: el PNG de public/ és el del manifest».
+  4. Avisa Claude al canal (261009_1245_auditoria_claude.md): llavors canvia les referències del codi
+     (DEFAULT_AUTHOR, BrandMark, llavors i proves), que hui no poden apuntar a fitxers que no existixen.
+
+======================================================================
+3. PROVES I LÍMITS
+======================================================================
+
+  · tests/laboratori-logotips-261009.test.js importa les funcions d'escriu-png.mjs i les prova sense escriure:
+    hash de cada tros, llargada i sha256 del base64, mida, sha256 i IHDR del PNG. 9 verdes el 261009 a les 13:53.
+  · Alguns trossos porten peces superposades (trossos/<clau>.<i>.b64.<desplaçament>): són les correccions de
+    caràcters mal copiats, validades pel hash del navegador. És deliberat; no les esborreu.
+  · Els SVG de public/ NO s'han d'esborrar: supabase/seed.sql i les files del servidor els porten.
+  · Quan estiga aplicat, este laboratori es pot arxivar (la prova se salta sola sense escriu-png.mjs).

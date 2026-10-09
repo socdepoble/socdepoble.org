@@ -1,4 +1,3 @@
-import React from 'react';
 import { UniversalCard } from './../PedraSeca';
 import { resolveAsset } from '../../config/assetResolver';
 import { COPYRIGHT_SDP, RUTA_CALENDARI, dataDElement, dataHoraDeBarra, rutaCalendariDeLaData } from './editorial.js';
@@ -76,9 +75,10 @@ export function etiquetaAgendaDelDia(dia) {
  * T6 (ordre del Mestre, 261004, prompt 261004_0515 §5) · On porta la boina
  * d'un acte: la pàgina de qui signa (`deQuiSigna`, la ruta que en fa qui
  * pinta la targeta) o, si no se sap qui és, el sistema i la reserva «Sóc de
- * Poble» (sense nom propi) van a la pàgina del projecte (DEFAULT_AUTHOR.href,
- * RUTA_PROJECTE de config/navigation.js). Un nom sense identitat coneguda no
- * s'endevina: sense enllaç.
+ * Poble» (sense nom propi) van al perfil de Sóc de Poble (DEFAULT_AUTHOR.href,
+ * RUTA_PERFIL_PROJECTE de config/navigation.js; Onada 8, 261009: abans, la
+ * pàgina del projecte). Un nom sense identitat coneguda no s'endevina: sense
+ * enllaç.
  */
 export function rutaDeLaBoinaDeLActe(item, deQuiSigna) {
   if (deQuiSigna) return deQuiSigna;
@@ -126,7 +126,9 @@ export function EventCard({ item, esdeveniment = null, onConnect, objecte, autho
       /* T6 · Derogat per l'ordre del Mestre del 261004 (prompt 261004_0515):
          el sistema ja no porta a /pobles, i qui signa ja té enllaç. */
       authorHref={rutaDeLaBoinaDeLActe(item, authorHref)}
-      avatarUrl={fontImatgePropia(resolveAsset((typeof item.author_avatar === 'string' ? item.author_avatar : null) || '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg'))}
+      /* Onada 8 (261009) · La reserva és l'avatar de Sóc de Poble (el PNG),
+         no un literal: ja ve resolt i resolveAsset no el torna a tocar. */
+      avatarUrl={fontImatgePropia(resolveAsset((typeof item.author_avatar === 'string' ? item.author_avatar : null) || DEFAULT_AUTHOR.avatarUrl))}
       location={item.author_location || item.location || item.population || "La Torre de les Maçanes"}
       date={data.date}
       time={data.time}

@@ -10,6 +10,9 @@ import { AppGridContext } from '../../../components/layout/AppGridShell.jsx';
 import { ColumnaCataleg } from './ColumnaCataleg.jsx';
 import { ColumnaColleccio } from './ColumnaColleccio.jsx';
 import { ColumnaColleccions } from './ColumnaColleccions.jsx';
+/* Onada 8 (261009) · La boina de Sóc de Poble que vestix l'app porta al seu
+   perfil (RUTA_PERFIL_PROJECTE); una ruta vella /projecte ja no s'hi pinta. */
+import { RUTA_PERFIL_PROJECTE } from '../../../config/navigation.js';
 
 afterEach(cleanup);
 
@@ -360,13 +363,13 @@ describe('forma="targetes" (UniversalCard)', () => {
   /* REGLA D'OR 1 (ordre del Mestre, 261004) · La boina taronja amb l'autor real: la que l'app vestix
      a cada article (`autoria`, la forma de PaginaApp). L'esquelet no n'inventa cap. */
   test('la boina: `article.autoria` (nom, poble, avatar i ruta) a dalt de la targeta; sense, la targeta de sempre', () => {
-    const PROJECTE = { nom: 'Sóc de Poble', poble: 'La Torre de les Maçanes', avatar: '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg', href: '/projecte' };
+    const PROJECTE = { nom: 'Sóc de Poble', poble: 'La Torre de les Maçanes', avatar: '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg', href: RUTA_PERFIL_PROJECTE };
     const articles = [{ ...ARTICLES[0], autoria: PROJECTE }, { ...ARTICLES[1], autoria: { nom: 'Tu' } }, ARTICLES[2]];
     munta(<ColumnaCataleg forma="targetes" titol="Productes" categories={CATEGORIES} articles={articles} />);
     const tallat = targetaDe('Tallat');
     expect([...tallat.children].map((e) => e.className)[0]).toBe('sp-card-header');
     const autor = within(tallat.querySelector('header.sp-card-header')).getByRole('link', { name: /^Sóc de Poble/ });
-    expect(autor.getAttribute('href')).toBe('/projecte');
+    expect(autor.getAttribute('href')).toBe(RUTA_PERFIL_PROJECTE);
     expect(tallat.querySelector('.sp-card-author-location').textContent).toBe('La Torre de les Maçanes');
     /* L'avatar és la imatge privada de les apps: el filtre de mitjans i sense referent. */
     const avatar = tallat.querySelector('img.sp-card-avatar');
@@ -381,9 +384,9 @@ describe('forma="targetes" (UniversalCard)', () => {
   });
 
   test('ColumnaColleccio: la boina de cada línia (`linia.autoria`)', () => {
-    const linies = [{ id: 'p', articleId: 'pomes', quantitat: 1, nom: 'Pomes', autoria: { nom: 'Sóc de Poble', href: '/projecte' } }];
+    const linies = [{ id: 'p', articleId: 'pomes', quantitat: 1, nom: 'Pomes', autoria: { nom: 'Sóc de Poble', href: RUTA_PERFIL_PROJECTE } }];
     munta(<ColumnaColleccio forma="targetes" titol="Llista" linies={linies} onTria={() => {}} />);
-    expect(within(targetaDe('Pomes')).getByRole('link', { name: 'Sóc de Poble' }).getAttribute('href')).toBe('/projecte');
+    expect(within(targetaDe('Pomes')).getByRole('link', { name: 'Sóc de Poble' }).getAttribute('href')).toBe(RUTA_PERFIL_PROJECTE);
   });
 
   test('Llei del Píxel: sense la prop, el cos de sempre (rajoles i files), cap UniversalCard', () => {
@@ -446,7 +449,7 @@ describe('la prop avis (l’avís dins del marc)', () => {
     cos: [...marc.querySelector(':scope > .sdp-marc-columna__cos').children].map(descriu)
   }));
   const DESTACATS = [{ id: 'recents', nom: 'Recents', articles: [ARTICLES[2]] }];
-  const AUTORIA = { nom: 'Sóc de Poble', href: '/projecte' };
+  const AUTORIA = { nom: 'Sóc de Poble', href: RUTA_PERFIL_PROJECTE };
   /* Les tres columnes com les munta la Nevera (vistes/Compra.jsx): La compra primer. */
   const nevera = (props = {}) => (
     <>

@@ -101,7 +101,7 @@ class SpTopBar extends HTMLElement {
       <header>
         <div class="brand-container">
           <a href="/xat" style="text-decoration: none; display: flex; align-items: center;">
-            <img src="/assets/system/ui/logo-socdepoble-rect-blanc.svg" alt="Sóc de Poble" class="logo" style="cursor: pointer;">
+            <img src="/assets/system/ui/logo-socdepoble-rect-blanc-985x256.png" alt="Sóc de Poble" class="logo" style="cursor: pointer;">
           </a>
           <span class="brand-text"><slot name="brand"></slot></span>
         </div>

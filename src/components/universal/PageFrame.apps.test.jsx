@@ -5,7 +5,8 @@
    · refTitol: el focus a l'H1, amb tabIndex -1 només quan es passa;
    · traduccio={false}: Traduir avisa i el servei no rep res;
    · telemetria={{ comptar: false }}: el Connectar de la barra no compta;
-   · T6: sense nom propi, la barra signa «Sóc de Poble» i enllaça a /projecte;
+   · T6: sense nom propi, la barra signa «Sóc de Poble» i enllaça al seu
+     perfil (Onada 8; abans, a /projecte);
    · D-C: l'etiqueta amb botó porta sp-card-label--amb-accio (substituïx el :has()).
    Sense les props, el DOM de sempre (PageFrame.test.jsx, CAPCALERA_SENSE_RANURA). */
 import { createRef } from 'react';
@@ -103,20 +104,28 @@ describe('refTitol', () => {
   });
 });
 
-describe('T6 · l’autor per defecte enllaça a la pàgina del projecte', () => {
+/* Onada 8 (261009) · L'autor per defecte enllaça al perfil de Sóc de Poble
+   (DEFAULT_AUTHOR.href, '/empresa/socdepoble'), ja no a /projecte. */
+describe('T6 · l’autor per defecte enllaça al perfil de Sóc de Poble', () => {
   const autor = (container) => container.querySelector('section.bar-orange').firstElementChild;
 
-  test('sense nom propi: «Sóc de Poble» i un enllaç a /projecte', () => {
+  test('sense nom propi: «Sóc de Poble» i un enllaç al seu perfil', () => {
     const { container } = render(<PageFrame chrome="context" title="Pàgina" />);
     expect(autor(container).tagName).toBe('A');
-    expect(autor(container).getAttribute('href')).toBe('/projecte');
+    expect(autor(container).getAttribute('href')).toBe('/empresa/socdepoble');
     expect(autor(container).getAttribute('href')).toBe(DEFAULT_AUTHOR.href);
     expect(autor(container).querySelector('.sp-card-author-name').textContent).toBe(DEFAULT_AUTHOR.name);
   });
 
-  test('una ruta nul·la explícita amb l’autor per defecte també porta al projecte', () => {
+  test('una ruta nul·la explícita amb l’autor per defecte també porta al seu perfil', () => {
     const { container } = render(<PageFrame chrome="context" title="Pàgina" authorHref={null} />);
-    expect(autor(container).getAttribute('href')).toBe('/projecte');
+    expect(autor(container).getAttribute('href')).toBe(DEFAULT_AUTHOR.href);
+  });
+
+  test('Onada 8 · una ruta vella /projecte enllaça al perfil i continua portant el logotip', () => {
+    const { container } = render(<PageFrame chrome="context" title="Pàgina" authorHref="/projecte" />);
+    expect(autor(container).getAttribute('href')).toBe(DEFAULT_AUTHOR.href);
+    expect(container.querySelector('header.page-title img')).not.toBeNull();
   });
 
   test('una ruta pròpia mana, també la de topBarData', () => {
@@ -144,7 +153,7 @@ describe('T6 · l’autor per defecte enllaça a la pàgina del projecte', () =>
     vi.stubGlobal('location', { origin: 'capacitor://localhost', protocol: 'capacitor:', host: 'localhost', hostname: 'localhost',
       href: 'capacitor://localhost/page/x', pathname: '/page/x', search: '', hash: '' });
     const { container } = render(<PageFrame chrome="context" title="Pàgina" />);
-    expect(autor(container).getAttribute('href')).toBe('/projecte');
+    expect(autor(container).getAttribute('href')).toBe(DEFAULT_AUTHOR.href);
   });
 });
 

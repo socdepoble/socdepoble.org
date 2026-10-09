@@ -31,7 +31,12 @@ export default function SectionItemCard({
      Comentar obri el seu xat, o el directe d'una persona o una IA. Sense ell,
      el de la fitxa a què porta `to` si és una ruta de perfil (rutaDePerfil):
      cada targeta, el seu, mai el de la llista. Si no ho és, cap xat (useAccions). */
-  objecte
+  objecte,
+  /* Onada 8 (261009; requeriments, punt 4) · El botó gran de la targeta
+     (la ranura `accio` d'UniversalCard: «Anar al xat» d'una entitat del
+     directori) i, amb ell, les etiquetes al seu lloc. Sense, el DOM de sempre. */
+  accio = null,
+  etiquetesAmbAccio = false
 }) {
   const navigate = useNavigate();
   const objecteTargeta = objecte !== undefined ? objecte : (objecteDeRutaDePerfil(to, typeof title === 'string' ? title : '') || undefined);
@@ -70,6 +75,8 @@ export default function SectionItemCard({
         showShare={true}
         onConnect={onConnect}
         objecte={objecteTargeta}
+        accio={accio}
+        etiquetesAmbAccio={etiquetesAmbAccio}
       />
     </div>
   );

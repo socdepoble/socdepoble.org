@@ -22,5 +22,5 @@ export const CALENDAR_EVENTS = [{
      eventsSeed.test.js ho fixa. */
   author_entity_id: 'socdepoble',
   author_location: 'La Torre de les Maçanes',
-  author_avatar: '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg'
+  author_avatar: '/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png'
 }];

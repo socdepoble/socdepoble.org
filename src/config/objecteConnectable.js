@@ -99,6 +99,36 @@ export function rutaXatDePagina(objecte) {
   return `/xat?${parts.join('&')}`;
 }
 
+/* ── Onada 8 (261009) · «Comentar» → «En privat»: el xat amb l'autor ──────
+   El requeriment del Mestre: «Només s'hi accedeix quan es prem Comentar i es
+   tria En privat. Això obri el xat amb l'autor d'eixa publicació per poder
+   parlar amb ell, encara que no el conegues». El backend ja ho permet
+   (crea_fil_directe, 2610081543). Ací només es diu AMB QUI: el que ho decidix
+   del tot (el pilot, una publicació pròpia) és useAccions. */
+const TIPUS_D_INTERLOCUTOR = Object.freeze(['persona', 'entitat', 'grup', 'ia']);
+
+/**
+ * Amb qui obri el xat «En privat» un descriptor: { tipus, id, nom, projecte },
+ * o null si no se sap. L'autor de l'element, si té id (objecteDe); si no, el
+ * mateix perfil (objecteDePerfil: una persona, una entitat, un grup o una
+ * IA). Un nom sense id no s'endevina. `projecte` és la marca de l'entitat
+ * pilot (navigation.js), que va pel canal de Sóc de Poble.
+ */
+export function interlocutorDe(objecte) {
+  if (!objecte || typeof objecte !== 'object') return null;
+  const autor = objecte.autor;
+  if (autor && text(autor.id).trim()) {
+    return { tipus: text(autor.tipus), id: text(autor.id), nom: text(autor.nom), projecte: autor.projecte === true };
+  }
+  if (TIPUS_D_INTERLOCUTOR.includes(objecte.tipus) && text(objecte.id).trim()) {
+    return { tipus: objecte.tipus, id: text(objecte.id), nom: text(objecte.titol), projecte: objecte.projecte === true };
+  }
+  return null;
+}
+
+/** El xat privat amb un interlocutor: /xat?amb=<id>, el de «Escriu-li al xat». */
+export const rutaXatPrivat = (interlocutor) => `/xat?amb=${encodeURIComponent(text(interlocutor?.id))}`;
+
 /** Quin xat obri «Comentar»: 'comu', 'directe' o null (cap). Dona nom al botó de la barra blava. */
 export function modeXat(objecte) {
   if (!rutaXatDePagina(objecte)) return null;

@@ -24,7 +24,8 @@ import { rutaDAutoria, rutaDePerfil } from '../../config/navigation.js';
    portar a la pàgina de l'autor que l'ha creada». La barra taronja d'esta
    pàgina privada porta a la fitxa pública pròpia: la persona, per l'id de
    la seua fila (dades.id, no 'jo'); una organització, per rutaDAutoria
-   (l'entitat pilot, /projecte); un agent IA, /perfil/:id. La mateixa tria
+   (l'entitat pilot, al seu perfil, /empresa/socdepoble: Onada 8, 261009;
+   abans, /projecte); un agent IA, /perfil/:id. La mateixa tria
    que rutaDeFitxaPublica de PerfilEditor, que no s'importa: les proves del
    Perfil substituïxen eixe mòdul sencer.
 

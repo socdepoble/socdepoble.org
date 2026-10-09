@@ -84,6 +84,30 @@ describe('261007 · el botó Comentar de la barra i el seu menú', () => {
     expect(menu()).toBeNull();
   });
 
+  /* Onada 8 (261009) · «En privat» diu amb qui: el nom de l'autor
+     (comentarPrivatAmb, useAccions). Sense nom, la línia de sempre. Tancat,
+     el mateix trio de sempre. */
+  test('Onada 8 · amb el nom de l’autor, «En privat» diu «Un xat només entre tu i {nom}»', () => {
+    const { container } = render(<BarraBlava {...TOTES} comentarXat="comu" comentarPrivatAmb="Pepa" />);
+    expect(marques(container.querySelector('.sp-card-actions'))).toEqual(['button.sp-card-action', 'button.sp-card-action', 'button.sp-card-action']);
+    fireEvent.click(comentar());
+    expect(fila(PRIVAT).textContent).toBe(`${PRIVAT}Un xat només entre tu i Pepa`);
+    expect(TEXTOS_COMENTAR.privatDetallAmb[1].replace('{nom}', 'Pepa')).toBe('Un xat només entre tu i Pepa');
+    cleanup();
+    render(<BarraBlava {...TOTES} comentarXat="comu" comentarPrivatAmb="  " />);
+    fireEvent.click(comentar());
+    expect(fila(PRIVAT).textContent).toBe(`${PRIVAT}${TEXTOS_COMENTAR.privatDetall[1]}`);
+  });
+
+  test('Onada 8 · la barra d’una pàgina amb autor: el menú en diu el nom i «En privat» obri el seu xat', () => {
+    const objecte = { tipus: 'publicacio', id: 'coca', titol: 'Coca', ruta: '/mur/coca', autor: { tipus: 'persona', id: 'pepa', nom: 'Pepa' } };
+    render(<UniversalPage title="Coca" chrome="full" objecte={objecte}><p>Cos</p></UniversalPage>);
+    fireEvent.click(comentar());
+    expect(fila(PRIVAT).textContent).toBe(`${PRIVAT}Un xat només entre tu i Pepa`);
+    fireEvent.click(fila(PRIVAT));
+    expect(mocks.navigate).toHaveBeenLastCalledWith('/xat?amb=pepa');
+  });
+
   test('triar: tanca el menú, torna el focus a Comentar i passa la via', () => {
     const onComment = vi.fn();
     render(<BarraBlava {...TOTES} onComment={onComment} comentarXat="comu" />);
@@ -300,7 +324,8 @@ describe('261007 · els textos del menú de Comentar', () => {
   const LLENGUES = SUPPORTED_LANGUAGES.map(({ code }) => code);
 
   test('cada clau té valor propi en les cinc llengües, una sola vegada, i la reserva és el valor valencià', () => {
-    expect(Object.keys(TEXTOS_COMENTAR).sort()).toEqual(['menu', 'privat', 'privatDetall', 'public', 'publicDetall', 'senseXatPublic']);
+    /* Onada 8 (261009) · privatDetallAmb: «Un xat només entre tu i {nom}». */
+    expect(Object.keys(TEXTOS_COMENTAR).sort()).toEqual(['menu', 'privat', 'privatDetall', 'privatDetallAmb', 'public', 'publicDetall', 'senseXatPublic']);
     for (const [clau, reserva] of Object.values(TEXTOS_COMENTAR)) {
       expect([clau, createTranslator('ca')(clau)]).toEqual([clau, reserva]);
       for (const codi of LLENGUES.filter((llengua) => llengua !== 'ca')) {

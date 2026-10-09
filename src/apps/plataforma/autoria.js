@@ -6,7 +6,8 @@
  * llegir config/ ni data/ (fronteres.test.js): la plataforma li dona la boina
  * d'una identitat resolta per IDENTIFICADOR, amb rutaDAutoria de
  * config/navigation.js (la mateixa font de les targetes, de les pàgines i del
- * detall: l'entitat pilot porta a la pàgina del projecte), mai pel nom que es
+ * detall: l'entitat pilot porta al seu perfil, /empresa/socdepoble, des de
+ * l'Onada 8, 261009; abans, a la pàgina del projecte), mai pel nom que es
  * veu.
  *
  *   ENTITAT_PROJECTE   { tipus: 'entitat', id }: l'entitat Sóc de Poble, que

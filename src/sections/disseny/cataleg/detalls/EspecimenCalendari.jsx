@@ -359,7 +359,7 @@ export default function EspecimenCalendari() {
           d'edició: al centre, el botó d'emoticona (la ploma blanca). */}
       <div className="sdp-especimen__barres">
         <BarraTaronja authorName="Sóc de Poble" authorLocation="La Torre de les Maçanes"
-          authorAvatar="/assets/system/ui/logo-socdepoble-cuadrat-verd.svg" etiqueta="Autoria i data (espècimen)"
+          authorAvatar="/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png" etiqueta="Autoria i data (espècimen)"
           onObriEmoticona={res}
           barActions={<SelectorDataHora valor={data} onTria={setData} />} />
       </div>

@@ -7,7 +7,16 @@
 
    Router propi en memòria (MemoryRouter) i les targetes de veres
    (UniversalCard); només se substituïxen la UniversalPage (la seua
-   maquinària no entra en joc), l'eixida segura (SessionContext) i l'i18n. */
+   maquinària no entra en joc), l'eixida segura (SessionContext) i l'i18n.
+
+   Onada 8 (261009; requeriments 261009_1300, punt 2; decisions D1, D2, D4,
+   D5 i D7 de MarIA) · Totes les targetes del Panell són Universal Cards
+   senceres: porten Connectar i el copyright (la Revisió R3 queda derogada).
+   La Consola, el Cervell i Disseny ja no són plugins: «Maquinària i Sistema»
+   les pinta primer, amb la targeta del Mur (TargetaDelMur). Les proves de les
+   eines del registre (targetesDUtilitats) no les compten: tenen la seua
+   pròpia (targetesDeLaMaquinaria). Sense proveïdor del contingut core, el
+   Panell llig PAGE_COPY. */
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { MemoryRouter, useLocation, useNavigate } from '../../app/contexts/RouterContext';
@@ -15,10 +24,12 @@ import { XatSocDePobleContext } from '../../components/PedraSeca/hooks/xatSocDeP
 import { TEXTOS_COMENTAR } from '../../components/PedraSeca/organismes/textosComentar.js';
 import { RouteSEO } from '../../hooks/RouteSEO';
 import { createTranslator } from '../../config/i18n';
-import { resolvePageSlugPath } from '../../config/navigation.js';
+import { resolvePageSlugPath, RUTA_PERFIL_PROJECTE } from '../../config/navigation.js';
 import { PAGE_COPY } from '../text/pageContent.js';
+import { COPYRIGHT_SDP } from '../../components/universal/editorial.js';
+import { RUTA_DRETS_AUTOR, SYSTEM_PAGES } from '../../config/systemPages.js';
 import { IDS_PLUGINS, PLUGINS, rutaDelPlugin } from '../plugins/registrePlugins.js';
-import { AUTORIA_SOCDEPOBLE, DESTINS_CONTROL } from './destinsControl.js';
+import { AUTORIA_SOCDEPOBLE, DESTINS_CONTROL, PAGINES_MAQUINARIA } from './destinsControl.js';
 import fontApp from '../../app/App.jsx?raw';
 import fontControl from './ControlSection.jsx?raw';
 
@@ -79,7 +90,11 @@ const esPaginaServida = (ruta) => {
   const clau = decodeURIComponent(trobat[1]);
   return Object.hasOwn(PAGE_COPY, clau) && resolvePageSlugPath(clau) === null;
 };
-const esDestiDeLApp = (ruta) => rutesEstatiques().has(camiDe(ruta)) || esPaginaServida(ruta);
+/* Onada 8 (261009) · La boina de Sóc de Poble porta al seu perfil
+   (RUTA_PERFIL_PROJECTE, /empresa/socdepoble), que servix la ruta amb
+   paràmetre de la fitxa pública (App.jsx, empresa/:agentId). Abans, /projecte. */
+const esPerfilDeLaBoina = (ruta) => ruta === RUTA_PERFIL_PROJECTE && fontApp.includes('<Route path="empresa/:agentId"');
+const esDestiDeLApp = (ruta) => rutesEstatiques().has(camiDe(ruta)) || esPaginaServida(ruta) || esPerfilDeLaBoina(ruta);
 
 /* P7-B · La preferència de les Utilitats (DetallEspai.jsx escriu
    sdp_utilitats_actives; ControlSection la llig) és d'EXCLUSIÓ: només un
@@ -275,8 +290,21 @@ const SECCIONS_DUTILITATS = ['L’empresa', 'La llar', 'Utilitats i Connectors (
 const seccioDe = (nom) => screen.queryByRole('heading', { level: 2, name: nom })?.closest('section') ?? null;
 const seccioDUtilitats = () => seccioDe('Utilitats i Connectors (Plugins)');
 const targetesDe = (seccio) => (seccio ? [...seccio.querySelectorAll('.sdp-card-grid > article.sp-card')] : []);
-const targetesDUtilitats = () => SECCIONS_DUTILITATS.flatMap((nom) => targetesDe(seccioDe(nom)));
 const titolDeTargeta = (targeta) => targeta.querySelector('.sp-card-title').textContent;
+/* Onada 8 (261009) · Les tres pàgines del sistema de «Maquinària i Sistema»,
+   en l'ordre del Panell, amb el seu copy i la seua entrada de SYSTEM_PAGES. */
+const PAGINES_DE_LA_MAQUINARIA = PAGINES_MAQUINARIA.map((clau) => ({
+  clau, copy: PAGE_COPY[clau], pagina: SYSTEM_PAGES.find((pagina) => pagina.key === clau)
+}));
+const TITOLS_DE_LA_MAQUINARIA = new Set(PAGINES_DE_LA_MAQUINARIA.map(({ copy }) => copy.title));
+const esPaginaDeLaMaquinaria = (targeta) => TITOLS_DE_LA_MAQUINARIA.has(titolDeTargeta(targeta));
+/* Les targetes de les eines (registre i Snippet), sense les pàgines del sistema. */
+const targetesDUtilitats = () => SECCIONS_DUTILITATS.flatMap((nom) => targetesDe(seccioDe(nom))).filter((targeta) => !esPaginaDeLaMaquinaria(targeta));
+const targetesDeLaMaquinaria = () => targetesDe(seccioDe('Maquinària i Sistema')).filter(esPaginaDeLaMaquinaria);
+const titolsDeLaMaquinaria = () => targetesDeLaMaquinaria().map(titolDeTargeta);
+/* Onada 8 (261009; revisió R3 derogada) · El peu de totes les targetes del
+   Panell: Traduir, Comentar, Compartir i Connectar. */
+const PEU_SENCER = (titol) => [`Traduir ${titol}`, `Comentar ${titol}`, `Compartir ${titol}`, `Connectar amb ${titol}`];
 const utilitats = () => targetesDUtilitats().map(titolDeTargeta);
 const targetaDUtilitat = (titol) => targetesDUtilitats().find((targeta) => titolDeTargeta(targeta) === titol);
 const senseSnippet = (titols) => titols.filter((titol) => titol !== 'Snippet');
@@ -289,8 +317,11 @@ const NOMES_DALT = [['Mapa', 'mapa'], ['Vehicle Compartit', 'vehicle'], ['Animal
 /* Les onze de l'ordre del Mestre (prompt 261004_0015 T2). El registre és la
    font: si en porta més (MarIA hi ha afegit «disseny»), també es pinten.
    Ordre del Mestre (261007) · Bàscula descartada per ara: en queden deu
-   d'aquelles onze; amb «disseny», el registre en porta onze. */
-const LES_DE_LORDRE = ['mapa', 'vehicle', 'animalets', 'gestoria', 'rebost', 'salut', 'consola', 'cervell', 'rss', 'tpv'];
+   d'aquelles onze; amb «disseny», el registre en porta onze.
+   Onada 8 (261009) · La Consola i el Cervell (i «disseny») ja no són
+   plugins, sinó pàgines del sistema: en queden huit al registre, i les
+   altres dos són de PAGINES_MAQUINARIA. */
+const LES_DE_LORDRE = ['mapa', 'vehicle', 'animalets', 'gestoria', 'rebost', 'salut', 'rss', 'tpv'];
 /* On porta cada targeta d'Utilitats, pel seu títol (el Snippet, a la seua fitxa del Panell). */
 const PAGINA_DUTILITAT = new Map([
   ...PLUGINS.map((plugin) => [plugin.titol, rutaDelPlugin(plugin.id)]),
@@ -303,6 +334,7 @@ const PAGINA_DUTILITAT = new Map([
 test('P7-B · W4-08 · el registre sense les de dalt es veu una vegada, en l’ordre del registre, canònic; el Snippet tanca les Utilitats', () => {
   pinta();
   expect(IDS_PLUGINS).toEqual(expect.arrayContaining(LES_DE_LORDRE));
+  expect(PAGINES_MAQUINARIA).toEqual(['consola', 'cervell', 'disseny']);
   /* Ordre del Mestre (261007) · Bàscula descartada per ara: cap targeta ni enllaç seu al Panell. */
   expect(IDS_PLUGINS).not.toContain('bascula');
   expect(document.querySelector('[href="/plugin/bascula"]')).toBeNull();
@@ -326,16 +358,20 @@ test('P7-B · W4-08 · el registre sense les de dalt es veu una vegada, en l’o
     expect(targeta.firstElementChild, titol).toBe(capcal);
     expect(capcal.querySelector('.sp-card-author-name').textContent, titol).toBe(AUTORIA_SOCDEPOBLE.author);
     expect(capcal.querySelector('.sp-card-author-location').textContent, titol).toBe(AUTORIA_SOCDEPOBLE.location);
-    expect(capcal.querySelector('a.sp-card-author-link').getAttribute('href'), titol).toBe('/projecte');
+    expect(capcal.querySelector('a.sp-card-author-link').getAttribute('href'), titol).toBe(RUTA_PERFIL_PROJECTE);
     expect(capcal.querySelector('.btn-date-time'), titol).toBeNull();
     /* L'enllaç de tota la targeta, amb el nom del títol. */
     const enllac = targeta.querySelector('a.sp-card-link-overlay');
     expect([enllac.getAttribute('href'), enllac.getAttribute('aria-label')], titol).toEqual([PAGINA_DUTILITAT.get(titol), titol]);
     expect(within(targeta).getByRole('heading', { level: 3, name: titol }).classList.contains('sdp-sr-only'), titol).toBe(false);
-    /* El peu blau de P6: Traduir, Comentar i Compartir, sense Connectar. */
+    /* El peu blau de P6: Traduir, Comentar i Compartir.
+       Onada 8 (261009; revisió R3 derogada) · I Connectar, i el copyright
+       cap a «Drets d'autor». Abans, sense Connectar ni copyright. */
     expect(targeta.lastElementChild.className, titol).toBe('sp-card-footer');
     expect([...targeta.querySelectorAll('.sp-card-footer button')].map((boto) => boto.getAttribute('aria-label')), titol)
-      .toEqual([`Traduir ${titol}`, `Comentar ${titol}`, `Compartir ${titol}`]);
+      .toEqual(PEU_SENCER(titol));
+    const drets = targeta.querySelector('.sp-card-body > .sp-card-copyright > a.sp-card-copyright__enllac');
+    expect([drets.textContent, drets.getAttribute('href')], titol).toEqual([COPYRIGHT_SDP, RUTA_DRETS_AUTOR]);
   });
   /* Il·lustració, subtítol i entradilla: els del registre, sense cap canvi. */
   PLUGINS_DE_BAIX.forEach((plugin) => {
@@ -345,7 +381,12 @@ test('P7-B · W4-08 · el registre sense les de dalt es veu una vegada, en l’o
     expect(within(targeta).getByRole('heading', { level: 4 }).textContent, plugin.id).toBe(sensePunt(plugin.subtitol));
     expect(targeta.querySelector('p.sp-card-text').textContent, plugin.id).toBe(plugin.entradilla);
   });
-  /* El Snippet, amb la seua il·lustració i el seu subtítol de sempre. */
+  /* El Snippet, amb la seua il·lustració i el seu subtítol de sempre.
+     Onada 8 (261009) · I sense entradilla, com sempre: la seua targeta mai
+     n'ha portat cap (SNIPPET de ControlSection.jsx). Pendent de decisió de
+     MarIA (requeriments 261009_1300, punt 2): si la targeta ha de llegir el
+     lead de la seua fitxa (FitxaSnippet.jsx), una sola font, esta línia
+     canviarà. Les decisions D1 i D6 no en diuen res. */
   const snippet = targetaDUtilitat('Snippet');
   expect(snippet.querySelector('img.sp-card-media').getAttribute('src')).toBe('/assets/nano_cards/snippet_nano_card.jpg');
   expect(within(snippet).getByRole('heading', { level: 4 }).textContent).toBe('Extensió de Chrome per a desar webs al Bloc');
@@ -484,6 +525,8 @@ test('P7-B · la preferència només amaga una utilitat amb un false explícit; 
     pinta();
     expect(senseSnippet(utilitats()), String(valor)).toEqual(TITOLS_DE_BAIX);
     expect(utilitats(), String(valor)).toContain('Snippet');
+    /* Onada 8 · I les tres pàgines de la maquinària (cervell: null no l'amaga). */
+    expect(titolsDeLaMaquinaria(), String(valor)).toEqual(PAGINES_DE_LA_MAQUINARIA.map(({ copy }) => copy.title));
     cleanup();
   }
   /* Una clau aliena (`inventada`) no amaga res. Ordre del Mestre (261007,
@@ -495,9 +538,19 @@ test('P7-B · la preferència només amaga una utilitat amb un false explícit; 
   expect(utilitats()).toEqual(PLUGINS_DE_BAIX.filter((plugin) => plugin.id !== 'gestoria').map((plugin) => plugin.titol));
   expect(utilitats()).not.toContain('Snippet');
   cleanup();
+  /* Onada 8 (261009) · La Consola ja no és una utilitat del registre: és la
+     pàgina del sistema de la maquinària, i la preferència vella l'amaga igual.
+     Abans es mirava a utilitats(), que ara no la compta. */
   localStorage.setItem(CLAU_UTILITATS, JSON.stringify({ metriques: false }));
   pinta();
+  expect(titolsDeLaMaquinaria()).toEqual(['El Cervell', 'Disseny Pedra Seca']);
   expect(utilitats()).not.toContain('Consola Termodinàmica');
+  cleanup();
+  /* Cada pàgina de la maquinària s'amaga per la seua clau, com una utilitat. */
+  localStorage.setItem(CLAU_UTILITATS, JSON.stringify({ consola: false, cervell: false, disseny: false }));
+  pinta();
+  expect(titolsDeLaMaquinaria()).toEqual([]);
+  expect(senseSnippet(utilitats())).toEqual(TITOLS_DE_BAIX);
   cleanup();
   localStorage.setItem(CLAU_UTILITATS, JSON.stringify({ gestoria: false, mapa: false, snippet: false, inventada: false, salut: true }));
   pinta();
@@ -648,13 +701,14 @@ test('P5 · W4-08 · huit targetes estàndard en ordre, a la graella de sempre a
     const titol = titolDe(targeta);
     /* La targeta de sempre: cap variant i cap overlay.
        P6 (directriu 2325, confirmació 2) · I el peu blau de sempre, al final,
-       amb Traduir, Comentar i Compartir; sense Connectar ni etiquetes. */
+       amb Traduir, Comentar i Compartir; sense etiquetes.
+       Onada 8 (261009; revisió R3 derogada) · I Connectar, i el copyright.
+       Abans, «sense Connectar». */
     expect(targeta.className, titol).toBe('sp-card');
     expect(targeta.querySelector('.sp-card-link-overlay'), titol).toBeNull();
     expect(targeta.lastElementChild.className, titol).toBe('sp-card-footer');
-    expect([...targeta.querySelectorAll('.sp-card-footer button')].map((boto) => boto.getAttribute('aria-label')), titol).toEqual([
-      `Traduir ${titol}`, `Comentar ${titol}`, `Compartir ${titol}`
-    ]);
+    expect([...targeta.querySelectorAll('.sp-card-footer button')].map((boto) => boto.getAttribute('aria-label')), titol).toEqual(PEU_SENCER(titol));
+    expect(targeta.querySelector('.sp-card-copyright__enllac').textContent, titol).toBe(COPYRIGHT_SDP);
     expect(targeta.querySelector('.sp-card-labels'), titol).toBeNull();
     /* Títol, subtítol i entradilla visibles: els de la pàgina de la targeta. */
     expect(within(targeta).getByRole('heading', { level: 3, name: titol }).classList.contains('sdp-sr-only'), titol).toBe(false);
@@ -679,12 +733,12 @@ test('P5 · T6 · la boina de cada targeta és socdepoble: l’autor obri la pà
     expect(capcal.querySelector('.sp-card-author-location').textContent, titolDe(targeta)).toBe('La Torre de les Maçanes');
     expect([...capcal.querySelectorAll('.btn-date-time span')].map((s) => s.textContent), titolDe(targeta)).toEqual(DATES_DALT[index]);
     expect(capcal.querySelector('.sp-card-author-name').textContent, titolDe(targeta)).toBe('Sóc de Poble');
-    expect(capcal.querySelector('a.sp-card-author-link').getAttribute('href'), titolDe(targeta)).toBe('/projecte');
+    expect(capcal.querySelector('a.sp-card-author-link').getAttribute('href'), titolDe(targeta)).toBe(RUTA_PERFIL_PROJECTE);
     expect(capcal.textContent, titolDe(targeta)).not.toMatch(/IAIA|MarIA/);
     expect(capcal.querySelector('.sp-card-meta button.btn-date-time').closest('a'), titolDe(targeta)).toBeNull();
   }
   fireEvent.click(targetesDeDalt()[3].querySelector('a.sp-card-author-link'));
-  expect(ubicacio()).toBe('/projecte');
+  expect(ubicacio()).toBe(RUTA_PERFIL_PROJECTE);
   cleanup();
   pinta();
   fireEvent.click(targetesDeDalt()[0].querySelector('button.btn-date-time'));
@@ -904,18 +958,106 @@ test('P6 · Compartir comparteix l’adreça de la pàgina de la targeta (Saber-
 /* La mateixa anatomia dalt i baix (directriu 2325, confirmació 2: «el peu blau
    baix (Traduir, Compartir, Comentar)»). Les targetes de dalt pintaven
    Connectar perquè TargetaDeDesti no passava showConnect={false}, i les
-   d'Utilitats no: dos peus distints en el mateix Panell. */
-test('R3 · cap targeta del Panell porta Connectar: dalt i baix, el mateix peu de tres accions', () => {
+   d'Utilitats no: dos peus distints en el mateix Panell.
+   Derogada per l'ordre del Mestre del 261009 (requeriments 261009_1300,
+   punt 2: les targetes del Panell «no poden perdre elements» i «han de ser
+   autèntiques Universal Cards»; decisió D1 de MarIA): la prova deia «cap
+   targeta del Panell porta Connectar». Ara totes el porten, i el copyright,
+   dalt, als espais, a les Utilitats i a la Maquinària: el mateix peu de
+   quatre accions a tot el Panell. */
+test('R3 · Onada 8 · totes les targetes del Panell porten Connectar i el copyright: el mateix peu de quatre accions', () => {
   pinta();
-  expect(targetesDeDalt().length).toBeGreaterThan(0);
+  expect(targetesDeDalt()).toHaveLength(DESTINS_CONTROL.length);
   expect(targetesDUtilitats().length).toBeGreaterThan(0);
-  for (const targeta of [...targetesDeDalt(), ...targetesDUtilitats()]) {
+  expect(targetesDeLaMaquinaria()).toHaveLength(PAGINES_MAQUINARIA.length);
+  for (const targeta of [...targetesDeDalt(), ...targetesDUtilitats(), ...targetesDeLaMaquinaria()]) {
     const titol = titolDe(targeta);
-    expect(targeta.querySelector('.sp-card-connect'), titol).toBeNull();
+    expect(targeta.querySelector('.sp-card-footer > .sp-card-connect').getAttribute('aria-label'), titol).toBe(`Connectar amb ${titol}`);
     expect(targeta.lastElementChild.className, titol).toBe('sp-card-footer');
     expect([...targeta.querySelectorAll('.sp-card-footer button')].map((boto) => boto.getAttribute('aria-label')), titol)
-      .toEqual([`Traduir ${titol}`, `Comentar ${titol}`, `Compartir ${titol}`]);
+      .toEqual(PEU_SENCER(titol));
+    const drets = targeta.querySelector('.sp-card-copyright__enllac');
+    expect([drets.textContent, drets.getAttribute('href')], titol).toEqual([COPYRIGHT_SDP, RUTA_DRETS_AUTOR]);
   }
+});
+
+/* Onada 8 · Connectar porta a /connectar, la ruta d'App, amb l'objecte de la
+   targeta: la pàgina de «Saber-ne més» dalt i la de la targeta baix. Cap
+   targeta del Panell es queda a /control. */
+test('R3 · Onada 8 · Connectar de cada targeta obri /connectar amb la seua pàgina', () => {
+  const esperades = [
+    [() => targetesDeDalt()[0], '/page/publicar_mur'],
+    [() => targetaDUtilitat('Gestoria'), '/plugin/gestoria'],
+    [() => targetaDUtilitat('Snippet'), '/control?fitxa=snippet'],
+    [() => targetesDeLaMaquinaria()[0], '/page/consola']
+  ];
+  expect(rutesEstatiques().has('connectar')).toBe(true);
+  for (const [targeta, pagina] of esperades) {
+    pinta();
+    fireEvent.click(targeta().querySelector('.sp-card-connect'));
+    const desti = new URL(ubicacio(), 'https://poble.invalid');
+    expect([pagina, desti.pathname]).toEqual([pagina, '/connectar']);
+    expect([pagina, [...desti.searchParams.values()].some((valor) => valor.includes(pagina))]).toEqual([pagina, true]);
+    cleanup();
+  }
+});
+
+/* ═══ Onada 8 (261009; requeriments 261009_1300, punt 2; decisions D2, D4,
+   D5 i D7 de MarIA) · La Consola, el Cervell i Disseny són pàgines, no
+   plugins: «Maquinària i Sistema» les pinta primer amb la targeta del Mur ═══ */
+test('Onada 8 · la maquinària comença per la Consola, el Cervell i Disseny, amb la targeta del Mur i la data del Mestre', () => {
+  pinta();
+  const seccio = seccioDe('Maquinària i Sistema');
+  /* Primer les tres pàgines i després les eines del registre (l'RSS i el TPV). */
+  expect(targetesDe(seccio).map(titolDeTargeta)).toEqual([
+    'Consola Termodinàmica', 'El Cervell', 'Disseny Pedra Seca',
+    ...PLUGINS.filter((plugin) => ['rss', 'tpv'].includes(plugin.id)).map((plugin) => plugin.titol)
+  ]);
+  const DATES = { consola: ['00:00', '08/09/26'], cervell: ['00:00', '09/09/26'], disseny: ['00:00', '10/09/26'] };
+  for (const [index, { clau, copy, pagina }] of PAGINES_DE_LA_MAQUINARIA.entries()) {
+    const targeta = targetesDeLaMaquinaria()[index];
+    /* La boina del Mur: Sóc de Poble cap al seu perfil, i la data de la pàgina. */
+    const capcal = targeta.querySelector('header.sp-card-header');
+    expect(capcal.querySelector('a.sp-card-author-link').getAttribute('href'), clau).toBe(RUTA_PERFIL_PROJECTE);
+    expect(capcal.querySelector('.sp-card-author-name').textContent, clau).toBe('Sóc de Poble');
+    expect([...capcal.querySelectorAll('.btn-date-time span')].map((s) => s.textContent), clau).toEqual(DATES[clau]);
+    /* Títol, subtítol, entradilla i imatge: els de PAGE_COPY (D4). */
+    expect(titolDeTargeta(targeta), clau).toBe(copy.title);
+    expect(targeta.querySelector('.sp-card-subtitle').textContent, clau).toBe(sensePunt(copy.subtitle));
+    const imatge = targeta.querySelector('img.sp-card-media');
+    expect([imatge.getAttribute('src'), imatge.getAttribute('alt')], clau).toEqual([copy.image, copy.imageAlt]);
+    /* Tota la targeta obri la seua pàgina (SYSTEM_PAGES), mai /plugin/<id>. */
+    expect(targeta.querySelector('a.sp-card-link-overlay').getAttribute('href'), clau).toBe(pagina.href);
+    expect(targeta.querySelector(`[href="/plugin/${clau}"]`), clau).toBeNull();
+  }
+  /* La Consola i el Cervell porten el botó «Obrir…» en lloc de les etiquetes;
+     Disseny, les seues etiquetes (D7: l'única excepció a la P6). */
+  const [consola, cervell, disseny] = targetesDeLaMaquinaria();
+  expect(within(consola).getByRole('link', { name: 'Obrir la Consola' }).getAttribute('href')).toBe('/consola');
+  expect(within(cervell).getByRole('link', { name: 'Obrir el Cervell' }).getAttribute('href')).toBe('/consola/explorador');
+  for (const targeta of [consola, cervell]) expect(targeta.querySelector('.sp-card-labels'), titolDeTargeta(targeta)).toBeNull();
+  expect(disseny.querySelector('.sp-card-accio')).toBeNull();
+  expect([...disseny.querySelectorAll('.sp-card-labels .sp-card-label')].map((etiqueta) => etiqueta.textContent))
+    .toEqual(PAGE_COPY.disseny.labels.map((etiqueta) => etiqueta.text));
+  /* El botó navega a l'eina; la resta de la targeta, a la seua pàgina. */
+  fireEvent.click(within(consola).getByRole('link', { name: 'Obrir la Consola' }));
+  expect(ubicacio()).toBe('/consola');
+  cleanup();
+  pinta();
+  fireEvent.click(targetesDeLaMaquinaria()[1].querySelector('a.sp-card-link-overlay'));
+  expect(ubicacio()).toBe('/page/cervell');
+});
+
+/* Onada 8 · D6 · Les eines del registre i el Snippet no porten cap data
+   inventada; la P6 (cap etiqueta) continua per a totes les targetes del
+   Panell menys les tres pàgines. */
+test('Onada 8 · D6 i D7 · cap data per a les eines; cap etiqueta fora de les pàgines de la maquinària', () => {
+  pinta();
+  for (const targeta of targetesDUtilitats()) {
+    expect(targeta.querySelector('.btn-date-time'), titolDeTargeta(targeta)).toBeNull();
+    expect(targeta.querySelector('.sp-card-labels'), titolDeTargeta(targeta)).toBeNull();
+  }
+  for (const targeta of targetesDeDalt()) expect(targeta.querySelector('.sp-card-labels'), titolDe(targeta)).toBeNull();
 });
 
 /* D3 per a la graella de baix. La passada de D3 només prem
@@ -949,7 +1091,13 @@ test('R3 · D3 · cada utilitat pintada obri una pàgina que servix App, i cap e
 
 /* W4-11 · La graella no decidix la disponibilitat: cap targeta porta a
    plugin.obrir a seques (ni a /consola, /app/… o /disseny); «Obrir» el decidix
-   la pàgina del plugin amb useDestiDelPlugin, que passa pels interruptors. */
+   la pàgina del plugin amb useDestiDelPlugin, que passa pels interruptors.
+   Derogat per a les tres pàgines del sistema per l'ordre del Mestre del
+   261009 (decisions D3 i D7 de MarIA): la Consola i el Cervell porten el
+   botó «Obrir…» de la seua pàgina (accioDeLaPagina), cap a /consola i
+   /consola/explorador, i Disseny obri /disseny. Ho vigila la prova «Onada 8 ·
+   la maquinària comença per…»; esta mira només les eines del registre i el
+   Snippet (targetesDUtilitats), per a les quals W4-11 continua vigent. */
 test('W4-11 · cap utilitat porta directament al destí d’«Obrir»: el Panell no llig plugin.obrir', () => {
   expect(fontControl).not.toMatch(/\.obrir\b/);
   expect(fontControl).not.toMatch(/\bappDelPlugin\b/);
@@ -970,7 +1118,8 @@ test('W4-11 · cap utilitat porta directament al destí d’«Obrir»: el Panell
    Ordre del Mestre (261007, correcció C2) · El xat resolt és la via «En
    privat» del menú, i el dona el proveïdor de l'app amb el seu avís ja
    traduït: el Panell no en fa cap resolució pròpia. */
-const BOINES_AL_PROJECTE = () => [...targetesDeDalt(), ...targetesDUtilitats()]
+/* Onada 8 (261009) · I les tres pàgines de la maquinària (la boina del Mur). */
+const BOINES_AL_PROJECTE = () => [...targetesDeDalt(), ...targetesDUtilitats(), ...targetesDeLaMaquinaria()]
   .map((targeta) => targeta.querySelector('a.sp-card-author-link')?.getAttribute('href'));
 const NO_DISPONIBLE = 'Xat de Sóc de Poble: encara no disponible en este servidor.';
 const ES_BUSCA = 'Xat de Sóc de Poble: encara s’està buscant en este servidor.';
@@ -981,7 +1130,7 @@ test('W4-09 · 261007 · remot resolt: «En privat» porta al xat de l’entitat
   pinta();
   const boines = BOINES_AL_PROJECTE();
   expect(boines.length).toBeGreaterThan(DESTINS_CONTROL.length);
-  expect(boines).toEqual(Array(boines.length).fill('/projecte'));
+  expect(boines).toEqual(Array(boines.length).fill(RUTA_PERFIL_PROJECTE));
   expect(screen.queryByText(/Xat de Sóc de Poble/)).toBeNull();
   fireEvent.click(obriComentar(targetesDeDalt()[0], titolDe(targetesDeDalt()[0])).privat);
   expect(ubicacio()).toBe(href);
@@ -1001,7 +1150,7 @@ test('W4-09 · 261007 · remot sense entitat o amb error: la boina continua al p
     estat.toast.mockClear();
     pinta();
     const boines = BOINES_AL_PROJECTE();
-    expect(boines, estatDelXat).toEqual(Array(boines.length).fill('/projecte'));
+    expect(boines, estatDelXat).toEqual(Array(boines.length).fill(RUTA_PERFIL_PROJECTE));
     for (const targeta of targetesDeDalt()) {
       expect(targeta.querySelector('.sp-card-author-name').textContent).toBe('Sóc de Poble');
     }
@@ -1022,7 +1171,7 @@ test('W4-09 · 261007 · remot resolent: la boina al projecte, cap Alerta, i «E
   estat.xat = { estat: 'resolent', href: null, avis: ES_BUSCA, resol: vi.fn(() => new Promise(() => {})) };
   pinta();
   const boines = BOINES_AL_PROJECTE();
-  expect(boines).toEqual(Array(boines.length).fill('/projecte'));
+  expect(boines).toEqual(Array(boines.length).fill(RUTA_PERFIL_PROJECTE));
   expect(screen.queryByText(/Xat de Sóc de Poble/)).toBeNull();
   /* Ja es resol: obrir el Panell no en demana cap altra. */
   expect(estat.xat.resol).not.toHaveBeenCalled();

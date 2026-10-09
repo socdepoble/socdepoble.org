@@ -333,8 +333,8 @@ export default function NotesEditor({ activeNote, onToast = null, seccio = null 
      també la còpia que en prova el Foraster (autoriaNota) i l'estat buit, que
      pinta el text d'n1: la signa Sóc de Poble, no qui la llig.
      Ordre del Mestre (261007) · La signatura porta també la `ruta` de la
-     pàgina de l'autor (signaturaDeNota): la benvinguda, a /projecte; el
-     Foraster, cap. */
+     pàgina de l'autor (signaturaDeNota): la benvinguda, al perfil de Sóc de
+     Poble (Onada 8, 261009; abans, a /projecte); el Foraster, cap. */
   const idSignatura = notaEnEdicio ? notaEnEdicio.id : ID_NOTA_BENVINGUDA;
   const signatura = useMemo(
     () => signaturaDeNota({ notaId: idSignatura, actor, actorId, agents, currentUser }),

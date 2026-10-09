@@ -79,8 +79,9 @@ function FitxaApp({ app, idioma, onApaga }) {
    de sistema i porta l'anatomia de totes: abans pintava el bloc del títol a
    mà, fora de la Pàgina Universal, sense barres ni logotip. Ara és la Pàgina
    Universal de les apps (PaginaApp, la porta permesa des de src/apps): doble
-   barra, la boina de Sóc de Poble (sense autor, signa el projecte i enllaça a
-   /projecte) i el seu logotip dalt de l'H1. El contingut i l'ordre, els de
+   barra, la boina de Sóc de Poble (sense autor, signa el projecte i enllaça al
+   seu perfil; Onada 8, 261009: abans, a /projecte) i el seu logotip dalt de
+   l'H1. El contingut i l'ordre, els de
    sempre: l'H1, l'entradeta i la llista. Tornar va a la pàgina d'abans, com
    a la resta de pàgines de sistema (UniversalPage). */
 export function PortalApps() {

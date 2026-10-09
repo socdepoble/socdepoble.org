@@ -9,7 +9,7 @@ export const MOCK_MARKET_ITEMS = [{
   seller: 'Javi',
   /* T3 (261001) · avatar_url no és l'autoria: el nom i l'avatar de qui signa
      els posa marketContent.js des de author_id (identitatsSeed · autoriaSeed). */
-  avatar_url: '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg',
+  avatar_url: '/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png',
   author_name: 'Javi',
   population: 'La Torre de les Maçanes',
   author_role: 'user',
@@ -32,7 +32,7 @@ export const MOCK_MARKET_ITEMS = [{
   description: "Mapa del tresor sobre cotó resistent. La imatge complementa el text, no el substituïx.",
   price: '15.00€',
   seller: 'Sóc de Poble',
-  avatar_url: '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg',
+  avatar_url: '/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png',
   author_name: 'Sóc de Poble',
   population: 'La Torre de les Maçanes',
   author_role: 'business',

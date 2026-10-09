@@ -13,8 +13,8 @@
  * Ordre del Mestre (261007) ·
  *  · «Comentaris = xat» · Comentar és el MATEIX a totes les targetes: el
  *    menú de dues vies d'UniversalCard (useAccions), «En privat» (el xat
- *    privat amb Sóc de Poble) i «En públic» (el xat públic de l'element, pel
- *    seu objecte). Cap gestor propi: derogat `onComentarSistema`, que a les
+ *    privat amb l'autor, Onada 8; sense autor, amb Sóc de Poble) i «En
+ *    públic» (el xat públic de l'element, pel seu objecte). Cap gestor propi: derogat `onComentarSistema`, que a les
  *    targetes de sistema saltava la via pública.
  *  · L'acció gran (accioDeLaPagina de systemPages.js: «Anar al xat» a la
  *    targeta d'El Xat) va a la ranura `accio` d'UniversalCard, en lloc de les
@@ -38,9 +38,10 @@ import { useNavigate } from '../../app/contexts/RouterContext';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { resolveAsset } from '../../config/assetResolver';
 import {
-  esRutaInterna, getSectionItemPath, objecteDe, objecteDePagina, RUTA_PROJECTE, rutaConnectarObjecte, rutaDePerfilDAutor
+  esRutaInterna, getSectionItemPath, objecteDe, objecteDePagina, RUTA_PERFIL_PROJECTE, rutaConnectarObjecte, rutaDePerfilDAutor
 } from '../../config/navigation';
 import { COPYRIGHT_SDP, dataDElement } from '../../components/universal/editorial.js';
+import { DEFAULT_AUTHOR } from '../../components/universal/UniversalUtils.js';
 import { accioDeLaPagina } from '../../config/systemPages.js';
 import { fotoDeLaTargeta } from '../mercat/imatgesDeProducte.js';
 import { useEntitatDelProjecte } from '../../hooks/useEntitatDelProjecte.js';
@@ -49,23 +50,24 @@ import { fontImatgePropia } from '../../utils/sanitize.js';
 /**
  * T6 (ordre del Mestre, 261004, prompt 261004_0515 §5) · On porta la boina
  * d'una publicació del Mur: la pàgina de qui signa (una persona o una
- * entitat, rutaDePerfilDAutor, que ja porta l'entitat pilot al projecte); si
- * no se sap qui és, una pàgina del sistema o una publicació signada amb la
- * reserva «Sóc de Poble» (sense nom propi) van a RUTA_PROJECTE. Un nom sense
- * identitat coneguda no s'endevina: sense enllaç.
+ * entitat, rutaDePerfilDAutor, que ja porta l'entitat pilot al seu perfil);
+ * si no se sap qui és, una pàgina del sistema o una publicació signada amb la
+ * reserva «Sóc de Poble» (sense nom propi) van al perfil de Sóc de Poble
+ * (RUTA_PERFIL_PROJECTE; Onada 8, 261009: abans, la pàgina del projecte). Un
+ * nom sense identitat coneguda no s'endevina: sense enllaç.
  */
 export function rutaDeLaBoinaDelMur(item) {
   const deQuiSigna = rutaDePerfilDAutor(item);
   if (deQuiSigna) return deQuiSigna;
   const ambNomPropi = Boolean(item?.author_name || item?.seller);
-  return item?.isSystem || !ambNomPropi ? RUTA_PROJECTE : undefined;
+  return item?.isSystem || !ambNomPropi ? RUTA_PERFIL_PROJECTE : undefined;
 }
 
 export function TargetaDelMur({ item, esdeveniment = null }) {
   const { t } = useUIActions();
   const navigate = useNavigate();
   /* T6 en remot · l'id de servidor de l'entitat pilot: quan arriba, la boina
-     de les seues publicacions torna a pintar-se i porta al projecte. */
+     de les seues publicacions torna a pintar-se i porta al seu perfil. */
   useEntitatDelProjecte();
 
   if (item.type === 'event') {
@@ -135,8 +137,9 @@ export function TargetaDelMur({ item, esdeveniment = null }) {
       onConnect={() => navigate(rutaConnectarObjecte(objecte))}
       /* Decisió 3 (261007) · L'avatar declarat, si és propi. Un de fora (un
          avatar de Google) no cau al logotip de Sóc de Poble, que signaria la
-         publicació d'un veí amb la marca: null i la silueta de sempre. */
-      avatarUrl={fontImatgePropia(resolveAsset(item.author_avatar || item.avatar_url || '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg'))}
+         publicació d'un veí amb la marca: null i la silueta de sempre.
+         Onada 8 (261009) · Sense cap avatar, el de Sóc de Poble (el PNG). */
+      avatarUrl={fontImatgePropia(resolveAsset(item.author_avatar || item.avatar_url || DEFAULT_AUTHOR.avatarUrl))}
       location={item.author_location || item.population || "La Torre de les Maçanes"}
       date={data.date}
       time={data.time}

@@ -31,7 +31,7 @@
 
    Abast · La prova acredita que el crash no naix d'esta capa només per a
    l'arbre muntat en llavor (dataMode 'seed'), en memòria (MemoryRouter; el
-   lloc propi usa BrowserRouter, main.jsx:30 i PedraSecaEmbed.jsx:279) i amb
+   lloc propi usa BrowserRouter, main.jsx:29 i PedraSecaEmbed.jsx:279) i amb
    un sol graf de mòduls de vitest, és a dir, una sola instància de
    SessionContext.jsx. No cobrix una hipòtesi que dona exactament el mateix
    missatge: al servidor de Vite en desenvolupament, el chunk lazy

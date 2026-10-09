@@ -37,7 +37,7 @@ import {
   COPYRIGHT_SDP, COPYRIGHT_VIQUIPEDIA, RUTA_CALENDARI, dataDElement, dataHoraDeBarra, rutaCalendariDeLaData
 } from '../../components/universal/editorial.js';
 import { acteAEsdeveniment } from '../mur/agendaMur.js';
-import { DEFAULT_AUTHOR, esAvatarSegur, esMarcaDeLEntitat } from '../../components/universal/UniversalUtils.js';
+import { DEFAULT_AUTHOR, esAvatarSegur, esMarcaDeLEntitat, esRutaDelProjecte } from '../../components/universal/UniversalUtils.js';
 import { useResolvedAssetState } from '../../hooks/useResolvedAsset.js';
 import { esFontImatgePropia } from '../../utils/sanitize.js';
 import { pageKeyDeRuta, paginaDeRuta, propsDePaginaDeText } from '../text/paginaDeText.js';
@@ -233,10 +233,13 @@ export function paginaDElement(section, item) {
        davant: el que va triar qui publica.
        Onada 5 (ordre del Mestre, 261008) · Un poble porta el logotip de Sóc
        de Poble damunt de l'H1. La barra ja signa amb la gent del poble, i
-       PageFrame només el posa sol quan signa Sóc de Poble: cal dir-ho ací. */
+       PageFrame només el posa sol quan signa Sóc de Poble: cal dir-ho ací.
+       Onada 8 (261009) · L'entitat es reconeix per esRutaDelProjecte (el seu
+       perfil, o la ruta vella /projecte). */
     ...(logoPropi ? { logoEntitat: logoPropi }
-      : esPoble || rutaDAutoria === DEFAULT_AUTHOR.href ? { logoEntitat: DEFAULT_AUTHOR.logo } : {}),
-    /* T4: l'autoria de la barra taronja enllaça al perfil públic de qui signa. */
+      : esPoble || esRutaDelProjecte(rutaDAutoria) ? { logoEntitat: DEFAULT_AUTHOR.logo } : {}),
+    /* T4: l'autoria de la barra taronja enllaça al perfil públic de qui signa.
+       Onada 8 (261009) · La d'un poble, a la seua fitxa (getAuthorHref). */
     authorHref: section.getAuthorHref ? section.getAuthorHref(item) : rutaDAutoria,
     /* T51 · la regla de data viu a editorial.js (pura, sense React). */
     ...dataDElement(item)
@@ -274,9 +277,9 @@ const dataDeProps = (props) => ({ time: props.time, date: props.date, dateTime: 
    signa amb el de sèrie (PageFrame): la targeta diu el mateix, i `propi`
    diu si l'autor ve de l'element.
    T6 (ordre del Mestre, 261004, prompt 261004_0515 §5) · I porta on porta la
-   barra: la pàgina de qui signa o, amb l'autor de sèrie, la del projecte
-   (DEFAULT_AUTHOR.href, el mateix que hi posa PageFrame). Un autor propi
-   sense pàgina coneguda, cap ruta. */
+   barra: la pàgina de qui signa o, amb l'autor de sèrie, el perfil de Sóc de
+   Poble (DEFAULT_AUTHOR.href, el mateix que hi posa PageFrame; Onada 8). Un
+   autor propi sense pàgina coneguda, cap ruta. */
 function targetaDElement(section, item) {
   const props = paginaDElement(section, item);
   const propi = Boolean(props.authorName);
@@ -293,8 +296,9 @@ function targetaDElement(section, item) {
 /* La targeta d'una pàgina de text: les props de TextSection. Una pàgina de
    text no declara autor i la seua barra taronja signa amb el de sèrie.
    T6 (261004) · Derogat per l'ordre del Mestre del 261004 (prompt
-   261004_0515): la ruta ja no és null, és la del projecte, la mateixa de la
-   barra taronja de la pàgina (PageFrame, DEFAULT_AUTHOR.href). */
+   261004_0515): la ruta ja no és null, és la de Sóc de Poble, la mateixa de
+   la barra taronja de la pàgina (PageFrame, DEFAULT_AUTHOR.href: el seu
+   perfil des de l'Onada 8). */
 function targetaDePagina(page, pageKey, t) {
   const props = propsDePaginaDeText(page, pageKey, t);
   return {

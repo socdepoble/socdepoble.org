@@ -25,7 +25,7 @@
  * veres) la IAIA tampoc no és al xat de mostra: ni la seua conversa, ni el
  * seu no llegit, ni a «Nova conversa». La seua cara la retalla CaraXat.
  */
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { XatContext } from '../XatContext.jsx';
 import { agrupaComunitats } from '../missatges.js';
 import { useUIActions } from '../../../app/contexts/UIContext.jsx';

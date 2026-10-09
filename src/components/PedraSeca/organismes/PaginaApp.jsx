@@ -20,10 +20,12 @@
  * CONTRACTE
  *   title · subtitle · lead (l'H1, l'H2 i l'entradilla de PageFrame)
  *   author { nom, avatar, href, poble } · sense, signa «Sóc de Poble» i porta
- *     a la pàgina del projecte (DEFAULT_AUTHOR, T6). Norma del Mestre, 261004
- *     (logotips): sense autor o amb la ruta del projecte (/projecte), la
- *     pàgina porta el logotip de Sóc de Poble dalt de l'H1; el decidix
- *     PageFrame per la ruta de la boina. Una font de fora o una persona, cap.
+ *     al seu perfil (DEFAULT_AUTHOR, T6; Onada 8, 261009: /empresa/socdepoble,
+ *     abans la pàgina del projecte). Norma del Mestre, 261004 (logotips):
+ *     sense autor o amb la ruta del projecte (esRutaDelProjecte: el perfil o
+ *     la vella /projecte), la pàgina porta el logotip de Sóc de Poble dalt de
+ *     l'H1; el decidix PageFrame per la ruta de la boina. Una font de fora o
+ *     una persona, cap.
  *   date · time · dateTime (la pastilla de la barra taronja)
  *   heroImage · heroAlt (la portada, filtrada)
  *   labels (les píndoles de davall de l'H1) · accioPrincipal (l'acció gran

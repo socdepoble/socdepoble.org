@@ -167,6 +167,15 @@ export const DESTINS_CONTROL = Object.freeze([
   })
 ]);
 
+/**
+ * Onada 8 (261009; requeriments 261009_1300, punt 2) · Les pàgines del
+ * sistema (SYSTEM_PAGES) que el Panell pinta a «Maquinària i Sistema», en
+ * este ordre i davant de les eines del registre: la Consola, el Cervell i
+ * Disseny. Ja no són plugins. Cada clau és també l'id amb què la preferència
+ * «Mostrar al Panell» les amaga (profile/aplicacions.js, camp `panell`).
+ */
+export const PAGINES_MAQUINARIA = Object.freeze(['consola', 'cervell', 'disseny']);
+
 /** Sense secció pròpia ni camí per a publicar, la funció està «en obres» (W4-04). */
 export const enObres = (destiControl) => !destiControl.publicar && !destiControl.seccio;
 

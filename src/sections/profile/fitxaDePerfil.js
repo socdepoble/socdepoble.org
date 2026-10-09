@@ -1,4 +1,4 @@
-import { RUTA_PROJECTE, rutaDAutoria, rutaDePerfil } from '../../config/navigation.js';
+import { RUTA_PERFIL_PROJECTE, rutaDAutoria, rutaDePerfil } from '../../config/navigation.js';
 import { ENTITAT_PILOT_SLUG } from '../../data/identitatsSeed.js';
 import { menaDeFitxa } from './perfilCamps.js';
 
@@ -54,7 +54,8 @@ export function slugDEntitat(identitat) {
  * (ordre del Mestre, 261007):
  *   · la persona, per l'id de la seua fila (dades.id): `identitat.id` és 'jo';
  *   · una organització, per rutaDAutoria; l'entitat pilot, pel slug declarat,
- *     a /projecte des del primer render;
+ *     al seu perfil des del primer render (RUTA_PERFIL_PROJECTE; Onada 8,
+ *     261009: abans, /projecte);
  *   · un agent IA, a la seua fitxa (/perfil/:id).
  * Sense id, null: la barra queda sense enllaç.
  */
@@ -62,7 +63,7 @@ export function rutaDeFitxaPublica(identitat) {
   const mena = identitat?.mena;
   if (mena === 'persona') return rutaDePerfil('persona', identitat.dades?.id);
   if (mena === 'agent') return rutaDePerfil('ia', identitat.id);
-  if (identitat?.id != null && slugDEntitat(identitat) === ENTITAT_PILOT_SLUG) return RUTA_PROJECTE;
+  if (identitat?.id != null && slugDEntitat(identitat) === ENTITAT_PILOT_SLUG) return RUTA_PERFIL_PROJECTE;
   return rutaDAutoria({ tipus: mena === 'grup' ? 'grup' : 'entitat', id: identitat?.id });
 }
 

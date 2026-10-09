@@ -45,8 +45,11 @@ const NOTES = [
 /* Dues carpetes del servidor (una dins de l'altra); el Bloc hi afig la Safata d’Entrada. */
 const CARPETES = [{ id: 'f-mur', name: 'Mur', parentId: null }, { id: 'f-hort', name: 'Hort', parentId: 'f-mur' }];
 const CERCA = 'Cerca una nota, una pàgina o una carpeta';
-/* Les pàgines de Sóc de Poble que viuen al PAGE_COPY, sense les portades de la Wiki i de Disseny. */
-const PAGINES = ['projecte', 'constitucio', 'roadmap', 'notes', 'versions', 'legal', 'xat', 'drets-autor', 'anima', 'fedivers'];
+/* Les pàgines de Sóc de Poble que viuen al PAGE_COPY, sense les portades de la Wiki i de Disseny.
+   Onada 8 (261009) · Amb el Cervell, pàgina del sistema darrere de Disseny.
+   La Consola també ho és, però no es repetix: ja és al grup de la Wiki, com
+   abans (Llei del Píxel). */
+const PAGINES = ['projecte', 'constitucio', 'roadmap', 'notes', 'cervell', 'versions', 'legal', 'xat', 'drets-autor', 'anima', 'fedivers'];
 
 beforeEach(() => {
   setLocalNoteField.mockReset();

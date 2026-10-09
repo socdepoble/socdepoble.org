@@ -66,13 +66,21 @@ export function autorDe(item) {
   return null;
 }
 
-/* Autoria editorial del Mur: l'entitat pilot porta a /projecte; la resta,
-   al perfil públic. El Mercat usa rutaDePerfilPublicDAutor i porta sempre
+/* Autoria editorial del Mur: l'entitat pilot porta al seu perfil públic; la
+   resta, també al seu. El Mercat usa rutaDePerfilPublicDAutor i porta sempre
    al perfil de qui ven, també per al pilot (marató2230, pla2045).
-   Es resol per identificador (id, slug o àlies), mai pel nom visible. */
+   Es resol per identificador (id, slug o àlies), mai pel nom visible.
+   Onada 8 (261009) · Derogat el /projecte de la boina: un clic a QUALSEVOL
+   boina taronja porta al perfil públic de qui signa, mai a /projecte ni al
+   xat. */
 
-/** La pàgina del projecte: on porta la boina de l'entitat pilot. */
+/** La pàgina editorial del projecte (/projecte). Ja no és cap boina (Onada 8). */
 export const RUTA_PROJECTE = PAGE_ROUTE_MAP.projecte;
+
+/** Onada 8 (261009) · El perfil públic de l'entitat pilot, pel seu slug
+ *  declarat: on porta la boina de Sóc de Poble. DEFAULT_AUTHOR.href
+ *  (UniversalUtils.js) l'escriu en literal; una prova en fixa la igualtat. */
+export const RUTA_PERFIL_PROJECTE = rutaDePerfil('entitat', ENTITAT_PILOT_SLUG);
 
 /* Tots els identificadors amb què signa l'entitat pilot (identitatsSeed.js). */
 const IDS_DEL_PROJECTE = new Set([
@@ -123,7 +131,7 @@ function avisaDelProjecte() {
 /**
  * Reconeix l'entitat pilot en una entitat que torna el backend, amb la forma
  * de loadPerfilPublic ({ tipus, id, slug }): si és una entitat i el seu slug
- * és el declarat, el seu id porta a RUTA_PROJECTE. Torna cert si ho és.
+ * és el declarat, el seu id porta a RUTA_PERFIL_PROJECTE. Torna cert si ho és.
  */
 export function registraEntitatDelProjecte(entitat) {
   const id = entitat?.id == null ? '' : String(entitat.id);
@@ -201,15 +209,25 @@ export function oblidaEntitatDelProjecte() {
   avisaDelProjecte();
 }
 
+/* Onada 8 (261009) · L'entitat pilot, per identificador (mai pel nom): una
+   entitat, o qui no diu el tipus, amb un id de la llavor o un de remot ja
+   registrat. La lligen la boina (rutaDAutoria) i «En privat» (objecteDe). */
+function esAutorDelProjecte(autor) {
+  const id = autor?.id == null ? '' : String(autor.id);
+  return Boolean(id) && TIPUS_D_ENTITAT.has(autor.tipus) && esIdDelProjecte(id);
+}
+
 /**
- * Ruta de la pàgina de qui signa ({ tipus, id }): RUTA_PROJECTE per a
+ * Ruta de la pàgina de qui signa ({ tipus, id }): RUTA_PERFIL_PROJECTE per a
  * l'entitat pilot (pels ids de la llavor o pel remot que ha tornat el
  * backend), rutaDePerfil per a la resta, o null si no se sap qui és.
+ * Onada 8 (261009) · El pilot va al seu perfil pel slug declarat, el mateix
+ * en llavor i en remot: abans anava a /projecte.
  */
 export function rutaDAutoria(autor) {
   const id = autor?.id == null ? '' : String(autor.id);
   if (!id) return null;
-  if (TIPUS_D_ENTITAT.has(autor.tipus) && esIdDelProjecte(id)) return RUTA_PROJECTE;
+  if (esAutorDelProjecte(autor)) return RUTA_PERFIL_PROJECTE;
   return rutaDePerfil(autor.tipus, id);
 }
 
@@ -239,6 +257,13 @@ const TIPUS_DE_PERFIL = new Set(['persona', 'entitat', 'grup', 'ia']);
 
 const text = (valor) => (valor == null ? '' : String(valor));
 
+/* Onada 8 (261009) · «En privat» obri el xat amb l'autor (useAccions), i el
+   de Sóc de Poble és el canal del projecte (useXatSocDePoble): `projecte`
+   diu que l'autor, o el perfil, és l'entitat pilot, per id, àlies o UUID
+   registrat. Només hi és quan és cert: la resta de descriptors no canvien.
+   Pedra Seca ho llig sense importar la llavor. */
+const marcaDelProjecte = (identitat) => (esAutorDelProjecte(identitat) ? { projecte: true } : null);
+
 /** Descriptor d'un element d'una secció. Una secció desconeguda és una 'pagina'. */
 export function objecteDe(item, seccio) {
   if (!item) return null;
@@ -252,7 +277,7 @@ export function objecteDe(item, seccio) {
     titol: text(item.title || item.name),
     seccio: seccio ? String(seccio) : '',
     ruta: esRutaInterna(ruta) ? ruta : '',
-    autor: autor || nom ? { tipus: autor?.tipus || '', id: autor?.id || '', nom } : null
+    autor: autor || nom ? { tipus: autor?.tipus || '', id: autor?.id || '', nom, ...marcaDelProjecte(autor) } : null
   };
 }
 
@@ -262,7 +287,10 @@ export function objecteDePerfil(perfil) {
   if (!id) return null;
   const tipus = TIPUS_DE_PERFIL.has(perfil.tipus) ? perfil.tipus
     : (perfil.tipus === 'empresa' ? 'entitat' : 'persona');
-  return { tipus, id, titol: text(perfil.nom || perfil.name), seccio: 'perfil', ruta: rutaDePerfil(tipus, id), autor: null };
+  return {
+    tipus, id, titol: text(perfil.nom || perfil.name), seccio: 'perfil', ruta: rutaDePerfil(tipus, id), autor: null,
+    ...marcaDelProjecte({ tipus, id })
+  };
 }
 
 /* La inversa exacta de rutaDePerfil: el prefix que ella escriu per a cada tipus. */

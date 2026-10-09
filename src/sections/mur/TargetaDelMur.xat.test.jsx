@@ -57,8 +57,10 @@ describe('261007 · la targeta d’El Xat', () => {
     const xat = sistema('xat');
     expect(xat).toMatchObject({ id: 'xat', isSystem: true, mainHref: '/page/xat', title: 'El Xat', image: '/assets/uploads/brain/xat_portada.jpg' });
     expect(accioDeLaPagina('xat')).toEqual({ id: 'anar-al-xat', verb: 'Anar al xat', desti: '/xat', varietat: 'primari' });
-    /* Cap altra pàgina del sistema porta acció: el Mur no canvia per a elles. */
-    expect(SYSTEM_PAGES.filter((pagina) => accioDeLaPagina(pagina.key)).map((pagina) => pagina.key)).toEqual(['xat']);
+    /* Cap altra pàgina del sistema porta acció: el Mur no canvia per a elles.
+       Onada 8 (261009) · Menys la Consola i el Cervell, que hi entren amb el
+       seu botó «Obrir…» (systemPages.test.js). */
+    expect(SYSTEM_PAGES.filter((pagina) => accioDeLaPagina(pagina.key)).map((pagina) => pagina.key)).toEqual(['consola', 'cervell', 'xat']);
   });
 
   test('en lloc de les etiquetes, el gran botó «Anar al xat»; les altres targetes conserven les seues', () => {

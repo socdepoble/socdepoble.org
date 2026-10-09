@@ -15,7 +15,7 @@ export default function EspecimenPaginaApp() {
       descripcio="El detall d’un element d’una app (una notícia, un article de la Nevera) amb l’anatomia de sempre: barra blava (Tornar, Índex, Traduir, Comentar, Compartir i Connectar), portada, barra taronja d’autoria i data, el bloc del títol i l’article. Munta PageFrame, però és la porta que les apps sí que poden obrir: sense traductor (Traduir ho diu i cap text ix cap al servei), sense telemetria (el Connectar no compta) i amb les imatges privades (una portada o un avatar d’un servidor de fora no es pinten). La pastilla de data és text: un element d’una app no és al Calendari."
       contracte={[
         ['title / subtitle / lead', 'node', '—', 'L’H1 únic de la pàgina, l’H2 i l’entradilla (PageFrame).'],
-        ['author', '{ nom, avatar, href, poble }', 'null', 'La barra taronja. Sense, signa «Sóc de Poble» i porta a la pàgina del projecte (T6). L’avatar passa pel filtre privat.'],
+        ['author', '{ nom, avatar, href, poble }', 'null', 'La barra taronja. Sense, signa «Sóc de Poble» i porta al seu perfil (T6; Onada 8: abans, a la pàgina del projecte). L’avatar passa pel filtre privat.'],
         ['date / time / dateTime', 'string', '—', 'La pastilla de la barra taronja, en text.'],
         ['heroImage / heroAlt', 'string', '—', 'La portada: només el mateix origen o el de mitjans, demanada sense referent. Una de fora no es pinta.'],
         ['labels', '(string | { text, className })[]', '[]', 'Les píndoles de davall de l’H1.'],
@@ -31,7 +31,7 @@ export default function EspecimenPaginaApp() {
       <PaginaApp
         subtitle="Obri la biblioteca de dissabte"
         lead="Cada dissabte de 10:00 a 13:00, amb préstec de llibres i jocs per a la canalla."
-        author={{ nom: 'Notícies del Poble', poble: 'La Torre de les Maçanes', avatar: '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg' }}
+        author={{ nom: 'Notícies del Poble', poble: 'La Torre de les Maçanes', avatar: '/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png' }}
         time="09:30" date="04/10/26" dateTime="2026-10-04T09:30"
         heroImage="/assets/nano_cards/mur_nano_card.jpg"
         labels={[{ text: 'Notícies', className: 'sdp-badge-system' }]}

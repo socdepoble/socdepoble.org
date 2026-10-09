@@ -43,7 +43,7 @@ const BLAVA = {
 const AUTORIA = {
   authorName: 'Sóc de Poble',
   authorLocation: 'La Torre de les Maçanes',
-  authorAvatar: '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg',
+  authorAvatar: '/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png',
 };
 
 /* La regla de la pastilla (decisió del Mestre, 260928), dita una sola vegada. */
@@ -111,10 +111,11 @@ export default function EspecimenControlsBarra() {
       <AvisTraduccio carregant="FR" />
 
       <h4>Comentar: en privat o en públic</h4>
-      <p>Ordre del Mestre (261007): no hi ha fil de comentaris davall de cap publicació, el debat és un xat. Comentar és el mateix botó a la barra blava i al peu de la targeta, i obri este menú just després del botó, amb el comportament del de Traduir (focus a la primera fila, Escape, clic fora, fletxes). «En privat» porta al xat només entre la persona i Sóc de Poble; «En públic», al xat obert de l’element, amb el seu títol com a nom. Sense xat públic, la fila es queda enfocable però desactivada i diu per què. Com a WhatsApp, dues files grans amb icona i una línia que diu on porta; com a molt 300px d’ample. Ací, obert i quiet: amb la via pública i sense.</p>
+      <p>Ordre del Mestre (261007): no hi ha fil de comentaris davall de cap publicació, el debat és un xat. Comentar és el mateix botó a la barra blava i al peu de la targeta, i obri este menú just després del botó, amb el comportament del de Traduir (focus a la primera fila, Escape, clic fora, fletxes). «En privat» porta al xat només entre la persona i l’autor de l’element, encara que no el conega, i la línia en diu el nom (Onada 8); amb Sóc de Poble, sense autor o amb una publicació pròpia, al xat amb Sóc de Poble. «En públic», al xat obert de l’element, amb el seu títol com a nom. Sense xat públic, la fila es queda enfocable però desactivada i diu per què. Com a WhatsApp, dues files grans amb icona i una línia que diu on porta; com a molt 300px d’ample. Ací, obert i quiet: amb la via pública i sense, i amb una autora.</p>
       <div className="sdp-especimen__fila">
         <MenuComentar ambPublic onTria={res} onTanca={res} mostra />
         <MenuComentar onTria={res} onTanca={res} mostra />
+        <MenuComentar ambPublic privatAmb="Maria" onTria={res} onTanca={res} mostra />
       </div>
       <p>El botó, a soles: tancat, només diu que obri un menú (aria-haspopup, aria-expanded).</p>
       <div className="sdp-especimen__fila">

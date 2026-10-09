@@ -54,7 +54,9 @@ test('en mode seed, el Mur i les pàgines porten les dates de prova de l’arren
   moments.slice(1).forEach((moment, i) => expect(moment).toBeLessThan(moments[i]));
   expect(moments[0]).toBeLessThan(ARA.getTime());
   expect(Math.min(...moments)).toBeGreaterThanOrEqual(prova.dillunsDe(ARA).getTime());
-  expect(perId(core.pages, 'disseny').date).toBe('2026-09-14T18:25:00+02:00');
+  /* Onada 8 (261009) · Disseny ja no porta data de prova: la seua és la del
+     copy, la que li ha donat el Mestre. Abans, 2026-09-14T18:25:00+02:00. */
+  expect(perId(core.pages, 'disseny').date).toBe('2026-09-10T00:00:00+02:00');
   expect(perId(core.pages, 'versions').date).toBe('2026-09-03T11:50:00+02:00');
 });
 

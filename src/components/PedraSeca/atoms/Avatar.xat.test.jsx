@@ -20,7 +20,8 @@ import { CARA_DE_LA_IAIA } from '../../../data/xatsPerDefecte.js';
 /* Onada 6 (tasca 12) · La IAIA arriba amb l'avatar d'AGENTS_MAP i el xat en
    pinta la cara: «Festa del Poble», enquadrada (CaraXat). */
 const IAIA = CARA_DE_LA_IAIA.src;
-const LOGO = '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg';
+/* Onada 8 (261009) · El logo de la comunitat és el PNG de la llavor (abans, l'SVG). */
+const LOGO = '/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png';
 /* Mateix origen que la pàgina, com el plugin-url de WordPress. */
 const PAQUET = `${window.location.origin}/wp-content/plugins/socdepoble-enxufe/dist`;
 const t = (_clau, alternativa) => alternativa;

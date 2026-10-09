@@ -35,6 +35,11 @@ const MOMENTS = [
 
 const N = IMPORTANTS_DEL_MUR.length;
 const clau = ([coleccio, id]) => `${coleccio}:${id}`;
+/* Onada 8 (261009; requeriments 261009_1300, punt 2) · Les tres pàgines de la
+   maquinària porten la data que els ha donat el Mestre (8, 9 i 10 de
+   setembre, PAGE_COPY), cap data de prova: Disseny ja no és de les
+   tècniques. Van darrere de les importants i davant de les Versions. */
+const MAQUINARIA_DEL_MUR = Object.freeze(['pages:disseny', 'pages:cervell', 'pages:consola']);
 const diaLocal = (valor) => {
   const d = new Date(valor);
   return [d.getFullYear(), d.getMonth() + 1, d.getDate()];
@@ -93,7 +98,7 @@ describe('la llavor del Mur amb les dates de prova', () => {
     const ordenades = targetesDelMur(llavor)
       .map((targeta) => ({ ...targeta, moment: momentDElement(targeta.item) }))
       .sort((a, b) => b.moment - a.moment);
-    const esperat = [...IMPORTANTS_DEL_MUR.map(clau), ...TECNIQUES_DEL_MUR.map(clau)];
+    const esperat = [...IMPORTANTS_DEL_MUR.map(clau), ...MAQUINARIA_DEL_MUR, ...TECNIQUES_DEL_MUR.map(clau)];
     expect(ordenades.slice(0, esperat.length).map(({ clau: c }) => c)).toEqual(esperat);
 
     for (const { item, moment } of ordenades.slice(0, N)) {
@@ -101,7 +106,12 @@ describe('la llavor del Mur amb les dates de prova', () => {
       expect(moment).toBeLessThan(ara.getTime());
       expect(dataDElement(item).time).toMatch(/^\d{2}:\d{2}$/);
     }
-    for (const { item, moment } of ordenades.slice(N, esperat.length)) {
+    /* Onada 8 · La maquinària, amb la data del seu copy, sense tocar. */
+    for (const { clau: c, item, moment } of ordenades.slice(N, N + MAQUINARIA_DEL_MUR.length)) {
+      expect([c, moment]).toEqual([c, Date.parse(PAGE_COPY[c.slice('pages:'.length)].date)]);
+      expect([c, dataDElement(item).time]).toEqual([c, '00:00']);
+    }
+    for (const { item, moment } of ordenades.slice(N + MAQUINARIA_DEL_MUR.length, esperat.length)) {
       const [any, mes, dia] = diaLocal(moment);
       expect([any, mes]).toEqual([2026, 9]);
       expect(dia).toBeGreaterThanOrEqual(2);
@@ -122,7 +132,7 @@ describe('la llavor del Mur amb les dates de prova', () => {
       .map((targeta) => ({ ...targeta, moment: momentDElement(targeta.item) }))
       .sort((a, b) => b.moment - a.moment);
     const posicio = ordenades.findIndex(({ clau: c }) => c === 'pages:drets-autor');
-    expect(posicio).toBeGreaterThanOrEqual(N + TECNIQUES_DEL_MUR.length);
+    expect(posicio).toBeGreaterThanOrEqual(N + MAQUINARIA_DEL_MUR.length + TECNIQUES_DEL_MUR.length);
     expect(ordenades[posicio].moment).toBe(Date.parse(PAGE_COPY['drets-autor'].date));
     expect(ordenades[posicio].item.created_at).toBe('2026-01-30T00:00:00+01:00');
   });

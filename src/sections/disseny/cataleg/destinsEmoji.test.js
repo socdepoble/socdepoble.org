@@ -224,9 +224,13 @@ describe('destinsDelDisseny', () => {
 describe('destinsDelSistema', () => {
   const copyDe = (clau) => PAGE_COPY[clau] || null;
 
-  test('les pàgines del sistema i, darrere, les de text de la navegació; sense les portades que ja encapçalen el seu grup', () => {
-    const destins = destinsDelSistema(SYSTEM_PAGES, SECTIONS, copyDe, [COVER_PAGE_KEYS.wiki, COVER_PAGE_KEYS.disseny]);
-    const claus = ['projecte', 'constitucio', 'roadmap', 'notes', 'versions', 'legal', 'xat', 'drets-autor', 'anima', 'fedivers'];
+  test('les pàgines del sistema i, darrere, les de text de la navegació; sense les que ja són a un altre grup', () => {
+    /* Onada 8 (261009) · La Consola i el Cervell, pàgines del sistema
+       darrere de Disseny (SYSTEM_PAGES). La Consola, com les portades, es
+       passa com a ja llistada (AssignacioEmoji.jsx): la Wiki ja la porta i
+       no es repetix. El Cervell és nou i hi és. */
+    const destins = destinsDelSistema(SYSTEM_PAGES, SECTIONS, copyDe, [COVER_PAGE_KEYS.wiki, COVER_PAGE_KEYS.disseny, COVER_PAGE_KEYS.consola]);
+    const claus = ['projecte', 'constitucio', 'roadmap', 'notes', 'cervell', 'versions', 'legal', 'xat', 'drets-autor', 'anima', 'fedivers'];
     expect(destins.map((desti) => desti.id)).toEqual(claus.map((clau) => `sistema:${clau}`));
     expect(destins.map((desti) => desti.titol)).toEqual(claus.map((clau) => PAGE_COPY[clau].title));
     expect(destins.every((desti) => desti.grup === 'sistema' && desti.escriu === 'codi')).toBe(true);
@@ -237,7 +241,9 @@ describe('destinsDelSistema', () => {
     const glifs = Object.fromEntries(destinsDelSistema(SYSTEM_PAGES, SECTIONS, copyDe).map((desti) => [desti.id, desti.glif]));
     expect(glifs).toMatchObject({
       'sistema:projecte': FileText, 'sistema:constitucio': ShieldCheck, 'sistema:roadmap': Route, 'sistema:notes': NotebookPen,
-      'sistema:xat': GLIF_DOCUMENT, 'sistema:drets-autor': GLIF_DOCUMENT, 'sistema:anima': BrainCircuit, 'sistema:fedivers': Network
+      'sistema:xat': GLIF_DOCUMENT, 'sistema:drets-autor': GLIF_DOCUMENT, 'sistema:anima': BrainCircuit, 'sistema:fedivers': Network,
+      /* Onada 8 (261009) · /page/cervell no té entrada a la barra: el document. */
+      'sistema:cervell': GLIF_DOCUMENT
     });
     /* Sense exclusions, les portades de la Wiki i de Disseny també hi són. */
     expect(Object.keys(glifs)).toEqual(expect.arrayContaining(['sistema:wikidepoble', 'sistema:disseny']));

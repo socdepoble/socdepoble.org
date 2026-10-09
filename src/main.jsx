@@ -1,5 +1,4 @@
 import styles from './css/index.css?inline';
-import React from 'react';
 
 const styleNode = document.createElement('style');
 styleNode.textContent = styles;

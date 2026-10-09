@@ -8,6 +8,9 @@
  *    del Mestre del 261004 (prompt 261004_0515): el sistema anava a /pobles;
  *  · un nom sense identitat coneguda no s'endevina: sense enllaç.
  * Les publicacions i els actes (EventCard) seguixen la mateixa regla.
+ * Onada 8 (261009) · Derogat el «al projecte»: Sóc de Poble (el pilot, el
+ * sistema i la reserva) porta al seu perfil públic, RUTA_PERFIL_PROJECTE
+ * ('/empresa/socdepoble'), mai a /projecte. Les proves lligen la constant.
  */
 import React from 'react';
 import { cleanup, render } from '@testing-library/react';
@@ -29,7 +32,7 @@ import { TargetaDelMur, rutaDeLaBoinaDelMur } from './TargetaDelMur.jsx';
 import { targetesDeSistema } from './targetesMur.js';
 import { MARKET_ITEMS } from '../mercat/marketContent.js';
 import { EVENTS } from './eventsContent.js';
-import { RUTA_PROJECTE } from '../../config/navigation.js';
+import { RUTA_PERFIL_PROJECTE, RUTA_PROJECTE } from '../../config/navigation.js';
 import { PAGE_COPY } from '../text/pageContent.js';
 
 const MAC = MARKET_ITEMS.find((item) => item.id === 'mac-mini-m4');
@@ -49,21 +52,22 @@ afterEach(cleanup);
 beforeEach(() => { vi.clearAllMocks(); });
 
 describe('T6 · la boina del Mur porta a la pàgina de qui signa', () => {
-  test('una pàgina del sistema signa «Sóc de Poble» i porta al projecte, no a /pobles', () => {
+  test('una pàgina del sistema signa «Sóc de Poble» i porta al seu perfil, no a /pobles ni a /projecte', () => {
     const [sistema] = targetesDeSistema(PAGE_COPY);
     expect(sistema.isSystem).toBe(true);
-    expect(boina(sistema)).toEqual({ primer: true, nom: 'Sóc de Poble', href: RUTA_PROJECTE });
-    expect(RUTA_PROJECTE).toBe('/projecte');
+    expect(boina(sistema)).toEqual({ primer: true, nom: 'Sóc de Poble', href: RUTA_PERFIL_PROJECTE });
+    expect(RUTA_PERFIL_PROJECTE).toBe('/empresa/socdepoble');
+    expect(RUTA_PERFIL_PROJECTE).not.toBe(RUTA_PROJECTE);
   });
 
-  test('una publicació sense nom ni identitat signa amb la reserva i porta al projecte', () => {
+  test('una publicació sense nom ni identitat signa amb la reserva i porta al perfil de Sóc de Poble', () => {
     expect(boina({ id: 'p1', type: 'post', title: 'Sense signatura', created_at: '2026-09-01T10:00:00.000Z' }))
-      .toEqual({ primer: true, nom: 'Sóc de Poble', href: '/projecte' });
+      .toEqual({ primer: true, nom: 'Sóc de Poble', href: RUTA_PERFIL_PROJECTE });
   });
 
-  test('el Javi, al seu perfil; l’entitat pilot, al projecte, per identificador', () => {
+  test('el Javi, al seu perfil; l’entitat pilot, al seu, per identificador', () => {
     expect(boina(MAC)).toMatchObject({ nom: 'Javi', href: '/gent/javillinares' });
-    expect(boina(SAMARRETA)).toMatchObject({ nom: 'Sóc de Poble', href: '/projecte' });
+    expect(boina(SAMARRETA)).toMatchObject({ nom: 'Sóc de Poble', href: RUTA_PERFIL_PROJECTE });
     expect(boina({ id: 'f', type: 'post', title: 'Pa', author_name: 'Forn', author_org_id: 'forn' })).toMatchObject({ href: '/empresa/forn' });
   });
 
@@ -75,30 +79,30 @@ describe('T6 · la boina del Mur porta a la pàgina de qui signa', () => {
     expect(boina({ id: 'm', type: 'market', title: 'Cistella', seller: 'Pepa' }).href).toBeNull();
   });
 
-  test('un acte: la persona que el signa, al seu perfil; el sistema, al projecte', () => {
+  test('un acte: la persona que el signa, al seu perfil; el sistema, al de Sóc de Poble', () => {
     expect(boina({ id: 'e1', type: 'event', title: 'Ball', date: '2026-11-14', author_name: 'Javi', owner_user_id: 'javillinares' }))
       .toMatchObject({ nom: 'Javi', href: '/gent/javillinares' });
     cleanup();
     expect(boina({ id: 'e2', type: 'event', title: 'Festa', date: '2026-11-14', isSystem: true }))
-      .toMatchObject({ nom: 'Sóc de Poble', href: '/projecte' });
+      .toMatchObject({ nom: 'Sóc de Poble', href: RUTA_PERFIL_PROJECTE });
     cleanup();
     expect(boina({ id: 'e3', type: 'event', title: 'Reunió', date: '2026-11-14', author_name: 'Pepa' }).href).toBeNull();
   });
 
   /* Revisió del front «boina-publicar» (261004) · L'acte de la llavor «2n Aplec
      pel Territori» signa Sóc de Poble: porta l'id de l'entitat pilot a la
-     dada (eventsSeed.js), com la samarreta, i la boina va al projecte per
+     dada (eventsSeed.js), com la samarreta, i la boina va al seu perfil per
      l'id. El mateix al Mur i a /calendari (la mateixa targeta). */
-  test('l’acte de la llavor signat per Sóc de Poble porta al projecte, per identificador', () => {
+  test('l’acte de la llavor signat per Sóc de Poble porta al seu perfil, per identificador', () => {
     const [aplec] = EVENTS;
     expect(aplec.id).toBe('aplec-2023');
-    expect(boina(aplec)).toMatchObject({ nom: 'Sóc de Poble', href: RUTA_PROJECTE });
+    expect(boina(aplec)).toMatchObject({ nom: 'Sóc de Poble', href: RUTA_PERFIL_PROJECTE });
   });
 
   test('rutaDeLaBoinaDelMur: qui signa mana; després, el sistema i la reserva', () => {
     expect(rutaDeLaBoinaDelMur({ isSystem: true, author_name: 'Javi', owner_user_id: 'javillinares' })).toBe('/gent/javillinares');
-    expect(rutaDeLaBoinaDelMur({ isSystem: true })).toBe('/projecte');
-    expect(rutaDeLaBoinaDelMur({})).toBe('/projecte');
+    expect(rutaDeLaBoinaDelMur({ isSystem: true })).toBe(RUTA_PERFIL_PROJECTE);
+    expect(rutaDeLaBoinaDelMur({})).toBe(RUTA_PERFIL_PROJECTE);
     expect(rutaDeLaBoinaDelMur({ seller: 'Pepa' })).toBeUndefined();
     expect(rutaDeLaBoinaDelMur({ author_name: 'Pepa' })).toBeUndefined();
   });

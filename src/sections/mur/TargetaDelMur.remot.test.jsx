@@ -39,7 +39,7 @@ vi.mock('../../data/backendPort.js', () => ({
 }));
 
 import { TargetaDelMur } from './TargetaDelMur.jsx';
-import { oblidaEntitatDelProjecte, RUTA_PROJECTE } from '../../config/navigation.js';
+import { oblidaEntitatDelProjecte, RUTA_PERFIL_PROJECTE } from '../../config/navigation.js';
 import { ENTITAT_PILOT_SLUG } from '../../data/identitatsSeed.js';
 
 const publicacio = (id, orgId) => ({ id, type: 'post', title: `Avís ${id}`, author_name: 'Sóc de Poble', author_org_id: orgId });
@@ -65,10 +65,11 @@ beforeEach(() => {
 });
 
 describe('T6 en remot · la boina de l’entitat pilot pel seu id de servidor', () => {
-  test('quan el port torna l’id, la boina del pilot porta al projecte; la d’una altra entitat, al seu perfil', async () => {
+  /* Onada 8 (261009) · La del pilot, al seu perfil (RUTA_PERFIL_PROJECTE), ja no a /projecte. */
+  test('quan el port torna l’id, la boina del pilot porta al seu perfil; la d’una altra entitat, al seu', async () => {
     const arrel = pinta([publicacio('a', UUID_PILOT), publicacio('b', UUID_PILOT), publicacio('c', UUID_ALTRA)]);
-    await waitFor(() => expect(hrefDe(arrel, 'a')).toBe(RUTA_PROJECTE));
-    expect(hrefDe(arrel, 'b')).toBe(RUTA_PROJECTE);
+    await waitFor(() => expect(hrefDe(arrel, 'a')).toBe(RUTA_PERFIL_PROJECTE));
+    expect(hrefDe(arrel, 'b')).toBe(RUTA_PERFIL_PROJECTE);
     expect(hrefDe(arrel, 'c')).toBe(`/empresa/${UUID_ALTRA}`);
     /* Tres targetes, una sola crida, amb el slug declarat (mai el nom). */
     expect(estat.loadPerfilPublic).toHaveBeenCalledTimes(1);

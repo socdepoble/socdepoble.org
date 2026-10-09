@@ -117,12 +117,14 @@ describe('EspecimenPage · el bloc del títol: avatar o logotip', () => {
     pinta();
     const figura = mostra('Signa l’entitat: el logotip de Sóc de Poble, cap avatar');
     expect(fills(capcalera(figura))).toEqual(['IMG.page-title-logo light-only', 'IMG.page-title-logo dark-only']);
+    // Onada 8 (261009) · Els PNG de 985x256 (abans, els SVG).
     expect([...capcalera(figura).querySelectorAll('img')].map((img) => img.getAttribute('src'))).toEqual([
-      '/assets/system/ui/logo-socdepoble-rect-negre.svg',
-      '/assets/system/ui/logo-socdepoble-rect-blanc.svg'
+      '/assets/system/ui/logo-socdepoble-rect-negre-985x256.png',
+      '/assets/system/ui/logo-socdepoble-rect-blanc-985x256.png'
     ]);
     expect(figura.querySelector('.page-title-avatar')).toBeNull();
-    expect(within(figura.querySelector('section.bar-orange')).getByRole('link', { name: /Sóc de Poble/ }).getAttribute('href')).toBe('/projecte');
+    /* Onada 8 (261009) · La boina porta al perfil públic de Sóc de Poble, mai a /projecte. */
+    expect(within(figura.querySelector('section.bar-orange')).getByRole('link', { name: /Sóc de Poble/ }).getAttribute('href')).toBe('/empresa/socdepoble');
   });
 
   it('el contracte documenta avatarAutor al costat de logoEntitat i senseLogo', () => {

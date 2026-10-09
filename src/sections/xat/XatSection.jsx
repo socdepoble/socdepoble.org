@@ -77,7 +77,6 @@ import { subjecteDeXat } from '../../data/contracte.js';
 import { construeixRetall } from './retall.js';
 import { cercaXat, FILTRES_CERCA_XAT } from './cercaXat.js';
 import { useSEO } from '../../hooks/useSEO';
-import { resolveAsset } from '../../config/assetResolver.js';
 import { rutaDEntrada } from '../../config/rutaEntrada.js';
 import { objecteDePagina, rutaConnectarObjecte } from '../../config/objecteConnectable.js';
 /* Ordre del Mestre (261007) · La pàgina destacada de la columna dreta: es tria a paginaDestacada.js. */
@@ -341,10 +340,11 @@ function XatWorkspace() {
   } = useXat();
 
   const titolSeccio = t('section.xat.rail.titol', 'Xat');
+  /* Onada 8 (261009) · Sense `image`: useSEO no passa cap SVG a les xarxes i
+     ja hi posava la imatge base. El <head> és el mateix. */
   const seoXat = {
     title: totalNoLlegits > 0 ? `(${totalNoLlegits}) ${titolSeccio}` : titolSeccio,
-    description: t('section.xat.subtitle', 'Espai de xat'),
-    image: resolveAsset('/assets/system/ui/logo-socdepoble-cuadrat-verd.svg')
+    description: t('section.xat.subtitle', 'Espai de xat')
   };
   useSEO(seoXat);
 

@@ -3,7 +3,7 @@ import { useCallback, useEffect, useId, useLayoutEffect, useState, useRef } from
 import { createPortal } from 'react-dom';
 import { useRouter } from '../../app/contexts/RouterContext';
 import { Camera, Trash2 } from 'lucide-react';
-import { isSafeAsset, isSafeUrl, DEFAULT_AUTHOR, PAGE_CHROME_MODES, esAvatarSegur, esMarcaDeLEntitat } from './UniversalUtils';
+import { isSafeAsset, isSafeUrl, DEFAULT_AUTHOR, MARQUES_SVG_ANTIGUES, PAGE_CHROME_MODES, esAvatarSegur, esMarcaDeLEntitat, esRutaDelProjecte } from './UniversalUtils';
 import { RUTA_DRETS_AUTOR } from '../../config/systemPages.js';
 import { useResolvedAssetState } from '../../hooks/useResolvedAsset.js';
 import { escriuSeccio, llegixSeccio, rutaAmbConsulta, slugsDeSeccions } from './workspace/seleccioUrl.js';
@@ -408,7 +408,8 @@ export function PageFrame({
   heroWidth, heroHeight, heroFetchPriority,
   /* T6 (ordre del Mestre, 261004) · Sense nom propi (ni ací ni a
      topBarData), la barra signa amb DEFAULT_AUTHOR i, si ningú hi posa ruta,
-     enllaça a la pàgina del projecte (DEFAULT_AUTHOR.href). */
+     enllaça al perfil de Sóc de Poble (DEFAULT_AUTHOR.href; Onada 8, 261009:
+     abans, la pàgina del projecte). */
   authorName, authorLocation = DEFAULT_AUTHOR.location,
   authorAvatar = DEFAULT_AUTHOR.avatarUrl,
   /* T4 · amb ruta, avatar i nom de la barra taronja enllacen al perfil públic. */
@@ -567,6 +568,7 @@ export function PageFrame({
     compartirVisible,
     connectarVisible,
     comentarXat,
+    comentarPrivatAmb,
     menuTraduir
   } = useAccions({
     title,
@@ -724,7 +726,7 @@ export function PageFrame({
      abans només la portaven 'full' i 'context', i les pàgines de sistema (la
      Consola, el Mur, el Control…) en quedaven sense. Signa qui passa la pàgina
      o, si ningú no en passa cap, DEFAULT_AUTHOR (logo, nom i poble de Sóc de
-     Poble) enllaçat a /projecte. La pastilla de data és la que du la pàgina:
+     Poble) enllaçat al seu perfil (Onada 8). La pastilla de data és la que du la pàgina:
      ací no se n'inventa cap (ni la d'ara ni guionets; skill sdp-pedra-seca
      §10 i barraTaronjaData.contracte.test.jsx). Només un `true` explícit
      la lleva: un text o un 1 no l'apaguen, i la config del ContentProvider
@@ -749,9 +751,14 @@ export function PageFrame({
        b) senseLogo === true: cap logotip. L'única excepció, per ordre
           explícita del Mestre (una cadena o un 1 no l'activen);
        c) logoEntitat: el logotip de l'entitat que signa;
-       d) signa Sóc de Poble: la ruta de la boina és DEFAULT_AUTHOR.href
-          ('/projecte'), que rutaDAutoria només dona per identificador, mai
-          pel nom. El seu logotip rectangular, amb el marcatge de sempre;
+       d) signa Sóc de Poble: la ruta de la boina és la del projecte
+          (esRutaDelProjecte: DEFAULT_AUTHOR.href, '/empresa/socdepoble'
+          des de l'Onada 8, o la vella '/projecte'), que rutaDAutoria només
+          dona per identificador, mai pel nom. El seu logotip rectangular,
+          amb el marcatge de sempre. Onada 8 (261009, revisió) · També el
+          guanya una pàgina que ja signava amb rutaDePerfil del pilot, com la
+          caiguda d'una connexió al seu perfil (ConnexioDetall.test.jsx):
+          pendent de confirmar per MarIA;
        e) compatibilitat: showLogos === true continua pintant el de Sóc de
           Poble, de manera que cap pàgina no el perd hui (Llei del Píxel);
        f) avatarAutor: una persona o la IA no porten logotip, porten el seu
@@ -763,7 +770,7 @@ export function PageFrame({
      títol. */
   const logoDeLaRanura = topBarData?.logoComponent || null;
   const logoAutomatic = senseLogo === true ? null
-    : (logoDescrit(logoEntitat) ?? (barAuthorHref === DEFAULT_AUTHOR.href || showLogos === true ? DEFAULT_AUTHOR.logo : null));
+    : (logoDescrit(logoEntitat) ?? (esRutaDelProjecte(barAuthorHref) || showLogos === true ? DEFAULT_AUTHOR.logo : null));
   const avatarDeCapcalera = logoDeLaRanura || logoAutomatic || senseLogo === true ? null : avatarDescrit(avatarAutor);
   /* Correcció de la revisió (261008, CONTRACTE-1) · Una referència que no es
      pot pintar, amb les claus per a canviar-la: les píndoles soles. */
@@ -797,6 +804,7 @@ export function PageFrame({
           connectLabel={connectLabel}
           /* T63.2 · Inoperatiu (l'editor, T36) no porta enlloc: el nom no en promet cap xat. */
           comentarXat={accionsInoperatives ? null : comentarXat}
+          comentarPrivatAmb={comentarPrivatAmb}
           accionsInoperatives={accionsInoperatives}
           onClickInoperatiu={onClickInoperatiu}
           menuTraduir={menuTraduir}
@@ -981,11 +989,17 @@ function logoDescrit(logo) {
    (.page-title-logo: fins a 600px, i l'ample de la capçalera en pantalla
    estreta) amb height: auto, i un cop carregat val la proporció de l'SVG:
    els píxels finals són els d'abans. Només per als dos fitxers de Sóc de
-   Poble: el d'una altra entitat té la seua mida, que ací no sabem. */
+   Poble: el d'una altra entitat té la seua mida, que ací no sabem.
+   Onada 8 (261009) · Ara són PNG de 985x256, amb la mateixa proporció. Els
+   SVG d'abans (MARQUES_SVG_ANTIGUES) continuen portant la seua mida: una
+   pàgina desada amb ells no salta. */
 const MIDA_NATURAL_LOGO_SDP = Object.freeze({ width: '300', height: '78' });
 function midaNaturalDelLogo(clar, fosc) {
   const sdp = DEFAULT_AUTHOR.logo;
-  return clar === sdp.clar && fosc === sdp.fosc ? MIDA_NATURAL_LOGO_SDP : null;
+  const esLaMarca = (src, ara, antic) => src === ara || src === resolveAsset(antic);
+  return esLaMarca(clar, sdp.clar, MARQUES_SVG_ANTIGUES.clar) && esLaMarca(fosc, sdp.fosc, MARQUES_SVG_ANTIGUES.fosc)
+    ? MIDA_NATURAL_LOGO_SDP
+    : null;
 }
 
 /* El logotip del bloc del títol, abans de l'H1.

@@ -4,8 +4,9 @@
  * MATEIXA a la barra blava (universal/barres/BarraBlava.jsx) i al peu de la
  * targeta (UniversalCard). No hi ha fil de comentaris davall de cap
  * publicació: el debat és un xat.
- *   · «En privat» · un xat privat només entre la persona i Sóc de Poble, el
- *     missatge directe amb l'entitat;
+ *   · «En privat» · un xat privat només entre la persona i l'autor de
+ *     l'element (Onada 8, 261009); sense autor, o amb el pilot, Sóc de Poble,
+ *     el missatge directe amb l'entitat;
  *   · «En públic» · el xat públic de l'element, amb el seu títol com a nom,
  *     com els grups «General» o «Beta testers»: hi pot entrar tothom.
  * Correcció C9 · Abans vivia a BarraBlava.jsx, i UniversalCard, un organisme
@@ -51,11 +52,18 @@ const FILES = '[role="menuitem"]';
  * pinta obert i quiet, sense furtar el focus, sense escoltar la pàgina (cap
  * clic fora ni Escape que el tanque: Disseny no té cap botó on tornar) i
  * sense tria. Les fletxes, Inici i Fi continuen movent el focus per les files.
+ * Onada 8 (261009) · `privatAmb`: el nom de qui hi ha a l'altra banda de «En
+ * privat» (l'autor, useAccions · comentarPrivatAmb). Amb ell, la línia de
+ * davall diu «Un xat només entre tu i {nom}»; sense, la de sempre.
  */
-export function MenuComentar({ ambPublic = false, onTria, onTanca, botoRef = null, mostra = false }) {
+export function MenuComentar({ ambPublic = false, privatAmb = null, onTria, onTanca, botoRef = null, mostra = false }) {
   const t = useTraductorOpcional();
   const id = useId();
   const { ref, tria, mouFocus } = useMenuEmergent({ files: FILES, onTria, onTanca, botoRef, mostra });
+  const nomPrivat = typeof privatAmb === 'string' ? privatAmb.trim() : '';
+  const detallPrivat = nomPrivat
+    ? tradueix(t, TEXTOS_COMENTAR.privatDetallAmb).replace('{nom}', () => nomPrivat)
+    : tradueix(t, TEXTOS_COMENTAR.privatDetall);
 
   const fila = ({ via, Icona, nom, detall, disponible }) => (
     <button type="button" role="menuitem" className="sdp-menu-traduir__item"
@@ -64,7 +72,7 @@ export function MenuComentar({ ambPublic = false, onTria, onTanca, botoRef = nul
       <Icona className="sdp-menu-traduir__marca" size={20} aria-hidden="true" focusable="false" />
       <span className="sdp-menu-comentar__text">
         <span id={`${id}-${via}`} className="sdp-menu-comentar__nom">{tradueix(t, nom)}</span>
-        <span id={`${id}-${via}-detall`} className="sdp-menu-comentar__detall">{tradueix(t, detall)}</span>
+        <span id={`${id}-${via}-detall`} className="sdp-menu-comentar__detall">{detall}</span>
       </span>
     </button>
   );
@@ -72,10 +80,10 @@ export function MenuComentar({ ambPublic = false, onTria, onTanca, botoRef = nul
   return (
     <div ref={ref} className="sdp-menu-traduir sdp-menu-comentar" role="menu"
       aria-label={tradueix(t, TEXTOS_COMENTAR.menu)} onKeyDown={mouFocus}>
-      {fila({ via: 'privat', Icona: Lock, nom: TEXTOS_COMENTAR.privat, detall: TEXTOS_COMENTAR.privatDetall, disponible: true })}
+      {fila({ via: 'privat', Icona: Lock, nom: TEXTOS_COMENTAR.privat, detall: detallPrivat, disponible: true })}
       {fila({
         via: 'public', Icona: Users, nom: TEXTOS_COMENTAR.public,
-        detall: ambPublic ? TEXTOS_COMENTAR.publicDetall : TEXTOS_COMENTAR.senseXatPublic, disponible: ambPublic
+        detall: tradueix(t, ambPublic ? TEXTOS_COMENTAR.publicDetall : TEXTOS_COMENTAR.senseXatPublic), disponible: ambPublic
       })}
     </div>
   );
@@ -90,9 +98,10 @@ export function MenuComentar({ ambPublic = false, onTria, onTanca, botoRef = nul
  * onComment('privat' | 'public'). Amb null (un handler propi, que mana, o les
  * accions inoperatives de l'editor), cap menú ni atribut nou: el clic va a
  * onComment, com sempre. `label`, `className`, `presentation` i
- * `ariaDisabled` són els d'IconButton.
+ * `ariaDisabled` són els d'IconButton. Onada 8 (261009) · `privatAmb`, el
+ * nom de l'autor de «En privat» (MenuComentar); tancat, cap píxel canvia.
  */
-export function BotoComentar({ label = COMENTAR, comentarXat = null, onComment, className = '', presentation = false, ariaDisabled }) {
+export function BotoComentar({ label = COMENTAR, comentarXat = null, privatAmb = null, onComment, className = '', presentation = false, ariaDisabled }) {
   const boto = useRef(null);
   const [obert, setObert] = useState(false);
   const tanca = useCallback(() => setObert(false), []);
@@ -108,7 +117,7 @@ export function BotoComentar({ label = COMENTAR, comentarXat = null, onComment, 
         <CommentIcon className="icon" />
       </IconButton>
       {ambMenu && obert ? (
-        <MenuComentar ambPublic={comentarXat === 'comu'} botoRef={boto} onTria={onComment} onTanca={tanca} />
+        <MenuComentar ambPublic={comentarXat === 'comu'} privatAmb={privatAmb} botoRef={boto} onTria={onComment} onTanca={tanca} />
       ) : null}
     </>
   );

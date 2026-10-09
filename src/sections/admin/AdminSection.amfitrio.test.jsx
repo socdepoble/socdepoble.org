@@ -9,7 +9,8 @@
        taronja amb l'autor. A Usuaris i a Entitats la pàgina és el detall
        (sdp-universal-page §5: la UniversalPage es construïx dins de la
        columna dreta, mai al voltant del Workspace): sense barra blava,
-       signada per Sóc de Poble i enllaçada a /projecte. Els estats sense
+       signada per Sóc de Poble i enllaçada al seu perfil (Onada 8; abans,
+       a /projecte). Els estats sense
        graella (sense la capacitat, l'error) porten la seua.
    La UniversalPage és la de veres. Dades sintètiques. */
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
@@ -27,6 +28,8 @@ vi.mock('../../data/backendPort.js', () => ({
   adminListOrganizations: (...args) => m.entitats(...args)
 }));
 import AdminSection from './AdminSection.jsx';
+/* Onada 8 (261009) · La boina de Sóc de Poble porta al seu perfil, ja no a /projecte. */
+import { DEFAULT_AUTHOR } from '../../components/universal/UniversalUtils.js';
 
 const SELECTOR_DE_LA_REGLA = '.sdp-universal-page-container--sense-blava > .content-wrapper > .app-grid-page';
 const VISTES = [
@@ -99,7 +102,7 @@ describe('(b) sense la capacitat admin', () => {
 
 /* La Pàgina Universal del detall: davall de la capçalera de la columna (la
    d'abans, amb la fletxa ← en estret), sense barra blava, amb la barra
-   taronja de Sóc de Poble enllaçada a /projecte. */
+   taronja de Sóc de Poble enllaçada al seu perfil (Onada 8; abans, a /projecte). */
 function comprovaLaPaginaDelDetall(container, titol) {
   const detall = container.querySelector('#app-grid-main');
   const aside = detall.querySelector('aside.perfil-detall');
@@ -110,7 +113,7 @@ function comprovaLaPaginaDelDetall(container, titol) {
   expect(pagina.classList.contains('sdp-universal-page-container--sense-blava')).toBe(true);
   expect(container.querySelector('header.bar-blue')).toBeNull();
   const barra = pagina.querySelector(':scope > section.bar-orange');
-  expect(barra.firstElementChild.getAttribute('href')).toBe('/projecte');
+  expect(barra.firstElementChild.getAttribute('href')).toBe(DEFAULT_AUTHOR.href);
   expect(barra.querySelector('.sp-card-author-name').textContent).toBe('Sóc de Poble');
   // Una sola Pàgina Universal: la del detall.
   expect(container.querySelectorAll('.sdp-universal-page-container')).toHaveLength(1);

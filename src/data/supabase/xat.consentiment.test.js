@@ -65,10 +65,22 @@ describe('SDP-XAT-016 · persona sense consentiment al xat', () => {
     }
   });
 
-  it('la resta de codis SDP conserven el text del servidor (SDP-XAT-004)', async () => {
+  /* Onada 8 (261009, revisió) · SDP-XAT-004 ja té text humà («En privat» hi
+     pot portar des de qualsevol publicació): l'exemple de «la resta» passa a
+     ser SDP-XAT-006, que no en té. */
+  it('la resta de codis SDP conserven el text del servidor (SDP-XAT-006)', async () => {
+    const text = 'SDP-XAT-006: no eres membre actiu del fil.';
+    respon({ message: text, code: '42501' }, 403);
+    await expect(creaFilDirecte(PERSONA, null, REMOT)).rejects.toMatchObject({ code: 'SDP-XAT-006', retriable: false, message: text });
+  });
+
+  it('Onada 8 · SDP-XAT-004 (no és d’este poble): text humà, el mateix code i el text del servidor a la causa', async () => {
     const text = 'SDP-XAT-004: l\'interlocutor no és disponible en aquest poble.';
     respon({ message: text, code: '42501' }, 403);
-    await expect(creaFilDirecte(PERSONA, null, REMOT)).rejects.toMatchObject({ code: 'SDP-XAT-004', retriable: false, message: text });
+    const error = await creaFilDirecte(PERSONA, null, REMOT).catch((e) => e);
+    expect(error).toMatchObject({ code: 'SDP-XAT-004', retriable: false, message: createTranslator('ca')('section.xat.error.noDelPoble') });
+    expect(error.message).not.toMatch(/SDP-XAT/);
+    expect(error.cause).toMatchObject({ message: text });
   });
 
   it('l’adaptador no hi posa cap condició pròpia: una crida a crea_fil_directe i el fil que torne el servidor', async () => {

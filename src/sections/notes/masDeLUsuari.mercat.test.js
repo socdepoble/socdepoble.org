@@ -11,12 +11,14 @@ import { MARKET_ITEMS } from '../../data/sectionContent.js';
 
 const XICA = '/assets/uploads/empresa/soc-de-poble/mercat/samarreta-soc-de-poble/01-chica-jersey.png';
 const QUADRAT_VERD = '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg';
+/* Onada 8 (261009) · El quadrat verd de la llavor és ara el PNG. */
+const QUADRAT_VERD_PNG = '/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png';
 
 describe('Esmena 3 · la foto de la fitxa d’un producte al MAS', () => {
   test('la Samarreta de la llavor: la xica, mai el quadrat verd de qui ven; la ruta, la del producte', () => {
     const samarreta = MARKET_ITEMS.find((item) => item.id === 'samarreta-socdepoble');
     // La sonda: la llavor porta el logotip a imageSrc, el que pintava la fitxa.
-    expect(samarreta.imageSrc).toBe(QUADRAT_VERD);
+    expect(samarreta.imageSrc).toBe(QUADRAT_VERD_PNG);
     const nota = publicacioComANota(samarreta, 'mercat');
     expect(nota.image).toBe(XICA);
     expect(nota.data.ruta).toBe('/mercat/samarreta-socdepoble');

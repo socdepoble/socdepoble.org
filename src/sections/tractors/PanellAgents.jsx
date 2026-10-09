@@ -1,4 +1,3 @@
-import React from 'react';
 import { sanitizeHtml } from '../../utils/sanitize.js';
 import { parseMarkdown, extreuEditorial } from '../wiki-de-poble/parseMarkdown.js';
 

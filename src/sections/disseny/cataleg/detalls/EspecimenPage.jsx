@@ -17,7 +17,8 @@ import { Llinatge } from '../Llinatge.jsx';
 const AVATAR_MOSTRA = '/assets/uploads/avatars/avatar-ratoli-comic.png';
 const DATA_MOSTRA = { time: '09:30', date: '04/10/26', dateTime: '2026-10-04T09:30' };
 /* Sense ruta d'autoria: la boina no porta enlloc des del catàleg i no és la
-   de Sóc de Poble (/projecte), de manera que PageFrame no hi posa logotip. */
+   de Sóc de Poble (el seu perfil, Onada 8), de manera que PageFrame no hi
+   posa logotip. */
 const SIGNA_LA_IA = { authorName: 'Súper Ratolí', authorLocation: 'Xixona', authorAvatar: AVATAR_MOSTRA, authorHref: null };
 
 /* Correcció del verificador (261004) · Dins de la columna del catàleg, tres
@@ -45,7 +46,7 @@ export default function EspecimenPage() {
         contracte={[           ['chrome', "'full'|'context'|'system'|'page'|'none'", "'page'", 'Si es pinta la barra blava (full, context i system) i la capçalera (tots menys none). La barra taronja no en depén: la porten tots (ordre del Mestre, 261004).'],           ['title / subtitle / lead', 'node', '—', 'h1 únic de la pàgina; h2 i entradeta.'],           ['labels', '(string|{ text, className, href, onClick })[]', '[]', 'Insígnies de taxonomia.'],
           ['heroImage / heroAlt', 'string', '—', 'Imatge de capçalera; heroAlt obligatori si informa.'],
           ['senseBarraTaronja', 'boolean', 'false', 'L’única excepció a la barra taronja universal: només true la lleva, i només per ordre explícita del Mestre. Hui no la passa cap pàgina.'],
-          ['logoEntitat', '{ clar, fosc?, alt }', '—', 'El logotip de l’entitat que signa, dalt de l’H1 (norma del Mestre, 261004): amb fosc, una imatge per tema; sense, una sola, de fins a 600x600. Sense, una pàgina que signa Sóc de Poble (la boina enllaça a /projecte) porta el seu logotip rectangular; una persona o la IA, cap: porten el seu avatar (avatarAutor).'],
+          ['logoEntitat', '{ clar, fosc?, alt }', '—', 'El logotip de l’entitat que signa, dalt de l’H1 (norma del Mestre, 261004): amb fosc, una imatge per tema; sense, una sola, de fins a 600x600. Sense, una pàgina que signa Sóc de Poble (la boina enllaça al seu perfil, /empresa/socdepoble, Onada 8) porta el seu logotip rectangular; una persona o la IA, cap: porten el seu avatar (avatarAutor).'],
           ['senseLogo', 'boolean', 'false', 'L’única excepció al logotip de l’entitat: només true el lleva, i només per ordre explícita del Mestre, amb el motiu escrit al costat. Hui no la passa cap pàgina. No lleva el logotip que puja la persona a l’editor.'],
           ['avatarAutor', '{ src, alt, onCanvia?, etiquetaCanvia?, onLleva?, etiquetaLleva?, ajuda?, pujant? }', 'null', 'L’avatar redó de qui signa quan és una persona o la IA (norma del Mestre, 261004; skill sdp-pedra-seca §11), centrat davant de l’H1: --sdp-avatar-capcalera (300px), a l’ample de la capçalera en pantalla estreta. El passa qui sap que signa una persona o la IA (la fitxa pública, el detall d’un element), mai s’endevina de la ruta de la boina. src: un camí, una URL o un sdp-media:// (el resol el port); una adreça insegura o la marca de Sóc de Poble no es pinten. Va després de les vies del logotip: amb logotip, cap avatar, i senseLogo també el lleva. Amb onCanvia (la pàgina és de qui mira), és un botó «Canvia la teua imatge» amb la marca de la càmera. Contracte-1 (261008): amb onCanvia i etiquetaCanvia, davall de l’avatar una píndola de text visible que fa el mateix; amb onLleva i una imatge pintada, una segona píndola que la lleva (etiquetaLleva, per defecte «Llevar l’avatar»). Si la referència no es pot pintar (la marca, una adreça insegura, un sdp-media:// que el port no resol), les píndoles es pinten soles, la de llevar inclosa: la persona la pot substituir o buidar. Amb fila de píndoles (línia I1, pla 261008_1201): ajuda (text) pinta una línia .sdp-camp__ajuda sencera davall de les píndoles, i pujant (només true) les deixa disabled i aria-busy mentre la imatge puja. Sense eixes claus, el DOM de sempre.'],
           /* Decisió del Mestre (261008) · drets d'autor dins de l'editor. */
@@ -73,7 +74,7 @@ export default function EspecimenPage() {
       </ul>
 
       <h3>Barra Taronja (Context i Autoria)</h3>
-      <p>Tota pàgina la porta, també les de sistema i les que no tenen portada (ordre del Mestre, 261004). Sense autor propi, signa Sóc de Poble amb el seu logo i enllaça a la pàgina del projecte. Distribueix les metadades de l'element actiu:</p>
+      <p>Tota pàgina la porta, també les de sistema i les que no tenen portada (ordre del Mestre, 261004). Sense autor propi, signa Sóc de Poble amb el seu logo i enllaça al seu perfil (Onada 8: la boina porta sempre al perfil de qui signa). Distribueix les metadades de l'element actiu:</p>
       <ul>
         <li><strong>Esquerra:</strong> Identitat visual (avatar), nom i poble.</li>
         <li><strong>Centre:</strong> L’emoticona del document (EmoticonaBarra): en edició, el botó que la tria; en lectura, només si n’hi ha una de triada.</li>
@@ -102,7 +103,7 @@ export default function EspecimenPage() {
         <figure className="sdp-especimen__figura">
           <figcaption>Signa l’entitat: el logotip de Sóc de Poble, cap avatar</figcaption>
           <PageFrame className="sdp-especimen__barres" chrome="page" {...DATA_MOSTRA} LinkComponent={Link}>
-            <p>Sense autor propi, signa Sóc de Poble: la boina porta a /projecte i el bloc del títol, el seu logotip.</p>
+            <p>Sense autor propi, signa Sóc de Poble: la boina porta al seu perfil i el bloc del títol, el seu logotip.</p>
           </PageFrame>
         </figure>
       </div>

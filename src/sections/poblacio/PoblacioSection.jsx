@@ -1,5 +1,5 @@
  
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { useSEO } from '../../hooks/useSEO';
 import { Link } from '../../app/contexts/RouterContext';

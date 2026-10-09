@@ -229,7 +229,8 @@ describe('historial per cursor i marques', () => {
    tota persona en remot: la regla és de xatsPerDefecte.js i l'adaptador només
    la crida amb la resposta del servidor. */
 describe('xats d’ajuda per defecte en remot', () => {
-  const LOGO_QUADRAT = '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg';
+  // Onada 8 (261009) · El logo quadrat és el PNG (abans, l'SVG).
+  const LOGO_QUADRAT = '/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png';
   const UUID_ENTITAT = '00000000-0000-4000-8000-0000000000aa';
   it('sense cap conversa, les dues files a la cua, amb el logo quadrat de Sóc de Poble', async () => {
     query.data = [];
@@ -349,7 +350,8 @@ describe('canal privat de temps real', () => {
 describe('mode seed (localXat)', () => {
   /* T63.1 · La Pàgina Universal d'on naix la comunitat: el perfil públic de l'entitat pilot. */
   const SUBJECTE = { tipus: 'entitat', id: 'socdepoble', ruta: '/empresa/socdepoble', titol: 'Sóc de Poble' };
-  const LOGO = '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg';
+  // Onada 8 (261009) · El logo de l'entitat a la llavor és el PNG (abans, l'SVG).
+  const LOGO = '/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png';
   const TIPUS_DE_LA_LLAVOR = ['canal', 'comunitat', 'grup', 'grup', 'iaia'];
   const noLlegits = (fils) => fils.reduce((total, f) => total + f.noLlegits, 0);
 

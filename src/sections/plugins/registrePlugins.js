@@ -14,6 +14,17 @@
  * i 02_saber/00_full_de_ruta.md). La seua il·lustració,
  * public/assets/ui/plugins/bascula_vinyeta.jpg, es conserva al disc: cap
  * esborrat. /plugin/bascula ja és la 404 de sempre.
+ * Onada 8 (261009; requeriments 261009_1300, punt 2: «Consola Termodinàmica»,
+ * «El Cervell» i «Panell de Disseny» «són pàgines, no plugins») · Ixen del
+ * registre, com la Bàscula: ara en són huit, i /plugin/consola,
+ * /plugin/cervell i /plugin/disseny són la 404 de sempre. Són pàgines del
+ * sistema (SYSTEM_PAGES de config/systemPages.js i PAGE_COPY): la Consola i
+ * el Cervell, a /page/consola i /page/cervell amb el seu botó «Obrir…» cap a
+ * /consola i /consola/explorador; Disseny, a /disseny, amb el títol i la
+ * imatge de PAGE_COPY. El Panell les pinta a «Maquinària i Sistema» amb la
+ * targeta del Mur. Les il·lustracions es conserven al disc: consola_vinyeta i
+ * cervell_vinyeta són ara la imatge de la seua pàgina, i disseny_vinyeta la
+ * fa servir l'espècimen del Panell del catàleg (EspecimenPanell.jsx).
  *
  * Cada plugin: { id, titol, subtitol, entradilla, imatge, imatgeAlt, obrir,
  * entorn, espai, etiquetaObrir }.
@@ -37,13 +48,8 @@
  *             rebost)». El rebost domèstic és eixa entrada.
  *   salut   → /app/salut · apps/salut/manifest.js:22. RutaApps la canonitza a
  *             l'entrada per defecte ('diari', :43).
- *   consola → /consola · App.jsx, <Route path="/consola/*">;
- *             consola/consolaPagines.js:20 (RUTA_CONSOLA).
- *   cervell → /consola/explorador · consolaPagines.js:28 ('explorador') i
- *             :133 (ruta); consola/mapa/ExploradorMapa.jsx:12 «L'Explorador
- *             del cervell: el graf d'Obsidian aplicat als agents del Mas».
- *   consola i cervell porten entorn 'desenvolupament': les seues dades
- *             (/__iaia/*) només les servix `vite serve` (consola-iaia.mjs:13).
+ *   consola, cervell i disseny · Onada 8 (261009) · ja no són del registre
+ *             (vegeu més amunt). Les seues rutes viuen a SYSTEM_PAGES.
  *   rss     → /app/lector · apps/lector/manifest.js:17 (Notícies del Poble).
  *             Peça C (261007) · El manifest del Lector porta entorn
  *             'desenvolupament' (:29): fora de DEV la plataforma l'apaga
@@ -51,9 +57,6 @@
  *             el literal no és al paquet ('no-compilada'). Este plugin no
  *             porta `entorn`: el decidix l'app.
  *   tpv     → /app/bar · apps/bar/manifest.js:16 (El Bar, TPV d'hostaleria).
- *   disseny → /disseny · Peça C (261007) · App.jsx, ActorRoutes,
- *             <Route path="disseny"> (DesignSection, sections/disseny/). Una
- *             secció d'App, no una app de la plataforma: cap interruptor.
  *   gestoria → /app/gestoria · apps/gestoria/manifest.js (id 'gestoria',
  *             entrades 'tauler' i 'aprendre'). Ordre del Mestre, 261004
  *             («contaminació crítica de rutes/estats entre Gestoria i Wiki»):
@@ -67,15 +70,13 @@
  *     tenen secció (control/destinsControl.js:29-31).
  *
  * Pur: sense React ni xarxa. Les rutes d'app es fan amb rutaDeApp (la mateixa
- * de la plataforma), que ja és al paquet principal (PlataformaContext). La de
- * la Consola és literal perquè importar consolaPagines.js arrossegaria el Mapa
- * sencer al tros de qui llig esta taula; la prova la confronta amb
+ * de la plataforma), que ja és al paquet principal (PlataformaContext).
+ * Onada 8 (261009) · La ruta literal de la Consola se n'ha anat amb el seu
+ * plugin: ara és a SYSTEM_PAGES, i systemPages.test.js la confronta amb
  * RUTA_CONSOLA.
  */
 import { analitzaRuta } from '../../apps/plataforma/registreApps.js';
 import { rutaDeApp } from '../../apps/plataforma/manifestApp.js';
-
-const RUTA_CONSOLA = '/consola';
 
 /** On viuen les il·lustracions (public/). */
 export const IMATGES_PLUGINS = '/assets/ui/plugins';
@@ -84,11 +85,10 @@ export const RUTA_PLUGINS = '/plugin';
 
 /* entorn · 'desenvolupament' si el destí només funciona al servidor local de
    desenvolupament (com el camp `entorn` dels manifests d'app); null si no.
-   Revisió P7-A: la Consola i el Cervell lligen /__iaia/consola.json i
-   /__iaia/mapa.json, que només servix el middleware de dev
-   (tooling/vite/consola-iaia.mjs, `apply: 'serve'`). Fora de dev,
-   useDestiDelPlugin deixa el botó inert: cap enllaç que porte a «Entrar» o a
-   una Consola sense dades.
+   Fora de dev, useDestiDelPlugin deixa el botó inert: cap enllaç que porte
+   a «Entrar» o a una eina sense dades. Hui només el porta la Gestoria: la
+   Consola i el Cervell, que el portaven per /__iaia/* (només el servix `vite
+   serve`, tooling/vite/consola-iaia.mjs), ja no són del registre (Onada 8).
    espai · l'espai del Panell de Control on viu la targeta ('empresa' o
    'llar', ESPAIS_PLUGINS), o null si va a les graelles d'Utilitats o de
    Maquinària. Un sol valor per plugin: cap targeta pot viure en dos espais. */
@@ -185,35 +185,8 @@ export const PLUGINS = Object.freeze([
     espai: 'llar',
     etiquetaObrir: 'Obrir Salut'
   }),
-  plugin({
-    id: 'consola',
-    titol: 'Consola Termodinàmica',
-    subtitol: 'Què gasta i què falla dins del Mas',
-    entradilla: 'El tauler d’administració: consums, rebuts, skills i avisos de salut del sistema. Només funciona al servidor local de desenvolupament.',
-    imatgeAlt: 'Una iaia amb ulleres de soldar maneja una màquina de vapor plena de rellotges, i un veí l’apreta amb una clau',
-    obrir: RUTA_CONSOLA,
-    entorn: 'desenvolupament',
-    etiquetaObrir: 'Obrir la Consola'
-  }),
-  plugin({
-    id: 'cervell',
-    titol: 'El Cervell',
-    subtitol: 'Qui es relaciona amb qui, en un graf',
-    entradilla: 'El mapa de relacions del Mas: skills, rutes i agents units per fils. Viu dins de la Consola, a l’Explorador.',
-    imatgeAlt: 'Un cervell ple d’engranatges i bombetes dins d’una bóta, connectat a una màquina d’escriure, davant de veïns bocabadats',
-    obrir: `${RUTA_CONSOLA}/explorador`,
-    entorn: 'desenvolupament',
-    etiquetaObrir: 'Obrir el Cervell'
-  }),
-  plugin({
-    id: 'disseny',
-    titol: 'Panell de Disseny',
-    subtitol: 'Sistema de disseny i contrast',
-    entradilla: 'Gestiona el contrast extrem (Mode Bancal), la tipografia i les ombres del sistema. Utilitats per modelar l\'arquitectura de pedra seca.',
-    imatgeAlt: 'Un arquitecte i una iaia traçant els plànols del poble sobre una gran taula de pedra, amb eines de dibuix',
-    obrir: '/disseny',
-    etiquetaObrir: 'Obrir el Panell de Disseny'
-  }),
+  /* Onada 8 (261009) · La Consola, el Cervell i el Panell de Disseny ja no
+     són plugins: són pàgines del sistema (vegeu la capçalera). */
   plugin({
     id: 'rss',
     titol: 'Lector RSS',

@@ -1,6 +1,7 @@
 import { expect, test } from 'vitest';
 import { ALIES_DEL_PANELL, APLICACIONS, ESTATS_APLICACIO, aplicacionsValides } from './aplicacions.js';
 import { IDS_PLUGINS } from '../plugins/registrePlugins.js';
+import { PAGINES_MAQUINARIA } from '../control/destinsControl.js';
 
 test('les utilitats de sèrie: les cinc utilitats declarades, pendents i amb icona', () => {
   expect(APLICACIONS.map((a) => a.id)).toEqual(['gestoria', 'metriques', 'lector-rss', 'cervell', 'snippet']);
@@ -32,9 +33,12 @@ test('el filtre descarta ids invàlids, noms buits i repetits; guanya la primera
 
 /* Ordre del Mestre (261007, prompt 261007_1628, peça C) · La preferència que
    escriu el Perfil ha de ser la que llig el Panell: cada utilitat apunta a un
-   id del registre de plugins (el que amaga ControlSection) o al Snippet. */
-test('peça C · cada aplicació del Perfil apunta a un id del registre de plugins o és «snippet»', () => {
-  const delPanell = new Set([...IDS_PLUGINS, 'snippet']);
+   id del registre de plugins (el que amaga ControlSection) o al Snippet.
+   Onada 8 (261009) · O a una pàgina del sistema de «Maquinària i Sistema»
+   (PAGINES_MAQUINARIA): la Consola i el Cervell ja no són plugins, però el
+   Panell les amaga per la mateixa clau. */
+test('peça C · cada aplicació del Perfil apunta a un id del Panell: del registre de plugins, de la maquinària o «snippet»', () => {
+  const delPanell = new Set([...IDS_PLUGINS, ...PAGINES_MAQUINARIA, 'snippet']);
   for (const aplicacio of aplicacionsValides(APLICACIONS)) {
     expect(delPanell.has(aplicacio.panell), `${aplicacio.id} → ${aplicacio.panell}`).toBe(true);
   }

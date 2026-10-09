@@ -22,7 +22,7 @@ import { DialegEmoticona } from '../../../../components/universal/classificacio/
 const AUTORIA = {
   authorName: 'Sóc de Poble',
   authorLocation: 'La Torre de les Maçanes',
-  authorAvatar: '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg',
+  authorAvatar: '/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png',
 };
 const DATA_LECTURA = { time: '11:00', date: '25/04/26', dateTime: '2026-04-25T11:00:00' };
 const INICIALS = Object.freeze({ sense: '', amb: '🍅' });

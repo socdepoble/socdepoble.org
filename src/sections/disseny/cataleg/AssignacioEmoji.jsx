@@ -56,8 +56,11 @@ import {
 const CAP = Object.freeze([]);
 const ETIQUETA_CERCA = 'Cerca una nota, una pàgina o una carpeta';
 
-/* Les portades que ja encapçalen el seu grup: no es repetixen entre les pàgines del sistema. */
-const PORTADES_DELS_GRUPS = Object.freeze([COVER_PAGE_KEYS.wiki, COVER_PAGE_KEYS.disseny]);
+/* Les pàgines que ja són a un altre grup no es repetixen entre les del
+   sistema: les portades de la Wiki i de Disseny, que encapçalen el seu.
+   Onada 8 (261009) · I la Consola, ara pàgina del sistema: la Wiki ja la
+   llista (Maquinària de la IAIA, destinsDeLaWiki). El Cervell només és ací. */
+const JA_LLISTADES = Object.freeze([COVER_PAGE_KEYS.wiki, COVER_PAGE_KEYS.disseny, COVER_PAGE_KEYS.consola]);
 
 /* La portada d'una pàgina del sistema: el copy carregat primer i PAGE_COPY
    de reserva, amb la mateixa precedència que DesignSection i la Wiki. */
@@ -157,7 +160,7 @@ export function AssignacioEmoji({ emoji, nom, onFet }) {
       wiki: destinsDeLaWiki(wiki.manifest, copyDe(COVER_PAGE_KEYS.wiki),
         { consola: copyDe(COVER_PAGE_KEYS.consola), locals: wiki.locals }),
       disseny: destinsDelDisseny(CATALOG_CATEGORIES, CATALOG_ITEMS, copyDe(COVER_PAGE_KEYS.disseny)),
-      sistema: destinsDelSistema(SYSTEM_PAGES, SECTIONS, copyDe, PORTADES_DELS_GRUPS)
+      sistema: destinsDelSistema(SYSTEM_PAGES, SECTIONS, copyDe, JA_LLISTADES)
     };
   }, [hiHaBloc, carpetesDelBloc, notes, wiki.manifest, wiki.locals, pageCopy]);
   const filtrats = useMemo(

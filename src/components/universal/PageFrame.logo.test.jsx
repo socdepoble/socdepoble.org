@@ -6,7 +6,8 @@
      a) la ranura de l'editor (topBarData.logoComponent);
      b) senseLogo === true: cap logotip;
      c) logoEntitat: el de l'entitat que signa;
-     d) signa Sóc de Poble (la boina enllaça a DEFAULT_AUTHOR.href, /projecte):
+     d) signa Sóc de Poble (la boina enllaça a DEFAULT_AUTHOR.href; Onada 8,
+        261009: el seu perfil, /empresa/socdepoble, o la vella /projecte):
         el seu logotip rectangular, amb el marcatge de sempre byte a byte;
      e) compatibilitat: showLogos === true continua pintant el de Sóc de Poble;
      f) altrament, cap logotip (una persona, una font de fora). Una persona o
@@ -25,7 +26,7 @@ import { fixaBaseRecursos, resolveAsset } from '../../config/assetResolver';
 import { PageFrame } from './PageFrame.jsx';
 import { UniversalPage } from './UniversalPage.jsx';
 import { ContentProvider } from './ContentProvider.jsx';
-import { DEFAULT_AUTHOR, PAGE_CHROME_MODES } from './UniversalUtils.js';
+import { DEFAULT_AUTHOR, MARQUES_SVG_ANTIGUES, PAGE_CHROME_MODES } from './UniversalUtils.js';
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -36,8 +37,10 @@ afterEach(() => {
   fixaBaseRecursos('/');
 });
 
-const NEGRE = '/assets/system/ui/logo-socdepoble-rect-negre.svg';
-const BLANC = '/assets/system/ui/logo-socdepoble-rect-blanc.svg';
+/* Onada 8 (261009) · El logotip de Sóc de Poble és el PNG de 985x256 (abans,
+   l'SVG). Els SVG d'abans es reconeixen encara (MARQUES_SVG_ANTIGUES). */
+const NEGRE = '/assets/system/ui/logo-socdepoble-rect-negre-985x256.png';
+const BLANC = '/assets/system/ui/logo-socdepoble-rect-blanc-985x256.png';
 const capcalera = (container) => container.querySelector('header.page-title');
 const logos = (container) => [...(capcalera(container)?.querySelectorAll('img') ?? [])];
 const fills = (element) => [...element.children].map((e) => `${e.tagName}.${e.className}`);
@@ -50,12 +53,14 @@ const DOS_LOGOS_SDP = ['IMG.page-title-logo light-only', 'IMG.page-title-logo da
    width="300" height="78", la mida natural de l'SVG, perquè el navegador en
    reserve el lloc abans de carregar-lo. La resta (ordre d'atributs, classes,
    alt i src) continua sent byte a byte la d'abans; el CSS en mana l'ample i
-   els píxels finals no canvien (comprovat al navegador a 320, 375 i 1280). */
+   els píxels finals no canvien (comprovat al navegador a 320, 375 i 1280).
+   Onada 8 (261009) · Derogat el src: els PNG de 985x256 en lloc dels SVG, amb
+   la mateixa proporció. La resta del marcatge continua sent el d'abans. */
 function LogoDAbans() {
   return (
     <>
-      <img alt="Logotip Sóc de Poble" className="page-title-logo light-only" src={resolveAsset("/assets/system/ui/logo-socdepoble-rect-negre.svg")} width="300" height="78" />
-      <img alt="Logotip Sóc de Poble" className="page-title-logo dark-only" src={resolveAsset("/assets/system/ui/logo-socdepoble-rect-blanc.svg")} width="300" height="78" />
+      <img alt="Logotip Sóc de Poble" className="page-title-logo light-only" src={resolveAsset("/assets/system/ui/logo-socdepoble-rect-negre-985x256.png")} width="300" height="78" />
+      <img alt="Logotip Sóc de Poble" className="page-title-logo dark-only" src={resolveAsset("/assets/system/ui/logo-socdepoble-rect-blanc-985x256.png")} width="300" height="78" />
     </>
   );
 }
@@ -135,8 +140,8 @@ describe('d) qui signa Sóc de Poble porta el seu logotip, també les pàgines d
     fixaBaseRecursos('/wp-content/plugins/socdepoble/dist');
     const { container } = render(<PageFrame chrome="system" title="Consola" />);
     expect(logos(container).map((img) => img.getAttribute('src'))).toEqual([
-      '/wp-content/plugins/socdepoble/dist/assets/system/ui/logo-socdepoble-rect-negre.svg',
-      '/wp-content/plugins/socdepoble/dist/assets/system/ui/logo-socdepoble-rect-blanc.svg'
+      `/wp-content/plugins/socdepoble/dist${NEGRE}`,
+      `/wp-content/plugins/socdepoble/dist${BLANC}`
     ]);
     expect(logos(container).map((img) => img.outerHTML)).toEqual(marcatgeDAbans());
   });
@@ -203,6 +208,21 @@ describe('c) logoEntitat: el logotip de l’entitat que signa', () => {
   test('DEFAULT_AUTHOR.logo com a logoEntitat dona el mateix marcatge que la signatura de Sóc de Poble', () => {
     const { container } = render(<PageFrame chrome="full" title="Sóc de Poble" authorName="Sóc de Poble" logoEntitat={DEFAULT_AUTHOR.logo} />);
     expect(logos(container).map((img) => img.outerHTML)).toEqual(marcatgeDAbans());
+  });
+
+  /* Onada 8 (261009) · Una pàgina desada amb els SVG d'abans els pinta tal
+     qual, i amb la mida natural reservada: no salta en carregar-los. */
+  test('el logotip d’abans (els SVG de MARQUES_SVG_ANTIGUES) continua portant width="300" height="78"', () => {
+    for (const base of ['/', '/wp-content/plugins/socdepoble/dist']) {
+      fixaBaseRecursos(base);
+      const { container, unmount } = render(<PageFrame chrome="full" title="Sóc de Poble"
+        logoEntitat={{ clar: MARQUES_SVG_ANTIGUES.clar, fosc: MARQUES_SVG_ANTIGUES.fosc, alt: 'Logotip Sóc de Poble' }} />);
+      expect(logos(container).map((img) => [img.getAttribute('src'), img.getAttribute('width'), img.getAttribute('height')]), base).toEqual([
+        [resolveAsset(MARQUES_SVG_ANTIGUES.clar), '300', '78'],
+        [resolveAsset(MARQUES_SVG_ANTIGUES.fosc), '300', '78']
+      ]);
+      unmount();
+    }
   });
 
   test('mana sobre la signatura de Sóc de Poble; un descriptor sense imatge clara és com si no n’hi haguera', () => {

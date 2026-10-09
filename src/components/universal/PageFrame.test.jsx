@@ -30,9 +30,10 @@ const CAPCALERA_SENSE_RANURA='<header class="page-title"><h1>Títol</h1>'
   +'<a href="/page/drets-autor" class="sp-card-copyright__enllac">© Sóc de Poble</a></p></header>';
 /* Derogat en part (ordre del Mestre, 261004, correcció final del risc de
    Safari 16): cada imatge del logotip de Sóc de Poble porta al final
-   width="300" height="78", la mida natural de l'SVG (PageFrame.logo.test.jsx). */
-const LOGOS_SDP='<img alt="Logotip Sóc de Poble" class="page-title-logo light-only" src="/assets/system/ui/logo-socdepoble-rect-negre.svg" width="300" height="78">'
-  +'<img alt="Logotip Sóc de Poble" class="page-title-logo dark-only" src="/assets/system/ui/logo-socdepoble-rect-blanc.svg" width="300" height="78">';
+   width="300" height="78", la mida natural de l'SVG (PageFrame.logo.test.jsx).
+   Onada 8 (261009) · El src és el PNG de 985x256 (abans, l'SVG). */
+const LOGOS_SDP='<img alt="Logotip Sóc de Poble" class="page-title-logo light-only" src="/assets/system/ui/logo-socdepoble-rect-negre-985x256.png" width="300" height="78">'
+  +'<img alt="Logotip Sóc de Poble" class="page-title-logo dark-only" src="/assets/system/ui/logo-socdepoble-rect-blanc-985x256.png" width="300" height="78">';
 const LABELS=['Sistema',{text:'Mur',className:'sdp-badge-system'}];
 test('sense ranura de classificació, la capçalera no canvia ni un node',()=>{
   const {container}=render(<PageFrame title="Títol" labels={LABELS} copyright="© Sóc de Poble" authorName="Pepa" authorHref="/gent/pepa"/>);

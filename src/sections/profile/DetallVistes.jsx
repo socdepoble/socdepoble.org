@@ -53,7 +53,9 @@ export function DetallVistes({ identitat }) {
   const avatarBarra = avatarDesat.startsWith('sdp-media://') ? avatarResolt : avatarDesat;
   const poble = pobleDeFitxa(identitat, identitats);
   const nom = identitat?.nom || '';
-  const autor = useMemo(() => ({ nom, avatar: avatarBarra, poble }), [nom, avatarBarra, poble]);
+  /* Onada 8 (261009) · La boina de la targeta porta on la barra taronja: la fitxa pública. */
+  const rutaFitxa = identitat ? rutaDeFitxaPublica(identitat) : null;
+  const autor = useMemo(() => ({ nom, avatar: avatarBarra, poble, ruta: rutaFitxa }), [nom, avatarBarra, poble, rutaFitxa]);
   const etiquetes = useMemo(() => etiquetesDeFitxa(identitat), [identitat]);
 
   if (!identitat || !fitxa) return null;
@@ -71,7 +73,7 @@ export function DetallVistes({ identitat }) {
         authorAvatar: avatarBarra,
         authorLocation: poble,
         /* Ordre del Mestre (261007) · la barra taronja porta a la fitxa pública. */
-        authorHref: rutaDeFitxaPublica(identitat),
+        authorHref: rutaFitxa,
       }}
     >
       <div className="perfil-compte perfil-vistes">

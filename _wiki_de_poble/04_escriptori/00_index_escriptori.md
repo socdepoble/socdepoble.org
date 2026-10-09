@@ -35,6 +35,9 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu — i
 
 
 
+- [[261009_2005_acta_marmota_onada8]] · torn_7ffb2f2b: Acta Final de les Onades 7 i 8, per al BUNDLE del Mestre
+- [[261009_2005_brainstorming_panell_superadmin]] · torn_7ffb2f2b: proposta del punt 5 de l'Onada 8, pendent de les decisions del Mestre
+- [[261009_2005_auditoria_inventari_onada9]] · torn_7ffb2f2b: inventari per a l'Onada 9, que executa MarIA
 - [[261009_1245_auditoria_claude]] · Mestre 261009: Claude reporta l'estat de l'Onada 7
 - [[261009_1216_prompt_claude_onada7]]
 - [[261009_1216_pla_implementacio_onada7]]

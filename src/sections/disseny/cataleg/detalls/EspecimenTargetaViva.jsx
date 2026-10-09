@@ -1,6 +1,7 @@
 import { Especimen } from '../Especimen.jsx';
 import { Llinatge } from '../Llinatge.jsx';
 import { AVISOS_TARGETA_VIVA, BotoTargetaViva, TargetaViva } from '../../../../components/universal/TargetaViva.jsx';
+import { RUTA_PERFIL_PROJECTE } from '../../../../config/navigation.js';
 
 /* T50 (decisió del Mestre, 260928: «Llista + dreta si hi cap») · La targeta
    viva REAL (TargetaViva i el xip BotoTargetaViva), amb els textos d'avís de
@@ -14,7 +15,8 @@ import { AVISOS_TARGETA_VIVA, BotoTargetaViva, TargetaViva } from '../../../../c
    això sense data triada la pastilla diu la d'ara i, amb una data triada al
    calendari, la triada. */
 
-const AUTORIA = Object.freeze({ nom: 'Sóc de Poble', poble: 'La Torre de les Maçanes', avatar: '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg' });
+/* Onada 8 (261009) · La boina porta al perfil de qui signa, com a l'editor. */
+const AUTORIA = Object.freeze({ nom: 'Sóc de Poble', poble: 'La Torre de les Maçanes', avatar: '/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png', ruta: RUTA_PERFIL_PROJECTE });
 const ETIQUETES = Object.freeze([{ text: 'Agricultura', className: 'sdp-badge-category' }, { text: 'tomaca', className: 'sdp-badge-tag' }]);
 
 const NOTA_SENSE = Object.freeze({
@@ -53,7 +55,7 @@ export default function EspecimenTargetaViva() {
         descripcio="La mateixa UniversalCard que tindrà el document (variant pla): caputxa taronja, cos i peu blau. Els botons ensenyen les proporcions però no fan res: en clicar-ne un, un diàleg ho explica amb el text del seu consumidor. L’emoticona només apareix a la caputxa si s’ha triat."
         contracte={[
           ['document', '{ title, subtitle, lead, heroImage, icon, copyright, publishDate, … }', '—', 'El de l’editor: els camps de text són HTML sanejat i es pinten en text pla; un camp buit diu el text de llavor.'],
-          ['autor / etiquetes', '{ nom, avatar, poble } / labels', 'null / []', 'La mateixa autoria de la barra taronja de l’editor i les píndoles del document.'],
+          ['autor / etiquetes', '{ nom, avatar, poble, ruta } / labels', 'null / []', 'La mateixa autoria de la barra taronja de l’editor i les píndoles del document. Amb ruta (Onada 8), la boina enllaça al perfil de qui signa i navega, com l’enllaç dels drets; sense, text.'],
           ['avis', '{ titol, descripcio, vista }', 'la reserva', 'El text de cada consumidor: AVISOS_TARGETA_VIVA.notes o .perfil. Sense, la reserva (AVIS_PREVISUALITZACIO), que no promet cap publicació.'],
           ['onMainClick / actual', 'fn / boolean', '— / false', 'A la llista, tornar a triar la fitxa i marcar-la com a triada (aria-current).'],
           ['BotoTargetaViva', '{ document, autor, etiquetes, avis }', '—', 'El xip «Vista targeta» i el seu diàleg (descripció: avis.vista). La targeta només es munta amb el diàleg obert. Hui només el munta el Bloc de Notes: amb ambVistes={false} (el Perfil), DocumentEditor no el pinta.'],

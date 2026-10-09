@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { UniversalEditorShell } from './UniversalEditorShell';
 import { SelectorVisibilitat, TEXTOS_VISIBILITAT } from './SelectorVisibilitat.jsx';
 import BotoDretsAutor from './CopyrightSelector.jsx';
@@ -393,10 +393,12 @@ export function DocumentEditor({ adapter, onToast }) {
   }, [dretsOberts]);
 
   /* T50 · La targeta viva signa com la barra taronja. Abans del retorn
-     primerenc, com la resta de hooks. */
+     primerenc, com la resta de hooks.
+     Onada 8 (261009) · També la seua boina porta a la pàgina de qui signa
+     (barAuthorHref): cap boina sense el seu perfil. */
   const autorTargeta = useMemo(
-    () => ({ nom: barAuthorName, avatar: barAuthorAvatar, poble: barAuthorLocation }),
-    [barAuthorName, barAuthorAvatar, barAuthorLocation],
+    () => ({ nom: barAuthorName, avatar: barAuthorAvatar, poble: barAuthorLocation, ruta: barAuthorHref || null }),
+    [barAuthorName, barAuthorAvatar, barAuthorLocation, barAuthorHref],
   );
 
   /* T7 (ordre del Mestre, prompt 261004_0515) · Targetes incrustades al cos.

@@ -29,7 +29,8 @@ afterEach(cleanup);
 const barra = (container) => container.querySelector('section.bar-orange');
 const autor = (container) => barra(container).firstElementChild;
 const fills = (container) => [...container.querySelector('.sdp-universal-page-container').children].map((e) => e.className);
-const LOGO = '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg';
+/* Onada 8 (261009) · L'avatar de Sóc de Poble és el PNG (abans, l'SVG). */
+const LOGO = '/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png';
 
 /* Tots els modes que coneix PageFrame, i un que no (cau a 'page'). */
 const MODES = [...PAGE_CHROME_MODES, 'inventat'];
@@ -39,12 +40,13 @@ describe('261004 · la barra taronja es pinta en tots els modes de chrome', () =
     expect([...PAGE_CHROME_MODES].sort()).toEqual(['context', 'full', 'none', 'page', 'system']);
   });
 
-  test.each(MODES)('chrome="%s": barra taronja amb el logo, el nom i el poble de Sóc de Poble, enllaçada a /projecte', (chrome) => {
+  /* Onada 8 (261009) · Enllaçada al perfil de Sóc de Poble, ja no a /projecte. */
+  test.each(MODES)('chrome="%s": barra taronja amb el logo, el nom i el poble de Sóc de Poble, enllaçada al seu perfil', (chrome) => {
     const { container } = render(<PageFrame chrome={chrome} title="Pàgina de sistema" />);
     expect(barra(container)).not.toBeNull();
     expect(barra(container).getAttribute('aria-label')).toBe('Autoria i data');
     expect(autor(container).tagName).toBe('A');
-    expect(autor(container).getAttribute('href')).toBe('/projecte');
+    expect(autor(container).getAttribute('href')).toBe('/empresa/socdepoble');
     expect(autor(container).getAttribute('href')).toBe(DEFAULT_AUTHOR.href);
     expect(autor(container).querySelector('img.sp-card-avatar').getAttribute('src')).toBe(LOGO);
     expect(autor(container).querySelector('.sp-card-author-name').textContent).toBe('Sóc de Poble');
@@ -53,14 +55,14 @@ describe('261004 · la barra taronja es pinta en tots els modes de chrome', () =
 
   test('sense chrome (el de sempre, \'page\'): també la porta', () => {
     const { container } = render(<PageFrame title="Ací no hi ha res" />);
-    expect(autor(container).getAttribute('href')).toBe('/projecte');
+    expect(autor(container).getAttribute('href')).toBe(DEFAULT_AUTHOR.href);
   });
 
   test('una pàgina de sistema sense portada: blava, taronja, títol i article, en este ordre', () => {
     const { container } = render(<UniversalPage chrome="system" title="El pols del cervell" lead="Una mirada a la màquina." />);
     expect(fills(container)).toEqual(['bar-blue', 'bar-orange', 'page-title', 'content-wrapper']);
     expect(container.querySelector('.hero-image')).toBeNull();
-    expect(autor(container).getAttribute('href')).toBe('/projecte');
+    expect(autor(container).getAttribute('href')).toBe(DEFAULT_AUTHOR.href);
   });
 
   test('UniversalPage en mode sistema, amb portada: la barra va davall de la portada, com a la resta de pàgines', () => {
@@ -144,7 +146,7 @@ describe('261004 · la via d’excepció (senseBarraTaronja), només per ordre d
       </ContentProvider>
     );
     expect(barra(container)).not.toBeNull();
-    expect(autor(container).getAttribute('href')).toBe('/projecte');
+    expect(autor(container).getAttribute('href')).toBe(DEFAULT_AUTHOR.href);
   });
 
   test('la topBarData amb la clau a true tampoc l’apaga (ni a UniversalPage ni a PageFrame)', () => {

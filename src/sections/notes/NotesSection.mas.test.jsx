@@ -158,19 +158,22 @@ test('F4 · editar una nota no refà les publicacions: els objectes són els mat
    261008: el «Sóc de Poble loguejat» és l'ENTITAT socdepoble triada al
    selector d'identitat) ── Les deu pàgines del sistema que el Mur signa com a
    «Sóc de Poble» no són a MurContext: les construïx MurSection des del
-   contingut core (targetesDeSistema). Ara també entren al Bloc de l'entitat. */
+   contingut core (targetesDeSistema). Ara també entren al Bloc de l'entitat.
+   Onada 8 (261009) · Dotze: la Consola i el Cervell hi entren com a pàgines
+   del sistema (SYSTEM_PAGES). Abans, deu. */
 const NUCLI = Object.freeze({ status: 'ready', pageCopy: PAGE_COPY, refresh: () => {} });
 const SISTEMA = SYSTEM_PAGES.map((pagina) => `publicacio:mur:${pagina.key}`);
+const PAGINES_DEL_SISTEMA = 12;
 const delMur = (items) => publicacions(items).filter((item) => item.categoryIds.includes('f-mur'));
 
-test('Grup E · amb el contingut core, l’entitat Sóc de Poble veu les deu pàgines del sistema a «Mur», darrere de les seues publicacions', () => {
+test('Grup E · amb el contingut core, l’entitat Sóc de Poble veu les dotze pàgines del sistema a «Mur», darrere de les seues publicacions', () => {
   const items = pinta({
     actor: { tipus: 'entitat', id: ENTITAT_PILOT_ID, slug: ENTITAT_PILOT_SLUG, rol: 'owner' },
     config: { dataMode: 'seed' },
     core: NUCLI,
     feed: [{ id: 'p1', title: 'Directa', author_org_id: ENTITAT_PILOT_ID }]
   });
-  expect(SISTEMA).toHaveLength(10);
+  expect(SISTEMA).toHaveLength(PAGINES_DEL_SISTEMA);
   expect(delMur(items).map((item) => item.id)).toEqual(['publicacio:mur:p1', ...SISTEMA]);
   const xat = items.find((item) => item.id === 'publicacio:mur:xat');
   expect(xat.data).toMatchObject({ seccio: 'mur', ruta: '/page/xat', item: { isSystem: true } });
@@ -206,7 +209,7 @@ test('Grup E · amb les pàgines, editar una nota no refà les publicacions: els
   Object.assign(mocks, { actor: { tipus: 'entitat', id: 'uuid-org', slug: ENTITAT_PILOT_SLUG, rol: 'owner' }, core: NUCLI, notes: [{ id: 'n-esb', title: 'Reg' }] });
   const { rerender } = render(<NotesSection />);
   const abans = publicacions(mocks.model.items);
-  expect(abans).toHaveLength(10);
+  expect(abans).toHaveLength(PAGINES_DEL_SISTEMA);
   mocks.notes = [{ id: 'n-esb', title: 'Reg a goteig' }];
   // Un valor nou del proveïdor amb el mateix pageCopy, com en cada revalidació.
   mocks.core = { ...NUCLI };

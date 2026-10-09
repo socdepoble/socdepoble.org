@@ -3,12 +3,14 @@
  * veres, amb la precedència de les rutes (TextRoute, PageDetailSection), i
  * les props que la pinten igual a TextSection i al lector de connexions.
  */
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, test } from 'vitest';
 import { PAGE_COPY } from './pageContent.js';
 import { RUTES_SENSE_PAGINA_DE_TEXT, pageKeyDeRuta, paginaDeRuta, propsDePaginaDeText } from './paginaDeText.js';
-import { COPYRIGHT_SDP, dataHoraDeBarra } from '../../components/universal/editorial.js';
+import { COPYRIGHT_SDP, COPYRIGHT_VIQUIPEDIA, dataHoraDeBarra } from '../../components/universal/editorial.js';
+import { MAXIM_LEMA } from '../../data/limitsText.js';
+import { DRETS_IMATGES, DRETS_TEXT, esFotoValida, esLlicenciaLliure, triaImatges } from '../pobles/pobleDeViquipedia.js';
 import { LLICENCIA_PER_DEFECTE, LLICENCIES, OPCIO_ACTUAL } from '../../components/universal/drets/llicencies.js';
 
 test('les rutes de text amb pageKey propi: /iaia i l’àlies /ia són «anima», amb query, fragment o barra final', () => {
@@ -112,10 +114,13 @@ describe('261007 · /page/drets-autor és «Drets d’autor»', () => {
     expect(html).not.toMatch(/<h[12]\b/i);
     expect(html.trim()).toMatch(/^<h3>/);
     const titols = [...html.matchAll(/<h([34])>([^<]*)<\/h\1>/g)].map(([, nivell, text]) => [nivell, text]);
+    /* Onada 8 (261009; requeriments 261009_1300, punt 6) · L'apartat nou de
+       la Viquipèdia i Wikimedia Commons, darrere del contingut. */
     expect(titols.filter(([nivell]) => nivell === '3').map(([, text]) => text)).toEqual([
       'Dos coses, dos llicències',
       'El codi: AGPL-3.0, lliure i gratuït',
       'El contingut: CC BY-NC-SA 4.0 de sèrie',
+      'La Viquipèdia i Wikimedia Commons: el que prenem i com ho citem',
       'Per què triar una llicència privada o el domini públic',
       "Les llicències que pots triar a l'editor"
     ]);
@@ -147,6 +152,49 @@ describe('261007 · /page/drets-autor és «Drets d’autor»', () => {
     expect(contingut).toContain('BY (Reconeixement): qui la use ha de dir que és teua.');
     expect(contingut).toContain('NC (No comercial): ningú no en pot fer negoci sense el teu permís.');
     expect(contingut).toContain("SA (Compartir igual): qui l'adapte o la millore l'ha de tornar al poble amb esta mateixa llicència.");
+  });
+
+  /* Onada 8 (261009; requeriments 261009_1300, punt 6) · L'apartat de la
+     Viquipèdia diu NOMÉS el que fa el codi: el copyright dels pobles
+     (COPYRIGHT_VIQUIPEDIA), l'atribució de l'eina de pobles nous (DRETS_TEXT
+     i DRETS_IMATGES), les llicències i les fotos que admet (esLlicenciaLliure
+     i esFotoValida), el límit de l'entradilla (MAXIM_LEMA) i les tres fotos
+     (triaImatges). Si el codi canvia, esta prova cau i la pàgina s'ha de
+     tornar a escriure. */
+  test('Onada 8 · la Viquipèdia i Wikimedia Commons: el que diu la pàgina és el que fa el codi', () => {
+    const viqui = textDe(html.slice(html.indexOf('<h3>La Viquipèdia'), html.indexOf('<h3>Per què triar')));
+    expect(viqui).toContain('es publica amb CC BY-SA 4.0');
+    expect(viqui).toContain(`«${COPYRIGHT_VIQUIPEDIA}»`);
+    expect(viqui).toContain('«Publicat a la Viquipèdia»');
+    expect(viqui).toContain(`«${DRETS_TEXT}»`);
+    expect(viqui).toContain(`«${DRETS_IMATGES}»`);
+    expect(viqui).toContain(`retallat si passa de ${MAXIM_LEMA} caràcters`);
+    expect(viqui).toContain('CC0, domini públic, CC BY o CC BY-SA');
+    for (const llicencia of ['CC0', 'Public domain', 'CC BY 4.0', 'CC BY-SA 3.0 es']) expect([llicencia, esLlicenciaLliure(llicencia)]).toEqual([llicencia, true]);
+    for (const llicencia of ['CC BY-NC 4.0', 'CC BY-ND 4.0', 'CC BY-NC-SA 4.0']) expect([llicencia, esLlicenciaLliure(llicencia)]).toEqual([llicencia, false]);
+    // «de 1000 píxels d'amplada o més» i «Mai l'escut, la bandera ni un mapa».
+    expect(viqui).toContain("de 1000 píxels d'amplada o més");
+    const foto = { src: 'https://upload.wikimedia.org/x.jpg', mime: 'image/jpeg', amplada: 1000, alcada: 600, fitxer: 'Plaça.jpg', llicencia: 'CC BY-SA 4.0' };
+    expect(esFotoValida(foto)).toBe(true);
+    expect(esFotoValida({ ...foto, amplada: 999 })).toBe(false);
+    for (const fitxer of ['Escut de la Torre.jpg', 'Bandera de la Torre.jpg', 'Mapa de la Torre.jpg']) expect([fitxer, esFotoValida({ ...foto, fitxer })]).toEqual([fitxer, false]);
+    // Tres fotos: la panoràmica, la de l'avatar i una de reserva.
+    expect(Object.keys(triaImatges([]))).toEqual(['hero', 'avatar', 'reserva']);
+  });
+
+  /* Onada 8 · «Hui encara no està fet del tot»: cap mòdul de l'app crida
+     l'eina (només ella mateixa i les proves). El dia que algú l'endolle al
+     registre, esta prova cau i la pàgina s'ha de posar al dia. */
+  test('Onada 8 · la pàgina diu que l’eina de pobles nous encara no s’activa sola, i és veritat', () => {
+    const viqui = textDe(html.slice(html.indexOf('<h3>La Viquipèdia'), html.indexOf('<h3>Per què triar')));
+    expect(viqui).toContain('Hui encara no està fet del tot:');
+    expect(viqui).toContain("encara no s'activa sola quan algú s'apunta des d'un poble nou, no guarda la targeta al servidor");
+    const arrel = resolve(process.cwd(), 'src');
+    const fonts = readdirSync(arrel, { recursive: true }).map(String)
+      .filter((fitxer) => /\.(?:js|jsx)$/.test(fitxer) && !/\.test\.(?:js|jsx)$/.test(fitxer));
+    const quiLaCrida = fonts.filter((fitxer) => !fitxer.endsWith('pobleDeViquipedia.js')
+      && readFileSync(resolve(arrel, fitxer), 'utf8').includes('pobleDeViquipedia('));
+    expect(quiLaCrida).toEqual([]);
   });
 
   test('les eixides privades: «Copyright (C)», tots els drets reservats, i el domini públic CC0', () => {

@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, useMemo, useId } from 'react';
+import { useRef, useEffect, useState, useMemo, useId } from 'react';
 import useForceLayout from './useForceLayout';
 import { wikiManifest } from '../../../data/wikiManifest';
 import { Play, Pause, ZoomIn, ZoomOut, Maximize, X } from 'lucide-react';

@@ -4,7 +4,7 @@ import { dataDeFila } from '../../components/universal/editorial.js';
 import { LlistaNodes } from '../../components/universal/connexio/LlistaNodes.jsx';
 import { ESTATS_APLICACIO } from './aplicacions.js';
 import { BlocPerfil as Bloc } from './BlocPerfil.jsx';
-import { RUTA_PROJECTE, rutaDePerfil } from '../../config/navigation.js';
+import { RUTA_PERFIL_PROJECTE, rutaDePerfil } from '../../config/navigation.js';
 
 /* ═══════════════════════════════════════════════════════════════════
    PÀGINES DE LECTURA DE L'ESPAI DE TREBALL DEL PERFIL
@@ -17,12 +17,13 @@ import { RUTA_PROJECTE, rutaDePerfil } from '../../config/navigation.js';
 
 /* La utilitat és del node, no de cap persona: la barra taronja ho diu.
    T6 (ordre del Mestre, 261004, prompt 261004_0515 §5) · Signa Sóc de Poble,
-   el sistema, i la boina porta a la pàgina del projecte. */
+   el sistema, i la boina porta al seu perfil (Onada 8, 261009: abans, a la
+   pàgina del projecte). */
 const AUTORIA_NODE = Object.freeze({
   authorName: 'Sóc de Poble',
   authorLocation: 'Utilitat d’este node',
   authorAvatar: '',
-  authorHref: RUTA_PROJECTE,
+  authorHref: RUTA_PERFIL_PROJECTE,
 });
 
 /* Ordre del Mestre (261007) · «Quan isquen, les barres taronges han de portar

@@ -255,11 +255,20 @@ describe('dataHoraDeBarra i dataDeDocument (T51)', () => {
       // A València (la zona de les proves, vite.config.js), la pastilla que es veu.
       expect([data.time, data.date], clau).toEqual([time, date]);
     }
+    /* Onada 8 (261009; requeriments 261009_1300, punt 2) · La Consola i
+       Disseny n'ixen per decisió del Mestre: porten la data que ell ha triat
+       (8 i 10 de setembre, a les 00:00 hora local), com el Cervell (9 de
+       setembre) i Drets d'autor. No són hores de cap commit. */
     const senseHora = Object.entries(PAGE_COPY)
       .filter(([, pagina]) => typeof pagina?.date === 'string' && pagina.date.endsWith('T00:00:00.000Z'))
       .map(([clau]) => clau)
       .sort();
-    expect(senseHora).toEqual(['anima', 'consola', 'constitucio', 'disseny', 'legal', 'notes_shared', 'projecte', 'roadmap']);
+    expect(senseHora).toEqual(['anima', 'constitucio', 'legal', 'notes_shared', 'projecte', 'roadmap']);
+    const triadesPelMestre = { consola: '2026-09-08T00:00:00+02:00', cervell: '2026-09-09T00:00:00+02:00', disseny: '2026-09-10T00:00:00+02:00' };
+    for (const [clau, iso] of Object.entries(triadesPelMestre)) {
+      expect(PAGE_COPY[clau].date, clau).toBe(iso);
+      expect(dataHoraDeBarra({ creat: iso }).time, clau).toBe('00:00');
+    }
   });
 
   it('T4 · el mateix instant diu la mateixa hora des de qualsevol camp i en qualsevol forma', () => {

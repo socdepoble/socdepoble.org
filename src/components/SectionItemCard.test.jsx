@@ -15,19 +15,38 @@ vi.mock('../app/contexts/RouterContext', () => ({
 vi.mock('./universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
 
 import SectionItemCard from './SectionItemCard.jsx';
+import { DEFAULT_AUTHOR } from './universal/UniversalUtils.js';
 
 afterEach(cleanup);
 
 const BASE = { to: '/gent/pepa', title: 'Pepa', subtitle: 'Forner', excerpt: 'Pa de llenya', image: '/assets/x.png' };
 
+/* Onada 8 (261009) · La boina de Sóc de Poble és el seu perfil
+   (DEFAULT_AUTHOR.href); una ruta vella /projecte també hi porta. */
 test('amb authorHref, la boina és un enllaç a la pàgina de qui signa', () => {
-  const { container } = render(<SectionItemCard {...BASE} author="Sóc de Poble" location="La Torre de les Maçanes" authorHref="/projecte" />);
+  const { container } = render(<SectionItemCard {...BASE} author="Sóc de Poble" location="La Torre de les Maçanes" authorHref={DEFAULT_AUTHOR.href} />);
   const enllac = container.querySelector('header.sp-card-header a.sp-card-author-link');
-  expect(enllac.getAttribute('href')).toBe('/projecte');
+  expect(enllac.getAttribute('href')).toBe(DEFAULT_AUTHOR.href);
   expect(enllac.querySelector('.sp-card-author-name').textContent).toBe('Sóc de Poble');
   /* La boina, dalt de tot; la imatge, després (D-B). */
   const article = container.querySelector('article');
   expect(article.firstElementChild.className).toBe('sp-card-header');
+});
+
+test('Onada 8 · una ruta vella /projecte enllaça al perfil de Sóc de Poble', () => {
+  const { container } = render(<SectionItemCard {...BASE} author="Sóc de Poble" authorHref="/projecte" />);
+  expect(container.querySelector('a.sp-card-author-link').getAttribute('href')).toBe(DEFAULT_AUTHOR.href);
+});
+
+test('Onada 8 · la ranura accio i les etiquetes passen a UniversalCard; sense, el DOM de sempre', () => {
+  const ambAccio = render(<SectionItemCard {...BASE} eyebrow="Entitat" accio={<button type="button">Anar al xat</button>} etiquetesAmbAccio />).container;
+  const cos = ambAccio.querySelector('.sp-card-body');
+  expect([...cos.children].map((fill) => fill.className).filter((c) => c.startsWith('sp-card-labels') || c === 'sp-card-accio'))
+    .toEqual(['sp-card-labels', 'sp-card-accio']);
+  cleanup();
+  const sense = render(<SectionItemCard {...BASE} eyebrow="Entitat" />).container.innerHTML;
+  cleanup();
+  expect(render(<SectionItemCard {...BASE} eyebrow="Entitat" accio={null} etiquetesAmbAccio />).container.innerHTML).toBe(sense);
 });
 
 test('sense authorHref, la boina de sempre (sense enllaç), i sense autor, cap boina: el DOM no canvia', () => {

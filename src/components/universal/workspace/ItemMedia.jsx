@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import { useContext, useState } from 'react';
 import {
   useResolvedAssetState
 } from '../../../hooks/useResolvedAsset.js';

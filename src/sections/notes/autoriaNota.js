@@ -17,7 +17,7 @@
  * poble }, la forma que llegix la targeta viva de la llista (NotaFitxa).
  */
 import { DEFAULT_AUTHOR, FORASTER, autorDeSessio, isSafeUrl } from '../../components/universal/UniversalUtils.js';
-import { RUTA_PROJECTE, rutaDAutoria, rutaDePerfil } from '../../config/navigation.js';
+import { RUTA_PERFIL_PROJECTE, rutaDAutoria, rutaDePerfil } from '../../config/navigation.js';
 
 export const NOM_SENSE_NOM = 'Veí';
 
@@ -139,8 +139,9 @@ function triaSignant({ notaId, actor, actorId, agents, currentUser }) {
 /**
  * Ordre del Mestre (261007) · La ruta de la pàgina de qui signa una nota, o
  * null. La mateixa tria que autoriaDeNota:
- *   · la nota de benvinguda i la còpia de prova: Sóc de Poble, RUTA_PROJECTE;
- *   · entitat activa: rutaDAutoria (l'entitat pilot porta a /projecte; la
+ *   · la nota de benvinguda i la còpia de prova: Sóc de Poble, al seu perfil
+ *     (RUTA_PERFIL_PROJECTE; Onada 8, 261009: abans, RUTA_PROJECTE);
+ *   · entitat activa: rutaDAutoria (l'entitat pilot porta al seu perfil; la
  *     resta, a la seua fitxa pública);
  *   · agent IA actiu: la seua fitxa (rutaDePerfil 'ia');
  *   · persona amb sessió: la seua fitxa pública (rutaDePerfil 'persona', amb
@@ -150,7 +151,7 @@ function triaSignant({ notaId, actor, actorId, agents, currentUser }) {
  */
 export function rutaDAutoriaDeNota({ notaId, actor, actorId, agents, currentUser } = {}) {
   const signant = triaSignant({ notaId, actor, actorId, agents, currentUser });
-  if (signant.via === 'benvinguda') return RUTA_PROJECTE;
+  if (signant.via === 'benvinguda') return RUTA_PERFIL_PROJECTE;
   if (signant.via === 'entitat') return rutaDAutoria({ tipus: 'entitat', id: actor.id });
   if (signant.via === 'agent') return rutaDePerfil('ia', signant.agent.id);
   return currentUser?.id == null ? null : rutaDePerfil('persona', currentUser.id);

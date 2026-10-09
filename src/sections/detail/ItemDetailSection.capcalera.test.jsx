@@ -56,11 +56,15 @@ vi.mock('../../hooks/useSEO.js', () => ({ useSEO: () => {} }));
 vi.mock('../../components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
 import ItemDetailSection from './ItemDetailSection.jsx';
 import { EVENTS, MARKET_ITEMS } from '../../data/sectionContent.js';
-import { RUTA_PROJECTE } from '../../config/navigation.js';
+import { RUTA_PERFIL_PROJECTE } from '../../config/navigation.js';
 
 const LOGO_NEGRE = '/assets/system/ui/logo-socdepoble-rect-negre.svg';
 /* La marca de l'entitat: l'avatar de la boina de Sóc de Poble, mai el d'una persona. */
 const QUADRAT_VERD = '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg';
+/* Onada 8 (261009) · La marca que es pinta ara són els PNG; els SVG d'abans
+   (els de dalt) continuen arribant de les files del servidor. */
+const LOGO_NEGRE_PNG = '/assets/system/ui/logo-socdepoble-rect-negre-985x256.png';
+const QUADRAT_VERD_PNG = '/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png';
 const capcalera = (container) => container.querySelector('header.page-title');
 const srcsDeLaCapcalera = (container) => [...capcalera(container).querySelectorAll('img')].map((img) => img.getAttribute('src'));
 const fills = (container) => [...capcalera(container).children].map((e) => `${e.tagName}.${e.className}`);
@@ -91,13 +95,13 @@ describe('l’entitat del projecte (per identificador): el seu logotip, cap avat
     const container = pinta('mercat', llavor(MARKET_ITEMS, 'samarreta-socdepoble'));
     expect(boina(container)).toBe('/empresa/socdepoble');
     expect(fills(container).slice(0, 3)).toEqual(['IMG.page-title-logo light-only', 'IMG.page-title-logo dark-only', 'H1.']);
-    expect(capcalera(container).querySelector('img').getAttribute('src')).toBe(LOGO_NEGRE);
+    expect(capcalera(container).querySelector('img').getAttribute('src')).toBe(LOGO_NEGRE_PNG);
     expect(container.querySelector('.page-title-avatar')).toBeNull();
   });
 
   test('/events/aplec-2023 (signat per author_entity_id, com el seed.sql corregit)', () => {
     const container = pinta('events', llavor(EVENTS, 'aplec-2023'));
-    expect(boina(container)).toBe(RUTA_PROJECTE);
+    expect(boina(container)).toBe(RUTA_PERFIL_PROJECTE);
     expect(fills(container).slice(0, 3)).toEqual(['IMG.page-title-logo light-only', 'IMG.page-title-logo dark-only', 'H1.']);
     expect(container.querySelector('.page-title-avatar')).toBeNull();
   });
@@ -142,7 +146,7 @@ describe('una persona: el seu avatar redó, mai el logotip de Sóc de Poble', ()
   });
 
   test('cap avatar de capçalera amb la marca de Sóc de Poble, encara que vinga com a author_avatar', () => {
-    for (const marca of [QUADRAT_VERD, LOGO_NEGRE]) {
+    for (const marca of [QUADRAT_VERD, LOGO_NEGRE, QUADRAT_VERD_PNG, LOGO_NEGRE_PNG]) {
       const container = pinta('mur', {
         id: 'p-marca', type: 'feed', title: 'Recepta', author_name: 'Pepa', owner_user_id: 'u-1',
         author_avatar: marca, created_at: '2026-09-01T10:00:00.000Z'

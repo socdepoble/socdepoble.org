@@ -33,7 +33,6 @@ import { Boto } from '../../components/PedraSeca/index.js';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { useNavigate } from '../../app/contexts/RouterContext';
 import { useSEO } from '../../hooks/useSEO';
-import { resolveAsset } from '../../config/assetResolver.js';
 import ClosCaXat, { BotoObriRail } from './components/ClosCaXat.jsx';
 import PanellInicialMobil from './components/PanellInicialMobil.jsx';
 import { PRESETS_AMPLARIA } from './amplariaColumnes.js';
@@ -65,10 +64,11 @@ export default function XatControlSection() {
     else setOpcioId(id);
   };
 
+  /* Onada 8 (261009) · Sense `image`: useSEO no passa cap SVG a les xarxes i
+     ja hi posava la imatge base. El <head> és el mateix. */
   useSEO({
     title: titol,
-    description: t('section.xatcontrol.subtitle', 'Ajustos, missatges temporals i organització de converses.'),
-    image: resolveAsset('/assets/system/ui/logo-socdepoble-cuadrat-verd.svg')
+    description: t('section.xatcontrol.subtitle', 'Ajustos, missatges temporals i organització de converses.')
   });
 
   /* La capçalera de la columna porta el mateix dibuix que l'entrada del rail

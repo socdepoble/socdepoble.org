@@ -7,11 +7,17 @@
       "aprovat_per": "MarIA",
       "data": "2026-10-05"
     },
-    "consola": {
-      "sha256": "f5b751a42484369b3674031285ad5a4ebe14ff1be53ca072cd7e41a874a397f0",
+    "cervell": {
+      "sha256": "e9065c0fdd7e8b3760a790682d11f6d6f02a5c98d4cc8b2a24d54910ac67d121",
       "html": 0,
-      "aprovat_per": "Javi",
-      "data": "2026-09-24"
+      "aprovat_per": "MarIA (delegada pel Mestre, 261009)",
+      "data": "2026-10-09"
+    },
+    "consola": {
+      "sha256": "7afd7cae015995b8ec5c03e5718ffce46b886f4d25911c6d38bc91a231290a19",
+      "html": 0,
+      "aprovat_per": "MarIA (delegada pel Mestre, 261009)",
+      "data": "2026-10-09"
     },
     "constitucio": {
       "sha256": "73b9be6c99ca64b9c8f84c2f28e5d3b9d3b3768325e78b050ef48173ab4ac30c",
@@ -20,16 +26,16 @@
       "data": "2026-09-24"
     },
     "disseny": {
-      "sha256": "6d65eb07e4512bc9400f4e55b6fccd3a02c74480f68e8eeb7699d7686a0faa47",
+      "sha256": "e4cac168ac71813d9b8d759d73ff2f2c3eb183febc32a4c46d54d911a80db14c",
       "html": 2147,
-      "aprovat_per": "MarIA",
-      "data": "2026-10-05"
+      "aprovat_per": "MarIA (delegada pel Mestre, 261009)",
+      "data": "2026-10-09"
     },
     "drets-autor": {
-      "sha256": "bc57b0d49cb0e21bb3823e6b8f9436edc8c4b8367dea009746850aaf23934d9c",
-      "html": 6576,
-      "aprovat_per": "MarIA",
-      "data": "2026-10-08"
+      "sha256": "ada0ab714e308d75277d9215676bfbc2f92afce7b089f6580632b35754d485cf",
+      "html": 9662,
+      "aprovat_per": "MarIA (delegada pel Mestre, 261009)",
+      "data": "2026-10-09"
     },
     "fedivers": {
       "sha256": "042b41663bdec1b0c59b7f7e47946b765a80a29bceb80a3b6ed3e9d1b816a326",

@@ -1,7 +1,7 @@
 import { backendScope } from '../../config/backendConfig.js';
 import { useSession } from '../../app/contexts/SessionContext.jsx';
 import { useScopedResource } from '../../app/contexts/useScopedResource.js';
-import React, { createContext, useContext, useMemo } from 'react';
+import { createContext, useContext, useMemo } from 'react';
 import { loadMultimedia } from '../../data/backendPort.js';
 import { useIdentitat } from '../../app/contexts/IdentitatContext.jsx';
 

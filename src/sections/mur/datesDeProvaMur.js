@@ -62,11 +62,14 @@ export const IMPORTANTS_DEL_MUR = Object.freeze([
 
 /**
  * Les molt tècniques, amb data fixa de fa dues setmanes, en hora de València
- * (CEST): el disseny del codi i la història de les versions. Porten hora,
- * com les importants. [col·lecció, id, data]
+ * (CEST): la història de les versions. Porten hora, com les importants.
+ * [col·lecció, id, data]
+ * Onada 8 (261009; requeriments 261009_1300, punt 2) · Disseny ja no hi és:
+ * el Mestre li ha donat la seua data (2026-09-10, PAGE_COPY.disseny), i mana
+ * en llavor i en remot, com la Consola, el Cervell i Drets d'autor. Abans,
+ * ['pages', 'disseny', '2026-09-14T18:25:00+02:00'].
  */
 export const TECNIQUES_DEL_MUR = Object.freeze([
-  ['pages', 'disseny', '2026-09-14T18:25:00+02:00'],
   ['pages', 'versions', '2026-09-03T11:50:00+02:00']
 ].map((fila) => Object.freeze(fila)));
 

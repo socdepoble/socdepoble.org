@@ -14,7 +14,8 @@
  *   traduirVisible · comentarVisible · compartirVisible · connectarVisible ·
  *   onTranslate · onComment · onShare · onConnect · connectLabel ·
  *   comentarXat ('comu' | 'privat' | null: el menú de Comentar, ordre del
- *     Mestre, 261007; el posa useAccions) ·
+ *     Mestre, 261007; el posa useAccions) · comentarPrivatAmb (Onada 8: el
+ *     nom de l'autor amb qui obri el xat «En privat», o null) ·
  *   accionsInoperatives + onClickInoperatiu (T36: Comentar, Compartir i
  *     Connectar es pinten igual però el clic va a onClickInoperatiu; T7 ·
  *     porten aria-disabled="true" i el clic diu quin botó és:
@@ -37,7 +38,8 @@
  * davall de cap publicació: el debat és un xat. Comentar obri un menú amb dues
  * vies, el MATEIX patró que el de Traduir (MenuComentar, just després del
  * botó, dins del trio):
- *   · «En privat» · un xat privat només entre la persona i Sóc de Poble, el
+ *   · «En privat» · un xat privat només entre la persona i l'autor de la
+ *     pàgina (Onada 8, 261009); sense autor, o amb el pilot, Sóc de Poble, el
  *     missatge directe amb l'entitat;
  *   · «En públic» · el xat públic de l'element, amb el seu títol com a nom,
  *     com els grups «General» o «Beta testers»: hi pot entrar tothom. Sense
@@ -70,6 +72,8 @@ export function BarraBlava({
   onTranslate, onComment, onShare, onConnect,
   connectLabel = 'Connectar',
   comentarXat = null,
+  /* Onada 8 (261009) · el nom de l'autor de «En privat» (useAccions). */
+  comentarPrivatAmb = null,
   accionsInoperatives = false, onClickInoperatiu = null,
   menuTraduir = null,
   indexControla,
@@ -131,7 +135,7 @@ export function BarraBlava({
         {/* Ordre del Mestre (261007) · Inoperatiu (l'editor, T36), Comentar no
             obri cap menú: el clic diu quin botó és. */}
         {comentarVisible && (
-          <BotoComentar comentarXat={accionsInoperatives ? null : comentarXat} onComment={clicDe('comentar', onComment)}
+          <BotoComentar comentarXat={accionsInoperatives ? null : comentarXat} privatAmb={comentarPrivatAmb} onComment={clicDe('comentar', onComment)}
             className={inoperativa} presentation ariaDisabled={ariaInoperatiu} />
         )}
         {compartirVisible && (

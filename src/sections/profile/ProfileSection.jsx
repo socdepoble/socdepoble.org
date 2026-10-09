@@ -1,8 +1,9 @@
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import SectionItemCard from '../../components/SectionItemCard';
+import { PortaDePagina } from '../../components/PedraSeca/organismes/PortesTargeta.jsx';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { useNavigate } from '../../app/contexts/RouterContext';
-import { rutaConnectarPerfil, rutaDePerfil } from '../../config/navigation.js';
+import { objecteDePerfil, rutaConnectarPerfil, rutaDePerfil, rutaXatDePagina } from '../../config/navigation.js';
 
 /* El tipus d'agent del catàleg, en el vocabulari del perfil públic. */
 const TIPUS = Object.freeze({ AI: 'ia', COMPANY: 'entitat' });
@@ -21,6 +22,18 @@ export default function ProfileSection({ agents = [] }) {
   const connecta = (agent) => {
     const ruta = rutaConnectarPerfil({ tipus: tipusDAgent(agent), id: agent?.id, nom: agent?.name });
     return ruta ? () => navigate(ruta) : undefined;
+  };
+  /* Onada 8 (261009; requeriments, punt 4) · La targeta d'una entitat (o
+     d'un grup) del directori porta el botó gran «Anar al xat», cap al xat
+     comú de la seua pàgina (la Comunitat: rutaXatDePagina sobre el seu
+     descriptor, el mateix de «Comentar · En públic»), com la del poble. Una
+     persona o una IA no en tenen (el seu és el directe, «En privat»): cap
+     botó. Les etiquetes es queden (etiquetesAmbAccio). */
+  const portaDelXat = (agent) => {
+    const tipus = tipusDAgent(agent);
+    if (tipus !== 'entitat' && tipus !== 'grup') return null;
+    const desti = rutaXatDePagina(objecteDePerfil({ tipus, id: agent?.id, nom: agent?.name }));
+    return desti ? <PortaDePagina porta={{ id: 'xat-de-l-entitat', verb: t('section.xat.anarAlXat', 'Anar al xat'), desti, varietat: 'primari' }} /> : null;
   };
 
   return (
@@ -44,6 +57,8 @@ export default function ProfileSection({ agents = [] }) {
             meta={[agent.type]}
             buttonLabel={t('common.readMore', 'Llegir més')}
             onConnect={connecta(agent)}
+            accio={portaDelXat(agent)}
+            etiquetesAmbAccio
           />
         ))}
       </div>

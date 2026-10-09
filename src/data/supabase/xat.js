@@ -81,9 +81,18 @@ const errorLocal = (missatge, code, retriable = false) => Object.assign(new Erro
    trobar el primer dia, amb la seua clau d'i18n (section.xat.error.*):
    SDP-XAT-003 (encara no consta com a membre del poble: noMembre), SDP-XAT-013
    (la pàgina no existix o no la pot vore: paginaNoVisible) i SDP-XAT-429 (el
-   límit de 15 missatges cada 5 s de 2609080200: massaMissatges). */
+   límit de 15 missatges cada 5 s de 2609080200: massaMissatges).
+   Onada 8 (261009) · SDP-XAT-002: crea_fil_directe no obri un xat amb tu
+   mateix ni amb una entitat que representes (ambTuMateix). «En privat» ja
+   porta eixos casos al xat amb Sóc de Poble; este és el text si hi arriba
+   algú per un altre camí (un enllaç ?amb= amb el seu id).
+   Onada 8 (261009, revisió) · SDP-XAT-004: l'altra persona no és del poble
+   (o n'ha demanat la baixa). «En privat» hi pot portar ara des de qualsevol
+   publicació (noDelPoble). Com SDP-XAT-016, el text no diu el motiu. */
 const MISSATGES_SDP_HUMANS = Object.freeze({
+  'SDP-XAT-002': 'No pots obrir un xat privat amb tu mateix ni amb una entitat que representes.',
   'SDP-XAT-003': 'Encara no consta que sigues d’este poble, i el xat és per a la gent del poble. Prova d’eixir i tornar a entrar.',
+  'SDP-XAT-004': 'Esta persona no està disponible en este poble.',
   'SDP-XAT-013': 'Esta pàgina ja no existix o no la pots vore.',
   'SDP-XAT-016': 'Esta persona no està disponible al xat.',
   'SDP-XAT-429': 'Has enviat molts missatges en poc de temps. Espera uns segons i torna-ho a provar.'

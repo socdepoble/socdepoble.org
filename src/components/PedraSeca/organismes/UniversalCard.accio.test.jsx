@@ -67,6 +67,27 @@ test('amb accio, la ranura ocupa el lloc de les etiquetes i les etiquetes no es 
   expect(boto.className.split(' ')).toEqual(expect.arrayContaining(['sdp-boto', 'sdp-boto--primari', 'sdp-boto--gran']));
 });
 
+/* Onada 8 (261009) · La targeta d'un poble afig «Anar al xat» i conserva les
+   seues etiquetes: amb etiquetesAmbAccio, les etiquetes es queden al seu lloc
+   i el botó va just després, abans dels drets. Sense, la regla d'El Xat. */
+test('Onada 8 · amb etiquetesAmbAccio, les etiquetes es queden i el botó va just després', () => {
+  const { container } = pinta({ accio: <PortaDePagina porta={PORTA} />, etiquetesAmbAccio: true });
+  const cos = container.querySelector('.sp-card-body');
+  const fills = [...cos.children].map((fill) => fill.className);
+  expect(fills.indexOf('sp-card-labels')).toBe(fills.indexOf('sp-card-text') + 1);
+  expect(fills.indexOf('sp-card-accio')).toBe(fills.indexOf('sp-card-labels') + 1);
+  expect(fills.indexOf('sp-card-copyright')).toBe(fills.indexOf('sp-card-accio') + 1);
+  expect([...cos.querySelectorAll('.sp-card-labels > li')].map((li) => li.textContent)).toEqual(['Comunicació', 'Eina']);
+  expect(screen.getByRole('link', { name: 'Anar al xat' }).getAttribute('href')).toBe('/xat');
+  /* Sense accio, la prop no hi fa res: el DOM de sempre. */
+  cleanup();
+  const { container: sense } = pinta();
+  const abans = sense.querySelector('article').outerHTML;
+  cleanup();
+  const { container: senseAmbProp } = pinta({ etiquetesAmbAccio: true });
+  expect(senseAmbProp.querySelector('article').outerHTML).toBe(abans);
+});
+
 test('el clic al botó navega al seu destí i no obri la targeta; un clic fora del botó obri la pàgina', () => {
   const obriTargeta = vi.fn();
   const { container } = pinta({ accio: <PortaDePagina porta={PORTA} />, onMainClick: obriTargeta });

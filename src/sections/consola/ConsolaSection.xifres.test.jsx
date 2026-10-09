@@ -30,6 +30,9 @@ import ConsolaSection from './ConsolaSection.jsx';
 import { CLAU_PRIVACITAT, paginaConsola, paginesConsola } from './consolaPagines.js';
 import { SLUGS_XIFRES, detallXifra, rutaXifra, xifraDelMas } from './xifresMas.js';
 import { evidenciesDe } from './mapa/mapaContent.js';
+/* Onada 8 (261009) · La boina de Sóc de Poble porta al seu perfil
+   (RUTA_PERFIL_PROJECTE), ja no a /projecte. */
+import { RUTA_PERFIL_PROJECTE } from '../../config/navigation.js';
 
 const metrica = (nom, extra) => ({ metrica: nom, unitat: 'fraccio', numerador: null, denominador: null, font: 'x', prova: 'p', ...extra });
 const TORN = 'torn-261003-a · claude · open · caducat el 2026-10-03T21:00:00Z';
@@ -134,9 +137,9 @@ test.each(SLUGS_XIFRES)('/consola/xifres/%s: H1 = títol de la targeta, Sóc de 
   expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
   expect(document.querySelector('.page-intro h2').textContent).toBe(subtitol);
   expect(document.querySelector('.page-intro p.lead').textContent).toBe(entradeta);
-  // La Pàgina Universal sencera: doble barra, i Sóc de Poble a la taronja, enllaçat a /projecte.
+  // La Pàgina Universal sencera: doble barra, i Sóc de Poble a la taronja, enllaçat al seu perfil (Onada 8; abans, /projecte).
   const autor = barraTaronja().firstElementChild;
-  expect(autor.getAttribute('href')).toBe('/projecte');
+  expect(autor.getAttribute('href')).toBe(RUTA_PERFIL_PROJECTE);
   expect(autor.querySelector('.sp-card-author-name').textContent).toBe('Sóc de Poble');
   expect(barraTaronja().querySelector('time.btn-date-time').getAttribute('datetime')).toBeTruthy();
   expect(document.querySelector('header.bar-blue')).not.toBeNull();
@@ -159,13 +162,15 @@ test.each(SLUGS_XIFRES)('/consola/xifres/%s: H1 = títol de la targeta, Sóc de 
 /* Norma del Mestre, 261004 (prompt 261004_1108, logotips) · Tota pàgina que
    signa Sóc de Poble, també les de sistema, porta el seu logotip dalt de
    l'H1: el tauler de la Consola (UniversalPage, autor per defecte) i la
-   pàgina d'una xifra (PaginaApp amb AUTORIA_SOCDEPOBLE, ruta /projecte).
-   Abans no en portaven cap. */
+   pàgina d'una xifra (PaginaApp amb AUTORIA_SOCDEPOBLE, ruta del seu perfil;
+   Onada 8, 261009: abans, /projecte).
+   Abans no en portaven cap.
+   Onada 8 (261009) · El logotip és el PNG de 985x256 (abans, l'SVG). */
 const logosDelTitol = () => [...document.querySelectorAll('header.page-title > img.page-title-logo')];
 const esperaLogoSdp = () => {
   expect(logosDelTitol().map((img) => [img.className, img.getAttribute('src')])).toEqual([
-    ['page-title-logo light-only', '/assets/system/ui/logo-socdepoble-rect-negre.svg'],
-    ['page-title-logo dark-only', '/assets/system/ui/logo-socdepoble-rect-blanc.svg']
+    ['page-title-logo light-only', '/assets/system/ui/logo-socdepoble-rect-negre-985x256.png'],
+    ['page-title-logo dark-only', '/assets/system/ui/logo-socdepoble-rect-blanc-985x256.png']
   ]);
   expect(logosDelTitol()[1].nextElementSibling.tagName).toBe('H1');
 };
@@ -174,7 +179,7 @@ test('logotips · el tauler de la Consola i la pàgina d’una xifra porten el l
   esperaLogoSdp();
   cleanup();
   await obri('/consola/xifres/torns-caducats');
-  expect(barraTaronja().firstElementChild.getAttribute('href')).toBe('/projecte');
+  expect(barraTaronja().firstElementChild.getAttribute('href')).toBe(RUTA_PERFIL_PROJECTE);
   esperaLogoSdp();
 });
 
@@ -235,7 +240,7 @@ test('sense Mapa, la pàgina de la xifra diu per què i no inventa cap número',
   expect(h1()).toBe('Skills del cens');
   expect(screen.getByText('Mapa no disponible')).toBeTruthy();
   expect(document.querySelector('table')).toBeNull();
-  expect(barraTaronja().firstElementChild.getAttribute('href')).toBe('/projecte');
+  expect(barraTaronja().firstElementChild.getAttribute('href')).toBe(RUTA_PERFIL_PROJECTE);
 });
 
 test('una xifra que no existix no peta: estat buit honest i camí de tornada', async () => {
@@ -243,7 +248,7 @@ test('una xifra que no existix no peta: estat buit honest i camí de tornada', a
   expect(window.location.pathname).toBe('/consola/xifres/no-existix');
   expect(h1()).toBe('Xifra no trobada');
   expect(screen.getByText('Cap xifra amb este nom')).toBeTruthy();
-  expect(barraTaronja().firstElementChild.getAttribute('href')).toBe('/projecte');
+  expect(barraTaronja().firstElementChild.getAttribute('href')).toBe(RUTA_PERFIL_PROJECTE);
   fireEvent.click(screen.getByRole('link', { name: 'Torna a la Consola' }));
   expect(window.location.pathname).toBe('/consola');
   expect(h1()).toBe('Consola Termodinàmica');
@@ -326,7 +331,7 @@ test.each(DE_LES_PAGINES)('/consola/xifres/%s: la pàgina diu el mateix que la t
   expect(h1Rapid()).toBe(xifra.titol);
   expect(document.querySelector('.page-intro h2').textContent).toBe(xifra.subtitol);
   expect(document.querySelector('.page-intro p.lead').textContent).toBe(xifra.entradeta);
-  expect(barraTaronja().firstElementChild.getAttribute('href')).toBe('/projecte');
+  expect(barraTaronja().firstElementChild.getAttribute('href')).toBe(RUTA_PERFIL_PROJECTE);
   expect(document.querySelector('a[href^="/consola/"]:not([href="/consola"])').getAttribute('href')).toBe(xifra.tracta.ruta);
   dadaVivaEnMono(slug);
 });

@@ -233,10 +233,12 @@ describe('Grup E · les pàgines del sistema al Mur de l’actor', () => {
     expect(result.current.carregant).toBe(false);
   });
 
-  test('amb el contingut core: les deu pàgines del Mur, memoritzades sobre pageCopy', () => {
+  /* Onada 8 (261009) · Dotze: la Consola i el Cervell hi entren com a pàgines
+     del sistema. Abans, deu. */
+  test('amb el contingut core: les dotze pàgines del Mur, memoritzades sobre pageCopy', () => {
     mocks.core = NUCLI;
     const { result, rerender } = renderHook(() => useTargetesDeSistema());
-    expect(SYSTEM_PAGES).toHaveLength(10);
+    expect(SYSTEM_PAGES).toHaveLength(12);
     expect(result.current.map((targeta) => targeta.id)).toEqual(SYSTEM_PAGES.map((pagina) => pagina.key));
     expect(result.current.every((targeta) => targeta.isSystem && targeta.type === 'sistema')).toBe(true);
     // Les mateixes targetes que MurSection (targetesDeSistema), sense cap forma pròpia.

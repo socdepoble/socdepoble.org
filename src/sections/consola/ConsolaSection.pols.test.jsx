@@ -27,6 +27,9 @@ vi.mock('./consolaContent.js', async (importOriginal) => ({
 import { RouterProvider, Route, Routes } from '../../app/contexts/RouterContext';
 import ConsolaSection from './ConsolaSection.jsx';
 import { CLAU_PRIVACITAT } from './consolaPagines.js';
+/* Onada 8 (261009) · La boina de Sóc de Poble porta al seu perfil
+   (RUTA_PERFIL_PROJECTE), ja no a /projecte. */
+import { RUTA_PERFIL_PROJECTE } from '../../config/navigation.js';
 
 const DIA = 24 * 60 * 60 * 1000;
 const AMB_REBUT = () => ({
@@ -78,7 +81,7 @@ test.each([
   expect(h1()).toBe(titol);
   expect(document.querySelector('.page-intro h2').textContent).toMatch(/^Per a /);
   expect(document.querySelector('.page-intro p.lead').textContent.length).toBeGreaterThan(20);
-  expect(barraTaronja().firstElementChild.getAttribute('href')).toBe('/projecte');
+  expect(barraTaronja().firstElementChild.getAttribute('href')).toBe(RUTA_PERFIL_PROJECTE);
   expect(document.querySelector('header.bar-blue')).not.toBeNull();
   const molla = document.querySelector('nav.sdp-molla');
   expect([...molla.querySelectorAll('a')].map((a) => a.getAttribute('href'))).toEqual(['/consola', '/consola/pols']);
@@ -90,14 +93,16 @@ test.each([
 });
 
 /* Norma del Mestre, 261004 (prompt 261004_1108, logotips) · La pàgina d'un
-   panell del pols (PaginaApp amb AUTORIA_SOCDEPOBLE, ruta /projecte) signa
-   Sóc de Poble i porta el seu logotip dalt de l'H1. Abans no en portava. */
+   panell del pols (PaginaApp amb AUTORIA_SOCDEPOBLE, ruta del seu perfil;
+   Onada 8, 261009: abans, /projecte) signa
+   Sóc de Poble i porta el seu logotip dalt de l'H1. Abans no en portava.
+   Onada 8 (261009) · El logotip és el PNG de 985x256 (abans, l'SVG). */
 test('logotips · /consola/pols/rebuts porta el logotip de Sóc de Poble dalt de l’H1', async () => {
   await obri('/consola/pols/rebuts', /^Instantània: /);
   const logos = [...document.querySelectorAll('header.page-title > img.page-title-logo')];
   expect(logos.map((img) => [img.className, img.getAttribute('src')])).toEqual([
-    ['page-title-logo light-only', '/assets/system/ui/logo-socdepoble-rect-negre.svg'],
-    ['page-title-logo dark-only', '/assets/system/ui/logo-socdepoble-rect-blanc.svg']
+    ['page-title-logo light-only', '/assets/system/ui/logo-socdepoble-rect-negre-985x256.png'],
+    ['page-title-logo dark-only', '/assets/system/ui/logo-socdepoble-rect-blanc-985x256.png']
   ]);
   expect(logos[1].nextElementSibling.textContent).toBe('Rebuts');
 });
@@ -158,7 +163,7 @@ test('/consola/pols/skills: les xifres de dins són targetes amb boina que porte
   expect(targetes().map(href)).toEqual(
     ['skills-del-manifest', 'skills-del-nucli', 'skills-fora-del-manifest', 'skills-sense-disc', 'segell-de-skills']
       .map((s) => `/consola/xifres/${s}`));
-  expect(targetes().every((t) => t.querySelector(':scope > .sp-card-header a.sp-card-author-link').getAttribute('href') === '/projecte'))
+  expect(targetes().every((t) => t.querySelector(':scope > .sp-card-header a.sp-card-author-link').getAttribute('href') === RUTA_PERFIL_PROJECTE))
     .toBe(true);
   expect(document.querySelector('.sp-card--action, .sdp-consola__quieta')).toBeNull();
   expect(document.querySelector('.sdp-consola__segell')).toBeNull();

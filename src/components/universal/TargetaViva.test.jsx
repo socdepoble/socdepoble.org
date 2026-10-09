@@ -63,6 +63,25 @@ test('T50 · cap «(i)» a la caputxa (sdp-universal-page §1.C): la targeta és
   } finally { vi.useRealTimers(); }
 });
 
+/* Onada 8 (261009, revisió) · «Un clic a QUALSEVOL boina taronja porta
+   SEMPRE al perfil públic de qui signa»: amb `autor.ruta`, la boina és
+   l'enllaç d'UniversalCard (no s'intercepta, com el dels drets), i el clic no
+   torna a triar la fitxa. Sense ruta, text, com abans. */
+test('Onada 8 · amb autor.ruta, la boina enllaça al perfil de qui signa i no obri l’avís; sense, és text', () => {
+  const onMainClick = vi.fn();
+  const { container, unmount } = render(<TargetaViva document={DOC} autor={{ ...AUTOR, ruta: '/gent/pep' }} onMainClick={onMainClick} />);
+  const boina = container.querySelector('.sp-card-header a.sp-card-author-link');
+  // El Link del router simulat és un <a> pla: la ruta queda a `to`.
+  expect(boina.getAttribute('to')).toBe('/gent/pep');
+  fireEvent.click(boina);
+  expect(onMainClick).not.toHaveBeenCalled();
+  expect(screen.queryByRole('dialog')?.open ?? false).toBe(false);
+  unmount();
+  const senseRuta = render(<TargetaViva document={DOC} autor={AUTOR} />);
+  expect(senseRuta.container.querySelector('.sp-card-header a.sp-card-author-link')).toBeNull();
+  expect(senseRuta.container.querySelector('.sp-card-header span.sp-card-author-block')).not.toBeNull();
+});
+
 test('T50 · la targeta sense mainHref no navega en clicar-la; onMainClick (la fitxa de la llista) es crida', () => {
   const onMainClick = vi.fn();
   render(<TargetaViva document={DOC} autor={AUTOR} onMainClick={onMainClick} />);
