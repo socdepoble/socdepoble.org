@@ -27,6 +27,8 @@ import { RouteErrorBoundary } from './RouteErrorBoundary.jsx';
 export { RouteErrorBoundary } from './RouteErrorBoundary.jsx';
 import { EVENT_NIVELL_IAIA, esIaiaActiva, nivellIaiaDesat } from '../sections/realitat/nivellIaia.js';
 import { PAGE_COPY } from '../sections/text/pageContent.js';
+import { accioDeLaPaginaDeText } from '../sections/text/accionsDeText.js';
+import { AccioDeLaPaginaDeText } from '../sections/text/AccioDeLaPaginaDeText.jsx';
 import { ProveidorXatSocDePoble } from '../sections/control/xatCorporatiu.js';
 import { BotoCrom } from '../components/universal/PanellCrom.jsx';
 /* T47 · Escriptors de l'autodesament des de l'arrencada (reprenen esborranys pendents). */
@@ -693,9 +695,16 @@ function TextRoute({ pageKey }) {
     }
     return <Navigate to={DEFAULT_SECTION_PATH} replace />;
   }
+  /* Onada 10 (261010; decisió del Mestre del 261010) · /iaia porta, dins del
+     bloc blanc de l'H1, el botó «Anar al xat» cap al xat amb la IAIA MarIA
+     (accioPrincipal de PageFrame, per TextSection). Es decidix amb la funció
+     pura, mai amb l'element, com a PageDetailSection. La resta de pàgines de
+     text passen null, que TextSection no fa arribar a la UniversalPage: les
+     props de sempre, exactes. */
+  const accioPrincipal = accioDeLaPaginaDeText(pageKey) ? <AccioDeLaPaginaDeText pageKey={pageKey} /> : null;
   return (
     <Suspense fallback={<RouteFallback />}>
-      <TextSection page={page} pageKey={pageKey}>
+      <TextSection page={page} pageKey={pageKey} accioPrincipal={accioPrincipal}>
         {/* Transparència Radical: el comptador es mostra on s'explica la privacitat.
             Suspense propi perquè el tauler no torne a tapar el text mentre arriba. */}
         {pageKey === 'legal' ? <Suspense fallback={null}><TaulerTelemetria /></Suspense> : null}

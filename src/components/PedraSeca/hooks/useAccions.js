@@ -170,8 +170,10 @@ export function urlPerCompartir(href, router = null) {
  *    un altre xat;
  *  · en llavor, un autor que el xat local no pot obrir (`directeAmb`, del
  *    proveïdor): abans de l'Onada 8 anava a Sóc de Poble, i no ha de caure en
- *    «Esta persona no és del poble». Amb un àlies (el Mac Mini de
- *    'javillinares'), l'id del padró que torna directeAmb;
+ *    «Esta persona és forastera en este poble.» (SDP-XAT-004; el text és de
+ *    l'Onada 10, 261010; pla 261010_1121; decisió del Mestre del 261010).
+ *    Amb un àlies (el Mac Mini de 'javillinares'), l'id del padró que torna
+ *    directeAmb;
  *  · una ruta que el contracte no admet (esRutaInterna).
  * `xat` és el valor de useXatSocDePoble: { esDeQuiMira?, directeAmb? }.
  */

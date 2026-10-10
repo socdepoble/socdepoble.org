@@ -58,6 +58,19 @@ const subscriptors = new Map();
 /* Mateix format que el servidor: «SDP-XAT-NNN: text», amb `code` i `retriable`. */
 const errorXat = (codi, missatge) => Object.assign(new Error(`${codi}: ${missatge}`), { code: codi, retriable: false });
 const errorPla = (missatge) => Object.assign(new Error(missatge), { code: 'LOCAL', retriable: false });
+/* Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010) · Obrir
+   un directe amb algú que no és al padró ix amb el MATEIX codi que
+   crea_fil_directe (SDP-XAT-004) i amb el text humà de l'adaptador remot
+   (MISSATGES_SDP_HUMANS de supabase/xat.js, que és el valor valencià de
+   'section.xat.error.noDelPoble'): la interfície el tradueix pel `code` a les
+   cinc llengües (errorsXat.js), sense cap clau nova. Abans era un errorPla
+   ('LOCAL') amb un text propi que eixia en valencià en les cinc.
+   Sense el prefix «SDP-XAT-004: » d'errorXat: en remot l'adaptador el canvia
+   pel text humà, i ací no hi ha qui el canvie (useAplicaAbast pinta el
+   `message` tal qual). `retriable` continua sent false i cap consumidor
+   mirava 'LOCAL': ni reintent ni cap altre camí, només el text.
+   xatCorporatiu.test.jsx vigila que el text siga el de la clau. */
+const errorForastera = () => Object.assign(new Error('Esta persona és forastera en este poble.'), { code: 'SDP-XAT-004', retriable: false });
 
 const copia = (missatge) => ({ ...missatge, metadades: { ...missatge.metadades } });
 
@@ -438,12 +451,14 @@ export function createLocalXatAdapter() {
     /**
      * Obri una conversa amb algú del padró: una persona (fil directe), l'entitat
      * (fil d'entitat, jo com a client) o la IAIA (fil 'iaia'). Idempotent.
+     * Onada 10 (261010) · Qui no és al padró és «forastera»: SDP-XAT-004, com
+     * al servidor (errorForastera, dalt).
      */
     async creaFilDirecte(altreUsuariId, titol = null, config = {}) {
       const { estat, jo } = magatzem(config);
       if (!altreUsuariId || altreUsuariId === jo) throw errorPla('No pots obrir una conversa amb tu mateix.');
       const altre = String(altreUsuariId);
-      if (!estat.membres.some((membre) => membre.usuariId === altre)) throw errorPla('Esta persona no és del poble.');
+      if (!estat.membres.some((membre) => membre.usuariId === altre)) throw errorForastera();
       const existent = filAmb(estat, jo, altre);
       if (existent) return existent;
       if (estat.entitats.has(altre)) {

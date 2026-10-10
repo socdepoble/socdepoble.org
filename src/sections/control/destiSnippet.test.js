@@ -2,12 +2,25 @@
    consulta sobre la mateixa ruta) i on porta el botó principal (la clau
    `snippetChromeUrl` de la capa del paquet, només https, mai un lloc fixat). */
 import { describe, expect, test } from 'vitest';
+import { dataHoraDeBarra } from '../../components/universal/editorial.js';
 import {
-  CLAU_FITXA, CLAU_URL_SNIPPET, FITXA_SNIPPET, destiDelSnippet, rutaDeLaFitxa, urlDelSnippet
+  CLAU_FITXA, CLAU_URL_SNIPPET, DATA_DEL_SNIPPET, FITXA_SNIPPET, destiDelSnippet, rutaDeLaFitxa, urlDelSnippet
 } from './destiSnippet.js';
 
 const APP = 'https://poble.test';
 const BOTIGA = 'https://chromewebstore.google.com/detail/snippet/abcdefghijklmnop';
+
+/* Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010, M4) · La
+   data de la targeta canònica del Snippet i de la barra taronja de la seua
+   fitxa: el dia documentat («CU, Onada 3, 261003») i res més. Cap font en diu
+   l'hora: és una data de només dia, i la pastilla no en pinta cap (l'hora no
+   s'inventa). Si el Mestre en dicta una, esta prova es gira amb la dada. */
+describe('DATA_DEL_SNIPPET', () => {
+  test('és el dia de la CU, sense hora: la pastilla pinta la data i prou', () => {
+    expect(DATA_DEL_SNIPPET).toBe('2026-10-03');
+    expect(dataHoraDeBarra({ creat: DATA_DEL_SNIPPET })).toEqual({ time: '', date: '03/10/26', dateTime: '2026-10-03' });
+  });
+});
 
 describe('rutaDeLaFitxa', () => {
   test('obri la fitxa sobre la ruta d’on està la persona, sense ruta nova', () => {

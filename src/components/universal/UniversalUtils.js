@@ -159,7 +159,15 @@ export function camiDeLaMarca(url) {
 /* T22 (Mestre, 260927) · La persona sense sessió és el Foraster, i el seu
    poble és sempre este. Nom i poble van junts: qualsevol barra taronja,
    targeta o capçalera que pinte el convidat llig d'ací, mai d'un literal
-   propi. Amb sessió, nom i poble reals. */
+   propi. Amb sessió, nom i poble reals.
+   Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010) ·
+   «Foraster» guanya un segon sentit, NOMÉS als dos errors del xat: amb
+   sessió, però sense constar en este poble. SDP-XAT-003 diu «Estàs en Mode
+   Foraster…» (tu no hi constes) i SDP-XAT-004, «Esta persona és forastera en
+   este poble.» (l'altra persona no n'és). Eixos textos viuen a i18n.js
+   (section.xat.error.noMembre i .noDelPoble) i a data/supabase/xat.js, no
+   ací: esta constant continua sent només la del convidat sense sessió, i
+   autorDeSessio, davall, no canvia. */
 export const FORASTER = Object.freeze({
   name: 'Foraster',
   location: 'Poble de la persona forastera'
@@ -169,7 +177,9 @@ export const FORASTER = Object.freeze({
    de `currentUser` que ja usa IdentitatContext) i sense tocar cap backend.
    Sense sessió, el Foraster sencer. Amb sessió, el nom de la persona i el
    poble que viatja a `user_metadata.town_name` (o buit si no en té: una
-   persona registrada sense poble no és forastera). */
+   persona registrada sense poble no es pinta com a Foraster; que el xat li
+   diga «Mode Foraster» si no consta al poble és cosa dels seus errors,
+   vegeu la nota de l'Onada 10 de dalt). */
 export function autorDeSessio(currentUser) {
   if (!currentUser) return { name: FORASTER.name, location: FORASTER.location };
   const meta = currentUser.user_metadata || {};

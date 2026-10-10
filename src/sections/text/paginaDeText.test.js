@@ -12,6 +12,11 @@ import { COPYRIGHT_SDP, COPYRIGHT_VIQUIPEDIA, dataHoraDeBarra } from '../../comp
 import { MAXIM_LEMA } from '../../data/limitsText.js';
 import { DRETS_IMATGES, DRETS_TEXT, esFotoValida, esLlicenciaLliure, triaImatges } from '../pobles/pobleDeViquipedia.js';
 import { LLICENCIA_PER_DEFECTE, LLICENCIES, OPCIO_ACTUAL } from '../../components/universal/drets/llicencies.js';
+import { consolaDemanaSessio } from '../../app/guards/guardaConsola.js';
+import { accioDeLaPagina } from '../../config/systemPages.js';
+import { ETIQUETES, IDS_PAGINES, LLINDAR_REBUTS_RANCIS_DIES, paginaConsola, paginesConsola } from '../consola/consolaPagines.js';
+import { CONFIANCES, TIPUS_NODE } from '../consola/mapa/contracteMapa.js';
+import { toDeColor } from '../consola/semafor.js';
 
 test('les rutes de text amb pageKey propi: /iaia i l’àlies /ia són «anima», amb query, fragment o barra final', () => {
   for (const ruta of ['/iaia', '/iaia?x=1', '/iaia/', '/iaia#reflexions', '/ia']) expect(pageKeyDeRuta(ruta)).toBe('anima');
@@ -231,6 +236,137 @@ describe('261007 · /page/drets-autor és «Drets d’autor»', () => {
     // Ja no parla d'un botó que sempre diu «Elegir drets d'autor», i cap enllaç nou: l'únic continua sent el de /legal.
     expect(paragraf).not.toContain("Al botó «Elegir drets d'autor» de l'editor");
     expect(llista).not.toMatch(/<a\b/);
+  });
+});
+
+/* Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010) · «La
+   Consola Termodinàmica» i «El Cervell» (/page/consola i /page/cervell,
+   PageDetailSection) guanyen cos: sis paràgrafs seguits, sense cap títol,
+   només etiquetes de prosa i negretes per a escanejar. El text diu NOMÉS el
+   que fa el codi, i estes proves l'hi ancoren: si canvia el nombre de pàgines
+   de la Consola, un títol, el semàfor, les classes de peça del graf o
+   l'accés, la prova cau i la pàgina s'ha de tornar a escriure. */
+describe('Onada 10 · /page/consola i /page/cervell: sis paràgrafs ancorats al codi', () => {
+  const textDe = (tros) => tros.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+  const llig = (ruta) => readFileSync(resolve(process.cwd(), ruta), 'utf8');
+  const paragrafs = (html) => [...html.matchAll(/<p>([\s\S]*?)<\/p>/g)].map(([, cos]) => cos);
+
+  test.each(['consola', 'cervell'])('%s: es resol pel slug, i el cos són sis paràgrafs amb negretes i res més', (clau) => {
+    expect(pageKeyDeRuta(`/page/${clau}`)).toBe(clau);
+    expect(paginaDeRuta(`/page/${clau}?x=1#y`)).toEqual({ pageKey: clau, page: PAGE_COPY[clau] });
+    const { html } = PAGE_COPY[clau];
+    // Cap títol. Escrit com a classe [1-6]: design_guard llig els literals de capçalera de qualsevol .js.
+    expect(html).not.toMatch(/<h[1-6]\b/i);
+    // Només etiquetes de prosa: paràgrafs i negretes.
+    const etiquetes = [...html.matchAll(/<([a-z0-9]+)[\s>]/gi)].map((m) => m[1].toLowerCase());
+    expect([...new Set(etiquetes)].sort()).toEqual(['p', 'strong']);
+    expect(etiquetes.filter((etiqueta) => etiqueta === 'p')).toHaveLength(6);
+    // Cap atribut: ni classe, ni estil, ni data-sdp-targetes; cap imatge ni cap enllaç.
+    expect(html).not.toMatch(/<[a-z0-9]+\s/i);
+    // El format del fitxer: salt de línia i sis espais davant de cada paràgraf, i res fora d'ells.
+    const cossos = paragrafs(html);
+    expect(cossos).toHaveLength(6);
+    expect(html).toBe(`\n      ${cossos.map((cos) => `<p>${cos}</p>`).join('\n      ')}\n    `);
+    for (const cos of cossos) {
+      expect(cos).toContain('<strong>');
+      expect(textDe(cos).length).toBeGreaterThan(80);
+    }
+  });
+
+  test('consola: «nou targetes» són les nou pàgines de la Consola, i cada títol és el que pinta el tauler', () => {
+    const text = textDe(PAGE_COPY.consola.html);
+    expect(IDS_PAGINES).toHaveLength(9);
+    expect(text).toContain('trobes nou targetes, una per pàgina');
+    const titols = paginesConsola().map((pagina) => pagina.title);
+    expect(new Set(titols).size).toBe(9);
+    for (const titol of titols) expect([titol, text.includes(`«${titol}»`)]).toEqual([titol, true]);
+  });
+
+  test('consola: el semàfor, «El Mas en xifres» i el botó són els de l’app', () => {
+    const text = textDe(PAGE_COPY.consola.html);
+    expect([ETIQUETES.reparar.to, ETIQUETES.important.to, ETIQUETES.enOrdre.to]).toEqual([toDeColor('roig'), toDeColor('taronja'), toDeColor('verd')]);
+    expect(text).toContain(`«${ETIQUETES.reparar.text}» en roig, «${ETIQUETES.important.text}» en taronja o «${ETIQUETES.enOrdre.text}» en verd`);
+    expect(llig('src/sections/consola/XifresMas.jsx')).toContain('>El Mas en xifres<');
+    expect(text).toContain('«El Mas en xifres»');
+    expect(text).toContain(`el botó «${accioDeLaPagina('consola').verb}»`);
+  });
+
+  /* Correcció de l'Onada 10 (261010) · El tercer paràgraf deia que «cada
+     vegada» que una IA llig les fonts en queda un rebut, i que les IAs «anoten»
+     el consum. Hui cap eina escriu rebuts al diari (matrix.mjs ho declara) i
+     el diari de consum és un contracte proposat: el text diu el rebut pel que
+     porta i pel llindar que el tauler marca. El dia que una eina torne a
+     escriure rebuts, l'àncora de matrix.mjs cau i el paràgraf es pot tornar a
+     escriure. */
+  test('consola: el rebut es diu pel que porta, i «més d’una setmana» és el llindar del pols', () => {
+    const text = textDe(PAGE_COPY.consola.html);
+    expect(LLINDAR_REBUTS_RANCIS_DIES).toBe(7);
+    expect(text).toContain('cada rebut diu quines fonts d’un protocol va llegir senceres una IA, amb l’empremta de cada fitxer');
+    expect(text).toContain('si fa més d’una setmana que no n’arriba cap, el tauler ho marca');
+    expect(text).toContain('els registres de consum que hi haja al diari de sessió');
+    expect(llig('tooling/brain/matrix.mjs')).toContain('no autoritza escriptures ni deixa rebuts al diari');
+    expect(text).not.toContain('cada vegada que una IA llig');
+    expect(text).not.toContain('que les IAs anoten');
+  });
+
+  /* Correcció de l'Onada 10 (261010) · El cinqué paràgraf deia «no executa
+     res» i que les fonts eren només fitxers del projecte. El compilador del
+     Mapa executa git (lectura) i llig els llançadors de launchd de l'ordinador
+     on es treballa: el text ho acota. Si el compilador deixa de fer-ho, esta
+     prova cau i la frase s'ha de tornar a escriure. */
+  test('consola: el que executa i d’on llig és el que fa el compilador del Mapa', () => {
+    const text = textDe(PAGE_COPY.consola.html);
+    const compilador = llig('tooling/brain/mapa-consola.mjs');
+    expect(compilador).toContain("execFileSync('git'");
+    expect(compilador).toContain("path.join(home, 'Library', 'LaunchAgents')");
+    expect(text).not.toContain('no executa res');
+    expect(text).toContain('no arregla, no esborra i no executa cap reparació');
+    expect(text).toContain('dins del projecte, l’estat de git i les tasques programades del Mas a l’ordinador on es treballa');
+  });
+
+  /* El paràgraf 6 de cada pàgina: qui hi entra i què hi veu. La decisió P7-A
+     (el botó «Obrir…» no mira l'entorn) continua pendent (systemPages.js): si
+     el Mestre obri la Consola a tothom o fa inert el botó, esta prova cau. */
+  test.each(['consola', 'cervell'])('%s: l’accés que diu la pàgina és el de la ruta (superadmin fora de desenvolupament)', (clau) => {
+    const text = textDe(PAGE_COPY[clau].html);
+    // En qualsevol build la ruta passa per la barrera; només el servidor de desenvolupament l'obri.
+    expect([consolaDemanaSessio(false), consolaDemanaSessio(true)]).toEqual([true, false]);
+    expect(llig('src/app/App.jsx')).toContain('<RequireAuth rol="superadmin"><ConsolaSection /></RequireAuth>');
+    expect(text).toContain('el rol «superadmin»');
+    expect(llig('src/app/guards/RequireAuth.jsx')).toContain('>Accés restringit<');
+    expect(text).toContain('veuràs l’avís «Accés restringit»');
+    expect(text).toMatch(/Hui (la Consola només funciona|el Cervell només es veu) a l’ordinador de qui manté el Mas\./);
+  });
+
+  test('sense dades: el que diuen les targetes de la Consola i la pàgina del Mapa', () => {
+    expect(llig('src/sections/consola/consolaPagines.js')).toContain("absent: 'Dades no disponibles en este entorn'");
+    expect(textDe(PAGE_COPY.consola.html)).toContain('les dades no estan disponibles en este entorn');
+    expect(llig('src/sections/consola/ConsolaSection.jsx')).toContain('titol="Mapa no disponible"');
+    expect(textDe(PAGE_COPY.cervell.html)).toContain('la pàgina dirà «Mapa no disponible»');
+  });
+
+  test('cervell: les nou classes de peça, la línia discontínua, el detall i els límits són els de l’Explorador', () => {
+    const text = textDe(PAGE_COPY.cervell.html);
+    expect(TIPUS_NODE).toHaveLength(9);
+    expect(text).toContain('Hi ha peces de nou classes');
+    // El botó porta a l'Explorador, que és una pàgina de la Consola amb eixe títol.
+    const explorador = paginaConsola('explorador');
+    expect(accioDeLaPagina('cervell')).toMatchObject({ verb: 'Obrir el Cervell', desti: explorador.ruta });
+    expect(text).toContain(`a la pàgina «${explorador.title}», i el botó «${accioDeLaPagina('cervell').verb}» hi porta directament`);
+    // La relació de la prosa (confiança 'inferit') es pinta discontínua.
+    expect(CONFIANCES).toEqual(['declarat', 'derivat', 'inferit']);
+    expect(llig('src/sections/consola/mapa/ExploradorMapa.jsx')).toContain('discontínua ix de la prosa');
+    expect(text).toContain('Una línia discontínua ix de la prosa');
+    // Els blocs del detall d'una peça, i el botó que només copia.
+    const detall = llig('src/sections/consola/mapa/DetallPeca.jsx');
+    for (const bloc of ['On viu', 'Què fa', 'Qui hi arriba', 'Avisos']) {
+      expect([bloc, detall.includes(bloc), text.includes(bloc.toLowerCase())]).toEqual([bloc, true, true]);
+    }
+    expect(detall).toContain('Copiar l’ordre de reparació');
+    expect(text).toContain('com a molt copia l’ordre de reparació');
+    // El límit declarat dels scripts.
+    expect(llig('src/sections/consola/mapa/grafMapa.js')).toContain('sap qui el crida, però no analitza què llig ni què escriu');
+    expect(text).toContain('sap qui el crida, però no què llig ni què escriu');
   });
 });
 

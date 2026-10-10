@@ -15,7 +15,15 @@
  * src/sections/disseny/cataleg/detalls`, sense comptar les proves ni este
  * fitxer). Una versió que no és la darrera és una data falsa a la pastilla.
  *
- * Darrera posada al dia: EspecimenTargetaViva.jsx, 2026-10-09T16:43:08+02:00, Onada 8 (front 8A,
+ * Darrera posada al dia: EspecimenXatLlista.jsx, 2026-10-10T13:05:23+02:00, Onada 10 (261010; revisió
+ * de l'Onada): la mostra de la llista que no carrega diu el text nou de SDP-XAT-003 («Mode Foraster»).
+ * Arreplega EspecimenUniversalCard.jsx (13:04:54, Onada 10: el contracte d'`accio` diu que la Consola i
+ * el Cervell porten «Obrir…» només a la seua pàgina) i els tocats el 261009 després de les 16:43 sense
+ * posar-la al dia: AssignacioEmoji.jsx (18:14:40), destinsEmoji.js (18:14:48) i, a les 18:29:55-56,
+ * EspecimenArticles.jsx, EspecimenAvatar.jsx, EspecimenCalendari.jsx, EspecimenControlsBarra.jsx,
+ * EspecimenEmoticonaBarra.jsx, EspecimenEstatDesament.jsx, EspecimenPaginaApp.jsx, EspecimenRajola.jsx,
+ * EspecimenTargetaViva.jsx i EspecimenXat.jsx.
+ * Versió anterior: EspecimenTargetaViva.jsx, 2026-10-09T16:43:08+02:00, Onada 8 (front 8A,
  * revisió adversarial): la boina de la targeta viva porta al perfil de qui signa (autor.ruta). Arreplega
  * els espècimens del mateix front tocats sense posar-la al dia: EspecimenPage.jsx (15:25:02),
  * EspecimenPaginaApp.jsx (15:25:07), EspecimenControlsBarra.jsx (15:25:17) i EspecimenUniversalCard.jsx
@@ -82,4 +90,4 @@
  * Quan el manifest porte `creat` i `modificat` per espècimen, manaran eixos
  * camps i esta constant només farà de versió del conjunt.
  */
-export const VERSIO_CATALEG = '2026-10-09T16:43:08+02:00';
+export const VERSIO_CATALEG = '2026-10-10T13:05:23+02:00';

@@ -9,6 +9,14 @@
    targeta és la portada. R1: targetes estàtiques, cap xifra al Panell. R3:
    la llar mai es barreja amb l'empresa.
 
+   Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010) · M3: el
+   Rebost Domèstic i Salut es queden a «La llar» (no entren al Mur). M4: les
+   targetes de plugin passen a targeta canònica, amb la franja taronja de la
+   data i l'hora i les etiquetes Categoria i Etiqueta del registre. DEROGADES,
+   per a estes targetes, «cap etiqueta» (regla d'or 1, P6) i la part de R1 que
+   deia «cap data»: la pastilla amb la data FIXA del registre és l'única xifra
+   admesa. La resta de R1 continua sencera.
+
    Router propi en memòria i les targetes de veres (UniversalCard); se
    substituïxen la UniversalPage, l'eixida segura, el toast i l'i18n, com a
    ControlSection.test.jsx. En producció, la Gestoria no navega: ho prova
@@ -18,7 +26,7 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { MemoryRouter, useLocation } from '../../app/contexts/RouterContext';
 import { RUTA_PERFIL_PROJECTE, rutaDAutoria } from '../../config/navigation.js';
 import { RUTA_DRETS_AUTOR } from '../../config/systemPages.js';
-import { COPYRIGHT_SDP } from '../../components/universal/editorial.js';
+import { COPYRIGHT_SDP, dataHoraDeBarra } from '../../components/universal/editorial.js';
 import { STORAGE_PREFIX } from '../../config/storage.js';
 import { CLAU_UTILITATS_ACTIVES, desaUtilitatActiva } from '../profile/utilitatsActives.js';
 import { ESPAIS_PLUGINS, PLUGINS, pluginsDeLEspai, rutaDelPlugin } from '../plugins/registrePlugins.js';
@@ -73,6 +81,14 @@ const sensePunt = (text) => text.replace(/\.$/, '');
 /* Les targetes dels dos espais, amb el plugin de cada una. */
 const targetesDelsEspais = () => ESPAIS_PLUGINS.flatMap((espai) => targetesDe(seccioDe(espai.titol))
   .map((targeta) => [targeta, PLUGINS.find((plugin) => plugin.titol === titolDe(targeta))]));
+/* Onada 10 (decisió M4 del Mestre) · La pastilla de la boina, com la pinta la
+   targeta, i la que ha de pintar segons la data del registre: l'hora i el
+   dia (dataHoraDeBarra, la mateixa lectura de les targetes de dalt). */
+const pastillaDe = (targeta) => [...targeta.querySelectorAll('header.sp-card-header button.btn-date-time span')].map((s) => s.textContent);
+const pastillaDelRegistre = (plugin) => {
+  const { time, date } = dataHoraDeBarra({ creat: plugin.data });
+  return [time, date].filter(Boolean);
+};
 
 /* Les rutes de la taula d'App, sense paràmetres ni comodins (com a ControlSection.test.jsx). */
 const rutesEstatiques = () => new Set([...fontApp.matchAll(/<Route\s+path="([^"]+)"/g)]
@@ -142,16 +158,31 @@ test('regla d’or 1 · cada targeta: boina de Sóc de Poble cap al seu perfil, 
     const titol = titolDe(targeta);
     expect(plugin, titol).toBeTruthy();
     /* L'anatomia de sempre: boina → (l'enllaç de tota la targeta) → imatge →
-       cos → peu, cap variant ni etiqueta. */
+       cos → peu, cap variant.
+       Onada 10 (261010; decisió M4 del Mestre) · DEROGAT «ni etiqueta»: la
+       targeta canònica porta exactament les etiquetes del registre, una
+       Categoria i una Etiqueta, en eixe ordre i sense enllaç. Continua sense
+       botó gran ni portes. */
     expect(targeta.className, titol).toBe('sp-card');
     expect([...targeta.children].map((fill) => fill.className), titol)
       .toEqual(['sp-card-header', 'sp-card-link-overlay', 'sp-card-media-container', 'sp-card-body', 'sp-card-footer']);
-    expect(targeta.querySelector('.sp-card-labels'), titol).toBeNull();
-    /* La boina: l'entitat Sóc de Poble, enllaçada a la seua pàgina. */
+    expect(plugin.etiquetes.map((etiqueta) => etiqueta.className), titol).toEqual(['sdp-badge-category', 'sdp-badge-tag']);
+    expect([...targeta.querySelectorAll('.sp-card-body > ul.sp-card-labels > li')].map((li) => [li.textContent, li.className]), titol)
+      .toEqual(plugin.etiquetes.map((etiqueta) => [etiqueta.text, `sp-card-label ${etiqueta.className}`]));
+    expect(targeta.querySelectorAll('ul.sp-card-labels'), titol).toHaveLength(1);
+    expect(targeta.querySelector('ul.sp-card-labels [href]'), titol).toBeNull();
+    expect(targeta.querySelector('.sp-card-accio'), titol).toBeNull();
+    expect(targeta.querySelector('.sp-card-portes'), titol).toBeNull();
+    /* La boina: l'entitat Sóc de Poble, enllaçada a la seua pàgina.
+       Onada 10 (M4) · I la franja taronja: UNA pastilla, un botó, amb la
+       data i l'hora del registre. */
     const capcal = targeta.querySelector('header.sp-card-header');
     expect(capcal.querySelector('.sp-card-author-name').textContent, titol).toBe(AUTORIA_SOCDEPOBLE.author);
     expect(capcal.querySelector('.sp-card-author-location').textContent, titol).toBe(AUTORIA_SOCDEPOBLE.location);
     expect(capcal.querySelector('a.sp-card-author-link').getAttribute('href'), titol).toBe(RUTA_PERFIL_PROJECTE);
+    expect(targeta.querySelectorAll('.btn-date-time'), titol).toHaveLength(1);
+    expect(pastillaDelRegistre(plugin), titol).toHaveLength(2);
+    expect(pastillaDe(targeta), titol).toEqual(pastillaDelRegistre(plugin));
     /* La imatge de la targeta és la portada de la seua pàgina (PluginPage). */
     const imatge = targeta.querySelector('img.sp-card-media');
     expect([imatge.getAttribute('src'), imatge.getAttribute('alt')], titol).toEqual([plugin.imatge, plugin.imatgeAlt]);
@@ -189,27 +220,55 @@ test('regla d’or 1 · el clic de cada targeta obri /plugin/<id> i el de la boi
   }
 });
 
-/* R1 · Targetes estàtiques: cap xifra, comptador, data ni avís que isca de
-   les dades. El Panell també es munta dins de l'amfitrió.
+/* R1 · Targetes estàtiques: cap xifra, comptador ni avís que isca de les
+   dades. El Panell també es munta dins de l'amfitrió.
    Onada 8 (261009) · El copyright de les targetes (COPYRIGHT_SDP, «CC
    BY-NC-SA 4.0…») porta el número de versió de la llicència, que no és cap
    dada: es comprova que és exactament eixe text i es deixa fora de la
-   comprovació de xifres. La resta de la targeta, com abans. */
-test('R1 · cap xifra als dos espais: ni al text, ni a la boina, ni al quadrat de la targeta', () => {
+   comprovació de xifres. La resta de la targeta, com abans.
+   Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010, M4) ·
+   DEROGADA EN PART: R1 deia també «cap data» i la prova exigia que cap
+   targeta dels espais portara pastilla. L'ordre nova: cada targeta porta la
+   franja taronja amb la data FIXA del registre, que no ix de les dades de
+   ningú (no és de cap apunt, de cap comptador ni de cap eina, i és la
+   mateixa per a tothom i a qualsevol amfitrió). La pastilla és l'ÚNICA
+   xifra admesa: es comprova que és exactament la del registre i es retira
+   d'un clon, com el copyright, i a la resta s'exigix zero xifres, com
+   sempre. */
+test('R1 · Onada 10 · als dos espais, l’única xifra és la pastilla de la data del registre: cap altra al text, a la boina ni al quadrat', () => {
   pinta();
   for (const espai of ESPAIS_PLUGINS) {
     const seccio = seccioDe(espai.titol);
-    const senseDrets = seccio.cloneNode(true);
-    const drets = [...senseDrets.querySelectorAll('.sp-card-copyright')];
+    const plugins = pluginsDeLEspai(espai.id);
+    const net = seccio.cloneNode(true);
+    const drets = [...net.querySelectorAll('.sp-card-copyright')];
     expect([espai.id, drets.length]).toEqual([espai.id, targetesDe(seccio).length]);
     for (const paragraf of drets) {
       expect([espai.id, paragraf.textContent]).toEqual([espai.id, COPYRIGHT_SDP]);
       paragraf.remove();
     }
-    expect([espai.id, /\d/.test(senseDrets.textContent)]).toEqual([espai.id, false]);
-    expect([espai.id, [...seccio.querySelectorAll('[aria-label]')].filter((el) => /\d/.test(el.getAttribute('aria-label')))])
+    /* Una pastilla per targeta, dins de la boina, amb la data del registre i res més. */
+    const pastilles = [...net.querySelectorAll('.btn-date-time')];
+    expect([espai.id, pastilles.length]).toEqual([espai.id, plugins.length]);
+    for (const [index, pastilla] of pastilles.entries()) {
+      const plugin = plugins[index];
+      const esperada = pastillaDelRegistre(plugin);
+      expect([plugin.id, pastilla.matches('header.sp-card-header .sp-card-meta > button.btn-date-time')]).toEqual([plugin.id, true]);
+      expect([plugin.id, [...pastilla.querySelectorAll('span')].map((s) => s.textContent)]).toEqual([plugin.id, esperada]);
+      expect([plugin.id, pastilla.textContent]).toEqual([plugin.id, esperada.join('')]);
+      /* El seu nom accessible només diu eixa mateixa data (i on porta). */
+      expect([plugin.id, pastilla.getAttribute('aria-label').startsWith(`${esperada.join(' ')} · `)]).toEqual([plugin.id, true]);
+      expect([plugin.id, /\d/.test(pastilla.getAttribute('aria-label').slice(esperada.join(' ').length))]).toEqual([plugin.id, false]);
+      pastilla.remove();
+    }
+    /* Sense el copyright ni la pastilla: zero xifres, al text i als noms accessibles. */
+    expect([espai.id, /\d/.test(net.textContent)]).toEqual([espai.id, false]);
+    expect([espai.id, [...net.querySelectorAll('[aria-label]')].filter((el) => /\d/.test(el.getAttribute('aria-label')))])
       .toEqual([espai.id, []]);
-    expect(seccio.querySelector('.btn-date-time'), espai.id).toBeNull();
+    expect([espai.id, [...net.querySelectorAll('[title]')].filter((el) => /\d/.test(el.getAttribute('title')))])
+      .toEqual([espai.id, []]);
+    /* Ni les etiquetes noves ni el quadrat de la targeta porten cap xifra. */
+    expect([espai.id, [...seccio.querySelectorAll('ul.sp-card-labels > li')].filter((li) => /\d/.test(li.textContent))]).toEqual([espai.id, []]);
     expect(seccio.querySelector('.sp-card-calendar-badge'), espai.id).toBeNull();
   }
 });

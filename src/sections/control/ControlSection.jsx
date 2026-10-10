@@ -84,11 +84,10 @@
  * (DESTINS_CONTROL) es repetix baix. Les eines d'administració van a la seua
  * secció, «Maquinària i Sistema» (IDS_MAQUINARIA). Cada targeta de baix
  * navega a /plugin/<id> (W4-11): «Obrir» el decidix la pàgina del plugin amb
- * useDestiDelPlugin, mai esta graella. Derogat per a les tres pàgines del
- * sistema per l'ordre del Mestre del 261009 (decisions D3 i D7 de MarIA):
- * la graella hi pinta la targeta del Mur, amb el botó «Obrir…» de la seua
- * pàgina (accioDeLaPagina), que no passa per useDestiDelPlugin. Per a les
- * eines del registre, W4-11 continua vigent.
+ * useDestiDelPlugin, mai esta graella. L'Onada 8 (261009; decisions D3 i D7
+ * de MarIA) en va fer una excepció per a les tres pàgines del sistema, que
+ * portaven el botó «Obrir…» de la seua pàgina. DEROGADA per l'Onada 10
+ * (vegeu més avall): W4-11 torna a valdre per a TOTES les targetes de baix.
  * Revisió R3 · Derogada per l'ordre del Mestre del 261009 (requeriments
  * 261009_1300, punt 2: les targetes del Panell «no poden perdre elements» i
  * «han de ser autèntiques Universal Cards»; decisió D1 de MarIA): totes les
@@ -98,14 +97,40 @@
  *
  * Onada 8 (261009; requeriments 261009_1300, punt 2; decisions D2, D4, D5 i
  * D7 de MarIA) · «Consola Termodinàmica», «El Cervell» i «Panell de Disseny»
- * són pàgines, no plugins: ixen del registre i «Maquinària i Sistema» les
- * pinta primer (PAGINES_MAQUINARIA de destinsControl.js) amb la MATEIXA
- * targeta del Mur (TargetaDelMur) i el mateix element (targetesDeSistema):
- * la data de la seua pàgina (8, 9 i 10 de setembre), les etiquetes o el botó
- * «Obrir…», el copyright i Connectar. Són l'única excepció a la P6 (cap
- * etiqueta al Panell), i no naveguen a /plugin/<id>: obrin la seua pàgina
- * (/page/consola, /page/cervell i /disseny). La preferència de DetallEspai
- * les amaga igual, per la seua clau.
+ * són pàgines, no plugins: ixen del registre. «Maquinària i Sistema» les
+ * pintava primer, amb la targeta del Mur (la data de la seua pàgina, les
+ * etiquetes o el botó «Obrir…», el copyright i Connectar), i la preferència
+ * de DetallEspai les amagava per la seua clau. DEROGAT per l'Onada 10 (el
+ * paràgraf següent): continuen sent pàgines i no plugins, però ja no tenen
+ * targeta al Panell.
+ *
+ * Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010) ·
+ *   · «Consola Termodinàmica», «El Cervell» i «Disseny Pedra Seca» ixen del
+ *     Panell de Control i viuen només al Mur (SYSTEM_PAGES, MurSection). Ací
+ *     no en queda res: ni la targeta, ni la llista de les pàgines de la
+ *     maquinària que portava destinsControl.js, ni la lectura del copy del
+ *     core. «Maquinària i Sistema» conserva la secció, l'h2 i les dues eines
+ *     del registre: el Lector RSS i el TPV del Bar. Les preferències ja
+ *     desades amb les claus d'aquelles pàgines es queden al storage, sense
+ *     efecte: no s'esborra res (profile/aplicacions.js, `panell: null`).
+ *   · W4-11 torna a valdre per a totes les targetes de baix: cap targeta
+ *     obri directament una eina ni pinta cap botó gran.
+ *   · M4 · TOTES les targetes de plugin del Panell (Gestoria, Rebost
+ *     Domèstic, Salut, Lector RSS, TPV del Bar i el Snippet) passen a targeta
+ *     canònica: la franja taronja amb la data i l'hora, i les etiquetes
+ *     Categoria i Etiqueta. Ixen del registre (camps `data` i `etiquetes` de
+ *     registrePlugins.js), com la resta de la targeta: cap text ni cap data
+ *     copiats ací. El Snippet, que no és del registre, porta les seues
+ *     (SNIPPET, més avall, i destiSnippet.js). DEROGADES, només per a estes
+ *     targetes: la D6 de l'Onada 8 («cap data per a les eines»), la P6 («cap
+ *     etiqueta al Panell») i la R1 dels espais en la part de «cap data».
+ *     L'ordre nova: la targeta de plugin porta la data FIXA de la seua font,
+ *     que no ix de les dades de ningú, i les dues etiquetes. La resta de R1
+ *     continua sencera: cap xifra, comptador ni avís que isca de les dades.
+ *   · M3 · El Rebost Domèstic i Salut es queden ací, a «La llar»: no entren
+ *     al Mur.
+ *   · Les huit targetes de dalt no canvien: la data de la seua pàgina i cap
+ *     etiqueta (P6).
  *
  * Onada 2 de la Gestoria (ordre del Mestre, 261004; MAPA_EMPRESA_GESTORIA.txt
  * §2.2; decisió A11: només les targetes que ja funcionen) · Dos espais nous,
@@ -114,30 +139,28 @@
  * text ni ruta copiats ací. Cada targeta és la TargetaDUtilitat de sempre
  * (boina de Sóc de Poble cap al projecte, il·lustració, títol, subtítol,
  * entradilla, tota la targeta cap a /plugin/<id> i el peu canònic). Targetes
- * estàtiques: cap xifra ni dada (R1). Un plugin d'un espai no es repetix a
- * Utilitats ni a Maquinària (W4-08), i cap targeta viu en dos espais (R3).
+ * estàtiques: cap xifra ni dada (R1); des de l'Onada 10, amb l'única excepció
+ * de la data fixa del registre (vegeu més amunt). Un plugin d'un espai no es
+ * repetix a Utilitats ni a Maquinària (W4-08), i cap targeta viu en dos
+ * espais (R3).
  */
 import {
   LogOut,
   MessageSquare
 } from 'lucide-react';
-import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate, useSearchParams } from '../../app/contexts/RouterContext';
-import { useCoreContent } from '../../app/contexts/CoreContentContext';
 import { useEixidaSegura } from '../../components/universal/EixidaSegura.jsx';
 import { UniversalPage } from '../../components/universal/UniversalPage';
-import { COPYRIGHT_SDP } from '../../components/universal/editorial.js';
+import { COPYRIGHT_SDP, dataHoraDeBarra } from '../../components/universal/editorial.js';
 import { Alerta, UniversalButton, UniversalCard } from '../../components/PedraSeca';
 import { useXatSocDePobleResolt } from '../../components/PedraSeca/hooks/xatSocDePoble.js';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { llegixUtilitatsActives, subscriuUtilitatsActives } from '../profile/utilitatsActives.js';
-import { TargetaDelMur } from '../mur/TargetaDelMur.jsx';
-import { targetesDeSistema } from '../mur/targetesMur.js';
-import { PAGE_COPY } from '../text/pageContent.js';
 import { FitxaSnippet } from './FitxaSnippet.jsx';
-import { CLAU_FITXA, FITXA_SNIPPET, rutaDeLaFitxa } from './destiSnippet.js';
+import { CLAU_FITXA, DATA_DEL_SNIPPET, FITXA_SNIPPET, rutaDeLaFitxa } from './destiSnippet.js';
 import { posicioDeLaVista, recolocaLaVista } from './vistaDeLaFitxa.js';
-import { AUTORIA_SOCDEPOBLE, DESTINS_CONTROL, PAGINES_MAQUINARIA, TEXTOS_PORTES, contingutDe, portesDe } from './destinsControl.js';
+import { AUTORIA_SOCDEPOBLE, DESTINS_CONTROL, TEXTOS_PORTES, contingutDe, portesDe } from './destinsControl.js';
 import { AVISOS_XAT_CORPORATIU } from './xatCorporatiu.js';
 import { ESPAIS_PLUGINS, PLUGINS, pluginsDeLEspai, rutaDelPlugin } from '../plugins/registrePlugins.js';
 
@@ -185,18 +208,30 @@ function TargetaDeDesti({ desti, t }) {
 
 /* P7-B · Una utilitat de la graella de baix: la UniversalCard canònica, com
    les de dalt però amb l'enllaç de tota la targeta en lloc de les portes.
-   Boina de Sóc de Poble sense data (el registre no en porta cap i no se
-   n'inventa cap, com la seua pàgina), la il·lustració, títol, subtítol i
-   entradilla, cap etiqueta, i el peu blau de P6 cap a la mateixa pàgina que
-   obri la targeta: Traduir, Comentar i Compartir.
+   Boina de Sóc de Poble, la il·lustració, títol, subtítol i entradilla, i el
+   peu blau de P6 cap a la mateixa pàgina que obri la targeta: Traduir,
+   Comentar i Compartir.
    Ordre del Mestre (261009; revisió R3 derogada) · I Connectar i el
    copyright, com dalt.
+   Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010, M4) ·
+   Targeta canònica sencera: la franja taronja amb la data i l'hora, i les
+   etiquetes Categoria i Etiqueta. DEROGAT «boina sense data (el registre no
+   en porta cap)» i «cap etiqueta»: el registre ja porta les dues coses, i
+   l'ordre nova és pintar-les.
+   `data` · la cadena de data de la font (el registre, o el Snippet), o
+   null. Es llig amb dataHoraDeBarra, com la de les targetes de dalt
+   (contingutDe) i la de la barra taronja de la seua pàgina: targeta i pàgina
+   diuen el mateix. Sense data, cap pastilla: no se n'inventa cap (T51).
+   `etiquetes` · les de la font, tal qual ({ text, className }); sense, cap
+   llista.
+   Cap `accio` ni cap `portes`: la targeta de plugin no ha portat mai botó
+   gran, i així continua (W4-11: «Obrir» el decidix la seua pàgina).
    `ruta` · la pàgina de la utilitat; és un Link del router: porta la base de
    l'amfitrió a l'href i navega dins del router en memòria de WordPress.
    `abansDObrir` · el Snippet hi recorda on era el Panell (vistaDeLaFitxa.js).
    T6 (261004) · La boina porta al projecte, com dalt.
    Ordre del Mestre (261007) · Comentar, el menú de dues vies, com dalt. */
-function TargetaDUtilitat({ titol, subtitol, entradilla, imatge, imatgeAlt = '', ruta, abansDObrir }) {
+function TargetaDUtilitat({ titol, subtitol, entradilla, imatge, imatgeAlt = '', ruta, abansDObrir, data = null, etiquetes }) {
   return (
     <UniversalCard
       title={titol}
@@ -205,6 +240,8 @@ function TargetaDUtilitat({ titol, subtitol, entradilla, imatge, imatgeAlt = '',
       imageUrl={imatge}
       imageAlt={imatgeAlt}
       {...AUTORIA_SOCDEPOBLE}
+      {...(data ? dataHoraDeBarra({ creat: data }) : null)}
+      labels={etiquetes}
       mainHref={ruta}
       onMainClick={abansDObrir}
       hasFooter={true}
@@ -217,7 +254,10 @@ function TargetaDUtilitat({ titol, subtitol, entradilla, imatge, imatgeAlt = '',
    «L'empresa» o «La llar»: una secció amb el seu h2, l'entradeta i la graella
    de sempre, amb les targetes canòniques de les Utilitats. Sense cap targeta
    visible (la persona les ha llevades totes a DetallEspai), no es pinta: cap
-   capçalera buida. */
+   capçalera buida.
+   Onada 10 (261010; decisions M3 i M4 del Mestre) · El Rebost Domèstic i
+   Salut es queden a «La llar», i totes les targetes dels espais porten la
+   data i les etiquetes del registre. */
 function EspaiDelPanell({ espai, visibles }) {
   const plugins = pluginsDeLEspai(espai.id).filter(visibles);
   if (plugins.length === 0) return null;
@@ -235,6 +275,8 @@ function EspaiDelPanell({ espai, visibles }) {
             imatge={plugin.imatge}
             imatgeAlt={plugin.imatgeAlt}
             ruta={rutaDelPlugin(plugin.id)}
+            data={plugin.data}
+            etiquetes={plugin.etiquetes}
           />
         ))}
       </div>
@@ -252,10 +294,14 @@ function EspaiDelPanell({ espai, visibles }) {
    de llegat ('sdp_utilitats_actives').
    Peça C (ordre del Mestre, 261007, prompt 261007_1628) · Les claus són els
    ids d'esta graella: DetallEspai ja escriu amb l'id del Panell
-   (profile/aplicacions.js, camp `panell`: 'consola' i 'rss', no 'metriques'
-   ni 'lector-rss'), i el Perfil llig la mateixa regla (estaAlPanell). Una
-   preferència desada abans amb l'id vell arriba ací traduïda
-   (utilitatsActives.js, ALIES_DEL_PANELL). */
+   (profile/aplicacions.js, camp `panell`: 'rss', no 'lector-rss'), i el
+   Perfil llig la mateixa regla (estaAlPanell). Una preferència desada abans
+   amb l'id vell arriba ací traduïda (utilitatsActives.js, ALIES_DEL_PANELL).
+   Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010) · La
+   Consola i el Cervell ja no tenen targeta ací: al Perfil porten `panell:
+   null` i no ofereixen cap preferència. Les claus que algú ja tinga desades
+   ('consola', 'cervell', 'disseny' o la vella 'metriques') no casen amb cap
+   targeta: es queden al storage, sense efecte. */
 /* L'id del Snippet a APLICACIONS (profile/aplicacions.js), el que hi guarda DetallEspai. */
 const ID_SNIPPET = 'snippet';
 /* W4-08 · Les eines d'administració i de sistema, en l'ordre del registre:
@@ -263,8 +309,10 @@ const ID_SNIPPET = 'snippet';
    Ordre del Mestre (261007) · Bàscula descartada per ara: ja no és del
    registre ni d'esta secció.
    Onada 8 (261009) · La Consola, el Cervell i Disseny ja no són del
-   registre: són pàgines del sistema, i la secció les pinta primer
-   (paginesDeMaquinaria). Del registre hi queden l'RSS i el TPV. */
+   registre: són pàgines del sistema. Del registre hi queden l'RSS i el TPV.
+   Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010) · DEROGAT
+   «la secció les pinta primer»: les tres pàgines viuen només al Mur, i la
+   secció és exactament estes dues eines. */
 const IDS_MAQUINARIA = Object.freeze(['rss', 'tpv']);
 /* W4-08 · Decisió del Mestre: un plugin amb targeta de publicació dalt (Mapa,
    Vehicle Compartit i Animalets) no es repetix a les graelles de baix. */
@@ -276,31 +324,33 @@ const visible = (amagades) => (plugin) => !amagades.has(plugin.id) && !IDS_NOMES
 const SENSE_ESPAI = PLUGINS.filter((plugin) => !plugin.espai);
 const PLUGINS_UTILITATS = SENSE_ESPAI.filter((plugin) => !IDS_MAQUINARIA.includes(plugin.id));
 const PLUGINS_MAQUINARIA = SENSE_ESPAI.filter((plugin) => IDS_MAQUINARIA.includes(plugin.id));
-/* El Snippet no és del registre de plugins: la seua targeta de sempre. */
+/* El Snippet no és del registre de plugins: la seua targeta de sempre.
+   Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010, M4) ·
+   També passa a targeta canònica, amb les dues coses que porten les del
+   registre:
+     data      · DATA_DEL_SNIPPET (destiSnippet.js, on viuen el criteri i
+                 l'evidència): només el dia, perquè cap font en documenta
+                 l'hora. La pastilla pinta la data sense hora; l'hora no
+                 s'inventa (T51). La mateixa constant alimenta la barra
+                 taronja de la fitxa: targeta i pàgina diuen el mateix.
+     etiquetes · una Categoria i una Etiqueta, en l'ordre de la skill
+                 sdp-universal-page (§4) i sense enllaç (D3). Són un
+                 ESBORRANY per al Mestre: la Categoria, la mateixa de les
+                 eines del registre; l'Etiqueta diu què és. */
 const SNIPPET = Object.freeze({
   titol: 'Snippet',
   subtitol: 'Extensió de Chrome per a desar webs al Bloc',
-  imatge: '/assets/nano_cards/snippet_nano_card.jpg'
+  imatge: '/assets/nano_cards/snippet_nano_card.jpg',
+  data: DATA_DEL_SNIPPET,
+  etiquetes: Object.freeze([
+    Object.freeze({ text: 'Eina', className: 'sdp-badge-category' }),
+    Object.freeze({ text: 'Extensió', className: 'sdp-badge-tag' })
+  ])
 });
 
 /* La preferència ja arriba sanejada (un objecte pla o {}): només compta el false explícit. */
 function utilitatsAmagades(preferencia) {
   return new Set(Object.keys(preferencia).filter((id) => preferencia[id] === false));
-}
-
-/* Onada 8 (261009) · Les pàgines del sistema de «Maquinària i Sistema»,
-   fetes targeta del Mur amb el mateix element que el Mur
-   (targetesDeSistema), en l'ordre de PAGINES_MAQUINARIA. El copy carregat
-   mana i PAGE_COPY fa de reserva clau per clau, com la portada de la Wiki:
-   mentre el core carrega (pageCopy buit), la secció ja les pinta i no hi ha
-   cap salt. Les que la persona ha llevat a DetallEspai no hi són. */
-function paginesDeMaquinaria(pageCopy, amagades) {
-  const copy = Object.fromEntries(PAGINES_MAQUINARIA.map((clau) => [clau, pageCopy?.[clau] || PAGE_COPY[clau]]));
-  const targetes = targetesDeSistema(copy);
-  return PAGINES_MAQUINARIA
-    .filter((clau) => !amagades.has(clau))
-    .map((clau) => targetes.find((targeta) => targeta.id === clau))
-    .filter(Boolean);
 }
 
 export default function ControlSection() {
@@ -352,9 +402,6 @@ function PanellControl({ vistaRef, abansDeLaFitxa }) {
     () => subscriuUtilitatsActives(() => setAmagades(utilitatsAmagades(llegixUtilitatsActives()))),
     []
   );
-  /* Onada 8 (261009) · La Consola, el Cervell i Disseny, amb el copy del core. */
-  const { pageCopy } = useCoreContent();
-  const paginesMaquinaria = useMemo(() => paginesDeMaquinaria(pageCopy, amagades), [pageCopy, amagades]);
 
   /* P5 · El títol de la graella, per a lector: les targetes h3 pengen d'un h2. */
   const idDestins = useId();
@@ -421,6 +468,8 @@ function PanellControl({ vistaRef, abansDeLaFitxa }) {
                 imatge={plugin.imatge}
                 imatgeAlt={plugin.imatgeAlt}
                 ruta={rutaDelPlugin(plugin.id)}
+                data={plugin.data}
+                etiquetes={plugin.etiquetes}
               />
             ))}
             {amagades.has(ID_SNIPPET) ? null : (
@@ -430,6 +479,8 @@ function PanellControl({ vistaRef, abansDeLaFitxa }) {
                 imatge={SNIPPET.imatge}
                 ruta={rutaDeLaFitxa(pathname)}
                 abansDObrir={abansDeLaFitxa}
+                data={SNIPPET.data}
+                etiquetes={SNIPPET.etiquetes}
               />
             )}
           </div>
@@ -446,11 +497,9 @@ function PanellControl({ vistaRef, abansDeLaFitxa }) {
           </p>
 
           <div className="sdp-card-grid">
-            {/* Onada 8 (261009) · Primer, les tres pàgines del sistema, amb la
-                targeta del Mur; després, les eines del registre. */}
-            {paginesMaquinaria.map((item) => (
-              <TargetaDelMur key={`sistema-${item.id}`} item={item} />
-            ))}
+            {/* Onada 10 (261010; decisió del Mestre del 261010) · Només les
+                eines del registre: les tres pàgines del sistema que l'Onada 8
+                hi pintava primer viuen ara només al Mur. */}
             {PLUGINS_MAQUINARIA.filter(visible(amagades)).map((plugin) => (
               <TargetaDUtilitat
                 key={plugin.id}
@@ -460,6 +509,8 @@ function PanellControl({ vistaRef, abansDeLaFitxa }) {
                 imatge={plugin.imatge}
                 imatgeAlt={plugin.imatgeAlt}
                 ruta={rutaDelPlugin(plugin.id)}
+                data={plugin.data}
+                etiquetes={plugin.etiquetes}
               />
             ))}
           </div>

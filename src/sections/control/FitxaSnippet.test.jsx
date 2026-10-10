@@ -10,9 +10,11 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
 const estat = vi.hoisted(() => ({ capa: {} }));
 vi.mock('../../config/capaDelPaquet.js', () => ({ capaDelPaquet: () => estat.capa }));
+/* Onada 10 (261010) · La pàgina substituïda també ensenya la data que rep
+   per a la barra taronja (time, date i dateTime), en atributs de la secció. */
 vi.mock('../../components/universal/UniversalPage', () => ({
-  UniversalPage: ({ title, subtitle, lead, children }) => (
-    <section data-pagina="fitxa">
+  UniversalPage: ({ title, subtitle, lead, time, date, dateTime, children }) => (
+    <section data-pagina="fitxa" data-hora={time} data-dia={date} data-instant={dateTime}>
       <p data-titol="pagina">{title}</p>
       <p data-subtitol="pagina">{subtitle}</p>
       <p data-lead="pagina">{lead}</p>
@@ -21,12 +23,26 @@ vi.mock('../../components/universal/UniversalPage', () => ({
   )
 }));
 
+import { dataHoraDeBarra } from '../../components/universal/editorial.js';
+import { DATA_DEL_SNIPPET } from './destiSnippet.js';
 import { FitxaSnippet } from './FitxaSnippet.jsx';
 
 const BOTIGA = 'https://chromewebstore.google.com/detail/snippet/abcdefghijklmnop';
 
 beforeEach(() => { estat.capa = {}; });
 afterEach(cleanup);
+
+/* Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010, M4) · La
+   targeta del Snippet porta data a la boina, i la fitxa la mateixa a la barra
+   taronja: una sola font (DATA_DEL_SNIPPET), llegida amb dataHoraDeBarra. És
+   un dia sense hora: no se n'inventa cap. Abans, la fitxa no en passava cap. */
+test('Onada 10 · la fitxa passa a la barra taronja la data de la targeta del Snippet: el dia, sense hora', () => {
+  render(<FitxaSnippet />);
+  const pagina = document.querySelector('[data-pagina="fitxa"]');
+  const esperada = dataHoraDeBarra({ creat: DATA_DEL_SNIPPET });
+  expect([pagina.dataset.hora, pagina.dataset.dia, pagina.dataset.instant]).toEqual([esperada.time, esperada.date, esperada.dateTime]);
+  expect([pagina.dataset.hora, pagina.dataset.dia, pagina.dataset.instant]).toEqual(['', '03/10/26', '2026-10-03']);
+});
 
 test('la fitxa explica què és, com funciona en 3 passos, què necessita i la privacitat', () => {
   render(<FitxaSnippet />);

@@ -268,8 +268,10 @@ export default function EspecimenXatLlista() {
       <ColumnaAmbPeu etiqueta="Llista de mostra amb el peu">
         <LlistaConverses fils={[per['dir-vicent']]} onSelect={(id) => setAvis(`Obriria la conversa ${id}.`)} locale={LOCALE} t={t} joId="jo" peu={peu()} />
       </ColumnaAmbPeu>
+      {/* Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010) · La
+          mostra de l'avís diu el text nou de SDP-XAT-003 («Mode Foraster»). */}
       <ColumnaAmbPeu etiqueta="Llista que no s’ha pogut carregar, amb el peu">
-        <LlistaConverses fils={[]} locale={LOCALE} t={t} avis="Encara no consta que sigues d’este poble, i el xat és per a la gent del poble." peu={peu()} />
+        <LlistaConverses fils={[]} locale={LOCALE} t={t} avis="Estàs en Mode Foraster: el xat és per a la gent d’este poble." peu={peu()} />
       </ColumnaAmbPeu>
       <ColumnaAmbPeu etiqueta="El xat no s’ha pogut obrir: la reserva">
         <LlistaConverses fils={[]} locale={LOCALE} t={t} estatBuit="Encara no tens cap conversa" peu={peu({ reserva: RESERVA_DE_MOSTRA })} />

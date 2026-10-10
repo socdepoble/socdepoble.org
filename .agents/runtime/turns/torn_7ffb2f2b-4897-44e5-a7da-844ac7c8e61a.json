@@ -4,9 +4,9 @@
   "actor": "claude",
   "scope": "code",
   "state": "context_loaded",
-  "revision": 12,
+  "revision": 15,
   "createdAt": "2026-10-09T10:45:32.963Z",
-  "updatedAt": "2026-10-09T18:11:35.289Z",
+  "updatedAt": "2026-10-10T09:56:48.849Z",
   "expiresAt": "2026-10-10T10:45:32.964Z",
   "contractHash": "2b09edd15b17e4d3f835b8943e7a7eea42ec351afc53905f67410c7f9fb32949",
   "humanInventoryVersion": 1,
@@ -3506,17 +3506,29 @@
       "id": "d168d9b8-4479-4559-9d99-93b838167984",
       "route": "auditoria",
       "routeVersion": "2.0.0",
-      "file": "_wiki_de_poble/04_escriptori/261009_1245_auditoria_claude.md",
+      "file": "_wiki_de_poble/90_arxiu_historic/261009_1245_auditoria_claude.md",
       "contractSnapshot": "48b44234f2a7103480d7fd1888294328e91dcbf3c8de7ca895cee6d887bc25ec",
       "template": "_wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonica.md",
       "templateHash": "855544fb761eca8472fd500438aeb726b8b63e796ee5b733d83bd52a38d204cf",
-      "issuedAt": "2026-10-09T10:46:26.024Z"
+      "issuedAt": "2026-10-09T10:46:26.024Z",
+      "moves": [
+        {
+          "from": "_wiki_de_poble/04_escriptori/261009_1245_auditoria_claude.md",
+          "to": "_wiki_de_poble/90_arxiu_historic/261009_1245_auditoria_claude.md",
+          "hash": "e3e261cb718375bd42a478628e262124631ba9a0a8045dbf73434bc2698f490c",
+          "at": "2026-10-10T09:56:48.102Z",
+          "receiptIds": [
+            "d168d9b8-4479-4559-9d99-93b838167984",
+            "fc467bae-e851-4708-8d51-e4412d531ca0"
+          ]
+        }
+      ]
     },
     "fc467bae-e851-4708-8d51-e4412d531ca0": {
       "id": "fc467bae-e851-4708-8d51-e4412d531ca0",
       "route": "auditoria",
       "routeVersion": "2.0.0",
-      "file": "_wiki_de_poble/04_escriptori/261009_1245_auditoria_claude.md",
+      "file": "_wiki_de_poble/90_arxiu_historic/261009_1245_auditoria_claude.md",
       "contractSnapshot": "48b44234f2a7103480d7fd1888294328e91dcbf3c8de7ca895cee6d887bc25ec",
       "template": "_wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonica.md",
       "templateHash": "855544fb761eca8472fd500438aeb726b8b63e796ee5b733d83bd52a38d204cf",
@@ -3526,23 +3538,47 @@
         "preparedAt": "2026-10-09T10:46:30.476Z",
         "committedAt": "2026-10-09T10:46:30.499Z",
         "documentHash": "257ddd6518dca2925cf8e766fbb9219ce8d949767cea480c16707533a0ae21a2"
-      }
+      },
+      "moves": [
+        {
+          "from": "_wiki_de_poble/04_escriptori/261009_1245_auditoria_claude.md",
+          "to": "_wiki_de_poble/90_arxiu_historic/261009_1245_auditoria_claude.md",
+          "hash": "e3e261cb718375bd42a478628e262124631ba9a0a8045dbf73434bc2698f490c",
+          "at": "2026-10-10T09:56:48.103Z",
+          "receiptIds": [
+            "d168d9b8-4479-4559-9d99-93b838167984",
+            "fc467bae-e851-4708-8d51-e4412d531ca0"
+          ]
+        }
+      ]
     },
     "d0b3d96c-01ba-470c-afe0-7c7efe70fe89": {
       "id": "d0b3d96c-01ba-470c-afe0-7c7efe70fe89",
       "route": "auditoria",
       "routeVersion": "2.0.0",
-      "file": "_wiki_de_poble/04_escriptori/261009_2005_auditoria_inventari_onada9.md",
+      "file": "_wiki_de_poble/90_arxiu_historic/261009_2005_auditoria_inventari_onada9.md",
       "contractSnapshot": "48b44234f2a7103480d7fd1888294328e91dcbf3c8de7ca895cee6d887bc25ec",
       "template": "_wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonica.md",
       "templateHash": "855544fb761eca8472fd500438aeb726b8b63e796ee5b733d83bd52a38d204cf",
-      "issuedAt": "2026-10-09T18:03:01.224Z"
+      "issuedAt": "2026-10-09T18:03:01.224Z",
+      "moves": [
+        {
+          "from": "_wiki_de_poble/04_escriptori/261009_2005_auditoria_inventari_onada9.md",
+          "to": "_wiki_de_poble/90_arxiu_historic/261009_2005_auditoria_inventari_onada9.md",
+          "hash": "569cca92f06363b041cba0f17994cabc0477acfbace08012655e48f383b37dc4",
+          "at": "2026-10-10T09:56:48.848Z",
+          "receiptIds": [
+            "d0b3d96c-01ba-470c-afe0-7c7efe70fe89",
+            "8745e0b3-264e-48d6-8848-cd03cc44b6fd"
+          ]
+        }
+      ]
     },
     "8745e0b3-264e-48d6-8848-cd03cc44b6fd": {
       "id": "8745e0b3-264e-48d6-8848-cd03cc44b6fd",
       "route": "auditoria",
       "routeVersion": "2.0.0",
-      "file": "_wiki_de_poble/04_escriptori/261009_2005_auditoria_inventari_onada9.md",
+      "file": "_wiki_de_poble/90_arxiu_historic/261009_2005_auditoria_inventari_onada9.md",
       "contractSnapshot": "48b44234f2a7103480d7fd1888294328e91dcbf3c8de7ca895cee6d887bc25ec",
       "template": "_wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonica.md",
       "templateHash": "855544fb761eca8472fd500438aeb726b8b63e796ee5b733d83bd52a38d204cf",
@@ -3552,7 +3588,19 @@
         "preparedAt": "2026-10-09T18:03:05.445Z",
         "committedAt": "2026-10-09T18:03:05.467Z",
         "documentHash": "54a1b02b1cf77aea0080670c81bedc2484875335b615463600987b1d4b905a32"
-      }
+      },
+      "moves": [
+        {
+          "from": "_wiki_de_poble/04_escriptori/261009_2005_auditoria_inventari_onada9.md",
+          "to": "_wiki_de_poble/90_arxiu_historic/261009_2005_auditoria_inventari_onada9.md",
+          "hash": "569cca92f06363b041cba0f17994cabc0477acfbace08012655e48f383b37dc4",
+          "at": "2026-10-10T09:56:48.849Z",
+          "receiptIds": [
+            "d0b3d96c-01ba-470c-afe0-7c7efe70fe89",
+            "8745e0b3-264e-48d6-8848-cd03cc44b6fd"
+          ]
+        }
+      ]
     },
     "260118b2-d154-42b9-ac84-7eef2b691860": {
       "id": "260118b2-d154-42b9-ac84-7eef2b691860",
@@ -3584,17 +3632,29 @@
       "id": "776a0c8c-342c-423c-a8a5-e6278f02724b",
       "route": "acta",
       "routeVersion": "2.0.0",
-      "file": "_wiki_de_poble/04_escriptori/261009_2005_acta_marmota_onada8.md",
+      "file": "_wiki_de_poble/90_arxiu_historic/261009_2005_acta_marmota_onada8.md",
       "contractSnapshot": "e8147545feadd8f6067e35e7dea0575ab3bfec28c4e3921f576f361734f6c576",
       "template": "_wiki_de_poble/03_actuar/plantilles/acta.md",
       "templateHash": "d0a64c35b75833b88ea561903829fb02558db7be214a9ee5844045cafc1333a1",
-      "issuedAt": "2026-10-09T18:11:28.585Z"
+      "issuedAt": "2026-10-09T18:11:28.585Z",
+      "moves": [
+        {
+          "from": "_wiki_de_poble/04_escriptori/261009_2005_acta_marmota_onada8.md",
+          "to": "_wiki_de_poble/90_arxiu_historic/261009_2005_acta_marmota_onada8.md",
+          "hash": "c8fde2dd29f882f14c938e7630e178a4334a4c6ef0b662b5bcef10d4c2a93f5a",
+          "at": "2026-10-10T09:56:48.432Z",
+          "receiptIds": [
+            "776a0c8c-342c-423c-a8a5-e6278f02724b",
+            "a246f0b7-126a-4625-80cc-266b71465fce"
+          ]
+        }
+      ]
     },
     "a246f0b7-126a-4625-80cc-266b71465fce": {
       "id": "a246f0b7-126a-4625-80cc-266b71465fce",
       "route": "acta",
       "routeVersion": "2.0.0",
-      "file": "_wiki_de_poble/04_escriptori/261009_2005_acta_marmota_onada8.md",
+      "file": "_wiki_de_poble/90_arxiu_historic/261009_2005_acta_marmota_onada8.md",
       "contractSnapshot": "e8147545feadd8f6067e35e7dea0575ab3bfec28c4e3921f576f361734f6c576",
       "template": "_wiki_de_poble/03_actuar/plantilles/acta.md",
       "templateHash": "d0a64c35b75833b88ea561903829fb02558db7be214a9ee5844045cafc1333a1",
@@ -3604,7 +3664,19 @@
         "preparedAt": "2026-10-09T18:11:35.269Z",
         "committedAt": "2026-10-09T18:11:35.289Z",
         "documentHash": "f00690a9071738325029b03aeb1cdb11a55b1418ac27fa5df5ae637645228efd"
-      }
+      },
+      "moves": [
+        {
+          "from": "_wiki_de_poble/04_escriptori/261009_2005_acta_marmota_onada8.md",
+          "to": "_wiki_de_poble/90_arxiu_historic/261009_2005_acta_marmota_onada8.md",
+          "hash": "c8fde2dd29f882f14c938e7630e178a4334a4c6ef0b662b5bcef10d4c2a93f5a",
+          "at": "2026-10-10T09:56:48.432Z",
+          "receiptIds": [
+            "776a0c8c-342c-423c-a8a5-e6278f02724b",
+            "a246f0b7-126a-4625-80cc-266b71465fce"
+          ]
+        }
+      ]
     }
   },
   "plan": null,
@@ -3682,6 +3754,31 @@
       "file": "_wiki_de_poble/04_escriptori/261009_2005_acta_marmota_onada8.md",
       "at": "2026-10-09T18:11:35.289Z",
       "hash": "f00690a9071738325029b03aeb1cdb11a55b1418ac27fa5df5ae637645228efd"
+    },
+    {
+      "state": "context_loaded",
+      "action": "handoff",
+      "at": "2026-10-10T09:56:48.103Z"
+    },
+    {
+      "state": "context_loaded",
+      "action": "handoff",
+      "at": "2026-10-10T09:56:48.432Z"
+    },
+    {
+      "state": "context_loaded",
+      "action": "handoff",
+      "at": "2026-10-10T09:56:48.849Z"
     }
+  ],
+  "ownedPaths": [
+    "_wiki_de_poble/90_arxiu_historic/261009_1245_auditoria_claude.md",
+    "_wiki_de_poble/90_arxiu_historic/261009_2005_acta_marmota_onada8.md",
+    "_wiki_de_poble/90_arxiu_historic/261009_2005_auditoria_inventari_onada9.md"
+  ],
+  "relocated": [
+    "_wiki_de_poble/04_escriptori/261009_1245_auditoria_claude.md",
+    "_wiki_de_poble/04_escriptori/261009_2005_acta_marmota_onada8.md",
+    "_wiki_de_poble/04_escriptori/261009_2005_auditoria_inventari_onada9.md"
   ]
 }

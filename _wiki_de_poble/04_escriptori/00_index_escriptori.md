@@ -33,19 +33,15 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu — i
 
 ## Activitat en curs
 
-
-
-- [[261009_2005_acta_marmota_onada8]] · torn_7ffb2f2b: Acta Final de les Onades 7 i 8, per al BUNDLE del Mestre
-- [[261009_2005_brainstorming_panell_superadmin]] · torn_7ffb2f2b: proposta del punt 5 de l'Onada 8, pendent de les decisions del Mestre
-- [[261009_2005_auditoria_inventari_onada9]] · torn_7ffb2f2b: inventari per a l'Onada 9, que executa MarIA
-- [[261009_1245_auditoria_claude]] · Mestre 261009: Claude reporta l'estat de l'Onada 7
-- [[261009_1216_prompt_claude_onada7]]
-- [[261009_1216_pla_implementacio_onada7]]
-- [[261009_1238_missatge_maria_a_claude]] · Mestre 261009: Co-working a Tres Bandes per al pont
-- [[261009_1255_resposta_maria_a_claude]] · Mestre 261009: Llum verda de MarIA a Claude
-- [[261009_1300_requeriments_onada8]] · Mestre 261009: Requeriments gravats per a la pròxima Onada
-- [[261009_1330_requeriments_onada9_neteja]] · Mestre 261009: Directrius absolutes d'escombrada
+- [[261010_1730_pla_implementacio_onada11]]
+- [[261010_1730_prompt_claude_onada11]]
+- [[../90_arxiu_historic/261009_2005_brainstorming_panell_superadmin]] · torn_7ffb2f2b: proposta del punt 5 de l'Onada 8, pendent de les decisions del Mestre
+- [[../90_arxiu_historic/261009_1238_missatge_maria_a_claude]] · Mestre 261009: Co-working a Tres Bandes per al pont
+- [[../90_arxiu_historic/261009_1255_resposta_maria_a_claude]] · Mestre 261009: Llum verda de MarIA a Claude
+- [[../90_arxiu_historic/261009_1300_requeriments_onada8]] · Mestre 261009: Requeriments gravats per a la pròxima Onada
+- [[../90_arxiu_historic/261009_1330_requeriments_onada9_neteja]] · Mestre 261009: Directrius absolutes d'escombrada
 - [[../10_actes/261009_0745_acta_marmota]]
+- [[../10_actes/261010_1200_acta_marmota]]
 
 Tancament autoritzat: rutes Gestoria/Wiki, avatars i paquet 1.0.3. Els altres documents es conserven com a relleu o fronts ajornats per a la pròxima sessió.
 
@@ -754,6 +750,10 @@ Enllaços a peces ja existents, verificats al disc; no s’han mogut ni editat e
 
 ## Arxivat amb la Porta Olivera
 
+- [[../90_arxiu_historic/261009_1216_prompt_claude_onada7]]
+- [[../90_arxiu_historic/261009_1245_auditoria_claude]]
+- [[../90_arxiu_historic/261009_2005_acta_marmota_onada8]]
+- [[../90_arxiu_historic/261009_2005_auditoria_inventari_onada9]]
 - [[../90_arxiu_historic/261008_2345_pla_implementacio_onada5]]
 - [[../90_arxiu_historic/261009_0230_prompt_claude_onada6]]
 - [[../90_arxiu_historic/261009_0245_pla_implementacio_onada6]]

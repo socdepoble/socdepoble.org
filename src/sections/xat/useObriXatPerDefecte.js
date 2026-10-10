@@ -22,11 +22,46 @@
  */
 import { useNavigate } from '../../app/contexts/RouterContext';
 import { useComentaEnPrivat } from '../../components/PedraSeca/hooks/useAccions.js';
-import { objecteDePagina, rutaXatDePagina } from '../../config/objecteConnectable.js';
+import { objecteDePagina, rutaXatDePagina, rutaXatPrivat } from '../../config/objecteConnectable.js';
 import { PAGINES_AMB_XAT } from '../../data/contracte.js';
+import { IAIA_ID } from '../../data/identitatsSeed.js';
 
 /** La ruta del xat públic de la pàgina de la IAIA, amb el títol del contracte. */
 export const RUTA_XAT_DE_LA_IAIA = rutaXatDePagina(objecteDePagina({ titol: PAGINES_AMB_XAT['/iaia'], ruta: '/iaia' }));
+
+/* Els modes sense servidor de dades, com a data/supabase/perfils.js. */
+const MODES_LOCALS = new Set(['seed', 'local']);
+
+/**
+ * Onada 10 (261010; decisió del Mestre del 261010) · Per on s'entra al xat de
+ * la IAIA des de FORA del Xat (el botó «Anar al xat» de /iaia): la mateixa
+ * conversa que obri la fila «IAIA MarIA» de la llista, en cada mode de dades
+ * (`modeDades` és el de useXat()).
+ *   · remot · la fila és la d'ajuda per defecte, que porta a
+ *     RUTA_XAT_DE_LA_IAIA, o el xat públic de /iaia ja obert, que és eixe
+ *     mateix fil amb el seu nom (vestixLaIAIA, data/xatsPerDefecte.js);
+ *   · llavor i local · la fila és el fil 'iaia' (el de data/xatSeed.js, o el
+ *     que crea «Parla amb la IAIA»): el directe de sempre, /xat?amb=<id>, que
+ *     creaFilDirecte troba o crea (data/localXat.js). Allí el xat públic de la
+ *     pàgina és un altre xat, i la IAIA no hi contesta.
+ * Un mode desconegut va per la via del remot. Pura: no navega ni obri cap
+ * fil; XatSection resol totes dues rutes amb els efectes de sempre (?amb= i
+ * ?sobre=). Si el Mestre tria una altra via per a la IAIA, canvia ací, amb la
+ * constant de dalt.
+ *
+ * Revisió de l'Onada 10 (261010) · «La mateixa conversa que la fila» val AMB
+ * sessió. En remot i sense sessió, la fila «IAIA MarIA» que veu el convidat
+ * és la conversa de mostra (FakeChatOnboarding, 'fake-iaia'), i esta funció,
+ * que només mira el mode de dades, torna igualment RUTA_XAT_DE_LA_IAIA:
+ * l'efecte ?sobre= de XatSection porta el convidat a l'entrada (rutaDEntrada),
+ * com el «Comentar» de /iaia, i després d'entrar s'aterra a la pròpia
+ * identitat (RUTA_DESPRES_D_ENTRAR), no al xat. Pendent del Mestre: o
+ * l'entrada, com ara, o la conversa de mostra (/xat/fake-iaia). Fins que ho
+ * trie, App.iaia.test.jsx ho deixa escrit com a [DEFECTE].
+ */
+export function rutaDelXatDeLaIAIA(modeDades) {
+  return MODES_LOCALS.has(modeDades) ? rutaXatPrivat({ id: IAIA_ID }) : RUTA_XAT_DE_LA_IAIA;
+}
 
 /** (clau) => void: obri el xat real de la fila d'ajuda `clau` ('socdepoble' | 'iaia'). */
 export default function useObriXatPerDefecte() {

@@ -94,6 +94,19 @@ describe('useDadesDeLOriginal: una pàgina, la miniatura de la seua UniversalPag
     expect(props.accio.props.porta).toMatchObject({ id: expect.any(String), desti: '/xat', varietat: 'primari' });
   });
 
+  /* Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010) · La
+     targeta incrustada és una targeta: l'acció és la de la TARGETA
+     (accioDeLaTargeta). La Consola i el Cervell, incrustades dins d'un text,
+     tampoc porten el botó «Obrir…»; pinten Categoria i Etiqueta, les mateixes
+     de la seua targeta del Mur (PAGE_COPY). */
+  test.each(['consola', 'cervell'])('Onada 10 · «%s» incrustada: cap acció gran, i les etiquetes de PAGE_COPY', (clau) => {
+    const props = sincronitzada({ clau: `pagina:${clau}`, ruta: `/page/${clau}`, titol: PAGE_COPY[clau].title });
+    expect(props.title).toBe(PAGE_COPY[clau].title);
+    expect(Object.hasOwn(props, 'accio')).toBe(false);
+    expect(props.labels).toEqual(PAGE_COPY[clau].labels);
+    expect(props.labels.map((etiqueta) => etiqueta.className)).toEqual(['sdp-badge-category', 'sdp-badge-tag']);
+  });
+
   test('una pàgina que no existix, una clau no vàlida o una secció sense dades: null (la instantània)', () => {
     expect(sincronitzada({ clau: 'pagina:no-hi-es', ruta: '/page/no-hi-es', titol: 'No' })).toBeNull();
     expect(sincronitzada({ clau: 'nota:1', ruta: '/notes/1', titol: 'Nota' })).toBeNull();

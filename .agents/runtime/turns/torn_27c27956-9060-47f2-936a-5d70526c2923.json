@@ -4,9 +4,9 @@
   "actor": "MarIA",
   "scope": "documents",
   "state": "context_loaded",
-  "revision": 2,
+  "revision": 3,
   "createdAt": "2026-10-09T10:16:33.966Z",
-  "updatedAt": "2026-10-09T10:16:42.126Z",
+  "updatedAt": "2026-10-10T09:56:47.938Z",
   "expiresAt": "2026-10-10T10:16:33.967Z",
   "contractHash": "2b09edd15b17e4d3f835b8943e7a7eea42ec351afc53905f67410c7f9fb32949",
   "humanInventoryVersion": 1,
@@ -3507,7 +3507,7 @@
       "id": "4f6caf24-6b67-4a1a-9f22-b76d418192b3",
       "route": "prompt.local",
       "routeVersion": "3.4.0",
-      "file": "_wiki_de_poble/04_escriptori/261009_1216_prompt_claude_onada7.md",
+      "file": "_wiki_de_poble/90_arxiu_historic/261009_1216_prompt_claude_onada7.md",
       "contractSnapshot": "1217dd55ccae9a6b6dbf5b651085e2821b3c87717157b8f22319e3f9c342c362",
       "template": "_wiki_de_poble/03_actuar/plantilles/prompt_local.md",
       "templateHash": "69997976f6e4d34f9041b9e54c4bdf3e2cd7dd4ebb9fe0864b6828cbcb32bb34",
@@ -3517,7 +3517,18 @@
         "preparedAt": "2026-10-09T10:16:42.092Z",
         "committedAt": "2026-10-09T10:16:42.126Z",
         "documentHash": "fb5f0bf4f395e7186b165309f96ea3e7330f0c8e11aaeb216728598e888264e8"
-      }
+      },
+      "moves": [
+        {
+          "from": "_wiki_de_poble/04_escriptori/261009_1216_prompt_claude_onada7.md",
+          "to": "_wiki_de_poble/90_arxiu_historic/261009_1216_prompt_claude_onada7.md",
+          "hash": "28feaff1e455ad569ff1fd0631b3d813065ffb7c6b4e8bf2801824de0a4dbe4d",
+          "at": "2026-10-10T09:56:47.937Z",
+          "receiptIds": [
+            "4f6caf24-6b67-4a1a-9f22-b76d418192b3"
+          ]
+        }
+      ]
     }
   },
   "plan": null,
@@ -3539,6 +3550,17 @@
       "file": "_wiki_de_poble/04_escriptori/261009_1216_prompt_claude_onada7.md",
       "at": "2026-10-09T10:16:42.126Z",
       "hash": "fb5f0bf4f395e7186b165309f96ea3e7330f0c8e11aaeb216728598e888264e8"
+    },
+    {
+      "state": "context_loaded",
+      "action": "handoff",
+      "at": "2026-10-10T09:56:47.938Z"
     }
+  ],
+  "ownedPaths": [
+    "_wiki_de_poble/90_arxiu_historic/261009_1216_prompt_claude_onada7.md"
+  ],
+  "relocated": [
+    "_wiki_de_poble/04_escriptori/261009_1216_prompt_claude_onada7.md"
   ]
 }

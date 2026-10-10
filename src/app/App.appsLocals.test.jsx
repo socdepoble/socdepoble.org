@@ -29,7 +29,8 @@
      el remot que pren per defecte (backendConfig.js:19).
    · D3 · Cap llista blanca: el conjunt EXACTE de mètodes del port cridats
      sense sessió, per mode (CRIDES_SENSE_SESSIO).
-   · D5 · /control espera el Panell de veres (ControlSection.jsx:374).
+   · D5 · /control espera el Panell de veres (la secció «Maquinària i
+     Sistema» de ControlSection.jsx).
    · D1 · El clic al titular en un mode local es fixa com a [DEFECTE D1]
      (convenció de tests/porta-olivera-diagnosi.test.mjs:8-11): passa hui
      perquè afirma el comportament actual, i la reparació l'ha d'invertir.
@@ -396,8 +397,14 @@ test('sense sessió i en un build (DEV false), /consola continua portant a /regi
 
 /* D5 · No n'hi ha prou amb l'aria-current de la barra (controlActiu, a
    App.jsx): es pinta per la ruta, encara que ControlSection no s'haja muntat. S'espera el
-   Panell de veres: la secció «Maquinària i Sistema» (ControlSection.jsx:373-374)
-   i «Eixir del poble» (:408-416), que només pinta PanellControl. */
+   Panell de veres: la secció «Maquinària i Sistema» (section.sdp-control-maquinaria
+   de ControlSection.jsx) i «Eixir del poble» (el seu .sdp-control-actions), que
+   només pinta PanellControl.
+   Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010) · Les cites
+   portaven números de línia del Panell (373-374 i 408-416), que ja eren rancis
+   i es tornen a moure: les tres targetes de sistema ixen de la secció. Ara es
+   cita per nom. La secció i el seu h2 es conserven, amb el Lector RSS i el TPV
+   del Bar: les assercions no canvien. */
 test('sense sessió, /control continua sense guarda: es pinta el Panell, com abans', async () => {
   await munta('/control', async () => {
     const maquinaria = await screen.findByRole('heading', { level: 2, name: 'Maquinària i Sistema' }, { timeout: 8000 });

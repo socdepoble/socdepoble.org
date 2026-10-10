@@ -16,9 +16,17 @@
  *    privat amb l'autor, Onada 8; sense autor, amb Sóc de Poble) i «En
  *    públic» (el xat públic de l'element, pel seu objecte). Cap gestor propi: derogat `onComentarSistema`, que a les
  *    targetes de sistema saltava la via pública.
- *  · L'acció gran (accioDeLaPagina de systemPages.js: «Anar al xat» a la
- *    targeta d'El Xat) va a la ranura `accio` d'UniversalCard, en lloc de les
- *    etiquetes; la resta de la targeta continua obrint la seua pàgina.
+ *  · L'acció gran de la targeta (accioDeLaTargeta de systemPages.js: «Anar
+ *    al xat» a la targeta d'El Xat) va a la ranura `accio` d'UniversalCard,
+ *    en lloc de les etiquetes; la resta de la targeta continua obrint la seua
+ *    pàgina.
+ *
+ * Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010) · Les
+ * targetes de la Consola i del Cervell perden el botó gran «Obrir…» (derogat
+ * de l'Onada 8, 261009) i porten Categoria i Etiqueta, les `labels` de
+ * PAGE_COPY: sense `accio`, UniversalCard ja pinta les etiquetes. El botó
+ * continua a la seua pàgina (/page/consola i /page/cervell). Val igual al
+ * Calendari i al peu «Ja publicat», que munten esta mateixa targeta.
  *
  * Decisió 3 del Mestre (261007, confirmada) · «Imatges externes al Mur:
  * PROHIBIDES (PRIVACITAT).» La imatge i l'avatar d'una publicació passen pel
@@ -42,7 +50,7 @@ import {
 } from '../../config/navigation';
 import { COPYRIGHT_SDP, dataDElement } from '../../components/universal/editorial.js';
 import { DEFAULT_AUTHOR } from '../../components/universal/UniversalUtils.js';
-import { accioDeLaPagina } from '../../config/systemPages.js';
+import { accioDeLaTargeta } from '../../config/systemPages.js';
 import { fotoDeLaTargeta } from '../mercat/imatgesDeProducte.js';
 import { useEntitatDelProjecte } from '../../hooks/useEntitatDelProjecte.js';
 import { fontImatgePropia } from '../../utils/sanitize.js';
@@ -106,8 +114,11 @@ export function TargetaDelMur({ item, esdeveniment = null }) {
     ? objecteDePagina({ titol: item.title || item.name, ruta: item.mainHref, id: item.id })
     : objecteDe(item, seccio);
   /* Ordre del Mestre (261007) · Una targeta de sistema porta la seua acció
-     gran, si en té, en lloc de les etiquetes. */
-  const porta = item.isSystem ? accioDeLaPagina(item.id, t) : null;
+     gran, si en té, en lloc de les etiquetes.
+     Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010) · La
+     de la TARGETA (accioDeLaTargeta), que hui només declara El Xat: la
+     Consola i el Cervell tenen el botó a la seua pàgina, no ací. */
+  const porta = item.isSystem ? accioDeLaTargeta(item.id, t) : null;
   /* Ordre del Mestre (261007) · La foto principal d'un producte és la mateixa
      a les tres superfícies (Mercat, Mur i pàgina): imatgesDeProducte, mai el
      logotip de qui ven. En remot, el mapejador posa el logotip a image_url

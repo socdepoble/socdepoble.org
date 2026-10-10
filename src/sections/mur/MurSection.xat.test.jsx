@@ -12,10 +12,10 @@ import React from 'react';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
-const mocks = vi.hoisted(() => ({ navigate: vi.fn(), core: {}, mur: {} }));
+const mocks = vi.hoisted(() => ({ navigate: vi.fn(), core: {}, mur: {}, params: new URLSearchParams() }));
 vi.mock('../../app/contexts/RouterContext', () => ({
   useNavigate: () => mocks.navigate,
-  useSearchParams: () => [new URLSearchParams()],
+  useSearchParams: () => [mocks.params],
   Link: ({ to, children, ...rest }) => React.createElement('a', { href: to, ...rest }, children)
 }));
 vi.mock('@/components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
@@ -47,6 +47,7 @@ const comenta = (titol, via) => {
 afterEach(cleanup);
 beforeEach(() => {
   vi.clearAllMocks();
+  mocks.params = new URLSearchParams();
   mocks.mur = { status: 'ready', error: null, sortedFeedPosts: [], sortedMarketItems: [], sortedEvents: [] };
 });
 
@@ -79,6 +80,37 @@ test('261007 · totes les targetes de sistema, el mateix menú; la via privada, 
   expect(mocks.navigate.mock.calls).toEqual([[REMOT.href], [REMOT.href]]);
   comenta('Constitució', PUBLIC);
   expect(mocks.navigate).toHaveBeenLastCalledWith(expect.stringContaining('/xat?sobre=pagina:%2Fconstitucio&'));
+});
+
+/* Onada 10 (261010; revisió de l'Onada) · La Consola i el Cervell porten
+   «Sistema» com a Categoria perquè el filtre ?category= del Mur compara el
+   TEXT de les etiquetes (MurSection.jsx · perCategoria), sense mirar ni la
+   classe ni la posició, i sense distingir majúscules. Ací es munta el Mur amb
+   el paràmetre de veres: fins ara cap prova passava pel filtre. */
+test('Onada 10 · ?category= filtra pel text de qualsevol etiqueta: «sistema» conserva la Consola i el Cervell', () => {
+  const titols = () => [...document.querySelectorAll('article.sp-card .sp-card-title')].map((titol) => titol.textContent);
+  mocks.core = ambPagines(['consola', 'cervell', 'disseny']);
+  mocks.params = new URLSearchParams({ category: 'sistema' });
+  render(<MurSection />);
+  // De més nova a més vella: el Cervell (09-09) i la Consola (08-09). Disseny no porta «Sistema».
+  expect(titols()).toEqual(['El Cervell', 'Consola Termodinàmica']);
+  cleanup();
+
+  // La segona etiqueta també casa: no és només la primera.
+  mocks.params = new URLSearchParams({ category: 'Manteniment' });
+  render(<MurSection />);
+  expect(titols()).toEqual(['Consola Termodinàmica']);
+  cleanup();
+
+  mocks.params = new URLSearchParams({ category: 'Pedra Seca' });
+  render(<MurSection />);
+  expect(titols()).toEqual(['Disseny Pedra Seca']);
+  cleanup();
+
+  // Sense el paràmetre, les tres.
+  mocks.params = new URLSearchParams();
+  render(<MurSection />);
+  expect(titols()).toHaveLength(3);
 });
 
 test('261007 · el Mur no resol cap xat ni passa cap gestor de Comentar propi a les targetes', () => {

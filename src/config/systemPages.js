@@ -11,25 +11,40 @@
  */
 
 /**
- * Ordre del Mestre (261007) · L'acció gran d'una pàgina del sistema: el botó
- * blau que la seua targeta (Mur i Calendari) porta en lloc de les etiquetes i
- * que la seua pàgina repetix davall de l'H1. Una sola font per a les dues
+ * L'acció gran d'una pàgina del sistema: la porta blava cap a la seua eina
  * (accioDeLaPagina). `text` és un parell [clau i18n, reserva en valencià],
  * com AVISOS_XAT_CORPORATIU i TEXTOS_PORTES; `desti`, una ruta de l'app.
+ *
+ * Ordre del Mestre (261007) · El botó de la targeta (Mur i Calendari), en
+ * lloc de les etiquetes, i el de la pàgina, davall de l'H1, són la mateixa
+ * porta. Continua vigent, sencera, per a El Xat.
+ * Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010) · Per a
+ * la Consola i el Cervell, eixa ordre queda derogada a la TARGETA: perd el
+ * botó i porta Categoria i Etiqueta (les `labels` de PAGE_COPY). A la seua
+ * PÀGINA, el botó va dalt i al final (decisió M2): dins del bloc blanc de
+ * l'H1 i repetit després del cos, com les pàgines de Publicar. Ho diuen dues
+ * marques de dades del descriptor, i cap de les dues ix al retorn
+ * d'accioDeLaPagina:
+ *  · `targeta: true` · la targeta també porta el botó (accioDeLaTargeta);
+ *  · `final: true` · la pàgina el repetix després del cos (accioAlFinal).
  */
 const ANAR_AL_XAT = Object.freeze({
   id: 'anar-al-xat',
   text: Object.freeze(['section.xat.anarAlXat', 'Anar al xat']),
-  desti: '/xat'
+  desti: '/xat',
+  targeta: true
 });
 
 /* Onada 8 (261009; requeriments 261009_1300, punt 2) · La Consola i el
-   Cervell són pàgines del sistema, no plugins: la seua targeta i la seua
-   pàgina porten el botó gran cap a l'eina, com El Xat. Les rutes són
-   literals perquè este mòdul no importa res; systemPages.test.js les
-   confronta amb RUTA_CONSOLA i amb les pàgines de la Consola. Fora de
-   desenvolupament, /consola demana el rol de superadmin (App.jsx,
-   RutaConsola).
+   Cervell són pàgines del sistema, no plugins: la seua pàgina porta el botó
+   gran cap a l'eina. Les rutes són literals perquè este mòdul no importa
+   res; systemPages.test.js les confronta amb RUTA_CONSOLA i amb les pàgines
+   de la Consola. Fora de desenvolupament, /consola demana el rol de
+   superadmin (App.jsx, RutaConsola).
+   Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010) ·
+   Derogat de l'Onada 8 que la seua targeta porte el botó «com El Xat»: sense
+   `targeta`, la targeta pinta les etiquetes; amb `final`, la pàgina repetix
+   el botó després dels sis paràgrafs.
    Pendent de decisió (MarIA o el Mestre) · Esta porta no mira l'entorn. Quan
    eren plugins, la revisió P7-A deixava inert el seu «Obrir» fora de
    desenvolupament (useDestiDelPlugin), perquè les dades de la Consola
@@ -37,12 +52,14 @@ const ANAR_AL_XAT = Object.freeze({
 const OBRIR_CONSOLA = Object.freeze({
   id: 'obrir-consola',
   text: Object.freeze(['section.consola.obrir', 'Obrir la Consola']),
-  desti: '/consola'
+  desti: '/consola',
+  final: true
 });
 const OBRIR_CERVELL = Object.freeze({
   id: 'obrir-cervell',
   text: Object.freeze(['section.cervell.obrir', 'Obrir el Cervell']),
-  desti: '/consola/explorador'
+  desti: '/consola/explorador',
+  final: true
 });
 
 /**
@@ -55,8 +72,12 @@ const OBRIR_CERVELL = Object.freeze({
  * Onada 8 (261009; requeriments 261009_1300, punt 2) · «Consola Termodinàmica»
  * i «El Cervell» ja no són plugins del Panell: viuen a /page/consola i
  * /page/cervell (PageDetailSection, sense ruta nova), darrere de Disseny, i
- * porten el seu botó «Obrir…» cap a l'eina. El Panell pinta les tres a
- * «Maquinària i Sistema» amb la targeta del Mur (ControlSection.jsx).
+ * la seua pàgina porta el botó «Obrir…» cap a l'eina.
+ * Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010) ·
+ * Derogat de l'Onada 8 que el Panell de Control pinte les tres (Consola,
+ * Cervell i Disseny) a «Maquinària i Sistema»: ixen del Panell i les seues
+ * targetes viuen només al Mur (i al Calendari i incrustades), sense botó i
+ * amb Categoria i Etiqueta.
  */
 export const SYSTEM_PAGES = Object.freeze([
   { key: 'projecte', isAvis: false, href: '/projecte' },
@@ -81,19 +102,45 @@ export const SYSTEM_PAGES = Object.freeze([
  */
 export const RUTA_DRETS_AUTOR = SYSTEM_PAGES.find((pagina) => pagina.key === 'drets-autor').href;
 
+/* El descriptor de l'acció que declara una pàgina del sistema, o null. */
+const accioDeclarada = (clau) => SYSTEM_PAGES.find((candidata) => candidata.key === clau)?.accio ?? null;
+
 /**
- * Ordre del Mestre (261007) · La porta de l'acció gran d'una pàgina del
+ * Ordre del Mestre (261007) · La porta de l'acció gran d'una PÀGINA del
  * sistema ({ id, verb, desti, varietat }, la forma de PortesTargeta.jsx), o
- * null si la pàgina no en té. `t` és el traductor de la interfície; sense,
- * la reserva en valencià. Pur: la targeta i la pàgina la pinten amb
- * PortaDePagina, la mateixa porta.
+ * null si la pàgina no en té (hui en tenen El Xat, la Consola i el Cervell).
+ * `t` és el traductor de la interfície; sense, la reserva en valencià. Pur:
+ * la pàgina la pinta amb PortaDePagina davall de l'H1. Les marques `targeta`
+ * i `final` del descriptor no ixen al retorn.
  */
 export function accioDeLaPagina(clau, t) {
-  const pagina = SYSTEM_PAGES.find((candidata) => candidata.key === clau);
-  if (!pagina?.accio) return null;
-  const [clauText, reserva] = pagina.accio.text;
+  const accio = accioDeclarada(clau);
+  if (!accio) return null;
+  const [clauText, reserva] = accio.text;
   const verb = typeof t === 'function' ? t(clauText, reserva) : reserva;
-  return { id: pagina.accio.id, verb: verb || reserva, desti: pagina.accio.desti, varietat: 'primari' };
+  return { id: accio.id, verb: verb || reserva, desti: accio.desti, varietat: 'primari' };
+}
+
+/**
+ * Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010) · La
+ * porta que la TARGETA d'una pàgina del sistema porta en lloc de les
+ * etiquetes (Mur, Calendari, targeta incrustada i catàleg): la mateixa
+ * d'accioDeLaPagina, però només si el descriptor la declara per a la targeta
+ * (`targeta: true`; hui, només El Xat, ordre del 261007). Si no, null: la
+ * targeta pinta les seues etiquetes. Pur.
+ */
+export function accioDeLaTargeta(clau, t) {
+  return accioDeclarada(clau)?.targeta === true ? accioDeLaPagina(clau, t) : null;
+}
+
+/**
+ * Onada 10 (261010; pla 261010_1121; decisió M2 del Mestre del 261010) ·
+ * true quan la pàgina repetix el seu botó després del cos, dins de
+ * div.sdp-pagina-accio, a més del de davall de l'H1 (`final: true`; hui, la
+ * Consola i el Cervell). false en la resta, també sense acció. Pur.
+ */
+export function accioAlFinal(clau) {
+  return accioDeclarada(clau)?.final === true;
 }
 
 /**

@@ -82,7 +82,9 @@ const MODES_LOCALS = new Set(['seed', 'local']);
 
 /* Onada 8 (261009) · El padró del xat de la llavor: amb qui pot obrir un
    directe «En privat» quan no hi ha servidor. localXat.creaFilDirecte rebutja
-   la resta («Esta persona no és del poble»). Són els usuariId de
+   la resta amb SDP-XAT-004, el codi del servidor («Esta persona és forastera
+   en este poble.»; Onada 10, 261010; pla 261010_1121; decisió del Mestre del
+   261010: abans era un error 'LOCAL' sense traduir). Són els usuariId de
    XAT_SEED_MEMBRES (data/xatSeed.js): la persona pilot, l'entitat pilot i la
    IAIA. No s'importa xatSeed, que porta les converses de mostra (com
    PERSONES_SEED de localPerfils.js): xatCorporatiu.test.jsx vigila que diguen

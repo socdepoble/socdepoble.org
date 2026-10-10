@@ -39,7 +39,9 @@ test('XatLlista porta el peu «Informa d’un error» en els tres estats', () =>
   expect(screen.getByText('Obriria el xat de feedback amb l’esborrany de l’informe.').getAttribute('role')).toBe('status');
 
   const senseCarregar = screen.getByRole('complementary', { name: 'Llista que no s’ha pogut carregar, amb el peu' });
-  expect(within(senseCarregar).getByRole('alert').textContent).toContain('Encara no consta');
+  /* Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010) · La
+     mostra porta el text nou de SDP-XAT-003. */
+  expect(within(senseCarregar).getByRole('alert').textContent).toContain('Estàs en Mode Foraster');
   expect(within(senseCarregar).getByRole('button', { name: "Informa d'un error" })).not.toBeNull();
 
   const reserva = screen.getByRole('complementary', { name: 'El xat no s’ha pogut obrir: la reserva' });

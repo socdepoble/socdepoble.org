@@ -33,7 +33,13 @@ export default [
       'react/jsx-uses-vars': 'error',
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
-      'no-unused-vars': ['warn', { 'varsIgnorePattern': '^React$' }],
+      /* El perdó de `React` (varsIgnorePattern '^React$') és el que esperen les
+         proves: als fitxers de producció, qualitat.fantasmes.test.js passa la
+         mateixa regla sense el perdó (vars: 'all'); a les proves, el React
+         sobrant no arriba a cap paquet. Reposat el 261010 per ordre del Mestre:
+         sense ell, una cinquantena de proves amb `import React` tombaven tots
+         els censos de «zero avisos». */
+      'no-unused-vars': ['warn', { varsIgnorePattern: '^React$' }],
       'no-unsafe-finally': 'off',
       'no-control-regex': 'off',
       'no-restricted-syntax': [

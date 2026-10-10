@@ -20,6 +20,8 @@
  *     .zip es descarrega i la fitxa explica com carregar-lo desempaquetat (mode
  *     de desenvolupador). Un .crx no es pot instal·lar fora de la botiga en el
  *     Chrome estable de Windows i de macOS: no s'accepta.
+ *   · Onada 10 (261010) · I la data del Snippet (DATA_DEL_SNIPPET), que
+ *     lligen la targeta i la fitxa.
  *
  * Pur: sense React ni xarxa.
  */
@@ -32,6 +34,25 @@ export const CLAU_FITXA = 'fitxa';
 export const FITXA_SNIPPET = 'snippet';
 /** La clau de la capa del paquet amb l'enllaç d'instal·lació o de descàrrega. */
 export const CLAU_URL_SNIPPET = 'snippetChromeUrl';
+
+/* Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010, M4:
+   «totes les targetes de plugin del Panell passen a targeta canònica») · LA
+   DATA del Snippet, per a la boina de la seua targeta (ControlSection.jsx) i
+   per a la barra taronja de la seua fitxa (FitxaSnippet.jsx): una sola font,
+   targeta i pàgina diuen el mateix. Cap data inventada (regla T51 del Mestre,
+   editorial.js).
+   Criteri: el dia en què van nàixer la targeta i la fitxa, «CU (Onada 3,
+   261003)».
+   Evidència: la capçalera d'este fitxer, la de FitxaSnippet.jsx i la de
+   ControlSection.jsx, i les de les seues proves, totes amb eixe mateix
+   segell; i .agents/ESTAT.md, relleu «2026-10-03 · Claude · Onada 3
+   completa», que llista la «fitxa del Snippet» entre el que s'hi va fer.
+   Només el DIA: cap d'eixes fonts en diu l'hora, i l'hora no s'inventa. La
+   pastilla pinta «03/10/26» sense hora (dataHoraDeBarra, font de només dia).
+   Les altres targetes de plugin porten l'hora del document de la seua ordre
+   (registrePlugins.js); ací no hi ha cap document amb hora que es puga citar.
+   Pendent del Mestre: confirmar el dia i, si la vol, dictar-ne l'hora. */
+export const DATA_DEL_SNIPPET = '2026-10-03';
 
 const RUTA_CONTROL = '/control';
 const RUTA_UTILITATS = '/utilitats';

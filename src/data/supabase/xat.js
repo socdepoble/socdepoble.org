@@ -88,11 +88,28 @@ const errorLocal = (missatge, code, retriable = false) => Object.assign(new Erro
    algú per un altre camí (un enllaç ?amb= amb el seu id).
    Onada 8 (261009, revisió) · SDP-XAT-004: l'altra persona no és del poble
    (o n'ha demanat la baixa). «En privat» hi pot portar ara des de qualsevol
-   publicació (noDelPoble). Com SDP-XAT-016, el text no diu el motiu. */
+   publicació (noDelPoble).
+   Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010) · La
+   paraula «Foraster» als dos errors del poble, en les cinc llengües:
+     · SDP-XAT-003 parla de TU (no constes en este poble): «Estàs en Mode
+       Foraster…» (noMembre), amb el mateix remei d'eixir i tornar a entrar.
+     · SDP-XAT-004 parla de L'ALTRA persona, i ara el text DIU que és
+       forastera (noDelPoble). Queda DEROGADA per a este codi la regla de
+       l'Onada 8 «com SDP-XAT-016, el text no diu el motiu»: l'ordre nova és
+       dir-lo. SDP-XAT-016 continua sense dir-lo.
+     · Risc conegut i acceptat: crea_fil_directe llança el mateix SDP-XAT-004
+       també per una baixa demanada, per un id que no és de ningú i per una
+       entitat que no es veu des d'este poble, i en eixos casos el text dirà
+       igualment «forastera». Separar-los demana una migració nova.
+     · «Foraster» volia dir fins ara només «persona sense sessió» (T22,
+       components/universal/UniversalUtils.js). Ací guanya un segon sentit:
+       amb sessió, però sense constar en este poble.
+   localXat.js llança el seu rebuig del padró amb este mateix SDP-XAT-004 i
+   este mateix text, perquè la llavor i el mode local diguen el mateix. */
 const MISSATGES_SDP_HUMANS = Object.freeze({
   'SDP-XAT-002': 'No pots obrir un xat privat amb tu mateix ni amb una entitat que representes.',
-  'SDP-XAT-003': 'Encara no consta que sigues d’este poble, i el xat és per a la gent del poble. Prova d’eixir i tornar a entrar.',
-  'SDP-XAT-004': 'Esta persona no està disponible en este poble.',
+  'SDP-XAT-003': 'Estàs en Mode Foraster: el xat és per a la gent d’este poble. Prova d’eixir i tornar a entrar.',
+  'SDP-XAT-004': 'Esta persona és forastera en este poble.',
   'SDP-XAT-013': 'Esta pàgina ja no existix o no la pots vore.',
   'SDP-XAT-016': 'Esta persona no està disponible al xat.',
   'SDP-XAT-429': 'Has enviat molts missatges en poc de temps. Espera uns segons i torna-ho a provar.'

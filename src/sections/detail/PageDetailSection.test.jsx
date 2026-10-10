@@ -18,6 +18,7 @@ vi.mock('../../pages/NotFoundPage', () => ({ default: () => <p>404</p> }));
 import PageDetailSection from './PageDetailSection.jsx';
 import { PublicarDeLaPagina } from '../control/PublicarDeLaPagina.jsx';
 import { DESTINS_CONTROL } from '../control/destinsControl.js';
+import { accioAlFinal, accioDeLaPagina } from '../../config/systemPages.js';
 import fontPagina from './PageDetailSection.jsx?raw';
 
 afterEach(() => {
@@ -71,6 +72,36 @@ test('261007 · /page/xat passa l’acció «Anar al xat» dalt (accioPrincipal)
   expect(m.props.accioPrincipal).not.toBeNull();
   expect(m.props.accioPrincipal.props).toEqual({ clau: 'xat' });
   expect(m.props.accioPrincipal.type).not.toBe(PublicarDeLaPagina);
+});
+
+/* Onada 10 (261010; pla 261010_1121; decisió M2 del Mestre del 261010) ·
+   /page/consola i /page/cervell porten el botó «Obrir…» dalt (accioPrincipal,
+   com El Xat) i repetit al final: el fill de TextSection, que continua sent
+   UN sol element, és la mateixa peça amb lloc 'baix'. La resta de pàgines
+   passen PublicarDeLaPagina com sempre. */
+test('Onada 10 · /page/consola i /page/cervell passen el botó dalt (accioPrincipal) i el repetixen al final (children)', () => {
+  for (const clau of ['consola', 'cervell']) {
+    visita(clau);
+    const { accioPrincipal, children, pageKey } = m.props;
+    expect(pageKey).toBe(clau);
+    expect([clau, accioPrincipal.props]).toEqual([clau, { clau }]);
+    expect([clau, React.isValidElement(children), children.props]).toEqual([clau, true, { clau, lloc: 'baix' }]);
+    // La mateixa peça dalt i baix, i cap de les dues és el Publicar del Panell.
+    expect([clau, children.type === accioPrincipal.type, children.type === PublicarDeLaPagina]).toEqual([clau, true, false]);
+    cleanup();
+  }
+});
+
+test('Onada 10 · /page/xat no repetix res al final: el fill és el PublicarDeLaPagina de sempre, que no hi pinta res', () => {
+  visita('xat');
+  expect([m.props.children.type, m.props.children.props]).toEqual([PublicarDeLaPagina, { clau: 'xat' }]);
+});
+
+/* Les dues accions no es trepitgen: cap pàgina de la doble acció del Panell
+   (destiDePagina) declara alhora una acció de pàgina del sistema. Si un dia
+   n'hi ha una, PageDetailSection ha de decidir quina mana, dalt i baix. */
+test('Onada 10 · cap pàgina amb destí al Panell té també acció de pàgina del sistema', () => {
+  expect(DESTINS_CONTROL.map((desti) => desti.pagina).filter((clau) => accioDeLaPagina(clau) || accioAlFinal(clau))).toEqual([]);
 });
 
 test('T8 · una pàgina sense destí no porta cap acció dalt (null, no un element que pinta null)', () => {

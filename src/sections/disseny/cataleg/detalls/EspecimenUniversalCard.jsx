@@ -10,7 +10,7 @@ import { propsDeTargetaDeLaPagina } from '../../../../components/universal/targe
 import { useNavigate } from '../../../../app/contexts/RouterContext';
 import { objecteDePagina } from '../../../../config/objecteConnectable.js';
 import { getSectionItemPath, RUTA_PERFIL_PROJECTE } from '../../../../config/navigation.js';
-import { RUTA_DRETS_AUTOR, accioDeLaPagina } from '../../../../config/systemPages.js';
+import { RUTA_DRETS_AUTOR, accioDeLaTargeta } from '../../../../config/systemPages.js';
 import { PAGE_COPY } from '../../../text/pageContent.js';
 import { propsDePaginaDeText } from '../../../text/paginaDeText.js';
 import { MARKET_ITEMS } from '../../../mercat/marketContent.js';
@@ -43,10 +43,13 @@ const POBLE_DE_L_AVIS = TOWNS.find((poble) => poble.title === SDP.location) || n
    la miniatura de la seua UniversalPage. Les mostres passen pel MATEIX camí
    que la targeta incrustada sincronitzada (sections/detail/SincronitzacioTargetes.jsx):
    propsDePaginaDeText → propsDeTargetaDeLaPagina, més l'acció gran de la
-   pàgina (accioDeLaPagina) si en té. Cap dada copiada a mà. */
+   targeta (accioDeLaTargeta) si en té. Cap dada copiada a mà.
+   Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010) · L'acció
+   és la de la TARGETA, que hui només declara El Xat; la Consola i el Cervell
+   tenen el botó a la seua pàgina i la seua targeta porta etiquetes. */
 const deVeritat = (clau) => {
   const props = propsDeTargetaDeLaPagina(propsDePaginaDeText(PAGE_COPY[clau], clau));
-  const porta = accioDeLaPagina(clau);
+  const porta = accioDeLaTargeta(clau);
   return { ...props, mainHref: `/page/${clau}`, ...(porta ? { accio: <PortaDePagina porta={porta} /> } : null) };
 };
 const PEU = { hasFooter: true, showTranslate: true, showComment: true, showShare: true, showConnect: true };
@@ -134,7 +137,7 @@ export default function EspecimenUniversalCard() {
         ['calendarBadge', '{ dia, mes, any?, dateTime, onClick? }', 'null', 'La insígnia de data d’un esdeveniment (EventCard): un <time dateTime> amb dia, mes i any; amb onClick, un botó. Si també hi ha squareBadge, mana squareBadge.'],
         ['actual', 'boolean', 'false', 'La targeta és l’element triat d’una llista: aria-current="true" a l’element principal (o a l’article, si no n’hi ha).'],
         ['labels', "(string | { text, className, href })[]", '[]', 'Taxonomia: sdp-badge-system · category · tag · accent.'],
-        ['accio', 'node', 'null', "Ordre del Mestre (261007) · L’acció gran de la pàgina, en lloc de les etiquetes: PortaDePagina, el mateix botó primari gran que la UniversalPage pinta davall del títol. La declara la pàgina del sistema (systemPages.js · accioDeLaPagina): «Anar al xat» a la targeta d’El Xat. És germana del vel: el botó porta al seu destí i la resta de la targeta, a la pàgina."],
+        ['accio', 'node', 'null', "Ordre del Mestre (261007) · L’acció gran de la pàgina, en lloc de les etiquetes: PortaDePagina, el mateix botó primari gran que la UniversalPage pinta davall del títol. La declara la pàgina del sistema per a la seua targeta (systemPages.js · accioDeLaTargeta): «Anar al xat» a la targeta d’El Xat. Onada 10 (261010) · Una pàgina pot tindre acció i no dur-la a la targeta: la Consola i el Cervell porten «Obrir…» només a la seua pàgina, i la seua targeta, Categoria i Etiqueta. És germana del vel: el botó porta al seu destí i la resta de la targeta, a la pàgina."],
         ['etiquetesAmbAccio', 'boolean', 'false', 'Onada 8 (261009) · Amb accio, les etiquetes també es pinten, al seu lloc, i el botó va just després: la targeta d’un poble afig «Anar al xat» (el xat de la seua gent) sense perdre la província, la comarca ni l’enllaç a la Viquipèdia. Sense, la ranura ocupa el lloc de les etiquetes, com a El Xat.'],
         ['copyright', 'string', '—', `Ordre del Mestre (261007) · Els drets. SEMPRE és un enllaç blau (--sdp-accio-text) a la pàgina de sistema «Drets d’autor» (${RUTA_DRETS_AUTOR}), siga quin siga el text: la llicència de sèrie (COPYRIGHT_SDP, CC BY-NC-SA 4.0), «© Pepet» o una atribució. Sense subratllat, que només ix en passar-hi el ratolí. Una sola línia: un text llarg es retalla amb punts suspensius, i el text sencer continua sent el nom accessible. L’àrea tàctil és de --sdp-touch sense moure la línia. És germà del vel: el clic no obri la targeta.`],
         ['hasFooter / showTranslate / showComment / showShare / showConnect', 'boolean', '—', 'Peu blau. hasFooter=true activa les quatre accions per defecte.'],

@@ -455,13 +455,17 @@ const CLAUS = {
   /* Onada 6 (xat per als beta testers, decisió 5) · Tres codis SDP més que
      arriben a la persona amb text propi (MISSATGES_SDP_HUMANS) i es diuen en
      la llengua de la interfície (errorsXat.js). Les d'eu i gl són proposta a
-     revisar per algú que les parle. */
+     revisar per algú que les parle.
+     Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010) ·
+     noMembre (SDP-XAT-003, parla de TU: no constes en este poble) passa a
+     dir «Mode Foraster» en les cinc llengües. L'eu («kanpotar») i el gl
+     («forasteiro») continuen sent proposta a revisar per algú que les parle. */
   'section.xat.error.noMembre': {
-    ca: 'Encara no consta que sigues d’este poble, i el xat és per a la gent del poble. Prova d’eixir i tornar a entrar.',
-    es: 'Todavía no constas como vecino o vecina de este pueblo, y el chat es para la gente del pueblo. Prueba a salir y volver a entrar.',
-    en: 'You are not registered as part of this town yet, and the chat is for the people of the town. Try signing out and back in.',
-    eu: 'Oraindik ez zaude herri honetako kide gisa erregistratuta, eta txata herriko jendearentzat da. Saiatu irten eta berriro sartzen.',
-    gl: 'Aínda non constas como veciño ou veciña desta vila, e o chat é para a xente da vila. Proba a saír e volver entrar.'
+    ca: 'Estàs en Mode Foraster: el xat és per a la gent d’este poble. Prova d’eixir i tornar a entrar.',
+    es: 'Estás en Modo Forastero: el chat es para la gente de este pueblo. Prueba a salir y volver a entrar.',
+    en: 'You are in Outsider mode: the chat is for the people of this town. Try signing out and back in.',
+    eu: 'Kanpotar moduan zaude: txata herri honetako jendearentzat da. Saiatu irten eta berriro sartzen.',
+    gl: 'Estás en Modo Forasteiro: o chat é para a xente desta vila. Proba a saír e volver entrar.'
   },
   'section.xat.error.paginaNoVisible': {
     ca: 'Esta pàgina ja no existix o no la pots vore.',
@@ -489,14 +493,21 @@ const CLAUS = {
     gl: 'Non podes abrir un chat privado contigo mesmo nin cunha entidade que representas.'
   },
   /* Onada 8 (261009, revisió) · SDP-XAT-004: «En privat» amb algú que no és
-     d'este poble. El text no diu el motiu. Les d'eu i gl són proposta a
-     revisar per algú que les parle. */
+     d'este poble.
+     Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010) · El
+     text passa a dir que la persona és forastera, en les cinc llengües.
+     Queda DEROGADA per a esta clau la regla de l'Onada 8 «el text no diu el
+     motiu»; SDP-XAT-016 (noDisponible, dalt) continua sense dir-lo. Risc
+     conegut i acceptat: el mateix codi també salta per una baixa demanada,
+     un id inexistent o una entitat no visible (src/data/supabase/xat.js).
+     Les d'eu («kanpotarra») i gl («forasteira») són proposta a revisar per
+     algú que les parle. */
   'section.xat.error.noDelPoble': {
-    ca: 'Esta persona no està disponible en este poble.',
-    es: 'Esta persona no está disponible en este pueblo.',
-    en: 'This person is not available in this town.',
-    eu: 'Pertsona hau ez dago erabilgarri herri honetan.',
-    gl: 'Esta persoa non está dispoñible nesta vila.'
+    ca: 'Esta persona és forastera en este poble.',
+    es: 'Esta persona es forastera en este pueblo.',
+    en: 'This person is an outsider in this town.',
+    eu: 'Pertsona hau kanpotarra da herri honetan.',
+    gl: 'Esta persoa é forasteira nesta vila.'
   },
   'section.xat.comentar.privat.detallAmb': {
     ca: 'Un xat només entre tu i {nom}',

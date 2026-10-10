@@ -1215,8 +1215,8 @@
     },
     {
       "id": "c390d917359c",
-      "path": "/assets/ui/logo-socdepoble-rect-blanc.svg",
-      "filename": "logo-socdepoble-rect-blanc.svg",
+      "path": "/assets/ui/logo-socdepoble-rect-blanc.png",
+      "filename": "logo-socdepoble-rect-blanc.png",
       "folder": "ui",
       "type": "image",
       "tags": [
@@ -1225,8 +1225,8 @@
     },
     {
       "id": "096c37f70f20",
-      "path": "/assets/ui/logo-socdepoble-rect-negre.svg",
-      "filename": "logo-socdepoble-rect-negre.svg",
+      "path": "/assets/ui/logo-socdepoble-rect-negre.png",
+      "filename": "logo-socdepoble-rect-negre.png",
       "folder": "ui",
       "type": "image",
       "tags": [
@@ -1265,8 +1265,8 @@
     },
     {
       "id": "208f31900f99",
-      "path": "/assets/uploads/companies/soc_de_poble/avatars/logo-socdepoble-cuadrat-verd.svg",
-      "filename": "logo-socdepoble-cuadrat-verd.svg",
+      "path": "/assets/uploads/companies/soc_de_poble/avatars/logo-socdepoble-cuadrat-verd.png",
+      "filename": "logo-socdepoble-cuadrat-verd.png",
       "folder": "companies/soc_de_poble/avatars",
       "type": "image",
       "tags": [
@@ -1516,8 +1516,8 @@
       "hash": "23c65e455055be0e2672eae0c6de5ea7"
     },
     {
-      "original": "/assets/ui/logo-socdepoble-rect-blanc.svg",
-      "duplicate": "/assets/ui/logo-socdepoble-rect.svg",
+      "original": "/assets/ui/logo-socdepoble-rect-blanc.png",
+      "duplicate": "/assets/ui/logo-socdepoble-rect.png",
       "hash": "c390d917359cb9dc2bbaf6a6126cb75e"
     },
     {

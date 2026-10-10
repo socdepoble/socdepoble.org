@@ -31,6 +31,11 @@
  * és dins del cos original, que s'amaga quan es traduïx.
  * Fora d'abast (decidit): PluginPage (/plugin/:id) té el mateix patró de
  * botó al final, però amb «Obrir …», no «Publicar»: no porta el de dalt.
+ * DEROGAT EN PART per l'Onada 10 (261010; pla 261010_1121; decisió del Mestre
+ * del 261010, M2): a les pàgines del Rebost i de Salut el botó «Obrir…» va
+ * dalt i al final, com ací (PluginPage.jsx ho fa amb la seua pròpia porta;
+ * este component no hi intervé). La resta de pàgines de plugin conserven un
+ * sol botó, baix.
  */
 import { useUIActions } from '../../app/contexts/UIContext';
 import { PortaDePagina } from '../../components/PedraSeca/organismes/PortesTargeta.jsx';

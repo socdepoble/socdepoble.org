@@ -21,9 +21,18 @@
  *    diga exactament false (estaAlPanell). Abans el Perfil la llegia al revés
  *    (sense preferència, «Mostrar») i el primer clic no canviava res;
  *  · l'id és el del Panell (aplicacions.js, camp `panell`). Una preferència
- *    desada abans amb l'id de l'aplicació ('metriques', 'lector-rss') es
- *    llig com la del seu id del Panell ('consola', 'rss') mentre este no en
- *    tinga cap de pròpia (ALIES_DEL_PANELL): ningú no perd el que va triar.
+ *    desada abans amb l'id de l'aplicació ('lector-rss') es llig com la del
+ *    seu id del Panell ('rss') mentre este no en tinga cap de pròpia
+ *    (ALIES_DEL_PANELL): ningú no perd el que va triar.
+ *
+ * Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010) · Les
+ * targetes de la Consola i del Cervell ixen del Panell de Control. DEROGAT
+ * l'àlies 'metriques' → 'consola' (ix sol d'ALIES_DEL_PANELL, perquè la
+ * Consola de Mètriques porta `panell: null`): una preferència vella de
+ * 'metriques' ja no es copia enlloc. Ací no canvia cap línia de codi, i no
+ * s'esborra res: les claus 'consola', 'cervell', 'disseny' i 'metriques' que
+ * algú ja tinga desades es queden al storage, sense cap targeta que les
+ * llija.
  */
 import { getPreferenciaLlegat, getVal, setVal } from '../../config/storage.js';
 import { ALIES_DEL_PANELL } from './aplicacions.js';

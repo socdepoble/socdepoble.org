@@ -81,7 +81,11 @@ export const AGENTS_IA_SEED = Object.freeze([Object.freeze({
   short_bio: AGENTS_MAP.IAIA.short_bio,
   avatar_url: AGENTS_MAP.IAIA.avatar_url,
   hero_url: '',
-  presentacio_html: '',
+  /* Onada 10 (261010; decisió del Mestre del 261010) · «Qui és la IAIA
+     MarIA?», el cos del seu perfil públic: el text del catàleg (agentsSeed.js,
+     la font única), com el nom, el rol, el lema i l'avatar. Abans era buit i
+     el perfil pintava la bio curta (localPerfils.js · publicDAgent). */
+  presentacio_html: AGENTS_MAP.IAIA.presentacio_html,
   copyright: '',
   town_name: AGENTS_MAP.IAIA.town_name,
   /* L'entitat que administra l'agent: qui hi mana pot editar-ne la fitxa. */

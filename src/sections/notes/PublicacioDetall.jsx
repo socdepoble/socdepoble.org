@@ -44,7 +44,7 @@ import {
 import { paginaDElement, useLogoEntitatDElement } from '../detail/elementDeSeccio.js';
 import { dataDElement } from '../../components/universal/editorial.js';
 import { objecteDe, objecteDePagina, RUTA_PERFIL_PROJECTE, rutaDePerfilDAutor } from '../../config/navigation.js';
-import { accioDeLaPagina } from '../../config/systemPages.js';
+import { accioAlFinal, accioDeLaPagina } from '../../config/systemPages.js';
 import { useEntitatDelProjecte } from '../../hooks/useEntitatDelProjecte.js';
 import { pageKeyDeRuta, propsDePaginaDeText } from '../text/paginaDeText.js';
 import { CosDeLaPagina } from '../text/TextSection.jsx';
@@ -113,8 +113,14 @@ function peuDeLaPublicacio({ veuHistoric, seccio, id, t }) {
  *    enllaç, mai el del Bloc (/notes?…);
  *  · Comentar, el xat comú de la pàgina (objecteDePagina, com la seua targeta
  *    del Mur);
- *  · l'acció gran de la pàgina, si en té (El Xat: «Anar al xat»), davall de
- *    l'H1: la mateixa porta de la targeta i de /page/xat (PortaDePagina);
+ *  · l'acció gran de la pàgina, si en té (El Xat: «Anar al xat»; la Consola
+ *    i el Cervell: «Obrir…»), davall de l'H1: la mateixa porta de la seua
+ *    ruta /page/<clau> (PortaDePagina);
+ *  · Onada 10 (261010; pla 261010_1121; decisió M2 del Mestre del 261010) ·
+ *    si la pàgina repetix el botó al final (accioAlFinal: la Consola i el
+ *    Cervell), ací també: el mateix div.sdp-pagina-accio darrere del cos,
+ *    com a /page/consola i /page/cervell. Va amb el cos: sense cos (una ruta
+ *    que no és la pàgina de text d'esta clau), tampoc el botó del final;
  *  · al peu, el que l'entitat ja té publicat al Mur, sense esta pàgina.
  * Sense autor propi, com a la ruta i com ConnexioDetall: la barra taronja
  * signa amb el de sèrie.
@@ -146,6 +152,11 @@ function LectorDePaginaDelSistema({ pagina, ruta, t, onObri, onShare, peu }) {
         </div>
       ) : null}
       {ambCos ? <CosDeLaPagina html={pagina.html} /> : null}
+      {ambCos && porta && accioAlFinal(clau) ? (
+        <div className="sdp-pagina-accio">
+          <PortaDePagina porta={porta} />
+        </div>
+      ) : null}
     </UniversalPage>
   );
 }

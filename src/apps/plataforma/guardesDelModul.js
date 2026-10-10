@@ -85,8 +85,7 @@ export const ADRECES_DE_TOTS = Object.freeze(['www.w3.org']);
    guardesDelModul.test.js comprova que cada declaració és exactament el que
    porta la clausura del cos, i els builds reals de modulDeBuild.test.jsx, que
    el cos compilat no en porta cap més.
-   Estes declaracions, com la de la Gestoria, queden pendents de la signatura
-   del Mestre (Onada 7, 261009). */
+   Estes declaracions, com la de la Gestoria, estan aprovades pel Mestre (Onada 10, 261010). */
 export const DECLARACIONS_DELS_MODULS = congela({
   gestoria: {
     adreces: ['localhost:3340', 'mail.google.com', 'prewww2.aeat.es', 'purl.org', 'schemas.openxmlformats.org', 'www2.agenciatributaria.gob.es'],

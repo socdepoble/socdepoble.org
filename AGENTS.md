@@ -46,7 +46,7 @@ Quan l'usuari demana un **"Prompt" o "Auditoria"** per al Consell (ex: Z, Qwen, 
 
 **EXCEPCIÓ (Agents Locals):** Claude (App d'escriptori / Cowork) i Codex (App de ChatGPT) tenen accés natiu a l'entorn local. Per a aquestes dos IAs, **NO S'HA DE GENERAR CAP BUNDLE**, només el Prompt. Mantenir l'Efecte Matrix és vital per estalviar redundàncies. Si el destinatari és Claude o Codex, crea exclusivament el `.md` del Prompt.
 
-## 7. MODO JARVIS (Automatització Proactiva)
+## 7. MODE JARVIS (Automatització Proactiva)
 No faces que l'usuari treballe per a tu. Fes anar eines directament (`run_command`, etc.).
 
 ## 8. LLEI DE L'ENXUFABILITAT (Sollutia)

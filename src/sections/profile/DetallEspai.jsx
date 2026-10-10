@@ -40,16 +40,31 @@ const autoriaDeLaPersona = (persona) => ({
 import { useState, useEffect } from 'react';
 import { desaUtilitatActiva, estaAlPanell, subscriuUtilitatsActives } from './utilitatsActives.js';
 
-/* T51 · Pendent: una utilitat encara no té cap data real. La seua
-   declaració (aplicacions.js, aplicacionsValides) no porta cap camp de data
-   i esta pàgina no se n'inventa cap: cal que la configuració en porte una. */
+/* T51 · Pendent: la declaració d'una utilitat del Perfil (aplicacions.js,
+   aplicacionsValides) no porta cap camp de data i esta pàgina no se n'inventa
+   cap: cal que la configuració en porte una.
+   Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010, M4) ·
+   Ja no és cert que «una utilitat encara no té cap data real»: la targeta
+   del Panell de la Gestoria i del Lector RSS porta la data del registre de
+   plugins (registrePlugins.js, camp `data`), i la del Snippet, la seua
+   (destiSnippet.js, DATA_DEL_SNIPPET). Esta fitxa del Perfil encara no les
+   llig: la seua barra taronja continua sense pastilla. Pintar-la ací és un
+   canvi de pantalla que l'ordre no nomena; queda pendent del Mestre. */
 export function DetallAplicacio({ aplicacio }) {
   /* Ordre del Mestre (261007, prompt 261007_1628, peça C) · La preferència
      es llig i s'escriu amb l'id del Panell (aplicacions.js, camp `panell`):
-     'consola' per a la Consola de Mètriques i 'rss' per al Lector, els que
-     amaga ControlSection. I amb la regla del Panell (estaAlPanell): sense
-     preferència, la utilitat ja hi és i el botó diu «Ocultar». Derogat:
-     l'id de l'aplicació com a clau i el Boolean() que la llegia al revés. */
+     'rss' per al Lector, el que amaga ControlSection. I amb la regla del
+     Panell (estaAlPanell): sense preferència, la utilitat ja hi és i el botó
+     diu «Ocultar». Derogat: l'id de l'aplicació com a clau i el Boolean()
+     que la llegia al revés.
+     Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010) · Les
+     targetes de la Consola i del Cervell ixen del Panell de Control: la
+     Consola de Mètriques i el Cervell porten `panell: null` (DEROGAT
+     «'consola' per a la Consola de Mètriques»). Una utilitat sense targeta
+     al Panell no pinta el bloc de la preferència: «Ocultar del Panell» no
+     tindria res a ocultar, i ací no hi ha cap botó que no faça res. Els
+     hooks es queden incondicionals; sense bloc, ningú escriu res. */
+  const alPanell = aplicacio?.panell !== null;
   const id = aplicacio?.panell || aplicacio?.id;
   const [activa, setActiva] = useState(() => estaAlPanell(id));
 
@@ -95,24 +110,27 @@ export function DetallAplicacio({ aplicacio }) {
             </p>
           )}
         </Bloc>
-        
-        <Bloc titol="Ajustos de l'Usuari">
-          <p className="perfil-compte__text">
-            Pots fixar aquesta utilitat al teu Panell de Control perquè siga de ràpid accés.
-          </p>
-          {/* Design Guard (marató del 261007, Llei del Píxel) · Fora l'estil en
-              línia: el token --sdp-gap-md no existix a cap full, el marge no
-              s'aplicava mai (0) i el bloc ja separa els fills amb el seu gap. */}
-          <div>
-            <button
-              type="button"
-              className={`sdp-boto ${activa ? 'sdp-boto--perill' : 'sdp-boto--primari'}`}
-              onClick={toggleActiva}
-            >
-              {activa ? 'Ocultar del Panell de Control' : 'Mostrar al Panell de Control'}
-            </button>
-          </div>
-        </Bloc>
+
+        {/* Onada 10 (261010) · Només per a les utilitats amb targeta al Panell. */}
+        {alPanell ? (
+          <Bloc titol="Ajustos de l'Usuari">
+            <p className="perfil-compte__text">
+              Pots fixar aquesta utilitat al teu Panell de Control perquè siga de ràpid accés.
+            </p>
+            {/* Design Guard (marató del 261007, Llei del Píxel) · Fora l'estil en
+                línia: el token --sdp-gap-md no existix a cap full, el marge no
+                s'aplicava mai (0) i el bloc ja separa els fills amb el seu gap. */}
+            <div>
+              <button
+                type="button"
+                className={`sdp-boto ${activa ? 'sdp-boto--perill' : 'sdp-boto--primari'}`}
+                onClick={toggleActiva}
+              >
+                {activa ? 'Ocultar del Panell de Control' : 'Mostrar al Panell de Control'}
+              </button>
+            </div>
+          </Bloc>
+        ) : null}
       </div>
     </UniversalPage>
   );

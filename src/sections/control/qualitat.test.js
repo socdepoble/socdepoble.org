@@ -24,6 +24,13 @@ const CONTROL = [
   'src/sections/control/ControlSection.sessio.test.jsx',
   'src/sections/control/destinsControl.js',
   'src/sections/control/destinsControl.test.js',
+  /* Onada 10 (261010; decisió M4 del Mestre) · El Snippet passa a targeta
+     canònica: la seua data viu a destiSnippet.js i la llig també la fitxa.
+     Cap altra porta lintava estos quatre fitxers. */
+  'src/sections/control/destiSnippet.js',
+  'src/sections/control/destiSnippet.test.js',
+  'src/sections/control/FitxaSnippet.jsx',
+  'src/sections/control/FitxaSnippet.test.jsx',
   'src/sections/control/qualitat.test.js'
 ];
 const PANELL = 'src/sections/control/ControlSection.jsx';

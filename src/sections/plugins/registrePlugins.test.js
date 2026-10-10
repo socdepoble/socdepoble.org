@@ -14,6 +14,12 @@
  * Cervell i el Panell de Disseny «són pàgines, no plugins» i ixen del
  * registre, com la Bàscula. Les seues rutes i el seu botó «Obrir…» els prova
  * systemPages.test.js.
+ * Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010, M4) ·
+ * Cada plugin guanya `data` i `etiquetes`, els camps de la targeta canònica
+ * del Panell. Els porten plens la Gestoria, el Rebost, Salut, el Lector RSS
+ * i el TPV del Bar; Mapa, Vehicle Compartit i Animalets, null i llista
+ * buida. La regla R1 («cap xifra») queda derogada en part: la data fixa del
+ * registre en queda fora, i la prova ho diu.
  */
 import { existsSync } from 'node:fs';
 import path from 'node:path';
@@ -21,6 +27,7 @@ import { describe, expect, test } from 'vitest';
 import fontApp from '../../app/App.jsx?raw';
 import { MANIFESTS_INTERNS, analitzaRuta } from '../../apps/plataforma/registreApps.js';
 import { rutaDeApp } from '../../apps/plataforma/manifestApp.js';
+import { dataHoraDeBarra } from '../../components/universal/editorial.js';
 import { segmentPagina } from '../consola/consolaPagines.js';
 import {
   ESPAIS_PLUGINS, IDS_PLUGINS, IMATGES_PLUGINS, PLUGINS, appDelPlugin, clauPortadaDelPlugin, pluginPerId, pluginsDeLEspai,
@@ -28,6 +35,14 @@ import {
 } from './registrePlugins.js';
 
 const ORDRE = ['mapa', 'vehicle', 'animalets', 'gestoria', 'rebost', 'salut', 'rss', 'tpv'];
+/* Onada 10 (decisió M4 del Mestre, 261010) · Els que tenen targeta de plugin
+   al Panell, i per tant data i etiquetes. Mapa, Vehicle Compartit i Animalets
+   no: la seua targeta del Panell és la de dalt, la de publicació (W4-08). */
+const AMB_TARGETA_DE_PLUGIN = ['gestoria', 'rebost', 'salut', 'rss', 'tpv'];
+const SENSE_TARGETA_DE_PLUGIN = ['mapa', 'vehicle', 'animalets'];
+/* L'hora del document de l'ordre (prompt 261004_0015), el criteri de les
+   targetes de dalt (destinsControl.test.js). Pendent del Mestre: confirmar-la. */
+const DATA_DE_L_ORDRE = '2026-10-04T00:15:00+02:00';
 
 /* Les rutes de la taula d'App (App.jsx), amb el seu element. */
 const rutesDApp = () => [...fontApp.matchAll(/<Route\s+path="([^"]+)"/g)].map((m) => m[1]);
@@ -198,13 +213,103 @@ describe('registre de plugins', () => {
   });
 
   /* R1 · Targetes estàtiques: cap xifra als textos d'un espai (ni a la seua
-     entradeta). Les xifres només viuen dins de cada eina. */
-  test('R1 · cap xifra en els textos dels espais ni de les seues targetes', () => {
+     entradeta). Les xifres només viuen dins de cada eina.
+     Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010, M4) ·
+     DEROGADA EN PART: la targeta canònica porta la franja taronja amb data i
+     hora, i `data` queda explícitament FORA d'esta regla. El motiu: és la
+     data fixa del registre, la mateixa per a tothom, i no una dada de la
+     persona (no ix de cap apunt, de cap comptador ni de cap eina). La resta
+     de R1 continua, i s'estén als textos de les etiquetes noves, de tots els
+     plugins: cap xifra. */
+  test('R1 · cap xifra en els textos dels espais, de les seues targetes ni de les etiquetes; la data fixa del registre en queda fora', () => {
     const textos = [
       ...ESPAIS_PLUGINS.flatMap((e) => [e.titol, e.entradeta]),
-      ...PLUGINS.filter((p) => p.espai).flatMap((p) => [p.titol, p.subtitol, p.entradilla, p.imatgeAlt, p.etiquetaObrir])
+      ...PLUGINS.filter((p) => p.espai).flatMap((p) => [p.titol, p.subtitol, p.entradilla, p.imatgeAlt, p.etiquetaObrir]),
+      ...PLUGINS.flatMap((p) => p.etiquetes.map((etiqueta) => etiqueta.text))
     ];
     expect(textos.filter((text) => /\d/.test(text))).toEqual([]);
+    // Sonda: la data sí que porta xifres, i per això no és a la llista de dalt.
+    expect(pluginsDeLEspai('llar').map((p) => /\d/.test(p.data))).toEqual([true, true]);
+  });
+
+  /* Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010, M4:
+     «totes les targetes de plugin del Panell passen a targeta canònica») ·
+     Els dos camps nous. Existixen a TOTS els plugins (qui els llig no ha de
+     preguntar si hi són), i només els porten plens els que tenen targeta de
+     plugin al Panell. */
+  test('Onada 10 · tots els plugins porten `data` i `etiquetes`; plens, només els cinc amb targeta de plugin al Panell', () => {
+    for (const plugin of PLUGINS) {
+      expect([plugin.id, Object.hasOwn(plugin, 'data'), Object.hasOwn(plugin, 'etiquetes')]).toEqual([plugin.id, true, true]);
+      expect([plugin.id, plugin.data === null || typeof plugin.data === 'string', Array.isArray(plugin.etiquetes)]).toEqual([plugin.id, true, true]);
+    }
+    expect(PLUGINS.filter((p) => p.data !== null).map((p) => p.id)).toEqual(AMB_TARGETA_DE_PLUGIN);
+    expect(PLUGINS.filter((p) => p.etiquetes.length > 0).map((p) => p.id)).toEqual(AMB_TARGETA_DE_PLUGIN);
+    // La resta: null i llista buida, ni un píxel canvia.
+    for (const id of SENSE_TARGETA_DE_PLUGIN) {
+      expect([id, pluginPerId(id).data, pluginPerId(id).etiquetes]).toEqual([id, null, []]);
+    }
+    // Cap altre camp nou: el text llarg de la pàgina viu a presentacioPlugins.js.
+    for (const plugin of PLUGINS) {
+      expect([plugin.id, Object.keys(plugin)]).toEqual([plugin.id, [
+        'id', 'titol', 'subtitol', 'entradilla', 'imatge', 'imatgeAlt', 'obrir', 'entorn', 'espai', 'etiquetaObrir', 'data', 'etiquetes'
+      ]]);
+    }
+  });
+
+  test('Onada 10 · les llistes d’etiquetes i cada etiqueta estan congelades, també les buides', () => {
+    for (const plugin of PLUGINS) {
+      expect([plugin.id, Object.isFrozen(plugin.etiquetes)]).toEqual([plugin.id, true]);
+      for (const etiqueta of plugin.etiquetes) {
+        expect([plugin.id, etiqueta.text, Object.isFrozen(etiqueta)]).toEqual([plugin.id, etiqueta.text, true]);
+      }
+    }
+    // Cap llista compartida entre dos plugins: tocar-ne una no en tocaria cap altra.
+    expect(new Set(PLUGINS.map((p) => p.etiquetes)).size).toBe(PLUGINS.length);
+  });
+
+  /* La data: cap data inventada (T51 i D6). El criteri és el de les targetes
+     de dalt, l'hora del document de l'ordre, i el mateix lector
+     (dataHoraDeBarra) en trau l'hora i el dia de la franja taronja. */
+  test('Onada 10 · la data és un ISO amb desplaçament, la de l’ordre del 261004, i dataHoraDeBarra en trau hora i dia', () => {
+    for (const id of AMB_TARGETA_DE_PLUGIN) {
+      const { data } = pluginPerId(id);
+      expect([id, /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/.test(data)]).toEqual([id, true]);
+      expect([id, Number.isNaN(Date.parse(data))]).toEqual([id, false]);
+      expect([id, dataHoraDeBarra({ creat: data })]).toEqual([id, { time: '00:15', date: '04/10/26', dateTime: DATA_DE_L_ORDRE }]);
+    }
+    expect(Object.fromEntries(AMB_TARGETA_DE_PLUGIN.map((id) => [id, pluginPerId(id).data])))
+      .toEqual(Object.fromEntries(AMB_TARGETA_DE_PLUGIN.map((id) => [id, DATA_DE_L_ORDRE])));
+    // Sense data, el lector no en fabrica cap: la pastilla no es pinta.
+    expect(dataHoraDeBarra({ creat: pluginPerId('mapa').data })).toEqual({ time: '', date: '', dateTime: '' });
+  });
+
+  /* Les etiquetes: una Categoria i una Etiqueta, en l'ordre de la skill
+     sdp-universal-page (§4), només amb `text` i `className` (cap `href`: el
+     Panell no admet cap altre enllaç, D3). Els valors són un esborrany per al
+     Mestre. */
+  test('Onada 10 · cada targeta de plugin porta una Categoria i una Etiqueta, sense enllaç', () => {
+    for (const id of AMB_TARGETA_DE_PLUGIN) {
+      const { etiquetes } = pluginPerId(id);
+      expect([id, etiquetes.map((etiqueta) => etiqueta.className)]).toEqual([id, ['sdp-badge-category', 'sdp-badge-tag']]);
+      for (const etiqueta of etiquetes) {
+        expect([id, Object.keys(etiqueta)]).toEqual([id, ['text', 'className']]);
+        expect([id, typeof etiqueta.text === 'string' && etiqueta.text.trim() === etiqueta.text && etiqueta.text.length > 0]).toEqual([id, true]);
+      }
+    }
+    expect(Object.fromEntries(AMB_TARGETA_DE_PLUGIN.map((id) => [id, pluginPerId(id).etiquetes.map((etiqueta) => etiqueta.text)]))).toEqual({
+      gestoria: ['Eina', 'Factures'],
+      rebost: ['Eina', 'Compra'],
+      salut: ['Eina', 'Cures'],
+      rss: ['Eina', 'Notícies'],
+      tpv: ['Eina', 'Hostaleria']
+    });
+    // Una píndola no duplica el context: cap text d'etiqueta repetix el títol d'un espai ni el del plugin.
+    const titolsDEspai = ESPAIS_PLUGINS.map((e) => e.titol);
+    for (const plugin of PLUGINS) {
+      for (const etiqueta of plugin.etiquetes) {
+        expect([plugin.id, etiqueta.text, titolsDEspai.includes(etiqueta.text) || etiqueta.text === plugin.titol]).toEqual([plugin.id, etiqueta.text, false]);
+      }
+    }
   });
 
   test('appDelPlugin diu de quina app de la plataforma és l’«Obrir» (per als interruptors), o null', () => {

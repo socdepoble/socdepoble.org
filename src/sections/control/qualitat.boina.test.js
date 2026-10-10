@@ -36,6 +36,10 @@ const FRONT = [
   'src/sections/detail/PageDetailSection.jsx',
   'src/sections/detail/PageDetailSection.test.jsx',
   'src/sections/detail/PageDetailSection.publicar.test.jsx',
+  /* Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010) · La
+     prova nova de /page/consola i /page/cervell (el botó dalt i al final):
+     cap altra llista la lintava. */
+  'src/sections/detail/PageDetailSection.consola.test.jsx',
   'src/sections/detail/elementDeSeccio.js',
   'src/sections/detail/elementDeSeccio.test.js',
   'src/sections/text/TextSection.jsx',

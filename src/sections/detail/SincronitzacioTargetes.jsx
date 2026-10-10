@@ -20,8 +20,11 @@
  *     «Legal i privacitat»: el còmic, el subtítol, l'entradilla, «Sistema», el
  *     rellotge 00:00 · 30/01/26, l'avatar de Sóc de Poble i La Torre de les
  *     Maçanes, com la seua targeta del Mur;
- *   · l'acció gran d'una pàgina del sistema, si en té (systemPages.js ·
- *     accioDeLaPagina, la mateixa porta de la targeta del Mur: «Anar al xat»).
+ *   · l'acció gran de la targeta d'una pàgina del sistema, si en té
+ *     (systemPages.js · accioDeLaTargeta, la mateixa porta de la targeta del
+ *     Mur: «Anar al xat»). Onada 10 (261010; pla 261010_1121; decisió del
+ *     Mestre del 261010) · La Consola i el Cervell, incrustades, tampoc
+ *     porten el botó «Obrir…»: pinten les etiquetes de PAGE_COPY, com al Mur.
  * Sense original (encara carrega, ja no hi és o és d'un altre poble), null:
  * la targeta pinta la instantània.
  *
@@ -44,7 +47,7 @@ import { PortaDePagina } from '../../components/PedraSeca/organismes/PortesTarge
 import { propsDeTargetaDeLaPagina } from '../../components/universal/targetaDeLaPagina.js';
 import { objecteDeTargeta } from '../../components/universal/richText/extensions/targetes/formaDelGrup.js';
 import { TargetesSincronitzadesContext } from '../../components/universal/richText/extensions/targetes/TargetesSincronitzadesContext.js';
-import { accioDeLaPagina } from '../../config/systemPages.js';
+import { accioDeLaTargeta } from '../../config/systemPages.js';
 import { propsDePaginaDeText } from '../text/paginaDeText.js';
 import { paginaDElement, useOriginalDeConnexio } from './elementDeSeccio.js';
 
@@ -71,7 +74,7 @@ export function propsDeLOriginal(original, t) {
   if (original?.tipus === 'pagina' && original.page) {
     const props = propsDeTargetaDeLaPagina(propsDePaginaDeText(original.page, original.pageKey, t));
     if (!props) return null;
-    const porta = accioDeLaPagina(original.pageKey, t);
+    const porta = accioDeLaTargeta(original.pageKey, t);
     return porta ? { ...props, accio: <PortaDePagina porta={porta} /> } : props;
   }
   if (original?.tipus === 'seccio' && original.section && original.item) {

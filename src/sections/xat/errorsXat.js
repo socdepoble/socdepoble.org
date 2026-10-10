@@ -8,7 +8,12 @@
  */
 
 /** Codi SDP → clau d'i18n. Onada 8 (261009) · SDP-XAT-002: cap xat amb tu
- *  mateix; SDP-XAT-004: l'altra persona no és d'este poble. */
+ *  mateix; SDP-XAT-004: l'altra persona no és d'este poble.
+ *  Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010) · Els
+ *  dos errors del poble diuen «Foraster»: SDP-XAT-003 (TU: «Estàs en Mode
+ *  Foraster…») i SDP-XAT-004 (L'ALTRA persona: «…és forastera en este
+ *  poble»). El mapa no canvia; el mode llavor i el local també llancen
+ *  SDP-XAT-004 (data/localXat.js) i passen per ací. */
 export const CLAUS_ERROR_SDP = Object.freeze({
   'SDP-XAT-002': 'section.xat.error.ambTuMateix',
   'SDP-XAT-003': 'section.xat.error.noMembre',

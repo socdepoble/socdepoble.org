@@ -42,9 +42,13 @@ function classesAmbRegla() {
 }
 
 describe('el cens', () => {
-  test('el registre, la pàgina, el destí i les seues proves hi són', () => {
-    for (const esperat of ['registrePlugins.js', 'PluginPage.jsx', 'useDestiDelPlugin.js', 'registrePlugins.test.js',
-      'PluginPage.test.jsx', 'PluginPage.app.test.jsx', 'qualitat.test.js']) {
+  /* Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010, M4) ·
+     Hi entra la presentació llarga de la pàgina (presentacioPlugins.js) i la
+     seua prova: com la resta de la carpeta, passen per ESLint i per les
+     regles de davall. */
+  test('el registre, la presentació, la pàgina, el destí i les seues proves hi són', () => {
+    for (const esperat of ['registrePlugins.js', 'presentacioPlugins.js', 'PluginPage.jsx', 'useDestiDelPlugin.js', 'registrePlugins.test.js',
+      'presentacioPlugins.test.js', 'PluginPage.test.jsx', 'PluginPage.app.test.jsx', 'qualitat.test.js']) {
       expect(PLUGINS).toContain(`src/sections/plugins/${esperat}`);
     }
   });
@@ -108,8 +112,15 @@ describe('higiene', () => {
     for (const fitxer of TOTS) expect(cru.test(llig(fitxer)), fitxer).toBe(false);
   });
 
-  test('el registre és pur: sense React ni xarxa', () => {
+  /* Onada 10 (261010) · La presentació també: és text, i a més no importa
+     res (ni el registre: va a banda perquè el Panell no se l'emporte). */
+  test('el registre i la presentació són purs: sense React ni xarxa', () => {
     const registre = llig('src/sections/plugins/registrePlugins.js');
     expect(registre).not.toMatch(/from 'react'|fetch\(|import\(/);
+    const presentacio = llig('src/sections/plugins/presentacioPlugins.js');
+    expect(presentacio).not.toMatch(/from 'react'|fetch\(|import\(/);
+    expect(presentacio).not.toMatch(/^\s*import\s/m);
+    // I el registre no se l'emporta: el text llarg només viatja amb la pàgina.
+    expect(registre).not.toMatch(/from '\.\/presentacioPlugins/);
   });
 });

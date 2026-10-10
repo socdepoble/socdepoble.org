@@ -146,13 +146,16 @@ describe('«Informa d’un error» (prompt 261009_0230, punt 4)', () => {
 
   /* Revisió 261009 (problema mitjà) · La fallada més probable del primer dia
      és una llista que no carrega (SDP-XAT-003 per una alta sense pertinença):
-     el canal de feedback no pot desaparéixer just llavors. */
+     el canal de feedback no pot desaparéixer just llavors.
+     Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010) · Les
+     mostres d'este fitxer porten el text nou de SDP-XAT-003 («Mode
+     Foraster»), el que hi posa l'adaptador (MISSATGES_SDP_HUMANS). */
   test('també davall de l’avís d’una llista que no s’ha pogut carregar, i de la llista buida', () => {
-    mocks.avis = 'Encara no consta que sigues d’este poble.';
+    mocks.avis = 'Estàs en Mode Foraster: el xat és per a la gent d’este poble.';
     mocks.threads = [];
     render(<XatSection />);
     const alerta = screen.getByRole('alert');
-    expect(alerta.textContent).toContain('Encara no consta');
+    expect(alerta.textContent).toContain('Estàs en Mode Foraster');
     expect(boto()).not.toBeNull();
     expect(alerta.nextElementSibling).toBe(boto().parentElement);
     cleanup();
@@ -165,7 +168,7 @@ describe('«Informa d’un error» (prompt 261009_0230, punt 4)', () => {
   test('si el xat no s’obri (SDP-XAT-003), l’informe no es perd: copiar-lo o enviar-lo per correu', async () => {
     const writeText = vi.fn(async () => {});
     posaPortaRetalls({ writeText });
-    mocks.createThread.mockRejectedValue(Object.assign(new Error('Encara no consta que sigues d’este poble.'), { code: 'SDP-XAT-003' }));
+    mocks.createThread.mockRejectedValue(Object.assign(new Error('Estàs en Mode Foraster: el xat és per a la gent d’este poble.'), { code: 'SDP-XAT-003' }));
     muntaRemot();
     expect(screen.queryByRole('button', { name: "Copia l'informe" })).toBeNull();
     fireEvent.click(boto());
@@ -232,10 +235,10 @@ describe('«Informa d’un error» (prompt 261009_0230, punt 4)', () => {
   });
 
   test('una fallada en obrir-lo es diu per a la persona (SDP-XAT-003), mai el codi cru', async () => {
-    mocks.createThread.mockRejectedValue(Object.assign(new Error('Encara no consta que sigues d’este poble, i el xat és per a la gent del poble. Prova d’eixir i tornar a entrar.'), { code: 'SDP-XAT-003' }));
+    mocks.createThread.mockRejectedValue(Object.assign(new Error('Estàs en Mode Foraster: el xat és per a la gent d’este poble. Prova d’eixir i tornar a entrar.'), { code: 'SDP-XAT-003' }));
     muntaRemot();
     fireEvent.click(boto());
-    await waitFor(() => expect(mocks.showToast).toHaveBeenCalledWith(expect.stringContaining('Encara no consta'), 'error'));
+    await waitFor(() => expect(mocks.showToast).toHaveBeenCalledWith(expect.stringContaining('Estàs en Mode Foraster'), 'error'));
     expect(mocks.showToast.mock.calls.flat().join(' ')).not.toMatch(/SDP-XAT/);
   });
 

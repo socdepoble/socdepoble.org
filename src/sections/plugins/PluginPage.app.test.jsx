@@ -3,6 +3,11 @@
  * shell sencer, sense sessió i amb un backend fals sense xarxa. Comprova que
  * App munta la pàgina del plugin (i no ItemDetailSection, que també casaria
  * amb «/:sectionId/:itemId») i que un id desconegut és la 404.
+ * Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010, M2 i
+ * M4) · El Rebost i Salut porten el botó «Obrir…» dalt (dins del bloc blanc
+ * de l'H1) i al final, i sis paràgrafs de presentació: dins de l'App de
+ * veres també. Les consultes de coincidència única passen a demanar-ne
+ * exactament dos, amb el mateix destí o el mateix estat inert.
  */
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, expect, test, vi } from 'vitest';
@@ -62,12 +67,23 @@ async function muntaApp(ruta, cos) {
   }
 }
 
-test('App munta /plugin/rebost: la pàgina del plugin, amb la portada plegable i el botó d’Obrir', async () => {
+test('App munta /plugin/rebost: la pàgina del plugin, amb la portada plegable, els sis paràgrafs i el botó d’Obrir dalt i al final', async () => {
   await muntaApp('/plugin/rebost', async () => {
     const titol = await screen.findByRole('heading', { level: 1, name: 'Rebost Domèstic' });
     expect(titol).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Amaga la portada' })).toBeTruthy();
-    expect(screen.getByRole('link', { name: 'Obrir el Rebost' }).getAttribute('href')).toBe('/app/nevera/casa');
+    // Onada 10 (M2) · Dos enllaços, el de dalt i el de baix, cap a la mateixa entrada.
+    const enllacos = screen.getAllByRole('link', { name: 'Obrir el Rebost' });
+    expect(enllacos.map((enllac) => enllac.getAttribute('href'))).toEqual(['/app/nevera/casa', '/app/nevera/casa']);
+    const [dalt, baix] = enllacos;
+    expect(dalt.parentElement.className).toBe('page-title-accio');
+    expect(dalt.closest('header.page-title')).toBe(titol.closest('header.page-title'));
+    expect(baix.parentElement.className).toBe('sdp-pagina-accio');
+    // Onada 10 (M4) · Els sis paràgrafs, dins de l'article i abans del botó de baix.
+    const article = baix.closest('article.content-wrapper');
+    expect(article.lastElementChild).toBe(baix.parentElement);
+    expect(article.querySelectorAll(':scope > article.cms-preview > p')).toHaveLength(6);
+    expect(baix.parentElement.previousElementSibling.className).toBe('cms-preview');
   });
 });
 
@@ -75,7 +91,10 @@ test('App: Salut en un document que no és l’ama (sense manageDocumentHead) no
   await muntaApp('/plugin/salut', async () => {
     await screen.findByRole('heading', { level: 1, name: 'Salut' });
     expect(screen.queryByRole('link', { name: /Obrir Salut/ })).toBeNull();
-    expect(screen.getByRole('button', { name: 'Obrir Salut (no disponible ací)' }).getAttribute('aria-disabled')).toBe('true');
+    // Onada 10 (M2) · Dos botons, dalt i al final, i tots dos inerts.
+    const botons = screen.getAllByRole('button', { name: 'Obrir Salut (no disponible ací)' });
+    expect(botons.map((boto) => [boto.parentElement.className, boto.getAttribute('aria-disabled')]))
+      .toEqual([['page-title-accio', 'true'], ['sdp-pagina-accio', 'true']]);
   });
 });
 

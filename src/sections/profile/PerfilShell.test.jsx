@@ -1,4 +1,3 @@
-import React from 'react';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 const m = vi.hoisted(() => ({
@@ -173,15 +172,26 @@ test('tercera columna: l’editor per a la fitxa, El compte, i Privacitat i dade
   expect(m.workspace.renderDetail({ item: null })).toBeNull();
 });
 
-test('una aplicació pendent: estat honest, només la preferència del Panell i cap enllaç d’obertura', () => {
+/* Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010) · Les
+   targetes de la Consola i del Cervell ixen del Panell de Control. DEROGAT
+   «les cinc aplicacions pendents pinten el botó del Panell»: només el pinten
+   les tres que hi tenen targeta (Gestoria, Lector RSS i Snippet). La Consola
+   de Mètriques i el Cervell (`panell: null`) no pinten cap botó: no hi ha
+   res a mostrar ni a ocultar, i un botó que no fa res està vetat. */
+test('una aplicació pendent: estat honest, la preferència del Panell només si hi té targeta, i cap enllaç d’obertura', () => {
   render(<PerfilShell />);
-  for (const [id, nom] of [['gestoria', 'Gestoria de Poble'], ['metriques', 'Consola de Mètriques'], ['lector-rss', 'Curation AI (Lector RSS)'], ['cervell', 'Cervell (Node Graph)'], ['snippet', 'Snippet']]) {
+  const aplicacions = [
+    ['gestoria', 'Gestoria de Poble', true], ['metriques', 'Consola de Mètriques', false],
+    ['lector-rss', 'Curation AI (Lector RSS)', true], ['cervell', 'Cervell (Node Graph)', false], ['snippet', 'Snippet', true],
+  ];
+  for (const [id, nom, alPanell] of aplicacions) {
     const vista = render(m.workspace.renderDetail({ item: item(`app-${id}-sobre`) }));
     expect(screen.getByRole('heading', { level: 1, name: nom })).toBeTruthy();
     expect(screen.getByText('Pendent de connectar en este node')).toBeTruthy();
     /* Ordre del Mestre (261007, prompt 261007_1628, peça C) · Sense
        preferència la utilitat ja és al Panell: el botó diu «Ocultar». */
-    expect(screen.getAllByRole('button').map((b) => b.textContent)).toEqual(['Ocultar del Panell de Control']);
+    expect([id, screen.queryAllByRole('button').map((b) => b.textContent)])
+      .toEqual([id, alPanell ? ['Ocultar del Panell de Control'] : []]);
     expect(screen.queryAllByRole('link')).toEqual([]);
     vista.unmount();
   }

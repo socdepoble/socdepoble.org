@@ -12,11 +12,19 @@
    Onada 8 (261009; requeriments 261009_1300, punt 2; decisions D1, D2, D4,
    D5 i D7 de MarIA) · Totes les targetes del Panell són Universal Cards
    senceres: porten Connectar i el copyright (la Revisió R3 queda derogada).
-   La Consola, el Cervell i Disseny ja no són plugins: «Maquinària i Sistema»
-   les pinta primer, amb la targeta del Mur (TargetaDelMur). Les proves de les
-   eines del registre (targetesDUtilitats) no les compten: tenen la seua
-   pròpia (targetesDeLaMaquinaria). Sense proveïdor del contingut core, el
-   Panell llig PAGE_COPY. */
+   La Consola, el Cervell i Disseny ja no són plugins.
+
+   Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010) ·
+   DEROGAT «Maquinària i Sistema les pinta primer, amb la targeta del Mur»
+   (Onada 8): les tres pàgines ixen del Panell i viuen només al Mur. La
+   secció porta només les eines del registre, i ací ja no hi ha cap prova
+   pròpia de les pàgines de la maquinària: la prova «Onada 10 · …» vigila que
+   no en quede res. DEROGADES també, per a les sis targetes de plugin
+   (Gestoria, Rebost Domèstic, Salut, Lector RSS, TPV del Bar i el Snippet),
+   la D6 («cap data per a les eines») i la P6 («cap etiqueta al Panell»):
+   decisió M4, targeta canònica amb la data i les etiquetes de la seua font
+   (el registre de plugins, o el Snippet). Les huit targetes de dalt
+   conserven les seues assercions. */
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { MemoryRouter, useLocation, useNavigate } from '../../app/contexts/RouterContext';
@@ -26,10 +34,12 @@ import { RouteSEO } from '../../hooks/RouteSEO';
 import { createTranslator } from '../../config/i18n';
 import { resolvePageSlugPath, RUTA_PERFIL_PROJECTE } from '../../config/navigation.js';
 import { PAGE_COPY } from '../text/pageContent.js';
-import { COPYRIGHT_SDP } from '../../components/universal/editorial.js';
-import { RUTA_DRETS_AUTOR, SYSTEM_PAGES } from '../../config/systemPages.js';
+import { COPYRIGHT_SDP, dataHoraDeBarra } from '../../components/universal/editorial.js';
+import { RUTA_DRETS_AUTOR } from '../../config/systemPages.js';
 import { IDS_PLUGINS, PLUGINS, rutaDelPlugin } from '../plugins/registrePlugins.js';
-import { AUTORIA_SOCDEPOBLE, DESTINS_CONTROL, PAGINES_MAQUINARIA } from './destinsControl.js';
+import { DATA_DEL_SNIPPET } from './destiSnippet.js';
+import { AUTORIA_SOCDEPOBLE, DESTINS_CONTROL } from './destinsControl.js';
+import * as destinsControl from './destinsControl.js';
 import fontApp from '../../app/App.jsx?raw';
 import fontControl from './ControlSection.jsx?raw';
 
@@ -200,7 +210,11 @@ test('D3 · cap targeta ni botó del Panell navega a una ruta que no és a la ta
   /* W4-08 (revisió adversarial de C3, 261004) · Una pintada del Panell sencer
      per cada clicable: amb huit targetes dalt i deu baix són 36 pintades, i
      sota càrrega passaven dels 5 s per defecte (6,1 i 8,8 s mesurats). El
-     temps no és el que es prova: el límit explícit no afluixa cap asserció. */
+     temps no és el que es prova: el límit explícit no afluixa cap asserció.
+     Onada 10 (261010; decisió M4 del Mestre) · Les sis targetes de plugin
+     porten ara la pastilla de la data, que també es prem ací: porta al
+     Calendari del seu mes, una ruta d'App, com la de les targetes de dalt.
+     Les tres pàgines de la maquinària, que també en portaven, ja no hi són. */
 }, 30_000);
 
 /* P5 (261003) i W4-08 (261004) substituïxen les targetes d'edició del
@@ -291,17 +305,39 @@ const seccioDe = (nom) => screen.queryByRole('heading', { level: 2, name: nom })
 const seccioDUtilitats = () => seccioDe('Utilitats i Connectors (Plugins)');
 const targetesDe = (seccio) => (seccio ? [...seccio.querySelectorAll('.sdp-card-grid > article.sp-card')] : []);
 const titolDeTargeta = (targeta) => targeta.querySelector('.sp-card-title').textContent;
-/* Onada 8 (261009) · Les tres pàgines del sistema de «Maquinària i Sistema»,
-   en l'ordre del Panell, amb el seu copy i la seua entrada de SYSTEM_PAGES. */
-const PAGINES_DE_LA_MAQUINARIA = PAGINES_MAQUINARIA.map((clau) => ({
-  clau, copy: PAGE_COPY[clau], pagina: SYSTEM_PAGES.find((pagina) => pagina.key === clau)
-}));
-const TITOLS_DE_LA_MAQUINARIA = new Set(PAGINES_DE_LA_MAQUINARIA.map(({ copy }) => copy.title));
-const esPaginaDeLaMaquinaria = (targeta) => TITOLS_DE_LA_MAQUINARIA.has(titolDeTargeta(targeta));
-/* Les targetes de les eines (registre i Snippet), sense les pàgines del sistema. */
-const targetesDUtilitats = () => SECCIONS_DUTILITATS.flatMap((nom) => targetesDe(seccioDe(nom))).filter((targeta) => !esPaginaDeLaMaquinaria(targeta));
-const targetesDeLaMaquinaria = () => targetesDe(seccioDe('Maquinària i Sistema')).filter(esPaginaDeLaMaquinaria);
-const titolsDeLaMaquinaria = () => targetesDeLaMaquinaria().map(titolDeTargeta);
+/* Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010) · Les
+   tres pàgines del sistema que l'Onada 8 pintava a «Maquinària i Sistema» i
+   que ara viuen només al Mur: els seus títols (els de PAGE_COPY, la font de
+   la targeta del Mur) i totes les rutes on portaven (la seua pàgina i el
+   botó «Obrir…»). Ací només servixen per a afirmar que NO hi són. */
+const CLAUS_FORA_DEL_PANELL = ['consola', 'cervell', 'disseny'];
+const TITOLS_FORA_DEL_PANELL = CLAUS_FORA_DEL_PANELL.map((clau) => PAGE_COPY[clau].title);
+const RUTES_FORA_DEL_PANELL = ['/page/consola', '/page/cervell', '/disseny', '/consola', '/consola/explorador'];
+/* Les targetes de les eines (registre i Snippet): totes les de les quatre
+   seccions de baix. Onada 10 · Ja no cal descartar-ne cap: abans, les tres
+   pàgines del sistema de la maquinària. */
+const targetesDUtilitats = () => SECCIONS_DUTILITATS.flatMap((nom) => targetesDe(seccioDe(nom)));
+/* Onada 10 (decisió M4 del Mestre) · La targeta canònica de plugin: el que
+   ha de pintar cada una ix de la seua FONT, pel títol de la targeta: el
+   registre de plugins (camps `data` i `etiquetes`) o, per al Snippet, la seua
+   data (destiSnippet.js) i les seues dues etiquetes (SNIPPET de
+   ControlSection.jsx: Categoria «Eina» i Etiqueta «Extensió», l'esborrany de
+   l'ordre). Cap títol escrit a mà decidix qui porta data: ho diu el registre. */
+const ETIQUETES_DEL_SNIPPET = [['Eina', 'sdp-badge-category'], ['Extensió', 'sdp-badge-tag']];
+const fontDeLaTargeta = (titol) => {
+  const plugin = PLUGINS.find((p) => p.titol === titol);
+  if (plugin) return { data: plugin.data, etiquetes: plugin.etiquetes.map(({ text, className }) => [text, className]) };
+  return titol === 'Snippet' ? { data: DATA_DEL_SNIPPET, etiquetes: ETIQUETES_DEL_SNIPPET } : null;
+};
+/* La pastilla de la boina, com la pinta la targeta: l'hora i el dia, o només
+   el dia si la font no porta hora (l'hora no s'inventa). */
+const pastillaEsperada = (data) => {
+  const { time, date } = dataHoraDeBarra({ creat: data });
+  return [time, date].filter(Boolean);
+};
+const pastillaDe = (targeta) => [...targeta.querySelectorAll('header.sp-card-header button.btn-date-time span')].map((s) => s.textContent);
+const etiquetesDe = (targeta) => [...targeta.querySelectorAll('ul.sp-card-labels > li')].map((li) => [li.textContent, li.className]);
+const etiquetesEsperades = (etiquetes) => etiquetes.map(([text, classe]) => [text, `sp-card-label ${classe}`]);
 /* Onada 8 (261009; revisió R3 derogada) · El peu de totes les targetes del
    Panell: Traduir, Comentar, Compartir i Connectar. */
 const PEU_SENCER = (titol) => [`Traduir ${titol}`, `Comentar ${titol}`, `Compartir ${titol}`, `Connectar amb ${titol}`];
@@ -319,8 +355,9 @@ const NOMES_DALT = [['Mapa', 'mapa'], ['Vehicle Compartit', 'vehicle'], ['Animal
    Ordre del Mestre (261007) · Bàscula descartada per ara: en queden deu
    d'aquelles onze; amb «disseny», el registre en porta onze.
    Onada 8 (261009) · La Consola i el Cervell (i «disseny») ja no són
-   plugins, sinó pàgines del sistema: en queden huit al registre, i les
-   altres dos són de PAGINES_MAQUINARIA. */
+   plugins, sinó pàgines del sistema: en queden huit al registre.
+   Onada 10 (261010) · I cap de les tres és ja al Panell: viuen només al
+   Mur. */
 const LES_DE_LORDRE = ['mapa', 'vehicle', 'animalets', 'gestoria', 'rebost', 'salut', 'rss', 'tpv'];
 /* On porta cada targeta d'Utilitats, pel seu títol (el Snippet, a la seua fitxa del Panell). */
 const PAGINA_DUTILITAT = new Map([
@@ -334,7 +371,13 @@ const PAGINA_DUTILITAT = new Map([
 test('P7-B · W4-08 · el registre sense les de dalt es veu una vegada, en l’ordre del registre, canònic; el Snippet tanca les Utilitats', () => {
   pinta();
   expect(IDS_PLUGINS).toEqual(expect.arrayContaining(LES_DE_LORDRE));
-  expect(PAGINES_MAQUINARIA).toEqual(['consola', 'cervell', 'disseny']);
+  /* Onada 10 (261010; decisió del Mestre del 261010) · Les tres pàgines del
+     sistema ja no tenen cap targeta al Panell (abans ací es fixava la llista
+     de les pàgines de la maquinària, que ja no existix). */
+  expect(TITOLS_FORA_DEL_PANELL).toEqual(['Consola Termodinàmica', 'El Cervell', 'Disseny Pedra Seca']);
+  const titolsDelPanell = [...document.querySelectorAll('article.sp-card .sp-card-title')].map((titol) => titol.textContent);
+  expect(titolsDelPanell.filter((titol) => TITOLS_FORA_DEL_PANELL.includes(titol))).toEqual([]);
+  expect(Object.keys(destinsControl)).not.toContain('PAGINES_MAQUINARIA');
   /* Ordre del Mestre (261007) · Bàscula descartada per ara: cap targeta ni enllaç seu al Panell. */
   expect(IDS_PLUGINS).not.toContain('bascula');
   expect(document.querySelector('[href="/plugin/bascula"]')).toBeNull();
@@ -347,19 +390,32 @@ test('P7-B · W4-08 · el registre sense les de dalt es veu una vegada, en l’o
   expect(titolDeTargeta(targetesDe(seccioDUtilitats()).at(-1))).toBe('Snippet');
   targetes.forEach((targeta) => {
     const titol = titolDeTargeta(targeta);
-    /* La targeta de sempre: cap variant, cap etiqueta, cap porta. */
+    const font = fontDeLaTargeta(titol);
+    expect(font, titol).not.toBeNull();
+    /* La targeta de sempre: cap variant, cap porta i cap botó gran.
+       Onada 10 (261010; decisió M4 del Mestre) · DEROGAT «cap etiqueta»: la
+       targeta canònica porta la Categoria i l'Etiqueta de la seua font,
+       exactament eixes dues i en eixe ordre. */
     expect(targeta.className, titol).toBe('sp-card');
-    expect(targeta.querySelector('.sp-card-labels'), titol).toBeNull();
+    expect(font.etiquetes.map(([, classe]) => classe), titol).toEqual(['sdp-badge-category', 'sdp-badge-tag']);
+    expect(etiquetesDe(targeta), titol).toEqual(etiquetesEsperades(font.etiquetes));
+    expect(targeta.querySelectorAll('.sp-card-body > ul.sp-card-labels'), titol).toHaveLength(1);
     expect(targeta.querySelector('.sp-card-portes'), titol).toBeNull();
-    /* La boina de Sóc de Poble, dalt de tot i sense data (el registre no en porta).
+    expect(targeta.querySelector('.sp-card-accio'), titol).toBeNull();
+    /* La boina de Sóc de Poble, dalt de tot.
        Derogat per l'ordre del Mestre del 261004 (prompt 261004_0515, T6):
-       l'autor porta a la pàgina del projecte, no al xat corporatiu. */
+       l'autor porta a la pàgina del projecte, no al xat corporatiu.
+       Onada 10 (261010; decisió M4 del Mestre) · DEROGAT «sense data (el
+       registre no en porta)»: la boina porta UNA pastilla amb la data de la
+       seua font, llegida com la de les targetes de dalt (dataHoraDeBarra). */
     const capcal = targeta.querySelector('header.sp-card-header');
     expect(targeta.firstElementChild, titol).toBe(capcal);
     expect(capcal.querySelector('.sp-card-author-name').textContent, titol).toBe(AUTORIA_SOCDEPOBLE.author);
     expect(capcal.querySelector('.sp-card-author-location').textContent, titol).toBe(AUTORIA_SOCDEPOBLE.location);
     expect(capcal.querySelector('a.sp-card-author-link').getAttribute('href'), titol).toBe(RUTA_PERFIL_PROJECTE);
-    expect(capcal.querySelector('.btn-date-time'), titol).toBeNull();
+    expect(targeta.querySelectorAll('.btn-date-time'), titol).toHaveLength(1);
+    expect(pastillaEsperada(font.data).length, titol).toBeGreaterThan(0);
+    expect(pastillaDe(targeta), titol).toEqual(pastillaEsperada(font.data));
     /* L'enllaç de tota la targeta, amb el nom del títol. */
     const enllac = targeta.querySelector('a.sp-card-link-overlay');
     expect([enllac.getAttribute('href'), enllac.getAttribute('aria-label')], titol).toEqual([PAGINA_DUTILITAT.get(titol), titol]);
@@ -500,13 +556,39 @@ test('P7-B · W4-08 · Mapa, Vehicle Compartit i Animalets només dalt: cap targ
 });
 
 /* Cap text ni cap il·lustració dels plugins es copia al Panell: tot es llig de
-   registrePlugins.js. */
-test('P7-B · cap text ni imatge dels plugins és copiat a ControlSection.jsx', () => {
+   registrePlugins.js.
+   Onada 10 (261010; decisió M4 del Mestre) · Tampoc els camps nous de la
+   targeta canònica: ni la data ni el text de les etiquetes del registre.
+   L'única excepció és el text que el Snippet, que no és del registre, porta
+   a la seua pròpia constant (la Categoria «Eina», la mateixa de les eines
+   del registre per l'esborrany de l'ordre): eixe sí que ha de ser al Panell,
+   i una sola vegada com a dada. */
+test('P7-B · cap text, imatge, data ni etiqueta dels plugins és copiat a ControlSection.jsx', () => {
+  const delSnippet = new Set(ETIQUETES_DEL_SNIPPET.map(([text]) => text));
+  const ambData = PLUGINS.filter((plugin) => plugin.data);
+  expect(ambData.length).toBeGreaterThan(0);
   for (const plugin of PLUGINS) {
-    for (const valor of [plugin.subtitol, plugin.entradilla, plugin.imatgeAlt, `${plugin.id}_vinyeta`]) {
+    const etiquetes = plugin.etiquetes.map((etiqueta) => etiqueta.text).filter((text) => !delSnippet.has(text));
+    const valors = [plugin.subtitol, plugin.entradilla, plugin.imatgeAlt, `${plugin.id}_vinyeta`, ...etiquetes];
+    if (plugin.data) valors.push(plugin.data, plugin.data.slice(0, 10));
+    for (const valor of valors) {
       expect(fontControl.includes(valor), `${plugin.id}: ${valor}`).toBe(false);
     }
   }
+  /* Cada plugin amb etiquetes en porta almenys una que NO és del Snippet: la
+     comprovació de dalt no es queda buida per a cap. */
+  for (const plugin of PLUGINS.filter((p) => p.etiquetes.length > 0)) {
+    expect(plugin.etiquetes.some((etiqueta) => !delSnippet.has(etiqueta.text)), plugin.id).toBe(true);
+  }
+  /* El text compartit amb el Snippet, una sola vegada com a dada (text: '…'). */
+  for (const text of delSnippet) {
+    expect([text, fontControl.split(`text: '${text}'`).length - 1]).toEqual([text, 1]);
+  }
+  /* La data del Snippet tampoc s'escriu al Panell: viu a destiSnippet.js. */
+  expect(fontControl.includes(DATA_DEL_SNIPPET)).toBe(false);
+  /* I el Panell llig els dos camps del registre, als tres llocs de crida. */
+  expect(fontControl.split('data={plugin.data}').length - 1).toBe(3);
+  expect(fontControl.split('etiquetes={plugin.etiquetes}').length - 1).toBe(3);
 });
 
 /* La preferència de DetallEspai és d'EXCLUSIÓ: una utilitat s'amaga només amb
@@ -525,33 +607,35 @@ test('P7-B · la preferència només amaga una utilitat amb un false explícit; 
     pinta();
     expect(senseSnippet(utilitats()), String(valor)).toEqual(TITOLS_DE_BAIX);
     expect(utilitats(), String(valor)).toContain('Snippet');
-    /* Onada 8 · I les tres pàgines de la maquinària (cervell: null no l'amaga). */
-    expect(titolsDeLaMaquinaria(), String(valor)).toEqual(PAGINES_DE_LA_MAQUINARIA.map(({ copy }) => copy.title));
+    /* Onada 10 (261010) · I cap de les tres pàgines que han eixit del Panell,
+       diga el que diga la preferència (abans, Onada 8: hi eren totes tres). */
+    expect(utilitats().filter((titol) => TITOLS_FORA_DEL_PANELL.includes(titol)), String(valor)).toEqual([]);
     cleanup();
   }
-  /* Una clau aliena (`inventada`) no amaga res. Ordre del Mestre (261007,
-     prompt 261007_1628, peça C) · `metriques` ja no és aliena: és l'id del
-     Perfil per a la Consola (aplicacions.js, camp `panell`), i una
-     preferència vella desada amb eixe id també l'amaga (ALIES_DEL_PANELL). */
+  /* Una clau aliena (`inventada`) no amaga res. */
   localStorage.setItem(CLAU_UTILITATS, JSON.stringify({ gestoria: false, mapa: false, snippet: false, inventada: false, salut: true }));
   pinta();
   expect(utilitats()).toEqual(PLUGINS_DE_BAIX.filter((plugin) => plugin.id !== 'gestoria').map((plugin) => plugin.titol));
   expect(utilitats()).not.toContain('Snippet');
   cleanup();
-  /* Onada 8 (261009) · La Consola ja no és una utilitat del registre: és la
-     pàgina del sistema de la maquinària, i la preferència vella l'amaga igual.
-     Abans es mirava a utilitats(), que ara no la compta. */
-  localStorage.setItem(CLAU_UTILITATS, JSON.stringify({ metriques: false }));
-  pinta();
-  expect(titolsDeLaMaquinaria()).toEqual(['El Cervell', 'Disseny Pedra Seca']);
-  expect(utilitats()).not.toContain('Consola Termodinàmica');
-  cleanup();
-  /* Cada pàgina de la maquinària s'amaga per la seua clau, com una utilitat. */
-  localStorage.setItem(CLAU_UTILITATS, JSON.stringify({ consola: false, cervell: false, disseny: false }));
-  pinta();
-  expect(titolsDeLaMaquinaria()).toEqual([]);
-  expect(senseSnippet(utilitats())).toEqual(TITOLS_DE_BAIX);
-  cleanup();
+  /* Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010) ·
+     DEROGAT «`metriques` és l'id del Perfil per a la Consola i també
+     l'amaga» (peça C, 261007) i «cada pàgina de la maquinària s'amaga per la
+     seua clau» (Onada 8): la Consola, el Cervell i Disseny ja no tenen
+     targeta al Panell. Les claus que algú ja tinga desades ('metriques',
+     'consola', 'cervell', 'disseny') són ara alienes: no amaguen res, no
+     fan aparéixer res i no s'esborren. */
+  const VELLES = { metriques: false, consola: false, cervell: false, disseny: false };
+  for (const preferencia of [{ metriques: false }, VELLES, { metriques: true, consola: true, cervell: true, disseny: true }]) {
+    const desada = JSON.stringify(preferencia);
+    localStorage.setItem(CLAU_UTILITATS, desada);
+    pinta();
+    expect(senseSnippet(utilitats()), desada).toEqual(TITOLS_DE_BAIX);
+    expect(utilitats(), desada).toContain('Snippet');
+    expect(targetesDe(seccioDe('Maquinària i Sistema')).map(titolDeTargeta), desada).toEqual(['Lector RSS', 'TPV del Bar']);
+    expect(localStorage.getItem(CLAU_UTILITATS), desada).toBe(desada);
+    cleanup();
+  }
   localStorage.setItem(CLAU_UTILITATS, JSON.stringify({ gestoria: false, mapa: false, snippet: false, inventada: false, salut: true }));
   pinta();
   /* Dalt, el Mapa continua a la seua posició i el Panell, sencer. */
@@ -969,8 +1053,10 @@ test('R3 · Onada 8 · totes les targetes del Panell porten Connectar i el copyr
   pinta();
   expect(targetesDeDalt()).toHaveLength(DESTINS_CONTROL.length);
   expect(targetesDUtilitats().length).toBeGreaterThan(0);
-  expect(targetesDeLaMaquinaria()).toHaveLength(PAGINES_MAQUINARIA.length);
-  for (const targeta of [...targetesDeDalt(), ...targetesDUtilitats(), ...targetesDeLaMaquinaria()]) {
+  /* Onada 10 (261010) · Dalt i baix són TOTES les targetes del Panell: ja no
+     n'hi ha de terceres (abans, les tres pàgines de la maquinària). */
+  expect([...targetesDeDalt(), ...targetesDUtilitats()]).toHaveLength(document.querySelectorAll('article.sp-card').length);
+  for (const targeta of [...targetesDeDalt(), ...targetesDUtilitats()]) {
     const titol = titolDe(targeta);
     expect(targeta.querySelector('.sp-card-footer > .sp-card-connect').getAttribute('aria-label'), titol).toBe(`Connectar amb ${titol}`);
     expect(targeta.lastElementChild.className, titol).toBe('sp-card-footer');
@@ -983,13 +1069,16 @@ test('R3 · Onada 8 · totes les targetes del Panell porten Connectar i el copyr
 
 /* Onada 8 · Connectar porta a /connectar, la ruta d'App, amb l'objecte de la
    targeta: la pàgina de «Saber-ne més» dalt i la de la targeta baix. Cap
-   targeta del Panell es queda a /control. */
+   targeta del Panell es queda a /control.
+   Onada 10 (261010) · La quarta fila era la primera pàgina de la maquinària
+   (/page/consola), que ja no és al Panell: ara és la primera eina de
+   «Maquinària i Sistema», que connecta amb la seua pàgina de plugin. */
 test('R3 · Onada 8 · Connectar de cada targeta obri /connectar amb la seua pàgina', () => {
   const esperades = [
     [() => targetesDeDalt()[0], '/page/publicar_mur'],
     [() => targetaDUtilitat('Gestoria'), '/plugin/gestoria'],
     [() => targetaDUtilitat('Snippet'), '/control?fitxa=snippet'],
-    [() => targetesDeLaMaquinaria()[0], '/page/consola']
+    [() => targetesDe(seccioDe('Maquinària i Sistema'))[0], '/plugin/rss']
   ];
   expect(rutesEstatiques().has('connectar')).toBe(true);
   for (const [targeta, pagina] of esperades) {
@@ -1002,62 +1091,109 @@ test('R3 · Onada 8 · Connectar de cada targeta obri /connectar amb la seua pà
   }
 });
 
-/* ═══ Onada 8 (261009; requeriments 261009_1300, punt 2; decisions D2, D4,
-   D5 i D7 de MarIA) · La Consola, el Cervell i Disseny són pàgines, no
-   plugins: «Maquinària i Sistema» les pinta primer amb la targeta del Mur ═══ */
-test('Onada 8 · la maquinària comença per la Consola, el Cervell i Disseny, amb la targeta del Mur i la data del Mestre', () => {
+/* ═══ Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010) ·
+   «Consola Termodinàmica», «El Cervell» i «Disseny Pedra Seca» ixen del
+   Panell de Control i viuen només al Mur ═══
+   DEROGADA la prova «Onada 8 · la maquinària comença per la Consola, el
+   Cervell i Disseny, amb la targeta del Mur i la data del Mestre»
+   (requeriments 261009_1300, punt 2; decisions D2, D4, D5 i D7 de MarIA),
+   que n'afirmava la targeta, la data, la imatge, el botó «Obrir…» i les
+   etiquetes de Disseny. L'ordre nova és la contrària: al Panell no en queda
+   res. La targeta de cada una la vigilen ara les proves del Mur. */
+test('Onada 10 · «Maquinària i Sistema» és exactament el Lector RSS i el TPV del Bar: la Consola, el Cervell i Disseny ja no són al Panell', () => {
   pinta();
+  /* La secció es conserva, amb el seu h2, i porta només les eines del registre. */
   const seccio = seccioDe('Maquinària i Sistema');
-  /* Primer les tres pàgines i després les eines del registre (l'RSS i el TPV). */
-  expect(targetesDe(seccio).map(titolDeTargeta)).toEqual([
-    'Consola Termodinàmica', 'El Cervell', 'Disseny Pedra Seca',
-    ...PLUGINS.filter((plugin) => ['rss', 'tpv'].includes(plugin.id)).map((plugin) => plugin.titol)
-  ]);
-  const DATES = { consola: ['00:00', '08/09/26'], cervell: ['00:00', '09/09/26'], disseny: ['00:00', '10/09/26'] };
-  for (const [index, { clau, copy, pagina }] of PAGINES_DE_LA_MAQUINARIA.entries()) {
-    const targeta = targetesDeLaMaquinaria()[index];
-    /* La boina del Mur: Sóc de Poble cap al seu perfil, i la data de la pàgina. */
-    const capcal = targeta.querySelector('header.sp-card-header');
-    expect(capcal.querySelector('a.sp-card-author-link').getAttribute('href'), clau).toBe(RUTA_PERFIL_PROJECTE);
-    expect(capcal.querySelector('.sp-card-author-name').textContent, clau).toBe('Sóc de Poble');
-    expect([...capcal.querySelectorAll('.btn-date-time span')].map((s) => s.textContent), clau).toEqual(DATES[clau]);
-    /* Títol, subtítol, entradilla i imatge: els de PAGE_COPY (D4). */
-    expect(titolDeTargeta(targeta), clau).toBe(copy.title);
-    expect(targeta.querySelector('.sp-card-subtitle').textContent, clau).toBe(sensePunt(copy.subtitle));
-    const imatge = targeta.querySelector('img.sp-card-media');
-    expect([imatge.getAttribute('src'), imatge.getAttribute('alt')], clau).toEqual([copy.image, copy.imageAlt]);
-    /* Tota la targeta obri la seua pàgina (SYSTEM_PAGES), mai /plugin/<id>. */
-    expect(targeta.querySelector('a.sp-card-link-overlay').getAttribute('href'), clau).toBe(pagina.href);
-    expect(targeta.querySelector(`[href="/plugin/${clau}"]`), clau).toBeNull();
+  expect(seccio.classList.contains('sdp-control-maquinaria')).toBe(true);
+  /* El lead es conserva literal, encara que la secció ja no porte cap targeta de disseny. */
+  expect(seccio.querySelector(':scope > p.lead').textContent.replace(/\s+/g, ' ').trim())
+    .toBe("Panells d'administració, configuració de disseny i eines internes de la plataforma. Aquestes utilitats normalment s'activen només per a l'equip d'administració.");
+  const eines = PLUGINS.filter((plugin) => ['rss', 'tpv'].includes(plugin.id));
+  expect(eines.map((plugin) => plugin.titol)).toEqual(['Lector RSS', 'TPV del Bar']);
+  expect(targetesDe(seccio).map(titolDeTargeta)).toEqual(eines.map((plugin) => plugin.titol));
+  expect(targetesDe(seccio).map((targeta) => targeta.querySelector('a.sp-card-link-overlay').getAttribute('href')))
+    .toEqual(eines.map((plugin) => rutaDelPlugin(plugin.id)));
+  /* Cap targeta de tot el Panell porta cap dels tres títols. */
+  expect(TITOLS_FORA_DEL_PANELL).toEqual(['Consola Termodinàmica', 'El Cervell', 'Disseny Pedra Seca']);
+  const titols = [...document.querySelectorAll('article.sp-card .sp-card-title')].map((titol) => titol.textContent);
+  expect(titols.length).toBeGreaterThan(DESTINS_CONTROL.length);
+  expect(titols.filter((titol) => TITOLS_FORA_DEL_PANELL.includes(titol))).toEqual([]);
+  for (const titol of TITOLS_FORA_DEL_PANELL) expect(screen.queryByText(titol), titol).toBeNull();
+  /* Cap enllaç a la seua pàgina ni a l'eina on portava el botó «Obrir…». */
+  const hrefs = [...document.querySelectorAll('[href]')].map((element) => element.getAttribute('href'));
+  expect(hrefs.length).toBeGreaterThan(0);
+  expect(hrefs.filter((href) => RUTES_FORA_DEL_PANELL.includes(href.split(/[?#]/)[0]))).toEqual([]);
+  for (const clau of CLAUS_FORA_DEL_PANELL) expect(document.querySelector(`[href="/plugin/${clau}"]`), clau).toBeNull();
+  expect(screen.queryByRole('link', { name: 'Obrir la Consola' })).toBeNull();
+  expect(screen.queryByRole('link', { name: 'Obrir el Cervell' })).toBeNull();
+  /* Cap botó gran a cap targeta del Panell (la ranura `accio` de la targeta del Mur). */
+  expect(document.querySelector('.sp-card-accio')).toBeNull();
+  /* I la font del Panell ja no nomena la maquinària que les pintava. */
+  for (const nom of ['TargetaDelMur', 'targetesDeSistema', 'PAGINES_MAQUINARIA']) {
+    expect(fontControl.includes(nom), nom).toBe(false);
   }
-  /* La Consola i el Cervell porten el botó «Obrir…» en lloc de les etiquetes;
-     Disseny, les seues etiquetes (D7: l'única excepció a la P6). */
-  const [consola, cervell, disseny] = targetesDeLaMaquinaria();
-  expect(within(consola).getByRole('link', { name: 'Obrir la Consola' }).getAttribute('href')).toBe('/consola');
-  expect(within(cervell).getByRole('link', { name: 'Obrir el Cervell' }).getAttribute('href')).toBe('/consola/explorador');
-  for (const targeta of [consola, cervell]) expect(targeta.querySelector('.sp-card-labels'), titolDeTargeta(targeta)).toBeNull();
-  expect(disseny.querySelector('.sp-card-accio')).toBeNull();
-  expect([...disseny.querySelectorAll('.sp-card-labels .sp-card-label')].map((etiqueta) => etiqueta.textContent))
-    .toEqual(PAGE_COPY.disseny.labels.map((etiqueta) => etiqueta.text));
-  /* El botó navega a l'eina; la resta de la targeta, a la seua pàgina. */
-  fireEvent.click(within(consola).getByRole('link', { name: 'Obrir la Consola' }));
-  expect(ubicacio()).toBe('/consola');
-  cleanup();
-  pinta();
-  fireEvent.click(targetesDeLaMaquinaria()[1].querySelector('a.sp-card-link-overlay'));
-  expect(ubicacio()).toBe('/page/cervell');
+  for (const nom of ['useCoreContent', 'accioDeLaPagina']) expect(fontControl.includes(nom), nom).toBe(false);
 });
 
-/* Onada 8 · D6 · Les eines del registre i el Snippet no porten cap data
-   inventada; la P6 (cap etiqueta) continua per a totes les targetes del
-   Panell menys les tres pàgines. */
-test('Onada 8 · D6 i D7 · cap data per a les eines; cap etiqueta fora de les pàgines de la maquinària', () => {
+/* Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010, M4:
+   «totes les targetes de plugin del Panell passen a targeta canònica»).
+   DEROGADA la prova «Onada 8 · D6 i D7 · cap data per a les eines; cap
+   etiqueta fora de les pàgines de la maquinària». L'ordre nova: les sis
+   targetes de plugin (Gestoria, Rebost Domèstic, Salut, Lector RSS, TPV del
+   Bar i el Snippet) porten la franja taronja amb la data i l'hora de la seua
+   font, i les etiquetes Categoria i Etiqueta; continuen sense botó gran ni
+   portes. La D6 es conserva en el que valia: cap data INVENTADA (la que es
+   pinta és, lletra per lletra, la de la font). La P6 («cap etiqueta») val
+   ara només per a les huit targetes de dalt. */
+test('Onada 10 · M4 · les sis targetes de plugin són canòniques: data i hora de la seua font, Categoria i Etiqueta, i cap botó gran ni porta', () => {
   pinta();
-  for (const targeta of targetesDUtilitats()) {
-    expect(targeta.querySelector('.btn-date-time'), titolDeTargeta(targeta)).toBeNull();
-    expect(targeta.querySelector('.sp-card-labels'), titolDeTargeta(targeta)).toBeNull();
+  const targetes = targetesDUtilitats();
+  expect(targetes.map(titolDeTargeta)).toEqual(['Gestoria', 'Rebost Domèstic', 'Salut', 'Snippet', 'Lector RSS', 'TPV del Bar']);
+  for (const targeta of targetes) {
+    const titol = titolDeTargeta(targeta);
+    const font = fontDeLaTargeta(titol);
+    expect(font, titol).not.toBeNull();
+    /* La franja taronja: UNA pastilla, un botó dins de la boina, amb els
+       mateixos textos que dataHoraDeBarra trau de la data de la font. */
+    const pastilles = targeta.querySelectorAll('.btn-date-time');
+    expect(pastilles, titol).toHaveLength(1);
+    expect(pastilles[0].matches('header.sp-card-header .sp-card-meta > button.btn-date-time'), titol).toBe(true);
+    expect(pastillaEsperada(font.data).length, titol).toBeGreaterThan(0);
+    expect(pastillaDe(targeta), titol).toEqual(pastillaEsperada(font.data));
+    /* Les etiquetes: exactament les de la font, una Categoria i una Etiqueta, sense enllaç. */
+    expect(font.etiquetes.map(([, classe]) => classe), titol).toEqual(['sdp-badge-category', 'sdp-badge-tag']);
+    expect(etiquetesDe(targeta), titol).toEqual(etiquetesEsperades(font.etiquetes));
+    expect(targeta.querySelector('ul.sp-card-labels [href]'), titol).toBeNull();
+    /* Cap botó gran ni cap porta: la targeta de plugin no n'ha portat mai. */
+    expect(targeta.querySelector('.sp-card-accio'), titol).toBeNull();
+    expect(targeta.querySelector('.sp-card-portes'), titol).toBeNull();
+    expect(targeta.querySelector('.sp-card-porta'), titol).toBeNull();
   }
-  for (const targeta of targetesDeDalt()) expect(targeta.querySelector('.sp-card-labels'), titolDe(targeta)).toBeNull();
+  /* Les del registre: la data amb hora (el dia i l'hora del registre). */
+  for (const plugin of PLUGINS_DE_BAIX) {
+    expect([plugin.id, typeof plugin.data, plugin.etiquetes.length]).toEqual([plugin.id, 'string', 2]);
+    const { time, date } = dataHoraDeBarra({ creat: plugin.data });
+    expect([plugin.id, time !== '', date !== '']).toEqual([plugin.id, true, true]);
+    expect([plugin.id, pastillaDe(targetaDUtilitat(plugin.titol))]).toEqual([plugin.id, [time, date]]);
+  }
+  /* El Snippet: només el dia (cap font en documenta l'hora, i no s'inventa);
+     les seues dues etiquetes, les de l'esborrany de l'ordre. */
+  const snippet = targetaDUtilitat('Snippet');
+  expect(DATA_DEL_SNIPPET).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  expect(pastillaDe(snippet)).toEqual([dataHoraDeBarra({ creat: DATA_DEL_SNIPPET }).date]);
+  expect(pastillaDe(snippet)).toEqual(['03/10/26']);
+  expect(etiquetesDe(snippet)).toEqual([['Eina', 'sp-card-label sdp-badge-category'], ['Extensió', 'sp-card-label sdp-badge-tag']]);
+  /* La pastilla porta al Calendari, al mes de la data, com la de les targetes de dalt. */
+  fireEvent.click(targetaDUtilitat('Salut').querySelector('button.btn-date-time'));
+  expect(ubicacio()).toBe('/calendari?mes=2026-10');
+  /* Les huit de dalt no canvien: la data de la seua pàgina i cap etiqueta (P6). */
+  cleanup();
+  pinta();
+  expect(targetesDeDalt()).toHaveLength(DESTINS_CONTROL.length);
+  for (const targeta of targetesDeDalt()) {
+    expect(targeta.querySelector('.sp-card-labels'), titolDe(targeta)).toBeNull();
+    expect(targeta.querySelectorAll('.btn-date-time'), titolDe(targeta)).toHaveLength(1);
+  }
 });
 
 /* D3 per a la graella de baix. La passada de D3 només prem
@@ -1092,12 +1228,13 @@ test('R3 · D3 · cada utilitat pintada obri una pàgina que servix App, i cap e
 /* W4-11 · La graella no decidix la disponibilitat: cap targeta porta a
    plugin.obrir a seques (ni a /consola, /app/… o /disseny); «Obrir» el decidix
    la pàgina del plugin amb useDestiDelPlugin, que passa pels interruptors.
-   Derogat per a les tres pàgines del sistema per l'ordre del Mestre del
-   261009 (decisions D3 i D7 de MarIA): la Consola i el Cervell porten el
-   botó «Obrir…» de la seua pàgina (accioDeLaPagina), cap a /consola i
-   /consola/explorador, i Disseny obri /disseny. Ho vigila la prova «Onada 8 ·
-   la maquinària comença per…»; esta mira només les eines del registre i el
-   Snippet (targetesDUtilitats), per a les quals W4-11 continua vigent. */
+   L'Onada 8 (261009; decisions D3 i D7 de MarIA) en va fer una excepció per a
+   les tres pàgines del sistema, que portaven el botó «Obrir…» de la seua
+   pàgina. DEROGADA per l'Onada 10 (261010; pla 261010_1121; decisió del
+   Mestre del 261010): les tres ixen del Panell, la prova que vigilava
+   l'excepció («Onada 8 · la maquinària comença per…») ja no existix, i W4-11
+   torna a valdre per a TOTES les targetes de baix, que són les que mira esta
+   prova (targetesDUtilitats). */
 test('W4-11 · cap utilitat porta directament al destí d’«Obrir»: el Panell no llig plugin.obrir', () => {
   expect(fontControl).not.toMatch(/\.obrir\b/);
   expect(fontControl).not.toMatch(/\bappDelPlugin\b/);
@@ -1118,8 +1255,9 @@ test('W4-11 · cap utilitat porta directament al destí d’«Obrir»: el Panell
    Ordre del Mestre (261007, correcció C2) · El xat resolt és la via «En
    privat» del menú, i el dona el proveïdor de l'app amb el seu avís ja
    traduït: el Panell no en fa cap resolució pròpia. */
-/* Onada 8 (261009) · I les tres pàgines de la maquinària (la boina del Mur). */
-const BOINES_AL_PROJECTE = () => [...targetesDeDalt(), ...targetesDUtilitats(), ...targetesDeLaMaquinaria()]
+/* Onada 10 (261010) · Dalt i baix: totes les targetes del Panell. Abans
+   (Onada 8), també les tres pàgines de la maquinària, amb la boina del Mur. */
+const BOINES_AL_PROJECTE = () => [...targetesDeDalt(), ...targetesDUtilitats()]
   .map((targeta) => targeta.querySelector('a.sp-card-author-link')?.getAttribute('href'));
 const NO_DISPONIBLE = 'Xat de Sóc de Poble: encara no disponible en este servidor.';
 const ES_BUSCA = 'Xat de Sóc de Poble: encara s’està buscant en este servidor.';

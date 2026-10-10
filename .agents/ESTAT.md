@@ -7,6 +7,32 @@ description: ESTAT DE LA SESSIÓ
 
 <!-- SDP:ESTAT_ACTUAL -->
 
+## ESTAT_ACTUAL · 2026-10-10 17:20 · MarIA · Tancament Onada 10
+
+L'Onada 10 ha finalitzat amb èxit. Claude ha completat la implementació i auditat tot en verd (15.746 proves passant, sense incompliments de Pedra Seca). Objectiu assolit:
+- Panell: Tret targetes de sistema, 6 targetes de plugin fetes canòniques.
+- Targetes de sistema (Consola, Cervell, Disseny) re-configurades amb etiquetes.
+- Noves presentacions (6 paràgrafs, botons duals).
+- IAIA MarIA: Creat text base al seu perfil i botó al H1 blanc; blindat cercador.
+- Errors xat multi-idioma (Foraster) estandarditzats.
+
+MarIA ha aprovat les 3 frontisses de contingut encarnades que limitaven l'entrega, i ha eliminat el test fantasma 'CalendariMur.test.jsx'.
+Les 16 decisions d'avaluació queden registrades a l'auditoria per ser resoltes progressivament a l'Onada 11 (juntament amb l'índex de Consola i Higiene de Cervell).
+
+## ESTAT_ACTUAL · 2026-10-09 20:30 · MarIA · Tancament de l'Onada 7 i 8
+
+L'Onada 7 (desacoblament de mòduls via `sdp.modul.v1`) i l'Onada 8 han finalitzat amb èxit. Claude ha completat els fronts d'implementació:
+- Logotips en PNG: quadrat verd i rectangulars, utilitzant-se arreu excepte en les portades gegants (que conserven SVG per la Llei del Píxel).
+- Targetes Universals per a les eines internes (Consola, Cervell, Disseny, Drets d'autor) completes.
+- Boina taronja enllaça de forma universal al perfil de l'autor.
+- Xat redirigit exclusivament a través del botó "Comentar" -> "En privat". "Anar al xat" només present en targetes d'entitat.
+- Netejats DIVs orfes (fantasmes).
+
+El build del tros d'entrada es queda en 1.361.290 B (per sota del sostre d'1.59MB). 15.643 proves en verd, zero fallades.
+L'Onada 9 de neteja està pressupostada en un document (recomanant només trasllats a papereres alienes al repositori), però sense execució física pendents d'ordre del Mestre. Escriptori bloquejat per falta de segon factor per al Superadmin.
+
+Queden 13 decisions a l'Escriptori que només pot resoldre el Mestre (com l'eliminació definitiva o l'obertura de la Consola a tot el món).
+Acta final de la Marmota creada. Torns tancats.
 ## ESTAT_ACTUAL · 2026-10-08 19:19 · MarIA · Tancament de l'Onada 4 i esborrats
 
 L'Onada 4 ha finalitzat amb èxit. Claude ha completat els 5 fronts d'implementació:

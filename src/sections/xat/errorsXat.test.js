@@ -18,7 +18,9 @@ const ca = createTranslator('ca');
 describe('textDErrorDelXat', () => {
   it('cada codi amb clau ix traduït a les cinc llengües i sense el codi', () => {
     /* Onada 8 (261009) · SDP-XAT-002 (cap xat amb tu mateix) i SDP-XAT-004
-       (no és d'este poble, revisió) també tenen text humà. */
+       (no és d'este poble, revisió) també tenen text humà.
+       Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010) ·
+       SDP-XAT-003 i SDP-XAT-004 diuen «Foraster»; les claus són les mateixes. */
     expect(Object.keys(CLAUS_ERROR_SDP).sort()).toEqual(['SDP-XAT-002', 'SDP-XAT-003', 'SDP-XAT-004', 'SDP-XAT-013', 'SDP-XAT-016', 'SDP-XAT-429']);
     for (const [codi, clau] of Object.entries(CLAUS_ERROR_SDP)) {
       const error = { code: codi, message: ca(clau) };

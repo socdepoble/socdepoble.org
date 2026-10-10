@@ -29,8 +29,13 @@ test('el mateix codi en castellà; i SDP-XAT-003 també', () => {
   pinta(enError({ codiError: 'SDP-XAT-429' }), 'es');
   expect(screen.getByRole('alert').textContent).toContain('Has enviado muchos mensajes en poco tiempo.');
   cleanup();
-  pinta(enError({ codiError: 'SDP-XAT-003', error: 'Encara no consta que sigues d’este poble.' }), 'en');
-  expect(screen.getByRole('alert').textContent).toContain('You are not registered as part of this town yet');
+  /* Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010) ·
+     SDP-XAT-003 diu «Mode Foraster» («Outsider mode» en anglés), mai el
+     text valencià que porta l'error. */
+  pinta(enError({ codiError: 'SDP-XAT-003', error: 'Estàs en Mode Foraster: el xat és per a la gent d’este poble.' }), 'en');
+  const avis = screen.getByRole('alert');
+  expect(avis.textContent).toContain('You are in Outsider mode: the chat is for the people of this town.');
+  expect(avis.textContent).not.toMatch(/SDP-XAT|Mode Foraster/);
 });
 
 test('sense codi traduït, el missatge de l’error; sense missatge, «No s’ha enviat»', () => {

@@ -21,12 +21,20 @@
  *
  * `vistaRef` (de ControlSection) apunta al cos de la fitxa: amb ell es
  * col·loca la vista quan s'obri (vistaDeLaFitxa.js).
+ *
+ * Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010, M4) · La
+ * targeta del Snippet passa a targeta canònica i porta data a la boina. La
+ * barra taronja d'esta fitxa pinta la MATEIXA (DATA_DEL_SNIPPET, de
+ * destiSnippet.js, llegida amb dataHoraDeBarra): targeta i pàgina diuen el
+ * mateix (ordre del Mestre, 261001). És una data de només dia: la pastilla
+ * no porta hora, que no s'inventa. Abans, la fitxa no en passava cap.
  */
 import { useId } from 'react';
 import { Download, Puzzle } from 'lucide-react';
 import { UniversalPage } from '../../components/universal/UniversalPage';
+import { dataHoraDeBarra } from '../../components/universal/editorial.js';
 import { Alerta, Boto } from '../../components/PedraSeca/index.js';
-import { destiDelSnippet, urlDelSnippet } from './destiSnippet.js';
+import { DATA_DEL_SNIPPET, destiDelSnippet, urlDelSnippet } from './destiSnippet.js';
 
 const INSTALLA = 'Instal·la a Chrome';
 const DESCARREGA = 'Descarrega l’extensió';
@@ -96,6 +104,8 @@ export function FitxaSnippet({ vistaRef }) {
       title="Snippet"
       subtitle="Desa qualsevol web d’un clic"
       lead="Una extensió de Chrome que porta a Sóc de Poble la web que estàs llegint."
+      /* Onada 10 (M4) · La data de la targeta, a la barra taronja. */
+      {...dataHoraDeBarra({ creat: DATA_DEL_SNIPPET })}
     >
       <div ref={vistaRef} className="content-wrapper">
         <section>

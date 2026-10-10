@@ -10,16 +10,22 @@
  *    fallaria.
  * Onada 8 (261009; requeriments 261009_1300, punt 2) · La Consola i el
  * Cervell són pàgines del sistema (/page/consola i /page/cervell), amb el
- * botó «Obrir…» cap a l'eina; Disseny continua a /disseny. Les tres porten la
- * data literal del Mestre.
+ * botó «Obrir…» de la seua PÀGINA cap a l'eina; Disseny continua a /disseny.
+ * Les tres porten la data literal del Mestre.
+ * Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010) · El botó
+ * de la TARGETA és una altra pregunta (accioDeLaTargeta: hui, només El Xat),
+ * i la Consola i el Cervell repetixen el de la pàgina després del cos
+ * (accioAlFinal). Les tres targetes de la maquinària porten etiquetes a
+ * PAGE_COPY: Categoria i Etiqueta.
  */
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, test } from 'vitest';
 import fontApp from '../app/App.jsx?raw';
 import { RUTA_CONSOLA, segmentPagina } from '../sections/consola/consolaPagines.js';
-import { RUTA_DRETS_AUTOR, SYSTEM_PAGES, accioDeLaPagina } from './systemPages.js';
+import { RUTA_DRETS_AUTOR, SYSTEM_PAGES, accioAlFinal, accioDeLaPagina, accioDeLaTargeta } from './systemPages.js';
 import { PAGE_COPY } from '../sections/text/pageContent.js';
+import { IDS_PLUGINS, RUTA_PLUGINS } from '../sections/plugins/registrePlugins.js';
 import { createTranslator } from './i18n.js';
 import { resolvePageSlugPath } from './navigation.js';
 
@@ -56,7 +62,10 @@ describe('Onada 8 · la Consola, el Cervell i Disseny són pàgines del sistema'
     expect(fontApp.includes('<Route path="/page/:slug"')).toBe(true);
   });
 
-  test('el botó gran «Obrir…»: la Consola a RUTA_CONSOLA i el Cervell a l’Explorador, cap còpia que divergisca', () => {
+  /* L'acció de la PÀGINA (el botó de davall de l'H1 de /page/consola i
+     /page/cervell). toEqual: el retorn és exactament { id, verb, desti,
+     varietat }, sense les marques `targeta` ni `final` del descriptor. */
+  test('el botó gran «Obrir…» de la pàgina: la Consola a RUTA_CONSOLA i el Cervell a l’Explorador, cap còpia que divergisca', () => {
     expect(accioDeLaPagina('consola')).toEqual({ id: 'obrir-consola', verb: 'Obrir la Consola', desti: RUTA_CONSOLA, varietat: 'primari' });
     expect(accioDeLaPagina('cervell')).toEqual({ id: 'obrir-cervell', verb: 'Obrir el Cervell', desti: `${RUTA_CONSOLA}/explorador`, varietat: 'primari' });
     // L'Explorador és una pàgina de la Consola de veres; /consola/cervell, no.
@@ -96,6 +105,85 @@ describe('Onada 8 · la Consola, el Cervell i Disseny són pàgines del sistema'
     }
     expect(PAGE_COPY.cervell).toMatchObject({ title: 'El Cervell', image: '/assets/ui/plugins/cervell_vinyeta.jpg' });
     expect(PAGE_COPY.consola.image).toBe('/assets/ui/plugins/consola_vinyeta.jpg');
+  });
+});
+
+/* Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010) · Les
+   targetes de la Consola, del Cervell i de Disseny viuen només al Mur. La
+   Consola i el Cervell hi perden el botó gran (derogat de l'Onada 8) i porten
+   Categoria i Etiqueta; a la seua pàgina, el botó va dalt i al final (M2). El
+   Xat conserva el seu botó a la targeta (ordre del 261007, no derogada). */
+describe('Onada 10 · el botó de la targeta, el del final de la pàgina i les etiquetes', () => {
+  const CLAUS = SYSTEM_PAGES.map((pagina) => pagina.key);
+
+  test('accioDeLaTargeta: només El Xat porta el botó a la targeta, i és la mateixa porta de la seua pàgina', () => {
+    expect(CLAUS.filter((clau) => accioDeLaTargeta(clau))).toEqual(['xat']);
+    expect(accioDeLaTargeta('xat')).toEqual({ id: 'anar-al-xat', verb: 'Anar al xat', desti: '/xat', varietat: 'primari' });
+    expect(accioDeLaTargeta('xat')).toEqual(accioDeLaPagina('xat'));
+    for (const clau of ['consola', 'cervell', 'disseny', 'drets-autor', 'no-hi-es', undefined]) {
+      expect([clau, accioDeLaTargeta(clau)]).toEqual([clau, null]);
+    }
+    // El verb passa pel traductor, com el de la pàgina.
+    const t = (clau, reserva) => (clau === 'section.xat.anarAlXat' ? 'Go to the chat' : reserva);
+    expect(accioDeLaTargeta('xat', t).verb).toBe('Go to the chat');
+    expect(accioDeLaTargeta('consola', t)).toBeNull();
+  });
+
+  test('accioAlFinal: la Consola i el Cervell repetixen el botó després del cos; la resta, no', () => {
+    expect(CLAUS.filter((clau) => accioAlFinal(clau))).toEqual(['consola', 'cervell']);
+    for (const clau of ['xat', 'disseny', 'drets-autor', 'no-hi-es', undefined]) {
+      expect([clau, accioAlFinal(clau)]).toEqual([clau, false]);
+    }
+    // Cap botó al final sense un botó de pàgina que repetir.
+    for (const clau of CLAUS.filter((candidata) => accioAlFinal(candidata))) {
+      expect([clau, accioDeLaPagina(clau) !== null]).toEqual([clau, true]);
+    }
+  });
+
+  test('les marques viuen al descriptor i no ixen al retorn d’accioDeLaPagina', () => {
+    const accio = (clau) => SYSTEM_PAGES.find((pagina) => pagina.key === clau).accio;
+    expect([accio('xat').targeta, accio('xat').final]).toEqual([true, undefined]);
+    for (const clau of ['consola', 'cervell']) {
+      expect([clau, accio(clau).targeta, accio(clau).final]).toEqual([clau, undefined, true]);
+    }
+    for (const clau of ['xat', 'consola', 'cervell']) {
+      expect([clau, Object.keys(accioDeLaPagina(clau))]).toEqual([clau, ['id', 'verb', 'desti', 'varietat']]);
+      expect([clau, Object.isFrozen(accio(clau))]).toEqual([clau, true]);
+    }
+  });
+
+  /* Les etiquetes són la font única de la targeta, de la capçalera de la
+     pàgina i de la targeta incrustada. Valors d'esborrany per al Mestre; el
+     text «Sistema» es conserva a propòsit, perquè el filtre ?category= del
+     Mur compara el text de les etiquetes (MurSection.jsx). */
+  test('PAGE_COPY: la Consola i el Cervell porten Categoria i Etiqueta; Disseny, les seues dos i una tercera', () => {
+    expect(PAGE_COPY.consola.labels).toEqual([
+      { text: 'Sistema', className: 'sdp-badge-category' },
+      { text: 'Manteniment', className: 'sdp-badge-tag' }
+    ]);
+    expect(PAGE_COPY.cervell.labels).toEqual([
+      { text: 'Sistema', className: 'sdp-badge-category' },
+      { text: 'Graf', className: 'sdp-badge-tag' }
+    ]);
+    expect(PAGE_COPY.disseny.labels).toEqual([
+      { text: 'MUR', className: 'sdp-badge-system' },
+      { text: 'Disseny UI', className: 'sdp-badge-category' },
+      { text: 'Pedra Seca', className: 'sdp-badge-tag' }
+    ]);
+    for (const clau of ['consola', 'cervell']) {
+      expect([clau, PAGE_COPY[clau].labels.some((etiqueta) => etiqueta.text === 'Sistema')]).toEqual([clau, true]);
+    }
+  });
+
+  /* Decisió M3 del Mestre (261010) · El Rebost Domèstic i Salut es queden al
+     Panell de Control (espai «La llar») i NO entren al Mur. El Mur i el
+     Calendari pinten SYSTEM_PAGES: cap plugin del registre n'és una entrada,
+     ni per la clau ni per la ruta. Qui en vulga afegir un ha de derogar M3, no
+     pujar un recompte. */
+  test('M3 · cap plugin del registre és una pàgina del sistema: el Rebost i Salut no entren al Mur', () => {
+    expect(IDS_PLUGINS).toEqual(expect.arrayContaining(['rebost', 'salut']));
+    expect(CLAUS.filter((clau) => IDS_PLUGINS.includes(clau))).toEqual([]);
+    expect(SYSTEM_PAGES.filter((pagina) => pagina.href.startsWith(`${RUTA_PLUGINS}/`)).map((pagina) => pagina.key)).toEqual([]);
   });
 });
 

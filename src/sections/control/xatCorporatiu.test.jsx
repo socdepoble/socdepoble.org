@@ -65,6 +65,7 @@ import { XAT_SOCDEPOBLE_DE_LLAVOR, useXatSocDePoble, useXatSocDePobleResolt } fr
 import { UniversalCard } from '../../components/PedraSeca/organismes/UniversalCard.jsx';
 import { TEXTOS_COMENTAR } from '../../components/universal/barres/BarraBlava.jsx';
 import { esRutaInterna } from '../../config/objecteConnectable.js';
+import { createTranslator } from '../../config/i18n.js';
 import { ESPERA_DESPRES_DE_FALLADA_MS, objecteDe, objecteDePerfil } from '../../config/navigation.js';
 import { resolRuta } from '../../app/contexts/politicaRouter.js';
 import { ENTITAT_PILOT_SLUG, IAIA_ID, PERSONA_PILOT } from '../../data/identitatsSeed.js';
@@ -568,9 +569,17 @@ describe('Onada 8 · el proveïdor de veres: qui mira i el padró de la llavor',
     for (const qui of [{ tipus: 'persona', id: 'javillinares' }, { tipus: 'ia', id: IAIA_ID }, { tipus: 'persona', id: XAT_SEED_IDS.javi }]) {
       await expect(localXat.creaFilDirecte(directeDeLlavor(qui), null, config)).resolves.toEqual(expect.any(String));
     }
+    /* Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010) · El
+       rebuig del padró ix amb el codi del servidor (SDP-XAT-004), no amb
+       'LOCAL': la interfície el tradueix pel `code` (errorsXat.js). Es
+       comprova el codi, i que el text és el valor valencià de la clau
+       («…forastera…»), sense el codi cru: és el que pinta qui no tradueix. */
+    const forastera = createTranslator('ca')('section.xat.error.noDelPoble');
     for (const id of ['javillinares', FORA_DEL_PADRO.id]) {
-      await expect(localXat.creaFilDirecte(id, null, config)).rejects.toThrow('Esta persona no és del poble.');
+      const error = await localXat.creaFilDirecte(id, null, config).catch((e) => e);
+      expect([id, error instanceof Error, error.code, error.retriable, error.message]).toEqual([id, true, 'SDP-XAT-004', false, forastera]);
     }
+    expect(forastera).not.toMatch(/SDP-XAT/);
   });
 
   test('integració: una publicació pròpia, un autor de fora del padró i el Mac Mini de Javi, amb el proveïdor i les targetes de veres', () => {
