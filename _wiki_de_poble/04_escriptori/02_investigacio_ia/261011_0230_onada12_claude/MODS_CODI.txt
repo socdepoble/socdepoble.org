@@ -1,0 +1,698 @@
+ELS MODS D'AUDITORIA COM A FITXERS AL MAS · Onada 12, front 7 · laboratori 261011_0230_onada12_claude
+Claude (Opus 5.5), 2026-10-11 matinada (02:30-03:15), sobre l'arbre de backup-notes-publish (HEAD fdb72ae0, amb canvis sense commit).
+Encàrrec: 261011_0130_ordres_nit_directora.md, punt 7. És la secció D de l'estudi; les seccions A, B, C, E i F són
+al fitxer germà AUTOCURACIO_I_MODS.txt.
+
+Este document no ha esborrat, mogut ni editat res. Els dos Mods són TEXT per a copiar: no s'han creat a tooling/ i
+NO s'han executat. Són codi revisat a mà contra el disc d'eixa nit (el format real de supabase/seed.sql i les
+exportacions reals de tooling/gates/porta-olivera.mjs). Les cites de línia són del moment de la lectura.
+
+====================================================================
+D1 · CONTRACTE `sdp.mod.v1`
+====================================================================
+
+Què és. Un fitxer `tooling/mods/mod-<nom>.mjs`, Node pur i sense dependències, que exporta `MANIFEST` (congelat) i
+una funció pura que torna l'informe. És l'equivalent, del costat del disc, d'un sentinella `sdp.sentinella.v1`
+(`src/sections/tractors/sentinelles/contracte.js`), i en copia el vocabulari perquè la casa no n'aprenga un altre.
+
+Manifest (tots obligatoris): `schema: 'sdp.mod.v1'`; `id` (`mod.<nom>`); `nom`; `versio` (semver); `nivell` (`L0`
+només llig; `L1` pot demanar a una porta existent que moga coses que es poden desfer; cap `L2`: res que esborre);
+`descripcio`; `fitxa` (ruta del Markdown d'aprovació); `fonts` (els fitxers que formen l'empremta: ell mateix i el
+que importa); `llig` (abast de lectura, per superfície, mai per patró obert); `escriu` (per defecte `[]`; un L1 diu
+quina porta escriu per ell i on); `xarxa: 'cap'`; `dadesPersonals`; `disparador`; `ordres` (les línies d'ordre
+exactes, argv literal); `proves`.
+
+Regles de comportament:
+1. Sense bandera, o amb `--sec`, simula: imprimix el pla i no toca res. És el mode per defecte.
+2. Actuar és `--aplica --codi CODI`, on el codi són els 12 primers caràcters del sha256 del pla que ha imprés
+   `--sec`. Si la taula ha canviat, el codi no casa i no fa res (el mateix mecanisme que
+   `cron_higiene.mjs --l2 --confirma`, `:425-434, 460`).
+3. Un Mod no mou, no reanomena i no esborra amb `fs`: per a moure crida la porta que ja existix. Un Mod no escriu
+   l'índex.
+4. Eixida: un sol JSON per stdout (`schema: 'sdp.mod.informe.v1'`). Codis: 0 net, 1 hi ha troballes o feina, 2 no
+   ha pogut auditar. Un abast absent és un 2, mai un verd.
+5. Arrel per `arrelSegura()` i guarda `esMain(import.meta.url)` de `tooling/lib/arrel.mjs:284,360-364` (resol
+   espais i enllaços simbòlics). Mai `process.cwd()`.
+6. No llig el contingut de `90_arxiu_historic/` (AGENTS §5): com la porta, només noms. No entra a `01_produccio/`,
+   `02_investigacio_ia/` ni a la Safata.
+7. S'absté si hi ha `document-create.lock`, `mutation.lock` o `mutation.pending.json`.
+
+On viu. El codi, a `tooling/mods/`: és maquinària, i `tooling` és zona de governança (`mutation-policy.mjs:6`), que
+és la fricció que toca per a una cosa que pot acabar movent fitxers. La fitxa, a la Wiki
+(`_wiki_de_poble/03_actuar/mods/mod_<nom>.md`, ancorada a `00_index_actuar.md`), perquè la Wiki compilada només
+ingerix Markdown de `_wiki_de_poble` i la lliçó 261002 vol que el Mestre la veja des de la web.
+
+Qui el pot executar, tal com és el disc hui:
+- Agents locals (Claude, Codex): només ordres que siguen, lletra per lletra, a `READ_NODE_COMMANDS`
+  (`mutation-policy.mjs:134-142`), i amb el `cwd` a l'arrel (`:151`). Un Mod L0 hi entra amb una línia per ordre:
+  `'node tooling/mods/mod-auditoria-llavors.mjs'`, `'node tooling/mods/mod-neteja-escriptori.mjs'` i
+  `'node tooling/mods/mod-neteja-escriptori.mjs --sec'`. El mode `--aplica` no hi entra mai.
+- MarIA no va «sense hook»: el seu `run_command` passa per `antigravity-hook.mjs:414-478`. Una ordre
+  `node tooling/mods/…` no és a la llista d'admeses directes (`:436`), però arriba a l'`ALLOW` final perquè
+  `scriptSobreIndex` no jutja els scripts versionats de `tooling/` (`VERSIONAT`, `:197`, `:385`). Pot executar els
+  dos modes.
+- Afegir un Mod és escriure a `tooling/`: MarIA o el Mestre, o `executor-mutacio.mjs` amb pla i lease.
+
+Com es lliga a les lleis:
+- AGENTS §5 i §12: res s'esborra; el que ix va a `90_arxiu_historic/` amb `porta-olivera.mjs --arxiva`, que no
+  trepitja mai un destí i rebutja qualsevol nom amb barra (`nomSolt`, `:986-993`), de manera que `01_produccio/`,
+  `02_investigacio_ia/` i la Safata queden fora per construcció.
+- §16, Oblit Saludable: el Mod proposa què ja no fa falta; qui decidix és l'orquestradora, amb l'Acte Reflex
+  Pre-Arxivament (`core-higiene-escriptori`, pas 0).
+- Somiador: «requerix un encàrrec explícit» i «no mou documents ancorats ni vinculats a torns». El Mod de neteja no
+  mou cap declarat viu amb vida ni cap document sostingut per un torn obert, i mai crida el Somiador.
+- «No hi ha purga per antiguitat»: l'edat sola no classifica res. Un document és consumit perquè és de categoria de
+  torn, de jornada anterior i ningú l'ha declarat viu, que és la definició de `ranci()`
+  (`porta-olivera.mjs:218-221`).
+
+L'aprovació: un forat que cal dir. La lliçó 261002 demana aprovar «des de la interfície de la pàgina web». La porta
+d'aprovació de la web (tractors i sentinelles) guarda el registre a l'IndexedDB del navegador i calcula l'empremta
+sobre fonts de `src/` servides per Vite (`registreTractors.js:23-29`). Un Mod de Node no pot llegir eixe registre.
+Hui no hi ha pont. Opcions: (a) la fitxa es llig a la Wiki i l'acte d'aprovació és un codi teclejat en un terminal,
+com Plaquetes (`plaquetes.mjs:297-320`) i la L2 del cron; (b) un punt d'escriptura nou al connector de DEV
+(`consola-iaia.mjs` hui només servix GET) que desa l'aprovació en un fitxer; (c) els Mods L0 s'executen sense
+aprovació i només els L1 la demanen. Recomane (a) ara i (b) quan hi haja ordre; (c) contradiu la lletra de la
+lliçó i és decisió del Mestre.
+
+Una porta `tractor-mods` (20 línies) hauria de fer complir el contracte: cada `tooling/mods/mod-*.mjs` exporta un
+`MANIFEST` vàlid, la fitxa existix, les seues `ordres` de lectura són a `READ_NODE_COMMANDS` i les d'acció no.
+
+====================================================================
+D2 · MOD 1 · `tooling/mods/mod-auditoria-llavors.mjs` (L0, només lectura)
+====================================================================
+
+No s'ha executat: és codi revisat a mà contra el format real de `supabase/seed.sql` (files
+`('tenant', 'clau', '<json>'::jsonb, versió)`, línies 8-17).
+
+```js
+#!/usr/bin/env node
+/**
+ * mod-auditoria-llavors.mjs — Mod d'auditoria «sdp.mod.v1», nivell L0: només llig.
+ *
+ * Cens de duplicats i fantasmes a les llavors:
+ *   LLV-ID-REPETIT        un id dues vegades dins d'una col·lecció de supabase/seed.sql
+ *   LLV-SENSE-ID          una entrada sense id (byId, contentHelpers.js, la descarta en pintar)
+ *   LLV-TITOL-REPETIT     el mateix títol amb ids diferents dins d'una col·lecció
+ *   LLV-DERIVADA          una entrada de mediaItems que repetix un element d'una altra col·lecció,
+ *                         o un mateix recurs en més d'una entrada de mediaItems
+ *   LLV-RECURS-ABSENT     una ruta /assets/… que no és a public/ amb la caixa exacta
+ *   LLV-SQL-DESFASAT      seed.sql no porta el que les fonts JS diuen que hauria de portar
+ *   LLV-PAYLOAD-ILLEGIBLE una fila d'app_content que no és JSON
+ *   LLV-FONT-ABSENT       un fitxer de l'abast que no és al disc
+ *
+ * Abast per superfície (sdp-workflow, lliçó 260923): SQL, FONTS_JS i els noms de public/.
+ * Res més. No importa cap mòdul de src/ (porten import.meta de Vite): llig text.
+ *
+ * Eixida: un JSON per stdout. Codi 0 sense troballes roges ni grogues; 1 si n'hi ha;
+ * 2 si no ha pogut auditar (arrel, abast o arguments).
+ */
+import fs from 'node:fs';
+import path from 'node:path';
+import { arrelSegura, esMain } from '../lib/arrel.mjs';
+
+export const MANIFEST = Object.freeze({
+  schema: 'sdp.mod.v1',
+  id: 'mod.auditoria-llavors',
+  nom: 'Auditoria de llavors',
+  versio: '1.0.0',
+  nivell: 'L0',
+  descripcio: 'Cens de duplicats i fantasmes a les llavors: ids repetits, recursos /assets/ que no són a public/ i entrades derivades duplicades.',
+  fitxa: '_wiki_de_poble/03_actuar/mods/mod_auditoria_llavors.md',
+  fonts: Object.freeze(['tooling/lib/arrel.mjs', 'tooling/mods/mod-auditoria-llavors.mjs']),
+  llig: Object.freeze(['supabase/seed.sql', 'public/ (només noms de fitxer)', 'els fitxers de FONTS_JS']),
+  escriu: Object.freeze([]),
+  xarxa: 'cap',
+  dadesPersonals: false,
+  disparador: Object.freeze(['manual']),
+  ordres: Object.freeze(['node tooling/mods/mod-auditoria-llavors.mjs']),
+  proves: Object.freeze(['tests/mod-auditoria-llavors.test.mjs'])
+});
+
+export const SQL = 'supabase/seed.sql';
+export const PUBLIC = 'public';
+export const LLEGAT = 'src/sections/multimedia/legacyMedia.js';
+export const FONTS_JS = Object.freeze([
+  'src/apps/bar/llavors/laParroquia.js',
+  'src/config/assetResolver.js',
+  'src/data/agentsSeed.js',
+  'src/data/appSeed.js',
+  'src/data/identitatsSeed.js',
+  'src/data/xatsPerDefecte.js',
+  'src/sections/mercat/marketSeed.js',
+  'src/sections/multimedia/legacyMedia.js',
+  'src/sections/mur/eventsSeed.js',
+  'src/sections/plugins/registrePlugins.js',
+  'src/sections/pobles/townsSeed.js',
+  'src/sections/text/legalContent.js',
+  'src/sections/text/pageContent.js'
+]);
+
+const RE_FILA = /^\s*\('([^']*)',\s*'([A-Za-z]+)',\s*'(.*)'::jsonb,\s*(\d+)\)[,;]?\s*$/;
+const RE_RECURS = /\/assets\/[^\s"'`()<>\\,;]+/g;
+const RE_ID_LITERAL = /\bid:\s*'([a-z0-9][a-z0-9-]*)'/g;
+const DERIVADA = /^(market|feed|town)-/;
+const COLLECCIO_DE = Object.freeze({ market: 'marketItems', feed: 'feedPosts', town: 'towns' });
+
+const llig = (abs) => {
+  try { return fs.readFileSync(abs, 'utf8'); }
+  catch (error) { if (error.code === 'ENOENT') return null; throw error; }
+};
+const liniaDe = (text, tros) => {
+  const i = text.indexOf(tros);
+  return i < 0 ? null : text.slice(0, i).split('\n').length;
+};
+const troballa = (codi, severitat, missatge, font) => ({ codi, severitat, missatge, font });
+
+/** Les files d'app_content de seed.sql: { clau, linia, versio, payload }. Pura. */
+export function filesDeLaLlavor(sql) {
+  const files = [];
+  const illegibles = [];
+  String(sql).split('\n').forEach((linia, i) => {
+    const m = RE_FILA.exec(linia);
+    if (!m) return;
+    try { files.push({ clau: m[2], linia: i + 1, versio: Number(m[4]), payload: JSON.parse(m[3].replaceAll("''", "'")) }); }
+    catch (error) { illegibles.push({ clau: m[2], linia: i + 1, motiu: error.message }); }
+  });
+  return { files, illegibles };
+}
+
+/** Les rutes /assets/… amb extensió que nomena un text, sense consulta ni fragment. Pura. */
+export function recursosDe(text) {
+  const trobats = new Set();
+  for (const [cru] of String(text).matchAll(RE_RECURS)) {
+    if (cru.includes('$') || cru.includes('{')) continue;   // tros d'una plantilla: no és una ruta sencera
+    const net = cru.split(/[?#]/)[0].replace(/[.:]+$/, '');
+    if (/\.[A-Za-z0-9]{2,5}$/.test(net)) trobats.add(net);
+  }
+  return [...trobats].sort();
+}
+
+/* La ruta és un fitxer de public/ amb la caixa exacta de cada tram: a macOS el disc no la
+   distingix i a Linux (la CI, el servidor) sí. Només readdir i stat: cap contingut. */
+function creaCens(arrel) {
+  const dirs = new Map();
+  const noms = (abs) => {
+    if (!dirs.has(abs)) {
+      let llista = null;
+      try { llista = new Set(fs.readdirSync(abs)); } catch { /* no és un directori llegible */ }
+      dirs.set(abs, llista);
+    }
+    return dirs.get(abs);
+  };
+  return (ruta) => {
+    let relatiu;
+    try { relatiu = decodeURIComponent(ruta); } catch { return false; }
+    const trams = relatiu.split('/').filter(Boolean);
+    if (trams.some((tram) => tram === '.' || tram === '..')) return false;
+    let cursor = path.join(arrel, PUBLIC);
+    for (const tram of trams) {
+      if (!noms(cursor)?.has(tram)) return false;
+      cursor = path.join(cursor, tram);
+    }
+    try { return fs.statSync(cursor).isFile(); } catch { return false; }
+  };
+}
+
+/** L'auditoria sencera sobre una arrel. No escriu res. */
+export function audita(arrel) {
+  if (!fs.existsSync(path.join(arrel, PUBLIC, 'assets'))) {
+    throw new Error(`${PUBLIC}/assets no és al disc: sense ell, tota ruta semblaria absent`);
+  }
+  const troballes = [];
+  const existeix = creaCens(arrel);
+  const comptes = { files: 0, colleccions: 0, entrades: 0, recursos: 0, fonts: 0 };
+  const colleccions = new Map();
+  const absent = (ruta, font) => troballa('LLV-RECURS-ABSENT', 'roja', `${ruta} no és a ${PUBLIC}/ (amb la caixa exacta).`, font);
+
+  /* 1 · supabase/seed.sql */
+  const sql = llig(path.join(arrel, SQL));
+  if (sql === null) {
+    troballes.push(troballa('LLV-FONT-ABSENT', 'groga', `${SQL} no és al disc: la llavor SQL no s'ha auditat.`, SQL));
+  } else {
+    const { files, illegibles } = filesDeLaLlavor(sql);
+    comptes.files = files.length;
+    if (!files.length && !illegibles.length) {
+      troballes.push(troballa('LLV-SQL-DESFASAT', 'groga', `${SQL} no porta cap fila d'app_content amb la forma esperada: el generador ha canviat de format o el fitxer és buit.`, SQL));
+    }
+    for (const f of illegibles) {
+      troballes.push(troballa('LLV-PAYLOAD-ILLEGIBLE', 'roja', `La fila «${f.clau}» no és JSON vàlid (${f.motiu}).`, `${SQL}:${f.linia}`));
+    }
+    for (const f of files) {
+      if (!Array.isArray(f.payload)) continue;
+      const font = `${SQL}:${f.linia}`;
+      colleccions.set(f.clau, f);
+      comptes.colleccions += 1;
+      comptes.entrades += f.payload.length;
+      const perId = new Map();
+      const perTitol = new Map();
+      f.payload.forEach((entrada, i) => {
+        const id = entrada?.id;
+        if (id === undefined || id === null || id === '') {
+          troballes.push(troballa('LLV-SENSE-ID', 'groga', `«${f.clau}»[${i}] no porta id: el client la descarta en pintar (byId).`, font));
+          return;
+        }
+        perId.set(String(id), [...(perId.get(String(id)) ?? []), i]);
+        const titol = typeof entrada.title === 'string' ? entrada.title.trim() : '';
+        if (titol) perTitol.set(titol, [...(perTitol.get(titol) ?? []), String(id)]);
+      });
+      for (const [id, llocs] of perId) {
+        if (llocs.length > 1) troballes.push(troballa('LLV-ID-REPETIT', 'roja', `«${f.clau}» porta l'id «${id}» ${llocs.length} vegades (posicions ${llocs.join(', ')}).`, font));
+      }
+      for (const [titol, ids] of perTitol) {
+        if (ids.length > 1) troballes.push(troballa('LLV-TITOL-REPETIT', 'groga', `«${f.clau}» porta el títol «${titol}» en ${ids.length} entrades (${ids.join(', ')}).`, font));
+      }
+    }
+
+    /* Derivades: el mateix element en dues col·leccions, o un recurs en dues entrades. */
+    const media = colleccions.get('mediaItems');
+    if (media) {
+      const font = `${SQL}:${media.linia}`;
+      const titols = new Map();
+      const titolsDe = (clau) => {
+        if (!titols.has(clau)) {
+          titols.set(clau, new Map((colleccions.get(clau)?.payload ?? [])
+            .filter((e) => typeof e?.title === 'string').map((e) => [e.title.trim(), String(e.id)])));
+        }
+        return titols.get(clau);
+      };
+      const perSrc = new Map();
+      for (const entrada of media.payload) {
+        const id = String(entrada?.id ?? '');
+        const prefix = DERIVADA.exec(id)?.[1];
+        if (prefix) {
+          const origen = COLLECCIO_DE[prefix];
+          const idOrigen = titolsDe(origen).get(String(entrada.title ?? '').trim());
+          if (idOrigen) troballes.push(troballa('LLV-DERIVADA', 'groga', `«${entrada.title}» és a «${origen}» (${idOrigen}) i, derivada, a «mediaItems» (${id}): el mateix element es pinta en dues seccions.`, font));
+        }
+        if (typeof entrada?.src === 'string' && entrada.src) perSrc.set(entrada.src, [...(perSrc.get(entrada.src) ?? []), id]);
+      }
+      for (const [src, ids] of perSrc) {
+        if (ids.length > 1) troballes.push(troballa('LLV-DERIVADA', 'groga', `El recurs ${src} és la imatge de ${ids.length} entrades de «mediaItems» (${ids.join(', ')}).`, font));
+      }
+    }
+
+    for (const ruta of recursosDe(sql)) {
+      comptes.recursos += 1;
+      if (!existeix(ruta)) troballes.push(absent(ruta, `${SQL}:${liniaDe(sql, ruta)}`));
+    }
+  }
+
+  /* 2 · Les fonts JS de l'abast */
+  let llegat = null;
+  for (const rel of FONTS_JS) {
+    const text = llig(path.join(arrel, rel));
+    if (text === null) {
+      troballes.push(troballa('LLV-FONT-ABSENT', 'groga', `${rel} és a l'abast del Mod i no és al disc: actualitza FONTS_JS.`, rel));
+      continue;
+    }
+    comptes.fonts += 1;
+    if (rel === LLEGAT) llegat = text;
+    for (const ruta of recursosDe(text)) {
+      comptes.recursos += 1;
+      if (!existeix(ruta)) troballes.push(absent(ruta, `${rel}:${liniaDe(text, ruta)}`));
+    }
+  }
+
+  /* 3 · seed.sql contra les fonts: cada id literal de legacyMedia.js ha de ser a mediaItems. */
+  const media = colleccions.get('mediaItems');
+  if (llegat !== null && media) {
+    const alSql = new Set(media.payload.map((e) => String(e?.id ?? '')));
+    const falten = [...llegat.matchAll(RE_ID_LITERAL)].map((m) => m[1]).filter((id) => !alSql.has(id));
+    if (falten.length) {
+      troballes.push(troballa('LLV-SQL-DESFASAT', 'groga', `«mediaItems» de ${SQL} no porta ${falten.length} entrades de ${LLEGAT} (${falten.slice(0, 5).join(', ')}${falten.length > 5 ? '…' : ''}): la llavor SQL és d'abans d'eixes fonts.`, `${SQL}:${media.linia}`));
+    }
+  }
+
+  const resum = { roja: 0, groga: 0, info: 0 };
+  for (const t of troballes) resum[t.severitat] += 1;
+  return {
+    schema: 'sdp.mod.informe.v1', mod: MANIFEST.id, versio: MANIFEST.versio, mode: 'lectura',
+    abast: { sql: SQL, public: PUBLIC, fonts: FONTS_JS }, comptes, resum,
+    valid: resum.roja + resum.groga === 0, troballes
+  };
+}
+
+function main(argv = process.argv.slice(2)) {
+  const desconegut = argv.find((a, i) => !(a === '--arrel' || a.startsWith('--arrel=') || argv[i - 1] === '--arrel'));
+  if (desconegut) throw new Error(`Argument desconegut: ${desconegut}. Ús: mod-auditoria-llavors.mjs [--arrel=RUTA]`);
+  const informe = audita(arrelSegura());
+  process.stdout.write(`${JSON.stringify(informe, null, 2)}\n`);
+  return informe.valid ? 0 : 1;
+}
+
+if (esMain(import.meta.url)) {
+  try { process.exitCode = main(); }
+  catch (error) {
+    process.stdout.write(`${JSON.stringify({ schema: 'sdp.mod.informe.v1', mod: MANIFEST.id, valid: false, error: error.message })}\n`);
+    process.exitCode = 2;
+  }
+}
+```
+
+El que hauria de trobar hui, pel que s'ha vist a mà: 9 `LLV-RECURS-ABSENT` a `assetResolver.js` (les nou imatges de
+reserva dels pobles, `:9-19`), almenys 2 `LLV-DERIVADA` (`market-0`, `market-1`) i 1 `LLV-SQL-DESFASAT` (seed.sql
+sense les entrades de `legacyMedia.js`). Eixiria amb 1.
+
+Fitxa d'aprovació · `mod.auditoria-llavors` 1.0.0 · L0 · xarxa: cap · dades personals: no
+- Què fa: llig `supabase/seed.sql`, tretze fitxers de llavor de `src/` i els noms de `public/`, i diu quins ids es
+  repetixen, quines imatges es nomenen i no existixen, quines entrades de Multimèdia repetixen un element d'una
+  altra secció i si el SQL s'ha quedat arrere respecte del codi.
+- Què llig: exactament la llista `FONTS_JS`, `supabase/seed.sql` i els noms (mai el contingut) de `public/`.
+- Què escriu: res. L'eixida és un JSON per pantalla.
+- Què no farà mai: corregir una llavor, tocar `public/`, connectar-se enlloc, importar codi de l'app, llegir
+  `.env*`.
+- Porta humana: el Mod delata; decidir què es neteja i regenerar `seed.sql` és de qui tinga l'ordre.
+- Com es desfà: no hi ha res a desfer. Retirar-lo és llevar el fitxer i la seua línia de `READ_NODE_COMMANDS`.
+- Qualsevol canvi al fitxer o a esta fitxa invalida l'aprovació.
+
+====================================================================
+D3 · MOD 2 · `tooling/mods/mod-neteja-escriptori.mjs` (L1: només la porta Olivera mou)
+====================================================================
+
+Què vol dir «saturada», perquè la porta no ho definix: per a este Mod, l'Escriptori està saturat si l'índex passa de
+`LLINDAR_SEDIMENT` (300 línies), o hi ha algun document consumit, o algun declarat viu sense vida. Eixa nit: saturat
+per l'índex (799), 0 consumits, 0 caducats; el mode d'acció respondria «Res a arxivar».
+
+```js
+#!/usr/bin/env node
+/**
+ * mod-neteja-escriptori.mjs — Mod de batuda de l'Escriptori «sdp.mod.v1», nivell L1.
+ *
+ * Sense bandera o amb --sec: classifica cada document del primer nivell de 04_escriptori/
+ * (viu amb motiu, viu caducat, consumit, sense àncora, ancorat sense declarar), les àncores
+ * fantasma, la Safata i el sediment de l'índex, i proposa el pla. No toca res.
+ *
+ * Amb --aplica --codi CODI: executa EXACTAMENT el pla que ha imprés --sec, i només d'una
+ * manera: cridant `porta-olivera.mjs --arxiva --nom …` (primer amb --sec). No mou, no
+ * reanomena, no esborra ni escriu l'índex amb fs. Mai toca 01_produccio/, 02_investigacio_ia/
+ * ni la Safata: la porta rebutja qualsevol nom amb barra. Mai crida el Somiador.
+ *
+ * Què NO decidix: un declarat viu amb motiu vàlid no ix mai; un declarat viu caducat només
+ * ix amb --inclou-caducats, si és d'una jornada anterior i la seua categoria ix per nom.
+ * L'edat sola no classifica res (no hi ha purga per antiguitat).
+ *
+ * Eixida: un JSON per stdout. Codi 0 res a fer; 1 hi ha pla, decisions o sediment (o la
+ * porta no ha pogut moure-ho tot); 2 error d'ús, d'estructura o codi de pla que no casa.
+ */
+import fs from 'node:fs';
+import path from 'node:path';
+import { createHash } from 'node:crypto';
+import { spawnSync } from 'node:child_process';
+import { CAMINS, arrelSegura, esMain } from '../lib/arrel.mjs';
+import {
+  LLINDAR_SEDIMENT, PER_NOM, SECCIO_ARXIVATS, TRANSITORIES,
+  ancoratge, ancoresDe, artefactes, avui, checkConvocatoria, nomsSolts, prosaIndex, ranci, remeis, safata, sediment
+} from '../gates/porta-olivera.mjs';
+
+export const MANIFEST = Object.freeze({
+  schema: 'sdp.mod.v1',
+  id: 'mod.neteja-escriptori',
+  nom: 'Batuda de l’Escriptori',
+  versio: '1.0.0',
+  nivell: 'L1',
+  descripcio: 'Classifica la taula i el sediment de l’índex, proposa el pla i, amb el codi del pla, demana a la porta Olivera que arxive els consumits.',
+  fitxa: '_wiki_de_poble/03_actuar/mods/mod_neteja_escriptori.md',
+  fonts: Object.freeze(['tooling/gates/porta-olivera.mjs', 'tooling/lib/arrel.mjs', 'tooling/mods/mod-neteja-escriptori.mjs']),
+  llig: Object.freeze(['_wiki_de_poble/04_escriptori/ (primer nivell i 00_index_escriptori.md)', '.agents/runtime/turns/ (a través de la porta)', 'noms de fitxer de 90_arxiu_historic/, 10_actes/ i subcarpetes de l’Escriptori (mai el contingut)']),
+  escriu: Object.freeze(['Res directament. Amb --aplica, la porta Olivera mou els consumits a _wiki_de_poble/90_arxiu_historic/ i reescriu 00_index_escriptori.md.']),
+  xarxa: 'cap',
+  dadesPersonals: false,
+  disparador: Object.freeze(['manual', 'quan la porta avisa de [CONV-07] o d’Escriptori brut']),
+  ordres: Object.freeze(['node tooling/mods/mod-neteja-escriptori.mjs', 'node tooling/mods/mod-neteja-escriptori.mjs --sec']),
+  proves: Object.freeze(['tests/mod-neteja-escriptori.test.mjs'])
+});
+
+const PORTA = 'tooling/gates/porta-olivera.mjs';
+const ORDRE = `node ${PORTA}`;
+const INDEX = CAMINS.indexEscriptori;
+const NOM_INDEX = path.posix.basename(INDEX);
+const BLOQUEJOS = Object.freeze(['.agents/runtime/document-create.lock', '.agents/runtime/mutation.lock', '.agents/runtime/mutation.pending.json']);
+const SESSIO = /^\d{6}_[A-Za-z0-9]+(?:_[A-Za-z0-9]+)*$/;
+const US = 'Ús: mod-neteja-escriptori.mjs [--sec] [--inclou-caducats] | --aplica --codi CODI [--inclou-caducats] [--sessio aammdd_Nom]';
+const sha = (text) => createHash('sha256').update(text).digest('hex');
+
+/** Cada document solt del primer nivell amb la seua classe i el perquè. Només llig. */
+export function classifica(arrel, { dia = avui(), ara = Date.now() } = {}) {
+  const conv = checkConvocatoria(arrel, { dia, ara });
+  const vida = new Map(conv.vida.map((v) => [v.nom, v]));
+  const consumits = new Set(ranci(arrel, dia).map((d) => d.nom));
+  const anc = ancoratge(arrel);
+  const senseAncora = new Set(anc.senseAncora);
+  const perNom = new Map(artefactes(arrel).map((d) => [d.nom, d]));
+  const documents = [...nomsSolts(arrel)].filter((nom) => nom !== NOM_INDEX).sort().map((nom) => {
+    const art = perNom.get(nom) ?? null;
+    const v = vida.get(nom) ?? null;
+    const base = {
+      nom, categoria: art?.categoria ?? null, jornada: art?.data ?? null,
+      ixPerNom: Boolean(art) && (TRANSITORIES.test(art.categoria) || PER_NOM.test(art.categoria))
+    };
+    if (v?.valid) return { ...base, classe: 'viu', motiu: v.motiu };
+    if (v) return { ...base, classe: 'viu-caducat', motiu: `${v.codi}: ${v.motiu}` };
+    if (consumits.has(nom)) return { ...base, classe: 'consumit', motiu: 'categoria de torn, de jornada anterior i sense declaració de viu' };
+    if (senseAncora.has(nom)) return { ...base, classe: 'sense-ancora', motiu: `no té cap àncora a ${NOM_INDEX}` };
+    return { ...base, classe: 'ancorat', motiu: art ? 'ancorat fora d’«Activitat en curs»: la porta no el jutja' : 'nom fora de la taxonomia aammdd_hhmm_categoria_titol.ext' };
+  });
+  const fantasmes = remeis(arrel, anc.fantasma).map((r) => ({ ancora: r.ref, trobats: r.trobats, remei: r.ancora }));
+  return {
+    documents, fantasmes, safata: safata(arrel),
+    convocatoria: { fase: conv.fase, troballes: conv.troballes.map((t) => `[${t.codi}] ${t.missatge}`) }
+  };
+}
+
+/** El sediment de l'índex, mesurat, i què es pot compactar. Només llig l'índex; de la resta, noms. */
+export function sedimentIndex(arrel) {
+  const text = fs.readFileSync(path.join(arrel, INDEX), 'utf8');
+  const linies = text.split('\n');
+  if (text.endsWith('\n')) linies.pop();
+  const prosa = prosaIndex(text).split('\n');
+  const caps = [];
+  linies.forEach((_, i) => {
+    const m = /^##[ \t]+(.+?)[ \t]*$/.exec(prosa[i] ?? '');
+    if (m) caps.push({ titol: m[1], linia: i + 1 });
+  });
+  const seccions = caps.map((c, k) => {
+    const final = (caps[k + 1]?.linia ?? linies.length + 1) - 1;
+    const cos = prosa.slice(c.linia, final);
+    return {
+      titol: c.titol, linia: c.linia, final, linies: final - c.linia + 1,
+      ancores: (cos.join('\n').match(/!?\[\[[^[\]\n]+\]\]/g) ?? []).length,
+      blancs: cos.filter((l) => !l.trim()).length,
+      buida: cos.every((l) => !l.trim())
+    };
+  });
+  let blancsSobrers = 0;
+  for (let i = 1; i < linies.length; i += 1) if (!linies[i].trim() && !linies[i - 1].trim()) blancsSobrers += 1;
+
+  const perDesti = { taula: 0, laboratori: 0, produccio: 0, arxiu: 0, actes: 0, altres: 0 };
+  const absents = [];
+  const escriptori = path.join(arrel, CAMINS.escriptori);
+  const hiEs = (abs) => { try { fs.lstatSync(abs); return true; } catch { return false; } };
+  for (const a of ancoresDe(text)) {
+    const ref = a.raw.replace(/\\(?=[|#])/g, '').split(/[|#]/)[0].trim();
+    const classe = !ref.includes('/') ? 'taula'
+      : ref.startsWith('02_investigacio_ia/') ? 'laboratori'
+        : ref.startsWith('01_produccio/') ? 'produccio'
+          : ref.startsWith('../90_arxiu_historic/') ? 'arxiu'
+            : ref.startsWith('../10_actes/') ? 'actes' : 'altres';
+    perDesti[classe] += 1;
+    if (classe === 'taula') continue;   // les del primer nivell les jutja la porta (ancoratge)
+    // Només existència (lstat): mai es llig el contingut, tampoc el de l'arxiu (AGENTS §5).
+    const abs = path.resolve(escriptori, ref);
+    if (!hiEs(abs) && !hiEs(`${abs}.md`)) absents.push(ref);
+  }
+
+  /* Declaracions d'«Activitat en curs» que apunten fora de la taula: la porta no les veu
+     (només resol el primer nivell) i no caduquen mai. */
+  const foraDeTaula = [];
+  for (const s of seccions.filter((x) => /^Activitat en curs/.test(x.titol))) {
+    for (let i = s.linia; i < s.final; i += 1) {
+      const m = /^[ \t]*[-*][ \t]+!?\[\[([^[\]\n]+)\]\]/.exec(prosa[i] ?? '');
+      if (m && m[1].split(/[|#]/)[0].includes('/')) foraDeTaula.push({ linia: i + 1, ancora: m[1] });
+    }
+  }
+
+  const buides = seccions.filter((s) => s.buida);
+  const fix = seccions.find((s) => /^Fix Automàtic/i.test(s.titol)) ?? null;
+  const arxivats = seccions.find((s) => s.titol === SECCIO_ARXIVATS) ?? null;
+  const mesura = sediment(arrel);
+  return {
+    linies: linies.length, llindar: LLINDAR_SEDIMENT, bytes: mesura.bytes, saturat: linies.length > LLINDAR_SEDIMENT,
+    seccions: seccions.length, blancsSobrers,
+    seccionsBuides: buides.map((s) => ({ titol: s.titol, linia: s.linia })),
+    blocFixAutomatic: fix ? { linia: fix.linia, final: fix.final, ancores: fix.ancores, blancs: fix.blancs } : null,
+    arxivats: arxivats ? { linia: arxivats.linia, final: arxivats.final, ancores: arxivats.ancores } : null,
+    ancoresPerDesti: perDesti, ancoresAbsents: absents, declaracionsForaDeTaula: foraDeTaula,
+    compactacio: {
+      senseTocarCapAncora: {
+        liniesEnBlancSobreres: blancsSobrers,
+        seccionsBuides: buides.length,
+        liniesEstimadesDespres: Math.max(0, linies.length - blancsSobrers - buides.length),
+        qui: 'l’orquestradora, amb l’eina d’edició; cap enllaç es perd'
+      },
+      ambDecisioHumana: [
+        { que: `${perDesti.laboratori + perDesti.produccio} àncores a 02_investigacio_ia/ i 01_produccio/ cap a un índex per carpeta`, perque: 'la porta SCC només acredita les àncores escrites a 00_index_escriptori.md (verificador-scc.mjs, verifyEscriptoriAnchoring): abans cal que seguisca un nivell de subíndexs' },
+        { que: `${arxivats?.ancores ?? 0} línies de «${SECCIO_ARXIVATS}»`, perque: 'només es poden llevar quan el torn de cada una està tancat, i la línia no diu de quin torn és' },
+        { que: `${foraDeTaula.length} declaracions d’«Activitat en curs» que apunten fora de la taula`, perque: 'porten motius del Mestre i de torns: decidir si continuen és seu' },
+        { que: fix ? `bloc «Fix Automàtic d’Àncores» (línies ${fix.linia}-${fix.final}, ${fix.ancores} àncores, ${fix.blancs} línies en blanc)` : 'cap bloc «Fix Automàtic»', perque: 'les seues àncores són de 01_produccio/: fondre-les amb la secció «01_produccio» és un gest sobre la zona humana' }
+      ]
+    }
+  };
+}
+
+/** El pla: què s'arxivaria, amb quina ordre de la porta, i què queda per decidir. Només llig. */
+export function pla(arrel, { dia = avui(), ara = Date.now(), inclouCaducats = false } = {}) {
+  const c = classifica(arrel, { dia, ara });
+  const consumits = c.documents.filter((d) => d.classe === 'consumit').map((d) => d.nom);
+  const caducats = c.documents
+    .filter((d) => d.classe === 'viu-caducat' && d.ixPerNom && d.jornada !== null && d.jornada < dia).map((d) => d.nom);
+  const arxiva = [...consumits, ...(inclouCaducats ? caducats : [])].sort();
+  const decisions = [];
+  for (const d of c.documents) {
+    if (arxiva.includes(d.nom)) continue;
+    if (d.classe === 'viu-caducat') {
+      decisions.push({ sobre: d.nom, motiu: d.motiu, opcions: [
+        'dona-li motiu a la seua línia d’«Activitat en curs» (· per a [[consumidor]], · torn_ID o · Mestre aammdd: motiu)',
+        d.ixPerNom ? `${ORDRE} --arxiva --sec --nom ${d.nom}` : 'la seua categoria no ix per nom: pregunta al Mestre'
+      ] });
+    } else if (d.classe === 'sense-ancora') {
+      decisions.push({ sobre: d.nom, motiu: d.motiu, opcions: [`ancora’l a ${NOM_INDEX}; si ja està consumit, ${ORDRE} --arxiva --sec --nom ${d.nom}`] });
+    }
+  }
+  for (const f of c.fantasmes) {
+    decisions.push({
+      sobre: `[[${f.ancora}]]`,
+      motiu: f.remei ? `àncora fantasma: el document és a ${f.trobats[0]}` : f.trobats.length ? `àncora fantasma ambigua: ${f.trobats.join(', ')}` : 'àncora fantasma sense destí als llocs que cerca la porta',
+      opcions: [`${ORDRE} --repara --sec`]
+    });
+  }
+  if (c.safata.elements.length) {
+    decisions.push({ sobre: c.safata.carpeta, motiu: `${c.safata.elements.length} element(s) a la Safata d’Entrada`, opcions: ['classifica cada element: la porta només arxiva per nom documents del primer nivell, i este Mod no entra a la Safata'] });
+  }
+  const codi = sha(JSON.stringify({ dia, arxiva })).slice(0, 12);
+  const noms = arxiva.flatMap((nom) => ['--nom', nom]).join(' ');
+  const index = sedimentIndex(arrel);
+  return {
+    schema: 'sdp.mod.informe.v1', mod: MANIFEST.id, versio: MANIFEST.versio, mode: 'sec', dia,
+    saturat: index.saturat || arxiva.length > 0 || c.documents.some((d) => d.classe === 'viu-caducat'),
+    documents: c.documents, convocatoria: c.convocatoria,
+    pla: {
+      arxiva, codi,
+      simulacio: arxiva.length ? `${ORDRE} --arxiva --sec ${noms}` : null,
+      aplicacio: arxiva.length ? `node tooling/mods/mod-neteja-escriptori.mjs --aplica --codi ${codi}${inclouCaducats ? ' --inclou-caducats' : ''}` : null,
+      caducatsQueEixirienAmbLaBandera: inclouCaducats ? [] : caducats
+    },
+    decisions, index
+  };
+}
+
+/** Executa el pla vigent, i només eixe, a través de la porta Olivera. */
+export function aplica(arrel, { codi, sessio = null, dia = avui(), ara = Date.now(), inclouCaducats = false } = {}) {
+  const p = pla(arrel, { dia, ara, inclouCaducats });
+  if (!p.pla.arxiva.length) return { ...p, mode: 'aplica', porta: null, motiu: 'Res a arxivar.' };
+  if (codi !== p.pla.codi) throw new Error(`El codi no és el del pla vigent (${p.pla.codi}): la taula ha canviat o el pla no s'ha llegit. Torna a passar el mode --sec.`);
+  const bloqueig = BLOQUEJOS.find((rel) => fs.existsSync(path.join(arrel, rel)));
+  if (bloqueig) throw new Error(`${bloqueig} present: hi ha una escriptura documental o una mutació en curs. No s'ha mogut res.`);
+  const args = [PORTA, '--arxiva', ...p.pla.arxiva.flatMap((nom) => ['--nom', nom]), ...(sessio ? ['--sessio', sessio] : [])];
+  const opcions = { cwd: arrel, encoding: 'utf8', timeout: 60000 };
+  const assaig = spawnSync(process.execPath, [...args, '--sec'], opcions);
+  if (assaig.error || assaig.status !== 0) {
+    throw new Error(`La simulació de la porta Olivera ha fallat; no s'ha mogut res: ${(assaig.error?.message ?? `${assaig.stderr}${assaig.stdout}`).trim()}`);
+  }
+  const real = spawnSync(process.execPath, args, opcions);
+  return {
+    ...p, mode: 'aplica',
+    porta: { ordre: `node ${args.join(' ')}`, codi: real.status, eixida: `${real.stdout ?? ''}${real.stderr ?? ''}`.trim() },
+    despres: classifica(arrel, { dia, ara: Date.now() }).documents.map(({ nom, classe }) => ({ nom, classe }))
+  };
+}
+
+function opcionsDe(argv) {
+  const o = { sec: false, aplica: false, codi: null, sessio: null, inclouCaducats: false };
+  for (let i = 0; i < argv.length; i += 1) {
+    const a = argv[i];
+    if (a === '--sec') o.sec = true;
+    else if (a === '--aplica') o.aplica = true;
+    else if (a === '--inclou-caducats') o.inclouCaducats = true;
+    else if (a === '--codi' || a === '--sessio') {
+      const valor = argv[i + 1];
+      if (!valor || valor.startsWith('--')) throw new Error(`${a} necessita un valor. ${US}`);
+      o[a.slice(2)] = valor;
+      i += 1;
+    } else if (a === '--arrel') i += 1;
+    else if (!a.startsWith('--arrel=')) throw new Error(`Argument desconegut: ${a}. ${US}`);
+  }
+  if (o.sec && o.aplica) throw new Error(`Tria --sec o --aplica. ${US}`);
+  if (o.aplica && !/^[0-9a-f]{12}$/.test(o.codi ?? '')) throw new Error(`--aplica necessita el codi de 12 caràcters que dona el mode --sec. ${US}`);
+  if (!o.aplica && (o.codi !== null || o.sessio !== null)) throw new Error(`--codi i --sessio només valen amb --aplica. ${US}`);
+  if (o.sessio !== null && !SESSIO.test(o.sessio)) throw new Error(`--sessio ha de ser aammdd_Nom. ${US}`);
+  return o;
+}
+
+function main(argv = process.argv.slice(2)) {
+  const o = opcionsDe(argv);
+  const arrel = arrelSegura();
+  if (o.aplica) {
+    const r = aplica(arrel, { codi: o.codi, sessio: o.sessio, inclouCaducats: o.inclouCaducats });
+    process.stdout.write(`${JSON.stringify(r, null, 2)}\n`);
+    return r.porta && r.porta.codi !== 0 ? 1 : 0;
+  }
+  const p = pla(arrel, { inclouCaducats: o.inclouCaducats });
+  process.stdout.write(`${JSON.stringify(p, null, 2)}\n`);
+  return p.saturat || p.decisions.length ? 1 : 0;
+}
+
+if (esMain(import.meta.url)) {
+  try { process.exitCode = main(); }
+  catch (error) {
+    process.stdout.write(`${JSON.stringify({ schema: 'sdp.mod.informe.v1', mod: MANIFEST.id, valid: false, error: error.message })}\n`);
+    process.exitCode = 2;
+  }
+}
+```
+
+Notes del codi: tots els noms que importa de la porta s'exporten hui (`LLINDAR_SEDIMENT :111`, `TRANSITORIES :114`,
+`PER_NOM :116`, `SECCIO_ARXIVATS :129`, `avui :140`, `nomsSolts :158`, `artefactes :182`, `ranci :218`,
+`safata :233`, `prosaIndex :244`, `ancoresDe :282`, `ancoratge :315`, `remeis :351`, `sediment :681`,
+`checkConvocatoria :702`). Importar la porta no executa res (guarda `esMain`, `:1448`). El Mod no importa
+`arxiva()`: crida la CLI, que és l'única que imprimix les ordres de `handoff` dels documents amb rebut de torn
+(`:1376-1380`); eixes línies queden dins de `porta.eixida` i l'orquestradora les ha d'executar.
+
+Proposta concreta per a compactar l'índex de 799 línies sense perdre cap àncora:
+1. Sense decisió humana, només edició de l'orquestradora: plegar les línies en blanc seguides (247 en blanc en
+   total; hi ha tirades de més de 20, per exemple entre la 577 i la 600 i entre la 726 i la 753) i llevar les 12
+   capçaleres sense cos («Activitat tancada (260924, nit)», «Tasca actual de l'Escriptori», «Captures
+   (01_produccio)»…). Cap enllaç amb fragment apunta a seccions de l'índex (la cerca de `00_index_escriptori#` a
+   la Wiki viva, `.agents` i `src/sections` no torna res). Queda al voltant de 560 línies: continua per damunt de
+   300.
+2. Amb decisió i canvi de codi: les 318 àncores a `02_investigacio_ia/` i les 48 a `01_produccio/` poden anar a un
+   índex per carpeta (`02_investigacio_ia/00_index_investigacio.md`…), enllaçat des del principal, però només si
+   abans `verificador-scc.mjs:110` aprén a acreditar les àncores dels índexs enllaçats que viuen dins de
+   l'Escriptori. Sense eixe canvi, moure-les posa la porta SCC roja amb 366 `ESCRIPTORI_UNANCHORED`. Amb ell, el
+   principal baixaria a unes 190 línies. Toca `tooling/` (lease) i una zona protegida (crear un fitxer dins de
+   `02_investigacio_ia/`): ordre del Mestre.
+3. Amb decisió: «Arxivat amb la Porta Olivera» (46 línies). Remei de fons: que `despenja()`
+   (`porta-olivera.mjs:1121-1122`) escriga `- [[…]] · torn_ID` quan afig la línia, i que la porta la pode quan el
+   torn es tanque. Mentrestant, les revisa l'orquestradora al tancament, com diu la skill.
+4. Amb decisió del Mestre: les 5 declaracions d'«Activitat en curs» que apunten a l'arxiu (línies 41-45) i el bloc
+   «Fix Automàtic d'Àncores» (601-698; no s'ha trobat quin script el va escriure: cap eina de `tooling/` ni de
+   `scripts/` conté eixe títol, tret de la porta, que només el detecta).
+
+Fitxa d'aprovació · `mod.neteja-escriptori` 1.0.0 · L1 · xarxa: cap · dades personals: no
+- Què fa: mira la taula i l'índex, diu què és cada document i per què, quant sediment hi ha i d'on ve, i proposa un
+  pla amb un codi. Amb eixe codi, demana a la porta Olivera que arxive els documents consumits.
+- Què llig: el primer nivell de `04_escriptori/`, `00_index_escriptori.md`, els registres de torn (a través de la
+  porta) i noms de fitxer de l'arxiu, de les actes i de les subcarpetes.
+- Què escriu: res per ell mateix. En mode d'acció, la porta mou els consumits a `90_arxiu_historic/` i despenja les
+  seues àncores.
+- Què no farà mai: esborrar; moure o editar amb `fs`; escriure l'índex; entrar a `01_produccio/`,
+  `02_investigacio_ia/` o la Safata; llegir el contingut de l'arxiu; arxivar un declarat viu amb motiu vàlid o
+  sostingut per un torn obert; arxivar res pel sol fet de ser vell; actuar amb un codi d'un pla que ja no és el
+  vigent; actuar amb un lock d'escriptura present; cridar el Somiador; fer el `handoff` d'un torn.
+- Porta humana: el pla el llig l'orquestradora abans d'aplicar-lo (Acte Reflex Pre-Arxivament). Els caducats no
+  ixen sense `--inclou-caducats`. Tot el que és compactar l'índex és proposta.
+- Com es desfà: cada document mogut és sencer a `90_arxiu_historic/` (o a la carpeta de sessió). Es torna a la
+  taula i es reancora a l'índex; si cal recuperar bytes d'una versió anterior, per `core-restauracio-segellada`.
+  La porta no trepitja mai un destí, de manera que no hi ha res sobreescrit.
+- Qualsevol canvi al Mod, a la porta Olivera o a esta fitxa invalida l'aprovació.
+
+Vincles: [[00_index_escriptori]]

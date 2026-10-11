@@ -139,6 +139,7 @@ test('cap funció del plugin es crida sense definir ni es definix dues vegades',
   const NO_FUNCIONS = new Set([
     'socdepoble_enxufe_amfitrio', 'socdepoble_enxufe_nompoble', 'socdepoble_enxufe_poble', // secció i camps d'ajustos
     'socdepoble_enxufe_config', 'socdepoble_enxufe_ruta_a_url',                            // filtres públics
+    'socdepoble_enxufe_seo',                                                                 // filtre públic (Onada 11, 261010, tasca 7): OpenGraph de la ruta
     'socdepoble_enxufe_canal', 'socdepoble_enxufe_paquet',                                  // opció i proves de Salut
     'socdepoble_enxufe_comprova',                                                            // acció i nonce
     'socdepoble_enxufe_http', 'socdepoble_enxufe_url', 'socdepoble_enxufe_temporal', 'socdepoble_enxufe_arrel', 'socdepoble_enxufe_bloqueig' // codis d'error

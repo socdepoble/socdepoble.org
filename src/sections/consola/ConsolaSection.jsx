@@ -20,6 +20,7 @@ import { Mono, Privat, PrivacitatConsola, TargetaConsola, tornaAlCim } from './p
 import { PaginaPanellPols, PaginaPols } from './PolsConsola.jsx';
 import { panellPols, segmentPols } from './polsConsola.js';
 import { GraellaXifres, PaginaXifra, XifresMas } from './XifresMas.jsx';
+import { IndexConsola } from './IndexConsola.jsx';
 import { XIFRA_DE_CODI, segmentXifra, xifraDelMas, xifresDeLaGraella, xifresDeVista } from './xifresMas.js';
 import { entradetaPlana } from './xifresComu.js';
 import { rutaDelNode } from './problemesConsola.js';
@@ -340,10 +341,16 @@ export default function ConsolaSection() {
     return (
       /* T2 (ordre del Mestre, 260930) · l'Índex de la Consola arriba a h6: hi entren les mètriques (h5).
          Correcció B1 (260930) · el tauler també respecta la privacitat recordada: l'alerta de
-         vigilància hi pinta rutes i ordres. */
+         vigilància hi pinta rutes i ordres.
+         Onada 11 (261010; prompt 261010_1730, tasca 5) · Davall de totes les targetes, l'Índex de
+         la Consola (IndexConsola.jsx): text pur, H2, H3 per pàgina i H4 per targeta, cada títol
+         enllaçat a la seua pàgina. Només ací, a /consola: la Consola incrustada de la Wiki
+         (ConsolaIncrustada) no el pinta i conserva els seus píxels. Dins del mateix proveïdor
+         de privacitat: les entradetes porten rutes en <Mono>. */
       <UniversalPage title={copy.title} subtitle={copy.subtitle} lead={copy.lead} chrome="system" nivellMaxIndex={6}>
         <PrivacitatConsola.Provider value={privat}>
           <ConsolaTauler consola={consola} mapa={mapa} cimRef={cim} />
+          <IndexConsola mapa={mapa.mapa} dades={consola.dades} locale={locale} />
         </PrivacitatConsola.Provider>
       </UniversalPage>
     );

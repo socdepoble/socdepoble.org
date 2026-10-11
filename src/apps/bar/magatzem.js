@@ -13,6 +13,12 @@
  *   · Tancar una comanda escriu primer el tiquet (mateix id) i després
  *     esborra la comanda: si alguna cosa talla pel mig, en carregar-ho es
  *     reconcilia (una comanda que ja té tiquet és una comanda tancada).
+ *   · Moure o dividir toca dues comandes en dues transaccions (primer el
+ *     destí): si alguna cosa talla pel mig, les línies queden a les dues.
+ *     En carregar-ho NOMÉS es detecta i s'avisa (`migsMoviments`,
+ *     nucli/migMoviment.js): la càrrega no escriu res per a arreglar-ho.
+ *   · Cobrar mira el `rev`: una comanda que al disc ha canviat (o ja no hi
+ *     és) des que la memòria la va llegir no es cobra (CONFLICTE).
  * Res d'això ix de l'ordinador: cap crida de xarxa.
  */
 import { creaMagatzemIdb } from '../../utils/magatzemLocal.js';
@@ -20,6 +26,7 @@ import { validaCataleg } from './nucli/cataleg.js';
 import { errorBar } from './nucli/comu.js';
 import { esDescartable } from './nucli/comanda.js';
 import { ESTABLIMENT_EXEMPLE, llavorCarta, llavorSala } from './nucli/llavor.js';
+import { detectaMigsMoviments } from './nucli/migMoviment.js';
 import { validaSala } from './nucli/sala.js';
 
 export const NOM_BASE = 'sdp-bar';
@@ -94,6 +101,17 @@ export function creaMagatzemBar(opcions = {}) {
 
   const meta = async (clau) => (await base.obte('meta', clau))?.valor ?? null;
 
+  /* Desa una comanda oberta si el `rev` és el del disc (la regla de desaComanda). */
+  const desaOberta = (comanda) => base.actualitza('comandes', comanda.id, (actual) => {
+    /* Sense registre al disc, només hi entra una comanda nova (rev 0). */
+    const revDisc = actual ? actual.rev : 0;
+    if (revDisc !== comanda.rev) {
+      throw errorBar('CONFLICTE', 'Esta comanda ha canviat en una altra banda: torna a carregar-la.');
+    }
+    if (comanda.estat !== 'oberta') throw errorBar('NO_OBERTA', 'Al store de comandes només hi ha comandes obertes.');
+    return { ...comanda, rev: comanda.rev + 1 };
+  });
+
   return {
     base,
 
@@ -129,13 +147,19 @@ export function creaMagatzemBar(opcions = {}) {
         if (await base.obte('tiquets', comanda.id)) ambTiquet.add(comanda.id);
       }
       if (escriptora) for (const id of ambTiquet) await base.esborra('comandes', id);
+      const comandes = totesComandes.filter((c) => c.estat === 'oberta' && !ambTiquet.has(c.id));
       return {
         carta: senseId(carta),
         sala: senseId(sala),
         establiment,
         tornActual,
         torns,
-        comandes: totesComandes.filter((c) => c.estat === 'oberta' && !ambTiquet.has(c.id)),
+        comandes,
+        /* Correcció del refutador (261011, T2; decisió: «detecta i avisa») · Els «Mou» i els
+           «Dividix» que un tall va deixar a mitges: NOMÉS es detecten (nucli/migMoviment.js, pur
+           i que mai llança). Ací no s'escriu, no es retalla ni es descarta res: la pantalla avisa
+           i la persona ho arregla. */
+        migsMoviments: detectaMigsMoviments(comandes, tiquetsDelTorn),
         tiquets: tiquetsDelTorn.sort((a, b) => a.numero - b.numero),
         traspas: await meta('traspas'),
         tancament: await meta('tancament')
@@ -144,15 +168,7 @@ export function creaMagatzemBar(opcions = {}) {
 
     /** Desa una comanda oberta si el `rev` és el del disc; torna la desada (rev + 1). */
     desaComanda(comanda) {
-      return base.actualitza('comandes', comanda.id, (actual) => {
-        /* Sense registre al disc, només hi entra una comanda nova (rev 0). */
-        const revDisc = actual ? actual.rev : 0;
-        if (revDisc !== comanda.rev) {
-          throw errorBar('CONFLICTE', 'Esta comanda ha canviat en una altra banda: torna a carregar-la.');
-        }
-        if (comanda.estat !== 'oberta') throw errorBar('NO_OBERTA', 'Al store de comandes només hi ha comandes obertes.');
-        return { ...comanda, rev: comanda.rev + 1 };
-      });
+      return desaOberta(comanda);
     },
 
     /** Descarta una comanda buida (cap línia ni pagament): no hi ha res a guardar. */
@@ -166,6 +182,17 @@ export function creaMagatzemBar(opcions = {}) {
      * oberta amb el mateix id.
      */
     async tancaComanda(tiquet) {
+      /* Correcció del refutador (261011, G) · Abans d'escriure el tiquet, el `rev` de la comanda
+         ha de ser el del disc, com en desar-la: una memòria rància (la comanda ha canviat en una
+         altra banda, o un moviment se n'ha emportat les línies i ja no hi és) no es cobra. Una
+         comanda que no s'ha desat mai (rev 0) no té res al disc amb què comparar. */
+      if (tiquet.tipus === 'venda' && !(await base.obte('tiquets', tiquet.id))) {
+        /* (Si el tiquet ja existix, mana el JA_TANCAT de baix: el motiu de sempre.) */
+        const alDisc = await base.obte('comandes', tiquet.id);
+        if (alDisc ? alDisc.rev !== tiquet.rev : tiquet.rev !== 0) {
+          throw errorBar('CONFLICTE', 'Esta comanda ha canviat en una altra banda: torna a carregar-la abans de cobrar.');
+        }
+      }
       await base.actualitza('tiquets', tiquet.id, (actual) => {
         if (actual) throw errorBar('JA_TANCAT', 'Este tiquet ja existix: un tiquet tancat no es reescriu.');
         return tiquet;

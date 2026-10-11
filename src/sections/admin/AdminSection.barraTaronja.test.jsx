@@ -20,6 +20,8 @@ vi.mock('../../data/backendPort.js', () => ({
   adminListUsers: (...args) => m.usuaris(...args),
   adminListOrganizations: (...args) => m.entitats(...args)
 }));
+/* Onada 11 (261010) · El Tauler llig la sessió (calSegonFactor): ací, aal2, el d'abans. */
+vi.mock('../../app/contexts/SessionContext.jsx', () => ({ useSession: () => ({ esSuperadmin: true, nivell: 'aal2', calSegonFactor: false }) }));
 import AdminSection from './AdminSection.jsx';
 /* Onada 8 (261009) · La boina de Sóc de Poble porta al seu perfil, ja no a /projecte. */
 import { DEFAULT_AUTHOR } from '../../components/universal/UniversalUtils.js';

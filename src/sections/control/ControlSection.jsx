@@ -158,7 +158,7 @@ import { useXatSocDePobleResolt } from '../../components/PedraSeca/hooks/xatSocD
 import { useUIActions } from '../../app/contexts/UIContext';
 import { llegixUtilitatsActives, subscriuUtilitatsActives } from '../profile/utilitatsActives.js';
 import { FitxaSnippet } from './FitxaSnippet.jsx';
-import { CLAU_FITXA, DATA_DEL_SNIPPET, FITXA_SNIPPET, rutaDeLaFitxa } from './destiSnippet.js';
+import { CLAU_FITXA, DATA_DEL_SNIPPET, ETIQUETES_DEL_SNIPPET, FITXA_SNIPPET, rutaDeLaFitxa } from './destiSnippet.js';
 import { posicioDeLaVista, recolocaLaVista } from './vistaDeLaFitxa.js';
 import { AUTORIA_SOCDEPOBLE, DESTINS_CONTROL, TEXTOS_PORTES, contingutDe, portesDe } from './destinsControl.js';
 import { AVISOS_XAT_CORPORATIU } from './xatCorporatiu.js';
@@ -336,16 +336,17 @@ const PLUGINS_MAQUINARIA = SENSE_ESPAI.filter((plugin) => IDS_MAQUINARIA.include
      etiquetes · una Categoria i una Etiqueta, en l'ordre de la skill
                  sdp-universal-page (§4) i sense enllaç (D3). Són un
                  ESBORRANY per al Mestre: la Categoria, la mateixa de les
-                 eines del registre; l'Etiqueta diu què és. */
+                 eines del registre; l'Etiqueta diu què és.
+                 Onada 11 (261010; prompt 261010_1730, tasca 6, D5) · Viuen a
+                 destiSnippet.js (ETIQUETES_DEL_SNIPPET), amb la data: la
+                 fitxa les pinta a la seua capçalera, com la pàgina d'un
+                 plugin, i targeta i fitxa diuen el mateix. */
 const SNIPPET = Object.freeze({
   titol: 'Snippet',
   subtitol: 'Extensió de Chrome per a desar webs al Bloc',
   imatge: '/assets/nano_cards/snippet_nano_card.jpg',
   data: DATA_DEL_SNIPPET,
-  etiquetes: Object.freeze([
-    Object.freeze({ text: 'Eina', className: 'sdp-badge-category' }),
-    Object.freeze({ text: 'Extensió', className: 'sdp-badge-tag' })
-  ])
+  etiquetes: ETIQUETES_DEL_SNIPPET
 });
 
 /* La preferència ja arriba sanejada (un objecte pla o {}): només compta el false explícit. */
@@ -491,8 +492,10 @@ function PanellControl({ vistaRef, abansDeLaFitxa }) {
         <section className="sdp-control-maquinaria">
           <h2>Maquinària i Sistema</h2>
 
+          {/* Onada 11 (261010; prompt 261010_1730, tasca 6, D6) · El lead perd
+              «configuració de disseny»: Disseny ja no té cap targeta ací. */}
           <p className="lead">
-            Panells d'administració, configuració de disseny i eines internes de la plataforma.
+            Panells d'administració i eines internes de la plataforma.
             Aquestes utilitats normalment s'activen només per a l'equip d'administració.
           </p>
 

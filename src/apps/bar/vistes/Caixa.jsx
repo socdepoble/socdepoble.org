@@ -23,7 +23,7 @@
 import { useEffect, useState } from 'react';
 import { ArrowRightLeft, Plus, Send, Split, Trash2 } from 'lucide-react';
 import {
-  Boto, Camp, Dialeg, EstatBuit, Fila, Pila, Selector, TeclatNumeric
+  Alerta, Boto, Camp, Dialeg, EstatBuit, Fila, Pila, Selector, TeclatNumeric
 } from '../../../components/PedraSeca/index.js';
 import { ColumnaCataleg, ColumnaColleccio, ColumnaColleccions } from '../../comu/esquelet/index.js';
 import { esIdOpac, esSlug, useParametresConsulta } from '../../plataforma/index.js';
@@ -187,14 +187,19 @@ function DialegMou({ obert, comanda, onTanca }) {
     /* La comanda de destí és un altre camí, sense ?mou=: el diàleg es tanca sol. */
     if (r.ok) ves('caixa', r.valor.id);
   };
+  /* Correcció del refutador (261011, T1) · Com «Dividix» per línies (Cobrament.jsx): una comanda
+     amb pagaments no es mou sencera (el cobrat es quedaria a l'origen, sense línies), i la
+     pantalla ho diu abans de provar-ho. L'estat ho refusa igualment (PAGAT_SUPERA) sense escriure res. */
+  const ambPagaments = Boolean(comanda?.pagaments.length);
   return (
     <Dialeg obert={obert} onTanca={onTanca} titol="Mou o ajunta la comanda" descripcio="Totes les línies passen al lloc que tries; si ja hi ha una comanda, s’hi ajunten."
-      accions={<><Boto onClick={() => onTanca('boto')}>Cancel·la</Boto><Boto varietat="primari" disabled={!desti} onClick={mou}>Mou</Boto></>}>
+      accions={<><Boto onClick={() => onTanca('boto')}>Cancel·la</Boto><Boto varietat="primari" disabled={!desti || ambPagaments} onClick={mou}>Mou</Boto></>}>
       {obert ? (
         <Camp etiqueta="On va">
           <Selector opcions={opcions} value={desti} onChange={(event) => setDesti(event.target.value)} />
         </Camp>
       ) : null}
+      {obert && ambPagaments ? <Alerta to="info" viva={false}>Esta comanda ja té pagaments: acaba de cobrar-la abans de moure-la.</Alerta> : null}
     </Dialeg>
   );
 }

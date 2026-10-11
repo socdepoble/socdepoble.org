@@ -1,4 +1,5 @@
 import React from 'react';
+import { registraIncident } from '../utils/autocuracio.js';
 
 export class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -10,6 +11,9 @@ export class ErrorBoundary extends React.Component {
   }
   componentDidCatch(error, errorInfo) {
     console.error('[PedraSeca] Error capturat pel límit de React:', error, errorInfo);
+    /* Onada 12 (261011; ordres 261011_0130, punt 7) · Rastre local: l'arrel
+       sencera ha caigut. Mai el missatge de l'error. */
+    registraIncident('panell', 'arrel', 'fallback');
   }
   render() {
     if (this.state.hasError) {

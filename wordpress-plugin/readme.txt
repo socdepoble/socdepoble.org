@@ -55,6 +55,10 @@ This plugin connects to the Sóc de Poble service. Accounts, messages and posts 
 
 Update channel (only in the package distributed by Sóc de Poble, not in the WordPress.org directory): the plugin reads https://socdepoble.org/enxufe/stable.json and its signature to offer updates, then downloads the listed package. It queries this channel after api.wordpress.org answers WordPress's own update check. Requests identify the plugin, not the site. Automatic updates remain disabled until enabled in Plugins. The switch appears after an update check with the plugin active; activation clears the update cache so the next Plugins visit triggers a check. Updates are installed only while the plugin is active, in the socdepoble-enxufe directory, with the release channel key, and outside symlinks or Git checkouts. Automatic updates also require WP-Cron and connectivity to WordPress.org. Settings → Sóc de Poble and Site Health explain unmet conditions.
 
+== Link previews per route ==
+
+Off by default. When the `socdepoble_enxufe_seo` filter returns `true` and `socdepoble_enxufe_ruta_a_url` returns `parametre`, a request with `?sdp=/route` gets that route's Open Graph tags from the static table `dist/seo-routes.json` only; nothing from the request is printed. The page cache must not ignore or strip the `sdp` query parameter.
+
 == Optional translation service (DeepL) ==
 
 Set DEEPL_API_KEY in the PHP process environment or as a constant in wp-config.php. The plugin does not load the source repository's .env file or expose the key in JavaScript. Free API keys ending in :fx use api-free.deepl.com; other keys use api.deepl.com. The key authenticates server requests to DeepL. No SDK is required.

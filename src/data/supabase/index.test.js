@@ -33,6 +33,11 @@ test('l’adaptador Supabase sencer valida i ofereix compte i consentiment', () 
   expect(presents).toEqual(expect.arrayContaining(['membresOrganitzacio']));
   expect(teCapacitat('membresOrganitzacio')).toBe(true);
   for (const nom of CAPACITATS.membresOrganitzacio) expect(typeof supabase[nom], nom).toBe('function');
+  /* Onada 11 (261010; prompt 261010_1730, tasca 2) · el segon factor del superadmin i la personalització del poble. */
+  expect(presents).toEqual(expect.arrayContaining(['segonFactor', 'personalitzacio']));
+  expect(teCapacitat('segonFactor')).toBe(true);
+  expect(teCapacitat('personalitzacio')).toBe(true);
+  for (const nom of [...CAPACITATS.segonFactor, ...CAPACITATS.personalitzacio]) expect(typeof supabase[nom], nom).toBe('function');
 });
 
 test('cap mètode de compte o consentiment es perd per ambigüitat entre mòduls', () => {

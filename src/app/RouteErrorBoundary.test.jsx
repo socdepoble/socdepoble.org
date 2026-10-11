@@ -4,6 +4,8 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { RouteErrorBoundary } from './RouteErrorBoundary.jsx';
 import { lazyRoute } from '../apps/plataforma/lazyRoute.js';
 import { SlotErrorBoundary } from '../components/universal/workspace/SlotErrorBoundary.jsx';
+import { ErrorBoundary } from '../components/ErrorBoundary.jsx';
+import { _reiniciaAutocuracio, incidents } from '../utils/autocuracio.js';
 
 beforeEach(() => { vi.spyOn(console, 'error').mockImplementation(() => {}); });
 afterEach(() => { vi.unstubAllGlobals(); cleanup(); vi.restoreAllMocks(); });
@@ -126,6 +128,46 @@ test('perdre autoritat amb focus a recarregar no deixa el focus al body', async 
   vista.rerender(view(Child, { externalConfig: { manageDocumentHead: false } }));
   expect(screen.queryByRole('button', { name: 'Recarrega l’aplicació' })).toBeNull();
   expect(document.activeElement).toBe(screen.getByRole('heading', { level: 2 }));
+});
+
+/* Onada 12 (261011; ordres 261011_0130, punt 7) · Els tres límits d'error
+   deixen rastre al registre local (utils/autocuracio.js): el tipus i una
+   etiqueta del codi, mai el missatge de l'error. */
+const rastre = () => incidents().map(({ tipus, on, accio }) => [tipus, on, accio]);
+const SECRET = 'text privat de la persona';
+function Trencada() { throw new Error(SECRET); }
+
+test('Onada 12 · un import fallat queda anotat una vegada, com a «tros» de la secció, i no com a panell', async () => {
+  _reiniciaAutocuracio();
+  render(view(lazyRoute(unavailable), { resetKey: '/disseny/fitxa-123' }));
+  await screen.findByRole('alert');
+  expect(rastre()).toEqual([['tros', 'disseny', 'fallback']]);
+});
+
+test('Onada 12 · una vista que peta queda anotada com a «ruta», amb la secció i sense el missatge', () => {
+  _reiniciaAutocuracio();
+  render(<RouteErrorBoundary resetKey="/notes/abc-123" mostraDetall={false}><Trencada /></RouteErrorBoundary>);
+  expect(rastre()).toEqual([['ruta', 'notes', 'fallback']]);
+  expect(JSON.stringify(incidents())).not.toContain(SECRET);
+  expect(JSON.stringify(incidents())).not.toContain('abc-123');
+});
+
+test('Onada 12 · un panell que peta queda anotat amb el seu domini i la ruta no cau', () => {
+  _reiniciaAutocuracio();
+  render(<RouteErrorBoundary resetKey="/mur" mostraDetall={false}>
+    <SlotErrorBoundary domini="detall"><Trencada /></SlotErrorBoundary>
+  </RouteErrorBoundary>);
+  expect(screen.getByText(/El detall s'ha esfondrat/)).toBeTruthy();
+  expect(screen.queryByText('Hi ha hagut un problema')).toBeNull();
+  expect(rastre()).toEqual([['panell', 'detall', 'fallback']]);
+  expect(JSON.stringify(incidents())).not.toContain(SECRET);
+});
+
+test('Onada 12 · el límit de l’arrel anota la caiguda sencera', () => {
+  _reiniciaAutocuracio();
+  render(<ErrorBoundary><Trencada /></ErrorBoundary>);
+  expect(screen.getByText("No s'ha pogut carregar Sóc de Poble")).toBeTruthy();
+  expect(rastre()).toEqual([['panell', 'arrel', 'fallback']]);
 });
 
 test('un canvi de connexió no pren el focus d’un control fora del panell', async () => {

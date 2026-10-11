@@ -3,10 +3,12 @@ const request = vi.hoisted(() => vi.fn(async () => []));
 /* T2 · El mode resolt el tria cada prova; per defecte cap (una config sense mode és remota). */
 const mode = vi.hoisted(() => ({ actual: undefined }));
 vi.mock('./runtime.js', () => ({ request, getResolvedConfig: () => ({ hasSupabaseConfig: true, tenantId: 'town', runtimeDataMode: mode.actual }),
-  APP_SEED_VERSION: 1, buildSeedAppData: vi.fn(), generateUUID: vi.fn(), getCurrentUser: vi.fn(), mapContentRowsToData: vi.fn() }));
+  APP_SEED_VERSION: 1, buildSeedAppData: vi.fn(), generateUUID: vi.fn(), getCurrentUser: vi.fn(), mapContentRowsToData: vi.fn(), rpc: vi.fn() }));
 vi.mock('./xat.js', () => ({ enviaMissatge: vi.fn() }));
 import { appendSectionSubmissionNetworkOnly, loadMur, loadMultimedia, loadCoreContent } from './content.js';
 import { getCurrentUser, buildSeedAppData, mapContentRowsToData } from './runtime.js';
+/* Onada 11 (261010; prompt 261010_1730, tasca 2) · El camp additiu `personalitzacio` de loadCoreContent. */
+import { adminDesaPersonalitzacio, reiniciaPersonalitzacioLocal } from './personalitzacio.js';
 test('Mur i Multimèdia no consulten Notes ni descarreguen app_content alié', async () => {
   await loadMur('A'); await loadMultimedia('A');
   const urls = request.mock.calls.map(([url]) => url);
@@ -108,12 +110,79 @@ test('el contingut d’app_content conserva la signatura del projecte dins del p
   request.mockResolvedValue([]);
 });
 
+/* Onada 12 (261011; ordres 261011_0130, punt 7) · Una fila d'app_content amb un
+   objecte on toca una llista rebutjava loadMur sencer («primary is not
+   iterable», mergeById): el Mur en error per una fila de l'administració. */
+test('Onada 12 · una fila feedPosts que no és una llista no rebutja la càrrega del Mur: es pren buida i els veïns es pinten', async () => {
+  const avis = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  request.mockReset();
+  try {
+    request.mockImplementation(async (url) => {
+      if (url.includes('app_content')) return [{ key: 'feedPosts', payload: { id: 'malmesa' } }, { key: 'events', payload: 'text' }, { key: 'marketItems', payload: [{ id: 'mel' }] }];
+      return url.includes('section_id=eq.mur') ? [{ id: 'p1', title: 'Fira', payload: { title: 'Fira' }, owner_user_id: 'U' }] : [];
+    });
+    const mur = await loadMur('A');
+    expect(mur.feedPosts).toEqual([expect.objectContaining({ id: 'p1', title: 'Fira' })]);
+    expect(mur.events).toEqual([]);
+    expect(mur.marketItems).toEqual([{ id: 'mel' }]);
+    expect(avis.mock.calls.flat().join(' ')).not.toContain('malmesa');
+  } finally {
+    avis.mockRestore();
+    request.mockReset();
+    request.mockResolvedValue([]);
+  }
+});
+
 test('el core remot conserva documents estàtics, però identitats i pobles només venen del servidor', async () => {
   request.mockClear();
   buildSeedAppData.mockResolvedValue({ pages: [{ id: 'projecte' }], towns: [{ id: 'demo-town' }], agents: [{ id: 'demo-agent' }] });
   mapContentRowsToData.mockReturnValue({ towns: [], agents: [] });
-  expect(await loadCoreContent('A')).toEqual({ ownerUserId: 'A', pages: [{ id: 'projecte' }], pageCopy: {}, towns: [], agents: [] });
+  /* Onada 11 · Sense files de taxonomia ni estil, el camp additiu diu null per clau. */
+  expect(await loadCoreContent('A')).toEqual({ ownerUserId: 'A', pages: [{ id: 'projecte' }], pageCopy: {}, towns: [], agents: [],
+    personalitzacio: { taxonomia: null, estil: null } });
 });
+
+/* ───────── Onada 11 (261010; prompt 261010_1730, tasca 2) · la personalització dins de loadCoreContent ───────── */
+test('Onada 11 · en remot, loadCoreContent demana també taxonomia i estil a app_content i les torna amb payload i versió', async () => {
+  request.mockReset();
+  buildSeedAppData.mockResolvedValue({ pages: [{ id: 'projecte' }], towns: [], agents: [] });
+  mapContentRowsToData.mockReturnValue({ towns: [{ id: 'la-torre' }], agents: [] });
+  request.mockResolvedValueOnce([
+    { key: 'towns', payload: [{ id: 'la-torre' }], version: 1 },
+    { key: 'taxonomia', payload: { categories: ['Festes'] }, version: 3 }
+  ]);
+  const core = await loadCoreContent('A');
+  const url = new URL(request.mock.calls[0][0], 'http://poble.test');
+  expect(url.pathname).toBe('/rest/v1/app_content');
+  expect(url.searchParams.get('key')).toBe('in.(towns,agents,taxonomia,estil)');
+  expect(core).toMatchObject({ towns: [{ id: 'la-torre' }], pages: [{ id: 'projecte' }], pageCopy: {},
+    personalitzacio: { taxonomia: { payload: { categories: ['Festes'] }, versio: 3 }, estil: null } });
+  request.mockReset();
+  request.mockResolvedValue([]);
+});
+
+test('Onada 11 · en seed, loadCoreContent torna el que té el magatzem en memòria de personalitzacio.js (null si res)', () => ambMode('seed', async () => {
+  reiniciaPersonalitzacioLocal();
+  request.mockClear();
+  buildSeedAppData.mockResolvedValue({ ...LLAVOR, pages: [{ id: 'projecte' }], towns: [{ id: 'demo-town' }], agents: [] });
+  expect((await loadCoreContent('A')).personalitzacio).toEqual({ taxonomia: null, estil: null });
+  getCurrentUser.mockReturnValue({ id: 'U' });
+  await adminDesaPersonalitzacio({ clau: 'estil', payload: { '--sdp-accent': 'var(--sdp-crom-verd-500)' }, versio: null }, { dataMode: 'seed' });
+  const core = await loadCoreContent('A');
+  expect(core.personalitzacio).toEqual({ taxonomia: null, estil: { payload: { '--sdp-accent': 'var(--sdp-crom-verd-500)' }, versio: 1 } });
+  expect(core).toMatchObject({ towns: [{ id: 'demo-town' }], pageCopy: {} });
+  expect(request).not.toHaveBeenCalled();
+  reiniciaPersonalitzacioLocal();
+}));
+
+test('Onada 11 · en local, loadCoreContent porta el camp additiu amb null per clau i cap petició', () => ambMode('local', async () => {
+  reiniciaPersonalitzacioLocal();
+  request.mockClear();
+  buildSeedAppData.mockResolvedValue({ pages: [{ id: 'projecte' }], towns: [], agents: [] });
+  expect(await loadCoreContent('A')).toEqual({ towns: [], pages: [{ id: 'projecte' }], pageCopy: {}, agents: [], ownerUserId: 'A',
+    personalitzacio: { taxonomia: null, estil: null } });
+  expect(request).not.toHaveBeenCalled();
+}));
 
 /* ───────── I2 · Qui signa la publicació (contracte §7) ───────── */
 const publicacio = (actor) => ({ id: 'S1', sectionId: 'mur', title: 'Fira', payload: { title: 'Fira' },

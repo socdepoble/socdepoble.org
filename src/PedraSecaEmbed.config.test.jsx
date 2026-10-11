@@ -1087,6 +1087,11 @@ describe('la ruta de l’app cap a l’amfitrió (clàusula dels slugs)', () => 
     }
   });
 
+  /* Onada 12 (261011; ordres 261011_0130, punt 4) · Abans el reflex no obria
+     mai cap entrada i «Arrere» treia del portal. Ara la primera càrrega
+     adopta l'entrada (replaceState) i cada navegació nova n'obri una; l'estat
+     de l'amfitrió es conserva i s'amplia amb la clau `sdp`. La seqüència
+     sencera amb «Arrere» és a PedraSecaEmbed.historial.test.jsx. */
   test('fase 2 · fragment: la ruta viu a #sdp= i la resta de la URL i de l’estat de l’amfitrió no es toca', async () => {
     window.history.replaceState({ amfitrio: 1 }, '', '/pagina?x=1#vista=mapa');
     const push = vi.spyOn(window.history, 'pushState');
@@ -1094,10 +1099,12 @@ describe('la ruta de l’app cap a l’amfitrió (clàusula dels slugs)', () => 
       const element = await munta({ 'ruta-a-url': 'fragment', 'ruta-inicial': '/xat' });
       expect(element.config.rutaAUrl).toBe('fragment');
       expect(onEs()).toBe('/pagina?x=1#vista=mapa&sdp=/xat');
+      expect(window.history.state).toEqual({ amfitrio: 1, sdp: { ruta: '/xat', i: 0 } });
+      expect(push).not.toHaveBeenCalled();
       await act(async () => { navegadors.get(element)('/mur?filtre=tot&ordre=nou'); });
       expect(onEs()).toBe('/pagina?x=1#vista=mapa&sdp=/mur%3Ffiltre%3Dtot%26ordre%3Dnou');
-      expect(window.history.state).toEqual({ amfitrio: 1 });
-      expect(push).not.toHaveBeenCalled();
+      expect(window.history.state).toEqual({ amfitrio: 1, sdp: { ruta: '/mur?filtre=tot&ordre=nou', i: 1 } });
+      expect(push).toHaveBeenCalledTimes(1);
     } finally {
       push.mockRestore();
     }

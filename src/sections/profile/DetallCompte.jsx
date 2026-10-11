@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { dataDeFila } from '../../components/universal/editorial.js';
 import { useCoreContent } from '../../app/contexts/CoreContentContext.jsx';
+import { useSessioOpcional } from '../../app/contexts/SessionContext.jsx';
 import { ajustosPersona, ajustosOrganitzacio, usePerfilOpcional } from './PerfilContext.jsx';
 import DetallAjust from './DetallAjust.jsx';
 import { BlocPerfil as Bloc } from './BlocPerfil.jsx';
@@ -33,6 +34,11 @@ import { rutaDAutoria, rutaDePerfil } from '../../config/navigation.js';
    (els pobles del contingut core, useCoreContent, que sense proveïdor torna
    una llista buida) i, si el port en sap (`ambMembres`, CONTRACTE-4, i el
    context del Perfil present), gestiona els MEMBRES i deixa «Eixir».
+
+   Onada 11 (261010; prompt 261010_1730, tasca 2) · El superadmin (la sessió,
+   useSessioOpcional: sense proveïdor, com a les proves, no ho és) té dos
+   ajustos més al compte: el segon factor i l'entrada al Tauler. La resta de
+   la gent veu el compte d'abans, fila a fila.
    ═══════════════════════════════════════════════════════════════════ */
 
 function rutaDeLaFitxa(identitat) {
@@ -46,6 +52,7 @@ export function DetallCompte({ identitat, guardarAjust, pujaMitja, contacte = nu
   const dades = identitat?.dades;
   const { towns } = useCoreContent();
   const perfil = usePerfilOpcional();
+  const superadmin = Boolean(useSessioOpcional()?.esSuperadmin);
 
   /* Les accions de membres, només per a una organització i amb el port que en sap. */
   const usuariId = perfil?.usuari?.id ?? null;
@@ -61,10 +68,10 @@ export function DetallCompte({ identitat, guardarAjust, pujaMitja, contacte = nu
 
   const ajustos = useMemo(() => {
     const cataleg = persona
-      ? ajustosPersona(dades || {})
+      ? ajustosPersona(dades || {}, { superadmin })
       : ajustosOrganitzacio(dades || {}, contacte, { pobles: towns, ambMembres: Boolean(membres) });
     return cataleg.filter((ajust) => ajust.lloc === 'compte');
-  }, [persona, dades, contacte, towns, membres]);
+  }, [persona, dades, contacte, towns, membres, superadmin]);
 
   if (!identitat) return null;
 

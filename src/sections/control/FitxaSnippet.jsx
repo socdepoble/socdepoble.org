@@ -28,13 +28,19 @@
  * destiSnippet.js, llegida amb dataHoraDeBarra): targeta i pàgina diuen el
  * mateix (ordre del Mestre, 261001). És una data de només dia: la pastilla
  * no porta hora, que no s'inventa. Abans, la fitxa no en passava cap.
+ *
+ * Onada 11 (261010; prompt 261010_1730, tasca 6, D5) · I les MATEIXES
+ * etiquetes que la targeta (ETIQUETES_DEL_SNIPPET, de destiSnippet.js), a la
+ * capçalera de la fitxa (`labels` d'UniversalPage: davall de l'H1, dins del
+ * bloc blanc), com la pàgina d'un plugin (PluginPage.jsx). Abans la fitxa
+ * només portava la data.
  */
 import { useId } from 'react';
 import { Download, Puzzle } from 'lucide-react';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { dataHoraDeBarra } from '../../components/universal/editorial.js';
 import { Alerta, Boto } from '../../components/PedraSeca/index.js';
-import { DATA_DEL_SNIPPET, destiDelSnippet, urlDelSnippet } from './destiSnippet.js';
+import { DATA_DEL_SNIPPET, ETIQUETES_DEL_SNIPPET, destiDelSnippet, urlDelSnippet } from './destiSnippet.js';
 
 const INSTALLA = 'Instal·la a Chrome';
 const DESCARREGA = 'Descarrega l’extensió';
@@ -106,6 +112,8 @@ export function FitxaSnippet({ vistaRef }) {
       lead="Una extensió de Chrome que porta a Sóc de Poble la web que estàs llegint."
       /* Onada 10 (M4) · La data de la targeta, a la barra taronja. */
       {...dataHoraDeBarra({ creat: DATA_DEL_SNIPPET })}
+      /* Onada 11 (D5) · Les etiquetes de la targeta, davall de l'H1. */
+      labels={ETIQUETES_DEL_SNIPPET}
     >
       <div ref={vistaRef} className="content-wrapper">
         <section>

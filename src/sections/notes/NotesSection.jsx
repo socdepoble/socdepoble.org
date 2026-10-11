@@ -23,7 +23,8 @@ import { ALL_CATEGORY_ID } from '../../components/universal/workspace/workspaceS
 import { CARPETA_ALTRES, CARPETA_PER_SECCIO, esIdDePublicacio, itemsPublicatsDe, seccioDeCarpeta, seccioDePublicacio } from './masDeLUsuari.js';
 import { llicenciaDeLActor } from '../../components/universal/drets/herencia.js';
 import { LLICENCIA_PER_DEFECTE } from '../../components/universal/drets/llicencies.js';
-import { CATEGORIES_BASE, ETIQUETES_BASE } from './classificacioBloc.js';
+import { useCoreContent } from '../../app/contexts/CoreContentContext.jsx';
+import { categoriesBase, etiquetesBase } from '../../data/personalitzacio.js';
 import { CLAUS_BLOC, carpetaDeDesa, esModeDesa, escriuDesa, paramsDeLaNota } from './modeDesa.js';
 import { SnippetCurador } from './SnippetCurador.jsx';
 import { NotaPreparadaContext, TITOL_NOTA_PREPARADA, useNotaPreparada } from './notaPreparada.js';
@@ -255,17 +256,26 @@ export default function NotesSection() {
   const { calEntrar } = useMemo(() => reglaDEntrada({ teSessio, config, canCreate }), [teSessio, config, canCreate]);
   const ambPreparada = !modeDesa && !calEntrar;
 
+  /* Onada 11 (261010; prompt 261010_1730, tasca 2) · Les categories i
+     etiquetes de sèrie (classificacioBloc.js), ampliades per la taxonomia del
+     poble si la superadmin n'ha desat una: sense personalització són les
+     mateixes llistes de sempre (categoriesBase i etiquetesBase tornen la base
+     mateixa). */
+  const { personalitzacio } = useCoreContent();
+  const taxonomia = personalitzacio?.taxonomia?.payload;
+  const categoriesDeSerie = categoriesBase(taxonomia);
+  const etiquetesDeSerie = etiquetesBase(taxonomia);
   const allCategories = useMemo(() => {
-    const cats = new Set(CATEGORIES_BASE);
+    const cats = new Set(categoriesDeSerie);
     notes.forEach(n => (n.categories || []).forEach(c => cats.add(c)));
     return Array.from(cats).sort().map(c => ({ id: `cat_${c}`, label: c }));
-  }, [notes]);
+  }, [notes, categoriesDeSerie]);
 
   const allTags = useMemo(() => {
-    const tags = new Set(ETIQUETES_BASE);
+    const tags = new Set(etiquetesDeSerie);
     notes.forEach(n => (n.tags || []).forEach(t => tags.add(t)));
     return Array.from(tags).sort().map(t => ({ id: `tag_${t}`, label: t }));
-  }, [notes]);
+  }, [notes, etiquetesDeSerie]);
 
   // Sense sessió o amb el backend apagat l'adaptador torna [] de carpetes:
   // pintem el catàleg de carpetes de sèrie perquè la vista siga sempre completa.

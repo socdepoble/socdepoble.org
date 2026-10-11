@@ -2,8 +2,8 @@
    els reexports NOTES i NOTE_FOLDERS (amb l'import de notesContent.js): cap
    mòdul no els llegia, i es calculaven a cada càrrega. El catàleg de notes
    viu de veres és el d'appSeed.js (NOTE_FOLDERS_SEED, NOTES_SEED).
-   sections/notes/notesContent.js queda sense importador; retirar-lo és un
-   esborrat de fitxer i el decidix el Mestre (AGENTS §5). */
+   Onada 12 (261011; ordres 261011_0130, punt 1) · sections/notes/notesContent.js,
+   que quedava sense importador, ja no és al disc. */
 import { AGENT_LIST } from '../sections/profile/profileContent.js';
 import { EVENTS } from '../sections/mur/eventsContent.js';
 import { MARKET_ITEMS } from '../sections/mercat/marketContent.js';

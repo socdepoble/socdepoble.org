@@ -4,6 +4,7 @@ import { sanitizeHtml, netejaText, esFontImatgeSegura } from '../utils/sanitize.
 import { normalitzaOrigen } from './origenNota.js';
 import { emojiSol } from '../utils/emoji.js';
 import { dataIsoONull } from '../utils/calendari.js';
+import { registraIncident } from '../utils/autocuracio.js';
 
 const STORE = 'notes';
 function openDB() {
@@ -81,6 +82,12 @@ const revisioValida = revision => Number.isSafeInteger(revision) && revision >= 
 /* Una nota de llavor esborrada deixa una marca: sense ella, initial() la
    tornaria a barrejar en la càrrega següent i ressuscitaria. */
 const viva = (notes, id) => (Object.hasOwn(notes, id) && !notes[id]?._esborrada ? notes[id] : null);
+/* Onada 12 (261011; ordres 261011_0130, punt 7) · Una entrada del magatzem que
+   no és un objecte (null, un text, un número) no és cap nota. Abans passava
+   el filtre de load(): un null rebutjava tota càrrega de les notes
+   (loadNotesPage llig note.estat) i un primitiu eixia com una nota sense id.
+   Només es deixa de llistar: l'entrada es queda al magatzem, intacta. */
+const esNota = (note) => note !== null && typeof note === 'object' && !note._esborrada;
 const noTrobada = () => Object.assign(new Error('Nota local no trobada.'), { status: 404 });
 const conflicte = () => Object.assign(new Error('Conflicte de concurrència de revisió.'), { status: 409 });
 
@@ -93,7 +100,13 @@ export function createLocalNotesAdapter(storage = persistence, { rellotge = () =
   return {
     async load(owner = getDefaultUserId(), config = {}) {
       const notes = { ...initial(config), ...await storage.read(scope(owner, config)) };
-      return { notes: Object.values(notes).filter(note => !note?._esborrada), noteFolders: NOTE_FOLDERS_SEED };
+      const totes = Object.values(notes);
+      const bones = totes.filter(esNota);
+      const malmeses = totes.length - bones.length - totes.filter(note => note?._esborrada).length;
+      if (malmeses && registraIncident('dades', 'notes-locals', 'entrada-apartada') === 1) {
+        console.warn(`[localNotes] ${malmeses} entrada/es del magatzem local no són notes: es deixen de banda, sense tocar-les.`);
+      }
+      return { notes: bones, noteFolders: NOTE_FOLDERS_SEED };
     },
     async create(input, config = {}) {
       const id = input.id || crypto.randomUUID();

@@ -77,6 +77,9 @@
  *         Opt-in `ruta-a-url="fragment|parametre"`: la primera instància
  *         també reflectix la ruta sencera a la clau `sdp` de la URL de
  *         l'amfitrió (#sdp= o ?sdp=) i la torna a llegir en hashchange/popstate.
+ *         Onada 12 (261011; ordres 261011_0130, punt 4): cada navegació nova
+ *         de l'app hi obri una entrada d'historial (pushState) i «Arrere» del
+ *         navegador torna a la pantalla d'abans dins de l'app (ReflexDeRuta).
  *       · APPS. La clau `apps` (ids del registre de la Plataforma d'Apps)
  *         entra per la configuració, mai pel global de l'amfitrió.
  *
@@ -97,7 +100,7 @@
 
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import { BrowserRouter, MemoryRouter, useLocation, useNavigate } from './app/contexts/RouterContext.jsx';
+import { BrowserRouter, MemoryRouter, useLocation, useRouter } from './app/contexts/RouterContext.jsx';
 import App from './app/App.jsx';
 import { SessionProvider } from './app/contexts/SessionContext.jsx';
 import { UIProvider } from './app/contexts/UIContext.jsx';
@@ -146,7 +149,9 @@ const AVISOS_DEL_REFLEX = Object.freeze({
   'fragment-alie': 'El fragment de la URL de l’amfitrió no és de paràmetres clau=valor (un ancoratge o un router de hash): '
     + 'la ruta no s’hi escriu per a no trencar-lo. Declareu ruta-a-url="parametre".',
   'nomes-cami': `La ruta passa de ${LIMIT_RUTA_A_URL} caràcters codificada: a la URL de l’amfitrió només s’escriu el camí, sense la consulta.`,
-  'massa-llarga': `El camí de la ruta passa de ${LIMIT_RUTA_A_URL} caràcters codificat: no s’escriu a la URL de l’amfitrió.`
+  'massa-llarga': `El camí de la ruta passa de ${LIMIT_RUTA_A_URL} caràcters codificat: no s’escriu a la URL de l’amfitrió.`,
+  'no-escrita': 'El navegador ha rebutjat l’escriptura a l’historial (massa escriptures seguides o un document sense origen): '
+    + 'l’app continua navegant en memòria.'
 });
 
 function trossosDeLaUrl(mode) {
@@ -164,12 +169,65 @@ export function llegeixRutaDeLaUrl(mode) {
   try { return sanejaRuta(decodeURIComponent(codificada)); } catch { return undefined; }
 }
 
+/* Onada 12 (261011; ordres 261011_0130, punt 4) · «Arrere» del navegador
+   navega dins de l'app. Cada entrada de l'historial que escriu el reflex
+   porta, a més de la ruta a la URL, un estat propi sota la clau `sdp` de
+   history.state: { ruta, i } (la ruta sencera i quantes entrades pròpies té
+   darrere). L'estat de l'amfitrió es conserva i s'amplia ({ ...estat, sdp });
+   si no és un objecte pla (un text, una llista, una data) no es toca i
+   l'entrada es reconeix només per la URL. */
+const esEstatAmpliable = (estat) => estat === null || estat === undefined
+  || (typeof estat === 'object' && Object.getPrototypeOf(estat) === Object.prototype);
+const ambEstatPropi = (estat, propi) => (esEstatAmpliable(estat) ? { ...estat, [CLAU_RUTA]: propi } : estat);
+
+/** L'estat propi de l'entrada actual de l'historial ({ ruta, i }), o undefined si no és nostra. */
+export function estatPropi() {
+  let propi;
+  try { propi = window.history.state?.[CLAU_RUTA]; } catch { return undefined; }
+  if (!propi || typeof propi !== 'object') return undefined;
+  const ruta = sanejaRuta(propi.ruta);
+  return ruta && Number.isSafeInteger(propi.i) && propi.i >= 0 ? { ruta, i: propi.i } : undefined;
+}
+
+/* La ruta de l'entrada actual: mana la URL. L'estat propi només la completa
+   quan la URL no ha pogut portar la consulta (nomes-cami) i el camí coincidix. */
+function rutaDeLEntrada(mode) {
+  const deLaUrl = llegeixRutaDeLaUrl(mode);
+  const propi = estatPropi();
+  return propi && deLaUrl === propi.ruta.split('?')[0] ? propi.ruta : deLaUrl;
+}
+
+/* Un salt numèric de l'app (navigate(-1)) per l'historial del navegador, sense
+   passar mai de la primera entrada pròpia: el botó «Arrere» de l'app no trau
+   ningú del portal. Fals si l'entrada actual no és nostra o si darrere no hi
+   consta cap entrada pròpia: llavors el salt és el de la llista del router,
+   que el reflex manté al pas de l'historial (posicio, a ReflexDeRuta). */
+function saltaPerLHistorial(n) {
+  const propi = estatPropi();
+  if (!propi) return false;
+  const salt = n < 0 ? Math.max(n, -propi.i) : n;
+  if (!salt && n < 0) return false;
+  if (salt) window.history.go(salt);
+  return true;
+}
+
 /**
- * Escriu la ruta a la clau pròpia amb replaceState: mai una entrada nova a l'historial.
- * @returns {'escrita'|'igual'|'nomes-cami'|'fragment-alie'|'massa-llarga'|undefined}
+ * Escriu la ruta a la clau pròpia de la URL i a l'estat propi de l'entrada.
+ * Amb `empeny` (una navegació nova de l'usuari) obri una entrada a l'historial
+ * (pushState); sense, substituïx l'actual (replaceState: redireccions, àlies,
+ * la primera càrrega). Mai no empeny damunt d'una entrada que no és nostra:
+ * l'adopta, i «Arrere» des de la primera pantalla ix del portal com en
+ * qualsevol web.
+ * `iBase`: la posició de l'última entrada pròpia coneguda (-1 si cap), per a
+ * comptar una entrada que arriba sense estat propi: la que ha obert el
+ * navegador amb la nostra clau a la URL (un fragment, un ancoratge) va
+ * darrere d'ella; la que és de l'amfitrió i s'adopta, al seu lloc.
+ * Si el navegador rebutja l'escriptura (Safari en talla 100 cada 30 s; un
+ * document d'origen opac, totes) no llança: torna 'no-escrita'.
+ * @returns {'escrita'|'igual'|'nomes-cami'|'fragment-alie'|'massa-llarga'|'no-escrita'|undefined}
  *   undefined si no hi ha res a escriure (mode o ruta invàlids).
  */
-export function escriuRutaALaUrl(mode, ruta) {
+export function escriuRutaALaUrl(mode, ruta, empeny = false, iBase = -1) {
   if (!MODES_RUTA.includes(mode) || typeof window === 'undefined') return undefined;
   const neta = sanejaRuta(ruta);
   if (!neta) return undefined;
@@ -193,41 +251,87 @@ export function escriuRutaALaUrl(mode, ruta) {
     : trossos.map((t, i) => (i === lloc ? propi : t)).filter((t, i) => i === lloc || !esTrosPropi(t));
   const { pathname, search, hash } = window.location;
   const url = mode === 'parametre' ? `${pathname}?${nous.join('&')}${hash}` : `${pathname}${search}#${nous.join('&')}`;
-  if (url === pathname + search + hash) return estat === 'escrita' ? 'igual' : estat;
-  window.history.replaceState(window.history.state, '', url);
+  const mateixaUrl = url === pathname + search + hash;
+  const anterior = window.history.state;
+  const entrada = estatPropi();
+  /* Ja és l'entrada d'esta ruta (o l'estat de l'amfitrió no es pot ampliar i
+     la URL ja la porta): res a escriure. */
+  if (mateixaUrl && (entrada ? entrada.ruta === neta : !esEstatAmpliable(anterior))) return estat === 'escrita' ? 'igual' : estat;
+  const nostra = Boolean(entrada) || trossos.some((t) => t.startsWith(`${CLAU_RUTA}=`));
+  const i = entrada ? entrada.i : Math.max(0, iBase + (nostra ? 1 : 0));
+  try {
+    if (empeny && nostra) window.history.pushState(ambEstatPropi(anterior, { ruta: neta, i: i + 1 }), '', url);
+    else window.history.replaceState(ambEstatPropi(anterior, { ruta: neta, i }), '', url);
+  } catch {
+    return 'no-escrita';
+  }
   return estat;
 }
 
-/* Viu dins del MemoryRouter: escriu la ruta a la URL i, quan l'amfitrió la
-   canvia (fragment editat, Arrere del navegador), la segueix sense afegir
-   entrades a l'historial de l'app. No pinta res. */
-function ReflexDeRuta({ mode }) {
-  const navigate = useNavigate();
+/* Viu dins del MemoryRouter: escriu la ruta a la URL i a l'historial del
+   navegador, i quan l'entrada canvia (Arrere i Avant del navegador, fragment
+   editat, pàgina tornada de la memòria cau) la segueix sense escriure res.
+   Onada 12 (261011; ordres 261011_0130, punt 4) · Una navegació nova de l'app
+   (la llista pròpia del router creix: `index` puja) obri una entrada;
+   una substitució (Navigate, àlies, el cercador) reescriu l'actual. El
+   popstate d'una entrada que no porta la clau `sdp` és de l'amfitrió i no es
+   toca. En un popstate l'app torna a l'entrada de la llista del router que
+   li correspon (`posicio`), amb el seu estat (navigate(to, { state })), que
+   no passa mai per history.state; si la llista no la té (una recàrrega),
+   reescriu l'última.
+   `alDia` (ref de qui munta): cert quan l'entrada actual del navegador és la
+   de la ruta de l'app. Si l'última ruta no s'ha pogut escriure (rebutjada,
+   massa llarga, fragment alié, estat de l'amfitrió no ampliable), els salts
+   numèrics de l'app van per la llista del router i no per l'historial.
+   No pinta res. */
+function ReflexDeRuta({ mode, alDia }) {
+  const { navigate, index } = useRouter();
   const { pathname, search } = useLocation();
   const actual = search ? `${pathname}?${search}` : pathname;
   const actualRef = React.useRef(actual);
+  const darrerIndex = React.useRef(index);
+  // La posició de l'última entrada pròpia vista i el que la separa de la de la llista del router.
+  const darrerI = React.useRef(-1);
+  const desfasament = React.useRef(0);
   // Un avís per motiu i per instància: la ruta canvia a cada tecla del cercador.
   const avisats = React.useRef(new Set());
 
   React.useEffect(() => {
     actualRef.current = actual;
-    const estat = escriuRutaALaUrl(mode, actual);
+    const empeny = index > darrerIndex.current;
+    darrerIndex.current = index;
+    const estat = escriuRutaALaUrl(mode, actual, empeny, darrerI.current);
+    const propi = estatPropi();
+    alDia.current = Boolean(propi) && propi.ruta === sanejaRuta(actual);
+    if (alDia.current) {
+      darrerI.current = propi.i;
+      desfasament.current = index - propi.i;
+    }
     if (Object.hasOwn(AVISOS_DEL_REFLEX, estat) && !avisats.current.has(estat)) {
       avisats.current.add(estat);
       console.warn(`[soc-de-poble] ${AVISOS_DEL_REFLEX[estat]}`);
     }
-  }, [mode, actual]);
+  }, [mode, actual, index, alDia]);
 
   React.useEffect(() => {
     const alCanviarLaUrl = () => {
-      const ruta = llegeixRutaDeLaUrl(mode);
-      if (ruta && ruta !== actualRef.current) navigate(ruta, { replace: true });
+      const propi = estatPropi();
+      if (propi) darrerI.current = propi.i;
+      const ruta = rutaDeLEntrada(mode);
+      if (!ruta || ruta === actualRef.current) return;
+      // popstate i hashchange arriben junts quan només canvia el fragment: un sol salt.
+      actualRef.current = ruta;
+      navigate(ruta, { replace: true, posicio: propi ? propi.i + desfasament.current : undefined });
     };
+    // bfcache: la pàgina torna sencera, però es comprova que l'app i la URL diuen el mateix.
+    const enTornar = (event) => { if (event.persisted) alCanviarLaUrl(); };
     window.addEventListener('hashchange', alCanviarLaUrl);
     window.addEventListener('popstate', alCanviarLaUrl);
+    window.addEventListener('pageshow', enTornar);
     return () => {
       window.removeEventListener('hashchange', alCanviarLaUrl);
       window.removeEventListener('popstate', alCanviarLaUrl);
+      window.removeEventListener('pageshow', enTornar);
     };
   }, [mode, navigate]);
 
@@ -246,7 +350,11 @@ export default function PedraSecaEmbed({ config: suppliedConfig, themeMode, lang
      la URL guanya a la ruta inicial; sense, la de sempre. */
   const [reflex] = React.useState(() => (router.memoria && isFirstInstance !== false && MODES_RUTA.includes(config.rutaAUrl)
     ? config.rutaAUrl : null));
-  const [rutaInicial] = React.useState(() => (reflex && llegeixRutaDeLaUrl(reflex)) || config.rutaInicial);
+  const [rutaInicial] = React.useState(() => (reflex && rutaDeLEntrada(reflex)) || config.rutaInicial);
+  /* Els salts numèrics de l'app van per l'historial del navegador només
+     mentre el reflex el té al dia (ReflexDeRuta); si no, per la llista pròpia. */
+  const alDia = React.useRef(false);
+  const alSaltar = React.useCallback((n) => alDia.current && saltaPerLHistorial(n), []);
 
   /* WP-R1: cap a l'amfitrió ix la ruta tapada, i només quan canvia: escriure
      al cercador (/cerca?q=…, cada 250 ms) no és cap navegació nova. */
@@ -282,8 +390,8 @@ export default function PedraSecaEmbed({ config: suppliedConfig, themeMode, lang
     <ErrorBoundary>
       {router.memoria
         ? (
-          <MemoryRouter rutaInicial={rutaInicial} onCanvi={alCanviarRuta}>
-            {reflex ? <><ReflexDeRuta mode={reflex} />{app}</> : app}
+          <MemoryRouter rutaInicial={rutaInicial} onCanvi={alCanviarRuta} alSaltar={reflex ? alSaltar : undefined}>
+            {reflex ? <><ReflexDeRuta mode={reflex} alDia={alDia} />{app}</> : app}
           </MemoryRouter>
         )
         : <BrowserRouter basename={router.basename}>{app}</BrowserRouter>}

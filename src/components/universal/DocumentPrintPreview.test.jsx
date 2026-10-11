@@ -9,7 +9,12 @@ test('A4 export escapes metadata, sanitizes rich text and blocks executable reso
   const document = new DOMParser().parseFromString(html, 'text/html');
   expect(document.querySelector('script')).toBeNull();
   expect(document.querySelector('[onclick]')).toBeNull();
-  expect(document.querySelector('.cover h1').textContent).toBe('Títol');
+  /* Onada 11 (261010; prompt 261010_1730, tasca 3) · la portada no porta cap h1:
+     l'únic H1 és el de l'article, i el títol de portada és el bloc .cover-titol. */
+  expect(document.querySelector('.cover .cover-titol').textContent).toBe('Títol');
+  expect([...document.querySelectorAll('h1')].map(h => h.textContent)).toEqual(['Títol']);
+  expect(document.querySelector('article > header.page-title > h1').textContent).toBe('Títol');
+  expect(document.querySelector('style').textContent).toContain('.cover-titol { font-size: 36pt;');
   expect(document.querySelector('article h2').textContent).toBe('Capítol');
   expect(document.querySelector('meta[http-equiv]').content).toContain("default-src 'none'");
   expect(document.querySelector('style').textContent).toContain('size: A4');

@@ -139,8 +139,10 @@ test('/consola: el tauler són nou targetes universals que expliquen cada pàgin
   expect(screen.getAllByRole('heading', { level: 1 }).map((h) => h.textContent)).toEqual(['Consola Termodinàmica']);
   /* Correcció 261004 (verificador, punt 9) · sense Mapa, «El Mas en xifres»
      també es pinta (cap pàgina sense targeta): el seu h2 ve darrere del de
-     la introducció. */
-  expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual(['Manteniment de la IAIA', 'El Mas en xifres']);
+     la introducció.
+     Onada 11 (261010; prompt 261010_1730, tasca 5) · I, tancant el tauler,
+     l'H2 de l'Índex de la Consola (IndexConsola.jsx), també sense cap font. */
+  expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual(['Manteniment de la IAIA', 'El Mas en xifres', 'Índex de la Consola']);
   expect(document.querySelector('.page-intro h2 + p.lead')).not.toBeNull();
   expect(screen.queryByRole('tablist')).toBeNull();
 

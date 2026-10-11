@@ -257,6 +257,53 @@ test('una sincronització sense canvis no avisa ni canvia la referència de l’
   } finally { deixa(); buida(); }
 });
 
+/* Onada 11 (261010; prompt 261010_1730, tasca 2) · El nivell d'asseguranca
+   (claim aal) viatja amb l'estat i un canvi de nivell avisa, com el de rol:
+   el verify del segon factor desa una sessió nova (renovació) i avisa amb
+   sdp:auth-change, i la interfície ha de vore que ja és aal2. */
+const jwtAmb = (extra) => `${b64u({ alg: 'none' })}.${b64u({ sub: 'A', exp: Math.floor(Date.now() / 1000) + 3600, ...extra })}.c2ln`;
+test('Onada 11 · l’estat porta nivell (aal del JWT desat) i un canvi de nivell amb el mateix usuari avisa una vegada', async () => {
+  buida(); await flush();
+  mocks.role.mockResolvedValue('superadmin');
+  desaSessio({ access_token: jwtAmb({ aal: 'aal1' }), refresh_token: 'r1', user: { id: 'A' } });
+  mocks.user = { id: 'A' };
+  sincronitza(); await flush();
+  expect(getSessionState()).toMatchObject({ estat: 'dins', rol: 'superadmin', nivell: 'aal1' });
+  const avisos = [];
+  const deixa = subscribeSession(s => avisos.push(s.nivell));
+  avisos.length = 0;
+  try {
+    /* Com fa verificaFactor (segonFactor.js): la sessió nova com a renovació i l'avís. */
+    expect(desaSessio({ access_token: jwtAmb({ aal: 'aal2' }), refresh_token: 'r2', user: { id: 'A' } }, { renovacio: true })).toBe(true);
+    window.dispatchEvent(new CustomEvent('sdp:auth-change'));
+    await flush();
+    expect(getSessionState().nivell).toBe('aal2');
+    /* El primer avís ja porta el nivell nou; el segon és la reconsulta del rol
+       que fa tota renovació (la generació es mou). Cap avís torna a aal1. */
+    expect(avisos[0]).toBe('aal2');
+    expect(avisos.every((n) => n === 'aal2')).toBe(true);
+    expect(getSessionState().rol).toBe('superadmin');
+    /* Una sincronització sense canvis no avisa ni canvia la referència. */
+    const abans = getSessionState();
+    avisos.length = 0;
+    sincronitza(); await flush();
+    expect(avisos).toEqual([]);
+    expect(getSessionState()).toBe(abans);
+  } finally { deixa(); buida(); }
+  /* Fora de la sessió, el nivell torna a null. */
+  expect(getSessionState()).toMatchObject({ estat: 'fora', nivell: null });
+});
+
+test('Onada 11 · un JWT opac (sense claim aal) deixa el nivell a null, sense fer caure la sessió', async () => {
+  buida(); await flush();
+  mocks.role.mockResolvedValue('usuari');
+  desaSessio({ access_token: 'jwt-opac', refresh_token: 'r1', user: { id: 'A' } });
+  mocks.user = { id: 'A' };
+  sincronitza(); await flush();
+  expect(getSessionState()).toMatchObject({ estat: 'dins', usuari: { id: 'A' }, nivell: null });
+  buida();
+});
+
 test('un rol nou sí que avisa, una sola vegada', async () => {
   buida(); await flush();
   mocks.role.mockResolvedValue('usuari');

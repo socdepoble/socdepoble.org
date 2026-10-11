@@ -66,6 +66,8 @@ import { Alerta, Boto, Camp, CampText, Carregant, Casella, GrupCamps, GrupOpcion
 import { urlPerCompartir, useUbicacioApp } from '../../components/PedraSeca/hooks/useAccions.js';
 import { netejaDrets, normalitzaAbast, teDretsReservats } from '../../data/origenNota.js';
 import { useOriginalDeConnexio } from '../detail/elementDeSeccio.js';
+import { useCoreContent } from '../../app/contexts/CoreContentContext.jsx';
+import { categoriesBase } from '../../data/personalitzacio.js';
 import { contingutExternDeParams, notaDeContingutExtern } from './contingutExtern.js';
 import {
   ETIQUETA_OBJECTE, LIMIT_GRUPS, LIMIT_PERSONES, estatDelXat, grupsDeXat, missatgeDeConnexio,
@@ -81,8 +83,10 @@ import { ResumConnexio } from './ResumConnexio.jsx';
 import { BlocAdministrarOrganitzacio } from './organitzacio/BlocAdministrarOrganitzacio.jsx';
 
 const SUGGESTED_TAGS = ['Història local', 'Interessant', 'Patrimoni', 'Gent del Poble', 'Debat'];
-/* Les mateixes categories de sèrie que el Bloc (NotesSection). */
-const CATEGORIES_BASE = ['Sistema'];
+/* Les mateixes categories de sèrie que el Bloc (NotesSection): Onada 11
+   (261010; prompt 261010_1730, tasca 2) · la còpia local s'ha unificat amb
+   classificacioBloc.js i, dins del component, passa per categoriesBase amb la
+   taxonomia del poble (sense personalització, la mateixa llista). */
 const TIPUS_DE_PERFIL = new Set(['persona', 'entitat', 'grup', 'ia']);
 
 /** El que la nota recordarà de l'element connectat. */
@@ -260,11 +264,14 @@ function ConnectarElementIntern() {
   const resumRef = useRef(null);
 
   const displayFolders = carpetesDelBloc(noteFolders);
+  /* Onada 11 · Les categories de sèrie, ampliades per la taxonomia del poble si n'hi ha. */
+  const { personalitzacio } = useCoreContent();
+  const categoriesDeSerie = categoriesBase(personalitzacio?.taxonomia?.payload);
   const categoriesDisponibles = useMemo(() => {
-    const totes = new Set(CATEGORIES_BASE);
+    const totes = new Set(categoriesDeSerie);
     for (const nota of notes || []) for (const categoria of nota?.categories || []) if (categoria) totes.add(String(categoria));
     return [...totes].sort((a, b) => a.localeCompare(b));
-  }, [notes]);
+  }, [notes, categoriesDeSerie]);
 
   /* El padró del poble només es consulta mentre «Persones concretes» és la
      tria, amb un xicotet retard mentre s'escriu (com el xat). */

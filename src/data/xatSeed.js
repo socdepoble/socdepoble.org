@@ -27,7 +27,7 @@
  * pilot i de Javi vénen d'identitatsSeed i agentsSeed, perquè el perfil, el
  * xat i el Mercat parlen de la mateixa identitat.
  */
-import { BENVINGUDA_IAIA, ENTITAT_PILOT_ID, ENTITATS_SEED, IAIA_ID } from './identitatsSeed.js';
+import { BENVINGUDA_IAIA, ENTITAT_PILOT_ID, ENTITATS_SEED, IAIA_ID, PERSONA_PILOT } from './identitatsSeed.js';
 import { AGENTS_MAP } from './agentsSeed.js';
 import { ID_FIL_BETA_TESTERS_LLAVOR } from './xatsPerDefecte.js';
 import { rutaDePerfil } from '../config/navigation.js';
@@ -63,10 +63,15 @@ export const XAT_SEED_NOMS = Object.freeze({
 });
 
 /* Padró del poble: a qui es pot escriure. La persona pilot, l'entitat pilot i
-   la IAIA, cadascú amb el seu tipus perquè la interfície ho diga. Javi no porta
-   avatar: el d'AGENTS_MAP.JAVI és el logo de l'entitat i els confondria. */
+   la IAIA, cadascú amb el seu tipus perquè la interfície ho diga.
+   Onada 12 (261011; ordres 261011_0130, punt 3, D-09) · Javi porta la foto del
+   padró pilot (PERSONA_PILOT.avatar, identitatsSeed.js), la mateixa del seu
+   perfil, del Cercador i de les targetes que signa. Fins ara anava sense
+   avatar perquè el catàleg d'agents li posava el logotip de l'entitat i els
+   confonia; des de l'Onada 11 el catàleg ja porta la foto. Es llig de la taula
+   d'identitats, mai d'una ruta escrita ací. */
 export const XAT_SEED_MEMBRES = Object.freeze([
-  Object.freeze({ usuariId: JAVI, nom: XAT_SEED_NOMS[JAVI], tipus: 'persona', avatarUrl: null }),
+  Object.freeze({ usuariId: JAVI, nom: XAT_SEED_NOMS[JAVI], tipus: 'persona', avatarUrl: PERSONA_PILOT.avatar }),
   Object.freeze({ usuariId: ENTITAT, nom: XAT_SEED_NOMS[ENTITAT], tipus: 'entitat', avatarUrl: ENTITATS_SEED[0].logo_url }),
   Object.freeze({ usuariId: IAIA, nom: XAT_SEED_NOMS[IAIA], tipus: 'ia', avatarUrl: AGENTS_MAP.IAIA.avatar_url })
 ]);

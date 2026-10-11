@@ -31,10 +31,12 @@ export function planPartsIguals(comanda, n) {
 /**
  * Separa línies en una comanda filla.
  *   seleccio [{ liniaId, quantitat }] · idNova (id de la filla) · nouIdLinia()
+ *   · op (opcional): la marca del moviment (mouLinies), per a poder-lo acabar
+ *   si un tall deixa la filla escrita i la mare sencera
  * @returns {{ mare: object, filla: object }}
  */
-export function divideixPerLinies(comanda, seleccio, { idNova, ara, nouIdLinia, per } = {}) {
+export function divideixPerLinies(comanda, seleccio, { idNova, ara, nouIdLinia, per, op } = {}) {
   const filla = creaComanda({ id: idNova, tornId: comanda.tornId, origen: comanda.origen, ara, per: per || comanda.atesPer });
-  const { origen, desti } = mouLinies(comanda, filla, seleccio, { ara, nouIdLinia });
+  const { origen, desti } = mouLinies(comanda, filla, seleccio, { ara, nouIdLinia, op });
   return { mare: origen, filla: desti };
 }

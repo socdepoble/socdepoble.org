@@ -13,8 +13,16 @@ export const MARKET_ITEMS = MOCK_MARKET_ITEMS.map((item) => {
      identitat de qui signa (identitatsSeed · autoriaSeed), no d'una còpia
      escrita al producte: el Mac Mini de la persona pilot pintava el logo de
      l'entitat. Va a author_avatar, el camp que ja lligen la targeta del Mur i
-     la barra taronja del detall; avatar_url i imageSrc no es toquen (la
-     Multimèdia i la imatge del detall en depenen: Llei del Píxel). */
+     la barra taronja del detall; avatar_url i imageSrc no es toquen (Llei del
+     Píxel).
+     Onada 12 (261011; ordres 261011_0130, punt 1) · imageSrc continua sent
+     l'avatar_url quan el producte no porta image_url ni image (els dos de la
+     llavor: el logotip). Ja no és la foto de ningú: la Multimèdia
+     (mediaContent.js · fotosDelMercat), el detall i el Cercador lligen
+     `images`. Només queda com a RESERVA de qui no té cap foto pròpia
+     (targetaDeProducte.js, TargetaDelMur.jsx, masDeLUsuari.js, indexCerca.js),
+     i una prova d'un altre front el fixa (notes/masDeLUsuari.mercat.test.js):
+     llevar-la és decisió del Mestre (imatgesDeProducte.js · fotoDeLaTargeta). */
   const autoria = autoriaSeed(item);
 
   return {

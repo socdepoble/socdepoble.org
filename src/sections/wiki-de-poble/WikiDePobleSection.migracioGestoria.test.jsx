@@ -23,9 +23,13 @@ vi.mock('../../hooks/useResolvedAsset.js', () => ({
   useResolvedAsset: (ref) => ref,
   useResolvedAssetState: () => ({ url: null, status: 'idle', isLoading: false })
 }));
+/* Onada 11 (261010; prompt 261010_1730, tasca 3) · la closca de prova pinta el
+   seu títol amb el doble d'UniversalPage de dalt (un sol h1 al fitxer, la Regla
+   de les Capçaleres); la prova continua buscant el heading de nivell 1. */
 vi.mock('../gestoria/tauler/ShellGestoria.jsx', async () => {
   const { useState } = await import('react');
   const { useNavigate } = await import('../../app/contexts/RouterContext');
+  const { UniversalPage } = await import('../../components/universal/UniversalPage.jsx');
   return {
     default: function ShellGestoriaDeProva() {
       const navigate = useNavigate();
@@ -33,10 +37,11 @@ vi.mock('../gestoria/tauler/ShellGestoria.jsx', async () => {
       return (
         <div className="sdp-gestoria-closca">
           <nav aria-label="Panell de control de la Gestoria">Gestoria</nav>
-          <header className="page-title"><h1>Tauler Central</h1></header>
-          <button type="button" onClick={() => setVisible(true)}>Mostra l’estat privat</button>
-          {visible ? <p>Estat privat sintètic</p> : null}
-          <button type="button" onClick={() => navigate(CONSULTA_TRACTORS)}>Obri el panell de Tractors</button>
+          <UniversalPage title="Tauler Central">
+            <button type="button" onClick={() => setVisible(true)}>Mostra l’estat privat</button>
+            {visible ? <p>Estat privat sintètic</p> : null}
+            <button type="button" onClick={() => navigate(CONSULTA_TRACTORS)}>Obri el panell de Tractors</button>
+          </UniversalPage>
         </div>
       );
     }

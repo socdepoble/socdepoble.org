@@ -7,12 +7,16 @@ const m = vi.hoisted(() => ({
   towns: [], perfil: null,
   /* Correcció 261008 · l'avís efímer de l'App (la confirmació d'«Eixir»). */
   toast: vi.fn(),
+  /* Onada 11 (261010) · la sessió opcional (null: sense proveïdor, ningú és superadmin). */
+  sessio: null,
 }));
 vi.mock('@/components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: m.toast }) }));
 vi.mock('../../app/contexts/CoreContentContext.jsx', () => ({ useCoreContent: () => ({ status: 'ready', towns: m.towns }) }));
 vi.mock('./PerfilContext.jsx', async (importOriginal) => ({ ...(await importOriginal()), usePerfilOpcional: () => m.perfil }));
 vi.mock('../../app/contexts/RouterContext', () => ({ useNavigate: () => m.navigate, Link: ({ to, children }) => <a href={to}>{children}</a> }));
-vi.mock('../../app/contexts/SessionContext', () => ({ useSession: () => ({ logout: m.logout }) }));
+vi.mock('../../app/contexts/SessionContext', () => ({ useSession: () => ({ logout: m.logout }), useSessioOpcional: () => m.sessio }));
+/* Onada 11 (261010) · El segon factor té proves pròpies (admin/SegonFactor.test.jsx). */
+vi.mock('../admin/SegonFactor.jsx', () => ({ SegonFactor: () => <p>el segon factor, en línia</p> }));
 vi.mock('../../components/universal/UniversalPage', () => ({
   UniversalPage: (props) => {
     m.pagina = props;
@@ -47,8 +51,37 @@ beforeEach(() => {
   for (const f of [m.navigate, m.logout, m.estatBaixa, m.estatConsentiment, m.exporta, m.toast]) f.mockReset();
   m.towns = [];
   m.perfil = null;
+  m.sessio = null;
 });
 afterEach(() => { cleanup(); vi.restoreAllMocks(); });
+
+/* ── Onada 11 (261010; prompt 261010_1730, tasca 2) · el superadmin dins d'«El compte» ── */
+
+test('Onada 11 · el superadmin veu «Segon factor» (en línia) i «Panell de superadministració» abans de «Tancar sessió»; el botó porta a /admin', () => {
+  m.sessio = { esSuperadmin: true, nivell: 'aal1', calSegonFactor: true };
+  pinta();
+  const titols = screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent);
+  expect(titols).toEqual(['Correu electrònic', 'Estat del perfil', 'Contrasenya', 'Segon factor', 'Panell de superadministració', 'Tancar sessió']);
+  expect(within(seccio('Segon factor')).getByText('el segon factor, en línia')).toBeTruthy();
+  const boto = within(seccio('Panell de superadministració')).getByRole('button', { name: 'Panell de superadministració' });
+  expect(boto.disabled).toBe(false);
+  fireEvent.click(boto);
+  expect(m.navigate).toHaveBeenCalledWith('/admin');
+  // Cap element nou al menú del Perfil: tot va dins d'esta pàgina.
+  expect(screen.getAllByRole('heading', { level: 1 }).map((h) => h.textContent)).toEqual(['El compte']);
+});
+
+test('Onada 11 · sense ser superadmin, o sense sessió, el compte és el d’abans; i una organització no porta els dos ajustos ni amb superadmin', () => {
+  m.sessio = { esSuperadmin: false, nivell: 'aal1', calSegonFactor: false };
+  pinta();
+  expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual(['Correu electrònic', 'Estat del perfil', 'Contrasenya', 'Tancar sessió']);
+  expect(screen.queryByText('el segon factor, en línia')).toBeNull();
+  cleanup();
+  m.sessio = { esSuperadmin: true, nivell: 'aal2', calSegonFactor: false };
+  pinta(forn);
+  expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual(['Poble', 'Correu de l’organització', 'Correu a la fitxa pública', 'Membres', 'Identificador', 'Fitxa pública', 'Eixir de l’organització']);
+  expect(screen.queryByText('el segon factor, en línia')).toBeNull();
+});
 
 test('la persona veu els ajustos del compte i no els de la fitxa', () => {
   pinta();

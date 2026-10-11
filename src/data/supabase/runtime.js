@@ -5,6 +5,7 @@ import { CLAU_USUARI, usuariDeSessio, versioSessio, jwtPerBackend } from '../ide
 import { normalizeBackendConfig } from '../../config/backendConfig.js';
 import { permetOrigenMitjans } from '../../utils/sanitize.js';
 import { CODI_BACKEND_INABASTABLE } from '../errorsBackend.js';
+import { llistaDe } from '../../utils/autocuracio.js';
 
 /* T2 (ordre del Mestre, 260930) · `codi` és el vocabulari neutral del port
    (errorsBackend.js): la vista decidix per ell i mai pel text de l'adaptador. */
@@ -131,13 +132,19 @@ export async function rpc(nom, cos, config = {}, opcions = {}) {
 
 export function mapContentRowsToData(rows) {
   const lookup = new Map(rows.map((row) => [row.key, row.payload]));
+  /* Onada 12 (261011; ordres 261011_0130, punt 7) · Llistes tolerants: una
+     fila d'app_content amb un objecte o un text on toca una llista es pren
+     buida (llistaDe l'anota i avisa una vegada). Abans passava tal qual i
+     byId(payload.towns) petava dins del proveïdor del contingut, per damunt
+     de la barrera de la ruta: tota l'app en blanc per una fila malmesa. */
+  const llista = (clau) => llistaDe(lookup.get(clau), clau);
   // El contingut remot és autoritatiu: una llista buida no activa la demostració.
-  return { ownerUserId: getDefaultUserId(), agents: lookup.get('agents') || [], feedPosts: lookup.get('feedPosts') || [],
-    marketItems: lookup.get('marketItems') || [], events: lookup.get('events') || [], towns: lookup.get('towns') || [],
-    mediaItems: lookup.get('mediaItems') || [],
-    noteFolders: lookup.get('noteFolders') || [],
-    notes: lookup.get('notes') || [],
-    pages: lookup.get('pages') || [], sectionSubmissions: [], chatMessages: [] };
+  return { ownerUserId: getDefaultUserId(), agents: llista('agents'), feedPosts: llista('feedPosts'),
+    marketItems: llista('marketItems'), events: llista('events'), towns: llista('towns'),
+    mediaItems: llista('mediaItems'),
+    noteFolders: llista('noteFolders'),
+    notes: llista('notes'),
+    pages: llista('pages'), sectionSubmissions: [], chatMessages: [] };
 }
 
 export const buildSeedAppData = (ownerUserId = getDefaultUserId()) => Promise.resolve({ ownerUserId,

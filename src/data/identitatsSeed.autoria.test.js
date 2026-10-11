@@ -4,11 +4,13 @@
  * Mini de la persona pilot pintava el logo de l'entitat perquè l'avatar era
  * una còpia escrita al producte i la identitat no en tenia cap de real.
  */
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { expect, test } from 'vitest';
+import { AGENTS_MAP } from './agentsSeed.js';
 import { ENTITATS_SEED, PERSONA_PILOT, autoriaSeed } from './identitatsSeed.js';
-import { createLocalPerfilsAdapter } from './localPerfils.js';
+import { PERSONES_SEED, createLocalPerfilsAdapter } from './localPerfils.js';
+import { XAT_SEED_IDS, XAT_SEED_MEMBRES } from './xatSeed.js';
 
 /* Onada 8 (261009) · El logo de l'entitat pilot és el PNG (abans, l'SVG). */
 const LOGO = '/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png';
@@ -19,6 +21,11 @@ const fitxerDe = (carpeta, ruta) => join(process.cwd(), carpeta, ruta);
 test('la persona pilot porta la foto del seu perfil, no el logo de l’entitat', () => {
   expect(PERSONA_PILOT.avatar).toBe(FOTO);
   expect(PERSONA_PILOT.avatar).not.toBe(ENTITATS_SEED[0].logo_url);
+  /* Onada 11 (261010; prompt 261010_1730, tasca 6, D8) · També al catàleg
+     d'agents: AGENTS_MAP.JAVI porta la foto, no la marca (Pedra Seca §11), i
+     és la font única d'on PERSONA_PILOT la llig. */
+  expect(AGENTS_MAP.JAVI.avatar_url).toBe(FOTO);
+  expect(AGENTS_MAP.JAVI.avatar_url).not.toBe(AGENTS_MAP.SOCDEPOBLE.avatar_url);
   /* La foto existix a public/. Només es mira public/: wordpress-plugin/dist no
      es versiona (.gitignore · dist) i en un clon net o a la CI no hi és. El
      paquet del connector copia public/ sencer llevat dels ocults i de quatre
@@ -66,6 +73,26 @@ test('una sola font: la fitxa local de la persona pilot, el seu perfil públic i
   expect(perfils.getProfile(senseFoto).avatar_url).toBe('');
   // Només canvia la persona pilot: l'entitat conserva el seu logo.
   expect(perfils.loadPerfilPublic('socdepoble', null).avatar).toBe(LOGO);
+});
+
+/* Onada 12 (261011; ordres 261011_0130, punt 3, D-09) · Ratificada la foto del
+   padró com a cara de JAVI, «al padró de llavor i al xat». La fila de Javi al
+   padró del xat anava sense avatar (avatarUrl null: la silueta) perquè el
+   catàleg li posava el logotip de l'entitat. Ara els tres padrons de la llavor
+   (catàleg d'agents, persones del poble i xat) diuen la mateixa foto, i cap
+   la torna a escriure: tots la lligen de PERSONA_PILOT.avatar. */
+test('D-09 · la persona pilot porta la mateixa foto al catàleg, al padró de persones i al padró del xat; l’entitat, el logotip', () => {
+  const javiAlXat = XAT_SEED_MEMBRES.find((membre) => membre.usuariId === XAT_SEED_IDS.javi);
+  expect(javiAlXat).toMatchObject({ usuariId: AGENTS_MAP.JAVI.id, tipus: 'persona', avatarUrl: FOTO });
+  expect(javiAlXat.avatarUrl).toBe(PERSONA_PILOT.avatar);
+  expect(PERSONES_SEED.map((persona) => [persona.id, persona.avatar])).toEqual([[AGENTS_MAP.JAVI.id, PERSONA_PILOT.avatar]]);
+  // Cap fila de persona del padró del xat pinta la marca, i l'entitat la conserva.
+  for (const membre of XAT_SEED_MEMBRES.filter((m) => m.tipus === 'persona')) expect(membre.avatarUrl).not.toBe(LOGO);
+  expect(XAT_SEED_MEMBRES.find((membre) => membre.tipus === 'entitat').avatarUrl).toBe(LOGO);
+  // Una sola font: la ruta de la foto només s'escriu al catàleg d'agents.
+  const fonts = ['xatSeed.js', 'identitatsSeed.js', 'localPerfils.js', 'localXat.js'].map((nom) => readFileSync(fitxerDe('src/data', nom), 'utf8'));
+  for (const font of fonts) expect(font).not.toContain('javi-llinares-perfil');
+  expect(readFileSync(fitxerDe('src/data', 'agentsSeed.js'), 'utf8').match(/javi-llinares-perfil/g)).toHaveLength(1);
 });
 
 test('una identitat que no és del padró pilot no es resol: l’element conserva el que porta', () => {

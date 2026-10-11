@@ -1,5 +1,5 @@
 // Servei únic de sessió: identitat, configuració i consultes segellades.
-import { caducitatJwt, MARGE_RENOVACIO_MS, versioSessio, sessioRecuperable, reconciliaAmbRegistre, esClauDelRegistre, triaRefresc, configuraBackendSessio } from './identitat.js';
+import { caducitatJwt, MARGE_RENOVACIO_MS, versioSessio, sessioRecuperable, reconciliaAmbRegistre, esClauDelRegistre, triaRefresc, configuraBackendSessio, nivellDAsseguranca } from './identitat.js';
 import { normalizeBackendConfig } from '../config/backendConfig.js';
 import { getCurrentUser, teCapacitat, refrescaSessio, logout, elMeuRol } from './backendPort.js';
 
@@ -22,7 +22,11 @@ let configKey = '';
 const owners = new Map();
 const defaultOwner = Symbol('sessio');
 const listeners = new Set();
-let estatActual = { usuari: null, estat: 'comprovant', rol: null, generacio: 0 };
+/* Onada 11 (261010; prompt 261010_1730, tasca 2) · `nivell` és el claim `aal`
+   del JWT desat ('aal1' | 'aal2' | null), recalculat a cada sincronització:
+   el verify del segon factor desa una sessió nova i avisa (sdp:auth-change),
+   i el canvi de nivell ha d'arribar a la interfície com el de rol. */
+let estatActual = { usuari: null, estat: 'comprovant', rol: null, generacio: 0, nivell: null };
 
 export const getSessionState = () => estatActual;
 export function subscribeSession(listener) {
@@ -34,8 +38,9 @@ function notify() { listeners.forEach(listener => listener(estatActual)); }
 function clearTimer() { clearTimeout(temporitzador); temporitzador = null; }
 
 /* Auditoria 261007 (B) · Els camps de l'estat que veuen els oients: l'usuari
-   (per referència), l'estat, el rol i la generació. */
-const CAMPS_ESTAT = Object.freeze(['usuari', 'estat', 'rol', 'generacio']);
+   (per referència), l'estat, el rol i la generació.
+   Onada 11 (261010) · I el nivell d'asseguranca: un canvi de nivell notifica. */
+const CAMPS_ESTAT = Object.freeze(['usuari', 'estat', 'rol', 'generacio', 'nivell']);
 const mateixContingut = (a, b) => a === b || JSON.stringify(a) === JSON.stringify(b);
 
 // Opcions de presentació/rutes de PedraSecaEmbed i àlies ja normalitzats.
@@ -133,7 +138,8 @@ export function sincronitza() {
     intents = 0;
     estatActual = { ...estatActual, rol: user ? 'desconegut' : null };
   }
-  estatActual = { ...estatActual, usuari: user, estat: user ? 'dins' : 'fora', generacio };
+  /* Onada 11 (261010) · El nivell es llig del JWT desat, només amb usuari. */
+  estatActual = { ...estatActual, usuari: user, estat: user ? 'dins' : 'fora', generacio, nivell: user ? nivellDAsseguranca() : null };
   if (!user) estatActual = { ...estatActual, rol: null };
   else if (teCapacitat('sessio')) {
     const myGen = generacio;
@@ -167,7 +173,7 @@ export function sincronitza() {
 function recuperaSessio() {
   if (recuperacioGastada || !sessioRecuperable() || !teCapacitat('sessio')) return false;
   recuperacioGastada = true;
-  estatActual = { ...estatActual, usuari: null, rol: null, estat: 'comprovant' };
+  estatActual = { ...estatActual, usuari: null, rol: null, estat: 'comprovant', nivell: null };
   notify();
   void renovaAra().finally(() => {
     if (estatActual.estat === 'comprovant' && !estatActual.usuari) sincronitza();

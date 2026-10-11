@@ -44,7 +44,10 @@ const init = () => {
     exposaGlobal();
 
     // Segellar l'adaptador abans de pintar
-    arrenca();
+    /* Onada 12 (261011; ordres 261011_0130, punt 7) · Una arrencada fallida
+       (el tros de l'adaptador que no baixa) no queda com un rebuig sense amo:
+       les vistes ja el reben per quanLlest(), que hi torna en el reintent. */
+    arrenca().catch((e) => console.error('[main] Arrencada fallida:', e));
 
     const root = createRoot(arrel);
 

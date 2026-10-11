@@ -9,7 +9,7 @@ import { afterEach, expect, test, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import {
   BrowserRouter, Link, MemoryRouter, NavLink, Navigate, Route, Routes,
-  useLocation, useNavigate, useParams, useSearchParams
+  useLocation, useNavigate, useParams, useRouter as useContextDelRouter, useSearchParams
 } from './RouterContext.jsx';
 
 let push;
@@ -330,4 +330,59 @@ test('al navegador l’app és ama de l’historial: l’state continua sent el 
   act(() => navega('/pobles/sella', { state: { preloadedItem: { id: 'sella' } } }));
   expect(window.location.pathname).toBe('/comunitat/pobles/sella');
   expect(estatActual).toEqual({ preloadedItem: { id: 'sella' } });
+});
+
+/* Onada 12 (261011, correccions de la refutació) · En un popstate el reflex
+   torna a l'entrada de la llista que li toca, amb el seu estat; si la llista
+   no té eixa ruta en eixa posició, reescriu l'actual com sempre. */
+test('MemoryRouter posicio: torna a una entrada de la llista si la ruta hi coincidix; si no, substituïx l’actual', () => {
+  situa('/pagina-de-l-amfitrio');
+  let navega;
+  let estatActual;
+  let index;
+  function Sonda() { navega = useNavigate(); estatActual = useLocation().state; index = useContextDelRouter().index; return null; }
+  render(<MemoryRouter><Sonda /><OnSoc /></MemoryRouter>);
+  act(() => navega('/mur?f=1', { state: { n: 1 } }));
+  act(() => navega('/pobles'));
+  act(() => navega('/mur?f=1', { replace: true, posicio: 1 }));
+  expect([on(), index, estatActual]).toEqual(['/mur?f=1', 1, { n: 1 }]);
+  // La llista no s'ha retallat: avant continua havent-hi /pobles.
+  act(() => navega('/pobles', { replace: true, posicio: 2 }));
+  expect([on(), index]).toEqual(['/pobles', 2]);
+  // Posició que no porta eixa ruta, o fora de la llista: substitució de l'entrada actual.
+  act(() => navega('/xat', { replace: true, posicio: 1 }));
+  expect([on(), index, estatActual]).toEqual(['/xat', 2, null]);
+  act(() => navega('/mercat', { replace: true, posicio: -3 }));
+  expect([on(), index]).toEqual(['/mercat', 2]);
+  expect(escriptures()).toBe(0);
+});
+
+/* Onada 12 (261011; ordres 261011_0130, punt 4) · El reflex de l'element
+   (PedraSecaEmbed.jsx) atén els salts numèrics amb l'historial del navegador.
+   El router només li'ls oferix: si no els vol, el salt és el de sempre. */
+test('MemoryRouter alSaltar: un salt numèric que algú atén no mou la llista pròpia; si no l’atén, sí', () => {
+  situa('/pagina-de-l-amfitrio');
+  let navega;
+  let index;
+  const alSaltar = vi.fn((n) => n === -2);
+  function Sonda() { navega = useNavigate(); return null; }
+  function Posicio() { index = useContextDelRouter().index; return null; }
+  render(<MemoryRouter alSaltar={alSaltar}><Sonda /><Posicio /><OnSoc /></MemoryRouter>);
+  expect(index).toBe(0);
+  act(() => navega('/mur'));
+  act(() => navega('/pobles'));
+  // Una entrada nova puja l'índex; una substitució, no.
+  expect(index).toBe(2);
+  act(() => navega('/xat', { replace: true }));
+  expect(index).toBe(2);
+  expect(alSaltar).not.toHaveBeenCalled();
+  act(() => navega(-2));
+  expect(alSaltar).toHaveBeenLastCalledWith(-2);
+  expect(on()).toBe('/xat');
+  expect(index).toBe(2);
+  act(() => navega(-1));
+  expect(alSaltar).toHaveBeenLastCalledWith(-1);
+  expect(on()).toBe('/mur');
+  expect(index).toBe(1);
+  expect(escriptures()).toBe(0);
 });

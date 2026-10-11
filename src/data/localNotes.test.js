@@ -1,6 +1,7 @@
 import { expect, test, vi } from 'vitest';
 import { createLocalNotesAdapter } from './localNotes.js';
 import { getDefaultUserId } from './appSeed.js';
+import { backendScope } from '../config/backendConfig.js';
 
 function memoryDisk() {
   const records = new Map();
@@ -111,6 +112,44 @@ test('una purga sense res vençut no escriu', async () => {
   const mutate = vi.spyOn(storage, 'mutate');
   expect(await adapter.purgaPaperera(config)).toBe(0);
   expect(mutate).not.toHaveBeenCalled();
+});
+
+/* Onada 12 (261011; ordres 261011_0130, punt 7) · Entrades malmeses al magatzem. */
+test('Onada 12 · una entrada null o primitiva no ix a la llista, no tomba la càrrega i es queda al magatzem intacta', async () => {
+  const avis = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  try {
+    const storage = memoryDisk(), adapter = createLocalNotesAdapter(storage);
+    const bona = await adapter.create({ title: 'Bona' }, config);
+    // El magatzem es fa malbé per fora de l'adaptador (una altra versió, una extensió).
+    const clau = JSON.stringify([backendScope(config), getDefaultUserId()]);
+    await storage.mutate(clau, stored => ({ ...stored, trencada: null, text: 'no sóc una nota', numero: 7 }));
+    const carregades = (await adapter.load(getDefaultUserId(), config)).notes;
+    expect(carregades.map(n => n.id)).toEqual([bona.id]);
+    // El que fa loadNotesPage amb cada nota (llegir-ne l'estat) ja no llança.
+    expect(() => carregades.filter(note => (note.estat ?? 'activa') === 'activa')).not.toThrow();
+    expect(await storage.read(clau)).toMatchObject({ trencada: null, text: 'no sóc una nota', numero: 7 });
+    expect(Object.keys(await storage.read(clau))).toHaveLength(4);
+    // La nota bona es continua podent desar, i la purga tampoc no toca les malmeses.
+    await expect(adapter.update(bona.id, { title: 'Encara bona' }, 0, config)).resolves.toMatchObject({ revision: 1 });
+    expect(await adapter.purgaPaperera(config)).toBe(0);
+    expect(Object.keys(await storage.read(clau))).toHaveLength(4);
+    // S'avisa una vegada, amb el nombre i mai amb el contingut.
+    await adapter.load(getDefaultUserId(), config);
+    expect(avis).toHaveBeenCalledTimes(1);
+    expect(avis.mock.calls[0].join(' ')).toContain('3 entrada/es');
+    expect(avis.mock.calls[0].join(' ')).not.toContain('no sóc una nota');
+  } finally { avis.mockRestore(); }
+});
+
+test('Onada 12 · la marca d’una nota de llavor esborrada no compta com a entrada malmesa', async () => {
+  const avis = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  try {
+    const storage = memoryDisk(), seedConfig = { dataMode: 'seed' }, adapter = createLocalNotesAdapter(storage);
+    const n1 = (await adapter.load(getDefaultUserId(), seedConfig)).notes.find(n => n.id === 'n1');
+    await adapter.remove('n1', n1.revision, seedConfig);
+    expect((await adapter.load(getDefaultUserId(), seedConfig)).notes.map(n => n.id)).not.toContain('n1');
+    expect(avis).not.toHaveBeenCalled();
+  } finally { avis.mockRestore(); }
 });
 
 test('storage failure is reported, never shown as a successful save', async () => {

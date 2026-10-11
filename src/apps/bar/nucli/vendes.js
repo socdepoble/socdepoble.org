@@ -41,9 +41,14 @@
  *   contracte. Els arguments dolents porten codi propi: TIQUETS, ZONA, DATA,
  *   RANG. vendaDeTiquet sola llança TIQUET, MOMENT o ZONA.
  *
- * PENDENT (relleu del 261006): cap pantalla, cap ruta ni el magatzem no la
- * criden. El consumidor serà la Gestoria (pas següent), que haurà de llegir
- * els tiquets del magatzem del Bar i triar el titular; ací no s'endolla res.
+ * ENDOLLAT (Onada 12, 261011; ordres 261011_0130, punt 6): el detall d'un torn
+ * tancat (vistes/Torns.jsx, «Vendes per a la Gestoria (JSON)») baixa el
+ * registre dels tiquets del torn en un fitxer, amb el titular a null i la zona
+ * de l'establiment o, mentre el Bar no la guarde, la de la caixa que exporta
+ * (vistes/desa.js; l'avís de la pantalla la diu). El fitxer és la frontera: el
+ * Bar no importa la Gestoria, i el TPV i la Gestoria poden viure en dispositius
+ * diferents. PENDENT: que la Gestoria el llija (el seu importador) i que el Bar
+ * guarde la zona de l'establiment (decisió del Mestre).
  */
 import {
   ESQUEMA_VENDES, MONEDA_VENDES, creaRegistreVendes, esDataValida, titularDelRegistre

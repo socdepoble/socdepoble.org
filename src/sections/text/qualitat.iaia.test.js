@@ -61,11 +61,15 @@ describe('ESLint', () => {
 });
 
 describe('Pedra Seca', () => {
+  /* Onada 11 (261010; prompt 261010_1730, tasca 6, D4) · L'única classe que la
+     peça pot escriure és «sdp-pagina-accio», l'embolcall del botó del final
+     que ja fan servir PageDetailSection (AccioDeLaPagina, lloc 'baix') i les
+     pàgines de plugin: cap classe nova. La porta continua sent PortaDePagina. */
   test('les peces noves: cap style=, cap hex, cap classe nova, res fora del Baseline 2022', () => {
     const vetats = [
       [/\sstyle=[{"]/, 'style='],
       [/#[0-9a-fA-F]{3,8}\b/, 'color hex'],
-      [/className=/, 'className (la peça és PortaDePagina, que ja porta les seues)'],
+      [/className=(?!"sdp-pagina-accio")/, 'className (la peça és PortaDePagina, que ja porta les seues; només l’embolcall sdp-pagina-accio del final)'],
       [/:has\(/, ':has()'],
       [/\.(?:findLast|findLastIndex|toSorted|toReversed|toSpliced)\(|Object\.groupBy|withResolvers/, 'fora del Baseline'],
       [/\(\?<[=!]/, 'lookbehind']

@@ -8,6 +8,12 @@ import { SECCIONS_PAGINABLES } from '../contracte.js';
    mode seed les porta (les pàgines de sistema es servixen igual en remot,
    amb la seua data de creació). */
 import { llavorAmbDatesDeProva } from '../../sections/mur/datesDeProvaMur.js';
+/* Onada 11 (261010; prompt 261010_1730, tasca 2) · La personalització del
+   poble (taxonomia i estil) viatja dins de loadCoreContent com a camp
+   ADDITIU i opcional: en remot, de les files d'app_content; en seed o local,
+   del magatzem en memòria de personalitzacio.js. */
+import { CLAUS_PERSONALITZACIO, personalitzacioDeFiles, personalitzacioLocal } from './personalitzacio.js';
+import { llistaDe } from '../../utils/autocuracio.js';
 
 const SECCIONS = new Set(['mur', 'mercat', 'events', 'multimedia', 'notes']);
 /* T2 (ordre del Mestre, 260930) · Com auth.js: la comprovació de mode local
@@ -122,14 +128,17 @@ export async function appendSectionSubmissionNetworkOnly(submission, config = {}
     headers: { Prefer: 'return=representation,resolution=merge-duplicates' }, body: [fila] });
   return stored;
 }
+/* Onada 11 (261010) · Les claus d'app_content que demana loadCoreContent. */
+const CLAUS_CORE = ['towns', 'agents', ...CLAUS_PERSONALITZACIO].join(',');
 export async function loadCoreContent(ownerUserId = getDefaultUserId(), config = {}) {
   const { runtimeDataMode, hasSupabaseConfig, tenantId } = getResolvedConfig(config); const seed = await buildSeedAppData(ownerUserId);
-  if (runtimeDataMode === 'seed') return { towns: seed.towns, pages: llavorAmbDatesDeProva(seed).pages, pageCopy: {}, agents: seed.agents, ownerUserId };
-  if (runtimeDataMode === 'local') return { towns: [], pages: seed.pages, pageCopy: {}, agents: [], ownerUserId };
+  if (runtimeDataMode === 'seed') return { towns: seed.towns, pages: llavorAmbDatesDeProva(seed).pages, pageCopy: {}, agents: seed.agents, ownerUserId, personalitzacio: personalitzacioLocal() };
+  if (runtimeDataMode === 'local') return { towns: [], pages: seed.pages, pageCopy: {}, agents: [], ownerUserId, personalitzacio: personalitzacioLocal() };
   if (!hasSupabaseConfig) throw new Error('Falten credencials de Supabase per carregar el contingut Core.');
   if (!tenantId) throw new Error('Poble no configurat: falta tenantId (VITE_TENANT_ID).');
-  const rows = await request(`/rest/v1/app_content?select=key,payload,version&key=in.(towns,agents)&tenant_id=eq.${encodeURIComponent(tenantId)}`, config, { signal: config.signal });
-  const base = mapContentRowsToData(rows || []); return { towns: base.towns, pages: seed.pages, pageCopy: {}, agents: base.agents, ownerUserId };
+  const rows = await request(`/rest/v1/app_content?select=key,payload,version&key=in.(${CLAUS_CORE})&tenant_id=eq.${encodeURIComponent(tenantId)}`, config, { signal: config.signal });
+  const base = mapContentRowsToData(rows || []);
+  return { towns: base.towns, pages: seed.pages, pageCopy: {}, agents: base.agents, ownerUserId, personalitzacio: personalitzacioDeFiles(rows || []) };
 }
 /** Carrega exclusivament les fonts d’una secció; Notes té el seu port propi.
  * Decisió 4 del Mestre (261007) · Amb `ambPaginacio` (només loadMur), demana
@@ -163,9 +172,13 @@ async function loadSections(ownerUserId, config, sections, { ambPaginacio = fals
         : { signal: config.signal }))
   ]);
   /* Auditoria 261007 (B) · Les d'app_content no passen per elementDeFila: són
-     de l'administració i signen legítimament dins del payload. */
+     de l'administració i signen legítimament dins del payload.
+     Onada 12 (261011; ordres 261011_0130, punt 7) · llistaDe: una fila amb un
+     objecte on toca una llista es pren buida, en lloc de rebutjar la càrrega
+     sencera del Mur ([...primary] de mergeById); les publicacions dels veïns
+     es pinten igual. */
   const llistes = Object.fromEntries(sections.map(([key], index) => [key, mergeById(
-    rows.find(row => row.key === key)?.payload || [],
+    llistaDe(rows.find(row => row.key === key)?.payload, key),
     submissions[index].map(elementDeFila)
   )]));
   if (!ambPaginacio) return llistes;

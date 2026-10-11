@@ -72,6 +72,10 @@ afterEach(cleanup);
 
 const bloc = (titol) => screen.getByRole('heading', { level: 2, name: titol }).closest('section');
 const targeta = () => bloc('Vista targeta').querySelector('article.sp-card.sdp-targeta-viva-carta');
+/* Onada 11 (261010; prompt 261010_1730, tasca 3) · el paper s'analitza amb
+   DOMParser i es mira el text dels h1: cap literal de marcatge a la prova. */
+const paperDom = (paper) => new DOMParser().parseFromString(paper.getAttribute('srcdoc'), 'text/html');
+const titolsH1 = (paper) => [...paperDom(paper).querySelectorAll('h1')].map((h) => h.textContent);
 
 test('dos blocs dins d’una pàgina de context: «Vista A4 / PDF» i «Vista targeta», en este ordre', () => {
   render(<DetallVistes identitat={jo} />);
@@ -88,13 +92,16 @@ test('la vista A4: els dos botons de sempre, que obrin la vista prèvia sense po
   fireEvent.click(within(a4).getByRole('button', { name: 'Vista A4 / PDF' }));
   expect(screen.getByRole('checkbox', { name: 'Incloure portada' }).checked).toBe(false);
   const paper = screen.getByTitle('Document A4');
-  expect(paper.getAttribute('srcdoc')).toContain('<h1>Pep del Mas</h1>');
+  expect(titolsH1(paper)).toEqual(['Pep del Mas']);
   expect(paper.getAttribute('srcdoc')).not.toContain('<section class="cover">');
   fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Tancar' }));
   fireEvent.click(within(a4).getByRole('button', { name: 'Crear portada' }));
   expect(screen.getByRole('checkbox', { name: 'Incloure portada' }).checked).toBe(true);
-  // La portada porta el nom de qui signa (el de la barra taronja, com a l'editor).
-  expect(screen.getByTitle('Document A4').getAttribute('srcdoc')).toContain('<section class="cover">');
+  // La portada porta el nom de qui signa (el de la barra taronja, com a l'editor); l'únic h1 continua sent el de l'article.
+  const ambPortada = screen.getByTitle('Document A4');
+  expect(ambPortada.getAttribute('srcdoc')).toContain('<section class="cover">');
+  expect(paperDom(ambPortada).querySelector('.cover .cover-titol').textContent).toBe('Pep del Mas');
+  expect(titolsH1(ambPortada)).toEqual(['Pep del Mas']);
 });
 
 test('la vista targeta: la targeta viva en línia, amb l’autoria de la barra taronja, les píndoles i l’avís del Perfil', () => {

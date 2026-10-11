@@ -101,6 +101,11 @@ test('arranca el shell real i carrega els providers sense activar ErrorBoundary'
     expect(inesperat).not.toHaveBeenCalled();
     expect(peticioExterna).not.toHaveBeenCalled();
     expect(errors).not.toHaveBeenCalled();
+    /* Onada 11 (261010; prompt 261010_1730, tasca 2) · Llei del Píxel: sense
+       estil desat (este loadCoreContent no torna `personalitzacio`),
+       EstilDelPoble no afig cap <style> ni cap full al document. */
+    expect(document.querySelector('style[data-sdp-estil]')).toBeNull();
+    expect(document.adoptedStyleSheets?.length ?? 0).toBe(0);
   } finally {
     cleanup();
     // Si hi havia backend, el restaurem; el cas inicial buit queda aïllat per Vitest.

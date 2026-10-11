@@ -28,7 +28,12 @@ const PANELLS = Object.freeze([
   {
     id: 'rebuts', titol: 'Rebuts', icona: 'receipt',
     subtitol: 'Per a comprovar què ha llegit de veritat l’eixam',
-    entradilla: 'Cada vegada que un agent llig senceres les fonts d’un protocol, en queda un rebut amb l’empremta de cada fitxer. Obri’l per vore quines fonts va llegir.'
+    /* Onada 11 (261010; prompt 261010_1730, tasca 6, D15) · La mateixa
+       correcció que el paràgraf de /page/consola (Onada 10): hui cap eina
+       escriu rebuts al diari, i el text diu el rebut pel que és i pel llindar
+       que el tauler marca (LLINDAR_REBUTS_RANCIS_DIES, consolaPagines.js), no
+       «cada vegada que un agent llig». */
+    entradilla: 'Un rebut és la constància que un agent ha llegit senceres les fonts d’un protocol, amb l’empremta de cada fitxer. Obri’l per vore quines fonts va llegir; si fa més d’una setmana que no n’arriba cap, el tauler ho marca.'
   },
   {
     id: 'skills', titol: 'Skills', icona: 'puzzle',

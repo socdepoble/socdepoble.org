@@ -202,17 +202,20 @@ const classificacio = (etiqueta, categoria = 'Eina') => [
    (WordPress): les xifres només viuen dins de cada eina, mai ací.
    Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010, M4) ·
    R1 queda derogada en part: la targeta porta la data FIXA del registre
-   (DATA_DE_L_ORDRE), que no ix de les dades de ningú. Cap altra xifra. */
+   (DATA_DE_L_ORDRE), que no ix de les dades de ningú. Cap altra xifra.
+   Onada 11 (261010; prompt 261010_1730, tasca 6, D6) · Les entradetes diuen
+   que el Panell no mostra cap xifra ni cap dada «teua»: la data fixa de la
+   targeta no és de ningú, i el text ja no està en tensió amb ella. */
 export const ESPAIS_PLUGINS = Object.freeze([
   Object.freeze({
     id: 'empresa',
     titol: 'L’empresa',
-    entradeta: 'Les eines de l’activitat: el que es declara o es justifica davant d’Hisenda i de la gestoria. El Panell no en mostra cap xifra; les dades només es veuen dins de cada eina.'
+    entradeta: 'Les eines de l’activitat: el que es declara o es justifica davant d’Hisenda i de la gestoria. El Panell no mostra cap xifra de les teues dades; les dades només es veuen dins de cada eina.'
   }),
   Object.freeze({
     id: 'llar',
     titol: 'La llar',
-    entradeta: 'Les eines de casa: el rebost, la compra i el quadern de salut. Viuen separades de les de l’empresa, i el Panell no en mostra cap dada.'
+    entradeta: 'Les eines de casa: el rebost, la compra i el quadern de salut. Viuen separades de les de l’empresa, i el Panell no mostra cap dada teua.'
   })
 ]);
 

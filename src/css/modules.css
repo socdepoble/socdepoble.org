@@ -557,72 +557,6 @@ aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(2) {
   min-height: var(--sdp-touch-min);
 }
 
-.univ-manager-toolbar--facets {
-  justify-content: space-between;
-  background: var(--sdp-crom-fons);
-}
-
-.univ-manager-toolbar--list {
-  justify-content: space-between;
-  background:
-    linear-gradient(var(--sdp-crom-hover), var(--sdp-crom-hover)),
-    var(--sdp-crom-fons);
-}
-
-.univ-manager-inbox {
-  display: inline-flex;
-  flex: 1 1 auto;
-  align-items: center;
-  justify-content: flex-start;
-  gap: var(--sdp-space-2);
-  min-height: var(--sdp-touch-min);
-  padding: 0 var(--sdp-space-3);
-  border: 0;
-  border-radius: var(--sdp-radi-s);
-  background: transparent;
-  color: var(--sdp-crom-text);
-  font: inherit;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-
-
-.univ-manager-toolbar--list .btn-primary {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--sdp-space-1);
-  min-height: var(--sdp-touch-min);
-  padding-inline: var(--sdp-space-3);
-  white-space: nowrap;
-}
-
-
-
-
-
-.search-bar {
-  display: flex;
-  align-items: center;
-  gap: var(--sdp-space-2);
-  background: var(--sdp-fons-subtil);
-  padding: var(--sdp-space-2) var(--sdp-space-3);
-  border-radius: var(--sdp-radi-s);
-  border: 1px solid var(--sdp-vora);
-}
-
-.search-bar input {
-  flex: 1;
-  min-width: 0;
-  background: transparent;
-  border: none;
-  font: inherit;
-  font-size: var(--sdp-text-small);
-  color: var(--sdp-text-cos);
-  outline: none;
-}
-.search-bar input:focus-visible { outline: 2px solid var(--sdp-accio-forta); outline-offset: 2px; }
-
 .univ-manager-facet-header {
   padding: var(--sdp-space-4) var(--sdp-space-4) var(--sdp-space-2);
   margin: 0;
@@ -794,9 +728,6 @@ aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(2) {
     background: var(--sdp-fons-superficie);
   }
 }
-.sdp-dropdown-item--danger {
-  color: var(--sdp-error);
-}
 .sdp-dropdown-item__icona {
   display: inline-flex;
   align-items: center;
@@ -841,8 +772,6 @@ aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(2) {
 .sdp-fitxa-seccio { display: flex; flex-direction: column; height: 100%; }
 
 /* ── Pàgina universal · UniversalPage.jsx i gestors ──────────────── */
-.content-wrapper--sense-marge { padding: 0; }
-.notes-column__body--sense-marge { padding: 0; }
 .sp-card-price--en-linia {
   float: none;
   display: inline-block;
@@ -910,18 +839,11 @@ aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(2) {
 }
 .onboarding-card__intro--espaiada { margin-top: var(--sdp-space-4); }
 .onboarding-form__pindola { margin-bottom: var(--sdp-space-6); }
-.onboarding-form__error { display: block; margin-top: var(--sdp-space-2); }
 /* Una cadena sense espais (l'error cru del servidor, un correu llarg) fixava
    l'amplària mínima del cos de la targeta, que és columna flex centrada: el
    cos passava de la targeta i camps i alerta tocaven la vora. Només estos dos
    continguts partixen on calga; la resta de la targeta no canvia. */
 .sp-card--onboarding :is(.sdp-alerta, strong) { overflow-wrap: anywhere; }
-.onboarding-consentiment { align-items: center; }
-.onboarding-consentiment__casella {
-  width: 2rem; height: 2rem;
-  flex-shrink: 0;
-  cursor: pointer;
-}
 
 }
 
@@ -937,10 +859,6 @@ aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(2) {
   display: flex;
   flex-direction: column;
   isolation: isolate;
-}
-
-.ues-header {
-  flex: 0 0 auto;
 }
 
 .ues-scroll {
@@ -1076,10 +994,6 @@ aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(2) {
   justify-content: center;
 }
 
-.ues-canvas--ple {
-  padding: 0;
-}
-
 /* ==========================================================================
    Error d'arrencada (host.js fallback)
    ========================================================================== */
@@ -1139,46 +1053,7 @@ aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(2) {
 
 /* 7.5 Taules suprimides. Veure Canonical CSS al final de l'arxiu. */
 
-.table-action {
-  color: var(--sdp-accent-text);
-  font-weight: 600;
-  text-decoration: none;
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .table-action:hover {
-    color: var(--sdp-accent-text-hover);
-    text-decoration: underline;
-  }
-}
-
 /* 7.6 Navegació */
-
-.nav-bar {
-  display: flex;
-  border-bottom: 1px solid var(--sdp-vora);
-  margin-bottom: var(--sdp-space-6);
-}
-
-.nav-bar a {
-  padding: 16px 24px;
-  text-decoration: none;
-  color: var(--sdp-text-suau);
-  font-weight: 600;
-  white-space: nowrap;
-  transition: color var(--sdp-t);
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .nav-bar a:hover {
-    color: var(--sdp-text-titol);
-  }
-}
-
-.nav-bar a.active {
-  color: var(--sdp-accio-text);
-  border-bottom: 3px solid var(--sdp-accio);
-}
 
 .pagination {
   display: flex;
@@ -1251,13 +1126,6 @@ details[open] summary.accordion-header svg:last-child {
 
 /* 7.13 Tooltips */
 
-.tooltip-preview {
-  display: flex;
-  gap: 32px;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
 .tooltip-term {
   text-decoration: underline dotted;
   cursor: help;
@@ -1301,12 +1169,6 @@ details[open] summary.accordion-header svg:last-child {
   margin-bottom: var(--sdp-space-2);
 }
 
-.divider-basic {
-  height: 1px;
-  background: var(--sdp-vora);
-  margin: 16px 0;
-}
-
 .divider-text {
   display: flex;
   align-items: center;
@@ -1341,11 +1203,6 @@ details[open] summary.accordion-header svg:last-child {
 .divider-dashed {
   border-top: 1px dashed var(--sdp-vora);
   margin: 16px 0;
-}
-
-.divider-dotted {
-  border-top: 2px dotted var(--sdp-vora);
-  margin: var(--sdp-space-6) 0;
 }
 
 /* 7.18 Llistes de definició */
@@ -1627,30 +1484,6 @@ details[open] summary.accordion-header svg:last-child {
 .search-filters select:focus {
   border-color: var(--sdp-accio-text);
   box-shadow: 0 0 0 3px var(--sdp-anell-accio);
-}
-
-.search-result {
-  margin-bottom: var(--sdp-space-6);
-}
-
-.search-result-title {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: var(--sdp-accent-text);
-  margin-bottom: var(--sdp-space-1);
-}
-
-.search-result-meta {
-  font-size: var(--sdp-text-meta);
-  color: var(--sdp-text-suau);
-  margin-bottom: var(--sdp-space-2);
-  letter-spacing: 0.05em;
-}
-
-.search-result-excerpt {
-  color: var(--sdp-text-titol);
-  font-size: 0.95rem;
-  line-height: 1.5;
 }
 
 /* 7.20 Paginació simplificada */
@@ -2058,10 +1891,6 @@ details[open] summary.accordion-header svg:last-child {
 
 /* ── 8. FAB (només escriptori) ─────────────────────────────────── */
 
-.sdp-ocult {
-  display: none !important;
-}
-
 .sdp-text-error {
   color: var(--sdp-error);
 }
@@ -2339,39 +2168,10 @@ details[open] summary.accordion-header svg:last-child {
   }
 }
 
-/* UniversalCard Calendar Badge Override */
-
-/* ── BOTONERA MUR (Constitució Pedra Seca) ── */
-
-.sdp-filtres {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) repeat(2, minmax(10rem, auto)) auto;
-  align-items: end;
-  gap: var(--sdp-space-4);
-  padding: var(--sdp-space-4);
-  background: var(--sdp-fons-targeta);
-  border: 1px solid var(--sdp-vora);
-  border-radius: var(--sdp-radi-m);
-}
-
-/* Blau per a arquitectura / vistes */
-
-/* Taronja per a estat/mode actiu */
-
-@media (max-width: 720px) {
-
-}
-
-/* ── BADGES POBLE (Auditoria Grok) ── */
-
 /* Documentació del Sistema de Disseny (DesignSection) */
 
 .component-doc {
   margin-bottom: var(--sdp-space-8);
-}
-
-.component-doc-header {
-  margin-bottom: var(--sdp-space-4);
 }
 
 .component-doc-preview {
@@ -2380,64 +2180,6 @@ details[open] summary.accordion-header svg:last-child {
   border-radius: var(--sdp-radi-m);
   border: 1px solid var(--sdp-vora);
 }
-
-.component-doc-preview--transparent {
-  background: transparent;
-  padding: 0;
-  border: none;
-}
-
-.chat-container {
-  padding: var(--sdp-space-4);
-  margin-bottom: var(--sdp-space-6);
-  background-color: var(--sdp-fons-superficie);
-  border-radius: var(--sdp-radi-g);
-  display: flex;
-  flex-direction: column;
-  gap: var(--sdp-space-4);
-}
-
-.form-control {
-  width: 100%;
-  border: 1px solid var(--sdp-vora-control);
-  border-radius: var(--sdp-radi-m);
-  padding: var(--sdp-space-2) var(--sdp-space-3);
-  background-color: var(--sdp-fons-elevat);
-  color: var(--sdp-text-cos);
-}
-
-/* Documentació - Elements de Xat */
-
-.chat-avatar-ia {
-  background-color: var(--sdp-accent);
-  color: var(--sdp-sobre-accent);
-}
-
-.chat-avatar-jl {
-  background-color: var(--sdp-accio-subtil);
-  color: var(--sdp-accio-text);
-}
-
-.chat-input-wrapper {
-  display: flex;
-  gap: var(--sdp-space-2);
-  align-items: flex-end;
-  background-color: var(--sdp-fons-targeta);
-  padding: var(--sdp-space-3);
-  border-radius: var(--sdp-radi-g);
-  border: 1px solid var(--sdp-vora-control);
-}
-
-.chat-input-textarea {
-  width: 100%;
-  resize: none;
-  border: none;
-  background-color: transparent;
-  padding: var(--sdp-space-2) 0;
-  color: inherit;
-  outline: none;
-}
-.chat-input-textarea:focus-visible { outline: 2px solid var(--sdp-accio-forta); outline-offset: 2px; }
 
 .sdp-avisador-efimer {
   position: fixed;
@@ -2540,29 +2282,8 @@ details[open] summary.accordion-header svg:last-child {
   border-top-right-radius: 0;
 }
 
-/* AAA (Q1, 261004): el 0,7 d'opacitat deixava el text de 12px per davall
-   d'AA. Ara 14px i opac, amb el color de la bombolla (--sdp-text-cos). */
-.sdp-chat-bubble-meta {
-  display: flex;
-  justify-content: flex-end;
-  font-size: var(--sdp-text-meta);
-  margin-top: 4px;
-}
-
-@media (max-width: 768px) {
-  .mobile-only {
-    display: block !important;
-  }
-}
-
-@media (min-width: 769px) {
-  .mobile-only {
-    display: none !important;
-  }
-}
-
 /* ==========================================
-   UTILITATS SDP 
+   UTILITATS SDP
 ========================================== */
 
 .sdp-unstyled-btn {
@@ -2611,15 +2332,6 @@ details[open] summary.accordion-header svg:last-child {
 /* ── TRASPASAT DE legacy-components.css ──
    sosp-spin i sosp-pulse, sense cap consumidor a src, retirats el 261004. */
 
-.detail-page {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sdp-space-6);
-  max-width: 800px;
-  margin: 0 auto;
-  padding: var(--sdp-space-4);
-}
-
 .detail-hero {
   background: var(--sdp-fons-superficie);
   border-radius: var(--sdp-radi-xl);
@@ -2637,13 +2349,6 @@ details[open] summary.accordion-header svg:last-child {
   font-weight: 800;
   line-height: 1.1;
   margin-bottom: var(--sdp-space-4);
-}
-
-.section-item-card__subtitle {
-  font-size: 1.2rem;
-  color: var(--sdp-text-suau);
-  font-weight: 500;
-  margin-bottom: var(--sdp-space-6);
 }
 
 .media-frame {
@@ -2774,27 +2479,7 @@ details[open] summary.accordion-header svg:last-child {
 
 /* .login-switcher: retirat el 260911, substituït per PillToggle. */
 
-.login-form {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sdp-space-4);
-}
-
-.login-action {
-  margin-top: 8px;
-  width: 100%;
-  justify-content: center;
-}
-
 /* 7.13 Alta personal i d'organitzacions */
-
-.onboarding-layout {
-  width: min(100%, 860px);
-  margin: var(--sdp-space-6) auto var(--sdp-space-10);
-  display: flex;
-  flex-direction: column;
-  gap: var(--sdp-space-6);
-}
 
 .onboarding-card {
   padding: clamp(var(--sdp-space-5), 5vw, var(--sdp-space-10));
@@ -2805,47 +2490,12 @@ details[open] summary.accordion-header svg:last-child {
   box-shadow: var(--sdp-ombra-3);
 }
 
-.onboarding-card__heading {
-  display: flex;
-  align-items: center;
-  gap: var(--sdp-space-4);
-  margin-bottom: var(--sdp-space-5);
-}
-
-.onboarding-card__heading h2,
 .onboarding-card h2 {
   margin: 0;
   color: var(--sdp-text-titol);
   font-size: clamp(1.5rem, 4vw, 2rem);
   line-height: var(--sdp-leading-tight);
   text-transform: none;
-}
-
-.onboarding-card__icon {
-  width: var(--sdp-space-16);
-  height: var(--sdp-space-16);
-  flex: 0 0 var(--sdp-space-16);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--sdp-accio-text);
-  border-radius: 50%;
-  background: var(--sdp-accio-subtil);
-}
-
-.onboarding-card__eyebrow {
-  margin: 0 0 var(--sdp-space-1);
-  color: var(--sdp-accent-text);
-  font-size: var(--sdp-text-meta);
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.onboarding-card__heading h2,
-.onboarding-card__heading h3 {
-  margin-top: 0;
-  margin-bottom: 0;
 }
 
 .onboarding-card__intro {
@@ -2858,152 +2508,6 @@ details[open] summary.accordion-header svg:last-child {
 .onboarding-form {
   display: flex;
   flex-direction: column;
-}
-
-.onboarding-field-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--sdp-space-4);
-}
-
-.onboarding-privacy-note,
-.onboarding-public-note {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--sdp-space-3);
-  margin-bottom: var(--sdp-space-6);
-  padding: var(--sdp-space-4);
-  border: 1px solid var(--sdp-vora);
-  border-radius: var(--sdp-radi-m);
-  background: var(--sdp-fons-subtil);
-  color: var(--sdp-text-cos);
-}
-
-.onboarding-privacy-note svg {
-  flex: 0 0 auto;
-  color: var(--sdp-exit-text);
-}
-
-.onboarding-privacy-note p,
-.onboarding-public-note p {
-  margin: 0;
-  font-size: var(--sdp-text-meta);
-  line-height: var(--sdp-leading-body);
-}
-
-.onboarding-card__action {
-  min-height: var(--sdp-touch-min);
-  align-self: flex-end;
-  justify-content: center;
-}
-
-.onboarding-loading {
-  min-height: 240px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--sdp-space-3);
-  color: var(--sdp-text-suau);
-  font-weight: 700;
-}
-
-.onboarding-loading__spinner {
-  width: var(--sdp-space-6);
-  height: var(--sdp-space-6);
-  border: 3px solid var(--sdp-vora);
-  border-top-color: var(--sdp-accio);
-  border-radius: var(--sdp-radi-pastilla);
-  animation: spin 0.8s linear infinite;
-}
-
-.onboarding-confirmation,
-.onboarding-complete {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-}
-
-.onboarding-confirmation > p:not(.onboarding-card__eyebrow),
-.onboarding-complete > p:not(.onboarding-card__eyebrow) {
-  max-width: 62ch;
-  color: var(--sdp-text-cos);
-  line-height: var(--sdp-leading-body);
-}
-
-.onboarding-confirmation .onboarding-card__action,
-.onboarding-complete .onboarding-card__action {
-  align-self: center;
-}
-
-.onboarding-complete__mark {
-  width: var(--sdp-space-20);
-  height: var(--sdp-space-20);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: var(--sdp-space-4);
-  color: var(--sdp-exit-text);
-  border: 2px solid var(--sdp-exit);
-  border-radius: var(--sdp-radi-pastilla);
-  background: var(--sdp-exit-fons);
-}
-
-.onboarding-summary {
-  width: min(100%, 560px);
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  margin: var(--sdp-space-6) 0;
-  border: 1px solid var(--sdp-vora);
-  border-radius: var(--sdp-radi-m);
-  overflow: hidden;
-}
-
-.onboarding-summary div {
-  min-width: 0;
-  padding: var(--sdp-space-4);
-  border-right: 1px solid var(--sdp-vora);
-}
-
-.onboarding-summary div:last-child {
-  border-right: 0;
-}
-
-.onboarding-summary dt {
-  color: var(--sdp-text-suau);
-  font-size: var(--sdp-text-meta);
-}
-
-.onboarding-summary dd {
-  margin: var(--sdp-space-1) 0 0;
-  color: var(--sdp-text-titol);
-  font-weight: 800;
-  overflow-wrap: anywhere;
-}
-
-@media (max-width: 720px) {
-  .onboarding-summary {
-    grid-template-columns: 1fr;
-  }
-
-  .onboarding-summary div {
-    border-right: 0;
-    border-bottom: 1px solid var(--sdp-vora);
-  }
-
-  .onboarding-summary div:last-child {
-    border-bottom: 0;
-  }
-
-  .onboarding-field-grid {
-    grid-template-columns: 1fr;
-    gap: 0;
-  }
-
-  .onboarding-card__action {
-    width: 100%;
-    align-self: stretch;
-  }
 }
 
 .detail-hero .card__title {
@@ -3034,61 +2538,6 @@ details[open] summary.accordion-header svg:last-child {
 /* ── COMPONENTS TIPTAP (PoC) ── */
 
 /* --- Perfil Universal (Formularis Pedra Seca) --- */
-
-/* Universal Toolbar (shared between Notes and Profiles) */
-
-.editor-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex: none;
-  height: auto;
-  min-height: var(--sdp-alt-accio);
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  gap: var(--sdp-space-2);
-  padding: var(--sdp-space-1) var(--sdp-space-4);
-  background: linear-gradient(var(--sdp-crom-hover), var(--sdp-crom-hover)), var(--sdp-crom-fons);
-  color: var(--sdp-crom-text);
-  border-bottom: 1px solid var(--sdp-crom-vora);
-}
-
-/* Universal Action Bars (Graelles) */
-
-
-
-.editor-toolbar .toolbar-actions {
-  display: flex;
-  flex: 1 1 240px;
-  flex-wrap: nowrap;
-  gap: var(--sdp-space-1);
-  min-width: 0;
-}
-
-.editor-toolbar .toolbar-actions.right {
-  margin-left: auto;
-  flex: 0 0 auto;
-}
-
-.editor-toolbar .toolbar-actions button {
-  background: transparent;
-  color: inherit;
-  border: none;
-  cursor: pointer;
-  padding: var(--sdp-space-1);
-  border-radius: var(--sdp-radi-s);
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .editor-toolbar .toolbar-actions button:hover:not(:disabled) {
-    background: var(--sdp-crom-hover);
-  }
-}
-
-.editor-toolbar button:disabled {
-  opacity: .5;
-  cursor: default;
-}
 
 /* --- REFINAMENTS DE UI --- */
 
@@ -3196,6 +2645,12 @@ details[open] summary.accordion-header svg:last-child {
    on viu la resta del calaix (.toc-drawer, més amunt): tota regla nova va a
    components. */
 @layer components {
+  /* Onada 12 (261011; ordres 261011_0130, D-01: «Mantenim el NO anell en
+     aquesta versió») · Excepció explícita per a la porta de disseny
+     (tooling/gates/design_guard.mjs, regla focus-invisible): el marcador ha
+     d'anar just davant de la regla, dins dels 120 caràcters anteriors a
+     l'outline. Només empara esta regla: un contenidor enfocat per programa
+     (tabIndex -1), no un control. ALLOW_FOCUS_INVISIBLE */
   .toc-drawer:focus { outline: none; }
 }
 
@@ -3392,14 +2847,6 @@ details[open] summary.accordion-header svg:last-child {
     color: var(--sdp-text-suau);
     font-weight: 400;
   }
-  .sdp-bloc-date-group {
-    padding: var(--sdp-space-4) var(--sdp-space-3) var(--sdp-space-2);
-    margin: 0;
-    color: var(--sdp-text-suau);
-    font-size: var(--sdp-text-meta);
-    font-weight: 700;
-  }
-
   .sdp-editor-tools {
 
     flex: none;
@@ -5976,7 +5423,6 @@ details[open] summary.accordion-header svg:last-child {
 .sdp-media-externa-video { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
 .sdp-media-externa-mapa { border: 0; }
 .onboarding-benvinguda { margin-bottom: 2rem; }
-.xat-header-menu { position: relative; }
 
 /* ═══════════════════════════════════════════════════════════════════
    LLESQUES DEL POLIMENT EDITORIAL (prompt 260925_1655)
@@ -6171,9 +5617,21 @@ details[open] summary.accordion-header svg:last-child {
   @media (hover: hover) and (pointer: fine) {
     .sdp-consola__detall-cap:hover { background: var(--sdp-fons-subtil); }
   }
+  /* Onada 12 (261011; ordres 261011_0130, punt 5) · Kowalski: tot el que es
+     pot prémer respon en prémer-ho. La fila no en tenia: al tàctil, sense
+     hover, obria i tancava sense cap retorn. El premut és de COLOR (el fons
+     del hover), com la família de barra (components.css, Q3), i no l'escala
+     del sistema: una fila d'ample complet que s'encongix un 3 % mou massa
+     pantalla. La transició ja és al repòs (el `background` de dalt): el gest
+     es pot interrompre. Cap píxel canvia en repòs. */
+  .sdp-consola__detall-cap:active { background: var(--sdp-fons-subtil); }
+  /* Onada 12 (261011; punt 5) · Kowalski: la geometria de l'anell és la dels
+     tokens (--sdp-focus-gruix i --sdp-focus-separacio: 3px i 2px, els
+     mateixos valors que hi havia escrits a mà). L'anell no s'anima: la
+     transició de la fila només nomena el fons. */
   .sdp-consola__detall-cap:focus-visible {
-    outline: 3px solid var(--sdp-focus);
-    outline-offset: 2px;
+    outline: var(--sdp-focus-gruix) solid var(--sdp-focus);
+    outline-offset: var(--sdp-focus-separacio);
   }
   .sdp-consola__detall[open] > .sdp-consola__detall-cap {
     border-end-start-radius: 0;
@@ -6190,6 +5648,81 @@ details[open] summary.accordion-header svg:last-child {
   }
   .sdp-consola__detall-cos { padding: var(--sdp-space-4); }
   .sdp-consola__detall-cos > :last-child { margin-bottom: 0; }
+
+  /* Onada 11 (261010; prompt 261010_1730, tasca 5) · L'Índex de la Consola
+     (IndexConsola.jsx), al peu del tauler de /consola, darrere d'«El Mas en
+     xifres»: text pur amb els encapçalaments de base.css (h2, h3 amb la seua
+     vora, h4) i paràgrafs. Només aire: separat de la graella de xifres per
+     dalt, cada pàgina (h3) amb el seu bloc, i el «per a què» de cada pàgina
+     com el subtítol de la seua targeta (suau i en seminegreta). El
+     scroll-margin és el de les mètriques i els desplegables: el salt des
+     de l'Índex de secció no queda davall de la barra blava ni de la taronja. */
+  .sdp-consola__index { margin-top: var(--sdp-space-8); }
+  .sdp-consola__index-pagina { margin-top: var(--sdp-space-6); }
+  .sdp-consola__index-pagina > h4 { margin-top: var(--sdp-space-4); }
+  .sdp-consola__index-peraque {
+    margin: 0 0 var(--sdp-space-2);
+    color: var(--sdp-text-suau);
+    font-weight: 600;
+  }
+  .sdp-consola__index :is(h2, h3, h4) {
+    scroll-margin-top: calc(var(--sdp-alt-accio) * 2 + var(--sdp-space-4));
+  }
+  /* Onada 12 (261011; ordres 261011_0130, punt 5) · Kowalski: el títol
+     enllaçat de l'Índex (h3 i h4) no responia en prémer-lo. El premut global
+     de base.css (FEEDBACK TÀCTIL) és una escala, i un enllaç en línia no es
+     transforma; les seues excepcions (opacitat 0,7) només cobrixen els
+     enllaços de paràgraf, de llista i de prosa, i este full no admet text
+     translúcid (modules.abast.capes.test.js, AAA). El retorn és de color: el
+     del hover dels enllaços (base.css, --sdp-accent-text-hover), que al
+     tàctil no arribava mai. La transició es declara en repòs i en esta capa,
+     perquè el gest es puga interrompre (la de base.css, en capa legacy, només
+     vivia dins del :active). Cap píxel canvia en repòs. */
+  .sdp-consola__index :is(h3, h4) > a { transition: color var(--sdp-t); }
+  .sdp-consola__index :is(h3, h4) > a:active { color: var(--sdp-accent-text-hover); }
+
+  /* Onada 12 (261011; ordres 261011_0130, punt 2) · LLEI VISUAL DEL QUADRAT:
+     «Totes les imatges a la Consola s'han de visualitzar sempre de forma
+     quadrada (aspect-ratio: 1/1 i object-fit: cover centrat). Si alguna és
+     rectangular, es tallaran els extrems però el centre quedarà perfecte com
+     l'avatar.» Una sola regla per a tota imatge de contingut que la Consola
+     pinta: el mitjà d'una targeta de la Consola (TargetaConsola, peces.jsx,
+     amb el seu contenidor) i la miniatura de l'Índex (IndexConsola.jsx).
+     Dins de la targeta, la regla canvia una sola cosa respecte de la
+     Targeta Universal (components.css, .sp-card-media): l'ancoratge passa de
+     dalt al centre; el quadrat i el `cover` ja hi eren i ací es fixen perquè
+     la llei no depenga de la targeta base. Guanya per especificitat (dues
+     classes contra una) dins de la mateixa capa. L'avatar de la boina
+     (.sp-card-avatar, 48 × 48 amb `cover`) ja la complix i no es toca.
+     Cap vora, fons, farcit ni ombra: la imatge va a sang. */
+  .sdp-consola__targeta .sp-card-media-container,
+  .sdp-consola__targeta .sp-card-media,
+  .sdp-consola__index-imatge {
+    aspect-ratio: 1 / 1;
+  }
+  .sdp-consola__targeta .sp-card-media,
+  .sdp-consola__index-imatge {
+    object-fit: cover;
+    object-position: center;
+  }
+  /* La miniatura de l'Índex: un bloc de 128px (el costat de la insígnia
+     lateral de les targetes), darrere de l'entradeta del seu títol. El radi
+     és el de les imatges de lectura (base.css). L'alçada la posa el quadrat. */
+  .sdp-consola__index-imatge {
+    display: block;
+    inline-size: calc(var(--sdp-space-16) * 2);
+    max-inline-size: 100%;
+    block-size: auto;
+    margin-block: var(--sdp-space-4);
+    border-radius: var(--sdp-radi-s);
+  }
+  /* Onada 12 (261011; segon torn, refutació del front 2) · La miniatura de
+     l'H2 de l'Índex penja d'un títol i d'una entradeta CENTRATS (base.css: h2
+     i .lead); com a bloc sense marge lateral es quedava enganxada a
+     l'esquerra, davall d'un text centrat. Centrada amb ells. Les dels H3
+     (fills de .sdp-consola__index-pagina) es queden a l'esquerra, com el seu
+     títol i el seu text. Només marge: cap vora ni fons. */
+  .sdp-consola__index > .sdp-consola__index-imatge { margin-inline: auto; }
 }
 
 /* ── EXPLORADOR · llegenda, cerca i filtres; el graf i el detall al final ── */
@@ -8616,8 +8149,11 @@ details[open] summary.accordion-header svg:last-child {
   .sdp-cerca__mes { align-self: flex-start; }
 
   /* T45 · ResultatCerca (PedraSeca): miniatura 1:1 o avatar, meta, títol
-     enllaçat i extracte de dues línies. Classes pròpies: les legacy
-     .search-result* no es toquen (Llei del Píxel del catàleg antic). */
+     enllaçat i extracte de dues línies. Classes pròpies.
+     Onada 12 (261011; ordres 261011_0130, D-03) · Derogat «les legacy
+     .search-result* no es toquen»: cap fitxer del repositori les nomenava
+     (el catàleg antic ja no existix) i les seues quatre regles i el
+     fragment de la llista del Bancal han eixit del full. Cap píxel canvia. */
   .sdp-resultat-cerca {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr);
@@ -10066,7 +9602,7 @@ details[open] summary.accordion-header svg:last-child {
     .sdp-targeta-opcio__ajuda, .sdp-realitat__connexio-text,
     .sdp-resultat-cerca__meta, .sdp-cerca__estat,
     .toc-level-4 button, .toc-level-6 button, .sdp-slash-menu__ajuda,
-    .sdp-avisador-efimer, .sdp-chat-bubble-meta, .search-result-meta,
+    .sdp-avisador-efimer, .sdp-chat-bubble-meta,
     .file-item-meta, .download-card-meta, .embed-caption, .upload-zone-sub,
     .stat-label, .divider-label, .pagination-label
   ),
@@ -10083,7 +9619,7 @@ details[open] summary.accordion-header svg:last-child {
     .sdp-targeta-opcio__ajuda, .sdp-realitat__connexio-text,
     .sdp-resultat-cerca__meta, .sdp-cerca__estat,
     .toc-level-4 button, .toc-level-6 button, .sdp-slash-menu__ajuda,
-    .sdp-avisador-efimer, .sdp-chat-bubble-meta, .search-result-meta,
+    .sdp-avisador-efimer, .sdp-chat-bubble-meta,
     .file-item-meta, .download-card-meta, .embed-caption, .upload-zone-sub,
     .stat-label, .divider-label, .pagination-label
   ) { font-weight: 600; }
@@ -10519,5 +10055,193 @@ details[open] summary.accordion-header svg:last-child {
     display: inline-flex;
     align-items: center;
     gap: var(--sdp-space-1);
+  }
+}
+
+/* ═══ SUPERADMIN · Onada 11 (261010) ═══ */
+/* Onada 11 (261010; prompt 261010_1730, tasca 2) · La faceta «Estil del poble»
+   del Tauler (sections/admin/FacetaEstil.jsx): la graella de camps de cada grup
+   de tokens, el nom tècnic de cada token com a ajuda del Camp, la llista de
+   parells de contrast (els baixos en roig: --sdp-error-text), les accions i
+   l'historial de versions. Només tokens semàntics: cap color cru, cap
+   --sdp-crom-*. Només la veu el superadmin: cap pantalla d'abans canvia. */
+@layer components {
+  .sdp-estil { display: flex; flex-direction: column; gap: var(--sdp-space-6); }
+  .sdp-estil .sdp-grup__cos {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+    gap: var(--sdp-space-4);
+  }
+  .sdp-estil .sdp-camp { margin-bottom: 0; }
+  .sdp-estil .sdp-camp__ajuda {
+    font-family: var(--sdp-font-mono);
+    font-size: var(--sdp-text-meta);
+    overflow-wrap: anywhere;
+  }
+  .sdp-estil__grup--crom .sdp-camp__ajuda { font-family: inherit; font-size: inherit; }
+  .sdp-estil__camp--personalitzat .sdp-camp__etiqueta { color: var(--sdp-accio-text); }
+  .sdp-estil__subtitol { margin: 0; color: var(--sdp-text-titol); font-size: var(--sdp-text-h6); }
+  .sdp-estil__contrast { display: grid; gap: var(--sdp-space-3); }
+  .sdp-estil__parells { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--sdp-space-1); }
+  .sdp-estil__parell { color: var(--sdp-text-cos); }
+  .sdp-estil__parell--baix { color: var(--sdp-error-text); font-weight: var(--sdp-pes-negreta); }
+  .sdp-estil__accions { display: flex; flex-wrap: wrap; gap: var(--sdp-space-2); }
+  .sdp-estil__historial { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--sdp-space-2); }
+  .sdp-estil__versio {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sdp-space-2);
+    padding: var(--sdp-space-3);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-targeta);
+    color: var(--sdp-text-cos);
+  }
+}
+
+/* ═══ SUPERADMIN · Onada 11 (261010) ═══
+   Front D1 (prompt 261010_1730, tasca 2) · El segon factor TOTP
+   (sections/admin/SegonFactor.jsx), a la porta del Tauler (la columna del mig,
+   AdminSection.jsx, només amb la sessió en aal1) i dins d'«El compte» del
+   Perfil. Només tokens semàntics i l'escala; cap media query: la caixa del QR
+   és fluida i el camp del codi no passa de l'amplada d'un codi. Sense
+   superadmin, cap d'estes classes arriba al DOM (Llei del Píxel). */
+@layer components {
+  .sdp-admin-porta {
+    display: grid;
+    gap: var(--sdp-space-4);
+    padding: var(--sdp-space-4);
+    max-inline-size: var(--sdp-measure);
+  }
+  .sdp-segon-factor {
+    display: grid;
+    gap: var(--sdp-space-3);
+    max-inline-size: var(--sdp-measure);
+  }
+  .sdp-segon-factor__inscripcio,
+  .sdp-segon-factor__confirmacio,
+  .sdp-segon-factor__actiu {
+    display: grid;
+    gap: var(--sdp-space-3);
+  }
+  .sdp-segon-factor > p,
+  .sdp-segon-factor__inscripcio > p,
+  .sdp-segon-factor__confirmacio > p,
+  .sdp-segon-factor__actiu > p { margin: 0; }
+  /* La caixa del QR: la pell de targeta, i la imatge omple la caixa (el QR
+     del servidor és un SVG quadrat). */
+  .sdp-segon-factor__qr {
+    display: grid;
+    place-items: center;
+    inline-size: min(100%, 240px);
+    padding: var(--sdp-space-3);
+    border: 1px solid var(--sdp-vora-control);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-targeta);
+  }
+  .sdp-segon-factor__qr > img {
+    display: block;
+    inline-size: 100%;
+    block-size: auto;
+    aspect-ratio: 1;
+  }
+  /* La clau per a escriure-la a mà: monoespai, es selecciona d'una peça. */
+  .sdp-segon-factor__secret {
+    font-family: var(--sdp-font-mono);
+    font-size: var(--sdp-text-base);
+    letter-spacing: 0.08em;
+    overflow-wrap: anywhere;
+    user-select: all;
+    -webkit-user-select: all;
+    padding: var(--sdp-space-1) var(--sdp-space-2);
+    border-radius: var(--sdp-radi-s);
+    background: var(--sdp-fons-subtil);
+    color: var(--sdp-text-titol);
+  }
+  /* El camp del codi de sis xifres: grans, separades i centrades. */
+  .sdp-control.sdp-segon-factor__codi {
+    font-family: var(--sdp-font-mono);
+    font-size: var(--sdp-text-h5);
+    letter-spacing: 0.3em;
+    text-align: center;
+    max-inline-size: 14ch;
+  }
+  .sdp-segon-factor__formulari > .sdp-camp { margin-bottom: var(--sdp-space-3); }
+}
+
+/* ── Onada 11 (261010; prompt 261010_1730, tasca 2; front D2) · FACETA
+   «ETIQUETES I CATEGORIES» DEL TAULER (FacetaTaxonomia.jsx) ──
+   Blocs amb H2 (com els d'«El compte»), la botonera d'accions, una fila per
+   etiqueta (text, classe i «Llevar», en graella que es plega sola), les
+   llistes de valors de sèrie afegits i el formulari d'afegir. Només tokens
+   semàntics i l'escala d'espais i radis; la previsualització de les etiquetes
+   reutilitza .sp-card-labels / .sp-card-label de components.css tal qual.
+   Sense media queries ni consultes de contenidor. Cap píxel fora del Tauler
+   canvia. */
+@layer components {
+  .sdp-superadmin-taxonomia {
+    display: grid;
+    gap: var(--sdp-space-6);
+  }
+  .sdp-superadmin-taxonomia__accions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sdp-space-3);
+  }
+  .sdp-superadmin-taxonomia__accions > p { margin: 0; }
+  .sdp-superadmin-bloc {
+    display: grid;
+    gap: var(--sdp-space-4);
+    padding-block-start: var(--sdp-space-4);
+    border-block-start: 1px solid var(--sdp-vora);
+  }
+  .sdp-superadmin-bloc__titol {
+    margin: 0;
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-h5);
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+  }
+  .sdp-superadmin-etiqueta {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+    gap: var(--sdp-space-3);
+    align-items: end;
+    padding: var(--sdp-space-3);
+    border: 1px solid var(--sdp-vora-control);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-targeta);
+  }
+  .sdp-superadmin-etiqueta > .sdp-camp { margin: 0; }
+  .sdp-superadmin-llista {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sdp-space-2);
+  }
+  .sdp-superadmin-llista > li {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sdp-space-2);
+    padding-inline-start: var(--sdp-space-3);
+    border: 1px solid var(--sdp-vora-control);
+    border-radius: var(--sdp-radi-pastilla);
+    background: var(--sdp-fons-subtil);
+    color: var(--sdp-text-titol);
+  }
+  .sdp-superadmin-afegir {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    gap: var(--sdp-space-3);
+  }
+  .sdp-superadmin-afegir > .sdp-camp {
+    flex: 1 1 14rem;
+    margin: 0;
   }
 }

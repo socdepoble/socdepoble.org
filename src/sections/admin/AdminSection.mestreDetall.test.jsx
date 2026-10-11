@@ -16,6 +16,8 @@ vi.mock('../../data/backendPort.js', () => ({
   adminListUsers: (...args) => m.usuaris(...args),
   adminListOrganizations: (...args) => m.entitats(...args)
 }));
+/* Onada 11 (261010) · El Tauler llig la sessió (calSegonFactor): ací, aal2, el d'abans. */
+vi.mock('../../app/contexts/SessionContext.jsx', () => ({ useSession: () => ({ esSuperadmin: true, nivell: 'aal2', calSegonFactor: false }) }));
 /* La barra blava del doble: la fletxa crida l'onBack que rep (si en rep). */
 vi.mock('../../components/universal/UniversalPage', () => ({
   UniversalPage: ({ children, onBack }) => (

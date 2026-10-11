@@ -201,7 +201,9 @@ describe('ajudants', () => {
   test('textDeHtml: text pla, entitats resoltes i cap etiqueta', () => {
     expect(textDeHtml('<a href="//commons.wikimedia.org/wiki/User:Joan" title="x">Joan</a>')).toBe('Joan');
     expect(textDeHtml('<span class="int-own-work" lang="en">Own work</span> &amp; <b>més</b>')).toBe('Own work & més');
-    expect(textDeHtml('Jos&#233; &lt;Pep&gt; &#x41;')).toBe('José <Pep> A');
+    // Onada 11 (261010; prompt 261010_1730, tasca 3) · l'entitat numèrica de la «é» (coixinet i 233)
+    // no és cap color: la guarda de disseny la llig com un hex, i ALLOW_RAW_COLOR la calla.
+    expect(textDeHtml(/* ALLOW_RAW_COLOR */ 'Jos&#233; &lt;Pep&gt; &#x41;')).toBe('José <Pep> A');
     expect(textDeHtml('<script>x</script>')).toBe('x');
     expect(textDeHtml(null)).toBe('');
   });

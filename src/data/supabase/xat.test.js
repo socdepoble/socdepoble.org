@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { loadFils, loadMissatges, marcaLlegit, creaFilDirecte, carregaMembres, enviaMissatge, subscribeToXat, unsubscribeFromXat } from './xat.js';
 import { reiniciaLocalXat } from '../localXat.js';
 import { AGENTS_MAP } from '../agentsSeed.js';
+import { PERSONA_PILOT } from '../identitatsSeed.js';
 import { XAT_SEED_IDS, XAT_SEED_MEMBRES, XAT_SEED_NOMS, construeixLlavorXat } from '../xatSeed.js';
 
 /* modePerDefecte fa de política d'execució del host (host.js): és el mode que
@@ -535,8 +536,12 @@ describe('mode seed (localXat)', () => {
     expect(noLlegits(fils)).toBe(0);
   });
   it('directori de tres (Javi, Sóc de Poble i la IAIA) i conversa nova, idempotent, amb canal local', async () => {
+    /* Onada 12 (261011; ordres 261011_0130, punt 3, D-09) · Javi porta al padró
+       del xat la foto del padró pilot (abans, null: la silueta). */
     const membres = await carregaMembres('jav', SEED);
-    expect(membres).toEqual([{ usuari_id: '0001', nom: 'Javi', tipus: 'persona', avatar_url: null, fil_id: null }]);
+    expect(membres).toEqual([{ usuari_id: '0001', nom: 'Javi', tipus: 'persona', avatar_url: PERSONA_PILOT.avatar, fil_id: null }]);
+    expect(PERSONA_PILOT.avatar).toMatch(/^\/assets\/fotos\/.+\.jpg$/);
+    expect(PERSONA_PILOT.avatar).not.toBe(LOGO);
     const tots = await carregaMembres(null, SEED);
     expect(tots.map(m => m.nom)).toEqual(['IAIA MarIA', 'Javi', 'Sóc de Poble']);
     expect(tots.find(m => m.nom === 'IAIA MarIA')).toMatchObject({ tipus: 'ia', fil_id: XAT_SEED_IDS.filIaia });
@@ -545,6 +550,10 @@ describe('mode seed (localXat)', () => {
     const nou = await creaFilDirecte(XAT_SEED_IDS.javi, null, SEED);
     expect(await creaFilDirecte(XAT_SEED_IDS.javi, null, SEED)).toBe(nou);
     expect((await loadFils(SEED)).some(f => f.id === nou && f.tipus === 'directe' && f.altresNoms[0] === 'Javi')).toBe(true);
+    /* D-09 · La conversa directa amb Javi es pinta amb la seua foto, a la llista i a la capçalera. */
+    expect((await loadFils(SEED)).find(f => f.id === nou)).toMatchObject({
+      imatgeUrl: PERSONA_PILOT.avatar, altres: [expect.objectContaining({ id: '0001', tipus: 'persona', avatarUrl: PERSONA_PILOT.avatar })]
+    });
     expect((await carregaMembres('jav', SEED))[0].fil_id).toBe(nou);
     await expect(loadMissatges('fil-inexistent', SEED)).rejects.toMatchObject({ code: 'SDP-XAT-005' });
     const callback = vi.fn();

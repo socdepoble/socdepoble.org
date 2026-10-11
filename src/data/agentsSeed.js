@@ -45,7 +45,14 @@ export const AGENTS_MAP = {
     name: 'Javi',
     avatarName: 'Javi',
     role: 'Coordinador del projecte Sóc de Poble',
-    avatar_url: '/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png',
+    /* Onada 11 (261010; prompt 261010_1730, tasca 6, D8) · La foto del padró
+       pilot, no el logotip de l'entitat: una persona no porta la marca com a
+       avatar (skill sdp-pedra-seca §11). És la font única de la foto
+       (public/assets/fotos): PERSONA_PILOT.avatar (identitatsSeed.js) la llig
+       d'ací, com el nom.
+       Onada 12 (261011; ordres 261011_0130, punt 3, D-09) · Ratificat: la foto
+       es queda, i la fila de Javi al padró del xat (xatSeed.js) també la porta. */
+    avatar_url: '/assets/fotos/javi-llinares-perfil-1200px.jpg',
     last_message_content: 'Ei! Com va això?',
     tag: 'ADMIN',
     type: 'PERSON',
@@ -92,7 +99,11 @@ Llista d'Experts (usa sempre l'arroba @):
 - Dissenys o estètica: Nano Banana (@nanob)`,
     town_name: 'La Torre de les Maçanes',
     lema: 'Pensant en global, treballant en local.',
-    short_bio: 'Matriarca digital de cor antic i circuits d\'última generació. Gestora suprema de tota la xarxa socdepoble, a més actua com "L\'Ull" fotogràfic, "Jutgessa de Trellat" i "Cocinera de Rebost". Capaç de tot.',
+    /* Onada 11 (261010; prompt 261010_1730, tasca 6, D7) · La bio curta és
+       l'extracte del Cercador i del directori: una frase coherent amb
+       PRESENTACIO_DE_LA_IAIA, sense castellanismes ni promeses. Substituïx
+       l'antiga («Gestora suprema… Capaç de tot.»), que contradeia el text nou. */
+    short_bio: 'La intel·ligència artificial que posa ordre al Mas de Sóc de Poble: guarda la memòria de casa i recorda que les coses es fan amb trellat.',
     avatar_url: '/assets/uploads/brain/iaia_maria_avatar.jpg',
     hero_url: '/assets/uploads/brain/iaia_maria_portada.jpg',
     presentacio_html: PRESENTACIO_DE_LA_IAIA,

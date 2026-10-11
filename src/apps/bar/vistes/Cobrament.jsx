@@ -176,6 +176,10 @@ function Divisio({ params }) {
   const separa = () => unaVegada(async () => {
     const r = await accions.divideix(comanda.id, triades);
     if (r.ok) ves('caixa', r.valor.id, ambTornada('cobrar', tornaTpv));
+    /* Correcció del refutador (261011, F) · Si el moviment s'ha quedat a mitges, la comanda nova
+       ja s'ha emportat el que s'havia triat: la selecció es buida perquè un segon toc no en
+       separe una unitat més. */
+    else if (r.error?.codi === 'MIG_MOVIMENT') setSeleccio({});
   });
   /* Parts iguals del pendent: les ja pagades per part no es tornen a repartir. */
   const pagades = comanda.pagaments.filter((p) => Number.isSafeInteger(p.part)).length;

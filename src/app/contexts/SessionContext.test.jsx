@@ -4,7 +4,9 @@ import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-libra
 const m = vi.hoisted(() => ({
   logout: vi.fn(() => Promise.resolve()), comprova: vi.fn(async () => ({ ok: true })),
   demana: vi.fn(async () => ({ enviat: true })), definix: vi.fn(async () => true),
-  entra: vi.fn(async () => ({ access_token: 'sintetic' })), capacitats: { recuperacio: true }
+  entra: vi.fn(async () => ({ access_token: 'sintetic' })), capacitats: { recuperacio: true },
+  /* Onada 11 (261010) · L'estat del servei de sessió, canviable per prova (rol i nivell). */
+  estat: { usuari: { id: 'U' }, estat: 'dins', rol: 'usuari', generacio: 1, nivell: null }
 }));
 vi.mock('../../data/backendPort.js', () => ({
   teCapacitat: (nom) => nom !== 'recuperacioContrasenya' || m.capacitats.recuperacio,
@@ -19,7 +21,7 @@ vi.mock('../../data/backendPort.js', () => ({
   getCurrentUser: () => ({ id: 'U' })
 }));
 vi.mock('../../data/sessionService.js', () => ({
-  getSessionState: () => ({ usuari: { id: 'U' }, estat: 'dins', rol: 'usuari', generacio: 1 }),
+  getSessionState: () => m.estat,
   subscribeSession: () => () => {},
   setSessionConfig: () => () => {},
   renovaAra: vi.fn()
@@ -49,6 +51,7 @@ beforeEach(async () => {
   m.definix.mockReset().mockImplementation(async () => true);
   m.entra.mockReset().mockImplementation(async () => ({ access_token: 'sintetic' }));
   m.capacitats.recuperacio = true;
+  m.estat = { usuari: { id: 'U' }, estat: 'dins', rol: 'usuari', generacio: 1, nivell: null };
   oblidaRecuperacioPendent();
   await cuaDesament.reinicia();
 });
@@ -301,6 +304,27 @@ test('R2 · desar la contrasenya nova oblida l’enllaç; si el port la rebutja,
   await act(async () => { await sonda.sessio.definixContrasenyaNova('contrasenya-nova-llarga', CONFIG); });
   expect(m.definix).toHaveBeenLastCalledWith('contrasenya-nova-llarga', CONFIG);
   expect(sonda.sessio.enllacDeRecuperacio).toBeNull();
+});
+
+/* Onada 11 (261010; prompt 261010_1730, tasca 2) · private.es_superadmin()
+   exigix aal2 (migració 2610061448): el context diu el nivell de la sessió i
+   si el superadmin ha de confirmar el segon factor abans de tocar el Tauler. */
+test('Onada 11 · el context exposa nivell i calSegonFactor: un superadmin sense aal2 l’ha de confirmar; amb aal2 o sense ser superadmin, no', () => {
+  m.estat = { ...m.estat, rol: 'superadmin', nivell: 'aal1' };
+  expect(ambSonda().sessio).toMatchObject({ esSuperadmin: true, nivell: 'aal1', calSegonFactor: true });
+  cleanup();
+  m.estat = { ...m.estat, rol: 'superadmin', nivell: null };
+  expect(ambSonda().sessio).toMatchObject({ esSuperadmin: true, nivell: null, calSegonFactor: true });
+  cleanup();
+  m.estat = { ...m.estat, rol: 'superadmin', nivell: 'aal2' };
+  expect(ambSonda().sessio).toMatchObject({ esSuperadmin: true, nivell: 'aal2', calSegonFactor: false });
+  cleanup();
+  m.estat = { ...m.estat, rol: 'usuari', nivell: 'aal1' };
+  expect(ambSonda().sessio).toMatchObject({ esSuperadmin: false, nivell: 'aal1', calSegonFactor: false });
+  cleanup();
+  /* Un servei de sessió d'abans de l'Onada 11 (sense el camp): null, sense petar. */
+  m.estat = { usuari: { id: 'U' }, estat: 'dins', rol: 'usuari', generacio: 1 };
+  expect(ambSonda().sessio).toMatchObject({ nivell: null, calSegonFactor: false });
 });
 
 test('T18 · eixir amb un adaptador alternatiu conserva la configuració explícita', () => {

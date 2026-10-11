@@ -29,11 +29,15 @@ export const AJUSTOS = Object.freeze({ entrada: 'ajustos', tramDades: 'dades' })
     (el tram és un id que el nucli ja reserva: cap canvi d'esquema). */
 export const TEMPORADA = Object.freeze({ entrada: 'temporada', primer: 'colleccio', tram: 'cataleg' });
 
+/** Onada 12 (261011; ordres 261011_0130, punt 6) · Receptes: el receptari primer; el que cal comprar per a
+    cuinar és el panell /receptes/<id>/cal-comprar (el tram és un id que el nucli ja reserva: cap canvi d'esquema). */
+export const RECEPTES_VISTA = Object.freeze({ entrada: 'receptes', primer: 'cataleg', tram: 'cal-comprar', rutaColleccio: RUTA_LLISTA });
+
 export const ENTRADA_LLISTES = 'llistes';
 
 /** Les entrades que porten la llista al camí: totes. */
 export const ENTRADES_AMB_LLISTA = Object.freeze([
-  ENTRADA_LLISTES, COMPRA.entrada, CATALEG.entrada, CASA.entrada, TEMPORADA.entrada, AJUSTOS.entrada
+  ENTRADA_LLISTES, COMPRA.entrada, CATALEG.entrada, CASA.entrada, RECEPTES_VISTA.entrada, TEMPORADA.entrada, AJUSTOS.entrada
 ]);
 
 /** El validador del paràmetre :llista de les rutes que no fa rutesCatalegColleccio. */

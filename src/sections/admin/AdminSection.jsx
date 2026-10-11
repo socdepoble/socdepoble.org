@@ -1,15 +1,30 @@
 import { useState, useEffect, useLayoutEffect } from 'react';
-import { User, Building2, ServerCog, ArrowLeft } from 'lucide-react';
+import { User, Building2, ServerCog, ArrowLeft, ShieldCheck } from 'lucide-react';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import AppGridShell, { useAppGrid } from '../../components/layout/AppGridShell';
 import AppGridColumn from '../../components/layout/AppGridColumn';
 import { adminListUsers, adminListOrganizations, teCapacitat } from '../../data/backendPort.js';
 import { UniversalWorkspace } from '../../components/universal/workspace/UniversalWorkspace.jsx';
-import { Boto, EstatBuit } from '../../components/PedraSeca/index.js';
+import { Alerta, Boto, EstatBuit } from '../../components/PedraSeca/index.js';
+import { useSession } from '../../app/contexts/SessionContext.jsx';
 import { IndicadorsAdmin } from './IndicadorsAdmin.jsx';
+import { SegonFactor } from './SegonFactor.jsx';
+import { TEXT_CAL_SEGON_FACTOR, esRebuigDeSegonFactor } from './rebuigSegonFactor.js';
+import { FacetaTaxonomia, FACETA_TAXONOMIA } from './FacetaTaxonomia.jsx';
+import { FacetaEstil, FACETA_ESTIL } from './FacetaEstil.jsx';
 
 /* MD (revisió) · La fletxa ← de la llista d'Usuaris i d'Entitats en estret. */
 const TORNAR_AL_TAULER = 'Tornar al Tauler';
+
+/* Onada 11 (261010; prompt 261010_1730, tasca 2; front D4) · Les facetes
+   noves del menú del Tauler, darrere d'Usuaris i Entitats: les etiquetes i
+   categories (FacetaTaxonomia, D2), l'estil del poble (FacetaEstil, D3) i el
+   segon factor (SegonFactor, D1). La porta de la columna del mig (AdminDashboard)
+   ja pinta el segon factor quan la sessió és aal1; esta faceta el complementa
+   per a gestionar-lo (vore'l actiu, retirar-lo) quan la sessió ja és aal2.
+   Cada faceta té la mateixa forma que una entrada del menú: { id, titol, icona }. */
+export const FACETA_SEGON_FACTOR = Object.freeze({ id: 'segon-factor', titol: 'Segon factor', icona: ShieldCheck });
+export const FACETES = Object.freeze([FACETA_TAXONOMIA, FACETA_ESTIL, FACETA_SEGON_FACTOR]);
 
 /* Higiene d'amfitrió (ordre del Mestre, 261004, front «amfitrio-admin») ·
    Sense la capacitat 'admin' (un node que no l'oferix), cap crida al port:
@@ -37,7 +52,11 @@ function SenseCapacitat({ icona, que, onBack }) {
 
 /* Higiene d'amfitrió (261004) · La crida al port, només amb la capacitat i
    dins de la promesa: una excepció síncrona del port també acaba al .catch.
-   Res no s'escriu quan la vista ja s'ha desmuntat. */
+   Res no s'escriu quan la vista ja s'ha desmuntat.
+   Onada 11 (261010; prompt 261010_1730, tasca 2) · L'error diu si és el
+   rebuig del servidor per falta del segon factor (42501 amb «SDP-ADMIN»,
+   rebuigSegonFactor.js): llavors no és «de permisos o de xarxa», i la vista
+   diu què cal fer. `error` és { text, segonFactor } o null. */
 function useLlistaAdmin(carrega, textError) {
   const [fase] = useState(() => (ambCapacitatAdmin() ? 'llista' : 'sense-capacitat'));
   const [files, setFiles] = useState([]);
@@ -50,11 +69,29 @@ function useLlistaAdmin(carrega, textError) {
       .then((resultat) => { if (viva) setFiles(resultat); })
       .catch((err) => {
         console.error(err);
-        if (viva) setError(textError);
+        if (!viva) return;
+        setError(esRebuigDeSegonFactor(err)
+          ? { text: TEXT_CAL_SEGON_FACTOR, segonFactor: true }
+          : { text: textError, segonFactor: false });
       });
     return () => { viva = false; };
   }, [fase, carrega, textError]);
   return { fase, files, error };
+}
+
+/* Onada 11 (261010) · L'error d'una llista del Tauler. El de permisos o de
+   xarxa es pinta com sempre (Llei del Píxel); el rebuig per falta del segon
+   factor porta el camí de tornada al Tauler, on es confirma. */
+function ErrorDeLlista({ error, onBack }) {
+  if (error.segonFactor) {
+    return (
+      <Alerta to="error" titol="Cal confirmar el segon factor"
+        accions={<Boto varietat="secundari" onClick={onBack}>{TORNAR_AL_TAULER}</Boto>}>
+        {error.text}
+      </Alerta>
+    );
+  }
+  return <div className="sdp-alerta sdp-alerta--error" role="alert">{error.text}</div>;
 }
 
 
@@ -88,22 +125,50 @@ function AdminSidebar({ activeTab, setActiveTab }) {
           <User size={18} aria-hidden="true" />
           <span>Usuaris</span>
         </button>
-        <button 
+        <button
           className={`univ-manager-facet-item ${activeTab === 'entitats' ? 'univ-manager-facet-item--active' : ''}`}
           onClick={() => setActiveTab('entitats')}
         >
           <Building2 size={18} aria-hidden="true" />
           <span>Entitats</span>
         </button>
+        {/* Onada 11 (261010; front D4) · Les facetes noves, amb la mateixa
+            pinta que Usuaris i Entitats: l'arrel les pinta com a vista pròpia. */}
+        {FACETES.map(({ id, titol, icona: Icona }) => (
+          <button
+            key={id}
+            type="button"
+            className={`univ-manager-facet-item ${activeTab === id ? 'univ-manager-facet-item--active' : ''}`}
+            onClick={() => setActiveTab(id)}
+          >
+            <Icona size={18} aria-hidden="true" />
+            <span>{titol}</span>
+          </button>
+        ))}
       </div>
     </aside>
   );
 }
 
+/* Onada 11 (261010; prompt 261010_1730, tasca 2) · La porta del Tauler: un
+   superadmin amb la sessió en aal1 (calSegonFactor, SessionContext) veu
+   primer l'avís i el segon factor (SegonFactor.jsx), i davall el benvingut de
+   sempre. Amb aal2, el DOM és el d'abans, byte a byte (AdminSection.test.jsx).
+   Usuaris i Entitats continuen accessibles: si el servidor els rebutja, ho
+   diuen amb el mateix camí (ErrorDeLlista). Ningú queda fora del Tauler. */
 function AdminDashboard() {
+  const { calSegonFactor } = useSession();
   return (
     <div className="sdp-buit">
       <AppGridColumn titol="Tauler" />
+      {calSegonFactor ? (
+        <div className="sdp-admin-porta">
+          <Alerta to="avis" titol="Cal el segon factor per a administrar">
+            Eres superadministrador, però esta sessió encara no ha confirmat el segon factor: el servidor rebutjarà qualsevol canvi fins que el confirmes ací.
+          </Alerta>
+          <SegonFactor />
+        </div>
+      ) : null}
       <div className="sdp-buit__text">
         <p>Benvingut a l'administració de Sóc de Poble.</p>
         <div className="sdp-alerta sdp-alerta--info" role="status">
@@ -141,10 +206,26 @@ function TornaALaLlista() {
    abans, a /projecte). El logotip de qui
    signa (norma del Mestre, 261004) queda així dins del detall, en el flux de
    la columna: cap graella absoluta el tapa. */
-function PaginaDelDetall({ titol, children }) {
+/* Onada 11 (261010; front D4) · La mateixa fletxa ←, però a una faceta que
+   l'arrel pinta fora de tota closca (Estil del poble, Segon factor): no hi ha
+   cap llista a què tornar ni cap AppGridShell (useAppGrid llançaria), així que
+   sempre és a la vista i torna al Tauler. */
+function FletxaAlTauler({ onBack }) {
+  return (
+    <button type="button" className="app-grid-col-header__accio-icon" onClick={onBack}
+      aria-label={TORNAR_AL_TAULER} title={TORNAR_AL_TAULER}>
+      <ArrowLeft size={24} aria-hidden="true" focusable="false" />
+    </button>
+  );
+}
+
+/* Amb `onBack` (Onada 11, front D4), la pàgina és una faceta del Tauler pintada
+   per l'arrel: la fletxa ← de la capçalera torna al Tauler. Sense, el detall
+   d'Usuaris i d'Entitats d'abans, byte a byte. */
+function PaginaDelDetall({ titol, onBack = null, children }) {
   return (
     <aside className="perfil-detall">
-      <AppGridColumn titol={titol} esquerra={<TornaALaLlista />} />
+      <AppGridColumn titol={titol} esquerra={onBack ? <FletxaAlTauler onBack={onBack} /> : <TornaALaLlista />} />
       <UniversalPage>{children}</UniversalPage>
     </aside>
   );
@@ -190,7 +271,7 @@ function AdminUsersManager({ onBack }) {
   }
 
   if (error) {
-    return <PaginaDEstat><div className="sdp-alerta sdp-alerta--error" role="alert">{error}</div></PaginaDEstat>;
+    return <PaginaDEstat><ErrorDeLlista error={error} onBack={onBack} /></PaginaDEstat>;
   }
 
   const model = {
@@ -238,7 +319,7 @@ function AdminCompaniesManager({ onBack }) {
   }
 
   if (error) {
-    return <PaginaDEstat><div className="sdp-alerta sdp-alerta--error" role="alert">{error}</div></PaginaDEstat>;
+    return <PaginaDEstat><ErrorDeLlista error={error} onBack={onBack} /></PaginaDEstat>;
   }
 
   const model = {
@@ -290,11 +371,35 @@ export default function AdminSection() {
      §5, i el logotip que PageFrame hi posa damunt del contingut quedava davall
      de la graella absoluta. L'arrel torna el Workspace directament. El chrome
      del Tauler no canvia. */
+  const tornaAlTauler = () => setActiveTab('dashboard');
   if (activeTab === 'usuaris') {
-    return <AdminUsersManager onBack={() => setActiveTab('dashboard')} />;
+    return <AdminUsersManager onBack={tornaAlTauler} />;
   }
   if (activeTab === 'entitats') {
-    return <AdminCompaniesManager onBack={() => setActiveTab('dashboard')} />;
+    return <AdminCompaniesManager onBack={tornaAlTauler} />;
+  }
+  /* Onada 11 (261010; prompt 261010_1730, tasca 2; front D4) · Les facetes
+     noves, com Usuaris i Entitats: una vista pròpia per activeTab, amb la
+     tornada al Tauler. La taxonomia porta la seua Pàgina Universal (D2: barra
+     blava, títol i entrada), i la fletxa blava torna ací. L'estil i el segon
+     factor són seccions: van dins d'una pàgina del detall, amb la capçalera de
+     columna i la fletxa ← «Tornar al Tauler». */
+  if (activeTab === FACETA_TAXONOMIA.id) {
+    return <FacetaTaxonomia onBack={tornaAlTauler} />;
+  }
+  if (activeTab === FACETA_ESTIL.id) {
+    return (
+      <PaginaDelDetall titol={FACETA_ESTIL.titol} onBack={tornaAlTauler}>
+        <FacetaEstil />
+      </PaginaDelDetall>
+    );
+  }
+  if (activeTab === FACETA_SEGON_FACTOR.id) {
+    return (
+      <PaginaDelDetall titol={FACETA_SEGON_FACTOR.titol} onBack={tornaAlTauler}>
+        <SegonFactor />
+      </PaginaDelDetall>
+    );
   }
 
   /* El benvingut del Tauler no canvia. Els Indicadors (decisió del Mestre

@@ -74,6 +74,11 @@ function contenidorDesplacat(inici = 0) {
 
 const h1 = () => screen.getByRole('heading', { level: 1 }).textContent;
 const tauler = () => screen.getByRole('navigation', { name: 'Pàgines de la Consola' });
+/* Onada 11 (261010; prompt 261010_1730, tasca 5) · El tauler ha acabat de
+   llegir quan la mètrica del pols és al DOM. Des de l'Índex de la Consola, el
+   mateix text és també el títol de la xifra «registres-de-consum» a l'índex:
+   dues aparicions, i es busquen totes. */
+const esperaElTauler = () => screen.findAllByText(/registres? de consum/);
 
 /* Correcció 261004 (verificador, punt 4) · Les dues proves que recorrien les
    nou pàgines en un sol test passaven del temps límit (8 s). La causa no era
@@ -89,7 +94,7 @@ const mollaCapALaConsola = () => document.querySelector('nav.sdp-molla a[href="/
 
 test.each(paginesConsola().map((p) => [p.id, p]))('la targeta del tauler obri /consola/%s i la molla de pa torna al tauler', async (_id, p) => {
   render(<Aplicacio />);
-  await screen.findByText(/registres? de consum/);
+  await esperaElTauler();
 
   fireEvent.click(enllacDelTauler(p.ruta));
   expect(window.location.pathname).toBe(p.ruta);
@@ -114,7 +119,7 @@ test.each(paginesConsola().map((p) => [p.id, p]))('la targeta del tauler obri /c
    continuen sent dades: clicar-les no porta enlloc». */
 test('cada xifra del Mas porta a la seua pàgina pròpia, i d’allí a la de la Consola; les peces dels agents també', async () => {
   render(<Aplicacio />);
-  await screen.findByText(/registres? de consum/);
+  await esperaElTauler();
 
   const xifres = () => screen.getByRole('region', { name: 'El Mas en xifres' });
   fireEvent.click(within(xifres()).getByRole('link', { name: '1 skill opaca' }));
@@ -169,13 +174,19 @@ const esPaginaPropia = (h) => /^\/consola\/(xifres\/[a-z0-9-]+|pols\/[a-z]+)$/.t
 
 test('al tauler de /consola, cada pàgina té exactament una targeta, i cada xifra la seua', async () => {
   render(<Aplicacio />);
-  await screen.findByText(/registres? de consum/);
+  await esperaElTauler();
   const recompte = cap('/consola', tauler()).reduce((acc, h) => ({ ...acc, [h]: (acc[h] || 0) + 1 }), {});
   expect(recompte).toEqual(Object.fromEntries(paginesConsola().map((p) => [p.ruta, 1])));
   // Fora del tauler, les úniques portes són les de les xifres, una per xifra, cap a la seua pàgina pròpia.
   const xifres = cap('/consola', screen.getByRole('region', { name: 'El Mas en xifres' }));
   expect(xifres).toEqual(SLUGS_XIFRES.map(rutaXifra));
-  expect(cap('/consola').length).toBe(paginesConsola().length + xifres.length);
+  /* Onada 11 (261010; prompt 261010_1730, tasca 5) · I, al peu, l'Índex de la
+     Consola enllaça en text pur cada pàgina i cada targeta: les seues portes
+     es compten a part (ConsolaSection.index.test.jsx les fixa una a una), i
+     fora d'ell no n'hi ha cap altra. */
+  const delIndex = cap('/consola', screen.getByRole('region', { name: 'Índex de la Consola' }));
+  expect(delIndex.length).toBeGreaterThan(paginesConsola().length + xifres.length);
+  expect(cap('/consola').length).toBe(paginesConsola().length + xifres.length + delIndex.length);
   expect(errors).not.toHaveBeenCalled();
 });
 
@@ -194,7 +205,7 @@ test.each(paginesConsola().map((p) => [p.id, p]))('a /consola/%s, l’única por
    mètriques de les targetes (h5) hi entren, sagnades davall del seu títol. */
 test('l’Índex de secció de la Consola recull les mètriques en h5', async () => {
   render(<Aplicacio />);
-  await screen.findByText(/registres? de consum/);
+  await esperaElTauler();
   fireEvent.click(screen.getByRole('button', { name: 'Índex de secció' }));
   const index = screen.getByRole('dialog', { name: 'Taula de continguts' });
   const entrades = [...index.querySelectorAll('li')].map((li) => [li.className, li.textContent]);
@@ -218,7 +229,7 @@ test('l’Índex de secció de la Consola recull les mètriques en h5', async ()
 
 test('arrere i avant del navegador tornen a la pàgina i al tauler', async () => {
   render(<Aplicacio />);
-  await screen.findByText(/registres? de consum/);
+  await esperaElTauler();
   fireEvent.click(within(tauler()).getByRole('link', { name: 'Calendari de processos' }));
   expect(h1()).toBe('Calendari de processos');
 
@@ -235,7 +246,7 @@ test('arrere i avant del navegador tornen a la pàgina i al tauler', async () =>
 test('canviar de pàgina torna al cim del contenidor de scroll', async () => {
   const contenidor = contenidorDesplacat(0);
   render(<Aplicacio />, { container: contenidor });
-  await screen.findByText(/registres? de consum/);
+  await esperaElTauler();
 
   contenidor.scrollTop = 900;                       // el Mestre ha baixat fins al peu del tauler
   fireEvent.click(within(tauler()).getByRole('link', { name: 'Actors del Mas' }));
@@ -273,7 +284,7 @@ test('una subruta desconeguda torna al tauler sense deixar-la a l’historial', 
   window.history.replaceState(null, '', '/consola/pestanyes');
   const abans = window.history.length;
   render(<Aplicacio />);
-  await screen.findByText(/registres? de consum/);
+  await esperaElTauler();
   expect(window.location.pathname).toBe('/consola');
   expect(window.history.length).toBe(abans);
 });

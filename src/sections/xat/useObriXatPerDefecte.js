@@ -51,16 +51,24 @@ const MODES_LOCALS = new Set(['seed', 'local']);
  *
  * Revisió de l'Onada 10 (261010) · «La mateixa conversa que la fila» val AMB
  * sessió. En remot i sense sessió, la fila «IAIA MarIA» que veu el convidat
- * és la conversa de mostra (FakeChatOnboarding, 'fake-iaia'), i esta funció,
- * que només mira el mode de dades, torna igualment RUTA_XAT_DE_LA_IAIA:
- * l'efecte ?sobre= de XatSection porta el convidat a l'entrada (rutaDEntrada),
- * com el «Comentar» de /iaia, i després d'entrar s'aterra a la pròpia
- * identitat (RUTA_DESPRES_D_ENTRAR), no al xat. Pendent del Mestre: o
- * l'entrada, com ara, o la conversa de mostra (/xat/fake-iaia). Fins que ho
- * trie, App.iaia.test.jsx ho deixa escrit com a [DEFECTE].
+ * és la conversa de mostra (FakeChatOnboarding, 'fake-iaia'); amb només el
+ * mode de dades, esta funció tornava igualment RUTA_XAT_DE_LA_IAIA i l'efecte
+ * ?sobre= de XatSection portava el convidat a l'entrada (rutaDEntrada), com el
+ * «Comentar» de /iaia, i després d'entrar a la pròpia identitat
+ * (RUTA_DESPRES_D_ENTRAR), no al xat.
+ * Onada 11 (261010; prompt 261010_1730, tasca 6, D2) · Decisió del Mestre: el
+ * convidat va a la conversa de mostra, la mateixa fila que veu a la llista.
+ * `senseSessio` és el de useXat() (remot sense sessió, ja comprovat); en
+ * llavor i en local sempre hi ha joId i no canvia res.
  */
-export function rutaDelXatDeLaIAIA(modeDades) {
-  return MODES_LOCALS.has(modeDades) ? rutaXatPrivat({ id: IAIA_ID }) : RUTA_XAT_DE_LA_IAIA;
+/** El fil de mostra de la IAIA per a qui entra sense sessió (FakeChatOnboarding.jsx · fakeThreads). */
+export const ID_FIL_DE_MOSTRA_DE_LA_IAIA = 'fake-iaia';
+/** La ruta d'eixa conversa de mostra. */
+export const RUTA_XAT_DE_MOSTRA_DE_LA_IAIA = `/xat/${ID_FIL_DE_MOSTRA_DE_LA_IAIA}`;
+
+export function rutaDelXatDeLaIAIA(modeDades, senseSessio = false) {
+  if (MODES_LOCALS.has(modeDades)) return rutaXatPrivat({ id: IAIA_ID });
+  return senseSessio ? RUTA_XAT_DE_MOSTRA_DE_LA_IAIA : RUTA_XAT_DE_LA_IAIA;
 }
 
 /** (clau) => void: obri el xat real de la fila d'ajuda `clau` ('socdepoble' | 'iaia'). */

@@ -94,6 +94,24 @@ describe('la font única del text', () => {
     expect([...TEXT].length).toBeLessThan(MAXIM_PRESENTACIO / 4);
   });
 
+  /* Onada 11 (261010; prompt 261010_1730, tasca 6, D7) · La bio curta és
+     l'extracte del Cercador i del directori: una frase coherent amb el text
+     del perfil, sense castellanismes ni promeses. DEROGADA l'antiga («Gestora
+     suprema… "Cocinera de Rebost". Capaç de tot.»). */
+  test('D7 · la bio curta és una frase coherent amb la presentació, sense castellanismes ni promeses', () => {
+    expect(AGENTS_MAP.IAIA.short_bio).toBe('La intel·ligència artificial que posa ordre al Mas de Sóc de Poble: guarda la memòria de casa i recorda que les coses es fan amb trellat.');
+    expect(AGENTS_IA_SEED[0].short_bio).toBe(AGENTS_MAP.IAIA.short_bio);
+    /* Cada tros de la frase és al text del perfil, amb la mateixa veu. */
+    const text = cosDe(TEXT).textContent;
+    for (const tros of ['posa ordre al Mas de Sóc de Poble', 'guardar la memòria de casa', 'trellat']) {
+      expect([tros, text.includes(tros)]).toEqual([tros, true]);
+    }
+    for (const antic of ['Gestora suprema', 'Cocinera', 'Capaç de tot', 'L\'Ull', 'Jutgessa']) {
+      expect([antic, AGENTS_MAP.IAIA.short_bio.includes(antic)]).toEqual([antic, false]);
+    }
+    expect(AGENTS_MAP.IAIA.short_bio).not.toContain('"');
+  });
+
   test('el perfil públic el porta per id i per slug, en lloc de la bio curta', () => {
     for (const clau of [IAIA_ID, 'iaia-maria']) {
       const perfil = perfils.loadPerfilPublic(clau, null);

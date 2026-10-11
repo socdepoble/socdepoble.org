@@ -204,6 +204,23 @@ describe('IndicadorsAdmin', () => {
     expect(m.usuaris).toHaveBeenCalledTimes(2);
   });
 
+  /* Onada 11 (261010; prompt 261010_1730, tasca 2) · El 42501 amb «SDP-ADMIN»
+     (private.es_superadmin exigix aal2) no és «de permisos o de xarxa». */
+  test('Onada 11 · el 42501 amb «SDP-ADMIN» diu «Cal confirmar el segon factor», sense parlar de xarxa, i el reintent continua', async () => {
+    m.usuaris.mockRejectedValueOnce(Object.assign(
+      new Error('Supabase 403: {"code":"42501","details":null,"hint":null,"message":"SDP-ADMIN-001: cal rol de superadmin."}'),
+      { status: 403 }
+    ));
+    render(<IndicadorsAdmin ara={ARA} />);
+    calcula();
+    const alerta = await screen.findByRole('alert');
+    expect(alerta.textContent).toContain('Cal confirmar el segon factor');
+    expect(alerta.textContent).not.toMatch(/xarxa|No s’han pogut carregar/);
+    expect(screen.queryByRole('figure')).toBeNull();
+    fireEvent.click(within(alerta).getByRole('button', { name: 'Torna-ho a provar' }));
+    expect(await screen.findAllByRole('figure')).toHaveLength(3);
+  });
+
   test('un port que llança de manera síncrona també acaba en l’alerta', async () => {
     m.entitats.mockImplementation(() => { throw new Error('[backendPort] El mètode no està implementat'); });
     render(<IndicadorsAdmin ara={ARA} />);

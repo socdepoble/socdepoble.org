@@ -115,3 +115,42 @@ test('una renovació no pot substituir l’actor', () => {
   expect(desaSessio({ access_token: 'synthetic', user: { id: 'B' } }, { renovacio: true })).toBe(false);
   expect(usuariDeSessio().id).toBe(SUB);
 });
+
+/* ───────── Onada 11 (261010; prompt 261010_1730, tasca 2) · carregaJwt i nivellDAsseguranca ───────── */
+
+/* GoTrue codifica la càrrega en UTF-8 i base64url; el b64u d'ací (Latin-1) no
+   val per a provar accents: este sí. */
+const b64uUtf8 = (o) => btoa(String.fromCharCode(...new TextEncoder().encode(JSON.stringify(o)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+test('Onada 11 · carregaJwt descodifica la càrrega (UTF-8 i base64url) i torna null amb un token opac, corromput o que no és text', () => {
+  expect(identitat.carregaJwt(jwt(claims({ aal: 'aal2' })))).toMatchObject({ sub: SUB, iss: EMISSOR, aal: 'aal2' });
+  expect(identitat.carregaJwt(`${b64u({ alg: 'none' })}.${b64uUtf8(claims({ aal: 'aal2', nom: 'Veïna ñ·è' }))}.c2ln`))
+    .toMatchObject({ sub: SUB, aal: 'aal2', nom: 'Veïna ñ·è' });
+  for (const opac of ['opac', 'a.b', 'a.b.c.d', `x.${b64u({ alg: 'none' })}!!.c`, '', null, undefined, 42, { access_token: 'x' }]) {
+    expect(identitat.carregaJwt(opac), String(opac)).toBeNull();
+  }
+  /* Una càrrega que no és cap objecte tampoc val. */
+  expect(identitat.carregaJwt(`${b64u({ alg: 'none' })}.${btoa('42')}.c2ln`)).toBeNull();
+  /* caducitatJwt i adoptaSessioExterna lligen amb el mateix descodificador. */
+  const exp = Math.floor(Date.now() / 1000) + 120;
+  expect(identitat.caducitatJwt(jwt(claims({ exp })))).toBe(exp * 1000);
+  expect(identitat.caducitatJwt(jwt(claims({ exp: 'demà' })))).toBeNull();
+  expect(identitat.caducitatJwt('opac')).toBeNull();
+});
+
+test('Onada 11 · nivellDAsseguranca llig el claim aal del JWT donat o del desat, i null sense JWT, opac o sense el claim', () => {
+  expect(identitat.nivellDAsseguranca(jwt(claims({ aal: 'aal1' })))).toBe('aal1');
+  expect(identitat.nivellDAsseguranca(jwt(claims({ aal: 'aal2' })))).toBe('aal2');
+  expect(identitat.nivellDAsseguranca(jwt(claims()))).toBeNull();
+  expect(identitat.nivellDAsseguranca(jwt(claims({ aal: 'aal3' })))).toBeNull();
+  expect(identitat.nivellDAsseguranca('opac')).toBeNull();
+  expect(identitat.nivellDAsseguranca(null)).toBeNull();
+  /* Sense argument: el JWT de la sessió desada. */
+  expect(identitat.nivellDAsseguranca()).toBeNull();
+  desaSessio({ access_token: jwt(claims({ aal: 'aal1' })), refresh_token: 'r1', user: { id: SUB } });
+  expect(identitat.nivellDAsseguranca()).toBe('aal1');
+  /* El verify del segon factor desa una sessió nova com a renovació: el nivell puja. */
+  expect(desaSessio({ access_token: jwt(claims({ aal: 'aal2' })), refresh_token: 'r2', user: { id: SUB } }, { renovacio: true })).toBe(true);
+  expect(identitat.nivellDAsseguranca()).toBe('aal2');
+  esborraSessio();
+  expect(identitat.nivellDAsseguranca()).toBeNull();
+});

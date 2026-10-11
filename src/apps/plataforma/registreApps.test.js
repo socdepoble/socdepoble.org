@@ -32,7 +32,8 @@ describe('les apps internes', () => {
     const nevera = APPS_INTERNES.find((app) => app.id === 'nevera');
     expect(nevera).toMatchObject({ origen: 'interna', nivell: 'gratuit', dadesPersonals: false, entradaPerDefecte: 'llista' });
     expect(typeof nevera.carrega).toBe('function');
-    expect(nevera.entrades.map((entrada) => entrada.slug)).toEqual(['llistes', 'llista', 'cataleg', 'casa', 'temporada', 'ajustos']);
+    /* Onada 12 (261011; ordres 261011_0130, punt 6) · «receptes», darrere d'«A casa». */
+    expect(nevera.entrades.map((entrada) => entrada.slug)).toEqual(['llistes', 'llista', 'cataleg', 'casa', 'receptes', 'temporada', 'ajustos']);
     expect(appDeRuta('/app/nevera/llista/casa')?.id).toBe('nevera');
     expect(entradaActiva(nevera, '/app/nevera/casa/cal-comprar')?.slug).toBe('casa');
   });

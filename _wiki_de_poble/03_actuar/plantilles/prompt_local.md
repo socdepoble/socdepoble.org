@@ -35,12 +35,12 @@ Abans de generar l'arxiu per a la IA:
 | Camp | Valor |
 | --- | --- |
 | Identificador | SDP-PROMPT-LOCAL-AAMMDD |
-| Versió del document | 3.4.0 |
+| Versió del document | 3.5.0 |
 | Entorn | entorn-dev-local |
 | Creació | AA-MM-DD HH:MM |
 | Modificació | AA-MM-DD HH:MM |
 | Propietari | Agents Locals |
-| Plantilla | prompt_local.md (v3.4.0) |
+| Plantilla | prompt_local.md (v3.5.0) |
 | Ruta | prompt.local |
 | Rebut | sdp:torn…:… |
 | Tall d'evidència | [HEAD + hora] |
@@ -51,6 +51,7 @@ Abans de generar l'arxiu per a la IA:
 
 ## Historial
 
+- **v3.5.0 (261011):** S'introdueix la mentalitat d'I+D obligatòria com a pilar del prompt: les IAs han de plantejar les últimes tendències de l'estat de l'art (Investigació) abans de desenvolupar qualsevol solució mecànica.
 - **v3.4.0 (261006, ENX-01):** El Context Tècnic porta la frase canònica de l'enxufabilitat amb Sollutia («Model B», ADR + port neutral), triada i signada pel Mestre el 261006: és la mateixa, caràcter per caràcter, que obri l'ADR-2026-09, i AGENTS.md §8 la rep amb el seu paquet de governança. La Directiva Suprema dona destí als punts d'accés de Sollutia: la Frontissa, només en lectura. La versió 3.4.0 també va a `.agents/protocolledge.json` en eixe paquet (deia 3.3.0 mentre la plantilla deia 3.3.1).
 - **v3.3.1 (261005_1250):** Integració de les "Tècniques d'Investigació i Autòpsia". S'exigeix a la IA que vaja més enllà de la teoria de les skills i verifique el codi font real dels scripts i tractors per trobar discrepàncies mecàniques.
 - **v3.3.0:** Refactorització estructural global. Es canvia el camp de registre "Versió" per "Versió del document" per evitar ambigüitats, exigint una migració a protocolledge.json.
@@ -107,8 +108,9 @@ En finalitzar l'auditoria o l'edició, heu de complir els següents passos:
 
 Tota línia de codi ha de complir el principi d'independència i modularitat.
 
-### Tècniques d'Investigació i Autòpsia (Obligatori)
+### Tècniques d'I+D, Investigació i Autòpsia (Obligatori)
 No et conformes amb investigar el que diuen les skills teòriques i la doctrina (Wiki/AGENTS). Cada script, hook o tractor que estiga implicat en l'execució d'eixa teoria ha de ser llegit i verificat a fons (a nivell de codi `.mjs`, `.py`, etc.). Assegura't que el codi complix efectivament el disseny, no té exclusions cegues i no produeix bloquejos mecànics per inèrcia.
+**Mentalitat I+D:** No et limites a obeir i picar codi (Desenvolupament). Exerceix sempre com a investigador de tendències (Investigació). Abans d'implementar res, analitza l'estat de l'art i planteja com aprofitar les últimes solucions del mercat i tecnologies innovadores per resoldre el problema demanat. Mantenir-nos a l'avantguarda és la teva responsabilitat.
 
 ### Automillora Proactiva (Obligatori)
 Quan acabeu de redactar el vostre informe, hi heu d'afegir un punt final titulat "Proposta d'Automillora". Heu de complir dos requisits:

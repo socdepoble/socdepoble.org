@@ -458,14 +458,20 @@ const CLAUS = {
      revisar per algú que les parle.
      Onada 10 (261010; pla 261010_1121; decisió del Mestre del 261010) ·
      noMembre (SDP-XAT-003, parla de TU: no constes en este poble) passa a
-     dir «Mode Foraster» en les cinc llengües. L'eu («kanpotar») i el gl
-     («forasteiro») continuen sent proposta a revisar per algú que les parle. */
+     dir «Mode Foraster» en les cinc llengües.
+     Onada 11 (261010; prompt 261010_1730, tasca 6, D11) · en: «Outsider Mode»
+     amb majúscules i «logging out», que casa amb el botó «Log out»
+     (section.xat.ajustos.tancaSessio); eu: «arrotz», el terme que ja portava
+     el diccionari (section.xat.fake.iaia1), en lloc de «kanpotar»; gl: «pobo»,
+     el terme que domina el diccionari gl (nav.pobles, section.xat.padro…), en
+     lloc de «vila». L'eu i el gl continuen sent proposta a revisar per algú
+     que les parle. */
   'section.xat.error.noMembre': {
     ca: 'Estàs en Mode Foraster: el xat és per a la gent d’este poble. Prova d’eixir i tornar a entrar.',
     es: 'Estás en Modo Forastero: el chat es para la gente de este pueblo. Prueba a salir y volver a entrar.',
-    en: 'You are in Outsider mode: the chat is for the people of this town. Try signing out and back in.',
-    eu: 'Kanpotar moduan zaude: txata herri honetako jendearentzat da. Saiatu irten eta berriro sartzen.',
-    gl: 'Estás en Modo Forasteiro: o chat é para a xente desta vila. Proba a saír e volver entrar.'
+    en: 'You are in Outsider Mode: the chat is for the people of this town. Try logging out and back in.',
+    eu: 'Arrotz moduan zaude: txata herri honetako jendearentzat da. Saiatu irten eta berriro sartzen.',
+    gl: 'Estás en Modo Forasteiro: o chat é para a xente deste pobo. Proba a saír e volver entrar.'
   },
   'section.xat.error.paginaNoVisible': {
     ca: 'Esta pàgina ja no existix o no la pots vore.',
@@ -500,14 +506,16 @@ const CLAUS = {
      motiu»; SDP-XAT-016 (noDisponible, dalt) continua sense dir-lo. Risc
      conegut i acceptat: el mateix codi també salta per una baixa demanada,
      un id inexistent o una entitat no visible (src/data/supabase/xat.js).
-     Les d'eu («kanpotarra») i gl («forasteira») són proposta a revisar per
-     algú que les parle. */
+     Les d'eu i gl són proposta a revisar per algú que les parle.
+     Onada 11 (261010; prompt 261010_1730, tasca 6, D11) · eu: «arrotza», el
+     terme que ja portava el diccionari; gl: «pobo», el que domina el
+     diccionari gl. */
   'section.xat.error.noDelPoble': {
     ca: 'Esta persona és forastera en este poble.',
     es: 'Esta persona es forastera en este pueblo.',
     en: 'This person is an outsider in this town.',
-    eu: 'Pertsona hau kanpotarra da herri honetan.',
-    gl: 'Esta persoa é forasteira nesta vila.'
+    eu: 'Pertsona hau arrotza da herri honetan.',
+    gl: 'Esta persoa é forasteira neste pobo.'
   },
   'section.xat.comentar.privat.detallAmb': {
     ca: 'Un xat només entre tu i {nom}',

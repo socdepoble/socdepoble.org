@@ -35,6 +35,7 @@ import AppGridColumn from '../../components/layout/AppGridColumn';
 import { Alerta, Boto, Carregant, EstatBuit, Histograma, MarcColumna, Pila, Taula } from '../../components/PedraSeca/index.js';
 import { adminListOrganizations, adminListUsers, teCapacitat } from '../../data/backendPort.js';
 import { LLINDAR_GRUP_PETIT, altesPerMes, barresHistograma, darrerAcces, entitatsPerTipus } from './indicadors.js';
+import { TEXT_CAL_SEGON_FACTOR, esRebuigDeSegonFactor } from './rebuigSegonFactor.js';
 
 /* El sostre de public.admin_list_users (2609150000_seguretat_profunda_deepseek.sql):
    no en torna més, i les torna de l'alta més recent a la més antiga. */
@@ -102,6 +103,17 @@ function Contingut({ estat, ara, calcula }) {
     );
   }
   if (estat.fase === 'carregant') return <Carregant etiqueta="Carregant els indicadors…" />;
+  /* Onada 11 (261010; prompt 261010_1730, tasca 2) · El rebuig del servidor per
+     falta del segon factor (42501 amb «SDP-ADMIN») no és «de permisos o de
+     xarxa»: es diu què cal fer, i el reintent val quan ja s'ha confirmat. */
+  if (estat.fase === 'error' && estat.segonFactor) {
+    return (
+      <Alerta to="error" titol="Cal confirmar el segon factor"
+        accions={<Boto onClick={calcula}>Torna-ho a provar</Boto>}>
+        {TEXT_CAL_SEGON_FACTOR}
+      </Alerta>
+    );
+  }
   if (estat.fase === 'error') {
     return (
       <Alerta to="error" titol="No s’han pogut carregar els indicadors"
@@ -160,7 +172,7 @@ export function IndicadorsAdmin({ ara = null }) {
       parcial: Array.isArray(persones) && persones.length >= LIMIT_PERSONES,
       persones: files(persones).map(dadesDePersona),
       entitats: files(entitats).map(dadesDEntitat)
-    }), () => setEstat({ fase: 'error' }));
+    }), (error) => setEstat({ fase: 'error', segonFactor: esRebuigDeSegonFactor(error) }));
   };
 
   return (

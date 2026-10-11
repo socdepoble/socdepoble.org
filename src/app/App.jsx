@@ -27,10 +27,12 @@ import { RouteErrorBoundary } from './RouteErrorBoundary.jsx';
 export { RouteErrorBoundary } from './RouteErrorBoundary.jsx';
 import { EVENT_NIVELL_IAIA, esIaiaActiva, nivellIaiaDesat } from '../sections/realitat/nivellIaia.js';
 import { PAGE_COPY } from '../sections/text/pageContent.js';
-import { accioDeLaPaginaDeText } from '../sections/text/accionsDeText.js';
+import { accioDeLaPaginaDeText, accioDeTextAlFinal } from '../sections/text/accionsDeText.js';
 import { AccioDeLaPaginaDeText } from '../sections/text/AccioDeLaPaginaDeText.jsx';
 import { ProveidorXatSocDePoble } from '../sections/control/xatCorporatiu.js';
 import { BotoCrom } from '../components/universal/PanellCrom.jsx';
+/* Onada 11 (261010; prompt 261010_1730, tasca 2) · L'estil desat del poble, aplicat a l'arrel de la instància. */
+import { EstilDelPoble } from './EstilDelPoble.jsx';
 /* T47 · Escriptors de l'autodesament des de l'arrencada (reprenen esborranys pendents). */
 import './autodesamentEscriptors.js';
 const XatSection = lazyRoute(() => import('../sections/xat/XatSection'));
@@ -700,7 +702,11 @@ function TextRoute({ pageKey }) {
      (accioPrincipal de PageFrame, per TextSection). Es decidix amb la funció
      pura, mai amb l'element, com a PageDetailSection. La resta de pàgines de
      text passen null, que TextSection no fa arribar a la UniversalPage: les
-     props de sempre, exactes. */
+     props de sempre, exactes.
+     Onada 11 (261010; prompt 261010_1730, tasca 6, D4) · «Dalt i al final»,
+     com «Obrir…» de /page/consola (PageDetailSection · accioAlFinal): el
+     mateix botó es repetix després del cos, dins de div.sdp-pagina-accio,
+     l'últim fill de l'article. Es decidix amb accioDeTextAlFinal, pura. */
   const accioPrincipal = accioDeLaPaginaDeText(pageKey) ? <AccioDeLaPaginaDeText pageKey={pageKey} /> : null;
   return (
     <Suspense fallback={<RouteFallback />}>
@@ -708,6 +714,7 @@ function TextRoute({ pageKey }) {
         {/* Transparència Radical: el comptador es mostra on s'explica la privacitat.
             Suspense propi perquè el tauler no torne a tapar el text mentre arriba. */}
         {pageKey === 'legal' ? <Suspense fallback={null}><TaulerTelemetria /></Suspense> : null}
+        {accioDeTextAlFinal(pageKey) ? <AccioDeLaPaginaDeText pageKey={pageKey} lloc="baix" /> : null}
       </TextSection>
     </Suspense>
   );
@@ -730,7 +737,7 @@ export default function App({ config, targetNode }) {
             vegada per a tota l'app, no una per targeta (xatCorporatiu.js). */}
         <ProveidorXatSocDePoble>
           <AppShell mobileNav={<MobileNav />}>
-            <AppContent config={stableConfig} />
+            <AppContent config={stableConfig} targetNode={targetNode} />
           </AppShell>
         </ProveidorXatSocDePoble>
       </NotificationProvider>
@@ -738,10 +745,14 @@ export default function App({ config, targetNode }) {
   );
 }
 
-function AppContent({ config }) {
+function AppContent({ config, targetNode }) {
   // Els Providers ja gestionen l'actorKey internament. No els destruïm forçosament (F01).
   return (
     <CoreContentProvider config={config}>
+      {/* Onada 11 (261010; tasca 2) · L'estil del poble (personalitzacio.estil)
+          sobre la .sdp-root de la instància: dins del shadow root (targetNode)
+          o al document. Sense estil desat no pinta ni toca res. */}
+      <EstilDelPoble targetNode={targetNode} />
       <MurProvider config={config}>
         <NotesDataProvider config={config}>
           <NotesProvider>

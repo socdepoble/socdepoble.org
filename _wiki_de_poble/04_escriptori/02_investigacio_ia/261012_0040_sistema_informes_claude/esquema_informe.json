@@ -1,0 +1,68 @@
+{
+  "$comment": "Model de document del sistema «Informe editorial» v1.0. Este exemple curt usa cada tipus de bloc una vegada. genera_informe.py el convertix en HTML amb el CSS incrustat. El text va net: **negreta** i [COMPLETAR …] són l'únic marcatge.",
+  "lang": "es",
+  "title": "Ejemplo · Informe editorial",
+  "description": "Ejemplo mínimo del sistema de diseño de informes de Sóc de Poble.",
+  "cover": {
+    "kicker": "Sóc de Poble · Sistema de informes · Ejemplo",
+    "title": "Título del informe",
+    "subtitle": "Una línea que explica qué es este documento y para quién.",
+    "alert": { "label": "Fecha límite", "big": "Jueves 15 de octubre de 2026", "text": "Texto corto bajo la fecha, con **lo importante en negrita**." },
+    "meta": [
+      { "label": "Para", "value": "Nombre de la persona destinataria" },
+      { "label": "Elaborado por", "value": "Claude para Sóc de Poble" },
+      { "label": "Fecha", "value": "12 de octubre de 2026" },
+      { "label": "Fuentes", "value": "Ficheros o documentos de los que sale el texto" }
+    ],
+    "box": { "accent": true, "title": "Cómo leer este documento", "items": ["Las **negritas** marcan cifras y decisiones.", "Lo marcado en [COMPLETAR amarillo] son datos pendientes."] },
+    "toc": ["Parte I · Primera parte", "Parte II · Segunda parte"]
+  },
+  "parts": [
+    {
+      "kicker": "Parte I",
+      "title": "Primera parte",
+      "blocks": [
+        { "type": "h2", "text": "1. Un apartado" },
+        { "type": "p", "text": "Párrafo normal con **una negrita** y un hueco [COMPLETAR por rellenar].", "lead": false },
+        { "type": "steps", "items": ["Primer paso urgente.", "Segundo paso urgente."] },
+        { "type": "crit", "num": 1, "title": "Nombre del criterio", "pts": "5 puntos posibles", "declares": "5", "risk_level": "medio",
+          "paras": [
+            { "label": "Lo que yo veo", "text": "Texto completo de la valoración." },
+            { "label": "Qué adjuntar", "text": "Lista de pruebas." },
+            { "label": "Riesgo", "text": "Medio. Explicación del riesgo." }
+          ] },
+        { "type": "box", "title": "Resumen", "items": ["Primera línea del resumen.", "Segunda línea."] },
+        { "type": "letters", "items": ["Corrección a.", "Corrección b."] },
+        { "type": "h3", "text": "1.1 Un subapartado" },
+        { "type": "ul", "items": ["Punto uno.", "Punto dos."] },
+        { "type": "field", "key": "A", "text": "**Datos de la entidad:** qué escribir en este campo." },
+        { "type": "check", "items": ["Documento uno.", "Documento dos."] },
+        { "type": "card", "n": 1, "title": "Hallazgo en tarjeta", "text": "Texto del hallazgo." }
+      ]
+    },
+    {
+      "kicker": "Parte II",
+      "title": "Segunda parte",
+      "blocks": [
+        { "type": "p", "text": "Las tablas van siempre a toda anchura; las filas con muchos campos, en fichas.", "span": true, "lead": true },
+        { "type": "table", "caption": "Tabla de ejemplo", "compact": false,
+          "columns": [ { "label": "Concepto" }, { "label": "Euros", "num": true }, { "label": "Observación" } ],
+          "rows": [
+            ["Alquiler", "3.538,00", "Subvencionable."],
+            { "class": "total", "cells": ["Total", "36.172,77", "Suma exacta."] },
+            { "class": "warn", "cells": ["Revocación", "0,00", "Reducción igual o superior al 35 %."] }
+          ] },
+        { "type": "record", "title": "A. Escenario de ejemplo", "fields": [["Gastos", "36.172,77"], ["IVC", "17.000,00"]], "text_label": "Comentario", "text": "Texto libre del registro." },
+        { "type": "hr" }
+      ]
+    },
+    {
+      "kicker": "Colofón",
+      "title": "Sobre este documento",
+      "colophon": true,
+      "blocks": [
+        { "type": "p", "text": "Método, fuentes y límites en dos o tres párrafos." }
+      ]
+    }
+  ]
+}

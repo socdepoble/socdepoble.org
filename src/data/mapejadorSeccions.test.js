@@ -132,6 +132,15 @@ describe('elementDeFilaPublicada · el payload d’un veí no és autoritat', ()
     for (const clau of ['isSystem', 'isAvis', 'type', 'is_pinned', 'pinned_position', 'mainHref']) expect(element).not.toHaveProperty(clau);
   });
 
+  /* Correcció D5 (261011, refutació del front 1) · `article` (l'article on
+     s'usa una foto) el posa el sistema (mediaContent.js), mai una persona: el
+     Cercador el llig per a no repetir un article (indexCerca.js). */
+  test('un `article` del payload no viatja: un veí no pot lligar la seua publicació a un article d’altri', () => {
+    const element = fila({ title: 'Foto', src: '/assets/a.jpg', article: { sectionId: 'mercat', id: 'mac-mini-m4' } });
+    expect(element).not.toHaveProperty('article');
+    expect(element).toMatchObject({ title: 'Foto', src: '/assets/a.jpg' });
+  });
+
   test('un tipus legítim es conserva', () => {
     expect(fila({ type: 'compartit' }).type).toBe('compartit');
   });

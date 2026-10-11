@@ -16,7 +16,10 @@ import { CODI_ENTRADA, ambCodi, esBackendInabastable } from '../errorsBackend.js
 import { ErrorColumnaAbsent, columnaAbsent } from '../autodesament/errors.js';
 
 let renovacioEnCurs = null;
-const emetCanvi = (user) => globalThis.window?.dispatchEvent(new CustomEvent('sdp:auth-change', { detail: { user } }));
+/* Onada 11 (261010; prompt 261010_1730, tasca 2) · Exportat: el verify del
+   segon factor (segonFactor.js) desa una sessió nova amb la mateixa
+   coreografia que renova() i avisa igual. */
+export const emetCanvi = (user) => globalThis.window?.dispatchEvent(new CustomEvent('sdp:auth-change', { detail: { user } }));
 
 /* L'última configuració amb servidor. Qui ix sense passar-ne cap (l'amfitrió amb
    expulsaSessio, un botó antic) també ha de poder revocar la sessió al servidor. */
@@ -28,7 +31,9 @@ const recorda = (config) => { const resolved = normalizeBackendConfig(config); i
    sessió sencera. Una sola renovació alhora per origen. navigator.locks és dins del
    baseline; sense ell (jsdom, WebViews velles) es renova igual que abans de D1. */
 const PANY_RENOVACIO = 'sdp:sessio:renovacio';
-const ambPany = (signal, fn) => (globalThis.navigator?.locks?.request
+/* Onada 11 (261010) · Exportat per a segonFactor.js: la sessió nova del verify
+   rota el registre dins del mateix pany que una renovació. */
+export const ambPany = (signal, fn) => (globalThis.navigator?.locks?.request
   ? globalThis.navigator.locks.request(PANY_RENOVACIO, { signal }, fn) : fn());
 
 async function renova(config, epochActual, controller) {
@@ -138,8 +143,10 @@ export async function elMeuRol(config = {}) {
    configuració sense mode és remota. */
 const MODES_LOCALS = new Set(['seed', 'local']);
 /* Síncrona a posta: la decisió de mode no pot afegir cap microtasca abans de
-   la primera petició remota (capturaSessio ha de trobar la sessió on era). */
-const esModeLocal = (config) => MODES_LOCALS.has(getResolvedConfig(config).runtimeDataMode);
+   la primera petició remota (capturaSessio ha de trobar la sessió on era).
+   Onada 11 (261010) · Exportada per a segonFactor.js, que sense GoTrue no té
+   res a demanar. */
+export const esModeLocal = (config) => MODES_LOCALS.has(getResolvedConfig(config).runtimeDataMode);
 /* T4 (ordre del Mestre, 260930) · El codi MODE_LOCAL diu a la interfície per
    què no s'ha pogut entrar sense que haja de llegir el text. */
 function exigeixModeRemot(config) {
@@ -388,8 +395,10 @@ const MISSATGE_ENTRADA = Object.freeze({
 });
 const LIMIT_GOTRUE = /^over_[a-z_]+_rate_limit$/;
 
-/* El cos JSON de «Supabase NNN: {…}» (runtime.request), o null. */
-function cosDeGoTrue(error) {
+/* El cos JSON de «Supabase NNN: {…}» (runtime.request), o null.
+   Onada 11 (261010) · Exportada: segonFactor.js traduïx els error_code de
+   l'API MFA de GoTrue amb el mateix patró que codiDeGoTrue. */
+export function cosDeGoTrue(error) {
   try {
     const cos = JSON.parse(String(error?.message ?? '').replace(/^Supabase\s+\d+:\s*/, ''));
     return cos && typeof cos === 'object' ? cos : null;

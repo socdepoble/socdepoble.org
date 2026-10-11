@@ -11,7 +11,9 @@
  *     bio o descripció o rol, entradilla = lema, cos = presentació.
  *   · Una IA es diu: etiqueta i avís visibles, sempre.
  *   · Accions honestes: «Escriu-li» obri el xat amb eixa identitat (?amb=id)
- *     i «Edita la fitxa» només si la fitxa és de qui mira.
+ *     i «Edita la fitxa» només si la fitxa és de qui mira. Per a la IAIA,
+ *     «Parla amb la IAIA» va on va la seua fila de la llista del Xat
+ *     (rutaDelXatDeLaIAIA, sections/xat/useObriXatPerDefecte.js).
  *   · T43 (ordre del Mestre, 260928) · Una organització que la persona
  *     administra (pertinença owner/admin d'IdentitatContext) també porta
  *     «Edita la fitxa» (obri el Perfil a la seua fitxa, sense canviar
@@ -44,6 +46,11 @@ import {
 import { DEFAULT_AUTHOR, esRutaDelProjecte } from '../../components/universal/UniversalUtils';
 import { useResolvedAsset } from '../../hooks/useResolvedAsset.js';
 import { resolveAsset } from '../../config/assetResolver.js';
+import { agentIASeed, esIAIA } from '../../data/identitatsSeed.js';
+/* Onada 11 (261010; refutació del front C, D12) · El destí del xat de la IAIA
+   és el mateix que el de la seua fila de la llista i el del botó de /iaia. */
+import { rutaDelXatDeLaIAIA } from '../xat/useObriXatPerDefecte.js';
+import { useXat } from '../xat/XatContext';
 
 const ETIQUETA = Object.freeze({ persona: 'Persona', entitat: 'Entitat', grup: 'Grup', ia: 'Intel·ligència artificial' });
 
@@ -55,6 +62,25 @@ export function perfilDelCataleg(agent) {
     tipus, id: agent.id, slug: null, nom: agent.name, avatar: agent.avatar_url || '', hero: '', lema: agent.lema || '',
     bio: agent.role || '', presentacioHtml: agent.short_bio || '', poble: agent.town_name || '', esIA: tipus === 'ia',
     publicat: true, propietari: false, copyright: '', emoticona: ''
+  };
+}
+
+/**
+ * Onada 11 (261010; prompt 261010_1730, tasca 6, D12) · El mateix DTO que
+ * loadPerfilPublic, des del padró d'IA del paquet (AGENTS_IA_SEED,
+ * identitatsSeed.js: hui, la IAIA MarIA), amb la seua presentació sencera
+ * (com publicDAgent de data/localPerfils.js). Sense `creat` ni `modificat`:
+ * cap data inventada (T51), i la barra taronja no pinta cap pastilla.
+ * `propietari` és sempre false: fora de la llavor no hi ha cap rol que mane
+ * sobre ella.
+ */
+export function perfilDeLaIADelPaquet(agent) {
+  if (!agent) return null;
+  return {
+    tipus: 'ia', id: agent.id, slug: agent.slug || null, nom: agent.name, avatar: agent.avatar_url || '',
+    hero: agent.hero_url || '', lema: agent.lema || '', bio: agent.role || '',
+    presentacioHtml: agent.presentacio_html || agent.short_bio || '', poble: agent.town_name || '',
+    esIA: true, publicat: true, propietari: false, copyright: agent.copyright || '', emoticona: ''
   };
 }
 
@@ -74,6 +100,16 @@ export default function PerfilPublicSection({ agents = AGENTS_BUITS }) {
   const { externalConfig } = useUIState();
   const navigate = useNavigate();
   const { memberships = [], actor, setActor } = useIdentitat();
+  /* Onada 11 (261010; refutació del front C, D12) · En remot, el directe
+     /xat?amb=<id> amb la IAIA no s'obri: el servidor no coneix el seu UUID
+     (crea_fil_directe falla i el Xat avisa) i, sense sessió, el fil de mostra
+     que obri és el de Sóc de Poble, no el seu. El botó va on va la seua fila
+     (rutaDelXatDeLaIAIA). `senseSessio` és el de useXat() (fora del
+     proveïdor, el BUIT: false); el mode de dades es llig de la configuració,
+     com a la càrrega de davall, i no de useXat(), que fora del proveïdor diu
+     'remote' també en llavor. */
+  const { senseSessio } = useXat();
+  const modeDades = normalizeBackendConfig(externalConfig).dataMode;
   const [estat, setEstat] = useState({ id: null, status: 'loading', perfil: null });
 
   useEffect(() => {
@@ -90,11 +126,23 @@ export default function PerfilPublicSection({ agents = AGENTS_BUITS }) {
           if (error?.name !== 'AbortError') console.warn('[PerfilPublic] No s’ha pogut llegir el perfil:', error?.message);
         }
       }
-      // Una resposta buida del servidor és autoritativa. El catàleg només
-      // suplix un node demostratiu que no implementa el port de directori.
+      // Una resposta buida del servidor és autoritativa (fora de la IA del
+      // paquet, D12, més avall). El catàleg només suplix un node demostratiu
+      // que no implementa el port de directori.
       if (!teCapacitat('directori') && normalizeBackendConfig(externalConfig).dataMode !== 'remote') {
         perfil = perfilDelCataleg(agents.find((agent) => String(agent.id) === clau));
       }
+      /* Onada 11 (261010; prompt 261010_1730, tasca 6, D12) · Una IA del
+         paquet (AGENTS_IA_SEED: hui, la IAIA MarIA) no viu a cap taula: en
+         remot el servidor no la coneix (supabase/perfils.js) i loadPerfilPublic
+         torna null, mentre que el Xat ja la pinta del paquet
+         (data/xatsPerDefecte.js, FakeChatOnboarding.jsx) i la seua fila porta
+         ací. La pàgina cau al paquet per a ella, també en remot, pel seu id o
+         pel seu slug declarat (agentIASeed). Per a una persona o una entitat,
+         la resposta buida del servidor continua manant: cap identitat del
+         paquet suplix una d'inexistent al servidor. Amb la capacitat de
+         directori en llavor i en local el port ja la torna, i ací no es passa. */
+      if (!perfil) perfil = perfilDeLaIADelPaquet(agentIASeed(clau));
       /* Revisió dels verificadors (front «logo», 261004) · En remot, l'id de
          l'entitat del projecte és el del servidor (un UUID) i només el
          registrava la resolució de l'app (useEntitatDelProjecte). Si esta
@@ -207,6 +255,11 @@ export default function PerfilPublicSection({ agents = AGENTS_BUITS }) {
     alt: `Avatar de ${perfil.nom}`,
     onCanvia: perfil.propietari ? () => navigate(rutaEdita) : undefined
   } : null;
+  /* El directe de sempre per a tothom; per a la IAIA, la conversa de la seua
+     fila en cada mode de dades (en llavor i en local, el mateix directe). */
+  const rutaDelXat = esIAIA(perfil.id)
+    ? rutaDelXatDeLaIAIA(modeDades, senseSessio)
+    : `/xat?amb=${encodeURIComponent(perfil.id)}`;
 
   return (
     <UniversalPage
@@ -250,7 +303,7 @@ export default function PerfilPublicSection({ agents = AGENTS_BUITS }) {
         </Alerta>
       ) : null}
       <div className="sdp-alerta__accions">
-        <Boto varietat="primari" icona={perfil.esIA ? Bot : MessageCircle} onClick={() => navigate(`/xat?amb=${encodeURIComponent(perfil.id)}`)}>
+        <Boto varietat="primari" icona={perfil.esIA ? Bot : MessageCircle} onClick={() => navigate(rutaDelXat)}>
           {perfil.esIA ? t('section.perfil.public.parlaIA', 'Parla amb la IAIA') : t('section.perfil.public.escriu', 'Escriu-li al xat')}
         </Boto>
         {perfil.propietari || administra ? (

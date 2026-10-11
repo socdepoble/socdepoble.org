@@ -295,7 +295,11 @@ describe('moviment · tokens i propietats que s’animen', () => {
 
   test('els calaixos (barra lateral i panells de la graella) només animen el transform, amb la durada i la corba de calaix (Q4)', () => {
     const calaixos = transicions.filter(({ selector }) => /app-grid-column--(left|middle)|nav\.app-sidebar/.test(selector));
-    expect(calaixos.length).toBeGreaterThanOrEqual(6);
+    /* Onada 12 (261011; ordres 261011_0130, D-03) · Eren 6: la sisena era
+       `nav.app-sidebar.sidebar-open`, una regla morta (cap codi posa
+       `sidebar-open`: en compacte la barra viu dins del Dialeg,
+       .sdp-dialeg-sidebar, App.jsx) que ha eixit del full. */
+    expect(calaixos.length).toBeGreaterThanOrEqual(5);
     for (const { selector, v } of calaixos) {
       expect(v, selector).toMatch(/^transform var\(--sdp-durada-panell\) var\(--sdp-corba-calaix\)/);
       expect(propietats(v).every((p) => p === 'transform' || p === 'visibility'), selector).toBe(true);

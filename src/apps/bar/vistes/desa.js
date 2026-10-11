@@ -24,6 +24,22 @@ export function desaFitxer(nom, contingut, tipus) {
   return true;
 }
 
+/**
+ * Onada 12 (261011; ordres 261011_0130, punt 6) · La zona IANA d'este
+ * dispositiu ('Europe/Madrid'), o null si el navegador no la diu. El registre
+ * de vendes (nucli/vendes.js) vol la zona de l'ESTABLIMENT: mentre el Bar no la
+ * guarde (decisió del Mestre pendent), val la de la caixa que fa l'exportació,
+ * que és al bar, i la pantalla ho diu.
+ */
+export function zonaDelDispositiu() {
+  try {
+    const zona = new Intl.DateTimeFormat().resolvedOptions().timeZone;
+    return typeof zona === 'string' && zona !== '' ? zona : null;
+  } catch {
+    return null;
+  }
+}
+
 /** Un nom de fitxer sense res de la persona: el tipus, l'id del torn i la data. */
 export function nomFitxer(prefix, tornId, moment, extensio) {
   const data = typeof moment === 'string' ? moment.slice(0, 10) : 'sense-data';

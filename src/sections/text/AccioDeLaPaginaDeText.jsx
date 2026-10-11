@@ -14,20 +14,31 @@
  * element vertader, i PageFrame pintaria un div.page-title-accio buit.
  *
  * El verb es traduïx ací dins i el destí es tria amb el mode de dades del xat
- * (useXat().modeDades): amb sessió, la conversa que obri és la de la fila
- * «IAIA MarIA» de la llista (sections/xat/useObriXatPerDefecte.js ·
- * rutaDelXatDeLaIAIA). En remot i sense sessió passa per l'entrada, com
- * «Comentar»: la sessió no es mira ací, i eixe cas està pendent del Mestre
- * (vegeu la nota de rutaDelXatDeLaIAIA).
+ * (useXat().modeDades): la conversa que obri és la de la fila «IAIA MarIA» de
+ * la llista (sections/xat/useObriXatPerDefecte.js · rutaDelXatDeLaIAIA).
+ *
+ * Onada 11 (261010; prompt 261010_1730, tasca 6) ·
+ *   · D2 · En remot i sense sessió (useXat().senseSessio), la fila que el
+ *     convidat veu és la conversa de mostra, i el botó hi porta.
+ *   · D4 · `lloc`, calcat d'AccioDeLaPagina (PageDetailSection.jsx):
+ *     · 'dalt' (per defecte) · la porta sola, dins de div.page-title-accio;
+ *     · 'baix' · la mateixa porta dins de div.sdp-pagina-accio, després del
+ *       cos (TextRoute la passa com a fill de TextSection).
  */
 import { useUIActions } from '../../app/contexts/UIContext';
 import { PortaDePagina } from '../../components/PedraSeca/organismes/PortesTargeta.jsx';
 import { useXat } from '../xat/XatContext';
 import { accioDeLaPaginaDeText } from './accionsDeText.js';
 
-export function AccioDeLaPaginaDeText({ pageKey }) {
+export function AccioDeLaPaginaDeText({ pageKey, lloc = 'dalt' }) {
   const { t } = useUIActions();
-  const { modeDades } = useXat();
-  const porta = accioDeLaPaginaDeText(pageKey, t, modeDades);
-  return porta ? <PortaDePagina porta={porta} /> : null;
+  const { modeDades, senseSessio } = useXat();
+  const porta = accioDeLaPaginaDeText(pageKey, t, modeDades, senseSessio);
+  if (!porta) return null;
+  if (lloc !== 'baix') return <PortaDePagina porta={porta} />;
+  return (
+    <div className="sdp-pagina-accio">
+      <PortaDePagina porta={porta} />
+    </div>
+  );
 }

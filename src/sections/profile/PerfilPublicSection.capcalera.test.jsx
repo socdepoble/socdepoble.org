@@ -38,7 +38,8 @@ vi.mock('../../host.js', () => ({ quanLlest: async () => {} }));
 vi.mock('../../components/universal/UniversalPage', () => ({
   UniversalPage: (props) => {
     mocks.renders.push(props);
-    return <h1>{props.title}</h1>;
+    /* Onada 11 (261010; prompt 261010_1730, tasca 3) · l'h1 dins de la capçalera page-title, com la de veres. */
+    return <header className="page-title"><h1>{props.title}</h1></header>;
   }
 }));
 import PerfilPublicSection from './PerfilPublicSection.jsx';

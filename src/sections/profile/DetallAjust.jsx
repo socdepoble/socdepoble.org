@@ -4,11 +4,16 @@ import { compressImage } from '../../utils/imageUtils.js';
 import { isSafeUrl } from '../../components/universal/UniversalUtils';
 import { useEixidaSegura } from '../../components/universal/EixidaSegura.jsx';
 import { useToast } from '../../components/universal/NotificationContext.jsx';
-import { Camp, DialegConfirmacio, Selector } from '../../components/PedraSeca';
+import { Boto, Camp, DialegConfirmacio, Selector } from '../../components/PedraSeca';
 import { classificaError } from '../../data/autodesament/errors.js';
 import { ERROR_CORREU_INVALID, validaCorreu } from './contacteOrganitzacio.js';
 import { useEnquadramentAvatar } from './useEnquadramentAvatar.jsx';
 import { GestioMembres } from './GestioMembres.jsx';
+import { SegonFactor } from '../admin/SegonFactor.jsx';
+
+/* Onada 11 (261010; prompt 261010_1730, tasca 2) · La ruta del Tauler de
+   superadministració (App.jsx: /admin/*, darrere de RequireAuth). */
+const RUTA_ADMIN = '/admin';
 
 /* Indirecció per a les proves: jsdom no deixa substituir location.reload. */
 export const pagina = { recarrega: () => window.location.reload() };
@@ -322,6 +327,18 @@ export default function DetallAjust({
     /* Ordre del Mestre (261008, grup C) · La gestió dels membres. */
     if (ajust.accio === 'membres') {
       return <GestioMembres organitzacio={identitat} accions={membres} />;
+    }
+    /* Onada 11 (261010; prompt 261010_1730, tasca 2) · El segon factor del
+       superadmin, en línia com els membres, i l'entrada al Tauler. */
+    if (ajust.accio === 'segon-factor') {
+      return <SegonFactor />;
+    }
+    if (ajust.accio === 'obrir-admin') {
+      return (
+        <div className="sdp-buit">
+          <Boto varietat="primari" onClick={() => navigate(RUTA_ADMIN)}>{ajust.titol}</Boto>
+        </div>
+      );
     }
     if (ajust.accio === 'eixir') {
       return (

@@ -192,3 +192,19 @@ export const definixContrasenyaNova = asseguraMetode('definixContrasenyaNova');
 export const llistaMembresOrganitzacio = asseguraMetode('llistaMembresOrganitzacio');
 export const desaMembreOrganitzacio = asseguraMetode('desaMembreOrganitzacio');
 export const llevaMembreOrganitzacio = asseguraMetode('llevaMembreOrganitzacio');
+
+/* Onada 11 (261010; prompt 261010_1730, tasca 2) · El segon factor del
+   superadmin (capacitat 'segonFactor'). No és nucli: «El compte» pregunta
+   abans amb teCapacitat i, sense ella, no pinta la inscripció. */
+export const llistaFactors = asseguraMetode('llistaFactors');
+export const inscriuFactor = asseguraMetode('inscriuFactor');
+export const reptaFactor = asseguraMetode('reptaFactor');
+export const verificaFactor = asseguraMetode('verificaFactor');
+export const retiraFactor = asseguraMetode('retiraFactor');
+
+/* Onada 11 (261010; prompt 261010_1730, tasca 2) · La personalització del
+   poble (capacitat 'personalitzacio'). No és nucli: el Tauler pregunta abans
+   amb teCapacitat i, sense ella, no pinta «Desa». La lectura va dins de
+   loadCoreContent (camp additiu `personalitzacio`). */
+export const adminDesaPersonalitzacio = asseguraMetode('adminDesaPersonalitzacio');
+export const adminHistorialPersonalitzacio = asseguraMetode('adminHistorialPersonalitzacio');

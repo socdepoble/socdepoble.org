@@ -273,6 +273,21 @@ description: "Documentació canònica de Sóc de Poble."
   moderació que ella mateixa posa com a condició prèvia (vegeu «Xat de pàgina
   i comunitats»): aplicar la cadena és una decisió del Mestre.
 
+- `migrations/2610101900_personalitzacio_superadmin.sql`
+  Onada 11 (261010, tasca 2): la personalització del poble que desa el
+  superadmin. Les tres polítiques de lectura d'`app_content` (2609200300)
+  admeten dues claus més, `taxonomia` i `estil` (no `agents`: decisió del
+  Mestre pendent); la taula `app_content_historial` (una fila per versió
+  desada, només la llig la superadmin amb aal2); i les RPC
+  `admin_desa_contingut(p_tenant_id, p_clau, p_payload, p_versio)` (control
+  de versió optimista: `SDP-ADMIN-006` si la vigent ja no és la que
+  s'editava) i `admin_historial_contingut(p_tenant_id, p_clau)` (fins a 50
+  versions), darrere de `private.es_superadmin()` (codis `SDP-ADMIN-003` a
+  `006`). Additiva i idempotent; **NO aplicada: l'aplica el Mestre, després
+  de 2610090100 i de 2610061448**, i **va abans de publicar el client**:
+  sense ella la faceta «Etiquetes i categories» del Tauler diu que el
+  servidor encara no té les funcions (NO-DISPONIBLE).
+
 - `seed.sql`
   Contingut inicial del portal.
 

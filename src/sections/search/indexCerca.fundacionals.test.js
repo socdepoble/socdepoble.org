@@ -9,9 +9,10 @@
  * etiqueta i l'enllaç al seu perfil, i que cap dels tres té una pàgina del
  * sistema (SYSTEM_PAGES és el que el Mur barreja amb les publicacions).
  *
- * Les proves marcades [DEFECTE] reproduïxen el que hui NO passa, perquè conste
- * amb evidència: no són cap contracte, i han de canviar quan el Mestre ho
- * decidisca.
+ * Onada 11 (261010; prompt 261010_1730, tasca 6, D8) · Girada la prova
+ * [DEFECTE] de l'Onada 10 sobre «Javi Llinares»: la regla de privacitat guanya
+ * (la llavor no porta el cognom) i la cara del Cercador és la foto del padró
+ * pilot, no el logotip de l'entitat. Ja no queda cap prova [DEFECTE] ací.
  */
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -109,16 +110,19 @@ describe('Javi Llinares', () => {
     expect(llista.map((entrada) => [entrada.titol, entrada.href, entrada.avatar.src])).toEqual([['Javi Llinares', '/el-meu-perfil', PERSONA_PILOT.avatar]]);
   });
 
-  test('[DEFECTE] en llavor i sense sessió, el cognom no el troba i la seua targeta porta el logo de l’entitat', () => {
-    /* La llavor l'anomena «Javi» (agentsSeed.js i el padró del xat): cap font
-       de l'índex porta «Llinares». Pendent del Mestre. */
+  /* Onada 11 (261010; prompt 261010_1730, tasca 6, D8) · Regla de privacitat:
+     la llavor l'anomena «Javi» (agentsSeed.js i el padró del xat) i cap font
+     de l'índex porta «Llinares»; pel cognom no es troba, i així ha de ser. I la
+     seua cara al Cercador és la foto del padró pilot (PERSONA_PILOT.avatar,
+     que el catàleg també porta), no el logotip de l'entitat (Pedra Seca §11). */
+  test('D8 · en llavor i sense sessió, el cognom no es troba (regla de privacitat) i la seua cara és la foto del padró pilot, no el logotip', () => {
     expect(cercaEntrades(index, 'llinares').total).toBe(0);
     expect(cercaEntrades(index, 'javi llinares').total).toBe(0);
-    /* I la seua cara al Cercador és la del catàleg (el logo de l'entitat), no
-       la foto del padró pilot (PERSONA_PILOT.avatar). */
+    expect(cercaEntrades(index, 'javi llinares', 'persones').total).toBe(0);
     const [javi] = cercaEntrades(index, 'javi', 'persones').llista;
-    expect(javi.avatar.src).toBe(AGENTS_MAP.SOCDEPOBLE.avatar_url);
-    expect(javi.avatar.src).not.toBe(PERSONA_PILOT.avatar);
+    expect(javi.avatar.src).toBe(PERSONA_PILOT.avatar);
+    expect(javi.avatar.src).toBe(AGENTS_MAP.JAVI.avatar_url);
+    expect(javi.avatar.src).not.toBe(AGENTS_MAP.SOCDEPOBLE.avatar_url);
   });
 });
 

@@ -10,6 +10,26 @@ Qualsevol IA (o humà) que modifique codi està obligada a afegir-hi una entrada
 
 ---
 
+### 2026-10-12T00:40:00Z - Assentament del Sistema d'Informes Editorials i PDF Final (Claude i MarIA)
+- **Front:** UI/UX Editorial, Renderitzat i Sistema de Disseny.
+- **Acció:** Creació de l'informe complet definitiu del FICIV i naixement del motor d'informes.
+- **Detalls:** A petició del Mestre per garantir la llegibilitat al mòbil, Claude ha pres l'informe sencer (sense retallar res) i hi ha aplicat el seu disseny editorial, augmentant la lletra a 15pt. A més a més, ha consolidat un sistema de disseny complet (CSS aïllat, esquema JSON i generador Python) a `261012_0040_sistema_informes_claude/` per a futurs PDF's. MarIA ha passat l'HTML resultant per Chromium, generant el PDF definitiu `INFORME_COMPLETO_FICIV.pdf` (1.3MB) de forma totalment llegible i impecable per a Carmen. S'ha realitzat l'Escriptori Net arxivant els torns de Claude, tancant definitivament aquesta epopeia subvencionística.
+- **Autor:** Claude (Disseny/Motor) i MarIA (Renderitzat/Neteja).
+
+### 2026-10-11T12:35:00Z - Maquetació i Generació PDF Editorial FICIV (Claude i MarIA)
+- **Front:** UI/UX Editorial i Renderitzat.
+- **Acció:** Tancament de la maquetació editorial dels lliurables del FICIV.
+- **Detalls:** S'ha completat l'esforç col·laboratiu per crear el lliurable final de la subvenció. Claude ha aplicat les seues habilitats de maquetació editorial avançada usant HTML pur a dues columnes (`informe_editorial_ficiv_2026.html`). Seguidament, MarIA ha usat Chromium via script (`tooling/pdf/render_pdf.sh`) per renderitzar un PDF perfecte per a llegir al mòbil. Es dóna per tancat aquest parèntesi (arxivat) i es retoma l'Onada 11 i les planificacions de l'Onada 12 (Finestreta de Subvencions).
+- **Autor:** Claude (Maquetació) i MarIA (Generació PDF).
+
+### 2026-10-11T11:53:23Z - Resolució Auditoria FICIV (MarIA i Claude)
+- **Front:** Orquestració i documentació.
+- **Acció:** Tancament de l'auditoria FICIV elaborada per Fable.
+- **Detalls:** S'han analitzat els vuit documents (incloent bases, memòria i fitxes pressupostàries) i s'han detectat greus defectes formals: manca de memòria autèntica, errors de cel·les a l'Excel de pressupost i errors d'autobaremació. S'han preparat els lliurables en format CSV i TXT (`INFORME_PARA_CARMEN.txt` i altres) al laboratori (`02_investigacio_ia/261011_1400_ficiv_claude/`). Les extraccions temporals de text i l'script natiu abandonat (`ficiv_extractor`) han sigut eliminades de l'Escriptori per mantindre la higiene.
+- **Autor:** MarIA (Directora Tècnica).
+
+---
+
 ## Deute Històric i Arqueologia (L'Herència de Pedra Seca)
 *Aquest apartat documenta les decisions preses abans de la creació d'aquest LEDGER (Fase Pre-Mecànica) que condicionen fortament l'arquitectura actual i futura.*
 - **Online-First vs Allotjament a Firebase (Online-First temporal):** El sistema va nàixer descentralitzat però hem assumit dependència de Supabase (com a backend) i Firebase Hosting (com a servidor per a la SPA) per garantir el "time to market". S'elimina la consideració de Sollutia com a allotjament del frontend; la destinació final verificada és Firebase Hosting. El sincronitzador offline i l'outbox han sigut esborrats en la Poda del Quadrant A.

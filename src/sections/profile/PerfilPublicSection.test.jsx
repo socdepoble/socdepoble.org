@@ -9,8 +9,11 @@ const mocks = vi.hoisted(() => ({
   id: 'iaia', navigate: vi.fn(), load: vi.fn(), capacitat: true, seo: vi.fn(), toast: vi.fn(),
   config: {}, t: (_, alternativa) => alternativa, resolveAsset: (v) => v, agents: [],
   /* T43 · la identitat de qui mira (pertinences i actor). */
-  identitat: { memberships: [], actor: null, setActor: vi.fn() }
+  identitat: { memberships: [], actor: null, setActor: vi.fn() },
+  /* D12 (refutació del front C) · el que la fitxa llig del Xat: només `senseSessio`. */
+  xat: { senseSessio: false }
 }));
+vi.mock('../xat/XatContext', () => ({ useXat: () => mocks.xat }));
 vi.mock('../../app/contexts/IdentitatContext.jsx', () => ({ useIdentitat: () => mocks.identitat }));
 vi.mock('../../app/contexts/RouterContext', () => ({
   useParams: () => ({ agentId: mocks.id }),
@@ -34,7 +37,8 @@ import { oblidaEntitatDelProjecte, RUTA_PERFIL_PROJECTE, rutaDAutoria } from '..
 import { AGENTS_MAP } from '../../data/agentsSeed.js';
 /* Ordre del Mestre (261007) · La pàgina de l'entitat pilot s'obri pel seu
    slug declarat, el de producció ('socdepoble'). */
-import { ENTITAT_PILOT_SLUG } from '../../data/identitatsSeed.js';
+import { ENTITAT_PILOT_SLUG, IAIA_ID, PERSONA_PILOT } from '../../data/identitatsSeed.js';
+import { RUTA_XAT_DE_LA_IAIA, RUTA_XAT_DE_MOSTRA_DE_LA_IAIA } from '../xat/useObriXatPerDefecte.js';
 
 const IAIA = { tipus: 'ia', id: 'iaia', slug: 'iaia-maria', nom: 'IAIA MarIA', avatar: '', hero: '', lema: 'Pensant en global', bio: 'Matriarca Digital', presentacioHtml: '<p>Cor antic i circuits nous.</p>', poble: 'La Torre de les Maçanes', esIA: true, publicat: true, propietari: false, copyright: '' };
 const ENTITAT = { ...IAIA, tipus: 'entitat', id: 'socdepoble', nom: 'Sóc de Poble', esIA: false, propietari: true, presentacioHtml: '' };
@@ -43,6 +47,7 @@ afterEach(cleanup);
 beforeEach(() => {
   vi.clearAllMocks(); mocks.config = {}; mocks.id = 'iaia'; mocks.capacitat = true; mocks.load.mockResolvedValue(IAIA);
   mocks.identitat = { memberships: [], actor: null, setActor: vi.fn(() => true) };
+  mocks.xat = { senseSessio: false };
   /* Els ids remots del projecte són d'abast de mòdul: cap prova en deixa per a la següent. */
   oblidaEntitatDelProjecte();
 });
@@ -101,6 +106,67 @@ test.each([true, false])('en remot cap catàleg suplix un perfil absent (directo
   /* Poliment T45 · en remot la fitxa d'una altra persona encara no es pot
      llegir: el text no diu només «és privada». */
   expect(screen.getByText(/Les fitxes d’altres persones encara no es poden obrir en este servidor/)).toBeTruthy();
+});
+
+/* Onada 11 (261010; prompt 261010_1730, tasca 6, D12) · La IAIA viu al paquet
+   i no a cap taula: en remot el port torna null (supabase/perfils.js) i la
+   pàgina la pinta del paquet (AGENTS_IA_SEED), pel seu id i pel seu slug, amb
+   el text «Qui és la IAIA MarIA?», l'avís d'IA, el seu avatar i el botó del
+   xat. Una persona o una entitat absents continuen sent «Perfil no trobat»
+   (prova de dalt): la resposta buida del servidor només deixa de manar per a
+   la IA del paquet.
+   Refutació del front C (261010) · El botó «Parla amb la IAIA» va on va la
+   seua fila de la llista del Xat (rutaDelXatDeLaIAIA): en remot amb sessió,
+   el xat públic de /iaia (RUTA_XAT_DE_LA_IAIA); sense sessió, la seua
+   conversa de mostra (RUTA_XAT_DE_MOSTRA_DE_LA_IAIA). DEROGAT el directe
+   /xat?amb=<id> en remot: el servidor no coneix el seu UUID (crea_fil_directe
+   fallava amb un avís) i, sense sessió, obria la mostra de Sóc de Poble. En
+   llavor i en local el directe es conserva (PerfilPublicSection.iaia.test). */
+test.each([['per id', IAIA_ID], ['per slug', 'iaia-maria']])('D12 · en remot, quan el servidor no la coneix, el perfil de la IAIA ix del paquet %s', async (_, clau) => {
+  mocks.config = { dataMode: 'remote' };
+  mocks.id = clau;
+  mocks.load.mockResolvedValue(null);
+  const { container } = render(<PerfilPublicSection agents={[]} />);
+  expect(await screen.findByRole('heading', { level: 1, name: 'IAIA MarIA' })).toBeTruthy();
+  expect(mocks.load).toHaveBeenCalledWith(clau, mocks.config);
+  expect(screen.getByRole('status').textContent).toContain('Este perfil és una intel·ligència artificial');
+  expect(screen.getByText('Intel·ligència artificial', { selector: '.sp-card-label' })).toBeTruthy();
+  /* Front D4 (integració) · El cos de la presentació, tal qual: es llig per
+     l'outerHTML de l'article (la porta lint_logica_usuari no admet cap lectura
+     directa del cos fora de sanitizeHtml). */
+  expect(container.querySelector('article.detail-content').outerHTML).toContain(AGENTS_MAP.IAIA.presentacio_html);
+  expect(container.querySelector('img.page-title-avatar__imatge').getAttribute('src')).toBe(AGENTS_MAP.IAIA.avatar_url);
+  expect(screen.queryByText(/encara no es poden obrir/)).toBeNull();
+  expect(screen.queryByRole('button', { name: 'Edita la fitxa' })).toBeNull();
+  fireEvent.click(screen.getByRole('button', { name: 'Parla amb la IAIA' }));
+  expect(mocks.navigate).toHaveBeenCalledWith(RUTA_XAT_DE_LA_IAIA);
+  expect(mocks.navigate).not.toHaveBeenCalledWith(`/xat?amb=${IAIA_ID}`);
+  expect(mocks.seo).toHaveBeenLastCalledWith(expect.objectContaining({ title: 'IAIA MarIA', index: true }));
+});
+
+test('D12 · en remot i sense sessió, «Parla amb la IAIA» obri la seua conversa de mostra, la mateixa fila que veu el convidat', async () => {
+  mocks.config = { dataMode: 'remote' };
+  mocks.id = IAIA_ID;
+  mocks.load.mockResolvedValue(null);
+  mocks.xat = { senseSessio: true };
+  render(<PerfilPublicSection agents={[]} />);
+  expect(await screen.findByRole('heading', { level: 1, name: 'IAIA MarIA' })).toBeTruthy();
+  fireEvent.click(screen.getByRole('button', { name: 'Parla amb la IAIA' }));
+  expect(mocks.navigate).toHaveBeenCalledWith(RUTA_XAT_DE_MOSTRA_DE_LA_IAIA);
+  expect(RUTA_XAT_DE_MOSTRA_DE_LA_IAIA).not.toBe(RUTA_XAT_DE_LA_IAIA);
+});
+
+test('D12 · perfilDeLaIADelPaquet: el mateix DTO que el port, només per a una IA del paquet', async () => {
+  const { perfilDeLaIADelPaquet } = await import('./PerfilPublicSection.jsx');
+  const { AGENTS_IA_SEED } = await import('../../data/identitatsSeed.js');
+  expect(perfilDeLaIADelPaquet(null)).toBeNull();
+  expect(perfilDeLaIADelPaquet(undefined)).toBeNull();
+  const [iaia] = AGENTS_IA_SEED;
+  expect(perfilDeLaIADelPaquet(iaia)).toEqual({
+    tipus: 'ia', id: IAIA_ID, slug: 'iaia-maria', nom: 'IAIA MarIA', avatar: AGENTS_MAP.IAIA.avatar_url, hero: '',
+    lema: AGENTS_MAP.IAIA.lema, bio: AGENTS_MAP.IAIA.role, presentacioHtml: AGENTS_MAP.IAIA.presentacio_html,
+    poble: AGENTS_MAP.IAIA.town_name, esIA: true, publicat: true, propietari: false, copyright: '', emoticona: ''
+  });
 });
 
 test('en seed el «Perfil no trobat» no parla de cap límit del servidor', async () => {
@@ -481,19 +547,26 @@ test('avatar · una persona sense avatar no porta res: el bloc del títol comen�
 });
 
 /* Correcció dels verificadors (ordre del Mestre, 261004; skill sdp-pedra-seca
-   §11) · Al catàleg, JAVI (una persona) porta com a avatar_url la marca de
-   Sóc de Poble: la seua fitxa no la pinta com a avatar redó (PageFrame la
-   rebutja). El bloc del títol comença per l'H1. */
-test('avatar · una persona del catàleg amb la marca de Sóc de Poble com a avatar: ni avatar ni logotip', async () => {
+   §11) · Al catàleg, JAVI (una persona) portava com a avatar_url la marca de
+   Sóc de Poble, i la seua fitxa no la pintava com a avatar redó (PageFrame la
+   rebutja).
+   Onada 11 (261010; prompt 261010_1730, tasca 6, D8) · El catàleg porta ara la
+   foto del padró pilot (PERSONA_PILOT.avatar): la fitxa la pinta com a avatar
+   redó davant de l'H1, com la de qualsevol persona, i la marca no ix mai com
+   a avatar. DEROGAT «ni avatar ni logotip: el bloc del títol comença per l'H1». */
+test('avatar · la persona pilot del catàleg porta la foto del padró com a avatar redó, mai la marca de Sóc de Poble', async () => {
   mocks.config = { dataMode: 'seed' };
   mocks.capacitat = false;
   mocks.id = AGENTS_MAP.JAVI.id;
-  render(<PerfilPublicSection agents={[AGENTS_MAP.JAVI]} />);
+  const { container } = render(<PerfilPublicSection agents={[AGENTS_MAP.JAVI]} />);
   await screen.findByRole('heading', { level: 1, name: AGENTS_MAP.JAVI.name });
-  const capcalera = document.querySelector('header.page-title');
-  expect(capcalera.firstElementChild.tagName).toBe('H1');
-  expect(capcalera.querySelector('.page-title-avatar')).toBeNull();
-  expect([...capcalera.querySelectorAll('img')].map((img) => img.getAttribute('src'))).not.toContain(AGENTS_MAP.JAVI.avatar_url);
+  expect(AGENTS_MAP.JAVI.avatar_url).toBe(PERSONA_PILOT.avatar);
+  expect(AGENTS_MAP.JAVI.avatar_url).not.toBe(AGENTS_MAP.SOCDEPOBLE.avatar_url);
+  const capcalera = container.querySelector('header.page-title');
+  expect([...capcalera.children].map((e) => `${e.tagName}.${e.className}`).slice(0, 2)).toEqual(['DIV.page-title-avatar', 'H1.']);
+  expect(capcalera.querySelector('img.page-title-avatar__imatge').getAttribute('src')).toBe(PERSONA_PILOT.avatar);
+  expect([...capcalera.querySelectorAll('img')].map((img) => img.getAttribute('src'))).not.toContain(AGENTS_MAP.SOCDEPOBLE.avatar_url);
+  expect(container.querySelector('.page-title-logo')).toBeNull();
 });
 
 test('avatar · una entitat no porta avatar, porta el seu logotip (també la del projecte)', async () => {

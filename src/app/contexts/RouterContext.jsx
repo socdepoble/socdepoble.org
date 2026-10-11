@@ -337,8 +337,17 @@ export function BrowserRouter({ children, basename }) {
    `onCanvi(ruta)` (opcional): avisa qui munta el router de la ruta de l'app
    (camí + consulta) en muntar i a cada canvi. L'element el fa servir per a
    emetre `sdp-navega` cap a l'amfitrió (clàusula dels slugs), però la tapa
-   abans: la consulta i els ids no ixen (contracteAmfitrio.js:tapaRuta). */
-export function MemoryRouter({ children, basename = '', rutaInicial = '/', onCanvi }) {
+   abans: la consulta i els ids no ixen (contracteAmfitrio.js:tapaRuta).
+   Onada 12 (261011; ordres 261011_0130, punt 4) · `alSaltar(n)` (opcional):
+   qui munta el router pot atendre els salts numèrics (navigate(-1)) amb
+   l'historial del navegador quan l'amfitrió ha declarat `ruta-a-url`
+   (PedraSecaEmbed.jsx, ReflexDeRuta). Si torna true, el salt ja és seu i la
+   llista pròpia no es mou; si no, el salt és el de sempre, en memòria. El
+   context porta `index` (la posició en la llista pròpia) perquè el reflex
+   distingisca una entrada nova (puja) d'una substitució (no canvia), i
+   navigate(ruta, { replace: true, posicio }) torna a una entrada de la llista
+   (la que el popstate del navegador assenyala) en lloc de reescriure l'última. */
+export function MemoryRouter({ children, basename = '', rutaInicial = '/', onCanvi, alSaltar }) {
   const base = useMemo(() => normalitzaBase(basename), [basename]);
 
   const [state, setState] = useState(() => ({
@@ -362,6 +371,7 @@ export function MemoryRouter({ children, basename = '', rutaInicial = '/', onCan
 
   const navigate = useCallback((to, options = {}) => {
     if (!to && to !== 0) return;
+    if (typeof to === 'number' && typeof alSaltar === 'function' && alSaltar(to) === true) return;
 
     setState(prev => {
       if (typeof to === 'number') {
@@ -374,6 +384,12 @@ export function MemoryRouter({ children, basename = '', rutaInicial = '/', onCan
       if (ruta === null) return prev;
 
       const newEntry = entradaDeMemoria(ruta, options.state ?? null);
+      /* `posicio` (el reflex, en un popstate): si la llista ja té esta ruta
+         en eixa posició, s'hi va sense retallar res i amb el seu estat. */
+      const vella = Number.isInteger(options.posicio) ? prev.history[options.posicio] : null;
+      if (vella && vella.path === newEntry.path && vella.search.toString() === newEntry.search.toString()) {
+        return { ...prev, index: options.posicio };
+      }
       let newHistory = prev.history.slice(0, prev.index + 1);
       
       if (options.replace) {
@@ -384,16 +400,18 @@ export function MemoryRouter({ children, basename = '', rutaInicial = '/', onCan
         return { history: newHistory, index: newHistory.length - 1 };
       }
     });
-  }, []);
+  }, [alSaltar]);
 
+  const index = state.index;
   const contextValue = useMemo(() => ({
     currentPath,
     searchParams,
     navigate,
     basename: base,
     memoria: true,
-    estat
-  }), [currentPath, searchParams, navigate, base, estat]);
+    estat,
+    index
+  }), [currentPath, searchParams, navigate, base, estat, index]);
 
   return (
     <RouterContext.Provider value={contextValue}>

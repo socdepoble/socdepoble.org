@@ -336,9 +336,16 @@ export function convida(comanda, liniaId, { motiu, ara, per } = {}) {
  * total(destí) després === abans (invariant 5).
  *   seleccio [{ liniaId, quantitat }] · nouIdLinia() per a les parts i per a
  *   un id que ja existisca al destí.
+ *   op (opcional, un id) · LA MARCA DEL MOVIMENT (correcció del refutador,
+ *   261011, T2). Les dues comandes es desen en dues transaccions (primer el
+ *   destí): amb `op`, cada esdeveniment «mou» de les DUES bandes porta la
+ *   mateixa marca, i el del destí diu a més de quina línia ve (`deLinia`) i
+ *   quantes unitats tenia (`abans`). Amb això, si un tall deixa el destí
+ *   escrit i l'origen sencer, es pot acabar el moviment sense endevinar res
+ *   (migMoviment.js). Sense `op`, els esdeveniments de sempre.
  * @returns {{ origen: object, desti: object }}
  */
-export function mouLinies(origen, desti, seleccio, { ara, nouIdLinia } = {}) {
+export function mouLinies(origen, desti, seleccio, { ara, nouIdLinia, op } = {}) {
   exigeixOberta(origen);
   exigeixOberta(desti);
   exigeixMoment(ara);
@@ -350,6 +357,8 @@ export function mouLinies(origen, desti, seleccio, { ara, nouIdLinia } = {}) {
     exigeix(esId(id), 'ID', 'Cal un generador d’ids per a les línies noves.');
     return id;
   };
+  exigeix(op === undefined || esId(op), 'ID', 'La marca del moviment és un id.');
+  const marca = op === undefined ? {} : { op };
   const idsDesti = new Set(desti.linies.map((l) => l.id));
   let liniesOrigen = [...origen.linies];
   const mogudes = [];
@@ -371,12 +380,36 @@ export function mouLinies(origen, desti, seleccio, { ara, nouIdLinia } = {}) {
     }
     idsDesti.add(movent.id);
     mogudes.push(movent);
-    esdevenimentsOrigen.push({ moment: ara, tipus: 'mou', liniaId, abans: linia.quantitat, despres: linia.quantitat - q, altra: desti.id });
-    esdevenimentsDesti.push({ moment: ara, tipus: 'mou', liniaId: movent.id, despres: q, altra: origen.id });
+    esdevenimentsOrigen.push({ moment: ara, tipus: 'mou', liniaId, abans: linia.quantitat, despres: linia.quantitat - q, altra: desti.id, ...marca });
+    esdevenimentsDesti.push({
+      moment: ara, tipus: 'mou', liniaId: movent.id, despres: q, altra: origen.id, ...(op === undefined ? {} : { op, deLinia: liniaId, abans: linia.quantitat })
+    });
   }
   const nouOrigen = exigeixPagatCobert({ ...origen, linies: liniesOrigen, historial: [...origen.historial, ...esdevenimentsOrigen] });
   const nouDesti = { ...desti, linies: [...desti.linies, ...mogudes], historial: [...desti.historial, ...esdevenimentsDesti] };
   return { origen: nouOrigen, desti: nouDesti };
+}
+
+/**
+ * L'historial d'una comanda que es descarta, guardat a la que se n'ha emportat
+ * les línies (correcció del refutador, 261011, T7). Quan «Mou» o «Dividix»
+ * buiden l'origen, l'origen s'esborra, i amb ell es perdia qui havia fet cada
+ * descompte, quan va marxar, quan es va obrir i qui l'atenia. Sense canviar
+ * l'esquema (l'historial ja és una llista oberta d'esdeveniments): el destí
+ * rep un esdeveniment «absorbix» ({ altra: l'origen, obertaA, per, comensals? })
+ * i una còpia de cada esdeveniment de l'origen marcada amb `de` (l'id de la
+ * comanda on va passar; si ja venia heretat, es conserva el primer). Les
+ * línies, els pagaments i els totals no canvien. Els esdeveniments amb `de`
+ * no són moviments propis del destí (migMoviment.js els salta).
+ */
+export function heretaHistorial(desti, origen, { ara } = {}) {
+  exigeixMoment(ara);
+  const absorbix = {
+    moment: ara, tipus: 'absorbix', altra: origen.id, obertaA: origen.obertaA, per: origen.atesPer,
+    ...(origen.comensals === undefined ? {} : { comensals: origen.comensals })
+  };
+  const heretats = origen.historial.map((esdeveniment) => ({ ...esdeveniment, de: esdeveniment.de || origen.id }));
+  return { ...desti, historial: [...desti.historial, absorbix, ...heretats] };
 }
 
 /**

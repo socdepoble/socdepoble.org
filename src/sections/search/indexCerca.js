@@ -13,6 +13,7 @@
 import { isSafeAsset } from '../../components/universal/UniversalUtils.js';
 import { normalizeSearchText, stripMarkdownImages } from '../../config/contentHelpers.js';
 import { getSectionItemPath, resolveItemPath, resolvePageSlugPath, rutaDePerfil } from '../../config/navigation.js';
+import { imatgesDeProducte } from '../mercat/imatgesDeProducte.js';
 
 /* Els tipus de la cerca, en l'ordre en què es pinten els grups i els filtres.
    `text` és el valor per defecte de la clau d'i18n `clau`. */
@@ -203,7 +204,7 @@ const primeraImatge = (...valors) => {
  * d'ací ix l'extracte quan la coincidència no és a l'entradilla.
  */
 function entrada({ tipus, id, titol, meta = [], extracte = '', detall = '', cos = [], imatge = null, avatar = null,
-  href = null, accio = null, data = null, privada = false, propia = false }) {
+  href = null, accio = null, data = null, privada = false, propia = false, fotoDe = null }) {
   if (id == null || String(id) === '') return null;
   const textExtracte = textPla(extracte);
   const textTitol = textPla(titol).slice(0, 200) || textExtracte.slice(0, 80);
@@ -225,6 +226,8 @@ function entrada({ tipus, id, titol, meta = [], extracte = '', detall = '', cos 
     data: marcaTemps(data),
     privada: Boolean(privada),
     propia,
+    /* La clau de l'article del qual esta entrada és la foto (deMedia), o null. */
+    fotoDe,
     titolPlegat: plega(textTitol),
     text: plega([textTitol, textExtracte, textDetall, ...cos.map((valor) => textPla(valor))].join(' '))
   };
@@ -382,10 +385,26 @@ export function deProducte(producte) {
     extracte: primerText(producte?.subtitle, producte?.summary, producte?.description),
     detall: producte?.description,
     cos: [producte?.subtitle, venedor, producte?.tag, producte?.category_slug, producte?.population],
-    imatge: { src: primeraImatge(producte?.imageSrc, producte?.images, producte?.image_url, producte?.image) },
+    /* Onada 12 (261011; ordres 261011_0130, punt 1) · La miniatura és la foto
+       del producte, la mateixa regla de la targeta i del detall
+       (imatgesDeProducte: `images` primer, mai l'avatar de qui ven). Abans
+       manava imageSrc, que per als productes de la llavor és el logotip de
+       qui ven (marketContent.js): el Mac Mini eixia amb el quadrat verd.
+       Sense cap foto pròpia que es puga pintar, la reserva de sempre. */
+    imatge: { src: primeraImatge(imatgesDeProducte(producte), producte?.imageSrc, producte?.image_url, producte?.image) },
     href: resolveItemPath({ ...producte, sectionId: producte?.sectionId || 'mercat' }),
     data: producte?.created_at
   });
+}
+
+/* Onada 12 (261011; ordres 261011_0130, punt 1: «hi ha dos Mac Mini») · El
+   tipus de la cerca on ix l'article de cada secció: amb ell es fa la clau
+   (`tipus:id`) de l'article d'una foto (mediaContent.js · `article`). */
+const TIPUS_DE_SECCIO = Object.freeze({ mur: 'publicacions', mercat: 'mercat', events: 'agenda', pobles: 'pobles' });
+
+function clauDeLArticle(article) {
+  const tipus = Object.hasOwn(TIPUS_DE_SECCIO, article?.sectionId) ? TIPUS_DE_SECCIO[article.sectionId] : null;
+  return tipus && article.id != null && String(article.id) !== '' ? `${tipus}:${article.id}` : null;
 }
 
 export function deMedia(media, opcions = {}) {
@@ -401,7 +420,11 @@ export function deMedia(media, opcions = {}) {
     cos: [media?.subtitle, media?.source, media?.tag],
     imatge: esImatge ? { src: primeraImatge(media?.src, media?.imageSrc) } : null,
     href: resolveItemPath({ ...media, sectionId: media?.sectionId || 'multimedia' }),
-    data: media?.created_at
+    data: media?.created_at,
+    /* La foto d'un article és una entrada de Multimèdia com les altres; qui
+       compon els resultats (cercaEntrades) la retira de la vista «tot» quan
+       el seu article ja hi ix. */
+    fotoDe: clauDeLArticle(media?.article)
   });
 }
 
@@ -518,6 +541,14 @@ export function fusionaPerClau(entrades) {
  * Cerca `consulta` dins de les entrades (AND per paraula). Torna la llista del
  * filtre `tipus`, ordenada, i els recomptes de TOTS els tipus (per als filtres).
  * Una clau repetida compta una sola vegada (fusionaPerClau).
+ * Onada 12 (261011; ordres 261011_0130, punt 1: «hi ha dos Mac Mini»;
+ * correcció D3 de la refutació) · La foto d'un article (`fotoDe`) no es
+ * repetix a la vista «tot» quan el seu article JA és entre els resultats: el
+ * producte, el poble o la publicació ix una sola vegada, amb eixa foto de
+ * miniatura. Amb el filtre del seu tipus (Multimèdia) la foto ix sempre, i
+ * també a «tot» si l'article no casa amb la consulta o no és a l'índex. El
+ * recompte de cada tipus és el que el seu filtre ensenya; el de «tot», el de
+ * la vista «tot».
  */
 export function cercaEntrades(entrades, consulta, tipus = 'tot') {
   const llistaFitxes = fitxes(consulta);
@@ -525,13 +556,17 @@ export function cercaEntrades(entrades, consulta, tipus = 'tot') {
   if (!llistaFitxes.length) return { llista: [], perTipus, total: 0, fitxes: llistaFitxes };
   const frase = llistaFitxes.join(' ');
   const filtre = tipusValid(tipus);
-  const trobades = [];
-  for (const actual of fusionaPerClau(entrades)) {
+  const coincidents = fusionaPerClau(entrades).filter((actual) => {
     const text = typeof actual.text === 'string' ? actual.text : '';
-    if (!llistaFitxes.every((fitxa) => text.includes(fitxa))) continue;
+    return llistaFitxes.every((fitxa) => text.includes(fitxa));
+  });
+  const clausTrobades = new Set(coincidents.map((actual) => actual.clau));
+  const trobades = [];
+  for (const actual of coincidents) {
+    const repetida = Boolean(actual.fotoDe) && clausTrobades.has(actual.fotoDe);
     if (actual.tipus in perTipus) perTipus[actual.tipus] += 1;
-    perTipus.tot += 1;
-    if (filtre === 'tot' || actual.tipus === filtre) {
+    if (!repetida) perTipus.tot += 1;
+    if (filtre === 'tot' ? !repetida : actual.tipus === filtre) {
       trobades.push({ entrada: actual, punts: puntua(actual, llistaFitxes, frase) });
     }
   }

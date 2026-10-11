@@ -244,6 +244,58 @@ export const CAPACITATS = Object.freeze({
     'llistaMembresOrganitzacio',
     'desaMembreOrganitzacio',
     'llevaMembreOrganitzacio'
+  ]),
+  /* Onada 11 (261010; prompt 261010_1730, tasca 2) · El segon factor (TOTP)
+     del superadmin. private.es_superadmin() exigix aal2 (migració
+     2610061448): sense ell, el Tauler no pot desar res. Opcional a posta: un
+     node sense servidor d'autenticació (la llavor, WordPress) continua sent
+     vàlid i «El compte» no pinta la inscripció. La interfície ho pregunta amb
+     teCapacitat('segonFactor') i, per a saber si cal confirmar-lo, mira
+     `calSegonFactor` de la sessió. Formes (config sempre l'últim):
+       llistaFactors(config) → Promise<Factor[]>
+         Els factors TOTP del compte; buida sense sessió o sense servidor.
+       inscriuFactor(nom, config) → Promise<{ id, qr, secret, uri }>
+         Crea un factor pendent: `qr` és l'SVG com a data URI, `secret` la
+         clau per a escriure-la a mà i `uri` l'otpauth://.
+       reptaFactor(factorId, config) → Promise<{ repteId, caduca }>
+         Obri un repte del factor; `caduca` és un instant ISO o null.
+       verificaFactor({ factorId, repteId, codi }, config) → Promise<{ nivell: 'aal2' }>
+         Confirma el codi i DESA la sessió nova (aal2) en lloc de la vella, amb
+         la mateixa coreografia que una renovació (rotació del registre
+         persistent, resetClient, sdp:auth-change). Verifica també el primer
+         codi d'un factor acabat d'inscriure.
+       retiraFactor(factorId, config) → Promise<{ id }>
+     Factor: { id, nom, tipus: 'totp', estat: 'verificat' | 'pendent' }.
+     Els errors porten `code` de CODI_SEGON_FACTOR (errorsBackend.js); en seed
+     o local, llistaFactors torna [] i la resta rebutja amb 'no-disponible'. */
+  segonFactor: Object.freeze([
+    'llistaFactors',
+    'inscriuFactor',
+    'reptaFactor',
+    'verificaFactor',
+    'retiraFactor'
+  ]),
+  /* Onada 11 (261010; prompt 261010_1730, tasca 2) · La personalització del
+     poble que desa el superadmin: la taxonomia (categories i etiquetes) i
+     l'estil (els tokens --sdp-* de la capa semàntica). Opcional a posta: un
+     node sense ella continua sent vàlid i el Tauler no pinta «Desa». La
+     interfície ho pregunta amb teCapacitat('personalitzacio'). Formes (config
+     sempre l'últim):
+       adminDesaPersonalitzacio({ clau, payload, versio }, config) → Promise<{ clau, payload, versio }>
+         clau és 'taxonomia' o 'estil'; `versio` és la versió que s'editava
+         (null o 0 si no n'hi havia) i la resposta porta la versió NOVA. Només
+         amb el segon factor confirmat (aal2): si no, 'cal-segon-factor'; si
+         algú ha desat pel camí, 'conflicte-versio'.
+       adminHistorialPersonalitzacio(clau, config) → Promise<[{ versio, payload, creat, autor }]>
+         Les versions desades, de més nova a més vella.
+     La LECTURA no és cap mètode nou: loadCoreContent torna el camp ADDITIU i
+     opcional `personalitzacio: { taxonomia: { payload, versio } | null,
+     estil: { payload, versio } | null }`, que els consumidors fusionen amb
+     la seua base (PAGE_COPY, tokens.css). Els errors porten `code` de
+     CODI_PERSONALITZACIO (errorsBackend.js). */
+  personalitzacio: Object.freeze([
+    'adminDesaPersonalitzacio',
+    'adminHistorialPersonalitzacio'
   ])
 });
 

@@ -10,6 +10,8 @@
  *                                               (?categoria=, ?vista=graella|llista, ?article=)
  *   /app/nevera/cataleg/<id>[/propis]           els propis · el catàleg sencer
  *   /app/nevera/casa/<id>[/cal-comprar]         cal comprar · el que hi ha a casa
+ *   /app/nevera/receptes/<id>[/cal-comprar]     cal comprar per a cuinar · les receptes amb el que
+ *                                               hi ha a casa (?categoria=, ?vista=, ?article=)
  *   /app/nevera/temporada/<id>[/cataleg]        la llista per temporada · de temporada
  *                                               (?mes=1..12, ?filtre=temporada)
  *   /app/nevera/ajustos/<id>[/dades]            la llista · les dades i la còpia
@@ -23,7 +25,8 @@ import { ColumnaAjustosLlista, ColumnaDades } from './vistes/Ajustos.jsx';
 import { ColumnaACasa, ColumnaCalComprar } from './vistes/Casa.jsx';
 import { ColumnaArticlesPropis, ColumnaCatalegSencer } from './vistes/Cataleg.jsx';
 import { ColumnaCatalegCompra, ColumnaLaCompra, ColumnaLlistaActiva, ColumnaLlistes } from './vistes/Compra.jsx';
-import { AJUSTOS, CASA, CATALEG, COMPRA, ENTRADA_LLISTES, PARAMS_LLISTA, TEMPORADA } from './vistes/constants.js';
+import { AJUSTOS, CASA, CATALEG, COMPRA, ENTRADA_LLISTES, PARAMS_LLISTA, RECEPTES_VISTA, TEMPORADA } from './vistes/constants.js';
+import { ColumnaCalPerACuinar, ColumnaReceptes } from './vistes/Receptes.jsx';
 import { ColumnaDeTemporada, ColumnaLlistaPerTemporada } from './vistes/Temporada.jsx';
 
 const opcions = ({ primer, tram, rutaColleccio }) => ({ primer, tram, rutaColleccio });
@@ -40,6 +43,8 @@ export const RUTES = Object.freeze([
   ...rutesCatalegColleccio({ path: COMPRA.entrada, ...opcions(COMPRA), Esquerra: ColumnaLlistes, Colleccio: ColumnaLaCompra, Cataleg: ColumnaCatalegCompra }),
   ...rutesCatalegColleccio({ path: CATALEG.entrada, ...opcions(CATALEG), Colleccio: ColumnaArticlesPropis, Cataleg: ColumnaCatalegSencer }),
   ...rutesCatalegColleccio({ path: CASA.entrada, ...opcions(CASA), Colleccio: ColumnaCalComprar, Cataleg: ColumnaACasa }),
+  /* Onada 12 (261011; ordres 261011_0130, punt 6) · Receptes amb el que hi ha a «A casa». */
+  ...rutesCatalegColleccio({ path: RECEPTES_VISTA.entrada, ...opcions(RECEPTES_VISTA), Colleccio: ColumnaCalPerACuinar, Cataleg: ColumnaReceptes }),
   { path: TEMPORADA.entrada, ...TEMPORADA_MIG },
   { path: `${TEMPORADA.entrada}/${TEMPORADA.tram}`, ...TEMPORADA_DETALL },
   { path: `${TEMPORADA.entrada}/:llista`, params: PARAMS_LLISTA, ...TEMPORADA_MIG },
@@ -61,6 +66,7 @@ const TITOLS_PER_ENTRADA = Object.freeze({
   [COMPRA.entrada]: Object.freeze({ esquerra: 'Les meues llistes', mig: 'La llista' }),
   [CATALEG.entrada]: Object.freeze({ mig: 'Articles propis' }),
   [CASA.entrada]: Object.freeze({ mig: 'Cal comprar' }),
+  [RECEPTES_VISTA.entrada]: Object.freeze({ mig: 'Cal comprar per a cuinar' }),
   [TEMPORADA.entrada]: Object.freeze({ mig: 'La llista per temporada' }),
   [AJUSTOS.entrada]: Object.freeze({ mig: 'Ajustos de la llista' })
 });

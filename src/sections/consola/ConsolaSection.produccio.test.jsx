@@ -16,8 +16,10 @@ vi.mock('../../app/contexts/RouterContext', () => ({
   Navigate: ({ to }) => <p data-testid="redirigix">{to}</p>,
   Link: ({ to, children, ...props }) => <a href={to} {...props}>{children}</a>
 }));
+/* Onada 11 (261010; prompt 261010_1730, tasca 3) · el doble embolcalla l'h1 en
+   una capçalera page-title, com la UniversalPage de veres. */
 vi.mock('../../components/universal/UniversalPage', () => ({
-  UniversalPage: ({ title, children }) => <main><h1>{title}</h1>{children}</main>
+  UniversalPage: ({ title, children }) => <main><header className="page-title"><h1>{title}</h1></header>{children}</main>
 }));
 vi.mock('../../hooks/useSEO', () => ({ useSEO: () => {} }));
 vi.mock('../../app/contexts/UIContext', () => ({ useUIState: () => ({ locale: 'ca-ES' }) }));

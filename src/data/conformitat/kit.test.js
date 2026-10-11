@@ -227,6 +227,73 @@ describe('el kit veu una falla', () => {
     expect(CAPACITATS.membresOrganitzacio).toEqual(['llistaMembresOrganitzacio', 'desaMembreOrganitzacio', 'llevaMembreOrganitzacio']);
   });
 
+  /* ── Onada 11 (261010; prompt 261010_1730, tasca 2) · El segon factor del
+     superadmin ('segonFactor') i la personalització del poble ('personalitzacio') ── */
+  test('Onada 11 · llistaFactors conforme amb una llista de factors ben formada; un factor sense tipus o estat és una falla', async () => {
+    const llista = cas('llistaFactors');
+    expect(llista).toMatchObject({ capacitat: 'segonFactor', espera: 'resol', escriu: false });
+    const bons = [{ id: 'f1', nom: 'Mòbil', tipus: 'totp', estat: 'verificat' }, { id: 'f2', nom: '', tipus: 'totp', estat: 'pendent' }];
+    expect(await executaCas(llista, { llistaFactors: async () => bons }, ctx())).toMatchObject({ estat: 'ok', falles: [] });
+    expect(await executaCas(llista, { llistaFactors: async () => [] }, ctx())).toMatchObject({ estat: 'ok', falles: [] });
+    expect(await executaCas(llista, { llistaFactors: async () => [{ id: 'f1', nom: 'Mòbil', tipus: 'sms', estat: 'actiu' }] }, ctx()))
+      .toMatchObject({ estat: 'falla', falles: ['el factor f1 no és totp', 'el factor f1 té estat "actiu"'] });
+    expect((await executaCas(llista, { llistaFactors: async () => null }, ctx())).estat).toBe('falla');
+  });
+
+  test('Onada 11 · inscriure, reptar, verificar o retirar han de rebutjar amb code; resoldre o rebutjar sense code és una falla', async () => {
+    const crides = [];
+    const rebutja = async (...args) => { crides.push(args); throw Object.assign(new Error('No disponible.'), { code: 'no-disponible' }); };
+    for (const metode of ['inscriuFactor', 'reptaFactor', 'verificaFactor', 'retiraFactor']) {
+      const c = cas(metode);
+      expect(c, metode).toMatchObject({ capacitat: 'segonFactor', espera: 'rebutja', escriu: false });
+      expect(await executaCas(c, { [metode]: rebutja }, ctx()), metode).toMatchObject({ estat: 'ok', falles: [] });
+      expect(await executaCas(c, { [metode]: async () => ({ id: 'f1' }) }, ctx()), metode).toMatchObject({ estat: 'falla', falles: ['ha resolt i havia de rebutjar'] });
+      const senseCodi = await executaCas(c, { [metode]: async () => { throw new Error('Sense codi'); } }, ctx());
+      expect(senseCodi.falles[0], metode).toMatch(/^havia de rebutjar amb un Error amb code/);
+      expect(await executaCas(c, {}, ctx()), metode).toMatchObject({ estat: 'omés', motiu: 'capacitat segonFactor absent' });
+    }
+    expect(crides).toEqual([
+      ['Conformitat', { dataMode: 'seed' }],
+      ['conformitat-sense-factor', { dataMode: 'seed' }],
+      [{ factorId: 'conformitat-sense-factor', repteId: 'conformitat-sense-repte', codi: '000000' }, { dataMode: 'seed' }],
+      ['conformitat-sense-factor', { dataMode: 'seed' }]
+    ]);
+    expect(CAPACITATS.segonFactor).toEqual(['llistaFactors', 'inscriuFactor', 'reptaFactor', 'verificaFactor', 'retiraFactor']);
+  });
+
+  test('Onada 11 · desar o llegir l’historial sense el segon factor és conforme amb cal-segon-factor o sense-sessio; un altre code és una falla', async () => {
+    for (const [metode, args] of [['adminDesaPersonalitzacio', [{ clau: 'taxonomia', payload: { categories: [] }, versio: null }, { dataMode: 'seed' }]],
+      ['adminHistorialPersonalitzacio', ['taxonomia', { dataMode: 'seed' }]]]) {
+      const c = cas(metode);
+      expect(c, metode).toMatchObject({ capacitat: 'personalitzacio', espera: 'rebutja', escriu: false });
+      const crides = [];
+      const amb = (code) => async (...rebuts) => { crides.push(rebuts); throw Object.assign(new Error('Cal confirmar el segon factor per a desar.'), { code }); };
+      expect(await executaCas(c, { [metode]: amb('cal-segon-factor') }, ctx()), metode).toMatchObject({ estat: 'ok', falles: [] });
+      expect(await executaCas(c, { [metode]: amb('sense-sessio') }, ctx()), metode).toMatchObject({ estat: 'ok', falles: [] });
+      expect(crides).toEqual([args, args]);
+      expect(await executaCas(c, { [metode]: amb('desconegut') }, ctx()), metode)
+        .toMatchObject({ estat: 'falla', falles: ['el code havia de ser cal-segon-factor o sense-sessio i és "desconegut"'] });
+      expect(await executaCas(c, { [metode]: async () => ({ clau: 'taxonomia', payload: {}, versio: 1 }) }, ctx()), metode)
+        .toMatchObject({ estat: 'falla', falles: ['ha resolt i havia de rebutjar'] });
+      expect(await executaCas(c, {}, ctx()), metode).toMatchObject({ estat: 'omés', motiu: 'capacitat personalitzacio absent' });
+    }
+    expect(CAPACITATS.personalitzacio).toEqual(['adminDesaPersonalitzacio', 'adminHistorialPersonalitzacio']);
+  });
+
+  test('Onada 11 · loadCoreContent conforme sense personalitzacio o amb null i { payload, versio } per clau; una forma trencada és una falla', async () => {
+    const c = { ...ctx(), ownerUserId: 'u' };
+    const base = { towns: [], agents: [], pages: [], pageCopy: {} };
+    for (const personalitzacio of [undefined, { taxonomia: null, estil: null }, { taxonomia: { payload: { categories: [] }, versio: 2 }, estil: null }]) {
+      expect(await executaCas(cas('loadCoreContent'), { loadCoreContent: async () => ({ ...base, personalitzacio }) }, c), JSON.stringify(personalitzacio))
+        .toMatchObject({ estat: 'ok', falles: [] });
+    }
+    const amb = (personalitzacio) => executaCas(cas('loadCoreContent'), { loadCoreContent: async () => ({ ...base, personalitzacio }) }, c);
+    expect(await amb([])).toMatchObject({ estat: 'falla', falles: ['personalitzacio havia de ser un objecte i és array'] });
+    expect(await amb({ taxonomia: 'x', estil: null })).toMatchObject({ estat: 'falla', falles: ['personalitzacio.taxonomia havia de ser null o { payload, versio } i és string'] });
+    expect(await amb({ taxonomia: null, estil: { payload: [], versio: 'v1' } })).toMatchObject({ estat: 'falla',
+      falles: ['personalitzacio.estil.payload havia de ser un objecte', 'personalitzacio.estil.versio havia de ser un enter'] });
+  });
+
   test('el temps real sense canal és vàlid i el desat passa al cas següent', async () => {
     const c = { ...ctx(), filId: 'f1' };
     const noop = { subscribeToXat: async () => ({ subscription: null, error: null }), unsubscribeFromXat: async () => {} };

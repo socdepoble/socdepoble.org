@@ -38,7 +38,8 @@ La generació entrega esta plantilla i conserva un snapshot del contracte al reb
 
 ## Historial
 
-[pendent]
+- **v2.1.0 (261011):** S'introdueix la mentalitat d'I+D obligatòria com a pilar del prompt: les IAs han de plantejar les últimes tendències de l'estat de l'art abans de desenvolupar solucions mecàniques.
+- **v2.0.0:** Format net SDP-Consell original.
 
 ## Tasca
 
@@ -52,7 +53,7 @@ La generació entrega esta plantilla i conserva un snapshot del contracte al reb
 | Camp | Valor |
 | --- | --- |
 | Identificador | SDP-PROMPT-CONSELL-AAMMDD |
-| Versió del document | 1.0.0 (Consell) |
+| Versió del document | 2.1.0 (Consell) |
 | Entorn | entorn-dev-local |
 | Creació | AA-MM-DD HH:MM |
 | Modificació | AA-MM-DD HH:MM |
@@ -90,8 +91,9 @@ La generació entrega esta plantilla i conserva un snapshot del contracte al reb
 2. **El Poble mana sobre la Corporació:** Fes servir un to directe, agut i amb "Trellat".
 3. **Informe de Consum de Tokens:** Al final de la teua auditoria, has d'informar obligatòriament del teu consum de tokens estimat o mesurat (d'entrada i d'eixida), i de qualsevol dada relativa a la complexitat de l'anàlisi realitzada. Això ens ajuda a fer bones medicions a la nostra Consola Termodinàmica.
 
-### 4. Tècniques d'Investigació i Autòpsia (Obligatori)
+### 4. Tècniques d'I+D, Investigació i Autòpsia (Obligatori)
 No et conformes amb investigar el que diuen les skills teòriques i la doctrina del codi que t'enviem (Wiki/AGENTS). Cada script, hook o tractor de codi que estiga implicat en l'execució d'eixa teoria ha de ser analitzat de veres. Assegura't que el codi implementa efectivament el disseny teòric que se t'explica, i comprova que no tinga exclusions mecàniques cegues o bloquejos per inèrcia abans de donar-lo per bo.
+**Mentalitat I+D:** No et limites a auditar codi clàssicament (Desenvolupament). Exerceix sempre com a investigador de tendències (Investigació). Abans d'implementar i corregir, analitza l'estat de l'art tecnològic global i planteja a la Orquestradora i a nosaltres les solucions de vanguardia del mercat que farien d'aquest un sistema molt millor. Mantenir-nos a l'avantguarda és responsabilitat del Consell.
 
 
 

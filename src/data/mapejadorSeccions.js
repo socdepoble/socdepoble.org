@@ -232,11 +232,18 @@ export function mapSectionSubmissionToItem(submission) {
    enllaçava la targeta a una web de fora (mainHref) o feia ombra a l'id d'una
    altra publicació (slug, trobaElement d'elementDeSeccio.js). L'únic
    escriptor legítim (NotesContext · publishNote) no n'escriu cap: la neteja
-   és idèntica al píxel per al contingut real. */
+   és idèntica al píxel per al contingut real.
+   Onada 12 (261011; ordres 261011_0130, punt 1; correcció D5 de la
+   refutació) · `article` (l'article on s'usa una foto de Multimèdia) el posa
+   el sistema a les fotos derivades (multimedia/mediaContent.js) i el Cercador
+   el llig per a no repetir un article (indexCerca.js · cercaEntrades): amb
+   ell al payload, un veí lligaria la seua publicació a un producte o a un
+   poble d'altri i la faria desaparéixer de la vista «tot». Cap escriptor
+   legítim de publicacions n'escriu. */
 const CLAUS_D_AUTORITAT = Object.freeze([
   'author_org_id', 'authorOrgId', 'author_entity_id', 'author_id', 'author_user_id',
   'owner_user_id', 'ownerUserId', 'isSystem', 'isAvis', 'is_pinned', 'pinned_position',
-  'mainHref', 'slug'
+  'mainHref', 'slug', 'article'
 ]);
 
 /* La insígnia «Sistema» (sdp-badge-system) és de les pàgines del sistema i de

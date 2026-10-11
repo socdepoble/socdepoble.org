@@ -1,6 +1,7 @@
 import { Component, createRef } from 'react';
 import { esErrorLazy } from '../apps/plataforma/lazyRoute.js';
 import { esAmaDelDocument } from '../apps/plataforma/interruptors.js';
+import { registraIncident } from '../utils/autocuracio.js';
 
 /** Sole recovery owner for route imports, including failures inside slots. */
 export class RouteErrorBoundary extends Component {
@@ -18,6 +19,11 @@ export class RouteErrorBoundary extends Component {
   }
   componentDidCatch(error, info) {
     console.error('[RouteErrorBoundary] Error capturat a la ruta:', error, info);
+    /* Onada 12 (261011; ordres 261011_0130, punt 7) · Rastre local de la
+       caiguda: el tipus i la secció (el primer tram de la ruta, mai la fitxa
+       ni el missatge de l'error). */
+    registraIncident(esErrorLazy(error) ? 'tros' : 'ruta',
+      String(this.props.resetKey ?? '').split('/').filter(Boolean)[0] || 'inici', 'fallback');
     if (document.activeElement === document.body) this.titolRef.current?.focus();
   }
   getSnapshotBeforeUpdate() {

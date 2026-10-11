@@ -15,8 +15,10 @@ import AppGridColumn from '../../../components/layout/AppGridColumn.jsx';
 import { Alerta, Boto, Carregant, EstatBuit, MarcColumna, Pila } from '../../../components/PedraSeca/index.js';
 import { useClosaAplicacio } from '../../plataforma/index.js';
 import { useBar } from '../estat/ProveidorBar.jsx';
-import { avisDeSessio } from '../estat/textos.js';
+import { avisDeSessio, avisMigMoviment } from '../estat/textos.js';
+import { textNumero } from '../nucli/cobrament.js';
 import { useVes } from './punt.js';
+import { horaCurta, nomOrigen } from './vestits.js';
 
 /* L'avís de la sessió que Preparat dona a la columna de la vista:
    { avis, dins, reclama }. Intern: no s'exporta; el porta AvisDeLaColumna. */
@@ -91,11 +93,32 @@ export function AvisSessioEnEstret() {
   return mida === 'estret' ? <AvisSessio /> : null;
 }
 
-/** L'avís de l'última operació que no s'ha fet (estat/textos.js), si n'hi ha. */
+/**
+ * L'avís de l'última operació que no s'ha fet (estat/textos.js), si n'hi ha, i
+ * (correcció del refutador, 261011, T2: «detecta i avisa») un avís per cada
+ * moviment a mitges que l'estat detecta (ProveidorBar, migsMoviments): quines
+ * línies, a quines dues comandes i què fer. Este no es tanca ni l'esborra cap
+ * operació: dura mentre el duplicat hi siga. Sense res a dir, el DOM de sempre.
+ */
 export function AvisOperacio() {
-  const { avis, accions } = useBar();
-  if (!avis) return null;
-  return <Alerta to="error" onTanca={accions.oblidaAvis}>{avis}</Alerta>;
+  const { avis, accions, migsMoviments = [], sala } = useBar();
+  /* «Taula 3», «Barra · 10:00» o, si ja és un tiquet, «Nota 0004». */
+  const nomDe = (descripcio) => {
+    if (!descripcio) return 'una comanda';
+    if (descripcio.numero !== null) return textNumero(descripcio.numero);
+    const nom = nomOrigen(descripcio.origen, sala);
+    return descripcio.origen?.tipus === 'taula' || !descripcio.obertaA ? nom : `${nom} · ${horaCurta(descripcio.obertaA)}`;
+  };
+  if (!avis && migsMoviments.length === 0) return null;
+  return (
+    <>
+      {avis ? <Alerta to="error" onTanca={accions.oblidaAvis}>{avis}</Alerta> : null}
+      {migsMoviments.map((mig) => {
+        const { titol, text } = avisMigMoviment(mig, nomDe);
+        return <Alerta key={`${mig.op}-${mig.origenId}-${mig.destiId}`} to="avis" titol={titol}>{text}</Alerta>;
+      })}
+    </>
+  );
 }
 
 /**

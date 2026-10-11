@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FICIV 2026 · Informe para la solicitud de ayuda del IVC</title>
+<meta name="description" content="Informe editorial para Carmen Chaves: puntuación del autobaremo, correcciones, presupuesto, Anexo I y borrador de la Memoria de actuación. Solicitud de ayuda a festivales del IVC 2026.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  /* ============================================================
+     FICIV 2026 · Informe editorial · HTML listo para PDF
+     Dos columnas obligatorias, letra grande, @media print.
+     ============================================================ */
+  :root {
+    --ink: #1a1a1a;
+    --muted: #595959;
+    --rule: #d8d2c4;
+    --paper: #f5f1e8;
+    --navy: #1e3a5f;
+    --accent: #c7501b;
+    --accent-soft: #fbe9df;
+    --ok: #1b6b43;   --ok-bg: #e3f3e9;
+    --mid: #8a5a00;  --mid-bg: #fff2cf;
+    --hi: #a5261b;   --hi-bg: #fbe3e0;
+    --mark: #fff1a3;
+    --col-gap: 8mm;
+  }
+
+  @page { size: A4; margin: 14mm 13mm 16mm 13mm; }
+
+  html { font-size: 13.5pt; }
+  body {
+    margin: 0;
+    font-family: "Source Sans 3", "Helvetica Neue", Arial, "Segoe UI", sans-serif;
+    color: var(--ink);
+    line-height: 1.6;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    background: #fff;
+  }
+  @media screen {
+    body { background: #e8e5de; padding: 1.5rem 0; }
+    .doc { max-width: 210mm; margin: 0 auto; background: #fff; padding: 14mm 13mm 16mm; }
+  }
+
+  /* ---------- Tipografía ---------- */
+  h1, h2, h3, h4 { color: var(--navy); line-height: 1.2; margin: 0; }
+  h1 { font-size: 2rem; }
+  h2 { font-size: 1.45rem; margin-top: 1.5rem; margin-bottom: 0.75rem; padding-top: 0.5rem; border-top: 3px solid var(--navy); }
+  h3 { font-size: 1.15rem; margin-top: 1.25rem; margin-bottom: 0.5rem; color: var(--accent); }
+  h4 { font-size: 1rem; margin-top: 1rem; margin-bottom: 0.25rem; }
+  p { margin: 0 0 0.75rem; }
+  p.lead { font-size: 1.1rem; }
+  strong { font-weight: 700; }
+  small, .muted { color: var(--muted); }
+  mark { background: var(--mark); padding: 0 0.25rem; border-radius: 2px; font-weight: 700; }
+  ul, ol { margin: 0 0 0.75rem; padding-left: 1.25rem; }
+  li { margin-bottom: 0.5rem; }
+  li::marker { color: var(--accent); font-weight: 700; }
+  hr { border: 0; border-top: 1px solid var(--rule); margin: 1rem 0; }
+
+  /* ---------- Portada ---------- */
+  .cover { break-after: page; page-break-after: always; }
+  .cover .kicker { color: var(--accent); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; font-size: 0.9rem; margin-bottom: 1rem; }
+  .cover h1 { font-size: 2.6rem; margin-bottom: 0.75rem; }
+  .cover .sub { font-size: 1.3rem; color: var(--muted); line-height: 1.35; margin-bottom: 2rem; }
+  .meta { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem 1.5rem; margin: 1.5rem 0; font-size: 1rem; }
+  .meta div { border-top: 1px solid var(--rule); padding-top: 0.5rem; }
+  .meta b { display: block; color: var(--navy); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.06em; }
+  .toc { margin-top: 2rem; }
+  .toc ol { padding-left: 1.5rem; }
+  .toc li { margin-bottom: 0.25rem; }
+
+  /* ---------- Partes a dos columnas ---------- */
+  .part {
+    break-before: page; page-break-before: always;
+    -webkit-column-count: 2; column-count: 2;
+    -webkit-column-gap: var(--col-gap); column-gap: var(--col-gap);
+    -webkit-column-rule: 1px solid var(--rule); column-rule: 1px solid var(--rule);
+    /* En pantalla, columnas equilibradas para la revisión previa.
+       En papel, relleno secuencial: cada página llena la columna 1 y luego la 2. */
+    -webkit-column-fill: balance; column-fill: balance;
+  }
+  @media print {
+    .part { -webkit-column-fill: auto; column-fill: auto; }
+  }
+  .part > h1, .span, .part > table, .part > .wide {
+    -webkit-column-span: all; column-span: all;
+  }
+  .part > h1 { margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 4px solid var(--accent); }
+  .part > h1 small { display: block; font-size: 0.95rem; color: var(--muted); font-weight: 400; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 0.25rem; }
+  h2, h3, h4 { break-after: avoid; page-break-after: avoid; }
+  .part > h2:first-of-type { margin-top: 0; border-top: 0; padding-top: 0; }
+  @media screen and (max-width: 720px) {
+    .part { column-count: 1; }
+  }
+
+  /* ---------- Cajas ---------- */
+  .box, .alert, .crit, .card { break-inside: avoid; page-break-inside: avoid; }
+  .box { background: var(--paper); border-left: 5px solid var(--navy); padding: 0.75rem 1rem; margin: 0.75rem 0 1rem; border-radius: 0 6px 6px 0; }
+  .box.accent { border-left-color: var(--accent); background: var(--accent-soft); }
+  .box h4 { margin-top: 0; }
+  .alert { background: var(--navy); color: #fff; padding: 1rem 1.25rem; border-radius: 8px; margin: 1rem 0; }
+  .alert b { color: #ffd9c4; }
+  .alert .big { font-size: 1.6rem; font-weight: 700; line-height: 1.2; display: block; margin: 0.25rem 0 0.5rem; }
+  .card { border: 1px solid var(--rule); border-radius: 8px; padding: 0.75rem 1rem; margin: 0 0 0.75rem; background: #fff; }
+  .card .n { display: inline-block; min-width: 2rem; height: 2rem; line-height: 2rem; text-align: center; border-radius: 999px; background: var(--accent); color: #fff; font-weight: 700; margin-right: 0.5rem; }
+  .card h4 { display: inline; color: var(--ink); font-size: 1.05rem; }
+
+  /* ---------- Fichas de criterio ---------- */
+  .crit { border: 1px solid var(--rule); border-radius: 8px; padding: 0.75rem 1rem 0.5rem; margin: 0 0 0.75rem; }
+  .crit .head { display: flex; align-items: flex-start; gap: 0.75rem; margin-bottom: 0.5rem; }
+  .crit .num { font-size: 1.7rem; font-weight: 700; color: var(--navy); line-height: 1; min-width: 2.25rem; }
+  .crit .title { font-weight: 700; color: var(--ink); line-height: 1.25; }
+  .crit .pts { display: block; color: var(--muted); font-weight: 400; font-size: 0.9rem; }
+  .kv { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem; margin: 0.5rem 0; }
+  .kv div { background: var(--paper); border-radius: 6px; padding: 0.5rem 0.5rem; font-size: 0.95rem; line-height: 1.3; }
+  .kv b { display: block; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 0.25rem; }
+  .kv .val { font-size: 1.25rem; font-weight: 700; color: var(--navy); }
+  .crit p { font-size: 0.98rem; margin-bottom: 0.5rem; }
+  .crit p b { color: var(--navy); }
+  .badge { display: inline-block; padding: 0.1rem 0.6rem; border-radius: 999px; font-weight: 700; font-size: 0.9rem; line-height: 1.5; white-space: nowrap; }
+  .b-alto { background: var(--hi-bg); color: var(--hi); }
+  .b-medio { background: var(--mid-bg); color: var(--mid); }
+  .b-bajo { background: var(--ok-bg); color: var(--ok); }
+  .b-na { background: var(--paper); color: var(--muted); }
+
+  /* ---------- Tablas ---------- */
+  table { width: 100%; border-collapse: collapse; margin: 0.5rem 0 1.25rem; font-size: 0.95rem; break-inside: auto; }
+  caption { text-align: left; font-weight: 700; color: var(--navy); padding: 0.5rem 0; font-size: 1.05rem; caption-side: top; }
+  thead { display: table-header-group; }
+  tr { break-inside: avoid; page-break-inside: avoid; }
+  th { text-align: left; background: var(--paper); color: var(--navy); border-bottom: 2px solid var(--navy); padding: 0.5rem 0.5rem; vertical-align: bottom; line-height: 1.25; }
+  td { border-bottom: 1px solid var(--rule); padding: 0.5rem 0.5rem; vertical-align: top; line-height: 1.35; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  tr.total td { font-weight: 700; background: var(--paper); border-top: 2px solid var(--navy); }
+  tr.warn td { background: var(--hi-bg); }
+  table.compact { font-size: 0.9rem; }
+  table.compact td, table.compact th { padding: 0.35rem 0.4rem; }
+
+  /* ---------- Listas de control ---------- */
+  ul.check { list-style: none; padding-left: 0; }
+  ul.check li { padding-left: 1.75rem; position: relative; }
+  ul.check li::before { content: "☐"; position: absolute; left: 0; top: -0.05rem; font-size: 1.2rem; color: var(--accent); }
+  ol.steps { counter-reset: step; list-style: none; padding-left: 0; }
+  ol.steps li { counter-increment: step; position: relative; padding-left: 2.5rem; margin-bottom: 0.75rem; break-inside: avoid; }
+  ol.steps li::before { content: counter(step); position: absolute; left: 0; top: 0; width: 1.9rem; height: 1.9rem; line-height: 1.9rem; text-align: center; border-radius: 999px; background: var(--navy); color: #fff; font-weight: 700; }
+
+  .field { margin-bottom: 0.75rem; break-inside: avoid; }
+  .field b.k { display: inline-block; background: var(--navy); color: #fff; border-radius: 4px; padding: 0 0.5rem; margin-right: 0.35rem; }
+
+  .colophon { font-size: 0.95rem; color: var(--muted); }
+  .pagenote { font-size: 0.85rem; color: var(--muted); text-align: right; margin-top: 1rem; }
+</style>
+</head>
+<body>
+<div class="doc">
+
+<!-- ======================================================= PORTADA -->
+<header class="cover">
+  <div class="kicker">Institut Valencià de Cultura · Ayudas a festivales 2026 · DOGV 10456, 22/09/2026</div>
+  <h1>FICIV 2026<br>Informe para presentar la solicitud</h1>
+  <p class="sub">Puntuación del autobaremo criterio a criterio, correcciones de la Hoja de méritos, presupuesto y escenarios, Anexo I campo a campo y borrador completo de la Memoria de actuación.</p>
+
+  <div class="alert">
+    <b>Fecha límite de presentación</b>
+    <span class="big">Jueves 15 de octubre de 2026</span>
+    Quince días hábiles desde el 23 de septiembre, descontando sábados, domingos y los festivos del 9 y el 12 de octubre. <b>Confírmalo en la sede electrónica del IVC y presenta el miércoles 14.</b> Fuera de plazo la exclusión es automática (resuelvo 5.1).
+  </div>
+
+  <div class="meta">
+    <div><b>Para</b> Carmen Chaves, subdirectora del Festival Internacional de Cine Infantil de València (FICIV)</div>
+    <div><b>Entidad solicitante</b> Asociación Festival Internacional de Cine Infantil · NIF G98756497</div>
+    <div><b>Fecha del informe</b> 11 de octubre de 2026</div>
+    <div><b>Elaborado por</b> Claude, inteligencia artificial del equipo de Sóc de Poble, a partir de los ocho documentos de la carpeta «A presentar»</div>
+    <div><b>Fuentes</b> Convocatoria (DOGV-C-2026-29661), nota informativa del IVC, autobaremo de festivales, Hoja de méritos FICIV 2026, Ficha presupuestaria, Anexo I, catálogo XII FICIV</div>
+    <div><b>Lengua</b> Castellano, la del expediente. Cada afirmación cita el «resuelvo» (apartado) de la convocatoria para que puedas comprobarla</div>
+  </div>
+
+  <div class="box accent">
+    <h4>Cómo usar este documento</h4>
+    <ul>
+      <li><strong>Si solo tienes diez minutos</strong>, lee «Lo esencial en una página» y la lista «Lo urgente, por orden».</li>
+      <li><strong>Si vas a corregir la Hoja de méritos</strong>, ve a la Parte I, sección 2, y lee cada ficha de criterio: dice lo que declaras, lo que se puede defender y el papel que lo demuestra.</li>
+      <li><strong>Si vas a rehacer el Excel</strong>, la Parte II tiene todas las cifras en tablas. Los ficheros CSV y TXT originales siguen en la misma carpeta, editables.</li>
+      <li><strong>Si vas a escribir la Memoria</strong>, la Parte III es un borrador completo: lo marcado en <mark>amarillo</mark> son datos que solo tiene la Asociación.</li>
+    </ul>
+  </div>
+
+  <div class="toc">
+    <h3>Contenido</h3>
+    <ol>
+      <li>Lo esencial en una página</li>
+      <li>Parte I · El informe: urgencias, puntuación, correcciones, Memoria, Ficha, Anexo I, documentación, PDF de méritos y 2027</li>
+      <li>Parte II · Las cifras: presupuesto, ingresos, topes, escenarios y sensibilidad</li>
+      <li>Parte III · Borrador de la Memoria de actuación</li>
+      <li>Colofón: método, fuentes y límites</li>
+    </ol>
+  </div>
+</header>
+
+<!-- ======================================================= LO ESENCIAL -->
+<section class="part">
+  <h1><small>Resumen ejecutivo</small>Lo esencial en una página</h1>
+
+  <div class="card"><span class="n">1</span><h4>No hay Memoria de actuación</h4>
+    <p>El fichero «Memoria actuación 2026.pdf» es el <strong>catálogo</strong>: mismo tamaño en bytes y mismo texto que «catálogo.pdf». La convocatoria exige una memoria detallada de actividades (resuelvo 6.i). <strong>Sin ella la solicitud sale como incompleta</strong> y hay que subsanar en diez días hábiles. La Parte III es un borrador completo.</p></div>
+
+  <div class="card"><span class="n">2</span><h4>La Ficha presupuestaria firmada tiene un error de celdas</h4>
+    <p>Patrocinios (7.500) y taquilla (3.631,28) están fuera de las filas que suma la fórmula. Por eso el total de ingresos marca 25.041,49 y el resultado <strong>−11.131,28</strong>. Con las filas en su sitio, ingresos y gastos son <strong>36.172,77 euros exactos</strong>. Hay que rehacer el Excel, exportar a PDF y firmar de nuevo.</p></div>
+
+  <div class="card"><span class="n">3</span><h4>La puntuación real es más baja que la declarada, pero entra con holgura</h4>
+    <p>Tu Hoja suma 84,5. Incluye <strong>2,5 puntos que no existen</strong> (el criterio 6 es todo o nada) y tres criterios con interrogante. Puntos seguros con papeles: <strong>67</strong>. Con Novetlè documentado: <strong>77</strong>. Con sostenibilidad acreditada: <strong>82</strong>. El umbral es 50.</p></div>
+
+  <div class="card"><span class="n">4</span><h4>Se puede pedir más dinero</h4>
+    <p>El tope individual es el 50&nbsp;% del gasto ejecutado en 2025 (36.575,41): <strong>18.287,70 euros</strong>. Pides 17.000. Como la ayuda se reparte con la fórmula <strong>puntos × importe solicitado × coeficiente común</strong>, pedir el máximo sube la ayuda un 7,6&nbsp;% sin coste, a cambio de incluir en el presupuesto el informe de auditor, que ya es obligatorio.</p></div>
+
+  <div class="card"><span class="n">5</span><h4>Hay un error de hecho en paridad</h4>
+    <p>Claude Barras, director de «Salvajes», es un hombre. En 2025 solo <strong>1 de 5</strong> largometrajes a concurso tiene directora (20&nbsp;%), no el 40&nbsp;% escrito. La solución es usar <strong>la edición 2026</strong> como «última edición»: terminó el 8 de octubre, antes del plazo, y cumple en todos los apartados.</p></div>
+
+  <table class="span">
+    <caption>Puntuación: dónde estás y dónde puedes llegar</caption>
+    <thead><tr><th>Escenario</th><th class="num">Puntos</th><th>Qué hace falta</th></tr></thead>
+    <tbody>
+      <tr><td>Hoja de méritos tal como está</td><td class="num">84,5</td><td>Incluye 2,5 puntos inexistentes y tres criterios sin acreditar</td></tr>
+      <tr><td><strong>Seguros con las pruebas del cuadro</strong></td><td class="num"><strong>67</strong></td><td>Criterios 1, 2, 3, 4, 5, 8, 10, 11, 12 y 15</td></tr>
+      <tr><td>Con Novetlè documentado (13 y 14)</td><td class="num">77</td><td>Certificado del Ayuntamiento de Novetlè o del CEIP Jaime I</td></tr>
+      <tr><td>Con sostenibilidad documentada (9)</td><td class="num">82</td><td>Facturas y certificados de MRW y Correos Express; certificado de la plantación</td></tr>
+      <tr><td>Con invitado internacional probado (6)</td><td class="num">87</td><td>Solo si Raúl García, residente en Singapur, vino en persona</td></tr>
+      <tr class="total"><td>Umbral para entrar en el reparto</td><td class="num">50</td><td>Cada punto por encima sube la ayuda en proporción</td></tr>
+    </tbody>
+  </table>
+
+  <div class="box">
+    <h4>Después de presentar</h4>
+    <p>El IVC publicará en su web un listado de solicitudes completas, incompletas y no admitidas. <strong>Esa publicación vale como notificación</strong> y abre <strong>10 días hábiles</strong> para subsanar (resuelvo 5.3). Alguien debe mirar la web del IVC cada dos días desde finales de octubre. Las notificaciones electrónicas no abiertas en 10 días naturales se dan por rechazadas (resuelvo 7). La resolución llegará en un máximo de tres meses. <strong>Todo el gasto debe estar pagado antes del 30 de noviembre de 2026.</strong></p>
+  </div>
+</section>
+
+<!-- ======================================================= PARTE I -->
+<section class="part">
+  <h1><small>Parte I</small>El informe</h1>
+
+  <h2>1. Lo urgente, por orden</h2>
+  <ol class="steps">
+    <li><strong>Escribir la Memoria de actuación</strong> (resuelvo 6.i). Lo adjuntado es el catálogo. Usa el borrador de la Parte III.</li>
+    <li><strong>Corregir la Ficha presupuestaria</strong> en el Excel: mover patrocinios y taquilla a las filas que suma la fórmula. Entregar el <strong>.xls y el PDF firmado</strong> (instrucción 5 de la ficha).</li>
+    <li><strong>Decidir cuánto pides.</strong> Máximo legal <strong>18.287,70</strong> (resuelvo 2.2.a). Ver sección 5 y Parte II.</li>
+    <li><strong>Rellenar y firmar digitalmente el autobaremo.</strong> El PDF de la carpeta está en blanco. Usa la puntuación realista de la sección 2.</li>
+    <li><strong>Corregir el criterio 8 (paridad)</strong> en la Hoja de méritos y usar la edición 2026 con tablas limpias.</li>
+    <li><strong>Quitar los interrogantes</strong> («5 puntos?») de los criterios 6, 13 y 14 y decidir qué se declara. Lo declarado y no acreditado no puntúa y resta credibilidad.</li>
+    <li><strong>Conseguir el certificado de Novetlè</strong> (Ayuntamiento o CEIP Jaime I): fecha, actividad y asistentes. Son <strong>10 puntos</strong> que dependen de un papel.</li>
+    <li><strong>Pedir el certificado de la secretaría</strong> con el número de socios, fechado después del 22/09/2026, y reunir la documentación de la Asociación (sección 7).</li>
+    <li><strong>Pedir presupuesto a un auditor ROAC.</strong> Con 36.172,77 de presupuesto el informe de auditor es <strong>obligatorio</strong> en la justificación (resuelvo 14.2.b). Es gasto indirecto subvencionable.</li>
+    <li><strong>Revisar las facturas de 2026:</strong> a nombre de la Asociación (NIF G98756497), con el nombre del festival en el concepto, por transferencia si superan 300 euros y pagadas antes del 30/11/2026.</li>
+  </ol>
+
+  <h2>2. La puntuación, criterio a criterio</h2>
+  <p>Máximo 100 puntos; mínimo para entrar en el reparto, 50. Cada ficha dice lo que declaras, lo que se puede defender, el riesgo y <strong>el papel que decide</strong>.</p>
+
+  <div class="crit"><div class="head"><div class="num">1</div><div class="title">Listado ICAA o red internacional con requisitos previos<span class="pts">5 puntos</span></div></div>
+    <div class="kv"><div><b>Declaras</b><span class="val">5</span></div><div><b>Defendible</b><span class="val">5</span></div><div><b>Riesgo</b><span class="badge b-bajo">Bajo</span></div></div>
+    <p><b>Qué adjuntar:</b> la página del listado de festivales admitidos por el ICAA 2026 con FICIV señalado y la referencia de la resolución, y el certificado o carta de ECFA vigente (red que exige ser festival infantil o juvenil).</p>
+    <p><b>Consejo:</b> quita la frase «por falta de presupuesto, en calidad de suplentes». No aporta nada al criterio y suena a debilidad. Lo que puntúa es figurar en el listado.</p></div>
+
+  <div class="crit"><div class="head"><div class="num">2</div><div class="title">Actividades paralelas para nuevos públicos infantiles y juveniles<span class="pts">5 puntos</span></div></div>
+    <div class="kv"><div><b>Declaras</b><span class="val">5</span></div><div><b>Defendible</b><span class="val">5</span></div><div><b>Riesgo</b><span class="badge b-bajo">Bajo</span></div></div>
+    <p><b>Qué adjuntar:</b> programa 2026 con las actividades marcadas: talleres de doblaje (Escuela de Doblaje de Valencia con ASPANION, Nube 7, Novetlè), taller «Cómo hacer una película», gincanas, sección educativa con fichas didácticas por ciclo, jurado infantil, Animateen, exposiciones. Dos fotos y cifras de asistencia.</p></div>
+
+  <div class="crit"><div class="head"><div class="num">3</div><div class="title">Obras en valenciano: 10&nbsp;% = 3 puntos, 20&nbsp;% o más = 5<span class="pts">5 puntos</span></div></div>
+    <div class="kv"><div><b>Declaras</b><span class="val">5</span></div><div><b>Defendible</b><span class="val">5</span></div><div><b>Riesgo</b><span class="badge b-medio">Medio</span></div></div>
+    <p>El fondo es correcto: <strong>14 títulos sobre 56 = 25&nbsp;%</strong>. Pero la Hoja dice 15 obras, lista 14 y escribe 23,21&nbsp;% (que sería 13/56). <strong>La comisión va a contar.</strong></p>
+    <p><b>Qué adjuntar:</b> tabla completa de las 56 obras de 2025 con una columna «versión» (VAL doblada, VAL subtitulada, VO VAL, CAST) y el porcentaje al pie; páginas del programa 2025 que lo demuestren. Elige una base (obras o sesiones) y mantenla.</p></div>
+
+  <div class="crit"><div class="head"><div class="num">4</div><div class="title">Sección competitiva de ámbito internacional<span class="pts">5 puntos</span></div></div>
+    <div class="kv"><div><b>Declaras</b><span class="val">5</span></div><div><b>Defendible</b><span class="val">5</span></div><div><b>Riesgo</b><span class="badge b-bajo">Bajo</span></div></div>
+    <p><b>Qué adjuntar:</b> bases 2026 publicadas (con fecha anterior al festival) de la Sección Oficial Internacional de Largometrajes y de la Sección Oficial de Cortometrajes Europeos, y el palmarés.</p></div>
+
+  <div class="crit"><div class="head"><div class="num">5</div><div class="title">Premios en metálico (2,5) y pagos por selección (2,5)<span class="pts">5 puntos</span></div></div>
+    <div class="kv"><div><b>Declaras</b><span class="val">5</span></div><div><b>Defendible</b><span class="val">5</span></div><div><b>Riesgo</b><span class="badge b-bajo">Bajo</span></div></div>
+    <p><b>Qué adjuntar:</b> bases con la dotación (200 euros largometraje, 100 euros cortometraje), justificante del pago del premio 2025 o 2026 y <strong>las facturas de «screening fee» o pago por selección</strong> de las secciones Educativa y Familiar. La Hoja dice «tenemos las facturas»: tienen que ir dentro del PDF.</p></div>
+
+  <div class="crit"><div class="head"><div class="num">6</div><div class="title">Invitados nacionales e internacionales<span class="pts">5 puntos · todo o nada</span></div></div>
+    <div class="kv"><div><b>Declaras</b><span class="val">2,5?</span></div><div><b>Defendible</b><span class="val">0</span></div><div><b>Riesgo</b><span class="badge b-alto">Alto</span></div></div>
+    <p><strong>No existe la media puntuación.</strong> Declaras que solo hubo invitados nacionales: son 0 puntos. Única vía defendible: <strong>Raúl García</strong> (Premio Internacional FICIV 2026) reside en Singapur, y el criterio de festivales no define «internacional». Si asistió en persona puedes declarar SÍ argumentando la residencia, con riesgo medio-alto de que la comisión no lo acepte.</p>
+    <p><b>Mi consejo:</b> decláralo solo si Raúl García vino físicamente y lo puedes probar (billetes, factura de alojamiento, lista de invitados con país de residencia). Si no, 0, y lo preparas para 2027.</p></div>
+
+  <div class="crit"><div class="head"><div class="num">7</div><div class="title">Jurado internacional en la edición anterior<span class="pts">5 puntos</span></div></div>
+    <div class="kv"><div><b>Declaras</b><span class="val">0</span></div><div><b>Defendible</b><span class="val">0</span></div><div><b>Riesgo</b><span class="badge b-na">Ninguno</span></div></div>
+    <p>Correcto. <b>Para 2027:</b> un solo jurado extranjero vale 5 puntos y su viaje y alojamiento son gasto subvencionable si vive a más de 100 km.</p></div>
+
+  <div class="crit"><div class="head"><div class="num">8</div><div class="title">Paridad: 2 + 1 + 1 + 1<span class="pts">5 puntos</span></div></div>
+    <div class="kv"><div><b>Declaras</b><span class="val">5</span></div><div><b>Defendible</b><span class="val">5</span></div><div><b>Riesgo</b><span class="badge b-medio">Medio</span></div></div>
+    <p>Paridad según la convocatoria: <strong>cada sexo entre el 40&nbsp;% y el 60&nbsp;%</strong> (LO 2/2024). Con la <strong>edición 2026</strong> como última edición: largometrajes a concurso <strong>2 de 4</strong> películas con directora (50&nbsp;%); cortometrajes europeos <strong>6 de 11</strong> películas con directora (55&nbsp;%) y 11 mujeres de 23 personas directoras identificadas (48&nbsp;%); jurado profesional <strong>2 de 4</strong> (50&nbsp;%); equipo de dirección y producción <strong>3 de 5</strong> (60&nbsp;%, justo en el límite); ponentes de masterclass y mesas <strong>8 de 15</strong> personas distintas (53&nbsp;%).</p>
+    <p><b>Corrige:</b> «Claude Barras» es un hombre; en 2025 solo «Hola, Frida!» tiene codirectora (1 de 5, 20&nbsp;%). No escribas «81&nbsp;% de dirección femenina»: por encima del 60&nbsp;% ya no es paridad. Explica en una línea que la XII edición finalizó el 8/10/2026, antes del fin del plazo.</p>
+    <p><b>Qué adjuntar:</b> una tabla por apartado con nombre, cargo o película y sexo, con el porcentaje al pie; páginas del catálogo 2026 como prueba.</p></div>
+
+  <div class="crit"><div class="head"><div class="num">9</div><div class="title">Sostenibilidad: 5 puntos si se cumplen 2 de 8 requisitos<span class="pts">5 puntos</span></div></div>
+    <div class="kv"><div><b>Declaras</b><span class="val">5</span></div><div><b>Defendible</b><span class="val">5</span></div><div><b>Riesgo</b><span class="badge b-medio">Medio</span></div></div>
+    <p>Dos requisitos sólidos: <strong>6.º mensajería ecológica</strong> (MRW con ISO 14001 y Correos Express) y <strong>8.º compensación de huella</strong> (100 árboles en el cauce del Turia, «Parque de las Falleras FICIV»). El 3.º (agente de sostenibilidad) tal como está es débil: que el cine Lys tenga placas solares no es contratar un ecomanager.</p>
+    <p><b>Qué adjuntar:</b> facturas de MRW y Correos Express a nombre de la Asociación más el certificado ISO 14001 y la política ambiental de ambas; certificado, convenio o nota de prensa de la plantación con fecha y número de árboles. Corrige la URL rota «httpscineslscomecols». Presenta 6.º y 8.º como principales y el 3.º solo como refuerzo.</p></div>
+
+  <div class="crit"><div class="head"><div class="num">10</div><div class="title">Difusión en valenciano: programación, catálogo o web<span class="pts">5 puntos</span></div></div>
+    <div class="kv"><div><b>Declaras</b><span class="val">5</span></div><div><b>Defendible</b><span class="val">5</span></div><div><b>Riesgo</b><span class="badge b-medio">Medio</span></div></div>
+    <p>Basta uno de los tres soportes, pero <strong>el catálogo que has adjuntado está en castellano</strong>.</p>
+    <p><b>Qué adjuntar:</b> captura fechada de la web en valenciano con la programación 2026, cartel y programa de mano en valenciano, publicaciones en redes en valenciano. Si el catálogo tiene versión valenciana, portada y dos páginas.</p></div>
+
+  <div class="crit"><div class="head"><div class="num">11</div><div class="title">Presupuesto de gastos de la edición anterior<span class="pts">16 de 20 puntos · tramo 25.000 a 50.000</span></div></div>
+    <div class="kv"><div><b>Declaras</b><span class="val">16</span></div><div><b>Defendible</b><span class="val">16</span></div><div><b>Riesgo</b><span class="badge b-bajo">Bajo</span></div></div>
+    <p>Correcto: <strong>36.575,41 euros en 2025</strong>. El criterio habla de «gasto real realizado», no de presupuesto.</p>
+    <p><b>Qué adjuntar:</b> ficha presupuestaria justificativa 2025 presentada al IVC, o informe de auditor 2025, o cuenta de resultados 2025 aprobada por la asamblea y firmada por presidencia y secretaría. Una previsión no basta. Para llegar a 20 puntos hace falta ejecutar 50.000.</p></div>
+
+  <div class="crit"><div class="head"><div class="num">12</div><div class="title">Número de ediciones anteriores: 1 punto por edición<span class="pts">11 de 15 puntos</span></div></div>
+    <div class="kv"><div><b>Declaras</b><span class="val">11</span></div><div><b>Defendible</b><span class="val">11</span></div><div><b>Riesgo</b><span class="badge b-bajo">Bajo</span></div></div>
+    <p>Correcto: 11 ediciones anteriores a la XII. El cartel de la XII solo prueba la actual.</p>
+    <p><b>Qué adjuntar:</b> tabla con las 11 ediciones (año, fechas, sede) y una miniatura de cartel o recorte de prensa por edición.</p></div>
+
+  <div class="crit"><div class="head"><div class="num">13</div><div class="title">Difusión presencial en más de un municipio<span class="pts">5 puntos</span></div></div>
+    <div class="kv"><div><b>Declaras</b><span class="val">5?</span></div><div><b>Defendible</b><span class="val">5 / 0</span></div><div><b>Riesgo</b><span class="badge b-alto">Alto</span></div></div>
+    <p>Depende de un hecho: FICIV en Ruta en Novetlè estaba programado el 2/10 y el catálogo dice «cancelado alerta roja, trasladado al 6 y 7 de octubre». <strong>Si se celebró el 6 o el 7, 5 puntos.</strong> La sección educativa online no cuenta: tiene que ser presencial.</p>
+    <p><b>Qué adjuntar:</b> certificado del Ayuntamiento de Novetlè o del CEIP Jaime I con fecha, actividad y asistentes; cartel o convocatoria; fotos.</p></div>
+
+  <div class="crit"><div class="head"><div class="num">14</div><div class="title">Incidencia social: el municipio más pequeño donde se celebre<span class="pts">5 puntos</span></div></div>
+    <div class="kv"><div><b>Declaras</b><span class="val">5?</span></div><div><b>Defendible</b><span class="val">5 / 1</span></div><div><b>Riesgo</b><span class="badge b-alto">Alto</span></div></div>
+    <p>Si Novetlè cuenta como sede, <strong>5 puntos</strong> (menos de 1.000 habitantes según el INE; comprueba la cifra oficial). Si no, València (más de 100.000) da <strong>1 punto</strong>. Cuatro puntos dependen del mismo papel que el criterio 13.</p></div>
+
+  <div class="crit"><div class="head"><div class="num">15</div><div class="title">Proyecciones accesibles: audiodescripción o subtitulado para personas sordas<span class="pts">5 puntos</span></div></div>
+    <div class="kv"><div><b>Declaras</b><span class="val">5</span></div><div><b>Defendible</b><span class="val">5</span></div><div><b>Riesgo</b><span class="badge b-bajo">Bajo</span></div></div>
+    <p>Correcto: «Nina y el secreto del erizo» con subtitulado adaptado en todos los pases. Las sesiones para personas con TEA y la sala accesible refuerzan el relato pero no son el criterio.</p>
+    <p><b>Qué adjuntar:</b> confirmación de la distribuidora o ficha técnica del DCP con la pista SPS, programa donde se anuncia, foto de pantalla.</p></div>
+
+  <div class="box">
+    <h4>Resumen de puntos</h4>
+    <p>Tu suma: <strong>84,5</strong>. Seguros con los papeles del cuadro: <strong>67</strong>. Más Novetlè documentado: <strong>77</strong> (sin Novetlè, 68). Más sostenibilidad documentada: <strong>82</strong>. Más invitado internacional probado: <strong>87</strong>. Umbral: 50. <strong>Estás dentro con holgura y cada punto adicional sube la ayuda en proporción.</strong></p>
+  </div>
+
+  <h2>3. Correcciones concretas en la Hoja de méritos</h2>
+  <ol>
+    <li><strong>Criterio 3:</strong> 15 obras anunciadas, 14 listadas, 23,21&nbsp;% escrito. Pon la tabla completa y un solo porcentaje.</li>
+    <li><strong>Criterio 6:</strong> no existe la media puntuación. 0 o 5.</li>
+    <li><strong>Criterio 8, 2025:</strong> Claude Barras («Salvajes») es un hombre. En 2025 solo «Hola, Frida!» tiene codirectora: 1 de 5 largometrajes (20&nbsp;%). Usa 2026.</li>
+    <li><strong>Criterio 8:</strong> «Si tomamos por última la edición 2025… Si tomamos por última la edición 2026…». Elige 2026 y explica en una línea que la XII edición finalizó el 8/10/2026.</li>
+    <li><strong>Criterio 8:</strong> «81&nbsp;% de dirección femenina» supera el 60&nbsp;%. Presenta recuentos por película y por persona que queden entre 40 y 60.</li>
+    <li><strong>Criterio 9:</strong> la frase sobre el cine Lys como «agente de sostenibilidad» no encaja con el requisito 3.º. Reordena: 6.º y 8.º primero.</li>
+    <li><strong>Criterios 13 y 14:</strong> el texto está duplicado y acaba en «5 puntos?». Sustitúyelo por el hecho documentado.</li>
+    <li><strong>Erratas:</strong> «quipo», «videjuegos», «puedo realizar», «le municipio», «Davíd», «Cándela Ortin», «httpscineslscomecols».</li>
+    <li><strong>Cada apartado</strong> debe terminar con «Documentos adjuntos: …» y la página donde están. El índice de la portada debe coincidir con las páginas reales.</li>
+    <li><strong>La cabecera del autobaremo</strong> exige que todo se pueda acreditar ante la comisión y que los campos no acreditados no puntúan: ningún criterio con «?» ni con pruebas solo prometidas.</li>
+  </ol>
+
+  <h2>4. La Memoria de actuación</h2>
+  <p>El resuelvo 6.i pide «una memoria de actuación detallada con indicación de las actividades previstas». <strong>El catálogo no cumple esa función</strong>: es promocional, no tiene datos de la entidad, ni presupuesto, ni calendario de ejecución, ni demuestra la definición de festival del resuelvo 1.4.I (proyecciones abiertas al público y actividades paralelas como unidad programática indivisible, bases escritas previas y públicas, sección competitiva con jurado o público, mínimo tres días intensivos, presupuesto mínimo 5.000). La nota informativa avisa de que <strong>solo son subvencionables los gastos de los días propios del festival</strong> dentro de esa unidad programática.</p>
+  <p>La XII edición va del <strong>23 de septiembre al 8 de octubre de 2026</strong> (exposiciones hasta el 13 de octubre) con actividad casi diaria: presentarla como una sola unidad con fechas de inicio y fin claras, <strong>las mismas en el Anexo I, la memoria y la ficha</strong>. Como la edición ya ha terminado, la memoria puede dar cifras reales de asistencia: es más fuerte que una previsión.</p>
+  <p>El borrador de la Parte III sigue el orden de los 15 criterios para que la comisión encuentre cada mérito sin buscar.</p>
+  <div class="box">
+    <h4>Errores del catálogo a corregir antes de adjuntarlo como anexo</h4>
+    <ul>
+      <li>Inauguración: «Fechas: 23 de octubre de 2026» (es <strong>23 de septiembre</strong>) y «programación del 24 al 8 de octubre» (es <strong>del 23 de septiembre al 8 de octubre</strong>). Hora 10:30 en una página y 12 h en otra.</li>
+      <li>Gincana: «Fechas: 03 de septiembre» (es <strong>8 de octubre</strong>, Plaza Dr. Collado).</li>
+      <li>«Olivia y el terremoto invisible» lleva pegada la sinopsis de «El tesoro de Barracuda».</li>
+      <li>«Ostrich» lleva pegados los créditos de «Lights».</li>
+      <li>Erratas: «Belñla», «PRESENTCION», «EDUCTIVA», «OTUBRE», «Horizon Forbbiden», «Ann Atbor», «Woodstock File Festival», «MAPA DE LES SEDES» en una página castellana.</li>
+      <li>Novetlè: aparece «Cancelado Alerta Roja. Trasladado al 6 y 7 de octubre» y a la vez «Cancelado». Deja la versión real.</li>
+    </ul>
+  </div>
+
+  <h2>5. La Ficha presupuestaria</h2>
+  <h3>5.1 El error</h3>
+  <p>En el PDF firmado los ingresos privados (7.500 patrocinios y 3.631,28 ventas) aparecen escritos pero el «Subtotal aportaciones privadas» marca <strong>0,00</strong> y el total de ingresos <strong>25.041,49</strong>. Las dos cifras están fuera de las filas que recoge la fórmula del bloque «3. Aportaciones de entidades privadas». Al moverlas, los ingresos son <strong>36.172,77</strong> y el resultado <strong>0,00</strong>. Vuelve a exportar a PDF y a firmar. Entrega el .xls y el PDF.</p>
+
+  <h3>5.2 Separa «Ventas y recursos propios»</h3>
+  <p>La taquilla (3 euros por alumno, 3,50 y 6 euros familiar) <strong>es un ingreso</strong> y se declara. Los recursos propios de la Asociación son autofinanciación y <strong>NO cuentan como ingreso</strong> (resuelvo 14.2.a.2.a). Si mezclas los dos conceptos, el día de la justificación tendrás que explicar la diferencia.</p>
+
+  <h3>5.3 Cuánto pedir</h3>
+  <p>Topes: <strong>22.000 euros</strong> y el <strong>50&nbsp;% del gasto ejecutado en 2025</strong> (36.575,41), es decir <strong>18.287,70</strong>. Pides 17.000. Para que los ingresos no superen los gastos (art. 19.3 LGS) el presupuesto de gastos tiene que subir al menos a 37.460,47: lo normal es añadir el informe de auditor (unos 1.300 euros, obligatorio) en CAP 13. Ver el escenario B en la Parte II.</p>
+
+  <h3>5.4 La trampa del presupuesto equilibrado</h3>
+  <p>Tu ficha tiene ingresos iguales a gastos. En la justificación, si justificas menos gasto del previsto, <strong>los ingresos declarados superan el gasto y el IVC reduce su ayuda euro a euro</strong> hasta igualar (ejemplo literal de la nota informativa: con 20.000 de ingresos y 15.000 justificados cobras 5.000 de 10.000). Dos protecciones: <strong>presupuestar todos los gastos reales</strong> del festival (seguros, derechos de autor, imprenta, web, subtitulado, auditor, desplazamientos de jurado) y <strong>mantener un pequeño margen</strong> de gastos por encima de ingresos cubierto con recursos propios (escenario C).</p>
+
+  <h3>5.5 Reglas que te pueden quitar dinero</h3>
+  <ul>
+    <li><strong>Indirectos</strong> (asesoría, auditoría, cuota ECFA si la pones ahí): máximo <strong>7&nbsp;% de los directos</strong>. Con asesoría 1.100 + auditoría 1.300 + cuota 300 te pasas (2.700 sobre un tope de unos 2.434). Pon la cuota ECFA como gasto directo o ajusta.</li>
+    <li><strong>Trabajo de socios</strong> de la Asociación: máximo <strong>40&nbsp;% de los gastos directos</strong>. CAP 6 solo (13.216,61) está en el 37,7&nbsp;%. Si CAP 7 también son socios, te pasas.</li>
+    <li><strong>Subcontratación:</strong> máximo <strong>50&nbsp;%</strong> del gasto subvencionable y nunca más del 50&nbsp;% a una misma empresa o grupo vinculado. Si una sola empresa factura gestión, coordinación o programación (CAP 2 + 6 + 7 sumarían el 61,8&nbsp;%), hay problema. Pagos directos a jurados, ponentes, técnicos y proyeccionistas no son subcontratación.</li>
+    <li><strong>Invitados (CAP 4):</strong> solo jurados, ponentes y equipos de las películas, residentes a <strong>más de 100 km</strong>, con nombre en la factura y fechas del festival. Nunca el equipo organizador ni gasolina.</li>
+    <li><strong>Restauración:</strong> solo de jurados, ponentes y equipos invitados, durante los días del festival, con relación nominal. Caterings y ágapes promocionales, no.</li>
+    <li>Nada inventariable, ni regalos, ni publicaciones ajenas al festival, ni actividades fuera de las fechas del festival.</li>
+    <li><strong>IVA:</strong> si la Asociación no deduce IVA, la factura completa es gasto; si lo deduce, solo la base.</li>
+    <li>Todo pagado <strong>antes del 30/11/2026</strong>, por transferencia si supera 300 euros, con el nombre del festival en el concepto y extracto bancario del cargo.</li>
+    <li>Más de 20 facturas o más de 20.000 euros: <strong>informe de auditor ROAC obligatorio</strong>. Su coste es indirecto subvencionable.</li>
+    <li>Tres presupuestos (art. 31.3 LGS) para cualquier servicio que supere 15.000 euros a un mismo proveedor.</li>
+  </ul>
+
+  <h3>5.6 Dos capítulos para pensar</h3>
+  <p><strong>CAP 12 «Pertenencia a asociaciones»</strong> (300, cuota ECFA): sostiene el criterio 1, pero una comisión estricta puede no verlo como gasto del festival; mejor como indirecto o con una línea en Observaciones. <strong>CAP 10 está vacío:</strong> si hay seguros de responsabilidad civil o derechos SGAE, van ahí y hacen el presupuesto más real.</p>
+
+  <h2>6. El Anexo I, campo a campo</h2>
+  <div class="box accent">
+    <p><strong>Antes de nada:</strong> el PDF que tienes mezcla páginas del Anexo I con páginas de otros impresos del IVC (Anexo III de guion y desarrollo). Comprueba que el formulario que rellenas y firmas solo tiene las páginas con el código <strong>«IA - 14580 - 01 - E»</strong> y los apartados A a H. Si ves páginas de «guion» o «productora», descarga de nuevo el impreso desde el trámite.</p>
+  </div>
+  <div class="field"><b class="k">A</b> <strong>Entidad solicitante:</strong> Asociación Festival Internacional de Cine Infantil (razón social exacta de los estatutos), NIF G98756497, domicilio social, CP, localidad, provincia, teléfono y correo. «Registro de Empresas Audiovisuales de la CV»: si no está inscrita, en blanco; no es requisito para festivales.</div>
+  <div class="field"><b class="k">B</b> <strong>Persona representante:</strong> quien firma con certificado digital (presidencia). DNI, nombre y apellidos, cargo, teléfono y correo. Las notificaciones irán a la Dirección Electrónica Habilitada de la Asociación o a la Carpeta Ciudadana de esa persona: <strong>tiene que tener certificado y mirarlo</strong>.</div>
+  <div class="field"><b class="k">C</b> Solo ayuntamientos: en blanco.</div>
+  <div class="field"><b class="k">D</b> <strong>Modalidad:</strong> «Festival». Nombre: XII Festival Internacional de Cine Infantil de València (FICIV) 2026. Fecha inicio <strong>23/09/2026</strong>. Fecha fin: <strong>08/10/2026</strong> si cierras con el fallo de premios, o <strong>13/10/2026</strong> para que los gastos de las exposiciones queden dentro (recomendado, y la misma fecha en la memoria). Presupuesto del festival: el total de la ficha. Ediciones sin contar la actual: <strong>11</strong>. Presupuesto ejecutado en el ejercicio anterior: <strong>36.575,41</strong>.</div>
+  <div class="field"><b class="k">E.1</b> <strong>Ayudas de Estado para los mismos costes:</strong> marca SÍ e incluye al Ayuntamiento de València (objeto: XII FICIV 2026; solicitado 8.041,49; concedido si ya hay resolución; 22,2&nbsp;% del coste). Los patrocinios de los colegios profesionales son privados y no van aquí.</div>
+  <div class="field"><b class="k">E.2</b> <strong>Minimis:</strong> la Asociación realiza actividad económica (taquilla, patrocinios); declara las ayudas públicas recibidas en los tres últimos años (IVC 2024 y 2025, Ayuntamiento, ICAA si la hubo) con organismo, objeto, importe y fecha. Límite 300.000 euros: estáis lejos, pero la declaración tiene que ser exacta.</div>
+  <div class="field"><b class="k">F</b> <strong>Declaración responsable:</strong> marca que NO está incursa en prohibiciones del art. 13.2 LGS. Personas con discapacidad: con menos de 50 trabajadores, «Está exenta de la obligación». Plan de igualdad: con menos de 50 trabajadores, «Declaro que no estoy obligado».</div>
+  <div class="field"><b class="k">G·H</b> <strong>Consulta de datos:</strong> NO marques «me opongo». <strong>SÍ marca «Autorizo»</strong> a la AEAT, la Tesorería de la Seguridad Social y la Agència Tributària Valenciana. Si no autorizas tendrás que aportar los tres certificados. Tenlos a mano de todas formas.</div>
+  <div class="field"><b class="k">Firma</b> firma electrónica de la persona representante (certificado de representante de persona jurídica, o certificado personal más el acta de nombramiento). Fecha del día de la firma.</div>
+
+  <h2>7. Documentación administrativa de la Asociación</h2>
+  <p>Resuelvo 6.b, 6.c y 6.e. <strong>Nada puede ir por enlace</strong> a webs, Drive o similares: se considera no presentado (resuelvo 5.4).</p>
+  <ul class="check">
+    <li>Acta fundacional o escritura de constitución y modificaciones posteriores.</li>
+    <li>Estatutos vigentes inscritos en el Registro Autonómico de Asociaciones de la CV, con sello de inscripción.</li>
+    <li>Acreditación de la inscripción en ese Registro.</li>
+    <li>Relación de miembros de la junta directiva inscritos.</li>
+    <li>Acta de nombramiento de la presidencia o certificado del secretario, y DNI de la persona representante.</li>
+    <li><strong>Alta en el IAE o en el Censo</strong> (modelo 036) con la actividad del festival. Es requisito para ser beneficiario (resuelvo 3.2.a). Si no la tenéis, se presenta por internet antes de entregar.</li>
+    <li><strong>Certificado de la secretaría</strong>, posterior al 22/09/2026, con el número de socios, personas físicas y jurídicas por separado.</li>
+    <li>Justificante bancario del pago de cuotas del año en curso (último pago anterior al 22/09/2026). Si los estatutos no fijan cuotas, certificado de la secretaría que lo diga.</li>
+    <li>Certificados de estar al corriente con AEAT, Seguridad Social y ATV solo si no autorizas la consulta.</li>
+    <li>Anexo I firmado.</li>
+    <li>Memoria de actuación.</li>
+    <li>Ficha presupuestaria en .xls y en PDF firmado.</li>
+    <li>Autobaremo rellenado y firmado.</li>
+    <li>PDF único de documentación acreditativa de méritos con índice.</li>
+  </ul>
+
+  <h2>8. Cómo montar el PDF único de méritos</h2>
+  <p>Nota informativa, punto 1.5: <strong>un solo PDF</strong>, con índice en la primera página y los documentos <strong>en el orden de los 15 criterios</strong> del autobaremo. Para cada criterio: una portadilla con el número y el título, la puntuación que declaras, dos o tres líneas con el hecho, y detrás las pruebas.</p>
+  <p><strong>Pruebas que convencen</strong> a una comisión: certificados de terceros, facturas, resoluciones, bases publicadas, capturas con fecha y URL visible, páginas del catálogo o programa con el dato marcado, fotos con pie. Las afirmaciones propias sin papel detrás no puntúan. Evita repetir el texto del criterio en cada página y evita párrafos con dudas. <strong>Si una prueba no existe, no declares el mérito.</strong></p>
+
+  <h2>9. Para 2027: puntos fáciles</h2>
+  <ul>
+    <li><strong>Un jurado internacional</strong> (criterio 7): 5 puntos. Viaje y alojamiento subvencionables si vive a más de 100 km.</li>
+    <li><strong>Un invitado o invitada internacional</strong> que venga en persona (criterio 6): 5 puntos. Por ejemplo la dirección de uno de los cortos europeos a concurso.</li>
+    <li><strong>Sostenibilidad blindada</strong> (criterio 9): puntos limpios de reciclaje en las sedes con foto y declaración del cine (7.º) y una sesión de formación del equipo con hoja de firmas (4.º).</li>
+    <li><strong>Novetlè bajo techo</strong> y con certificado del Ayuntamiento firmado el mismo día (criterios 13 y 14): 10 puntos que este año dependen de un papel.</li>
+    <li><strong>Paridad por diseño:</strong> fijar al programar que el 40-60&nbsp;% se cumpla por película y por persona, y guardar la tabla desde el principio.</li>
+    <li><strong>Presupuesto ejecutado de 50.000 o más:</strong> 4 puntos más (criterio 11) y ayuda máxima de 22.000.</li>
+    <li><strong>Versión valenciana del catálogo</strong>, no solo de la web: cierra el criterio 10 sin discusión.</li>
+    <li><strong>Una carpeta por criterio desde enero:</strong> la solicitud de 2027 se monta en una tarde.</li>
+  </ul>
+</section>
+
+<!-- ======================================================= PARTE II -->
+<section class="part">
+  <h1><small>Parte II</small>Las cifras</h1>
+  <p class="span lead">Todo lo que sigue sale de la Ficha presupuestaria firmada y de la convocatoria. Los ficheros <strong>pressupost_ficiv_2026.csv</strong> y <strong>escenaris_financament.csv</strong>, en la misma carpeta, tienen estas tablas en formato editable (separador «;», decimales con coma).</p>
+
+  <table class="span compact">
+    <caption>Tabla 1 · Gastos previstos 2026, capítulo a capítulo</caption>
+    <thead><tr><th>Cap.</th><th>Concepto</th><th class="num">Euros</th><th class="num">%</th><th>Tipo</th><th>Lo que dice la norma</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Alquiler por proyecciones</td><td class="num">3.538,00</td><td class="num">9,78</td><td>Directo</td><td>Subvencionable (resuelvo 13.6). Factura a nombre de la Asociación y con el nombre del festival en el concepto.</td></tr>
+      <tr><td>2</td><td>Gestión de películas</td><td class="num">4.911,00</td><td class="num">13,58</td><td>Directo</td><td>Derechos y pagos por selección: acreditan el criterio 5. Si una sola empresa gestiona toda la programación, es subcontratación (tope 50&nbsp;%).</td></tr>
+      <tr><td>3</td><td>Comunicación, marketing y publicidad</td><td class="num">2.883,30</td><td class="num">7,97</td><td>Directo</td><td>Solo publicidad exclusiva del festival. Guardar muestras en valenciano para el criterio 10.</td></tr>
+      <tr><td>4</td><td>Invitados</td><td class="num">2.030,79</td><td class="num">5,61</td><td>Directo</td><td>Solo jurados, ponentes y equipos de las obras, a más de 100 km, factura nominal con fechas. Nunca equipo organizador ni combustible.</td></tr>
+      <tr><td>5</td><td>Premios o galardones oficiales</td><td class="num">850,00</td><td class="num">2,35</td><td>Directo</td><td>Premios en metálico de las bases. Pago directo a cada premiado: no es subcontratación.</td></tr>
+      <tr><td>6</td><td><strong>Personal</strong></td><td class="num"><strong>13.216,61</strong></td><td class="num">36,54</td><td>Directo</td><td>Contratos, RNT y RLC, o facturas. Si lo cobran socios: máximo 40&nbsp;% de los directos (≈ 14.029). Si lo factura una empresa que coordina, es subcontratación.</td></tr>
+      <tr><td>7</td><td>Otros profesionales y empresas</td><td class="num">4.215,50</td><td class="num">11,65</td><td>Directo</td><td>Técnicos, proyeccionistas, talleristas: pago directo por concepto, no es subcontratación. Si hay socios, se suma con CAP 6 para el 40&nbsp;%.</td></tr>
+      <tr><td>8</td><td>Vídeos, fotos y diseño gráfico</td><td class="num">800,00</td><td class="num">2,21</td><td>Directo</td><td>Subvencionable si el concepto es exclusivo del festival.</td></tr>
+      <tr><td>9</td><td>Varios producción</td><td class="num">87,57</td><td class="num">0,24</td><td>Directo</td><td>Detallar el concepto. Ningún bien inventariable.</td></tr>
+      <tr><td>10</td><td>Sin concepto en la ficha</td><td class="num">0,00</td><td class="num">0,00</td><td>—</td><td>Capítulo vacío. Seguros o derechos SGAE irían aquí.</td></tr>
+      <tr><td>11</td><td>Digitalización</td><td class="num">2.240,00</td><td class="num">6,19</td><td>Directo</td><td>DCP, subtitulado para personas sordas (criterio 15) y versiones en valenciano (criterio 3).</td></tr>
+      <tr><td>12</td><td>Pertenencia a asociaciones</td><td class="num">300,00</td><td class="num">0,83</td><td>Indirecto</td><td>Cuota ECFA: sostiene el criterio 1. Riesgo de que no se vea «estrictamente necesario»; imputarlo dentro del 7&nbsp;%.</td></tr>
+      <tr><td>13</td><td>Asesores</td><td class="num">1.100,00</td><td class="num">3,04</td><td>Indirecto</td><td>Gestoría. El informe de auditor, obligatorio, también es indirecto. Tope conjunto: 7&nbsp;% de los directos (≈ 2.434).</td></tr>
+      <tr class="total"><td></td><td>Total gastos previstos</td><td class="num">36.172,77</td><td class="num">100</td><td></td><td>Suma exacta de los capítulos. Debe coincidir con el Anexo I, apartado D.</td></tr>
+    </tbody>
+  </table>
+
+  <table class="span">
+    <caption>Tabla 2 · Ingresos previstos 2026</caption>
+    <thead><tr><th>Origen</th><th class="num">Euros</th><th class="num">%</th><th>Observación</th></tr></thead>
+    <tbody>
+      <tr><td>IVC, ayuda solicitada</td><td class="num">17.000,00</td><td class="num">47,00</td><td>Máximo legal <strong>18.287,70</strong> (50&nbsp;% de 36.575,41) y nunca más de 22.000.</td></tr>
+      <tr><td>Ayuntamiento de València</td><td class="num">8.041,49</td><td class="num">22,23</td><td>Ayuda pública: declararla en el Anexo I, apartado E.1.</td></tr>
+      <tr><td>Patrocinios (Colegios de Ópticos, Psicólogos y Podólogos)</td><td class="num">7.500,00</td><td class="num">20,73</td><td>Privado. En la ficha firmada el subtotal privado sale 0,00: fuera de las filas que suma la fórmula.</td></tr>
+      <tr><td>Ventas (taquilla)</td><td class="num">3.631,28</td><td class="num">10,04</td><td>Solo la taquilla es ingreso. Los «recursos propios» no lo son (resuelvo 14.2).</td></tr>
+      <tr class="total"><td>Total ingresos previstos</td><td class="num">36.172,77</td><td class="num">100</td><td>En la ficha firmada aparece 25.041,49 y un resultado de −11.131,28: error de celdas, no de dinero.</td></tr>
+      <tr><td>Resultado (ingresos − gastos)</td><td class="num">0,00</td><td class="num"></td><td><strong>Equilibrado y sin margen.</strong> Cualquier euro no justificado reduce la ayuda del IVC euro a euro (art. 19.3 LGS).</td></tr>
+    </tbody>
+  </table>
+
+  <table class="span compact">
+    <caption>Tabla 3 · Topes que hay que vigilar (escenario actual)</caption>
+    <thead><tr><th>Concepto</th><th class="num">Importe</th><th>Tope</th><th>Situación</th></tr></thead>
+    <tbody>
+      <tr><td>Ayuda IVC pedida</td><td class="num">17.000,00</td><td>18.287,70 y 22.000</td><td>Dentro. <strong>Se puede pedir hasta 18.287,70.</strong></td></tr>
+      <tr><td>Costes indirectos (CAP 12 + 13)</td><td class="num">1.400,00</td><td>7&nbsp;% de los directos = 2.434,09</td><td>Dentro. Con la auditoría (≈ 1.300) sube a 2.700 y <strong>se pasa</strong>: CAP 12 a directo o ajustar CAP 13.</td></tr>
+      <tr><td>Trabajo de socios (si CAP 6 lo cobran socios)</td><td class="num">13.216,61</td><td>40&nbsp;% de los directos = 14.029,11</td><td>Dentro pero ajustado. Si CAP 7 también son socios (17.432,11) <strong>se pasa</strong>.</td></tr>
+      <tr><td>Subcontratación</td><td class="num">por determinar</td><td>50&nbsp;% del gasto = 18.086,39</td><td>Comprobar que CAP 2 + 6 + 7 no los factura una misma empresa (sumarían 22.343,11 = 61,8&nbsp;%).</td></tr>
+      <tr><td>Umbral de auditor</td><td class="num">36.172,77</td><td>20.000 o más de 20 facturas</td><td><strong>Informe de auditor ROAC obligatorio.</strong> Pedir presupuesto ya.</td></tr>
+      <tr><td>Fecha límite de pago</td><td class="num">—</td><td>30/11/2026</td><td>Transferencia obligatoria por encima de 300 euros, con el nombre del festival en el concepto.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="box span">
+    <h4>La fórmula del reparto</h4>
+    <p><strong>Importe de la ayuda = puntos × ayuda solicitada × α.</strong> El coeficiente α es el mismo para todos los festivales con 50 puntos o más (crédito disponible dividido por la suma de todas las «X»). Cada punto del autobaremo y cada euro solicitado suben la ayuda en la misma proporción, hasta el tope individual (22.000 euros o el 50&nbsp;% del gasto ejecutado en 2025: <strong>18.287,70</strong>).</p>
+  </div>
+
+  <table class="span">
+    <caption>Tabla 4 · Tres escenarios de solicitud (otros ingresos fijos: Ayuntamiento 8.041,49 + patrocinios 7.500,00 + taquilla 3.631,28 = 19.172,77)</caption>
+    <thead><tr><th>Escenario</th><th class="num">Gastos previstos</th><th class="num">IVC solicitado</th><th class="num">Total ingresos</th><th class="num">Resultado</th><th class="num">X = 82 pts × IVC</th></tr></thead>
+    <tbody>
+      <tr><td><strong>A</strong> · Ficha actual corregida</td><td class="num">36.172,77</td><td class="num">17.000,00</td><td class="num">36.172,77</td><td class="num">0,00</td><td class="num">1.394.000</td></tr>
+      <tr><td><strong>B</strong> · Máximo legal</td><td class="num">37.472,77</td><td class="num"><strong>18.287,70</strong></td><td class="num">37.460,47</td><td class="num">−12,30</td><td class="num"><strong>1.499.591</strong></td></tr>
+      <tr><td><strong>C</strong> · Máximo legal con margen</td><td class="num">40.000,00</td><td class="num"><strong>18.287,70</strong></td><td class="num">37.460,47</td><td class="num">−2.539,53</td><td class="num"><strong>1.499.591</strong></td></tr>
+    </tbody>
+  </table>
+  <div class="box span">
+    <h4>Qué significa cada escenario</h4>
+    <ul>
+      <li><strong>A · Ficha actual corregida:</strong> lo que hay hoy, con las filas privadas bien sumadas. Equilibrado y sin margen.</li>
+      <li><strong>B · Máximo legal:</strong> CAP 13 sube a 2.400 (asesoría 1.100 + auditoría 1.300) y se pide el 50&nbsp;% exacto del gasto ejecutado en 2025. <strong>X sube un 7,6&nbsp;%</strong> respecto a A.</li>
+      <li><strong>C · Máximo legal con margen:</strong> presupuesto completo y realista (seguros, SGAE, imprenta, web, subtitulado, auditoría). El déficit lo cubre la Asociación con recursos propios, que no computan como ingreso. <strong>Protege la ayuda si la ejecución baja hasta un 6&nbsp;%.</strong></li>
+    </ul>
+  </div>
+
+  <table class="span compact">
+    <caption>Tabla 5 · Sensibilidad en la justificación, escenario B (presupuesto 37.472,77; otros ingresos 19.172,77; IVC 18.287,70)</caption>
+    <thead><tr><th class="num">Gasto justificado</th><th class="num">% del previsto</th><th class="num">IVC cobrable</th><th>Regla que se aplica</th></tr></thead>
+    <tbody>
+      <tr><td class="num">37.472,77</td><td class="num">100,0</td><td class="num"><strong>18.287,70</strong></td><td>Cobro íntegro.</td></tr>
+      <tr><td class="num">36.000,00</td><td class="num">96,1</td><td class="num">16.827,23</td><td>Los ingresos totales (37.460,47) superan el gasto: el IVC minora hasta igualar (art. 19.3 LGS).</td></tr>
+      <tr><td class="num">34.000,00</td><td class="num">90,7</td><td class="num">14.827,23</td><td>Misma regla. Todavía dentro de la reducción tolerada del 25&nbsp;%.</td></tr>
+      <tr><td class="num">30.000,00</td><td class="num">80,1</td><td class="num">10.827,23</td><td>Misma regla.</td></tr>
+      <tr><td class="num">28.104,58</td><td class="num">75,0</td><td class="num">8.931,81</td><td><strong>Límite del 25&nbsp;%:</strong> por debajo hace falta autorización previa del IVC y se minora además la ayuda en el porcentaje que exceda el 25&nbsp;% (resuelvo 14.3).</td></tr>
+      <tr class="warn"><td class="num">24.357,30</td><td class="num">65,0</td><td class="num">0,00</td><td><strong>Reducción igual o superior al 35&nbsp;%:</strong> pérdida del derecho al cobro o reintegro.</td></tr>
+    </tbody>
+  </table>
+
+  <table class="span compact">
+    <caption>Tabla 6 · Sensibilidad en la justificación, escenario C (presupuesto 40.000; otros ingresos 19.172,77; IVC 18.287,70)</caption>
+    <thead><tr><th class="num">Gasto justificado</th><th class="num">% del previsto</th><th class="num">IVC cobrable</th><th>Regla que se aplica</th></tr></thead>
+    <tbody>
+      <tr><td class="num">40.000,00</td><td class="num">100,0</td><td class="num"><strong>18.287,70</strong></td><td>Cobro íntegro.</td></tr>
+      <tr><td class="num">37.460,47</td><td class="num">93,7</td><td class="num"><strong>18.287,70</strong></td><td><strong>Cobro íntegro: el margen absorbe la desviación.</strong></td></tr>
+      <tr><td class="num">34.000,00</td><td class="num">85,0</td><td class="num">14.827,23</td><td>Los ingresos superan el gasto: minoración hasta igualar.</td></tr>
+      <tr><td class="num">30.000,00</td><td class="num">75,0</td><td class="num">10.827,23</td><td>Límite del 25&nbsp;%.</td></tr>
+      <tr class="warn"><td class="num">26.000,00</td><td class="num">65,0</td><td class="num">0,00</td><td>Revocación.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="box">
+    <h4>Lo que enseñan las dos tablas</h4>
+    <p>El IVC paga como máximo <strong>la diferencia entre el gasto justificado y los demás ingresos</strong>. Para cobrar la ayuda entera hay que justificar al menos tanto gasto como ingresos declarados. Un presupuesto completo con un pequeño margen de gastos (escenario C) es la única protección real; la regla del 25&nbsp;% casi nunca es la que muerde primero.</p>
+  </div>
+</section>
+
+<!-- ======================================================= PARTE III -->
+<section class="part">
+  <h1><small>Parte III · Borrador para completar</small>Memoria de actuación · XII FICIV 2026</h1>
+  <p class="span lead">Solicitud de ayuda a la realización de festivales de carácter audiovisual. Institut Valencià de Cultura, convocatoria 2026 (DOGV 10456, 22/09/2026). Las marcas <mark>COMPLETAR</mark> señalan datos que solo tiene la Asociación. Los datos entre paréntesis salen del catálogo 2026 y de la Hoja de méritos: compruébalos. La memoria sigue el orden de los criterios del resuelvo 9.I. Extensión recomendada: 10 a 14 páginas más anexos.</p>
+
+  <h2>1. Datos identificativos</h2>
+  <p><strong>Entidad solicitante:</strong> Asociación Festival Internacional de Cine Infantil. NIF G98756497. <mark>COMPLETAR domicilio social, registro de asociaciones y número</mark>.</p>
+  <p><strong>Representante legal:</strong> <mark>COMPLETAR nombre y cargo</mark>.</p>
+  <p><strong>Actividad:</strong> XII Festival Internacional de Cine Infantil de València (FICIV), edición 2026.</p>
+  <p><strong>Fechas de la unidad programática:</strong> del 23 de septiembre al 13 de octubre de 2026. Jornadas con proyecciones abiertas al público: 23 de septiembre, 1, 2, 3, 6, 7 y 8 de octubre; jornadas profesionales 24 y 25 de septiembre; actividades familiares, talleres y exposiciones el resto de días. <mark>Si prefieres cerrar el 8 de octubre con el fallo de premios, cambia aquí, en el Anexo I y en la ficha</mark>.</p>
+  <p><strong>Municipios:</strong> València y Novetlè (la Costera, menos de 1.000 habitantes).</p>
+  <p><strong>Sedes:</strong> Cines Lys; Ateneo Mercantil de València; Estación del Norte y Estación Joaquín Sorolla; Fnac San Agustín; Plaza del Ayuntamiento y Plaza Dr. Collado; Academia STEAM Nube 7; Escuela de Doblaje de Valencia; Colegio Jesús María; Colegio Oficial de Arquitectos de la Comunitat Valenciana; CEIP Jaime I y Ayuntamiento de Novetlè.</p>
+  <p><strong>Presupuesto total de la actividad:</strong> <mark>COMPLETAR, el mismo de la ficha presupuestaria</mark> euros. <strong>Ayuda solicitada al IVC:</strong> <mark>COMPLETAR, el mismo de la ficha</mark> euros. <strong>Presupuesto ejecutado en la edición anterior (2025):</strong> 36.575,41 euros. <strong>Ediciones anteriores celebradas:</strong> 11 <mark>COMPLETAR años exactos si alguna edición no fue anual</mark>.</p>
+
+  <h2>2. El festival y su trayectoria</h2>
+  <p>FICIV es el festival internacional de cine infantil de València. Nació en <mark>COMPLETAR año</mark> con el objetivo de <mark>COMPLETAR dos líneas: acercar el cine de calidad a la infancia y la juventud, formar nuevos públicos, dar visibilidad a la animación y al audiovisual valenciano</mark>.</p>
+  <p>Doce ediciones consecutivas. Miembro de la <strong>European Children's Film Association (ECFA)</strong>, red europea de festivales para público infantil y juvenil que exige requisitos previos de admisión. Incluido en el <strong>listado de festivales del ICAA</strong> (convocatoria de ayudas a festivales 2026). Colabora de forma estable con el IVC-La Filmoteca (selección de obras candidatas a los premios ECFA), la Universitat Politècnica de València, la Universitat de València, la Escuela de Doblaje de Valencia, ESAT y AEVI, y con los colegios profesionales de Ópticos, Psicólogos y Podólogos como patrocinadores.</p>
+  <p>Cifras de la edición 2025: obras proyectadas 56 (largometrajes y cortometrajes presenciales); espectadores <mark>COMPLETAR</mark>; centros escolares participantes <mark>COMPLETAR</mark>; presupuesto ejecutado 36.575,41 euros.</p>
+
+  <h2>3. Cumplimiento de la definición de festival (resuelvo 1.4.I)</h2>
+  <ul>
+    <li><strong>Unidad programática indivisible:</strong> la XII edición agrupa en un solo programa, con una sola imagen, un solo catálogo y una sola comunicación, las proyecciones de las secciones Oficial de Largometrajes, Oficial de Cortometrajes Europeos, Educativa, Familiar, Animateen y Muestra Iberoamericana, más las jornadas profesionales Anima València, los talleres, las gincanas y las exposiciones.</li>
+    <li><strong>Bases escritas, previas y públicas:</strong> las bases de las dos secciones oficiales se publicaron el <mark>COMPLETAR fecha</mark> en <mark>COMPLETAR web</mark> (anexo 2).</li>
+    <li><strong>Sección competitiva con premios por jurado o público:</strong> Sección Oficial de Largometrajes con jurado profesional y jurado infantil; Sección Oficial de Cortometrajes Europeos con Premio del Público; Animateen con Premio del Público adolescente. Premios en metálico de 200 euros (largometraje) y 100 euros (cortometraje) <mark>COMPLETAR el resto de premios y dotaciones</mark>.</li>
+    <li><strong>Período intensivo no inferior a tres días:</strong> siete jornadas con proyecciones abiertas al público (23/09, 01/10, 02/10, 03/10, 06/10, 07/10 y 08/10) dentro de un programa continuo del 23 de septiembre al 13 de octubre.</li>
+    <li><strong>Presupuesto mínimo de 5.000 euros:</strong> presupuesto de la edición <mark>COMPLETAR</mark> euros; ejecutado en 2025, 36.575,41 euros.</li>
+    <li><strong>Al menos dos ediciones en los últimos cuatro años:</strong> ediciones 2023, 2024 y 2025 celebradas <mark>COMPLETAR fechas</mark>.</li>
+  </ul>
+
+  <h2>4. Objetivos de la XII edición</h2>
+  <ul>
+    <li><strong>Formar nuevos públicos:</strong> sección educativa por ciclos de Primaria con fichas didácticas, sección familiar y Animateen para adolescentes.</li>
+    <li><strong>Dar a conocer el cine de animación europeo e iberoamericano</strong> en versión original subtitulada y en valenciano.</li>
+    <li><strong>Conectar la infancia con la industria valenciana</strong> de la animación y el videojuego (Anima València, ESAT, AEVI, Hampa Studio, Keytoon, Pangur Animation).</li>
+    <li><strong>Igualdad:</strong> programación paritaria, mesa «Territorio de Mujeres», inauguración con «Bella» y coloquio sobre violencia de género.</li>
+    <li><strong>Accesibilidad e inclusión:</strong> subtitulado para personas sordas, sesiones adaptadas a personas con TEA, taller de doblaje con ASPANION.</li>
+    <li><strong>Llevar el festival al territorio:</strong> FICIV en Ruta en Novetlè.</li>
+    <li><strong>Sostenibilidad:</strong> proveedores de mensajería certificados y compensación de huella con el Parque de las Falleras FICIV.</li>
+  </ul>
+
+  <table class="span compact">
+    <caption>5. Programa de actividades (unidad programática 2026). Asistencia real: <mark>COMPLETAR</mark> en cada fila</caption>
+    <thead><tr><th>Fecha</th><th>Actividad</th><th>Sección</th><th>Sede y municipio</th><th>Acceso</th></tr></thead>
+    <tbody>
+      <tr><td>23/09 mié</td><td>Presentación de la XII edición y proyección de «Bella» (Manuel H. Martín y Amparo Martínez Barco, 2025). Intervención de Ana Bella (Fundación Ana Bella), participación de Michelle Jenner y coloquio con el Colegio Oficial de Psicólogos de la CV y la Asociación Por Ti Mujer</td><td>Inauguración</td><td>Cines Lys, València</td><td>Gratuito</td></tr>
+      <tr><td>24/09 jue</td><td>IX Anima València, Jornada de Videojuegos: masterclasses de Gisela Vaquero, Nuria Alted y Jaime Torres; mesa del sector moderada por Gustavo Aranda con Gisela Vaquero, Nuria Alted, Ana Lafuente y Jaime Torres; pitchings con jurado (Carla Martorell, Carles Pons, Ana Lafuente, Jaime Torres)</td><td>Profesional</td><td>Ateneo Mercantil, València</td><td>5 euros</td></tr>
+      <tr><td>25/09 vie</td><td>IX Anima València, Jornada de Animación: masterclasses de Pablo Llorens, María Pulido, Raúl García (Premio Internacional FICIV Joaquín Sorolla 2026) y David y Jonathan Cuevas (Keytoon); mesa «Territorio de Mujeres» con María Pulido, Leticia Montalva y Paloma Mora; pitchings con jurado (Paloma Mora, Leticia Montalva, Elena Hernández)</td><td>Profesional</td><td>Ateneo Mercantil, València</td><td>5 euros</td></tr>
+      <tr><td>26/09 sáb</td><td>Juegos gigantes infantiles</td><td>Familiar</td><td>Plaza Aza, València</td><td>Gratuito</td></tr>
+      <tr><td>28/09 lun</td><td>Mostra de cortometrajes iberoamericanos de animación para centros escolares (en línea)</td><td>Educativa online</td><td>Centros escolares</td><td>Concertado</td></tr>
+      <tr><td>29/09 al 13/10</td><td>Exposición de alumnado de la Universitat Politècnica de València</td><td>Familiar</td><td>Estación del Norte y Estación Joaquín Sorolla, València</td><td>Gratuito</td></tr>
+      <tr><td>30/09 al 13/10</td><td>Exposición de Bellas Artes de la Universitat de València «Del relato tradicional a la creación audiovisual contemporánea» y muestra de fotografía publicitaria (David Roldán)</td><td>Familiar</td><td>Fnac San Agustín, València</td><td>Gratuito</td></tr>
+      <tr><td>01/10 jue y 02/10 vie</td><td>Proyecciones para centros escolares por ciclos: «Pezqueñín, el pequeño aventurero» y «El tesoro de Barracuda» (1.er ciclo), «Nina y el secreto del erizo» (2.º ciclo, <strong>subtitulado para personas sordas en todos los pases</strong>), «Olivia y el terremoto invisible» (3.er ciclo). Todas en castellano y en valenciano</td><td>Educativa</td><td>Cines Lys, València</td><td>3 euros por alumno; profesorado gratis</td></tr>
+      <tr><td>02/10 vie</td><td>Taller cinematográfico «Cómo hacer una película»</td><td>Educativa</td><td>Academia Nube 7, València</td><td>Gratuito</td></tr>
+      <tr><td>02/10 vie</td><td>FICIV en Ruta: mostra de cortometrajes iberoamericanos y taller de doblaje. Suspendido por alerta roja y trasladado al <mark>COMPLETAR 6 o 7 de octubre; si no se celebró, retira esta fila y la referencia a Novetlè en los criterios 13 y 14</mark></td><td>Educativa · FICIV en Ruta</td><td>CEIP Jaime I y Ayuntamiento de Novetlè</td><td>Concertado</td></tr>
+      <tr><td>03/10 sáb</td><td>Sección Familiar: retrospectiva Tadeo Jones 1, 2 y 3; «Winnipeg, el barco de la esperanza» (Animateen); «Superthings, la película» (premier mundial, 400 localidades); «Evolution»</td><td>Familiar y Oficial</td><td>Cines Lys, València</td><td>3,50 euros (3 comisiones falleras); 6 euros la premier</td></tr>
+      <tr><td>03/10 sáb</td><td>Gincana Star Wars</td><td>Familiar</td><td>Plaza del Ayuntamiento, València</td><td>Gratuito</td></tr>
+      <tr><td>04/10 dom</td><td>Taller de doblaje con niños y niñas de ASPANION</td><td>Educativa</td><td>Escuela de Doblaje de Valencia</td><td>Concertado</td></tr>
+      <tr><td>06/10 mar</td><td>Animateen, Premio del Público: proyección y votación</td><td>Oficial</td><td>Colegio Jesús María, València</td><td>Concertado</td></tr>
+      <tr><td>07/10 mié</td><td>Proyecciones para centros escolares</td><td>Educativa</td><td>Cines Lys, València</td><td>3 euros</td></tr>
+      <tr><td>08/10 jue</td><td>Proyecciones para centros escolares; Animateen en el Colegio Oficial de Arquitectos (18:30); gincana Superthings en la Plaza Dr. Collado (11:30); <strong>fallo de premios de las secciones oficiales</strong></td><td>Educativa, Oficial y Familiar</td><td>Cines Lys, COACV y Plaza Dr. Collado, València</td><td>3 euros, concertado y gratuito</td></tr>
+      <tr><td>13/10 mar</td><td>Clausura de las exposiciones</td><td>Familiar</td><td>Estaciones y Fnac, València</td><td>Gratuito</td></tr>
+    </tbody>
+  </table>
+  <p class="span"><strong>Total de jornadas con actividad: 14. Jornadas con proyección abierta al público: 7.</strong> Obras proyectadas: <mark>COMPLETAR número de largometrajes, cortometrajes y programas</mark>.</p>
+
+  <h2>6. Secciones y obras</h2>
+  <p><strong>6.1 Sección Oficial Internacional de Largometrajes a concurso:</strong> «Olivia y el terremoto invisible» (Irene Iborra), «Superthings, la película» (Víctor Monigote), «Winnipeg, el barco de la esperanza» (Beñat Beitia y Elio Quiroga), «Evolution» (Zayra Muñoz y Julio Soto). Jurado profesional: Silvino Puig (presidente), Pablo Llorens, María Pulido, Elena Gobernado. Jurado infantil: Sergio Ramón, Abril Ramón, Dante Osuna, Lucina Dasí, Sento Dasí. Premio: <mark>COMPLETAR dotación</mark>.</p>
+  <p><strong>6.2 Sección Oficial de Cortometrajes Europeos a concurso (Premio del Público):</strong> «3 Captains» (Julia Ocker, Alemania), «City in the Fox» (Mikael Lindskov Jacobsen, Dinamarca), «Ducks» (J. Jefferies, Reino Unido), «Epifanía» (Mila Useche, Alemania-Colombia), «Jam &amp; Wood» (Elena Walf, Alemania-Croacia), «Las flores de Malva» (colectivo Supinfocom Rubika, Francia), «Lights» (Aitana Cantero y María Isabel Sáiz, España), «Ostrich» (Marie-Christine Kenov, Suiza), «The Sky Was Candy» (Anh Tú Nguyen), «When the Oceans Rise» (Yongxin Wang). Premio: 100 euros <mark>COMPLETAR</mark>.</p>
+  <p><strong>6.3 Sección Educativa:</strong> cuatro largometrajes por ciclos de Primaria con fichas didácticas de valores, en castellano y valenciano; «Nina y el secreto del erizo» con subtitulado para personas sordas.</p>
+  <p><strong>6.4 Sección Familiar:</strong> retrospectiva Tadeo Jones, premier mundial de «Superthings», juegos gigantes, gincanas, exposiciones.</p>
+  <p><strong>6.5 Animateen (III edición):</strong> Premio del Público adolescente, con «Winnipeg» y las sesiones en el Colegio Jesús María y en el Colegio Oficial de Arquitectos.</p>
+  <p><strong>6.6 Muestra Iberoamericana:</strong> «Chicha la Chicharra» (Colombia), «El árbol ya fue plantado» (Argentina), «El chico pelo de flor», «Melty Hearts» (Chile); en sala y en la Sección Educativa Online.</p>
+  <p><strong>6.7 Sección Profesional, IX Anima València:</strong> dos jornadas de animación y videojuegos con masterclasses, mesas y pitchings.</p>
+  <p><strong>6.8 Homenajes y premios Joaquín Sorolla 2026:</strong> Premio Internacional a Raúl García; Premio Nacional a Jaime Torres (ESAT); Premio Honorífico al doblaje de animación a Michelle Jenner; Premio Honorífico a AEVI.</p>
+  <p><strong>6.9</strong> FICIV en Ruta (Novetlè) y FICIV juego web (III Animap).</p>
+
+  <h2>7. Méritos según los criterios de valoración</h2>
+  <p><strong>7.1 Reconocimiento (criterio a).</strong> FICIV figura en el listado de festivales admitidos por el ICAA en 2026 <mark>COMPLETAR referencia de la resolución</mark> y es miembro de ECFA. Anexos 3 y 4.</p>
+  <p><strong>7.2 Nuevos públicos (criterio b).</strong> Toda la programación va dirigida a la infancia y la juventud; actividades de formación: tres talleres de doblaje, taller de realización, gincanas, fichas didácticas por ciclo, jurado infantil, Animateen, exposiciones universitarias. Anexo 1.</p>
+  <p><strong>7.3 Valenciano en pantalla (criterio c).</strong> En la edición 2025 se proyectaron 56 obras, de las que 14 se exhibieron dobladas o subtituladas en valenciano (25&nbsp;%) <mark>COMPLETAR y cuadrar con la tabla del anexo 5</mark>. En 2026 toda la sección educativa se ofrece en versión valenciana.</p>
+  <p><strong>7.4 Sección competitiva internacional (criterio d).</strong> Dos secciones oficiales internacionales con bases públicas. Anexo 2.</p>
+  <p><strong>7.5 Premios en metálico y pagos por selección (criterio e).</strong> Premios de 200 y 100 euros; pago de derechos de exhibición a las obras seleccionadas de las secciones Educativa y Familiar. Anexo 6.</p>
+  <p><strong>7.6 Invitados (criterio f).</strong> Invitados nacionales: <mark>COMPLETAR lista</mark>. <mark>Si Raúl García, residente en Singapur, asistió en persona, indícalo con la prueba; si no, no declares invitados internacionales</mark>.</p>
+  <p><strong>7.7 Jurado internacional en la edición anterior (criterio g).</strong> No se declara.</p>
+  <p><strong>7.8 Paridad (criterio h), edición 2026</strong>, con la definición de la LO 2/2024 (cada sexo entre el 40&nbsp;% y el 60&nbsp;%). Dirección de las obras en secciones competitivas: largometrajes 2 de 4 películas con directora (50&nbsp;%); cortometrajes 6 de 11 películas con directora (55&nbsp;%) y 11 mujeres de 23 personas directoras identificadas (48&nbsp;%); tabla en el anexo 7. Jurado profesional: 2 mujeres y 2 hombres (50&nbsp;%). Jurado infantil: 2 niñas y 3 niños (40&nbsp;%). Equipo de dirección y producción: 3 mujeres y 2 hombres (60&nbsp;%) <mark>COMPLETAR con el equipo completo si se mantiene entre 40 y 60</mark>. Ponentes de masterclasses, mesas y jurados de pitching: 8 mujeres y 7 hombres (53&nbsp;%).</p>
+  <p><strong>7.9 Sostenibilidad (criterio i).</strong> Requisito 6.º: la mensajería del festival se contrata con MRW (ISO 14001) y Correos Express (certificaciones ambientales). Requisito 8.º: compensación de huella mediante la plantación de 100 árboles en el cauce del Turia, Parque de las Falleras FICIV <mark>COMPLETAR fecha y entidad certificante</mark>. Refuerzo: las proyecciones se realizan en Cines Lys, sala con placas solares y programa ambiental Ecolys. Anexo 8.</p>
+  <p><strong>7.10 Difusión en valenciano (criterio j).</strong> Web, programación y comunicación en redes en valenciano <mark>COMPLETAR si el catálogo tiene versión valenciana</mark>. Anexo 9.</p>
+  <p><strong>7.11 Presupuesto ejecutado en la edición anterior (criterio k).</strong> 36.575,41 euros en 2025. Anexo 10.</p>
+  <p><strong>7.12 Ediciones (criterio l).</strong> Once ediciones anteriores. Anexo 11.</p>
+  <p><strong>7.13 Más de un municipio (criterio m).</strong> València y Novetlè <mark>COMPLETAR o retirar</mark>. Anexo 12.</p>
+  <p><strong>7.14 Incidencia social (criterio n).</strong> Novetlè, menos de 1.000 habitantes <mark>COMPLETAR o retirar</mark>.</p>
+  <p><strong>7.15 Accesibilidad (criterio o).</strong> «Nina y el secreto del erizo» con subtitulado para personas con discapacidad auditiva en todos los pases; sesiones adaptadas a personas con TEA; sala accesible. Anexo 13.</p>
+
+  <h2>8. Equipo organizador</h2>
+  <p><mark>COMPLETAR nombres y funciones: dirección, subdirección (Carmen Chaves), producción, programación, comunicación, coordinación educativa, técnica</mark>. Indicar qué personas son socias de la Asociación y cuáles son contratadas o externas, porque afecta al tope del 40&nbsp;% de gasto de socios (resuelvo 13.5).</p>
+
+  <h2>9. Comunicación y difusión</h2>
+  <p>Web <mark>COMPLETAR dominio</mark>, redes sociales (Instagram <mark>COMPLETAR seguidores</mark>), catálogo, cartel de la XII edición, notas de prensa y cobertura en medios <mark>COMPLETAR dos o tres impactos</mark>, difusión directa a centros escolares de València y de la Costera. Idiomas: valenciano y castellano.</p>
+
+  <h2>10. Presupuesto y plan de financiación</h2>
+  <p>Resumen de la ficha presupuestaria (misma cifra que el Anexo I). <strong>Gastos:</strong> alquiler de proyecciones 3.538,00; gestión de películas 4.911,00; comunicación 2.883,30; invitados 2.030,79; premios 850,00; personal 13.216,61; otros profesionales 4.215,50; vídeo, foto y diseño 800,00; varios 87,57; digitalización y subtitulado 2.240,00; cuota ECFA 300,00; asesoría y auditoría 1.100,00 <mark>COMPLETAR si se añade el auditor</mark>. Total <mark>COMPLETAR</mark>.</p>
+  <p><strong>Ingresos:</strong> IVC <mark>COMPLETAR</mark>; Ayuntamiento de València 8.041,49; patrocinios de los colegios profesionales de Ópticos, Psicólogos y Podólogos 7.500,00; taquilla 3.631,28. Total <mark>COMPLETAR</mark>. La diferencia, si la hay, la cubre la Asociación con recursos propios.</p>
+  <p>Costes indirectos imputados: <mark>COMPLETAR</mark>, por debajo del 7&nbsp;% de los costes directos. Gastos facturados por socios de la Asociación: <mark>COMPLETAR</mark>, por debajo del 40&nbsp;% de los costes directos. No existe subcontratación de la organización del festival <mark>o: la subcontratación asciende a X euros, inferior al 50&nbsp;%</mark>.</p>
+
+  <h2>11. Calendario de ejecución y justificación</h2>
+  <p>Actividad ejecutada entre el 23 de septiembre y el 13 de octubre de 2026, dentro del período subvencionable (23/12/2025 a 30/11/2026). Todas las facturas se emiten a nombre de la Asociación y se abonan por transferencia <strong>antes del 30 de noviembre de 2026</strong>. Justificación mediante cuenta justificativa con <strong>informe de auditor inscrito en el ROAC</strong>, al superar el presupuesto los 20.000 euros (resuelvo 14.2.b): memoria de actuación justificativa, memoria económica abreviada, ficha presupuestaria justificativa, relación clasificada de gastos y declaración responsable de no doble financiación.</p>
+
+  <h2>12. Resultados</h2>
+  <p><mark>COMPLETAR con cifras reales de la edición: espectadores totales, alumnado y centros, asistentes a Anima València, participantes en talleres, obras proyectadas, países representados, impactos en medios</mark>. Comparación con 2025 en dos líneas.</p>
+
+  <h2>Anexos</h2>
+  <ol>
+    <li>Catálogo y programa de la XII edición (corregir erratas antes de adjuntar).</li>
+    <li>Bases de las secciones oficiales 2026 y palmarés.</li>
+    <li>Listado de festivales del ICAA 2026 con FICIV señalado.</li>
+    <li>Acreditación de pertenencia a ECFA.</li>
+    <li>Tabla de obras 2025 con versión lingüística.</li>
+    <li>Bases con dotación de premios, justificantes de pago y facturas de pagos por selección.</li>
+    <li>Tablas de paridad 2026.</li>
+    <li>Facturas y certificados ambientales de MRW y Correos Express; certificado de la plantación.</li>
+    <li>Capturas fechadas de web, redes y programa en valenciano.</li>
+    <li>Justificación del gasto ejecutado en 2025.</li>
+    <li>Tabla de las once ediciones anteriores con carteles.</li>
+    <li>Certificado del Ayuntamiento de Novetlè o del CEIP Jaime I.</li>
+    <li>Acreditación del subtitulado para personas sordas de «Nina y el secreto del erizo».</li>
+  </ol>
+</section>
+
+<!-- ======================================================= COLOFÓN -->
+<section class="part colophon">
+  <h1><small>Colofón</small>Método, fuentes y límites</h1>
+  <p><strong>Fuentes leídas íntegramente:</strong> la resolución de convocatoria (DOGV 10456, 22/09/2026, 23 páginas), la nota informativa del IVC sobre festivales, cineclubs, jornadas y asociaciones, el autobaremo de festivales, la Hoja de méritos FICIV 2026, la Ficha presupuestaria firmada, el Anexo I y el catálogo de la XII edición.</p>
+  <p><strong>Comprobaciones hechas:</strong> suma exacta de los trece capítulos de gasto y de los cuatro ingresos; identidad byte a byte de «Memoria actuación 2026.pdf» y «catálogo.pdf»; topes de ayuda e indirectos; recuentos de paridad nombre a nombre sobre el catálogo 2026 (el sexo de tres personas no se pudo determinar por el nombre y quedaron fuera del recuento); porcentaje de obras en valenciano 2025; cómputo del plazo de quince días hábiles.</p>
+  <p><strong>No verificado, por falta de acceso a internet:</strong> el listado ICAA 2026, la población oficial de Novetlè, la celebración de FICIV en Ruta los días 6 o 7 de octubre, las certificaciones de MRW y Correos Express y el calendario oficial de días inhábiles de la Generalitat. Las estimaciones de puntos suponen que los hechos declarados son ciertos y documentables.</p>
+  <p><strong>Este informe no sustituye</strong> la lectura de la convocatoria ni el criterio de la comisión técnica de valoración. Está pensado para que la solicitud llegue completa, coherente y sin afirmaciones que no se puedan probar.</p>
+  <p class="pagenote">FICIV 2026 · Informe para la solicitud de ayuda del IVC · Elaborado por Claude para Sóc de Poble · 11 de octubre de 2026</p>
+</section>
+
+</div>
+</body>
+</html>

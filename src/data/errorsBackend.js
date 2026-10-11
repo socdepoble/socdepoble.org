@@ -55,12 +55,88 @@ export const CODI_MITJANS = Object.freeze({
   DESCONEGUT: 'mitjans-desconegut'
 });
 
+/** Onada 11 (261010; prompt 261010_1730, tasca 2) · El segon factor (TOTP) del
+ * superadmin (capacitat 'segonFactor', contracte.js). Van a `error.code`.
+ * CODI_INVALID: el codi de l'aplicació d'autenticació no és el que toca;
+ * REPTE_CADUCAT: el repte ha caducat abans d'escriure el codi;
+ * FACTOR_NO_TROBAT: el factor ja no existix (retirat o d'un altre compte);
+ * NOM_REPETIT: ja hi ha un factor amb eixe nom; MASSA_FACTORS: el servidor no
+ * n'admet més; NO_HABILITAT: el servidor no té el TOTP activat; SENSE_SESSIO:
+ * cal una sessió per a gestionar-lo; NO_DISPONIBLE: el mode (seed, local) no
+ * té servidor d'autenticació; DESCONEGUT: un rebuig sense traducció (el text
+ * del proveïdor es queda a `cause`, mai a la vista). */
+export const CODI_SEGON_FACTOR = Object.freeze({
+  CODI_INVALID: 'codi-invalid',
+  REPTE_CADUCAT: 'repte-caducat',
+  FACTOR_NO_TROBAT: 'factor-no-trobat',
+  NOM_REPETIT: 'nom-repetit',
+  MASSA_FACTORS: 'massa-factors',
+  NO_HABILITAT: 'no-habilitat',
+  SENSE_SESSIO: 'sense-sessio',
+  NO_DISPONIBLE: 'no-disponible',
+  DESCONEGUT: 'desconegut'
+});
+
+/** La frase en valencià de cada codi del segon factor. La vista pot usar-la tal qual. */
+export const MISSATGE_SEGON_FACTOR = Object.freeze({
+  [CODI_SEGON_FACTOR.CODI_INVALID]: 'El codi no és correcte. Mira l’aplicació d’autenticació i torna-ho a provar.',
+  [CODI_SEGON_FACTOR.REPTE_CADUCAT]: 'El repte ha caducat. Demana’n un altre i escriu el codi nou.',
+  [CODI_SEGON_FACTOR.FACTOR_NO_TROBAT]: 'Este segon factor ja no existix. Recarrega i torna-ho a provar.',
+  [CODI_SEGON_FACTOR.NOM_REPETIT]: 'Ja tens un segon factor amb este nom. Tria’n un altre.',
+  [CODI_SEGON_FACTOR.MASSA_FACTORS]: 'Ja tens el màxim de segons factors inscrits. Retira’n un abans d’afegir-ne un altre.',
+  [CODI_SEGON_FACTOR.NO_HABILITAT]: 'Este node no té habilitat el segon factor. Cal activar-lo al servidor.',
+  [CODI_SEGON_FACTOR.SENSE_SESSIO]: 'Cal iniciar sessió per a gestionar el segon factor.',
+  [CODI_SEGON_FACTOR.NO_DISPONIBLE]: 'El segon factor no està disponible en este mode: cal un servidor d’autenticació.',
+  [CODI_SEGON_FACTOR.DESCONEGUT]: 'No s’ha pogut completar l’operació del segon factor. Torna-ho a provar.'
+});
+
+/** Onada 11 (261010; prompt 261010_1730, tasca 2) · La personalització del
+ * poble (taxonomia i estil) que desa el superadmin (capacitat
+ * 'personalitzacio', contracte.js). Van a `error.code`.
+ * CAL_SEGON_FACTOR: el servidor exigix aal2 (private.es_superadmin, migració
+ * 2610061448) i la sessió no el té; CONFLICTE_VERSIO: algú ha desat una versió
+ * més nova que la que s'editava (SDP-ADMIN-006); CLAU_INVALIDA: la clau no és
+ * 'taxonomia' ni 'estil'; SENSE_SESSIO: cal una sessió; NO_DISPONIBLE: el
+ * servidor encara no té les funcions (migració pendent); DESCONEGUT: un
+ * rebuig sense traducció. */
+export const CODI_PERSONALITZACIO = Object.freeze({
+  CAL_SEGON_FACTOR: 'cal-segon-factor',
+  CONFLICTE_VERSIO: 'conflicte-versio',
+  CLAU_INVALIDA: 'clau-invalida',
+  SENSE_SESSIO: 'sense-sessio',
+  NO_DISPONIBLE: 'no-disponible',
+  DESCONEGUT: 'desconegut'
+});
+
+/** La frase en valencià de cada codi de la personalització. */
+export const MISSATGE_PERSONALITZACIO = Object.freeze({
+  [CODI_PERSONALITZACIO.CAL_SEGON_FACTOR]: 'Cal confirmar el segon factor per a desar.',
+  [CODI_PERSONALITZACIO.CONFLICTE_VERSIO]: 'Algú ha desat una versió més nova. Recarrega i torna a aplicar el canvi.',
+  [CODI_PERSONALITZACIO.CLAU_INVALIDA]: 'Només es poden desar la taxonomia i l’estil.',
+  [CODI_PERSONALITZACIO.SENSE_SESSIO]: 'Cal iniciar sessió com a superadmin per a desar.',
+  [CODI_PERSONALITZACIO.NO_DISPONIBLE]: 'El servidor encara no té les funcions de personalització. Cal aplicar la migració pendent.',
+  [CODI_PERSONALITZACIO.DESCONEGUT]: 'No s’ha pogut desar la personalització. Torna-ho a provar.'
+});
+
 /** Posa el codi a l'error sense perdre'n el missatge ni la causa. */
 export function ambCodi(error, code) {
   const eixida = error instanceof Error ? error : new Error(String(error?.message || error || ''));
   eixida.code = code;
   return eixida;
 }
+
+/* Un Error nou amb la frase de la taula i el `code`; la resposta cruda del
+   proveïdor viatja a `cause`. Un codi fora de la taula cau a DESCONEGUT. */
+function errorTraduit(missatges, code, cause) {
+  const codi = Object.hasOwn(missatges, code) ? code : 'desconegut';
+  return ambCodi(new Error(missatges[codi], cause ? { cause } : undefined), codi);
+}
+
+/** Onada 11 · Un Error amb el `code` i la frase de MISSATGE_SEGON_FACTOR. Pura. */
+export const errorDeSegonFactor = (code, cause) => errorTraduit(MISSATGE_SEGON_FACTOR, code, cause);
+
+/** Onada 11 · Un Error amb el `code` i la frase de MISSATGE_PERSONALITZACIO. Pura. */
+export const errorDePersonalitzacio = (code, cause) => errorTraduit(MISSATGE_PERSONALITZACIO, code, cause);
 
 // El TypeError cru que llancen els navegadors quan fetch no arriba al servidor.
 const RE_FETCH = /Failed to fetch|NetworkError|Load failed|Network request failed/i;

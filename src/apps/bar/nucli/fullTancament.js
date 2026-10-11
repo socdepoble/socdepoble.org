@@ -7,11 +7,13 @@
  *                                   compartit amb el lot dels sentinelles)
  *   fullTancament(torn, tiquets)  → el model de full per a utils/fulls
  *                                   (fulles «Resum», «Per producte»,
- *                                   «Moviments» i «Anul·lacions»)
+ *                                   «Moviments» i «Anul·lacions»; amb la
+ *                                   carta, també «Consum d'ingredients»)
  */
 import { errorBar, esCents, esId, esMoment, esSlug } from './comu.js';
 import { compta, totalLinia } from './linia.js';
 import { textNumero } from './cobrament.js';
+import { consumDeVendes } from './consum.js';
 
 export const ESQUEMA_TANCAMENT = 'sdp.bar.tancament.v1';
 
@@ -70,9 +72,12 @@ export function horaLocal(moment) {
  * El model de full (utils/fulls/model.js) del torn tancat.
  * @param {object} torn  torn tancat
  * @param {object[]} tiquets  els tiquets del torn (per a les anul·lacions i devolucions)
- * @param {{ hora?: (iso: string) => string }} [opcions]  l'hora local (les proves la fixen)
+ * @param {{ hora?: (iso: string) => string, carta?: object }} [opcions]  l'hora local (les proves la
+ *   fixen) i, Onada 12 (261011; ordres 261011_0130, punt 6), la carta: amb ella, una cinquena
+ *   fulla, «Consum d'ingredients» (nucli/consum.js: el consum teòric del rebost del bar segons
+ *   els escandalls de la carta d'ara; al final, el venut sense escandall). Sense, les quatre de sempre.
  */
-export function fullTancament(torn, tiquets = [], { hora = horaLocal } = {}) {
+export function fullTancament(torn, tiquets = [], { hora = horaLocal, carta = null } = {}) {
   if (!torn || torn.estat !== 'tancat' || !torn.resum) throw errorBar('TORN', 'Només es fa el full d’un torn tancat.');
   const r = torn.resum;
   const nomCategoria = new Map(r.perCategoria.map((c) => [c.categoriaId, c.nom]));
@@ -135,7 +140,23 @@ export function fullTancament(torn, tiquets = [], { hora = horaLocal } = {}) {
           { titol: 'Unitats', tipus: 'nombre' }, { titol: 'Import', tipus: 'import' }, { titol: 'Motiu', tipus: 'text' }
         ],
         files: incidencies.map(([h, numero, ...resta]) => [h, numero === null ? 'Comanda oberta' : textNumero(numero), ...resta])
-      }
+      },
+      ...(carta ? [fullaDeConsum(consumDeVendes(delTorn, carta))] : [])
+    ]
+  };
+}
+
+/* La fulla «Consum d'ingredients»: una fila per ingredient i, darrere, el venut que no té escandall. */
+function fullaDeConsum({ ingredients, senseEscandall }) {
+  return {
+    nom: 'Consum d’ingredients',
+    columnes: [
+      { titol: 'Ingredient o producte', tipus: 'text', amplada: 32 }, { titol: 'Unitat', tipus: 'text' },
+      { titol: 'Quantitat neta', tipus: 'nombre' }, { titol: 'Quantitat amb minva', tipus: 'nombre' }, { titol: 'Nota', tipus: 'text', amplada: 44 }
+    ],
+    files: [
+      ...ingredients.map((i) => [i.nom, i.unitatBase, i.quantitat, i.quantitatBruta, '']),
+      ...senseEscandall.map((p) => [p.nom, 'u', p.unitats, '', 'Venut sense escandall: no se’n sap el consum'])
     ]
   };
 }

@@ -7,6 +7,21 @@ description: ESTAT DE LA SESSIÓ
 
 <!-- SDP:ESTAT_ACTUAL -->
 
+## ESTAT_ACTUAL · 2026-10-12 00:40 · MarIA · Informe FICIV Tancat i Motor de Generació d'Informes (Onada 12)
+La tasca de l'auditoria i preparació dels lliurables del FICIV ha finalitzat amb un èxit enorme. Claude ha elaborat l'informe ÍNTEGRE en HTML/CSS, pujant la tipografia a 15pt per a lectura perfecta al mòbil, i ens ha regalat un motor i sistema de disseny sencer a `261012_0040_sistema_informes_claude/`. MarIA ha renderitzat correctament l'arxiu i l'ha lliurat. La safata està neta i arxivat, obrint la porta completament al desenvolupament de la "Finestreta de Subvencions" (Onada 12).
+
+## ESTAT_ACTUAL · 2026-10-11 14:10 · MarIA · Maquetació PDF FICIV i llavor per a la Finestreta de Subvencions (Onada 12).
+S'ha delegat a Claude (mitjançant un prompt i pla canònics) la tasca de maquetar els 4 lliurables del FICIV en un format HTML/MD editorial amb lletra gran, que després renderitzarem a PDF des de l'IDE. A més, s'ha assentat la decisió de crear la funcionalitat "Finestreta de Subvencions" en la pròxima Onada (Onada 12), aprofitant la intel·ligència i directrius extretes en l'auditoria d'avui.
+
+## ESTAT_ACTUAL · 2026-10-11 02:00 · MarIA · Tancament Onada 11 i Pas a Onada 12 (Nocturna)
+
+L'Onada 11 ha sigut auditada amb l'èxit de les proves globals i empaquetada. La safata de l'Escriptori s'ha arxivat i s'ha preparat una Sessió Nocturna Autònoma (Headless) per a Fable amb 7 fronts essencials, entre els quals:
+- Targetes píxel-perfect i avataritzades al Mur/Consola (eliminant el fons blanc).
+- Intercepció PushState de l'Iframe.
+- Anàlisi i importació de les Human Interface Guidelines (Kowalski).
+- Gestoria intel·ligent amb el CSV validat, preparant un entorn autònom.
+S'ha generat l'Acta Marmota i s'ha autoritzat el reinici del sistema per a llençar l'agent.
+
 ## ESTAT_ACTUAL · 2026-10-10 17:20 · MarIA · Tancament Onada 10
 
 L'Onada 10 ha finalitzat amb èxit. Claude ha completat la implementació i auditat tot en verd (15.746 proves passant, sense incompliments de Pedra Seca). Objectiu assolit:

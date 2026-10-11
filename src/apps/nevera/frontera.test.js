@@ -57,8 +57,10 @@ function resol(fitxer, especificador) {
 describe('el que pot importar', () => {
   test('el cens de producció no és buit (la porta mira de veres)', () => {
     expect(PRODUCCIO.length).toBeGreaterThan(10);
+    /* Onada 12 (261011; ordres 261011_0130, punt 6) · Els ingredients, el receptari i el recomanador. */
     expect(NUCLI).toEqual([
-      `${APP}/nucli/cataleg.js`, `${APP}/nucli/copia.js`, `${APP}/nucli/index.js`, `${APP}/nucli/nevera.js`, `${APP}/nucli/productes.js`
+      `${APP}/nucli/cataleg.js`, `${APP}/nucli/copia.js`, `${APP}/nucli/index.js`, `${APP}/nucli/ingredients.js`, `${APP}/nucli/nevera.js`,
+      `${APP}/nucli/productes.js`, `${APP}/nucli/receptes.js`, `${APP}/nucli/recomanador.js`
     ]);
   });
 
@@ -139,5 +141,21 @@ describe('la temporada de la vista és pura', () => {
     expect(senseComentaris(llig(PER_TEMPORADA)).match(IMPURS)).toBeNull();
     /* Sonda: el patró veu el rellotge i un hook. */
     for (const sonda of ['new Date()', 'useState(0)']) expect(IMPURS.test(sonda), sonda).toBe(true);
+  });
+});
+
+/* Onada 12 (261011; ordres 261011_0130, punt 6) · La part de dades de les
+   Receptes també viu a vistes/ i és igual de pura: només llig el nucli. El
+   recomanador no rep cap rellotge (el Rebost no guarda dates). */
+describe('les receptes de la vista són pures', () => {
+  const PER_RECEPTES = `${APP}/vistes/perReceptes.js`;
+
+  test('només importa la porta del nucli', () => {
+    expect(especificadors(llig(PER_RECEPTES)).map((e) => resol(PER_RECEPTES, e))).toEqual([`${APP}/nucli/index.js`]);
+  });
+
+  test('cap React, DOM, rellotge, atzar ni temporitzador (tampoc a Receptes.jsx: cap dia d’avui)', () => {
+    expect(senseComentaris(llig(PER_RECEPTES)).match(IMPURS)).toBeNull();
+    expect(senseComentaris(llig(`${APP}/vistes/Receptes.jsx`)).match(/\bDate\b|Math\.random/)).toBeNull();
   });
 });

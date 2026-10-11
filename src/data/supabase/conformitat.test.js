@@ -275,7 +275,20 @@ function fetchDelServidor(entrada, opcions = {}) {
   if (url.pathname === '/auth/v1/health') return Promise.resolve(resposta({}));
   estat.autoritzacions.add(opcions.headers?.Authorization ?? null);
   const p = url.searchParams;
+  /* Onada 11 (261010; prompt 261010_1730, tasca 2) · L'API MFA de GoTrue, com
+     la documenta Supabase: un factor que no existix és 404 mfa_factor_not_found
+     (repte, verify i retirada). */
+  const factor = /^\/auth\/v1\/factors\/([^/]+)(?:\/(challenge|verify))?$/.exec(url.pathname);
+  if (factor) return Promise.resolve(resposta({ code: 404, error_code: 'mfa_factor_not_found', msg: 'Factor not found' }, { status: 404 }));
   const ruta = {
+    /* Onada 11 · El compte de conformitat no té cap factor inscrit; este node
+       no té el TOTP habilitat, i una inscripció es rebutja com fa GoTrue. */
+    '/auth/v1/user': () => resposta({ id: PERSONA, email: 'conformitat@poble.invalid', factors: [] }),
+    '/auth/v1/factors': () => resposta({ code: 422, error_code: 'mfa_totp_enroll_not_enabled', msg: 'MFA enroll is disabled for TOTP' }, { status: 422 }),
+    /* Onada 11 · Les RPC del Tauler darrere de private.es_superadmin() (aal2):
+       la sessió de conformitat no té el segon factor i PostgREST torna el 42501. */
+    '/rest/v1/rpc/admin_desa_contingut': () => resposta({ code: '42501', details: null, hint: null, message: 'SDP-ADMIN-003: cal confirmar el segon factor (aal2).' }, { status: 403 }),
+    '/rest/v1/rpc/admin_historial_contingut': () => resposta({ code: '42501', details: null, hint: null, message: 'SDP-ADMIN-003: cal confirmar el segon factor (aal2).' }, { status: 403 }),
     '/rest/v1/app_content': () => {
       const claus = /^in\.\((.*)\)$/.exec(p.get('key') || '')?.[1]?.split(',') || [];
       return resposta(claus.includes('towns')

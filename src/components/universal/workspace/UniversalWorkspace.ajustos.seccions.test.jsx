@@ -26,8 +26,10 @@ vi.mock('../../../data/wikiManifest.js', () => ({
     ]
   }
 }));
+/* Onada 11 (261010; prompt 261010_1730, tasca 3) · el doble embolcalla l'h1 en
+   una capçalera page-title, com la UniversalPage de veres. */
 vi.mock('../UniversalPage.jsx', () => ({
-  UniversalPage: ({ title, children }) => <main><h1>{title}</h1>{children}</main>
+  UniversalPage: ({ title, children }) => <main><header className="page-title"><h1>{title}</h1></header>{children}</main>
 }));
 vi.mock('../graph/BrainGraph', () => ({ default: () => null }));
 vi.mock('../../../sections/consola/ConsolaSection.jsx', () => ({ ConsolaIncrustada: () => null }));

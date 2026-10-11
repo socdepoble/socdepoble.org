@@ -4,7 +4,7 @@
 import { describe, expect, test } from 'vitest';
 import { dataHoraDeBarra } from '../../components/universal/editorial.js';
 import {
-  CLAU_FITXA, CLAU_URL_SNIPPET, DATA_DEL_SNIPPET, FITXA_SNIPPET, destiDelSnippet, rutaDeLaFitxa, urlDelSnippet
+  CLAU_FITXA, CLAU_URL_SNIPPET, DATA_DEL_SNIPPET, ETIQUETES_DEL_SNIPPET, FITXA_SNIPPET, destiDelSnippet, rutaDeLaFitxa, urlDelSnippet
 } from './destiSnippet.js';
 
 const APP = 'https://poble.test';
@@ -19,6 +19,19 @@ describe('DATA_DEL_SNIPPET', () => {
   test('és el dia de la CU, sense hora: la pastilla pinta la data i prou', () => {
     expect(DATA_DEL_SNIPPET).toBe('2026-10-03');
     expect(dataHoraDeBarra({ creat: DATA_DEL_SNIPPET })).toEqual({ time: '', date: '03/10/26', dateTime: '2026-10-03' });
+  });
+});
+
+/* Onada 11 (261010; prompt 261010_1730, tasca 6, D5) · Les etiquetes de la
+   targeta del Snippet viuen ací, amb la data, perquè la fitxa les pinte a la
+   seua capçalera i targeta i fitxa diguen el mateix. */
+describe('ETIQUETES_DEL_SNIPPET', () => {
+  test('una Categoria i una Etiqueta, congelades, amb les classes de les targetes de plugin', () => {
+    expect(ETIQUETES_DEL_SNIPPET.map(({ text, className }) => [text, className]))
+      .toEqual([['Eina', 'sdp-badge-category'], ['Extensió', 'sdp-badge-tag']]);
+    expect(ETIQUETES_DEL_SNIPPET.map((etiqueta) => Object.keys(etiqueta))).toEqual([['text', 'className'], ['text', 'className']]);
+    expect(Object.isFrozen(ETIQUETES_DEL_SNIPPET)).toBe(true);
+    expect(ETIQUETES_DEL_SNIPPET.every(Object.isFrozen)).toBe(true);
   });
 });
 

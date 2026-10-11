@@ -15,12 +15,24 @@ const llig = (ruta) => readFileSync(path.join(ARREL, ruta), 'utf8');
 const senseComentaris = (codi) => codi.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
 
 const PURS = [`${DIR}/indicadors.js`];
-const VISTES = [`${DIR}/AdminSection.jsx`, `${DIR}/IndicadorsAdmin.jsx`];
-const PRODUCCIO = [...VISTES, ...PURS];
+/* Onada 11 (261010; prompt 261010_1730, tasca 2) · el segon factor (SegonFactor.jsx)
+   i la lectura pura del rebuig del servidor (rebuigSegonFactor.js, que importa
+   el vocabulari del port i per això no és a PURS). */
+/* Front D4 (integració) · i les dues facetes de personalització que el Tauler
+   cableja al menú (FacetaTaxonomia.jsx, D2; FacetaEstil.jsx, D3). */
+const VISTES = [
+  `${DIR}/AdminSection.jsx`, `${DIR}/IndicadorsAdmin.jsx`, `${DIR}/SegonFactor.jsx`,
+  `${DIR}/FacetaTaxonomia.jsx`, `${DIR}/FacetaEstil.jsx`
+];
+const PRODUCCIO = [...VISTES, ...PURS, `${DIR}/rebuigSegonFactor.js`];
 const PROVES = [
   `${DIR}/AdminSection.test.jsx`,
   `${DIR}/IndicadorsAdmin.test.jsx`,
   `${DIR}/indicadors.test.js`,
+  `${DIR}/SegonFactor.test.jsx`,
+  `${DIR}/rebuigSegonFactor.test.js`,
+  `${DIR}/FacetaTaxonomia.test.jsx`,
+  `${DIR}/FacetaEstil.test.jsx`,
   `${DIR}/qualitat.test.js`
 ];
 const TOTS = [...PRODUCCIO, ...PROVES];
@@ -78,9 +90,10 @@ describe('per text', () => {
       expect(vetat.test(senseComentaris(llig(fitxer)).replace(/^import .*$/gm, '')), fitxer).toBe(false);
     }
     const imports = [...llig(`${DIR}/IndicadorsAdmin.jsx`).matchAll(/^import .* from '([^']+)';$/gm)].map((m) => m[1]);
+    /* Onada 11 (261010) · i la lectura del rebuig per falta del segon factor. */
     expect(imports).toEqual([
       'react', 'lucide-react', '../../components/layout/AppGridColumn', '../../components/PedraSeca/index.js',
-      '../../data/backendPort.js', './indicadors.js'
+      '../../data/backendPort.js', './indicadors.js', './rebuigSegonFactor.js'
     ]);
   });
 

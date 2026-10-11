@@ -11,20 +11,23 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 const estat = vi.hoisted(() => ({ capa: {} }));
 vi.mock('../../config/capaDelPaquet.js', () => ({ capaDelPaquet: () => estat.capa }));
 /* Onada 10 (261010) · La pàgina substituïda també ensenya la data que rep
-   per a la barra taronja (time, date i dateTime), en atributs de la secció. */
+   per a la barra taronja (time, date i dateTime), en atributs de la secció.
+   Onada 11 (261010; prompt 261010_1730, tasca 6, D5) · I les etiquetes que
+   rep per a la capçalera (`labels`), en una llista. */
 vi.mock('../../components/universal/UniversalPage', () => ({
-  UniversalPage: ({ title, subtitle, lead, time, date, dateTime, children }) => (
+  UniversalPage: ({ title, subtitle, lead, time, date, dateTime, labels, children }) => (
     <section data-pagina="fitxa" data-hora={time} data-dia={date} data-instant={dateTime}>
       <p data-titol="pagina">{title}</p>
       <p data-subtitol="pagina">{subtitle}</p>
       <p data-lead="pagina">{lead}</p>
+      {labels ? <ul data-etiquetes="pagina">{labels.map((etiqueta) => <li key={etiqueta.text} className={etiqueta.className}>{etiqueta.text}</li>)}</ul> : null}
       {children}
     </section>
   )
 }));
 
 import { dataHoraDeBarra } from '../../components/universal/editorial.js';
-import { DATA_DEL_SNIPPET } from './destiSnippet.js';
+import { DATA_DEL_SNIPPET, ETIQUETES_DEL_SNIPPET } from './destiSnippet.js';
 import { FitxaSnippet } from './FitxaSnippet.jsx';
 
 const BOTIGA = 'https://chromewebstore.google.com/detail/snippet/abcdefghijklmnop';
@@ -42,6 +45,18 @@ test('Onada 10 · la fitxa passa a la barra taronja la data de la targeta del Sn
   const esperada = dataHoraDeBarra({ creat: DATA_DEL_SNIPPET });
   expect([pagina.dataset.hora, pagina.dataset.dia, pagina.dataset.instant]).toEqual([esperada.time, esperada.date, esperada.dateTime]);
   expect([pagina.dataset.hora, pagina.dataset.dia, pagina.dataset.instant]).toEqual(['', '03/10/26', '2026-10-03']);
+});
+
+/* Onada 11 (261010; prompt 261010_1730, tasca 6, D5) · La fitxa pinta a la
+   seua capçalera les MATEIXES etiquetes que la targeta del Snippet
+   (ETIQUETES_DEL_SNIPPET, de destiSnippet.js), com la pàgina d'un plugin:
+   targeta i fitxa diuen el mateix. Abans la fitxa només portava la data. */
+test('Onada 11 · la fitxa passa a la capçalera les etiquetes de la targeta del Snippet: Categoria «Eina» i Etiqueta «Extensió»', () => {
+  render(<FitxaSnippet />);
+  const llista = document.querySelector('[data-pagina="fitxa"] > [data-etiquetes="pagina"]');
+  const pintades = [...llista.children].map((li) => [li.textContent, li.className]);
+  expect(pintades).toEqual(ETIQUETES_DEL_SNIPPET.map(({ text, className }) => [text, className]));
+  expect(pintades).toEqual([['Eina', 'sdp-badge-category'], ['Extensió', 'sdp-badge-tag']]);
 });
 
 test('la fitxa explica què és, com funciona en 3 passos, què necessita i la privacitat', () => {

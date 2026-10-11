@@ -60,7 +60,9 @@ const init = () => {
       }
     });
 
-    arrenca();
+    /* Onada 12 (261011; ordres 261011_0130, punt 7) · Com main.jsx: el rebuig
+       té amo, i quanLlest() torna a arrencar en el reintent de la vista. */
+    arrenca().catch((e) => console.error('[natiu] Arrencada fallida:', e));
 
     // Pas 4b: la capa del paquet per davall de la del lloc, com main.jsx.
     createRoot(arrel).render(<PedraSecaEmbed config={{ ...capaDelPaquet(), ...DEL_LLOC }} isFirstInstance={true} targetNode={arrel} />);

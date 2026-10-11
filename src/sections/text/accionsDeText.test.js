@@ -8,15 +8,24 @@
  *    font, la clau 'section.xat.anarAlXat'.
  *  · El destí és el de rutaDelXatDeLaIAIA, segons el mode de dades del xat.
  *  · 'anima' no és cap pàgina del sistema: la IAIA no té targeta al Mur.
+ *
+ * Onada 11 (261010; prompt 261010_1730, tasca 6) ·
+ *  · D2 · en remot i sense sessió, el destí és la conversa de mostra de la
+ *    IAIA (/xat/fake-iaia), la fila que el convidat veu a la llista.
+ *  · D4 · 'anima' repetix el botó al final del cos (accioDeTextAlFinal), com
+ *    la Consola i el Cervell (accioAlFinal de systemPages.js).
  */
 import { describe, expect, test } from 'vitest';
 import { esRutaDeLaPorta } from '../../components/PedraSeca/organismes/PortesTargeta.jsx';
 import { createTranslator } from '../../config/i18n.js';
 import { SECTIONS } from '../../config/sections.js';
-import { SYSTEM_PAGES, accioDeLaPagina } from '../../config/systemPages.js';
+import { SYSTEM_PAGES, accioAlFinal, accioDeLaPagina } from '../../config/systemPages.js';
 import { IAIA_ID } from '../../data/identitatsSeed.js';
-import { RUTA_XAT_DE_LA_IAIA, rutaDelXatDeLaIAIA } from '../xat/useObriXatPerDefecte.js';
-import { accioDeLaPaginaDeText } from './accionsDeText.js';
+import {
+  ID_FIL_DE_MOSTRA_DE_LA_IAIA, RUTA_XAT_DE_LA_IAIA, RUTA_XAT_DE_MOSTRA_DE_LA_IAIA, rutaDelXatDeLaIAIA
+} from '../xat/useObriXatPerDefecte.js';
+import fontMostra from '../xat/components/FakeChatOnboarding.jsx?raw';
+import { accioDeLaPaginaDeText, accioDeTextAlFinal } from './accionsDeText.js';
 import { PAGE_COPY } from './pageContent.js';
 
 const DIRECTE = `/xat?amb=${IAIA_ID}`;
@@ -36,6 +45,33 @@ describe('accioDeLaPaginaDeText', () => {
       const { desti } = accioDeLaPaginaDeText('anima', undefined, mode);
       expect([mode, desti]).toEqual([mode, rutaDelXatDeLaIAIA(mode)]);
       expect([mode, esRutaDeLaPorta(desti)]).toEqual([mode, true]);
+    }
+  });
+
+  /* Onada 11 (D2) · Sense sessió en remot, la fila «IAIA MarIA» de la llista
+     és la conversa de mostra (FakeChatOnboarding): el botó hi porta. En llavor
+     i en local sempre hi ha joId, i `senseSessio` no canvia res. */
+  test('D2 · en remot i sense sessió, la conversa de mostra de la IAIA; en llavor i en local, el directe de sempre', () => {
+    expect(RUTA_XAT_DE_MOSTRA_DE_LA_IAIA).toBe('/xat/fake-iaia');
+    expect(accioDeLaPaginaDeText('anima', undefined, 'remote', true).desti).toBe(RUTA_XAT_DE_MOSTRA_DE_LA_IAIA);
+    expect(accioDeLaPaginaDeText('anima', undefined, undefined, true).desti).toBe(RUTA_XAT_DE_MOSTRA_DE_LA_IAIA);
+    expect(accioDeLaPaginaDeText('anima', undefined, 'remote', false).desti).toBe(RUTA_XAT_DE_LA_IAIA);
+    expect(accioDeLaPaginaDeText('anima', undefined, 'seed', true).desti).toBe(DIRECTE);
+    expect(accioDeLaPaginaDeText('anima', undefined, 'local', true).desti).toBe(DIRECTE);
+    expect(esRutaDeLaPorta(RUTA_XAT_DE_MOSTRA_DE_LA_IAIA)).toBe(true);
+    /* L'id del fil de mostra és el que FakeChatOnboarding dona a la fila de la IAIA. */
+    expect(ID_FIL_DE_MOSTRA_DE_LA_IAIA).toBe('fake-iaia');
+    expect(fontMostra).toContain(`id: '${ID_FIL_DE_MOSTRA_DE_LA_IAIA}'`);
+  });
+
+  /* Onada 11 (D4) · «Dalt i al final», com la Consola i el Cervell. */
+  test('D4 · «L’Ànima de la IAIA» repetix el botó al final, com les pàgines del sistema que ho fan; cap altra pàgina de text', () => {
+    expect(accioDeTextAlFinal('anima')).toBe(true);
+    expect(accioAlFinal('consola')).toBe(true);
+    const claus = new Set([...Object.keys(PAGE_COPY), ...SECTIONS.filter((seccio) => seccio.kind === 'text' && seccio.pageKey).map((seccio) => seccio.pageKey)]);
+    expect([...claus].filter((clau) => accioDeTextAlFinal(clau))).toEqual(['anima']);
+    for (const estranya of ['constructor', 'toString', '__proto__', '', 'ANIMA', undefined, null, 7, {}]) {
+      expect([String(estranya), accioDeTextAlFinal(estranya)]).toEqual([String(estranya), false]);
     }
   });
 

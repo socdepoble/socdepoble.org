@@ -41,7 +41,7 @@ import { errorBar } from '../nucli/comu.js';
 import { nouId } from '../nucli/ids.js';
 import {
   adoptaComanda, afegeixProducte, anullaLinia, aplicaDescompte, canviaNota, canviaQuantitat, comandaObertaDe, convida, creaComanda,
-  esDescartable, marxa, mouLinies, sumaQuantitat, totals
+  esDescartable, heretaHistorial, marxa, mouLinies, sumaQuantitat, totals
 } from '../nucli/comanda.js';
 import { afegeixPagament, potTancar, tanca } from '../nucli/cobrament.js';
 import { divideixPerLinies } from '../nucli/divisio.js';
@@ -51,6 +51,7 @@ import { afegeixMoviment, arqueig, obriTorn, potVendre, resumTorn, tancaTorn } f
 import { marcaLlegida, notaDeTraspas } from '../nucli/traspas.js';
 import { llistaReposicio } from '../nucli/reposicio.js';
 import { obteLlavor } from '../llavors/index.js';
+import { detectaMigsMoviments } from '../nucli/migMoviment.js';
 import { textError } from './textos.js';
 
 const ContextBar = createContext(null);
@@ -87,6 +88,8 @@ export function ProveidorBar({ magatzem: injectat = null, rellotge = araReal, at
     let viu = true;
     const llegixBase = () => setBase({ persistent: magatzem.base.persistent, mode: magatzem.base.mode });
     const recarrega = () => magatzem.carrega().then((d) => { if (viu) posa(d); }).catch(() => {});
+    /* Una sola lectura en arrancar (la de baix). L'avís de mode NO rellig: magatzemLocal l'emet en
+       cada arrancada normal (de 'lliure' a 'escriptora') i en faria dues de concurrents. */
     const desfes = magatzem.base.subscriu((esdeveniment) => {
       if (!viu) return;
       if (esdeveniment.tipus === 'mode' || esdeveniment.tipus === 'persistent') llegixBase();
@@ -160,6 +163,34 @@ export function ProveidorBar({ magatzem: injectat = null, rellotge = araReal, at
     const novaComandaA = async (d, ctx, origen) => {
       const comanda = creaComanda({ id: ctx.id('c'), tornId: d.tornActual.id, origen, ara: ctx.ara, per: d.tornActual.obertPer });
       return magatzem.desaComanda(comanda);
+    };
+
+    /*
+     * Les dues escriptures d'un moviment ja validat (mou, divideix): primer el destí, després
+     * l'origen (que es retalla o, si queda buit, es descarta, i llavors el destí n'hereta
+     * l'historial). L'ordre fa que un tall duplique i no perda.
+     * Si la segona escriptura falla, RES no ho arregla sol (decisió del 261011: «detecta i
+     * avisa»): les línies queden a les dues comandes. La memòria es posa igual que el disc (es
+     * rellig; si no es pot, s'hi posa el destí que sí que s'ha escrit, amb el seu `rev`), la
+     * detecció ho pinta (migsMoviments) i l'error diu exactament això (MIG_MOVIMENT): no
+     * «torna-ho a provar», que faria moure-ho una altra vegada.
+     */
+    const traspassa = async (d, ctx, origenNou, destiNou, origenAbans) => {
+      const buit = esDescartable(origenNou);
+      const desatDesti = await magatzem.desaComanda(buit ? heretaHistorial(destiNou, origenAbans, { ara: ctx.ara }) : destiNou);
+      const ambDesti = { ...d, ...ambComanda(d, desatDesti) };
+      try {
+        if (buit) {
+          await magatzem.descartaComanda(origenNou);
+          return { estat: { comandes: ambDesti.comandes.filter((c) => c.id !== origenNou.id) }, valor: desatDesti };
+        }
+        const desatOrigen = await magatzem.desaComanda(origenNou);
+        return { estat: ambComanda(ambDesti, desatOrigen), valor: desatDesti };
+      } catch {
+        const fresques = await magatzem.carrega().catch(() => null);
+        posa(fresques || { ...ref.current, ...ambComanda(ref.current, desatDesti) });
+        throw errorBar('MIG_MOVIMENT', 'El moviment s’ha quedat a mitges.');
+      }
     };
 
     /* Tanca i desa el tiquet; el torn en guarda la llista. */
@@ -255,35 +286,39 @@ export function ProveidorBar({ magatzem: injectat = null, rellotge = araReal, at
         return { estat: { comandes: d.comandes.filter((c) => c.id !== comandaId) }, valor: null };
       }),
 
-      /** Mou línies a una altra comanda o a un origen sense comanda (una taula lliure). */
+      /**
+       * Mou línies a una altra comanda o a un origen sense comanda (una taula lliure).
+       * Correccions del refutador (261011):
+       *   T1 · Tot es valida ABANS d'escriure res. La comanda de destí nova es fa en memòria
+       *        (abans s'escrivia buida i, si mouLinies refusava —un pagament parcial, PAGAT_SUPERA—,
+       *        quedava una comanda fantasma al disc) i s'escriu una sola vegada, ja amb les línies.
+       *   T2 · Dues comandes, dues transaccions (traspassa): primer el destí i després l'origen,
+       *        amb la marca del moviment (`op`) a les dues bandes. Si la segona falla, res no
+       *        ho arregla sol: la memòria es posa igual que el disc (mai amb el `rev` vell del
+       *        destí), la detecció avisa (migsMoviments) i l'error és MIG_MOVIMENT.
+       *   T7 · Si l'origen es buida i es descarta, el destí n'hereta l'historial.
+       *   BAR-R9 (Onada 12) · Es descarta l'origen JA BUIT, no el d'abans.
+       */
       mou: (comandaId, desti, seleccio) => escriu(async (d, ctx) => {
         exigeixVenda(d);
         const origen = comandaDe(d, comandaId);
-        let estat = d;
-        let comandaDesti = desti.comandaId ? comandaDe(d, desti.comandaId) : null;
-        if (!comandaDesti) {
-          comandaDesti = await novaComandaA(d, ctx, desti.origen);
-          estat = { ...d, ...ambComanda(d, comandaDesti) };
-        }
-        const r = mouLinies(origen, comandaDesti, seleccio, { ara: ctx.ara, nouIdLinia: () => ctx.id('l') });
-        const desatDesti = await magatzem.desaComanda(r.desti);
-        estat = { ...estat, ...ambComanda(estat, desatDesti) };
-        if (esDescartable(r.origen)) {
-          await magatzem.descartaComanda(origen);
-          return { estat: { comandes: estat.comandes.filter((c) => c.id !== origen.id) }, valor: desatDesti };
-        }
-        const desatOrigen = await magatzem.desaComanda(r.origen);
-        return { estat: ambComanda(estat, desatOrigen), valor: desatDesti };
+        const comandaDesti = desti.comandaId
+          ? comandaDe(d, desti.comandaId)
+          : creaComanda({ id: ctx.id('c'), tornId: d.tornActual.id, origen: desti.origen, ara: ctx.ara, per: d.tornActual.obertPer });
+        const r = mouLinies(origen, comandaDesti, seleccio, { ara: ctx.ara, nouIdLinia: () => ctx.id('l'), op: ctx.id('m') });
+        return traspassa(d, ctx, r.origen, r.desti, origen);
       }),
 
-      /** Separa línies en una comanda filla (dividir el compte per línies). */
+      /**
+       * Separa línies en una comanda filla (dividir el compte per línies). Com «mou»: la filla
+       * i la mare, amb la marca del moviment; si la mare es buida, es descarta (BAR-R10) i la
+       * filla n'hereta l'historial (T7).
+       */
       divideix: (comandaId, seleccio) => escriu(async (d, ctx) => {
         exigeixVenda(d);
-        const { mare, filla } = divideixPerLinies(comandaDe(d, comandaId), seleccio, { idNova: ctx.id('c'), ara: ctx.ara, nouIdLinia: () => ctx.id('l') });
-        const desadaFilla = await magatzem.desaComanda(filla);
-        const desadaMare = await magatzem.desaComanda(mare);
-        const estat = { ...d, ...ambComanda(d, desadaFilla) };
-        return { estat: ambComanda(estat, desadaMare), valor: desadaFilla };
+        const abans = comandaDe(d, comandaId);
+        const { mare, filla } = divideixPerLinies(abans, seleccio, { idNova: ctx.id('c'), ara: ctx.ara, nouIdLinia: () => ctx.id('l'), op: ctx.id('m') });
+        return traspassa(d, ctx, mare, filla, abans);
       }),
 
       /** Devolució enllaçada d'un tiquet del torn. */
@@ -380,7 +415,12 @@ export function ProveidorBar({ magatzem: injectat = null, rellotge = araReal, at
       bolca: () => magatzem.bolca(),
       oblidaAvis: () => setAvis(null)
     };
-  }, [opera, magatzem]);
+  }, [opera, magatzem, posa]);
+
+  /* Correcció del refutador (261011, T2; «detecta i avisa») · Els moviments a mitges, calculats
+     de l'estat d'ARA (comandes obertes i tiquets del torn), no només en carregar: l'avís no depén
+     de cap operació (una de bona no l'esborra) i se'n va sol quan el duplicat ja no hi és. */
+  const migsMoviments = useMemo(() => (dades ? detectaMigsMoviments(dades.comandes, dades.tiquets) : []), [dades]);
 
   const valor = useMemo(() => ({
     carregat: Boolean(dades),
@@ -388,9 +428,10 @@ export function ProveidorBar({ magatzem: injectat = null, rellotge = araReal, at
     ...base,
     avis,
     ...(dades || {}),
+    migsMoviments,
     permis,
     accions
-  }), [dades, errorCarrega, base, avis, permis, accions]);
+  }), [dades, errorCarrega, base, avis, migsMoviments, permis, accions]);
 
   return <ContextBar.Provider value={valor}>{children}</ContextBar.Provider>;
 }

@@ -37,7 +37,7 @@ import { PAGE_COPY } from '../text/pageContent.js';
 import { COPYRIGHT_SDP, dataHoraDeBarra } from '../../components/universal/editorial.js';
 import { RUTA_DRETS_AUTOR } from '../../config/systemPages.js';
 import { IDS_PLUGINS, PLUGINS, rutaDelPlugin } from '../plugins/registrePlugins.js';
-import { DATA_DEL_SNIPPET } from './destiSnippet.js';
+import { DATA_DEL_SNIPPET, ETIQUETES_DEL_SNIPPET as ETIQUETES_SNIPPET } from './destiSnippet.js';
 import { AUTORIA_SOCDEPOBLE, DESTINS_CONTROL } from './destinsControl.js';
 import * as destinsControl from './destinsControl.js';
 import fontApp from '../../app/App.jsx?raw';
@@ -320,10 +320,13 @@ const targetesDUtilitats = () => SECCIONS_DUTILITATS.flatMap((nom) => targetesDe
 /* Onada 10 (decisió M4 del Mestre) · La targeta canònica de plugin: el que
    ha de pintar cada una ix de la seua FONT, pel títol de la targeta: el
    registre de plugins (camps `data` i `etiquetes`) o, per al Snippet, la seua
-   data (destiSnippet.js) i les seues dues etiquetes (SNIPPET de
-   ControlSection.jsx: Categoria «Eina» i Etiqueta «Extensió», l'esborrany de
-   l'ordre). Cap títol escrit a mà decidix qui porta data: ho diu el registre. */
-const ETIQUETES_DEL_SNIPPET = [['Eina', 'sdp-badge-category'], ['Extensió', 'sdp-badge-tag']];
+   data i les seues dues etiquetes (Categoria «Eina» i Etiqueta «Extensió»,
+   l'esborrany de l'ordre). Cap títol escrit a mà decidix qui porta data: ho
+   diu el registre.
+   Onada 11 (261010; prompt 261010_1730, tasca 6, D5) · Les etiquetes del
+   Snippet viuen a destiSnippet.js (ETIQUETES_DEL_SNIPPET), amb la data, i la
+   fitxa les pinta també: abans eren de la constant SNIPPET del Panell. */
+const ETIQUETES_DEL_SNIPPET = ETIQUETES_SNIPPET.map(({ text, className }) => [text, className]);
 const fontDeLaTargeta = (titol) => {
   const plugin = PLUGINS.find((p) => p.titol === titol);
   if (plugin) return { data: plugin.data, etiquetes: plugin.etiquetes.map(({ text, className }) => [text, className]) };
@@ -559,10 +562,10 @@ test('P7-B · W4-08 · Mapa, Vehicle Compartit i Animalets només dalt: cap targ
    registrePlugins.js.
    Onada 10 (261010; decisió M4 del Mestre) · Tampoc els camps nous de la
    targeta canònica: ni la data ni el text de les etiquetes del registre.
-   L'única excepció és el text que el Snippet, que no és del registre, porta
-   a la seua pròpia constant (la Categoria «Eina», la mateixa de les eines
-   del registre per l'esborrany de l'ordre): eixe sí que ha de ser al Panell,
-   i una sola vegada com a dada. */
+   Onada 11 (261010; prompt 261010_1730, tasca 6, D5) · DEROGADA l'excepció
+   del Snippet («el text de la seua constant sí que ha de ser al Panell, una
+   sola vegada com a dada»): les seues etiquetes viuen a destiSnippet.js, com
+   la data, i el Panell les llig (SNIPPET.etiquetes = ETIQUETES_DEL_SNIPPET). */
 test('P7-B · cap text, imatge, data ni etiqueta dels plugins és copiat a ControlSection.jsx', () => {
   const delSnippet = new Set(ETIQUETES_DEL_SNIPPET.map(([text]) => text));
   const ambData = PLUGINS.filter((plugin) => plugin.data);
@@ -580,10 +583,12 @@ test('P7-B · cap text, imatge, data ni etiqueta dels plugins és copiat a Contr
   for (const plugin of PLUGINS.filter((p) => p.etiquetes.length > 0)) {
     expect(plugin.etiquetes.some((etiqueta) => !delSnippet.has(etiqueta.text)), plugin.id).toBe(true);
   }
-  /* El text compartit amb el Snippet, una sola vegada com a dada (text: '…'). */
+  /* Onada 11 (D5) · Els textos de les etiquetes del Snippet tampoc s'escriuen
+     al Panell: viuen a destiSnippet.js i el Panell en llig la constant. */
   for (const text of delSnippet) {
-    expect([text, fontControl.split(`text: '${text}'`).length - 1]).toEqual([text, 1]);
+    expect([text, fontControl.includes(`'${text}'`)]).toEqual([text, false]);
   }
+  expect(fontControl).toContain('etiquetes: ETIQUETES_DEL_SNIPPET');
   /* La data del Snippet tampoc s'escriu al Panell: viu a destiSnippet.js. */
   expect(fontControl.includes(DATA_DEL_SNIPPET)).toBe(false);
   /* I el Panell llig els dos camps del registre, als tres llocs de crida. */
@@ -1105,9 +1110,12 @@ test('Onada 10 · «Maquinària i Sistema» és exactament el Lector RSS i el TP
   /* La secció es conserva, amb el seu h2, i porta només les eines del registre. */
   const seccio = seccioDe('Maquinària i Sistema');
   expect(seccio.classList.contains('sdp-control-maquinaria')).toBe(true);
-  /* El lead es conserva literal, encara que la secció ja no porte cap targeta de disseny. */
+  /* Onada 11 (261010; prompt 261010_1730, tasca 6, D6) · El lead perd
+     «configuració de disseny», que ja no té cap targeta al Panell. DEROGAT
+     «el lead es conserva literal» de l'Onada 10. */
   expect(seccio.querySelector(':scope > p.lead').textContent.replace(/\s+/g, ' ').trim())
-    .toBe("Panells d'administració, configuració de disseny i eines internes de la plataforma. Aquestes utilitats normalment s'activen només per a l'equip d'administració.");
+    .toBe("Panells d'administració i eines internes de la plataforma. Aquestes utilitats normalment s'activen només per a l'equip d'administració.");
+  expect(seccio.querySelector(':scope > p.lead').textContent).not.toContain('configuració de disseny');
   const eines = PLUGINS.filter((plugin) => ['rss', 'tpv'].includes(plugin.id));
   expect(eines.map((plugin) => plugin.titol)).toEqual(['Lector RSS', 'TPV del Bar']);
   expect(targetesDe(seccio).map(titolDeTargeta)).toEqual(eines.map((plugin) => plugin.titol));

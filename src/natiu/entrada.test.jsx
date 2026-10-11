@@ -18,7 +18,8 @@ const ENTORN = vi.hoisted(() => {
 });
 const pintats = vi.hoisted(() => []);
 
-vi.mock('../host.js', () => ({ configura: vi.fn(), arrenca: vi.fn(), arrencaAuto: vi.fn(), exposaGlobal: vi.fn() }));
+/* Onada 12 (261011) · arrenca() torna una promesa, com la de veres: l'entrada li posa un .catch. */
+vi.mock('../host.js', () => ({ configura: vi.fn(), arrenca: vi.fn(async () => ({ fase: 'segellat' })), arrencaAuto: vi.fn(), exposaGlobal: vi.fn() }));
 vi.mock('../config/capaDelPaquet.js', async (importOriginal) => {
   const original = await importOriginal();
   return { ...original, fixaCapaDelPaquet: vi.fn(original.fixaCapaDelPaquet) };
@@ -76,6 +77,27 @@ test('arrenca després de configura(), pinta una sola vegada amb la capa per dav
   expect(pintats[0].props.config).toEqual({ ...CAPA_NATIVA, ...DEL_LLOC });
   expect(pintats[0].props.isFirstInstance).toBe(true);
   expect(pintats[0].props.targetNode).toBe(document.getElementById('root'));
+});
+
+/* Onada 12 (261011; ordres 261011_0130, punt 7) · Com main.jsx: el rebuig d'una
+   arrencada fallida té amo i l'App es pinta igual. */
+test('una arrencada que falla no deixa cap rebuig sense amo i l’App es pinta igual', async () => {
+  const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+  const senseAmo = vi.fn();
+  process.on('unhandledRejection', senseAmo);
+  try {
+    const fallada = new Error('tros caigut');
+    (await import('../host.js')).arrenca.mockRejectedValueOnce(fallada);
+    const { host } = await avalua();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(host.arrenca).toHaveBeenCalledTimes(1);
+    expect(error).toHaveBeenCalledWith('[natiu] Arrencada fallida:', fallada);
+    expect(senseAmo).not.toHaveBeenCalled();
+    expect(pintats).toHaveLength(1);
+  } finally {
+    process.off('unhandledRejection', senseAmo);
+    error.mockRestore();
+  }
 });
 
 test('amb un #root que ja té contingut no fa res: ni capa, ni configura, ni pintada', async () => {

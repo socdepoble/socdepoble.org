@@ -393,12 +393,6 @@
   .sdp-paginacio__num:focus-visible, .sdp-paginacio__pas:focus-visible { outline: 3px solid var(--sdp-focus); outline-offset: 2px; }
   .sdp-paginacio__pas:disabled { opacity: 0.45; cursor: not-allowed; }
   .sdp-paginacio__salt { padding-inline: var(--sdp-space-1); color: var(--sdp-text-suau); }
-  .sdp-taula--ampla { width: 100%; min-width: 600px; }
-  @media (hover: hover) and (pointer: fine) {
-    .sdp-taula--interactiva tbody tr:hover { background: var(--sdp-fons-subtil); cursor: pointer; }
-  }
-  .sdp-accions { display: flex; flex-wrap: wrap; gap: var(--sdp-space-3); align-items: center; }
-  .sdp-accions--final { justify-content: flex-end; }
 
   /* ── ESTATS ───────────────────────────────────────────────────────── */
   .sdp-buit {
@@ -455,15 +449,6 @@
   }
 
   /* ── CATÀLEG (només /disseny) ─────────────────────────────────────── */
-  .sdp-cataleg-nav { margin-block: var(--sdp-space-4) var(--sdp-space-6); }
-  .sdp-cataleg-nav__llista { display: flex; flex-wrap: wrap; gap: var(--sdp-space-2); margin: 0; padding: 0; list-style: none; }
-  .sdp-cataleg-nav__llista > li { margin: 0; }
-  .sdp-cataleg-nav__enllac {
-    display: inline-flex; align-items: center; min-height: var(--sdp-touch-min); padding: 0 var(--sdp-space-4);
-    border: 2px solid var(--sdp-vora); border-radius: var(--sdp-radi-boto);
-    color: var(--sdp-text-titol); font-weight: 700; text-decoration: none;
-  }
-  .sdp-cataleg-nav__enllac[aria-current="page"] { background: var(--sdp-fons-invers); border-color: var(--sdp-fons-invers); color: var(--sdp-text-invers); }
   .sdp-especimen { margin-bottom: var(--sdp-space-10); padding-top: var(--sdp-space-6); border-top: 2px solid var(--sdp-vora); }
   .sdp-especimen__cap { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--sdp-space-3); }
   .sdp-especimen__nom { margin: 0; }
@@ -572,20 +557,17 @@
     margin-top: var(--sdp-space-8); padding: var(--sdp-space-4);
     border: 1px solid var(--sdp-vora); border-radius: var(--sdp-radi-m); background: var(--sdp-fons-targeta);
   }
-  .sdp-consola__instantania { margin: 0; color: var(--sdp-text-suau); font-weight: 700; }
+  /* Onada 12 (261011; ordres 261011_0130, punt 5) · Kowalski: xifres
+     tabulars on els nombres canvien. La data i l'hora de la instantània es
+     tornen a pintar amb cada «Refrescar»: amb xifres de la mateixa amplària,
+     la línia i el botó del costat no ballen. Com .sdp-consola__metrica i
+     .sdp-consola__dada (modules.css). */
+  .sdp-consola__instantania { margin: 0; color: var(--sdp-text-suau); font-weight: 700; font-variant-numeric: tabular-nums; }
   /* D-C (ordre del Mestre, 261004) · dins de prosa fa el 90 % del pare; mai
      per davall del sòl de 14px si el pare és text meta. */
   .sdp-consola__mono { font-family: var(--sdp-font-mono); font-size: max(0.9em, var(--sdp-text-meta)); overflow-wrap: anywhere; }
 
 /* Migrat des de legat.css */
-.btn-group {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--sdp-space-4);
-  align-items: center;
-  justify-content: flex-start;
-}
-
 .btn {
   padding: var(--sdp-space-3) var(--sdp-space-6);
   border-radius: var(--sdp-radi-boto);
@@ -617,17 +599,6 @@
   color: var(--sdp-sobre-accio);
 }
 
-.btn-outline-dark {
-  background: transparent;
-  border: 1px solid var(--sdp-vora-control);
-  color: var(--sdp-text-titol);
-}
-
-.btn-base {
-  background: var(--sdp-fons-invers);
-  color: var(--sdp-text-invers);
-}
-
 .btn-danger {
   background: var(--sdp-error);
   color: var(--sdp-sobre-color);
@@ -642,15 +613,6 @@
 
   .btn-secondary:hover:not(:disabled) {
     background: var(--sdp-accio-control-hover);
-  }
-
-  .btn-outline-dark:hover:not(:disabled) {
-    border-color: var(--sdp-text-suau);
-    background: var(--sdp-fons-targeta);
-  }
-
-  .btn-base:hover:not(:disabled) {
-    background: var(--sdp-fons-invers);
   }
 
   .btn-danger:hover:not(:disabled) {
@@ -960,11 +922,18 @@
   min-width: 0;
 }
 
+/* Onada 12 (261011; ordres 261011_0130, punt 2: «eradicar qualsevol marc
+   blanc (borders, fons, padding amb fons blanc darrere la imatge) a la
+   Consola i especialment al Mur») · Fora el fons --sdp-fons-targeta (blanc en
+   clar) de darrere de l'avatar: era un disc blanc davall de la imatge, que
+   es veia a través d'un avatar amb transparència i mentre la imatge no
+   havia arribat. Ara darrere de l'avatar només hi ha la barra taronja on
+   viu. La reserva sense avatar (--fallback, més avall) porta el seu fons
+   propi i no canvia; la mida, el cercle, el `cover` i l'ombra, tampoc. */
 .sp-card-avatar {
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: var(--sdp-fons-targeta);
   object-fit: cover;
   flex: none;
   box-shadow: var(--sdp-ombra-1);
@@ -1592,24 +1561,6 @@ a.pill:active {
   white-space: nowrap;
 }
 
-/* Els modificadors d'estat van DESPRÉS del segon .badge: mateixa capa i
-   mateixa especificitat, guanya l'ordre de font. Abans vivien davant i
-   eixe bloc els pintava tots de gris neutre. */
-.badge-success {
-  background: var(--sdp-exit-fons);
-  color: var(--sdp-exit-text);
-}
-
-.badge-warning {
-  background: var(--sdp-avis-fons);
-  color: var(--sdp-avis-text);
-}
-
-.badge-info {
-  background: var(--sdp-info-fons);
-  color: var(--sdp-info-text);
-}
-
 .devices-panel__head .badge-row,
 .card__body .badge-row {
   justify-content: center;
@@ -1630,17 +1581,6 @@ a.pill:active {
   margin-top: 0;
   margin-bottom: var(--sdp-space-3);
   justify-content: center;
-}
-
-.editor-toolbar .btn-icon {
-  color: var(--sdp-crom-text);
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .editor-toolbar .btn-icon:hover {
-    background: var(--sdp-crom-hover);
-    color: var(--sdp-crom-text);
-  }
 }
 
 .btn-icon {
@@ -1668,11 +1608,6 @@ a.pill:active {
 @media (hover: hover) and (pointer: fine) {
   .btn-publish:hover {
     background: var(--sdp-accio-hover);
-  }
-
-  .editor-toolbar .btn-icon:hover {
-    outline: 1px solid currentColor;
-    outline-offset: -2px;
   }
 }
 
@@ -2528,6 +2463,89 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
   :root[data-contrast="bancal"] .sp-card-calendar-badge__any,
   :host([data-contrast="bancal"]) .sp-card-calendar-badge__any {
     opacity: 1;
+  }
+}
+
+/* ── Onada 12 (261011; ordres 261011_0130, punt 5) · Kowalski: L'OMBRA DE LA
+   TARGETA NO S'ANIMA ───────────────────────────────────────────────────────
+   Regla ja adoptada el 261004 (pla 261004_0050, Fase A i C: «cap ombra
+   animada: el canvi d'ombra és instantani», com la targeta de modules.css):
+   en passar el ratolí per damunt d'una targeta, l'ombra passa de
+   --sdp-ombra-2 a --sdp-ombra-3 de colp, sense els 300ms de fosa. Animar una
+   ombra és repintar la targeta sencera a cada fotograma; en una graella de
+   targetes es nota. La regla base de .sp-card (més amunt) la fixa lletra
+   per lletra una altra prova (UniversalCard.vinyeta.capes.test.jsx) i no es
+   toca: esta, amb la mateixa especificitat i darrere, guanya per ordre de
+   font, com el premut de .sdp-boto del bloc de dalt. L'ombra de repòs i la
+   del hover (Q6) són les de sempre: cap píxel canvia en repòs, ni al tàctil.
+   No cobrix .sp-card--action:hover (la recepta del Control: alça 2px, temps
+   literals i sense guarda de ratolí), també fixada i fora de la superfície
+   d'esta passada (Mur i Consola): pendent d'ordre. */
+@layer components {
+  .sp-card {
+    transition: none;
+  }
+}
+
+/* ── Onada 12 (261011; ordres 261011_0130, punt 5) · Kowalski §1 (document
+   261011_0246): «Respond on pointer-down, not on release. Highlight a button
+   the instant it's pressed» · LA TARGETA RESPON EN PRÉMER-LA ───────────────
+   El vel enllaç de la targeta (.sp-card-link-overlay) és tota la seua
+   superfície clicable. El premut global de base.css (FEEDBACK TÀCTIL, capa
+   legacy) li posava l'escala del sistema, però el vel és transparent: no es
+   veia res, i al tàctil (sense hover) la targeta s'obria sense cap retorn.
+   Ara el vel es tiny en prémer:
+     · En clar, --sdp-fons-hover-subtil (la roca al 6 %): sobre el blanc de
+       la targeta fa un gris de paper i sobre una foto l'enfosquix un 6 %,
+       sense tapar-la. En fosc eixe vel no es veu (roca sobre roca): mana
+       --sdp-crom-realc (blanc al 7 %). És el mateix parell clar/fosc que ja
+       fa servir l'etiqueta que es pot prémer (.sp-card-label__action:hover,
+       més amunt): cap token nou.
+     · A l'instant en prémer (`transition: none` dins del premut: cap retard
+       d'entrada) i de tornada amb la durada i la corba dels àtoms, declarada
+       en repòs: si es torna a prémer a mitja tornada, respon de colp.
+     · Sense escala (`transform: none`): un vel encongit al 97 % deixaria una
+       vora sense tenyir, i el vel no té res a moure.
+   El vel viu davall de les peces interactives de la targeta (z-index 1
+   contra 2): la boina, el peu, les etiquetes i el copyright no es tinyen, i
+   prémer-los no tiny la targeta. La regla base del vel i l'anell de focus
+   (ombra interior) les fixen altres proves i no es toquen: estes són regles
+   noves, darrere i a la mateixa capa. Amb moviment reduït, l'apagador global
+   de base.css deixa la tornada en res. Cap píxel canvia en repòs. */
+@layer components {
+  .sp-card-link-overlay {
+    transition: background-color var(--sdp-t);
+  }
+  .sp-card-link-overlay:active {
+    background-color: var(--sdp-fons-hover-subtil);
+    transform: none;
+    transition: none;
+  }
+  :root[data-theme="dark"] .sp-card-link-overlay:active,
+  :host([data-theme="dark"]) .sp-card-link-overlay:active {
+    background-color: var(--sdp-crom-realc);
+  }
+}
+
+/* ── Onada 12 (261011; ordres 261011_0130, punt 5) · Kowalski §7 (document
+   261011_0246): «Anchor interactions to their source» · EL MENÚ DE COMENTAR
+   DE LA TARGETA NAIX DEL SEU BOTÓ ──────────────────────────────────────────
+   Regla ja adoptada el 261004 (modules.css, @keyframes sdp-aparicio-menu:
+   «cada menú posa el seu transform-origin a la cantonada del disparador»),
+   que els menús del Xat ja complixen. El de la targeta apareixia de colp i
+   sense origen. Penja del peu blau i s'obri cap amunt, apegat a l'esquerra,
+   damunt del botó Comentar: l'origen és baix a l'esquerra. Entra des de
+   --sdp-escala-aparicio (0,96, mai 0) i l'opacitat, en --sdp-durada-rapida
+   amb la corba d'eixida. El seu lloc es posa amb `bottom` i
+   `inset-inline-start`, sense cap transform: l'animació no en trepitja cap.
+   NO el de la barra blava (.bar-blue .sdp-menu-traduir), que se centra amb
+   translateX(-50%) i el perdria. Amb moviment reduït l'escala val 1
+   (tokens.css) i només queda la fosa, que l'apagador de base.css deixa en
+   res. Tancat, el menú no és al DOM: cap píxel canvia en repòs. */
+@layer components {
+  .sp-card-footer .sdp-menu-comentar {
+    transform-origin: bottom left;
+    animation: sdp-aparicio-menu var(--sdp-durada-rapida) var(--sdp-corba-eixida);
   }
 }
 

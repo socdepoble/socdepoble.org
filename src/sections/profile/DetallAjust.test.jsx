@@ -10,6 +10,8 @@ vi.mock('../../app/contexts/RouterContext', () => ({ useNavigate: () => m.naviga
 vi.mock('../../app/contexts/SessionContext.jsx', () => ({
   useSession: () => ({ logout: m.logout, preparaEixida: m.preparaEixida }),
 }));
+/* Onada 11 (261010) · El segon factor té proves pròpies (admin/SegonFactor.test.jsx). */
+vi.mock('../admin/SegonFactor.jsx', () => ({ SegonFactor: () => <p>el segon factor, en línia</p> }));
 import DetallAjust, { AVIS_SENSE_COLUMNA, pagina } from './DetallAjust.jsx';
 import { NotificationProvider } from '../../components/universal/NotificationContext.jsx';
 
@@ -72,6 +74,25 @@ test('C01 · si tancar la sessió falla, es diu en línia i no es recarrega', as
   expect(screen.getByRole('alert').textContent).toBe('No s’ha pogut tancar la sessió.');
   expect(pagina.recarrega).not.toHaveBeenCalled();
   expect(screen.getByRole('button', { name: 'Confirmar eixida' }).disabled).toBe(false);
+});
+
+/* ── Onada 11 (261010; prompt 261010_1730, tasca 2) · el segon factor i el Tauler del superadmin ── */
+
+const SEGON_FACTOR = Object.freeze({ id: 'segon-factor', lloc: 'compte', titol: 'Segon factor', tipus: 'accio', accio: 'segon-factor', obert: true });
+const PANELL = Object.freeze({ id: 'panell-superadmin', lloc: 'compte', titol: 'Panell de superadministració', tipus: 'accio', accio: 'obrir-admin', obert: true });
+
+test('Onada 11 · l’acció «segon-factor» pinta el segon factor en línia, i «obrir-admin» un botó primari amb el títol de l’ajust que porta a /admin', () => {
+  render(<DetallAjust ajust={SEGON_FACTOR} identitat={jo} />);
+  expect(screen.getByText('el segon factor, en línia')).toBeTruthy();
+  expect(screen.queryByText(/Acció pendent/)).toBeNull();
+  cleanup();
+  render(<DetallAjust ajust={PANELL} identitat={jo} />);
+  const boto = screen.getByRole('button', { name: 'Panell de superadministració' });
+  expect(boto.className).toBe('sdp-boto sdp-boto--primari');
+  expect(boto.disabled).toBe(false);
+  fireEvent.click(boto);
+  expect(m.navigate).toHaveBeenCalledTimes(1);
+  expect(m.navigate).toHaveBeenCalledWith('/admin');
 });
 
 /* ── Ordre del Mestre (261008, grup C) · el poble (selector) i els membres ── */

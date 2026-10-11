@@ -42,6 +42,9 @@
  *                     uninstall.php);
  *   manifest.php      identitat del paquet (sdp.release.v1), només lectura;
  *   marcatge.php      el marcatge universal, el shortcode i la plantilla;
+ *   seo.php           l'OpenGraph de la ruta per a les xarxes, des de la taula
+ *                     dist/seo-routes.json (Onada 11, 261010; esborrany inert:
+ *                     només amb el filtre socdepoble_enxufe_seo i ?sdp=);
  *   bloc/             el bloc «Sóc de Poble» (block.json, render.php);
  *   ajustos.php       Ajustos → Sóc de Poble: identitat de l'amfitrió i diagnosi;
  *   salut.php         proves de Salut del lloc;
@@ -123,6 +126,7 @@ const SOCDEPOBLE_ENXUFE_SLUG      = 'socdepoble-enxufe';
 const SOCDEPOBLE_ENXUFE_HANDLE    = 'socdepoble-enxufe';
 const SOCDEPOBLE_ENXUFE_BUNDLE    = 'dist/soc-de-poble.standalone.js';
 const SOCDEPOBLE_ENXUFE_MANIFEST  = 'dist/sdp-release.json';
+const SOCDEPOBLE_ENXUFE_SEO_RUTES = 'dist/seo-routes.json';
 const SOCDEPOBLE_ENXUFE_FONTS     = 'dist/fonts/noto-sans.css';
 const SOCDEPOBLE_ENXUFE_PLANTILLA = 'socdepoble-enxufe-pantalla-completa';
 const SOCDEPOBLE_ENXUFE_OPCIO     = 'socdepoble_enxufe';
@@ -131,6 +135,7 @@ require_once __DIR__ . '/includes/idioma.php';
 require_once __DIR__ . '/includes/copies.php';
 require_once __DIR__ . '/includes/manifest.php';
 require_once __DIR__ . '/includes/marcatge.php';
+require_once __DIR__ . '/includes/seo.php';
 require_once __DIR__ . '/includes/traduccio.php';
 require_once __DIR__ . '/includes/ajustos.php';
 require_once __DIR__ . '/includes/salut.php';

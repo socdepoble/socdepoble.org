@@ -20,8 +20,13 @@
  *     security_invoker, lectura per a tothom);
  *   · la fitxa pròpia: `profiles` (la política «profiles read own» només
  *     deixa llegir la fila de la sessió);
- *   · el catàleg de demostració només existix en seed/local; cap persona,
- *     empresa o IA del paquet suplix una identitat inexistent al servidor;
+ *   · el catàleg de demostració només existix en seed/local; cap persona ni
+ *     empresa del paquet suplix una identitat inexistent al servidor. Onada
+ *     11 (261010; prompt 261010_1730, tasca 6, D12) · L'única excepció és la
+ *     IA del paquet (AGENTS_IA_SEED), que no té taula al servidor
+ *     (listMyAgents torna buit): este adaptador continua tornant null, i és
+ *     la pàgina (sections/profile/PerfilPublicSection.jsx ·
+ *     perfilDeLaIADelPaquet) qui la pinta del paquet, com ja fa el Xat;
  *   · la fitxa d'una ALTRA persona (ordre del Mestre, 261002): la RPC
  *     `perfil_public(p_id)` (migració 2610021520, security definer). Sencera
  *     si l'ha publicada (`is_public`); si no, només el nom, la foto i el poble,

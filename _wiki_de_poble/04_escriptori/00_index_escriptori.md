@@ -32,9 +32,14 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu — i
 - [[01_produccio/article-ayudawp.md]]
 
 ## Activitat en curs
+- [[261011_0348_acta_marmota_fi_onada11]] · Mestre 261011: Acta de Relleu per fatiga
+- [[261011_0246_teoria_kowalski_apple_design]] · Mestre 261011: Directriu visual Apple
+- [[261011_0230_auditoria_claude_onada12]]
+- [[261010_2200_tractor_ortografia_valenciana]] · Mestre 261010: directives d'imatges per a l'Onada 12
 
-- [[261010_1730_pla_implementacio_onada11]]
-- [[261010_1730_prompt_claude_onada11]]
+
+- [[261011_0130_ordres_nit_directora]] · Mestre 261011: Ordres de nit per a Claude
+- [[02_investigacio_ia/261010_1805_arqueologia_claude]] · Fable 261010: Resultats de l'arqueologia de l'antiga web
 - [[../90_arxiu_historic/261009_2005_brainstorming_panell_superadmin]] · torn_7ffb2f2b: proposta del punt 5 de l'Onada 8, pendent de les decisions del Mestre
 - [[../90_arxiu_historic/261009_1238_missatge_maria_a_claude]] · Mestre 261009: Co-working a Tres Bandes per al pont
 - [[../90_arxiu_historic/261009_1255_resposta_maria_a_claude]] · Mestre 261009: Llum verda de MarIA a Claude
@@ -750,6 +755,18 @@ Enllaços a peces ja existents, verificats al disc; no s’han mogut ni editat e
 
 ## Arxivat amb la Porta Olivera
 
+- [[../90_arxiu_historic/261012_0040_auditoria_claude_informe_complet_ficiv]]
+- [[../90_arxiu_historic/261012_0025_prompt_claude_informe_complet_editorial]]
+- [[../90_arxiu_historic/261012_0025_pla_implementacio_informe_editorial]]
+- [[../90_arxiu_historic/261011_1430_auditoria_claude_maquetacio_ficiv]]
+- [[../90_arxiu_historic/261011_1410_prompt_claude_maquetacio_ficiv]]
+- [[../90_arxiu_historic/261011_1410_pla_implementacio_maquetacio_ficiv]]
+- [[../90_arxiu_historic/261011_1400_auditoria_claude_ficiv]]
+- [[../90_arxiu_historic/261011_1314_prompt_claude_ficiv]]
+- [[../90_arxiu_historic/261011_1314_pla_implementacio_ficiv]]
+- [[../90_arxiu_historic/261010_1730_pla_implementacio_onada11]]
+- [[../90_arxiu_historic/261010_1730_prompt_claude_onada11]]
+- [[../90_arxiu_historic/261010_1741_auditoria_claude]]
 - [[../90_arxiu_historic/261009_1216_prompt_claude_onada7]]
 - [[../90_arxiu_historic/261009_1245_auditoria_claude]]
 - [[../90_arxiu_historic/261009_2005_acta_marmota_onada8]]
@@ -791,3 +808,8 @@ Enllaços a peces ja existents, verificats al disc; no s’han mogut ni editat e
 - [[../10_actes/261007_0025_acta_marmota]]
 - [[../10_actes/261007_1645_acta_marmota]]
 - [[../10_actes/261009_1216_acta_marmota]]
+- [[261011_0246_teoria_kowalski_apple_design]] · per a 
+
+## Àncores sense destí (Porta Olivera)
+
+- 261011 · `Claude`: cap fitxer amb eixe nom als llocs cercats (_wiki_de_poble/90_arxiu_historic/ i les seues subcarpetes, _wiki_de_poble/10_actes/ i les subcarpetes de l'Escriptori; la cerca no baixa més d'un nivell); retirada per --repara.

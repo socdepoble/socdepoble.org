@@ -72,6 +72,35 @@ function fallesDePaginacio(paginacio) {
   ]);
 }
 
+/* Onada 11 (261010; prompt 261010_1730, tasca 2) · El camp ADDITIU i opcional
+   `personalitzacio` de loadCoreContent (capacitat 'personalitzacio'): absent,
+   o un objecte amb taxonomia i estil, cada una null o { payload, versio }. */
+const CLAUS_PERSONALITZACIO = ['taxonomia', 'estil'];
+function fallesDePersonalitzacio(personalitzacio) {
+  if (personalitzacio === undefined) return [];
+  if (!esObjecte(personalitzacio)) return [`personalitzacio havia de ser un objecte i és ${tipusDe(personalitzacio)}`];
+  return CLAUS_PERSONALITZACIO.flatMap((clau) => {
+    const valor = personalitzacio[clau];
+    if (valor === null) return [];
+    if (!esObjecte(valor)) return [`personalitzacio.${clau} havia de ser null o { payload, versio } i és ${tipusDe(valor)}`];
+    return [
+      ...(esObjecte(valor.payload) ? [] : [`personalitzacio.${clau}.payload havia de ser un objecte`]),
+      ...(esEnter(valor.versio) ? [] : [`personalitzacio.${clau}.versio havia de ser un enter`])
+    ];
+  });
+}
+
+/* Onada 11 · Un rebuig del port amb un `code` de text (CODI_SEGON_FACTOR,
+   CODI_PERSONALITZACIO, errorsBackend.js): la interfície decidix pel codi. */
+const rebuigAmbCode = (error) => (error instanceof Error && esTextNoBuit(error.code)
+  ? []
+  : [`havia de rebutjar amb un Error amb code: ${tipusDe(error)} ${JSON.stringify(error?.code ?? null)}`]);
+const CODIS_SENSE_SEGON_FACTOR = ['cal-segon-factor', 'sense-sessio'];
+const rebuigSenseSegonFactor = (error) => [
+  ...rebuigAmbCode(error),
+  ...(error?.code === undefined || CODIS_SENSE_SEGON_FACTOR.includes(error.code) ? [] : [`el code havia de ser ${CODIS_SENSE_SEGON_FACTOR.join(' o ')} i és ${JSON.stringify(error.code)}`])
+];
+
 /* Una pàgina de loadSeccioPage: elements amb id, complete boolean i
    nextCursor null només quan és completa. */
 const fallesDePaginaDeSeccio = (pagina) => [
@@ -125,13 +154,14 @@ export const CASOS = Object.freeze([
     comprova: (usuari) => (usuari === null || teId(usuari) ? [] : [`ni null ni usuari amb id: ${tipusDe(usuari)}`])
   }),
   cas({
-    metode: 'loadCoreContent', titol: 'loadCoreContent(ownerUserId, config) → { towns[], pages[], agents[], pageCopy }',
+    metode: 'loadCoreContent', titol: 'loadCoreContent(ownerUserId, config) → { towns[], pages[], agents[], pageCopy, personalitzacio? }',
     requerix: ['ownerUserId'],
     arguments: (ctx) => [ctx.ownerUserId, ctx.config],
     comprova: (valor) => [
       ...exigixLlistes(valor, ['towns', 'agents']),
       ...(Array.isArray(valor?.pages) ? [] : ['pages havia de ser una llista']),
-      ...(esObjecte(valor?.pageCopy) ? [] : ['pageCopy havia de ser un objecte'])
+      ...(esObjecte(valor?.pageCopy) ? [] : ['pageCopy havia de ser un objecte']),
+      ...fallesDePersonalitzacio(valor?.personalitzacio)
     ]
   }),
   cas({
@@ -356,6 +386,68 @@ export const CASOS = Object.freeze([
     comprova: (error) => (error instanceof Error && esTextNoBuit(error.code)
       ? []
       : [`havia de rebutjar amb un Error amb code: ${tipusDe(error)} ${JSON.stringify(error?.code ?? null)}`])
+  }),
+  /* Onada 11 (261010; prompt 261010_1730, tasca 2) · El segon factor del
+     superadmin. El kit no té cap aplicació d'autenticació: només pot
+     comprovar la llista i que cada rebuig porta un `code` de
+     CODI_SEGON_FACTOR (errorsBackend.js). Un factor o un repte que no
+     existixen no són de ningú: rebutgen amb code, amb sessió o sense (sense
+     servidor d'autenticació, 'no-disponible'). Inscriure un factor crearia
+     dades al servidor: el kit demana que el node ho rebutge amb code quan no
+     pot (sense sessió, sense GoTrue o amb el TOTP no habilitat), i la
+     inscripció real queda per a la prova de fum amb un servidor de veres. */
+  cas({
+    metode: 'llistaFactors', capacitat: 'segonFactor',
+    titol: "llistaFactors(config) → Factor[] ({ id, nom, tipus: 'totp', estat: 'verificat' | 'pendent' }); buida sense sessió",
+    arguments: (ctx) => [ctx.config],
+    comprova: (llista) => {
+      if (!Array.isArray(llista)) return [`havia de ser una llista i és ${tipusDe(llista)}`];
+      return llista.flatMap((factor) => [
+        ...(teId(factor) ? [] : ['un factor sense id']),
+        ...(factor?.tipus === 'totp' ? [] : [`el factor ${factor?.id} no és totp`]),
+        ...(['verificat', 'pendent'].includes(factor?.estat) ? [] : [`el factor ${factor?.id} té estat ${JSON.stringify(factor?.estat)}`]),
+        ...(typeof factor?.nom === 'string' ? [] : [`el factor ${factor?.id} no té nom de text`])
+      ]);
+    }
+  }),
+  cas({
+    metode: 'inscriuFactor', capacitat: 'segonFactor', espera: 'rebutja',
+    titol: 'inscriuFactor(nom, config) quan el node no pot inscriure (sense sessió, sense servidor o TOTP no habilitat) rebutja amb un code',
+    arguments: (ctx) => ['Conformitat', ctx.config],
+    comprova: rebuigAmbCode
+  }),
+  cas({
+    metode: 'reptaFactor', capacitat: 'segonFactor', espera: 'rebutja',
+    titol: 'reptaFactor(factorId, config) d’un factor que no existix rebutja amb un code',
+    arguments: (ctx) => ['conformitat-sense-factor', ctx.config],
+    comprova: rebuigAmbCode
+  }),
+  cas({
+    metode: 'verificaFactor', capacitat: 'segonFactor', espera: 'rebutja',
+    titol: 'verificaFactor({ factorId, repteId, codi }, config) d’un factor que no existix rebutja amb un code i no toca la sessió',
+    arguments: (ctx) => [{ factorId: 'conformitat-sense-factor', repteId: 'conformitat-sense-repte', codi: '000000' }, ctx.config],
+    comprova: rebuigAmbCode
+  }),
+  cas({
+    metode: 'retiraFactor', capacitat: 'segonFactor', espera: 'rebutja',
+    titol: 'retiraFactor(factorId, config) d’un factor que no existix rebutja amb un code',
+    arguments: (ctx) => ['conformitat-sense-factor', ctx.config],
+    comprova: rebuigAmbCode
+  }),
+  /* Onada 11 · La personalització del poble només la desa un superadmin amb
+     el segon factor confirmat: sense sessió, 'sense-sessio'; amb una sessió
+     sense aal2, el servidor ho diu i el port traduïx a 'cal-segon-factor'. */
+  cas({
+    metode: 'adminDesaPersonalitzacio', capacitat: 'personalitzacio', espera: 'rebutja',
+    titol: "adminDesaPersonalitzacio({ clau: 'taxonomia', payload, versio }, config) sense el segon factor rebutja amb code cal-segon-factor o sense-sessio",
+    arguments: (ctx) => [{ clau: 'taxonomia', payload: { categories: [] }, versio: null }, ctx.config],
+    comprova: rebuigSenseSegonFactor
+  }),
+  cas({
+    metode: 'adminHistorialPersonalitzacio', capacitat: 'personalitzacio', espera: 'rebutja',
+    titol: "adminHistorialPersonalitzacio('taxonomia', config) sense el segon factor rebutja amb code cal-segon-factor o sense-sessio",
+    arguments: (ctx) => ['taxonomia', ctx.config],
+    comprova: rebuigSenseSegonFactor
   })
 ]);
 

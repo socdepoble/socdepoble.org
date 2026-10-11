@@ -208,7 +208,15 @@ export const CONTRACTE_AMFITRIO_V1 = congela({
      En mode `fragment` només s'escriu sobre un fragment buit o de forma
      clau=valor: un ancoratge (#seccio) o un router de hash (#/ruta) de
      l'amfitrió no es toquen, i l'element avisa. Per damunt de
-     limits.rutaAUrl s'escriu només el camí, sense la consulta. */
+     limits.rutaAUrl s'escriu només el camí, sense la consulta.
+     Onada 12 (261011; ordres 261011_0130, punt 4) · HISTORIAL: qui declara
+     l'opt-in també accepta que cada navegació nova de l'app òbriga una
+     entrada a l'historial del navegador (pushState), perquè «Arrere» torne a
+     la pantalla d'abans dins de l'app; les redireccions i la primera càrrega
+     reescriuen l'entrada (replaceState). Cada entrada pròpia porta, dins de
+     history.state i sota la mateixa clau, { ruta, i }; la resta de l'estat
+     és de l'amfitrió i es conserva. Un popstate cap a una entrada sense la
+     clau és de l'amfitrió: l'app no hi reacciona (PedraSecaEmbed.jsx). */
   rutaAUrl: { clau: 'sdp', modes: ['fragment', 'parametre'], ruta: 'sencera', fragment: 'clau=valor' },
 
   /* Els canals d'una declaració (validaDeclaracioAmfitrio). Un canal fora

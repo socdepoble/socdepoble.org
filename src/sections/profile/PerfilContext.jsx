@@ -114,7 +114,13 @@ export function usePerfilOpcional() {
    PerfilEditor) o 'compte' (formularis de DetallCompte).
    ═══════════════════════════════════════════════════════════════════ */
 
-export function ajustosPersona(perfil = {}) {
+/**
+ * Onada 11 (261010; prompt 261010_1730, tasca 2) · `superadmin`: només per a
+ * qui ho és, dos ajustos més al compte: el segon factor (TOTP) i l'entrada al
+ * Tauler. Van DINS d'«El compte» (PerfilShell.test.jsx fixa els apartats del
+ * Perfil: cap de nou). Sense superadmin, el catàleg és el d'abans, fila a fila.
+ */
+export function ajustosPersona(perfil = {}, { superadmin = false } = {}) {
   return [
     { id: 'nom', lloc: 'fitxa', titol: 'Nom', camp: 'full_name', tipus: 'text', valor: perfil.full_name || '', obert: true },
     { id: 'avatar', lloc: 'fitxa', titol: 'Foto de perfil', camp: 'avatar_url', tipus: 'imatge', valor: perfil.avatar_url || '', obert: true },
@@ -129,6 +135,11 @@ export function ajustosPersona(perfil = {}) {
         ? 'Tens una baixa en curs: el perfil està congelat. Es desfà cancel·lant-la a «Privacitat i dades».'
         : 'Tria si vols ser visible a la gent del poble o mantindre el compte privat.' },
     { id: 'contrasenya', lloc: 'compte', titol: 'Contrasenya', tipus: 'password', valor: '******', obert: true },
+    /* Onada 11 (261010) · El segon factor i el Tauler, abans de «Tancar sessió». */
+    ...(superadmin ? [
+      { id: 'segon-factor', lloc: 'compte', titol: 'Segon factor', tipus: 'accio', accio: 'segon-factor', obert: true },
+      { id: 'panell-superadmin', lloc: 'compte', titol: 'Panell de superadministració', tipus: 'accio', accio: 'obrir-admin', obert: true },
+    ] : []),
     { id: 'sessio', lloc: 'compte', titol: 'Tancar sessió', tipus: 'accio', accio: 'logout', obert: true },
   ];
 }

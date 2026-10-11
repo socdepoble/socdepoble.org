@@ -1,9 +1,12 @@
 /** Proves pures de l'índex de /cerca (T45): plegat, AND, rànquing, adaptadors i ressaltat. */
 import { expect, test } from 'vitest';
 import {
-  cercaEntrades, deAgent, deConversa, deIdentitat, deMembre, deNota, dePagina, deProducte, dePublicacio,
+  cercaEntrades, deAgent, deConversa, deIdentitat, deMedia, deMembre, deNota, dePagina, dePoble, deProducte, dePublicacio,
   extracteAmbContext, extracteDeResultat, fitxes, partsRessaltades, plega, textPla, tipusValid
 } from './indexCerca.js';
+import { MARKET_ITEMS } from '../mercat/marketContent.js';
+import { MEDIA_ITEMS } from '../multimedia/mediaContent.js';
+import { TOWNS } from '../pobles/townsContent.js';
 
 const membre = (usuari_id, nom, extra = {}) => ({ usuari_id, nom, tipus: 'persona', avatar_url: null, fil_id: null, ...extra });
 
@@ -92,6 +95,68 @@ test('una referència opaca (sdp-media://) o un camp cru insegur no fa miniatura
   expect(dePublicacio({ id: 'j', title: 'X', image: 'javascript:alert(1)' }).imatge).toBeNull();
   expect(deMembre(membre('u', 'Pepa', { avatar_url: 'sdp-media://mitjans_privats/u/cara.jpg' })).avatar.src).toBeNull();
   expect(deMembre(membre('u', 'Pepa', { avatar_url: '/assets/pepa.jpg' })).avatar.src).toBe('/assets/pepa.jpg');
+});
+
+/* Onada 12 (261011; ordres 261011_0130, punt 1: «hi ha dos Mac Mini»). */
+test('la miniatura d’un producte és la seua primera foto, no l’imageSrc que porta el logotip de qui ven', () => {
+  const LOGO = '/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png';
+  const mac = deProducte({ id: 'mac', title: 'Mac Mini', avatar_url: LOGO, imageSrc: LOGO, images: ['/assets/mac.jpg', '/assets/mac-2.jpg'] });
+  expect(mac.imatge.src).toBe('/assets/mac.jpg');
+  /* Sense cap foto pròpia, la reserva de sempre (la de la targeta del Mercat). */
+  expect(deProducte({ id: 'cadira', title: 'Cadira', avatar_url: LOGO, imageSrc: LOGO }).imatge.src).toBe(LOGO);
+});
+
+/* Correcció D3 (261011, refutació del front 1) · La foto d'un article és una
+   entrada de Multimèdia de ple dret: només es retira de la vista «tot» quan
+   el seu article ja hi ix. */
+test('la foto d’un article fa entrada i diu de quin article és (fotoDe); un mitjà de l’arxiu, cap article', () => {
+  const foto = deMedia({ id: 'market-0', title: 'Mac Mini', src: '/assets/mac.jpg', article: { sectionId: 'mercat', id: 'mac' } });
+  expect([foto.clau, foto.tipus, foto.fotoDe, foto.imatge.src]).toEqual(['multimedia:market-0', 'multimedia', 'mercat:mac', '/assets/mac.jpg']);
+  expect(deMedia({ id: 't', title: 'Tibi', article: { sectionId: 'pobles', id: 'tibi' } }).fotoDe).toBe('pobles:tibi');
+  expect(deMedia({ id: 'f', title: 'Fira', article: { sectionId: 'mur', id: 'p1' } }).fotoDe).toBe('publicacions:p1');
+  expect(deMedia({ id: 'a', title: 'Aplec', article: { sectionId: 'events', id: 'e1' } }).fotoDe).toBe('agenda:e1');
+  /* Una secció desconeguda o un article sense id no casen amb cap resultat. */
+  expect(deMedia({ id: 'x', title: 'X', article: { sectionId: 'altres', id: '1' } }).fotoDe).toBeNull();
+  expect(deMedia({ id: 'y', title: 'Y', article: { sectionId: 'mercat' } }).fotoDe).toBeNull();
+  const arxiu = deMedia({ id: 'nano-mur', title: 'Mur', src: '/assets/nano.jpg', kind: 'image' });
+  expect([arxiu.clau, arxiu.fotoDe, arxiu.imatge.src]).toEqual(['multimedia:nano-mur', null, '/assets/nano.jpg']);
+});
+
+test('una foto es queda a la vista «tot» si el seu article no és entre els resultats', () => {
+  const foto = deMedia({ id: 'market-0', title: 'Mac Mini', description: 'Gris espacial', article: { sectionId: 'mercat', id: 'mac' } });
+  /* L'article no és a l'índex (una altra font encara carrega, o ja no existix). */
+  expect(cercaEntrades([foto], 'mac').llista.map((e) => e.clau)).toEqual(['multimedia:market-0']);
+  /* L'article hi és però no casa amb la consulta: la foto sí, i ix. */
+  const producte = deProducte({ id: 'mac', title: 'Mac Mini', description: 'Comprat al març' });
+  const gris = cercaEntrades([producte, foto], 'gris');
+  expect(gris.llista.map((e) => e.clau)).toEqual(['multimedia:market-0']);
+  expect(gris.perTipus).toMatchObject({ tot: 1, mercat: 0, multimedia: 1 });
+});
+
+test('amb la llavor de veres: a «tot», el Mac Mini, la Samarreta i cada poble ixen UNA vegada; amb el filtre Multimèdia, la seua foto', () => {
+  const index = [...TOWNS.map((poble) => dePoble(poble)), ...MARKET_ITEMS.map((producte) => deProducte(producte)),
+    ...MEDIA_ITEMS.map((media) => deMedia(media))].filter(Boolean);
+  const mac = cercaEntrades(index, 'mac mini');
+  expect(mac.llista.map((e) => e.clau)).toEqual(['mercat:mac-mini-m4']);
+  expect(mac.total).toBe(1);
+  /* El recompte de cada filtre és el que eixe filtre ensenya; «tot» no conta la foto repetida. */
+  expect(mac.perTipus).toMatchObject({ tot: 1, mercat: 1, multimedia: 1 });
+  expect(mac.llista[0].imatge.src).toBe('/assets/uploads/brain/mac_mini_m4_1787721966622.jpg');
+  expect(cercaEntrades(index, 'samarreta').llista.map((e) => e.clau)).toEqual(['mercat:samarreta-socdepoble']);
+  expect(cercaEntrades(index, 'tibi').llista.map((e) => e.clau)).toEqual(['pobles:tibi']);
+
+  const fotoMac = cercaEntrades(index, 'mac mini', 'multimedia');
+  expect(fotoMac.llista.map((e) => e.clau)).toEqual(['multimedia:market-0']);
+  expect(fotoMac.total).toBe(1);
+  expect(cercaEntrades(index, 'samarreta', 'multimedia').llista.map((e) => e.clau)).toEqual(['multimedia:market-1']);
+  expect(cercaEntrades(index, 'tibi', 'multimedia').llista.map((e) => e.clau)).toEqual(['multimedia:town-tibi']);
+  for (const poble of TOWNS) {
+    expect(cercaEntrades(index, poble.title).llista.filter((e) => e.titol === poble.title).map((e) => e.clau)).toEqual([`pobles:${poble.id}`]);
+    expect(cercaEntrades(index, poble.title, 'multimedia').llista.map((e) => e.clau)).toContain(`multimedia:town-${poble.id}`);
+  }
+  /* L'arxiu de Multimèdia es continua trobant, a «tot» i amb el filtre. */
+  expect(cercaEntrades(index, 'nano banana', 'multimedia').total).toBeGreaterThan(0);
+  expect(cercaEntrades(index, 'nano banana').perTipus.tot).toBe(cercaEntrades(index, 'nano banana').perTipus.multimedia);
 });
 
 test('agents PERSON, COMPANY i AI van al tipus i a la ruta que toquen', () => {

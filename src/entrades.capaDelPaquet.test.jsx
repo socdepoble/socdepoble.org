@@ -20,7 +20,8 @@ const ENTORN = vi.hoisted(() => {
 });
 const pintats = vi.hoisted(() => []);
 
-vi.mock('./host.js', () => ({ configura: vi.fn(), arrenca: vi.fn(), arrencaAuto: vi.fn(), exposaGlobal: vi.fn() }));
+/* Onada 12 (261011) · arrenca() torna una promesa, com la de veres: main.jsx li posa un .catch. */
+vi.mock('./host.js', () => ({ configura: vi.fn(), arrenca: vi.fn(async () => ({ fase: 'segellat' })), arrencaAuto: vi.fn(), exposaGlobal: vi.fn() }));
 vi.mock('./config/capaDelPaquet.js', async (importOriginal) => {
   const original = await importOriginal();
   return { ...original, fixaCapaDelPaquet: vi.fn(original.fixaCapaDelPaquet) };
@@ -72,6 +73,29 @@ test('main.jsx: fixa la capa del paquet amb les VITE_* abans de configura(), i c
   expect(pintats[0].props.config).toEqual({ ...DEL_PAQUET, pluginUrl: '/', manageDocumentHead: true, routerType: 'browser' });
   expect(host.exposaGlobal).toHaveBeenCalledTimes(1);
   expect(host.arrenca).toHaveBeenCalledTimes(1);
+});
+
+/* Onada 12 (261011; ordres 261011_0130, punt 7) · El rebuig d'una arrencada
+   fallida té amo: es diu per consola i l'App es pinta igual (les vistes el
+   reben per quanLlest(), que torna a arrencar en el reintent). */
+test('main.jsx: una arrencada que falla no deixa cap rebuig sense amo i l’App es pinta igual', async () => {
+  const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+  const senseAmo = vi.fn();
+  process.on('unhandledRejection', senseAmo);
+  try {
+    const fallada = new Error('tros caigut');
+    const host = await import('./host.js');
+    host.arrenca.mockRejectedValueOnce(fallada);
+    await avalua(() => import('./main.jsx'));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(host.arrenca).toHaveBeenCalledTimes(1);
+    expect(error).toHaveBeenCalledWith('[main] Arrencada fallida:', fallada);
+    expect(senseAmo).not.toHaveBeenCalled();
+    expect(pintats).toHaveLength(1);
+  } finally {
+    process.off('unhandledRejection', senseAmo);
+    error.mockRestore();
+  }
 });
 
 test('embed.jsx: fixa la capa del paquet abans d’exposar l’API (i de drenar la cua), i no munta res sobre el #root', async () => {

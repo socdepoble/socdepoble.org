@@ -18,6 +18,10 @@ export * from './realtime.js';
 export * from './utils.js';
 export * from './compte.js';
 export * from './perfils.js';
+/* Onada 11 (261010; prompt 261010_1730, tasca 2) · El segon factor del
+   superadmin i la personalització del poble. */
+export * from './segonFactor.js';
+export * from './personalitzacio.js';
 
 
 

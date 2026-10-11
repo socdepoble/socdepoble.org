@@ -17,6 +17,7 @@ const TEXTOS = Object.freeze({
   NO_OBERTA: 'Esta comanda ja no està oberta.',
   NO_TROBADA: 'No l’hem trobada: potser ja s’ha tancat.',
   CONFLICTE: 'Esta comanda ha canviat en una altra banda: torna a provar-ho.',
+  MIG_MOVIMENT: 'El moviment s’ha quedat a mitges: les línies són ara a les DUES comandes. No el repetisques: mira l’avís de davall i lleva-les de la comanda on sobren abans de cobrar.',
   JA_TANCAT: 'Este tiquet ja està tancat i no es pot reescriure.',
   SENSE_MOTIU: 'Cal dir el motiu.',
   MARXADA: 'Esta línia ja ha marxat: per a llevar-ne, cal anul·lar-la amb motiu.',
@@ -38,6 +39,31 @@ const TEXTOS = Object.freeze({
   OCUPAT: 'Tanca el torn i les comandes obertes abans de canviar la carta.',
   LLAVOR: 'Esta carta no existix.'
 });
+
+/**
+ * L'avís d'un «Mou» o un «Dividix» a mitges (nucli/migMoviment.js,
+ * detectaMigsMoviments), per a una persona: quines línies, a quines dues
+ * comandes i què fer. `nomDe(descripcio)` diu el nom d'una comanda («Taula 3»,
+ * «Barra · 10:00», «Nota 0004»); el posa la vista. Res no s'arregla sol.
+ * @returns {{ titol: string, text: string }}
+ */
+export function avisMigMoviment(mig, nomDe) {
+  const titol = 'Un moviment s’ha quedat a mitges';
+  if (!mig || mig.motiu === 'ERROR') {
+    return { titol: 'No s’han pogut comprovar els moviments', text: 'No s’ha pogut mirar si algun moviment entre comandes s’ha quedat a mitges. Revisa les comandes obertes abans de cobrar: alguna línia podria estar dues vegades.' };
+  }
+  const linies = mig.linies.map((l) => `${l.quantitat} × ${l.nom}`).join(', ');
+  const quines = `${mig.linies.length === 1 && mig.linies[0].quantitat === 1 ? 'La línia' : 'Les línies'} ${linies}`;
+  const origen = nomDe(mig.origen);
+  const desti = nomDe(mig.desti);
+  if (mig.motiu === 'ORIGEN_COBRAT') {
+    return { titol, text: `${quines}: ja s’han cobrat a «${origen}» i encara són a «${desti}». Revisa-la abans de cobrar: estes línies poden estar dues vegades. Si sobren, lleva-les de «${desti}».` };
+  }
+  if (mig.motiu === 'DESTI_COBRAT') {
+    return { titol, text: `${quines}: ja s’han cobrat a «${desti}» i encara són a «${origen}». Revisa-la abans de cobrar: estes línies poden estar dues vegades. Si sobren, lleva-les de «${origen}».` };
+  }
+  return { titol, text: `${quines}: són a «${origen}» i també a «${desti}». Revisa-les abans de cobrar: estes línies poden estar dues vegades. Lleva-les de la comanda on sobren; no tornes a fer el moviment.` };
+}
 
 export function textError(error) {
   const codi = error?.codi;

@@ -8,11 +8,42 @@ vi.mock('../identitat.js', () => ({ jwtPerBackend: () => m.store.get('jwt') ?? n
   get versioSessio() { return m.epoch; } }));
 import { configuraRefrescSessio, request, rpc, ErrorSupabase, mapContentRowsToData } from './runtime.js';
 import { CODI_BACKEND_INABASTABLE, esBackendInabastable } from '../errorsBackend.js';
+import { byId } from '../../config/contentHelpers.js';
+import { _reiniciaAutocuracio, incidents } from '../../utils/autocuracio.js';
 
 test('el contingut remot buit no injecta notes, carpetes ni identitats de demostració', () => {
   expect(mapContentRowsToData([])).toMatchObject({ notes: [], noteFolders: [], agents: [], towns: [] });
   const notes = [{ id: 'real', folderId: 'own-folder' }];
   expect(mapContentRowsToData([{ key: 'notes', payload: notes }]).notes).toEqual(notes);
+});
+
+/* Onada 12 (261011; ordres 261011_0130, punt 7) · Llistes tolerants: una fila
+   d'app_content amb la forma equivocada es pren buida i la resta de claus no
+   se'n ressent. Abans l'objecte passava tal qual i byId(payload.towns)
+   (CoreContentContext) llançava «items.filter is not a function». */
+test('Onada 12 · un payload que no és una llista (objecte, text o null) dona [] i no tomba el contingut', () => {
+  const avis = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  _reiniciaAutocuracio();
+  try {
+    const agents = [{ id: 'agent-real' }];
+    const dades = mapContentRowsToData([
+      { key: 'towns', payload: { id: 'sella' } }, { key: 'feedPosts', payload: 'text' }, { key: 'events', payload: null },
+      { key: 'agents', payload: agents }
+    ]);
+    expect(dades).toMatchObject({ towns: [], feedPosts: [], events: [], marketItems: [], pages: [] });
+    // La llista bona viatja intacta, la mateixa referència.
+    expect(dades.agents).toBe(agents);
+    // El que fa el proveïdor del contingut amb `towns`: ja no llança.
+    expect(byId(dades.towns)).toEqual([]);
+    expect(() => byId({ id: 'sella' })).toThrow(TypeError);
+    // Queda anotat (mai el contingut) i s'avisa una vegada per clau; el null és l'estat normal.
+    expect(incidents().map(({ tipus, on, accio }) => [tipus, on, accio]).sort()).toEqual([
+      ['dades', 'feedPosts', 'llista-buida'], ['dades', 'towns', 'llista-buida']
+    ]);
+    expect(avis).toHaveBeenCalledTimes(2);
+    mapContentRowsToData([{ key: 'towns', payload: { id: 'sella' } }]);
+    expect(avis).toHaveBeenCalledTimes(2);
+  } finally { avis.mockRestore(); _reiniciaAutocuracio(); }
 });
 
 const CONFIG = { supabaseUrl: 'https://api.example.test', supabaseAnonKey: 'sb_publishable_synthetic' };

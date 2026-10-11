@@ -53,6 +53,7 @@ import { avisaClausDescartades, capaDelPaquet, separaClausDelPaquet } from './co
 import { sanitizeHtml } from './utils/sanitize.js';
 import { registraAppExterna, registraModul as registraModulAlRegistre } from './apps/plataforma/registreApps.js';
 import { carregadorDelDocument } from './apps/plataforma/carregaModul.js';
+import { registraIncident } from './utils/autocuracio.js';
 
 /* ═══════════════════════ Estat de l'arrencada ═══════════════════════ */
 
@@ -78,6 +79,9 @@ export { CONTRACTE_BACKEND };
 
 let _segellat = false;
 let _deferArrenca = false;
+/* Onada 12 (261011; ordres 261011_0130, punt 7) · L'última arrencada ha
+   fallat i ningú no l'ha tornada a provar encara (quanLlest la consumix). */
+let arrencadaFallida = false;
 let backendExtern = false;
 
 export function deferArrenca() {
@@ -151,10 +155,14 @@ export function injectaBackendDelPaquet(backend) {
 export function arrenca() {
   if (arrencada) return arrencada;
 
+  /* Un intent nou, vinga de qui vinga, gasta la marca: mentre és en vol, un
+     quanLlest() no ha d'anotar un reintent que no fa (refutació 261011). */
+  arrencadaFallida = false;
   fase = FASE.ARRENCANT;
   _segellat = true;
 
-  arrencada = (async () => {
+  let fallidaAlMateixTick = false;
+  const intent = (async () => {
     try {
       const injectats = Object.keys(getBackendImplementation());
       const pendentsNucli = CONTRACTE_NUCLI.filter((k) => !injectats.includes(k));
@@ -179,14 +187,23 @@ export function arrenca() {
       fase = FASE.CONFIGURABLE; // Permetem tornar a intentar
       _segellat = false;
       arrencada = null;
+      fallidaAlMateixTick = true;
+      arrencadaFallida = true; // quanLlest() hi tornarà una vegada (Onada 12)
+      registraIncident('arrencada', 'host', 'fallada');
       if (rejectLlest) rejectLlest(e);
       for (const espera of [...esperes]) espera.reject(e);
       creaPromesaLlest(); // Preparem una nova promesa per si hi ha un reintent
       throw e;
     }
   })();
+  /* Onada 12 (261011; ordres 261011_0130, punt 7) · Amb l'adaptador ja posat,
+     l'intent no espera res i una fallada passa pel catch abans d'arribar ací:
+     guardar-ne la promesa deixava `arrencada` rebutjada per sempre i cap
+     arrenca() posterior tornava a provar res («Permetem tornar a intentar»).
+     Una fallada després d'una espera ja la buida el catch, com sempre. */
+  arrencada = fallidaAlMateixTick ? null : intent;
 
-  return arrencada;
+  return intent;
 }
 
 export function quanLlest({ signal } = {}) {
@@ -205,6 +222,24 @@ export function quanLlest({ signal } = {}) {
     const onAbort = () => espera.reject(new DOMException('Operació cancel·lada.', 'AbortError'));
     esperes.add(espera);
     if (signal) signal.addEventListener('abort', onAbort, { once: true });
+    /* Onada 12 (261011; ordres 261011_0130, punt 7) · Després d'una arrencada
+       fallida (el tros de l'adaptador que no baixa), l'espera d'un «Torna-ho a
+       provar» no la resolia ningú: cap entrada torna a cridar arrenca() i la
+       vista es quedava en «Carregant» per sempre. Ara la primera espera que
+       arriba després de la fallada torna a arrencar, una vegada per fallada:
+       si torna a fallar, esta espera rep el rebuig (arrenca() la rebutja amb
+       la resta) i la marca queda posada per a la següent petició explícita;
+       cap bucle, cap temporitzador. Mai abans de la primera arrencada: sense
+       fallada no hi ha marca, i deferArrenca() i arrencada="manual" continuen
+       manant. L'espera ja és a `esperes`: una arrencada que acaba en el mateix
+       tick (adaptador ja injectat) també la resol. Amb deferArrenca() mana
+       l'amfitrió també després d'una fallada: pot voler tornar a configurar
+       abans d'arrencar, i ací no se li avança ningú (refutació 261011). */
+    if (arrencadaFallida && !_deferArrenca) {
+      arrencadaFallida = false;
+      registraIncident('arrencada', 'host', 'reintent');
+      arrenca().catch(() => {});
+    }
   });
 }
 

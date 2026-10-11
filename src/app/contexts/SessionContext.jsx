@@ -68,7 +68,9 @@ export function SessionProvider({ children, config = EMPTY_CONFIG }) {
     return () => { unsubscribe(); release(); };
   }, [config]);
 
-  const { usuari, estat, rol, generacio } = estatComplet;
+  /* Onada 11 (261010; prompt 261010_1730, tasca 2) · `nivell` és el claim `aal`
+     del JWT ('aal1' | 'aal2' | null, sessionService). */
+  const { usuari, estat, rol, generacio, nivell = null } = estatComplet;
   const usuariId = usuari?.id ?? null;
 
   /* R · correcció de la revisió · La sessió d'un enllaç de recuperació encara
@@ -153,12 +155,18 @@ export function SessionProvider({ children, config = EMPTY_CONFIG }) {
   const value = useMemo(
     () => {
       const estatEfectiu = (estat === 'dins' && rol === 'desconegut') ? 'comprovant' : estat;
+      const esSuperadmin = rol === 'superadmin';
+      /* Onada 11 (261010) · private.es_superadmin() exigix aal2 (migració
+         2610061448): un superadmin sense el segon factor confirmat en esta
+         sessió no pot desar res al Tauler, i la interfície ho ha de dir abans
+         que el servidor torne 42501. */
       return {
-        currentUser: usuari, estat: estatEfectiu, rol, esSuperadmin: rol === 'superadmin', renovaAra, generacio,
+        currentUser: usuari, estat: estatEfectiu, rol, esSuperadmin, renovaAra, generacio,
+        nivell, calSegonFactor: esSuperadmin && nivell !== 'aal2',
         recuperacioPendent, enllacDeRecuperacio, ...backendFuncs, logout: tancaSessio, eixAmb, preparaEixida
       };
     },
-    [usuari, estat, rol, generacio, recuperacioPendent, enllacDeRecuperacio, backendFuncs, tancaSessio, eixAmb, preparaEixida]
+    [usuari, estat, rol, generacio, nivell, recuperacioPendent, enllacDeRecuperacio, backendFuncs, tancaSessio, eixAmb, preparaEixida]
   );
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;

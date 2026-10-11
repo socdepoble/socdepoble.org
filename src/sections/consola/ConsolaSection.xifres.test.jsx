@@ -122,7 +122,8 @@ test.each(SLUGS_XIFRES)('/consola/xifres/%s: H1 = títol de la targeta, Sóc de 
   // La targeta del tauler.
   window.history.replaceState(null, '', '/consola');
   render(<Aplicacio />);
-  await screen.findByText('El Mas en xifres');
+  // Onada 11 (261010; prompt 261010_1730, tasca 5) · l'H2 de la secció i l'H3 de l'Índex de la Consola: dues aparicions.
+  await screen.findAllByText('El Mas en xifres');
   const targeta = [...xifresDelTauler().querySelectorAll('article.sp-card')]
     .find((t) => t.querySelector('a.sp-card-link-overlay').getAttribute('href') === rutaXifra(slug));
   const titol = targeta.querySelector('h3').textContent;
@@ -260,7 +261,8 @@ test('Connectar de la targeta porta a la pàgina de la xifra; Compartir comparte
   vi.stubGlobal('navigator', { ...navigator, share: undefined, clipboard: { writeText: copia } });
   window.history.replaceState(null, '', '/consola');
   render(<Aplicacio />);
-  await screen.findByText('El Mas en xifres');
+  // Onada 11 (261010; prompt 261010_1730, tasca 5) · l'H2 de la secció i l'H3 de l'Índex de la Consola: dues aparicions.
+  await screen.findAllByText('El Mas en xifres');
   await act(async () => {
     fireEvent.click(within(xifresDelTauler()).getByRole('button', { name: 'Compartir 1 torn caducat' }));
   });

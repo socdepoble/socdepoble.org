@@ -162,14 +162,23 @@ test('fora de soc-de-poble conserva showModal i no crea cap capa local', () => {
   expect(document.querySelector('.sdp-capa-modal')).toBeNull();
 });
 
+/* Onada 11 (261010; prompt 261010_1730, tasca 3) · la secció s'amaga amb una
+   classe i un full d'estil del document (jsdom no carrega el CSS de l'app),
+   sense cap style=: la trampa (modalLocal.js, controls) la troba per l'estil
+   calculat dels ancestres, el mateix camí que abans amb display:none en línia
+   (l'atribut hidden entraria pel curtcircuit de closest('[hidden]')). */
 test('la trampa de Tab exclou controls dins de seccions amagades per CSS', () => {
+  const full = document.createElement('style');
+  full.textContent = '.prova-seccio-amagada { display: none; }';
+  document.head.append(full);
   const { root, shadow } = muntaLocal(<Dialeg obert titol="Focus visible" onTanca={() => {}}>
-    <button>Últim visible</button><div style={{ display: 'none' }}><button>Amagat</button></div>
+    <button>Últim visible</button><div className="prova-seccio-amagada"><button>Amagat</button></div>
   </Dialeg>);
   const ultim = within(root).getByRole('button', { name: 'Últim visible' }); ultim.focus();
   const e = new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true });
   fireEvent(ultim, e); expect(e.defaultPrevented).toBe(true);
   expect(shadow.activeElement).toBe(within(root).getByRole('button', { name: 'Tancar' }));
+  full.remove();
 });
 
 test('desmuntar pare i fill oberts restituïx els germans i no altera el modal d’una altra instància', () => {

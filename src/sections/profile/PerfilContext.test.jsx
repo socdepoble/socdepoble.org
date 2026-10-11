@@ -157,6 +157,20 @@ it('cada ajust del catàleg diu si viu a la fitxa o al compte', () => {
   expect(org.find(a => a.id === 'fitxa').pendent).toBe(true);
 });
 
+/* Onada 11 (261010; prompt 261010_1730, tasca 2) · El superadmin té dos ajustos
+   més al compte: el segon factor i el Tauler. La resta, el catàleg d'abans. */
+it('Onada 11 · ajustosPersona amb superadmin afig «Segon factor» i «Panell de superadministració» al compte, abans de «Tancar sessió»; sense, no canvia', () => {
+  expect(ajustosPersona({}, {})).toEqual(ajustosPersona());
+  expect(ajustosPersona({}, { superadmin: false })).toEqual(ajustosPersona());
+  const amb = ajustosPersona({ full_name: 'Pep' }, { superadmin: true });
+  expect(amb.filter(a => a.lloc === 'fitxa').map(a => a.id)).toEqual(['nom', 'avatar']);
+  expect(amb.filter(a => a.lloc === 'compte').map(a => a.id)).toEqual(['correu', 'privacitat', 'contrasenya', 'segon-factor', 'panell-superadmin', 'sessio']);
+  expect(amb.find(a => a.id === 'segon-factor')).toEqual({ id: 'segon-factor', lloc: 'compte', titol: 'Segon factor', tipus: 'accio', accio: 'segon-factor', obert: true });
+  expect(amb.find(a => a.id === 'panell-superadmin')).toEqual({ id: 'panell-superadmin', lloc: 'compte', titol: 'Panell de superadministració', tipus: 'accio', accio: 'obrir-admin', obert: true });
+  /* La resta de files són idèntiques a les d'abans. */
+  expect(amb.filter(a => !['segon-factor', 'panell-superadmin'].includes(a.id))).toEqual(ajustosPersona({ full_name: 'Pep' }));
+});
+
 /* ── Grup C (ordre del Mestre, 261008) · el poble i els membres de l'organització ── */
 
 it('grup C · opcionsDePoble: l’opció buida primer, els pobles per nom (ca) i el desat encara que ja no hi siga', () => {

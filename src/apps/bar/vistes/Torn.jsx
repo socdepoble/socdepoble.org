@@ -19,6 +19,7 @@ import {
   Alerta, BarraResum, Boto, Camp, CampText, LiniesColleccio, PillToggle, Pila, Taula, TeclatNumeric
 } from '../../../components/PedraSeca/index.js';
 import { ColumnaColleccio } from '../../comu/esquelet/index.js';
+import { esDescartable } from '../nucli/comanda.js';
 import { resumTorn } from '../nucli/torn.js';
 import { useBar } from '../estat/ProveidorBar.jsx';
 import { AvisBase, AvisDeLaColumna, AvisOperacio, Columna, Preparat } from './comu.jsx';
@@ -136,7 +137,9 @@ function Torn() {
     if (traspas && !traspas.llegidaA) return <LecturaTraspas nota={traspas} />;
     return <ObriTorn traspas={traspas} />;
   }
-  const resum = resumTorn(tornActual, bar.tiquets, bar.comandes, { categories: bar.carta.categories });
+  /* Onada 12 (261011, BAR-R11) · Les mateixes comandes obertes que el tancament (Tancament.jsx):
+     una de buida (un tiquet de barra nou sense res) no ho és, i es descartarà en tancar. */
+  const resum = resumTorn(tornActual, bar.tiquets, bar.comandes.filter((c) => !esDescartable(c)), { categories: bar.carta.categories });
   return (
     <Columna titol="Torn actual"
       eines={<BarraResum etiqueta={`Torn de ${tornActual.obertPer}`} comptador={resum.tiquets} textComptador={(n) => `${n} tiquets`}

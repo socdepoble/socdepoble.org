@@ -273,6 +273,62 @@ describe('grup C · membreDOrganitzacio i els codis SDP-ORGMEM', () => {
   });
 });
 
+/* Onada 11 (261010; prompt 261010_1730, tasca 2) · El segon factor del
+   superadmin i la personalització del poble. */
+test('Onada 11 · segonFactor és una capacitat opcional de cinc mètodes, fora del nucli i congelada', () => {
+  expect(CAPACITATS.segonFactor).toEqual(['llistaFactors', 'inscriuFactor', 'reptaFactor', 'verificaFactor', 'retiraFactor']);
+  expect(Object.isFrozen(CAPACITATS.segonFactor)).toBe(true);
+  for (const nom of CAPACITATS.segonFactor) {
+    expect(CONTRACTE_NUCLI).not.toContain(nom);
+    expect(CAPACITATS.sessio).not.toContain(nom);
+    expect(CONTRACTE_BACKEND).toContain(nom);
+  }
+  /* El nucli no creix. */
+  expect(CONTRACTE_NUCLI).toHaveLength(32);
+  for (const quants of [1, 2, 3, 4]) {
+    expect(() => port.validaBackendImplementation({ ...nucli(), ...capacitat('segonFactor', quants) }))
+      .toThrow('Capacitat parcial: segonFactor');
+  }
+});
+
+test('Onada 11 · un backend sense segonFactor continua sent vàlid i no el pot cridar', () => {
+  port.setBackendImplementation(nucli());
+  expect(port.teCapacitat('segonFactor')).toBe(false);
+  expect(() => port.llistaFactors({})).toThrow('no està implementat');
+  expect(() => port.inscriuFactor('Mòbil', {})).toThrow('no està implementat');
+  expect(() => port.reptaFactor('f', {})).toThrow('no està implementat');
+  expect(() => port.verificaFactor({ factorId: 'f', repteId: 'r', codi: '000000' }, {})).toThrow('no està implementat');
+  expect(() => port.retiraFactor('f', {})).toThrow('no està implementat');
+  port.setBackendImplementation({ ...nucli(), ...capacitat('segonFactor') });
+  expect(port.teCapacitat('segonFactor')).toBe(true);
+  expect(port.verificaFactor({ factorId: 'f', repteId: 'r', codi: '000000' }, {})).toBe('verificaFactor');
+});
+
+test('Onada 11 · personalitzacio és una capacitat opcional de dos mètodes, fora del nucli i de admin, i congelada', () => {
+  expect(CAPACITATS.personalitzacio).toEqual(['adminDesaPersonalitzacio', 'adminHistorialPersonalitzacio']);
+  expect(Object.isFrozen(CAPACITATS.personalitzacio)).toBe(true);
+  for (const nom of CAPACITATS.personalitzacio) {
+    expect(CONTRACTE_NUCLI).not.toContain(nom);
+    expect(CAPACITATS.admin).not.toContain(nom);
+    expect(CONTRACTE_BACKEND).toContain(nom);
+  }
+  /* La lectura no és cap mètode nou: viatja dins de loadCoreContent. */
+  expect(CONTRACTE_BACKEND.filter((nom) => /personalitzacio/i.test(nom))).toEqual(CAPACITATS.personalitzacio);
+  expect(() => port.validaBackendImplementation({ ...nucli(), ...capacitat('personalitzacio', 1) }))
+    .toThrow('Capacitat parcial: personalitzacio');
+});
+
+test('Onada 11 · un backend sense personalitzacio continua sent vàlid i no la pot cridar', () => {
+  port.setBackendImplementation(nucli());
+  expect(port.teCapacitat('personalitzacio')).toBe(false);
+  expect(() => port.adminDesaPersonalitzacio({ clau: 'taxonomia', payload: {}, versio: null }, {})).toThrow('no està implementat');
+  expect(() => port.adminHistorialPersonalitzacio('taxonomia', {})).toThrow('no està implementat');
+  port.setBackendImplementation({ ...nucli(), ...capacitat('personalitzacio') });
+  expect(port.teCapacitat('personalitzacio')).toBe(true);
+  expect(port.adminDesaPersonalitzacio({ clau: 'estil', payload: {}, versio: null }, {})).toBe('adminDesaPersonalitzacio');
+  expect(port.adminHistorialPersonalitzacio('estil', {})).toBe('adminHistorialPersonalitzacio');
+});
+
 test('un node amb el nucli sol continua sent vàlid, sense compte ni consentiment', () => {
   port.setBackendImplementation(nucli());
   expect(port.teCapacitat('compte')).toBe(false);

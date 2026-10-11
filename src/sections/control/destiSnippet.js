@@ -54,6 +54,19 @@ export const CLAU_URL_SNIPPET = 'snippetChromeUrl';
    Pendent del Mestre: confirmar el dia i, si la vol, dictar-ne l'hora. */
 export const DATA_DEL_SNIPPET = '2026-10-03';
 
+/* Onada 11 (261010; prompt 261010_1730, tasca 6, D5) · LES ETIQUETES del
+   Snippet, al costat de la data i per la mateixa raó: targeta i fitxa diuen
+   el mateix. Abans vivien a la constant SNIPPET de ControlSection.jsx i la
+   fitxa no les pintava. Una Categoria i una Etiqueta, en l'ordre de la skill
+   sdp-universal-page (§4), sense enllaç (D3 de l'Onada 10), amb les classes
+   de les etiquetes de les targetes de plugin (registrePlugins.js). Són
+   l'esborrany per al Mestre de l'Onada 10: la Categoria, la mateixa de les
+   eines del registre; l'Etiqueta diu què és. */
+export const ETIQUETES_DEL_SNIPPET = Object.freeze([
+  Object.freeze({ text: 'Eina', className: 'sdp-badge-category' }),
+  Object.freeze({ text: 'Extensió', className: 'sdp-badge-tag' })
+]);
+
 const RUTA_CONTROL = '/control';
 const RUTA_UTILITATS = '/utilitats';
 /* Un paquet d'extensió de Chrome per a carregar desempaquetat: es descarrega. */

@@ -64,7 +64,9 @@ import { ESTATS_DESTINACIO, useDestinacioEnllac } from '../../apps/plataforma/de
 import { rutaDEntrada } from '../../config/rutaEntrada.js';
 import { reglaDEntrada } from '../connectar/contingutExtern.js';
 import { missatgeDeLError } from '../connectar/abastConnexio.js';
-import { AVIS_CATEGORIA, CATEGORIES_BASE, ETIQUETES_BASE } from './classificacioBloc.js';
+import { AVIS_CATEGORIA } from './classificacioBloc.js';
+import { useCoreContent } from '../../app/contexts/CoreContentContext.jsx';
+import { categoriesBase, etiquetesBase } from '../../data/personalitzacio.js';
 import {
   APP_LECTOR, DESTINS, entradaDeDesa, entradaDeFont, escriuDesa, escriuDesti, llegixDesa, llegixDesti, nomProposat,
   paramsDeLaNota
@@ -159,6 +161,13 @@ export function SnippetCurador({ carpetes = CAP, carpetaId }) {
   const { showToast } = useToast();
   const { creaNota, canCreate, config, notes = CAP } = useNotes() || {};
   const id = useId();
+  /* Onada 11 (261010; prompt 261010_1730, tasca 2) · Les llistes de sèrie
+     del Bloc, ampliades per la taxonomia del poble si n'hi ha; sense
+     personalització, les mateixes de classificacioBloc.js. */
+  const { personalitzacio } = useCoreContent();
+  const taxonomia = personalitzacio?.taxonomia?.payload;
+  const CATEGORIES_BASE = categoriesBase(taxonomia);
+  const ETIQUETES_BASE = etiquetesBase(taxonomia);
 
   const { contingut, categories, etiquetes, emoticona } = useMemo(() => llegixDesa(params), [params]);
   const valor = contingut?.ok ? contingut.valor : null;

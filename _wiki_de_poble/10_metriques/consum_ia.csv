@@ -22,3 +22,5 @@ Data,IA,Model,Limit,Mètrica,Valor(%),Sessió/Activitat,Cost(USD)
 2026-10-04 01:22,Codex,Astra,Semanal,Restant,51,"Auditorias Adversariales Onada 4",0.0
 2026-10-04 01:35,Claude,Opus,Semanal,Consumit,41,"Passada de Tancament Onada 4",552.25
 2026-10-04 02:00,Codex,Astra,Sessió,Consumit,50,"Auditoria Onada 4",0
+2026-10-11 03:17,Claude,Fable 5.1,Sessió,Consumit,36,"Onada 11/12 (Refutació Adversarial i Auditories)",360.30
+2026-10-11 03:17,Claude,Tots els models,Semanal,Consumit,58,"Onada 11/12 (Refutació Adversarial i Auditories)",360.30

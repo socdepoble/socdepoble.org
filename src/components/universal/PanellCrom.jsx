@@ -10,13 +10,39 @@
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Settings } from 'lucide-react';
-import { Dialeg, Camp, CampText, Boto } from '../PedraSeca';
+import { Dialeg, Camp, CampText, Boto, Alerta } from '../PedraSeca';
 import { useSession } from '../../app/contexts/SessionContext';
+import { useCoreContent } from '../../app/contexts/CoreContentContext';
+import { adminDesaPersonalitzacio, teCapacitat } from '../../data/backendPort.js';
+import { MISSATGE_PERSONALITZACIO } from '../../data/errorsBackend.js';
+import { ambCrom } from '../../config/estil.js';
 import { aplica, restaura, base, deltaDe, previsualitza, CANON_BLAU } from '../../config/crom.js';
+
+/* Onada 11 (261010; prompt 261010_1730, tasca 2) · Com AdminSection: un port que
+   no és a punt i llança també val com a «sense la capacitat». */
+function ambCapacitatPersonalitzacio() {
+  try { return teCapacitat('personalitzacio') === true; } catch { return false; }
+}
 
 export function PanellCrom({ arrel, obert, onTanca }) {
   const [color, setColor] = useState('');
   const aplicatRef = useRef(false);
+
+  /* Onada 11 (261010; prompt 261010_1730, tasca 2) · «Desar»: el gir aplicat
+     passa a l'estil del poble (clau 'estil' de la personalització, estil.js),
+     fusionat amb els tokens que ja hi ha desats i amb la versió que s'editava;
+     l'error es diu pel codi ('cal-segon-factor', 'conflicte-versio'…). Només
+     amb la capacitat 'personalitzacio': sense ella, el DOM d'abans, byte a byte. */
+  const { personalitzacio, refresh } = useCoreContent();
+  const estilDesat = personalitzacio?.estil ?? null;
+  const [potDesar] = useState(ambCapacitatPersonalitzacio);
+  const [desant, setDesant] = useState(false);
+  const [avis, setAvis] = useState(null);
+  const viu = useRef(true);
+  useEffect(() => {
+    viu.current = true;
+    return () => { viu.current = false; };
+  }, []);
 
   useEffect(() => {
     if (!arrel || !obert || color) return;
@@ -47,6 +73,24 @@ export function PanellCrom({ arrel, obert, onTanca }) {
     setColor(base(arrel).canons[CANON_BLAU]);
   }, [arrel]);
 
+  /* Promise.resolve().then: el port llança de manera síncrona si el mètode no hi és, i això també acaba a l'avís. */
+  const desaAlPoble = useCallback(() => {
+    if (!arrel) return;
+    aplica(arrel, delta);
+    aplicatRef.current = delta !== 0;
+    setDesant(true);
+    setAvis(null);
+    Promise.resolve()
+      .then(() => adminDesaPersonalitzacio({ clau: 'estil', payload: ambCrom(estilDesat?.payload, delta), versio: estilDesat?.versio ?? null }))
+      .then((resultat) => {
+        if (!viu.current) return;
+        setAvis({ to: 'exit', text: `Crom desat per a tot el poble (versió ${resultat?.versio ?? '?'}).` });
+        refresh?.();
+      })
+      .catch((err) => { if (viu.current) setAvis({ to: 'error', text: MISSATGE_PERSONALITZACIO[err?.code] || MISSATGE_PERSONALITZACIO.desconegut }); })
+      .finally(() => { if (viu.current) setDesant(false); });
+  }, [arrel, delta, estilDesat, refresh]);
+
   return (
     <Dialeg obert={obert} onTanca={onTanca} titol="Crom del sistema" costat="dreta">
       <div className="sdp-crom-panell">
@@ -75,8 +119,10 @@ export function PanellCrom({ arrel, obert, onTanca }) {
 
         <div className="sdp-alerta__accions">
           <Boto onClick={desa}>Aplicar</Boto>
+          {potDesar ? <Boto varietat="primari" onClick={desaAlPoble} carregant={desant}>Desar</Boto> : null}
           <Boto varietat="secundari" onClick={torna}>Tornar al cànon</Boto>
         </div>
+        {avis ? <Alerta to={avis.to} onTanca={() => setAvis(null)}>{avis.text}</Alerta> : null}
       </div>
     </Dialeg>
   );

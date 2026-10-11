@@ -26,6 +26,7 @@ import { Alerta, Insignia } from '../../components/PedraSeca';
 import { llicenciaDeLActor } from '../../components/universal/drets/herencia.js';
 import { ID_COPIA_PROVA, ID_NOTA_BENVINGUDA, autoriaDeLActor, signaturaDeNota } from './autoriaNota.js';
 import { useNotaPreparadaDelBloc } from './notaPreparada.js';
+import { categoriesBase, etiquetesBase } from '../../data/personalitzacio.js';
 import { useMur } from '../mur/MurContext';
 import { cercaEntrades, deActe, dePagina, dePoble, deProducte, dePublicacio, textPla } from '../search/indexCerca.js';
 import { rutaDePerfilDAutor } from '../../config/navigation.js';
@@ -42,9 +43,11 @@ const NOTA_BENVINGUDA = NOTES_SEED.find((n) => n.id === ID_NOTA_BENVINGUDA) || {
 
 /* Categories i etiquetes que sempre existixen al Bloc (les mateixes que la
    columna de navegació de NotesSection). Com que sempre hi tornen, a la modal
-   no es reanomenen ni s'esborren. */
-const CATEGORIES_BASE = ['Sistema'];
-const ETIQUETES_BASE = ['Productivitat', 'Tutorial'];
+   no es reanomenen ni s'esborren. Onada 11 (261010; prompt 261010_1730,
+   tasca 2) · La còpia local s'ha unificat amb classificacioBloc.js, i les
+   llistes passen per categoriesBase / etiquetesBase amb la taxonomia del
+   poble (useCoreContent().personalitzacio): sense personalització són les
+   mateixes llistes de sèrie. */
 const CARPETA_PER_DEFECTE = 'f-notes';
 
 const AVIS_CATEGORIA = `Cal almenys una categoria. Si vols netejar-les, marca'n una de general, com «${CATEGORIA_GENERAL}».`;
@@ -140,8 +143,12 @@ export default function NotesEditor({ activeNote, onToast = null, seccio = null 
     notes = CAP, notesComplete, mouNota, esborraNota, potEsborrar = false, scopeKey
   } = useNotes();
   const { actorId, actor, memberships } = useIdentitat();
-  const { agents, towns, pages } = useCoreContent();
+  const { agents, towns, pages, personalitzacio } = useCoreContent();
   const { currentUser, esSuperadmin = false } = useSession();
+  /* Onada 11 · Les llistes de sèrie, ampliades per la taxonomia del poble si n'hi ha. */
+  const taxonomia = personalitzacio?.taxonomia?.payload;
+  const CATEGORIES_BASE = categoriesBase(taxonomia);
+  const ETIQUETES_BASE = etiquetesBase(taxonomia);
   const { showToast } = useToast();
   const mur = useMur();
 

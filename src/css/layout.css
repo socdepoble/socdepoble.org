@@ -512,12 +512,6 @@ nav.mobile-nav { display: none; }
        el calaix haja eixit. */
     transition: transform var(--sdp-durada-panell) var(--sdp-corba-calaix), visibility 0s linear var(--sdp-durada-panell);
   }
-  :where(.sdp-root.is-compact) nav.app-sidebar.sidebar-open {
-    transform: translateX(0);
-    visibility: visible;
-    box-shadow: var(--sdp-crom-ombra);
-    transition: transform var(--sdp-durada-panell) var(--sdp-corba-calaix), visibility 0s;
-  }
 
   /* Si la sidebar està dins d'un Dialeg (F02), el Dialeg gestiona l'obertura/tancament.
      height: 100% → el negre arriba fins a baix (abans heretava height: auto). */
@@ -709,11 +703,7 @@ nav.mobile-nav { display: none; }
   .search-filters input, .search-filters select, .search-filters button { flex: none; width: 100%; }
   .pagination-simple { flex-direction: column; }
 
-  .tabs, .nav-bar { overflow-x: auto; scrollbar-width: none; }
-  .modal-preview { padding: 20px; }
-  .spinner-group { gap: var(--sdp-space-4); }
-  .btn-group { gap: var(--sdp-space-3); }
-  section.design-block { margin-bottom: var(--sdp-space-12); }
+  .tabs { overflow-x: auto; scrollbar-width: none; }
 }
 @supports not (container-type: inline-size) {
 
@@ -726,11 +716,7 @@ nav.mobile-nav { display: none; }
   .search-filters input, .search-filters select, .search-filters button { flex: none; width: 100%; }
   .pagination-simple { flex-direction: column; }
 
-  .tabs, .nav-bar { overflow-x: auto; scrollbar-width: none; }
-  .modal-preview { padding: 20px; }
-  .spinner-group { gap: var(--sdp-space-4); }
-  .btn-group { gap: var(--sdp-space-3); }
-  section.design-block { margin-bottom: var(--sdp-space-12); }
+  .tabs { overflow-x: auto; scrollbar-width: none; }
 
 }
 

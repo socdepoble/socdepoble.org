@@ -1,5 +1,6 @@
 import { esErrorLazy } from '../../../apps/plataforma/lazyRoute.js';
 import { Component } from 'react';
+import { registraIncident } from '../../../utils/autocuracio.js';
 
 /**
  * SlotErrorBoundary — contenidor aïllat per a slots de domini.
@@ -27,6 +28,11 @@ export class SlotErrorBoundary extends Component {
   }
 
   componentDidCatch(error, info) {
+    /* Onada 12 (261011; ordres 261011_0130, punt 7) · Rastre local de la
+       caiguda del panell (en producció, sense onError, no en quedava cap):
+       el domini, mai el missatge. Un import fallat no és d'ací: puja a la
+       barrera de la ruta (render), que l'anota com a «tros». */
+    if (!esErrorLazy(error)) registraIncident('panell', this.props.domini || 'panell', 'fallback');
     if (this.props.onError) {
       this.props.onError(error, info);
     } else if (import.meta.env.DEV) {

@@ -448,6 +448,18 @@ export const MARGE_RENOVACIO_MS = 60_000;
  * Un `exp` mentit per l'usuari només el perjudica a ell: renovarà abans.
  */
 export function caducitatJwt(jwt = getEfimer(CLAU_JWT, null)) {
+  const carrega = carregaJwt(jwt);
+  return typeof carrega?.exp === 'number' ? carrega.exp * 1000 : null;
+}
+
+/**
+ * Onada 11 (261010; prompt 261010_1730, tasca 2) · La càrrega (payload) del
+ * JWT descodificada, o null si no té forma de JWT, és opac o està corromput.
+ * Pura. NO VERIFICA LA SIGNATURA, com caducitatJwt: ací només es llig el que
+ * el servidor ha dit; qui decidix si val és el servidor. Un sol descodificador
+ * per a caducitatJwt, nivellDAsseguranca i adoptaSessioExterna.
+ */
+export function carregaJwt(jwt) {
   if (!jwt || typeof jwt !== 'string') return null;
   const parts = jwt.split('.');
   if (parts.length !== 3) return null;
@@ -457,10 +469,23 @@ export function caducitatJwt(jwt = getEfimer(CLAU_JWT, null)) {
       atob(b64 + '='.repeat((4 - b64.length % 4) % 4))
         .split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('')
     ));
-    return typeof carrega.exp === 'number' ? carrega.exp * 1000 : null;
+    return carrega && typeof carrega === 'object' ? carrega : null;
   } catch {
     return null;   // token opac o corromput: que decidisca el servidor
   }
+}
+
+/**
+ * Onada 11 (261010; prompt 261010_1730, tasca 2) · El nivell d'asseguranca
+ * de la sessió, el claim `aal` de GoTrue: 'aal1' (només contrasenya o Google)
+ * o 'aal2' (segon factor confirmat). null sense JWT, amb un token opac o sense
+ * el claim. private.es_superadmin() exigix aal2 (migració 2610061448): la
+ * interfície ho pregunta ací per a saber si el superadmin ha de confirmar el
+ * segon factor abans que el servidor li torne 42501.
+ */
+export function nivellDAsseguranca(jwt = getEfimer(CLAU_JWT, null)) {
+  const aal = carregaJwt(jwt)?.aal;
+  return aal === 'aal1' || aal === 'aal2' ? aal : null;
 }
 
 /** true si el token ja no val. Sense token → true. */
@@ -506,14 +531,9 @@ export function adoptaSessioExterna(sessio, opcionsJS = {}) {
     return false;
   }
 
-  let carrega = null;
-  try {
-    const b64 = jwt.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
-    carrega = JSON.parse(decodeURIComponent(
-      atob(b64 + '='.repeat((4 - b64.length % 4) % 4))
-        .split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('')
-    ));
-  } catch { return false; }
+  /* Onada 11 (261010) · El mateix descodificador que caducitatJwt (carregaJwt). */
+  const carrega = carregaJwt(jwt);
+  if (!carrega) return false;
 
   if (!carrega?.sub || !RE_UUID.test(String(carrega.sub))) return false;
   if (carrega.iss !== issuer) return false;

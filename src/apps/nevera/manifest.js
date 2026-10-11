@@ -20,6 +20,8 @@ export default {
     { slug: 'llista', titol: { ca: 'La compra', es: 'La compra' }, icona: 'ClipboardList' },
     { slug: 'cataleg', titol: { ca: 'Catàleg', es: 'Catálogo' }, icona: 'LayoutGrid' },
     { slug: 'casa', titol: { ca: 'A casa', es: 'En casa' }, icona: 'Boxes' },
+    /* Onada 12 (261011; ordres 261011_0130, punt 6) · Què es pot cuinar amb el que hi ha a casa. */
+    { slug: 'receptes', titol: { ca: 'Receptes', es: 'Recetas' }, icona: 'ChefHat' },
     { slug: 'temporada', titol: { ca: 'Temporada', es: 'Temporada' }, icona: 'CalendarDays' },
     { slug: 'ajustos', titol: { ca: 'Ajustos', es: 'Ajustes' }, icona: 'Settings' }
   ],

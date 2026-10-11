@@ -2,6 +2,7 @@ import { backendScope } from '../../config/backendConfig.js';
 import { useScopedResource } from './useScopedResource.js';
 import { createContext, useContext, useEffect, useMemo } from 'react';
 import { loadCoreContent } from '../../data/backendPort.js';
+import { aplicaPersonalitzacio } from '../../data/personalitzacio.js';
 import { byId } from '../../config/contentHelpers';
 import { useIdentitat } from './IdentitatContext.jsx';
 import { useRecarregaExterna } from './useRecarregaExterna.jsx';
@@ -42,7 +43,15 @@ export function CoreContentProvider({ children, config }) {
      consumidor no la llig i el Mestre no ha demanat cap indicador.
      `errorRevalidacio` sí (l'error de la revalidació, a banda de `status`). */
   const value = useMemo(() => {
-    if (status !== 'ready' || !payload) return { status, error, errorRevalidacio, towns: [], pages: [], pageCopy: {}, agents: [], sortedTowns: [], featuredTowns: [], refresh };
+    if (status !== 'ready' || !payload) return { status, error, errorRevalidacio, towns: [], pages: [], pageCopy: {}, agents: [], sortedTowns: [], featuredTowns: [], personalitzacio: null, refresh };
+    /* Onada 11 (261010; prompt 261010_1730, tasca 2) · La personalització
+       del poble (camp additiu `personalitzacio` de loadCoreContent: taxonomia
+       i estil, cada una { payload, versio } o null). L'únic punt de fusió:
+       les etiquetes de la taxonomia entren al pageCopy ací, i tots els
+       consumidors («pageCopy[k] || PAGE_COPY[k]») les reben sense saber-ho.
+       Llei del Píxel: sense taxonomia, aplicaPersonalitzacio torna el mateix
+       objecte, i el value és el d'abans amb el camp `personalitzacio` a més. */
+    const personalitzacio = payload.personalitzacio ?? null;
     return {
       status,
       error,
@@ -51,9 +60,10 @@ export function CoreContentProvider({ children, config }) {
       sortedTowns: payload.towns ? byId(payload.towns) : [],
       featuredTowns: payload.towns ? byId(payload.towns).filter(t => t.is_featured) : [],
       pages: payload.pages || [],
-      pageCopy: Object.fromEntries((payload.pages || []).map(page => [page.id, { ...page }])),
+      pageCopy: aplicaPersonalitzacio(Object.fromEntries((payload.pages || []).map(page => [page.id, { ...page }])), personalitzacio?.taxonomia?.payload),
       agents: payload.agents || [],
       ownerUserId: payload.ownerUserId,
+      personalitzacio,
       refresh
     };
   }, [status, payload, error, errorRevalidacio, refresh]);
@@ -64,5 +74,5 @@ export function CoreContentProvider({ children, config }) {
 }
 
 export function useCoreContent() {
-  return useContext(CoreContentContext) || { status: 'loading', towns: [], pages: [], pageCopy: {}, agents: [], sortedTowns: [], featuredTowns: [] };
+  return useContext(CoreContentContext) || { status: 'loading', towns: [], pages: [], pageCopy: {}, agents: [], sortedTowns: [], featuredTowns: [], personalitzacio: null };
 }

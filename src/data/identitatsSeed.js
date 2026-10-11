@@ -38,12 +38,18 @@ export const PERSONA_PILOT = Object.freeze({
   slug: 'javi',
   nom: AGENTS_MAP.JAVI.avatarName,
   /* T3 (ordre del Mestre, 261001) · La foto del perfil de la persona pilot
-     (public/assets/fotos; el paquet del connector copia public/). És l'única
-     font: l'autoria de les targetes (autoriaSeed), la fitxa local sense foto
-     de sessió i el perfil públic (localPerfils) la llegixen d'ací.
-     AGENTS_MAP.JAVI continua portant el logo de l'entitat al catàleg
-     d'agents (/perfil, la Realitat): canviar-lo no és d'esta ordre. */
-  avatar: '/assets/fotos/javi-llinares-perfil-1200px.jpg',
+     (public/assets/fotos; el paquet del connector copia public/). L'autoria
+     de les targetes (autoriaSeed), la fitxa local sense foto de sessió i el
+     perfil públic (localPerfils) la llegixen d'ací.
+     Onada 11 (261010; prompt 261010_1730, tasca 6, D8) · AGENTS_MAP.JAVI ja
+     porta la foto al catàleg d'agents (abans, el logo de l'entitat, que Pedra
+     Seca §11 no admet per a una persona): la font única és el catàleg, i ací
+     es llig d'allí, com el nom.
+     Onada 12 (261011; ordres 261011_0130, punt 3, D-09) · Ratificat per
+     Direcció Tècnica. El padró del xat (xatSeed.js · XAT_SEED_MEMBRES) i el
+     padró local de persones (localPerfils.js · PERSONES_SEED) la prenen
+     d'este camp: cap fitxer torna a escriure la ruta de la foto. */
+  avatar: AGENTS_MAP.JAVI.avatar_url,
   /* Identificadors amb què la llavor signa contingut de la persona pilot. */
   alies: Object.freeze(['javillinares', AGENTS_MAP.JAVI.id, 'javi'])
 });

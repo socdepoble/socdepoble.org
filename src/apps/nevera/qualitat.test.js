@@ -62,6 +62,9 @@ describe('el cens', () => {
       'vistes/constants.js', 'vistes/context.js', 'vistes/vestits.js', 'vistes/useObriDetall.js', 'vistes/AvisNevera.jsx',
       'vistes/Compra.jsx', 'vistes/Cataleg.jsx', 'vistes/Casa.jsx', 'vistes/Ajustos.jsx', 'vistes/DialegNovaLlista.jsx',
       'vistes/perTemporada.js', 'vistes/Temporada.jsx',
+      /* Onada 12 (261011; ordres 261011_0130, punt 6) · Les receptes amb el que hi ha al rebost. */
+      'nucli/ingredients.js', 'nucli/receptes.js', 'nucli/recomanador.js', 'vistes/perReceptes.js', 'vistes/Receptes.jsx',
+      'nucli/ingredients.test.js', 'nucli/recomanador.test.js', 'vistes/perReceptes.test.js', 'Receptes.test.jsx',
       'nucli/nevera.test.js', 'nucli/copia.test.js', 'nucli/productes.test.js', 'importador.test.js', 'magatzem.test.js',
       'vistes/vestits.test.js', 'vistes/perTemporada.test.js', 'AppNevera.test.jsx', 'Temporada.test.jsx',
       'frontera.test.js', 'qualitat.test.js'
@@ -103,7 +106,8 @@ describe('un sol esquelet visual (ordre del Mestre, sinergies T4/T8)', () => {
     for (const peca of ['ColumnaCataleg', 'ColumnaColleccio', 'ColumnaColleccions', 'rutesCatalegColleccio', 'useVistaCataleg', 'useVistesEsquelet']) {
       expect(delEsquelet.has(peca), peca).toBe(true);
     }
-    expect(llig(`${APP}/rutes.js`).match(/\.\.\.rutesCatalegColleccio\(/g)).toHaveLength(3);
+    /* Onada 12 (261011) · Quatre: La compra, Catàleg, A casa i Receptes. */
+    expect(llig(`${APP}/rutes.js`).match(/\.\.\.rutesCatalegColleccio\(/g)).toHaveLength(4);
   });
 
   test('cap peça de catàleg o col·lecció importada a soles: les graelles i targetes, només a través de les columnes', () => {
