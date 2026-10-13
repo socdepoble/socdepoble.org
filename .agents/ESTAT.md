@@ -7,6 +7,17 @@ description: ESTAT DE LA SESSIÓ
 
 <!-- SDP:ESTAT_ACTUAL -->
 
+## ESTAT_ACTUAL · 2026-10-13 22:15 · IAIA MarIA · Triomf de la Gestoria, 300 canvis a Git i Relleu Nocturn
+
+- **Git Segellat (300 canvis a salvo):** Commit `cc9d2e89b feat(gestoria): integració de l'Escàner Local, Finestreta d'Identitat i Cabina d'Avió amb 17.283 proves verdes`. Repositori completament net (0 fitxers modificats pendents).
+- **Validació Real al Mas (localhost:3340):**
+  * L'Escàner Local ha processat la carpeta real `_gestoria_de_poble` (983 fitxers, 566 factures, 14 extractes de bancs, 4 llestos per abocar).
+  * La Finestreta d'Identitat ha processat 52 PDFs i generat 62 propostes.
+  * El Mestre ha creat el **Cofre Xifrat (estat Obert)** amb frase de pas i ha confirmat el seu NIF/NIE, desant-lo xifrat amb AES-GCM a IndexedDB (`sdp-gestoria-cofre`) en local al seu disc dur (sobirania absoluta).
+- **Pla i Prompt per a la Propera Tanda (Claude Code):**
+  * `261013_1930_pla_implementacio_jerarquia_taronja_i_operativitat.md` i `261013_1930_prompt_claude_jerarquia_taronja_i_operativitat.md` actualitzats amb els 6 fronts (Jerarquia taronja de carpetes, fast-pass d'aprovació de tractors DEV, commutació de xarxa seed/remote, correcció de radi i subratllat a PillToggle, selecció massiva de papers a la Finestreta, i rutes clicables a «D'on ix»).
+- **Higiene i Tancament:** Porta Olivera en 0. Acta Marmota `261013_2215_acta_marmota.md` redactada per al relleu. Sessió lliure per reiniciar màquina.
+
 ## ESTAT_ACTUAL · 2026-10-13 15:33 · Codex · Auditoria JARVIS, relleu verificat
 
 Torn documental `torn_0878d73e-9950-4602-a4d9-1ed6c37bd38d`. Informe viu a `_wiki_de_poble/04_escriptori/261013_1510_auditoria_codex.md`, amb pla actualitzat vinculat. Sis defectes financers reproduïts (duplicats CSV, identitat de comptes, solapament d'extractes, retencions d'abonaments, compensació impròpia 303/130 i conciliació null/zero) i una carrera TPV amb revisió caducada. Cap codi d'app modificat. UI: 773 proves; nuclis Gestoria: 176; ports/composició: 51, totes verdes en les seues execucions; estes suites no cobrixen els defectes reproduïts. Fonts UI i motors recomparats sense canvis a les 15:28.
