@@ -8,8 +8,10 @@
  * author_org_id. Abans el payload deia sempre el nom de l'app i un poble fix.
  * Pur: sense React ni backend.
  *
- * Un correu no es publica mai. IdentitatContext.nomDePersona hi cau quan la
- * persona no té cap nom; aleshores es diu «Veí».
+ * Un correu no es publica mai. La reserva del nom de l'actor persona
+ * (nomDePersona, a app/contexts/personaDeSessio.js des del 13-10-2026, pla
+ * 261013_1405, front A) hi cau quan la persona no té nom ni a la fila de
+ * profiles ni a les metadades; aleshores es diu «Veí».
  *
  * Ordre del Mestre (261007): «Quan isquen, les barres taronges han de portar
  * a la pàgina de l'autor que l'ha creada». signaturaDeNota hi afig la `ruta`
@@ -51,9 +53,13 @@ const fotoPublica = (valor) => (isSafeUrl(net(valor)) ? net(valor) : null);
  *   · persona: el nom de l'actor (mai un correu), la foto i el poble de la sessió.
  * Onada 6 (decisió 2 de la nit del 261009: «l'entitat porta el town_name de
  * l'organització si l'actor el té») · Es llig `poble` o `town_name` de
- * l'actor; sense, continua sent buit, com abans. L'actor d'IdentitatContext
- * no el porta: qui publica l'hi posa abans amb actorAmbPobleDeLEntitat (la
- * fila de la pertinença, baix).
+ * l'actor; sense, continua sent buit, com abans. Fins al 13-10-2026 l'actor
+ * d'IdentitatContext no el portava i qui publicava l'hi posava abans amb
+ * actorAmbPobleDeLEntitat (la fila de la pertinença, baix). Des de l'ordre
+ * del Mestre del 13-10-2026 (pla 261013_1405, front A) l'actor entitat ja el
+ * porta, de la mateixa fila. L'actor persona també porta `poble` (el de la
+ * fila de profiles), però ací la persona continua signant amb el town_name
+ * de les metadades de la sessió: el codi no ha canviat.
  */
 export function autoriaDeLActor(actor, currentUser) {
   if (!actor) return null;
@@ -80,6 +86,9 @@ export function autoriaDeLActor(actor, currentUser) {
  * mode seed des de localPerfils.js). Torna l'actor amb `poble` = el
  * town_name de la seua fila; si l'actor ja en porta, si no és una entitat o
  * si la fila no en té, el MATEIX actor. Pur.
+ * Ordre del Mestre, 13-10-2026 (pla 261013_1405, front A) · L'actor entitat
+ * d'IdentitatContext ja porta este `poble` (la mateixa fila): per a ell és
+ * una no-operació. Es conserva per als actors que no passen pel proveïdor.
  */
 export function actorAmbPobleDeLEntitat(actor, memberships) {
   if (actor?.tipus !== 'entitat' || net(actor.poble) || net(actor.town_name)) return actor;

@@ -150,6 +150,35 @@ test('TargetaConsola amb destí: boina de Sóc de Poble amb la data, tota clicab
   expect(navega).toHaveBeenCalledWith('/consola/inventari');
 });
 
+/* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front F) · Les targetes del
+   tauler de /consola porten la il·lustració de la seua pàgina: amb `imatge`,
+   el mitjà de la UniversalCard (quadrat a sang, Llei Visual del quadrat) en
+   el lloc de la insígnia lateral; la resta de la targeta, igual. */
+test('TargetaConsola amb imatge: el mitjà en lloc de la insígnia lateral, i la resta de la targeta igual', () => {
+  render(<TargetaConsola icona={Puzzle} titol="Inventari de skills" subtitol="Per a saber quines skills cal cuidar"
+    entradilla="Semàfor de cada skill segons els avisos que en fa el Mapa del Mas." dada="22 skills al Mapa"
+    generat="2026-09-25T13:12:23.715Z" a="/consola/inventari"
+    imatge="/assets/nano_cards/lector_rss_nano_card.jpg" imatgeAlt="Un iaio amb ulleres llig un rotllo de paper llarguíssim" />);
+  const article = screen.getByRole('article');
+  expect(article.className).toBe('sp-card sdp-consola__targeta');
+  expect([...article.children].map((el) => el.className.split(' ')[0]))
+    .toEqual(['sp-card-header', 'sp-card-link-overlay', 'sp-card-media-container', 'sp-card-body', 'sp-card-footer']);
+  const img = article.querySelector('.sp-card-media-container > img.sp-card-media');
+  expect(img.getAttribute('src')).toBe('/assets/nano_cards/lector_rss_nano_card.jpg');
+  expect(img.getAttribute('alt')).toBe('Un iaio amb ulleres llig un rotllo de paper llarguíssim');
+  expect(img.getAttribute('loading')).toBe('lazy');
+  // Cap insígnia lateral: la imatge o la icona.
+  expect(article.querySelector('.sp-card-calendar-badge')).toBeNull();
+  expect(article.querySelector('.sp-card-body.has-aside')).toBeNull();
+  // La resta: la boina amb la data, el títol, el cos i el peu canònic.
+  expect(article.querySelector('.sp-card-header .sp-card-meta > time.btn-date-time')).not.toBeNull();
+  expect(article.querySelector('h3.sp-card-title').textContent).toBe('Inventari de skills');
+  expect(article.querySelector('.sdp-consola__dada').textContent).toBe('22 skills al Mapa');
+  expect([...article.querySelectorAll('.sp-card-footer button')].map((b) => b.getAttribute('aria-label'))).toEqual([
+    'Traduir Inventari de skills', 'Comentar Inventari de skills', 'Compartir Inventari de skills', 'Connectar amb Inventari de skills'
+  ]);
+});
+
 /* T2 (ordre del Mestre, 260930) · Efecte tauler: cada mètrica és un h5
    centrat (ho fa la classe, a modules.css) dins d'un bloc propi que esquiva
    la insígnia flotant. Els missatges d'estat no són mètriques: paràgraf. */

@@ -28,6 +28,16 @@
  * l'ordre títol, «per a què», entradeta no canvien, i un node sense imatge
  * deixa el DOM de l'Onada 11. Llei Visual: sempre quadrada i centrada
  * (.sdp-consola__index-imatge, modules.css § CONSOLA), sense marc.
+ *
+ * Derogat EN PART per l'ordre del Mestre del 13-10-2026 (pla 261013_1405,
+ * front F) · Les miniatures dels H3 (Explorador i Avisos i salut) passen a
+ * les capçaleres de les seues targetes del tauler (imatgesConsola.js): cap
+ * imatge es pinta dues vegades a /consola. Només l'H2 en porta, i el DOM dels
+ * H3 torna a ser el de l'Onada 11. Esta vista no canvia: pinta el que diu la
+ * dada (indexConsola.js).
+ * Ordre del Mestre, 13-10-2026 (pla 261013_1405, front F) · L'Índex ja no és
+ * l'últim bloc del tauler: darrere ve el «Diagnòstic del Mas»
+ * (DiagnosiConsola.jsx), amb l'accés ràpid i el text pla.
  */
 import { Fragment, useContext, useId } from 'react';
 import { Link } from '../../app/contexts/RouterContext';

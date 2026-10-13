@@ -733,13 +733,16 @@ export function useGestoria({ obteAprovacio, subtle, inflate, entorn = globalThi
     [estat.analisi, estat.proposta, estat.correu]
   );
 
-  /* La cobertura de la carpeta és la de l'anàlisi; la del correu, la del creuament (si n'hi ha). */
+  /* La cobertura de la carpeta és la de l'anàlisi; la del correu, la del creuament (si n'hi ha).
+     L'historial (les factures dels fulls dels trimestres anteriors que el tractor ha llegit) ix
+     perquè el cable cap al Tauler en faça el 130 de l'any. */
   const analisi = useMemo(() => {
     if (!estat.analisi) return null;
     const correu = estat.correu?.cobertura;
     return {
       documents: estat.analisi.documents,
       avisos: estat.analisi.avisos,
+      historial: Array.isArray(estat.analisi.historial) ? estat.analisi.historial : [],
       cobertura: correu
         ? { ...estat.analisi.cobertura, correu: correu.correu, correusRevisats: correu.correusRevisats, periodeCorreu: correu.periodeCorreu }
         : estat.analisi.cobertura

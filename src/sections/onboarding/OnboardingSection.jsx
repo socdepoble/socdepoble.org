@@ -11,7 +11,7 @@ import { RegistrationStep } from './OnboardingSteps.jsx';
 import { ContrasenyaNovaStep, EnllacPerdutStep } from './RecuperacioSteps.jsx';
 import { normalizeBackendConfig } from '../../config/backendConfig.js';
 import { eleccioRemotaActiva, enterRemoteMode, exitRemoteMode } from '../../config/dataMode.js';
-import { RUTA_DESPRES_D_ENTRAR, modeDEntrada } from '../../config/rutaEntrada.js';
+import { RUTA_DESPRES_D_ENTRAR, aterratgeDespresDEntrar, modeDEntrada } from '../../config/rutaEntrada.js';
 import { delEfimer, getEfimer, setEfimer } from '../../config/storage.js';
 import { CODI_ENTRADA } from '../../data/errorsBackend.js';
 import { ESTAT_ENLLAC } from '../../data/recuperacioPendent.js';
@@ -240,10 +240,14 @@ export default function OnboardingSection() {
      l'entrada. El ?tornar que porten les portes (barrera, Xat, Connectar…)
      ja no mana. Hi passen la contrasenya, el registre amb sessió, Google per
      finestra i Google per redirecció (GoTrue torna a la pàgina on s'ha premut
-     el botó: data/oauthRelay.js, urlDeTornada). */
+     el botó: data/oauthRelay.js, urlDeTornada).
+     Excepció estreta (261012_2148): una tornada a una entrada de la Gestoria
+     (/app/gestoria/<entrada>) sí que mana (aterratgeDespresDEntrar); la
+     resta, també la de les altres apps, al perfil. */
+  const tornar = new URLSearchParams(consultaDeLApp(consultaDeMemoria)).get('tornar');
   useEffect(() => {
-    if (currentUser && modeDades === 'remote' && !recuperacioEnCurs) navigate(RUTA_DESPRES_D_ENTRAR, { replace: true });
-  }, [currentUser, modeDades, navigate, recuperacioEnCurs]);
+    if (currentUser && modeDades === 'remote' && !recuperacioEnCurs) navigate(aterratgeDespresDEntrar(tornar), { replace: true });
+  }, [currentUser, modeDades, navigate, recuperacioEnCurs, tornar]);
 
   /* R · Les dues crides de la recuperació, pel port amb la configuració del node. */
   const demanaRecuperacio = (correu) => demanaRecuperacioContrasenya(correu, externalConfig);

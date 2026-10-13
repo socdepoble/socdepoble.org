@@ -5,6 +5,9 @@ import {
   ActionControl, IconButton, DateTimeControl, SelectorDataHora, BotoComentar, MenuComentar,
   BackIcon, ForwardIcon, IndexIcon, TranslateIcon, CommentIcon, ShareIcon, PinIcon, IaiaIcon
 } from '../../../../components/PedraSeca/index.js';
+/* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front B) · el rellotge viu no és a la façana:
+   l'importa PaginaApp, i ací per la seua ruta (porta del catàleg, C2). */
+import { RellotgeViu } from '../../../../components/PedraSeca/atoms/RellotgeViu.jsx';
 import { BarraBlava } from '../../../../components/universal/barres/BarraBlava.jsx';
 import { BarraTaronja } from '../../../../components/universal/barres/BarraTaronja.jsx';
 import { BotoVisibilitat } from '../../../../components/universal/barres/BotoVisibilitat.jsx';
@@ -60,7 +63,7 @@ export default function EspecimenControlsBarra() {
   return (
     <>
     <Llinatge id="barres" />
-    <Especimen id="controls-barra" nom="Controls de barra · BarraBlava · BarraTaronja · IconButton · ActionControl · DateTimeControl · BotoComentar · MenuComentar" fitxer="src/components/universal/barres/ · universal/EmoticonaBarra.jsx · PedraSeca/atoms/controls.jsx · atoms/icones.jsx · PedraSeca/organismes/Comentar.jsx"
+    <Especimen id="controls-barra" nom="Controls de barra · BarraBlava · BarraTaronja · IconButton · ActionControl · DateTimeControl · RellotgeViu · BotoComentar · MenuComentar" fitxer="src/components/universal/barres/ · universal/EmoticonaBarra.jsx · PedraSeca/atoms/controls.jsx · atoms/RellotgeViu.jsx · atoms/icones.jsx · PedraSeca/organismes/Comentar.jsx"
       descripcio="Les dues barres de color de PageFrame, que són components propis (T51): la blava de navegació de pàgina i la taronja d’autoria (autoria · emoticona · data). Els seus botons, i els del peu de la UniversalCard, són una sola família visual: cercles de 48px per a icones (44px, a tocar, als dos packs de la barra blava), pastilles de 48px per a text, mateix hover (vel blanc) i cap transform. A la barra blava mana l’ample de la BARRA, no el de la finestra: amb 480px o menys, CONNECTAR perd la paraula i queda el «+» en un cercle. A la taronja totes les icones són blanques dins d’un cercle de vel fosc."
       contracte={[
         ['BarraBlava', 'onBack · onForward · onIndex · *Visible · onTranslate · onComment · onShare · onConnect · comentarXat · accionsInoperatives · menuTraduir', '—', 'Presentacional: PageFrame hi posa useAccions. Sense onBack/onForward, la fletxa no es pinta.'],
@@ -76,7 +79,8 @@ export default function EspecimenControlsBarra() {
         ['IconButton.onClick / presentation', 'fn / boolean', '—', 'Sense onClick ni presentation no es pinta; presentation el mostra desactivat sense semblar apagat.'],
         ['ActionControl.className', 'string', '—', 'El botó de base (IconButton el fa servir). btn-connectar per a l’acció principal (pastilla blava fosca), amb els spans sp-card-connect-text i sp-card-connect-plus; btn-icon-orange per al pin «Ancorar» de la caputxa de la UniversalCard (cercle de vel fosc, icona blanca).'],
         ['DateTimeControl.time / date / dateTime', 'string', '—', 'Pastilla amb hora i data; amb onClick és <button>, sense és <time>. Una font de només dia es pinta sense hora: l’hora no s’inventa.'],
-        ['DateTimeControl.label', 'string', '«Data i hora: …»', 'Nom accessible. En lectura (pàgina i targeta) diu l’hora, el dia (en l’ordre en què es veuen, WCAG 2.5.3) i on porta el clic: el Calendari en el mes de la data, amb totes les targetes d’eixe mes (/calendari?mes=AAAA-MM).']
+        ['DateTimeControl.label', 'string', '«Data i hora: …»', 'Nom accessible. En lectura (pàgina i targeta) diu l’hora, el dia (en l’ordre en què es veuen, WCAG 2.5.3) i on porta el clic: el Calendari en el mes de la data, amb totes les targetes d’eixe mes (/calendari?mes=AAAA-MM).'],
+        ['RellotgeViu.rellotge / etiqueta', '() => ms / string', '— / «Data i hora d’ara: hh:mm del dd/mm/aa»', 'La data i l’hora d’ara, vives (ordre del Mestre, 13-10-2026): la pastilla de sempre, sense clic ni regió viva, renovada al canvi de cada minut amb un sol temporitzador (useAra), que es neteja en desmuntar i es resincronitza en tornar a primer pla. rellotge és el rellotge injectat (la Gestoria, les proves); sense, el del dispositiu. No és a la façana: el posa PaginaApp amb rellotgeViu, a l’extrem dret de la barra taronja.']
       ]}
       a11y={['Cada icona porta aria-label i title amb l’objecte: «Comentar Samarreta…».', 'Zona tàctil de 48px en totes les formes; als packs de la barra blava, el sòl de 44px (--sdp-touch).', 'Focus visible dins de la barra amb --sdp-accent-text (blava) o --sdp-crom-focus (closca).']}
       fes={[
@@ -155,6 +159,12 @@ export default function EspecimenControlsBarra() {
       <div className="sdp-especimen__barres">
         <BarraTaronja {...AUTORIA} etiqueta="Autoria i data (espècimen, pastilla de només lectura)"
           barActions={<DateTimeControl time="11:00" date="25/04/26" dateTime="2026-04-25T11:00:00" />} />
+      </div>
+
+      <h4>Rellotge viu (les apps que el demanen)</h4>
+      <p>Ordre del Mestre (13-10-2026): a la Gestoria, la barra taronja porta SEMPRE la data i l’hora d’ara a l’extrem dret, darrere de les seues accions. És una excepció ordenada a la regla de la pastilla, que és la data del document: PageFrame no s’inventa mai l’hora d’ara, i el rellotge només el posa PaginaApp quan la pàgina el demana (rellotgeViu). És la pastilla de sempre, amb el format únic de les barres (hh:mm i dd/mm/aa), sense clic i sense anunciar-se a cada minut.</p>
+      <div className="sdp-especimen__barres">
+        <BarraTaronja {...AUTORIA} etiqueta="Autoria i rellotge viu (espècimen, apps)" barActions={<RellotgeViu />} />
       </div>
 
       <h4>Icones pròpies</h4>

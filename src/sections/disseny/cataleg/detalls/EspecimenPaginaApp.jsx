@@ -23,6 +23,8 @@ export default function EspecimenPaginaApp() {
         ['onBack', 'fn', '—', 'Tornar de la barra blava: tanca el detall.'],
         ['refTitol', 'ref', '—', 'Un ref a l’H1 (amb tabIndex -1) per a portar-hi el focus quan s’obri.'],
         ['objecte / onComment / onShare / onConnect / showComment / showShare / showConnect', '—', '—', 'Les accions de la barra blava, com a PageFrame. Sense, les de sempre. Una llista privada no té res a compartir: showShare={false}.'],
+        ['barActions', 'node', 'null', 'Les accions de la dreta de la barra taronja (ordre del Mestre, 261004, Gestoria: l’ull de privacitat i la data de la darrera lectura). Manen sobre la pastilla del document.'],
+        ['rellotgeViu / rellotge', 'boolean / () => ms', 'false / —', 'Ordre del Mestre, 13-10-2026 (Gestoria): amb rellotgeViu (només un true explícit), la data i l’hora d’ara, vives (RellotgeViu), són sempre l’últim fill de les accions de la dreta de la barra taronja: darrere de barActions o, sense, de la pastilla del document, que no es perd. rellotge és el rellotge injectat (proves). Sense, el DOM de sempre.'],
         ['children', 'node', '—', 'El cos, dins de l’article de la pàgina.']
       ]}
       a11y={['Un sol H1: el títol de la pàgina. En esta mostra no n’hi ha cap, perquè la pàgina de Disseny ja porta el seu.', 'Amb refTitol, l’H1 rep el focus en obrir el detall (tabIndex -1).']}

@@ -2,10 +2,10 @@
   "schema": "sdp.contingut.v1",
   "claus": {
     "anima": {
-      "sha256": "fc6340e07ccd3d424be90c69345e7a802025ccc6a850927da6d26e3a0100521b",
-      "html": 10321,
-      "aprovat_per": "MarIA",
-      "data": "2026-10-05"
+      "sha256": "c74e787ba601c7d691cafd12a30ad2dfdb2b87f8bfd2fa475ceb92a8d6ac45d8",
+      "html": 10515,
+      "aprovat_per": "Mestre",
+      "data": "2026-10-13"
     },
     "cervell": {
       "sha256": "851b3742533b81cdc557c2499537f82b8da0c3e87dd98937d789588cc3f450e4",

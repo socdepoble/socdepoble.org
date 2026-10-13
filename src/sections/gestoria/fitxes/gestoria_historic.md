@@ -12,7 +12,7 @@ Llig, només en este ordinador, els extractes del banc que tu tries (de l'1 de g
 2. **Comprova la teua aprovació.** Abans de llegir res verifica que l'empremta del seu codi, d'esta fitxa i del seu manifest és la que has aprovat. Si no ho és, s'atura i la pantalla diu «Cal aprovar el tractor».
 3. **Tu tries els fitxers.** Fins a 60 extractes de 10 MB com a molt: Norma 43 (`.n43`, `.aeb`, `.c43`, `.q43`, `.txt` o `.dat`) o el CSV de moviments del banc, triats amb el selector del sistema.
 4. **Classifica dins.** Per a cada moviment llig el text dels conceptes, el comerç de la targeta i el creditor del rebut SEPA, i hi busca la categoria (IA, allotjament i dominis, programari, telefonia i internet, energia, comissions bancàries, impostos, quota d'autònoms, transferències i nòmines, traspàs entre comptes propis, ingressos de clients, altres o per revisar) i el proveïdor (Anthropic, OpenAI, Gemini, Copilot, Perplexity, Mistral, xAI, Kimi, DeepSeek, Z.ai, Qwen, fal.ai, ElevenLabs, Replicate, OpenRouter, Midjourney, Cursor, Vercel, Supabase…). Primer manen les teues regles. Google o Microsoft sense dir el producte van a «per revisar»: Gemini no és Workspace.
-5. **En guarda només el que necessiten les xifres.** De cada compte: l'entitat, els quatre últims dígits, la moneda, les dates i els saldos. De cada moviment: les dates, l'import, l'import en dòlars si el banc el porta, la categoria, el proveïdor, la confiança, un codi del motiu i un identificador opac (una empremta de les dates i l'import, per a recordar les teues reclassificacions). El text dels conceptes, el comerç, les referències, el número de document i les dades del rebut SEPA es descarten en acabar de classificar.
+5. **En guarda només el que necessiten les xifres.** De cada compte: l'entitat, els quatre últims dígits, la moneda, les dates, els saldos i un identificador opac del compte. L'identificador ix del número sencer amb una sal que només viu en esta sessió i no porta cap xifra del compte: servix només perquè dos comptes del mateix banc acabats en els mateixos quatre dígits siguen dos comptes, amb els seus dies i els seus saldos per separat (abans s'ajuntaven). En pantalla el compte es diu «c43-entitat-sufix», i només el segon d'eixos dos porta «-2». De cada moviment: les dates, l'import, l'import en dòlars si el banc el porta, la categoria, el proveïdor, la confiança, un codi del motiu i un identificador opac (una empremta de les dates i l'import, per a recordar les teues reclassificacions). El text dels conceptes, el comerç, les referències, el número de document i les dades del rebut SEPA es descarten en acabar de classificar.
 6. **Calcula l'històric.** Unix els extractes del mateix compte extracte a extracte: un dia que ja cobrix un extracte no torna a comptar en cap altre, encara que un siga anual i l'altre trimestral. Un període és «complet» només si tots els teus comptes el cobrixen sencer; si en falta algun dia d'algun compte (un forat entre extractes, o un compte amb menys extractes), és «parcial» i un avís diu les dates; si cap extracte el cobrix, no té xifra. Els traspassos entre comptes propis van a part; una eixida d'un compte i una entrada d'un altre amb el mateix import i tres dies de diferència com a molt es marquen com a traspàs probable, per revisar.
 7. **Estima els impostos.** El 303 i el 130 de cada trimestre, el 390 i una renda orientativa, amb paràmetres que pots canviar (també les escales i la minoració, tram a tram) i que diuen d'on ixen. Un trimestre sense extractes no té ni 303 ni 130. Tot és una estimació per a revisar amb la gestoria, mai una declaració.
 
@@ -21,6 +21,8 @@ Llig, només en este ordinador, els extractes del banc que tu tries (de l'1 de g
 - Els extractes del banc que tries: els llig sencers en la memòria del navegador, però en guarda només el que diu el pas 5.
 - El selector mostra el nom dels fitxers triats. Dins de la lectura, el nom només es guarda en l'avís d'un fitxer que no s'ha pogut llegir.
 - Amb el cofre obert, la teua configuració desada: les regles, les reclassificacions, els paràmetres, les suposicions i l'escenari.
+- Si has entrat al teu compte, el titular que li passa l'app: el teu nom, el teu poble i el teu avatar, i res més (cap correu ni identificador). Només es pinta a la boina, a les targetes i a la pàgina de cada targeta, enllaçat al teu perfil; sense sessió, la boina diu «Titular sense configurar». No entra a cap xifra, a cap fitxer ni al cofre.
+- L'hora d'este ordinador: a la dreta de la barra taronja hi ha sempre la data i l'hora d'ara (un rellotge viu, també amb el cofre bloquejat), i l'hora de la darrera lectura dels extractes és un xip a la seua esquerra, amb el dia només si no és el d'avui.
 
 ## Què escriu
 
@@ -33,7 +35,7 @@ Llig, només en este ordinador, els extractes del banc que tu tries (de l'1 de g
 - No es connecta al teu banc ni a cap servei: treballa amb els fitxers que descarregues tu.
 - No envia res per la xarxa.
 - No mostra cap xifra fins que tu prems l'ull: ni a les targetes, ni a les taules, ni als recomptes, ni als gràfics (l'alçada de les barres també és una xifra: amb l'ull tancat, el gràfic no es pinta).
-- No posa cap dada a l'adreça de la pàgina.
+- No posa cap dada a l'adreça de la pàgina, ni el teu nom: cap encapçalament el porta.
 
 ## Límits honestos
 
@@ -42,6 +44,7 @@ Llig, només en este ordinador, els extractes del banc que tu tries (de l'1 de g
 - El banc no diu la base ni l'IVA: la simulació els suposa (21 % per defecte) i cada despesa necessita la seua factura per a deduir-se.
 - Les escales, els mínims, els límits i els terminis són dades [NO VERIFICAT] per a revisar cada any amb la gestoria.
 - La renda només compta l'activitat econòmica: cap altra renda, reducció ni deducció.
+- Si dos comptes del mateix banc acabats en els mateixos quatre dígits tenen el mateix dia un moviment del mateix import, llegits junts el del primer (per l'oficina, que es mira en memòria i no es guarda) conserva el seu identificador i el de l'altre en porta un de propi, perquè reclassificar-ne un no canvie l'altre. Si en una altra lectura tries només el segon compte, eixe moviment torna a l'identificador comú: la reclassificació que li havies fet no el seguix, i la del primer compte sí que li arriba. Els moviments que no coincidixen amb cap de l'altre compte no canvien mai d'identificador.
 
 ## Com es desenxufa
 

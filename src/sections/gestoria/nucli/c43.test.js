@@ -85,8 +85,11 @@ describe('llegeixC43 · un fitxer bo', () => {
 
   test('la capçalera: saldo deutor en negatiu, divisa i només els 4 últims dígits del compte', () => {
     const [a, b] = lectura.comptes;
+    /* Ordre del Mestre, 13-10-2026 (auditoria de Codex 261013_1510, GES-A2): la capçalera porta també
+       l'id opac del compte, fet de la clau sencera abans de reduir-la (16 consonants, cap xifra). */
     expect(a.capcalera).toEqual({
-      entitat: '9999', oficina: '0001', compte4: '4321', dataInicial: { a: 2099, m: 7, d: 1 }, dataFinal: { a: 2099, m: 9, d: 30 },
+      entitat: '9999', oficina: '0001', compte4: '4321', idCompte: expect.stringMatching(/^[bcdfghjklmnpqrst]{16}$/),
+      dataInicial: { a: 2099, m: 7, d: 1 }, dataFinal: { a: 2099, m: 9, d: 30 },
       saldoInicial: -10391, divisa: 'EUR', codiDivisa: '978', modalitat: '4', nom: 'TITULAR SINTETIC'
     });
     expect(b.capcalera).toMatchObject({ compte4: '8765', saldoInicial: 213457, modalitat: '3' });
@@ -152,6 +155,34 @@ describe('llegeixC43 · un fitxer bo', () => {
     const r = llegeixC43(new TextEncoder().encode(fitxer(ascii)));
     expect(r.codificacio).toBe('utf-8');
     expect(r.avisos).toEqual([]);
+  });
+});
+
+/* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front I · motors; auditoria de Codex 261013_1510, GES-A2). */
+describe('llegeixC43 · l’id opac del compte', () => {
+  const sol = (c) => ambFi([r11(c), r33(c, { nDeure: 0, deure: 0, nHaver: 0, haver: 0, saldo: 0 })]);
+  const idDe = (c) => llegeixC43(fitxer(sol(c))).comptes[0].capcalera.idCompte;
+  /* Comptes inventats: mateixa entitat i mateix sufix 4321; només canvien l'oficina o els dígits del mig. */
+  const ALTRA_OFICINA = { ...COMPTE_A, oficina: '0002' };
+  const ALTRES_DIGITS = { ...COMPTE_A, compte: '0000014321' };
+
+  test('el mateix compte dona el mateix id, en dos fitxers i en dues lectures', () => {
+    expect(idDe(COMPTE_A)).toBe(idDe(COMPTE_A));
+    expect(llegeixC43(latin1(fitxer(BO))).comptes[0].capcalera.idCompte).toBe(idDe(COMPTE_A));
+  });
+
+  test('dos comptes amb la mateixa entitat i el mateix sufix tenen ids diferents', () => {
+    const ids = [idDe(COMPTE_A), idDe(ALTRA_OFICINA), idDe(ALTRES_DIGITS), idDe(COMPTE_B)];
+    expect(new Set(ids).size).toBe(4);
+    expect(llegeixC43(fitxer(sol(ALTRA_OFICINA))).comptes[0].capcalera.compte4).toBe('4321');
+  });
+
+  test('no porta cap xifra ni el número: només 16 consonants', () => {
+    for (const c of [COMPTE_A, ALTRA_OFICINA, ALTRES_DIGITS]) {
+      const id = idDe(c);
+      expect(id).toMatch(/^[bcdfghjklmnpqrst]{16}$/);
+      for (const tros of [c.entitat, c.oficina, c.compte, c.compte.slice(-4)]) expect(id).not.toContain(tros);
+    }
   });
 });
 

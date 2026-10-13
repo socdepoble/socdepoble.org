@@ -1,7 +1,8 @@
 import { createContext, useContext, useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useSession } from './SessionContext';
-import { getDefaultUserId, listMyOrganizations } from '../../data/backendPort';
+import { getDefaultUserId, getProfile, listMyOrganizations } from '../../data/backendPort';
 import { getVal, setVal, delVal } from '../../config/storage';
+import { firmaDePersona, mateixPerfil, perfilDeFila, personaDeSessio, pobleDeLaPertinenca } from './personaDeSessio.js';
 
 /**
  * IdentitatContext — amb quina identitat actua la persona.
@@ -13,7 +14,16 @@ import { getVal, setVal, delVal } from '../../config/storage';
  * sense pertinença cau a «persona», mai a una identitat que no es té.
  *
  * Qui llig `actor` té tot el que cal per a signar: tipus, id, nom, avatar,
- * rol, slug i kind. Qui llig `actorKey` té la clau d'àmbit de les dades.
+ * rol, slug i kind (T43, ordre del Mestre del 260928) i, ampliat per l'ordre
+ * del Mestre del 13-10-2026 (pla 261013_1405, front A), `poble`: el de la
+ * persona o el town_name de la pertinença de l'entitat ('' si no en té).
+ * Qui llig `actorKey` té la clau d'àmbit de les dades.
+ *
+ * Front A, pla 261013_1405 (ordre del Mestre 13-10-2026) · La persona es
+ * pinta amb la seua fila de profiles (getProfile del port neutral, només amb
+ * sessió); les metadades de GoTrue són la reserva i manen mentre la fila és
+ * d'abans d'una edició (firma, personaDeSessio.js). L'entrada persona
+ * d'`identitats` (el calaix i la boina de les apps) porta el mateix.
  */
 
 const IdentitatContext = createContext(null);
@@ -37,15 +47,6 @@ export function desaPreferencia(userId, pref) {
 }
 
 const CAP = Object.freeze([]);
-
-function nomDePersona(user) {
-  const meta = user?.user_metadata || {};
-  return meta.full_name || meta.name || user?.full_name || user?.email || 'El meu compte';
-}
-function avatarDePersona(user) {
-  const meta = user?.user_metadata || {};
-  return meta.avatar_url || meta.picture || user?.avatar_url || null;
-}
 
 export function IdentitatProvider({ children, config = {} }) {
   const { currentUser, generacio } = useSession();
@@ -91,6 +92,34 @@ export function IdentitatProvider({ children, config = {} }) {
     return () => { viu = false; };
   }, [userId, generacio, tick]);
 
+  /* Front A, pla 261013_1405 (ordre del Mestre 13-10-2026) · La fila de
+     profiles de la persona, amb el mateix patró que les pertinences: només
+     amb sessió (sense, cap crida al port: App.appsLocals.test.jsx, D3), i una
+     resposta d'una sessió anterior no entra (viu i fila.id === userId). Es
+     torna a llegir en cada entrada, renovació (generacio), refresh() i edició
+     del perfil (firma). Un error, un null o la fila de reserva deixen l'estat
+     com estava: la firma ja impedix que un perfil vell es pinte, i una
+     renovació que falla no fa parpellejar la foto. Res es desa enlloc: en un
+     ordinador compartit del poble (T47) el primer fotograma porta les
+     inicials de les metadades. */
+  const firma = firmaDePersona(currentUser);
+  const [perfil, setPerfil] = useState(null);
+  useEffect(() => {
+    if (!userId) { setPerfil(null); return; }
+    let viu = true;
+    Promise.resolve()
+      .then(() => getProfile(configRef.current))
+      .then((fila) => {
+        if (!viu) return;
+        const nou = perfilDeFila(fila, userId, firma);
+        if (nou) setPerfil((abans) => (mateixPerfil(abans, nou) ? abans : nou));
+      })
+      .catch(() => {});
+    return () => { viu = false; };
+  }, [userId, generacio, tick, firma]);
+
+  const persona = useMemo(() => personaDeSessio(currentUser, perfil), [currentUser, perfil]);
+
   const defaultActorId = userId || getSafeDefaultUserId();
 
   /* La preferència d'entitat només val si la pertinença existix i pot signar. */
@@ -104,32 +133,36 @@ export function IdentitatProvider({ children, config = {} }) {
   const actorId = entitatActiva ? entitatActiva.id : defaultActorId;
   const actorKey = `${actorType}::${actorId}`;
 
+  /* Front A (261013_1405) · `poble` a tots dos: el de la persona (perfil, o
+     town_name de les metadades) i el de la pertinença de l'entitat, la mateixa
+     font que autoriaNota.actorAmbPobleDeLEntitat. Sense sessió, null. */
   const actor = useMemo(() => {
     if (entitatActiva) {
       return {
         tipus: 'entitat', id: entitatActiva.id, nom: entitatActiva.name,
         avatar: entitatActiva.logo_url || null, rol: entitatActiva.role,
-        slug: entitatActiva.slug, kind: entitatActiva.kind
+        slug: entitatActiva.slug, kind: entitatActiva.kind, poble: pobleDeLaPertinenca(entitatActiva)
       };
     }
     return {
-      tipus: 'persona', id: defaultActorId, nom: currentUser ? nomDePersona(currentUser) : null,
-      avatar: currentUser ? avatarDePersona(currentUser) : null, rol: currentUser ? 'persona' : 'convidat',
-      slug: null, kind: null
+      tipus: 'persona', id: defaultActorId, nom: persona ? persona.nom : null,
+      avatar: persona ? persona.avatar : null, rol: currentUser ? 'persona' : 'convidat',
+      slug: null, kind: null, poble: persona ? persona.poble : null
     };
-  }, [entitatActiva, defaultActorId, currentUser]);
+  }, [entitatActiva, defaultActorId, currentUser, persona]);
 
-  /* Identitats amb què es pot actuar: la persona i les organitzacions on mana. */
+  /* Identitats amb què es pot actuar: la persona i les organitzacions on mana.
+     La persona, sempre la primera i amb el nom, la foto i el poble de l'actor. */
   const identitats = useMemo(() => {
-    if (!userId) return CAP;
+    if (!userId || !persona) return CAP;
     return [
-      { tipus: 'persona', id: userId, nom: nomDePersona(currentUser), avatar: avatarDePersona(currentUser), rol: 'persona', activa: actorType === 'persona' },
+      { tipus: 'persona', id: userId, nom: persona.nom, avatar: persona.avatar, poble: persona.poble, rol: 'persona', activa: actorType === 'persona' },
       ...memberships.filter(potSignarPer).map((m) => ({
-        tipus: 'entitat', id: m.id, nom: m.name, avatar: m.logo_url || null, rol: m.role, slug: m.slug, kind: m.kind,
+        tipus: 'entitat', id: m.id, nom: m.name, avatar: m.logo_url || null, poble: pobleDeLaPertinenca(m), rol: m.role, slug: m.slug, kind: m.kind,
         activa: actorType === 'entitat' && String(actorId) === String(m.id)
       }))
     ];
-  }, [userId, currentUser, memberships, actorType, actorId]);
+  }, [userId, persona, memberships, actorType, actorId]);
 
   /** Tria la identitat activa. Torna true si s'ha aplicat; false si no es pot. */
   const setActor = useCallback((type, id) => {

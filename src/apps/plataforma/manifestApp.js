@@ -47,6 +47,13 @@ export const PREFIXOS_ELEMENT = Object.freeze(['sollutia-', 'sdp-ext-']);
 
 export const PERMISOS_VEURE = Object.freeze(['public', 'sessio', 'superadmin']);
 export const PERMISOS_ESCRIURE = Object.freeze(['sessio', 'superadmin']);
+/* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front B: la boina de la
+   Gestoria porta el titular de la sessió) · permisos.titular 'sessio': l'app
+   rep pel pont (useSessioApp().titular) el nom, l'avatar i el poble de la
+   persona que ha entrat. Només una app interna el pot declarar: cap codi
+   d'un amfitrió (externa) ni compilat a banda (modul) no rep cap dada de la
+   persona. Sense, el titular és sempre null. */
+export const PERMISOS_TITULAR = Object.freeze(['sessio']);
 export const NIVELLS = Object.freeze(['gratuit', 'premium']);
 export const ENTORNS = Object.freeze(['produccio', 'desenvolupament']);
 export const DADES_PERSONALS = Object.freeze([false, 'salut', 'financeres']);
@@ -80,7 +87,7 @@ const PATRO_CAMI_PROHIBIT = /[\s\\"'<>`\u0000-\u001F\u007F-\u009F]/;
 const CLAUS_ENTRADA = new Set(['slug', 'titol', 'icona', 'grup', 'permis']);
 const CLAUS_GRUP = new Set(['id', 'titol']);
 const CLAUS_INTERRUPTOR = new Set(['id', 'titol', 'nivell', 'dret', 'actiuPerDefecte']);
-const CLAUS_PERMISOS = new Set(['veure', 'escriure']);
+const CLAUS_PERMISOS = new Set(['veure', 'escriure', 'titular']);
 
 const esObjecte = (valor) => valor !== null && typeof valor === 'object' && !Array.isArray(valor);
 const esIdApp = (valor) => typeof valor === 'string' && PATRO_ID_APP.test(valor) && !valor.endsWith('-') && !valor.includes('--');
@@ -193,12 +200,20 @@ function validaInterruptors(interruptors, errors) {
   }).filter(Boolean));
 }
 
-function validaPermisos(permisos, errors) {
-  if (!esObjecte(permisos)) { errors.push('permisos: cal { veure, escriure? }'); return Object.freeze({ veure: 'public' }); }
+function validaPermisos(permisos, origen, errors) {
+  if (!esObjecte(permisos)) { errors.push('permisos: cal { veure, escriure?, titular? }'); return Object.freeze({ veure: 'public' }); }
   clausDesconegudes(permisos, CLAUS_PERMISOS, 'permisos', errors);
   if (!PERMISOS_VEURE.includes(permisos.veure)) errors.push('permisos.veure: public | sessio | superadmin');
   if (permisos.escriure !== undefined && !PERMISOS_ESCRIURE.includes(permisos.escriure)) errors.push('permisos.escriure: sessio | superadmin');
-  return Object.freeze({ veure: permisos.veure, ...(permisos.escriure !== undefined ? { escriure: permisos.escriure } : {}) });
+  if (permisos.titular !== undefined) {
+    if (!PERMISOS_TITULAR.includes(permisos.titular)) errors.push('permisos.titular: sessio');
+    else if (origen !== 'interna') errors.push('permisos.titular: només les apps internes reben el titular de la sessió');
+  }
+  return Object.freeze({
+    veure: permisos.veure,
+    ...(permisos.escriure !== undefined ? { escriure: permisos.escriure } : {}),
+    ...(permisos.titular !== undefined ? { titular: permisos.titular } : {})
+  });
 }
 
 function validaCapacitats(capacitats, errors) {
@@ -262,7 +277,7 @@ export function validaManifestApp(m, { origen = 'interna' } = {}) {
   for (const grup of grups) {
     if (!entrades.some((entrada) => entrada.grup === grup.id)) errors.push(`grups: el grup «${grup.id}» no té cap entrada`);
   }
-  const permisos = validaPermisos(m.permisos, errors);
+  const permisos = validaPermisos(m.permisos, externa ? 'externa' : modul ? 'modul' : 'interna', errors);
   const capacitats = validaCapacitats(m.capacitats, errors);
   if (!NIVELLS.includes(m.nivell)) errors.push('nivell: gratuit | premium');
   if (m.nivell === 'premium' && !(typeof m.dret === 'string' && PATRO_DRET.test(m.dret))) errors.push('dret: una app premium necessita un dret sdp.app.<id>');

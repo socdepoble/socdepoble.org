@@ -126,6 +126,7 @@ export default function PanellTractors({ magatzem, subtle, tractors: cataleg, en
   const arrel = useRef(null);
   const urlExportat = useRef(null);
   const idTitol = useId();
+  const idPorta = useId();
   const idNom = useId();
   const idEmpremta = useId();
   const idHistorial = useId();
@@ -208,13 +209,10 @@ export default function PanellTractors({ magatzem, subtle, tractors: cataleg, en
   }
 
   return (
-    <section ref={arrel} className="sdp-tractors-panell" aria-labelledby={idTitol}>
-      <h2 id={idTitol} className="sdp-tractors-panell__titol">Porta d’aprovació de tractors</h2>
+    <section ref={arrel} className="sdp-tractors-panell" aria-labelledby={idPorta}>
+      <h3 id={idPorta} className="sdp-tractors-panell__titol">Porta d’aprovació de tractors</h3>
       <p>
-        Un tractor és un automatisme que processa dades. Cap s’executa si no n’has aprovat la versió exacta:
-        l’empremta cobrix el manifest, la fitxa i cada línia de les fonts llistades, que són el codi del tractor,
-        el de la seua interfície i el d’esta porta. Els components comuns de l’app (botons, diàlegs, navegació)
-        no hi entren. Si en canvia una línia, torna a «pendent».
+        Els components comuns de l’app (botons, diàlegs, navegació) no hi entren. Si en canvia una línia, torna a «pendent».
       </p>
       {persistent ? null : (
         <Alerta to="avis" viva={false} titol="Este navegador no pot guardar les aprovacions">

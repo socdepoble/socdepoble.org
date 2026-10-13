@@ -47,7 +47,15 @@ const CODI = [
   // Correcció 261004 (verificador de la tercera passada) · les unitats del contracte del Mapa.
   'src/sections/consola/mapa/contracteMapa.js',
   'src/components/PedraSeca/organismes/formulari.jsx',
-  'src/sections/disseny/cataleg/detalls/EspecimenCamp.jsx'
+  'src/sections/disseny/cataleg/detalls/EspecimenCamp.jsx',
+  /* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front F) · les il·lustracions
+     de les targetes i el Diagnòstic del Mas. IndexConsola.jsx no hi entra: només
+     n'ha canviat el comentari, i la seua entradeta porta la classe global
+     `lead` de base.css (deute anterior, fora de la regla de prefix). */
+  'src/sections/consola/imatgesConsola.js',
+  'src/sections/consola/indexConsola.js',
+  'src/sections/consola/diagnosiConsola.js',
+  'src/sections/consola/DiagnosiConsola.jsx'
 ];
 const PROVES = [
   'src/sections/consola/ConsolaSection.test.jsx',
@@ -69,7 +77,14 @@ const PROVES = [
   'src/sections/consola/mapa/mapaContent.test.js',
   'src/components/PedraSeca/organismes/formulari.test.jsx',
   'src/sections/disseny/cataleg/detalls/EspecimenUniversalCard.consola.test.jsx',
-  'src/config/assetResolver.test.js'
+  'src/config/assetResolver.test.js',
+  // Ordre del Mestre, 13-10-2026 (pla 261013_1405, front F) · les proves del front.
+  'src/sections/consola/imatgesConsola.test.js',
+  'src/sections/consola/indexConsola.test.js',
+  'src/sections/consola/diagnosiConsola.test.js',
+  'src/sections/consola/ConsolaSection.diagnosi.test.jsx',
+  'src/sections/consola/ConsolaSection.index.test.jsx',
+  'src/css/diagnosi.capes.test.js'
 ];
 const JSX = CODI.filter((f) => f.endsWith('.jsx'));
 const ESTIL_EN_LINIA = new RegExp(['\\ss', 'tyle=[{"]'].join(''));
@@ -108,14 +123,17 @@ describe('Pedra Seca al JSX tocat', () => {
      boina i la classe ja no la pinta ningú, ni té regla al full. */
   test('les classes noves porten prefix i tenen regla al full', () => {
     const NOVES = ['sdp-camp-fitxer', 'sdp-camp-fitxer__boto', 'sdp-camp-fitxer__estat',
-      'sdp-consola__avis', 'sdp-consola__evidencies'];
+      'sdp-consola__avis', 'sdp-consola__evidencies',
+      // Ordre del Mestre, 13-10-2026 (pla 261013_1405, front F) · el Diagnòstic del Mas.
+      'sdp-consola__diagnosi', 'sdp-consola__acces', 'sdp-consola__diagnosi-text'];
     for (const classe of NOVES) expect(CSS, classe).toMatch(new RegExp(`\\.${classe}(?![\\w-])`));
     const literals = JSX.flatMap((f) => [...llig(f).matchAll(/className="([^"]+)"/g)].flatMap((m) => m[1].split(/\s+/)));
     expect(literals.filter((c) => !/^(?:sdp-|sp-)/.test(c))).toEqual([]);
   });
 
   test('les regles noves són a @layer components, sense :has() ni colors crus', () => {
-    for (const selector of ['.sdp-camp-fitxer {', '.sdp-consola__avis {', '.sdp-consola__evidencies {']) {
+    for (const selector of ['.sdp-camp-fitxer {', '.sdp-consola__avis {', '.sdp-consola__evidencies {',
+      '.sdp-consola__diagnosi {', '.sdp-consola__acces > ul {', '.sdp-consola__diagnosi-text {']) {
       const index = CSS.indexOf(selector);
       expect(index, selector).toBeGreaterThan(-1);
       const obertura = CSS.lastIndexOf('@layer components {', index);

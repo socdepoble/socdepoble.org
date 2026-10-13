@@ -18,7 +18,14 @@
  * Avui la plataforma només coneix l'entitat del projecte (el padró pilot,
  * identitatsSeed.js). La identitat de la persona (nom, avatar i perfil) no
  * arriba a les apps: cap sessió ni perfil travessa la frontera, i un autor
- * que no es coneix no s'inventa (null).
+ * que no es coneix no s'inventa (null). Derogat EN PART per l'ordre del
+ * Mestre del 13-10-2026 (pla 261013_1405, front B: la boina de la Gestoria
+ * porta el titular de la sessió): una app interna que declara
+ * permisos.titular 'sessio' al manifest rep pel pont de sessió
+ * (useSessioApp().titular) el nom, l'avatar i el poble de la persona que ha
+ * entrat, filtrats (titularNet, sessioApp.js), i mai el seu id ni el seu
+ * perfil. La resta d'apps continua sense rebre res de la persona, i esta
+ * funció continua sense resoldre cap persona.
  * La forma és la de l'autoria de PaginaApp ({ nom, avatar, href, poble }).
  * L'avatar és el camí propi del paquet: UniversalCard el resol amb la base de
  * recursos en pintar-lo (resolRecursPropi), no ací.

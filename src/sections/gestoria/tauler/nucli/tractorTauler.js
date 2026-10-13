@@ -34,6 +34,11 @@
  * referències, el document ni el rebut SEPA (el creditor, el seu
  * identificador amb el NIF i el mandat), ni el nom del fitxer, que només
  * apareix a l'avís d'un fitxer que no s'ha pogut llegir. La fitxa ho diu així.
+ * Ordre del Mestre, 13-10-2026 (pla 261013_1405, front I · motors; auditoria
+ * de Codex 261013_1510, GES-A2): de cada compte ix també `idCompte`, l'id
+ * opac que c43.js deriva de la clau sencera abans de reduir-la. No porta cap
+ * xifra del compte i no es pot desfer; només fa que dos comptes acabats en
+ * els mateixos quatre dígits no es confonguen en un (resumTauler.comptesDe).
  * JS pur: sense DOM ni React.
  */
 import { ErrorAprovacio, exigeixAprovacio } from '../../../tractors/nucli/aprovacio.js';
@@ -155,7 +160,7 @@ function movimentReduit(m) {
 /**
  * La lectura de la Norma 43 que guarda el Tauler (vegeu la capçalera).
  * @param {object} lectura el que torna llegeixC43
- * @returns {{ comptes: Array<{ capcalera: { entitat: string, compte4: string, dataInicial: object|null,
+ * @returns {{ comptes: Array<{ capcalera: { entitat: string, compte4: string, idCompte?: string, dataInicial: object|null,
  *   dataFinal: object|null, saldoInicial: number|null, divisa: string|null }, moviments: object[],
  *   peu: { saldoFinal: number|null }|null }>, avisos: Array<{ codi: string, severitat: string }> }}
  */
@@ -167,6 +172,8 @@ export function reduixC43(lectura) {
         capcalera: {
           entitat: cap.entitat ?? null,
           compte4: cap.compte4 ?? null,
+          /* GES-A2: l'id opac de c43.js, si la lectura en porta; mai l'oficina ni el número. */
+          ...(typeof cap.idCompte === 'string' && cap.idCompte !== '' ? { idCompte: cap.idCompte } : {}),
           dataInicial: dataDe(cap.dataInicial),
           dataFinal: dataDe(cap.dataFinal),
           saldoInicial: cap.saldoInicial ?? null,

@@ -20,7 +20,12 @@
    (amb la política de persistència fixada, m.politica, i el registre desat).
    Correccions de la revisió (261006): la sessió desada val també «en línia»
    (un servidor que no respon no talla la venda) i, amb el permís 'sessio',
-   una «comprovant» que ja porta el compte és «dins». */
+   una «comprovant» que ja porta el compte és «dins».
+   Ordre del Mestre, 13-10-2026 (pla 261013_1405, front B: la boina de la
+   Gestoria porta el titular de la sessió) · Derogat EN PART el «res més» del
+   261006: una novena clau, `titular`, { nom, avatar, poble } de la PERSONA de
+   la sessió (mai l'entitat activa), filtrada i només per a l'app interna que
+   la declara (permisos.titular 'sessio'); per a la resta, sempre null. */
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { afterEach, describe, expect, test, vi } from 'vitest';
@@ -34,11 +39,11 @@ import { CLAU_PERSISTENT } from '../../data/identitat.js';
 import { ENTORN_OBERT, muntaPlataforma } from './__fixtures__/munta.jsx';
 import { manifestDeProva } from './__fixtures__/manifests.js';
 import { useSessioDeLaRuta } from './ContextApp.jsx';
-import { marcaDeLActor } from './fontSessio.js';
+import { marcaDeLActor, titularDeLActor } from './fontSessio.js';
 import { useSessioApp } from './index.js';
 import { creaRegistre } from './registreApps.js';
 import RutaApps from './RutaApps.jsx';
-import { ESTAT, MOTIUS, esModeDeProves, marcaNeta, motiuDe } from './sessioApp.js';
+import { ESTAT, MOTIUS, NOM_SENSE_NOM, esModeDeProves, marcaNeta, motiuDe, titularNet } from './sessioApp.js';
 
 /* undefined: el context de veres (sense proveïdor, null). Un valor: el que
    tornaria el proveïdor. `organitzacions`: les pertinences que torna el port
@@ -68,9 +73,11 @@ vi.mock('../../app/contexts/IdentitatContext.jsx', async (importOriginal) => {
   const real = await importOriginal();
   return { ...real, useIdentitatOpcional: () => (m.identitat === undefined ? real.useIdentitatOpcional() : m.identitat) };
 });
+/* getProfile: el front A (pla 261013_1405) fa que IdentitatProvider llija el
+   perfil pel port; ací cap fila, i la persona es queda amb les metadades. */
 vi.mock('../../data/backendPort.js', async (importOriginal) => {
   const real = await importOriginal();
-  return { ...real, listMyOrganizations: async () => m.organitzacions };
+  return { ...real, listMyOrganizations: async () => m.organitzacions, getProfile: async () => null };
 });
 vi.mock('../../data/identitat.js', async (importOriginal) => {
   const real = await importOriginal();
@@ -83,7 +90,8 @@ vi.mock('../../data/identitat.js', async (importOriginal) => {
   };
 });
 
-const CLAUS = ['enLinia', 'estat', 'marca', 'modeProves', 'motiu', 'potEscriure', 'rutaEntrada', 'teSessio'];
+/* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front B) · nou claus: s'hi afig `titular`. */
+const CLAUS = ['enLinia', 'estat', 'marca', 'modeProves', 'motiu', 'potEscriure', 'rutaEntrada', 'teSessio', 'titular'];
 const ENTRADA_INICI = '/registre?mode=entrar&tornar=%2Fapp%2Fprova%2Finici';
 const AMB_SESSIO = Object.freeze({ veure: 'public', escriure: 'sessio' });
 const AMB_SUPERADMIN = Object.freeze({ veure: 'public', escriure: 'superadmin' });
@@ -91,15 +99,26 @@ const AMB_SUPERADMIN = Object.freeze({ veure: 'public', escriure: 'superadmin' }
 /** La forma sencera que torna el pont, amb els valors d'una app sense sessió, en línia i en remot. */
 const forma = (camps = {}) => ({
   estat: 'fora', teSessio: false, potEscriure: false, motiu: 'sense-sessio', enLinia: true, modeProves: false,
-  marca: null, rutaEntrada: ENTRADA_INICI, ...camps
+  marca: null, rutaEntrada: ENTRADA_INICI, titular: null, ...camps
 });
 
-/* L'actor d'una entitat tal com el dona IdentitatContext (tots els camps). */
+/* L'actor d'una entitat tal com el dona IdentitatContext (tots els camps).
+   Front A (pla 261013_1405, ordre del Mestre del 13-10-2026) · l'actor porta
+   també el poble: el de la pertinença (town_name) o ''. */
 const ENTITAT = Object.freeze({
   tipus: 'entitat', id: 'org-sonda-7', nom: 'Bar de la Parròquia', avatar: 'logo-parroquia.png',
-  rol: 'owner', slug: 'bar-parroquia', kind: 'entitat'
+  rol: 'owner', slug: 'bar-parroquia', kind: 'entitat', poble: ''
 });
 const MARCA = Object.freeze({ nom: 'Bar de la Parròquia', logotip: 'logo-parroquia.png', slug: 'bar-parroquia' });
+/* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front B) · la persona de la sessió tal com la posa
+   IdentitatContext a identitats[0] (amb el poble del front A), el titular que n'ix i el manifest
+   que el declara. */
+const PERSONA = Object.freeze({
+  tipus: 'persona', id: 'usuari-sonda-1', nom: 'Pepa Soler', avatar: '/assets/cares/sonda.png',
+  rol: 'persona', activa: false, poble: 'La Torre de les Maçanes'
+});
+const TITULAR = Object.freeze({ nom: 'Pepa Soler', avatar: '/assets/cares/sonda.png', poble: 'La Torre de les Maçanes' });
+const AMB_TITULAR = Object.freeze({ veure: 'public', escriure: 'sessio', titular: 'sessio' });
 /* La sessió tal com la dona SessionContext: l'usuari, el rol i un testimoni
    que no han d'eixir mai cap a l'app. */
 const SESSIO_DINS = Object.freeze({
@@ -591,13 +610,175 @@ describe('amb IdentitatProvider de veres (la sessió i el port, simulats)', () =
     await screen.findByTestId('sessio');
     await waitFor(() => expect(vist.marca).toEqual(MARCA));
     expect(vist).toEqual(forma({ estat: 'dins', teSessio: true, potEscriure: true, motiu: 'sessio', marca: MARCA }));
-    /* Si IdentitatProvider canvia avatar, slug o rol, esta prova cau abans que el TPV perda la marca. */
+    /* Si IdentitatProvider canvia avatar, slug, rol o poble, esta prova cau abans que el TPV perda la
+       marca. La forma inclou el poble des del front A (pla 261013_1405, ordre del Mestre del 13-10-2026). */
     expect(actor).toEqual(ENTITAT);
   });
 });
 
+/* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front B: la boina de la Gestoria porta el titular de
+   la sessió) · El titular és SEMPRE la persona que ha entrat (identitats, tipus 'persona'), mai
+   l'entitat activa; només arriba a l'app interna que el declara (permisos.titular 'sessio') i mai
+   amb estat 'fora'; i porta tres camps i prou, mai un correu. */
+describe('el titular: la persona de la sessió, només a l’app que el declara', () => {
+  const ambPersona = (actor = ENTITAT) => ({ actor, identitats: [PERSONA, { ...ENTITAT, activa: actor === ENTITAT }] });
+
+  test('pels contexts, amb el permís: { nom, avatar, poble } de la persona, congelat, encara que actue com l’entitat', async () => {
+    m.sessio = SESSIO_DINS;
+    m.identitat = ambPersona(ENTITAT);
+    const vista = await munta({ permisos: AMB_TITULAR });
+    expect(vista).toEqual(forma({ estat: 'dins', teSessio: true, potEscriure: true, motiu: 'sessio', marca: MARCA, titular: TITULAR }));
+    expect(Object.isFrozen(vista.titular)).toBe(true);
+    expect(Object.keys(vista.titular).sort()).toEqual(['avatar', 'nom', 'poble']);
+    cleanup();
+    /* Actuant com a persona, la mateixa. */
+    m.identitat = ambPersona(PERSONA);
+    expect((await munta({ permisos: AMB_TITULAR })).titular).toEqual(TITULAR);
+  });
+
+  test('sense el permís al manifest, null: la persona no arriba a cap altra app, ni per l’entorn', async () => {
+    m.sessio = SESSIO_DINS;
+    m.identitat = ambPersona();
+    expect((await munta({ permisos: AMB_SESSIO })).titular).toBeNull();
+    cleanup();
+    expect((await munta()).titular).toBeNull();
+    cleanup();
+    expect((await munta({ permisos: AMB_SESSIO, sessio: { estat: 'dins', titular: TITULAR } })).titular).toBeNull();
+  });
+
+  test('amb estat «fora», null; en la renovació del mateix compte es conserva (no parpelleja); en eixir, se’n va', async () => {
+    m.sessio = { ...SESSIO_DINS, estat: 'fora' };
+    m.identitat = ambPersona();
+    expect((await munta({ permisos: AMB_TITULAR })).titular).toBeNull();
+    cleanup();
+    m.sessio = SESSIO_DINS;
+    await munta({ permisos: AMB_TITULAR });
+    expect(vist.titular).toEqual(TITULAR);
+    m.sessio = { ...SESSIO_DINS, estat: 'comprovant' };
+    await rellig();
+    expect([vist.estat, vist.titular]).toEqual(['dins', TITULAR]);
+    m.sessio = { ...SESSIO_DINS, estat: 'fora', currentUser: null };
+    await rellig();
+    expect([vist.estat, vist.titular]).toEqual(['fora', null]);
+  });
+
+  test('un convidat, una llista sense persona o cap llista: null (l’entitat no és mai el titular)', async () => {
+    m.sessio = SESSIO_DINS;
+    m.identitat = { actor: { tipus: 'persona', id: null, nom: null, avatar: null, rol: 'convidat', slug: null, kind: null }, identitats: [] };
+    expect((await munta({ permisos: AMB_TITULAR })).titular).toBeNull();
+    cleanup();
+    m.identitat = { actor: ENTITAT, identitats: [{ ...ENTITAT, activa: true }] };
+    expect((await munta({ permisos: AMB_TITULAR })).titular).toBeNull();
+    cleanup();
+    m.identitat = { actor: PERSONA };
+    expect((await munta({ permisos: AMB_TITULAR })).titular).toBeNull();
+  });
+
+  test('un nom que és un correu, buit o absent: «El meu compte», mai el correu', async () => {
+    m.sessio = SESSIO_DINS;
+    for (const nom of ['sonda@exemple.invalid', '   ', null, undefined]) {
+      m.identitat = { actor: PERSONA, identitats: [{ ...PERSONA, nom }] };
+      const vista = await munta({ permisos: AMB_TITULAR });
+      expect(vista.titular, String(nom)).toEqual({ ...TITULAR, nom: NOM_SENSE_NOM });
+      expect(JSON.stringify(vista), String(nom)).not.toContain('@');
+      cleanup();
+    }
+  });
+
+  test('per l’entorn (entorn.sessio.titular): el mateix filtre i el mateix permís; l’entorn mana damunt dels contexts', async () => {
+    const ambSobrants = { ...TITULAR, id: 'usuari-sonda-1', email: 'sonda@exemple.invalid', rol: 'owner', kind: 'entitat' };
+    const vista = await munta({ permisos: AMB_TITULAR, sessio: { estat: 'dins', titular: ambSobrants } });
+    expect(vista.titular).toEqual(TITULAR);
+    expect(JSON.stringify(vista)).not.toMatch(/usuari-sonda-1|exemple\.invalid|owner|"kind"/);
+    cleanup();
+    expect((await munta({ permisos: AMB_TITULAR, sessio: { estat: 'dins', titular: { ...TITULAR, nom: 'sonda@exemple.invalid' } } })).titular)
+      .toEqual({ ...TITULAR, nom: NOM_SENSE_NOM });
+    cleanup();
+    expect((await munta({ permisos: AMB_TITULAR, sessio: { estat: 'fora', titular: TITULAR } })).titular).toBeNull();
+    cleanup();
+    expect((await munta({ permisos: AMB_TITULAR, sessio: { estat: 'dins', titular: 'Pepa Soler' } })).titular).toBeNull();
+    cleanup();
+    m.sessio = SESSIO_DINS;
+    m.identitat = ambPersona();
+    expect((await munta({ permisos: AMB_TITULAR, sessio: { estat: 'dins' } })).titular).toBeNull();
+  });
+
+  test('la instantània de la font porta el titular de la persona i, de la persona, res més', async () => {
+    m.sessio = SESSIO_DINS;
+    m.identitat = ambPersona();
+    let instantania = null;
+    function SondaFont() {
+      instantania = useSessioDeLaRuta();
+      return <Sonda />;
+    }
+    const registre = creaRegistre({
+      internes: [manifestDeProva({ carrega: () => Promise.resolve({ default: SondaFont }), permisos: AMB_TITULAR })]
+    });
+    muntaPlataforma('/app/prova/inici', { registre, entorn: ENTORN_OBERT });
+    await screen.findByTestId('sessio');
+    expect(instantania).toEqual({ estat: 'dins', idUsuari: 'usuari-sonda-1', esSuperadmin: false, marca: MARCA, titular: TITULAR });
+    expect(Object.isFrozen(instantania.titular)).toBe(true);
+    expect(JSON.stringify(instantania.titular)).not.toMatch(/usuari-sonda-1|"rol"|"tipus"|"activa"|"id"/);
+  });
+
+  test('amb IdentitatProvider de veres: la persona de les metadades, encara que la preferència siga l’entitat', async () => {
+    m.sessio = {
+      ...SESSIO_DINS,
+      currentUser: Object.freeze({
+        id: 'usuari-sonda-1', access_token: 'testimoni-sonda', email: 'sonda@exemple.invalid',
+        user_metadata: { full_name: 'Pepa Soler', avatar_url: '/assets/cares/sonda.png' }
+      })
+    };
+    m.organitzacions = [{ id: 'org-sonda-7', name: 'Bar de la Parròquia', logo_url: 'logo-parroquia.png', role: 'owner', slug: 'bar-parroquia', kind: 'entitat' }];
+    desaPreferencia('usuari-sonda-1', { type: 'entitat', id: 'org-sonda-7' });
+    const registre = creaRegistre({
+      internes: [manifestDeProva({ carrega: () => Promise.resolve({ default: Sonda }), permisos: AMB_TITULAR })]
+    });
+    muntaPlataforma('/app/prova/inici', {
+      registre,
+      entorn: ENTORN_OBERT,
+      fills: (
+        <IdentitatProvider>
+          <Routes><Route path="/app/*" element={<RutaApps />} /></Routes>
+        </IdentitatProvider>
+      )
+    });
+    await screen.findByTestId('sessio');
+    await waitFor(() => expect(vist.marca).toEqual(MARCA));
+    /* Sense poble a les metadades ni cap fila de perfil (getProfile simulat, null): ''. */
+    expect(vist.titular).toEqual({ nom: 'Pepa Soler', avatar: '/assets/cares/sonda.png', poble: '' });
+    expect(JSON.stringify(vist)).not.toMatch(/exemple\.invalid|usuari-sonda-1|testimoni-sonda/);
+  });
+
+  test('titularNet i titularDeLActor, soles', () => {
+    expect(NOM_SENSE_NOM).toBe('El meu compte');
+    expect(titularNet(TITULAR)).toEqual(TITULAR);
+    expect(Object.isFrozen(titularNet(TITULAR))).toBe(true);
+    expect(Object.keys(titularNet({ ...TITULAR, id: 'x', email: 'y', rol: 'owner', kind: 'k' })).sort()).toEqual(['avatar', 'nom', 'poble']);
+    expect(titularNet(null)).toBeNull();
+    expect(titularNet('Pepa Soler')).toBeNull();
+    expect(titularNet({ nom: '   ' })).toBeNull();
+    expect(titularNet({ nom: 7 })).toBeNull();
+    expect(titularNet({ nom: '  Pepa Soler  ', avatar: 7, poble: 3 })).toEqual({ nom: 'Pepa Soler', avatar: null, poble: '' });
+    expect(titularNet({ nom: 'Pepa', poble: '  La Torre de les Maçanes ' }).poble).toBe('La Torre de les Maçanes');
+    expect(titularNet({ nom: 'pepa@exemple.invalid' }).nom).toBe(NOM_SENSE_NOM);
+    /* 80 caràcters com a molt, comptats per caràcter: cap emoji partit per la meitat. */
+    const llarg = titularNet({ nom: `${'🍅'.repeat(79)}ab` });
+    expect(Array.from(llarg.nom)).toHaveLength(80);
+    expect(llarg.nom.endsWith('🍅a')).toBe(true);
+    expect(titularDeLActor(PERSONA)).toEqual(TITULAR);
+    expect(titularDeLActor(ENTITAT)).toBeNull();
+    expect(titularDeLActor({ ...PERSONA, rol: 'convidat' })).toBeNull();
+    expect(titularDeLActor(null)).toBeNull();
+    expect(titularDeLActor({ ...PERSONA, nom: 'pepa@exemple.invalid' })).toEqual({ ...TITULAR, nom: NOM_SENSE_NOM });
+    expect(titularDeLActor({ ...PERSONA, poble: undefined })).toEqual({ ...TITULAR, poble: '' });
+  });
+});
+
 describe('la forma i la tornada', () => {
-  test('huit claus i prou, congelada: cap id, usuari, rol ni testimoni', async () => {
+  /* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front B) · nou claus: s'hi afig `titular`. Amb el
+     titular declarat i la persona de la sessió, tampoc no hi entra cap id, correu, rol ni kind. */
+  test('nou claus i prou, congelada: cap id, usuari, rol ni testimoni, ni amb el titular', async () => {
     m.sessio = SESSIO_DINS;
     m.identitat = { actor: ENTITAT, actorKey: 'entitat::org-sonda-7', memberships: [{ id: 'org-sonda-7', role: 'owner' }] };
     const vista = await munta({ permisos: AMB_SESSIO });
@@ -608,9 +789,18 @@ describe('la forma i la tornada', () => {
       expect(text, fuita).not.toContain(fuita);
     }
     expect(() => { vista.teSessio = false; }).toThrow(TypeError);
+    cleanup();
+    m.identitat = { ...m.identitat, identitats: [{ ...PERSONA, email: 'sonda@exemple.invalid' }, { ...ENTITAT, activa: true }] };
+    const ambTitular = await munta({ permisos: AMB_TITULAR });
+    expect(Object.keys(ambTitular).sort()).toEqual(CLAUS);
+    expect(ambTitular.titular).toEqual(TITULAR);
+    const textAmbTitular = JSON.stringify(ambTitular);
+    for (const fuita of ['org-sonda-7', 'usuari-sonda-1', 'testimoni-sonda', 'superadmin-sonda', 'owner', 'entitat::', '"kind"', '"rol"', '"id"', '@', '"persona"']) {
+      expect(textAmbTitular, fuita).not.toContain(fuita);
+    }
   });
 
-  test('també sense xarxa i en mode de proves: les mateixes huit claus, i els camps nous són booleans o un motiu conegut', async () => {
+  test('també sense xarxa i en mode de proves: les mateixes nou claus, i els camps nous són booleans o un motiu conegut', async () => {
     posaEnLinia(false);
     m.sessio = SESSIO_FORA;
     m.recuperable = true;
@@ -684,7 +874,9 @@ describe('la forma i la tornada', () => {
     expect(Object.isFrozen(ESTAT)).toBe(true);
   });
 
-  test('la instantània de la font: quatre camps, congelada, sense testimoni, rol, pertinences ni actor', async () => {
+  /* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front B) · cinc camps: s'hi afig el titular, la
+     persona de la sessió filtrada (sense identitats, cap: null). */
+  test('la instantània de la font: cinc camps, congelada, sense testimoni, rol, pertinences ni actor', async () => {
     m.sessio = SESSIO_DINS;
     m.identitat = { actor: ENTITAT, actorKey: 'entitat::org-sonda-7', memberships: [{ id: 'org-sonda-7', role: 'owner' }] };
     let instantania = null;
@@ -697,7 +889,7 @@ describe('la forma i la tornada', () => {
     });
     muntaPlataforma('/app/prova/inici', { registre, entorn: ENTORN_OBERT });
     await screen.findByTestId('sessio');
-    expect(instantania).toEqual({ estat: 'dins', idUsuari: 'usuari-sonda-1', esSuperadmin: false, marca: MARCA });
+    expect(instantania).toEqual({ estat: 'dins', idUsuari: 'usuari-sonda-1', esSuperadmin: false, marca: MARCA, titular: null });
     expect(Object.isFrozen(instantania)).toBe(true);
     const text = JSON.stringify(instantania);
     for (const fuita of ['testimoni-sonda', 'superadmin-sonda', 'owner', 'org-sonda-7', 'entitat::', '"kind"', 'generacio']) {

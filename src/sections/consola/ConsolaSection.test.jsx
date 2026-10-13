@@ -93,16 +93,27 @@ function teBoinaDeSocDePoble(t) {
   expect(autor.querySelector('.sp-card-author-location').textContent).toBe('La Torre de les Maçanes');
   expect(autor.querySelector('img.sp-card-avatar').getAttribute('src')).toBe('/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png');
 }
-function targetesExplicatives(contenidor = document, { perA = true } = {}) {
+/* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front F) · `ambImatge`: les
+   nou targetes del tauler de /consola porten la il·lustració de la seua
+   pàgina (imatgesConsola.js) al mitjà i ja no la icona a la insígnia lateral.
+   Derogat EN PART per l'ordre del Mestre del 13-10-2026 (front F): «La icona
+   ocupa el lloc de la foto» per a eixes nou; la resta (xifres, pols,
+   pàgines) continua amb la icona. */
+function targetesExplicatives(contenidor = document, { perA = true, ambImatge = false } = {}) {
   const targetes = [...contenidor.querySelectorAll('article.sp-card.sdp-consola__targeta')];
   for (const t of targetes) {
     expect(t.className).toBe(esClicable(t) ? 'sp-card sdp-consola__targeta' : 'sp-card sdp-consola__targeta sdp-consola__quieta');
     expect(t.parentElement.classList.contains('sdp-card-grid')).toBe(true);
-    // La boina de l'autor real; mai una autoria inventada ni la font. La icona ocupa el lloc de la foto.
+    // La boina de l'autor real; mai una autoria inventada ni la font. La icona ocupa el lloc de la foto, si no n'hi ha.
     teBoinaDeSocDePoble(t);
     expect(t.textContent).not.toMatch(/Consola Termodinàmica|Font: /);
-    expect(t.querySelector('.sp-card-media-container')).toBeNull();
-    expect(t.querySelector('.sp-card-calendar-badge svg').getAttribute('width')).toBe('48');
+    if (ambImatge) {
+      expect(t.querySelector('.sp-card-media-container > img.sp-card-media')).not.toBeNull();
+      expect(t.querySelector('.sp-card-calendar-badge')).toBeNull();
+    } else {
+      expect(t.querySelector('.sp-card-media-container')).toBeNull();
+      expect(t.querySelector('.sp-card-calendar-badge svg').getAttribute('width')).toBe('48');
+    }
     // Títol, subtítol («per a…» al tauler i al pols) i entradilla.
     expect(t.querySelector('h3.sp-card-title')).not.toBeNull();
     if (perA) expect(t.querySelector('h4.sp-card-subtitle').textContent).toMatch(/^Per a /);
@@ -140,14 +151,19 @@ test('/consola: el tauler són nou targetes universals que expliquen cada pàgin
   /* Correcció 261004 (verificador, punt 9) · sense Mapa, «El Mas en xifres»
      també es pinta (cap pàgina sense targeta): el seu h2 ve darrere del de
      la introducció.
-     Onada 11 (261010; prompt 261010_1730, tasca 5) · I, tancant el tauler,
-     l'H2 de l'Índex de la Consola (IndexConsola.jsx), també sense cap font. */
-  expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual(['Manteniment de la IAIA', 'El Mas en xifres', 'Índex de la Consola']);
+     Onada 11 (261010; prompt 261010_1730, tasca 5) · I l'H2 de l'Índex de
+     la Consola (IndexConsola.jsx), també sense cap font.
+     Ordre del Mestre, 13-10-2026 (pla 261013_1405, front F) · I, tancant el
+     tauler, el del Diagnòstic del Mas (DiagnosiConsola.jsx). Derogat EN PART:
+     l'Índex com a últim H2. */
+  expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent))
+    .toEqual(['Manteniment de la IAIA', 'El Mas en xifres', 'Índex de la Consola', 'Diagnòstic del Mas']);
   expect(document.querySelector('.page-intro h2 + p.lead')).not.toBeNull();
   expect(screen.queryByRole('tablist')).toBeNull();
 
   const nav = screen.getByRole('navigation', { name: 'Pàgines de la Consola' });
-  expect(targetesExplicatives(nav)).toHaveLength(9);
+  // Ordre del Mestre, 13-10-2026 (front F) · les nou porten la il·lustració de la seua pàgina, sense insígnia lateral.
+  expect(targetesExplicatives(nav, { ambImatge: true })).toHaveLength(9);
   expect(nav.className).toBe('sdp-card-grid sdp-consola__graella');
   // Tota la targeta porta a la seua pàgina; l'autor de la boina, al seu perfil (Onada 8; abans, /projecte).
   expect([...nav.querySelectorAll('a.sp-card-link-overlay')].map((a) => a.getAttribute('href'))).toEqual(PAGINES.map((id) => `/consola/${id}`));

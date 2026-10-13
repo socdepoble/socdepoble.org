@@ -1,0 +1,323 @@
+ANNEX F06 · CONTROL només veta C0 i DEL: format, C1 i separadors Unicode passen, i un caràcter invisible partix un DNI davant de la guarda
+Severitat final: mitjana (autor: mitjana; àrbitres: reproducció mitjana, doctrina mitjana, impacte mitjana)
+Veredicte: 3 de 3 (refuta: cap)
+Categoria: privacitat · Lent d'origen: guardes
+Fitxer: src/sections/gestoria/identitat/nucli/guardes.js · Línies: 51-52, 82-86, 105
+Decisió humana: sí · Emojis compostos (U+200D) a l'àlies: es refusen (per defecte) o s'admeten? I va registreVendes.js (Bar) al mateix commit?
+Toca font signada: cap
+Solapaments: F01 i F20 a guardes.js 82-86 (identificadorsDe); F02 i F03, veïnes sense línies comunes (54-73)
+Imports verificats: sí · Línia base: 12 fitxers, 222 proves, verdes
+Estat: escrit
+
+RESUM
+La classe CONTROL de guardes.js només veta U+0000-001F i U+007F. Els controls C1 (U+0085), els caràcters de format (U+00AD,
+U+200B-200F, U+202A-202E, U+FEFF) i els separadors U+2028 i U+2029 passen comprovaText, encara que el comentari i el missatge
+prometen refusar els salts de línia. A més, un caràcter invisible entre els dígits d'un DNI el partix davant d'identificadorsDe:
+la guarda torna [] i en pantalla el número es llig sencer. Importa per a la Finestreta perquè l'àlies del titular i el de
+l'expedient són text lliure que es congela, i esta guarda és la que impedix que hi acabe un identificador. Hui no hi ha fuga:
+els tres carrils no estan endollats i el Bar passa titular null. Es proposa: CONTROL per propietat Unicode (Cc, Cf, Zl, Zp);
+buscar cada forma al text i a una còpia sense invisibles (mai es troba menys que hui); que el missatge diga el que refusa; i
+el mateix a la còpia de src/utils/vendes/registreVendes.js, amb una prova de paritat que obliga a tocar els dos fitxers junts.
+
+EVIDÈNCIA
+ 1. guardes.js:52 · CONTROL = /[\u0000-\u001F\u007F]/. Queden fora U+0085 (C1); U+00AD, U+200B-200F, U+202A-202E, U+2060-2069 i
+    U+FEFF (format); i U+2028 i U+2029 (separadors de línia i de paràgraf).
+ 2. guardes.js:102 · trim() només lleva blancs dels extrems. guardes.js:105 · CONTROL.test(net) dona fals: cap TEXT_INVALID.
+ 3. guardes.js:64 · DNI = (?:^|\D)\d{1,2}\.?\d{3}\.?\d{3}[-\s.]?[A-HJ-NP-TV-Z]. Entre grups de xifres només admet el punt.
+ 4. Traça de tros('1234', car(0x00AD), '5678', 'Z'). Des de ^: «12» i \d{3} topa amb U+00AD; «1», «234» i \d{3} topa amb U+00AD.
+    Des de \D = U+00AD: «56» i \d{3} topa amb «Z»; «5», «678» i \d{3} topa amb «Z». Cap coincidència.
+ 5. guardes.js:65-72 · les altres formes demanen 7 xifres seguides darrere d'una lletra, 9 xifres o més, dues lletres i dues
+    xifres, o «@». La tirada més llarga és de 4: identificadorsDe (82-86) torna [] i comprovaText (106-110) no afig cap error.
+ 6. titular.js:59 valida l'àlies amb comprovaText i titular.js:97 el congela; expedient.js:178 i 205 fan el mateix.
+ 7. guardes.js:51 i 105 · el comentari i el missatge parlen de «salts de línia»; U+0085, U+2028 i U+2029 ho són i passen.
+ 8. Còpia: src/utils/vendes/registreVendes.js:101 (CONTROL), 125-129 (identificadorsDe) i 191 (missatge), idèntics. L'importa
+    src/apps/bar/nucli/vendes.js:55; src/apps/bar/vistes/Torns.jsx:95 hi passa titular: null.
+ 9. Cap prova ho vigila: rg de Cf, Zl, Zp, C1 i ignorables en cru als tres carrils, src/utils/vendes i src/apps/bar/nucli no
+    troba cap text que arribe a la guarda; per punt de codi només hi ha «\n» (guardes.test.js:122) i 0x7F (registreVendes.test.js:364).
+10. El text del missatge només viu a guardes.js:105 i registreVendes.js:191; cap prova l'afirma (les proves miren codis).
+11. tractors.js no llista cap font d'identitat/ ni de src/utils/vendes; fronteraModelsPurs.test.js:106-110 ho comprova.
+12. Errada de lectura de l'autor, sense efecte: darrere de \d{1,2} hi ha \.? i no [-\s.]?, que només va davant de la lletra.
+13. Línia base, npx vitest run (tres carrils, fronteraModelsPurs, registreVendes i dues proves del Bar): 12 fitxers, 222 proves, verdes.
+
+ESCENARI
+A. comprovaText(tros('1234', car(0x00AD), '5678', 'Z'), 'alies', errors)
+   Hui: torna el text i errors = []; validaTitular no afig cap error per l'àlies i creaTitular el congela.
+   Amb la proposta: errors porta TEXT_INVALID i IDENTIFICADOR_PERSONAL (DNI).
+B. comprovaText(tros('Casa', car(0x2028), 'nova'), 'alies', errors)   (igual amb 0x2029, 0x0085, 0x00AD i 0xFEFF al mig)
+   Hui: errors = []. Amb la proposta: errors = [TEXT_INVALID].
+C. identificadorsDe(tros('1234', car(0xFE0F), '5678', 'Z'))   (selector de variació: no és de format, però no es veu)
+   Hui: []. Amb la proposta: ['DNI'].
+D. identificadorsDe(tros('5', car(0x200B), '1234', '5678', 'Z'))   (l'invisible fa de vora del número)
+   Hui: ['DNI']. Amb la proposta: ['DNI']. Amb la proposta original de l'autor (llevar i buscar una sola vegada) es perdia.
+
+FONT DE VERITAT
+- guardes.js:12-13 · «Les formes són heurístiques i fallen cap al costat segur: un text que ho sembla es refusa».
+- guardes.js:51 · «Caràcters de control (inclosos els salts de línia): no van a cap camp d'estos models», i el missatge de 105.
+- titular.js:13-16 · «El model NO guarda cap número d'identitat ni cap compte»; «El titular només porta un àlies».
+- La casa ja els tracta com a hostils: src/sections/gestoria/nucli/pdfText.js:645-654 esborra U+00AD i U+200B del text dels PDF;
+  src/config/configAmfitrio.js:25-31 veta C0, DEL, C1, els invisibles i les marques bidi al nom del poble;
+  src/utils/vendes/registreVendes.test.js:426-431 veta eixos rangs en cru al codi font.
+- Baseline 2022: les propietats Unicode amb la bandera u ja són a producció (src/config/assetResolver.js:47, amb \p{Cc}\p{Cf};
+  src/sections/gestoria/nucli/receptes.js:61). La proposta no porta cap mirada arrere ni cap dependència.
+
+==== PROPOSTA (codi complet) ====
+Sis blocs en dos fitxers, que van junts al mateix commit. Les línies són les dels fitxers vigents, llegits el 261012: aplica
+els blocs de baix cap a dalt o busca el tros literal. No hi ha cap import nou ni cap fitxer nou de producció.
+
+BLOC 1 · SUBSTITUÏX · src/sections/gestoria/identitat/nucli/guardes.js · línies 51-52
+--- vigent ---
+/* Caràcters de control (inclosos els salts de línia): no van a cap camp d'estos models. */
+const CONTROL = /[\u0000-\u001F\u007F]/;
+--- nou ---
+/* Caràcters que no van a cap camp d'estos models: els de control (C0, DEL i
+   C1, salts de línia inclosos), els de format (guionet discrecional, amplada
+   zero, direcció del text, marca d'ordre de bytes) i els separadors de línia
+   i de paràgraf d'Unicode. Un de format partiria un número davant de la
+   guarda sense veure's en pantalla; un de direcció mostraria l'àlies a
+   l'inrevés. Van per propietat Unicode amb la bandera u, com a
+   src/config/assetResolver.js: cap caràcter invisible va en cru al codi font.
+   src/utils/vendes/registreVendes.js en porta còpia, i la seua prova en
+   vigila la paritat. */
+const CONTROL = /[\p{Cc}\p{Cf}\p{Zl}\p{Zp}]/u;
+
+/* Els caràcters que no es veuen en pantalla: els de format i la resta
+   d'ignorables per defecte d'Unicode (la juntura de grafemes, els selectors
+   de variació, els farciments). Es lleven de la còpia on es busquen les
+   formes vetades, mai del text que es guarda. */
+const INVISIBLES = /[\p{Cf}\p{Default_Ignorable_Code_Point}]/gu;
+
+BLOC 2 · SUBSTITUÏX · src/sections/gestoria/identitat/nucli/guardes.js · línies 82-86
+--- vigent ---
+export function identificadorsDe(text) {
+  if (typeof text !== 'string' || text === '') return [];
+  const pla = text.replace(/_/g, ' ');
+  return FORMES_VETADES.filter(([, patro]) => patro.test(pla)).map(([forma]) => forma);
+}
+--- nou ---
+export function identificadorsDe(text) {
+  if (typeof text !== 'string' || text === '') return [];
+  const pla = text.replace(/_/g, ' ');
+  /* Cada forma es busca dues vegades: al text tal com ve i a una còpia sense
+     els caràcters invisibles. Així un invisible no partix cap número, i
+     tampoc deixa de fer de vora quan en fa. */
+  const senseInvisibles = pla.replace(INVISIBLES, '');
+  return FORMES_VETADES.filter(([, patro]) => patro.test(pla) || patro.test(senseInvisibles)).map(([forma]) => forma);
+}
+
+BLOC 3 · SUBSTITUÏX · src/sections/gestoria/identitat/nucli/guardes.js · línia 105
+--- vigent ---
+  if (CONTROL.test(net)) errors.push({ codi: 'TEXT_INVALID', camp, missatge: `${camp} porta salts de línia o caràcters de control.` });
+--- nou ---
+  if (CONTROL.test(net)) errors.push({ codi: 'TEXT_INVALID', camp, missatge: `${camp} porta salts de línia, caràcters de control o caràcters invisibles.` });
+
+BLOC 4 · SUBSTITUÏX · src/utils/vendes/registreVendes.js · línies 100-101
+--- vigent ---
+/* Caràcters de control (inclosos els salts de línia): com CONTROL de guardes.js. */
+const CONTROL = /[\u0000-\u001F\u007F]/;
+--- nou ---
+/* Caràcters de control (C0, DEL i C1), de format i separadors de línia i de paràgraf d'Unicode: com CONTROL de guardes.js. */
+const CONTROL = /[\p{Cc}\p{Cf}\p{Zl}\p{Zp}]/u;
+/* Els caràcters que no es veuen en pantalla: com INVISIBLES de guardes.js. */
+const INVISIBLES = /[\p{Cf}\p{Default_Ignorable_Code_Point}]/gu;
+
+BLOC 5 · SUBSTITUÏX · src/utils/vendes/registreVendes.js · línies 124-129
+--- vigent ---
+/* Les formes d'identificador personal d'un text ([] si cap); «_» compta com a separador. */
+function identificadorsDe(text) {
+  if (typeof text !== 'string' || text === '') return [];
+  const pla = text.replace(/_/g, ' ');
+  return FORMES_VETADES.filter(([, patro]) => patro.test(pla)).map(([forma]) => forma);
+}
+--- nou ---
+/* Les formes d'identificador personal d'un text ([] si cap); «_» compta com a
+   separador i cada forma es busca també sense els caràcters invisibles, com a guardes.js. */
+function identificadorsDe(text) {
+  if (typeof text !== 'string' || text === '') return [];
+  const pla = text.replace(/_/g, ' ');
+  const senseInvisibles = pla.replace(INVISIBLES, '');
+  return FORMES_VETADES.filter(([, patro]) => patro.test(pla) || patro.test(senseInvisibles)).map(([forma]) => forma);
+}
+
+BLOC 6 · SUBSTITUÏX · src/utils/vendes/registreVendes.js · línia 191
+--- vigent ---
+  if (CONTROL.test(net)) errors.push({ codi: 'TEXT_INVALID', camp, missatge: `${camp} porta salts de línia o caràcters de control.` });
+--- nou ---
+  if (CONTROL.test(net)) errors.push({ codi: 'TEXT_INVALID', camp, missatge: `${camp} porta salts de línia, caràcters de control o caràcters invisibles.` });
+
+Per què no trenca cap prova existent (raonat sobre el codi llegit):
+- \p{Cc} conté sencer l'interval d'ara (U+0000-001F i U+007F): tot el que hui es refusa es continua refusant.
+- Per a un text sense cap caràcter de format ni ignorable, senseInvisibles és igual a pla i el resultat és el d'hui. Cap text de
+  les proves dels tres carrils, de src/utils/vendes ni de src/apps/bar/nucli que arribe a la guarda en porta (evidència 9).
+- Les expressions de FORMES_VETADES no porten la bandera g: test() no guarda estat. INVISIBLES la porta i només s'usa amb replace.
+- registreVendes.js continua sense cap import (la seua prova «JS pur» ho exigix): per això la classe es copia i no s'importa.
+- Les proves de qualitat de src/utils/vendes continuen valent: cap mirada arrere, cap caràcter invisible en cru, ecmaVersion 2022.
+- Cap prova de frontera veta el canvi: no hi ha fitxer nou, ni export nou, ni import nou (fronteraModelsPurs.test.js i
+  privacitat.test.js llegits sencers).
+
+VARIANT DE LA DECISIÓ HUMANA (no forma part de la proposta per defecte)
+Només si el Mestre respon «s'admeten» a la pregunta dels emojis compostos, la línia de CONTROL passa a ser, als dos fitxers:
+
+const CONTROL = /[\p{Cc}\p{Zl}\p{Zp}]|(?!\u{200D})\p{Cf}/u;
+
+És una mirada avant (entra al baseline) i U+200D va escapat. La còpia de busca continua llevant U+200D, de manera que un número
+partit amb ell es troba igual; el que es perd és el TEXT_INVALID sobre una juntura solta, que tampoc es veu en pantalla. Amb la
+variant, l'última prova de PROVA 1 espera [] en lloc de ['TEXT_INVALID'] (el canvi exacte va escrit al final de PROVA 1).
+
+==== PROVA (vitest completa) ====
+PROVA 1 · AFIG al final de src/sections/gestoria/identitat/nucli/guardes.test.js (darrere de la línia 156).
+El fitxer ja porta els imports que calen (línies 5-8) i la funció tros (línia 10); no cal cap import nou. Els imports vigents són:
+
+import { describe, expect, test } from 'vitest';
+import {
+  comprovaClaus, comprovaData, comprovaId, comprovaText, congela, esDataIso, esIdOpac, esSha256, idOpacDerivat, identificadorsDe, llancaSiCal
+} from './guardes.js';
+
+Bloc que s'afig, sencer:
+
+const car = (codi) => String.fromCodePoint(codi);
+
+/* Els caràcters invisibles es fan des del punt de codi: cap va en cru al
+   fitxer, i les formes vetades continuen compostes a trossos. */
+describe('caràcters invisibles, controls C1 i separadors de línia Unicode', () => {
+  test.each([
+    ['guionet discrecional U+00AD', 0x00AD],
+    ['espai d’amplada zero U+200B', 0x200B],
+    ['juntura d’amplada zero U+200D', 0x200D],
+    ['marca d’ordre de bytes U+FEFF', 0xFEFF],
+    ['juntura de grafemes U+034F', 0x034F],
+    ['selector de variació U+FE0F', 0xFE0F]
+  ])('un DNI partit per «%s» es troba igual', (_, codi) => {
+    expect(identificadorsDe(tros('1234', car(codi), '5678', 'Z'))).toContain('DNI');
+    expect(identificadorsDe(tros('Casa ', '1234', '5678', car(codi), 'Z'))).toContain('DNI');
+  });
+
+  test('l’invisible que fa de vora continua fent-ne: no es perd cap forma que hui es troba', () => {
+    expect(identificadorsDe(tros('5', car(0x200B), '1234', '5678', 'Z'))).toContain('DNI');
+  });
+
+  test.each([
+    ['separador de línia U+2028', tros('Casa', car(0x2028), 'nova')],
+    ['separador de paràgraf U+2029', tros('Casa', car(0x2029), 'nova')],
+    ['control C1 (NEL U+0085)', tros('Casa', car(0x0085), 'nova')],
+    ['inversió de direcció U+202E', tros(car(0x202E), 'avon asaC')],
+    ['guionet discrecional U+00AD', tros('Casa', car(0x00AD), 'nova')],
+    ['marca d’ordre de bytes U+FEFF', tros('Casa', car(0xFEFF), 'nova')]
+  ])('comprovaText refusa «%s»', (_, text) => {
+    const errors = [];
+    comprovaText(text, 'alies', errors);
+    expect(errors.map((e) => e.codi)).toEqual(['TEXT_INVALID']);
+  });
+
+  test('un DNI partit per un invisible porta l’error de l’identificador, i el del caràcter si és de format', () => {
+    const deFormat = [];
+    comprovaText(tros('1234', car(0x00AD), '5678', 'Z'), 'alies', deFormat);
+    expect(deFormat.map((e) => e.codi)).toEqual(['TEXT_INVALID', 'IDENTIFICADOR_PERSONAL']);
+    const ignorable = [];
+    comprovaText(tros('1234', car(0xFE0F), '5678', 'Z'), 'alies', ignorable);
+    expect(ignorable.map((e) => e.codi)).toEqual(['IDENTIFICADOR_PERSONAL']);
+  });
+
+  test('un àlies amb accents, punt volat, espai dur i emojis senzills continua passant net', () => {
+    const alies = tros('Casa de prova · Çà và', car(0x00A0), 'bé ', car(0x1F33F), ' ', car(0x2764), car(0xFE0F));
+    const errors = [];
+    expect(comprovaText(alies, 'alies', errors)).toBe(alies);
+    expect(errors).toEqual([]);
+  });
+
+  /* Valor per defecte, pendent de la decisió del Mestre: la juntura d'amplada
+     zero (U+200D) és de format i es refusa, també dins d'un emoji compost. */
+  test('per defecte, un emoji compost amb la juntura U+200D es refusa com qualsevol caràcter de format', () => {
+    const errors = [];
+    comprovaText(tros('Hort ', car(0x1F468), car(0x200D), car(0x1F33E)), 'alies', errors);
+    expect(errors.map((e) => e.codi)).toEqual(['TEXT_INVALID']);
+  });
+});
+
+Resultat esperat de PROVA 1, per traça: hui fallen 14 dels 16 casos (les sis files del DNI partit, les sis de comprovaText, la
+dels dos errors i la de l'emoji compost) i en passen 2 (la vora i l'àlies net, que són guardes de regressió). Amb els blocs 1-3,
+passen els 16. Cap línia porta 8 xifres seguides ni una forma sencera: la prova «cap literal amb forma de DNI, NIE o IBAN, proves
+incloses» de fronteraModelsPurs.test.js continua verda.
+Amb la VARIANT, l'última prova es substituïx per esta:
+
+  test('un emoji compost amb la juntura U+200D passa net (decisió del Mestre)', () => {
+    const errors = [];
+    comprovaText(tros('Hort ', car(0x1F468), car(0x200D), car(0x1F33E)), 'alies', errors);
+    expect(errors).toEqual([]);
+  });
+
+PROVA 2 · INSERIX a src/utils/vendes/registreVendes.test.js entre la línia 374 i la 375: dins de
+describe('la Gestoria hi pot entrar (només lectura de les seues guardes)'), darrere de la prova «paritat de l’àlies».
+Fa servir el que el fitxer ja té: t i car (línies 24-25), comprovaText (import de la línia 21), validaRegistreVendes (import de
+les línies 17-20, exportada a registreVendes.js:378) i els helpers registre i activitat del mateix fitxer. Cap import nou.
+
+  test('paritat dels invisibles: l’àlies els refusa com comprovaText, i un invisible no partix cap identificador', () => {
+    const esperats = [
+      [t('Bar', car(0xAD), 'nou'), ['TEXT_INVALID']],
+      [t('Bar', car(0x200B), 'nou'), ['TEXT_INVALID']],
+      [t('Bar', car(0x85), 'nou'), ['TEXT_INVALID']],
+      [t('Bar', car(0x2028), 'nou'), ['TEXT_INVALID']],
+      [t(car(0x202E), 'uon raB'), ['TEXT_INVALID']],
+      [t('Bar ', '0000', car(0xAD), '0000', 'T'), ['TEXT_INVALID', 'IDENTIFICADOR_PERSONAL']],
+      [t('Bar ', '0000', car(0x34F), '0000', 'T'), ['IDENTIFICADOR_PERSONAL']],
+      [t('Bar 5', car(0x200B), '0000', '0000', 'T'), ['TEXT_INVALID', 'IDENTIFICADOR_PERSONAL']],
+      [t('Bar de la Plaça', car(0xA0), 'nova'), []]
+    ];
+    for (const [alies, codisEsperats] of esperats) {
+      const gestoria = [];
+      comprovaText(alies, 'registre.titular.alies', gestoria, { obligatori: true, maxim: 80 });
+      const nostres = validaRegistreVendes(registre({ titular: activitat({ alies }) })).filter((e) => e.camp === 'registre.titular.alies');
+      expect(gestoria.map((e) => e.codi), JSON.stringify(alies)).toEqual(codisEsperats);
+      expect(nostres.map((e) => e.codi), JSON.stringify(alies)).toEqual(codisEsperats);
+    }
+  });
+
+Resultat esperat de PROVA 2, per traça: hui falla a la primera fila (les dues bandes tornen []). Només passa quan guardes.js i
+registreVendes.js porten l'esmena: amb un sol dels dos fitxers canviat cau una de les dues afirmacions. La fila de «Bar 5» cau amb
+la cerca única; l'última fila (espai dur) passa hui i ha de continuar passant. Les línies noves no porten cap caràcter en cru, i
+la prova de les línies 426-431 del mateix fitxer continua verda.
+
+Proves existents que canvien: cap. guardes.test.js:117-127 («comprovaText: obligatori, llargària, control i identificadors») i
+registreVendes.test.js («el titular mal format» i «paritat de l’àlies») només porten «\n» i 0x7F, que continuen sent TEXT_INVALID,
+i totes miren codis, mai el text del missatge.
+
+==== ESMENES DELS ÀRBITRES INTEGRADES ====
+- Reproducció · codi complet de registreVendes.js, sense importar de guardes.js: integrada (blocs 4-6).
+- Reproducció · al comentari, citar el repositori i no versions de navegador: integrada (bloc 1 cita assetResolver.js).
+- Reproducció · l'alternativa del U+200D no pot portar invisibles en cru: integrada; la VARIANT porta U+200D escapat pel punt de codi.
+- Reproducció · el missatge és còpia visible i no el toca: s'absté; doctrina i impacte el canvien. S'integra (blocs 3 i 6) perquè
+  el text vell no diria què es refusa. Són blocs separables: sense ells, cap prova canvia de resultat.
+- Reproducció · la prova va dins de guardes.test.js: integrada (PROVA 1), en lloc del fitxer nou que proposa impacte.
+- Reproducció i doctrina · ampliar la llista «aliesos» de la paritat: descartada per redundant; PROVA 2 ja cau si es toca un sol fitxer.
+- Doctrina · INVISIBLES amb Default_Ignorable_Code_Point (U+034F, selectors de variació): integrada (blocs 1 i 4).
+- Doctrina · casos de prova amb U+200D, U+FE0F i U+034F, codis exactes i emoji amb selector de variació: integrada (PROVA 1).
+- Doctrina · cerca única sobre la còpia sense invisibles: descartada; perd formes que hui es troben (escenari D).
+- Doctrina · llista tancada d'invisibles per a admetre U+200D i U+200C: descartada a favor de la forma d'impacte, que refusa més.
+- Impacte · cerca doble, al text i a la còpia sense invisibles: integrada (blocs 2 i 5).
+- Impacte · fitxer nou guardes.invisibles.test.js: descartada; el mateix contingut va com a describe a guardes.test.js.
+- Impacte · prova de paritat dels invisibles a registreVendes.test.js: integrada (PROVA 2), amb una fila de regressió afegida.
+- Impacte · la decisió humana queda en experiència d'ús i el valor per defecte és \p{Cf} sencer: integrada.
+- Contradiccions, resoltes cap a l'opció conservadora: cerca doble (impacte) davant de cerca única (reproducció i doctrina), perquè
+  mai troba menys que hui; describe al fitxer de proves que ja existix (reproducció i doctrina) davant de fitxer nou (impacte).
+- Fora d'esta troballa, anotat pels tres àrbitres: el DNI partit per un separador visible (espai o guionet entre grups) també passa
+  hui; és el terreny de F01, F02 i F03.
+
+==== LÍMITS D'ESTE ANNEX ====
+- Les proves noves no s'han executat: l'auditoria no escriu a src/. Que fallen hui i passen amb la proposta està raonat per traça
+  sobre el codi llegit, no observat. El defecte tampoc s'ha reproduït executant-lo: cap prova existent l'exercita.
+- \p{Default_Ignorable_Code_Point} no s'usa encara enlloc del repositori (grep a src, tests i tooling: 0 línies). És de la taula
+  de propietats binàries d'ES2018, la mateixa edició que \p{Cf}, però no s'ha provat en Safari 16.0, Chrome 100 ni Firefox 100
+  des d'ací. PROVA 1 el verifica a Node: si el motor no el coneguera, guardes.js donaria error de sintaxi en carregar-se.
+  Si el Mestre no el vol introduir, INVISIBLES queda en /\p{Cf}/gu als dos fitxers i es lleven de les proves les files de U+034F
+  i U+FE0F, que passarien a ser un límit conegut.
+- No s'ha executat la proposta contra ESLint ni contra la cadena de portes del pre-commit; s'ha llegit eslint.config.js
+  (ecmaVersion 2022, no-control-regex apagada) i les proves de qualitat de src/utils/vendes.
+- No s'ha comprovat en cap navegador com es pinta un àlies amb U+202E; l'efecte visual que descriu l'autor es pren del
+  comportament estàndard del text bidireccional.
+- registreVendes.js és el contracte sdp.vendes.v1 del Bar, fora del perímetre auditat. Entra a la proposta perquè la seua prova
+  compara l'àlies amb comprovaText: ha de constar al pla que aprove el Mestre.
+- src/sections/gestoria/facturacio/comu.js:59 exporta una tercera còpia de CONTROL amb la classe estreta, per als registres
+  fiscals. No s'ha tocat ni s'ha auditat ací: queda pendent d'ordre.
+- Les línies citades són les de l'arbre llegit el 261012; hi ha altres agents editant en paral·lel. Abans d'aplicar cap bloc,
+  comprova que el tros vigent continua sent literal.
+- Solapament amb F01 i F20: si alguna d'elles canvia com es construïx «pla» a identificadorsDe, la versió final ha de conservar
+  les dues cerques (al text i a la còpia sense invisibles) i el mateix canvi a registreVendes.js 124-129.

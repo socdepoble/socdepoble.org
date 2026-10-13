@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { MAXIM_TORNADA, esRutaDEntrada, modeDEntrada, rutaDEntrada, tornadaSegura } from './rutaEntrada.js';
+import { MAXIM_TORNADA, RUTA_DESPRES_D_ENTRAR, aterratgeDespresDEntrar, esRutaDEntrada, modeDEntrada, rutaDEntrada, tornadaSegura } from './rutaEntrada.js';
 import { esRutaInterna } from './objecteConnectable.js';
 
 /* Correcció de la revisió T1–T4 (260930) · Un /connectar de Web Share Target
@@ -61,4 +61,28 @@ test('T4 · només entrar i crear són modes', () => {
   expect(modeDEntrada('entrar')).toBe('entrar');
   expect(modeDEntrada('crear')).toBe('crear');
   expect(modeDEntrada('register')).toBe(null);
+});
+
+/* Petició del Mestre (261012_2148) · Excepció estreta a l'ordre 261002: només
+   una tornada a una entrada de la Gestoria mana on s'aterra; la resta, al perfil. */
+test('261012 · aterratge: una entrada de la Gestoria hi torna, amb la seua consulta', () => {
+  expect(aterratgeDespresDEntrar('/app/gestoria/tauler')).toBe('/app/gestoria/tauler');
+  expect(aterratgeDespresDEntrar('/app/gestoria/impostos?any=2026')).toBe('/app/gestoria/impostos?any=2026');
+  expect(aterratgeDespresDEntrar('/app/gestoria/tauler#context')).toBe('/app/gestoria/tauler#context');
+  const ida = rutaDEntrada({ mode: 'entrar', tornar: '/app/gestoria/tauler' });
+  expect(aterratgeDespresDEntrar(new URLSearchParams(ida.split('?')[1]).get('tornar'))).toBe('/app/gestoria/tauler');
+});
+
+test.each([
+  ['cap tornada', null],
+  ['una pàgina de la xarxa', '/mur'],
+  ['una altra app', '/app/bar/carta'],
+  ['l’arrel de la Gestoria', '/app/gestoria'],
+  ['una subruta de la Gestoria', '/app/gestoria/tauler/extra'],
+  ['majúscules', '/app/Gestoria/tauler'],
+  ['fora de l’app', '//dolent.test/app/gestoria/tauler'],
+  ['la mateixa entrada', '/registre?mode=entrar&tornar=%2Fapp%2Fgestoria%2Ftauler'],
+  ['massa llarga', `/app/gestoria/tauler?x=${'a'.repeat(MAXIM_TORNADA)}`],
+])('261012 · aterratge: %s continua anant al perfil', (_nom, tornar) => {
+  expect(aterratgeDespresDEntrar(tornar)).toBe(RUTA_DESPRES_D_ENTRAR);
 });

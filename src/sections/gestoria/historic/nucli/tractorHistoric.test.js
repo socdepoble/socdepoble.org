@@ -7,6 +7,7 @@
 import { describe, expect, test, vi } from 'vitest';
 import { creaAutenticadorSimulat } from '../../../../../tests/helpers/autenticadorSimulat.js';
 import { ErrorAprovacio, preparaRegistre } from '../../../tractors/nucli/aprovacio.js';
+import { serieHistorica } from '../../despeses/nucli/serieHistorica.js';
 import { TRACTOR_HISTORIC, TRACTOR_TAULER } from '../../tractors.js';
 import {
   ACCEPTA_HISTORIC, CODIS_TRACTOR_HISTORIC, ErrorHistoric, LIMITS_HISTORIC, executaTractorHistoric, fnv1a
@@ -39,8 +40,8 @@ function fitxer(name, contingut, { size } = {}) {
 const xifres = (n, llargaria) => String(Math.abs(n)).padStart(llargaria, '0');
 const text = (valor, llargaria) => String(valor).padEnd(llargaria, ' ').slice(0, llargaria);
 const aammdd = (iso) => iso.slice(2, 4) + iso.slice(5, 7) + iso.slice(8, 10);
-function n43({ entitat = '9999', compte = '0000004321', desde, fins, saldoInicial = 100000, moviments }) {
-  const linies = [`11${entitat}0001${compte}${aammdd(desde)}${aammdd(fins)}2${xifres(saldoInicial, 14)}9783${text('TITULAR SINTETIC', 26)}${text('', 3)}`];
+function n43({ entitat = '9999', oficina = '0001', compte = '0000004321', desde, fins, saldoInicial = 100000, moviments }) {
+  const linies = [`11${entitat}${oficina}${compte}${aammdd(desde)}${aammdd(fins)}2${xifres(saldoInicial, 14)}9783${text('TITULAR SINTETIC', 26)}${text('', 3)}`];
   let deure = 0, haver = 0, sumaDeure = 0, sumaHaver = 0;
   for (const m of moviments) {
     if (m.centims < 0) { deure += 1; sumaDeure -= m.centims; } else { haver += 1; sumaHaver += m.centims; }
@@ -49,7 +50,7 @@ function n43({ entitat = '9999', compte = '0000004321', desde, fins, saldoInicia
     if (m.usd != null) linies.push(`2401840${xifres(m.usd, 14)}${text('', 59)}`);
   }
   const saldoFinal = saldoInicial + sumaHaver - sumaDeure;
-  linies.push(`33${entitat}0001${compte}${xifres(deure, 5)}${xifres(sumaDeure, 14)}${xifres(haver, 5)}${xifres(sumaHaver, 14)}2${xifres(saldoFinal, 14)}978${text('', 4)}`);
+  linies.push(`33${entitat}${oficina}${compte}${xifres(deure, 5)}${xifres(sumaDeure, 14)}${xifres(haver, 5)}${xifres(sumaHaver, 14)}2${xifres(saldoFinal, 14)}978${text('', 4)}`);
   linies.push(`88${'9'.repeat(18)}${xifres(linies.length, 6)}${text('', 54)}`);
   return linies.join('\r\n');
 }
@@ -231,5 +232,78 @@ describe('amb l’aprovació vigent: classifica dins i en torna la lectura redu�
     const error = await errorDe(executaTractorHistoric({ fitxers: [primer, segon], aprovacio: APROVACIO, signal: controlador.signal }));
     expect(error.codi).toBe('LECTURA_CANCELLADA');
     expect(segon.arrayBuffer).not.toHaveBeenCalled();
+  });
+});
+
+/* Revisió adversarial 13-10-2026, troballes FIN-4 i TI-1. Des de GES-A2, dos comptes de la mateixa entitat acabats
+   en els mateixos quatre dígits són dos comptes a la sèrie, però el tractor els donava la mateixa clau d'id: el
+   mateix moviment (dia i import) en tots dos tenia el mateix id, i reclassificar-ne un canviava l'altre. Les proves
+   de GES-A2 de la sèrie no passen pel tractor i no ho podien vore: estes sí. Comptes i imports inventats. */
+describe('dos comptes de la mateixa entitat i el mateix sufix: cap id compartit', () => {
+  const QUOTA = { data: '2025-01-10', centims: -10000, conceptes: ['QUOTA SINTETICA'] };
+  const COMISSIO = { data: '2025-01-20', centims: -500, conceptes: ['COMISSIO SINTETICA'] };
+  const COMPRA = { data: '2025-01-25', centims: -700, conceptes: ['COMPRA SINTETICA'] };
+  const gener = (oficina, compte, moviments) => n43({ oficina, compte, desde: '2025-01-01', fins: '2025-01-31', moviments });
+  const A = gener('0001', '0000004321', [QUOTA, COMISSIO]);
+  const B = gener('0002', '0000004321', [QUOTA, COMPRA]);
+  /* L'id de sempre (creaIds): entitat-sufix, dates, import i ordinal dins de l'extracte. */
+  const idDeSempre = ({ data, centims }) => `m${fnv1a(`9999-4321|${data}|${data}|${centims}|1`)}`;
+  const idsDe = async (executa, triats) => {
+    const { extractes } = await executa({ fitxers: triats.map(([nom, t]) => fitxer(nom, t)), aprovacio: APROVACIO });
+    return extractes.map((e) => e.lectura.comptes[0].moviments.map((m) => m.id));
+  };
+  const ids = (triats) => idsDe(executaTractorHistoric, triats);
+
+  test('un sol compte: els id de sempre, byte a byte', async () => {
+    expect(await ids([['a.n43', A]])).toEqual([[idDeSempre(QUOTA), idDeSempre(COMISSIO)]]);
+    expect(await ids([['b.n43', B]])).toEqual([[idDeSempre(QUOTA), idDeSempre(COMPRA)]]);
+  });
+
+  test('oficines diferents: el primer compte conserva els id de sempre i el segon du la quota desambiguada', async () => {
+    const [a, b] = await ids([['a.n43', A], ['b.n43', B]]);
+    /* Abans: b[0] === a[0], el mateix id per a dues quotes de dos comptes. */
+    expect(a).toEqual([idDeSempre(QUOTA), idDeSempre(COMISSIO)]);
+    expect(b[0]).not.toBe(a[0]);
+    expect(b[0]).toMatch(/^m[0-9a-f]{8}$/);
+    /* El moviment que no coincidix amb cap de l'altre compte no canvia: la seua reclassificació desada val. */
+    expect(b[1]).toBe(idDeSempre(COMPRA));
+    const [b2, a2] = await ids([['b.n43', B], ['a.n43', A]]);
+    expect([a2, b2]).toEqual([a, b]);
+  });
+
+  test('la mateixa oficina (només canvien els dígits del mig): dos id, siga quin siga l’ordre i la sal de la sessió', async () => {
+    const A1 = gener('0001', '0000004321', [QUOTA, COMISSIO]);
+    const B1 = gener('0001', '0000014321', [QUOTA, COMPRA]);
+    const [a, b] = await ids([['a.n43', A1], ['b.n43', B1]]);
+    expect(a[0]).not.toBe(b[0]);
+    expect([a[0], b[0]]).toContain(idDeSempre(QUOTA));
+    expect([a[1], b[1]]).toEqual([idDeSempre(COMISSIO), idDeSempre(COMPRA)]);
+    expect(await ids([['b.n43', B1], ['a.n43', A1]])).toEqual([b, a]);
+    /* Una altra sessió: c43.js fa una sal nova i els idCompte canvien; els id dels moviments, no. */
+    vi.resetModules();
+    const { executaTractorHistoric: altraSessio } = await import('./tractorHistoric.js');
+    const capcalera = async (executa) => (await executa({ fitxers: [fitxer('a.n43', A1)], aprovacio: APROVACIO })).extractes[0].lectura.comptes[0].capcalera;
+    expect((await capcalera(altraSessio)).idCompte).not.toBe((await capcalera(executaTractorHistoric)).idCompte);
+    expect(await idsDe(altraSessio, [['b.n43', B1], ['a.n43', A1]])).toEqual([b, a]);
+  });
+
+  test('tres comptes acabats igual amb la mateixa quota: tres id diferents', async () => {
+    const C = gener('0003', '0000004321', [QUOTA]);
+    const quotes = (await ids([['c.n43', C], ['a.n43', A], ['b.n43', B]])).map((llista) => llista[0]);
+    expect(new Set(quotes).size).toBe(3);
+    expect(quotes[1]).toBe(idDeSempre(QUOTA));
+  });
+
+  test('a la sèrie, reclassificar la quota d’un compte no canvia la de l’altre, i cap id es repetix', async () => {
+    const lectura = await executaTractorHistoric({ fitxers: [fitxer('a.n43', A), fitxer('b.n43', B)], aprovacio: APROVACIO });
+    const idA = lectura.extractes[0].lectura.comptes[0].moviments[0].id;
+    const serie = serieHistorica({ lectura, reclassificacions: { [idA]: { categoria: 'energia' } } });
+    const quotes = serie.moviments.filter((m) => m.centims === QUOTA.centims);
+    expect(quotes.map((m) => m.compte)).toEqual([1, 2]);
+    /* Abans: totes dues «energia» i RECLASSIFICAT. */
+    expect(quotes[0]).toMatchObject({ categoria: 'energia', motiu: 'RECLASSIFICAT' });
+    expect(quotes[1].categoria).not.toBe('energia');
+    expect(quotes[1].motiu).not.toBe('RECLASSIFICAT');
+    expect(new Set(serie.moviments.map((m) => m.id)).size).toBe(serie.moviments.length);
   });
 });

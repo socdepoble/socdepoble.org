@@ -88,6 +88,13 @@ export function Xifra({ etiqueta, valor, icona, a }) {
       (onDateTime={false}), que no porta al Calendari.
     · LA IMATGE O LA ICONA. `imatge` va al mitjà de la targeta (i és la
       portada de la seua pàgina); sense, la icona a la insígnia lateral.
+      Derogat EN PART per l'ordre del Mestre del 13-10-2026 (pla
+      261013_1405, front F): «la icona de la part en el lloc de la foto»
+      (ordre del 260926) per a les nou targetes del tauler de /consola, que
+      porten la il·lustració de la seua pàgina (imatgesConsola.js). La
+      portada de la pàgina encara no: la imatge només n'és la del SEO
+      (ConsolaSection.jsx · seoDe). Les xifres, els panells del pols i la
+      Consola incrustada de la Wiki continuen amb la icona.
     · TOTA CLICABLE. `a` la fa enllaç cap a la seua pàgina; `onObri`, botó.
       Sense cap dels dos és només explicació: sense peu i sense aparença de
       clicable (no hi ha peus buits). Ordre del Mestre, 261004 (xat: cap xifra

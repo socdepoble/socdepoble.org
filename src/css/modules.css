@@ -5723,6 +5723,54 @@ details[open] summary.accordion-header svg:last-child {
      (fills de .sdp-consola__index-pagina) es queden a l'esquerra, com el seu
      títol i el seu text. Només marge: cap vora ni fons. */
   .sdp-consola__index > .sdp-consola__index-imatge { margin-inline: auto; }
+
+  /* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front F) · El Diagnòstic
+     del Mas (DiagnosiConsola.jsx), darrere de l'Índex de la Consola i tancant
+     el tauler de /consola: separat de l'Índex per dalt com l'Índex ho està de
+     les xifres. L'accés ràpid és una fila d'enllaços que es plega, centrada
+     davall de l'H2 (centrat a base.css), sense pics ni sagnat: la llista es
+     reinicia com la dels estats. El text pla és el bloc monoespaiat de la
+     casa (el patró de .sdp-tractors-panell__codi, més avall), però amb
+     pre-wrap i tall a qualsevol punt: en mòbil cap línia llarga (una ruta, un
+     avís) obri scroll horitzontal. 16px (--sdp-text-small), per damunt del sòl
+     de 14px. Cap vora, cap ombra, cap transició, cap color cru. */
+  .sdp-consola__diagnosi { margin-top: var(--sdp-space-8); }
+  .sdp-consola__acces > ul {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--sdp-space-2) var(--sdp-space-4);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .sdp-consola__acces > ul > li { margin: 0; padding: 0; }
+  /* Revisió adversarial 13-10-2026, troballa PS-1 · Pedra Seca §6: cap
+     element interactiu baixa de --sdp-touch. Els nou enllaços de l'accés
+     ràpid eren text en línia (una línia de lletra d'alt, files a 8px): en
+     mòbil, prémer-ne un en trepitjava el veí. Cada enllaç és ara una caixa
+     de 48px com a mínim, amb el text centrat dins; la lletra, el color i el
+     subratllat de base.css no canvien (el subratllat es propaga al text de
+     la caixa flex). Només creix l'àrea de toc: cap vora, fons ni farcit. */
+  .sdp-consola__acces > ul > li > a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-block-size: var(--sdp-touch);
+    min-inline-size: var(--sdp-touch);
+  }
+  .sdp-consola__diagnosi-text {
+    margin: var(--sdp-space-4) 0 0;
+    padding: var(--sdp-space-4);
+    border-radius: var(--sdp-radi-s);
+    background: var(--sdp-fons-subtil);
+    color: var(--sdp-text-cos);
+    font-family: var(--sdp-font-mono);
+    font-size: var(--sdp-text-small);
+    line-height: var(--sdp-leading-cos);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
 }
 
 /* ── EXPLORADOR · llegenda, cerca i filtres; el graf i el detall al final ── */
@@ -9636,8 +9684,9 @@ details[open] summary.accordion-header svg:last-child {
   /* ShellGestoria.jsx, Tauler.jsx i TargetaTauler.jsx (ordre del Mestre,
      261004; onada 2, pas 1 del MAPA de la Gestoria): la closca, la boina
      personal i el Tauler Central. Sense media queries ni consultes de
-     contenidor: la pàgina ocupa l'espai disponible amb flex-wrap. L'app
-     /app/gestoria usa la Sidebar exterior i no munta el rail local. Cap
+     contenidor: la pàgina ocupa l'espai disponible amb flex-wrap. La
+     navegació no és de la closca: és la BarraApp global (ordre de MarIA
+     261012_2145, que retira el rail intern del Panell ERP). Cap
      opacitat sobre text: una xifra amagada no és
      un text esvaït, és «Import amagat». Va després del bloc Bancal: cap dels
      seus selectors no és del Bancal, i el bloc del front T7 es llig fins al
@@ -9648,81 +9697,22 @@ details[open] summary.accordion-header svg:last-child {
     align-items: flex-start;
     gap: var(--sdp-space-4);
   }
-  /* 261004 · Dins de l'app /app/gestoria el rail ja no s'apila com feia a la
-     columna de detall de la Wiki: a 1280 queda al costat de la pàgina. Amb
-     14rem els mòduls «en obres» ixen del rail i la insígnia es partix; amb
-     17rem encara se'n partixen tres. 19rem és la base mínima on cada mòdul
-     (icona, nom i insígnia) cap en una línia. En pantalla estreta el rail
-     continua apilant-se a amplada completa (flex-wrap). */
-  .sdp-gestoria-closca__rail {
-    flex: 1 1 19rem;
-    min-width: 0;
-    padding: var(--sdp-space-3);
-    border: 1px solid var(--sdp-vora);
-    border-radius: var(--sdp-radi-m);
-    background: var(--sdp-fons-targeta);
-  }
-  .sdp-gestoria-closca__rail-titol {
-    margin: 0 0 var(--sdp-space-2);
-    color: var(--sdp-text-titol);
-    font-size: var(--sdp-text-small);
-    font-weight: 700;
-    text-transform: uppercase;
-  }
-  .sdp-gestoria-closca__moduls {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--sdp-space-1);
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-  .sdp-gestoria-closca__moduls > li {
-    flex: 1 1 10rem;
-    margin: 0;
-  }
-  .sdp-gestoria-closca__modul {
-    display: flex;
-    align-items: center;
-    gap: var(--sdp-space-2);
-    width: 100%;
-    min-height: var(--sdp-touch);
-    padding: var(--sdp-space-2) var(--sdp-space-3);
-    border: 0;
-    border-radius: var(--sdp-radi-s);
-    background: transparent;
-    color: var(--sdp-text-cos);
-    font: inherit;
-    text-align: start;
-    cursor: pointer;
-  }
-  .sdp-gestoria-closca__modul-nom {
-    flex: 1 1 auto;
-    min-width: 0;
-  }
-  .sdp-gestoria-closca__modul[aria-current="page"] {
-    background: var(--sdp-accent);
-    color: var(--sdp-sobre-accent);
-    font-weight: 700;
-  }
-  @media (hover: hover) and (pointer: fine) {
-    .sdp-gestoria-closca__modul:hover:not([aria-current="page"]) { background: var(--sdp-fons-subtil); }
-  }
-  .sdp-gestoria-closca__modul:focus-visible {
-    outline: 3px solid var(--sdp-focus);
-    outline-offset: 2px;
-  }
   .sdp-gestoria-closca__pagina {
     flex: 999 1 30rem;
     min-width: 0;
   }
-  /* Les barres de la pàgina de la closca no s'enganxen. Abans (D3) la
-     closca anava dins de la pàgina de l'eina local i no havien de tapar les
-     de fora; des del 261004 l'app la munta sola i són les úniques barres,
-     però continuen sense enganxar-se per Llei del Píxel: si s'han d'enganxar
-     com les de la resta de pàgines, ho decidix el Mestre. */
-  .sdp-gestoria-closca .sdp-universal-page-container > header.bar-blue,
-  .sdp-gestoria-closca .sdp-universal-page-container > section.bar-orange {
+  /* Les barres de la pàgina de la closca no s'enganxen en escriptori. Abans
+     (D3) la closca anava dins de la pàgina de l'eina local i no havien de
+     tapar les de fora; des del 261004 l'app la munta sola i són les úniques
+     barres, però continuen sense enganxar-se per Llei del Píxel.
+     Ordre del Mestre (261012, vespre) · En mòbil i tauleta (compacte) les
+     barres «acompanyen l'scroll» també a l'ERP: s'enganxen com les de la
+     resta de pàgines i s'amaguen en baixar (layout.css, «Barres que
+     acompanyen el scroll»). En repòs, sticky i static pinten igual. L'abast
+     és el <main> de l'arrel de l'app: a socdepoble.org el body també porta
+     .sdp-root (sense is-compact) i un descendent qualsevol casaria. */
+  :where(.sdp-root:not(.is-compact) > .app-main) .sdp-gestoria-closca .sdp-universal-page-container > header.bar-blue,
+  :where(.sdp-root:not(.is-compact) > .app-main) .sdp-gestoria-closca .sdp-universal-page-container > section.bar-orange {
     position: static;
   }
 
@@ -9731,6 +9721,17 @@ details[open] summary.accordion-header svg:last-child {
     display: inline-flex;
     align-items: center;
     gap: var(--sdp-space-2);
+  }
+  /* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front B): la darrera
+     lectura és un xip secundari a l'esquerra del rellotge viu, que PaginaApp
+     posa a l'extrem dret. És la mateixa pastilla (.btn-date-time, sense cap
+     pell nova: el contrast de la barra no canvia); la distingix el que diu,
+     només l'hora si la lectura és d'avui. No s'encongix: l'autoria cedix
+     l'ample, com amb la pastilla de sempre. */
+  .sdp-gestoria-boina__lectura {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
   }
   .sdp-gestoria-ull {
     display: inline-flex;
@@ -9790,6 +9791,180 @@ details[open] summary.accordion-header svg:last-child {
   .sdp-gestoria-tauler__amagat {
     display: inline-flex;
     align-items: center;
+    gap: var(--sdp-space-2);
+  }
+
+  /* El titular configurat a la closca (petició del Mestre via MarIA,
+     261012_2148): el formulari del diàleg, en columna, i la nota que diu on
+     viu (només en memòria) i que no és cap compte. */
+  .sdp-gestoria-titular {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-3);
+  }
+  .sdp-gestoria-titular__nota {
+    margin: 0;
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-small);
+  }
+
+  /* La capçalera de context del panell (ContextTrimestre): el trimestre, el
+     commutador de vista i les dues barres natives (Progres) de la liquidació. */
+  .sdp-gestoria-context {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-3);
+    margin-block-end: var(--sdp-space-6);
+    padding: var(--sdp-space-3);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-targeta);
+  }
+  .sdp-gestoria-context__barres {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sdp-space-4);
+  }
+  .sdp-gestoria-context__barra {
+    display: flex;
+    flex: 1 1 16rem;
+    flex-direction: column;
+    gap: var(--sdp-space-1);
+    min-width: 0;
+  }
+  .sdp-gestoria-context__titol {
+    margin: 0;
+    color: var(--sdp-text-titol);
+    font-weight: 700;
+  }
+  .sdp-gestoria-context__nota {
+    margin: 0;
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-small);
+  }
+  /* El venciment que corre d'un altre trimestre: mai amagat darrere del triat. */
+  .sdp-gestoria-context__obert {
+    margin: 0;
+    color: var(--sdp-avis-text);
+    font-size: var(--sdp-text-small);
+    font-weight: 700;
+  }
+
+  /* La vista comprimida: cada bloc en una Taula densa; el títol de cada fila
+     és el botó de la pàgina de la seua targeta, amb la diana tàctil sencera. */
+  .sdp-gestoria-comprimida th[scope="row"] {
+    min-width: 9rem;
+    font-weight: 400;
+    text-align: start;
+  }
+  /* Sense xifra, el perquè és una frase: es partix (la xifra, .sdp-num, no).
+     Dues columnes de 9 i 8rem caben senceres en un telèfon de 375px. */
+  .sdp-gestoria-comprimida__motiu { min-width: 8rem; }
+  .sdp-gestoria-comprimida td { vertical-align: top; }
+  .sdp-gestoria-comprimida__obri {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--sdp-touch);
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--sdp-accio-text);
+    font: inherit;
+    font-weight: 700;
+    text-align: start;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+  .sdp-gestoria-comprimida__obri:focus-visible {
+    outline: 3px solid var(--sdp-focus);
+    outline-offset: 2px;
+  }
+  .sdp-gestoria-comprimida__subtitol {
+    display: block;
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-small);
+  }
+  .sdp-gestoria-comprimida__sense {
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-small);
+  }
+  .sdp-gestoria-comprimida__etiquetes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sdp-space-1);
+    margin-block-start: var(--sdp-space-1);
+  }
+
+  /* La Cabina d'Avió (CabinaAvio.jsx; ordre del Mestre, 13-10-2026, pla
+     261013_1405, front E): la tercera vista del Tauler. Els instruments en
+     una graella auto-fill de quadres amb vora (sense ombra), el flux de cada
+     mes en dos Histogrames de Pedra Seca (entrades en verd d'èxit, eixides en
+     roig d'error) i la Taula densa de la comprimida, i els venciments en
+     Alertes. Sense media queries: la graella es plega sola. */
+  .sdp-gestoria-cabina {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-3);
+    margin-block: var(--sdp-space-6);
+  }
+  .sdp-gestoria-cabina__bloc {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-2);
+  }
+  .sdp-gestoria-cabina__seccio {
+    margin: var(--sdp-space-4) 0 0;
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-h6);
+  }
+  .sdp-gestoria-cabina__nota {
+    margin: 0;
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-small);
+  }
+  .sdp-gestoria-cabina__instruments {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 14rem), 1fr));
+    gap: var(--sdp-space-2);
+    margin: 0;
+  }
+  .sdp-gestoria-cabina__instrument {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-1);
+    min-width: 0;
+    padding: var(--sdp-space-2) var(--sdp-space-3);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-targeta);
+  }
+  .sdp-gestoria-cabina__instrument > dt,
+  .sdp-gestoria-cabina__instrument > dd { margin: 0; }
+  .sdp-gestoria-cabina__valor {
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-h5);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .sdp-gestoria-cabina__motiu {
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-small);
+  }
+  .sdp-gestoria-cabina__avis {
+    color: var(--sdp-avis-text);
+    font-size: var(--sdp-text-small);
+    font-weight: 700;
+  }
+  .sdp-gestoria-cabina__grafics {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 18rem), 1fr));
+    gap: var(--sdp-space-4);
+  }
+  .sdp-gestoria-cabina__entrades .sdp-histograma__barra { background: var(--sdp-exit); }
+  .sdp-gestoria-cabina__eixides .sdp-histograma__barra { background: var(--sdp-error); }
+  .sdp-gestoria-cabina__venciments {
+    display: flex;
+    flex-direction: column;
     gap: var(--sdp-space-2);
   }
 }
@@ -9874,6 +10049,93 @@ details[open] summary.accordion-header svg:last-child {
     margin: 0;
     color: var(--sdp-text-suau);
     font-size: var(--sdp-text-small);
+  }
+}
+
+/* ── GESTORIA ESCÀNER (261013) ── */
+@layer components {
+  /* escaner/PanellEscaner.jsx (ordre del Mestre, 13-10-2026, pla 261013_1405,
+     front D): l'Escàner Local de la closca. Les tessel·les (Boto secundari
+     amb aria-pressed, del nucli 1.1.0), les taules, les caselles, les alertes
+     i els botons són els de Pedra Seca; ací només la disposició: les seccions en
+     columna, els títols com els del Tauler i la graella de tessel·les amb
+     auto-fill (el mateix forat fantasma que evita .sdp-gestoria-tauler__graella).
+     Sense ombres ni media queries: tot es plega per l'amplada disponible. La
+     xifra amagada reutilitza .sdp-gestoria-tauler__amagat. */
+  .sdp-gestoria-escaner {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-4);
+  }
+  .sdp-gestoria-escaner__seccio {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-3);
+    margin-block: var(--sdp-space-4);
+  }
+  .sdp-gestoria-escaner__titol {
+    margin: 0;
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-h4);
+    line-height: 1.2;
+    text-transform: uppercase;
+  }
+  .sdp-gestoria-escaner__nota {
+    margin: 0;
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-small);
+  }
+  .sdp-gestoria-escaner__accions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sdp-space-3);
+  }
+  .sdp-gestoria-escaner__radiografia {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 11rem), 1fr));
+    gap: var(--sdp-space-3);
+  }
+  /* La tessel·la (ordre del Mestre, 13-10-2026, pla 261013_1405, front D):
+     un Boto secundari en columna, amb la icona, el títol i el recompte, i
+     com a mínim --sdp-touch d'alt. (0,2,0) per a guanyar la fila de .sdp-boto
+     i :where(.perfil-pagina) .sdp-boto. La triada es pinta des de
+     [aria-pressed="true"], com .sdp-pindola__opcio: sense l'ARIA no pareix
+     triada. (0,3,0) i després de components.css: guanya el hover del
+     secundari. --sdp-accio-control amb --sdp-sobre-accio fa 9,21:1 (AAA). */
+  .sdp-boto.sdp-gestoria-escaner__tessela {
+    flex-direction: column;
+    gap: var(--sdp-space-2);
+    min-block-size: var(--sdp-touch);
+    padding: var(--sdp-space-4) var(--sdp-space-3);
+    border-radius: var(--sdp-radi-g);
+    text-align: center;
+    overflow-wrap: anywhere;
+  }
+  .sdp-gestoria-escaner__tessela > span {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-1);
+  }
+  .sdp-gestoria-escaner__tessela-titol {
+    font-size: var(--sdp-text-base);
+    line-height: var(--sdp-leading-tight);
+  }
+  .sdp-gestoria-escaner__tessela-compte { font-weight: 400; }
+  .sdp-boto.sdp-gestoria-escaner__tessela[aria-pressed="true"] {
+    background: var(--sdp-accio-control);
+    border-color: var(--sdp-accio-control);
+    color: var(--sdp-sobre-accio);
+  }
+  .sdp-gestoria-escaner__llista {
+    margin: 0;
+    padding-inline-start: var(--sdp-space-5);
+    color: var(--sdp-text-cos);
+  }
+  .sdp-gestoria-escaner__extractes { overflow-wrap: anywhere; }
+  .sdp-gestoria-escaner__resum {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-2);
   }
 }
 
@@ -10243,5 +10505,86 @@ details[open] summary.accordion-header svg:last-child {
   .sdp-superadmin-afegir > .sdp-camp {
     flex: 1 1 14rem;
     margin: 0;
+  }
+}
+
+/* ── GESTORIA FINESTRETA (261013) ── */
+@layer components {
+  /* Finestreta.jsx (ordre del Mestre, 13-10-2026, pla 261013_1405, front H:
+     la Fitxa d'identitat privada sobirana i la Finestreta única). Les taules,
+     les insígnies, els camps, les caselles, les pestanyes i els avisos són els
+     de Pedra Seca; l'ull i la boina, els del Tauler (.sdp-gestoria-ull,
+     .sdp-gestoria-boina). Ací només la disposició de les seccions, els
+     títols, les rutes dels papers, el valor amagat i els formularis a mà.
+     Sense ombres ni media queries de pantalla: les accions es pleguen amb
+     flex-wrap i els formularis a mà amb auto-fill. A l'esborrany imprés no hi
+     van els botons ni els formularis. Cap píxel fora d'esta vista canvia. */
+  .sdp-gestoria-finestreta__seccio { margin-block: var(--sdp-space-8); }
+  .sdp-gestoria-finestreta__titol {
+    margin: 0 0 var(--sdp-space-4);
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-h4);
+    line-height: 1.2;
+    text-transform: uppercase;
+  }
+  .sdp-gestoria-finestreta__nota {
+    margin: 0 0 var(--sdp-space-3);
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-small);
+  }
+  .sdp-gestoria-finestreta__avisos {
+    margin: 0;
+    padding-inline-start: var(--sdp-space-5);
+    color: var(--sdp-text-cos);
+  }
+  .sdp-gestoria-finestreta__accions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sdp-space-2) var(--sdp-space-3);
+    margin-block: var(--sdp-space-3);
+  }
+  .sdp-gestoria-finestreta__accions > .sdp-gestoria-finestreta__nota { margin: 0; }
+  /* Les rutes dels papers són llargues i sense espais: es tallen on calga. */
+  .sdp-gestoria-finestreta__ruta { overflow-wrap: anywhere; }
+  .sdp-gestoria-finestreta__fonts {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-small);
+    overflow-wrap: anywhere;
+  }
+  .sdp-gestoria-finestreta__valor {
+    font-family: var(--sdp-font-mono);
+    overflow-wrap: anywhere;
+  }
+  .sdp-gestoria-finestreta__amagat {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sdp-space-1);
+    color: var(--sdp-text-suau);
+  }
+  .sdp-gestoria-finestreta__correccio,
+  .sdp-gestoria-finestreta__a-ma {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr));
+    align-items: end;
+    gap: var(--sdp-space-3);
+    margin-block: var(--sdp-space-3);
+  }
+  .sdp-gestoria-finestreta__correccio > .sdp-camp,
+  .sdp-gestoria-finestreta__a-ma > .sdp-camp { margin: 0; }
+  .sdp-gestoria-finestreta__formulari {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-2);
+    padding-block: var(--sdp-space-3);
+  }
+  .sdp-gestoria-finestreta__formulari > .sdp-gestoria-finestreta__nota { margin: 0; }
+  @media print {
+    .sdp-gestoria-finestreta__accions,
+    .sdp-gestoria-finestreta__correccio,
+    .sdp-gestoria-finestreta__a-ma { display: none; }
   }
 }

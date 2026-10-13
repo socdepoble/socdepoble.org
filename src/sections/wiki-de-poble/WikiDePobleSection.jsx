@@ -45,10 +45,11 @@ const copyDePortada = (pageCopy, clau) => pageCopy?.[clau] || PAGE_COPY[clau];
    sinó el seu emoji (iconesWiki.js), distint per a cada eina.
    Revisió del 261007 (M2-15) · Una eina nova sense emoji a iconesWiki.js
    porta FileText de reserva: mai la carpeta de la categoria. */
-const einaLocal = (id, title, subtitle, categoryId, tags) => ({
+const einaLocal = (id, title, subtitle, categoryId, tags, lead) => ({
   id,
   title,
   subtitle,
+  lead,
   icon: ICONES_ITEMS_WIKI[id] || FileText,
   categoryId,
   categoryIds: [categoryId],
@@ -99,7 +100,8 @@ export function modulsLocalsActius(env) {
        (ICONA_PORTADA). */
     categories: [],
     items: [
-      einaLocal('tractors_aprovacio', 'Aprovació de tractors', 'Què fa cada tractor, la seua empremta i la teua signatura', 'maquinaria_cat', ['tractors']),
+      einaLocal('tractors_aprovacio', 'Aprovació de tractors', 'Què fa cada tractor, la seua empremta i la teua signatura', 'maquinaria_cat', ['tractors'],
+        'Un tractor és un automatisme que processa dades. Cap s’executa si no n’has aprovat la versió exacta: l’empremta cobrix el manifest, la fitxa i cada línia de les fonts llistades, que són el codi del tractor, el de la seua interfície i el d’esta porta.'),
       einaLocal('sentinelles_panell', 'Sentinelles', 'Els set sentinelles d’autonomia: aprova’ls i mira què observen', 'maquinaria_cat', ['sentinelles']),
       einaLocal('agents_panell', 'Agents (BIOS)', 'EL BIOS COGNITIU i directrius dels agents (AGENTS.md)', 'maquinaria_cat', ['agents'])
     ]
@@ -169,6 +171,7 @@ function EinaLocal({ item, Eina }) {
       chrome="context"
       title={item.title}
       subtitle={item.subtitle}
+      lead={item.lead}
       showLogos={true}
       labels={[
         { text: 'WIKI DE POBLE', className: 'sdp-badge-system' },

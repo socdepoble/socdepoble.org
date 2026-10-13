@@ -21,10 +21,14 @@ Aquest tractor vigila que tot text inserit al sistema complisca les regles inneg
 ## 1. Flux Lliure del Text (Zero "Capar")
 No es pot limitar artificialment l'amplada del text (evitar contenidors que tallen el text a poc més de mitja pàgina). El text ha de **fluir de forma natural ocupant l'espai disponible**, adaptant-se fins al final, respectant únicament els marges generals del sistema de Pedra Seca. Zero caixes estretes innecessàries.
 
-## 2. Jerarquia Semàntica Rigorosa (H1 - H6)
-Tot document o pàgina ha de tindre una jerarquia clara:
-- **H1:** Només pot haver-hi un `<h1>` principal per pàgina, i el logotip de Sóc de Poble ha de precedir-lo (activant `showLogos={true}` on calga).
-- **H2 - H6:** S'han d'utilitzar `<h2>`, `<h3>`, `<h4>`, `<h5>` i `<h6>` per a estructurar els apartats, sense saltar-se nivells. Aquesta és la clau per a un bon mapa de lectura.
+## 2. Jerarquia Editorial Canònica (H1 → H2 → Entradeta → H3 → Paràgraf)
+Tot document, pantalla o eina de Sóc de Poble segueix un patró editorial estricte sense excepcions ni estils inventats:
+- **H1:** Títol principal a la decoració blanca de capçalera (`PageFrame` / `UniversalPage`), acompanyat del logotip de l'entitat damunt si cal, etiquetes, data i categories.
+- **H2:** Títol de secció o de bloc funcional (ex: *«Què fa cada tractor, la seua empremta i la teua signatura»*).
+- **Entradeta (Lead explicativa):** Text destacat just davall de l'H2 que sintetitza el propòsit essencial del bloc. Mai s'encasta un H3 directament davall d'un H2 sense entradeta ni s'inventen estils estranys.
+- **H3:** Subapartat temàtic, porta o mecanisme concret (ex: *«Porta d'aprovació de tractors»*).
+- **Paràgraf normal:** Explicació didàctica desenvolupada (ex: *«Els components comuns de l'app no hi entren...»*).
+- **Regla Didàctica d'Or:** *«Un paràgraf més mai està de més quan és didàctic.»* Si calen dos o tres paràgrafs per fer-ho entendre clarament a la gent del poble, s'escriuen amb naturalitat.
 
 ## 3. Escanejabilitat Visual (Llegir d'un colp d'ull)
 Sóc de Poble està pensat per a lectors que busquen anar al gra.

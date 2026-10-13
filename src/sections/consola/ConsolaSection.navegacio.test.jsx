@@ -28,6 +28,7 @@ import { RouterProvider, Route, Routes } from '../../app/contexts/RouterContext'
 import ConsolaSection from './ConsolaSection.jsx';
 import { paginesConsola } from './consolaPagines.js';
 import { SLUGS_XIFRES, rutaXifra } from './xifresMas.js';
+import { ETIQUETA_ACCES, TITOL_DIAGNOSI } from './diagnosiConsola.js';
 
 const MAPA = {
   schema: 'sdp.mapa.v1', generat: '2026-09-25T13:12:23.715Z', tall: null,
@@ -186,7 +187,32 @@ test('al tauler de /consola, cada pàgina té exactament una targeta, i cada xif
      fora d'ell no n'hi ha cap altra. */
   const delIndex = cap('/consola', screen.getByRole('region', { name: 'Índex de la Consola' }));
   expect(delIndex.length).toBeGreaterThan(paginesConsola().length + xifres.length);
-  expect(cap('/consola').length).toBe(paginesConsola().length + xifres.length + delIndex.length);
+  /* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front F) · I, darrere de
+     l'Índex, l'accés ràpid del Diagnòstic del Mas: una porta per pàgina, en
+     l'ordre del tauler, i cap altra (el <pre> és text pla, sense enllaços). */
+  const delAcces = cap('/consola', screen.getByRole('navigation', { name: ETIQUETA_ACCES }));
+  expect(delAcces).toEqual(paginesConsola().map((p) => p.ruta));
+  expect(cap('/consola', screen.getByRole('region', { name: TITOL_DIAGNOSI }))).toEqual(delAcces);
+  expect(cap('/consola').length).toBe(paginesConsola().length + xifres.length + delIndex.length + delAcces.length);
+  expect(errors).not.toHaveBeenCalled();
+});
+
+/* Una prova per pàgina i consultes pel DOM, com el recorregut de les
+   targetes del tauler (correcció 261004, verificador, punt 4): el tauler
+   sencer es torna a pintar a cada volta. */
+const enllacDeLAcces = (ruta) => document.querySelector(`nav[aria-label="${ETIQUETA_ACCES}"] a[href="${ruta}"]`);
+test.each(paginesConsola().map((p) => [p.id, p]))('l’accés ràpid del Diagnòstic del Mas obri /consola/%s, i la molla de pa torna al tauler', async (_id, p) => {
+  render(<Aplicacio />);
+  await esperaElTauler();
+  expect(enllacDeLAcces(p.ruta).textContent).toBe(p.title);
+  fireEvent.click(enllacDeLAcces(p.ruta));
+  expect(window.location.pathname).toBe(p.ruta);
+  expect(h1Rapid()).toBe(p.title);
+  // A la pàgina no hi ha cap Diagnòstic: és només del tauler.
+  expect(document.querySelector('.sdp-consola__diagnosi')).toBeNull();
+  fireEvent.click(mollaCapALaConsola());
+  expect(window.location.pathname).toBe('/consola');
+  expect(enllacDeLAcces(p.ruta)).not.toBeNull();
   expect(errors).not.toHaveBeenCalled();
 });
 

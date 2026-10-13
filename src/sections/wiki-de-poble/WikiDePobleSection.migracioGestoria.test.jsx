@@ -36,7 +36,6 @@ vi.mock('../gestoria/tauler/ShellGestoria.jsx', async () => {
       const [visible, setVisible] = useState(false);
       return (
         <div className="sdp-gestoria-closca">
-          <nav aria-label="Panell de control de la Gestoria">Gestoria</nav>
           <UniversalPage title="Tauler Central">
             <button type="button" onClick={() => setVisible(true)}>Mostra l’estat privat</button>
             {visible ? <p>Estat privat sintètic</p> : null}
@@ -150,7 +149,7 @@ test('els documents ordinaris conserven la consulta i la Wiki no mostra Gestoria
   expect(screen.queryByRole('button', { name: 'Gestoria de Poble' })).toBeNull();
 });
 
-test('tornar a la Wiki desmunta el rail i l’estat privat; entrar de nou comença net', async () => {
+test('tornar a la Wiki desmunta la closca i l’estat privat; entrar de nou comença net', async () => {
   const { container } = munta('/app/gestoria/tauler');
   await screen.findByRole('heading', { level: 1, name: 'Tauler Central' });
   fireEvent.click(screen.getByRole('button', { name: 'Mostra l’estat privat' }));

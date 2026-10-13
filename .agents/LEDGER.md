@@ -860,4 +860,4 @@ Es conserva literalment TOT el fitxer anterior, inclosos HASH històrics. SHA256
 261007 | correcció | sdp-workflow | ordre explícita sencera; abans de crear res, integrar-ho en la maquinària existent
 261007 | correcció | sdp-universal-page | pàgina nova = SYSTEM_PAGES + PAGE_COPY + UniversalPage, cap component a mida
 
-<!-- HASH: bb5556603130052cacc20af7163212272b5d056412b49d8015822240967a3d98 -->
+<!-- HASH: 83f60e2b55edd87bc42a176d691572d80e14a2b49abf4f75ee4d7c7009807e91 -->

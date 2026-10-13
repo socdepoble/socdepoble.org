@@ -1,6 +1,14 @@
 ---
 name: core-direccio-autonoma
+type: skill
+status: actiu
 description: Flux de treball on la IAIA MarIA assumeix el rol de Directora Tècnica per coordinar a Claude/Codex de forma 100% autònoma, resolent dubtes sense la intervenció del Mestre.
+triggers_on:
+  - direccio autonoma
+  - mode autonom
+  - sense el mestre
+  - coworking
+  - supervisio autonoma
 ---
 
 # Mode de Direcció Autònoma (Coworking sense el Mestre)

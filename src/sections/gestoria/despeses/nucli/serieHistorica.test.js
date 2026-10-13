@@ -3,9 +3,16 @@
    trimestre i any sense duplicar els trams solapats, cap xifra on no hi ha
    extractes, la despesa en IA neta per proveïdor amb els dòlars del registre
    24, els traspassos a part i els indicadors del director financer. Lectures
-   reduïdes sintètiques, com les torna el tractor. */
+   reduïdes sintètiques, com les torna el tractor. Ordre del Mestre,
+   13-10-2026 (pla 261013_1405, front I; auditoria de Codex 261013_1510,
+   GES-A2): dos comptes de la mateixa entitat acabats igual són dos comptes,
+   també passant pel lector i el reductor de veres. */
 import { describe, expect, test } from 'vitest';
-import { CODIS_SERIE, DIES_TRASPAS, MESOS_INDICADORS, SENSE_PROVEIDOR, indicadors, rangPerDefecte, serieHistorica } from './serieHistorica.js';
+import { llegeixC43 } from '../../nucli/c43.js';
+import { reduixC43 } from '../../tauler/nucli/tractorTauler.js';
+import {
+  CODIS_SERIE, DIES_TRASPAS, MESOS_INDICADORS, SENSE_PROVEIDOR, comptesHistoric, indicadors, rangPerDefecte, serieHistorica
+} from './serieHistorica.js';
 
 const d = (iso) => ({ a: Number(iso.slice(0, 4)), m: Number(iso.slice(5, 7)), d: Number(iso.slice(8, 10)) });
 let comptador = 0;
@@ -305,5 +312,112 @@ describe('els indicadors del director financer', () => {
     const res = indicadors({ serie: serieHistorica({}) });
     expect(res.caixa).toEqual({ valor: null, motiu: 'SENSE_DADES' });
     expect(res.provisio).toEqual({ valor: null, motiu: 'SENSE_DADES' });
+  });
+});
+
+/* ── GES-A2 · Ordre del Mestre, 13-10-2026 (pla 261013_1405, front I; auditoria de Codex 261013_1510) ──
+   Abans la sèrie agrupava per «entitat i quatre últims dígits»: el segon compte acabat igual es prenia pel
+   primer, els seus dies ja eren «coberts» i se'n perdien tots els moviments i el saldo. Norma 43 sintètica,
+   registre a registre (la forma de historic/nucli/n43Sintetic.test.js), llegida amb llegeixC43 i reduïda amb
+   reduixC43, que és el que fa el tractor de l'Històric (historic/nucli/tractorHistoric.js). Els dos comptes
+   només canvien d'oficina: mateixa entitat i mateixes quatre últimes xifres. El tractor, a més, dona els id dels
+   moviments; que la QUOTA dels dos comptes no compartix id (i que reclassificar-ne una no toca l'altra) ho prova
+   tractorHistoric.test.js (revisió adversarial 13-10-2026, troballes FIN-4 i TI-1). */
+describe('GES-A2 · dos comptes de la mateixa entitat acabats en les mateixes quatre xifres', () => {
+  const xifres = (n, llargaria) => String(Math.abs(n)).padStart(llargaria, '0');
+  const text = (valor, llargaria) => String(valor).padEnd(llargaria, ' ').slice(0, llargaria);
+  const aammdd = (iso) => iso.slice(2, 4) + iso.slice(5, 7) + iso.slice(8, 10);
+  const clauDe = (oficina) => `9999${oficina}${xifres(43, 10)}`;
+  function n43({ oficina, desde, fins, saldoInicial, moviments }) {
+    const clau = clauDe(oficina);
+    const linies = [`11${clau}${aammdd(desde)}${aammdd(fins)}2${xifres(saldoInicial, 14)}9783${text('TITULAR SINTETIC', 26)}${text('', 3)}`];
+    let deure = 0;
+    let haver = 0;
+    let sumaDeure = 0;
+    let sumaHaver = 0;
+    for (const m of moviments) {
+      if (m.centims < 0) {
+        deure += 1;
+        sumaDeure -= m.centims;
+      } else {
+        haver += 1;
+        sumaHaver += m.centims;
+      }
+      linies.push(`22${text('', 4)}0001${aammdd(m.data)}${aammdd(m.data)}99000${m.centims < 0 ? '1' : '2'}${xifres(m.centims, 14)}${xifres(0, 10)}${text('', 12)}${text('', 16)}`);
+      linies.push(`2301${text(m.concepte, 38)}${text('', 38)}`);
+    }
+    const saldoFinal = saldoInicial + sumaHaver - sumaDeure;
+    linies.push(`33${clau}${xifres(deure, 5)}${xifres(sumaDeure, 14)}${xifres(haver, 5)}${xifres(sumaHaver, 14)}2${xifres(saldoFinal, 14)}978${text('', 4)}`);
+    linies.push(`88${'9'.repeat(18)}${xifres(linies.length, 6)}${text('', 54)}`);
+    return linies.join('\r\n');
+  }
+  /* El que el tractor passa a la sèrie: la lectura reduïda (sense text de concepte). */
+  const reduida = (contingut) => ({ lectura: reduixC43(llegeixC43(contingut)) });
+  /* La mateixa quota, el mateix dia i pel mateix import, als dos comptes. */
+  const QUOTA = { data: '2025-01-10', centims: -10000, concepte: 'QUOTA SINTETICA' };
+  const A = n43({ oficina: '0001', desde: '2025-01-01', fins: '2025-03-31', saldoInicial: 500000, moviments: [
+    QUOTA, { data: '2025-02-15', centims: 30000, concepte: 'TRANSFERENCIA SINTETICA' }, { data: '2025-03-20', centims: -2500, concepte: 'COMISSIO SINTETICA' }
+  ] });
+  const B = n43({ oficina: '0002', desde: '2025-01-01', fins: '2025-03-31', saldoInicial: 200000, moviments: [
+    QUOTA, { data: '2025-03-05', centims: -4000, concepte: 'COMPRA SINTETICA' }
+  ] });
+  const SALDO_A = 500000 - 10000 + 30000 - 2500;
+  const SALDO_B = 200000 - 10000 - 4000;
+
+  test('la Norma 43 sintètica es llig sense avisos, i el reductor hi deixa el sufix compartit i dos id opacs diferents', () => {
+    const [a, b] = [reduida(A), reduida(B)].map((x) => x.lectura);
+    expect([a.avisos, b.avisos]).toEqual([[], []]);
+    expect([a, b].map((l) => l.comptes[0].capcalera.compte4)).toEqual(['0043', '0043']);
+    expect(a.comptes[0].capcalera.idCompte).toMatch(/^[bcdfghjklmnpqrst]{16}$/);
+    expect(a.comptes[0].capcalera.idCompte).not.toBe(b.comptes[0].capcalera.idCompte);
+  });
+
+  test('són dos comptes: cap moviment perdut, la caixa suma els dos saldos i cap avís de solapament fals', () => {
+    const serie = serieHistorica({ lectura: { extractes: [reduida(A), reduida(B)] } });
+    expect(serie.comptes.map((c) => [c.n, c.entitat, c.compte4, c.saldo])).toEqual([[1, '9999', '0043', SALDO_A], [2, '9999', '0043', SALDO_B]]);
+    expect(serie.moviments.map((m) => [m.compte, m.centims])).toEqual([[1, -10000], [2, -10000], [1, 30000], [2, -4000], [1, -2500]]);
+    expect(serie.caixa).toEqual({ saldo: SALDO_A + SALDO_B, fins: d('2025-03-31'), completa: true });
+    expect(serie.totals).toMatchObject({ entrades: 30000, eixides: 10000 + 10000 + 4000 + 2500, cobertura: 'completa' });
+    expect(serie.avisos).toEqual([]);
+  });
+
+  test('l’id de presentació és el de sempre i només el segon du «-2»; l’ordre dels fitxers no canvia qui és qui', () => {
+    const perId = (extractes) => Object.fromEntries(comptesHistoric({ extractes }).comptes.map((c) => [c.id, c.saldo]));
+    const directe = perId([reduida(A), reduida(B)]);
+    expect(Object.keys(directe).sort()).toEqual(['c43-9999-0043', 'c43-9999-0043-2']);
+    expect(Object.values(directe).sort((x, y) => x - y)).toEqual([SALDO_B, SALDO_A]);
+    expect(perId([reduida(B), reduida(A)])).toEqual(directe);
+  });
+
+  test('el mateix compte en dos extractes que se solapen continua sent un: el dia repetit compta una vegada', () => {
+    const A2 = n43({ oficina: '0001', desde: '2025-03-01', fins: '2025-04-30', saldoInicial: 500000 - 10000 + 30000, moviments: [
+      { data: '2025-03-20', centims: -2500, concepte: 'COMISSIO SINTETICA' }, { data: '2025-04-10', centims: -7000, concepte: 'QUOTA SINTETICA' }
+    ] });
+    const serie = serieHistorica({ lectura: { extractes: [reduida(A2), reduida(A)] } });
+    expect(comptesHistoric({ extractes: [reduida(A), reduida(A2)] }).comptes.map((c) => c.id)).toEqual(['c43-9999-0043']);
+    expect(serie.comptes.map((c) => [c.compte4, c.saldo])).toEqual([['0043', SALDO_A - 7000]]);
+    expect(serie.moviments.map((m) => m.centims)).toEqual([-10000, 30000, -2500, -7000]);
+    expect(serie.avisos.map((a) => a.codi)).toEqual(['EXTRACTES_SOLAPATS']);
+  });
+
+  test('ni l’id opac ni el número sencer ixen de la sèrie', () => {
+    const lectures = [reduida(A), reduida(B)];
+    const json = JSON.stringify([serieHistorica({ lectura: { extractes: lectures } }), comptesHistoric({ extractes: lectures }).comptes.map((c) => c.id)]);
+    for (const l of lectures) expect(json).not.toContain(l.lectura.comptes[0].capcalera.idCompte);
+    for (const oficina of ['0001', '0002']) expect(json).not.toContain(clauDe(oficina));
+    expect(json).not.toContain(xifres(43, 10));
+  });
+
+  test('una lectura feta a mà: amb idCompte manen els id; sense (o buit, o que no és un text), la clau d’abans', () => {
+    const a = extracte({ desde: '2025-01-01', fins: '2025-01-31', moviments: [mov('2025-01-10', -100, 'altres')] });
+    const b = extracte({ desde: '2025-01-01', fins: '2025-01-31', saldoInicial: 2000000, moviments: [mov('2025-01-10', -100, 'altres')] });
+    const ambId = (e, idCompte) => ({ lectura: { ...e.lectura, comptes: e.lectura.comptes.map((c) => ({ ...c, capcalera: { ...c.capcalera, idCompte } })) } });
+    const comptes = (extractes) => comptesHistoric({ extractes }).comptes.map((c) => [c.id, c.saldo]);
+    expect(comptes([ambId(a, 'bcdfghjklmnpqrst'), ambId(b, 'tsrqpnmlkjhgfdcb')])).toEqual([['c43-9999-4321', 999900], ['c43-9999-4321-2', 1999900]]);
+    expect(comptes([ambId(b, 'tsrqpnmlkjhgfdcb'), ambId(a, 'bcdfghjklmnpqrst')])).toEqual([['c43-9999-4321-2', 1999900], ['c43-9999-4321', 999900]]);
+    expect(comptes([ambId(a, 'bcdfghjklmnpqrst'), ambId(b, 'bcdfghjklmnpqrst')])).toHaveLength(1);
+    /* Sense id opac vàlid no hi ha res millor que l'entitat i el sufix: un compte, com abans del 13-10-2026. */
+    expect(comptes([a, b])).toHaveLength(1);
+    expect(comptes([ambId(a, ''), ambId(b, 42)])).toEqual([['c43-9999-4321', 999900]]);
   });
 });

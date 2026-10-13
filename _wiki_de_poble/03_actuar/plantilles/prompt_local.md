@@ -26,6 +26,7 @@ Aquesta plantilla estableix les instruccions tècniques i el context arquitectò
 Abans de generar l'arxiu per a la IA:
 - [ ] **Escriptori net i indexat**: `04_escriptori/` només ha de contindre els arxius de la sessió actual. Arxius anteriors han d'estar a `90_arxiu_historic/`. Tots els arxius actius estan a `00_index_escriptori.md`.
 - [ ] **Pla d'Implementació** generat si cal.
+- [ ] **Cron de vigilància**: L'orquestradora programarà un cron (p. ex. cada 10 minuts) per revisar els relleus a l'Escriptori si l'agent local treballarà de forma autònoma i llarga.
 - [ ] **Rebut obtingut** per a l'arxiu generat.
 
 ## Registre
@@ -35,12 +36,12 @@ Abans de generar l'arxiu per a la IA:
 | Camp | Valor |
 | --- | --- |
 | Identificador | SDP-PROMPT-LOCAL-AAMMDD |
-| Versió del document | 3.5.0 |
+| Versió del document | 3.7.0 |
 | Entorn | entorn-dev-local |
 | Creació | AA-MM-DD HH:MM |
 | Modificació | AA-MM-DD HH:MM |
 | Propietari | Agents Locals |
-| Plantilla | prompt_local.md (v3.5.0) |
+| Plantilla | prompt_local.md (v3.7.0) |
 | Ruta | prompt.local |
 | Rebut | sdp:torn…:… |
 | Tall d'evidència | [HEAD + hora] |
@@ -51,7 +52,10 @@ Abans de generar l'arxiu per a la IA:
 
 ## Historial
 
-- **v3.5.0 (261011):** S'introdueix la mentalitat d'I+D obligatòria com a pilar del prompt: les IAs han de plantejar les últimes tendències de l'estat de l'art (Investigació) abans de desenvolupar qualsevol solució mecànica.
+- **v3.7.0 (261013):** Protocol de Desconvocatòria i Tall Tèrmic de Crons («Cadascuna a sa casa»). Prohibició estricta de crons infinits sense límit d'iteracions o sense parada explícita; en finalitzar l'encàrrec o tancar el torn, la IA ha de cancel·lar qualsevol tasca programada per evitar malbaratar tokens i quota del pla.
+- **v3.6.0 (261012):** Institucionalització del 'Canal Viu' per a entorns multi-agent en paral·lel (Nou Xat Lateral). S'indica explícitament als agents que un cron específic vigilarà els seus processos asíncrons i que han de coordinar-se sense xafar-se la memòria compartida.
+- **v3.5.0 (261012):** S'introdueix l'exigència de l'**Auditoria Adversarial (Gauntlet Prompt)** per defecte a la instrucció de torn. La IA està obligada a executar un *Àrbitre Intern* abans d'emetre l'informe per evitar donar codi a mitges o amb placeholders.
+- **v3.4.1 (261011):** S'introdueix la mentalitat d'I+D obligatòria com a pilar del prompt: les IAs han de plantejar les últimes tendències de l'estat de l'art (Investigació) abans de desenvolupar qualsevol solució mecànica.
 - **v3.4.0 (261006, ENX-01):** El Context Tècnic porta la frase canònica de l'enxufabilitat amb Sollutia («Model B», ADR + port neutral), triada i signada pel Mestre el 261006: és la mateixa, caràcter per caràcter, que obri l'ADR-2026-09, i AGENTS.md §8 la rep amb el seu paquet de governança. La Directiva Suprema dona destí als punts d'accés de Sollutia: la Frontissa, només en lectura. La versió 3.4.0 també va a `.agents/protocolledge.json` en eixe paquet (deia 3.3.0 mentre la plantilla deia 3.3.1).
 - **v3.3.1 (261005_1250):** Integració de les "Tècniques d'Investigació i Autòpsia". S'exigeix a la IA que vaja més enllà de la teoria de les skills i verifique el codi font real dels scripts i tractors per trobar discrepàncies mecàniques.
 - **v3.3.0:** Refactorització estructural global. Es canvia el camp de registre "Versió" per "Versió del document" per evitar ambigüitats, exigint una migració a protocolledge.json.
@@ -82,6 +86,8 @@ Tot el que construïm al frontend (Consola, UI, etc.) té un únic objectiu fona
 
 [Aquí s'ha de detallar l'ordre concreta i el context funcional del problema a resoldre].
 
+> **MÈTODE GAUNTLET (Obligatori):** L'Agent Local ha de processar aquest prompt en mode *Gauntlet*. Planifica, construeix, audita el teu propi resultat amb un *Àrbitre Adversarial intern* (buscant falles, placeholders o incompliments de la Llei de l'Enxufabilitat), i corregeix fins que assoleixis la perfecció. Prohibit lliurar la primera versió sense passar l'auditoria adversarial.
+
 ## Tasques
 
 - T1: ...
@@ -101,8 +107,9 @@ Tot el que construïm al frontend (Consola, UI, etc.) té un únic objectiu fona
 En finalitzar l'auditoria o l'edició, heu de complir els següents passos:
 1. **Sortida:** Genereu el vostre document d'informe o auditoria exclusivament a `_wiki_de_poble/04_escriptori/` seguint la taxonomia `AAMMDD_HHMM_auditoria_[nom_ia].md`.
 2. **Context Compartit:** Qualsevol altre document present a `04_escriptori/` és part del context actiu i s'ha de llegir sencer abans d'emetre l'informe.
-3. **Consens Tècnic:** Si treballeu en paral·lel amb una altra IA, actueu com un sistema coordinat. Consensueu el pla i proposeu solucions integrals. No s'executarà cap canvi sobre codi crític fins que el Pla estigui estabilitzat.
+3. **Consens Tècnic i Canal Viu (Execució Paral·lela):** Si treballeu en un Xat Lateral en paral·lel amb una altra IA, actueu de forma coordinada i NO us xafeu mútuament l'Escriptori. Deixeu un informe de progrés a `04_escriptori/` cada 10-15 minuts (o en acabar cada bloc lògic). L'orquestradora (MarIA) ha programat un cron actiu vigilant l'Escriptori exclusivament per al vostre fil i deixarà nous documents de ruta si cal. Llegiu l'Escriptori constantment abans d'actuar. No s'executarà cap canvi sobre codi crític fins que el Pla estigui estabilitzat.
 4. **Retroalimentació:** Si aquesta plantilla (prompt_local) es pot optimitzar tècnicament, detalleu-ho al vostre informe.
+5. **Desconvocatòria i Tancament de Crons («Cadascuna a sa casa»):** Quan l'informe final estiga emés o quan finalitze el torn de treball, és OBLIGATORI aturar i cancel·lar qualsevol cron o schedule recurrent de fons. Està terminantment prohibit deixar processos zombis actius que continuen consumint tokens o bloquegen el tancament de l'aplicació. En acabar, tot agent allibera els seus recursos i cancel·la les seues tasques programades.
 
 ## Acte reflex
 

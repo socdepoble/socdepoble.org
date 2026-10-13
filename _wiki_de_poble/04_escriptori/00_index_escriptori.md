@@ -32,13 +32,25 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu — i
 - [[01_produccio/article-ayudawp.md]]
 
 ## Activitat en curs
-- [[261011_0348_acta_marmota_fi_onada11]] · Mestre 261011: Acta de Relleu per fatiga
-- [[261011_0246_teoria_kowalski_apple_design]] · Mestre 261011: Directriu visual Apple
-- [[261011_0230_auditoria_claude_onada12]]
-- [[261010_2200_tractor_ortografia_valenciana]] · Mestre 261010: directives d'imatges per a l'Onada 12
+- [[261013_1930_prompt_claude_jerarquia_taronja_i_operativitat]]
+- [[261013_1930_pla_implementacio_jerarquia_taronja_i_operativitat]]
+- [[261013_1600_estudi_destil_laboratori_ia]]
+- [[261013_1510_auditoria_codex]]
+- [[261013_1510_auditoria_claude]]
+- [[261013_1405_prompt_chatgpt_auditor]]
+- [[261013_1405_prompt_claude_gestoria_jarvis]]
+- [[261013_1405_pla_implementacio_gestoria_jarvis]]
+- [[../90_arxiu_historic/261012_2148_peticio_registre_mestre]] · torn_02f070c3-0705-4c0e-b5d3-32c84ab77117
+- [[../90_arxiu_historic/261012_2145_ordre_unificacio_barra_maria]] · torn_02f070c3-0705-4c0e-b5d3-32c84ab77117
+- [[../90_arxiu_historic/261012_2105_correccio_barra_maria]] · torn_02f070c3-0705-4c0e-b5d3-32c84ab77117
+- [[../90_arxiu_historic/261012_2050_ordres_directora_maria]] · torn_02f070c3-0705-4c0e-b5d3-32c84ab77117
+- [[02_investigacio_ia/261012_1322_relat_historic_xylella]] · Mestre 261012: antecedent de la Xylella per a Claude
+- [[../10_actes/261011_0348_acta_marmota_fi_onada11]] · Mestre 261011: Acta de Relleu per fatiga
+- [[02_investigacio_ia/261011_0246_teoria_kowalski_apple_design]] · Mestre 261011: Directriu visual Apple
+- [[02_investigacio_ia/261010_2200_tractor_ortografia_valenciana]] · Mestre 261010: directives d'imatges per a l'Onada 12
 
 
-- [[261011_0130_ordres_nit_directora]] · Mestre 261011: Ordres de nit per a Claude
+- [[../90_arxiu_historic/261011_0130_ordres_nit_directora]] · Mestre 261011: Ordres de nit per a Claude
 - [[02_investigacio_ia/261010_1805_arqueologia_claude]] · Fable 261010: Resultats de l'arqueologia de l'antiga web
 - [[../90_arxiu_historic/261009_2005_brainstorming_panell_superadmin]] · torn_7ffb2f2b: proposta del punt 5 de l'Onada 8, pendent de les decisions del Mestre
 - [[../90_arxiu_historic/261009_1238_missatge_maria_a_claude]] · Mestre 261009: Co-working a Tres Bandes per al pont
@@ -755,6 +767,17 @@ Enllaços a peces ja existents, verificats al disc; no s’han mogut ni editat e
 
 ## Arxivat amb la Porta Olivera
 
+- [[../90_arxiu_historic/261012_1633_auditoria_claude_gestoria]]
+- [[../90_arxiu_historic/261012_1700_pla_implementacio_previsio_economica]]
+- [[../90_arxiu_historic/261012_2022_auditoria_codex]]
+- [[../90_arxiu_historic/261012_2117_auditoria_claude_gestoria_erp]]
+- [[../90_arxiu_historic/261012_2245_prompt_claude_refinament]]
+- [[../90_arxiu_historic/261012_2325_auditoria_claude_refinament]]
+- [[../90_arxiu_historic/261012_2004_prompt_chatgpt_auditor]]
+- [[../90_arxiu_historic/261012_1940_prompt_claude_gestoria_erp]]
+- [[../90_arxiu_historic/261012_1940_pla_implementacio_gestoria_erp]]
+- [[../90_arxiu_historic/261012_1159_prompt_claude_gestoria]]
+- [[../90_arxiu_historic/261012_1159_pla_implementacio_gestoria]]
 - [[../90_arxiu_historic/261012_0040_auditoria_claude_informe_complet_ficiv]]
 - [[../90_arxiu_historic/261012_0025_prompt_claude_informe_complet_editorial]]
 - [[../90_arxiu_historic/261012_0025_pla_implementacio_informe_editorial]]
@@ -808,8 +831,9 @@ Enllaços a peces ja existents, verificats al disc; no s’han mogut ni editat e
 - [[../10_actes/261007_0025_acta_marmota]]
 - [[../10_actes/261007_1645_acta_marmota]]
 - [[../10_actes/261009_1216_acta_marmota]]
-- [[261011_0246_teoria_kowalski_apple_design]] · per a 
+- [[02_investigacio_ia/261011_0246_teoria_kowalski_apple_design]] · per a 
 
 ## Àncores sense destí (Porta Olivera)
 
+- 261013 · `261013_1415_prompt_chatgpt_auditor`: cap fitxer amb eixe nom als llocs cercats (_wiki_de_poble/90_arxiu_historic/ i les seues subcarpetes, _wiki_de_poble/10_actes/ i les subcarpetes de l'Escriptori; la cerca no baixa més d'un nivell); retirada per --repara.
 - 261011 · `Claude`: cap fitxer amb eixe nom als llocs cercats (_wiki_de_poble/90_arxiu_historic/ i les seues subcarpetes, _wiki_de_poble/10_actes/ i les subcarpetes de l'Escriptori; la cerca no baixa més d'un nivell); retirada per --repara.

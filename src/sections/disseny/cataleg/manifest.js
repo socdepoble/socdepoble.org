@@ -46,7 +46,9 @@ export const ICONES_ESPECIMENS = Object.freeze({
   }),
   navegacio: Object.freeze({
     pestanyes: '📑', molla: '🍞', paginacio: '⏭️', acordio: '🪗', 'nav-mobil': '📲',
-    'xat-rail': '🛤️', 'seccions-categoria': '↕️'
+    'xat-rail': '🛤️', 'seccions-categoria': '↕️',
+    /* Ordre del Mestre (261012, vespre) · el botó de damunt de «Pobles». */
+    'tornar-dalt': '🔝'
   }),
   retroalimentacio: Object.freeze({
     alerta: '⚠️', insignia: '📛', buit: '📭', carrega: '⏳', progres: '🔋',
@@ -111,9 +113,11 @@ const FONAMENTS = [
   especimen('fonaments', 'targeta-viva', 'Targeta viva', 'TargetaViva · BotoTargetaViva (T50)', ['organisme', 'targeta', 'editor'],
     'La targeta del document mentre s’escriu, amb la mateixa anatomia que tindrà publicada: a la llista, a la dreta de l’editor si hi cap i, si no, darrere del xip «Vista targeta». Al Perfil, també en línia a l’apartat «Les vistes». Els botons no fan res: ho diu un avís.',
     'previsualitzacio vista targeta xip aside llista dreta notes perfil vistes'),
-  especimen('fonaments', 'controls-barra', 'Controls de barra', 'BarraBlava · BarraTaronja · IconButton · ActionControl · DateTimeControl', ['atom', 'barra', 'icona'],
+  /* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front B) · s'hi afig RellotgeViu, la data i
+     l'hora d'ara, vives, a la dreta de la barra taronja de les apps que la demanen. */
+  especimen('fonaments', 'controls-barra', 'Controls de barra', 'BarraBlava · BarraTaronja · IconButton · ActionControl · DateTimeControl · RellotgeViu', ['atom', 'barra', 'icona'],
     'Les dues barres de color de PageFrame, ja components propis (BarraBlava i BarraTaronja), i els àtoms que les omplin. La capçalera i el peu de la UniversalCard fan servir els mateixos àtoms.',
-    'pin ancorar data hora pastilla'),
+    'pin ancorar data hora pastilla rellotge viu ara minut'),
   /* T51 (ordre del Mestre, 260928) · l'espai central de la barra taronja. */
   especimen('fonaments', 'emoticona-barra', 'Emoticona de la barra', 'EmoticonaBarra · l’espai central de la barra taronja (T51)', ['molecula', 'barra', 'emoticona'],
     'Al centre de la barra taronja. En edició, el botó que obri el diàleg d’emoticona: la ploma blanca mentre no n’hi ha cap. En lectura, només l’emoticona triada; sense, la cel·la queda buida.',
@@ -236,7 +240,11 @@ const NAVEGACIO = [
   especimen('navegacio', 'acordio', 'Acordio', 'PedraSeca/organismes/Accordion.jsx', ['organisme'],
     'Contingut plegable per a preguntes freqüents i ajustos llargs.'),
   especimen('navegacio', 'nav-mobil', 'Nav Mobil', 'App.jsx · nav.mobile-nav', ['plantilla', 'mobil'],
-    'Fins a 1023px d’ample, la barra inferior fixa amb cinc caselles: Xat, Mur, el Panell de Control com a botó central, Mercat i Pobles, en pistes d’ample igual. La barra lateral passa a calaix.'),
+    'Fins a 1023px d’ample, la barra inferior fixa amb cinc caselles: Xat, Mur, el Panell de Control com a botó central, Mercat i Pobles, en pistes d’ample igual. La barra lateral passa a calaix. Acompanya el scroll: baixant s’amaga, pujant torna.'),
+  /* Ordre del Mestre (261012, vespre) · el botó «Tornar a dalt», damunt de «Pobles» (Pedra Seca §9). */
+  especimen('navegacio', 'tornar-dalt', 'Tornar a dalt', 'PedraSeca/atoms/BotoTornarADalt.jsx', ['atom', 'mobil', 'scroll'],
+    'Botó redó i suau que porta a dalt el que s’està llegint. En compacte la closca el pinta damunt de «Pobles» quan el visor ha baixat més d’una pantalla i les barres es veuen.',
+    'tornar dalt pujar amunt scroll inici fletxa boto flotant pobles'),
   /* Onada 3B (Pedra Seca §9) · el rail del Xat i les vistes que obri. */
   especimen('navegacio', 'xat-rail', 'Xat · rail i vistes', 'RailXat · VistaEnConstruccio', ['organisme', 'xat', 'rail'],
     'El menú de l’esquerra del Xat, calcat del de WhatsApp per a Mac, desplegat i plegat, amb les seccions «Més» i «Comunitats» i el peu amb l’avatar propi; i les vistes que encara no fan res i ho diuen.',
@@ -371,7 +379,7 @@ CATALOG_ITEMS.push(
     'graella llista targetes seccions categories noticies nevera apps universalcard'),
   especimen('estructura', 'pagina-app', 'Pàgina de les apps', 'PedraSeca/organismes/PaginaApp.jsx', ['plantilla', 'pagina', 'apps'],
     'El detall d’un element d’una app amb l’anatomia de la Pàgina Universal: doble barra, portada, bloc del títol i article. Munta PageFrame sense traductor ni telemetria, i amb les imatges privades.',
-    'pagina app detall noticies nevera lector traduir telemetria privada pageframe')
+    'pagina app detall noticies nevera lector traduir telemetria privada pageframe rellotge')
 );
 
 /* Ordre del Mestre, 261006 (prompt 261006_1215 i skill sdp-clon-loiverse) · el TPV universal:
@@ -436,6 +444,9 @@ export const ARBRE_UNIVERSAL = Object.freeze([
     rol: 'Barra lateral, barra negra, main i navegació mòbil. No hi ha cap UniversalShell: és el JSX d’App.jsx.' },
   { id: 'nav-mobil', nom: 'Navegació mòbil', fitxer: 'src/app/App.jsx', pare: 'closca', item: 'navegacio-nav-mobil',
     rol: 'nav.mobile-nav, fins a 1023px d’ample.' },
+  /* Ordre del Mestre (261012, vespre) · el botó de damunt de «Pobles». */
+  { id: 'tornar-dalt', nom: 'Tornar a dalt', fitxer: 'src/components/PedraSeca/atoms/BotoTornarADalt.jsx', pare: 'closca', item: 'navegacio-tornar-dalt',
+    rol: 'El botó redó de damunt de «Pobles», fins a 1023px d’ample: el pinta la closca (TornarADalt) quan useBarresAmbScroll diu que el visor ha baixat més d’una pantalla amb les barres a la vista.' },
   { id: 'identitat', nom: 'Identitat activa', fitxer: 'src/components/universal/identitat/', pare: 'closca', item: 'fonaments-identitat',
     rol: 'El botó de la barra negra i el calaix «Amb qui actues?».', usa: ['dialeg'] },
   /* Esmena D1 de la revisió de T52a · el Xat no és un UniversalWorkspace:

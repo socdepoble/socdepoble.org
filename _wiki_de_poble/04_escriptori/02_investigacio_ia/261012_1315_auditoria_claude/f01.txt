@@ -1,0 +1,318 @@
+ANNEX F01 · DNI, NIE i NIF d'entitat amb separadors entre grups de xifres passen la guarda (fals negatiu)
+Severitat final: alta (autor: alta; àrbitres: reproducció alta, doctrina alta, impacte alta)
+Veredicte: 3 de 3 (refuta: cap)
+Categoria: privacitat · Lent d'origen: guardes
+Fitxer: src/sections/gestoria/identitat/nucli/guardes.js · Línies: 54-73 (es canvien); 82-86 i 113-117 (el camí, no es toquen)
+Decisió humana: sí · Acceptes que «any + número de tres xifres + lletra» («2026-001 de…», id «…-2026-001-a») es refuse com a DNI?
+Toca font signada: cap
+Solapaments: F02 (55-65), F03 (54-73) i F20 (63-86) cauen dins del bloc 54-73 que ací se substituïx; F06 (51-52, 82-86, 105), no
+Imports verificats: sí · Línia base: 8 fitxers, 170 proves, totes verdes (npx vitest run; vegeu EVIDÈNCIA 15)
+Estat: escrit
+
+RESUM
+El comentari de guardes.js:54-55 promet que els separadors habituals (espai, guionet, punt) compten, però el DNI (:64) només admet el punt
+entre grups, i el NIE (:65) i el NIF d'entitat (:66) exigixen set xifres seguides; IBAN, compte, afiliació i targeta no coneixen el punt.
+Un número escrit «dd ddd ddd L», «dd-ddd-ddd-L» o «L-dd.ddd.ddd» (d = xifra, L = lletra) dona identificadorsDe = [] i passa per àlies,
+per text lliure i per id opac. Importa per a la Finestreta perquè l'expedient (projectes/nucli/expedient.js:176-179) valida l'id, l'àlies
+i el codi comptable amb estes mateixes guardes. Hui no hi ha fuga: el carril no està endollat i el Bar passa titular: null.
+Es proposa admetre el separador opcional entre TOTS els grups de xifres de set formes, a guardes.js i a la còpia de registreVendes.js,
+amb una prova nova i quatre files de paritat. El canvi té un cost de fals positiu que ha de decidir el Mestre; si diu que no, queda
+escrita, completa, la variant agrupada.
+
+EVIDÈNCIA
+1. guardes.js:54-55 diu «Els separadors habituals (espai, guionet, punt) també compten»; :12-13, «fallen cap al costat segur».
+2. guardes.js:64 (DNI) posa «\.?» entre grups; :65 (NIE) i :66 (NIF_ENTITAT), «\d{7}» seguit; :67-70 separen amb «[\s-]?» o «[\s/-]?».
+3. A = tros('12 ', '345 ', '678 ', 'Z') contra :64: «\d{1,2}»=«12», «\.?»=«», «\d{3}» troba l'espai i falla; amb «1», «\d{3}»=«2»+espai,
+   falla; les arrancades darrere de cada espai fallen igual. :65 no té X/Y/Z davant de xifres; :66 la Z no és a la classe.
+4. A contra la resta: :69 «12», espai, «\d{8}» troba «345» i un espai; :70 huit xifres (en calen 13); :71 «6», «7», «8» i s'acaba. A dona [].
+5. B = tros('ref-', '12-', '345-', '678-', 'z'): :113 ID_OPAC casa; :64 falla a cada guionet; :66 «f», «-», «\d{7}»=«12-» falla; :70 huit xifres.
+6. identificadorsDe(B) = [] i :117 esIdOpac(B) = true; document.js:142 l'accepta com a referència, contra document.js:11-12.
+7. C = tros('CIF ', 'B-', '12.', '345.', '678'): :66 «B», «-», «\d{7}»=«12.» falla; :64 arriba a «678» i s'acaba sense lletra. C dona [].
+8. Camí públic: titular.js:59 crida comprovaText; guardes.js:106-109 no afig res amb «Casa » + A; validaTitular = [] i titular.js:89-97 el congela.
+9. La còpia src/utils/vendes/registreVendes.js:107-117 porta els mateixos nou patrons, lletra per lletra (comparats un a un).
+10. Abast hui: fronteraModelsPurs.test.js:99-104 (cap fitxer de fora importa els carrils) és verda; apps/bar/vistes/Torns.jsx:95 passa titular: null.
+11. Cap prova ho fixa com a límit: a guardes.test.js:13-26, per al DNI, el NIE i el NIF, l'única fila amb separadors entre grups és el DNI
+    amb punts (:15); defectes.onada12.test.js no nomena les guardes. Contrast: nucli/nif.test.js:23, normalitzaNif llig guionet, punt i espai.
+12. Proposta traçada contra guardes.test.js: cada patró nou accepta tot el que acceptava el vell; :53-54 i :58 continuen a [] i :72, opac.
+13. grep dels patrons nous de DNI, NIE i NIF sobre identitat/, burocracia/, projectes/ i utils/vendes: una coincidència, icsTerminis.test.js:39
+    (un DTSTAMP que ja casa hui i no passa per la guarda). Cap fixture literal canvia de resultat.
+14. tractors.js: cap llista de «fonts» nomena identitat/ ni utils/vendes (rg sense resultat; fronteraModelsPurs.test.js:106-110 ho afirma).
+15. Línia base: npx vitest run de guardes, titular, document, fronteraModelsPurs, obligacions, terminis, expedient i registreVendes
+    (les .test.js): «Test Files 8 passed (8) · Tests 170 passed (170)».
+
+ESCENARI
+Entrada 1: validaTitular({ id: 'tit_prova_llar', tipus: 'persona', ambit: 'LLAR', alies: tros('Casa ', '12 ', '345 ', '678 ', 'Z') })
+  hui: [] (creaTitular congela l'àlies amb el número dins) → amb la proposta: [IDENTIFICADOR_PERSONAL a titular.alies]
+Entrada 2: validaDocument({ ...RETA, referencia: tros('ref-', '12-', '345-', '678-', 'z') }), amb la RETA de document.test.js:18-27
+  hui: [] (la referència «opaca» porta el número) → amb la proposta: [ID_INVALID a document.referencia]
+Entrada 3: comprovaText(tros('CIF ', 'B-', '12.', '345.', '678'), 'alies', errors)
+  hui: cap error → amb la proposta: IDENTIFICADOR_PERSONAL (NIF_ENTITAT)
+
+FONT DE VERITAT
+- src/sections/gestoria/identitat/nucli/guardes.js:12-13: «fallen cap al costat segur: un text que ho sembla es refusa».
+- El mateix fitxer, :54-55: els separadors habituals «també compten, perquè ningú les escriu sempre igual».
+- src/sections/gestoria/identitat/nucli/document.js:10-12: «ni la referència és el número d'un document».
+- src/sections/gestoria/identitat/nucli/guardes.test.js:32-33: precedent; la casa ja va eixamplar els patrons quan unes formes «s'escapaven».
+- Doctrina dels models purs de la Gestoria: un fals negatiu d'identificador personal és greu; el fals positiu s'accepta.
+
+==== PROPOSTA (codi complet) ====
+Els dos canvis de producció i els de la prova (secció següent) van al mateix commit: si només se'n toca un costat, la paritat cau.
+Cap import nou, cap dependència, cap mirada arrere. Cap dels dos fitxers és font de cap tractor signat.
+
+SUBSTITUÏX 1 · src/sections/gestoria/identitat/nucli/guardes.js · línies 54-73
+--- TROS VIGENT ---
+/* Les formes que cap text pot portar. Els separadors habituals (espai,
+   guionet, punt) també compten, perquè ningú les escriu sempre igual.
+   Cap forma depén d'una frontera de paraula (\b) DAVANT: entre una lletra i
+   una xifra no n'hi ha, i «dni» o «cta» enganxats davant amagarien el número.
+   Les formes que comencen per una xifra només demanen que DAVANT no n'hi haja
+   cap altra ((?:^|\D), sense mirada arrere, que Safari 16.0 no coneix); les
+   només numèriques i el NIF d'entitat, que DARRERE tampoc: així un número més
+   llarg no es pren per un altre. Les que comencen per una lletra no demanen
+   res davant, i les que acaben en lletra no demanen res darrere. */
+const FORMES_VETADES = Object.freeze([
+  ['DNI', /(?:^|\D)\d{1,2}\.?\d{3}\.?\d{3}[-\s.]?[A-HJ-NP-TV-Z]/i],
+  ['NIE', /[XYZ][-\s.]?\d{7}[-\s.]?[A-HJ-NP-TV-Z]/i],
+  ['NIF_ENTITAT', /[ABCDEFGHJNPQRSUVW][-\s.]?\d{7}[-\s.]?[0-9A-J](?!\d)/i],
+  ['IBAN', /[A-Z]{2}\d{2}(?:[\s-]?[A-Z0-9]{4}){3,7}(?:[\s-]?[A-Z0-9]{1,3})?/i],
+  ['COMPTE', /(?:^|\D)\d{4}[\s-]?\d{4}[\s-]?\d{2}[\s-]?\d{10}(?!\d)/],
+  ['AFILIACIO', /(?:^|\D)\d{2}[\s/-]?\d{8}[\s/-]?\d{2}(?!\d)/],
+  ['TARGETA', /(?:^|\D)\d(?:[\s-]?\d){12,18}(?!\d)/],
+  ['TELEFON', /(?:^|\D)(?:\+?\d{2}[\s.-]?)?[6-9](?:[\s.-]?\d){8}(?!\d)/],
+  ['CORREU', /[^\s@]+@[^\s@]+\.[a-z]{2,}/i]
+]);
+--- TROS NOU ---
+/* Les formes que cap text pot portar. Els separadors habituals (espai,
+   guionet, punt; la barra també en l'afiliació) compten ENTRE TOTS els grups
+   de xifres, perquè ningú les escriu sempre igual: un número partit en grups
+   (dos, tres i tres xifres i la lletra) és el mateix que escrit tot seguit.
+   COST ACCEPTAT, perquè fallen cap al costat segur: un any i un número de
+   tres xifres seguits d'una lletra («any-número de…», o un id acabat en
+   «-any-número-lletra») tenen la forma d'un DNI de set xifres i es refusen.
+   Un id «prefix-any-número», sense lletra darrere, continua sent opac.
+   Cap forma depén d'una frontera de paraula (\b) DAVANT: entre una lletra i
+   una xifra no n'hi ha, i «dni» o «cta» enganxats davant amagarien el número.
+   Les formes que comencen per una xifra només demanen que DAVANT no n'hi haja
+   cap altra ((?:^|\D), sense mirada arrere, que Safari 16.0 no coneix); les
+   només numèriques i el NIF d'entitat, que DARRERE tampoc: així un número més
+   llarg no es pren per un altre. Les que comencen per una lletra no demanen
+   res davant, i les que acaben en lletra no demanen res darrere.
+   src/utils/vendes/registreVendes.js porta una còpia literal d'esta llista:
+   tot canvi ací es fa també allà. */
+const FORMES_VETADES = Object.freeze([
+  ['DNI', /(?:^|\D)\d{1,2}[-\s.]?\d{3}[-\s.]?\d{3}[-\s.]?[A-HJ-NP-TV-Z]/i],
+  ['NIE', /[XYZ][-\s.]?\d[-\s.]?\d{3}[-\s.]?\d{3}[-\s.]?[A-HJ-NP-TV-Z]/i],
+  ['NIF_ENTITAT', /[ABCDEFGHJNPQRSUVW][-\s.]?\d{2}[-\s.]?\d{3}[-\s.]?\d{2}[-\s.]?[0-9A-J](?!\d)/i],
+  ['IBAN', /[A-Z]{2}\d{2}(?:[-\s.]?[A-Z0-9]{4}){3,7}(?:[-\s.]?[A-Z0-9]{1,3})?/i],
+  ['COMPTE', /(?:^|\D)\d{4}[-\s.]?\d{4}[-\s.]?\d{2}[-\s.]?\d{10}(?!\d)/],
+  ['AFILIACIO', /(?:^|\D)\d{2}[-\s./]?\d{8}[-\s./]?\d{2}(?!\d)/],
+  ['TARGETA', /(?:^|\D)\d(?:[-\s.]?\d){12,18}(?!\d)/],
+  ['TELEFON', /(?:^|\D)(?:\+?\d{2}[\s.-]?)?[6-9](?:[\s.-]?\d){8}(?!\d)/],
+  ['CORREU', /[^\s@]+@[^\s@]+\.[a-z]{2,}/i]
+]);
+
+SUBSTITUÏX 2 · src/utils/vendes/registreVendes.js · línies 107-117
+(El comentari de 103-106 es queda com està: ja diu que és còpia literal i que la prova en vigila la paritat.)
+--- TROS VIGENT ---
+const FORMES_VETADES = Object.freeze([
+  ['DNI', /(?:^|\D)\d{1,2}\.?\d{3}\.?\d{3}[-\s.]?[A-HJ-NP-TV-Z]/i],
+  ['NIE', /[XYZ][-\s.]?\d{7}[-\s.]?[A-HJ-NP-TV-Z]/i],
+  ['NIF_ENTITAT', /[ABCDEFGHJNPQRSUVW][-\s.]?\d{7}[-\s.]?[0-9A-J](?!\d)/i],
+  ['IBAN', /[A-Z]{2}\d{2}(?:[\s-]?[A-Z0-9]{4}){3,7}(?:[\s-]?[A-Z0-9]{1,3})?/i],
+  ['COMPTE', /(?:^|\D)\d{4}[\s-]?\d{4}[\s-]?\d{2}[\s-]?\d{10}(?!\d)/],
+  ['AFILIACIO', /(?:^|\D)\d{2}[\s/-]?\d{8}[\s/-]?\d{2}(?!\d)/],
+  ['TARGETA', /(?:^|\D)\d(?:[\s-]?\d){12,18}(?!\d)/],
+  ['TELEFON', /(?:^|\D)(?:\+?\d{2}[\s.-]?)?[6-9](?:[\s.-]?\d){8}(?!\d)/],
+  ['CORREU', /[^\s@]+@[^\s@]+\.[a-z]{2,}/i]
+]);
+--- TROS NOU ---
+const FORMES_VETADES = Object.freeze([
+  ['DNI', /(?:^|\D)\d{1,2}[-\s.]?\d{3}[-\s.]?\d{3}[-\s.]?[A-HJ-NP-TV-Z]/i],
+  ['NIE', /[XYZ][-\s.]?\d[-\s.]?\d{3}[-\s.]?\d{3}[-\s.]?[A-HJ-NP-TV-Z]/i],
+  ['NIF_ENTITAT', /[ABCDEFGHJNPQRSUVW][-\s.]?\d{2}[-\s.]?\d{3}[-\s.]?\d{2}[-\s.]?[0-9A-J](?!\d)/i],
+  ['IBAN', /[A-Z]{2}\d{2}(?:[-\s.]?[A-Z0-9]{4}){3,7}(?:[-\s.]?[A-Z0-9]{1,3})?/i],
+  ['COMPTE', /(?:^|\D)\d{4}[-\s.]?\d{4}[-\s.]?\d{2}[-\s.]?\d{10}(?!\d)/],
+  ['AFILIACIO', /(?:^|\D)\d{2}[-\s./]?\d{8}[-\s./]?\d{2}(?!\d)/],
+  ['TARGETA', /(?:^|\D)\d(?:[-\s.]?\d){12,18}(?!\d)/],
+  ['TELEFON', /(?:^|\D)(?:\+?\d{2}[\s.-]?)?[6-9](?:[\s.-]?\d){8}(?!\d)/],
+  ['CORREU', /[^\s@]+@[^\s@]+\.[a-z]{2,}/i]
+]);
+
+Proves existents: cap afirmació de guardes.test.js, titular.test.js, document.test.js, obligacions.test.js, terminis.test.js,
+expedient.test.js ni registreVendes.test.js canvia de resultat amb estos patrons (traça estàtica): no cal girar-ne cap.
+
+SI EL MESTRE RESPON QUE NO · variant agrupada (el DNI, el NIE i el NIF es lligen compactes o amb un separador a CADA tall)
+A les dues llistes (guardes.js i registreVendes.js), les tres primeres files són estes en lloc de les de dalt; la resta, igual:
+  ['DNI', /(?:^|\D)\d{1,2}(?:\.?\d{3}\.?|[-\s.]\d{3}[-\s.])\d{3}[-\s.]?[A-HJ-NP-TV-Z]/i],
+  ['NIE', /[XYZ][-\s.]?(?:\d{7}|\d[-\s.]\d{3}[-\s.]\d{3})[-\s.]?[A-HJ-NP-TV-Z]/i],
+  ['NIF_ENTITAT', /[ABCDEFGHJNPQRSUVW][-\s.]?(?:\d{7}|\d{2}[-\s.]\d{3}[-\s.]\d{2})[-\s.]?[0-9A-J](?!\d)/i],
+I al comentari nou de guardes.js, les quatre línies que van de «COST ACCEPTAT» a «continua sent opac.» se substituïxen per estes:
+   El DNI, el NIE i el NIF d'entitat es lligen compactes (el DNI, també amb
+   punts) o AGRUPATS amb un separador a cada tall. LÍMIT: un número partit a
+   mitges (un sol tall, sense punt) no es reconeix; a canvi, un any i un
+   número de tres xifres seguits d'una lletra no es prenen per un DNI.
+
+==== PROVA (vitest completa) ====
+FITXER NOU · src/sections/gestoria/identitat/nucli/guardes.separadors.test.js
+Frontera: fronteraModelsPurs.test.js:44-51 només compta els fitxers de producció (este acaba en .test.js) i la seua porta de literals
+(:80-88) no hi troba res, perquè cap peça porta huit xifres davant d'una lletra ni un IBAN sencer. privacitat.test.js:57 exclou les proves.
+Abans del canvi cauen onze de les dotze files de la taula, la prova dels ids, la del camí públic i la del límit.
+
+// @vitest-environment node
+/* Identitat legal · les formes vetades amb separadors entre els grups de
+   xifres. Dades sintètiques, compostes a trossos perquè cap porta les trobe
+   escrites senceres. Abans de l'arreglament, onze de les dotze files de la
+   taula no es trobaven: el DNI amb punts i la lletra enganxada ja es trobava
+   i queda de testimoni, i el NIE amb punts es caçava com a DNI i li faltava
+   l'etiqueta. Els dos ids passaven per opacs, i el titular, el document i el
+   text lliure acceptaven el número. */
+import { describe, expect, test } from 'vitest';
+import { validaDocument } from './document.js';
+import { comprovaText, esIdOpac, identificadorsDe } from './guardes.js';
+import { validaTitular } from './titular.js';
+
+const tros = (...parts) => parts.join('');
+const codis = (errors) => errors.map((e) => e.codi);
+
+const LLAR = { id: 'tit_prova_llar', tipus: 'persona', ambit: 'LLAR', alies: 'Casa de prova' };
+const RETA = {
+  id: 'doc_prova_reta',
+  titular: 'tit_prova_activitat',
+  tipus: 'reta-alta-baixa',
+  organisme: 'TGSS',
+  dates: { document: '2026-01-10', notificacio: '2026-01-12', efectes: '2026-01-01' },
+  referencia: 'ref_prova_001',
+  sha256: 'AB'.repeat(32),
+  teCodiVerificacio: true
+};
+
+describe('els separadors habituals compten entre tots els grups de xifres', () => {
+  test.each([
+    ['DNI', tros('12 ', '345 ', '678 ', 'Z')],
+    ['DNI', tros('12-', '345-', '678-', 'Z')],
+    ['DNI', tros('12.', '345.', '678', 'Z')],
+    ['NIE', tros('X', '1 ', '234 ', '567 ', 'Z')],
+    ['NIE', tros('X', '1.', '234.', '567', 'Z')],
+    ['NIF_ENTITAT', tros('G', '12.', '345.', '678')],
+    ['NIF_ENTITAT', tros('B-', '12.', '345.', '678')],
+    ['NIF_ENTITAT', tros('G', '12 ', '345 ', '678')],
+    ['IBAN', tros('ES91.', '2100.', '0418.', '4502.', '0005.', '1332')],
+    ['COMPTE', tros('2100.', '0418.', '45.', '0200051332')],
+    ['AFILIACIO', tros('28.', '1234', '5678.', '90')],
+    ['TARGETA', tros('4000.', '0000.', '0000.', '0002')]
+  ])('troba la forma %s', (forma, text) => {
+    expect(identificadorsDe(text)).toContain(forma);
+    expect(identificadorsDe(`Text de prova amb ${text} al mig`)).toContain(forma);
+  });
+
+  test('un id amb el número partit per guions o guions baixos tampoc és opac', () => {
+    expect(esIdOpac(tros('fac-', '12-', '345-', '678-', 'z'))).toBe(false);
+    expect(esIdOpac(tros('ref_', '12_', '345_', '678_', 'z'))).toBe(false);
+  });
+
+  test('el titular, el document i un text lliure refusen el número amb separadors', () => {
+    expect(codis(validaTitular({ ...LLAR, alies: tros('Casa ', '12 ', '345 ', '678 ', 'Z') }))).toEqual(['IDENTIFICADOR_PERSONAL']);
+    expect(codis(validaDocument({ ...RETA, referencia: tros('ref-', '12-', '345-', '678-', 'z') }))).toEqual(['ID_INVALID']);
+    const errors = [];
+    comprovaText(tros('CIF ', 'B-', '12.', '345.', '678'), 'alies', errors);
+    expect(codis(errors)).toEqual(['IDENTIFICADOR_PERSONAL']);
+  });
+});
+
+describe('el que no és cap forma continua net, i el cost que s’accepta', () => {
+  test('els textos neutres i el número de nou xifres', () => {
+    for (const text of ['Activitat de prova 2026', '2026-04-20', 'Model 303 del 3T', 'doc-2026-001', tros('ref ', '1234', '5678', '9')]) {
+      expect(identificadorsDe(text), text).toEqual([]);
+    }
+    expect(esIdOpac('doc-2026-001')).toBe(true);
+  });
+
+  test('[LÍMIT VOLGUT] un any i un número de tres xifres seguits d’una lletra tenen la forma d’un DNI i es refusen', () => {
+    expect(identificadorsDe(tros('Convocatòria ', '2026-', '001', ' de prova'))).toContain('DNI');
+    expect(esIdOpac(tros('doc-', '2026-', '001', '-a'))).toBe(false);
+  });
+});
+
+SUBSTITUÏX 3 · src/utils/vendes/registreVendes.test.js · línies 351-355 (dos ids nous a la «paritat de l'id opac»)
+--- TROS VIGENT ---
+    const ids = [
+      'tit_abcdefghijklmnop', nouIdOpac('tit', new Uint8Array(16)), 'abcd', 'abc', 'Tit_abcd', '1tit', '_tit', 'tit-amb-guions_i_baixos9',
+      'a'.repeat(96), 'a'.repeat(97), t('tit_', '0000', '0000', 't'), t('tit_', 'x', '0000000', 'l'), t('tit_', 'es', '00', '_0000_0000_0000_0000'),
+      t('tit_6', '00', '_00_00_00'), 'tit abcd', 'tit.abcd', 42, null
+    ];
+--- TROS NOU ---
+    const ids = [
+      'tit_abcdefghijklmnop', nouIdOpac('tit', new Uint8Array(16)), 'abcd', 'abc', 'Tit_abcd', '1tit', '_tit', 'tit-amb-guions_i_baixos9',
+      'a'.repeat(96), 'a'.repeat(97), t('tit_', '0000', '0000', 't'), t('tit_', 'x', '0000000', 'l'), t('tit_', 'es', '00', '_0000_0000_0000_0000'),
+      t('tit_6', '00', '_00_00_00'), t('tit_', '00_', '000_', '000_', 't'), t('ref-', '00-', '000-', '000-', 't'), 'tit abcd', 'tit.abcd', 42, null
+    ];
+
+SUBSTITUÏX 4 · src/utils/vendes/registreVendes.test.js · línies 363-367 (dos àlies nous a la «paritat de l'àlies»)
+--- TROS VIGENT ---
+    const aliesos = [
+      'Bar de la Plaça', '  Forn  ', 'x'.repeat(80), 'x'.repeat(81), '', '   ', null, 42, t('Llar', '\n', 'nova'), t('Llar', car(0x7F)),
+      t('Bar ', '0000', '0000', 'T'), t('nom', '@', 'exemple', '.org'), t('Tel ', '6', '00', ' 00 00 00'), t('ES', '00', ' 0000 0000 0000 0000 0000'),
+      t('Casa ', 'Y', '0000000', 'X'), 'Taula 12', 'Any 2026'
+    ];
+--- TROS NOU ---
+    const aliesos = [
+      'Bar de la Plaça', '  Forn  ', 'x'.repeat(80), 'x'.repeat(81), '', '   ', null, 42, t('Llar', '\n', 'nova'), t('Llar', car(0x7F)),
+      t('Bar ', '0000', '0000', 'T'), t('nom', '@', 'exemple', '.org'), t('Tel ', '6', '00', ' 00 00 00'), t('ES', '00', ' 0000 0000 0000 0000 0000'),
+      t('Casa ', 'Y', '0000000', 'X'), t('Bar ', '00 ', '000 ', '000 ', 'T'), t('Cif ', 'B-', '00.', '000.', '000'), 'Taula 12', 'Any 2026'
+    ];
+
+Les quatre files de paritat passen hui (els dos costats coincidixen en no veure res) i passen amb les dues còpies canviades (els dos
+costats refusen). Si només es canvia un costat, cauen les quatre. Valen igual per a la variant agrupada.
+
+SI EL MESTRE RESPON QUE NO · canvis en guardes.separadors.test.js per a la variant agrupada
+El títol del segon describe passa a ser 'el que no és cap forma continua net', i la prova «[LÍMIT VOLGUT]» se substituïx per estes dues:
+
+  test('una sèrie amb any i número no és un DNI, encara que acabe en lletra', () => {
+    expect(identificadorsDe(tros('Convocatòria ', '2026-', '001', ' de prova'))).toEqual([]);
+    expect(esIdOpac(tros('doc-', '2026-', '001', '-a'))).toBe(true);
+  });
+
+  test('[LÍMIT VOLGUT] un número partit a mitges, amb un sol tall i sense punt, no es reconeix', () => {
+    expect(identificadorsDe(tros('12345 ', '678 ', 'Z'))).toEqual([]);
+  });
+
+==== ESMENES DELS ÀRBITRES INTEGRADES ====
+- Reproducció (a), doctrina i impacte · no enganxar el comentari de guardes.js dins de registreVendes.js: INTEGRADA; allà només canvia la llista.
+- Reproducció (b) i doctrina (a) · declarar el cost del fals positiu (any + número + lletra): INTEGRADA al comentari i fixada amb «[LÍMIT VOLGUT]».
+- Reproducció (b) · alternativa amb referència arrere (\1) per a exigir el mateix separador: DESCARTADA; el mateix àrbitre no la recomana.
+- Reproducció (c), doctrina i impacte · files de paritat a registreVendes.test.js: INTEGRADA amb les quatre de reproducció, que componen
+  amb zeros com la resta del fitxer; les d'impacte (amb les xifres 1-8) i les de doctrina (dues) queden cobertes per estes.
+- Doctrina (c) · el comentari de producció no escriu cap identificador sintètic sencer: INTEGRADA; descriu els grups sense cap número.
+- Doctrina (d), reproducció i impacte · la capçalera de la prova deia malament quines files fallen hui: INTEGRADA (onze de dotze, i quina no).
+- Doctrina · cal decisió del Mestre pel cost: INTEGRADA; la pregunta és a la capçalera d'este annex.
+- Doctrina · variant estreta (només el DNI de huit xifres agrupat i el NIE amb punts): DESCARTADA com a eixida del «no»; la variant
+  agrupada d'impacte cobrix més (DNI de set xifres, NIE amb espais, NIF agrupat) sense el cost.
+- Impacte · variant agrupada com a proposta principal: NO ADOPTADA com a principal. Contradiu reproducció i doctrina; es tria l'opció
+  conservadora, que per a una guarda de privacitat és la que refusa més («fallen cap al costat segur», guardes.js:12-13). Queda escrita
+  completa com a eixida del «no».
+- Impacte · prova pel camí públic (validaTitular, validaDocument, comprovaText): INTEGRADA; traçada amb els patrons de la proposta.
+- Impacte · prova «una sèrie amb any i número no és un DNI»: només a l'eixida del «no»; a la proposta principal és la contrària.
+- Impacte · costos de fals positiu que queden: INTEGRADA a LÍMITS.
+- Reproducció · imprecisions de l'evidència de l'autor (recompte de la targeta; el NIE amb punts ja es caça hui com a DNI): INTEGRADES.
+- Pròpia · la fila de l'afiliació partix les huit xifres en dues peces ('1234', '5678.'), com fa guardes.test.js:20.
+
+==== LÍMITS D'ESTE ANNEX ====
+- Res del codi nou s'ha executat: l'auditoria no escriu a src/. La proposta, la prova nova i les files de paritat estan comprovades
+  per traça estàtica, patró a patró, contra les fixtures de les huit proves de la línia base. Cal executar-les en aplicar-les.
+- ESLint no s'ha passat sobre el codi nou. registreVendes.test.js porta la seua pròpia prova d'ESLint («zero missatges») i la de
+  Baseline («cap lookbehind»); els patrons nous només usen (?: i (?!.
+- Falsos positius nous de la proposta, a més del de la pregunta: un any i un número de tres xifres separats per espai davant d'una
+  paraula («2026 100 dies») i un número de set xifres amb espais davant d'una paraula es refusen com a DNI; una paraula acabada en
+  lletra de la classe del NIF davant d'un número de huit xifres amb punts, com a NIF_ENTITAT; dues dates amb punts seguides, com a
+  TARGETA (amb guionets ja passa hui).
+- Falsos negatius que continuen oberts amb qualsevol de les dues variants: un número escrit xifra a xifra amb espais, els agrupaments
+  no canònics (quatre i quatre xifres) i altres separadors (coma, barra fora de l'afiliació). Les xifres d'altres alfabets són F20 i
+  els caràcters invisibles, F06: no es toquen ací.
+- Hui un «L-dd.ddd.ddd» ja es caça per accident com a DNI quan darrere ve un separador i una lletra de la classe (per exemple « SL»):
+  el forat és quan va a final de text, dins de parèntesis o davant d'I, O o U.
+- Les portes de literals (fronteraModelsPurs.test.js:80-88 i privacitat.test.js:281-289) tenen el mateix punt cec (demanen huit o set
+  xifres seguides). No es toquen ací.
+- La duplicació de la llista entre guardes.js i registreVendes.js continua (registreVendes.js:62-67 ja diu que haurien de compartir-la).
+- F02 i F03 descriuen el mateix bloc: aplicar esta proposta les resol o les reduïx; qui les consolide ha de partir d'este text.
+- No s'ha pogut consultar git (el hook només deixa ordres de lectura): les línies són les de l'arbre de treball llegit el 261012.
+- Després de vitest, el hook PostToolUse ha avisat «segell divergent». No s'ha tocat res fora d'este fitxer.

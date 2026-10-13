@@ -126,9 +126,11 @@ const PONTS_GESTORIA = new Map([
       '../../sections/gestoria/aprendre/Aprendre.jsx',
       '../../sections/gestoria/facturar/Facturacio.jsx',
       /* Onada 6, ordre del Mestre (261009): «Històric i IA» (el banc, la despesa en IA, les simulacions i el llibre per a la gestora). */
-      '../../sections/gestoria/historic/Historic.jsx'
+      '../../sections/gestoria/historic/Historic.jsx',
+      /* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front H): «Identitat i Finestreta» (la fitxa d'identitat privada, darrere del cofre, i els tràmits preparats per a copiar). */
+      '../../sections/gestoria/finestreta/Finestreta.jsx'
     ]),
-    motiu: 'Ordre del Mestre, 261004: la Gestoria passa de la Wiki a /app/gestoria; el codi es queda al seu carril, amb la seua guarda. 261007: la Facturació entra pel pont i no per ShellGestoria (font del tractor gestoria.tauler). Onada 6, ordre del Mestre (261009): l’Històric i IA, pel mateix motiu.'
+    motiu: 'Ordre del Mestre, 261004: la Gestoria passa de la Wiki a /app/gestoria; el codi es queda al seu carril, amb la seua guarda. 261007: la Facturació entra pel pont i no per ShellGestoria (font del tractor gestoria.tauler). Onada 6, ordre del Mestre (261009): l’Històric i IA, pel mateix motiu. Ordre del Mestre, 13-10-2026 (pla 261013_1405, front H): Identitat i Finestreta, amb el seu tractor propi (gestoria.identitat), pel mateix motiu.'
   })]
 ]);
 const esPont = (ruta, especificador, ponts = PONTS_GESTORIA) => Boolean(ponts.get(ruta)?.especificadors.includes(especificador));

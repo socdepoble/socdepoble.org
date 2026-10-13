@@ -10,7 +10,10 @@
    Convenció de la casa (tests/porta-olivera-diagnosi.test.mjs): una prova
    «[DEFECTE Gn]» PASSA hui perquè afirma el comportament defectuós, amb el
    valor correcte escrit al costat. El dia que s'arregle, la prova cau i es
-   gira. Dades sintètiques (any 2099, empreses inventades). */
+   gira. Dades sintètiques (any 2099, empreses inventades).
+   G1 ja està arreglat i girat: ordre del Mestre, 13-10-2026 (pla
+   261013_1405, front I · motors; auditoria de Codex 261013_1510, GES-A4).
+   Ara és una prova de regressió «[ARREGLAT G1]» del resultat correcte. */
 import { describe, expect, test } from 'vitest';
 import { classificaMoviment } from './despeses/nucli/categories.js';
 import { estimaIrpf130 } from './impostos/nucli/impostos.js';
@@ -22,7 +25,7 @@ const CIF = ['A1234', '5674'].join('');
 const emesa = (parcial) => crearFactura({ tipus: 'ingres', contrapart: 'Client Sintetic SL', nif: CIF, descripcio: 'Prova', ...parcial });
 
 describe('impostos.js (font de gestoria.tauler i gestoria.historic)', () => {
-  test('[DEFECTE G1] la retenció d’un abonament suma en lloc de restar: el 130 descompta el doble', () => {
+  test('[ARREGLAT G1] la retenció d’un abonament resta: factura i abonament íntegre són neutrals per al 130', () => {
     const factures = [
       emesa({ data: D(2099, 1, 10), num: 'F99-0001', subtotal: 100000, iva: 21000, retencio: 15000, total: 106000 }),
       emesa({ data: D(2099, 1, 11), num: 'R99-0001', subtotal: -100000, iva: -21000, retencio: 15000, total: -106000, abonament: true }),
@@ -30,9 +33,12 @@ describe('impostos.js (font de gestoria.tauler i gestoria.historic)', () => {
     ];
     const irpf = estimaIrpf130({ factures, any: 2099, t: 1 });
     expect(irpf).toMatchObject({ ingressos: 100000, rendiment: 100000, quota: 20000 });
-    /* Correcte: retencions 0 (la factura i el seu abonament s'anul·len) i resultat 20000. */
-    expect(irpf.retencions).toBe(30000);
-    expect(irpf.resultat).toBe(0);
+    /* Abans (defecte): retencions 30000 i resultat 0. Ara, el correcte: la factura i el seu abonament s'anul·len. */
+    expect(irpf.retencions).toBe(0);
+    expect(irpf.resultat).toBe(20000);
+    /* I és el mateix 130 que sense la parella anul·lada. */
+    const sense = estimaIrpf130({ factures: [factures[2]], any: 2099, t: 1 });
+    expect({ retencions: irpf.retencions, resultat: irpf.resultat }).toEqual({ retencions: sense.retencions, resultat: sense.resultat });
   });
 });
 

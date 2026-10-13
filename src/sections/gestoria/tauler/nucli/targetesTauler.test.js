@@ -7,7 +7,10 @@ import path from 'node:path';
 import { describe, expect, test } from 'vitest';
 import { llegeixC43 } from '../../nucli/c43.js';
 import { crearFactura } from '../../nucli/model.js';
-import { BLOCS_TAULER, dadesDelTauler, etiquetaXifra, nomsDelsComptes, textAmagat, textXifra } from './targetesTauler.js';
+import {
+  BLOCS_TAULER, dadesDelTauler, etiquetaXifra, hisendaSobreCaixa, nomsDelsComptes, rellotgeDelTermini, textAmagat, textXifra, trimestreVei
+} from './targetesTauler.js';
+import { estimaIva303, resumHisenda } from '../../impostos/nucli/impostos.js';
 import { reduixC43 } from './tractorTauler.js';
 
 const xifres = (n, llargaria) => String(n).padStart(llargaria, '0');
@@ -43,6 +46,27 @@ describe('dadesDelTauler', () => {
       expect(Object.keys(BLOCS_TAULER)).toContain(t.bloc);
     }
     expect(dades.iva).toMatchObject({ any: 2026, t: 4, completa: false });
+  });
+
+  test('amb el trimestre del Full (periode), les estimacions són d’eixe trimestre i no del d’avui', () => {
+    const factura = crearFactura({ tipus: 'ingres', data: '2026-07-15', num: 'A-0007', contrapart: 'Client de Prova', subtotal: '100,00', iva: '21,00', total: '121,00' });
+    const dades = dadesDelTauler({ lectura: LECTURA, factures: [factura], avui: AVUI, periode: { any: 2026, t: 3 } });
+    const per = Object.fromEntries(dades.targetes.map((t) => [t.id, t]));
+    expect(dades.iva).toMatchObject({ any: 2026, t: 3, repercutit: 2100, factures: { emeses: 1, rebudes: 0 } });
+    expect(per['iva-303'].subtitol).toBe('Estimació del 3T 2026');
+    expect(per['iva-303'].etiquetes.map((e) => e.text)).toContain('Termini 20/10/2026');
+    expect(per['irpf-130'].xifra).toEqual({ tipus: 'import', valor: 2000, moneda: 'EUR' });
+    /* Un periode que no és un trimestre no mana: es torna al trimestre d'avui. */
+    expect(dadesDelTauler({ avui: AVUI, periode: { any: 2026, t: 7 } }).iva).toMatchObject({ any: 2026, t: 4 });
+  });
+
+  test('cap targeta diu que el Tauler no rep factures: sense, diu d’on vindran; amb, d’on ixen', () => {
+    const sense = dadesDelTauler({ avui: AVUI });
+    expect(JSON.stringify(sense.targetes)).not.toMatch(/pas 2 del MAPA|encara no rep/);
+    expect(sense.targetes.find((t) => t.id === 'factures').senseXifra).toMatch(/Full trimestral/);
+    const factura = crearFactura({ tipus: 'despesa', data: '2026-10-01', num: 'B-0001', contrapart: 'Proveïdor de Prova', subtotal: '10,00', iva: '2,10', total: '12,10' });
+    const amb = dadesDelTauler({ lectura: LECTURA, factures: [factura], avui: AVUI });
+    expect(amb.targetes.find((t) => t.id === 'iva-303').font).toMatch(/^Les factures que el Full trimestral ha passat al Tauler/);
   });
 
   test('amb un extracte: la caixa, el compte i el flux dels 30 dies; la cobertura diu que falta un mes', () => {
@@ -113,6 +137,144 @@ describe('dadesDelTauler', () => {
       expect(dades.targetes.find((t) => t.id === id).notes.at(-1), id).toMatch(/^Estimació per a revisar amb la gestoria/);
     }
   });
+
+  /* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front I · motors; auditoria de Codex 261013_1510, GES-A5):
+     la targeta Hisenda diu el que surt a pagar de cada model, sumat; un 303 a compensar va a part i no resta. */
+  test('Hisenda: un 303 a compensar no resta del 130, i la fila del crèdit hi és sempre (no en diu el signe)', () => {
+    const exempta = crearFactura({ tipus: 'ingres', data: '2026-07-15', num: 'A-0101', contrapart: 'Client de Prova', subtotal: '5000,00', iva: '0,00', total: '5000,00' });
+    const inversio = {
+      ...crearFactura({ tipus: 'despesa', data: '2026-08-10', num: 'B-0101', contrapart: 'Proveïdor de Prova', subtotal: '1000,00', iva: '210,00', total: '1210,00' }),
+      tipusOperacio: 'interior-deduible'
+    };
+    const dades = dadesDelTauler({ lectura: LECTURA, factures: [exempta, inversio], avui: AVUI, periode: { any: 2026, t: 3 } });
+    const hisenda = dades.targetes.find((t) => t.id === 'hisenda');
+    expect(dades.iva.resultat).toBe(-21000);
+    expect(dades.irpf.resultat).toBe(80000);
+    /* Abans: el net, 590,00 €. Ara: el 130 sencer (800,00 €), i 210,00 € d'IVA a compensar al detall. */
+    expect(hisenda.xifra).toEqual({ tipus: 'import', valor: 80000, moneda: 'EUR' });
+    expect(hisenda.detall.map((fila) => [fila.etiqueta, fila.xifra?.valor ?? null]))
+      .toEqual([['303 · IVA', -21000], ['130 · IRPF', 80000], ['IVA a compensar (no resta)', 21000]]);
+    expect(hisenda.notes).toContain('Un 303 a compensar no resta del 130: és IVA per a trimestres següents (o, si toca, per a demanar), no diners cobrats.');
+    expect(dades.liquidacio).toMatchObject({ estat: 'xifra', percentatge: 82, supera: false });
+    /* Un 303 a pagar: la mateixa fila, amb 0. Les etiquetes del detall no canvien amb el signe. */
+    const aPagar = dadesDelTauler({
+      lectura: LECTURA, avui: AVUI, periode: { any: 2026, t: 3 },
+      factures: [crearFactura({ tipus: 'ingres', data: '2026-07-15', num: 'A-0102', contrapart: 'Client de Prova', subtotal: '100,00', iva: '21,00', total: '121,00' })]
+    }).targetes.find((t) => t.id === 'hisenda');
+    expect(aPagar.detall.map((fila) => fila.etiqueta)).toEqual(hisenda.detall.map((fila) => fila.etiqueta));
+    expect(aPagar.detall.at(-1).xifra).toEqual({ tipus: 'import', valor: 0, moneda: 'EUR' });
+    expect(aPagar.xifra).toEqual({ tipus: 'import', valor: 2100 + 2000, moneda: 'EUR' });
+  });
+});
+
+/* Panell ERP, ordre del Mestre, 261012: la capçalera de context. */
+describe('el context del panell', () => {
+  const rellotgeDe = (any, t, avui = AVUI) => {
+    const { periode, termini } = estimaIva303({ any, t });
+    return rellotgeDelTermini({ any, t, periode, termini, avui });
+  };
+
+  test('trimestreVei: l’anterior i el següent, amb el canvi d’any; res si no és un trimestre', () => {
+    expect(trimestreVei({ any: 2026, t: 4 }, 1)).toEqual({ any: 2027, t: 1 });
+    expect(trimestreVei({ any: 2026, t: 1 }, -1)).toEqual({ any: 2025, t: 4 });
+    expect(trimestreVei({ any: 2026, t: 2 }, 1)).toEqual({ any: 2026, t: 3 });
+    expect(trimestreVei({ any: 2026, t: 3 }, 0)).toEqual({ any: 2026, t: 3 });
+    expect(trimestreVei({ any: 2026, t: 5 }, 1)).toBeNull();
+    expect(trimestreVei(null, 1)).toBeNull();
+    expect(trimestreVei({ any: 2026, t: 2 }, 0.5)).toBeNull();
+  });
+
+  test('el rellotge del termini: dins del trimestre, en la finestra de presentació, abans i després', () => {
+    const obert3T = 'Ara és oberta la presentació del 3T 2026: acaba el 20/10/2026.';
+    expect(rellotgeDe(2026, 4)).toEqual({
+      fase: 'trimestre', valor: 4, max: 92, etiqueta: 'El 4T 2026: dia 4 de 92',
+      text: 'La presentació del 303 i del 130 va del 01/01/2027 al 30/01/2027.', obert: obert3T
+    });
+    /* El venciment que corre no s'amaga mai darrere del trimestre triat; si el triat és eixe, el text ja ho diu. */
+    expect(rellotgeDe(2026, 3)).toMatchObject({ fase: 'presentacio', valor: 4, max: 20, etiqueta: 'Presentació del 3T 2026: dia 4 de 20', obert: null });
+    expect(rellotgeDe(2027, 1)).toMatchObject({ fase: 'abans', valor: null, max: null, text: 'El 1T 2027 encara no ha començat: comença el 01/01/2027.', obert: obert3T });
+    expect(rellotgeDe(2026, 2)).toMatchObject({ fase: 'vencut', valor: null, text: 'El termini de presentació del 2T 2026 va acabar el 20/07/2026.', obert: obert3T });
+    /* Fora de cap finestra (el 21 d'octubre), res; la del 4T va fins al 30 de gener de l'any següent. */
+    expect(rellotgeDe(2026, 4, { a: 2026, m: 10, d: 21 }).obert).toBeNull();
+    expect(rellotgeDe(2027, 1, { a: 2027, m: 1, d: 30 }).obert).toBe('Ara és oberta la presentació del 4T 2026: acaba el 30/01/2027.');
+    expect(rellotgeDe(2027, 1, { a: 2027, m: 1, d: 31 }).obert).toBeNull();
+    /* L'últim dia del trimestre i l'últim de la finestra encara hi són. */
+    expect(rellotgeDe(2026, 3, { a: 2026, m: 9, d: 30 })).toMatchObject({ fase: 'trimestre', valor: 92, max: 92 });
+    expect(rellotgeDe(2026, 3, { a: 2026, m: 10, d: 20 })).toMatchObject({ fase: 'presentacio', valor: 20, max: 20 });
+    expect(rellotgeDe(2026, 3, { a: 2026, m: 10, d: 21 })).toMatchObject({ fase: 'vencut' });
+    expect(rellotgeDelTermini({ any: 2026, t: 4 })).toMatchObject({ fase: 'sense', valor: null });
+    expect(rellotgeDe(2026, 4, null)).toMatchObject({ fase: 'sense' });
+  });
+
+  test('Hisenda sobre la caixa: la part de la caixa, amb sostre de 100 i el perquè quan no es pot dir', () => {
+    const caixa = (saldo, completa = true) => ({ saldo, completa });
+    const hisenda = (total, completa = true) => ({ total, completa });
+    expect(hisendaSobreCaixa({ hisenda: hisenda(2500), caixa: caixa(10000) })).toEqual({ estat: 'xifra', percentatge: 25, supera: false, completa: true });
+    expect(hisendaSobreCaixa({ hisenda: hisenda(15000), caixa: caixa(10000) })).toEqual({ estat: 'xifra', percentatge: 100, supera: true, completa: true });
+    expect(hisendaSobreCaixa({ hisenda: hisenda(2500, false), caixa: caixa(10000) })).toMatchObject({ completa: false });
+    expect(hisendaSobreCaixa({ hisenda: hisenda(2500), caixa: caixa(10000, false) })).toMatchObject({ completa: false });
+    expect(hisendaSobreCaixa({ hisenda: hisenda(0), caixa: caixa(10000) })).toEqual({ estat: 'res', completa: true });
+    expect(hisendaSobreCaixa({ hisenda: hisenda(-500), caixa: caixa(10000) })).toEqual({ estat: 'res', completa: true });
+    expect(hisendaSobreCaixa({ hisenda: hisenda(null), caixa: caixa(10000) })).toMatchObject({ estat: 'sense', motiu: expect.stringMatching(/^Sense estimació de Hisenda/) });
+    /* 'sense' (i el seu motiu, que es veu amb l'ull tancat) només vol dir que falta la dada, mai el signe d'una xifra. */
+    for (const saldo of [null, 1.5]) {
+      expect(hisendaSobreCaixa({ hisenda: hisenda(2500), caixa: caixa(saldo) }), String(saldo)).toMatchObject({ estat: 'sense', motiu: expect.stringMatching(/^Sense caixa real/) });
+    }
+    for (const saldo of [0, -100]) {
+      expect(hisendaSobreCaixa({ hisenda: hisenda(2500), caixa: caixa(saldo) }), String(saldo)).toEqual({ estat: 'descobert', completa: true });
+      expect(hisendaSobreCaixa({ hisenda: hisenda(null), caixa: caixa(saldo) }), String(saldo)).toMatchObject({ estat: 'sense', motiu: expect.stringMatching(/^Sense estimació/) });
+      expect(hisendaSobreCaixa({ hisenda: hisenda(0), caixa: caixa(saldo) }), String(saldo)).toEqual({ estat: 'res', completa: true });
+    }
+    /* Codex, GES-04: un net a zero d'una estimació incompleta no es dona per segur. */
+    expect(hisendaSobreCaixa({ hisenda: hisenda(0, false), caixa: caixa(10000) })).toEqual({ estat: 'res', completa: false });
+    expect(hisendaSobreCaixa()).toMatchObject({ estat: 'sense' });
+  });
+
+  test('dadesDelTauler porta el rellotge del trimestre de les estimacions i Hisenda sobre la caixa', () => {
+    const dades = dadesDelTauler({ lectura: LECTURA, avui: AVUI, periode: { any: 2026, t: 3 } });
+    expect(dades.rellotge).toMatchObject({ fase: 'presentacio', etiqueta: 'Presentació del 3T 2026: dia 4 de 20' });
+    expect(dades.liquidacio).toMatchObject({ estat: 'sense', motiu: expect.stringMatching(/^Sense estimació de Hisenda/) });
+    expect(dadesDelTauler({ avui: AVUI }).liquidacio).toMatchObject({ estat: 'sense', motiu: expect.stringMatching(/^Sense caixa real/) });
+  });
+
+  /* Revisió adversarial 13-10-2026, troballa FIN-3: resumHisenda suma només els models amb resultat, i un total de
+     zero amb un model sense estimació no diu res d'eixe model. El «res» porta quin falta i no es dona per complet. */
+  test('Hisenda sobre la caixa, «res» amb un model sense estimació: diu quin falta i és incomplet; sense cap dels dos, «sense»', () => {
+    const caixa = { saldo: 10000, completa: true };
+    const model = (resultat, completa = true) => ({ resultat, completa });
+    const amb = (iva, irpf) => hisendaSobreCaixa({ hisenda: resumHisenda({ iva, irpf }), caixa, iva, irpf });
+    /* Els dos models coneguts: el «res» de sempre, complet o no. */
+    expect(amb(model(-50000), model(0))).toEqual({ estat: 'res', completa: true });
+    expect(amb(model(-50000, false), model(0, false))).toEqual({ estat: 'res', completa: false });
+    /* Un 303 a compensar i el 130 sense estimació; i el mirall, un 303 sense estimació i el 130 a zero. */
+    expect(amb(model(-50000), model(null, false))).toEqual({ estat: 'res', completa: false, desconegut: '130' });
+    expect(amb(model(null, false), model(0))).toEqual({ estat: 'res', completa: false, desconegut: '303' });
+    /* Cap dels dos: no hi ha estimació, ni tan sols amb un total de fora que diga zero. */
+    expect(amb(model(null, false), model(null, false))).toMatchObject({ estat: 'sense', motiu: expect.stringMatching(/^Sense estimació de Hisenda/) });
+    expect(hisendaSobreCaixa({ hisenda: { total: 0, completa: true }, caixa, iva: model(null), irpf: model(null) }))
+      .toMatchObject({ estat: 'sense', motiu: expect.stringMatching(/^Sense estimació de Hisenda/) });
+    /* Un model desconegut no deixa mai l'estimació completa, encara que el total de fora diga que sí. */
+    expect(hisendaSobreCaixa({ hisenda: { total: 0, completa: true }, caixa, iva: model(-50000), irpf: model(null) }))
+      .toEqual({ estat: 'res', completa: false, desconegut: '130' });
+    expect(hisendaSobreCaixa({ hisenda: { total: 2500, completa: true }, caixa, iva: model(2500), irpf: model(null) }))
+      .toEqual({ estat: 'xifra', percentatge: 25, supera: false, completa: false });
+  });
+
+  test('dadesDelTauler passa el 303 i el 130 a Hisenda sobre la caixa: el «res» d’un sol model conegut diu quin falta', () => {
+    /* Una compra deduïble amb l'IVA llegit i sense la base: el 303 surt a compensar i el 130 no té cap base de l'any. */
+    const senseBase = {
+      ...crearFactura({ tipus: 'despesa', data: '2026-08-10', num: 'B-0301', contrapart: 'Proveïdor de Prova', iva: '210,00', total: '1210,00' }),
+      tipusOperacio: 'interior-deduible'
+    };
+    const ambSenseBase = dadesDelTauler({ lectura: LECTURA, factures: [senseBase], avui: AVUI, periode: { any: 2026, t: 3 } });
+    expect([ambSenseBase.iva.resultat, ambSenseBase.irpf.resultat, ambSenseBase.hisenda.total]).toEqual([-21000, null, 0]);
+    expect(ambSenseBase.liquidacio).toEqual({ estat: 'res', completa: false, desconegut: '130' });
+    /* El mirall: una compra amb la base i sense l'IVA llegit; el 303 no té cap factura amb IVA i el 130 queda a zero. */
+    const senseIva = crearFactura({ tipus: 'despesa', data: '2026-08-10', num: 'B-0302', contrapart: 'Proveïdor de Prova', subtotal: '1000,00', total: '1210,00' });
+    const ambSenseIva = dadesDelTauler({ lectura: LECTURA, factures: [senseIva], avui: AVUI, periode: { any: 2026, t: 3 } });
+    expect([ambSenseIva.iva.resultat, ambSenseIva.irpf.resultat, ambSenseIva.hisenda.total]).toEqual([null, 0, 0]);
+    expect(ambSenseIva.liquidacio).toEqual({ estat: 'res', completa: false, desconegut: '303' });
+  });
 });
 
 describe('el text de les xifres', () => {
@@ -127,6 +289,37 @@ describe('el text de les xifres', () => {
     expect(textXifra(null)).toBe('');
     expect(textAmagat({ tipus: 'import' })).toBe('Import amagat');
     expect(textAmagat({ tipus: 'mesos' })).toBe('Xifra amagada');
+  });
+
+  /* Cabina d'Avió, ordre del Mestre, 13-10-2026 (pla 261013_1405, front E): els dies de cobertura i la ràtio. */
+  test('dies i ràtio: enters amb dia o dies, dos decimals amb la coma i «vegades»; amagats, «Xifra amagada»', () => {
+    expect(textXifra({ tipus: 'dies', valor: 1 })).toBe('1');
+    expect(etiquetaXifra({ tipus: 'dies', valor: 1 })).toBe('1 dia');
+    expect(etiquetaXifra({ tipus: 'dies', valor: 37 })).toBe('37 dies');
+    expect(etiquetaXifra({ tipus: 'dies', valor: 0 })).toBe('0 dies');
+    expect(textXifra({ tipus: 'ratio', valor: 2.35 })).toBe('2,35');
+    expect(etiquetaXifra({ tipus: 'ratio', valor: 2.35 })).toBe('2,35 vegades');
+    expect(etiquetaXifra({ tipus: 'ratio', valor: 1 })).toBe('1,00 vegades');
+    expect(textXifra({ tipus: 'ratio', valor: 10 })).toBe('10,00');
+    expect(textAmagat({ tipus: 'dies' })).toBe('Xifra amagada');
+    expect(textAmagat({ tipus: 'ratio' })).toBe('Xifra amagada');
+    /* Uns dies que no són enters no es pinten com si ho foren; ni una ràtio infinita. */
+    expect(textXifra({ tipus: 'dies', valor: 1.5 })).toBe('');
+    expect(etiquetaXifra({ tipus: 'dies', valor: 1.5 })).toBe('');
+    expect(textXifra({ tipus: 'ratio', valor: Infinity })).toBe('');
+  });
+
+  test('dadesDelTauler porta la Cabina: sense lectura, cap mes de flux i cada instrument amb el seu perquè', () => {
+    const dades = dadesDelTauler({ avui: AVUI });
+    expect(dades.cabina).toMatchObject({ fins: null, mesos: [], maxim: null });
+    expect(dades.cabina.instruments.map((i) => i.xifra)).toEqual(Array(8).fill(null));
+    for (const i of dades.cabina.instruments) expect(i.senseXifra, i.id).toMatch(/\S/);
+    /* El 4 d'octubre: la presentació del 3T, oberta; la del 4T, propera. */
+    expect(dades.cabina.venciments.map((v) => [v.clau, v.fase])).toEqual([['2026-T3', 'oberta'], ['2026-T4', 'propera']]);
+    const ambExtracte = dadesDelTauler({ lectura: LECTURA, avui: AVUI }).cabina;
+    expect(ambExtracte.mesos.map((m) => [m.clau, m.entrades, m.eixides, m.net])).toEqual([['2026-06', 0, 2500, -2500]]);
+    expect(ambExtracte.instruments.find((i) => i.id === 'caixa').xifra).toEqual({ tipus: 'import', valor: 97500, moneda: 'EUR' });
+    expect(Object.isFrozen(ambExtracte)).toBe(true);
   });
 
   test('cap xifra escrita al codi del model: totes ixen de les lectures', () => {

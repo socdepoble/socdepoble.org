@@ -10,12 +10,30 @@
  * L'entrada és la lectura REDUÏDA i ja classificada del tractor
  * 'gestoria.historic' (historic/nucli/tractorHistoric.js): cap text de
  * concepte. Els comptes s'unixen ací, extracte a extracte (comptesHistoric):
- * un compte per entitat i quatre últims dígits, i un dia que ja cobrix un
- * extracte no torna a comptar en cap altre, siga quin siga l'ordre i la
- * llargària dels fitxers (un extracte anual i un de trimestral del mateix
- * any no perden ni dupliquen res). Si hi ha Norma 43, el CSV del banc només
- * diu quines files no hi tenen parella. L'eixida només copia els camps de
- * la llista blanca (moviment net): ni text, ni referències, ni SEPA.
+ * un compte per compte de veres, i un dia que ja cobrix un extracte no torna
+ * a comptar en cap altre, siga quin siga l'ordre i la llargària dels fitxers
+ * (un extracte anual i un de trimestral del mateix any no perden ni dupliquen
+ * res). Si hi ha Norma 43, el CSV del banc només diu quines files no hi tenen
+ * parella. L'eixida només copia els camps de la llista blanca (moviment net):
+ * ni text, ni referències, ni SEPA.
+ *
+ * Derogat EN PART per l'ordre del Mestre, 13-10-2026 (pla 261013_1405, front
+ * I · motors; auditoria de Codex 261013_1510, GES-A2), sobre la de l'Onada 6
+ * (261009). Abans el compte era «entitat i quatre últims dígits», i dos
+ * comptes de la mateixa entitat acabats igual eren un de sol: els dies del
+ * segon es descartaven com a «ja coberts» pel primer i la caixa en perdia
+ * el saldo. Ara la clau és `idCompte`, l'id opac que c43.js deriva del número
+ * sencer (la lectura reduïda del tractor el porta); l'entitat i el sufix només
+ * fan l'id de presentació («c43-9999-4321» i, si dos comptes diferents el
+ * compartixen, «c43-9999-4321-2»), la mateixa regla que resumTauler.js
+ * (clauDelCompte, idsDelsComptes). Una lectura sense `idCompte` (feta a mà)
+ * torna a la clau d'abans. Els id dels moviments, que fa el tractor
+ * (historic/nucli/tractorHistoric.js), no canvien: les reclassificacions
+ * desades al cofre en depenen. Revisió adversarial 13-10-2026, troballes
+ * FIN-4 i TI-1: amb dos comptes separats, el mateix moviment (dia i import)
+ * en tots dos tenia el mateix id i una reclassificació s'aplicava als dos;
+ * ara el tractor el desambigua per al segon compte (desambiguaIds) i el
+ * primer conserva el de sempre. Ací els id es fan servir tal com arriben.
  *
  * Regles de les xifres (ordre del Mestre, 261004, «zeros falsos»):
  *   · només sumen els comptes en euros; la resta, amb un avís;
@@ -102,6 +120,30 @@ function saldoCsv(files) {
 /* Com es diu un compte en un avís. */
 const nomCompte = (c) => (c.compte4 ? `del compte acabat en ${c.compte4}` : 'del CSV del banc');
 
+/* La clau d'un compte de la Norma 43 (GES-A2, vegeu la capçalera): l'id opac de c43.js; una lectura sense (feta a
+   mà) torna a l'entitat i el sufix d'abans. Els dos espais de noms no es poden confondre. */
+const comparaText = (x, y) => (x < y ? -1 : x > y ? 1 : 0);
+const clauDelCompte = (cap) => (typeof cap?.idCompte === 'string' && cap.idCompte !== ''
+  ? `opac:${cap.idCompte}`
+  : `sufix:${cap?.entitat ?? ''}-${cap?.compte4 ?? ''}`);
+
+/* L'id de presentació de cada compte: «c43-entitat-sufix», el de sempre. Dos comptes diferents amb la mateixa
+   entitat i el mateix sufix (GES-A2) es distingixen amb «-2», «-3»…, en l'ordre de les seues claus (l'ordre dels
+   fitxers no canvia qui és qui). Ordre del Mestre, 13-10-2026 (pla 261013_1405, front I). */
+function idsDelsComptes(grups) {
+  const perBase = new Map();
+  for (const [clau, trams] of grups) {
+    const base = `c43-${trams[0].entitat ?? ''}-${trams[0].compte4 ?? ''}`;
+    if (!perBase.has(base)) perBase.set(base, []);
+    perBase.get(base).push(clau);
+  }
+  const ids = new Map();
+  for (const [base, claus] of perBase) {
+    [...claus].sort(comparaText).forEach((clau, i) => ids.set(clau, i === 0 ? base : `${base}-${i + 1}`));
+  }
+  return ids;
+}
+
 /* Un tram ordenable: els que tenen dates, primer; de la data inicial més antiga a la més nova i, a la mateixa, el més llarg. */
 function ordreTrams(x, y) {
   const ambX = esDataValida(x.desde) && esDataValida(x.fins);
@@ -150,6 +192,8 @@ function uneixCompte(id, trams) {
  *   desde: object|null, fins: object|null, saldo: number|null, moviments: object[], coberts: number[][], solapats: boolean }>,
  *   csvSenseParella: number, ambAvisos: number }}
  *   `coberts`: els dies coberts (en dies des de 1970), en intervals units; `ambAvisos`: els extractes amb avisos alts o mitjans.
+ *   `id`: el de presentació, «c43-entitat-sufix» (amb «-2», «-3»… si dos comptes diferents el compartixen) o 'csv';
+ *   la identitat del compte és `idCompte` de la capçalera, que no ix d'ací (GES-A2, 13-10-2026).
  */
 export function comptesHistoric({ extractes = [], csv = [] } = {}) {
   const grups = new Map();
@@ -159,9 +203,9 @@ export function comptesHistoric({ extractes = [], csv = [] } = {}) {
     for (const compte of lectura?.comptes ?? []) {
       const cap = compte?.capcalera ?? {};
       const moviments = compte?.moviments ?? [];
-      const id = `c43-${cap.entitat ?? ''}-${cap.compte4 ?? ''}`;
-      if (!grups.has(id)) grups.set(id, []);
-      grups.get(id).push({
+      const clau = clauDelCompte(cap);
+      if (!grups.has(clau)) grups.set(clau, []);
+      grups.get(clau).push({
         entitat: cap.entitat ?? null, compte4: cap.compte4 ?? null, divisa: cap.divisa ?? null,
         desde: esDataValida(cap.dataInicial) ? cap.dataInicial : primeraData(moviments.map((m) => m?.dataOperacio)),
         fins: esDataValida(cap.dataFinal) ? cap.dataFinal : darreraData(moviments.map((m) => m?.dataOperacio)),
@@ -175,7 +219,8 @@ export function comptesHistoric({ extractes = [], csv = [] } = {}) {
   });
   let csvSenseParella = 0;
   if (grups.size) {
-    const comptes = [...grups.entries()].map(([id, trams]) => uneixCompte(id, trams));
+    const ids = idsDelsComptes(grups);
+    const comptes = [...grups.entries()].map(([clau, trams]) => uneixCompte(ids.get(clau), trams));
     const files = lecturesCsv.flat();
     if (files.length) csvSenseParella = fusionaMoviments(comptes.flatMap((c) => c.moviments), files).senseParella.csv.length;
     return { comptes, csvSenseParella, ambAvisos };

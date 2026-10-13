@@ -79,7 +79,7 @@
   --sdp-primary-200: #ffd1bb;
   --sdp-primary-300: #ffb38c;
   --sdp-primary-400: #ff955b;
-  --sdp-primary-500: var(--sdp-canon-taronja);   /* el cànon. Només com a FONS. */
+  --sdp-primary-500: var(--sdp-canon-taronja);   /* el cànon. Només com a FONS; derogat EN PART per l'ordre del Mestre, 13-10-2026 (front C): lletra només sobre la roca, amb --sdp-crom-grup-text. */
   --sdp-primary-600: #dd6302;
   --sdp-primary-700: #ad4c03;   /* Taronja fort · text i fons massís d'accent */
   --sdp-primary-800: #873a01;   /* text accent · 7,97:1 · AAA */
@@ -398,6 +398,17 @@
   --sdp-crom-actiu-fons:        var(--sdp-primary-500);
   --sdp-crom-actiu-fons-hover:  var(--sdp-primary-400);
   --sdp-crom-actiu-text:        var(--sdp-pedra-900);
+  /* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front C) · Jerarquia de la
+     barra lateral: els títols de grup i els desplegables que no són enllaços
+     («Sistema» de la barra principal i els grups de la BarraApp de totes les
+     apps) van en el taronja del cànon; els enllaços continuen blancs. Token
+     de LLETRA propi: --sdp-crom-actiu-fons és de fons (AppGridShell.contrast).
+     Sobre la roca (#0e0d0c) el cànon (#ff7300) fa 7,12:1, AAA per a la lletra
+     de 16px/600. No servix sobre les capçaleres de columna, Grafit 700
+     (#3d3b35), 4,11:1: allí el text continua en --sdp-crom-text (C4, 261004).
+     La xifra val per al to canònic (crom.js gira la rampa, com amb l'actiu).
+     Va en línia pròpia: C2 (tractor-cromatic) mesura contra la targeta blanca. */
+  --sdp-crom-grup-text:         var(--sdp-primary-500);
   /* T62 · Selecció de la navegació secundària sobre crom: la 1a columna
      (arbre de carpetes, famílies i categories, rail del Xat) i els rails
      plegats. Els actius van en blau (Pedra Seca §2); la barra principal,

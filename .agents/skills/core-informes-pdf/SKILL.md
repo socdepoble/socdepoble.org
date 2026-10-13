@@ -1,6 +1,14 @@
 ---
 name: core-informes-pdf
+type: skill
+status: actiu
 description: Tractor per a la creació, maquetació editorial i renderitzat de PDF professionals a Sóc de Poble (informes, memòries i lliurables).
+triggers_on:
+  - informe pdf
+  - renderitzat pdf
+  - document editorial
+  - pdf professional
+  - exportar a pdf
 ---
 # Tractor: Generació d'Informes PDF Editorials
 
@@ -11,15 +19,15 @@ Els PDF MAI es generen amb eines com `pdftoppm` o llibreries antigues que no res
 `sh tooling/pdf/render_pdf.sh [entrada.html] [eixida.pdf]`
 Aquest script accepta `--replace` per a sobreescriure. L'script confia cegament en les regles `@media print` de l'HTML.
 
-## 2. Tipografia i Maquetació (Regla de la Lectura en Mòbil)
-1. **Mida Gegant (Regla d'or):** Els PDF sovint s'obren al mòbil o es passen per WhatsApp. Qualsevol informe ha de portar el text base a un mínim de **15pt** (mai menys). Penseu que val més gastar 4 folis més que deixar-se la vista fent zoom a columnes estretes.
-2. **Font Corporativa:** L'informe ha de descarregar i utilitzar **Source Sans 3**.
-3. **Format Multicolumna:** S'ha de maquetar el contingut en columnes pures de CSS (ex. `column-count: 2; column-gap: 8mm;`) per a donar ritme editorial i facilitar el salt d'ull.
+## 2. Tipografia i Maquetació (Estil de Llibre)
+1. **Mida i Font (Estalvi i Llegibilitat):** El text base ha de tindre una mida de **14pt o 15pt**, i s'utilitzarà obligatòriament la família tipogràfica **Noto Sans SemiCondensed** (semi-condensada) per encabir més text sense sacrificar la lectura ni malgastar paper.
+2. **Format de Llibre (Marginació):** S'ha d'aplicar CSS de pàgina A4 (`@page { size: A4; margin: 25mm 20mm; }`) per assegurar marges generosos per dalt (per la capçalera) i pels costats, emulant l'estètica d'un llibre. Es pot mantenir el format multicolumna si afavoreix el salt d'ull.
 
 ## 3. Paginació i Capçaleres (El Detall Professional)
-En tots els lliurables i informes de Sóc de Poble cal assegurar l'estructura documental següent per donar serietat institucional:
-1. **Portada i Títol a la capçalera:** El nom complet de l'informe ha de figurar de manera clara i prominent (e.g. en la capçalera de les pàgines o en la pròpia portada).
-2. **Numeració de pàgines al peu:** És ABSOLUTAMENT OBLIGATORI afegir numeració al peu de pàgina, utilitzant el format relatiu (ex. `Pàgina 1 de 20`). Com que l'script `render_pdf.sh` executa Chromium en headless, açò s'ha de forçar via les pseudo-classes de CSS (`@page { @bottom-right { content: "Pàgina " counter(page) " de " counter(pages); } }`) o afegint els paràmetres escaients (`--display-header-footer` al cridar el renderitzador si s'actualitza l'script per suportar-ho).
+En tots els lliurables i informes de Sóc de Poble cal assegurar aquesta estructura documental perquè l'usuari sàpiga sempre on és:
+1. **Capçalera recurrent:** El títol de l'informe ha d'aparèixer imprès "en xicotet" a la capçalera superior de TOTES les pàgines.
+2. **Numeració de pàgines al peu:** És ABSOLUTAMENT OBLIGATORI afegir numeració a la vora inferior (ex. `14`, o `14/20`).
+Tot això s'ha de forçar via CSS Print (`@page { @top-center { content: "Títol"; font-size: 10pt; } @bottom-right { content: counter(page); } }`) en l'arxiu CSS o afegint els paràmetres escaients (`--display-header-footer`) a l'script de renderitzat.
 
 ## 4. Components Semàntics i Identitat Visual (CSS)
 S'han d'utilitzar caixes i components de disseny per emfatitzar la informació important, mai abocar el text de colp. El sistema de disseny es troba com a referència a: `_wiki_de_poble/04_escriptori/02_investigacio_ia/261012_0040_sistema_informes_claude/`.

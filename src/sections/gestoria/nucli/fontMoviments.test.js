@@ -2,13 +2,16 @@
 /* Onada 12 (261011; ordres 261011_0130, punt 6). El port dels moviments del
    banc: els dos adaptadors d'ara (Norma 43 i CSV) passen el kit de
    conformitat, i un tercer adaptador (el d'un agregador bancari, fet ací de
-   mentida i sense xarxa) s'endolla sense tocar res. Dades sintètiques. */
-import { describe, expect, test } from 'vitest';
+   mentida i sense xarxa) s'endolla sense tocar res. Dades sintètiques.
+   Ordre del Mestre, 13-10-2026 (pla 261013_1405, front I; auditoria de Codex
+   261013_1510, GES-A2): dos comptes de la mateixa entitat acabats igual no
+   es confonen al port, ni en un fitxer ni en dos. */
+import { describe, expect, test, vi } from 'vitest';
 import { concilia } from './concilia.js';
 import {
   CAMPS_MOVIMENT, ESQUEMA_FONT_MOVIMENTS, TIPUS_FONT_MOVIMENTS, comprovaFont, creaFont, fontDeC43, fontDeCsv, llegixFonts, uneixMoviments
 } from './fontMoviments.js';
-import { crearFactura } from './model.js';
+import { crearFactura, hashFnv1a } from './model.js';
 
 const D = (a, m, d) => ({ a, m, d });
 
@@ -16,16 +19,20 @@ const D = (a, m, d) => ({ a, m, d });
 const xifres = (n, llargaria) => String(n).padStart(llargaria, '0');
 const camp = (valor, llargaria) => String(valor).padEnd(llargaria, ' ').slice(0, llargaria);
 const COMPTE = { entitat: '9999', oficina: '0001', compte: '0000004321' };
-const r11 = (des, fins) => `11${COMPTE.entitat}${COMPTE.oficina}${COMPTE.compte}${des}${fins}2${xifres(0, 14)}9783${camp('TITULAR SINTETIC', 26)}${camp('', 3)}`;
+const r11 = (des, fins, c = COMPTE) => `11${c.entitat}${c.oficina}${c.compte}${des}${fins}2${xifres(0, 14)}9783${camp('TITULAR SINTETIC', 26)}${camp('', 3)}`;
 const r22 = ({ op, centims }) => `22${camp('', 4)}0001${op}${op}990001${xifres(centims, 14)}${xifres(0, 10)}${camp('', 12)}${camp('', 16)}`;
 const r23 = (text) => `2301${camp(text, 38)}${camp('', 38)}`;
-const r33 = (carrecs) => `33${COMPTE.entitat}${COMPTE.oficina}${COMPTE.compte}${xifres(carrecs.length, 5)}${xifres(carrecs.reduce((s, c) => s + c, 0), 14)}${xifres(0, 5)}${xifres(0, 14)}1${xifres(carrecs.reduce((s, c) => s + c, 0), 14)}978${camp('', 4)}`;
+const r33 = (carrecs, c = COMPTE) => `33${c.entitat}${c.oficina}${c.compte}${xifres(carrecs.length, 5)}${xifres(carrecs.reduce((s, x) => s + x, 0), 14)}${xifres(0, 5)}${xifres(0, 14)}1${xifres(carrecs.reduce((s, x) => s + x, 0), 14)}978${camp('', 4)}`;
 const r88 = (n) => `88${'9'.repeat(18)}${xifres(n, 6)}${camp('', 54)}`;
-/* Un extracte amb els càrrecs que es diuen: [{ op: 'aammdd', centims, text }]. */
-function norma43(des, fins, carrecs) {
-  const linies = [r11(des, fins), ...carrecs.flatMap((c) => [r22(c), r23(c.text)]), r33(carrecs.map((c) => c.centims))];
+/* Els registres d'un compte (11, 22 i 23, 33) amb els càrrecs que es diuen: [{ op: 'aammdd', centims, text }]. */
+const registresDe = (des, fins, carrecs, c = COMPTE) => [r11(des, fins, c), ...carrecs.flatMap((x) => [r22(x), r23(x.text)]), r33(carrecs.map((x) => x.centims), c)];
+/* Un fitxer amb els comptes que es diuen, un darrere de l'altre, i el registre de fi. */
+const fitxerDe = (...comptes) => {
+  const linies = comptes.flat();
   return `${[...linies, r88(linies.length)].join('\r\n')}\r\n`;
-}
+};
+/* Un extracte d'un compte (per defecte, COMPTE). */
+const norma43 = (des, fins, carrecs, c = COMPTE) => fitxerDe(registresDe(des, fins, carrecs, c));
 const JULIOL = norma43('990701', '990731', [
   { op: '990705', centims: 12100, text: 'PAGO FACTURA PRV-1001' },
   { op: '990710', centims: 150, text: 'CAFE BAR SINTETIC' },
@@ -97,6 +104,90 @@ describe('l’identificador estable', () => {
   test('uneixMoviments no es fia de res: llistes buides, nul·les o sense id', () => {
     expect(uneixMoviments(null)).toEqual({ moviments: [], repetits: 0, dubtosos: 0 });
     expect(uneixMoviments([null, [null, {}, { id: 7 }]])).toEqual({ moviments: [], repetits: 0, dubtosos: 0 });
+  });
+});
+
+/* GES-A2 · Ordre del Mestre, 13-10-2026 (pla 261013_1405, front I; auditoria de Codex 261013_1510). Abans
+   l'empremta del compte era «entitat-sufix»: la mateixa quota, el mateix dia i pel mateix import, en dos comptes
+   acabats igual donava el mateix id. Entre dos fitxers, uneixMoviments en llevava una com a «repetida»; dins d'un
+   fitxer, el kit refusava la font sencera («Dos moviments porten el mateix id»). Ara l'empremta porta l'id opac
+   de c43.js. Els dos comptes només canvien d'oficina: mateixa entitat i mateixes quatre últimes xifres. */
+describe('GES-A2 · dos comptes de la mateixa entitat acabats en les mateixes quatre xifres', () => {
+  const ALTRA_OFICINA = { ...COMPTE, oficina: '0002' };
+  const QUOTA = { op: '990715', centims: 4900, text: 'QUOTA SINTETICA' };
+  const DEL_COMPTE = registresDe('990701', '990731', [QUOTA]);
+  const DE_L_ALTRE = registresDe('990701', '990731', [QUOTA], ALTRA_OFICINA);
+  const idsDe = (text) => fontDeC43(text).llegixMoviments().map((m) => m.id);
+
+  test('dos fitxers, un compte cada un, amb la mateixa quota: no es perd cap moviment', () => {
+    const a = fontDeC43(fitxerDe(DEL_COMPTE), { nom: 'a.n43' });
+    const b = fontDeC43(fitxerDe(DE_L_ALTRE), { nom: 'b.n43' });
+    const unio = llegixFonts([a, b]);
+    expect(unio).toMatchObject({ repetits: 0, dubtosos: 0 });
+    /* Entre fitxers diferents el nom de presentació no es pot distingir: la identitat va a l'id. */
+    expect(unio.moviments.map((m) => [m.import, m.compte])).toEqual([[-4900, '9999-4321'], [-4900, '9999-4321']]);
+    expect(a.llegixMoviments()[0].id).not.toBe(b.llegixMoviments()[0].id);
+  });
+
+  test('els dos comptes en un sol fitxer: la font passa el kit, i el segon es diu «-2»', () => {
+    const font = fontDeC43(fitxerDe(DEL_COMPTE, DE_L_ALTRE));
+    expect(font.avisos).toEqual([]);
+    expect(comprovaFont(font)).toEqual([]);
+    expect(font.llegixMoviments().map((m) => [m.import, m.compte])).toEqual([[-4900, '9999-4321'], [-4900, '9999-4321-2']]);
+    expect(new Set(font.llegixMoviments().map((m) => m.id)).size).toBe(2);
+  });
+
+  test('la identitat no depén de la posició: cada compte dona els mateixos id sol, primer o segon, i el mateix compte en dos fitxers compta una vegada', () => {
+    const [delCompte] = idsDe(fitxerDe(DEL_COMPTE));
+    const [deLAltre] = idsDe(fitxerDe(DE_L_ALTRE));
+    expect(idsDe(fitxerDe(DEL_COMPTE, DE_L_ALTRE))).toEqual([delCompte, deLAltre]);
+    expect(idsDe(fitxerDe(DE_L_ALTRE, DEL_COMPTE))).toEqual([deLAltre, delCompte]);
+    /* El nom de presentació seguix l'ordre del fitxer: el primer que apareix es queda el de sempre. */
+    expect(fontDeC43(fitxerDe(DE_L_ALTRE, DEL_COMPTE)).llegixMoviments().map((m) => m.compte)).toEqual(['9999-4321', '9999-4321-2']);
+    const unio = llegixFonts([fontDeC43(fitxerDe(DE_L_ALTRE, DEL_COMPTE)), fontDeC43(fitxerDe(DEL_COMPTE))]);
+    expect(unio).toMatchObject({ repetits: 1, dubtosos: 0, moviments: { length: 2 } });
+  });
+
+  test('el mateix compte en dos blocs del mateix fitxer no és un segon compte: cap «-2»', () => {
+    const font = fontDeC43(fitxerDe(DEL_COMPTE, registresDe('990801', '990831', [{ ...QUOTA, op: '990815' }])));
+    expect(comprovaFont(font)).toEqual([]);
+    expect(font.llegixMoviments().map((m) => m.compte)).toEqual(['9999-4321', '9999-4321']);
+  });
+
+  test('ni el número sencer ni l’id opac ixen pel port', () => {
+    const json = JSON.stringify(fontDeC43(fitxerDe(DEL_COMPTE, DE_L_ALTRE)).llegixMoviments());
+    for (const c of [COMPTE, ALTRA_OFICINA]) expect(json).not.toContain(`${c.entitat}${c.oficina}${c.compte}`);
+    expect(json).not.toContain(COMPTE.compte);
+    expect(json).not.toMatch(/[bcdfghjklmnpqrst]{16}/);
+  });
+
+  test('una lectura sense idCompte torna a la clau d’abans: el mateix id que abans del 13-10-2026', async () => {
+    /* Hui llegeixC43 sempre el porta: este cas només es pot fer llevant-lo d'una lectura de veres. */
+    vi.resetModules();
+    vi.doMock('./c43.js', async (importOriginal) => {
+      const real = await importOriginal();
+      const senseId = (compte) => {
+        const capcalera = { ...compte.capcalera };
+        delete capcalera.idCompte;
+        return { ...compte, capcalera };
+      };
+      return { ...real, llegeixC43: (entrada) => {
+        const lectura = real.llegeixC43(entrada);
+        return { ...lectura, comptes: lectura.comptes.map(senseId) };
+      } };
+    });
+    try {
+      const { fontDeC43: fontSenseId } = await import('./fontMoviments.js');
+      const [primer] = fontSenseId(JULIOL).llegixMoviments();
+      const clau = ['9999-4321', '2099-07-05', '2099-07-05', -12100, 'PAGO FACTURA PRV 1001'].join('|');
+      expect(primer).toMatchObject({ id: `mv_${hashFnv1a(`${clau}|1`)}`, compte: '9999-4321' });
+      expect(fontDeC43(JULIOL).llegixMoviments()[0].id).not.toBe(primer.id);
+      /* Sense id opac, dos comptes acabats igual tornen a ser un de sol, com abans: cap «-2». */
+      expect(fontSenseId(fitxerDe(DEL_COMPTE, DE_L_ALTRE)).llegixMoviments().map((m) => m.compte)).toEqual(['9999-4321', '9999-4321']);
+    } finally {
+      vi.doUnmock('./c43.js');
+      vi.resetModules();
+    }
   });
 });
 

@@ -13,6 +13,7 @@ export const FLAG_UV = 0x04;
 export const FLAG_AT = 0x40;
 export const FLAG_ED = 0x80;
 export const ALG_ES256 = -7;
+export const ALG_RS256 = -257;
 
 const PROFUNDITAT_MAXIMA = 16;
 const LLARGARIA_MAXIMA_CREDENCIAL = 1023;

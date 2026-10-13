@@ -2757,3 +2757,38 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
     pointer-events: none;
   }
 }
+
+/* ── BOTÓ TORNAR A DALT (ordre del Mestre, 261012, vespre) ──────────────
+   «Un botó suau de "Tornar a dalt"» (BotoTornarADalt): la pell del «Baixa al
+   final» del Xat (.sdp-xat-baixa__boto, modules.css), redó, de fons elevat i
+   icona suau, amb l'ombra funcional d'un element flotant (--sdp-ombra-2). La
+   vora de --sdp-vora-control (3,66:1, WCAG 1.4.11) el separa de qualsevol
+   contingut que passe per davall. Entra amb l'aparició comuna (sdp-aparicio,
+   modules.css): amb moviment reduït, només la fosa. On va i quan apareix és
+   de la closca (layout.css, «Tornar a dalt»). */
+@layer components {
+  .sdp-tornar-dalt {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: var(--sdp-touch);
+    block-size: var(--sdp-touch);
+    padding: 0;
+    border: 1px solid var(--sdp-vora-control);
+    border-radius: var(--sdp-radi-pastilla);
+    background: var(--sdp-fons-elevat);
+    color: var(--sdp-text-suau);
+    box-shadow: var(--sdp-ombra-2);
+    cursor: pointer;
+    transition: background-color var(--sdp-t), transform var(--sdp-durada-premut) var(--sdp-corba-eixida);
+    animation: sdp-aparicio var(--sdp-durada-base) var(--sdp-corba-eixida);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .sdp-tornar-dalt:hover { background-color: var(--sdp-fons-subtil); }
+  }
+  .sdp-tornar-dalt:focus-visible {
+    outline: var(--sdp-focus-gruix) solid var(--sdp-focus);
+    outline-offset: var(--sdp-focus-separacio);
+  }
+  .sdp-tornar-dalt:active { transform: scale(var(--sdp-escala-premut)); }
+}

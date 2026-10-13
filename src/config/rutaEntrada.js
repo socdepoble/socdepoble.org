@@ -10,7 +10,13 @@
  * Ordre del Mestre (261002) · Deroga T4 per a l'ENTRADA: després d'entrar o de
  * crear el compte ja no es torna a la ruta d'origen, s'aterra sempre a la
  * pròpia identitat (RUTA_DESPRES_D_ENTRAR). El ?tornar es continua construint
- * i validant ací, però cap porta l'obeïx per a decidir on s'aterra.
+ * i validant ací, però cap porta l'obeïx per a decidir on s'aterra…
+ *
+ * …llevat d'una excepció estreta i escrita (petició del Mestre via MarIA,
+ * 261012_2148: «en registrar-se, salta directament a la Gestoria»): una
+ * tornada que és una entrada de la Gestoria (/app/gestoria/<entrada>) sí que
+ * mana (aterratgeDespresDEntrar). Qualsevol altra porta, també la de la resta
+ * d'apps (la Bar envia la seua tornada), continua aterrant al perfil.
  */
 
 export const RUTA_ENTRADA = '/registre';
@@ -49,6 +55,20 @@ export function esRutaDEntrada(ruta) {
 /** La tornada admesa, o null: interna (fins a MAXIM_TORNADA) i que no torne a l'entrada. */
 export function tornadaSegura(ruta) {
   return esTornadaInterna(ruta) && !esRutaDEntrada(ruta) ? ruta : null;
+}
+
+/* Una entrada de la Gestoria: /app/gestoria/<entrada>, i res més darrere que no siga consulta o fragment. */
+const ENTRADA_DE_LA_GESTORIA = /^\/app\/gestoria\/[a-z0-9-]+(?:[?#]|$)/;
+
+/**
+ * On aterra una entrada correcta: la tornada, si és segura i és una entrada
+ * de la Gestoria; si no, sempre el propi perfil (ordre del Mestre, 261002).
+ * @param {unknown} tornar el ?tornar de la consulta
+ * @returns {string}
+ */
+export function aterratgeDespresDEntrar(tornar) {
+  const tornada = tornadaSegura(tornar);
+  return tornada && ENTRADA_DE_LA_GESTORIA.test(tornada) ? tornada : RUTA_DESPRES_D_ENTRAR;
 }
 
 /** /registre amb `mode` i `tornar`, sense cap paràmetre que no siga vàlid. */

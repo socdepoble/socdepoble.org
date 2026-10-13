@@ -1,0 +1,201 @@
+ANNEX F12 · conservacioExpedient dona data de conservació amb un pagament sense justificació, contra el seu propi contracte
+Severitat final: baixa (autor: mitjana; àrbitres: reproducció baixa, doctrina baixa, impacte baixa)
+Veredicte: 3 de 3 (refuta: cap)
+Categoria: correccio · Lent d'origen: expedient
+Fitxer: src/sections/gestoria/projectes/nucli/expedient.js · Línies: 254-257 i 260-261 (canvi); 262-270 (efecte)
+Decisió humana: sí · Amb pagament i sense justificació, mana el comentari (cap data, expedient viu) o el codi (compte des del pagament)?
+Toca font signada: cap
+Solapaments: F27 (258-270: mateixa funció, es toquen 260-261); F38 (258-259: citades, no tocades); F14 (82-93: dependència, sense línies)
+Imports verificats: sí · Línia base: 2 fitxers, 25 proves verdes (vitest 4.1.10): expedient.test.js 18 i fronteraModelsPurs.test.js 7
+Estat: escrit
+
+RESUM
+El comentari de conservacioExpedient promet que, mentre no hi ha justificació, no es dona cap data. El codi no ho complix: amb un
+pagament anotat i la justificació buida compara el pagament amb '' (qualsevol data és major), el pren com a base i torna una data
+i el text «Es conserva tot l’expedient N anys». En una ajuda amb pagament anticipat eixa data és anterior a la que eixirà quan es
+justifique: la Finestreta diria «fins ací» abans d'hora. Hui el dany és baix: cap pantalla crida la funció, `protegit` és sempre
+true i el resultat porta «A verificar amb la gestoria.». Es proposa que la base només existisca quan hi ha justificació (el
+pagament mana només si és posterior a ella), deixar-ho escrit al comentari i afegir la prova del cicle sencer. Queda una decisió
+del Mestre amb la gestoria: si en algun programa el compte ha d'arrancar del pagament, el que es corregix és el comentari.
+
+EVIDÈNCIA
+1. expedient.js:254-257 · el comentari diu: «Mentre no hi ha justificació no se'n pot dir cap data i és protegit.»
+2. expedient.js:260-261 · base = pagament && pagament > (justificacio ?? '') ? pagament : justificacio (sobre expedient.dates).
+3. expedient.js:82-93 · comprovaDates accepta 'pagament' (clau de DATES_EXPEDIENT, línia 43) i només compara concessió amb sol·licitud.
+4. expedient.js:209 · creaExpedient posa null a cada data absent: amb KIT més pagament queda justificacio null i pagament '2026-07-01'.
+5. guardes.js:40 i 43-46 · DATA_ISO demana 4-2-2 xifres i esDataIso crida esDataValida: comparar dates ISO com a text és correcte.
+6. Línia 260 amb eixa entrada: '2026-07-01' > (null ?? '') és '2026-07-01' > '', cert per a tot text no buit; base = '2026-07-01'.
+7. terminis.js:71-79 · sumaMesos('2026-07-01', 60): total = 2026·12 + 6 + 60 = 24378; any 2031, mes 7, dia 1; fins = '2031-07-01'.
+8. expedient.js:264-266 · protegit: true i el text «Es conserva tot l’expedient 5 anys des de l’última justificació o pagament.»
+9. Contrafactual: sense el «?? ''», '2026-07-01' > null és fals i base queda null. És l'única peça que fa comptar un pagament sol.
+10. catalegTipus.js:360 i 364 · «4 anys des de la justificació (art. 39 LGS)»; termini('justificacio', 4) i termini('justificacio', 5, 'fonsEuropeus').
+11. catalegTipus.js:65 · DATES_BASE.justificacio té siFalta: 'vigent'; línies 12-13: «La lectura és sempre la prudent».
+12. document.js:18-19 i 183-185 · el càlcul és prudent i `fins` és null «sense la data de referència»; document.test.js:67-72 ho prova.
+13. expedient.test.js:148-153 · quatre afirmacions, cap amb pagament sense justificació. Traçades amb la proposta: les quatre es mantenen.
+14. grep de conservacioExpedient a src, tooling, tests i supabase: només expedient.js:258 i expedient.test.js:10 i 149-152. Cap consumidor.
+15. grep de conservacioMesos a src, 02_saber i 03_actuar: només expedient.js:54, 68, 263 i 266. grep d'«anticip» i «bestreta» a la Gestoria: res.
+16. defectes.onada12.test.js · només G1, G2 i G3 (línies 25, 40 i 46); res sobre expedients ni conservació. No és un límit volgut.
+17. tractors.js no té cap ruta de projectes/ (grep -c: 0); fronteraModelsPurs.test.js:106-110 afirma que cap font signada és d'eixe carril.
+18. npx vitest run sobre expedient.test.js i fronteraModelsPurs.test.js (rutes senceres): 2 fitxers, 25 proves verdes, vitest 4.1.10.
+
+ESCENARI
+Entrada 1 · Kit Digital amb el pagament anotat i sense justificació (KIT d'expedient.test.js:17-31):
+  conservacioExpedient(creaExpedient({ ...KIT, dates: { ...KIT.dates, pagament: '2026-07-01' } }))
+  Hui: { fins: '2031-07-01', protegit: true, verificar: VERIFICAR,
+         text: 'Es conserva tot l’expedient 5 anys des de l’última justificació o pagament.' }
+  Amb la proposta: { fins: null, protegit: true, verificar: VERIFICAR, text: 'L’expedient és viu: no es pot llençar res.' }
+
+Entrada 2 · subvenció genèrica amb el pagament abans de justificar (SUBVENCIO d'expedient.test.js:33-42):
+  conservacioExpedient(creaExpedient({ ...SUBVENCIO, dates: { concessio: '2026-04-01', pagament: '2026-05-01' } }))
+  Hui: fins = '2030-05-01'. Quan s'anota la justificació del 2026-12-01 la data passa a '2030-12-01': la primera era set mesos
+  anterior a la bona.
+  Amb la proposta: fins = null mentre no hi ha justificació; després, '2030-12-01'.
+
+Entrada 3 · justificació el 2027-09-01 i pagament el 2027-12-01 (expedient.test.js:151): '2032-12-01' hui i amb la proposta.
+  Res canvia per a l'expedient ja justificat.
+
+FONT DE VERITAT
+1. El contracte escrit del mòdul: src/sections/gestoria/projectes/nucli/expedient.js:254-257 («Mentre no hi ha justificació no se'n pot dir cap data i és protegit.»).
+2. La doctrina de conservació de la casa, que compta des de la justificació i dona per viu el paper si eixa data falta:
+   · src/sections/gestoria/documents/catalegTipus.js:12-13 («La lectura és sempre la prudent»), :65 (justificacio amb siFalta 'vigent'), :360 i :364 (la subvenció, des de la justificació).
+   · src/sections/gestoria/identitat/nucli/document.js:18-19 («el càlcul és prudent») i :183-185 (`fins` és null sense la data de referència).
+   · src/sections/gestoria/identitat/nucli/document.test.js:67-72 («sense la data de referència, la conservació no inventa cap data»).
+3. NO és font de veritat d'este annex: src/sections/gestoria/burocracia/nucli/terminis.js:19-20. Eixes línies parlen de venciments, on el costat segur és la data anterior; en una data de conservació el costat segur és la posterior. L'autor ho citava a l'escenari amb el sentit girat; es retira (esmena dels tres àrbitres).
+4. Les cites legals de l'autor i dels àrbitres (Llei 38/2003, art. 14.1.g, 34.4 i 39; Reglament Financer (UE, Euratom) 2018/1046, art. 132, per remissió de l'art. 22.2.f del Reglament (UE) 2021/241) són de memòria: ningú les ha contrastades amb una font oficial en esta auditoria. No sostenen la proposta; són el motiu de la decisió humana.
+
+==== PROPOSTA (codi complet) ====
+Dos blocs sobre el mateix fitxer. Cap import nou: PROGRAMES (línia 48), congela i VERIFICAR (import de la línia 28) i sumaMesos (import de la línia 31) ja hi són. Les línies 258-259 i 262-270 no es toquen.
+
+SUBSTITUÏX 1 de 2 · src/sections/gestoria/projectes/nucli/expedient.js · línies 254-257
+
+--- VIGENT ---
+/**
+ * La conservació de l'expedient: fins quan s'han de guardar els papers. Mentre
+ * no hi ha justificació no se'n pot dir cap data i és protegit.
+ */
+--- NOU ---
+/**
+ * La conservació de l'expedient: fins quan s'han de guardar els papers. Mentre
+ * no hi ha justificació no se'n pot dir cap data i és protegit: un pagament
+ * anticipat (anterior a la justificació) no fa córrer el compte. És la mateixa
+ * lectura prudent del catàleg de documents: sense la data de la justificació,
+ * l'ajuda encara és vigent.
+ */
+--- FI ---
+
+SUBSTITUÏX 2 de 2 · src/sections/gestoria/projectes/nucli/expedient.js · línies 260-261 (numeració d'abans del bloc 1)
+
+--- VIGENT ---
+  const base = expedient.dates.pagament && expedient.dates.pagament > (expedient.dates.justificacio ?? '')
+    ? expedient.dates.pagament : expedient.dates.justificacio;
+--- NOU ---
+  const { justificacio, pagament } = expedient.dates;
+  const base = justificacio && pagament && pagament > justificacio ? pagament : justificacio;
+--- FI ---
+
+Com queda la funció sencera després dels dos blocs (per a llegir-la d'una tirada; no és un tercer canvi):
+
+/**
+ * La conservació de l'expedient: fins quan s'han de guardar els papers. Mentre
+ * no hi ha justificació no se'n pot dir cap data i és protegit: un pagament
+ * anticipat (anterior a la justificació) no fa córrer el compte. És la mateixa
+ * lectura prudent del catàleg de documents: sense la data de la justificació,
+ * l'ajuda encara és vigent.
+ */
+export function conservacioExpedient(expedient) {
+  const programa = PROGRAMES[expedient.programa];
+  const { justificacio, pagament } = expedient.dates;
+  const base = justificacio && pagament && pagament > justificacio ? pagament : justificacio;
+  return congela({
+    fins: base ? sumaMesos(base, programa.conservacioMesos) : null,
+    protegit: true,
+    text: base
+      ? `Es conserva tot l’expedient ${programa.conservacioMesos / 12} anys des de l’última justificació o pagament.`
+      : 'L’expedient és viu: no es pot llençar res.',
+    verificar: VERIFICAR
+  });
+}
+
+Taula de la base amb el codi nou (j = justificació, p = pagament):
+  j null, p null       → base null → fins null, «L’expedient és viu».
+  j null, p amb data   → base null → fins null, «L’expedient és viu». (Hui: base = p.)
+  j amb data, p null   → base = j.
+  j amb data, p <= j   → base = j.
+  j amb data, p > j    → base = p.
+Només canvia la segona fila. El text de la branca amb data continua sent cert: quan hi ha base, és l'última de les dues dates.
+
+==== PROVA (vitest completa) ====
+Fitxer: src/sections/gestoria/projectes/nucli/expedient.test.js (el que ja existix), dins del describe('conservació i avisos de forma') de la línia 147. Cap import nou; el bloc fa servir el que el fitxer ja importa o definix:
+  línia 5   · import { describe, expect, test } from 'vitest';
+  línia 6   · import { VERIFICAR } from '../../identitat/nucli/guardes.js';            (guardes.js:38 l'exporta)
+  línies 9-12 · conservacioExpedient i creaExpedient de './expedient.js'               (expedient.js:258 i 197 les exporten)
+  línia 17  · const KIT · línia 33 · const SUBVENCIO
+Cap prova existent canvia: les quatre afirmacions de les línies 149-152 es mantenen (null, '2032-09-01', '2032-12-01' i '2030-07-01'). El bloc conserva la prova vigent, literal, i n'afig una darrere.
+
+SUBSTITUÏX · src/sections/gestoria/projectes/nucli/expedient.test.js · línies 148-153
+
+--- VIGENT ---
+  test('mentre és viu, protegit i sense data; després, 5 anys (Kit Digital) o 4 (subvenció)', () => {
+    expect(conservacioExpedient(creaExpedient(KIT))).toMatchObject({ fins: null, protegit: true, verificar: VERIFICAR });
+    expect(conservacioExpedient(creaExpedient({ ...KIT, dates: { ...KIT.dates, justificacio: '2027-09-01' } })).fins).toBe('2032-09-01');
+    expect(conservacioExpedient(creaExpedient({ ...KIT, dates: { ...KIT.dates, justificacio: '2027-09-01', pagament: '2027-12-01' } })).fins).toBe('2032-12-01');
+    expect(conservacioExpedient(creaExpedient({ ...SUBVENCIO, dates: { concessio: '2026-04-01', justificacio: '2026-07-01' } })).fins).toBe('2030-07-01');
+  });
+--- NOU ---
+  test('mentre és viu, protegit i sense data; després, 5 anys (Kit Digital) o 4 (subvenció)', () => {
+    expect(conservacioExpedient(creaExpedient(KIT))).toMatchObject({ fins: null, protegit: true, verificar: VERIFICAR });
+    expect(conservacioExpedient(creaExpedient({ ...KIT, dates: { ...KIT.dates, justificacio: '2027-09-01' } })).fins).toBe('2032-09-01');
+    expect(conservacioExpedient(creaExpedient({ ...KIT, dates: { ...KIT.dates, justificacio: '2027-09-01', pagament: '2027-12-01' } })).fins).toBe('2032-12-01');
+    expect(conservacioExpedient(creaExpedient({ ...SUBVENCIO, dates: { concessio: '2026-04-01', justificacio: '2026-07-01' } })).fins).toBe('2030-07-01');
+  });
+
+  test('un pagament sense justificació (anticipat) no fa córrer la conservació', () => {
+    const anticipatKit = conservacioExpedient(creaExpedient({ ...KIT, dates: { ...KIT.dates, pagament: '2026-07-01' } }));
+    expect(anticipatKit).toMatchObject({ fins: null, protegit: true, verificar: VERIFICAR });
+    expect(anticipatKit.text).toMatch(/viu/);
+    // També al programa genèric (4 anys).
+    const anticipatSubvencio = conservacioExpedient(creaExpedient({ ...SUBVENCIO, dates: { concessio: '2026-04-01', pagament: '2026-05-01' } }));
+    expect(anticipatSubvencio).toMatchObject({ fins: null, protegit: true, verificar: VERIFICAR });
+    expect(anticipatSubvencio.text).toMatch(/viu/);
+    // Quan arriba la justificació, el compte arranca d'ella i no del pagament anticipat.
+    expect(conservacioExpedient(creaExpedient({ ...KIT, dates: { ...KIT.dates, justificacio: '2027-09-01', pagament: '2026-07-01' } })).fins).toBe('2032-09-01');
+    expect(conservacioExpedient(creaExpedient({ ...SUBVENCIO, dates: { concessio: '2026-04-01', pagament: '2026-05-01', justificacio: '2026-12-01' } })).fins).toBe('2030-12-01');
+    // Un pagament posterior a la justificació continua manant.
+    expect(conservacioExpedient(creaExpedient({ ...KIT, dates: { ...KIT.dates, justificacio: '2027-09-01', pagament: '2027-12-01' } })).fins).toBe('2032-12-01');
+  });
+--- FI ---
+
+Traça de la prova nova (sumaMesos, terminis.js:71-79: total = any·12 + (mes − 1) + mesos):
+  1. KIT amb pagament 2026-07-01 i sense justificació. Hui: '2031-07-01' (24378) i el text «Es conserva»: la prova FALLA al primer expect. Amb la proposta: null i «viu».
+  2. SUBVENCIO amb pagament 2026-05-01 i sense justificació. Hui: 2026·12 + 4 + 48 = 24364 → '2030-05-01' (fallaria també). Amb la proposta: null i «viu».
+  3. KIT amb justificació 2027-09-01 i pagament 2026-07-01: el pagament no és posterior, base = justificació; 2027·12 + 8 + 60 = 24392 → '2032-09-01'. Passa hui i amb la proposta.
+  4. SUBVENCIO amb justificació 2026-12-01 i pagament 2026-05-01: base = justificació; 2026·12 + 11 + 48 = 24371 → '2030-12-01'. Passa hui i amb la proposta.
+  5. KIT amb justificació 2027-09-01 i pagament 2027-12-01: base = pagament; 2027·12 + 11 + 60 = 24395 → '2032-12-01'. Passa hui i amb la proposta.
+És una prova de regressió de la correcció, no una prova «[DEFECTE]»: hui falla i amb la proposta passa. Les entrades són les fixtures sintètiques del fitxer (ids opacs de prova, cap dada personal) i les dates no casen amb cap patró vetat per fronteraModelsPurs.test.js:80-88.
+
+==== ESMENES DELS ÀRBITRES INTEGRADES ====
+- Reproducció, doctrina i impacte · font de veritat: integrada. Es retira terminis.js:19-20 (parla de venciments i diu el contrari) i entren catalegTipus.js:12-13, 65, 360 i 364, document.js:18-19 i 183-185 i document.test.js:67-72, totes rellegides.
+- Reproducció · la guarda que fa vàlida la comparació com a text és esDataIso (guardes.js:40-46), no esDataValida a soles: integrada a l'evidència 5.
+- Reproducció · alternativa «corregir el comentari i no el codi»: no s'integra com a codi. És la branca B de la decisió humana (vegeu LÍMITS); l'annex consolida una sola proposta i la lectura legal que la sostindria no està contrastada.
+- Doctrina · fer constar la decisió humana i que una ajuda sense fase de justificació queda «viva»: integrada a la capçalera i a LÍMITS.
+- Impacte · comentari ampliat amb la lectura prudent del catàleg: integrada (bloc 1). Substituïx el «(LGS art. 34.4)» que l'autor posava dins del comentari. Contradicció entre autor i àrbitre resolta pel costat conservador: cap cita legal sense contrastar dins del codi.
+- Impacte · no deduir del pagament una data per a les ajudes sense justificació; si es vol, dada nova amb el seu pla: integrada a LÍMITS.
+- Reproducció · prova amb el programa 'subvencio' i el cas anticipat i després justificat ('2030-12-01'): integrada (afirmacions 2 i 4).
+- Doctrina · prova amb toMatchObject i text «viu» per als dos programes: integrada (afirmacions 1 i 2).
+- Doctrina · cas justificat de SUBVENCIO amb justificació 2026-07-01 ('2030-07-01'): descartat a favor del de reproducció ('2030-12-01'). Els dos àrbitres donaven dates distintes per al mateix cas; es tria el que no repetix el valor de la línia 152, perquè distingix millor un error.
+- Impacte · prova amb el Kit justificat després d'un pagament anticipat ('2032-09-01'): integrada (afirmació 3).
+- Els tres àrbitres · severitat de mitjana a baixa: confirmada per la comprovació pròpia (cap consumidor, `protegit` sempre true, llegenda de verificar, i la data es corregix quan s'anota la justificació). Torna a mitjana si la Finestreta endolla la funció a una pantalla o a un .ics sense l'esmena.
+- Consolidació · el bloc únic de l'autor (254-270) es partix en dos blocs mínims (254-257 i 260-261) per a no xafar les línies de F38 (258-259) i reduir el solapament amb F27 (258-270). El codi resultant és el de l'autor, lletra per lletra; només canvia el comentari.
+
+==== LÍMITS D'ESTE ANNEX ====
+- La prova nova no s'ha executat: l'auditoria no escriu a src/. Els valors esperats ixen de la traça a mà sobre sumaMesos, no d'una execució. La línia base sí que s'ha executat (2 fitxers, 25 proves verdes).
+- Decisió humana, branca A (la d'este annex): mana el comentari. Sense justificació no hi ha data, encara que hi haja pagament.
+- Decisió humana, branca B: mana el codi i el pagament sol fa córrer el compte (un àrbitre recorda, de memòria i sense contrastar, que per als fons europeus del Kit Digital la conservació es compta des del pagament del saldo). En eixe cas no s'aplica cap dels dos blocs: es reescriu el comentari de les línies 254-257 perquè diga «des de l'última de les dues dates», s'afig una prova que afirme '2031-07-01' per a l'entrada 1 i cal mirar si catalegTipus.js:360-364, que només compta des de la justificació, s'ha d'alinear. No se'n dona el codi: depén d'una lectura legal que ningú ha contrastat amb una font oficial, i escriure-la seria inventar doctrina.
+- Les cites legals (Llei 38/2003 i reglaments europeus) no s'han comprovat en esta sessió. La proposta no en depén: se sosté en el contracte escrit del mòdul i en la doctrina de conservació de la casa.
+- Amb la proposta, una ajuda que no té fase de justificació, o on la justificació no s'anota mai, queda «viva» i sense data per sempre. És el costat segur. Si es vol una data per a eixes ajudes cal una dada nova a l'expedient o al programa, amb el seu pla; no es deduïx del pagament.
+- Solapament amb F27 (258-270): F27 toca la mateixa funció pel costat dels mesos i dels fons europeus. No s'ha pogut llegir el seu annex (no era al laboratori en escriure este). Qui aplique els dos ha de fondre'ls a mà sobre les línies 260-261 i tornar a comprovar els números de línia: el bloc 1 d'ací baixa tres línies tot el que ve darrere.
+- Solapament amb F38 (258-259): la desestructuració nova (`expedient.dates`) peta igual que el codi vigent si l'expedient no ve de creaExpedient. Este annex no ho empitjora ni ho arregla; és faena de F38.
+- Dependència amb F14 (82-93): si F14 afig regles de coherència entre dates, no ha de vetar un pagament anterior a la justificació. La prova d'ací el fa servir en les afirmacions 3 i 4 i és, justament, el cas del pagament anticipat.
+- Cap píxel canvia: el carril de projectes no està endollat a cap pantalla (fronteraModelsPurs.test.js:99-104) i cap tractor signat el té com a font (106-110).
+- Les fixtures de la prova són les del fitxer (dates de 2026 i 2027, ids opacs de prova): s'ha preferit la coherència amb les proves veïnes a introduir-ne de noves.
+- Després del vitest, el hook segell-auto ha dit «Origen no acreditat: segell divergent». És soroll conegut d'esta sessió: no s'ha escrit res fora d'este fitxer.

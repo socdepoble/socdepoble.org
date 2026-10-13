@@ -10,7 +10,10 @@
    pinta cap xifra ni cap regla; en obrir, la configuració desada es recupera;
    en bloquejar (botó, autobloqueig o des de la pàgina d'una targeta) es
    buida tot; en eixir de la vista el cofre es bloqueja; i a l'IndexedDB no
-   queda res en clar. */
+   queda res en clar.
+   Ordre del Mestre, 13-10-2026 (pla 261013_1405, front B): «a la dreta
+   SEMPRE la data i l'hora vives». Amb el cofre bloquejat la boina va sense
+   l'ull, però el rellotge viu i el titular de la sessió s'hi queden. */
 import { webcrypto } from 'node:crypto';
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, test, vi } from 'vitest';
@@ -119,12 +122,12 @@ async function magatzemAprovat() {
   return magatzem;
 }
 
-async function munta({ cofre, magatzem }) {
+async function munta({ cofre, magatzem, titular }) {
   const descarrega = vi.fn();
   const vista = render(
     <MemoryRouter rutaInicial="/app/gestoria/historic">
       <Historic cofre={cofre} magatzem={magatzem ?? await magatzemAprovat()} subtle={subtle} entorn={entornTractors} rellotge={rellotge}
-        avui={AVUI} descarrega={descarrega} />
+        avui={AVUI} descarrega={descarrega} titular={titular} />
     </MemoryRouter>
   );
   return { ...vista, descarrega };
@@ -189,6 +192,23 @@ describe('la porta del cofre', () => {
     const foto = screen.getByRole('heading', { level: 2, name: 'La foto del director financer' });
     expect(porta.compareDocumentPosition(foto) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(foto.compareDocumentPosition(gestio) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  /* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front B). */
+  test('amb el cofre bloquejat, la barra no porta l’ull però sí el titular de la sessió i el rellotge viu, l’últim de la barra', async () => {
+    const { cofre } = await cofreAmbConfiguracio();
+    const { container } = await munta({ cofre, titular: { nom: 'Pepa Soler', poble: 'Vilaprova de Dalt', avatar: null } });
+    expect(await screen.findByRole('button', { name: 'Obri el cofre' })).toBeTruthy();
+    senseRes(container);
+    const barra = container.querySelector('section.bar-orange');
+    expect(barra.querySelector('.sp-card-author-name').textContent).toBe('Pepa Soler');
+    const accions = barra.querySelector('.bar-actions');
+    expect(accions.querySelector('.sdp-gestoria-boina')).toBeNull();
+    expect(accions.children).toHaveLength(1);
+    const rellotgeViu = accions.lastElementChild;
+    expect(rellotgeViu.tagName).toBe('TIME');
+    expect(rellotgeViu.getAttribute('aria-label')).toMatch(/^Data i hora d’ara: \d{2}:\d{2} del \d{2}\/\d{2}\/\d{2}$/);
+    expect(textDe(container)).not.toContain('Titular sense configurar');
   });
 });
 

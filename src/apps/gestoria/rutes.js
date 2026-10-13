@@ -20,6 +20,15 @@ export const ENTRADA_APRENDRE = 'aprendre';
 /** L'entrada del manifest que munta la Facturació, fora de la closca (ordre del Mestre, 261007). */
 export const ENTRADA_FACTURACIO = 'facturacio';
 
+/**
+ * L'entrada del manifest que munta «Identitat i Finestreta», fora de la
+ * closca, pel pont i darrere del cofre (ordre del Mestre, 13-10-2026, pla
+ * 261013_1405, front H). La closca la coneix només com a ruta (hrefIdentitat):
+ * l'Escàner hi envia la persona quan troba papers d'identitat, sense llegir-ne
+ * cap byte.
+ */
+export const ENTRADA_IDENTITAT = 'identitat';
+
 /** L'ítem de la Wiki on s'aproven els tractors (WikiDePobleSection, modulsLocalsActius). */
 export const ITEM_PORTA_TRACTORS = 'tractors_aprovacio';
 

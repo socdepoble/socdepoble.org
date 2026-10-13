@@ -135,6 +135,34 @@ describe('el 130', () => {
       .toMatchObject({ quota: 2000, retencions: 1500, resultat: 500 });
   });
 
+  /* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front I · motors; auditoria de Codex 261013_1510, GES-A4). */
+  test('la retenció d’una rectificativa resta: factura i abonament íntegre són neutrals', () => {
+    const neutral = estimaIrpf130({ factures: [emesa(d(2026, 1, 9), 10000, 0)], any: 2026, t: 1 });
+    const ambParella = estimaIrpf130({
+      factures: [
+        emesa(d(2026, 1, 5), 10000, 0, { retencio: 1500 }),
+        emesa(d(2026, 1, 6), -10000, 0, { retencio: 1500 }),
+        emesa(d(2026, 1, 9), 10000, 0)
+      ],
+      any: 2026, t: 1
+    });
+    const projecta = (r) => ({ rendiment: r.rendiment, retencions: r.retencions, resultat: r.resultat });
+    expect(projecta(ambParella)).toEqual(projecta(neutral));
+    expect(projecta(ambParella)).toEqual({ rendiment: 10000, retencions: 0, resultat: 2000 });
+    /* El signe escrit de la retenció no importa: el mana la base, com al model. */
+    const escritaNegativa = estimaIrpf130({
+      factures: [emesa(d(2026, 1, 5), 10000, 0, { retencio: -1500 }), emesa(d(2026, 1, 6), -10000, 0, { retencio: -1500 })], any: 2026, t: 1
+    });
+    expect(escritaNegativa.retencions).toBe(0);
+  });
+
+  test('un abonament sense la seua factura a l’any: la retenció neta és negativa i no s’amaga', () => {
+    const r = estimaIrpf130({
+      factures: [emesa(d(2026, 1, 9), 20000, 0), emesa(d(2026, 2, 3), -5000, 0, { retencio: 750 })], any: 2026, t: 1
+    });
+    expect(r).toMatchObject({ rendiment: 15000, quota: 3000, retencions: -750, resultat: 3750 });
+  });
+
   test('totes les de l’any en una altra moneda o sense base: cap xifra, mai un 0,00 €', () => {
     const r = estimaIrpf130({
       factures: [emesa(d(2026, 1, 9), 10000, 2100, { moneda: 'GBP' }), rebuda(d(2026, 2, 3), null, 0)],
@@ -154,13 +182,28 @@ describe('el 130', () => {
 });
 
 describe('la targeta Hisenda', () => {
+  /* Ordre del Mestre, 13-10-2026 (auditoria de Codex 261013_1510, GES-A5): resumHisenda porta també
+     `ivaACompensar` (0 si el 303 surt a pagar; null sense 303). */
   test('suma les dues estimacions; amb una sola, la que hi ha i incompleta; sense cap, cap xifra', () => {
     const iva = { resultat: 16800, completa: true, falten: [] };
     const irpf = { resultat: 25000, completa: true, falten: [] };
-    expect(resumHisenda({ iva, irpf })).toEqual({ total: 41800, completa: true, falten: [] });
+    expect(resumHisenda({ iva, irpf })).toEqual({ total: 41800, ivaACompensar: 0, completa: true, falten: [] });
     const senseIrpf = { resultat: null, completa: false, falten: [{ codi: 'SENSE_FACTURES', missatge: 'x' }] };
     expect(resumHisenda({ iva, irpf: senseIrpf })).toMatchObject({ total: 16800, completa: false });
-    expect(resumHisenda({})).toEqual({ total: null, completa: false, falten: [] });
+    expect(resumHisenda({})).toEqual({ total: null, ivaACompensar: null, completa: false, falten: [] });
+  });
+
+  /* GES-A5: un 303 negatiu és IVA a compensar, no diners cobrats: no resta del 130. */
+  test('un 303 a compensar no resta del 130: el que surt a pagar va a part del crèdit d’IVA', () => {
+    const iva = { resultat: -50000, completa: true, falten: [] };
+    const irpf = { resultat: 30000, completa: true, falten: [] };
+    expect(resumHisenda({ iva, irpf })).toEqual({ total: 30000, ivaACompensar: 50000, completa: true, falten: [] });
+    /* Només el 303 a compensar: no hi ha res a pagar, però la xifra existix (0), i el crèdit, a part. */
+    expect(resumHisenda({ iva, irpf: { resultat: null, completa: false, falten: [] } })).toMatchObject({ total: 0, ivaACompensar: 50000, completa: false });
+    /* Un 303 a pagar no té res a compensar. */
+    expect(resumHisenda({ iva: { resultat: 2100, completa: true, falten: [] }, irpf })).toMatchObject({ total: 32100, ivaACompensar: 0 });
+    /* Sense 303, el crèdit no es pot saber: null, mai 0. */
+    expect(resumHisenda({ iva: { resultat: null, completa: false, falten: [] }, irpf })).toMatchObject({ total: 30000, ivaACompensar: null });
   });
 
   test('els codis i la llegenda: mai «declaració» com a promesa', () => {

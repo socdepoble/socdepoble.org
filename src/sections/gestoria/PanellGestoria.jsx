@@ -20,7 +20,7 @@
  *
  * Props: { obteAprovacio, estatTractors: { 'gestoria.factures': { estat,
  * curta }, 'gestoria.correus': { estat, curta } }, onObreTractors, subtle,
- * inflate, entorn, avui, descarrega? } (descarrega: per a les proves; per
+ * inflate, entorn, avui, descarrega?, onFactures?: (cable|null) => void } (descarrega: per a les proves; per
  * defecte, Blob i enllaç temporal com a DetallPrivacitat.jsx).
  */
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
@@ -505,7 +505,7 @@ function ErrorDe({ error, accions, visibles, onTanca, onObreTractors }) {
 }
 
 export default function PanellGestoria({
-  obteAprovacio, estatTractors, onObreTractors, subtle, inflate, entorn, avui, descarrega = descarregaPerDefecte
+  obteAprovacio, estatTractors, onObreTractors, subtle, inflate, entorn, avui, descarrega = descarregaPerDefecte, onFactures
 }) {
   const g = useGestoria({ obteAprovacio, subtle, inflate, entorn, avui });
   const [hui] = useState(() => dataDeAvui(typeof avui === 'function' ? avui() : new Date()) ?? dataDeAvui(new Date()));
@@ -534,6 +534,29 @@ export default function PanellGestoria({
   const facturesAprovat = factures?.estat === 'aprovat';
   const correusAprovat = correus?.estat === 'aprovat';
   const { proposta, versio, incidencies, entregables } = g;
+
+  /* El cable cap al Tauler (ordre del Mestre, 261012). Amb una proposta, la
+     closca rep el trimestre, les seues factures i l'historial dels fulls
+     anteriors (per al 130 de l'any); quan la proposta desapareix d'este mateix
+     muntatge (Desenxufa), rep null. En muntar sense proposta no s'avisa res:
+     la closca conserva el que ja tenia d'una anàlisi anterior. */
+  const historialDelFull = g.analisi?.historial ?? null;
+  const teniaProposta = useRef(false);
+  useEffect(() => {
+    if (typeof onFactures !== 'function') return;
+    if (proposta) {
+      teniaProposta.current = true;
+      onFactures({
+        any: proposta.any,
+        t: proposta.t,
+        factures: [...proposta.ingressos, ...proposta.despeses],
+        historial: Array.isArray(historialDelFull) ? historialDelFull : []
+      });
+    } else if (teniaProposta.current) {
+      teniaProposta.current = false;
+      onFactures(null);
+    }
+  }, [proposta, historialDelFull, onFactures]);
   const altes = incidencies.filter((i) => i.severitat === 'alta');
   const estaRevisada = revisada === versio && Boolean(proposta);
   const estaAcceptada = acceptada === versio;
@@ -576,6 +599,8 @@ export default function PanellGestoria({
   }
 
   function desenxufa() {
+    teniaProposta.current = false;
+    onFactures?.(null);
     g.desenxufa();
     setRevisada(null);
     setAcceptada(null);

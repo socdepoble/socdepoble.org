@@ -1,0 +1,521 @@
+ANNEX F07 · Cap cola entre recursos.js i client.js: la Porta Frontissa veta l'import que endollaria el traductor (deute D10)
+Severitat final: mitjana (autor: alta; àrbitres: reproducció mitjana, doctrina baixa, impacte mitjana)
+Veredicte: 2 de 3 (refuta: doctrina)
+Categoria: arquitectura · Lent d'origen: enxufabilitat
+Fitxer: src/data/adaptadors/sollutia/client.js · Línies: 1-17 (i tooling/gates/tractor-frontissa.mjs:33-36 i tests/frontissa-gate.test.mjs:39-54)
+Decisió humana: sí · Dones l'ordre de D10 (endollar recursos.js a client.js) amb este abast, que toca la Porta Frontissa amb executor i lease?
+Toca font signada: cap (cap fitxer tocat és font de src/sections/gestoria/tractors.js; tooling/gates demana executor i lease)
+Solapaments: cap (la part 3 de l'autor, l'origen de l'API a origensSollutia.js, ix d'este annex i queda per a la seua troballa)
+Imports verificats: sí · Línia base: vitest 3 fitxers i 21 proves verdes; laboratori 261006, 1 fitxer i 16 proves en skip
+Estat: escrit
+
+RESUM
+recursos.js registra el traductor del perfil i F3 el valida amb la fixture, però client.js porta el catàleg literal i buit i no
+importa recursos.js. A més, tractor-frontissa.mjs:34 exigix un sol import: endollar el traductor validat posa roja la porta.
+Hui l'efecte en execució és zero: llig() falla tancat, que és el volgut, i la Frontissa no té cap consumidor. És el deute D10 del
+laboratori del 261006, reconfirmat; el que és nou és el veto de la porta i una proposta amb codi i proves.
+Importa per a la Finestreta perquè el prompt 261012_1143:56 dona per imminents els endpoints de Sollutia i els fa entrar per la
+Frontissa. Es proposa una cola (composaRecursos) que fa de cada transport un descriptor amb el traductor registrat, i una porta
+que exigix eixe import, audita recursos.js i comprova la cola en execució. El catàleg de producció continua buit: no s'obri res.
+
+EVIDÈNCIA
+1. client.js:1 importa només './creaFrontissa.js'; :4-8 porta `resources: Object.freeze({})`; :14 dona UNKNOWN_RESOURCE a tot nom.
+2. recursos.js:4-16 dona `perfil: { traductor }`; creaFrontissa.js:19-27 exigix enabled, captureId, decode, path, params, maxBytes, timeoutMs.
+3. Cap peça de sollutia/ (cinc fitxers: client, creaFrontissa, recursos i dues proves) convertix `traductor` en `decode`.
+4. tractor-frontissa.mjs:34 comença per `imports.length === 1`: amb un segon import, 2 === 1 és fals i requireContract (:12) llança.
+5. tractor-frontissa.mjs:37 veta tot import al transport i :39-45 audita l'AST només d'[entry, factory]: recursos.js queda fora.
+6. La porta no mira cap `decode` de l'entrada i :91-92 sondeja tres noms: un `decode` escrit a mà a client.js passaria sense F3.
+7. tractor-adaptadors.mjs:44-55 (F3) passa cada fixture pel traductor de recursos.js: valida una funció que client.js no pot usar.
+8. F3 recorre fixtures (:48), no recursos: no exigix fixture per recurs. La forma de llista (:52) no la usa cap recursos.js viu.
+9. viquipedia/client.js:20 i :195 ja fan la cola (`decode: RECURSOS[nom].traductor`) amb el mateix creaFrontissa; la porta només mira sollutia/.
+10. Cap fitxer de src/ importa sollutia/client.js fora de creaFrontissa.test.js:3 (grep sobre src/, exclòs wikiManifest.js).
+11. Executat: npx vitest run sobre creaFrontissa.test.js, recursos.test.js i origensSollutia.test.js: 3 fitxers, 21 proves verdes.
+12. Executat: npx vitest run tests/laboratori-model-b-261006.test.js: 1 fitxer i 16 proves en skip (:84, `describe.skipIf(!ACTIU)`).
+13. Els pins :310, :317-319 i :333-336 del laboratori, per tant, no fixen res hui; la seua capçalera (:22-23) en demana la retirada.
+14. origensSollutia.test.js:48-49 fixa la llista exacta de cinc exports: la part 3 de l'autor (un sisé export) la posaria roja.
+15. frontissa-gate.test.mjs:44-49 munta l'arrel temporal amb tres fitxers, sense recursos.js; :52 és un assert.rejects sense comparador.
+16. Amb un import nou a client.js, els tres mutants de :39-43 caurien per mòdul absent i passarien sense provar la mutació.
+17. ADR-2026-09:36 cita `client.js:9` (ESCRIPTURES_PERMESES): única cita de línia de client.js a 02_saber, 03_actuar i AGENTS.md.
+18. Deute ja escrit al laboratori 261006: CANDIDATES.txt:193-201, :491-495 i :551-552 (D5 i D10, «Ordre i abast, del Mestre»).
+19. tractors.js: les fonts dels quatre manifests són de src/sections/tractors i src/sections/gestoria; cap de src/data ni de tooling.
+20. @babel/parser instal·lat: 8.0.4; la porta ja usa ObjectProperty (:58) i cobrix ImportExpression i Import (:41): base de la traça.
+
+ESCENARI
+Entrada: Sollutia lliura un GET anònim de convocatòries. S'afig el traductor a recursos.js, la fixture i el seu transport.
+Hui: per a usar eixe traductor, client.js ha d'importar recursos.js, i la Porta Frontissa (tractor-frontissa.mjs:34) ix roja amb
+«client.js ha de consumir la frontissa local comprovada»; run-portes.mjs:84 l'executa a la cadena. L'única via verda de hui és
+escriure un `decode` a mà dins de client.js, que F3 no valida: la fixture i la producció deixen de parlar del mateix codi.
+Amb la proposta: una entrada a TRANSPORTS (camí, paràmetres, mida, temps, captureId, enabled) i l'origen de l'API a client.js;
+composaRecursos hi posa el traductor de recursos.js, la porta ix verda i llig('convocatories') torna el DTO que F3 ha validat.
+Un transport sense traductor registrat fa llançar INVALID_RESOURCE en carregar client.js: falla tancat, i se sent de seguida.
+Comprovable amb dades de la casa: composaRecursos(RECURSOS, { perfil: transport }) i la fixture perfil.json donen el DTO tancat
+de quatre camps (prova 1 de client.cola.test.js). Hui eixa funció no existix i llig('perfil') dona UNKNOWN_RESOURCE.
+
+FONT DE VERITAT
+- _wiki_de_poble/02_saber/architecture/ADR-2026-09-SOLLUTIA-MODEL-B.md:37-38 (decisió 4): cada recurs entra a recursos.js amb
+  captura real, traductor i fixture. La decisió no prescriu l'import: dona per fet que recursos.js és la porta d'entrada.
+- AGENTS.md §8 (Llei de l'Enxufabilitat): Sollutia, només en lectura per GET a través de la Frontissa.
+- tooling/gates/tractor-adaptadors.mjs:12-14 (F3): promet que un canvi del JSON de Sollutia es posa roig abans que la UI ho note.
+  Només és cert si el traductor que F3 valida és el que la producció usa.
+- _wiki_de_poble/04_escriptori/261012_1143_prompt_claude_auditoria_adversarial.md:56: endpoints imminents, per la Frontissa.
+- Límit volgut, que la proposta respecta: src/data/adaptadors/sollutia/creaFrontissa.test.js:18-21 (catàleg de producció tancat).
+- Deute D10: _wiki_de_poble/04_escriptori/02_investigacio_ia/261006_0300_ledger_claude/t4_model_b/CANDIDATES.txt:551-552.
+
+==== PROPOSTA (codi complet) ====
+
+Tres fitxers que entren junts, en un sol canvi: A (client.js), B (la porta) i C (la prova de la porta). Separats no passen:
+la porta nova ix roja amb el client de hui (li falta l'import de recursos.js i la cola) i el client nou ix roig amb la porta de hui
+(línia 34). Cap altre fitxer de src/ canvia: recursos.js, creaFrontissa.js i origensSollutia.js es queden com estan.
+
+---- A · SUBSTITUÏX · src/data/adaptadors/sollutia/client.js · línies 1-17 (el fitxer sencer) ----
+
+VIGENT:
+import { creaFrontissa, ErrorDades } from './creaFrontissa.js';
+
+/** Composició interna Model B. Activar recursos exigix una captura versionada. */
+const CONFIGURACIO = Object.freeze({
+  apiOrigin: null,
+  allowedOrigins: Object.freeze([]),
+  resources: Object.freeze({})
+});
+export const ESCRIPTURES_PERMESES = Object.freeze([]);
+let lectura;
+
+/** Conserva el port públic; un issuer de sessió mai és un endpoint de dades. */
+export async function llig(recurs, params = {}, options = {}) {
+  if (!Object.hasOwn(CONFIGURACIO.resources, recurs)) throw new ErrorDades('UNKNOWN_RESOURCE');
+  lectura ||= creaFrontissa(CONFIGURACIO);
+  return lectura(recurs, params, options);
+}
+
+NOU (48 línies; ESCRIPTURES_PERMESES continua a la línia 9, que és la que cita l'ADR-2026-09:36):
+import { creaFrontissa, ErrorDades } from './creaFrontissa.js';
+import { RECURSOS } from './recursos.js';
+
+/* ADR-2026-09, decisió 4 · El transport de cada recurs: camí, paràmetres, mida,
+   temps i el `captureId` de la captura real. `enabled` només passa a true amb
+   eixa captura i la fixture a tests/frontissa/fixtures/sollutia/<nom>.json.
+   Hui, cap. El traductor no va ací: ve de recursos.js per la cola de baix. */
+const TRANSPORTS = Object.freeze({});
+export const ESCRIPTURES_PERMESES = Object.freeze([]);
+
+/* El descodificador d'un recurs recorre el mateix camí que F3 de
+   tractor-adaptadors.mjs valida amb la fixture: un recurs de llista passa per
+   `extrau` (si en té) i per `traductor.llista`; la resta, per `traductor`. */
+const descodificadorDe = (recurs) => {
+  if (!recurs || typeof recurs !== 'object') return null;
+  if (!recurs.llista) return typeof recurs.traductor === 'function' ? recurs.traductor : null;
+  if (typeof recurs.traductor?.llista !== 'function') return null;
+  return (payload) => recurs.traductor.llista(recurs.extrau ? recurs.extrau(payload) : payload);
+};
+
+/* La cola amb recursos.js, al patró de viquipedia/client.js: un descriptor de
+   creaFrontissa per cada transport, amb el traductor registrat com a
+   descodificador. Un transport sense traductor no entra (falla tancat) i el
+   descodificador va l'últim: cap transport en pot posar un de propi. */
+export const composaRecursos = (traductors, transports) => {
+  const resources = {};
+  for (const [nom, transport] of Object.entries(transports)) {
+    const traductor = Object.hasOwn(traductors, nom) ? descodificadorDe(traductors[nom]) : null;
+    if (typeof traductor !== 'function') throw new ErrorDades('INVALID_RESOURCE');
+    resources[nom] = Object.freeze({ ...transport, decode: traductor });
+  }
+  return Object.freeze(resources);
+};
+
+/** Composició interna Model B. Activar recursos exigix una captura versionada. */
+const CONFIGURACIO = Object.freeze({
+  apiOrigin: null,
+  allowedOrigins: Object.freeze([]),
+  resources: composaRecursos(RECURSOS, TRANSPORTS)
+});
+let lectura;
+
+/** Conserva el port públic; un issuer de sessió mai és un endpoint de dades. */
+export async function llig(recurs, params = {}, options = {}) {
+  if (!Object.hasOwn(CONFIGURACIO.resources, recurs)) throw new ErrorDades('UNKNOWN_RESOURCE');
+  lectura ||= creaFrontissa(CONFIGURACIO);
+  return lectura(recurs, params, options);
+}
+
+---- B1 · SUBSTITUÏX · tooling/gates/tractor-frontissa.mjs · línies 10-11 ----
+
+VIGENT:
+const CLIENT = 'src/data/adaptadors/sollutia/client.js';
+const TRANSPORT = 'src/data/adaptadors/sollutia/creaFrontissa.js';
+
+NOU:
+const CLIENT = 'src/data/adaptadors/sollutia/client.js';
+const TRANSPORT = 'src/data/adaptadors/sollutia/creaFrontissa.js';
+const CATALOG = 'src/data/adaptadors/sollutia/recursos.js';
+
+---- B2 · SUBSTITUÏX · tooling/gates/tractor-frontissa.mjs · línies 29-45 ----
+(La resta de validateFrontissaStructure, de la línia 46 a la 69, no canvia. La signatura tampoc.)
+
+VIGENT:
+/** Checks executable AST, not reassuring words in comments or dead string data. */
+export function validateFrontissaStructure(client, transport) {
+  const entry = parse(client, { sourceType: 'module' });
+  const factory = parse(transport, { sourceType: 'module' });
+  const imports = entry.program.body.filter(node => node.type === 'ImportDeclaration');
+  requireContract(imports.length === 1 && imports[0].source.value === './creaFrontissa.js'
+    && imports[0].specifiers.some(s => s.type === 'ImportSpecifier' && named(s.imported, 'creaFrontissa') && named(s.local, 'creaFrontissa')),
+  'client.js ha de consumir la frontissa local comprovada');
+  requireContract(!factory.program.body.some(node => node.type === 'ImportDeclaration'), 'Transport amb dependència externa no auditada');
+  const allowedStatements = new Set(['ImportDeclaration', 'VariableDeclaration', 'ExportNamedDeclaration']);
+  for (const ast of [entry, factory]) {
+    requireContract(ast.program.body.every(node => allowedStatements.has(node.type)), 'Efecte executable al nivell de mòdul');
+    requireContract(nodes(ast, node => node.type === 'ImportExpression' || node.type === 'Import'
+      || (node.type === 'CallExpression' && (named(node.callee, 'fetch') || named(node.callee, 'eval')
+      || (node.callee.type === 'MemberExpression' && ['fetch', 'eval'].includes(node.callee.property?.name))))).length === 0,
+    'El transport ha de passar només pel fetchImpl observat');
+  }
+
+NOU:
+/* Cap via de xarxa ni de codi dinàmic fora del fetchImpl observat. */
+const obriXarxa = node => node.type === 'ImportExpression' || node.type === 'Import'
+  || (node.type === 'CallExpression' && (named(node.callee, 'fetch') || named(node.callee, 'eval')
+  || (node.callee.type === 'MemberExpression' && ['fetch', 'eval'].includes(node.callee.property?.name))));
+
+/** recursos.js entra al perímetre perquè l'entrada l'importa: només declaracions, cap dependència i cap xarxa pròpia. */
+export function validateCatalogStructure(catalog) {
+  const ast = parse(catalog, { sourceType: 'module' });
+  requireContract(ast.program.body.every(node => node.type === 'VariableDeclaration'
+    || (node.type === 'ExportNamedDeclaration' && !node.source)),
+  'recursos.js només pot declarar: cap import, reexport ni efecte al nivell de mòdul');
+  requireContract(nodes(ast, obriXarxa).length === 0, 'Un traductor no pot obrir xarxa ni codi dinàmic');
+}
+
+/** Checks executable AST, not reassuring words in comments or dead string data. */
+export function validateFrontissaStructure(client, transport) {
+  const entry = parse(client, { sourceType: 'module' });
+  const factory = parse(transport, { sourceType: 'module' });
+  const imports = entry.program.body.filter(node => node.type === 'ImportDeclaration');
+  /* L'entrada importa el transport auditat i els traductors de recursos.js (els
+     que F3 de tractor-adaptadors valida amb la fixture), i res més. */
+  const IMPORTS_PERMESOS = new Map([
+    ['./creaFrontissa.js', ['creaFrontissa', 'ErrorDades']],
+    ['./recursos.js', ['RECURSOS']]
+  ]);
+  const importa = (font, nom) => imports.some(node => node.source.value === font
+    && node.specifiers.some(s => s.type === 'ImportSpecifier' && named(s.imported, nom) && named(s.local, nom)));
+  requireContract(importa('./creaFrontissa.js', 'creaFrontissa'), 'client.js ha de consumir la frontissa local comprovada');
+  requireContract(importa('./recursos.js', 'RECURSOS'), 'client.js ha de prendre els traductors de recursos.js');
+  requireContract(new Set(imports.map(node => node.source.value)).size === imports.length, 'Import duplicat a client.js');
+  for (const node of imports) {
+    const noms = IMPORTS_PERMESOS.get(node.source.value);
+    requireContract(Array.isArray(noms) && node.specifiers.length > 0 && node.specifiers.every(s => s.type === 'ImportSpecifier'
+      && s.imported.type === 'Identifier' && noms.includes(s.imported.name) && named(s.local, s.imported.name)),
+    `client.js importa ${node.source.value} fora de la llista de la Frontissa`);
+  }
+  requireContract(!entry.program.body.some(node => node.type === 'ExportNamedDeclaration' && node.source), 'Reexport a client.js: dependència no auditada');
+  /* Un sol `decode` a l'entrada, el de la cola i amb l'identificador `traductor`:
+     un mètode, una clau calculada o un segon `decode` són un traductor de
+     contraban. El nom sol no acredita res: la sonda d'auditFrontissa comprova
+     en execució que és el traductor registrat. */
+  const decodes = nodes(entry, node => (node.type === 'ObjectProperty' || node.type === 'ObjectMethod') && keyOf(node) === 'decode');
+  requireContract(decodes.length === 1 && decodes[0].type === 'ObjectProperty' && !decodes[0].computed
+    && named(decodes[0].value, 'traductor'),
+  'Cap decode literal a client.js: el traductor ve de recursos.js');
+  /* El catàleg de producció ix de la cola, i de cap altre lloc. */
+  const catalegs = nodes(entry, node => node.type === 'ObjectProperty' && keyOf(node) === 'resources');
+  requireContract(catalegs.length === 1 && catalegs[0].value?.type === 'CallExpression'
+    && named(catalegs[0].value.callee, 'composaRecursos') && catalegs[0].value.arguments.length === 2
+    && named(catalegs[0].value.arguments[0], 'RECURSOS') && named(catalegs[0].value.arguments[1], 'TRANSPORTS'),
+  'El catàleg de producció ha d’eixir de composaRecursos(RECURSOS, TRANSPORTS)');
+  requireContract(!factory.program.body.some(node => node.type === 'ImportDeclaration'), 'Transport amb dependència externa no auditada');
+  const allowedStatements = new Set(['ImportDeclaration', 'VariableDeclaration', 'ExportNamedDeclaration']);
+  for (const ast of [entry, factory]) {
+    requireContract(ast.program.body.every(node => allowedStatements.has(node.type)), 'Efecte executable al nivell de mòdul');
+    requireContract(nodes(ast, obriXarxa).length === 0, 'El transport ha de passar només pel fetchImpl observat');
+  }
+
+---- B3 · SUBSTITUÏX · tooling/gates/tractor-frontissa.mjs · línies 80-82 ----
+
+VIGENT:
+  const clientText = fs.readFileSync(path.join(root, CLIENT), 'utf8');
+  const factoryText = fs.readFileSync(path.join(root, TRANSPORT), 'utf8');
+  validateFrontissaStructure(clientText, factoryText);
+
+NOU:
+  const clientText = fs.readFileSync(path.join(root, CLIENT), 'utf8');
+  const factoryText = fs.readFileSync(path.join(root, TRANSPORT), 'utf8');
+  validateFrontissaStructure(clientText, factoryText);
+  /* L'entrada importa el catàleg: el catàleg entra al perímetre auditat. */
+  validateCatalogStructure(fs.readFileSync(path.join(root, CATALOG), 'utf8'));
+
+---- B4 · SUBSTITUÏX · tooling/gates/tractor-frontissa.mjs · línies 89-92 ----
+
+VIGENT:
+    const { llig, ESCRIPTURES_PERMESES } = await import(url(CLIENT, clientText));
+    assert.ok(Object.isFrozen(ESCRIPTURES_PERMESES) && ESCRIPTURES_PERMESES.length === 0);
+    for (const name of ['/perfil', 'sample', 'https://evil.test/'])
+      await assert.rejects(() => llig(name), { code: 'UNKNOWN_RESOURCE' });
+
+NOU:
+    const { llig, ESCRIPTURES_PERMESES, composaRecursos } = await import(url(CLIENT, clientText));
+    assert.ok(Object.isFrozen(ESCRIPTURES_PERMESES) && ESCRIPTURES_PERMESES.length === 0);
+    for (const name of ['/perfil', 'sample', 'https://evil.test/'])
+      await assert.rejects(() => llig(name), { code: 'UNKNOWN_RESOURCE' });
+    /* La cola: el decode del descriptor és el traductor registrat, mai el que
+       porte el transport, i un transport sense traductor no entra. */
+    const registrat = raw => ({ name: raw.name });
+    const intrus = () => { throw new Error('DECODE_DEL_TRANSPORT'); };
+    const colat = composaRecursos({ sample: { traductor: registrat } }, { sample: { ...descriptor(), decode: intrus } });
+    assert.ok(Object.isFrozen(colat) && Object.isFrozen(colat.sample));
+    assert.equal(colat.sample.decode, registrat);
+    assert.throws(() => composaRecursos({}, { sample: descriptor() }), { code: 'INVALID_RESOURCE' });
+
+---- B5 · SUBSTITUÏX · tooling/gates/tractor-frontissa.mjs · línia 126 ----
+
+VIGENT:
+    return { ok: true, checked: ['client.js', 'creaFrontissa.js'], transportCalls: observations.length };
+
+NOU:
+    return { ok: true, checked: ['client.js', 'creaFrontissa.js', 'recursos.js'], transportCalls: observations.length };
+
+---- C1 · SUBSTITUÏX · tests/frontissa-gate.test.mjs · línia 7 ----
+
+VIGENT:
+import { auditFrontissa, validateFrontissaStructure } from '../tooling/gates/tractor-frontissa.mjs';
+
+NOU:
+import { auditFrontissa, validateCatalogStructure, validateFrontissaStructure } from '../tooling/gates/tractor-frontissa.mjs';
+
+---- C2 · SUBSTITUÏX · tests/frontissa-gate.test.mjs · línies 11-12 ----
+
+VIGENT:
+const client = fs.readFileSync(path.join(ROOT, DIR, 'client.js'), 'utf8');
+const transport = fs.readFileSync(path.join(ROOT, DIR, 'creaFrontissa.js'), 'utf8');
+
+NOU:
+const client = fs.readFileSync(path.join(ROOT, DIR, 'client.js'), 'utf8');
+const transport = fs.readFileSync(path.join(ROOT, DIR, 'creaFrontissa.js'), 'utf8');
+const catalog = fs.readFileSync(path.join(ROOT, DIR, 'recursos.js'), 'utf8');
+
+---- C3 · SUBSTITUÏX · tests/frontissa-gate.test.mjs · línia 16 ----
+(Canvi d'una prova existent: la porta passa a auditar tres fitxers i ho diu a `checked`.)
+
+VIGENT:
+  assert.deepEqual(await auditFrontissa(ROOT), { ok: true, checked: ['client.js', 'creaFrontissa.js'], transportCalls: 1 });
+
+NOU:
+  assert.deepEqual(await auditFrontissa(ROOT), { ok: true, checked: ['client.js', 'creaFrontissa.js', 'recursos.js'], transportCalls: 1 });
+
+---- C4 · SUBSTITUÏX · tests/frontissa-gate.test.mjs · línies 39-54 (fins al final del fitxer) ----
+(Canvi d'una prova existent: l'arrel temporal ha de portar recursos.js o els mutants passen per mòdul absent.
+Les línies 20-37 no canvien: les seues mutacions continuen aplicant-se sobre el client nou.)
+
+VIGENT:
+for (const [name, editClient, editTransport] of [
+  ['origin allowlist bypass', value => value, value => value.replace('!allowedOrigins.includes(base.origin)', 'false')],
+  ['DTO decoder bypass', value => value, value => value.replace('resource.decode(JSON.parse(text))', 'JSON.parse(text)')],
+  ['production catalog bypass', value => value.replace("if (!Object.hasOwn(CONFIGURACIO.resources, recurs)) throw new ErrorDades('UNKNOWN_RESOURCE');", 'return {};'), value => value],
+]) test(`runtime probes detect ${name} with intact transport AST`, async t => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'sdp-frontissa-mutant-'));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  fs.mkdirSync(path.join(root, DIR), { recursive: true });
+  fs.writeFileSync(path.join(root, 'package.json'), '{"type":"module"}');
+  fs.writeFileSync(path.join(root, DIR, 'client.js'), editClient(client));
+  fs.writeFileSync(path.join(root, DIR, 'creaFrontissa.js'), editTransport(transport));
+  validateFrontissaStructure(editClient(client), editTransport(transport));
+  const fetchBefore = globalThis.fetch;
+  await assert.rejects(() => auditFrontissa(root));
+  assert.equal(globalThis.fetch, fetchBefore, 'gate restores the fetch guard even after failure');
+});
+
+NOU:
+/* L'arrel temporal porta tot el que client.js importa. Sense recursos.js, un
+   mutant «passaria» per mòdul absent i no per la mutació: per això hi ha un
+   control sense mutar i les sondes descarten ENOENT i ERR_MODULE_NOT_FOUND. */
+function arrelTemporal(t, editClient = value => value, editTransport = value => value) {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'sdp-frontissa-mutant-'));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  fs.mkdirSync(path.join(root, DIR), { recursive: true });
+  fs.writeFileSync(path.join(root, 'package.json'), '{"type":"module"}');
+  fs.writeFileSync(path.join(root, DIR, 'client.js'), editClient(client));
+  fs.writeFileSync(path.join(root, DIR, 'creaFrontissa.js'), editTransport(transport));
+  fs.writeFileSync(path.join(root, DIR, 'recursos.js'), catalog);
+  return root;
+}
+
+test('control: the unmutated copy passes the gate in a temporary root', async t => {
+  assert.deepEqual(await auditFrontissa(arrelTemporal(t)), { ok: true, checked: ['client.js', 'creaFrontissa.js', 'recursos.js'], transportCalls: 1 });
+});
+
+const COLA = 'const traductor = Object.hasOwn(traductors, nom) ? descodificadorDe(traductors[nom]) : null;';
+for (const [name, editClient, editTransport] of [
+  ['origin allowlist bypass', value => value, value => value.replace('!allowedOrigins.includes(base.origin)', 'false')],
+  ['DTO decoder bypass', value => value, value => value.replace('resource.decode(JSON.parse(text))', 'JSON.parse(text)')],
+  ['production catalog bypass', value => value.replace("if (!Object.hasOwn(CONFIGURACIO.resources, recurs)) throw new ErrorDades('UNKNOWN_RESOURCE');", 'return {};'), value => value],
+  ['cola bypass', value => value.replace(COLA, 'const traductor = transport.decode;'), value => value],
+]) test(`runtime probes detect ${name} with intact transport AST`, async t => {
+  assert.ok(editClient(client) !== client || editTransport(transport) !== transport, 'the mutation must apply');
+  const root = arrelTemporal(t, editClient, editTransport);
+  validateFrontissaStructure(editClient(client), editTransport(transport));
+  const fetchBefore = globalThis.fetch;
+  await assert.rejects(() => auditFrontissa(root), error => !['ENOENT', 'ERR_MODULE_NOT_FOUND'].includes(error?.code));
+  assert.equal(globalThis.fetch, fetchBefore, 'gate restores the fetch guard even after failure');
+});
+
+test('entry imports are an allow-list and the production catalog comes from the cola', () => {
+  for (const changed of [
+    client.replace("import { RECURSOS } from './recursos.js';", "import { RECURSOS } from './recursos.js';\nimport { extra } from './altre.js';"),
+    client.replace("import { RECURSOS } from './recursos.js';", "import { RECURSOS as R, altres } from './recursos.js';"),
+    client.replace("import { RECURSOS } from './recursos.js';", "import * as tot from './recursos.js';"),
+    client.replace("from './recursos.js'", "from './altres.js'"),
+    client.replace('decode: traductor', 'decode: raw => raw'),
+    client.replace('decode: traductor', 'decode: transport.decode ?? traductor'),
+    client.replace('decode: traductor', 'decode(raw) { return raw; }'),
+    client.replace('resources: composaRecursos(RECURSOS, TRANSPORTS)', 'resources: Object.freeze({})'),
+    `${client}\nexport { extra } from './altre.js';\n`,
+  ]) {
+    assert.notEqual(changed, client, 'the mutation must apply');
+    assert.throws(() => validateFrontissaStructure(changed, transport));
+  }
+});
+
+test('catalog structure: declarations only, no dependency and no private transport', () => {
+  validateCatalogStructure(catalog);
+  for (const changed of [
+    `import { x } from './altre.js';\n${catalog}`,
+    `${catalog}\nexport { y } from './altre.js';\n`,
+    `${catalog}\nfetch('https://evil.test/');\n`,
+    catalog.replace('return Object.freeze({ id: ident,', "fetch('https://evil.test/'); return Object.freeze({ id: ident,"),
+    catalog.replace('return Object.freeze({ id: ident,', "import('./altre.js'); return Object.freeze({ id: ident,"),
+  ]) {
+    assert.notEqual(changed, catalog, 'the mutation must apply');
+    assert.throws(() => validateCatalogStructure(changed));
+  }
+});
+
+==== PROVA (vitest completa) ====
+
+FITXER NOU · src/data/adaptadors/sollutia/client.cola.test.js
+Cap prova de frontera el veta. fronteraModelsPurs.test.js recorre src/sections/gestoria; privacitat.test.js, a més, busca a src/
+qui importa la Gestoria, i este fitxer no la importa. F2 de tractor-adaptadors.mjs (:38-42) sí que escaneja esta carpeta, proves
+incloses, i busca verbs d'escriptura, DDL i service_role: no n'hi ha cap.
+Hui client.js no exporta composaRecursos; en Vitest el nom arriba undefined i les quatre primeres proves fallen amb TypeError.
+La cinquena ja passa hui: és la guarda de regressió del catàleg tancat. Amb el bloc A passen les cinc (traçat, no executat).
+
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { expect, test, vi } from 'vitest';
+import { creaFrontissa } from './creaFrontissa.js';
+import { composaRecursos, llig } from './client.js';
+import { RECURSOS } from './recursos.js';
+
+/* La cola entre recursos.js i creaFrontissa: la fixture (la mateixa de F3 i de
+   recursos.test.js) travessa el transport real amb el traductor registrat i ix
+   com el DTO congelat. Cap dada s'escriu ací: tot es llig de la fixture. */
+const FIXTURE = resolve(process.cwd(), 'tests/frontissa/fixtures/sollutia/perfil.json');
+const { forma } = JSON.parse(readFileSync(FIXTURE, 'utf8'));
+const ORIGEN = 'https://api.sollutia.test';
+const TRANSPORT_PERFIL = Object.freeze({
+  enabled: true, captureId: 'sollutia-perfil-fixture', path: '/perfil', params: Object.freeze([]), maxBytes: 16384, timeoutMs: 1000
+});
+const resposta = (cos) => new Response(JSON.stringify(cos), { headers: { 'content-type': 'application/json' } });
+const frontissa = (resources, fetchImpl) => creaFrontissa({ apiOrigin: ORIGEN, allowedOrigins: [ORIGEN], resources, fetchImpl });
+
+test('la fixture travessa creaFrontissa amb el traductor de recursos.js i ix com el DTO tancat', async () => {
+  const fetchImpl = vi.fn(async () => resposta(forma));
+  const lectura = frontissa(composaRecursos(RECURSOS, { perfil: TRANSPORT_PERFIL }), fetchImpl);
+  const dto = await lectura('perfil');
+  expect(fetchImpl.mock.calls[0][0]).toBe('https://api.sollutia.test/perfil');
+  expect(fetchImpl.mock.calls[0][1]).toMatchObject({ method: 'GET', credentials: 'omit', redirect: 'error' });
+  expect(Object.keys(dto).sort()).toEqual(['display_name', 'email', 'id', 'name']);
+  expect(dto).toEqual({ id: forma.uuid, email: forma.email, name: forma.name, display_name: forma.name });
+  expect(Object.isFrozen(dto)).toBe(true);
+  expect(dto).not.toHaveProperty('identitats');
+});
+
+test('cap transport pot posar el seu decode: mana el traductor de recursos.js', () => {
+  const intrus = () => ({ cru: true });
+  const colat = composaRecursos(RECURSOS, { perfil: { ...TRANSPORT_PERFIL, decode: intrus } });
+  expect(colat.perfil.decode).toBe(RECURSOS.perfil.traductor);
+  expect(Object.isFrozen(colat)).toBe(true);
+  expect(Object.isFrozen(colat.perfil)).toBe(true);
+});
+
+test('un transport sense traductor registrat no entra al catàleg: falla tancat', () => {
+  expect(() => composaRecursos(RECURSOS, { convocatories: TRANSPORT_PERFIL })).toThrow('INVALID_RESOURCE');
+  expect(() => composaRecursos(RECURSOS, { constructor: TRANSPORT_PERFIL })).toThrow('INVALID_RESOURCE');
+  expect(() => composaRecursos({ perfil: { traductor: 'no-es-funcio' } }, { perfil: TRANSPORT_PERFIL })).toThrow('INVALID_RESOURCE');
+  expect(() => composaRecursos({ perfil: { llista: true, traductor: () => ({}) } }, { perfil: TRANSPORT_PERFIL })).toThrow('INVALID_RESOURCE');
+});
+
+test('un recurs de llista recorre el camí de F3: extrau i traductor.llista', async () => {
+  const traductor = Object.assign((fila) => Object.freeze({ id: fila.id }), {
+    llista: (files) => Object.freeze(files.map((fila) => Object.freeze({ id: fila.id })))
+  });
+  const traductors = { convocatories: { llista: true, extrau: (payload) => payload.data, traductor } };
+  const fetchImpl = vi.fn(async () => resposta({ data: [{ id: 'c1', intern: 'no-es-dto' }], total: 1 }));
+  const lectura = frontissa(composaRecursos(traductors, { convocatories: { ...TRANSPORT_PERFIL, path: '/convocatories' } }), fetchImpl);
+  expect(await lectura('convocatories')).toEqual([{ id: 'c1' }]);
+  expect(fetchImpl.mock.calls[0][0]).toBe('https://api.sollutia.test/convocatories');
+});
+
+test('el catàleg de producció continua tancat mentre TRANSPORTS és buit', async () => {
+  await expect(llig('perfil')).rejects.toMatchObject({ code: 'UNKNOWN_RESOURCE' });
+});
+
+Prova complementària de la porta (node:test, suite «primary» de tooling/tests/node-suite-manifest.json:195-197): són els blocs
+C1 a C4 de la proposta, a tests/frontissa-gate.test.mjs. Amb el canvi sencer passa d'11 proves a 15: la real, sis mutants d'AST
+del transport, el catàleg d'escriptures, el control, quatre sondes d'execució, la llista d'imports amb la cola i el catàleg.
+
+Proves existents que han de continuar verdes sense tocar-les (raonat sobre el codi llegit, no executat amb la proposta):
+- src/data/adaptadors/sollutia/creaFrontissa.test.js:18-21: llig('/perfil') continua donant UNKNOWN_RESOURCE.
+- src/data/adaptadors/sollutia/recursos.test.js: recursos.js no es toca.
+- src/config/origensSollutia.test.js:45-50: origensSollutia.js no es toca.
+
+==== ESMENES DELS ÀRBITRES INTEGRADES ====
+- Integrada (els tres): fora la part 3 de l'autor (ORIGEN_API_SOLLUTIA); trenca origensSollutia.test.js:48-49 i és d'una altra troballa.
+- Integrada (els tres): fora la part 4 (pins del laboratori 261006); el corredor fa skip sencer, comprovat per mi (16 en skip).
+- Integrada (reproducció): ESCRIPTURES_PERMESES es queda a la línia 9. Contradiu doctrina i impacte, que la baixaven i demanaven
+  recalcular la cita de l'ADR signada; trie l'opció conservadora: la cita `client.js:9` continua certa i l'ADR no es toca.
+- Integrada (els tres): `Object.hasOwn(traductors, nom)` abans de llegir el traductor; un nom heretat no fa de recurs.
+- Integrada (impacte): la forma de llista de F3 (descodificadorDe). Els altres dos no en parlen. Cap recurs viu la usa hui: si el
+  Mestre no la vol, cal llevar descodificadorDe, la prova 4 i l'última expectativa de la prova 3, i ajustar la línia 28 de
+  client.js i la constant COLA del bloc C4 perquè lligen `traductors[nom]?.traductor`.
+- Integrada (impacte): recursos.js entra al perímetre de la porta (validateCatalogStructure, predicat obriXarxa compartit i
+  `checked` amb tres fitxers). Sense açò la porta admetria un mòdul executat que ningú audita.
+- Integrada (doctrina): un sol `decode`, ObjectProperty no calculat i amb l'identificador `traductor`; i `resources` ha d'eixir de
+  composaRecursos(RECURSOS, TRANSPORTS). Contradiu impacte, que volia la porta compatible amb el client de hui; trie la
+  conservadora, la porta estricta: porta i client entren junts i la porta nova ix roja amb el client de hui.
+- Integrada (reproducció i doctrina): sonda executable de la cola a auditFrontissa (identitat del traductor i INVALID_RESOURCE),
+  perquè la comprovació per nom no acredita res tota sola.
+- Integrada (els tres): l'arrel temporal dels mutants copia recursos.js. Integrats també el control sense mutar (reproducció i
+  impacte) i el comparador de doctrina, ampliat a ENOENT perquè la porta ara llig recursos.js amb readFileSync.
+- Integrada (impacte): reexport amb origen vetat a client.js, i import duplicat vetat (els tres).
+- Afegit per la consolidació: l'import de RECURSOS des de './recursos.js' és obligatori, no només permés. Sense ell, un RECURSOS
+  declarat dins de client.js passaria la comprovació per nom de composaRecursos(RECURSOS, TRANSPORTS). Per això la validació del
+  catàleg és incondicional i desapareix la branca `ambCataleg` d'impacte.
+- Integrada (els tres): corregit «hui falla en importar»; en Vitest el nom arriba undefined i la cinquena prova ja passa hui.
+- Integrada (doctrina i impacte), al relat i no al codi: el títol de l'autor exagerava. L'ADR no prescriu l'import, i el recompte
+  de fitxers baixa: amb la cola, un recurs anònim toca recursos.js, la fixture, recursos.test.js i TRANSPORTS més l'origen.
+- Descartada (doctrina): posar també el transport a recursos.js. És una decisió de disseny que l'àrbitre no desenvolupa; queda com
+  a pregunta per al Mestre i no canvia la porta que ací es proposa.
+- Descartada (reproducció, opcional): afegir client.js i la prova nova al cens de src/data/conformitat/qualitat.test.js. No he
+  pogut passar ESLint sobre el codi proposat; afegir-los al cens sense eixa execució seria afirmar un verd que no he vist.
+- Descartada (doctrina): tractar-la com a límit documentat de severitat baixa. El catàleg buit és un límit volgut; la cola absent
+  és deute pendent d'ordre (D10). La severitat es queda en la mediana, mitjana, i la meua comprovació no la desmentix.
+
+==== LÍMITS D'ESTE ANNEX ====
+- La prova nova de Vitest no s'ha executat: l'auditoria no escriu a src/. Està traçada contra creaFrontissa.js:11-92 i recursos.js:6-14.
+- La porta i la seua prova (blocs B i C) tampoc s'han executat: el hook no deixa córrer node --test ni npm run porta:frontissa.
+  Tot és traça estàtica sobre les formes de node d'@babel/parser 8.0.4. Abans de fiar-se'n: node --test tests/frontissa-gate.test.mjs.
+- El comportament de hui de la prova nova (nom undefined, quatre roges i una verda) es deduïx del transformador de Vitest; no s'ha vist.
+- No s'ha passat ESLint sobre cap bloc. L'estil seguix el de cada fitxer: cometes simples, dos espais i punt i coma.
+- La fixture perfil.json és sintètica, no una captura real: segons la decisió 4 de l'ADR no avala obrir cap recurs. TRANSPORTS naix
+  buit i este annex no proposa omplir-lo.
+- Queden fora, i són decisions del Mestre: l'origen de l'API (apiOrigin continua en null), el token de sessió al GET
+  (creaFrontissa.js:60-63, ADR-2026-09:35-36) i retirar tests/laboratori-model-b-261006.test.js, com demana la seua capçalera.
+- F3 no exigix fixture per recurs. El dia que TRANSPORTS deixe d'estar buit caldrà una comprovació recurs a fixture; hui seria buida.
+- Defecte veí no tocat: un transport amb enabled diferent de true entraria a CONFIGURACIO.resources, passaria la guarda de llig() i,
+  amb apiOrigin null, creaFrontissa llançaria un TypeError de URL i no un ErrorDades. Només pot passar amb TRANSPORTS no buit.
+- El predicat obriXarxa es conserva tal com és a :41-43: no veu una crida opcional (`x?.fetch()`). No s'ha ampliat per no canviar
+  el que la porta ja certifica del transport.
+- La porta no garantix que el catàleg estiga buit, ni abans ni després: certifica l'estructura. Amb la proposta, obrir un recurs
+  ja no posa roja la porta; el fre passa a ser la captura real que demana l'ADR i l'ordre del Mestre.
+- El hook PostToolUse ha avisat de «segell divergent» després de cada eina. És estat previ de l'arbre; no s'ha tocat res.
+- La carpeta 261012_1315_auditoria_claude/ no existia al laboratori quan s'ha llistat; naix amb l'escriptura d'este fitxer.

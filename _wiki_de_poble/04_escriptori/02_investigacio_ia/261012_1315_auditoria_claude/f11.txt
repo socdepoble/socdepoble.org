@@ -1,0 +1,187 @@
+ANNEX F11 · potImputar no valida nova.factura ni nova.expedient i diu «possible» per a una factura sense id
+Severitat final: baixa (autor: mitjana; àrbitres: reproducció baixa, doctrina mitjana, impacte baixa)
+Veredicte: 3 de 3 (refuta: cap)
+Categoria: correccio · Lent d'origen: expedient
+Fitxer: src/sections/gestoria/projectes/nucli/expedient.js · Línies: 27-29 i 357-368 (canvi); 369-376 i 383-386 (efecte)
+Decisió humana: no · cap
+Toca font signada: cap
+Solapaments: F34 (364-368 i 375: mateix defecte, s'aplica una vegada); F37 (364-376: mateix bloc); F04 (capçalera 6-10: +3 línies)
+Imports verificats: sí · Línia base: 3 fitxers, 65 proves verdes; expedient.test.js a soles, 1 fitxer i 18 proves (vitest 4.1.10)
+Estat: escrit
+
+RESUM
+potImputar, la pregunta prèvia del doble finançament, només comprova que `nova` és un objecte i que els dos imports són cèntims.
+No mira `nova.factura` ni `nova.expedient`, encara que el seu JSDoc i el missatge del seu TypeError els nomenen. Sense factura
+respon «possible» amb tot l'import disponible; amb una factura que creaExpedient refusaria (ID_INVALID), també; i sense
+expedient, o amb un text amb forma d'identificador, l'avís de fons europeus el torna dins d'`expedients`. Per a la Finestreta
+és una resposta prèvia que diu «cap» d'una imputació que després no es podrà crear. El carril no està endollat i creaExpedient
+continua parant-ho aigües avall: per això queda en baixa. Es proposa exigir esIdOpac als dos ids a la guarda d'entrada, i
+dir-ho al JSDoc i al missatge de l'error, que no repetix mai el valor rebut.
+
+EVIDÈNCIA
+1. expedient.js:366 · la guarda d'entrada només avalua esObjecte(nova), esCentims(nova.importFactura) i esCentims(nova.importImputat).
+2. expedient.js:362 i 367 · el JSDoc declara expedient i factura (string) i el missatge diu «porta factura»; la condició no els mira.
+3. Cas A, sense factura · [kit] (expedient.test.js:163) i nova = { expedient: 'exp_subvencio_prova', importFactura: 300000, importImputat: 1 }.
+4. 369 · 'fac_prova_001' === undefined és fals → altres = []. 372 · find no troba l'id → fonsEuropeusDe(undefined) → null (línia 283).
+5. 373-376 · altresExpedients = [] i avisos = []. 377 i 380 · [].some → false. 383 · disponible = 300000 − 0.
+6. 384-385 · 1 <= 300000 → { possible: true, disponible: 300000, codi: null, avisos: [] }. No es llança res.
+7. Cas B, factura 'Factura 1' · mateix camí (cap imputació casa) → possible: true. guardes.js:113 · ID_OPAC demana minúscules i cap espai.
+8. expedient.js:157 · creaExpedient sí que la refusa (comprovaId → ID_INVALID); expedient.test.js:59 ja ho afirma. Pregunta i creació xoquen.
+9. Cas C, factura 'fac_prova_001' i expedient undefined · 369 altres = [la imputació del kit, fons true]; 372 fonsNou = null; 373 en queda 1.
+10. 374 i 287 · potSerDobleUe([null, true]) → true. 375 i 292 · expedients: ['exp_kit_prova', undefined]. 383-385 · disponible 100000, possible: true.
+11. Cas D, expedient = tros('exp-', '1234', '5678', 'z') · mateix camí que C: el text compost ix dins d'avisos[0].expedients.
+12. guardes.js:64 i 117 · la forma DNI el caça i esIdOpac el refusa; guardes.test.js:78 ho afirma per a tros('tit-', '1234', '5678', 'z').
+13. guardes.js:117 · esIdOpac existix i s'exporta. expedient.js:27-29 ja importa d'eixe mòdul: cap dependència nova ni fitxer nou.
+14. expedient.js:109, 130, 157, 176, 177 i 179 · la resta d'ids passen comprovaId. potImputar és l'única entrada que rep una imputació crua.
+15. grep -rn potImputar src/sections/gestoria → expedient.js (18 i 364) i expedient.test.js (11, 185-192, 204-206 i 216). Cap consumidor de fora.
+16. expedient.test.js:187-191, 205 i 216 · tots els ids que hui es passen a potImputar són opacs; la 192 continua llançant per importImputat: 0.
+17. defectes.onada12.test.js · cap línia parla de potImputar, d'expedients ni d'imputacions: només G1, G2, G3 (25, 40, 46) i Norma 43 (66).
+18. tractors.js · cap ruta de projectes/. fronteraModelsPurs.test.js:99-110 afirma que el carril no està endollat i que cap font signada n'és.
+19. npx vitest run sobre expedient.test.js, fronteraModelsPurs.test.js i guardes.test.js → 3 fitxers, 65 proves verdes; expedient a soles, 18.
+
+ESCENARI
+En tots els casos, kit = creaExpedient(KIT) d'expedient.test.js:17-31 i 163: una imputació de 200000 sobre 'fac_prova_001' (300000).
+
+Entrada 1 · potImputar([kit], { expedient: 'exp_subvencio_prova', importFactura: 300000, importImputat: 1 }), sense factura.
+  Hui: { possible: true, disponible: 300000, codi: null, avisos: [] }.
+  Amb la proposta: TypeError, «La imputació nova porta expedient i factura (ids opacs) i importFactura i importImputat en cèntims
+  enters positius.»
+
+Entrada 2 · la mateixa, amb factura: 'Factura 1'.
+  Hui: possible: true, disponible: 300000. Després, validaExpedient amb eixa factura a les imputacions torna ID_INVALID i
+  creaExpedient llança EXPEDIENT_INVALID: la pregunta prèvia ha dit que cabia una imputació que no es pot crear.
+  Amb la proposta: el mateix TypeError de l'entrada 1.
+
+Entrada 3 · { expedient: tros('exp-', '1234', '5678', 'z'), factura: 'fac_prova_001', importFactura: 300000, importImputat: 1 }.
+  Hui: possible: true, disponible: 100000, i avisos[0].expedients porta el text compost (forma de DNI) al costat de 'exp_kit_prova'.
+  Amb la proposta: el mateix TypeError; el missatge no repetix el valor rebut.
+
+Entrada 4 · { expedient: 'exp_subvencio_prova', factura: 'fac_prova_009', importFactura: 300000, importImputat: 1 }, ids opacs.
+  Hui i amb la proposta: { possible: true, disponible: 300000, codi: null, avisos: [] }. Res canvia per a qui ja ho feia bé.
+
+FONT DE VERITAT
+- src/sections/gestoria/projectes/nucli/expedient.js:362 (JSDoc: `nova` porta expedient i factura) i 367 (el missatge nomena «factura»).
+- src/sections/gestoria/identitat/nucli/guardes.js:5-8 i 12-13 (capçalera: ids opacs; les formes «fallen cap al costat segur») i 115-117.
+- src/sections/gestoria/identitat/nucli/guardes.js:153-161 (comprovaId) i expedient.js:157 i 176: el que creaExpedient exigix als dos ids.
+- src/sections/gestoria/projectes/nucli/expedient.test.js:59: 'Factura 1' com a factura dona ID_INVALID; potImputar hui en diu «possible».
+- src/sections/gestoria/identitat/nucli/guardes.test.js:78: un id amb forma de DNI darrere d'un guionet no és opac.
+- src/sections/gestoria/defectes.onada12.test.js: cap [DEFECTE] ni [LÍMIT VOLGUT] sobre potImputar; no és defecte conegut ni límit volgut.
+- Doctrina dels models purs de la Gestoria: les guardes de privacitat fallen cap al costat segur.
+
+==== PROPOSTA (codi complet) ====
+Dos blocs sobre un sol fitxer. Cap fitxer nou i cap dependència nova: esIdOpac ja s'exporta a src/sections/gestoria/identitat/nucli/guardes.js:117, el mòdul d'on expedient.js ja importa la resta de guardes. Els números de línia són els del fitxer vigent (387 línies): si abans s'aplica F04, que afig tres línies a la capçalera, els blocs s'apliquen pel text literal.
+
+SUBSTITUÏX 1 de 2 · src/sections/gestoria/projectes/nucli/expedient.js · línies 27-29
+Motiu: importar esIdOpac. La llista continua en ordre alfabètic (congela, esIdOpac, esObjecte).
+
+--- VIGENT ---
+import {
+  comprovaClaus, comprovaData, comprovaId, comprovaText, congela, esObjecte, idOpacDerivat, llancaSiCal, VERIFICAR
+} from '../../identitat/nucli/guardes.js';
+--- NOU ---
+import {
+  comprovaClaus, comprovaData, comprovaId, comprovaText, congela, esIdOpac, esObjecte, idOpacDerivat, llancaSiCal, VERIFICAR
+} from '../../identitat/nucli/guardes.js';
+--- FI ---
+
+SUBSTITUÏX 2 de 2 · src/sections/gestoria/projectes/nucli/expedient.js · línies 357-368
+Motiu: la guarda d'entrada exigix que expedient i factura siguen ids opacs, i el JSDoc i el missatge diuen el que la guarda fa. El missatge és un text fix: no porta mai el valor rebut.
+
+--- VIGENT ---
+/**
+ * Si una imputació nova cabria: quant queda disponible de la factura entre
+ * tots els expedients i, si no cap, per què. Porta també els avisos que no
+ * bloquegen (POSSIBLE_DOBLE_FINANCAMENT_UE). No crea ni canvia res.
+ * @param {object[]} expedients
+ * @param {{ expedient: string, factura: string, importFactura: number, importImputat: number }} nova
+ */
+export function potImputar(expedients, nova) {
+  if (!Array.isArray(expedients)) throw new TypeError('Cal la llista d’expedients.');
+  if (!esObjecte(nova) || !esCentims(nova.importFactura) || !esCentims(nova.importImputat)) {
+    throw new TypeError('La imputació nova porta factura, importFactura i importImputat en cèntims enters positius.');
+  }
+--- NOU ---
+/**
+ * Si una imputació nova cabria: quant queda disponible de la factura entre
+ * tots els expedients i, si no cap, per què. Porta també els avisos que no
+ * bloquegen (POSSIBLE_DOBLE_FINANCAMENT_UE). No crea ni canvia res.
+ * `expedient` i `factura` són ids opacs, com els que demana creaExpedient:
+ * sense ells, o amb un text que no ho és, no es respon (TypeError, sense
+ * repetir el valor rebut).
+ * @param {object[]} expedients
+ * @param {{ expedient: string, factura: string, importFactura: number, importImputat: number }} nova
+ */
+export function potImputar(expedients, nova) {
+  if (!Array.isArray(expedients)) throw new TypeError('Cal la llista d’expedients.');
+  if (!esObjecte(nova) || !esIdOpac(nova.expedient) || !esIdOpac(nova.factura) || !esCentims(nova.importFactura) || !esCentims(nova.importImputat)) {
+    throw new TypeError('La imputació nova porta expedient i factura (ids opacs) i importFactura i importImputat en cèntims enters positius.');
+  }
+--- FI ---
+
+Les línies 369-387 (el cos de la funció, des de `const altres` fins a la clau de tancament) no canvien: el càlcul de `altres`, `fonsNou`, `avisos`, les dos eixides de bloqueig i el `disponible` queden tal com estan. L'expedient que encara no és a la llista però porta un id opac es continua acceptant: és el que diu el comentari de la línia 371 («si és a la llista; si no, no se sap») i el que prova expedient.test.js:216.
+
+Fronteres: fronteraModelsPurs.test.js no s'ha de tocar. El cens (línies 44-51) no canvia perquè no hi ha cap fitxer nou; l'import nou ve d'un dels tres carrils (prova de la línia 53); i el text nou no porta cap literal amb forma de DNI, NIE o IBAN (prova de les línies 80-88). privacitat.test.js tampoc: llig el codi de producció i el canvi no afig xarxa, emmagatzematge ni cap importació de fora del carril.
+
+Proves existents: cap afirma el comportament que canvia. A expedient.test.js, les set crides a potImputar (línies 188, 189, 190, 191, 192, 206 i 216) passen ids opacs ('exp_subvencio_prova', 'exp_kit_prova', 'exp_kit_prova_dos', 'fac_prova_001' i 'fac_prova_009': tots casen amb ID_OPAC i cap porta prou xifres seguides ni cap forma vetada), i la de la línia 192 continua llançant TypeError per importImputat: 0. No cal canviar-ne cap.
+
+==== PROVA (vitest completa) ====
+Fitxer: src/sections/gestoria/projectes/nucli/expedient.test.js (el que ja existix), dins de describe('el doble finançament'), just després de la prova 'potImputar diu quant en queda, sense crear res'. Cap import nou; el bloc fa servir el que el fitxer ja porta:
+
+import { describe, expect, test } from 'vitest';
+import {
+  avisosExpedient, avisosFinancament, comprovaDobleFinancament, conservacioExpedient, creaExpedient, faseActual, idTerminiExpedient, MISSATGE_DOBLE_UE,
+  potImputar, PROGRAMES, terminisExpedient, validaExpedient
+} from './expedient.js';
+
+i les constants locals `tros` (línia 14) i `kit` (línia 163, dins del mateix describe). Les formes d'identificador es componen a trossos, amb els mateixos trossos que ja porten les línies 57 i 58 del fitxer; cap dada personal.
+
+SUBSTITUÏX · src/sections/gestoria/projectes/nucli/expedient.test.js · línies 192-193
+
+--- VIGENT ---
+    expect(() => potImputar([kit], { ...nova, importImputat: 0 })).toThrow(TypeError);
+  });
+--- NOU ---
+    expect(() => potImputar([kit], { ...nova, importImputat: 0 })).toThrow(TypeError);
+  });
+
+  test('potImputar exigix ids opacs: sense factura, sense expedient o amb un text que no ho és, no respon', () => {
+    const nova = { expedient: 'exp_subvencio_prova', importFactura: 300000, importImputat: 1 };
+    // Sense factura no hi ha res a preguntar: abans deia «possible» amb tot l'import disponible.
+    expect(() => potImputar([kit], nova)).toThrow(TypeError);
+    expect(() => potImputar([kit], { ...nova, factura: 'Factura 1' })).toThrow(TypeError);
+    expect(() => potImputar([kit], { ...nova, factura: tros('ES91 ', '2100 0418 ', '4502 0005 1332') })).toThrow(TypeError);
+    // Sense expedient, o amb un que té forma de DNI: abans l'avís de fons europeus el portava dins d'`expedients`.
+    expect(() => potImputar([kit], { ...nova, factura: 'fac_prova_001', expedient: undefined })).toThrow(TypeError);
+    expect(() => potImputar([kit], { ...nova, factura: 'fac_prova_001', expedient: tros('exp-', '1234', '5678', 'z') })).toThrow(TypeError);
+    // Amb ids opacs, la resposta de sempre.
+    expect(potImputar([kit], { ...nova, factura: 'fac_prova_009' })).toMatchObject({ possible: true, disponible: 300000, codi: null, avisos: [] });
+  });
+--- FI ---
+
+Resultat esperat, per traça (no executat): amb la proposta, npx vitest run src/sections/gestoria/projectes/nucli/expedient.test.js dona 1 fitxer i 19 proves verdes. Sense la proposta, la prova nova cau al primer expect (no es llança res: la funció torna possible: true); el segon, el tercer, el quart i el cinqué tampoc llancen hui, i l'últim passa hui i després. No és una prova [DEFECTE]: cau hui i passa amb l'arreglament.
+
+Per què cada expect llança amb la proposta: esIdOpac(undefined) és fals (no és un text); 'Factura 1' i el text compost amb forma d'IBAN no casen amb ID_OPAC (majúscules i espais); el text compost 'exp-' més huit xifres i una lletra casa amb ID_OPAC però identificadorsDe hi troba la forma DNI (el guionet fa de frontera). El literal de la prova no fa saltar fronteraModelsPurs.test.js:80-88: cap dels trossos porta huit xifres seguides, i darrere de 'ES91 ' ve una cometa, no quatre caràcters més.
+
+==== ESMENES DELS ÀRBITRES INTEGRADES ====
+- Reproducció, proposta: cap esmena. Res a integrar. De les seues cinc comprovacions, n'he refet quatre llegint el codi (export, ordre de l'import, proves existents i frontera) i la del linter amb un grep de max-len sobre eslint.config.js, que no torna cap línia.
+- Reproducció, prova: cap esmena.
+- Doctrina, proposta: opcional, alinear el JSDoc amb la guarda nova. INTEGRADA, amb la redacció de l'àrbitre d'impacte.
+- Doctrina, prova: cap esmena.
+- Impacte, proposta: llevar el «// …» de l'autor i donar els dos canvis separats i complets, amb el JSDoc ampliat. INTEGRADA. Una diferència de forma: el bloc 2 cobrix les línies 357-368 i no la funció sencera (357-387), perquè el cos no canvia ni una lletra i així no es trepitgen les línies de F34 i F37; el fitxer que en resulta és el mateix.
+- Impacte, nota «el missatge no repetix mai el valor rebut»: INTEGRADA al JSDoc («sense repetir el valor rebut») perquè qui mantinga la funció no hi afija el valor al missatge.
+- Impacte, prova: afegir el cas de l'expedient amb forma de DNI i fixar la resposta sencera del camí bo (codi: null i avisos: []). INTEGRADA sencera: és la prova final.
+- Impacte, correcció a l'evidència de l'autor («l'única entrada que accepta ids sense passar la guarda» és massa: idTerminiExpedient, línia 227, tampoc la passa): INTEGRADA. L'evidència d'este annex diu «l'única que rep una imputació crua».
+- Impacte, nota fora d'abast (potImputar tampoc refusa claus desconegudes de `nova` amb comprovaClaus): DESCARTADA. El mateix àrbitre la deixa fora; canviaria un comportament que cap troballa demana, i amb la guarda nova un camp mal anomenat ja cau perquè factura o expedient queden undefined.
+- Contradicció entre àrbitres, JSDoc: doctrina proposa tocar la línia @param i impacte afegir una frase a la descripció. Trie la d'impacte, la conservadora: la línia @param queda com està.
+- Severitat: doctrina proposa mitjana; reproducció i impacte, baixa. La mediana és baixa i la meua comprovació no la desmentix: potImputar no desa res, creaExpedient continua refusant l'id (línia 157) i el carril no té cap consumidor fora de les proves.
+
+==== LÍMITS D'ESTE ANNEX ====
+- La prova nova NO s'ha executat: l'auditoria no escriu a src/. El que se'n diu és traça estàtica sobre el codi llegit. La línia base sí que s'ha executat: 3 fitxers i 65 proves verdes (expedient, frontera i guardes); expedient.test.js a soles, 1 fitxer i 18 proves.
+- No s'ha passat el linter sobre el codi proposat. La línia nova de la guarda fa uns 150 caràcters; el fitxer ja en porta de més llargues (la 132, per exemple), i eslint.config.js no porta cap regla max-len. No s'ha mirat si hi ha una altra configuració que n'afija.
+- No s'ha pogut confirmar amb git que expedient.js coincidix amb l'últim commit (el hook bloca les ordres que no són de lectura simple). L'annex descriu l'arbre de treball llegit el 2026-10-12: 387 línies, amb potImputar a les línies 357-387.
+- La proposta exigix que els ids siguen opacs, no que l'expedient existisca a la llista ni que la factura estiga imputada enlloc. Si es vol que potImputar refuse un expedient desconegut, és un canvi de contracte (contra el comentari de la línia 371 i la prova de la línia 216) i demana ordre.
+- Les altres entrades que es refien que la llista ve de creaExpedient (avisosFinancament, comprovaDobleFinancament, terminisExpedient) no es toquen: és la germana F38.
+- F34 descriu el mateix defecte des de la lent de privacitat (línies 364-368 i 375). Este annex i el seu s'apliquen una sola vegada. Si F34 es consolida amb una altra eixida (un error amb codi estable en lloc de TypeError, per exemple), cal triar-ne una: este annex manté TypeError, que és el que ja llança la guarda d'entrada i el que afirma la prova de la línia 192.
+- F37 cita les línies 364-376 del mateix bloc. Este annex no toca les línies 369-376: si F37 les canvia, les dos propostes es fusionen pel text sense conflicte.
+- Quan el carril s'endolle, la UI que cride potImputar haurà de capturar el TypeError o validar els ids abans de preguntar. Hui no hi ha cap consumidor: no s'ha pogut comprovar cap pantalla.
+- expedient.js no és font de cap tractor signat hui. Quan entre al manifest d'un tractor, qualsevol canvi posterior del fitxer tornarà eixa aprovació a «pendent».

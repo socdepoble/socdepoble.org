@@ -31,6 +31,18 @@
  * en du un camp `sepa`. El número de compte no es guarda mai sencer: només
  * els 4 últims dígits. JS pur, sense DOM ni APIs de Node: es pot importar
  * des del navegador i des de Node.
+ *
+ * Ordre del Mestre, 13-10-2026 (pla 261013_1405, front I · motors;
+ * auditoria de Codex 261013_1510, GES-A2): dos comptes de la mateixa entitat
+ * acabats en els mateixos quatre dígits es confonien en un, perquè la
+ * identitat es reduïa abans de saber qui era qui. Ara la capçalera porta
+ * `idCompte`: un identificador OPAC derivat de la clau sencera (entitat,
+ * oficina i compte) ací, ABANS de reduir-la, amb una sal aleatòria de la
+ * sessió. El mateix compte dona el mateix id durant la sessió, i dos comptes
+ * diferents, ids diferents; però no es pot tornar enrere: sense la sal (que
+ * no ix mai d'este mòdul), provar números no el reconstruïx. Són 16 lletres
+ * consonants: cap xifra ni cap vocal, no pot semblar un número de compte ni
+ * cap paraula. No és un resum criptogràfic: només separa comptes.
  */
 import { decodificaTextDetallat } from './csv.js';
 import { dinsDeRang, esDataValida, rangTrimestre } from './dates.js';
@@ -68,6 +80,39 @@ export const MONEDES_ISO = Object.freeze({
 export const monedaDeCodi = (codi) => MONEDES_ISO[codi] ?? null;
 
 const espaisNets = (text) => String(text ?? '').replace(/\s+/g, ' ').trim();
+
+/* L'identificador opac del compte (GES-A2, vegeu la capçalera). La sal es fa
+   la primera vegada que cal, amb crypto.getRandomValues; sense, amb
+   Math.random (el precedent d'enviament/correuGestoria.js). */
+const LLETRES_ID = 'bcdfghjklmnpqrst';
+let salDeSessio = null;
+function sal() {
+  if (salDeSessio === null) {
+    const bytes = new Uint8Array(16);
+    const cripto = globalThis.crypto;
+    if (typeof cripto?.getRandomValues === 'function') cripto.getRandomValues(bytes);
+    else for (let i = 0; i < bytes.length; i += 1) bytes[i] = Math.floor(Math.random() * 256);
+    salDeSessio = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+  }
+  return salDeSessio;
+}
+/* FNV-1a de 32 bits des d'una base: dues bases diferents fan 64 bits. */
+function fnv32(text, base) {
+  let h = base;
+  for (let i = 0; i < text.length; i += 1) {
+    h ^= text.charCodeAt(i);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return h;
+}
+function idOpacDeCompte(clau) {
+  let id = '';
+  for (const h of [fnv32(`${sal()}|${clau}`, 0x811c9dc5), fnv32(`${clau}|${sal()}`, 0x050c5d1f)]) {
+    for (let k = 28; k >= 0; k -= 4) id += LLETRES_ID[(h >>> k) & 15];
+  }
+  return id;
+}
+
 const ambSigne = (signe, valor) => (signe === null || valor === null ? null : valor === 0 ? 0 : signe * valor);
 
 /* Recull d'avisos amb sostre per codi: un fitxer amb totes les línies curtes no en dona 800. */
@@ -174,6 +219,8 @@ function llegeix11(estat, l) {
     entitat: l.camp(3, 6),
     oficina: l.camp(7, 10),
     compte4: l.camp(11, 20).trim().slice(-4),
+    /* GES-A2: de la clau sencera, abans de reduir-la; no la porta dins. */
+    idCompte: idOpacDeCompte(l.camp(3, 20)),
     dataInicial: l.data(21, 'La data inicial'),
     dataFinal: l.data(27, 'La data final'),
     saldoInicial: ambSigne(l.signe(33, 'El signe del saldo inicial'), l.xifres(34, 47, 'El saldo inicial')),
@@ -318,7 +365,7 @@ const LECTORS = Object.freeze({ 11: llegeix11, 22: llegeix22, 23: llegeix23, 24:
  * @param {Uint8Array|ArrayBuffer|string} entrada els bytes del fitxer (es
  *   decodifiquen amb decodificaTextDetallat) o el text ja decodificat
  * @returns {{
- *   comptes: Array<{ capcalera: { entitat: string, oficina: string, compte4: string, dataInicial: object|null,
+ *   comptes: Array<{ capcalera: { entitat: string, oficina: string, compte4: string, idCompte: string, dataInicial: object|null,
  *     dataFinal: object|null, saldoInicial: number|null, divisa: string|null, codiDivisa: string, modalitat: string,
  *     nom: string }, moviments: object[], peu: object|null }>,
  *   fi: { registres: number|null }|null, registres: number, recompte: Record<string, number>,

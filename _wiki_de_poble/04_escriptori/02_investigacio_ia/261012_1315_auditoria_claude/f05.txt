@@ -1,0 +1,239 @@
+ANNEX F05 · El mateix id d'ocurrència per a dos titulars: l'.ics en fon dos venciments i un desapareix sense avís
+Severitat final: mitjana (autor: mitjana; àrbitres: reproducció mitjana, doctrina baixa, impacte mitjana)
+Veredicte: 3 de 3 (refuta: cap)
+Categoria: correccio · Lent d'origen: terminis
+Fitxer: src/sections/gestoria/burocracia/nucli/icsTerminis.js · Línies: 120-122 (on es manifesta); origen i arreglament a obligacions.js:344-347
+Decisió humana: sí · Vols que l'id de cada ocurrència porte el titular davant (gira 4 assercions), o que només l'UID de l'.ics el porte a l'empremta?
+Toca font signada: cap
+Solapaments: cap germana a icsTerminis.js; la proposta toca obligacions.js:344-347, obligacions.test.js:29, 172 i 178, i avisos.test.js:80-82
+Imports verificats: sí · Línia base: 5 fitxers, 77 proves, totes verdes
+Estat: escrit
+
+RESUM
+obligacions.js:347 fa l'id d'una ocurrència amb l'obligació i la clau de la finestra; el titular va a part (:353) i no hi entra.
+La llar i l'activitat d'una mateixa persona compartixen obligacions (SUMA, renda, demanda d'ocupació) i claus: els seus ids coincidixen.
+icsTerminis.js:120-122 fa l'UID només de l'id i, amb un UID repetit, es queda la data més primerenca: l'altre venciment cau i res ho diu.
+Per a la Finestreta, l'.ics és l'única peça de terminis que ix de l'ordinador: un rebut que hi falta és un rebut que es paga tard.
+És latent: els carrils no estan endollats (fronteraModelsPurs.test.js:100-104). Hui no hi ha cap id guardat ni cap calendari importat.
+Proposta: que l'id porte el titular davant, a l'origen (obligacions.js), com l'id d'un termini d'expedient ja porta l'expedient.
+L'exportador i els avisos no es toquen. Cost: quatre assercions que fixen la forma vella es giren, i la renda ix com dos actes el mateix dia.
+La proposta (B) de l'autor (llançar ID_REPETIT a l'exportador) es retira: els tres àrbitres demostren que detecta però no cura.
+
+EVIDÈNCIA
+1. obligacions.js:347 `id: `${ob.id}:${finestra.clau}``; :353 `titular: perfil.titular.id`, en un camp a part. Codi vigent, llegit hui.
+2. obligacions.js:287-289, FINESTRES.extern: `clau: `${any}:${i + 1}``, la posició dins de la llista carregada. El titular no hi entra.
+3. obligacions.js:94 i :167: «suma-tributs-locals» val per a LLAR, ACTIVITAT i ENTITAT, i la regla només mira `tributsLocals`.
+4. obligacions.js:78 i :159-163: «aeat-100» no és mai «no» per a una persona (LLAR «cal-verificar», ACTIVITAT «si»); clau «2025:anual».
+5. Calendari 2026 de la LLAR (tributsLocals cert, demandaOcupacio fals, SUMA amb fi 2026-05-04): dues ocurrències,
+   «suma-tributs-locals:2026:1» (2026-05-04) i «aeat-100:2025:anual» (2026-06-30). La resta de regles donen «no».
+6. Calendari 2026 de l'ACTIVITAT (exempt, objectiva, la resta a fals, marques buides, SUMA amb fi 2026-06-01): els MATEIXOS dos ids,
+   amb venciments 2026-06-01 i 2026-06-30. Són dies feiners: res es corre (obligacions.test.js:199-210 ja fixa 05-04 i 06-01).
+7. icsTerminis.js:78-81: uidDeTermini(id) fa l'empremta de String(id) i prou; :120 el crida amb element.id.
+8. icsTerminis.js:121-122 amb [...llar, ...activitat]: SUMA de la llar → U1, 05-04; renda de la llar → U2, 06-30; SUMA de l'activitat → U1,
+   '2026-05-04' <= '2026-06-01' és cert → continue; renda de l'activitat → U2 → continue. Eixida: 2 VEVENT (4 de maig i 30 de juny).
+9. En un fitxer per titular els UID també coincidixen; per la capçalera (:12-15) reimportar un UID actualitza l'acte: guanya l'últim fitxer.
+10. avisos.js:74-90 no desduplica; l'avís (:81-89) copia `id` i no porta `titular`: dos avisos amb el mateix id, indistingibles.
+11. Precedent de la casa: expedient.js:227 (idTerminiExpedient) i :241; l'id d'un termini d'expedient ja porta el seu amo.
+12. guardes.js:113 (ID_OPAC) i titular.js:105 (esTitular exigix esIdOpac): l'id d'un titular no porta mai «:»; el prefix és inequívoc.
+13. No és un límit documentat: cap comentari ni prova dels tres carrils diu que una llista siga d'un sol titular (grep sense resultat).
+    El MAPA de l'empresa, pas 6 (línia 457), preveu el contrari: la Llar mostra, en lectura, els venciments de l'activitat.
+14. No endollat: calendariObligacions i icsDeTerminis només els criden proves dels carrils (grep a src); fronteraModelsPurs.test.js:100-104.
+15. Ids d'ocurrència fixats (grep a src, tests, supabase i tooling): obligacions.test.js:29, 172 i 178, i avisos.test.js:80-82. Cap més.
+16. Línia base (npx vitest run sobre icsTerminis, obligacions, avisos, expedient i fronteraModelsPurs): 5 fitxers, 77 proves, verdes.
+
+ESCENARI
+Entrada: una persona amb la casa en un municipi (titular LLAR, rebut de SUMA fins al 2026-05-04) i el local en un altre (titular ACTIVITAT,
+rebut fins al 2026-06-01) exporta els dos calendaris junts: icsDeTerminis([...deLaLlar, ...deLActivitat]).
+Hui: dos actes, el 4 de maig i el 30 de juny. L'1 de juny no és al calendari i no hi ha cap error. Si exporta un fitxer per titular,
+els dos porten el mateix UID per al rebut de SUMA i importar el segon mou l'acte del primer: queda la data de l'últim fitxer importat.
+Amb la proposta: quatre ids distints i quatre actes (4 de maig, 1 de juny i dos el 30 de juny, la renda de cada titular); en dos fitxers,
+cap UID es repetix. Els avisos d'avisos.js també deixen de compartir id.
+
+FONT DE VERITAT
+- src/sections/gestoria/burocracia/nucli/icsTerminis.js:12-16: l'UID és estable perquè reimportar actualitze l'acte; «dues vegades el mateix
+  id» parla del mateix termini que canvia de data, no de dos terminis. icsTerminis.test.js:71-72 i 82-87 ho fixen i no es toquen.
+- src/sections/gestoria/burocracia/nucli/avisos.js:5-7: llig «qualsevol element que porte id i venciment». L'id és l'única clau que tots
+  els consumidors tenen garantida; per això ha de ser única entre titulars.
+- src/sections/gestoria/burocracia/nucli/obligacions.js:11-12: fail-closed, «l'obligació NO desapareix». És la font pròpia d'este carril
+  (l'autor citava «les guardes fallen cap al costat segur», que és doctrina de guardes.js, de privacitat).
+- src/sections/gestoria/projectes/nucli/expedient.js:20-22 i 226-227: l'id d'un termini d'expedient porta l'expedient; :324 i :334 tracten
+  dos expedients amb el mateix id com a incidència (EXPEDIENT_REPETIT), no com a fusió.
+- src/sections/gestoria/identitat/nucli/titular.js:5-9: la mateixa persona té un registre de LLAR i un d'ACTIVITAT.
+- _wiki_de_poble/04_escriptori/02_investigacio_ia/261004_0605_nit_claude/MAPA_EMPRESA_GESTORIA.txt, pas 6 (línia 457): la Llar mostra,
+  en lectura, els venciments de l'activitat. Dos titulars en una mateixa llista és el cas previst, no l'excepció.
+
+==== PROPOSTA (codi complet) ====
+Abans de picar: decisió del Mestre, perquè canvia la forma pública de l'id d'una ocurrència.
+Cap import nou, cap fitxer nou, cap dependència. Cinc blocs que van junts en el mateix canvi: un de producció i quatre
+assercions existents que fixen la forma vella de l'id. icsTerminis.js, avisos.js i expedient.js no canvien de cap línia.
+
+SUBSTITUÏX 1 · src/sections/gestoria/burocracia/nucli/obligacions.js · línies 344-347
+--- vigent ---
+function ocurrencia(ob, perfil, [aplica, motiu], finestra, cal) {
+  const { venciment, prudencia } = vencimentDe(ob, finestra, cal);
+  return {
+    id: `${ob.id}:${finestra.clau}`,
+--- nou ---
+/* L'id d'una ocurrència porta el titular davant. La llar i l'activitat d'una
+   mateixa persona, i les entitats que porta, compartixen obligacions i claus
+   de finestra: sense el titular, dos rebuts distints de SUMA tindrien el
+   mateix id, i avisos.js i icsTerminis.js, que només lligen l'id, els
+   prendrien pel mateix termini. Com idTerminiExpedient a Projectes, l'id és
+   únic entre amos. Un id opac no porta mai «:» (guardes.js): el primer «:»
+   separa sempre el titular de la resta. */
+function ocurrencia(ob, perfil, [aplica, motiu], finestra, cal) {
+  const { venciment, prudencia } = vencimentDe(ob, finestra, cal);
+  return {
+    id: `${perfil.titular.id}:${ob.id}:${finestra.clau}`,
+--- fi ---
+La resta de la funció (línies 348-370) queda igual. perVenciment (372-379) i l'ordenació final d'avisosDe no canvien de resultat:
+dins d'un calendari tots els ids compartixen el prefix i l'ordre relatiu és el mateix.
+
+SUBSTITUÏX 2 · src/sections/gestoria/burocracia/nucli/obligacions.test.js · línia 29
+Motiu: totes les cerques del fitxer (o['aeat-303:2026:1T'], el filtre startsWith('oepm') de la línia 167) continuen valent sense tocar-les,
+i el filtre de la 167 no passa en buit.
+--- vigent ---
+const perId = (calendari) => Object.fromEntries(calendari.ocurrencies.map((o) => [o.id, o]));
+--- nou ---
+/* L'id d'una ocurrència porta el titular davant: ací s'indexa pel que ve darrere. */
+const perId = (calendari) => Object.fromEntries(calendari.ocurrencies.map((o) => [o.id.slice(calendari.titular.length + 1), o]));
+--- fi ---
+
+SUBSTITUÏX 3 · src/sections/gestoria/burocracia/nucli/obligacions.test.js · línia 172
+--- vigent ---
+    expect(sumaPendent).toMatchObject({ id: 'suma-tributs-locals:2026:pendent', venciment: null, corregut: false });
+--- nou ---
+    expect(sumaPendent).toMatchObject({ id: 'tit_prova_activitat:suma-tributs-locals:2026:pendent', venciment: null, corregut: false });
+--- fi ---
+
+SUBSTITUÏX 4 · src/sections/gestoria/burocracia/nucli/obligacions.test.js · línia 178
+--- vigent ---
+    expect(calendari.ocurrencies.slice(0, 4).map((x) => x.id)).toEqual(['tgss-reta:2026:01', 'aeat-130:2025:4T', 'aeat-303:2025:4T', 'aeat-390:2025:anual']);
+--- nou ---
+    expect(calendari.ocurrencies.slice(0, 4).map((x) => x.id)).toEqual([
+      'tit_prova_activitat:tgss-reta:2026:01', 'tit_prova_activitat:aeat-130:2025:4T', 'tit_prova_activitat:aeat-303:2025:4T', 'tit_prova_activitat:aeat-390:2025:anual'
+    ]);
+--- fi ---
+
+SUBSTITUÏX 5 · src/sections/gestoria/burocracia/nucli/avisos.test.js · línies 80-82
+--- vigent ---
+    expect(avisos.map((a) => [a.id, a.nivell, a.presenta])).toEqual([
+      ['tgss-reta:2026:09', 'vencut', 'titular'], ['aeat-130:2026:3T', 'avis', 'gestoria'], ['aeat-303:2026:3T', 'avis', 'gestoria']
+    ]);
+--- nou ---
+    expect(avisos.map((a) => [a.id, a.nivell, a.presenta])).toEqual([
+      ['tit_prova_activitat:tgss-reta:2026:09', 'vencut', 'titular'], ['tit_prova_activitat:aeat-130:2026:3T', 'avis', 'gestoria'],
+      ['tit_prova_activitat:aeat-303:2026:3T', 'avis', 'gestoria']
+    ]);
+--- fi ---
+
+Proves existents que NO canvien, comprovades una per una: icsTerminis.test.js (els ids de TERMINIS s'escriuen a mà; la prova «amb el
+calendari d'obligacions», línies 102-113, compta actes i no mira cap id); expedient.test.js (no crida calendariObligacions);
+fronteraModelsPurs.test.js (cap fitxer nou, cap import nou, cap literal amb forma d'identificador).
+Efecte que el Mestre ha de saber: amb la llar i l'activitat juntes, la renda ix com dos actes «Termini fiscal» el mateix dia, un per
+titular. És una repetició, no una pèrdua.
+
+==== PROVA (vitest completa) ====
+Va a src/sections/gestoria/burocracia/nucli/icsTerminis.test.js, dins de describe('icsDeTerminis'), darrere de la prova «amb el
+calendari d'obligacions» (entre la línia 113 i la 114). No cal cap import nou: fa servir els que el fitxer ja té a les línies 5-8
+i les tres ajudes de les línies 10-12, que es copien ací literals perquè es veja d'on ix cada nom:
+
+import { describe, expect, test } from 'vitest';
+import { creaTitular } from '../../identitat/nucli/titular.js';
+import { DESCRIPCIO_GENERICA, icsDeTerminis, PRODID_TERMINIS, TITOL_GENERIC, TITOLS, uidDeTermini } from './icsTerminis.js';
+import { calendariObligacions } from './obligacions.js';
+
+const ARA = new Date(Date.UTC(2026, 9, 4, 6, 0, 0));
+const desplega = (text) => text.replace(/\r\n /g, '');
+const linies = (text) => desplega(text).split('\r\n').filter(Boolean);
+
+El bloc que s'afig, sencer:
+
+  test('la llar i l’activitat d’una persona: cap id es repetix i cada venciment de SUMA té el seu acte', () => {
+    const llar = creaTitular({ id: 'tit_prova_llar', tipus: 'persona', ambit: 'LLAR', alies: 'Casa de prova' });
+    const activitat = creaTitular({ id: 'tit_prova_activitat', tipus: 'persona', ambit: 'ACTIVITAT', alies: 'Activitat de prova', persona: 'tit_prova_llar' });
+    const suma = (fi) => ({ finestresExternes: { 'suma-tributs-locals': [{ periode: 'IBI', fi }] } });
+    const deLaLlar = calendariObligacions(2026, { titular: llar, tributsLocals: true, demandaOcupacio: false }, suma('2026-05-04')).ocurrencies;
+    const deLActivitat = calendariObligacions(2026, {
+      titular: activitat, regimIva: 'exempt', estimacioIrpf: 'objectiva', intracomunitari: false, operacionsAmbTercers: false, reta: false,
+      tributsLocals: true, demandaOcupacio: false, marques: []
+    }, suma('2026-06-01')).ocurrencies;
+    const totes = [...deLaLlar, ...deLActivitat];
+    // L'id porta el titular davant: les mateixes obligacions de dos titulars són quatre terminis distints.
+    // Abans, els dos de SUMA eren «suma-tributs-locals:2026:1» i els dos de la renda, «aeat-100:2025:anual».
+    expect(totes.map((o) => [o.id, o.venciment])).toEqual([
+      ['tit_prova_llar:suma-tributs-locals:2026:1', '2026-05-04'], ['tit_prova_llar:aeat-100:2025:anual', '2026-06-30'],
+      ['tit_prova_activitat:suma-tributs-locals:2026:1', '2026-06-01'], ['tit_prova_activitat:aeat-100:2025:anual', '2026-06-30']
+    ]);
+    const dtstart = (text) => linies(text).filter((x) => x.startsWith('DTSTART'));
+    const uids = (text) => linies(text).filter((x) => x.startsWith('UID:'));
+    // Exportats junts. Abans: dos actes, el 4 de maig i el 30 de juny; el rebut de l'1 de juny desapareixia sense cap avís.
+    const junts = icsDeTerminis(totes, { ara: ARA });
+    expect(dtstart(junts)).toEqual(['DTSTART;VALUE=DATE:20260504', 'DTSTART;VALUE=DATE:20260601', 'DTSTART;VALUE=DATE:20260630', 'DTSTART;VALUE=DATE:20260630']);
+    expect(new Set(uids(junts)).size).toBe(4);
+    // Un fitxer per titular. Abans: els mateixos UID, i importar el segon fitxer trepitjava l'acte del primer.
+    const fitxerLlar = uids(icsDeTerminis(deLaLlar, { ara: ARA }));
+    const fitxerActivitat = uids(icsDeTerminis(deLActivitat, { ara: ARA }));
+    expect(fitxerLlar).toHaveLength(2);
+    expect(fitxerLlar.filter((uid) => fitxerActivitat.includes(uid))).toEqual([]);
+    expect(fitxerLlar).toContain(`UID:${uidDeTermini('tit_prova_llar:suma-tributs-locals:2026:1')}`);
+    // El titular va dins de l'id, i de l'id només ix l'empremta.
+    expect(desplega(junts)).not.toContain('tit_prova');
+    // El mateix id (el mateix termini del mateix titular) continua sent un sol acte, el de la data més primerenca.
+    const repetit = icsDeTerminis([deLaLlar[0], { ...deLaLlar[0], venciment: '2026-05-05' }], { ara: ARA });
+    expect(dtstart(repetit)).toEqual(['DTSTART;VALUE=DATE:20260504']);
+  });
+
+Traça de la prova, feta a mà sobre el codi vigent i sobre la proposta:
+- Cada perfil dona dues ocurrències amb venciment: SUMA (la llar el 05-04, l'activitat el 06-01) i la renda el 06-30. La resta
+  d'obligacions ixen «no» amb eixos perfils (303 exempt, 130 objectiva, 349, 347, RETA i ocupació a fals, marques buides, llar sense IVA).
+- Hui CAU a la primera asserció: els ids són «suma-tributs-locals:2026:1» i «aeat-100:2025:anual», repetits en les dues llistes. Si es
+  llevara, cauria a la dels DTSTART (ixen dos actes, no quatre) i a la dels dos fitxers (els UID coincidixen).
+- Amb la proposta passa sencera: quatre ids, quatre actes ordenats per venciment i UID disjunts entre els dos fitxers.
+- L'última asserció passa hui i amb la proposta: guarda que el límit documentat (mateix id, la data més primerenca) no es mou.
+- Els comentaris de la prova diuen les dates amb lletres a propòsit: fronteraModelsPurs.test.js veta, també a les proves, huit xifres
+  seguides d'una lletra, i una data compacta davant d'una paraula hi passaria massa prop.
+
+==== ESMENES DELS ÀRBITRES INTEGRADES ====
+- CONTRADICCIÓ (on va el titular): reproducció el posa a l'empremta de l'UID (icsTerminis.js); doctrina i impacte, a l'id d'origen
+  (obligacions.js). Es tria l'id d'origen per conservadora: no eixampla el que llig l'exportador estret (frontera de privacitat), no deixa
+  els avisos amb ids repetits i val per a qualsevol consumidor que només llija l'id.
+- Reproducció, proposta (UID amb el titular): DESCARTADA pel punt anterior. Queda com a alternativa per al Mestre: uidDeTermini(id, titular)
+  amb el titular i l'id separats per un salt de línia dins de l'empremta; canvia la capçalera (8-16), els JSDoc (77 i 105) i la línia 120
+  d'icsTerminis.js, gira icsTerminis.test.js:67 i deixa els avisos com estan. Este annex no en dona el codi.
+- Reproducció, prova: INTEGRADA. El camí públic sencer (dos calendariObligacions i icsDeTerminis), la comprovació «un fitxer per titular»
+  i «el mateix id del mateix titular és un sol acte». uidDeTermini es crida amb un sol argument, perquè l'id ja porta el titular.
+- Reproducció, matisos: INTEGRATS. El defecte és latent (resum) i la (B) de l'autor detecta però no cura (resum i evidència 9).
+- Doctrina, proposta (l'id porta el titular; l'exportador no es toca; quatre assercions girades): INTEGRADA. El bloc de producció es
+  reduïx a les línies 344-347, perquè la resta de la funció no canvia.
+- Doctrina, prova A (obligacions.test.js, ids disjunts): INTEGRADA dins de la prova única, a la primera asserció; no es dona com a
+  segona prova. El tercer id compartit que hi cita (la demanda d'ocupació pendent) queda cobert pel mateix prefix.
+- Doctrina, prova B: INTEGRADA (és la mateixa traça que la d'impacte).
+- Doctrina, font de veritat: INTEGRADA. La font pròpia és obligacions.js:11-12, no la doctrina de guardes.js.
+- Doctrina, severitat «baixa»: NO APLICADA. La mediana és mitjana i la comprovació no la desmentix: és latent i no perd dades guardades,
+  però quan s'endolle li passa al perfil corrent (llar i activitat amb SUMA) i el que cau és un venciment de l'única peça que ix fora.
+- Impacte, proposta: INTEGRADA. El comentari de damunt de la funció és el seu, amb una frase més: l'id opac no porta mai «:».
+- Impacte, prova (quatre actes, ids distints, UID disjunts per fitxer): INTEGRADA.
+- Impacte, correcció a l'autor («tres suites» fixen ids): INTEGRADA. En són dues: obligacions.test.js i una asserció d'avisos.test.js.
+- Asserció de la línia 178: doctrina la compon amb .map i impacte l'escriu literal. Es tria la literal: una asserció fixa es llig sense
+  calcular.
+- Autor, proposta (B) i la seua prova (toThrow amb «dos titulars»): RETIRADES. Amb llar i activitat llançaria sempre (les dues porten la
+  renda) i, amb un fitxer per titular, els UID continuarien coincidint. La segona meitat de la seua prova es conserva al final de la nova.
+
+==== LÍMITS D'ESTE ANNEX ====
+- Res del que es proposa s'ha executat: ni la prova nova ni les quatre assercions girades. L'auditoria no escriu a src/ i la traça és
+  a mà. La línia base (5 fitxers, 77 proves) és del codi vigent.
+- Que els quatre UID siguen distints s'afirma per la funció (dues empremtes FNV-1a de 32 bits de quatre cadenes distintes), no per una
+  eixida vista.
+- La tria entre l'id d'origen i l'UID és del Mestre. Si tria l'UID, este annex no li dona el codi: cal demanar-lo.
+- La clau de les finestres externes continua sent posicional (obligacions.js:287-289): si la llista carregada es reordena, cada id passa
+  a un altre període i reimportar mou l'acte equivocat. És un altre defecte, dins d'un mateix titular; no s'arregla ací.
+- La renda de la llar i la de l'activitat ixen com dos actes el mateix dia. Fondre-les (una persona, una declaració) és una altra decisió.
+- Els avisos passen a tindre ids distints, però continuen sense camp `titular` (avisos.js:81-89): qui els pinte haurà de llegir el prefix
+  de l'id o rebre el titular per una altra via. No es toca.
+- No es dona variant [DEFECTE]: cap font signada es toca i l'arreglament no espera l'aprovació de cap tractor. Si el Mestre ajorna la
+  decisió, la prova nova no es pot afegir sola, perquè cauria.
+- La prova usa l'any 2026, com la resta del fitxer i de les proves del carril (les dates de SUMA ja les fixa obligacions.test.js:199-210).
+  Cap dada és real: titulars «tit_prova_…», un àlies inventat i dos dies de cobrament inventats.
+- El laboratori 261012_1315_auditoria_claude no existia quan s'ha escrit este annex: no s'ha pogut mirar si un altre annex toca
+  obligacions.js o les seues proves. La llista de germanes que s'ha rebut és només d'icsTerminis.js.

@@ -216,11 +216,14 @@ describe('amb l’aprovació vigent', () => {
     for (const vetada of CLAUS_VETADES) expect(claus, vetada).not.toContain(vetada);
     expect(JSON.stringify(r)).not.toMatch(/TITULAR|CREDITOR|B99999999|MANDAT|REFUNSINTETI|REFDOSSINTETICA|DOC7654321|0777|PERSONA|FORN|extracte_/);
 
-    /* El que sí que guarda: el que necessiten les xifres del Tauler. */
+    /* El que sí que guarda: el que necessiten les xifres del Tauler. Ordre del Mestre, 13-10-2026 (auditoria
+       de Codex 261013_1510, GES-A2): també l'id opac del compte, que no porta cap xifra seua. */
     const [compte] = r.extractes[0].lectura.comptes;
     expect(compte.capcalera).toEqual({
-      entitat: '9999', compte4: '4321', dataInicial: { a: 2026, m: 6, d: 1 }, dataFinal: { a: 2026, m: 6, d: 30 }, saldoInicial: 100000, divisa: 'EUR'
+      entitat: '9999', compte4: '4321', idCompte: llegeixC43(N43_SEPA).comptes[0].capcalera.idCompte,
+      dataInicial: { a: 2026, m: 6, d: 1 }, dataFinal: { a: 2026, m: 6, d: 30 }, saldoInicial: 100000, divisa: 'EUR'
     });
+    expect(compte.capcalera.idCompte).toMatch(/^[bcdfghjklmnpqrst]{16}$/);
     expect(compte.moviments).toEqual([{ dataOperacio: { a: 2026, m: 6, d: 10 }, dataValor: { a: 2026, m: 6, d: 10 }, centims: -2500, conceptComu: '03' }]);
     expect(compte.peu).toEqual({ saldoFinal: 97500 });
     expect(r.csv[0].lectura.moviments).toEqual([
@@ -249,6 +252,18 @@ describe('amb l’aprovació vigent', () => {
     expect(reduixCsv({ moviments: [{ fila: 2, concepte: 'PERSONA', comerc: 'FORN', centims: 5, saldo: null }], avisos: [] }).moviments)
       .toEqual([{ fila: 2, dataOperacio: null, dataValor: null, centims: 5, saldo: null }]);
     expect(reduixC43(null)).toEqual({ comptes: [], avisos: [] });
+  });
+
+  /* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front I · motors; auditoria de Codex 261013_1510, GES-A2). */
+  test('reduixC43 conserva l’id opac de c43.js i res més del compte; sense id, la capçalera és la d’abans', () => {
+    const capcalera = { entitat: '9999', oficina: '0001', compte4: '4321', idCompte: 'bcdfghjklmnpqrst', nom: 'TITULAR SINTETIC', divisa: 'EUR' };
+    const ambId = reduixC43({ comptes: [{ capcalera, moviments: [], peu: null }], avisos: [] }).comptes[0].capcalera;
+    expect(ambId).toMatchObject({ entitat: '9999', compte4: '4321', idCompte: 'bcdfghjklmnpqrst' });
+    expect(Object.keys(ambId)).not.toContain('oficina');
+    for (const idCompte of [undefined, '', 42, null]) {
+      const sense = reduixC43({ comptes: [{ capcalera: { ...capcalera, idCompte }, moviments: [], peu: null }], avisos: [] }).comptes[0].capcalera;
+      expect(Object.keys(sense), String(idCompte)).not.toContain('idCompte');
+    }
   });
 
   test('sense fitxers o massa fitxers de colp: ErrorTauler', async () => {

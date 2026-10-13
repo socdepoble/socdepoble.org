@@ -58,6 +58,8 @@ export const CATALOG_DETAIL_LOADERS = {
   'navegacio/paginacio': lazyRoute(() => import('./detalls/EspecimenPaginacio.jsx')),
   'navegacio/acordio': lazyRoute(() => import('./detalls/EspecimenAcordio.jsx')),
   'navegacio/nav-mobil': lazyRoute(() => import('./detalls/EspecimenNavMobil.jsx')),
+  /* Ordre del Mestre (261012, vespre) · el botó «Tornar a dalt», damunt de «Pobles». */
+  'navegacio/tornar-dalt': lazyRoute(() => import('./detalls/EspecimenTornarADalt.jsx')),
   'retroalimentacio/alerta': lazyRoute(() => import('./detalls/EspecimenAlerta.jsx')),
   'retroalimentacio/insignia': lazyRoute(() => import('./detalls/EspecimenInsignia.jsx')),
   'retroalimentacio/buit': lazyRoute(() => import('./detalls/EspecimenBuit.jsx')),

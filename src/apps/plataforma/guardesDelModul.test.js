@@ -7,7 +7,7 @@
    2 · la declaració de la Gestoria és la llista blanca de privacitat.test.js
        (aprovada pel Mestre) més les adreces de les fitxes que porta com a
        text, ni una més;
-   3 · la clausura del pont (AppGestoria.jsx, amb les quatre vistes i els
+   3 · la clausura del pont (AppGestoria.jsx, amb les cinc vistes i els
        Tractors que arrosseguen): Pedra Seca, plataforma i router només del
        nucli i amb noms que exposa; cap context, dada ni host.js; cap paquet
        fora de lucide-react (React és del nucli); cap xarxa, magatzem ni
@@ -228,7 +228,7 @@ describe('1 · les guardes del text (guardesDelModul.js)', () => {
   });
 });
 
-/* La Gestoria de veritat, des del pont amb les quatre vistes. */
+/* La Gestoria de veritat, des del pont amb les cinc vistes (la cinquena, Identitat i Finestreta, des de l'ordre del Mestre del 13-10-2026, pla 261013_1405, front H). */
 const GESTORIA = clausura(PONT);
 const RUTES = [...GESTORIA.fitxers.keys()];
 
@@ -255,10 +255,12 @@ describe('2 · la declaració de la Gestoria és la de la seua guarda de privaci
 });
 
 describe('3 · la clausura del pont de la Gestoria passa les guardes del build', () => {
-  test('la clausura mira de veres: les quatre vistes, el Cofre, el QR, el correu, l’XLSX, els Tractors i les fitxes', () => {
+  test('la clausura mira de veres: les cinc vistes, el Cofre, el QR, el correu, l’XLSX, els Tractors i les fitxes', () => {
     expect(RUTES).toEqual(expect.arrayContaining([
       'src/sections/gestoria/tauler/ShellGestoria.jsx', 'src/sections/gestoria/aprendre/Aprendre.jsx',
       'src/sections/gestoria/facturar/Facturacio.jsx', 'src/sections/gestoria/historic/Historic.jsx',
+      /* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front H): la Finestreta, la cinquena vista del pont, i el seu tractor. */
+      'src/sections/gestoria/finestreta/Finestreta.jsx', 'src/sections/gestoria/finestreta/nucli/tractorIdentitat.js',
       'src/sections/gestoria/facturacio/registre/qr.js', 'src/sections/gestoria/enviament/correuGestoria.js',
       'src/utils/fulls/xlsx.js', 'src/sections/tractors/useTractors.js'
     ]));

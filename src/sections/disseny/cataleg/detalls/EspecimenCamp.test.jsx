@@ -44,6 +44,17 @@ it('la descripció ja no diu que CampFitxer hereta required, i el contracte diu 
   expect(obligatori).toContain('només en enviar i si és el primer control invàlid del formulari');
 });
 
+/* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front D): la prop opt-in nomsVisibles té la seua fila. */
+it('el contracte documenta CampFitxer.nomsVisibles: cert per defecte, i en fals només el recompte', () => {
+  const { container } = render(<EspecimenCamp />);
+  const taula = within(container).getByRole('table', { name: 'Contracte' });
+  const [tipus, defecte, que] = filaDe(taula, 'CampFitxer.nomsVisibles');
+  expect(tipus).toBe('boolean');
+  expect(defecte).toBe('true');
+  expect(que).toContain('només el recompte («Cap carpeta triada», «1 fitxer», «N fitxers»)');
+  expect(que).toContain('onChange rep els fitxers igual');
+});
+
 it('l’espècimen viu de CampFitxer no porta required natiu i el botó du l’etiqueta del Camp', () => {
   render(<EspecimenCamp />);
   const input = screen.getByLabelText('Còpia de seguretat (JSON)');

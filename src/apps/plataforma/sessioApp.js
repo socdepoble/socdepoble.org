@@ -5,7 +5,12 @@
  * importa SessionContext ni el backend (fronteres.test.js, Model B) i no veu
  * el JWT, ni l'usuari, ni el rol de plataforma. La plataforma traduïx
  * `permisos.escriure` del manifest a `potEscriure` i, dins de l'app, li dona
- * això i res més:
+ * això i res més. Derogat EN PART per l'ordre del Mestre del 13-10-2026 (pla
+ * 261013_1405, front B: la boina de la Gestoria porta el titular de la
+ * sessió): s'hi afig una novena clau, `titular`, que només porta el nom,
+ * l'avatar i el poble de la persona, filtrats, i només a les apps internes
+ * que la declaren al manifest (permisos.titular 'sessio'). La resta d'apps
+ * la reben sempre null:
  *
  *   useSessioApp() · Object.freeze({
  *     estat        'comprovant' | 'dins' | 'fora' (sense SessionProvider, 'fora');
@@ -19,7 +24,9 @@
  *                  servidor darrere i entrar és impossible per disseny;
  *     marca        { nom, logotip, slug } de l'organització activa, o null;
  *     rutaEntrada  /registre?mode=entrar&tornar=<ruta actual>, la mateixa
- *                  que construïx RequireAuth (rutaDEntrada)
+ *                  que construïx RequireAuth (rutaDEntrada);
+ *     titular      { nom, avatar, poble } de la persona de la sessió, o null
+ *                  (ordre del Mestre, 13-10-2026; vegeu «El titular», més avall)
  *   })
  *
  *   EL MOTIU (ordres del Mestre, 261006: offline prioritari, el permís per a
@@ -62,7 +69,8 @@
  *     ProveidorApp i ací es crida amb useSessioDeLaRuta (ContextApp.jsx, que
  *     tampoc no arriba a cap app: PlataformaContext.jsx, que sí, ja no és a
  *     la clausura). Torna la instantània mínima { estat, idUsuari,
- *     esSuperadmin, marca }, i només la llig l'app que crida este ganxo.
+ *     esSuperadmin, marca, titular }, i només la llig l'app que crida este
+ *     ganxo.
  *     RouterContext i UIContext sí que hi són: no són ascendents de cap app.
  *     La porta és fronteres.test.js. En producció no hi ha HMR, i la sessió
  *     que arriba és la mateixa.
@@ -112,14 +120,28 @@
  *     Tres camps i prou: cap id, correu, rol, kind ni cap altra clau. És
  *     l'ÚNIC contracte de la marca de l'organització (marcaNeta): el
  *     logotip, text o null, el filtra la peça en pintar-lo (fontSegura).
+ *   · EL TITULAR (ordre del Mestre, 13-10-2026, pla 261013_1405, front B: la
+ *     boina taronja de la Gestoria porta el titular real de la sessió). És
+ *     SEMPRE la persona que ha entrat (la identitat de tipus 'persona' de
+ *     IdentitatContext; titularDeLActor, a fontSessio.js), mai l'entitat
+ *     activa: actuar com una organització no canvia qui porta la gestoria.
+ *     Només hi és amb les dues condicions alhora: el manifest el declara
+ *     (permisos.titular 'sessio', que validaManifestApp només admet en una app
+ *     interna) i l'estat no és 'fora'. En 'comprovant' es conserva, com la
+ *     marca. Tres camps i prou, congelats (titularNet): el nom (text, mai un
+ *     correu: un nom amb «@» passa a NOM_SENSE_NOM; 80 caràcters com a molt),
+ *     l'avatar (text o null; el filtra la peça en pintar-lo) i el poble (text
+ *     o ''). Cap id, correu, rol, kind ni testimoni. No va mai a la URL ni a
+ *     cap emmagatzematge: el pont només el torna.
  *   · Cap crida al port del backend ni a la xarxa: només llig la instantània
  *     de la ruta, el navegador i el que hi ha desat en este dispositiu.
  *   · Proves: ProveidorPlataforma amb `entorn.sessio` ({ estat, esSuperadmin?,
- *     marca?, enLinia?, modeProves?, recuperable? }) substituïx la instantània
- *     de la ruta (PlataformaContext.jsx). La marca de l'entorn ja és la
- *     marca, i passa pel mateix filtre de camps. enLinia, modeProves i
- *     recuperable, si són booleans, fixen el navegador, el mode de dades i la
- *     sessió desada; si no hi són, es llegixen de veres.
+ *     marca?, titular?, enLinia?, modeProves?, recuperable? }) substituïx la
+ *     instantània de la ruta (PlataformaContext.jsx). La marca i el titular de
+ *     l'entorn ja són la marca i el titular, i passen pel mateix filtre de
+ *     camps (i el titular, pel mateix permís del manifest). enLinia,
+ *     modeProves i recuperable, si són booleans, fixen el navegador, el mode
+ *     de dades i la sessió desada; si no hi són, es llegixen de veres.
  */
 import { useMemo, useRef, useSyncExternalStore } from 'react';
 import { useLocation } from '../../app/contexts/RouterContext';
@@ -161,6 +183,29 @@ export function marcaNeta(marca) {
   const nom = textONull(marca.nom);
   if (!nom) return null;
   return Object.freeze({ nom, logotip: textONull(marca.logotip), slug: textONull(marca.slug) });
+}
+
+/**
+ * El nom de reserva d'una persona sense nom o amb el correu per nom: el
+ * mateix de IdentitatContext (nomDePersona). Un correu no arriba mai a la boina.
+ */
+export const NOM_SENSE_NOM = 'El meu compte';
+const MAX_NOM_TITULAR = 80;
+
+/**
+ * El titular net i congelat (ordre del Mestre, 13-10-2026, pla 261013_1405,
+ * front B): { nom, avatar, poble } i cap altra clau. El nom, sense espais als
+ * extrems i de 80 caràcters com a molt (comptats per caràcter, no per unitat
+ * UTF-16); un nom amb «@» passa a NOM_SENSE_NOM. L'avatar, text o null; el
+ * poble, text o ''. null si no és un objecte o no porta cap nom.
+ */
+export function titularNet(titular) {
+  if (titular === null || typeof titular !== 'object') return null;
+  const cru = textONull(titular.nom);
+  if (!cru) return null;
+  const nom = cru.includes('@') ? NOM_SENSE_NOM : Array.from(cru.trim()).slice(0, MAX_NOM_TITULAR).join('').trim();
+  const poble = textONull(titular.poble);
+  return Object.freeze({ nom, avatar: textONull(titular.avatar), poble: poble ? poble.trim() : '' });
 }
 
 /**
@@ -263,12 +308,19 @@ export function useSessioApp() {
   const recuperable = mira && (desadaFixada ? deLEntorn.recuperable : desadaDeVeres);
   const desti = pathname + (search ? `?${search}` : '');
   const marcaDeLaRuta = deLaRuta?.marca ?? null;
+  /* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front B) · El titular, només
+     a l'app interna que el declara (vegeu «El titular», a la capçalera). */
+  const ambTitular = manifest.permisos?.titular === 'sessio';
+  const titularDeLaRuta = deLaRuta?.titular ?? null;
 
   return useMemo(() => {
     const motiu = motiuDe({ escriure, teSessio, esSuperadmin, estat, enLinia, modeProves, recuperable });
     let marca = null;
+    let titular = null;
     /* La de la ruta ja ve neta (marcaDeLActor); torna a passar pel filtre, com la de l'entorn. */
     if (estat !== ESTAT.FORA) marca = marcaNeta(deLEntorn ? deLEntorn.marca : marcaDeLaRuta);
+    /* El de la ruta també ve net (titularDeLActor), i també hi torna a passar. */
+    if (ambTitular && estat !== ESTAT.FORA) titular = titularNet(deLEntorn ? deLEntorn.titular : titularDeLaRuta);
     return Object.freeze({
       estat,
       teSessio,
@@ -277,7 +329,8 @@ export function useSessioApp() {
       enLinia,
       modeProves,
       marca,
-      rutaEntrada: rutaDEntrada({ mode: 'entrar', tornar: desti })
+      rutaEntrada: rutaDEntrada({ mode: 'entrar', tornar: desti }),
+      titular
     });
-  }, [deLEntorn, estat, teSessio, esSuperadmin, enLinia, modeProves, recuperable, marcaDeLaRuta, escriure, desti]);
+  }, [deLEntorn, estat, teSessio, esSuperadmin, enLinia, modeProves, recuperable, marcaDeLaRuta, escriure, desti, ambTitular, titularDeLaRuta]);
 }

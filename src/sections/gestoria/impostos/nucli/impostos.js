@@ -18,9 +18,22 @@
  *    encara no porta eixe camp.
  *  · 130 · el 20 % del rendiment acumulat de l'any fins al final del
  *    trimestre (bases de les emeses menys bases de les rebudes), menys les
- *    retencions de les emeses i els pagaments del 130 dels trimestres
+ *    retencions netes de les emeses i els pagaments del 130 dels trimestres
  *    anteriors. Sense eixos pagaments, l'estimació es fa sense descomptar-los
  *    i diu que és incompleta. Un resultat negatiu queda en zero.
+ *    Ordre del Mestre, 13-10-2026 (pla 261013_1405, front I · motors;
+ *    auditoria de Codex 261013_1510, GES-A4; era el [DEFECTE G1] de
+ *    defectes.onada12.test.js): la retenció d'una rectificativa (base
+ *    negativa) RESTA, amb el signe que li dona el model (nucli/model.js,
+ *    totalAmbRetencio). Una factura i el seu abonament íntegre són neutrals.
+ *    Si l'abonament és d'una factura d'un altre any, la retenció neta de
+ *    l'any pot ser negativa, i així es diu.
+ *  · Hisenda (resumHisenda) · el que surt a PAGAR de cada model, cadascun pel
+ *    seu compte. Derogat EN PART l'acord del 261012 (auditoria de Codex,
+ *    GES-04: el total era el net del 303 i del 130) per l'ordre del Mestre,
+ *    13-10-2026 (auditoria de Codex 261013_1510, GES-A5): un 303 a compensar
+ *    no és caixa ni cap devolució cobrada i no resta del 130; va a part
+ *    (ivaACompensar).
  * Les factures en una altra moneda, amb un import desconegut o pendents de
  * revisar no es compten (o es compten i es diu, les pendents): sempre ho diu
  * `falten`. Si cap factura del període no és en euros amb l'import llegit,
@@ -53,6 +66,9 @@ const enter = (x) => Number.isSafeInteger(x);
 const suma = (llista, camp) => llista.reduce((total, f) => total + f[camp], 0);
 const plural = (n, una, moltes) => (n === 1 ? una : `${n} ${moltes}`);
 const falta = (codi, missatge) => Object.freeze({ codi, missatge });
+/* GES-A4: la retenció amb el signe de la factura. El model la guarda en positiu; en una rectificativa
+   (base negativa) va girada, com al total (nucli/model.js, totalAmbRetencio). */
+const retencioAmbSigne = (f) => (enter(f.retencio) ? Math.abs(f.retencio) * (f.subtotal < 0 ? -1 : 1) : 0);
 
 /**
  * El trimestre natural d'una data { a, m, d }.
@@ -184,7 +200,7 @@ export function estimaIrpf130({ factures = [], any, t, pagamentsAnteriors = null
   const despeses = suma(grups.rebudes, 'subtotal');
   const rendiment = ingressos - despeses;
   const quota = rendiment > 0 ? Math.round((rendiment * TIPUS_PAGAMENT_130) / 100) : 0;
-  const retencions = grups.emeses.reduce((total, f) => total + (enter(f.retencio) ? Math.abs(f.retencio) : 0), 0);
+  const retencions = grups.emeses.reduce((total, f) => total + retencioAmbSigne(f), 0);
   return {
     ...base,
     completa: falten.length === 0,
@@ -209,17 +225,21 @@ function ordena(falten) {
 }
 
 /**
- * El que diu la targeta «Hisenda»: la suma de les dues estimacions del
- * trimestre. Sense cap de les dues xifres, null; amb una sola, la que hi ha,
- * i incompleta.
+ * El que diu la targeta «Hisenda»: el que caldria PAGAR este trimestre, la
+ * suma de la part a pagar de cada estimació (GES-A5, vegeu la capçalera). Un
+ * 303 negatiu no hi resta: és IVA a compensar (o, si toca, a demanar), no
+ * diners cobrats, i va a part. Sense cap de les dues xifres, null; amb una
+ * sola, la que hi ha, i incompleta.
  * @param {{ iva: object, irpf: object }} p el que tornen estimaIva303 i estimaIrpf130
- * @returns {{ total: number|null, completa: boolean, falten: object[] }}
+ * @returns {{ total: number|null, ivaACompensar: number|null, completa: boolean, falten: object[] }}
+ *   ivaACompensar: el que el 303 deixa a compensar (0 si surt a pagar); null sense 303
  */
 export function resumHisenda({ iva, irpf } = {}) {
   const xifres = [iva?.resultat, irpf?.resultat].filter(enter);
   const falten = ordena([...(iva?.falten ?? []), ...(irpf?.falten ?? [])]);
   return {
-    total: xifres.length ? xifres.reduce((total, x) => total + x, 0) : null,
+    total: xifres.length ? xifres.reduce((total, x) => total + Math.max(0, x), 0) : null,
+    ivaACompensar: enter(iva?.resultat) ? Math.max(0, -iva.resultat) : null,
     completa: xifres.length === 2 && Boolean(iva?.completa) && Boolean(irpf?.completa),
     falten
   };

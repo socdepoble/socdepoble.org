@@ -15,7 +15,28 @@
  * src/sections/disseny/cataleg/detalls`, sense comptar les proves ni este
  * fitxer). Una versió que no és la darrera és una data falsa a la pastilla.
  *
- * Darrera posada al dia: EspecimenXatLlista.jsx, 2026-10-10T13:05:23+02:00, Onada 10 (261010; revisió
+ * Darrera posada al dia: EspecimenCamp.jsx, 2026-10-13T17:17:21+02:00, ordre del Mestre del
+ * 13-10-2026 (pla 261013_1405, front D): la fila CampFitxer.nomsVisibles al contracte de l'espècimen,
+ * la prop opt-in de la privacitat de formulari.jsx (en fals, la línia d'estat només diu el recompte
+ * dels fitxers triats, mai els seus noms). La posa al dia la revisió adversarial 13-10-2026, troballa
+ * ORD-2: l'espècimen es va tocar després de la versió del front B i la pastilla deia una data falsa.
+ * Versió anterior: EspecimenPaginaApp.jsx i manifest.js, 2026-10-13T15:47:43+02:00, ordre del
+ * Mestre del 13-10-2026 (pla 261013_1405, front B: «A la part dreta de la barra taronja, SEMPRE la data
+ * i l'hora vives»): l'àtom nou RellotgeViu, registrat a registre.js (15:47:12) i pintat de veres a
+ * EspecimenControlsBarra.jsx (15:47:29), amb la seua fila al contracte; les props rellotgeViu i
+ * rellotge (i barActions, que hi faltava) al contracte d'EspecimenPaginaApp.jsx; i a manifest.js, el
+ * subtítol de controls-barra i les paraules de cerca.
+ * Versió anterior: EspecimenTornarADalt.jsx, 2026-10-12T22:08:14+02:00, revisió adversarial
+ * (261012) de l'ordre del Mestre del vespre: el botó «Tornar a dalt» no es pinta al final del
+ * recorregut (taparia l'última fila) ni amb un peu ancorat a baix («Desar autoria», el compositor del
+ * Xat), i EspecimenNavMobil.jsx (22:08:13) diu que amb un peu ancorat la barra inferior es queda.
+ * Versió anterior: EspecimenNavMobil.jsx, 2026-10-12T21:11:26+02:00, ordre del Mestre (261012,
+ * vespre): les barres acompanyen el scroll en compacte i el botó «Tornar a dalt» damunt de «Pobles»
+ * (Pedra Seca §9). L'espècimen nou EspecimenTornarADalt.jsx (21:10:44), amb les entrades noves de
+ * manifest.js (navegacio/tornar-dalt, l'emoji 🔝 i el node de l'arbre universal, 21:10:58), de
+ * detailRegistry.jsx i registre.js (BotoTornarADalt, 21:11:08); EspecimenNavMobil.jsx deroga el «No
+ * facis: amagar-la en fer scroll» i diu com acompanya el scroll.
+ * Versió anterior: EspecimenXatLlista.jsx, 2026-10-10T13:05:23+02:00, Onada 10 (261010; revisió
  * de l'Onada): la mostra de la llista que no carrega diu el text nou de SDP-XAT-003 («Mode Foraster»).
  * Arreplega EspecimenUniversalCard.jsx (13:04:54, Onada 10: el contracte d'`accio` diu que la Consola i
  * el Cervell porten «Obrir…» només a la seua pàgina) i els tocats el 261009 després de les 16:43 sense
@@ -90,4 +111,4 @@
  * Quan el manifest porte `creat` i `modificat` per espècimen, manaran eixos
  * camps i esta constant només farà de versió del conjunt.
  */
-export const VERSIO_CATALEG = '2026-10-10T13:05:23+02:00';
+export const VERSIO_CATALEG = '2026-10-13T17:17:21+02:00';

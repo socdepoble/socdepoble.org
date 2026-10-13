@@ -78,7 +78,10 @@ test('arranca el shell real i carrega els providers sense activar ErrorBoundary'
     loadFils: vi.fn(async () => []),
     /* Amb sessió, la identitat carrega les organitzacions on la persona mana
        (IdentitatContext): és una lectura esperada, no una crida inesperada. */
-    listMyOrganizations: vi.fn(async () => [])
+    listMyOrganizations: vi.fn(async () => []),
+    /* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front A) · I la fila de
+       profiles de la persona, per a pintar-la a la barra negra: també esperada. */
+    getProfile: vi.fn(async () => null)
   };
   setBackendImplementation(backend);
   try {
@@ -90,6 +93,7 @@ test('arranca el shell real i carrega els providers sense activar ErrorBoundary'
       expect(backend.loadMultimedia).toHaveBeenCalled();
       expect(backend.loadFils).toHaveBeenCalled();
       expect(backend.listMyOrganizations).toHaveBeenCalled();
+      expect(backend.getProfile).toHaveBeenCalled();
       expect(screen.getByRole('main')).toBeTruthy();
     });
     /* La ruta lazy real encara ha de resoldre després dels providers. El
@@ -234,6 +238,99 @@ test('acta 261004_1027 · amb sessió, l’avatar gran de la barra negra porta a
     cleanup();
     if (Object.keys(anterior).length) setBackendImplementation(anterior);
   }
+});
+
+/* ── Front A (ordre del Mestre, 13-10-2026; pla 261013_1405) · Avatar ──────
+   Shell real amb una sessió d'entrada amb contrasenya: sense metadades, només
+   el correu. Abans la barra negra pintava la inicial del correu i cap foto;
+   ara pinta el nom i la foto de la fila de profiles, que IdentitatContext
+   llig pel port neutral (getProfile). El control: sense fila, o amb la de
+   reserva de l'adaptador, la reserva de sempre. El DOM del botó és el de
+   l'acta 261004_1027 (Llei del Píxel): només en canvia el contingut. */
+const FOTO_FRONT_A = 'https://lh3.googleusercontent.com/a/pepa.png';
+const SENSE_METADADES = Object.freeze({ id: 'u-front-a', email: 'pepa@poble.test', user_metadata: Object.freeze({}) });
+
+async function muntaSenseMetadades(getProfile, cos) {
+  vi.stubGlobal('ResizeObserver', class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  });
+  vi.stubGlobal('matchMedia', vi.fn(query => ({
+    matches: false, media: query, onchange: null,
+    addListener: vi.fn(), removeListener: vi.fn(),
+    addEventListener: vi.fn(), removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn()
+  })));
+  vi.stubGlobal('fetch', vi.fn(() => { throw new Error('Xarxa inesperada'); }));
+  const anterior = { ...getBackendImplementation() };
+  setBackendImplementation({
+    ...Object.fromEntries(CONTRACTE_NUCLI.map(name => [name, async () => null])),
+    getCurrentUser: () => SENSE_METADADES,
+    getRuntimeDataMode: () => 'local',
+    getBackendConfigurat: () => true,
+    getDefaultUserId: () => SENSE_METADADES.id,
+    recullTornadaOAuth: async () => null,
+    loadCoreContent: async () => ({ towns: [], pages: [], agents: [] }),
+    loadMur: async () => ({ feedPosts: [], events: [], marketItems: [] }),
+    loadNotes: async () => ({ notes: [], noteFolders: [] }),
+    loadMultimedia: async () => ({ mediaItems: [], mediaTimelineGroups: [] }),
+    loadFils: async () => [],
+    listMyOrganizations: async () => [],
+    getProfile
+  });
+  /* L'estat de sessionService és de mòdul: se sincronitza abans de muntar (muntaAmbSessio). */
+  sincronitza();
+  window.history.replaceState(null, '', '/mur');
+  try {
+    render(<PedraSecaEmbed config={{ routerType: 'browser' }} />);
+    await cos();
+  } finally {
+    cleanup();
+    if (Object.keys(anterior).length) setBackendImplementation(anterior);
+  }
+}
+
+test('Front A (pla 261013_1405) · sense metadades, la barra negra pinta el nom i la foto de profiles', async () => {
+  const getProfile = vi.fn(async () => ({
+    id: SENSE_METADADES.id, full_name: 'Pepa Soler', avatar_url: FOTO_FRONT_A, town_name: 'La Torre de les Maçanes'
+  }));
+  await muntaSenseMetadades(getProfile, async () => {
+    const boto = await screen.findByRole('button', { name: 'El teu perfil: Pepa Soler' });
+    expect(getProfile).toHaveBeenCalled();
+    const header = boto.closest('header.bar-black');
+    expect(header).not.toBeNull();
+    expect(boto.className).toBe('sdp-top-bar-avatar');
+    expect(boto.querySelector('.sdp-avatar.sdp-avatar--lg')).not.toBeNull();
+    const img = await waitFor(() => {
+      const trobada = boto.querySelector('img');
+      expect(trobada).not.toBeNull();
+      return trobada;
+    });
+    expect(img.getAttribute('src')).toBe(FOTO_FRONT_A);
+    expect(img.getAttribute('referrerpolicy')).toBe('no-referrer');
+    /* Ni la inicial del correu ni el correu enlloc de la barra. */
+    expect(boto.querySelector('.sdp-avatar > span[aria-hidden="true"]')).toBeNull();
+    expect(header.textContent).not.toContain('pepa@poble.test');
+    expect(boto.getAttribute('title')).toBe('El teu perfil: Pepa Soler');
+    expect(header.querySelectorAll('[style]')).toHaveLength(0);
+  });
+});
+
+test.each([
+  ['sense fila (null)', null],
+  ['amb la fila de reserva de l’adaptador', { reserva: true, id: 'u-front-a', full_name: '', avatar_url: '', visibility: 'private', town_name: '' }]
+])('Front A (pla 261013_1405) · control: %s, la reserva de sempre (el correu i la seua inicial, cap foto)', async (_cas, fila) => {
+  const getProfile = vi.fn(async () => fila);
+  await muntaSenseMetadades(getProfile, async () => {
+    const boto = await screen.findByRole('button', { name: 'El teu perfil: pepa@poble.test' });
+    await waitFor(() => expect(getProfile).toHaveBeenCalled());
+    await act(async () => { await new Promise((r) => setTimeout(r, 0)); });
+    expect(boto.isConnected).toBe(true);
+    expect(boto.getAttribute('aria-label')).toBe('El teu perfil: pepa@poble.test');
+    expect(boto.querySelector('img')).toBeNull();
+    expect(boto.querySelector('.sdp-avatar > span[aria-hidden="true"]').textContent).toBe('P');
+  });
 });
 
 /* ── Rutes amb barrera, sense sessió ─────────────────────────────────────
@@ -736,6 +833,40 @@ test('261002 · una tornada d’OAuth amb sessió aterra a /el-meu-perfil des de
     expect(window.location.search).toBe('');
   }, { routerType: 'browser', dataMode: 'remote' },
   { recullTornadaOAuth: recull, getCurrentUser: () => usuari, listMyOrganizations: async () => [] });
+});
+
+/* Petició del Mestre (261012_2148) i GES-07 (auditoria de Codex 261012_2022) ·
+   La tornada de Google per redirecció decidix com l'entrada
+   (aterratgeDespresDEntrar): la porta de la Gestoria porta ?tornar al Tauler i
+   urlDeTornada el conserva. La closca i l'entrada ja no discrepen. */
+const tornadaOAuthAmbSessio = async (ruta, desti) => {
+  vi.stubGlobal('innerWidth', 1024);
+  let usuari = null;
+  let resol = null;
+  const recull = vi.fn(() => new Promise((r) => { resol = r; }));
+  await muntaSenseSessio(ruta, async () => {
+    await barres();
+    expect(recull).toHaveBeenCalledTimes(1);
+    usuari = { id: 'u-261012', user_metadata: { full_name: 'Pepa Soler' } };
+    await act(async () => {
+      window.dispatchEvent(new CustomEvent('sdp:auth-change', { detail: { user: usuari } }));
+      resol({ access_token: 'sintetic', user: usuari });
+    });
+    await waitFor(() => expect(window.location.pathname).toBe(desti));
+  }, { routerType: 'browser', dataMode: 'remote' },
+  { recullTornadaOAuth: recull, getCurrentUser: () => usuari, listMyOrganizations: async () => [] });
+};
+
+test('261012 · una tornada d’OAuth amb sessió des de la porta de la Gestoria aterra al Tauler', async () => {
+  await tornadaOAuthAmbSessio('/registre?mode=entrar&tornar=%2Fapp%2Fgestoria%2Ftauler', '/app/gestoria/tauler');
+});
+
+test('261012 · la decisió és de la closca: amb el ?tornar al Tauler també hi aterra fora de /registre', async () => {
+  await tornadaOAuthAmbSessio('/mur?tornar=%2Fapp%2Fgestoria%2Ftauler', '/app/gestoria/tauler');
+});
+
+test('261012 · una tornada d’OAuth amb el ?tornar d’una altra app continua aterrant al perfil', async () => {
+  await tornadaOAuthAmbSessio('/registre?mode=entrar&tornar=%2Fapp%2Fbar%2Fcarta', '/el-meu-perfil');
 });
 
 test('261002 · una tornada d’OAuth sense sessió no mou la ruta', async () => {

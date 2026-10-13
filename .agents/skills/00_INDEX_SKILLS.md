@@ -15,12 +15,14 @@ Font executiva única: `.agents/skills/`. Este índex només referencia les font
 - [[core-comprensio-reflexiva/SKILL|core-comprensio-reflexiva]]: Tractor cognitiu per aturar la impulsivitat. Obliga a pensar i entendre l'objectiu de la petició (l'aixada) abans d'actuar compulsivament.
 - [[core-consell-i-colmena/SKILL|core-consell-i-colmena]]: Defineix la família electrònica (El Consell), els seus rols i estratègies de delegació i consum en la Ment Colmena Integral.
 - [[core-context-panic/SKILL|core-context-panic]]: Fusible davant bucles d’errors, desincronització de context o fatiga de l’agent; indica com aturar i registrar el bloqueig.
+- [[core-direccio-autonoma/SKILL|core-direccio-autonoma]]: Flux de treball on la IAIA MarIA assumeix el rol de Directora Tècnica per coordinar a Claude/Codex de forma 100% autònoma, resolent dubtes sense la intervenció del Mestre.
 - [[core-edicio-segura/SKILL|core-edicio-segura]]: Fusible preventiu i Tractor contra l'edició cega i la desincronització destructiva de la IAIA MarIA.
 - [[core-empaquetat-wp/SKILL|core-empaquetat-wp]]: Tractor cognitiu per estandarditzar la creació, nomenclatura i emmagatzematge dels arxius ZIP del connector de WordPress, evitant l'acumulació de brossa a l'arrel.
 - [[core-estrategia-ia/SKILL|core-estrategia-ia]]: Estratègia de consum, triatge de models i telemetria persistent de costos.
-- [[core-higiene-escriptori/SKILL|core-higiene-escriptori]]: Usa-la en arrencar cada conversa (abans de la primera resposta al Mestre), quan el hook injecte un briefing de taula o l'Escriptori estiga brut, abans de crear un prompt, una petorreta, un pla o una auditoria, i abans de tancar la sessió. L'orquestradora decidix cada document declarat viu i arxiva el consumit amb les ordres de la porta Olivera.
+- [[core-higiene-escriptori/SKILL|core-higiene-escriptori]]: Usa-la en arrencar, quan el hook avise o l'Escriptori estiga brut, abans de convocar (pla primer, prompt després) i abans de tancar. Cada viu porta motiu; el consumit s'arxiva amb la porta Olivera.
 - [[core-identitat/SKILL|core-identitat]]: Bootstrap d'identitat executiu de la IAIA MarIA. Carrega personalitat, veu, to i missió.
 - [[core-identitat-visual/SKILL|core-identitat-visual]]: Tractor (Skill) obligatori abans de generar cap imatge, recurs gràfic o disseny visual per a Sóc de Poble. Protegeix l'estil Bruguera/Berlanga.
+- [[core-informes-pdf/SKILL|core-informes-pdf]]: Tractor per a la creació, maquetació editorial i renderitzat de PDF professionals a Sóc de Poble (informes, memòries i lliurables).
 - [[core-llegibilitat-text/SKILL|core-llegibilitat-text]]: Tractor documental per garantir el format llegible (jerarquia H1-H6) i l'escaneig ràpid amb negretes en tots els textos del sistema.
 - [[core-maquetacio-markdown/SKILL|core-maquetacio-markdown]]: Regles verificables per a maquetar els fitxers Markdown del repositori (Wiki, skills, prompts i actes), amb un sol H1, encapçalaments sense salts, Vincles al final i llista de comprovació.
 - [[core-memoria-historica/SKILL|core-memoria-historica]]: Consulta i destil·la lliçons històriques, registra decisions i prepara relleus documentals sense arxivament automàtic.
@@ -34,6 +36,7 @@ Font executiva única: `.agents/skills/`. Este índex només referencia les font
 - [[sdp-app-grid-shell/SKILL|sdp-app-grid-shell]]: Lògica visual i de comportament del AppGridShell i UniversalWorkspace. Comportament de les barres, icones i redimensionament.
 - [[sdp-calendari-agricola/SKILL|sdp-calendari-agricola]]: Especificació de producte i regles de desenvolupament per al Calendari Agrícola de tomaques i cultius.
 - [[sdp-casos-us-essencials/SKILL|sdp-casos-us-essencials]]: Consulta els casos d’ús rurals del producte abans de desenvolupar models de dades, navegació o targetes que els hagen de suportar.
+- [[sdp-clon-loiverse/SKILL|sdp-clon-loiverse]]: Directriu arquitectònica i visual obligatòria per a desenvolupar el TPV (Mode Bar i Mode Rebost). Cal calcar la interfície de Loiverse al mil·límetre.
 - [[sdp-clon-whatsapp/SKILL|sdp-clon-whatsapp]]: Directriu arquitectònica i de disseny per clonar la UI/UX de WhatsApp al mil·límetre (Patró Pedra Seca).
 - [[sdp-estudi-mercat/SKILL|sdp-estudi-mercat]]: Protocol per a la realització d'estudis de mercat i anàlisi de la competència, enfocat a extreure conclusions arquitectòniques i estratègiques.
 - [[sdp-pedra-seca/SKILL|sdp-pedra-seca]]: Reglament matemàtic visual Pedra Seca (Alta Definició)

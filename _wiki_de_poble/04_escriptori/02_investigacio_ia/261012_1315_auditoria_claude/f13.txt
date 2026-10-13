@@ -1,0 +1,184 @@
+ANNEX F13 · La plantilla del Kit Digital no té cap termini que isca de la data de l'acord: el temps d'instal·lar i facturar no es vigila
+Severitat final: baixa (autor: mitjana; àrbitres: reproducció baixa, doctrina baixa, impacte baixa)
+Veredicte: 3 de 3 (refuta: cap)
+Categoria: correccio · Lent d'origen: expedient
+Fitxer: src/sections/gestoria/projectes/nucli/expedient.js · Línies: 56-60 (canvi); 34, 36-44 i 236-252 (context)
+Decisió humana: sí · La gestoria confirma 3 mesos des de l'acord per a instal·lar i facturar (o 6 segons la convocatòria)? Plantilla o termini propi?
+Toca font signada: cap
+Solapaments: cap línia compartida (56-60); funcionals: F04 i F29 (117-141, un id nou a la plantilla) i F14 (82-93, l'acord passa a comptar)
+Imports verificats: sí · Línia base: 2 fitxers, 25 proves verdes (vitest 4.1.10): expedient.test.js i fronteraModelsPurs.test.js
+Estat: escrit
+
+RESUM
+L'expedient guarda la data de l'acord (DATES_EXPEDIENT.acord, que el motor veu com a «validacio») i té la fase «execucio», però cap
+dels tres terminis de la plantilla del Kit Digital naix d'eixa data: ixen de la concessió (6 mesos) i de la factura (3 i 15). Entre
+l'acord validat i la factura no hi ha cap venciment propi ni cap avís, i les dues justificacions queden pendents, sense data límit.
+Per a la Finestreta vol dir callar quan l'agent encara no ha facturat: el silenci és el costat insegur del motor. Hui no arriba a
+ningú, perquè el carril no està endollat. Es proposa un quart termini, «implantacio-i-factura» (fase execucio, origen acord, 3 mesos,
+qui: agent), i una prova que en fixa el venciment, l'avís a 7 dies, el pendent i el complit. La durada ve de memòria de l'autor i dels
+àrbitres, no del BOE: no s'aplica fins que la gestoria la confirme. Mentrestant, el mateix termini cap com a termini propi de l'expedient.
+
+EVIDÈNCIA
+Rutes des de src/sections/gestoria/; «:N» sola és de projectes/nucli/expedient.js (387 línies, arbre del 2026-10-12); «test:N», de la seua prova.
+1. :56-60 · vigent i literal: tres terminis, amb origen 'concessio' (6 mesos), 'factura' (3) i 'factura' (15). Cap amb origen 'acord'.
+2. :34 FASES porta 'execucio'; :40 mapa acord → 'validacio', que és a ORIGENS (burocracia/nucli/terminis.js:32). grep «validacio» a la
+   Gestoria: com a origen, només eixes dues línies. grep «dates.acord» a src: res. La data de l'acord no la llig cap termini ni cap funció.
+3. Escenari · :88-90 valida les dates; :209 deixa factura null; :238 fets = { sollicitud, concessio } (la fita de KIT, test:28, és `prevista`).
+4. signatura-acords · terminis.js:71-79: sumaMesos('2026-03-16', 6) = '2026-09-16', dimecres; no es corre; complit false (:242).
+5. Les dues justificacions · :244-245: dates.factura és null → venciment null i pendent «Falta la data «factura» de l’expedient.».
+6. burocracia/nucli/avisos.js:75 salta els dos pendents; avisos.js:77 dona 22 dies fins al 16 de setembre; avisos.js:53-54, cap llindar: [].
+7. Correcció a l'autor: «cap venciment entre juny i setembre» no és exacte, n'hi ha un (2026-09-16), que demana signar uns acords quan la
+   data de l'acord ja és informada. El nucli de la troballa aguanta: res de la plantilla llig eixa data.
+8. Amb la proposta · sumaMesos('2026-06-01', 3): total 24320 → '2026-09-01', dimarts (test:97 fixa el 2026-08-29 en dissabte): no es
+   corre. Del 25 d'agost a l'1 de setembre, 7 dies: avisos.js:53-56 dona llindar 7 i nivell 'proper'.
+9. El terme nou passa validaTermini (terminis.js:183-208): 'agent' és a QUI_FA (terminis.js:33), el text fa 79 caràcters (màxim 200) i no
+   casa cap forma d'identitat/nucli/guardes.js:63-73; l'id casa amb ID_OPAC (guardes.js:113): una fita feta del mateix id el dona per complit.
+10. Cap prova existent canvia: test:92 i test:109 indexen per `termini`; test:117 i test:129 són de 'subvencio' (plantilla buida); a
+    test:137-143 el terme nou és pendent (KIT no porta acord) i avisos.js:75 i burocracia/nucli/icsTerminis.js:117 el salten.
+11. Premissa legal · grep «ETD/1498» a src, tests i _wiki_de_poble/02_saber: una línia, :55, el nom de la norma sense cap termini. El
+    repositori no guarda les bases i el BOE no s'ha consultat: ni l'article ni la durada vigent queden acreditats.
+12. No és límit volgut: defectes.onada12.test.js porta G1, G2, G3 i un [LÍMIT VOLGUT] de resumTauler.js; res de l'expedient. tractors.js
+    no llista cap ruta de projectes/ (fronteraModelsPurs.test.js:106-110). Línia base: 2 fitxers, 25 proves verdes.
+
+ESCENARI
+Entrada · creaExpedient({ ...KIT, dates: { sollicitud: '2026-01-15', concessio: '2026-03-16', acord: '2026-06-01' } }), amb el KIT
+sintètic d'expedient.test.js:17-31: acord validat l'1 de juny de 2026 i encara sense factura. Es mira el dia 2026-08-25.
+
+Hui · terminisExpedient torna tres elements: 'signatura-acords' (venciment '2026-09-16', complit false) i les dues justificacions amb
+venciment null i pendent «Falta la data «factura» de l’expedient.». avisosDe(terminis, '2026-08-25') torna []. La data límit d'instal·lar
+i facturar no ix enlloc; l'únic avís del període és el de 'signatura-acords', des de l'1 de setembre (a 15 dies del 16), que demana
+signar uns acords que ja tenen data.
+
+Amb la proposta · quatre elements. El nou: termini 'implantacio-i-factura', fase 'execucio', origen { tipus: 'validacio', data:
+'2026-06-01' }, venciment '2026-09-01', corregut false, qui 'agent', complit false, pendent null, verificar «A verificar amb la gestoria.».
+avisosDe(terminis, '2026-08-25') torna un avís: l'id opac d'eixe termini, nivell 'proper', diesRestants 7, categoria 'expedient'.
+
+Variants · sense data d'acord (el KIT tal qual), el terme nou ix pendent: venciment null i «Falta la data «acord» de l’expedient.».
+Amb una fita feta del mateix id (fase 'execucio'), complit true, i avisosDe d'eixe mateix dia torna [].
+
+FONT DE VERITAT
+- src/sections/gestoria/projectes/nucli/expedient.js:6-8 (capçalera): «El programa porta la plantilla de terminis (els del Kit Digital, amb les bases com a font)». Cap comentari diu que el tram entre l'acord i la factura es deixe fora.
+- expedient.js:55: la font declarada del programa és «Orde ETD/1498/2021 (bases reguladores del Kit Digital) i la convocatòria de cada segment». Al repositori només hi ha el nom de la norma: cap article i cap durada. Que el temps d'instal·lar i facturar siga de tres mesos des de la validació de l'acord ve de la memòria de l'autor i dels tres àrbitres, que coincidixen en la substància i no en el número d'article, i que recorden, sense poder-ho comprovar, que alguna convocatòria l'allarga a sis.
+- Evidència interna, que no depén del BOE: expedient.js:34 (fase 'execucio') i expedient.js:40 (acord → 'validacio'), amb src/sections/gestoria/burocracia/nucli/terminis.js:32 (ORIGENS). El model té la data, l'origen i la fase, i cap termini de la plantilla els fa servir: és maquinària posada i sense endollar, no una exclusió escrita.
+- _wiki_de_poble/04_escriptori/02_investigacio_ia/261004_0605_nit_claude/MAPA_EMPRESA_GESTORIA.txt:444-449 (pas 5): el fitxer es va encarregar amb «terminis del Kit Digital» i amb proves dels «terminis de les fases».
+- terminis.js:19-21: sense festius, «el venciment que dona pot ser ANTERIOR al real, mai posterior: és el costat segur». Un termini que no existix és el cas contrari: el motor calla. I src/sections/gestoria/burocracia/nucli/avisos.js:7-8: «Un element sense venciment (pendent de dades) no s'avisa».
+- src/sections/gestoria/defectes.onada12.test.js: cap prova [DEFECTE] ni [LÍMIT VOLGUT] parla de l'expedient. No és un defecte conegut ni un límit acceptat.
+- Correcció a la troballa de l'autor: l'«art. 30» de l'Orde no s'ha de citar enlloc, perquè ningú l'ha contrastat. L'únic article 30 que hi ha al carril és el de la Llei 39/2015 (terminis.js:8 i terminis.js:35), que regula el còmput dels terminis i no el Kit Digital.
+
+==== PROPOSTA (codi complet) ====
+Un sol bloc sobre un sol fitxer. Cap import nou: plantilla és del mateix fitxer (línia 46) i el terme nou només porta literals. 'execucio' és a FASES (línia 34), 'acord' a DATES_EXPEDIENT (línia 40), 'mesos' a UNITATS (terminis.js:31) i 'agent' a QUI_FA (terminis.js:33).
+
+Condició prèvia (decisió humana): no s'aplica fins que la gestoria, o el text consolidat de les bases i la convocatòria del segment, confirme la durada. La proposta porta 3 mesos, que és la durada que recorden l'autor i els tres àrbitres i, si la real fora més llarga, la que cau del costat segur del motor (un venciment anterior al real, mai posterior).
+
+SUBSTITUÏX 1 de 1 · src/sections/gestoria/projectes/nucli/expedient.js · línies 56-60 (PROGRAMES['kit-digital'].terminis)
+Motiu: la plantilla guanya un termini que naix de la data de l'acord, entre la signatura i la primera justificació. El comentari deixa escrit el costat segur i com es dona per complit.
+
+--- VIGENT ---
+    terminis: plantilla([
+      { id: 'signatura-acords', fase: 'acord', origen: 'concessio', durada: 6, unitat: 'mesos', qui: 'titular', consequencia: 'Sense acords de prestació signats a temps, el bo digital caduca.' },
+      { id: 'primera-justificacio', fase: 'justificacio', origen: 'factura', durada: 3, unitat: 'mesos', qui: 'agent', consequencia: 'Sense la primera justificació a temps, es pot perdre l’ajuda.' },
+      { id: 'segona-justificacio', fase: 'justificacio', origen: 'factura', durada: 15, unitat: 'mesos', qui: 'agent', consequencia: 'Sense la segona justificació, després del període de prestació, es pot haver de reintegrar.' }
+    ]),
+--- NOU ---
+    /* «implantacio-i-factura» és l'únic termini que naix de la data de l'acord: el temps de l'agent per a
+       instal·lar la solució i emetre la factura. Si la convocatòria del segment dona més temps, la data
+       real és posterior a la calculada, mai anterior (el costat segur de terminis.js). Es dona per complit
+       com els altres: amb una fita feta del mateix id, no en omplir la data de la factura. */
+    terminis: plantilla([
+      { id: 'signatura-acords', fase: 'acord', origen: 'concessio', durada: 6, unitat: 'mesos', qui: 'titular', consequencia: 'Sense acords de prestació signats a temps, el bo digital caduca.' },
+      { id: 'implantacio-i-factura', fase: 'execucio', origen: 'acord', durada: 3, unitat: 'mesos', qui: 'agent', consequencia: 'Sense la solució instal·lada i la factura emesa a temps, es pot perdre l’ajuda.' },
+      { id: 'primera-justificacio', fase: 'justificacio', origen: 'factura', durada: 3, unitat: 'mesos', qui: 'agent', consequencia: 'Sense la primera justificació a temps, es pot perdre l’ajuda.' },
+      { id: 'segona-justificacio', fase: 'justificacio', origen: 'factura', durada: 15, unitat: 'mesos', qui: 'agent', consequencia: 'Sense la segona justificació, després del període de prestació, es pot haver de reintegrar.' }
+    ]),
+--- FI ---
+
+Cap fitxer nou. El cens de src/sections/gestoria/fronteraModelsPurs.test.js (línies 44-51) no canvia, i cap dels seus patrons veta res del bloc: el comentari i el text no porten cap global de pantalla, cap API de xarxa ni d'emmagatzematge, cap URL ni cap literal amb forma de DNI, NIE o IBAN. src/sections/gestoria/privacitat.test.js escaneja el mateix fitxer amb vetos de la mateixa classe (xarxa, emmagatzematge, URL, finestres, literals d'identificador) i tampoc hi troba res.
+
+Cap prova existent afirma el comportament que canvia. Les proves del Kit Digital d'expedient.test.js lligen els terminis per id (línies 92 i 109) i no en compten cap; les que desestructuren per posició (línies 117 i 129) són del programa 'subvencio', de plantilla buida. A la prova d'avisos i .ics (línies 136-144) el terme nou és pendent, perquè KIT no porta data d'acord, i ni avisosDe ni icsDeTerminis miren un element sense venciment.
+
+Via provisional, sense tocar codi: el mateix termini cap hui com a termini propi d'un expedient, { id: 'implantacio-i-factura', fase: 'execucio', origen: 'acord', durada: 3, unitat: 'mesos', qui: 'agent' }, que comprovaTerminis accepta (línies 129-139). Si després s'aplica este bloc, eixe expedient s'ha de tornar a crear sense el termini propi: vegeu els límits (F04 i F29).
+
+==== PROVA (vitest completa) ====
+Fitxer: src/sections/gestoria/projectes/nucli/expedient.test.js (el que ja existix). Cap import nou; la prova fa servir el que el fitxer ja importa a les línies 5-12 i el KIT de les línies 17-31:
+
+import { describe, expect, test } from 'vitest';
+import { VERIFICAR } from '../../identitat/nucli/guardes.js';
+import { avisosDe } from '../../burocracia/nucli/avisos.js';
+import { icsDeTerminis, TITOLS } from '../../burocracia/nucli/icsTerminis.js';
+import {
+  avisosExpedient, avisosFinancament, comprovaDobleFinancament, conservacioExpedient, creaExpedient, faseActual, idTerminiExpedient, MISSATGE_DOBLE_UE,
+  potImputar, PROGRAMES, terminisExpedient, validaExpedient
+} from './expedient.js';
+
+Va dins de describe('els terminis de l’expedient'), darrere de la prova 'sense la data d’origen, pendent; amb la fita feta, complit'. Les dades són sintètiques: l'expedient de prova del fitxer, sense cap dada personal.
+
+SUBSTITUÏX · src/sections/gestoria/projectes/nucli/expedient.test.js · línies 113-114
+
+--- VIGENT ---
+    expect(faseActual(exp)).toBe('acord');
+  });
+--- NOU ---
+    expect(faseActual(exp)).toBe('acord');
+  });
+
+  test('la primera fase del Kit Digital: tres mesos des de la validació de l’acord per a instal·lar i facturar', () => {
+    // Acord validat l'1 de juny de 2026 i encara sense factura. L'1 de setembre de 2026 és dimarts: no es corre.
+    const dates = { sollicitud: '2026-01-15', concessio: '2026-03-16', acord: '2026-06-01' };
+    const terminis = terminisExpedient(creaExpedient({ ...KIT, dates }));
+    const t = Object.fromEntries(terminis.map((x) => [x.termini, x]));
+    expect(t['implantacio-i-factura']).toMatchObject({
+      id: idTerminiExpedient('exp_kit_prova', 'implantacio-i-factura'), fase: 'execucio', origen: { tipus: 'validacio', data: '2026-06-01' },
+      venciment: '2026-09-01', corregut: false, qui: 'agent', complit: false, pendent: null, verificar: VERIFICAR
+    });
+    // El 25 d'agost falten 7 dies: s'avisa. La signatura (16 de setembre) és a 22 dies i les justificacions esperen la factura.
+    expect(avisosDe(terminis, '2026-08-25').map((a) => [a.id, a.nivell, a.diesRestants, a.categoria]))
+      .toEqual([[idTerminiExpedient('exp_kit_prova', 'implantacio-i-factura'), 'proper', 7, 'expedient']]);
+    // Sense la data de l'acord, pendent, i diu quina data falta.
+    const pendent = terminisExpedient(creaExpedient(KIT)).find((x) => x.termini === 'implantacio-i-factura');
+    expect(pendent).toMatchObject({ venciment: null, complit: false });
+    expect(pendent.pendent).toMatch(/acord/);
+    // Amb la fita feta del mateix id, complit: ja no s'avisa.
+    const fet = terminisExpedient(creaExpedient({ ...KIT, dates, fites: [...KIT.fites, { id: 'implantacio-i-factura', fase: 'execucio', feta: '2026-07-10' }] }));
+    expect(fet.find((x) => x.termini === 'implantacio-i-factura').complit).toBe(true);
+    expect(avisosDe(fet, '2026-08-25')).toEqual([]);
+  });
+--- FI ---
+
+Resultat esperat, per traça (no executat): amb la proposta, npx vitest run src/sections/gestoria/projectes/nucli/expedient.test.js src/sections/gestoria/fronteraModelsPurs.test.js dona 2 fitxers i 26 proves verdes.
+- Hui cau a la primera asserció: t['implantacio-i-factura'] és undefined i toMatchObject el rebutja. Si no caiguera ací, cauria la de l'avís, que hui torna [].
+- Venciment: sumaMesos('2026-06-01', 3) = '2026-09-01' (terminis.js:71-79), dimarts; primerHabil no el mou i corregut és false. L'origen que veu el motor és { tipus: 'validacio', data: '2026-06-01' } (expedient.js:247).
+- Avís: diesEntre('2026-08-25', '2026-09-01') = 7; nivellDe(7) amb [15, 7, 2] creua 15 i 7, el llindar és 7, que no és ni el primer ni l'últim: 'proper' (avisos.js:53-56). 'signatura-acords' és a 22 dies i no creua cap llindar; les dues justificacions tenen venciment null.
+- Pendent: amb el KIT tal qual, dates.acord és null i expedient.js:245 torna «Falta la data «acord» de l’expedient.».
+- Complit: la fita nova passa comprovaFites (expedient.js:108-113): id opac, fase 'execucio' i data vàlida. fets la porta (expedient.js:238), complit és true, i avisos.js:75 salta l'element.
+- Cap literal de la prova casa amb els patrons de fronteraModelsPurs.test.js:81-85, que també llig les proves: no hi ha cap seqüència de huit xifres seguides.
+- No és una prova [DEFECTE]: cau hui i passa amb l'arreglament. Si l'arreglament s'ajorna i es vol deixar constància, la forma de la casa és afirmar els valors de hui (el terme no existix i avisosDe torna []) amb els correctes escrits al costat, a src/sections/gestoria/defectes.onada12.test.js.
+
+==== ESMENES DELS ÀRBITRES INTEGRADES ====
+- Reproducció, doctrina i impacte, proposta: el camp `consequencia` diu què s'hi juga i no repetix l'obligació. INTEGRADA.
+- Contradicció en la redacció de `consequencia`: reproducció i doctrina escriuen «dins de la primera fase» i «l'ajuda d'eixe acord»; impacte, «a temps» i «l'ajuda». Es tria la d'impacte per conservadora: no posa en un text de producte ni el terme «primera fase» ni l'abast «d'eixe acord», que ningú ha contrastat amb les bases, i té la mateixa forma que 'primera-justificacio'.
+- Reproducció (b), doctrina i impacte: cap «art. 30» al codi ni a la prova. INTEGRADA; a la font de veritat s'avisa que l'article 30 que hi ha al carril és el de la Llei 39/2015.
+- Reproducció (c), doctrina i impacte: decisió humana prèvia sobre la durada, amb 3 mesos com a valor del costat segur. INTEGRADA a la capçalera, a la condició prèvia del bloc i al comentari.
+- Doctrina, proposta: un comentari que explique el costat segur. INTEGRADA amb un retoc: es lleva «porta el termini de les bases», que afirma el que no s'ha verificat, i s'hi afig com es dona per complit, que és l'observació que fan els tres àrbitres.
+- Impacte, proposta: la via provisional com a termini propi de l'expedient. INTEGRADA com a nota, amb l'avís de la col·lisió d'ids (F04 i F29) que cap àrbitre esmenta.
+- Reproducció, doctrina i impacte, observació: `complit` només depén d'una fita feta del mateix id. INTEGRADA al comentari i als límits; no es toca el model.
+- Reproducció, errada de lectura de l'autor (sí que hi ha un venciment entre juny i setembre, el 2026-09-16). INTEGRADA a l'evidència i a l'escenari.
+- Els tres, prova: dates coherents (acord sense factura) en lloc d'heretar la factura del 29 de maig de KIT. INTEGRADA.
+- Els tres, prova: l'avís a 7 dies, que és el que la troballa denuncia. INTEGRADA en una sola asserció amb l'id, el nivell, els dies que falten (doctrina) i la categoria (impacte).
+- Prova, el complit: reproducció el prova amb el KIT tal qual (factura sense acord); doctrina i impacte, amb les dates de l'escenari. Es tria la de doctrina i impacte, que no barreja dades incoherents, amb les dues assercions d'impacte (complit true i cap avís).
+- Prova, la data de la fita feta (20 d'agost, 15 de juliol o 10 de juliol segons l'àrbitre): és indiferent per al resultat; queda el 10 de juliol.
+- Severitat: els tres àrbitres proposen baixa i la comprovació pròpia no ho desmentix: el carril no està endollat, cada termini porta la llegenda de verificar, no hi ha pèrdua de dades ni eixida d'identificadors, i la norma no està contrastada.
+
+==== LÍMITS D'ESTE ANNEX ====
+- La prova nova NO s'ha executat: l'auditoria no escriu a src/. El que se'n diu és traça estàtica sobre el codi llegit. La línia base sí que s'ha executat (2 fitxers, 25 proves verdes: 18 d'expedient.test.js i 7 de fronteraModelsPurs.test.js, comptades al fitxer).
+- No s'ha passat el linter sobre el codi proposat. La forma és la de les línies veïnes: cometes simples, dos espais, punt i coma, apòstrof tipogràfic dins dels textos i recte als comentaris.
+- La premissa legal NO està verificada. El repositori no guarda les bases i el BOE no s'ha consultat des d'esta sessió. Ni el número d'article ni la durada vigent queden acreditats, ni si el termini és prorrogable. Les altres tres durades de la plantilla (6, 3 i 15 mesos) tampoc s'han contrastat: només se n'ha comprovat el càlcul.
+- Si la gestoria diu 6 mesos, canvien quatre coses i res més: `durada: 6` al terme nou; a la prova, el venciment passa a '2026-12-01' (dimarts, no es corre), el dia dels dos avisosDe passa a '2026-11-24' (7 dies abans; 'signatura-acords' ja fa 69 dies que ha vençut i avisos.js:79 la deixa fora), el comentari de la prova i el títol diuen «sis mesos». Traçat, no executat.
+- El terme nou es dona per complit com tots: amb una fita feta del mateix id (expedient.js:238 i 242). Omplir dates.factura no el tanca, igual que omplir dates.acord no tanca hui 'signatura-acords'. Fins que es marque la fita, continuarà avisant encara que la factura ja existisca. Fer que una data tanque un termini és un canvi de model i una decisió a part.
+- L'avís no diu qui el fa: avisos.js:80 llig `presenta`, no `qui`, i el missatge del terme nou serà «El teu termini.» encara que siga de l'agent, com ja passa amb 'primera-justificacio'. Queda fora d'este annex.
+- Solapament funcional amb F04 i F29 (comprovaTerminis, línies 117-141, no refusa ids repetits ni els que tapen un termini del programa): la proposta afig un id a la plantilla. Un expedient que ja porte un termini propi 'implantacio-i-factura' (la via provisional) tindria dos elements amb el mateix id opac: dos avisos i un sol acte al .ics. Convé resoldre F04 o F29 abans, o tornar a crear eixos expedients sense el termini propi. Hui no n'hi ha cap: el carril no està endollat.
+- Solapament funcional amb F14 (comprovaDates, línies 82-93, només compara concessió i sol·licitud): amb la proposta, la data de l'acord passa a generar un venciment. Un acord anterior a la concessió, o una factura anterior a l'acord, passen la validació i donarien un termini calculat sobre dates incoherents.
+- Cap germana toca les línies 56-60. F27 i F37 toquen PROGRAMES.subvencio (63-72), que este bloc no mou.
+- Les dates de la prova són del 2026, com les del KIT del fitxer, i no d'un any llunyà: el dia de la setmana de l'1 de setembre es recolza en el que ja fixa la prova de la línia 97 (2026-08-29, dissabte).
+- No s'ha comprovat executant que els quatre ids opacs derivats del Kit Digital siguen diferents entre ells; idOpacDerivat (guardes.js:142-151) dona 32 bits dobles i la col·lisió és improbable, però només ho diria l'execució.
+- El hook no deixa executar git: no s'ha confirmat que expedient.js coincidix amb l'últim commit. L'annex descriu l'arbre de treball llegit el 2026-10-12.
+- expedient.js no és font de cap tractor signat hui (tractors.js no llista cap ruta de projectes/, i fronteraModelsPurs.test.js:106-110 ho afirma). Quan el carril s'endolle i entre al manifest d'un tractor, qualsevol canvi posterior del fitxer tornarà eixa aprovació a «pendent»; aleshores esta troballa torna a mitjana si no s'ha resolt.

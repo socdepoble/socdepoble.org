@@ -276,20 +276,22 @@ test.each(MODES)('sense sessió, en mode %s i amb el servidor caigut, la Gestori
   });
 }, 15000);
 
-/* L'única porta de la Gestoria cap a /registre és un clic de la persona: el
-   nom de la boina enllaça al perfil propi (ShellGestoria.jsx:54, RUTA_TITULAR),
-   que sí que porta guarda (App.jsx:838). Es fixa tal com és: canviar-ho és
-   decisió del Mestre. En remot, l'entrada no canvia de mode: és el [CONTROL]
-   de les proves [DEFECTE D1] de més avall. */
-test('[CONTROL] sense sessió, en mode remote, només el clic al titular de la boina porta a /registre (el perfil propi té guarda)', async () => {
+/* Les portes de la Gestoria cap a /registre són sempre un clic de la persona.
+   Decisió del Mestre (petició 261012_2148, via MarIA, acatada al xat): sense
+   sessió, el nom de la boina porta a l'entrada amb la tornada al Tauler
+   (AppGestoria, entradaAlTauler), i en entrar s'hi aterra (rutaEntrada.js,
+   aterratgeDespresDEntrar). En remot, l'entrada no canvia de mode: és el
+   [CONTROL] de les proves [DEFECTE D1] de més avall. */
+const ENTRADA_AL_TAULER = `${RUTA_ENTRADA}?mode=entrar&tornar=%2Fapp%2Fgestoria%2Ftauler`;
+test('[CONTROL] sense sessió, en mode remote, només el clic al titular de la boina porta a /registre, amb la tornada al Tauler', async () => {
   await munta('/app/gestoria/tauler', async () => {
     await h1DeLApp('gestoria');
     const titular = within(contenidor('gestoria')).getAllByRole('link').find((enllac) => enllac.textContent.includes('Titular sense configurar'));
-    expect(titular?.getAttribute('href')).toBe('/el-meu-perfil');
+    expect(titular?.getAttribute('href')).toBe(ENTRADA_AL_TAULER);
     expect(window.location.pathname).toBe('/app/gestoria/tauler');
     fireEvent.click(titular);
     await waitFor(() => expect(window.location.pathname).toBe(RUTA_ENTRADA));
-    expect(tornar()).toBe('/el-meu-perfil');
+    expect(tornar()).toBe('/app/gestoria/tauler');
     /* L'entrada ja muntada (OnboardingSection.jsx:370-371): en remot no demana res. */
     expect(await screen.findByRole('heading', { name: 'Benvinguda al Mas Electrònic' }, { timeout: 8000 })).toBeTruthy();
     expect(dades.enterRemoteMode).not.toHaveBeenCalled();
@@ -320,7 +322,7 @@ async function clicAlTitularFinsAlRegistre() {
   expect(dades.enterRemoteMode).not.toHaveBeenCalled();
   fireEvent.click(titular);
   await waitFor(() => expect(window.location.pathname).toBe(RUTA_ENTRADA));
-  expect(tornar()).toBe('/el-meu-perfil');
+  expect(tornar()).toBe('/app/gestoria/tauler');
   expect(await screen.findByRole('heading', { name: 'Benvinguda al Mas Electrònic' }, { timeout: 8000 })).toBeTruthy();
 }
 const AVIS_SERVIDOR_CAIGUT = /El servidor del poble no respon ara mateix/;
@@ -363,17 +365,66 @@ test.each(['local', 'seed'])('[DEFECTE D1] sense sessió, en mode %s, amb la cap
   }, { dataMode: mode, capacitats: { comprovaServidor: sonda } });
 }, 15000);
 
-test('amb sessió, la Gestoria es pinta igual que sense', async () => {
+/* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front B): «Si hi ha un usuari
+   autenticat, la barra taronja de TOTES les pàgines de la Gestoria ha de
+   mostrar automàticament el seu avatar i el seu nom. Mai ha de recaure en
+   “Titular sense configurar” si hi ha sessió», i «a l'extrem dret, SEMPRE la
+   data i l'hora vives». Derogat EN PART per eixa ordre la decisió del Mestre
+   de la petició 261012_2148 («la sessió no porta cap dada de la persona a la
+   Gestoria: la pintura és la mateixa amb sessió i sense, llevat de la porta
+   del compte»), que esta prova fixava. Ara, amb sessió, la boina (i qualsevol
+   autoria de la pàgina) porta la persona de la sessió, enllaçada al perfil;
+   l'entradeta la saluda i no queda cap porta del titular («Configura el
+   titular» tampoc: la sessió mana). Sense sessió continua l'estat honest amb
+   l'entrada al compte que torna al Tauler i les dues portes. La resta de la
+   pintura no canvia. El rellotge viu és l'últim de la barra en tots dos
+   casos; com que diu l'hora de veres, es trau de la còpia abans de comparar
+   (dues pintades a banda i banda d'un canvi de minut no serien iguals). */
+test('amb sessió, la boina de la Gestoria porta la persona de la sessió; sense, l’estat honest; la resta es pinta igual, amb el rellotge viu a la dreta', async () => {
   /* Els id de useId (`:r3:`) depenen de l'ordre de muntatge de tot l'arbre, no de l'app. */
   const pintura = async () => {
     await h1DeLApp('gestoria');
     await screen.findByText('Cal aprovar el tractor');
-    return contenidor('gestoria').innerHTML.replace(/:r[0-9a-z]+:/g, ':id:');
+    const arrel = contenidor('gestoria');
+    const accions = arrel.querySelector('section.bar-orange .bar-actions');
+    const rellotgeViu = accions?.lastElementChild ?? null;
+    const ambRellotge = rellotgeViu?.tagName === 'TIME'
+      && /^Data i hora d’ara: \d{2}:\d{2} del \d{2}\/\d{2}\/\d{2}$/.test(rellotgeViu.getAttribute('aria-label') ?? '');
+    const sensePersona = within(arrel).queryAllByText('Titular sense configurar').length;
+    const copia = arrel.cloneNode(true);
+    copia.querySelector('section.bar-orange .bar-actions')?.lastElementChild?.remove();
+    /* L'autoria de la barra (a.sp-card-author.sp-card-author-link) i la de cada
+       targeta (a.sp-card-author-link amb el div.sp-card-author a dins): el nom,
+       on porta l'enllaç, i fora de la còpia. */
+    const noms = [...new Set([...copia.querySelectorAll('.sp-card-author-name')].map((n) => n.textContent))];
+    const enllacos = [...copia.querySelectorAll('.sp-card-author-link')];
+    const hrefs = [...new Set(enllacos.map((a) => a.getAttribute('href')))];
+    enllacos.forEach((a) => a.remove());
+    copia.querySelectorAll('.sp-card-author').forEach((a) => a.remove());
+    const portes = [...copia.querySelectorAll('.sdp-alerta')].find((a) => a.textContent.includes('Qui porta esta gestoria?'));
+    const botons = portes ? [...portes.querySelectorAll('button')].map((b) => b.textContent) : [];
+    portes?.remove();
+    const entradeta = copia.querySelector('p.lead');
+    const lead = entradeta?.textContent ?? '';
+    if (entradeta) entradeta.textContent = lead.replace(/^Hola, [^!]+! /, '');
+    return { html: copia.innerHTML.replace(/:r[0-9a-z]+:/g, ':id:'), noms, hrefs, botons, lead, ambRellotge, sensePersona };
   };
   let senseSessio = null;
   await munta('/app/gestoria/tauler', async () => { senseSessio = await pintura(); });
+  expect(senseSessio.noms).toEqual(['Titular sense configurar']);
+  expect(senseSessio.hrefs).toEqual([ENTRADA_AL_TAULER]);
+  expect(senseSessio.botons).toEqual(['Configura el titular', 'Entra al compte']);
+  expect(senseSessio.lead).not.toMatch(/^Hola,/);
+  expect(senseSessio.ambRellotge).toBe(true);
   await munta('/app/gestoria/tauler', async () => {
-    expect(await pintura()).toBe(senseSessio);
+    const ambSessio = await pintura();
+    expect(ambSessio.noms).toEqual(['Pepa Soler']);
+    expect(ambSessio.hrefs).toEqual(['/el-meu-perfil']);
+    expect(ambSessio.sensePersona).toBe(0);
+    expect(ambSessio.botons).toEqual([]);
+    expect(ambSessio.lead).toMatch(/^Hola, Pepa Soler! /);
+    expect(ambSessio.ambRellotge).toBe(true);
+    expect(ambSessio.html).toBe(senseSessio.html);
     expect(window.location.pathname).toBe('/app/gestoria/tauler');
     senseCapBarrera();
   }, { usuari: USUARI });

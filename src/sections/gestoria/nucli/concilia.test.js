@@ -112,6 +112,62 @@ describe('R1 · el moviment cita el número de la factura', () => {
   });
 });
 
+/* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front I · motors; auditoria de Codex 261013_1510, GES-A6):
+   «desconegut» no és «diferència zero». Abans, un càrrec qualsevol que citava una factura sense total o en
+   una altra moneda feia R1 alta amb diferencia null i retirava la factura de les pendents. */
+describe('GES-A6 · un import que no es pot comparar mai fa una parella alta', () => {
+  const altes = (r) => r.parelles.filter((p) => p.confianca === 'alta');
+
+  test('factura en dòlars citada per un càrrec en euros sense 24: mitjana, amb incidència', () => {
+    const usd = factura({ num: 'INV-SINT-0001', data: '2099-01-05', contrapart: 'Servei Estranger Exemple', moneda: 'USD', total: 10000 });
+    const m = mov('2099-01-05', -1, { ref1: 'INV-SINT-0001' });
+    const r = concilia({ moviments: [m], factures: [usd] });
+    expect(altes(r)).toEqual([]);
+    expect(resum(r.parelles)).toEqual([['R1', 'mitjana', [m.linia], ['INV-SINT-0001'], null]]);
+    expect(r.incidencies).toEqual([expect.objectContaining({ codi: 'IMPORT_DESCONEGUT', severitat: 'mitjana', linia: m.linia })]);
+    expect(CODIS_CONCILIACIO).toContain('IMPORT_DESCONEGUT');
+  });
+
+  test('factura en euros sense total: mitjana, amb incidència', () => {
+    const senseTotal = { id: 'sint-sense-total', tipus: 'despesa', num: 'INV-SINT-0002', moneda: 'EUR', total: null, data: data('2099-01-05') };
+    const m = mov('2099-01-05', -1, { ref1: 'INV-SINT-0002' });
+    const r = concilia({ moviments: [m], factures: [senseTotal] });
+    expect(altes(r)).toEqual([]);
+    expect(resum(r.parelles)).toEqual([['R1', 'mitjana', [m.linia], ['INV-SINT-0002'], null]]);
+    expect(codis(r)).toEqual(['IMPORT_DESCONEGUT']);
+  });
+
+  test('si un altre moviment la paga exacta en la seua moneda (24), la citació sense import no se l’endú', () => {
+    const usd = factura({ num: 'INV-SINT-0003', data: '2099-01-05', contrapart: 'Servei Estranger Exemple', moneda: 'USD', total: 2150 });
+    const cita = mov('2099-01-04', -1, { ref1: 'INV-SINT-0003' });
+    const paga = mov('2099-01-06', -1978, { comu: '12', divisa: { codi: '840', moneda: 'USD', centims: -2150 } });
+    const r = concilia({ moviments: [cita, paga], factures: [usd] });
+    expect(resum(r.parelles)).toEqual([['R5', 'alta', [paga.linia], ['INV-SINT-0003'], 0]]);
+    expect(r.movimentsSenseFactura).toEqual([cita]);
+  });
+
+  test('una factura en una altra moneda citada i pagada amb el seu import exacte al 24: R1 alta, diferència 0', () => {
+    const usd = factura({ num: 'INV-SINT-0004', data: '2099-01-05', contrapart: 'Servei Estranger Exemple', moneda: 'USD', total: 2150 });
+    const m = mov('2099-03-20', -1978, { ref1: 'INV-SINT-0004', divisa: { codi: '840', moneda: 'USD', centims: -2150 } });
+    const r = concilia({ moviments: [m], factures: [usd] });
+    expect(r.parelles).toEqual([{ moviments: [m], factures: [usd], regla: 'R1', confianca: 'alta', diferencia: 0, tipusCanvi: 0.92 }]);
+    /* El 24 d'un altre import, o d'una altra moneda, no quadra. */
+    for (const divisa of [{ codi: '840', moneda: 'USD', centims: -2151 }, { codi: '826', moneda: 'GBP', centims: -2150 }]) {
+      const altre = mov('2099-03-20', -1978, { ref1: 'INV-SINT-0004', divisa });
+      expect(altes(concilia({ moviments: [altre], factures: [usd] })), divisa.moneda).toEqual([]);
+    }
+  });
+
+  test('R6 · un rebut sense import (o una factura sense total) no és una parella alta', () => {
+    const f = factura({ num: 'SINT-INV-0011', data: '2099-07-07', contrapart: 'Servei Exemple', total: 1291 });
+    const senseImport = concilia({ factures: [f], rebuts: [{ ruta: 'rebuts/r.pdf', text: 'SINT-INV-0011' }] });
+    expect(resum(senseImport.parelles)).toEqual([['R6', 'mitjana', [], ['SINT-INV-0011'], null]]);
+    const senseTotal = { ...f, total: null };
+    expect(resum(concilia({ factures: [senseTotal], rebuts: [{ ruta: 'rebuts/r.pdf', text: 'SINT-INV-0011', import: 1291 }] }).parelles))
+      .toEqual([['R6', 'mitjana', [], ['SINT-INV-0011'], null]]);
+  });
+});
+
 describe('R4 · diverses factures', () => {
   const q1 = factura({ num: 'QT-2099-01', data: '2099-07-20', contrapart: 'Gestora Exemple', total: 31157 });
   const q2 = factura({ num: 'QT-2099-02', data: '2099-07-20', contrapart: 'Gestora Exemple', total: 44629 });

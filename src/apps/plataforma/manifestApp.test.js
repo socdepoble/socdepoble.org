@@ -6,7 +6,7 @@ import {
 } from './__fixtures__/manifests.js';
 import { ICONES_APP, iconaDe } from './iconesApp.js';
 import {
-  NOMS_ICONES, ORIGENS_APP, PATRO_INTEGRITAT, PREFIXOS_ELEMENT, esCamiDeRecurs, esElementPermes, rutaDeApp, titolDe,
+  NOMS_ICONES, ORIGENS_APP, PATRO_INTEGRITAT, PERMISOS_TITULAR, PREFIXOS_ELEMENT, esCamiDeRecurs, esElementPermes, rutaDeApp, titolDe,
   validaManifestApp
 } from './manifestApp.js';
 
@@ -91,6 +91,57 @@ describe('validaManifestApp · el que no passa', () => {
   test('ni null ni una llista són un manifest', () => {
     expect(validaManifestApp(null).ok).toBe(false);
     expect(validaManifestApp([]).ok).toBe(false);
+  });
+});
+
+/* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front B: la boina de la
+   Gestoria porta el titular de la sessió) · permisos.titular 'sessio': el
+   pont dona el nom, l'avatar i el poble de la persona només a l'app interna
+   que el declara. Cap app externa ni cap mòdul no el pot declarar. */
+describe('permisos.titular', () => {
+  test('«sessio» en una app interna: vàlid, normalitzat i congelat', () => {
+    const { ok, errors, manifest } = validaManifestApp(manifestDeProva({ permisos: { veure: 'public', escriure: 'sessio', titular: 'sessio' } }));
+    expect(errors).toEqual([]);
+    expect(ok).toBe(true);
+    expect(manifest.permisos).toEqual({ veure: 'public', escriure: 'sessio', titular: 'sessio' });
+    expect(Object.isFrozen(manifest.permisos)).toBe(true);
+    expect(PERMISOS_TITULAR).toEqual(['sessio']);
+    expect(Object.isFrozen(PERMISOS_TITULAR)).toBe(true);
+  });
+
+  test('sense declarar-lo, els permisos de sempre: cap clau titular', () => {
+    const { manifest } = validaManifestApp(manifestDeProva());
+    expect(manifest.permisos).toEqual({ veure: 'public' });
+    expect('titular' in manifest.permisos).toBe(false);
+  });
+
+  test.each([
+    ['un altre valor', 'tothom'],
+    ['un booleà', true],
+    ['null', null],
+    ['la majúscula', 'Sessio']
+  ])('%s no és cap permís de titular', (_nom, titular) => {
+    const resultat = validaManifestApp(manifestDeProva({ permisos: { veure: 'public', titular } }));
+    expect(resultat.ok).toBe(false);
+    expect(resultat.manifest).toBeNull();
+    expect(resultat.errors.join(' | ')).toContain('permisos.titular: sessio');
+  });
+
+  test('una app externa o un mòdul no el poden declarar: només les apps internes', () => {
+    const permisos = { veure: 'public', titular: 'sessio' };
+    const externa = validaManifestApp(manifestExternDeProva({ permisos }), { origen: 'externa' });
+    expect(externa.ok).toBe(false);
+    expect(externa.errors.join(' | ')).toContain('només les apps internes');
+    const modul = validaManifestApp(manifestModulDeProva({ permisos }), { origen: 'modul' });
+    expect(modul.ok).toBe(false);
+    expect(modul.errors.join(' | ')).toContain('només les apps internes');
+    /* Sense el titular, les mateixes passen. */
+    expect(validaManifestApp(manifestExternDeProva(), { origen: 'externa' }).ok).toBe(true);
+    expect(validaManifestApp(manifestModulDeProva(), { origen: 'modul' }).ok).toBe(true);
+  });
+
+  test('una clau de permís desconeguda continua sent un error', () => {
+    expect(errorsDe(manifestDeProva({ permisos: { veure: 'public', identitat: 'sessio' } }))).toContain('permisos: clau desconeguda «identitat»');
   });
 });
 

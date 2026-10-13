@@ -265,8 +265,11 @@ nav.app-sidebar .nav-item { min-height: var(--sdp-touch-min); margin-bottom: 0; 
 }
 
 /* T5 (ordre del Mestre, 261007) · «Sistema» és una entrada més de la barra feta
-   botó: la mateixa caixa, rètol i colors que .nav-item, sense groc. Només li
-   cal llevar el vestit UA del <button>. El xebró gira quan el grup s'obri. */
+   botó: la mateixa caixa i rètol que .nav-item, sense groc. Només li cal
+   llevar el vestit UA del <button>. El xebró gira quan el grup s'obri.
+   Derogat EN PART per l'ordre del Mestre, 13-10-2026 (pla 261013_1405, front
+   C): el color ja no és el de .nav-item sinó el taronja de títol de grup
+   (bloc JERARQUIA DE LA BARRA LATERAL, darrere d'esta capa). Sense groc, igual. */
 nav.app-sidebar .nav-item--desplegable {
   border: 0;
   background: transparent;
@@ -968,4 +971,115 @@ nav.mobile-nav { display: none; }
 
 }
 
+/* ══ JERARQUIA DE LA BARRA LATERAL (ordre del Mestre, 13-10-2026; pla
+   261013_1405, front C) ══
+   Els títols de grup i els desplegables que no són enllaços van en el
+   taronja de Pedra Seca, amb pes 600, separats dels enllaços. «Sistema»
+   (App.jsx) és un <button>, no un enllaç: rètol, icona i xebró (currentColor)
+   van en --sdp-crom-grup-text, 7,12:1 sobre la roca (tokens.css). Els enllaços
+   (.nav-item) continuen blancs i l'actiu, amb el seu ple taronja. Els títols de
+   grup de la BarraApp (totes les apps) els pinta apps.css amb el mateix token.
+   Capa components i no legacy, que només pot encongir (index.css): guanya al
+   .nav-item:hover i a la regla de Bancal (.nav-item:not(.active)) sense pujar
+   especificitat, i en Bancal el taronja ja és sòlid. El pes 600 ja el donava
+   --sdp-font-barra: cap píxel nou. Amb el ratolí, el blanc de sempre (el
+   hover d'abans, sense fons: la T5 ja el llevava). Plegada, només hi queda
+   la icona, en taronja com les de les capçaleres del Workspace. La guarda
+   del hover va ací, abans de la regla de la portada buida: darrere d'ella,
+   cap @media (barresScroll.capes.test.js). */
+@layer components {
+  nav.app-sidebar .nav-item--desplegable {
+    color: var(--sdp-crom-grup-text);
+    font-weight: 600;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    nav.app-sidebar .nav-item--desplegable:hover { color: var(--sdp-crom-text); }
+  }
+}
+
 .hero-image--buit { background: transparent; padding: var(--sdp-space-8) 0; }
+
+/* ══ BARRES QUE ACOMPANYEN EL SCROLL · COMPACTE (ordre del Mestre, 261012) ══
+   «L'acumulació de barres superiors i el footer lleven massa espai de
+   lectura. Fes que les barres acompanyen l'scroll (que s'oculten al baixar)
+   per alliberar el 100% de la pantalla per a l'ERP.» I el botó «Tornar a
+   dalt», damunt de «Pobles».
+   useBarresAmbScroll (App.jsx) posa data-sdp-barres a l'arrel: «dalt» amaga
+   la blava i la taronja; «totes», també la barra inferior. En repòs i en
+   escriptori l'atribut no hi és i res d'açò canvia cap píxel: tot penja de
+   .sdp-root.is-compact (el tall d'App.jsx), sense cap @media. Capa
+   `components` i no `legacy`, que només pot encongir (index.css).
+   · Blava i taronja: el seu `top` d'enganxament passa a negatiu. Una barra
+     enganxada puja fins a eixir del visor, que la retalla; una que encara va
+     en el flux (la taronja davall d'una portada) no es mou, perquè ja
+     acompanya el contingut. Un
+     transform les hauria pujat totes dues, també la taronja a mitja portada,
+     i n'hauria deixat el forat. La pila puja sencera: la blava dues alçades
+     i la taronja una. Les barres static (el Bloc de Notes, l'espècimen) no
+     fan cas del `top`.
+   · Les peces enganxades davall de les dues barres (eines de l'editor i
+     capçalera de dies del calendari) pugen al cim del visor: cap forat.
+   · La barra inferior és fixa: baixa amb transform. La reserva del visor no
+     canvia i el scroll no salta.
+   · Mai display, visibility, opacity ni aria-hidden: amagar no és llevar
+     (PageFrame.capes.test.js). La barra negra no es toca.
+   · La transició del calaix; amb moviment reduït, l'apagador de base.css. */
+@layer components {
+  .sdp-root.is-compact .sdp-universal-page-container > header.bar-blue,
+  .sdp-root.is-compact .sdp-universal-page-container > section.bar-orange,
+  .sdp-root.is-compact .sdp-editor-eines {
+    transition: top var(--sdp-durada-panell) var(--sdp-corba-calaix);
+  }
+  .sdp-root.is-compact .sdp-cal-setmana__capcal {
+    transition: inset-block-start var(--sdp-durada-panell) var(--sdp-corba-calaix);
+  }
+  .sdp-root.is-compact > nav.mobile-nav {
+    transition: transform var(--sdp-durada-panell) var(--sdp-corba-calaix);
+  }
+  .sdp-root.is-compact[data-sdp-barres] .sdp-universal-page-container > header.bar-blue {
+    top: calc(var(--sdp-alt-accio) * -2);
+  }
+  .sdp-root.is-compact[data-sdp-barres] .sdp-universal-page-container > section.bar-orange {
+    top: calc(var(--sdp-alt-accio) * -1);
+  }
+  .sdp-root.is-compact[data-sdp-barres] .sdp-editor-eines { top: 0; }
+  .sdp-root.is-compact[data-sdp-barres] .sdp-cal-setmana__capcal { inset-block-start: 0; }
+  .sdp-root.is-compact[data-sdp-barres="totes"] > nav.mobile-nav { transform: translateY(100%); }
+
+  /* Les pàgines «contingut» fills del visor (el Mur, el Calendari, el perfil
+     públic) fan scroll elles mateixes i acaben damunt de la reserva de la
+     barra inferior: amagar-la hi deixaria una franja buida. En repòs, la
+     mateixa caixa, absoluta fins a la reserva (el mateix píxel que en el
+     flux, també la barra de scroll). Amb «totes» arriba fins a baix i la
+     reserva passa a dins, com al detall del Workspace (modules.css): el
+     recorregut màxim és el mateix i el scroll no salta. En tornar, la caixa
+     espera que la barra haja tornat (canvi sec, retardat --sdp-durada-panell,
+     com el visibility del calaix): el forat no es veu mai. */
+  :where(.sdp-root.is-compact) .app-main__content > .sdp-universal-page-container--contained {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: calc(var(--sdp-alt-nav-mobil) + env(safe-area-inset-bottom, 0px));
+    left: 0;
+    height: auto;
+    transition: bottom 0s linear var(--sdp-durada-panell), padding-bottom 0s linear var(--sdp-durada-panell);
+  }
+  :where(.sdp-root.is-compact[data-sdp-barres="totes"]) .app-main__content > .sdp-universal-page-container--contained {
+    bottom: 0;
+    padding-bottom: calc(var(--sdp-alt-nav-mobil) + env(safe-area-inset-bottom, 0px));
+    transition: none;
+  }
+
+  /* Tornar a dalt (BotoTornarADalt): fix dins de l'arrel, que és el bloc
+     contenidor també a l'arrel ombra (base.css), i fora del contingut, que
+     el gest de recarregar desplaça amb un transform. Damunt de «Pobles»: la
+     barra té cinc pistes iguals (layout.css, barra inferior) i el centre de
+     l'última cau a una desena de pista de la vora. Per davall de la barra i
+     del vel (--z-fab). Només el pinta la closca, quan les barres es veuen. */
+  .sdp-root.is-compact > .sdp-tornar-dalt {
+    position: fixed;
+    bottom: calc(var(--sdp-alt-nav-mobil) + env(safe-area-inset-bottom, 0px) + var(--sdp-space-3));
+    right: calc(var(--sdp-space-3) + (100% - var(--sdp-space-3) * 2) / 10 - var(--sdp-touch) / 2);
+    z-index: var(--z-fab);
+  }
+}

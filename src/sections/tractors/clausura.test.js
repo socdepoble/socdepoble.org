@@ -15,7 +15,9 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, test } from 'vitest';
 import { parse } from '@babel/parser';
-import { TRACTOR_CORREUS, TRACTOR_FACTURES, TRACTOR_HISTORIC, TRACTOR_TAULER } from '../gestoria/tractors.js';
+import {
+  TRACTOR_CORREUS, TRACTOR_ESCANER, TRACTOR_FACTURES, TRACTOR_HISTORIC, TRACTOR_IDENTITAT, TRACTOR_TAULER
+} from '../gestoria/tractors.js';
 
 const ARREL = process.cwd();
 const GESTORIA = 'src/sections/gestoria';
@@ -28,7 +30,20 @@ const ENTRADES_TAULER = Object.freeze([`${GESTORIA}/tauler/ShellGestoria.jsx`, `
    'gestoria.historic' també són entrades; el seu manifest cobrix tot el que
    hi penja (també les peces del Tauler que reutilitza). */
 const ENTRADES_HISTORIC = Object.freeze([`${GESTORIA}/historic/Historic.jsx`, `${GESTORIA}/historic/nucli/tractorHistoric.js`]);
-const ENTRADES = Object.freeze([`${GESTORIA}/ContenidorGestoria.jsx`, `${GESTORIA}/nucli/tractor.js`, ...ENTRADES_TAULER, ...ENTRADES_HISTORIC]);
+/* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front D): l'Escàner Local
+   ('gestoria.escaner') té tractor propi; el seu panell, el seu hook i el seu
+   executor també són entrades, i el seu manifest cobrix el que hi penja. */
+const ENTRADES_ESCANER = Object.freeze([
+  `${GESTORIA}/escaner/PanellEscaner.jsx`, `${GESTORIA}/escaner/useEscaner.js`, `${GESTORIA}/escaner/nucli/tractorEscaner.js`
+]);
+/* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front H): la Fitxa
+   d'identitat i la Finestreta ('gestoria.identitat') també: la vista del pont
+   i el seu executor. */
+const ENTRADES_IDENTITAT = Object.freeze([`${GESTORIA}/finestreta/Finestreta.jsx`, `${GESTORIA}/finestreta/nucli/tractorIdentitat.js`]);
+const ENTRADES = Object.freeze([
+  `${GESTORIA}/ContenidorGestoria.jsx`, `${GESTORIA}/nucli/tractor.js`, ...ENTRADES_TAULER, ...ENTRADES_HISTORIC, ...ENTRADES_ESCANER,
+  ...ENTRADES_IDENTITAT
+]);
 
 /* Del graf però fora de les fonts, a propòsit. */
 const LLISTA_BLANCA = Object.freeze({
@@ -58,15 +73,17 @@ const existix = (ruta) => existsSync(path.join(ARREL, ruta));
 const llig = (ruta) => readFileSync(path.join(ARREL, ruta), 'utf8');
 
 /* Els especificadors d'importació: estàtica (també en diverses línies),
-   reexportació, d'efecte i dinàmica. */
-function especificadors(codi) {
+   reexportació, d'efecte i dinàmica. Amb { dinamiques: false }, només els
+   estàtics (ordre del Mestre, 13-10-2026, pla 261013_1405, front D: el graf
+   que l'Escàner executa sense cap import() de després d'una altra aprovació). */
+function especificadors(codi, { dinamiques = true } = {}) {
   const ast = parse(codi, { sourceType: 'module', plugins: ['jsx'], createImportExpressions: true });
   const imports = [];
   const visita = (node) => {
     if (!node || typeof node !== 'object') return;
     if (['ImportDeclaration', 'ExportNamedDeclaration', 'ExportAllDeclaration'].includes(node.type) && node.source) {
       imports.push({ inici: node.start, valor: node.source.value });
-    } else if (node.type === 'ImportExpression') {
+    } else if (node.type === 'ImportExpression' && dinamiques) {
       const font = node.source;
       const valor = font.type === 'StringLiteral' ? font.value
         : font.type === 'TemplateLiteral' && font.expressions.length === 0 ? font.quasis[0].value.cooked : null;
@@ -90,7 +107,7 @@ function resol(des, especificador) {
   return candidats.find((ruta) => /\.(?:m?js|jsx)$/.test(ruta) && existix(ruta)) ?? base;
 }
 
-function clausura(entrades) {
+function clausura(entrades, opcions) {
   const vistos = new Set();
   const importacions = [];
   const pendents = [...entrades];
@@ -98,7 +115,7 @@ function clausura(entrades) {
     const ruta = pendents.pop();
     if (vistos.has(ruta)) continue;
     vistos.add(ruta);
-    for (const especificador of especificadors(llig(ruta))) {
+    for (const especificador of especificadors(llig(ruta), opcions)) {
       if (!especificador.startsWith('.')) continue;
       const desti = resol(ruta, especificador);
       importacions.push({ des: ruta, especificador, desti });
@@ -119,7 +136,10 @@ function fitxersDe(directori) {
 }
 
 const { fitxers: GRAF, importacions: IMPORTACIONS } = clausura(ENTRADES);
-const COBERTES = new Set([...TRACTOR_FACTURES.fonts, ...TRACTOR_CORREUS.fonts, ...TRACTOR_TAULER.fonts, ...TRACTOR_HISTORIC.fonts]);
+const COBERTES = new Set([
+  ...TRACTOR_FACTURES.fonts, ...TRACTOR_CORREUS.fonts, ...TRACTOR_TAULER.fonts, ...TRACTOR_HISTORIC.fonts,
+  ...TRACTOR_ESCANER.fonts, ...TRACTOR_IDENTITAT.fonts
+]);
 
 describe('el lector d’importacions', () => {
 
@@ -190,17 +210,26 @@ describe('la clausura des de les entrades de la Gestoria', () => {
     }
   });
 
-  test('el Tauler: el seu graf és a les fonts del seu manifest (o a les dels dos signats), amb la porta sencera', () => {
+  /* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front D): la closca
+     acull el panell de l'Escàner Local (PanellEscaner i useEscaner, al costat
+     de useTauler), i el seu propi manifest el cobrix ('gestoria.escaner'); la
+     seua clausura estricta és més avall. Com ContenidorGestoria amb els dos
+     signats, les fonts de l'Escàner s'admeten al graf del Tauler sense entrar
+     a la seua empremta. */
+  test('el Tauler: el seu graf és a les fonts del seu manifest (o a les dels dos signats o de l’Escàner), amb la porta sencera', () => {
     const { fitxers } = clausura(ENTRADES_TAULER);
     const delsSignats = new Set([...TRACTOR_FACTURES.fonts, ...TRACTOR_CORREUS.fonts]);
+    const delEscaner = new Set(TRACTOR_ESCANER.fonts);
     const fora = fitxers.filter((ruta) => dinsCarrils(ruta) && !esProva(ruta) && !TRACTOR_TAULER.fonts.includes(ruta)
-      && !delsSignats.has(ruta) && !(ruta in LLISTA_BLANCA));
+      && !delsSignats.has(ruta) && !delEscaner.has(ruta) && !(ruta in LLISTA_BLANCA));
     expect(fora).toEqual([]);
     const porta = fitxers.filter((ruta) => ruta.startsWith(`${TRACTORS}/`) && !esProva(ruta));
     expect(porta.length).toBeGreaterThan(5);
     expect(porta.filter((ruta) => !TRACTOR_TAULER.fonts.includes(ruta))).toEqual([]);
     expect(fitxers).toContain(`${GESTORIA}/nucli/c43.js`);
     expect(fitxers).toContain(`${GESTORIA}/ContenidorGestoria.jsx`);
+    expect(fitxers, 'la closca munta el panell de l’Escàner').toContain(`${GESTORIA}/escaner/PanellEscaner.jsx`);
+    expect(fitxers, 'la closca munta la Cabina d’Avió').toContain(`${GESTORIA}/tauler/CabinaAvio.jsx`);
   });
 
   /* Onada 6, ordre del Mestre (261009): el tractor de l'Històric és NOU i
@@ -224,7 +253,11 @@ describe('la clausura des de les entrades de la Gestoria', () => {
        seues fonts, i tampoc no pot ser font dels altres tres. */
     const nous = (ruta) => ruta.startsWith(`${GESTORIA}/historic/`) || ruta.startsWith(`${GESTORIA}/despeses/`) || ruta === `${GESTORIA}/impostos/nucli/simulacio.js`
       || ruta.startsWith(`${GESTORIA}/cofre/`);
-    for (const manifest of [TRACTOR_FACTURES, TRACTOR_CORREUS, TRACTOR_TAULER]) expect(manifest.fonts.filter(nous), manifest.id).toEqual([]);
+    /* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front D): l'Escàner tampoc. (La Fitxa d'identitat sí que
+       porta el cofre sencer, front H: la seua clausura, més avall, ho comprova.) */
+    for (const manifest of [TRACTOR_FACTURES, TRACTOR_CORREUS, TRACTOR_TAULER, TRACTOR_ESCANER]) {
+      expect(manifest.fonts.filter(nous), manifest.id).toEqual([]);
+    }
     expect(fitxers, 'el cofre és al graf de l’Històric').toEqual(expect.arrayContaining([`${GESTORIA}/cofre/PortaCofre.jsx`, `${GESTORIA}/cofre/cofre.js`]));
     /* La fitxa i les fonts declarades sense ús no hi sobren: cada font és al graf o és de la porta. */
     const sobrants = TRACTOR_HISTORIC.fonts.filter((ruta) => !fitxers.includes(ruta) && !ruta.startsWith(`${TRACTORS}/`));
@@ -234,11 +267,71 @@ describe('la clausura des de les entrades de la Gestoria', () => {
   test('cap fitxer del Tauler ni de les estimacions és font dels dos tractors signats: les seues empremtes no canvien', () => {
     const delsSignats = [...TRACTOR_FACTURES.fonts, ...TRACTOR_CORREUS.fonts];
     expect(delsSignats.filter((ruta) => ruta.startsWith(`${GESTORIA}/tauler/`) || ruta.startsWith(`${GESTORIA}/impostos/`))).toEqual([]);
+    /* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front E): la Cabina d'Avió (la vista i el seu model) també és
+       del Tauler. */
     expect(TRACTOR_TAULER.fonts.filter((ruta) => ruta.startsWith(`${GESTORIA}/tauler/`))).toEqual([
-      `${GESTORIA}/tauler/ShellGestoria.jsx`, `${GESTORIA}/tauler/TargetaTauler.jsx`, `${GESTORIA}/tauler/Tauler.jsx`,
-      `${GESTORIA}/tauler/nucli/resumTauler.js`, `${GESTORIA}/tauler/nucli/targetesTauler.js`, `${GESTORIA}/tauler/nucli/tractorTauler.js`,
-      `${GESTORIA}/tauler/useTauler.js`
+      `${GESTORIA}/tauler/CabinaAvio.jsx`, `${GESTORIA}/tauler/ShellGestoria.jsx`, `${GESTORIA}/tauler/TargetaTauler.jsx`,
+      `${GESTORIA}/tauler/Tauler.jsx`, `${GESTORIA}/tauler/nucli/cabinaAvio.js`, `${GESTORIA}/tauler/nucli/resumTauler.js`,
+      `${GESTORIA}/tauler/nucli/targetesTauler.js`, `${GESTORIA}/tauler/nucli/tractorTauler.js`, `${GESTORIA}/tauler/useTauler.js`
     ]);
+  });
+
+  /* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front D): l'Escàner Local
+     és un tractor NOU i separat. El graf estàtic del seu panell, del seu hook
+     i del seu executor és sencer a les seues fonts, amb la porta. La Font
+     (font/fontNavegador.js) importa nucli/tractor.js, i este carrega amb
+     import() els lectors del full i del correu després de LA SEUA aprovació:
+     l'Escàner no els executa mai, i per això el graf amb els dinàmics només
+     pot eixir de les seues fonts cap a les dels dos signats. Cap font seua hi
+     sobra, i cap fitxer d'escaner/ ni de documents/ és font dels altres
+     tractors: les seues empremtes no en depenen. */
+  test('l’Escàner: el seu graf estàtic és a les seues fonts; amb els dinàmics, només a les dels dos signats; cap font hi sobra', () => {
+    const estatic = clausura(ENTRADES_ESCANER, { dinamiques: false }).fitxers;
+    const { fitxers } = clausura(ENTRADES_ESCANER);
+    const fora = (llista, admeses) => llista.filter((ruta) => dinsCarrils(ruta) && !esProva(ruta) && !admeses.has(ruta) && !(ruta in LLISTA_BLANCA));
+    expect(fora(estatic, new Set(TRACTOR_ESCANER.fonts))).toEqual([]);
+    expect(fora(fitxers, new Set([...TRACTOR_ESCANER.fonts, ...TRACTOR_FACTURES.fonts, ...TRACTOR_CORREUS.fonts]))).toEqual([]);
+    const porta = fitxers.filter((ruta) => ruta.startsWith(`${TRACTORS}/`) && !esProva(ruta));
+    expect(porta.length).toBeGreaterThan(5);
+    expect(porta.filter((ruta) => !TRACTOR_ESCANER.fonts.includes(ruta))).toEqual([]);
+    const sobrants = TRACTOR_ESCANER.fonts.filter((ruta) => !fitxers.includes(ruta) && !ruta.startsWith(`${TRACTORS}/`));
+    expect(sobrants).toEqual([]);
+    expect(fitxers).toEqual(expect.arrayContaining([`${GESTORIA}/escaner/nucli/escaner.js`, `${GESTORIA}/tauler/nucli/tractorTauler.js`]));
+    /* Ni el cofre, ni l'Històric, ni la Fitxa d'identitat, ni les peces de la UI del Tauler. */
+    const aliens = fitxers.filter((ruta) => ['cofre/', 'historic/', 'despeses/', 'finestreta/', 'identitat/'].some((c) => ruta.startsWith(`${GESTORIA}/${c}`))
+      || ruta === `${GESTORIA}/tauler/Tauler.jsx` || ruta === `${GESTORIA}/tauler/ShellGestoria.jsx`);
+    expect(aliens).toEqual([]);
+    const seus = (ruta) => ruta.startsWith(`${GESTORIA}/escaner/`) || ruta.startsWith(`${GESTORIA}/documents/`);
+    for (const manifest of [TRACTOR_FACTURES, TRACTOR_CORREUS, TRACTOR_TAULER, TRACTOR_HISTORIC, TRACTOR_IDENTITAT]) {
+      expect(manifest.fonts.filter(seus), manifest.id).toEqual([]);
+    }
+  });
+
+  /* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front H): la Fitxa
+     d'identitat i la Finestreta són un tractor NOU i separat, darrere del
+     cofre (col·lecció 'identitat'). El seu graf sencer, també els lectors que
+     nucli/tractor.js carrega amb import(), és a les seues pròpies fonts (com
+     l'Històric: si canvia una peça que ell executa, la seua empremta ha de
+     canviar), amb la porta; cap font hi sobra; i cap fitxer de finestreta/
+     és font dels altres cinc. */
+  test('la Fitxa d’identitat: el seu graf sencer és a les fonts del seu manifest, amb la porta i el cofre, i els seus fitxers no toquen els altres', () => {
+    const { fitxers } = clausura(ENTRADES_IDENTITAT);
+    const fora = fitxers.filter((ruta) => dinsCarrils(ruta) && !esProva(ruta) && !TRACTOR_IDENTITAT.fonts.includes(ruta) && !(ruta in LLISTA_BLANCA));
+    expect(fora).toEqual([]);
+    const porta = fitxers.filter((ruta) => ruta.startsWith(`${TRACTORS}/`) && !esProva(ruta));
+    expect(porta.length).toBeGreaterThan(5);
+    expect(porta.filter((ruta) => !TRACTOR_IDENTITAT.fonts.includes(ruta))).toEqual([]);
+    const sobrants = TRACTOR_IDENTITAT.fonts.filter((ruta) => !fitxers.includes(ruta) && !ruta.startsWith(`${TRACTORS}/`));
+    expect(sobrants).toEqual([]);
+    expect(fitxers).toEqual(expect.arrayContaining([
+      `${GESTORIA}/cofre/cofre.js`, `${GESTORIA}/cofre/PortaCofre.jsx`, `${GESTORIA}/nucli/pdfText.js`, `${GESTORIA}/font/fontNavegador.js`
+    ]));
+    const aliens = fitxers.filter((ruta) => ['tauler/', 'historic/', 'escaner/', 'identitat/', 'despeses/'].some((c) => ruta.startsWith(`${GESTORIA}/${c}`)));
+    expect(aliens).toEqual([]);
+    const seus = (ruta) => ruta.startsWith(`${GESTORIA}/finestreta/`);
+    for (const manifest of [TRACTOR_FACTURES, TRACTOR_CORREUS, TRACTOR_TAULER, TRACTOR_HISTORIC, TRACTOR_ESCANER]) {
+      expect(manifest.fonts.filter(seus), manifest.id).toEqual([]);
+    }
   });
 
   test('la llista blanca és justa: cada entrada existix, és al graf, no és a cap font i porta motiu', () => {

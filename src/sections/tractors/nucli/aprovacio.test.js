@@ -235,13 +235,13 @@ describe('detecció de WebAuthn', () => {
 });
 
 describe('registraClauWebAuthn', () => {
-  test('demana una clau de plataforma ES256 amb UV i en torna la credencial i la jwk', async () => {
+  test('demana una clau de plataforma ES256 i RS256 amb UV i en torna la credencial i la jwk', async () => {
     const aut = await creaAutenticador();
     const credentials = credencialsFalses(aut);
     const clau = await registraClauWebAuthn({ credentials, rpId: RP_ID, nomRp: 'Sóc de Poble', subtle, origen: ORIGEN });
     expect(clau).toEqual({ credencial: base64url(aut.id), jwk: aut.jwk });
     const { publicKey } = credentials.crides.create[0];
-    expect(publicKey.pubKeyCredParams).toEqual([{ type: 'public-key', alg: -7 }]);
+    expect(publicKey.pubKeyCredParams).toEqual([{ type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 }]);
     expect(publicKey.authenticatorSelection).toEqual({ authenticatorAttachment: 'platform', userVerification: 'required' });
     expect(publicKey.attestation).toBe('none');
     expect(publicKey.rp).toEqual({ id: RP_ID, name: 'Sóc de Poble' });

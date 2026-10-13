@@ -30,7 +30,9 @@ vi.mock('./consolaContent.js', async (importOriginal) => ({
 import { RouterProvider, Route, Routes } from '../../app/contexts/RouterContext';
 import ConsolaSection, { ConsolaIncrustada } from './ConsolaSection.jsx';
 import { IMATGES_INDEX, TITOL_INDEX, TITOL_MAS, indexConsola, nodesDeLIndex } from './indexConsola.js';
-import { CLAU_PRIVACITAT, paginesConsola } from './consolaPagines.js';
+import { IMATGES_CONSOLA } from './imatgesConsola.js';
+import { TITOL_DIAGNOSI } from './diagnosiConsola.js';
+import { CLAU_PRIVACITAT, IDS_PAGINES, paginesConsola } from './consolaPagines.js';
 import { rutaPanell } from './polsConsola.js';
 import { rutaXifra } from './xifresMas.js';
 
@@ -163,48 +165,44 @@ test.each([['amb', true], ['sense', false]])('/consola %s fonts: l’índex ve d
    (IMATGES_INDEX), darrere de l'entradeta del seu títol i davant de les seues
    targetes. La jerarquia de text no canvia (la prova de dalt la fixa igual
    que a l'Onada 11), i la forma quadrada la posa una sola classe
-   (src/css/imatgesASang.capes.test.js): cap estil en línia. */
-test.each([['amb', true], ['sense', false]])('/consola %s fonts: l’H2 i els H3 amb il·lustració la pinten en una miniatura, i ningú més', async (_nom, amb) => {
+   (src/css/imatgesASang.capes.test.js): cap estil en línia.
+   Derogat EN PART per l'ordre del Mestre del 13-10-2026 (pla 261013_1405,
+   front F): les miniatures dels H3 (Explorador i Avisos i salut) i «fora de
+   l'índex, el tauler no guanya cap imatge de contingut». Les il·lustracions
+   de les pàgines van a les capçaleres de les seues targetes del tauler
+   (imatgesConsola.js), i cap imatge es pinta dues vegades a /consola (lliçó
+   261010 de sdp-universal-page): a l'Índex només queda la de l'H2. */
+test.each([['amb', true], ['sense', false]])('/consola %s fonts: l’Índex només pinta la miniatura de l’H2; les de les pàgines són a les seues targetes', async (_nom, amb) => {
   if (amb) ambFonts();
   await obri('/consola');
   const regio = index();
   const imatges = [...regio.querySelectorAll('img')];
   expect(imatges.map((img) => [img.getAttribute('src'), img.getAttribute('alt')]))
     .toEqual(Object.values(IMATGES_INDEX).map((x) => [x.imatge, x.imatgeAlt]));
-  for (const img of imatges) {
-    // Una sola classe, la de la Llei Visual; cap mida ni estil escrits al node.
-    expect(img.className).toBe('sdp-consola__index-imatge');
-    expect(img.hasAttribute('style')).toBe(false);
-    expect(img.hasAttribute('width')).toBe(false);
-    expect(img.getAttribute('loading')).toBe('lazy');
-    // No és cap enllaç ni viu dins de cap capçalera: el títol continua sent text.
-    expect(img.closest('a, h2, h3, h4')).toBeNull();
-  }
+  expect(imatges).toHaveLength(1);
+  const [delIndex] = imatges;
+  // Una sola classe, la de la Llei Visual; cap mida ni estil escrits al node.
+  expect(delIndex.className).toBe('sdp-consola__index-imatge');
+  expect(delIndex.hasAttribute('style')).toBe(false);
+  expect(delIndex.hasAttribute('width')).toBe(false);
+  expect(delIndex.getAttribute('loading')).toBe('lazy');
+  // No és cap enllaç ni viu dins de cap capçalera: el títol continua sent text.
+  expect(delIndex.closest('a, h2, h3, h4')).toBeNull();
   // La de l'H2: filla directa de l'índex, just darrere de la seua línia d'explicació.
-  const [delIndex, ...deLesPagines] = imatges;
   expect(delIndex.parentElement).toBe(regio);
   expect(delIndex.previousElementSibling.className).toBe('lead');
   expect(delIndex.previousElementSibling.previousElementSibling.tagName).toBe('H2');
-  // Les dels H3: dins de la seua pàgina, darrere de l'entradeta i davant de la primera targeta (H4).
-  const titolDe = { explorador: 'Explorador del cervell', salut: 'Avisos i salut' };
-  expect(deLesPagines).toHaveLength(Object.keys(titolDe).length);
-  for (const [i, id] of Object.keys(titolDe).entries()) {
-    const img = deLesPagines[i];
-    const pagina = img.parentElement;
-    expect(pagina.className).toBe('sdp-consola__index-pagina');
-    expect(pagina.querySelector('h3').textContent).toBe(titolDe[id]);
-    expect(img.getAttribute('src')).toBe(IMATGES_INDEX[id].imatge);
-    expect(img.previousElementSibling.tagName).toBe('P');
-    expect(img.previousElementSibling.previousElementSibling.className).toBe('sdp-consola__index-peraque');
-    if (img.nextElementSibling) expect(img.nextElementSibling.tagName).toBe('H4');
-    expect(pagina.querySelectorAll('img')).toHaveLength(1);
-  }
-  // Una pàgina sense il·lustració conserva el DOM de l'Onada 11: cap imatge.
-  for (const seccio of regio.querySelectorAll('.sdp-consola__index-pagina')) {
-    if (!Object.values(titolDe).includes(seccio.querySelector('h3').textContent)) expect(seccio.querySelector('img')).toBeNull();
-  }
-  // Fora de l'índex, el tauler no guanya cap imatge de contingut: les targetes porten la icona i l'avatar de la boina.
-  expect(document.querySelectorAll('img.sp-card-media')).toHaveLength(0);
+  // Cap pàgina de l'índex porta miniatura: totes conserven el DOM de l'Onada 11.
+  for (const seccio of regio.querySelectorAll('.sdp-consola__index-pagina')) expect(seccio.querySelector('img')).toBeNull();
+  // Les nou targetes del tauler porten la il·lustració de la seua pàgina, en l'ordre d'IDS_PAGINES; les xifres, cap.
+  const tauler = screen.getByRole('navigation', { name: 'Pàgines de la Consola' });
+  expect([...tauler.querySelectorAll('img.sp-card-media')].map((img) => [img.getAttribute('src'), img.getAttribute('alt')]))
+    .toEqual(IDS_PAGINES.map((id) => [IMATGES_CONSOLA[id].imatge, IMATGES_CONSOLA[id].imatgeAlt]));
+  expect(screen.getByRole('region', { name: TITOL_MAS }).querySelector('img.sp-card-media')).toBeNull();
+  // Cap imatge de contingut es repetix a /consola.
+  const totes = [...document.querySelectorAll('img.sp-card-media, img.sdp-consola__index-imatge')].map((img) => img.getAttribute('src'));
+  expect(totes).toHaveLength(IDS_PAGINES.length + 1);
+  expect(new Set(totes).size).toBe(totes.length);
   expect(errors).not.toHaveBeenCalled();
 });
 
@@ -248,7 +246,11 @@ test('navegar des de l’índex: una pàgina (H3), un panell del pols i una xifr
   expect(errors).not.toHaveBeenCalled();
 });
 
-test('l’Índex de secció de la barra blava recull l’H2, els H3 i els H4 de l’índex, en ordre i al final', async () => {
+/* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front F) · Darrere de
+   l'Índex ve el Diagnòstic del Mas, amb el seu H2 i cap altra capçalera.
+   Derogat EN PART per l'ordre del Mestre del 13-10-2026 (front F): l'Índex
+   «al final» de l'Índex de secció (Onada 11). */
+test('l’Índex de secció de la barra blava recull l’H2, els H3 i els H4 de l’índex, en ordre; i, al final, el Diagnòstic del Mas', async () => {
   ambFonts();
   await obri('/consola');
   fireEvent.click(screen.getByRole('button', { name: 'Índex de secció' }));
@@ -256,7 +258,10 @@ test('l’Índex de secció de la barra blava recull l’H2, els H3 i els H4 de 
   const entrades = [...dialeg.querySelectorAll('li')].map((li) => [li.className, li.textContent]);
   const inici = entrades.findIndex(([classe, text]) => classe === 'toc-item toc-level-2' && text === TITOL_INDEX);
   expect(inici).toBeGreaterThan(0);
-  expect(entrades.slice(inici)).toEqual(esperades().map(([nivell, titol]) => [`toc-item toc-level-${nivell.slice(1)}`, titol]));
+  const fi = entrades.findIndex(([classe], i) => i > inici && classe === 'toc-item toc-level-2');
+  expect(fi).toBeGreaterThan(inici);
+  expect(entrades.slice(inici, fi)).toEqual(esperades().map(([nivell, titol]) => [`toc-item toc-level-${nivell.slice(1)}`, titol]));
+  expect(entrades.slice(fi)).toEqual([['toc-item toc-level-2', TITOL_DIAGNOSI]]);
   expect(errors).not.toHaveBeenCalled();
 });
 

@@ -44,11 +44,17 @@ const MANIFEST = 'src/apps/gestoria/manifest.js';
    càlcul per a la gestora». La quarta, «Històric i IA», entra pel pont com la
    Facturació, pel mateix motiu (ShellGestoria no es toca), i passa per esta
    mateixa guarda. */
+/* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front H): la cinquena,
+   «Identitat i Finestreta» (la fitxa d'identitat privada, darrere del cofre,
+   i els tràmits preparats per a copiar, amb el seu tractor propi
+   'gestoria.identitat'), entra pel pont com l'Històric i passa per esta
+   mateixa guarda: cap xarxa, cap emmagatzematge fora del cofre. */
 const DEL_PONT = Object.freeze([
   '../../sections/gestoria/tauler/ShellGestoria.jsx',
   '../../sections/gestoria/aprendre/Aprendre.jsx',
   '../../sections/gestoria/facturar/Facturacio.jsx',
-  '../../sections/gestoria/historic/Historic.jsx'
+  '../../sections/gestoria/historic/Historic.jsx',
+  '../../sections/gestoria/finestreta/Finestreta.jsx'
 ]);
 
 /* Ruta des de l'arrel del repositori: les claus del glob són relatives a este fitxer. */
@@ -95,7 +101,13 @@ describe('el cens', () => {
       `${GESTORIA}/facturar/Facturacio.jsx`, `${GESTORIA}/facturar/useFacturacio.js`, `${GESTORIA}/facturacio/magatzemPerfil.js`,
       // Onada 6, ordre del Mestre (261009): l'Històric, el seu tractor, les categories i la simulació també.
       `${GESTORIA}/historic/Historic.jsx`, `${GESTORIA}/historic/nucli/tractorHistoric.js`, `${GESTORIA}/despeses/nucli/categories.js`,
-      `${GESTORIA}/impostos/nucli/simulacio.js`, `${GESTORIA}/fitxes/gestoria_historic.md`
+      `${GESTORIA}/impostos/nucli/simulacio.js`, `${GESTORIA}/fitxes/gestoria_historic.md`,
+      // Ordre del Mestre, 13-10-2026 (pla 261013_1405): l'Escàner Local (front D), la Fitxa d'identitat i la Finestreta (front H) i la Cabina d'Avió (front E).
+      `${GESTORIA}/escaner/PanellEscaner.jsx`, `${GESTORIA}/escaner/useEscaner.js`, `${GESTORIA}/escaner/nucli/escaner.js`,
+      `${GESTORIA}/escaner/nucli/tractorEscaner.js`, `${GESTORIA}/fitxes/gestoria_escaner.md`,
+      `${GESTORIA}/finestreta/Finestreta.jsx`, `${GESTORIA}/finestreta/useFinestreta.js`, `${GESTORIA}/finestreta/nucli/tractorIdentitat.js`,
+      `${GESTORIA}/finestreta/nucli/fitxaIdentitat.js`, `${GESTORIA}/finestreta/nucli/formularisFinestreta.js`, `${GESTORIA}/fitxes/gestoria_identitat.md`,
+      `${GESTORIA}/tauler/CabinaAvio.jsx`, `${GESTORIA}/tauler/nucli/cabinaAvio.js`
     ]) expect(rutes, esperada).toContain(esperada);
     expect(rutes.filter(esProva)).toEqual([]);
     expect(CODI.length).toBeGreaterThan(40);
@@ -301,8 +313,15 @@ describe('res ix d’este ordinador', () => {
        canvien ni tornen a «pendent».
        Onada 6, ordre del Mestre (261009): quart manifest, 'gestoria.historic'
        (l'històric del banc i la despesa en IA), també de signatura i sense
-       xarxa; els tres d'abans no canvien. */
-    expect(TRACTORS_GESTORIA.map((m) => m.id)).toEqual(['gestoria.factures', 'gestoria.correus', 'gestoria.tauler', 'gestoria.historic']);
+       xarxa; els tres d'abans no canvien.
+       Ordre del Mestre, 13-10-2026 (pla 261013_1405): cinqué, 'gestoria.escaner'
+       (l'Escàner Local de la carpeta, front D), i sisé, 'gestoria.identitat'
+       (la Fitxa d'identitat i la Finestreta, front H). Tots dos llegixen dades
+       personals: també de signatura i sense xarxa. Els quatre d'abans no
+       canvien de nivell. */
+    expect(TRACTORS_GESTORIA.map((m) => m.id)).toEqual([
+      'gestoria.factures', 'gestoria.correus', 'gestoria.tauler', 'gestoria.historic', 'gestoria.escaner', 'gestoria.identitat'
+    ]);
     for (const manifest of TRACTORS_GESTORIA) {
       expect(manifest, manifest.id).toMatchObject({ dadesPersonals: true, nivellMinim: 'signatura', xarxa: 'cap' });
     }
@@ -407,7 +426,8 @@ describe('la frontera: la Gestoria només pel pont de la seua app, els Tractors 
     expect(delsCarrils(fontPont.slice(0, inici) + fontPont.slice(fi))).toEqual([]);
     expect([...bloc.matchAll(/lazyRoute\(\(\) => import\(/g)]).toHaveLength(DEL_PONT.length);
     // Onada 6, ordre del Mestre (261009): quatre, amb «Històric i IA».
-    expect(DEL_PONT).toHaveLength(4);
+    // Ordre del Mestre, 13-10-2026 (pla 261013_1405, front H): cinc, amb «Identitat i Finestreta».
+    expect(DEL_PONT).toHaveLength(5);
     // Els Tractors no hi entren mai, ni ContenidorGestoria directament (arriba per la closca, com abans).
     expect(fontPont).not.toMatch(/sections\/tractors\/|ContenidorGestoria\.jsx'/);
   });
@@ -471,11 +491,12 @@ describe('la frontera: la Gestoria només pel pont de la seua app, els Tractors 
   test('al build de producció del pont no queda cap importació de la Gestoria', async () => {
     // 261007: també la Facturació, que en desenvolupament és la tercera importació.
     // Onada 6, ordre del Mestre (261009): i «Històric i IA», la quarta.
-    const gestoria = /import\(\s*["'][^"']*(?:ShellGestoria|aprendre\/Aprendre|facturar\/Facturacio|historic\/Historic)/g;
+    // Ordre del Mestre, 13-10-2026 (pla 261013_1405, front H): i «Identitat i Finestreta», la cinquena.
+    const gestoria = /import\(\s*["'][^"']*(?:ShellGestoria|aprendre\/Aprendre|facturar\/Facturacio|historic\/Historic|finestreta\/Finestreta)/g;
     const desenvolupament = await compila(PONT, false);
-    expect(desenvolupament.match(gestoria)).toHaveLength(4);
+    expect(desenvolupament.match(gestoria)).toHaveLength(5);
     const produccio = await compila(PONT, true);
     expect(produccio.match(gestoria)).toBeNull();
-    expect(produccio).not.toMatch(/ShellGestoria|ContenidorGestoria|Aprendre\.jsx|Facturacio\.jsx|Historic\.jsx|sections\/gestoria/);
+    expect(produccio).not.toMatch(/ShellGestoria|ContenidorGestoria|Aprendre\.jsx|Facturacio\.jsx|Historic\.jsx|Finestreta\.jsx|sections\/gestoria/);
   }, 60000);
 });

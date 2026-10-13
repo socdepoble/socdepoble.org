@@ -6,7 +6,11 @@
    banc hi arriba mai, i que el llibre ix només després de confirmar-ho.
    Integració de l'Onada 6 (261009): ací es prova la vista sense la porta del
    cofre (VistaHistoric), amb la persistència injectada; la porta, el cofre i
-   el bloqueig es proven a HistoricCofre.test.jsx. */
+   el bloqueig es proven a HistoricCofre.test.jsx.
+   Ordre del Mestre, 13-10-2026 (pla 261013_1405, front B): amb el titular de
+   la sessió (la prop que passa el pont), la boina, les targetes i la pàgina de
+   cada targeta porten la persona; el rellotge viu és sempre l'últim de la
+   barra, i la lectura és un xip a la seua esquerra. */
 import { webcrypto } from 'node:crypto';
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, test, vi } from 'vitest';
@@ -16,7 +20,9 @@ import { crearMagatzemMemoria } from '../../tractors/nucli/magatzem.js';
 import { TRACTORS, empremtaDe } from '../../tractors/registreTractors.js';
 import { CONSULTA_TRACTORS } from '../ContenidorGestoria.jsx';
 import { TRACTOR_HISTORIC } from '../tractors.js';
-import { CONSULTA_TRACTORS_HISTORIC, TITULAR_HISTORIC, VistaHistoric as Historic, pastillaDe } from './Historic.jsx';
+import {
+  CONSULTA_TRACTORS_HISTORIC, TITULAR_HISTORIC, VistaHistoric as Historic, pastillaDe, pastillaDeLectura, titularDelHistoric
+} from './Historic.jsx';
 import { CONFIGURACIO_BUIDA, VERSIO_CONFIGURACIO, configuracioNeta } from './useHistoric.js';
 
 afterEach(() => {
@@ -62,16 +68,24 @@ function Ruta() {
   return <output aria-label="Ruta">{`${pathname}${search ? `?${search}` : ''}`}</output>;
 }
 
-function munta({ magatzem = crearMagatzemMemoria(), persistencia, descarrega = vi.fn() } = {}) {
+function munta({ magatzem = crearMagatzemMemoria(), persistencia, descarrega = vi.fn(), titular } = {}) {
   const vista = render(
     <MemoryRouter rutaInicial="/app/gestoria/historic">
       <Historic magatzem={magatzem} subtle={subtle} entorn={entorn} rellotge={rellotge} avui={AVUI}
-        persistencia={persistencia} descarrega={descarrega} />
+        persistencia={persistencia} descarrega={descarrega} titular={titular} />
       <Ruta />
     </MemoryRouter>
   );
   return { ...vista, descarrega };
 }
+
+/* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front B): el titular que passa el pont (sintètic: cap persona real). */
+const TITULAR_SESSIO = Object.freeze({ nom: 'Pepa Soler', poble: 'Vilaprova de Dalt', avatar: null });
+const barraTaronja = (arrel) => arrel.querySelector('section.bar-orange');
+const nomDeLaBoina = (arrel) => barraTaronja(arrel).querySelector('.sp-card-author-name').textContent;
+/* El rellotge viu: un <time> amb el nom «Data i hora d’ara…» i l'instant del rellotge injectat. */
+const esRellotge = (node) => node?.tagName === 'TIME' && /^Data i hora d’ara: /.test(node.getAttribute('aria-label') ?? '')
+  && node.getAttribute('datetime') === pastillaDe(ARA).dateTime;
 
 async function llegit(opcions = {}) {
   const magatzem = await magatzemAprovat();
@@ -352,12 +366,82 @@ describe('la persistència injectable', () => {
   });
 });
 
+/* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front B): «la barra taronja de
+   TOTES les pàgines de la Gestoria porta el titular real autenticat, i a la
+   dreta SEMPRE la data i l'hora vives». */
+describe('la boina: el titular de la sessió i el rellotge viu', () => {
+  test('sense titular, l’estat honest; el rellotge viu és l’últim de la barra, i abans de llegir no hi ha cap xip de lectura', async () => {
+    const { container } = munta({ magatzem: await magatzemAprovat() });
+    await screen.findByLabelText('Tria els extractes del banc de tot el període');
+    expect(nomDeLaBoina(container)).toBe('Titular sense configurar');
+    expect(barraTaronja(container).querySelector('.sp-card-author').getAttribute('href')).toBe('/el-meu-perfil');
+    const accions = barraTaronja(container).querySelector('.bar-actions');
+    expect(esRellotge(accions.lastElementChild)).toBe(true);
+    expect(accions.querySelectorAll('time')).toHaveLength(1);
+    expect(accions.querySelector('.sdp-gestoria-boina__lectura')).toBeNull();
+  });
+
+  test('amb el titular de la sessió, la boina, les targetes i la pàgina d’una targeta porten la persona; mai «Titular sense configurar»', async () => {
+    const { container } = await llegit({ titular: TITULAR_SESSIO });
+    const autor = barraTaronja(container).querySelector('.sp-card-author');
+    expect(autor.querySelector('.sp-card-author-name').textContent).toBe('Pepa Soler');
+    expect(autor.querySelector('.sp-card-author-location').textContent).toBe('Vilaprova de Dalt');
+    expect(autor.getAttribute('href')).toBe('/el-meu-perfil');
+    /* La boina de la pàgina i la de cada targeta de la foto del director financer. */
+    expect(screen.getAllByText('Pepa Soler').length).toBeGreaterThan(1);
+    expect(textDe(container)).not.toContain('Titular sense configurar');
+    /* El nom no va mai a cap encapçalament: l'Índex de la barra blava els escriu a la URL. */
+    for (const encapcalament of container.querySelectorAll('h1, h2, h3')) expect(encapcalament.textContent).not.toContain('Pepa Soler');
+    fireEvent.click(screen.getByRole('button', { name: 'Caixa real' }));
+    await screen.findByRole('heading', { level: 1, name: 'Caixa real' });
+    expect(nomDeLaBoina(container)).toBe('Pepa Soler');
+    const accions = barraTaronja(container).querySelector('.bar-actions');
+    expect(esRellotge(accions.lastElementChild)).toBe(true);
+    expect(screen.getByRole('button', { name: 'Mostra les xifres' })).toBeTruthy();
+  });
+
+  test('després de llegir, el xip de la lectura va a l’esquerra del rellotge: l’hora sola el mateix dia, i el nom accessible sencer', async () => {
+    const { container } = await llegit();
+    const accions = barraTaronja(container).querySelector('.bar-actions');
+    expect(esRellotge(accions.lastElementChild)).toBe(true);
+    const xip = accions.querySelector('.sdp-gestoria-boina .sdp-gestoria-boina__lectura time');
+    const lectura = pastillaDe(ARA);
+    expect(xip.getAttribute('aria-label')).toBe(`Dades llegides a les ${lectura.time} del ${lectura.date}`);
+    expect(xip.getAttribute('datetime')).toBe(lectura.dateTime);
+    expect([...xip.querySelectorAll('span')].map((span) => span.textContent)).toEqual([lectura.time]);
+    expect(xip.compareDocumentPosition(accions.lastElementChild) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(accions.querySelectorAll('time')).toHaveLength(2);
+  });
+});
+
 describe('peces', () => {
   test('la boina: el titular sense configurar, mai una autora fingida; la pastilla de la lectura', () => {
     expect(TITULAR_HISTORIC).toMatchObject({ nom: 'Titular sense configurar', href: '/el-meu-perfil' });
     expect(pastillaDe(null)).toBeNull();
     const pastilla = pastillaDe(new Date(2026, 9, 9, 7, 5).getTime());
     expect(pastilla).toEqual({ time: '07:05', date: '09/10/26', dateTime: '2026-10-09T07:05' });
+  });
+
+  /* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front B). */
+  test('pastillaDeLectura: la data només si la lectura no és d’avui; el dateTime i el nom accessible, sempre sencers', () => {
+    const lectura = new Date(2026, 9, 9, 7, 5).getTime();
+    expect(pastillaDeLectura(null, lectura)).toBeNull();
+    expect(pastillaDeLectura(lectura, new Date(2026, 9, 9, 23, 59).getTime())).toEqual({
+      time: '07:05', date: undefined, dateTime: '2026-10-09T07:05', etiqueta: 'Dades llegides a les 07:05 del 09/10/26'
+    });
+    expect(pastillaDeLectura(lectura, new Date(2026, 9, 10, 0, 1).getTime())).toEqual({
+      time: '07:05', date: '09/10/26', dateTime: '2026-10-09T07:05', etiqueta: 'Dades llegides a les 07:05 del 09/10/26'
+    });
+    /* Sense un ara vàlid, la data es mostra: mai s'amaga una data que no se sap si és la d'avui. */
+    expect(pastillaDeLectura(lectura, Number.NaN).date).toBe('09/10/26');
+  });
+
+  test('titularDelHistoric: el titular de la sessió enllaçat al perfil; sense nom, l’estat honest', () => {
+    expect(titularDelHistoric(null)).toBe(TITULAR_HISTORIC);
+    expect(titularDelHistoric({ nom: '   ' })).toBe(TITULAR_HISTORIC);
+    expect(titularDelHistoric(TITULAR_SESSIO)).toEqual({ ...TITULAR_SESSIO, href: '/el-meu-perfil' });
+    expect(titularDelHistoric({ nom: ' Pepa Soler ', poble: 3, avatar: 7, correu: 'pepa@poble.test' }))
+      .toEqual({ nom: 'Pepa Soler', poble: '', avatar: null, href: '/el-meu-perfil' });
   });
 
   test('el desmuntatge en plena lectura no publica res', async () => {

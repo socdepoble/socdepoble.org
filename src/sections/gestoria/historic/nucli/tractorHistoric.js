@@ -24,7 +24,9 @@
  * Norma 43 i CSV alhora, abans de classificar es fusionen (el CSV aporta el
  * comerç de les compres amb targeta). La lectura que torna és la REDUÏDA del
  * Tauler (reduixC43, reduixCsv) més, per a cada moviment, un identificador
- * opac (una empremta FNV-1a de compte, dates, import i ordinal: cap text),
+ * opac (una empremta FNV-1a de compte, dates, import i ordinal: cap text; si
+ * dos comptes acabats igual el compartixen, el segon el du desambiguat, vegeu
+ * desambiguaIds),
  * la categoria, el proveïdor, la confiança i el codi del motiu. Mai ix d'ací
  * el text dels conceptes, el comerç, les referències, el document, el SEPA,
  * el nom del titular ni el nom del fitxer (només a l'avís d'un fitxer que no
@@ -126,6 +128,57 @@ function creaIds() {
     vistos.set(base, n);
     return `m${fnv1a(`${base}|${n}`)}${n > 1 ? `-${n}` : ''}`;
   };
+}
+
+const comparaText = (x, y) => (x < y ? -1 : x > y ? 1 : 0);
+
+/*
+ * Revisió adversarial 13-10-2026, troballes FIN-4 i TI-1. Des de GES-A2, dos
+ * comptes de la mateixa entitat acabats en els mateixos quatre dígits són dos
+ * comptes, però la clau dels id (entitat i sufix) era la mateixa: el mateix
+ * moviment (dates i import) en tots dos tenia el mateix id, i reclassificar-ne
+ * un canviava l'altre. Ara, dins d'una lectura, un id que fan dos comptes
+ * diferents (`idCompte`) amb la mateixa clau el conserva el primer, tal com
+ * era (les reclassificacions desades continuen valent), i els altres el
+ * reben desambiguat amb el seu ordinal: m + FNV-1a de «id|ordinal». Els
+ * moviments que no coincidixen no canvien mai.
+ * L'ordre dels comptes no depén de la sal de la sessió (que canvia els
+ * `idCompte` en cada sessió) ni de l'ordre dels fitxers: primer l'oficina de
+ * la capçalera (que només es mira ací i no ix); amb la mateixa oficina, la
+ * llista ordenada dels id dels seus moviments; i, si encara empaten (els
+ * mateixos moviments), l'`idCompte`. L'únic que en pot deduir qui veja els
+ * id és que un compte va abans que l'altre: res de cap xifra. Un hash sense
+ * sal del número sencer seria estable fins i tot llegint els comptes per
+ * separat, però amb 32 bits i l'entitat i el sufix coneguts es desfà provant
+ * números; i el número sencer no ix de c43.js.
+ * `trams`: un per compte de cada extracte, { clau, qui, oficina, compte }, on
+ * `compte` és el reduït (se li canvien els id dels moviments).
+ */
+function desambiguaIds(trams) {
+  const perClau = new Map();
+  for (const tram of trams) {
+    if (!perClau.has(tram.clau)) perClau.set(tram.clau, new Map());
+    const perQui = perClau.get(tram.clau);
+    if (!perQui.has(tram.qui)) perQui.set(tram.qui, { qui: tram.qui, oficina: tram.oficina, trams: [] });
+    perQui.get(tram.qui).trams.push(tram);
+  }
+  for (const perQui of perClau.values()) {
+    if (perQui.size < 2) continue;
+    const comptes = [...perQui.values()].map((c) => ({
+      ...c, firma: [...new Set(c.trams.flatMap((t) => t.compte.moviments.map((m) => m.id)))].sort().join(',')
+    })).sort((x, y) => comparaText(x.oficina, y.oficina) || comparaText(x.firma, y.firma) || comparaText(x.qui, y.qui));
+    const presos = new Set();
+    comptes.forEach((c, i) => {
+      const propis = new Set();
+      for (const { compte } of c.trams) {
+        compte.moviments = compte.moviments.map((m) => {
+          propis.add(m.id);
+          return presos.has(m.id) ? { ...m, id: `m${fnv1a(`${m.id}|${i + 1}`)}` } : m;
+        });
+      }
+      for (const id of propis) presos.add(id);
+    });
+  }
 }
 
 const classificacioDe = (c) => ({ categoria: c.categoria, proveidor: c.proveidor, confianca: c.confianca, motiu: c.motiu });
@@ -237,11 +290,20 @@ export async function executaTractorHistoric({ fitxers, aprovacio, subtle, regle
   /* 3. Classificar dins i reduir: cap text ix d'ací. */
   const classificats = {};
   const compta = (c) => { classificats[c.categoria] = (classificats[c.categoria] ?? 0) + 1; };
+  /* Cada compte de cada extracte, per a desambiguaIds (revisió adversarial 13-10-2026, troballes FIN-4 i TI-1). */
+  const tramsIds = [];
   const extractes = lecturesC43.map((lectura) => {
     const reduida = reduixC43(lectura);
     reduida.comptes.forEach((compte, k) => {
       const sencer = lectura.comptes[k];
       const clauCompte = `${compte.capcalera.entitat ?? ''}-${compte.capcalera.compte4 ?? ''}`;
+      const idCompte = compte.capcalera.idCompte;
+      tramsIds.push({
+        clau: clauCompte,
+        qui: typeof idCompte === 'string' && idCompte !== '' ? `opac:${idCompte}` : `sufix:${clauCompte}`,
+        oficina: sencer.capcalera?.oficina ?? '',
+        compte
+      });
       const idDe = creaIds();
       compte.moviments = compte.moviments.map((m, j) => {
         const original = sencer.moviments[j];
@@ -255,6 +317,7 @@ export async function executaTractorHistoric({ fitxers, aprovacio, subtle, regle
     });
     return { lectura: reduida };
   });
+  desambiguaIds(tramsIds);
   const csv = lecturesCsv.map((lectura) => {
     const reduida = reduixCsv(lectura);
     const idDe = creaIds();

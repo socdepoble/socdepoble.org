@@ -58,6 +58,8 @@ export const REGISTRE = [
   { nom: 'Paginacio', fitxer: 'PedraSeca/organismes/navegacio.jsx', pagina: 'navegacio', estat: 'viu' },
   { nom: 'Accordion', fitxer: 'PedraSeca/organismes/Accordion.jsx', pagina: 'navegacio', estat: 'viu' },
   { nom: 'AccordionItem', fitxer: 'PedraSeca/organismes/Accordion.jsx', pagina: 'navegacio', estat: 'viu' },
+  // Ordre del Mestre (261012, vespre) · el botó de damunt de «Pobles» (EspecimenTornarADalt).
+  { nom: 'BotoTornarADalt', fitxer: 'PedraSeca/atoms/BotoTornarADalt.jsx', pagina: 'navegacio', estat: 'viu' },
   // Fonaments (espècimens vius a detalls/EspecimenUniversalCard, EspecimenControlsBarra,
   // EspecimenAvatar, EspecimenBotonera, EspecimenTaula i EspecimenIndicador)
   { nom: 'UniversalCard', fitxer: 'PedraSeca/organismes/UniversalCard.jsx', pagina: 'fonaments', estat: 'viu' },
@@ -268,3 +270,8 @@ REGISTRE.push({ nom: 'MenuComentar', fitxer: 'PedraSeca/organismes/Comentar.jsx'
 REGISTRE.push({ nom: 'PublicacionsDeLActor', fitxer: 'sections/mur/PublicacionsDeLActor.jsx', pagina: 'fonaments', estat: 'viu', fora: true });
 REGISTRE.push({ nom: 'VistaPublicacionsDeLActor', fitxer: 'sections/mur/PublicacionsDeLActor.jsx', pagina: 'fonaments', estat: 'viu', fora: true });
 REGISTRE.push({ nom: 'TargetaDelMercat', fitxer: 'sections/mercat/TargetaDelMercat.jsx', pagina: 'fonaments', estat: 'viu', fora: true });
+/* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front B: «A la part dreta de la barra taronja,
+   SEMPRE la data i l'hora vives») · la pastilla amb l'hora d'ara, renovada al canvi de cada minut.
+   No entra a la façana: la posa PaginaApp (rellotgeViu). Espècimen: EspecimenControlsBarra
+   (fonaments/controls-barra). */
+REGISTRE.push({ nom: 'RellotgeViu', fitxer: 'PedraSeca/atoms/RellotgeViu.jsx', pagina: 'fonaments', estat: 'viu' });

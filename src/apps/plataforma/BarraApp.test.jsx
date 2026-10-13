@@ -106,6 +106,26 @@ describe('dins d’una app', () => {
     expect(screen.getByTestId('titol-menu').textContent).toBe('Menú La Prova');
   });
 
+  /* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front C) · El taronja dels
+     títols de grup (apps.css, --sdp-crom-grup-text) penja d'una distinció del
+     DOM: el títol és un <p> dins del seu grup, mai un enllaç ni un botó, i cap
+     enllaç porta la seua classe (els enllaços continuen blancs). */
+  test('el títol de grup no és cap enllaç ni cap botó: és el <p> del grup, i cap enllaç en porta la classe', () => {
+    const { nav } = muntaBarra('/app/prova/caixa');
+    const grup = within(nav).getByRole('group', { name: 'Gestió' });
+    const titols = [...nav.querySelectorAll('.sdp-app-barra__grup')];
+    expect(titols).toHaveLength(1);
+    expect(titols[0].tagName).toBe('P');
+    expect(titols[0].textContent).toBe('Gestió');
+    expect(grup.contains(titols[0])).toBe(true);
+    expect(titols[0].closest('a, button')).toBeNull();
+    expect(titols[0].querySelector('a, button')).toBeNull();
+    for (const enllac of within(nav).getAllByRole('link')) {
+      expect(enllac.classList.contains('sdp-app-barra__grup')).toBe(false);
+      expect(enllac.querySelector('.sdp-app-barra__grup')).toBeNull();
+    }
+  });
+
   test('a una subruta de l’entrada, s’encén només eixa entrada (caixa, no caixa-b)', () => {
     const { nav } = muntaBarra('/app/prova/caixa/t-3');
     expect(actius(nav)).toEqual(['/app/prova/caixa']);

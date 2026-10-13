@@ -21,6 +21,8 @@ import { PaginaPanellPols, PaginaPols } from './PolsConsola.jsx';
 import { panellPols, segmentPols } from './polsConsola.js';
 import { GraellaXifres, PaginaXifra, XifresMas } from './XifresMas.jsx';
 import { IndexConsola } from './IndexConsola.jsx';
+import { DiagnosiConsola } from './DiagnosiConsola.jsx';
+import { imatgeDePagina } from './imatgesConsola.js';
 import { XIFRA_DE_CODI, segmentXifra, xifraDelMas, xifresDeLaGraella, xifresDeVista } from './xifresMas.js';
 import { entradetaPlana } from './xifresComu.js';
 import { rutaDelNode } from './problemesConsola.js';
@@ -173,12 +175,26 @@ const fontsDe = (consola, mapa) => ({
  * marca per dins (T3) i du les etiquetes d'un colp d'ull (consolaPagines.js).
  * El record de visites es llig en muntar el tauler: tornar-hi des d'una
  * pàgina el refresca. Davall, «El Mas en xifres», també sense Mapa.
+ * Ordre del Mestre, 13-10-2026 (pla 261013_1405, front F) · «Col·locar a les
+ * capçaleres de les targetes de la Consola Termodinàmica les il·lustracions
+ * artístiques de Pedra Seca existents.» Amb `ambImatges`, cada targeta porta
+ * la il·lustració de la seua pàgina (imatgesConsola.js) al mitjà, quadrada i
+ * centrada (Llei Visual del quadrat), i la icona d'ICONES deixa de pintar-se
+ * (TargetaConsola: «la imatge o la icona»). Només el tauler de /consola en
+ * porta: la Consola incrustada de la Wiki (ConsolaIncrustada) no passa
+ * `ambImatges` i conserva els seus píxels. Derogat EN PART per l'ordre del
+ * Mestre del 13-10-2026 (pla 261013_1405, front F): l'Onada 12 (261011;
+ * ordres 261011_0130, punt 2), «fora de l'índex, el tauler no guanya cap
+ * imatge de contingut», i l'ordre del 260926 «la icona de la part en el lloc
+ * de la foto» per a les nou targetes de /consola (les xifres conserven la
+ * seua icona).
+ * `ara` és el rellotge de la pintada: la coberta i l'etiqueta del pols diuen
+ * el mateix dels rebuts, i el tauler de /consola el comparteix amb el
+ * Diagnòstic del Mas (DiagnosiConsola.jsx). Sense, el d'ara.
  */
-export function ConsolaTauler({ consola, mapa, cimRef }) {
+export function ConsolaTauler({ consola, mapa, cimRef, ambImatges = false, ara = Date.now() }) {
   const fonts = fontsDe(consola, mapa);
   const [vistes] = useState(llegixVistes);
-  // Un sol rellotge per pintada: la coberta i l'etiqueta del pols diuen el mateix dels rebuts.
-  const ara = Date.now();
   return (
     <>
       <AlertaVigilancia mapa={mapa.mapa} />
@@ -187,6 +203,7 @@ export function ConsolaTauler({ consola, mapa, cimRef }) {
           const delMapa = p.id !== 'pols';
           return (
             <TargetaConsola key={p.id} icona={ICONES[p.id]} titol={p.title} subtitol={p.subtitle}
+              {...(ambImatges ? imatgeDePagina(p.id) : null)}
               entradilla={p.lead} metriques={mesuresPagina(p.id, fonts)} dada={resumPagina(p.id, fonts)} a={p.ruta}
               estats={estatsPagina(p.id, fonts, ara)}
               problemes={problemesPagina(p.id, fonts)}
@@ -266,7 +283,12 @@ function ContingutPagina({ id, consola, mapa, locale }) {
 /* El títol i la descripció de la pestanya: el tauler, una pàgina, un panell
    del pols o una xifra (la seua imatge, si en té, és la del SEO). El que no
    existix no s'indexa. Amb el mode privacitat, el títol de la pestanya no
-   porta cap ruta (titolPrivat). */
+   porta cap ruta (titolPrivat).
+   Ordre del Mestre, 13-10-2026 (pla 261013_1405, front F) · La imatge de la
+   targeta d'una pàgina del tauler (imatgesConsola.js) és la imatge SEO de la
+   seua pàgina (lliçó 261004 de sdp-universal-page). No en fa la portada
+   (hero): la Llei Visual del quadrat no cobrix la portada de PageFrame i
+   canviaria els píxels de nou pàgines sense l'ordre del Mestre. */
 function seoDe({ copy, pagina, slugXifra, xifra, llegint, idPanell, panell, privat }) {
   if (slugXifra !== null) {
     // Mentre les fonts es lligen no se sap si la xifra existix (PaginaXifra espera).
@@ -279,7 +301,7 @@ function seoDe({ copy, pagina, slugXifra, xifra, llegint, idPanell, panell, priv
     if (!panell) return { title: `Panell no trobat · ${copy.title}`, description: 'Esta adreça no correspon a cap panell del pols.', index: false };
     return { title: `${panell.titol} · ${copy.title}`, description: entradetaPlana(panell.entradilla) };
   }
-  if (pagina) return { title: `${pagina.title} · ${copy.title}`, description: pagina.lead };
+  if (pagina) return { title: `${pagina.title} · ${copy.title}`, description: pagina.lead, image: imatgeDePagina(pagina.id).imatge || undefined };
   return { title: copy.title, description: copy.lead };
 }
 
@@ -338,6 +360,8 @@ export default function ConsolaSection() {
   if (id === null) return <Navigate to={RUTA_CONSOLA} replace />;
 
   if (!pagina) {
+    // Un sol rellotge per a les targetes i el Diagnòstic del Mas: el text diu el mateix dels rebuts.
+    const ara = Date.now();
     return (
       /* T2 (ordre del Mestre, 260930) · l'Índex de la Consola arriba a h6: hi entren les mètriques (h5).
          Correcció B1 (260930) · el tauler també respecta la privacitat recordada: l'alerta de
@@ -346,11 +370,19 @@ export default function ConsolaSection() {
          la Consola (IndexConsola.jsx): text pur, H2, H3 per pàgina i H4 per targeta, cada títol
          enllaçat a la seua pàgina. Només ací, a /consola: la Consola incrustada de la Wiki
          (ConsolaIncrustada) no el pinta i conserva els seus píxels. Dins del mateix proveïdor
-         de privacitat: les entradetes porten rutes en <Mono>. */
+         de privacitat: les entradetes porten rutes en <Mono>.
+         Ordre del Mestre, 13-10-2026 (pla 261013_1405, front F) · Les targetes del tauler porten
+         la il·lustració de la seua pàgina (ambImatges), i darrere de l'Índex, tancant el tauler,
+         el Diagnòstic del Mas (DiagnosiConsola.jsx): l'accés ràpid a les nou pàgines i el
+         diagnòstic sencer en un <pre>, amb les mateixes fonts i el mateix rellotge que les
+         targetes. Derogat EN PART per l'ordre del Mestre del 13-10-2026 (pla 261013_1405,
+         front F): l'Índex de la Consola com a últim bloc del tauler (Onada 11). Tampoc a la
+         Consola incrustada. */
       <UniversalPage title={copy.title} subtitle={copy.subtitle} lead={copy.lead} chrome="system" nivellMaxIndex={6}>
         <PrivacitatConsola.Provider value={privat}>
-          <ConsolaTauler consola={consola} mapa={mapa} cimRef={cim} />
+          <ConsolaTauler consola={consola} mapa={mapa} cimRef={cim} ambImatges ara={ara} />
           <IndexConsola mapa={mapa.mapa} dades={consola.dades} locale={locale} />
+          <DiagnosiConsola fonts={fontsDe(consola, mapa)} locale={locale} ara={ara} />
         </PrivacitatConsola.Provider>
       </UniversalPage>
     );

@@ -24,3 +24,6 @@ Data,IA,Model,Limit,Mètrica,Valor(%),Sessió/Activitat,Cost(USD)
 2026-10-04 02:00,Codex,Astra,Sessió,Consumit,50,"Auditoria Onada 4",0
 2026-10-11 03:17,Claude,Fable 5.1,Sessió,Consumit,36,"Onada 11/12 (Refutació Adversarial i Auditories)",360.30
 2026-10-11 03:17,Claude,Tots els models,Semanal,Consumit,58,"Onada 11/12 (Refutació Adversarial i Auditories)",360.30
+2026-10-13 17:35,Claude,Opus 5.5,Semanal,Consumit,19,"Gestoria JARVIS - Implementacio i Verificacio",350.20
+2026-10-13 17:35,Claude,Opus 5.5,Sessio,Consumit,48,"Gestoria JARVIS - Implementacio i Verificacio",350.20
+2026-10-13 17:35,Codex,ChatGPT Pro 100,Semanal,Restant,78,"Auditoria Gestoria JARVIS",0.0

@@ -14,7 +14,7 @@ import {
   DECISIONS, DIA_MS, NIVELLS, PATRO_EMPREMTA, SCHEMA_APROVACIO,
   avaluaEstat, instantDe, preimatgeRegistre, rangNivell, validaManifest, validaRegistre
 } from './registre.js';
-import { ALG_ES256, FLAG_UP, FLAG_UV, extreuClauDeRegistre, verificaAssercio } from './webauthn.js';
+import { ALG_ES256, ALG_RS256, FLAG_UP, FLAG_UV, extreuClauDeRegistre, verificaAssercio } from './webauthn.js';
 
 export const CODIS_APROVACIO = Object.freeze([
   'APROVACIO_REQUERIDA', 'EMPREMTA_DIVERGENT', 'APROVACIO_CADUCADA',
@@ -166,7 +166,10 @@ export async function registraClauWebAuthn({
         challenge: repteBytes,
         rp: { id: rpId, name: nomRp },
         user: { id: aleatoris(16), name: 'aprovador-tractors', displayName: 'Aprovador de tractors' },
-        pubKeyCredParams: [{ type: 'public-key', alg: ALG_ES256 }],
+        pubKeyCredParams: [
+          { type: 'public-key', alg: ALG_ES256 },
+          { type: 'public-key', alg: ALG_RS256 }
+        ],
         authenticatorSelection: { authenticatorAttachment: 'platform', userVerification: 'required' },
         attestation: 'none',
         timeout: TEMPS_WEBAUTHN_MS

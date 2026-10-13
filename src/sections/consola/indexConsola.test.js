@@ -9,7 +9,7 @@ import {
   ID_INDEX, ID_MAS, IMATGES_INDEX, TEXT_INDEX, TITOL_INDEX, TITOL_MAS, indexConsola, nodesDeLIndex
 } from './indexConsola.js';
 import { PAGE_COPY } from '../text/pageContent.js';
-import { pluginPerId } from '../plugins/registrePlugins.js';
+import { IMATGES_CONSOLA } from './imatgesConsola.js';
 import { IDS_PAGINES, paginaConsola } from './consolaPagines.js';
 import { IDS_PANELLS, panellPols, rutaPanell } from './polsConsola.js';
 import {
@@ -211,48 +211,48 @@ describe('amb el Mapa i consola.json de prova', () => {
 /* Onada 12 (261011; ordres 261011_0130, punt 2) · Les il·lustracions de
    l'índex: una sola taula (IMATGES_INDEX), cap ruta inventada (el fitxer és
    al disc, dins de public/) i cap text alternatiu propi (és el de la font
-   que ja pinta eixa imatge). */
+   que ja pinta eixa imatge).
+   Derogat EN PART per l'ordre del Mestre del 13-10-2026 (pla 261013_1405,
+   front F): les miniatures d'explorador i salut. Les il·lustracions de les
+   pàgines van a les capçaleres de les seues targetes del tauler
+   (imatgesConsola.js, la taula única, que imatgesConsola.test.js prova contra
+   el disc i les fonts), i l'Índex només conserva la de l'H2: una imatge no es
+   pinta dues vegades a /consola (lliçó 261010 de sdp-universal-page). */
 const PUBLIC = path.join(process.cwd(), 'public');
 const alDisc = (ruta) => path.join(PUBLIC, ...ruta.split('/').filter(Boolean));
 const esFitxerAmbPes = (ruta) => existsSync(alDisc(ruta)) && statSync(alDisc(ruta)).isFile() && statSync(alDisc(ruta)).size > 0;
 
 describe('les il·lustracions', () => {
-  test('la taula només nomena nodes de nivell 2 i 3 que existixen, i cada fitxer és a public/', () => {
-    const titols = new Map(nodesDeLIndex(indexConsola()).filter((n) => n.nivell < 4).map((n) => [n.id, n]));
-    expect(Object.keys(IMATGES_INDEX)).toEqual([ID_INDEX, 'explorador', 'salut']);
-    for (const [id, { imatge, imatgeAlt }] of Object.entries(IMATGES_INDEX)) {
-      expect(titols.has(id), id).toBe(true);
-      expect(imatge, id).toMatch(/^\/assets\/(ui\/plugins\/[a-z]+_vinyeta|nano_cards\/[a-z_]+_nano_card)\.jpg$/);
-      expect(esFitxerAmbPes(imatge), `${imatge} no és a public/`).toBe(true);
-      expect(imatgeAlt.length, id).toBeGreaterThan(20);
-    }
-    // Cap imatge repetida: una il·lustració, un sol node.
-    const rutes = Object.values(IMATGES_INDEX).map((x) => x.imatge);
-    expect(new Set(rutes).size).toBe(rutes.length);
+  test('la taula de l’Índex només nomena l’H2, i el seu fitxer és a public/', () => {
+    // Ordre del Mestre, 13-10-2026 (front F) · abans [index, explorador, salut]; ara les dues de les pàgines són de les targetes.
+    expect(Object.keys(IMATGES_INDEX)).toEqual([ID_INDEX]);
+    const { imatge, imatgeAlt } = IMATGES_INDEX[ID_INDEX];
+    expect(imatge).toMatch(/^\/assets\/(ui\/plugins\/[a-z]+_vinyeta|nano_cards\/[a-z_]+_nano_card)\.jpg$/);
+    expect(esFitxerAmbPes(imatge), `${imatge} no és a public/`).toBe(true);
+    expect(imatgeAlt.length).toBeGreaterThan(20);
   });
 
-  test('la ruta i el text alternatiu són els de la font que ja pinta eixa imatge (PAGE_COPY i el registre de plugins)', () => {
+  test('la ruta i el text alternatiu de l’H2 són els de PAGE_COPY.consola, i són els de la taula única', () => {
     expect(IMATGES_INDEX[ID_INDEX]).toEqual({ imatge: PAGE_COPY.consola.image, imatgeAlt: PAGE_COPY.consola.imageAlt });
-    expect(IMATGES_INDEX.explorador).toEqual({ imatge: PAGE_COPY.cervell.image, imatgeAlt: PAGE_COPY.cervell.imageAlt });
-    const salut = pluginPerId('salut');
-    expect(IMATGES_INDEX.salut).toEqual({ imatge: salut.imatge, imatgeAlt: salut.imatgeAlt });
-    // «El Cervell» viu a l'Explorador: ho diu el seu copy, i per això la seua imatge va a eixe node.
-    expect(PAGE_COPY.cervell.lead).toContain('Explorador');
+    expect(IMATGES_INDEX[ID_INDEX]).toBe(IMATGES_CONSOLA.index);
   });
 
-  test('l’H2 i cada H3 porten imatge i imatgeAlt (null i buit si no en tenen); els H4, cap', () => {
+  test('l’H2 porta la seua il·lustració; els H3 porten imatge null i imatgeAlt buit; els H4, cap camp', () => {
     for (const fonts of [[], [MAPA, CONSOLA]]) {
       const plans = nodesDeLIndex(indexConsola(...fonts));
       for (const n of plans.filter((x) => x.nivell < 4)) {
-        const esperada = IMATGES_INDEX[n.id] ?? { imatge: null, imatgeAlt: '' };
+        const esperada = n.nivell === 2 ? IMATGES_INDEX[ID_INDEX] : { imatge: null, imatgeAlt: '' };
         expect({ imatge: n.imatge, imatgeAlt: n.imatgeAlt }, n.id).toEqual(esperada);
       }
       for (const n of plans.filter((x) => x.nivell === 4)) {
         expect(n.imatge, n.id).toBeUndefined();
         expect(n.imatgeAlt, n.id).toBeUndefined();
       }
-      // Tres nodes amb il·lustració, ni un més: una miniatura per títol, mai una graella.
-      expect(plans.filter((x) => x.imatge).map((x) => x.id)).toEqual([ID_INDEX, 'explorador', 'salut']);
+      // Un sol node amb il·lustració: la de l'H2. La de cada pàgina és a la seua targeta, una sola vegada a /consola.
+      expect(plans.filter((x) => x.imatge).map((x) => x.id)).toEqual([ID_INDEX]);
+      // Cap il·lustració de les targetes no torna a l'Índex.
+      const deLesTargetes = IDS_PAGINES.map((id) => IMATGES_CONSOLA[id].imatge);
+      expect(plans.filter((x) => deLesTargetes.includes(x.imatge))).toEqual([]);
     }
   });
 

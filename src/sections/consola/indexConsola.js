@@ -39,8 +39,15 @@
  * dictat de l'Onada 11: l'índex continua sent un H2, H3 i H4 de text, i la
  * imatge és una miniatura quadrada davall de l'entradeta del seu títol, mai
  * una targeta ni una graella. Els H4 no en porten cap.
+ * Derogat EN PART per l'ordre del Mestre del 13-10-2026 (pla 261013_1405,
+ * front F) · Les il·lustracions de les pàgines van a les capçaleres de les
+ * seues targetes del tauler (imatgesConsola.js, la taula única): els H3 ja no
+ * porten miniatura (null i ''), perquè /consola no pinte dues vegades la
+ * mateixa imatge (lliçó 261010 de sdp-universal-page). Només l'H2 conserva
+ * la seua. Els camps `imatge` i `imatgeAlt` dels nivells 2 i 3 es queden.
  */
 import { paginesConsola } from './consolaPagines.js';
+import { IMATGES_CONSOLA } from './imatgesConsola.js';
 import { panellsPols } from './polsConsola.js';
 import { xifresDeLaGraella, xifresDeVista } from './xifresMas.js';
 
@@ -66,30 +73,15 @@ export const TEXT_MAS = 'Les deu xifres del tauler, cada una amb la seua pàgina
    damunt d'una pàgina de la Consola que parla d'una altra cosa.
     · index (l'H2) · consola_vinyeta: és la imatge de la Consola
       (PAGE_COPY.consola, la de /page/consola i de la seua targeta del Mur).
-    · explorador · cervell_vinyeta: «El Cervell» viu a l'Explorador
-      (PAGE_COPY.cervell: «Viu dins de la Consola, a l'Explorador»; el seu
-      botó obri /consola/explorador).
-    · salut · salut_vinyeta: el metge que pren la tensió, per a «Avisos i
-      salut». ESBORRANY per al Mestre: és la il·lustració del plugin Salut
-      (el quadern de cures), i ací fa de metàfora de la salut del Mas. Si no
-      ha de compartir-se, lleva esta línia i res més canvia.
-   La resta de pàgines no tenen cap il·lustració pròpia entre les 18: es
-   queden sense, i no se'n força cap. */
-const VINYETES = '/assets/ui/plugins';
-export const IMATGES_INDEX = Object.freeze({
-  index: Object.freeze({
-    imatge: `${VINYETES}/consola_vinyeta.jpg`,
-    imatgeAlt: 'Una iaia amb ulleres de soldar maneja una màquina de vapor plena de rellotges, i un veí l’apreta amb una clau'
-  }),
-  explorador: Object.freeze({
-    imatge: `${VINYETES}/cervell_vinyeta.jpg`,
-    imatgeAlt: 'Un cervell ple d’engranatges i bombetes dins d’una bóta, connectat a una màquina d’escriure, davant de veïns bocabadats'
-  }),
-  salut: Object.freeze({
-    imatge: `${VINYETES}/salut_vinyeta.jpg`,
-    imatgeAlt: 'Un metge pren la tensió a un iaio assegut en una cadira de bova, al carrer, entre gats i gossos'
-  })
-});
+   Derogat EN PART per l'ordre del Mestre del 13-10-2026 (pla 261013_1405,
+   front F): «explorador · cervell_vinyeta» i «salut · salut_vinyeta» com a
+   miniatures dels seus H3, i «La resta de pàgines no tenen cap il·lustració
+   pròpia entre les 18: es queden sense». Ara la taula de totes les
+   il·lustracions de la Consola és imatgesConsola.js, amb el criteri de cada
+   una (i les ESBORRANY per al Mestre); les de les nou pàgines van a la seua
+   targeta del tauler, i d'ací l'Índex només en pren la de l'H2. L'export es
+   conserva amb el seu nom: qui el llig continua llegint la taula de l'Índex. */
+export const IMATGES_INDEX = Object.freeze({ [ID_INDEX]: IMATGES_CONSOLA.index });
 
 /** La il·lustració d'un node ({ imatge, imatgeAlt }); sense, null i ''. */
 const imatgeDe = (id) => {

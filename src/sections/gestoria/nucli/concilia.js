@@ -21,7 +21,12 @@
  *      cita la Q270815, però «XQ270815» no; i un número que comença o acaba
  *      en xifra no pot ser un tros d'un grup de xifres enganxades per guions,
  *      barres o punts («PERIODE 2099-07-15» no cita la 2099-07). Alta si
- *      l'import quadra; si no, es deixa per a després de R3 (vegeu baix).
+ *      l'import quadra (diferència 0; en una factura en una altra moneda, el
+ *      24 porta el seu import exacte); si no, es deixa per a després de R3
+ *      (vegeu baix). Ordre del Mestre, 13-10-2026 (pla 261013_1405, front I ·
+ *      motors; auditoria de Codex 261013_1510, GES-A6): un import que no es
+ *      pot comparar (factura sense total, o en una altra moneda sense el 24)
+ *      NO quadra: «desconegut» no és «diferència zero».
  *   R4 n'hi apareixen diverses: el subconjunt de fins a 4 que suma l'import
  *      exacte, si és únic (la transferència que paga dues quotes). Alta. Si
  *      cap no quadra, també es deixa per a després de R3.
@@ -40,14 +45,17 @@
  *   R1 i R4 sense l'import exacte: el moviment que cita factures que no paga
  *      exactes no entra a R2, R5 ni R3, però les seues factures sí, perquè un
  *      pagament exacte d'un altre moviment passe davant. Les citades que
- *      queden lliures fan parella amb ell: mitjana, amb incidència.
+ *      queden lliures fan parella amb ell: mitjana, amb incidència
+ *      (IMPORT_DIFERENT o, si l'import no es pot comparar, IMPORT_DESCONEGUT).
  *   R5 sense 24: l'únic càrrec de la mateixa finestra que és del proveïdor de
  *      la factura (mitjana) o que porta comissió de compra a l'estranger (baixa).
  *   R4 per proveïdor: un càrrec del mateix creditor o proveïdor que paga
  *      entre 2 i 4 factures seues dels 100 dies anteriors. Mitjana.
  *   R6 un rebut (text, número o nom de fitxer) cita el número d'una factura.
  *      No hi entra cap moviment: un rebut no diu des de quin compte s'ha
- *      pagat, i la factura seguix sense pagament al banc.
+ *      pagat, i la factura seguix sense pagament al banc. Alta només amb la
+ *      diferència 0; un rebut sense import (o una factura sense total), mitjana
+ *      (GES-A6).
  * La comissió de canvi (concepte comú 17, el mateix dia) s'afig a la parella
  * R5 si comparteix referència amb el càrrec: la referència 1 o el document
  * (si porten xifres), o una referència de 8 caràcters o més amb xifres als
@@ -57,8 +65,10 @@
  * Parella: { moviments, factures, regla, confianca, diferencia, rebuts?,
  * tipusCanvi?, comissio? }. diferencia = suma dels moviments − import esperat
  * de les factures, en cèntims (null si alguna no és en euros o no té total);
- * en R5, la diferència en la moneda de la factura (0 amb el 24, null sense);
- * en R6, |rebut| − |factura|. JS pur: sense DOM ni APIs de Node.
+ * en R5, i en R1 amb una factura en una altra moneda, la diferència en la
+ * moneda de la factura (0 amb el 24, null sense); en R6, |rebut| − |factura|.
+ * Una parella de confiança alta té SEMPRE diferencia === 0 (GES-A6).
+ * JS pur: sense DOM ni APIs de Node.
  */
 import { textDelsConceptes } from './c43.js';
 import { nifsDelProveidor } from './cataleg.js';
@@ -70,7 +80,9 @@ import { aprenProveidors, identificaProveidor } from './proveidors.js';
 
 export const REGLES_CONCILIACIO = Object.freeze(['R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7']);
 /* Els codis que pot tornar concilia a les incidències. */
-export const CODIS_CONCILIACIO = Object.freeze(['AMBIGUITAT', 'IMPORT_DIFERENT', 'ANULLACIO_SENSE_CARREC', 'MOVIMENT_ILLEGIBLE']);
+export const CODIS_CONCILIACIO = Object.freeze([
+  'AMBIGUITAT', 'IMPORT_DIFERENT', 'ANULLACIO_SENSE_CARREC', 'MOVIMENT_ILLEGIBLE', 'IMPORT_DESCONEGUT'
+]);
 /* Dies del moviment respecte de la data de la factura: abans (fins a −abans) i després (fins a +despres). */
 export const FINESTRES = Object.freeze({
   compra: Object.freeze({ abans: 3, despres: 10 }),
@@ -173,6 +185,10 @@ function diferenciaDe(moviments, factures) {
   if (esperats.includes(null)) return null;
   return suma(moviments.map((m) => m.centims)) - suma(esperats);
 }
+
+/* GES-A6: una factura en una altra moneda només quadra si el 24 del moviment porta el seu import exacte. */
+const exacteEnDivisa = (m, f) => !enEuros(f) && f.moneda !== 'XXX' && Number.isSafeInteger(f.total) && f.total !== 0
+  && m.divisa?.moneda === f.moneda && Math.abs(m.divisa.centims ?? Number.NaN) === Math.abs(f.total);
 
 /* El candidat més pròxim en dies; en un empat, el que va després de la factura. */
 function mesProper(candidats, diesDelCandidat) {
@@ -338,8 +354,14 @@ export function concilia({ moviments = [], factures = [], rebuts = [], rang = nu
     return parella;
   };
   const avisaDiferencia = (parella, m) => {
-    if (!parella.diferencia) return;
+    if (parella.diferencia === 0) return;
     const quines = parella.factures.length === 1 ? `la factura ${nomFactura(parella.factures[0])}` : `${parella.factures.length} factures`;
+    /* GES-A6: sense un import que es puga comparar no hi ha «diferència 0», i també es diu. */
+    if (parella.diferencia === null) {
+      incidencia('IMPORT_DESCONEGUT', 'mitjana',
+        `El moviment ${quin(m)} cita ${quines}, però l’import no es pot comparar (una altra moneda o sense total): revisa-ho a mà.`, refMoviment(m));
+      return;
+    }
     incidencia('IMPORT_DIFERENT', 'mitjana',
       `El moviment ${quin(m)} cita ${quines}, però l’import no quadra: hi ha ${formatImport(parella.diferencia)} de diferència.`, refMoviment(m));
   };
@@ -373,8 +395,11 @@ export function concilia({ moviments = [], factures = [], rebuts = [], rang = nu
     const citades = facturesLliures().filter((f) => claus.has(f) && signeCompatible(m, f) && citaClau(tallat, claus.get(f)));
     if (citades.length === 0) continue;
     if (citades.length === 1) {
-      if (diferenciaDe([m], citades)) esperaR3(m, citades);
-      else aparella('R1', 'alta', [m], citades);
+      /* GES-A6: alta només amb la diferència 0; null (import desconegut o una altra moneda) no quadra. */
+      const [f] = citades;
+      if (diferenciaDe([m], citades) === 0) aparella('R1', 'alta', [m], citades);
+      else if (exacteEnDivisa(m, f)) aparella('R1', 'alta', [m], citades, { diferencia: 0, tipusCanvi: arrodonix(Math.abs(m.centims) / Math.abs(f.total)) });
+      else esperaR3(m, citades);
       continue;
     }
     const sumables = citades.filter((f) => enEuros(f) && importEsperat(f) !== null).slice(0, MAX_CANDIDATS_SUBCONJUNT);
@@ -483,7 +508,7 @@ export function concilia({ moviments = [], factures = [], rebuts = [], rang = nu
     if (citades.length === 0) continue;
     const [f] = citades;
     const diferencia = Number.isSafeInteger(r.import) && Number.isSafeInteger(f.total) ? Math.abs(r.import) - Math.abs(f.total) : null;
-    parelles.push({ moviments: [], factures: [f], rebuts: [r], regla: 'R6', confianca: diferencia ? 'mitjana' : 'alta', diferencia });
+    parelles.push({ moviments: [], factures: [f], rebuts: [r], regla: 'R6', confianca: diferencia === 0 ? 'alta' : 'mitjana', diferencia });
     if (diferencia) {
       incidencia('IMPORT_DIFERENT', 'baixa',
         `El rebut ${nomRebut(r)} cita la factura ${nomFactura(f)}, però els imports no quadren: hi ha ${formatImport(diferencia)} de diferència.`, refFactura(f));

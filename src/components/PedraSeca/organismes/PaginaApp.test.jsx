@@ -214,4 +214,87 @@ describe('l’autoria', () => {
   });
 });
 
+/* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front B) · «A la part dreta
+   de la barra taronja, SEMPRE la data i l'hora vives». Amb rellotgeViu, el
+   rellotge (RellotgeViu) és l'últim fill de les accions de la dreta; sense, el
+   DOM de sempre (Llei del Píxel per a la resta d'apps). El rellotge injectat
+   congela l'hora: l'avanç del minut el proven RellotgeViu.test.jsx i
+   useAra.test.jsx. */
+describe('el rellotge viu de la barra taronja', () => {
+  const ARA = new Date(2026, 9, 13, 9, 59, 30).getTime();
+  const rellotge = () => ARA;
+  const RELLOTGE = 'Data i hora d’ara: 09:59 del 13/10/26';
+  const accionsDe = (arrel) => arrel.querySelector('section.bar-orange .bar-actions');
+  const fillsDe = (accions) => [...accions.children].map((e) => [e.tagName, e.getAttribute('aria-label') ?? e.textContent]);
+
+  test('sense barActions: la pastilla del document, que no es perd, i després el rellotge', () => {
+    const accions = accionsDe(pinta({ rellotgeViu: true, rellotge }));
+    expect(fillsDe(accions).map(([etiqueta]) => etiqueta)).toEqual(['TIME', 'TIME']);
+    expect(accions.firstElementChild.getAttribute('datetime')).toBe(NOTICIA.dateTime);
+    expect(accions.firstElementChild.textContent).toBe('09:3004/10/26');
+    const darrer = accions.lastElementChild;
+    expect(darrer.className).toBe('btn-date-time');
+    expect(darrer.getAttribute('aria-label')).toBe(RELLOTGE);
+    expect(darrer.getAttribute('datetime')).toBe('2026-10-13T09:59');
+    expect(darrer.textContent).toBe('09:5913/10/26');
+  });
+
+  test('amb barActions: les accions, en el seu ordre, i el rellotge a l’extrem dret', () => {
+    const accions = accionsDe(pinta({
+      rellotgeViu: true,
+      rellotge,
+      barActions: (
+        <>
+          <button type="button" aria-pressed="false">Mostra les xifres</button>
+          <span className="sdp-gestoria-boina__lectura">llegit</span>
+        </>
+      )
+    }));
+    expect(fillsDe(accions)).toEqual([['BUTTON', 'Mostra les xifres'], ['SPAN', 'llegit'], ['TIME', RELLOTGE]]);
+    /* barActions mana sobre la pastilla del document: no n'hi ha cap més. */
+    expect(accions.querySelectorAll('.btn-date-time')).toHaveLength(1);
+  });
+
+  test('sense cap data del document: només el rellotge', () => {
+    const accions = accionsDe(pinta({ rellotgeViu: true, rellotge, time: undefined, date: undefined, dateTime: undefined }));
+    expect(fillsDe(accions)).toEqual([['TIME', RELLOTGE]]);
+  });
+
+  test('un barActions buit no tapa la pastilla del document, com fins ara', () => {
+    const accions = accionsDe(pinta({ rellotgeViu: true, rellotge, barActions: false }));
+    expect(fillsDe(accions).map(([etiqueta]) => etiqueta)).toEqual(['TIME', 'TIME']);
+    expect(accions.firstElementChild.getAttribute('datetime')).toBe(NOTICIA.dateTime);
+  });
+
+  test('sense rellotgeViu, el DOM de sempre: cap rellotge, ni amb barActions ni sense', () => {
+    let arrel = pinta({ rellotge });
+    expect([...accionsDe(arrel).children].map((e) => e.className)).toEqual(['btn-date-time']);
+    expect(arrel.querySelector('[aria-label^="Data i hora d’ara"]')).toBeNull();
+    cleanup();
+    arrel = pinta({ barActions: <button type="button" aria-pressed="false">Mostra les xifres</button> });
+    expect([...accionsDe(arrel).children].map((e) => e.tagName)).toEqual(['BUTTON']);
+    expect(arrel.querySelector('[aria-label^="Data i hora d’ara"]')).toBeNull();
+  });
+
+  test('només un true explícit l’encén: un text o un 1, no', () => {
+    for (const valor of ['si', 'true', 1]) {
+      const arrel = pinta({ rellotgeViu: valor, rellotge });
+      expect(arrel.querySelector('[aria-label^="Data i hora d’ara"]'), String(valor)).toBeNull();
+      expect([...accionsDe(arrel).children].map((e) => e.className)).toEqual(['btn-date-time']);
+      cleanup();
+    }
+  });
+
+  test('el rellotge no canvia res més de la pàgina: la mateixa anatomia, la mateixa autoria i el mateix H1', () => {
+    const senseRellotge = pinta();
+    const marc = (arrel) => [...arrel.querySelector('.sdp-universal-page-container').children].map((e) => e.className);
+    const abans = { marc: marc(senseRellotge), autor: senseRellotge.querySelector('section.bar-orange').firstElementChild.outerHTML };
+    cleanup();
+    const ambRellotge = pinta({ rellotgeViu: true, rellotge });
+    expect(marc(ambRellotge)).toEqual(abans.marc);
+    expect(ambRellotge.querySelector('section.bar-orange').firstElementChild.outerHTML).toBe(abans.autor);
+    expect(ambRellotge.querySelectorAll('h1')).toHaveLength(1);
+  });
+});
+
 

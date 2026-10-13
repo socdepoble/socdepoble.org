@@ -39,10 +39,25 @@
  *     sincronització) · les accions de la dreta de la barra taronja
  *     (BarraTaronja). Manen sobre la pastilla per defecte: qui les passa hi
  *     posa la seua. Sense, el DOM de sempre.
+ *   rellotgeViu · rellotge (ordre del Mestre, 13-10-2026, pla 261013_1405,
+ *     front B: «A la part dreta de la barra taronja, SEMPRE la data i l'hora
+ *     vives») · Amb rellotgeViu (només un `true` explícit: un text o un 1 no
+ *     l'encenen), la data i l'hora d'ara (atoms/RellotgeViu.jsx) són SEMPRE
+ *     l'últim fill de les accions de la dreta, l'extrem dret de la barra:
+ *     darrere de barActions o, sense, darrere de la pastilla del document
+ *     (date · time · dateTime), que no es perd. `rellotge` (() => ms) és el
+ *     rellotge injectat (la Gestoria, les proves). És una excepció ordenada a
+ *     la regla de la pastilla (skill sdp-pedra-seca §10, 28-09-2026: la
+ *     pastilla és la data del document): PageFrame continua sense inventar-se
+ *     «la d'ara», i el rellotge el posa esta porta quan la pàgina el demana.
+ *     Sense rellotgeViu, el DOM de sempre (Llei del Píxel per a la resta
+ *     d'apps).
  *   children (el cos, dins de l'article de la pàgina)
  */
 import { Link } from '../../../app/contexts/RouterContext';
 import { PageFrame } from '../../universal/PageFrame.jsx';
+import { DateTimeControl } from '../atoms/controls.jsx';
+import { RellotgeViu } from '../atoms/RellotgeViu.jsx';
 import { fontSegura } from './marca.jsx';
 
 const SENSE_TELEMETRIA = Object.freeze({ comptar: false });
@@ -62,14 +77,26 @@ export function PaginaApp({
   refTitol,
   objecte, onComment, onShare, onConnect, showComment, showShare, showConnect,
   barActions = null,
+  rellotgeViu = false,
+  rellotge,
   children
 }) {
   const portada = fontSegura(heroImage);
+  /* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front B) · Amb el
+     rellotge, les accions acaben sempre en la data i l'hora d'ara. Sense
+     barActions, davant hi va la pastilla del document, la mateixa que hi
+     pintaria la barra (sense data, cap). */
+  const accions = rellotgeViu === true ? (
+    <>
+      {barActions || ((time || date) ? <DateTimeControl time={time} date={date} dateTime={dateTime} /> : null)}
+      <RellotgeViu rellotge={rellotge} />
+    </>
+  ) : barActions;
   /* La portada i, si n'hi ha, les accions de la barra taronja. Sense cap de
      les dues, l'objecte buit de sempre. */
   const dadesBarra = {
     ...(portada ? { heroComponent: <img src={portada} alt={heroAlt} referrerPolicy="no-referrer" decoding="async" /> } : {}),
-    ...(barActions ? { barActions } : {})
+    ...(accions ? { barActions: accions } : {})
   };
   const autoria = author ? {
     authorName: author.nom ?? '',

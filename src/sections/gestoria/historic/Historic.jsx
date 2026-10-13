@@ -36,8 +36,24 @@
  * (cofreDeLaGestoria, a cofre.js) i es bloqueja en eixir d'esta vista.
  * VistaHistoric és la vista sense la porta: només per a les proves, que hi
  * injecten la persistència; la ruta munta sempre la porta.
+ *
+ * LA BOINA (ordre del Mestre, 13-10-2026, pla 261013_1405, front B: «la barra
+ * taronja de TOTES les pàgines de la Gestoria porta el titular real
+ * autenticat, i a la dreta SEMPRE la data i l'hora vives») · Amb sessió, el
+ * pont passa `titular` ({ nom, avatar, poble }, el de useSessioApp) i la
+ * boina, les targetes i la pàgina de cada targeta porten la persona,
+ * enllaçada al seu perfil; sense, «Titular sense configurar» (TITULAR_HISTORIC),
+ * com abans. La PaginaApp i la PaginaTargeta porten el rellotge viu
+ * (rellotgeViu), sempre l'últim de la barra: també amb el cofre bloquejat,
+ * quan la boina no té l'ull. L'hora de la darrera lectura dels extractes es
+ * queda com un xip secundari a l'esquerra del rellotge
+ * (sdp-gestoria-boina__lectura), amb la data només si no és la d'avui.
+ * Derogat EN PART per eixa ordre el «Sense configuració local, la boina diu
+ * la veritat» de l'Onada 6 (261009): continua valent sense sessió. També la
+ * lectura com a pastilla del document de la PaginaApp (261009): la data de la
+ * barra és el rellotge, i la lectura només viu al xip de la boina.
  * Proves: el cofre, el magatzem, subtle, el catàleg, l'entorn, el rellotge,
- * avui, la persistència (VistaHistoric) i descarrega s'injecten.
+ * avui, la persistència (VistaHistoric), descarrega i el titular s'injecten.
  */
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { CheckCheck, EyeOff, FileDown, FileSearch, RotateCcw, Undo2 } from 'lucide-react';
@@ -68,7 +84,7 @@ import { useHistoric } from './useHistoric.js';
 
 /* La consulta que obri la porta dels Tractors (la mateixa que CONSULTA_TRACTORS de ContenidorGestoria.jsx; una prova ho comprova). */
 export const CONSULTA_TRACTORS_HISTORIC = '?categoria=tractors_cat&item=tractors_aprovacio';
-/* Sense configuració local, la boina diu la veritat: cap autora fingida (com la closca). */
+/* Sense sessió, la boina diu la veritat: cap autora fingida (com la closca). */
 export const TITULAR_HISTORIC = Object.freeze({ nom: 'Titular sense configurar', poble: '', avatar: null, href: '/el-meu-perfil' });
 /** Les files de «Per revisar» que es pinten com a molt. */
 export const MAX_REVISIO = 40;
@@ -113,6 +129,46 @@ export function pastillaDe(ms) {
   const data = `${dosXifres(d.getDate())}/${dosXifres(d.getMonth() + 1)}/${String(d.getFullYear()).slice(-2)}`;
   const hora = `${dosXifres(d.getHours())}:${dosXifres(d.getMinutes())}`;
   return { time: hora, date: data, dateTime: `${d.getFullYear()}-${dosXifres(d.getMonth() + 1)}-${dosXifres(d.getDate())}T${hora}` };
+}
+
+/**
+ * Ordre del Mestre, 13-10-2026 (pla 261013_1405, front B) · El xip de la
+ * darrera lectura, a l'esquerra del rellotge viu: l'hora sempre i la data
+ * només si no és la d'avui (dues pastilles amb la mateixa data no diuen res i
+ * resten amplada en mòbil). El dateTime i el nom accessible, sempre sencers.
+ * @param {number|null} ms l'instant de la lectura
+ * @param {number} ara l'instant d'ara (el rellotge de la pàgina)
+ * @returns {{ time: string, date: string|undefined, dateTime: string, etiqueta: string }|null}
+ */
+export function pastillaDeLectura(ms, ara) {
+  const pastilla = pastillaDe(ms);
+  if (!pastilla) return null;
+  const avui = pastillaDe(ara);
+  const mateixDia = Boolean(avui) && avui.dateTime.slice(0, 10) === pastilla.dateTime.slice(0, 10);
+  return {
+    time: pastilla.time,
+    date: mateixDia ? undefined : pastilla.date,
+    dateTime: pastilla.dateTime,
+    etiqueta: `Dades llegides a les ${pastilla.time} del ${pastilla.date}`
+  };
+}
+
+/**
+ * Ordre del Mestre, 13-10-2026 (pla 261013_1405, front B) · L'autoria de la
+ * boina: el titular de la sessió que passa el pont, enllaçat al seu perfil;
+ * sense nom, TITULAR_HISTORIC.
+ * @param {{ nom?: string, avatar?: string|null, poble?: string }|null} titular
+ * @returns {{ nom: string, poble: string, avatar: string|null, href: string }}
+ */
+export function titularDelHistoric(titular) {
+  const nom = typeof titular?.nom === 'string' ? titular.nom.trim() : '';
+  if (!nom) return TITULAR_HISTORIC;
+  return Object.freeze({
+    nom,
+    poble: typeof titular.poble === 'string' ? titular.poble : '',
+    avatar: typeof titular.avatar === 'string' ? titular.avatar : null,
+    href: TITULAR_HISTORIC.href
+  });
 }
 
 /* La porta del tractor i el selector dels extractes. */
@@ -449,9 +505,13 @@ function SeccioLlibre({ h, subtle, descarrega, onAnuncia }) {
  * del títol (Historic hi posa PortaCofre).
  * @param {{ magatzem?: object, subtle?: SubtleCrypto, tractors?: object[], entorn?: object, rellotge?: () => number,
  *   avui?: object, persistencia?: { llig: Function, desa: Function, subscriu?: Function }, descarrega?: Function,
- *   porta?: (contingut: import('react').ReactNode) => import('react').ReactNode }} props
+ *   porta?: (contingut: import('react').ReactNode) => import('react').ReactNode,
+ *   titular?: { nom: string, avatar?: string|null, poble?: string }|null }} props
+ *   `titular`: el de la sessió, que passa el pont (ordre del Mestre, 13-10-2026, front B); sense, l'estat honest
  */
-export function VistaHistoric({ magatzem, subtle, tractors, entorn, rellotge, avui, persistencia, descarrega = descarregaPerDefecte, porta = null }) {
+export function VistaHistoric({
+  magatzem, subtle, tractors, entorn, rellotge, avui, persistencia, descarrega = descarregaPerDefecte, porta = null, titular: titularPropi = null
+}) {
   const navigate = useNavigate();
   const h = useHistoric({ magatzem, subtle, tractors, entorn, rellotge, avui, persistencia });
   const [visible, setVisible] = useState(false);
@@ -477,11 +537,19 @@ export function VistaHistoric({ magatzem, subtle, tractors, entorn, rellotge, av
   const targetes = useMemo(() => targetesHistoric({ serie: h.serie, indicadors: h.indicadors, provisio: h.provisio }),
     [h.serie, h.indicadors, h.provisio]);
   const pastilla = pastillaDe(h.llegit);
-  /* Amb el cofre bloquejat no hi ha cap xifra que mostrar: la boina va sense l'ull. */
+  /* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front B): el titular de la sessió i el xip de la lectura. */
+  const titular = titularDelHistoric(titularPropi);
+  const lectura = pastillaDeLectura(h.llegit, typeof rellotge === 'function' ? rellotge() : Date.now());
+  /* Amb el cofre bloquejat no hi ha cap xifra que mostrar: la boina va sense
+     l'ull (i sense xip). El rellotge viu el posa PaginaApp igualment. */
   const boina = h.persistenciaBloquejada ? null : (
     <span className="sdp-gestoria-boina">
       <UllPrivacitat visible={visible} onCommuta={() => setVisible((abans) => !abans)} etiqueta="Mostra les xifres" />
-      {pastilla ? <DateTimeControl {...pastilla} label={`Dades llegides a les ${pastilla.time} del ${pastilla.date}`} /> : null}
+      {lectura ? (
+        <span className="sdp-gestoria-boina__lectura">
+          <DateTimeControl time={lectura.time} date={lectura.date} dateTime={lectura.dateTime} label={lectura.etiqueta} />
+        </span>
+      ) : null}
     </span>
   );
   const oblida = () => {
@@ -493,12 +561,12 @@ export function VistaHistoric({ magatzem, subtle, tractors, entorn, rellotge, av
     navegat.current = true;
     setOberta(id);
   };
-  const comuns = { titular: TITULAR_HISTORIC, pastilla, visible, generacio: h.generacio, onObri: obri, onAvis: setAnunci };
+  const comuns = { titular, pastilla, visible, generacio: h.generacio, onObri: obri, onAvis: setAnunci };
   const targeta = oberta ? targetes.find((t) => t.id === oberta) ?? null : null;
 
   if (targeta) {
     return (
-      <PaginaTargeta targeta={targeta} titular={TITULAR_HISTORIC} pastilla={pastilla} visible={visible} barActions={boina}
+      <PaginaTargeta targeta={targeta} titular={titular} visible={visible} barActions={boina} rellotge={rellotge}
         onTorna={() => { navegat.current = true; setOberta(null); }} refTitol={refTitol} />
     );
   }
@@ -542,7 +610,7 @@ export function VistaHistoric({ magatzem, subtle, tractors, entorn, rellotge, av
   return (
     <PaginaApp title="Històric i IA" subtitle="El banc des de l’any passat, la despesa en IA i les simulacions"
       lead="El panell del director financer: tots els extractes de l’1 de gener de l’any passat al final del trimestre passat, classificats en este ordinador."
-      author={TITULAR_HISTORIC} {...(pastilla ?? {})} barActions={boina} labels={ETIQUETES} refTitol={refTitol}
+      author={titular} barActions={boina} rellotgeViu rellotge={rellotge} labels={ETIQUETES} refTitol={refTitol}
       showComment={false} showShare={false} showConnect={false}>
       <p role="status" aria-live="polite" className="sdp-nomes-lector">{anunci}</p>
       {typeof porta === 'function' ? porta(contingut) : contingut}
@@ -556,8 +624,9 @@ export function VistaHistoric({ magatzem, subtle, tractors, entorn, rellotge, av
  * l'únic cofre de l'app; en eixir de la vista, el cofre es bloqueja (la clau
  * i tot el que és desxifrat fora de la memòria).
  * @param {{ cofre?: object, magatzem?: object, subtle?: SubtleCrypto, tractors?: object[], entorn?: object,
- *   rellotge?: () => number, avui?: object, descarrega?: Function }} props
+ *   rellotge?: () => number, avui?: object, descarrega?: Function, titular?: object|null }} props
  *   `cofre`: per a les proves (creaCofreLocal); sense, el de l'app (cofreDeLaGestoria)
+ *   `titular`: el de la sessió, que passa el pont (ordre del Mestre, 13-10-2026, pla 261013_1405, front B)
  */
 export default function Historic({ cofre: cofreDeFora = null, ...props }) {
   const [cofre] = useState(() => cofreDeFora ?? cofreDeLaGestoria());

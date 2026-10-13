@@ -25,7 +25,7 @@ import PanellGestoria, { estatTractorsDe } from './PanellGestoria.jsx';
 export const CONSULTA_TRACTORS = '?categoria=tractors_cat&item=tractors_aprovacio';
 
 export default function ContenidorGestoria({
-  magatzem, subtle, tractors, entorn, rellotge, inflate, avui, descarrega
+  magatzem, subtle, tractors, entorn, rellotge, inflate, avui, descarrega, onFactures
 }) {
   const navigate = useNavigate();
   const porta = useTractors({ magatzem, subtle, tractors, entorn, rellotge });
@@ -55,6 +55,7 @@ export default function ContenidorGestoria({
         entorn={entorn}
         avui={avui}
         descarrega={descarrega}
+        onFactures={onFactures}
       />
     </>
   );

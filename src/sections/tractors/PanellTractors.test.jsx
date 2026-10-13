@@ -176,7 +176,7 @@ describe('llista i detall', () => {
     expect(container.querySelector('h1')).toBeNull();
     // Fora dels diàlegs (cada <dialog> porta el seu h2), només el títol del panell.
     expect([...container.querySelectorAll('h2')].filter((h) => !h.closest('dialog')).map((h) => h.textContent))
-      .toEqual(['Porta d’aprovació de tractors']);
+      .toEqual(['Què fa cada tractor, la seua empremta i la teua signatura']);
   });
 
   test('rebaixaTitols no toca el codi i no passa de h6', () => {
@@ -342,9 +342,9 @@ describe('exportar i oblidar', () => {
 describe('el que diu de l’empremta és exacte', () => {
   test('cobrix les fonts llistades (tractor, la seua interfície i la porta), no els components comuns', async () => {
     const { container } = await munta();
-    const intro = container.querySelector('.sdp-tractors-panell__titol').nextElementSibling.textContent;
-    expect(intro).toMatch(/cada línia de les fonts llistades/);
-    expect(intro).toMatch(/el codi del tractor, el de la seua interfície i el d’esta porta/);
-    expect(intro).toMatch(/Els components comuns de l’app .* no hi entren/);
+    const panell = container.querySelector('.sdp-tractors-panell').textContent;
+    expect(panell).toMatch(/cada línia de les fonts llistades/);
+    expect(panell).toMatch(/el codi del tractor, el de la seua interfície i el d’esta porta/);
+    expect(panell).toMatch(/Els components comuns de l’app .* no hi entren/);
   });
 });

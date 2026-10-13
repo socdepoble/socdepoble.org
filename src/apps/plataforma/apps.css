@@ -7,6 +7,10 @@
    :has(), espais en múltiples de 0.25rem.
    La barra d'una app reutilitza les classes de layout.css: ací només
    hi ha el nom de l'app i el títol de grup, amb el crom de la roca.
+   Ordre del Mestre, 13-10-2026 (pla 261013_1405, front C): el títol de
+   grup, que no és cap enllaç, va en el taronja de --sdp-crom-grup-text i
+   pes 600 (el mateix token que «Sistema», layout.css); els enllaços
+   continuen blancs i el nom de l'app, també.
    ═══════════════════════════════════════════════════════════════════ */
 
 /* ── Barra lateral d'una app (BarraApp.jsx) ── */
@@ -24,11 +28,15 @@
   font-weight: 700;
 }
 
+/* Títol de grup (Operacions, Diners i impostos…; també els del Bar i de
+   Salut): taronja del cànon sobre la roca, 7,12:1 (tokens.css). Abans, el
+   blanc al 78 % dels enllaços, i no s'hi distingia. */
 .sdp-app-barra__grup {
   margin: 0;
   padding: var(--sdp-space-2) var(--sdp-space-4);
-  color: var(--sdp-crom-text-suau);
+  color: var(--sdp-crom-grup-text);
   font: var(--sdp-font-barra);
+  font-weight: 600;
 }
 
 /* Plegada (escriptori), el títol del grup no té lloc: només queden les icones. */

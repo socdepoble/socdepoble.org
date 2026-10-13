@@ -577,6 +577,34 @@ test('261002 · Google per redirecció: la tornada a /registre aterra al perfil 
   esPerfil();
 });
 
+/* Petició del Mestre (261012_2148) · Excepció estreta: la porta de la Gestoria
+   (el nom de la boina i «Entra al compte» del Tauler) porta ?tornar al Tauler, i
+   en arribar la sessió s'hi aterra. La porta de qualsevol altra app no. */
+test('261012 · la porta de la Gestoria: quan arriba la sessió, s’aterra al Tauler', async () => {
+  m.entra.mockResolvedValue({ access_token: 'jwt', user: { id: 'U' } });
+  const arbre = ambRuta(rutaDEntrada({ mode: 'entrar', tornar: '/app/gestoria/tauler' }));
+  const { rerender } = render(arbre());
+  fireEvent.change(screen.getByLabelText('Correu electrònic'), { target: { name: 'email', value: 'ana@poble.test' } });
+  fireEvent.change(screen.getByLabelText('Contrasenya'), { target: { name: 'password', value: 'contrasenya-actual' } });
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Entrar al compte' })); });
+  expect(m.navigate).not.toHaveBeenCalled();
+  arribaLaSessio(rerender, arbre);
+  expect(m.navigate).toHaveBeenCalledTimes(1);
+  expect(m.navigate).toHaveBeenCalledWith('/app/gestoria/tauler', { replace: true });
+});
+
+test('261012 · NAVEGADOR: la tornada al Tauler de la barra d’adreces també hi aterra', () => {
+  window.history.replaceState(null, '', '/registre?mode=entrar&tornar=%2Fapp%2Fgestoria%2Ftauler');
+  entraAmbSessio(<BrowserRouter><OnboardingSection /></BrowserRouter>);
+  expect(m.navigate).toHaveBeenCalledTimes(1);
+  expect(m.navigate).toHaveBeenCalledWith('/app/gestoria/tauler', { replace: true });
+});
+
+test('261012 · la porta d’una altra app (la Bar) continua aterrant al perfil', () => {
+  entraAmbSessio(<MemoryRouter rutaInicial="/registre?mode=entrar&tornar=%2Fapp%2Fbar%2Fcarta"><OnboardingSection /></MemoryRouter>);
+  esPerfil();
+});
+
 test('261002 · RequireAuth: la seua entrada (/registre?mode=entrar&tornar=<pàgina protegida>) també aterra al perfil', () => {
   const entrada = rutaDEntrada({ mode: 'entrar', tornar: '/admin' });
   expect(entrada).toBe('/registre?mode=entrar&tornar=%2Fadmin');

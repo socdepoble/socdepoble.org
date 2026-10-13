@@ -16,13 +16,13 @@ Una font de moviments és un objecte amb `esquema`, `id`, `tipus`, `nom`, `local
 
 Cada moviment porta:
 
-- **id**: estable. El mateix moviment té el mateix identificador en dues lectures del mateix fitxer i en dos extractes del mateix compte que se solapen. És una empremta del compte, les dates, l'import, el concepte i l'ordinal dels iguals: dos cafés del mateix dia són dos moviments. Un CSV no diu de quin compte o targeta és: el seu identificador porta la identitat del fitxer (una empremta del nom i de les columnes).
+- **id**: estable dins de la sessió. El mateix moviment té el mateix identificador en dues lectures del mateix fitxer i en dos extractes del mateix compte que se solapen. És una empremta del compte, les dates, l'import, el concepte i l'ordinal dels iguals: dos cafés del mateix dia són dos moviments. En la Norma 43, el compte de l'empremta és l'identificador opac que `c43.js` trau del número sencer amb una sal de la sessió (cap xifra del compte): dos comptes del mateix banc acabats en els mateixos quatre dígits ja no comparteixen identificadors, i l'identificador només és estable mentre dura la sessió (ordre del Mestre, 13-10-2026, pla 261013_1405, front I; auditoria Codex GES-A2). Sense eixe identificador, el d'abans: l'entitat i els quatre últims dígits. Un CSV no diu de quin compte o targeta és: el seu identificador porta la identitat del fitxer (una empremta del nom i de les columnes).
 - **data** i **dataValor**: dies del calendari (`{ a, m, d }`), sense hora ni zona horària.
 - **concepte**: el text del banc, en una línia.
 - **import**: cèntims enters amb signe. Una eixida és negativa; una devolució, positiva.
 - **saldo**: cèntims després del moviment, o `null` si l'origen no el diu.
 - **moneda**: codi ISO 4217.
-- **compte**: l'entitat i els quatre últims dígits, o `null`. Mai el número sencer.
+- **compte**: un nom per a mostrar, l'entitat i els quatre últims dígits, o `null`. Mai el número sencer. Si dos comptes diferents del mateix fitxer acaben igual, són «entitat-sufix» i «entitat-sufix-2», en l'ordre en què apareixen.
 - **detall**: el moviment tal com l'entén la conciliació.
 
 ## Els adaptadors que hi ha hui
@@ -34,7 +34,7 @@ Tots dos són **locals**: lligen un fitxer que la persona ha triat i responen de
 
 ## Quan dos moviments són el mateix, i quan no se sap
 
-- **D'un compte conegut** (la Norma 43 diu l'entitat i els quatre últims dígits): el mateix identificador és el mateix moviment, i només compta una vegada.
+- **D'un compte conegut** (la Norma 43 porta el compte, que es reconeix per l'identificador opac i no per l'entitat i els quatre últims dígits): el mateix identificador és el mateix moviment, i només compta una vegada.
 - **De la mateixa font** (el mateix fitxer triat dos colps): també.
 - **De dos CSV que no diuen de qui són**: no es lleva mai res en silenci. Dues targetes poden tindre la mateixa subscripció el mateix dia. Si dos moviments de dos CSV coincidixen en dia, import i concepte, es conserven tots dos i `uneixMoviments` torna quants en són (`dubtosos`); qui ho consumix ha d'avisar. El preu: dos extractes de la mateixa targeta que se solapen compten els dies repetits dues vegades, amb avís. És millor un avís que perdre un càrrec.
 - **La moneda** viatja amb cada moviment. El que no és en euros no s'ha de conciliar ni sumar amb la resta.
@@ -95,6 +95,7 @@ Hui encara no hi entren: la Gestoria no té cap importador d'ingressos. La Gesto
 
 - L'identificador depén de l'ordre dels moviments iguals dins de cada fitxer. Dos extractes que tallen el mateix dia per llocs diferents poden donar un ordinal diferent a un moviment repetit.
 - Un CSV no diu de quin compte és. El port no ho endevina: avisa.
+- Entre dos fitxers diferents, el nom `compte` no distingix dos comptes acabats en els mateixos quatre dígits (tots dos es diuen «entitat-sufix»): els distingix l'identificador de cada moviment, que és el que `uneixMoviments` mira. Qui agrupe per compte entre fitxers ha d'agrupar per l'identificador, no pel nom.
 - Els mòduls nous (`fontMoviments.js`, `extracteCsv.js`, `auditoriaPagaments.js`) viuen a `nucli/`, que `fronteraModelsPurs.test.js` NO vigila (eixa prova només mira `identitat/`, `burocracia/` i `projectes/`). Les portes que sí que els lligen són `privacitat.test.js` (cap xarxa, cap emmagatzematge) i `qualitat.test.js` (lint i Baseline).
 - Un moviment de la Norma 43 i el mateix moviment en un CSV no tenen el mateix identificador (el text del concepte canvia): per a ajuntar-los hi ha `fusionaMoviments`, no el port.
 - El port no guarda res: cada lectura torna a llegir el fitxer.

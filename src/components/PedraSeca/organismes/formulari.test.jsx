@@ -195,6 +195,60 @@ describe('CampFitxer (D-D)', () => {
     expect(document.querySelector('.sdp-camp__error')).toBeNull();
   });
 
+  /* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front D) · nomsVisibles={false}, per a una carpeta arrel amb
+     papers d'identitat (l'Escàner i la Finestreta): la línia d'estat només compta. Per defecte, el text de sempre. */
+  test('nomsVisibles={false} amb fitxers solts: la línia d’estat només en diu el recompte, i onChange els rep sencers', () => {
+    const onChange = vi.fn((e) => [...e.target.files].map((f) => f.name));
+    const { container } = render(<Camp etiqueta="Papers"><CampFitxer multiple nomsVisibles={false} onChange={onChange} /></Camp>);
+    const input = screen.getByLabelText('Papers');
+    const estat = container.querySelector('.sdp-camp-fitxer__estat');
+    expect(estat.textContent).toBe('Cap fitxer triat');
+    fireEvent.change(input, { target: { files: [fitxer('sol.json')] } });
+    expect(estat.textContent).toBe('1 fitxer');
+    fireEvent.change(input, { target: { files: ['a', 'b', 'c', 'd', 'e'].map((n) => fitxer(`${n}.json`)) } });
+    expect(estat.textContent).toBe('5 fitxers');
+    expect(estat.getAttribute('aria-live')).toBe('polite');
+    expect(onChange.mock.results.map((r) => r.value)).toEqual([['sol.json'], ['a.json', 'b.json', 'c.json', 'd.json', 'e.json']]);
+    expect(new XMLSerializer().serializeToString(container)).not.toContain('.json');
+    expect(input.hasAttribute('nomsvisibles')).toBe(false);
+  });
+
+  test('nomsVisibles={false} amb webkitdirectory (per CampText tipus="file", com els usa la Gestoria): «Cap carpeta triada» i el recompte', () => {
+    const { container } = render(
+      <Camp etiqueta="Carpeta arrel"><CampText tipus="file" webkitdirectory="" multiple nomsVisibles={false} /></Camp>
+    );
+    const input = screen.getByLabelText('Carpeta arrel');
+    expect(input.hasAttribute('webkitdirectory')).toBe(true);
+    expect(screen.getByRole('button', { name: 'Carpeta arrel: Triar carpeta' })).toBeTruthy();
+    const estat = container.querySelector('.sdp-camp-fitxer__estat');
+    expect(estat.textContent).toBe('Cap carpeta triada');
+    const papers = ['paper_sintetic_u.pdf', 'paper_sintetic_dos.pdf'].map((nom) => new File(['x'], nom));
+    fireEvent.change(input, { target: { files: papers } });
+    expect(estat.textContent).toBe('2 fitxers');
+    expect(new XMLSerializer().serializeToString(container)).not.toContain('paper_sintetic');
+    fireEvent.change(input, { target: { files: [papers[0]] } });
+    expect(estat.textContent).toBe('1 fitxer');
+    expect(new XMLSerializer().serializeToString(container)).not.toContain('paper_sintetic');
+    expect(input.hasAttribute('nomsvisibles')).toBe(false);
+  });
+
+  test('Llei del Píxel: sense nomsVisibles (i amb nomsVisibles cert), el mateix DOM i els noms de sempre', () => {
+    render(
+      <>
+        <Camp etiqueta="Per defecte"><CampFitxer multiple /></Camp>
+        <Camp etiqueta="Amb noms"><CampFitxer multiple nomsVisibles /></Camp>
+        <Camp etiqueta="Carpeta"><CampText tipus="file" webkitdirectory="" multiple /></Camp>
+      </>
+    );
+    const [defecte, amb, carpeta] = ['Per defecte', 'Amb noms', 'Carpeta'].map((etiqueta) => screen.getByLabelText(etiqueta));
+    const quatre = () => ['a', 'b', 'c', 'd'].map((n) => fitxer(`${n}.json`));
+    for (const input of [defecte, amb, carpeta]) fireEvent.change(input, { target: { files: quatre() } });
+    const html = (input, etiqueta) => input.closest('.sdp-camp').outerHTML.replaceAll(input.id, 'ID').replaceAll(etiqueta, 'ETIQUETA');
+    expect(html(amb, 'Amb noms')).toBe(html(defecte, 'Per defecte'));
+    expect(defecte.closest('.sdp-camp').querySelector('.sdp-camp-fitxer__estat').textContent).toBe('4 fitxers: a.json, b.json, c.json i 1 més');
+    expect(carpeta.closest('.sdp-camp').querySelector('.sdp-camp-fitxer__estat').textContent).toBe('4 fitxers: a.json, b.json, c.json i 1 més');
+  });
+
   test('Llei del Píxel: CampText de text pinta l’<input> de sempre, sense embolcall', () => {
     render(<Camp etiqueta="Nom"><CampText placeholder="x" /></Camp>);
     const input = screen.getByLabelText('Nom');

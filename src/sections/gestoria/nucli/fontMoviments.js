@@ -15,12 +15,16 @@
  *   · Un moviment: { id, data, dataValor, concepte, import, saldo, moneda,
  *     compte, origen: { font, tipus, posicio }, detall }.
  *       id        estable: el mateix moviment té el mateix id en dos extractes
- *                 que se solapen i en dues lectures del mateix fitxer.
+ *                 que se solapen i en dues lectures del mateix fitxer (en la
+ *                 Norma 43, dins de la mateixa sessió: vegeu L'IDENTIFICADOR).
  *       data      la d'operació, { a, m, d }; dataValor, igual.
  *       import    cèntims enters amb signe: una eixida és negativa.
  *       saldo     cèntims després del moviment, o null si l'origen no el diu.
  *       moneda    ISO 4217 ('EUR' quasi sempre; 'XXX' si no se sap).
  *       compte    «entitat-quatre últims dígits», o null. Mai el número sencer.
+ *                 És el nom de presentació, no la identitat: si dos comptes
+ *                 diferents del mateix fitxer el compartixen, el segon du
+ *                 «-2» (el tercer, «-3»…).
  *       detall    el moviment tal com l'entén la conciliació (concilia.js).
  *   · local: true vol dir que respon de seguida, sense xarxa. Una font de
  *     xarxa (un agregador PSD2) tornarà una promesa i dirà local: false; qui
@@ -37,6 +41,20 @@
  * cafés del mateix dia al mateix bar són dos moviments, i el mateix café en
  * dos extractes solapats del MATEIX COMPTE CONEGUT és un de sol
  * (uneixMoviments). Sense compte conegut, davant del dubte es conserven tots.
+ *
+ * Derogat EN PART per l'ordre del Mestre, 13-10-2026 (pla 261013_1405, front
+ * I · motors; auditoria de Codex 261013_1510, GES-A2), sobre la de l'Onada
+ * 12 (261011). Abans «el compte» de l'empremta era l'entitat i el sufix: dos
+ * comptes diferents de la mateixa entitat acabats igual, amb el mateix
+ * moviment (una quota del mateix dia i del mateix import), donaven el mateix
+ * id; uneixMoviments en llevava un com a «repetit» (diners perduts en
+ * silenci) i, dins d'un sol fitxer, el kit refusava la font sencera per id
+ * repetits. Ara l'empremta porta `idCompte`, l'id opac que c43.js deriva del
+ * número sencer amb una sal de la sessió: el mateix compte en dos fitxers
+ * dona el mateix id durant la sessió, i dos comptes diferents, ids
+ * diferents. Una lectura sense `idCompte` torna a la clau d'abans. Este
+ * fitxer és font del sentinella 'sentinella.triturador-financer'
+ * (tractors/sentinelles/trituradorFinancer.js): la seua empremta canvia.
  *
  * Cap xarxa, cap credencial, cap emmagatzematge. JS pur: sense DOM ni APIs de
  * Node. Res del que rep es modifica.
@@ -58,6 +76,32 @@ const MONEDA_DESCONEGUDA = 'XXX';
 const textNormal = (text) => String(text ?? '').normalize('NFD').replace(/\p{M}/gu, '').toUpperCase().replace(/[^A-Z0-9]+/g, ' ').trim();
 const iso = (d) => formatData(d, 'aaaa-mm-dd');
 const copiaData = (d) => ({ a: d.a, m: d.m, d: d.d });
+
+/* La identitat d'un compte de la Norma 43 a l'empremta (GES-A2): l'id opac de c43.js; una lectura sense torna a
+   l'entitat i el sufix d'abans, amb el mateix text (els id d'eixe cas no canvien). Els dos espais de noms no es
+   poden confondre: el sufix són xifres i un guió, i l'opac du «opac:». */
+const identitatDelCompte = (cap) => (typeof cap?.idCompte === 'string' && cap.idCompte !== ''
+  ? `opac:${cap.idCompte}`
+  : `${cap?.entitat}-${cap?.compte4}`);
+
+/* El nom de presentació de cada compte d'un fitxer: «entitat-sufix», el de sempre. Dos comptes DIFERENTS del
+   mateix fitxer amb la mateixa entitat i el mateix sufix (GES-A2) es distingixen amb «-2», «-3»…, en l'ordre en
+   què hi apareixen. Ordre del Mestre, 13-10-2026 (pla 261013_1405, front I). És la regla de
+   tauler/nucli/resumTauler.js (idsDelsComptes), amb una diferència: allà els fitxers són molts i l'ordre és el de
+   les claus opaques; ací és un sol fitxer, i el seu ordre no depén de la sal de la sessió. Entre dos fitxers el
+   nom no distingix dos comptes acabats igual: els distingix l'id. */
+function nomsDelsComptes(capcaleres) {
+  const perBase = new Map();
+  return capcaleres.map((cap) => {
+    const base = `${cap?.entitat}-${cap?.compte4}`;
+    if (!perBase.has(base)) perBase.set(base, []);
+    const identitats = perBase.get(base);
+    const identitat = identitatDelCompte(cap);
+    if (!identitats.includes(identitat)) identitats.push(identitat);
+    const n = identitats.indexOf(identitat) + 1;
+    return { identitat, nom: n === 1 ? base : `${base}-${n}` };
+  });
+}
 
 /* L'id de cada moviment d'un origen: l'empremta de la seua clau i l'ordinal dels iguals. */
 function creaIds() {
@@ -112,23 +156,25 @@ export function creaFont({ tipus, nom = '', moviments = [], avisos = [], local =
 export function fontDeC43(entrada, { nom = '' } = {}) {
   const lectura = llegeixC43(entrada);
   const moviments = [];
-  for (const compte of lectura.comptes) {
+  /* GES-A2 (13-10-2026): l'empremta du la identitat del compte; el camp `compte`, el nom de presentació. */
+  const noms = nomsDelsComptes(lectura.comptes.map((compte) => compte.capcalera));
+  for (const [k, compte] of lectura.comptes.entries()) {
     const cap = compte.capcalera;
-    const clauCompte = `${cap.entitat}-${cap.compte4}`;
+    const { identitat, nom: nomCompte } = noms[k];
     const idDe = creaIds();
     for (const m of compte.moviments) {
       if (!esDataValida(m.dataOperacio) || !Number.isSafeInteger(m.centims)) continue;
       const dataValor = esDataValida(m.dataValor) ? m.dataValor : m.dataOperacio;
       const concepte = textDelsConceptes(m);
       moviments.push({
-        id: idDe({ compte: clauCompte, data: m.dataOperacio, dataValor, centims: m.centims, concepte }),
+        id: idDe({ compte: identitat, data: m.dataOperacio, dataValor, centims: m.centims, concepte }),
         data: copiaData(m.dataOperacio),
         dataValor: copiaData(dataValor),
         concepte,
         import: m.centims,
         saldo: null,
         moneda: cap.divisa ?? MONEDA_DESCONEGUDA,
-        compte: clauCompte,
+        compte: nomCompte,
         origen: { posicio: m.linia },
         detall: m
       });

@@ -53,7 +53,7 @@ if ( ! defined( 'SOCDEPOBLE_ENXUFE_CLAU_PUBLICA' ) ) {
 	/* Clau pública Ed25519 del canal, 64 xifres hexadecimals. La genera el
 	   Mestre amb `node wordpress-plugin/eines/empaqueta.mjs --genera-clau` i
 	   l'empaquetador comprova que coincidix amb la clau que signa. */
-	define( 'SOCDEPOBLE_ENXUFE_CLAU_PUBLICA', '' );
+	define( 'SOCDEPOBLE_ENXUFE_CLAU_PUBLICA', 'e38cf53ce54696af11c597152702580ce51a2e07158282d45dd897cb723ef278' );
 }
 
 /* El paquet que veu WordPress és simbòlic: sense este fitxer carregat (plugin

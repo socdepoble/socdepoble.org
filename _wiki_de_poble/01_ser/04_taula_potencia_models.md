@@ -24,13 +24,12 @@ Aquesta taula recull la potència i cost relatiu dels models d'Intel·ligència 
 | Fable 5.1 | `claude-fable-5-1` | 9,5 | 1M | 10 / 50 | 5 | Tasques de llarg abast amb molta autonomia: Ultracode amb refutació adversarial, auditories extremes, problemes on Opus 5 s'encalla. Cinc vegades el consum de Sonnet 5: es reserva, no es gasta en CSS. |
 | Mythos 5.1 | `claude-mythos-5-1` | 9,5 | 1M | 10 / 50 | 5 | No disponible: només organitzacions aprovades (Project Glasswing). Mateix model que Fable 5.1 sense les mesures addicionals. |
 
-## Regles de triatge que se'n deriven per al Mas
+## Regles de triatge que se'n deriven per al Mas (Estratègia de Frontera)
 
-1. **La palanca barata és l'esforç, no el model antic.** Abans de baixar de model, baixar `effort` (`output_config.effort`: low, medium, high, xhigh, max): un Opus 5 a `medium` sol rendir més que un Opus 4.6 a `high` i gasta menys. Sonnet 4.6 i Opus 4.x no tenen cap lloc a la taula de costos d'un pla Pro.
-2. **Cada peça al seu model.** Lectura massiva i mecànica → Haiku 4.5. Codi de rutina, proves i documents → Sonnet 5. Arquitectura, jutjar troballes i integrar → Opus 5 (5.5 quan arribe). Només el que Opus 5 no trau → Fable 5.1.
-3. **Ultracode és car per construcció.** Quan s'orquestre amb Fable, els lectors i refutadors auxiliars (agents lectors) han d'anar a Haiku 4.5 o Sonnet 5 (`opts.model` del workflow) i Fable només ha de jutjar i integrar l'última part per no rebentar la quota.
-4. **Codex es reserva** per a backend, RLS i migracions, mai per a CSS.
-5. **Mesurar, no creure.** `node tooling/brain/tracker_consum.mjs` després de cada torn; la fila «Consum de límit relatiu» és una proporció de preu, no una lectura del pla.
+1. **Només Models de Frontera:** A Sóc de Poble treballem a un nivell d'exigència on **Haiku i Sonnet no tenen lloc en el nostre flux diari**. Utilitzem exclusivament models de frontera (Opus 5.x, Fable 5.x, i ChatGPT Codex) fins i tot per als canvis menuts. Preferim la precisió quirúrgica i la lucidesa absoluta abans que un suposat "estalvi de tokens".
+2. **La Llei de l'Oblit (Mitigació de Quota):** Com que usem models tan potents (com Fable 5.1), és habitual xocar contra els límits termodinàmics de context o les barreres d'ús diari de l'API/App. Quan això passa, **l'estratègia NO és baixar a un model inferior**, sinó aplicar la Llei de l'Oblit: s'abandona el xat actiu, es destil·la el progrés en un document a l'Escriptori, i s'obri un **nou xat** fresc (o es canvia d'usuari/plataforma) reprenent des del 100% de potència.
+3. **Cada eina al seu extrem:** Claude Opus/Fable i jo (Antigravity/MarIA) portem el pes absolut del frontend, React i el modelat d'arquitectura. Codex s'encarrega d'auditories adversarials i backend sense pietat. Tot el que supose un descens d'aquesta línia de frontera està desaconsellat.
+4. **La palanca barata és l'esforç, no el model.** Si s'ha de modular l'esforç a l'API (e.g. `output_config.effort`), es fa sobre el model de frontera. Un Opus a esforç mig és sempre superior a un Sonnet ofegat intentant entendre l'arquitectura de Pedra Seca.
 
 ## Vincles
 - [[03_equip_ia]]

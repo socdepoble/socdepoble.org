@@ -123,12 +123,17 @@ function useIntentDEnviar(input, actiu) {
   return enviant;
 }
 
-/** «Cap fitxer triat», «1 fitxer: a.json», «2 fitxers: a.json, b.json» o «12 fitxers: a, b, c i 9 més». */
-function estatFitxers(noms, { carpeta = false } = {}) {
+/**
+ * «Cap fitxer triat», «1 fitxer: a.json», «2 fitxers: a.json, b.json» o «12 fitxers: a, b, c i 9 més».
+ * Amb `ambNoms` en fals (ordre del Mestre, 13-10-2026, pla 261013_1405, front D), només el recompte: «1 fitxer» o
+ * «12 fitxers» (i «Cap carpeta triada» o «Cap fitxer triat», com sempre).
+ */
+function estatFitxers(noms, { carpeta = false, ambNoms = true } = {}) {
   if (!noms.length) return carpeta ? 'Cap carpeta triada' : 'Cap fitxer triat';
+  const quants = noms.length === 1 ? '1 fitxer' : `${noms.length} fitxers`;
+  if (!ambNoms) return quants;
   const vistos = noms.slice(0, MAX_NOMS_ESTAT).join(', ');
   const resta = noms.length - MAX_NOMS_ESTAT;
-  const quants = noms.length === 1 ? '1 fitxer' : `${noms.length} fitxers`;
   return `${quants}: ${vistos}${resta > 0 ? ` i ${resta} més` : ''}`;
 }
 
@@ -171,8 +176,14 @@ function estatFitxers(noms, { carpeta = false } = {}) {
  *    mou el focus. Sense <form>, el focus no es mou mai.
  * textBoto: el verb del botó; per defecte, «Triar fitxer», «Triar fitxers» o
  * «Triar carpeta» segons multiple i webkitdirectory.
+ * nomsVisibles (ordre del Mestre, 13-10-2026, pla 261013_1405, front D): per
+ * defecte, cert, i la línia d'estat diu fins a tres noms. En fals, només el
+ * recompte («Cap carpeta triada», «1 fitxer», «N fitxers»): per a una carpeta
+ * arrel que porta papers d'identitat (l'Escàner i la Finestreta de la
+ * Gestoria), on un nom de fitxer pot dur dades personals. És opt-in: qui no
+ * el passa pinta el mateix text de sempre.
  */
-export function CampFitxer({ textBoto, className, disabled = false, onChange, onInvalid, ...rest }) {
+export function CampFitxer({ textBoto, nomsVisibles = true, className, disabled = false, onChange, onInvalid, ...rest }) {
   const { required: obligatori, ...control } = useControl('CampFitxer', rest);
   const { etiqueta, obligatori: campObligatori } = useContext(CampCtx);
   const arrel = useRef(null);
@@ -225,7 +236,7 @@ export function CampFitxer({ textBoto, className, disabled = false, onChange, on
           aria-label={nom} aria-describedby={descritPer} onClick={() => input.current?.click()}>
           {verb}
         </Boto>
-        <p id={idEstat} className="sdp-camp-fitxer__estat" aria-live="polite">{estatFitxers(noms, { carpeta })}</p>
+        <p id={idEstat} className="sdp-camp-fitxer__estat" aria-live="polite">{estatFitxers(noms, { carpeta, ambNoms: nomsVisibles !== false })}</p>
       </div>
       {mostraAvis ? (
         <p id={idAvis} className="sdp-camp__error">

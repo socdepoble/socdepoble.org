@@ -1,8 +1,9 @@
 import { RouteSEO } from '../hooks/RouteSEO';
 import { RouteTelemetria } from '../hooks/RouteTelemetria';
 import { usePullToRefresh } from '../hooks/usePullToRefresh.js';
+import { useBarresAmbScroll } from '../hooks/useBarresAmbScroll.js';
 import { useEntitatDelProjecte } from '../hooks/useEntitatDelProjecte.js';
-import React, { Suspense, useCallback, useEffect, useRef, memo, StrictMode, useMemo, useState } from 'react';
+import React, { Suspense, useCallback, useEffect, useRef, memo, StrictMode, useMemo, useState, useSyncExternalStore } from 'react';
 import { Navigate, NavLink, Route, Routes, useNavigate, useLocation, useParams, useRouter } from './contexts/RouterContext';
 import { MoonStar, Search, Settings, Sun, Globe } from '../icons.jsx';
 import { ChevronDown, LayoutGrid, PanelLeftClose } from 'lucide-react';
@@ -10,10 +11,11 @@ import { IaiaIcon } from '../components/PedraSeca/atoms/icones';
 import BrandMark from '../components/BrandMark';
 import { NotificationProvider } from '../components/universal/NotificationContext.jsx';
 import { Dialeg } from '../components/PedraSeca/organismes/Dialeg.jsx';
+import { BotoTornarADalt } from '../components/PedraSeca/atoms/BotoTornarADalt.jsx';
 import { DEFAULT_SECTION_PATH, SECTIONS, SECTION_ORDER } from '../config/sections';
 import { getSectionLabels } from '../config/i18n';
 import { normalizeBackendConfig } from '../config/backendConfig.js';
-import { RUTA_DESPRES_D_ENTRAR, esRutaDEntrada, rutaDEntrada } from '../config/rutaEntrada.js';
+import { aterratgeDespresDEntrar, esRutaDEntrada, rutaDEntrada } from '../config/rutaEntrada.js';
 import { recullTornadaOAuth } from '../data/backendPort.js';
 import { anunciaEnllacDeRecuperacio, marcaRecuperacioPendent } from '../data/recuperacioPendent.js';
 import { useSessioOpcional } from './contexts/SessionContext.jsx';
@@ -380,6 +382,18 @@ function AppShell({ children, mobileNav }) {
     textos: textosRecarrega
   });
 
+  /* Ordre del Mestre (261012, vespre) · En compacte i fora del mode immersiu,
+     les barres acompanyen el scroll (data-sdp-barres a l'arrel, sense
+     repintar res; layout.css) i, quan tornen amb el visor avall, el botó
+     «Tornar a dalt» apareix damunt de «Pobles» (TornarADalt, més avall). En
+     escriptori no hi ha escolta, ni atribut, ni botó. */
+  const barres = useBarresAmbScroll({
+    arrelRef: rootRef,
+    visorRef: mainRef,
+    actiu: isCompact && !immersiu,
+    clauRuta: location.pathname
+  });
+
   // Restaurar el focus a main en canviar de ruta (A11y)
   useEffect(() => {
     if (mainRef.current) {
@@ -405,9 +419,17 @@ function AppShell({ children, mobileNav }) {
      vigila amb una ref de muntatge i no amb un AbortController de l'efecte: en
      StrictMode l'efecte es desmunta i es torna a muntar abans que responga, la
      tornada no es repetix (tornadaFeta) i l'avortament deixava la resposta
-     sense atendre fora de producció. Com `montat` a OnboardingSection. */
+     sense atendre fora de producció. Com `montat` a OnboardingSection.
+     Petició del Mestre (261012_2148) · La mateixa decisió que l'entrada
+     (aterratgeDespresDEntrar): urlDeTornada conserva la consulta de la pàgina,
+     i la porta de la Gestoria hi porta ?tornar al Tauler. Es llig la consulta
+     amb què s'ha muntat la closca, la de la tornada; sense ?tornar (un router
+     en memòria que la pàgina amfitriona ha tornat a carregar), al perfil.
+     Abans la closca anava sempre al perfil i l'entrada al Tauler: guanyava qui
+     navegava l'últim (GES-07, auditoria de Codex 261012_2022). */
   const tornadaFeta = useRef(false);
   const shellMuntat = useRef(false);
+  const consultaDeLaTornada = useRef(location.search);
   useEffect(() => {
     shellMuntat.current = true;
     return () => { shellMuntat.current = false; };
@@ -435,7 +457,8 @@ function AppShell({ children, mobileNav }) {
         }
         if (!shellMuntat.current) return;
         showToast(t('section.login.success.login', 'Benvingut de nou!'), 'success');
-        navigate(RUTA_DESPRES_D_ENTRAR, { replace: true });
+        const tornar = new URLSearchParams(consultaDeLaTornada.current).get('tornar');
+        navigate(aterratgeDespresDEntrar(tornar), { replace: true });
       })
       .catch((e) => {
         if (!shellMuntat.current) return;
@@ -603,9 +626,22 @@ function AppShell({ children, mobileNav }) {
       </main>
 
       {mobileNav}
+      {/* Després de la barra mòbil, i només quan es pot pujar: en repòs no
+          hi ha cap node i la barra continua sent l'últim fill (T3). */}
+      <TornarADalt barres={barres} />
     </div>
     </ProveidorModeImmersiu>
   );
+}
+
+/* Ordre del Mestre (261012, vespre) · «Tornar a dalt» damunt de «Pobles».
+   Llig l'store de useBarresAmbScroll, que només avisa quan canvia: la closca
+   no es repinta per cap scroll, només este component, i només quan el botó
+   apareix o se'n va. */
+const potPujarAlServidor = () => false;
+function TornarADalt({ barres }) {
+  const potPujar = useSyncExternalStore(barres.subscriu, barres.potPujar, potPujarAlServidor);
+  return potPujar ? <BotoTornarADalt onPuja={barres.pujaADalt} /> : null;
 }
 
 const TopBar = memo(function TopBar({ onToggleSidebar, menuObert = false, nomPoble }) {
