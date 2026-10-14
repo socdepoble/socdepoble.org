@@ -1,4 +1,4 @@
-=== Sóc de Poble — Enxufe ===
+=== Sóc de Poble. Portal de Pobles Connectats ===
 Contributors: socdepoble
 Tags: community, rural, village, social network, embed
 Requires at least: 6.5
@@ -8,7 +8,7 @@ Stable tag: 1.0.5
 License: AGPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/agpl-3.0.html
 
-Embeds the Sóc de Poble rural community app in any page with a shortcode or a block, using the same markup as every other host.
+Connect to the Sóc de Poble Portal, a Fediverse of Connected Villages. Open Settings ➔ Sóc de Poble to choose your village and activate this node.
 
 == Description ==
 

@@ -989,17 +989,6 @@ function socdepoble_enxufe_prova_canal() {
  * @return string
  */
 function socdepoble_enxufe_avis_automatiques( $html, $plugin_file ) {
-	if ( plugin_basename( SOCDEPOBLE_ENXUFE_FITXER ) !== $plugin_file ) {
-		return $html;
-	}
-	$prova = socdepoble_enxufe_prova_canal();
-	if ( 'good' === $prova['status'] ) {
-		return $html;
-	}
-	return $html . sprintf(
-		'<p class="description"><a href="%1$s">%2$s</a></p>',
-		esc_url( admin_url( 'options-general.php?page=socdepoble-enxufe' ) ),
-		esc_html( $prova['label'] )
-	);
+	return $html;
 }
-add_filter( 'plugin_auto_update_setting_html', 'socdepoble_enxufe_avis_automatiques', 10, 2 );
+

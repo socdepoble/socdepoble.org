@@ -189,6 +189,8 @@ export const PAGE_COPY = {
     "title": "Nodes i Fedivers",
     "subtitle": "Com es connecten els pobles?",
     "lead": "Sóc de Poble no és una sola web: és una xarxa de nodes. Cada poble o col·lectiu pot obrir l’App a la seua casa digital i continuar connectat amb la resta.",
+    "image": "/assets/ui/plugins/fedivers_vinyeta.jpg",
+    "imageAlt": "Il·lustració còmic estil Bruguera i Berlanga amb pobles connectats per pots de llanda, coloms missatgers i un tractor amb parabòlica",
     "labels": [
       { "text": "Sistema", "className": "sdp-badge-system" },
       { "text": "Xarxa", "className": "sdp-badge-category" }

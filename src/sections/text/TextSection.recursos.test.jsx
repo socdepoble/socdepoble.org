@@ -77,12 +77,12 @@ test('amb amfitrió, una URL externa permesa i un data: passen intactes; només 
   expect(srcs(container)).toEqual([externa, dades, `${PAQUET}/assets/fotos/iaia-maria.png`]);
 });
 
-test('una pàgina sense imatge (com /fedivers) porta la capçalera de reserva del paquet, no la del servidor de dev', () => {
-  expect(PAGE_COPY.fedivers.image).toBeUndefined();
-  render(<TextSection page={PAGE_COPY.fedivers} pageKey="fedivers" />);
+test('una pàgina sense imatge porta la capçalera de reserva del paquet, no la del servidor de dev', () => {
+  const paginaSenseImatge = { title: 'Pàgina sense imatge', html: '<p>Text de prova</p>' };
+  render(<TextSection page={paginaSenseImatge} pageKey="sense-imatge" />);
   expect(mocks.props.heroImage).toBe(HERO_RESERVA);
   cleanup();
   incrustaEnAmfitrio();
-  render(<TextSection page={PAGE_COPY.fedivers} pageKey="fedivers" />);
+  render(<TextSection page={paginaSenseImatge} pageKey="sense-imatge" />);
   expect(mocks.props.heroImage).toBe(`${PAQUET}${HERO_RESERVA}`);
 });

@@ -19,7 +19,7 @@ return array(
 		'Translation is busy. Try again shortly.' => 'El traductor està ocupat. Torna-ho a provar en uns instants.',
 		'The translation provider is unavailable. Try again later.' => 'El proveïdor de traducció no està disponible. Torna-ho a provar més tard.',
 		'The translation request could not be accepted.' => 'No s’ha pogut acceptar la petició de traducció.',
-		'Embeds the Sóc de Poble rural community app with the universal host markup: a shortcode, a block and an optional full-screen template.' => 'Enxufa l’App comunitària rural de Sóc de Poble amb el marcatge universal d’amfitrió: un shortcode, un bloc i una plantilla opcional de pantalla completa.',
+		'Connect to the Sóc de Poble Portal, a Fediverse of Connected Villages! The civic network connecting neighbours, associations, events and local shops. Open Settings ➔ Sóc de Poble to choose your village and activate this node.' => 'Enxufa’t al Portal Sóc de Poble, un Fedivers de Pobles Connectats! La xarxa cívica i viva per a connectar veïns, associacions, esdeveniments i comerç local. Entra a Ajustos ➔ Sóc de Poble per a configurar el teu poble i activar este node.',
 		"block description\x04Embeds the Sóc de Poble app with the universal host markup." => 'Enxufa l’App de Sóc de Poble amb el marcatge universal d’amfitrió.',
 		"block keyword\x04village" => 'vila',
 		"block keyword\x04community" => 'comunitat',

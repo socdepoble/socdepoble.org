@@ -1,0 +1,102 @@
+{
+  "schema": "sdp.release.v1",
+  "producte": "soc-de-poble",
+  "versio": "1.1.2",
+  "generat": "2026-10-14T12:30:05.141Z",
+  "contracte": {
+    "marcatge": "sdp.markup.v1",
+    "element": "soc-de-poble",
+    "global": "SocDePobleConfig",
+    "claus": [
+      "nomPoble",
+      "poble"
+    ],
+    "atributs": [
+      "plugin-url",
+      "fonts-href",
+      "nom-poble",
+      "poble",
+      "ruta-inicial",
+      "base-path",
+      "traductor-url"
+    ]
+  },
+  "runtime": {
+    "amfitrio": "autonom",
+    "dependencies": []
+  },
+  "node": {
+    "origen": "https://adjlvwtxhpclgmnsvwpm.supabase.co",
+    "mode": "remote",
+    "tenant": "11111111-2222-3333-4444-555555555555",
+    "desenvolupament": false
+  },
+  "entrada": {
+    "cami": "soc-de-poble.standalone.js",
+    "mida": 3427,
+    "sha256": "348be794c70e5495620c0abeaea295d19a901439c70a9cf943f04397256e2389",
+    "integrity": "sha384-Nl/1IvBNfaZKj1OSs2AhDvReFJ/vhr93pxZ+nk2FlXaPU/wdXCMQSyXV4/ZcbNvp"
+  },
+  "fonts": {
+    "cami": "fonts/noto-sans.css",
+    "integrity": "sha384-1pKog10G8xIectlT/i90hJfaDrMiaKg9Zp8jonCfsaFRcpvNRLyIYLiaq1w82eYO"
+  },
+  "inventari": {
+    "cami": "sdp-inventari.json",
+    "fitxers": 504,
+    "sha256": "e9a8d99494c21a93733323e2d28b0578e6a80f83a6792c43cf826a16b008c1a9"
+  },
+  "formatDelPaquet": {
+    "format": "trossos",
+    "modul": "trossos/soc-de-poble-D88kybfz.js",
+    "trossos": 276
+  },
+  "canal": "stable",
+  "adaptadors": {
+    "wordpress": {
+      "slug": "socdepoble-enxufe",
+      "versio": "1.1.2",
+      "requires": "6.5",
+      "requires_php": "7.4",
+      "tested": "7.1",
+      "paquet": {
+        "nom": "socdepoble-enxufe-v1.1.2-261014_1430.zip",
+        "url": "https://github.com/socdepoble/socdepoble.org/releases/download/enxufe-v1.1.2/socdepoble-enxufe-v1.1.2-261014_1430.zip",
+        "mida": 134607081,
+        "sha256": "9cde8948f3bfc28e4b3b415de38954dd0007285f864719e2ef6d19db4a9e34ec"
+      },
+      "directori": {
+        "nom": "socdepoble-enxufe-v1.1.2-261014_1430.zip",
+        "cami": "directori/socdepoble-enxufe-v1.1.2-261014_1430.zip",
+        "mida": 134335202,
+        "sha256": "40eb296c00d2d6ee3ed1229322142ceed0c32f496c3418c3eae2184dceb9ee63",
+        "requires": "6.6",
+        "requires_php": "7.4",
+        "tested": "7.1",
+        "runtime": {
+          "amfitrio": "wordpress",
+          "dependencies": [
+            "react",
+            "react-dom",
+            "react-jsx-runtime"
+          ],
+          "wordpressMinim": "6.6"
+        },
+        "entrada": {
+          "cami": "soc-de-poble.standalone.js",
+          "mida": 4358135,
+          "sha256": "b21f01a8c870dc73afb3ae8f9994ea8d1f34ec1960cc0792af8bb897903a96ab",
+          "integrity": "sha384-Bqn9mVpj4j/3VR+cQwvi6/3ke+GOkNJQQm7muU9WHngzckq/AlWF09/zZbsT/2Nj"
+        }
+      }
+    }
+  },
+  "estatic": {
+    "paquet": {
+      "nom": "socdepoble-spa-v1.1.2-261014_1430.zip",
+      "url": "https://github.com/socdepoble/socdepoble.org/releases/download/enxufe-v1.1.2/socdepoble-spa-v1.1.2-261014_1430.zip",
+      "mida": 134530311,
+      "sha256": "5d6e198680d93a309a0f7b32d75cae65f17d1f69a1fded85d2ecedaf29319844"
+    }
+  }
+}

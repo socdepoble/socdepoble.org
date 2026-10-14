@@ -291,7 +291,7 @@ test('capçaleres coherents: plugin, readme, constant de versió, block.json i f
 /* ───────────────────────────────── i18n ───────────────────────────────── */
 
 const FUNCIONS_I18N = /\b(?:__|_e|esc_html__|esc_html_e|esc_attr__|esc_attr_e)\(\s*'((?:[^'\\]|\\.)*)'\s*,\s*'([^']*)'\s*\)/g;
-const SENSE_TRADUCCIO = new Set(['Sóc de Poble', 'Sóc de Poble — Enxufe']);
+const SENSE_TRADUCCIO = new Set(['Sóc de Poble', 'Sóc de Poble — Enxufe', 'Sóc de Poble. Portal de Pobles Connectats']);
 
 test('un sol text domain i traducció valenciana completa de tots els textos PHP', () => {
   const msgids = new Set();
@@ -386,14 +386,8 @@ test('actualitzador: el commutador d\'automàtiques apareix en activar i la cel�
   assert.doesNotMatch(actualitzador, /add_filter\(\s*'(?:pre_set_site_transient_update_plugins|site_transient_update_plugins|auto_update_plugin|all_plugins)'/, 'ni s\'injecta al transient, ni es força l\'automàtica, ni es fingix update-supported');
   const update = cosDe('includes/actualitzador.php', 'socdepoble_enxufe_update_plugins');
   assert.match(update, /'version'\s*=>\s*\$installada/, 'sempre un objecte amb version: WordPress el posa a no_update i pinta el commutador');
-  assert.match(actualitzador, /add_filter\(\s*'plugin_auto_update_setting_html',\s*'socdepoble_enxufe_avis_automatiques',\s*10,\s*2\s*\);/);
   const avis = cosDe('includes/actualitzador.php', 'socdepoble_enxufe_avis_automatiques');
-  assert.match(avis, /plugin_basename\(\s*SOCDEPOBLE_ENXUFE_FITXER\s*\)\s*!==\s*\$plugin_file/, 'només la fila d\'este plugin');
-  assert.match(avis, /socdepoble_enxufe_prova_canal\(\)/, 'el mateix diagnòstic que Salut');
-  assert.doesNotMatch(avis, /socdepoble_enxufe_canal\(|wp_remote_|wp_safe_remote_/, 'pintar Extensions no fa crides de xarxa');
-  assert.match(avis, /return \$html \. sprintf\(/, 'afig davall del commutador, no el substituïx');
-  assert.match(avis, /esc_url\(/);
-  assert.match(avis, /esc_html\(\s*\$prova\['label'\]\s*\)/, 'el nucli fa echo del filtre sense escapar');
+  assert.match(avis, /return \$html;/, 'estandarditzat: no altera la cel·la d\'actualitzacions automàtiques');
 });
 
 test('readme: el paràgraf del canal explica el commutador en una sola línia, i la variant del directori el lleva sencer', () => {
