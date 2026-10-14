@@ -251,8 +251,13 @@ describe('contrast WCAG de l’agenda, l’any i la navegació (clar i fosc)', (
       expect(contrast(de(triat, 'border-color'), targeta), `${tema} triat vora`).toBeGreaterThanOrEqual(3);
       const premuda = '.sdp-cal-vistes .sdp-pindola__opcio[aria-pressed="true"]';
       expect(contrast(de(premuda, 'color'), de(premuda, 'background')), `${tema} vista premuda`).toBeGreaterThanOrEqual(4.5);
-      // L'estat de la premuda també es llig sense color: subratllada.
-      expect(valor(premuda, 'text-decoration')).toBe('underline');
+      /* Sense subratllat (ordre del Mestre, pla 261013_1930, front 4): l'estat
+         de la premuda es llig per la lluminositat, perquè el seu fons fa 3:1 o
+         més contra la targeta en clar i en fosc (WCAG 1.4.1 i 1.4.11). */
+      expect(contrast(de(premuda, 'background'), targeta), `${tema} vista premuda fons`).toBeGreaterThanOrEqual(3);
+      const subratllats = REGLES.filter((r) => r.selectors.includes(premuda)
+        && Object.keys(propietats(r.text)).some((p) => /^text-(decoration|underline)/.test(p)));
+      expect(subratllats.map((r) => r.text.trim()), `${tema} vista premuda sense subratllat`).toEqual([]);
     });
 
     test(`${tema}: la línia d’«ara», les fletxes i el punt de cada font (≥ 3:1 sobre la targeta)`, () => {
@@ -264,6 +269,20 @@ describe('contrast WCAG de l’agenda, l’any i la navegació (clar i fosc)', (
       }
     });
   }
+
+  /* Front 4 (pla 261013_1930; decisió del Mestre, 14-10) · El selector de
+     vista ja no porta el radi de targeta: hereta la píndola de la base
+     (.sdp-pindola, --sdp-radi-boto), que resol a la pastilla en clar i en fosc. */
+  test('el selector de vista no redeclara el radi: hereta la píndola de la base', () => {
+    const propies = REGLES.filter((r) => r.selectors.some((s) => s.startsWith('.sdp-cal-vistes')));
+    expect(propies.length).toBeGreaterThan(0);
+    const ambRadi = propies.filter((r) => Object.keys(propietats(r.text)).some((p) => p.includes('radius')));
+    expect(ambRadi.map((r) => r.selectors.join(', '))).toEqual([]);
+    expect(valor('.sdp-pindola', 'border-radius')).toBe('var(--sdp-radi-boto)');
+    for (const tema of ['clar', 'fosc']) {
+      expect(hex('var(--sdp-radi-boto)', TEMES[tema]), tema).toBe(hex('var(--sdp-radi-pastilla)', TEMES[tema]));
+    }
+  });
 });
 
 /* ── Els valors per defecte dels elements nus ─────────────────────────────

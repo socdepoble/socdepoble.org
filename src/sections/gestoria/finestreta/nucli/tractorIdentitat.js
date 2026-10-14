@@ -31,11 +31,20 @@
  * escanejat dona un avís i cap proposta, i les dades s'entren a mà. Un
  * senyal (AbortSignal) cancel·la entre fitxers. Res es desa ni ix d'este
  * ordinador. JS pur: sense DOM ni React.
+ *
+ * TORNAR A OBRIR UN PAPER (Front 6, ordre del Mestre del 14-10-2026, pla
+ * 261013_1930: «Fitxa + obrir el PDF»): obriPaperIdentitat torna a llegir UN
+ * paper d'una proposta, amb la mateixa porta abans de tocar la Font, i el
+ * torna només si no és vetat, si és un PDF o un text pla i si la seua
+ * empremta és la que es va llegir (una carpeta nova amb un fitxer homònim, o
+ * un paper que ha canviat, no s'obri). Torna els bytes i un MIME FIX, mai
+ * derivat del fitxer, i cap text: la vista en fa una URL local i l'obri.
  */
 import { ErrorAprovacio, exigeixAprovacio } from '../../../tractors/nucli/aprovacio.js';
 import { jsonCanonic, sha256Hex } from '../../../tractors/nucli/canonic.js';
 import { manifestNet } from '../../../tractors/nucli/empremta.js';
 import { decodificaText } from '../../nucli/csv.js';
+import { esPdf } from '../../nucli/inflate.js';
 import { extreuTextPdf } from '../../nucli/pdfText.js';
 import { TRACTOR_IDENTITAT } from '../../tractors.js';
 import { extreuPropostes, teSalut } from './extractorIdentitat.js';
@@ -44,8 +53,13 @@ import { decidixLectura } from './filtreDocuments.js';
 const MB = 1024 * 1024;
 /** Límits explícits; els dos executors n'admeten d'altres (enters positius). */
 export const LIMITS_IDENTITAT = Object.freeze({ fitxers: 60, midaFitxer: 10 * MB });
-/** Els codis d'ErrorIdentitat. */
-export const CODIS_TRACTOR_IDENTITAT = Object.freeze(['PARAMETRES_INVALIDS', 'FONT_INVALIDA', 'MASSA_FITXERS', 'LECTURA_CANCELLADA']);
+/** Els codis d'ErrorIdentitat. Els PAPER_*, només els de tornar a obrir un paper (obriPaperIdentitat). */
+export const CODIS_TRACTOR_IDENTITAT = Object.freeze([
+  'PARAMETRES_INVALIDS', 'FONT_INVALIDA', 'MASSA_FITXERS', 'LECTURA_CANCELLADA', 'PAPER_VETAT', 'PAPER_CANVIAT', 'PAPER_ILLEGIBLE'
+]);
+/** El MIME de cada extensió que es pot tornar a obrir: fix, mai derivat del fitxer (un HTML servit com a blob s'executaria a l'origen de l'app). */
+export const MIME_PAPER = Object.freeze({ pdf: 'application/pdf', txt: 'text/plain;charset=utf-8' });
+const SHA256_HEX = /^[0-9a-f]{64}$/;
 /** Els codis dels avisos: cap porta text del document, només la ruta del fitxer. */
 export const CODIS_AVIS_IDENTITAT = Object.freeze([
   'FONT_LIMITADA', 'FITXER_MASSA_GRAN', 'FITXER_ILLEGIBLE', 'PDF_XIFRAT', 'PDF_SENSE_TEXT', 'PDF_INCOMPLET', 'SALUT'
@@ -256,4 +270,55 @@ export async function executaTractorIdentitat({ font, marcats, aprovacio, subtle
   comprovaCancelLacio(signal);
   informa(onProgres, { fase: 'fet', fet: aLlegir.length, total: aLlegir.length });
   return congela({ decisions, propostes: [...propostes], avisos, llegits });
+}
+
+/**
+ * Torna a llegir UN paper d'una proposta per a obrir-lo en una pestanya
+ * (Front 6, vegeu la capçalera). FAIL-CLOSED com els altres dos passos: la
+ * porta abans de tocar la Font. Després, per este ordre: un vetat
+ * (decidixLectura) mai; només PDF i text pla, amb el MIME de MIME_PAPER; el
+ * límit de mida; l'empremta ha de ser la de la proposta (si no, PAPER_CANVIAT:
+ * ha canviat o és d'una altra carpeta); i un PDF, amb la capçalera «%PDF-».
+ * Els bytes no es congelen (Object.freeze d'un Uint8Array amb elements llança).
+ * @param {object} p
+ * @param {object} p.font la Font de la carpeta triada
+ * @param {string} p.ruta la ruta de la font de la proposta
+ * @param {string} p.sha256 l'empremta de la font de la proposta (64 xifres hex)
+ * @param {object} p.aprovacio el de contextAprovacio('gestoria.identitat')
+ * @param {SubtleCrypto} [p.subtle]
+ * @param {AbortSignal} [p.signal]
+ * @param {{ midaFitxer?: number }} [p.limits]
+ * @returns {Promise<Readonly<{ bytes: Uint8Array, tipus: string }>>} cap text del document
+ */
+export async function obriPaperIdentitat({ font, ruta, sha256, aprovacio, subtle, signal, limits = {} } = {}) {
+  comprovaCancelLacio(signal);
+  await exigeixTractor(aprovacio, subtle);
+  comprovaCancelLacio(signal);
+  exigeixFont(font);
+  const empremta = typeof sha256 === 'string' ? sha256.toLowerCase() : '';
+  if (typeof ruta !== 'string' || ruta.trim() === '' || !SHA256_HEX.test(empremta)) {
+    throw new ErrorIdentitat('PARAMETRES_INVALIDS', 'Cal la ruta del paper i la seua empremta.');
+  }
+  if (decidixLectura(ruta).decisio === 'ometre') throw new ErrorIdentitat('PAPER_VETAT', 'Este paper no s’obri mai des de la Gestoria.');
+  const ext = extensio(ruta);
+  if (!Object.prototype.hasOwnProperty.call(MIME_PAPER, ext)) throw new ErrorIdentitat('PAPER_VETAT', 'Només s’obrin els papers PDF i de text pla.');
+  const midaFitxer = enterPositiu(limits?.midaFitxer, LIMITS_IDENTITAT.midaFitxer);
+  let bytes;
+  try {
+    bytes = await font.llig(ruta);
+  } catch (error) {
+    /* Una carpeta desenxufada es diu tal qual, com a la lectura. */
+    if (error?.codi === 'FONT_OBLIDADA') throw error;
+    comprovaCancelLacio(signal);
+    throw new ErrorIdentitat('PAPER_ILLEGIBLE', 'No s’ha pogut tornar a llegir este paper: potser ja no és a la carpeta triada.', { cause: error });
+  }
+  comprovaCancelLacio(signal);
+  if (!(bytes instanceof Uint8Array)) throw new ErrorIdentitat('PAPER_ILLEGIBLE', 'No s’ha pogut tornar a llegir este paper.');
+  if (bytes.length > midaFitxer) throw new ErrorIdentitat('PAPER_ILLEGIBLE', `Fa més de ${mida(midaFitxer)}: no s’obri.`);
+  if ((await sha256Hex(bytes, subtle)) !== empremta) {
+    throw new ErrorIdentitat('PAPER_CANVIAT', 'Este paper no és el que es va llegir: ha canviat o és d’una altra carpeta.');
+  }
+  comprovaCancelLacio(signal);
+  if (ext === 'pdf' && !esPdf(bytes)) throw new ErrorIdentitat('PAPER_ILLEGIBLE', 'No comença per «%PDF-»: no s’obri com a PDF.');
+  return Object.freeze({ bytes, tipus: MIME_PAPER[ext] });
 }

@@ -6,6 +6,10 @@
  * L'estat de cada tractor ix d'avaluaEstat i, si diu «aprovat», també de
  * verificaRegistre: el panell no diu mai «aprovat» si exigeixAprovacio, la
  * porta de veres, diria que no. origen = location.origin, rpId = hostname.
+ *
+ * Ordre del Mestre, 13-10-2026 (pla 261013_1930, front 2) · aprovaTotsPendents
+ * aprova en bloc, NOMÉS al servidor de desenvolupament (import.meta.env.DEV),
+ * pel mateix camí que la via individual (aprova): no salta cap comprovació.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
@@ -81,6 +85,40 @@ export async function estatDelTractor({ tractor, info, registres, claus, ara, or
   return { ...fila, estat: avaluacio.estat, registre: avaluacio.registre ?? fila.registre, motiu: avaluacio.motiu };
 }
 
+/* Els estats que l'aprovació en bloc torna a aprovar. Mai 'revocat' (és un no
+   explícit del Mestre), ni 'incomplet' ni 'error' (no tenen empremta). */
+export const APROVABLES_EN_BLOC = Object.freeze(['pendent', 'empremta-divergent', 'caducat']);
+
+export const esAprovableEnBloc = (fila) => APROVABLES_EN_BLOC.includes(fila?.estat) && Boolean(fila?.empremta);
+
+/* L'aprovació en bloc, pura: recorre EN SÈRIE (WebAuthn no admet dues crides
+   alhora, i la primera signatura pot registrar la clau) les files aprovables i
+   crida per a cada una el MATEIX `aprova` que la via individual, amb el nivell
+   mínim del manifest i l'empremta que es veia. Sense WebAuthn, les de signatura
+   s'ometen (SENSE_WEBAUTHN). Una signatura que no es completa (Touch ID
+   cancel·lat) atura la sèrie: la resta s'ometen (SERIE_ATURADA). No llança. */
+export async function aprovaEnBloc(files, { aprova, webauthn = false } = {}) {
+  const resultat = { aprovats: [], fallits: [], omesos: [] };
+  let aturada = false;
+  for (const fila of (Array.isArray(files) ? files : []).filter(esAprovableEnBloc)) {
+    const nivell = fila.manifest?.nivellMinim;
+    if (aturada) resultat.omesos.push({ id: fila.id, motiu: 'SERIE_ATURADA' });
+    else if (nivell === 'signatura' && !webauthn) resultat.omesos.push({ id: fila.id, motiu: 'SENSE_WEBAUTHN' });
+    else {
+      try {
+        const registre = await aprova(fila.id, {
+          nivell, confirmacio: nivell === 'confirmacio' ? fila.curta : undefined, empremta: fila.empremta
+        });
+        resultat.aprovats.push({ id: fila.id, registre });
+      } catch (error) {
+        resultat.fallits.push({ id: fila.id, error });
+        aturada = error?.codi === 'SIGNATURA_INVALIDA';
+      }
+    }
+  }
+  return resultat;
+}
+
 export function useTractors({ magatzem, subtle, tractors = TRACTORS, entorn = globalThis, rellotge = Date.now } = {}) {
   const [desti] = useState(() => magatzem ?? magatzemTractors());
   const { origen, rpId } = entornDe(entorn);
@@ -107,10 +145,12 @@ export function useTractors({ magatzem, subtle, tractors = TRACTORS, entorn = gl
         tractor, info: infos[i], registres, claus, ara, origen, rpId, subtle
       })));
       if (meu === torn.current) setVista({ carregant: false, error: null, tractors: files, claus });
+      return files;
     } catch (error) {
       if (meu === torn.current) {
         setVista((previ) => ({ ...previ, carregant: false, error: `No s'han pogut llegir les aprovacions: ${missatgeDe(error)}` }));
       }
+      return null;
     }
   }, [desti, llegixEmpremtes, tractors, rellotge, origen, rpId, subtle]);
 
@@ -193,6 +233,18 @@ export function useTractors({ magatzem, subtle, tractors = TRACTORS, entorn = gl
     return registre;
   }, [tractors, desti, rellotge, refresca]);
 
+  /* Només al servidor de desenvolupament: el literal el reemplaça Vite i, fora
+     de DEV, el hook no l'exposa (el useCallback es crida sempre: regles dels
+     hooks). Torna també les files ja refrescades: una aprovació desada no
+     sempre deixa el tractor aprovat (un registre vell amb data futura mana). */
+  const aprovaTotsPendents = useCallback(async () => {
+    if (!import.meta.env.DEV) {
+      throw new ErrorAprovacio('APROVACIO_REQUERIDA', 'L’aprovació en bloc només existix al servidor de desenvolupament.');
+    }
+    const resultat = await aprovaEnBloc(vista.tractors, { aprova, webauthn });
+    return { ...resultat, files: (await refresca()) ?? [] };
+  }, [vista.tractors, aprova, webauthn, refresca]);
+
   const exporta = useCallback(() => desti.exporta(), [desti]);
 
   const oblidaTot = useCallback(async () => {
@@ -210,6 +262,7 @@ export function useTractors({ magatzem, subtle, tractors = TRACTORS, entorn = gl
     revoca,
     exporta,
     oblidaTot,
-    recarrega: refresca
+    recarrega: refresca,
+    ...(import.meta.env.DEV ? { aprovaTotsPendents } : {})
   };
 }

@@ -10,6 +10,7 @@
  */
 import { isValidElement } from 'react';
 import { esFontImatgeSegura } from '../../../utils/sanitize.js';
+import { esMitjaOpac } from '../../../utils/mitjaOpac.js';
 import { resolRecursPropi } from '../../../config/assetResolver.js';
 import { inicialsDe } from '../molecules/Rajola.jsx';
 
@@ -27,10 +28,15 @@ export function pintaIcona(icona, mida = 20) {
   return null;
 }
 
-/** La font d'una imatge d'article, si és segura (el mateix filtre que Rajola). */
+/** La font d'una imatge d'article, si és segura (el mateix filtre que Rajola).
+ *  XAT-02 (ordre del Mestre, 261014, pla 261014_0210) · Una referència opaca
+ *  dels mitjans ('sdp-media://…', esMitjaOpac) no és cap font: el navegador no
+ *  la sap carregar (ERR_UNKNOWN_URL_SCHEME). Torna null i qui pinta hi posa el
+ *  seu substitut (la marca, les inicials del logotip del TPV, la silueta). La
+ *  resta de fonts, igual que abans. */
 export function fontSegura(imatge) {
   const font = typeof imatge === 'string' && imatge !== '' ? resolRecursPropi(imatge) : null;
-  return font && esFontImatgeSegura(font) ? font : null;
+  return font && !esMitjaOpac(font) && esFontImatgeSegura(font) ? font : null;
 }
 
 /** Inicials i icona de categoria. `renderMedia(article)` pot posar-hi un node propi. */

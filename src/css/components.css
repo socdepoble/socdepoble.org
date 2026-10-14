@@ -275,6 +275,18 @@
   }
   .sdp-dialeg--calaix .sdp-dialeg__marc { height: 100%; }
   .sdp-dialeg--calaix .sdp-dialeg__cos { flex: 1; }
+  .sdp-dialeg--calaix .sdp-dialeg__peu {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: center;
+    gap: var(--sdp-space-2);
+  }
+  .sdp-dialeg--calaix .sdp-dialeg__peu .sdp-boto {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+  }
   .sdp-dialeg--esquerra { inset: 0 auto 0 0; border-inline-start: 0; }
   .sdp-dialeg--dreta { inset: 0 0 0 auto; border-inline-end: 0; }
   /* Calaix de la barra lateral (App.jsx, mode compacte): negre de dalt a baix.

@@ -10,7 +10,7 @@ import {
 
 export const APP_SEED_VERSION = 250035;
 import { getDefaultUserId, idConvidat } from './identitat.js';
-import { ENTITAT_PILOT_SLUG } from './identitatsSeed.js';
+import { ENTITAT_PILOT_SLUG, ENTITAT_RENTONAR_SLUG, entitatSeed } from './identitatsSeed.js';
 export { getDefaultUserId, idConvidat };
 
 /* El pla d'alta (la fila 'onboarding' d'app_content). No incorpora usuaris,
@@ -20,7 +20,11 @@ export { getDefaultUserId, idConvidat };
    d'identitats (identitatsSeed.js, ENTITAT_PILOT_SLUG): ací no es copia cap
    identificador. Cap codi de src no llig esta fila en temps d'execució; només
    viatja a supabase/seed.sql quan es regenera amb el seu script.
-   createOnboardingSeed() s'ha retirat: no la cridava ningú. */
+   createOnboardingSeed() s'ha retirat: no la cridava ningú.
+   Front 3 (261013) · El grup també: Rentonar ja és una entitat de la taula
+   única, i el seu tipus, nom, slug, lema i descripció es lligen de la seua
+   fila. Els valors són els d'abans, i la fila d'app_content no canvia. */
+const RENTONAR = entitatSeed(ENTITAT_RENTONAR_SLUG);
 const ONBOARDING_TEMPLATE = {
   company: {
     kind: 'company',
@@ -29,12 +33,12 @@ const ONBOARDING_TEMPLATE = {
     description: 'Xarxa rural per connectar persones, pobles i projectes amb trellat.'
   },
   group: {
-    kind: 'group',
-    name: 'Rentonar',
-    slug: 'rentonar',
+    kind: RENTONAR.kind,
+    name: RENTONAR.name,
+    slug: RENTONAR.slug,
     parentSlug: ENTITAT_PILOT_SLUG,
-    lema: 'Natura i Patrimoni',
-    description: 'Grup de treball de l’Associació ecologista El Rentonar.'
+    lema: RENTONAR.lema,
+    description: RENTONAR.description
   }
 };
 

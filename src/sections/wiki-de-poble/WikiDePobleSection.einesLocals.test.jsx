@@ -239,6 +239,18 @@ describe('en desenvolupament', () => {
     expect(arrel.querySelectorAll('h1')).toHaveLength(1);
   });
 
+  /* El subtítol i l'entradilla de la porta d'aprovació són de la pàgina, no del
+     panell: ací es prova el que abans provava PanellTractors.test.jsx (ordre
+     del Mestre, 13-10-2026, pla 261013_1930, front 2: proves en verd). */
+  test('la porta d’aprovació: el subtítol i l’entradilla diuen què cobrix l’empremta', async () => {
+    const arrel = obri('tractors_aprovacio');
+    await screen.findByText('Doble dels Tractors');
+    expect(arrel.querySelector('.page-intro h2').textContent).toBe('Què fa cada tractor, la seua empremta i la teua signatura');
+    const entradilla = arrel.querySelector('.page-intro p.lead').textContent;
+    expect(entradilla).toMatch(/cada línia de les fonts llistades/);
+    expect(entradilla).toMatch(/el codi del tractor, el de la seua interfície i el d’esta porta/);
+  });
+
   test('Traduir no envia el text de l’eina enlloc: ho diu i no obri cap menú', async () => {
     obri('tractors_aprovacio');
     await screen.findByText('Doble dels Tractors');

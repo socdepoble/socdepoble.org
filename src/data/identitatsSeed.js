@@ -13,15 +13,29 @@
  * Ordre del Mestre (261007) · A producció l'entitat és 'socdepoble', sense
  * guions: el slug declarat (ENTITAT_PILOT_SLUG) passa de 'soc-de-poble' a
  * 'socdepoble' i ara és el mateix text que l'id d'agentsSeed
- * (ENTITAT_PILOT_ID). La plantilla d'alta d'appSeed (i la de
- * supabase/seed.sql) encara porta 'soc-de-poble', que ja no és cap àlies:
- * una entitat creada amb ella no es reconeix com la pilot. Si l'ha de
- * reconéixer és una decisió pendent del Mestre.
+ * (ENTITAT_PILOT_ID). La plantilla d'alta d'appSeed ja el llig d'ací
+ * (ENTITAT_PILOT_SLUG). Només va arrere la fila 'onboarding' de
+ * supabase/seed.sql (línia 17), que encara porta 'soc-de-poble' com a slug i
+ * com a parentSlug: ja no és cap àlies. Cap codi de src no llig eixa fila en
+ * temps d'execució (appSeed.js); regenerar-la és una mutació governada que
+ * queda pendent.
+ *
+ * Ordre del Mestre (261013; pla 261013_1930, Front 3) · Les entitats
+ * fundacionals 'socdepoble' i 'rentonar' han d'estar operatives. Rentonar és
+ * la segona entitat del padró (la pilot continua sent la primera): un grup
+ * amb mare Sóc de Poble, el mateix text com a id i com a slug, i el nom, el
+ * lema i la descripció que la plantilla d'alta d'appSeed llig d'ací.
  *
  * REGLA DEL MODE SEED: la persona que ha entrat és la persona pilot («Javi»)
- * i és propietària de l'entitat pilot («Sóc de Poble»). És l'única manera de
- * provar el canal compartit del xat, el MAS de l'entitat i la fitxa sense una
- * base de dades. En remot la pertinença la diu el servidor
+ * i és propietària de l'entitat pilot («Sóc de Poble»), i de cap altra
+ * entitat del padró. És l'única manera de provar el canal compartit del xat,
+ * el MAS de l'entitat i la fitxa sense una base de dades. En l'app autònoma
+ * no s'hi arriba: en seed i local entrar i registrar-se tornen MODE_LOCAL
+ * (supabase/auth.js · exigeixModeRemot) i /registre passa el node a remote
+ * si el servidor respon. Només s'assolix amb una sessió que injecta
+ * l'amfitrió (identitat.js · adoptaSessioExterna) o amb la sessió simulada
+ * d'una prova; sense sessió, ningú no administra cap entitat de la llavor.
+ * En remot la pertinença la diu el servidor
  * (list_my_organizations) i este fitxer no mana res: només aporta la IAIA,
  * que viu al paquet i no a cap taula, i el pont per slug declarat de
  * l'entitat pilot amb el contingut que la llavor signa (aliesDeLActor, F4).
@@ -33,6 +47,9 @@ import { AGENTS_MAP } from './agentsSeed.js';
 export const IAIA_ID = AGENTS_MAP.IAIA.id;
 export const ENTITAT_PILOT_ID = AGENTS_MAP.SOCDEPOBLE.id;
 export const ENTITAT_PILOT_SLUG = 'socdepoble';
+/* Front 3 (261013) · La segona entitat fundacional. Com la pilot des del
+   261007, l'id i el slug declarat són el mateix text. */
+export const ENTITAT_RENTONAR_SLUG = 'rentonar';
 
 export const PERSONA_PILOT = Object.freeze({
   slug: 'javi',
@@ -75,6 +92,34 @@ export const ENTITATS_SEED = Object.freeze([Object.freeze({
   /* Membres amb rol declarat. T63.1 (decisió del Mestre, 260928): cap persona
      inventada, de manera que la llavor no en declara cap i hi mana qui té
      sessió (regla del mode seed, `rolALEntitat`). */
+  membres: Object.freeze([])
+}), Object.freeze({
+  /* Ordre del Mestre (261013; pla 261013_1930, Front 3) · Rentonar, el grup
+     de treball de l'Associació ecologista El Rentonar. Nom, lema i
+     descripció són els de la plantilla d'alta (appSeed.js ·
+     ONBOARDING_SEED.group), que des d'ara els llig d'ací: una sola font. La
+     mare és l'entitat pilot, com el parentSlug de la plantilla, amb la forma
+     de la fila del servidor (parent_organization_id, l'id de la mare). Ni
+     logotip ni poble: la llavor no se'ls inventa (la mediateca en registra un
+     logotip, però el fitxer no és a public/). */
+  id: ENTITAT_RENTONAR_SLUG,
+  slug: ENTITAT_RENTONAR_SLUG,
+  kind: 'group',
+  name: 'Rentonar',
+  lema: 'Natura i Patrimoni',
+  description: 'Grup de treball de l’Associació ecologista El Rentonar.',
+  parent_organization_id: ENTITAT_PILOT_ID,
+  logo_url: '',
+  hero_url: '',
+  presentacio_html: '',
+  copyright: '',
+  visibility: 'public',
+  town_name: '',
+  alies: Object.freeze([ENTITAT_RENTONAR_SLUG]),
+  /* Cap membre declarat i cap propietària implícita (regla del mode seed):
+     ningú no l'administra fins que algú s'hi connecta (localPerfils ·
+     reclamaOrganitzacio). El xat de la llavor no veu eixa connexió:
+     localXat només pregunta a rolALEntitat. */
   membres: Object.freeze([])
 })]);
 
@@ -135,14 +180,19 @@ export function autoriaSeed(item) {
 /**
  * Rol de `usuariId` a l'entitat `orgId` en mode seed, o null. Un membre de la
  * llavor té el rol declarat; qualsevol persona amb sessió és propietària de
- * l'entitat pilot (regla del mode seed, capçalera). Sense sessió, ningú.
+ * l'entitat pilot, i només d'ella (regla del mode seed, capçalera). Sense
+ * sessió, ningú.
+ * Front 3 (261013) · Abans la regla valia per a qualsevol entitat del padró
+ * i només coincidia amb la pilot perquè n'hi havia una. Amb Rentonar al
+ * padró, qui té sessió no n'és propietària: en la llavor no l'administra
+ * ningú fins que algú s'hi connecta.
  */
 export function rolALEntitat(orgId, usuariId, { teSessio = false } = {}) {
   const entitat = entitatSeed(orgId);
   if (!entitat || !usuariId) return null;
   const membre = entitat.membres.find((m) => m.usuariId === String(usuariId));
   if (membre) return membre.role;
-  return teSessio ? 'owner' : null;
+  return teSessio && entitat.id === ENTITAT_PILOT_ID ? 'owner' : null;
 }
 
 /**

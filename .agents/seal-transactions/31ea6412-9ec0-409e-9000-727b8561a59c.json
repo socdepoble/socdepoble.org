@@ -1,0 +1,17 @@
+{
+  "id": "31ea6412-9ec0-409e-9000-727b8561a59c",
+  "session": "ab214e88-a743-45b1-8a56-25317868d573",
+  "operationId": "sdp-auditoria-codex-relleu-ledger-261014",
+  "claim": "ab214e88-a743-45b1-8a56-25317868d573:governance-write",
+  "planHash": "10ed9777256e6e64d0c6c39879a0f763ca4003ba07b1abea85fd0e1196156182",
+  "beforeSeal": "fdd541a4a6c1bede31f6b51fff308bb55b81261f568bb06504b169ecb535976e",
+  "files": [
+    {
+      "path": ".agents/LEDGER.md",
+      "before": "75ae397377804f857d9a82543c8ce410646d6e31421ba2d1e6ee06301746d6de",
+      "after": "4df838e2551fde7990965315f15c59777eaf3b703c24c162ae3e61f79f01a554"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "037d6f8bb955504b3c57690510c31256c043225b63eaa38c261907313b3ec026"
+}

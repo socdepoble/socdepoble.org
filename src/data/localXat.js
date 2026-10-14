@@ -453,12 +453,17 @@ export function createLocalXatAdapter() {
      * (fil d'entitat, jo com a client) o la IAIA (fil 'iaia'). Idempotent.
      * Onada 10 (261010) · Qui no és al padró és «forastera»: SDP-XAT-004, com
      * al servidor (errorForastera, dalt).
+     * Front 3 (261013; pla 261013_1930) · Com crea_fil_directe (2610081543),
+     * que obri qualsevol organització pública del poble, una entitat del
+     * padró d'entitats (ENTITATS_SEED, totes públiques) s'obri encara que no
+     * siga al padró del xat: és el que fa «Escriu-li al xat» de /grup/rentonar.
+     * El padró que llista carregaMembres no canvia (xatSeed.js).
      */
     async creaFilDirecte(altreUsuariId, titol = null, config = {}) {
       const { estat, jo } = magatzem(config);
       if (!altreUsuariId || altreUsuariId === jo) throw errorPla('No pots obrir una conversa amb tu mateix.');
       const altre = String(altreUsuariId);
-      if (!estat.membres.some((membre) => membre.usuariId === altre)) throw errorForastera();
+      if (!estat.membres.some((membre) => membre.usuariId === altre) && !estat.entitats.has(altre)) throw errorForastera();
       const existent = filAmb(estat, jo, altre);
       if (existent) return existent;
       if (estat.entitats.has(altre)) {

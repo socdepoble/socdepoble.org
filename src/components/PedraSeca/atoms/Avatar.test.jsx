@@ -59,15 +59,49 @@ test('un valor ja resolt no es torna a prefixar', () => {
   expect(srcDe({ src: `${CAMI}${IAIA}` })).toBe(`${CAMI}${IAIA}`);
 });
 
-test('amb base, https:, data:, sdp-media:// i els camins que no són /assets/ queden intactes', () => {
+/* XAT-02 (ordre del Mestre, 261014) · Abans la llista portava també una
+   referència sdp-media://, que es pintava tal qual: era el defecte. Ara no es
+   pinta (prova de davall); la resta continua intacta. */
+test('amb base, https:, data: i els camins que no són /assets/ queden intactes', () => {
   fixaBaseRecursos(PAQUET);
   const intactes = [
     'https://lh3.googleusercontent.com/a/foto.jpg',
     'data:image/png;base64,AAAA',
-    'sdp-media://mitjans/u/cara.jpg',
     '/altres/foto.png'
   ];
   for (const valor of intactes) expect(srcDe({ src: valor })).toBe(valor);
+});
+
+/* XAT-02 (ordre del Mestre, 261014, pla 261014_0210) · Cap
+   <img src="sdp-media://…"> al DOM: el navegador no coneix l'esquema
+   (ERR_UNKNOWN_URL_SCHEME). Una referència opaca es pinta com sense imatge,
+   amb o sense la base del paquet. */
+test('XAT-02 · una referència sdp-media:// (també amb espais davant) pinta el mateix DOM que sense imatge', () => {
+  /* C4-XAT-03 (Codex, 261014_0235) · L'esquema no distingix majúscules, com el filtre de sanitize.js (/i). */
+  const REFS = ['sdp-media://mitjans/u/cara.jpg', 'sdp-media://mitjans_privats/u/cara.jpg', '  sdp-media://mitjans/u/cara.jpg',
+    'SDP-MEDIA://mitjans_privats/u/cara.jpg', 'sDp-MeDiA://mitjans/u/cara.jpg'];
+  for (const base of ['/', PAQUET]) {
+    fixaBaseRecursos(base);
+    for (const src of REFS) {
+      const props = { nom: 'Pepa Güell', mida: 'md', llavor: 'pepa', alt: '' };
+      const { container } = render(<><Avatar {...props} src={src} enquadrament="iaia" /><Avatar {...props} /></>);
+      const [ambRef, senseImatge] = container.children;
+      expect(container.querySelector('img'), src).toBeNull();
+      expect(ambRef.isEqualNode(senseImatge), src).toBe(true);
+      expect(ambRef.querySelector('[aria-hidden="true"]').textContent).toBe('PG');
+      cleanup();
+    }
+  }
+});
+
+test('XAT-02 · les fonts vàlides continuen pintant la mateixa imatge (Llei del Píxel)', () => {
+  const ORIGEN = 'https://mitjans-avatar.example';
+  permetOrigenMitjans(ORIGEN);
+  for (const valor of [IAIA, 'data:image/png;base64,AAAA', `${ORIGEN}/storage/u/cara.webp`, 'https://lh3.googleusercontent.com/a/foto.jpg']) {
+    expect(srcDe({ src: valor }), valor).toBe(valor);
+  }
+  /* blob: no passava el filtre de seguretat i continua sense passar-lo. */
+  expect(srcDe({ src: 'blob:https://x/1' })).toBeNull();
 });
 
 test('sense src, o amb una font insegura, les inicials; la base no ho canvia', () => {

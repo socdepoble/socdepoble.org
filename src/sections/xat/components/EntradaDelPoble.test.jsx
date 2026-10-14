@@ -1,17 +1,19 @@
 /* Torn 260930 (T1) · EntradaDelPoble: qui arriba a /xat en un amfitrió amb
-   poble veu primer el grup del poble, UNA sola vegada per àmbit, només en
-   ample, i en remot mai no el crea en silenci. */
+   poble veu primer el poble, UNA sola vegada per àmbit i només en ample.
+   Ordre del Mestre (14-10, pla 261014_0210, XAT-01) · Ja no obri el General:
+   demana la fitxa de la comunitat amb l'id del seu fil (`onEntra`), mai un
+   fil, i sense comunitat no crea ni demana res en cap mode de dades. La ruta
+   (/xat?comunitat=<id>, amb replace) i el focus són de XatSection: en té les
+   proves XatSection.revisio260930.test.jsx. */
 import { render, cleanup, act } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import EntradaDelPoble from './EntradaDelPoble.jsx';
 
 const mocks = vi.hoisted(() => ({
-  navigate: vi.fn(),
   mida: 'ample',
   xat: {}
 }));
 
-vi.mock('../../../app/contexts/RouterContext', () => ({ useNavigate: () => mocks.navigate }));
 vi.mock('../../../components/layout/AppGridShell.jsx', () => ({ useAppGrid: () => ({ mida: mocks.mida }) }));
 vi.mock('../XatContext', () => ({ useXat: () => mocks.xat }));
 
@@ -31,9 +33,11 @@ function guarda() {
   });
 }
 
+let onEntra;
+
 beforeEach(() => {
   vi.useFakeTimers();
-  mocks.navigate.mockReset();
+  onEntra = vi.fn();
   mocks.mida = 'ample';
   mocks.xat = { status: 'ready', senseSessio: false, modeDades: 'seed', consumixEntrada: guarda() };
 });
@@ -44,95 +48,105 @@ afterEach(() => {
 
 const decidix = () => act(() => { vi.runAllTimers(); });
 
-test('en ample, amb la comunitat del poble, obri el seu General', () => {
-  render(<EntradaDelPoble poble={POBLE} comunitat={COMUNITAT} aLaLlista />);
+test.each([['seed'], ['local'], ['remote']])('en ample (%s), amb la comunitat del poble, demana la seua fitxa i mai el General', (modeDades) => {
+  mocks.xat.modeDades = modeDades;
+  render(<EntradaDelPoble poble={POBLE} comunitat={COMUNITAT} aLaLlista onEntra={onEntra} />);
   decidix();
-  expect(mocks.navigate).toHaveBeenCalledTimes(1);
-  expect(mocks.navigate).toHaveBeenCalledWith('/xat/general', { replace: true });
+  expect(onEntra).toHaveBeenCalledTimes(1);
+  expect(onEntra).toHaveBeenCalledWith('c-torre');
 });
 
-test('en seed, sense comunitat, la crea pel camí del «Comentar» (?sobre=poble:<id>)', () => {
-  render(<EntradaDelPoble poble={POBLE} comunitat={null} aLaLlista />);
+/* La ruta la fa XatSection amb la mateixa `consulta` que obriComunitat: ací
+   l'id no es toca, ni es codifica ni es convertix. */
+test.each([['c torre/1&a=b'], [42]])('passa l\'id del fil tal qual (%s)', (id) => {
+  const comunitat = { ...COMUNITAT, fil: { ...COMUNITAT.fil, id } };
+  render(<EntradaDelPoble poble={POBLE} comunitat={comunitat} aLaLlista onEntra={onEntra} />);
   decidix();
-  const [ruta, opcions] = mocks.navigate.mock.calls[0];
-  expect(opcions).toEqual({ replace: true });
-  const url = new URL(ruta, 'https://x.invalid');
-  expect(url.pathname).toBe('/xat');
-  expect(url.searchParams.get('sobre')).toBe('poble:la-torre-de-les-macanes');
-  expect(url.searchParams.get('titol')).toBe('Gent de la Torre');
+  expect(onEntra).toHaveBeenCalledTimes(1);
+  expect(onEntra.mock.calls[0][0]).toBe(id);
 });
 
-/* Integració Xat i Pobles (Onada 6) · Sense nom declarat, el grup que es crea
-   es diu com la gent del poble de la fitxa (towns), també un poble inventat;
-   que arriben les fitxes després no torna a decidir. */
-test('en seed, sense nom declarat i amb les fitxes, el grup nou es diu com la gent', () => {
-  const towns = [{ id: 'olivera-inventada', title: "L'Olivera Inventada" }];
-  const poble = { id: 'olivera-inventada', nom: '' };
-  const { rerender } = render(<EntradaDelPoble poble={poble} comunitat={null} towns={null} aLaLlista />);
-  rerender(<EntradaDelPoble poble={poble} comunitat={null} towns={towns} aLaLlista />);
+/* Crear la comunitat només per arribar a /xat era un efecte col·lateral: la
+   fila del poble ja és al capdamunt (anteposaPoble). */
+test.each([['seed'], ['local'], ['remote']])('en %s, sense comunitat, no crea ni demana res, però consumix l\'entrada', (modeDades) => {
+  mocks.xat.modeDades = modeDades;
+  render(<EntradaDelPoble poble={POBLE} comunitat={null} aLaLlista onEntra={onEntra} />);
   decidix();
-  expect(mocks.navigate).toHaveBeenCalledTimes(1);
-  const url = new URL(mocks.navigate.mock.calls[0][0], 'https://x.invalid');
-  expect(url.searchParams.get('sobre')).toBe('poble:olivera-inventada');
-  expect(url.searchParams.get('titol')).toBe("Gent de l'Olivera Inventada");
-  expect(url.searchParams.get('ruta')).toBe('/pobles/olivera-inventada');
-});
-
-test('en remot, sense comunitat, no crea res (pla 2135, P2) però consumix l\'entrada', () => {
-  mocks.xat.modeDades = 'remote';
-  render(<EntradaDelPoble poble={POBLE} comunitat={null} aLaLlista />);
-  decidix();
-  expect(mocks.navigate).not.toHaveBeenCalled();
+  expect(onEntra).not.toHaveBeenCalled();
   expect(mocks.xat.consumixEntrada).toHaveBeenCalledWith(`poble:${POBLE.id}`);
 });
 
-test('en remot, amb la comunitat ja existent, sí que obri el General', () => {
-  mocks.xat.modeDades = 'remote';
-  render(<EntradaDelPoble poble={POBLE} comunitat={COMUNITAT} aLaLlista />);
+test('una comunitat sense id de fil no demana res', () => {
+  render(<EntradaDelPoble poble={POBLE} comunitat={{ ...COMUNITAT, fil: { ...COMUNITAT.fil, id: '' } }} aLaLlista onEntra={onEntra} />);
   decidix();
-  expect(mocks.navigate).toHaveBeenCalledWith('/xat/general', { replace: true });
+  expect(onEntra).not.toHaveBeenCalled();
 });
 
-test('una sola vegada: tornar a /xat no reobri el grup', () => {
-  const { unmount } = render(<EntradaDelPoble poble={POBLE} comunitat={COMUNITAT} aLaLlista />);
+test('una sola vegada: tornar a /xat (la fletxa de la fitxa) no la reobri', () => {
+  const { unmount } = render(<EntradaDelPoble poble={POBLE} comunitat={COMUNITAT} aLaLlista onEntra={onEntra} />);
   decidix();
   unmount();
-  render(<EntradaDelPoble poble={POBLE} comunitat={COMUNITAT} aLaLlista />);
+  render(<EntradaDelPoble poble={POBLE} comunitat={COMUNITAT} aLaLlista onEntra={onEntra} />);
   decidix();
-  expect(mocks.navigate).toHaveBeenCalledTimes(1);
+  expect(onEntra).toHaveBeenCalledTimes(1);
 });
 
-test('en estret no navega, i l\'entrada queda consumida: passar després a ample no segresta la llista', () => {
-  mocks.mida = 'estret';
-  const { rerender } = render(<EntradaDelPoble poble={POBLE} comunitat={COMUNITAT} aLaLlista />);
+test('la comunitat que arriba després de consumir l\'entrada no la reobri', () => {
+  const { rerender } = render(<EntradaDelPoble poble={POBLE} comunitat={null} aLaLlista onEntra={onEntra} />);
   decidix();
-  expect(mocks.navigate).not.toHaveBeenCalled();
+  rerender(<EntradaDelPoble poble={POBLE} comunitat={COMUNITAT} aLaLlista onEntra={onEntra} />);
+  decidix();
+  expect(onEntra).not.toHaveBeenCalled();
+});
+
+/* XatSection li passa una funció nova a cada render: es crida l'última, i
+   canviar-la no torna a decidir ni allarga l'espera. */
+test('un onEntra nou a cada render: es crida l\'últim, una sola vegada', () => {
+  const primer = vi.fn();
+  const { rerender } = render(<EntradaDelPoble poble={POBLE} comunitat={COMUNITAT} aLaLlista onEntra={primer} />);
+  rerender(<EntradaDelPoble poble={POBLE} comunitat={COMUNITAT} aLaLlista onEntra={onEntra} />);
+  decidix();
+  expect(primer).not.toHaveBeenCalled();
+  expect(onEntra).toHaveBeenCalledTimes(1);
+  rerender(<EntradaDelPoble poble={POBLE} comunitat={COMUNITAT} aLaLlista onEntra={vi.fn()} />);
+  decidix();
+  expect(onEntra).toHaveBeenCalledTimes(1);
+  expect(mocks.xat.consumixEntrada).toHaveBeenCalledTimes(1);
+});
+
+test.each([['estret'], ['mitja']])('en %s no demana res, i l\'entrada queda consumida: passar després a ample no segresta la llista', (mida) => {
+  mocks.mida = mida;
+  const { rerender } = render(<EntradaDelPoble poble={POBLE} comunitat={COMUNITAT} aLaLlista onEntra={onEntra} />);
+  decidix();
+  expect(onEntra).not.toHaveBeenCalled();
+  expect(mocks.xat.consumixEntrada).toHaveBeenCalledWith(`poble:${POBLE.id}`);
   mocks.mida = 'ample';
-  rerender(<EntradaDelPoble poble={POBLE} comunitat={COMUNITAT} aLaLlista />);
+  rerender(<EntradaDelPoble poble={POBLE} comunitat={COMUNITAT} aLaLlista onEntra={onEntra} />);
   decidix();
-  expect(mocks.navigate).not.toHaveBeenCalled();
+  expect(onEntra).not.toHaveBeenCalled();
 });
 
 test('la mida es llig en decidir, no en el primer render (la closca naix «ample» i mesura després)', () => {
-  const { rerender } = render(<EntradaDelPoble poble={POBLE} comunitat={COMUNITAT} aLaLlista />);
+  const { rerender } = render(<EntradaDelPoble poble={POBLE} comunitat={COMUNITAT} aLaLlista onEntra={onEntra} />);
   mocks.mida = 'estret';
-  rerender(<EntradaDelPoble poble={POBLE} comunitat={COMUNITAT} aLaLlista />);
+  rerender(<EntradaDelPoble poble={POBLE} comunitat={COMUNITAT} aLaLlista onEntra={onEntra} />);
   decidix();
-  expect(mocks.navigate).not.toHaveBeenCalled();
+  expect(onEntra).not.toHaveBeenCalled();
 });
 
-test('no fa res sense poble, fora de la llista, sense sessió o amb el xat carregant', () => {
+test('no fa res sense poble, fora de la llista, sense sessió, amb el xat carregant o sense onEntra', () => {
   const casos = [
     [{ poble: null, aLaLlista: true }, {}],
     [{ poble: POBLE, aLaLlista: false }, {}],
     [{ poble: POBLE, aLaLlista: true }, { senseSessio: true }],
-    [{ poble: POBLE, aLaLlista: true }, { status: 'loading' }]
+    [{ poble: POBLE, aLaLlista: true }, { status: 'loading' }],
+    [{ poble: POBLE, aLaLlista: true, onEntra: null }, {}]
   ];
   for (const [props, xat] of casos) {
     mocks.xat = { status: 'ready', senseSessio: false, modeDades: 'seed', consumixEntrada: guarda(), ...xat };
-    render(<EntradaDelPoble {...props} comunitat={COMUNITAT} />);
+    render(<EntradaDelPoble onEntra={onEntra} {...props} comunitat={COMUNITAT} />);
     decidix();
-    expect(mocks.navigate).not.toHaveBeenCalled();
+    expect(onEntra).not.toHaveBeenCalled();
     expect(mocks.xat.consumixEntrada).not.toHaveBeenCalled();
     cleanup();
   }

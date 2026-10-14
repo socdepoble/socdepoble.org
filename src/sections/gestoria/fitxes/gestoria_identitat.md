@@ -13,11 +13,12 @@ Llig, només en este ordinador, els teus papers d’identitat de la carpeta que 
 3. **Tu tries la carpeta arrel** de la Gestoria amb el selector del sistema (o, si el navegador no en té, amb el botó de pujar una carpeta). Res es puja enlloc.
 4. **«Què llegiré i què no».** Abans d’obrir cap paper, decidix pel nom i per la carpeta de cada fitxer què es llig, què no i què cal que marques, i t’ho ensenya en una taula amb el perquè:
    - **Es llegirà:** els papers coneguts i permesos de 01_Identitat_Legal i de 03_Burocracia/SUMA: la vida laboral, la resolució d’afiliació, les resolucions del RETA, l’informe de bases, els rebuts i notificacions de SUMA, la sol·licitud del Kit Digital, l’alta al registre d’associacions, els estatuts i el certificat de representació.
-   - **Només si el marques:** els papers amb un nom que no diu què són. Només compta el nom del fitxer, no la carpeta on és. Sense la teua marca no s’obrin.
+   - **Només si el marques:** els papers amb un nom que no diu què són. Només compta el nom del fitxer, no la carpeta on és. Sense la teua marca no s’obrin. Els pots marcar d’un en un o tots de colp amb «Marca tots els pendents», i desmarcar-los tots amb «Desmarca tots». **Marcar no és llegir:** només s’obrin quan prems «Llig». La marca de colp només toca els d’esta llista: els que no s’obriran mai queden fora, i tampoc s’obririen si arribaren marcats.
    - **No s’obrirà mai,** encara que el marques: tot el que és fora de 01_Identitat_Legal i de 03_Burocracia/SUMA; les carpetes 90 (arxiu), de quarantena i de l’Agència Tributària; i, a qualsevol lloc, la llista de vetats.
 5. **Llig els permesos i els marcats.** De cada un en calcula l’empremta SHA-256 i en trau el text: el d’un PDF generat per màquina o el d’un fitxer de text pla. L’extractor hi busca les etiquetes de cada tipus de paper i, darrere de cada etiqueta, el primer valor que té la forma i passa el validador del camp (amb la lletra o el dígit de control quan l’identificador en porta). Sense etiqueta no hi ha proposta: cap número solt es pren per un DNI.
 6. **Descarta el paper.** Els bytes i el text es deixen anar en acabar cada paper. Només queden les propostes: el camp, el valor, la regla que l’ha trobat, la confiança i la font (la ruta del paper i la seua empremta).
 7. **Revises les propostes.** Cap entra sola a la fitxa: la **confirmes**, la **rebutges** o la **corregixes** a mà. Quan dos papers diuen coses diferents, el camp queda «en conflicte» i tries tu. Si un paper nou diu una altra cosa d’un valor ja confirmat, la fitxa t’ho avisa i no el canvia sense tu.
+   - **D’on ix.** Cada paper es desplega i diu el seu tipus, la data del nom (si en porta), la regla que l’ha trobat i l’empremta curta (les huit primeres xifres). Per a consultar-lo, i resoldre un conflicte, dos passos, només amb l’ull obert i amb la carpeta triada: **«Comprova el paper» el torna a llegir en este ordinador, en comprova l’empremta i, si coincidix, «Obri’l en una pestanya» te l’obri en una pestanya d’este navegador.** Mai els vetats, i mai un paper que no és el que es va llegir: si ha canviat o és d’una altra carpeta (amb el mateix nom), l’empremta no coincidix, no s’obri i t’ho diu. Només PDF i text pla.
 8. **La Finestreta.** Quatre formularis declaratius (la sol·licitud genèrica de la Generalitat, la instància general de l’Ajuntament, la sol·licitud a SUMA i l’acreditació de la representació d’una entitat), cadascun **«A verificar contra el model vigent»**. Només els valors confirmats els omplin, tornats a validar amb el tipus del camp del formulari: un NIF no entra mai en un camp de nom. Cada camp té «Copia» (al porta-retalls, quan prems el botó) i cada formulari un «Esborrany per imprimir».
 
 ## La llista de vetats
@@ -39,6 +40,7 @@ La fitxa tampoc té on guardar un IBAN, una dada de salut, el codi segur de veri
 
 - La carpeta que tries: el nom i la mida de cada fitxer, per a decidir què es llig.
 - Dels papers que es lligen (pas 4), els bytes, en la memòria del navegador, el temps de calcular-ne l’empremta i extraure’n el text.
+- Quan prems «Comprova el paper» (pas 7), els bytes d’eixe paper, una altra vegada i en este ordinador, per a comprovar-ne l’empremta. Si coincidix, en fa una adreça local d’este navegador (que no ix enlloc) perquè l’obrigues; l’adreça es revoca als 2 minuts, en bloquejar el cofre, amb «Oblida la carpeta», en triar una carpeta nova, si una comprovació nova del mateix paper falla i en eixir de la vista. No en trau cap text.
 - Amb el cofre obert, la teua fitxa desada: només els valors confirmats.
 
 ## Què escriu
@@ -53,7 +55,8 @@ La fitxa tampoc té on guardar un IBAN, una dada de salut, el codi segur de veri
 - No envia res per la xarxa ni es connecta a cap organisme.
 - No posa cap dada legal al perfil social (`public.profiles`), a les metadades del compte, a cap sessió, registre, error ni cua.
 - No canvia l’avatar ni la portada: són elecció exclusiva teua.
-- No mostra cap valor fins que tu prems l’ull de la barra: ni a les propostes, ni a la fitxa, ni als formularis.
+- No mostra cap valor fins que tu prems l’ull de la barra: ni a les propostes, ni a la fitxa, ni als formularis. Sense l’ull obert, tampoc comprova ni obri cap paper.
+- No obri mai un paper vetat, ni un que no siga el que es va llegir (l’empremta no coincidix).
 - No posa cap dada a l’adreça de la pàgina: els títols de les seccions no porten mai cap nom de paper ni cap valor.
 - No fa reconeixement de text (OCR): un PDF escanejat o xifrat dona un avís i cap proposta.
 
@@ -64,10 +67,14 @@ La fitxa tampoc té on guardar un IBAN, una dada de salut, el codi segur de veri
 - Els quatre formularis són aproximacions declaratives **[A VERIFICAR contra el model vigent]**: els codis de l’òrgan i els camps de cada organisme poden canviar.
 - Un rebuig no es recorda: tornar a llegir el mateix paper el pot tornar a proposar.
 - La lectura s’atura a 60 papers de 10 MB com a molt.
+- **La pestanya oberta amb «Obri’l en una pestanya» no es tanca quan el cofre es bloqueja ni quan prems «Oblida»: tanca-la tu.** Revocar l’adreça impedix obrir-la de nou, però no buida una pestanya que ja l’ha carregada.
+- Que el visor de PDF del navegador obri el paper en la pestanya nova és **[A VERIFICAR]** a Chrome, Safari i Firefox: la política de seguretat de la pàgina podria bloquejar-lo.
+- Un paper de text pla s’obri com a UTF-8: si està escrit en una altra codificació, els accents poden eixir mal.
+- Una carpeta nova no buida les propostes de l’anterior: l’empremta evita que s’obriga un paper d’una altra carpeta amb el mateix nom.
 
 ## Com es desenxufa
 
-«Oblida la carpeta» desenxufa la carpeta, buida la taula, la lectura i les propostes, i torna a amagar els valors; els confirmats es queden a la fitxa. També cancel·la la lectura activa: el paper que ja ha començat acaba, però els seus bytes es descarten i no se’n llig cap més. Bloquejar el cofre (el botó «Bloqueja», 10 minuts sense activitat, 5 amb la pestanya amagada, eixir de la pàgina o d’esta vista) fa el mateix i, a més, buida de la memòria la fitxa desxifrada. Revocar l’aprovació al panell de Tractors bloqueja les lectures següents.
+«Oblida la carpeta» desenxufa la carpeta, buida la taula, la lectura i les propostes, revoca les adreces dels papers comprovats i torna a amagar els valors; els confirmats es queden a la fitxa. També cancel·la la lectura activa: el paper que ja ha començat acaba, però els seus bytes es descarten i no se’n llig cap més. Bloquejar el cofre (el botó «Bloqueja», 10 minuts sense activitat, 5 amb la pestanya amagada, eixir de la pàgina o d’esta vista) fa el mateix i, a més, buida de la memòria la fitxa desxifrada. Revocar l’aprovació al panell de Tractors bloqueja les lectures següents.
 
 ## L’aprovació
 

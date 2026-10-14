@@ -7,6 +7,11 @@
  * l'historial. Aprovar obri DialegAprovacio; revocar és immediat; oblidar-ho
  * tot demana confirmació. Les proves injecten magatzem, subtle, tractors,
  * entorn i rellotge (vegeu useTractors).
+ *
+ * Ordre del Mestre, 13-10-2026 (pla 261013_1930, front 2) · Al servidor de
+ * desenvolupament, i només allí (literal import.meta.env.DEV: fora de DEV el
+ * botó no arriba al paquet), «Aprovar tots els pendents (DEV)» aprova en bloc
+ * pel camí de sempre. És aprovació tècnica: no substituïx la revisió reflexiva.
  */
 import { Copy } from 'lucide-react';
 import { useEffect, useId, useRef, useState } from 'react';
@@ -19,7 +24,7 @@ import { sanitizeHtml } from '../../utils/sanitize.js';
 import { parseMarkdown } from '../wiki-de-poble/parseMarkdown.js';
 import DialegAprovacio, { textError } from './DialegAprovacio.jsx';
 import { empremtaCurta } from './nucli/empremta.js';
-import { useTractors } from './useTractors.js';
+import { esAprovableEnBloc, useTractors } from './useTractors.js';
 
 /* L'estat mai no es diu només amb el color: la insígnia porta el text. */
 const INSIGNIA = Object.freeze({
@@ -111,21 +116,53 @@ function Llista({ elements }) {
   return <ul>{elements.map((element) => <li key={element}>{element}</li>)}</ul>;
 }
 
+/* El resum de l'aprovació en bloc, amb l'estat ja refrescat: si una aprovació
+   desada no deixa el tractor «Aprovat» (un registre vell amb data futura
+   continua manant), compta amb els errors. Els omesos es compten per motiu,
+   perquè demanen coses diferents. SENSE_WEBAUTHN: Touch ID només hi és en
+   context segur, i des d'una IP de la xarxa local s'ometen tots els de
+   signatura (sense esquema: la porta de privacitat no admet cap URL al carril).
+   SERIE_ATURADA: només ix amb WebAuthn present, quan una signatura no s'ha
+   completat; la resta no s'ha provat, i n'hi ha prou amb tornar a clicar. */
+function resumEnBloc({ aprovats, fallits, omesos, files }) {
+  const queda = (id) => files.some((f) => f.id === id && f.estat === 'aprovat');
+  const ometen = (motiu) => omesos.filter((o) => o.motiu === motiu).length;
+  const n = aprovats.filter(({ id }) => queda(id)).length;
+  const m = ometen('SENSE_WEBAUTHN');
+  const a = ometen('SERIE_ATURADA');
+  const k = aprovats.length + fallits.length - n;
+  return `Aprovació en bloc (DEV): ${n} ${n === 1 ? 'aprovat' : 'aprovats'}, ${m} sense signar`
+    + `${m ? ' (cal Touch ID a localhost:3340)' : ''}, ${k} amb error`
+    + `${a ? `, ${a} sense provar (la sèrie s’ha aturat: torna a clicar per a continuar)` : ''}.`;
+}
+
+/* En un lot, el text de SIGNATURA_INVALIDA del diàleg («No s’ha aprovat res»)
+   no és cert: els anteriors de la sèrie sí que s'han aprovat. Ací es diu què
+   ha passat amb este tractor; la resta, al resum. */
+const TITOL_EN_BLOC = Object.freeze({
+  SIGNATURA_INVALIDA: 'La signatura no s’ha completat o no és vàlida: este tractor no s’ha aprovat i la sèrie s’ha aturat ací.'
+});
+
 export default function PanellTractors({ magatzem, subtle, tractors: cataleg, entorn, rellotge }) {
+  const porta = useTractors({ magatzem, subtle, tractors: cataleg, entorn, rellotge });
   const {
     carregant, error, tractors, persistent, webauthn, aprova, revoca, exporta, oblidaTot
-  } = useTractors({ magatzem, subtle, tractors: cataleg, entorn, rellotge });
+  } = porta;
   const [triatId, setTriatId] = useState(null);
   const [aprovant, setAprovant] = useState(false);
   const [obertures, setObertures] = useState(0);
   const [revocant, setRevocant] = useState(false);
+  const [aprovantTots, setAprovantTots] = useState(false);
   const [oblidant, setOblidant] = useState(false);
   const [esborrant, setEsborrant] = useState(false);
   const [avis, setAvis] = useState('');
   const [errorAccio, setErrorAccio] = useState(null);
   const arrel = useRef(null);
+  const titolPorta = useRef(null);
+  const blocTots = useRef(null);
+  const tornaFocus = useRef(false);
   const urlExportat = useRef(null);
-  const idTitol = useId();
+  const idBloc = useId();
   const idPorta = useId();
   const idNom = useId();
   const idEmpremta = useId();
@@ -137,7 +174,20 @@ export default function PanellTractors({ magatzem, subtle, tractors: cataleg, en
     if (urlExportat.current) URL.revokeObjectURL(urlExportat.current);
   }, []);
 
+  /* Mentre treballa, el botó de l'aprovació en bloc està desactivat i el focus
+     cau al document. En acabar torna al botó o, si ja no queda cap pendent, al
+     títol de la porta. Si la persona l'ha dut a un altre lloc, no es toca. */
+  useEffect(() => {
+    if (aprovantTots || !tornaFocus.current) return;
+    tornaFocus.current = false;
+    const boto = blocTots.current?.querySelector('button');
+    const actiu = arrel.current?.ownerDocument.activeElement;
+    if (actiu && actiu !== actiu.ownerDocument.body && actiu !== boto) return;
+    (boto && !boto.disabled ? boto : titolPorta.current)?.focus();
+  }, [aprovantTots]);
+
   const triat = tractors.find((t) => t.id === triatId) ?? tractors[0] ?? null;
+  const pendents = tractors.filter(esAprovableEnBloc).length;
   const m = triat?.manifest;
   const insignia = (t) => INSIGNIA[t.estat] ?? INSIGNIA.pendent;
 
@@ -152,6 +202,29 @@ export default function PanellTractors({ magatzem, subtle, tractors: cataleg, en
     await aprova(id, { nivell, confirmacio, empremta });
     setAprovant(false);
     setAvis(`Aprovat: ${manifest.nom}, versió ${manifest.versio} (${curta}).`);
+  }
+
+  /* Només hi arriba el botó de DEV. Una fallada es diu amb el nom del tractor;
+     la resta, al resum. */
+  async function aprovaTots() {
+    setErrorAccio(null);
+    setAvis('');
+    setAprovantTots(true);
+    try {
+      const resultat = await porta.aprovaTotsPendents();
+      setAvis(resumEnBloc(resultat));
+      const [primer] = resultat.fallits;
+      if (primer) {
+        const { titol, detall } = textError(primer.error);
+        const nom = tractors.find((t) => t.id === primer.id)?.manifest.nom ?? primer.id;
+        setErrorAccio({ titol: `${nom}: ${TITOL_EN_BLOC[primer.error?.codi] ?? titol}`, detall });
+      }
+    } catch (e) {
+      setErrorAccio(textError(e));
+    } finally {
+      tornaFocus.current = true;
+      setAprovantTots(false);
+    }
   }
 
   async function revocaTriat() {
@@ -210,10 +283,25 @@ export default function PanellTractors({ magatzem, subtle, tractors: cataleg, en
 
   return (
     <section ref={arrel} className="sdp-tractors-panell" aria-labelledby={idPorta}>
-      <h3 id={idPorta} className="sdp-tractors-panell__titol">Porta d’aprovació de tractors</h3>
+      <h3 id={idPorta} ref={titolPorta} tabIndex={-1} className="sdp-tractors-panell__titol">Porta d’aprovació de tractors</h3>
       <p>
         Els components comuns de l’app (botons, diàlegs, navegació) no hi entren. Si en canvia una línia, torna a «pendent».
       </p>
+      {import.meta.env.DEV ? (
+        <>
+          <div ref={blocTots} className="sdp-tractors-panell__accions">
+            <Boto varietat="secundari" onClick={aprovaTots} carregant={aprovantTots}
+              disabled={carregant || !pendents} aria-describedby={idBloc}>
+              Aprovar tots els pendents (DEV)
+            </Boto>
+          </div>
+          <p id={idBloc} className="sdp-tractors-panell__motiu">
+            {pendents ? `${pendents} ${pendents === 1 ? 'pendent' : 'pendents'} d’aprovar. ` : 'Cap tractor pendent. '}
+            Aprovació tècnica del servidor de desenvolupament: no substituïx la lectura de la fitxa ni la revisió
+            reflexiva. La primera aprovació després d’un canvi a la porta mateixa es fa d’una en una.
+          </p>
+        </>
+      ) : null}
       {persistent ? null : (
         <Alerta to="avis" viva={false} titol="Este navegador no pot guardar les aprovacions">
           IndexedDB no hi és o no es deixa obrir (passa en algunes finestres privades): les aprovacions només
@@ -310,9 +398,9 @@ export default function PanellTractors({ magatzem, subtle, tractors: cataleg, en
             </section>
 
             <div className="sdp-tractors-panell__accions">
-              <Boto varietat="primari" onClick={obriAprovacio} disabled={!triat.empremta}>Aprova esta versió</Boto>
+              <Boto varietat="primari" onClick={obriAprovacio} disabled={!triat.empremta || aprovantTots}>Aprova esta versió</Boto>
               <Boto varietat="secundari" onClick={revocaTriat} carregant={revocant}
-                disabled={triat.registre?.decisio !== 'aprovat'}>
+                disabled={triat.registre?.decisio !== 'aprovat' || aprovantTots}>
                 Revoca
               </Boto>
             </div>

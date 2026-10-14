@@ -17,7 +17,8 @@ import { ErrorAprovacio, preparaRegistre } from '../../../tractors/nucli/aprovac
 import { validaManifest } from '../../../tractors/nucli/registre.js';
 import { NUCLI_IDENTITAT, TRACTOR_HISTORIC, TRACTOR_IDENTITAT, UI_IDENTITAT } from '../../tractors.js';
 import {
-  CODIS_AVIS_IDENTITAT, CODIS_TRACTOR_IDENTITAT, ErrorIdentitat, LIMITS_IDENTITAT, executaTractorIdentitat, planificaTractorIdentitat
+  CODIS_AVIS_IDENTITAT, CODIS_TRACTOR_IDENTITAT, ErrorIdentitat, LIMITS_IDENTITAT, MIME_PAPER, executaTractorIdentitat, obriPaperIdentitat,
+  planificaTractorIdentitat
 } from './tractorIdentitat.js';
 
 const ARA = Date.UTC(2026, 9, 13, 14, 0, 0);
@@ -401,5 +402,100 @@ describe('límits, errors de la Font i cancel·lació', () => {
     const font = fontEspia();
     const r = await executaTractorIdentitat({ font, aprovacio: APROVACIO, onProgres: () => { throw new Error('pantalla'); } });
     expect(r.llegits).toHaveLength(2);
+  });
+});
+
+/* Front 6 (ordre del Mestre del 14-10-2026, pla 261013_1930: «Fitxa + obrir el PDF»): tornar a obrir UN paper d'una
+   proposta. La mateixa porta abans de tocar la Font; mai un vetat; només PDF i text pla, amb el MIME fix; l'empremta ha
+   de ser la de la proposta; l'eixida, els bytes i el tipus, sense cap text extret. */
+describe('obriPaperIdentitat: tornar a obrir un paper verificat per empremta', () => {
+  const empremtaDe = (ruta) => sha(carpeta()[ruta]);
+  const PDF = '01_Identitat_Legal/vida_laboral.pdf';
+
+  test.each([
+    ['sense aprovació', undefined, 'APROVACIO_REQUERIDA'],
+    ['amb l’aprovació de l’Històric', aprovacioDe(TRACTOR_HISTORIC), 'APROVACIO_REQUERIDA'],
+    ['amb l’empremta divergent', aprovacioDe(TRACTOR_IDENTITAT, { empremta: ALTRA }), 'EMPREMTA_DIVERGENT'],
+    ['amb l’aprovació caducada', aprovacioDe(TRACTOR_IDENTITAT, { ara: ARA + 91 * DIA }), 'APROVACIO_CADUCADA']
+  ])('%s: ErrorAprovacio i cap crida a la Font', async (_cas, aprovacio, codi) => {
+    const font = fontEspia();
+    const error = await errorDe(obriPaperIdentitat({ font, ruta: RUTES.vida, sha256: empremtaDe(RUTES.vida), aprovacio }));
+    expect(error).toBeInstanceOf(ErrorAprovacio);
+    expect(error.codi).toBe(codi);
+    expect(font.llista).not.toHaveBeenCalled();
+    expect(font.llig).not.toHaveBeenCalled();
+  });
+
+  test('un vetat, un de fora, un de l’arxiu o una imatge no s’obrin mai (PAPER_VETAT), encara que l’empremta quadre', async () => {
+    const font = fontEspia();
+    for (const ruta of [RUTES.salut, RUTES.banc, RUTES.renda, RUTES.arxiu, RUTES.fora, RUTES.imatge]) {
+      const error = await errorDe(obriPaperIdentitat({ font, ruta, sha256: empremtaDe(ruta), aprovacio: APROVACIO }));
+      expect(error, ruta).toBeInstanceOf(ErrorIdentitat);
+      expect(error.codi, ruta).toBe('PAPER_VETAT');
+    }
+    expect(font.llig).not.toHaveBeenCalled();
+  });
+
+  test('una extensió que no és PDF ni text pla no s’obri: ni HTML, ni Word, ni un fitxer sense extensió', async () => {
+    const rutes = ['01_Identitat_Legal/vida_laboral.html', '01_Identitat_Legal/vida_laboral.docx', '01_Identitat_Legal/vida_laboral'];
+    const bytes = latin1(VIDA_LABORAL);
+    const font = fontEspia(Object.fromEntries(rutes.map((ruta) => [ruta, bytes])));
+    for (const ruta of rutes) {
+      expect((await errorDe(obriPaperIdentitat({ font, ruta, sha256: sha(bytes), aprovacio: APROVACIO }))).codi, ruta).toBe('PAPER_VETAT');
+    }
+    expect(font.llig).not.toHaveBeenCalled();
+  });
+
+  test('una empremta diferent (ha canviat o és d’una altra carpeta): PAPER_CANVIAT i cap byte a l’eixida', async () => {
+    const font = fontEspia({ [RUTES.vida]: latin1(`${VIDA_LABORAL}\nUna línia de més`) });
+    const error = await errorDe(obriPaperIdentitat({ font, ruta: RUTES.vida, sha256: empremtaDe(RUTES.vida), aprovacio: APROVACIO }));
+    expect(error).toBeInstanceOf(ErrorIdentitat);
+    expect(error.codi).toBe('PAPER_CANVIAT');
+    expect(error.message).toBe('Este paper no és el que es va llegir: ha canviat o és d’una altra carpeta.');
+    expect(llegits(font)).toEqual([RUTES.vida]);
+  });
+
+  test('el MIME és fix per extensió, mai del fitxer; l’eixida porta només els bytes i el tipus, sense cap text extret', async () => {
+    expect(MIME_PAPER).toEqual({ pdf: 'application/pdf', txt: 'text/plain;charset=utf-8' });
+    const font = fontEspia({ ...carpeta(), [PDF]: PDF_AMB_TEXT });
+    /* L'empremta de la proposta es compara sense majúscules. */
+    const txt = await obriPaperIdentitat({ font, ruta: RUTES.vida, sha256: empremtaDe(RUTES.vida).toUpperCase(), aprovacio: APROVACIO });
+    expect(Object.keys(txt).sort()).toEqual(['bytes', 'tipus']);
+    expect(txt.tipus).toBe('text/plain;charset=utf-8');
+    expect(txt.bytes).toBeInstanceOf(Uint8Array);
+    expect(sha(txt.bytes)).toBe(empremtaDe(RUTES.vida));
+    expect(Object.isFrozen(txt)).toBe(true);
+    const pdfObert = await obriPaperIdentitat({ font, ruta: PDF, sha256: sha(PDF_AMB_TEXT), aprovacio: APROVACIO });
+    expect(pdfObert.tipus).toBe('application/pdf');
+    expect(llegits(font)).toEqual([PDF, RUTES.vida].sort());
+    expect(font.llista).not.toHaveBeenCalled();
+  });
+
+  test('un .pdf que no porta «%PDF-», massa gran o illegible: PAPER_ILLEGIBLE; la carpeta desenxufada es diu tal qual', async () => {
+    const fals = latin1('no és cap PDF');
+    const font = fontEspia({ ...carpeta(), [PDF]: fals }, { fallen: { [RUTES.suma]: Object.assign(new Error('no'), { codi: 'FITXER_ILLEGIBLE' }) } });
+    expect((await errorDe(obriPaperIdentitat({ font, ruta: PDF, sha256: sha(fals), aprovacio: APROVACIO }))).codi).toBe('PAPER_ILLEGIBLE');
+    expect((await errorDe(obriPaperIdentitat({
+      font, ruta: RUTES.vida, sha256: empremtaDe(RUTES.vida), aprovacio: APROVACIO, limits: { midaFitxer: 40 }
+    }))).codi).toBe('PAPER_ILLEGIBLE');
+    expect((await errorDe(obriPaperIdentitat({ font, ruta: RUTES.suma, sha256: empremtaDe(RUTES.suma), aprovacio: APROVACIO }))).codi).toBe('PAPER_ILLEGIBLE');
+    const oblidada = Object.assign(new Error('La carpeta s’ha desenxufat.'), { codi: 'FONT_OBLIDADA' });
+    const desenxufada = fontEspia(carpeta(), { fallen: { [RUTES.vida]: oblidada } });
+    expect(await errorDe(obriPaperIdentitat({ font: desenxufada, ruta: RUTES.vida, sha256: empremtaDe(RUTES.vida), aprovacio: APROVACIO }))).toBe(oblidada);
+  });
+
+  test('sense ruta, sense una empremta de 64 xifres, sense Font o ja cancel·lat: cap byte llegit; els codis nous són a la llista', async () => {
+    const font = fontEspia();
+    for (const [ruta, sha256] of [['', empremtaDe(RUTES.vida)], [RUTES.vida, 'abc'], [RUTES.vida, undefined]]) {
+      expect((await errorDe(obriPaperIdentitat({ font, ruta, sha256, aprovacio: APROVACIO }))).codi).toBe('PARAMETRES_INVALIDS');
+    }
+    expect((await errorDe(obriPaperIdentitat({ font: {}, ruta: RUTES.vida, sha256: empremtaDe(RUTES.vida), aprovacio: APROVACIO }))).codi).toBe('FONT_INVALIDA');
+    const controlador = new AbortController();
+    controlador.abort();
+    expect((await errorDe(obriPaperIdentitat({
+      font, ruta: RUTES.vida, sha256: empremtaDe(RUTES.vida), aprovacio: APROVACIO, signal: controlador.signal
+    }))).codi).toBe('LECTURA_CANCELLADA');
+    expect(font.llig).not.toHaveBeenCalled();
+    expect(CODIS_TRACTOR_IDENTITAT).toEqual(expect.arrayContaining(['PAPER_VETAT', 'PAPER_CANVIAT', 'PAPER_ILLEGIBLE']));
   });
 });

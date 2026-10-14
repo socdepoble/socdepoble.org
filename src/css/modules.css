@@ -409,6 +409,34 @@ aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(2) {
 .sdp-workspace-folder-row > .sdp-workspace-nav-item[aria-current="page"] + .sdp-workspace-folder-toggle svg {
   color: var(--sdp-crom-seleccio-text);
 }
+/* Front 1b (pla 261013_1930; decisió del Mestre, 14-10) · Jerarquia de la 1a
+   columna: els contenidors van en --sdp-crom-contenidor-text, la Taronja 400
+   (els contrastos sobre la columna i sobre el vel de hover viuen a tokens.css,
+   al costat del token). Contenidor pur: la capçalera de grup, que només plega.
+   Contenidor-enllaç: la carpeta amb fills, el nom de la qual tria i desplega i
+   és l'únic nom de fila amb aria-expanded (CategoryBranch; ho fixa
+   UniversalWorkspace.arbre.test.jsx), i el seu desplegador, el germà adjacent.
+   El desplegador també és .sdp-workspace-nav-item amb aria-expanded: el
+   selector del nom l'exclou, i només el pinta el del germà, que sap si el nom
+   és l'actiu. Les fulles continuen en --sdp-crom-text, i la cel·la activa no
+   es toca (T62b): cada selector de fila exclou aria-current. Les icones i els
+   xebrons hereten per currentColor (guarda T62b). Combinador de fill i no
+   :has() (Baseline 2022): el títol plegable de la capçalera de columna també
+   és .sdp-workspace-nav-item amb aria-expanded, i ha de quedar fora. */
+.sdp-workspace-group-heading > .sdp-workspace-nav-item,
+.sdp-workspace-folder-row > .sdp-workspace-nav-item[aria-expanded]:not([aria-current="page"]):not(.sdp-workspace-folder-toggle),
+.sdp-workspace-folder-row > .sdp-workspace-nav-item:not([aria-current="page"]) + .sdp-workspace-folder-toggle {
+  color: var(--sdp-crom-contenidor-text);
+}
+/* Amb el ratolí, el blanc de sempre, com «Sistema» (layout.css): sobre el vel
+   de --sdp-crom-hover la Taronja 400 baixaria del 4,5:1. */
+@media (hover: hover) and (pointer: fine) {
+  .sdp-workspace-group-heading > .sdp-workspace-nav-item:hover,
+  .sdp-workspace-folder-row > .sdp-workspace-nav-item[aria-expanded]:not([aria-current="page"]):not(.sdp-workspace-folder-toggle):hover,
+  .sdp-workspace-folder-row > .sdp-workspace-nav-item:not([aria-current="page"]) + .sdp-workspace-folder-toggle:hover {
+    color: var(--sdp-crom-text);
+  }
+}
 .sdp-workspace-nav-item__icon {
   display: inline-flex;
   align-items: center;
@@ -6778,17 +6806,23 @@ details[open] summary.accordion-header svg:last-child {
      base.css posa a tot h3. */
   .sdp-cal-navegacio__titol { flex: 1 1 12rem; min-inline-size: 0; margin: 0; padding-block-end: 0; border-block-end: 0; font-size: var(--sdp-text-h5); font-weight: 400; line-height: 1.2; color: var(--sdp-text-titol); }
   /* El selector de vista: el PillToggle de sèrie sense ombra ni marge,
-     alineat a l'inici i amb radi de targeta (en estret s'apila en dues files).
-     La premuda va en --sdp-accio-control (text blanc a 9,21:1; el --sdp-accio
-     de sèrie en fa 3,87:1) i subratllada: en fosc el fons fa 1,95:1 sobre la
-     targeta, i l'estat s'ha de llegir també sense color (WCAG 1.4.1). */
-  .sdp-cal-vistes { justify-content: flex-start; gap: var(--sdp-space-1); margin: 0; padding: var(--sdp-space-1); border-radius: var(--sdp-radi-m); box-shadow: none; }
+     alineat a l'inici i amb el radi de píndola de la base (.sdp-pindola,
+     --sdp-radi-boto). Sense subratllat, per ordre del Mestre (pla
+     261013_1930, front 4; decisió del 14-10, «blau clar en fosc»): la premuda
+     porta la parella del cercle de hui, --sdp-accio-text de fons i
+     --sdp-text-invers de lletra. En clar és el blau fort amb lletra blanca de
+     sempre; en fosc, el blau clar amb lletra de roca. L'estat es llig per la
+     lluminositat: el fons fa 9,21:1 en clar i 10,32:1 en fosc contra la
+     targeta (3:1 o més, WCAG 1.4.1 i 1.4.11), i la lletra, 9,21:1 i 11,18:1
+     sobre el fons. aria-pressed el diu al lector. En estret (/calendari a
+     375px) les cinc vistes s'apilen en dues files, el contenidor es fa un
+     estadi de 55px de radi i la premuda d'una cantonada (Setmana, Any) n'ix
+     uns 6px per la corba: mesurat el 14-10, pendent de decisió del Mestre. */
+  .sdp-cal-vistes { justify-content: flex-start; gap: var(--sdp-space-1); margin: 0; padding: var(--sdp-space-1); box-shadow: none; }
   .sdp-cal-vistes .sdp-pindola__opcio { padding-inline: var(--sdp-space-3); }
   .sdp-cal-vistes .sdp-pindola__opcio[aria-pressed="true"] {
-    background: var(--sdp-accio-control);
-    color: var(--sdp-sobre-accio);
-    text-decoration: underline;
-    text-underline-offset: var(--sdp-space-1);
+    background: var(--sdp-accio-text);
+    color: var(--sdp-text-invers);
   }
 
   /* Agenda (VistaAgenda). Fase visual (prompt 261001_0445) · La superfície de
@@ -10555,6 +10589,17 @@ details[open] summary.accordion-header svg:last-child {
     font-size: var(--sdp-text-small);
     overflow-wrap: anywhere;
   }
+  /* Front 6 (ordre del Mestre del 14-10-2026, pla 261013_1930): a «D’on ix», cada paper és un <details>. El
+     <summary> amb la ruta té l'àrea tàctil de Pedra Seca; el cos (el tipus, la data, la regla i l'empremta) va sense
+     el sagnat de sèrie de <dd>, que en una cel·la estreta no hi cap. Els dos passos per a obrir-lo són dins de
+     __accions, que ja no s'imprimix. */
+  .sdp-gestoria-finestreta__paper > summary {
+    min-block-size: var(--sdp-touch);
+    cursor: pointer;
+  }
+  .sdp-gestoria-finestreta__dades-paper { margin: 0; }
+  .sdp-gestoria-finestreta__dades-paper > dd { margin: 0 0 var(--sdp-space-1); }
+  .sdp-gestoria-finestreta__empremta { font-family: var(--sdp-font-mono); }
   .sdp-gestoria-finestreta__valor {
     font-family: var(--sdp-font-mono);
     overflow-wrap: anywhere;

@@ -1,13 +1,13 @@
 ---
 type: prompt
 status: esborrany
-description: 'Encàrrec executiu per a Claude Code: estil taronja per a carpetes i desplegables, aprovació en bloc de tractors i operativitat de dades.'
+description: 'Encàrrec adversarial per a GPT Codex: sanejament de 01_produccio, verificació de trasllat del laboratori IA i optimització de la consola.'
 tags:
   - govern
 visibility: private
-reflex: sdp:torn_42485a7d-4411-457d-b7e2-f591b38cc2b2:14849e01-f0b5-49f7-b8e8-6a9ff5d2cfab
+reflex: sdp:torn_dda495f1-6c4b-4301-88d9-2c306ea24d80:9b92a697-0e3c-4022-af7e-d05b29b47a46
 ---
-# Prompt Local per a Claude Code — Jerarquia Taronja, Aprovació Ràpida i Operativitat
+# Prompt Local per a GPT Codex — Auditoria Adversarial de Producció, Laboratori IA i Consola
 
 Aquesta plantilla estableix les instruccions tècniques i el context arquitectònic per a agents locals (Claude/Codex).
 
@@ -15,30 +15,32 @@ Aquesta plantilla estableix les instruccions tècniques i el context arquitectò
 ## 0. Preflight (Per a l'agent orquestrador)
 
 - Pla d'Implementació vigent: `_wiki_de_poble/04_escriptori/261013_1930_pla_implementacio_jerarquia_taronja_i_operativitat.md`.
+- Estudi de Destil·lació del Laboratori IA: `_wiki_de_poble/04_escriptori/261013_1600_estudi_destil_laboratori_ia.md`.
 - Estat de l'Escriptori: Net (Porta Olivera en 0).
-- Suite de proves de referència: 17.283 proves verdes. Cap regressió permesa.
+- Rol assignat a GPT Codex: **Revisor Adversarial i Sanejador Forense** de `01_produccio/`, `02_investigacio_ia/` i la Consola.
 
 <!-- SDP:SECTION prompt.local.s1 -->
 ## Registre
 
 | Camp | Valor |
 | --- | --- |
-| Identificador | sdp:torn_42485a7d-4411-457d-b7e2-f591b38cc2b2:14849e01-f0b5-49f7-b8e8-6a9ff5d2cfab |
+| Identificador | sdp:torn_dda495f1-6c4b-4301-88d9-2c306ea24d80:9b92a697-0e3c-4022-af7e-d05b29b47a46 |
 | Versió del document | 1.0.0 |
 | Entorn | entorn-dev-local |
-| Creació | 2026-10-13T17:30:15.298Z |
-| Modificació | 2026-10-13T17:32:00.000Z |
+| Creació | 2026-10-13T21:56:03.987Z |
+| Modificació | 2026-10-13T22:00:00.000Z |
 | Propietari | agent-local |
-| Aprovació humana | aprovat (ordre directa del Mestre Javi) |
+| Aprovació humana | aprovat (ordre directa del Mestre per àudio) |
 | Plantilla | _wiki_de_poble/03_actuar/plantilles/prompt_local.md (v3.7.0) |
-| Model IA | Claude Code / Claude 3.7 Sonnet |
+| Model IA | GPT Codex / ChatGPT Codex |
 | Tokens consumits | [pendent d'execució] |
 
 <!-- SDP:SECTION prompt.local.s2 -->
 ## Historial
 
-2026-10-13T17:30:15.298Z: esborrany creat.
-2026-10-13T17:32:00.000Z: encàrrec completat i llest per a execució autònoma per part de Claude Code.
+2026-10-13T21:56:03.987Z: esborrany creat.
+2026-10-13T22:00:00.000Z: encàrrec completat i llest per a execució autònoma per part de GPT Codex.
+2026-10-14T01:50:00.000Z: DESCONVOCATÒRIA EMESA («Cadascuna a sa casa»). Informe emés a `261014_0002_auditoria_codex.md`. Claude ha lliurat els 6 fronts amb 17.458 proves verdes. S'ordena l'aturada immediata de qualsevol cron recurrent per preservar la quota setmanal (63% restant).
 
 <!-- SDP:SECTION prompt.local.s3 -->
 ## Context Tècnic i Arquitectònic
@@ -61,38 +63,25 @@ Tot el que construïm al frontend (Consola, UI, etc.) té un únic objectiu fona
 <!-- SDP:SECTION prompt.local.s_instruccio -->
 ## Instrucció del torn
 
-Executar de forma rigorosa i autònoma els canvis especificats al Pla d'Implementació (`261013_1930_pla_implementacio_jerarquia_taronja_i_operativitat.md`):
-1. **Jerarquia Taronja de Carpetes i Desplegables:** Convertir visualment tots els contenidors/desplegables en color taronja de marca (`--sdp-accent-taronja` / `--sdp-orange`), tant a la Sidebar de navegació principal com a la columna de navegació de l'espai de treball (`UniversalWorkspace`), diferenciant radicalment contenidors de documents finals.
-2. **Fast-Pass d'Aprovació de Tractors en DEV:** Implementar la funció i botó d'aprovació massiva de tractors pendents en entorn de desenvolupament local (`import.meta.env.DEV`), evitant la fatiga de 10 clics manuals després de cada canvi tècnic de codi.
-3. **Validació d'Operativitat de Xarxa:** Assegurar que la commutació entre `seed` i `remote` i la visibilitat de les entitats i el xat funcioni d'acord amb el contracte de backend.
-4. **Disseny de la Botonera de Vistes (`modules.css`):** Corregir la regla `.sdp-cal-vistes`: retirar el subratllat prohibit (`text-decoration: underline`) en `[aria-pressed="true"]` i assignar el radi de càpsula `--sdp-radius-pill` de Pedra Seca.
-5. **Accessibilitat i Selecció Massiva a «Què llegiré i què no» (`Finestreta.jsx`, `useFinestreta.js`):** Implementar selecció en bloc (`marcaTotsDemanar()` / `desmarcaTotsDemanar()`) amb botó ràpid accessible a la capçalera de la taula de la Finestreta perquè l'usuari no haja de clicar desenes de vegades manualment per a papers amb nom opac/hash.
+Executar una **auditoria adversarial forense** sobre tres fronts d'higiene i sostenibilitat del projecte:
+1. **Auditoria de Zona de Producció (`04_escriptori/01_produccio/`):** Classificar exhaustivament els 27 elements (10 carpetes i 17 fitxers) que hi habiten. Determinar quins elements han estat integrats al codi font (ex. clons Loyverse i WhatsApp a `UniversalWorkspace`), quins són duplicats obsolets (ex. els 5 formats de `checklist-limpieza-wp-ayudawp` i `Alergenos-ES_COPIA-ES_POT_BORRAR`), i quins recursos gràfics o audios originals s'han de protegir intactes. Proposar una matriu d'arxivat segura cap a `90_arxiu_historic/`.
+2. **Revisió de Destil·lació del Laboratori IA (`04_escriptori/02_investigacio_ia/`):** Contrastar l'estudi `261013_1600_estudi_destil_laboratori_ia.md`. Validar si les 19 entrades proposades per al trasllat a l'arxiu històric tenen cap dependència oculta a les suites de test (`src/apps/bar/llavors/laParroquia.test.js` o scripts de `tooling/`).
+3. **Auditoria de Sanejament de la Consola Termodinàmica:** Inspeccionar el codi de la consola (`src/pages/admin/SolatgeConsole.jsx`, components del panell de control) per identificar targetes inactives, mètriques orfes o blocs de sediment que calga netejar perquè el tauler siga àgil, clar i sense sobrecàrrega.
 
 <!-- SDP:SECTION prompt.local.s4 -->
 ## Tasques
 
-- [ ] **Tasca 1 (Sidebar Principal):** Aplicar identitat visual taronja a `.nav-item--desplegable` («Sistema») a `src/css/layout.css` i `src/app/App.jsx`.
-- [ ] **Tasca 2 (Espai de Treball `UniversalWorkspace`):** 
-  - Estilitzar els encapçalaments de grup (`.sdp-workspace-group-heading button`) amb color taronja de capçalera a `src/css/modules.css`.
-  - Estilitzar les files de carpetes amb fills (`.sdp-workspace-folder-row` amb `hasChildren`) per ressaltar la icona i l'etiqueta en to taronja de contenidor de Pedra Seca.
-- [ ] **Tasca 3 (Aprovació Ràpida de Tractors):** 
-  - Afegir el mètode `aprovaTotsPendents()` a `src/sections/tractors/useTractors.js`.
-  - Afegir el botó `Aprovar tots (DEV)` a `src/sections/tractors/PanellTractors.jsx` visible només en `import.meta.env.DEV`.
-  - Adaptar i ampliar `PanellTractors.test.jsx`.
-- [ ] **Tasca 4 (Botonera de Vistes):** A `src/css/modules.css:6785-6792`, retirar `text-decoration: underline` i aplicar `border-radius: var(--sdp-radius-pill)`.
-- [ ] **Tasca 5 (Finestreta - Selecció Massiva de Papers Opacs):** 
-  - A `src/sections/gestoria/finestreta/useFinestreta.js`, afegir `marcaTotsDemanar()` i `desmarcaTotsDemanar()`.
-  - A `src/sections/gestoria/finestreta/Finestreta.jsx`, afegir botons o accions ràpides d'accessibilitat («Marca tots els pendents» / «Desmarca tots») a la taula `Què llegiré i què no`.
-  - Actualitzar `Finestreta.test.jsx` i `useFinestreta.test.jsx`.
-- [ ] **Tasca 6 (Finestreta - Inspecció de Fonts a «D'on ix»):** Permetre obrir o consultar el document / fragment d'origen des de les rutes llistades a «D'on ix» per facilitar la resolució de camps en conflicte.
-- [ ] **Tasca 7 (Verificació de Proves):** Llançar les suites de test corresponents i verificar que totes les proves mantenen el 100% verd.
-- [ ] **Tasca 8 (Auditoria):** Emetre l'informe final a `_wiki_de_poble/04_escriptori/261013_HHMM_auditoria_claude.md`.
+- [ ] **Tasca 1 (Forense de `01_produccio`):** Elaborar una taula de triatge de tots els elements de `04_escriptori/01_produccio/`: estat (integrat / duplicat / actiu humà), justificació i acció recomanada (conservar / arxivar a 90_historic / quarantena).
+- [ ] **Tasca 2 (Verificació de laboratori IA):** Comprovar l'impacte en Vitest de les 19 entrades marcades per a trasllat a `261013_1600_estudi_destil_laboratori_ia.md`.
+- [ ] **Tasca 3 (Auditoria Consola Termodinàmica):** Revisar `SolatgeConsole.jsx` i `modules.css` per a detectar elements de disseny morts o no conformes amb Pedra Seca.
+- [ ] **Tasca 4 (Auditoria d'Invariants de la Gestoria):** Contrastar les noves peces d'Escàner Local i Finestreta amb els invariants financers de partida doble i integritat de dades.
+- [ ] **Tasca 5 (Informe Final):** Redactar l'auditoria a `_wiki_de_poble/04_escriptori/261013_HHMM_auditoria_codex.md` sense tocar ni esborrar directament cap arxiu de `01_produccio` (AGENTS §12).
 
 <!-- SDP:SECTION prompt.local.s5 -->
 ## Riscos
 
-- **Contrast WCAG AA:** Verificar que els tons taronges utilitzats sobre fons clar compleixen la ràtio de contrast mínim de 4.5:1.
-- **Aïllament DEV:** El botó d'aprovació massiva sota cap concepte ha d'arribar al bundle de producció de WordPress o Sollutia.
+- **Zona Humana Sagrada (AGENTS §12):** La IA no pot esborrar ni moure unilateralment cap fitxer de `01_produccio/`. Tota proposta s'ha d'emetre com a dictamen perquè el Mestre o MarIA l'aprove.
+- **Trencament de Proves:** Comprovar que cap trasllat de laboratori trenque suites actives abans de recomanar-ne l'arxiu.
 
 <!-- SDP:SECTION prompt.local.s6 -->
 ## Protocol d'Interacció i Sortida

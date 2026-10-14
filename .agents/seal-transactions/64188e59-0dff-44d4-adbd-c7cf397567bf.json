@@ -1,0 +1,17 @@
+{
+  "id": "64188e59-0dff-44d4-adbd-c7cf397567bf",
+  "session": "0ffd451a-0c2a-4c91-8fe6-ba52fb28ab9c",
+  "operationId": "sdp-auditoria-codex-relleu-estat-261014",
+  "claim": "0ffd451a-0c2a-4c91-8fe6-ba52fb28ab9c:governance-write",
+  "planHash": "94178b1f112d0d88325ff74ea37a25b658aebe6f1c3b719a46ad321e83fa5270",
+  "beforeSeal": "2b7dfcfbd0a9fc8c91fbfe09435b14f274326a7916cfe10c1b4c68e5fbe24d94",
+  "files": [
+    {
+      "path": ".agents/ESTAT.md",
+      "before": "f2796bab4a48e2a3fc674552d6111012292044b5563cba3404fa037b57d12b5a",
+      "after": "db56b171df001afd347fc860f947d1763c162efeadfd365833d77ab4d2d53e82"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "037d6f8bb955504b3c57690510c31256c043225b63eaa38c261907313b3ec026"
+}

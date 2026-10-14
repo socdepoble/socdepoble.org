@@ -27,7 +27,7 @@
  * pilot i de Javi vénen d'identitatsSeed i agentsSeed, perquè el perfil, el
  * xat i el Mercat parlen de la mateixa identitat.
  */
-import { BENVINGUDA_IAIA, ENTITAT_PILOT_ID, ENTITATS_SEED, IAIA_ID, PERSONA_PILOT } from './identitatsSeed.js';
+import { BENVINGUDA_IAIA, ENTITAT_PILOT_ID, IAIA_ID, PERSONA_PILOT, entitatSeed } from './identitatsSeed.js';
 import { AGENTS_MAP } from './agentsSeed.js';
 import { ID_FIL_BETA_TESTERS_LLAVOR } from './xatsPerDefecte.js';
 import { rutaDePerfil } from '../config/navigation.js';
@@ -37,6 +37,9 @@ const DIA_MS = 86400000;
 const JAVI = AGENTS_MAP.JAVI.id;
 const IAIA = IAIA_ID;
 const ENTITAT = ENTITAT_PILOT_ID;
+/* Front 3 (261013) · La fitxa de l'entitat pilot es busca pel seu id, no per
+   la posició: el padró d'entitats ja en porta més d'una (Rentonar). */
+const PILOT = entitatSeed(ENTITAT_PILOT_ID);
 const FIL_IAIA = '7c2a1d9e-3b4f-4a5c-9d6e-1f2a3b4c5d04';
 /* Identificadors nous: els acabats en 01, 02, 03 i 05 eren de les converses
    retirades i no es tornen a fer servir. */
@@ -59,11 +62,17 @@ export const XAT_SEED_IDS = Object.freeze({
 export const XAT_SEED_NOMS = Object.freeze({
   [JAVI]: AGENTS_MAP.JAVI.avatarName,
   [IAIA]: AGENTS_MAP.IAIA.name,
-  [ENTITAT]: ENTITATS_SEED[0].name
+  [ENTITAT]: PILOT.name
 });
 
 /* Padró del poble: a qui es pot escriure. La persona pilot, l'entitat pilot i
    la IAIA, cadascú amb el seu tipus perquè la interfície ho diga.
+   Front 3 (261013) · Rentonar no hi és: este padró és el que llisten
+   «Conversa nova» i el Cercador (els tres fundacionals de l'Onada 10), i
+   afegir-la és una decisió del Mestre. «Escriu-li al xat» de la seua fitxa
+   l'obri igualment: com crea_fil_directe, localXat.creaFilDirecte accepta
+   qualsevol entitat del padró d'entitats (identitatsSeed · ENTITATS_SEED).
+   En la llavor ningú no l'administra (rolALEntitat), i ningú no contesta.
    Onada 12 (261011; ordres 261011_0130, punt 3, D-09) · Javi porta la foto del
    padró pilot (PERSONA_PILOT.avatar, identitatsSeed.js), la mateixa del seu
    perfil, del Cercador i de les targetes que signa. Fins ara anava sense
@@ -72,14 +81,14 @@ export const XAT_SEED_NOMS = Object.freeze({
    d'identitats, mai d'una ruta escrita ací. */
 export const XAT_SEED_MEMBRES = Object.freeze([
   Object.freeze({ usuariId: JAVI, nom: XAT_SEED_NOMS[JAVI], tipus: 'persona', avatarUrl: PERSONA_PILOT.avatar }),
-  Object.freeze({ usuariId: ENTITAT, nom: XAT_SEED_NOMS[ENTITAT], tipus: 'entitat', avatarUrl: ENTITATS_SEED[0].logo_url }),
+  Object.freeze({ usuariId: ENTITAT, nom: XAT_SEED_NOMS[ENTITAT], tipus: 'entitat', avatarUrl: PILOT.logo_url }),
   Object.freeze({ usuariId: IAIA, nom: XAT_SEED_NOMS[IAIA], tipus: 'ia', avatarUrl: AGENTS_MAP.IAIA.avatar_url })
 ]);
 
 /* La Pàgina Universal d'on naix la comunitat: el perfil públic de l'entitat
    pilot, amb la mateixa ruta que fa servir la resta de l'app. */
 const SUBJECTE_ENTITAT = Object.freeze({
-  tipus: 'entitat', id: ENTITAT, ruta: rutaDePerfil('entitat', ENTITAT), titol: ENTITATS_SEED[0].name
+  tipus: 'entitat', id: ENTITAT, ruta: rutaDePerfil('entitat', ENTITAT), titol: PILOT.name
 });
 
 const idMissatge = (n) => `a1b2c3d4-0000-4000-8000-${String(n).padStart(12, '0')}`;
@@ -160,7 +169,7 @@ export function construeixLlavorXat(joId, ara = Date.now()) {
   const fils = [
     fil(FIL_IAIA, 'iaia', a(1, 8, 59)),
     fil(FIL_COMUNITAT, 'comunitat', a(2, 10, 0), {
-      titol: ENTITATS_SEED[0].name, orgId: ENTITAT, imatgeUrl: ENTITATS_SEED[0].logo_url, subjecte: subjecte()
+      titol: PILOT.name, orgId: ENTITAT, imatgeUrl: PILOT.logo_url, subjecte: subjecte()
     }),
     fil(FIL_AVISOS, 'canal', a(2, 10, 0), { titol: 'Avisos', orgId: ENTITAT, comunitatId: FIL_COMUNITAT, subjecte: subjecte() }),
     fil(FIL_GENERAL, 'grup', a(2, 10, 0), { titol: 'General', comunitatId: FIL_COMUNITAT, subjecte: subjecte() }),

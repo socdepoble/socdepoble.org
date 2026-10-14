@@ -11,7 +11,8 @@ const ARREL = process.cwd();
 const CARRIL = 'src/sections/tractors';
 const CODI = ['registreTractors.js', 'useTractors.js', 'PanellTractors.jsx', 'DialegAprovacio.jsx'].map((f) => `${CARRIL}/${f}`);
 const PROVES = [
-  'registreTractors.test.js', 'useTractors.test.jsx', 'PanellTractors.test.jsx', 'DialegAprovacio.test.jsx', 'qualitat.test.js'
+  'registreTractors.test.js', 'useTractors.test.jsx', 'PanellTractors.test.jsx', 'PanellTractors.produccio.test.js',
+  'DialegAprovacio.test.jsx', 'qualitat.test.js'
 ].map((f) => `${CARRIL}/${f}`);
 const llig = (ruta) => readFileSync(path.join(ARREL, ruta), 'utf8');
 

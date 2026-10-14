@@ -613,7 +613,7 @@ comptes temporals i els retira en `finally`; no admet una URL remota.
 - Les taules `chat_threads` i `chat_messages` són una **làpida**: el frontend ja
   no les usa. Es mantenen perquè `seed.sql` encara les omple i per compatibilitat de dades antigues. `loadAppData()` accepta una base buida i
   no fusiona converses o notes seed amb dades remotes.
-- El frontend admet `VITE_DATA_MODE=auto|supabase|hybrid|seed|local`.
+- El frontend admet `VITE_DATA_MODE=remote|seed|local`; qualsevol altre valor, o cap, és `remote` (`src/config/dataMode.js`).
 - Regenerar el SQL de dades seed és una mutació governada i requerix el segell
   criptogràfic de `canonada.mjs`.
 

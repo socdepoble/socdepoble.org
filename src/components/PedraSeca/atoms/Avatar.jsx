@@ -28,8 +28,16 @@
  * desplaça fins al tros que diu el nom (modules.css, .sdp-avatar--enquadrat-*):
  * la cara d'una il·lustració sense cap fitxer nou. Sense la prop, o amb un nom
  * que no és de la llista, l'Avatar de sempre.
+ *
+ * XAT-02 (ordre del Mestre, 261014, pla 261014_0210) · Una referència opaca
+ * del port de mitjans ('sdp-media://…', esMitjaOpac) és una font absent: el
+ * filtre de seguretat l'admet, però el navegador no la sap carregar
+ * (ERR_UNKNOWN_URL_SCHEME). Es pinten les inicials, com sense imatge; qui la
+ * vol veure la resol abans pel port (AvatarResolt, CaraXat). Qualsevol altra
+ * font, igual que abans (Llei del Píxel).
  */
 import { esFontImatgeSegura } from '../../../utils/sanitize.js';
+import { esMitjaOpac } from '../../../utils/mitjaOpac.js';
 import { resolRecursPropi } from '../../../config/assetResolver.js';
 
 const MIDES = ['xs', 'sm', 'md', 'lg', 'xl'];
@@ -54,7 +62,7 @@ export function Avatar({ nom, src = null, mida = 'md', className, llavor = null,
 
   const font = resolRecursPropi(src);
   let safeSrc = null;
-  if (font && esFontImatgeSegura(font)) {
+  if (font && !esMitjaOpac(font) && esFontImatgeSegura(font)) {
     safeSrc = font;
   }
 

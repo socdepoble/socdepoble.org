@@ -5,11 +5,13 @@
    d'un IndexedDB fals (tests/helpers/idbFals.js), la porta d'aprovació amb el
    catàleg del manifest i un autenticador WebAuthn simulat. Es mira: sense
    cofre obert, res; sense aprovació, «Cal aprovar el tractor»; la taula abans
-   de llegir; els valors amagats fins a l'ull; confirmar desa xifrat i només
+   de llegir, amb els opacs marcats de colp sense llegir-ne cap; els valors
+   amagats fins a l'ull; confirmar desa xifrat i només
    el confirmat; la Finestreta copia dins del clic i imprimix un esborrany; el
-   bloqueig ho buida; cap títol porta dades. Papers sintètics; el NIF es
-   genera calculant-ne la lletra. */
-import { webcrypto } from 'node:crypto';
+   bloqueig ho buida; cap títol porta dades; i (Front 6) «D’on ix» amb el
+   tipus, la data, la regla i l'empremta de cada paper, i els dos passos per a
+   obrir-lo. Papers sintètics; el NIF es genera calculant-ne la lletra. */
+import { createHash, webcrypto } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
@@ -22,9 +24,13 @@ import { construixTractor, empremtaDe } from '../../tractors/registreTractors.js
 import { ID_UNIC, creaCofreLocal, persistenciaDelCofre } from '../cofre/cofre.js';
 import { NOM_BD_COFRE } from '../cofre/magatzemCofre.js';
 import { TRACTOR_IDENTITAT } from '../tractors.js';
-import Finestreta, { AVIS_SENSE_SIGNAR, COLLECCIO_IDENTITAT, ETIQUETES_CAMPS, TITULAR_FINESTRETA, autorDe, valorEnText } from './Finestreta.jsx';
+import Finestreta, {
+  AVIS_SENSE_SIGNAR, COLLECCIO_IDENTITAT, ETIQUETES_CAMPS, ETIQUETES_TIPUS_PAPER, TITULAR_FINESTRETA, autorDe, valorEnText
+} from './Finestreta.jsx';
+import { TIPUS_DOCUMENT_IDENTITAT } from './nucli/filtreDocuments.js';
 import { afegixRepresentacio, afegixTitular, entraAMa, fitxaBuida, nouIdFitxa, perAlCofre } from './nucli/fitxaIdentitat.js';
 import { FORMULARIS, VERIFICAR } from './nucli/formularisFinestreta.js';
+import { LIMITS_IDENTITAT } from './nucli/tractorIdentitat.js';
 import { CAMPS_IDENTITAT } from './nucli/validadorsIdentitat.js';
 
 const subtle = webcrypto.subtle;
@@ -52,6 +58,8 @@ const RUTES = Object.freeze({
   opac: '01_Identitat_Legal/escanejat_0001.txt',
   salut: '01_Identitat_Legal/informe_medico.txt'
 });
+/* Un segon opac, fora de RUTES: la prova del front D compta cada nom de RUTES a la taula. */
+const OPAC2 = '01_Identitat_Legal/escanejat_0002.txt';
 const PRIVATS = ['ROSA', 'FERRANDO', 'PUIG', PERSONA, 'SENTINELLA'];
 const fitxer = (ruta, text) => {
   const dades = new TextEncoder().encode(text);
@@ -93,16 +101,17 @@ async function magatzemAprovat() {
   return magatzem;
 }
 
-async function munta({ cofre, magatzem, titular = null } = {}) {
+async function munta({ cofre, magatzem, titular = null, entorn = entornTractors } = {}) {
   const copia = vi.fn(() => Promise.resolve());
   const imprimix = vi.fn();
+  const obriPaper = vi.fn();
   const vista = render(
     <MemoryRouter rutaInicial="/app/gestoria/identitat">
       <Finestreta cofre={cofre} titular={titular} magatzem={magatzem ?? await magatzemAprovat()} subtle={subtle} tractors={TRACTORS}
-        entorn={entornTractors} rellotge={rellotge} copia={copia} imprimix={imprimix} />
+        entorn={entorn} rellotge={rellotge} copia={copia} imprimix={imprimix} obriPaper={obriPaper} />
     </MemoryRouter>
   );
-  return { ...vista, copia, imprimix };
+  return { ...vista, copia, imprimix, obriPaper };
 }
 
 async function cofreObert() {
@@ -154,6 +163,10 @@ function titolsNets() {
 describe('les peces pures de la vista', () => {
   test('cada camp de la fitxa té el seu nom en valencià', () => {
     expect(Object.keys(CAMPS_IDENTITAT).filter((camp) => !ETIQUETES_CAMPS[camp])).toEqual([]);
+  });
+
+  test('cada tipus de paper del filtre té el seu nom en valencià a «D’on ix», i cap més', () => {
+    expect(Object.keys(ETIQUETES_TIPUS_PAPER).sort()).toEqual([...TIPUS_DOCUMENT_IDENTITAT].sort());
   });
 
   test('l’autoria: la persona de la sessió amb la seua pàgina, o la veritat sense configurar', () => {
@@ -260,6 +273,76 @@ describe('de la carpeta a la fitxa', () => {
     titolsNets();
   });
 
+  test('els opacs de colp: «Marca tots els pendents» i «Desmarca tots», amb l’anunci, el focus al germà i cap casella per al de salut', async () => {
+    const { cofre } = await cofreObert();
+    const { container } = await munta({ cofre });
+    const input = await screen.findByLabelText(ETIQUETA_CARPETA, {}, { timeout: 5000 });
+    const llista = [fitxer(RUTES.vida, VIDA_LABORAL), fitxer(RUTES.opac, VIDA_LABORAL), fitxer(OPAC2, VIDA_LABORAL), fitxer(RUTES.salut, VIDA_LABORAL)];
+    fireEvent.change(input, { target: { files: llista } });
+    const grup = await screen.findByRole('group', { name: 'Papers de nom opac' }, { timeout: 5000 });
+    const casella = (ruta) => screen.getByRole('checkbox', { name: `Llig-lo: ${ruta}` });
+    const boto = (nom) => within(grup).getByRole('button', { name: nom });
+    expect(boto('Desmarca tots').disabled).toBe(true);
+
+    /* Amb un opac marcat a mà, el botó compta només els pendents. */
+    fireEvent.click(casella(RUTES.opac));
+    expect(boto('Marca tots els pendents (1)').disabled).toBe(false);
+    fireEvent.click(casella(RUTES.opac));
+
+    const marca = boto('Marca tots els pendents (2)');
+    marca.focus();
+    fireEvent.click(marca);
+    expect(casella(RUTES.opac).checked).toBe(true);
+    expect(casella(OPAC2).checked).toBe(true);
+    expect(screen.getByRole('button', { name: 'Llig els 3 papers' })).toBeTruthy();
+    expect(boto('Marca tots els pendents (0)').disabled).toBe(true);
+    const anunci = screen.getByText('Marcats 2 papers de nom opac: encara no se n’ha llegit cap.');
+    expect(anunci.getAttribute('role')).toBe('status');
+    /* El botó clicat s'ha desactivat: el focus passa al germà, no al body. */
+    expect(document.activeElement).toBe(boto('Desmarca tots'));
+    /* Marcar no és llegir; el de salut no té casella; cap nom de paper al grup ni a l'anunci. */
+    expect(llista.some((f) => f.arrayBuffer.mock.calls.length)).toBe(false);
+    const taula = screen.getByRole('region', { name: 'Els papers de la carpeta i la decisió' });
+    expect(within(within(taula).getByText(RUTES.salut).closest('tr')).queryByRole('checkbox')).toBeNull();
+    for (const ruta of [...Object.values(RUTES), OPAC2]) {
+      const nom = ruta.split('/').pop();
+      expect(grup.textContent, nom).not.toContain(nom);
+      expect(anunci.textContent, nom).not.toContain(nom);
+    }
+    expect(nomsSenseEtiquetaVisible(container)).toEqual([]);
+
+    fireEvent.click(boto('Desmarca tots'));
+    expect(casella(RUTES.opac).checked).toBe(false);
+    expect(casella(OPAC2).checked).toBe(false);
+    expect(screen.getByRole('button', { name: 'Llig el paper' })).toBeTruthy();
+    expect(anunci.textContent).toBe('Desmarcats tots els papers de nom opac.');
+    expect(boto('Desmarca tots').disabled).toBe(true);
+    expect(document.activeElement).toBe(boto('Marca tots els pendents (2)'));
+    expect(llista.some((f) => f.arrayBuffer.mock.calls.length)).toBe(false);
+  });
+
+  test('més papers dels que es lligen de colp: la nota al costat de «Llig…», també a l’anunci, i cap llegit', async () => {
+    const { cofre } = await cofreObert();
+    await munta({ cofre });
+    const input = await screen.findByLabelText(ETIQUETA_CARPETA, {}, { timeout: 5000 });
+    const n = LIMITS_IDENTITAT.fitxers + 1;
+    const ruta = (i) => `01_Identitat_Legal/escanejat_${String(i).padStart(4, '0')}.txt`;
+    const llista = Array.from({ length: n }, (_, i) => fitxer(ruta(i), 'res'));
+    fireEvent.change(input, { target: { files: llista } });
+    const grup = await screen.findByRole('group', { name: 'Papers de nom opac' }, { timeout: 5000 });
+    fireEvent.click(within(grup).getByRole('button', { name: `Marca tots els pendents (${n})` }));
+    const avis = `Com a molt ${LIMITS_IDENTITAT.fitxers} papers de colp: n’hi ha ${n} per llegir. Desmarca’n algun.`;
+    const nota = screen.getByText(avis);
+    expect(screen.getByRole('button', { name: `Llig els ${n} papers` }).getAttribute('aria-describedby')).toBe(nota.id);
+    expect(screen.getByText(`Marcats ${n} papers de nom opac: encara no se n’ha llegit cap. ${avis}`).getAttribute('role')).toBe('status');
+    expect(llista.some((f) => f.arrayBuffer.mock.calls.length)).toBe(false);
+
+    /* Un de menys i ja hi cap: la nota se'n va. */
+    fireEvent.click(screen.getByRole('checkbox', { name: `Llig-lo: ${ruta(0)}` }));
+    expect(document.getElementById(nota.id)).toBeNull();
+    expect(screen.getByRole('button', { name: `Llig els ${LIMITS_IDENTITAT.fitxers} papers` }).hasAttribute('aria-describedby')).toBe(false);
+  });
+
   test('la Finestreta: copia dins del clic, l’esborrany només amb l’ull obert, i diu que no signa ni presenta', async () => {
     const { cofre } = await cofreObert();
     const { copia, imprimix, container } = await munta({ cofre });
@@ -331,6 +414,8 @@ describe('de la carpeta a la fitxa', () => {
     const input = await screen.findByLabelText(ETIQUETA_CARPETA, {}, { timeout: 5000 });
     fireEvent.change(input, { target: { files: [fitxer(RUTES.vida, VIDA_LABORAL), fitxer(RUTES.opac, VIDA_LABORAL)] } });
     const casella = await screen.findByRole('checkbox', { name: `Llig-lo: ${RUTES.opac}` }, { timeout: 5000 });
+    /* I els botons de la marca de colp, que es diuen pel seu text. */
+    expect(screen.getByRole('group', { name: 'Papers de nom opac' })).toBeTruthy();
     expect(nomsSenseEtiquetaVisible(container)).toEqual([]);
 
     /* Els papers diuen un altre nom que el confirmat: «Confirma este» i «Rebutja’l» a la fitxa, i les propostes. */
@@ -357,6 +442,136 @@ describe('de la carpeta a la fitxa', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Desa’l a mà' }));
     const fitxa = await screen.findByRole('region', { name: 'La teua fitxa · Persona titular' });
     expect(within(fitxa).getByText('Entrat a mà')).toBeTruthy();
+  });
+});
+
+/* Front 6 (ordre del Mestre del 14-10-2026, pla 261013_1930: «Fitxa + obrir el PDF», per a resoldre els camps en
+   conflicte): a «D’on ix», cada paper és un <details> amb la ruta (mai en un títol), el tipus, la data del nom, la
+   regla i l'empremta curta; i dos passos, «Comprova el paper» (asíncron) i «Obri’l en una pestanya» (obriPaper DINS
+   del clic), tots dos desactivats amb l'ull tancat. L'URL de l'entorn és falsa: es veu què es crea i què es revoca. */
+const empremta = (text) => createHash('sha256').update(new TextEncoder().encode(text)).digest('hex');
+function urlFals() {
+  let n = 0;
+  return { createObjectURL: vi.fn(() => `blob:paper-${++n}`), revokeObjectURL: vi.fn() };
+}
+/* El <details> d'un paper a la fila d'un camp de les propostes, obert (el desplegament no és cosa de la prova). */
+function paperDe(etiqueta, ruta) {
+  const fila = within(screen.getByRole('region', { name: 'Propostes · Persona titular' })).getByText(etiqueta).closest('tr');
+  const detalls = [...fila.querySelectorAll('details')].find((d) => d.querySelector('summary').textContent === ruta);
+  detalls.open = true;
+  return detalls;
+}
+const dadesDe = (detalls) => Object.fromEntries([...detalls.querySelectorAll('dt')].map((dt) => [dt.textContent, dt.nextElementSibling.textContent]));
+const PAPER_CANVIAT = 'Este paper no és el que es va llegir: ha canviat o és d’una altra carpeta.';
+
+describe('«D’on ix»: el paper d’on ix cada valor (Front 6)', () => {
+  test('cada paper és un <details> amb la ruta al <summary>, mai en un títol, i a dins el tipus, la data, la regla i l’empremta curta', async () => {
+    const { cofre } = await cofreObert();
+    const { container } = await munta({ cofre });
+    await lligPapers();
+    const vida = paperDe('NIF o NIE', RUTES.vida);
+    const opac = paperDe('NIF o NIE', RUTES.opac);
+    expect(vida.closest('h1, h2, h3, h4, h5, h6')).toBeNull();
+    expect(dadesDe(vida)).toEqual({
+      Paper: 'Vida laboral', 'Data del paper': '03/10/2025', 'Regla que l’ha trobat': 'nif-persona', Empremta: empremta(VIDA_LABORAL).slice(0, 8)
+    });
+    /* El paper de nom opac no porta data al nom. */
+    expect(dadesDe(opac)).toEqual({
+      Paper: 'Paper de tipus desconegut (nom opac)', 'Regla que l’ha trobat': 'nif-persona', Empremta: empremta(VIDA_LABORAL).slice(0, 8)
+    });
+    /* Amb l'ull tancat, cap valor de la persona: la ruta ja hi era, i la resta és de la font. */
+    for (const privat of PRIVATS) expect(container.textContent, privat).not.toContain(privat);
+    titolsNets();
+  });
+
+  test('dos passos: «Comprova el paper» i «Obri’l en una pestanya», que crida obriPaper dins del clic; tots dos desactivats amb l’ull tancat', async () => {
+    const { cofre } = await cofreObert();
+    const url = urlFals();
+    const { container, obriPaper } = await munta({ cofre, entorn: { ...entornTractors, URL: url } });
+    await lligPapers();
+    const vida = paperDe('NIF o NIE', RUTES.vida);
+    const comprova = within(vida).getByRole('button', { name: `Comprova el paper: ${RUTES.vida}` });
+    const obri = within(vida).getByRole('button', { name: `Obri’l en una pestanya: ${RUTES.vida}` });
+    expect(comprova.disabled).toBe(true);
+    expect(obri.disabled).toBe(true);
+    expect(vida.textContent).toContain('Obri l’ull de la barra per a comprovar-lo i obrir-lo.');
+
+    const ull = screen.getByRole('button', { name: 'Mostra les dades' });
+    fireEvent.click(ull);
+    expect(comprova.disabled).toBe(false);
+    expect(obri.disabled).toBe(true);
+    comprova.focus();
+    fireEvent.click(comprova);
+    await waitFor(() => expect(obri.disabled).toBe(false), { timeout: 5000 });
+    expect(url.createObjectURL).toHaveBeenCalledTimes(1);
+    expect(url.createObjectURL.mock.calls[0][0].type).toBe('text/plain;charset=utf-8');
+    expect(screen.getByText('Paper comprovat: és el que es va llegir. Ja el pots obrir en una pestanya.').getAttribute('role')).toBe('status');
+    /* El botó que ara toca rep el focus. */
+    expect(document.activeElement).toBe(obri);
+    expect(obriPaper).not.toHaveBeenCalled();
+
+    fireEvent.click(obri);
+    /* Dins del mateix clic: obriPaper ja s'ha cridat, sense cap espera pel mig. */
+    expect(obriPaper).toHaveBeenCalledTimes(1);
+    expect(obriPaper).toHaveBeenCalledWith('blob:paper-1');
+    expect(screen.getByText('Paper obert en una pestanya nova. No es tanca quan bloqueges el cofre ni amb «Oblida»: tanca-la tu.')
+      .getAttribute('role')).toBe('status');
+    expect(nomsSenseEtiquetaVisible(container)).toEqual([]);
+    titolsNets();
+
+    /* L'ull tancat els torna a desactivar. */
+    fireEvent.click(ull);
+    expect(comprova.disabled).toBe(true);
+    expect(obri.disabled).toBe(true);
+  });
+
+  test('«Oblida la carpeta» revoca la URL comprovada; a la fitxa, sense carpeta, la nota en lloc dels botons', async () => {
+    const { cofre } = await cofreObert();
+    const url = urlFals();
+    await munta({ cofre, entorn: { ...entornTractors, URL: url } });
+    await lligPapers();
+    fireEvent.click(screen.getByRole('button', { name: 'Confirma Nom' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Mostra les dades' }));
+    fireEvent.click(within(paperDe('NIF o NIE', RUTES.vida)).getByRole('button', { name: `Comprova el paper: ${RUTES.vida}` }));
+    await waitFor(() => expect(url.createObjectURL).toHaveBeenCalledTimes(1), { timeout: 5000 });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Oblida la carpeta' }));
+    expect(url.revokeObjectURL).toHaveBeenCalledWith('blob:paper-1');
+    const fitxa = await screen.findByRole('region', { name: 'La teua fitxa · Persona titular' });
+    const papers = [...within(fitxa).getByText('Nom').closest('tr').querySelectorAll('details')];
+    /* La recepta del nom no mira els papers de nom opac: només la vida laboral n'és font. */
+    expect(papers.map((d) => d.querySelector('summary').textContent)).toEqual([RUTES.vida]);
+    for (const detalls of papers) {
+      expect(detalls.textContent).toContain('Tria la carpeta on és el paper per a obrir-lo.');
+      expect(detalls.querySelector('button')).toBeNull();
+    }
+  });
+});
+
+/* Proves [DEFECTE]: passen reproduint un deute conegut, previ al Front 6, que no s'arregla ací. Es conserven a part de
+   les regressions perquè qui l'arregle sàpiga quina asserció ha de girar. */
+describe('[DEFECTE] deute previ conegut', () => {
+  test('[DEFECTE useFinestreta.js planifica] una carpeta nova no buida les propostes de l’anterior; l’empremta n’evita l’obertura: PAPER_CANVIAT visible i anunciat', async () => {
+    const { cofre } = await cofreObert();
+    const url = urlFals();
+    const { obriPaper } = await munta({ cofre, entorn: { ...entornTractors, URL: url } });
+    await lligPapers();
+    /* Una altra carpeta, amb un paper del mateix nom i un altre contingut. */
+    fireEvent.change(screen.getByLabelText(ETIQUETA_CARPETA), { target: { files: [fitxer(RUTES.vida, `${VIDA_LABORAL}\nUna línia de més`)] } });
+    await screen.findByRole('button', { name: 'Llig el paper' }, { timeout: 5000 });
+    /* El DEFECTE: les propostes de la carpeta d'abans continuen a la pantalla. */
+    expect(screen.getByRole('heading', { level: 2, name: 'Propostes per revisar' })).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Mostra les dades' }));
+    const vida = paperDe('NIF o NIE', RUTES.vida);
+    const comprova = within(vida).getByRole('button', { name: `Comprova el paper: ${RUTES.vida}` });
+    fireEvent.click(comprova);
+    const motiu = await within(vida).findByText(PAPER_CANVIAT, {}, { timeout: 5000 });
+    expect(comprova.getAttribute('aria-describedby')).toBe(motiu.id);
+    expect(screen.getByText(`No s’ha pogut comprovar el paper. ${PAPER_CANVIAT}`).getAttribute('role')).toBe('status');
+    expect(within(vida).getByRole('button', { name: `Obri’l en una pestanya: ${RUTES.vida}` }).disabled).toBe(true);
+    expect(url.createObjectURL).not.toHaveBeenCalled();
+    expect(obriPaper).not.toHaveBeenCalled();
   });
 });
 

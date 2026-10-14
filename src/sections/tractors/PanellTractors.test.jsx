@@ -16,6 +16,7 @@ const URL_ORIGINAL = ['createObjectURL', 'revokeObjectURL'].map((nom) => [nom, O
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
+  vi.unstubAllEnvs();
   for (const [nom, descriptor] of URL_ORIGINAL) {
     if (descriptor) Object.defineProperty(URL, nom, descriptor);
     else delete URL[nom];
@@ -174,9 +175,9 @@ describe('llista i detall', () => {
     expect(fitxa.getByText('No envia res.')).toBeTruthy();
     expect(fitxa.getByText('# açò és codi, no un títol')).toBeTruthy();
     expect(container.querySelector('h1')).toBeNull();
-    // Fora dels diàlegs (cada <dialog> porta el seu h2), només el títol del panell.
-    expect([...container.querySelectorAll('h2')].filter((h) => !h.closest('dialog')).map((h) => h.textContent))
-      .toEqual(['Què fa cada tractor, la seua empremta i la teua signatura']);
+    // Fora dels diàlegs (cada <dialog> porta el seu h2), cap h2: el subtítol de la porta («Què fa cada tractor, la
+    // seua empremta i la teua signatura») és de la pàgina de la Wiki i es prova a WikiDePobleSection.einesLocals.test.jsx.
+    expect([...container.querySelectorAll('h2')].filter((h) => !h.closest('dialog')).map((h) => h.textContent)).toEqual([]);
   });
 
   test('rebaixaTitols no toca el codi i no passa de h6', () => {
@@ -263,6 +264,132 @@ describe('aprovar i revocar', () => {
   });
 });
 
+/* Ordre del Mestre, 13-10-2026 (pla 261013_1930, front 2) · L'aprovació en
+   bloc, només al servidor de desenvolupament (vitest corre amb DEV cert; el
+   paquet de producció es prova a PanellTractors.produccio.test.js). */
+describe('aprovar tots els pendents (només DEV)', () => {
+  const BLOC = 'Aprovar tots els pendents (DEV)';
+  const PATRO = 'Aprovació tècnica del servidor de desenvolupament: no substituïx la lectura de la fitxa ni la revisió '
+    + 'reflexiva. La primera aprovació després d’un canvi a la porta mateixa es fa d’una en una.';
+  const descripcio = (b) => b.ownerDocument.getElementById(b.getAttribute('aria-describedby'));
+  const status = () => screen.getByRole('status').textContent;
+
+  test('a la capçalera de la porta, abans de la llista, amb el nom exacte i la descripció del patró', async () => {
+    await munta();
+    const bloc = boto(BLOC);
+    expect(bloc.disabled).toBe(false);
+    expect(bloc.className).toContain('sdp-boto--secundari');
+    // Lector i Signat; l'Incomplet no té empremta i no compta.
+    expect(descripcio(bloc).textContent).toBe(`2 pendents d’aprovar. ${PATRO}`);
+    expect(bloc.compareDocumentPosition(screen.getByRole('list', { name: 'Tractors' })) & Node.DOCUMENT_POSITION_FOLLOWING)
+      .toBeTruthy();
+  });
+
+  test('sense WebAuthn: aprova el de confirmació, deixa el de signatura i el resum ho diu; el focus torna al botó', async () => {
+    const { magatzem } = await munta();
+    boto(BLOC).focus();
+    fireEvent.click(boto(BLOC));
+    await waitFor(() => expect(status())
+      .toBe('Aprovació en bloc (DEV): 1 aprovat, 1 sense signar (cal Touch ID a localhost:3340), 0 amb error.'));
+    expect(element('Lector de prova').textContent).toContain('Aprovat');
+    expect(element('Signat de prova').textContent).toContain('Pendent');
+    expect(element('Incomplet de prova').textContent).toContain('Incomplet');
+    expect((await magatzem.registres()).map((r) => [r.tractor, r.nivell])).toEqual([['prova.lector', 'confirmacio']]);
+    expect(boto(BLOC).disabled).toBe(false);
+    expect(descripcio(boto(BLOC)).textContent).toBe(`1 pendent d’aprovar. ${PATRO}`);
+    expect(document.activeElement).toBe(boto(BLOC));
+  });
+
+  test('amb WebAuthn simulat: tots dos aprovats, la signatura a l’historial, el botó desactivat i el focus al títol', async () => {
+    const { magatzem } = await munta({ entorn: await entornAmbWebAuthn() });
+    boto(BLOC).focus();
+    fireEvent.click(boto(BLOC));
+    await waitFor(() => expect(status()).toBe('Aprovació en bloc (DEV): 2 aprovats, 0 sense signar, 0 amb error.'));
+    expect(element('Lector de prova').textContent).toContain('Aprovat');
+    expect(element('Signat de prova').textContent).toContain('Aprovat');
+    expect(await magatzem.claus()).toHaveLength(1);
+    expect(boto(BLOC).disabled).toBe(true);
+    expect(descripcio(boto(BLOC)).textContent).toBe(`Cap tractor pendent. ${PATRO}`);
+    expect(document.activeElement).toBe(screen.getByRole('heading', { level: 3, name: 'Porta d’aprovació de tractors' }));
+    fireEvent.click(element('Signat de prova'));
+    expect(detall().querySelector('.sdp-tractors-panell__historial li').textContent)
+      .toContain('Aprovat · Signatura amb Touch ID o clau de pas');
+  });
+
+  test('Touch ID cancel·lat: l’error porta el nom del tractor i el resum el compta', async () => {
+    const entorn = await entornAmbWebAuthn();
+    entorn.navigator.credentials.get = async () => { throw new Error('NotAllowedError'); };
+    await munta({ entorn });
+    fireEvent.click(boto(BLOC));
+    await waitFor(() => expect(status()).toBe('Aprovació en bloc (DEV): 1 aprovat, 0 sense signar, 1 amb error.'));
+    // En un lot, l'alerta no diu «No s’ha aprovat res»: el Lector sí que s'ha aprovat.
+    const alerta = screen.getByRole('alert');
+    expect(alerta.textContent).toContain('Signat de prova: La signatura no s’ha completat o no és vàlida: '
+      + 'este tractor no s’ha aprovat i la sèrie s’ha aturat ací.');
+    expect(alerta.textContent).not.toContain('No s’ha aprovat res');
+    expect(element('Signat de prova').textContent).toContain('Pendent');
+  });
+
+  test('sèrie aturada abans d’un altre: «sense provar», sense el consell de Touch ID, i un altre clic continua', async () => {
+    const entorn = await entornAmbWebAuthn();
+    const { credentials } = entorn.navigator;
+    const signa = credentials.get;
+    credentials.get = async () => { throw new Error('NotAllowedError'); };
+    // El Signat primer: en cancel·lar-lo, el Lector (de confirmació) ja no es prova.
+    const { magatzem } = await munta({ entorn, tractors: [CATALEG[1], CATALEG[0]] });
+    fireEvent.click(boto(BLOC));
+    await waitFor(() => expect(status()).toBe('Aprovació en bloc (DEV): 0 aprovats, 0 sense signar, 1 amb error, '
+      + '1 sense provar (la sèrie s’ha aturat: torna a clicar per a continuar).'));
+    expect(status()).not.toContain('cal Touch ID');
+    expect(screen.getByRole('alert').textContent).not.toContain('No s’ha aprovat res');
+    expect(element('Lector de prova').textContent).toContain('Pendent');
+    expect(element('Signat de prova').textContent).toContain('Pendent');
+    expect(await magatzem.registres()).toEqual([]);
+
+    credentials.get = signa;
+    fireEvent.click(boto(BLOC));
+    await waitFor(() => expect(status()).toBe('Aprovació en bloc (DEV): 2 aprovats, 0 sense signar, 0 amb error.'));
+    expect(screen.queryByRole('alert')).toBeNull();
+    expect(element('Lector de prova').textContent).toContain('Aprovat');
+    expect(element('Signat de prova').textContent).toContain('Aprovat');
+  });
+
+  test('sense cap pendent (aprovat o incomplet), desactivat i ho diu', async () => {
+    const magatzem = crearMagatzemMemoria();
+    const { empremta } = await empremtaDe(CATALEG[0], subtle);
+    await magatzem.afegixRegistre(preparaRegistre({
+      manifest: CATALEG[0].manifest, empremta, decisio: 'aprovat', nivell: 'confirmacio', ara: T0 - 1000
+    }));
+    await munta({ magatzem, tractors: [CATALEG[0], CATALEG[2]] });
+    expect(boto(BLOC).disabled).toBe(true);
+    expect(descripcio(boto(BLOC)).textContent).toBe(`Cap tractor pendent. ${PATRO}`);
+  });
+
+  test('mentre treballa: «Treballant…», i «Aprova esta versió» i «Revoca» desactivats', async () => {
+    const base = crearMagatzemMemoria();
+    let allibera;
+    const pausa = new Promise((resol) => { allibera = resol; });
+    const magatzem = { ...base, afegixRegistre: async (registre) => { await pausa; return base.afegixRegistre(registre); } };
+    await munta({ magatzem });
+    fireEvent.click(boto(BLOC));
+    const treballant = await screen.findByRole('button', { name: 'Treballant…' });
+    expect(treballant.getAttribute('aria-describedby')).toBe(descripcio(treballant).id);
+    expect(boto('Aprova esta versió').disabled).toBe(true);
+    expect(boto('Revoca').disabled).toBe(true);
+    allibera();
+    await waitFor(() => expect(status()).toMatch(/^Aprovació en bloc \(DEV\): 1 aprovat/));
+    expect(boto('Aprova esta versió').disabled).toBe(false);
+  });
+
+  test('fora de DEV no hi ha ni el botó ni la descripció', async () => {
+    vi.stubEnv('DEV', false);
+    await munta();
+    expect(screen.queryByRole('button', { name: /Aprovar tots/ })).toBeNull();
+    expect(screen.queryByText(/Aprovació tècnica del servidor de desenvolupament/)).toBeNull();
+    expect(boto('Aprova esta versió').disabled).toBe(false);
+  });
+});
+
 describe('exportar i oblidar', () => {
   test('sense registres no descarrega res; amb registres, un JSONL amb enllaç temporal', async () => {
     let n = 0;
@@ -340,11 +467,12 @@ describe('exportar i oblidar', () => {
 });
 
 describe('el que diu de l’empremta és exacte', () => {
-  test('cobrix les fonts llistades (tractor, la seua interfície i la porta), no els components comuns', async () => {
+  /* Què cobrix (cada línia de les fonts llistades: el tractor, la seua
+     interfície i la porta) ho diu l'entradilla de la pàgina de la Wiki, i es
+     prova a WikiDePobleSection.einesLocals.test.jsx; el panell diu què no. */
+  test('els components comuns no hi entren', async () => {
     const { container } = await munta();
     const panell = container.querySelector('.sdp-tractors-panell').textContent;
-    expect(panell).toMatch(/cada línia de les fonts llistades/);
-    expect(panell).toMatch(/el codi del tractor, el de la seua interfície i el d’esta porta/);
     expect(panell).toMatch(/Els components comuns de l’app .* no hi entren/);
   });
 });

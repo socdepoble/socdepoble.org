@@ -345,6 +345,7 @@ export const TRACTOR_IDENTITAT = Object.freeze({
   llig: Object.freeze([
     'La carpeta arrel de la Gestoria que tries amb el selector del sistema: el nom i la mida de cada fitxer, per a decidir què es llig i què no abans d’obrir-ne cap',
     'Dins de 01_Identitat_Legal i de 03_Burocracia/SUMA, el PDF generat per màquina o el text pla dels papers permesos (vida laboral, afiliació, RETA, informe de bases, SUMA, Kit Digital, registre i estatuts d’associacions, representació) i dels que tu marques; mai salut, banc, credencials, renda, herència, model 145 ni imatges',
+    'Quan prems «Comprova el paper» a «D’on ix», torna a llegir en este ordinador eixe paper de la carpeta triada, en comprova l’empremta i, si coincidix, l’obri en una pestanya d’este navegador; mai els vetats, només PDF i text pla i sense traure’n cap text',
     'Amb el cofre obert, la teua fitxa d’identitat desada: només els valors que has confirmat'
   ]),
   escriu: Object.freeze([

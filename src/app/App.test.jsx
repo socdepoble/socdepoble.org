@@ -495,6 +495,78 @@ test('a 1023px la barra lateral continua dins del calaix compacte', async () => 
   });
 });
 
+/* ── Front 1a (pla 261013_1930) · Guarda de DOM de «Sistema» ─────────────
+   El taronja de «Sistema» (layout.css, `nav.app-sidebar .nav-item--desplegable`
+   a @layer components, ordre del Mestre del 13-10) penja d'este DOM: un
+   <button> amb les dues classes, l'únic desplegable de la barra i mai un
+   enllaç (els enllaços continuen blancs). Les icones no porten color propi:
+   pinten amb currentColor i hereten el taronja. Si algú reanomena la classe
+   o el convertix en NavLink, el CSS deixa de casar en silenci; ho diu ací.
+   Des de /mur, que no és de «Sistema», el grup comença plegat. */
+function comprovaSistema(barra) {
+  const sistema = within(barra).getByRole('button', { name: 'Sistema' });
+  expect(sistema.tagName).toBe('BUTTON');
+  expect([...sistema.classList]).toEqual(['nav-item', 'nav-item--desplegable']);
+  /* Tot el selector de layout.css: l'avantpassat també ha de ser nav.app-sidebar. */
+  expect(sistema.closest('nav.app-sidebar')).toBe(barra);
+  expect([...barra.querySelectorAll('.nav-item--desplegable')]).toEqual([sistema]);
+  /* Cap enllaç, tampoc els del grup amagat, porta la classe ni l'embolcalla.
+     Abans, que n'hi haja: sense enllaços el bucle seria cert per buit. */
+  expect(barra.querySelector('a[href="/pobles"]')).not.toBeNull();
+  expect(barra.querySelector('#app-sidebar-sistema a')).not.toBeNull();
+  for (const enllac of barra.querySelectorAll('a, [role="link"]')) {
+    expect(enllac.classList.contains('nav-item--desplegable')).toBe(false);
+    expect(enllac.contains(sistema)).toBe(false);
+  }
+  expect(sistema.querySelector('a, [role="link"]')).toBeNull();
+  /* La icona i el xebró, sense estil en línia i amb el traç de la lletra. */
+  const icones = [...sistema.querySelectorAll('svg')];
+  expect(icones).toHaveLength(2);
+  for (const icona of icones) {
+    expect(icona.hasAttribute('style')).toBe(false);
+    expect(icona.getAttribute('stroke')).toBe('currentColor');
+  }
+  /* Un style= al mateix botó guanyaria la regla de @layer components. */
+  expect(sistema.hasAttribute('style')).toBe(false);
+  expect(sistema.querySelectorAll('[style]')).toHaveLength(0);
+  /* aria-controls apunta al grup que existix, i el clic inverteix l'estat. */
+  const grup = document.getElementById(sistema.getAttribute('aria-controls'));
+  expect(grup).not.toBeNull();
+  expect(barra.contains(grup)).toBe(true);
+  expect(sistema.getAttribute('aria-expanded')).toBe('false');
+  expect(grup.hidden).toBe(true);
+  fireEvent.click(sistema);
+  expect(sistema.getAttribute('aria-expanded')).toBe('true');
+  expect(grup.hidden).toBe(false);
+  expect(within(barra).getByRole('group', { name: 'Sistema' })).toBe(grup);
+  fireEvent.click(sistema);
+  expect(sistema.getAttribute('aria-expanded')).toBe('false');
+  expect(grup.hidden).toBe(true);
+}
+
+test('Front 1a · a 1024px «Sistema» és el botó desplegable de la columna fixa, mai un enllaç, i el clic l’obri i el plega', async () => {
+  vi.stubGlobal('innerWidth', 1024);
+  await muntaSenseSessio('/mur', async () => {
+    const barra = await screen.findByRole('navigation', { name: 'Navegació principal' });
+    expect(barra.closest('dialog')).toBeNull();
+    comprovaSistema(barra);
+  });
+});
+
+test('Front 1a · a 1023px «Sistema» és el mateix botó dins del calaix obert', async () => {
+  vi.stubGlobal('innerWidth', 1023);
+  await muntaSenseSessio('/mur', async () => {
+    await screen.findByRole('main');
+    const barra = document.getElementById('app-sidebar');
+    const calaix = barra.closest('dialog.sdp-dialeg-sidebar');
+    expect(calaix).not.toBeNull();
+    /* El calaix s'obri com ho fa la persona: el logotip de la barra negra. */
+    fireEvent.click(within(document.querySelector('header.bar-black')).getByRole('button', { name: 'Obrir menú' }));
+    await waitFor(() => expect(calaix.open).toBe(true));
+    comprovaSistema(barra);
+  });
+});
+
 /* /realitat ja no porta guarda de sessió: el Selector de Realitat es va
    desbloquejar el 260927 (informe de vistes 0050) i s'obri sense registre. */
 test.each(['/admin', '/el-meu-perfil'])('%s continua portant a /registre sense sessió també a vite serve', async ruta => {

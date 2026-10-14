@@ -1,6 +1,8 @@
 import { beforeEach, expect, test } from 'vitest';
 import { createLocalPerfilsAdapter, PERSONES_SEED } from './localPerfils.js';
-import { ENTITAT_PILOT_ID, ENTITAT_PILOT_SLUG, ENTITATS_SEED, IAIA_ID } from './identitatsSeed.js';
+import {
+  ENTITAT_PILOT_ID, ENTITAT_PILOT_SLUG, ENTITAT_RENTONAR_SLUG, ENTITATS_SEED, IAIA_ID, entitatSeed, rolALEntitat
+} from './identitatsSeed.js';
 import { XAT_SEED_MEMBRES } from './xatSeed.js';
 
 /* Lògica d'Usuari · el padró pilot del mode seed: qui ha entrat és la persona
@@ -300,4 +302,37 @@ test('grup C · una organització membre: l’afig qui administra totes dues, ma
   expect(local.llevaMembreOrganitzacio('colla-proves', { tipus: 'organitzacio', id: 'forn' }, VEI_USUARI)).toEqual({ llevat: false });
   local.reinicia();
   expect(codiDe(() => local.llistaMembresOrganitzacio('colla-proves', VEI_USUARI))).toBe('SDP-ORGMEM-002');
+});
+
+/* ── Ordre del Mestre (261013; pla 261013_1930, Front 3) · les entitats fundacionals ── */
+
+const BIO_RENTONAR = 'Grup de treball de l’Associació ecologista El Rentonar.';
+
+test('Front 3 · la pilot continua sent la primera del padró i Rentonar, un grup fill seu, la segona', () => {
+  expect(ENTITATS_SEED.map((entitat) => entitat.id)).toEqual([ENTITAT_PILOT_ID, ENTITAT_RENTONAR_SLUG]);
+  expect(entitatSeed(ENTITAT_RENTONAR_SLUG)).toMatchObject({
+    id: 'rentonar', slug: 'rentonar', kind: 'group', name: 'Rentonar', lema: 'Natura i Patrimoni',
+    description: BIO_RENTONAR, parent_organization_id: ENTITAT_PILOT_ID, visibility: 'public', membres: []
+  });
+});
+
+test('Front 3 · Rentonar té fitxa pública de grup, per slug, amb sessió i sense', () => {
+  const esperat = {
+    tipus: 'grup', id: 'rentonar', slug: 'rentonar', nom: 'Rentonar', lema: 'Natura i Patrimoni', bio: BIO_RENTONAR,
+    avatar: '', poble: '', correu: '', esIA: false, publicat: true, propietari: false
+  };
+  expect(adapter.loadPerfilPublic(ENTITAT_RENTONAR_SLUG, null)).toMatchObject(esperat);
+  expect(adapter.loadPerfilPublic(ENTITAT_RENTONAR_SLUG, USUARI)).toMatchObject(esperat);
+});
+
+test('Front 3 · la regla de la llavor no s’estén a Rentonar: qui té sessió només és propietari de la pilot', () => {
+  expect(rolALEntitat(ENTITAT_PILOT_ID, USUARI.id, { teSessio: true })).toBe('owner');
+  expect(rolALEntitat(ENTITAT_RENTONAR_SLUG, USUARI.id, { teSessio: true })).toBeNull();
+  expect(adapter.listMyOrganizations(USUARI).map((org) => org.id)).toEqual([ENTITAT_PILOT_ID]);
+  expect(codiDe(() => adapter.llistaMembresOrganitzacio(ENTITAT_RENTONAR_SLUG, USUARI))).toBe('SDP-ORGMEM-002');
+  /* Qui s'hi connecta l'administra, com qualsevol organització sense propietària. */
+  expect(adapter.reclamaOrganitzacio(ENTITAT_RENTONAR_SLUG, USUARI)).toMatchObject({ organitzacioId: 'rentonar', role: 'admin', jaHiEra: false });
+  expect(adapter.listMyOrganizations(USUARI).find((org) => org.id === ENTITAT_RENTONAR_SLUG))
+    .toMatchObject({ kind: 'group', parent_organization_id: ENTITAT_PILOT_ID, role: 'admin' });
+  expect(adapter.loadPerfilPublic(ENTITAT_RENTONAR_SLUG, USUARI).propietari).toBe(true);
 });

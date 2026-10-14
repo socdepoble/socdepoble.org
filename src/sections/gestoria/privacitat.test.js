@@ -267,16 +267,21 @@ describe('res ix d’este ordinador', () => {
     expect(hosts).toEqual(PERMESES);
   });
 
-  test('obrir finestres o el menú de compartir: només el pas 5, que fa sempre la persona', () => {
+  test('obrir finestres o el menú de compartir: només el pas 5 i el paper verificat, que fa sempre la persona', () => {
     /* Llista blanca EXPLÍCITA i mínima, amb el perquè:
        · EnviamentGestoria.jsx obri la redacció de Gmail en una pestanya nova
          (window.open) i el menú de compartir del sistema (Web Share) amb el
          full que la persona ja ha revisat. Enviar ho fa ella.
+       · Finestreta.jsx (ordre del Mestre 14-10, pla 261013_1930 front 6:
+         obrir el paper verificat per empremta) obri en una pestanya nova
+         (window.open, noopener i noreferrer) la URL blob: local d'un paper
+         que la persona ja ha comprovat, dins del seu clic. Res ix d'este
+         ordinador.
        · correuGestoria.js només pregunta si el sistema pot compartir fitxers
          (canShare): no comparteix res.
        Ningú navega fora de l'app amb location. */
     const sortides = [
-      { que: 'window.open', patro: /\bwindow\.open\s*\(/, permesos: [`${GESTORIA}/enviament/EnviamentGestoria.jsx`] },
+      { que: 'window.open', patro: /\bwindow\.open\s*\(/, permesos: [`${GESTORIA}/enviament/EnviamentGestoria.jsx`, `${GESTORIA}/finestreta/Finestreta.jsx`] },
       { que: 'Web Share', patro: /\.(?:share|canShare)\s*\(/, permesos: [`${GESTORIA}/enviament/EnviamentGestoria.jsx`, `${GESTORIA}/enviament/correuGestoria.js`] },
       { que: 'navigator.share', patro: /\bnavigator\.share\b/, permesos: [] },
       { que: 'location', patro: /\blocation\.(?:href\s*=[^=]|assign\s*\(|replace\s*\()/, permesos: [] }
@@ -285,8 +290,11 @@ describe('res ix d’este ordinador', () => {
       const usen = CODI.filter(([, codi]) => patro.test(codi)).map(([ruta]) => ruta).sort();
       expect(usen.filter((ruta) => !permesos.includes(ruta)), que).toEqual([]);
     }
-    // La llista blanca no és decorativa: els dos fitxers fan servir el que s'hi permet.
+    // La llista blanca no és decorativa: els tres fitxers fan servir el que s'hi permet.
     expect(FONTS[`${GESTORIA}/enviament/EnviamentGestoria.jsx`]).toMatch(/\bwindow\.open\s*\(/);
+    expect(FONTS[`${GESTORIA}/finestreta/Finestreta.jsx`]).toMatch(/\bwindow\.open\s*\(\s*url\s*,\s*'_blank'\s*,\s*'noopener,noreferrer'\s*\)/);
+    // L'excepció de la Finestreta és per a una sola crida, la del paper verificat: una segona no hi entra.
+    expect(FONTS[`${GESTORIA}/finestreta/Finestreta.jsx`].match(/\bwindow\.open\s*\(/g)).toHaveLength(1);
     expect(FONTS[`${GESTORIA}/enviament/correuGestoria.js`]).toMatch(/mail\.google\.com/);
   });
 

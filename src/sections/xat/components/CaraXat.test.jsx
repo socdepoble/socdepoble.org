@@ -50,6 +50,8 @@ afterEach(() => {
 test('esMitjaOpac només reconeix les referències del port', () => {
   expect(esMitjaOpac(PUJADA)).toBe(true);
   expect(esMitjaOpac(`  ${PUJADA}`)).toBe(true);
+  /* L'esquema no distingix majúscules, com el filtre de sanitize.js (/i). */
+  expect(esMitjaOpac(PUJADA.replace('sdp-media', 'SDP-MEDIA'))).toBe(true);
   for (const valor of [IAIA, GOOGLE, DADA, 'blob:https://x/1', '', null, undefined, 42]) {
     expect(esMitjaOpac(valor)).toBe(false);
   }

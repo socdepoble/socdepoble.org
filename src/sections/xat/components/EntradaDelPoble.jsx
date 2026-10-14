@@ -1,6 +1,22 @@
 /**
  * EntradaDelPoble.jsx — torn 260930, T1: qui entra directament a /xat en un
- * amfitrió amb `poble` declarat veu primer el grup del seu poble. No pinta res.
+ * amfitrió amb `poble` declarat veu primer el seu poble. No pinta res.
+ *
+ * Ordre del Mestre (14-10, pla 261014_0210, XAT-01 de l'auditoria
+ * 261014_0148) · /xat ja no segresta cap al General de la comunitat. En
+ * ample, obrir el fil muntava Conversa a la columna dreta i se n'enduia la
+ * presentació (ColumnaDretaBuida) abans que la persona triara res: un grup
+ * sense missatges no presenta cap comunitat. Ara la primera arribada obri la
+ * FITXA de la comunitat del poble a la columna de llista (/xat?comunitat=<id>,
+ * T67, la mateixa ruta que obri FilaComunitat) i la dreta conserva la
+ * presentació fins que la persona tria un canal.
+ *
+ * Ací només es decidix SI s'entra i amb QUIN id. La ruta i el focus són de
+ * XatSection (`onEntra`): construïx la URL amb la mateixa `consulta` que
+ * obriComunitat i marca la fitxa com a prèvia perquè l'efecte de focus T67
+ * no la prenga per una obertura de la persona. Si la ruta es fera ací, eixe
+ * efecte movia el focus a la fletxa de la fitxa sense que ningú haguera fet
+ * res, i dins de l'encastat el prenia al cercador de la pàgina amfitriona.
  *
  * Muntat dins de la closca (com PanellInicialMobil), fa UNA sola cosa i una
  * sola vegada per sessió (useXat().consumixEntrada, que viu al proveïdor i
@@ -8,60 +24,56 @@
  * penja de backend + persona, i ni la renovació del JWT ni el canvi d'actor
  * la tornen a obrir; en té la prova XatContext.ambit.test.jsx):
  *   · en la primera arribada a /xat (sense fil, sense consulta, amb el xat
- *     carregat i sessió), consumix l'entrada, faça o no faça res. Així tornar
- *     després a la llista no reobri mai el grup: només l'arribada ho fa;
- *   · si la closca és ampla, obri el General de la comunitat del poble si ja
- *     existix; en seed/local, si no existix, la crea pel camí de sempre
- *     (?sobre=poble:<id>, com el «Comentar» de la pàgina del poble);
- *   · en estret i en mitjà no fa res: la llista primer, com ara, amb la fila
- *     del poble al capdamunt (anteposaPoble);
- *   · en remot, si la comunitat no existix, no la crea: la migració de xat de
- *     pàgina demana moderació abans d'obrir-los a tot un poble (pla 2135, P2).
- *     La fila fixada del poble queda per a qui la vulga obrir.
+ *     carregat i sessió), consumix l'entrada, faça o no faça res. Així la
+ *     fletxa de la fitxa, que torna a /xat, no la reobri mai: només
+ *     l'arribada ho fa;
+ *   · si la closca és ampla i la comunitat del poble ja existix, demana la
+ *     seua fitxa amb l'id del fil (`onEntra`, amb replace: l'enrere del
+ *     navegador no passa per una /xat que la persona no ha vist). Mai un fil
+ *     (/xat/<id>): la dreta queda sense conversa;
+ *   · si la comunitat encara no existix, res, en cap mode de dades: crear-la
+ *     només per arribar-hi era un efecte col·lateral (en seed/local, el
+ *     ?sobre=poble:<id> d'abans). La fila del poble ja va al capdamunt de la
+ *     llista (anteposaPoble) per a qui la vulga obrir; en remot, a més, la
+ *     migració de xat de pàgina demana moderació (pla 2135, P2);
+ *   · en estret i en mitjà no fa res: la llista primer, com ara;
+ *   · sense `onEntra` tampoc: ni decidix ni consumix l'entrada.
  *
  * La mida de la closca arriba mesurada un commit després del muntatge
  * (AppGridShell naix «ample» i mesura en fase de layout): la decisió es pren
  * en diferit i llig la mida d'una ref, mai la del primer render.
- *
- * Onada 6 (integració Xat i Pobles) · `towns` (opcional, les fitxes de
- * useCoreContent que ja té XatSection): el grup que es crea es diu com la
- * gent del poble si l'amfitrió no n'ha declarat el nom (pobleAmfitrio.js,
- * nomDelPoble). Es llig d'una ref: que arriben les fitxes no torna a decidir.
  */
 import { useEffect, useRef } from 'react';
-import { useNavigate } from '../../../app/contexts/RouterContext';
 import { useAppGrid } from '../../../components/layout/AppGridShell.jsx';
 import { useXat } from '../XatContext';
-import { generalDeComunitat, rutaSobreDelPoble } from '../pobleAmfitrio.js';
 
-const enc = (valor) => encodeURIComponent(String(valor));
-
-export default function EntradaDelPoble({ poble, comunitat = null, towns = null, aLaLlista = false }) {
+export default function EntradaDelPoble({ poble, comunitat = null, aLaLlista = false, onEntra = null }) {
   const { mida } = useAppGrid();
-  const navigate = useNavigate();
-  const { status, senseSessio, modeDades = 'remote', consumixEntrada } = useXat();
+  const { status, senseSessio, consumixEntrada } = useXat();
   const midaRef = useRef(mida);
   midaRef.current = mida;
   const comunitatRef = useRef(comunitat);
   comunitatRef.current = comunitat;
-  const townsRef = useRef(towns);
-  townsRef.current = towns;
+  const onEntraRef = useRef(onEntra);
+  onEntraRef.current = onEntra;
 
-  const llesta = Boolean(poble) && aLaLlista && status === 'ready' && !senseSessio && typeof consumixEntrada === 'function';
+  const llesta = Boolean(poble) && aLaLlista && status === 'ready' && !senseSessio
+    && typeof consumixEntrada === 'function' && typeof onEntra === 'function';
 
-  /* `poble` és estable (usePobleAmfitrio el memoritza); la mida i la
-     comunitat es lligen de refs en el moment de decidir. */
+  /* `poble` és estable (usePobleAmfitrio el memoritza); la mida, la
+     comunitat i `onEntra` (una funció nova a cada render de XatSection) es
+     lligen de refs en el moment de decidir. L'id va tal qual: codificar-lo
+     és cosa de la ruta. */
   useEffect(() => {
     if (!llesta) return undefined;
     const temporitzador = setTimeout(() => {
       if (!consumixEntrada(`poble:${poble.id}`)) return;
       if (midaRef.current !== 'ample') return;
-      const general = generalDeComunitat(comunitatRef.current);
-      if (general) navigate(`/xat/${enc(general.id)}`, { replace: true });
-      else if (!comunitatRef.current && modeDades !== 'remote') navigate(rutaSobreDelPoble(poble, townsRef.current), { replace: true });
+      const id = comunitatRef.current?.fil?.id;
+      if (id != null && id !== '') onEntraRef.current(id);
     }, 0);
     return () => clearTimeout(temporitzador);
-  }, [llesta, poble, modeDades, consumixEntrada, navigate]);
+  }, [llesta, poble, consumixEntrada]);
 
   return null;
 }

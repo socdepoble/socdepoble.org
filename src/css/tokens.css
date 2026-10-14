@@ -409,6 +409,22 @@
      La xifra val per al to canònic (crom.js gira la rampa, com amb l'actiu).
      Va en línia pròpia: C2 (tractor-cromatic) mesura contra la targeta blanca. */
   --sdp-crom-grup-text:         var(--sdp-primary-500);
+  /* Decisió del Mestre, 14-10-2026 (pla 261013_1930, front 1b) · Jerarquia de
+     la 1a columna de UniversalWorkspace: els contenidors (capçaleres de grup,
+     carpetes amb fills i el seu desplegador) van en Taronja 400; les fulles
+     continuen en --sdp-crom-text i la selecció, en blau (T62b). Token de LLETRA
+     propi sobre --sdp-workspace-nav-fons, Grafit 700 (#3d3b35), estable en els
+     quatre modes (clar, fosc, Bancal i Bancal fosc). Taronja 400 (#ff955b) hi
+     fa 5,17:1, AA per a la lletra de 16px/600 (el llindar de l'ordre és 4,5:1).
+     Amb el ratolí, sobre el vel de --sdp-crom-hover (#4e4d47), baixaria a
+     3,92:1: el hover torna a --sdp-crom-text, com «Sistema» (layout.css). És el
+     mateix to que l'anell de focus del crom (--sdp-crom-focus).
+     No es reutilitza --sdp-crom-grup-text perquè el cànon fa 4,11:1 sobre el
+     Grafit 700 i el cens d'eixe token és de dos usos sobre la roca
+     (jerarquiaBarraLateral).
+     La xifra val per al to canònic (crom.js gira la rampa, com amb l'actiu).
+     Va en línia pròpia: C2 (tractor-cromatic) mesura contra la targeta blanca. */
+  --sdp-crom-contenidor-text:   var(--sdp-primary-400);
   /* T62 · Selecció de la navegació secundària sobre crom: la 1a columna
      (arbre de carpetes, famílies i categories, rail del Xat) i els rails
      plegats. Els actius van en blau (Pedra Seca §2); la barra principal,

@@ -6,10 +6,12 @@
    comprova validaBackendImplementation (backendPort.js); ací es mira el que
    tornen.
    Pur: només importa el contracte. No importa cap adaptador ni cap corredor
-   de proves; qui el passa decidix com. L'adaptador Supabase el passa en mode
-   'seed' i sense xarxa (src/data/supabase/conformitat.test.js). Un altre
-   adaptador que trie Sóc de Poble s'hi enxufa igual, amb un fetch de mentida que servisca
-   les seues captures reals.
+   de proves; qui el passa decidix com. L'adaptador Supabase el passa dues
+   vegades (src/data/supabase/conformitat.test.js): en mode 'seed' i sense
+   xarxa, i en mode 'remote' amb un doble del servidor (fetch i supabase-js
+   falsos que servixen captures congelades amb les columnes de les
+   migracions). Un altre adaptador que trie Sóc de Poble s'hi enxufa igual,
+   amb un fetch de mentida que servisca les seues captures reals.
    Els casos d'ESCRIPTURA (escriu: true) només corren amb
    contextDeConformitat({ escriptures: true }): creen dades. */
 import { CAPACITATS, CONTRACTE_NUCLI, SECCIONS_PAGINABLES } from '../contracte.js';

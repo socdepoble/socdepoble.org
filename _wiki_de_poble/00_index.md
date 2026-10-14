@@ -142,6 +142,8 @@ D'ací pengen la identitat, el saber, les eines, les actes i l'Escriptori de Só
 - [[10_actes/261012_1920_acta_marmota.md]]
 - [[10_actes/261013_1420_acta_marmota.md]]
 - [[10_actes/261013_2215_acta_marmota.md]]
+- [[10_actes/261014_0130_acta_marmota.md]]
+- [[10_actes/261014_0330_acta_marmota.md]]
 - [[10_metriques/11_grafica_consum.md]]
 - [[10_metriques/12_esforc_huma_sessions.md]]
 

@@ -17,9 +17,9 @@
  * Revisió (AV) · L'adaptador de Supabase no sempre llança: si no pot firmar
  * una URL de mitjans_privats, o la referència no té carpeta, torna la MATEIXA
  * 'sdp-media://…' (data/supabase/storage.js, resolveAsset). El filtre de
- * seguretat l'accepta i AvatarResolt la pintaria. Per això ací no es fa
- * servir AvatarResolt sinó el seu hook, i es descarta tot valor resolt que
- * continue sent opac.
+ * seguretat l'accepta i AvatarResolt la pintava (fins a XAT-02, 261014: ara
+ * Avatar la descarta). Per això ací no es fa servir AvatarResolt sinó el seu
+ * hook, i es descarta tot valor resolt que continue sent opac.
  *
  * Qualsevol altre valor pinta EL MATEIX Avatar que abans, amb les mateixes
  * props (Llei del Píxel). Model B: el Xat no toca Supabase; resol el port.
@@ -33,9 +33,13 @@
 import { Avatar } from '../../../components/PedraSeca/index.js';
 import { useResolvedAsset } from '../../../hooks/useResolvedAsset.js';
 import { caraDeLaIAIA } from '../../../data/xatsPerDefecte.js';
+import { esMitjaOpac } from '../../../utils/mitjaOpac.js';
 
-/** Una referència opaca del port de mitjans ('sdp-media://…'). */
-export const esMitjaOpac = (src) => typeof src === 'string' && src.trim().startsWith('sdp-media://');
+/* XAT-02 (ordre del Mestre, 261014) · Una referència opaca del port de
+   mitjans ('sdp-media://…'). El predicat viu a utils/mitjaOpac.js perquè
+   Avatar i marca.jsx (Pedra Seca) no importen d'una secció; ací es reexporta
+   i l'API de CaraXat no canvia. */
+export { esMitjaOpac };
 
 /* La foto pujada, resolta pel port. El mateix Avatar que AvatarResolt; només
    canvia que una resolució que torna opaca es queda amb les inicials. */

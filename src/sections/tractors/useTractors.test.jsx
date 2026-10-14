@@ -5,7 +5,10 @@ import { base64url, concatena, desdeBase64url, sha256, utf8 } from './nucli/cano
 import { exigeixAprovacio, preparaRegistre, signaAmbWebAuthn } from './nucli/aprovacio.js';
 import { crearMagatzem, crearMagatzemMemoria } from './nucli/magatzem.js';
 import { catalegTractors, empremtaDe } from './registreTractors.js';
-import { contextAprovacio, entornDe, estatDelTractor, magatzemTractors, suportaWebAuthn, useTractors } from './useTractors.js';
+import {
+  APROVABLES_EN_BLOC, aprovaEnBloc, contextAprovacio, entornDe, esAprovableEnBloc, estatDelTractor, magatzemTractors,
+  suportaWebAuthn, useTractors
+} from './useTractors.js';
 
 afterEach(cleanup);
 
@@ -339,6 +342,155 @@ describe('estats que caduquen, canvien o es revoquen', () => {
     expect(fila('prova.incomplet')).toMatchObject({ estat: 'incomplet', registre: { decisio: 'aprovat' } });
     await act(async () => { await result.current.revoca('prova.incomplet'); });
     expect(fila('prova.incomplet').registre.decisio).toBe('revocat');
+  });
+});
+
+/* Ordre del Mestre, 13-10-2026 (pla 261013_1930, front 2) · L'aprovació en
+   bloc, només al servidor de desenvolupament, pel mateix camí que la via
+   individual (aprova). vitest corre amb DEV cert. */
+describe('aprovaTotsPendents (només DEV)', () => {
+  afterEach(() => vi.unstubAllEnvs());
+
+  const aprovaTots = async (result) => {
+    let resultat;
+    await act(async () => { resultat = await result.current.aprovaTotsPendents(); });
+    return resultat;
+  };
+  const ids = (llista) => llista.map(({ id }) => id);
+
+  test('aprovaEnBloc, pura: només pendent, empremta-divergent i caducat, amb empremta, en sèrie i amb el nivell mínim', async () => {
+    expect(APROVABLES_EN_BLOC).toEqual(['pendent', 'empremta-divergent', 'caducat']);
+    const empremta = `sha256:${'a'.repeat(64)}`;
+    const files = ['pendent', 'aprovat', 'caducat', 'revocat', 'empremta-divergent', 'incomplet', 'error']
+      .map((estat) => ({
+        id: `t.${estat}`, estat, curta: 'AAAA-AAAA', manifest: { nivellMinim: 'confirmacio' },
+        empremta: ['incomplet', 'error'].includes(estat) ? null : empremta
+      }));
+    files.push({ id: 't.sense-empremta', estat: 'pendent', empremta: null, manifest: { nivellMinim: 'confirmacio' } });
+    expect(files.filter(esAprovableEnBloc).map((f) => f.estat)).toEqual(['pendent', 'caducat', 'empremta-divergent']);
+    const crides = [];
+    let alhora = 0;
+    const resultat = await aprovaEnBloc(files, {
+      aprova: async (id, opcions) => {
+        alhora += 1;
+        crides.push([id, opcions, alhora]);
+        await new Promise((resol) => setTimeout(resol, 0));
+        alhora -= 1;
+        return { tractor: id };
+      }
+    });
+    expect(crides).toEqual(['t.pendent', 't.caducat', 't.empremta-divergent']
+      .map((id) => [id, { nivell: 'confirmacio', confirmacio: 'AAAA-AAAA', empremta }, 1]));
+    expect(resultat).toEqual({
+      aprovats: ['t.pendent', 't.caducat', 't.empremta-divergent'].map((id) => ({ id, registre: { tractor: id } })),
+      fallits: [],
+      omesos: []
+    });
+    expect(await aprovaEnBloc(undefined, { aprova: () => { throw new Error('no'); } })).toEqual({ aprovats: [], fallits: [], omesos: [] });
+  });
+
+  test('sense WebAuthn: aprova el de confirmació amb la curta, ometa el de signatura (SENSE_WEBAUTHN) i no toca l’incomplet', async () => {
+    const { result, fila, magatzem } = await munta();
+    expect(result.current.webauthn).toBe(false);
+    const resultat = await aprovaTots(result);
+    expect(ids(resultat.aprovats)).toEqual(['prova.lector']);
+    expect(resultat.omesos).toEqual([{ id: 'prova.signat', motiu: 'SENSE_WEBAUTHN' }]);
+    expect(resultat.fallits).toEqual([]);
+    // Les files que torna són les ja refrescades.
+    expect(resultat.files.map((f) => [f.id, f.estat])).toEqual([
+      ['prova.lector', 'aprovat'], ['prova.signat', 'pendent'], ['prova.incomplet', 'incomplet']
+    ]);
+    expect((await magatzem.registres()).map((r) => [r.tractor, r.nivell])).toEqual([['prova.lector', 'confirmacio']]);
+    expect(fila('prova.lector')).toMatchObject({ estat: 'aprovat', registre: resultat.aprovats[0].registre });
+  });
+
+  test('amb WebAuthn (credencials falses): el de signatura es signa (registra la clau) i tots dos queden aprovats; una segona crida no fa res', async () => {
+    const credentials = credencialsFalses(await creaAutenticador());
+    const { result, fila, magatzem } = await munta({ entorn: entornAmb(credentials) });
+    await waitFor(() => expect(result.current.webauthn).toBe(true));
+    const resultat = await aprovaTots(result);
+    expect(ids(resultat.aprovats)).toEqual(['prova.lector', 'prova.signat']);
+    expect(resultat.omesos).toEqual([]);
+    expect(credentials.crides).toEqual({ get: 1, create: 1 });
+    expect(fila('prova.lector')).toMatchObject({ estat: 'aprovat', registre: { nivell: 'confirmacio' } });
+    expect(fila('prova.signat')).toMatchObject({ estat: 'aprovat', registre: { nivell: 'signatura', prova: { tipus: 'webauthn' } } });
+
+    // Idempotent: ja no queda cap pendent.
+    const segona = await aprovaTots(result);
+    expect([segona.aprovats, segona.fallits, segona.omesos]).toEqual([[], [], []]);
+    expect(credentials.crides).toEqual({ get: 1, create: 1 });
+    expect(await magatzem.registres()).toHaveLength(2);
+  });
+
+  test('una versió canviada i una aprovació caducada es tornen a aprovar; una revocada, no', async () => {
+    const rellotge = rellotgeMobil();
+    const primer = await munta({ rellotge });
+    const { curta } = primer.fila('prova.lector');
+    await act(async () => { await primer.result.current.aprova('prova.lector', { nivell: 'confirmacio', confirmacio: curta }); });
+
+    const canviat = await munta({ magatzem: primer.magatzem, tractors: CATALEG_V2, rellotge });
+    expect(canviat.fila('prova.lector').estat).toBe('empremta-divergent');
+    rellotge.ara = T0 + 1000;
+    expect(ids((await aprovaTots(canviat.result)).aprovats)).toEqual(['prova.lector']);
+    expect(canviat.fila('prova.lector').estat).toBe('aprovat');
+    expect(canviat.fila('prova.lector').registre.empremta).toBe(canviat.fila('prova.lector').empremta);
+
+    rellotge.ara = T0 + 1000 + 90 * DIA;
+    await act(async () => { await canviat.result.current.recarrega(); });
+    expect(canviat.fila('prova.lector').estat).toBe('caducat');
+    rellotge.ara += 1000;
+    expect(ids((await aprovaTots(canviat.result)).aprovats)).toEqual(['prova.lector']);
+    expect(canviat.fila('prova.lector').estat).toBe('aprovat');
+
+    rellotge.ara += 1000;
+    await act(async () => { await canviat.result.current.revoca('prova.lector'); });
+    expect(canviat.fila('prova.lector').estat).toBe('revocat');
+    const revocat = await aprovaTots(canviat.result);
+    expect(ids(revocat.aprovats)).toEqual([]);
+    expect(canviat.fila('prova.lector').estat).toBe('revocat');
+    expect(canviat.fila('prova.lector').registres.map((r) => r.decisio)).toEqual(['aprovat', 'aprovat', 'aprovat', 'revocat']);
+  });
+
+  test('si el codi canvia després de llegir les files, EMPREMTA_DIVERGENT i res desat', async () => {
+    const { result, rerender, magatzem, rellotge } = await munta();
+    const vistes = result.current.tractors;
+    rerender({ magatzem, subtle, tractors: CATALEG_V2, entorn: ENTORN_SENSE, rellotge: rellotge.fn });
+    await waitFor(() => expect(result.current.tractors[0].curta).not.toBe(vistes[0].curta));
+    let resultat;
+    await act(async () => { resultat = await aprovaEnBloc(vistes, { aprova: result.current.aprova }); });
+    expect(resultat.fallits.map(({ id, error }) => [id, error.codi])).toEqual([['prova.lector', 'EMPREMTA_DIVERGENT']]);
+    expect(resultat.aprovats).toEqual([]);
+    expect(await magatzem.registres()).toEqual([]);
+  });
+
+  test('Touch ID cancel·lat: SIGNATURA_INVALIDA atura la sèrie i la resta s’ometen (SERIE_ATURADA)', async () => {
+    const credentials = credencialsFalses(await creaAutenticador());
+    credentials.get = async () => {
+      credentials.crides.get += 1;
+      throw new Error('NotAllowedError: cancel·lat');
+    };
+    const tractors = catalegTractors([
+      MANIFESTS[1], MANIFESTS[0], manifest({ id: 'prova.signat2', nom: 'Segon signat', nivellMinim: 'signatura' })
+    ], GLOB);
+    const { result, magatzem } = await munta({ entorn: entornAmb(credentials), tractors });
+    await waitFor(() => expect(result.current.webauthn).toBe(true));
+    const resultat = await aprovaTots(result);
+    expect(resultat.fallits.map(({ id, error }) => [id, error.codi])).toEqual([['prova.signat', 'SIGNATURA_INVALIDA']]);
+    expect(resultat.omesos).toEqual([
+      { id: 'prova.lector', motiu: 'SERIE_ATURADA' }, { id: 'prova.signat2', motiu: 'SERIE_ATURADA' }
+    ]);
+    expect(resultat.aprovats).toEqual([]);
+    expect(credentials.crides.get).toBe(1);
+    expect(await magatzem.registres()).toEqual([]);
+  });
+
+  test('fora de DEV el hook no l’exposa', async () => {
+    expect(typeof (await munta()).result.current.aprovaTotsPendents).toBe('function');
+    cleanup();
+    vi.stubEnv('DEV', false);
+    const { result } = await munta();
+    expect(result.current.aprovaTotsPendents).toBeUndefined();
+    expect('aprovaTotsPendents' in result.current).toBe(false);
   });
 });
 

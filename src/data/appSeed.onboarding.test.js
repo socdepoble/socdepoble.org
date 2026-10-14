@@ -10,7 +10,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, test } from 'vitest';
 import * as appSeed from './appSeed.js';
-import { ENTITAT_PILOT_SLUG } from './identitatsSeed.js';
+import { ENTITAT_PILOT_SLUG, ENTITAT_RENTONAR_SLUG, entitatSeed } from './identitatsSeed.js';
 
 const FONT = readFileSync(resolve(process.cwd(), 'src/data/appSeed.js'), 'utf8');
 
@@ -24,6 +24,22 @@ describe('appSeed · pla d’alta (Auditoria 261007 (B))', () => {
   test('cap slug de l’entitat escrit a mà al fitxer', () => {
     expect(FONT).not.toMatch(/['"]soc-de-poble['"]/);
     expect(FONT).not.toMatch(/['"]socdepoble['"]/);
+  });
+
+  /* Front 3 (261013) · Rentonar és una entitat de la taula única: el grup del
+     pla d'alta en llig la fila, amb els mateixos valors que abans, i el
+     fitxer no en copia cap. */
+  test('el grup pren de la taula única el tipus, el nom, l’slug, el lema i la descripció de Rentonar', () => {
+    const rentonar = entitatSeed(ENTITAT_RENTONAR_SLUG);
+    expect(appSeed.ONBOARDING_SEED.group).toEqual({
+      kind: rentonar.kind, name: rentonar.name, slug: rentonar.slug, parentSlug: ENTITAT_PILOT_SLUG,
+      lema: rentonar.lema, description: rentonar.description
+    });
+    expect(appSeed.ONBOARDING_SEED.group).toMatchObject({
+      kind: 'group', name: 'Rentonar', lema: 'Natura i Patrimoni',
+      description: 'Grup de treball de l’Associació ecologista El Rentonar.'
+    });
+    expect(FONT).not.toMatch(/['"]rentonar['"]/);
   });
 
   test('createOnboardingSeed ja no s’exporta', () => {

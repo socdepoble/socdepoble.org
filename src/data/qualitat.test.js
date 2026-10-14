@@ -50,7 +50,17 @@ const CENS = Object.freeze([
   'src/data/mapejadorSeccions.js',
   'src/data/mapejadorSeccions.test.js',
   'src/data/appSeed.onboarding.test.js',
-  'src/data/supabase/utils.test.js'
+  'src/data/supabase/utils.test.js',
+  /* Front 3 (261013; pla 261013_1930) · Rentonar al padró de la llavor: la
+     taula d'identitats, els consumidors que la lligen i les seues proves. */
+  'src/data/identitatsSeed.js',
+  'src/data/appSeed.js',
+  'src/data/xatSeed.js',
+  /* Correcció del Front 3 · creaFilDirecte obri una entitat del padró d'entitats. */
+  'src/data/localXat.js',
+  'src/data/localXat.test.js',
+  'src/data/localPerfils.test.js',
+  'src/data/supabase/perfils.fundacionals.test.js'
 ]);
 
 describe('el cens', () => {

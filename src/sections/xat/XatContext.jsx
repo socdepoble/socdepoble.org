@@ -1356,7 +1356,8 @@ export function XatProvider({ children, config }) {
   );
 
   /* Torn 260930 (T1, «Gent de la Torre») · Una entrada automàtica (obrir el
-     grup del poble en arribar a /xat) es fa UNA sola vegada per sessió (pla
+     poble en arribar a /xat; des del 14-10, XAT-01, la fitxa de la seua
+     comunitat i mai el General) es fa UNA sola vegada per sessió (pla
      2135, :116). El component que la dispara es torna a muntar cada vegada
      que es torna a /xat; este proveïdor viu per damunt de les rutes i
      sobreviu. Torna true només la primera vegada per a cada clau.

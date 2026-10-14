@@ -199,7 +199,9 @@ export function esFontImatgeSegura(url) {
  * Facebook, GitHub): són servidors de tercers. En una pàgina http(s), tot el
  * que admet este filtre l'admet també esFontImatgeSegura, i per això una
  * targeta amb `imatgePrivada` (fontSegura de marca.jsx) pinta igual el que ja
- * hi ha passat.
+ * hi ha passat. Llevat de les sdp-media:// (XAT-02, 261014): fontSegura les
+ * descarta (esMitjaOpac, utils/mitjaOpac.js) perquè el navegador no les sap
+ * carregar; com a dada continuen sent admissibles.
  *
  * Revisió adversarial del 261007 · Un camí absolut del mateix lloc ('/assets/…')
  * és propi encara que la finestra no siga http(s): a l'app nativa

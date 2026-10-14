@@ -860,4 +860,18 @@ Es conserva literalment TOT el fitxer anterior, inclosos HASH històrics. SHA256
 261007 | correcció | sdp-workflow | ordre explícita sencera; abans de crear res, integrar-ho en la maquinària existent
 261007 | correcció | sdp-universal-page | pàgina nova = SYSTEM_PAGES + PAGE_COPY + UniversalPage, cap component a mida
 
-<!-- HASH: 83f60e2b55edd87bc42a176d691572d80e14a2b49abf4f75ee4d7c7009807e91 -->
+## 2026-10-14 · GPT Codex · Relleu de l'auditoria adversarial
+
+Torn documental: torn_ddb1c6a6-9ca9-4640-ae52-c0a585fa02d5. Informe: _wiki_de_poble/04_escriptori/261014_0002_auditoria_codex.md.
+
+Auditoria documental de 27 entrades de producció i 19 propostes d'arxiu del laboratori. Àudios i recursos originals protegits; noms de còpia i formats alternatius no acrediten duplicació. Cap original ni codi modificat. La simulació de trasllat no afegix fallades en les proves enfocades, però perd cobertura per casos saltats o generació dinàmica; les fallades Node prèvies queden delimitades a l'informe.
+
+Gestoria: quatre defectes documentats, P1 comptes CSV i P2 saldo inconsistent, titular del formulari i deduplicació tributària; 932 proves enfocades passen. Consola: 936 passen i 1 salta. Propostes de sanejament pendents de decisió, sense canvis visuals executats. ESTAT ja té el relleu del mateix torn mitjançant executor i lease consumida. Tancament mecànic pendent de comprovació; aquest assentament no certifica verd de tancament. Cap monitor creat.
+
+
+## 261014 · Consell de quatre IAs · relleu d’auditoria en curs
+
+Torn torn_6e1c9735-95eb-43a6-864c-97f640acaccf; informe _wiki_de_poble/04_escriptori/261014_0235_auditoria_codex.md; tall 2026-10-14T00:47:48.840Z. Registre del dictamen inicial: dos P1 i dos P2 previs del Bar, reproduïts amb dades sintètiques; risc CON-03 de salut falsa; integració TPV–Rebost–Gestoria pendent. Evidència: 256 proves existents passades, tres cassets que constaten defectes i una carrera sense Web Locks; les 139 proves durant edició concurrent no acrediten un tall final. Monitor consell-de-quatre-ias-auditoria-codex-cada-15-minuts ACTIVE cada 15 minuts. Claude i la revisió de les ampliacions Gemini continuen; cap tancament del torn ni de l’onada. Rel­leu limitat a ESTAT i LEDGER, preservant l’històric íntegre; cap canvi de codi ni d’originals.
+
+
+<!-- HASH: 6ec1d5c7bec026d98e9be48c8c491f1422c6f1855d0d6f829d03f78181514251 -->

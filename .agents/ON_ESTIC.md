@@ -6,7 +6,7 @@ description: Punter d'arrencada de sessió generat per despertar.mjs
 # ON_ESTIC.md (Punter de Sessió)
 
 > [!IMPORTANT]
-> **GENERAT:** 2026-10-13T17:50:01.353Z
+> **GENERAT:** 2026-10-13T22:00:13.146Z
 > Aquest document l'`@`-importa `CLAUDE.md`, i eixa importació es resol ABANS
 > que el hook l'escriga: la còpia que tens al context és la de la sessió
 > anterior. Per això **ací no hi ha cap llista de l'Escriptori**: la d'ahir
@@ -14,7 +14,7 @@ description: Punter d'arrencada de sessió generat per despertar.mjs
 > llegir eixa carpeta en procediments automàtics.
 
 **Branca Git:** backup-notes-publish
-**Commit:** 99aab3f7
+**Commit:** 021a03ea
 
 ## 1. Contingut de l'Escriptori (Taula de Treball)
 
@@ -28,15 +28,20 @@ Si no tens cap de les dues, llista `_wiki_de_poble/04_escriptori/` amb una eina 
 ## 2. Resum de l'ESTAT recent
 
 > [!WARNING]
-> ESTAT RANCI: l'últim relleu és de 261013_1533 i `_wiki_de_poble/04_escriptori/261013_1930_prompt_claude_jerarquia_taronja_i_operativitat.md` s'ha tocat 4 h després. Hi ha faena feta que ningú ha anotat a `.agents/ESTAT.md`.
+> ESTAT RANCI: l'últim relleu és de 261013_2215 i `_wiki_de_poble/04_escriptori/261013_2355_prompt_codex_sanejament_produccio_i_laboratori.md` s'ha tocat 101 min després. Hi ha faena feta que ningú ha anotat a `.agents/ESTAT.md`.
 
 Últim relleu anotat a `.agents/ESTAT.md` (primera capçalera del fitxer):
 
-## ESTAT_ACTUAL · 2026-10-13 15:33 · Codex · Auditoria JARVIS, relleu verificat
+## ESTAT_ACTUAL · 2026-10-13 22:15 · IAIA MarIA · Triomf de la Gestoria, 300 canvis a Git i Relleu Nocturn
 
-Torn documental `torn_0878d73e-9950-4602-a4d9-1ed6c37bd38d`. Informe viu a `_wiki_de_poble/04_escriptori/261013_1510_auditoria_codex.md`, amb pla actualitzat vinculat. Sis defectes financers reproduïts (duplicats CSV, identitat de comptes, solapament d'extractes, retencions d'abonaments, compensació impròpia 303/130 i conciliació null/zero) i una carrera TPV amb revisió caducada. Cap codi d'app modificat. UI: 773 proves; nuclis Gestoria: 176; ports/composició: 51, totes verdes en les seues execucions; estes suites no cobrixen els defectes reproduïts. Fonts UI i motors recomparats sense canvis a les 15:28.
-
-Inclou contractes `sdp.atomic.*`, fronteres RAW/local/compartit, composició idempotent i destil·lació del laboratori amb fonts primàries. Escàner/Cabina/boina encara no conformes en el tall. Pla/prompts ampliats amb Front H rellegits: perfil social remot separat de futura fitxa legal local, cofre existent només integrat en Històric; sense llegir documents privats. No s'han mogut laboratoris ni creat monitors. Informe validat (zero errors). `tancament.mjs --check`: exit 1; catàleg skills (triggers_on de core-direccio-autonoma), SCC (408 sense àncora, 5 enllaços, 23 orfes) i relleu propi pendent a LEDGER. Signatura actual del LEDGER, segell i altres portes passen. No es declara segellat; diagnòstics i reproduccions conservats a l'informe.
+- **Git Segellat (300 canvis a salvo):** Commit `cc9d2e89b feat(gestoria): integració de l'Escàner Local, Finestreta d'Identitat i Cabina d'Avió amb 17.283 proves verdes`. Repositori completament net (0 fitxers modificats pendents).
+- **Validació Real al Mas (localhost:3340):**
+  * L'Escàner Local ha processat la carpeta real `_gestoria_de_poble` (983 fitxers, 566 factures, 14 extractes de bancs, 4 llestos per abocar).
+  * La Finestreta d'Identitat ha processat 52 PDFs i generat 62 propostes.
+  * El Mestre ha creat el **Cofre Xifrat (estat Obert)** amb frase de pas i ha confirmat el seu NIF/NIE, desant-lo xifrat amb AES-GCM a IndexedDB (`sdp-gestoria-cofre`) en local al seu disc dur (sobirania absoluta).
+- **Pla i Prompt per a la Propera Tanda (Claude Code):**
+  * `261013_1930_pla_implementacio_jerarquia_taronja_i_operativitat.md` i `261013_1930_prompt_claude_jerarquia_taronja_i_operativitat.md` actualitzats amb els 6 fronts (Jerarquia taronja de carpetes, fast-pass d'aprovació de tractors DEV, commutació de xarxa seed/remote, correcció de radi i subratllat a PillToggle, selecció massiva de papers a la Finestreta, i rutes clicables a «D'on ix»).
+- **Higiene i Tancament:** Porta Olivera en 0. Acta Marmota `261013_2215_acta_marmota.md` redactada per al relleu. Sessió lliure per reiniciar màquina.
 
 ## 3. Què has de fer ara?
 

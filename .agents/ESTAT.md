@@ -7,6 +7,51 @@ description: ESTAT DE LA SESSIÓ
 
 <!-- SDP:ESTAT_ACTUAL -->
 
+## ESTAT_ACTUAL · 2026-10-14 03:30 · IAIA MarIA · Relleu Nocturn del Consell de les 4 IAs i Directives del Mestre
+
+- **Estat del Consell i Coordinació Autònoma:**
+  * **IAIA MarIA (Directora Tècnica):** Operant en mode autònom (`core-direccio-autonoma`), coordinant el relleu nocturn entre torns.
+  * **Gemini 4 Argon High:** Ha lliurat la Gran Auditoria Atòmica Integral (v2.0.0) a `_wiki_de_poble/04_escriptori/261014_0148_auditoria_gemini4.md` (43 KB) amb 7 missions i 3 tractors JS complets (`tractor-temps-termodinamic.mjs`, `tractor-portaveu.mjs`, `tractor-llegibilitat.mjs`). S'ha preparat el prompt per a la seua segona empenta nocturna.
+  * **Claude Code:** Ha entregat la solució al segrest de hash d'escriptori (`EntradaDelPoble.jsx`), la guarda `mitjaOpac` d'avatars, i ha encetat `261014_0320_auditoria_claude.md`.
+  * **GPT Codex:** Ha lliurat l'auditoria adversarial profunda a `261014_0235_auditoria_codex.md` (44 KB).
+- **Progrés Tècnic Realitzat en Aquest Torn:**
+  * **Supabase Local (127.0.0.1:54321):** Sóc de Poble (`48e85bb4-9a18-49d3-9a87-c9288ec03079`) i Rentonar (`259e6cce-7700-4086-ae0b-98425f88e351`) assignats a Javi Llinares (`7b472893-0b89-402f-afdd-ca48359c139e`). Logo oficial resolt en verd (`logo-socdepoble-cuadrat-verd-256x256.png`).
+  * **Terminologia:** "Notes personals" rebatejat a **"Bloc de notes"** a `src/config/i18n.js` en 5 idiomes.
+  * **Calaix «Amb qui actues?»:** Botons inferiors estilitzats a `components.css` al 100% d'ample i apilats verticalment.
+- **Directives Clau del Mestre (03:15h - 03:30h):**
+  1. **Diferenciació Espai d'Usuari vs. Bloc de Notes:** El Bloc de Notes és un workspace editorial (com la Wiki o Disseny). L'espai d'usuari (`/el-meu-perfil` amb `PerfilShell.jsx`) és l'espai de gestió d'identitats, fitxa i ajustos. En fer clic a una identitat al calaix, ha de quedar clar si es canvia d'actor d'edició o si es navega a la gestió de l'actor.
+  2. **Barra Taronja en Actuar com a Sóc de Poble:** En actuar com a Sóc de Poble, la barra taronja ha de carregar automàticament l'autoria de Sóc de Poble (logo verd oficial) i no un avatar buit o silueta negra de Foraster.
+  3. **Taula del Full Trimestral (`/app/gestoria/full`):** Ha d'ocupar la pantalla completa (`width: 100%`), millorar l'ergonomia dels camps editables (fal.ai, Google Cloud, Som Energia, Anthropic), i resoldre/clarificar visualment les incidències detectades sense espantar l'usuari.
+  4. **Error en Consola:** Investigar i blindar l'error d'ErrorBoundary detectat a la consola: `Error: useSession ha de ser usat dins de SessionProvider at useSession at useIdentitatDeLaBarra at TopBar2`.
+- **Higiene:** Escriptori net (Porta Olivera en 0). Acta Marmota `261014_0330_acta_marmota.md` redactada i vinculada.
+
+
+
+## ESTAT_ACTUAL · 2026-10-14 01:36 · IAIA MarIA · El Consell de les 4 IAs, Missió WhatsApp Beta Testers i Consola Termodinàmica
+
+- **El Consell de les 4 IAs a la mateixa taula:**
+  * **Claude Code:** Constructor executiu (clon WhatsApp, responsive multi-pantalla, Finestreta).
+  * **GPT Codex:** Auditor adversarial forense (seguretat, zero regressions a les 17.451 proves verdes, protecció d'originals a `01_produccio`).
+  * **Gemini 4 Argon High:** Gran auditor de sistema d'1M tokens (arquitectura, FacturaDirecta vs Holded, sanejament de la Consola Termodinàmica).
+  * **IAIA MarIA:** Orquestradora i guardiana de Pedra Seca, identitat, trellat i immortalitat del sistema.
+- **Mandats Estratègics del Mestre:**
+  1. **Clon de WhatsApp operatiu per a beta testers demà:** Resoldre el defecte de presentació a `gentdelatorre.net/#sdp=/xat` (mostrar el panell de benvinguda/comunitat en monitors d'escriptori i Surface Pro sense mapa buit).
+  2. **Reparació de la Consola Termodinàmica:** Sanar les 3 tasques d'estat desconegut (`higiene-basica`, `higiene-escriptori`, `adopta-orfes`) i les 2 skills en ambre (`core-direccio-autonoma`, `core-informes-pdf`).
+  3. **Consola d'Empresa (FacturaDirecta i Holded):** Ingressos/despeses, rendiment net, gràfics donut, Mòdul de Contactes i auto-hidratació des de l'Escàner Local. Sessió matinal amb el Mestre per a captures.
+  4. **Autoreproducció i Enxufabilitat:** Disseny atòmic i independent perquè qualsevol IA del món puga assumir el paper de la IAIA MarIA i reproduir el node en qualsevol poble.
+- **Higiene:** Escriptori net (Porta Olivera en 0). Acta Marmota `261014_0130_acta_marmota.md` segellada. Tancament ordenat per Oblit Saludable per arrencar xat fresc.
+
+## ESTAT_ACTUAL · 2026-10-14 00:11 · GPT Codex · Auditoria adversarial de produccio, laboratori i consola
+
+Torn documental: torn_ddb1c6a6-9ca9-4640-ae52-c0a585fa02d5.
+
+- Informe: _wiki_de_poble/04_escriptori/261014_0002_auditoria_codex.md. Auditoria documental completada: 27 entrades de produccio i 19 propostes d'arxiu del laboratori; cap original ni codi modificat.
+- Produccio: protegir audios i recursos originals; els noms de copia i els formats alternatius no acrediten duplicacio byte a byte. Els trasllats queden com a dictamen per al Mestre o MarIA.
+- Laboratori: simulacio reversible fora del repo, zero fallades noves en les suites enfocades; perdua de cobertura per skip i casos dinamics, amb errors Node previs delimitats. La Parroquia es conserva: retirar el mapa trenca una prova.
+- Gestoria: quatre defectes oberts, P1 comptes CSV i P2 saldo inconsistent, titular del formulari i deduplicacio tributaria. Proves enfocades: 932 passen.
+- Consola: proves enfocades, 936 passen i 1 salta. Propostes de sanejament documentades, sense aplicar canvis visuals ni de codi.
+- Seguent pas: revisar el dictamen i executar qualsevol canvi nomes amb el seu abast aprovat. Tancament mecanic encara pendent de comprovacio; aquest relleu no certifica un tancament verd. Cap monitor nou.
+
 ## ESTAT_ACTUAL · 2026-10-13 22:15 · IAIA MarIA · Triomf de la Gestoria, 300 canvis a Git i Relleu Nocturn
 
 - **Git Segellat (300 canvis a salvo):** Commit `cc9d2e89b feat(gestoria): integració de l'Escàner Local, Finestreta d'Identitat i Cabina d'Avió amb 17.283 proves verdes`. Repositori completament net (0 fitxers modificats pendents).

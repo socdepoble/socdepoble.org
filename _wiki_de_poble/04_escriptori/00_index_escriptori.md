@@ -32,14 +32,16 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu — i
 - [[01_produccio/article-ayudawp.md]]
 
 ## Activitat en curs
-- [[261013_1930_prompt_claude_jerarquia_taronja_i_operativitat]]
-- [[261013_1930_pla_implementacio_jerarquia_taronja_i_operativitat]]
+- [[261014_0400_prompt_gemini4_arquitectura_gestoria_i_replegament]]
+- [[261014_0400_prompt_claude_gestoria_i_replegament]]
+- [[261014_0320_auditoria_claude]]
+- [[261014_0235_auditoria_codex]]
+- [[261014_0210_prompt_claude_reparacions_xat_i_consola]]
+- [[261014_0210_pla_implementacio_reparacions_xat_i_consola]]
+- [[261014_0148_auditoria_gemini4]]
+- [[261014_0130_pla_implementacio_auditoria_gemini4]]
+- [[261014_0130_prompt_gemini4_auditoria_adversarial_extrema]]
 - [[261013_1600_estudi_destil_laboratori_ia]]
-- [[261013_1510_auditoria_codex]]
-- [[261013_1510_auditoria_claude]]
-- [[261013_1405_prompt_chatgpt_auditor]]
-- [[261013_1405_prompt_claude_gestoria_jarvis]]
-- [[261013_1405_pla_implementacio_gestoria_jarvis]]
 - [[../90_arxiu_historic/261012_2148_peticio_registre_mestre]] · torn_02f070c3-0705-4c0e-b5d3-32c84ab77117
 - [[../90_arxiu_historic/261012_2145_ordre_unificacio_barra_maria]] · torn_02f070c3-0705-4c0e-b5d3-32c84ab77117
 - [[../90_arxiu_historic/261012_2105_correccio_barra_maria]] · torn_02f070c3-0705-4c0e-b5d3-32c84ab77117
@@ -767,6 +769,16 @@ Enllaços a peces ja existents, verificats al disc; no s’han mogut ni editat e
 
 ## Arxivat amb la Porta Olivera
 
+- [[../90_arxiu_historic/261014_0110_auditoria_claude]]
+- [[../90_arxiu_historic/261014_0002_auditoria_codex]]
+- [[../90_arxiu_historic/261013_2355_prompt_codex_sanejament_produccio_i_laboratori]]
+- [[../90_arxiu_historic/261013_1930_prompt_claude_jerarquia_taronja_i_operativitat]]
+- [[../90_arxiu_historic/261013_1930_pla_implementacio_jerarquia_taronja_i_operativitat]]
+- [[../90_arxiu_historic/261013_1510_auditoria_codex]]
+- [[../90_arxiu_historic/261013_1510_auditoria_claude]]
+- [[../90_arxiu_historic/261013_1405_prompt_claude_gestoria_jarvis]]
+- [[../90_arxiu_historic/261013_1405_prompt_chatgpt_auditor]]
+- [[../90_arxiu_historic/261013_1405_pla_implementacio_gestoria_jarvis]]
 - [[../90_arxiu_historic/261012_1633_auditoria_claude_gestoria]]
 - [[../90_arxiu_historic/261012_1700_pla_implementacio_previsio_economica]]
 - [[../90_arxiu_historic/261012_2022_auditoria_codex]]

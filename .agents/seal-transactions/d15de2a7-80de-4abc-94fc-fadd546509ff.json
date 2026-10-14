@@ -1,0 +1,22 @@
+{
+  "id": "d15de2a7-80de-4abc-94fc-fadd546509ff",
+  "session": "db458468-e63d-4313-b346-675f3be75c06",
+  "operationId": "consell-0235-relleu-en-curs-estat-ledger-2",
+  "claim": "db458468-e63d-4313-b346-675f3be75c06:governance-write",
+  "planHash": "c2809edccbbf2adbfa07b95ba71cd23faaa069e83d29c1303f6facd98fff50a3",
+  "beforeSeal": "7faee40738d891127c88ab98703cd901ae0848c0141fe7651a8b31158eece185",
+  "files": [
+    {
+      "path": ".agents/ESTAT.md",
+      "before": "ae84c71d066aa2ac872c56393b5e747b561c4fbd72e32deea3b83acc1013dfd9",
+      "after": "ffc1a7fc7b283f81ad14b0ea86eea05eeec52478dc498f29ca311186175eaba9"
+    },
+    {
+      "path": ".agents/LEDGER.md",
+      "before": "4df838e2551fde7990965315f15c59777eaf3b703c24c162ae3e61f79f01a554",
+      "after": "4d081dc03e6d5c5a4a62bd96446eb9b61f6c7e282beb29c73403247414e17a36"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "037d6f8bb955504b3c57690510c31256c043225b63eaa38c261907313b3ec026"
+}

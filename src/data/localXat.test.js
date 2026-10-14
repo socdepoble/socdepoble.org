@@ -1,7 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { localXat, reiniciaLocalXat } from './localXat.js';
 import { XAT_SEED_IDS } from './xatSeed.js';
-import { ENTITAT_PILOT_SLUG } from './identitatsSeed.js';
+import { ENTITAT_PILOT_SLUG, ENTITAT_RENTONAR_SLUG } from './identitatsSeed.js';
+import { createLocalPerfilsAdapter } from './localPerfils.js';
+import { objecteDePerfil } from '../config/navigation.js';
+import { rutaXatDePagina } from '../config/objecteConnectable.js';
 
 /* T63.2 i T67 · El magatzem local del Xat: fils de pàgina i comunitats.
    La sessió es controla des d'ací: amb sessió, qui mira és propietari de
@@ -121,15 +124,18 @@ describe('la comunitat «Sóc de Poble» de la llavor', () => {
 
   /* Ordre del Mestre (261007) · Amb slug i id iguals, cap prova no passa per
      la cerca per slug de localXat (obriFilDePagina: `e.slug ===
-     subjecte.id`). Un padró de prova, idèntic al de la llavor tret del slug,
-     la torna a exercitar: si la branca es perdera, el slug obriria una
-     comunitat nova en lloc del General de la llavor. El mòdul es carrega de
-     nou només per a esta prova, i la resta continua amb el padró real. */
+     subjecte.id`). Un padró de prova, idèntic al de la llavor tret del slug
+     de l'entitat pilot, la torna a exercitar: si la branca es perdera, el
+     slug obriria una comunitat nova en lloc del General de la llavor. El
+     mòdul es carrega de nou només per a esta prova, i la resta continua amb
+     el padró real. Front 3 (261013) · Només canvia el de la pilot: el padró ja
+     porta Rentonar, i dos entitats amb el mateix slug no serien cap llavor. */
   it('amb un slug distint de l’id, obrir la pàgina de l’entitat pel slug porta al mateix General', async () => {
     vi.resetModules();
     vi.doMock('./identitatsSeed.js', async (importOriginal) => {
       const original = await importOriginal();
-      return { ...original, ENTITATS_SEED: Object.freeze(original.ENTITATS_SEED.map((e) => ({ ...e, slug: 'slug-de-prova' }))) };
+      const ambSlugDeProva = (e) => (e.id === original.ENTITAT_PILOT_ID ? { ...e, slug: 'slug-de-prova' } : e);
+      return { ...original, ENTITATS_SEED: Object.freeze(original.ENTITATS_SEED.map(ambSlugDeProva)) };
     });
     try {
       const { localXat: ambPadroDeProva, reiniciaLocalXat: reinicia } = await import('./localXat.js');
@@ -171,5 +177,55 @@ describe('la comunitat «Sóc de Poble» de la llavor', () => {
       .rejects.toMatchObject({ code: 'SDP-XAT-011' });
     expect(await localXat.enviaMissatge(XAT_SEED_IDS.filGeneral, { id: 'general-convidat', text: 'Hola' }, SEED))
       .toMatchObject({ usuariId: 'convidat-seed', comOrgId: null });
+  });
+});
+
+/* Ordre del Mestre (261013; pla 261013_1930, Front 3) · Rentonar, la segona
+   entitat fundacional del padró, pels dos camins que ofereix la seua fitxa.
+   La fitxa és de tipus 'grup' (localPerfils · publicDEntitat, amb kind
+   'group'):
+   · «Comentar → En públic» porta a /xat?sobre=grup:rentonar, un grup pla
+     sense comunitat ni Avisos ('grup' és de la classe grup a
+     contracte.js · TIPUS_SUBJECTE_XAT);
+   · «Escriu-li al xat» porta a /xat?amb=rentonar (PerfilPublicSection), un fil
+     amb l'entitat on qui té sessió és client: la regla del mode seed només
+     la fa propietària de la pilot (identitatsSeed · rolALEntitat). */
+describe('Rentonar, la segona entitat de la llavor (Front 3)', () => {
+  const fitxa = () => createLocalPerfilsAdapter().loadPerfilPublic(ENTITAT_RENTONAR_SLUG, null);
+
+  it('«Comentar» de /grup/rentonar obri un grup pla de la pàgina, sense comunitat ni Avisos, on es pot escriure', async () => {
+    const objecte = objecteDePerfil(fitxa());
+    expect(objecte).toMatchObject({ tipus: 'grup', id: 'rentonar', titol: 'Rentonar', ruta: '/grup/rentonar' });
+    expect(rutaXatDePagina(objecte)).toBe('/xat?sobre=grup:rentonar&titol=Rentonar&ruta=%2Fgrup%2Frentonar');
+    /* El descriptor que XatSection en trau (objecteDeSobre) i passa a obriFilDePagina. */
+    const obert = await localXat.obriFilDePagina({ tipus: 'grup', id: 'rentonar', titol: 'Rentonar', ruta: '/grup/rentonar' }, SEED);
+    expect(obert.fils).toHaveLength(1);
+    const [grup] = obert.fils;
+    expect(obert.filId).toBe(grup.id);
+    expect(grup).toMatchObject({
+      tipus: 'grup', titol: 'Rentonar', comunitatId: null, entitatId: null, rol: 'membre', participant: true,
+      subjecte: { tipus: 'grup', id: 'rentonar', ruta: '/grup/rentonar', titol: 'Rentonar' }
+    });
+    const delSubjecte = (await localXat.loadFils(SEED)).filter((f) => f.subjecte?.id === ENTITAT_RENTONAR_SLUG);
+    expect(delSubjecte.map((f) => f.tipus)).toEqual(['grup']);
+    expect(await localXat.enviaMissatge(grup.id, { id: 'rentonar-public', text: 'Bon dia' }, SEED))
+      .toMatchObject({ seq: 1, usuariId: 'jo-A', comOrgId: null, autorNom: null });
+  });
+
+  it('«Escriu-li al xat» (/xat?amb=rentonar) obri el fil amb l’entitat, com crea_fil_directe; qui té sessió no l’administra', async () => {
+    const amb = fitxa().id;
+    expect(amb).toBe(ENTITAT_RENTONAR_SLUG);
+    const filId = await localXat.creaFilDirecte(amb, null, SEED);
+    expect(await localXat.creaFilDirecte(amb, null, SEED)).toBe(filId);
+    expect((await localXat.loadFils(SEED)).find((f) => f.id === filId)).toMatchObject({
+      tipus: 'entitat', entitatId: 'rentonar', entitatNom: 'Rentonar', comEntitat: false, rol: 'membre',
+      comunitatId: null, subjecte: null, altres: [{ id: 'rentonar', nom: 'Rentonar', tipus: 'entitat', avatarUrl: '' }]
+    });
+    expect(await localXat.enviaMissatge(filId, { id: 'rentonar-privat', text: 'Hola, Rentonar' }, SEED))
+      .toMatchObject({ seq: 1, usuariId: 'jo-A', comOrgId: null, autorNom: null });
+    /* El padró que es llista no canvia (xatSeed.js), i un id que no és cap
+       entitat del padró continua sent forastera. */
+    expect((await localXat.carregaMembres(null, SEED)).map((m) => m.usuari_id)).not.toContain(ENTITAT_RENTONAR_SLUG);
+    await expect(localXat.creaFilDirecte('coop', null, SEED)).rejects.toMatchObject({ code: 'SDP-XAT-004' });
   });
 });

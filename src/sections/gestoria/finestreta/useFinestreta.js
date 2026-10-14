@@ -15,8 +15,10 @@
  * espera (el navegador només obri el selector just després d'un gest de la
  * persona); sense selector de carpetes, usaFitxers amb els fitxers d'un
  * <input webkitdirectory>. Després, la taula (planificaTractorIdentitat), que
- * no obri cap fitxer. La persona marca els 'demanar' que vol (commutaMarcat)
- * i llig (executaTractorIdentitat).
+ * no obri cap fitxer. La persona marca els 'demanar' que vol, d'un en un
+ * (commutaMarcat) o tots de colp (marcaTotsDemanar / desmarcaTotsDemanar), i
+ * llig (executaTractorIdentitat). Marcar no és llegir: només llig obri cap
+ * paper, i els 'llegir' i els 'ometre' no es poden marcar mai.
  *
  * LA FITXA (nucli/fitxaIdentitat.js): les propostes es fusionen a la fitxa en
  * memòria, 'proposat' o 'en-conflicte', mai triades soles. Si encara no hi
@@ -32,8 +34,19 @@
  * cofre ({ estat: 'bloquejat' }, també l'automàtic) BUIDA tot el que és
  * desxifrat o se'n deriva: la fitxa, les propostes, les confiances, la
  * taula, la lectura i la carpeta. Cada obertura torna a llegir la fitxa.
- * Proves: el magatzem, subtle, el catàleg, l'entorn, el rellotge, inflate i
- * la persistència s'injecten.
+ *
+ * ELS PAPERS DE «D’ON IX» (Front 6, ordre del Mestre del 14-10-2026, pla
+ * 261013_1930: «Fitxa + obrir el PDF»): preparaPaper(font) torna a llegir el
+ * paper d'una font amb la carpeta viva (obriPaperIdentitat: la porta, cap
+ * vetat, l'empremta i el MIME fix) i en fa una URL blob: amb entorn.URL. La
+ * pestanya l'obri la vista, dins del clic. Cada URL es revoca als 120 s
+ * (VIDA_PAPER_MS), i totes amb deixaTot (el bloqueig del cofre i «Oblida»),
+ * amb una carpeta nova i en desmuntar. Una comprovació que falla revoca la URL
+ * d'abans del mateix paper: «Obri’l» mai obri els bytes d'una carpeta
+ * desenxufada. papersComprovats (clauPaper → URL) i potObrirPaper són estat:
+ * la vista es torna a pintar quan canvien.
+ * Proves: el magatzem, subtle, el catàleg, l'entorn (també URL, setTimeout i
+ * clearTimeout), el rellotge, inflate i la persistència s'injecten.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { contextAprovacio, useTractors } from '../../tractors/useTractors.js';
@@ -44,7 +57,7 @@ import {
   afegixTitular, confirma as confirmaValor, entraAMa as entraValorAMa, fitxaBuida, fusionaPropostes, llegixDelCofre,
   nouIdFitxa, perAlCofre, rebutja as rebutjaValor
 } from './nucli/fitxaIdentitat.js';
-import { executaTractorIdentitat, planificaTractorIdentitat } from './nucli/tractorIdentitat.js';
+import { executaTractorIdentitat, obriPaperIdentitat, planificaTractorIdentitat } from './nucli/tractorIdentitat.js';
 import { CAMPS_IDENTITAT } from './nucli/validadorsIdentitat.js';
 
 const ESTAT_BUIT = Object.freeze({
@@ -64,6 +77,25 @@ const empremtaDesable = (f) => JSON.stringify({ ...perAlCofre(f), actualitzat: n
 
 /** La clau d'una proposta al mapa de confiances: el camp i el valor. */
 export const clauConfianca = (camp, valor) => `${camp}|${String(valor)}`;
+
+/** El temps màxim que viu la URL d'un paper comprovat: després, es revoca. */
+export const VIDA_PAPER_MS = 120000;
+/** La clau d'un paper comprovat (papersComprovats): l'empremta i la ruta de la font. */
+export const clauPaper = (font) => `${font?.sha256 ?? ''}|${font?.ruta ?? ''}`;
+/** El que diu la vista quan no hi ha cap carpeta viva on tornar a llegir el paper. */
+export const SENSE_CARPETA_PAPER = 'Tria la carpeta on és el paper per a obrir-lo.';
+/* L'URL i els temporitzadors de l'entorn (injectables), o els del navegador; es criden com a mètodes del seu objecte. */
+const urlDe = (entorn) => (typeof entorn?.URL?.createObjectURL === 'function' ? entorn.URL : globalThis.URL);
+const temporitzadorsDe = (entorn) => (typeof entorn?.setTimeout === 'function' && typeof entorn?.clearTimeout === 'function' ? entorn : globalThis);
+/* Revoca la URL d'un paper comprovat amb l'entorn que la va crear, i n'atura el temporitzador. */
+function revocaPaper({ url, temps, entorn }) {
+  temporitzadorsDe(entorn).clearTimeout(temps);
+  try {
+    urlDe(entorn).revokeObjectURL(url);
+  } catch {
+    /* ja no hi era: res a alliberar */
+  }
+}
 
 /* La confiança més alta de cada camp i valor proposats (només en memòria, com la fitxa). */
 function confiancesDe(propostes, previes = new Map()) {
@@ -116,6 +148,8 @@ export function useFinestreta({ magatzem, subtle, tractors, entorn = globalThis,
   const [errorPersistencia, setErrorPersistencia] = useState(null);
   /* El registre desat no és una fitxa vàlida: no es trepitja. */
   const [desaBlocat, setDesaBlocat] = useState(false);
+  /* Els papers comprovats que es poden obrir: clauPaper(font) → URL blob: (les vives són a la ref `papers`). */
+  const [papersComprovats, setPapersComprovats] = useState(() => new Map());
 
   const fitxaActual = useRef(fitxa);
   const font = useRef(null);
@@ -125,6 +159,8 @@ export function useFinestreta({ magatzem, subtle, tractors, entorn = globalThis,
   const ocupat = useRef(false);
   const pendentDeDesar = useRef(false);
   const desat = useRef(null);
+  /* clauPaper(font) → { url, temps, entorn }: les URL vives, per a revocar-les. */
+  const papers = useRef(new Map());
   const deps = useRef(null);
   deps.current = { magatzem, subtle, tractors, entorn, rellotge, inflate };
   const viu = useRef(null);
@@ -135,7 +171,26 @@ export function useFinestreta({ magatzem, subtle, tractors, entorn = globalThis,
     setFitxa(nova);
   }, []);
 
-  /* Cancel·la el que hi haja en curs i desenxufa la carpeta. */
+  /* Revoca la URL viva d'un paper comprovat (si n'hi ha) i el trau de papersComprovats. */
+  const oblidaPaper = useCallback((clau) => {
+    const viva = papers.current.get(clau);
+    if (!viva) return;
+    revocaPaper(viva);
+    papers.current.delete(clau);
+    setPapersComprovats((abans) => {
+      const nou = new Map(abans);
+      nou.delete(clau);
+      return nou;
+    });
+  }, []);
+  /* Revoca totes les URL dels papers comprovats: la carpeta d'on venien ja no hi és. */
+  const oblidaPapers = useCallback(() => {
+    papers.current.forEach(revocaPaper);
+    papers.current = new Map();
+    setPapersComprovats((abans) => (abans.size ? new Map() : abans));
+  }, []);
+
+  /* Cancel·la el que hi haja en curs, desenxufa la carpeta i revoca les URL dels papers comprovats. */
   const deixaTot = useCallback(() => {
     torn.current += 1;
     lecturaActiva.current?.abort();
@@ -143,7 +198,8 @@ export function useFinestreta({ magatzem, subtle, tractors, entorn = globalThis,
     ocupat.current = false;
     if (font.current) oblidaFont(font.current);
     font.current = null;
-  }, []);
+    oblidaPapers();
+  }, [oblidaPapers]);
 
   /* El bloqueig del cofre: tot el que és desxifrat o se'n deriva fora de la memòria, i cap desament pendent. */
   const buida = useCallback(() => {
@@ -212,13 +268,15 @@ export function useFinestreta({ magatzem, subtle, tractors, entorn = globalThis,
     };
   }, [persistencia, buida, posaFitxa]);
 
-  /* Desmuntatge: res en curs i la carpeta desenxufada. */
+  /* Desmuntatge: res en curs, la carpeta desenxufada i cap URL de paper viva. */
   useEffect(() => () => {
     torn.current += 1;
     lecturaActiva.current?.abort();
     lecturaActiva.current = null;
     if (font.current) oblidaFont(font.current);
     font.current = null;
+    papers.current.forEach(revocaPaper);
+    papers.current = new Map();
   }, []);
 
   /* Cada decisió de la persona que canvia els confirmats es desa: només perAlCofre(fitxa). */
@@ -245,9 +303,13 @@ export function useFinestreta({ magatzem, subtle, tractors, entorn = globalThis,
     return () => { actiu = false; };
   }, [fitxa, persistencia, desaBlocat]);
 
-  /* La taula «Què llegiré i què no» d'una carpeta nova: cap byte, només els noms. */
+  /* La taula «Què llegiré i què no» d'una carpeta nova: cap byte, només els noms. Les URL dels papers
+     comprovats de la carpeta d'abans es revoquen amb ella. */
   const planifica = useCallback(async (nova, meu) => {
-    if (font.current && font.current !== nova) oblidaFont(font.current);
+    if (font.current && font.current !== nova) {
+      oblidaFont(font.current);
+      oblidaPapers();
+    }
     font.current = nova;
     const controlador = new AbortController();
     lecturaActiva.current = controlador;
@@ -267,7 +329,7 @@ export function useFinestreta({ magatzem, subtle, tractors, entorn = globalThis,
       if (lecturaActiva.current === controlador) lecturaActiva.current = null;
       if (meu === torn.current) ocupat.current = false;
     }
-  }, []);
+  }, [oblidaPapers]);
 
   /* Es pot triar o llegir: tractor aprovat, cofre obert, fitxa llegida i res en curs. */
   const pot = useCallback(() => viu.current.aprovat && !viu.current.persistenciaBloquejada && viu.current.fitxaLlegida && !ocupat.current, []);
@@ -320,6 +382,27 @@ export function useFinestreta({ magatzem, subtle, tractors, entorn = globalThis,
     });
   }, []);
 
+  /* Marca de colp tots els opacs ('demanar') de la taula, darrere dels que ja ho eren i sense repetir-ne cap: els
+     'llegir' i els 'ometre' no hi entren mai. Marcar no és llegir. Si no canvia res, el mateix estat (cap pintada). */
+  const marcaTotsDemanar = useCallback(() => {
+    setEstat((e) => {
+      if (e.ocupat || !e.pla) return e;
+      const ja = new Set(e.marcats);
+      const nous = [];
+      for (const d of e.pla.decisions) {
+        if (d.decisio !== 'demanar' || ja.has(d.ruta)) continue;
+        ja.add(d.ruta);
+        nous.push(d.ruta);
+      }
+      return nous.length ? { ...e, marcats: [...e.marcats, ...nous] } : e;
+    });
+  }, []);
+
+  /* Desmarca tots els opacs (els marcats només poden ser 'demanar'). */
+  const desmarcaTotsDemanar = useCallback(() => {
+    setEstat((e) => (e.ocupat || e.marcats.length === 0 ? e : { ...e, marcats: [] }));
+  }, []);
+
   /* Llig els permesos i els marcats, i en fusiona les propostes a la fitxa (en memòria: no es desa res). */
   const llig = useCallback(async () => {
     const { estat: actual } = viu.current;
@@ -358,6 +441,51 @@ export function useFinestreta({ magatzem, subtle, tractors, entorn = globalThis,
       if (meu === torn.current) ocupat.current = false;
     }
   }, [posaFitxa, pot]);
+
+  /* Front 6: torna a llegir el paper d'una font de «D’on ix» amb la carpeta viva, en comprova l'empremta i en fa una
+     URL blob: (entorn.URL) amb el MIME fix. Torna { url } o { motiu, codi }: el motiu, en valencià i sense cap ruta.
+     L'aprovació es llig ara, com abans de cada pas. Si mentre es comprovava la carpeta s'ha oblidat o canviat (també
+     pel bloqueig del cofre), no es fa cap URL. Una segona comprovació del mateix paper revoca la URL d'abans, i una
+     que falla també: el paper ja no és el que es va comprovar. */
+  const preparaPaper = useCallback(async (fontDoc) => {
+    if (!font.current) return { motiu: SENSE_CARPETA_PAPER, codi: 'SENSE_CARPETA' };
+    if (!pot()) return { motiu: 'Ara no es pot comprovar el paper: espera que acabe la lectura.', codi: 'OCUPAT' };
+    if (fontDoc?.tipus !== 'document') return { motiu: 'Este valor no ve de cap paper.', codi: 'PARAMETRES_INVALIDS' };
+    const carpeta = font.current;
+    const { magatzem: m, subtle: s, tractors: t, entorn: en, rellotge: r } = deps.current;
+    let paper;
+    try {
+      const aprovacio = await contextAprovacio(TRACTOR_IDENTITAT.id, { magatzem: m, subtle: s, tractors: t, entorn: en, rellotge: r });
+      paper = await obriPaperIdentitat({ font: carpeta, ruta: fontDoc.ruta, sha256: fontDoc.sha256, aprovacio, subtle: s });
+    } catch (error) {
+      oblidaPaper(clauPaper(fontDoc));
+      return { motiu: missatgeDe(error), codi: error?.codi ?? null };
+    }
+    if (font.current !== carpeta) return { motiu: 'La carpeta ha canviat mentre es comprovava el paper: torna-ho a provar.', codi: 'FONT_OBLIDADA' };
+    let url;
+    try {
+      url = urlDe(en).createObjectURL(new Blob([paper.bytes], { type: paper.tipus }));
+    } catch {
+      return { motiu: 'Este navegador no ha pogut preparar el paper per a obrir-lo.', codi: null };
+    }
+    const clau = clauPaper(fontDoc);
+    const anterior = papers.current.get(clau);
+    if (anterior) revocaPaper(anterior);
+    const temps = temporitzadorsDe(en).setTimeout(() => {
+      const viva = papers.current.get(clau);
+      if (viva?.url !== url) return;
+      revocaPaper(viva);
+      papers.current.delete(clau);
+      setPapersComprovats((abans) => {
+        const nou = new Map(abans);
+        nou.delete(clau);
+        return nou;
+      });
+    }, VIDA_PAPER_MS);
+    papers.current.set(clau, { url, temps, entorn: en });
+    setPapersComprovats((abans) => new Map(abans).set(clau, url));
+    return { url };
+  }, [pot, oblidaPaper]);
 
   /* Una decisió de la persona sobre la fitxa. Torna null si s'ha fet, o el motiu si no (sense cap valor dins). */
   const decidix = useCallback((canvi) => {
@@ -423,6 +551,9 @@ export function useFinestreta({ magatzem, subtle, tractors, entorn = globalThis,
   return {
     porta, fila, aprovat, ...estat, fitxa, confiances, persistenciaBloquejada, fitxaLlegida, errorPersistencia, desaBlocat,
     potTriarCarpeta: potTriarCarpeta(entorn),
-    triaCarpeta, usaFitxers, commutaMarcat, llig, confirma, rebutja, entraAMa, oblida
+    /* Front 6: hi ha una carpeta viva on tornar a llegir un paper, i res en curs (com pot(), però des de l'estat). */
+    potObrirPaper: aprovat && !persistenciaBloquejada && fitxaLlegida && estat.teCarpeta && !estat.ocupat,
+    papersComprovats,
+    triaCarpeta, usaFitxers, commutaMarcat, marcaTotsDemanar, desmarcaTotsDemanar, llig, preparaPaper, confirma, rebutja, entraAMa, oblida
   };
 }

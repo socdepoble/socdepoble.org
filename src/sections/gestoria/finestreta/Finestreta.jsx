@@ -21,9 +21,15 @@
  *     clic; si no n'hi ha, un <input webkitdirectory>).
  *   · «QUÈ LLEGIRÉ I QUÈ NO»: cada paper de 01_Identitat_Legal i de
  *     03_Burocracia/SUMA amb la decisió i el perquè, abans d'obrir-ne cap. Els
- *     de nom opac només es lligen si la persona els marca.
+ *     de nom opac només es lligen si la persona els marca, d'un en un o tots
+ *     de colp; marcar no és llegir: només «Llig…» obri cap paper.
  *   · LES PROPOSTES, agrupades per titular, amb el paper d'on ixen i la
- *     confiança: Confirma, Rebutja o Corregix (a mà).
+ *     confiança: Confirma, Rebutja o Corregix (a mà). A «D’on ix» (Front 6,
+ *     ordre del Mestre del 14-10-2026, pla 261013_1930: «Fitxa + obrir el
+ *     PDF»), cada paper és un <details>: la ruta i, a dins, el tipus, la data
+ *     del nom, la regla i l'empremta curta; i dos passos per a consultar-lo:
+ *     «Comprova el paper» (el torna a llegir i en comprova l'empremta) i
+ *     «Obri’l en una pestanya» (dins del clic), tots dos amb l'ull obert.
  *   · LA TEUA FITXA: els valors confirmats, que es desen xifrats al cofre.
  *   · LA FINESTRETA: una pestanya per formulari, cada camp amb «Copia» i un
  *     esborrany per a imprimir. Tots són «A verificar contra el model vigent».
@@ -40,10 +46,13 @@
  * VistaFinestreta és la vista sense la porta: només per a les proves, que hi
  * injecten la persistència; la ruta munta sempre la porta.
  * Proves: el cofre, el magatzem, subtle, el catàleg, l'entorn, el rellotge,
- * inflate, la persistència (VistaFinestreta), copia i imprimix s'injecten.
+ * inflate, la persistència (VistaFinestreta), copia, imprimix i obriPaper
+ * s'injecten.
  */
-import { useCallback, useEffect, useId, useMemo, useState } from 'react';
-import { Check, Copy, Eye, EyeOff, FileSearch, FolderOpen, PenLine, Printer, X } from 'lucide-react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
+import {
+  Check, Copy, ExternalLink, Eye, EyeOff, FileCheck, FileSearch, FolderOpen, ListChecks, ListX, PenLine, Printer, X
+} from 'lucide-react';
 import { useNavigate } from '../../../app/contexts/RouterContext';
 import { Boto } from '../../../components/PedraSeca/atoms/Boto.jsx';
 import { Carregant, EstatBuit, Progres } from '../../../components/PedraSeca/atoms/estats.jsx';
@@ -58,8 +67,9 @@ import PortaCofre from '../cofre/PortaCofre.jsx';
 import { formatImport } from '../nucli/diners.js';
 import { MOTIUS } from './nucli/filtreDocuments.js';
 import { FORMULARIS, VERIFICAR, omplixFormulari } from './nucli/formularisFinestreta.js';
+import { LIMITS_IDENTITAT } from './nucli/tractorIdentitat.js';
 import { CAMPS_IDENTITAT } from './nucli/validadorsIdentitat.js';
-import { clauConfianca, useFinestreta } from './useFinestreta.js';
+import { SENSE_CARPETA_PAPER, clauConfianca, clauPaper, useFinestreta } from './useFinestreta.js';
 
 /* La consulta que obri la porta dels Tractors (la mateixa que CONSULTA_TRACTORS de ContenidorGestoria.jsx). */
 export const CONSULTA_TRACTORS_IDENTITAT = '?categoria=tractors_cat&item=tractors_aprovacio';
@@ -116,6 +126,20 @@ export const ETIQUETES_CAMPS = Object.freeze({
   'representacio.tipus': 'Tipus de representació',
   'representacio.vigentDes': 'Vigent des de',
   'representacio.vigentFins': 'Vigent fins a'
+});
+
+/** El nom de cada tipus de paper (TIPUS_DOCUMENT_IDENTITAT del filtre), en valencià: el que diu «D’on ix». */
+export const ETIQUETES_TIPUS_PAPER = Object.freeze({
+  'vida-laboral': 'Vida laboral',
+  'resolucio-afiliacio': 'Resolució d’afiliació a la Seguretat Social',
+  reta: 'Resolució del RETA',
+  'informe-bases': 'Informe de bases de cotització',
+  suma: 'Rebut o notificació de SUMA',
+  'kit-digital': 'Sol·licitud del Kit Digital',
+  'registre-associacions': 'Alta al registre d’associacions',
+  estatuts: 'Estatuts de l’associació',
+  'certificat-representacio': 'Certificat de representació',
+  desconegut: 'Paper de tipus desconegut (nom opac)'
 });
 
 const ETIQUETES = Object.freeze([
@@ -181,6 +205,9 @@ function diaDe(moment) {
   return Number.isNaN(d.getTime()) ? '—' : `${dosXifres(d.getDate())}/${dosXifres(d.getMonth() + 1)}/${d.getFullYear()}`;
 }
 
+/* La data d'un paper (dataDocument, «aaaa-mm-dd», treta del prefix del nom) en dd/mm/aaaa, o null. */
+const dataDelPaper = (iso) => (typeof iso === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(iso) ? `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}` : null);
+
 /* Els predeterminats de «Copia» (el porta-retalls, cridat dins del clic) i de l'esborrany (imprimir la
    pàgina); les proves els injecten. Cap dels dos ix d'este ordinador: el porta-retalls i la impressora són
    de la persona. */
@@ -189,6 +216,13 @@ function copiaPerDefecte(text) {
 }
 function imprimixPerDefecte() {
   window.print();
+}
+/* El predeterminat d'«Obri’l en una pestanya» (Front 6, ordre del Mestre del 14-10-2026, pla 261013_1930): la URL
+   blob: local d'un paper ja comprovat, en una pestanya nova d'este navegador, sense opener ni referrer. Es crida
+   dins del clic, sense cap espera pel mig (si no, el navegador el pren per una finestra emergent). Res ix d'este
+   ordinador. La porta de privacitat (privacitat.test.js) el permet només ací i a l'enviament. */
+function obriPaperPerDefecte(url) {
+  window.open(url, '_blank', 'noopener,noreferrer');
 }
 
 /* L'ull de privacitat de la boina: un sol control, amb aria-pressed (premut = els valors es veuen). La mateixa
@@ -215,12 +249,102 @@ function Valor({ text, visible }) {
   );
 }
 
-/* D'on ix un valor: els papers (la ruta, a la cel·la) o «Entrat a mà». */
-function Origens({ fonts }) {
+/* Un paper de «D’on ix» (Front 6, ordre del Mestre del 14-10-2026, pla 261013_1930: «Fitxa + obrir el PDF», per a
+   resoldre els camps en conflicte). La ruta al <summary>, dins de la cel·la i mai en un títol; a dins, el que la font
+   ja portava: el tipus, la data del nom, la regla i l'empremta curta (cap valor de la persona). Per a consultar-lo,
+   dos passos: «Comprova el paper» el torna a llegir en este ordinador i en comprova l'empremta (asíncron); «Obri’l en
+   una pestanya» crida obriPaper DINS del clic, sense esperar res. Tots dos, només amb l'ull obert (com l'esborrany
+   per imprimir) i amb una carpeta viva. El motiu d'un error es veu al costat del botó i s'anuncia, sense cap ruta.
+   En comprovar-lo, el focus passa a «Obri’l…» (Boto no reenvia cap ref: es busca dins del grup). */
+function PaperDOrigen({ font, h, visible, obriPaper, onAnuncia }) {
+  const accions = useRef(null);
+  const enCurs = useRef(false);
+  const idMotiu = useId();
+  const [comprovant, setComprovant] = useState(false);
+  const [motiu, setMotiu] = useState('');
+  const [enfoca, setEnfoca] = useState(null);
+  useEffect(() => {
+    if (!enfoca) return;
+    accions.current?.querySelector(`[data-accio="${enfoca}"]:not(:disabled)`)?.focus();
+    setEnfoca(null);
+  }, [enfoca]);
+  const url = h.papersComprovats.get(clauPaper(font)) ?? null;
+  const tancat = !visible || !h.potObrirPaper;
+  const data = dataDelPaper(font.dataDocument);
+  const comprova = async () => {
+    if (enCurs.current) return;
+    enCurs.current = true;
+    setComprovant(true);
+    setMotiu('');
+    const resultat = await h.preparaPaper(font);
+    enCurs.current = false;
+    setComprovant(false);
+    if (resultat.url) {
+      setEnfoca('obri');
+      onAnuncia('Paper comprovat: és el que es va llegir. Ja el pots obrir en una pestanya.');
+    } else {
+      setMotiu(resultat.motiu);
+      onAnuncia(`No s’ha pogut comprovar el paper. ${resultat.motiu}`);
+    }
+  };
+  /* Síncron: entre el clic i obriPaper no hi ha cap espera. */
+  const obri = () => {
+    if (!url) return;
+    try {
+      obriPaper(url);
+      onAnuncia('Paper obert en una pestanya nova. No es tanca quan bloqueges el cofre ni amb «Oblida»: tanca-la tu.');
+    } catch {
+      const no = 'Este navegador no ha deixat obrir la pestanya: torna-ho a provar.';
+      setMotiu(no);
+      onAnuncia(no);
+    }
+  };
+  return (
+    <details className="sdp-gestoria-finestreta__paper">
+      <summary>{font.ruta}</summary>
+      <dl className="sdp-gestoria-finestreta__dades-paper">
+        <dt>Paper</dt>
+        <dd>{ETIQUETES_TIPUS_PAPER[font.tipusDocument] ?? ETIQUETES_TIPUS_PAPER.desconegut}</dd>
+        {data ? (
+          <>
+            <dt>Data del paper</dt>
+            <dd>{data}</dd>
+          </>
+        ) : null}
+        <dt>Regla que l’ha trobat</dt>
+        <dd>{font.regla}</dd>
+        <dt>Empremta</dt>
+        <dd className="sdp-gestoria-finestreta__empremta">{String(font.sha256).slice(0, 8)}</dd>
+      </dl>
+      {h.teCarpeta ? (
+        <div className="sdp-gestoria-finestreta__accions" ref={accions}>
+          {/* Revisió adversarial 13-10-2026, troballa A11Y-1: el nom accessible comença pel text que es veu (WCAG 2.5.3). */}
+          <Boto varietat="secundari" icona={FileCheck} data-accio="comprova" disabled={tancat} aria-label={`Comprova el paper: ${font.ruta}`}
+            aria-describedby={motiu ? idMotiu : undefined} onClick={comprova}>
+            Comprova el paper
+          </Boto>
+          <Boto varietat="fantasma" icona={ExternalLink} data-accio="obri" disabled={tancat || !url} aria-label={`Obri’l en una pestanya: ${font.ruta}`}
+            onClick={obri}>
+            Obri’l en una pestanya
+          </Boto>
+          {comprovant ? <p className="sdp-gestoria-finestreta__nota">Comprovant el paper…</p> : null}
+          {motiu ? <p id={idMotiu} className="sdp-gestoria-finestreta__nota">{motiu}</p> : null}
+          {visible ? null : <p className="sdp-gestoria-finestreta__nota">Obri l’ull de la barra per a comprovar-lo i obrir-lo.</p>}
+        </div>
+      ) : (
+        <p className="sdp-gestoria-finestreta__nota">{SENSE_CARPETA_PAPER}</p>
+      )}
+    </details>
+  );
+}
+
+/* D'on ix un valor: «Entrat a mà» o els papers, cadascun amb el seu <details> (PaperDOrigen). `paper` porta el que
+   cal per a obrir-los: el hook, l'ull, obriPaper i l'anunci. */
+function Origens({ fonts, paper }) {
   return (
     <ul className="sdp-gestoria-finestreta__fonts">
       {(fonts ?? []).map((font, i) => (
-        <li key={`${font.ruta ?? 'a-ma'}-${i}`}>{font.tipus === 'manual' ? 'Entrat a mà' : font.ruta}</li>
+        <li key={`${font.ruta ?? 'a-ma'}-${i}`}>{font.tipus === 'manual' ? 'Entrat a mà' : <PaperDOrigen font={font} {...paper} />}</li>
       ))}
     </ul>
   );
@@ -302,14 +426,46 @@ function SeccioCarpeta({ h, onOblida }) {
   );
 }
 
-/* Pas 2: «Què llegiré i què no», abans de llegir res. */
-function SeccioPla({ h }) {
+/* Pas 2: «Què llegiré i què no», abans de llegir res. Els de nom opac es marquen d'un en un (la casella «Llig-lo»)
+   o tots de colp; marcar no és llegir: només «Llig…» obri cap paper, i els que no s'obriran no tenen casella. Els
+   anuncis només porten recomptes: el nom de cada paper només és a la taula (ordre del Mestre, pla 261013_1405,
+   front D). */
+function SeccioPla({ h, onAnuncia }) {
+  const grup = useRef(null);
+  const idLimit = useId();
+  /* El botó clicat queda desactivat i el focus cauria al body: el rep el germà (Boto no reenvia cap ref). */
+  const [enfoca, setEnfoca] = useState(null);
+  useEffect(() => {
+    if (!enfoca) return;
+    grup.current?.querySelector(`[data-accio="${enfoca}"]:not(:disabled)`)?.focus();
+    setEnfoca(null);
+  }, [enfoca]);
   const decisions = h.pla.decisions;
   const fora = decisions.filter((d) => d.motiu === 'fora-dabast');
   const dins = decisions.filter((d) => d.motiu !== 'fora-dabast');
   const compte = (que) => dins.filter((d) => d.decisio === que).length;
   const marcats = new Set(h.marcats);
-  const aLlegir = compte('llegir') + dins.filter((d) => d.decisio === 'demanar' && marcats.has(d.ruta)).length;
+  const opacs = dins.filter((d) => d.decisio === 'demanar');
+  const pendents = opacs.filter((d) => !marcats.has(d.ruta)).length;
+  const marcatsOpacs = opacs.length - pendents;
+  const aLlegir = compte('llegir') + marcatsOpacs;
+  const ocupat = Boolean(h.ocupat);
+  /* Més papers dels que el tractor llig de colp (LIMITS_IDENTITAT): «Llig…» acabaria en error. Si els permesos sols
+     ja hi passen, desmarcar no basta. */
+  const avisLimit = (n) => `Com a molt ${LIMITS_IDENTITAT.fitxers} papers de colp: n’hi ha ${n} per llegir. ${
+    compte('llegir') > LIMITS_IDENTITAT.fitxers ? 'Tria una carpeta més concreta.' : 'Desmarca’n algun.'}`;
+  const marcaTots = () => {
+    const despres = compte('llegir') + opacs.length;
+    h.marcaTotsDemanar();
+    setEnfoca('desmarca');
+    onAnuncia(`${pendents === 1 ? 'Marcat 1 paper' : `Marcats ${pendents} papers`} de nom opac: encara no se n’ha llegit cap.${
+      despres > LIMITS_IDENTITAT.fitxers ? ` ${avisLimit(despres)}` : ''}`);
+  };
+  const desmarcaTots = () => {
+    h.desmarcaTotsDemanar();
+    setEnfoca('marca');
+    onAnuncia('Desmarcats tots els papers de nom opac.');
+  };
   return (
     <Seccio titol="Què llegiré i què no" ajuda="Decidit només pel nom de cada paper i per la seua carpeta, sense obrir-ne cap.">
       <p className="sdp-gestoria-finestreta__nota">
@@ -319,6 +475,18 @@ function SeccioPla({ h }) {
         <Alerta to="avis" titol="La carpeta no s’ha pogut mirar sencera">
           <ul className="sdp-gestoria-finestreta__avisos">{h.pla.avisos.map((a, i) => <li key={`${a.codi}-${i}`}>{a.missatge}</li>)}</ul>
         </Alerta>
+      ) : null}
+      {/* Fora de la regió desplaçable de la taula: en mòbil es veu encara que la taula llisque. El nom de cada botó és
+          el seu text (A11Y-1, WCAG 2.5.3). */}
+      {opacs.length ? (
+        <div role="group" aria-label="Papers de nom opac" className="sdp-gestoria-finestreta__accions" ref={grup}>
+          <Boto varietat="secundari" icona={ListChecks} data-accio="marca" disabled={pendents === 0 || ocupat} onClick={marcaTots}>
+            {`Marca tots els pendents (${pendents})`}
+          </Boto>
+          <Boto varietat="fantasma" icona={ListX} data-accio="desmarca" disabled={marcatsOpacs === 0 || ocupat} onClick={desmarcaTots}>
+            Desmarca tots
+          </Boto>
+        </div>
       ) : null}
       {dins.length ? (
         <Taula titol="Els papers de la carpeta i la decisió" densa>
@@ -336,7 +504,7 @@ function SeccioPla({ h }) {
                   <td>
                     {/* Revisió adversarial 13-10-2026, troballa A11Y-1: el nom accessible comença pel text que es veu (WCAG 2.5.3). */}
                     {d.decisio === 'demanar' ? (
-                      <Casella etiqueta="Llig-lo" aria-label={`Llig-lo: ${d.ruta}`} checked={marcats.has(d.ruta)} disabled={Boolean(h.ocupat)}
+                      <Casella etiqueta="Llig-lo" aria-label={`Llig-lo: ${d.ruta}`} checked={marcats.has(d.ruta)} disabled={ocupat}
                         onChange={() => h.commutaMarcat(d.ruta)} />
                     ) : (d.decisio === 'llegir' ? 'Sí' : 'No')}
                   </td>
@@ -351,10 +519,11 @@ function SeccioPla({ h }) {
         </Alerta>
       )}
       <div className="sdp-gestoria-finestreta__accions">
-        <Boto varietat="primari" icona={FileSearch} onClick={() => h.llig()} disabled={aLlegir === 0 || Boolean(h.ocupat)}
-          carregant={h.ocupat === 'llegint'}>
+        <Boto varietat="primari" icona={FileSearch} onClick={() => h.llig()} disabled={aLlegir === 0 || ocupat}
+          carregant={h.ocupat === 'llegint'} aria-describedby={aLlegir > LIMITS_IDENTITAT.fitxers ? idLimit : undefined}>
           {`Llig ${aLlegir === 1 ? 'el paper' : `els ${aLlegir} papers`}`}
         </Boto>
+        {aLlegir > LIMITS_IDENTITAT.fitxers ? <p id={idLimit} className="sdp-gestoria-finestreta__nota">{avisLimit(aLlegir)}</p> : null}
       </div>
       {h.ocupat === 'llegint' && h.progres?.total > 0 ? (
         <Progres etiqueta="Llegint els papers" valor={h.progres.fet} max={h.progres.total} />
@@ -401,9 +570,10 @@ function FormulariCorreccio({ etiqueta, onDesa, onCancela }) {
   );
 }
 
-/* Pas 3: les propostes per revisar, agrupades per titular. */
-function SeccioPropostes({ h, visible, onAnuncia }) {
+/* Pas 3: les propostes per revisar, agrupades per titular; a «D’on ix», els papers per a consultar (Front 6). */
+function SeccioPropostes({ h, visible, obriPaper, onAnuncia }) {
   const [corregint, setCorregint] = useState(null);
+  const paper = { h, visible, obriPaper, onAnuncia };
   const grups = portadorsDe(h.fitxa)
     .map((p) => ({ ...p, files: campsOrdenats(p.camps, (v) => v.estat !== 'confirmat') }))
     .filter((p) => p.files.length);
@@ -438,7 +608,7 @@ function SeccioPropostes({ h, visible, onAnuncia }) {
                       {conflicte ? <Insignia to="avis">{`En conflicte · opció ${i + 1}`}</Insignia> : null}
                     </th>
                     <td><Valor text={valorEnText(camp, c.valor)} visible={visible} /></td>
-                    <td><Origens fonts={c.fonts} /></td>
+                    <td><Origens fonts={c.fonts} paper={paper} /></td>
                     <td>{confianca ? <Insignia to={confianca.to}>{confianca.text}</Insignia> : '—'}</td>
                     <td>
                       <div className="sdp-gestoria-finestreta__accions">
@@ -509,9 +679,10 @@ function FormulariAMa({ h, onAnuncia }) {
   );
 }
 
-/* Pas 4: la teua fitxa, només els valors confirmats (els que es desen xifrats). */
-function SeccioFitxa({ h, visible, onAnuncia }) {
+/* Pas 4: la teua fitxa, només els valors confirmats (els que es desen xifrats); «D’on ix», com a les propostes. */
+function SeccioFitxa({ h, visible, obriPaper, onAnuncia }) {
   const [corregint, setCorregint] = useState(null);
+  const paper = { h, visible, obriPaper, onAnuncia };
   const grups = portadorsDe(h.fitxa)
     .map((p) => ({ ...p, files: campsOrdenats(p.camps, (v) => v.estat === 'confirmat') }))
     .filter((p) => p.files.length);
@@ -538,7 +709,7 @@ function SeccioFitxa({ h, visible, onAnuncia }) {
                 <tr key={clau}>
                   <th scope="row">{etiqueta}</th>
                   <td><Valor text={valorEnText(camp, valor.valor)} visible={visible} /></td>
-                  <td><Origens fonts={valor.fonts} /></td>
+                  <td><Origens fonts={valor.fonts} paper={paper} /></td>
                   <td>{diaDe(valor.confirmat)}</td>
                   <td>
                     <div className="sdp-gestoria-finestreta__accions">
@@ -554,7 +725,7 @@ function SeccioFitxa({ h, visible, onAnuncia }) {
                   <tr key={`${clau}-alt-${i}`}>
                     <th scope="row"><Insignia to="avis">{`Un paper diu una altra cosa · ${etiqueta}`}</Insignia></th>
                     <td><Valor text={valorEnText(camp, alternativa.valor)} visible={visible} /></td>
-                    <td><Origens fonts={alternativa.fonts} /></td>
+                    <td><Origens fonts={alternativa.fonts} paper={paper} /></td>
                     <td>—</td>
                     <td>
                       {/* Revisió adversarial 13-10-2026, troballa A11Y-1: el nom accessible comença pel text que es veu (WCAG 2.5.3). */}
@@ -703,11 +874,12 @@ function SeccioFinestreta({ h, visible, avui, copia, imprimix, onAnuncia }) {
  * @param {{ titular?: { nom: string, avatar?: string|null, poble?: string }|null, magatzem?: object, subtle?: SubtleCrypto,
  *   tractors?: object[], entorn?: object, rellotge?: () => number, inflate?: Function|null,
  *   persistencia?: { llig: Function, desa: Function, subscriu?: Function }, copia?: (text: string) => Promise<void>,
- *   imprimix?: () => void, porta?: (contingut: import('react').ReactNode) => import('react').ReactNode }} props
+ *   imprimix?: () => void, obriPaper?: (url: string) => void,
+ *   porta?: (contingut: import('react').ReactNode) => import('react').ReactNode }} props
  */
 export function VistaFinestreta({
   titular = null, magatzem, subtle, tractors, entorn, rellotge, inflate, persistencia, copia = copiaPerDefecte, imprimix = imprimixPerDefecte,
-  porta = null
+  obriPaper = obriPaperPerDefecte, porta = null
 }) {
   const navigate = useNavigate();
   const h = useFinestreta({ magatzem, subtle, tractors, entorn, rellotge, inflate, persistencia });
@@ -742,11 +914,11 @@ export function VistaFinestreta({
       {h.desaBlocat && h.errorPersistencia ? <Alerta to="error" titol="La fitxa desada">{h.errorPersistencia}</Alerta> : null}
       {!h.fitxaLlegida ? <Carregant etiqueta="Obrint la teua fitxa…" /> : null}
       {h.aprovat ? <SeccioCarpeta h={h} onOblida={oblida} /> : null}
-      {h.aprovat && h.pla ? <SeccioPla h={h} /> : null}
+      {h.aprovat && h.pla ? <SeccioPla h={h} onAnuncia={setAnunci} /> : null}
       {h.aprovat && h.lectura ? <ResumLectura lectura={h.lectura} /> : null}
       {/* La fitxa i la Finestreta també són codi del tractor: sense la seua aprovació, no es pinten. */}
-      {h.aprovat ? <SeccioPropostes h={h} visible={visible} onAnuncia={setAnunci} /> : null}
-      {h.aprovat && h.fitxaLlegida ? <SeccioFitxa h={h} visible={visible} onAnuncia={setAnunci} /> : null}
+      {h.aprovat ? <SeccioPropostes h={h} visible={visible} obriPaper={obriPaper} onAnuncia={setAnunci} /> : null}
+      {h.aprovat && h.fitxaLlegida ? <SeccioFitxa h={h} visible={visible} obriPaper={obriPaper} onAnuncia={setAnunci} /> : null}
       {h.aprovat && h.fitxaLlegida ? (
         <SeccioFinestreta h={h} visible={visible} avui={avui} copia={copia} imprimix={imprimix} onAnuncia={setAnunci} />
       ) : null}
@@ -775,7 +947,8 @@ export function VistaFinestreta({
  * de l'app; en eixir de la vista, el cofre es bloqueja (la clau i tot el que
  * és desxifrat fora de la memòria).
  * @param {{ cofre?: object, titular?: object|null, magatzem?: object, subtle?: SubtleCrypto, tractors?: object[], entorn?: object,
- *   rellotge?: () => number, inflate?: Function|null, descarrega?: Function, copia?: Function, imprimix?: Function }} props
+ *   rellotge?: () => number, inflate?: Function|null, descarrega?: Function, copia?: Function, imprimix?: Function,
+ *   obriPaper?: Function }} props
  *   `cofre`: per a les proves (creaCofreLocal); sense, el de l'app (cofreDeLaGestoria)
  */
 export default function Finestreta({ cofre: cofreDeFora = null, descarrega, ...props }) {

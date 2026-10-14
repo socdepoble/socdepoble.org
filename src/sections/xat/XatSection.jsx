@@ -296,8 +296,10 @@ function XatWorkspace() {
   const vistaDemanada = params.get('vista') || '';
   const vista = VISTES_XAT.includes(vistaDemanada) ? vistaDemanada : '';
   /* Torn 260930 (T1) · El poble de l'amfitrió («Gent de la Torre»): el seu
-     grup va al capdamunt i, en ample, és la primera vista (EntradaDelPoble).
-     Null a socdepoble.org: res no canvia. */
+     grup va al capdamunt i, en ample, la primera arribada n'obri la fitxa a
+     la columna de llista amb la presentació a la dreta (EntradaDelPoble;
+     ordre del Mestre del 14-10, XAT-01: mai el General). Null a
+     socdepoble.org: res no canvia. */
   const poble = usePobleAmfitrio();
   /* Onada 3 (P2, revisió) · La cara del poble de l'amfitrió, la de la seua
      fitxa de Pobles: la porta la comunitat del poble quan el servidor no n'hi
@@ -885,6 +887,21 @@ function XatWorkspace() {
 
   const obriComunitat = (id) => navigate(`/xat${consulta(id)}`);
 
+  /* XAT-01 (ordre del Mestre, 14-10) · La primera arribada a /xat en ample
+     obri la fitxa del poble (EntradaDelPoble) per la mateixa ruta, amb
+     replace. Ningú no l'ha demanada: si el focus ja era fora del Xat (a
+     <body>, o a la pàgina de l'amfitrió, que des del shadow root tancat de
+     l'encastat no es veu i comptava com a perduda), no es mou. Marcar-la com
+     a prèvia deixa l'efecte T67 quiet; sense la marca, el focus saltava a la
+     fletxa de la fitxa i el cercador de l'amfitrió se'l deixava. Si el focus
+     era dins del Xat, T67 decidix com sempre: només el recol·loca si
+     l'element que el tenia desapareix (el cercador de la llista, per
+     exemple). La fletxa de tornar el recol·loca en tots dos casos. */
+  const entraALaComunitat = (id) => {
+    if (focusPerdut(columnaRef.current)) comunitatPrevia.current = String(id);
+    navigate(`/xat${consulta(id)}`, { replace: true });
+  };
+
   /* T1 · La fila del poble que encara no existix fa el camí del «Comentar»
      de la pàgina del poble: l'efecte ?sobre= l'obri o el crea i porta al
      seu General. La marca `pobleDemanat` deixa que el focus seguisca la fila
@@ -1302,7 +1319,7 @@ function XatWorkspace() {
           cap conversa: en estret es queda la llista (amb l'avís, si el xat
           encara s'ha de resoldre) fins que arriba el xat real. */}
       <PanellInicialMobil llistaPrimer={!threadId || trobatEsComunitat || idPerDefecte} />
-      <EntradaDelPoble poble={poble} comunitat={comunitatDelPoble} towns={towns} aLaLlista={!threadId && pathname === '/xat' && !params.toString()} />
+      <EntradaDelPoble poble={poble} comunitat={comunitatDelPoble} aLaLlista={!threadId && pathname === '/xat' && !params.toString()} onEntra={entraALaComunitat} />
       {activeThread ? <ConversaAPantallaCompleta /> : null}
       {activeThread ? (
         <Conversa
