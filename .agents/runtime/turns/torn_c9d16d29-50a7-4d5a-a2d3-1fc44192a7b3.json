@@ -3,12 +3,12 @@
   "turn_id": "torn_c9d16d29-50a7-4d5a-a2d3-1fc44192a7b3",
   "actor": "Pla",
   "scope": "documents",
-  "state": "context_loaded",
-  "revision": 3,
+  "state": "closed",
+  "revision": 4,
   "createdAt": "2026-10-06T22:11:12.588Z",
-  "updatedAt": "2026-10-06T22:11:34.987Z",
+  "updatedAt": "2026-10-14T02:50:18.022Z",
   "expiresAt": "2026-10-07T22:11:12.588Z",
-  "contractHash": "2b09edd15b17e4d3f835b8943e7a7eea42ec351afc53905f67410c7f9fb32949",
+  "contractHash": "6a1959a7c85620476e8cb465609d6b2e56cbcc2c380e5faf3c14267bee1163fa",
   "humanInventoryVersion": 1,
   "initial": {
     "src/.DS_Store": "1d5d20f9d6acbb47fb89efa0be0546e487ef310833c1acdf528bffd5eff6b34c",
@@ -3150,6 +3150,12 @@
       "file": "_wiki_de_poble/04_escriptori/261007_0012_pla_implementacio_claude.md",
       "at": "2026-10-06T22:11:34.987Z",
       "hash": "2624489ea584c5001c364486327c519be8a6ab2129c413cde1c8ffc827b83f0c"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "context_loaded",
+      "at": "2026-10-14T02:50:18.022Z"
     }
   ]
 }

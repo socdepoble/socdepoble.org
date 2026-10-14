@@ -3,12 +3,12 @@
   "turn_id": "torn_39e9e0e0-9f43-4a07-aa77-4a250239504f",
   "actor": "claude",
   "scope": "documents",
-  "state": "context_loaded",
-  "revision": 8,
+  "state": "closed",
+  "revision": 9,
   "createdAt": "2026-10-11T11:13:41.564Z",
-  "updatedAt": "2026-10-11T12:07:27.706Z",
+  "updatedAt": "2026-10-14T02:50:18.022Z",
   "expiresAt": "2026-10-12T11:13:41.565Z",
-  "contractHash": "2b09edd15b17e4d3f835b8943e7a7eea42ec351afc53905f67410c7f9fb32949",
+  "contractHash": "6a1959a7c85620476e8cb465609d6b2e56cbcc2c380e5faf3c14267bee1163fa",
   "humanInventoryVersion": 1,
   "initial": {
     "src/ARCHITECTURE.md": "8dc1702cb19b085f1baf352c6db44f266c8c0969037319dc07ec0b7b3d09f052",
@@ -3704,7 +3704,16 @@
     }
   },
   "plan": null,
-  "verification": null,
+  "verification": {
+    "at": "2026-10-14T02:50:18.022Z",
+    "files": {
+      "_wiki_de_poble/90_arxiu_historic/261011_1314_prompt_claude_ficiv.md": "50616af4a1989152ae7fb3e3e4355e24b9e2599d8cdbe2163ff20e6d8db48a2d",
+      "_wiki_de_poble/90_arxiu_historic/261011_1314_pla_implementacio_ficiv.md": "0364cd0f442f9f836f24296d4f2d7c0f7f2144ea50dc5110a9bdf0f166532956"
+    },
+    "checks": [
+      "expire-close"
+    ]
+  },
   "history": [
     {
       "state": "opened",
@@ -3754,6 +3763,12 @@
       "state": "context_loaded",
       "action": "handoff",
       "at": "2026-10-11T12:07:27.706Z"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "context_loaded",
+      "at": "2026-10-14T02:50:18.022Z"
     }
   ],
   "ownedPaths": [

@@ -3,12 +3,12 @@
   "turn_id": "torn_70dd0d59-76c0-43dc-98e3-85f587c8b732",
   "actor": "Claude",
   "scope": "documents",
-  "state": "context_loaded",
-  "revision": 3,
+  "state": "closed",
+  "revision": 4,
   "createdAt": "2026-10-10T09:48:15.032Z",
-  "updatedAt": "2026-10-10T09:48:44.301Z",
+  "updatedAt": "2026-10-14T02:50:18.022Z",
   "expiresAt": "2026-10-11T09:48:15.032Z",
-  "contractHash": "2b09edd15b17e4d3f835b8943e7a7eea42ec351afc53905f67410c7f9fb32949",
+  "contractHash": "6a1959a7c85620476e8cb465609d6b2e56cbcc2c380e5faf3c14267bee1163fa",
   "humanInventoryVersion": 1,
   "initial": {
     "src/ARCHITECTURE.md": "8dc1702cb19b085f1baf352c6db44f266c8c0969037319dc07ec0b7b3d09f052",
@@ -3567,6 +3567,12 @@
       "file": "_wiki_de_poble/04_escriptori/261010_1148_prompt_claude_investigacio_seguretat.md",
       "at": "2026-10-10T09:48:44.301Z",
       "hash": "66b5b805689c82a0a59d7ae8b2fb5c3c915be3e728058ed6397bf4b497bc9806"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "context_loaded",
+      "at": "2026-10-14T02:50:18.022Z"
     }
   ]
 }

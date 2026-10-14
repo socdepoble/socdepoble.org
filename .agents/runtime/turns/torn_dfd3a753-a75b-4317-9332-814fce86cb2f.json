@@ -3,12 +3,12 @@
   "turn_id": "torn_dfd3a753-a75b-4317-9332-814fce86cb2f",
   "actor": "MarIA",
   "scope": "documents",
-  "state": "context_loaded",
-  "revision": 8,
+  "state": "closed",
+  "revision": 13,
   "createdAt": "2026-10-14T01:51:50.188Z",
-  "updatedAt": "2026-10-14T01:52:57.000Z",
+  "updatedAt": "2026-10-14T11:27:17.629Z",
   "expiresAt": "2026-10-15T01:51:50.188Z",
-  "contractHash": "060d350c0e8265a7c88a03d821e02052c420248cbde7f422c5006723ca4258ee",
+  "contractHash": "6a1959a7c85620476e8cb465609d6b2e56cbcc2c380e5faf3c14267bee1163fa",
   "humanInventoryVersion": 1,
   "initial": {
     "src/ARCHITECTURE.md": "8dc1702cb19b085f1baf352c6db44f266c8c0969037319dc07ec0b7b3d09f052",
@@ -3773,10 +3773,53 @@
         "committedAt": "2026-10-14T01:52:57.000Z",
         "documentHash": "6c8a645ec135ad4da115ff742d2e863b7ffd3b1691920e0112cc5243505c9fd0"
       }
+    },
+    "3f532a90-a7c6-450e-8132-0432c4c6081c": {
+      "id": "3f532a90-a7c6-450e-8132-0432c4c6081c",
+      "route": "auditoria",
+      "routeVersion": "2.0.0",
+      "file": "_wiki_de_poble/04_escriptori/261014_0415_auditoria_gemini4.md",
+      "contractSnapshot": "01e67a9ac0369fcead92e1afee81cd5a915b625444bc2e788c3af695da65fc34",
+      "template": "_wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonica.md",
+      "templateHash": "855544fb761eca8472fd500438aeb726b8b63e796ee5b733d83bd52a38d204cf",
+      "issuedAt": "2026-10-14T02:06:58.200Z",
+      "creation": {
+        "state": "committed",
+        "preparedAt": "2026-10-14T02:06:58.201Z",
+        "committedAt": "2026-10-14T02:06:58.222Z",
+        "documentHash": "bf14ee401d43b0b12f48d04e7068470905e1f2706ecb5a92677d725108564d31"
+      }
+    },
+    "10073355-f4a6-4f40-9a0c-b3946544b3e6": {
+      "id": "10073355-f4a6-4f40-9a0c-b3946544b3e6",
+      "route": "pla.implementacio",
+      "routeVersion": "2.0.0",
+      "file": "_wiki_de_poble/04_escriptori/261014_0425_pla_implementacio_gestoria_i_replegament.md",
+      "contractSnapshot": "bfd8560ffea624e5dfbe5c6f032214e98fb568d05d45d221b94878e020cb6354",
+      "template": "_wiki_de_poble/03_actuar/plantilles/pla_implementacio.md",
+      "templateHash": "d05074ef89d1ec60596509565d7ac7a1e02b0e2bed1b304311b7fa651b0d23d0",
+      "issuedAt": "2026-10-14T02:16:36.215Z",
+      "creation": {
+        "state": "committed",
+        "preparedAt": "2026-10-14T02:16:36.215Z",
+        "committedAt": "2026-10-14T02:16:36.235Z",
+        "documentHash": "598dc0f25b93f2ceab5149849ab619749e0b2e755ae3b8cbc514b79d0a4b1e94"
+      }
     }
   },
   "plan": null,
-  "verification": null,
+  "verification": {
+    "at": "2026-10-14T11:27:17.629Z",
+    "files": {
+      "_wiki_de_poble/04_escriptori/261014_0400_prompt_claude_gestoria_i_replegament.md": "847f96b61b885a70d4af2308788cc7728164f1977feddee54da3f87d16031e97",
+      "_wiki_de_poble/04_escriptori/261014_0400_prompt_gemini4_arquitectura_gestoria_i_replegament.md": "c35c2c6c140ecae574fc010bccab995ae86390482a520d7ecac5dd60b48e3642",
+      "_wiki_de_poble/04_escriptori/261014_0415_auditoria_gemini4.md": "4824cc1f209175c74def04d4fba8148b61488574b5ed40610cce0bc44251319e",
+      "_wiki_de_poble/04_escriptori/261014_0425_pla_implementacio_gestoria_i_replegament.md": "912fe220b68de79843515422753b2f16749f35ba90717771acbc2d5da4a00bcf"
+    },
+    "checks": [
+      "deliver-close"
+    ]
+  },
   "history": [
     {
       "state": "opened",
@@ -3828,6 +3871,36 @@
       "file": "_wiki_de_poble/04_escriptori/261014_0400_prompt_gemini4_arquitectura_gestoria_i_replegament.md",
       "at": "2026-10-14T01:52:57.000Z",
       "hash": "6c8a645ec135ad4da115ff742d2e863b7ffd3b1691920e0112cc5243505c9fd0"
+    },
+    {
+      "state": "context_loaded",
+      "action": "context",
+      "at": "2026-10-14T02:06:58.201Z"
+    },
+    {
+      "action": "create-committed",
+      "receiptId": "3f532a90-a7c6-450e-8132-0432c4c6081c",
+      "file": "_wiki_de_poble/04_escriptori/261014_0415_auditoria_gemini4.md",
+      "at": "2026-10-14T02:06:58.222Z",
+      "hash": "bf14ee401d43b0b12f48d04e7068470905e1f2706ecb5a92677d725108564d31"
+    },
+    {
+      "state": "context_loaded",
+      "action": "context",
+      "at": "2026-10-14T02:16:36.215Z"
+    },
+    {
+      "action": "create-committed",
+      "receiptId": "10073355-f4a6-4f40-9a0c-b3946544b3e6",
+      "file": "_wiki_de_poble/04_escriptori/261014_0425_pla_implementacio_gestoria_i_replegament.md",
+      "at": "2026-10-14T02:16:36.235Z",
+      "hash": "598dc0f25b93f2ceab5149849ab619749e0b2e755ae3b8cbc514b79d0a4b1e94"
+    },
+    {
+      "state": "closed",
+      "action": "deliver-close",
+      "previousState": "context_loaded",
+      "at": "2026-10-14T11:27:17.629Z"
     }
   ]
 }

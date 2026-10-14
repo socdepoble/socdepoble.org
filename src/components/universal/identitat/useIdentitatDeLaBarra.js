@@ -17,10 +17,25 @@
  *     l'avatar porta directament al perfil propi (`boto.perfil`). Amb més
  *     d'una, el calaix, que també hi porta («La meua fitxa i ajustos»).
  * `onNavega(ruta)` el posa la barra (amb la seua transició de vista).
+ *
+ * Prompt 261014_0400 (ordre del Mestre) · Sense proveïdor no llança. Llig les
+ * variants opcionals (useSessioOpcional, useIdentitatOpcional) i l'ordre dels
+ * hooks no canvia: dos useContext, com abans. Els dos casos no són iguals:
+ *   · Sense SessionProvider: «sense sessió», el botó Entrar i cap calaix.
+ *   · Amb sessió però sense IdentitatProvider: cap identitat carregada.
+ *     L'avatar genèric «El meu compte» porta al perfil propi; el calaix es
+ *     munta tancat i buit, i no s'obri mai (`perfil` és cert amb 0 identitats).
+ * La guarda és DEFENSIVA, no cura cap causa: en execució normal la
+ * TopBar sempre és dins dels dos proveïdors (PedraSecaEmbed.jsx). El pet vist
+ * en desenvolupament el provoca el HMR de Vite amb React Refresh, que torna a
+ * carregar SessionContext.jsx amb un createContext nou i deixa la barra
+ * lligada al context vell (vegeu src/apps/plataforma/fronteres.test.js:205-219).
+ * En eixe cas la barra diu «Entrar» a qui té sessió fins a recarregar, i el pet
+ * passa al consumidor següent (CoreContentProvider). En producció no hi ha HMR.
  */
 import { useCallback, useEffect, useState } from 'react';
-import { useSession } from '../../../app/contexts/SessionContext';
-import { useIdentitat } from '../../../app/contexts/IdentitatContext.jsx';
+import { useSessioOpcional } from '../../../app/contexts/SessionContext';
+import { useIdentitatOpcional } from '../../../app/contexts/IdentitatContext.jsx';
 import { useUbicacioApp } from '../../PedraSeca/hooks/useAccions.js';
 import { treuBase } from '../../../app/contexts/politicaRouter.js';
 import { esRutaDEntrada, rutaDEntrada } from '../../../config/rutaEntrada.js';
@@ -48,8 +63,8 @@ export function rutaSencera(router) {
 export const RUTA_PERFIL_PROPI = '/el-meu-perfil';
 
 export function useIdentitatDeLaBarra({ onNavega, etiquetaEntrar } = {}) {
-  const { currentUser } = useSession();
-  const { actor, identitats = [], setActor } = useIdentitat();
+  const currentUser = useSessioOpcional()?.currentUser ?? null;
+  const { actor = null, identitats = [], setActor } = useIdentitatOpcional() ?? {};
   /* El router on viu l'app (memòria o navegador), o null: la ruta es llig en el clic. */
   const router = useUbicacioApp();
   const [obert, setObert] = useState(false);

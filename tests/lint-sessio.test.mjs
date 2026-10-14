@@ -141,6 +141,7 @@ const FITXERS = [
   'src/components/universal/identitat/BotoIdentitatActiva.test.jsx',
   'src/components/universal/identitat/CalaixIdentitats.jsx',
   'src/components/universal/identitat/CalaixIdentitats.test.jsx',
+  'src/components/universal/identitat/barraSenseProveidors.test.jsx',
   'src/components/universal/identitat/rols.js',
   'src/components/universal/identitat/useIdentitatDeLaBarra.js',
   'src/components/universal/identitat/useIdentitatDeLaBarra.test.jsx',

@@ -3,12 +3,12 @@
   "turn_id": "torn_521ee9db-46ae-4d42-a550-4b9ac3f20b00",
   "actor": "Claude",
   "scope": "code",
-  "state": "context_loaded",
-  "revision": 3,
+  "state": "closed",
+  "revision": 4,
   "createdAt": "2026-09-24T12:07:09.982Z",
-  "updatedAt": "2026-09-24T12:36:07.089Z",
+  "updatedAt": "2026-10-14T02:50:18.022Z",
   "expiresAt": "2026-09-25T12:07:09.982Z",
-  "contractHash": "540bcbf19265f09a0c6b6712cbc2247ac0ea8200a5ddd2830667e0ac26b40b69",
+  "contractHash": "6a1959a7c85620476e8cb465609d6b2e56cbcc2c380e5faf3c14267bee1163fa",
   "humanInventoryVersion": 1,
   "initial": {
     "src/.DS_Store": "1d5d20f9d6acbb47fb89efa0be0546e487ef310833c1acdf528bffd5eff6b34c",
@@ -952,6 +952,12 @@
         "_wiki_de_poble/04_escriptori/260924_1410_auditoria_claude.md"
       ],
       "at": "2026-09-24T12:36:07.088Z"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "context_loaded",
+      "at": "2026-10-14T02:50:18.022Z"
     }
   ],
   "ownedPaths": [

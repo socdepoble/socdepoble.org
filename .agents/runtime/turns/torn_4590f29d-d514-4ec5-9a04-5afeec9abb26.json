@@ -3,12 +3,12 @@
   "turn_id": "torn_4590f29d-d514-4ec5-9a04-5afeec9abb26",
   "actor": "Claude",
   "scope": "documents",
-  "state": "context_loaded",
-  "revision": 5,
+  "state": "closed",
+  "revision": 6,
   "createdAt": "2026-10-01T01:27:56.553Z",
-  "updatedAt": "2026-10-01T01:29:48.007Z",
+  "updatedAt": "2026-10-14T02:50:18.022Z",
   "expiresAt": "2026-10-02T01:27:56.554Z",
-  "contractHash": "5503c6dc29a6ce8c6708d7b81f7bd79546d13d574467174b95aae4265e1b0d5e",
+  "contractHash": "6a1959a7c85620476e8cb465609d6b2e56cbcc2c380e5faf3c14267bee1163fa",
   "humanInventoryVersion": 1,
   "initial": {
     "src/.DS_Store": "1d5d20f9d6acbb47fb89efa0be0546e487ef310833c1acdf528bffd5eff6b34c",
@@ -1705,7 +1705,15 @@
     }
   },
   "plan": null,
-  "verification": null,
+  "verification": {
+    "at": "2026-10-14T02:50:18.022Z",
+    "files": {
+      "_wiki_de_poble/10_actes/261001_0330_acta_marmota.md": "d5787f877a28af3c0d920e95d555e2c1a459d8c3c24cd3386f08b7adfd7d647b"
+    },
+    "checks": [
+      "expire-close"
+    ]
+  },
   "history": [
     {
       "state": "opened",
@@ -1736,6 +1744,12 @@
       "state": "context_loaded",
       "action": "context",
       "at": "2026-10-01T01:29:48.007Z"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "context_loaded",
+      "at": "2026-10-14T02:50:18.022Z"
     }
   ]
 }

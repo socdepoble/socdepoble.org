@@ -4,16 +4,31 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
 /* T43 (ordre del Mestre, 260928) · la identitat de la barra negra amb el
    botó i el calaix de veres; la sessió, la identitat i els mitjans simulats. */
-const m = vi.hoisted(() => ({ user: null, identitat: null }));
-vi.mock('../../../app/contexts/SessionContext', () => ({ useSession: () => ({ currentUser: m.user }) }));
-vi.mock('../../../app/contexts/IdentitatContext.jsx', () => ({ useIdentitat: () => m.identitat }));
+const m = vi.hoisted(() => ({ user: null, identitat: null, senseSessio: false, senseIdentitat: false }));
+/* Prompt 261014_0400 (ordre del Mestre) · La simulació calca el contracte de
+   veres dels dos mòduls: sense proveïdor, l'estricte llança amb el seu missatge
+   (SessionContext.jsx, IdentitatContext.jsx) i l'opcional torna null. */
+vi.mock('../../../app/contexts/SessionContext', () => ({
+  useSession: () => {
+    if (m.senseSessio) throw new Error('useSession ha de ser usat dins de SessionProvider');
+    return { currentUser: m.user };
+  },
+  useSessioOpcional: () => (m.senseSessio ? null : { currentUser: m.user })
+}));
+vi.mock('../../../app/contexts/IdentitatContext.jsx', () => ({
+  useIdentitat: () => {
+    if (m.senseIdentitat) throw new Error('useIdentitat ha de ser usat dins de IdentitatProvider');
+    return m.identitat;
+  },
+  useIdentitatOpcional: () => (m.senseIdentitat ? null : m.identitat)
+}));
 /* Com la capacitat 'mitjans': un sdp-media:// es resol a una URL servible
    (ací, del mateix origen, que l'Avatar accepta). */
 vi.mock('../../../hooks/useResolvedAsset.js', () => ({
   useResolvedAsset: (ref) => (ref?.startsWith('sdp-media://') ? `/media/${ref.slice('sdp-media://'.length)}` : ref || '')
 }));
 import { RUTA_PERFIL_PROPI, useIdentitatDeLaBarra } from './useIdentitatDeLaBarra.js';
-import { BotoIdentitatActiva } from './BotoIdentitatActiva.jsx';
+import { BotoIdentitatActiva, etiquetaPerfilPropi } from './BotoIdentitatActiva.jsx';
 import { CalaixIdentitats } from './CalaixIdentitats.jsx';
 import { BrowserRouter, MemoryRouter } from '../../../app/contexts/RouterContext';
 
@@ -32,6 +47,8 @@ const FORN = { tipus: 'entitat', id: 'o-1', nom: 'Forn de la Torre', avatar: nul
 
 afterEach(cleanup);
 beforeEach(() => {
+  m.senseSessio = false;
+  m.senseIdentitat = false;
   m.user = { id: 'u-1', user_metadata: { avatar_url: 'https://lh3.googleusercontent.com/a/pepa.png' } };
   m.identitat = {
     actor: PERSONA,
@@ -194,4 +211,36 @@ test.each(['/registre', '/registre?mode=crear&tornar=/mur'])('T4 · a %s el bot�
   render(<MemoryRouter rutaInicial={ruta}><Barra onNavega={onNavega} /></MemoryRouter>);
   fireEvent.click(screen.getByRole('button', { name: 'Entrar' }));
   expect(onNavega).not.toHaveBeenCalled();
+});
+
+/* Prompt 261014_0400 (ordre del Mestre) · Guarda de la barra negra. Una peça
+   muntada sola (una prova, o el HMR de desenvolupament que deixa la barra
+   lligada a un context vell) no té SessionProvider ni IdentitatProvider:
+   és el Foraster de sempre, «Entrar», i no llança. */
+test('sense SessionProvider ni IdentitatProvider: «Entrar», cap calaix, cap error, i el clic porta a /registre', () => {
+  m.senseSessio = true;
+  m.senseIdentitat = true;
+  const onNavega = vi.fn();
+  expect(() => render(<Barra onNavega={onNavega} />)).not.toThrow();
+  const boto = screen.getByRole('button', { name: 'Entrar' });
+  expect(document.querySelector('dialog')).toBeNull();
+  fireEvent.click(boto);
+  expect(onNavega).toHaveBeenCalledTimes(1);
+  expect(onNavega).toHaveBeenCalledWith('/registre?mode=entrar&tornar=%2F');
+});
+
+/* Prompt 261014_0400 (ordre del Mestre) · El cas de transició del HMR: la
+   sessió hi és, però l'IdentitatContext de la barra ja no té proveïdor. No
+   llança i el nom és honest: cap identitat carregada, cap foto de ningú. No és
+   «sense sessió»: el calaix es munta, tancat, i el clic no l'obri. */
+test('amb sessió però sense IdentitatProvider no llança i el botó porta un nom honest', async () => {
+  m.senseIdentitat = true;
+  const onNavega = vi.fn();
+  expect(() => render(<Barra onNavega={onNavega} />)).not.toThrow();
+  const boto = screen.getByRole('button', { name: etiquetaPerfilPropi('El meu compte') });
+  expect(boto.querySelector('img')).toBeNull();
+  expect(document.querySelector('dialog')?.open).toBe(false);
+  await act(async () => { fireEvent.click(boto); });
+  expect(onNavega).toHaveBeenCalledWith(RUTA_PERFIL_PROPI);
+  expect(screen.queryByRole('dialog')).toBeNull();
 });

@@ -3,12 +3,12 @@
   "turn_id": "torn_2ded46a0-6215-44ab-9567-8531b539fc27",
   "actor": "IAIA",
   "scope": "documents",
-  "state": "context_loaded",
-  "revision": 3,
+  "state": "closed",
+  "revision": 4,
   "createdAt": "2026-10-12T14:50:55.628Z",
-  "updatedAt": "2026-10-12T14:51:24.412Z",
+  "updatedAt": "2026-10-14T02:50:18.022Z",
   "expiresAt": "2026-10-13T14:50:55.629Z",
-  "contractHash": "8588970175c0d5b1f9c562ef5cef81c075c9d09fef0a6206f2f095b5faca3c65",
+  "contractHash": "6a1959a7c85620476e8cb465609d6b2e56cbcc2c380e5faf3c14267bee1163fa",
   "humanInventoryVersion": 1,
   "initial": {
     "src/ARCHITECTURE.md": "8dc1702cb19b085f1baf352c6db44f266c8c0969037319dc07ec0b7b3d09f052",
@@ -3666,6 +3666,12 @@
       "file": "_wiki_de_poble/04_escriptori/261012_1700_pla_implementacio_previsio_economica.md",
       "at": "2026-10-12T14:51:24.412Z",
       "hash": "0345ed364ab0d890aa473cb0fe4ad15343e601268fa4e87bbdfcd0ac1f753112"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "context_loaded",
+      "at": "2026-10-14T02:50:18.022Z"
     }
   ]
 }

@@ -90,6 +90,35 @@ describe('CSS del panell', () => {
     }
   });
 
+  /* Prompt 261014_0400 (ordre del Mestre), front A: el Full trimestral, dins de la closca de pantalla sencera,
+     deixa el topall de 80rem; la Facturació, que el pont munta fora de la closca, el conserva. Els camps llargs
+     de la taula de revisió s'eixamplen només dins de la closca (LlibreFactures.jsx reutilitza __taula i __cel). */
+  test('el Full de la closca ocupa tota l’amplada; la regla base conserva els 80rem', () => {
+    const bloc = blocPanell();
+    expect(bloc).toMatch(/^\/\* ── GESTORIA PANELL \(261002\) ── \*\/\n@layer components \{/);
+    // Fora del @media print de la factura en paper: regles directes de la capa components.
+    const capa = bloc.slice(0, bloc.indexOf('@media print {'));
+    expect(capa).toMatch(/\n {2}\.sdp-gestoria-panell \{[^}]*\n {4}max-width: 80rem;\n[^}]*\}/);
+    expect(capa).toMatch(/\n {2}\.sdp-gestoria-closca \.sdp-gestoria-panell \{ max-width: none; \}\n/);
+    expect(capa).toMatch(/\n {2}\.sdp-gestoria-closca \.sdp-gestoria-panell__control\[data-mida="normal"\] \{ min-width: 10rem; \}\n/);
+    expect(capa).toMatch(/\n {2}\.sdp-gestoria-closca \.sdp-gestoria-panell__control\[data-mida="ampla"\] \{ min-width: 18rem; \}\n/);
+    // Les amplades de sempre continuen per a qualsevol altre lloc.
+    expect(capa).toMatch(/\n {2}\.sdp-gestoria-panell__control\[data-mida="ampla"\] \{ min-width: 14rem; \}\n/);
+  });
+
+  test('les xifres de la taula de revisió són tabulars; les de la Facturació no canvien', () => {
+    const capa = blocPanell().slice(0, blocPanell().indexOf('@media print {'));
+    const regles = [...capa.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map(([, selector, cos]) => ({ selector: selector.replace(/\/\*[\s\S]*?\*\//g, '').trim(), cos }));
+    const tabulars = regles.filter((r) => /font-variant-numeric: tabular-nums;/.test(r.cos)).flatMap((r) => r.selector.split(',').map((s) => s.trim()));
+    expect(tabulars).toEqual(expect.arrayContaining([
+      '.sdp-gestoria-closca .sdp-gestoria-panell__cel[data-tipus="import"]',
+      '.sdp-gestoria-closca .sdp-gestoria-panell__control[data-tipus="import"]',
+      '.sdp-gestoria-panell__cel[data-tipus="percentatge"]'
+    ]));
+    // Cap regla sense l'abast de la closca posa xifres tabulars a les cel·les d'import (LlibreFactures.jsx:100).
+    expect(tabulars.filter((s) => s.startsWith('.sdp-gestoria-panell__cel[data-tipus="import"]'))).toEqual([]);
+  });
+
   test('className només literal o ternària de literals; cap classe d’utilitat', () => {
     const utilitats = /(?:^|\s)sdp-(?:w|h|p|m|gap|bg|border)-|(?:^|\s)sdp-(?:flex|grid)(?:\s|$|-)/;
     for (const fitxer of JSX) {

@@ -12,6 +12,13 @@ triggers_on:
   - equip ia
   - ment colmena
   - rols ia
+contracte.llig:
+  - AGENTS.md
+  - _wiki_de_poble/04_escriptori
+  - _wiki_de_poble/10_actes
+contracte.escriu:
+  - _wiki_de_poble/04_escriptori
+  - _wiki_de_poble/10_actes
 ---
 # L'Equip d'IAs i la Ment Colmena Integral
 
@@ -63,3 +70,6 @@ Aquesta és la tècnica avançada de col·laboració per a IAs amb accés a disc
 - **Treball Asíncron i Acumulatiu:** Quan una IA local finalitza la seua tasca o auditoria, **ha de deixar el seu informe escrit en format Markdown a l'Escriptori** (`_wiki_de_poble/04_escriptori/`).
 - **Cadena de Muntatge Cognitiva:** D'aquesta manera, quan el Mestre activa la segona IA local (ex: després de Claude, llança Codex), el primer que fa la segona IA és **llegir l'informe deixat per la primera a l'Escriptori**. La segona IA pot llavors comentar-lo, criticar-lo, o expandir-lo.
 - **La Metàfora:** Actua com una reunió de treball real davall de l'olivera del portal de el mas: l'equip es reuneix, el primer presenta els plànols a la taula (Escriptori), i els següents membres de l'equip aporten la seua opinió sobre el mateix document. Açò afavoreix la cohesió i redueix el deute tècnic per manca de consens.
+
+## Vincles
+- [[00_INDEX_SKILLS]]

@@ -11,6 +11,11 @@ triggers_on:
   - dossier complet
   - missatge de presentació
   - presentació del projecte
+contracte.llig:
+  - _wiki_de_poble/01_ser/01_identitat.md
+  - _wiki_de_poble/00_index.md
+contracte.escriu:
+  - _wiki_de_poble/00_index.md
 ---
 # Skill: Portaveu Institucional
 
@@ -43,3 +48,6 @@ Quan s'indique actualitzar el "Dossier Complet" o els missatges de presentació 
 
 ## TANCAMENT
 No declares acabada la difusió fins que estigues completament segur que els tres arxius (o quatre si generes un dossier independent a la Wiki) han sigut actualitzats alhora i no deixen versions asincròniques desfasades al projecte.
+
+## Vincles
+- [[00_INDEX_SKILLS]]

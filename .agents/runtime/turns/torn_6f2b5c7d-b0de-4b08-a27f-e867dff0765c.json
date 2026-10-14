@@ -3,12 +3,12 @@
   "turn_id": "torn_6f2b5c7d-b0de-4b08-a27f-e867dff0765c",
   "actor": "MarIA",
   "scope": "documents",
-  "state": "context_loaded",
-  "revision": 6,
+  "state": "closed",
+  "revision": 7,
   "createdAt": "2026-10-05T11:01:56.650Z",
-  "updatedAt": "2026-10-05T11:06:20.458Z",
+  "updatedAt": "2026-10-14T02:50:18.022Z",
   "expiresAt": "2026-10-06T11:01:56.650Z",
-  "contractHash": "5503c6dc29a6ce8c6708d7b81f7bd79546d13d574467174b95aae4265e1b0d5e",
+  "contractHash": "6a1959a7c85620476e8cb465609d6b2e56cbcc2c380e5faf3c14267bee1163fa",
   "humanInventoryVersion": 1,
   "initial": {
     "src/.DS_Store": "1d5d20f9d6acbb47fb89efa0be0546e487ef310833c1acdf528bffd5eff6b34c",
@@ -2781,6 +2781,12 @@
       "file": "_wiki_de_poble/04_escriptori/261005_1303_pla_implementacio_opus.md",
       "at": "2026-10-05T11:06:20.458Z",
       "hash": "45881e38f9b673582622ae17afac2d4d482e78db204ea48ed17259c837a220fd"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "context_loaded",
+      "at": "2026-10-14T02:50:18.022Z"
     }
   ]
 }

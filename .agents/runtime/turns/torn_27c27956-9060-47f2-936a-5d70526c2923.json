@@ -3,12 +3,12 @@
   "turn_id": "torn_27c27956-9060-47f2-936a-5d70526c2923",
   "actor": "MarIA",
   "scope": "documents",
-  "state": "context_loaded",
-  "revision": 3,
+  "state": "closed",
+  "revision": 4,
   "createdAt": "2026-10-09T10:16:33.966Z",
-  "updatedAt": "2026-10-10T09:56:47.938Z",
+  "updatedAt": "2026-10-14T02:50:18.022Z",
   "expiresAt": "2026-10-10T10:16:33.967Z",
-  "contractHash": "2b09edd15b17e4d3f835b8943e7a7eea42ec351afc53905f67410c7f9fb32949",
+  "contractHash": "6a1959a7c85620476e8cb465609d6b2e56cbcc2c380e5faf3c14267bee1163fa",
   "humanInventoryVersion": 1,
   "initial": {
     "src/.DS_Store": "1d5d20f9d6acbb47fb89efa0be0546e487ef310833c1acdf528bffd5eff6b34c",
@@ -3532,7 +3532,15 @@
     }
   },
   "plan": null,
-  "verification": null,
+  "verification": {
+    "at": "2026-10-14T02:50:18.022Z",
+    "files": {
+      "_wiki_de_poble/90_arxiu_historic/261009_1216_prompt_claude_onada7.md": "28feaff1e455ad569ff1fd0631b3d813065ffb7c6b4e8bf2801824de0a4dbe4d"
+    },
+    "checks": [
+      "expire-close"
+    ]
+  },
   "history": [
     {
       "state": "opened",
@@ -3555,6 +3563,12 @@
       "state": "context_loaded",
       "action": "handoff",
       "at": "2026-10-10T09:56:47.938Z"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "context_loaded",
+      "at": "2026-10-14T02:50:18.022Z"
     }
   ],
   "ownedPaths": [

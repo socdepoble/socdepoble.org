@@ -3,12 +3,12 @@
   "turn_id": "torn_bd8aab94-5d17-4c48-be88-722b8d7cebda",
   "actor": "agent-local",
   "scope": "code",
-  "state": "planned",
-  "revision": 4,
+  "state": "closed",
+  "revision": 5,
   "createdAt": "2026-09-22T04:42:49.607Z",
-  "updatedAt": "2026-09-22T14:50:46.030Z",
+  "updatedAt": "2026-10-14T02:50:18.022Z",
   "expiresAt": "2026-09-23T04:42:49.608Z",
-  "contractHash": "e5e61083181dd3e8141afa6c6c51d7a705f20ee1dcc6a3e59fde553c1e54caa1",
+  "contractHash": "6a1959a7c85620476e8cb465609d6b2e56cbcc2c380e5faf3c14267bee1163fa",
   "initial": {
     "src/.DS_Store": "1d5d20f9d6acbb47fb89efa0be0546e487ef310833c1acdf528bffd5eff6b34c",
     "src/ARCHITECTURE.md": "8dc1702cb19b085f1baf352c6db44f266c8c0969037319dc07ec0b7b3d09f052",
@@ -798,6 +798,12 @@
       "at": "2026-09-22T15:20:39.125Z",
       "snapshot": "f50d6aa22084c918fbf4a627bb1a9cf85e50f594c99248a1b12d9923fa05fc54",
       "note": "Contracte i hashes existents comprovats; no acredita una lectura nova."
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "planned",
+      "at": "2026-10-14T02:50:18.022Z"
     }
   ]
 }

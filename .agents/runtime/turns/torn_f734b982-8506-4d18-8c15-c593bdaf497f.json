@@ -3,12 +3,12 @@
   "turn_id": "torn_f734b982-8506-4d18-8c15-c593bdaf497f",
   "actor": "Claude",
   "scope": "documents",
-  "state": "context_loaded",
-  "revision": 4,
+  "state": "closed",
+  "revision": 5,
   "createdAt": "2026-09-30T01:19:05.885Z",
-  "updatedAt": "2026-09-30T01:20:21.642Z",
+  "updatedAt": "2026-10-14T02:50:18.022Z",
   "expiresAt": "2026-10-01T01:19:05.885Z",
-  "contractHash": "40e4659e6ab6a6ad8c46c142a83642952ad761af891bcfe814664161c4ed840b",
+  "contractHash": "6a1959a7c85620476e8cb465609d6b2e56cbcc2c380e5faf3c14267bee1163fa",
   "humanInventoryVersion": 1,
   "initial": {
     "src/.DS_Store": "1d5d20f9d6acbb47fb89efa0be0546e487ef310833c1acdf528bffd5eff6b34c",
@@ -1543,6 +1543,12 @@
       "state": "context_loaded",
       "action": "context",
       "at": "2026-09-30T01:20:21.642Z"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "context_loaded",
+      "at": "2026-10-14T02:50:18.022Z"
     }
   ]
 }

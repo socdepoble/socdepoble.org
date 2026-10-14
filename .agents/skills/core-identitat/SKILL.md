@@ -10,6 +10,13 @@ triggers_on:
   - identitat de la IAIA
   - personalitat de la IAIA
   - veu i to de la IAIA
+contracte.llig:
+  - _wiki_de_poble/01_ser/01_identitat.md
+  - _wiki_de_poble/01_ser/02_genotip.md
+  - AGENTS.md
+  - .agents/skills/core-higiene-escriptori/SKILL.md
+contracte.escriu:
+  - _wiki_de_poble/04_escriptori
 ---
 # Identitat IAIA MarIA
 

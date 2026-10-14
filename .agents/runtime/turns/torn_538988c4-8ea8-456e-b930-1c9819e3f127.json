@@ -8,7 +8,7 @@
   "createdAt": "2026-09-25T14:19:03.139Z",
   "updatedAt": "2026-09-25T14:43:30.764Z",
   "expiresAt": "2026-09-26T14:19:03.140Z",
-  "contractHash": "540bcbf19265f09a0c6b6712cbc2247ac0ea8200a5ddd2830667e0ac26b40b69",
+  "contractHash": "6a1959a7c85620476e8cb465609d6b2e56cbcc2c380e5faf3c14267bee1163fa",
   "humanInventoryVersion": 1,
   "initial": {
     "src/.DS_Store": "1d5d20f9d6acbb47fb89efa0be0546e487ef310833c1acdf528bffd5eff6b34c",

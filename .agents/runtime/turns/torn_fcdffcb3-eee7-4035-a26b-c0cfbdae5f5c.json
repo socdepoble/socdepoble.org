@@ -3,12 +3,12 @@
   "turn_id": "torn_fcdffcb3-eee7-4035-a26b-c0cfbdae5f5c",
   "actor": "codex",
   "scope": "documents",
-  "state": "context_loaded",
-  "revision": 3,
+  "state": "closed",
+  "revision": 4,
   "createdAt": "2026-10-12T18:22:15.631Z",
-  "updatedAt": "2026-10-12T18:22:35.696Z",
+  "updatedAt": "2026-10-14T02:50:18.022Z",
   "expiresAt": "2026-10-13T18:22:15.632Z",
-  "contractHash": "38f6bff7cb8194898e3ece6d76ff3fc8e6910d882bb4db06b217c037a23d3a4c",
+  "contractHash": "6a1959a7c85620476e8cb465609d6b2e56cbcc2c380e5faf3c14267bee1163fa",
   "humanInventoryVersion": 1,
   "initial": {
     "src/ARCHITECTURE.md": "8dc1702cb19b085f1baf352c6db44f266c8c0969037319dc07ec0b7b3d09f052",
@@ -3687,6 +3687,12 @@
       "file": "_wiki_de_poble/04_escriptori/261012_2022_auditoria_codex.md",
       "at": "2026-10-12T18:22:35.696Z",
       "hash": "426f2d9b6b756424da4266bf1202a9556d165efed41349b59dcedd4ac123f8e7"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "context_loaded",
+      "at": "2026-10-14T02:50:18.022Z"
     }
   ]
 }

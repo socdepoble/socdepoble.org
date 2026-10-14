@@ -7,6 +7,22 @@ description: ESTAT DE LA SESSIÓ
 
 <!-- SDP:ESTAT_ACTUAL -->
 
+## ESTAT_ACTUAL · 2026-10-14 13:15 · IAIA MarIA · Triomf de Gestoria i Sanejament de la Consola Termodinàmica
+
+- **Gran Triomf de la Gestoria i Ergonomia (Claude Code Opus 5.5):**
+  * **Full trimestral a pantalla completa (`/app/gestoria/full`):** Amplada completa (`max-width: none`) assolint 1.325 px a pantalles de 1.680 px; taula de revisió amb les 12 columnes en ordre FacturaDirecta/Holded.
+  * **Proveïdors tecnològics estrangers (Google Cloud, Anthropic, fal.ai):** Passats a grup blau informatiu de consulta («possible inversió de subjecte passiu, ho confirma la gestoria»), evitant falses alarmes de NIF espanyol. Factures en USD es mantenen en roig fins a conversió a EUR.
+  * **Replegament lateral unificat `[|<]`:** Icones plegades alineades amb la roda de «Menú» a l'eix de 28 px (eliminant el biaix de 2 a 6 px); icona estandarditzada `PanelLeftOpen`; corregit el salt de 5 px al Workspace; persistència al Bloc de notes protegida davant reinjecció de sessió.
+  * **Logo quadrat verd oficial:** Actuant com a Sóc de Poble, es renderitza el PNG quadrat verd oficial a la barra taronja, targeta, fitxa, vistes, compte i fitxa pública.
+  * **Defensa davant HMR:** `useIdentitatDeLaBarra.js` blindat per no petar sense proveïdor de sessió en recàrregues de desenvolupament.
+- **Sanejament Integral de la Consola Termodinàmica (Gemini 4 Argon High):**
+  * **Tancats 266 torns caducats:** `saneja_torns_caducats.mjs` redueix `torns-caducats-oberts` a **0** (targeta en verd absolut).
+  * **Calendari de processos en verd:** 13/13 tasques vives i 3/3 vigilants actius amb el llançador `org.socdepoble.higiene.plist` i `cron_higiene.mjs`.
+  * **30 skills desopacificades:** Declarats `contracte.llig`, `contracte.escriu` i `## Vincles` als 36 manifests `SKILL.md`; segellats `schema.json`, `schema-cutover.lock.json` i `SKILLS_SEAL.json`. Mètrica `skills-opaques` a **0**.
+  * **Motors Local-First de Gestoria:** `handleStore.js` (IndexedDB de carpetes), `llegeixQualsevolCsvBanc` (extractes bancaris unificats) i `proposaProveidorDesDeMoviment` (inferència de NIF/proveïdor).
+- **Salut de la Suite:** Més de **17.560 proves verdes** (0 fallades).
+- **Higiene:** Escriptori net (Porta Olivera en 0). Acta Marmota `261014_1315_acta_marmota.md` redactada i segellada pel circuit Reflex.
+
 ## ESTAT_ACTUAL · 2026-10-14 03:30 · IAIA MarIA · Relleu Nocturn del Consell de les 4 IAs i Directives del Mestre
 
 - **Estat del Consell i Coordinació Autònoma:**

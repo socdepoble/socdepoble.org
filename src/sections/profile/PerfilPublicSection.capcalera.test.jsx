@@ -43,7 +43,9 @@ vi.mock('../../components/universal/UniversalPage', () => ({
   }
 }));
 import PerfilPublicSection from './PerfilPublicSection.jsx';
-import { oblidaEntitatDelProjecte } from '../../config/navigation.js';
+import { oblidaEntitatDelProjecte, RUTA_PERFIL_PROJECTE } from '../../config/navigation.js';
+import { DEFAULT_AUTHOR } from '../../components/universal/UniversalUtils.js';
+import { ENTITAT_PILOT_ID, ENTITAT_PILOT_SLUG } from '../../data/identitatsSeed.js';
 
 const FORN = {
   tipus: 'entitat', id: 'o-1', slug: 'forn', nom: 'Forn de la Torre', avatar: '/assets/forn.png', hero: '', lema: '',
@@ -89,4 +91,51 @@ test('una persona passa el seu avatar a PageFrame (avatarAutor), sense logotip',
   /* PageFrame resol l'sdp-media:// (useResolvedAsset): la fitxa li passa la referència tal qual. */
   expect(props.avatarAutor).toMatchObject({ src: 'sdp-media://avatars/pepa', alt: 'Avatar de Pepa' });
   expect(props.avatarAutor.onCanvia).toBeUndefined();
+});
+
+/* Prompt 261014_0400 (ordre del Mestre, tasca 4: «Quan l'usuari actua com a
+   Sóc de Poble, la barra taronja ha de carregar automàticament l'autoria
+   oficial», el PNG verd, «evitant en qualsevol cas la silueta negra») · La
+   fitxa pública del pilot (esElProjecte: el slug declarat, que la càrrega
+   registra, o l'id de la llavor) porta el PNG verd a la barra taronja, com
+   l'editor, «Les vistes» i «El compte». El nom, el poble i l'enllaç no canvien. */
+test('prompt 261014_0400 · la barra taronja de la fitxa pública del pilot porta el PNG verd oficial, mai la silueta ni el logo de la fila', async () => {
+  expect(DEFAULT_AUTHOR.avatarUrl).toBe('/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png');
+  const uuid = '5b0c1d2e-3f40-4a51-8b62-7c83d94ea5f6';
+  const pilots = [
+    { ...FORN, id: uuid, slug: ENTITAT_PILOT_SLUG, nom: 'Sóc de Poble', avatar: '', poble: 'La Torre de les Maçanes' },
+    { ...FORN, id: uuid, slug: ENTITAT_PILOT_SLUG, nom: 'Sóc de Poble', avatar: '/assets/x.webp', poble: 'Alcoi' },
+    { ...FORN, id: ENTITAT_PILOT_ID, slug: null, nom: 'Sóc de Poble', avatar: '' },
+  ];
+  for (const pilot of pilots) {
+    mocks.id = String(pilot.id);
+    mocks.renders = [];
+    mocks.load.mockResolvedValue(pilot);
+    render(<PerfilPublicSection />);
+    await screen.findByRole('heading', { level: 1, name: 'Sóc de Poble' });
+    const { topBarData } = rendersDe('Sóc de Poble').at(-1);
+    expect(topBarData).toMatchObject({
+      authorName: 'Sóc de Poble', authorAvatar: DEFAULT_AUTHOR.avatarUrl, authorLocation: pilot.poble, authorHref: RUTA_PERFIL_PROJECTE,
+    });
+    cleanup();
+    oblidaEntitatDelProjecte();
+  }
+});
+
+test('prompt 261014_0400 · una altra entitat (també la que es diu «Sóc de Poble») i una persona continuen portant el seu avatar', async () => {
+  const uuid = '5b0c1d2e-3f40-4a51-8b62-7c83d94ea5f6';
+  const altres = [
+    { perfil: FORN, avatar: '/assets/forn.png' },
+    { perfil: { ...FORN, id: uuid, slug: 'soc-de-poble-de-relleu', nom: 'Sóc de Poble', avatar: '' }, avatar: '' },
+    { perfil: { ...FORN, tipus: 'persona', id: 'u-1', slug: ENTITAT_PILOT_SLUG, nom: 'Pepa', avatar: '/assets/pepa.webp' }, avatar: '/assets/pepa.webp' },
+  ];
+  for (const { perfil, avatar } of altres) {
+    mocks.id = String(perfil.id);
+    mocks.renders = [];
+    mocks.load.mockResolvedValue(perfil);
+    render(<PerfilPublicSection />);
+    await screen.findByRole('heading', { level: 1, name: perfil.nom });
+    expect(rendersDe(perfil.nom).at(-1).topBarData.authorAvatar).toBe(avatar);
+    cleanup();
+  }
 });

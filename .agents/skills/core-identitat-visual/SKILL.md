@@ -15,6 +15,9 @@ triggers_on:
   - bàner
 contracte.llig:
   - _wiki_de_poble/02_saber/identitat_visual.md
+  - src/css/index.css
+contracte.escriu:
+  - _wiki_de_poble/02_saber/identitat_visual.md
 ---
 # Tractor d'Identitat Visual i Generació d'Imatges (Estil Nano)
 
@@ -39,3 +42,6 @@ El projecte ja disposa de recursos gràfics propis dissenyats a mà al directori
 Si et falta un d'aquests recursos, **demana'l al Mestre**. Ell te'l prepararà. No t'inventes imatges corporatives.
 
 *Nota de referència: Tota la teoria estesa i canònica d'aquest comportament visual està arxivada a `_wiki_de_poble/02_saber/identitat_visual.md`.*
+
+## Vincles
+- [[00_INDEX_SKILLS]]

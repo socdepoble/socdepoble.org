@@ -13,9 +13,13 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest';
    Damunt del nom, el mateix que la fitxa pública; a qui pot editar, el botó.
    ═══════════════════════════════════════════════════════════════════ */
 
-const m = vi.hoisted(() => ({ perfil: null }));
+const m = vi.hoisted(() => ({ perfil: null, resolts: [] }));
+/* Revisió del prompt 261014_0400 · `resolts`: el que l'editor ha demanat al port. */
 vi.mock('../../hooks/useResolvedAsset.js', () => ({
-  useResolvedAsset: (ref) => ref,
+  useResolvedAsset: (ref) => {
+    m.resolts.push(ref);
+    return ref;
+  },
   useResolvedAssetState: (ref) => ({ url: ref, status: ref ? 'ready' : 'idle', error: null, isLoading: false, retry: () => {}, cancel: () => {} }),
 }));
 vi.mock('../../app/contexts/IdentitatContext.jsx', () => ({ useIdentitat: () => ({ actorId: null, refresh: vi.fn() }) }));
@@ -50,6 +54,8 @@ vi.mock('../../components/universal/DocumentPrintPreview.jsx', () => ({ default:
 import { PerfilEditor } from './PerfilEditor.jsx';
 import { ENTITAT_PILOT_ID, ENTITAT_PILOT_SLUG } from '../../data/identitatsSeed.js';
 import { oblidaEntitatDelProjecte, RUTA_PERFIL_PROJECTE, rutaDAutoria } from '../../config/navigation.js';
+import { DEFAULT_AUTHOR } from '../../components/universal/UniversalUtils.js';
+import { llegixDocumentViu } from '../../components/universal/documentViu.js';
 
 const jo = { id: 'jo', mena: 'persona', nom: 'Pep', rol: 'Persona', dades: { id: 'U', full_name: 'Pep', town_name: 'La Torre' } };
 const ambAvatar = { ...jo, avatar: '/assets/a.webp', dades: { ...jo.dades, avatar_url: '/assets/a.webp' } };
@@ -57,6 +63,7 @@ const org = (role, extra = {}) => ({ id: 'O', mena: 'empresa', nom: 'Forn', rol:
 
 beforeEach(() => {
   m.perfil = { identitats: [], autodesament: null, guardarCampPerfil: vi.fn(), pujaMitja: vi.fn(), recarrega: vi.fn() };
+  m.resolts = [];
 });
 /* Auditoria 261007 (retocs de l'ordre E) · La fitxa d'una organització amb
    slug registra el seu id com a identificador del projecte (estat de mòdul
@@ -194,6 +201,80 @@ test('Relleu 261007 · un membre de l’entitat pilot sense permís (UUID i slug
   expect(abansDe(logos[0], titol())).toBe(true);
   expect(capcalera().querySelector('button')).toBeNull();
   expect(capcalera().querySelector('input[type="file"]')).toBeNull();
+});
+
+/* Prompt 261014_0400 (ordre del Mestre, tasca 4: «Quan l'usuari actua com a
+   Sóc de Poble, la barra taronja ha de carregar automàticament l'autoria
+   oficial», el PNG verd, «evitant en qualsevol cas la silueta negra») · La
+   fitxa del pilot a /el-meu-perfil, pel slug declarat o per l'id de la llavor
+   (el criteri de l'ordre E, esRutaDelProjecte): la barra taronja i la targeta
+   viva porten el PNG verd oficial, siga quin siga el logo de la fila (cap,
+   una referència opaca o un de propi), també en lectura. */
+const barraTaronja = () => {
+  const barres = document.querySelectorAll('section.bar-orange');
+  expect(barres).toHaveLength(1);
+  return barres[0];
+};
+
+test('prompt 261014_0400 · la fitxa del pilot: la barra taronja i la targeta viva porten el PNG verd oficial, mai la silueta ni el logo de la fila', () => {
+  const uuid = '5b0c1d2e-3f40-4a51-8b62-7c83d94ea5f6';
+  expect(DEFAULT_AUTHOR.avatarUrl).toBe('/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png');
+  const fitxes = [
+    org('owner', { id: uuid, nom: 'Sóc de Poble', avatar: null, dades: { slug: ENTITAT_PILOT_SLUG } }),
+    org('owner', { id: uuid, nom: 'Sóc de Poble', avatar: 'sdp-media://organitzacions/x.png', dades: { slug: ENTITAT_PILOT_SLUG, logo_url: 'sdp-media://organitzacions/x.png' } }),
+    org('member', { id: uuid, nom: 'Sóc de Poble', avatar: '/assets/x.webp', dades: { slug: ENTITAT_PILOT_SLUG, logo_url: '/assets/x.webp' } }),
+    { ...org('owner'), id: ENTITAT_PILOT_ID, nom: 'Sóc de Poble' },
+  ];
+  for (const identitat of fitxes) {
+    render(<PerfilEditor identitat={identitat} />);
+    const barra = barraTaronja();
+    expect(barra.querySelector('img.sp-card-avatar').getAttribute('src')).toBe(DEFAULT_AUTHOR.avatarUrl);
+    expect(barra.querySelector('.sp-card-avatar--fallback').classList.contains('sp-card-avatar--amagat')).toBe(true);
+    expect(llegixDocumentViu(identitat.id).autor.avatar).toBe(DEFAULT_AUTHOR.avatarUrl);
+    // La boina continua portant al perfil del pilot.
+    expect(llegixDocumentViu(identitat.id).autor.ruta).toBe(RUTA_PERFIL_PROJECTE);
+    cleanup();
+    oblidaEntitatDelProjecte();
+  }
+});
+
+test('prompt 261014_0400 · una altra organització sense logo (també la que es diu «Sóc de Poble») i una persona no canvien', () => {
+  const uuid = '5b0c1d2e-3f40-4a51-8b62-7c83d94ea5f6';
+  for (const identitat of [org('owner', { id: uuid, dades: { slug: 'forn' } }), org('owner', { id: uuid, nom: 'Sóc de Poble', dades: { slug: 'soc-de-poble-de-relleu' } })]) {
+    render(<PerfilEditor identitat={identitat} />);
+    const barra = barraTaronja();
+    expect(barra.querySelector('img.sp-card-avatar')).toBeNull();
+    expect(barra.querySelector('.sp-card-avatar--fallback').classList.contains('sp-card-avatar--amagat')).toBe(false);
+    expect(llegixDocumentViu(uuid).autor.avatar).toBe('');
+    cleanup();
+  }
+  render(<PerfilEditor identitat={ambAvatar} />);
+  expect(barraTaronja().querySelector('img.sp-card-avatar').getAttribute('src')).toBe('/assets/a.webp');
+  expect(llegixDocumentViu('jo').autor.avatar).toBe('/assets/a.webp');
+});
+
+/* Revisió del prompt 261014_0400 · L'editor del pilot no pinta el logo de la
+   fila enlloc (ni a la barra, ni a la targeta viva, ni damunt de l'H1): no
+   se'n demana cap al port, com a la fitxa pública. Una altra organització
+   amb una foto pujada continua resolent-la. En lectura, perquè en edició la
+   closca (UniversalEditorShell) resol pel seu compte el logoImage del
+   document, i això no és de PerfilEditor. */
+test('prompt 261014_0400 · l’editor del pilot, en lectura, no demana al port el logo de la fila; una altra organització, sí', () => {
+  const uuid = '5b0c1d2e-3f40-4a51-8b62-7c83d94ea5f6';
+  const logo = 'sdp-media://organitzacions/x.png';
+  for (const identitat of [
+    org('member', { id: uuid, nom: 'Sóc de Poble', avatar: logo, dades: { slug: ENTITAT_PILOT_SLUG, logo_url: logo } }),
+    { ...org('member'), id: ENTITAT_PILOT_ID, nom: 'Sóc de Poble', avatar: logo },
+  ]) {
+    render(<PerfilEditor identitat={identitat} />);
+    expect(barraTaronja().querySelector('img.sp-card-avatar').getAttribute('src')).toBe(DEFAULT_AUTHOR.avatarUrl);
+    expect(m.resolts).not.toContain(logo);
+    cleanup();
+    oblidaEntitatDelProjecte();
+    m.resolts = [];
+  }
+  render(<PerfilEditor identitat={org('member', { avatar: logo, dades: { logo_url: logo } })} />);
+  expect(m.resolts).toContain(logo);
 });
 
 test('ordre E · una persona en lectura (baixa en curs) veu el seu avatar redó, sense el botó', () => {

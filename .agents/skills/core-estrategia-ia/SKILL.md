@@ -4,6 +4,11 @@ type: skill
 status: actiu
 triggers_on: ["consum", "estrategia", "captures de consum"]
 description: Estratègia de consum, triatge de models i telemetria persistent de costos.
+contracte.llig:
+  - AGENTS.md
+  - .agents/protocolledge.json
+contracte.escriu:
+  - _wiki_de_poble/04_escriptori
 ---
 
 # ESTRATÈGIA DE CONSUM IA (Motor de Consum)
@@ -29,3 +34,6 @@ Les dades es guarden a `_wiki_de_poble/10_metriques/consum_ia.csv`.
 - **Claude (Opus 5 Max / Fable Extra):** L'espina dorsal de l'Eixam. Fable Extra té potència per a assumir tant arquitectura com pic i pala (frontend/disseny) sempre que els límits no s'esgoten.
 - **Codex (GPT-6 Astra Ligero):** Agent extremadament bo però de baix límit ("15% restant"). Es reserva per a verificacions independents, autosanació cega o auditories curtes molt específiques.
 - L'arquitecta principal (MarIA) recomanarà el model adient per a la següent tasca calculant la quota lliure real (després de consultar el CSV) i avaluant l'esforç requerit.
+
+## Vincles
+- [[00_INDEX_SKILLS]]

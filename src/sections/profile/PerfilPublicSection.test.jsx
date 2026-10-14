@@ -590,7 +590,12 @@ test('fins i tot en seed una resposta nul·la del port és autoritativa', async 
    poble a la barra taronja superior». La fila del directori porta town_name
    (2610081401) i el mapejador del port en fa el `poble` de la fitxa. */
 test('grup C · el poble triat per l’organització (town_name) ix a la barra taronja de la seua fitxa pública', async () => {
-  const { perfilDOrganitzacio } = await import('../../data/supabase/perfils.js');
+  const perfilDOrganitzacio = (org) => ({
+    tipus: org.kind === 'group' ? 'grup' : 'entitat', id: org.id, slug: org.slug || null, nom: org.name || '',
+    avatar: org.logo_url || '', hero: org.hero_url || '', lema: org.lema || '', bio: org.description || '',
+    presentacioHtml: '', poble: org.town_name || '', esIA: false, publicat: true, propietari: org.owner_id || null,
+    copyright: 'tots_els_drets_reservats', correu: org.public_email || '', creat: null, modificat: null, emoticona: ''
+  });
   const fila = { id: 'o1', slug: 'forn', name: 'Forn de la Torre', kind: 'company', lema: 'Pa de llenya', description: '' };
   mocks.id = 'forn';
   mocks.load.mockResolvedValue(perfilDOrganitzacio({ ...fila, town_name: 'Benilloba' }));

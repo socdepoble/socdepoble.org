@@ -9,7 +9,10 @@ triggers_on:
   - "sms llauradors"
 version: "2.0.0"
 contracte.llig:
-  - ".agents/skills/sdp-pedra-seca/SKILL.md"
+  - .agents/skills/sdp-pedra-seca/SKILL.md
+  - _wiki_de_poble/01_ser/02_genotip.md
+contracte.escriu:
+  - _wiki_de_poble/04_escriptori
 ---
 
 # 🍅 Calendari Agrícola i Avisos per SMS (Plug & Play)

@@ -9,7 +9,9 @@ import { usePerfil } from './PerfilContext.jsx';
 import { BlocPerfil as Bloc } from './BlocPerfil.jsx';
 import { documentDeFitxa, menaDeFitxa } from './perfilCamps.js';
 import { ENTITATS_FITXA } from './perfilEscriptor.js';
-import { etiquetesDeFitxa, pobleDeFitxa, potEditarFitxa, rutaDeFitxaPublica } from './fitxaDePerfil.js';
+import {
+  avatarDeLaBarraDeFitxa, esFitxaDelPilot, etiquetesDeFitxa, pobleDeFitxa, potEditarFitxa, rutaDeFitxaPublica,
+} from './fitxaDePerfil.js';
 
 /* ═══════════════════════════════════════════════════════════════════
    LES VISTES · la fitxa fora de l'editor
@@ -49,8 +51,13 @@ export function DetallVistes({ identitat }) {
   /* T35 · Una foto pujada és una referència opaca (sdp-media://) que la barra
      no resol: es resol pel port, com a l'editor. La resta, tal qual. */
   const avatarDesat = identitat?.avatar || '';
-  const avatarResolt = useResolvedAsset(avatarDesat);
-  const avatarBarra = avatarDesat.startsWith('sdp-media://') ? avatarResolt : avatarDesat;
+  /* Prompt 261014_0400 (ordre del Mestre, tasca 4) · La fitxa del pilot, el
+     PNG verd oficial a la barra i a la «Vista targeta», com a l'editor: la
+     regla viu a fitxaDePerfil.js (avatarDeLaBarraDeFitxa). La resta, tal qual.
+     Revisió del prompt 261014_0400 · El logo de la fila del pilot no es pinta:
+     no es demana al port (esFitxaDelPilot), com a la fitxa pública. */
+  const avatarResolt = useResolvedAsset(esFitxaDelPilot(identitat) ? '' : avatarDesat);
+  const avatarBarra = avatarDeLaBarraDeFitxa(identitat, avatarDesat.startsWith('sdp-media://') ? avatarResolt : avatarDesat);
   const poble = pobleDeFitxa(identitat, identitats);
   const nom = identitat?.nom || '';
   /* Onada 8 (261009) · La boina de la targeta porta on la barra taronja: la fitxa pública. */

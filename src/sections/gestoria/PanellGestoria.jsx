@@ -11,7 +11,11 @@
  *   3. Revisió: incidències per severitat, documents, ingressos i despeses
  *      editables (una factura en una altra moneda té el control «Els imports
  *      ja són en euros»: si encara no se n'ha escrit el total en euros, el
- *      demana abans, G3T-15), i el creuament opcional amb el correu.
+ *      demana abans, G3T-15), i el creuament opcional amb el correu. Les
+ *      taules de revisió porten les dotze columnes del Mestre (prompt
+ *      261014_0400, ordre del Mestre): el Tipus, el % d'IVA i el % d'IRPF
+ *      són de només lectura i no van al full. Les operacions amb l'estranger
+ *      tenen un grup informatiu propi i una línia per fila en to de pregunta.
  *   4. Proposta: la vista prèvia del full, «He revisat la proposta» (i
  *      «Genera-la igualment» si hi ha incidències altes), i els fitxers.
  *   5. Envia a la gestoria: EnviamentGestoria (títol h3, dins del pas), només
@@ -87,9 +91,10 @@ const ETIQUETES_CODI = Object.freeze({
   PDF_SENSE_DADES: 'PDF sense dades',
   SENTIT_DESCONEGUT: 'Emesa o rebuda?'
 });
-/* Les que sempre ha de decidir la persona: es marquen encara que siguen informatives. */
+/* Les que sempre ha de decidir la persona: es marquen encara que siguen informatives. IVA_ESTRANGER ja no
+   s'hi marca (prompt 261014_0400, ordre del Mestre): és una condició tributària que confirma la gestoria. */
 const DESTACADES = new Set([
-  'MONEDA_ESTRANGERA', 'FORA_TRIMESTRE', 'FALTA_MENSUAL', 'RETENCIO_IRPF', 'IVA_ESTRANGER', 'CORREU_NO_REVISAT', 'CORREU_PARCIAL',
+  'MONEDA_ESTRANGERA', 'FORA_TRIMESTRE', 'FALTA_MENSUAL', 'RETENCIO_IRPF', 'CORREU_NO_REVISAT', 'CORREU_PARCIAL',
   'CORREU_SENSE_DOCUMENT'
 ]);
 const GRUPS_SEVERITAT = Object.freeze([
@@ -98,6 +103,63 @@ const GRUPS_SEVERITAT = Object.freeze([
   { severitat: 'baixa', titol: 'Severitat baixa', to: 'neutre' },
   { severitat: 'info', titol: 'Informatives', to: 'info' }
 ]);
+
+/* Prompt 261014_0400 (ordre del Mestre), front A · Les operacions amb
+   l'estranger, dites amb claredat i sense alarma. Només presentació: la
+   severitat de cada incidència, l'estat de cada fila (estatFactura) i la
+   porta de generació no canvien. IVA_ESTRANGER (porta el país) va a un grup
+   informatiu propi i no a «Severitat mitjana»; amb ell, la incidència del
+   NIF d'una factura de fora de la UE, que no té NIF espanyol. Si el model
+   l'ha d'acceptar com a vàlid és decisió pendent del Mestre: la validació
+   és a nucli/model.js. MONEDA_ESTRANGERA continua alta fins que es passa a
+   euros: el full només admet euros. */
+const GRUP_ESTRANGER = Object.freeze({ clau: 'estranger', titol: 'Operacions amb l’estranger, informatives', to: 'info' });
+const EXPLICACIO_NIF_ESTRANGER = 'Una empresa de fora de la UE no té NIF espanyol: per això la fila es queda «Pendent». '
+  + 'Ho confirma la gestoria.';
+/* Còpia local i congelada de PAISOS_UE de nucli/nif.js (els 27 Estats, amb Grècia com a «EL», i «XI», Irlanda
+   del Nord). nif.js no l'exporta, i exportar-la tornaria a «pendent» els sis tractors: PanellGestoria.test.jsx
+   llig nif.js i comprova que esta llista no se'n desvie. */
+export const PAISOS_UE = Object.freeze([
+  'AT', 'BE', 'BG', 'CY', 'CZ', 'DE', 'DK', 'EE', 'EL', 'ES', 'FI', 'FR', 'HR', 'HU', 'IE', 'IT', 'LT', 'LU', 'LV',
+  'MT', 'NL', 'PL', 'PT', 'RO', 'SE', 'SI', 'SK', 'XI'
+]);
+const DE_LA_UE = new Set(PAISOS_UE);
+/* «Empresa d’Irlanda»: el nom dels països més habituals; la resta, amb el codi tal qual. */
+const DE_PAIS = Object.freeze({
+  IE: 'd’Irlanda', US: 'dels Estats Units', DE: 'd’Alemanya', FR: 'de França', NL: 'dels Països Baixos', LU: 'de Luxemburg',
+  GB: 'del Regne Unit', PT: 'de Portugal', IT: 'd’Itàlia', BE: 'de Bèlgica', CH: 'de Suïssa', XI: 'd’Irlanda del Nord'
+});
+const dePais = (pais) => DE_PAIS[pais] ?? `del país ${pais}`;
+const esDelNif = (inc) => inc.codi === 'NIF_INVALID' || (inc.codi === 'CAMP_BUIT' && inc.camp === 'nif');
+/* facturaId → la seua incidència IVA_ESTRANGER. */
+function estrangeresPerFactura(incidencies) {
+  const mapa = new Map();
+  for (const inc of incidencies) if (inc.codi === 'IVA_ESTRANGER' && inc.facturaId) mapa.set(inc.facturaId, inc);
+  return mapa;
+}
+/* Cert si la incidència va al grup de les operacions amb l'estranger. */
+function esDeLEstranger(inc, estrangeres) {
+  if (inc.codi === 'IVA_ESTRANGER') return true;
+  const estrangera = esDelNif(inc) ? estrangeres.get(inc.facturaId) : null;
+  return Boolean(estrangera) && !DE_LA_UE.has(estrangera.pais);
+}
+/* La columna Tipus: el règim de l'operació, pel país de la incidència IVA_ESTRANGER; sense, «Interior». Però
+   l'auditoria només la busca a les despeses amb la quota d'IVA llegida (auditoria.js:432): en una despesa sense
+   quota, l'absència no diu res del país i la cel·la diu «—» (correcció del front A, prompt 261014_0400, ordre del
+   Mestre). Sense país conegut (ni NIF-IVA ni catàleg) continua dient «Interior»: deute conegut, prova [DEFECTE]. */
+function regimDe(f, estrangera) {
+  if (estrangera) return DE_LA_UE.has(estrangera.pais) ? 'UE' : 'Fora de la UE';
+  return f.tipus === 'despesa' && !Number.isSafeInteger(f.iva) ? '—' : 'Interior';
+}
+/* La línia de la fila: la condició dita com a possibilitat, mai com a règim afirmat (auditoria.js:6-7). */
+function condicioEstrangera(f, estrangera) {
+  const ue = DE_LA_UE.has(estrangera.pais);
+  const qui = `Empresa ${dePais(estrangera.pais)} (${ue ? 'UE' : 'fora de la UE'})`;
+  if (f.iva !== 0) return `${qui} amb IVA: cal saber si eixe IVA és deduïble. Ho confirma la gestoria.`;
+  return ue
+    ? `${qui} sense IVA: possible inversió del subjecte passiu. Ho confirma la gestoria.`
+    : `${qui}: possible importació de serveis amb inversió del subjecte passiu. Ho confirma la gestoria.`;
+}
 
 const TIPUS_DOCUMENT = Object.freeze({
   'model-trimestral': 'Full de la gestoria',
@@ -116,17 +178,31 @@ const ESTAT_DOCUMENT = Object.freeze({
   ignorada: { to: 'neutre', text: 'No compta' }
 });
 
+/* Prompt 261014_0400 (ordre del Mestre), front A · Les dotze columnes de la
+   taula de revisió, en l'ordre del Mestre. Les que porten `camp` són les
+   cel·les editables de sempre (el títol és també el nom accessible del
+   camp); les que porten `derivada` són de només lectura: el Tipus, i el % de
+   la quota sobre la base. No van al full: el pas 4, el CSV i l'XLSX
+   continuen amb les 8 columnes de PLANTILLA_GESTORIA. La Quota IRPF és la
+   cel·la de la retenció de sempre i ara es mostra sempre. */
+const COLUMNA_RETENCIO = Object.freeze({ camp: 'retencio', titol: 'Quota IRPF', tipus: 'import', mida: 'curta' });
 const COLUMNES = Object.freeze([
+  { clau: 'tipus', titol: 'Tipus', derivada: 'regim' },
   { camp: 'data', titol: 'Data', tipus: 'data', mida: 'curta' },
-  { camp: 'num', titol: 'Núm', tipus: 'text', mida: 'normal' },
-  { camp: 'contrapart', titol: { ingres: 'Client', despesa: 'Proveïdor' }, tipus: 'text', mida: 'ampla' },
-  { camp: 'nif', titol: 'NIF - CIF', tipus: 'text', mida: 'normal' },
-  { camp: 'descripcio', titol: 'Descripció', tipus: 'text', mida: 'ampla' },
-  { camp: 'subtotal', titol: 'Subtotal', tipus: 'import', mida: 'curta' },
-  { camp: 'iva', titol: 'IVA', tipus: 'import', mida: 'curta' },
+  { camp: 'num', titol: 'Factura/Ref', tipus: 'text', mida: 'normal' },
+  { camp: 'contrapart', titol: 'Proveïdor/Client', tipus: 'text', mida: 'ampla' },
+  { camp: 'nif', titol: 'NIF/CIF', tipus: 'text', mida: 'normal' },
+  { camp: 'descripcio', titol: 'Concepte', tipus: 'text', mida: 'ampla' },
+  { camp: 'subtotal', titol: 'Base imposable', tipus: 'import', mida: 'curta' },
+  { clau: 'percentatge-iva', titol: '% IVA', derivada: 'percentatge', quota: 'iva' },
+  { camp: 'iva', titol: 'Quota IVA', tipus: 'import', mida: 'curta' },
+  { clau: 'percentatge-irpf', titol: '% IRPF', derivada: 'percentatge', quota: 'retencio' },
+  COLUMNA_RETENCIO,
   { camp: 'total', titol: 'Total', tipus: 'import', mida: 'curta' }
 ]);
-const COLUMNA_RETENCIO = Object.freeze({ camp: 'retencio', titol: 'Retenció IRPF', tipus: 'import', mida: 'curta' });
+/* Al peu, «Totals» ocupa les columnes de davant de la Base imposable, i davall de cada import hi ha la seua suma. */
+const COLUMNES_DAVANT_BASE = COLUMNES.findIndex((c) => c.camp === 'subtotal');
+const CAMPS_SUMATS = Object.freeze(['subtotal', 'iva', 'total']);
 const ETIQUETES_CAMP = Object.freeze({
   data: 'data', num: 'número', contrapart: 'contrapart', nif: 'NIF', descripcio: 'descripció',
   subtotal: 'subtotal', iva: 'IVA', total: 'total', retencio: 'retenció'
@@ -157,7 +233,6 @@ export function estatTractorsDe(tractors) {
   return estat;
 }
 
-const titolColumna = (columna, tipus) => (typeof columna.titol === 'string' ? columna.titol : columna.titol[tipus]);
 /* Una factura amb els imports en una moneda que no és la del full; 'XXX' és una que no se sap. */
 const enAltraMoneda = (f) => typeof f.moneda === 'string' && f.moneda !== MONEDA_DEL_FULL;
 const nomMoneda = (codi) => (codi === 'XXX' ? 'una moneda que no és l’euro' : codi);
@@ -169,6 +244,19 @@ function valorDe(factura, columna) {
   if (columna.tipus === 'data') return formatData(valor);
   if (columna.tipus === 'import') return formatImport(valor);
   return valor == null ? '' : String(valor);
+}
+
+/* «% IVA» i «% IRPF» (prompt 261014_0400, ordre del Mestre): la quota sobre la base, amb un decimal com a molt
+   i coma decimal (21 → «21 %», 7,5 → «7,5 %»); «—» si falta la base o la quota, o si la base és 0. Només es
+   mostra: no s'escriu a cap dada ni va al full. La retenció es guarda en positiu (model.js:66-74) i, com el missatge
+   de RETENCIO_IRPF (model.js:254), es divideix pel valor absolut de la base: en una rectificativa, «15 %» i no
+   «-15 %». La quota d'IVA porta el signe de la base i es divideix tal qual (correcció del front A, prompt 261014_0400). */
+function percentatgeDe(factura, quota) {
+  const base = factura.subtotal;
+  const part = factura[quota];
+  if (!Number.isSafeInteger(base) || base === 0 || !Number.isSafeInteger(part)) return '—';
+  const divisor = quota === 'retencio' ? Math.abs(base) : base;
+  return `${String(Math.round((part / divisor) * 1000) / 10).replace('.', ',')} %`;
 }
 
 /**
@@ -289,46 +377,56 @@ function TaulaFactures({ tipus, factures, incidencies, totalsEditats = {}, onEdi
     setTornaFocus(null);
   }, [tornaFocus]);
   const ingres = tipus === 'ingres';
-  const ambRetencio = factures.some((f) => Object.prototype.hasOwnProperty.call(f, 'retencio'));
-  const columnes = ambRetencio ? [...COLUMNES, COLUMNA_RETENCIO] : COLUMNES;
   const sumes = totals(factures);
   const titol = ingres ? 'Ingressos' : 'Despeses';
   const altre = ingres ? 'despeses' : 'ingressos';
+  const estrangeres = estrangeresPerFactura(incidencies);
   return (
     <section ref={seccio} className="sdp-gestoria-panell__bloc" aria-labelledby={idTitol}>
       <h3 id={idTitol} className="sdp-gestoria-panell__subtitol">{`${titol} (${factures.length})`}</h3>
       <Taula titol={`${titol} de la proposta`} densa className="sdp-gestoria-panell__taula">
         <thead>
           <tr>
-            {columnes.map((c) => <th key={c.camp} scope="col">{titolColumna(c, tipus)}</th>)}
+            {COLUMNES.map((c) => <th key={c.camp ?? c.clau} scope="col">{c.titol}</th>)}
             <th scope="col">Estat</th>
             <th scope="col">Accions</th>
           </tr>
         </thead>
         <tbody>
           {factures.length === 0 ? (
-            <tr><td colSpan={columnes.length + 2}>{ingres ? 'Cap ingrés.' : 'Cap despesa.'}</td></tr>
+            <tr><td colSpan={COLUMNES.length + 2}>{ingres ? 'Cap ingrés.' : 'Cap despesa.'}</td></tr>
           ) : factures.map((f, i) => {
             const nomFila = `${ingres ? 'l’ingrés' : 'la despesa'} ${i + 1}${f.num ? ` («${f.num}»)` : ''}`;
             const baixes = Object.entries(f.confianca ?? {}).filter(([, nivell]) => nivell === 'baixa').map(([camp]) => ETIQUETES_CAMP[camp] ?? camp);
-            const propies = incidencies.filter((inc) => inc.facturaId === f.id);
+            /* IVA_ESTRANGER ix del «Revisa:»: la condició es diu en la seua pròpia línia. */
+            const propies = incidencies.filter((inc) => inc.facturaId === f.id && inc.codi !== 'IVA_ESTRANGER');
+            const estrangera = estrangeres.get(f.id) ?? null;
             return (
               <tr key={f.id} data-factura={f.id}>
-                {columnes.map((c) => (
-                  <td key={c.camp} className="sdp-gestoria-panell__cel" data-tipus={c.tipus}>
-                    <CelEditable
-                      etiqueta={`${titolColumna(c, tipus)}, ${ingres ? 'ingrés' : 'despesa'} ${i + 1}`}
-                      valor={valorDe(f, c)}
-                      tipus={c.tipus}
-                      mida={c.mida}
-                      dubte={f.confianca?.[c.camp] === 'baixa'}
-                      onCanvi={(valor) => onEdita(f.id, c.camp, valor)}
-                    />
-                  </td>
-                ))}
+                {COLUMNES.map((c) => {
+                  if (c.derivada === 'regim') {
+                    return <td key={c.clau} className="sdp-gestoria-panell__cel" data-tipus="regim">{regimDe(f, estrangera)}</td>;
+                  }
+                  if (c.derivada === 'percentatge') {
+                    return <td key={c.clau} className="sdp-gestoria-panell__cel" data-tipus="percentatge">{percentatgeDe(f, c.quota)}</td>;
+                  }
+                  return (
+                    <td key={c.camp} className="sdp-gestoria-panell__cel" data-tipus={c.tipus}>
+                      <CelEditable
+                        etiqueta={`${c.titol}, ${ingres ? 'ingrés' : 'despesa'} ${i + 1}`}
+                        valor={valorDe(f, c)}
+                        tipus={c.tipus}
+                        mida={c.mida}
+                        dubte={f.confianca?.[c.camp] === 'baixa'}
+                        onCanvi={(valor) => onEdita(f.id, c.camp, valor)}
+                      />
+                    </td>
+                  );
+                })}
                 <td className="sdp-gestoria-panell__cel">
                   <Insignia to={f.estat === 'completa' ? 'exit' : 'avis'}>{f.estat === 'completa' ? 'Completa' : 'Pendent'}</Insignia>
                   {enAltraMoneda(f) ? <p className="sdp-gestoria-panell__nota">{`Imports en ${nomMoneda(f.moneda)}.`}</p> : null}
+                  {estrangera ? <p className="sdp-gestoria-panell__nota">{condicioEstrangera(f, estrangera)}</p> : null}
                   {baixes.length > 0 ? <p className="sdp-gestoria-panell__nota">{`Confiança baixa: ${baixes.join(', ')}.`}</p> : null}
                   {propies.length > 0 ? (
                     <p className="sdp-gestoria-panell__nota">
@@ -371,12 +469,14 @@ function TaulaFactures({ tipus, factures, incidencies, totalsEditats = {}, onEdi
           })}
         </tbody>
         <tfoot>
+          {/* Les sumes de sempre (totals() de model.js) davall de la seua columna; els percentatges i la Quota IRPF,
+              que totals() no suma, queden buits. */}
           <tr>
-            <th scope="row" colSpan={5}>Totals</th>
-            <td className="sdp-gestoria-panell__cel" data-tipus="import">{formatImport(sumes.subtotal)}</td>
-            <td className="sdp-gestoria-panell__cel" data-tipus="import">{formatImport(sumes.iva)}</td>
-            <td className="sdp-gestoria-panell__cel" data-tipus="import">{formatImport(sumes.total)}</td>
-            <td colSpan={ambRetencio ? 3 : 2}>{sumes.incomplet ? 'Falten imports: la suma no és completa.' : ''}</td>
+            <th scope="row" colSpan={COLUMNES_DAVANT_BASE}>Totals</th>
+            {COLUMNES.slice(COLUMNES_DAVANT_BASE).map((c) => (CAMPS_SUMATS.includes(c.camp)
+              ? <td key={c.camp} className="sdp-gestoria-panell__cel" data-tipus="import">{formatImport(sumes[c.camp])}</td>
+              : <td key={c.camp ?? c.clau} />))}
+            <td colSpan={2}>{sumes.incomplet ? 'Falten imports: la suma no és completa.' : ''}</td>
           </tr>
         </tfoot>
       </Taula>
@@ -389,22 +489,40 @@ function TaulaFactures({ tipus, factures, incidencies, totalsEditats = {}, onEdi
 
 function Incidencies({ incidencies }) {
   const idTitol = useId();
+  const estrangeres = estrangeresPerFactura(incidencies);
+  const deLEstranger = incidencies.filter((inc) => esDeLEstranger(inc, estrangeres));
+  /* Les de l'estranger, al seu grup informatiu (prompt 261014_0400, ordre del Mestre); la resta, per severitat. */
+  const grups = [
+    ...GRUPS_SEVERITAT.map((grup) => ({
+      ...grup, clau: grup.severitat, del: incidencies.filter((inc) => inc.severitat === grup.severitat && !esDeLEstranger(inc, estrangeres))
+    })),
+    { ...GRUP_ESTRANGER, del: deLEstranger }
+  ];
+  const ambAltes = incidencies.some((inc) => inc.severitat === 'alta');
   return (
     <section className="sdp-gestoria-panell__bloc" aria-labelledby={idTitol}>
       <h3 id={idTitol} className="sdp-gestoria-panell__subtitol">{`Incidències (${incidencies.length})`}</h3>
       <p className="sdp-gestoria-panell__nota">Són indicis per a revisar, no veredictes fiscals: la paraula final és teua i de la teua gestoria.</p>
-      {incidencies.length === 0 ? <p>Cap incidència detectada a la carpeta.</p> : GRUPS_SEVERITAT.map((grup) => {
-        const del = incidencies.filter((i) => i.severitat === grup.severitat);
-        if (del.length === 0) return null;
+      {/* Un fet, no un veredicte: mai no es declara el trimestre «complet» (auditoria.js:6-7). */}
+      {incidencies.length > 0 && !ambAltes ? (
+        <p>
+          {`Cap incidència d’alta severitat.${deLEstranger.length > 0
+            ? ' Les operacions amb l’estranger són informatives: les confirma la gestoria.' : ''}`}
+        </p>
+      ) : null}
+      {incidencies.length === 0 ? <p>Cap incidència detectada a la carpeta.</p> : grups.map((grup) => {
+        if (grup.del.length === 0) return null;
         return (
-          <div key={grup.severitat} className="sdp-gestoria-panell__grup">
-            <h4 className="sdp-gestoria-panell__grup-titol">{`${grup.titol} (${del.length})`}</h4>
+          <div key={grup.clau} className="sdp-gestoria-panell__grup">
+            <h4 className="sdp-gestoria-panell__grup-titol">{`${grup.titol} (${grup.del.length})`}</h4>
             <ul className="sdp-gestoria-panell__incidencies">
-              {del.map((inc, i) => (
+              {grup.del.map((inc, i) => (
                 <li key={`${inc.codi}-${inc.facturaId ?? ''}-${inc.fitxer ?? ''}-${inc.mes ?? ''}-${inc.camp ?? ''}-${i}`}
                   className="sdp-gestoria-panell__incidencia" data-destacada={DESTACADES.has(inc.codi) ? 'true' : undefined}>
                   <Insignia to={grup.to}>{ETIQUETES_CODI[inc.codi] ?? inc.codi}</Insignia>
                   <span>{inc.missatge}</span>
+                  {grup.clau === GRUP_ESTRANGER.clau && esDelNif(inc)
+                    ? <span className="sdp-gestoria-panell__nota">{EXPLICACIO_NIF_ESTRANGER}</span> : null}
                   {inc.fitxer ? <code className="sdp-gestoria-panell__fitxer">{nomDeRuta(inc.fitxer)}</code> : null}
                 </li>
               ))}

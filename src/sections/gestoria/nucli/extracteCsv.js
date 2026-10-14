@@ -67,15 +67,16 @@ const LLINDAR_COLUMNA = 0.8;
 const COLUMNES = new Map(Object.entries({
   data: ['fecha', 'data', 'fechaoperacion', 'fechadeoperacion', 'fechadelaoperacion', 'dataoperacio', 'datadoperacio', 'foperacion',
     'fechaoper', 'fechamovimiento', 'datamoviment', 'fechacompra', 'datacompra', 'fechatransaccion', 'date', 'transactiondate',
-    'bookingdate', 'dia'],
+    'bookingdate', 'dia', 'fechacontable', 'datacontable', 'datacomptable', 'fcontable'],
   dataValor: ['fvalor', 'fechavalor', 'fechadevalor', 'datavalor', 'valuedate'],
   concepte: ['concepto', 'concepte', 'descripcion', 'descripcio', 'detalle', 'detall', 'movimiento', 'moviment', 'description',
-    'observaciones', 'observacions', 'comercio', 'comerc', 'establecimiento', 'establiment', 'merchant'],
+    'observaciones', 'observacions', 'comercio', 'comerc', 'establecimiento', 'establiment', 'merchant', 'conceptocomun',
+    'conceptopropio', 'conceptepropi', 'masdatos', 'mesdades'],
   import: ['importe', 'import', 'cantidad', 'quantitat', 'amount', 'importeeur', 'importeeuros', 'importeur', 'importeneuros',
-    'importeoperacion'],
+    'importeoperacion', 'importemovimiento'],
   carrec: ['cargo', 'cargos', 'carrec', 'carrecs', 'debe', 'deure', 'debit', 'pagos', 'gastos'],
   abonament: ['abono', 'abonos', 'abonament', 'abonaments', 'haber', 'haver', 'credit', 'ingresos', 'ingressos'],
-  saldo: ['saldo', 'balance', 'saldoeur'],
+  saldo: ['saldo', 'balance', 'saldoeur', 'saldodisponible', 'saldocontable', 'saldocomptable', 'saldoposterior', 'disponible'],
   moneda: ['moneda', 'divisa', 'currency']
 }).flatMap(([camp, noms]) => noms.map((nom) => [nom, camp])));
 /* Els noms de la columna de concepte que diuen que és el comerç d'una targeta. */
@@ -347,6 +348,9 @@ export function llegeixExtracteCsv(text, { pista = '' } = {}) {
   const separades = 'carrec' in columnes || 'abonament' in columnes;
   const preambul = files.slice(primera, capcalera === null ? primera : capcalera + 1).flat().join(' ');
   const nomConcepte = capcalera !== null && 'concepte' in columnes ? clauColumna(files[capcalera][columnes.concepte]) : '';
+  const altresConceptes = capcalera !== null && 'concepte' in columnes
+    ? files[capcalera].map((nom, k) => (COLUMNES.get(clauColumna(nom)) === 'concepte' && k !== columnes.concepte ? k : -1)).filter((k) => k >= 0)
+    : [];
   const targeta = COLUMNES_DE_COMERC.has(nomConcepte) || DIU_TARGETA.test(senseAccents(`${preambul} ${String(pista ?? '').replace(/[_.-]+/g, ' ')}`).toUpperCase());
 
   /* Correcció 261011 (refutador, punt 10): parseData llig sempre el dia abans que el mes. Si alguna data només
@@ -404,7 +408,12 @@ export function llegeixExtracteCsv(text, { pista = '' } = {}) {
     const delaMoneda = cel('moneda').trim().toUpperCase();
     const moneda = /^[A-Z]{3}$/.test(delaMoneda) ? delaMoneda
       : (lectures.import.moneda ?? lectures.carrec.moneda ?? lectures.abonament.moneda ?? MONEDA_EXTRACTE);
-    llegides.push({ fila: n, data, dataValor: esDataValida(dataValor) ? dataValor : data, text: cel('concepte'), cru, saldo: lectures.saldo.centims, moneda });
+    const baseText = cel('concepte');
+    const extresText = altresConceptes
+      .map((k) => String(fila[k] ?? '').trim())
+      .filter((s) => s !== '' && !baseText.toLowerCase().includes(s.toLowerCase()));
+    const text = extresText.length > 0 ? [baseText.trim(), ...extresText].filter(Boolean).join(' ') : baseText;
+    llegides.push({ fila: n, data, dataValor: esDataValida(dataValor) ? dataValor : data, text, cru, saldo: lectures.saldo.centims, moneda });
   });
   if (ignorades > 0) {
     avisos.push(avis('FILES_IGNORADES', 'info',

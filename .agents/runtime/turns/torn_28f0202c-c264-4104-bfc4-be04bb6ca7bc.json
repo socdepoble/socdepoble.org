@@ -3,12 +3,12 @@
   "turn_id": "torn_28f0202c-c264-4104-bfc4-be04bb6ca7bc",
   "actor": "MarIA",
   "scope": "documents",
-  "state": "context_loaded",
-  "revision": 2,
+  "state": "closed",
+  "revision": 3,
   "createdAt": "2026-10-09T10:17:57.488Z",
-  "updatedAt": "2026-10-09T10:18:05.882Z",
+  "updatedAt": "2026-10-14T02:50:18.022Z",
   "expiresAt": "2026-10-10T10:17:57.489Z",
-  "contractHash": "2b09edd15b17e4d3f835b8943e7a7eea42ec351afc53905f67410c7f9fb32949",
+  "contractHash": "6a1959a7c85620476e8cb465609d6b2e56cbcc2c380e5faf3c14267bee1163fa",
   "humanInventoryVersion": 1,
   "initial": {
     "src/.DS_Store": "1d5d20f9d6acbb47fb89efa0be0546e487ef310833c1acdf528bffd5eff6b34c",
@@ -3522,7 +3522,15 @@
     }
   },
   "plan": null,
-  "verification": null,
+  "verification": {
+    "at": "2026-10-14T02:50:18.022Z",
+    "files": {
+      "_wiki_de_poble/10_actes/261009_1216_acta_marmota.md": "71db6dd975efafc22240a4c6c9412457efd70dc92e1b9a05452a94f6ba5d9910"
+    },
+    "checks": [
+      "expire-close"
+    ]
+  },
   "history": [
     {
       "state": "opened",
@@ -3540,6 +3548,12 @@
       "file": "_wiki_de_poble/10_actes/261009_1216_acta_marmota.md",
       "at": "2026-10-09T10:18:05.882Z",
       "hash": "df8e5120c704507be1ab193dca7c77f5ff3fc2e77bcb9cda08f14016e8725f3e"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "context_loaded",
+      "at": "2026-10-14T02:50:18.022Z"
     }
   ]
 }

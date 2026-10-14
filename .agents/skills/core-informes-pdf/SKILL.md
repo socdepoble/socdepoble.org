@@ -9,6 +9,11 @@ triggers_on:
   - document editorial
   - pdf professional
   - exportar a pdf
+contracte.llig:
+  - _wiki_de_poble/02_saber/identitat_visual.md
+  - _wiki_de_poble/04_escriptori
+contracte.escriu:
+  - _wiki_de_poble/04_escriptori
 ---
 # Tractor: Generació d'Informes PDF Editorials
 
@@ -44,3 +49,6 @@ Per tant, l'ordre d'execució és:
 2. Demanar expressament l'aplicació d'aquest "Sistema de Disseny Sóc de Poble per a informes".
 3. Renderitzar l'HTML complet retornat.
 4. Revisar visualment (via captures de pantalla o programari extern) per assegurar que el PDF ha absorbit els canvis.
+
+## Vincles
+- [[00_INDEX_SKILLS]]

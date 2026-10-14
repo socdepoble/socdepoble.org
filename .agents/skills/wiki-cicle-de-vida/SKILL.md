@@ -11,6 +11,13 @@ triggers_on:
   - tancar el torn
   - relleu documental
   - tancament de sessió
+contracte.llig:
+  - _wiki_de_poble/02_saber/doc_governanca.md
+  - _wiki_de_poble/04_escriptori
+  - _wiki_de_poble/10_actes
+contracte.escriu:
+  - _wiki_de_poble/04_escriptori
+  - _wiki_de_poble/10_actes
 ---
 # Cicle de vida documental
 

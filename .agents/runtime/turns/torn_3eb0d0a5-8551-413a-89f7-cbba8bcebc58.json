@@ -3,12 +3,12 @@
   "turn_id": "torn_3eb0d0a5-8551-413a-89f7-cbba8bcebc58",
   "actor": "MarIA",
   "scope": "documents",
-  "state": "context_loaded",
-  "revision": 3,
+  "state": "closed",
+  "revision": 4,
   "createdAt": "2026-10-12T14:32:31.916Z",
-  "updatedAt": "2026-10-12T14:32:55.606Z",
+  "updatedAt": "2026-10-14T02:50:18.022Z",
   "expiresAt": "2026-10-13T14:32:31.917Z",
-  "contractHash": "8588970175c0d5b1f9c562ef5cef81c075c9d09fef0a6206f2f095b5faca3c65",
+  "contractHash": "6a1959a7c85620476e8cb465609d6b2e56cbcc2c380e5faf3c14267bee1163fa",
   "humanInventoryVersion": 1,
   "initial": {
     "src/ARCHITECTURE.md": "8dc1702cb19b085f1baf352c6db44f266c8c0969037319dc07ec0b7b3d09f052",
@@ -3665,6 +3665,12 @@
       "file": "_wiki_de_poble/04_escriptori/261012_1633_auditoria_claude_gestoria.md",
       "at": "2026-10-12T14:32:55.606Z",
       "hash": "a0ce46411c003f44efc2f08e5f2a189eeda07dfef5c7f673db2b6a86b99fde47"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "context_loaded",
+      "at": "2026-10-14T02:50:18.022Z"
     }
   ]
 }

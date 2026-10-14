@@ -3,7 +3,15 @@
    fusionat amb el catàleg, i identificació per NIF, domini, nom i fitxer.
    Empreses fictícies i CIF sintètics calculats ací. */
 import { describe, expect, test } from 'vitest';
-import { aprenProveidors, cadenciaDe, clauMes, identificaProveidor, indexMes, paisDelNif } from './proveidors.js';
+import {
+  aprenProveidors,
+  cadenciaDe,
+  clauMes,
+  identificaProveidor,
+  indexMes,
+  paisDelNif,
+  proposaProveidorDesDeMoviment
+} from './proveidors.js';
 import { crearFactura } from './model.js';
 import { validaNif } from './nif.js';
 
@@ -352,3 +360,119 @@ describe('identificaProveidor', () => {
     expect(clau(identificaProveidor({ domini: 'example.com' }, [vist, nou]))).toBe('vist');
   });
 });
+
+describe('proposaProveidorDesDeMoviment', () => {
+  const registre = aprenProveidors([
+    despesa('Exemple Assessoria SL', CIF_ASSESSORIA, 2026, 1),
+    despesa('Som Energia SCCL', NIF_SOM_ENERGIA, 2026, 2, { subtotal: 5000, iva: 250, total: 5250 })
+  ]);
+
+  test('1. SEPA C43 amb NIF al registre: puntuació 100, confiança alta i origen sepa-nif', () => {
+    const mov = {
+      sepa: { creditor: 'SOM ENERGIA SCCL', idCreditor: `ES96000${NIF_SOM_ENERGIA}`, cif: NIF_SOM_ENERGIA, mandat: 'M-01' }
+    };
+    const proposta = proposaProveidorDesDeMoviment(mov, registre);
+    expect(proposta).toMatchObject({
+      clau: 'som-energia',
+      nom: 'Som Energia SCCL',
+      nif: NIF_SOM_ENERGIA,
+      pais: 'ES',
+      ivaHabitual: 5,
+      puntuacio: 100,
+      confianca: 'alta',
+      origen: 'sepa-nif'
+    });
+    expect(proposta.proveidor?.clau).toBe('som-energia');
+  });
+
+  test('2. SEPA C43 amb NIF vàlid d’un proveïdor nou no catalogat: proposa el NIF i el nom del creditor SEPA', () => {
+    const mov = {
+      sepa: { creditor: 'COOPERATIVA AGRICOLA SINTETICA', cif: CIF_FERRETERIA }
+    };
+    const proposta = proposaProveidorDesDeMoviment(mov, registre);
+    expect(proposta).toEqual({
+      proveidor: null,
+      clau: null,
+      nom: 'COOPERATIVA AGRICOLA SINTETICA',
+      nif: CIF_FERRETERIA,
+      pais: 'ES',
+      ivaHabitual: null,
+      puntuacio: 85,
+      confianca: 'alta',
+      origen: 'sepa-nif'
+    });
+  });
+
+  test('3. SEPA C43 sense NIF vàlid però amb nom de creditor conegut: origen sepa-creditor', () => {
+    const mov = {
+      sepa: { creditor: 'VODAFONE ENABLER ESPANA SL (LOWI)', cif: '' }
+    };
+    const proposta = proposaProveidorDesDeMoviment(mov, registre);
+    expect(proposta).toMatchObject({
+      clau: 'lowi',
+      nif: 'A80907397',
+      origen: 'sepa-creditor'
+    });
+  });
+
+  test('4. Comerç de targeta (amb domini o nom del catàleg): origen comerc', () => {
+    const perDomini = proposaProveidorDesDeMoviment({ comerc: 'ANTHROPIC.COM SAN FRANCISCO' }, registre);
+    expect(perDomini).toMatchObject({
+      clau: 'anthropic',
+      nom: 'Anthropic',
+      puntuacio: 95,
+      confianca: 'alta',
+      origen: 'comerc'
+    });
+
+    const perNom = proposaProveidorDesDeMoviment({ detall: { comerc: 'PAYPAL *SITEGROUND SPAIN' } }, registre);
+    expect(perNom).toMatchObject({
+      clau: 'siteground',
+      nif: 'B87194171',
+      origen: 'comerc'
+    });
+  });
+
+  test('5. Concepte de moviment (CSV o registres 23 de Norma 43): per frase, domini o NIF dins del concepte', () => {
+    const perFrase = proposaProveidorDesDeMoviment({
+      concepte: 'ADEUDO RECIBO DOMICILIADO SOM ENERGIA SCCL FACTURA JULIOL'
+    }, registre);
+    expect(perFrase).toMatchObject({
+      clau: 'som-energia',
+      nif: NIF_SOM_ENERGIA,
+      confianca: 'mitjana',
+      origen: 'concepte'
+    });
+
+    const perRegistres23 = proposaProveidorDesDeMoviment({
+      conceptes: [{ codi: '01', camps: ['TRANSFERENCIA A EXEMPLE ASSESSORIA SL', `CIF ${CIF_ASSESSORIA}`] }]
+    }, registre);
+    expect(perRegistres23).toMatchObject({
+      clau: 'exemple-assessoria',
+      nif: CIF_ASSESSORIA,
+      puntuacio: 100,
+      confianca: 'alta',
+      origen: 'concepte'
+    });
+
+    const perNifSepaEnText = proposaProveidorDesDeMoviment({
+      concepte: `ADEUDO SEPA ES96000${CIF_ALTRA} PROVEIDOR NOU SL`
+    }, registre);
+    expect(perNifSepaEnText).toMatchObject({
+      proveidor: null,
+      clau: null,
+      nif: CIF_ALTRA,
+      pais: 'ES',
+      confianca: 'mitjana',
+      origen: 'concepte'
+    });
+  });
+
+  test('6. Si no es passa registre, usa per defecte el catàleg integrat; si no hi ha cap pista, torna null', () => {
+    expect(proposaProveidorDesDeMoviment({ comerc: 'OPENAI *CHATGPT SUBSCR' })?.clau).toBe('openai');
+    expect(proposaProveidorDesDeMoviment({ concepte: 'REINTEGRO CAJERO AUTOMATICO' }, registre)).toBeNull();
+    expect(proposaProveidorDesDeMoviment(null, registre)).toBeNull();
+    expect(proposaProveidorDesDeMoviment({}, null)).toBeNull();
+  });
+});
+

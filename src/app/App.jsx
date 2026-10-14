@@ -272,15 +272,12 @@ function AppShell({ children, mobileNav }) {
       setIsDesktopSidebarClosed(v => !v);
     }
   }, [isCompact]);
-
-  useEffect(() => {
-    if (!rootRef.current) return;
-    if (isDesktopSidebarClosed) {
-      rootRef.current.classList.add('sidebar-closed');
-    } else {
-      rootRef.current.classList.remove('sidebar-closed');
-    }
-  }, [isDesktopSidebarClosed]);
+  /* Prompt 261014_0400 (ordre del Mestre), front B · 'sidebar-closed' la posa
+     només el className de l'arrel (més avall), en el mateix commit i abans del
+     pintat. Un efecte la tornava a posar o llevar amb classList després del
+     pintat: era redundant, i és on algú restauraria un plegat desat, que
+     arribaria tard (CLS). Si mai es persistix, es llig a l'inicialitzador del
+     useState, mai en un efecte. */
 
   const { showToast } = useToast();
   const { language, status, themeMode, contrastMode, externalConfig } = useUIState();

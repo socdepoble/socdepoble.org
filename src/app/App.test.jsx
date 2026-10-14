@@ -485,6 +485,29 @@ test('a 1024px la barra lateral és columna fixa, fora del calaix', async () => 
   });
 });
 
+/* Prompt 261014_0400 (ordre del Mestre), front B · 'sidebar-closed' ve només
+   del className de l'arrel, en el mateix commit que el plegat: cap efecte
+   l'afig ni la lleva amb classList després del pintat (on una restauració
+   desada arribaria tard i faria CLS). */
+test('plegar i desplegar la barra lateral posa i lleva sidebar-closed des del render de l’arrel', async () => {
+  vi.stubGlobal('innerWidth', 1440);
+  await muntaSenseSessio('/consola', async () => {
+    const barra = await screen.findByRole('navigation', { name: 'Navegació principal' });
+    const arrel = barra.closest('.sdp-root');
+    expect(arrel.classList.contains('sidebar-closed')).toBe(false);
+    fireEvent.click(within(barra).getByRole('button', { name: 'Plegar barra lateral' }));
+    expect(arrel.classList.contains('sidebar-closed')).toBe(true);
+    expect(barra.classList.contains('app-sidebar--tancada')).toBe(true);
+    fireEvent.click(within(barra).getByRole('button', { name: 'Desplegar barra lateral' }));
+    expect(arrel.classList.contains('sidebar-closed')).toBe(false);
+    expect(barra.classList.contains('app-sidebar--oberta')).toBe(true);
+  });
+  const { readFileSync } = await import('node:fs');
+  const { resolve } = await import('node:path');
+  const codi = readFileSync(resolve(process.cwd(), 'src/app/App.jsx'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+  expect(codi).not.toMatch(/classList\.(add|remove|toggle)\(\s*'sidebar-closed'/);
+});
+
 test('a 1023px la barra lateral continua dins del calaix compacte', async () => {
   vi.stubGlobal('innerWidth', 1023);
   await muntaSenseSessio('/consola', async () => {

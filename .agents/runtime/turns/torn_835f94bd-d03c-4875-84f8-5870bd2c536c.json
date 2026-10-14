@@ -3,12 +3,12 @@
   "turn_id": "torn_835f94bd-d03c-4875-84f8-5870bd2c536c",
   "actor": "claude-opus",
   "scope": "code",
-  "state": "context_loaded",
-  "revision": 6,
+  "state": "closed",
+  "revision": 7,
   "createdAt": "2026-10-12T18:19:30.694Z",
-  "updatedAt": "2026-10-12T21:26:03.756Z",
+  "updatedAt": "2026-10-14T02:50:18.022Z",
   "expiresAt": "2026-10-13T18:19:30.694Z",
-  "contractHash": "38f6bff7cb8194898e3ece6d76ff3fc8e6910d882bb4db06b217c037a23d3a4c",
+  "contractHash": "6a1959a7c85620476e8cb465609d6b2e56cbcc2c380e5faf3c14267bee1163fa",
   "humanInventoryVersion": 1,
   "initial": {
     "src/ARCHITECTURE.md": "8dc1702cb19b085f1baf352c6db44f266c8c0969037319dc07ec0b7b3d09f052",
@@ -3730,6 +3730,12 @@
       "file": "_wiki_de_poble/04_escriptori/261012_2325_auditoria_claude_refinament.md",
       "at": "2026-10-12T21:26:03.756Z",
       "hash": "509010688af041b7db34927c858eb299fc54fe6198c887bd350e7aaade84b1cd"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "context_loaded",
+      "at": "2026-10-14T02:50:18.022Z"
     }
   ]
 }

@@ -3,12 +3,12 @@
   "turn_id": "torn_7ffb2f2b-4897-44e5-a7da-844ac7c8e61a",
   "actor": "claude",
   "scope": "code",
-  "state": "context_loaded",
-  "revision": 15,
+  "state": "closed",
+  "revision": 16,
   "createdAt": "2026-10-09T10:45:32.963Z",
-  "updatedAt": "2026-10-10T09:56:48.849Z",
+  "updatedAt": "2026-10-14T02:50:18.022Z",
   "expiresAt": "2026-10-10T10:45:32.964Z",
-  "contractHash": "2b09edd15b17e4d3f835b8943e7a7eea42ec351afc53905f67410c7f9fb32949",
+  "contractHash": "6a1959a7c85620476e8cb465609d6b2e56cbcc2c380e5faf3c14267bee1163fa",
   "humanInventoryVersion": 1,
   "initial": {
     "src/.DS_Store": "1d5d20f9d6acbb47fb89efa0be0546e487ef310833c1acdf528bffd5eff6b34c",
@@ -3680,7 +3680,17 @@
     }
   },
   "plan": null,
-  "verification": null,
+  "verification": {
+    "at": "2026-10-14T02:50:18.022Z",
+    "files": {
+      "_wiki_de_poble/90_arxiu_historic/261009_1245_auditoria_claude.md": "e3e261cb718375bd42a478628e262124631ba9a0a8045dbf73434bc2698f490c",
+      "_wiki_de_poble/90_arxiu_historic/261009_2005_auditoria_inventari_onada9.md": "569cca92f06363b041cba0f17994cabc0477acfbace08012655e48f383b37dc4",
+      "_wiki_de_poble/90_arxiu_historic/261009_2005_acta_marmota_onada8.md": "c8fde2dd29f882f14c938e7630e178a4334a4c6ef0b662b5bcef10d4c2a93f5a"
+    },
+    "checks": [
+      "expire-close"
+    ]
+  },
   "history": [
     {
       "state": "opened",
@@ -3769,6 +3779,12 @@
       "state": "context_loaded",
       "action": "handoff",
       "at": "2026-10-10T09:56:48.849Z"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "context_loaded",
+      "at": "2026-10-14T02:50:18.022Z"
     }
   ],
   "ownedPaths": [

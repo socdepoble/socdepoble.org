@@ -15,6 +15,12 @@ triggers_on:
   - colors
   - components
 core: true
+contracte.llig:
+  - src/css/index.css
+  - src/components/layout/AppGridShell.jsx
+contracte.escriu:
+  - src/css/index.css
+  - src/components/layout/AppGridShell.jsx
 ---
 # 🪨 Pedra Seca 2.0: El Reglament Matemàtic
 
@@ -98,4 +104,7 @@ L'equivalent a l'Spec-driven per al disseny:
 - Este límit s'aplica a menús i calaixos. Una pantalla completa de treball, com l'editor o el visor, és legítima quan conserva una eixida o tornada arrere visible i accessible; no és una prohibició general d'ocupar el 100% de la pantalla.
 
 ## Ancoratge de Seguretat
+- [[00_INDEX_SKILLS]]
+
+## Vincles
 - [[00_INDEX_SKILLS]]

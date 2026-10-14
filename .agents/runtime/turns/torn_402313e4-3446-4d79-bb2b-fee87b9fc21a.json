@@ -3,12 +3,12 @@
   "turn_id": "torn_402313e4-3446-4d79-bb2b-fee87b9fc21a",
   "actor": "claude",
   "scope": "documents",
-  "state": "context_loaded",
-  "revision": 7,
+  "state": "closed",
+  "revision": 8,
   "createdAt": "2026-10-06T09:39:22.980Z",
-  "updatedAt": "2026-10-06T10:14:01.910Z",
+  "updatedAt": "2026-10-14T02:50:18.022Z",
   "expiresAt": "2026-10-07T09:39:22.980Z",
-  "contractHash": "2b09edd15b17e4d3f835b8943e7a7eea42ec351afc53905f67410c7f9fb32949",
+  "contractHash": "6a1959a7c85620476e8cb465609d6b2e56cbcc2c380e5faf3c14267bee1163fa",
   "humanInventoryVersion": 1,
   "initial": {
     "src/.DS_Store": "1d5d20f9d6acbb47fb89efa0be0546e487ef310833c1acdf528bffd5eff6b34c",
@@ -3031,6 +3031,12 @@
       "file": "_wiki_de_poble/04_escriptori/261006_1215_prompt_claude_loiverse.md",
       "at": "2026-10-06T10:14:01.910Z",
       "hash": "3f78e87c68573982ea1d7ff6b8d92b520160c6e7987c320471399b0b476d7688"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "context_loaded",
+      "at": "2026-10-14T02:50:18.022Z"
     }
   ]
 }

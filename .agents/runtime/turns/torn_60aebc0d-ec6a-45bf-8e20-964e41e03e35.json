@@ -3,12 +3,12 @@
   "turn_id": "torn_60aebc0d-ec6a-45bf-8e20-964e41e03e35",
   "actor": "codex",
   "scope": "documents",
-  "state": "planned",
-  "revision": 16,
+  "state": "closed",
+  "revision": 17,
   "createdAt": "2026-10-04T18:04:03.711Z",
-  "updatedAt": "2026-10-04T18:39:22.839Z",
+  "updatedAt": "2026-10-14T02:50:18.022Z",
   "expiresAt": "2026-10-05T18:04:03.711Z",
-  "contractHash": "5503c6dc29a6ce8c6708d7b81f7bd79546d13d574467174b95aae4265e1b0d5e",
+  "contractHash": "6a1959a7c85620476e8cb465609d6b2e56cbcc2c380e5faf3c14267bee1163fa",
   "humanInventoryVersion": 1,
   "initial": {
     "src/.DS_Store": "1d5d20f9d6acbb47fb89efa0be0546e487ef310833c1acdf528bffd5eff6b34c",
@@ -2754,7 +2754,17 @@
     "file": "_wiki_de_poble/90_arxiu_historic/261004_Auditoria_Gestoria_Codex/261004_1948_pla_implementacio_local_codex_auditoria_adversarial.md",
     "hash": "7024d6bff5f626556ff56bfccd3928169aaa210fa3b17efaa9ae9b2ec75d3bcd"
   },
-  "verification": null,
+  "verification": {
+    "at": "2026-10-14T02:50:18.022Z",
+    "files": {
+      "_wiki_de_poble/90_arxiu_historic/261004_Auditoria_Gestoria_Codex/261004_1948_pla_implementacio_local_codex_auditoria_adversarial.md": "7024d6bff5f626556ff56bfccd3928169aaa210fa3b17efaa9ae9b2ec75d3bcd",
+      "_wiki_de_poble/90_arxiu_historic/261004_Auditoria_Gestoria_Codex/261004_2005_auditoria_codex.md": "30d0fddd9d63e281682fe255e799da128550d6a7ef108ea5cebd56916d1f82a3",
+      "_wiki_de_poble/90_arxiu_historic/261004_Auditoria_Gestoria_Codex/261004_2025_acta_marmota_codex.md": "b52cddf8fa3296612f7a5c92166d967dded29f9ea9cceb877a8d286dcb583d2c"
+    },
+    "checks": [
+      "expire-close"
+    ]
+  },
   "history": [
     {
       "state": "opened",
@@ -2848,6 +2858,12 @@
         "_wiki_de_poble/04_escriptori/261004_2035_auditoria_codex.md"
       ],
       "at": "2026-10-04T18:39:22.839Z"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "planned",
+      "at": "2026-10-14T02:50:18.022Z"
     }
   ],
   "ownedPaths": [

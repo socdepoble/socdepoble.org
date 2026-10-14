@@ -10,6 +10,11 @@ triggers_on:
   - buscar skills externes
   - adaptar una skill
   - investigar un repositori d’agents
+contracte.llig:
+  - .agents/skills/00_INDEX_SKILLS.md
+  - _wiki_de_poble/00_index.md
+contracte.escriu:
+  - .agents/skills/00_INDEX_SKILLS.md
 ---
 
 # L'Explorador de Skills (El Caçador)

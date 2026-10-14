@@ -388,13 +388,28 @@
    principal (layout.css § TRUC PER A LA SIDEBAR), la fila de control i
    les columnes del Workspace (esta capçalera). Ritme:
      · fila superior de var(--sdp-alt-accio) amb la icona centrada
-       (.app-grid-col-header__rail-top);
-     · la primera cel·la s'apega a la fila superior, sense marge ni gap:
-       la mateixa distància (cap) que la primera fila de tota barra
-       desplegada (modules.css .app-sidebar-nav i .sdp-xat-rail-llista,
-       sense coixí de dalt). Plegar o desplegar no fa botar cap icona: la
-       primera entrada cau a la mateixa fila en els dos estats i a la
-       mateixa que la barra principal;
+       (.app-grid-col-header__rail-top): la fila 1 de la columna oberta;
+     · al Workspace, amb una sola acció (la roda de Disseny, Wiki i Perfil,
+       o la lupa de la llista en «ample»), eixa acció ocupa la fila 2 de la
+       columna oberta: la mateixa cel·la de var(--sdp-touch), centrada en
+       var(--sdp-alt-accio), i la primera carpeta cau a
+       2 × var(--sdp-alt-accio), com davall de les dues files de la columna
+       oberta. Prompt 261014_0400 (ordre del Mestre), front B: apegada a la
+       fila 1, la roda i el rail de davall pujaven 5px en plegar (mesurat a
+       /disseny, roda y=139→134, primera carpeta 194→189). Ara cauen a la
+       mateixa y plegats i oberts. Excepció: amb dues accions (al Bloc,
+       «Configurar categories» i la roda; en «mitja» i «estret», l'obridor de
+       la navegació i la lupa), oberta comparteixen la fila 2 i plegada
+       s'apilen en cel·les de var(--sdp-touch) des de la fila 1, com abans
+       del torn: cap no pot caure a la mateixa y en els dos estats, i les
+       carpetes cauen davall de dues cel·les de var(--sdp-touch) en lloc de
+       la fila 2 (mesurat al Bloc, 1440x900: 218 plegada contra 180
+       oberta). Posar-ne una altra davant és decisió del Mestre;
+     · el rail (o, al Xat, que no té accions, la primera entrada) s'apega a
+       l'última cel·la de dalt, sense marge, gap, vora ni coixí, i la
+       primera entrada del Xat cau a la mateixa fila que la barra principal
+       (modules.css .app-sidebar-nav i .sdp-xat-rail-llista, sense coixí de
+       dalt);
      · cada icona següent en una cel·la de var(--sdp-touch) d'alt i de
        banda a banda de la columna (56px), amb la icona centrada, apilades
        sense separació: «caixes sòlides, res de botons flotants» (ordre del
@@ -426,8 +441,10 @@
   width: 100%;
   height: var(--sdp-alt-accio);
   padding: 0;
-  /* Cap marge: la primera cel·la s'apega a la fila superior, com la
-     primera entrada de la barra desplegada (vegeu el ritme de dalt). */
+  /* Cap marge: la fila 2 (l'acció única), la primera de les accions
+     apilades o, sense accions, la primera entrada del rail s'apega a la fila
+     superior, com la primera entrada de la barra desplegada (vegeu el ritme
+     de dalt). */
   margin-bottom: 0;
 }
 
@@ -443,12 +460,30 @@
   align-self: center;
 }
 
-/* El rail de carpetes/documents (modules.css) ja porta la vora superior
-   amb var(--sdp-space-1) de coixí; el gap de la graella fa de marge, així
-   la separació entre l'última acció i la primera carpeta és la mateixa que
-   entre dos grups del rail (gap + vora + coixí). */
+/* La fila 2: l'acció única, la germana de l'expandir, i només quan el rail
+   en porta una (AppGridColumn hi posa app-grid-col-header--una-accio; sense
+   :has()). La cel·la continua sent de var(--sdp-touch) (el focus i la zona
+   tàctil, els de la columna oberta) i el marge li dona la fila sencera de
+   var(--sdp-alt-accio), amb la icona al mateix lloc que oberta. Amb dues
+   accions, la fila 2 per a la primera feia baixar la segona 10px i les
+   carpetes 5 (correcció dels revisors, prompt 261014_0400): s'apilen com a
+   cel·les del rail des de la fila 1. */
+.app-grid-col-header--collapsed.app-grid-col-header--una-accio .app-grid-col-header__rail-top + .app-grid-col-header__accio-icon {
+  margin-block: calc((var(--sdp-alt-accio) - var(--sdp-touch)) / 2);
+}
+
+/* El rail de carpetes/documents s'apega a l'última cel·la de dalt: la vora i
+   el coixí de dalt de modules.css (.sdp-workspace-rail) el deixaven 5px més
+   avall. Amb una acció cau a la mateixa y que la primera carpeta de la
+   columna oberta, com ja feia el rail del Xat (modules.css, .sdp-xat); amb
+   dues, davall de la segona cel·la. El filet que separava les accions
+   de les carpetes se'n va amb la vora: conservar-lo sense cap bot demanaria
+   descomptar-ne el gruix del coixí a mà. Els grups de dins del rail
+   conserven el seu (.sdp-workspace-rail__grup + .sdp-workspace-rail__grup). */
 .app-grid-col-header--collapsed > .sdp-workspace-rail {
   margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
 }
 
 .app-grid-col-header--accordion {

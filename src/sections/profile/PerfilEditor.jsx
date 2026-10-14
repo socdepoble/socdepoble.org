@@ -20,7 +20,9 @@ import { useAutodesament } from '../../data/autodesament/useAutodesament.js';
 import { useResolvedAsset } from '../../hooks/useResolvedAsset.js';
 import { registraEntitatDelProjecte } from '../../config/navigation.js';
 import { esRutaDelProjecte } from '../../components/universal/UniversalUtils.js';
-import { ETIQUETA_IA, etiquetesDeFitxa, potEditarFitxa, rutaDeFitxaPublica, slugDEntitat } from './fitxaDePerfil.js';
+import {
+  ETIQUETA_IA, avatarDeLaBarraDeFitxa, esFitxaDelPilot, etiquetesDeFitxa, potEditarFitxa, rutaDeFitxaPublica, slugDEntitat,
+} from './fitxaDePerfil.js';
 
 /* Línia I2 de l'Onada 4 (pla 261008_1201) · La lògica pura de la fitxa viu
    en un sol lloc, fitxaDePerfil.js, la mateixa que llig «Les vistes»
@@ -409,9 +411,13 @@ export function PerfilEditor({ identitat }) {
   /* T35 · L'avatar de la barra taronja. Una foto pujada és una referència
      opaca (sdp-media://) que la barra no resol (resolveAsset síncron): es
      resol ací pel port. La resta de valors passen tal qual. Ordre E (261007) ·
-     També és el logotip ja resolt d'una entitat en lectura (logoDeLectura). */
+     També és el logotip ja resolt d'una entitat en lectura (logoDeLectura).
+     Revisió del prompt 261014_0400 (ordre del Mestre) · La fitxa del pilot no
+     pinta el logo de la fila enlloc (avatarTaronja i logoDeLectura, a baix):
+     no es demana al port (esFitxaDelPilot, el criteri d'esPilot), com a la
+     fitxa pública. */
   const avatarDesat = identitat.avatar || '';
-  const avatarResolt = useResolvedAsset(avatarDesat);
+  const avatarResolt = useResolvedAsset(esFitxaDelPilot(identitat) ? '' : avatarDesat);
   const avatarBarra = avatarDesat.startsWith('sdp-media://') ? avatarResolt : avatarDesat;
 
   /* Onada 4 (retallador senzill, ordre del Mestre 261008) · Dos botons clars
@@ -559,11 +565,29 @@ export function PerfilEditor({ identitat }) {
      clau = id de la identitat), amb la mateixa autoria de la barra taronja i
      les mateixes píndoles. Per a qui només la llig, la fitxa del servidor. */
   /* Ordre del Mestre (261007) · La barra taronja porta a la fitxa pública.
-     Onada 8 (261009) · La boina de la targeta viva també (autorTargeta.ruta). */
+     Onada 8 (261009) · La boina de la targeta viva també (autorTargeta.ruta).
+     Onada 8 (261009) · La fitxa del pilot és el seu perfil
+     (RUTA_PERFIL_PROJECTE): es reconeix per esRutaDelProjecte.
+     Prompt 261014_0400 (ordre del Mestre, tasca 4: «Quan l'usuari actua com
+     a Sóc de Poble, la barra taronja ha de carregar automàticament l'autoria
+     oficial», el PNG verd, «evitant en qualsevol cas la silueta negra») · La
+     fitxa del pilot porta a la barra taronja i a la targeta viva el PNG verd
+     oficial (DEFAULT_AUTHOR.avatarUrl), no la silueta ni el logo_url de la
+     fila: el mateix criteri de l'ordre E, que hi fixa el logotip de damunt de
+     l'H1 (ranuraDelLogo i logoDeLectura, a baix). El nom i el poble
+     continuen sent els de la fitxa.
+     Revisió del prompt 261014_0400 (ordre del Mestre) · La regla ja viu a
+     fitxaDePerfil.js (avatarDeLaBarraDeFitxa), la mateixa que lligen «Les
+     vistes» (DetallVistes: la barra i la «Vista targeta») i «El compte»
+     (DetallCompte); la fitxa pública (PerfilPublicSection) hi aplica el seu
+     esElProjecte. Abans vivia només ací i, a la fitxa del pilot, les
+     superfícies canviaven en passar d'apartat. */
   const rutaFitxa = rutaDeFitxaPublica(identitat);
+  const esPilot = esRutaDelProjecte(rutaFitxa);
+  const avatarTaronja = avatarDeLaBarraDeFitxa(identitat, avatarBarra);
   const autorTargeta = useMemo(
-    () => ({ nom: identitat.nom, avatar: avatarBarra, poble, ruta: rutaFitxa }),
-    [identitat.nom, avatarBarra, poble, rutaFitxa],
+    () => ({ nom: identitat.nom, avatar: avatarTaronja, poble, ruta: rutaFitxa }),
+    [identitat.nom, avatarTaronja, poble, rutaFitxa],
   );
   /* Auditoria 261007 (retocs de l'ordre E) · Com PerfilPublicSection, la
      fitxa registra ella mateixa l'organització que té davant: si el seu slug
@@ -615,10 +639,9 @@ export function PerfilEditor({ identitat }) {
      i «Llevar l'avatar» queden desactivades).
      Correcció de la revisió de la línia I2 · Mentre puja, l'ajuda ho diu
      (AJUDA_IMATGE_PUJANT, el text de la closca): unes píndoles desactivades
-     sense cap motiu a la vista no fan res i no diuen per què. */
-  /* Onada 8 (261009) · La fitxa del pilot és el seu perfil
-     (RUTA_PERFIL_PROJECTE): es reconeix per esRutaDelProjecte. */
-  const esPilot = esRutaDelProjecte(rutaFitxa);
+     sense cap motiu a la vista no fan res i no diuen per què.
+     L'entitat pilot es reconeix per esPilot (esRutaDelProjecte de rutaFitxa,
+     a dalt, amb l'autoria de la barra taronja). */
   const ambAvatarRedo = mena !== 'organitzacio';
   const imatgeDeLaFitxa = fitxa.logoImage || '';
   const ranuraDelLogo = potEditar && !esPilot && (!ambAvatarRedo || !imatgeDeLaFitxa);

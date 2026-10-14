@@ -7,6 +7,7 @@ import { ajustosPersona, ajustosOrganitzacio, usePerfilOpcional } from './Perfil
 import DetallAjust from './DetallAjust.jsx';
 import { BlocPerfil as Bloc } from './BlocPerfil.jsx';
 import { rutaDAutoria, rutaDePerfil } from '../../config/navigation.js';
+import { avatarDeLaBarraDeFitxa } from './fitxaDePerfil.js';
 
 /* ═══════════════════════════════════════════════════════════════════
    EL COMPTE · el que no és la fitxa pública
@@ -26,9 +27,25 @@ import { rutaDAutoria, rutaDePerfil } from '../../config/navigation.js';
    pàgina privada porta a la fitxa pública pròpia: la persona, per l'id de
    la seua fila (dades.id, no 'jo'); una organització, per rutaDAutoria
    (l'entitat pilot, al seu perfil, /empresa/socdepoble: Onada 8, 261009;
-   abans, /projecte); un agent IA, /perfil/:id. La mateixa tria
-   que rutaDeFitxaPublica de PerfilEditor, que no s'importa: les proves del
-   Perfil substituïxen eixe mòdul sencer.
+   abans, /projecte); un agent IA, /perfil/:id.
+   Revisió del prompt 261014_0400 (ordre del Mestre) · rutaDeLaFitxa NO és
+   la tria de rutaDeFitxaPublica (fitxaDePerfil.js): no llig el slug, i el
+   pilot només el reconeix rutaDAutoria pels ids que coneix. El paràgraf
+   següent en diu el deute, que es queda així fins que el Mestre decidisca
+   l'enllaç. Derogat el motiu de no importar-la: vivia a PerfilEditor, que
+   les proves del Perfil substituïxen sencer, i des de la Línia I2 viu a
+   fitxaDePerfil.js.
+
+   Prompt 261014_0400 (ordre del Mestre, tasca 4: «Quan l'usuari actua com a
+   Sóc de Poble, la barra taronja ha de carregar automàticament l'autoria
+   oficial», el PNG verd, «evitant en qualsevol cas la silueta negra») · El
+   compte del pilot porta a la barra taronja el PNG verd oficial, com
+   l'editor i «Les vistes»: l'avatar ve d'avatarDeLaBarraDeFitxa
+   (fitxaDePerfil.js, que cap prova substituïx). La resta, l'avatar de la
+   fila, com abans. Ni el nom, ni el poble, ni rutaDeLaFitxa no canvien: el
+   pilot pel slug amb un UUID encara sense registrar continua portant a
+   /empresa/:uuid, i no al seu perfil com l'editor (deute conegut, fora de
+   l'abast del prompt).
 
    Ordre del Mestre (261008, grup C) · Una organització tria el seu POBLE
    (els pobles del contingut core, useCoreContent, que sense proveïdor torna
@@ -88,7 +105,7 @@ export function DetallCompte({ identitat, guardarAjust, pujaMitja, contacte = nu
       {...dataDeFila(dades)}
       topBarData={{
         authorName: identitat.nom,
-        authorAvatar: identitat.avatar || '',
+        authorAvatar: avatarDeLaBarraDeFitxa(identitat, identitat.avatar || ''),
         authorLocation: dades?.town_name || '',
         authorHref: rutaDeLaFitxa(identitat),
       }}

@@ -14,6 +14,9 @@ triggers_on:
 contracte.llig:
   - .agents/skills/sdp-pedra-seca/SKILL.md
   - .agents/skills/core-identitat/SKILL.md
+  - _wiki_de_poble/01_ser/02_genotip.md
+contracte.escriu:
+  - _wiki_de_poble/04_escriptori
 ---
 \n# 💡 Casos d'Ús Essencials i Funcionalitats Clau
 

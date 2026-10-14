@@ -3,12 +3,12 @@
   "turn_id": "torn_7a4fe1eb-e34b-4d4d-a1bf-a21d9ee32acb",
   "actor": "Claude",
   "scope": "documents",
-  "state": "context_loaded",
-  "revision": 5,
+  "state": "closed",
+  "revision": 6,
   "createdAt": "2026-10-04T18:30:08.745Z",
-  "updatedAt": "2026-10-04T18:35:53.473Z",
+  "updatedAt": "2026-10-14T02:50:18.022Z",
   "expiresAt": "2026-10-05T18:30:08.746Z",
-  "contractHash": "5503c6dc29a6ce8c6708d7b81f7bd79546d13d574467174b95aae4265e1b0d5e",
+  "contractHash": "6a1959a7c85620476e8cb465609d6b2e56cbcc2c380e5faf3c14267bee1163fa",
   "humanInventoryVersion": 1,
   "initial": {
     "src/.DS_Store": "1d5d20f9d6acbb47fb89efa0be0546e487ef310833c1acdf528bffd5eff6b34c",
@@ -2700,7 +2700,15 @@
     }
   },
   "plan": null,
-  "verification": null,
+  "verification": {
+    "at": "2026-10-14T02:50:18.022Z",
+    "files": {
+      "_wiki_de_poble/10_actes/261004_2045_acta_marmota_fortificacio.md": "3d47257600035fd86ffad02972eeea754077d3b1f323dabb034eaa14bc0fcdcb"
+    },
+    "checks": [
+      "expire-close"
+    ]
+  },
   "history": [
     {
       "state": "opened",
@@ -2731,6 +2739,12 @@
       "state": "context_loaded",
       "action": "context",
       "at": "2026-10-04T18:35:53.473Z"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "context_loaded",
+      "at": "2026-10-14T02:50:18.022Z"
     }
   ]
 }

@@ -42,6 +42,7 @@ import {
 } from './visibilitatNota.js';
 import { NotaPreparadaContext } from './notaPreparada.js';
 import { RUTA_PERFIL_PROJECTE } from '../../config/navigation.js';
+import { ENTITAT_PILOT_SLUG } from '../../data/identitatsSeed.js';
 
 beforeEach(() => {
   mocks.notes = [];
@@ -544,6 +545,26 @@ test('261007 · una nota pròpia porta a la fitxa de la persona; amb una entitat
   render(<NotesEditor activeNote={{ id: 'p', folderId: 'f-mur', categories: ['Sistema'], tags: [] }} />);
   expect(mocks.adapter.barAuthorName).toBe('Forn & Cia');
   expect(mocks.adapter.barAuthorHref).toBe('/empresa/O');
+});
+
+/* Prompt 261014_0400 (ordre del Mestre, tasca 4) · Actuant com a Sóc de Poble
+   (l'entitat pilot, pel slug declarat de la seua fila, amb un id UUID que
+   encara ningú ha registrat), la barra taronja porta l'autoria oficial i
+   l'enllaç al seu perfil, amb nota i a l'estat buit, encara que la fila no
+   porte logo: mai la silueta. El selector continua dient el nom de l'actor. */
+test('prompt 261014_0400 · actuant com a Sóc de Poble, la barra signa amb l’autoria oficial (amb nota i a l’estat buit)', () => {
+  const uuid = '5b0c1d2e-3f40-4a51-8b62-7c83d94ea5f6';
+  mocks.session = { currentUser: { id: 'U', user_metadata: { name: 'Pepa', avatar_url: 'https://exemple.org/pepa.png', town_name: 'Benifallim' } } };
+  mocks.identitat = { actorId: uuid, actor: { tipus: 'entitat', id: uuid, slug: ENTITAT_PILOT_SLUG, nom: 'Sóc de Poble', avatar: null, rol: 'owner' } };
+  render(<NotesEditor activeNote={{ id: 'p', folderId: 'f-mur', categories: ['Sistema'], tags: [] }} />);
+  expect(barra()).toEqual(SOC_DE_POBLE);
+  expect(mocks.adapter.barAuthorHref).toBe(RUTA_PERFIL_PROJECTE);
+  expect(mocks.adapter.visibilitat.comNom).toBe('Sóc de Poble');
+  cleanup();
+  render(<NotesEditor />);
+  expect(mocks.adapter.document).toBeNull();
+  expect(barra()).toEqual(SOC_DE_POBLE);
+  expect(mocks.adapter.barAuthorHref).toBe(RUTA_PERFIL_PROJECTE);
 });
 
 test('el selector no diu mai un correu: sense nom, «Veí» (el mateix que ix al Mur)', () => {

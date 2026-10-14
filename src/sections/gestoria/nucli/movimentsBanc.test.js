@@ -4,7 +4,13 @@
    el comerç de les compres amb targeta. Totes les dades són sintètiques, i
    la targeta porta el prefix de prova 999999. */
 import { describe, expect, test } from 'vitest';
-import { CODIS_AVIS_CSV_BANC, comercDelConcepte, fusionaMoviments, llegeixMovimentsCsv } from './movimentsBanc.js';
+import {
+  CODIS_AVIS_CSV_BANC,
+  comercDelConcepte,
+  fusionaMoviments,
+  llegeixMovimentsCsv,
+  llegeixQualsevolCsvBanc
+} from './movimentsBanc.js';
 
 const CAPCALERA = 'Fecha,F. valor,Concepto,Importe,Saldo';
 const FILES = [
@@ -113,3 +119,124 @@ describe('fusionaMoviments', () => {
     expect(fusionaMoviments(null, null)).toEqual({ moviments: [], senseParella: { c43: [], csv: [] } });
   });
 });
+
+describe('llegeixQualsevolCsvBanc', () => {
+  test('el CSV clàssic del banc conserva el concepte multilínia i el comerç pel lector estricte', () => {
+    const r = llegeixQualsevolCsvBanc(csv(FILES));
+    expect(r.origen).toBe('moviments');
+    expect(r.avisos).toEqual([]);
+    expect(r.moviments).toHaveLength(4);
+    expect(r.moviments[0]).toMatchObject({
+      concepte: 'OP.TARJ.COMPRA COMERCIO\n999999******0000 BOTIGA SINTETICA - POBLE',
+      centims: -1361,
+      comerc: 'BOTIGA SINTETICA - POBLE'
+    });
+  });
+
+  test('Sabadell: preàmbul, punt i coma, coma decimal, milers i Data d’operació sense F. valor', () => {
+    const sabadell = [
+      ' Banc Sabadell · Extracte de moviments;;;',
+      'Període consultat: 01/07/2099 - 31/07/2099;;;',
+      "Data d'operació;Concepte;Import;Saldo",
+      '05/07/2099;ADEUDO RECIBO SOM ENERGIA SCCL;-1.210,50;3.789,50',
+      '12/07/2099;TRANSFERENCIA A FAVOR DE CLIENT SINTETIC;2.500,00;6.289,50'
+    ].join('\r\n');
+    const r = llegeixQualsevolCsvBanc(sabadell);
+    expect(r.origen).toBe('extracte');
+    expect(r.avisos).toEqual([]);
+    expect(r.moviments).toEqual([
+      {
+        fila: 4,
+        dataOperacio: { a: 2099, m: 7, d: 5 },
+        dataValor: { a: 2099, m: 7, d: 5 },
+        concepte: 'ADEUDO RECIBO SOM ENERGIA SCCL',
+        centims: -121050,
+        saldo: 378950
+      },
+      {
+        fila: 5,
+        dataOperacio: { a: 2099, m: 7, d: 12 },
+        dataValor: { a: 2099, m: 7, d: 12 },
+        concepte: 'TRANSFERENCIA A FAVOR DE CLIENT SINTETIC',
+        centims: 250000,
+        saldo: 628950
+      }
+    ]);
+  });
+
+  test('BBVA: preàmbul, Concepto + Movimiento + Observaciones i Disponible com a saldo', () => {
+    const bbva = [
+      'Últimos movimientos;;',
+      'F.Valor;Fecha;Concepto;Movimiento;Importe;Divisa;Disponible',
+      '02/07/2099;01/07/2099;ADEUDO SEPA;LOWI TELECOM;-29,95;EUR;1.470,05',
+      '10/07/2099;10/07/2099;PAGO CON TARJETA;ANTHROPIC.COM;-21,78;EUR;1.448,27'
+    ].join('\n');
+    const r = llegeixQualsevolCsvBanc(bbva);
+    expect(r.origen).toBe('extracte');
+    expect(r.avisos).toEqual([]);
+    expect(r.moviments.map((m) => [m.concepte, m.centims, m.saldo])).toEqual([
+      ['ADEUDO SEPA LOWI TELECOM', -2995, 147005],
+      ['PAGO CON TARJETA ANTHROPIC.COM', -2178, 144827]
+    ]);
+  });
+
+  test('CaixaBank: Movimiento + Más datos i Saldo posterior', () => {
+    const caixabank = [
+      'Fecha;Fecha valor;Movimiento;Más datos;Importe;Saldo posterior',
+      '03/07/2099;03/07/2099;RECIBO DOMICILIADO;SITEGROUND SPAIN SL;-145,20 €;2.100,80 €',
+      '08/07/2099;08/07/2099;COMPRA TARJETA;FERRETERIA SINTETICA;-18,40 €;2.082,40 €'
+    ].join('\n');
+    const r = llegeixQualsevolCsvBanc(caixabank);
+    expect(r.origen).toBe('extracte');
+    expect(r.avisos).toEqual([]);
+    expect(r.moviments.map((m) => [m.concepte, m.centims, m.saldo])).toEqual([
+      ['RECIBO DOMICILIADO SITEGROUND SPAIN SL', -14520, 210080],
+      ['COMPRA TARJETA FERRETERIA SINTETICA', -1840, 208240]
+    ]);
+  });
+
+  test('Cajamar: Fecha contable, columnes separades Cargo/Abono i Saldo contable', () => {
+    const cajamar = [
+      'Fecha contable;Fecha valor;Concepto;Cargo;Abono;Saldo contable',
+      '04/07/2099;04/07/2099;RECIBO COOPERATIVA ELECTRICA;64,15;;935,85',
+      '15/07/2099;15/07/2099;ABONO SUBVENCION;;1.500,00;2.435,85'
+    ].join('\n');
+    const r = llegeixQualsevolCsvBanc(cajamar);
+    expect(r.origen).toBe('extracte');
+    expect(r.format?.signe).toBe('columnes');
+    expect(r.moviments.map((m) => [m.concepte, m.centims, m.saldo])).toEqual([
+      ['RECIBO COOPERATIVA ELECTRICA', -6415, 93585],
+      ['ABONO SUBVENCION', 150000, 243585]
+    ]);
+  });
+
+  test('extracte de targeta de crèdit: gira compres en positiu i ompli comerc', () => {
+    const targeta = [
+      'Fecha operación;Comercio;Importe',
+      '04/07/2099;ANTHROPIC SAN FRANCISCO;20,00',
+      '05/07/2099;FAL.AI SAN FRANCISCO;18,50',
+      '06/07/2099;FAL.AI SAN FRANCISCO;-3,50'
+    ].join('\n');
+    const r = llegeixQualsevolCsvBanc(targeta, { pista: 'targeta_juliol.csv' });
+    expect(r.origen).toBe('extracte');
+    expect(r.format).toMatchObject({ targeta: true, signe: 'girat', motiuSigne: 'TARGETA' });
+    expect(r.moviments.map((m) => [m.comerc, m.centims])).toEqual([
+      ['ANTHROPIC SAN FRANCISCO', -2000],
+      ['FAL.AI SAN FRANCISCO', -1850],
+      ['FAL.AI SAN FRANCISCO', 350]
+    ]);
+  });
+
+  test('text buit o sense columnes d’extracte', () => {
+    expect(llegeixQualsevolCsvBanc('')).toEqual({
+      moviments: [],
+      avisos: [expect.objectContaining({ codi: 'CSV_BUIT' })],
+      format: null,
+      origen: 'moviments'
+    });
+    const invalid = llegeixQualsevolCsvBanc('Nom, Ciutat\nAnna, Alcoi');
+    expect(invalid.moviments).toEqual([]);
+    expect(invalid.avisos[0].codi).toBe('SENSE_COLUMNES');
+  });
+});
+

@@ -3,12 +3,12 @@
   "turn_id": "torn_afa18e33-6945-4b77-b28b-0f4b51e82b76",
   "actor": "codex",
   "scope": "code",
-  "state": "planned",
-  "revision": 3,
+  "state": "closed",
+  "revision": 4,
   "createdAt": "2026-09-22T01:04:05.545Z",
-  "updatedAt": "2026-09-22T01:10:48.547Z",
+  "updatedAt": "2026-10-14T02:50:18.022Z",
   "expiresAt": "2026-09-23T01:04:05.545Z",
-  "contractHash": "d84658763735ad8a1bf507f7b58dcc63b22b2ad4442b2cfbe36d3e146994e41a",
+  "contractHash": "6a1959a7c85620476e8cb465609d6b2e56cbcc2c380e5faf3c14267bee1163fa",
   "initial": {
     "src/.DS_Store": "1d5d20f9d6acbb47fb89efa0be0546e487ef310833c1acdf528bffd5eff6b34c",
     "src/ARCHITECTURE.md": "8dc1702cb19b085f1baf352c6db44f266c8c0969037319dc07ec0b7b3d09f052",
@@ -771,6 +771,12 @@
       "state": "planned",
       "action": "bind-plan",
       "at": "2026-09-22T01:10:48.546Z"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "planned",
+      "at": "2026-10-14T02:50:18.022Z"
     }
   ]
 }

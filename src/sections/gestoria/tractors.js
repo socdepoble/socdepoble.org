@@ -133,6 +133,7 @@ const NUCLI_TAULER = [
   'src/sections/gestoria/nucli/csv.js',
   'src/sections/gestoria/nucli/dates.js',
   'src/sections/gestoria/nucli/diners.js',
+  'src/sections/gestoria/nucli/extracteCsv.js',
   'src/sections/gestoria/nucli/model.js',
   'src/sections/gestoria/nucli/movimentsBanc.js',
   'src/sections/gestoria/nucli/nif.js',

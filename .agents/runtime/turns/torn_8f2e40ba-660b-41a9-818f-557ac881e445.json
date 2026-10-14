@@ -3,12 +3,12 @@
   "turn_id": "torn_8f2e40ba-660b-41a9-818f-557ac881e445",
   "actor": "Claude",
   "scope": "documents",
-  "state": "context_loaded",
-  "revision": 6,
+  "state": "closed",
+  "revision": 7,
   "createdAt": "2026-10-12T17:35:13.753Z",
-  "updatedAt": "2026-10-12T18:05:14.964Z",
+  "updatedAt": "2026-10-14T02:50:18.022Z",
   "expiresAt": "2026-10-13T17:35:13.754Z",
-  "contractHash": "8588970175c0d5b1f9c562ef5cef81c075c9d09fef0a6206f2f095b5faca3c65",
+  "contractHash": "6a1959a7c85620476e8cb465609d6b2e56cbcc2c380e5faf3c14267bee1163fa",
   "humanInventoryVersion": 1,
   "initial": {
     "src/ARCHITECTURE.md": "8dc1702cb19b085f1baf352c6db44f266c8c0969037319dc07ec0b7b3d09f052",
@@ -3725,6 +3725,12 @@
       "file": "_wiki_de_poble/04_escriptori/261012_2004_prompt_chatgpt_auditor.md",
       "at": "2026-10-12T18:05:14.964Z",
       "hash": "7aaaecac10b8d31a50fc7095868f406001c12d6fb1eb49501d02a80f08ee50db"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "context_loaded",
+      "at": "2026-10-14T02:50:18.022Z"
     }
   ]
 }

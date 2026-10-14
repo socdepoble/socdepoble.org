@@ -3,12 +3,12 @@
   "turn_id": "torn_1066d819-7318-4ecf-b7a8-40e73a80e38a",
   "actor": "Claude",
   "scope": "code",
-  "state": "planned",
-  "revision": 4,
+  "state": "closed",
+  "revision": 5,
   "createdAt": "2026-10-10T15:41:21.635Z",
-  "updatedAt": "2026-10-10T15:55:24.698Z",
+  "updatedAt": "2026-10-14T02:50:18.022Z",
   "expiresAt": "2026-10-11T15:41:21.635Z",
-  "contractHash": "2b09edd15b17e4d3f835b8943e7a7eea42ec351afc53905f67410c7f9fb32949",
+  "contractHash": "6a1959a7c85620476e8cb465609d6b2e56cbcc2c380e5faf3c14267bee1163fa",
   "humanInventoryVersion": 1,
   "initial": {
     "src/ARCHITECTURE.md": "8dc1702cb19b085f1baf352c6db44f266c8c0969037319dc07ec0b7b3d09f052",
@@ -3577,6 +3577,12 @@
       "state": "planned",
       "action": "bind-plan",
       "at": "2026-10-10T15:55:24.697Z"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "planned",
+      "at": "2026-10-14T02:50:18.022Z"
     }
   ]
 }

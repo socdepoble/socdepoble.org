@@ -1,5 +1,6 @@
 import { RUTA_PERFIL_PROJECTE, rutaDAutoria, rutaDePerfil } from '../../config/navigation.js';
 import { ENTITAT_PILOT_SLUG } from '../../data/identitatsSeed.js';
+import { DEFAULT_AUTHOR, esRutaDelProjecte } from '../../components/universal/UniversalUtils.js';
 import { menaDeFitxa } from './perfilCamps.js';
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -23,6 +24,15 @@ import { menaDeFitxa } from './perfilCamps.js';
    Un mòdul que les importara d'allí les rebria sense definir en eixes
    proves: perfilModel.js (potEditarFitxa), que PerfilShell carrega sense
    doble en totes, i DetallVistes.jsx en les que no el substituïxen.
+
+   Prompt 261014_0400 (ordre del Mestre, tasca 4) · avatarDeLaBarraDeFitxa
+   també viu ací: l'avatar de la barra taronja i de la targeta viva de la
+   fitxa, el mateix a l'editor, a «Les vistes» i a «El compte». Abans la regla
+   del pilot vivia només a PerfilEditor i les tres superfícies es veien
+   distintes en passar d'apartat. UniversalUtils.js no importa res d'este
+   mòdul ni de la llavor: cap cicle. esFitxaDelPilot n'és el criteri, a
+   soles: amb ell, «Les vistes» i l'editor no demanen al port el logo de la
+   fila del pilot, que no pinten.
 
    pobleDeFitxa és la regla del poble de «Les vistes»: la persona, el seu
    (dades.town_name); una organització, el seu propi o cap, mai el de la
@@ -65,6 +75,35 @@ export function rutaDeFitxaPublica(identitat) {
   if (mena === 'agent') return rutaDePerfil('ia', identitat.id);
   if (identitat?.id != null && slugDEntitat(identitat) === ENTITAT_PILOT_SLUG) return RUTA_PERFIL_PROJECTE;
   return rutaDAutoria({ tipus: mena === 'grup' ? 'grup' : 'entitat', id: identitat?.id });
+}
+
+/**
+ * Prompt 261014_0400 (ordre del Mestre, tasca 4: «Quan l'usuari actua com a
+ * Sóc de Poble, la barra taronja ha de carregar automàticament l'autoria
+ * oficial», el PNG verd, «evitant en qualsevol cas la silueta negra») ·
+ * L'avatar de la barra taronja i de la targeta viva d'una fitxa:
+ *   · la fitxa del pilot (la seua fitxa és el seu perfil: esRutaDelProjecte
+ *     de rutaDeFitxaPublica, pel slug declarat o per l'id de la llavor, mai
+ *     pel nom; el criteri de l'ordre E), el PNG verd oficial
+ *     (DEFAULT_AUTHOR.avatarUrl), siga quin siga el logo de la fila: cap, una
+ *     referència opaca o un de propi;
+ *   · la resta, `avatarResolt`, el que cada superfície ja hi posava, tal qual.
+ * Només l'avatar: el nom, el poble i l'enllaç continuen sent els de la fitxa.
+ */
+export function avatarDeLaBarraDeFitxa(identitat, avatarResolt) {
+  return esFitxaDelPilot(identitat) ? DEFAULT_AUTHOR.avatarUrl : avatarResolt;
+}
+
+/**
+ * Revisió del prompt 261014_0400 (ordre del Mestre) · Si la fitxa és la del
+ * pilot (esRutaDelProjecte de rutaDeFitxaPublica: el slug declarat o l'id de
+ * la llavor, mai el nom). És el criteri d'avatarDeLaBarraDeFitxa, a soles:
+ * «Les vistes» i l'editor el lligen abans de resoldre el logo de la fila,
+ * que la fitxa del pilot no pinta, per a no demanar-lo al port (com la fitxa
+ * pública, que per al pilot ja no el resol).
+ */
+export function esFitxaDelPilot(identitat) {
+  return esRutaDelProjecte(rutaDeFitxaPublica(identitat));
 }
 
 /* Amb una baixa en curs el servidor té el perfil congelat: la fitxa es veu en

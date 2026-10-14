@@ -1,8 +1,8 @@
 import { expect, test } from 'vitest';
-import { AUTORIA_BENVINGUDA, ID_COPIA_PROVA, actorAmbPobleDeLEntitat, autoriaDeNota, rutaDAutoriaDeNota, signaturaDeNota } from './autoriaNota.js';
-import { DEFAULT_AUTHOR, FORASTER } from '../../components/universal/UniversalUtils.js';
-import { RUTA_PERFIL_PROJECTE } from '../../config/navigation.js';
-import { ENTITAT_PILOT_ID } from '../../data/identitatsSeed.js';
+import { AUTORIA_BENVINGUDA, ID_COPIA_PROVA, actorAmbPobleDeLEntitat, autoriaDeLActor, autoriaDeNota, rutaDAutoriaDeNota, signaturaDeNota } from './autoriaNota.js';
+import { DEFAULT_AUTHOR, FORASTER, MARQUES_SVG_ANTIGUES } from '../../components/universal/UniversalUtils.js';
+import { RUTA_PERFIL_PROJECTE, rutaDAutoria } from '../../config/navigation.js';
+import { ENTITAT_PILOT_ID, ENTITAT_PILOT_SLUG } from '../../data/identitatsSeed.js';
 
 /* T50 (D2) · Una sola autoria per a la barra taronja de l'editor de notes i
    per a la targeta viva de la llista. */
@@ -149,4 +149,67 @@ test('261007 · signaturaDeNota = autoriaDeNota + ruta; autoriaDeNota conserva l
   // La constant de la benvinguda no es toca (la targeta de la llista la compara per identitat).
   expect(Object.isFrozen(AUTORIA_BENVINGUDA)).toBe(true);
   expect(AUTORIA_BENVINGUDA).not.toHaveProperty('ruta');
+});
+
+/* Prompt 261014_0400 (ordre del Mestre, tasca 4: «Quan l'usuari actua com a
+   Sóc de Poble, la barra taronja ha de carregar automàticament l'autoria
+   oficial», el PNG verd, «evitant en qualsevol cas la silueta negra») · El
+   pilot com a actor signa amb l'autoria oficial sencera (AUTORIA_BENVINGUDA,
+   la de DEFAULT_AUTHOR) i porta al seu perfil, siga quin siga el logo de la
+   seua fila: cap, buit, una referència opaca, l'SVG d'abans o un de propi.
+   Es reconeix pel slug declarat o per l'id de la llavor, mai pel nom. */
+const UUID_PILOT = '5b0c1d2e-3f40-4a51-8b62-7c83d94ea5f6';
+const LOGOS_DE_LA_FILA = [null, '', 'sdp-media://organitzacions/x.png', MARQUES_SVG_ANTIGUES.avatar, 'https://exemple.org/logo-propi.png'];
+
+test('prompt 261014_0400 · el pilot com a actor (slug declarat o id de la llavor) signa amb l’autoria oficial, siga quin siga el seu logo', () => {
+  const pilots = [
+    { tipus: 'entitat', id: UUID_PILOT, slug: ENTITAT_PILOT_SLUG, nom: 'Sóc de Poble', rol: 'owner' },
+    { tipus: 'entitat', id: ENTITAT_PILOT_ID, nom: 'Sóc de Poble', rol: 'owner' },
+    // Ni el nom de la fila (buit o un altre) ni el seu poble manen: l'autoria és l'oficial.
+    { tipus: 'entitat', id: UUID_PILOT, slug: ENTITAT_PILOT_SLUG, nom: '', poble: 'Relleu' }
+  ];
+  for (const pilot of pilots) {
+    for (const avatar of LOGOS_DE_LA_FILA) {
+      const params = { notaId: 'p', actor: { ...pilot, avatar }, actorId: pilot.id, currentUser: PEPA };
+      expect(autoriaDeNota(params)).toBe(AUTORIA_BENVINGUDA);
+      expect(rutaDAutoriaDeNota(params)).toBe(RUTA_PERFIL_PROJECTE);
+      expect(signaturaDeNota(params)).toEqual({ ...AUTORIA_BENVINGUDA, ruta: RUTA_PERFIL_PROJECTE });
+    }
+  }
+  // També abans que ningú registre l'uuid del pilot: rutaDAutoria encara no el reconeix.
+  expect(rutaDAutoria({ tipus: 'entitat', id: UUID_PILOT })).toBe(`/empresa/${UUID_PILOT}`);
+  // El PNG verd, mai l'SVG d'abans.
+  expect(AUTORIA_BENVINGUDA.avatar).toBe('/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png');
+});
+
+test('prompt 261014_0400 · no és el pilot: el nom «Sóc de Poble» amb un altre slug, una persona amb el slug del pilot o una entitat qualsevol signen com sempre', () => {
+  const homonima = { tipus: 'entitat', id: 'X', slug: 'soc-de-poble-de-relleu', nom: 'Sóc de Poble', avatar: null };
+  expect(autoriaDeNota({ notaId: 'p', actor: homonima, actorId: 'X', currentUser: PEPA })).toEqual({ nom: 'Sóc de Poble', avatar: null, poble: '' });
+  expect(rutaDAutoriaDeNota({ notaId: 'p', actor: homonima, actorId: 'X', currentUser: PEPA })).toBe('/empresa/X');
+  const persona = { tipus: 'persona', id: 'U', slug: ENTITAT_PILOT_SLUG, nom: 'Pepa', avatar: null };
+  expect(autoriaDeNota({ notaId: 'p', actor: persona, actorId: 'U', currentUser: PEPA }))
+    .toEqual({ nom: 'Pepa', avatar: 'https://exemple.org/pepa.png', poble: 'Benifallim' });
+  expect(rutaDAutoriaDeNota({ notaId: 'p', actor: persona, actorId: 'U', currentUser: PEPA })).toBe('/gent/U');
+  // Una entitat qualsevol sense logo: cap imatge, i la barra hi pinta la silueta de reserva.
+  const forn = { tipus: 'entitat', id: 'O', nom: 'Forn & Cia', avatar: null };
+  expect(autoriaDeNota({ notaId: 'p', actor: forn, actorId: 'O', currentUser: PEPA })).toEqual({ nom: 'Forn & Cia', avatar: null, poble: '' });
+  expect(rutaDAutoriaDeNota({ notaId: 'p', actor: forn, actorId: 'O', currentUser: PEPA })).toBe('/empresa/O');
+});
+
+/* Revisió del prompt 261014_0400 (ordre del Mestre) · Reproduïx un deute
+   conegut, no el fixa com a bo. La barra i la targeta viva del pilot signen
+   amb l'autoria oficial. El selector «Publicaràs com a» i el payload del Mur
+   (autoriaDeLActor, a NotesEditor i a NotesContext) continuen sent la fila, i
+   el payload queda fora per ordre. Si la fila no porta logo, porta un altre
+   town_name o no té nom, la previsualització promet el que la publicació no
+   porta. Autoria sencera o només el logo és decisió del Mestre: quan la
+   prenga, cal girar esta prova. */
+test('[DEFECTE] prompt 261014_0400 · per al pilot, el selector i el payload del Mur (autoriaDeLActor) continuen sent la fila, mentre la barra diu l’autoria oficial', () => {
+  const senseLogoNiPoble = { tipus: 'entitat', id: UUID_PILOT, slug: ENTITAT_PILOT_SLUG, nom: 'Sóc de Poble', avatar: null };
+  const senseNom = { tipus: 'entitat', id: UUID_PILOT, slug: ENTITAT_PILOT_SLUG, nom: '', poble: 'Relleu', avatar: null };
+  for (const pilot of [senseLogoNiPoble, senseNom]) {
+    expect(autoriaDeNota({ notaId: 'p', actor: pilot, actorId: UUID_PILOT, currentUser: PEPA })).toBe(AUTORIA_BENVINGUDA);
+  }
+  expect(autoriaDeLActor(senseLogoNiPoble, PEPA)).toEqual({ nom: 'Sóc de Poble', avatar: null, poble: '' });
+  expect(autoriaDeLActor(senseNom, PEPA)).toEqual({ nom: ENTITAT_PILOT_SLUG, avatar: null, poble: 'Relleu' });
 });

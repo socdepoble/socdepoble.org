@@ -3,12 +3,12 @@
   "turn_id": "torn_89b60b14-096c-432c-a0f4-2f66cc92199f",
   "actor": "claude",
   "scope": "documents",
-  "state": "context_loaded",
-  "revision": 6,
+  "state": "closed",
+  "revision": 7,
   "createdAt": "2026-10-11T12:06:45.177Z",
-  "updatedAt": "2026-10-11T12:08:05.922Z",
+  "updatedAt": "2026-10-14T02:50:18.022Z",
   "expiresAt": "2026-10-12T12:06:45.178Z",
-  "contractHash": "2b09edd15b17e4d3f835b8943e7a7eea42ec351afc53905f67410c7f9fb32949",
+  "contractHash": "6a1959a7c85620476e8cb465609d6b2e56cbcc2c380e5faf3c14267bee1163fa",
   "humanInventoryVersion": 1,
   "initial": {
     "src/ARCHITECTURE.md": "8dc1702cb19b085f1baf352c6db44f266c8c0969037319dc07ec0b7b3d09f052",
@@ -3703,6 +3703,12 @@
       "file": "_wiki_de_poble/04_escriptori/261011_1410_pla_implementacio_maquetacio_ficiv.md",
       "at": "2026-10-11T12:08:05.921Z",
       "hash": "e5c80c37b5ce0506a0a3a62279bc48578030c52b077b95861be3a391a47b2299"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "context_loaded",
+      "at": "2026-10-14T02:50:18.022Z"
     }
   ]
 }

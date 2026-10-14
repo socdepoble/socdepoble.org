@@ -3,12 +3,12 @@
   "turn_id": "torn_8ec393af-c2a2-4019-af49-5b64677a0e4e",
   "actor": "Claude",
   "scope": "code",
-  "state": "context_loaded",
-  "revision": 5,
+  "state": "closed",
+  "revision": 6,
   "createdAt": "2026-10-04T20:39:36.545Z",
-  "updatedAt": "2026-10-05T01:37:50.585Z",
+  "updatedAt": "2026-10-14T02:50:18.022Z",
   "expiresAt": "2026-10-05T20:39:36.546Z",
-  "contractHash": "5503c6dc29a6ce8c6708d7b81f7bd79546d13d574467174b95aae4265e1b0d5e",
+  "contractHash": "6a1959a7c85620476e8cb465609d6b2e56cbcc2c380e5faf3c14267bee1163fa",
   "humanInventoryVersion": 1,
   "initial": {
     "src/.DS_Store": "1d5d20f9d6acbb47fb89efa0be0546e487ef310833c1acdf528bffd5eff6b34c",
@@ -2715,6 +2715,12 @@
       "file": "_wiki_de_poble/04_escriptori/261005_0345_avaluacio_final_marato.md",
       "at": "2026-10-05T01:37:50.585Z",
       "hash": "07791da93f21fb7f5fb9b03a8e28b18f36f3186e4e62f19b540cc91db6a92b49"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "context_loaded",
+      "at": "2026-10-14T02:50:18.022Z"
     }
   ]
 }

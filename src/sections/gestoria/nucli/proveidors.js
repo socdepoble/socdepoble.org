@@ -361,3 +361,216 @@ export function identificaProveidor(senyals, registre) {
   }
   return millor;
 }
+
+/* Cert si les fitxes `sub` apareixen seguides en qualsevol posició de `llarg`. */
+function conteFitxes(sub, llarg) {
+  if (sub.length === 0 || sub.length > llarg.length) return false;
+  for (let i = 0; i <= llarg.length - sub.length; i += 1) {
+    if (sub.every((fitxa, j) => llarg[i + j] === fitxa)) return true;
+  }
+  return false;
+}
+
+const fitxesAlfanumeriques = (text) => String(text ?? '')
+  .normalize('NFD')
+  .replace(/\p{M}/gu, '')
+  .toLowerCase()
+  .split(/[^a-z0-9]+/)
+  .filter(Boolean);
+
+/* Punts d'un proveïdor en un text de moviment (comerç, creditor o concepte lliure). */
+function puntsEnTextMoviment(textMoviment, p) {
+  const directe = puntsNom(normalitzaNom(textMoviment), p);
+  if (directe > 0) return directe;
+  const delText = fitxesAlfanumeriques(textMoviment);
+  if (delText.length === 0) return 0;
+  const candidats = [p.nom, ...(p.paraulesText ?? [])].map(normalitzaNom).filter((c) => c.length >= LLARGARIA_MINIMA_PARAULA);
+  const perFrase = candidats.some((c) => conteFitxes(fitxesAlfanumeriques(c), delText));
+  return perFrase ? PUNTS.paraula : 0;
+}
+
+/* Extreu possibles dominis presents dins d'un text bancari («PAGO ANTHROPIC.COM», «FAL.AI»). */
+function dominisDeText(text) {
+  const trobats = String(text ?? '').toLowerCase().match(/[a-z0-9-]+(?:\.[a-z0-9-]+)+/g) ?? [];
+  return [...new Set(trobats.map(amfitrioDe).filter(Boolean))];
+}
+
+/* Extreu NIF vàlids (o el NIF d'un identificador de creditor SEPA) presents dins d'un text. */
+function nifsDeText(text) {
+  const brut = String(text ?? '').toUpperCase();
+  const candidats = [];
+  for (const [, sufixSepa] of brut.matchAll(/\b[A-Z]{2}\d{2}[A-Z0-9]{3}([A-Z0-9]{8,12})\b/g)) {
+    const valid = nifValid(sufixSepa);
+    if (valid) candidats.push(valid);
+  }
+  for (const [token] of brut.matchAll(/\b[A-Z0-9]{8,14}\b/g)) {
+    const valid = nifValid(token);
+    if (valid) candidats.push(valid);
+  }
+  return [...new Set(candidats)];
+}
+
+/* Text unificat dels conceptes i referències d'un moviment (C43, CSV o port de moviments). */
+function textDelMoviment(moviment) {
+  const parts = [];
+  if (typeof moviment?.concepte === 'string') parts.push(moviment.concepte);
+  if (typeof moviment?.text === 'string') parts.push(moviment.text);
+  const conceptes = moviment?.conceptes ?? moviment?.detall?.conceptes;
+  if (Array.isArray(conceptes)) {
+    for (const c of conceptes) {
+      if (typeof c === 'string') parts.push(c);
+      else if (Array.isArray(c?.camps)) parts.push(...c.camps);
+    }
+  }
+  for (const ref of [moviment?.ref1, moviment?.ref2, moviment?.detall?.ref1, moviment?.detall?.ref2]) {
+    if (typeof ref === 'string' && ref.trim() !== '') parts.push(ref);
+  }
+  return parts.map(textNet).filter(Boolean).join(' ');
+}
+
+/* Cerca el proveïdor del registre que millor casa amb un text bancari (creditor, comerç o concepte). */
+function cercaProveidorEnText(text, registre) {
+  const net = textNet(text);
+  if (!net) return null;
+  const dominis = dominisDeText(net);
+  let millor = null;
+  for (const p of registre ?? []) {
+    if (!p) continue;
+    const punts = [];
+    if (dominis.some((amfitrio) => (p.dominis ?? []).some((d) => amfitrio === d || amfitrio.endsWith(`.${d}`)))) {
+      punts.push(PUNTS.domini);
+    }
+    const perNom = puntsEnTextMoviment(net, p);
+    if (perNom) punts.push(perNom);
+    if (punts.length === 0) continue;
+    const puntuacio = Math.min(100, Math.max(...punts) + 5 * (punts.length - 1));
+    const vist = (x) => (x.mesosVistos?.length ?? 0) > 0;
+    if (!millor || puntuacio > millor.puntuacio || (puntuacio === millor.puntuacio && vist(p) && !vist(millor.proveidor))) {
+      millor = { proveidor: p, puntuacio };
+    }
+  }
+  return millor;
+}
+
+function construeixProposta({ proveidor = null, puntuacio, origen, nomAlternatiu = '', nifAlternatiu = null }) {
+  const nif = proveidor?.nif ?? nifAlternatiu ?? null;
+  const nom = proveidor?.nom || textNet(nomAlternatiu) || nif || '';
+  const confianca = puntuacio >= 80 ? 'alta' : puntuacio >= 60 ? 'mitjana' : 'baixa';
+  return {
+    proveidor,
+    clau: proveidor?.clau ?? null,
+    nom,
+    nif,
+    pais: proveidor?.pais ?? paisDelNif(nif),
+    ivaHabitual: proveidor?.ivaHabitual ?? null,
+    puntuacio,
+    confianca,
+    origen
+  };
+}
+
+/**
+ * Infereix el proveïdor i el NIF a partir d'un moviment bancari (Norma 43, CSV
+ * o moviment del port `fontMoviments.js`), creuant per ordre de prioritat:
+ *   1. NIF del creditor SEPA (`sepa.cif`): contra el registre/catàleg (100,
+ *      confiança alta) o, si és un proveïdor nou amb NIF vàlid, proposant el
+ *      NIF i el nom del creditor SEPA (85, confiança alta).
+ *   2. Nom/domini del creditor SEPA (`sepa.creditor`).
+ *   3. Comerç de la targeta (`comerc`).
+ *   4. Concepte i referències del moviment (NIF citat al concepte, domini o
+ *      nom/paraules del proveïdor).
+ * @param {object} moviment
+ * @param {object[]} [registre] el d'aprenProveidors; si s'omet, usa el catàleg integrat
+ * @returns {{ proveidor: object|null, clau: string|null, nom: string, nif: string|null,
+ *   pais: string|null, ivaHabitual: number|null, puntuacio: number,
+ *   confianca: 'alta'|'mitjana'|'baixa', origen: 'sepa-nif'|'sepa-creditor'|'comerc'|'concepte' }|null}
+ */
+export function proposaProveidorDesDeMoviment(moviment, registre = aprenProveidors([])) {
+  if (!moviment || typeof moviment !== 'object') return null;
+  const llista = Array.isArray(registre) ? registre : [];
+  const sepa = moviment.sepa ?? moviment.detall?.sepa ?? null;
+  const creditorSepa = textNet(sepa?.creditor);
+  const nifSepa = nifValid(sepa?.cif);
+
+  if (nifSepa) {
+    const perNif = identificaProveidor({ nif: nifSepa, nom: creditorSepa }, llista);
+    if (perNif) {
+      return construeixProposta({
+        proveidor: perNif.proveidor,
+        puntuacio: perNif.puntuacio,
+        origen: 'sepa-nif',
+        nomAlternatiu: creditorSepa,
+        nifAlternatiu: nifSepa
+      });
+    }
+    return construeixProposta({
+      proveidor: null,
+      puntuacio: 85,
+      origen: 'sepa-nif',
+      nomAlternatiu: creditorSepa,
+      nifAlternatiu: nifSepa
+    });
+  }
+
+  if (creditorSepa) {
+    const perCreditor = cercaProveidorEnText(creditorSepa, llista);
+    if (perCreditor) {
+      return construeixProposta({
+        proveidor: perCreditor.proveidor,
+        puntuacio: perCreditor.puntuacio,
+        origen: 'sepa-creditor',
+        nomAlternatiu: creditorSepa
+      });
+    }
+  }
+
+  const comerc = textNet(moviment.comerc ?? moviment.detall?.comerc);
+  if (comerc) {
+    const perComerc = cercaProveidorEnText(comerc, llista);
+    if (perComerc) {
+      return construeixProposta({
+        proveidor: perComerc.proveidor,
+        puntuacio: perComerc.puntuacio,
+        origen: 'comerc',
+        nomAlternatiu: comerc
+      });
+    }
+  }
+
+  const concepte = textDelMoviment(moviment);
+  if (concepte) {
+    const nifsConcepte = nifsDeText(concepte);
+    for (const nif of nifsConcepte) {
+      const perNifConcepte = identificaProveidor({ nif, nom: concepte }, llista);
+      if (perNifConcepte) {
+        return construeixProposta({
+          proveidor: perNifConcepte.proveidor,
+          puntuacio: perNifConcepte.puntuacio,
+          origen: 'concepte',
+          nifAlternatiu: nif
+        });
+      }
+    }
+    const perConcepte = cercaProveidorEnText(concepte, llista);
+    if (perConcepte) {
+      return construeixProposta({
+        proveidor: perConcepte.proveidor,
+        puntuacio: perConcepte.puntuacio,
+        origen: 'concepte',
+        nifAlternatiu: nifsConcepte[0] ?? null
+      });
+    }
+    if (nifsConcepte.length > 0) {
+      return construeixProposta({
+        proveidor: null,
+        puntuacio: 75,
+        origen: 'concepte',
+        nomAlternatiu: concepte,
+        nifAlternatiu: nifsConcepte[0]
+      });
+    }
+  }
+
+  return null;
+}
+

@@ -5,6 +5,11 @@ version: 1.0.0
 type: skill
 status: canonic
 triggers_on: [prompt_generation, planning, documentation]
+contracte.llig:
+  - _wiki_de_poble/02_saber/doc_governanca.md
+  - tooling/wiki/schema.json
+contracte.escriu:
+  - _wiki_de_poble/02_saber/doc_governanca.md
 ---
 
 # Tractor Documental: Taxonomia Estricta (Fusible)
@@ -24,3 +29,6 @@ Si l'usuari (o un altre agent) et demana generar un "pla d'implementació", un "
 
 ## 3. Conseqüències (Zero Tolerància)
 Qualsevol intent de burlar l'estructura canònica afegint arxius "com caiguen" a l'escriptori o enviant variables [pendent] al Rebut causarà que les Portes de Seguretat (Com `Contracte Documental`) facen caure la gàbia de git, trencant la sessió. Actua amb rigor termodinàmic.
+
+## Vincles
+- [[00_INDEX_SKILLS]]

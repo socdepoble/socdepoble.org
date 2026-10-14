@@ -12,6 +12,11 @@ triggers_on:
   - empaqueta el plugin
   - release de l'enxufe
   - plugin de wordpress
+contracte.llig:
+  - package.json
+  - vite.config.js
+contracte.escriu:
+  - package.json
 ---
 # Tractors i Procediment d'Empaquetat del Plugin de WordPress (Enxufe)
 

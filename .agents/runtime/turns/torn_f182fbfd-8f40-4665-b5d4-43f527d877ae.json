@@ -3,12 +3,12 @@
   "turn_id": "torn_f182fbfd-8f40-4665-b5d4-43f527d877ae",
   "actor": "codex",
   "scope": "documents",
-  "state": "planned",
-  "revision": 5,
+  "state": "closed",
+  "revision": 6,
   "createdAt": "2026-09-24T02:37:11.443Z",
-  "updatedAt": "2026-09-24T02:53:43.865Z",
+  "updatedAt": "2026-10-14T02:50:18.022Z",
   "expiresAt": "2026-09-25T02:37:11.444Z",
-  "contractHash": "540bcbf19265f09a0c6b6712cbc2247ac0ea8200a5ddd2830667e0ac26b40b69",
+  "contractHash": "6a1959a7c85620476e8cb465609d6b2e56cbcc2c380e5faf3c14267bee1163fa",
   "humanInventoryVersion": 1,
   "initial": {
     "src/.DS_Store": "1d5d20f9d6acbb47fb89efa0be0546e487ef310833c1acdf528bffd5eff6b34c",
@@ -931,6 +931,12 @@
         "_wiki_de_poble/04_escriptori/260924_0437_auditoria_codex.md"
       ],
       "at": "2026-09-24T02:53:43.865Z"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "planned",
+      "at": "2026-10-14T02:50:18.022Z"
     }
   ],
   "ownedPaths": [

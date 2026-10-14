@@ -449,6 +449,16 @@ export function UniversalWorkspace({
     nivell.current = panell;
     if (memoria) recordaNivell(memoria, elementRef.current, panell);
   }, [memoria]);
+  /* Prompt 261014_0400 (ordre del Mestre), front B · El plegat de les columnes
+     també viu ací, FORA del WorkspaceProvider amb clau, com `nivell`: al Bloc,
+     la reinjecció de la sessió de l'amfitrió canvia workspaceKey, remunta el
+     proveïdor i el plegat tornava a columnesInicials sense cap acció de la
+     persona (un salt de layout real). WorkspaceFrame hi escriu l'últim
+     plegat abans del pintat (useLayoutEffect, escriure en una ref no pinta) i
+     la remuntada l'hereta. La primera muntada no canvia: la ref naix buida i
+     mana columnesInicials, com sempre. */
+  const columnesRef = useRef(null);
+  const columnesDeMuntada = columnesRef.current ?? columnesInicials ?? (compacte ? COLUMNES_COMPACTE : undefined);
 
   return (
     <WorkspaceProvider
@@ -463,11 +473,12 @@ export function UniversalWorkspace({
       initialSelection={seleccioInicial}
       selection={seleccio}
       onSelectionChange={onSelectionChange}
-      columnesInicials={columnesInicials ?? (compacte ? COLUMNES_COMPACTE : undefined)}
+      columnesInicials={columnesDeMuntada}
       inclouDescendents={inclouDescendents}
       categoriaSenseElement={compacte}
     >
       <WorkspaceFrame
+        columnesRef={columnesRef}
         compacte={compacte}
         espai={espai}
         grups={grupsNavegacio}
@@ -501,10 +512,16 @@ export function UniversalWorkspace({
 }
 
 function WorkspaceFrame({
-  compacte, espai, grups, amagades, vigilaAmagada, declaraNavegacio, mestreDetall, panellEstret, onPanell, tornaDeLaLlista, error, onCreate, onCreateError, onManageCategories, renderItem, renderDetail,
+  columnesRef, compacte, espai, grups, amagades, vigilaAmagada, declaraNavegacio, mestreDetall, panellEstret, onPanell, tornaDeLaLlista, error, onCreate, onCreateError, onManageCategories, renderItem, renderDetail,
   labels, icons, tagFilter, collapsibleNavigation, replegaTotaCapcalera, sortable, canCreate, onRetry, listClassName, detailClassName, className
 }) {
   const workspace = useWorkspace();
+  /* Prompt 261014_0400 · L'últim plegat, per a la remuntada per workspaceKey
+     (UniversalWorkspace, columnesRef). */
+  const plegat = workspace.state.collapsed;
+  useLayoutEffect(() => {
+    columnesRef.current = plegat;
+  }, [columnesRef, plegat]);
   const listFocusRef = useRef(null);
   const detailFocusRef = useRef(null);
   const collapseLeftRef = useRef(null);

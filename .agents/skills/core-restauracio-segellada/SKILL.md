@@ -26,6 +26,11 @@ triggers_on:
   - git revert
 core: true
 eines_obligatories: tooling/brain/ancora.mjs
+contracte.llig:
+  - AGENTS.md
+  - .agents/protocolledge.json
+contracte.escriu:
+  - _wiki_de_poble/04_escriptori
 ---
 
 # Restauració segellada

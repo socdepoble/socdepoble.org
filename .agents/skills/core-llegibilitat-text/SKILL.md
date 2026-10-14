@@ -13,6 +13,9 @@ triggers_on:
   - copy
 contracte.llig:
   - .agents/skills/sdp-pedra-seca/SKILL.md
+  - _wiki_de_poble/00_index.md
+contracte.escriu:
+  - _wiki_de_poble/00_index.md
 ---
 # Tractor de Llegibilitat i Flux de Text (Pedra Seca)
 
@@ -37,3 +40,6 @@ Sóc de Poble està pensat per a lectors que busquen anar al gra.
 
 ## 4. Deure d'Avís i Auto-Correcció
 Si, mentre inspecciones una pàgina, detectes un text pla (sense ressaltar), una falta d'encapçalaments (falten H2, H3...) o un text capat que no fluïx, **has d'avisar immediatament o aplicar tu mateix la correcció** sota el paraigua d'aquest tractor.
+
+## Vincles
+- [[00_INDEX_SKILLS]]

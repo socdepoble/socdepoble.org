@@ -2744,17 +2744,15 @@ details[open] summary.accordion-header svg:last-child {
   }
   /* El títol de la columna NO és un element de navegació seleccionat, i des
      del 260924 AppGridColumn.jsx ja no li posa aria-current="page" (A11Y, P10
-     de l'auditoria 0754). En repòs, la regla de dalt (0,3,0) el deixa
-     transparent i blanc, com abans.
-
-     LLEI DEL PÍXEL · decisió pendent del Mestre. Amb l'atribut, el Bloc li
-     pintava dos restes del «fantasma» que sdp-app-grid-shell §2 prohibix:
-     la icona en --sdp-primary-700 i, en hover, el fons crema amb text negre
-     (la regla :hover de l'actiu, (0,4,0), guanyava per ordre a la tapadora).
-     Perquè llevar l'atribut no moga cap píxel, el títol plegable s'ha afegit
-     com a selector a eixes dues regles de l'actiu (més avall, «Actiu: fons
-     clar»). Per a matar el fantasma, lleva'n els dos selectors marcats P10:
-     el títol quedarà blanc i, en hover, amb el vel de la resta de la columna. */
+     de l'auditoria 0754). En repòs és transparent. El blanc que la regla de
+     dalt dona al botó el torna taronja, més avall en esta mateixa capa, el
+     bloc del __plegable i del seu svg (color: var(--sdp-crom-actiu-fons)):
+     d'ahí ve el taronja de la icona. El rètol és blanc per AppGridShell.css
+     («C4», .app-grid-col-header__plegable .sdp-workspace-nav-item__label).
+     Els dos selectors marcats P10 que li conservaven els restes del
+     «fantasma» de l'actiu (sdp-app-grid-shell §2) ja no hi són: cap regla de
+     l'actiu nomena el títol plegable (comprovat al prompt 261014_0400, ordre
+     del Mestre, amb grep i al navegador a /notes). */
   .sdp-workspace .app-grid-col-header__plegable .sdp-workspace-nav-item__icon {
     width: var(--sdp-touch-min);
     flex: none;
@@ -3215,8 +3213,10 @@ details[open] summary.accordion-header svg:last-child {
      (ordre del Mestre, 260927 vespre: «blocs purs i durs de banda a banda,
      apegats a la capçalera»). Icona de 24 a 16px de la vora (eix
      a 28: el de la roda de «Menú», el del rail plegat i el de la barra
-     principal, oberta o plegada) i text a 56 (16 + 24 + 16), on comença
-     «CONTROL» a la barra principal; les files d'eixa barra queden a 57 (gap
+     principal, oberta o plegada; plegada hi queia a 26 fins al prompt
+     261014_0400, ordre del Mestre: layout.css § TRUC) i text a 56
+     (16 + 24 + 16), on comença «CONTROL» a la barra principal; oberta, el
+     text de les files d'eixa barra queda a 57 (gap
      13 més un marge de 4 que Pedra Seca §3 no admet: deute seu, no del
      rail). Plegar i desplegar el rail no mou cap icona d'eix. El color va
      explícit, com a .sdp-workspace-groups:
@@ -3247,13 +3247,13 @@ details[open] summary.accordion-header svg:last-child {
      el coixí és 0 i la separació amb el títol, 16, la de les files. */
   .sdp-xat .app-grid-column--left .app-grid-col-header__plec > svg { padding-inline: 0; }
   .sdp-xat .app-grid-column--left .app-grid-col-header__plec { gap: var(--sdp-space-4); }
-  /* Rail plegat: al Workspace la vora i el coixí de dalt del rail separen el
-     grup d'accions (roda, lupa) del de carpetes (AppGridShell.css, «un sol
-     joc de regles»). Al Xat no hi ha accions: davall de la fila de «Menú» ve
-     directament la primera entrada, i eixos 5px (vora 1 més coixí 4) la
-     deixaven més avall que la de la barra principal plegada (layout.css,
-     coixí de 4). Sense vora ni coixí, el gap de 4 de la graella fa de marge
-     i la primera cel·la cau a la mateixa fila que a la barra principal. */
+  /* Rail plegat sense vora ni coixí de dalt. Al Xat no hi ha accions: davall
+     de la fila de «Menú» ve directament la primera entrada, i la vora i el
+     coixí de .sdp-workspace-rail (5px) la deixaven més avall que la de la
+     barra principal plegada (layout.css, sense coixí de dalt). Sense ells, i
+     sense gap a la capçalera plegada, cau a la mateixa fila. Des del prompt
+     261014_0400 (ordre del Mestre) és la regla de tot rail plegat
+     (AppGridShell.css, «un sol joc de regles»): esta en queda redundant. */
   .sdp-xat .app-grid-col-header--collapsed > .sdp-workspace-rail {
     border-top: 0;
     padding-top: 0;
@@ -8995,6 +8995,12 @@ details[open] summary.accordion-header svg:last-child {
     margin-inline: auto;
     padding-block-end: var(--sdp-space-8);
   }
+  /* Prompt 261014_0400 (ordre del Mestre), front A · El Full trimestral
+     (/app/gestoria/full) viu dins de la closca de pantalla sencera i n'ocupa
+     tota l'amplada, com els programes de facturació; el topall de 80rem es
+     queda per a la Facturació, que el pont munta fora de la closca
+     (AppGestoria.jsx). L'especificitat (0,2,0) guanya a la regla de dalt. */
+  .sdp-gestoria-closca .sdp-gestoria-panell { max-width: none; }
   .sdp-gestoria-panell__barra {
     display: flex;
     flex-wrap: wrap;
@@ -9165,6 +9171,15 @@ details[open] summary.accordion-header svg:last-child {
     text-align: end;
     white-space: nowrap;
   }
+  /* Prompt 261014_0400 (ordre del Mestre), front A · Les columnes de només
+     lectura de la revisió: el Tipus (Interior, UE, Fora de la UE) i el % de
+     la quota sobre la base, amb xifres tabulars. */
+  .sdp-gestoria-panell__cel[data-tipus="regim"] { white-space: nowrap; }
+  .sdp-gestoria-panell__cel[data-tipus="percentatge"] {
+    font-variant-numeric: tabular-nums;
+    text-align: end;
+    white-space: nowrap;
+  }
   .sdp-gestoria-panell__control {
     box-sizing: border-box;
     width: 100%;
@@ -9176,6 +9191,14 @@ details[open] summary.accordion-header svg:last-child {
   .sdp-gestoria-panell__control[data-mida="curta"] { min-width: 7rem; }
   .sdp-gestoria-panell__control[data-mida="ampla"] { min-width: 14rem; }
   .sdp-gestoria-panell__control[data-tipus="import"] { text-align: end; }
+  /* Dins de la closca (el Full a pantalla sencera), els camps llargs de la
+     revisió s'eixamplen i els imports porten xifres tabulars. Sempre amb
+     l'abast de la closca: la Facturació reutilitza __taula i __cel
+     (LlibreFactures.jsx) i no ha de canviar. */
+  .sdp-gestoria-closca .sdp-gestoria-panell__control[data-mida="normal"] { min-width: 10rem; }
+  .sdp-gestoria-closca .sdp-gestoria-panell__control[data-mida="ampla"] { min-width: 18rem; }
+  .sdp-gestoria-closca .sdp-gestoria-panell__cel[data-tipus="import"],
+  .sdp-gestoria-closca .sdp-gestoria-panell__control[data-tipus="import"] { font-variant-numeric: tabular-nums; }
   .sdp-gestoria-panell__control[data-dubte="true"] {
     border-width: 2px;
     border-color: var(--sdp-avis);

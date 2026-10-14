@@ -11,6 +11,12 @@ triggers_on:
   - aammdd_hhmm
   - timestamp
   - hora termodinàmica
+contracte.llig:
+  - _wiki_de_poble/02_saber/doc_governanca.md
+  - _wiki_de_poble/04_escriptori
+  - _wiki_de_poble/10_actes
+contracte.escriu:
+  - _wiki_de_poble/04_escriptori
 ---
 
 # Llei del Temps Termodinàmic (Causalitat Documental)
@@ -33,3 +39,6 @@ Abans de nominar **qualsevol** arxiu que porte data/hora al títol, has d'execut
 ## La Promesa del Rellotger
 
 La IAIA MarIA promet que no tornarà a fiar-se de l'hora de "com i quan vam quedar" per generar fitxers de taxonomia termodinàmica, evitant que el Mestre perga temps revisant l'obvietat.
+
+## Vincles
+- [[00_INDEX_SKILLS]]

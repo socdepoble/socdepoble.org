@@ -14,6 +14,14 @@ triggers_on:
   - maquetar un markdown
   - jerarquia d'encapçalaments
   - secció de vincles
+contracte.llig:
+  - _wiki_de_poble/02_saber/doc_governanca.md
+  - _wiki_de_poble/00_index.md
+  - .agents/skills/core-llegibilitat-text/SKILL.md
+  - .agents/skills/sdp-universal-page/SKILL.md
+  - .agents/skills/wiki-documentacio-i-reflex/SKILL.md
+contracte.escriu:
+  - _wiki_de_poble/00_index.md
 ---
 # Maquetació de Markdown
 

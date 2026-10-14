@@ -11,7 +11,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Settings } from 'lucide-react';
 import { Dialeg, Camp, CampText, Boto, Alerta } from '../PedraSeca';
-import { useSession } from '../../app/contexts/SessionContext';
+import { useSessioOpcional } from '../../app/contexts/SessionContext';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
 import { adminDesaPersonalitzacio, teCapacitat } from '../../data/backendPort.js';
 import { MISSATGE_PERSONALITZACIO } from '../../data/errorsBackend.js';
@@ -128,9 +128,14 @@ export function PanellCrom({ arrel, obert, onTanca }) {
   );
 }
 
-/** Disparador. Captura l'arrel de la instància des del seu propi node. */
+/** Disparador. Captura l'arrel de la instància des del seu propi node.
+ *
+ * Prompt 261014_0400 (ordre del Mestre) · És fill de la TopBar (App.jsx): sense
+ * SessionProvider no hi ha rol i no pinta res, en lloc de llançar. Guarda
+ * defensiva, com la de useIdentitatDeLaBarra.js (el HMR de desenvolupament
+ * deixa la barra lligada a un SessionContext vell; en producció no passa). */
 export function BotoCrom() {
-  const { rol } = useSession();
+  const rol = useSessioOpcional()?.rol ?? null;
   const [obert, setObert] = useState(false);
   const [arrel, setArrel] = useState(null);
 

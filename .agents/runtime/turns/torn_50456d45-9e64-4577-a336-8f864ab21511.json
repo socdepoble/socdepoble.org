@@ -3,12 +3,12 @@
   "turn_id": "torn_50456d45-9e64-4577-a336-8f864ab21511",
   "actor": "Codex",
   "scope": "code",
-  "state": "planned",
-  "revision": 5,
+  "state": "closed",
+  "revision": 6,
   "createdAt": "2026-09-27T19:41:37.033Z",
-  "updatedAt": "2026-09-27T20:12:21.664Z",
+  "updatedAt": "2026-10-14T02:50:18.022Z",
   "expiresAt": "2026-09-28T19:41:37.034Z",
-  "contractHash": "b96dc21e8d1f65cff77fba9a5116b278cc83e67a21078783b7620ebc4cb7b599",
+  "contractHash": "6a1959a7c85620476e8cb465609d6b2e56cbcc2c380e5faf3c14267bee1163fa",
   "humanInventoryVersion": 1,
   "initial": {
     "src/.DS_Store": "1d5d20f9d6acbb47fb89efa0be0546e487ef310833c1acdf528bffd5eff6b34c",
@@ -1231,6 +1231,12 @@
       "state": "planned",
       "action": "bind-plan",
       "at": "2026-09-27T20:12:21.663Z"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "planned",
+      "at": "2026-10-14T02:50:18.022Z"
     }
   ]
 }

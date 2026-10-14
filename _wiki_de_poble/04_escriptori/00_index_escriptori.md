@@ -32,6 +32,9 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu — i
 - [[01_produccio/article-ayudawp.md]]
 
 ## Activitat en curs
+- [[261014_0425_pla_implementacio_gestoria_i_replegament]]
+- [[261014_0412_auditoria_claude]]
+- [[261014_0415_auditoria_gemini4]]
 - [[261014_0400_prompt_gemini4_arquitectura_gestoria_i_replegament]]
 - [[261014_0400_prompt_claude_gestoria_i_replegament]]
 - [[261014_0320_auditoria_claude]]
@@ -849,3 +852,4 @@ Enllaços a peces ja existents, verificats al disc; no s’han mogut ni editat e
 
 - 261013 · `261013_1415_prompt_chatgpt_auditor`: cap fitxer amb eixe nom als llocs cercats (_wiki_de_poble/90_arxiu_historic/ i les seues subcarpetes, _wiki_de_poble/10_actes/ i les subcarpetes de l'Escriptori; la cerca no baixa més d'un nivell); retirada per --repara.
 - 261011 · `Claude`: cap fitxer amb eixe nom als llocs cercats (_wiki_de_poble/90_arxiu_historic/ i les seues subcarpetes, _wiki_de_poble/10_actes/ i les subcarpetes de l'Escriptori; la cerca no baixa més d'un nivell); retirada per --repara.
+- [[../10_actes/261014_1315_acta_marmota]]

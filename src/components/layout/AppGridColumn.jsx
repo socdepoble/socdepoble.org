@@ -1,10 +1,13 @@
-import { ChevronDown, ChevronRight, PanelLeftClose, PanelRightOpen } from 'lucide-react';
+import { ChevronDown, ChevronRight, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 
 /**
  * Capçalera única de columna.
  * Ordre visual (obert): [ esquerra / titol ] … [ accions ] [ replegar ]
  * Collapsed: [ expandir ] + accions + fills (vertical). Els fills són el rail
  * d'icones de la columna plegada: l'expandir i la roda queden sempre a dalt.
+ * El botó [|<] és la parella PanelLeftClose (replegar) / PanelLeftOpen
+ * (expandir), prompt 261014_0400 (ordre del Mestre); qui passa `icona` al rail
+ * plegat (el Xat, amb la roda) la conserva.
  */
 export default function AppGridColumn({
   titol,
@@ -72,9 +75,16 @@ export default function AppGridColumn({
   const resolvedEndActions = endActions.length > 0 ? endActions : accions;
 
   if (variant === 'collapsed') {
-    const CollapsedIcon = Icona || PanelRightOpen;
+    const CollapsedIcon = Icona || PanelLeftOpen;
+    /* Prompt 261014_0400 (ordre del Mestre), front B · Amb una sola acció (la
+       roda de Disseny, Wiki i Perfil, o la lupa de la llista en «ample»),
+       eixa acció ocupa la fila 2, com a la columna oberta (AppGridShell.css).
+       Amb dues (el Bloc; l'obridor de la navegació i la lupa en «mitja» i
+       «estret»), oberta comparteixen la fila 2 i plegada s'apilen: la fila 2
+       per a la primera feia baixar la segona 10px. Sense :has(), la marca. */
+    const unaAccio = startActions.length + resolvedEndActions.length === 1;
     return (
-      <div className={['app-grid-col-header', 'app-grid-col-header--collapsed', esDark === 'intens' ? 'app-grid-col-header--dark-intens' : esDark ? 'app-grid-col-header--dark' : ''].filter(Boolean).join(' ')}>
+      <div className={['app-grid-col-header', 'app-grid-col-header--collapsed', unaAccio ? 'app-grid-col-header--una-accio' : '', esDark === 'intens' ? 'app-grid-col-header--dark-intens' : esDark ? 'app-grid-col-header--dark' : ''].filter(Boolean).join(' ')}>
         {/* Fila superior del rail: el mateix botó és la fila, amb l'alçada de
             la capçalera oberta (var(--sdp-alt-accio)) i la icona centrada. La
             geometria viu a AppGridShell.css (.app-grid-col-header__rail-top),

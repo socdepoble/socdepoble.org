@@ -3,6 +3,8 @@
    contracte de File System Access que fa servir fontNavegador.js). Empreses
    fictícies, CIF calculats i adreces example.org; cap dada de cap persona. */
 import { webcrypto } from 'node:crypto';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { creaAutenticadorSimulat } from '../../../tests/helpers/autenticadorSimulat.js';
@@ -10,7 +12,7 @@ import { TIPUS_XLSX } from './nucli/entregables.js';
 import { fullACsv, maquetaFull } from './nucli/fullModel.js';
 import { crearFactura } from './nucli/model.js';
 import { PLANTILLA_GESTORIA } from './nucli/plantilla.js';
-import PanellGestoria, { estatTractorsDe } from './PanellGestoria.jsx';
+import PanellGestoria, { PAISOS_UE, estatTractorsDe } from './PanellGestoria.jsx';
 import { TRACTOR_CORREUS, TRACTOR_FACTURES } from './tractors.js';
 
 afterEach(() => {
@@ -82,6 +84,25 @@ const PDF_DOLARS = pdfPla([
   'Example Cloud Inc', 'Invoice number INV-2026-0907', 'Invoice date: 30/08/2026',
   'Subtotal $20.00', 'VAT (21%) $4.20', 'Total $24.20'
 ]);
+/* Prompt 261014_0400 (ordre del Mestre), front A: una empresa de fora de la UE en dòlars i sense IVA. El nom
+   del fitxer casa amb el patró del catàleg (fal-invoice-…, país US); la factura és inventada. */
+const FITXER_FORA_UE = '2026_3T/fal-invoice-EX-2026-0915.pdf';
+const PDF_FORA_UE = pdfPla([
+  'Example Labs Inc', 'Invoice number EX-2026-0915', 'Invoice date: 15/09/2026',
+  'Subtotal $20.00', 'VAT (0%) $0.00', 'Total $20.00'
+]);
+/* El CSV del proveïdor de dalt (país IE pel catàleg), sense IVA. */
+const CSV_SENSE_IVA = [
+  'Número de factura,7777777777',
+  'Fecha de la factura,31 jul 2026',
+  'Importe de la factura,"10,00 €"',
+  '',
+  'Descripción,Intervalo,Cantidad,Importe(€)',
+  'Servei al núvol,1 jul 2026 - 31 jul 2026,1,"10,00"',
+  'Subtotal en EUR,,,"10,00"',
+  'I.V.A. (0%),,,"0,00"',
+  'Total en EUR,,,"10,00"'
+].join('\r\n');
 
 /* Un handle de carpeta en memòria, amb escriptura i permisos com els de Chrome. */
 function handleDe(nom, fitxers, escrits) {
@@ -175,6 +196,28 @@ function munta({ estatTractors = ESTAT_APROVAT, entorn, descarrega = vi.fn(), on
 const boto = (nom) => screen.getByRole('button', { name: nom });
 const pas = (n) => screen.getByRole('heading', { level: 2, name: new RegExp(`^${n}\\. `) }).closest('section');
 const status = () => screen.getAllByRole('status').find((el) => el.classList.contains('sdp-gestoria-panell__avis'));
+/* Un grup d'incidències pel títol (h4), o null. */
+const grupDe = (nom) => screen.queryByRole('heading', { level: 4, name: nom })?.closest('.sdp-gestoria-panell__grup') ?? null;
+/* La cel·la d'una fila de la taula de revisió sota la columna que porta eixe títol. */
+function celDe(regio, numFila, titol) {
+  const titols = [...regio.querySelectorAll('thead th')].map((th) => th.textContent);
+  expect(titols, `falta la columna «${titol}»`).toContain(titol);
+  return regio.querySelectorAll('tbody tr[data-factura]')[numFila - 1].children[titols.indexOf(titol)];
+}
+/* Factura/Ref → Tipus de cada fila de la taula de revisió. */
+const tipusPerNum = (regio) => Object.fromEntries([...regio.querySelectorAll('tbody tr[data-factura]')].map((_, i) => [
+  within(celDe(regio, i + 1, 'Factura/Ref')).getByRole('textbox').value, celDe(regio, i + 1, 'Tipus').textContent
+]));
+function edita(nom, valor) {
+  const camp = screen.getByRole('textbox', { name: nom });
+  fireEvent.change(camp, { target: { value: valor } });
+  fireEvent.blur(camp);
+}
+/* Prompt 261014_0400 (ordre del Mestre), front A: les dotze columnes de la revisió, en l'ordre del Mestre. */
+const TITOLS_REVISIO = Object.freeze([
+  'Tipus', 'Data', 'Factura/Ref', 'Proveïdor/Client', 'NIF/CIF', 'Concepte', 'Base imposable', '% IVA', 'Quota IVA',
+  '% IRPF', 'Quota IRPF', 'Total'
+]);
 
 async function analitzat(opcions) {
   const muntat = munta(opcions);
@@ -271,7 +314,7 @@ describe('pas 3: revisió', () => {
     expect(revisio.getByText('Documents de la carpeta (2)')).toBeTruthy();
     expect(revisio.getByText('2026_3T/7777777777.csv')).toBeTruthy();
     const despeses = within(revisio.getByRole('region', { name: 'Despeses de la proposta' }));
-    expect(despeses.getByRole('textbox', { name: 'Núm, despesa 1' }).value).toBe('7777777777');
+    expect(despeses.getByRole('textbox', { name: 'Factura/Ref, despesa 1' }).value).toBe('7777777777');
     expect(despeses.getByRole('textbox', { name: 'Total, despesa 1' }).value).toBe('12,10 €');
     expect(revisio.getByRole('textbox', { name: /Titular del full/ }).value).toBe(TITULAR);
   });
@@ -396,6 +439,174 @@ describe('pas 3: revisió', () => {
   });
 });
 
+/* Prompt 261014_0400 (ordre del Mestre), front A: la taula de revisió del pas 3 amb les dotze columnes del Mestre,
+   i les operacions amb l'estranger presentades com a condició tributària (en to de pregunta), sense canviar cap
+   severitat ni el full que rep la gestoria. */
+describe('pas 3: les dotze columnes i les operacions amb l’estranger', () => {
+  test('les dues taules porten les dotze columnes en l’ordre del Mestre, i després Estat i Accions', async () => {
+    await analitzat();
+    for (const nom of ['Ingressos de la proposta', 'Despeses de la proposta']) {
+      const regio = screen.getByRole('region', { name: nom });
+      expect([...regio.querySelectorAll('thead th')].map((th) => th.textContent)).toEqual([...TITOLS_REVISIO, 'Estat', 'Accions']);
+      // El peu ocupa les catorze columnes: «Totals» fins al Concepte, i l'avís de la suma davall d'Estat i Accions.
+      const peu = [...regio.querySelectorAll('tfoot tr > *')];
+      expect(peu.reduce((suma, cel) => suma + cel.colSpan, 0)).toBe(14);
+      expect([peu[0].textContent, peu[0].colSpan]).toEqual(['Totals', 6]);
+    }
+    expect(screen.getByText('Cap ingrés.').colSpan).toBe(14);
+  });
+
+  test('[REGRESSIÓ] la vista prèvia del pas 4 continua amb les 8 columnes del full de la gestoria', async () => {
+    await analitzat();
+    const vista = within(pas(4)).getByRole('region', { name: 'Vista prèvia del full del 3T de 2026' });
+    const capcaleres = [...vista.querySelectorAll('tr.sdp-gestoria-full__capcalera')].map((tr) => [...tr.children].map((th) => th.textContent));
+    expect(capcaleres).toEqual([
+      ['Data', 'Núm', 'Client', 'NIF - CIF', 'Descripció', 'Subtotal', 'IVA', 'Total'],
+      ['Data', 'Núm', 'Proveïdor', 'NIF - CIF', 'Descripció', 'Subtotal', 'IVA', 'Total']
+    ]);
+    expect(within(vista).queryByText(/% IVA|% IRPF|Tipus|Quota/)).toBeNull();
+  });
+
+  test('«% IVA» i «% IRPF» es deriven de la base i la quota, sense camp; «—» si la base és 0 o falta', async () => {
+    await analitzat();
+    const despeses = screen.getByRole('region', { name: 'Despeses de la proposta' });
+    edita('Base imposable, despesa 1', '100,00');
+    await waitFor(() => expect(screen.getByRole('textbox', { name: 'Base imposable, despesa 1' }).value).toBe('100,00 €'));
+    edita('Quota IVA, despesa 1', '21,00');
+    await waitFor(() => expect(celDe(despeses, 1, '% IVA').textContent).toBe('21 %'));
+    expect(within(celDe(despeses, 1, '% IVA')).queryByRole('textbox')).toBeNull();
+    expect(celDe(despeses, 1, '% IVA').getAttribute('data-tipus')).toBe('percentatge');
+    // Sense retenció, la quota d'IRPF és el camp de sempre (buit) i el percentatge, «—».
+    expect(screen.getByRole('textbox', { name: 'Quota IRPF, despesa 1' }).value).toBe('');
+    expect(celDe(despeses, 1, '% IRPF').textContent).toBe('—');
+    edita('Base imposable, despesa 1', '0');
+    await waitFor(() => expect(celDe(despeses, 1, '% IVA').textContent).toBe('—'));
+    // Una fila nova, sense base: «—».
+    fireEvent.click(boto('Afig una despesa'));
+    await waitFor(() => expect(despeses.querySelectorAll('tbody tr[data-factura]')).toHaveLength(2));
+    expect(celDe(despeses, 2, '% IVA').textContent).toBe('—');
+    expect(within(pas(4)).queryByText('21 %')).toBeNull();
+  });
+
+  test('la columna Tipus diu la condició de cada fila quan se’n sap el país: UE, Fora de la UE o, amb NIF espanyol, Interior', async () => {
+    await analitzat({ entorn: entornAmbCarpeta({ ...CARPETA, [FITXER_FORA_UE]: PDF_FORA_UE }).entorn });
+    const despeses = screen.getByRole('region', { name: 'Despeses de la proposta' });
+    expect(tipusPerNum(despeses)).toEqual({ '7777777777': 'UE', 'EX-2026-0915': 'Fora de la UE' });
+    expect(within(celDe(despeses, 1, 'Tipus')).queryByRole('textbox')).toBeNull();
+    // Amb un NIF espanyol, l'auditoria ja no hi veu cap empresa d'un altre país: «Interior».
+    edita('NIF/CIF, despesa 1', cif('B', '7100001'));
+    await waitFor(() => expect(tipusPerNum(despeses)['7777777777']).toBe('Interior'));
+  });
+
+  /* Correcció del front A (prompt 261014_0400, ordre del Mestre): l'auditoria només busca IVA_ESTRANGER a les
+     despeses amb la quota d'IVA llegida (auditoria.js:432). Sense quota, no se'n sap el país: ni «Interior» ni «UE». */
+  test('una despesa de la UE amb la Quota IVA buida no es dona per «Interior»: «—» fins que se n’escriu la quota', async () => {
+    await analitzat();
+    const despeses = screen.getByRole('region', { name: 'Despeses de la proposta' });
+    expect(celDe(despeses, 1, 'Tipus').textContent).toBe('UE');
+    edita('Quota IVA, despesa 1', '');
+    await waitFor(() => expect(screen.getByRole('textbox', { name: 'Quota IVA, despesa 1' }).value).toBe(''));
+    expect(celDe(despeses, 1, 'Tipus').textContent).toBe('—');
+    edita('Quota IVA, despesa 1', '2,10');
+    await waitFor(() => expect(celDe(despeses, 1, 'Tipus').textContent).toBe('UE'));
+  });
+
+  /* Correcció del front A (prompt 261014_0400, ordre del Mestre): la retenció es guarda en positiu (model.js:66-74)
+     i el seu percentatge es diu sobre el valor absolut de la base, com el missatge de RETENCIO_IRPF (model.js:254). */
+  test('«% IRPF» és la retenció sobre la base, també en una rectificativa amb la base en negatiu', async () => {
+    await analitzat();
+    const despeses = screen.getByRole('region', { name: 'Despeses de la proposta' });
+    edita('Base imposable, despesa 1', '1.000,00');
+    await waitFor(() => expect(screen.getByRole('textbox', { name: 'Base imposable, despesa 1' }).value).toBe('1.000,00 €'));
+    edita('Quota IRPF, despesa 1', '150,00');
+    await waitFor(() => expect(celDe(despeses, 1, '% IRPF').textContent).toBe('15 %'));
+    // Una rectificativa: la base i la quota d'IVA en negatiu; la retenció es continua guardant en positiu.
+    edita('Base imposable, despesa 1', '-1.000,00');
+    await waitFor(() => expect(screen.getByRole('textbox', { name: 'Base imposable, despesa 1' }).value).toBe('-1.000,00 €'));
+    edita('Quota IVA, despesa 1', '-210,00');
+    await waitFor(() => expect(celDe(despeses, 1, '% IVA').textContent).toBe('21 %'));
+    expect(celDe(despeses, 1, '% IRPF').textContent).toBe('15 %');
+    expect(within(pas(3)).getAllByText(/\(15 % de la base\)/).length).toBeGreaterThan(0);
+  });
+
+  test('una empresa de la UE sense IVA: al grup informatiu, sense destacar, amb el país i la inversió del subjecte passiu', async () => {
+    const { entorn } = entornAmbCarpeta({ '2026_3T/7777777777.csv': bytes(CSV_SENSE_IVA) });
+    await analitzat({ entorn });
+    const estranger = grupDe(/^Operacions amb l’estranger, informatives \(/);
+    expect(estranger).toBeTruthy();
+    const linia = within(estranger).getByText(/inversió del subjecte passiu/).closest('li');
+    expect(linia.hasAttribute('data-destacada')).toBe(false);
+    expect(within(linia).getByText('Empresa d’un altre país').classList.contains('sdp-insignia--info')).toBe(true);
+    expect(linia.textContent).toMatch(/Irlanda/);
+    expect(linia.textContent).toMatch(/gestoria/);
+    // No és dins de «Severitat mitjana» (la severitat de les dades no canvia: només la presentació).
+    const mitjana = grupDe(/^Severitat mitjana/);
+    if (mitjana) expect(within(mitjana).queryByText(/Irlanda/)).toBeNull();
+    // A la fila: la condició en to de pregunta, i fora del «Revisa:».
+    const despeses = screen.getByRole('region', { name: 'Despeses de la proposta' });
+    const estat = celDe(despeses, 1, 'Estat').textContent;
+    expect(estat).toContain('Empresa d’Irlanda (UE) sense IVA: possible inversió del subjecte passiu. Ho confirma la gestoria.');
+    expect(estat).not.toMatch(/Revisa:[^.]*Empresa d’un altre país/);
+    expect(celDe(despeses, 1, 'Tipus').textContent).toBe('UE');
+    // Sense cap alta, una línia factual; mai «complet».
+    expect(grupDe(/^Severitat alta/)).toBeNull();
+    expect(within(pas(3)).getByText('Cap incidència d’alta severitat. Les operacions amb l’estranger són informatives: les confirma la gestoria.')).toBeTruthy();
+    expect(within(pas(3)).queryByText(/complet\b/)).toBeNull();
+  });
+
+  test('una empresa de fora de la UE en dòlars: la moneda continua alta; en euros, cap alta, «fora de la UE» i el NIF al grup informatiu', async () => {
+    const { entorn } = entornAmbCarpeta({ [FITXER_FORA_UE]: PDF_FORA_UE });
+    await analitzat({ entorn });
+    const alta = grupDe(/^Severitat alta/);
+    expect(within(alta).getByText('Moneda estrangera').classList.contains('sdp-insignia--error')).toBe(true);
+    const fila = 'la despesa 1 («EX-2026-0915»)';
+    fireEvent.click(boto(`Els imports ja són en euros, ${fila}`));
+    const camp = screen.getByRole('textbox', { name: `Total en euros del càrrec, ${fila}` });
+    fireEvent.change(camp, { target: { value: '18,40' } });
+    fireEvent.keyDown(camp, { key: 'Enter' });
+    await waitFor(() => expect(grupDe(/^Severitat alta/)).toBeNull());
+    expect(within(pas(3)).getByText('Cap incidència d’alta severitat. Les operacions amb l’estranger són informatives: les confirma la gestoria.')).toBeTruthy();
+    const despeses = screen.getByRole('region', { name: 'Despeses de la proposta' });
+    expect(celDe(despeses, 1, 'Tipus').textContent).toBe('Fora de la UE');
+    const estat = celDe(despeses, 1, 'Estat');
+    expect(estat.textContent).toContain(
+      'Empresa dels Estats Units (fora de la UE): possible importació de serveis amb inversió del subjecte passiu. Ho confirma la gestoria.'
+    );
+    // La fila continua dient l'estat que calcula el model: sense NIF espanyol, «Pendent».
+    expect(within(estat).getByText('Pendent')).toBeTruthy();
+    // La incidència del NIF d'esta factura és al grup informatiu, amb l'explicació, i no a «Severitat mitjana».
+    const estranger = grupDe(/^Operacions amb l’estranger, informatives \(/);
+    const nif = within(estranger).getByText(/^Una empresa de fora de la UE no té NIF espanyol/).closest('li');
+    expect(nif.querySelector('.sdp-insignia--info')).toBeTruthy();
+    const mitjana = grupDe(/^Severitat mitjana/);
+    if (mitjana) expect(within(mitjana).queryByText(/NIF/)).toBeNull();
+  });
+
+  test('la llista local de la UE és la PAISOS_UE de nucli/nif.js, sense desviar-se’n', () => {
+    const codi = readFileSync(path.join(process.cwd(), 'src/sections/gestoria/nucli/nif.js'), 'utf8');
+    const llista = /const PAISOS_UE = new Set\(\[([^\]]*)\]\)/.exec(codi)?.[1];
+    expect(llista, 'PAISOS_UE ja no és a nucli/nif.js').toBeTruthy();
+    const codis = [...llista.matchAll(/'([A-Z]{2})'/g)].map((m) => m[1]);
+    expect(codis.length).toBeGreaterThan(26);
+    expect([...PAISOS_UE].sort()).toEqual([...codis].sort());
+    expect(Object.isFrozen(PAISOS_UE)).toBe(true);
+  });
+});
+
+/* Proves [DEFECTE]: passen reproduint un deute conegut que no s'arregla ací. Es conserven a part de les regressions
+   perquè qui l'arregle sàpiga quina asserció ha de girar. */
+describe('[DEFECTE] deute conegut de la columna Tipus', () => {
+  /* Prompt 261014_0400 (ordre del Mestre), front A: el Tipus ix d'IVA_ESTRANGER, i sense país (ni prefix de NIF-IVA
+     ni entrada al catàleg) l'auditoria no l'emet. Ho ha de decidir el Mestre: una regla nova al panell o el país a
+     nucli/auditoria.js (que torna a «pendent» també l'escàner i la identitat). Quan es decidisca, esta asserció gira. */
+  test('[DEFECTE regimDe] una factura en dòlars d’una empresa que ni el NIF ni el catàleg situen diu «Interior»', async () => {
+    await analitzat({ entorn: entornAmbCarpeta({ ...CARPETA, '2026_3T/example_cloud.pdf': PDF_DOLARS }).entorn });
+    const despeses = screen.getByRole('region', { name: 'Despeses de la proposta' });
+    expect(tipusPerNum(despeses)['INV-2026-0907']).toBe('Interior');
+    expect(celDe(despeses, 2, 'Estat').textContent).toContain('Imports en USD.');
+  });
+});
+
 describe('pas 4 i 5: la proposta, els fitxers i el correu', () => {
   test('el flux sencer: vista prèvia, revisió, generació, descàrrega, desar i enviament', async () => {
     const { descarrega, escrits } = await analitzat();
@@ -439,7 +650,7 @@ describe('pas 4 i 5: la proposta, els fitxers i el correu', () => {
 
   test('una edició després d’aprovar la proposta l’anul·la: fora fitxers i correu, i a revisar de nou', async () => {
     await generat();
-    const descripcio = screen.getByRole('textbox', { name: 'Descripció, despesa 1' });
+    const descripcio = screen.getByRole('textbox', { name: 'Concepte, despesa 1' });
     fireEvent.change(descripcio, { target: { value: 'Servei al núvol de juliol' } });
     fireEvent.blur(descripcio);
     await waitFor(() => expect(screen.queryByRole('heading', { name: 'Fitxers generats' })).toBeNull());

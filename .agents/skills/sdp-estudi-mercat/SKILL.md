@@ -9,6 +9,11 @@ triggers_on:
   - estudi de mercat
   - analitza la competència
   - investiga un competidor
+contracte.llig:
+  - _wiki_de_poble/01_ser/02_genotip.md
+  - _wiki_de_poble/04_escriptori
+contracte.escriu:
+  - _wiki_de_poble/04_escriptori
 ---
 \n# SKILL: Estudi de Mercat (Anàlisi de la Competència)
 

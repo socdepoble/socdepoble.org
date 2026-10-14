@@ -17,6 +17,13 @@ triggers_on:
   - briefing de taula
   - declarats vius
 version: 4.0.0
+contracte.llig:
+  - _wiki_de_poble/04_escriptori
+  - _wiki_de_poble/10_actes
+  - _wiki_de_poble/02_saber/doc_governanca.md
+contracte.escriu:
+  - _wiki_de_poble/04_escriptori
+  - _wiki_de_poble/10_actes
 ---
 
 # Higiene de l'Escriptori

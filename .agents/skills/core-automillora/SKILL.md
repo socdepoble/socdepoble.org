@@ -4,6 +4,11 @@ type: skill
 status: actiu
 triggers_on: ["automillora", "core"]
 description: Protocol d'Automillora Contínua, Mimetisme Empàtic i l'Olivera (Co-working a Tres Bandes). Defineix com la IA aprèn de la insistència humana per humanitzar-se i com coordina tasques entre MarIA, Claude i Codex.
+contracte.llig:
+  - AGENTS.md
+  - _wiki_de_poble/02_saber/memoria_aprenentatges.md
+contracte.escriu:
+  - _wiki_de_poble/02_saber/memoria_aprenentatges.md
 ---
 
 # CONCEPTE
@@ -45,3 +50,5 @@ Sempre que veges frustració, repetició o directrius de neteja ("Zafarrancho"):
 2. Analitza la persistència del Mestre i converteix-la en una "Detecció de Patró".
 3. Proposa i executa amb criteris de Mimetisme Empàtic.
 
+## Vincles
+- [[00_INDEX_SKILLS]]

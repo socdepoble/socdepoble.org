@@ -3,12 +3,12 @@
   "turn_id": "torn_9364bf5b-fc4e-4d30-8484-52277e3c7079",
   "actor": "MarIA",
   "scope": "documents",
-  "state": "context_loaded",
-  "revision": 7,
+  "state": "closed",
+  "revision": 8,
   "createdAt": "2026-10-08T09:56:14.828Z",
-  "updatedAt": "2026-10-08T10:01:29.917Z",
+  "updatedAt": "2026-10-14T02:50:18.022Z",
   "expiresAt": "2026-10-09T09:56:14.830Z",
-  "contractHash": "2b09edd15b17e4d3f835b8943e7a7eea42ec351afc53905f67410c7f9fb32949",
+  "contractHash": "6a1959a7c85620476e8cb465609d6b2e56cbcc2c380e5faf3c14267bee1163fa",
   "humanInventoryVersion": 1,
   "initial": {
     "src/.DS_Store": "1d5d20f9d6acbb47fb89efa0be0546e487ef310833c1acdf528bffd5eff6b34c",
@@ -3361,6 +3361,12 @@
       "file": "_wiki_de_poble/04_escriptori/261008_1201_prompt_claude.md",
       "at": "2026-10-08T10:01:29.917Z",
       "hash": "24a123bc0be89dcad6f61768f381fd3670d8e6352d13037fd7f99b33eaa2b964"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "context_loaded",
+      "at": "2026-10-14T02:50:18.022Z"
     }
   ]
 }

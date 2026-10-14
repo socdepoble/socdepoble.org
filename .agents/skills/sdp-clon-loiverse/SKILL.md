@@ -9,6 +9,11 @@ triggers_on:
   - mode bar
   - mode rebost
   - llista de la compra
+contracte.llig:
+  - .agents/skills/sdp-pedra-seca/SKILL.md
+  - src/data/backendPort.js
+contracte.escriu:
+  - src/data/backendPort.js
 ---
 
 # Clonació Visual de Loiverse (El TPV Universal)
@@ -35,3 +40,6 @@ L'Estratègia és:
 
 ## Obligació de l'Agent
 Qualsevol agent assignat a crear el mòdul de "Menjar i Beure", "Rebost" o "Llista de la Compra" ha de llegir obligatòriament aquesta skill i aplicar-la per a dissenyar el frontend en React. No inventes una UI nova; copia Loiverse.
+
+## Vincles
+- [[00_INDEX_SKILLS]]

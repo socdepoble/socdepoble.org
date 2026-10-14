@@ -285,9 +285,18 @@ export default function PerfilPublicSection({ agents = AGENTS_BUITS }) {
          Onada 8 (261009) · «Un clic a QUALSEVOL boina taronja porta SEMPRE al
          perfil públic»: la boina de la fitxa porta a la fitxa mateixa, per la
          seua ruta canònica (rutaDAutoria: el pilot, a /empresa/socdepoble).
-         Abans no era cap enllaç. */
+         Abans no era cap enllaç.
+         Prompt 261014_0400 (ordre del Mestre, tasca 4: «Quan l'usuari actua
+         com a Sóc de Poble, la barra taronja ha de carregar automàticament
+         l'autoria oficial», el PNG verd, «evitant en qualsevol cas la silueta
+         negra») · La fitxa del pilot (esElProjecte, el mateix que hi fixa el
+         logotip de damunt de l'H1) porta el PNG verd oficial, com l'editor,
+         «Les vistes» i «El compte» (avatarDeLaBarraDeFitxa, fitxaDePerfil.js).
+         El nom, el poble i l'enllaç no canvien. */
       topBarData={{
-        authorName: perfil.nom, authorAvatar: perfil.avatar || '', authorLocation: perfil.poble || '', emoticona: perfil.emoticona || '',
+        authorName: perfil.nom,
+        authorAvatar: esElProjecte ? DEFAULT_AUTHOR.avatarUrl : (perfil.avatar || ''),
+        authorLocation: perfil.poble || '', emoticona: perfil.emoticona || '',
         authorHref: rutaDAutoria({ tipus: perfil.tipus, id: perfil.id })
       }}
       onConnect={rutaConnectarPerfil(perfil) ? () => navigate(rutaConnectarPerfil(perfil)) : false}

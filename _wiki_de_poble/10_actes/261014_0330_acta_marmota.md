@@ -2,7 +2,10 @@
 type: document
 status: canonic
 description: "Acta Marmota de Relleu Nocturn: estat del Consell, mandats de FacturaDirecta/Holded per a la Gestoria, auto-descobriment de carpetes, offline/online i coordinació Claude/Gemini"
-tags: [acta, marmota, relleu, consell4ias, gestoria, facturadirecta, holded, claude, gemini4, offline]
+tags:
+  - acta
+  - marmota
+  - consell
 visibility: private
 ---
 
@@ -50,7 +53,7 @@ visibility: private
 - La Gestoria no ha de ser un laberint complicat: cal **calcar la claredat i ergonomia de FacturaDirecta i Holded**, sistemes amb anys d'ús provat.
 - **Auto-descobriment de carpetes (Zero Friction):** La IA ha de ser la que explore el disc (`_gestoria_de_poble/`) i col·loque cada fitxer al seu lloc automàticament (incloent les carpetes dels bancs, extractes C43/CSV i factures). L'usuari no ha d'estar pujant carpetes manualment.
 - **Conciliacions i Duplicats Visuals:** La IA ha de trobar els moviments aparellats i els duplicats, mostrant enllaços clicables directes per revisar-los a l'instant.
-- **Online i Offline:** Funcionament natiu tant desconnectat (Local-First, IndexedDB, File System Access) com connectat al backend.
+- **Online i Offline:** Funcionament natiu tant desconnectat (local en navegador via IndexedDB i File System Access) com connectat al backend.
 
 ### B. Taula del Full Trimestral (`/app/gestoria/full`)
 - La taula ha de ser 100% operativa: **pantalla completa (full width)**, amb columnes amples i còmodes (Client/Proveïdor, NIF, concepte, base, IVA, retenció).

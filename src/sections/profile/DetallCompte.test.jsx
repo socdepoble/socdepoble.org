@@ -244,6 +244,53 @@ test('261007 · la barra taronja del compte porta a la fitxa pública pròpia (p
   expect(m.pagina.topBarData.authorHref).toBe(RUTA_PERFIL_PROJECTE);
 });
 
+/* Prompt 261014_0400 (ordre del Mestre, tasca 4: «Quan l'usuari actua com a
+   Sóc de Poble, la barra taronja ha de carregar automàticament l'autoria
+   oficial», el PNG verd, «evitant en qualsevol cas la silueta negra») · «El
+   compte» diu el mateix que l'editor i «Les vistes» (avatarDeLaBarraDeFitxa,
+   de fitxaDePerfil.js): el pilot, pel slug declarat o per l'id de la llavor,
+   porta el PNG verd a la barra taronja, siga quin siga el logo de la fila. El
+   nom, el poble i l'enllaç són els de sempre. */
+test('prompt 261014_0400 · la barra taronja del compte del pilot porta el PNG verd oficial; una altra organització i la persona, el seu avatar', async () => {
+  const { ENTITAT_PILOT_ID, ENTITAT_PILOT_SLUG } = await import('../../data/identitatsSeed.js');
+  const { RUTA_PERFIL_PROJECTE } = await import('../../config/navigation.js');
+  const { DEFAULT_AUTHOR } = await import('../../components/universal/UniversalUtils.js');
+  expect(DEFAULT_AUTHOR.avatarUrl).toBe('/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png');
+  const uuid = '5b0c1d2e-3f40-4a51-8b62-7c83d94ea5f6';
+  const pilot = { ...forn, id: uuid, nom: 'Sóc de Poble', dades: { ...forn.dades, slug: ENTITAT_PILOT_SLUG, town_name: 'Alcoi' } };
+  for (const avatar of [null, '', 'sdp-media://organitzacions/x.png', '/assets/x.webp']) {
+    pinta({ ...pilot, avatar });
+    expect(m.pagina.topBarData).toMatchObject({ authorName: 'Sóc de Poble', authorAvatar: DEFAULT_AUTHOR.avatarUrl, authorLocation: 'Alcoi' });
+    cleanup();
+  }
+  pinta({ ...forn, id: ENTITAT_PILOT_ID, avatar: null });
+  expect(m.pagina.topBarData).toMatchObject({ authorAvatar: DEFAULT_AUTHOR.avatarUrl, authorHref: RUTA_PERFIL_PROJECTE });
+  cleanup();
+  pinta({ ...forn, avatar: '/assets/forn.webp' });
+  expect(m.pagina.topBarData.authorAvatar).toBe('/assets/forn.webp');
+  cleanup();
+  pinta({ ...forn, id: uuid, nom: 'Sóc de Poble', avatar: null, dades: { ...forn.dades, slug: 'soc-de-poble-de-relleu' } });
+  expect(m.pagina.topBarData.authorAvatar).toBe('');
+  cleanup();
+  pinta({ ...jo, avatar: '/assets/pep.webp', dades: { ...jo.dades, id: 'U', slug: ENTITAT_PILOT_SLUG } });
+  expect(m.pagina.topBarData.authorAvatar).toBe('/assets/pep.webp');
+});
+
+/* Revisió del prompt 261014_0400 · Reproduïx un deute conegut, no el fixa:
+   rutaDeLaFitxa (DetallCompte) no mira el slug, i el pilot amb un UUID que
+   ningú ha registrat encara porta a /empresa/:uuid, mentre l'editor i «Les
+   vistes» (rutaDeFitxaPublica) ja porten al seu perfil. L'avatar sí que és
+   el de l'editor. L'enllaç queda fora per ordre (la Llei del Píxel del
+   prompt): triar-lo és decisió pendent del Mestre. */
+test('[DEFECTE] prompt 261014_0400 · el compte del pilot per slug, amb el UUID sense registrar, porta a /empresa/:uuid i no al seu perfil', async () => {
+  const { ENTITAT_PILOT_SLUG } = await import('../../data/identitatsSeed.js');
+  const { RUTA_PERFIL_PROJECTE } = await import('../../config/navigation.js');
+  const uuid = '5b0c1d2e-3f40-4a51-8b62-7c83d94ea5f6';
+  pinta({ ...forn, id: uuid, nom: 'Sóc de Poble', dades: { ...forn.dades, slug: ENTITAT_PILOT_SLUG } });
+  expect(m.pagina.topBarData.authorHref).toBe(`/empresa/${uuid}`);
+  expect(m.pagina.topBarData.authorHref).not.toBe(RUTA_PERFIL_PROJECTE);
+});
+
 /* ── Grup C (ordre del Mestre, 261008) · el poble i els membres ── */
 
 test('grup C · qui administra tria el poble entre els del node; es desa pel nom i la barra taronja el porta', async () => {

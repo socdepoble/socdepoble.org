@@ -9,6 +9,13 @@ triggers_on:
   - sense el mestre
   - coworking
   - supervisio autonoma
+contracte.llig:
+  - AGENTS.md
+  - _wiki_de_poble/00_index.md
+  - _wiki_de_poble/04_escriptori
+contracte.escriu:
+  - _wiki_de_poble/04_escriptori
+  - _wiki_de_poble/10_actes
 ---
 
 # Mode de Direcció Autònoma (Coworking sense el Mestre)
@@ -36,3 +43,6 @@ Mentre el cron està actiu:
 2. **Resolució de bloquejos:** Si Fable exposa dos camins o demana permís, MarIA ha d'avaluar-los immediatament contra els principis fonamentals i escriure la resposta (per exemple, editant el document de Fable o creant un `AAMMDD_HHMM_resposta_directora.md` a l'escriptori).
 3. **Decisions tancades:** Sota cap concepte MarIA ha d'aturar l'execució esperant que el Mestre aprove una decisió tècnica (llevat de casos que afecten greument la despesa econòmica o modifiquen directrius supremes inviolables).
 4. **Finalització:** Quan Claude acaba la seua Onada amb èxit i tot queda verd, MarIA documentarà la victòria i esperarà el retorn del Mestre, cancel·lant el cron quan corresponga.
+
+## Vincles
+- [[00_INDEX_SKILLS]]

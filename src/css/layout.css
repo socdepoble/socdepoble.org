@@ -944,19 +944,30 @@ nav.mobile-nav { display: none; }
     align-items: stretch;
     gap: 0;
   }
-  /* Separador de grups: 1px amb var(--sdp-space-1) a cada costat (el gap),
-     igual que la vora entre grups del rail del Workspace. */
+  /* Separador de grups: el filet d'1px de banda a banda i sense marge (la
+     llista plegada no té gap). Desplegat, porta var(--sdp-space-2) amunt i
+     avall (modules.css, .app-sidebar-divider): plegada, les entrades de
+     davall pugen eixos 16px. */
   .sdp-root:not(.is-compact).sidebar-closed nav.app-sidebar .app-sidebar-divider {
     width: auto;
     margin: 0;
   }
+  /* Prompt 261014_0400 (ordre del Mestre), front B · La icona va al principi
+     de la cel·la, a var(--sdp-space-4) de la vora: el mateix eix (x=16) que
+     la roda de la T24 o la icona de l'app de dalt (centrada en 56px) i que la
+     barra oberta (coixí de 16 de .nav-item). Centrada, la cel·la centrava 28px
+     (la icona i el margin-right de 4px de .icona-linia, que no és :only-child
+     perquè el rètol ocult continua al DOM) i la icona queia a x=14; amb
+     «Sistema» obert i la llista desbordada, la barra de scroll clàssica li
+     menjava 11px i la duia a x=10. Des de la vora, cap dels dos la mou. */
   .sdp-root:not(.is-compact).sidebar-closed nav.app-sidebar .nav-item {
     width: auto;
     height: var(--sdp-touch);
     min-height: var(--sdp-touch);
     margin: 0;
     padding: 0;
-    justify-content: center;
+    padding-inline-start: var(--sdp-space-4);
+    justify-content: flex-start;
     /* Cel·la rectangular pura de banda a banda (width auto dins de la li
        estirada), com la fila desplegada (regla definitiva del Mestre,
        260927 vespre: la barra principal és un llistat a sang). */

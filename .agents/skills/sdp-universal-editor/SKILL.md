@@ -11,6 +11,11 @@ triggers_on:
   - TipTap
   - toolbar
   - NotesEditor
+contracte.llig:
+  - .agents/skills/sdp-pedra-seca/SKILL.md
+  - src/components/universal/UniversalEditorShell.jsx
+contracte.escriu:
+  - src/components/universal/UniversalEditorShell.jsx
 ---
 
 # SKILL: Universal Editor — Comportament i UX

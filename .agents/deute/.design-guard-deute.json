@@ -1,35 +1,28 @@
 {
   "inline-style": {
-    "max": 17,
+    "max": 4,
     "identitats": [
-      "inline-style|app/App.jsx|style=",
-      "inline-style|components/PedraSeca/atoms/icones.jsx|style=",
       "inline-style|components/PedraSeca/composicio/index.jsx|style=",
       "inline-style|components/PedraSeca/molecules/Dropdown.jsx|style=",
-      "inline-style|components/PedraSeca/organismes/UniversalIndicatorCard.jsx|style=",
-      "inline-style|components/universal/NotificationContext.jsx|style=",
-      "inline-style|components/universal/UniversalEditorShell.jsx|style=",
-      "inline-style|components/universal/UniversalToolbar.jsx|style=",
-      "inline-style|sections/detail/detailSectionMeta.jsx|style=",
-      "inline-style|sections/disseny/cataleg/detalls/EspecimenInventariGlobal.jsx|style=",
-      "inline-style|sections/disseny/cataleg/detalls/EspecimenMediaExterna.jsx|style=",
-      "inline-style|sections/xat/XatSection.jsx|style="
+      "inline-style|components/PedraSeca/organismes/UniversalIndicatorCard.jsx|style="
     ]
   },
   "touch-too-small": {
-    "max": 3,
+    "max": 2,
     "identitats": [
       "touch-too-small|css/components.css|height:24px",
-      "touch-too-small|css/components.css|width:24px",
-      "touch-too-small|css/layout.css|width:24px"
+      "touch-too-small|css/components.css|width:24px"
+    ]
+  },
+  "focus-invisible": {
+    "max": 1,
+    "identitats": [
+      "focus-invisible|css/modules.css|outline-none"
     ]
   },
   "raw-color": {
-    "max": 20,
+    "max": 17,
     "identitats": [
-      "raw-color|css/modules.css|#b91c1c",
-      "raw-color|css/modules.css|#ef4444",
-      "raw-color|css/modules.css|#fee2e2",
       "raw-color|sections/disseny/cataleg/detalls/EspecimenColor.jsx|#00599d",
       "raw-color|sections/disseny/cataleg/detalls/EspecimenColor.jsx|#016ebf",
       "raw-color|sections/disseny/cataleg/detalls/EspecimenColor.jsx|#027e38",

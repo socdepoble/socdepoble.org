@@ -3,12 +3,12 @@
   "turn_id": "torn_33788a4e-9495-4037-919b-1b5672b5034d",
   "actor": "MarIA",
   "scope": "documents",
-  "state": "context_loaded",
-  "revision": 6,
+  "state": "closed",
+  "revision": 7,
   "createdAt": "2026-10-12T12:03:57.854Z",
-  "updatedAt": "2026-10-12T12:03:58.415Z",
+  "updatedAt": "2026-10-14T02:50:18.022Z",
   "expiresAt": "2026-10-13T12:03:57.854Z",
-  "contractHash": "8588970175c0d5b1f9c562ef5cef81c075c9d09fef0a6206f2f095b5faca3c65",
+  "contractHash": "6a1959a7c85620476e8cb465609d6b2e56cbcc2c380e5faf3c14267bee1163fa",
   "humanInventoryVersion": 1,
   "initial": {
     "src/ARCHITECTURE.md": "8dc1702cb19b085f1baf352c6db44f266c8c0969037319dc07ec0b7b3d09f052",
@@ -3708,6 +3708,12 @@
       "file": "_wiki_de_poble/04_escriptori/261012_1405_prompt_claude_gestoria_v2.md",
       "at": "2026-10-12T12:03:58.415Z",
       "hash": "51c9401e0eba76337c16d7cf96fb112f8c64f332669e1900507b852de734cdcb"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "context_loaded",
+      "at": "2026-10-14T02:50:18.022Z"
     }
   ]
 }

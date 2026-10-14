@@ -12,6 +12,11 @@ triggers_on:
   - pantalla nova
   - menú d'ajustos
   - bottom sheet
+contracte.llig:
+  - .agents/skills/sdp-pedra-seca/SKILL.md
+  - src/components/layout/AppGridShell.jsx
+contracte.escriu:
+  - src/components/layout/AppGridShell.jsx
 ---
 # Llei del Clonatge de WhatsApp (Pedra Seca v2)
 
@@ -34,3 +39,6 @@ Sempre que es demane a una IA dissenyar o programar una nova vista (com ara el "
 **ESTÀ PROHIBIT** carregar o fer scraping sencer del centre d'ajuda de WhatsApp (`faq.whatsapp.com`) als contexts de la IA. Les FAQ de WhatsApp contenen manuals sobre com bloquejar spam, canviar de número de telèfon, Meta Business, i xifratge extrem a extrem, que no apliquen a la nostra arquitectura i provocarien un desastre per contaminació de tokens (Context Panic). 
 
 Ens interessa **la UX/UI (la carcassa)**, no la infraestructura tècnica ni les polítiques d'ús de Meta. L'eina de treball han de ser les captures de pantalla del mòbil del Mestre.
+
+## Vincles
+- [[00_INDEX_SKILLS]]

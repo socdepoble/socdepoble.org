@@ -10,6 +10,11 @@ triggers_on:
   - chrome
   - bar-blue
   - page-header
+contracte.llig:
+  - src/components/universal/UniversalPage.jsx
+  - src/components/layout/AppGridShell.jsx
+contracte.escriu:
+  - src/components/universal/UniversalPage.jsx
 ---
 
 # SKILL: UniversalPage — Anatomia i Comportament
@@ -116,3 +121,6 @@ Quan es construeix una aplicació o secció complexa que empra el sistema de gra
 A més, **tota pàgina, també les de sistema, porta la barra taronja amb el logo i l'autor** perquè siga clicable, encara que no tinga imatge hero (ex. Consola, Pols del cervell). La boina i la barra taronja només es lleven per ordre explícita del Mestre.
 **261007** | **Una pàgina de contingut naix de la maquinària existent**: una pàgina informativa o de sistema nova (p. ex. «Drets d'autor») és una entrada de `SYSTEM_PAGES` (`src/config/systemPages.js`) i de `PAGE_COPY` (`src/sections/text/pageContent.js`), amb el seu HTML, i la pinta la UniversalPage de sempre (TextSection). Així hereta la barra taronja, la targeta, el SEO, Connectar i Comentar, i l'enxufabilitat. Si un bloc ha d'aparéixer dins d'una pàgina, s'hi incrusta amb el mecanisme de targetes incrustades que ja existix (`data-sdp-targetes`).
 **261010** | **Prohibit duplicar la HeroImage a l'interior o al peu de la pàgina**: Una imatge hero principal col·locada dalt ja compleix la seva funció per a la notícia/pàgina. És un error de disseny i de redundància innecessària repetir eixa mateixa imatge a la part inferior de la pàgina o en altres seccions del cos. Si la publicació ha de tenir múltiples imatges (ex: targetes incrustades), han de ser fotografies diferents. Mai es duplica la mateixa imatge dins de la mateixa notícia.
+
+## Vincles
+- [[00_INDEX_SKILLS]]

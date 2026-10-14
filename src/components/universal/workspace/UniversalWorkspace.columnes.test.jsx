@@ -120,6 +120,50 @@ describe('P3 · columnesInicials', () => {
       expect(sidebar.querySelector('.sdp-workspace-rail')).toBeNull();
     });
   });
+
+  /* Prompt 261014_0400 (ordre del Mestre), front B · El WorkspaceProvider porta
+     key={model.workspaceKey}: al Bloc de notes, la reinjecció de la sessió de
+     l'amfitrió el remunta i el plegat tornava a columnesInicials sense cap
+     acció de la persona, un salt de layout real (CLS). El plegat viu ara també
+     fora del proveïdor amb clau, com el nivell del mestre-detall. La primera
+     muntada no canvia: ho vigilen les proves de dalt. */
+  const ambClau = (clau, extra = {}) => (
+    <UniversalWorkspace model={{ ...MODEL, workspaceKey: clau }} labels={ETIQUETES}
+      initialSelection={{ categoryId: 'f-mur' }} renderDetail={() => null} {...extra} />
+  );
+
+  test('[DEFECTE] la navegació desplegada a mà continua desplegada quan l’amfitrió remunta el Workspace', () => {
+    ambAmpladaIFotogrames(1400, (buidaFotogrames) => {
+      const { container, rerender } = render(ambClau('sessio-1', { columnesInicials: { left: true } }));
+      expect(container.querySelector('.app-grid-content.has-left-collapsed')).not.toBeNull();
+      fireEvent.click(screen.getByRole('button', { name: 'Expandir CARPETES' }));
+      buidaFotogrames();
+      expect(container.querySelector('.has-left-collapsed')).toBeNull();
+
+      const closca = container.querySelector('.app-grid-shell');
+      rerender(ambClau('sessio-2', { columnesInicials: { left: true } }));
+      /* És una remuntada de veres: la closca és un node nou. */
+      expect(container.querySelector('.app-grid-shell')).not.toBe(closca);
+      expect(container.querySelector('.has-left-collapsed')).toBeNull();
+      expect(screen.getByRole('button', { name: 'Replegar CARPETES' })).toBeTruthy();
+    });
+  });
+
+  test('[DEFECTE] i a l’inrevés: el que la persona plega continua plegat després de la remuntada', () => {
+    ambAmpladaIFotogrames(1400, (buidaFotogrames) => {
+      const { container, rerender } = render(ambClau('sessio-1'));
+      expect(container.querySelector('.has-left-collapsed, .has-middle-collapsed')).toBeNull();
+      fireEvent.click(screen.getByRole('button', { name: 'Replegar CARPETES' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Replegar NOTES' }));
+      buidaFotogrames();
+
+      const closca = container.querySelector('.app-grid-shell');
+      rerender(ambClau('sessio-2'));
+      expect(container.querySelector('.app-grid-shell')).not.toBe(closca);
+      const graella = container.querySelector('.app-grid-content');
+      expect([graella.classList.contains('has-left-collapsed'), graella.classList.contains('has-middle-collapsed')]).toEqual([true, true]);
+    });
+  });
 });
 
 describe('P5 · inclouDescendents', () => {

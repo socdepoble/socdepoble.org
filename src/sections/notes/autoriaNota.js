@@ -17,9 +17,29 @@
  * a la pàgina de l'autor que l'ha creada». signaturaDeNota hi afig la `ruta`
  * de la pàgina de qui signa; autoriaDeNota continua tornant { nom, avatar,
  * poble }, la forma que llegix la targeta viva de la llista (NotaFitxa).
+ *
+ * Prompt 261014_0400 (ordre del Mestre, tasca 4: «Quan l'usuari actua com a
+ * Sóc de Poble, la barra taronja ha de carregar automàticament l'autoria
+ * oficial», el PNG verd, «evitant en qualsevol cas la silueta negra») · El
+ * pilot com a actor signa la barra i la targeta viva amb l'autoria oficial
+ * sencera (AUTORIA_BENVINGUDA) i porta al seu perfil. Es reconeix amb el
+ * predicat del xat (esLaIdentitatDAjuda: slug declarat o id de la llavor,
+ * mai pel nom ni per cap uuid; data/xatsPerDefecte.js només importa la
+ * llavor i el contracte: cap cicle). El payload del Mur (autoriaDeLActor) no
+ * canvia: continua sent el de la fila.
+ * Revisió del prompt 261014_0400 · Per tant, per al pilot, la barra i la
+ * targeta viva poden dir un nom, un poble i un logo que el selector
+ * «Publicaràs com a» i la publicació no porten: passa quan la fila té un
+ * altre nom, un altre town_name o cap logo_url. Per al pilot, la invariant de
+ * NotesEditor («el selector i la barra no poden dir una cosa i el Mur una
+ * altra») i l'avís de la targeta viva (AVISOS_TARGETA_VIVA.notes) deixen de
+ * complir-se. El payload queda fora per ordre. Triar entre l'autoria sencera
+ * i només el logo és decisió pendent del Mestre: la prova [DEFECTE]
+ * d'autoriaNota.test.js reproduïx el deute.
  */
 import { DEFAULT_AUTHOR, FORASTER, autorDeSessio, isSafeUrl } from '../../components/universal/UniversalUtils.js';
 import { RUTA_PERFIL_PROJECTE, rutaDAutoria, rutaDePerfil } from '../../config/navigation.js';
+import { esLaIdentitatDAjuda } from '../../data/xatsPerDefecte.js';
 
 export const NOM_SENSE_NOM = 'Veí';
 
@@ -104,6 +124,10 @@ export function actorAmbPobleDeLEntitat(actor, memberships) {
  * targeta signava amb la persona.
  *   · la nota de benvinguda i la còpia que en prova el Foraster: Sóc de
  *     Poble, a La Torre, amb el seu avatar (T65), per damunt de tot actor;
+ *   · l'entitat pilot activa: la mateixa autoria oficial, siga quin siga el
+ *     logo, el nom o el poble de la seua fila (prompt 261014_0400, ordre del
+ *     Mestre; el PNG verd guanya també a un logo propi, com l'ordre E de
+ *     PerfilEditor). El payload del Mur no la porta: vegeu la capçalera;
  *   · entitat activa: el seu nom i el seu logo, mai la persona (T43.3);
  *   · agent IA actiu: el seu nom, la seua foto i el seu poble;
  *   · si no, la sessió (T22: sense sessió, nom i poble del Foraster junts).
@@ -115,7 +139,7 @@ export function actorAmbPobleDeLEntitat(actor, memberships) {
  */
 export function autoriaDeNota({ notaId, actor, actorId, agents, currentUser } = {}) {
   const signant = triaSignant({ notaId, actor, actorId, agents, currentUser });
-  if (signant.via === 'benvinguda') return AUTORIA_BENVINGUDA;
+  if (signant.via === 'benvinguda' || signant.via === 'oficial') return AUTORIA_BENVINGUDA;
   let qui;
   if (signant.via === 'entitat') {
     qui = { nom: signant.autoria.nom, avatar: actor.avatar, poble: signant.autoria.poble };
@@ -135,9 +159,13 @@ export function autoriaDeNota({ notaId, actor, actorId, agents, currentUser } = 
 }
 
 /* Qui signa, en l'ordre de autoriaDeNota: una sola tria per al nom i per a la
-   ruta, perquè la barra no diga un autor i porte a la pàgina d'un altre. */
+   ruta, perquè la barra no diga un autor i porte a la pàgina d'un altre.
+   Prompt 261014_0400 (ordre del Mestre) · El pilot, just després de la
+   benvinguda i abans de mirar-ne el nom: una fila sense nom tampoc no cau a
+   la persona. */
 function triaSignant({ notaId, actor, actorId, agents, currentUser }) {
   if (notaId != null && IDS_BENVINGUDA.has(String(notaId))) return { via: 'benvinguda' };
+  if (esLaIdentitatDAjuda(actor, 'socdepoble')) return { via: 'oficial' };
   const autoria = autoriaDeLActor(actor, currentUser);
   if (actor?.tipus === 'entitat' && autoria) return { via: 'entitat', autoria };
   const agent = (agents || []).find((a) => String(a?.id) === String(actorId));
@@ -150,6 +178,8 @@ function triaSignant({ notaId, actor, actorId, agents, currentUser }) {
  * null. La mateixa tria que autoriaDeNota:
  *   · la nota de benvinguda i la còpia de prova: Sóc de Poble, al seu perfil
  *     (RUTA_PERFIL_PROJECTE; Onada 8, 261009: abans, RUTA_PROJECTE);
+ *   · l'entitat pilot activa: el seu perfil, també abans que ningú n'haja
+ *     registrat l'uuid (prompt 261014_0400, ordre del Mestre);
  *   · entitat activa: rutaDAutoria (l'entitat pilot porta al seu perfil; la
  *     resta, a la seua fitxa pública);
  *   · agent IA actiu: la seua fitxa (rutaDePerfil 'ia');
@@ -160,7 +190,7 @@ function triaSignant({ notaId, actor, actorId, agents, currentUser }) {
  */
 export function rutaDAutoriaDeNota({ notaId, actor, actorId, agents, currentUser } = {}) {
   const signant = triaSignant({ notaId, actor, actorId, agents, currentUser });
-  if (signant.via === 'benvinguda') return RUTA_PERFIL_PROJECTE;
+  if (signant.via === 'benvinguda' || signant.via === 'oficial') return RUTA_PERFIL_PROJECTE;
   if (signant.via === 'entitat') return rutaDAutoria({ tipus: 'entitat', id: actor.id });
   if (signant.via === 'agent') return rutaDePerfil('ia', signant.agent.id);
   return currentUser?.id == null ? null : rutaDePerfil('persona', currentUser.id);

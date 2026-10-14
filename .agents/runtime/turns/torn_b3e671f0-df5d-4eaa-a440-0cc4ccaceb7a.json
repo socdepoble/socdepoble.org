@@ -3,12 +3,12 @@
   "turn_id": "torn_b3e671f0-df5d-4eaa-a440-0cc4ccaceb7a",
   "actor": "maria",
   "scope": "documents",
-  "state": "context_loaded",
-  "revision": 3,
+  "state": "closed",
+  "revision": 4,
   "createdAt": "2026-10-08T21:45:22.753Z",
-  "updatedAt": "2026-10-09T10:50:44.690Z",
+  "updatedAt": "2026-10-14T02:50:18.022Z",
   "expiresAt": "2026-10-09T21:45:22.758Z",
-  "contractHash": "2b09edd15b17e4d3f835b8943e7a7eea42ec351afc53905f67410c7f9fb32949",
+  "contractHash": "6a1959a7c85620476e8cb465609d6b2e56cbcc2c380e5faf3c14267bee1163fa",
   "humanInventoryVersion": 1,
   "initial": {
     "src/.DS_Store": "1d5d20f9d6acbb47fb89efa0be0546e487ef310833c1acdf528bffd5eff6b34c",
@@ -3353,7 +3353,15 @@
     }
   },
   "plan": null,
-  "verification": null,
+  "verification": {
+    "at": "2026-10-14T02:50:18.022Z",
+    "files": {
+      "_wiki_de_poble/90_arxiu_historic/261008_2345_pla_implementacio_onada5.md": "ba7c1587cf9cd03dd2283fdd72694c15902f9854f82ad944a5ce8a41269f90e0"
+    },
+    "checks": [
+      "expire-close"
+    ]
+  },
   "history": [
     {
       "state": "opened",
@@ -3376,6 +3384,12 @@
       "state": "context_loaded",
       "action": "handoff",
       "at": "2026-10-09T10:50:44.690Z"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "context_loaded",
+      "at": "2026-10-14T02:50:18.022Z"
     }
   ],
   "ownedPaths": [

@@ -3,12 +3,12 @@
   "turn_id": "torn_68d3778e-c4dc-4621-92e9-e4b28f21a287",
   "actor": "codex",
   "scope": "code",
-  "state": "planned",
-  "revision": 14,
+  "state": "closed",
+  "revision": 15,
   "createdAt": "2026-09-30T13:49:34.513Z",
-  "updatedAt": "2026-09-30T14:31:17.085Z",
+  "updatedAt": "2026-10-14T02:50:18.022Z",
   "expiresAt": "2026-10-01T13:49:34.513Z",
-  "contractHash": "5503c6dc29a6ce8c6708d7b81f7bd79546d13d574467174b95aae4265e1b0d5e",
+  "contractHash": "6a1959a7c85620476e8cb465609d6b2e56cbcc2c380e5faf3c14267bee1163fa",
   "humanInventoryVersion": 1,
   "initial": {
     "src/.DS_Store": "1d5d20f9d6acbb47fb89efa0be0546e487ef310833c1acdf528bffd5eff6b34c",
@@ -1567,7 +1567,15 @@
     "file": "_wiki_de_poble/04_escriptori/260930_1545_pla_implementacio_coworking.md",
     "hash": "5af894707c0ed022cd5268661fba3ca156024afc415906cbfba42fcfaa2ad297"
   },
-  "verification": null,
+  "verification": {
+    "at": "2026-10-14T02:50:18.022Z",
+    "files": {
+      "_wiki_de_poble/90_arxiu_historic/260930_1558_auditoria_codex.md": "5f84823f66dcbd0b1be9184d4bfafb7a51ffe94a29e906bc8552b1491722039c"
+    },
+    "checks": [
+      "expire-close"
+    ]
+  },
   "history": [
     {
       "state": "opened",
@@ -1647,6 +1655,12 @@
       "state": "planned",
       "action": "bind-plan",
       "at": "2026-09-30T14:31:17.084Z"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "planned",
+      "at": "2026-10-14T02:50:18.022Z"
     }
   ],
   "ownedPaths": [

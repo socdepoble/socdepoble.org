@@ -3,12 +3,12 @@
   "turn_id": "torn_c5c343ef-7dd7-4f5d-8ca2-259abe20da08",
   "actor": "Claude",
   "scope": "code",
-  "state": "context_loaded",
-  "revision": 3,
+  "state": "closed",
+  "revision": 4,
   "createdAt": "2026-10-11T00:25:37.419Z",
-  "updatedAt": "2026-10-11T00:25:45.166Z",
+  "updatedAt": "2026-10-14T02:50:18.022Z",
   "expiresAt": "2026-10-12T00:25:37.420Z",
-  "contractHash": "2b09edd15b17e4d3f835b8943e7a7eea42ec351afc53905f67410c7f9fb32949",
+  "contractHash": "6a1959a7c85620476e8cb465609d6b2e56cbcc2c380e5faf3c14267bee1163fa",
   "humanInventoryVersion": 1,
   "initial": {
     "src/ARCHITECTURE.md": "8dc1702cb19b085f1baf352c6db44f266c8c0969037319dc07ec0b7b3d09f052",
@@ -3610,6 +3610,12 @@
       "file": "_wiki_de_poble/04_escriptori/261011_0230_auditoria_claude_onada12.md",
       "at": "2026-10-11T00:25:45.166Z",
       "hash": "c731490cc49477ca4b64dc73123b114bd198ccb483e54742fe52032ab568ec70"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "context_loaded",
+      "at": "2026-10-14T02:50:18.022Z"
     }
   ]
 }

@@ -7,6 +7,11 @@ tags:
 name: sdp-app-grid-shell
 triggers_on:
   - app grid shell
+contracte.llig:
+  - src/components/layout/AppGridShell.jsx
+  - src/css/index.css
+contracte.escriu:
+  - src/components/layout/AppGridShell.jsx
 ---
 \n# SKILL: AppGridShell i l'Espai de Treball (UniversalWorkspace)
 
@@ -41,3 +46,6 @@ Quan l'usuari clica als icones d'ocultar les columnes (per amagar la barra later
 ## 4. Deute Tècnic Restringit
 - Està estrictament prohibit l'ús de l'atribut `style=` directament sobre els components React per no trencar les regles de la `design-guard`. Les mides dinàmiques s'injectaran preferiblement a través de classes dinàmiques o `<style>` tags inserits localment si és inevitable.
 - No s'ha de fer ús del pseudo-selector `:has()` en els estils com `src/components/layout/AppGridShell.css`, per mantenir l'estàndard del *Baseline 2022*. Les ocultacions es controlaran a través de classes de React (ex: `has-left-collapsed`).
+
+## Vincles
+- [[00_INDEX_SKILLS]]

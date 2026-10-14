@@ -185,7 +185,7 @@ describe('la porta d’aprovació, endollada', () => {
     expect(showDirectoryPicker).toHaveBeenCalledWith({ mode: 'read' });
     fireEvent.click(screen.getByRole('button', { name: 'Analitza el 3T de 2026' }));
     const despeses = within(await screen.findByRole('region', { name: 'Despeses de la proposta' }));
-    expect(despeses.getByRole('textbox', { name: 'Núm, despesa 1' }).value).toBe('7777777777');
+    expect(despeses.getByRole('textbox', { name: 'Factura/Ref, despesa 1' }).value).toBe('7777777777');
     expect(lectures).toEqual(['7777777777.csv']);
   });
 

@@ -12,6 +12,8 @@ import {ID_NOTA_BENVINGUDA,autoriaDeNota,signaturaDeNota} from './autoriaNota.js
 import {RUTA_PERFIL_PROJECTE} from '../../config/navigation.js';
 import {AVISOS_TARGETA_VIVA} from '../../components/universal/TargetaViva.jsx';
 import {CLAU_APAGADA,ESDEVENIMENT_DOM} from '../../data/telemetria.js';
+import {DEFAULT_AUTHOR} from '../../components/universal/UniversalUtils.js';
+import {ENTITAT_PILOT_SLUG} from '../../data/identitatsSeed.js';
 /* `window.umami` d'amfitrió: el Connectar compta sense backend i cap prova toca la xarxa. */
 let vistos;
 const escolta=(event)=>vistos.push(event.detail);
@@ -134,6 +136,26 @@ test('Onada 8 · la boina de la targeta viva porta a la pàgina de qui signa, la
   mocks.identitat = { actorId: null };
   const foraster = render(<NotaFitxa active item={PROVA} onSelect={vi.fn()} />);
   expect(foraster.container.querySelector('.sp-card-header a.sp-card-author-link')).toBeNull();
+});
+
+/* Prompt 261014_0400 (ordre del Mestre, tasca 4) · La boina de la targeta viva
+   signa com la barra taronja de l'editor: actuant com a Sóc de Poble (el slug
+   declarat de la fila, amb un id UUID) i sense logo a la fila, el PNG verd
+   oficial, el seu nom, el seu poble i el seu perfil; mai la silueta. */
+test('prompt 261014_0400 · actuant com a Sóc de Poble sense logo, la boina porta el PNG verd oficial i cap silueta', () => {
+  const uuid = '5b0c1d2e-3f40-4a51-8b62-7c83d94ea5f6';
+  mocks.session = { currentUser: { id: 'U', user_metadata: { name: 'Pepa', avatar_url: 'https://exemple.org/pepa.png', town_name: 'Benifallim' } } };
+  mocks.identitat = { actorId: uuid, actor: { tipus: 'entitat', id: uuid, slug: ENTITAT_PILOT_SLUG, nom: 'Sóc de Poble', avatar: null, rol: 'owner' } };
+  const { container } = render(<NotaFitxa active item={PROVA} onSelect={vi.fn()} />);
+  const boina = container.querySelector('.sp-card-header');
+  expect(DEFAULT_AUTHOR.avatarUrl).toBe('/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png');
+  expect(boina.querySelector('img.sp-card-avatar').getAttribute('src')).toBe(DEFAULT_AUTHOR.avatarUrl);
+  expect(boina.querySelector('.sp-card-avatar--fallback')).toBeNull();
+  expect(boina.querySelector('svg.lucide-user-round')).toBeNull();
+  expect(boina.querySelector('.sp-card-author-name').textContent).toBe(DEFAULT_AUTHOR.name);
+  expect(boina.querySelector('.sp-card-author-location').textContent).toBe(DEFAULT_AUTHOR.location);
+  expect(boina.querySelector('a.sp-card-author-link').getAttribute('href')).toBe(RUTA_PERFIL_PROJECTE);
+  expect(container.textContent).not.toContain('Pepa');
 });
 
 test('D3 · la data de la targeta és la de publicació triada (T40), no la d’última edició', () => {

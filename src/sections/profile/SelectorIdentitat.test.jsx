@@ -8,8 +8,17 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest';
    peces de veres com les munta la TopBar d'App.jsx; la sessió, la identitat i
    els mitjans simulats. Els comportaments són els que ja es provaven ací. */
 const m = vi.hoisted(() => ({ user: null, valor: null, setActor: null }));
-vi.mock('../../app/contexts/SessionContext', () => ({ useSession: () => ({ currentUser: m.user }) }));
-vi.mock('../../app/contexts/IdentitatContext', () => ({ useIdentitat: () => m.valor }));
+/* Prompt 261014_0400 (ordre del Mestre) · La barra llig les variants opcionals
+   (useSessioOpcional, useIdentitatOpcional): la simulació les exporta al costat
+   de les estrictes, perquè vitest llança en llegir una exportació que no hi és. */
+vi.mock('../../app/contexts/SessionContext', () => ({
+  useSession: () => ({ currentUser: m.user }),
+  useSessioOpcional: () => ({ currentUser: m.user })
+}));
+vi.mock('../../app/contexts/IdentitatContext', () => ({
+  useIdentitat: () => m.valor,
+  useIdentitatOpcional: () => m.valor
+}));
 vi.mock('../../hooks/useResolvedAsset.js', () => ({ useResolvedAsset: () => '' }));
 import { useIdentitatDeLaBarra } from '../../components/universal/identitat/useIdentitatDeLaBarra.js';
 import { BotoIdentitatActiva } from '../../components/universal/identitat/BotoIdentitatActiva.jsx';

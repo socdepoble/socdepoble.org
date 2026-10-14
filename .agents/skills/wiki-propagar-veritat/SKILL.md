@@ -9,6 +9,13 @@ triggers_on:
   - propagar una decisió
   - actualitzar una decisió arquitectònica
   - coherència de la wiki
+contracte.llig:
+  - _wiki_de_poble/00_index.md
+  - AGENTS.md
+  - _wiki_de_poble/02_saber/doc_governanca.md
+contracte.escriu:
+  - _wiki_de_poble/00_index.md
+  - AGENTS.md
 ---
 \n# SKILL: Propagar la Veritat (Buscar i Reemplaçar Global)
 

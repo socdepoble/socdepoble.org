@@ -84,7 +84,7 @@ export default function EspecimenShell() {
         ]}
         noFacis={[
           'Una segona barra superior per secció: això és el crom de UniversalPage (barres blava i taronja).',
-          'Mutar el DOM des d’un onClick per a plegar la barra. Deute: un efecte encara hi afig sidebar-closed amb classList, a més del className de l’arrel.'
+          'Mutar el DOM des d’un onClick per a plegar la barra.'
         ]}>
         <div className="sdp-anatomia" aria-hidden="true">
           <div className="sdp-anatomia__lat">Barra lateral<br />nav#app-sidebar<br />(calaix fins a 1023px)</div>

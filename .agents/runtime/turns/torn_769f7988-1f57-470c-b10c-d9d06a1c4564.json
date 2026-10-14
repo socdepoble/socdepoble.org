@@ -3,12 +3,12 @@
   "turn_id": "torn_769f7988-1f57-470c-b10c-d9d06a1c4564",
   "actor": "maria",
   "scope": "documents",
-  "state": "context_loaded",
-  "revision": 5,
+  "state": "closed",
+  "revision": 6,
   "createdAt": "2026-10-12T09:43:00.495Z",
-  "updatedAt": "2026-10-12T09:43:32.323Z",
+  "updatedAt": "2026-10-14T02:50:18.022Z",
   "expiresAt": "2026-10-13T09:43:00.496Z",
-  "contractHash": "2b09edd15b17e4d3f835b8943e7a7eea42ec351afc53905f67410c7f9fb32949",
+  "contractHash": "6a1959a7c85620476e8cb465609d6b2e56cbcc2c380e5faf3c14267bee1163fa",
   "humanInventoryVersion": 1,
   "initial": {
     "src/ARCHITECTURE.md": "8dc1702cb19b085f1baf352c6db44f266c8c0969037319dc07ec0b7b3d09f052",
@@ -3697,6 +3697,12 @@
       "file": "_wiki_de_poble/04_escriptori/261012_1143_pla_implementacio_auditoria.md",
       "at": "2026-10-12T09:43:32.323Z",
       "hash": "dff95d4931be15c8a015aa6d5c0ffa0677bc6df46b822138b46e5d183b59ef9d"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "context_loaded",
+      "at": "2026-10-14T02:50:18.022Z"
     }
   ]
 }

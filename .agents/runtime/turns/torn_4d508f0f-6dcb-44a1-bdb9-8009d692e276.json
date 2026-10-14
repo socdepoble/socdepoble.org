@@ -3,12 +3,12 @@
   "turn_id": "torn_4d508f0f-6dcb-44a1-bdb9-8009d692e276",
   "actor": "codex",
   "scope": "code",
-  "state": "planned",
-  "revision": 20,
+  "state": "closed",
+  "revision": 21,
   "createdAt": "2026-09-22T15:18:31.020Z",
-  "updatedAt": "2026-09-22T15:38:01.398Z",
+  "updatedAt": "2026-10-14T02:50:18.022Z",
   "expiresAt": "2026-09-23T15:18:31.020Z",
-  "contractHash": "e5e61083181dd3e8141afa6c6c51d7a705f20ee1dcc6a3e59fde553c1e54caa1",
+  "contractHash": "6a1959a7c85620476e8cb465609d6b2e56cbcc2c380e5faf3c14267bee1163fa",
   "initial": {
     "src/.DS_Store": "1d5d20f9d6acbb47fb89efa0be0546e487ef310833c1acdf528bffd5eff6b34c",
     "src/ARCHITECTURE.md": "8dc1702cb19b085f1baf352c6db44f266c8c0969037319dc07ec0b7b3d09f052",
@@ -887,7 +887,15 @@
     "file": "_wiki_de_poble/04_escriptori/260922_0643_pla_implementacio_cervell.md",
     "hash": "bf4a9fdce7e4474bcae78d27ea4a7dc00b8b7f32c5a8b60c584f96602e3395bc"
   },
-  "verification": null,
+  "verification": {
+    "at": "2026-10-14T02:50:18.022Z",
+    "files": {
+      "_wiki_de_poble/04_escriptori/02_investigacio_ia/260922_0500_informe_idees_noves_skills.md": "53e8a5dba8c99b3ce34c94986ae92cb7b7912057889921a41aa7b7d1c88f5645"
+    },
+    "checks": [
+      "expire-close"
+    ]
+  },
   "history": [
     {
       "state": "opened",
@@ -973,6 +981,12 @@
       "state": "planned",
       "action": "context",
       "at": "2026-09-22T15:38:01.398Z"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "planned",
+      "at": "2026-10-14T02:50:18.022Z"
     }
   ],
   "humanBaseline": {

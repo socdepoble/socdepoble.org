@@ -13,6 +13,11 @@ triggers_on:
   - al·lucinació
   - fatiga
 core: true
+contracte.llig:
+  - AGENTS.md
+  - _wiki_de_poble/04_escriptori
+contracte.escriu:
+  - _wiki_de_poble/04_escriptori
 ---
 
 # 🛑 SKILL: Fusible Mental (Core Context Panic)

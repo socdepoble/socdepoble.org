@@ -3,12 +3,12 @@
   "turn_id": "torn_55aca329-9a08-4046-87d4-c82e02ae7536",
   "actor": "claude-opus-5.5",
   "scope": "code",
-  "state": "context_loaded",
-  "revision": 3,
+  "state": "closed",
+  "revision": 4,
   "createdAt": "2026-09-28T17:38:42.075Z",
-  "updatedAt": "2026-09-28T23:15:38.558Z",
+  "updatedAt": "2026-10-14T02:50:18.022Z",
   "expiresAt": "2026-09-29T17:38:42.076Z",
-  "contractHash": "b96dc21e8d1f65cff77fba9a5116b278cc83e67a21078783b7620ebc4cb7b599",
+  "contractHash": "6a1959a7c85620476e8cb465609d6b2e56cbcc2c380e5faf3c14267bee1163fa",
   "humanInventoryVersion": 1,
   "initial": {
     "src/.DS_Store": "1d5d20f9d6acbb47fb89efa0be0546e487ef310833c1acdf528bffd5eff6b34c",
@@ -1377,6 +1377,12 @@
         "_wiki_de_poble/04_escriptori/260928_2355_auditoria_claude.md"
       ],
       "at": "2026-09-28T23:15:38.558Z"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "context_loaded",
+      "at": "2026-10-14T02:50:18.022Z"
     }
   ],
   "ownedPaths": [

@@ -3,12 +3,12 @@
   "turn_id": "torn_c61b8383-89c7-4543-b80a-5e4db7c3df4c",
   "actor": "claude",
   "scope": "documents",
-  "state": "context_loaded",
-  "revision": 10,
+  "state": "closed",
+  "revision": 11,
   "createdAt": "2026-10-11T11:35:38.853Z",
-  "updatedAt": "2026-10-11T22:38:01.768Z",
+  "updatedAt": "2026-10-14T02:50:18.022Z",
   "expiresAt": "2026-10-12T11:35:38.854Z",
-  "contractHash": "2b09edd15b17e4d3f835b8943e7a7eea42ec351afc53905f67410c7f9fb32949",
+  "contractHash": "6a1959a7c85620476e8cb465609d6b2e56cbcc2c380e5faf3c14267bee1163fa",
   "humanInventoryVersion": 1,
   "initial": {
     "src/ARCHITECTURE.md": "8dc1702cb19b085f1baf352c6db44f266c8c0969037319dc07ec0b7b3d09f052",
@@ -3716,7 +3716,15 @@
     }
   },
   "plan": null,
-  "verification": null,
+  "verification": {
+    "at": "2026-10-14T02:50:18.022Z",
+    "files": {
+      "_wiki_de_poble/90_arxiu_historic/261011_1400_auditoria_claude_ficiv.md": "58dfc9dc822911095266dca029715ef0168a03ff35a255fa2afa5d44aafc52de"
+    },
+    "checks": [
+      "expire-close"
+    ]
+  },
   "history": [
     {
       "state": "opened",
@@ -3778,6 +3786,12 @@
       "file": "_wiki_de_poble/04_escriptori/261012_0040_auditoria_claude_informe_complet_ficiv.md",
       "at": "2026-10-11T22:38:01.768Z",
       "hash": "69f2716b162a320d5717bb4a1909cd231563b72e1910bc0be3554ecd877c0b2c"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "context_loaded",
+      "at": "2026-10-14T02:50:18.022Z"
     }
   ],
   "ownedPaths": [

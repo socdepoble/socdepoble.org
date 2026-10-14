@@ -3,12 +3,12 @@
   "turn_id": "torn_ea2e07b8-7e27-4ad5-8bd1-13748bcb2768",
   "actor": "claude",
   "scope": "documents",
-  "state": "context_loaded",
-  "revision": 3,
+  "state": "closed",
+  "revision": 4,
   "createdAt": "2026-10-06T09:50:26.909Z",
-  "updatedAt": "2026-10-06T11:39:12.905Z",
+  "updatedAt": "2026-10-14T02:50:18.022Z",
   "expiresAt": "2026-10-07T09:50:26.910Z",
-  "contractHash": "2b09edd15b17e4d3f835b8943e7a7eea42ec351afc53905f67410c7f9fb32949",
+  "contractHash": "6a1959a7c85620476e8cb465609d6b2e56cbcc2c380e5faf3c14267bee1163fa",
   "humanInventoryVersion": 1,
   "initial": {
     "src/.DS_Store": "1d5d20f9d6acbb47fb89efa0be0546e487ef310833c1acdf528bffd5eff6b34c",
@@ -2978,6 +2978,12 @@
       "file": "_wiki_de_poble/04_escriptori/261006_1150_auditoria_claude.md",
       "at": "2026-10-06T11:39:12.905Z",
       "hash": "820ba73f93bb8604f8295cde63d642cb7912927d8b4aee71920908a366e4df1c"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "context_loaded",
+      "at": "2026-10-14T02:50:18.022Z"
     }
   ]
 }

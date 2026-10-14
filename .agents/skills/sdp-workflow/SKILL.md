@@ -13,6 +13,10 @@ triggers_on:
 core: true
 contracte.llig:
   - .agents/skills/wiki-busca-skills/SKILL.md
+  - .agents/skills/sdp-universal-page/SKILL.md
+  - AGENTS.md
+contracte.escriu:
+  - _wiki_de_poble/04_escriptori
 ---
 # ⚙️ Workflow de Sóc de Poble (Alta Definició)
 

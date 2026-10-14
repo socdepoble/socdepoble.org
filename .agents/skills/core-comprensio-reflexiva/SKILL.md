@@ -12,6 +12,12 @@ triggers_on:
   - impulsivitat
   - comprensió reflexiva
   - entendre la petició
+contracte.llig:
+  - AGENTS.md
+  - _wiki_de_poble/01_ser/02_genotip.md
+  - _wiki_de_poble/04_escriptori
+contracte.escriu:
+  - _wiki_de_poble/04_escriptori
 ---
 
 # Tractor de Comprensió Reflexiva
@@ -32,3 +38,6 @@ Abans de llançar-te a escriure codi, crear fitxers o respondre precipitadament 
 5. **Format Zero Fricció (Regla del Copiar-Enganxar):** Assegura't de respectar els hàbits diaris que estalvien fricció al Mestre. **Exemple fonamental:** Si el Mestre et demana text per a copiar i enganxar en altre xat, s'ha de donar sempre dins d'un bloc de codi Markdown (```` ```markdown ````), sense excepcions, i mai encadenat en text pla.
 
 No actues mai per pulsió. Reflexiona, entén la necessitat subjacent i executa de forma quirúrgica.
+
+## Vincles
+- [[00_INDEX_SKILLS]]

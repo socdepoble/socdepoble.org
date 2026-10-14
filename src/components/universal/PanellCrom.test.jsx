@@ -2,8 +2,16 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { MISSATGE_PERSONALITZACIO } from '../../data/errorsBackend.js';
 
-const sessio = vi.hoisted(() => ({ rol: null }));
-vi.mock('../../app/contexts/SessionContext', () => ({ useSession: () => ({ rol: sessio.rol }) }));
+const sessio = vi.hoisted(() => ({ rol: null, senseProveidor: false }));
+/* Prompt 261014_0400 (ordre del Mestre) · El contracte de veres de
+   SessionContext.jsx: sense proveïdor, useSession llança i l'opcional torna null. */
+vi.mock('../../app/contexts/SessionContext', () => ({
+  useSession: () => {
+    if (sessio.senseProveidor) throw new Error('useSession ha de ser usat dins de SessionProvider');
+    return { rol: sessio.rol };
+  },
+  useSessioOpcional: () => (sessio.senseProveidor ? null : { rol: sessio.rol })
+}));
 /* Onada 11 (261010; prompt 261010_1730, tasca 2) · El port i el contingut core
    que «Desar» necessita; sense la capacitat, el panell és el d'abans. */
 const port = vi.hoisted(() => ({ capacitats: new Set(), desa: vi.fn() }));
@@ -20,6 +28,7 @@ import { BotoCrom, PanellCrom } from './PanellCrom.jsx';
 // en eixe mode perquè el forat no puga tornar sense que ho notem.
 beforeEach(() => {
   vi.stubEnv('MODE', 'development');
+  sessio.senseProveidor = false;
   port.capacitats = new Set();
   port.desa.mockReset().mockResolvedValue({ clau: 'estil', payload: {}, versio: 1 });
   core.valor = { personalitzacio: null, refresh: vi.fn() };
@@ -36,6 +45,19 @@ test('superadmin: la roda del crom es mostra', () => {
   sessio.rol = 'superadmin';
   render(<BotoCrom />);
   expect(screen.getByRole('button', { name: 'Crom del sistema' })).toBeTruthy();
+});
+
+/* Prompt 261014_0400 (ordre del Mestre) · BotoCrom és fill de la TopBar (App.jsx):
+   sense SessionProvider (una peça muntada sola, o el HMR de desenvolupament) no
+   pinta res i no llança. El rol simulat és superadmin a posta: el que amaga la
+   roda és l'absència de proveïdor, no el rol. */
+test('sense SessionProvider la roda no es pinta i no llança', () => {
+  sessio.senseProveidor = true;
+  sessio.rol = 'superadmin';
+  let vista;
+  expect(() => { vista = render(<BotoCrom />); }).not.toThrow();
+  expect(screen.queryByRole('button', { name: 'Crom del sistema' })).toBeNull();
+  expect(vista.container.innerHTML).toBe('');
 });
 
 function muntaPanell() {

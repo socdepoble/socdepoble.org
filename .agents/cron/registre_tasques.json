@@ -22,6 +22,7 @@
       "fusible": {
         "max_ko_consecutius": 2
       },
+      "script": "scripts/immunitari/plaquetes.mjs",
       "llancador": { "tipus": "tasca", "tasca": "plaquetes-diagnostic" }
     },
     {
@@ -33,6 +34,7 @@
       "fusible": {
         "max_ko_consecutius": 2
       },
+      "script": "scripts/immunitari/plaquetes.mjs",
       "llancador": { "tipus": "tasca", "tasca": "plaquetes-diagnostic" }
     },
     {
@@ -44,6 +46,7 @@
       "fusible": {
         "max_ko_consecutius": 2
       },
+      "script": "scripts/immunitari/plaquetes.mjs",
       "llancador": { "tipus": "tasca", "tasca": "plaquetes-diagnostic" }
     }
   ],

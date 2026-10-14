@@ -3,12 +3,12 @@
   "turn_id": "torn_781e03ba-49f0-49af-92de-0ff87a9e29d0",
   "actor": "MarIA",
   "scope": "documents",
-  "state": "context_loaded",
-  "revision": 1,
+  "state": "closed",
+  "revision": 2,
   "createdAt": "2026-10-01T13:37:01.500Z",
-  "updatedAt": "2026-10-01T13:37:11.904Z",
+  "updatedAt": "2026-10-14T02:50:18.022Z",
   "expiresAt": "2026-10-02T13:37:01.502Z",
-  "contractHash": "5503c6dc29a6ce8c6708d7b81f7bd79546d13d574467174b95aae4265e1b0d5e",
+  "contractHash": "6a1959a7c85620476e8cb465609d6b2e56cbcc2c380e5faf3c14267bee1163fa",
   "humanInventoryVersion": 1,
   "initial": {
     "src/.DS_Store": "1d5d20f9d6acbb47fb89efa0be0546e487ef310833c1acdf528bffd5eff6b34c",
@@ -1817,6 +1817,12 @@
       "state": "context_loaded",
       "action": "context",
       "at": "2026-10-01T13:37:11.904Z"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "context_loaded",
+      "at": "2026-10-14T02:50:18.022Z"
     }
   ]
 }

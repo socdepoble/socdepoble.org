@@ -8,6 +8,11 @@ triggers_on:
   - neteja de l'arrel
   - fitxers solts a l'arrel
   - neteja_brossa_arrel
+contracte.llig:
+  - _wiki_de_poble/02_saber/doc_governanca.md
+  - _wiki_de_poble/04_escriptori
+contracte.escriu:
+  - _wiki_de_poble/04_escriptori
 ---
 # Tractor de Neteja d'Arrels
 

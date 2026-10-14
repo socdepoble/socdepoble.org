@@ -12,6 +12,11 @@ triggers_on:
   - tècniques d'investigació
   - investigar el codi
   - cacera de bugs
+contracte.llig:
+  - AGENTS.md
+  - _wiki_de_poble/00_index.md
+contracte.escriu:
+  - _wiki_de_poble/04_escriptori
 ---
 
 # Tècniques d'Investigació i Autòpsia
@@ -29,3 +34,6 @@ Quan hi ha un error o una discrepància (com ara un tractor que falla constantme
 4. **Sentència i Solució:** Identifica el bloqueig exacte a nivell de codi, demostra-ho citant els números de línia, i proposa la solució tècnica estructural que calca la realitat a la teoria (o redissenya la teoria si aquesta és mecànicament inviable).
 
 Aquesta tècnica és l'antídot contra l'estancament: evita que el sistema caiga en la frustració d'intentar complir una regla humana (teòrica) que està bloquejada per una regla de màquina (codi).
+
+## Vincles
+- [[00_INDEX_SKILLS]]

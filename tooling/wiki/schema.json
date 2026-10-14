@@ -151,6 +151,15 @@
         "pattern": "^(?!.*90_arxiu_historic)\\S+$"
       },
       "uniqueItems": true
+    },
+    "contracte.escriu": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "pattern": "^(?!.*90_arxiu_historic)\\S+$"
+      },
+      "uniqueItems": true
     }
   }
 }

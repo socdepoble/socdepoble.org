@@ -3,12 +3,12 @@
   "turn_id": "torn_ddd7a133-b647-4153-830e-aa31d09b5bc1",
   "actor": "claude-opus-5.5",
   "scope": "code",
-  "state": "planned",
-  "revision": 7,
+  "state": "closed",
+  "revision": 8,
   "createdAt": "2026-09-30T19:42:47.759Z",
-  "updatedAt": "2026-10-01T00:37:57.238Z",
+  "updatedAt": "2026-10-14T02:50:18.022Z",
   "expiresAt": "2026-10-01T19:42:47.759Z",
-  "contractHash": "5503c6dc29a6ce8c6708d7b81f7bd79546d13d574467174b95aae4265e1b0d5e",
+  "contractHash": "6a1959a7c85620476e8cb465609d6b2e56cbcc2c380e5faf3c14267bee1163fa",
   "humanInventoryVersion": 1,
   "initial": {
     "src/.DS_Store": "1d5d20f9d6acbb47fb89efa0be0546e487ef310833c1acdf528bffd5eff6b34c",
@@ -1684,6 +1684,12 @@
       "state": "planned",
       "action": "context",
       "at": "2026-10-01T00:37:57.238Z"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "planned",
+      "at": "2026-10-14T02:50:18.022Z"
     }
   ]
 }

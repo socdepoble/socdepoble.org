@@ -20,6 +20,7 @@ import { totsElsMoviments } from './c43.js';
 import { parseCsv } from './csv.js';
 import { comparaDates, esDataValida, formatData, parseData } from './dates.js';
 import { parseImport } from './diners.js';
+import { llegeixExtracteCsv } from './extracteCsv.js';
 
 /* Noms de columna (sense accents, espais ni punts) → camp del moviment. */
 const COLUMNES = new Map(Object.entries({
@@ -164,3 +165,42 @@ export function fusionaMoviments(c43, csv) {
   });
   return { moviments, senseParella: { c43: c43SenseParella, csv: delCsv.filter((fila) => !aparellades.has(fila)) } };
 }
+
+/**
+ * Llig qualsevol extracte bancari o de targeta en CSV (Sabadell, BBVA,
+ * CaixaBank, Cajamar, targetes de crèdit i el full clàssic del banc).
+ * Primer prova el lector estricte (`llegeixMovimentsCsv`, que preserva els
+ * conceptes multilínia quan la capçalera és la clàssica i el signe ja ve
+ * donat); si falta capçalera, hi ha preàmbul, columnes de càrrec/abonament,
+ * coma decimal amb milers o gir de signe per saldo/targeta, delega en el
+ * lector tolerant (`llegeixExtracteCsv`).
+ * @param {string} text
+ * @param {{ pista?: string }} [opcions]
+ * @returns {{ moviments: object[], avisos: object[], format: object|null, origen: 'moviments'|'extracte' }}
+ */
+export function llegeixQualsevolCsvBanc(text, opcions = {}) {
+  const estricte = llegeixMovimentsCsv(text);
+  if (estricte.avisos.some((a) => a.codi === 'CSV_BUIT')) {
+    return { moviments: [], avisos: estricte.avisos, format: null, origen: 'moviments' };
+  }
+  const tolerant = llegeixExtracteCsv(text, opcions);
+  const capcaleraEstricte = !estricte.avisos.some((a) => a.codi === 'CAPCALERA');
+  const validsEstricte = estricte.moviments.filter((m) => esDataValida(m.dataOperacio) && esDataValida(m.dataValor) && m.centims !== null).length;
+  const necessitaTolerant = !capcaleraEstricte
+    || validsEstricte === 0
+    || tolerant.format?.signe === 'girat'
+    || (tolerant.format?.targeta === true && estricte.moviments.every((m) => !m.comerc))
+    || (estricte.avisos.length > 0 && tolerant.moviments.length > validsEstricte);
+
+  if (!necessitaTolerant) {
+    return { moviments: estricte.moviments, avisos: estricte.avisos, format: tolerant.format, origen: 'moviments' };
+  }
+  if (tolerant.moviments.length > 0 || tolerant.format !== null) {
+    return { moviments: tolerant.moviments, avisos: tolerant.avisos, format: tolerant.format, origen: 'extracte' };
+  }
+  if (estricte.moviments.length > 0) {
+    return { moviments: estricte.moviments, avisos: estricte.avisos, format: null, origen: 'moviments' };
+  }
+  return { moviments: [], avisos: tolerant.avisos, format: null, origen: 'extracte' };
+}
+

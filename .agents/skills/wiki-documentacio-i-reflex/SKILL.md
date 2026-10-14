@@ -13,6 +13,14 @@ triggers_on:
   - petorreta
   - crear prompt
   - abans de començar
+contracte.llig:
+  - _wiki_de_poble/00_index.md
+  - _wiki_de_poble/02_saber/doc_governanca.md
+  - _wiki_de_poble/03_actuar/plantilles/prompt_consell.md
+  - _wiki_de_poble/03_actuar/plantilles/prompt_local.md
+contracte.escriu:
+  - _wiki_de_poble/04_escriptori
+  - _wiki_de_poble/10_actes
 ---
 # Acte Reflex i Procés d'Auditories (Antigament "Petorretes")
 

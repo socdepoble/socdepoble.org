@@ -5,6 +5,11 @@ type: skill
 status: actiu
 triggers_on: ["inici de sessió", "tancament de sessió", "fatiga", "nanochat"]
 description: Tractor cognitiu per mesurar el temps invertit, l'esforç i la fatiga humana del Mestre, lligant nanochats en jornades reals.
+contracte.llig:
+  - .agents/protocolledge.json
+  - _wiki_de_poble/04_escriptori
+contracte.escriu:
+  - _wiki_de_poble/04_escriptori
 ---
 
 # SKILL: Telemetria Humana i Tractor Cognitiu

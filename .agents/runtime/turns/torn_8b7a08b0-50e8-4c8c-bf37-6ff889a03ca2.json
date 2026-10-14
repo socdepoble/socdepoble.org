@@ -3,12 +3,12 @@
   "turn_id": "torn_8b7a08b0-50e8-4c8c-bf37-6ff889a03ca2",
   "actor": "agent-local",
   "scope": "code",
-  "state": "opened",
-  "revision": 0,
+  "state": "closed",
+  "revision": 1,
   "createdAt": "2026-09-29T11:22:27.714Z",
-  "updatedAt": "2026-09-29T11:22:27.714Z",
+  "updatedAt": "2026-10-14T02:50:18.022Z",
   "expiresAt": "2026-09-30T11:22:27.714Z",
-  "contractHash": "b96dc21e8d1f65cff77fba9a5116b278cc83e67a21078783b7620ebc4cb7b599",
+  "contractHash": "6a1959a7c85620476e8cb465609d6b2e56cbcc2c380e5faf3c14267bee1163fa",
   "humanInventoryVersion": 1,
   "initial": {
     "src/.DS_Store": "1d5d20f9d6acbb47fb89efa0be0546e487ef310833c1acdf528bffd5eff6b34c",
@@ -1397,6 +1397,12 @@
       "state": "opened",
       "action": "open",
       "at": "2026-09-29T11:22:27.714Z"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "opened",
+      "at": "2026-10-14T02:50:18.022Z"
     }
   ]
 }

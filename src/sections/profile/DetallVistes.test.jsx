@@ -11,11 +11,15 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest';
    les peces de l'app que la targeta no necessita. Dades sintètiques.
    ═══════════════════════════════════════════════════════════════════ */
 
-const m = vi.hoisted(() => ({ perfil: null, pagina: null, desament: null }));
+const m = vi.hoisted(() => ({ perfil: null, pagina: null, desament: null, resolts: [] }));
 vi.mock('./PerfilContext.jsx', () => ({ usePerfil: () => m.perfil }));
 vi.mock('../../data/autodesament/useAutodesament.js', () => ({ useAutodesament: (ref) => m.desament(ref) }));
+/* Revisió del prompt 261014_0400 · `resolts`: el que s'ha demanat al port. */
 vi.mock('../../hooks/useResolvedAsset.js', () => ({
-  useResolvedAsset: (ref) => (String(ref || '').startsWith('sdp-media://') ? 'blob:avatar-resolt' : ref),
+  useResolvedAsset: (ref) => {
+    m.resolts.push(ref);
+    return String(ref || '').startsWith('sdp-media://') ? 'blob:avatar-resolt' : ref;
+  },
   useResolvedAssetState: (ref) => ({ url: ref, status: ref ? 'ready' : 'idle', error: null, isLoading: false, retry: () => {}, cancel: () => {} }),
 }));
 vi.mock('../../app/contexts/IdentitatContext.jsx', () => ({ useIdentitat: () => ({ actorId: null, refresh: vi.fn() }) }));
@@ -50,6 +54,9 @@ vi.mock('../../components/universal/UniversalPage', () => ({
 
 import { DetallVistes } from './DetallVistes.jsx';
 import { AVISOS_TARGETA_VIVA } from '../../components/universal/TargetaViva.jsx';
+import { DEFAULT_AUTHOR } from '../../components/universal/UniversalUtils.js';
+import { ENTITAT_PILOT_ID, ENTITAT_PILOT_SLUG } from '../../data/identitatsSeed.js';
+import { RUTA_PERFIL_PROJECTE } from '../../config/navigation.js';
 
 const NET = Object.freeze({ camps: Object.freeze({}), errors: Object.freeze({}), estat: 'net', problema: null, persistent: true });
 const AUTODESAMENT = Object.freeze({ ambit: 'ambit-A', context: { tenantId: '00000000-0000-4000-8000-000000000000' } });
@@ -65,6 +72,7 @@ const forn = {
 
 beforeEach(() => {
   m.pagina = null;
+  m.resolts = [];
   m.desament = vi.fn(() => NET);
   m.perfil = { identitats: [jo, forn], autodesament: AUTODESAMENT };
 });
@@ -159,6 +167,79 @@ test('una organització: el seu poble o cap (mai el de la persona), la seua fitx
   cleanup();
   render(<DetallVistes identitat={{ ...forn, dades: { ...forn.dades, town_name: 'Alcoi' } }} />);
   expect(m.pagina.topBarData.authorLocation).toBe('Alcoi');
+});
+
+/* Prompt 261014_0400 (ordre del Mestre, tasca 4: «Quan l'usuari actua com a
+   Sóc de Poble, la barra taronja ha de carregar automàticament l'autoria
+   oficial», el PNG verd, «evitant en qualsevol cas la silueta negra») · «Les
+   vistes» diuen el mateix que l'editor (avatarDeLaBarraDeFitxa, de
+   fitxaDePerfil.js): la fitxa del pilot, pel slug declarat o per l'id de la
+   llavor, porta el PNG verd a la barra taronja i a la «Vista targeta», siga
+   quin siga el logo de la fila. El nom, el poble i l'enllaç no canvien. */
+const avatarDeLaCarta = () => targeta().querySelector('.sp-card-author .sp-card-avatar');
+
+test('prompt 261014_0400 · la fitxa del pilot: la barra taronja i la «Vista targeta» porten el PNG verd oficial, mai la silueta ni el logo de la fila', () => {
+  const uuid = '5b0c1d2e-3f40-4a51-8b62-7c83d94ea5f6';
+  expect(DEFAULT_AUTHOR.avatarUrl).toBe('/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png');
+  const pilot = { ...forn, id: uuid, nom: 'Sóc de Poble', dades: { ...forn.dades, name: 'Sóc de Poble', slug: ENTITAT_PILOT_SLUG, town_name: 'Alcoi' } };
+  const fitxes = [
+    { ...pilot, avatar: null },
+    { ...pilot, avatar: '' },
+    { ...pilot, avatar: 'sdp-media://organitzacions/x.png' },
+    { ...pilot, avatar: '/assets/x.webp', dades: { ...pilot.dades, role: 'member' } },
+    { ...forn, id: ENTITAT_PILOT_ID, nom: 'Sóc de Poble', avatar: null },
+  ];
+  for (const identitat of fitxes) {
+    render(<DetallVistes identitat={identitat} />);
+    expect(m.pagina.topBarData).toEqual({
+      authorName: 'Sóc de Poble',
+      authorAvatar: DEFAULT_AUTHOR.avatarUrl,
+      authorLocation: identitat.dades.town_name || '',
+      authorHref: RUTA_PERFIL_PROJECTE,
+    });
+    const avatar = avatarDeLaCarta();
+    expect(avatar.tagName).toBe('IMG');
+    expect(avatar.getAttribute('src')).toBe(DEFAULT_AUTHOR.avatarUrl);
+    expect(targeta().querySelector('.sp-card-avatar--fallback')).toBeNull();
+    expect(targeta().querySelector('.sp-card-author-name').textContent).toBe('Sóc de Poble');
+    cleanup();
+  }
+});
+
+test('prompt 261014_0400 · una altra organització (també la que es diu «Sóc de Poble») i una persona no canvien', () => {
+  render(<DetallVistes identitat={forn} />);
+  expect(m.pagina.topBarData.authorAvatar).toBe('/assets/forn.webp');
+  expect(avatarDeLaCarta().getAttribute('src')).toBe('/assets/forn.webp');
+  cleanup();
+  const homonima = { ...forn, id: '5b0c1d2e-3f40-4a51-8b62-7c83d94ea5f6', nom: 'Sóc de Poble', avatar: null, dades: { ...forn.dades, slug: 'soc-de-poble-de-relleu' } };
+  render(<DetallVistes identitat={homonima} />);
+  expect(m.pagina.topBarData.authorAvatar).toBe('');
+  expect(avatarDeLaCarta().classList.contains('sp-card-avatar--fallback')).toBe(true);
+  cleanup();
+  render(<DetallVistes identitat={{ ...jo, avatar: '/assets/pep.webp', dades: { ...jo.dades, slug: ENTITAT_PILOT_SLUG } }} />);
+  expect(m.pagina.topBarData.authorAvatar).toBe('/assets/pep.webp');
+  expect(avatarDeLaCarta().getAttribute('src')).toBe('/assets/pep.webp');
+});
+
+/* Revisió del prompt 261014_0400 · La fitxa del pilot no pinta el logo de
+   la fila: no se'n demana cap al port (com la fitxa pública, logoCru). Una
+   altra organització amb una foto pujada continua resolent-la. */
+test('prompt 261014_0400 · la fitxa del pilot no demana al port el logo de la fila; una altra organització, sí', () => {
+  const logo = 'sdp-media://organitzacions/x.png';
+  const pilots = [
+    { ...forn, id: '5b0c1d2e-3f40-4a51-8b62-7c83d94ea5f6', nom: 'Sóc de Poble', avatar: logo, dades: { ...forn.dades, slug: ENTITAT_PILOT_SLUG } },
+    { ...forn, id: ENTITAT_PILOT_ID, nom: 'Sóc de Poble', avatar: logo },
+  ];
+  for (const identitat of pilots) {
+    render(<DetallVistes identitat={identitat} />);
+    expect(m.pagina.topBarData.authorAvatar).toBe(DEFAULT_AUTHOR.avatarUrl);
+    expect(m.resolts).not.toContain(logo);
+    cleanup();
+    m.resolts = [];
+  }
+  render(<DetallVistes identitat={{ ...forn, avatar: logo }} />);
+  expect(m.resolts).toContain(logo);
+  expect(m.pagina.topBarData.authorAvatar).toBe('blob:avatar-resolt');
 });
 
 test('qui només n’és membre no llig la cua (com l’editor en lectura); sense identitat, res', () => {

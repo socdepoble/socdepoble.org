@@ -3,12 +3,12 @@
   "turn_id": "torn_19f918b3-dce9-44cb-a810-0ff3936533b3",
   "actor": "Claude",
   "scope": "documents",
-  "state": "context_loaded",
-  "revision": 2,
+  "state": "closed",
+  "revision": 3,
   "createdAt": "2026-10-04T09:10:44.360Z",
-  "updatedAt": "2026-10-04T12:50:54.012Z",
+  "updatedAt": "2026-10-14T02:50:18.022Z",
   "expiresAt": "2026-10-05T09:10:44.362Z",
-  "contractHash": "5503c6dc29a6ce8c6708d7b81f7bd79546d13d574467174b95aae4265e1b0d5e",
+  "contractHash": "6a1959a7c85620476e8cb465609d6b2e56cbcc2c380e5faf3c14267bee1163fa",
   "humanInventoryVersion": 1,
   "initial": {
     "src/.DS_Store": "1d5d20f9d6acbb47fb89efa0be0546e487ef310833c1acdf528bffd5eff6b34c",
@@ -2615,7 +2615,15 @@
     }
   },
   "plan": null,
-  "verification": null,
+  "verification": {
+    "at": "2026-10-14T02:50:18.022Z",
+    "files": {
+      "_wiki_de_poble/90_arxiu_historic/261004_1111_prompt_local_claude_urgent_pull_to_refresh.md": "1b72634ea0446992ec634b29392404a27658e58cae451f485eed84ac90d258ec"
+    },
+    "checks": [
+      "expire-close"
+    ]
+  },
   "history": [
     {
       "state": "opened",
@@ -2631,6 +2639,12 @@
       "state": "context_loaded",
       "action": "handoff",
       "at": "2026-10-04T12:50:54.012Z"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "context_loaded",
+      "at": "2026-10-14T02:50:18.022Z"
     }
   ],
   "ownedPaths": [

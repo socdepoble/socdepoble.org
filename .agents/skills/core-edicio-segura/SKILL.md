@@ -6,6 +6,11 @@ status: actiu
 tags: [govern]
 triggers_on:
   - edicio de components React
+contracte.llig:
+  - AGENTS.md
+  - package.json
+contracte.escriu:
+  - _wiki_de_poble/04_escriptori
 ---
 
 # LLEI DEL TRACTOR D'EDICIÓ SEGURA (FUSIBLE VISUAL)
@@ -22,3 +27,6 @@ Aquesta skill es carrega com a Tractor per evitar la repetició de la "Ceguera p
 
 ## Si es trenca l'Error Boundary...
 Quan un component React cau en un error de hooks fora de provider, el `SlotErrorBoundary` o el Catch Boundary superior ocultaran l'element. **Això equival a esborrar el codi dels ulls de l'usuari**, fet que pot fer-li creure que ho has fet a propòsit. Atura't, entén l'error del log i repara l'entorn de test/browser.
+
+## Vincles
+- [[00_INDEX_SKILLS]]
