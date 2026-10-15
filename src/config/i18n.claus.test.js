@@ -29,7 +29,12 @@ import fontHistoric from '../sections/mur/usePublicacionsDeLActor.js?raw';
 import fontPublicacionsActor from '../sections/mur/PublicacionsDeLActor.jsx?raw';
 /* B03 (revisió del 261008) · La reserva valenciana de SDP-XAT-016 viu a
    l'adaptador del xat (MISSATGES_SDP_HUMANS), que no coneix la llengua. */
-import fontAdaptadorXat from '../data/supabase/xat.js?raw';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __dirI18n = path.dirname(fileURLToPath(import.meta.url));
+const fontAdaptadorXat = fs.readFileSync(path.resolve(__dirI18n, '../data/supabase/xat.js'), 'utf8');
 /* Onada 6 (pla 261009_0245, ítem 5) · Els textos del panell «Gent de …» de la
    pàgina d'un poble. */
 import fontTextosDelPoble from '../sections/pobles/usePublicacionsDelPoble.js?raw';
@@ -629,6 +634,30 @@ const CLAUS = {
   },
   'section.cervell.obrir': {
     ca: 'Obrir el Cervell', es: 'Abrir el Cerebro', en: 'Open the Brain', eu: 'Ireki Garuna', gl: 'Abrir o Cerebro'
+  },
+  /* Pla 261014_1450 (front C) · El peu del rail amb una entitat activa i la
+     línia del compositor que diu qui signa. Les d'eu i gl són proposta a
+     revisar per algú que les parle. */
+  'section.xat.ajustos.obriComEntitat': {
+    ca: 'Tu: ajustos (actues com a {nom})',
+    es: 'Tú: ajustes (actúas como {nom})',
+    en: 'You: settings (acting as {nom})',
+    eu: 'Zu: ezarpenak ({nom} gisa ari zara)',
+    gl: 'Ti: axustes (actúas como {nom})'
+  },
+  'section.xat.signa.entitat': {
+    ca: 'Escrius com a {nom}.',
+    es: 'Escribes como {nom}.',
+    en: 'You are writing as {nom}.',
+    eu: '{nom} gisa idazten ari zara.',
+    gl: 'Escribes como {nom}.'
+  },
+  'section.xat.signa.persona': {
+    ca: 'Escrius com a tu: en esta conversa no parles en nom de {entitat}.',
+    es: 'Escribes como tú: en esta conversación no hablas en nombre de {entitat}.',
+    en: 'You are writing as yourself: in this conversation you do not speak for {entitat}.',
+    eu: 'Zeure izenean idazten ari zara: elkarrizketa honetan ez zara {entitat}-(r)en izenean ari.',
+    gl: 'Escribes como ti: nesta conversa non falas en nome de {entitat}.'
   }
 };
 

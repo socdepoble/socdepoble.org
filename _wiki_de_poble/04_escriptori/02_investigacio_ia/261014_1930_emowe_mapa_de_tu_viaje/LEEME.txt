@@ -1,0 +1,21 @@
+# El mapa de tu viaje con IA
+
+Dos archivos para convertir la carpeta de fotos de un viaje en un mapa interactivo: cada foto en su sitio, agrupadas según lo cerca que mires, con su fecha y hora. Se abre con doble clic, funciona sin internet y tus fotos no salen de tu ordenador.
+
+- **PROMPT_UNIVERSAL.txt**: el encargo completo para tu IA, con todo lo que afiné hasta que el mapa quedó como quería.
+- **plantilla-mapa.html**: la base del mapa, vacía. La IA la copia y la rellena con tus fotos. No la abras esperando ver tu viaje: sola enseña un mapa en blanco.
+
+## Qué necesitas
+
+- **Una carpeta con las fotos del viaje**, tal cual salen del móvil o la cámara, con la ubicación activada al hacerlas. Si las pasas desde el iPhone, comprueba que al compartir no se quita la ubicación.
+- **Un agente que pueda leer esa carpeta y escribir en ella**: Claude Code, Codex o la app de escritorio de Claude con acceso a carpetas. Hace falta un plan de pago (unos 20 € al mes): con un viaje entero, los planes gratis se quedan cortos.
+
+## Cómo hacerlo
+
+1. Copia **PROMPT_UNIVERSAL.txt** y **plantilla-mapa.html** dentro de la carpeta de las fotos (o en una carpeta al lado).
+2. Abre tu agente en esa carpeta y escríbele: «Lee PROMPT_UNIVERSAL.txt y haz el mapa de las fotos de esta carpeta usando plantilla-mapa.html».
+3. Espera: lee el sitio y la hora de cada foto, hace las miniaturas y monta el mapa. Te lo deja en una subcarpeta «Mapa interactivo …».
+4. Abre el HTML de esa subcarpeta con doble clic. Si algo no te gusta, díselo y que lo corrija.
+5. ¿Más fotos del mismo viaje? Ponlas en la carpeta y pídele que actualice el mapa.
+
+Más en emowe.com · Marcos (Emowe)

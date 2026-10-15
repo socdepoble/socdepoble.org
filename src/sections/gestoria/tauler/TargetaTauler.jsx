@@ -20,6 +20,17 @@
  *  · EL PEU, PRIVAT. Compartir mai (una targeta privada no es comparteix),
  *    Comentar no es pinta, i Traduir només avisa: cap xifra no ix cap al
  *    servei de traducció.
+ *    Derogat EN PART per l'ordre del Mestre, 14-10-2026 (prompt 261014_2015,
+ *    punt 5; decisió de les 21:20), sobre D-A (261004) i el MAPA §2.4: la
+ *    barra blava i el peu de la Gestoria porten les accions de sempre
+ *    (Comentar, Compartir i Connectar), però cap no trau res d'este ordinador
+ *    ni fa eixir de la Gestoria (on la lectura dels extractes s'oblidaria): en
+ *    prémer-les, diuen per què (AVISOS_ACCIONS_PRIVADES). A la barra, amb les
+ *    accions inoperatives de PageFrame (barraPrivada, aria-disabled); al peu,
+ *    UniversalCard no les té, i un handler propi avisa (peuPrivat), amb
+ *    l'opt-in `ambAccionsPrivades`. Sense qui avise (onAvis), totes dues fallen
+ *    tancades: les accions apagades, el DOM de sempre (l'Històric, que no ho
+ *    demana, no canvia cap píxel). Connectar del peu continua obrint la pàgina.
  * Les dades de la targeta (títol, xifra, etiquetes) les fa
  * nucli/targetesTauler.js; ací només es pinten.
  */
@@ -41,6 +52,47 @@ export const AVIS_XIFRES_SENSE_TRADUCCIO = 'Les xifres de la Gestoria no es trad
 
 /* Connectar porta a la pàgina de la targeta i no compta res (MAPA §2.4). */
 const SENSE_TELEMETRIA = Object.freeze({ comptar: false });
+
+/**
+ * El que diuen les accions de la barra i del peu de la Gestoria en prémer-les
+ * (ordre del Mestre, 14-10-2026, punt 5): per què no ixen d'este ordinador.
+ * Cap text porta dades: ni xifres, ni comptes, ni el nom del titular.
+ */
+export const AVISOS_ACCIONS_PRIVADES = Object.freeze({
+  comentar: 'A la Gestoria no s’hi comenta: les dades no ixen d’este ordinador. Si vols parlar amb Sóc de Poble, obri el Xat; en eixir de la Gestoria, la lectura dels extractes s’oblida.',
+  compartir: 'Esta pàgina és privada i no es comparteix. El full per a la gestoria es prepara a la secció «Plantilla Gestoria» del Quadre de comandament, després de revisar-lo al Full trimestral.',
+  connectar: 'Esta pàgina és privada: no es connecta al teu Bloc, perquè les xifres només viuen en este ordinador.'
+});
+
+/**
+ * Les accions de la barra blava d'una pàgina de la Gestoria (PaginaApp →
+ * PageFrame): pintades i inoperatives, amb el perquè. Sense onAvis, apagades
+ * (falla tancada: el DOM de sempre).
+ * @param {((text: string) => void)|null} onAvis
+ * @returns {object} les props per a PaginaApp
+ */
+export function barraPrivada(onAvis) {
+  if (typeof onAvis !== 'function') return { showComment: false, showShare: false, showConnect: false };
+  return {
+    accionsInoperatives: true,
+    onClickInoperatiu: (accio) => onAvis(AVISOS_ACCIONS_PRIVADES[accio] ?? AVISOS_ACCIONS_PRIVADES.compartir)
+  };
+}
+
+/**
+ * Comentar i Compartir del peu d'una targeta: UniversalCard no té accions
+ * inoperatives, i un handler propi avisa (com les previsualitzacions que
+ * avisen de useAccions). Sense onAvis, apagades (falla tancada).
+ * @param {((text: string) => void)|null} onAvis
+ * @returns {object} les props per a UniversalCard
+ */
+export function peuPrivat(onAvis) {
+  if (typeof onAvis !== 'function') return { showShare: false, showComment: false };
+  return {
+    onComment: () => onAvis(AVISOS_ACCIONS_PRIVADES.comentar),
+    onShare: () => onAvis(AVISOS_ACCIONS_PRIVADES.compartir)
+  };
+}
 
 /**
  * L'ull de privacitat: un sol control per boina, amb aria-pressed (premut =
@@ -85,9 +137,11 @@ function quadratDe(targeta, mostra) {
  * @param {{ time: string, date: string, dateTime: string }|null} [p.pastilla] la darrera sincronització
  * @param {boolean} [p.visibleInicial] la xifra es veu en pintar-se (l'ull de la closca); per defecte, no
  * @param {(id: string) => void} [p.onObri] obri la pàgina pròpia de la targeta
- * @param {(text: string) => void} [p.onAvis] diu un avís a la persona (Traduir)
+ * @param {(text: string) => void} [p.onAvis] diu un avís a la persona (Traduir i, amb ambAccionsPrivades, Comentar i Compartir)
+ * @param {boolean} [p.ambAccionsPrivades] el peu porta Comentar i Compartir, que només avisen (ordre del Mestre,
+ *   14-10-2026, punt 5); sense, apagats com sempre
  */
-export function TargetaTauler({ targeta, titular, pastilla = null, visibleInicial = false, onObri, onAvis }) {
+export function TargetaTauler({ targeta, titular, pastilla = null, visibleInicial = false, onObri, onAvis, ambAccionsPrivades = false }) {
   const [visible, setVisible] = useState(visibleInicial === true);
   const ambXifra = Boolean(targeta.xifra);
   const obri = () => onObri?.(targeta.id);
@@ -119,8 +173,7 @@ export function TargetaTauler({ targeta, titular, pastilla = null, visibleInicia
       labels={targeta.etiquetes}
       onMainClick={obri}
       hasFooter
-      showShare={false}
-      showComment={false}
+      {...peuPrivat(ambAccionsPrivades === true ? onAvis : null)}
       onTranslate={() => onAvis?.(AVIS_XIFRES_SENSE_TRADUCCIO)}
       onConnect={obri}
       telemetria={SENSE_TELEMETRIA}

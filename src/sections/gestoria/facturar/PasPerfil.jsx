@@ -16,6 +16,10 @@
  * emetre dies que facturava l'eina d'abans). Un .json d'un altre NIF es
  * refusa, i el d'este conserva la data de pas vigent. El magatzem del perfil
  * ho torna a comprovar en desar (PERFIL_FIXAT).
+ * Prompt 261014_1605, front G1 · PODER 5: la «data de pas» es diu «primer dia
+ * que factures ací», i el resum de les dades desades va recollit dins d'un
+ * desplegable perquè la Factura nova quede a dalt. L'avís de l'última acció
+ * en queda fora: es llig encara que el desplegable estiga tancat.
  */
 import { useId, useState } from 'react';
 import { Boto } from '../../../components/PedraSeca/atoms/Boto.jsx';
@@ -87,20 +91,25 @@ export function PasPerfil({ f }) {
     const versio = f.perfil.config;
     return (
       <>
-        <dl className="sdp-gestoria-panell__dades">
-          <div><dt>NIF</dt><dd>{f.config.nif}</dd></div>
-          <div><dt>Nom legal</dt><dd>{f.config.nom}</dd></div>
-          {f.config.nomComercial ? <div><dt>Nom comercial</dt><dd>{f.config.nomComercial}</dd></div> : null}
-          <div><dt>Domicili fiscal</dt><dd>{domiciliDe(f.config)}</dd></div>
-          <div><dt>Data de pas</dt><dd>{dataCurta(f.config.facturacio.dataPas)}</dd></div>
-        </dl>
-        <p className="sdp-gestoria-panell__nota">
-          {`Versió ${versio.versio} del perfil, desada en este ordinador. Les dades no ixen d’ací.`}
-        </p>
+        <details className="sdp-gestoria-panell__documents">
+          <summary>{`Les dades desades (versió ${versio.versio})`}</summary>
+          <div className="sdp-gestoria-panell__bloc">
+            <dl className="sdp-gestoria-panell__dades">
+              <div><dt>NIF</dt><dd>{f.config.nif}</dd></div>
+              <div><dt>Nom legal</dt><dd>{f.config.nom}</dd></div>
+              {f.config.nomComercial ? <div><dt>Nom comercial</dt><dd>{f.config.nomComercial}</dd></div> : null}
+              <div><dt>Domicili fiscal</dt><dd>{domiciliDe(f.config)}</dd></div>
+              <div><dt>Primer dia que factures ací</dt><dd>{dataCurta(f.config.facturacio.dataPas)}</dd></div>
+            </dl>
+            <p className="sdp-gestoria-panell__nota">
+              {`Versió ${versio.versio} del perfil, desada en este ordinador. Les dades no ixen d’ací.`}
+            </p>
+            <div className="sdp-gestoria-panell__accions">
+              <Boto varietat="secundari" onClick={obri}>Canvia les dades de l’empresa</Boto>
+            </div>
+          </div>
+        </details>
         <AvisDeZona avis={f.avis} zona="perfil" onTanca={f.tancaAvis} />
-        <div className="sdp-gestoria-panell__accions">
-          <Boto varietat="secundari" onClick={obri}>Canvia les dades de l’empresa</Boto>
-        </div>
       </>
     );
   }
@@ -117,7 +126,7 @@ export function PasPerfil({ f }) {
       </Camp>
       {importat ? (
         <p className="sdp-gestoria-panell__nota">
-          {`Dades carregades de «${importat}»: revisa-les i desa-les.${fixada ? ' La data de pas no canvia: ja hi ha factures emeses.' : ''}`}
+          {`Dades carregades de «${importat}»: revisa-les i desa-les.${fixada ? ' El primer dia que factures ací no canvia: ja hi ha factures emeses.' : ''}`}
         </p>
       ) : null}
       <GrupCamps llegenda="L’empresa">
@@ -146,9 +155,9 @@ export function PasPerfil({ f }) {
           <CampText value={formulari.provincia} spellCheck={false} onChange={canvia('provincia')} />
         </Camp>
       </GrupCamps>
-      <Camp etiqueta="Data de pas" obligatori
+      <Camp etiqueta="Primer dia que factures ací" obligatori
         ajuda={fixada
-          ? 'Ja hi ha factures emeses des d’este dia: la data de pas no es pot canviar.'
+          ? 'Ja hi ha factures emeses des d’este dia: no es pot canviar.'
           : 'El primer dia que factures amb este programa. Les factures d’abans d’eixe dia les fa l’eina que feies servir.'}>
         <CampText tipus="date" value={formulari.dataPas} readOnly={Boolean(fixada)} onChange={canvia('dataPas')} />
       </Camp>

@@ -29,6 +29,14 @@ export const ENTRADA_FACTURACIO = 'facturacio';
  */
 export const ENTRADA_IDENTITAT = 'identitat';
 
+/**
+ * L'entrada del manifest del Full trimestral, que munta la closca (ordre del
+ * Mestre, 14-10-2026, prompt 261014_2015, punt 3). La closca la coneix com a
+ * ruta (hrefFull): la «Plantilla Gestoria» del Quadre de comandament hi envia
+ * la persona quan encara no hi ha cap full generat.
+ */
+export const ENTRADA_FULL = 'full';
+
 /** L'ítem de la Wiki on s'aproven els tractors (WikiDePobleSection, modulsLocalsActius). */
 export const ITEM_PORTA_TRACTORS = 'tractors_aprovacio';
 

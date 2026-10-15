@@ -45,6 +45,13 @@
  * l'Històric. Hisenda sobre la caixa: amb el total de GES-A5 (13-10-2026,
  * la part a pagar de cada model), el «res a pagar» ja no és el net del 303 i
  * del 130, sinó que cap dels dos surt a pagar.
+ *
+ * Ordre del Mestre, 14-10-2026 (prompt 261014_2015, punts 2 i 5): la Cabina
+ * d'Avió es diu «Quadre de comandament» (només el nom visible, VISTES_TAULER), i
+ * les pàgines de la closca porten a la barra i al peu les accions de sempre,
+ * inoperatives i amb el perquè (BlocTargetes amb `ambAccionsPrivades` i
+ * PaginaTargeta amb `onAvis`). Sense les props, el DOM de sempre: l'Històric no
+ * canvia cap píxel.
  */
 import { useId, useLayoutEffect, useRef, useState } from 'react';
 import { Construction, EyeOff, FileSearch } from 'lucide-react';
@@ -60,7 +67,7 @@ import { Taula } from '../../../components/PedraSeca/organismes/Taula.jsx';
 import { LLEGENDA_ESTIMACIO } from '../impostos/nucli/impostos.js';
 import { BLOCS_TAULER, etiquetaXifra, textAmagat, textXifra } from './nucli/targetesTauler.js';
 import { ACCEPTA_TAULER } from './nucli/tractorTauler.js';
-import { TargetaTauler } from './TargetaTauler.jsx';
+import { TargetaTauler, barraPrivada } from './TargetaTauler.jsx';
 
 /* Com diu la porta l'estat del tractor, quan no està aprovat. */
 const ESTATS_TRACTOR = Object.freeze({
@@ -92,14 +99,19 @@ export function Xifra({ xifra, visible = false }) {
  * Mestre) per l'ordre del Mestre, 13-10-2026 (pla 261013_1405, front E): la
  * Cabina d'Avió va entre les dues, i Targetes continua sent la primera i la de
  * per defecte.
+ * Ordre del Mestre, 14-10-2026 (prompt 261014_2015, punt 2): la Cabina d'Avió
+ * es diu «Quadre de comandament». Només canvia el nom que es veu: el valor
+ * intern continua sent 'cabina' (vistaDelModul, VISTES_DENSES i la vista
+ * triada que es conserva entre mòduls). La «Plantilla Gestoria» (punt 3) no és
+ * una vista més: és l'última secció del Quadre (CabinaAvio.jsx).
  */
 export const VISTES_TAULER = Object.freeze([
   Object.freeze({ valor: 'targetes', text: 'Targetes' }),
-  Object.freeze({ valor: 'cabina', text: 'Cabina d’Avió' }),
+  Object.freeze({ valor: 'cabina', text: 'Quadre de comandament' }),
   Object.freeze({ valor: 'comprimida', text: 'Vista comprimida' })
 ]);
 
-/** Les dues vistes dels Bancs i dels Impostos (ordre del Mestre, 13-10-2026: la Cabina és només del Tauler). */
+/** Les dues vistes dels Bancs i dels Impostos (ordre del Mestre, 13-10-2026: el Quadre de comandament és només del Tauler). */
 export const VISTES_PANELL = Object.freeze([VISTES_TAULER[0], VISTES_TAULER[2]]);
 
 /* Les vistes denses: quan un mòdul no oferix la triada, en mostra una altra de densa abans que les targetes. */
@@ -175,7 +187,9 @@ export function TaulaComprimida({ titol, targetes, visible = false, onObri }) {
  * torna a nàixer amb l'ull de la closca, i l'ull que s'havia obert en una
  * targeta no passa a la lectura següent.
  */
-export function BlocTargetes({ titol, targetes, titular, pastilla, visible, generacio = 0, vista = 'targetes', onObri, onAvis }) {
+export function BlocTargetes({
+  titol, targetes, titular, pastilla, visible, generacio = 0, vista = 'targetes', onObri, onAvis, ambAccionsPrivades = false
+}) {
   const id = useId();
   if (!targetes.length) return null;
   return (
@@ -187,7 +201,7 @@ export function BlocTargetes({ titol, targetes, titular, pastilla, visible, gene
         <div className="sdp-card-grid sdp-gestoria-tauler__graella">
           {targetes.map((t) => (
             <TargetaTauler key={`${t.id}-${visible ? 'mostrades' : 'amagades'}-${generacio}`} targeta={t} titular={titular} pastilla={pastilla}
-              visibleInicial={visible} onObri={onObri} onAvis={onAvis} />
+              visibleInicial={visible} onObri={onObri} onAvis={onAvis} ambAccionsPrivades={ambAccionsPrivades} />
           ))}
         </div>
       )}
@@ -418,6 +432,9 @@ export function VistaImpostos({ dades, comuns }) {
  * La pàgina pròpia d'una targeta: PaginaApp amb la boina personal (la barra
  * taronja amb l'ull de la pàgina), el mateix títol, subtítol i entradeta, la
  * xifra, el detall i d'on ix. Sense Compartir, Comentar ni Connectar.
+ * Derogat EN PART per l'ordre del Mestre, 14-10-2026 (prompt 261014_2015,
+ * punt 5): amb `onAvis`, la barra porta les tres accions inoperatives, que
+ * diuen per què no ixen (barraPrivada, TargetaTauler.jsx).
  * Ordre del Mestre, 13-10-2026 (pla 261013_1405, front B): «a la part dreta
  * de la barra taronja, SEMPRE la data i l'hora vives». La pàgina d'una
  * targeta només la munta la Gestoria (la closca i l'Històric), i per això el
@@ -429,12 +446,18 @@ export function VistaImpostos({ dades, comuns }) {
  * la barra ja no la mostrava; sense, faria dues dates i la de la lectura sense
  * dir-ho.
  */
-export function PaginaTargeta({ targeta, titular, visible = false, barActions, rellotgeViu = true, rellotge, onTorna, refTitol }) {
+export function PaginaTargeta({
+  targeta, titular, visible = false, barActions, rellotgeViu = true, rellotge, onTorna, refTitol, onAvis = null, avis = null
+}) {
   const id = useId();
+  /* Ordre del Mestre, 14-10-2026 (punt 5): amb `onAvis` (la closca), la barra porta Comentar, Compartir i
+     Connectar inoperatius, que diuen per què no ixen; `avis` és l'Alerta on ho diuen. Sense (l'Històric),
+     apagats: el DOM de sempre. */
   return (
     <PaginaApp title={targeta.titol} subtitle={targeta.subtitol} lead={targeta.entradeta}
       author={titular} barActions={barActions} rellotgeViu={rellotgeViu === true} rellotge={rellotge} labels={targeta.etiquetes}
-      onBack={onTorna} refTitol={refTitol} showComment={false} showShare={false} showConnect={false}>
+      onBack={onTorna} refTitol={refTitol} {...barraPrivada(onAvis)}>
+      {avis}
       <section className="sdp-gestoria-tauler__seccio" aria-labelledby={`${id}-xifra`}>
         <h2 id={`${id}-xifra`}>La xifra</h2>
         <p className="sdp-gestoria-tauler__xifra"><Xifra xifra={targeta.xifra} visible={visible} /></p>

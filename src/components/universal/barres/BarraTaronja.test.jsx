@@ -1,8 +1,19 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { act, cleanup, fireEvent, render } from '@testing-library/react';
-import { afterEach, expect, test, vi } from 'vitest';
-vi.mock('../../../config/assetResolver', () => ({ resolveAsset: (uri) => uri }));
+import { act, cleanup, fireEvent, render, waitFor } from '@testing-library/react';
+import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
+/* El resolutor de camins és la identitat, com sempre en este fitxer. Ordre
+   del Mestre, 14-10-2026 (prompt 261014_2015, punt 4) · Les proves de la
+   referència opaca hi posen el de veres (mocks.resolAsset) i el port simulat,
+   com a PageFrame.avatar.test.jsx: sense la capacitat 'mitjans', el mateix que
+   una app sense node. */
+const mocks = vi.hoisted(() => ({ resolAsset: (uri) => uri, capacitats: new Set(), resol: vi.fn() }));
+vi.mock('../../../config/assetResolver', () => ({ resolveAsset: (...args) => mocks.resolAsset(...args) }));
+vi.mock('../../../data/backendPort.js', async (importOriginal) => ({
+  ...(await importOriginal()),
+  teCapacitat: (capacitat) => mocks.capacitats.has(capacitat),
+  resolveAsset: (ref, opcions) => mocks.resol(ref, opcions)
+}));
 vi.mock('../../../app/contexts/RouterContext', () => ({ useNavigate: () => vi.fn(), Link: 'a' }));
 vi.mock('../NotificationContext.jsx', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
 import { BarraTaronja } from './BarraTaronja.jsx';
@@ -226,4 +237,90 @@ test('PageFrame passa onObriEmoticona de topBarData a l’espai central', () => 
   const { container } = render(<PageFrame chrome="context" title="Pàgina" topBarData={{ onObriEmoticona }} />);
   act(() => { fireEvent.click(container.querySelector('.bar-orange > .sdp-emoticona-barra--boto')); });
   expect(onObriEmoticona).toHaveBeenCalledTimes(1);
+});
+
+/* Ordre del Mestre, 14-10-2026 (prompt 261014_2015, punt 4; decisió de les
+   21:20) · La referència opaca d'una pujada ('sdp-media://') es resol pel port
+   amb useResolvedAsset; mentre es resol, o si no es pot, el cercle de reserva,
+   mai la referència crua. Amb el resolutor de camins de veres: abans, una
+   'sdp-media://…' passava per resolveAsset i es pintava '/sdp-media://…'. */
+describe('la referència opaca d’una pujada es resol pel port', () => {
+  const REF = 'sdp-media://mitjans/t/u/avatars/p.webp';
+  const resolta = (ref) => `${window.location.origin}/storage/v1/object/public/${ref.trim().replace(/^sdp-media:\/\//i, '')}`;
+  let resolutorDeVeres;
+  beforeAll(async () => {
+    ({ resolveAsset: resolutorDeVeres } = await vi.importActual('../../../config/assetResolver'));
+  });
+  beforeEach(() => {
+    mocks.resolAsset = resolutorDeVeres;
+    mocks.capacitats = new Set();
+    mocks.resol.mockReset();
+  });
+  afterEach(() => {
+    mocks.resolAsset = (uri) => uri;
+    mocks.capacitats = new Set();
+  });
+  const ambPort = (resolutor = async (ref) => resolta(ref)) => {
+    mocks.capacitats = new Set(['mitjans']);
+    mocks.resol.mockImplementation(resolutor);
+  };
+  /* act buida el treball pendent de React en eixir: el valor resolt ja s'ha pintat. */
+  const buida = () => act(async () => { await new Promise((resolt) => { setTimeout(resolt, 0); }); });
+  const srcAvatar = (seccio) => seccio.querySelector('img.sp-card-avatar')?.getAttribute('src');
+  const opacs = (seccio) => [...seccio.querySelectorAll('[src], [srcset]')]
+    .flatMap((e) => [e.getAttribute('src'), e.getAttribute('srcset')])
+    .filter((valor) => valor && /sdp-media/i.test(valor));
+  const ambCercle = (seccio) => {
+    expect(seccio.querySelector('img.sp-card-avatar')).toBeNull();
+    expect(seccio.querySelector('.sp-card-avatar--fallback:not(.sp-card-avatar--amagat)')).not.toBeNull();
+  };
+
+  test('resolta pel port, pinta l’avatar amb eixa URL; mentre es resol, el cercle de reserva', async () => {
+    ambPort();
+    const seccio = barra({ authorAvatar: REF });
+    ambCercle(seccio);
+    await waitFor(() => expect(srcAvatar(seccio)).toBe(resolta(REF)));
+    expect(mocks.resol).toHaveBeenCalledWith(REF, expect.anything());
+    expect(opacs(seccio)).toEqual([]);
+  });
+
+  test('sense la capacitat, o si el port torna la referència, res o falla: el cercle de reserva, mai la referència', async () => {
+    for (const resolutor of [null, async (ref) => ref, async () => null, async () => { throw new Error('el node no respon'); }]) {
+      if (resolutor) ambPort(resolutor);
+      const seccio = barra({ authorAvatar: REF });
+      if (resolutor) await waitFor(() => expect(mocks.resol).toHaveBeenCalledWith(REF, expect.anything()));
+      await buida();
+      ambCercle(seccio);
+      expect(opacs(seccio)).toEqual([]);
+      if (!resolutor) expect(mocks.resol).not.toHaveBeenCalled();
+      cleanup();
+      mocks.capacitats = new Set();
+      mocks.resol.mockReset();
+    }
+  });
+
+  test('un esquema en majúscules o amb espais davant: al port, la forma canònica; sense port, mai al DOM (ni darrere d’una barra)', async () => {
+    for (const ref of ['SDP-MEDIA://mitjans/t/u/avatars/p.webp', '  sdp-media://mitjans/t/u/avatars/p.webp', ' Sdp-Media://mitjans/t/u/avatars/p.webp']) {
+      let seccio = barra({ authorAvatar: ref });
+      await buida();
+      ambCercle(seccio);
+      expect([ref, opacs(seccio)]).toEqual([ref, []]);
+      cleanup();
+      ambPort();
+      seccio = barra({ authorAvatar: ref });
+      await waitFor(() => expect(srcAvatar(seccio)).toBe(resolta(REF)));
+      expect(mocks.resol.mock.calls.map(([demanada]) => demanada)).toEqual([REF]);
+      cleanup();
+      mocks.capacitats = new Set();
+      mocks.resol.mockReset();
+    }
+  });
+
+  test('una ruta crua continua pel camí de sempre (resolveAsset i isSafeAsset) i no passa pel port', async () => {
+    ambPort();
+    const seccio = barra();
+    await buida();
+    expect(srcAvatar(seccio)).toBe(AUTORIA.authorAvatar);
+    expect(mocks.resol).not.toHaveBeenCalled();
+  });
 });

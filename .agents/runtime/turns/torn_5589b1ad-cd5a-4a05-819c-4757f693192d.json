@@ -3,10 +3,10 @@
   "turn_id": "torn_5589b1ad-cd5a-4a05-819c-4757f693192d",
   "actor": "Claude",
   "scope": "code",
-  "state": "context_loaded",
-  "revision": 6,
+  "state": "closed",
+  "revision": 7,
   "createdAt": "2026-10-13T13:07:31.910Z",
-  "updatedAt": "2026-10-13T13:39:45.193Z",
+  "updatedAt": "2026-10-14T14:40:54.443Z",
   "expiresAt": "2026-10-14T13:07:31.910Z",
   "contractHash": "6a1959a7c85620476e8cb465609d6b2e56cbcc2c380e5faf3c14267bee1163fa",
   "humanInventoryVersion": 1,
@@ -3692,7 +3692,15 @@
     }
   },
   "plan": null,
-  "verification": null,
+  "verification": {
+    "at": "2026-10-14T14:40:54.443Z",
+    "files": {
+      "_wiki_de_poble/04_escriptori/261013_1600_estudi_destil_laboratori_ia.md": "93600d28f18bf3ae92eae727237ddbaa0d3aa0b945e1e43fc40be48784c99067"
+    },
+    "checks": [
+      "expire-close"
+    ]
+  },
   "history": [
     {
       "state": "opened",
@@ -3732,6 +3740,12 @@
       "file": "_wiki_de_poble/04_escriptori/261013_1600_estudi_destil_laboratori_ia.md",
       "at": "2026-10-13T13:39:45.192Z",
       "hash": "63f21c06ba067feb5cedb4b4dd2be649dc97defc147b7be93b5b51b7dabadf6e"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "context_loaded",
+      "at": "2026-10-14T14:40:54.443Z"
     }
   ]
 }

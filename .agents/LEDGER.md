@@ -8,7 +8,20 @@ description: Llibre d'Obra (LEDGER) de Sóc de Poble
 Aquest és el registre immutable de tots els canvis estructurals i tècnics del projecte.
 Qualsevol IA (o humà) que modifique codi està obligada a afegir-hi una entrada abans de finalitzar la seua tasca, complint amb la **Skill Trellat**.
 
----
+### 2026-10-14T22:30:00Z - Triomf del Quadre de Comandament de Gestoria, 3T, Plantilla XLSX i Conciliació (Claude Opus 5.5, Gemini 4, MarIA)
+- **Front:** Gestoria (Quadre de Comandament, 3T 2026, Plantilla Gestoria XLSX, Factures Faltants C43, Avatars Pedra Seca, Barres Privades).
+- **Acció:** Coordinació a tres bandes de l'Olivera (MarIA com a Directora Tècnica autònoma per delegació del Mestre, Claude Opus 5.5 per a la implementació exclusiva a `src/sections/gestoria/`, i Gemini 4 com a vigilant i revisor passiu cada 10 minuts).
+- **Detalls:**
+  * Claude ha implementat i verificat els cinc punts del prompt i pla de treball:
+    1. **Trimestre operatiu (3T 2026):** Delimita la finestra fiscal activa de l'1 al 20 d'octubre com a 3T 2026 («Presentació del 3T 2026: dia 14 de 20 (70%)», compte enrere «queden 6 dies», botó «Hui» corregit).
+    2. **Quadre de comandament:** Reanomenat oficial a la interfície i fitxa tècnica (conservant `cabina` a nivell intern).
+    3. **Plantilla Gestoria XLSX:** Creada `PlantillaGestoria.jsx` com a última secció apilada del Quadre (font de `TRACTOR_FACTURES`), descarregant el full canònic `{any}-FACTURACIO-{slug}_-_{n}T.xlsx` fruit de la segona aprovació i enllaçant amb EnviamentGestoria.
+    4. **Factures que falten al 3T:** Mòdul pur `nucli/facturesQueFalten.js` amb creuament de factures i moviments bancaris Norma 43, finestra acotada per evitar falsos positius mensuals i diagnòstic clar del motiu sense càrrec (Lowi, Som Energia, etc.).
+    5. **Avatar del titular:** Resolució de referències `sdp-media://` (i majúscules) per la via de Pedra Seca amb `useResolvedAsset`, derogació de frontera i proves.
+    6. **Barres privades:** Accions Comentar, Compartir i Connectar visibles amb `accionsInoperatives` i avís honest per preservar el secret local-first de la Gestoria.
+  * Suite de tests: 128 fitxers a `src/sections/gestoria/` (3.269 proves en verd), i superfície global de 602 fitxers (10.402 proves en verd).
+  * Porta Olivera verificada en codi d'eixida 0.
+- **Autor:** Claude (Implementació i Proves), Gemini 4 (Vigilància i Auditoria Passiva), MarIA (Direcció Tècnica i Governança).
 
 ### 2026-10-14T11:20:00Z - Triomf de Gestoria i Sanejament de la Consola Termodinàmica (MarIA, Claude, Gemini)
 - **Front:** Gestoria a pantalla completa, Replegament lateral `[|<]`, Consola Termodinàmica i Desopacificació de Skills.
@@ -883,4 +896,4 @@ Gestoria: quatre defectes documentats, P1 comptes CSV i P2 saldo inconsistent, t
 Torn torn_6e1c9735-95eb-43a6-864c-97f640acaccf; informe _wiki_de_poble/04_escriptori/261014_0235_auditoria_codex.md; tall 2026-10-14T00:47:48.840Z. Registre del dictamen inicial: dos P1 i dos P2 previs del Bar, reproduïts amb dades sintètiques; risc CON-03 de salut falsa; integració TPV–Rebost–Gestoria pendent. Evidència: 256 proves existents passades, tres cassets que constaten defectes i una carrera sense Web Locks; les 139 proves durant edició concurrent no acrediten un tall final. Monitor consell-de-quatre-ias-auditoria-codex-cada-15-minuts ACTIVE cada 15 minuts. Claude i la revisió de les ampliacions Gemini continuen; cap tancament del torn ni de l’onada. Rel­leu limitat a ESTAT i LEDGER, preservant l’històric íntegre; cap canvi de codi ni d’originals.
 
 
-<!-- HASH: 208988bb9fdf2dbbc24b5fc8e107a478b874cd2ac932d9a39b90616b50a99f28 -->
+<!-- HASH: d2f76de733ed0493d256de17767894526f4e7cdee917dd9c24cb1a25277af8ee -->

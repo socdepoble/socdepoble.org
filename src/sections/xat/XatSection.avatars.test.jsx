@@ -302,6 +302,49 @@ test('la fitxa de la comunitat i la vista Comunitats porten la cara del poble am
   expect(bloc?.querySelector('.sdp-xat-vista-comunitats__avatar img')?.getAttribute('src')).toBe(`${PAQUET}${CARA}`);
 });
 
+/* Pla 261014_1450 (front A) · El peu del rail porta la foto de la persona
+   (joAvatar, la mateixa font que la TopBar en mode persona). Una foto pujada
+   ('sdp-media://…') la resol el port, com les files de la llista: abans el peu
+   pintava sempre les inicials. */
+const PUJADA_JO = 'sdp-media://mitjans/11111111-2222-3333-4444-555555555555/aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee/avatars/jo.webp';
+const PUJADA_JO_RESOLTA = `${NODE}/storage/v1/object/public/${PUJADA_JO.slice('sdp-media://'.length)}`;
+const SDP_ACTIVA = { id: 'socdepoble', nom: 'Sóc de Poble', avatar: LOGO_PNG };
+
+test('front A · la foto pujada de la persona es resol pel port i va al peu del rail', async () => {
+  ambLaBaseDelPaquet();
+  munta({ ...ambSessio(), joAvatar: PUJADA_JO });
+  await waitFor(() => expect(caresDe(rail()).Javi).toBe(PUJADA_JO_RESOLTA));
+  expect(mocks.resol).toHaveBeenCalledWith(PUJADA_JO, expect.anything());
+  expect(screen.getByRole('button', { name: 'Tu: ajustos' }).querySelector('img.sdp-avatar__imatge').getAttribute('src')).toBe(PUJADA_JO_RESOLTA);
+  capImatgeTrencada();
+});
+
+test('front A · la foto pujada de la persona en un node sense «mitjans»: inicials al peu, i el port no es crida', async () => {
+  mocks.mitjans = false;
+  ambLaBaseDelPaquet();
+  munta({ ...context(), joAvatar: PUJADA_JO });
+  expect(caresDe(rail()).Javi).toBeNull();
+  expect(rail().querySelector('.sdp-avatar[title="Javi"]').textContent).toBe('J');
+  expect(mocks.resol).not.toHaveBeenCalled();
+});
+
+/* Pla 261014_1450 (front C) · Amb una entitat activa a la barra negra, el peu
+   del rail porta el SEU logo (amb la base del paquet), mai la foto de la
+   persona, i el nom accessible ho diu. La conversa oberta diu qui signa: en
+   un xat personal, la persona. */
+test('front C · amb entitatActiva, el peu porta el logo de l’entitat i la conversa diu que hi signes com a tu', async () => {
+  ambLaBaseDelPaquet();
+  mocks.threadId = 'f-pepa';
+  munta({ ...ambSessio(), joAvatar: PUJADA_JO, entitatActiva: SDP_ACTIVA });
+  const boto = screen.getByRole('button', { name: 'Tu: ajustos (actues com a Sóc de Poble)' });
+  const avatar = boto.querySelector('.sdp-avatar');
+  expect(avatar.getAttribute('title')).toBe('Sóc de Poble');
+  expect(avatar.classList.contains('sdp-xat-avatar--quadrat')).toBe(true);
+  expect(avatar.querySelector('img').getAttribute('src')).toBe(`${PAQUET}${LOGO_PNG}`);
+  expect(caresDe(rail()).Javi).toBeUndefined();
+  expect(screen.getByText('Escrius com a tu: en esta conversa no parles en nom de Sóc de Poble.')).toBeTruthy();
+});
+
 test('una foto pujada (sdp-media) en un node sense la capacitat «mitjans»: inicials, mai una imatge trencada', async () => {
   mocks.mitjans = false;
   ambLaBaseDelPaquet();

@@ -95,6 +95,10 @@ function filAmbLaGentDelPoble(fil, towns) {
       canvis.title = titol;
       if (typeof fil.searchText === 'string') canvis.searchText = `${titol} ${textDe(fil.ultimText)}`.toLowerCase();
     }
+    const cara = textDe(fitxa?.avatar_url) || textDe(fitxa?.image_url) || textDe(fitxa?.imageSrc);
+    if (cara && !textDe(fil.avatar_url)) {
+      canvis.avatar_url = cara;
+    }
   }
   return Object.keys(canvis).length ? { ...fil, ...canvis } : fil;
 }

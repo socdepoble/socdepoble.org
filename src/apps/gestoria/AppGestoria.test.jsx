@@ -25,7 +25,10 @@
    sense configurar» amb l'entrada al compte. Per això la closca rep ara
    quatre props (hrefEntrada, hrefIdentitat, modulActiu i titular).
    Ordre del Mestre, 13-10-2026 (pla 261013_1405, front H): «Identitat i
-   Finestreta», la cinquena vista del pont, al grup Operacions. */
+   Finestreta», la cinquena vista del pont, al grup Operacions.
+   Ordre del Mestre, 14-10-2026 (prompt 261014_2015, punt 3): la closca rep
+   també hrefFull, la ruta del Full trimestral, per a l'estat buit de la
+   «Plantilla Gestoria» del Quadre de comandament: cinc props. */
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { Route, Routes } from '../../app/contexts/RouterContext';
@@ -39,7 +42,7 @@ import RutaApps from '../plataforma/RutaApps.jsx';
 import { RUTA_TITULAR, TITULAR_SENSE_CONFIGURAR, autorDelPont, entradaAlTauler } from './AppGestoria.jsx';
 import manifestGestoria from './manifest.js';
 import {
-  ENTRADA_APRENDRE, ENTRADA_FACTURACIO, ENTRADA_IDENTITAT, ITEM_PORTA_TRACTORS, RUTA_PORTA_TRACTORS, desviamentDeLaConsulta
+  ENTRADA_APRENDRE, ENTRADA_FACTURACIO, ENTRADA_FULL, ENTRADA_IDENTITAT, ITEM_PORTA_TRACTORS, RUTA_PORTA_TRACTORS, desviamentDeLaConsulta
 } from './rutes.js';
 
 const closca = vi.hoisted(() => ({ muntatges: 0 }));
@@ -72,7 +75,7 @@ vi.mock('../../sections/gestoria/tauler/ShellGestoria.jsx', async () => {
   const { PaginaApp } = await import('../../components/PedraSeca/index.js');
   return {
     default: function DobleDeLaClosca(props) {
-      const { modulActiu = 'tauler', hrefEntrada = null, hrefIdentitat = null, titular = null } = props;
+      const { modulActiu = 'tauler', hrefEntrada = null, hrefIdentitat = null, hrefFull = null, titular = null } = props;
       const navigate = useNavigate();
       const [comptador, setComptador] = useState(0);
       useEffect(() => { closca.muntatges += 1; }, []);
@@ -81,10 +84,11 @@ vi.mock('../../sections/gestoria/tauler/ShellGestoria.jsx', async () => {
         <div className="sdp-gestoria-closca">
           <PaginaApp title={titol} subtitle="Gestoria de Poble" showComment={false} showShare={false} showConnect={false}>
             <p>Doble de la closca</p>
-            {/* Què li passa l'app: el mòdul de la ruta, l'entrada al compte, la ruta de la Finestreta i el titular de la sessió (cap prop de navegació pròpia). */}
+            {/* Què li passa l'app: el mòdul de la ruta, l'entrada al compte, les rutes de la Finestreta i del Full i el titular de la sessió (cap prop de navegació pròpia). */}
             <output aria-label="Props de prova">{Object.keys(props).sort().join(',')}</output>
             <output aria-label="Entrada de prova">{hrefEntrada ?? ''}</output>
             <output aria-label="Identitat de prova">{hrefIdentitat ?? ''}</output>
+            <output aria-label="Full de prova">{hrefFull ?? ''}</output>
             <output aria-label="Titular de prova">{titular ? JSON.stringify(titular) : ''}</output>
             <output aria-label="Mòdul actiu de prova">{modulActiu}</output>
             <output aria-label="Comptador de memòria de prova">{comptador}</output>
@@ -263,10 +267,12 @@ describe('en desenvolupament, una app pròpia', () => {
     /* La closca rep el mòdul de la ruta, la ruta de la Finestreta, el titular
        (sense sessió, cap) i, sense sessió, l'entrada al compte que torna al
        Tauler. Ordre del Mestre, 13-10-2026 (pla 261013_1405, fronts B i H):
-       abans, «hrefEntrada,modulActiu» i prou. */
-    expect(screen.getByLabelText('Props de prova').textContent).toBe('hrefEntrada,hrefIdentitat,modulActiu,titular');
+       abans, «hrefEntrada,modulActiu» i prou. Ordre del Mestre, 14-10-2026
+       (prompt 261014_2015, punt 3): i la ruta del Full trimestral. */
+    expect(screen.getByLabelText('Props de prova').textContent).toBe('hrefEntrada,hrefFull,hrefIdentitat,modulActiu,titular');
     expect(screen.getByLabelText('Entrada de prova').textContent).toBe(ENTRADA_AL_TAULER);
     expect(screen.getByLabelText('Identitat de prova').textContent).toBe('/app/gestoria/identitat');
+    expect(screen.getByLabelText('Full de prova').textContent).toBe(`/app/gestoria/${ENTRADA_FULL}`);
     expect(screen.getByLabelText('Titular de prova').textContent).toBe('');
     fireEvent.click(barra.getByRole('link', { name: 'Aprendre' }));
     expect(ubicacio()).toBe('/app/gestoria/aprendre');
@@ -397,10 +403,11 @@ describe('en desenvolupament, una app pròpia', () => {
    corporatiu a la Facturació». Derogat EN PART el «el pont no passa cap dada
    de la persona» de la petició 261012_2148. */
 describe('amb sessió, el pont passa el titular de la sessió', () => {
-  test('la closca rep el titular net (sense correu ni id), cap entrada al compte i la ruta de la Finestreta', async () => {
+  test('la closca rep el titular net (sense correu ni id), cap entrada al compte i les rutes de la Finestreta i del Full', async () => {
     muntaPlataforma('/app/gestoria/tauler', { registre: registre(), entorn: ENTORN_AMB_SESSIO });
     await screen.findByText('Doble de la closca');
-    expect(screen.getByLabelText('Props de prova').textContent).toBe('hrefEntrada,hrefIdentitat,modulActiu,titular');
+    expect(screen.getByLabelText('Props de prova').textContent).toBe('hrefEntrada,hrefFull,hrefIdentitat,modulActiu,titular');
+    expect(screen.getByLabelText('Full de prova').textContent).toBe('/app/gestoria/full');
     expect(JSON.parse(screen.getByLabelText('Titular de prova').textContent)).toEqual(TITULAR);
     expect(screen.getByLabelText('Entrada de prova').textContent).toBe('');
     expect(screen.getByLabelText('Identitat de prova').textContent).toBe('/app/gestoria/identitat');

@@ -109,6 +109,37 @@ describe('la fila de profiles', () => {
   });
 });
 
+/* Pla 261014_1450, front B (ordre del Mestre, 14-10-2026) · La foto pujada a
+   Sóc de Poble guanya a la de Google, també en el contracte que llegixen la
+   TopBar (actor.avatar) i el Xat (identitats[persona].avatar). */
+describe('front B · la pujada abans que la foto del proveïdor d’entrada', () => {
+  const PUJADA = 'sdp-media://mitjans/la-torre/u-pepa/avatars/pepa.webp';
+  const PUJADA_META = 'sdp-media://mitjans/la-torre/u-pepa/avatars/pepa-meta.webp';
+
+  test('Google a les metadades i la pujada a la fila: actor.avatar i identitats[0].avatar valen la pujada', async () => {
+    ambSessio({ ...PEPA, user_metadata: { full_name: 'Pepa Soler', avatar_url: FOTO_META, picture: FOTO } });
+    const port = portAmbRespostes();
+    m.getProfile = port.getProfile;
+    const { result } = munta();
+    /* Mentre la fila no arriba, la reserva de les metadades: la de Google. */
+    expect(result.current.actor.avatar).toBe(FOTO_META);
+    await waitFor(() => expect(port.getProfile).toHaveBeenCalledTimes(1));
+    await act(async () => { port.respostes[0].resol({ ...FILA_PEPA, avatar_url: PUJADA }); });
+    await waitFor(() => expect(result.current.actor.avatar).toBe(PUJADA));
+    expect(result.current.actor).toMatchObject({ tipus: 'persona', id: 'u-pepa', nom: 'Pepa Soler', avatar: PUJADA });
+    expect(result.current.identitats[0]).toMatchObject({ tipus: 'persona', id: 'u-pepa', avatar: PUJADA });
+  });
+
+  test('Google a la fila (la que copia el trigger d’alta) i la pujada a les metadades: la pujada no cau quan arriba la fila', async () => {
+    ambSessio({ ...PEPA, user_metadata: { full_name: 'Pepa Soler', avatar_url: PUJADA_META, picture: FOTO_META } });
+    m.getProfile = vi.fn(async () => FILA_PEPA);
+    const { result } = munta();
+    await waitFor(() => expect(result.current.actor.poble).toBe(POBLE));
+    expect(result.current.actor.avatar).toBe(PUJADA_META);
+    expect(result.current.identitats[0].avatar).toBe(PUJADA_META);
+  });
+});
+
 describe('cap crida sense sessió, i cap caiguda si el port falla', () => {
   test('sense sessió, getProfile no es crida mai i l’actor és el convidat, sense poble', async () => {
     m.getProfile = vi.fn(async () => FILA_PEPA);

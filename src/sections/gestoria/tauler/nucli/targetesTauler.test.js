@@ -8,7 +8,8 @@ import { describe, expect, test } from 'vitest';
 import { llegeixC43 } from '../../nucli/c43.js';
 import { crearFactura } from '../../nucli/model.js';
 import {
-  BLOCS_TAULER, dadesDelTauler, etiquetaXifra, hisendaSobreCaixa, nomsDelsComptes, rellotgeDelTermini, textAmagat, textXifra, trimestreVei
+  BLOCS_TAULER, dadesDelTauler, etiquetaXifra, hisendaSobreCaixa, nomsDelsComptes, rellotgeDelTermini, textAmagat, textXifra,
+  trimestreOperatiu, trimestreVei
 } from './targetesTauler.js';
 import { estimaIva303, resumHisenda } from '../../impostos/nucli/impostos.js';
 import { reduixC43 } from './tractorTauler.js';
@@ -45,7 +46,7 @@ describe('dadesDelTauler', () => {
       expect(t.titol && t.subtitol && t.entradeta && t.font, t.id).toBeTruthy();
       expect(Object.keys(BLOCS_TAULER)).toContain(t.bloc);
     }
-    expect(dades.iva).toMatchObject({ any: 2026, t: 4, completa: false });
+    expect(dades.iva).toMatchObject({ any: 2026, t: 3, completa: false });
   });
 
   test('amb el trimestre del Full (periode), les estimacions són d’eixe trimestre i no del d’avui', () => {
@@ -56,8 +57,9 @@ describe('dadesDelTauler', () => {
     expect(per['iva-303'].subtitol).toBe('Estimació del 3T 2026');
     expect(per['iva-303'].etiquetes.map((e) => e.text)).toContain('Termini 20/10/2026');
     expect(per['irpf-130'].xifra).toEqual({ tipus: 'import', valor: 2000, moneda: 'EUR' });
-    /* Un periode que no és un trimestre no mana: es torna al trimestre d'avui. */
-    expect(dadesDelTauler({ avui: AVUI, periode: { any: 2026, t: 7 } }).iva).toMatchObject({ any: 2026, t: 4 });
+    /* Un periode que no és un trimestre no mana: es torna al trimestre operatiu d'avui (3T 2026 el 04/10, 4T el 21/10). */
+    expect(dadesDelTauler({ avui: AVUI, periode: { any: 2026, t: 7 } }).iva).toMatchObject({ any: 2026, t: 3 });
+    expect(dadesDelTauler({ avui: { a: 2026, m: 10, d: 21 }, periode: { any: 2026, t: 7 } }).iva).toMatchObject({ any: 2026, t: 4 });
   });
 
   test('cap targeta diu que el Tauler no rep factures: sense, diu d’on vindran; amb, d’on ixen', () => {
@@ -81,7 +83,7 @@ describe('dadesDelTauler', () => {
     expect(per.despeses.etiquetes.map((e) => e.text)).toEqual(['Banc']);
     expect(per.cobertura).toMatchObject({ xifra: null, senseXifra: 'Cal almenys un mes de moviments per a calcular-la.' });
     expect(per.conciliacio.xifra).toEqual({ tipus: 'recompte', valor: 1 });
-    expect(per.hisenda.etiquetes.map((e) => e.text)).toEqual(['Impostos', 'Estimació incompleta', 'Termini 30/01/2027']);
+    expect(per.hisenda.etiquetes.map((e) => e.text)).toEqual(['Impostos', 'Estimació incompleta', 'Termini 20/10/2026']);
     expect(JSON.stringify(dades.targetes)).not.toMatch(/0000004321|TITULAR SINTETIC/);
   });
 
@@ -117,12 +119,12 @@ describe('dadesDelTauler', () => {
   });
 
   test('factures sense cap import en euros: el 303, el 130, Hisenda i les finances diuen «Sense mesura en euros»', () => {
-    /* Una del trimestre de les estimacions (4T) i una de la finestra de les finances (juny), les dues en dòlars. */
+    /* Una del trimestre operatiu (3T) i una de la finestra de les finances (juny), les dues en dòlars. */
     const enDolars = (data, num) => ({
       ...crearFactura({ tipus: 'ingres', data, num, contrapart: 'Client de Prova', subtotal: '100,00', iva: '21,00', total: '121,00' }),
       moneda: 'USD'
     });
-    const dades = dadesDelTauler({ lectura: LECTURA, factures: [enDolars('2026-10-02', 'A-0009'), enDolars('2026-06-20', 'A-0008')], avui: AVUI });
+    const dades = dadesDelTauler({ lectura: LECTURA, factures: [enDolars('2026-08-02', 'A-0009'), enDolars('2026-06-20', 'A-0008')], avui: AVUI });
     const per = Object.fromEntries(dades.targetes.map((t) => [t.id, t]));
     for (const id of ['hisenda', 'iva-303', 'irpf-130', 'ingressos', 'despeses', 'rendiment']) {
       expect(per[id].xifra, id).toBeNull();
@@ -174,7 +176,7 @@ describe('el context del panell', () => {
     return rellotgeDelTermini({ any, t, periode, termini, avui });
   };
 
-  test('trimestreVei: l’anterior i el següent, amb el canvi d’any; res si no és un trimestre', () => {
+  test('trimestreVei i trimestreOperatiu: la finestra de presentació oberta mana sobre el trimestre natural', () => {
     expect(trimestreVei({ any: 2026, t: 4 }, 1)).toEqual({ any: 2027, t: 1 });
     expect(trimestreVei({ any: 2026, t: 1 }, -1)).toEqual({ any: 2025, t: 4 });
     expect(trimestreVei({ any: 2026, t: 2 }, 1)).toEqual({ any: 2026, t: 3 });
@@ -182,6 +184,12 @@ describe('el context del panell', () => {
     expect(trimestreVei({ any: 2026, t: 5 }, 1)).toBeNull();
     expect(trimestreVei(null, 1)).toBeNull();
     expect(trimestreVei({ any: 2026, t: 2 }, 0.5)).toBeNull();
+    expect(trimestreOperatiu({ a: 2026, m: 10, d: 14 })).toEqual({ any: 2026, t: 3 });
+    expect(trimestreOperatiu({ a: 2026, m: 10, d: 20 })).toEqual({ any: 2026, t: 3 });
+    expect(trimestreOperatiu({ a: 2026, m: 10, d: 21 })).toEqual({ any: 2026, t: 4 });
+    expect(trimestreOperatiu({ a: 2027, m: 1, d: 30 })).toEqual({ any: 2026, t: 4 });
+    expect(trimestreOperatiu({ a: 2027, m: 1, d: 31 })).toEqual({ any: 2027, t: 1 });
+    expect(trimestreOperatiu(null)).toBeNull();
   });
 
   test('el rellotge del termini: dins del trimestre, en la finestra de presentació, abans i després', () => {
@@ -204,6 +212,68 @@ describe('el context del panell', () => {
     expect(rellotgeDe(2026, 3, { a: 2026, m: 10, d: 21 })).toMatchObject({ fase: 'vencut' });
     expect(rellotgeDelTermini({ any: 2026, t: 4 })).toMatchObject({ fase: 'sense', valor: null });
     expect(rellotgeDe(2026, 4, null)).toMatchObject({ fase: 'sense' });
+  });
+
+  /* Ordre del Mestre, 14-10-2026 (prompt 261014_2015, punt 1): el trimestre per defecte és l'operatiu. */
+  test('trimestreOperatiu a totes les vores de les quatre finestres; res sense un dia vàlid', () => {
+    const casos = [
+      [{ a: 2026, m: 9, d: 30 }, { any: 2026, t: 3 }], [{ a: 2026, m: 10, d: 1 }, { any: 2026, t: 3 }],
+      [{ a: 2026, m: 12, d: 31 }, { any: 2026, t: 4 }], [{ a: 2027, m: 1, d: 1 }, { any: 2026, t: 4 }],
+      [{ a: 2027, m: 3, d: 31 }, { any: 2027, t: 1 }], [{ a: 2027, m: 4, d: 1 }, { any: 2027, t: 1 }],
+      [{ a: 2027, m: 4, d: 20 }, { any: 2027, t: 1 }], [{ a: 2027, m: 4, d: 21 }, { any: 2027, t: 2 }],
+      [{ a: 2027, m: 7, d: 1 }, { any: 2027, t: 2 }], [{ a: 2027, m: 7, d: 20 }, { any: 2027, t: 2 }],
+      [{ a: 2027, m: 7, d: 21 }, { any: 2027, t: 3 }]
+    ];
+    for (const [avui, esperat] of casos) expect(trimestreOperatiu(avui), JSON.stringify(avui)).toEqual(esperat);
+    for (const invalid of [undefined, { a: 2026, m: 2, d: 30 }, '2026-10-14', { a: 2026, m: 13, d: 1 }]) {
+      expect(trimestreOperatiu(invalid), String(invalid)).toBeNull();
+    }
+  });
+
+  test('el cas del Mestre (14-10-2026, sense Full): el 3T en presentació, dia 14 de 20 i queden 6 dies', () => {
+    const dades = dadesDelTauler({ avui: { a: 2026, m: 10, d: 14 } });
+    expect(dades.iva).toMatchObject({ any: 2026, t: 3 });
+    expect(dades.rellotge).toEqual({
+      fase: 'presentacio', valor: 14, max: 20, etiqueta: 'Presentació del 3T 2026: dia 14 de 20',
+      text: 'Ara és el termini de presentació del 303 i del 130, que acaba el 20/10/2026: queden 6 dies.', obert: null
+    });
+    const per = Object.fromEntries(dades.targetes.map((t) => [t.id, t]));
+    expect(per['iva-303'].subtitol).toBe('Estimació del 3T 2026');
+    expect(per['iva-303'].etiquetes.map((e) => e.text)).toContain('Termini 20/10/2026');
+    expect(per.hisenda.subtitol).toBe('Models 303 i 130 · 3T 2026');
+    /* Els venciments del Quadre de comandament: el 3T obert (el mateix compte enrere) i el 4T proper, sense repetir-ne cap. */
+    expect(dades.cabina.venciments.map((v) => [v.clau, v.fase])).toEqual([['2026-T3', 'oberta'], ['2026-T4', 'propera']]);
+    expect(dades.cabina.venciments[0].text).toBe('La presentació acaba el 20/10/2026: queden 6 dies.');
+  });
+
+  test('el compte enrere del rellotge: queda un dia, acaba hui; l’endemà, el trimestre natural sense presentació oberta', () => {
+    const rellotge = (d) => dadesDelTauler({ avui: { a: 2026, m: 10, d } }).rellotge;
+    expect(rellotge(19).text).toBe('Ara és el termini de presentació del 303 i del 130, que acaba el 20/10/2026: queda un dia.');
+    expect(rellotge(20)).toMatchObject({ valor: 20, max: 20, text: 'Ara és el termini de presentació del 303 i del 130, que acaba hui, el 20/10/2026.' });
+    expect(rellotge(21)).toMatchObject({ fase: 'trimestre', etiqueta: 'El 4T 2026: dia 21 de 92', obert: null });
+    expect(dadesDelTauler({ avui: { a: 2027, m: 1, d: 1 } }).rellotge).toMatchObject({ etiqueta: 'Presentació del 4T 2026: dia 1 de 30' });
+    expect(dadesDelTauler({ avui: { a: 2027, m: 1, d: 31 } }).rellotge.etiqueta).toBe('El 1T 2027: dia 31 de 90');
+    expect(dadesDelTauler({ avui: { a: 2028, m: 1, d: 31 } }).rellotge.etiqueta).toBe('El 1T 2028: dia 31 de 91');
+  });
+
+  test('el Full continua manant sobre el trimestre operatiu: amb el 2T, vençut, i l’avís de la presentació oberta del 3T', () => {
+    const dades = dadesDelTauler({ avui: { a: 2026, m: 10, d: 14 }, periode: { any: 2026, t: 2 } });
+    expect(dades.iva).toMatchObject({ any: 2026, t: 2 });
+    expect(dades.rellotge).toMatchObject({ fase: 'vencut', obert: 'Ara és oberta la presentació del 3T 2026: acaba el 20/10/2026.' });
+  });
+
+  test('invariant: cap dia del 2026 al 2028 deixa el rellotge per defecte fora del trimestre o amb un avís d’una altra finestra', () => {
+    const dia = new Date(Date.UTC(2026, 0, 1));
+    while (dia.getUTCFullYear() < 2029) {
+      const avui = { a: dia.getUTCFullYear(), m: dia.getUTCMonth() + 1, d: dia.getUTCDate() };
+      const natural = { any: avui.a, t: Math.ceil(avui.m / 3) };
+      const operatiu = trimestreOperatiu(avui);
+      expect([JSON.stringify(natural), JSON.stringify(trimestreVei(natural, -1))], JSON.stringify(avui)).toContain(JSON.stringify(operatiu));
+      const { rellotge } = dadesDelTauler({ avui });
+      expect(['trimestre', 'presentacio'], JSON.stringify(avui)).toContain(rellotge.fase);
+      expect(rellotge.obert, JSON.stringify(avui)).toBeNull();
+      dia.setUTCDate(dia.getUTCDate() + 1);
+    }
   });
 
   test('Hisenda sobre la caixa: la part de la caixa, amb sostre de 100 i el perquè quan no es pot dir', () => {

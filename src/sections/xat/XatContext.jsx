@@ -73,6 +73,16 @@
  * amb «(Tu)»), `joNom` (el nom de la PERSONA, no el de l'entitat amb què
  * actua) i `senseSessio` (remot sense sessió, ja comprovada: mai mentre la
  * sessió es comprova). Cap valor d'un altre scope: van amb `visible`.
+ *   Pla 261014_1450 (front C) · `joId`, `joNom` i `joAvatar` CONTINUEN sent
+ *   la persona, també quan la barra negra actua com una entitat: el servidor
+ *   desa usuari_id = auth.uid() (xat_envia, migració 2610081543) i
+ *   missatges.js decidix el costat de cada bombolla amb `joId`. Posar-hi
+ *   l'entitat passaria tots els missatges propis a 'other'. `entitatActiva`
+ *   ({ id, nom, avatar } o null) és l'entitat amb què actua a la barra negra,
+ *   el MATEIX `actor` d'IdentitatContext que pinta BotoIdentitatActiva, i
+ *   només es presenta: el peu del rail en pinta el logo i el compositor diu
+ *   qui signa. No canvia `joId` ni qui signa: ho decidix el servidor per fil
+ *   (xat_participants.com_org_id → fil.comEntitat).
  *
  * DOS ÀMBITS (revisió adversarial 260930, troballes de l'entrada del poble i
  * dels esborranys)
@@ -319,6 +329,7 @@ const BUIT = {
   joId: null,
   joNom: null,
   joAvatar: null,
+  entitatActiva: null,
   senseSessio: false,
   chatThreads: [],
   chatMessages: [],
@@ -391,12 +402,26 @@ function AvisadorXat({ registra }) {
 
 export function XatProvider({ children, config }) {
   const { currentUser: usuari, generacio, estat: estatSessio } = useSession();
-  const { actorKey, identitats } = useIdentitat();
+  const { actorKey, identitats, actor } = useIdentitat();
   /* Onada 3 · El nom de la persona (no el de l'entitat amb què actua): el xat
      és sempre de `joId`, i «Nova conversa» el pinta amb «(Tu)». */
   const persona = Array.isArray(identitats) ? identitats.find((i) => i?.tipus === 'persona' && i.id === usuari?.id) : null;
   const joNom = persona?.nom || null;
   const joAvatar = persona?.avatar || null;
+  /* Pla 261014_1450 (front C) · L'entitat amb què actua a la barra negra: el
+     MATEIX `actor` d'IdentitatContext que pinta BotoIdentitatActiva
+     (useIdentitatDeLaBarra.js:94-98). Només es presenta (rail, compositor);
+     `joId` continua sent la persona (vegeu la capçalera, «Qui soc»). El memo
+     penja dels camps i no de l'objecte: el valor no canvia si l'actor es
+     torna a construir igual. */
+  const actuaComEntitat = actor?.tipus === 'entitat';
+  const entitatId = actuaComEntitat ? actor.id ?? null : null;
+  const entitatNom = actuaComEntitat ? actor.nom || null : null;
+  const entitatAvatar = actuaComEntitat ? actor.avatar || null : null;
+  const entitatActiva = useMemo(
+    () => (actuaComEntitat ? { id: entitatId, nom: entitatNom, avatar: entitatAvatar } : null),
+    [actuaComEntitat, entitatId, entitatNom, entitatAvatar]
+  );
   /* Onada 6 (tasca 12) · Amb el nivell d'IA a 0 (Apagada) la IAIA no apareix
      al xat: ni a la llista (i, per tant, a les cerques i a les comunitats),
      ni als no llegits, ni als contactes freqüents, ni als avisos. Les dades
@@ -1434,6 +1459,9 @@ export function XatProvider({ children, config }) {
     joId: visible ? joId : null,
     joNom: visible ? joNom : null,
     joAvatar: visible ? joAvatar : null,
+    /* Pla 261014_1450 (front C) · L'entitat de la barra negra, només per a
+       pintar-la (rail i compositor); null si actua com a persona. */
+    entitatActiva: visible ? entitatActiva : null,
     /* Remot sense sessió, ja comprovat (mai mentre la sessió es comprova):
        ?sobre= porta a /registre en lloc de fer com si. */
     senseSessio: !joId && estatSessio !== 'comprovant',
@@ -1466,7 +1494,7 @@ export function XatProvider({ children, config }) {
        fil és un xat seu amagat per això. */
     iaiaApagada,
     esFilAmagat: filAmagat
-  }), [visible, joId, joNom, joAvatar, estatSessio, estat, avis, llistaFresca, avisLlista, scopeKey, ambitEstable, filsVisibles, missatgesDerivats,
+  }), [visible, joId, joNom, joAvatar, entitatActiva, estatSessio, estat, avis, llistaFresca, avisLlista, scopeKey, ambitEstable, filsVisibles, missatgesDerivats,
     totalNoLlegits, filActiu, getThreadMessages, hiHaMesAntics, carregantAntics, esperaAntics, carregaMesAntics, sendChatMessage, reintenta, descartaFallit, marcaVist,
     obriFil, creaFil, cercaMembres, carregaFils, obriFilDePagina, comunitats, contactesFrequents, marcaLlegides,
     modeDades, consumixEntrada, iaiaApagada, filAmagat]);

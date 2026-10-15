@@ -32,8 +32,11 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu — i
 - [[01_produccio/article-ayudawp.md]]
 
 ## Activitat en curs
-- [[261014_1450_pla_implementacio_sincronitzacio_identitats_i_xat]]
-- [[261013_1600_estudi_destil_laboratori_ia]]
+- [[261014_2040_auditoria_gemini4]]
+- [[261014_2035_auditoria_claude]]
+- [[261014_2030_pla_implementacio_gestoria_quadre_comandament_i_conciliacio]]
+- [[261014_2015_prompt_claude_i_gemini4_quadre_comandament_gestoria]]
+- [[261013_1600_estudi_destil_laboratori_ia]] · Mestre 261014: referència viva de destil·lació del laboratori IA
 - [[../90_arxiu_historic/261012_2148_peticio_registre_mestre]] · torn_02f070c3-0705-4c0e-b5d3-32c84ab77117
 - [[../90_arxiu_historic/261012_2145_ordre_unificacio_barra_maria]] · torn_02f070c3-0705-4c0e-b5d3-32c84ab77117
 - [[../90_arxiu_historic/261012_2105_correccio_barra_maria]] · torn_02f070c3-0705-4c0e-b5d3-32c84ab77117
@@ -761,6 +764,10 @@ Enllaços a peces ja existents, verificats al disc; no s’han mogut ni editat e
 
 ## Arxivat amb la Porta Olivera
 
+- [[../90_arxiu_historic/261014_1450_pla_implementacio_sincronitzacio_identitats_i_xat]]
+- [[../90_arxiu_historic/261014_1638_auditoria_gemini4]]
+- [[../90_arxiu_historic/261014_1636_auditoria_claude]]
+- [[../90_arxiu_historic/261014_1605_prompt_claude_opus_i_gemini4_taula_olivera]]
 - [[../90_arxiu_historic/261014_0130_pla_implementacio_auditoria_gemini4]]
 - [[../90_arxiu_historic/261014_0130_prompt_gemini4_auditoria_adversarial_extrema]]
 - [[../90_arxiu_historic/261014_0148_auditoria_gemini4]]
@@ -849,3 +856,5 @@ Enllaços a peces ja existents, verificats al disc; no s’han mogut ni editat e
 - 261013 · `261013_1415_prompt_chatgpt_auditor`: cap fitxer amb eixe nom als llocs cercats (_wiki_de_poble/90_arxiu_historic/ i les seues subcarpetes, _wiki_de_poble/10_actes/ i les subcarpetes de l'Escriptori; la cerca no baixa més d'un nivell); retirada per --repara.
 - 261011 · `Claude`: cap fitxer amb eixe nom als llocs cercats (_wiki_de_poble/90_arxiu_historic/ i les seues subcarpetes, _wiki_de_poble/10_actes/ i les subcarpetes de l'Escriptori; la cerca no baixa més d'un nivell); retirada per --repara.
 - [[../10_actes/261014_1315_acta_marmota]]
+- [[../10_actes/261014_2050_acta_marmota]]
+- [[../10_actes/261015_1310_acta_marmota]]

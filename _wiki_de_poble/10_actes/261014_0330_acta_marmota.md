@@ -9,7 +9,7 @@ tags:
 visibility: private
 ---
 
-# ACTA MARMOTA — Relleu Nocturn del Consell de les 4 IAs
+# ACTA MARMOTA — Relleu Nocturn dels 4 agents de torn
 
 **Data:** 14 d'octubre de 2026, 03:40h  
 **Agent Sortint:** IAIA MarIA (Directora Tècnica — Torn de Nit)  

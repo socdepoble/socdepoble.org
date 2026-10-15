@@ -32,22 +32,22 @@
       "data": "2026-10-10"
     },
     "drets-autor": {
-      "sha256": "ada0ab714e308d75277d9215676bfbc2f92afce7b089f6580632b35754d485cf",
-      "html": 9662,
-      "aprovat_per": "MarIA (delegada pel Mestre, 261009)",
-      "data": "2026-10-09"
+      "sha256": "c76835f5b58f6aa24369fe8f89b3df6c8d359b8dca2011bee7641102039d5437",
+      "html": 10278,
+      "aprovat_per": "Mestre Javi Llinares",
+      "data": "2026-10-14"
     },
     "fedivers": {
-      "sha256": "042b41663bdec1b0c59b7f7e47946b765a80a29bceb80a3b6ed3e9d1b816a326",
+      "sha256": "31e1c61addbf74b905010ddf571a2534d70f33e364984f42b7b6ebf7fd99c2ec",
       "html": 2452,
-      "aprovat_per": "Mestre",
-      "data": "2026-10-01"
+      "aprovat_per": "Mestre Javi Llinares (via Gemini 4 / MarIA)",
+      "data": "2026-10-14"
     },
     "legal": {
-      "sha256": "b9e4a614ba897bae57288bc7d9d4398f2738869b18da000de0f3db05e9f5258b",
-      "html": 21642,
-      "aprovat_per": "Javi (delegat a Claude, 261007)",
-      "data": "2026-10-07"
+      "sha256": "fe8a725dad4920ac7d97b9130bca0e86b067b560414a5bd90c6c781aae6cd44b",
+      "html": 26287,
+      "aprovat_per": "Mestre Javi Llinares",
+      "data": "2026-10-14"
     },
     "notes": {
       "sha256": "39cf0339b0694fc1ed39bdcac47064fadb725d844e6410753a9af90e1fc4e94c",

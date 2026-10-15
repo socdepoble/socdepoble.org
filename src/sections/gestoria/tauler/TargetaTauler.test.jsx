@@ -9,7 +9,9 @@ import path from 'node:path';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { MemoryRouter, useLocation } from '../../../app/contexts/RouterContext';
-import { AVIS_XIFRES_SENSE_TRADUCCIO, TargetaTauler, UllPrivacitat } from './TargetaTauler.jsx';
+import {
+  AVISOS_ACCIONS_PRIVADES, AVIS_XIFRES_SENSE_TRADUCCIO, TargetaTauler, UllPrivacitat, barraPrivada, peuPrivat
+} from './TargetaTauler.jsx';
 
 afterEach(() => {
   cleanup();
@@ -132,6 +134,53 @@ describe('el cos i el peu', () => {
     expect(fetch).not.toHaveBeenCalled();
     expect(screen.getByTestId('ubicacio').textContent).not.toMatch(/traduccions/);
     vi.unstubAllGlobals();
+  });
+});
+
+/* Ordre del Mestre, 14-10-2026 (prompt 261014_2015, punt 5): la barra i el peu porten les accions de sempre,
+   que a la Gestoria només avisen. Sense l'opt-in, el peu de sempre (l'Històric no canvia cap píxel). */
+describe('les accions privades', () => {
+  test('amb ambAccionsPrivades: Comentar i Compartir al peu, que només avisen; no naveguen, no comparteixen', () => {
+    const share = vi.fn();
+    const writeText = vi.fn();
+    vi.stubGlobal('navigator', { ...globalThis.navigator, share, clipboard: { writeText } });
+    const { targeta, onAvis, onObri } = pinta({ ambAccionsPrivades: true });
+    const noms = [...targeta.querySelectorAll('footer.sp-card-footer button')].map((b) => b.getAttribute('aria-label'));
+    expect(noms).toEqual(expect.arrayContaining(['Traduir Caixa real', 'Connectar amb Caixa real']));
+    const comentar = noms.find((nom) => /^Comentar/.test(nom));
+    const compartir = noms.find((nom) => /^Compartir/.test(nom));
+    expect(comentar && compartir).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: comentar }));
+    fireEvent.click(screen.getByRole('button', { name: compartir }));
+    expect(onAvis.mock.calls).toEqual([[AVISOS_ACCIONS_PRIVADES.comentar], [AVISOS_ACCIONS_PRIVADES.compartir]]);
+    expect(share).not.toHaveBeenCalled();
+    expect(writeText).not.toHaveBeenCalled();
+    expect(onObri).not.toHaveBeenCalled();
+    expect(screen.getByTestId('ubicacio').textContent).toBe('/app/gestoria/tauler');
+    vi.unstubAllGlobals();
+  });
+
+  test('sense onAvis, l’opt-in falla tancat: el peu de sempre, sense Comentar ni Compartir', () => {
+    const { targeta } = pinta({ ambAccionsPrivades: true, onAvis: undefined });
+    expect([...targeta.querySelectorAll('footer.sp-card-footer button')].map((b) => b.getAttribute('aria-label')))
+      .toEqual(['Traduir Caixa real', 'Connectar amb Caixa real']);
+  });
+
+  test('barraPrivada i peuPrivat: amb qui avise, inoperatives amb el perquè; sense, apagades', () => {
+    const onAvis = vi.fn();
+    const barra = barraPrivada(onAvis);
+    expect(barra.accionsInoperatives).toBe(true);
+    for (const accio of ['comentar', 'compartir', 'connectar']) barra.onClickInoperatiu(accio);
+    expect(onAvis.mock.calls.map(([text]) => text)).toEqual([
+      AVISOS_ACCIONS_PRIVADES.comentar, AVISOS_ACCIONS_PRIVADES.compartir, AVISOS_ACCIONS_PRIVADES.connectar
+    ]);
+    for (const sense of [null, undefined, 'no']) {
+      expect(barraPrivada(sense)).toEqual({ showComment: false, showShare: false, showConnect: false });
+      expect(peuPrivat(sense)).toEqual({ showShare: false, showComment: false });
+    }
+    expect(Object.isFrozen(AVISOS_ACCIONS_PRIVADES)).toBe(true);
+    /* Cap avís porta dades: ni xifres, ni dígits de compte, ni el nom del titular. */
+    expect(Object.values(AVISOS_ACCIONS_PRIVADES).join(' ')).not.toMatch(/\d|Taller de Prova/);
   });
 });
 

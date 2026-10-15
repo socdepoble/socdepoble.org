@@ -7,7 +7,7 @@ tags:
 visibility: private
 reflex: sdp:torn_0d1141b5-ca43-4382-840e-86198decda37:15ec5d31-e9dc-4eb8-9af3-fa22a57d746a
 ---
-# Acta Marmota: Relleu Diürn del Consell de les 3 IAs
+# Acta Marmota: Relleu Diürn de l'Olivera dels 3 agents
 
 > **Nota per a la IAIA:** Aquesta plantilla fon l'acta tècnica, el registre d'estat mental i el punt de control per al següent torn (Marmota). Ha de ser un document ric, detallat i exhaustiu. No escatimes en tokens ací, l'historial és la nostra única memòria a llarg termini. Descriu en profunditat què s'ha tocat, per què, i quins conflictes s'han superat.
 
@@ -78,7 +78,7 @@ Plantilla entregada: _wiki_de_poble/03_actuar/plantilles/acta.md; SHA-256 d0a64c
   * Afegit el suport de `contracte.escriu` a l'esquema de govern `schema.json` i segellat `schema-cutover.lock.json`.
   * Declarades les entrades (`contracte.llig`) i eixides (`contracte.escriu`) juntament amb la secció canònica `## Vincles` als **36 manifests SKILL.md** sota `.agents/skills/`.
   * Segellat `.agents/SKILLS_SEAL.json` amb 0 discrepàncies. Indicador de skills opaques a la Consola reduït a **0**.
-- **Motors de Dades Local-First de Gestoria:**
+- **Motors de Dades en Local (Cofre Privat) de Gestoria:**
   * Magatzem IndexedDB de Carpetes: `handleStore.js` (`desaHandleCarpeta`, `recuperaHandleCarpeta`, `oblidaHandleCarpeta`).
   * Lector Unificat d'Extractes Bancaris CSV: `llegeixQualsevolCsvBanc` a `movimentsBanc.js` delegant en `extracteCsv.js`.
   * Inferència de Proveïdors des d'Apunts Bancaris: `proposaProveidorDesDeMoviment` a `proveidors.js`.

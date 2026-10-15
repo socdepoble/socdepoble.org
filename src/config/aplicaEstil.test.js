@@ -27,7 +27,7 @@ function arrelNova(contenidor = document.body) {
 beforeEach(() => { crom.aplica.mockReset(); crom.restaura.mockReset(); });
 afterEach(() => {
   fulls().forEach((n) => n.remove());
-  document.body.innerHTML = '';
+  document.body.replaceChildren();
   vi.unstubAllGlobals();
 });
 

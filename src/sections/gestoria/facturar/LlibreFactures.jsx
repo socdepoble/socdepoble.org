@@ -15,8 +15,14 @@
  * aturada: mirar i imprimir no toca el llibre; en tancar-la, el focus torna al
  * botó «Factura» que l'ha oberta. I l'XML de prova dels registres
  * per a l'AEAT (xmlAeat.js), que es descarrega i no s'envia enlloc.
+ * Prompt 261014_1605, front G1:
+ *   · PODER 1 · la factura mostrada és estat de useFacturacio (f.mostrada):
+ *     emetre l'obri sola i «Factura» la canvia, sempre una sola vista. Va
+ *     davant dels detalls tècnics, que és el que es busca;
+ *   · PODER 3 · l'XML de prova i la seua nota, dins d'un desplegable de
+ *     detalls tècnics, tancat d'entrada.
  */
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Boto } from '../../../components/PedraSeca/atoms/Boto.jsx';
 import { Insignia } from '../../../components/PedraSeca/atoms/Insignia.jsx';
 import { Alerta } from '../../../components/PedraSeca/molecules/Alerta.jsx';
@@ -35,10 +41,7 @@ export function LlibreFactures({ f }) {
   const [anulant, setAnulant] = useState(null);
   const [motiu, setMotiu] = useState('');
   const [totes, setTotes] = useState(false);
-  /* La clau de la factura que es mostra en paper (no el registre: després d'anul·lar-la, el seu estat canvia). */
-  const [mostrada, setMostrada] = useState(null);
-  /* El botó «Factura» que l'ha oberta: en tancar-la, el focus hi torna (correcció de la revisió, 261009). */
-  const origen = useRef(null);
+  const { mostrada } = f;
   const estat = estatDeLaCadena(f.informe);
   const files = useMemo(() => filesDelLlibre(f.cadena), [f.cadena]);
   const visibles = totes ? files : files.slice(0, FACTURES_VISIBLES);
@@ -49,15 +52,8 @@ export function LlibreFactures({ f }) {
     setMotiu('');
     setAnulant(fila);
   };
-  const mostra = (fila) => (event) => {
-    origen.current = event.currentTarget;
-    setMostrada(clauDeFactura(fila.registre));
-  };
-  const tancaFactura = () => {
-    setMostrada(null);
-    if (origen.current?.isConnected) origen.current.focus();
-    origen.current = null;
-  };
+  /* El botó «Factura» que l'ha oberta: en tancar-la, el focus hi torna (correcció de la revisió, 261009). */
+  const mostra = (fila) => (event) => f.mostraFactura(clauDeFactura(fila.registre), event.currentTarget);
   /* El diàleg es tanca sempre: l'èxit o l'error es diuen a l'avís del llibre, que no queda davall del vel. */
   async function anulla() {
     await f.anulla(anulant.registre, motiu);
@@ -123,22 +119,25 @@ export function LlibreFactures({ f }) {
           <Boto varietat="secundari" onClick={() => setTotes(true)}>{`Mostra les ${files.length} factures`}</Boto>
         </div>
       ) : null}
-      {files.length ? (
-        <>
-          <p className="sdp-gestoria-panell__nota">
-            L’XML de prova porta els registres com els enviarà el programa a l’AEAT quan hi haja remissió. Ara no s’envia res,
-            i encara li falta el bloc del sistema informàtic (la declaració responsable del programa no existix).
-          </p>
-          <div className="sdp-gestoria-panell__accions">
-            <Boto varietat="secundari" onClick={f.exportaXml} disabled={Boolean(f.ocupat) || !f.cadenaBona} carregant={f.ocupat === 'xml'}>
-              Descarrega l’XML de prova per a l’AEAT
-            </Boto>
-          </div>
-        </>
-      ) : null}
       {filaMostrada ? (
         <ImpressioFactura key={mostrada} registre={filaMostrada.registre} anulada={filaMostrada.anulada}
-          onTanca={tancaFactura} imprimix={f.imprimix} />
+          onTanca={f.tancaFactura} imprimix={f.imprimix} />
+      ) : null}
+      {files.length ? (
+        <details className="sdp-gestoria-panell__documents">
+          <summary>Detalls tècnics: l’XML de prova per a l’AEAT</summary>
+          <div className="sdp-gestoria-panell__bloc">
+            <p className="sdp-gestoria-panell__nota">
+              L’XML de prova porta els registres com els enviarà el programa a l’AEAT quan hi haja remissió. Ara no s’envia res,
+              i encara li falta el bloc del sistema informàtic (la declaració responsable del programa no existix).
+            </p>
+            <div className="sdp-gestoria-panell__accions">
+              <Boto varietat="secundari" onClick={f.exportaXml} disabled={Boolean(f.ocupat) || !f.cadenaBona} carregant={f.ocupat === 'xml'}>
+                Descarrega l’XML de prova per a l’AEAT
+              </Boto>
+            </div>
+          </div>
+        </details>
       ) : null}
 
       <DialegConfirmacio obert={Boolean(anulant)} destructiu onTanca={() => setAnulant(null)} onConfirma={anulla}

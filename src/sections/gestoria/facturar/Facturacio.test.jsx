@@ -195,7 +195,8 @@ async function configura() {
   escriu('Adreça (obligatori)', 'Plaça del Poble, 1');
   escriu('Codi postal (obligatori)', '46999');
   escriu('Població (obligatori)', 'Poble de Prova');
-  escriu('Data de pas (obligatori)', '2026-10-07');
+  // Prompt 261014_1605, G1 · PODER 5: la «data de pas» és el primer dia que factures ací.
+  escriu('Primer dia que factures ací (obligatori)', '2026-10-07');
   fireEvent.click(boto('Desa les dades de l’empresa'));
   await screen.findByText('Dades de l’empresa desades');
   fireEvent.click(boto('No en tinc: comence de zero'));
@@ -227,6 +228,10 @@ async function emet(numero) {
 
 const numeroQueTindra = () => screen.getByText('Número que tindrà').nextElementSibling.textContent;
 const taula = () => within(screen.getByRole('region', { name: 'Factures emeses' }));
+/* Un pas de la pantalla pel seu títol: el NIF de l'empresa també es llig a «Qui factura?» (PODER 5). */
+const pas = (titol) => within(screen.getByRole('region', { name: titol }));
+/* Un desplegable pel text del seu resum (PODERS 3, 4 i 5). */
+const desplegable = (resum) => screen.getByText(resum, { selector: 'summary' }).closest('details');
 
 describe('sense allò que fa falta, no s’emet res', () => {
   test('sense IndexedDB: ho diu i no hi ha cap formulari (mai una reserva en memòria)', async () => {
@@ -257,8 +262,8 @@ describe('el camí sencer, sense xarxa', () => {
     expect(screen.queryByRole('heading', { level: 1 })).toBeNull();
 
     await configura();
-    // El resum del perfil, i la versió desada al seu magatzem (no al llibre).
-    expect(screen.getByText(CIF_EMISSOR)).toBeTruthy();
+    // El resum del perfil, i la versió desada al seu magatzem (no al llibre). El NIF també és a «Qui factura?».
+    expect(pas('1. Les dades de l’empresa').getByText(CIF_EMISSOR)).toBeTruthy();
     expect(screen.getByText('Plaça del Poble, 1, 46999 Poble de Prova')).toBeTruthy();
     expect(files(idb, NOM_BD_PERFIL, 'versions').map((f) => f.clau)).toEqual(['config|000000000001', 'llegat|000000000001']);
     // Amb el perfil llest, es demana la persistència; el navegador diu que no, i es diu.
@@ -329,7 +334,7 @@ describe('el camí sencer, sense xarxa', () => {
 
     munta({ idb, persist: async () => true });
     await waitFor(() => expect(numeroQueTindra()).toBe('A2026-0002'));
-    expect(screen.getByText(CIF_EMISSOR)).toBeTruthy();
+    expect(pas('1. Les dades de l’empresa').getByText(CIF_EMISSOR)).toBeTruthy();
     expect(screen.getByText('No hi havia factures d’abans: el programa comença de zero.')).toBeTruthy();
     expect(taula().getByRole('rowheader', { name: 'A2026-0001' })).toBeTruthy();
     // Concedida, es diu amb una insígnia i sense cap avís.
@@ -406,7 +411,7 @@ describe('el camí sencer, sense xarxa', () => {
     fireEvent.click(boto('Canvia les dades de l’empresa'));
     const nif = screen.getByLabelText('NIF (obligatori)');
     expect(nif.readOnly).toBe(true);
-    expect(screen.getByLabelText('Data de pas (obligatori)').readOnly).toBe(true);
+    expect(screen.getByLabelText('Primer dia que factures ací (obligatori)').readOnly).toBe(true);
     expect(screen.getByText('Ja hi ha factures emeses amb este NIF: no es pot canviar.')).toBeTruthy();
     // Encara que el valor del camp es canvie per una altra via, no es desa.
     fireEvent.change(nif, { target: { value: DNI_CLIENT } });
@@ -453,10 +458,21 @@ describe('emetre de veres: retenció, factura en paper i rectificativa', () => {
     expect(screen.getByText('Total a pagar').nextElementSibling.textContent).toBe('4,45 €');
     await emet('A2026-0001');
 
+    // Prompt 261014_1605, G1 · PODER 1: emesa, ja s'ha obert sola. «Factura» de la fila de la mateixa factura fa
+    // servir el mateix estat: la vista no es remunta (la mateixa clau) i el focus no es mou (fireEvent no el posa al
+    // botó): continua al títol, on l'ha posat l'obertura automàtica. Que la fila d'una factura DIFERENT porte el focus
+    // al seu títol es comprova a PODER 1.
+    const oberta = await screen.findByRole('heading', { name: 'La factura A2026-0001', level: 3 });
     fireEvent.click(boto('Mostra la factura A2026-0001'));
     const titol = await screen.findByRole('heading', { name: 'La factura A2026-0001', level: 3 });
+    expect(titol).toBe(oberta);
     expect(document.activeElement).toBe(titol);
     const vista = within(titol.closest('section'));
+    // PODER 3: els interruptors van dins dels detalls tècnics, tancats d'entrada.
+    const tecnics = desplegable('Detalls tècnics: el QR i la menció VERI*FACTU');
+    expect(tecnics.open).toBe(false);
+    fireEvent.click(within(tecnics).getByText('Detalls tècnics: el QR i la menció VERI*FACTU'));
+    expect(tecnics.open).toBe(true);
     const full = within(vista.getByRole('article', { name: 'Factura A2026-0001' }));
     expect(full.getByText('QR tributario:')).toBeTruthy();
     expect(full.getByRole('img', { name: 'Codi QR de cotejo de la factura a l’AEAT' })).toBeTruthy();
@@ -591,7 +607,11 @@ describe('emetre de veres: retenció, factura en paper i rectificativa', () => {
     omplClient();
     omplLinia();
     await emet('A2026-0001');
-    fireEvent.click(boto('Descarrega l’XML de prova per a l’AEAT'));
+    // Prompt 261014_1605, G1 · PODER 3: l'XML de prova, dins dels seus detalls tècnics, tancats d'entrada.
+    const tecnics = desplegable('Detalls tècnics: l’XML de prova per a l’AEAT');
+    expect(tecnics.open).toBe(false);
+    fireEvent.click(within(tecnics).getByText('Detalls tècnics: l’XML de prova per a l’AEAT'));
+    fireEvent.click(within(tecnics).getByRole('button', { name: 'Descarrega l’XML de prova per a l’AEAT' }));
     expect(await screen.findByText('XML de prova descarregat')).toBeTruthy();
     expect(descarrega).toHaveBeenCalledTimes(1);
     const [{ nom, tipus, dades }] = descarrega.mock.calls[0];
@@ -623,6 +643,249 @@ describe('emetre de veres: retenció, factura en paper i rectificativa', () => {
     fireEvent.click(boto('Revisa i emet la factura'));
     expect(await screen.findByText(/^Alguna de les factures triades ja no es pot rectificar/)).toBeTruthy();
     expect(screen.queryByRole('dialog')).toBeNull();
+  });
+});
+
+/* Prompt 261014_1605, front G1: la Facturació en tres preguntes (qui factura, a qui i què, revisa i emet),
+   amb el PDF en un clic i la part tècnica darrere de desplegables discrets, abans del 20 d'octubre. */
+describe('la factura en tres preguntes (Prompt 261014_1605, G1)', () => {
+  test('PODER 1 · emesa, la factura s’obri sola amb «Imprimeix o desa en PDF»; una sola vista, i el focus torna on toca', async () => {
+    const imprimix = vi.fn();
+    munta({ imprimix });
+    await configura();
+    await waitFor(() => expect(numeroQueTindra()).toBe('A2026-0001'));
+    omplClient();
+    omplLinia();
+    await emet('A2026-0001');
+    // Sense baixar al llibre: la factura emesa ja és oberta, amb el focus al seu títol.
+    const titol = await screen.findByRole('heading', { name: 'La factura A2026-0001', level: 3 });
+    expect(document.activeElement).toBe(titol);
+    expect(boto('Mostra la factura A2026-0001').getAttribute('aria-pressed')).toBe('true');
+    fireEvent.click(within(titol.closest('section')).getByRole('button', { name: 'Imprimeix o desa en PDF' }));
+    expect(imprimix).toHaveBeenCalledTimes(1);
+
+    // Una altra: la vista passa a la nova i en queda una sola, perquè toca l'<html> i el <body>.
+    await waitFor(() => expect(numeroQueTindra()).toBe('A2026-0002'));
+    omplClient();
+    omplLinia({ concepte: 'Coca', quantitat: '1', preu: '10,00', iva: '10' });
+    await emet('A2026-0002');
+    expect(await screen.findByRole('heading', { name: 'La factura A2026-0002', level: 3 })).toBeTruthy();
+    expect(screen.queryByRole('heading', { name: 'La factura A2026-0001' })).toBeNull();
+    expect(document.querySelectorAll('.sdp-gestoria-factura')).toHaveLength(1);
+    expect(document.body.querySelectorAll(':scope > .sdp-gestoria-factura-impresa')).toHaveLength(1);
+    expect(document.documentElement.classList.contains('sdp-gestoria-imprimint')).toBe(true);
+
+    // Tancar la que ha obert l'emissió: el focus va a l'acció principal del formulari, i el document queda com estava.
+    fireEvent.click(boto('Tanca la factura'));
+    expect(screen.queryByRole('heading', { name: 'La factura A2026-0002' })).toBeNull();
+    expect(document.activeElement).toBe(boto('Revisa i emet la factura'));
+    expect(document.documentElement.classList.contains('sdp-gestoria-imprimint')).toBe(false);
+    expect(document.body.querySelector('.sdp-gestoria-factura-impresa')).toBeNull();
+
+    // La fila «Factura» del llibre fa servir el mateix estat: en canvia una per l'altra, el focus va al títol de la
+    // nova (una altra clau: la vista es remunta) i, en tancar-la, torna al seu botó. El focus es posa abans al botó,
+    // com fa el clic d'un navegador, perquè el títol de l'A2026-0002 no el deixe ja on es comprova.
+    fireEvent.click(boto('Mostra la factura A2026-0002'));
+    boto('Mostra la factura A2026-0001').focus();
+    fireEvent.click(boto('Mostra la factura A2026-0001'));
+    const titolDeLaFila = await screen.findByRole('heading', { name: 'La factura A2026-0001', level: 3 });
+    expect(document.activeElement).toBe(titolDeLaFila);
+    expect(document.querySelectorAll('.sdp-gestoria-factura')).toHaveLength(1);
+    expect(boto('Mostra la factura A2026-0002').getAttribute('aria-pressed')).toBe('false');
+    fireEvent.click(boto('Tanca la factura'));
+    expect(document.activeElement).toBe(boto('Mostra la factura A2026-0001'));
+    expect(xarxa).not.toHaveBeenCalled();
+  });
+
+  test('PODER 2 · «A qui?»: el client d’una factura anterior omple els camps, que es poden canviar; a la rectificativa no hi és', async () => {
+    const { idb } = munta();
+    await configura();
+    await waitFor(() => expect(numeroQueTindra()).toBe('A2026-0001'));
+    // Sense factures al llibre, no hi ha res per triar.
+    expect(screen.queryByLabelText('Client d’una factura anterior (opcional)')).toBeNull();
+    omplClient();
+    omplLinia();
+    await emet('A2026-0001');
+    await waitFor(() => expect(numeroQueTindra()).toBe('A2026-0002'));
+
+    const selector = () => screen.getByLabelText('Client d’una factura anterior (opcional)');
+    const camp = (etiqueta) => screen.getByLabelText(etiqueta).value;
+    expect([...selector().options].map((o) => o.textContent)).toEqual(['Cap: un client nou', `Bar de la Plaça · ${DNI_CLIENT}`]);
+    expect(selector().value).toBe('');
+    fireEvent.change(selector(), { target: { value: DNI_CLIENT } });
+    expect([camp('NIF del client (obligatori)'), camp('Nom o raó social (obligatori)'), camp('Adreça (obligatori)'),
+      camp('Codi postal (obligatori)'), camp('Població (obligatori)')]).toEqual([DNI_CLIENT, 'Bar de la Plaça', 'Carrer Major, 2', '46998', 'Poble de Prova']);
+    expect(selector().value).toBe(DNI_CLIENT);
+    // «Cap» els buida; es torna a triar i se'n corregix un: el selector ja no diu que és el de la factura.
+    fireEvent.change(selector(), { target: { value: '' } });
+    expect(camp('NIF del client (obligatori)')).toBe('');
+    fireEvent.change(selector(), { target: { value: DNI_CLIENT } });
+    escriu('Nom o raó social (obligatori)', 'Bar de la Plaça SL');
+    expect(selector().value).toBe('');
+    omplLinia({ concepte: 'Coca', quantitat: '1', preu: '10,00', iva: '10' });
+    await emet('A2026-0002');
+    expect(files(idb, NOM_BD, 'registres')[1].registre.factura.destinatari).toMatchObject({
+      nif: DNI_CLIENT, nom: 'Bar de la Plaça SL', domicili: { adreca: 'Carrer Major, 2', codiPostal: '46998', poblacio: 'Poble de Prova' }
+    });
+    // Un client per NIF, amb les dades de la factura més nova.
+    await waitFor(() => expect([...selector().options].map((o) => o.textContent)).toEqual(['Cap: un client nou', `Bar de la Plaça SL · ${DNI_CLIENT}`]));
+
+    // A la rectificativa, el client és el de la factura que corregix: el selector no hi és i la còpia de sempre mana.
+    fireEvent.click(screen.getByRole('radio', { name: 'Factura rectificativa' }));
+    expect(screen.queryByLabelText('Client d’una factura anterior (opcional)')).toBeNull();
+    fireEvent.click(screen.getByLabelText('A2026-0001 · 07/10/2026 · Bar de la Plaça · 5,20 €'));
+    expect(camp('Nom o raó social (obligatori)')).toBe('Bar de la Plaça');
+    expect(xarxa).not.toHaveBeenCalled();
+  });
+
+  test('PODER 3 · dalt, una frase planera i certa; Veri*Factu, l’XML de prova i els interruptors, en detalls tècnics tancats', async () => {
+    munta();
+    await configura();
+    // On es guarden de veres: el llibre i el perfil són a l'IndexedDB d'este navegador (portIndexedDB, magatzemPerfil).
+    expect(screen.getByText('Factura des d’este ordinador, amb connexió o sense. Les factures i les dades de l’empresa es guarden en este '
+      + 'navegador, i no ixen d’ací.')).toBeTruthy();
+    const tecnics = desplegable('Detalls tècnics (Veri*Factu i AEAT)');
+    expect(tecnics.open).toBe(false);
+    expect(within(tecnics).getByText(/^Cada factura entra al llibre Veri\*Factu encadenada a l’anterior/)).toBeTruthy();
+    expect(within(tecnics).getByText('L’enviament a l’AEAT encara no està fet: el llibre el tindrà preparat.')).toBeTruthy();
+    fireEvent.click(within(tecnics).getByText('Detalls tècnics (Veri*Factu i AEAT)'));
+    expect(tecnics.open).toBe(true);
+
+    await waitFor(() => expect(numeroQueTindra()).toBe('A2026-0001'));
+    omplClient();
+    omplLinia();
+    await emet('A2026-0001');
+    expect(desplegable('Detalls tècnics: l’XML de prova per a l’AEAT').open).toBe(false);
+    // La factura: imprimir, davant; el QR (encés) i la menció VERI*FACTU (apagada), darrere.
+    const vista = within((await screen.findByRole('heading', { name: 'La factura A2026-0001', level: 3 })).closest('section'));
+    const delPaper = desplegable('Detalls tècnics: el QR i la menció VERI*FACTU');
+    expect(delPaper.open).toBe(false);
+    expect(within(delPaper).getAllByRole('switch').map((s) => s.getAttribute('aria-checked'))).toEqual(['true', 'false']);
+    expect(within(delPaper).queryByRole('button', { name: 'Imprimeix o desa en PDF' })).toBeNull();
+    expect(vista.getByRole('button', { name: 'Imprimeix o desa en PDF' })).toBeTruthy();
+    // Cap promesa que el codi no complix: ni «segellada» ni «oficial» (no hi ha remissió a l'AEAT).
+    expect(screen.queryByText(/segellad|oficial/i)).toBeNull();
+  });
+
+  test('PODER 4 · la completa per defecte; el tipus, la data de l’operació i la descripció, a «Més opcions», que diu el que s’hi ha triat', async () => {
+    const { idb } = munta();
+    await configura();
+    await waitFor(() => expect(numeroQueTindra()).toBe('A2026-0001'));
+    const mes = desplegable('Més opcions');
+    const resum = () => mes.querySelector('summary').textContent;
+    expect(mes.open).toBe(false);
+    expect(screen.getByRole('radio', { name: 'Factura completa' }).checked).toBe(true);
+    expect(within(mes).getByRole('group', { name: 'Quina factura fas?' })).toBeTruthy();
+    expect(within(mes).getByLabelText('Data de l’operació (opcional)')).toBeTruthy();
+    expect(within(mes).getByLabelText('Descripció de l’operació (opcional)')).toBeTruthy();
+    // A la vista, fora del desplegable: el client, les línies, la retenció, la data i el botó.
+    for (const etiqueta of ['NIF del client (obligatori)', 'Concepte (obligatori)', 'Retenció d’IRPF', 'Data de la factura (obligatori)']) {
+      expect(mes.contains(screen.getByLabelText(etiqueta)), etiqueta).toBe(false);
+    }
+
+    // Obert a mà, es tria el tiquet: el resum ho diu i, tancat a mà, ho continua dient.
+    fireEvent.click(mes.querySelector('summary'));
+    await waitFor(() => expect(mes.open).toBe(true));
+    fireEvent.click(screen.getByRole('radio', { name: 'Factura simplificada (tiquet)' }));
+    expect(resum()).toBe('Més opcions: Factura simplificada (tiquet)');
+    await waitFor(() => expect(numeroQueTindra()).toBe('T2026-0001'));
+    fireEvent.click(mes.querySelector('summary'));
+    await waitFor(() => expect(mes.open).toBe(false));
+    expect(resum()).toBe('Més opcions: Factura simplificada (tiquet)');
+
+    // Tornar a la completa, amb descripció i data de l'operació: arriben a la factura.
+    fireEvent.click(mes.querySelector('summary'));
+    await waitFor(() => expect(mes.open).toBe(true));
+    fireEvent.click(screen.getByRole('radio', { name: 'Factura completa' }));
+    expect(resum()).toBe('Més opcions');
+    await waitFor(() => expect(numeroQueTindra()).toBe('A2026-0001'));
+    escriu('Descripció de l’operació (opcional)', 'Pa per a la festa');
+    escriu('Data de l’operació (opcional)', '2026-10-06');
+    expect(resum()).toBe('Més opcions: data de l’operació, descripció');
+    // Encara obert: canviar el que hi ha dins no el plega mai.
+    expect(mes.open).toBe(true);
+    omplClient();
+    omplLinia();
+    await emet('A2026-0001');
+    expect(files(idb, NOM_BD, 'registres')[0].registre.factura).toMatchObject({ descripcio: 'Pa per a la festa', dataOperacio: '2026-10-06' });
+    expect(resum()).toBe('Més opcions');
+    expect(xarxa).not.toHaveBeenCalled();
+  });
+
+  test('PODER 5 · el primer dia que factures ací; els passos fets, recollits; la Factura nova en tres preguntes', async () => {
+    munta();
+    await screen.findByRole('heading', { name: '1. Les dades de l’empresa' });
+    escriu('NIF (obligatori)', CIF_EMISSOR);
+    escriu('Nom legal (obligatori)', 'Forn del Poble SL');
+    escriu('Adreça (obligatori)', 'Plaça del Poble, 1');
+    escriu('Codi postal (obligatori)', '46999');
+    escriu('Població (obligatori)', 'Poble de Prova');
+    // Sense el primer dia, l'error ho diu sense jerga.
+    fireEvent.click(boto('Desa les dades de l’empresa'));
+    expect(await screen.findByText(/^Falta el primer dia que factures ací: el dia des del qual factures amb este programa/)).toBeTruthy();
+    expect(screen.queryByText(/data de pas/i)).toBeNull();
+    escriu('Primer dia que factures ací (obligatori)', '2026-10-07');
+    fireEvent.click(boto('Desa les dades de l’empresa'));
+    await screen.findByText('Dades de l’empresa desades');
+
+    // Pas 1 fet: el resum, recollit; l'avís, fora del desplegable.
+    const perfil = desplegable('Les dades desades (versió 1)');
+    expect(perfil.open).toBe(false);
+    expect(within(perfil).getByText('Primer dia que factures ací').nextElementSibling.textContent).toBe('07/10/2026');
+    expect(within(perfil).getByRole('button', { name: 'Canvia les dades de l’empresa' })).toBeTruthy();
+    expect(perfil.contains(screen.getByText('Dades de l’empresa desades'))).toBe(false);
+
+    // Pas 2 fet: el mateix.
+    fireEvent.click(boto('No en tinc: comence de zero'));
+    await screen.findByText('Factures d’abans desades');
+    const llegat = desplegable('Sense factures d’abans: el programa comença de zero');
+    expect(llegat.open).toBe(false);
+    expect(within(llegat).getByText('No hi havia factures d’abans: el programa comença de zero.')).toBeTruthy();
+    expect(within(llegat).getByRole('button', { name: 'Torna a carregar les factures d’abans' })).toBeTruthy();
+    expect(llegat.contains(screen.getByText('Factures d’abans desades'))).toBe(false);
+
+    // La Factura nova, en tres preguntes; qui factura, del perfil i només per a llegir.
+    await waitFor(() => expect(numeroQueTindra()).toBe('A2026-0001'));
+    const nova = pas('3. Factura nova');
+    const preguntes = nova.getAllByRole('heading', { level: 3 });
+    expect(preguntes.map((h) => h.textContent)).toEqual(['Qui factura?', 'A qui i què?', 'Revisa i emet']);
+    expect(nova.getByText('Nom legal').nextElementSibling.textContent).toBe('Forn del Poble SL');
+    expect(nova.getByText('NIF').nextElementSibling.textContent).toBe(CIF_EMISSOR);
+    expect(nova.queryByRole('textbox', { name: /^NIF \(obligatori\)$|^Nom legal/ })).toBeNull();
+    // L'ordre de lectura: el client va darrere d'«A qui i què?»; la data, el número i el botó, darrere de «Revisa i emet».
+    const despres = (a, b) => Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(despres(preguntes[1], nova.getByLabelText('NIF del client (obligatori)'))).toBe(true);
+    expect(despres(nova.getByLabelText('Retenció d’IRPF'), preguntes[2])).toBe(true);
+    for (const element of [nova.getByLabelText('Data de la factura (obligatori)'), nova.getByText('Número que tindrà'), boto('Revisa i emet la factura')]) {
+      expect(despres(preguntes[2], element)).toBe(true);
+    }
+    expect(xarxa).not.toHaveBeenCalled();
+  });
+
+  /* Correcció de la revisió (Prompt 261014_1605, G1): la nota deia «es canvien allí» també quan el NIF ja no es
+     podia canviar (PERFIL_FIXAT del magatzem del perfil, i el camp de només lectura del pas 1). */
+  test('PODER 5 · la nota de «Qui factura?» diu la veritat: sense factures, es canvien al pas 1; amb factures emeses, el NIF ja no', async () => {
+    munta();
+    await configura();
+    await waitFor(() => expect(numeroQueTindra()).toBe('A2026-0001'));
+    const nova = () => pas('3. Factura nova');
+    const lliure = 'Són les dades de l’empresa del pas 1: es canvien allí.';
+    const fixat = 'Són les dades de l’empresa del pas 1: el nom legal es canvia allí; el NIF ja no, perquè hi ha factures emeses.';
+    // Sense cap factura emesa, el pas 1 deixa canviar el nom legal i el NIF.
+    expect(nova().getByText(lliure)).toBeTruthy();
+    expect(nova().queryByText(fixat)).toBeNull();
+
+    omplClient();
+    omplLinia();
+    await emet('A2026-0001');
+    // Amb una factura emesa amb este NIF, el perfil es fixa: la nota ja no promet canviar el NIF.
+    expect(await nova().findByText(fixat)).toBeTruthy();
+    expect(nova().queryByText(lliure)).toBeNull();
+    // I el pas 1 fa el que diu la nota: el NIF, de només lectura; el nom legal, no.
+    fireEvent.click(boto('Canvia les dades de l’empresa'));
+    expect(screen.getByLabelText('NIF (obligatori)').readOnly).toBe(true);
+    expect(screen.getByLabelText('Nom legal (obligatori)').readOnly).toBe(false);
+    expect(xarxa).not.toHaveBeenCalled();
   });
 });
 

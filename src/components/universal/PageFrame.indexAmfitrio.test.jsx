@@ -31,7 +31,7 @@ beforeEach(() => {
 });
 afterEach(() => {
   cleanup();
-  document.body.innerHTML = '';
+  document.body.replaceChildren();
   Element.prototype.scrollIntoView = scrollAbans;
 });
 

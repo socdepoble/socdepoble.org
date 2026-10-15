@@ -31,6 +31,13 @@
  *   · F4 · desar la configuració o el llegat porta els registres del llibre
  *     llegits en eixe moment: amb factures del NIF vigent, el perfil és fix
  *     (PERFIL_FIXAT al magatzem).
+ * Prompt 261014_1605, front G1 · PODER 1 (el PDF en un clic): la factura que
+ * es mostra en paper és estat d'ací, no del llibre. Emesa bé, el formulari
+ * l'obri (mostraEmesa) en tancar el seu diàleg de confirmació, i «Factura» de
+ * cada fila del llibre fa servir el mateix estat: sempre hi ha
+ * una sola ImpressioFactura muntada, perquè toca l'<html> i el <body>. En
+ * tancar-la, el focus torna on diu qui l'ha oberta (el botó de la fila, o
+ * l'acció principal del formulari quan l'ha oberta l'emissió).
  * Cap crida de xarxa. Proves: port, perfil, subtle, idb, locks,
  * emmagatzematge, rellotge, entorn i descarrega s'injecten.
  */
@@ -45,14 +52,15 @@ import { creaPortIndexedDB } from '../facturacio/registre/portIndexedDB.js';
 import { xmlDeRegistres } from '../facturacio/registre/xmlAeat.js';
 import { demanaCarpeta, fontDesDeHandle, oblidaFont, potTriarCarpeta } from '../font/fontNavegador.js';
 import { TIPUS_COPIA, TIPUS_XML, marcaDeCopia, nomFitxerCopia, nomFitxerXml, ultimsConegutsDe } from './nucli/copia.js';
-import { euros } from './nucli/formulari.js';
+import { clauDeFactura, euros } from './nucli/formulari.js';
 
 const PERFIL_BUIT = Object.freeze({ config: null, llegat: null, copia: null });
 
 /* El títol de l'avís de cada error que la persona pot trobar-se. */
 const TITOLS_ERROR = Object.freeze({
   CONFIG_INVALIDA: 'Les dades de l’empresa no estan completes',
-  SENSE_DATA_PAS: 'Falta la data de pas',
+  /* Prompt 261014_1605, G1 · PODER 5: la «data de pas» és el primer dia que factures ací. */
+  SENSE_DATA_PAS: 'Falta el primer dia que factures ací',
   LLEGAT_INVALID: 'Les factures d’abans no s’han pogut llegir',
   FACTURA_INVALIDA: 'La factura no està completa',
   NUMERO_NO_CORRELATIU: 'El número ha canviat',
@@ -162,6 +170,10 @@ export function useFacturacio({
   const [persistencia, setPersistencia] = useState(null);
   const [ocupat, setOcupat] = useState(null);
   const [avis, setAvis] = useState(null);
+  /* PODER 1 (Prompt 261014_1605, G1): la clau de la factura que es mostra en paper (no el registre: després
+     d'anul·lar-la, el seu estat canvia), i on torna el focus en tancar-la (un element, o una funció que el dona). */
+  const [mostrada, setMostrada] = useState(null);
+  const tornaFocus = useRef(null);
   const viu = useRef(true);
 
   /* Llegir el perfil i el llibre, i verificar la cadena sencera amb la marca de l'última còpia. */
@@ -253,6 +265,20 @@ export function useFacturacio({
     if (viu.current) setAvis(avisExit(zona, titol, text, to));
   }, []);
 
+  /** Mostra en paper la factura de `clau`; en tancar-la, el focus anirà a `torna`. */
+  const mostraFactura = useCallback((clau, torna = null) => {
+    tornaFocus.current = torna;
+    setMostrada(clau);
+  }, []);
+
+  const tancaFactura = useCallback(() => {
+    const torna = tornaFocus.current;
+    tornaFocus.current = null;
+    setMostrada(null);
+    const desti = typeof torna === 'function' ? torna() : torna;
+    if (desti?.isConnected) desti.focus();
+  }, []);
+
   /* El perfil es desa amb el llibre llegit en eixe moment (no el de la pantalla, que pot anar tard):
      el magatzem hi mira si ja s'ha emés amb el NIF vigent (PERFIL_FIXAT). */
   const desaConfig = useCallback(async (nova) => {
@@ -296,6 +322,13 @@ export function useFacturacio({
     if (r.ok) exit('factura', `Factura ${r.resultat.numSerie} emesa`, `Total: ${euros(r.resultat.importTotal)}. Ja és al llibre, encadenada a l’anterior.`);
     return r;
   }, [executa, exit, emissio, recarrega]);
+
+  /* PODER 1 (Prompt 261014_1605, G1): la factura acabada d'emetre, en paper. L'alta que torna emet() és el
+     registre del llibre que pinta ImpressioFactura. La crida el formulari després de tancar el seu diàleg:
+     el diàleg torna el focus on era i, després, la factura el porta al seu títol. */
+  const mostraEmesa = useCallback((alta, torna = null) => {
+    if (viu.current && alta) mostraFactura(clauDeFactura(alta), torna);
+  }, [mostraFactura]);
 
   const anulla = useCallback(async (registre, motiu) => {
     const r = await executa('anul·lant', 'llibre', async () => {
@@ -412,6 +445,11 @@ export function useFacturacio({
     potTriarCarpeta: potTriarCarpeta(entorn),
     /* Onada 6: qui imprimix la factura (per defecte, window.print a ImpressioFactura); les proves l'injecten. */
     imprimix,
+    /* PODER 1 (Prompt 261014_1605, G1): la factura en paper, una sola a la vegada. */
+    mostrada,
+    mostraFactura,
+    mostraEmesa,
+    tancaFactura,
     dataDeHui: () => dataDeHui(ara.current()),
     tancaAvis: () => setAvis(null),
     desaConfig,

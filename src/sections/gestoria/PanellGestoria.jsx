@@ -26,6 +26,10 @@
  * curta }, 'gestoria.correus': { estat, curta } }, onObreTractors, subtle,
  * inflate, entorn, avui, descarrega?, onFactures?: (cable|null) => void } (descarrega: per a les proves; per
  * defecte, Blob i enllaç temporal com a DetallPrivacitat.jsx).
+ * El cable (onFactures): { any, t, factures, historial, titular, entregables } o null. Ordre del Mestre,
+ * 14-10-2026 (prompt 261014_2015, punt 3): titular i entregables (els del full generat, o null mentre no n'hi
+ * ha) són per a la «Plantilla Gestoria» del Quadre de comandament (PlantillaGestoria.jsx), que en fa servir
+ * també la descàrrega per defecte (descarregaPerDefecte, exportada per això).
  */
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { Boto } from '../../components/PedraSeca/atoms/Boto.jsx';
@@ -208,8 +212,10 @@ const ETIQUETES_CAMP = Object.freeze({
   subtotal: 'subtotal', iva: 'IVA', total: 'total', retencio: 'retenció'
 });
 
-/* Descàrrega amb Blob i un enllaç temporal, com a DetallPrivacitat.jsx: res passa per cap servidor. */
-function descarregaPerDefecte({ nom, tipus, dades }) {
+/* Descàrrega amb Blob i un enllaç temporal, com a DetallPrivacitat.jsx: res passa per cap servidor. Exportada
+   (ordre del Mestre, 14-10-2026, prompt 261014_2015, punt 3) perquè la «Plantilla Gestoria» del Quadre de
+   comandament descarregue l'XLSX de la mateixa manera; el comportament no canvia. */
+export function descarregaPerDefecte({ nom, tipus, dades }) {
   const url = URL.createObjectURL(new Blob([dades], { type: tipus || 'application/octet-stream' }));
   const enllac = document.createElement('a');
   enllac.href = url;
@@ -657,7 +663,13 @@ export default function PanellGestoria({
      closca rep el trimestre, les seues factures i l'historial dels fulls
      anteriors (per al 130 de l'any); quan la proposta desapareix d'este mateix
      muntatge (Desenxufa), rep null. En muntar sense proposta no s'avisa res:
-     la closca conserva el que ja tenia d'una anàlisi anterior. */
+     la closca conserva el que ja tenia d'una anàlisi anterior.
+     Ordre del Mestre, 14-10-2026 (prompt 261014_2015, punt 3): el cable porta
+     també el titular de la proposta i els entregables del full generat (el
+     full maquetat i els bytes de la segona aprovació), o null mentre no n'hi
+     ha. No en fa cap de nou: qualsevol canvi de la proposta els anul·la
+     (SENSE_APROVACIO, a useGestoria.js) i el cable els torna a passar null;
+     generar-los torna a avisar la closca amb la mateixa proposta. */
   const historialDelFull = g.analisi?.historial ?? null;
   const teniaProposta = useRef(false);
   useEffect(() => {
@@ -668,13 +680,16 @@ export default function PanellGestoria({
         any: proposta.any,
         t: proposta.t,
         factures: [...proposta.ingressos, ...proposta.despeses],
-        historial: Array.isArray(historialDelFull) ? historialDelFull : []
+        historial: Array.isArray(historialDelFull) ? historialDelFull : [],
+        /* Ordre del Mestre, 14-10-2026 (prompt 261014_2015, punt 3): per a la «Plantilla Gestoria» del Quadre de comandament. */
+        titular: proposta.titular,
+        entregables: entregables ?? null
       });
     } else if (teniaProposta.current) {
       teniaProposta.current = false;
       onFactures(null);
     }
-  }, [proposta, historialDelFull, onFactures]);
+  }, [proposta, historialDelFull, entregables, onFactures]);
   const altes = incidencies.filter((i) => i.severitat === 'alta');
   const estaRevisada = revisada === versio && Boolean(proposta);
   const estaAcceptada = acceptada === versio;

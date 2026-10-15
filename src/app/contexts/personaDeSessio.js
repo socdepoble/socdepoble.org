@@ -19,8 +19,26 @@
  *   · és d'un altre compte (fila.id ≠ usuari.id): una resposta tardana d'una
  *     sessió anterior no es barreja mai amb la d'ara (doctrina T47).
  *
- * Pur: sense React ni port (la mateixa capa que politicaRouter.js).
+ * Pla 261014_1450, front B (ordre del Mestre, 14-10-2026) · La foto de l'actor
+ * persona (la barra negra i el Xat, per IdentitatContext) es tria ací amb
+ * triaAvatar, i la de /el-meu-perfil (PerfilContext.jsx) crida la mateixa
+ * funció: 1) la pujada a Sóc de Poble, 2) la del proveïdor d'entrada
+ * (Google…), 3) cap, i Avatar hi pinta les inicials amb la llavor. La firma i
+ * la validesa de la fila no canvien: la regla només ordena els candidats que
+ * ja hi entraven.
+ * Pla 261014_1450, front B (revisió) · No és l'única cadena de foto de la persona: encara
+ * porten la seua sections/notes/autoriaNota.js:152 (la signatura de la sessió
+ * en una nota), data/localPerfils.js:91 (avatarDeSessio de l'adaptador local)
+ * i la fila de reserva de data/supabase/auth.js:198 (getProfile). Pendent,
+ * fora de l'abast del front B.
+ *
+ * Pur: sense React ni port (la mateixa capa que politicaRouter.js). Des del
+ * front B importa utils/sanitize.js pel classificador de fonts pròpies; eixe
+ * mòdul arma DOMPurify en carregar-se i necessita un DOM (el navegador, o
+ * jsdom a les proves). IdentitatContext ja el portava al graf
+ * (sessionService → data/identitat.js).
  */
+import { esFontImatgePropia } from '../../utils/sanitize.js';
 
 /* U+0000: cap camp de text de la sessió no el porta, i dos camps no es poden
    confondre en ajuntar-los. */
@@ -28,15 +46,34 @@ const SEPARADOR = '\u0000';
 const net = (valor) => (typeof valor === 'string' ? valor.trim() : '');
 const metadadesDe = (usuari) => usuari?.user_metadata || {};
 
+/* Pla 261014_1450, front B (ordre del Mestre, 14-10-2026: «La prioritat
+   d'avatars ha de ser estricta») · 1) la primera candidata pròpia per a
+   esFontImatgePropia, el mateix classificador del mode estricte del Mur
+   ('sdp-media://…', data:image, un camí de l'app o un origen del nostre
+   servidor de mitjans); 2) si no n'hi ha cap, la primera no buida, que és la
+   del proveïdor d'entrada (Google, Facebook, GitHub); 3) null, i Avatar hi
+   pinta les inicials amb la llavor. Dins de cada grup mana l'ordre dels
+   candidats. Els valors es netegen d'espais, i un que no és text compta com a
+   buit. */
+export function triaAvatar(...candidats) {
+  const fonts = candidats.map(net).filter(Boolean);
+  return fonts.find((font) => esFontImatgePropia(font)) || fonts[0] || null;
+}
+
 /* T43 (260928) · La cadena de sempre, mudada ací sense canvis des
    d'IdentitatContext: ara és la reserva quan no hi ha fila de perfil. */
 export function nomDePersona(usuari) {
   const meta = metadadesDe(usuari);
   return meta.full_name || meta.name || usuari?.full_name || usuari?.email || 'El meu compte';
 }
+/* Pla 261014_1450, front B · La reserva de les metadades passa per la mateixa
+   regla, perquè en este fitxer no quede cap altra cadena de foto. Només canvia
+   quan una candidata de més avall és pròpia i una de més amunt no ho és: ara
+   guanya la pròpia. Revisió del front B · personaDeSessio la crida com a
+   reserva: un sol camí per a la foto de la sessió en este mòdul. */
 export function avatarDePersona(usuari) {
   const meta = metadadesDe(usuari);
-  return meta.avatar_url || meta.picture || usuari?.avatar_url || null;
+  return triaAvatar(meta.avatar_url, meta.picture, usuari?.avatar_url);
 }
 
 /**
@@ -82,15 +119,25 @@ export function mateixPerfil(a, b) {
  * El perfil només val si és d'este compte i de la firma d'ara; si no, mana la
  * reserva de les metadades. Camp a camp: un perfil sense foto no esborra la
  * foto de les metadades (la de Google, p. ex.).
+ * Pla 261014_1450, front B · La foto la tria triaAvatar entre la fila (només
+ * si és vàlida) i les tres de la sessió: una pujada guanya a la de Google
+ * siga on siga, i una fila d'abans d'una edició no hi entra encara que siga
+ * pròpia (la barra mai pinta una foto vella).
+ * Revisió del front B · Les tres de la sessió hi arriben per
+ * avatarDePersona. És el mateix que posar-les planes darrere de la fila:
+ * avatarDePersona torna la primera pròpia de les tres, si n'hi ha; si no, la
+ * primera no buida (que no és pròpia), o null. Damunt, triaAvatar torna a
+ * preferir la pròpia i, entre dues de la mateixa mena, la de la fila.
  */
 export function personaDeSessio(usuari, perfil) {
   if (!usuari) return null;
   const valid = Boolean(perfil) && usuari.id != null
     && perfil.usuariId === String(usuari.id) && perfil.firma === firmaDePersona(usuari);
+  const meta = metadadesDe(usuari);
   return Object.freeze({
     nom: (valid && perfil.nom) || nomDePersona(usuari),
-    avatar: (valid && perfil.avatar) || avatarDePersona(usuari),
-    poble: (valid && perfil.poble) || net(metadadesDe(usuari).town_name)
+    avatar: triaAvatar(valid ? perfil.avatar : '', avatarDePersona(usuari)),
+    poble: (valid && perfil.poble) || net(meta.town_name)
   });
 }
 

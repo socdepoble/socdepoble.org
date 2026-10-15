@@ -54,7 +54,9 @@ const DIES = diesDeCobertura({ saldo: 440000, despesaMensual: DADES.resum.cobert
 
 const serialitzat = (node) => new XMLSerializer().serializeToString(node);
 const encapcalaments = (node) => [...node.querySelectorAll('h1, h2, h3, h4, h5, h6')].map((h) => h.textContent);
-const ESTATICS = ['Cabina d’Avió', 'Instruments', 'Flux de caixa per mes', 'Venciments'];
+/* Ordre del Mestre, 14-10-2026 (prompt 261014_2015, punts 2, 3 i 4): «Quadre de comandament», i les dues seccions
+   noves al final, «Factures que falten» (la penúltima) i «Plantilla Gestoria» (l'última). */
+const ESTATICS = ['Quadre de comandament', 'Instruments', 'Flux de caixa per mes', 'Venciments', 'Factures que falten', 'Plantilla Gestoria'];
 
 function munta(dades, visible = false) {
   const onObri = vi.fn();
@@ -259,6 +261,82 @@ describe('Pedra Seca i privacitat de la Cabina', () => {
   });
 });
 
+/* Ordre del Mestre, 14-10-2026 (prompt 261014_2015, punts 3 i 4): les dues seccions finals del Quadre. El model de
+   les factures que falten el calcula la closca (nucli/facturesQueFalten.js); ací es pinta un de fet a mà. */
+describe('el Quadre de comandament: «Factures que falten» i «Plantilla Gestoria», al final', () => {
+  const FALTEN = Object.freeze({
+    estat: 'fet', any: 2026, t: 3,
+    resultat: {
+      linies: [{
+        clau: 'exemple-energia', nom: 'Exemple Energia SCCL', domini: 'exemple.test', cadencia: 'mensual',
+        mesos: [
+          { mes: '2026-07', estat: 'falta-amb-pagament', esperades: 1, trobades: [], pagament: { data: d(2026, 7, 17), centims: 3591, privat: true }, banc: 'cobert' },
+          { mes: '2026-08', estat: 'completa', esperades: 1, trobades: ['FE-0002'], pagament: null, banc: 'cobert', sensePagament: null },
+          { mes: '2026-09', estat: 'falta', esperades: 1, trobades: [], pagament: null, banc: 'sense-extracte', sensePagament: 'sense-extracte' }
+        ]
+      }],
+      incidencies: [{ codi: 'FORAT_NUMERACIO', missatge: 'Falta un número de la sèrie de prova.' }],
+      resum: { falten: 2, potserFalten: 0, ambPagament: 1 }
+    }
+  });
+  const pinta = (props, visible = false) => render(<CabinaAvio dades={DADES} visible={visible} {...props} />).container.querySelector('.sdp-gestoria-cabina');
+
+  test('l’ordre: «Factures que falten» és la penúltima secció i «Plantilla Gestoria» l’última; sense dades, el perquè', () => {
+    const cabina = pinta({});
+    expect(encapcalaments(cabina).slice(-2)).toEqual(['Factures que falten', 'Plantilla Gestoria']);
+    expect(within(cabina).getByText(/^Analitza el trimestre al Full trimestral/)).toBeTruthy();
+    expect(within(cabina).getByText('El full de la gestoria el prepara el Full trimestral.')).toBeTruthy();
+    expect(within(cabina).queryByRole('region', { name: 'Taula · Factures que falten' })).toBeNull();
+  });
+
+  test('les que falten: només els mesos que falten, el domini en text i l’import del càrrec amagat amb l’ull tancat', () => {
+    const cabina = pinta({ falten: FALTEN });
+    const taula = within(cabina).getByRole('region', { name: 'Taula · Factures que falten' });
+    const files = within(taula).getAllByRole('row').slice(1).map((tr) => [...tr.children].map((c) => c.textContent));
+    expect(files).toEqual([
+      ['Exemple Energia SCCL', 'Juliol 2026', 'Falta, i el banc té el càrrec', '17/07/2026 · Import amagat', 'exemple.test'],
+      ['Exemple Energia SCCL', 'Setembre 2026', 'Falta', 'Sense extracte del mes', 'exemple.test']
+    ]);
+    expect(serialitzat(cabina)).not.toMatch(/35,91|3591/);
+    expect(within(cabina).getByText('Falta un número de la sèrie de prova.')).toBeTruthy();
+    expect(within(cabina).getByText(/^Del Full del 3T 2026, amb els extractes que has triat\. Són indicis per a revisar/)).toBeTruthy();
+    /* Cap enllaç ix del Quadre: el domini és text. */
+    expect(cabina.querySelectorAll('a[href^="http"]')).toHaveLength(0);
+    cleanup();
+    const oberta = within(pinta({ falten: FALTEN }, true)).getByRole('region', { name: 'Taula · Factures que falten' });
+    expect(within(oberta).getAllByRole('row')[1].children[3].textContent).toBe('17/07/2026 · 35,91 €');
+  });
+
+  /* Revisió adversarial 14-10-2026: sense pagament, la cel·la diu per què, i mai «cap càrrec» quan n'hi ha diversos. */
+  test('sense pagament, el perquè fidel: diversos càrrecs, cap càrrec, sense historial o no es busca', () => {
+    const mesDe = (sensePagament, estat = 'falta') => ({ mes: '2026-07', estat, esperades: 1, trobades: [], pagament: null, banc: 'cobert', sensePagament });
+    const motius = [['diversos', 'Diversos càrrecs hi podrien casar'], ['cap', 'Cap càrrec que hi case'],
+      ['compartit', 'Un càrrec que també podria ser d’un altre mes'], ['sense-historial', 'Sense historial per a buscar-lo'],
+      ['no-cercat', 'Ja n’hi ha alguna: no es busca']];
+    for (const [motiu, text] of motius) {
+      const estat = motiu === 'no-cercat' ? 'potser-falta' : 'falta';
+      const falten = { ...FALTEN, resultat: { ...FALTEN.resultat, linies: [{ ...FALTEN.resultat.linies[0], mesos: [mesDe(motiu, estat)] }] } };
+      const taula = within(pinta({ falten })).getByRole('region', { name: 'Taula · Factures que falten' });
+      expect(within(taula).getAllByRole('row')[1].children[3].textContent, motiu).toBe(text);
+      cleanup();
+    }
+  });
+
+  test('si el creuament falla, ho diu; cap mes que falte, també', () => {
+    expect(within(pinta({ falten: { estat: 'error' } })).getByText(/^No s’ha pogut creuar el Full trimestral/)).toBeTruthy();
+    cleanup();
+    const complet = { ...FALTEN, resultat: { ...FALTEN.resultat, linies: [{ ...FALTEN.resultat.linies[0], mesos: [FALTEN.resultat.linies[0].mesos[1]] }], incidencies: [] } };
+    expect(within(pinta({ falten: complet })).getByText(/^Cap proveïdor habitual no té cap mes sense factura/)).toBeTruthy();
+  });
+
+  test('la «Plantilla Gestoria»: el node de la closca es pinta dins de l’última secció', () => {
+    const cabina = pinta({ plantilla: <p>Node de la plantilla de prova</p> });
+    const ultima = [...cabina.querySelectorAll('.sdp-gestoria-cabina__bloc')].at(-1);
+    expect(within(ultima).getByText('Node de la plantilla de prova')).toBeTruthy();
+    expect(within(ultima).getByRole('heading', { level: 3 }).textContent).toBe('Plantilla Gestoria');
+  });
+});
+
 /* Tauler.jsx · el commutador de vistes. Derogat EN PART el de dues vistes de l'ordre del 261012 per l'ordre del
    Mestre, 13-10-2026 (pla 261013_1405, front E): el Tauler en té tres; els Bancs i els Impostos, dues. */
 describe('el commutador de vistes', () => {
@@ -268,14 +346,19 @@ describe('el commutador de vistes', () => {
   const botons = () => within(screen.getByRole('group', { name: 'Vista del panell' })).getAllByRole('button')
     .map((b) => [b.textContent, b.getAttribute('aria-pressed')]);
 
-  test('el Tauler: «Targetes | Cabina d’Avió | Vista comprimida», Targetes primer; els Bancs i els Impostos, sense la Cabina', () => {
-    expect(VISTES_TAULER.map((v) => [v.valor, v.text])).toEqual([['targetes', 'Targetes'], ['cabina', 'Cabina d’Avió'], ['comprimida', 'Vista comprimida']]);
+  /* Ordre del Mestre, 14-10-2026 (prompt 261014_2015, punt 2): la Cabina d'Avió es diu «Quadre de comandament»; el
+     valor intern continua sent 'cabina'. La «Plantilla Gestoria» no és cap vista: és l'última secció del Quadre. */
+  test('el Tauler: «Targetes | Quadre de comandament | Vista comprimida», Targetes primer; els Bancs i els Impostos, sense el Quadre', () => {
+    expect(VISTES_TAULER.map((v) => [v.valor, v.text])).toEqual([
+      ['targetes', 'Targetes'], ['cabina', 'Quadre de comandament'], ['comprimida', 'Vista comprimida']
+    ]);
     expect(VISTES_PANELL.map((v) => v.valor)).toEqual(['targetes', 'comprimida']);
     expect(Object.isFrozen(VISTES_TAULER) && Object.isFrozen(VISTES_PANELL)).toBe(true);
   });
 
   test('vistaDelModul: la triada si el mòdul l’oferix; una densa que no oferix, la densa que sí; si no, la primera', () => {
     expect(vistaDelModul('cabina', VISTES_TAULER)).toBe('cabina');
+    expect(vistaDelModul('plantilla', VISTES_TAULER)).toBe('targetes');
     expect(vistaDelModul('cabina', VISTES_PANELL)).toBe('comprimida');
     expect(vistaDelModul('cabina')).toBe('comprimida');
     expect(vistaDelModul('comprimida', VISTES_PANELL)).toBe('comprimida');
@@ -291,11 +374,11 @@ describe('el commutador de vistes', () => {
     const { rerender } = render(<ContextTrimestre dades={dades()} vista="targetes" onCanviaVista={onCanviaVista} periode={periode} />);
     expect(botons()).toEqual([['Targetes', 'true'], ['Vista comprimida', 'false']]);
     rerender(<ContextTrimestre dades={dades()} vista="targetes" onCanviaVista={onCanviaVista} vistes={VISTES_TAULER} periode={periode} />);
-    expect(botons()).toEqual([['Targetes', 'true'], ['Cabina d’Avió', 'false'], ['Vista comprimida', 'false']]);
-    fireEvent.click(screen.getByRole('button', { name: 'Cabina d’Avió' }));
+    expect(botons()).toEqual([['Targetes', 'true'], ['Quadre de comandament', 'false'], ['Vista comprimida', 'false']]);
+    fireEvent.click(screen.getByRole('button', { name: 'Quadre de comandament' }));
     expect(onCanviaVista).toHaveBeenLastCalledWith('cabina');
     rerender(<ContextTrimestre dades={dades()} vista="cabina" onCanviaVista={onCanviaVista} vistes={VISTES_TAULER} periode={periode} />);
-    expect(botons()).toEqual([['Targetes', 'false'], ['Cabina d’Avió', 'true'], ['Vista comprimida', 'false']]);
+    expect(botons()).toEqual([['Targetes', 'false'], ['Quadre de comandament', 'true'], ['Vista comprimida', 'false']]);
     /* Als Impostos (amb trimestre) i als Bancs (sense), amb la Cabina triada al Tauler: la comprimida, premuda. */
     rerender(<ContextTrimestre dades={dades()} vista="cabina" onCanviaVista={onCanviaVista} periode={periode} />);
     expect(botons()).toEqual([['Targetes', 'false'], ['Vista comprimida', 'true']]);

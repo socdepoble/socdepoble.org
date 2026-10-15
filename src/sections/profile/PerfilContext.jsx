@@ -10,6 +10,7 @@ import { creaOrganitzacio as creaOrganitzacioAlServei } from '../../data/organiz
 import { candidatsDeMembre } from './membresModel.js';
 
 import { useSession } from '../../app/contexts/SessionContext.jsx';
+import { triaAvatar } from '../../app/contexts/personaDeSessio.js';
 import { backendScope } from '../../config/backendConfig.js';
 import { capturaSessio, entradaSessio } from '../../data/identitat.js';
 import { cuaDesament } from '../../data/autodesament/cua.js';
@@ -415,7 +416,12 @@ function PerfilScope({ children, config, usuariId, usuariSessio, onCanviOrganitz
       id: 'jo',
       mena: 'persona',
       nom: dadesPerfil?.full_name || usuari?.user_metadata?.name || usuari?.user_metadata?.full_name || 'El meu compte',
-      avatar: dadesPerfil?.avatar_url || usuari?.user_metadata?.avatar_url,
+      /* Pla 261014_1450, front B · La mateixa regla que la barra i el Xat
+         (triaAvatar, personaDeSessio.js): la pujada a Sóc de Poble abans que
+         la de Google, i sense cap, null. Sense `picture` a propòsit:
+         aplicaColumnes no la lleva de la còpia local en esborrar la foto, i
+         la de Google hi tornaria. */
+      avatar: triaAvatar(dadesPerfil?.avatar_url, usuari?.user_metadata?.avatar_url),
       rol: 'Persona',
       dades: dadesPersona,
     },

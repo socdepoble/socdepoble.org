@@ -317,5 +317,7 @@ describe('res en clar a l’IndexedDB', () => {
     expect(window.sessionStorage.length).toBe(0);
     /* La pantalla sí que ho té, mentre el cofre és obert. */
     expect(textDe(container)).toContain('«sentinellaprivada» → Intel·ligència artificial');
-  });
+    /* Temps propi: el PBKDF2 del cofre i el waitFor de 5 s no caben en els 5 s
+       per defecte quan la suite corre en paral·lel (auditoria 261014_1636). */
+  }, 20000);
 });

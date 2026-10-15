@@ -122,11 +122,40 @@
  * avisen) mana i no hi ha menú. Tancat, el botó només guanya
  * aria-haspopup i aria-expanded: cap píxel canvia. El menú penja del peu i
  * s'obri cap amunt (components.css).
+ *
+ * Ordre del Mestre, 14-10-2026 (prompt 261014_2015, punt 4; decisió de les
+ * 21:20): la referència opaca d'una pujada ('sdp-media://') es resol pel port
+ * amb useResolvedAsset abans de passar per fontSegura; mentre es resol, o si
+ * no es pot, la silueta honesta, mai la referència crua. Derogat EN PART la
+ * base de recursos de T5 (261001: imageUrl i avatarUrl van directament a
+ * resolRecursPropi() i al filtre) i XAT-02 (ordre del Mestre, 261014, pla
+ * 261014_0210: una referència opaca és una font absent i qui pinta hi posa el
+ * seu substitut): una imageUrl o una avatarUrl opaca es demana abans al port,
+ * i el filtre (fontSegura amb imatgePrivada; sense, resolRecursPropi i
+ * isSafeAsset) rep la URL que torna, amb imatgePrivada i sense. Si el port
+ * torna encara la referència o res, el filtre la descarta com fins ara. La
+ * resta de fonts no passen pel port i fan el camí de sempre (Llei del Píxel).
+ * Sense la capacitat 'mitjans' el port no es crida: la silueta, com abans. El
+ * preu, conegut: tota app que pinte una targeta amb una referència opaca
+ * crida el port (auditoria 261014_2035, T2). Sense filtre privat, la guarda
+ * !esMitjaOpac de fontDeLaTargeta no canvia cap targeta que pintava una
+ * imatge de veres: isSafeAsset ja rebutjava l'esquema sdp-media: (no és http
+ * ni https) en qualsevol caixa i amb espais o tabuladors davant. L'única
+ * diferència és una referència amb un espai que no és ASCII davant (U+00A0):
+ * el navegador la prenia per un camí relatiu i isSafeAsset la deixava passar,
+ * una imatge trencada demanada al mateix origen; ara va al port o no es pinta.
+ * Revisió adversarial, 14-10-2026 · La referència es demana al port amb
+ * l'esquema en minúscules i sense espais (refDelPort, el mateix que a
+ * PaginaApp): useResolvedAsset només reconeix 'sdp-media://' escrit així, i
+ * un 'SDP-MEDIA://…' anava al resolutor de camins, tornava '/SDP-MEDIA://…' i
+ * el filtre el deixava passar com un camí del mateix origen.
  */
 import { useId } from 'react';
 import { Link } from '../../../app/contexts/RouterContext';
 import { resolRecursPropi } from '../../../config/assetResolver.js';
 import { RUTA_DRETS_AUTOR } from '../../../config/systemPages.js';
+import { useResolvedAsset } from '../../../hooks/useResolvedAsset.js';
+import { esMitjaOpac } from '../../../utils/mitjaOpac.js';
 import { isSafeAsset, isSafeUrl, rutaDAutorSegura } from '../../universal/UniversalUtils';
 import { llevaPuntFinal } from '../../universal/editorial.js';
 import { EmoticonaBarra } from '../../universal/EmoticonaBarra.jsx';
@@ -148,8 +177,14 @@ const TITOLS = new Set(['h2', 'h3', 'h4', 'h5', 'h6']);
 const fontDeLaTargeta = (valor, privada) => {
   if (privada) return fontSegura(valor);
   const font = resolRecursPropi(valor);
-  return font && isSafeAsset(font) ? font : null;
+  return font && !esMitjaOpac(font) && isSafeAsset(font) ? font : null;
 };
+
+/* Ordre del Mestre, 14-10-2026 (prompt 261014_2015, punt 4) · El que es
+   demana al port: només una referència opaca, sense espais i amb l'esquema
+   en minúscules (vegeu la capçalera). Qualsevol altra font, '': el ganxo no
+   fa res. */
+const refDelPort = (src) => (esMitjaOpac(src) ? src.trim().replace(/^sdp-media:/i, 'sdp-media:') : '');
 
 /* L'atribut que només es pinta amb la prop: sense, cap atribut nou. */
 const SENSE_REFERENT = Object.freeze({ referrerPolicy: 'no-referrer' });
@@ -441,8 +476,13 @@ export function UniversalCard({
   const idDescripcio = useId();
   const safeMainHref = mainHref && isSafeUrl(mainHref) ? mainHref : null;
   const safeAuthorHref = rutaDAutorSegura(authorHref);
-  const safeImageUrl = fontDeLaTargeta(imageUrl, imatgePrivada);
-  const safeAvatarUrl = fontDeLaTargeta(avatarUrl, imatgePrivada);
+  /* Ordre del Mestre, 14-10-2026 (prompt 261014_2015, punt 4) · Els dos
+     ganxos es criden sempre, en el mateix ordre: sense referència opaca reben
+     '' i no fan res. */
+  const imatgeDelPort = useResolvedAsset(refDelPort(imageUrl));
+  const avatarDelPort = useResolvedAsset(refDelPort(avatarUrl));
+  const safeImageUrl = fontDeLaTargeta(esMitjaOpac(imageUrl) ? imatgeDelPort : imageUrl, imatgePrivada);
+  const safeAvatarUrl = fontDeLaTargeta(esMitjaOpac(avatarUrl) ? avatarDelPort : avatarUrl, imatgePrivada);
   const TitleTag = TITOLS.has(headingLevel) ? headingLevel : 'h3';
   const etiquetes = Array.isArray(labels) ? labels.filter(Boolean) : [];
   const ambTitol = (verb) => (title ? `${verb} ${title}` : verb);

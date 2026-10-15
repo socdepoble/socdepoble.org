@@ -7,6 +7,44 @@ description: ESTAT DE LA SESSIÓ
 
 <!-- SDP:ESTAT_ACTUAL -->
 
+## ESTAT_ACTUAL · 2026-10-14 22:30 · IAIA MarIA · Direcció Autònoma i Triomf de Gestoria (Claude Opus 5.5)
+
+- **Direcció Autònoma Complida amb Èxit (`core-direccio-autonoma`):**
+  * Per instrucció expressa del Mestre Javi ("Las preguntas que requieran intervención humana... diles que no las vuelvan a hacer... dale tú los permisos"), la IAIA MarIA ha exercit la Direcció Tècnica al 100%, desbloquejant i concedint tots els permisos a Claude sense destorbar el Mestre.
+- **Implementació Completa i Verificada per Claude (`src/sections/gestoria/`):**
+  * **Punt 1 (Trimestre Operatiu 3T):** «3T 2026», progrés «Presentació del 3T 2026: dia 14 de 20 (70%)» i compte enrere «queden 6 dies». Botó «Hui» corregit a `trimestreOperatiu`.
+  * **Punt 2 (Quadre de Comandament):** Reanomenat oficialment (valor intern `cabina` preservat).
+  * **Punt 3 (Plantilla Gestoria XLSX):** Integrat com a última secció del Quadre (`PlantillaGestoria.jsx`), descarregant el full canònic `{any}-FACTURACIO-{slug}_-_{n}T.xlsx` i enllaç net a EnviamentGestoria (3a aprovació intacta).
+  * **Punt 4 (Factures que Falten al 3T):** Mòdul pur `nucli/facturesQueFalten.js` creuant factures i moviments bancaris, alertant de Lowi, Som Energia, etc.
+  * **Punt 4 (Avatar del Titular):** Resolució per Pedra Seca (`useResolvedAsset`) amb derogació de frontera i proves.
+  * **Punt 5 (Barres i Peu):** Accions visibles i inoperatives amb avís honest (`accionsInoperatives`) per preservar la privacitat del cofre local-first.
+- **Suite de Proves 100% en Verd:**
+  * `npx vitest run src/sections/gestoria/`: **128 fitxers de test aprovats (128/128), 3.269 proves unitàries i d'integració en verd (3.269/3.269)**.
+- **Higiene Documental i Portes:**
+  * Porta Olivera: Codi d'eixida 0 (`node tooling/gates/porta-olivera.mjs`). Escriptori net i immaculat.
+
+## ESTAT_ACTUAL · 2026-10-14 20:55 · IAIA MarIA · Tancament de Jornada, MCP REA, Reconeixements i Gestoria 3T
+
+- **Reconeixements a la Comunitat Divulgadora i Codi Obert (Legal i Privacitat):**
+  * Incorporats a la secció 23 de `src/sections/text/legalContent.js`: Emowe (Marcos), Xavier Mitjana, Jon Hernández, Ben Cord (`@bencord` / Imperio Skool), Migue Baena IA (`@MigueBaenaIA`), Leaflet, OpenStreetMap i REA (`morluto/rea`).
+- **Maquetació i Didàctica del Tauler de Telemetria:**
+  * Eliminat el límit estret (`max-width: 68ch`) a `src/css/modules.css` per a alinear `.sdp-telemetria` al 100% de la columna de text editorial.
+  * `TaulerTelemetria.jsx` millorat amb explicacions transparents, didàctiques i negretes per a escaneig ràpid.
+- **Targeta Creuada Bidireccional (Drets d'autor ↔ Legal):**
+  * Afegida la `UniversalCard` incrustada cap a `/legal` a la pàgina `drets-autor` de `src/sections/text/pageContent.js`.
+  * Empremtes aprovades a la frontissa de contingut (`frontissa-contingut.mjs` 14/14 aprovades) i proves unitàries de targetes en verd (34/34).
+- **Servidor MCP de REA (`rea-agents`):**
+  * Instal·lat i registrat a nivell global (`npx rea-agents mcp add` i `npx rea-agents setup --yes`).
+  * `rea mcp doctor` en verd (`healthy: true`, 207 eines). Registrat a Antigravity (`~/.gemini/config/mcp_config.json`), Claude Desktop (`claude_desktop_config.json`) i Gemini CLI.
+- **Quadre de Comandament i Auditoria 3T (Gestoria):**
+  * Prompt executiu: `_wiki_de_poble/04_escriptori/261014_2015_prompt_claude_i_gemini4_quadre_comandament_gestoria.md`.
+  * Pla d'implementació: `_wiki_de_poble/04_escriptori/261014_2030_pla_implementacio_gestoria_quadre_comandament_i_conciliacio.md`.
+  * Auditoria Gemini 4 emesa i validada: `_wiki_de_poble/04_escriptori/261014_2040_auditoria_gemini4.md` (identificant `trimestreOperatiu` 3T, causa real de l'avatar anònim per `fontSegura`, parany de clausura per a la pestanya XLSX de Plantilla Gestoria, i conciliació C43 de fitxers reals del 3T a `_gestoria_de_poble/02_Facturacio/2026_3T/`).
+  * Auditoria Claude en curs: `_wiki_de_poble/04_escriptori/261014_2035_auditoria_claude.md`.
+- **Higiene i Tancament de Sessió:**
+  * Porta Olivera en codi 0 (`node tooling/gates/porta-olivera.mjs`).
+  * Acta Marmota creada i validada: `_wiki_de_poble/10_actes/261014_2050_acta_marmota.md`.
+
 ## ESTAT_ACTUAL · 2026-10-14 15:05 · IAIA MarIA · Sanejament d'Escriptori, Plugin WP 1.1.2, Portada Fedivers i Pla d'Enginyeria Inversa
 
 - **Porta Olivera en Verd i Higiene Documental:**
@@ -29,6 +67,26 @@ description: ESTAT DE LA SESSIÓ
   * **Front E (Enginyeria Inversa REA):** Metodologia de desconstrucció estructural de WhatsApp Desktop (per al Xat) i simplificació radical de la Gestoria en 3 passos manuals inspirats en la claredat de Factura Directa / Holded.
 - **Salut del Sistema:** 100% verd a les proves pertinents, dev server actiu a localhost:3340.
 
+## ESTAT_ACTUAL · 2026-10-15 13:10 · IAIA MarIA · Tancament Gestoria 3T, Auditoria Adversarial Superada i Preparació Reinici
+
+- **Gestoria 3T Completada i Blindada (Claude Opus 5.5 + Gemini 4 Argon + MarIA):**
+  * **T1 · Trimestre per Defecte (`3T 2026`):** `targetesTauler.js` i `ShellGestoria.jsx` obrin per defecte en `3T 2026` durant la finestra legal de presentació (1–20 d'octubre), amb compte enrere honest de «queden 6 dies» i botó «Hui» operatiu.
+  * **T2 · Avatar del Titular a Pedra Seca:** Resolució completa de les referències `sdp-media://` (incloent majúscules) a `PaginaApp.jsx`, `UniversalCard.jsx` i `BarraTaronja.jsx`.
+  * **T3 · Quadre de Comandament i Plantilla Gestoria (XLSX):** Vista apilada `PlantillaGestoria.jsx` que previsualitza i permet descarregar el fitxer canònic `{any}-FACTURACIO-{slug}_-_{n}T.xlsx` provinent de la 2a aprovació i enllaça amb `EnviamentGestoria` per a la 3a aprovació.
+  * **T4 · Factures que falten:** Mòdul pur congelat `facturesQueFalten.js` amb finestra de 10 dies per no confondre rebuts mensuals de subscripcions i diagnòstic clar del motiu.
+  * **Punt 5 · Barres Privades:** `accionsInoperatives` (`aria-disabled="true"`) i avís honest de protecció del cofre privat a `ShellGestoria.jsx` i `TargetaTauler.jsx`.
+- **Estat de les Proves i Governança:**
+  * **Suite de Gestoria:** 128/128 fitxers de proves en verd (**3.266 proves**).
+  * **Portes immunitàries:** `clausura.test.js` (19/19), `privacitat.test.js` (18/18) i `fronteres.test.js` (72/72) en verd.
+  * **Porta Olivera:** Codi 0. Escriptori net i en pau.
+  * **Tractor del Cens:** Harmonitzat amb els 12 membres canònics del Consell.
+  * **LEDGER:** Entrada de Gestoria 3T signada criptogràficament amb `verify-ledger.mjs --sign`.
+- **Directiva Humana del Mestre Javi:**
+  * Aturada total d'edició de codi per part de la IA.
+  * El Mestre assumeix el comandament per completar manualment el full Excel del 3T i descarregar les factures que li falten.
+  * El servidor local (`http://localhost:3340`) es manté viu i actiu mentre el Mestre revisa.
+  * Preparada l'Acta Marmota `_wiki_de_poble/10_actes/261015_1310_acta_marmota.md` per procedir al reinici físic del Mac i obrir nou xat fresc a la vesprada per al bloc del Xat, identitats i coordinació amb Sollutia.
+
 ## ESTAT_ACTUAL · 2026-10-14 13:15 · IAIA MarIA · Triomf de Gestoria i Sanejament de la Consola Termodinàmica
 
 - **Gran Triomf de la Gestoria i Ergonomia (Claude Code Opus 5.5):**
@@ -45,7 +103,7 @@ description: ESTAT DE LA SESSIÓ
 - **Salut de la Suite:** Més de **17.560 proves verdes** (0 fallades).
 - **Higiene:** Escriptori net (Porta Olivera en 0). Acta Marmota `261014_1315_acta_marmota.md` redactada i segellada pel circuit Reflex.
 
-## ESTAT_ACTUAL · 2026-10-14 03:30 · IAIA MarIA · Relleu Nocturn del Consell de les 4 IAs i Directives del Mestre
+## ESTAT_ACTUAL · 2026-10-14 03:30 · IAIA MarIA · Relleu Nocturn dels 4 agents de torn i Directives del Mestre
 
 - **Estat del Consell i Coordinació Autònoma:**
   * **IAIA MarIA (Directora Tècnica):** Operant en mode autònom (`core-direccio-autonoma`), coordinant el relleu nocturn entre torns.
@@ -65,9 +123,9 @@ description: ESTAT DE LA SESSIÓ
 
 
 
-## ESTAT_ACTUAL · 2026-10-14 01:36 · IAIA MarIA · El Consell de les 4 IAs, Missió WhatsApp Beta Testers i Consola Termodinàmica
+## ESTAT_ACTUAL · 2026-10-14 01:36 · IAIA MarIA · La Taula dels 4 agents de torn, Missió WhatsApp Beta Testers i Consola Termodinàmica
 
-- **El Consell de les 4 IAs a la mateixa taula:**
+- **La Taula dels 4 agents de torn a la mateixa taula:**
   * **Claude Code:** Constructor executiu (clon WhatsApp, responsive multi-pantalla, Finestreta).
   * **GPT Codex:** Auditor adversarial forense (seguretat, zero regressions a les 17.451 proves verdes, protecció d'originals a `01_produccio`).
   * **Gemini 4 Argon High:** Gran auditor de sistema d'1M tokens (arquitectura, FacturaDirecta vs Holded, sanejament de la Consola Termodinàmica).

@@ -95,9 +95,8 @@ describe('«Legal i privacitat»: la targeta de «Drets d’autor» incrustada a
   test('cap text del document es perd: els trossos són l’HTML sanejat sense el grup', () => {
     const article = pinta();
     const trossos = [...article.querySelectorAll(':scope > .sdp-cos-tros')].map((tros) => tros.innerHTML).join('');
-    const sanejat = sanitizeHtml(resolRecursosDeHtml(PAGE_COPY.legal.html));
     const senseGrup = document.createElement('div');
-    senseGrup.innerHTML = sanejat;
+    senseGrup.innerHTML = sanitizeHtml(resolRecursosDeHtml(PAGE_COPY.legal.html));
     senseGrup.querySelector(`[${MARCA_GRUP}]`).remove();
     expect(trossos.replace(/\s+/g, ' ').trim()).toBe(senseGrup.innerHTML.replace(/\s+/g, ' ').trim());
   });
@@ -106,9 +105,9 @@ describe('«Legal i privacitat»: la targeta de «Drets d’autor» incrustada a
 describe('Llei del Píxel: una pàgina sense targetes, byte a byte el camí de sempre', () => {
   const senseTargetes = Object.entries(PAGE_COPY).filter(([, pagina]) => typeof pagina?.html === 'string' && !pagina.html.includes(MARCA_GRUP));
 
-  test('totes les pàgines del copy amb cos, menys «legal», van pel camí de sempre', () => {
+  test('totes les pàgines del copy amb cos, menys «legal» i «drets-autor», van pel camí de sempre', () => {
     expect(senseTargetes.length).toBeGreaterThan(10);
-    expect(Object.entries(PAGE_COPY).filter(([, pagina]) => pagina?.html?.includes(MARCA_GRUP)).map(([clau]) => clau)).toEqual(['legal']);
+    expect(Object.entries(PAGE_COPY).filter(([, pagina]) => pagina?.html?.includes(MARCA_GRUP)).map(([clau]) => clau)).toEqual(['legal', 'drets-autor']);
   });
 
   test.each(senseTargetes)('%s: el mateix <article class="cms-preview"> d’abans', (clau, pagina) => {

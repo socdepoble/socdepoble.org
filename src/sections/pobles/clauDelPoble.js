@@ -42,6 +42,7 @@
  * Pur: sense React, sense xarxa i sense dades pròpies.
  */
 import { dataDeDocument } from '../../components/universal/editorial.js';
+import { DEFAULT_AUTHOR } from '../../components/universal/UniversalUtils.js';
 import { slugDelPoble } from './nomsDelPoble.js';
 
 const CAP = Object.freeze([]);
@@ -56,12 +57,17 @@ const CAMPS_DE_LLOC = Object.freeze(['author_location', 'town_name', 'population
 
 const textDe = (valor) => (typeof valor === 'string' || typeof valor === 'number' ? String(valor).trim() : '');
 
+/* Les pàgines del sistema (targetesDeSistema) les signa l'entitat pilot
+   (DEFAULT_AUTHOR, amb seu al seu poble). */
+const esDeSistema = (item) => item.isSystem === true || item.type === 'sistema';
+
 /* La clau que la publicació DECLARA (poble_id, fet slug), o null. */
 const pobleDeclaratDe = (item) => slugDelPoble(textDe(item.poble_id)) || null;
 
 /** La clau (slug) del poble des d'on s'ha publicat `item`, o null si no se sap. */
 export function pobleDeLaPublicacio(item) {
   if (!item || typeof item !== 'object') return null;
+  if (esDeSistema(item)) return slugDelPoble(textDe(DEFAULT_AUTHOR.location)) || null;
   const declarat = pobleDeclaratDe(item);
   if (declarat) return declarat;
   const lloc = CAMPS_DE_LLOC.map((camp) => textDe(item[camp])).find(Boolean);
@@ -83,14 +89,10 @@ export function esDelPoble(item, town) {
   return clau !== null && clausDelPoble(town).includes(clau);
 }
 
-/* Les pàgines del sistema (targetesDeSistema) no són de cap poble: són de
-   Sóc de Poble i ja tenen el seu lloc al Mur. */
-const esDeSistema = (item) => item.isSystem === true || item.type === 'sistema';
-
 /**
  * Les publicacions del poble `town` dins de `fonts` (el que dona useMur:
  * { feedPosts, marketItems, events }), sense ordenar: [{ seccio, item }],
- * sense repetits ni pàgines del sistema. Sense cap, CAP.
+ * sense repetits. Sense cap, CAP.
  */
 export function itemsDelPoble(fonts, town) {
   const claus = clausDelPoble(town);
@@ -100,7 +102,7 @@ export function itemsDelPoble(fonts, town) {
   for (const [seccio, font] of FONTS_DEL_POBLE) {
     const llista = Array.isArray(fonts[font]) ? fonts[font] : CAP;
     for (const item of llista) {
-      if (!item || typeof item !== 'object' || item.id == null || esDeSistema(item)) continue;
+      if (!item || typeof item !== 'object' || item.id == null) continue;
       const clau = pobleDeLaPublicacio(item);
       const id = `${seccio}:${item.id}`;
       if (clau === null || !claus.includes(clau) || vistos.has(id)) continue;

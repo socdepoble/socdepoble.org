@@ -101,9 +101,7 @@ export default function TaulerTelemetria({ config = CONFIG_COMPILADA }) {
     <section className="sdp-telemetria" aria-labelledby={`${id}-titol`}>
       <h3 id={`${id}-titol`}>Telemetria: què comptem i com ho pots comprovar</h3>
       <p>
-        Sóc de Poble compta les visites i l'acte de «Connectar» amb un comptador Umami. Per a comptar no
-        carreguem cap programa de fora: el missatge l'envia el codi de la mateixa aplicació, i més avall
-        pots vore cada intent que ha eixit, o no, del teu navegador.
+        A <strong>Sóc de Poble</strong> comptem les visites i l'acte de «Connectar» amb un comptador <strong>Umami</strong>. Per a comptar <strong>no carreguem cap programa extern</strong> de rastreig comercial: el missatge l'envia el codi de la mateixa aplicació, i més avall pots vore en directe cada intent que ha eixit, o no, del teu navegador.
       </p>
 
       <h4>Què es compta i què no</h4>
@@ -124,7 +122,7 @@ export default function TaulerTelemetria({ config = CONFIG_COMPILADA }) {
           concreta). El títol de la pestanya no viatja: en una fitxa porta el títol del que mires.
         </li>
         <li>
-          <strong>Cap galeta</strong> i cap identificador guardat al teu navegador. Com en qualsevol
+          <strong>Cap galeta (zero cookies)</strong> i cap identificador guardat al teu navegador. Com en qualsevol
           connexió a internet, el servidor del comptador veu la teua adreça IP i el tipus de navegador.
         </li>
         <li>
@@ -165,6 +163,9 @@ export default function TaulerTelemetria({ config = CONFIG_COMPILADA }) {
       )}
 
       <h4>Tauler públic</h4>
+      <p className="sdp-telemetria__nota">
+        <strong>Transparència radical:</strong> si les mètriques d'ús són col·lectives i respecten la privacitat, han de ser visibles per a tothom. Ací s'incrusta la finestra oberta d'estadístiques transparents.
+      </p>
       {config.shareUrl ? (
         <>
           <iframe
@@ -191,7 +192,7 @@ export default function TaulerTelemetria({ config = CONFIG_COMPILADA }) {
 
       <h4>El que ha enviat este navegador</h4>
       <p className="sdp-telemetria__nota">
-        Cada intent de comptar des que has obert esta pestanya, enviat o no, del més recent al més antic
+        <strong>Evidència directa des de la memòria del teu navegador:</strong> cada intent de comptar des que has obert esta pestanya, enviat o no, del més recent al més antic
         (fins a 20). «Enviat» vol dir que ha eixit del navegador: el comptador no en torna confirmació. La
         llista viu només en la memòria d'esta pestanya.
       </p>

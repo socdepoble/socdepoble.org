@@ -29,6 +29,10 @@
  *   · La còpia porta `hidden`: si el full de la Gestoria no arriba al <body>
  *     del document (l'encastament carrega els estils dins de la seua ombra),
  *     la còpia no es veu mai a la pàgina de l'amfitrió.
+ * Prompt 261014_1605, front G1 · PODER 3: davall del títol, «Imprimeix o desa
+ * en PDF» i «Tanca la factura»; els dos interruptors (el QR, encés, i la
+ * menció VERI*FACTU, apagada) i la seua nota van dins d'un desplegable de
+ * detalls tècnics, tancat d'entrada. El paper no canvia: el QR hi continua.
  * Proves: `imprimix` s'injecta (jsdom no imprimix).
  */
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
@@ -209,16 +213,21 @@ export function ImpressioFactura({ registre, anulada = false, onTanca, imprimix 
     <section className="sdp-gestoria-factura" aria-labelledby={idTitol}>
       <div className="sdp-gestoria-factura__barra">
         <h3 id={idTitol} ref={titol} tabIndex={-1} className="sdp-gestoria-panell__subtitol">{`La factura ${registre.numSerie}`}</h3>
-        <Interruptor etiqueta="El QR tributari a la factura" actiu={ambQr} onCanvi={setAmbQr} />
-        <Interruptor etiqueta="La menció «VERI*FACTU»" actiu={false} desactivat />
-        <p className="sdp-gestoria-panell__nota">
-          La menció «VERI*FACTU» només es podrà posar quan el programa envie cada registre a l’AEAT, i encara no ho fa.
-          Mentrestant, si algú llig el QR, la seu de l’AEAT no hi trobarà esta factura: el full ho diu davall de l’adreça del QR.
-        </p>
         <div className="sdp-gestoria-panell__accions">
           <Boto varietat="primari" icona={Printer} onClick={imprimix} disabled={!lectura.model}>Imprimeix o desa en PDF</Boto>
           <Boto varietat="secundari" onClick={onTanca}>Tanca la factura</Boto>
         </div>
+        <details className="sdp-gestoria-panell__documents">
+          <summary>Detalls tècnics: el QR i la menció VERI*FACTU</summary>
+          <div className="sdp-gestoria-panell__bloc">
+            <Interruptor etiqueta="El QR tributari a la factura" actiu={ambQr} onCanvi={setAmbQr} />
+            <Interruptor etiqueta="La menció «VERI*FACTU»" actiu={false} desactivat />
+            <p className="sdp-gestoria-panell__nota">
+              La menció «VERI*FACTU» només es podrà posar quan el programa envie cada registre a l’AEAT, i encara no ho fa.
+              Mentrestant, si algú llig el QR, la seu de l’AEAT no hi trobarà esta factura: el full ho diu davall de l’adreça del QR.
+            </p>
+          </div>
+        </details>
       </div>
       {lectura.model ? <FullFactura model={lectura.model} refFull={full} /> : (
         <Alerta to="error" viva={false} titol="Esta factura no es pot mostrar">

@@ -20,6 +20,12 @@
  * S'endolla pel pont i no per ShellGestoria: ShellGestoria és font del
  * tractor gestoria.tauler i tocar-la en tornaria l'aprovació a «pendent».
  * Cap crida de xarxa; la remissió a l'AEAT encara no existix i es diu.
+ * Prompt 261014_1605, front G1 (la Facturació en tres preguntes, abans del 20):
+ *   · PODER 3 · dalt, una frase planera i certa (el llibre i el perfil són
+ *     a l'IndexedDB d'este navegador: portIndexedDB i magatzemPerfil); el
+ *     llibre Veri*Factu i l'AEAT, en un desplegable de detalls tècnics;
+ *   · PODER 5 · els passos 1 i 2, quan ja estan fets, es mostren recollits
+ *     (PasPerfil i PasLlegat), i la Factura nova queda a dalt.
  * Proves: totes les props van a useFacturacio (port, perfil, subtle, idb,
  * locks, emmagatzematge, rellotge, entorn, descarrega, imprimix).
  */
@@ -75,12 +81,18 @@ export default function Facturacio(props) {
     <div className="sdp-gestoria-panell">
       <div className="sdp-gestoria-panell__barra">
         <p>
-          Factura des d’este ordinador, amb connexió o sense. Cada factura entra al llibre Veri*Factu encadenada a
-          l’anterior, i ni el llibre ni les dades de l’empresa ixen d’ací.
+          Factura des d’este ordinador, amb connexió o sense. Les factures i les dades de l’empresa es guarden en este
+          navegador, i no ixen d’ací.
         </p>
         {f.persistencia === 'concedida' ? <Insignia to="exit">El navegador no l’esborrarà</Insignia> : null}
       </div>
-      <p className="sdp-gestoria-panell__avis">L’enviament a l’AEAT encara no està fet: el llibre el tindrà preparat.</p>
+      <details className="sdp-gestoria-panell__documents">
+        <summary>Detalls tècnics (Veri*Factu i AEAT)</summary>
+        <div className="sdp-gestoria-panell__bloc">
+          <p>Cada factura entra al llibre Veri*Factu encadenada a l’anterior, i la cadena es torna a verificar cada vegada que obris esta pantalla.</p>
+          <p className="sdp-gestoria-panell__avis">L’enviament a l’AEAT encara no està fet: el llibre el tindrà preparat.</p>
+        </div>
+      </details>
       <AvisPersistencia f={f} />
       <ol className="sdp-gestoria-panell__passos">
         <Pas numero={1} titol="Les dades de l’empresa" estat={f.config ? 'fet' : 'actiu'}>

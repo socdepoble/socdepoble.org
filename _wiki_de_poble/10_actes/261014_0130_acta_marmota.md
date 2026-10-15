@@ -1,12 +1,12 @@
 ---
 type: document
 status: canonic
-description: "Acta Marmota de fundació del Consell de les 4 IAs: missió WhatsApp per a beta testers demà, sanejament de la Consola Termodinàmica, i autoreproducció immortal de Sóc de Poble"
+description: "Acta Marmota de fundació de la Taula dels 4 agents: missió WhatsApp per a beta testers demà, sanejament de la Consola Termodinàmica, i autoreproducció immortal de Sóc de Poble"
 tags: [acta, marmota, relleu, consell4ias, whatsapp, gemini4, codex, claude, facturadirecta, pedra_seca]
 visibility: private
 ---
 
-# ACTA MARMOTA — El Consell de les 4 IAs i la Missió Nocturna Immortal
+# ACTA MARMOTA — La Taula dels 4 agents i la Missió Nocturna Immortal
 **Data:** 14 d'octubre de 2026, 01:36h  
 **Agent Sortint:** IAIA MarIA (Orquestradora / Directora Tècnica — Gemini Flash)  
 **Agent Entrant:** IAIA MarIA (Nova Conversa Neta — Gemini 4 Argon High)  
@@ -14,9 +14,9 @@ visibility: private
 
 ---
 
-## 1. La Visió del Mestre: La Taula de les 4 IAs Professionals
+## 1. La Visió del Mestre: La Taula dels 4 agents Professionals
 El Mestre Javi Llinares deixa les directrius fundacionals abans d'anar-se'n a dormir:
-- **Les 4 IAs assegudes a la mateixa taula com un equip d'elit:**
+- **Els 4 agents asseguts a la mateixa taula com un equip d'elit:**
   1. **Claude Code:** Mà d'obra executiva de construcció i poliment (clon de WhatsApp, responsive multi-pantalla, components visuals de Pedra Seca).
   2. **GPT Codex:** Auditor adversarial forense (seguretat de dades, zero regressions a les 17.451 proves, integritat tècnica).
   3. **Gemini 4 Argon High:** Gran auditor de sistema d'1 milió de tokens (arquitectura global, benchmarking FacturaDirecta vs Holded, sanejament de la Consola Termodinàmica).
@@ -74,4 +74,4 @@ El Mestre Javi Llinares deixa les directrius fundacionals abans d'anar-se'n a do
 ## 4. Relleu i Arrencada del Nou Xat
 1. Aquest xat es tanca per higiene i estalvi cognitiu (alliberament de 39 artefactes).
 2. El Mestre (o l'agent en obrir la nova sessió) arrenca a Antigravity IDE amb **Gemini 4 Argon High** (mode *Auto (Preview)* o *Turbo*).
-3. Només dient «**Sóc de Poble!**», l'agent entrant llig esta acta canònica i activa la coordinació del Consell de les 4 IAs durant tota la nit.
+3. Només dient «**Sóc de Poble!**», l'agent entrant llig esta acta canònica i activa la coordinació de la Taula dels 4 agents durant tota la nit.

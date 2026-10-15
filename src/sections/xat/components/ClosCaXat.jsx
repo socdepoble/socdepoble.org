@@ -15,7 +15,8 @@
  *     amb la cara del poble, com a la llista: useCaraDelPoble), que obrin la
  *     seua fitxa (/xat?comunitat=<id>, FitxaComunitat);
  *   · al peu, fix, l'avatar propi, «Tu» i el llapis «Edita el perfil»
- *     (/el-meu-perfil).
+ *     (/el-meu-perfil). Pla 261014_1450 (fronts A i C): l'avatar és la cara
+ *     de la barra negra, el logo de l'entitat activa o la foto de la persona.
  * L'estat plegat o desplegat de cada secció es recorda com el del rail
  * (clauSeccio); la secció que conté l'entrada activa s'obri en arribar-hi,
  * sense tocar la preferència, i si la persona la plega estant-hi, la
@@ -77,7 +78,6 @@ import {
 } from 'lucide-react';
 import AppGridShell, { useAppGrid } from '../../../components/layout/AppGridShell.jsx';
 import AppGridColumn from '../../../components/layout/AppGridColumn.jsx';
-import { Avatar } from '../../../components/PedraSeca/index.js';
 import CaraXat from './CaraXat.jsx';
 import { useLocation, useNavigate } from '../../../app/contexts/RouterContext';
 import { useUIActions } from '../../../app/contexts/UIContext';
@@ -169,7 +169,9 @@ export default function ClosCaXat({
   rightColumn
 }) {
   const { t } = useUIActions();
-  const { comunitats: comunitatsDelXat = CAP, joId = null, joNom = null } = useXat();
+  const {
+    comunitats: comunitatsDelXat = CAP, joId = null, joNom = null, joAvatar = null, entitatActiva = null
+  } = useXat();
   /* Onada 3 (AV, revisió) · El rail porta la mateixa cara del poble que la
      llista, la fitxa i la vista Comunitats (XatSection): amb sessió, el
      servidor no en dona cap a la comunitat del poble (pobleAmfitrio.js). */
@@ -230,6 +232,8 @@ export default function ClosCaXat({
           comunitats={comunitats}
           joId={joId}
           joNom={joNom}
+          joAvatar={joAvatar}
+          entitatActiva={entitatActiva}
           onAjustos={obriAjustos}
         />
       )}
@@ -250,8 +254,9 @@ export default function ClosCaXat({
  * desplegat i, en triar-hi una entrada, el panell es tanca: en estret torna
  * la llista ('middle'); en mitjà, les dos columnes (null).
  *
- * No llig cap context de dades: `comunitats`, `joId` i `joNom` arriben per
- * props (ClosCaXat els pren d'useXat()), i `onVes(ruta)` substituïx la
+ * No llig cap context de dades: `comunitats`, `joId`, `joNom`, `joAvatar` i
+ * `entitatActiva` (pla 261014_1450, fronts A i C) arriben per props
+ * (ClosCaXat els pren d'useXat()), i `onVes(ruta)` substituïx la
  * navegació (el catàleg de disseny la fa local). Així es pot pintar al
  * catàleg dins d'un AppGridContext. `recordaSeccions` (per defecte, sí)
  * desa l'estat de les seccions amb getVal/setVal; el catàleg el passa a
@@ -261,7 +266,8 @@ export default function ClosCaXat({
  */
 export function RailXat({
   activa = 'converses', comunitatActiva = null, plegat = false, onAlterna, titol, t,
-  comunitats = CAP, joId = null, joNom = null, onVes = null, recordaSeccions = true, onAjustos = null
+  comunitats = CAP, joId = null, joNom = null, joAvatar = null, entitatActiva = null,
+  onVes = null, recordaSeccions = true, onAjustos = null
 }) {
   const { mida, setPanellObert } = useAppGrid();
   const navigate = useNavigate();
@@ -341,7 +347,11 @@ export function RailXat({
   /* Torn 260930 (T1) · El full «Ajustos»: fora d'ample, la tria tanca abans
      el panell del rail. Sense marca de retorn: el focus el pren el full i,
      en tancar-lo, la closca el torna (ClosCaXat, retornaFocus). */
-  const etiquetaAjustos = t('section.xat.ajustos.obri', 'Tu: ajustos');
+  /* Pla 261014_1450 (front C) · Amb una entitat activa, el nom accessible diu
+     amb qui actues; continua començant per «Tu», el que es veu (WCAG 2.5.3). */
+  const etiquetaAjustos = entitatActiva?.nom
+    ? t('section.xat.ajustos.obriComEntitat', 'Tu: ajustos (actues com a {nom})').replace('{nom}', entitatActiva.nom)
+    : t('section.xat.ajustos.obri', 'Tu: ajustos');
   const obriAjustos = (e) => {
     const boto = e.currentTarget;
     tria(() => onAjustos(boto), { retorn: false })();
@@ -368,7 +378,15 @@ export function RailXat({
   const avatarDe = (comunitat) => (
     <CaraXat nom={nomDe(comunitat)} src={comunitat.fil?.avatar_url} mida="xs" llavor={comunitat.fil?.id} alt="" className="sdp-xat-avatar--quadrat" />
   );
-  const avatarPropi = <Avatar nom={nomJo} mida="xs" llavor={joId} alt="" />;
+  /* Pla 261014_1450 (fronts A i C) · La cara del peu és la de la barra negra:
+     amb una entitat activa, el SEU logo (mai la foto de la persona,
+     useIdentitatDeLaBarra.js), quadrat com les comunitats; si no, la foto de
+     la persona. Passa per CaraXat, com les comunitats: una foto pujada
+     ('sdp-media://…') la resol el port (Avatar sol la descartaria i pintaria
+     les inicials). Sense foto, el mateix Avatar de sempre (Llei del Píxel). */
+  const avatarPropi = entitatActiva
+    ? <CaraXat nom={entitatActiva.nom || nomJo} src={entitatActiva.avatar} mida="xs" llavor={entitatActiva.id} alt="" className="sdp-xat-avatar--quadrat" />
+    : <CaraXat nom={nomJo} src={joAvatar} mida="xs" llavor={joId} alt="" />;
 
   if (ample && plegat) {
     /* La barra estreta de WhatsApp Desktop: només les icones, en el mateix

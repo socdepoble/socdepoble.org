@@ -91,12 +91,26 @@ export function diesDeCobertura({ saldo = null, despesaMensual = null } = {}) {
   return Math.floor((Math.max(0, saldo) * DIES_PER_MES) / despesaMensual);
 }
 
+/**
+ * La fi d'una finestra de presentació en paraules, amb el compte enrere:
+ * «acaba el 20/10/2026: queden 6 dies», «… queda un dia» o «acaba hui, el
+ * 20/10/2026». Ordre del Mestre, 14-10-2026 (prompt 261014_2015, punt 1): el
+ * rellotge de la capçalera del Tauler (rellotgeDelTermini) diu el mateix
+ * compte enrere que els venciments d'ací.
+ * @param {{a:number,m:number,d:number}} fi
+ * @param {number} diesRestants
+ * @returns {string}
+ */
+export function compteEnrere(fi, diesRestants) {
+  if (diesRestants === 0) return `acaba hui, el ${dia(fi)}`;
+  return `acaba el ${dia(fi)}: ${diesRestants === 1 ? 'queda un dia' : `queden ${diesRestants} dies`}`;
+}
+
 /* El text d'un venciment: una data no és cap xifra financera, es pinta sempre. */
 function textDelVenciment(fase, termini, diesRestants) {
   if (fase === 'propera') return `La presentació va del ${dia(termini.inici)} al ${dia(termini.fi)}.`;
   if (fase === 'vencuda') return `La presentació va acabar el ${dia(termini.fi)}.`;
-  if (diesRestants === 0) return `La presentació acaba hui, el ${dia(termini.fi)}.`;
-  return `La presentació acaba el ${dia(termini.fi)}: ${diesRestants === 1 ? 'queda un dia' : `queden ${diesRestants} dies`}.`;
+  return `La presentació ${compteEnrere(termini.fi, diesRestants)}.`;
 }
 
 /**

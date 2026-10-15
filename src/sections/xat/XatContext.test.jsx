@@ -13,7 +13,9 @@ const mock = vi.hoisted(() => ({
   obriFilDePagina: vi.fn(), teCapacitat: vi.fn()
 }));
 vi.mock('../../app/contexts/SessionContext', () => ({ useSession: () => mock.session }));
-vi.mock('../../app/contexts/IdentitatContext.jsx', () => ({ useIdentitat: () => ({ actorKey: mock.actorKey, identitats: mock.identitats }) }));
+/* Pla 261014_1450 (front C) · `actor` és el d'IdentitatContext que pinta la
+   barra negra; sense valor, com fins ara (cap entitat activa). */
+vi.mock('../../app/contexts/IdentitatContext.jsx', () => ({ useIdentitat: () => ({ actorKey: mock.actorKey, identitats: mock.identitats, actor: mock.actor }) }));
 vi.mock('../../app/contexts/RouterContext', () => ({ useLocation: () => ({ pathname: mock.pathname }) }));
 vi.mock('../../app/contexts/UIContext', () => ({ useUIActions: () => ({ t: (_, fallback) => fallback }) }));
 vi.mock('../../components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: mock.showToast }) }));
@@ -38,7 +40,7 @@ async function open(config = { backendId: 'supabase', tenantId: '00000000-0000-0
 }
 beforeEach(() => {
   vi.clearAllMocks(); snapshots = []; mock.pathname = '/xat';
-  mock.session = { currentUser: { id: 'A' }, generacio: 1 }; mock.actorKey = 'persona::A'; mock.identitats = undefined;
+  mock.session = { currentUser: { id: 'A' }, generacio: 1 }; mock.actorKey = 'persona::A'; mock.identitats = undefined; mock.actor = undefined;
   mock.loadFils.mockResolvedValue([fil()]);
   mock.loadMissatges.mockResolvedValue([message('secret-A')]);
   mock.marcaLlegit.mockResolvedValue({ llegitFinsSeq: 1, rebutFinsSeq: 1 });
@@ -1163,6 +1165,8 @@ describe('xat de pàgina i comunitats (T63.2, T67)', () => {
     expect(value.contactesFrequents).toEqual([]);
     expect(value.marcaLlegides(['fil-A'])).toBe(0);
     expect(value.joId).toBeNull();
+    /* Pla 261014_1450 (front C) · Fora del proveïdor, cap entitat activa. */
+    expect(value.entitatActiva).toBeNull();
   });
 
   /* Onada 3 · La interfície necessita saber qui és «jo»: la cerca no el troba
@@ -1199,6 +1203,46 @@ describe('xat de pàgina i comunitats (T63.2, T67)', () => {
     mock.session = { currentUser: null, generacio: 2, estat: 'fora' };
     view.rerender(tree(CONFIG));
     expect(value.senseSessio).toBe(true);
+  });
+
+  /* Pla 261014_1450 (front C) · La barra negra actua com una entitat: el xat
+     exposa `entitatActiva` amb el MATEIX actor d'IdentitatContext (per a
+     pintar-la al rail i dir-ho al compositor), però `joId`, `joNom` i
+     `joAvatar` continuen sent la persona: el servidor desa usuari_id =
+     auth.uid() i el costat de les bombolles es decidix amb `joId`. Com la
+     resta del jo, no es veu fora del scope visible. */
+  it('amb un actor entitat exposa entitatActiva i el jo continua sent la persona', async () => {
+    mock.identitats = [
+      { tipus: 'persona', id: 'A', nom: 'Pepa Soler', avatar: '/assets/pepa.jpg' },
+      { tipus: 'entitat', id: 'o-1', nom: 'Forn de la Torre', avatar: '/assets/forn.jpg' }
+    ];
+    mock.actor = { tipus: 'persona', id: 'A', nom: 'Pepa Soler', avatar: '/assets/pepa.jpg' };
+    const view = await muntat();
+    expect(value.entitatActiva).toBeNull();
+
+    mock.actor = { tipus: 'entitat', id: 'o-1', nom: 'Forn de la Torre', avatar: '/assets/forn.jpg', rol: 'owner', slug: 'forn' };
+    mock.actorKey = 'entitat::o-1';
+    view.rerender(tree(CONFIG));
+    await waitFor(() => expect(value.status).toBe('ready'));
+    expect(value.entitatActiva).toEqual({ id: 'o-1', nom: 'Forn de la Torre', avatar: '/assets/forn.jpg' });
+    expect([value.joId, value.joNom, value.joAvatar]).toEqual(['A', 'Pepa Soler', '/assets/pepa.jpg']);
+    /* El mateix actor tornat a construir no canvia el valor (memo pels camps). */
+    const abans = value.entitatActiva;
+    mock.actor = { ...mock.actor };
+    view.rerender(tree(CONFIG));
+    expect(value.entitatActiva).toBe(abans);
+
+    /* Una entitat sense logo: avatar null, mai la foto de la persona. */
+    mock.actor = { tipus: 'entitat', id: 'o-1', nom: 'Forn de la Torre', avatar: null };
+    view.rerender(tree(CONFIG));
+    expect(value.entitatActiva).toEqual({ id: 'o-1', nom: 'Forn de la Torre', avatar: null });
+
+    /* Sense sessió (scope no visible): null, com el jo. */
+    mock.session = { currentUser: null, generacio: 2, estat: 'comprovant' };
+    snapshots = [];
+    view.rerender(tree(CONFIG));
+    expect(snapshots[0].entitatActiva).toBeNull();
+    expect(snapshots[0].joId).toBeNull();
   });
 });
 

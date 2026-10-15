@@ -111,20 +111,51 @@ En provar l'entorn real a `https://gentdelatorre.net/#sdp=/xat`, el Mestre ha id
   - `src/sections/xat/XatContext.test.jsx`.
   - `src/components/universal/identitat/useIdentitatDeLaBarra.test.jsx`.
 
-#### Front E: Enginyeria Inversa de la Usabilitat (Calcar WhatsApp al Xat i Factura Directa a la Gestoria)
+#### Front E: Enginyeria Inversa de la Usabilitat (Metodologia REA: Obsidian, WhatsApp, Feedly, Raindrop i GnuCash)
 - **Inspiració i Metodologia REA (Reverse Engineer Anything via MCP)**:
-  - Aplicar la lògica de desconstrucció estructural sobre aplicacions madures de referència per nodrir els nostres tractors de Pedra Seca sense inventar la roda ni generar fricció.
-  - **Xat (Clonatge de WhatsApp Desktop)**:
-    - Extracció d'evidència del comportament de WhatsApp Web / Desktop (estructures DOM, estils computats, espaiats exactes de 24/48px, gestió d'àudios i canvis d'estat de lectura).
-    - Assegurar que el flux de resposta, reenviament i composició complisca la directriu canònica `.agents/skills/sdp-clon-whatsapp/SKILL.md`.
-  - **Gestoria (Simplificació Radical calcada de Factura Directa / Holded)**:
-    - El Mestre percep la Gestoria actual com a difícil i carregada d'utilitzar per a la vida rural real.
-    - Desconstruir el flux canònic de Factura Directa:
-      1. Formulari simple i humà: Qui factura? A qui? Què s'ha venut?
-      2. Taula de línies amb autocompletat de productes del camp o serveis locals.
-      3. Càlcul transparent d'IVA i retencions sense requerir formació fiscal.
-      4. Emissió de factura oficial amb segell en PDF amb 1 sol clic (integrada amb el generador PDF de Pedra Seca).
-      5. Menús d'alta enginyeria amagats darrere de desplegables discrets perquè l'usuari només veja facilitat.
+  - **Vídeo de referència obligatòria:** `https://youtu.be/NzXzcCVv5FI?si=GntOb1utK0zyqlnv` (*"I tried the viral repo for recreating apps"*).
+  - **Repositori Oficial:** `https://github.com/morluto/rea` (disponible per a agents via MCP amb `npx rea-agents setup`).
+  - Aplicar la lògica de desconstrucció estructural sobre aplicacions madures de referència («seen vs inferred») per nodrir els components de Pedra Seca sense inventar la roda ni generar codi a mitges:
+    * **ARQUETIP MESTRE: Obsidian (i Notion)**: La base fundacional de Sóc de Poble és Obsidian: sistema de fitxers locals plans (Markdown), graf de coneixement viu, arquitectura modular de plugins extensibles i espais de treball mal·leables. Desconstruir com Obsidian gestiona la mal·leabilitat dels panells, el renderitzat i l'extensibilitat per veure què ens falta a la nostra Wiki/Workspace i fer-la encara més agradable i intuïtiva per als veïns.
+    * **Xat Rural (WhatsApp Desktop)**: Estructures DOM exactes, separadors temporals, espaiats de 24/48px, gestió d'àudios i ergonomia d'escriptori / mòbil seguint `.agents/skills/sdp-clon-whatsapp/SKILL.md`.
+    * **Lector Rural (Feedly)**: Jerarquia de carpetes, estils de targeta i lectura àgil d'RSS.
+    * **Marcadors i Recursos (Raindrop.io)**: Previsualitzacions riques, col·leccions i etiquetatge ràpid.
+    * **Salut Rural**: Eines de tele-assistència i suport a gent gran (avisos de medicació i xarxa de suport veïnal).
+    * **Gestoria Rural (Factura Directa + Holded + GnuCash)**: Simplificació humana en 3 passos, autocompletat de productes agrícoles i la sobirania de dades i doble partida neta de GnuCash.
+
+#### Front F: Quadre de Comandament i Exportació en Full de Càlcul (Excel / XLSX / CSV)
+- **Fitxers implicats:**
+  - `src/sections/gestoria/components/FullTrimestral.jsx`
+  - `src/sections/gestoria/components/TaulerGestoria.jsx`
+  - `src/sections/gestoria/services/exportadorExcel.js` (o servei de generació CSV/XLSX)
+- **Objectiu:**
+  - Generar un **Quadre de Comandament Executiu** i una taula completa de 12 columnes que es puga exportar en 1 sol clic com a **full de càlcul descarregable (Excel / XLSX / CSV)**.
+  - El fitxer ha de contenir:
+    1. **Full Resum (Quadre de Comandament):** Total d'ingressos, total de despeses, base imposable, IVA repercutit, IVA suportat, diferència a ingressar/compensar (Model 303), retencions d'IRPF acumulades (Model 130) i rendiment net del trimestre.
+    2. **Full Detallat de Factures i Despeses:** Les 12 columnes ordenades (Data, Núm. Factura, NIF/CIF, Emissor/Receptor, Concepte, Tipus Operació, Base Imposable, % IVA, Quota IVA, % IRPF, Quota IRPF, Total).
+  - **Usabilitat rural immediata:** L'usuari pot descarregar este full i enviar-lo directament per correu electrònic a la seua gestoria abans del dia 20 sense tocar ni un sol paper físic, a més de conservar-lo com a còpia de seguretat sobirana al seu disc dur.
+
+#### Front G: Blindatge Defensiu davant `useSession` a la Pàgina de Pobles
+- **Problema reproduït pel Mestre en captura de pantalla:** En navegar a `/pobles/la-torre-de-les-macanes`, es produeix un crash d'ErrorBoundary amb el missatge: `useSession ha de ser usat dins de SessionProvider`.
+- **Fitxers a revisar:** `src/sections/pobles/**`, `src/components/universal/**`, `src/app/routes/**`.
+- **Solució:** Aplicar la mateixa guarda defensiva implementada a `useIdentitatDeLaBarra.js` (retornar valors per defecte si el context de sessió és nul o no està muntat), evitant que la fallada de context trenqui la visualització de la pàgina del poble.
+
+#### Front H: Resolució de l'Avatar de la Comunitat «Gent de la Torre» al Xat
+- **Problema detectat pel Mestre:** A la llista de converses del xat, la fila de «Gent de la Torre» mostra les inicials `GD` sobre fons gris rígid en comptes de la imatge de la Torre de les Maçanes (imatge històrica de Viquipèdia / imatge oficial del poble).
+- **Fitxers implicats:** `src/sections/xat/XatContext.jsx`, `src/sections/xat/components/Conversa.jsx`, `src/sections/xat/components/CaraXat.jsx`.
+- **Solució:** Assegurar que la comunitat del poble resolgui el seu `avatar_url` a partir de les dades del poble associat (`poble:la-torre-de-les-macanes`), assignant-li la seua foto oficial sense caure al fallback de lletres.
+
+#### Front I: Mostrar Totes les Publicacions a la Pàgina del Poble (Prou de límit a 3 targetes)
+- **Problema detectat pel Mestre:** A la pàgina de Gent de la Torre només apareixen 3 targetes («Samarreta Sóc de Poble», «Mac Mini», «2n Aplec pel Territori»), quan s'han publicat moltes més targetes des de la Torre de les Maçanes.
+- **Fitxers implicats:** `src/sections/pobles/PobleSection.jsx` (o component de graella del poble) i consultes a `src/data/`.
+- **Solució:** Eliminar el `limit(3)` o tall rígid i connectar la càrrega completa de targetes vinculades al poble (o implementar botó «Mostra més publicacions»).
+
+#### Front J: Pàgina Didàctica del Plugin de WordPress (Estil Pedra Seca) i Missatge Sollutia
+- **Objectiu:** Modernitzar `wordpress-plugin/includes/ajustos.php`:
+  * Presentació càlida i humana: Què és Sóc de Poble? Portal de Pobles Connectats.
+  * Quants nodes connectats hi ha (La Torre de les Maçanes, Rentonar...) i com enxufar el poble amb el bloc natiu o shortcode `[socdepoble]`.
+  * Amagar la diagnosi tècnica freda (SHA-256, integritat, node, marcatge universal) sota un desplegable `<details>` de diagnosi per a desenvolupadors.
+  * Preparar el text del WhatsApp per a Sollutia per demanar l'enxufe de `socdepoble.org` com `gentdelatorre.net`.
 
 <!-- SDP:SECTION pla.implementacio.s5 -->
 ## Verificació

@@ -22,7 +22,12 @@
  * seua finestra de presentació, i com que una data no és cap xifra financera
  * es pinta sempre; la part de la caixa que caldria per a Hisenda
  * (hisendaSobreCaixa) sí que ho és, i la closca només la pinta amb l'ull obert.
- * Cabina d'Avió (ordre del Mestre, 13-10-2026, pla 261013_1405, front E):
+ * Ordre del Mestre, 14-10-2026 (prompt 261014_2015, punt 1): sense tria ni
+ * Full, el trimestre de les estimacions és el trimestre operatiu
+ * (trimestreOperatiu), el que té oberta la presentació del 303 i del 130, i
+ * el rellotge en compta els dies que queden.
+ * Cabina d'Avió (ordre del Mestre, 13-10-2026, pla 261013_1405, front E; des
+ * del 14-10-2026, «Quadre de comandament»):
  * dadesDelTauler porta també `cabina`, el model de la tercera vista del Tauler
  * (cabinaAvio.js), fet de les mateixes peces que les targetes; els venciments
  * miren el trimestre d'avui, l'anterior i el de les estimacions. Les xifres
@@ -42,7 +47,7 @@ import {
 } from '../../impostos/nucli/impostos.js';
 import { comparaDates, diesEntre, esDataValida, formatData, rangTrimestre } from '../../nucli/dates.js';
 import { formatImport } from '../../nucli/diners.js';
-import { cabinaDelTauler } from './cabinaAvio.js';
+import { cabinaDelTauler, compteEnrere } from './cabinaAvio.js';
 import { MONEDA_TAULER, comptesDe, resumTauler } from './resumTauler.js';
 
 /** Els blocs del Tauler, amb el seu títol, en l'ordre en què es pinten. */
@@ -457,6 +462,30 @@ export function trimestreVei(periode, pas) {
   return rangTrimestre(nou.any, nou.t) ? nou : null;
 }
 
+/**
+ * El trimestre operatiu d'una data (ordre del Mestre, 14-10-2026, prompt
+ * 261014_2015, punt 1): si avui cau dins de la finestra de presentació del
+ * trimestre anterior (de l'1 al 20 d'abril, juliol i octubre, i fins al 30 de
+ * gener per al 4T), el trimestre operatiu és el que s'està liquidant
+ * (l'anterior). Altrament, el trimestre natural de la data. El 14-10-2026 és
+ * el 3T 2026, que vença el 20-10, i no el 4T que acaba de començar. Els
+ * terminis són els de impostos.js, [NO VERIFICAT] i sense el pas al dia hàbil
+ * (el 30-01-2027 és dissabte); quan terminiPresentacio el tinga, esta funció
+ * el seguirà sense cap altre canvi.
+ * @param {{ a: number, m: number, d: number }|null} avui
+ * @returns {{ any: number, t: number }|null}
+ */
+export function trimestreOperatiu(avui) {
+  const actual = trimestreDeData(avui);
+  if (!actual) return null;
+  const anterior = trimestreVei(actual, -1);
+  const finestra = anterior ? terminiPresentacio(anterior.any, anterior.t) : null;
+  if (finestra && comparaDates(avui, finestra.inici) >= 0 && comparaDates(avui, finestra.fi) <= 0) {
+    return anterior;
+  }
+  return actual;
+}
+
 /* El nom del trimestre en el text del rellotge: «4T 2026». */
 const nomTrimestre = ({ any, t }) => (Number.isInteger(t) && Number.isInteger(any) ? `${t}T ${any}` : 'el trimestre');
 
@@ -470,6 +499,12 @@ const nomTrimestre = ({ any, t }) => (Number.isInteger(t) && Number.isInteger(an
  * Si avui hi ha oberta la presentació d'un altre trimestre (de l'1 al 20
  * d'octubre, la del 3T, mentre la capçalera mira el 4T), `obert` ho diu: el
  * venciment que corre no queda mai amagat darrere del trimestre triat.
+ * Derogat EN PART per l'ordre del Mestre, 14-10-2026 (prompt 261014_2015,
+ * punt 1): la capçalera ja no mira per defecte el 4T dins de la finestra del
+ * 3T, sinó el trimestre operatiu (trimestreOperatiu), i `obert` només apareix
+ * si la persona tria un altre trimestre o el Full en fixa un altre. En la
+ * fase 'presentacio', el text porta el compte enrere: «… acaba el
+ * 20/10/2026: queden 6 dies».
  * @param {{ any?: number, t?: number, periode?: object|null, termini?: object|null, avui?: object|null }} p
  *   el trimestre i el termini (els de l'estimació del 303) i el dia d'avui { a, m, d }
  * @returns {{ fase: 'sense'|'abans'|'trimestre'|'presentacio'|'vencut', valor: number|null, max: number|null,
@@ -500,9 +535,11 @@ export function rellotgeDelTermini({ any, t, periode = null, termini = null, avu
   }
   if (comparaDates(avui, termini.fi) <= 0) {
     const { valor, max } = tram(termini.inici, termini.fi);
+    /* Ordre del Mestre, 14-10-2026 (prompt 261014_2015, punt 1): el compte enrere fins al dia que acaba,
+       el mateix text que els venciments del Quadre de comandament (compteEnrere, cabinaAvio.js). */
     return {
       fase: 'presentacio', valor, max, etiqueta: `Presentació del ${nom}: dia ${valor} de ${max}`,
-      text: `Ara és el termini de presentació del 303 i del 130: acaba el ${dia(termini.fi)}.`, obert
+      text: `Ara és el termini de presentació del 303 i del 130, que ${compteEnrere(termini.fi, diesEntre(avui, termini.fi))}.`, obert
     };
   }
   return {
@@ -573,19 +610,20 @@ export function hisendaSobreCaixa({ hisenda = null, caixa = null, iva = null, ir
  * @param {object|null} [p.lectura] el que torna executaTractorTauler (sense, el Tauler buit i honest)
  * @param {object[]} [p.factures] les factures del model (nucli/model.js): la proposta del Full trimestral
  *   i les dels fulls anteriors que ha llegit com a historial (el 130 és de l'any)
- * @param {{a:number,m:number,d:number}|null} [p.avui] el dia d'avui: el trimestre de les estimacions quan no hi ha periode
+ * @param {{a:number,m:number,d:number}|null} [p.avui] el dia d'avui: sense periode, les estimacions són del seu
+ *   trimestre operatiu (ordre del Mestre, 14-10-2026: el que té oberta la presentació; trimestreOperatiu)
  * @param {{ any: number, t: number }|null} [p.periode] el trimestre que ha analitzat el Full: mana sobre el d'avui,
  *   perquè les estimacions parlen del mateix trimestre que el full; un periode que no és un trimestre s'ignora
  * @returns {{ comptes: object[], avisos: object[], resum: object, iva: object, irpf: object, hisenda: object,
  *   rellotge: object, liquidacio: object, targetes: object[], cabina: object }} rellotge: rellotgeDelTermini del
- *   trimestre de les estimacions; liquidacio: hisendaSobreCaixa; cabina: cabinaDelTauler (la Cabina d'Avió)
+ *   trimestre de les estimacions; liquidacio: hisendaSobreCaixa; cabina: cabinaDelTauler (el Quadre de comandament)
  */
 export function dadesDelTauler({ lectura = null, factures = [], avui = null, periode = null } = {}) {
   const llistaFactures = Array.isArray(factures) ? factures : [];
   const { comptes, avisos } = comptesDe({ extractes: lectura?.extractes ?? [], csv: lectura?.csv ?? [] });
   const resum = resumTauler({ comptes, factures: llistaFactures, avui });
   const delFull = periode && rangTrimestre(periode.any, periode.t) ? { any: periode.any, t: periode.t } : null;
-  const trimestre = delFull ?? trimestreDeData(avui) ?? trimestreDeData(resum.fins) ?? {};
+  const trimestre = delFull ?? trimestreOperatiu(avui) ?? trimestreDeData(resum.fins) ?? {};
   const iva = estimaIva303({ factures: llistaFactures, ...trimestre });
   const irpf = estimaIrpf130({ factures: llistaFactures, ...trimestre });
   const hisenda = resumHisenda({ iva, irpf });

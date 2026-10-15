@@ -8,13 +8,21 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { createRef } from 'react';
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { MemoryRouter, useLocation } from '../../../app/contexts/RouterContext';
 
-const mocks = vi.hoisted(() => ({ toast: vi.fn(), ui: { externalConfig: {} } }));
+const mocks = vi.hoisted(() => ({ toast: vi.fn(), ui: { externalConfig: {} }, capacitats: new Set(), resol: vi.fn() }));
 vi.mock('../../universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: mocks.toast }) }));
 vi.mock('../../../app/contexts/UIContext', () => ({ useUIState: () => mocks.ui }));
+/* Ordre del Mestre, 14-10-2026 (prompt 261014_2015, punt 4) · El port
+   simulat, com a PageFrame.avatar.test.jsx: sense la capacitat 'mitjans' (el
+   valor de cada prova si no la demana), el mateix que una app sense node. */
+vi.mock('../../../data/backendPort.js', async (importOriginal) => ({
+  ...(await importOriginal()),
+  teCapacitat: (capacitat) => mocks.capacitats.has(capacitat),
+  resolveAsset: (ref, opcions) => mocks.resol(ref, opcions)
+}));
 
 import { PaginaApp } from './PaginaApp.jsx';
 
@@ -28,6 +36,8 @@ const escolta = (event) => vistos.push(event.detail);
 beforeEach(() => {
   vistos = [];
   mocks.ui = { externalConfig: { traductorUrl: '/wp-json/socdepoble/v1/traduir' } };
+  mocks.capacitats = new Set();
+  mocks.resol.mockReset();
   buidaCauTraduccions();
   window.localStorage.removeItem(CLAU_APAGADA);
   window.umami = { track: vi.fn() };
@@ -294,6 +304,197 @@ describe('el rellotge viu de la barra taronja', () => {
     expect(marc(ambRellotge)).toEqual(abans.marc);
     expect(ambRellotge.querySelector('section.bar-orange').firstElementChild.outerHTML).toBe(abans.autor);
     expect(ambRellotge.querySelectorAll('h1')).toHaveLength(1);
+  });
+});
+
+/* act buida el treball pendent de React en eixir: el valor resolt ja s'ha pintat. */
+const buida = () => act(async () => { await new Promise((resolt) => { setTimeout(resolt, 0); }); });
+
+/* Ordre del Mestre, 14-10-2026 (prompt 261014_2015, punt 5) · Les accions
+   inoperatives de PageFrame (T36): la Gestoria porta Comentar, Compartir i
+   Connectar a la barra, amb aria-disabled, i el clic només diu quin botó és
+   (onClickInoperatiu): cap menú, cap navigator.share, cap porta-retalls i cap
+   navegació. Sense les props, el DOM i les accions de sempre. */
+describe('les accions inoperatives de PageFrame (T36)', () => {
+  const botoDe = (arrel, nom) => [...arrel.querySelectorAll('header.bar-blue button')].find((b) => b.getAttribute('aria-label') === nom);
+  const ubicacio = () => screen.getByTestId('ubicacio').textContent;
+  let share;
+  let writeText;
+  beforeEach(() => {
+    share = vi.fn(async () => {});
+    writeText = vi.fn(async () => {});
+    Object.defineProperty(window.navigator, 'share', { value: share, configurable: true, writable: true });
+    Object.defineProperty(window.navigator, 'clipboard', { value: { writeText }, configurable: true, writable: true });
+  });
+  afterEach(() => {
+    delete window.navigator.share;
+    delete window.navigator.clipboard;
+  });
+
+  test('Comentar, Compartir i Connectar porten aria-disabled="true"; Índex i Traduir, no', () => {
+    const arrel = pinta({ accionsInoperatives: true, onClickInoperatiu: vi.fn() });
+    const noms = [...arrel.querySelectorAll('header.bar-blue button')].map((b) => [b.getAttribute('aria-label'), b.getAttribute('aria-disabled')]);
+    expect(noms).toEqual([
+      ['Índex de secció', null], ['Traduir', null], ['Comentar', 'true'], ['Compartir', 'true'], ['Connectar', 'true']
+    ]);
+  });
+
+  test('un clic a Compartir crida onClickInoperatiu("compartir") i res més: ni navigator.share, ni el porta-retalls, ni la ubicació', async () => {
+    const onClickInoperatiu = vi.fn();
+    const arrel = pinta({ accionsInoperatives: true, onClickInoperatiu });
+    const abans = ubicacio();
+    fireEvent.click(botoDe(arrel, 'Compartir'));
+    await buida();
+    expect(onClickInoperatiu.mock.calls).toEqual([['compartir']]);
+    expect(share).not.toHaveBeenCalled();
+    expect(writeText).not.toHaveBeenCalled();
+    expect(mocks.toast).not.toHaveBeenCalled();
+    expect(ubicacio()).toBe(abans);
+  });
+
+  test('Comentar i Connectar també només diuen quin botó són: cap menú, cap navegació i cap telemetria', async () => {
+    const onClickInoperatiu = vi.fn();
+    const arrel = pinta({ accionsInoperatives: true, onClickInoperatiu });
+    const abans = ubicacio();
+    fireEvent.click(botoDe(arrel, 'Comentar'));
+    fireEvent.click(botoDe(arrel, 'Connectar'));
+    await buida();
+    expect(onClickInoperatiu.mock.calls).toEqual([['comentar'], ['connectar']]);
+    expect(document.querySelector('[role="menu"]')).toBeNull();
+    expect(botoDe(arrel, 'Comentar').hasAttribute('aria-haspopup')).toBe(false);
+    expect(ubicacio()).toBe(abans);
+    expect(vistos.filter((intent) => intent.nom === 'connectar')).toEqual([]);
+  });
+
+  test('sense les props, el DOM de sempre i el Compartir de veres (la prova discrimina); onClickInoperatiu sol no apaga res', async () => {
+    const sempre = pinta().querySelector('header.bar-blue').outerHTML;
+    cleanup();
+    const nomesClic = vi.fn();
+    const arrel = pinta({ onClickInoperatiu: nomesClic });
+    expect(arrel.querySelector('header.bar-blue').outerHTML).toBe(sempre);
+    expect(arrel.querySelector('header.bar-blue [aria-disabled]')).toBeNull();
+    fireEvent.click(botoDe(arrel, 'Compartir'));
+    await buida();
+    expect(share).toHaveBeenCalledTimes(1);
+    expect(nomesClic).not.toHaveBeenCalled();
+  });
+
+  test('ho diu el codi: les dues props passen per nomesAmbValor, com la resta d’accions de la barra', () => {
+    const codi = readFileSync(path.join(process.cwd(), 'src/components/PedraSeca/organismes/PaginaApp.jsx'), 'utf8');
+    expect(codi).toMatch(/nomesAmbValor\(\{[^}]*accionsInoperatives, onClickInoperatiu[^}]*\}\)/);
+  });
+});
+
+/* Ordre del Mestre, 14-10-2026 (prompt 261014_2015, punt 4; decisió de les
+   21:20) · La referència opaca d'una pujada ('sdp-media://') es resol pel port
+   amb useResolvedAsset abans de passar per fontSegura; mentre es resol, o si
+   no es pot, la silueta honesta, mai la referència crua. El port simulat la
+   resol a una URL del mateix origen, la que ja admet sanitize.js. */
+describe('la referència opaca d’una pujada es resol pel port', () => {
+  const REF = 'sdp-media://mitjans/t/u/avatars/p.webp';
+  const PORTADA = 'sdp-media://mitjans/t/u/portades/biblioteca.webp';
+  const resolta = (ref) => `${window.location.origin}/storage/v1/object/public/${ref.trim().replace(/^sdp-media:\/\//i, '')}`;
+  const ambPort = (resolutor = async (ref) => resolta(ref)) => {
+    mocks.capacitats = new Set(['mitjans']);
+    mocks.resol.mockImplementation(resolutor);
+  };
+  const ambAvatar = (avatar) => ({ author: { ...NOTICIA.author, avatar } });
+  const autorDe = (arrel) => arrel.querySelector('section.bar-orange .sp-card-author');
+  const srcAvatar = (arrel) => autorDe(arrel).querySelector('img.sp-card-avatar')?.getAttribute('src');
+  /* Tots els src i srcset del document que diuen sdp-media, amb qualsevol caixa i també darrere d'una barra. */
+  const opacs = (arrel) => [...arrel.querySelectorAll('[src], [srcset]')]
+    .flatMap((e) => [e.getAttribute('src'), e.getAttribute('srcset')])
+    .filter((valor) => valor && /sdp-media/i.test(valor));
+  const ambSilueta = (arrel) => {
+    expect(autorDe(arrel).querySelector('img.sp-card-avatar')).toBeNull();
+    expect(autorDe(arrel).querySelector('.sp-card-avatar--fallback:not(.sp-card-avatar--amagat)')).not.toBeNull();
+  };
+
+  test('resolta pel port, la barra taronja pinta l’avatar amb eixa URL; mentre es resol, la silueta', async () => {
+    ambPort();
+    const arrel = pinta(ambAvatar(REF));
+    ambSilueta(arrel);
+    await waitFor(() => expect(srcAvatar(arrel)).toBe(resolta(REF)));
+    expect(mocks.resol).toHaveBeenCalledWith(REF, expect.anything());
+    expect(opacs(arrel)).toEqual([]);
+  });
+
+  test('la portada opaca, resolta pel port, es pinta sense referent; mentre es resol, cap portada', async () => {
+    ambPort();
+    const arrel = pinta({ heroImage: PORTADA });
+    expect(arrel.querySelector('.hero-image')).toBeNull();
+    await waitFor(() => expect(arrel.querySelector('.hero-image img')?.getAttribute('src')).toBe(resolta(PORTADA)));
+    expect(arrel.querySelector('.hero-image img').getAttribute('referrerpolicy')).toBe('no-referrer');
+    expect(opacs(arrel)).toEqual([]);
+  });
+
+  test('sense la capacitat «mitjans», la silueta, cap portada i cap src opac; el port no es crida', async () => {
+    const arrel = pinta({ ...ambAvatar(REF), heroImage: PORTADA });
+    await buida();
+    ambSilueta(arrel);
+    expect(arrel.querySelector('.hero-image')).toBeNull();
+    expect(opacs(arrel)).toEqual([]);
+    expect(mocks.resol).not.toHaveBeenCalled();
+  });
+
+  test('si el port torna la mateixa referència (no pot firmar), res o falla: la silueta, mai la referència', async () => {
+    const PRIVADA = 'sdp-media://mitjans_privats/t/u/avatars/p.webp';
+    for (const resolutor of [async (ref) => ref, async () => null, async () => { throw new Error('el node no respon'); }]) {
+      ambPort(resolutor);
+      const arrel = pinta(ambAvatar(PRIVADA));
+      await waitFor(() => expect(mocks.resol).toHaveBeenCalledWith(PRIVADA, expect.anything()));
+      await buida();
+      ambSilueta(arrel);
+      expect(opacs(arrel)).toEqual([]);
+      cleanup();
+      mocks.resol.mockReset();
+    }
+  });
+
+  test('un esquema en majúscules o amb espais davant: al port, la forma canònica; sense port, mai al DOM (ni darrere d’una barra)', async () => {
+    for (const ref of ['SDP-MEDIA://mitjans/t/u/avatars/p.webp', '  sdp-media://mitjans/t/u/avatars/p.webp', ' Sdp-Media://mitjans/t/u/avatars/p.webp']) {
+      let arrel = pinta({ ...ambAvatar(ref), heroImage: ref });
+      await buida();
+      ambSilueta(arrel);
+      expect(arrel.querySelector('.hero-image'), ref).toBeNull();
+      expect([ref, opacs(arrel)]).toEqual([ref, []]);
+      cleanup();
+      ambPort();
+      arrel = pinta(ambAvatar(ref));
+      await waitFor(() => expect(srcAvatar(arrel)).toBe(resolta(REF)));
+      expect(mocks.resol.mock.calls.map(([demanada]) => demanada)).toEqual([REF]);
+      cleanup();
+      mocks.capacitats = new Set();
+      mocks.resol.mockReset();
+    }
+  });
+
+  test('una font que no és opaca no passa pel port i es pinta com sempre', async () => {
+    ambPort();
+    const arrel = pinta();
+    await buida();
+    expect(srcAvatar(arrel)).toBe(NOTICIA.author.avatar);
+    expect(arrel.querySelector('.hero-image img').getAttribute('src')).toBe(NOTICIA.heroImage);
+    expect(mocks.resol).not.toHaveBeenCalled();
+  });
+
+  test('els ganxos es criden sempre en el mateix ordre: d’opac a cap autor i a una font pròpia, sense trencar res', async () => {
+    ambPort();
+    const pagina = (props) => (
+      <MemoryRouter rutaInicial="/app/lector?article=a1">
+        <PaginaApp {...NOTICIA} {...props}><p>El cos de la notícia.</p></PaginaApp>
+      </MemoryRouter>
+    );
+    const { container, rerender } = render(pagina(ambAvatar(REF)));
+    await waitFor(() => expect(srcAvatar(container)).toBe(resolta(REF)));
+    rerender(pagina({ author: null, heroImage: PORTADA }));
+    await waitFor(() => expect(container.querySelector('.hero-image img')?.getAttribute('src')).toBe(resolta(PORTADA)));
+    expect(autorDe(container).querySelector('.sp-card-author-name').textContent).toBe('Sóc de Poble');
+    rerender(pagina({}));
+    await buida();
+    expect(srcAvatar(container)).toBe(NOTICIA.author.avatar);
+    expect(container.querySelector('.hero-image img').getAttribute('src')).toBe(NOTICIA.heroImage);
+    expect(opacs(container)).toEqual([]);
   });
 });
 

@@ -3,10 +3,19 @@
  * (El dictamen 260910 sobre Preact queda superat per la migració a React
  * del 260920.)
  */
-import { render, act, cleanup } from '@testing-library/react';
-import { afterEach, beforeEach, expect, test, vi } from 'vitest';
+import { render, act, cleanup, waitFor } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-const mocks = vi.hoisted(() => ({ navigate: vi.fn(), toast: vi.fn() }));
+const mocks = vi.hoisted(() => ({ navigate: vi.fn(), toast: vi.fn(), capacitats: new Set(), resol: vi.fn() }));
+
+/* Ordre del Mestre, 14-10-2026 (prompt 261014_2015, punt 4) · El port
+   simulat, com a PageFrame.avatar.test.jsx: sense la capacitat 'mitjans' (el
+   valor de cada prova si no la demana), el mateix que una app sense node. */
+vi.mock('../../../data/backendPort.js', async (importOriginal) => ({
+  ...(await importOriginal()),
+  teCapacitat: (capacitat) => mocks.capacitats.has(capacitat),
+  resolveAsset: (ref, opcions) => mocks.resol(ref, opcions)
+}));
 
 vi.mock('../../../app/contexts/RouterContext', async () => {
   const { createElement: h } = await import('react');
@@ -24,6 +33,7 @@ import { EventCard } from '../../universal/EventCard.jsx';
 import SectionItemCard from '../../SectionItemCard.jsx';
 import { TEXTOS_COMENTAR } from '../../universal/barres/BarraBlava.jsx';
 import { CLAU_APAGADA, ESDEVENIMENT_DOM } from '../../../data/telemetria.js';
+import { isSafeAsset } from '../../universal/UniversalUtils';
 
 /* Telemetria real amb `window.umami` d'amfitrió: el comptador rep l'event
    sense backend i cap prova toca la xarxa. */
@@ -34,6 +44,8 @@ const connectars = () => vistos.filter((intent) => intent.nom === 'connectar');
 beforeEach(() => {
   arrel = document.createElement('div'); // arrel separada: no penja del document
   vi.clearAllMocks();
+  mocks.capacitats = new Set();
+  mocks.resol.mockReset();
   vistos = [];
   window.localStorage.removeItem(CLAU_APAGADA);
   window.umami = { track: vi.fn() };
@@ -352,4 +364,133 @@ test('compartir sense porta-retalls avisa amb l\'enllaç en lloc de petar', asyn
     if (clipboardOriginal) Object.defineProperty(navigator, 'clipboard', clipboardOriginal);
     else delete navigator.clipboard;
   }
+});
+
+/* Ordre del Mestre, 14-10-2026 (prompt 261014_2015, punt 4; decisió de les
+   21:20) · La referència opaca d'una pujada ('sdp-media://') es resol pel port
+   amb useResolvedAsset abans del filtre; mentre es resol, o si no es pot, la
+   silueta honesta, mai la referència crua. Amb imatgePrivada (fontSegura) i
+   sense (resolRecursPropi i isSafeAsset). El port simulat la resol a una URL
+   del mateix origen, la que ja admet sanitize.js. */
+describe('la referència opaca d’una pujada es resol pel port', () => {
+  const REF = 'sdp-media://mitjans/t/u/avatars/p.webp';
+  const IMATGE = 'sdp-media://mitjans/t/u/publicacions/coca.webp';
+  const resolta = (ref) => `${window.location.origin}/storage/v1/object/public/${ref.trim().replace(/^sdp-media:\/\//i, '')}`;
+  const ambPort = (resolutor = async (ref) => resolta(ref)) => {
+    mocks.capacitats = new Set(['mitjans']);
+    mocks.resol.mockImplementation(resolutor);
+  };
+  /* act buida el treball pendent de React en eixir: el valor resolt ja s'ha pintat. */
+  const buida = () => act(async () => { await new Promise((resolt) => { setTimeout(resolt, 0); }); });
+  /* Una targeta nova en una arrel nova, sense port. */
+  const torna = () => {
+    cleanup();
+    arrel = document.createElement('div');
+    mocks.capacitats = new Set();
+    mocks.resol.mockReset();
+  };
+  /* Tots els src i srcset de la targeta que diuen sdp-media, amb qualsevol caixa i també darrere d'una barra. */
+  const opacs = () => [...arrel.querySelectorAll('[src], [srcset]')]
+    .flatMap((e) => [e.getAttribute('src'), e.getAttribute('srcset')])
+    .filter((valor) => valor && /sdp-media/i.test(valor));
+  const ambSilueta = () => {
+    expect(troba('img.sp-card-avatar')).toBeNull();
+    expect(troba('.sp-card-avatar--fallback')).not.toBeNull();
+  };
+
+  test('avatarUrl resolt pel port: la boina pinta eixa URL, amb imatgePrivada i sense; mentre es resol, la silueta', async () => {
+    for (const imatgePrivada of [false, true]) {
+      ambPort();
+      pinta({ title: 'Coca', author: 'Pepa', avatarUrl: REF, imatgePrivada });
+      ambSilueta();
+      await waitFor(() => expect(troba('img.sp-card-avatar')?.getAttribute('src')).toBe(resolta(REF)));
+      expect(troba('img.sp-card-avatar').getAttribute('referrerpolicy')).toBe(imatgePrivada ? 'no-referrer' : null);
+      expect(mocks.resol).toHaveBeenCalledWith(REF, expect.anything());
+      expect(opacs()).toEqual([]);
+      torna();
+    }
+  });
+
+  test('imageUrl resolta pel port es pinta, amb imatgePrivada i sense; mentre es resol, cap imatge', async () => {
+    for (const imatgePrivada of [false, true]) {
+      ambPort();
+      pinta({ title: 'Coca', imageUrl: IMATGE, imatgePrivada });
+      expect(troba('img.sp-card-media')).toBeNull();
+      await waitFor(() => expect(troba('img.sp-card-media')?.getAttribute('src')).toBe(resolta(IMATGE)));
+      expect(opacs()).toEqual([]);
+      torna();
+    }
+  });
+
+  test('sense resolució, la silueta i cap src opac, amb imatgePrivada i sense: sense la capacitat, o el port torna la referència, res o falla', async () => {
+    const resolutors = [null, async (ref) => ref, async () => null, async () => { throw new Error('el node no respon'); }];
+    for (const imatgePrivada of [false, true]) {
+      for (const resolutor of resolutors) {
+        if (resolutor) ambPort(resolutor);
+        pinta({ title: 'Coca', author: 'Pepa', avatarUrl: REF, imageUrl: IMATGE, imatgePrivada });
+        if (resolutor) await waitFor(() => expect(mocks.resol).toHaveBeenCalledTimes(2));
+        await buida();
+        ambSilueta();
+        expect(troba('img.sp-card-media')).toBeNull();
+        expect(opacs()).toEqual([]);
+        if (!resolutor) expect(mocks.resol).not.toHaveBeenCalled();
+        torna();
+      }
+    }
+    /* Correcció 3 · Sense autor ni lloc, un avatar que no es pot pintar no deixa cap capçal buit. */
+    pinta({ title: 'Coca', avatarUrl: REF });
+    await buida();
+    expect(troba('.sp-card-header')).toBeNull();
+  });
+
+  test('un esquema en majúscules o amb espais davant: al port, la forma canònica; sense port, mai al DOM (ni darrere d’una barra)', async () => {
+    for (const ref of ['SDP-MEDIA://mitjans/t/u/avatars/p.webp', '  sdp-media://mitjans/t/u/avatars/p.webp', ' Sdp-Media://mitjans/t/u/avatars/p.webp']) {
+      for (const imatgePrivada of [false, true]) {
+        pinta({ title: 'Coca', author: 'Pepa', avatarUrl: ref, imageUrl: ref, imatgePrivada });
+        await buida();
+        ambSilueta();
+        expect([ref, imatgePrivada, troba('img.sp-card-media')]).toEqual([ref, imatgePrivada, null]);
+        expect([ref, imatgePrivada, opacs()]).toEqual([ref, imatgePrivada, []]);
+        torna();
+        ambPort();
+        pinta({ title: 'Coca', author: 'Pepa', avatarUrl: ref, imatgePrivada });
+        await waitFor(() => expect(troba('img.sp-card-avatar')?.getAttribute('src')).toBe(resolta(REF)));
+        expect(mocks.resol.mock.calls.map(([demanada]) => demanada)).toEqual([REF]);
+        torna();
+      }
+    }
+  });
+
+  test('Llei del Píxel: una font que no és opaca no passa pel port i es pinta com abans, amb imatgePrivada i sense', async () => {
+    const PROPIES = ['/assets/img/coca.webp', `${window.location.origin}/storage/v1/object/public/mitjans/t/u/coca.webp`, 'data:image/png;base64,iVBORw0KGgo='];
+    for (const imatgePrivada of [false, true]) {
+      for (const font of PROPIES) {
+        ambPort();
+        pinta({ title: 'Coca', author: 'Pepa', avatarUrl: font, imageUrl: font, imatgePrivada });
+        await buida();
+        expect([font, troba('img.sp-card-avatar')?.getAttribute('src'), troba('img.sp-card-media')?.getAttribute('src')]).toEqual([font, font, font]);
+        expect(mocks.resol).not.toHaveBeenCalled();
+        torna();
+      }
+    }
+    /* Una de fora: sense filtre privat es pinta (isSafeAsset); amb el filtre privat, no. Com abans. */
+    ambPort();
+    pinta({ title: 'Coca', author: 'Pepa', avatarUrl: 'https://diari.example/logo.png' });
+    await buida();
+    expect(troba('img.sp-card-avatar').getAttribute('src')).toBe('https://diari.example/logo.png');
+    torna();
+    ambPort();
+    pinta({ title: 'Coca', author: 'Pepa', avatarUrl: 'https://diari.example/logo.png', imatgePrivada: true });
+    await buida();
+    expect(troba('img.sp-card-avatar')).toBeNull();
+    expect(mocks.resol).not.toHaveBeenCalled();
+  });
+
+  test('la guarda !esMitjaOpac sense filtre privat: isSafeAsset ja rebutjava l’esquema, llevat d’un espai no ASCII davant', () => {
+    for (const ref of [REF, 'SDP-MEDIA://mitjans/x.webp', '  sdp-media://mitjans/x.webp', '\tsdp-media://mitjans/x.webp']) {
+      expect([ref, isSafeAsset(ref)]).toEqual([ref, false]);
+    }
+    /* El navegador el pren per un camí relatiu del mateix origen: una imatge trencada. Ara no es pinta. */
+    expect(isSafeAsset(' sdp-media://mitjans/x.webp')).toBe(true);
+  });
 });

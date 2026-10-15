@@ -496,3 +496,20 @@ it('la persona porta el correu de la sessió i recarrega torna a llegir sense pa
   expect(value.carregant).toBe(false);
   await waitFor(() => expect(value.identitats[0].nom).toBe('Restaurat'));
 });
+
+/* ── Pla 261014_1450, front B · la foto de la persona a /el-meu-perfil ──
+   La regla de PerfilContext: triaAvatar entre la fila de profiles i
+   user_metadata.avatar_url. La pujada a Sóc de Poble guanya a la de Google
+   siga on siga, i sense cap foto, null (Avatar hi pinta les inicials). */
+const FOTO_GOOGLE = 'https://lh3.googleusercontent.com/a/pepa.png';
+const FOTO_PUJADA = 'sdp-media://mitjans/la-torre/A/avatars/pepa.webp';
+it.each([
+  ['fila amb la de Google i user_metadata amb la pujada', { avatar_url: FOTO_GOOGLE }, { avatar_url: FOTO_PUJADA }, FOTO_PUJADA],
+  ['fila amb la pujada i user_metadata amb la de Google', { avatar_url: FOTO_PUJADA }, { avatar_url: FOTO_GOOGLE }, FOTO_PUJADA],
+  ['cap foto, ni a la fila ni a la sessió', { avatar_url: null }, {}, null],
+])('front B · %s → identitats[0].avatar', async (_cas, deLaFila, metadades, esperat) => {
+  mock.user = { id: 'A', user_metadata: metadades };
+  mock.getProfile.mockImplementation(async () => ({ id: 'A', full_name: 'Perfil A', ...deLaFila }));
+  await open();
+  expect(value.identitats[0].avatar).toBe(esperat);
+});

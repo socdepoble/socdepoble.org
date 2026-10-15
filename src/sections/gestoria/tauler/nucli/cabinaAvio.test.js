@@ -10,7 +10,7 @@ import { llegeixC43 } from '../../nucli/c43.js';
 import { crearFactura } from '../../nucli/model.js';
 import { LLEGENDA_ESTIMACIO, resumHisenda } from '../../impostos/nucli/impostos.js';
 import {
-  DIES_FRESCOR, INSTRUMENTS_CABINA, MESOS_CABINA, NOTA_TERMINIS, cabinaDelTauler, diesDeCobertura, venciments
+  DIES_FRESCOR, INSTRUMENTS_CABINA, MESOS_CABINA, NOTA_TERMINIS, cabinaDelTauler, compteEnrere, diesDeCobertura, venciments
 } from './cabinaAvio.js';
 import { DIES_PER_MES } from './resumTauler.js';
 import { dadesDelTauler, hisendaSobreCaixa } from './targetesTauler.js';
@@ -111,6 +111,13 @@ describe('venciments', () => {
     expect(delTercer(d(2026, 10, 19))).toMatchObject({ fase: 'oberta', diesRestants: 1, text: 'La presentació acaba el 20/10/2026: queda un dia.' });
     expect(delTercer(d(2026, 10, 21))).toMatchObject({ fase: 'vencuda', diesRestants: -1, text: 'La presentació va acabar el 20/10/2026.' });
     expect(delTercer(d(2026, 9, 30))).toMatchObject({ fase: 'propera', text: 'La presentació va del 01/10/2026 al 20/10/2026.' });
+  });
+
+  /* Ordre del Mestre, 14-10-2026 (prompt 261014_2015, punt 1): el mateix compte enrere, per al rellotge de la capçalera. */
+  test('compteEnrere: queden N dies, queda un dia, acaba hui', () => {
+    expect(compteEnrere(d(2026, 10, 20), 6)).toBe('acaba el 20/10/2026: queden 6 dies');
+    expect(compteEnrere(d(2026, 10, 20), 1)).toBe('acaba el 20/10/2026: queda un dia');
+    expect(compteEnrere(d(2026, 10, 20), 0)).toBe('acaba hui, el 20/10/2026');
   });
 
   test('sense dia d’avui vàlid o sense finestres, cap venciment', () => {

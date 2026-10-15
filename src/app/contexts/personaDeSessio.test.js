@@ -7,7 +7,7 @@
  */
 import { describe, expect, test } from 'vitest';
 import {
-  avatarDePersona, firmaDePersona, mateixPerfil, nomDePersona, perfilDeFila, personaDeSessio, pobleDeLaPertinenca
+  avatarDePersona, firmaDePersona, mateixPerfil, nomDePersona, perfilDeFila, personaDeSessio, pobleDeLaPertinenca, triaAvatar
 } from './personaDeSessio.js';
 
 const FOTO = 'https://lh3.googleusercontent.com/a/pepa.png';
@@ -123,7 +123,7 @@ describe('firma · una edició a l’app fa manar les metadades fins que arriba 
   });
 });
 
-describe('la reserva de sempre (T43), mudada sense canvis', () => {
+describe('la reserva (T43): el nom, mudat sense canvis; la foto, per triaAvatar', () => {
   test.each([
     [{ user_metadata: { full_name: 'A', name: 'B' }, full_name: 'C', email: 'd@poble.test' }, 'A'],
     [{ user_metadata: { name: 'B' }, full_name: 'C', email: 'd@poble.test' }, 'B'],
@@ -135,10 +135,18 @@ describe('la reserva de sempre (T43), mudada sense canvis', () => {
     expect(nomDePersona(usuari)).toBe(esperat);
   });
 
+  /* Pla 261014_1450, front B (revisió) · URL de Google, que no són pròpies: amb 'a', 'b' i
+     'c' (camins relatius del mateix origen a jsdom, i per tant pròpies) la
+     prova passava per la regla de la pròpia, no per l'ordre de la reserva.
+     Així fixa avatar_url > picture > avatar_url de l'usuari quan cap és
+     pròpia; el cas de la pròpia és al bloc del front B. */
+  const G_A = 'https://lh3.googleusercontent.com/a';
+  const G_B = 'https://lh3.googleusercontent.com/b';
+  const G_C = 'https://lh3.googleusercontent.com/c';
   test.each([
-    [{ user_metadata: { avatar_url: 'a', picture: 'b' }, avatar_url: 'c' }, 'a'],
-    [{ user_metadata: { picture: 'b' }, avatar_url: 'c' }, 'b'],
-    [{ avatar_url: 'c' }, 'c'],
+    [{ user_metadata: { avatar_url: G_A, picture: G_B }, avatar_url: G_C }, G_A],
+    [{ user_metadata: { picture: G_B }, avatar_url: G_C }, G_B],
+    [{ avatar_url: G_C }, G_C],
     [{}, null]
   ])('avatarDePersona(%o) → %s', (usuari, esperat) => {
     expect(avatarDePersona(usuari)).toBe(esperat);
@@ -147,6 +155,78 @@ describe('la reserva de sempre (T43), mudada sense canvis', () => {
   test('sense cap nom enlloc, ni a la fila ni a la sessió: «El meu compte»', () => {
     const usuari = { id: 'u-sense-res' };
     expect(personaDeSessio(usuari, perfilDe(usuari, { id: 'u-sense-res', full_name: '' })).nom).toBe('El meu compte');
+  });
+});
+
+/* Pla 261014_1450, front B (ordre del Mestre, 14-10-2026: «La prioritat
+   d'avatars ha de ser estricta») · 1) la pujada a Sóc de Poble, 2) la del
+   proveïdor d'entrada (Google…), 3) cap, i Avatar hi pinta les inicials. Les
+   pujades són referències opaques del bucket públic 'mitjans', com les que
+   desa PerfilEditor (storage.js, carpeta 'avatars'). */
+const PUJADA = 'sdp-media://mitjans/la-torre/u-front-a/avatars/pepa.webp';
+const PUJADA_META = 'sdp-media://mitjans/la-torre/u-front-a/avatars/pepa-meta.webp';
+
+describe('front B · triaAvatar: pròpia > proveïdor d’entrada > cap', () => {
+  test.each([
+    ['la pròpia, encara que vinga després de la de Google', [FOTO, PUJADA], PUJADA],
+    ['la pròpia, quan ja és la primera', [PUJADA, FOTO], PUJADA],
+    ['entre dues pròpies, la primera', [FOTO, PUJADA, PUJADA_META], PUJADA],
+    ['un camí de l’app també és propi', [FOTO, '/assets/fotos/pepa.jpg'], '/assets/fotos/pepa.jpg'],
+    ['una data:image també és pròpia', [FOTO, 'data:image/png;base64,AAAA'], 'data:image/png;base64,AAAA'],
+    ['sense cap pròpia, la primera de Google', [FOTO, FOTO_META], FOTO],
+    ['els buits no compten: la primera no buida', ['', '   ', null, FOTO_META], FOTO_META],
+    ['els valors es netegen d’espais', [`  ${PUJADA}  `], PUJADA],
+    ['cap candidata, buides o que no són text: null', ['', '   ', null, undefined, 42, {}], null],
+    ['sense candidates: null', [], null]
+  ])('%s', (_cas, candidats, esperat) => {
+    expect(triaAvatar(...candidats)).toBe(esperat);
+  });
+});
+
+describe('front B · personaDeSessio pinta la pujada abans que la de Google', () => {
+  const GOOGLE = Object.freeze({ avatar_url: FOTO_META, picture: FOTO_META });
+
+  test('fila amb la pujada i metadades de Google → la pujada', () => {
+    const usuari = { ...SENSE_METADADES, user_metadata: GOOGLE };
+    expect(personaDeSessio(usuari, perfilDe(usuari, { ...FILA, avatar_url: PUJADA })).avatar).toBe(PUJADA);
+  });
+
+  test('fila amb la de Google (la que copia el trigger d’alta) i metadades amb la pujada → la pujada', () => {
+    const usuari = { ...SENSE_METADADES, user_metadata: { avatar_url: PUJADA_META, picture: FOTO_META } };
+    expect(personaDeSessio(usuari, perfilDe(usuari)).avatar).toBe(PUJADA_META);
+  });
+
+  test('una pujada a l’usuari de la sessió (actualitzaUsuariSessio) també guanya a la de Google de les metadades', () => {
+    const usuari = { ...SENSE_METADADES, user_metadata: GOOGLE, avatar_url: PUJADA_META };
+    expect(personaDeSessio(usuari, perfilDe(usuari)).avatar).toBe(PUJADA_META);
+    expect(avatarDePersona(usuari)).toBe(PUJADA_META);
+  });
+
+  test('només fotos de Google → la de la fila, com sempre', () => {
+    const usuari = { ...SENSE_METADADES, user_metadata: GOOGLE };
+    expect(personaDeSessio(usuari, perfilDe(usuari)).avatar).toBe(FOTO);
+  });
+
+  test('cap foto enlloc → null (Avatar hi pinta les inicials)', () => {
+    expect(personaDeSessio(SENSE_METADADES, perfilDe(SENSE_METADADES, { ...FILA, avatar_url: '' })).avatar).toBeNull();
+  });
+
+  test('firma invàlida: la fila no entra encara que siga una pujada', () => {
+    const perfilVell = perfilDe(SENSE_METADADES, { ...FILA, avatar_url: PUJADA });
+    const editat = { ...SENSE_METADADES, user_metadata: { full_name: 'Pepa Nova', avatar_url: FOTO_META } };
+    expect(personaDeSessio(editat, perfilVell).avatar).toBe(FOTO_META);
+  });
+
+  test('esborrar la pujada → null: ni la fila vella ni cap reserva', () => {
+    const ambPujada = { ...SENSE_METADADES, user_metadata: { full_name: 'Pepa Soler', avatar_url: PUJADA }, avatar_url: PUJADA };
+    const perfilVell = perfilDe(ambPujada, { ...FILA, avatar_url: PUJADA });
+    expect(personaDeSessio(ambPujada, perfilVell).avatar).toBe(PUJADA);
+    /* actualitzaUsuariSessio en esborrar: fora avatar_url i picture de les
+       metadades i avatar_url de l'usuari. La firma canvia. */
+    const esborrat = { ...SENSE_METADADES, user_metadata: { full_name: 'Pepa Soler' } };
+    expect(personaDeSessio(esborrat, perfilVell).avatar).toBeNull();
+    /* I la fila rellegida, ja sense foto, tampoc en porta cap. */
+    expect(personaDeSessio(esborrat, perfilDe(esborrat, { ...FILA, avatar_url: '' })).avatar).toBeNull();
   });
 });
 

@@ -388,6 +388,74 @@ test('sense nom de persona, el peu diu «Tu» i l’avatar en porta la inicial',
   expect(screen.getByText('T')).toBeTruthy();
 });
 
+/* Pla 261014_1450 (front A) · El peu porta la foto de la persona (joAvatar)
+   plegat i desplegat, amb el full «Ajustos» i sense: una sola constant
+   (avatarPropi) cobrix els quatre llocs. El title continua sent el nom. Sense
+   foto, les inicials de sempre (Llei del Píxel). */
+const FOTO = '/assets/profile-javi.jpg';
+const LOGO_SDP = '/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png';
+const SDP = Object.freeze({ id: 'socdepoble', nom: 'Sóc de Poble', avatar: LOGO_SDP });
+const peuDe = (container, plegat) => container.querySelector(plegat ? '.sdp-xat-rail-peu--plegat' : '.sdp-xat-rail-peu');
+
+test('front A · amb joAvatar, el peu porta la foto de la persona, plegat i desplegat, amb Ajustos i sense', () => {
+  for (const plegat of [true, false]) {
+    for (const onAjustos of [vi.fn(), null]) {
+      const { container, unmount } = pinta({ plegat, onAjustos, joAvatar: FOTO });
+      const avatar = peuDe(container, plegat).querySelector('.sdp-avatar--xs');
+      const cas = `plegat=${plegat} ajustos=${Boolean(onAjustos)}`;
+      expect(avatar.querySelector('img.sdp-avatar__imatge')?.getAttribute('src'), cas).toBe(FOTO);
+      expect(avatar.getAttribute('title'), cas).toBe('Javi Llinares');
+      expect(avatar.classList.contains('sdp-xat-avatar--quadrat'), cas).toBe(false);
+      unmount();
+    }
+  }
+});
+
+test('front A · sense joAvatar, el peu no porta cap imatge i pinta les inicials', () => {
+  for (const plegat of [true, false]) {
+    const { container, unmount } = pinta({ plegat, onAjustos: vi.fn() });
+    const avatar = peuDe(container, plegat).querySelector('.sdp-avatar--xs');
+    expect(avatar.querySelector('img'), `plegat=${plegat}`).toBeNull();
+    expect(avatar.textContent, `plegat=${plegat}`).toBe('JL');
+    unmount();
+  }
+});
+
+/* Pla 261014_1450 (front C) · Amb una entitat activa a la barra negra, el peu
+   pinta el SEU logo (quadrat, com les comunitats), mai la foto de la persona;
+   el nom accessible diu amb qui actues i continua començant per «Tu», el que
+   es veu (WCAG 2.5.3). El text visible «Tu» no canvia. */
+test('front C · amb entitatActiva, el peu porta el logo quadrat de l’entitat i el nom accessible ho diu', () => {
+  for (const plegat of [true, false]) {
+    const onAjustos = vi.fn();
+    const { container, unmount } = pinta({ plegat, onAjustos, joAvatar: FOTO, entitatActiva: SDP });
+    const peu = peuDe(container, plegat);
+    const boto = within(peu).getByRole('button', { name: 'Tu: ajustos (actues com a Sóc de Poble)' });
+    expect(boto.getAttribute('title'), `plegat=${plegat}`).toBe('Tu: ajustos (actues com a Sóc de Poble)');
+    const avatar = boto.querySelector('.sdp-avatar--xs');
+    expect(avatar.classList.contains('sdp-xat-avatar--quadrat'), `plegat=${plegat}`).toBe(true);
+    expect(avatar.querySelector('img.sdp-avatar__imatge').getAttribute('src'), `plegat=${plegat}`).toBe(LOGO_SDP);
+    expect(avatar.getAttribute('title'), `plegat=${plegat}`).toBe('Sóc de Poble');
+    expect([...peu.querySelectorAll('img')].map((img) => img.getAttribute('src')), `plegat=${plegat}`).not.toContain(FOTO);
+    if (!plegat) expect(within(boto).getByText('Tu')).toBeTruthy();
+    fireEvent.click(boto);
+    expect(onAjustos).toHaveBeenCalledWith(boto);
+    unmount();
+  }
+});
+
+test('front C · una entitat sense logo porta les seues inicials en quadrat; sense entitat, el nom de sempre', () => {
+  const { container, unmount } = pinta({ onAjustos: vi.fn(), joAvatar: FOTO, entitatActiva: { id: 'forn', nom: 'Forn de la Torre', avatar: null } });
+  const avatar = within(container.querySelector('.sdp-xat-rail-peu')).getByRole('button', { name: 'Tu: ajustos (actues com a Forn de la Torre)' }).querySelector('.sdp-avatar--xs');
+  expect(avatar.querySelector('img')).toBeNull();
+  expect(avatar.classList.contains('sdp-xat-avatar--quadrat')).toBe(true);
+  /* Avatar pren les inicials de les dos primeres paraules. */
+  expect(avatar.textContent).toBe('FD');
+  unmount();
+  const sense = pinta({ onAjustos: vi.fn(), entitatActiva: null });
+  expect(within(sense.container.querySelector('.sdp-xat-rail-peu')).getByRole('button', { name: 'Tu: ajustos' })).toBeTruthy();
+});
+
 /* ═══ T6 · El botó que obri el rail ══════════════════════════════════════
    BotoObriRail dins d'un AppGridContext de mentida, amb un rail
    (#app-grid-sidebar) que, com a AppGridShell fora d'ample, és inert i

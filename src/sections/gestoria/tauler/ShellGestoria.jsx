@@ -49,7 +49,9 @@
  *  · LA CAPÇALERA DE CONTEXT (Panell ERP, 261012) · el trimestre de les
  *    estimacions el tria la persona (‹ › i Hui) i mana: si el Full no en té
  *    factures, les targetes ho diuen. Quan el Full analitza un trimestre nou,
- *    o s'obliden les dades, el selector torna a seguir el Full o el dia d'avui.
+ *    o s'obliden les dades, el selector torna a seguir el Full o el trimestre
+ *    operatiu d'avui (ordre del Mestre, 14-10-2026: el que té la presentació
+ *    oberta).
  *  · LA VISTA COMPRIMIDA · el commutador de Tauler.jsx, que val per al
  *    Tauler, els Bancs i els Impostos i es conserva entre mòduls.
  *    Derogat EN PART per l'ordre del Mestre, 13-10-2026 (pla 261013_1405,
@@ -70,6 +72,30 @@
  *    també oblida la carpeta. La pista de la identitat legal porta a
  *    «Identitat i Finestreta», una vista del pont (`hrefIdentitat`). El
  *    Mestre torna a signar el Tauler.
+ *  · EL QUADRE DE COMANDAMENT (ordre del Mestre, 14-10-2026, prompt
+ *    261014_2015 i decisions de les 21:20). Derogat EN PART el que diuen
+ *    d'«avui» la capçalera de context i el JSDoc de dadesDelTauler:
+ *    - Punt 1: sense tria ni Full, el trimestre és el trimestre operatiu
+ *      (trimestreOperatiu: el que té oberta la presentació del 303 i del 130,
+ *      el 3T de l'1 al 20 d'octubre), i «Hui» hi porta.
+ *    - Punt 2: la Cabina d'Avió es diu «Quadre de comandament».
+ *    - Punt 3: l'última secció del Quadre és «Plantilla Gestoria»
+ *      (PlantillaGestoria.jsx, font del tractor de factures). Només mostra i
+ *      descarrega el full que el Full trimestral ha generat amb la segona
+ *      aprovació (`full.entregables`, pel cable onFactures), i el correu manté
+ *      la tercera. El Tauler continua sense escriure res. `hrefFull`
+ *      (opcional) porta al Full des de l'estat buit.
+ *    - Punt 4: la penúltima secció, «Factures que falten»
+ *      (nucli/facturesQueFalten.js), del trimestre del Full i amb els
+ *      moviments ja llegits.
+ *    - Punt 5: la barra i el peu porten Comentar, Compartir i Connectar
+ *      inoperatius, que diuen per què no ixen en l'Alerta del mòdul o de la
+ *      targeta (barraPrivada i peuPrivat, TargetaTauler.jsx). Cap no navega:
+ *      la lectura no s'oblida.
+ *    El Mestre torna a signar el Tauler (i l'Històric, per Tauler.jsx i
+ *    TargetaTauler.jsx), i també el Full trimestral i el Correu: el cable de
+ *    PanellGestoria.jsx, PlantillaGestoria.jsx i la fitxa de factures són
+ *    fonts seues.
  * En l'app, la ruta pública tria el mòdul; cap dada ni import va a la URL.
  * La targeta oberta viu en l'estat de la pàgina. L'Índex de la barra blava sí
  * que hi escriu el títol de la secció que tria la persona (?seccio=): per
@@ -82,7 +108,7 @@
  * avui i descarrega s'injecten i passen també a ContenidorGestoria (i el
  * rellotge, al rellotge viu de la barra); `titular` (opcional) és la persona
  * de la sessió, si n'hi ha; `hrefIdentitat` (opcional), la ruta de la vista
- * «Identitat i Finestreta».
+ * «Identitat i Finestreta»; `hrefFull` (opcional), la del Full trimestral.
  */
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useNavigate } from '../../../app/contexts/RouterContext';
@@ -95,15 +121,36 @@ import { PaginaApp } from '../../../components/PedraSeca/organismes/PaginaApp.js
 import ContenidorGestoria, { CONSULTA_TRACTORS } from '../ContenidorGestoria.jsx';
 import { PanellEscaner } from '../escaner/PanellEscaner.jsx';
 import { useEscaner } from '../escaner/useEscaner.js';
-import { trimestreDeData } from '../impostos/nucli/impostos.js';
+import { facturesQueFalten } from '../nucli/facturesQueFalten.js';
+import { PlantillaGestoria } from '../PlantillaGestoria.jsx';
 import { CabinaAvio } from './CabinaAvio.jsx';
-import { dadesDelTauler, trimestreVei } from './nucli/targetesTauler.js';
+import { dadesDelTauler, trimestreOperatiu, trimestreVei } from './nucli/targetesTauler.js';
 import {
   ContextTrimestre, ModulEnObres, PaginaTargeta, PortaTauler, VISTES_PANELL, VISTES_TAULER, VistaBancs, VistaImpostos, VistaTauler,
   vistaDelModul
 } from './Tauler.jsx';
-import { UllPrivacitat } from './TargetaTauler.jsx';
+import { UllPrivacitat, barraPrivada } from './TargetaTauler.jsx';
 import { useTauler } from './useTauler.js';
+
+/**
+ * Les factures que podrien faltar al trimestre del Full (ordre del Mestre,
+ * 14-10-2026, prompt 261014_2015, punt 4 i criteri 4): sense Full, res; amb
+ * Full, el seu trimestre (mai el que mira la capçalera), creuat amb els
+ * moviments dels extractes que el Tauler ja ha llegit. Un error del càlcul no
+ * tomba la closca: es diu que no s'ha pogut fer.
+ * @returns {{ estat: 'sense-full' }|{ estat: 'error' }|{ estat: 'fet', any: number, t: number, resultat: object }}
+ */
+function faltenDelFull(full, comptes, avui) {
+  if (!full || !Number.isInteger(full.any) || !Number.isInteger(full.t)) return { estat: 'sense-full' };
+  try {
+    return {
+      estat: 'fet', any: full.any, t: full.t,
+      resultat: facturesQueFalten({ any: full.any, t: full.t, factures: full.factures, historial: full.historial, comptes, avui })
+    };
+  } catch {
+    return { estat: 'error' };
+  }
+}
 
 /** La pàgina del titular: la seua (el perfil de qui fa servir la Gestoria). */
 export const RUTA_TITULAR = '/el-meu-perfil';
@@ -273,7 +320,7 @@ function TitularDEstaPagina({ onCanvia, onOblida }) {
  */
 export default function ShellGestoria({
   magatzem, subtle, tractors, entorn, rellotge, inflate, avui, descarrega, titular: titularPropi = null,
-  modulActiu, hrefEntrada = null, hrefIdentitat = null
+  modulActiu, hrefEntrada = null, hrefIdentitat = null, hrefFull = null
 }) {
   const navigate = useNavigate();
   const tauler = useTauler({ magatzem, subtle, tractors, entorn, rellotge });
@@ -283,7 +330,9 @@ export default function ShellGestoria({
   const [oberta, setOberta] = useState(null);
   const [visible, setVisible] = useState(false);
   const [avis, setAvis] = useState(null);
-  /* El que el Full trimestral ha passat (onFactures): { any, t, factures, historial } o null. */
+  /* El que el Full trimestral ha passat (onFactures): { any, t, factures, historial, titular, entregables } o null.
+     Ordre del Mestre, 14-10-2026 (punt 3): `titular` i `entregables` (els bytes de la segona aprovació, o null) són
+     per a la «Plantilla Gestoria» del Quadre de comandament; cap xifra del Tauler no en depén. */
   const [full, setFull] = useState(null);
   /* El trimestre que ha triat la persona a la capçalera de context, o null: el del Full o el d'avui. */
   const [periodeTriat, setPeriodeTriat] = useState(null);
@@ -423,17 +472,26 @@ export default function ShellGestoria({
     onHui: () => {
       const nou = llegixHui();
       setHui((abans) => (mateixDia(abans, nou) ? abans : nou));
-      setPeriodeTriat(trimestreDeData(nou));
+      setPeriodeTriat(trimestreOperatiu(nou));
     }
   };
   const obriTargeta = (id) => {
     navegat.current = true;
     setOberta({ modul, id });
+    setAvis(null);
   };
   const tornaAlModul = () => {
     navegat.current = true;
     setOberta(null);
+    setAvis(null);
   };
+  /* Ordre del Mestre, 14-10-2026 (punt 5): Comentar, Compartir i Connectar diuen per què no ixen, en l'Alerta
+     del mòdul (o de la pàgina de la targeta). No naveguen ni comparteixen: la lectura no s'oblida. */
+  const avisaAccio = (text) => setAvis({ modul, text });
+  /* Punt 4: les factures que podrien faltar al trimestre del Full, amb els moviments ja llegits. */
+  const falten = useMemo(() => faltenDelFull(full, dades.comptes, hui), [full, dades.comptes, hui]);
+  /* Punt 3: el Full trimestral, des de l'estat buit de la «Plantilla Gestoria»; només si el pont en dona la ruta. */
+  const obreFull = hrefFull ? () => navigate(hrefFull) : undefined;
 
   /* La boina: l'ull i el xip de la darrera lectura. El rellotge viu l'afig PaginaApp darrere, a l'extrem dret. */
   const accionsBoina = (
@@ -449,7 +507,7 @@ export default function ShellGestoria({
   /* Les targetes dels Bancs i dels Impostos pinten la vista que el seu commutador oferix (la Cabina és del Tauler). */
   const vistaPanell = vistaDelModul(vista, VISTES_PANELL);
   const comuns = { titular, pastilla, visible, generacio: tauler.generacio, vista: vistaPanell, onObri: obriTargeta,
-    onAvis: (text) => setAvis({ modul, text }) };
+    onAvis: avisaAccio, ambAccionsPrivades: true };
   const actual = MODULS_GESTORIA.find((m) => m.id === modul) ?? MODULS_GESTORIA[0];
   /* No es pinta ni un detall ni un avís del mòdul anterior, tampoc abans
      que l'efecte de navegació els buide. La lectura financera es conserva. */
@@ -473,7 +531,10 @@ export default function ShellGestoria({
     tauler: (
       <>
         {portesDelTitular}{titularDEstaPagina}{contextTauler}{porta}
-        {vista === 'cabina' ? <CabinaAvio dades={dades} visible={visible} onObri={obriTargeta} /> : <VistaTauler dades={dades} comuns={comuns} />}
+        {vista === 'cabina' ? (
+          <CabinaAvio dades={dades} visible={visible} onObri={obriTargeta} falten={falten}
+            plantilla={<PlantillaGestoria full={full} visible={visible} descarrega={descarrega} onObreFull={obreFull} />} />
+        ) : <VistaTauler dades={dades} comuns={comuns} />}
       </>
     ),
     bancs: <>
@@ -498,13 +559,14 @@ export default function ShellGestoria({
       <div className="sdp-gestoria-closca__pagina">
         {targeta ? (
           <PaginaTargeta targeta={targeta} titular={titular} visible={visible}
-            barActions={accionsBoina} rellotgeViu rellotge={rellotge} onTorna={tornaAlModul} refTitol={refTitol} />
+            barActions={accionsBoina} rellotgeViu rellotge={rellotge} onTorna={tornaAlModul} refTitol={refTitol}
+            onAvis={avisaAccio} avis={avisActual ? <Alerta to="info" onTanca={() => setAvis(null)}>{avisActual}</Alerta> : null} />
         ) : (
           <PaginaApp title={actual.titol} subtitle={actual.subtitol}
             lead={actual.id === 'tauler' ? (titular.configurat ? `Hola, ${titular.nom}! ${salutacio}` : salutacio) : actual.enObres ? EN_OBRES : undefined}
             author={titular} barActions={accionsBoina} rellotgeViu rellotge={rellotge}
             labels={actual.enObres ? [...ETIQUETES_PANELL, ETIQUETA_EN_OBRES] : ETIQUETES_PANELL}
-            refTitol={refTitol} showComment={false} showShare={false} showConnect={false}>
+            refTitol={refTitol} {...barraPrivada(avisaAccio)}>
             {avisActual ? <Alerta to="info" onTanca={() => setAvis(null)}>{avisActual}</Alerta> : null}
             {contingut}
           </PaginaApp>

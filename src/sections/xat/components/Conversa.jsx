@@ -85,9 +85,14 @@ function coixiDalt(ol) {
   return Number.isFinite(valor) ? valor : 0;
 }
 
+/* Pla 261014_1450 (front C) · `entitatActiva` (l'entitat de la barra negra,
+   d'useXat per XatSection) baixa per props al Compositor, que diu qui signa.
+   Per props i no per IdentitatContext: la UI de la conversa no llig cap
+   context d'identitat (Conversa.antics.test.jsx el simula sense actor). */
 export default function Conversa({
   initialText = '', clauEsborrany = null, fil, messages, onSendMessage, onBack, onEnviaAlBloc, onCopia,
-  hiHaMes, carregantMes, onCarregaMes, esperaAntics = null, onReintenta, onDescarta, onMarcaVist, locale, t
+  hiHaMes, carregantMes, onCarregaMes, esperaAntics = null, onReintenta, onDescarta, onMarcaVist, locale, t,
+  entitatActiva = null
 }) {
   const [text, setText] = useState(() => initialText || llegixEsborrany(clauEsborrany));
   const [modeSeleccio, setModeSeleccio] = useState(false);
@@ -519,6 +524,7 @@ export default function Conversa({
           onEnvia={envia}
           t={t}
           fil={fil}
+          entitatActiva={entitatActiva}
           campRef={campRef}
           onEscapa={resposta ? cancelaResposta : null}
           barra={resposta ? <BarraResposta missatge={resposta} onCancela={cancelaResposta} t={t} /> : null}

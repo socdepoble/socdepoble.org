@@ -213,6 +213,18 @@ function socdepoble_enxufe_pagina() {
 			<div class="notice notice-error inline"><p><?php esc_html_e( 'This package points to a development backend. Visitors of this site will see the app without data. Rebuild it as a release with production values.', 'socdepoble-enxufe' ); ?></p></div>
 		<?php endif; ?>
 
+		<div class="card" style="max-width:56rem;margin-top:1rem;padding:1.25rem 1.5rem;border-left:4px solid #f97316">
+			<h2 style="margin-top:0"><?php esc_html_e( 'Welcome to the Sóc de Poble Portal of Connected Villages', 'socdepoble-enxufe' ); ?></h2>
+			<p><?php esc_html_e( 'Sóc de Poble is the decentralized civic network born in the rural mountains of Alicante to connect neighbours, local associations, traditional events, village markets and collective memory without technological dependence.', 'socdepoble-enxufe' ); ?></p>
+			<p><strong><?php esc_html_e( 'Active village nodes in the network (9 municipalities + historical root):', 'socdepoble-enxufe' ); ?></strong><br />
+			<code>la-torre-de-les-macanes</code> (La Torre de les Maçanes) · <code>penaguila</code> (Penàguila) · <code>benifallim</code> (Benifallim) · <code>sella</code> (Sella) · <code>orxeta</code> (Orxeta) · <code>relleu</code> (Relleu) · <code>alcoleja</code> (Alcoleja) · <code>xixona</code> (Xixona) · <code>tibi</code> (Tibi) · <em>Rentonar (30 anys de llegat rural)</em></p>
+			<ol style="margin-bottom:0">
+				<li><?php esc_html_e( 'Choose your village identity below (for example: Gent de la Torre and la-torre-de-les-macanes) and save.', 'socdepoble-enxufe' ); ?></li>
+				<li><?php esc_html_e( 'Create or edit any WordPress page and insert the Sóc de Poble block or the [socdepoble] shortcode.', 'socdepoble-enxufe' ); ?></li>
+				<li><?php esc_html_e( 'Select the Sóc de Poble · full screen page template so the village plaza fills the entire window.', 'socdepoble-enxufe' ); ?></li>
+			</ol>
+		</div>
+
 		<form action="options.php" method="post">
 			<?php
 			settings_fields( 'socdepoble_enxufe' );
@@ -221,27 +233,31 @@ function socdepoble_enxufe_pagina() {
 			?>
 		</form>
 
-		<h2><?php esc_html_e( 'Package and data node', 'socdepoble-enxufe' ); ?></h2>
-		<table class="widefat striped" role="presentation">
-			<tbody>
-			<?php foreach ( socdepoble_enxufe_diagnosi() as $etiqueta => $valor ) : ?>
-				<tr>
-					<th scope="row"><?php echo esc_html( $etiqueta ); ?></th>
-					<td><code><?php echo esc_html( $valor ); ?></code></td>
-				</tr>
-			<?php endforeach; ?>
-			</tbody>
-		</table>
+		<details style="max-width:56rem;margin-top:1.5rem;padding:0.75rem 1rem;background:#fff;border:1px solid #c3c4c7">
+			<summary style="cursor:pointer;font-weight:600"><?php esc_html_e( 'Technical diagnosis and universal host markup (for developers)', 'socdepoble-enxufe' ); ?></summary>
 
-		<?php
-		if ( function_exists( 'socdepoble_enxufe_seccio_canal' ) ) {
-			socdepoble_enxufe_seccio_canal();
-		}
-		?>
+			<h2><?php esc_html_e( 'Package and data node', 'socdepoble-enxufe' ); ?></h2>
+			<table class="widefat striped" role="presentation">
+				<tbody>
+				<?php foreach ( socdepoble_enxufe_diagnosi() as $etiqueta => $valor ) : ?>
+					<tr>
+						<th scope="row"><?php echo esc_html( $etiqueta ); ?></th>
+						<td><code><?php echo esc_html( $valor ); ?></code></td>
+					</tr>
+				<?php endforeach; ?>
+				</tbody>
+			</table>
 
-		<h2><?php esc_html_e( 'Universal markup', 'socdepoble-enxufe' ); ?></h2>
-		<p><?php esc_html_e( 'The three pieces this plugin sends to the page (WordPress adds ?ver= to the script). Any other host (Sollutia, a static page) emits the same three pieces pointing to its own copy of dist/. The box that contains the element needs a height.', 'socdepoble-enxufe' ); ?></p>
-		<pre style="white-space:pre-wrap;word-break:break-all"><code><?php echo esc_html( socdepoble_enxufe_marcatge_de_referencia() ); ?></code></pre>
+			<?php
+			if ( function_exists( 'socdepoble_enxufe_seccio_canal' ) ) {
+				socdepoble_enxufe_seccio_canal();
+			}
+			?>
+
+			<h2><?php esc_html_e( 'Universal markup', 'socdepoble-enxufe' ); ?></h2>
+			<p><?php esc_html_e( 'The three pieces this plugin sends to the page (WordPress adds ?ver= to the script). Any other host (Sollutia, a static page) emits the same three pieces pointing to its own copy of dist/. The box that contains the element needs a height.', 'socdepoble-enxufe' ); ?></p>
+			<pre style="white-space:pre-wrap;word-break:break-all"><code><?php echo esc_html( socdepoble_enxufe_marcatge_de_referencia() ); ?></code></pre>
+		</details>
 	</div>
 	<?php
 }

@@ -64,7 +64,7 @@ import { Suspense } from 'react';
 import { Navigate, useLocation } from '../../app/contexts/RouterContext';
 import { Carregant, EstatBuit, PaginaApp } from '../../components/PedraSeca/index.js';
 import { useApp, useSessioApp, lazyRoute } from '../plataforma/index.js';
-import { ENTRADA_APRENDRE, ENTRADA_FACTURACIO, ENTRADA_IDENTITAT, desviamentDeLaConsulta } from './rutes.js';
+import { ENTRADA_APRENDRE, ENTRADA_FACTURACIO, ENTRADA_FULL, ENTRADA_IDENTITAT, desviamentDeLaConsulta } from './rutes.js';
 
 const VISTES = import.meta.env.DEV ? Object.freeze({
   tauler: lazyRoute(() => import('../../sections/gestoria/tauler/ShellGestoria.jsx')),
@@ -185,10 +185,13 @@ export default function AppGestoria() {
     );
   }
   const Closca = VISTES.tauler;
+  /* Ordre del Mestre, 14-10-2026 (prompt 261014_2015, punt 3): la «Plantilla Gestoria» del Quadre de
+     comandament porta al Full trimestral des del seu estat buit; com hrefIdentitat, la ruta la dona el pont
+     (una relativa des de /app/gestoria resoldria a /app/full). */
   return (
     <Suspense fallback={<Carregant etiqueta="Carregant la Gestoria…" />}>
       <Closca modulActiu={entrada} hrefEntrada={sessio.teSessio || titular ? null : entradaAlCompte}
-        titular={titular} hrefIdentitat={`${base}/${ENTRADA_IDENTITAT}`} />
+        titular={titular} hrefIdentitat={`${base}/${ENTRADA_IDENTITAT}`} hrefFull={`${base}/${ENTRADA_FULL}`} />
     </Suspense>
   );
 }

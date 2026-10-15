@@ -15,12 +15,20 @@
    que fixaven el que estes ordres canvien (la boina «sense cap data», la
    pastilla de la lectura com a primera data de la barra, el mòdul de l'Escàner
    «en obres» i la frase del net del 303 i del 130) fixen ara el comportament
-   nou, amb el motiu escrit a cadascuna. */
+   nou, amb el motiu escrit a cadascuna.
+   Ordre del Mestre, 14-10-2026 (prompt 261014_2015): el trimestre de la
+   capçalera és el trimestre operatiu (punt 1), la Cabina d'Avió es diu «Quadre
+   de comandament» (punt 2) i hi acaba amb «Factures que falten» i «Plantilla
+   Gestoria» (punt 3), i la barra i el peu porten Comentar, Compartir i
+   Connectar inoperatius, que només avisen (punt 5). AVUI, el 04-10-2026, és dins
+   de la finestra de presentació del 3T: les proves que fixaven el 4T com a
+   trimestre per defecte fixen ara el 3T, i les que deixaven de discriminar
+   injecten un altre dia, amb el motiu escrit a cadascuna. */
 import { webcrypto } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { afterEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { MemoryRouter, useLocation } from '../../../app/contexts/RouterContext';
 import { creaAutenticadorSimulat } from '../../../../tests/helpers/autenticadorSimulat.js';
 import { crearMagatzemMemoria } from '../../tractors/nucli/magatzem.js';
@@ -30,6 +38,7 @@ import { TRACTOR_ESCANER, TRACTOR_TAULER, TRACTOR_FACTURES } from '../tractors.j
 import ShellGestoria, {
   MODULS_GESTORIA, RUTA_TITULAR, TITULAR_SENSE_CONFIGURAR, pastillaDeLectura, pastillaDeSincronitzacio, titularDe, titularLocalDe
 } from './ShellGestoria.jsx';
+import { AVISOS_ACCIONS_PRIVADES } from './TargetaTauler.jsx';
 import { ContextTrimestre } from './Tauler.jsx';
 
 afterEach(() => {
@@ -86,23 +95,32 @@ function RutaDeLApp() {
 /* La ruta de l'amfitrió, que tria el mòdul: la de l'última closca muntada (vesAlModul). */
 let rutaDeLAmfitrio = null;
 
+/* Ordre del Mestre, 14-10-2026 (prompt 261014_2015, punt 3): `hrefFull`, la ruta del Full trimestral que dona el
+   pont. El doble `descarrega` és un de sol per muntatge (abans, un de nou a cada pintada), perquè la prova de la
+   «Plantilla Gestoria» en puga comptar les crides. */
 function munta({
-  magatzem = crearMagatzemMemoria(), titular, modulActiu, showDirectoryPicker, hrefEntrada, hrefIdentitat,
-  rellotge: rellotgeDeLaProva = rellotge, avui = AVUI
+  magatzem = crearMagatzemMemoria(), titular, modulActiu, showDirectoryPicker, hrefEntrada, hrefIdentitat, hrefFull,
+  rellotge: rellotgeDeLaProva = rellotge, avui = AVUI, descarrega = vi.fn()
 } = {}) {
   const entorn = { location: { origin: autenticador.origen, hostname: autenticador.rpId }, ...(showDirectoryPicker ? { showDirectoryPicker } : {}) };
   const arbre = (modul = modulActiu) => (
     <MemoryRouter rutaInicial={RUTA}>
       <ShellGestoria magatzem={magatzem} subtle={subtle} entorn={entorn} rellotge={rellotgeDeLaProva} inflate={null}
-        avui={avui} descarrega={vi.fn()} titular={titular} modulActiu={modul} hrefEntrada={hrefEntrada} hrefIdentitat={hrefIdentitat} />
+        avui={avui} descarrega={descarrega} titular={titular} modulActiu={modul} hrefEntrada={hrefEntrada} hrefIdentitat={hrefIdentitat}
+        hrefFull={hrefFull} />
       <RutaDeLApp />
     </MemoryRouter>
   );
   const vista = render(arbre());
   const canviaModul = (modul) => vista.rerender(arbre(modul));
   rutaDeLAmfitrio = canviaModul;
-  return { ...vista, closca: vista.container.querySelector('.sdp-gestoria-closca'), canviaModul };
+  return { ...vista, closca: vista.container.querySelector('.sdp-gestoria-closca'), canviaModul, descarrega };
 }
+
+/* Un dia d'avui injectat (el dia de la closca), a les 10 del matí. */
+const diaInjectat = (any, mes, dia) => () => new Date(any, mes - 1, dia, 10, 0, 0);
+const titolDelTrimestre = (closca) => closca.querySelector('.sdp-gestoria-context .sdp-cal-navegacio__titol').textContent;
+const capcalera = (closca) => within(closca.querySelector('.sdp-gestoria-context'));
 
 const ruta = () => screen.getByLabelText('Ruta').textContent;
 const h1 = (closca) => closca.querySelector('header.page-title > h1').textContent;
@@ -308,14 +326,20 @@ describe('el rellotge viu de la barra', () => {
     esperaRellotge(closca);
   }, 20000);
 
-  /* El dia de la closca seguix el rellotge: a mitjanit, sense esperar que la pestanya torne a primer pla. */
+  /* El dia de la closca seguix el rellotge: a mitjanit, sense esperar que la pestanya torne a primer pla.
+     Ordre del Mestre, 14-10-2026 (prompt 261014_2015, punt 1): el trimestre per defecte és l'operatiu, i l'1 de
+     gener és dins de la finestra del 4T: la nit de Cap d'Any ja no canvia de trimestre (continua el 4T 2026). La
+     prova passa a la mitjanit en què la finestra del 4T es tanca, del 30 al 31 de gener de 2027, perquè el
+     trimestre canvie de veres i continue passant al de l'any nou. */
   test('a mitjanit, el rellotge i el dia de la closca canvien: el trimestre de la capçalera passa al de l’any nou', () => {
     vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
     try {
-      let ara = new Date(2026, 11, 31, 23, 59, 30).getTime();
+      let ara = new Date(2027, 0, 30, 23, 59, 30).getTime();
       const { closca } = munta({ modulActiu: 'impostos', rellotge: () => ara, avui: null });
-      const titol = () => closca.querySelector('.sdp-gestoria-context .sdp-cal-navegacio__titol').textContent;
+      const titol = () => titolDelTrimestre(closca);
       expect(titol()).toBe('4T 2026');
+      /* L'últim dia de la presentació del 4T, el compte enrere diu que acaba hui. */
+      expect(capcalera(closca).getByText('Ara és el termini de presentació del 303 i del 130, que acaba hui, el 30/01/2027.')).toBeTruthy();
       esperaRellotge(closca, ara);
       ara += 31000;
       act(() => { vi.advanceTimersByTime(31000); });
@@ -519,8 +543,10 @@ describe('el Tauler, amb la signatura', () => {
     expect(serialitzat(closca)).not.toMatch(/975,00/);
     fireEvent.click(within(boina(closca)).getByRole('button', { name: 'Mostra les xifres' }));
     expect(closca.querySelector('.sdp-gestoria-tauler__xifra').textContent).toBe('975,00 €');
+    /* Ordre del Mestre, 14-10-2026 (prompt 261014_2015, punt 5): la barra de la pàgina d'una targeta porta també
+       Comentar, Compartir i Connectar, inoperatius (el que diuen en prémer-los, a «les accions privades»). */
     expect([...closca.querySelectorAll('header.bar-blue button')].map((b) => b.getAttribute('aria-label')))
-      .toEqual(['Tornar arrere', 'Índex de secció', 'Traduir']);
+      .toEqual(['Tornar arrere', 'Índex de secció', 'Traduir', 'Comentar', 'Compartir', 'Connectar']);
     fireEvent.click(screen.getByRole('button', { name: 'Tornar arrere' }));
     expect(h1(closca)).toBe('Tauler Central');
     expect(ruta()).toBe(RUTA);
@@ -548,7 +574,9 @@ describe('el Tauler, amb la signatura', () => {
     expect(targetes.map((t) => t.querySelector('.sp-card-title').textContent)).toEqual(['IVA · model 303', 'IRPF · model 130']);
     for (const t of targetes) {
       const etiquetes = [...t.querySelectorAll('.sp-card-label')].map((e) => e.textContent);
-      expect(etiquetes).toEqual(['Impostos', 'Estimació incompleta', 'Termini 30/01/2027']);
+      /* Ordre del Mestre, 14-10-2026 (prompt 261014_2015, punt 1): el 04-10-2026 el trimestre és el 3T, que es
+         presenta fins al 20/10/2026 (abans, el 4T, fins al 30/01/2027). */
+      expect(etiquetes).toEqual(['Impostos', 'Estimació incompleta', 'Termini 20/10/2026']);
       expect(t.querySelector('.sdp-gestoria-ull')).toBeNull();
     }
   });
@@ -596,6 +624,104 @@ describe('el Tauler, amb la signatura', () => {
   });
 });
 
+/* Ordre del Mestre, 14-10-2026 (prompt 261014_2015, punt 5): la barra blava de les pàgines de la closca i de la
+   pàgina de cada targeta porta Comentar, Compartir i Connectar com a accions inoperatives (aria-disabled), i el peu
+   de cada targeta, Comentar i Compartir. En prémer-les, la closca diu per què en una Alerta
+   (AVISOS_ACCIONS_PRIVADES); cap no navega ni comparteix, i la lectura dels extractes es conserva. navigator.share i
+   el porta-retalls són dobles: si algun s'hi cridara, la prova ho veuria. */
+describe('les accions privades de la barra i del peu', () => {
+  let share;
+  let writeText;
+  beforeEach(() => {
+    share = vi.fn(async () => {});
+    writeText = vi.fn(async () => {});
+    Object.defineProperty(window.navigator, 'share', { value: share, configurable: true, writable: true });
+    Object.defineProperty(window.navigator, 'clipboard', { value: { writeText }, configurable: true, writable: true });
+  });
+  afterEach(() => {
+    delete window.navigator.share;
+    delete window.navigator.clipboard;
+  });
+  const barra = (closca) => [...closca.querySelectorAll('header.bar-blue button')]
+    .map((b) => [b.getAttribute('aria-label'), b.getAttribute('aria-disabled')]);
+  const botoDeLaBarra = (closca, nom) => [...closca.querySelectorAll('header.bar-blue button')].find((b) => b.getAttribute('aria-label') === nom);
+  const alertaAmb = (text) => screen.getByText(text).closest('.sdp-alerta');
+  const textosPrivats = () => Object.values(AVISOS_ACCIONS_PRIVADES).filter((text) => screen.queryByText(text));
+  /* La lectura es conserva: el xip de la lectura i la boina de l'empresa i, a la pàgina del mòdul (on viu la porta),
+     «Oblida les dades». */
+  const lecturaViva = (closca, { delModul = true } = {}) => {
+    expect(xipDeLectura(closca)).not.toBeNull();
+    expect(boina(closca).querySelector('.sp-card-author-name').textContent).toBe('Taller de Prova');
+    if (delModul) expect(screen.getByRole('button', { name: 'Oblida les dades' })).toBeTruthy();
+  };
+
+  test('al mòdul Tauler: les tres accions, inoperatives; Compartir avisa i no navega ni comparteix; el peu d’una targeta també avisa', async () => {
+    const { closca } = munta({ magatzem: await ambSignatura() });
+    await llegixExtractes();
+    expect(barra(closca)).toEqual([
+      ['Índex de secció', null], ['Traduir', null], ['Comentar', 'true'], ['Compartir', 'true'], ['Connectar', 'true']
+    ]);
+    expect(textosPrivats()).toEqual([]);
+    fireEvent.click(botoDeLaBarra(closca, 'Compartir'));
+    const avis = alertaAmb(AVISOS_ACCIONS_PRIVADES.compartir);
+    expect(closca.contains(avis)).toBe(true);
+    expect(avis.classList.contains('sdp-alerta--info')).toBe(true);
+    expect(textosPrivats()).toEqual([AVISOS_ACCIONS_PRIVADES.compartir]);
+    expect(h1(closca)).toBe('Tauler Central');
+    expect(ruta()).toBe(RUTA);
+    expect(share).not.toHaveBeenCalled();
+    expect(writeText).not.toHaveBeenCalled();
+    lecturaViva(closca);
+    /* Connectar i Comentar de la barra diuen el seu perquè, i l'avís nou substituïx l'anterior. */
+    fireEvent.click(botoDeLaBarra(closca, 'Connectar'));
+    expect(textosPrivats()).toEqual([AVISOS_ACCIONS_PRIVADES.connectar]);
+    fireEvent.click(botoDeLaBarra(closca, 'Comentar'));
+    expect(textosPrivats()).toEqual([AVISOS_ACCIONS_PRIVADES.comentar]);
+    expect(document.querySelector('[role="menu"]')).toBeNull();
+    fireEvent.click(within(alertaAmb(AVISOS_ACCIONS_PRIVADES.comentar)).getByRole('button', { name: 'Tancar l\'avís' }));
+    expect(textosPrivats()).toEqual([]);
+    /* El peu de la targeta: Compartir i Comentar només avisen; la targeta no s'obri. */
+    fireEvent.click(screen.getByRole('button', { name: 'Compartir Caixa real' }));
+    expect(textosPrivats()).toEqual([AVISOS_ACCIONS_PRIVADES.compartir]);
+    fireEvent.click(screen.getByRole('button', { name: 'Comentar Caixa real' }));
+    expect(textosPrivats()).toEqual([AVISOS_ACCIONS_PRIVADES.comentar]);
+    expect(h1(closca)).toBe('Tauler Central');
+    expect(ruta()).toBe(RUTA);
+    expect(share).not.toHaveBeenCalled();
+    expect(writeText).not.toHaveBeenCalled();
+    lecturaViva(closca);
+  });
+
+  test('a la pàgina d’una targeta: l’avís es pinta dins de la pàgina, no navega, i Tornar el buida', async () => {
+    const { closca } = munta({ magatzem: await ambSignatura() });
+    await llegixExtractes();
+    fireEvent.click(screen.getByRole('button', { name: 'Caixa real' }));
+    expect(h1(closca)).toBe('Caixa real');
+    expect(barra(closca)).toEqual([
+      ['Tornar arrere', null], ['Índex de secció', null], ['Traduir', null], ['Comentar', 'true'], ['Compartir', 'true'], ['Connectar', 'true']
+    ]);
+    fireEvent.click(botoDeLaBarra(closca, 'Compartir'));
+    const avis = alertaAmb(AVISOS_ACCIONS_PRIVADES.compartir);
+    /* Dins de la pàgina de la targeta: abans del detall, al mateix contenidor que «La xifra». */
+    const pagina = closca.querySelector('.sdp-gestoria-closca__pagina');
+    expect(pagina.contains(avis)).toBe(true);
+    expect(avis.compareDocumentPosition(screen.getByRole('heading', { level: 2, name: 'La xifra' })) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(h1(closca)).toBe('Caixa real');
+    expect(ruta()).toBe(RUTA);
+    expect(share).not.toHaveBeenCalled();
+    expect(writeText).not.toHaveBeenCalled();
+    lecturaViva(closca, { delModul: false });
+    fireEvent.click(botoDeLaBarra(closca, 'Connectar'));
+    expect(textosPrivats()).toEqual([AVISOS_ACCIONS_PRIVADES.connectar]);
+    expect(h1(closca)).toBe('Caixa real');
+    fireEvent.click(screen.getByRole('button', { name: 'Tornar arrere' }));
+    expect(h1(closca)).toBe('Tauler Central');
+    expect(textosPrivats()).toEqual([]);
+    expect(ruta()).toBe(RUTA);
+    lecturaViva(closca);
+  });
+});
+
 /* Panell ERP, ordre del Mestre, 261012: la capçalera de context (el trimestre
    que tria la persona, el rellotge del termini i Hisenda sobre la caixa) i
    el commutador «Targetes | Vista comprimida». */
@@ -603,39 +729,109 @@ describe('el panell ERP', () => {
   const titolTrimestre = (closca) => closca.querySelector('.sdp-gestoria-context .sdp-cal-navegacio__titol').textContent;
   const subtitols = (closca) => [...closca.querySelectorAll('.sp-card-subtitle')].map((e) => e.textContent);
 
+  /* Ordre del Mestre, 14-10-2026 (prompt 261014_2015, punt 1): el 04-10-2026 el trimestre per defecte és el 3T, el
+     que té oberta la presentació (abans, el 4T natural), i «Hui» hi torna. La prova recorre els mateixos passos:
+     el trimestre anterior (amb el seu termini), el pas d'any i «Hui». */
   test('el trimestre de la capçalera mana sobre les estimacions, sense escriure res a la URL', async () => {
     const { closca } = munta();
     await screen.findByText('Cal aprovar el tractor');
     vesAlModul('Impostos');
-    expect(titolTrimestre(closca)).toBe('4T 2026');
-    expect(subtitols(closca)).toEqual(['Estimació del 4T 2026', 'Estimació del 4T 2026']);
-    fireEvent.click(screen.getByRole('button', { name: 'Trimestre anterior' }));
     expect(titolTrimestre(closca)).toBe('3T 2026');
     expect(subtitols(closca)).toEqual(['Estimació del 3T 2026', 'Estimació del 3T 2026']);
-    const iva = screen.getByRole('button', { name: 'IVA · model 303' }).closest('article');
-    expect([...iva.querySelectorAll('.sp-card-label')].map((e) => e.textContent)).toContain('Termini 20/10/2026');
+    const terminiDeLIva = () => [...screen.getByRole('button', { name: 'IVA · model 303' }).closest('article').querySelectorAll('.sp-card-label')]
+      .map((e) => e.textContent);
+    expect(terminiDeLIva()).toContain('Termini 20/10/2026');
+    fireEvent.click(screen.getByRole('button', { name: 'Trimestre anterior' }));
+    expect(titolTrimestre(closca)).toBe('2T 2026');
+    expect(subtitols(closca)).toEqual(['Estimació del 2T 2026', 'Estimació del 2T 2026']);
+    expect(terminiDeLIva()).toContain('Termini 20/07/2026');
+    fireEvent.click(screen.getByRole('button', { name: 'Trimestre següent' }));
     fireEvent.click(screen.getByRole('button', { name: 'Trimestre següent' }));
     fireEvent.click(screen.getByRole('button', { name: 'Trimestre següent' }));
     expect(titolTrimestre(closca)).toBe('1T 2027');
     fireEvent.click(screen.getByRole('button', { name: 'Hui' }));
-    expect(titolTrimestre(closca)).toBe('4T 2026');
+    expect(titolTrimestre(closca)).toBe('3T 2026');
     expect(ruta()).toBe(RUTA);
     /* El títol del trimestre és un paràgraf: l'Índex no el recull. */
     expect(closca.querySelector('.sdp-gestoria-context h1, .sdp-gestoria-context h2, .sdp-gestoria-context h3')).toBeNull();
   });
 
+  /* Ordre del Mestre, 14-10-2026 (prompt 261014_2015, punt 1): el 04-10-2026 la capçalera mira el 3T, que és en la
+     seua presentació (dia 4 de 20, amb el compte enrere), i ja no diu «Ara és oberta la presentació del 3T»:
+     n'és el trimestre. Eixe avís continua quan la persona tria el 4T, que és el que abans es veia per defecte. */
   test('el rellotge del termini es veu amb l’ull tancat: és una data, no cap xifra', async () => {
     const { closca } = munta({ magatzem: await ambSignatura() });
     await llegixExtractes();
-    const rellotge = screen.getByRole('progressbar', { name: 'El 4T 2026: dia 4 de 92' });
+    const rellotge = screen.getByRole('progressbar', { name: 'Presentació del 3T 2026: dia 4 de 20' });
     expect(rellotge.getAttribute('value')).toBe('4');
-    expect(rellotge.getAttribute('max')).toBe('92');
-    expect(within(closca.querySelector('.sdp-gestoria-context')).getByText(/va del 01\/01\/2027 al 30\/01\/2027/)).toBeTruthy();
-    /* El 4 d'octubre, mentre la capçalera mira el 4T, la presentació del 3T corre: es diu. */
-    expect(within(closca.querySelector('.sdp-gestoria-context')).getByText('Ara és oberta la presentació del 3T 2026: acaba el 20/10/2026.')).toBeTruthy();
+    expect(rellotge.getAttribute('max')).toBe('20');
+    expect(capcalera(closca).getByText('Ara és el termini de presentació del 303 i del 130, que acaba el 20/10/2026: queden 16 dies.')).toBeTruthy();
+    expect(closca.querySelector('.sdp-gestoria-context__obert')).toBeNull();
     /* Sense factures, Hisenda sobre la caixa no té de què partir, i ho diu. */
-    expect(within(closca.querySelector('.sdp-gestoria-context')).getByText(/^Sense estimació de Hisenda/)).toBeTruthy();
+    expect(capcalera(closca).getByText(/^Sense estimació de Hisenda/)).toBeTruthy();
     expect(serialitzat(closca)).not.toMatch(/975,00/);
+    /* El 4 d'octubre, si la persona mira el 4T, la presentació del 3T corre: es diu. */
+    fireEvent.click(screen.getByRole('button', { name: 'Trimestre següent' }));
+    const delQuart = screen.getByRole('progressbar', { name: 'El 4T 2026: dia 4 de 92' });
+    expect(delQuart.getAttribute('value')).toBe('4');
+    expect(delQuart.getAttribute('max')).toBe('92');
+    expect(capcalera(closca).getByText(/va del 01\/01\/2027 al 30\/01\/2027/)).toBeTruthy();
+    expect(closca.querySelector('.sdp-gestoria-context__obert').textContent).toBe('Ara és oberta la presentació del 3T 2026: acaba el 20/10/2026.');
+    expect(serialitzat(closca)).not.toMatch(/975,00/);
+  });
+
+  /* Ordre del Mestre, 14-10-2026 (prompt 261014_2015, punt 1): el dia de l'ordre, el 14 d'octubre, el trimestre
+     és el 3T (el que vença el 20), no el 4T que acaba de començar; i ho diu sense cap dada a la URL. */
+  test('el 14-10-2026, el trimestre operatiu és el 3T: dia 14 de 20 de la presentació, queden 6 dies', async () => {
+    const { closca } = munta({ avui: diaInjectat(2026, 10, 14) });
+    await screen.findByText('Cal aprovar el tractor');
+    expect(titolDelTrimestre(closca)).toBe('3T 2026');
+    const rellotge = screen.getByRole('progressbar', { name: 'Presentació del 3T 2026: dia 14 de 20' });
+    expect(rellotge.getAttribute('value')).toBe('14');
+    expect(rellotge.getAttribute('max')).toBe('20');
+    expect(capcalera(closca).getByText(/^Ara és el termini de presentació del 303 i del 130/).textContent).toMatch(/queden 6 dies\.$/);
+    expect(closca.querySelector('.sdp-gestoria-context__obert')).toBeNull();
+    vesAlModul('Impostos');
+    expect(titolDelTrimestre(closca)).toBe('3T 2026');
+    expect(subtitols(closca)).toEqual(['Estimació del 3T 2026', 'Estimació del 3T 2026']);
+    expect(ruta()).toBe(RUTA);
+  });
+
+  /* Ordre del Mestre, 14-10-2026 (prompt 261014_2015, punt 1): «Hui» porta al trimestre operatiu, des de qualsevol
+     altre. Dins de la finestra (el 14-10) és el 3T i no el 4T natural; fora (el 25-10, vençut el 3T) és el 4T i no
+     l'anterior: «Hui» no és ni «el trimestre d'avui» ni «sempre l'anterior». */
+  test('«Hui» porta al trimestre operatiu des d’un altre trimestre, dins i fora de la finestra de presentació', async () => {
+    const hui = () => fireEvent.click(screen.getByRole('button', { name: 'Hui' }));
+    const segueix = () => fireEvent.click(screen.getByRole('button', { name: 'Trimestre següent' }));
+    const anterior = () => fireEvent.click(screen.getByRole('button', { name: 'Trimestre anterior' }));
+
+    const dins = munta({ avui: diaInjectat(2026, 10, 14) });
+    await screen.findByText('Cal aprovar el tractor');
+    segueix();
+    expect(titolDelTrimestre(dins.closca)).toBe('4T 2026');
+    expect(screen.getByRole('progressbar', { name: 'El 4T 2026: dia 14 de 92' })).toBeTruthy();
+    expect(dins.closca.querySelector('.sdp-gestoria-context__obert').textContent).toBe('Ara és oberta la presentació del 3T 2026: acaba el 20/10/2026.');
+    hui();
+    expect(titolDelTrimestre(dins.closca)).toBe('3T 2026');
+    expect(dins.closca.querySelector('.sdp-gestoria-context__obert')).toBeNull();
+    anterior();
+    anterior();
+    expect(titolDelTrimestre(dins.closca)).toBe('1T 2026');
+    hui();
+    expect(titolDelTrimestre(dins.closca)).toBe('3T 2026');
+    expect(ruta()).toBe(RUTA);
+    cleanup();
+
+    const fora = munta({ avui: diaInjectat(2026, 10, 25) });
+    await screen.findByText('Cal aprovar el tractor');
+    expect(titolDelTrimestre(fora.closca)).toBe('4T 2026');
+    anterior();
+    expect(titolDelTrimestre(fora.closca)).toBe('3T 2026');
+    expect(capcalera(fora.closca).getByText('El termini de presentació del 3T 2026 va acabar el 20/10/2026.')).toBeTruthy();
+    hui();
+    expect(titolDelTrimestre(fora.closca)).toBe('4T 2026');
+    expect(screen.getByRole('progressbar', { name: 'El 4T 2026: dia 25 de 92' })).toBeTruthy();
+    expect(ruta()).toBe(RUTA);
   });
 
   /* Revisió adversarial (261012): amb l'ull tancat, la capçalera no pot dir el signe de la caixa ni el de l'estimació. */
@@ -702,8 +898,11 @@ describe('el panell ERP', () => {
 
 /* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front E; prompt, tasca 5): la Cabina d'Avió, la tercera vista del
    Tauler. Derogat EN PART el commutador de dues vistes del 261012: el del Tauler en té tres; els Bancs i els
-   Impostos es queden amb dues i, amb la Cabina triada, hi veuen la comprimida. */
-describe('la Cabina d’Avió', () => {
+   Impostos es queden amb dues i, amb la Cabina triada, hi veuen la comprimida.
+   Ordre del Mestre, 14-10-2026 (prompt 261014_2015, punt 2): la Cabina d'Avió es diu «Quadre de comandament», al
+   commutador i a l'H2 de la vista; el valor intern continua sent 'cabina'. */
+const QUADRE = 'Quadre de comandament';
+describe('el Quadre de comandament (abans, la Cabina d’Avió)', () => {
   const commutador = () => within(screen.getByRole('group', { name: 'Vista del panell' }));
   const opcions = () => commutador().getAllByRole('button').map((b) => b.textContent);
   const premuda = () => commutador().getAllByRole('button').filter((b) => b.getAttribute('aria-pressed') === 'true').map((b) => b.textContent);
@@ -711,10 +910,12 @@ describe('la Cabina d’Avió', () => {
   test('tres vistes al Tauler; amb l’ull tancat, cap xifra ni cap gràfic, però les dates sí; l’ull les mostra; cada instrument obri la seua targeta', async () => {
     const { closca, container } = munta({ magatzem: await ambSignatura() });
     await llegixExtractes();
-    expect(opcions()).toEqual(['Targetes', 'Cabina d’Avió', 'Vista comprimida']);
+    expect(opcions()).toEqual(['Targetes', QUADRE, 'Vista comprimida']);
     expect(premuda()).toEqual(['Targetes']);
-    fireEvent.click(commutador().getByRole('button', { name: 'Cabina d’Avió' }));
-    expect(premuda()).toEqual(['Cabina d’Avió']);
+    fireEvent.click(commutador().getByRole('button', { name: QUADRE }));
+    expect(premuda()).toEqual([QUADRE]);
+    expect(screen.queryByRole('button', { name: 'Cabina d’Avió' })).toBeNull();
+    expect(screen.queryByRole('heading', { name: 'Cabina d’Avió' })).toBeNull();
     expect(closca.querySelectorAll('article.sp-card')).toHaveLength(0);
     expect(closca.querySelectorAll('.sdp-histograma')).toHaveLength(0);
     expect(screen.getByText('Gràfics amagats')).toBeTruthy();
@@ -727,14 +928,14 @@ describe('la Cabina d’Avió', () => {
     expect(closca.querySelectorAll('figure.sdp-histograma')).toHaveLength(2);
     fireEvent.click(within(boina(closca)).getByRole('button', { name: 'Mostra les xifres' }));
     expect(serialitzat(closca)).not.toMatch(/975,00/);
-    /* L'instrument obri la pàgina de la seua targeta, i Tornar torna a la Cabina. */
+    /* L'instrument obri la pàgina de la seua targeta, i Tornar torna al Quadre. */
     fireEvent.click(screen.getByRole('button', { name: 'Caixa real' }));
     expect(h1(closca)).toBe('Caixa real');
     expect(document.activeElement).toBe(closca.querySelector('header.page-title > h1'));
     fireEvent.click(screen.getByRole('button', { name: 'Tornar arrere' }));
-    expect(screen.getByRole('heading', { level: 2, name: 'Cabina d’Avió' })).toBeTruthy();
-    expect(premuda()).toEqual(['Cabina d’Avió']);
-    /* Els Bancs no tenen Cabina: hi veuen la comprimida, i la tria es conserva per al Tauler. */
+    expect(screen.getByRole('heading', { level: 2, name: QUADRE })).toBeTruthy();
+    expect(premuda()).toEqual([QUADRE]);
+    /* Els Bancs no tenen Quadre: hi veuen la comprimida, i la tria es conserva per al Tauler. */
     vesAlModul('Bancs');
     expect(opcions()).toEqual(['Targetes', 'Vista comprimida']);
     expect(premuda()).toEqual(['Vista comprimida']);
@@ -744,28 +945,31 @@ describe('la Cabina d’Avió', () => {
     expect(opcions()).toEqual(['Targetes', 'Vista comprimida']);
     expect(premuda()).toEqual(['Vista comprimida']);
     vesAlModul('Tauler d’Inici');
-    expect(premuda()).toEqual(['Cabina d’Avió']);
-    expect(screen.getByRole('heading', { level: 2, name: 'Cabina d’Avió' })).toBeTruthy();
+    expect(premuda()).toEqual([QUADRE]);
+    expect(screen.getByRole('heading', { level: 2, name: QUADRE })).toBeTruthy();
     expect(container.querySelectorAll('h1')).toHaveLength(1);
     expect(closca.querySelectorAll('[style]')).toHaveLength(0);
     expect(ruta()).toBe(RUTA);
   }, 20000);
 
-  /* L'Índex escriu a l'adreça el títol de la secció que es tria: en la Cabina, amb les xifres a la vista, cap
-     entrada ni cap ruta porta un import, l'entitat, el compte ni el titular. */
-  test('l’Índex de la Cabina no escriu cap dada a la URL', async () => {
+  /* L'Índex escriu a l'adreça el títol de la secció que es tria: en el Quadre, amb les xifres a la vista, cap
+     entrada ni cap ruta porta un import, l'entitat, el compte ni el titular. Ordre del Mestre, 14-10-2026 (prompt
+     261014_2015, punts 2 i 3): el Quadre es diu així i les seues dues seccions noves també hi són. */
+  test('l’Índex del Quadre de comandament no escriu cap dada a la URL', async () => {
     const scrollAbans = Element.prototype.scrollIntoView;
     Element.prototype.scrollIntoView = function scrollIntoView() {};
     try {
       const { closca } = munta({ magatzem: await ambSignatura() });
       await llegixExtractes();
-      fireEvent.click(commutador().getByRole('button', { name: 'Cabina d’Avió' }));
+      fireEvent.click(commutador().getByRole('button', { name: QUADRE }));
       fireEvent.click(within(boina(closca)).getByRole('button', { name: 'Mostra les xifres' }));
       const obriIndex = () => fireEvent.click(within(closca).getByRole('button', { name: 'Índex de secció' }));
       const entrades = () => [...document.querySelectorAll('.toc-nav button')];
       obriIndex();
       const textos = entrades().map((e) => e.textContent);
-      expect(textos).toContain('Cabina d’Avió');
+      expect(textos).toContain(QUADRE);
+      expect(textos).toContain('Factures que falten');
+      expect(textos).toContain('Plantilla Gestoria');
       const rutes = [];
       for (let k = 0; k < textos.length; k += 1) {
         if (k > 0) obriIndex();
@@ -778,13 +982,44 @@ describe('la Cabina d’Avió', () => {
       Element.prototype.scrollIntoView = scrollAbans;
     }
   }, 20000);
+
+  /* Ordre del Mestre, 14-10-2026 (prompt 261014_2015, punts 3 i 4): el Quadre acaba amb «Factures que falten» (la
+     penúltima) i «Plantilla Gestoria» (l'última). Sense Full, la primera diu on es fa i la segona, l'estat buit;
+     amb la ruta del Full que dona el pont (hrefFull), l'estat buit hi porta. */
+  test('les dues últimes seccions: «Factures que falten» i «Plantilla Gestoria»; sense Full, els estats buits, i «Obri el Full trimestral» hi porta', async () => {
+    const { closca } = munta({ hrefFull: '/app/gestoria/full' });
+    await screen.findByText('Cal aprovar el tractor');
+    fireEvent.click(commutador().getByRole('button', { name: QUADRE }));
+    const quadre = screen.getByRole('heading', { level: 2, name: QUADRE }).closest('section');
+    const seccions = [...quadre.querySelectorAll('h3')].map((h) => h.textContent);
+    expect(seccions.slice(-2)).toEqual(['Factures que falten', 'Plantilla Gestoria']);
+    const seccio = (nom) => within(quadre).getByRole('heading', { level: 3, name: nom }).closest('section');
+    expect(within(seccio('Factures que falten')).getByText(/^Analitza el trimestre al Full trimestral/)).toBeTruthy();
+    const plantilla = within(seccio('Plantilla Gestoria'));
+    expect(plantilla.getByText('Encara no hi ha cap full generat')).toBeTruthy();
+    expect(plantilla.queryByRole('button', { name: 'Descarrega l’XLSX' })).toBeNull();
+    expect(ruta()).toBe(RUTA);
+    fireEvent.click(plantilla.getByRole('button', { name: 'Obri el Full trimestral' }));
+    expect(ruta()).toBe('/app/gestoria/full');
+    expect(closca.querySelectorAll('[style]')).toHaveLength(0);
+  });
+
+  test('sense la ruta del Full (hrefFull), l’estat buit de la «Plantilla Gestoria» no porta cap botó', async () => {
+    munta();
+    await screen.findByText('Cal aprovar el tractor');
+    fireEvent.click(commutador().getByRole('button', { name: QUADRE }));
+    const plantilla = within(screen.getByRole('heading', { level: 3, name: 'Plantilla Gestoria' }).closest('section'));
+    expect(plantilla.getByText('Encara no hi ha cap full generat')).toBeTruthy();
+    expect(plantilla.queryByRole('button', { name: 'Obri el Full trimestral' })).toBeNull();
+  });
 });
 
 describe('Pedra Seca i privacitat', () => {
   test('cap style= ni al codi de la closca ni al DOM; cap dada a la URL', async () => {
     /* Ordre del Mestre, 13-10-2026 (pla 261013_1405, fronts E i D): la Cabina d'Avió i el panell de l'Escàner
-       també són de la closca. */
-    for (const fitxerJsx of ['ShellGestoria.jsx', 'Tauler.jsx', 'CabinaAvio.jsx', '../escaner/PanellEscaner.jsx']) {
+       també són de la closca. Ordre del Mestre, 14-10-2026 (prompt 261014_2015, punt 3): i la «Plantilla
+       Gestoria» del Quadre de comandament. */
+    for (const fitxerJsx of ['ShellGestoria.jsx', 'Tauler.jsx', 'CabinaAvio.jsx', '../escaner/PanellEscaner.jsx', '../PlantillaGestoria.jsx']) {
       const codi = readFileSync(path.join(process.cwd(), 'src/sections/gestoria/tauler', fitxerJsx), 'utf8');
       expect(codi, fitxerJsx).not.toMatch(/\sstyle=/);
     }
@@ -897,9 +1132,18 @@ function carpetaDelFull() {
   return vi.fn(async () => arrel);
 }
 
+/* Ordre del Mestre, 14-10-2026 (prompt 261014_2015, punt 1): el 04-10-2026 el trimestre per defecte ja és el 3T,
+   el mateix que analitza el Full, i la prova ja no podria distingir el Full del defecte (ni que «Oblida les dades»
+   el desfà). Ara el dia de la closca és el 25-10-2026, amb la presentació del 3T vençuda: el defecte és el 4T, i el
+   Full continua analitzant el 3T (el trimestre anterior, PanellGestoria). El rellotge de les signatures continua
+   sent ARA. */
+const DESPRES_DE_LA_FINESTRA = diaInjectat(2026, 10, 25);
+
 describe('el cable del Full trimestral cap al Tauler (ordre del Mestre, 261012)', () => {
   test('analitzar el 3T al Full fa que Impostos parle del 3T; Oblida les dades ho desfà', async () => {
-    const { closca } = munta({ magatzem: await ambSignatures([TRACTOR_TAULER, TRACTOR_FACTURES]), showDirectoryPicker: carpetaDelFull() });
+    const { closca } = munta({
+      magatzem: await ambSignatures([TRACTOR_TAULER, TRACTOR_FACTURES]), showDirectoryPicker: carpetaDelFull(), avui: DESPRES_DE_LA_FINESTRA
+    });
     await llegixExtractes();
     const subtitols = () => [...closca.querySelectorAll('.sp-card-subtitle')].map((e) => e.textContent);
     vesAlModul('Impostos');
@@ -918,10 +1162,12 @@ describe('el cable del Full trimestral cap al Tauler (ordre del Mestre, 261012)'
     expect(subtitols()).toEqual(['Estimació del 3T 2026', 'Estimació del 3T 2026']);
     const irpf = screen.getByRole('button', { name: 'IRPF · model 130' }).closest('article');
     expect([...irpf.querySelectorAll('.sp-card-label')].map((e) => e.textContent)).toContain('Termini 20/10/2026');
-    /* El 3T, vist el 4 d'octubre, és dins de la seua finestra de presentació. */
-    expect(screen.getByRole('progressbar', { name: 'Presentació del 3T 2026: dia 4 de 20' })).toBeTruthy();
-    /* Amb factures i caixa, Hisenda sobre la caixa és una xifra: amb l'ull tancat no diu ni si hi ha res a pagar. */
+    /* El rellotge del termini seguix el trimestre del Full: el 3T, vist el 25 d'octubre, ja ha vençut (abans, vist el
+       4 d'octubre, era dins de la seua finestra; ara ho fixa «el 14-10-2026, el trimestre operatiu és el 3T»). */
     const context = within(closca.querySelector('.sdp-gestoria-context'));
+    expect(context.getByText('El termini de presentació del 3T 2026 va acabar el 20/10/2026.')).toBeTruthy();
+    expect(context.queryByRole('progressbar', { name: /T 2026/ })).toBeNull();
+    /* Amb factures i caixa, Hisenda sobre la caixa és una xifra: amb l'ull tancat no diu ni si hi ha res a pagar. */
     expect(context.getByText('Xifra amagada')).toBeTruthy();
     expect(context.queryByText(/surten? a pagar/)).toBeNull();
     fireEvent.click(within(boina(closca)).getByRole('button', { name: 'Mostra les xifres' }));
@@ -934,6 +1180,51 @@ describe('el cable del Full trimestral cap al Tauler (ordre del Mestre, 261012)'
     fireEvent.click(screen.getByRole('button', { name: 'Oblida les dades' }));
     vesAlModul('Impostos');
     expect(subtitols()).toEqual(['Estimació del 4T 2026', 'Estimació del 4T 2026']);
+  }, 30000);
+
+  /* Ordre del Mestre, 14-10-2026 (prompt 261014_2015, punt 3): de punta a punta, el full que genera el Full
+     trimestral (segona aprovació) arriba pel cable a la «Plantilla Gestoria» del Quadre de comandament, que no en
+     genera cap: hi mostra el nom canònic, amb l'ull tancat cap cel·la ni cap import, i en descarrega els bytes.
+     El titular del full és el sintètic de la resta de proves. */
+  test('el full generat al Full trimestral arriba a la «Plantilla Gestoria» del Quadre: el nom, cap import amb l’ull tancat i la descàrrega', async () => {
+    const { closca, descarrega } = munta({
+      magatzem: await ambSignatures([TRACTOR_TAULER, TRACTOR_FACTURES]), showDirectoryPicker: carpetaDelFull()
+    });
+    await llegixExtractes();
+    vesAlModul('Full trimestral');
+    fireEvent.click(await screen.findByRole('button', { name: 'Tria la carpeta de factures' }, { timeout: 3000 }));
+    await screen.findByText('«Facturacio»');
+    fireEvent.click(screen.getByRole('button', { name: 'Analitza el 3T de 2026' }));
+    await screen.findByRole('region', { name: 'Despeses de la proposta' }, { timeout: 10000 });
+    fireEvent.change(screen.getByRole('textbox', { name: /^Titular del full/ }), { target: { value: 'Taller de Prova' } });
+    fireEvent.click(screen.getByRole('checkbox', { name: /He revisat la proposta/ }));
+    /* La factura sintètica no té cap incidència d'alta severitat: n'hi ha prou amb la revisió. */
+    expect(screen.queryByRole('checkbox', { name: /Genera-la igualment/ })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Genera el full' }));
+    const fitxers = (await screen.findByRole('heading', { level: 3, name: 'Fitxers generats' }, { timeout: 10000 })).closest('section');
+    const nomGenerat = [...fitxers.querySelectorAll('code')].map((c) => c.textContent).find((nom) => nom.endsWith('.xlsx'));
+    expect(nomGenerat).toBe('2026-FACTURACIO-Taller_de_Prova_-_3T.xlsx');
+    expect(descarrega).not.toHaveBeenCalled();
+
+    vesAlModul('Tauler d’Inici');
+    fireEvent.click(within(screen.getByRole('group', { name: 'Vista del panell' })).getByRole('button', { name: QUADRE }));
+    const plantilla = screen.getByRole('heading', { level: 3, name: 'Plantilla Gestoria' }).closest('section');
+    expect(within(plantilla).getByText(nomGenerat).tagName).toBe('CODE');
+    expect(within(plantilla).getByText('El full generat del 3T de 2026: és el que es descarrega i s’adjunta.')).toBeTruthy();
+    expect(within(plantilla).getByText('Full amagat')).toBeTruthy();
+    expect(plantilla.querySelector('table')).toBeNull();
+    expect(serialitzat(plantilla)).not.toMatch(/€|\d,\d{2}|7777777777/);
+    /* «Factures que falten» ja parla del Full: el seu trimestre, no el que mira la capçalera. */
+    const falten = screen.getByRole('heading', { level: 3, name: 'Factures que falten' }).closest('section');
+    expect(within(falten).getByText(/^Del Full del 3T 2026, amb els extractes que has triat\./)).toBeTruthy();
+    fireEvent.click(within(plantilla).getByRole('button', { name: 'Descarrega l’XLSX' }));
+    expect(descarrega).toHaveBeenCalledTimes(1);
+    const [{ nom, dades }] = descarrega.mock.calls[0];
+    expect(nom).toBe(nomGenerat);
+    expect(nom).toMatch(/_-_3T\.xlsx$/);
+    expect(dades.length).toBeGreaterThan(0);
+    expect(closca.querySelectorAll('[style]')).toHaveLength(0);
+    expect(ruta()).toBe(RUTA);
   }, 30000);
 });
 

@@ -55,6 +55,10 @@ export const TRACTOR_FACTURES = Object.freeze({
     ...PORTA_APROVACIO,
     ...BASE_GESTORIA,
     ...UI_GESTORIA,
+    /* Ordre del Mestre, 14-10-2026 (prompt 261014_2015, punt 3): la «Plantilla Gestoria» del Quadre de comandament
+       fa les eixides del full (la descàrrega de l'XLSX generat i el correu) també des del Tauler: és d'este tractor,
+       no del Tauler, que continua sense escriure res. */
+    'src/sections/gestoria/PlantillaGestoria.jsx',
     'src/sections/gestoria/VistaPreviaFull.jsx',
     'src/sections/gestoria/enviament/EnviamentGestoria.jsx',
     'src/sections/gestoria/enviament/correuGestoria.js',
@@ -144,6 +148,18 @@ const NUCLI_TAULER = [
   'src/sections/gestoria/tauler/nucli/tractorTauler.js'
 ];
 
+/* Ordre del Mestre, 14-10-2026 (prompt 261014_2015, punt 4): les factures que
+   falten del Quadre de comandament. Les calcula la closca (ShellGestoria) amb
+   les factures que el Full trimestral ja li ha passat i els moviments que este
+   tractor ja ha llegit: cap lectura nova. El mòdul i l'auditoria que reutilitza
+   entren a l'empremta del Tauler (no a NUCLI_TAULER, que també és de
+   l'Històric: l'Històric no l'executa). Mai s'importen des de targetesTauler.js,
+   cabinaAvio.js ni Tauler.jsx, que són al graf de l'Històric. */
+const NUCLI_QUADRE = [
+  'src/sections/gestoria/nucli/auditoria.js',
+  'src/sections/gestoria/nucli/facturesQueFalten.js'
+];
+
 /* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front D): els extractes del
    Tauler també poden ser els que l'Escàner Local troba a la carpeta que tries i
    tu hi aboques. Els bytes els llig igualment este tractor, amb la seua
@@ -153,9 +169,9 @@ export const TRACTOR_TAULER = Object.freeze({
   id: 'gestoria.tauler',
   nom: 'Gestoria · Tauler de l’empresa',
   versio: '1.0.0',
-  descripcio: 'Llig només en este ordinador els extractes del banc que tries (Norma 43 o el CSV de moviments) i en calcula la caixa real, la cobertura, les finances dels últims 30 dies i la tresoreria de cada compte.',
+  descripcio: 'Llig només en este ordinador els extractes del banc que tries (Norma 43 o el CSV de moviments) i en calcula la caixa real, la cobertura, les finances dels últims 30 dies i la tresoreria de cada compte; amb les factures del Full trimestral, avisa de les que podrien faltar.',
   fitxa: 'src/sections/gestoria/fitxes/gestoria_tauler.md',
-  fonts: Object.freeze([...PORTA_APROVACIO, ...UI_TAULER, ...NUCLI_TAULER].sort()),
+  fonts: Object.freeze([...PORTA_APROVACIO, ...UI_TAULER, ...NUCLI_TAULER, ...NUCLI_QUADRE].sort()),
   llig: Object.freeze([
     'Els extractes del banc que tries amb el selector del sistema, o els que l’Escàner Local troba a la carpeta que tries i tu aboques al Tauler: Norma 43 (.n43, .aeb, .c43, .q43, .txt, .dat) o el CSV de moviments',
     'Si el tries també, el fitxer de configuració de l’empresa (.json): només el nom i la població de la boina'

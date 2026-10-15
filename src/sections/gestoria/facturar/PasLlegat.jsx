@@ -12,13 +12,16 @@
  * emeses, el llegat només s'amplia. «No en tinc» desapareix, i un llegat nou
  * que perdria alguna sèrie declarada (o números) ho diu abans de desar; el
  * magatzem del perfil ho torna a comprovar (PERFIL_FIXAT).
+ * Prompt 261014_1605, front G1 · PODER 5: desat el llegat, el resum va
+ * recollit dins d'un desplegable (una línia: titolDelLlegat) perquè la
+ * Factura nova quede a dalt; l'avís de l'última acció en queda fora.
  */
 import { useMemo, useState } from 'react';
 import { Boto } from '../../../components/PedraSeca/atoms/Boto.jsx';
 import { AreaText, Camp, CampText } from '../../../components/PedraSeca/organismes/formulari.jsx';
 import { sembraLlegat } from '../facturacio/llegat.js';
 import { seriesQueEsPerden } from '../facturacio/magatzemPerfil.js';
-import { numerosDelText, resumDelLlegat } from './nucli/formulari.js';
+import { numerosDelText, resumDelLlegat, titolDelLlegat } from './nucli/formulari.js';
 import { AvisDeZona, ErrorsDelFormulari, llegixText } from './peces.jsx';
 
 /* Els números no reconeguts que es mostren; la resta es compten. */
@@ -84,12 +87,17 @@ export function PasLlegat({ f }) {
   if (f.llegat && !obert) {
     return (
       <>
-        <ResumLlegat llegat={f.llegat} />
-        <NoReconeguts llista={f.llegat.noReconeguts} />
+        <details className="sdp-gestoria-panell__documents">
+          <summary>{titolDelLlegat(f.llegat)}</summary>
+          <div className="sdp-gestoria-panell__bloc">
+            <ResumLlegat llegat={f.llegat} />
+            <NoReconeguts llista={f.llegat.noReconeguts} />
+            <div className="sdp-gestoria-panell__accions">
+              <Boto varietat="secundari" onClick={reobri}>Torna a carregar les factures d’abans</Boto>
+            </div>
+          </div>
+        </details>
         <AvisDeZona avis={f.avis} zona="llegat" onTanca={f.tancaAvis} />
-        <div className="sdp-gestoria-panell__accions">
-          <Boto varietat="secundari" onClick={reobri}>Torna a carregar les factures d’abans</Boto>
-        </div>
       </>
     );
   }

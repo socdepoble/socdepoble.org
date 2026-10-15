@@ -330,6 +330,9 @@ function XatWorkspace() {
     obriFilDePagina = senseXat,
     joId = null,
     joNom = null,
+    /* Pla 261014_1450 (front C) · L'entitat de la barra negra: baixa a la
+       Conversa, i el Compositor diu qui signa. */
+    entitatActiva = null,
     senseSessio = false,
     ambitEstable = '',
     /* Auditoria 261008 (B04) · Si l'última càrrega de la llista ha anat bé, i
@@ -1327,6 +1330,7 @@ function XatWorkspace() {
           clauEsborrany={ambitEstable ? `${ambitEstable}::${activeThread.id}` : null}
           initialText={connectionContext}
           fil={activeThread}
+          entitatActiva={entitatActiva}
           messages={messages}
           onSendMessage={sendChatMessage}
           onBack={handleBackToList}

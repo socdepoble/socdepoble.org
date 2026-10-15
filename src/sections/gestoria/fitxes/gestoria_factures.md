@@ -17,6 +17,7 @@ Llig, només en este ordinador, la carpeta de factures que tu tries, et proposa 
 7. **Et mostra la proposta** amb el mateix format que lliures a la gestoria. Pots corregir qualsevol camp abans de continuar.
 8. **Només quan aproves la proposta** (la segona aprovació, la de l'operació concreta) genera el CSV i l'XLSX amb la plantilla de sempre de la gestoria. En Chrome, si ho demanes, els desa a la carpeta del trimestre; en Safari i Firefox es descarreguen.
 9. **Si vols, et prepara el correu per a la gestoria** (la tercera aprovació): obri la redacció de Gmail amb el destinatari, l'assumpte i el text que tu escrius (l'adjunt es descarrega al costat perquè l'arrossegues, ja que Gmail no admet adjunts per l'adreça), et dona un esborrany `.eml` amb l'adjunt per a Mail o Outlook, o obri el menú de compartir del sistema on el navegador ho permet. L'enviament el fas tu: el tractor mai prem «Envia».
+10. **També des del Quadre de comandament del Tauler.** Quan ja has generat el full, la secció «Plantilla Gestoria» del Quadre de comandament te'l mostra tal com el rebrà la gestoria (amb l'ull de la boina tancat, cap cel·la del full es pinta). Des d'allí també pots descarregar l'XLSX i preparar el correu per a la gestoria, sempre amb els mateixos bytes que has aprovat a la segona aprovació: el Quadre no genera ni aprova cap full, i el correu continua sent la tercera aprovació, intacta. Si canvies res de la proposta, el full generat deixa de valdre també allí, i cal tornar-lo a generar ací.
 
 ## Què llig
 

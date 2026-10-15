@@ -27,6 +27,13 @@
  *     si el client escrit no és el de la factura, es diu (avisDelClient);
  *   · el llibre: cada alta amb el seu estat (emesa o anul·lada) i els textos
  *     de la verificació de la cadena.
+ * Prompt 261014_1605, front G1 (la factura en tres preguntes, abans del 20):
+ *   · «A qui?»: els clients de les factures vives del llibre, un per NIF
+ *     (clientsDelLlibre), i quin és el que hi ha al formulari (clauDelClient);
+ *   · «Més opcions»: el tipus, la data de l'operació i la descripció, amb el
+ *     resum que diu què s'hi ha triat (mesOpcionsDe);
+ *   · el pas 2 recollit diu en una línia què s'hi ha declarat (titolDelLlegat),
+ *     i la «data de pas» és «el primer dia que factures ací».
  * Sense DOM, React ni xarxa.
  */
 import { ESQUEMA_CONFIG_EMPRESA, emissorDe, llegixConfigEmpresa, validaConfigEmpresa } from '../../facturacio/configEmpresa.js';
@@ -167,8 +174,9 @@ export function configDeFormulari(formulari, base = null) {
 export function errorsDelPerfil(formulari, base = null, fixada = null) {
   const config = configDeFormulari(formulari, base);
   const errors = validaConfigEmpresa(config);
+  /* Prompt 261014_1605, G1 · PODER 5: «data de pas» és jerga; és el primer dia que factures ací. */
   if (!net(formulari.dataPas)) {
-    errors.push('Falta la data de pas: el dia des del qual factures amb este programa (abans, amb l’eina que feies servir).');
+    errors.push('Falta el primer dia que factures ací: el dia des del qual factures amb este programa (abans, amb l’eina que feies servir).');
   }
   if (errors.length || !fixada) return errors;
   return canvisFixosDeConfig(fixada, llegixConfigEmpresa(config));
@@ -239,6 +247,18 @@ export function resumDelLlegat(llegat) {
   });
 }
 
+/**
+ * El llegat desat, en una línia: el resum del pas 2 quan ja està fet i es
+ * mostra recollit (Prompt 261014_1605, G1 · PODER 5).
+ * @param {{ series: object[] }|null} llegat el de sembraLlegat
+ * @returns {string}
+ */
+export function titolDelLlegat(llegat) {
+  const quantes = Array.isArray(llegat?.series) ? llegat.series.length : 0;
+  if (!quantes) return 'Sense factures d’abans: el programa comença de zero';
+  return quantes === 1 ? 'Una sèrie d’abans, tancada' : `${quantes} sèries d’abans, tancades`;
+}
+
 /* ── Factura ───────────────────────────────────────────────────────────── */
 
 /** Una línia buida del formulari. */
@@ -279,6 +299,25 @@ export function facturaBuida(dataExpedicio, tipus = 'F1') {
     substituides: [],
     rectificades: [], causa: 'R1', modalitat: 'S'
   };
+}
+
+/**
+ * «Més opcions» de la factura nova (Prompt 261014_1605, G1 · PODER 4): el
+ * tipus, la data de l'operació i la descripció viuen en un desplegable. Si el
+ * tipus no és la completa (F1) o algun d'eixos camps té valor, el desplegable
+ * va obert i el seu resum diu què s'hi ha triat: tancat a mà, l'estat es
+ * continua llegint.
+ * @param {object} formulari el de facturaBuida
+ * @returns {{ obertes: boolean, resum: string }}
+ */
+export function mesOpcionsDe(formulari) {
+  const triades = [];
+  if (formulari?.tipus && formulari.tipus !== 'F1') {
+    triades.push(OPCIONS_TIPUS.find((o) => o.valor === formulari.tipus)?.etiqueta ?? formulari.tipus);
+  }
+  if (net(formulari?.dataOperacio)) triades.push('data de l’operació');
+  if (net(formulari?.descripcio)) triades.push('descripció');
+  return { obertes: triades.length > 0, resum: triades.length ? `Més opcions: ${triades.join(', ')}` : 'Més opcions' };
 }
 
 /* Una quantitat com l'escriu la persona («2», «2,5», «0.125»): fins a tres decimals; null si no ho és. */
@@ -536,6 +575,37 @@ export function filesDelLlibre(registres) {
     total: euros(r.importTotal),
     anulada: anulades.has(clauDeFactura(r))
   }));
+}
+
+/**
+ * Els clients de les factures vives del llibre, per a no tornar-los a
+ * escriure (Prompt 261014_1605, G1 · PODER 2): un per NIF (net), amb les dades
+ * de la seua factura més nova, en ordre alfabètic. Les anul·lades i les
+ * simplificades (sense client) no compten. Cap magatzem nou: ja són al llibre.
+ * @param {ReadonlyArray<object>} registres la cadena d'un emissor
+ * @returns {{ clau: string, etiqueta: string, client: { nif: string, nom: string, adreca: string, codiPostal: string, poblacio: string } }[]}
+ */
+export function clientsDelLlibre(registres) {
+  const perNif = new Map();
+  for (const fila of filesDelLlibre(registres)) {
+    const destinatari = fila.registre.factura?.destinatari;
+    const clau = nifNet(destinatari?.nif);
+    if (fila.anulada || !clau || perNif.has(clau)) continue;
+    const client = clientDeDestinatari(destinatari);
+    perNif.set(clau, { clau, etiqueta: `${client.nom} · ${clau}`, client });
+  }
+  return [...perNif.values()].sort((a, b) => a.client.nom.localeCompare(b.client.nom, 'ca'));
+}
+
+/**
+ * La clau del client de la llista que és el del formulari (tots els camps
+ * iguals, el NIF net), o '' si el formulari en porta un altre o cap.
+ * @param {ReadonlyArray<{ clau: string, client: object }>} clients els de clientsDelLlibre
+ * @param {object} client el del formulari
+ * @returns {string}
+ */
+export function clauDelClient(clients, client) {
+  return (Array.isArray(clients) ? clients : []).find((c) => mateixClient(c.client, client))?.clau ?? '';
 }
 
 /**

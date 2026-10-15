@@ -10,10 +10,10 @@ import { describe, expect, test } from 'vitest';
 import { ESQUEMA_CONFIG_EMPRESA, llegixConfigEmpresa } from '../../facturacio/configEmpresa.js';
 import { sembraLlegat } from '../../facturacio/llegat.js';
 import {
-  OPCIONS_CAUSA, OPCIONS_IVA, OPCIONS_RETENCIO, OPCIONS_TIPUS, avisDelClient, clientBuit, clientDeDestinatari, commutaRectificada,
-  configDeFormulari, configDeJson, dadesDeFactura, dataCurta, errorsDeFactura,
+  OPCIONS_CAUSA, OPCIONS_IVA, OPCIONS_RETENCIO, OPCIONS_TIPUS, avisDelClient, clauDelClient, clientBuit, clientDeDestinatari, clientsDelLlibre,
+  commutaRectificada, configDeFormulari, configDeJson, dadesDeFactura, dataCurta, errorsDeFactura,
   errorsDelPerfil, estatDeLaCadena, euros, facturaBuida, filesDelLlibre, formulariDeConfig, formulariImportat, llegixQuantitat,
-  numerosDelText, rectificables, resumDelLlegat, tipusEfectiu, tiquetsSubstituibles, totalsDeFactura
+  mesOpcionsDe, numerosDelText, rectificables, resumDelLlegat, tipusEfectiu, tiquetsSubstituibles, titolDelLlegat, totalsDeFactura
 } from './formulari.js';
 
 const CIF_EMISSOR = 'B12345674';
@@ -50,7 +50,9 @@ describe('el perfil fiscal', () => {
     const errors = errorsDelPerfil(formulariBo({ nif: 'X', codiPostal: '9', dataPas: '' }));
     expect(errors.some((e) => e.includes('NIF'))).toBe(true);
     expect(errors.some((e) => e.includes('codi postal'))).toBe(true);
-    expect(errors.at(-1)).toMatch(/^Falta la data de pas/);
+    // Prompt 261014_1605, G1 · PODER 5: sense jerga, la «data de pas» és el primer dia que factures ací.
+    expect(errors.at(-1)).toMatch(/^Falta el primer dia que factures ací: /);
+    expect(errors.join(' ')).not.toMatch(/data de pas/);
   });
 
   test('sobre una configuració importada, es conserva el que el formulari no mostra', () => {
@@ -112,6 +114,14 @@ describe('el llegat', () => {
     ]);
     expect(resumDelLlegat(sembraLlegat([]))).toEqual([]);
   });
+
+  /* Prompt 261014_1605, G1 · PODER 5: el pas 2 fet es mostra recollit, amb el que s'hi ha declarat en una línia. */
+  test('el llegat desat, en una línia: cap, una sèrie o diverses', () => {
+    expect(titolDelLlegat(sembraLlegat([]))).toBe('Sense factures d’abans: el programa comença de zero');
+    expect(titolDelLlegat(null)).toBe('Sense factures d’abans: el programa comença de zero');
+    expect(titolDelLlegat(sembraLlegat(['F26 0001', 'F26 0003']))).toBe('Una sèrie d’abans, tancada');
+    expect(titolDelLlegat(sembraLlegat(['F25 0001', 'F26 0004']))).toBe('2 sèries d’abans, tancades');
+  });
 });
 
 describe('la factura', () => {
@@ -121,6 +131,17 @@ describe('la factura', () => {
     expect(OPCIONS_IVA.map((o) => o.valor)).toEqual(['4', '10', '21', 'E1']);
     expect(OPCIONS_RETENCIO.map((o) => o.valor)).toEqual(['', '7', '15']);
     expect(OPCIONS_CAUSA.map((o) => o.valor)).toEqual(['R1', 'R2', 'R3', 'R4']);
+  });
+
+  /* Prompt 261014_1605, G1 · PODER 4: el tipus, la data de l'operació i la descripció, dins de «Més opcions». */
+  test('«Més opcions»: la completa per defecte i tancat; obert, i dit al resum, si n’hi ha alguna triada', () => {
+    expect(facturaBuida(PAS).tipus).toBe('F1');
+    expect(mesOpcionsDe(facturaBuida(PAS))).toEqual({ obertes: false, resum: 'Més opcions' });
+    expect(mesOpcionsDe(facturaBuida(PAS, 'F2'))).toEqual({ obertes: true, resum: 'Més opcions: Factura simplificada (tiquet)' });
+    expect(mesOpcionsDe(facturaBona({ tipus: 'R', dataOperacio: '2026-10-05', descripcio: ' Comanda ' })))
+      .toEqual({ obertes: true, resum: 'Més opcions: Factura rectificativa, data de l’operació, descripció' });
+    expect(mesOpcionsDe(facturaBona({ descripcio: '   ' }))).toEqual({ obertes: false, resum: 'Més opcions' });
+    expect(mesOpcionsDe(undefined)).toEqual({ obertes: false, resum: 'Més opcions' });
   });
 
   test('la retenció d’IRPF, la data de l’operació i l’exempció arriben al nucli; la simplificada no porta retenció', () => {
@@ -316,6 +337,38 @@ describe('el llibre', () => {
     // Fora d'una rectificativa, o sense cap factura triada, no hi ha avís.
     expect(avisDelClient({ ...corregit, tipus: 'F1' }, llibre)).toBeNull();
     expect(avisDelClient(buit, llibre)).toBeNull();
+  });
+
+  /* Prompt 261014_1605, G1 · PODER 2: «A qui?» sense tornar a escriure el client, i sense cap magatzem nou. */
+  test('els clients del llibre: un per NIF net, el de la factura viva més nova, en ordre alfabètic; ni anul·lades ni tiquets', () => {
+    const domicili = { adreca: 'Carrer Major, 2', codiPostal: '46998', poblacio: 'Poble de Prova' };
+    const altreNif = ['8765', '4321', 'X'].join('');
+    const tercerNif = ['1111', '2222', 'R'].join('');
+    const llibre = [
+      alta('A2026-0001', 'F1', { factura: { destinatari: { nif: DNI_CLIENT, nom: 'Bar de la Plaça', domicili } } }),
+      alta('A2026-0002', 'F1', { factura: { destinatari: { nif: altreNif, nom: 'Casino del Poble', domicili } } }),
+      alta('A2026-0003', 'F1', { factura: { destinatari: { nif: ` ${DNI_CLIENT.toLowerCase()} `, nom: 'Bar de la Plaça SL', domicili } } }),
+      alta('T2026-0001', 'F2'),
+      alta('A2026-0004', 'F1', { factura: { destinatari: { nif: tercerNif, nom: 'Ajuntament', domicili } } }),
+      anulacio('A2026-0004'),
+      alta('A2026-0005', 'F1', { factura: { destinatari: { nif: altreNif, nom: 'Casino nou', domicili } } }),
+      anulacio('A2026-0005')
+    ];
+    const clients = clientsDelLlibre(llibre);
+    // El Bar, amb les dades de la més nova (el NIF es compara net); el Casino, de la viva (l'anul·lada no compta).
+    expect(clients.map(({ clau, etiqueta }) => [clau, etiqueta])).toEqual([
+      [DNI_CLIENT, `Bar de la Plaça SL · ${DNI_CLIENT}`],
+      [altreNif, `Casino del Poble · ${altreNif}`]
+    ]);
+    expect(clients[1].client).toEqual(clientDeDestinatari({ nif: altreNif, nom: 'Casino del Poble', domicili }));
+    expect(clientsDelLlibre(undefined)).toEqual([]);
+
+    // Quin és el del formulari: tots els camps iguals, el NIF net; si se n'ha canviat un, cap.
+    expect(clauDelClient(clients, clients[1].client)).toBe(altreNif);
+    expect(clauDelClient(clients, { ...clients[1].client, nif: ` ${altreNif.toLowerCase()}` })).toBe(altreNif);
+    expect(clauDelClient(clients, { ...clients[1].client, nom: 'Casino' })).toBe('');
+    expect(clauDelClient(clients, clientBuit())).toBe('');
+    expect(clauDelClient(undefined, clientBuit())).toBe('');
   });
 
   test('l’estat de la cadena, sempre amb text', () => {

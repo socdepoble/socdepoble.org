@@ -310,6 +310,9 @@ describe('Llei Visual del quadrat · els camins d’imatge de la Consola', () =>
 describe('les 18 il·lustracions de les ordres', () => {
   const VINYETES = ['animalets', 'bascula', 'cervell', 'consola', 'disseny', 'gestoria', 'habitatge', 'mapa', 'rebost', 'rss', 'salut', 'tpv', 'treball', 'vehicle'];
   const NANO_CARDS = ['calendari', 'mercat', 'mur', 'snippet'];
+  /* Les vinyetes de la carpeta que no són de les 18 de les ordres: la portada
+     còmic de /fedivers (ESTAT 261014_1505; src/sections/text/pageContent.js). */
+  const ALTRES_VINYETES = ['fedivers'];
 
   test('les 14 vinyetes i les 4 nano cards són a public/, amb pes', () => {
     const rutes = [
@@ -318,8 +321,8 @@ describe('les 18 il·lustracions de les ordres', () => {
     ];
     expect(rutes).toHaveLength(18);
     for (const ruta of rutes) expect(esFitxerAmbPes(ruta), ruta).toBe(true);
-    // La carpeta de vinyetes no en porta cap altra: les 14 són totes les que hi ha.
+    // La carpeta de vinyetes no en porta cap altra: les 14 i les ALTRES_VINYETES són totes les que hi ha.
     expect(readdirSync(alDisc('/assets/ui/plugins')).filter((f) => f.endsWith('.jpg')).sort())
-      .toEqual(VINYETES.map((id) => `${id}_vinyeta.jpg`).sort());
+      .toEqual([...VINYETES, ...ALTRES_VINYETES].map((id) => `${id}_vinyeta.jpg`).sort());
   });
 });

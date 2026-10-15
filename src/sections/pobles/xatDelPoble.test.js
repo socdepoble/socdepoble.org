@@ -80,6 +80,8 @@ describe('filsAmbLaGentDelPoble · els fils del xat amb el nom de la gent', () =
     const vestits = filsAmbLaGentDelPoble(fils, MOCK_TOWNS);
     const [comunitatT, avisos, general] = vestits;
     expect([comunitatT.name, comunitatT.title]).toEqual([TORRE.author, TORRE.author]);
+    expect(comunitatT.avatar_url).toBe(TORRE.avatar_url);
+    expect([avisos.avatar_url, general.avatar_url]).toEqual([null, null]);
     expect(comunitatT.searchText).toBe(`${TORRE.author} bon dia`.toLowerCase());
     expect([avisos.name, general.name]).toEqual(['Avisos', 'General']);
     expect(vestits.slice(0, 3).map((fil) => fil.subjecte.titol)).toEqual([TORRE.author, TORRE.author, TORRE.author]);

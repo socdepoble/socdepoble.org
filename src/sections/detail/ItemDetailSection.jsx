@@ -13,13 +13,21 @@ import { paginaDElement, trobaElement, useElementDeSeccio, useLogoEntitatDElemen
 import { ProveidorSincronitzacioTargetes } from './SincronitzacioTargetes.jsx';
 import { Carregant } from '../../components/PedraSeca/atoms/estats.jsx';
 
+function useSessioSegura() {
+  try {
+    return useSession();
+  } catch {
+    return null;
+  }
+}
+
 export default function ItemDetailSection() {
   const { events, feedPosts, marketItems } = useMur();
   const { towns } = useCoreContent();
   const { notes, status: estatNotes } = useNotesData();
   const { mediaItems } = useMultimedia();
   const { t } = useUIActions();
-  const { rol } = useSession();
+  const { rol = null } = useSessioSegura() ?? {};
   const { sectionId, itemId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();

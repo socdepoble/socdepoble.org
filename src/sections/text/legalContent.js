@@ -13,7 +13,7 @@ export const legalContent = {
     <p><em>Versió 2.0 · En vigor des del 9 de setembre de 2026. Substitueix qualsevol versió anterior d'aquest text.</em></p>
 
     <h3>0. Com llegir aquest document</h3>
-    <p>Ací dins hi ha tres coses, en aquest ordre. Primer, <strong>l'avís legal</strong>: qui hi ha darrere d'aquesta web i de què respon. Segon, la <strong>política de privacitat</strong>: què fem amb les teues dades i quins drets tens. Tercer, l'<strong>emmagatzematge al teu dispositiu</strong>: què deixem al teu navegador i per què.</p>
+    <p>Ací dins hi ha quatre coses, en aquest ordre. Primer, <strong>l'avís legal</strong>: qui hi ha darrere d'aquesta web i de què respon. Segon, la <strong>política de privacitat</strong>: què fem amb les teues dades i quins drets tens. Tercer, l'<strong>emmagatzematge al teu dispositiu</strong>: què deixem al teu navegador i per què. I quart, els <strong>reconeixements</strong>: les fonts, comunitats i divulgadors dels quals ens nodrim i aprenem.</p>
     <p>Hem intentat escriure-ho com si t'ho contàrem a la plaça. Quan hem hagut de posar un article de llei és perquè la llei ens obliga a citar-lo, no per fer-ho difícil.</p>
 
     <hr />
@@ -188,6 +188,22 @@ export const legalContent = {
     <h4>22. Com esborrar-ho tot</h4>
     <p>Tanca la pestanya i l'emmagatzematge de sessió desapareix sol. Per a l'emmagatzematge local, buida les dades del lloc des dels ajustos del teu navegador, o desinstal·la l'aplicació de la pantalla d'inici si l'hi tens. Amb això, el teu dispositiu queda net.</p>
     <p>Recorda que això <strong>només esborra el teu telèfon</strong>. Per a esborrar les dades del servidor, has de demanar la supressió tal com t'expliquem a l'apartat 16.</p>
+
+    <hr />
+
+    <h3>RECONEIXEMENTS I FONTS D'INSPIRACIÓ</h3>
+
+    <h4>23. Agraïments a la comunitat divulgadora i de codi obert</h4>
+    <p>A Sóc de Poble creiem en la generositat del coneixement compartit, en la cultura lliure i en el deure ètic de citar les fonts. Cap eina naix del no-res. Algunes de les nostres millores tecnològiques, fluxos de treball i components s'han nodrit directament del treball, el codi o les idees de divulgadors i creadors excepcionals que comparteixen solucions obertes amb la comunitat:</p>
+    <ul>
+      <li><strong>Emowe (Marcos)</strong> (<a href="https://emowe.com" target="_blank" rel="noopener noreferrer">emowe.com</a> / <a href="https://emowe.com/blog" target="_blank" rel="noopener noreferrer">blog</a> / <a href="https://www.youtube.com/@emowe" target="_blank" rel="noopener noreferrer">YouTube @emowe</a>) — pel seu desenvolupament i codi de la plantilla del mapa fotogràfic interactiu («El mapa de tu viaje con IA»), font directa d'inspiració per al nostre visualitzador territorial de fotos i targetes geolocalitzades amb privacitat des del dispositiu, així com per la seua metodologia de <em>Cerebro Digital</em> i arquitectura d'agents d'IA (sandboxes, perímetres per escrit, arnesos, operació atòmica basada en fitxers i gestió termodinàmica de tokens), que tant han aportat a la governança del nostre Mas.</li>
+      <li><strong>Xavier Mitjana</strong> (<a href="https://iaenaccion.com" target="_blank" rel="noopener noreferrer">iaenaccion.com</a> / <a href="https://www.youtube.com/@XavierMitjana" target="_blank" rel="noopener noreferrer">YouTube @XavierMitjana</a>) — pel seu projecte <em>IA en Acción</em> i la seua extraordinària tasca de formació i divulgació pràctica d'intel·ligència artificial, models de llenguatge i fluxos de treball, de la qual ens nodrim habitualment per a crear i millorar les eines d'aquest ecosistema.</li>
+      <li><strong>Jon Hernández</strong> (<a href="https://www.jonhernandez.education" target="_blank" rel="noopener noreferrer">jonhernandez.education</a> / <a href="https://www.youtube.com/@la_inteligencia_artificial" target="_blank" rel="noopener noreferrer">YouTube @la_inteligencia_artificial</a>) — divulgador i formador clau de referència sobre les novetats, l'impacte i les eines d'intel·ligència artificial (generació multimèdia, models visuals, agents i evolució tecnològica), per la seua capacitat pedagògica per a explicar aquesta revolució amb esperit crític, claredat i rigor perquè tothom puga entendre-la.</li>
+      <li><strong>Ben Cord (Benjamín Cordero)</strong> (<a href="https://www.youtube.com/@bencord" target="_blank" rel="noopener noreferrer">YouTube @bencord</a> / comunitat <a href="https://www.skool.com/imperio/about" target="_blank" rel="noopener noreferrer">Imperio a Skool</a>) — divulgador i especialista en automatitzacions, agents autònoms i <em>vibe coding</em>, pel seu enfocament pràctic per a connectar models d'IA amb eines d'execució i per la seua pedagogia per a estructurar sistemes de treball àgils sense burocràcia inútil.</li>
+      <li><strong>Migue Baena</strong> (<a href="https://www.youtube.com/@MigueBaenaIA" target="_blank" rel="noopener noreferrer">YouTube @MigueBaenaIA</a>) — divulgador especialitzat en intel·ligència artificial aplicada, enginyeria de <em>prompts</em> i l'ecosistema de <strong>Claude</strong> (Anthropic), projectes, <em>skills</em> i fluxos de treball pràctics de programació i productivitat, per la seua capacitat per a aterrar l'ús avançat d'assistents cognitius al dia a dia real.</li>
+      <li><strong>Projectes i biblioteques de programari lliure</strong> — especialment el projecte <strong>Leaflet</strong> (<a href="https://leafletjs.com" target="_blank" rel="noopener noreferrer">leafletjs.com</a>) i la comunitat global d'<strong>OpenStreetMap</strong> (<a href="https://www.openstreetmap.org" target="_blank" rel="noopener noreferrer">openstreetmap.org</a>), pilars indispensables per a la sobirania cartogràfica sense dependre de monopolis privatius. També l'eina oberta <strong>REA</strong> (<a href="https://github.com/morluto/rea" target="_blank" rel="noopener noreferrer">github.com/morluto/rea</a>) de <em>morluto</em>, de deconstrucció d'interfícies web i enginyeria inversa a components de codi per a analitzar, calcar funcionalitats clau i aprendre de patrons d'experiència d'usuari i arquitectura lliure.</li>
+    </ul>
+    <p>Reconéixer qui t'ha ensenyat el camí és una regla bàsica de poble. Des d'ací, el nostre agraïment sincer.</p>
 
     <hr />
 

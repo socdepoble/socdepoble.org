@@ -3,10 +3,10 @@
   "turn_id": "torn_7029462e-87cc-472a-b96e-a87df295d54e",
   "actor": "maria",
   "scope": "documents",
-  "state": "context_loaded",
-  "revision": 12,
+  "state": "closed",
+  "revision": 13,
   "createdAt": "2026-10-13T12:01:06.736Z",
-  "updatedAt": "2026-10-13T12:31:13.272Z",
+  "updatedAt": "2026-10-14T14:40:54.443Z",
   "expiresAt": "2026-10-14T12:01:06.737Z",
   "contractHash": "6a1959a7c85620476e8cb465609d6b2e56cbcc2c380e5faf3c14267bee1163fa",
   "humanInventoryVersion": 1,
@@ -3829,6 +3829,12 @@
       "state": "context_loaded",
       "action": "context",
       "at": "2026-10-13T12:31:13.272Z"
+    },
+    {
+      "state": "closed",
+      "action": "expire-close",
+      "previousState": "context_loaded",
+      "at": "2026-10-14T14:40:54.443Z"
     }
   ]
 }

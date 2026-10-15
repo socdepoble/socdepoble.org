@@ -184,13 +184,13 @@ const ESTAT_APROVAT = {
 };
 const AVUI = () => new Date(2026, 9, 2, 12, 0, 0);
 
-function munta({ estatTractors = ESTAT_APROVAT, entorn, descarrega = vi.fn(), onObreTractors = vi.fn() } = {}) {
+function munta({ estatTractors = ESTAT_APROVAT, entorn, descarrega = vi.fn(), onObreTractors = vi.fn(), onFactures } = {}) {
   const carpeta = entorn ? { entorn, escrits: [] } : entornAmbCarpeta();
   const vista = render(
     <PanellGestoria obteAprovacio={obteAprovacio} estatTractors={estatTractors} onObreTractors={onObreTractors}
-      subtle={subtle} inflate={null} entorn={carpeta.entorn} avui={AVUI} descarrega={descarrega} />
+      subtle={subtle} inflate={null} entorn={carpeta.entorn} avui={AVUI} descarrega={descarrega} onFactures={onFactures} />
   );
-  return { ...vista, ...carpeta, descarrega, onObreTractors };
+  return { ...vista, ...carpeta, descarrega, onObreTractors, onFactures };
 }
 
 const boto = (nom) => screen.getByRole('button', { name: nom });
@@ -673,6 +673,46 @@ describe('pas 4 i 5: la proposta, els fitxers i el correu', () => {
     fireEvent.click(within(await screen.findByRole('dialog', { name: 'Ja hi ha este fitxer a la carpeta' })).getByRole('button', { name: 'Sí, substituïx-lo' }));
     await waitFor(() => expect(escrits).toHaveLength(1));
     expect(status().textContent).toBe(`Substituït: «2026_3T/${NOM_XLSX}».`);
+  });
+});
+
+/* Ordre del Mestre, 14-10-2026 (prompt 261014_2015, punt 3): el cable cap a la closca porta també el titular i els
+   entregables del full generat, per a la «Plantilla Gestoria» del Quadre de comandament. */
+describe('el cable cap al Quadre de comandament: titular i entregables', () => {
+  const darrer = (espia) => espia.mock.calls[espia.mock.calls.length - 1][0];
+
+  test('null abans de generar, els entregables del full després de «Genera el full», null en editar i el cable null en desenxufar', async () => {
+    const onFactures = vi.fn();
+    const { descarrega } = await analitzat({ onFactures });
+    expect(darrer(onFactures)).toMatchObject({ any: 2026, t: 3, titular: TITULAR, entregables: null });
+    expect(darrer(onFactures).factures.length).toBeGreaterThan(0);
+
+    fireEvent.click(screen.getByRole('checkbox', { name: /He revisat la proposta/ }));
+    fireEvent.click(screen.getByRole('checkbox', { name: /Genera-la igualment/ }));
+    fireEvent.click(boto('Genera el full'));
+    await screen.findByRole('heading', { level: 3, name: 'Fitxers generats' });
+    await waitFor(() => expect(darrer(onFactures).entregables).not.toBeNull());
+    const ambFull = darrer(onFactures);
+    expect(ambFull).toMatchObject({ any: 2026, t: 3, titular: TITULAR });
+    expect(ambFull.entregables.xlsx.nom).toBe(NOM_XLSX);
+    expect(ambFull.entregables.xlsx.tipus).toBe(TIPUS_XLSX);
+    expect(ambFull.entregables.full.files.length).toBeGreaterThan(0);
+    // Els mateixos bytes que descarrega el pas 4: els de la segona aprovació.
+    fireEvent.click(within(pas(4)).getByRole('button', { name: 'Descarrega l’XLSX' }));
+    expect(ambFull.entregables.xlsx.dades).toEqual(descarrega.mock.calls[0][0].dades);
+
+    const descripcio = screen.getByRole('textbox', { name: 'Concepte, despesa 1' });
+    fireEvent.change(descripcio, { target: { value: 'Servei al núvol de juliol' } });
+    fireEvent.blur(descripcio);
+    await waitFor(() => expect(darrer(onFactures).entregables).toBeNull());
+    expect(darrer(onFactures).titular).toBe(TITULAR);
+    expect(darrer(onFactures).factures.some((f) => f.descripcio === 'Servei al núvol de juliol')).toBe(true);
+
+    fireEvent.click(boto('Desenxufa'));
+    await act(async () => {
+      fireEvent.click(within(screen.getByRole('dialog', { name: 'Vols desenxufar la Gestoria?' })).getByRole('button', { name: 'Sí, desenxufa' }));
+    });
+    expect(darrer(onFactures)).toBeNull();
   });
 });
 

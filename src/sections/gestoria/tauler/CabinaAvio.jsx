@@ -24,6 +24,21 @@
  * pinta. Les dates (la de referència i els venciments) es veuen sempre.
  * Cap encapçalament porta dades: l'Índex n'escriu el text a la URL (?seccio=).
  * La munta la closca (ShellGestoria), mai Tauler.jsx: en fa servir les peces.
+ *
+ * Ordre del Mestre, 14-10-2026 (prompt 261014_2015, punts 2, 3 i 4): la
+ * Cabina d'Avió es diu «Quadre de comandament», i després dels Venciments hi
+ * ha dues seccions més, apilades com les altres (la pantalla de sempre no
+ * canvia: Llei del Píxel):
+ *   · FACTURES QUE FALTEN (la penúltima) · el que calcula la closca amb
+ *     nucli/facturesQueFalten.js (`falten`): per proveïdor habitual i mes, les
+ *     que falten, les que en falta alguna i, si el banc té un únic càrrec que
+ *     hi casa, la data i l'import d'eixe càrrec (amagat amb l'ull tancat).
+ *     Són indicis per a revisar: la gestoria decidix el trimestre de cada
+ *     factura. On demanar-la és el domini públic del proveïdor, en text: cap
+ *     enllaç ix d'ací.
+ *   · PLANTILLA GESTORIA (l'última) · el node que dona la closca
+ *     (`plantilla`, PlantillaGestoria.jsx, del tractor de factures): este
+ *     fitxer no importa res del full, perquè el Tauler no escriu res.
  */
 import { useId } from 'react';
 import { EyeOff, FileSearch } from 'lucide-react';
@@ -31,7 +46,7 @@ import { EstatBuit } from '../../../components/PedraSeca/atoms/estats.jsx';
 import { Alerta } from '../../../components/PedraSeca/molecules/Alerta.jsx';
 import { Histograma } from '../../../components/PedraSeca/organismes/Histograma.jsx';
 import { Taula } from '../../../components/PedraSeca/organismes/Taula.jsx';
-import { nomMes } from '../nucli/dates.js';
+import { formatData, nomMes } from '../nucli/dates.js';
 import { formatImport } from '../nucli/diners.js';
 import { MONEDA_TAULER } from './nucli/resumTauler.js';
 import { AvisosComptes, Xifra, XifraDeFila } from './Tauler.jsx';
@@ -122,17 +137,104 @@ function TaulaFlux({ mesos, visible }) {
   );
 }
 
+/* L'estat d'un mes que falta, en paraules (els complets i els que encara han de vindre no es pinten). */
+const ESTATS_QUE_FALTEN = Object.freeze({
+  falta: 'Falta',
+  'falta-amb-pagament': 'Falta, i el banc té el càrrec',
+  'potser-falta': 'En falta alguna'
+});
+const nomDeClauMes = (clau) => {
+  const [any, mes] = String(clau).split('-').map(Number);
+  return Number.isInteger(any) && Number.isInteger(mes) ? `${nomMes(mes, 'ca', { majuscula: true })} ${any}` : String(clau);
+};
+
+/* Per què un mes que falta no porta el càrrec (facturesQueFalten, `sensePagament`). Revisió adversarial 14-10-2026:
+   «cap càrrec» només quan no n'hi ha cap; quan n'hi ha diversos o no s'ha buscat, es diu això. Cap text porta xifres. */
+const SENSE_PAGAMENT = Object.freeze({
+  'sense-extracte': 'Sense extracte del mes',
+  'sense-historial': 'Sense historial per a buscar-lo',
+  cap: 'Cap càrrec que hi case',
+  diversos: 'Diversos càrrecs hi podrien casar',
+  compartit: 'Un càrrec que també podria ser d’un altre mes',
+  'no-cercat': 'Ja n’hi ha alguna: no es busca'
+});
+
+/* La cel·la del pagament: amb un únic càrrec que hi casa, el dia i l'import (amagat); si no, per què no n'hi ha. */
+function CellaPagament({ mes, visible }) {
+  if (!mes.pagament) {
+    const motiu = SENSE_PAGAMENT[mes.sensePagament] ?? (mes.banc === 'sense-extracte' ? SENSE_PAGAMENT['sense-extracte'] : '—');
+    return <td className="sdp-gestoria-comprimida__motiu"><span className="sdp-gestoria-comprimida__sense">{motiu}</span></td>;
+  }
+  return (
+    <td className="sdp-num">
+      <span>{formatData(mes.pagament.data, 'dd/mm/aaaa')} · </span>
+      <Xifra xifra={IMPORT(mes.pagament.centims)} visible={visible} />
+    </td>
+  );
+}
+
+/* La secció «Factures que falten»: indicis per a revisar, mai veredictes. */
+function FacturesQueFalten({ falten, visible }) {
+  if (!falten || falten.estat === 'sense-full') {
+    return <p className="sdp-gestoria-cabina__nota">Analitza el trimestre al Full trimestral: amb les seues factures i els extractes del banc, ací es diu quines factures habituals podrien faltar.</p>;
+  }
+  if (falten.estat === 'error') {
+    return <p className="sdp-gestoria-cabina__nota">No s’ha pogut creuar el Full trimestral amb els extractes: revisa’ls al Full.</p>;
+  }
+  const { resultat } = falten;
+  const files = (resultat?.linies ?? []).flatMap((linia) => (linia.mesos ?? [])
+    .filter((mes) => Object.hasOwn(ESTATS_QUE_FALTEN, mes.estat))
+    .map((mes) => ({ linia, mes })));
+  return (
+    <>
+      <p className="sdp-gestoria-cabina__nota">{`Del Full del ${falten.t}T ${falten.any}, amb els extractes que has triat. Són indicis per a revisar: la gestoria decidix el trimestre de cada factura.`}</p>
+      {files.length ? (
+        <Taula titol="Taula · Factures que falten" densa className="sdp-gestoria-comprimida">
+          <thead>
+            <tr>
+              <th scope="col">Proveïdor</th><th scope="col">Mes</th><th scope="col">Estat</th><th scope="col">Càrrec al banc</th><th scope="col">On demanar-la</th>
+            </tr>
+          </thead>
+          <tbody>
+            {files.map(({ linia, mes }) => (
+              <tr key={`${linia.clau}-${mes.mes}`}>
+                <th scope="row">{linia.nom}</th>
+                <td>{nomDeClauMes(mes.mes)}</td>
+                <td>{ESTATS_QUE_FALTEN[mes.estat]}</td>
+                <CellaPagament mes={mes} visible={visible} />
+                <td>{linia.domini ?? 'La seua àrea de clients o el correu'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </Taula>
+      ) : (
+        <p className="sdp-gestoria-cabina__nota">Cap proveïdor habitual no té cap mes sense factura amb les dades d’este Full.</p>
+      )}
+      {resultat?.incidencies?.length ? (
+        <Alerta to="info" viva={false} titol="Altres indicis del trimestre">
+          <ul className="sdp-gestoria-tauler__avisos">
+            {resultat.incidencies.map((inc, i) => <li key={`${inc.codi}-${i}`}>{inc.missatge}</li>)}
+          </ul>
+        </Alerta>
+      ) : null}
+    </>
+  );
+}
+
 /**
- * La Cabina d'Avió.
- * @param {{ dades: object, visible?: boolean, onObri?: (idTargeta: string) => void }} p `dades`: les de
- *   dadesDelTauler (amb `cabina` i `avisos`); `visible`: l'ull de la boina; `onObri`: obri la pàgina d'una targeta
+ * El Quadre de comandament (abans, la Cabina d'Avió).
+ * @param {{ dades: object, visible?: boolean, onObri?: (idTargeta: string) => void, falten?: object|null,
+ *   plantilla?: import('react').ReactNode }} p `dades`: les de dadesDelTauler (amb `cabina` i `avisos`); `visible`:
+ *   l'ull de la boina; `onObri`: obri la pàgina d'una targeta; `falten`: el que calcula la closca amb
+ *   facturesQueFalten ({ estat: 'sense-full' | 'error' | 'fet', any, t, resultat }); `plantilla`: el node de la
+ *   «Plantilla Gestoria» que dona la closca
  */
-export function CabinaAvio({ dades, visible = false, onObri }) {
+export function CabinaAvio({ dades, visible = false, onObri, falten = null, plantilla = null }) {
   const id = useId();
   const { cabina } = dades;
   return (
     <section className="sdp-gestoria-cabina" aria-labelledby={`${id}-cabina`}>
-      <h2 id={`${id}-cabina`} className="sdp-gestoria-tauler__titol">Cabina d’Avió</h2>
+      <h2 id={`${id}-cabina`} className="sdp-gestoria-tauler__titol">Quadre de comandament</h2>
       <AvisosComptes avisos={dades.avisos ?? []} />
       <p className="sdp-gestoria-cabina__nota">{cabina.referencia}</p>
       {cabina.avisFrescor ? <Alerta to="avis" viva={false} titol="Extractes antics">{cabina.avisFrescor}</Alerta> : null}
@@ -166,6 +268,16 @@ export function CabinaAvio({ dades, visible = false, onObri }) {
           <p className="sdp-gestoria-cabina__nota">Sense el dia d’avui no es poden dir els venciments.</p>
         )}
         <p className="sdp-gestoria-cabina__nota">{cabina.notaTerminis}</p>
+      </section>
+
+      <section className="sdp-gestoria-cabina__bloc" aria-labelledby={`${id}-falten`}>
+        <h3 id={`${id}-falten`} className="sdp-gestoria-cabina__seccio">Factures que falten</h3>
+        <FacturesQueFalten falten={falten} visible={visible} />
+      </section>
+
+      <section className="sdp-gestoria-cabina__bloc" aria-labelledby={`${id}-plantilla`}>
+        <h3 id={`${id}-plantilla`} className="sdp-gestoria-cabina__seccio">Plantilla Gestoria</h3>
+        {plantilla ?? <p className="sdp-gestoria-cabina__nota">El full de la gestoria el prepara el Full trimestral.</p>}
       </section>
     </section>
   );

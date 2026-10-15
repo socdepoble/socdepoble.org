@@ -36,13 +36,39 @@
  * envia cap Referer (referrerPolicy="no-referrer"): el detall del Lector hi
  * pot passar el logo d'una font de fora sense dir-li qui el llig. Un atribut,
  * cap píxel.
+ *
+ * Ordre del Mestre, 14-10-2026 (prompt 261014_2015, punt 4; decisió de les
+ * 21:20): la referència opaca d'una pujada ('sdp-media://') es resol pel port
+ * amb useResolvedAsset abans de passar per fontSegura; mentre es resol, o si
+ * no es pot, la silueta honesta, mai la referència crua. Ací el filtre és
+ * resolveAsset i isSafeAsset (la barra no usa fontSegura): rep la URL que
+ * torna el port, mai la referència. Derogat EN PART el contracte d'authorAvatar
+ * («ruta crua: es resol i es valida ací»): una 'sdp-media://…' ja no passa per
+ * resolveAsset, que la convertia en '/sdp-media://…', un camí del mateix
+ * origen que isSafeAsset deixava passar (una imatge trencada demanada al
+ * nostre servidor), sinó pel port. Si el port torna encara la referència o
+ * res, o la capacitat 'mitjans' no hi és, el cercle de reserva. La resta de
+ * fonts, el camí de sempre (Llei del Píxel).
+ * Revisió adversarial, 14-10-2026 · La referència es demana al port amb
+ * l'esquema en minúscules i sense espais (refDelPort, el mateix que a
+ * PaginaApp i UniversalCard): useResolvedAsset només reconeix 'sdp-media://'
+ * escrit així, i un 'SDP-MEDIA://…' tornava '/SDP-MEDIA://…' del resolutor de
+ * camins i es pintava.
  */
 import { UserRound } from 'lucide-react';
 import { resolveAsset } from '../../../config/assetResolver';
+import { useResolvedAsset } from '../../../hooks/useResolvedAsset.js';
+import { esMitjaOpac } from '../../../utils/mitjaOpac.js';
 import { DateTimeControl } from '../../PedraSeca/atoms/controls.jsx';
 import { isSafeAsset, rutaDAutorSegura } from '../UniversalUtils';
 import { EmoticonaBarra } from '../EmoticonaBarra.jsx';
 import { emoticonaDeBarra } from '../../../utils/emoji.js';
+
+/* Ordre del Mestre, 14-10-2026 (prompt 261014_2015, punt 4) · El que es
+   demana al port: només una referència opaca, sense espais i amb l'esquema
+   en minúscules (vegeu la capçalera). Qualsevol altra font, '': el ganxo no
+   fa res. */
+const refDelPort = (src) => (esMitjaOpac(src) ? src.trim().replace(/^sdp-media:/i, 'sdp-media:') : '');
 
 export function BarraTaronja({
   authorName, authorLocation, authorAvatar, authorHref = null, LinkComponent = 'a',
@@ -51,7 +77,10 @@ export function BarraTaronja({
   time, date, dateTime, onDateTime, etiquetaData,
   etiqueta = 'Autoria i data',
 }) {
-  const resolt = typeof authorAvatar === 'string' ? resolveAsset(authorAvatar) : null;
+  /* El ganxo es crida sempre, el primer: sense referència opaca rep '' i no fa res. */
+  const avatarDelPort = useResolvedAsset(refDelPort(authorAvatar));
+  const fontAvatar = esMitjaOpac(authorAvatar) ? avatarDelPort : authorAvatar;
+  const resolt = typeof fontAvatar === 'string' && fontAvatar && !esMitjaOpac(fontAvatar) ? resolveAsset(fontAvatar) : null;
   const avatar = isSafeAsset(resolt) ? resolt : null;
   const href = rutaDAutorSegura(authorHref);
   const Autor = href ? (LinkComponent === 'a' ? 'a' : LinkComponent) : 'div';

@@ -19,7 +19,7 @@ afterEach(() => {
   cleanup();
   m.core = { personalitzacio: null };
   fulls().forEach((n) => n.remove());
-  document.body.innerHTML = '';
+  document.body.replaceChildren();
 });
 
 function Arrel({ children }) {

@@ -21,6 +21,7 @@
  */
 import { useMemo } from 'react';
 import { useMur } from '../mur/MurContext';
+import { usePaginesDelSistema } from '../mur/usePublicacionsDeLActor.js';
 import { publicacionsDelPoble } from './publicacionsDelPoble.js';
 
 const CAP = Object.freeze([]);
@@ -46,7 +47,11 @@ export function textosDelPoble(t = senseTraduccio) {
 /** Les publicacions del poble `poble` (una fitxa de /pobles), amb l'estat, l'error i el Reintentar del Mur. */
 export function usePublicacionsDelPoble(poble) {
   const mur = useMur();
-  const feedPosts = mur?.feedPosts || CAP;
+  const { targetes: sistema, carregant: paginesCarregant } = usePaginesDelSistema();
+  const delMur = mur?.feedPosts || CAP;
+  const estatDelMur = mur?.status ?? 'ready';
+  const ambSistema = sistema.length > 0 && estatDelMur === 'ready';
+  const feedPosts = useMemo(() => (ambSistema ? [...delMur, ...sistema] : delMur), [ambSistema, delMur, sistema]);
   const marketItems = mur?.marketItems || CAP;
   const events = mur?.events || CAP;
   /* La clau del poble, no l'objecte: la fitxa pot arribar com un objecte nou
@@ -58,7 +63,7 @@ export function usePublicacionsDelPoble(poble) {
     () => publicacionsDelPoble({ feedPosts, marketItems, events }, { id, slug, title: nom }),
     [feedPosts, marketItems, events, id, slug, nom]
   );
-  const estat = mur?.status ?? 'ready';
+  const estat = estatDelMur === 'ready' && paginesCarregant ? 'loading' : estatDelMur;
   const error = mur?.error ?? null;
   const refresh = typeof mur?.refresh === 'function' ? mur.refresh : null;
   return useMemo(() => ({ elements, estat, error, refresh }), [elements, estat, error, refresh]);

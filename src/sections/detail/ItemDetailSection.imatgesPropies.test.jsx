@@ -520,7 +520,7 @@ describe('Onada 5 · la pàgina d’un poble', () => {
     expect(container.querySelector('.content-wrapper > .badge-row').nextElementSibling).toBe(barra);
   });
 
-  test('Onada 6 · el panell porta les targetes del poble en l’ordre del Mur, i cap d’un altre poble ni del sistema', async () => {
+  test('Onada 6 · el panell porta totes les targetes del poble (incloses les del sistema) en l’ordre del Mur, i cap d’un altre poble', async () => {
     const container = pintaAmbMur(POBLE, {
       feedPosts: [
         { id: 'f1', type: 'feed', title: 'Festa de la Torre', author_location: 'La Torre de les Maçanes', created_at: '2026-09-02T10:00:00Z' },
@@ -531,8 +531,8 @@ describe('Onada 5 · la pàgina d’un poble', () => {
       marketItems: [{ id: 'm1', type: 'product', title: 'Mel de romer', population: 'La Torre de les Maçanes', created_at: '2026-09-04T10:00:00Z' }]
     });
     const panell = container.querySelector('[role="tabpanel"]');
-    await waitFor(() => expect(panell.querySelectorAll('article.sp-card')).toHaveLength(3));
-    expect([...panell.querySelectorAll('.sp-card-title')].map((e) => e.textContent)).toEqual(['Mel de romer', 'Festa de la Torre', 'Declarada']);
+    await waitFor(() => expect(panell.querySelectorAll('article.sp-card')).toHaveLength(4));
+    expect([...panell.querySelectorAll('.sp-card-title')].map((e) => e.textContent)).toEqual(['Mel de romer', 'Festa de la Torre', 'Declarada', 'Pàgina del sistema']);
     // Només les targetes: cap capçalera dins del panell (la pestanya ja el nomena).
     expect(panell.querySelector('h2')).toBeNull();
   });

@@ -5362,8 +5362,8 @@ details[open] summary.accordion-header svg:last-child {
   .sdp-telemetria {
     display: grid;
     gap: var(--sdp-space-4);
-    max-width: 68ch;
-    margin: var(--sdp-space-8) auto 0;
+    width: 100%;
+    margin-block-start: var(--sdp-space-8);
     padding-block-start: var(--sdp-space-8);
     border-block-start: 1px solid var(--sdp-vora);
   }
