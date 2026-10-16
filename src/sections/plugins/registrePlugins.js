@@ -67,6 +67,8 @@
  *     amb el Panell i eixe text només ha de viatjar amb la pàgina.
  *   · imatge · la il·lustració de MarIA, /assets/ui/plugins/<id>_vinyeta.jpg
  *     (public/). És la portada (Hero) de la pàgina i la imatge de la targeta.
+ *     Gauntlet 261016 (Bloc 1, Llei del Quadrat) · La del TPV del Bar és
+ *     tpv_vinyeta.webp (extensioImatge); la resta, .jpg com sempre.
  *   · obrir  · la ruta de l'app o de la secció QUE JA EXISTIX, o null («en
  *     obres»). Cap ruta inventada: registrePlugins.test.js comprova que cada
  *     una la servix App de veres. Una ruta /app/<id>/… és d'una app de la
@@ -131,16 +133,19 @@ export const RUTA_PLUGINS = '/plugin';
    del 261010, M4) · opcionals: sense, null i una llista buida (el plugin es
    pinta com sempre). La llista i cada etiqueta ixen congelades, i de cada
    etiqueta només passen `text` i `className`: cap `href` ni cap gestor pot
-   entrar al registre per ací. */
+   entrar al registre per ací.
+   extensioImatge · Gauntlet 261016 (Bloc 1, Llei del Quadrat) · opcional:
+   l'extensió de la il·lustració, 'jpg' si no ve (la imatge de sempre). Només
+   decidix la ruta de `imatge`: no és cap camp nou del plugin. */
 const plugin = ({
   id, titol, subtitol, entradilla, imatgeAlt, obrir = null, entorn = null, espai = null, etiquetaObrir,
-  data = null, etiquetes = []
+  data = null, etiquetes = [], extensioImatge = 'jpg'
 }) => Object.freeze({
   id,
   titol,
   subtitol,
   entradilla,
-  imatge: `${IMATGES_PLUGINS}/${id}_vinyeta.jpg`,
+  imatge: `${IMATGES_PLUGINS}/${id}_vinyeta.${extensioImatge}`,
   imatgeAlt,
   obrir,
   entorn,
@@ -305,7 +310,11 @@ export const PLUGINS = Object.freeze([
     obrir: rutaDeApp('bar'),
     etiquetaObrir: 'Obrir el Bar',
     data: DATA_DE_L_ORDRE,
-    etiquetes: classificacio('Hostaleria')
+    etiquetes: classificacio('Hostaleria'),
+    /* Gauntlet 261016 (Bloc 1, Llei del Quadrat) · La vinyeta nova, el
+       mateix cambrer: 1.200 × 1.200 en WebP de menys de 80 KB. El .jpg
+       d'abans es conserva al disc (cap esborrat). */
+    extensioImatge: 'webp'
   })
   /* Ordre del Mestre (261007) · Bàscula descartada per ara: ja no és cap
      plugin. Viu només com a llavor del Full de ruta (vegeu la capçalera). */

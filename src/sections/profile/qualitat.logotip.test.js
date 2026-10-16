@@ -44,7 +44,17 @@ const FITXERS = Object.freeze([
   'src/sections/profile/enquadramentAvatar.limits.test.jsx',
   'src/sections/profile/enquadramentAvatar.privacitat.test.jsx',
   'src/sections/profile/PerfilPublicSection.jsx',
-  'src/sections/disseny/cataleg/detalls/EspecimenEnquadrament.jsx'
+  'src/sections/disseny/cataleg/detalls/EspecimenEnquadrament.jsx',
+  /* Gauntlet 261016 (Bloc 1, Llei del Quadrat) · La font única de les mides
+     i del fitxer de la pujada, que useHeroImageHandler i la finestra de
+     retall importen, i la seua prova. */
+  'src/utils/pujadaImatge.js',
+  'src/utils/pujadaImatge.test.js',
+  /* Gauntlet 261016 (Bloc 1.2) · L'EXIF conservat de sèrie: el mòdul pur que
+     el prepara i l'incrusta, la seua prova i la de la casella del diàleg. */
+  'src/components/universal/enquadrament/exifIncrustat.js',
+  'src/components/universal/enquadrament/exifIncrustat.test.js',
+  'src/components/universal/enquadrament/DialegEnquadrament.exif.test.jsx'
 ]);
 
 const llig = (ruta) => readFileSync(path.join(ARREL, ruta), 'utf8');

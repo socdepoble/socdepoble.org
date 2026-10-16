@@ -16,8 +16,9 @@
  *   · cos-<hash>.js     · el cos, un script clàssic (IIFE) que en executar-se
  *                         crida SocDePoble.lliuraCos('<id>', () => Component).
  *                         No porta React, ni la plataforma, ni el router, ni
- *                         la Pedra Seca: els pren de SocDePoble.nucli, les
- *                         portes de src/apps/plataforma/contracteNucli.js.
+ *                         la Pedra Seca, ni l'espai de treball (1.2.0): els
+ *                         pren de SocDePoble.nucli, les portes de
+ *                         src/apps/plataforma/contracteNucli.js.
  *   · estils-<hash>.css · si el cos importa CSS (el 261009, cap app ho fa).
  *   · modul.js          · el registre, un script clàssic menut que crida
  *                         SocDePoble.registraModul(manifest) amb l'URL del
@@ -28,11 +29,11 @@
  *
  * Guardes (el build s'atura): un React, un react-dom o un scheduler propis;
  * qualsevol fitxer de src/app/contexts, src/data, host.js o config/storage.js
- * dins del cos (el Model B i els contexts de la pàgina); plataforma o Pedra
- * Seca que no siguen del nucli; un nom que el nucli no exposa; un import()
- * que no s'haja pogut inlinar; qualsevol canal de xarxa; un magatzem del
- * navegador que el mòdul no declara; i una URL de fora que no siga una dada
- * declarada pel mòdul (src/apps/plataforma/guardesDelModul.js).
+ * dins del cos (el Model B i els contexts de la pàgina); plataforma, Pedra
+ * Seca o espai de treball que no siguen del nucli; un nom que el nucli no
+ * exposa; un import() que no s'haja pogut inlinar; qualsevol canal de xarxa;
+ * un magatzem del navegador que el mòdul no declara; i una URL de fora que no
+ * siga una dada declarada pel mòdul (src/apps/plataforma/guardesDelModul.js).
  *
  * La Gestoria, a més, guarda el seu doble pany: AppGestoria només porta les
  * vistes en desenvolupament (privacitat.test.js). Mentre el Mestre no el
@@ -186,6 +187,10 @@ export function infraccionsDelCos(chunk, arrel, carpeta = null, id = null) {
       trobades.push(`porta el nucli de la pàgina (context, dades o host): ${font}`);
     } else if (/^src\/(?:apps\/plataforma|components\/PedraSeca)\//.test(font)) {
       trobades.push(`porta plataforma o Pedra Seca fora del nucli ${VERSIO_NUCLI}: ${font}`);
+    } else if (/^src\/components\/universal\/workspace\//.test(font)) {
+      /* Nucli 1.2.0 (261016): l'espai de treball és de la pàgina (porta 'workspace'). Una peça de
+         dins al cos seria una segona còpia dels seus contexts (WorkspaceContext, GlifCategoriaContext). */
+      trobades.push(`porta l'espai de treball fora del nucli ${VERSIO_NUCLI}: ${font}`);
     }
   }
   for (const [importat, noms] of Object.entries(chunk.importedBindings || {})) {

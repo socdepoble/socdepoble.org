@@ -169,6 +169,21 @@ test('agents PERSON, COMPANY i AI van al tipus i a la ruta que toquen', () => {
   expect(ia.meta[0]).toBe('Intel·ligència artificial');
 });
 
+/* Gauntlet 261016 (Bloc 3; ordre del Mestre) · Un personatge ANIMAL del
+   catàleg (El Gall, Súper Ratolí, La Mixa, Sultan) és una IA, amb el mateix
+   vocabulari que el directori i el perfil públic (data/agentsSeed.js ·
+   tipusDAgent): l'etiqueta d'IA i la ruta /perfil. Abans eixia com a persona,
+   cap a /gent. El tipus es llig en majúscules o en minúscules, com abans. */
+test('Gauntlet 261016 · un agent ANIMAL és una IA: l’etiqueta d’IA i la seua fitxa d’IA', () => {
+  const etiquetes = { etiquetes: { ia: 'Intel·ligència artificial' } };
+  for (const type of ['ANIMAL', 'animal']) {
+    const gall = deAgent({ id: 'gall', name: 'Marc (El Gall)', type, role: 'Meteo i Alertes', town_name: 'Sella' }, etiquetes);
+    expect([type, gall.tipus, gall.href, gall.meta]).toEqual([type, 'persones', '/perfil/gall', ['Intel·ligència artificial', 'Meteo i Alertes', 'Sella']]);
+  }
+  expect(deAgent({ id: 'ia', name: 'IA', type: 'ai' }, etiquetes).href).toBe('/perfil/ia');
+  expect(deAgent({ id: 'x', name: 'Algú', type: 'DESCONEGUT' }).href).toBe('/gent/x');
+});
+
 test('una persona del padró porta «Escriu-li» cap al xat; la fitxa, només si es pot obrir', () => {
   const fitxes = { fitxesDePersones: true };
   const sense = deMembre(membre('u 9', 'Maria'), fitxes);

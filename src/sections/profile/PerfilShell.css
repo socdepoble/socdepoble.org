@@ -138,8 +138,8 @@
 /* ── Les vistes (DetallVistes, ordre del Mestre 261008) ──
    Els dos botons de la vista A4 (les píndoles de sempre, .sdp-classificacio-
    pindola) en fila i, si no hi caben, en una altra; la targeta viva, amb
-   l'amplària de l'aside de l'editor (--sdp-targeta-viva-ample), arrambada a
-   l'esquerra com la resta dels blocs. */
+   la seua amplària (--sdp-targeta-viva-ample, la de la columna del llistat),
+   arrambada a l'esquerra com la resta dels blocs. */
 .perfil-vistes__botons {
   display: flex;
   flex-wrap: wrap;

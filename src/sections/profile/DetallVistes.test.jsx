@@ -1,6 +1,6 @@
 import React from 'react';
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
-import { afterEach, beforeEach, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 /* ═══════════════════════════════════════════════════════════════════
    Ordre del Mestre (261008) · «LES VISTES»: «Vista A4 / PDF», «Crear
@@ -9,10 +9,24 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest';
    simulen el context del Perfil, la cua d'autodesament (el que encara no ha
    confirmat el servidor), la Pàgina Universal (com a DetallCompte.test) i
    les peces de l'app que la targeta no necessita. Dades sintètiques.
+   Gauntlet 261016 (F1) · El port (la persona de la sessió, updateProfile i
+   updateOrganization) també: les proves del 403, al final, el fan passar per
+   la cua de veres. Sense `m.usuari`, la sessió és la del port de sempre.
    ═══════════════════════════════════════════════════════════════════ */
 
-const m = vi.hoisted(() => ({ perfil: null, pagina: null, desament: null, resolts: [] }));
+const m = vi.hoisted(() => ({
+  perfil: null, pagina: null, desament: null, resolts: [], usuari: null, updateProfile: null, updateOrganization: null,
+}));
 vi.mock('./PerfilContext.jsx', () => ({ usePerfil: () => m.perfil }));
+vi.mock('../../data/backendPort.js', async (importOriginal) => {
+  const original = await importOriginal();
+  return {
+    ...original,
+    getCurrentUser: (...args) => (m.usuari ? m.usuari : original.getCurrentUser(...args)),
+    updateProfile: (...args) => m.updateProfile(...args),
+    updateOrganization: (...args) => m.updateOrganization(...args),
+  };
+});
 vi.mock('../../data/autodesament/useAutodesament.js', () => ({ useAutodesament: (ref) => m.desament(ref) }));
 /* Revisió del prompt 261014_0400 · `resolts`: el que s'ha demanat al port. */
 vi.mock('../../hooks/useResolvedAsset.js', () => ({
@@ -57,6 +71,8 @@ import { AVISOS_TARGETA_VIVA } from '../../components/universal/TargetaViva.jsx'
 import { DEFAULT_AUTHOR } from '../../components/universal/UniversalUtils.js';
 import { ENTITAT_PILOT_ID, ENTITAT_PILOT_SLUG } from '../../data/identitatsSeed.js';
 import { RUTA_PERFIL_PROJECTE } from '../../config/navigation.js';
+import { cuaDesament } from '../../data/autodesament/cua.js';
+import { ambitDe } from '../../data/autodesament/ambit.js';
 
 const NET = Object.freeze({ camps: Object.freeze({}), errors: Object.freeze({}), estat: 'net', problema: null, persistent: true });
 const AUTODESAMENT = Object.freeze({ ambit: 'ambit-A', context: { tenantId: '00000000-0000-4000-8000-000000000000' } });
@@ -75,6 +91,9 @@ beforeEach(() => {
   m.resolts = [];
   m.desament = vi.fn(() => NET);
   m.perfil = { identitats: [jo, forn], autodesament: AUTODESAMENT };
+  m.usuari = null;
+  m.updateProfile = vi.fn(async (canvis) => ({ id: 'U', ...canvis }));
+  m.updateOrganization = vi.fn(async (id, canvis) => ({ id, ...canvis }));
 });
 afterEach(cleanup);
 
@@ -121,7 +140,10 @@ test('la vista targeta: la targeta viva en línia, amb l’autoria de la barra t
   expect(carta.querySelector('.sp-card-text').textContent).toBe('De la Torre de tota la vida');
   expect(carta.querySelector('.sp-card-author-name').textContent).toBe('Pep del Mas');
   expect(carta.querySelector('.sp-card-author-location').textContent).toBe('La Torre');
-  expect(within(carta).getByText('Persona')).toBeTruthy();
+  // Dignitat Humana (pla 261015_1900) · Ni la píndola «Persona» ni drets: el poble ja va a l'autoria.
+  expect(within(carta).queryByText('Persona')).toBeNull();
+  expect(carta.querySelector('.sp-card-labels')).toBeNull();
+  expect(carta.querySelector('.sp-card-copyright')).toBeNull();
   expect(bloc('Vista targeta').textContent).toContain(AVISOS_TARGETA_VIVA.perfil.vista);
   // Cap xip «Vista targeta»: la targeta ja és a la vista.
   expect(screen.queryByRole('button', { name: 'Vista targeta' })).toBeNull();
@@ -130,6 +152,27 @@ test('la vista targeta: la targeta viva en línia, amb l’autoria de la barra t
   const avis = screen.getByRole('dialog', { name: AVISOS_TARGETA_VIVA.perfil.titol });
   expect(avis.textContent).toContain(AVISOS_TARGETA_VIVA.perfil.descripcio);
   expect(avis.textContent).not.toMatch(/Mur/);
+});
+
+/* Directiva de Dignitat Humana (pla 261015_1900, Onada 1.1) · Ni el paper A4,
+   ni la portada, ni la targeta de «Les vistes» d'una persona porten drets
+   d'autor: tampoc amb una llicència desada o un esborrany vell de «Desar
+   autoria» a la cua. Control: l'organització conserva la seua al peu. */
+test('Dignitat Humana · la persona: cap drets al paper A4, a la portada ni a la targeta; l’organització, sí', () => {
+  m.desament = vi.fn((ref) => (ref ? { ...NET, estat: 'pendent', camps: { copyright: 'CC0 1.0' } } : NET));
+  const peus = (paper) => [...paperDom(paper).querySelectorAll('footer')].map((f) => f.textContent).join('|');
+  render(<DetallVistes identitat={{ ...jo, dades: { ...jo.dades, copyright: 'CC BY 4.0' } }} />);
+  expect(targeta().querySelector('.sp-card-copyright')).toBeNull();
+  fireEvent.click(within(bloc('Vista A4 / PDF')).getByRole('button', { name: 'Crear portada' }));
+  const paper = screen.getByTitle('Document A4');
+  expect(paper.getAttribute('srcdoc')).toContain('<section class="cover">');
+  expect(peus(paper)).not.toMatch(/CC BY|CC0|©/);
+  cleanup();
+  m.desament = vi.fn(() => NET);
+  render(<DetallVistes identitat={{ ...forn, dades: { ...forn.dades, copyright: 'CC BY 4.0' } }} />);
+  expect(targeta().querySelector('.sp-card-copyright')?.textContent).toBe('CC BY 4.0');
+  fireEvent.click(within(bloc('Vista A4 / PDF')).getByRole('button', { name: 'Vista A4 / PDF' }));
+  expect(peus(screen.getByTitle('Document A4'))).toContain('CC BY 4.0');
 });
 
 test('l’esborrany que el servidor encara no té es veu al paper i a la targeta (la cua, amb la clau de l’editor)', () => {
@@ -248,4 +291,97 @@ test('qui només n’és membre no llig la cua (com l’editor en lectura); sens
   cleanup();
   const { container } = render(<DetallVistes identitat={null} />);
   expect(container.innerHTML).toBe('');
+});
+
+/* ═══════════════════════════════════════════════════════════════════
+   GAUNTLET 261016 (F1) · «LES VISTES» I L'EDITOR, LA MATEIXA IMATGE
+
+   La regla de font única de l'editor (Bloc 3.5.4, PerfilEditor.jsx:
+   imatgeDeLaFitxa i ambEsborranyDImatge). Abans «Les vistes» llegien
+   identitat.avatar, el del servidor: després d'un avatar rebutjat (403),
+   l'apartat ensenyava la foto vella mentre l'editor, la barra taronja i la
+   targeta viva ensenyaven la nova. Com a PerfilEditor.imatges.test.jsx, el
+   403 s'injecta al port i el viu la cua de veres (cuaDesament, amb els
+   escriptors de perfilEscriptor.js); «Les vistes» en lligen la instantània,
+   que és el que dona useAutodesament.
+   ═══════════════════════════════════════════════════════════════════ */
+describe('Gauntlet 261016 (F1) · un 403 al desat de l’avatar: «Les vistes» porten la imatge de l’editor', () => {
+  const VELLA = '/assets/a.webp';
+  const NOVA = '/assets/nou.webp';
+  const error403 = (taula) => Object.assign(
+    new Error(`Supabase 403: {"code":"42501","message":"permission denied for table ${taula}"}`), { status: 403, code: '42501' },
+  );
+  const javi = { ...jo, nom: 'Javi Llinares', avatar: VELLA, dades: { ...jo.dades, full_name: 'Javi Llinares', avatar_url: VELLA } };
+  const rentonar = {
+    id: 'R', mena: 'grup', nom: 'El Rentonar', rol: 'Propietària', avatar: '/assets/rentonar.webp',
+    dades: { name: 'El Rentonar', role: 'owner', logo_url: '/assets/rentonar.webp' },
+  };
+  /* La cua només envia amb la sessió de l'àmbit de l'esborrany (ambit.js):
+     la persona U dins, com a PerfilEditor.imatges.test.jsx. */
+  const AMBIT_U = ambitDe(AUTODESAMENT.context, 'U');
+  const refDe = (id, entitat) => ({ ambit: AMBIT_U, context: AUTODESAMENT.context, entitat, id });
+  /* El valor s'encua, el servidor el rebutja, i «Les vistes» lligen la cua. */
+  async function rebutjat(ref, valor) {
+    cuaDesament.encua(ref, 'logoImage', valor);
+    await cuaDesament.desaAra(ref);
+    m.desament = vi.fn((clau) => (clau ? cuaDesament.llig(clau) : NET));
+  }
+  const imatges = () => ({ barra: m.pagina.topBarData.authorAvatar, targeta: avatarDeLaCarta()?.getAttribute('src') ?? null });
+
+  beforeEach(() => {
+    m.usuari = { id: 'U' };
+    m.perfil = { ...m.perfil, autodesament: { ambit: AMBIT_U, context: AUTODESAMENT.context } };
+  });
+  afterEach(() => cuaDesament.reinicia());
+
+  test('Javi Llinares · l’avatar rebutjat: la barra taronja i la «Vista targeta» porten la foto nova de la cua, no la del servidor', async () => {
+    m.updateProfile = vi.fn(async () => { throw error403('profiles'); });
+    await rebutjat(refDe('jo', 'perfil'), NOVA);
+    const estat = cuaDesament.llig(refDe('jo', 'perfil'));
+    expect([estat.estat, estat.camps.logoImage, estat.errors.logoImage.tipus]).toEqual(['error', NOVA, 'servidor']);
+    expect(m.updateProfile.mock.calls).toEqual([[{ avatar_url: NOVA }, AUTODESAMENT.context]]);
+    render(<DetallVistes identitat={javi} />);
+    expect(imatges()).toEqual({ barra: NOVA, targeta: NOVA });
+  });
+
+  test('Javi Llinares · «Llevar l’avatar» rebutjat: cap foto (la reserva de la targeta), mai la vella', async () => {
+    m.updateProfile = vi.fn(async () => { throw error403('profiles'); });
+    await rebutjat(refDe('jo', 'perfil'), '');
+    expect(m.updateProfile.mock.calls).toEqual([[{ avatar_url: null }, AUTODESAMENT.context]]);
+    render(<DetallVistes identitat={javi} />);
+    expect(m.pagina.topBarData.authorAvatar).toBe('');
+    expect(avatarDeLaCarta().classList.contains('sp-card-avatar--fallback')).toBe(true);
+  });
+
+  test('El Rentonar · el logotip rebutjat, el mateix; «Tornar al que hi ha desat» (la cua neta) torna al del servidor', async () => {
+    m.updateOrganization = vi.fn(async () => { throw error403('organizations'); });
+    await rebutjat(refDe('R', 'organitzacio'), NOVA);
+    expect(m.updateOrganization.mock.calls).toEqual([['R', { logo_url: NOVA }, AUTODESAMENT.context]]);
+    expect(cuaDesament.llig(refDe('R', 'organitzacio')).errors.logoImage.tipus).toBe('servidor');
+    render(<DetallVistes identitat={rentonar} />);
+    expect(imatges()).toEqual({ barra: NOVA, targeta: NOVA });
+    cleanup();
+    cuaDesament.descarta(refDe('R', 'organitzacio'), 'logoImage');
+    render(<DetallVistes identitat={rentonar} />);
+    expect(imatges()).toEqual({ barra: '/assets/rentonar.webp', targeta: '/assets/rentonar.webp' });
+  });
+
+  test('Sóc de Poble · amb un logotip rebutjat a la cua, la barra i la targeta continuen amb el PNG verd oficial, i no es demana al port', async () => {
+    const logo = 'sdp-media://organitzacions/nou.png';
+    m.updateOrganization = vi.fn(async () => { throw error403('organizations'); });
+    await rebutjat(refDe(ENTITAT_PILOT_ID, 'organitzacio'), logo);
+    expect(m.updateOrganization).toHaveBeenCalledTimes(1);
+    expect(cuaDesament.llig(refDe(ENTITAT_PILOT_ID, 'organitzacio')).errors.logoImage.tipus).toBe('servidor');
+    render(<DetallVistes identitat={{ ...forn, id: ENTITAT_PILOT_ID, nom: 'Sóc de Poble', avatar: null }} />);
+    expect(imatges()).toEqual({ barra: DEFAULT_AUTHOR.avatarUrl, targeta: DEFAULT_AUTHOR.avatarUrl });
+    expect(m.resolts).not.toContain(logo);
+  });
+
+  test('sense esborrany a la cua: la imatge de la fitxa i, sense cap, la reserva de la identitat (la foto de la sessió)', () => {
+    render(<DetallVistes identitat={{ ...jo, avatar: 'https://proveidor.example/foto.jpg', dades: { ...jo.dades, avatar_url: '/assets/pep.webp' } }} />);
+    expect(imatges()).toEqual({ barra: '/assets/pep.webp', targeta: '/assets/pep.webp' });
+    cleanup();
+    render(<DetallVistes identitat={{ ...jo, avatar: 'https://proveidor.example/foto.jpg' }} />);
+    expect(imatges()).toEqual({ barra: 'https://proveidor.example/foto.jpg', targeta: 'https://proveidor.example/foto.jpg' });
+  });
 });

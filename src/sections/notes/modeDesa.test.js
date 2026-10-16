@@ -272,4 +272,49 @@ describe('el bookmarklet (Model B: l’origen de l’app que el genera)', () => 
     expect(contingut.ok).toBe(true);
     expect(contingut.valor.entradilla).toHaveLength(256);
   });
+
+  /* Ordre del Mestre, 261016 (prompt 261016_0015, Bloc 0) · «L'usuari ha de poder capturar
+     contingut i decidir fàcilment si el destí és el Bloc de notes o el Lector RSS»: el
+     bookmarklet pot portar la destinació. Sense, o amb 'bloc', el de sempre. */
+  describe('la destinació opcional (desti)', () => {
+    /* El bookmarklet d'abans d'esta ordre, caràcter a caràcter (Llei del Píxel). */
+    const DE_SEMPRE = `javascript:(()=>{const u=new URL('/notes',"${ORIGEN_APP}");const p=u.searchParams;p.set('mode','desa');p.set('url',location.href.split('#')[0]);p.set('titol',document.title.slice(0,300));const s=String(getSelection()||'').trim().slice(0,256);if(s)p.set('entradilla',s);open(u.href,'sdp-desa','width=480,height=720');})();`;
+
+    test('sense desti, o amb «bloc», el bookmarklet de sempre: obri el Bloc, sense ?desti', () => {
+      expect(bookmarkletDesa(ORIGEN_APP)).toBe(DE_SEMPRE);
+      expect(bookmarkletDesa(ORIGEN_APP, {})).toBe(DE_SEMPRE);
+      expect(bookmarkletDesa(ORIGEN_APP, { desti: DESTINS.bloc })).toBe(DE_SEMPRE);
+      expect(bookmarkletDesa(ORIGEN_APP, { desti: undefined })).toBe(DE_SEMPRE);
+      const [obert] = executa({ href: URL_PROVA, titol: 'T', codi: bookmarkletDesa(ORIGEN_APP, { desti: 'bloc' }) });
+      const desti = new URL(obert.url);
+      expect(desti.searchParams.has('desti')).toBe(false);
+      expect(llegixDesti(desti.searchParams)).toEqual({ desti: 'bloc', categoriaFont: null });
+    });
+
+    test('amb «lector»: el snippet s’obri amb el Lector ja triat (?desti=lector) i el mateix contingut', () => {
+      const codi = bookmarkletDesa(ORIGEN_APP, { desti: DESTINS.lector });
+      expect(codi).not.toBe(DE_SEMPRE);
+      expect(codi.replace("p.set('desti','lector');", '')).toBe(DE_SEMPRE);
+      const [obert, ...resta] = executa({ href: `${URL_PROVA}#ancora`, titol: 'Un article', seleccio: 'Un tros', codi });
+      expect(resta).toEqual([]);
+      const desti = new URL(obert.url);
+      expect(`${desti.origin}${desti.pathname}`).toBe(`${ORIGEN_APP}/notes`);
+      expect(esModeDesa(desti.searchParams)).toBe(true);
+      expect(llegixDesti(desti.searchParams)).toEqual({ desti: 'lector', categoriaFont: null });
+      expect(llegixDesa(desti.searchParams).contingut).toEqual({
+        ok: true,
+        valor: { url: URL_PROVA, lloc: 'exemple.org', titol: 'Un article', subtitol: '', entradilla: 'Un tros' }
+      });
+      /* L'origen continua sent el de l'app que el genera. */
+      expect(bookmarkletDesa(undefined, { desti: 'lector' })).toBe(bookmarkletDesa(globalThis.location.origin, { desti: 'lector' }));
+    });
+
+    test('una destinació que no existix (o un origen que no val): cap bookmarklet', () => {
+      for (const dolenta of ['Lector', 'bar', '', null, 0, true, {}, ['lector']]) {
+        expect(bookmarkletDesa(ORIGEN_APP, { desti: dolenta }), String(dolenta)).toBeNull();
+      }
+      expect(bookmarkletDesa('http://poble.exemple.test', { desti: 'lector' })).toBeNull();
+      expect(bookmarkletDesa('javascript:alert(1)', { desti: 'lector' })).toBeNull();
+    });
+  });
 });

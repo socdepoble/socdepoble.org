@@ -13,6 +13,7 @@ import { NotificationProvider } from '../components/universal/NotificationContex
 import { Dialeg } from '../components/PedraSeca/organismes/Dialeg.jsx';
 import { BotoTornarADalt } from '../components/PedraSeca/atoms/BotoTornarADalt.jsx';
 import { DEFAULT_SECTION_PATH, SECTIONS, SECTION_ORDER } from '../config/sections';
+import { RUTES_CANONIQUES } from '../config/navigation.js';
 import { getSectionLabels } from '../config/i18n';
 import { normalizeBackendConfig } from '../config/backendConfig.js';
 import { aterratgeDespresDEntrar, esRutaDEntrada, rutaDEntrada } from '../config/rutaEntrada.js';
@@ -961,7 +962,15 @@ function ActorRoutes({ agents }) {
       <Route path="empresa/:agentId" element={<PerfilPublicSection agents={agents} />} />
       <Route path="ajuntament/:agentId" element={<PerfilPublicSection agents={agents} />} />
       <Route path="grup/:agentId" element={<PerfilPublicSection agents={agents} />} />
-      
+      {/* Gauntlet 261016 (Bloc 3.5.1; ordre del Mestre) · Les tres rutes
+          canòniques netes de les identitats del Mestre (/javillinares,
+          /socdepoble i /rentonar, RUTES_CANONIQUES de config/navigation.js):
+          la mateixa fitxa pública de sempre, pel slug declarat de cadascuna,
+          abans del comodí. Abans acabaven a NotFoundPage. */}
+      {Object.entries(RUTES_CANONIQUES).map(([clau, ruta]) => (
+        <Route key={clau} path={ruta.slice(1)} element={<PerfilPublicSection agents={agents} id={clau} />} />
+      ))}
+
       <Route path="projecte" element={<TextRoute pageKey="projecte" />} />
       <Route path="wikidepoble" element={<RutaWikiDePoble />} />
       <Route path="skills" element={<Navigate to="../wikidepoble" replace />} />

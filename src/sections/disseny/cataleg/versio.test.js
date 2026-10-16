@@ -12,7 +12,13 @@
    la prova troba EspecimenCamp.jsx fora de les notes i cau.
    També fixa el format de les notes: una sola «Darrera posada al dia», la
    primera, amb la data de la constant, i les «Versió anterior» amb data ISO
-   de la més nova a la més vella. */
+   de la més nova a la més vella.
+   Gauntlet 261016 · Els fitxers del catàleg d'esta nit no citen «16-10-2026»
+   ni «pla 261016_»: diuen «Gauntlet 261016», «del Gauntlet (261016)» i
+   «Pla 261016 (Bloc…», i la guarda no els veia. Ara reconeix també «gauntlet
+   aammdd» i «pla aammdd», sense distingir majúscules, amb el parèntesi
+   opcional davant de la data i sense exigir el «_»: cobrix més, mai menys
+   («pla 261013_» continua casant). */
 import { readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, test } from 'vitest';
@@ -47,6 +53,18 @@ function fitxersDelCataleg() {
 const escapa = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const nomenat = (nom, text) => new RegExp(`(^|[^A-Za-z0-9_])${escapa(nom)}([^A-Za-z0-9_]|$)`).test(text);
 
+/** Les marques d'una ordre del dia `dia` ('AAAA-MM-DD'): «dd-mm-aaaa» i, sense
+ *  distingir majúscules, «pla aammdd» o «gauntlet aammdd», amb el parèntesi opcional. */
+function marquesDelDia(dia) {
+  const [any, mes, diaDelMes] = dia.split('-');
+  const aammdd = `${any.slice(2)}${mes}${diaDelMes}`;
+  return [
+    new RegExp(escapa(`${diaDelMes}-${mes}-${any}`)),
+    new RegExp(`(^|[^A-Za-z0-9_])(pla|gauntlet)\\s*\\(?${aammdd}`, 'i')
+  ];
+}
+const citaElDia = (codi, dia) => marquesDelDia(dia).some((marca) => marca.test(codi));
+
 describe('les notes de versió de versio.js', () => {
   test('una sola «Darrera posada al dia», la primera nota, amb la data i l’hora de VERSIO_CATALEG', () => {
     expect(NOTES.filter((n) => n.tipus === 'darrera')).toHaveLength(1);
@@ -64,14 +82,28 @@ describe('les notes de versió de versio.js', () => {
 });
 
 describe('la versió arreplega el que s’ha tocat el seu dia', () => {
+  /* Gauntlet 261016 · Les formes que la guarda reconeix, les d'abans i les d'esta nit, i les que no. */
+  test.each([
+    ['ordre del Mestre del 16-10-2026', true],
+    ['(pla 261016_0015, Bloc 1)', true],
+    ['Gauntlet 261016 (Bloc 1, Llei del Quadrat)', true],
+    ['Bloc 3.4 del Gauntlet (261016) · Cap editor', true],
+    ['/* Pla 261016 (Bloc 3.1; ordre del Mestre)', true],
+    ['GAUNTLET 261016', true],
+    ['Gauntlet 261015 (Bloc 1)', false],
+    ['pla 261013_1405', false],
+    ['la plantilla 261016', false],
+    ['Templa 261016', false]
+  ])('el 2026-10-16, «%s» cita el dia: %s', (codi, cita) => {
+    expect(citaElDia(codi, '2026-10-16')).toBe(cita);
+  });
+
   test('cada fitxer del catàleg que cita una ordre del dia de la versió vigent és nomenat a les notes d’eixe dia', () => {
     const dia = VERSIO_CATALEG.slice(0, 10);
-    const [any, mes, diaDelMes] = dia.split('-');
-    const marques = [`${diaDelMes}-${mes}-${any}`, `pla ${any.slice(2)}${mes}${diaDelMes}_`];
     const notesDelDia = NOTES.filter((n) => n.iso && n.iso.slice(0, 10) === dia).map((n) => n.text).join(' ');
     expect(notesDelDia).not.toBe('');
     const citen = fitxersDelCataleg()
-      .filter((fitxer) => { const codi = readFileSync(fitxer, 'utf8'); return marques.some((m) => codi.includes(m)); })
+      .filter((fitxer) => citaElDia(readFileSync(fitxer, 'utf8'), dia))
       .map((fitxer) => path.basename(fitxer));
     expect(citen.length).toBeGreaterThan(0);
     expect(citen.filter((nom) => !nomenat(nom, notesDelDia))).toEqual([]);

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
-  CAMPS_FITXA, LIMITS_TEXT, MAXIM_PRESENTACIO, aHtml, documentDeFitxa, fitxaDeLectura, fitxaPublicada, menaDeFitxa, valorPerDesar,
+  CAMPS_FITXA, LIMITS_TEXT, MAXIM_PRESENTACIO, aHtml, copyrightDeFitxa, documentDeFitxa, fitxaDeLectura, fitxaPublicada, menaDeFitxa,
+  valorPerDesar,
 } from './perfilCamps.js';
 import { MAXIM_EMOTICONA, MAXIM_LEMA } from '../../data/limitsText.js';
 
@@ -29,8 +30,30 @@ describe('D2 · mapatge de la fitxa (opció A)', () => {
     expect(doc).toMatchObject({
       id: 'jo', title: 'Pep &amp; Maria', subtitle: 'Llaurador &lt;de&gt; secà', lead: 'Del Mas',
       content: '<p>Hola</p>', logoImage: 'sdp-media://mitjans/a.webp', heroImage: 'https://poble.test/h.webp',
-      isPublished: true, copyright: '© Pep & Maria',
+      isPublished: true, copyright: '',
     });
+  });
+
+  /* Directiva de Dignitat Humana (pla 261015_1900, Onada 1.1) · Una persona
+     no és una obra: la seua fitxa no porta drets (ni el desat, ni el «© Nom» de
+     reserva, ni un esborrany), en lectura ni en edició. L'organització i
+     l'agent, com sempre. La DADA es conserva: copyrightDeFitxa (la base de
+     l'autodesament) i la columna del contracte. */
+  it('Dignitat Humana · la fitxa de la persona no porta drets; l’organització i l’agent, sí', () => {
+    const ambDrets = { ...persona, dades: { ...persona.dades, copyright: 'CC BY 4.0' } };
+    expect(fitxaDeLectura(ambDrets).copyright).toBe('');
+    expect(documentDeFitxa(ambDrets).copyright).toBe('');
+    expect(documentDeFitxa(ambDrets, { copyright: 'CC0 1.0' }).copyright).toBe('');
+    expect(fitxaDeLectura(persona).copyright).toBe('');
+    expect(copyrightDeFitxa(ambDrets)).toBe('CC BY 4.0');
+    expect(copyrightDeFitxa(persona)).toBe('© Pep & Maria');
+    expect(CAMPS_FITXA.persona.copyright).toBe('copyright');
+    expect(fitxaDeLectura(empresa).copyright).toBe('© Forn');
+    expect(documentDeFitxa(empresa, { copyright: 'CC0 1.0' }).copyright).toBe('CC0 1.0');
+    expect(documentDeFitxa({ ...empresa, dades: { ...empresa.dades, copyright: 'CC BY 4.0' } }).copyright).toBe('CC BY 4.0');
+    const agent = { id: 'A', mena: 'agent', nom: 'IAIA', dades: { name: 'IAIA' } };
+    expect(documentDeFitxa(agent).copyright).toBe('© IAIA');
+    expect(copyrightDeFitxa(empresa)).toBe(fitxaDeLectura(empresa).copyright);
   });
 
   it('el que s’escriu (local) guanya a les dades del servidor', () => {

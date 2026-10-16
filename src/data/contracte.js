@@ -16,9 +16,11 @@
    src/sections/mur/agendaMur.js): qualsevol backend que torne este payload
    funciona igual, i la interfície no llig cap columna com a dia de l'acte. */
 /* Ordre del Mestre (261007) · Forma de loadFils()[], una Conversa del Xat:
-   camp opcional `perDefecte` ('socdepoble' | 'iaia'; absent o null en una
-   conversa de veres). Marca una fila que el backend SINTETITZA perquè tota
-   persona tinga amb qui parlar el primer dia (src/data/xatsPerDefecte.js):
+   camp opcional `perDefecte` ('socdepoble' | 'javi' | 'iaia'; absent o null
+   en una conversa de veres; 'javi', des del Gauntlet 261016, Bloc 3.6: Javi
+   Llinares, la persona humana de contacte, CONTACTE_HUMA). Marca una fila que
+   el backend SINTETITZA perquè tota persona tinga amb qui parlar el primer
+   dia (src/data/xatsPerDefecte.js · ACTORS_PERMANENTS):
    no és cap fil del servidor, no té missatges ni marques, el seu id porta el
    prefix 'sdp-per-defecte:' i no s'ha de passar mai a loadMissatges,
    enviaMissatge, marcaLlegit ni subscribeToXat. La interfície l'obri per la

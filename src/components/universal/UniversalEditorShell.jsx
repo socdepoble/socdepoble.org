@@ -12,6 +12,8 @@ import { useContent } from './ContentProvider.jsx';
 import { useToast } from './NotificationContext.jsx';
 import { IconaEstatDesament, RegioEstatDesament } from './EstatDesament.jsx';
 import { DialegEnquadrament } from './enquadrament/DialegEnquadrament.jsx';
+import { FORMATS } from './enquadrament/enquadrament.js';
+import { configDeForma, costatDeSortida } from './enquadrament/useEnquadramentImatge.jsx';
 import { UniversalPage } from './UniversalPage.jsx';
 import { TEXTOS_LLAVOR } from './textosLlavor.js';
 import { FORASTER } from './UniversalUtils';
@@ -172,6 +174,25 @@ export function EditableField({ html, placeholder, onChange, onBlur, className }
 export const AJUDA_IMATGE_PER_DEFECTE = "Pots pujar qualsevol tipus d'imatge o arxiu multimèdia.";
 /* L'ajuda d'una ranura sense imatge mentre la seua imatge encara puja. */
 export const AJUDA_IMATGE_PUJANT = 'Encara s’està desant la imatge. Quan acabe, la podràs tornar a canviar.';
+
+/* Gauntlet 261016 (Bloc 1, Llei del Quadrat; pla §0.1.1) · La capçalera d'un
+   document i la seua targeta (la miniatura del llistat i la del Mur) són la
+   MATEIXA imatge: un quadrat de 1.200 × 1.200 exactes. El diàleg T46 de la
+   closca ja no oferix «Original», «Apaisat» ni «Panoràmic» (una capçalera
+   apaïsada no seria la imatge de la targeta): només la fila del quadrat del
+   model, amb una ajuda pròpia, com l'avatar (FORMATS_AVATAR). El fitxer ix
+   amb la forma i la mida de la capçalera del Perfil (FORMES.capcalera de
+   useEnquadramentImatge, una sola constant per a les dues), també si cal
+   ampliar el retall, i sempre recodificat. La panoràmica del poble (secció
+   Pobles), l'única capçalera apaïsada, no passa per esta closca. */
+const CAPCALERA = configDeForma('capcalera');
+const QUADRAT_CAPCALERA = FORMATS.find((f) => f.valor === CAPCALERA.formatInicial) || CAPCALERA.formats[0];
+export const AJUDA_FORMA_CAPCALERA = 'La capçalera sempre és quadrada: la miniatura del llistat i la targeta del Mur ensenyen la mateixa imatge. Si la nota ja és al Mur, la targeta no canvia fins que la tornes a publicar.';
+export const FORMATS_CAPCALERA = Object.freeze([Object.freeze({ ...QUADRAT_CAPCALERA, ajuda: AJUDA_FORMA_CAPCALERA })]);
+/* Sense «Tria la forma» (la de sèrie del diàleg): només n'hi ha una. */
+export const DESCRIPCIO_ENQUADRAMENT_CAPCALERA = 'Mou la foto i amplia-la fins que el que importa quede dins del quadrat. Només es guarda el que hi ha dins.';
+/** L'eixida exacta del diàleg de la capçalera per a una foto (File) o una adreça ja resolta. */
+export const sortidaCapcalera = (font) => CAPCALERA.sortida(font);
 
 export function UniversalEditorShell({
   id,
@@ -741,8 +762,9 @@ export function useEditorShell({
   const obriEnquadrament = (font) => {
     if (pujant) return;
     setEnfocaHero(false);
-    // Cada obertura és una sessió pròpia (objecte nou): el desat tanca només la seua.
-    setEnquadrament({ font });
+    /* Cada obertura és una sessió pròpia (objecte nou): el desat tanca només la seua.
+       Gauntlet 261016 (Bloc 1) · Amb l'eixida exacta de la capçalera (sortidaCapcalera). */
+    setEnquadrament({ font, sortida: sortidaCapcalera(font) });
   };
 
   const triaHero = (e) => {
@@ -757,11 +779,19 @@ export function useEditorShell({
     obriEnquadrament(fitxer);
   };
 
-  const desaEnquadrament = async (fitxer) => {
+  /* Gauntlet 261016 (Bloc 1.2, mandat del Mestre, pla §0.1.3) · El diàleg
+     oferix la casella «Conserva la ubicació i la data de la foto» quan la
+     foto en porta; la seua tria (metadades.exif) va a la pujada.
+     Gauntlet 261016 (Bloc 1, Llei del Quadrat) · processaFitxer rep també la
+     forma ('capcalera', el contracte opcions.forma de useHeroImageHandler) i
+     el costat del retall que ja ix exacte (costatDeSortida): la foto es
+     comprimix a eixa mateixa mida, dins del pressupost, sense dependre del nom
+     del camp. */
+  const desaEnquadrament = async (fitxer, info, metadades) => {
     // La sessió d'este diàleg: en acabar es tanca ella, mai una altra.
     const sessio = enquadrament;
     errorHeroRef.current = null;
-    const fet = await heroHandler.processaFitxer(fitxer);
+    const fet = await heroHandler.processaFitxer(fitxer, { forma: 'capcalera', midaMaxima: costatDeSortida('capcalera'), ...metadades?.exif });
     if (!fet) throw new Error(errorHeroRef.current || "No s'ha pogut desar la imatge.");
     setEnquadrament((actual) => (actual === sessio ? null : actual));
     setEnfocaHero(true);
@@ -833,8 +863,12 @@ export function useEditorShell({
         </>
       )
     },
+    /* Gauntlet 261016 (Bloc 1, Llei del Quadrat) · Només el quadrat
+       (FORMATS_CAPCALERA) i l'eixida exacta de 1.200 × 1.200 de la sessió. */
     dialegEnquadrament: enquadrament ? (
-      <DialegEnquadrament font={enquadrament.font} onTanca={() => setEnquadrament(null)} onDesa={desaEnquadrament} />
+      <DialegEnquadrament font={enquadrament.font} formatInicial={CAPCALERA.formatInicial} formats={FORMATS_CAPCALERA}
+        descripcio={DESCRIPCIO_ENQUADRAMENT_CAPCALERA} sortida={enquadrament.sortida}
+        onTanca={() => setEnquadrament(null)} onDesa={desaEnquadrament} ofereixConservarExif />
     ) : null
   };
 }

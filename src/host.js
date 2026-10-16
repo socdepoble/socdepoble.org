@@ -432,8 +432,9 @@ export function exposaGlobal(objectiu = (typeof window !== 'undefined' ? window 
     return existent.value ?? null;
   }
 
-  /* `nucli` (sdp.modul.v1): React, la plataforma, la Pedra Seca del contracte
-     i el router, congelats i versionats (apps/plataforma/nucliModuls.js). Val
+  /* `nucli` (sdp.modul.v1): React, la plataforma, la Pedra Seca del contracte,
+     el router i, des de l'1.2.0, l'espai de treball del Bloc de notes (porta
+     'workspace'), congelats i versionats (apps/plataforma/nucliModuls.js). Val
      null fins que un mòdul el demana: el paquet no el porta fins llavors.
      Mai hi ha el port del backend ni els contexts de sessió i d'identitat. */
   const api = Object.freeze({

@@ -12,10 +12,21 @@
  * Onada 4, T3a (RETALLADOR §2) · Límits d'entrada (limits.js), orientació
  * EXIF aplicada UNA vegada (orientacio.js) i eixida WebP amb reserva JPEG. El
  * fitxer que ix és sempre un canvas nou: no porta cap EXIF (ADR D4).
+ * Gauntlet 261016 (Bloc 1.2) · Continua així: si la persona conserva la
+ * ubicació i la data (la casella del DialegEnquadrament), l'EXIF publicable
+ * de l'original el torna a posar la compressió de la pujada (compressImage
+ * amb conservaExif, exifIncrustat.js), no este retall.
+ * Gauntlet 261016 (P2 de Codex, 02:04:33) · Si el navegador posa dreta la
+ * foto es decidix PEL FORMAT dels bytes (un WebP no és un JPEG), amb la
+ * mateixa decisió i el mateix dibuix que la pujada directa (orientacioPendent
+ * i dibuixaDreta, orientacio.js): el retall ix sempre d'un raster ja dret, i
+ * l'EXIF que hi torna la pujada porta l'orientació 1.
  */
-import { llegixMetadadesImatge } from './exif.js';
+import { llegixOrientacioImatge } from './exif.js';
 import { ErrorImatge, comprovaDimensions, comprovaPes, esHeic } from './limits.js';
-import { navegadorAplicaOrientacio, transformacioOrientacio } from './orientacio.js';
+import {
+  dibuixaDreta, navegadorAplicaOrientacio, orientacioPendent, transformacioOrientacio,
+} from './orientacio.js';
 
 const esBlob = (valor) => typeof Blob !== 'undefined' && valor instanceof Blob;
 const cancellada = () => new DOMException('Càrrega cancel·lada.', 'AbortError');
@@ -37,37 +48,36 @@ function espera(element, url) {
   });
 }
 
-/** Només l'orientació: el bloc GPS no es toca per a dibuixar. */
-const orientacioDe = async (blob) => (await llegixMetadadesImatge(blob, { ambGps: false, ambData: false })).orientacio;
-
-/* Si el navegador NO posa dreta la foto en descodificar-la, es gira una sola
-   vegada sobre un canvas de la mida girada, i el canvas passa a ser la font
-   del visor i de l'exportació (un canvas no porta EXIF: ningú la tornarà a
-   girar). Si el navegador ja l'ha posada dreta, no es fa res. */
+/* Si el navegador NO posa dreta la foto en descodificar-la (en el seu
+   format: orientacioPendent), es gira una sola vegada sobre un canvas de la
+   mida girada, i el canvas passa a ser la font del visor i de l'exportació
+   (un canvas no porta EXIF: ningú la tornarà a girar). Si el navegador ja
+   l'ha posada dreta, o no hi ha res a girar, no es fa res. */
 async function giraSiCal(element, blob, { orienta, lligOrientacio }) {
-  if (await orienta()) return null;
-  const orientacio = await lligOrientacio(blob);
-  if (!(orientacio > 1 && orientacio <= 8)) return null;
+  const orientacio = await orientacioPendent(blob, { orienta, lligOrientacio });
+  if (orientacio === 1) return null;
   const t = transformacioOrientacio(orientacio, element.naturalWidth, element.naturalHeight);
   const canvas = document.createElement('canvas');
   canvas.width = t.amplada;
   canvas.height = t.alcada;
   const ctx = canvas.getContext('2d');
   if (!ctx) return null;
-  ctx.setTransform(...t.matriu);
-  ctx.drawImage(element, 0, 0);
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  dibuixaDreta(ctx, element, orientacio, t.amplada, t.alcada);
   return { element: canvas, amplada: t.amplada, alcada: t.alcada };
 }
 
 /**
- * Carrega la font i torna { element, amplada, alcada, tipus, allibera }.
+ * Carrega la font i torna { element, amplada, alcada, tipus, blob, allibera }.
  * `allibera()` revoca l'objectURL: el crida qui la carrega quan ja no la vol.
+ * Gauntlet 261016 (Bloc B, P2) · `blob` és el que s'ha obert (el File, o el
+ * que s'ha baixat d'una adreça ja desada; null per a un blob: directe): el
+ * DialegEnquadrament en llig l'EXIF, i la pujada el rep com a `original`.
  * Llança ErrorImatge('pes' | 'pixels' | 'heic') quan la foto passa dels
  * límits o és un HEIC que el navegador no sap obrir.
- * `orienta` i `lligOrientacio` són injectables per a les proves.
+ * `orienta` (rep { format }) i `lligOrientacio` (torna { format, orientacio })
+ * són injectables per a les proves.
  */
-export async function carregaImatge(font, { signal, orienta = navegadorAplicaOrientacio, lligOrientacio = orientacioDe } = {}) {
+export async function carregaImatge(font, { signal, orienta = navegadorAplicaOrientacio, lligOrientacio = llegixOrientacioImatge } = {}) {
   if (!esBlob(font) && (typeof font !== 'string' || !font)) {
     throw new TypeError('Cal un fitxer o una adreça d’imatge.');
   }
@@ -100,10 +110,10 @@ export async function carregaImatge(font, { signal, orienta = navegadorAplicaOri
         allibera();
         throw cancellada();
       }
-      return { ...girada, tipus: blob.type || '', allibera };
+      return { ...girada, tipus: blob.type || '', blob, allibera };
     }
     if (signal?.aborted) throw cancellada();
-    return { element, amplada, alcada, tipus: blob?.type || '', allibera: revoca };
+    return { element, amplada, alcada, tipus: blob?.type || '', blob, allibera: revoca };
   } catch (err) {
     revoca();
     throw err;

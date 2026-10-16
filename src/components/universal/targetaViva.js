@@ -2,10 +2,11 @@
  * targetaViva.js — el document que s'està escrivint, dit com a targeta.
  *
  * T50 (decisió del Mestre, 260928: «Llista + dreta si hi cap») · La fitxa
- * activa de la columna central (Bloc de Notes i Perfil) i l'aside de la dreta
- * de l'editor pinten la MATEIXA UniversalCard que tindrà la publicació. Ací
- * es traduïx el document de l'editor a les props de la targeta, d'una sola
- * manera per a tots dos llocs. Pur: sense React ni backend.
+ * activa de la columna central (Bloc de Notes i Perfil) i «Les vistes» del
+ * Perfil (DetallVistes) pinten la MATEIXA UniversalCard que tindrà la
+ * publicació; l'aside de la dreta de l'editor es va retirar al Bloc 3.4 del
+ * Gauntlet (261016). Ací es traduïx el document de l'editor a les props de la
+ * targeta, d'una sola manera per a tots els llocs. Pur: sense React ni backend.
  *
  *   · Títol, subtítol i entradilla en TEXT PLA: l'editor els desa en HTML
  *     sanejat («Pep&nbsp;<b>i</b>…») i la targeta els pinta com a text.

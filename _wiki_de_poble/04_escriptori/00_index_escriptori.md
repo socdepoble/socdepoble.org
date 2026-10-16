@@ -32,10 +32,12 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu — i
 - [[01_produccio/article-ayudawp.md]]
 
 ## Activitat en curs
-- [[261014_2040_auditoria_gemini4]]
-- [[261014_2035_auditoria_claude]]
-- [[261014_2030_pla_implementacio_gestoria_quadre_comandament_i_conciliacio]]
-- [[261014_2015_prompt_claude_i_gemini4_quadre_comandament_gestoria]]
+- [[261016_0035_acta_marmota_codex_gauntlet]]
+- [[261016_0022_auditoria_gemini4]]
+- [[261016_0021_auditoria_codex]]
+- [[261016_0022_auditoria_claude]]
+- [[261016_0015_prompt_gauntlet_claude_codex_gemini]]
+- [[261016_0015_pla_implementacio_gauntlet_autonom]]
 - [[261013_1600_estudi_destil_laboratori_ia]] · Mestre 261014: referència viva de destil·lació del laboratori IA
 - [[../90_arxiu_historic/261012_2148_peticio_registre_mestre]] · torn_02f070c3-0705-4c0e-b5d3-32c84ab77117
 - [[../90_arxiu_historic/261012_2145_ordre_unificacio_barra_maria]] · torn_02f070c3-0705-4c0e-b5d3-32c84ab77117
@@ -764,6 +766,16 @@ Enllaços a peces ja existents, verificats al disc; no s’han mogut ni editat e
 
 ## Arxivat amb la Porta Olivera
 
+- [[../90_arxiu_historic/261015_1900_pla_implementacio_xat_identitat_i_perfil]]
+- [[../90_arxiu_historic/261015_1900_prompt_gauntlet_claude_codex_gemini]]
+- [[../90_arxiu_historic/261015_1945_auditoria_gemini4]]
+- [[../90_arxiu_historic/261015_1945_auditoria_codex]]
+- [[../90_arxiu_historic/261015_1945_auditoria_claude]]
+- [[../90_arxiu_historic/261015_1933_acta_marmota_codex_fase1]]
+- [[../90_arxiu_historic/261014_2040_auditoria_gemini4]]
+- [[../90_arxiu_historic/261014_2035_auditoria_claude]]
+- [[../90_arxiu_historic/261014_2030_pla_implementacio_gestoria_quadre_comandament_i_conciliacio]]
+- [[../90_arxiu_historic/261014_2015_prompt_claude_i_gemini4_quadre_comandament_gestoria]]
 - [[../90_arxiu_historic/261014_1450_pla_implementacio_sincronitzacio_identitats_i_xat]]
 - [[../90_arxiu_historic/261014_1638_auditoria_gemini4]]
 - [[../90_arxiu_historic/261014_1636_auditoria_claude]]
@@ -858,3 +870,4 @@ Enllaços a peces ja existents, verificats al disc; no s’han mogut ni editat e
 - [[../10_actes/261014_1315_acta_marmota]]
 - [[../10_actes/261014_2050_acta_marmota]]
 - [[../10_actes/261015_1310_acta_marmota]]
+- [[../10_actes/261016_0025_acta_marmota]]

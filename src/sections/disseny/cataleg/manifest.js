@@ -109,9 +109,10 @@ const FONAMENTS = [
     /* P5 · Onada 4 (261003) · la targeta de doble acció del Panell de Control (PortesTargeta),
        amb l'ESMENA 261003 22:34: la targeta estàndard amb la boina de socdepoble. */
     'targeta plana pla emoticona ancorar pin avis portes porta doble accio publicar saber mes control obres socdepoble xat'),
-  /* T50 (decisió del Mestre, 260928: «Llista + dreta si hi cap») · la targeta del document que s'escriu. */
+  /* T50 (decisió del Mestre, 260928: «Llista + dreta si hi cap») · la targeta del document que s'escriu.
+     Bloc 3.4 del Gauntlet (261016) · Sense l'aside de la dreta de l'editor ni el seu xip: cap editor els munta. */
   especimen('fonaments', 'targeta-viva', 'Targeta viva', 'TargetaViva · BotoTargetaViva (T50)', ['organisme', 'targeta', 'editor'],
-    'La targeta del document mentre s’escriu, amb la mateixa anatomia que tindrà publicada: a la llista, a la dreta de l’editor si hi cap i, si no, darrere del xip «Vista targeta». Al Perfil, també en línia a l’apartat «Les vistes». Els botons no fan res: ho diu un avís.',
+    'La targeta del document mentre s’escriu, amb la mateixa anatomia que tindrà publicada: la fitxa activa de la llista i, al Perfil, també en línia a l’apartat «Les vistes». Cap editor la munta al costat: l’aside de la dreta i el xip «Vista targeta» s’han retirat. Els botons no fan res: ho diu un avís.',
     'previsualitzacio vista targeta xip aside llista dreta notes perfil vistes'),
   /* Ordre del Mestre, 13-10-2026 (pla 261013_1405, front B) · s'hi afig RellotgeViu, la data i
      l'hora d'ara, vives, a la dreta de la barra taronja de les apps que la demanen. */
@@ -477,8 +478,8 @@ export const ARBRE_UNIVERSAL = Object.freeze([
       'l’acollida (OnboardingSteps)', 'Control (ControlSection)', 'Traduccions (TranslationsSection)'
     ] },
   { id: 'targeta-viva', nom: 'TargetaViva', fitxer: 'src/components/universal/TargetaViva.jsx', pare: 'card', relacio: 'instancia', item: 'fonaments-targeta-viva',
-    rol: 'La UniversalCard (variant pla) del document que s’escriu: la fitxa activa del llistat, l’aside de l’editor si hi cap i el diàleg del xip «Vista targeta».',
-    consumidors: ['NotaFitxa (Notes)', 'PerfilShell (Perfil)', 'DocumentEditor (aside i xip)', 'DetallVistes (Perfil, «Les vistes»)'] },
+    rol: 'La UniversalCard (variant pla) del document que s’escriu: la fitxa activa del llistat i la targeta en línia de «Les vistes». El diàleg del xip «Vista targeta» només el munta el catàleg.',
+    consumidors: ['NotaFitxa (Notes)', 'PerfilShell (Perfil)', 'DetallVistes (Perfil, «Les vistes»)'] },
   { id: 'editor', nom: 'DocumentEditor → UniversalEditorShell', fitxer: 'src/components/universal/DocumentEditor.jsx', pare: 'page', relacio: 'instancia', item: null,
     rol: 'PageFrame en edició: la closca de l’editor pinta una UniversalPage amb ranures.' },
   { id: 'barra-eines', nom: 'UniversalToolbar', fitxer: 'src/components/universal/UniversalToolbar.jsx', pare: 'editor', item: 'estructura-barra-eines',

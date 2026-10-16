@@ -671,3 +671,92 @@ test('la reconciliació no substituïx un ID absent per un fallback ajornat',()=
  vista.rerender(policyTree({canAutoSelect,initialSelection:{categoryId:'b',itemId:'fantasma'},items:[...policyItems,{id:'real',categoryIds:['b']}]}));
  expect(policySelection()).toBe('b:real:false');
 });
+
+/* ═══ F2 del Gauntlet (261016, defecte L1-2 del Lector) · El que es veu a la llista ═══
+   renderDetail rep, a més de { item, selection }, dos camps opcionals: `visibleItemIds`, els ids
+   (en text) que hi deixen la carpeta, les etiquetes i la cerca, en un array congelat que
+   conserva la referència mentre no canvien; i `filtered`, si hi ha una cerca o una etiqueta
+   activa. Qui només llig item i selection (Notes, Wiki, Disseny, Admin, Perfil) pinta el mateix
+   DOM, i una tecla de la cerca que no canvia el resultat no torna a cridar renderDetail
+   (DetailColumn és memo). Cap nom nou a la porta 'workspace' del nucli. */
+const MODEL_VISIBLES = {
+  status: 'ready',
+  categories: [{ id: 'hort', label: 'Hort' }, { id: 'corral', label: 'Corral' }],
+  items: [
+    { id: 1, title: 'Tomaques', categoryIds: ['hort'], tags: ['estiu'] },
+    { id: 'b', title: 'Bajoques', categoryIds: ['hort'], tags: ['estiu'] },
+    { id: 'c', title: 'Carxofes', categoryIds: ['hort'], tags: ['hivern'] },
+    { id: 'g', title: 'Gallines', categoryIds: ['corral'] }
+  ]
+};
+const cercaElements = (text) => fireEvent.change(screen.getByRole('searchbox', { name: 'Cercar elements' }), { target: { value: text } });
+
+test('F2 · renderDetail rep els ids que es veuen a la llista i si hi ha filtre: carpeta, cerca i etiquetes', () => {
+  const rebuts = [];
+  render(
+    <UniversalWorkspace
+      model={MODEL_VISIBLES}
+      initialSelection={{ categoryId: 'hort', itemId: '1' }}
+      renderDetail={(arg) => { rebuts.push(arg); return <p>Detall</p>; }}
+    />
+  );
+  const darrer = () => rebuts[rebuts.length - 1];
+  /* La forma de l'argument: els dos camps de sempre i els dos nous, opcionals. */
+  expect(Object.keys(darrer())).toEqual(['item', 'selection', 'visibleItemIds', 'filtered']);
+  expect(darrer().selection).toEqual({ categoryId: 'hort', itemId: '1' });
+  expect(darrer().visibleItemIds).toEqual(['1', 'b', 'c']);
+  expect(Object.isFrozen(darrer().visibleItemIds)).toBe(true);
+  expect(darrer().filtered).toBe(false);
+
+  /* Una cerca: només el resultat, i filtrat. Obrir la lupa no és cap filtre. */
+  fireEvent.click(screen.getByRole('button', { name: 'Cercar elements' }));
+  expect(darrer().filtered).toBe(false);
+  cercaElements('ba');
+  expect(darrer().visibleItemIds).toEqual(['b']);
+  expect(darrer().filtered).toBe(true);
+  /* Una tecla que no canvia el resultat: cap crida nova i la mateixa referència. */
+  const crides = rebuts.length;
+  const ids = darrer().visibleItemIds;
+  cercaElements('baj');
+  expect(rebuts).toHaveLength(crides);
+  expect(darrer().visibleItemIds).toBe(ids);
+
+  /* Una etiqueta, sense cerca: també és un filtre. */
+  cercaElements('');
+  expect([darrer().visibleItemIds, darrer().filtered]).toEqual([['1', 'b', 'c'], false]);
+  fireEvent.click(screen.getByRole('button', { name: 'hivern' }));
+  expect([darrer().visibleItemIds, darrer().filtered]).toEqual([['c'], true]);
+
+  /* Tancar la cerca la neteja: la carpeta sencera, sense filtre. */
+  fireEvent.click(screen.getByRole('button', { name: 'Tancar' }));
+  expect([darrer().visibleItemIds, darrer().filtered]).toEqual([['1', 'b', 'c'], false]);
+
+  /* Una altra tria a la mateixa carpeta: crida nova, la mateixa llista (la mateixa referència). */
+  const abans = darrer().visibleItemIds;
+  fireEvent.click(screen.getByRole('button', { name: 'Bajoques' }));
+  expect(darrer().item.id).toBe('b');
+  expect(darrer().visibleItemIds).toBe(abans);
+
+  /* Una altra carpeta: els seus ids. */
+  fireEvent.click(screen.getByRole('button', { name: 'Corral' }));
+  expect([darrer().visibleItemIds, darrer().filtered]).toEqual([['g'], false]);
+});
+
+test('F2 · qui només llig item i selection pinta el DOM de sempre, amb cerca i sense', () => {
+  const { container } = render(
+    <UniversalWorkspace
+      model={MODEL_VISIBLES}
+      initialSelection={{ categoryId: 'hort', itemId: '1' }}
+      renderDetail={({ item, selection }) => <p>{item ? `Detall de ${item.title} (${selection.categoryId})` : 'res'}</p>}
+    />
+  );
+  const detall = () => container.querySelector('#app-grid-main .sdp-workspace-detail');
+  const sempre = '<div tabindex="-1" class="sdp-workspace-detail" data-error="false"><p>Detall de Tomaques (hort)</p></div>';
+  expect(detall().outerHTML).toBe(sempre);
+  fireEvent.click(screen.getByRole('button', { name: 'Cercar elements' }));
+  cercaElements('carx');
+  fireEvent.click(screen.getByRole('button', { name: 'hivern' }));
+  expect(detall().outerHTML).toBe(sempre);
+  fireEvent.click(screen.getByRole('button', { name: 'Tancar' }));
+  expect(detall().outerHTML).toBe(sempre);
+});

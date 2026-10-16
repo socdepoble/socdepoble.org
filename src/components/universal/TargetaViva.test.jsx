@@ -138,7 +138,8 @@ test('D1 · l’avís d’una acció diu el text del consumidor (avis), i sense,
   }
   expect(AVISOS_TARGETA_VIVA.notes.descripcio).toContain('una vegada publicada al Mur');
   expect(AVISOS_TARGETA_VIVA.notes.vista).toContain('una vegada publicada al Mur');
-  // Ni el Perfil ni la reserva (l'aside i el xip de DocumentEditor, compartits) prometen publicació.
+  // Ni el Perfil ni la reserva (la de qui no passa `avis`; la feia servir l'aside de DocumentEditor,
+  // retirat al Bloc 3.4 del Gauntlet, 261016) prometen publicació.
   for (const avis of [AVISOS_TARGETA_VIVA.perfil, AVIS_PREVISUALITZACIO]) {
     expect(`${avis.descripcio} ${avis.vista}`).not.toMatch(/publica/i);
   }
@@ -162,8 +163,8 @@ test('D5 · `actual` arriba a la targeta: el botó principal porta aria-current=
   const { container } = render(<TargetaViva document={DOC} autor={AUTOR} onMainClick={() => {}} actual />);
   expect(container.querySelector('button.sp-card-link-overlay').getAttribute('aria-current')).toBe('true');
   cleanup();
-  const aside = render(<TargetaViva document={DOC} autor={AUTOR} />);
-  expect(aside.container.querySelectorAll('[aria-current]')).toHaveLength(0);
+  const senseActual = render(<TargetaViva document={DOC} autor={AUTOR} />);
+  expect(senseActual.container.querySelectorAll('[aria-current]')).toHaveLength(0);
 });
 
 /* Ordre del Mestre (261007) · «Aplica a TargetaViva.jsx (quan actua com a ítem
@@ -192,15 +193,17 @@ test('261007 · a la fitxa de la llista, sense imatge, l’emoticona triada va a
   expect(senseEmoticona.container.querySelector('.sp-card-body').classList.contains('has-aside')).toBe(false);
 });
 
-/* Llei del Píxel · L'aside de l'editor (sense `actual`) i el diàleg del xip
-   «Vista targeta» no són ítems de llista: es queden sense quadrat, com abans,
-   i l'emoticona continua al centre de la caputxa (Pedra Seca §10). */
-test('261007 · l’aside i el xip «Vista targeta» no porten l’emoji XL al quadrat; l’emoticona continua a la caputxa', () => {
-  const aside = render(<TargetaViva document={{ ...DOC, icon: '🍅' }} autor={AUTOR} />);
-  expect(quadratDe(aside.container)).toBeNull();
-  expect(aside.container.querySelector('.sp-card-body').classList.contains('has-aside')).toBe(false);
-  expect(aside.container.querySelector('.sp-card .sdp-emoticona-barra').textContent).toBe('🍅');
-  aside.unmount();
+/* Llei del Píxel · La targeta en línia, sense `actual` («Les vistes» del
+   Perfil, DetallVistes; abans també l'aside de l'editor, retirat al Bloc 3.4
+   del Gauntlet, 261016), i el diàleg del xip «Vista targeta» no són ítems de
+   llista: es queden sense quadrat, com abans, i l'emoticona continua al centre
+   de la caputxa (Pedra Seca §10). */
+test('261007 · la targeta en línia (sense `actual`) i el xip «Vista targeta» no porten l’emoji XL al quadrat; l’emoticona continua a la caputxa', () => {
+  const enLinia = render(<TargetaViva document={{ ...DOC, icon: '🍅' }} autor={AUTOR} />);
+  expect(quadratDe(enLinia.container)).toBeNull();
+  expect(enLinia.container.querySelector('.sp-card-body').classList.contains('has-aside')).toBe(false);
+  expect(enLinia.container.querySelector('.sp-card .sdp-emoticona-barra').textContent).toBe('🍅');
+  enLinia.unmount();
   render(<BotoTargetaViva document={{ ...DOC, icon: '🍅' }} autor={AUTOR} etiquetes={[]} />);
   act(() => { fireEvent.click(screen.getByRole('button', { name: 'Vista targeta' })); });
   const vista = screen.getByRole('dialog', { name: 'Vista targeta' });

@@ -65,7 +65,7 @@ describe('la capçalera de PublicacioDetall la decidix qui signa', () => {
      l'element: al Mercat porta la marca de Sóc de Poble. */
   test('una persona amb només avatar_url (la marca de Sóc de Poble): ni avatar ni logotip', () => {
     const marca = '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg';
-    const container = pinta({ id: 'mac', title: 'Mac', seller: 'Mestre Poble', author_id: 'mestre-obres', avatar_url: marca }, 'mercat');
+    const container = pinta({ id: 'mac', title: 'Mac', seller: 'Javi Llinares', author_id: 'javillinares', avatar_url: marca }, 'mercat');
     expect(fills(container)[0]).toBe('H1.');
     expect(container.querySelector('.page-title-avatar')).toBeNull();
     expect(container.querySelector('.page-title-logo')).toBeNull();

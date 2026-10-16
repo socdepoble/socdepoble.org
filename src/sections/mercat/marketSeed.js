@@ -6,11 +6,12 @@ export const MOCK_MARKET_ITEMS = [{
   subtitle: 'Com nou - Apple - Gris',
   description: 'Mac Mini en perfecte estat. Comprat al març de 2025.\n\n- Processador Apple M4.\n- 24GB de RAM.\n- 512 GB d\'emmagatzematge.\n\nCaracterístiques adicionals:\n- Color: Gris\n- Estat: Com nou\n- Marca: Apple',
   price: '900.00€',
-  seller: 'Javi',
-  /* T3 (261001) · avatar_url no és l'autoria: el nom i l'avatar de qui signa
-     els posa marketContent.js des de author_id (identitatsSeed · autoriaSeed). */
-  avatar_url: '/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png',
-  author_name: 'Javi',
+  seller: 'Javi Llinares',
+  /* T3 (261001) · L'autoria de la persona pilot (Javi Llinares) porta la seua
+     foto personal de perfil, mai el logotip de l'entitat Sóc de Poble (Pedra Seca §11). */
+  avatar_url: '/assets/fotos/javi-llinares-perfil-1200px.jpg',
+  image_url: '/assets/uploads/brain/mac_mini_m4_1787721966622.jpg',
+  author_name: 'Javi Llinares',
   population: 'La Torre de les Maçanes',
   author_role: 'user',
   author_id: 'javillinares',

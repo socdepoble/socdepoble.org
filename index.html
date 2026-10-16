@@ -32,6 +32,14 @@
     <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content="Logotip de Sóc de Poble, Portal de Pobles Connectats, sobre el mapa verd" />
     <meta property="og:type" content="website" />
+    <!-- Bloc 3.5.5 (261016): WhatsApp i les xarxes no executen JavaScript; lligen
+         esta capçalera tal com ix del servidor. Ni og:url ni canonical hi van, a
+         propòsit: este HTML es servix a totes les rutes. Un canonical estàtic que
+         el JavaScript canvia després pot portar Google a plegar-les totes a la
+         portada, i Facebook, Messenger i LinkedIn prenen og:url com l'URL canònica
+         de l'objecte: un og:url fix a la portada hi plegaria cada enllaç profund.
+         Sense ell, el rastrejador pren l'URL que ha demanat. Tots dos els posa
+         useSEO per ruta al navegador. -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Sóc de Poble" />
     <meta name="twitter:description" content="Sóc de Poble: la xarxa pública del poble." />

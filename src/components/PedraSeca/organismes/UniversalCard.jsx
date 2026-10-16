@@ -112,6 +112,9 @@
  * subratllat només en passar el ratolí). Com la ranura `accio`, és un germà
  * del vel enllaç de la targeta, no un fill, i puja damunt seu
  * (.sp-card-copyright, z-index 2): el clic és seu i no obri la targeta.
+ * Directiva de Dignitat Humana (pla 261015_1900) · L'única excepció: la
+ * targeta que representa una PERSONA (`objecte.tipus === 'persona'`) no
+ * porta drets ni categories (`labels`). Una obra signada per una persona sí.
  *
  * Ordre del Mestre (261007) · «COMENTARIS = XAT» · Comentar del peu és el
  * MATEIX botó que el de la barra blava (BotoComentar, barres/BarraBlava.jsx):
@@ -484,7 +487,18 @@ export function UniversalCard({
   const safeImageUrl = fontDeLaTargeta(esMitjaOpac(imageUrl) ? imatgeDelPort : imageUrl, imatgePrivada);
   const safeAvatarUrl = fontDeLaTargeta(esMitjaOpac(avatarUrl) ? avatarDelPort : avatarUrl, imatgePrivada);
   const TitleTag = TITOLS.has(headingLevel) ? headingLevel : 'h3';
-  const etiquetes = Array.isArray(labels) ? labels.filter(Boolean) : [];
+  /* Directiva de Dignitat Humana (pla 261015_1900, Onada 1.1) · La targeta
+     d'una PERSONA (el descriptor de l'element, objecteDePerfil: tipus
+     'persona') no porta drets d'autor ni categories: una persona no és una
+     obra ni es categoritza. El poble, si el consumidor el dona, va a
+     l'autoria (location), que la guarda no toca.
+     Mana el tipus de l'OBJECTE representat, mai el de l'autor: una nota o un
+     article signats per una persona continuen amb els seus drets i etiquetes
+     (l'ordre del 261007, l'enllaç del copyright a totes les targetes, val per
+     a tota obra). */
+  const esPersona = objecte?.tipus === 'persona';
+  const etiquetes = !esPersona && Array.isArray(labels) ? labels.filter(Boolean) : [];
+  const drets = esPersona ? undefined : copyright;
   const ambTitol = (verb) => (title ? `${verb} ${title}` : verb);
 
   const alCalendari = usePastillaCalendari({ time, date, dateTime });
@@ -681,7 +695,7 @@ export function UniversalCard({
         subtitle={llevaPuntFinal(subtitle)}
         body={body}
         etiquetes={etiquetes}
-        copyright={copyright}
+        copyright={drets}
         portes={ambPortes ? <PortesTargeta portes={portesNetes} /> : null}
         privada={imatgePrivada}
         accio={accio}

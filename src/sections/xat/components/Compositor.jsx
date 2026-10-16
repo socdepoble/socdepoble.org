@@ -75,10 +75,17 @@ export default function Compositor({
   barra = null, onEscapa = null, campRef = null, entitatActiva = null
 }) {
   if (esNomesLectura(fil)) {
+    /* Gauntlet 261016 (Bloc 3.6.1) · Un fil de només lectura que no és uns
+       Avisos (el xat de Javi Llinares per a qui no s'ha registrat, al xat de
+       mostra) porta el seu avís ja traduït (`avisNomesLectura`): la mateixa
+       línia i la mateixa classe, amb la icona de persona. */
+    const avisPropi = typeof fil.avisNomesLectura === 'string' && fil.avisNomesLectura ? fil.avisNomesLectura : null;
     return (
       <p className="sdp-xat-compositor sdp-xat-compositor--avis" role="status">
-        <Megaphone size={20} aria-hidden="true" focusable="false" />
-        <span>{t('section.xat.canal.nomesAdmins', 'En Avisos només escriuen els administradors.')}</span>
+        {avisPropi
+          ? <UserRound size={20} aria-hidden="true" focusable="false" />
+          : <Megaphone size={20} aria-hidden="true" focusable="false" />}
+        <span>{avisPropi || t('section.xat.canal.nomesAdmins', 'En Avisos només escriuen els administradors.')}</span>
       </p>
     );
   }

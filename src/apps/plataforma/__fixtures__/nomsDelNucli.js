@@ -4,8 +4,12 @@
    (contracteNucli.js) no porta cap historial, que seria API nova.
    nucliModuls.test.js hi lliga el contracte: cap porta ni cap nom de
    l'1.0.0 s'ha llevat, i el que s'hi ha afegit és exactament
-   NOMS_DEL_NUCLI_1_1. guardesDelModul.test.js comprova que cada nom de
-   l'1.1.0 el fa servir alguna app. */
+   NOMS_DEL_NUCLI_1_1 més NOMS_DEL_NUCLI_1_2. guardesDelModul.test.js
+   comprova que cada nom de l'1.1.0 el fa servir alguna app i, des del
+   Gauntlet 261016, que l'1.2.0 té ús en una app de veres (el Lector munta
+   UniversalWorkspace) i que cada nom seu el fa servir una app o el mòdul de
+   l'espai (__fixtures__/modulAmbEspai, l'únic amb DefaultItemCard), que
+   modulDeBuild.test.jsx compila de veritat. */
 
 const congela = (portes) => Object.freeze(Object.fromEntries(
   Object.entries(portes).map(([clau, noms]) => [clau, noms === '*' ? '*' : Object.freeze([...noms])])
@@ -35,4 +39,10 @@ export const NOMS_DEL_NUCLI_1_1 = congela({
   pedraSeca: ['AfegitRapid', 'BarraResum', 'DetallArticle', 'ESTATS_ARTICLE', 'Fila', 'GraellaArticles', 'GraellaTargetes',
     'LiniesColleccio', 'LlistaArticles', 'MarcColumna', 'NavegacioPeriode', 'OrdenaCategories', 'Pila', 'PillToggle',
     'SelectorCategoria', 'TEXTOS_ESTAT_LINIA', 'TargetesColleccions', 'TeclatNumeric', 'UniversalTPV', 'estatLinia', 'mouCategoria']
+});
+
+/* El que l'1.2.0 (Gauntlet nocturn, 261016) afig a l'1.1.0: una porta nova,
+   l'espai de treball del Bloc de notes, perquè el Lector s'hi munte. */
+export const NOMS_DEL_NUCLI_1_2 = congela({
+  workspace: ['DefaultItemCard', 'UniversalWorkspace']
 });

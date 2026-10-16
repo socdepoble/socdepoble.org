@@ -132,10 +132,30 @@ describe('261007 · /page/drets-autor és «Drets d’autor»', () => {
     expect(titols.filter(([nivell]) => nivell === '4').length).toBeGreaterThanOrEqual(4);
     for (const [, text] of titols) expect(text.trim().endsWith('.')).toBe(false);
     expect((html.match(/<strong>/g) || []).length).toBeGreaterThan(20);
-    // Només etiquetes de prosa, i un sol enllaç: el de la pàgina legal.
-    const etiquetes = new Set([...html.matchAll(/<([a-z0-9]+)[\s>]/gi)].map((m) => m[1].toLowerCase()));
+    // La targeta canònica de Legal és l'única excepció a la prosa.
+    // Validem tot el grup abans de llevar-lo: cap div arbitrari queda admés.
+    const cos = new DOMParser().parseFromString(html, 'text/html').body;
+    const grup = cos.querySelector('div[data-sdp-targetes]');
+    const targeta = grup?.firstElementChild;
+    const atributs = (element) => Object.fromEntries([...element.attributes].map(({ name, value }) => [name, value]));
+    expect([...cos.querySelectorAll('div')]).toEqual([grup, targeta]);
+    expect(atributs(grup)).toEqual({ 'data-sdp-targetes': '', class: 'sdp-targetes', 'data-forma': 'sola', 'data-alineacio': 'dreta' });
+    expect(grup.children).toHaveLength(1);
+    expect(atributs(targeta)).toEqual({
+      'data-sdp-targeta': 'pagina:legal', class: 'sdp-targeta', 'data-ruta': '/legal',
+      // L'embed conserva la instantània desada, no el copy viu de la destinació.
+      'data-titol': 'Legal i privacitat',
+      'data-subtitol': "Condicions d'ús, responsabilitat, protecció de dades i telemetria honesta",
+      'data-entradilla': "Sense lletra menuda, sense galetes de seguiment i sense trampes. T'expliquem com funciona Sóc de Poble, quins drets tens i què fem per a protegir la teua intimitat.",
+      'data-autor': 'Sóc de Poble', 'data-autor-ruta': '/projecte'
+    });
+    expect(targeta.childNodes).toHaveLength(1);
+    expect(targeta.firstElementChild.outerHTML).toBe('<a href="/legal" rel="noopener noreferrer nofollow">Legal i privacitat</a>');
+    grup.remove();
+    // Fora de la targeta, només etiquetes de prosa i l'enllaç de /legal.
+    const etiquetes = new Set([...cos.querySelectorAll('*')].map((element) => element.localName));
     expect([...etiquetes].filter((e) => !['h3', 'h4', 'p', 'ul', 'li', 'strong', 'code', 'a'].includes(e))).toEqual([]);
-    expect([...html.matchAll(/<a\b[^>]*>/g)].map(([a]) => a)).toEqual(['<a href="/legal">']);
+    expect([...cos.querySelectorAll('a')].map(atributs)).toEqual([{ href: '/legal' }]);
   });
 
   test('el codi: AGPL-3.0, el mateix que diu el fitxer LICENSE', () => {

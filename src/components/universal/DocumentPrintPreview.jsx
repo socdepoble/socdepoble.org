@@ -26,10 +26,14 @@ const plain = value => String(value || '').replace(/<[^>]*>/g, '');
    marges verticals de 0.67em de l'h1 als navegadors actuals (Chrome 136+,
    Firefox 140+ i Safari 26 van llevar les regles d'h1 niat en <section>; al
    Baseline 2022 eixe h1 duia 0.83em: ahí la portada es mou 2 mm). */
+/* Directiva de Dignitat Humana (pla 261015_1900) · Sense drets (la fitxa d'una
+   persona), cap <footer>: un de buit deixava 10 mm (25 mm a la portada) de
+   marge sense res. Amb drets, el document de sempre. */
 export function buildPrintDocument(doc, cover = false, author = '') {
   const title = escape(plain(doc.title) || 'Sense títol');
   const copyright = escape(doc.copyright);
-  const coverHtml = cover ? `<section class="cover"><p>Sóc de Poble · Edició personal</p><p class="cover-titol">${title}</p><p>${escape(plain(doc.subtitle))}</p><p>${escape(author)}</p><footer>${copyright}</footer></section>` : '';
+  const peu = copyright ? `<footer>${copyright}</footer>` : '';
+  const coverHtml = cover ? `<section class="cover"><p>Sóc de Poble · Edició personal</p><p class="cover-titol">${title}</p><p>${escape(plain(doc.subtitle))}</p><p>${escape(author)}</p>${peu}</section>` : '';
   return `<!doctype html><html lang="ca"><head><meta charset="utf-8"><meta name="referrer" content="no-referrer"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data: blob: https:; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'"><title>${title}</title><style>
 @page { size: A4; margin: 20mm 18mm; }
 * { box-sizing: border-box; } body { margin: 0; color: ${PAPER.tinta}; background: white; font: 11pt/1.6 Georgia, serif; overflow-wrap: anywhere; }
@@ -38,7 +42,7 @@ img,svg { max-width: 100%; max-height: 225mm; object-fit: contain; } figure,bloc
 .cover { min-height: 245mm; display: flex; flex-direction: column; justify-content: center; text-align: center; break-after: page; } .cover-titol { font-size: 36pt; line-height: 1.2; font-weight: bold; margin: 0.67em 0; } .cover footer { margin-top: 25mm; }
 @media screen { body { padding: 4mm; background: ${PAPER.mesa}; } main { background: white; padding: 12mm; box-shadow: 0 2px 12px ${PAPER.ombra}; } .cover { min-height: 80vh; } }
 @media screen and (max-width: 120mm) { body { padding: 0; } main { padding: 4mm; } }
-</style></head><body><main>${coverHtml}<article><header class="page-title"><h1>${title}</h1></header>${doc.subtitle ? `<h2>${escape(plain(doc.subtitle))}</h2>` : ''}${sanitizeHtml(doc.lead || '')}${sanitizeHtml(doc.content || '')}<footer>${copyright}</footer></article></main></body></html>`;
+</style></head><body><main>${coverHtml}<article><header class="page-title"><h1>${title}</h1></header>${doc.subtitle ? `<h2>${escape(plain(doc.subtitle))}</h2>` : ''}${sanitizeHtml(doc.lead || '')}${sanitizeHtml(doc.content || '')}${peu}</article></main></body></html>`;
 }
 
 export default function DocumentPrintPreview({ document: doc, author = '' }) {

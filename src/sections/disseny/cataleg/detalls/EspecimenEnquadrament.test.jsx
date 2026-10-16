@@ -58,9 +58,21 @@ it('«Enquadrar l’avatar de la IAIA» obri el retallador de l’avatar: només
   act(() => { fireEvent.change(within(dialeg).getByLabelText('Ampliació'), { target: { value: '2' } }); });
   await act(async () => { fireEvent.click(within(dialeg).getByRole('button', { name: 'Desar l’enquadrament' })); });
   expect(dobles.exportaRetall.mock.calls[0][1]).toEqual({ x: 256, y: 256, w: 512, h: 512 });
+  /* Gauntlet 261016 (Bloc 1, Llei del Quadrat) · El retall ix a 400 × 400
+     exactes (sortidaAvatar), també d'una adreça (en JPEG: no en sap el tipus
+     abans de carregar-la). Abans, a la mida del retall (512 × 512). */
+  expect(dobles.exportaRetall.mock.calls[0][2]).toEqual({ amplada: 400, alcada: 400, tipus: 'image/jpeg' });
   expect(screen.queryByRole('dialog', { name: 'Enquadrar l’avatar' })).toBeNull();
   expect(screen.getByAltText('L’avatar enquadrat')).toBeTruthy();
-  expect(screen.getByText(/forma 1:1/).textContent).toContain('compressió de l’avatar');
+  /* Gauntlet 261016 (Bloc 1, Llei del Quadrat) · Actualitzada a posta: el peu
+     diu la mida exacta que ix del retallador (400 × 400, MIDA_AVATAR), i que
+     la compressió ja no la torna a reduir. Abans deia «fins a 400 px» (i, abans
+     encara, els 600 del logotip). */
+  const peu = screen.getByText(/forma 1:1/).textContent;
+  expect(peu).toContain('400 × 400 px exactes, forma 1:1');
+  expect(peu).toContain('compressió de l’avatar (WebP, 400 × 400 px, sense tornar-lo a reduir)');
+  expect(peu).not.toContain('600');
+  expect(peu).not.toContain('fins a');
 });
 
 /* Onada 4 · revisió adversarial (K1) · Els selectors de fitxers amagats, en l'ordre de l'espècimen. */
@@ -102,7 +114,28 @@ it('K1 · el peu només diu «sense tornar-la a codificar» quan el fitxer és d
   await triaFitxer(selectors(container)[1], quadrada());
   await act(async () => { fireEvent.click(within(screen.getByRole('dialog', { name: 'Enquadrar l’avatar' })).getByRole('button', { name: 'Desar l’enquadrament' })); });
   expect(dobles.exportaRetall).toHaveBeenCalledTimes(1);
+  /* Gauntlet 261016 (Bloc 1, Llei del Quadrat) · Actualitzada a posta: la
+     foto sencera de 1024 px ix a 400 × 400 exactes (abans, 1024 × 1024), en
+     PNG com el camí T46, i el peu diu la mida de veres. */
+  expect(dobles.exportaRetall.mock.calls[0][2]).toEqual({ amplada: 400, alcada: 400, tipus: 'image/png' });
   const peuAvatar = screen.getByAltText('L’avatar enquadrat').closest('figure').textContent;
-  expect(peuAvatar).toContain('1024 × 1024 px, forma 1:1');
+  expect(peuAvatar).toContain('400 × 400 px exactes, forma 1:1');
   expect(peuAvatar).not.toContain('sense tornar-la a codificar');
+});
+
+/* Gauntlet 261016 (Bloc 1, Llei del Quadrat, i Bloc 1.2, mandat de l'EXIF) ·
+   El catàleg encara deia «capçalera 1.200 × 675 / 16:9» i «fins a 400 px», i
+   no documentava la casella de l'EXIF (ofereixConservarExif) ni la clau
+   metadades.exif d'onDesa. */
+it('Bloc 1 · el contracte diu la capçalera quadrada de 1.200 × 1.200, l’avatar de 400 × 400 i la casella de l’EXIF', () => {
+  const { container } = munta();
+  const text = container.textContent;
+  expect(text).not.toMatch(/1\.200 × 675|16:9 \(1\.200|capçalera 16:9/);
+  expect(text).toContain('la capçalera, 1.200 × 1.200');
+  expect(text).toContain('l’avatar, 400 × 400');
+  expect(text).toContain('ofereixConservarExif');
+  expect(text).toContain('metadades.exif: { conservaExif: true, original } (marcada) o { conservaExif: false } (desmarcada)');
+  expect(text).toContain('Conserva la ubicació i la data de la foto');
+  expect(screen.getByRole('button', { name: 'Capçalera quadrada (1.200 × 1.200)' })).toBeTruthy();
+  expect(screen.queryByRole('button', { name: /16:9/ })).toBeNull();
 });

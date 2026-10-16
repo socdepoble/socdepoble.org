@@ -45,7 +45,7 @@ vi.mock('../../components/universal/UniversalPage', () => ({
 import PerfilPublicSection from './PerfilPublicSection.jsx';
 import { oblidaEntitatDelProjecte, RUTA_PERFIL_PROJECTE } from '../../config/navigation.js';
 import { DEFAULT_AUTHOR } from '../../components/universal/UniversalUtils.js';
-import { ENTITAT_PILOT_ID, ENTITAT_PILOT_SLUG } from '../../data/identitatsSeed.js';
+import { ENTITAT_PILOT_ID, ENTITAT_PILOT_SLUG, POBLE_FUNDACIONAL } from '../../data/identitatsSeed.js';
 
 const FORN = {
   tipus: 'entitat', id: 'o-1', slug: 'forn', nom: 'Forn de la Torre', avatar: '/assets/forn.png', hero: '', lema: '',
@@ -98,7 +98,12 @@ test('una persona passa el seu avatar a PageFrame (avatarAutor), sense logotip',
    oficial», el PNG verd, «evitant en qualsevol cas la silueta negra») · La
    fitxa pública del pilot (esElProjecte: el slug declarat, que la càrrega
    registra, o l'id de la llavor) porta el PNG verd a la barra taronja, com
-   l'editor, «Les vistes» i «El compte». El nom, el poble i l'enllaç no canvien. */
+   l'editor, «Les vistes» i «El compte». El nom, el poble i l'enllaç no canvien.
+   Gauntlet 261016 (Bloc 3.5.2; ordre del Mestre: «Prohibit mostrar entitats
+   sense poble») · El poble desat continua manant (Alcoi es queda Alcoi);
+   sense poble, el pilot porta el seu, La Torre de les Maçanes
+   (POBLE_FUNDACIONAL). Abans eixia sense poble: l'expectativa del tercer cas
+   s'ha actualitzat a propòsit. */
 test('prompt 261014_0400 · la barra taronja de la fitxa pública del pilot porta el PNG verd oficial, mai la silueta ni el logo de la fila', async () => {
   expect(DEFAULT_AUTHOR.avatarUrl).toBe('/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png');
   const uuid = '5b0c1d2e-3f40-4a51-8b62-7c83d94ea5f6';
@@ -115,7 +120,7 @@ test('prompt 261014_0400 · la barra taronja de la fitxa pública del pilot port
     await screen.findByRole('heading', { level: 1, name: 'Sóc de Poble' });
     const { topBarData } = rendersDe('Sóc de Poble').at(-1);
     expect(topBarData).toMatchObject({
-      authorName: 'Sóc de Poble', authorAvatar: DEFAULT_AUTHOR.avatarUrl, authorLocation: pilot.poble, authorHref: RUTA_PERFIL_PROJECTE,
+      authorName: 'Sóc de Poble', authorAvatar: DEFAULT_AUTHOR.avatarUrl, authorLocation: pilot.poble || POBLE_FUNDACIONAL, authorHref: RUTA_PERFIL_PROJECTE,
     });
     cleanup();
     oblidaEntitatDelProjecte();

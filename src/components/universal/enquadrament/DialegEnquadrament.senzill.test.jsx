@@ -221,11 +221,16 @@ describe('mode senzill · el peu', () => {
 });
 
 describe('mode senzill · l’eixida exacta de cada forma', () => {
-  test('avatar: fins a 600 px; logotip: 600 × 600 exactes; capçalera: 1.200 × 675 exactes (16:9)', async () => {
+  /* Gauntlet 261016 (Bloc 1, Llei del Quadrat: «avatars quadrats de 400 × 400
+     px», «la capçalera i la targeta són exactament la mateixa imatge de
+     1.200 × 1.200») · L'avatar passa de 600 a 400 (MIDA_AVATAR); el logotip
+     es queda en 600 (MIDA_LOGOTIP) i la capçalera deixa el 16:9 (1.200 × 675,
+     ordre 261008, derogada pel pla del Gauntlet) i és un quadrat. */
+  test('avatar: 400 × 400 exactes; logotip: 600 × 600 exactes; capçalera: 1.200 × 1.200 exactes (1:1)', async () => {
     const casos = [
-      ['avatar', { x: 1000, y: 0, w: 2000, h: 2000 }, { amplada: 600, alcada: 600, tipus: 'image/png' }],
+      ['avatar', { x: 1000, y: 0, w: 2000, h: 2000 }, { amplada: 400, alcada: 400, tipus: 'image/png' }],
       ['logotip', { x: 1000, y: 0, w: 2000, h: 2000 }, { amplada: 600, alcada: 600, tipus: 'image/png' }],
-      ['capcalera', { x: 222, y: 0, w: 3556, h: 2000 }, { amplada: 1200, alcada: 675, tipus: 'image/png' }],
+      ['capcalera', { x: 1000, y: 0, w: 2000, h: 2000 }, { amplada: 1200, alcada: 1200, tipus: 'image/png' }],
     ];
     for (const [forma, rect, opcions] of casos) {
       const vista = munta({ forma });
@@ -236,9 +241,11 @@ describe('mode senzill · l’eixida exacta de cada forma', () => {
     }
   });
 
-  test('un retall més menut que l’eixida: el logotip i la capçalera s’amplien a la mida exacta; l’avatar no', async () => {
+  /* Gauntlet 261016 (Bloc 1) · Abans l'avatar no s'ampliava (un retall de
+     300 px ixia a 300 × 300). Ara les tres formes són exactes. */
+  test('un retall més menut que l’eixida: les tres formes s’amplien a la mida exacta', async () => {
     const xicoteta = { amplada: 400, alcada: 300 };
-    const casos = [['avatar', 300, 300], ['logotip', 600, 600], ['capcalera', 1200, 675]];
+    const casos = [['avatar', 400, 400], ['logotip', 600, 600], ['capcalera', 1200, 1200]];
     for (const [forma, amplada, alcada] of casos) {
       const vista = munta({ forma, imatge: xicoteta });
       await carregat(vista);
@@ -250,15 +257,21 @@ describe('mode senzill · l’eixida exacta de cada forma', () => {
 
   test('la taula de formes: proporció, màscara i títol', () => {
     expect(Object.keys(FORMES)).toEqual(['avatar', 'logotip', 'capcalera']);
-    expect(FORMES.avatar).toMatchObject({ format: '1:1', mascara: 'cercle', titol: 'Retalla la foto', midaSortida: 600, exacta: null });
+    expect(FORMES.avatar).toMatchObject({ format: '1:1', mascara: 'cercle', titol: 'Retalla la foto', midaSortida: 400, exacta: { amplada: 400, alcada: 400 } });
     expect(FORMES.logotip).toMatchObject({ format: '1:1', mascara: null, titol: 'Retalla el logotip', exacta: { amplada: 600, alcada: 600 } });
-    expect(FORMES.capcalera).toMatchObject({ format: '16:9', mascara: null, titol: 'Retalla la capçalera', exacta: { amplada: 1200, alcada: 675 } });
-    expect(Object.isFrozen(FORMES) && Object.isFrozen(FORMES.capcalera)).toBe(true);
+    expect(FORMES.capcalera).toMatchObject({ format: '1:1', mascara: null, titol: 'Retalla la capçalera', exacta: { amplada: 1200, alcada: 1200 } });
+    expect(FORMES.capcalera.formats.map((f) => [f.valor, f.ratio])).toEqual([['1:1', 1]]);
+    expect(Object.isFrozen(FORMES) && Object.isFrozen(FORMES.capcalera) && Object.isFrozen(FORMES.avatar.exacta)).toBe(true);
   });
 });
 
 describe('l’espècimen del catàleg · els tres modes senzills', () => {
-  test('cercle, quadrat de 600 × 600 i 16:9 de 1.200 × 675, amb la imatge del repositori; sense style=', async () => {
+  /* Gauntlet 261016 (Bloc 1) · L'avatar en cercle ix ara a 400 × 400
+     exactes i la capçalera a 1.200 × 1.200 exactes: la llegenda de
+     l'espècimen la calcula de la taula FORMES. El nom del botó de la
+     capçalera és text de l'espècimen (EspecimenEnquadrament.jsx): ja no diu
+     16:9 sinó «Capçalera quadrada (1.200 × 1.200)», i es clica per eixe nom. */
+  test('cercle de 400 × 400, quadrat de 600 × 600 i capçalera de 1.200 × 1.200, amb la imatge del repositori; sense style=', async () => {
     dobles.carregaImatge.mockReset().mockResolvedValue({ amplada: 1024, alcada: 1024, tipus: 'image/png', element: {}, allibera: vi.fn() });
     dobles.exportaRetall.mockReset().mockResolvedValue(new File(['y'], 'enquadrament.png', { type: 'image/png' }));
     URL.createObjectURL = vi.fn(() => 'blob:prova');
@@ -268,9 +281,9 @@ describe('l’espècimen del catàleg · els tres modes senzills', () => {
       expect([...container.querySelectorAll('.sdp-especimen h4')].map((h) => h.textContent))
         .toContain('Les imatges de la fitxa: la finestra senzilla');
       const casos = [
-        ['Avatar en cercle', 'Retalla la foto', true, '600 × 600 px, avatar en cercle'],
+        ['Avatar en cercle', 'Retalla la foto', true, '400 × 400 px exactes, avatar en cercle'],
         ['Logotip quadrat (600 × 600)', 'Retalla el logotip', false, '600 × 600 px exactes, logotip quadrat'],
-        ['Capçalera 16:9 (1.200 × 675)', 'Retalla la capçalera', false, '1200 × 675 px exactes, capçalera'],
+        ['Capçalera quadrada (1.200 × 1.200)', 'Retalla la capçalera', false, '1200 × 1200 px exactes, capçalera'],
       ];
       for (const [boto, finestra, cercle, text] of casos) {
         await act(async () => { fireEvent.click(screen.getByRole('button', { name: boto })); });

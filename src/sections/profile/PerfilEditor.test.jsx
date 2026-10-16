@@ -20,7 +20,6 @@ import { PerfilEditor, AVIS_SENSE_COLUMNA } from './PerfilEditor.jsx';
 import { desaLlicenciaPerDefecte, llegixLlicenciaPerDefecte } from '../../components/universal/drets/herencia.js';
 import { cuaDesament } from '../../data/autodesament/cua.js';
 import { ambitDe } from '../../data/autodesament/ambit.js';
-import { AVISOS_TARGETA_VIVA } from '../../components/universal/TargetaViva.jsx';
 
 const CONFIG = Object.freeze({ tenantId: '00000000-0000-4000-8000-000000000000' });
 const jo = { id: 'jo', mena: 'persona', nom: 'Pep', rol: 'Persona', avatar: 'a.webp', dades: { full_name: 'Pep', is_public: false, town_name: 'La Torre' } };
@@ -49,28 +48,54 @@ test('D13 · les eines van davall de l’entradilla i sense llavor; la identitat
   expect(m.adapter).toMatchObject({ barAuthorName: 'Pep', barAuthorLocation: 'La Torre', barAuthorAvatar: 'a.webp' });
 });
 
-/* T50 (decisió del Mestre, 260928: «Llista + dreta si hi cap») · La fitxa del
-   Perfil activa la targeta viva de l'editor i publica el document en curs per
-   a la llista (documentViu, per l'id de la identitat). */
-test('T50 · l’adaptador del Perfil porta targetaViva: true (també en lectura)', () => {
+/* Pla 261015_1900 (Onada 1.2: «poda de la quarta columna»; deroga l'aside de
+   T50, «Llista + dreta si hi cap») · L'editor del Perfil ja no porta la
+   targeta fixa a la dreta, per a la persona i per a l'organització, també en
+   lectura. Sense aside tampoc hi ha cap avís que dir (avisTargetaViva fora).
+   La targeta viva continua a la llista (documentViu, la prova de baix) i a
+   «Les vistes».
+   Pla 261016 (canvi deliberat) · L'adaptador ja no porta ni la clau
+   `targetaViva` (abans, false): la maquinària T50 de DocumentEditor es queda
+   sense consumidor i es retira, com la de Notes (precedent P4,
+   NotesEditor.test.jsx). PerfilShell.targetaViva.test.jsx continua dient que
+   no hi ha cap aside. */
+test('Pla 261015 · l’adaptador del Perfil no porta targetaViva ni cap avís de l’aside (també en lectura)', () => {
   render(<PerfilEditor identitat={jo} />);
-  expect(m.adapter.targetaViva).toBe(true);
+  expect(m.adapter).not.toHaveProperty('targetaViva');
+  expect(m.adapter).not.toHaveProperty('avisTargetaViva');
+  cleanup();
+  render(<PerfilEditor identitat={org('owner')} />);
+  expect(m.adapter).not.toHaveProperty('targetaViva');
+  expect(m.adapter).not.toHaveProperty('avisTargetaViva');
   cleanup();
   render(<PerfilEditor identitat={org('member')} />);
   expect(m.adapter.document).toBeNull();
-  expect(m.adapter.targetaViva).toBe(true);
+  expect(m.adapter).not.toHaveProperty('targetaViva');
 });
 
-/* Poliment T50 (revisió de W3B1, D3) · L'aside i el xip de l'editor diuen el
-   mateix avís que la fitxa de la llista (PerfilShell): el del Perfil, que no
-   promet cap publicació, per a una persona i per a una organització. */
-test('T50 · l’adaptador del Perfil passa l’avís de la targeta viva del Perfil (persona i organització)', () => {
-  render(<PerfilEditor identitat={jo} />);
-  expect(m.adapter.avisTargetaViva).toBe(AVISOS_TARGETA_VIVA.perfil);
+/* Directiva de Dignitat Humana (pla 261015_1900, Onada 1.1) · La fitxa d'una
+   persona no porta drets d'autor ni categories: l'adaptador hi diu
+   ambDrets: false, sense dretsAutor ni dretsTriats, el document sense
+   copyright (ni el «© Nom» de reserva, ni el desat) i sense la píndola del rol.
+   L'organització i l'agent, com sempre. */
+test('Dignitat Humana · la persona: ambDrets false, sense drets ni la píndola del rol; l’organització i l’agent, com sempre', () => {
+  render(<PerfilEditor identitat={{ ...jo, dades: { ...jo.dades, copyright: 'CC BY 4.0' } }} />);
+  expect(m.adapter.ambDrets).toBe(false);
+  expect(m.adapter).not.toHaveProperty('dretsAutor');
+  expect(m.adapter).not.toHaveProperty('dretsTriats');
+  expect(m.adapter.document.copyright).toBe('');
+  expect(m.adapter.labels).toEqual([]);
   cleanup();
   render(<PerfilEditor identitat={org('owner')} />);
-  expect(m.adapter.avisTargetaViva).toBe(AVISOS_TARGETA_VIVA.perfil);
-  expect(`${m.adapter.avisTargetaViva.descripcio} ${m.adapter.avisTargetaViva.vista}`).not.toMatch(/publica|teua/i);
+  expect(m.adapter).not.toHaveProperty('ambDrets');
+  expect(m.adapter.dretsAutor).toEqual({ ambit: 'perfil', autor: 'Forn & Cia' });
+  expect(m.adapter.document.copyright).toBe('© Forn & Cia');
+  expect(m.adapter.labels).toEqual([{ text: 'Membre' }]);
+  cleanup();
+  render(<PerfilEditor identitat={{ id: 'iaia', mena: 'agent', nom: 'IAIA', rol: 'Agent IA', dades: { name: 'IAIA', copyright: 'CC0 1.0' } }} />);
+  expect(m.adapter).not.toHaveProperty('ambDrets');
+  expect(m.adapter.dretsAutor).toEqual({ ambit: 'neutre', autor: 'IAIA' });
+  expect(m.adapter.document.copyright).toBe('CC0 1.0');
 });
 
 test('T50 · el document en curs es publica per a la llista, amb l’autoria de la barra i les píndoles, i es retira en desmuntar', async () => {
@@ -355,7 +380,9 @@ test('la fila de reserva (profiles no s’ha pogut llegir) es veu en lectura, ho
   const reserva = { ...jo, dades: { reserva: true, id: 'jo', full_name: 'Pep', avatar_url: '', town_name: 'La Torre' } };
   render(<PerfilEditor identitat={reserva} />);
   expect(m.adapter.document).toBeNull();
-  expect(m.adapter.emptyDocument.labels).toEqual([{ text: 'Persona' }, { text: 'Sense connexió' }]);
+  // Dignitat Humana (261015) · Sense la píndola del rol: només l'estat, que és un avís honest.
+  expect(m.adapter.emptyDocument.labels).toEqual([{ text: 'Sense connexió' }]);
+  expect(m.adapter.emptyDocument.copyright).toBe('');
   expect(screen.getByRole('alert').textContent).toMatch(/No s’ha pogut llegir la fitxa/);
   fireEvent.click(screen.getByRole('button', { name: 'Tornar a provar' }));
   expect(m.recarrega).toHaveBeenCalledTimes(1);
@@ -509,7 +536,9 @@ test('D12 · amb una baixa en curs, la persona veu la fitxa en lectura: el servi
   render(<PerfilEditor identitat={enBaixa} />);
   expect(m.adapter.document).toBeNull();
   expect(m.adapter.emptyDocument).toMatchObject({ title: 'Veïna que se n’ha anat' });
-  expect(m.adapter.emptyDocument.labels).toEqual([{ text: 'Persona' }, { text: 'Baixa en curs' }]);
+  // Dignitat Humana (261015) · Sense la píndola del rol ni drets: només l'estat.
+  expect(m.adapter.emptyDocument.labels).toEqual([{ text: 'Baixa en curs' }]);
+  expect(m.adapter.emptyDocument.copyright).toBe('');
 });
 
 test('la pujada va a la carpeta de la identitat', async () => {
@@ -555,28 +584,36 @@ test('Línia I2 · la closca rep la guarda de pujada i el límit: heroPujant, aj
 
 /* Línia I2 (pla 261008_1201) · La píndola dels drets diu la llicència TRIADA
    de veres: la que s'acaba de triar o, si no, la del servidor; mai el «© Nom»
-   que la fitxa porta de lectura (document.copyright). */
-test('Línia I2 · dretsTriats: buit sense llicència desada (encara que la fitxa diga «© Pep»), la del servidor, i la que s’acaba de triar', () => {
-  render(<PerfilEditor identitat={joAmbId} />);
-  expect(m.adapter.document.copyright).toBe('© Pep');
+   que la fitxa porta de lectura (document.copyright).
+   Directiva de Dignitat Humana (pla 261015_1900) · Ara només l'organització
+   (i l'agent) en porten: la persona no té píndola de drets ni cap copyright,
+   tampoc amb una llicència desada o un esborrany vell a la cua. */
+const orgAmbDrets = (copyright) => ({ ...org('owner'), dades: { ...org('owner').dades, copyright } });
+test('Línia I2 · dretsTriats: buit sense llicència desada (encara que la fitxa diga «© Nom»), la del servidor, i la que s’acaba de triar', () => {
+  render(<PerfilEditor identitat={org('owner')} />);
+  expect(m.adapter.document.copyright).toBe('© Forn & Cia');
   expect(m.adapter.dretsTriats).toBe('');
   cleanup();
   // Un valor del servidor que no és text no és cap llicència triada.
-  render(<PerfilEditor identitat={ambServidor(null)} />);
+  render(<PerfilEditor identitat={orgAmbDrets(null)} />);
   expect(m.adapter.dretsTriats).toBe('');
   cleanup();
-  render(<PerfilEditor identitat={org('owner')} />);
-  expect(m.adapter.dretsTriats).toBe('');
-  cleanup();
-  render(<PerfilEditor identitat={ambServidor('CC BY 4.0')} />);
+  render(<PerfilEditor identitat={orgAmbDrets('CC BY 4.0')} />);
   expect(m.adapter.dretsTriats).toBe('CC BY 4.0');
-  act(() => m.adapter.updateLocal('jo', 'copyright', 'CC0 1.0'));
+  act(() => m.adapter.updateLocal('O', 'copyright', 'CC0 1.0'));
   expect(m.adapter.dretsTriats).toBe('CC0 1.0');
   cleanup();
   // L'esborrany de la cua guanya al servidor també en tornar a obrir la fitxa, com document.copyright.
-  render(<PerfilEditor identitat={ambServidor('CC BY 4.0')} />);
+  render(<PerfilEditor identitat={orgAmbDrets('CC BY 4.0')} />);
   expect(m.adapter.dretsTriats).toBe('CC0 1.0');
   expect(m.adapter.document.copyright).toBe('CC0 1.0');
+  cleanup();
+  // La persona: cap clau de drets i cap copyright, ni el desat ni el de l'esborrany.
+  render(<PerfilEditor identitat={ambServidor('CC BY 4.0')} />);
+  expect(m.adapter).not.toHaveProperty('dretsTriats');
+  expect(m.adapter.document.copyright).toBe('');
+  act(() => m.adapter.updateLocal('jo', 'copyright', 'CC0 1.0'));
+  expect(m.adapter.document.copyright).toBe('');
 });
 
 /* Línia I2 (pla 261008_1201) · La lògica pura de la fitxa té una sola font,
@@ -677,7 +714,7 @@ test('ordre E · en lectura, el mateix que la fitxa pública i sense botó: logo
   expect(m.adapter.emptyDocument.avatarAutor).toEqual({ src: 'https://poble.test/a.webp', alt: 'Avatar de Pep' });
 });
 
-test('Onada 4 · «Capçalera» obri directament la finestra de retall 16:9; cancel·lar no puja res ni torna la closca a la imatge', async () => {
+test('Onada 4 · «Capçalera» obri directament la finestra de retall (quadrada des del Gauntlet 261016); cancel·lar no puja res ni torna la closca a la imatge', async () => {
   const acaba = vi.fn();
   render(<PerfilEditor identitat={jo} />);
   act(() => m.adapter.onHeroEdit({ acaba }));
@@ -770,10 +807,16 @@ test('T39 · una organització la desa amb el seu id; un agent i qui només llig
   expect(m.adapter.dretsAutor.ambit).toBe('neutre');
 });
 
+/* Directiva de Dignitat Humana (pla 261015_1900) · La vista de drets de la
+   fitxa ja només la té l'organització: la persona no en porta (ambDrets). */
 test('T39 · la vista de drets diu que la fitxa és la font de l’herència; l’autor és el del «© Nom» de sèrie', () => {
+  render(<PerfilEditor identitat={org('owner')} />);
+  expect(m.adapter.dretsAutor).toEqual({ ambit: 'perfil', autor: 'Forn & Cia' });
+  expect(m.adapter.document.copyright).toBe('© Forn & Cia');
+  cleanup();
   render(<PerfilEditor identitat={jo} />);
-  expect(m.adapter.dretsAutor).toEqual({ ambit: 'perfil', autor: 'Pep' });
-  expect(m.adapter.document.copyright).toBe('© Pep');
+  expect(m.adapter).not.toHaveProperty('dretsAutor');
+  expect(m.adapter.ambDrets).toBe(false);
 });
 
 /* T39 (correcció de la revisió, 260928) · La preferència és el mirall de la
@@ -805,13 +848,34 @@ test('T39 · amb la fitxa oberta, un valor nou del servidor arriba a la preferè
 test('T39 · un desat confirmat no el torna enrere el valor vell que la fitxa encara porta', async () => {
   // La identitat no canvia: és el render en què la cua ja és buida i la fitxa encara no porta el valor confirmat.
   render(<PerfilEditor identitat={ambServidor('CC BY 4.0')} />);
-  // Com DocumentEditor: primer l'esborrany (desaLocal), que ja és la preferència, i després el desat.
+  /* Pla 261016 (Bloc 3.1; canvi deliberat) · Per a la persona, l'esborrany ja
+     no és la preferència (abans esta línia esperava 'CC0 1.0'): la seua fitxa
+     ja no en pot crear cap i els drets de sèrie es trien a «El compte». Fins
+     al desat, la preferència és la del servidor. L'organització conserva la
+     conducta de sempre: la prova següent. */
   act(() => m.adapter.updateLocal('jo', 'copyright', 'CC0 1.0'));
-  expect(llegixLlicenciaPerDefecte('uuid-pep')).toBe('CC0 1.0');
+  expect(llegixLlicenciaPerDefecte('uuid-pep')).toBe('CC BY 4.0');
   await act(() => m.adapter.saveRemote('jo', 'copyright', 'CC0 1.0'));
   expect(m.updateProfile).toHaveBeenCalledWith({ copyright: 'CC0 1.0' }, CONFIG);
   expect(m.adapter.estatDesament.estat).toBe('net');
   expect(llegixLlicenciaPerDefecte('uuid-pep')).toBe('CC0 1.0');
+});
+
+/* Pla 261016 (Bloc 3.1) · La conducta T39 que la persona deixa, sencera per a
+   l'organització (la seua fitxa sí que tria drets): l'esborrany és la
+   preferència abans del desat, i un desat confirmat no la torna enrere. */
+const fornAmbDrets = (copyright) => ({ ...org('owner'), dades: { ...org('owner').dades, copyright } });
+
+test('T39 · per a l’organització, l’esborrany de «Desar autoria» és la preferència, i un desat confirmat no el torna enrere', async () => {
+  render(<PerfilEditor identitat={fornAmbDrets('CC BY 4.0')} />);
+  expect(llegixLlicenciaPerDefecte('O')).toBe('CC BY 4.0');
+  // Com DocumentEditor: primer l'esborrany (desaLocal), que ja és la preferència, i després el desat.
+  act(() => m.adapter.updateLocal('O', 'copyright', 'CC0 1.0'));
+  expect(llegixLlicenciaPerDefecte('O')).toBe('CC0 1.0');
+  await act(() => m.adapter.saveRemote('O', 'copyright', 'CC0 1.0'));
+  expect(m.updateOrganization).toHaveBeenCalledWith('O', { copyright: 'CC0 1.0' }, CONFIG);
+  expect(m.adapter.estatDesament.estat).toBe('net');
+  expect(llegixLlicenciaPerDefecte('O')).toBe('CC0 1.0');
 });
 
 test('T39 · «Tornar al que hi ha desat» sobre els drets rebutjats també torna la preferència: sense valor al servidor, cap', async () => {
@@ -821,24 +885,48 @@ test('T39 · «Tornar al que hi ha desat» sobre els drets rebutjats també torn
   await act(() => m.adapter.saveRemote('jo', 'copyright', 'CC0 1.0'));
   expect(llegixLlicenciaPerDefecte('uuid-pep')).toBe('CC0 1.0');
   act(() => accioDeDrets('Tornar al que hi ha desat').onClick());
-  expect(m.adapter.document.copyright).toBe('© Pep');
+  // Dignitat Humana (261015) · La fitxa de la persona no pinta drets en cap moment.
+  expect(m.adapter.document.copyright).toBe('');
   expect(cuaDesament.llig({ ...m.autodesament, entitat: 'perfil', id: 'jo' }).camps).toEqual({});
   // Les notes noves ja no hereten la CC0 que s'acaba de rebutjar.
   expect(llegixLlicenciaPerDefecte('uuid-pep')).toBeNull();
 });
 
-test('T39 · l’esborrany rebutjat guanya al servidor també en tornar a obrir la fitxa; renunciar-hi torna al valor del servidor', async () => {
+/* Pla 261016 (Bloc 3.1; ordre del Mestre: «per a la persona, no copies a la
+   preferència un esborrany vell de copyright de la cua») · Canvi deliberat:
+   abans, per a la persona, l'esborrany rebutjat guanyava al servidor en
+   tornar a obrir la fitxa ('CC0 1.0'). Ara trepitjaria la tria d'«El compte»
+   (i, amb una CC0, dedicaria al domini públic cada nota nova): mana el
+   servidor. «Tornar al que hi ha desat» continua sent l'eixida de l'esborrany.
+   L'organització, com sempre: la prova següent. */
+test('T39 · per a la persona, un esborrany vell de drets rebutjat ja no guanya al servidor en tornar a obrir la fitxa; renunciar-hi continua tornant al servidor', async () => {
   m.updateProfile.mockRejectedValue(Object.assign(new Error('Forbidden'), { status: 403 }));
   render(<PerfilEditor identitat={ambServidor('CC BY 4.0')} />);
   act(() => m.adapter.updateLocal('jo', 'copyright', 'CC0 1.0'));
   await act(() => m.adapter.saveRemote('jo', 'copyright', 'CC0 1.0'));
   cleanup();
   render(<PerfilEditor identitat={ambServidor('CC BY 4.0')} />);
+  // Dignitat Humana (261015) · La fitxa no el pinta; i l'esborrany continua a la cua, amb el seu avís.
+  expect(m.adapter.document.copyright).toBe('');
+  expect(cuaDesament.llig({ ...m.autodesament, entitat: 'perfil', id: 'jo' }).camps).toHaveProperty('copyright', 'CC0 1.0');
+  expect(llegixLlicenciaPerDefecte('uuid-pep')).toBe('CC BY 4.0');
+  act(() => accioDeDrets('Tornar al que hi ha desat').onClick());
+  expect(m.adapter.document.copyright).toBe('');
+  expect(llegixLlicenciaPerDefecte('uuid-pep')).toBe('CC BY 4.0');
+});
+
+test('T39 · per a l’organització, l’esborrany rebutjat guanya al servidor també en tornar a obrir la fitxa; renunciar-hi torna al valor del servidor', async () => {
+  m.updateOrganization.mockRejectedValue(Object.assign(new Error('Forbidden'), { status: 403 }));
+  render(<PerfilEditor identitat={fornAmbDrets('CC BY 4.0')} />);
+  act(() => m.adapter.updateLocal('O', 'copyright', 'CC0 1.0'));
+  await act(() => m.adapter.saveRemote('O', 'copyright', 'CC0 1.0'));
+  cleanup();
+  render(<PerfilEditor identitat={fornAmbDrets('CC BY 4.0')} />);
   expect(m.adapter.document.copyright).toBe('CC0 1.0');
-  expect(llegixLlicenciaPerDefecte('uuid-pep')).toBe('CC0 1.0');
+  expect(llegixLlicenciaPerDefecte('O')).toBe('CC0 1.0');
   act(() => accioDeDrets('Tornar al que hi ha desat').onClick());
   expect(m.adapter.document.copyright).toBe('CC BY 4.0');
-  expect(llegixLlicenciaPerDefecte('uuid-pep')).toBe('CC BY 4.0');
+  expect(llegixLlicenciaPerDefecte('O')).toBe('CC BY 4.0');
 });
 
 test('T39 · sense cua d’autodesament la fitxa no desa res, i la preferència tampoc', async () => {
@@ -961,4 +1049,50 @@ test('T47 · C04 · un conflicte ofereix «Conservar el meu», que el torna a en
   await act(async () => {});
   expect(m.updateProfile).toHaveBeenLastCalledWith({ lema: 'Del Mas' }, CONFIG);
   expect(m.adapter.avisosCamps.lead).toBeUndefined();
+});
+
+/* Directiva de Dignitat Humana (pla 261015_1900) · La fitxa de la persona ja
+   no pinta drets, però l'autodesament compara el camp `copyright` amb la DADA
+   del servidor (copyrightDeFitxa), no amb el '' que es pinta: un esborrany vell
+   de «Desar autoria» no entra en un conflicte fals. */
+test('Dignitat Humana · la base del copyright de la persona és la dada del servidor, no el buit que es pinta', () => {
+  const verifica = vi.spyOn(cuaDesament, 'verifica');
+  const encua = vi.spyOn(cuaDesament, 'encua');
+  try {
+    render(<PerfilEditor identitat={ambServidor('CC BY 4.0')} />);
+    expect(m.adapter.document.copyright).toBe('');
+    const ref = { ...m.autodesament, entitat: 'perfil', id: 'jo' };
+    expect(verifica).toHaveBeenLastCalledWith(expect.objectContaining(ref), expect.objectContaining({ copyright: 'CC BY 4.0' }));
+    act(() => m.adapter.updateLocal('jo', 'copyright', 'CC0 1.0'));
+    expect(encua.mock.calls.find(([, camp]) => camp === 'copyright')[3]).toEqual({ baseValor: 'CC BY 4.0' });
+    cleanup();
+    // Sense llicència desada, la base és el «© Nom» de reserva de sempre (el valor que el servidor «té»).
+    render(<PerfilEditor identitat={joAmbId} />);
+    expect(verifica).toHaveBeenLastCalledWith(expect.anything(), expect.objectContaining({ copyright: '© Pep' }));
+  } finally {
+    verifica.mockRestore();
+    encua.mockRestore();
+  }
+});
+
+/* Directiva de Dignitat Humana (pla 261015_1900) · Un esborrany vell de
+   drets de la persona en conflicte o en error només es pot deixar anar: res a
+   triar a cegues sobre un valor que la fitxa ja no mostra. L'organització
+   conserva les seues eixides. */
+test('Dignitat Humana · un esborrany vell de drets de la persona en conflicte o en error: només «Tornar al que hi ha desat»', async () => {
+  m.updateProfile.mockRejectedValueOnce(Object.assign(new Error('Conflicte'), { status: 409 }));
+  render(<PerfilEditor identitat={ambServidor('CC BY 4.0')} />);
+  await act(() => m.adapter.saveRemote('jo', 'copyright', 'CC0 1.0'));
+  expect(accioDeDrets('Tornar al que hi ha desat')).toBeTruthy();
+  expect(m.adapter.avisosCamps.copyright.error.accions.map((accio) => accio.text)).toEqual(['Tornar al que hi ha desat']);
+  cleanup();
+  m.updateProfile.mockRejectedValueOnce(Object.assign(new Error('Forbidden'), { status: 403 }));
+  render(<PerfilEditor identitat={ambServidor('CC BY 4.0')} />);
+  await act(() => m.adapter.saveRemote('jo', 'copyright', 'CC BY-SA 4.0'));
+  expect(m.adapter.avisosCamps.copyright.error.accions.map((accio) => accio.text)).toEqual(['Tornar al que hi ha desat']);
+  cleanup();
+  m.updateOrganization.mockRejectedValueOnce(Object.assign(new Error('Conflicte'), { status: 409 }));
+  render(<PerfilEditor identitat={orgAmbDrets('CC BY 4.0')} />);
+  await act(() => m.adapter.saveRemote('O', 'copyright', 'CC0 1.0'));
+  expect(m.adapter.avisosCamps.copyright.error.accions.map((accio) => accio.text)).toEqual(['Conservar el meu', 'Tornar al que hi ha desat']);
 });

@@ -136,9 +136,10 @@ export const CONTRACTE_AMFITRIO_V1 = congela({
      `registra` amb el manifest (sdp.app.v1 més `cos`, `estils` opcionals i
      el rang `nucli`); el cos, un <script> clàssic del MATEIX origen amb
      `integrity` que la plataforma injecta quan s'obri l'app, crida `lliura`
-     mentre s'executa i pren React, la plataforma i Pedra Seca de `nucli`
-     (src/apps/plataforma/contracteNucli.js). Cap mòdul porta backend ni
-     sessió: el Model B no canvia. */
+     mentre s'executa i pren React, la plataforma, Pedra Seca, el router i,
+     des del nucli 1.2.0 (261016), l'espai de treball del Bloc de notes de
+     `nucli` (src/apps/plataforma/contracteNucli.js). Cap mòdul porta backend
+     ni sessió: el Model B no canvia. */
   moduls: {
     esquema: 'sdp.modul.v1',
     registra: 'registraModul',

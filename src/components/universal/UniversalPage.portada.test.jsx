@@ -9,11 +9,18 @@
  * Les proves són fora de L2 (tractor-persistencia): poden tocar
  * l'emmagatzematge directament.
  */
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { MemoryRouter } from '../../app/contexts/RouterContext';
 import { STORAGE_PREFIX } from '../../config/storage.js';
 import { CLAU_PORTADES, UniversalPage, _reiniciaPortades } from './UniversalPage.jsx';
+
+const mitjans = vi.hoisted(() => ({ disponible: false, resol: vi.fn() }));
+vi.mock('../../data/backendPort.js', async (importOriginal) => ({
+  ...await importOriginal(),
+  teCapacitat: (capacitat) => capacitat === 'mitjans' && mitjans.disponible,
+  resolveAsset: mitjans.resol
+}));
 
 const CLAU_DESADA = STORAGE_PREFIX + CLAU_PORTADES;
 const IMATGE = '/assets/ui/plugins/gestoria_vinyeta.jpg';
@@ -32,6 +39,8 @@ const imatge = (container) => container.querySelector('.hero-image img');
 const desat = () => JSON.parse(window.localStorage.getItem(CLAU_DESADA) ?? 'null');
 
 beforeEach(() => {
+  mitjans.disponible = false;
+  mitjans.resol.mockReset();
   window.localStorage.removeItem(CLAU_DESADA);
   _reiniciaPortades();
 });
@@ -70,6 +79,28 @@ describe('sense la prop: la portada de sempre (Llei del Píxel)', () => {
 });
 
 describe('amb la prop: la portada plegable', () => {
+  test('una portada opaca es resol pel port abans de pintar-se i conserva el plegat', async () => {
+    const referencia = 'sdp-media://mitjans/poble/u/portada.webp';
+    const resolta = 'https://mitjans.example/portada.webp';
+    mitjans.disponible = true;
+    mitjans.resol.mockResolvedValue(resolta);
+    const { container } = render(<Pagina heroImage={referencia} portadaPlegable={{ clau: 'plugin:gestoria' }} />);
+    expect(imatge(container)).toBeNull();
+    await waitFor(() => expect(imatge(container)?.getAttribute('src')).toBe(resolta));
+    expect(mitjans.resol).toHaveBeenCalledWith(referencia, { signal: expect.any(AbortSignal) });
+    fireEvent.click(boto());
+    expect(imatge(container).closest('[hidden]')).not.toBeNull();
+    expect(imatge(container).getAttribute('src')).toBe(resolta);
+  });
+
+  test('sense capacitat de mitjans, una portada opaca no genera cap petició d’imatge', () => {
+    const { container } = render(<Pagina heroImage="sdp-media://mitjans/poble/u/portada.webp" portadaPlegable={{ clau: 'plugin:gestoria' }} />);
+    expect(imatge(container)).toBeNull();
+    expect(mitjans.resol).not.toHaveBeenCalled();
+    fireEvent.click(boto());
+    expect(boto().getAttribute('aria-expanded')).toBe('false');
+  });
+
   test('per defecte es veu, i el botó diu què farà i què controla', () => {
     const { container } = render(<Pagina portadaPlegable={{ clau: 'plugin:gestoria' }} />);
     const b = boto();

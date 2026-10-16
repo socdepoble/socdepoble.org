@@ -502,8 +502,9 @@
   .sdp-arbre__rol { display: block; color: var(--sdp-text-suau); }
   .sdp-arbre__relacio { color: var(--sdp-text-titol); }
   .sdp-arbre code { overflow-wrap: anywhere; }
-  /* T52b · Targetes de mostra (TargetaViva, UniversalCard plana) a l'ample de la
-     targeta viva de l'editor; en una columna estreta, a tot l'ample. */
+  /* T52b · Targetes de mostra (TargetaViva, UniversalCard plana) a l'ample que
+     tenia la targeta viva a l'aside de l'editor (retirat al Bloc 3.4 del
+     Gauntlet, 261016); en una columna estreta, a tot l'ample. */
   .sdp-especimen__targetes {
     display: grid; gap: var(--sdp-space-6); align-items: start; margin-bottom: var(--sdp-space-4);
     grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr));
@@ -1996,63 +1997,18 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
   .sdp-nota-fitxa-viva { min-width: 0; }
 }
 
-/* ── T50 · TARGETA VIVA A LA DRETA DE L'EDITOR ─────────────────────────
-   Decisió del Mestre (260928): «Llista + dreta si hi cap». Amb la clau
-   `targetaViva` de l'adaptador (Bloc de Notes i Perfil), DocumentEditor
-   embolcalla la closca en `.sdp-editor-amb-targeta`, SEMPRE (el pare de la
-   closca no canvia amb l'amplària: TipTap no es remunta). L'embolcall és un
-   contenidor AMB NOM: el xip i l'aside no consulten el contenidor més pròxim
-   (.sdp-universal-page-container), sinó l'editor sencer.
-     · Editor de 60rem o més (menús plegats): graella editor | targeta, amb
-       l'aside fix i el seu propi scroll; el xip «Vista targeta» s'amaga.
-     · Més estret, en mòbil i en navegadors sense @container (Baseline 2022:
-       Chrome 100 i Firefox 100): cap aside; el xip obri el diàleg.
-   L'embolcall fa el paper que feia la closca dins de la columna del detall
-   (flex en columna, height 100%, min-height 0): les barres sticky i el
-   scroll del contenidor de la pàgina continuen dins de la closca.
-   `--drets`: amb la vista de drets d'autor oberta, s'amaga sencer (la closca
-   ja ho estava; l'aside no s'ha de quedar al costat de CopyrightPage). */
+/* ── T50 · LA CARTA DE LA TARGETA VIVA ─────────────────────────────────
+   Decisió del Mestre (260928): «Llista + dreta si hi cap». Bloc 3.4 del
+   Gauntlet (261016) · L'aside a la dreta de l'editor i el seu xip «Vista
+   targeta» ja no tenen consumidor (Notes els va llevar a P4; el Perfil, al
+   pla 261015), i les seues regles se n'han anat amb ells: l'embolcall amb
+   el contenidor amb nom, la graella, l'aside i la propietat del xip. Queda
+   la carta: la TargetaViva de la fitxa de la llista (NotaFitxa, PerfilShell)
+   i de «Les vistes» (DetallVistes) no força la columna flex a créixer. El
+   token --sdp-targeta-viva-ample (tokens.css) es queda: el fa servir
+   PerfilShell.css. */
 @layer components {
-  .sdp-editor-amb-targeta {
-    container: sdp-editor-targeta / inline-size;
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    min-height: 0;
-    min-width: 0;
-  }
-  .sdp-editor-amb-targeta--drets { display: none; }
-  .sdp-editor-amb-targeta__graella {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: minmax(0, 1fr);
-    flex: 1 1 0;
-    min-height: 0;
-    min-width: 0;
-  }
-  .sdp-targeta-viva { display: none; }
   .sdp-targeta-viva-carta { min-width: 0; }
-  /* El xip viu dins d'un altre contenidor (.sdp-universal-page-container):
-     Chrome no sempre torna a avaluar-hi la consulta amb nom quan l'editor
-     s'eixampla després d'haver-se estretit (el xip es quedava al costat de
-     l'aside). No consulta res: hereta de la graella, filla directa del
-     contenidor, una propietat que la consulta posa a `none`. Sense
-     @container, la propietat no existix i el xip es veu. */
-  .sdp-editor-amb-targeta .sdp-boto-targeta-viva { display: var(--targeta-viva-xip, inline-flex); }
-  @container sdp-editor-targeta (min-width: 60rem) {
-    .sdp-editor-amb-targeta__graella {
-      grid-template-columns: minmax(0, 1fr) var(--sdp-targeta-viva-ample);
-      --targeta-viva-xip: none;
-    }
-    .sdp-targeta-viva {
-      display: block;
-      min-height: 0;
-      overflow-y: auto;
-      padding-block: var(--sdp-space-4);
-      border-inline-start: 1px solid var(--sdp-vora);
-      background: var(--sdp-fons-app);
-    }
-  }
 }
 
 /* ── TRADUCTOR SOBIRÀ · menú de llengües i pàgina traduïda ─────────────

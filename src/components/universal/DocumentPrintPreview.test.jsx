@@ -21,6 +21,17 @@ test('A4 export escapes metadata, sanitizes rich text and blocks executable reso
   expect(buildPrintDocument({ title: 'Sense portada' })).not.toContain('<section class="cover">');
 });
 
+/* Directiva de Dignitat Humana (pla 261015_1900) · Sense drets (la fitxa d'una
+   persona), cap <footer> buit ni a l'article ni a la portada: només marge
+   sense res. Amb drets, el peu de sempre a tots dos llocs. */
+test('Dignitat Humana · sense drets, cap <footer>; amb drets, el de sempre a la portada i a l’article', () => {
+  const peus = (doc) => [...new DOMParser().parseFromString(buildPrintDocument(doc, true, 'Pepa'), 'text/html').querySelectorAll('footer')]
+    .map((f) => f.closest('.cover') ? `portada:${f.textContent}` : `article:${f.textContent}`);
+  expect(peus({ title: 'Pepa', copyright: '' })).toEqual([]);
+  expect(peus({ title: 'Pepa' })).toEqual([]);
+  expect(peus({ title: 'Carta', copyright: 'CC BY-SA' })).toEqual(['portada:CC BY-SA', 'article:CC BY-SA']);
+});
+
 /* T42 · un sol scroll, el del document. jsdom no calcula alçades (la regla
    es prova a DocumentPrintPreview.capes.test.js); ací, l'estructura que
    eixa regla necessita. */

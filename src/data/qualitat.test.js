@@ -60,7 +60,29 @@ const CENS = Object.freeze([
   'src/data/localXat.js',
   'src/data/localXat.test.js',
   'src/data/localPerfils.test.js',
-  'src/data/supabase/perfils.fundacionals.test.js'
+  'src/data/supabase/perfils.fundacionals.test.js',
+  /* Gauntlet 261016 (Bloc 3) · El catàleg d'agents (tipusDAgent, la font
+     única del tipus de perfil: un personatge ANIMAL és IA; i l'estil de Nano
+     Banana sense personatges de tercers, amb la seua prova), el perfil local
+     que el llig i l'adaptador de perfils (la dignitat de persona). */
+  'src/data/agentsSeed.js',
+  'src/data/agentsSeed.drets.test.js',
+  'src/data/localPerfils.js',
+  'src/data/supabase/perfils.js',
+  /* Gauntlet 261016 · La resta de fitxers d'esta capa tocats esta nit, que la
+     regla de la capçalera fa entrar al cens: l'autoria de la llavor (Bloc -1,
+     la persona pilot amb el seu retrat), el poble innegociable de les
+     organitzacions (Bloc 3.5.2), la prova de la migració del 403 de profiles
+     (Bloc 3.5.3, que ja es lint a ella mateixa) i les proves de l'adaptador
+     del xat (Bloc 3.6 i la baixa del canal de l'auditoria de Codex). */
+  'src/data/identitatsSeed.autoria.test.js',
+  'src/data/pobleOrganitzacio.js',
+  'src/data/organizations.js',
+  'src/data/supabase/organizations.js',
+  'src/data/supabase/perfilUpdatePropi.migracio.test.js',
+  'src/data/supabase/xat.test.js',
+  'src/data/supabase/xat.iaia.test.js',
+  'src/data/supabase/xat.baixa.realtimejs.test.js'
 ]);
 
 describe('el cens', () => {

@@ -1,5 +1,7 @@
 /**
- * Lector de notícies · l'adaptador de la llavor (desenvolupament).
+ * Lector de notícies · l'adaptador de la llavor (les proves i el literal
+ * VITE_SDP_LECTOR_LLAVOR=1; el servidor de desenvolupament ja no l'encén:
+ * ordre del Mestre, 261016, «Purga de Mocks»).
  *
  * Té la forma de l'adaptador del port (fontNoticies.js) i no fa xarxa:
  * analitza en local els feeds de llavor/cataleg.js amb el nucli. Perquè

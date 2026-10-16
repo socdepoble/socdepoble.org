@@ -66,7 +66,7 @@ describe('T6 · la boina del Mur porta a la pàgina de qui signa', () => {
   });
 
   test('el Javi, al seu perfil; l’entitat pilot, al seu, per identificador', () => {
-    expect(boina(MAC)).toMatchObject({ nom: 'Javi', href: '/gent/javillinares' });
+    expect(boina(MAC)).toMatchObject({ nom: 'Javi Llinares', href: '/gent/javillinares' });
     expect(boina(SAMARRETA)).toMatchObject({ nom: 'Sóc de Poble', href: RUTA_PERFIL_PROJECTE });
     expect(boina({ id: 'f', type: 'post', title: 'Pa', author_name: 'Forn', author_org_id: 'forn' })).toMatchObject({ href: '/empresa/forn' });
   });

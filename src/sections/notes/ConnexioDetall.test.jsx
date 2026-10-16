@@ -191,13 +191,30 @@ test('absent (un perfil): caiguda amb el títol de l’origen, avís i «Obri l�
   const { container } = render(<ConnexioDetall nota={nota(ORIGEN_PERFIL)} />);
   expect(container.querySelector('header.page-title h1').textContent).toBe('Pepa Soler');
   expect(screen.getByText('L’original no es pot mostrar ací')).toBeTruthy();
-  expect(screen.getByText('Persona')).toBeTruthy();
+  /* Gauntlet 261016 (Bloc 3; Directiva de Dignitat Humana) · DEROGADA la
+     píndola «Persona»: una connexió a una persona no la categoritza. */
+  expect(screen.queryByText('Persona')).toBeNull();
+  expect(container.querySelector('header.page-title .page-title-labels')).toBeNull();
+  expect(mocks.pagina.labels).toEqual([]);
   expect(mocks.pagina.onConnect).toBe(false);
   senseEditor(container);
   fireEvent.click(screen.getByRole('button', { name: 'Obri l’original' }));
   expect(mocks.navigate).toHaveBeenCalledWith('/gent/u1');
   fireEvent.click(screen.getByRole('button', { name: 'Compartir' }));
   await waitFor(() => expect(escriu).toHaveBeenCalledWith(new URL('/gent/u1', window.location.origin).href));
+});
+
+/* Gauntlet 261016 (Bloc 3) · La regla és de la persona i només d'ella: mana
+   el tipus de l'objecte representat (origen.objecte). Una entitat, un grup,
+   una IA o una obra que no es resol conserven la píndola del seu tipus, i un
+   objecte desconegut, «Element», com abans. */
+test.each([
+  ['entitat', 'Entitat'], ['grup', 'Grup'], ['ia', 'Intel·ligència artificial'], ['pagina', 'Pàgina'], [undefined, 'Element']
+])('caiguda d’una connexió a «%s»: la píndola del seu tipus es queda', (objecte, etiqueta) => {
+  const origen = { ...ORIGEN_PERFIL, objecte, autorTipus: objecte, itemId: 'x-1', ruta: '/perfil/x-1', titol: 'Un original' };
+  const { container } = render(<ConnexioDetall nota={nota(origen)} />);
+  expect(screen.getByText('L’original no es pot mostrar ací')).toBeTruthy();
+  expect([...container.querySelectorAll('header.page-title .page-title-labels > li')].map((li) => li.textContent)).toEqual([etiqueta]);
 });
 
 /* ── T71 · l'intern és un accés directe de lectura a l'original ── */

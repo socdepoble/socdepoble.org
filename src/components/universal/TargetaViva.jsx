@@ -2,10 +2,13 @@
  * TargetaViva.jsx — la targeta del document que s'està escrivint.
  *
  * T50 (decisió del Mestre, 260928: «Llista + dreta si hi cap») · Una sola
- * peça per als tres llocs on es veu la targeta mentre s'edita:
+ * peça per a tots els llocs on es veu la targeta del document:
  *   · la fitxa activa de la columna central (NotaFitxa, i la fitxa del Perfil);
- *   · l'aside fix a la dreta de l'editor, quan hi cap (DocumentEditor);
- *   · el diàleg del xip «Vista targeta», quan no hi cap (BotoTargetaViva).
+ *   · l'apartat «Les vistes» del Perfil, en línia (DetallVistes);
+ *   · el diàleg del xip «Vista targeta» (BotoTargetaViva), que hui només
+ *     munta el catàleg (EspecimenTargetaViva).
+ * Bloc 3.4 del Gauntlet (261016) · L'aside fix a la dreta de l'editor s'ha
+ * retirat: DocumentEditor ja no té les claus targetaViva ni avisTargetaViva.
  *
  * És la UniversalCard de la llista (variant "pla"), la mateixa anatomia que
  * la publicació: caputxa taronja, cos i peu blau. Els botons ensenyen les
@@ -34,9 +37,10 @@ import { llegixDocumentViu, publicaDocumentViu, subscriuDocumentViu } from './do
    prometre el que el seu consumidor no complix. `descripcio` és el diàleg que
    obri una acció de la targeta; `vista`, la descripció del diàleg del xip.
    AVIS_PREVISUALITZACIO és la reserva, sense cap promesa de publicació: la
-   fa servir qui no passa `avis` (DocumentEditor, si l'adaptador no porta
-   avisTargetaViva). Els textos d'usuari van amb els demostratius este/esta i
-   l'apòstrof tipogràfic (’), com la resta de l'app. */
+   fa servir qui no passa `avis`. Hui tots els consumidors en passen un
+   (AVISOS_TARGETA_VIVA); la feia servir l'aside de DocumentEditor, retirat
+   al Bloc 3.4 del Gauntlet (261016). Els textos d'usuari van amb els
+   demostratius este/esta i l'apòstrof tipogràfic (’), com la resta de l'app. */
 const TITOL_AVIS = 'Això és una previsualització';
 const BOTONS = 'Els botons d’esta targeta —connectar, traduir, comentar i compartir—';
 export const AVIS_PREVISUALITZACIO = Object.freeze({
@@ -72,7 +76,8 @@ const TELEMETRIA_PREVISUALITZACIO = Object.freeze({ mode: 'previsualitzacio' });
 /**
  * document: el de l'editor (HTML sanejat als camps de text).
  * autor: { nom, avatar, poble, ruta }, el de la barra taronja. etiquetes: les píndoles.
- * onMainClick: la fitxa de la llista la torna a triar; a l'aside no fa res.
+ * onMainClick: la fitxa de la llista la torna a triar; sense (a «Les vistes» i
+ *   al xip), el clic a la targeta no fa res.
  * avis: els textos del consumidor (AVISOS_TARGETA_VIVA); sense, la reserva.
  * actual: és la fitxa triada de la llista (aria-current a UniversalCard) i,
  *   sense imatge, porta l'emoji XL al quadrat (ordre del Mestre, 261007).
@@ -93,9 +98,10 @@ export function TargetaViva({ document, autor = null, etiquetes, className, onMa
      ítem de llista)»: sense imatge i amb una emoticona triada, l'emoji XL
      ocupa el quadrat (insigniaEmojiXL, la mateixa insígnia del catàleg); amb
      imatge, cap insígnia (CardBody la pintaria igualment). Només a la fitxa de
-     la llista, que és la que porta `actual` (NotaFitxa, PerfilShell): l'aside
-     i el xip «Vista targeta» de l'editor es queden com eren (Llei del Píxel)
-     fins que el Mestre ho decidisca. L'emoticona del centre de la caputxa es
+     la llista, que és la que porta `actual` (NotaFitxa, PerfilShell): «Les
+     vistes» del Perfil (DetallVistes) i el diàleg del xip «Vista targeta» no
+     el porten i es queden com eren (Llei del Píxel) fins que el Mestre ho
+     decidisca. L'emoticona del centre de la caputxa es
      queda: és la llei de la barra taronja (Pedra Seca §10, «en lectura o
      targeta, buit si no s'ha triat»), i amb imatge és l'únic lloc on es veu.
      Revisió del 261007 (M2-08) · Sense etiqueta: la targeta ja diu el títol, i
@@ -142,8 +148,10 @@ export function TargetaViva({ document, autor = null, etiquetes, className, onMa
 
 /**
  * El xip «Vista targeta» (família dels de davall del títol: Vista A4, Crear
- * portada) i el diàleg amb la targeta. És la xarxa quan l'aside no cap a la
- * dreta de l'editor, i en navegadors sense @container (components.css).
+ * portada) i el diàleg amb la targeta. Era la xarxa de l'aside de l'editor
+ * quan no hi cabia; amb l'aside, ha eixit de DocumentEditor (Bloc 3.4 del
+ * Gauntlet, 261016) i hui només el munta el catàleg (EspecimenTargetaViva):
+ * muntar-lo en una pantalla és decisió del Mestre.
  * La targeta només es munta amb el diàleg obert. `avis`, com a TargetaViva.
  */
 export function BotoTargetaViva({ document, autor = null, etiquetes, avis = AVIS_PREVISUALITZACIO }) {

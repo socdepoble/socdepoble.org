@@ -10,7 +10,7 @@
  * CONTRACTE (pur: sense contextos ni router; es pot pintar al catàleg)
  *   valor      · el copyright d'ara ('CC BY-NC-SA 4.0 Sóc de Poble', 'CC BY 4.0', 'x · CC0 1.0'…)
  *   autor      · el nom del text de sèrie de «Copyright (C)» (© autor)
- *   ambit      · 'publicacio' | 'perfil' | 'neutre' — quin avís d'herència es pinta
+ *   ambit      · 'publicacio' | 'perfil' | 'compte' | 'neutre' — quin avís d'herència es pinta
  *   perDefecte · la llicència heretada de sèrie (només àmbit 'publicacio'), o null
  *   onDesa(valor) · desar; el pare decidix el camí (desaLocal + desaCamp)
  *   onTanca(motiu: 'esc'|'tornar'|'boto') · tornar al document sense desar
@@ -19,9 +19,15 @@
  *   onEsborrany({ valor, tria, text }) · cada canvi de tria o de text, perquè
  *                el pare el guarde (Escape dins del text lliure no el perd)
  *   La casella de CC0 no forma part de l'esborrany: cada vegada es torna a acceptar.
+ *   Opcionals (pla 261016, Bloc 3.1), per a quan la vista no és dins d'un
+ *   document; sense elles, el DOM i els textos de sempre:
+ *   etiquetaTornar · el botó de dalt («Tornar al document»)
+ *   introduccio    · el paràgraf de davall del títol (el de sempre diu «Ara té «valor»»)
+ *   llegenda       · la del grup d'opcions («Tria els drets d’esta obra»)
  *
  * Es conserven del selector vell: l'acceptació irrevocable de CC0 (mateix text i
- * mateixa casella), el límit 246 + 10 = 256 i el valor «text · CC0 1.0».
+ * mateixa casella, menys a «El compte»: ACCEPTACIO_CC0), el límit 246 + 10 =
+ * 256 i el valor «text · CC0 1.0».
  * Res no canvia fins que es prem «Desar autoria»: és una decisió legal, no una
  * tecla, i la pàgina ho diu.
  *
@@ -42,6 +48,29 @@ import {
 
 const ICONES = { reservats: Copyright, cc: CreativeCommons, domini: Globe, lliure: PenLine, actual: History };
 
+/* La pista que l'avís de la nota donava abans a tothom, ara dita només per a
+   qui és certa: una entitat tria els seus drets de sèrie a la seua fitxa. */
+const PISTA_ENTITAT = 'Si publiques com a entitat, els drets de sèrie de l’entitat es trien a la seua fitxa del Perfil.';
+/* Pla 261016 (Bloc 3.1; ordre del Mestre) · I la persona, els de les seues
+   notes, a «El compte» (l'ajust 'drets-notes' de PerfilContext). */
+const PISTA_PERSONA = 'Els drets de sèrie de les teues notes es trien a «El compte» del Perfil.';
+
+/* L'acceptació irrevocable de CC0. La de sempre parla de l'obra que s'edita.
+   Gauntlet 261016 (encàrrec E; revisió adversarial, P3) · A «El compte» no hi
+   ha cap obra: es trien els drets amb què naixeran les notes noves, i això és
+   el que es diu i el que s'accepta. La casella hi continua sent obligatòria
+   per a desar CC0 com a valor de sèrie. */
+const ACCEPTACIO_CC0 = Object.freeze({
+  obra: Object.freeze({
+    avis: 'En confirmar esta opció dedicaràs la teua obra al domini públic amb CC0: altres persones podran copiar-la, modificar-la i usar-la comercialment. Esta renúncia és irrevocable en la mesura permesa per la llei. El text personalitzat no afegix restriccions a CC0.',
+    casella: 'Tinc els drets necessaris i accepte dedicar esta obra a CC0.',
+  }),
+  compte: Object.freeze({
+    avis: 'En confirmar esta opció, les teues notes noves naixeran dedicades al domini públic (CC0): altres persones les podran copiar, modificar i usar comercialment. Esta renúncia és irrevocable en la mesura permesa per la llei. El text personalitzat no afegix restriccions a CC0.',
+    casella: 'Tinc els drets necessaris i accepte que les meues notes noves naixquen dedicades a CC0.',
+  }),
+});
+
 /** Els textos de l'avís d'herència, per àmbit. Null: sense avís. */
 export function avisHerencia(ambit, perDefecte) {
   if (ambit === 'perfil') {
@@ -50,13 +79,28 @@ export function avisHerencia(ambit, perDefecte) {
       text: 'Estos drets són els de la teua fitxa i, a partir d’ara, els de sèrie de les notes que crees amb «CREAR NOTA» des d’este dispositiu. Les notes que ja tens no canvien: cadascuna guarda els seus.',
     };
   }
+  /* Pla 261016 (Bloc 3.1; ordre del Mestre) · «El compte» de la persona: la
+     vista no és dins de cap nota, i el que es tria són els drets amb què
+     naixeran les notes noves. Les que ja hi són no canvien. */
+  if (ambit === 'compte') {
+    return {
+      titol: 'Les teues notes noves naixen amb estos drets',
+      text: 'Estos són els drets amb què naixen les teues notes noves. Les que ja tens no canvien: cadascuna guarda els seus.',
+    };
+  }
+  /* Directiva de Dignitat Humana (pla 261015_1900) · La fitxa d'una persona ja
+     no tria drets (una persona no és una obra): l'avís no envia ningú «a la
+     teua fitxa del Perfil». Diu el que és cert per a qualsevol actor, persona
+     o entitat: amb què naixen les notes noves, que ací només canvia esta i
+     que els de sèrie d'una entitat es trien a la fitxa de l'entitat.
+     Pla 261016 (Bloc 3.1) · I on es trien els de la persona: «El compte». */
   if (ambit === 'publicacio') {
     return perDefecte ? {
       titol: 'Només canvia esta nota',
-      text: `Els drets de sèrie del teu Perfil són «${perDefecte}»: són els que porten les notes noves. Si els canvies ací, només canvien per a esta nota. Per a les futures, canvia’ls a la teua fitxa del Perfil.`,
+      text: `Les notes noves naixen amb els drets de sèrie «${perDefecte}». Si els canvies ací, només canvien per a esta nota: les altres guarden els seus. ${PISTA_PERSONA} ${PISTA_ENTITAT}`,
     } : {
       titol: 'Només canvia esta nota',
-      text: `En este dispositiu encara no hi ha drets de sèrie del teu Perfil. Si els tries a la teua fitxa, les notes noves que crees amb «CREAR NOTA» els portaran; mentrestant naixen amb «${LLICENCIA_PER_DEFECTE}». Ací només canvies esta nota.`,
+      text: `En este dispositiu encara no hi ha drets de sèrie: les notes noves que crees amb «CREAR NOTA» naixen amb «${LLICENCIA_PER_DEFECTE}». Ací només canvies esta nota. ${PISTA_PERSONA} ${PISTA_ENTITAT}`,
     };
   }
   return null;
@@ -115,6 +159,7 @@ function textosInicials({ id, text }, recuperat, autor) {
 
 export function CopyrightPage({
   valor: valorRebut = '', autor = '', ambit = 'neutre', perDefecte = null, esborrany = null, onEsborrany, onDesa, onTanca,
+  etiquetaTornar = 'Tornar al document', introduccio = null, llegenda = 'Tria els drets d’esta obra',
 }) {
   /* El valor d'ara es fixa en obrir: si canviara amb la vista oberta, l'opció
      «Mantindre» no ha d'aparéixer, desaparéixer ni desar un altre text. */
@@ -172,14 +217,15 @@ export function CopyrightPage({
   };
 
   const avis = avisHerencia(ambit, perDefecte);
+  const acceptacio = ambit === 'compte' ? ACCEPTACIO_CC0.compte : ACCEPTACIO_CC0.obra;
 
   return (
     <section className="sdp-drets" aria-labelledby={idTitol} onKeyDown={onKeyDown}>
       <header className="sdp-drets__cap">
-        <Boto varietat="fantasma" icona={ArrowLeft} onClick={() => onTanca?.('tornar')}>Tornar al document</Boto>
+        <Boto varietat="fantasma" icona={ArrowLeft} onClick={() => onTanca?.('tornar')}>{etiquetaTornar}</Boto>
         <h2 id={idTitol} ref={titolRef} tabIndex={-1} className="sdp-drets__titol">Drets d’autor</h2>
         <p className="sdp-drets__intro">
-          Tria qui pot usar esta obra i com. Ara té «{valor}». Res no canvia fins que prems «Desar autoria».
+          {introduccio ?? <>Tria qui pot usar esta obra i com. Ara té «{valor}». Res no canvia fins que prems «Desar autoria».</>}
         </p>
       </header>
 
@@ -191,7 +237,7 @@ export function CopyrightPage({
         ) : null}
         {avis ? <Alerta to="info" titol={avis.titol}><p>{avis.text}</p></Alerta> : null}
 
-        <GrupOpcions aspecte="targetes" llegenda="Tria els drets d’esta obra" valor={tria} onCanvi={canvia}
+        <GrupOpcions aspecte="targetes" llegenda={llegenda} valor={tria} onCanvi={canvia}
           textTriada="Triada" opcions={opcions} />
 
         {lliure ? (
@@ -216,13 +262,13 @@ export function CopyrightPage({
 
         {cc0 ? (
           <div className="sdp-drets__cc0">
-            <p>En confirmar esta opció dedicaràs la teua obra al domini públic amb CC0: altres persones podran copiar-la, modificar-la i usar-la comercialment. Esta renúncia és irrevocable en la mesura permesa per la llei. El text personalitzat no afegix restriccions a CC0.</p>
+            <p>{acceptacio.avis}</p>
             <p>
               <a href="https://creativecommons.org/publicdomain/zero/1.0/" target="_blank" rel="noreferrer">
                 Llegir les condicions de CC0<span className="sdp-nomes-lector"> (s’obri en una pestanya nova)</span>
               </a>
             </p>
-            <Casella etiqueta="Tinc els drets necessaris i accepte dedicar esta obra a CC0." checked={acceptat}
+            <Casella etiqueta={acceptacio.casella} checked={acceptat}
               onChange={(event) => setAcceptat(event.target.checked)} />
           </div>
         ) : (

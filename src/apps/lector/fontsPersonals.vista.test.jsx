@@ -231,12 +231,38 @@ describe('a la gestió de fonts', () => {
 });
 
 describe('la destinació d’enllaços que exporta el mòdul de l’app', () => {
-  test('amb la llavor (desenvolupament): la forma de la plataforma, sense obrir res en carregar-se', async () => {
-    const { destinacioEnllac } = await import('./AppLector.jsx');
-    expect(destinacioEnllac).not.toBeNull();
-    expect(destinacioEnllac.nomMaxim).toBe(80);
-    expect(typeof destinacioEnllac.categories).toBe('function');
-    expect(typeof destinacioEnllac.afig).toBe('function');
+  /* Ordre del Mestre, 261016 (prompt 261016_0015, Bloc 0, «Purga de Mocks») · Actualitzada a posta:
+     abans n'hi havia amb el servidor de desenvolupament tot sol (la llavor s'hi encenia). Ara la
+     llavor, i amb ella la destinació, només amb el literal EXACTE. */
+  test('amb el literal de la llavor (VITE_SDP_LECTOR_LLAVOR=1): la forma de la plataforma, sense obrir res en carregar-se', async () => {
+    vi.stubEnv('VITE_SDP_LECTOR_LLAVOR', '1');
+    vi.resetModules();
+    try {
+      const { destinacioEnllac } = await import('./AppLector.jsx');
+      expect(destinacioEnllac).not.toBeNull();
+      expect(destinacioEnllac.nomMaxim).toBe(80);
+      expect(typeof destinacioEnllac.categories).toBe('function');
+      expect(typeof destinacioEnllac.afig).toBe('function');
+    } finally {
+      vi.unstubAllEnvs();
+      vi.resetModules();
+    }
+  });
+
+  /* La conseqüència al Snippet Curador: en desenvolupament sense el literal no hi ha port, i el
+     Curador oferix només el Bloc (correcció SN-R1, NotesSection.lector.test.jsx). Una font personal
+     desada sense port no es veuria enlloc: la gestió de fonts, sense port, és l'estat buit. */
+  test('en desenvolupament sense el literal (Purga de Mocks, 261016): cap destinació', async () => {
+    vi.stubEnv('DEV', true);
+    vi.stubEnv('VITE_SDP_LECTOR_LLAVOR', '');
+    vi.resetModules();
+    try {
+      const { destinacioEnllac } = await import('./AppLector.jsx');
+      expect(destinacioEnllac).toBeNull();
+    } finally {
+      vi.unstubAllEnvs();
+      vi.resetModules();
+    }
   });
 
   test('sense port ni llavor (producció): cap destinació', async () => {

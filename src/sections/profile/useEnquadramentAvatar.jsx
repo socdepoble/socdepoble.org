@@ -1,7 +1,8 @@
 import { useEnquadramentImatge } from '../../components/universal/enquadrament/useEnquadramentImatge.jsx';
-import { FORMATS, MIDA_SORTIDA, tipusDeSortida } from '../../components/universal/enquadrament/enquadrament.js';
+import { FORMATS, tipusDeSortida } from '../../components/universal/enquadrament/enquadrament.js';
 import { PES_MAXIM_ENTRADA } from '../../components/universal/enquadrament/limits.js';
 import { validaFitxerImatge } from '../../hooks/useHeroImageHandler.js';
+import { MIDA_AVATAR } from '../../utils/pujadaImatge.js';
 
 /** L'avatar només té una forma: el quadrat. */
 export const FORMAT_AVATAR = '1:1';
@@ -14,12 +15,20 @@ export const PES_MAXIM_FOTO_AVATAR = PES_MAXIM_ENTRADA;
 
 /* Onada 4 · revisió adversarial (K2, K3) · Una foto nova (File) ix SEMPRE
    recodificada del retallador, també quan es desa sencera: mai l'original,
-   que pot pesar 25 MB i portar l'EXIF (ADR D4). Mateix tipus i mateixa mida
-   que el camí T46 (JPEG o PNG, fins a 1.200 px; el PNG conserva la
-   transparència d'un logotip). Una adreça ja resolta no canvia (T46). */
+   que pot pesar 25 MB. Mateix tipus que el camí T46 (JPEG o PNG; el PNG
+   conserva la transparència d'un logotip).
+   Gauntlet 261016 (Bloc 1, Llei del Quadrat) · I a la mida exacta de
+   l'avatar: 400 × 400 (MIDA_AVATAR, la font única de utils/pujadaImatge.js),
+   també si cal ampliar el retall, com la finestra senzilla de la fitxa
+   (FORMES.avatar). Abans ixia fins a 1.200 px i la compressió el reduïa pel
+   costat llarg: un retall menut es quedava menut. Una adreça ja resolta
+   desada sencera continua sense res a desar (T46); retallada, ix també a
+   400 × 400, en JPEG (una adreça no diu el seu tipus abans de carregar-se,
+   el mateix criteri que configDeForma). */
+export const EXACTA_AVATAR = Object.freeze({ amplada: MIDA_AVATAR, alcada: MIDA_AVATAR });
 export function sortidaAvatar(font) {
-  if (typeof Blob === 'undefined' || !(font instanceof Blob)) return null;
-  return { ampladaMaxima: MIDA_SORTIDA, format: tipusDeSortida(font.type) };
+  const fitxer = typeof Blob !== 'undefined' && font instanceof Blob;
+  return { ampladaMaxima: MIDA_AVATAR, format: tipusDeSortida(fitxer ? font.type : ''), exacta: EXACTA_AVATAR };
 }
 
 /* La fila del quadrat és la del model (enquadrament.js); només canvia
@@ -41,13 +50,19 @@ export const DESCRIPCIO_ENQUADRAMENT_AVATAR = 'Mou la foto i amplia-la fins que 
  * DialegEnquadrament amb una sola forma, el quadrat, i ix ja retallada (el
  * retall es «cou» dins de l'arxiu: D1 i D2 de l'ADR multimèdia).
  *
- * Privacitat de sèrie: un avatar no oferix mai geolocalitzar la foto. Una
- * foto nova ix sempre recodificada del retallador (sortidaAvatar), i després
- * la compressió de sempre la torna a codificar amb el canvas: el fitxer que
- * puja no porta l'EXIF de l'original (ADR D4).
+ * Un avatar no oferix mai geolocalitzar la foto. Una foto nova ix sempre
+ * recodificada del retallador (sortidaAvatar, 400 × 400 exactes), i després
+ * la compressió de sempre la torna a codificar amb el canvas.
+ * Gauntlet 261016 (Bloc 1.2, mandat del Mestre, pla §0.1.3) · L'EXIF el
+ * decidix la persona: si la foto porta la ubicació o la data, el retallador
+ * oferix la casella «Conserva la ubicació i la data de la foto», marcada de
+ * sèrie, i la seua tria arriba a onEnquadrat (tercer argument, `exif`).
+ * Marcada, la compressió hi torna a posar l'EXIF publicable de l'original
+ * (DetallAjust: fotoDinsDelPressupost); desmarcada, el fitxer que puja ix net.
  *
  * CONTRACTE
- *   onEnquadrat(fitxer, info) → Promise: rep el File ja retallat i el puja pel
+ *   onEnquadrat(fitxer, info, exif) → Promise: rep el File ja retallat (i la
+ *     tria de la casella, o undefined si no n'hi ha hagut) i el puja pel
  *     camí de cada lloc. Si acaba bé, el retallador es tanca. Si llança, el
  *     missatge ix dins del retallador i este continua obert (l'avís de fora,
  *     toast o línia del formulari, el posa qui puja: el modal el tapa).

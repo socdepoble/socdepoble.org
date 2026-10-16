@@ -1,6 +1,7 @@
 import { createOrganization, getCurrentUser } from './backendPort.js';
 import { capturaSessio } from './identitat.js';
 import { MAXIM_LEMA } from './limitsText.js';
+import { pobleDOrganitzacio } from './pobleOrganitzacio.js';
 
 const TIPUS = new Set(['company', 'group']);
 const ROLS = new Set(['owner', 'admin', 'member']);
@@ -40,7 +41,11 @@ export async function creaOrganitzacio(dades, config = {}, organitzacions = []) 
   } else if (parentOrganizationId) {
     throw new Error('Una empresa no pot tindre una organització mare.');
   }
-  const payload = { name, slug, kind };
+  /* Gauntlet 261016 (Bloc 3.5.2; ordre del Mestre: «Tota entitat creada ha
+     de portar el seu poble») · El poble és obligatori: el NOM del poble
+     (town_name), que el port desa amb l'organització. Sense, cap crida. */
+  const poble = pobleDOrganitzacio(input.town_name);
+  const payload = { name, slug, kind, town_name: poble };
   if (kind === 'group' && parentOrganizationId) payload.parentOrganizationId = parentOrganizationId;
   /* T49 · En caràcters de veres, com char_length del CHECK: «🌾» és 1, no 2. */
   for (const [camp, limit] of [['description', 500], ['lema', MAXIM_LEMA]]) {
@@ -57,14 +62,16 @@ export async function creaOrganitzacio(dades, config = {}, organitzacions = []) 
     throw new Error('El servidor no ha confirmat l’organització.');
   }
   /* Un port pot tornar només l'id; els camps que sí torna han de confirmar
-     la mateixa entitat. El nom pot haver canviat en un reintent idempotent. */
+     la mateixa entitat. El nom pot haver canviat en un reintent idempotent.
+     Gauntlet 261016 (Bloc 3.5.2) · També el poble: un port que confirma una
+     organització sense poble, o amb un altre, no l'ha desada com s'ha demanat. */
   const esperats = { kind, slug, parentOrganizationId: parentOrganizationId || null,
-    parent_organization_id: parentOrganizationId || null };
+    parent_organization_id: parentOrganizationId || null, town_name: poble };
   if (Object.entries(esperats).some(([camp, esperat]) => Object.hasOwn(creada, camp) && creada[camp] !== esperat)
     || (Object.hasOwn(creada, 'role') && !ROLS.has(creada.role))
     || (Object.hasOwn(creada, 'name') && (typeof creada.name !== 'string'
       || creada.name.trim().length < 2 || creada.name.trim().length > 120))) {
     throw new Error('El servidor ha retornat una organització incoherent. Torna a carregar el perfil abans de reintentar.');
   }
-  return { name, slug, kind, ...creada };
+  return { name, slug, kind, town_name: poble, ...creada };
 }

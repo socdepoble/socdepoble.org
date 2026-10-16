@@ -154,6 +154,40 @@ test('en seed (o local), que sí que obri les fitxes, la persona del padró enll
   expect(screen.getByRole('link', { name: 'Escriu-li a Javi Ferrer' }).getAttribute('href')).toBe('/xat?amb=u-pepa');
 });
 
+/* Gauntlet 261016 (Bloc 3.5.1; ordre del Mestre: «Tria i deixa un sol perfil
+   per a cadascuna») · En seed, qui té sessió declara els àlies de la persona
+   pilot (aliesDeLActor): la seua fitxa del padró i del catàleg ('0001') es
+   fusiona amb la pròpia, sense «Escriu-li». Mai pel nom: l'homònim del padró,
+   amb un altre id, continua sent una altra fitxa, i en remot (D1) el '0001'
+   continua apart. */
+const JAVI_DEL_CATALEG = Object.freeze({ id: '0001', name: 'Javi Llinares', type: 'PERSON', town_name: 'La Torre de les Maçanes' });
+const PADRO_AMB_HOMONIM = Object.freeze([
+  Object.freeze({ usuari_id: '0001', nom: 'Javi Llinares', tipus: 'persona', avatar_url: null, fil_id: null }),
+  Object.freeze({ usuari_id: 'u-pepa', nom: 'Javi Llinares', tipus: 'persona', avatar_url: null, fil_id: null })
+]);
+const enllacos = (nom) => screen.getAllByRole('link', { name: nom }).map((enllac) => enllac.getAttribute('href'));
+
+test('Bloc 3.5.1 · en seed amb sessió, un sol «Javi Llinares» propi, i l’homònim del padró continua apart', async () => {
+  mocks.mode = 'seed';
+  mocks.core = { ...mocks.core, agents: [JAVI_DEL_CATALEG] };
+  mocks.xat.cercaMembres = vi.fn(async () => PADRO_AMB_HOMONIM);
+  mocks.url = '?q=javi%20llinares&tipus=persones';
+  await pinta();
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Persones 2' })).toBeTruthy());
+  expect(enllacos('Javi Llinares')).toEqual(['/el-meu-perfil', '/gent/u-pepa']);
+  expect(enllacos('Escriu-li a Javi Llinares')).toEqual(['/xat?amb=u-pepa']);
+});
+
+test('Bloc 3.5.1 · en remot el mateix nom no fusiona el compte amb el catàleg (D1)', async () => {
+  mocks.core = { ...mocks.core, agents: [JAVI_DEL_CATALEG] };
+  mocks.xat.cercaMembres = vi.fn(async () => PADRO_AMB_HOMONIM);
+  mocks.url = '?q=javi%20llinares&tipus=persones';
+  await pinta();
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Persones 3' })).toBeTruthy());
+  expect(enllacos('Javi Llinares')).toEqual(['/el-meu-perfil', '/gent/0001']);
+  expect(enllacos('Escriu-li a Javi Llinares')).toEqual(['/xat?amb=0001', '/xat?amb=u-pepa']);
+});
+
 /* Ordre del Mestre (261002) · En remot, amb la capacitat 'directori' (la RPC
    perfil_public al darrere de loadPerfilPublic), la persona del padró ix al
    cercador amb la seua fitxa, com en seed. */

@@ -18,8 +18,10 @@
        passa les mateixes guardes amb la declaració de cada una, que és
        exactament el que porta; la llavor de DEV del Lector, fora i amb motiu;
    6 · Onada 7: cap fitxer de producció d'estes quatre apps ni de l'esquelet
-       comú importa Pedra Seca o el router de fora del nucli 1.1.0, i cada
-       nom que l'1.1.0 afig el fa servir algú.
+       comú importa Pedra Seca o el router de fora del nucli, i cada nom que
+       l'1.1.0 afig el fa servir algú. Des de l'1.2.0 (261016), tampoc
+       l'espai de treball: només per la façana i amb els noms de la porta;
+       i la porta té ús en una app, el Lector.
    Els builds de veritat de la Gestoria sencera i de les quatre apps són a
    modulDeBuild.test.jsx. Els patrons de les sondes es componen a trossos
    (patró de fronteres.test.js). */
@@ -30,12 +32,14 @@ import { NOMS_PER_FITXER_DE_PEDRA_SECA, VERSIO_NUCLI, exposaElNom, portaDeLaFont
 import {
   ADRECES_DE_TOTS, DECLARACIONS_DELS_MODULS, MAGATZEMS, XARXA, declaracioDe, hostsDe, infraccionsDelText
 } from './guardesDelModul.js';
-import { NOMS_DEL_NUCLI_1_1 } from './__fixtures__/nomsDelNucli.js';
+import { NOMS_DEL_NUCLI_1_1, NOMS_DEL_NUCLI_1_2 } from './__fixtures__/nomsDelNucli.js';
 
 const ARREL = process.cwd();
 const PONT = 'src/apps/gestoria/AppGestoria.jsx';
 const CARRILS = Object.freeze(['src/apps/gestoria', 'src/sections/gestoria', 'src/sections/tractors']);
 const PEDRA_SECA = 'src/components/PedraSeca/';
+/* Nucli 1.2.0 (261016): l'espai de treball, que només entra per la seua façana (porta 'workspace'). */
+const ESPAI_DE_TREBALL = 'src/components/universal/workspace/';
 /* Els paquets que el cos pot portar dins: els que permet privacitat.test.js (React és del nucli). */
 const PAQUETS_DEL_COS = Object.freeze(['lucide-react']);
 const CODI = /\.(?:[cm]?js|jsx)$/;
@@ -164,6 +168,8 @@ function infraccionsDeLaClausula({ fitxers, delNucli, paquets, noEntesos = [] },
       trobades.push(`porta el nucli de la pàgina (context, dades o host): ${ruta}`);
     } else if (/^src\/(?:apps\/plataforma|components\/PedraSeca)\//.test(ruta)) {
       trobades.push(`porta plataforma o Pedra Seca fora del nucli ${VERSIO_NUCLI}: ${ruta}`);
+    } else if (ruta.startsWith(ESPAI_DE_TREBALL)) {
+      trobades.push(`porta l'espai de treball fora del nucli ${VERSIO_NUCLI}: ${ruta}`);
     }
     for (const infraccio of infraccionsDelText(text, { id })) trobades.push(`${ruta}: ${infraccio}`);
   }
@@ -296,6 +302,29 @@ describe('3 · la clausura del pont de la Gestoria passa les guardes del build',
     expect(nomsDeLaClausula('Fitxa, { a, b as c }')).toEqual(['a', 'b', 'default']);
     expect(nomsDeLaClausula('* as tot')).toEqual(['*']);
   });
+
+  /* Nucli 1.2.0 (261016) · la porta 'workspace': la façana (amb o sense index.js) és del nucli i la
+     clausura s'hi atura; un fitxer de dins no ho és i se seguiria fins al port (ItemMedia →
+     useResolvedAsset). Una peça de dins al cos i un nom de la façana que la porta no exposa salten. */
+  test('la porta mira de veres: l’espai de treball, només per la façana i amb els noms de la porta', () => {
+    const VISTA = 'src/apps/lector/vistes/Vista.jsx';
+    for (const especificador of ['../../../components/universal/workspace/index.js', '../../../components/universal/workspace']) {
+      expect(portaDeLaFont(resol(VISTA, especificador))?.clau, especificador).toBe('workspace');
+    }
+    expect(portaDeLaFont(resol(VISTA, '../../../components/universal/workspace/UniversalWorkspace.jsx'))).toBeNull();
+    const sonda = {
+      fitxers: new Map([[`${ESPAI_DE_TREBALL}ItemMedia.jsx`, '']]),
+      delNucli: [
+        { origen: VISTA, font: `${ESPAI_DE_TREBALL}index.js`, noms: ['DefaultItemCard', 'UniversalWorkspace'] },
+        { origen: VISTA, font: `${ESPAI_DE_TREBALL}index.js`, noms: ['ESPAI_COMU'] }
+      ],
+      paquets: []
+    };
+    expect(infraccionsDeLaClausula(sonda, 'lector')).toEqual([
+      `porta l'espai de treball fora del nucli ${VERSIO_NUCLI}: ${ESPAI_DE_TREBALL}ItemMedia.jsx`,
+      `${VISTA}: importa ESPAI_COMU de ${ESPAI_DE_TREBALL}index.js, que el nucli ${VERSIO_NUCLI} no exposa`
+    ]);
+  });
 });
 
 describe('4 · Pedra Seca a tot l’arbre de la Gestoria i dels Tractors: només la del nucli', () => {
@@ -351,7 +380,8 @@ const APPS_DE_LA_FASE_1 = Object.freeze({
 });
 const NOMES_EN_DEV = new Map([
   ['src/apps/lector/llavor/fontLlavor.js', t('La llavor sintètica del Lector. AppLector.jsx només la fa servir darrere de LLAVOR_ACTIVA ',
-    '(import.meta.env.DEV o VITE_SDP_LECTOR_LLAVOR), que el build d’un mòdul deixa en fals. Porta com a text feeds ',
+    '(només el literal VITE_SDP_LECTOR_LLAVOR; des de la Purga de Mocks del 261016, ni el servidor de desenvolupament), ',
+    'que el build d’un mòdul deixa en fals. Porta com a text feeds ',
     'd’example.org amb els espais de noms de purl.org i search.yahoo.com: cap és una dada del Lector de producció.')]
 ]);
 const CLAUSURES_DE_LA_FASE_1 = Object.freeze(Object.fromEntries(
@@ -394,9 +424,10 @@ describe('5 · Onada 7: la clausura de cada app de la fase 1 passa les guardes d
     const deixats = new Set(Object.values(CLAUSURES_DE_LA_FASE_1).flatMap(({ deixats: d }) => [...d]));
     expect([...NOMES_EN_DEV.keys()].filter((fitxer) => !deixats.has(fitxer))).toEqual([]);
     expect([...CLAUSURES_DE_LA_FASE_1.lector.deixats]).toEqual(['src/apps/lector/llavor/fontLlavor.js']);
-    /* L'únic ús de l'adaptador de la llavor és darrere del literal de DEV. */
+    /* L'únic ús de l'adaptador de la llavor és darrere del seu literal. Ordre del Mestre, 261016
+       (Purga de Mocks) · Actualitzat a posta: el literal ja no porta import.meta.env.DEV. */
     const lector = llig(APPS_DE_LA_FASE_1.lector);
-    expect(lector).toContain("const LLAVOR_ACTIVA = import.meta.env.DEV || import.meta.env.VITE_SDP_LECTOR_LLAVOR === '1';");
+    expect(lector).toContain("const LLAVOR_ACTIVA = import.meta.env.VITE_SDP_LECTOR_LLAVOR === '1';");
     expect(lector.match(/\bcreaAdaptadorLlavor\b/g)).toHaveLength(2);
     expect(lector).toContain('(LLAVOR_ACTIVA ? creaFontNoticies(creaAdaptadorLlavor(');
     const ambLlavor = infraccionsDeLaClausula(clausura(APPS_DE_LA_FASE_1.lector), 'lector').join('\n');
@@ -407,9 +438,13 @@ describe('5 · Onada 7: la clausura de cada app de la fase 1 passa les guardes d
 describe('6 · Onada 7: Pedra Seca i el router a tot l’arbre de les quatre apps i de l’esquelet comú, només del nucli', () => {
   const CARRILS_DE_LES_APPS = Object.freeze(['src/apps/bar', 'src/apps/nevera', 'src/apps/salut', 'src/apps/lector', 'src/apps/comu']);
   /* Els noms que el nucli 1.1.0 afig al 1.0.0 són NOMS_DEL_NUCLI_1_1 (__fixtures__/nomsDelNucli.js):
-     nucliModuls.test.js diu que són exactament els que el contracte afig, i ací es prova que estan en ús. */
+     nucliModuls.test.js diu que són exactament els que el contracte afig, i ací es prova que estan en ús.
+     Nucli 1.2.0 (261016) · l'espai de treball també es mira: només la façana i els noms de la porta.
+     Gauntlet 261016 · L'1.2.0 ja té ús en una app de veres, el Lector (vistes/Noticies.jsx munta
+     UniversalWorkspace); `espaiPerCarril` diu quina app importa cada nom de la porta. */
   const fora = [];
-  const usats = { router: new Set(), pedraSeca: new Set() };
+  const usats = { router: new Set(), pedraSeca: new Set(), workspace: new Set() };
+  const espaiPerCarril = new Map();
   let vistes = 0;
   for (const carril of CARRILS_DE_LES_APPS) {
     for (const ruta of fitxersDe(carril)) {
@@ -418,7 +453,9 @@ describe('6 · Onada 7: Pedra Seca i el router a tot l’arbre de les quatre app
         if (!desti) continue;
         const porta = portaDeLaFont(desti);
         if (!porta) {
-          if (desti.startsWith(PEDRA_SECA) || desti.startsWith('src/app/contexts/')) fora.push(`${ruta}: ${desti} no és del nucli ${VERSIO_NUCLI}`);
+          if (desti.startsWith(PEDRA_SECA) || desti.startsWith(ESPAI_DE_TREBALL) || desti.startsWith('src/app/contexts/')) {
+            fora.push(`${ruta}: ${desti} no és del nucli ${VERSIO_NUCLI}`);
+          }
           continue;
         }
         if (!Object.hasOwn(usats, porta.clau)) continue;
@@ -426,12 +463,16 @@ describe('6 · Onada 7: Pedra Seca i el router a tot l’arbre de les quatre app
         for (const nom of noms) {
           if (!exposaElNom(porta, nom)) fora.push(`${ruta}: ${nom} de ${desti}`);
           usats[porta.clau].add(nom);
+          if (porta.clau === 'workspace') {
+            if (!espaiPerCarril.has(carril)) espaiPerCarril.set(carril, new Set());
+            espaiPerCarril.get(carril).add(nom);
+          }
         }
       }
     }
   }
 
-  test('cada import de Pedra Seca i del router és d’un fitxer del nucli i d’un nom que exposa', () => {
+  test('cada import de Pedra Seca, del router i de l’espai de treball és d’un fitxer del nucli i d’un nom que exposa', () => {
     expect(fora).toEqual([]);
     expect(vistes).toBeGreaterThan(50); // 58 importacions del router i de Pedra Seca el 261009
   });
@@ -439,6 +480,23 @@ describe('6 · Onada 7: Pedra Seca i el router a tot l’arbre de les quatre app
   test('la porta mira de veres: cada nom que el nucli 1.1.0 afig el fa servir alguna d’estes apps o l’esquelet comú', () => {
     for (const [clau, noms] of Object.entries(NOMS_DEL_NUCLI_1_1)) {
       expect(noms.filter((nom) => !usats[clau].has(nom)), clau).toEqual([]);
+    }
+  });
+
+  /* Gauntlet 261016 · Com la de l'1.1.0, la de l'1.2.0: la porta 'workspace' té ús en una app, el
+     Lector. DefaultItemCard, l'altre nom de la porta, no l'importa cap app (el Lector pren la fila
+     per defecte de l'espai sense nomenar-la): el fa servir el mòdul de l'espai, que modulDeBuild
+     compila de veres, i ací es comprova que l'importa per la façana. Cap nom de l'1.2.0 sense ús. */
+  test('la porta mira de veres: el nucli 1.2.0 té ús en una app (el Lector), i cada nom que afig el fa servir una app o el mòdul de l’espai', () => {
+    expect([...(espaiPerCarril.get('src/apps/lector') || [])]).toContain('UniversalWorkspace');
+    const MODUL_AMB_ESPAI = 'src/apps/plataforma/__fixtures__/modulAmbEspai/AppModulAmbEspai.jsx';
+    const delModul = new Set(importacions(llig(MODUL_AMB_ESPAI))
+      .filter(({ especificador }) => portaDeLaFont(resol(MODUL_AMB_ESPAI, especificador))?.clau === 'workspace')
+      .flatMap(({ noms }) => noms));
+    expect([...delModul].sort()).toEqual(['DefaultItemCard', 'UniversalWorkspace']);
+    for (const [clau, noms] of Object.entries(NOMS_DEL_NUCLI_1_2)) {
+      expect(noms.filter((nom) => !usats[clau].has(nom) && !delModul.has(nom)), clau).toEqual([]);
+      expect(noms.filter((nom) => usats[clau].has(nom)).length, clau).toBeGreaterThan(0);
     }
   });
 });

@@ -1,6 +1,7 @@
 import { getCurrentUser, getResolvedConfig, request } from './runtime.js';
 import { normalitzaContacte, normalitzaCorreu, validaCorreu } from '../correuOrganitzacio.js';
 import { errorDeMembre, membreDOrganitzacio } from '../contracte.js';
+import { pobleDOrganitzacio } from '../pobleOrganitzacio.js';
 
 /* Lògica d'Usuari · en seed i local les organitzacions on la persona mana són
    les del padró pilot (localPerfils). Comprovació explícita: sense mode, remot. */
@@ -25,12 +26,23 @@ export async function createOrganization(organization, config = {}) {
   const { tenantId, hasSupabaseConfig } = getResolvedConfig(config);
   if (!hasSupabaseConfig) throw new Error('No es pot crear una organització sense connexió al servidor.');
   if (!getCurrentUser()?.id) throw new Error('Cal iniciar sessió per crear una organització.');
+  /* Gauntlet 261016 (Bloc 3.5.2; ordre del Mestre: «Tota entitat creada ha
+     de portar el seu poble») · Sense poble, cap crida al servidor. */
+  const poble = pobleDOrganitzacio(organization?.town_name);
   const body = { p_tenant_id: tenantId,
     p_kind: organization?.kind, p_name: organization?.name, p_slug: organization?.slug,
     p_description: organization?.description || '', p_parent_organization_id: organization?.parentOrganizationId || null };
   /* create_organization ja accepta p_lema (M01); només s'envia si ve, i així
      una crida sense lema és idèntica a la d'abans. */
   if (organization?.lema !== undefined) body.p_lema = organization.lema;
+  /* Revisió adversarial del Gauntlet 261016 (encàrrec C; troballa «Crear una
+     organització amb un slug que ja administres sobreescriu en silenci el
+     poble de l'existent») · create_organization és idempotent: si la persona
+     ja administra una organització amb eixe slug en este poble, en torna la
+     MATEIXA fila sense dir-ho (2609281500, `if found`), i el PATCH de davall
+     li canviava el poble. La resposta no distingix una fila nova d'una que ja
+     hi era (les mateixes columnes, cap town_name): es mira ABANS de crear. */
+  const previa = await organitzacioDelSlug(body.p_slug, tenantId, config);
   let rows;
   try {
     rows = await request('/rest/v1/rpc/create_organization', config, { method: 'POST', body });
@@ -45,7 +57,71 @@ export async function createOrganization(organization, config = {}) {
   if (creada && Object.hasOwn(creada, 'tenant_id') && uuidCanon(creada.tenant_id) !== uuidCanon(body.p_tenant_id)) {
     throw new Error('El servidor ha retornat una organització d’un altre poble.');
   }
-  return creada;
+  /* Sense id confirmat no hi ha fila on desar el poble: el domini ho diu
+     («El servidor no ha confirmat l’organització»). */
+  if (typeof creada?.id !== 'string' || !creada.id.trim()) return creada;
+  /* Revisió adversarial del Gauntlet 261016 (encàrrec C) · Una fila que ja hi
+     era abans d'esta alta, i que no és d'una alta d'esta pàgina que no va
+     poder desar el poble, no es toca: amb el mateix poble és el reintent
+     idempotent de sempre; amb un altre, o sense cap (una fila d'abans de
+     l'obligació, potser d'un altre poble), l'error diu quina és. */
+  if (previa && String(previa.id) === creada.id && !ALTES_SENSE_POBLE.has(creada.id)) {
+    const seu = typeof previa.town_name === 'string' ? previa.town_name.trim() : '';
+    if (seu && seu === poble) return { ...creada, town_name: seu };
+    throw errorAmbCodi(jaExistix(String(body.p_slug ?? '').trim().toLowerCase(), seu), 'JA-EXISTIX');
+  }
+  /* Gauntlet 261016 (Bloc 3.5.2) · create_organization no té cap paràmetre
+     per al poble (la signatura canònica que fixa 2610042350): el poble es desa
+     tot seguit a la mateixa fila, amb el PATCH de sempre (updateOrganization;
+     la columna i el grant de 2610081401, amb la política «gestores
+     actualitzen l'organització», que només deixa escriure-la a qui
+     l'administra, i qui la crea n'és la propietària). La resposta porta el
+     poble desat.
+     Revisió adversarial del Gauntlet 261016 (encàrrec C; troballa «un error
+     que promet un reintent que mai no funciona») · Si el PATCH falla,
+     l'organització ja existix sense poble i el missatge diu per què
+     (motiuDelPobleNoDesat): només un tall promet el reintent. La fila queda
+     anotada com a alta d'esta pàgina sense poble (ALTES_SENSE_POBLE): el
+     reintent (la RPC torna la mateixa fila) hi torna a desar el poble, i
+     ara de veres, perquè la lectura prèvia ja la troba. */
+  let desada;
+  try {
+    desada = await updateOrganization(creada.id, { town_name: poble }, config);
+  } catch (error) {
+    ALTES_SENSE_POBLE.add(creada.id);
+    if (esCancel(error)) throw error;
+    throw errorAmbCodi(motiuDelPobleNoDesat(error), 'POBLE-NO-DESAT', error);
+  }
+  ALTES_SENSE_POBLE.delete(creada.id);
+  return { ...creada, town_name: typeof desada?.town_name === 'string' ? desada.town_name : poble };
+}
+
+/* Revisió adversarial del Gauntlet 261016 (encàrrec C) · Les organitzacions
+   que una alta d'esta pàgina ha creat sense poder-ne desar el poble (l'id de
+   la fila). Només el reintent d'una d'estes altes pot desar el poble en una
+   fila que ja existia. Dura el que dura la pàgina: després de recarregar,
+   l'organització ix al perfil sense poble i se li posa des de la seua fitxa. */
+const ALTES_SENSE_POBLE = new Set();
+
+/* La fila que ja té este slug en este poble i que la persona pot llegir (la
+   seua, si l'administra: «members read own organizations»), o null:
+   { id, town_name }. El slug, com el normalitza la RPC (lower(btrim)). Si el
+   servidor encara no té la columna town_name (2610081401), es torna a llegir
+   sense ella i es recorda (la memòria de T47, columnesSelectAbsents). */
+async function organitzacioDelSlug(slug, tenantId, config) {
+  const net = String(slug ?? '').trim().toLowerCase();
+  if (!net) return null;
+  const filtre = `slug=eq.${encodeURIComponent(net)}${tenantId ? `&tenant_id=eq.${encodeURIComponent(tenantId)}` : ''}`;
+  for (;;) {
+    const columnes = ['id', 'town_name'].filter((columna) => !columnesSelectAbsents.has(columna)).join(',');
+    try {
+      const files = await request(`/rest/v1/organizations?select=${columnes}&${filtre}&limit=1`, config, { signal: config.signal });
+      return Array.isArray(files) && files[0]?.id != null ? files[0] : null;
+    } catch (error) {
+      if (columnaAbsentDelSelect(error) !== 'town_name' || columnesSelectAbsents.has('town_name')) throw error;
+      columnesSelectAbsents.add('town_name');
+    }
+  }
 }
 /* Només columnes amb grant de SELECT: el RETURNING de return=representation
    exigix SELECT sobre cada columna que torna, i una sola sense grant fa fallar
@@ -125,7 +201,7 @@ const RE_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 const LIMIT_JUSTIFICACIO = 1000;
 const RE_CODI_CLAIM = /SDP-CLAIM-\d{3}/;
 const RE_CODI_ORGMAIL = /SDP-ORGMAIL-\d{3}/;
-const CODIS_NORMALITZATS = /^(SDP-CLAIM-\d{3}|SDP-ORGMAIL-\d{3}|SDP-ORGMEM-\d{3}|JA-PENDENT|NO-DISPONIBLE|CORREU-INVALID|ESQUEMA-DESFASAT)$/;
+const CODIS_NORMALITZATS = /^(SDP-CLAIM-\d{3}|SDP-ORGMAIL-\d{3}|SDP-ORGMEM-\d{3}|JA-PENDENT|NO-DISPONIBLE|CORREU-INVALID|ESQUEMA-DESFASAT|POBLE-NO-DESAT|JA-EXISTIX)$/;
 
 const MISSATGES_CLAIM = Object.freeze({
   'SDP-CLAIM-000': 'Cal iniciar sessió per a administrar una organització.',
@@ -162,6 +238,31 @@ const idOrganitzacio = (orgId) => {
    2610042350_convergencia_perfil_i_create_organization.sql. */
 const ESQUEMA_DESFASAT = 'El servidor d’este poble té més d’una versió de la funció que crea organitzacions i no en sap triar cap: l’organització no s’ha creat. Cal aplicar-hi una migració pendent.';
 const SENSE_CREACIO = 'El servidor d’este poble encara no té la funció que crea organitzacions: l’organització no s’ha creat. Cal aplicar-hi les migracions pendents.';
+/* Gauntlet 261016 (Bloc 3.5.2) · El poble no s'ha pogut desar després de
+   crear la fila (createOrganization): la frase diu què ha passat i què fer.
+   Revisió adversarial del Gauntlet 261016 (encàrrec C) · Abans, una sola
+   frase per a tot, «Torna-ho a provar: es desarà en la mateixa
+   organització», també quan el servidor no té la columna (PGRST204/42703) o
+   no deixa escriure-la (42501): el reintent tornava a fallar igual. Ara la
+   frase depén del motiu, i només un tall (sense resposta, 5xx, 408 o 429)
+   promet el reintent, que la memòria d'altes fa funcionar de veres. */
+const POBLE_NO_DESAT_TALL = 'L’organització s’ha creat, però el poble no s’ha pogut desar perquè el servidor no ha respost. Torna a prémer «Crear»: es desarà en la mateixa organització, sense crear-ne cap altra.';
+const POBLE_SENSE_COLUMNA = 'L’organització s’ha creat sense poble: el servidor d’este poble encara no té on desar-lo (li falta una migració pendent). Fins que no s’aplique, el poble no es podrà desar.';
+const POBLE_REBUTJAT = 'L’organització s’ha creat sense poble: el servidor d’este poble no ha acceptat desar-lo. Cal revisar-ne els permisos abans de posar-li el poble.';
+
+function motiuDelPobleNoDesat(error) {
+  if (/\bPGRST204\b|\b42703\b/.test(String(error?.message || ''))) return POBLE_SENSE_COLUMNA;
+  const status = Number(error?.status);
+  const tall = error instanceof TypeError || status === 0 || status === 408 || status === 429 || status >= 500;
+  return tall ? POBLE_NO_DESAT_TALL : POBLE_REBUTJAT;
+}
+
+/* Revisió adversarial del Gauntlet 261016 (encàrrec C) · L'alta ha tornat
+   una organització que la persona ja administrava (createOrganization): no
+   se n'ha creat cap ni se n'ha tocat el poble. */
+const jaExistix = (slug, poble) => (poble
+  ? `Ja administres una organització amb l’identificador «${slug}», i és de ${poble}: no se n’ha creat cap de nova ni se n’ha canviat el poble. Tria un altre identificador, o canvia-li el poble des de la seua fitxa.`
+  : `Ja administres una organització amb l’identificador «${slug}»: no se n’ha creat cap de nova ni se n’ha tocat res, tampoc el poble. Tria un altre identificador, o posa-li el poble des de la seua fitxa.`);
 
 function errorDeCreacio(error) {
   if (jaNormalitzat(error) || esCancel(error)) return error;

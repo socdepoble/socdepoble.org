@@ -7,14 +7,28 @@ import { Llinatge } from '../Llinatge.jsx';
 
 /* T39 (ordre del Mestre, 260928) · «Drets d'autor» a pantalla completa dins
    de l'editor. El botó de sempre, davall del títol, obri la vista dins de la
-   columna (ací, una columna simulada de 40rem). Quatre casos reals de l'avís
-   d'herència: una nota amb drets de sèrie, una sense, la fitxa del Perfil i
-   la còpia de prova del Foraster. Tot és local: no es desa res enlloc. */
+   columna (ací, una columna simulada de 40rem). Casos reals de l'avís
+   d'herència: una nota amb drets de sèrie, una sense, la fitxa del Perfil,
+   la còpia de prova del Foraster i «El compte». Tot és local: no es desa res
+   enlloc. */
+
+/* Pla 261016 (Bloc 3.1; ordre del Mestre) · «El compte» de la persona (l'ajust
+   'drets-notes', DetallAjust), on es trien els drets amb què naixen les seues
+   notes noves. La vista no és dins de cap document: porta les tres props
+   opcionals de CopyrightPage (etiquetaTornar, introduccio i llegenda) amb els
+   textos de l'ajust. Els altres casos no en porten cap: el DOM de sempre. */
+const vistaDelCompte = (valor) => ({
+  etiquetaTornar: 'Tornar al compte',
+  introduccio: `Tria amb quins drets naixen les teues notes noves. Ara són «${valor}». Res no canvia fins que prems «Desar autoria».`,
+  llegenda: 'Tria els drets de sèrie de les teues notes',
+});
+
 const CASOS = Object.freeze([
   { valor: 'nota', text: 'Nota amb herència', ambit: 'publicacio', perDefecte: 'CC BY-SA 4.0' },
   { valor: 'nota-buida', text: 'Nota sense herència', ambit: 'publicacio', perDefecte: null },
   { valor: 'perfil', text: 'Fitxa del Perfil', ambit: 'perfil', perDefecte: null },
   { valor: 'neutre', text: 'Foraster', ambit: 'neutre', perDefecte: null },
+  { valor: 'compte', text: 'El compte', ambit: 'compte', perDefecte: null, opcionals: vistaDelCompte },
 ]);
 
 export default function EspecimenDretsAutor() {
@@ -45,10 +59,11 @@ export default function EspecimenDretsAutor() {
       contracte={[
         ['valor', 'string', "''", 'Els drets d’ara. Preselecciona la llicència; un valor desconegut es pot «Mantindre».'],
         ['autor', 'string', "''", 'El text de sèrie de «Copyright (C)» (© autor), l’última opció. Buit: «Sóc de Poble».'],
-        ['ambit', "'publicacio' | 'perfil' | 'neutre'", "'neutre'", 'Quin avís d’herència es pinta (cap per a «neutre»).'],
+        ['ambit', "'publicacio' | 'perfil' | 'compte' | 'neutre'", "'neutre'", 'Quin avís d’herència es pinta (cap per a «neutre»). «compte» (pla 261016, Bloc 3.1): «El compte» de la persona, on es trien els drets amb què naixen les seues notes noves.'],
         ['perDefecte', 'string | null', 'null', 'Els drets de sèrie que hereten les notes noves (àmbit publicacio).'],
         ['onDesa', '(valor: string) => void', '—', 'Desar: el pare ho envia pel camí de sempre (desaLocal + desaCamp).'],
         ['onTanca', "(motiu: 'esc'|'tornar'|'boto') => void", '—', 'Tornar al document sense desar.'],
+        ['etiquetaTornar / introduccio / llegenda', 'string / ReactNode | null / string', "'Tornar al document' / null / 'Tria els drets d’esta obra'", 'Opcionals (pla 261016, Bloc 3.1), per a quan la vista no és dins d’un document (l’ajust de drets d’«El compte»): el botó de dalt, el paràgraf de davall del títol i la llegenda del grup d’opcions. Sense elles, el DOM i els textos de sempre (la introducció diu «Ara té «valor»»).'],
         ['BotoDretsAutor', '{ valor, triada?, onClick }', '—', 'El disparador (CopyrightSelector.jsx), amb data-sdp-drets (el destí del focus de l’editor). Sense triada, el marcatge de sempre, sense aria-haspopup: «Elegir drets d’autor». Amb triada (la llicència desada de veres, mai la reserva «© Sóc de Poble»), la píndola plena la mostra i es diu «Drets d’autor: X» (decisió del Mestre, 261008). A l’editor, la triada és document.copyright o, si l’adaptador porta la clau dretsTriats (el Perfil, on el copyright de lectura és el «© Nom» de sèrie), esta clau.'],
       ]}
       a11y={[
@@ -73,6 +88,7 @@ export default function EspecimenDretsAutor() {
       {obert ? (
         <div className="sdp-especimen__columna">
           <CopyrightPage key={cas} valor={valor} autor="Pep del Mas" ambit={actual.ambit} perDefecte={actual.perDefecte}
+            {...actual.opcionals?.(valor)}
             onDesa={(nou) => { setValor(nou); setTriada(nou); tanca(); }} onTanca={tanca} />
         </div>
       ) : (

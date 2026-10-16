@@ -58,7 +58,10 @@
  *     naixement del magatzem.
  * Cap data fixa escrita a mà: el rellotge és injectable (`ara`) per a les proves.
  */
-import { AGENTS_MAP } from './agentsSeed.js';
+/* Gauntlet 261016 (Bloc 3) · `tipusDAgent`: la font única del tipus de perfil
+   d'un agent del catàleg (un personatge ANIMAL és una IA). Abans n'hi havia
+   una còpia ací, que el feia persona. */
+import { AGENTS_MAP, tipusDAgent } from './agentsSeed.js';
 import {
   AGENTS_IA_SEED, ENTITATS_SEED, PERSONA_PILOT, agentIASeed, entitatSeed, esIAIA, rolALEntitat
 } from './identitatsSeed.js';
@@ -73,9 +76,6 @@ const CAMPS_PERFIL = ['full_name', 'avatar_url', 'visibility', 'town_name', 'bio
 /* Grup C (261008) · `town_name`: el poble de l'organització (2610081401). */
 const CAMPS_ORG = ['name', 'slug', 'description', 'kind', 'parent_organization_id', 'lema', 'logo_url', 'visibility', 'presentacio_html', 'hero_url', 'copyright', 'town_name'];
 const CAMPS_AGENT = ['name', 'role', 'lema', 'short_bio', 'avatar_url', 'hero_url', 'presentacio_html', 'copyright', 'town_name'];
-
-const TIPUS_AGENT = Object.freeze({ AI: 'ia', COMPANY: 'entitat' });
-const tipusDAgent = (agent) => TIPUS_AGENT[agent?.type] || 'persona';
 
 function nomDeSessio(usuari) {
   const meta = usuari?.user_metadata || {};
@@ -259,14 +259,19 @@ export function createLocalPerfilsAdapter({ entitats = ENTITATS_SEED, persones =
     propietari: Boolean(agent.owner_org_id) && ROLS_QUE_MANEN.has(rolDe(agent.owner_org_id, usuari)), copyright: agent.copyright || '',
     creat: agent.created_at, modificat: agent.updated_at, emoticona: ''
   });
-  const publicDelCataleg = (agent) => ({
-    tipus: tipusDAgent(agent), id: agent.id, slug: null, nom: agent.name,
-    avatar: (esLaPilot(agent.id) ? PERSONA_PILOT.avatar : agent.avatar_url) || '', hero: '',
-    lema: agent.lema || '', bio: agent.role || '', presentacioHtml: agent.short_bio || '', poble: agent.town_name || '',
-    esIA: agent.type === 'AI', publicat: true, propietari: false, copyright: '',
-    /* T51 · Fitxa de només lectura: el naixement del magatzem. */
-    creat: estat.naixement, modificat: estat.naixement, emoticona: ''
-  });
+  /* Gauntlet 261016 (Bloc 3) · `esIA` diu el mateix que el tipus: abans només
+     ho era el type 'AI', i un personatge ANIMAL eixia com a persona. */
+  const publicDelCataleg = (agent) => {
+    const tipus = tipusDAgent(agent);
+    return {
+      tipus, id: agent.id, slug: null, nom: agent.name,
+      avatar: (esLaPilot(agent.id) ? PERSONA_PILOT.avatar : agent.avatar_url) || '', hero: '',
+      lema: agent.lema || '', bio: agent.role || '', presentacioHtml: agent.short_bio || '', poble: agent.town_name || '',
+      esIA: tipus === 'ia', publicat: true, propietari: false, copyright: '',
+      /* T51 · Fitxa de només lectura: el naixement del magatzem. */
+      creat: estat.naixement, modificat: estat.naixement, emoticona: ''
+    };
+  };
 
   return {
     getProfile(usuari) {
@@ -310,7 +315,12 @@ export function createLocalPerfilsAdapter({ entitats = ENTITATS_SEED, persones =
       if (!clau) return null;
       const agent = estat.agents.get(clau) || (agentIASeed(clau) ? estat.agents.get(agentIASeed(clau).id) : null);
       if (agent) return publicDAgent(agent, usuari);
-      const orgSeed = entitatSeed(clau);
+      /* Gauntlet 261016 (Bloc 3.5.1; ordre del Mestre: «un sol perfil per a
+         cadascuna») · També qualsevol àlies declarat d'una entitat del padró
+         (el 'soc-de-poble_official' amb què la llavor signa la samarreta): la
+         mateixa fitxa que el seu id. Abans només l'id i el slug, i
+         /empresa/soc-de-poble_official donava «Perfil no trobat». */
+      const orgSeed = entitatSeed(clau) || entitats.find((entitat) => entitat.alies?.includes(clau)) || null;
       const org = estat.organitzacions.get(clau) || (orgSeed ? estat.organitzacions.get(orgSeed.id) : null);
       if (org) return publicDEntitat(org, usuari);
       const perfil = perfilDe(usuari);

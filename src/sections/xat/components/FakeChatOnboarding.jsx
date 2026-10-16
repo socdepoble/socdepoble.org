@@ -24,15 +24,34 @@
  * Onada 6 (tasca 12) · Amb el nivell d'IA a 0 (`iaiaApagada` del xat de
  * veres) la IAIA tampoc no és al xat de mostra: ni la seua conversa, ni el
  * seu no llegit, ni a «Nova conversa». La seua cara la retalla CaraXat.
+ *
+ * Gauntlet 261016 (prompt, Bloc 3.6; pla, Onada 1.2) · Ordre del Mestre: els
+ * quatre actors, sempre, també per a qui no s'ha registrat.
+ *   · «Gent de la Torre»: sense poble declarat, el de la llavor
+ *     (pobleDelXat, POBLE_PER_DEFECTE), amb Avisos i General com sempre.
+ *   · «Javi Llinares» (fake-javi), amb la seua foto (CONTACTE_HUMA): només el
+ *     missatge automàtic de l'ordre, literal (MISSATGE_AUTOMATIC_DE_JAVI), i
+ *     de només lectura: ni compositor ni cap resposta simulada en nom seu.
+ *     Va darrere de les altres: les files de sempre no es mouen.
+ *
+ * Auditoria adversarial 261016 · El fil i la bombolla de Javi viuen ara a
+ * data/xatsPerDefecte.js (filDeMostraDeJavi, missatgesDeMostraDeJavi), la
+ * mateixa peça que rep el convidat de la llavor i del local (XatContext): la
+ * pantalla d'ací no canvia. I creaFil (l'efecte ?amb= de XatSection: la via
+ * «En privat» d'una targeta seua, «Escriu-li al xat») porta Javi, per id o
+ * àlies del padró pilot, al seu xat de només lectura; abans acabava al xat de
+ * mostra de l'entitat Sóc de Poble, amb compositor i resposta simulada.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { XatContext } from '../XatContext.jsx';
 import { agrupaComunitats } from '../missatges.js';
 import { useUIActions } from '../../../app/contexts/UIContext.jsx';
 import { useCoreContent } from '../../../app/contexts/CoreContentContext';
-import { AJUDA, AJUDA_PER_CLAU } from '../../../data/xatsPerDefecte.js';
+import {
+  AJUDA, AJUDA_PER_CLAU, ID_FIL_DE_MOSTRA_DE_JAVI, esLaPersonaDeContacte, filDeMostraDeJavi, missatgesDeMostraDeJavi
+} from '../../../data/xatsPerDefecte.js';
 import usePobleAmfitrio from '../usePobleAmfitrio.js';
-import { avatarDelPoble, nomDelPoble, objecteDelPoble } from '../pobleAmfitrio.js';
+import { avatarDelPoble, nomDelPoble, objecteDelPoble, pobleDelXat } from '../pobleAmfitrio.js';
 
 const IAIA = AJUDA_PER_CLAU.iaia;
 const SOC_DE_POBLE = AJUDA_PER_CLAU.socdepoble;
@@ -60,7 +79,7 @@ function filsDelPoble(poble, t, ara, avatar, nom) {
 
 export default function FakeChatOnboarding({ originalContext, children }) {
   const { t } = useUIActions();
-  const poble = usePobleAmfitrio();
+  const poble = pobleDelXat(usePobleAmfitrio());
   const { towns } = useCoreContent();
   const avatarPoble = useMemo(() => avatarDelPoble(poble, towns), [poble, towns]);
   const [ara] = useState(() => new Date().toISOString());
@@ -72,7 +91,10 @@ export default function FakeChatOnboarding({ originalContext, children }) {
     'fake-sdp': [
       { id: 'm3', seq: 1, text: t('section.xat.fake.sdp1', "Benvingut a Sóc de Poble. Som una xarxa de pobles connectats."), sender: 'other', author: SOC_DE_POBLE.nom, is_ai: false, creatAl: ara },
       { id: 'm4', seq: 2, text: t('section.xat.fake.sdp2', "Registra't per a descobrir tot el que oferim."), sender: 'other', author: SOC_DE_POBLE.nom, is_ai: false, creatAl: ara }
-    ]
+    ],
+    /* Gauntlet 261016 (Bloc 3.6.1) · El literal de l'ordre, sense traduir:
+       és el text que el Mestre ha fixat. Cap altre missatge en nom seu. */
+    [ID_FIL_DE_MOSTRA_DE_JAVI]: missatgesDeMostraDeJavi(ara)
   }));
   /* Les respostes pendents es cancel·len en desmuntar (abans quedaven vives). */
   const temporitzadors = useRef(new Set());
@@ -112,7 +134,11 @@ export default function FakeChatOnboarding({ originalContext, children }) {
       ultimSeq: 2,
       llegitFinsSeq: 0,
       ultimText: t('section.xat.fake.sdp2', "Registra't per a descobrir tot el que oferim.")
-    }
+    },
+    /* Gauntlet 261016 (Bloc 3.6.1) · Javi Llinares: el missatge automàtic ja
+       llegit (els no llegits de la mostra no canvien) i de només lectura. L'avís
+       del compositor és la invitació de sempre de la mostra. */
+    filDeMostraDeJavi({ ultimAl: ara, avis: t('section.xat.fake.iaia2', "Si t'agrada el que veus, registra't per a entrar al xat de veritat!") })
   ], [t, ara, deLPoble, iaiaApagada]);
 
   const comunitats = useMemo(() => agrupaComunitats(fakeThreads), [fakeThreads]);
@@ -138,6 +164,9 @@ export default function FakeChatOnboarding({ originalContext, children }) {
   /* Com el de veres (XatContext): `opcions.respostaA` és l'id del missatge
      citat, i la bombolla simulada el conserva (auditoria de Codex 2150, C6-X2). */
   const sendChatMessage = useCallback(async (fil, text, opcions = {}) => {
+    /* Gauntlet 261016 (Bloc 3.6.1) · Com el de veres (XatContext): a un fil de
+       només lectura no s'envia res. El de Javi, a més, no respon mai sol. */
+    if (fil?.potEscriure === false) return [];
     const filId = fil.id;
     const respostaA = opcions?.respostaA ? String(opcions.respostaA) : null;
     const myMsg = { id: `m-${Date.now()}-${seguentSeq(filId)}`, text, respostaA, sender: 'me', author: 'Jo', creatAl: new Date().toISOString() };
@@ -176,7 +205,11 @@ export default function FakeChatOnboarding({ originalContext, children }) {
       nom, tipus, usuari_id: `ajuda:${tipus}`, avatar_url: avatar || null, noDisponible: false
     })),
     creaFil: async (altreUsuariId) => {
-      return altreUsuariId === 'ajuda:ia' && !iaiaApagada ? 'fake-iaia' : 'fake-sdp';
+      if (altreUsuariId === 'ajuda:ia' && !iaiaApagada) return 'fake-iaia';
+      /* Auditoria adversarial 261016 · Javi, per id o àlies (mai pel nom): el
+         seu xat de només lectura, no el de l'entitat. */
+      if (esLaPersonaDeContacte({ id: altreUsuariId })) return ID_FIL_DE_MOSTRA_DE_JAVI;
+      return 'fake-sdp';
     },
     esFilAmagat: (filId) => iaiaApagada && filId === 'fake-iaia'
   }), [originalContext, fakeThreads, comunitats, getThreadMessages, sendChatMessage, iaiaApagada]);

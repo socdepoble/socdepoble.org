@@ -46,7 +46,10 @@ test('el RETURNING només demana columnes amb grant de SELECT', async () => {
   expect(url.searchParams.get('select').split(',')).toEqual(COLUMNES);
 });
 /* Ordre del Mestre (261008, grup C) · El poble de l'organització: el NOM del
-   poble a la columna town_name (2610081401); buit o null el lleva. */
+   poble a la columna town_name (2610081401); buit o null el lleva.
+   Gauntlet 261016 (Bloc 3.5.2) · L'adaptador és el transport i la columna
+   admet null; qui prohibix buidar-lo és l'edició del Perfil (PerfilContext ·
+   guardarAjust i guardarCampPerfil), abans de cap crida. */
 test('grup C · updateOrganization desa el poble a town_name, i també el buida', async () => {
   await updateOrganization('O', { town_name: 'La Torre de les Maçanes' });
   expect(m.request.mock.calls[0][2].body).toEqual({ town_name: 'La Torre de les Maçanes' });
@@ -73,13 +76,32 @@ test('sense fila confirmada no anuncia èxit', async () => {
   await expect(updateOrganization('O', { name: 'Nom' })).rejects.toThrow("No s'ha pogut actualitzar");
 });
 
+/* Gauntlet 261016 (Bloc 3.5.2; ordre del Mestre: «Tota entitat creada ha de
+   portar el seu poble») · Cada alta porta el poble (town_name). La RPC no en
+   té paràmetre: el cos no canvia, i el poble es desa tot seguit amb un PATCH a
+   la mateixa fila (la crida següent), que la resposta reflectix. Abans hi
+   havia una sola crida per alta: els índexs de les crides i les respostes
+   d'estes proves s'han actualitzat a propòsit.
+   Revisió adversarial del Gauntlet 261016 (encàrrec C) · Abans de la RPC, una
+   lectura del slug (GET organizations?select=…) mira si la persona ja en té
+   una, perquè el PATCH del poble no toque una organització que ja existia: la
+   RPC és ara la crida 1 de cada alta i el PATCH la 2. `senseFilaPrevia()`
+   encua una lectura que no troba cap fila (una alta nova); els índexs s'han
+   tornat a actualitzar a propòsit. organizations.alta.test.js prova la
+   lectura i la resta de casos. */
+const NOM_POBLE = 'La Torre de les Maçanes';
+const FORN = Object.freeze({ kind: 'company', name: 'Forn', slug: 'forn', town_name: NOM_POBLE });
+const senseFilaPrevia = () => m.request.mockResolvedValueOnce([]);
+
 test('createOrganization envia p_lema només si ve', async () => {
   m.request.mockResolvedValue([{ id: 'O' }]);
-  await createOrganization({ kind: 'company', name: 'Forn', slug: 'forn' });
-  expect(m.request.mock.calls[0][2].body).not.toHaveProperty('p_lema');
-  await createOrganization({ kind: 'company', name: 'Forn', slug: 'forn', lema: 'Pa de llenya' });
-  expect(m.request.mock.calls[1][0]).toBe('/rest/v1/rpc/create_organization');
-  expect(m.request.mock.calls[1][2].body).toEqual({ p_tenant_id: POBLE, p_kind: 'company', p_name: 'Forn', p_slug: 'forn',
+  senseFilaPrevia();
+  await createOrganization(FORN);
+  expect(m.request.mock.calls[1][2].body).not.toHaveProperty('p_lema');
+  senseFilaPrevia();
+  await createOrganization({ ...FORN, lema: 'Pa de llenya' });
+  expect(m.request.mock.calls[4][0]).toBe('/rest/v1/rpc/create_organization');
+  expect(m.request.mock.calls[4][2].body).toEqual({ p_tenant_id: POBLE, p_kind: 'company', p_name: 'Forn', p_slug: 'forn',
     p_description: '', p_parent_organization_id: null, p_lema: 'Pa de llenya' });
 });
 test('createOrganization sense sessió no crida el servidor', async () => {
@@ -94,23 +116,83 @@ test.each(['seed', 'local'])('crear organització en %s no escriu al servidor re
 });
 
 test('createOrganization rebutja el tenant diferent del que ha enviat realment', async () => {
-  m.request.mockResolvedValue({ id: 'O', tenant_id: ALTRE_POBLE });
-  await expect(createOrganization({ kind: 'company', name: 'Forn', slug: 'forn' }, {})).rejects.toThrow('altre poble');
-  expect(m.request.mock.calls[0][2].body.p_tenant_id).toBe(POBLE);
+  senseFilaPrevia();
+  m.request.mockResolvedValueOnce({ id: 'O', tenant_id: ALTRE_POBLE });
+  await expect(createOrganization(FORN, {})).rejects.toThrow('altre poble');
+  expect(m.request.mock.calls[1][2].body.p_tenant_id).toBe(POBLE);
+  /* Una fila d'un altre poble no rep cap poble: la lectura i la RPC, cap PATCH. */
+  expect(m.request).toHaveBeenCalledTimes(2);
 });
 
 test('createOrganization accepta el tenant confirmat i una resposta parcial sense tenant', async () => {
   for (const resposta of [{ id: 'O', tenant_id: POBLE }, { id: 'O' }]) {
+    senseFilaPrevia();
     m.request.mockResolvedValueOnce([resposta]);
-    expect(await createOrganization({ kind: 'company', name: 'Forn', slug: 'forn' })).toEqual(resposta);
+    expect(await createOrganization(FORN)).toEqual({ ...resposta, town_name: NOM_POBLE });
   }
 });
 
 test('el tenant UUID és el mateix encara que PostgreSQL el retorne en minúscules', async () => {
   m.tenantId = 'AAAAAAAA-AAAA-4AAA-AAAA-AAAAAAAAAAAA';
   const resposta = { id: 'O', tenant_id: m.tenantId.toLowerCase() };
-  m.request.mockResolvedValue(resposta);
-  expect(await createOrganization({ kind: 'company', name: 'Forn', slug: 'forn' })).toEqual(resposta);
+  senseFilaPrevia();
+  m.request.mockResolvedValueOnce(resposta).mockResolvedValueOnce([{ ...resposta, town_name: NOM_POBLE }]);
+  expect(await createOrganization(FORN)).toEqual({ ...resposta, town_name: NOM_POBLE });
+  expect(m.request).toHaveBeenCalledTimes(3);
+});
+
+/* Gauntlet 261016 (Bloc 3.5.2) · Sense poble (absent, buit, d'espais o d'un
+   altre tipus), cap crida al servidor, i el missatge diu què cal fer. */
+test.each([
+  [{ kind: 'company', name: 'Forn', slug: 'forn' }],
+  [{ ...FORN, town_name: '' }],
+  [{ ...FORN, town_name: '   ' }],
+  [{ ...FORN, town_name: null }],
+])('Gauntlet 261016 · createOrganization sense poble no crida el servidor (%#)', async (organitzacio) => {
+  await expect(createOrganization(organitzacio)).rejects.toThrow('Cada organització ha de tindre el seu poble');
+  expect(m.request).not.toHaveBeenCalled();
+});
+
+test('Gauntlet 261016 · el poble es desa a la fila creada (PATCH a town_name) i la resposta porta el desat', async () => {
+  senseFilaPrevia();
+  m.request.mockResolvedValueOnce({ id: 'O', slug: 'forn', kind: 'company' })
+    .mockResolvedValueOnce([{ id: 'O', town_name: NOM_POBLE }]);
+  expect(await createOrganization({ ...FORN, town_name: `  ${NOM_POBLE} ` }))
+    .toEqual({ id: 'O', slug: 'forn', kind: 'company', town_name: NOM_POBLE });
+  expect(m.request).toHaveBeenCalledTimes(3);
+  const [ruta, , opcions] = m.request.mock.calls[2];
+  const url = new URL(ruta, 'https://example.test');
+  expect([url.pathname, url.searchParams.get('id')]).toEqual(['/rest/v1/organizations', 'eq.O']);
+  expect(opcions).toMatchObject({ method: 'PATCH', body: { town_name: NOM_POBLE } });
+});
+
+test('Gauntlet 261016 · sense id confirmat no es desa cap poble (el domini diu que el servidor no ha confirmat)', async () => {
+  senseFilaPrevia();
+  m.request.mockResolvedValueOnce({});
+  expect(await createOrganization(FORN)).toEqual({});
+  expect(m.request).toHaveBeenCalledTimes(2);
+});
+
+/* Revisió adversarial del Gauntlet 261016 (encàrrec C) · DEROGADA la frase
+   única «Torna-ho a provar: es desarà en la mateixa organització» per a
+   qualsevol fallada del PATCH: amb la columna absent (PGRST204, sense
+   2610081401) el reintent tornava a fallar igual, i la frase prometia un
+   reintent que no funcionava mai. Ara diu que falta la migració i no promet
+   cap reintent. Els altres motius (un tall, que sí que el promet i el fa
+   funcionar, i un permís) els prova organizations.alta.test.js. */
+test('Gauntlet 261016 · si el poble no es desa, POBLE-NO-DESAT en valencià (l’organització ja existix); una cancel·lació passa tal qual', async () => {
+  const absent = Object.assign(new Error('Supabase 400: {"code":"PGRST204","message":"Could not find the \'town_name\' column of \'organizations\' in the schema cache"}'), { status: 400 });
+  senseFilaPrevia();
+  m.request.mockResolvedValueOnce({ id: 'O' }).mockRejectedValueOnce(absent);
+  const fallada = await createOrganization(FORN).catch((e) => e);
+  expect(fallada).toMatchObject({ code: 'POBLE-NO-DESAT',
+    message: 'L’organització s’ha creat sense poble: el servidor d’este poble encara no té on desar-lo (li falta una migració pendent). Fins que no s’aplique, el poble no es podrà desar.' });
+  expect(fallada.cause).toBe(absent);
+  expect(fallada.message).not.toMatch(/PGRST|Supabase|Could not|Torna/i);
+  const cancel = Object.assign(new Error('Cancel·lat'), { name: 'AbortError' });
+  senseFilaPrevia();
+  m.request.mockResolvedValueOnce({ id: 'O' }).mockRejectedValueOnce(cancel);
+  await expect(createOrganization(FORN)).rejects.toBe(cancel);
 });
 
 /* T47 (C5) · Va després de totes les proves que miren el RETURNING: el mòdul
@@ -349,33 +431,38 @@ test.each(['seed', 'local'])('T43 · en %s tot delega a localPerfils: alta immed
    ni l'anglés de PostgREST. La crida no canvia (p_lema només si ve, M01). ── */
 
 /* La frase no diu quantes versions hi ha ni l'id de la migració (2610042350):
-   a qui crea l'organització no li diu res. */
+   a qui crea l'organització no li diu res.
+   Revisió adversarial del Gauntlet 261016 (encàrrec C) · La primera crida
+   és ara la lectura del slug (senseFilaPrevia): la RPC és la crida 1. */
 const ESQUEMA_DESFASAT = 'El servidor d’este poble té més d’una versió de la funció que crea organitzacions i no en sap triar cap: l’organització no s’ha creat. Cal aplicar-hi una migració pendent.';
 
 test('F1 · dues create_organization al servidor (PGRST203, HTTP 300): ESQUEMA-DESFASAT, sense anglés ni PGRST', async () => {
   const cru = errorServidor(300, '{"code":"PGRST203","details":null,"hint":"Try renaming the parameters or the function itself in the database so function overloading can be resolved","message":"Could not choose the best candidate function between: public.create_organization(p_tenant_id => uuid, p_kind => text, p_name => text, p_slug => text, p_description => text, p_parent_organization_id => uuid), public.create_organization(p_tenant_id => uuid, p_kind => text, p_name => text, p_slug => text, p_lema => text, p_description => text, p_parent_organization_id => uuid)"}');
+  senseFilaPrevia();
   m.request.mockRejectedValueOnce(cru);
-  const fallada = await createOrganization({ kind: 'company', name: 'Forn', slug: 'forn' }).catch((e) => e);
+  const fallada = await createOrganization(FORN).catch((e) => e);
   expect(fallada).toMatchObject({ code: 'ESQUEMA-DESFASAT', message: ESQUEMA_DESFASAT });
   expect(fallada.cause).toBe(cru);
   expect(fallada.message).not.toMatch(/PGRST|Supabase|candidate|function|overloading|2610042350|dues versions/i);
   // La crida sense lema no porta p_lema (M01): el client no tria cap de les versions.
-  const body = m.request.mock.calls[0][2].body;
+  const body = m.request.mock.calls[1][2].body;
   expect(body).not.toHaveProperty('p_lema');
 });
 
 test('F1 · un HTTP 300 sense PGRST203 al cos (cos buit) també és ESQUEMA-DESFASAT', async () => {
   const cru = errorServidor(300, 'Error desconegut.');
+  senseFilaPrevia();
   m.request.mockRejectedValueOnce(cru);
-  const fallada = await createOrganization({ kind: 'company', name: 'Forn', slug: 'forn' }).catch((e) => e);
+  const fallada = await createOrganization(FORN).catch((e) => e);
   expect(fallada).toMatchObject({ code: 'ESQUEMA-DESFASAT', message: ESQUEMA_DESFASAT });
   expect(fallada.cause).toBe(cru);
-  expect(m.request.mock.calls[0][2].body).not.toHaveProperty('p_lema');
+  expect(m.request.mock.calls[1][2].body).not.toHaveProperty('p_lema');
 });
 
 test('F1 · sense la funció al servidor (PGRST202): NO-DISPONIBLE, en valencià', async () => {
+  senseFilaPrevia();
   m.request.mockRejectedValueOnce(errorServidor(404, '{"code":"PGRST202","details":"Searched for the function public.create_organization","hint":null,"message":"Could not find the function public.create_organization in the schema cache"}'));
-  const fallada = await createOrganization({ kind: 'company', name: 'Forn', slug: 'forn' }).catch((e) => e);
+  const fallada = await createOrganization(FORN).catch((e) => e);
   expect(fallada).toMatchObject({ code: 'NO-DISPONIBLE',
     message: 'El servidor d’este poble encara no té la funció que crea organitzacions: l’organització no s’ha creat. Cal aplicar-hi les migracions pendents.' });
   expect(fallada.message).not.toMatch(/PGRST|Supabase|Could not/i);
@@ -386,7 +473,9 @@ test('F1 · la resta d’errors de create_organization passen tal qual (els prop
   const xarxa = new TypeError('Failed to fetch');
   const cancel = Object.assign(new Error('Cancel·lat'), { name: 'AbortError' });
   for (const error of [propi, xarxa, cancel]) {
+    senseFilaPrevia();
     m.request.mockRejectedValueOnce(error);
-    await expect(createOrganization({ kind: 'company', name: 'Forn', slug: 'forn' })).rejects.toBe(error);
+    await expect(createOrganization(FORN)).rejects.toBe(error);
+    expect(m.request.mock.calls.at(-1)[0]).toBe('/rest/v1/rpc/create_organization');
   }
 });

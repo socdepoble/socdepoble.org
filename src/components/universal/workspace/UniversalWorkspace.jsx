@@ -11,7 +11,7 @@ import { carpetesAmagadesDe, desaCarpetaAmagada, espaiDe, subscriuCarpetesVisibl
 import { ALL_CATEGORY_ID } from './workspaceState.js';
 import { ItemMedia } from './ItemMedia.jsx';
 import { NavGlyph, GlifCategoriaContext, GLIF_DOCUMENT, emojiInicial, primerGlif } from './NavGlyph.jsx';
-import { Dialeg, Boto } from '../../PedraSeca/index.js';
+import { Dialeg, Boto, Insignia } from '../../PedraSeca/index.js';
 import { Interruptor } from '../../PedraSeca/organismes/formulari.jsx';
 /* El traductor de la interfície, o null fora de l'app (o amb una prova que
    simula UIContext sense esta exportació): aleshores, la reserva en
@@ -25,10 +25,39 @@ import { TEXTOS_LLAVOR } from '../textosLlavor.js';
  * És 100% atòmic: no sap res del Bloc de Notes, de la Gestoria ni del Disseny.
  * Cada secció l'omple injectant:
  *   - `model`        → { status, error, navigationGroups | categories, items }
+ *                       Cada opció de la navegació (les `options` de cada grup
+ *                       o cada categoria) pot portar `count` (opcional, per al
+ *                       Lector, model Feedly: les no llegides de cada carpeta
+ *                       i de cada font): un enter >= 0. Amb més de 0, la fila
+ *                       de l'arbre el pinta com a últim fill del botó del
+ *                       nom, darrere del nom, amb la Insignia de Pedra Seca
+ *                       (to neutre; més de 99, «99+», com la pastilla del
+ *                       Xat), i el nom accessible el suma amb `labels.count`
+ *                       (per defecte «{n} sense llegir»: «Tecnologia 6 sense
+ *                       llegir»); el rail plegat el suma al nom i al title,
+ *                       sense cap xifra pintada. 0, absent o qualsevol valor
+ *                       que no siga un enter: cap número, i el DOM és el de
+ *                       sempre. L'espai no suma res: cada opció porta el seu
+ *                       recompte (si una carpeta ha de dur el total de les
+ *                       seues fonts, el calcula la secció).
  *   - `labels`       → textos de capçaleres i botons
  *   - `icons`        → { categories, items } icones decoratives de cada capçalera
  *   - `renderItem`   → (opcional) targeta pròpia per a cada element del llistat
- *   - `renderDetail` → l'editor o visor de la columna dreta
+ *   - `renderDetail` → l'editor o visor de la columna dreta. Rep
+ *                       { item, selection, visibleItemIds, filtered }:
+ *                       l'element obert (o null) i la selecció
+ *                       { categoryId, itemId }, com sempre; i, opcionals (F2
+ *                       del Gauntlet, 261016, per al «Marca-ho tot com a
+ *                       llegit» del Lector), el que es veu a la llista:
+ *                       `visibleItemIds`, els ids (en text) dels elements que
+ *                       hi deixen la carpeta, les etiquetes i la cerca, en
+ *                       l'ordre del model (sense l'ordenació de `sortable`),
+ *                       un array congelat que conserva la referència mentre
+ *                       no canvia; i `filtered`, si la persona hi té una
+ *                       cerca o una etiqueta activa (el mateix criteri que el
+ *                       «Netejar» de la llista). Qui només llig item i
+ *                       selection no veu cap canvi, i el DOM del detall és
+ *                       el de sempre.
  *   - `listClassName` / `detailClassName` → ganxos CSS per a la pell de la secció
  *   - `columnesInicials` → (opcional, T7 P3) { left, middle }: columnes que
  *                       arrenquen plegades en rail en «ample». Sense, cap.
@@ -128,6 +157,9 @@ const DEFAULT_LABELS = {
   select: 'Selecciona un element.',
   /* MD · La fletxa ← de la llista sense navegació (tornaDeLaLlista). */
   back: 'Tornar arrere',
+  /* El recompte d'una opció de la navegació (`count`), per al lector de
+     pantalla: {n} és el número sencer. */
+  count: '{n} sense llegir',
   untitled: TEXTOS_LLAVOR.titol
 };
 
@@ -172,6 +204,21 @@ const omple = (text, valors) => Object.entries(valors)
 
 /* El nom d'una carpeta o categoria de la navegació. */
 const nomDe = (node) => String(node.label ?? node.nom ?? node.name ?? node.id);
+
+/* El recompte opcional d'una opció de la navegació (`count`, per al Lector):
+   només un enter més gran que 0 es pinta; 0, absent o qualsevol altre valor
+   (un text, un decimal, un negatiu) torna 0 i la fila és la de sempre. */
+const recompteDe = (node) => (Number.isSafeInteger(node?.count) && node.count > 0 ? node.count : 0);
+/* La xifra que es veu: més de 99, «99+», com la pastilla de no llegits del
+   Xat (PastillaNoLlegits.jsx). El lector de pantalla rep el número sencer. */
+const xifraDelRecompte = (n) => (n > 99 ? '99+' : String(n));
+/* El text del recompte per al nom accessible (`labels.count`). */
+const textDelRecompte = (plantilla, n) => omple(typeof plantilla === 'string' ? plantilla : DEFAULT_LABELS.count, { n });
+
+/* Si la persona filtra la llista: una cerca o una etiqueta activa. És el
+   criteri del «Netejar» de la llista (ItemListColumn) i, des de l'F2 del
+   Gauntlet (261016), el `filtered` que rep renderDetail: un sol criteri. */
+const teFiltres = (state) => Boolean(state.query || state.activeTagIds.length);
 
 /* Correcció R1 del verificador (Llei de la Roda Dentada, 261007) · La
    navegació (els grups, cadascun amb el seu bosc de carpetes) es calcula una
@@ -347,14 +394,45 @@ function WorkspaceSettingsDialog({ obert, onTanca, labels, grupsDeCarpetes = CAP
   );
 }
 
-function focusAfterLayout(ref) {
-  if (typeof requestAnimationFrame !== 'function') {
-    ref.current?.focus();
-    return;
-  }
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => ref.current?.focus());
-  });
+/* Una sola petició de focus per espai: canviar de columna substituïx
+   l'anterior i desmuntar cancel·la també el segon fotograma. El focus que
+   l'editor o la persona ja han posat dins del destí es conserva. */
+function useFocusAfterLayout() {
+  const pending = useRef(null);
+  const cancel = useCallback(() => {
+    const request = pending.current;
+    pending.current = null;
+    if (request?.frame != null && typeof cancelAnimationFrame === 'function') {
+      cancelAnimationFrame(request.frame);
+    }
+  }, []);
+  useLayoutEffect(() => cancel, [cancel]);
+
+  return useCallback((ref) => {
+    cancel();
+    const request = { frame: null };
+    pending.current = request;
+    const focus = () => {
+      if (pending.current !== request) return;
+      pending.current = null;
+      const node = ref.current;
+      if (!node?.isConnected || node.closest('[inert], [aria-hidden="true"], [hidden], dialog:not([open])')) return;
+      const active = node.getRootNode().activeElement;
+      /* AppGridShell pot deixar provisionalment el focus a l'obridor de
+         la columna que acaba de tancar: eixa reserva sí que ha d'arribar
+         al destí. Un control del contingut que ja té focus, no es mou. */
+      if (node.contains(active) && !active.hasAttribute('data-obri-columna')) return;
+      node.focus();
+    };
+    if (typeof requestAnimationFrame !== 'function') {
+      focus();
+      return;
+    }
+    request.frame = requestAnimationFrame(() => {
+      if (pending.current !== request) return;
+      request.frame = requestAnimationFrame(focus);
+    });
+  }, [cancel]);
 }
 
 export function UniversalWorkspace({
@@ -516,12 +594,25 @@ function WorkspaceFrame({
   labels, icons, tagFilter, collapsibleNavigation, replegaTotaCapcalera, sortable, canCreate, onRetry, listClassName, detailClassName, className
 }) {
   const workspace = useWorkspace();
+  const focusAfterLayout = useFocusAfterLayout();
   /* Prompt 261014_0400 · L'últim plegat, per a la remuntada per workspaceKey
      (UniversalWorkspace, columnesRef). */
   const plegat = workspace.state.collapsed;
   useLayoutEffect(() => {
     columnesRef.current = plegat;
   }, [columnesRef, plegat]);
+  /* F2 del Gauntlet (261016, defecte L1-2 del Lector) · El que es veu a la
+     llista, per al detall (renderDetail): els ids dels elements que hi deixen
+     la carpeta, les etiquetes i la cerca (filteredItems) i si la persona
+     filtra. Els ids es fixen pel contingut (una clau de text): els mateixos,
+     en el mateix ordre, conserven la referència, i una tecla de la cerca que
+     no canvia el resultat no torna a pintar el detall (DetailColumn és memo). */
+  const clauVisibles = useMemo(
+    () => JSON.stringify(workspace.filteredItems.map((item) => item.id)),
+    [workspace.filteredItems]
+  );
+  const visibleItemIds = useMemo(() => Object.freeze(JSON.parse(clauVisibles)), [clauVisibles]);
+  const filtrat = teFiltres(workspace.state);
   const listFocusRef = useRef(null);
   const detailFocusRef = useRef(null);
   const collapseLeftRef = useRef(null);
@@ -575,6 +666,7 @@ function WorkspaceFrame({
           vigilaAmagada={vigilaAmagada}
           mestreDetall={mestreDetall}
           focusTarget={compacte ? detailFocusRef : listFocusRef}
+          focusAfterLayout={focusAfterLayout}
           onManageCategories={onManageCategories}
           collapsibleNavigation={collapsibleNavigation}
           replegaTotaCapcalera={replegaTotaCapcalera}
@@ -591,6 +683,7 @@ function WorkspaceFrame({
             tornaDeLaLlista={tornaDeLaLlista}
             rootRef={listFocusRef}
             detailFocusRef={detailFocusRef}
+            focusAfterLayout={focusAfterLayout}
             onCreate={onCreate}
             onCreateError={onCreateError}
             renderItem={renderItem}
@@ -623,6 +716,8 @@ function WorkspaceFrame({
             resolution={workspace.itemResolution}
             onRetry={workspace.retryItemResolution}
             onRetryLoad={compacte ? onRetry : null}
+            visibleItemIds={visibleItemIds}
+            filtered={filtrat}
           />
         </SlotErrorBoundary>
       }
@@ -634,7 +729,7 @@ function WorkspaceFrame({
 
 function CategoryColumn({
   compacte, espai, grups: groupsToRender, amagades, vigilaAmagada = false, mestreDetall = false, collapsibleNavigation, replegaTotaCapcalera, focusTarget,
-  onManageCategories, labels, icon, collapseBtnRef, expandBtnRef
+  onManageCategories, labels, icon, collapseBtnRef, expandBtnRef, focusAfterLayout
 }) {
   const { state, status, selectCategory, toggleColumn } = useWorkspace();
   const { mida, setPanellObert, tancaPanells, obriPanell, ambRailNavegacio, navegacioEnRail } = useAppGrid();
@@ -880,6 +975,7 @@ function CategoryColumn({
             activeId={state.activeCategoryId}
             onChoose={chooseFromRail}
             label={labels.categories}
+            textRecompte={labels.count}
           />
         </AppGridColumn>
         {settingsDialog}
@@ -968,6 +1064,7 @@ function CategoryColumn({
                   chooseCategory={chooseCategory}
                   chooseFolder={chooseFolder}
                   label={group.label || labels.categories}
+                  textRecompte={labels.count}
                 />
               )}
             </div>
@@ -993,8 +1090,11 @@ function glifDeclarat(category, group) {
 /* Rail de la columna de navegació plegada: un botó d'icona per cada carpeta o
    categoria de primer nivell, grup a grup, amb el mateix gestor de selecció
    que l'arbre. Una arrel que conté la selecció (una subcarpeta activa) es
-   declara aria-current="true"; l'activa exacta, "page", com a l'arbre. */
-function CategoryRail({ groups, activeId, onChoose, label }) {
+   declara aria-current="true"; l'activa exacta, "page", com a l'arbre.
+   El recompte (`count`) d'una arrel va al nom accessible i al title, com a
+   l'arbre: el botó del rail només té lloc per al glif i cap peça de Pedra
+   Seca no en pinta cap damunt. Sense recompte, el nom és el de sempre. */
+function CategoryRail({ groups, activeId, onChoose, label, textRecompte }) {
   const grups = groups.filter(group => group.tree.roots.length > 0);
   if (!grups.length) return null;
   return (
@@ -1008,13 +1108,15 @@ function CategoryRail({ groups, activeId, onChoose, label }) {
               const actual = activeId === category.id
                 ? 'page'
                 : arrelActiva?.id === category.id ? 'true' : undefined;
+              const recompte = recompteDe(category);
+              const nom = recompte ? `${nomDe(category)} ${textDelRecompte(textRecompte, recompte)}` : category.label;
               return (
                 <li key={category.id}>
                   <button
                     type="button"
                     className="sdp-workspace-rail__boto"
-                    aria-label={category.label}
-                    title={category.label}
+                    aria-label={nom}
+                    title={nom}
                     aria-current={actual}
                     onClick={() => onChoose(group, category)}
                   >
@@ -1030,13 +1132,20 @@ function CategoryRail({ groups, activeId, onChoose, label }) {
   );
 }
 
-function CategoryBranch({ nodes, group, activeId, expandedFolders, toggleFolder, chooseCategory, chooseFolder, label }) {
+/* L'arbre de la navegació. Amb recompte (`count` > 0), el nom de la fila
+   porta al final la Insignia neutra de Pedra Seca: la xifra es veu i el
+   lector de pantalla la sent sencera amb el seu text («Tecnologia 6 sense
+   llegir»). L'espai del davant separa el nom del text quan es compon el
+   nom accessible; entre els fills d'un flex (el botó ho és) un text només
+   d'espais no es pinta. Sense recompte, cap node de més. */
+function CategoryBranch({ nodes, group, activeId, expandedFolders, toggleFolder, chooseCategory, chooseFolder, label, textRecompte }) {
   return (
     <ul className="sdp-workspace-categories" aria-label={label}>
       {nodes.map(category => {
         const key = JSON.stringify([group.id, category.id]);
         const expanded = expandedFolders.has(key);
         const hasChildren = category.children.length > 0;
+        const recompte = recompteDe(category);
         return (
           <li key={category.id}>
             <div className="sdp-workspace-folder-row">
@@ -1053,6 +1162,15 @@ function CategoryBranch({ nodes, group, activeId, expandedFolders, toggleFolder,
                   <NavGlyph glyph={glifDeclarat(category, group)} size={18} />
                 </span>
                 <span className="sdp-workspace-nav-item__label">{category.label}</span>
+                {recompte ? (
+                  <>
+                    {' '}
+                    <Insignia>
+                      <span aria-hidden="true">{xifraDelRecompte(recompte)}</span>
+                      <span className="sdp-sr-only">{textDelRecompte(textRecompte, recompte)}</span>
+                    </Insignia>
+                  </>
+                ) : null}
               </button>
               {hasChildren ? (
                 <button
@@ -1073,6 +1191,7 @@ function CategoryBranch({ nodes, group, activeId, expandedFolders, toggleFolder,
                 nodes={category.children} group={group} activeId={activeId}
                 expandedFolders={expandedFolders} toggleFolder={toggleFolder}
                 chooseCategory={chooseCategory} chooseFolder={chooseFolder} label={category.label}
+                textRecompte={textRecompte}
               />
             )}
           </li>
@@ -1086,7 +1205,7 @@ function CategoryBranch({ nodes, group, activeId, expandedFolders, toggleFolder,
 
 function ItemListColumn({
   mestreDetall = false, tornaDeLaLlista = null, rootRef, detailFocusRef, onCreate, onCreateError, renderItem, labels, icon, categoryIcon,
-  tagFilter, sortable, replegaTotaCapcalera, canCreate, onRetry, listClassName, collapseBtnRef, expandBtnRef
+  tagFilter, sortable, replegaTotaCapcalera, canCreate, onRetry, listClassName, collapseBtnRef, expandBtnRef, focusAfterLayout
 }) {
   const {
     items, categories, navigationGroups, state, status, filteredItems, selectItem, requestItem,
@@ -1172,7 +1291,7 @@ function ItemListColumn({
     () => (tagFilter ? [...new Set(items.flatMap((item) => item.tags || []))].sort() : CAP),
     [items, tagFilter]
   );
-  const hasFilters = Boolean(state.query || state.activeTagIds.length);
+  const hasFilters = teFiltres(state);
 
   const createGenerationRef = useRef(0);
   const mountedRef = useRef(true);
@@ -1549,7 +1668,7 @@ function TornadaDelDetall() {
 
 const DetailColumn = memo(function DetailColumn({
   rootRef, error, renderDetail, labels, className, activeItem, status, activeCategoryId, activeItemId, resolution, onRetry,
-  onRetryLoad = null
+  onRetryLoad = null, visibleItemIds = CAP, filtered = false
 }) {
   let content;
   /* Si el contingut és un estat propi (sense la fletxa d'una Pàgina Universal). */
@@ -1574,7 +1693,11 @@ const DetailColumn = memo(function DetailColumn({
       selection: {
         categoryId: activeCategoryId,
         itemId: activeItemId
-      }
+      },
+      /* F2 (261016) · Opcionals: el que es veu a la llista i si la persona
+         la filtra (WorkspaceFrame). Cap canvi de DOM. */
+      visibleItemIds,
+      filtered
     });
     estatPropi = injectat == null && !activeItem;
     content = injectat ?? (activeItem ? null : <p>{labels.select}</p>);

@@ -14,6 +14,7 @@ vi.mock('../../app/contexts/SessionContext.jsx', () => ({
 vi.mock('../admin/SegonFactor.jsx', () => ({ SegonFactor: () => <p>el segon factor, en línia</p> }));
 import DetallAjust, { AVIS_SENSE_COLUMNA, pagina } from './DetallAjust.jsx';
 import { NotificationProvider } from '../../components/universal/NotificationContext.jsx';
+import { desaLlicenciaPerDefecte, llegixLlicenciaPerDefecte } from '../../components/universal/drets/herencia.js';
 
 const EIXIDA = Object.freeze({ id: 'sessio', lloc: 'compte', titol: 'Tancar sessió', tipus: 'accio', accio: 'logout', obert: true });
 const jo = Object.freeze({ id: 'jo', mena: 'persona', nom: 'Pep', dades: {} });
@@ -313,4 +314,93 @@ test('grup C · sense persona de sessió, «Eixir» no crida el port', async () 
   await act(async () => { fireEvent.click(within(screen.getByRole('dialog', { name: 'Eixir de Forn?' })).getByRole('button', { name: 'Eixir' })); });
   expect(membres.llevaMembre).not.toHaveBeenCalled();
   expect(screen.getByRole('alert').textContent).toBe('Cal iniciar sessió.');
+});
+
+/* ── Pla 261016 (Bloc 3.1; ordre del Mestre) · els drets de sèrie de les notes, a «El compte» ──
+   La píndola dels drets de l'editor (BotoDretsAutor) obri CopyrightPage dins
+   del bloc, amb l'àmbit 'compte'; desar passa per guardarAjust com qualsevol
+   altre ajust, i en tancar el focus torna a la píndola. */
+
+const DRETS = Object.freeze({
+  id: 'drets-notes', lloc: 'compte', titol: 'Drets de sèrie de les meues notes', camp: 'copyright', tipus: 'llicencia', valor: '', obert: true,
+});
+const pep = Object.freeze({ id: 'jo', mena: 'persona', nom: 'Pep', dades: { id: 'uuid-pep', full_name: 'Pep del Mas' } });
+const ELEGIR = "Elegir drets d'autor";
+const vistaDrets = () => screen.queryByRole('region', { name: 'Drets d’autor' });
+afterEach(() => { for (const id of ['uuid-pep', 'jo', 'O']) desaLlicenciaPerDefecte(id, ''); });
+
+test('261016 · sense drets desats, la píndola diu «Elegir drets d’autor» i obri CopyrightPage dins del bloc, amb els textos del compte', () => {
+  render(<DetallAjust ajust={DRETS} identitat={pep} guardarAjust={vi.fn()} />);
+  const pindola = screen.getByRole('button', { name: ELEGIR });
+  expect(pindola.hasAttribute('data-sdp-drets')).toBe(true);
+  expect(screen.queryByRole('button', { name: 'Guardar' })).toBeNull();
+  fireEvent.click(pindola);
+  const vista = vistaDrets();
+  expect(document.activeElement).toBe(within(vista).getByRole('heading', { level: 2, name: 'Drets d’autor' }));
+  expect(within(vista).getByRole('button', { name: 'Tornar al compte' })).toBeTruthy();
+  expect(vista.querySelector('.sdp-drets__intro').textContent)
+    .toBe('Tria amb quins drets naixen les teues notes noves. Res no canvia fins que prems «Desar autoria».');
+  expect(within(vista).getByRole('group', { name: 'Tria els drets de sèrie de les teues notes' })).toBeTruthy();
+  expect(within(vista).getByRole('status').textContent).toContain('Les teues notes noves naixen amb estos drets');
+  // Sense valor desat, la CC de sèrie preseleccionada; «Copyright (C)» porta el nom de la fitxa.
+  expect(within(vista).getByRole('radio', { name: /^CC BY-NC-SA 4\.0/ }).checked).toBe(true);
+  fireEvent.click(within(vista).getByRole('radio', { name: /Copyright \(C\)/ }));
+  expect(within(vista).getByRole('textbox').value).toBe('© Pep del Mas');
+  // Escape torna sense desar, i el focus a la píndola.
+  fireEvent.keyDown(vista, { key: 'Escape' });
+  expect(vistaDrets()).toBeNull();
+  expect(document.activeElement).toBe(screen.getByRole('button', { name: ELEGIR }));
+});
+
+test('261016 · «Desar autoria» tanca la vista, desa per guardarAjust i ho diu davall de la píndola, que recupera el focus', async () => {
+  const guardarAjust = vi.fn(async () => undefined);
+  render(<DetallAjust ajust={{ ...DRETS, valor: 'CC BY 4.0' }} identitat={pep} guardarAjust={guardarAjust} />);
+  fireEvent.click(screen.getByRole('button', { name: "Drets d'autor: CC BY 4.0" }));
+  const vista = vistaDrets();
+  expect(vista.querySelector('.sdp-drets__intro').textContent).toContain('Ara són «CC BY 4.0».');
+  expect(within(vista).getByRole('radio', { name: /^CC BY 4\.0/ }).checked).toBe(true);
+  fireEvent.click(within(vista).getByRole('radio', { name: /CC BY-SA 4\.0/ }));
+  await act(async () => { fireEvent.click(within(vista).getByRole('button', { name: 'Desar autoria' })); });
+  expect(guardarAjust).toHaveBeenCalledTimes(1);
+  expect(guardarAjust).toHaveBeenCalledWith('jo', 'drets-notes', 'CC BY-SA 4.0');
+  expect(vistaDrets()).toBeNull();
+  expect(screen.getByRole('status').textContent).toBe('Desat correctament.');
+  expect(document.activeElement).toBe(screen.getByRole('button', { name: "Drets d'autor: CC BY 4.0" }));
+});
+
+test('261016 · si el servidor no l’accepta, l’error es diu en línia i la tria es recupera en tornar-hi; «Cancel·lar» hi renuncia', async () => {
+  const guardarAjust = vi.fn(async () => { throw new Error('Sense xarxa'); });
+  render(<DetallAjust ajust={{ ...DRETS, valor: 'CC BY 4.0' }} identitat={pep} guardarAjust={guardarAjust} />);
+  const pindola = () => screen.getByRole('button', { name: "Drets d'autor: CC BY 4.0" });
+  fireEvent.click(pindola());
+  fireEvent.click(screen.getByRole('radio', { name: /CC BY-SA 4\.0/ }));
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Desar autoria' })); });
+  expect(screen.getByRole('alert').textContent).toBe('Sense xarxa');
+  fireEvent.click(pindola());
+  expect(screen.getByRole('radio', { name: /CC BY-SA 4\.0/ }).checked).toBe(true);
+  expect(screen.getByText('Continues on ho havies deixat')).toBeTruthy();
+  fireEvent.click(screen.getByRole('button', { name: 'Cancel·lar' }));
+  fireEvent.click(pindola());
+  expect(screen.getByRole('radio', { name: /^CC BY 4\.0/ }).checked).toBe(true);
+  expect(screen.queryByText('Continues on ho havies deixat')).toBeNull();
+});
+
+test('261016 · tancat (p. ex. amb una baixa en curs), mostra els drets desats i el motiu, sense píndola', () => {
+  render(<DetallAjust ajust={{ ...DRETS, valor: 'CC0 1.0', obert: false, motiu: 'Tens una baixa en curs: el perfil està congelat.' }} identitat={pep} />);
+  expect(screen.queryByRole('button')).toBeNull();
+  expect(screen.getByText('CC0 1.0')).toBeTruthy();
+  expect(screen.getByText('Tens una baixa en curs: el perfil està congelat.')).toBeTruthy();
+});
+
+test('261016 · els drets desats al servidor passen a la preferència d’este dispositiu (per l’id de la fila); un valor buit no l’esborra', () => {
+  render(<DetallAjust ajust={{ ...DRETS, valor: 'CC BY 4.0' }} identitat={pep} />);
+  expect(llegixLlicenciaPerDefecte('uuid-pep')).toBe('CC BY 4.0');
+  expect(llegixLlicenciaPerDefecte('jo')).toBeNull();
+  cleanup();
+  render(<DetallAjust ajust={DRETS} identitat={pep} />);
+  expect(llegixLlicenciaPerDefecte('uuid-pep')).toBe('CC BY 4.0');
+  cleanup();
+  // Una organització no en porta (els seus drets es trien a la fitxa), encara que algú li passara l'ajust.
+  render(<DetallAjust ajust={{ ...DRETS, valor: 'CC0 1.0' }} identitat={forn} />);
+  expect(llegixLlicenciaPerDefecte('O')).toBeNull();
 });

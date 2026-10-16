@@ -237,8 +237,9 @@ function socdepoble_enxufe_integritat( $etiqueta, $handle, $src ) {
 add_filter( 'script_loader_tag', 'socdepoble_enxufe_integritat', 10, 3 );
 
 /**
- * L'etiqueta <soc-de-poble> amb els atributs del contracte. Una instància pot
- * trepitjar nomPoble, poble i rutaInicial; els buits no s'emeten.
+ * L'etiqueta <soc-de-poble> amb els atributs del contracte i, a dins,
+ * l'esquelet de càrrega. Una instància pot trepitjar nomPoble, poble i
+ * rutaInicial; els buits no s'emeten.
  *
  * Només la instància pròpia de WordPress porta el servei de traducció i
  * l'opt-in ruta-a-url (atributsOptIn de sdp.amfitrio.v1). El marcatge de
@@ -285,7 +286,13 @@ function socdepoble_enxufe_element( $instancia = array(), $amb_serveis = true ) 
 		}
 	}
 
-	return '<soc-de-poble' . $atributs . '></soc-de-poble>';
+	/* Esquelet de càrrega (ordre del Mestre, 261016): el text del DOM clar es
+	   pinta de seguida, i el mòbil té primer pintat mentre baixa el paquet. En
+	   arrencar, l'element obri un shadow root tancat sense <slot> i el text
+	   deixa de pintar-se sol; si l'arrencada falla, el nucli el substituïx pel
+	   motiu. Literal, sense traducció i amb tres punts ASCII, que wptexturize
+	   no toca (socdepoble_enxufe_sense_texturitzar). */
+	return '<soc-de-poble' . $atributs . '>Carregant el mur...</soc-de-poble>';
 }
 
 /**
@@ -402,6 +409,24 @@ function socdepoble_enxufe_registra_entrades() {
 	wp_set_script_translations( 'socdepoble-app-editor-script', 'socdepoble-enxufe', plugin_dir_path( SOCDEPOBLE_ENXUFE_FITXER ) . 'languages' );
 }
 add_action( 'init', 'socdepoble_enxufe_registra_entrades' );
+
+/**
+ * El contingut de <soc-de-poble> no es texturitza: l'esquelet de càrrega
+ * arriba amb els seus tres punts ASCII. wptexturize els convertix en &#8230;
+ * allà on passa després del marcatge: el render del bloc (do_blocks va a la
+ * prioritat 9 de the_content i wptexturize a la 10) i les plantilles de
+ * blocs, que tornen a passar la plantilla sencera, shortcode inclòs
+ * (get_the_block_template_html). Fins ara l'element anava buit: fora d'ell
+ * no canvia res.
+ *
+ * @param string[] $etiquetes Elements HTML que wptexturize no toca.
+ * @return string[]
+ */
+function socdepoble_enxufe_sense_texturitzar( $etiquetes ) {
+	$etiquetes[] = 'soc-de-poble';
+	return $etiquetes;
+}
+add_filter( 'no_texturize_tags', 'socdepoble_enxufe_sense_texturitzar' );
 
 /**
  * El marcatge de referència per a qualsevol altre amfitrió, amb la

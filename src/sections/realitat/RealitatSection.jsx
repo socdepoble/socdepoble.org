@@ -2,7 +2,7 @@ import { useEffect, useId, useState } from 'react';
 import { Lightbulb, MessagesSquare, Network, PowerOff } from 'lucide-react';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { Avatar, Casella, GrupAvatars, GrupOpcions, IaiaIcon } from '../../components/PedraSeca/index.js';
-import { AGENTS } from '../profile/agentsSeed';
+import { AGENTS, tipusDAgent } from '../../data/agentsSeed.js';
 import { resolveAsset } from '../../config/assetResolver';
 import { getVal, setVal } from '../../config/storage.js';
 import { useUIActions } from '../../app/contexts/UIContext';
@@ -61,9 +61,14 @@ export default function RealitatSection() {
     );
   };
 
-  const aiAgents = AGENTS.filter(
-    (agent) => agent.type === 'AI' || agent.type === 'MASTER'
-  );
+  /* Gauntlet 261016 (Bloc 3; ordre del Mestre: els personatges ANIMAL del
+     catàleg són IA) · Els acompanyants són els agents que el catàleg classifica
+     com a IA (tipusDAgent, la font única de data/agentsSeed.js): les IA i els
+     personatges ANIMAL (El Gall, Súper Ratolí, La Mixa i Sultan). Abans era una
+     quarta còpia del vocabulari (AI o MASTER) que els deixava fora. Cap agent
+     del catàleg porta el tipus MASTER (és l'abast, `scope`, de la IAIA, de Javi
+     i de l'entitat), i un tipus desconegut és una persona: no hi entra. */
+  const aiAgents = AGENTS.filter((agent) => tipusDAgent(agent) === 'ia');
 
   const nivellActual = NIVELLS.find((n) => n.id === level) ?? NIVELLS[1];
   const activa = esIaiaActiva(nivellActual.id);

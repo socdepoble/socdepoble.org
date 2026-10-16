@@ -9,14 +9,28 @@ vi.mock('../../app/contexts/RouterContext', () => ({ useNavigate: () => vi.fn() 
 vi.mock('../../app/contexts/SessionContext.jsx', () => ({
   useSession: () => ({ logout: vi.fn(), preparaEixida: vi.fn(async () => []) }),
 }));
-const dobles = vi.hoisted(() => ({ carregaImatge: vi.fn(), exportaRetall: vi.fn(), compressImage: vi.fn() }));
+const dobles = vi.hoisted(() => ({ carregaImatge: vi.fn(), exportaRetall: vi.fn(), compressImage: vi.fn(), avisDeLaFoto: null }));
 vi.mock('../../components/universal/enquadrament/imatgeCanvas.js', () => ({
   carregaImatge: dobles.carregaImatge,
   dibuixaVisor: () => true,
   exportaRetall: dobles.exportaRetall,
 }));
 vi.mock('../../utils/imageUtils.js', () => ({ compressImage: dobles.compressImage }));
+/* Gauntlet 261016 (F1) · La compressió de veres; només quan una prova posa
+   `avisDeLaFoto`, fotoDinsDelPressupost el llança tal qual, sense comprimir. */
+vi.mock('../../utils/pujadaImatge.js', async (importOriginal) => {
+  const original = await importOriginal();
+  return {
+    ...original,
+    fotoDinsDelPressupost: (...args) => (dobles.avisDeLaFoto == null
+      ? original.fotoDinsDelPressupost(...args)
+      : Promise.reject(new Error(dobles.avisDeLaFoto))),
+  };
+});
 import DetallAjust from './DetallAjust.jsx';
+import { AVISOS_DE_LA_FOTO, ERROR_PRESSUPOST_EXIF_CAMERA, PRESSUPOST_PUJADA } from '../../utils/pujadaImatge.js';
+import { ETIQUETA_CONSERVA_CAMERA, exifPublicable } from '../../components/universal/enquadrament/exifIncrustat.js';
+import { TIPUS, jpegAmbExif } from '../../components/universal/enquadrament/jpegProva.js';
 
 const FOTO = Object.freeze({ id: 'avatar', lloc: 'fitxa', titol: 'Foto de perfil', camp: 'avatar_url', tipus: 'imatge', valor: '', obert: true });
 const jo = Object.freeze({ id: 'jo', mena: 'persona', nom: 'Pep', dades: {} });
@@ -24,6 +38,7 @@ const RETALLADOR = { name: 'Enquadrar l’avatar' };
 const MITJA = 'sdp-media://mitjans/t/u/avatars/a.webp';
 
 beforeEach(() => {
+  dobles.avisDeLaFoto = null;
   dobles.carregaImatge.mockReset().mockResolvedValue({ amplada: 900, alcada: 1200, tipus: 'image/jpeg', element: {}, allibera: vi.fn() });
   dobles.exportaRetall.mockReset().mockResolvedValue(new File(['y'], 'enquadrament.jpg', { type: 'image/jpeg' }));
   dobles.compressImage.mockReset().mockResolvedValue('data:image/webp;base64,AAAA');
@@ -59,7 +74,8 @@ test('Onada 4 · T3 · la foto obri el retallador en quadrat; desar puja UN fitx
   expect(dobles.exportaRetall.mock.calls[0][1]).toEqual({ x: 0, y: 150, w: 900, h: 900 });
   const retallat = await dobles.exportaRetall.mock.results[0].value;
   expect(dobles.compressImage).toHaveBeenCalledTimes(1);
-  expect(dobles.compressImage).toHaveBeenCalledWith(retallat, { maxSize: 600, format: 'image/webp', quality: 0.8 });
+  // Gauntlet 261016 (Bloc 1, Llei del Quadrat) · l'avatar, a 400 px (abans 600).
+  expect(dobles.compressImage).toHaveBeenCalledWith(retallat, { maxSize: 400, format: 'image/webp', quality: 0.8 });
   expect(pujaMitja).toHaveBeenCalledTimes(1);
   const [fitxer, carpeta] = pujaMitja.mock.calls[0];
   expect(fitxer).toBeInstanceOf(File);
@@ -68,6 +84,121 @@ test('Onada 4 · T3 · la foto obri el retallador en quadrat; desar puja UN fitx
   expect(screen.queryByRole('dialog', RETALLADOR)).toBeNull();
   expect(screen.getByRole('status').textContent).toBe('Imatge pujada. Ara dóna-li a Guardar.');
   expect(screen.getByAltText('Previsualització').getAttribute('src')).toBe(MITJA);
+});
+
+/* Gauntlet 261016 (Bloc 1) · Un navegador sense codificador WebP en canvas
+   (Safari 16) torna PNG. Abans l'avatar pujava així, avatar.png; ara la foto
+   es torna a codificar en JPEG (el PNG no cabria al pressupost) i puja
+   avatar.jpg, de tipus image/jpeg: el nom diu el que porta. El fetch torna
+   els bytes de veres. */
+const PNG = String.fromCharCode(0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 13) + 'IHDR';
+const JPEG = String.fromCharCode(0xff, 0xd8, 0xff, 0xe0, 0, 16) + 'JFIF\u0000xxxxx';
+function fetchDeVeres() {
+  vi.stubGlobal('fetch', vi.fn(async (url) => {
+    const tipus = /^data:([^;,]*)/.exec(url)?.[1] || '';
+    const bytes = Uint8Array.from(atob(url.slice(url.indexOf(',') + 1)), (c) => c.charCodeAt(0));
+    return { blob: async () => new Blob([bytes], { type: tipus }) };
+  }));
+}
+
+test('Gauntlet 261016 · un canvas sense WebP (Safari 16): la foto es torna a codificar en JPEG i puja avatar.jpg', async () => {
+  dobles.compressImage.mockImplementation(async (_f, { format }) => (format === 'image/jpeg'
+    ? `data:image/jpeg;base64,${btoa(JPEG)}`
+    : `data:image/png;base64,${btoa(PNG)}`));
+  fetchDeVeres();
+  const pujaMitja = vi.fn(async () => MITJA);
+  munta(pujaMitja);
+  await tria();
+  await desa();
+  expect(dobles.compressImage.mock.calls.map(([, o]) => o)).toEqual([
+    { maxSize: 400, format: 'image/webp', quality: 0.8 },
+    { maxSize: 400, format: 'image/jpeg', quality: 0.8 },
+  ]);
+  const [fitxer, carpeta] = pujaMitja.mock.calls[0];
+  expect([fitxer.name, fitxer.type, fitxer.size, carpeta]).toEqual(['avatar.jpg', 'image/jpeg', JPEG.length, 'avatars']);
+});
+
+/* Gauntlet 261016 (Bloc 1) · L'avatar entra al pressupost de les fotos:
+   menys de 80.000 bytes, baixant només la qualitat. Si ni la més baixa hi
+   cap, no puja res i es diu per què (no un error de connexió). */
+test('Gauntlet 261016 · un avatar que pesa massa fins i tot comprimit: l’avís del pressupost, dins i fora, i cap pujada', async () => {
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  dobles.compressImage.mockResolvedValue(`data:image/webp;base64,${btoa(`RIFF\u0000\u0000\u0000\u0000WEBPVP8 ${'x'.repeat(90000)}`)}`);
+  fetchDeVeres();
+  const pujaMitja = vi.fn(async () => MITJA);
+  munta(pujaMitja);
+  await tria();
+  await desa();
+  const missatge = 'La imatge pesa massa fins i tot comprimida; prova amb una altra foto.';
+  /* Gauntlet 261016 (P1 de l'auditoria adversarial) · Abans, els sis intents
+     de l'escala fixa (0,8 → 0,4); ara, la cerca de la qualitat, que acaba a la
+     mínima (0,04) quan no hi cap res. */
+  expect(dobles.compressImage.mock.calls.map(([, o]) => [o.maxSize, o.quality])).toEqual(
+    [0.8, 0.4, 0.2, 0.08, 0.04].map((q) => [400, q]),
+  );
+  expect(pujaMitja).not.toHaveBeenCalled();
+  expect(within(screen.getByRole('dialog', RETALLADOR)).getByRole('alert').textContent).toContain(missatge);
+  expect(screen.getAllByRole('alert').map((a) => a.textContent)).toContain(missatge);
+  expect(warn).not.toHaveBeenCalled();
+});
+
+/* Gauntlet 261016 (F1) · Abans només es reconeixien ERROR_PRESSUPOST i
+   ERROR_PRESSUPOST_EXIF: els avisos nous de la foto (el de la càmera i els de
+   l'EXIF que no es pot conservar) eixien com un error de connexió. Ara tots
+   els d'esAvisDeLaFoto (AVISOS_DE_LA_FOTO, pujadaImatge.js) es diuen tal
+   qual, dins del retallador i al formulari, i cap no s'anota com una fallada
+   de la xarxa. */
+const MARCA_MODEL = [{ tag: 0x010f, tipus: TIPUS.ASCII, valors: 'Canon' }, { tag: 0x0110, tipus: TIPUS.ASCII, valors: 'EOS R6' }];
+const ERROR_CONNEXIO = 'S\'ha produït un error al pujar la imatge. Comprova la teua connexió.';
+const avisos = () => screen.getAllByRole('alert').map((a) => a.textContent);
+
+test('Gauntlet 261016 (F1) · una foto amb només les dades de la càmera que, amb l’EXIF, no cap: l’avís de la càmera, dins i fora, mai el de connexió', async () => {
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  const camera = new File([jpegAmbExif({ ifd0: MARCA_MODEL })], 'camera.jpg', { type: 'image/jpeg' });
+  // Un byte més que el pressupost: sense l'EXIF de la càmera (el TIFF), hi cabria.
+  expect((await exifPublicable(camera)).tiff.length).toBeGreaterThan(1);
+  dobles.compressImage.mockResolvedValue(`data:image/webp;base64,${btoa(`RIFF\u0000\u0000\u0000\u0000WEBPVP8 ${'x'.repeat(PRESSUPOST_PUJADA - 16 + 1)}`)}`);
+  fetchDeVeres();
+  const pujaMitja = vi.fn(async () => MITJA);
+  munta(pujaMitja);
+  await tria(camera);
+  const casella = await within(screen.getByRole('dialog', RETALLADOR)).findByRole('checkbox', { name: new RegExp(ETIQUETA_CONSERVA_CAMERA) });
+  expect(casella.checked).toBe(true);
+  await desa();
+  expect(dobles.compressImage.mock.calls[0][1]).toMatchObject({ maxSize: 400, conservaExif: true, original: camera });
+  expect(pujaMitja).not.toHaveBeenCalled();
+  expect(within(screen.getByRole('dialog', RETALLADOR)).getByRole('alert').textContent).toContain(ERROR_PRESSUPOST_EXIF_CAMERA);
+  expect(avisos()).toContain(ERROR_PRESSUPOST_EXIF_CAMERA);
+  expect(avisos().join('|')).not.toContain(ERROR_CONNEXIO);
+  expect(warn).not.toHaveBeenCalled();
+});
+
+test.each(AVISOS_DE_LA_FOTO.map((avis) => [avis]))('Gauntlet 261016 (F1) · cada avís de la foto es diu tal qual, dins i fora, i no puja res: «%s»', async (avis) => {
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  dobles.avisDeLaFoto = avis;
+  const pujaMitja = vi.fn(async () => MITJA);
+  munta(pujaMitja);
+  await tria();
+  await desa();
+  expect(pujaMitja).not.toHaveBeenCalled();
+  expect(within(screen.getByRole('dialog', RETALLADOR)).getByRole('alert').textContent).toContain(avis);
+  expect(avisos()).toContain(avis);
+  expect(avisos().join('|')).not.toContain(ERROR_CONNEXIO);
+  expect(warn).not.toHaveBeenCalled();
+});
+
+test('Gauntlet 261016 (F1) · control: una fallada que no és cap avís de la foto continua sent l’error de connexió, i s’anota', async () => {
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  dobles.avisDeLaFoto = 'Failed to fetch';
+  const pujaMitja = vi.fn(async () => MITJA);
+  munta(pujaMitja);
+  await tria();
+  await desa();
+  expect(pujaMitja).not.toHaveBeenCalled();
+  expect(within(screen.getByRole('dialog', RETALLADOR)).getByRole('alert').textContent).toContain(ERROR_CONNEXIO);
+  expect(avisos()).toContain(ERROR_CONNEXIO);
+  expect(avisos().join('|')).not.toContain('Failed to fetch');
+  expect(warn).toHaveBeenCalledTimes(1);
 });
 
 test('Onada 4 · T3 · cancel·lar no puja res i el focus torna al selector de fitxers', async () => {

@@ -90,7 +90,12 @@ const FITXERS = Object.freeze([
   'src/sections/admin/AdminSection.jsx',
   /* Ordre del Mestre (pla 261007_0012, §0.7) · Emojis a l'índex de la Wiki
      (carpetes i portada): la prova del model que en fixa els glifs. */
-  'src/sections/wiki-de-poble/WikiDePobleSection.einesLocals.test.jsx'
+  'src/sections/wiki-de-poble/WikiDePobleSection.einesLocals.test.jsx',
+  /* Gauntlet del 261016 (Bloc 0 i Bloc 4) · El recompte de no llegides de
+     l'arbre (el Lector) i el focus diferit de l'espai: les dues proves noves
+     del component, que cap porta d'ESLint no vigilava. */
+  'src/components/universal/workspace/UniversalWorkspace.recompte.test.jsx',
+  'src/components/universal/workspace/UniversalWorkspace.focusDiferit.test.jsx'
 ]);
 
 const llig = (ruta) => readFileSync(path.join(ARREL, ruta), 'utf8');

@@ -1,25 +1,41 @@
 import { useCallback, useRef, useState } from 'react';
 import { DialegEnquadrament } from './DialegEnquadrament.jsx';
 import { tipusDeSortida } from './enquadrament.js';
+import { MIDA_AVATAR, MIDA_CAPCALERA, MIDA_LOGOTIP } from '../../../utils/pujadaImatge.js';
 
 /**
  * useEnquadramentImatge — Onada 4 (retallador senzill, ordre del Mestre
  * 261008). Una sola finestra de retall, calcada de la de Claude, per a les
  * tres imatges d'una fitxa: només canvien la proporció i la màscara.
- *   · avatar (persona, agent): cercle 1:1, el vel fora del cercle;
+ *   · avatar (persona, agent): cercle 1:1, el vel fora del cercle, exportat
+ *     a 400 × 400 exactes (MIDA_AVATAR, Gauntlet 261016, Bloc 1);
  *   · logotip (organització): quadrat 1:1, exportat a 600 × 600 exactes;
- *   · capçalera: rectangle 16:9, exportat a 1.200 × 675 (PROPORCIO_CAPCALERA
- *     i AMPLADA_CAPCALERA: una sola constant per a canviar-la).
+ *   · capçalera: quadrat 1:1, exportat a 1.200 × 1.200 exactes, la mateixa
+ *     imatge que la targeta (Gauntlet 261016, Bloc 1, Llei del Quadrat; abans
+ *     16:9 i 1.200 × 675, ordre 261008). PROPORCIO_CAPCALERA i
+ *     AMPLADA_CAPCALERA: una sola constant per a canviar-la.
  * Totes: el mode senzill del diàleg, sense geolocalitzar, el fitxer SEMPRE
- * recodificat (cap EXIF de l'original, ADR D4) i 10 MB d'entrada, dits
- * abans de triar la foto (AJUDA_FOTO).
+ * recodificat i 10 MB d'entrada, dits abans de triar la foto (AJUDA_FOTO).
+ * Gauntlet 261016 (Bloc 1.2, mandat del Mestre, pla §0.1.3) · L'avatar i la
+ * capçalera oferixen la casella de l'EXIF (marcada de sèrie) quan la foto en
+ * porta: «Conserva la ubicació i la data de la foto» o, si només porta la
+ * càmera, «Conserva les dades de la càmera de la foto» (Codex, 02:26).
+ * Marcada, la compressió hi torna a posar l'EXIF publicable de l'original. Si
+ * és ell el que no cap, l'avís és ERROR_PRESSUPOST_EXIF (o el de la càmera), i
+ * si no es pot conservar, ERROR_EXIF_NO_CONSERVABLE (o el de la càmera): qui
+ * puja els diu tal qual (esAvisDeLaFoto, utils/pujadaImatge.js). El logotip no
+ * (conservaExif: false): no és cap fotografia del poble i, en Safari 16, ix en
+ * PNG, que no el porta. Una `config` sense `conservaExif: false` també
+ * l'oferix (el mandat és de sèrie).
  *
  * CONTRACTE
  *   useEnquadramentImatge({ forma, onEnquadrat, onError, config? })
  *   forma ('avatar' | 'logotip' | 'capcalera') · una fila de FORMES.
- *   onEnquadrat(fitxer, info) → Promise: puja el File ja retallat. Si acaba
- *     bé, el diàleg es tanca; si llança, el missatge ix dins del diàleg, que
- *     continua obert (el modal tapa qualsevol toast).
+ *   onEnquadrat(fitxer, info, exif) → Promise: puja el File ja retallat. Si
+ *     acaba bé, el diàleg es tanca; si llança, el missatge ix dins del diàleg,
+ *     que continua obert (el modal tapa qualsevol toast). `exif` és la tria de
+ *     la casella, a punt per a les opcions de la pujada ({ conservaExif: true,
+ *     original } o { conservaExif: false }), o undefined si no n'hi ha hagut.
  *   onError(missatge) · la foto triada no es pot processar (validaFotoDeFitxa):
  *     no s'obri res i l'avís va fora (cap modal no el tapa).
  *   config · la configuració sencera, per a qui no és cap de les tres formes
@@ -43,31 +59,37 @@ export const ERROR_SENSE_FOTO = 'No has triat cap imatge.';
 export const ERROR_TIPUS_FOTO = 'Només pots pujar fotos PNG, JPEG o WebP.';
 export const ERROR_PES_FOTO = 'Esta foto ocupa més de 10 MB. Tria’n una de més lleugera.';
 
-/** La capçalera: proporció i amplada del fitxer. Canviar-la és canviar estes dues línies. */
-export const PROPORCIO_CAPCALERA = Object.freeze({ valor: '16:9', ratio: 16 / 9 });
-export const AMPLADA_CAPCALERA = 1200;
-/** El costat del logotip i de l'avatar. */
-export const MIDA_QUADRADA = 600;
+/* Gauntlet 261016 (Bloc 1, Llei del Quadrat) · Les mides ixen de la font
+   única (utils/pujadaImatge.js), la mateixa que llig la pujada: l'amplada de
+   la capçalera (MIDA_CAPCALERA, 1.200), el costat de l'avatar (MIDA_AVATAR,
+   400) i el del logotip (MIDA_LOGOTIP, 600), que ja no són el mateix. */
+/** La capçalera: proporció i amplada del fitxer. Canviar-la és canviar estes dues línies (l'amplada, a la font única). */
+export const PROPORCIO_CAPCALERA = Object.freeze({ valor: '1:1', ratio: 1 });
+export const AMPLADA_CAPCALERA = MIDA_CAPCALERA;
 
 const QUADRAT = Object.freeze([Object.freeze({ valor: '1:1', etiqueta: 'Quadrat (1:1)', ratio: 1 })]);
-const RECTANGLE_CAPCALERA = Object.freeze([
+const FORMATS_CAPCALERA = Object.freeze([
   Object.freeze({ valor: PROPORCIO_CAPCALERA.valor, etiqueta: `Capçalera (${PROPORCIO_CAPCALERA.valor})`, ratio: PROPORCIO_CAPCALERA.ratio }),
 ]);
 
 /* La taula pura de les tres formes. `exacta`: el fitxer fa exactament eixa
-   mida (també si cal ampliar el retall); sense, `midaSortida` és el màxim. */
+   mida (també si cal ampliar el retall); sense, `midaSortida` és el màxim.
+   Gauntlet 261016 (Bloc 1) · Les tres són exactes: l'avatar també ix a
+   400 × 400 quan el retall és més menut (abans quedava a la mida del retall). */
 export const FORMES = Object.freeze({
   avatar: Object.freeze({
-    format: '1:1', formats: QUADRAT, mascara: 'cercle', titol: 'Retalla la foto', midaSortida: MIDA_QUADRADA, exacta: null,
+    format: '1:1', formats: QUADRAT, mascara: 'cercle', titol: 'Retalla la foto', midaSortida: MIDA_AVATAR,
+    exacta: Object.freeze({ amplada: MIDA_AVATAR, alcada: MIDA_AVATAR }), conservaExif: true,
   }),
   logotip: Object.freeze({
-    format: '1:1', formats: QUADRAT, mascara: null, titol: 'Retalla el logotip', midaSortida: MIDA_QUADRADA,
-    exacta: Object.freeze({ amplada: MIDA_QUADRADA, alcada: MIDA_QUADRADA }),
+    format: '1:1', formats: QUADRAT, mascara: null, titol: 'Retalla el logotip', midaSortida: MIDA_LOGOTIP,
+    exacta: Object.freeze({ amplada: MIDA_LOGOTIP, alcada: MIDA_LOGOTIP }), conservaExif: false,
   }),
   capcalera: Object.freeze({
-    format: PROPORCIO_CAPCALERA.valor, formats: RECTANGLE_CAPCALERA, mascara: null, titol: 'Retalla la capçalera',
+    format: PROPORCIO_CAPCALERA.valor, formats: FORMATS_CAPCALERA, mascara: null, titol: 'Retalla la capçalera',
     midaSortida: AMPLADA_CAPCALERA,
     exacta: Object.freeze({ amplada: AMPLADA_CAPCALERA, alcada: Math.round(AMPLADA_CAPCALERA / PROPORCIO_CAPCALERA.ratio) }),
+    conservaExif: true,
   }),
 });
 
@@ -93,7 +115,8 @@ export function validaFotoDeFitxa(fitxer) {
 
 /* El tipus del fitxer que ix: el PNG conserva la transparència d'un
    logotip (també el d'un WebP); la resta, JPEG. Després, la pujada el passa
-   a WebP com sempre, a la mateixa mida. */
+   a WebP com sempre, a la mateixa mida (una foto, en JPEG si el navegador no
+   sap fer WebP: fotoDinsDelPressupost). */
 const tipusDe = (font) => tipusDeSortida(typeof Blob !== 'undefined' && font instanceof Blob ? font.type : '');
 
 /** La configuració del diàleg per a una forma (la consumix el hook). */
@@ -108,6 +131,7 @@ export function configDeForma(forma) {
     descripcio: AJUDA_RETALL,
     valida: validaFotoDeFitxa,
     sortida: (font) => ({ ampladaMaxima: f.midaSortida, format: tipusDe(font), ...(f.exacta ? { exacta: f.exacta } : null) }),
+    conservaExif: f.conservaExif !== false,
   };
 }
 
@@ -146,9 +170,11 @@ export function useEnquadramentImatge({ forma = 'avatar', config = null, onEnqua
       mascara={cfg.mascara}
       titol={cfg.titol}
       descripcio={cfg.descripcio}
+      ofereixConservarExif={cfg.conservaExif !== false}
       onTanca={tanca}
-      onDesa={async (fitxer, info) => {
-        await enquadratRef.current?.(fitxer, info);
+      onDesa={async (fitxer, info, metadades) => {
+        // Bloc 1.2 · La tria de la casella (o res) va a qui puja, com a tercer argument.
+        await enquadratRef.current?.(fitxer, info, metadades?.exif);
         setSessio((actual) => (actual === sessio ? null : actual));
         return true;
       }}

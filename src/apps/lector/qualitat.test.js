@@ -7,6 +7,10 @@
      l'app, cap style=, cap className que no siga un literal d'una classe
      global que ja existix (src/css), cap h1, cap import de CSS ni :has().
    · Cap AppGridShell a mà: una sola ClosaAplicacio, a AppLector.
+   · Bloc 0 del Gauntlet (ordre del Mestre, 261016): les notícies, sobre
+     l'espai de treball del Bloc de notes (un sol UniversalWorkspace, a
+     vistes/Noticies.jsx, per la façana); cap UniversalCard ni GraellaTargetes
+     al seu flux, i cap imatge a les seues files.
    · Cap HTML cru: l'article es pinta des de l'arbre net (Contingut.jsx).
    · Baseline 2022 (Safari 16.0, Chrome 100, Firefox 100).
    · El literal de compilació del manifest i el registre.
@@ -44,22 +48,41 @@ const senseComentaris = (text) => text.replace(/\/\*[\s\S]*?\*\//g, '');
 /* Les úniques classes que l'app escriu: globals de src/css, cap de nova.
    Derogat per l'ordre del Mestre del 261004 (prompt 261004_0515) · .sdp-centre
    i .lead eren el títol propi del lector (h2 + entradilla), retirat: el detall
-   és la Pàgina Universal (PaginaApp). La igualtat de davall continua exacta. */
-const CLASSES_GLOBALS = Object.freeze(['sdp-boto', 'sdp-boto--primari', 'sdp-boto--secundari', 'sdp-boto--gran', 'sdp-nomes-lector']);
+   és la Pàgina Universal (PaginaApp). La igualtat de davall continua exacta.
+   Bloc 0 del Gauntlet (ordre del Mestre, 261016) · .sdp-boto--secundari se'n
+   va amb els enllaços «Ves a Hui» i «Fonts» de la graella de notícies retirada
+   (els Link amb pell de botó): ja no la escriu cap fitxer. */
+const CLASSES_GLOBALS = Object.freeze(['sdp-boto', 'sdp-boto--primari', 'sdp-boto--gran', 'sdp-nomes-lector']);
+
+/* Bloc 0 (261016) · Les columnes de les carpetes i de les fonts (261004) s'han retirat, però l'entorn
+   de l'executor no pot esborrar fitxers: queden com a làpides sense codi fins que es trauen del
+   repositori (git rm). Mentre hi siguen, la porta de davall vigila que no tornen a la vida. */
+const LAPIDES = Object.freeze(['vistes/Carpetes.jsx', 'vistes/Fonts.jsx']);
 
 describe('el cens', () => {
   test('hi són el manifest, el nucli, el port, la llavor, el magatzem, les vistes i les proves', () => {
     for (const fitxer of [
       'manifest.js', 'AppLector.jsx', 'rutes.js', 'magatzem.js', 'fontNoticies.js', 'useLector.js', 'useNoticies.js',
       'llavor/cataleg.js', 'llavor/fontLlavor.js', 'nucli/index.js', 'nucli/analitzador.js', 'nucli/html.js', 'nucli/xml.js',
-      'vistes/context.js', 'vistes/navegacio.js', 'vistes/icones.js', 'vistes/comunes.jsx', 'vistes/Carpetes.jsx', 'vistes/Fonts.jsx',
+      'vistes/context.js', 'vistes/navegacio.js', 'vistes/icones.js', 'vistes/comunes.jsx',
       'vistes/Noticies.jsx', 'vistes/Lector.jsx', 'vistes/Contingut.jsx', 'vistes/GestioFonts.jsx',
       'nucli/xml.test.js', 'nucli/html.test.js', 'nucli/dates.test.js', 'nucli/analitzador.test.js', 'nucli/estat.test.js',
       'fontNoticies.test.js', 'magatzem.test.js', 'AppLector.test.jsx', 'privacitat.test.jsx', 'frontera.test.js', 'qualitat.test.js',
       /* SN (261003) · Les fonts personals: el nucli, l'API pública, el hook i les proves. */
       'nucli/personals.js', 'fontsPersonals.js', 'useFontsPersonals.js',
-      'nucli/personals.test.js', 'fontsPersonals.test.js', 'fontsPersonals.vista.test.jsx'
+      'nucli/personals.test.js', 'fontsPersonals.test.js', 'fontsPersonals.vista.test.jsx',
+      /* Bloc 0 (261016) · Les notícies sobre l'espai de treball. */
+      'espaiNoticies.test.jsx'
     ]) expect(existsSync(path.join(ARREL, APP, fitxer)), fitxer).toBe(true);
+  });
+
+  test('Bloc 0 · les làpides de les columnes retirades no tenen codi ni cap fitxer les importa', () => {
+    for (const lapida of LAPIDES.filter((f) => existsSync(path.join(ARREL, APP, f)))) {
+      expect(senseComentaris(llig(`${APP}/${lapida}`)).trim(), lapida).toBe('');
+      const nom = path.basename(lapida);
+      const importadors = DE_LAPP.filter((f) => especificadors(llig(f)).some((e) => e.endsWith(`/${nom}`)));
+      expect(importadors, lapida).toEqual([]);
+    }
   });
 
   test('cap fitxer CSS a l’app: tot el visual és de Pedra Seca', () => {
@@ -118,28 +141,55 @@ describe('estil visual 100% Pedra Seca (ordre del Mestre, 261003)', () => {
     for (const sonda of ['<ul>', '<li key="x">', 'role="grid"']) expect(estructura.test(sonda), sonda).toBe(true);
   });
 
-  test('cap AppGridShell a mà: l’única closca és ClosaAplicacio, i una sola, a AppLector', () => {
+  /* Bloc 0 del Gauntlet (ordre del Mestre, 261016) · Actualitzada a posta: a més de l'única
+     ClosaAplicacio (la gestió de fonts), un sol UniversalWorkspace, el de les notícies, per la
+     façana de l'espai (la porta 'workspace' del nucli 1.2.0) i amb un sol nom. */
+  test('cap AppGridShell a mà: una sola ClosaAplicacio (AppLector) i un sol UniversalWorkspace (les notícies), per la façana', () => {
     const closca = /components\/layout\/AppGridShell/;
     expect(PRODUCCIO.flatMap((f) => especificadors(llig(f)).filter((e) => closca.test(e)))).toEqual([]);
     expect(PRODUCCIO.filter((f) => /<ClosaAplicacio\b/.test(llig(f)))).toEqual([`${APP}/AppLector.jsx`]);
+    expect(PRODUCCIO.filter((f) => /<UniversalWorkspace\b/.test(llig(f)))).toEqual([`${APP}/vistes/Noticies.jsx`]);
+    const delEspai = PRODUCCIO.flatMap((f) => especificadors(llig(f)).filter((e) => e.includes('components/universal/workspace')).map((e) => [f, e]));
+    expect(delEspai).toEqual([[`${APP}/vistes/Noticies.jsx`, '../../../components/universal/workspace/index.js']]);
+    expect(llig(`${APP}/vistes/Noticies.jsx`)).toContain("import { UniversalWorkspace } from '../../../components/universal/workspace/index.js';");
   });
 
-  /* Ordre del Mestre, 261004 (prompt 261004_0515, «no inventar targetes»; D-A) · Les notícies són
-     UniversalCard dins de GraellaTargetes, el detall és la Pàgina Universal de les apps (PaginaApp) i
-     el catàleg de fonts va en targetes de l'esquelet. Cap peça pròpia de files o rajoles. */
-  test('no inventar targetes: UniversalCard a les llistes, PaginaApp al detall i cap fila ni rajola pròpia', () => {
+  /* Ordre del Mestre, 261004 (prompt 261004_0515, «no inventar targetes»; D-A) · El detall és la
+     Pàgina Universal de les apps (PaginaApp) i el catàleg de fonts va en targetes de l'esquelet.
+     Cap peça pròpia de files o rajoles.
+     Bloc 0 del Gauntlet (ordre del Mestre, 261016) · Reescrita a posta: «Prohibit crear noves
+     targetes inventades o jerarquies caòtiques a /app/lector/noticies». Les notícies ja no són
+     UniversalCard dins de GraellaTargetes: són l'espai de treball (l'arbre i la fila per defecte),
+     i al seu flux (vistes/Noticies.jsx) no hi torna cap targeta, graella, pastilla de vista ni
+     targeta de navegació, cap fila pròpia (renderItem) ni cap imatge a les files (`image`: la
+     pintaria ItemMedia sense política de referent). L'única UniversalCard que queda és la de
+     «Les que seguixes» (la gestió de fonts), sense telemetria, sense xat comú i amb la imatge
+     privada. */
+  test('no inventar targetes: l’espai de treball a les notícies, PaginaApp al detall i cap targeta, graella ni fila pròpia', () => {
     const importats = (f) => [...llig(f).matchAll(/import\s*\{([^}]+)\}\s*from/g)].flatMap((m) => m[1].split(',').map((s) => s.trim()));
     const vetades = /^(?:GraellaArticles|LlistaArticles|Rajola|Avatar)$/;
     expect(PRODUCCIO.flatMap((f) => importats(f).filter((nom) => vetades.test(nom)).map((nom) => `${f}: ${nom}`))).toEqual([]);
-    expect(importats(`${APP}/vistes/Noticies.jsx`)).toEqual(expect.arrayContaining(['UniversalCard', 'GraellaTargetes']));
-    expect(llig(`${APP}/vistes/Noticies.jsx`).match(/<UniversalCard\b/g)).toHaveLength(1);
+    /* El flux de notícies: l'espai, i res de les targetes. */
+    const delFlux = importats(`${APP}/vistes/Noticies.jsx`);
+    const noticies = senseComentaris(llig(`${APP}/vistes/Noticies.jsx`));
+    expect(delFlux).toContain('UniversalWorkspace');
+    for (const nom of ['UniversalCard', 'GraellaTargetes', 'PillToggle', 'NavTargetes', 'SeccionsCategoria', 'DefaultItemCard', 'useVistaCataleg']) {
+      expect(delFlux, nom).not.toContain(nom);
+      expect(noticies, nom).not.toMatch(new RegExp(`<${nom}\\b`));
+    }
+    expect(noticies).not.toMatch(/\bimage\s*:/);
+    expect(noticies).not.toMatch(/\brenderItem\b/);
+    /* Les targetes de navegació, només a «Les que seguixes»; la UniversalCard, només a la seua peça. */
+    expect(PRODUCCIO.filter((f) => /<NavTargetes\b/.test(llig(f)))).toEqual([`${APP}/vistes/GestioFonts.jsx`]);
+    expect(PRODUCCIO.filter((f) => /<UniversalCard\b/.test(llig(f)))).toEqual([`${APP}/vistes/comunes.jsx`]);
+    const comunes = llig(`${APP}/vistes/comunes.jsx`);
+    for (const literal of ['SENSE_TELEMETRIA = Object.freeze({ comptar: false })', 'telemetria={SENSE_TELEMETRIA}', 'objecte={null}', 'imatgePrivada']) {
+      expect(comunes, literal).toContain(literal);
+    }
+    /* El detall: la Pàgina Universal, una, i sense xat comú (la notícia és de fora). */
     expect(importats(`${APP}/vistes/Lector.jsx`)).toContain('PaginaApp');
     expect(llig(`${APP}/vistes/Lector.jsx`).match(/<PaginaApp\b/g)).toHaveLength(1);
-    /* Les notícies són de fora: sense telemetria, sense xat comú i amb la imatge privada. */
-    const noticies = llig(`${APP}/vistes/Noticies.jsx`);
-    for (const literal of ['SENSE_TELEMETRIA = Object.freeze({ comptar: false })', 'telemetria={SENSE_TELEMETRIA}', 'objecte={null}', 'imatgePrivada', 'onDateTime={false}']) {
-      expect(noticies, literal).toContain(literal);
-    }
+    expect(llig(`${APP}/vistes/Lector.jsx`)).toContain('objecte={null}');
     const catalegs = PRODUCCIO.flatMap((f) => [...llig(f).matchAll(/<ColumnaCataleg\b(\s+forma="targetes")?/g)].map((m) => [f, Boolean(m[1])]));
     expect(catalegs).toEqual([[`${APP}/vistes/GestioFonts.jsx`, true]]);
   });
@@ -164,9 +214,14 @@ describe('el manifest i el registre', () => {
     expect(manifest.split('import(').length - 1).toBe(1);
   });
 
-  test('la llavor sintètica va darrere del seu literal EXACTE i només AppLector la crea (Model B)', () => {
+  /* Ordre del Mestre, 261016 (prompt 261016_0015, Bloc 0, «Purga de Mocks») · Actualitzada a
+     posta: abans el literal era «DEV || VITE_SDP_LECTOR_LLAVOR», i el servidor de desenvolupament
+     ensenyava les notícies inventades. Ara només el literal explícit, i cap DEV al codi de l'app
+     (els comentaris en poden parlar). */
+  test('la llavor sintètica va darrere del seu literal EXACTE, sense DEV, i només AppLector la crea (Model B)', () => {
     const app = llig(`${APP}/AppLector.jsx`);
-    expect(app).toContain("const LLAVOR_ACTIVA = import.meta.env.DEV || import.meta.env.VITE_SDP_LECTOR_LLAVOR === '1';");
+    expect(app).toContain("const LLAVOR_ACTIVA = import.meta.env.VITE_SDP_LECTOR_LLAVOR === '1';");
+    expect(senseComentaris(app)).not.toMatch(/import\.meta\.env\.DEV\b/);
     expect(app).toContain('(LLAVOR_ACTIVA ? creaFontNoticies(creaAdaptadorLlavor({ ara: rellotge() })) : null)');
     const creen = PRODUCCIO.filter((f) => /(?<!function )creaAdaptadorLlavor\(/.test(senseComentaris(llig(f))));
     expect(creen).toEqual([`${APP}/AppLector.jsx`]);

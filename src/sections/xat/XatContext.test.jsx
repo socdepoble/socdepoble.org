@@ -51,6 +51,20 @@ beforeEach(() => {
 afterEach(() => { cleanup(); vi.useRealTimers(); });
 
 describe('confidencialitat del scope del Xat', () => {
+  it('captura un rebuig tardà de la baixa després de desmuntar', async () => {
+    const view = await open();
+    const pendent = deferred();
+    const causa = Object.assign(new Error('No s’ha pogut tancar el canal.'), { code: 'CANAL_NO_TANCAT', retriable: true });
+    const avisa = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      mock.unsubscribeFromXat.mockReturnValueOnce(pendent.promise);
+      view.unmount();
+      expect(mock.unsubscribeFromXat).toHaveBeenLastCalledWith('sub-A');
+      await act(async () => { pendent.reject(causa); });
+      expect(avisa).toHaveBeenCalledWith('[Xat] No s’ha pogut tancar el canal de temps real.', causa);
+    } finally { avisa.mockRestore(); }
+  });
+
   it('oculta i purga A en logout abans dels efectes, també en entrar B', async () => {
     const view = await open(); const old = value;
     mock.session = { currentUser: null, generacio: 2 };
@@ -1258,11 +1272,13 @@ describe('files d’ajuda per defecte', () => {
     await waitFor(() => expect(value.status).toBe('ready'));
   }
 
+  /* Gauntlet 261016 (Bloc 3.6) · Tres files des d'ara: Javi Llinares entre
+     Sóc de Poble i la IAIA. Les proves que en fixaven dues s'actualitzen. */
   it('passen del port a la llista, amb la marca, sense comptar com a no llegides ni com a contactes freqüents', async () => {
     mock.loadFils.mockResolvedValue(ambXatsPerDefecte([fil()]));
     await muntat();
-    expect(value.chatThreads.map(f => f.id)).toEqual(['fil-A', 'sdp-per-defecte:socdepoble', 'sdp-per-defecte:iaia']);
-    expect(perDefecte()).toEqual(['socdepoble', 'iaia']);
+    expect(value.chatThreads.map(f => f.id)).toEqual(['fil-A', 'sdp-per-defecte:socdepoble', 'sdp-per-defecte:javi', 'sdp-per-defecte:iaia']);
+    expect(perDefecte()).toEqual(['socdepoble', 'javi', 'iaia']);
     expect(value.chatThreads.find(f => f.id === 'fil-A').perDefecte).toBeNull();
     expect(value.totalNoLlegits).toBe(2);
     expect(value.contactesFrequents).toEqual([]);
@@ -1280,7 +1296,7 @@ describe('files d’ajuda per defecte', () => {
     mock.obriFilDePagina.mockResolvedValue({ filId: 'g-iaia', fils: [{ id: 'g-iaia', tipus: 'grup', titol: "L'ànima de la iaia",
       subjecte: { tipus: 'pagina', id: '/iaia', ruta: '/iaia', titol: "L'ànima de la iaia" }, participant: false }] });
     await act(async () => { await value.obriFilDePagina({ tipus: 'pagina', id: '/iaia', ruta: '/iaia', titol: "L'ànima de la iaia" }); });
-    expect(value.chatThreads.map(f => f.id)).toEqual(['fil-A', 'g-iaia', 'sdp-per-defecte:socdepoble']);
+    expect(value.chatThreads.map(f => f.id)).toEqual(['fil-A', 'g-iaia', 'sdp-per-defecte:socdepoble', 'sdp-per-defecte:javi']);
   });
 
   it('qui gestiona l’entitat pilot no veu la fila de Sóc de Poble; un membre sense rol de gestió, sí', async () => {
@@ -1291,10 +1307,121 @@ describe('files d’ajuda per defecte', () => {
     ];
     const view = render(tree(CONFIG));
     await waitFor(() => expect(value.status).toBe('ready'));
-    expect(perDefecte()).toEqual(['iaia']);
+    expect(perDefecte()).toEqual(['javi', 'iaia']);
     mock.identitats = [{ tipus: 'persona', id: 'A', nom: 'Pepa' }];
     view.rerender(tree(CONFIG));
+    expect(perDefecte()).toEqual(['socdepoble', 'javi', 'iaia']);
+  });
+
+  /* Gauntlet 261016 (Bloc 3.6) · La mateixa regla d'identitat que la de dalt:
+     ningú no es parla a si mateix. Javi no veu la fila «Javi Llinares»; la
+     resta, sí.
+     Auditoria adversarial 261016 (P2, suplantació) · Derogat «en remot, pel
+     nom de la seua sessió»: el nom és el full_name que tria cada usuari, i un
+     homònim perdia la fila de Javi. Ara per id o àlies del padró pilot; la
+     prova d'abans fixava el forat i s'ha partit en dos a posta. */
+  it('Javi Llinares (per id o àlies del padró pilot) no veu la seua pròpia fila', async () => {
+    mock.loadFils.mockResolvedValue(ambXatsPerDefecte([fil()]));
+    mock.session = { currentUser: { id: 'javillinares' }, generacio: 1 }; mock.actorKey = 'persona::javillinares';
+    mock.identitats = [{ tipus: 'persona', id: 'javillinares', nom: 'Javi Llinares' }];
+    await muntat();
     expect(perDefecte()).toEqual(['socdepoble', 'iaia']);
+  });
+
+  it('un homònim (un altre id amb el nom «Javi Llinares») sí que la veu: mai pel nom', async () => {
+    mock.loadFils.mockResolvedValue(ambXatsPerDefecte([fil()]));
+    mock.identitats = [{ tipus: 'persona', id: 'A', nom: 'Javi Llinares' }];
+    await muntat();
+    expect(value.joNom).toBe('Javi Llinares');
+    expect(perDefecte()).toEqual(['socdepoble', 'javi', 'iaia']);
+  });
+
+  /* Auditoria adversarial 261016 (P2) · En llavor i en local el xat públic de
+     /iaia és un grup on la IAIA no contesta: llegir-lo com a visitant no
+     retira la fila «IAIA MarIA» (que porta al directe). En remot, sí (dalt). */
+  it('en mode local, el xat públic de /iaia no retira la fila sintètica de la IAIA', async () => {
+    mock.loadFils.mockResolvedValue(ambXatsPerDefecte([fil()], { paginaDeLaIAIA: false }));
+    render(tree({ dataMode: 'local' }));
+    await waitFor(() => expect(value.status).toBe('ready'));
+    mock.obriFilDePagina.mockResolvedValue({ filId: 'g-iaia', fils: [{ id: 'g-iaia', tipus: 'grup', titol: "L'ànima de la iaia",
+      subjecte: { tipus: 'pagina', id: '/iaia', ruta: '/iaia', titol: "L'ànima de la iaia" }, participant: false }] });
+    await act(async () => { await value.obriFilDePagina({ tipus: 'pagina', id: '/iaia', ruta: '/iaia', titol: "L'ànima de la iaia" }); });
+    expect(value.chatThreads.map(f => f.id)).toEqual(['fil-A', 'g-iaia', 'sdp-per-defecte:socdepoble', 'sdp-per-defecte:javi', 'sdp-per-defecte:iaia']);
+  });
+});
+
+/* Auditoria adversarial 261016 (P3) · Ordre del Mestre (prompt 261016_0015,
+   Bloc 3.6): «Si un usuari no registrat fa clic per parlar-hi, es mostra el
+   missatge automàtic». En llavor i en local ningú no té sessió (l'entrada
+   torna MODE_LOCAL) i el convidat té un xat de veres (joId): la fila de Javi
+   el portava a un directe escrivible on ningú no contesta. Ara la fila és el
+   xat de només lectura de Javi (filDeMostraDeJavi, la mateixa peça que el xat
+   de mostra del remot), al mateix lloc de la cua, i res no arriba al port. */
+describe('Javi Llinares per a qui no té sessió en llavor i en local', () => {
+  const MISSATGE = '«Este missatge és automàtic: per a poder parlar amb mi has de registrar-te.»';
+  async function convidat(config) {
+    mock.session = { currentUser: null, generacio: 1, estat: 'fora' };
+    mock.loadFils.mockResolvedValue(ambXatsPerDefecte([fil()]));
+    render(tree(config));
+    await waitFor(() => expect(value.status).toBe('ready'));
+  }
+
+  it.each([['seed'], ['local']])('en mode %s, la fila de Javi és el seu xat de només lectura, amb el literal, al lloc de la sintètica', async (dataMode) => {
+    await convidat({ dataMode });
+    expect(value.senseSessio).toBe(false);
+    expect(value.chatThreads.map(f => f.id)).toEqual(['fil-A', 'sdp-per-defecte:socdepoble', 'fake-javi', 'sdp-per-defecte:iaia']);
+    expect(value.chatThreads.find(f => f.id === 'fake-javi')).toMatchObject({
+      name: 'Javi Llinares', potEscriure: false, ultimAl: null, noLlegits: 0, ultimText: MISSATGE,
+      avisNomesLectura: "Si t'agrada el que veus, registra't per a entrar al xat de veritat!"
+    });
+    expect(value.getThreadMessages('fake-javi').map(m => [m.text, m.sender, m.author, m.is_ai])).toEqual([[MISSATGE, 'other', 'Javi Llinares', false]]);
+    expect(value.totalNoLlegits).toBe(2);
+  });
+
+  it('obrir-lo, llegir-lo i demanar-ne més no van al port; enviar-hi no fa res', async () => {
+    await convidat({ dataMode: 'seed' });
+    const javi = value.chatThreads.find(f => f.id === 'fake-javi');
+    act(() => value.obriFil('fake-javi'));
+    act(() => value.marcaVist('fake-javi', 1));
+    let antics;
+    await act(async () => { antics = await value.carregaMesAntics('fake-javi'); });
+    expect(antics).toBe(false);
+    let enviats;
+    await act(async () => { enviats = await value.sendChatMessage(javi, 'Hola, Javi'); });
+    expect(enviats).toEqual([]);
+    await act(async () => { await new Promise((resol) => setTimeout(resol, 0)); });
+    expect(mock.loadMissatges).not.toHaveBeenCalled();
+    expect(mock.marcaLlegit).not.toHaveBeenCalled();
+    expect(mock.enviaMissatge).not.toHaveBeenCalled();
+    expect(mock.subscribeToXat).not.toHaveBeenCalled();
+    expect(value.avis).toBeNull();
+    expect(value.getThreadMessages('fake-javi')).toHaveLength(1);
+  });
+
+  it('el ?amb= i «Nova conversa» amb Javi (per id o àlies) hi porten sense crear cap directe; una altra persona, com sempre', async () => {
+    await convidat({ dataMode: 'seed' });
+    for (const id of ['0001', 'javillinares']) {
+      let filId;
+      await act(async () => { filId = await value.creaFil(id); });
+      expect(filId).toBe('fake-javi');
+    }
+    expect(mock.creaFilDirecte).not.toHaveBeenCalled();
+    mock.creaFilDirecte.mockResolvedValue('fil-B');
+    let altre;
+    await act(async () => { altre = await value.creaFil('0002'); });
+    expect(altre).toBe('fil-B');
+    expect(mock.creaFilDirecte).toHaveBeenCalledWith('0002', null, expect.any(Object));
+  });
+
+  it('amb sessió (en llavor o en remot), la fila de Javi és la sintètica de sempre i creaFil va al port', async () => {
+    mock.loadFils.mockResolvedValue(ambXatsPerDefecte([fil()]));
+    render(tree({ dataMode: 'seed' }));
+    await waitFor(() => expect(value.status).toBe('ready'));
+    expect(value.chatThreads.map(f => f.id)).toEqual(['fil-A', 'sdp-per-defecte:socdepoble', 'sdp-per-defecte:javi', 'sdp-per-defecte:iaia']);
+    mock.creaFilDirecte.mockResolvedValue('fil-J');
+    let filId;
+    await act(async () => { filId = await value.creaFil('0001'); });
+    expect(filId).toBe('fil-J');
   });
 });
 

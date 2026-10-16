@@ -34,6 +34,10 @@ import { menaDeFitxa } from './perfilCamps.js';
    soles: amb ell, «Les vistes» i l'editor no demanen al port el logo de la
    fila del pilot, que no pinten.
 
+   Gauntlet 261016 (encàrrec D) · avatarDeLaFitxa també: la imatge pròpia de
+   la fitxa amb l'esborrany de la cua, la mateixa a l'editor, a «Les vistes»,
+   a «El compte» i a la fitxa compacta de la llista central.
+
    pobleDeFitxa és la regla del poble de «Les vistes»: la persona, el seu
    (dades.town_name); una organització, el seu propi o cap, mai el de la
    persona; un agent IA, el seu o el de la persona que l'administra.
@@ -95,6 +99,31 @@ export function avatarDeLaBarraDeFitxa(identitat, avatarResolt) {
 }
 
 /**
+ * Gauntlet 261016 (encàrrec D; pla, Onada 1.1.4: «han de beure exactament de
+ * la mateixa instància de dades») · La imatge pròpia de la fitxa (l'avatar o
+ * el logotip), la mateixa a totes les superfícies del Perfil: l'editor, la
+ * seua barra taronja i la targeta viva (PerfilEditor), «Les vistes»
+ * (DetallVistes), «El compte» (DetallCompte) i la fitxa compacta de la llista
+ * central (FitxaDePerfil, PerfilShell; la base, perfilModel.js). Abans la
+ * regla vivia dins de l'editor (Bloc 3.5.4), copiada a «Les vistes» (F1), i
+ * la llista i «El compte» llegien identitat.avatar: després d'un avatar
+ * rebutjat (403), una foto al centre i una altra a la dreta.
+ *   · mentre la cua guarda un esborrany de logoImage (pendent o rebutjat), la
+ *     imatge de la fitxa tal qual, també el buit de «Llevar l'avatar»;
+ *   · si no, la de la fitxa o, sense cap, la reserva de la identitat (per a
+ *     la persona, la foto de la sessió: pla 261014_1450, front B).
+ * `fitxa` és el document de la fitxa amb l'esborrany (documentDeFitxa);
+ * `camps`, l'esborrany de la cua (useAutodesament). Torna la font crua: una
+ * referència opaca (sdp-media://) la resol cada superfície pel port, i el PNG
+ * verd del pilot el posa avatarDeLaBarraDeFitxa, a la barra. Mai null.
+ */
+export function avatarDeLaFitxa(fitxa, camps, identitat) {
+  const imatge = fitxa?.logoImage || '';
+  if (Object.hasOwn(camps || {}, 'logoImage')) return imatge;
+  return imatge || identitat?.avatar || '';
+}
+
+/**
  * Revisió del prompt 261014_0400 (ordre del Mestre) · Si la fitxa és la del
  * pilot (esRutaDelProjecte de rutaDeFitxaPublica: el slug declarat o l'id de
  * la llavor, mai el nom). És el criteri d'avatarDeLaBarraDeFitxa, a soles:
@@ -140,11 +169,17 @@ export function pobleDeFitxa(identitat, identitats = []) {
     || '');
 }
 
-/** Les píndoles de la fitxa: el rol i, si cal, l'estat que la fa de lectura o l'avís d'IA. */
+/**
+ * Les píndoles de la fitxa: el rol i, si cal, l'estat que la fa de lectura o l'avís d'IA.
+ * Directiva de Dignitat Humana (pla 261015_1900, Onada 1.1) · Una persona no
+ * es categoritza: la seua fitxa no porta el rol («Persona»). Només, si cal,
+ * l'estat que la fa de lectura («Baixa en curs», «Sense connexió»), que no és
+ * cap categoria sinó un avís honest. L'organització i l'agent, com sempre.
+ */
 export function etiquetesDeFitxa(identitat) {
-  const rol = { text: identitat?.rol };
-  if (enBaixa(identitat)) return [rol, { text: 'Baixa en curs' }];
-  if (deReserva(identitat)) return [rol, { text: 'Sense connexió' }];
-  if (menaDeFitxa(identitat) === 'agent') return [rol, { text: ETIQUETA_IA }];
-  return [rol];
+  const rol = menaDeFitxa(identitat) === 'persona' ? [] : [{ text: identitat?.rol }];
+  if (enBaixa(identitat)) return [...rol, { text: 'Baixa en curs' }];
+  if (deReserva(identitat)) return [...rol, { text: 'Sense connexió' }];
+  if (menaDeFitxa(identitat) === 'agent') return [...rol, { text: ETIQUETA_IA }];
+  return rol;
 }

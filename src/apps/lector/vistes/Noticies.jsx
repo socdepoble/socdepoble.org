@@ -1,267 +1,392 @@
 /**
- * Lector de notícies · la columna del DETALL (el panell ample): les
- * notícies de la carpeta o de la font o, amb ?article=<id>, el lector
- * immersiu (Lector.jsx), que n'ocupa el lloc.
+ * Lector de notícies · l'entrada «Notícies» (/app/lector/noticies…), muntada
+ * sobre l'espai de treball del Bloc de notes.
  *
- * Ordre del Mestre, 261004 (prompt 261004_0515, «no inventar targetes») ·
- * Cada notícia és una UniversalCard, la targeta de tot Sóc de Poble, dins de
- * GraellaTargetes de Pedra Seca (la graella de sempre o la columna de les
- * targetes planes). Les files i les rajoles pròpies (LlistaArticles,
- * GraellaArticles) i la variant 16:9 ja no s'hi fan servir.
- *   vista «Targetes»  la targeta de sempre, en la graella
- *   vista «Revista»   la targeta plana (variant 'pla'), en columna
- * La targeta porta tota l'anatomia: la boina taronja amb la font (enllaça a
- * les seues notícies) i la data absoluta, la imatge, el títol, el resum, les
- * etiquetes i el peu amb les quatre accions per defecte. El Mestre decidirà
- * què s'apaga. Una notícia és un contingut de fora:
- *   · la imatge i el logo de la font passen pel filtre de mitjans de
- *     l'amfitrió i es demanen sense referent (imatgePrivada);
- *   · la data no porta al Calendari (onDateTime={false});
- *   · cap xat comú on comentar-la (objecte={null}, useAccions);
- *   · el Connectar no compta a la telemetria ({ comptar: false }).
- * Una notícia no llegida porta l'etiqueta «Nou»; una de desada, «Desat per a
- * després». A «Hui» i «Per a després», les notícies van per seccions de
- * categoria (SeccionsCategoria, h3) i el títol de cada targeta baixa a h4.
+ * Bloc 0 del Gauntlet (ordre del Mestre, 261016, prompt 261016_0015) ·
+ * «Prohibit crear noves targetes inventades o jerarquies caòtiques a
+ * /app/lector/noticies. El Lector s'ha de muntar directament sobre el patró
+ * UniversalWorkspace de Bloc de notes (panell d'arbre/carpetes a l'esquerra,
+ * flux de lectura net a la dreta).» Pla 261016_0015, Onada 2: «llista de
+ * carpetes a l'esquerra, vista prèvia i lectura neta a la dreta». Deroga les
+ * columnes pròpies de l'ordre del 261004 (Carpetes.jsx, Fonts.jsx i la graella
+ * de UniversalCard d'esta vista, amb la Revista i les Targetes): és el mateix
+ * espai que el Bloc i la Wiki, per la seua façana (la porta 'workspace' del
+ * nucli 1.2.0, plataforma/contracteNucli.js), sense cap classe pròpia.
  *
- * En estret el mig no es veu al costat: les eines del detall porten també
- * l'enllaç a les fonts de la carpeta (el filtre per font) i «Marca-ho tot
- * com a llegit», el ✓ de la capçalera de la llista de Feedly al mòbil.
- *
- * En tancar el lector, el focus torna a la targeta de l'article (el seu
- * element principal, [data-element]) i la graella torna on era (scroll),
- * però només si és la mateixa llista: una altra carpeta, una altra font o una
- * altra vista comencen de dalt. Cap classe pròpia.
- *
- * Ordre del Mestre, 261004 (integració final; F05 de Codex i R1 de la 1045) ·
- * L'element principal de la targeta és un enllaç de veres al detall
- * (mainHref: la ruta canònica de la llista amb ?article=<id>, rutaArticle de
- * l'esquelet). El peu el fa servir: Compartir envia el detall, no la llista,
- * amb la base del router (navegador) o l'origen canònic (memòria). El clic
- * normal només apunta on tornar (retorn, focus i scroll) i navega el Link,
- * una sola vegada; Ctrl/Cmd/clic del mig obrin el detall en una pestanya nova.
- * La ruta és la canònica (/noticies/<carpeta>[/<font>]): des de l'entrada de
- * l'app (/noticies) ja no cal canonitzar després d'obrir.
+ *   navegació  l'arbre de l'espai, a la manera de Feedly: «Hui», «Per a
+ *              després», les categories del poble i, dins de cada una, les
+ *              fonts que se seguixen. Cada fila porta el seu recompte de no
+ *              llegides (`count`: l'espai no en suma cap; el de «Per a
+ *              després», les desades que encara no s'han llegit). «Totes» és
+ *              el «Tot» de l'espai. Cap botó de crear (sense onCreate).
+ *   llista     la fila per defecte de l'espai (DefaultItemCard): el títol i,
+ *              de subtítol, «font · data · Nou», amb la icona de la seua
+ *              categoria. Cap imatge: ItemMedia la demanaria sense política de
+ *              referent i la notícia de fora deixaria de ser privada.
+ *   detall     sense notícia, la carpeta: quantes n'hi ha i «Marca-ho tot com
+ *              a llegit» (amb una cerca, només els resultats que es veuen a
+ *              la llista, i el botó ho diu: F2 del Gauntlet, 261016), sempre
+ *              de la llista que es veu, també quan la carpeta de la URL és
+ *              amagada a la roda dentada; amb ?article=<id>, la lectura
+ *              immersiva (Lector.jsx), que en estret torna a la llista en
+ *              tancar-la, també amb l'Arrere del sistema (encàrrec F del
+ *              Gauntlet, 261016).
+ * Mana la URL (navegacio.js): triar a l'arbre o a la llista navega (push); el
+ * que l'espai reconcilia (una carpeta que ja no hi és), replace. La notícia
+ * oberta es queda a la llista on s'ha vist fins que la persona navega (llevar
+ * «Desa per a després» no la trau de «Per a després»), i l'instant de «Hui» és
+ * el de la llista (AppLector.jsx): obrir-la no la mou de carpeta. L'espai no
+ * obri cap notícia pel seu compte (canAutoSelect): obrir-la la marca com a
+ * llegida, i això només ho decidix la persona. En tancar-la, el focus torna a
+ * la seua fila si la llista és la mateixa (el `retorn` de Lector.jsx). Una
+ * altra carpeta o una altra font torna la llista a dalt, sense tocar el focus;
+ * obrir i tancar una notícia de la mateixa carpeta la deixa on era.
  */
-import { useLayoutEffect, useRef } from 'react';
-import { LayoutGrid, List, Rss } from 'lucide-react';
-import { Link } from '../../../app/contexts/RouterContext';
+import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { Bookmark, Folder, Newspaper, Rss, Sun } from 'lucide-react';
+import { useLocation, useNavigate } from '../../../app/contexts/RouterContext';
 import AppGridColumn from '../../../components/layout/AppGridColumn.jsx';
-import {
-  Boto, Carregant, EstatBuit, GraellaTargetes, MarcColumna, PillToggle, UniversalCard
-} from '../../../components/PedraSeca/index.js';
-import { useVistaCataleg } from '../../comu/esquelet/index.js';
+import { EstatBuit, MarcColumna } from '../../../components/PedraSeca/index.js';
+import { UniversalWorkspace } from '../../../components/universal/workspace/index.js';
 import { useClosaAplicacio } from '../../plataforma/index.js';
-import { CARPETES_FIXES, DESPRES, HUI, articlesDeCarpeta, dataDeBoina, dataLlarga, senseFinal } from '../nucli/index.js';
-import { MarcaTotLlegit, ObridorCarpetes } from './comunes.jsx';
+import {
+  DESPRES, HUI, articlesDeCarpeta, comptadorsCarpetes, dataDeBoina, esDeHui, ordenaPerData, senseFinal, seguix
+} from '../nucli/index.js';
+import { AvisLector, MarcaTotLlegit } from './comunes.jsx';
 import { useVistaLector } from './context.js';
 import { iconaDeCategoria } from './icones.js';
 import { CLOSCA, Lector, focusLliure } from './Lector.jsx';
-import { NOTICIES, TRAM_FONTS, useSeleccio } from './navegacio.js';
+import {
+  NOM_CARPETA_FIXA, carpetaDeOpcio, fontDeOpcio, opcioDeCarpeta, opcioDeFont, opcioDeLaSeleccio, rutaDeSeleccio, seleccioDeRuta
+} from './navegacio.js';
+
+/* La pell del Lector: tot el que l'espai de treball no ha de saber. */
+const ETIQUETES = Object.freeze({
+  categories: 'CARPETES',
+  items: 'NOTÍCIES',
+  all: 'Totes',
+  search: 'Cercar notícies',
+  loading: 'Carregant les notícies…',
+  error: 'No s’han pogut carregar les notícies.',
+  select: 'Tria una notícia.'
+});
+const ICONES = Object.freeze({ categories: Folder, items: Newspaper });
+const ESTAT_DE_L_ESPAI = Object.freeze({ carregant: 'loading', llest: 'ready', error: 'error' });
+/* L'espai no tria cap notícia pel seu compte: obrir-la la marcaria com a llegida. */
+const CAP_TRIA_AUTOMATICA = () => false;
+/* Una notícia de la URL que no és a la llista (d'una font que ja no se seguix, un enllaç
+   compartit…): l'espai no en decidix l'absència. La resol el detall (Lector.jsx · useArticle),
+   amb els seus estats de sempre: carregant, error i «Esta notícia ja no hi és». */
+const LA_RESOL_EL_DETALL = async () => ({ status: 'found' });
+const GRUP = 'carpetes';
+/* Els scrollers de la llista, dins de la closca: el cos de la columna del mig i, plegada, el seu
+   rail de documents (a la mateixa columna en ample i en mitjana; a #app-grid-rail en estret).
+   Mai l'arbre ni el detall. */
+const SCROLL_DE_LA_LLISTA = '#app-grid-list .sdp-workspace-column__body, .sdp-workspace-rail--documents';
+/* Una columna que la closca té tancada (AppGridShell la marca inert): el navegador no hi enfoca res. */
+const COLUMNA_TANCADA = '[inert]';
 
 const textNoticies = (n) => `${n} ${n === 1 ? 'notícia' : 'notícies'}`;
 
-/* Les etiquetes d'estat, sempre en text (mai només pel color). */
-const NOU = Object.freeze({ text: 'Nou', className: 'sdp-badge-accent' });
-const DESAT = Object.freeze({ text: 'Desat per a després', className: 'sdp-badge-category' });
-/* Les apps no entren a la telemetria (frontera.test.js): el Connectar no compta. */
-const SENSE_TELEMETRIA = Object.freeze({ comptar: false });
-
-/* Ordre del Mestre, 261004 (auditoria 0605, l'estat al lector de pantalla) ·
-   L'element principal de la targeta només porta el títol: les etiquetes d'estat
-   («Nou», «Desat per a després») les diu la seua descripció accessible, com fa
-   l'esquelet per a la Nevera (descripcioDe de ColumnaCataleg). Sense cap estat,
-   cap descripció. */
-const descripcioDeNoticia = (etiquetes) => etiquetes.filter(Boolean).map((etiqueta) => etiqueta.text).join(', ') || undefined;
-
 const BUITS = Object.freeze({
-  [HUI]: ['Hui encara no hi ha res nou', 'Les notícies de les últimes 24 hores de les fonts que seguixes apareixeran ací.'],
-  [DESPRES]: ['No has desat res per a després', 'Obri una notícia i toca «Desa per a després» per a guardar-la ací.'],
-  altres: ['No hi ha cap notícia ací', 'Quan esta font o esta carpeta publiquen, ho voràs ací.']
+  [HUI]: Object.freeze(['Hui encara no hi ha res nou', 'Les notícies de les últimes 24 hores de les fonts que seguixes apareixeran ací.']),
+  [DESPRES]: Object.freeze(['No has desat res per a després', 'Obri una notícia i toca «Desa per a després» per a guardar-la ací.']),
+  altres: Object.freeze(['No hi ha cap notícia ací', 'Quan esta font o esta carpeta publiquen, ho voràs ací.'])
 });
+/* El buit d'una carpeta ('hui', 'despres', una categoria o null). */
+const buitDe = (carpeta) => BUITS[carpeta && Object.hasOwn(BUITS, carpeta) ? carpeta : 'altres'];
 
-/* La llista que es veu: el retorn del lector només val per a la mateixa. */
-const clauDeLlista = (seleccio, vista) => [seleccio.carpeta, seleccio.fontId || '', vista.vista].join('|');
-
-/* Ordre del Mestre, 261004 (integració final; F04 de Codex i R4 de la 1045) · L'anatomia
-   sencera de la targeta de notícia, amb dades reals i mai inventades:
-     · boina: la font (enllaçada a les seues notícies) o, sense font coneguda, l'autor de
-       l'article, sense enllaç;
-     · subtítol: la secció de la font (el nom de la seua categoria) i, si la boina és la font,
-       l'autor de l'article («Cultura i festes · La colla»); si no n'hi ha cap dels dos, el nom
-       de la font. Sense font, la data llarga de l'article.
-   EXCEPCIÓ DE DADES EXTERNES ABSENTS (documentada): una notícia sense font ni autor no porta
-   boina. Ni el nom en blanc ni «Sóc de Poble», que no l'ha escrita: la data passa al subtítol
-   i la pastilla no es pinta (showDateTime={false}), de manera que la capçalera taronja no ix
-   buida. */
-function anatomiaDeNoticia(article, font, nomSeccio, desfas) {
-  const autor = font?.nom || article.autor || '';
-  const subtitol = font
-    ? [nomSeccio, article.autor].filter(Boolean).join(' · ') || font.nom
-    : dataLlarga(article.data, desfas);
-  return { autor: autor || undefined, ambBoina: autor !== '', subtitol: subtitol || undefined };
-}
-
-function EnllacHui({ children }) {
-  const { ruta } = useVistaLector();
-  return <Link to={ruta(NOTICIES, HUI)} className="sdp-boto sdp-boto--secundari">{children}</Link>;
-}
-
-/* En estret: les fonts de la carpeta (el mig), on es tria una font. */
-function EnllacFonts({ carpeta }) {
-  const { ruta } = useVistaLector();
-  return (
-    <Link to={ruta(NOTICIES, carpeta, TRAM_FONTS)} className="sdp-boto sdp-boto--secundari">
-      <Rss size={20} aria-hidden="true" focusable="false" />
-      <span>Fonts</span>
-    </Link>
-  );
-}
-
-function GraellaNoticies({ params, vista, retorn }) {
-  const { lector, noticies, ara, desfas, ruta } = useVistaLector();
-  const { mida } = useClosaAplicacio();
-  const seleccio = useSeleccio(params);
-  const cos = useRef(null);
-  const titol = seleccio.font?.nom || seleccio.nomCarpeta || 'Notícies';
-  const clau = clauDeLlista(seleccio, vista);
-
-  /* Tornant del lector: la graella on era i el focus a la targeta de l'article. */
-  useLayoutEffect(() => {
-    const desti = retorn.current;
-    if (!desti || !cos.current) return;
-    /* S'ha canviat de llista amb l'article obert: res a restaurar. */
-    if (desti.clau !== clau) {
-      retorn.current = null;
-      return;
-    }
-    const targeta = cos.current.querySelector(`[data-element="${desti.id}"]`);
-    if (!targeta && noticies.estat !== 'llest') return;
-    retorn.current = null;
-    const regio = cos.current.parentElement;
-    if (regio) regio.scrollTop = desti.scroll;
-    /* Ordre del Mestre, 261004 (integració final) · «Si era dins de la closca», com en obrir (Lector.jsx). */
-    if (focusLliure(cos.current, cos.current.closest(CLOSCA) || cos.current.closest('section'))) (targeta || regio)?.focus({ preventScroll: true });
-  });
-
-  let contingut;
-  if (noticies.estat === 'carregant') {
-    contingut = <Carregant etiqueta="Carregant les notícies…" />;
-  } else if (noticies.estat === 'error') {
-    contingut = (
-      <EstatBuit titol="No s’han pogut carregar les notícies" accio={<Boto varietat="secundari" onClick={noticies.rellegix}>Torna-ho a provar</Boto>}>
-        Les fonts no han respost. Pot ser cosa d’un moment.
-      </EstatBuit>
-    );
-  } else if (!seleccio.carpetaExistix || !seleccio.fontExistix) {
-    contingut = (
-      <EstatBuit titol={seleccio.carpetaExistix ? 'Esta font no existix' : 'Esta carpeta no existix'} accio={<EnllacHui>Ves a Hui</EnllacHui>}>
-        Potser ja no és del poble, o l’enllaç és d’una altra adreça.
-      </EstatBuit>
-    );
-  } else {
-    const llegits = new Set(lector.estat.llegits);
-    const desats = new Set(lector.estat.despres.map((desat) => desat.id));
-    const fontsPerId = new Map(noticies.fonts.map((font) => [font.id, font]));
-    const seccions = new Map(noticies.categories.map((categoria) => [categoria.id, categoria.nom]));
-    /* La llista canònica (F05): la de la carpeta i, si n'hi ha, la font. */
-    const camiDeLaLlista = seleccio.fontId ? ruta(NOTICIES, seleccio.carpeta, seleccio.fontId) : ruta(NOTICIES, seleccio.carpeta);
-    const revista = vista.vista === 'llista';
-    const agrupa = CARPETES_FIXES.includes(seleccio.carpeta) && !seleccio.fontId;
-    const llista = articlesDeCarpeta({ ...noticies, estat: lector.estat, carpeta: seleccio.carpeta, fontId: seleccio.fontId, ara }) || [];
-    const elements = llista.map((article) => ({
-      id: article.id,
-      categoriaId: agrupa ? fontsPerId.get(article.fontId)?.categoriaId || undefined : undefined,
-      article
-    }));
-    const categories = agrupa ? noticies.categories.map((categoria) => ({
-      id: categoria.id, nom: categoria.nom, icona: iconaDeCategoria(categoria.icona), visible: true, ordre: categoria.ordre
-    })) : null;
-    const [titolBuit, textBuit] = BUITS[CARPETES_FIXES.includes(seleccio.carpeta) && !seleccio.fontId ? seleccio.carpeta : 'altres'];
-    /* On tornar en tancar el lector. Derogat per l'ordre del Mestre, 261004 (integració final,
-       F05) · Ja no navega: ho fa el Link de la targeta (mainHref), una sola vegada. Si la ruta
-       del detall no es pot fer (fora de la base), el botó de sempre i obriArticle. */
-    const apunta = (id) => {
-      const regio = cos.current?.parentElement;
-      retorn.current = { id, scroll: regio ? regio.scrollTop : 0, clau };
-    };
-    const pintaTargeta = ({ article }) => {
-      const font = fontsPerId.get(article.fontId) || null;
-      const boina = dataDeBoina(article.data, desfas);
-      const etiquetes = [llegits.has(article.id) ? null : NOU, desats.has(article.id) ? DESAT : null];
-      const anatomia = anatomiaDeNoticia(article, font, font ? seccions.get(font.categoriaId) : null, desfas);
-      const detallDeLArticle = vista.rutaArticle(article.id, camiDeLaLlista);
-      return (
-        <UniversalCard
-          key={article.id}
-          variant={revista ? 'pla' : 'default'}
-          headingLevel={agrupa ? 'h4' : 'h3'}
-          title={senseFinal(article.titol)}
-          subtitle={anatomia.subtitol}
-          body={article.resum || undefined}
-          /* Verificació «lector-nevera», D3 (REGLA D'OR 1) · Sense font coneguda (una notícia
-             desada d'una font que el port ja no servix), l'autor de l'article, sense enllaç,
-             com al lector (Lector.jsx). Mai «Sóc de Poble», que no l'ha escrita. */
-          author={anatomia.autor}
-          authorHref={font ? ruta(NOTICIES, font.categoriaId || HUI, font.id) : undefined}
-          avatarUrl={font?.imatge || undefined}
-          imageUrl={article.imatge || undefined}
-          imatgePrivada
-          time={boina?.time}
-          date={boina?.date}
-          dateTime={boina ? article.data : undefined}
-          showDateTime={anatomia.ambBoina ? undefined : false}
-          onDateTime={false}
-          labels={etiquetes}
-          objecte={null}
-          mainHref={detallDeLArticle || undefined}
-          onMainClick={detallDeLArticle ? () => apunta(article.id) : () => {
-            apunta(article.id);
-            vista.obriArticle(article.id);
-          }}
-          idElement={article.id}
-          descripcioAccessible={descripcioDeNoticia(etiquetes)}
-          hasFooter
-          telemetria={SENSE_TELEMETRIA}
-        />
-      );
-    };
-    contingut = (
-      <GraellaTargetes
-        elements={elements}
-        categories={categories}
-        variant={revista ? 'llista' : 'graella'}
-        etiqueta={titol}
-        textArticles={textNoticies}
-        buit={<EstatBuit titol={titolBuit}>{textBuit}</EstatBuit>}
-      >
-        {pintaTargeta}
-      </GraellaTargetes>
-    );
+/* L'arbre: les carpetes fixes, les categories del poble i les fonts que se seguixen, cada una
+   dins de la seua categoria (una font sense categoria, a l'arrel). Els recomptes són de no
+   llegides: el de «Per a després», de les desades que encara no s'han llegit, perquè l'espai
+   en diu el text accessible d'un sol patró («{n} sense llegir»). */
+function opcionsDeLArbre({ noticies, estat, ara }) {
+  const llegits = new Set(estat.llegits);
+  const comptes = comptadorsCarpetes({ ...noticies, estat, ara });
+  const categories = new Set(noticies.categories.map((categoria) => categoria.id));
+  const perFont = new Map();
+  for (const article of noticies.articles) {
+    if (!llegits.has(article.id)) perFont.set(article.fontId, (perFont.get(article.fontId) || 0) + 1);
   }
+  const primeraFont = 2 + noticies.categories.length;
+  return [
+    { id: opcioDeCarpeta(HUI), label: NOM_CARPETA_FIXA[HUI], icon: Sun, order: 0, count: comptes.get(HUI) || 0 },
+    {
+      id: opcioDeCarpeta(DESPRES), label: NOM_CARPETA_FIXA[DESPRES], icon: Bookmark, order: 1,
+      count: estat.despres.filter((desat) => !llegits.has(desat.id)).length
+    },
+    ...noticies.categories.map((categoria, i) => ({
+      id: opcioDeCarpeta(categoria.id), label: categoria.nom, icon: iconaDeCategoria(categoria.icona), order: 2 + i,
+      count: comptes.get(categoria.id) || 0
+    })),
+    ...noticies.fonts.filter((font) => seguix(estat, font.id)).map((font, i) => ({
+      id: opcioDeFont(font.id), label: font.nom, icon: Rss, order: primeraFont + i,
+      parentId: categories.has(font.categoriaId) ? opcioDeCarpeta(font.categoriaId) : null,
+      count: perFont.get(font.id) || 0
+    }))
+  ];
+}
 
-  const ambMig = mida === 'estret' && seleccio.carpetaExistix;
-  const eines = (
-    <>
-      <ObridorCarpetes />
-      {ambMig ? <EnllacFonts carpeta={seleccio.carpeta} /> : null}
-      {ambMig ? <MarcaTotLlegit carpeta={seleccio.carpeta} fontId={seleccio.fontId} /> : null}
-      <PillToggle etiqueta="Vista de les notícies" valor={vista.vista} onCanvi={vista.triaVista} opcions={[
-        { valor: 'llista', text: 'Revista', icona: <List size={20} aria-hidden="true" focusable="false" /> },
-        { valor: 'graella', text: 'Targetes', icona: <LayoutGrid size={20} aria-hidden="true" focusable="false" /> }
-      ]} />
-    </>
-  );
+/* Les files de la llista: les notícies de les fonts que se seguixen i les desades (encara que la
+   font ja no les servisca), cadascuna amb les opcions de l'arbre on viu. De la més nova a la més
+   vella; a «Per a després», en l'ordre en què es van desar (el del nucli). */
+function filesDeLaLlista({ noticies, estat, ara, desfas, carpeta }) {
+  const llegits = new Set(estat.llegits);
+  const desats = new Set(estat.despres.map((desat) => desat.id));
+  const fonts = new Map(noticies.fonts.map((font) => [font.id, font]));
+  const categories = new Map(noticies.categories.map((categoria) => [categoria.id, categoria]));
+  const vives = ordenaPerData(noticies.articles.filter((article) => fonts.has(article.fontId) && seguix(estat, article.fontId)));
+  const deVives = new Set(vives.map((article) => article.id));
+  const despres = articlesDeCarpeta({ ...noticies, estat, carpeta: DESPRES, ara }) || [];
+  const ordre = carpeta === DESPRES
+    ? [...despres, ...vives.filter((article) => !desats.has(article.id))]
+    : ordenaPerData([...vives, ...despres.filter((article) => !deVives.has(article.id))]);
+  return ordre.map((article) => {
+    const font = fonts.get(article.fontId) || null;
+    const seguida = Boolean(font) && seguix(estat, font.id);
+    const categoria = seguida && font.categoriaId ? categories.get(font.categoriaId) || null : null;
+    const boina = dataDeBoina(article.data, desfas);
+    /* «font · data · Nou», sempre en text. Sense font coneguda, l'autor de l'article: mai
+       «Sóc de Poble», que no l'ha escrita. */
+    const subtitol = [font?.nom || article.autor, boina ? `${boina.time} ${boina.date}` : null, llegits.has(article.id) ? null : 'Nou']
+      .filter(Boolean).join(' · ');
+    return {
+      id: article.id,
+      title: senseFinal(article.titol),
+      subtitle: subtitol || undefined,
+      icon: (categoria && iconaDeCategoria(categoria.icona)) || Rss,
+      categoryIds: [
+        categoria ? opcioDeCarpeta(categoria.id) : null,
+        seguida ? opcioDeFont(font.id) : null,
+        seguida && esDeHui(article, ara) ? opcioDeCarpeta(HUI) : null,
+        desats.has(article.id) ? opcioDeCarpeta(DESPRES) : null
+      ].filter(Boolean),
+      searchText: [article.titol, font?.nom, article.autor, article.resum].filter(Boolean).join(' ')
+    };
+  });
+}
+
+/* El nom de la selecció: la carpeta, la font o «Totes». Claus pròpies: una categoria del poble
+   que es diguera 'constructor' no ha de llegir res d'Object.prototype. */
+function nomDeLaSeleccio(categoryId, noticies) {
+  if (categoryId == null) return ETIQUETES.all;
+  const carpeta = carpetaDeOpcio(categoryId);
+  if (carpeta) {
+    if (Object.hasOwn(NOM_CARPETA_FIXA, carpeta)) return NOM_CARPETA_FIXA[carpeta];
+    return noticies.categories.find((categoria) => categoria.id === carpeta)?.nom || 'Notícies';
+  }
+  const fontId = fontDeOpcio(categoryId);
+  return noticies.fonts.find((font) => font.id === fontId)?.nom || 'Notícies';
+}
+
+/* El detall sense cap notícia oberta: la carpeta, quantes en porta i «Marca-ho tot com a
+   llegit», el ✓ de la capçalera de la llista de Feedly. L'avís del disc, dins del marc.
+   `ancora`: un node del detall des d'on EspaiNoticies troba la closca (el scroll de la llista).
+   Pedra Seca no passa refs: és un <span> sense classe al voltant del text, i cap píxel canvia.
+   F2 del Gauntlet (261016, defecte L1-2) · `resultats`: amb una cerca, els ids que es veuen a la
+   llista (els dona l'espai a renderDetail); el botó marca només eixos i ho diu. El resum i el
+   buit continuen sent de la carpeta (`ids`). Sense cerca, null: el botó i l'abast de sempre. */
+function SenseNoticia({ titol, ids, resultats = null, buit, ancora }) {
+  const { lector } = useVistaLector();
+  const llegits = new Set(lector.estat.llegits);
+  const noLlegides = ids.filter((id) => !llegits.has(id)).length;
+  const marca = <MarcaTotLlegit ids={resultats ?? ids} filtrat={resultats != null} />;
   return (
-    <MarcColumna capcalera={<AppGridColumn titol={titol} />} eines={eines} etiqueta={titol}>
-      <div ref={cos}>{contingut}</div>
+    <MarcColumna capcalera={<AppGridColumn titol={titol} />} eines={marca} avis={<AvisLector />} etiqueta={titol}>
+      {ids.length ? (
+        <EstatBuit titol="Tria una notícia">
+          <span ref={ancora}>
+            {`${textNoticies(ids.length)}, ${noLlegides ? `${noLlegides} sense llegir` : 'totes llegides'}. Obri’n una de la llista per a llegir-la.`}
+          </span>
+        </EstatBuit>
+      ) : <EstatBuit titol={buit[0]}><span ref={ancora}>{buit[1]}</span></EstatBuit>}
     </MarcColumna>
   );
 }
 
-export function ColumnaNoticies({ params }) {
-  const vista = useVistaCataleg('llista');
-  /* On tornar en tancar el lector: { id, scroll, clau }. Viu ací perquè la columna no es desmunta. */
+/* La notícia oberta. En estret (el mestre-detall de l'espai), tancar-la torna a la llista,
+   com l'arrere de Feedly al mòbil; en ample i en mitjana, la llista ja es veu al costat. L'aspa,
+   «Tornar» i Esc obrin la llista en el mateix pas que tanquen (el focus troba la fila a la
+   vista); l'Arrere del sistema, que no passa per ací, el cobrix TornaALaLlista. */
+function DetallDeNoticia({ id, tanca, retorn }) {
+  const { mida, obriPanell } = useClosaAplicacio();
+  const onTanca = useCallback(() => {
+    tanca();
+    if (mida === 'estret') obriPanell('mig');
+  }, [tanca, mida, obriPanell]);
+  return <Lector id={id} onTanca={onTanca} retorn={retorn} />;
+}
+
+/* Encàrrec F del Gauntlet (261016, P2) · En estret, deixar la notícia torna a la llista vinga
+   d'on vinga. L'Arrere del sistema (el d'Android, history.back) només lleva ?article= de la URL,
+   sense passar per onTanca, i la closca aplica el panell d'eixida només en muntar (AppGridShell,
+   panellEstret): es quedava al detall buit, «Tria una notícia», en lloc de la llista. Viu dins de
+   la closca, davant del detall (amb notícia i sense), i en el pas d'una notícia oberta a cap obri
+   el panell de la llista si encara no ho és; l'aspa ja l'ha obert. No pinta res. */
+function TornaALaLlista({ obert }) {
+  const { mida, panellObert, obriPanell } = useClosaAplicacio();
+  const venia = useRef(obert);
+  useLayoutEffect(() => {
+    const deLaNoticia = venia.current != null;
+    venia.current = obert;
+    if (deLaNoticia && obert == null && mida === 'estret' && panellObert !== 'mig') obriPanell('mig');
+  }, [obert, mida, panellObert, obriPanell]);
+  return null;
+}
+
+/**
+ * `params`: els de la ruta de notícies, ja validats (rutes.js · RUTES_NOTICIES).
+ * `totes`: si la ruta és la de «Totes».
+ */
+export function EspaiNoticies({ params = null, totes = false }) {
+  const { lector, noticies, ara, desfas, ruta } = useVistaLector();
+  const navigate = useNavigate();
+  const { pathname, search } = useLocation();
+  const carpetaDelCami = params?.carpeta ?? null;
+  const fontDelCami = params?.font ?? null;
+  const articleDeLaUrl = new URLSearchParams(search).get('article');
+  const seleccio = useMemo(
+    () => seleccioDeRuta({ carpeta: carpetaDelCami, font: fontDelCami }, { totes, article: articleDeLaUrl }),
+    [carpetaDelCami, fontDelCami, totes, articleDeLaUrl]
+  );
+  const [inicial] = useState(seleccio);
+  const { categoryId: llista, itemId: obert } = seleccio;
+  const carpeta = carpetaDeOpcio(llista);
+  const estat = lector.estat;
+
+  const opcions = useMemo(() => opcionsDeLArbre({ noticies, estat, ara }), [noticies, estat, ara]);
+  const base = useMemo(() => filesDeLaLlista({ noticies, estat, ara, desfas, carpeta }), [noticies, estat, ara, desfas, carpeta]);
+  /* Encàrrec F del Gauntlet (261016, P2) · La notícia oberta es queda a la llista on la persona
+     l'ha vista. Una fila és de «Per a després» només mentre està desada (filesDeLaLlista):
+     llevar-ne «Desa per a després» amb la notícia oberta li llevava la carpeta, i l'espai,
+     reconciliant (WorkspaceContext), triava la primera de les seues, la categoria, i la URL es
+     reescrivia (replace). Com a Feedly, es queda on era fins que la persona navega: `enganxada`
+     recorda la notícia i la llista on s'ha vist, i mentre siguen les mateixes la fila hi continua.
+     Tancar-la l'oblida. Una notícia que arriba d'una altra llista (un enllaç a /esports?article=
+     d'una de festes) no s'hi ha vist mai: l'espai la porta a la seua, com sempre. */
+  const filaOberta = useMemo(() => (obert == null ? null : base.find((fila) => fila.id === obert) || null), [base, obert]);
+  const hiEs = Boolean(filaOberta) && (llista == null || filaOberta.categoryIds.includes(llista));
+  const [enganxada, setEnganxada] = useState(null);
+  useLayoutEffect(() => {
+    if (obert == null) setEnganxada(null);
+    else if (hiEs) setEnganxada((actual) => (actual?.id === obert && actual.llista === llista ? actual : { id: obert, llista }));
+  }, [obert, llista, hiEs]);
+  const files = useMemo(() => {
+    if (!filaOberta || hiEs || enganxada?.id !== obert || enganxada.llista !== llista) return base;
+    return base.map((fila) => (fila === filaOberta ? { ...fila, categoryIds: [...fila.categoryIds, llista] } : fila));
+  }, [base, filaOberta, hiEs, enganxada, obert, llista]);
+  const model = useMemo(() => ({
+    status: ESTAT_DE_L_ESPAI[noticies.estat] || 'loading',
+    itemsComplete: false,
+    resolveItemId: LA_RESOL_EL_DETALL,
+    canAutoSelect: CAP_TRIA_AUTOMATICA,
+    refresh: noticies.rellegix,
+    navigationGroups: [{ id: GRUP, label: null, options: opcions }],
+    items: files
+  }), [noticies.estat, noticies.rellegix, opcions, files]);
+
+  /* Mana la URL: la tria de la persona fa push; la reconciliació de l'espai, replace. */
+  const actual = search ? `${pathname}?${search}` : pathname;
+  const enTriar = useCallback(({ categoryId, itemId }, meta) => {
+    const desti = rutaDeSeleccio({ categoryId, itemId }, { fonts: noticies.fonts, ruta });
+    if (desti !== actual) navigate(desti, { replace: meta?.reason !== 'user' });
+  }, [noticies.fonts, ruta, actual, navigate]);
+  /* Tancar: la mateixa llista, sense l'article (ni la seua ?seccio=). */
+  const tanca = useCallback(() => {
+    if (actual !== pathname) navigate(pathname);
+  }, [actual, pathname, navigate]);
+
   const retorn = useRef(null);
-  if (vista.article) return <Lector key={vista.article} id={vista.article} onTanca={() => vista.tancaArticle()} />;
-  return <GraellaNoticies params={params} vista={vista} retorn={retorn} />;
+
+  /* P2 de Codex (relleu 02:26) · Una altra carpeta o una altra font comença de dalt, com a Feedly
+     i com les columnes del 261004, que es tornaven a muntar: l'espai conserva el node de la
+     llista d'una carpeta a l'altra i el scroll s'hi quedava. Es posa a 0 sense tocar el focus
+     (cap focus() ni scrollIntoView) i només quan canvia la llista: obrir i tancar una notícia de
+     la mateixa carpeta la deixa on era. La closca es troba des del detall: l'àncora de
+     SenseNoticia o la que deixa el lector a `retorn`; si en una pintada no n'hi ha cap (el
+     detall carregant), l'última coneguda. Va abans del focus, que buida `retorn`. */
+  const ancora = useRef(null);
+  const closca = useRef(null);
+  const llistaDelScroll = useRef(llista);
+  useLayoutEffect(() => {
+    const trobada = ancora.current?.closest(CLOSCA) || retorn.current?.closca || null;
+    if (trobada) closca.current = trobada;
+    if (llistaDelScroll.current === llista) return;
+    llistaDelScroll.current = llista;
+    if (!closca.current?.isConnected) return;
+    for (const node of closca.current.querySelectorAll(SCROLL_DE_LA_LLISTA)) {
+      if (node.scrollTop !== 0) node.scrollTop = 0;
+    }
+  });
+
+  /* En tancar la notícia, el focus torna a la seua fila, si la llista és la mateixa: una
+     altra carpeta comença de dalt, i el focus és d'on l'ha posat la persona (l'arbre).
+     Encàrrec F del Gauntlet (261016) · Una fila d'una columna tancada no el rep mai. En estret,
+     amb l'Arrere del sistema, la llista encara és un panell tancat en este commit: TornaALaLlista
+     l'obri en el següent, abans de pintar, i el focus hi va en el fotograma de després. */
+  const llistaDeLArticle = useRef(undefined);
+  useLayoutEffect(() => {
+    if (obert) {
+      llistaDeLArticle.current = llista;
+      return undefined;
+    }
+    const desti = retorn.current;
+    const mateixa = llistaDeLArticle.current === llista;
+    retorn.current = null;
+    llistaDeLArticle.current = undefined;
+    if (!mateixa || !desti?.fitxa?.isConnected) return undefined;
+    const enfoca = () => {
+      if (!desti.fitxa.isConnected || desti.fitxa.closest(COLUMNA_TANCADA)) return;
+      if (focusLliure(desti.fitxa, desti.closca)) desti.fitxa.focus({ preventScroll: true });
+    };
+    if (!desti.fitxa.closest(COLUMNA_TANCADA) || typeof requestAnimationFrame !== 'function') {
+      enfoca();
+      return undefined;
+    }
+    const fotograma = requestAnimationFrame(enfoca);
+    return () => cancelAnimationFrame(fotograma);
+  }, [obert, llista]);
+
+  /* El buit de la columna de la llista (labels.empty): el de la carpeta de la URL. */
+  const buit = buitDe(carpeta);
+  /* F2 (261016) · `visibleItemIds` i `filtered`, els camps opcionals de l'espai: amb una cerca,
+     el que la llista deixa a la vista.
+     Encàrrec F del Gauntlet (261016, P2) · El detall sense notícia és de la llista que es veu: la
+     carpeta que l'espai té triada (`selection.categoryId`), no la de la URL. Amb la carpeta de la
+     URL amagada a la roda dentada («Carpetes a la vista»), l'espai la mostra des del seu «Tot»
+     sense canviar la URL (seleccioALaVista), i el títol, el resum i «Marca-ho tot com a llegit»
+     són de «Totes». TornaALaLlista va davant del detall, amb notícia i sense: així passa d'un a
+     l'altre sense desmuntar-se. */
+  const renderDetail = useCallback(({ selection, visibleItemIds, filtered }) => {
+    const id = selection?.itemId ?? null;
+    const tornada = <TornaALaLlista obert={id} />;
+    if (id != null) return <>{tornada}<DetallDeNoticia key={id} id={String(id)} tanca={tanca} retorn={retorn} /></>;
+    const vista = opcioDeLaSeleccio(selection?.categoryId);
+    const ids = files.filter((fila) => vista == null || fila.categoryIds.includes(vista)).map((fila) => fila.id);
+    const resultats = filtered && Array.isArray(visibleItemIds) ? visibleItemIds : null;
+    return (
+      <>
+        {tornada}
+        <SenseNoticia titol={nomDeLaSeleccio(vista, noticies)} ids={ids} resultats={resultats} buit={buitDe(carpetaDeOpcio(vista))} ancora={ancora} />
+      </>
+    );
+  }, [tanca, files, noticies]);
+  const etiquetes = useMemo(() => ({ ...ETIQUETES, empty: `${buit[0]}.` }), [buit]);
+
+  /* MD (ordre del Mestre, 261003) · En mòbil, primer l'arbre; amb ?article= a l'entrada, la
+     notícia (nivellMestreDetall.js). */
+  return (
+    <UniversalWorkspace
+      idEspai="lector"
+      mestreDetall={{ clau: 'lector', element: obert }}
+      model={model}
+      initialSelection={inicial}
+      selection={seleccio}
+      onSelectionChange={enTriar}
+      labels={etiquetes}
+      icons={ICONES}
+      tagFilter={false}
+      renderDetail={renderDetail}
+    />
+  );
 }

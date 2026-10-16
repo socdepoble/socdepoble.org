@@ -7,6 +7,7 @@ import {
   llistaMembresOrganitzacio, desaMembreOrganitzacio, llevaMembreOrganitzacio, carregaMembres,
 } from '../../data/backendPort.js';
 import { creaOrganitzacio as creaOrganitzacioAlServei } from '../../data/organizations.js';
+import { pobleDOrganitzacio } from '../../data/pobleOrganitzacio.js';
 import { candidatsDeMembre } from './membresModel.js';
 
 import { useSession } from '../../app/contexts/SessionContext.jsx';
@@ -16,6 +17,7 @@ import { capturaSessio, entradaSessio } from '../../data/identitat.js';
 import { cuaDesament } from '../../data/autodesament/cua.js';
 import { ambitDe } from '../../data/autodesament/ambit.js';
 import { normalitzaContacte } from '../../data/correuOrganitzacio.js';
+import { desaLlicenciaPerDefecte } from '../../components/universal/drets/herencia.js';
 import { ENTITATS_FITXA } from './perfilEscriptor.js';
 import { esRolQueMana, etiquetaDeRol } from '../../components/universal/identitat/rols.js';
 import { ERROR_CORREU_INVALID, SENSE_CAPACITAT_CORREU, textAjudaCorreu, validaCorreu } from './contacteOrganitzacio.js';
@@ -65,14 +67,14 @@ const errorSenseMembres = () => Object.assign(
 const ambSenyal = (config, signal) => (signal ? { ...config, signal } : config);
 
 /* Ordre del Mestre (261008, grup C) · El poble d'una organització
-   (organizations.town_name, 2610081401): el NOM del poble, o null sense
-   poble. El mateix límit que el CHECK del servidor. */
-const MAXIM_NOM_POBLE = 120;
-function valorDePoble(valor) {
-  const nom = String(valor ?? '').trim();
-  if (nom.length > MAXIM_NOM_POBLE) throw new Error(`El nom del poble pot tindre com a màxim ${MAXIM_NOM_POBLE} caràcters.`);
-  return nom || null;
-}
+   (organizations.town_name, 2610081401): el NOM del poble, amb el mateix
+   límit que el CHECK del servidor.
+   Gauntlet 261016 (Bloc 3.5.2; ordre del Mestre: «El poble és innegociable»)
+   · DEROGAT «l'opció buida és sense poble (null)»: l'edició ja no pot buidar
+   el poble d'una organització. La regla és la de l'alta, una sola font
+   (data/pobleOrganitzacio.js), i el text buit és un error amb un missatge
+   clar, abans de cap crida. */
+const valorDePoble = pobleDOrganitzacio;
 
 /* L'estat del correu d'una organització quan la lectura falla. Un esquema
    absent (NO-DISPONIBLE) es diu amb el motiu de l'adaptador, mai l'error cru. */
@@ -104,9 +106,11 @@ export function usePerfilOpcional() {
    que una fila desactivada amb el motiu escrit.
 
    `tipus` diu QUIN giny pinta DetallAjust ('text' | 'area' |
-   'password' | 'imatge' | 'boolean' | 'correu' | 'selector' | 'accio').
-   La UI mai més endevina per l'id: afegir un ajust nou no requereix
-   tocar DetallAjust. Un 'selector' porta les seues `opcions`.
+   'password' | 'imatge' | 'boolean' | 'correu' | 'selector' |
+   'llicencia' | 'accio'). La UI mai més endevina per l'id: afegir un
+   ajust nou d'un tipus que ja hi és no requereix tocar DetallAjust. Un
+   'selector' porta les seues `opcions`; una 'llicencia' (pla 261016),
+   el copyright desat, i DetallAjust hi obri CopyrightPage.
 
    `pendent` (només accions) = el backend encara no la té: es pinta
    desactivada i honesta, mai prometuda.
@@ -135,6 +139,21 @@ export function ajustosPersona(perfil = {}, { superadmin = false } = {}) {
       motiu: perfil.baixa_demanada_at
         ? 'Tens una baixa en curs: el perfil està congelat. Es desfà cancel·lant-la a «Privacitat i dades».'
         : 'Tria si vols ser visible a la gent del poble o mantindre el compte privat.' },
+    /* Pla 261016 (Bloc 3.1; ordre del Mestre) · Els drets de sèrie de les notes
+       de la persona: la fitxa ja no en tria (Directiva de Dignitat Humana, pla
+       261015_1900), i es trien ací. La columna de sempre (profiles.copyright,
+       T39): guardarAjust la desa i, si ix bé, també la preferència d'este
+       dispositiu (herencia.js). Tancat amb una baixa en curs (perfil congelat,
+       com l'estat) i amb la fila de reserva (getProfile: no porta la columna,
+       i una tria a cegues trepitjaria la de veres). */
+    { id: 'drets-notes', lloc: 'compte', titol: 'Drets de sèrie de les meues notes', camp: 'copyright', tipus: 'llicencia',
+      valor: typeof perfil.copyright === 'string' ? perfil.copyright : '',
+      obert: !perfil.baixa_demanada_at && perfil.reserva !== true,
+      motiu: perfil.baixa_demanada_at
+        ? 'Tens una baixa en curs: el perfil està congelat. Es desfà cancel·lant-la a «Privacitat i dades».'
+        : perfil.reserva === true
+          ? 'No s’ha pogut llegir el compte del servidor: els drets de sèrie de les notes es poden triar quan es torne a llegir.'
+          : undefined },
     { id: 'contrasenya', lloc: 'compte', titol: 'Contrasenya', tipus: 'password', valor: '******', obert: true },
     /* Onada 11 (261010) · El segon factor i el Tauler, abans de «Tancar sessió». */
     ...(superadmin ? [
@@ -509,9 +528,12 @@ function PerfilScope({ children, config, usuariId, usuariSessio, onCanviOrganitz
       assertCurrent();
       aplicaColumnes(ENTITATS_FITXA.agent, objectiu.id, { [camp]: valor });
     } else {
-      await updateOrganization(objectiu.id, { [camp]: valor }, configRef.current);
+      /* Gauntlet 261016 (Bloc 3.5.2) · Cap camí d'edició buida el poble d'una
+         organització: tampoc qui desa la columna directament. */
+      const desat = camp === 'town_name' ? valorDePoble(valor) : valor;
+      await updateOrganization(objectiu.id, { [camp]: desat }, configRef.current);
       assertCurrent();
-      aplicaColumnes(ENTITATS_FITXA.organitzacio, objectiu.id, { [camp]: valor });
+      aplicaColumnes(ENTITATS_FITXA.organitzacio, objectiu.id, { [camp]: desat });
     }
   }, [identitats, assertCurrent, aplicaColumnes]);
 
@@ -554,10 +576,16 @@ function PerfilScope({ children, config, usuariId, usuariSessio, onCanviOrganitz
     if (!ajust.camp) {
       throw new Error(`L'ajust "${ajust.id}" no té camp associat al catàleg.`);
     }
-    /* Grup C (261008) · El poble d'una organització es desa pel nom, i
-       l'opció buida és «sense poble» (null), no un text buit. */
+    /* Grup C (261008) · El poble d'una organització es desa pel nom.
+       Gauntlet 261016 (Bloc 3.5.2) · L'opció buida ja no és «sense poble»:
+       és un error amb missatge clar (valorDePoble), i no es crida res. */
     const valorDesat = objectiu.mena !== 'persona' && ajust.id === 'poble' ? valorDePoble(valor) : valor;
     await guardarCampPerfil(ajust.camp, valorDesat, objectiu.id);
+    /* Pla 261016 (Bloc 3.1) · Els drets de sèrie de les notes, ja desats al
+       servidor: també la preferència d'este dispositiu, la que llig «CREAR
+       NOTA» (llicenciaDeLActor), per l'id de la fila i mai 'jo'. Si el
+       servidor el rebutja, guardarCampPerfil ja ha llançat i no se'n toca res. */
+    if (objectiu.mena === 'persona' && ajust.id === 'drets-notes') desaLlicenciaPerDefecte(objectiu.dades?.id, valorDesat);
   }, [identitats, contactes, guardarCampPerfil, assertCurrent, ambMembres]);
 
   const creaOrganitzacio = useCallback(async (dades) => {

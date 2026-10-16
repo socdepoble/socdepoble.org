@@ -58,6 +58,7 @@ vi.mock('../../hooks/useResolvedAsset.js', () => ({
 }));
 
 import NotesSection from './NotesSection.jsx';
+import { bookmarkletDesa } from './modeDesa.js';
 import { ProveidorPlataforma } from '../../apps/plataforma/PlataformaContext.jsx';
 import RutaApps from '../../apps/plataforma/RutaApps.jsx';
 import { creaRegistre } from '../../apps/plataforma/registreApps.js';
@@ -348,6 +349,48 @@ describe('afegir al Lector', () => {
     expect(dades.toast).not.toHaveBeenCalled();
     expect(url()).toBe(LECTOR);
     expect(await api.llistaFontsPersonals()).toEqual([]);
+  });
+});
+
+/* Ordre del Mestre, 261016 (prompt 261016_0015, Bloc 0: «L'usuari ha de poder capturar contingut i
+   decidir fàcilment si el destí és el Bloc de notes o el Lector RSS») · El bookmarklet amb
+   `desti: 'lector'` (modeDesa.js) obri el snippet amb el Lector ja triat; sense desti, el Bloc de
+   sempre; i sense Lector disponible, el Curador continua decidint: el Bloc (correcció SN-R1). */
+describe('el bookmarklet amb la destinació', () => {
+  /* La finestra que obri el bookmarklet, executat com ho faria el navegador en una web de fora. */
+  function rutaDelBookmarklet(opcions) {
+    const codi = bookmarkletDesa('https://poble.exemple.test', opcions);
+    let obert = null;
+    const bookmarklet = new Function('location', 'document', 'getSelection', 'open', codi.slice('javascript:'.length));
+    bookmarklet({ href: URL_PROVA }, { title: 'Un article' }, () => null, (adreca) => { obert = new URL(adreca); });
+    expect(obert.origin).toBe('https://poble.exemple.test');
+    return `${obert.pathname}${obert.search}`;
+  }
+
+  test('amb «lector»: el Curador arriba amb el Lector triat, el nom proposat i «Afegir al Lector»', async () => {
+    munta(rutaDelBookmarklet({ desti: 'lector' }));
+    expect(screen.getByRole('heading', { level: 1, name: 'Afegir al Lector' })).toBeTruthy();
+    expect((await nomFont()).value).toBe('Un article');
+    expect(opcio('Lector de notícies').checked).toBe(true);
+    expect(consulta().get('desti')).toBe('lector');
+    expect(consulta().get('url')).toBe(URL_PROVA);
+    expect(screen.getByRole('button', { name: 'Afegir al Lector' }).disabled).toBe(false);
+  });
+
+  test('sense desti: el Bloc de sempre, amb la tria a l’abast', async () => {
+    munta(rutaDelBookmarklet());
+    await triaLlesta();
+    expect(opcio('Bloc de notes').checked).toBe(true);
+    expect(consulta().has('desti')).toBe(false);
+    expect(screen.getByRole('heading', { level: 1, name: 'Desar al Bloc' })).toBeTruthy();
+  });
+
+  test('amb «lector» i el Lector no disponible (producció): el Bloc, sense cap tria ni càrrega', () => {
+    const { carrega } = munta(rutaDelBookmarklet({ desti: 'lector' }), { entorn: ENTORN_OBERT });
+    expect(senseTria()).toBeNull();
+    expect(screen.getByRole('heading', { level: 1, name: 'Desar al Bloc' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Desar a «Safata d’Entrada»' })).toBeTruthy();
+    expect(carrega).not.toHaveBeenCalled();
   });
 });
 

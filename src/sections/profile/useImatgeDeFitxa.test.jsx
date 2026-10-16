@@ -13,12 +13,13 @@ vi.mock('../../components/universal/enquadrament/imatgeCanvas.js', () => ({
   exportaRetall: dobles.exportaRetall,
 }));
 vi.mock('../../utils/imageUtils.js', () => ({ compressImage: dobles.compressImage }));
-import { AVIS_IMATGE_PUJANT, useImatgeDeFitxa } from './useImatgeDeFitxa.jsx';
+import { AVIS_IMATGE_PUJANT, ERROR_DESAT_IMATGE, useImatgeDeFitxa } from './useImatgeDeFitxa.jsx';
 import fontDelHook from './useImatgeDeFitxa.jsx?raw';
 import {
   ACCEPT_FOTO, ERROR_PES_FOTO, ERROR_TIPUS_FOTO, PES_MAXIM_FOTO,
 } from '../../components/universal/enquadrament/useEnquadramentImatge.jsx';
 import { AJUDA_IMATGE_PUJANT } from '../../components/universal/UniversalEditorShell.jsx';
+import { ERROR_PRESSUPOST } from '../../utils/pujadaImatge.js';
 
 const MB = 1024 * 1024;
 const URL_MITJA = 'sdp-media://mitjans/t/u/avatars/hero.webp';
@@ -164,7 +165,9 @@ describe('el filtre de pes i de tipus, abans d’obrir res', () => {
 });
 
 describe('Guardar · una pujada', () => {
-  test('capçalera: el retall de 1.200 × 675 puja UNA vegada sense tornar-lo a reduir, i es desa el camp', async () => {
+  /* Gauntlet 261016 (Bloc 1, Llei del Quadrat) · Abans el retall de la
+     capçalera era de 1.200 × 675 (16:9); ara és un quadrat de 1.200 × 1.200. */
+  test('capçalera: el retall de 1.200 × 1.200 puja UNA vegada sense tornar-lo a reduir, i es desa el camp', async () => {
     const acaba = vi.fn();
     const vista = munta({ control: { acaba } });
     fireEvent.click(screen.getByRole('button', { name: 'Obrir' }));
@@ -172,7 +175,7 @@ describe('Guardar · una pujada', () => {
     expect(vista.onImageUpload).not.toHaveBeenCalled();
     await guarda('Retalla la capçalera');
     expect(dobles.exportaRetall).toHaveBeenCalledTimes(1);
-    expect(dobles.exportaRetall.mock.calls[0][2]).toEqual({ amplada: 1200, alcada: 675, tipus: 'image/jpeg' });
+    expect(dobles.exportaRetall.mock.calls[0][2]).toEqual({ amplada: 1200, alcada: 1200, tipus: 'image/jpeg' });
     const retallat = await dobles.exportaRetall.mock.results[0].value;
     expect(dobles.compressImage).toHaveBeenCalledTimes(1);
     expect(dobles.compressImage).toHaveBeenCalledWith(retallat, { maxSize: 1200, format: 'image/webp', quality: 0.8 });
@@ -228,6 +231,49 @@ describe('Cancel·lar i els errors', () => {
     expect(vista.onDesat).not.toHaveBeenCalled();
   });
 
+  /* Gauntlet 261016 (Bloc 1, Llei del Quadrat) · L'avatar d'una persona es
+     desa al camp logoImage, però puja com a avatar: 400 × 400 exactes i dins
+     del pressupost de les fotos (la forma va amb el fitxer). Un fetch que
+     torna els bytes de veres del data URL i un codificador que en fa el pes
+     que se li diu. */
+  const pesDeQualitat = (pesos) => async (_f, { quality }) => `data:image/webp;base64,${btoa(`RIFF\u0000\u0000\u0000\u0000WEBPVP8 ${'x'.repeat(pesos(quality) - 16)}`)}`;
+  function fetchDeVeres() {
+    vi.stubGlobal('fetch', vi.fn(async (url) => {
+      const bytes = Uint8Array.from(atob(url.slice(url.indexOf(',') + 1)), (c) => c.charCodeAt(0));
+      return { blob: async () => new Blob([bytes], { type: 'image/webp' }) };
+    }));
+  }
+
+  test('avatar (camp logoImage): 400 × 400 exactes i, si pesa massa, baixa la qualitat a la mateixa mida', async () => {
+    fetchDeVeres();
+    dobles.compressImage.mockImplementation(pesDeQualitat((q) => (q > 0.7 ? 90000 : 50000)));
+    const vista = munta({ camp: 'logoImage', forma: 'avatar' });
+    await tria(vista, foto(2));
+    await guarda('Retalla la foto');
+    expect(dobles.exportaRetall.mock.calls[0][2]).toEqual({ amplada: 400, alcada: 400, tipus: 'image/jpeg' });
+    /* Gauntlet 261016 (P1 de l'auditoria adversarial) · Abans, l'escala fixa
+       (0,8, 0,72 i 0,64, el primer que hi cabia); ara, la cerca de la qualitat
+       més alta que hi cap (0,68), sempre a 400. */
+    expect(dobles.compressImage.mock.calls.map(([, o]) => [o.maxSize, o.quality])).toEqual([0.8, 0.4, 0.6, 0.68, 0.72].map((q) => [400, q]));
+    expect(vista.onImageUpload.mock.calls.map(([f]) => [f.name, f.size])).toEqual([['logoImage.webp', 50000]]);
+    expect(vista.onDesaCamp.mock.calls).toEqual([['logoImage', URL_MITJA]]);
+  });
+
+  test('una foto que pesa massa fins i tot a la qualitat més baixa: l’avís dins de la finestra, cap pujada ni desat', async () => {
+    fetchDeVeres();
+    dobles.compressImage.mockImplementation(pesDeQualitat(() => 90000));
+    const vista = munta();
+    await tria(vista, foto(2));
+    await guarda('Retalla la capçalera');
+    const finestra = screen.getByRole('dialog', { name: 'Retalla la capçalera' });
+    expect(within(finestra).getByRole('alert').textContent).toBe(ERROR_PRESSUPOST);
+    // Gauntlet 261016 (P1) · La cerca fins a la qualitat mínima: cinc intents (abans, els sis de l'escala).
+    expect(dobles.compressImage.mock.calls.map(([, o]) => o.quality)).toEqual([0.8, 0.4, 0.2, 0.08, 0.04]);
+    expect(vista.onImageUpload).not.toHaveBeenCalled();
+    expect(vista.onDesaCamp).not.toHaveBeenCalled();
+    expect(vista.onError).not.toHaveBeenCalled();
+  });
+
   test('si la pujada falla, l’error ix en línia dins de la finestra (cap toast) i torna a provar', async () => {
     const onImageUpload = vi.fn().mockRejectedValueOnce(new Error('Sense xarxa.')).mockResolvedValueOnce(URL_MITJA);
     const vista = munta({ onImageUpload });
@@ -242,6 +288,49 @@ describe('Cancel·lar i els errors', () => {
     expect(onImageUpload).toHaveBeenCalledTimes(2);
     expect(vista.onDesaCamp.mock.calls).toEqual([['heroImage', URL_MITJA]]);
     expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  /* Bloc 3.5.4 (Gauntlet 261016; P2 de Codex, «error 403») · Abans, el
+     resultat del desat del camp s'esperava sense mirar-lo: un false (la cua
+     del Perfil no ha pogut deixar la imatge al servidor) tancava la finestra,
+     cridava `acaba` i onDesat com si s'haguera desat. */
+  test('si el desat del camp torna false, la finestra continua oberta amb l’avís, sense acaba ni onDesat; tornar a Guardar ho torna a provar', async () => {
+    const acaba = vi.fn();
+    const onDesaCamp = vi.fn().mockResolvedValueOnce(false).mockResolvedValueOnce(true);
+    const vista = munta({ control: { acaba }, camp: 'logoImage', forma: 'avatar', onDesaCamp });
+    fireEvent.click(screen.getByRole('button', { name: 'Obrir' }));
+    await tria(vista, foto(1));
+    await guarda('Retalla la foto');
+    const finestra = screen.getByRole('dialog', { name: 'Retalla la foto' });
+    expect(within(finestra).getByRole('alert').textContent).toBe(ERROR_DESAT_IMATGE);
+    expect(acaba).not.toHaveBeenCalled();
+    expect(vista.onDesat).not.toHaveBeenCalled();
+    expect(vista.onError).not.toHaveBeenCalled();
+    expect(screen.getByRole('status').textContent).toBe('quiet');
+    await guarda('Retalla la foto');
+    expect(onDesaCamp.mock.calls).toEqual([['logoImage', URL_MITJA], ['logoImage', URL_MITJA]]);
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(acaba).toHaveBeenCalledTimes(1);
+    expect(vista.onDesat).toHaveBeenCalledWith('logoImage');
+  });
+
+  test('si el desat del camp rebutja, el seu missatge és l’avís de la finestra', async () => {
+    const onDesaCamp = vi.fn(async () => { throw new Error('El servidor no ha acceptat la imatge.'); });
+    const vista = munta({ onDesaCamp });
+    await tria(vista, foto(1));
+    await guarda('Retalla la capçalera');
+    expect(within(screen.getByRole('dialog', { name: 'Retalla la capçalera' })).getByRole('alert').textContent)
+      .toBe('El servidor no ha acceptat la imatge.');
+    expect(vista.onDesat).not.toHaveBeenCalled();
+    expect(vista.onError).not.toHaveBeenCalled();
+  });
+
+  test('un desat que no diu res (undefined) continua sent un desat fet, com sempre', async () => {
+    const vista = munta({ onDesaCamp: vi.fn(async () => undefined) });
+    await tria(vista, foto(1));
+    await guarda('Retalla la capçalera');
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(vista.onDesat).toHaveBeenCalledWith('heroImage');
   });
 });
 

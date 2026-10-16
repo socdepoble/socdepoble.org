@@ -12,6 +12,9 @@
  *     i, en prémer-la, fa el recorregut ?sobre=poble:<id> que ja fa el
  *     «Comentar» de la pàgina del poble (XatSection, obriFilDePagina).
  * Sense poble declarat (socdepoble.org, el standalone a #root) no canvia res.
+ * Gauntlet 261016 (Bloc 3.6) · Derogat per a la LLISTA: sense poble declarat,
+ * la fila és la de POBLE_PER_DEFECTE («Gent de la Torre»), que el Mestre vol
+ * sempre visible. L'entrada automàtica continua sense fer res.
  *
  * Model B: ací no hi ha cap crida al backend. El poble és presentació i
  * navegació (configAmfitrio.js): mai `tenantId`.
@@ -34,6 +37,23 @@ export function pobleDeConfig(externalConfig) {
   if (!id) return null;
   return { id, nom: sanejaEtiqueta(externalConfig?.nomPoble) || '' };
 }
+
+/**
+ * Gauntlet 261016 (prompt, Bloc 3.6; pla, Onada 1.2) · Ordre del Mestre:
+ * «Gent de la Torre» és una de les quatre converses que el Xat porta SEMPRE,
+ * també sense amfitrió (socdepoble.org, el standalone, localhost). És el poble
+ * pilot de la llavor (sections/pobles/townsSeed.js), amb el nom de l'ordre.
+ * Un poble declarat per l'amfitrió mana i el substituïx.
+ */
+export const POBLE_PER_DEFECTE = Object.freeze({ id: 'la-torre-de-les-macanes', nom: 'Gent de la Torre' });
+
+/**
+ * El poble de la fila del xat: el de l'amfitrió o, sense, POBLE_PER_DEFECTE.
+ * Només per a la llista (la fila i la seua cara). L'entrada automàtica a la
+ * fitxa del poble (EntradaDelPoble) continua sent només la del poble declarat:
+ * sense amfitrió, /xat no s'obri sol en cap fitxa.
+ */
+export const pobleDelXat = (poble) => poble || POBLE_PER_DEFECTE;
 
 /** La ruta de la pàgina del poble dins de l'app. */
 export const rutaDelPobleXat = (poble) => `/pobles/${enc(poble.id)}`;

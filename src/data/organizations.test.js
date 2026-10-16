@@ -9,9 +9,15 @@ vi.mock('./identitat.js', () => ({ capturaSessio: () => {
 } }));
 import { creaOrganitzacio, TIPUS_MARE } from './organizations.js';
 
-const empresa = { name: 'Forn', slug: 'forn', kind: 'company' };
+/* Gauntlet 261016 (Bloc 3.5.2; ordre del Mestre: «Tota entitat creada ha de
+   portar el seu poble») · Les altes vàlides porten el poble (town_name), que
+   el domini envia al port. Abans una alta sense poble arribava al port: les
+   proves que ho esperaven ara el porten, i les de davall fixen el rebuig. */
+const POBLE = 'La Torre de les Maçanes';
+const empresa = { name: 'Forn', slug: 'forn', kind: 'company', town_name: POBLE };
 const mare = { id: 'O', kind: 'company', role: 'owner' };
-const grup = { name: 'Colla', slug: 'colla', kind: 'group', parentOrganizationId: 'O' };
+const grup = { name: 'Colla', slug: 'colla', kind: 'group', town_name: POBLE, parentOrganizationId: 'O' };
+const colla = { name: 'Colla', slug: 'colla', kind: 'group', town_name: POBLE };
 beforeEach(() => { m.user = { id: 'A' }; m.entrada = 0; m.createOrganization.mockReset().mockResolvedValue({ id: 'N' }); });
 
 test('crea amb el port configurat, normalitza i no envia camps de privilegi', async () => {
@@ -40,22 +46,46 @@ test.each([
    empresa»: sense mare (absent, buida o d'espais), el grup arriba al port
    sense la clau parentOrganizationId, i no cal administrar res. */
 test.each([
-  [{ name: 'Colla', slug: 'colla', kind: 'group' }],
+  [colla],
   [{ ...grup, parentOrganizationId: '' }],
   [{ ...grup, parentOrganizationId: '   ' }],
   [{ ...grup, parentOrganizationId: undefined }],
 ])('un grup sense mare es crea i el payload no porta mare (%#)', async (dades) => {
   const resultat = await creaOrganitzacio(dades, {}, []);
-  expect(m.createOrganization).toHaveBeenCalledWith({ name: 'Colla', slug: 'colla', kind: 'group' }, {});
+  expect(m.createOrganization).toHaveBeenCalledWith(colla, {});
   expect(m.createOrganization.mock.calls[0][0]).not.toHaveProperty('parentOrganizationId');
-  expect(resultat).toEqual({ name: 'Colla', slug: 'colla', kind: 'group', id: 'N' });
+  expect(resultat).toEqual({ ...colla, id: 'N' });
 });
 
 test('un grup sense mare no confirma una resposta que en porte una', async () => {
   m.createOrganization.mockResolvedValue({ id: 'N', kind: 'group', parent_organization_id: 'O' });
-  await expect(creaOrganitzacio({ name: 'Colla', slug: 'colla', kind: 'group' })).rejects.toThrow('organització incoherent');
+  await expect(creaOrganitzacio(colla)).rejects.toThrow('organització incoherent');
   m.createOrganization.mockResolvedValue({ id: 'N', kind: 'group', parent_organization_id: null });
-  await expect(creaOrganitzacio({ name: 'Colla', slug: 'colla', kind: 'group' })).resolves.toMatchObject({ id: 'N' });
+  await expect(creaOrganitzacio(colla)).resolves.toMatchObject({ id: 'N' });
+});
+
+/* Gauntlet 261016 (Bloc 3.5.2) · Sense poble, o amb un poble buit, d'espais,
+   d'un altre tipus o massa llarg (el CHECK: 120 caràcters de veres), cap
+   alta arriba al port, i el missatge diu què cal fer. El poble es desa
+   retallat d'espais. */
+test.each([
+  [{ name: 'Forn', slug: 'forn', kind: 'company' }, 'ha de tindre el seu poble'],
+  [{ ...empresa, town_name: '' }, 'ha de tindre el seu poble'],
+  [{ ...empresa, town_name: '   ' }, 'ha de tindre el seu poble'],
+  [{ ...empresa, town_name: null }, 'ha de tindre el seu poble'],
+  [{ ...empresa, town_name: 7 }, 'ha de tindre el seu poble'],
+  [{ ...colla, town_name: undefined }, 'ha de tindre el seu poble'],
+  [{ ...empresa, town_name: 'x'.repeat(121) }, 'com a màxim 120 caràcters'],
+])('Gauntlet 261016 · una alta sense poble vàlid no arriba al port (%#: %j)', async (dades, error) => {
+  await expect(creaOrganitzacio(dades, {}, [mare])).rejects.toThrow(error);
+  expect(m.createOrganization).not.toHaveBeenCalled();
+});
+
+test('Gauntlet 261016 · el poble arriba al port retallat; 120 caràcters de veres hi caben («🌾» és 1)', async () => {
+  await creaOrganitzacio({ ...empresa, town_name: `  ${POBLE}  ` });
+  expect(m.createOrganization).toHaveBeenLastCalledWith(empresa, {});
+  await creaOrganitzacio({ ...empresa, town_name: '🌾'.repeat(120) });
+  expect(m.createOrganization).toHaveBeenLastCalledWith({ ...empresa, town_name: '🌾'.repeat(120) }, {});
 });
 
 /* F5 · poliment · Amb només les dades al títol, les cinc altes de `grup`
@@ -113,15 +143,25 @@ test.each([
   [empresa, { role: 'superadmin' }],
   [empresa, { role: null }],
   [empresa, { name: null }],
+  /* Gauntlet 261016 (Bloc 3.5.2) · Un port que confirma l'alta sense poble, o
+     amb un altre, no l'ha desada com s'ha demanat. */
+  [empresa, { town_name: null }],
+  [empresa, { town_name: '' }],
+  [empresa, { town_name: 'Alcoi' }],
 ])('una resposta contradictòria no confirma l’alta (%j, %j)', async (dades, camps) => {
   m.createOrganization.mockResolvedValue({ id: 'N', ...camps });
   await expect(creaOrganitzacio(dades, {}, [mare])).rejects.toThrow('organització incoherent');
 });
 
+/* Gauntlet 261016 (Bloc 3.5.2) · La resposta porta el poble desat: el que
+   confirma el port o, si no el torna, el que s'ha enviat. Abans era la
+   resposta tal qual. */
 test('un reintent conserva el nom actual de l’entitat i el rol retornats pel backend', async () => {
   const resposta = { id: 'N', name: 'Forn del poble', slug: 'forn', kind: 'company', parent_organization_id: null, role: 'admin' };
   m.createOrganization.mockResolvedValue(resposta);
-  expect(await creaOrganitzacio(empresa)).toEqual(resposta);
+  expect(await creaOrganitzacio(empresa)).toEqual({ ...resposta, town_name: POBLE });
+  m.createOrganization.mockResolvedValue({ ...resposta, town_name: POBLE });
+  expect(await creaOrganitzacio(empresa)).toEqual({ ...resposta, town_name: POBLE });
 });
 
 test.each(['owner', 'admin', 'member'])('un resultat parcial amb rol %s conserva els camps coneguts', async (role) => {

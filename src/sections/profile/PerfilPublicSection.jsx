@@ -35,24 +35,32 @@ import { useSEO } from '../../hooks/useSEO';
 import { loadPerfilPublic, teCapacitat } from '../../data/backendPort.js';
 import { renderRichText } from '../detail/detailRichText.jsx';
 import { ProveidorSincronitzacioTargetes } from '../detail/SincronitzacioTargetes.jsx';
-import { tipusDAgent } from './ProfileSection.jsx';
+/* Gauntlet 261016 (Bloc 3) · El tipus de perfil d'un agent del catàleg, de la
+   seua font única a la capa de dades (abans, la còpia del directori): un
+   personatge ANIMAL és una IA. */
+import { AGENTS_MAP, tipusDAgent } from '../../data/agentsSeed.js';
 import { normalizeBackendConfig } from '../../config/backendConfig.js';
 /* T43 (ordre del Mestre, 260928) · Connectar una fitxa pública porta el seu
    descriptor i, per a una entitat o un grup, `organitzacio=ID`. La funció viu
    a config/navigation.js: el directori (ProfileSection) fa el mateix camí. */
 import {
-  objecteDePerfil, registraEntitatDelProjecte, rutaConnectarPerfil, rutaDAutoria
+  objecteDePerfil, registraEntitatDelProjecte, rutaCanonicaDePerfil, rutaConnectarPerfil, rutaDAutoria
 } from '../../config/navigation.js';
 import { DEFAULT_AUTHOR, esRutaDelProjecte } from '../../components/universal/UniversalUtils';
 import { useResolvedAsset } from '../../hooks/useResolvedAsset.js';
 import { resolveAsset } from '../../config/assetResolver.js';
-import { agentIASeed, esIAIA } from '../../data/identitatsSeed.js';
+import {
+  PERSONA_PILOT, POBLE_FUNDACIONAL, agentIASeed, clauFundacional, entitatSeed, esIAIA, fundacionalDeLaClau
+} from '../../data/identitatsSeed.js';
 /* Onada 11 (261010; refutació del front C, D12) · El destí del xat de la IAIA
    és el mateix que el de la seua fila de la llista i el del botó de /iaia. */
 import { rutaDelXatDeLaIAIA } from '../xat/useObriXatPerDefecte.js';
 import { useXat } from '../xat/XatContext';
 
-const ETIQUETA = Object.freeze({ persona: 'Persona', entitat: 'Entitat', grup: 'Grup', ia: 'Intel·ligència artificial' });
+/* Gauntlet 261016 (Bloc 3; regressió de la Fase 1, T1 «Dignitat de persona»)
+   · Només una entitat, un grup o una IA porten la píndola del seu tipus. Una
+   persona no es categoritza: no n'hi ha cap per a ella (abans, «Persona»). */
+const ETIQUETA = Object.freeze({ entitat: 'Entitat', grup: 'Grup', ia: 'Intel·ligència artificial' });
 
 /** El mateix DTO que loadPerfilPublic, però des del catàleg d'agents del paquet. */
 export function perfilDelCataleg(agent) {
@@ -84,6 +92,39 @@ export function perfilDeLaIADelPaquet(agent) {
   };
 }
 
+/**
+ * Revisió adversarial del Gauntlet 261016 (encàrrec C; pla aprovat, Onada 1
+ * punt 5: «perfilDeLaPersonaPilot com a fallback per a qualsevol àlies de la
+ * persona pilot») · La fitxa de la persona pilot que el paquet ja publica: la
+ * del catàleg (AGENTS_MAP.JAVI, la mateixa que localPerfils.js dona sense
+ * sessió). Ningú no n'és propietari: fora de la llavor cap rol hi mana.
+ */
+export const perfilDeLaPersonaPilot = () => perfilDelCataleg(AGENTS_MAP.JAVI);
+
+/**
+ * Revisió adversarial del Gauntlet 261016 (encàrrec C) · La fitxa del paquet
+ * d'una de les tres identitats del Mestre per la clau que es demana, o null.
+ * La clau es reconeix per un identificador que declara la llavor
+ * (identitatsSeed.js · fundacionalDeLaClau: id, àlies, slug declarat o id
+ * remot declarat), mai pel nom ni pel slug que torne el servidor. Les dades són
+ * les que el paquet ja publica: la persona pilot, la del catàleg; una entitat,
+ * la del padró (ENTITATS_SEED), amb la forma del DTO de localPerfils.js. Sense
+ * propietari, sense correu i sense dates (T51: cap data inventada).
+ */
+export function perfilFundacionalDelPaquet(clau) {
+  const fundacional = fundacionalDeLaClau(clau);
+  if (!fundacional) return null;
+  if (fundacional === PERSONA_PILOT.slug) return perfilDeLaPersonaPilot();
+  const entitat = entitatSeed(fundacional);
+  if (!entitat) return null;
+  return {
+    tipus: entitat.kind === 'group' ? 'grup' : 'entitat', id: entitat.id, slug: entitat.slug, nom: entitat.name,
+    avatar: entitat.logo_url || '', hero: entitat.hero_url || '', lema: entitat.lema || '', bio: entitat.description || '',
+    presentacioHtml: entitat.presentacio_html || '', poble: entitat.town_name || '', esIA: false,
+    publicat: entitat.visibility === 'public', propietari: false, copyright: entitat.copyright || '', correu: '', emoticona: ''
+  };
+}
+
 let hostPromise;
 function hostReady() {
   hostPromise ||= import('../../host.js').catch((error) => { hostPromise = null; throw error; });
@@ -94,8 +135,24 @@ function hostReady() {
    l'efecte de càrrega i el faria girar sense parar (troballa de la refutació). */
 const AGENTS_BUITS = Object.freeze([]);
 
-export default function PerfilPublicSection({ agents = AGENTS_BUITS }) {
-  const { agentId } = useParams();
+/* Gauntlet 261016 (Bloc 3.5.1; ordre del Mestre: «socdepoble.org/javillinares»)
+   · La URL canònica d'una de les tres identitats del Mestre: la seua ruta neta
+   (rutaCanonicaDePerfil) a l'origen canònic del build, el mateix que fa servir
+   useSEO.js (VITE_CANONICAL_URL o, si no, el de la pàgina). És l'adreça que el
+   Mestre nomena, a l'arrel del domini: no depén d'on estiga muntada l'app. */
+function urlCanonica(ruta) {
+  const origen = import.meta.env?.VITE_CANONICAL_URL || window.location.origin;
+  return `${String(origen).replace(/\/$/, '')}${ruta}`;
+}
+
+/**
+ * `id` (Gauntlet 261016, Bloc 3.5.1): l'identificador fix d'una ruta canònica
+ * (/javillinares, /socdepoble, /rentonar; App.jsx), que no porta cap
+ * paràmetre. Sense, el de la ruta (/gent/:agentId i les germanes).
+ */
+export default function PerfilPublicSection({ agents = AGENTS_BUITS, id = null }) {
+  const { agentId: idDeLaRuta } = useParams();
+  const agentId = id ?? idDeLaRuta;
   const { t } = useUIActions();
   const { externalConfig } = useUIState();
   const navigate = useNavigate();
@@ -127,8 +184,9 @@ export default function PerfilPublicSection({ agents = AGENTS_BUITS }) {
         }
       }
       // Una resposta buida del servidor és autoritativa (fora de la IA del
-      // paquet, D12, més avall). El catàleg només suplix un node demostratiu
-      // que no implementa el port de directori.
+      // paquet, D12, i de les tres identitats del Mestre, més avall). El
+      // catàleg només suplix un node demostratiu que no implementa el port de
+      // directori.
       if (!teCapacitat('directori') && normalizeBackendConfig(externalConfig).dataMode !== 'remote') {
         perfil = perfilDelCataleg(agents.find((agent) => String(agent.id) === clau));
       }
@@ -140,9 +198,28 @@ export default function PerfilPublicSection({ agents = AGENTS_BUITS }) {
          ací. La pàgina cau al paquet per a ella, també en remot, pel seu id o
          pel seu slug declarat (agentIASeed). Per a una persona o una entitat,
          la resposta buida del servidor continua manant: cap identitat del
-         paquet suplix una d'inexistent al servidor. Amb la capacitat de
-         directori en llavor i en local el port ja la torna, i ací no es passa. */
+         paquet suplix una d'inexistent al servidor (fora de les tres del
+         Mestre, davall). Amb la capacitat de directori en llavor i en local el
+         port ja la torna, i ací no es passa. */
       if (!perfil) perfil = perfilDeLaIADelPaquet(agentIASeed(clau));
+      /* Revisió adversarial del Gauntlet 261016 (encàrrec C; pla aprovat,
+         Onada 1 punt 5, «Paritat total entre local i producció»; prompt, Bloc
+         3.5.1, les rutes canòniques dels beta-testers) · EXCEPCIÓ A D12,
+         revocable per Direcció Tècnica: en remot el servidor no resol cap
+         persona per àlies (supabase/perfils.js només en busca per UUID, i
+         perfil_public exigix sessió), i /javillinares, /gent/0001 i
+         /gent/javi-llinares donaven «Perfil no trobat», amb sessió i sense.
+         Per a les tres identitats que controla el Mestre (Javi Llinares, Sóc
+         de Poble i Rentonar), i NOMÉS per a elles, la fitxa cau al paquet
+         (perfilFundacionalDelPaquet) quan el servidor no la dona: la clau
+         demanada s'hi reconeix per un identificador declarat a la llavor,
+         mai pel nom ni per un slug que qualsevol organització podria
+         registrar. Si el servidor dona la fitxa, mana el servidor. Una clau de
+         la persona només la pot resoldre una PERSONA: una organització que
+         haja pres el slug «javillinares» (o '0001', 'javi'…) no es queda la
+         fitxa del Mestre. Per a tota altra persona o entitat, D12 es manté. */
+      const delPaquet = perfilFundacionalDelPaquet(clau);
+      if (delPaquet && (!perfil || (delPaquet.tipus === 'persona' && perfil.tipus !== 'persona'))) perfil = delPaquet;
       /* Revisió dels verificadors (front «logo», 261004) · En remot, l'id de
          l'entitat del projecte és el del servidor (un UUID) i només el
          registrava la resolució de l'app (useEntitatDelProjecte). Si esta
@@ -188,12 +265,20 @@ export default function PerfilPublicSection({ agents = AGENTS_BUITS }) {
      botó «Avatar» obri la finestra de retall (useImatgeDeFitxa, Onada 4). */
   const esPersonaOIA = perfil?.tipus === 'persona' || perfil?.tipus === 'ia';
 
+  /* Gauntlet 261016 (Bloc 3.5.1; ordre del Mestre) · La fitxa d'una de les
+     tres identitats del Mestre declara la seua URL canònica neta, s'obriga
+     per la ruta canònica o per una d'abans (/gent/0001, /empresa/socdepoble,
+     /grup/rentonar…): un sol perfil, una sola adreça per al SEO. La resta de
+     fitxes, la URL de sempre (useSEO, sense `canonical`). */
+  const rutaCanonica = rutaCanonicaDePerfil(perfil);
+
   useSEO({
     title: perfil ? perfil.nom : t('section.perfil.public.noTrobat', 'Perfil no trobat'),
     description: perfil ? (perfil.lema || perfil.bio || '') : '',
     image: perfil?.avatar || null,
     type: perfil?.tipus === 'persona' ? 'Person' : 'Organization',
-    index: Boolean(perfil?.publicat)
+    index: Boolean(perfil?.publicat),
+    ...(rutaCanonica ? { canonical: urlCanonica(rutaCanonica) } : {})
   });
 
   /* T63.2 · Mentre carrega o si no el troba, encara no sabem qui és (el prefix
@@ -230,9 +315,32 @@ export default function PerfilPublicSection({ agents = AGENTS_BUITS }) {
     );
   }
 
+  /* Gauntlet 261016 (Bloc 3; regressió de la Fase 1, T1 «Dignitat de persona»)
+     · Una persona no és una obra ni es categoritza: la seua fitxa pública no
+     porta la píndola del tipus ni els drets d'autor (ni el desat ni el «© Nom»
+     de reserva), com la seua targeta (UniversalCard) i la seua fitxa editable
+     (perfilCamps.js · fitxaDeLectura). Mana el tipus de l'objecte representat,
+     el del descriptor (objecteDePerfil), que també fa persona d'un tipus
+     desconegut; sense descriptor, el del DTO. Es queden el poble i «La teua
+     fitxa». L'entitat, el grup i la IA no canvien. */
+  const objecte = objecteDePerfil(perfil);
+  const etiquetaDelTipus = ETIQUETA[objecte?.tipus || perfil.tipus] || null;
+  const esPersona = !etiquetaDelTipus;
+  /* Gauntlet 261016 (Bloc 3.5.2; ordre del Mestre: «Prohibit mostrar
+     entitats sense poble») · El poble que porta la fitxa; si no en porta cap
+     i és una de les tres identitats del Mestre (clauFundacional: per id o per
+     slug declarat, mai pel nom), el seu, La Torre de les Maçanes
+     (POBLE_FUNDACIONAL). En llavor i en local les tres ja el porten; en remot
+     una fila sense poble no el perd a la pantalla. Cap altra fitxa s'inventa
+     cap poble: el poble desat sempre mana.
+     Revisió adversarial del Gauntlet 261016 (encàrrec C) · En remot, només
+     una fila amb l'id del servidor que declara la llavor
+     (IDS_REMOTS_FUNDACIONALS): un homònim d'un altre poble, amb el mateix
+     slug, ja no rep La Torre de les Maçanes. */
+  const poble = perfil.poble || (clauFundacional(perfil) ? POBLE_FUNDACIONAL : '');
   const etiquetes = [
-    { text: ETIQUETA[perfil.tipus] || ETIQUETA.persona, className: perfil.esIA ? 'sdp-badge-accent' : 'sdp-badge-system' },
-    ...(perfil.poble ? [{ text: perfil.poble, className: 'sdp-badge-category' }] : []),
+    ...(etiquetaDelTipus ? [{ text: etiquetaDelTipus, className: perfil.esIA ? 'sdp-badge-accent' : 'sdp-badge-system' }] : []),
+    ...(poble ? [{ text: poble, className: 'sdp-badge-category' }] : []),
     ...(perfil.propietari ? [{ text: t('section.perfil.public.teua', 'La teua fitxa'), className: 'sdp-badge-tag' }] : [])
   ];
 
@@ -260,6 +368,17 @@ export default function PerfilPublicSection({ agents = AGENTS_BUITS }) {
   const rutaDelXat = esIAIA(perfil.id)
     ? rutaDelXatDeLaIAIA(modeDades, senseSessio)
     : `/xat?amb=${encodeURIComponent(perfil.id)}`;
+  /* Gauntlet 261016 (Bloc 3) · L'avís i el botó d'una IA porten el seu nom:
+     abans deien «La IAIA MarIA» i «Parla amb la IAIA» per a qualsevol IA (un
+     personatge del catàleg, com El Gall o Nano Banana). Per a la IAIA, pel seu
+     id o pel seu slug declarat (agentIASeed), mai pel nom, els textos de
+     sempre. Només ella respon amb frases fetes (la seua resposta fixa,
+     localXat.js · RESPOSTA_IAIA): l'avís d'una altra IA no ho promet. */
+  const esLaIAIA = esIAIA(perfil.id) || esIAIA(agentIASeed(perfil.slug)?.id);
+  const avisDIA = esLaIAIA
+    ? t('section.perfil.public.iaText', 'La IAIA MarIA és una màquina de Sóc de Poble, en proves. Respon amb frases fetes i no substituïx cap persona del poble.')
+    : `${perfil.nom} és una màquina de Sóc de Poble, en proves. No substituïx cap persona del poble.`;
+  const parlaAmbLaIA = esLaIAIA ? t('section.perfil.public.parlaIA', 'Parla amb la IAIA') : `Parla amb ${perfil.nom}`;
 
   return (
     <UniversalPage
@@ -275,7 +394,7 @@ export default function PerfilPublicSection({ agents = AGENTS_BUITS }) {
       logoEntitat={logoDeLaFitxa}
       avatarAutor={avatarDeLaFitxa}
       labels={etiquetes}
-      copyright={perfil.copyright || `© ${perfil.nom}`}
+      copyright={esPersona ? undefined : (perfil.copyright || `© ${perfil.nom}`)}
       /* T51 · la data real de la fitxa: `creat` i `modificat` del PerfilPublic
          (created_at i updated_at de la fila, que supabase/perfils.js i
          localPerfils.js ja passen). Sense ells no hi ha pastilla: mai la d'ara. */
@@ -296,7 +415,7 @@ export default function PerfilPublicSection({ agents = AGENTS_BUITS }) {
       topBarData={{
         authorName: perfil.nom,
         authorAvatar: esElProjecte ? DEFAULT_AUTHOR.avatarUrl : (perfil.avatar || ''),
-        authorLocation: perfil.poble || '', emoticona: perfil.emoticona || '',
+        authorLocation: poble, emoticona: perfil.emoticona || '',
         authorHref: rutaDAutoria({ tipus: perfil.tipus, id: perfil.id })
       }}
       onConnect={rutaConnectarPerfil(perfil) ? () => navigate(rutaConnectarPerfil(perfil)) : false}
@@ -304,16 +423,16 @@ export default function PerfilPublicSection({ agents = AGENTS_BUITS }) {
          és el missatge directe de sempre (/xat?amb=); d'una entitat o d'un
          grup, el xat comú de la seua pàgina (la Comunitat). «Escriu-li al xat»
          continua sent el directe per a tothom. */
-      objecte={objecteDePerfil(perfil)}
+      objecte={objecte}
     >
       {perfil.esIA ? (
         <Alerta to="avis" titol={t('section.perfil.public.iaTitol', 'Este perfil és una intel·ligència artificial')}>
-          {t('section.perfil.public.iaText', 'La IAIA MarIA és una màquina de Sóc de Poble, en proves. Respon amb frases fetes i no substituïx cap persona del poble.')}
+          {avisDIA}
         </Alerta>
       ) : null}
       <div className="sdp-alerta__accions">
         <Boto varietat="primari" icona={perfil.esIA ? Bot : MessageCircle} onClick={() => navigate(rutaDelXat)}>
-          {perfil.esIA ? t('section.perfil.public.parlaIA', 'Parla amb la IAIA') : t('section.perfil.public.escriu', 'Escriu-li al xat')}
+          {perfil.esIA ? parlaAmbLaIA : t('section.perfil.public.escriu', 'Escriu-li al xat')}
         </Boto>
         {perfil.propietari || administra ? (
           <Boto varietat="secundari" icona={PencilLine} onClick={() => navigate(rutaEdita)}>

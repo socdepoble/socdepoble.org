@@ -26,6 +26,7 @@ vi.mock('../../data/backendPort.js', async (importOriginal) => {
 });
 
 import { IdentitatProvider, desaPreferencia, useIdentitat } from './IdentitatContext.jsx';
+import { desaLlicenciaPerDefecte, llegixLlicenciaPerDefecte, llicenciaDeLActor } from '../../components/universal/drets/herencia.js';
 
 const FOTO = 'https://lh3.googleusercontent.com/a/pepa.png';
 const FOTO_META = 'https://lh3.googleusercontent.com/a/pepa-meta.png';
@@ -63,6 +64,7 @@ const ambSessio = (currentUser, generacio = 1) => { m.sessio = { currentUser, ge
 afterEach(() => {
   cleanup();
   desaPreferencia(PEPA.id, null);
+  for (const id of [PEPA.id, TONI.id, 'o-forn']) desaLlicenciaPerDefecte(id, '');
   m.sessio = { currentUser: null, generacio: 1 };
   m.getProfile = undefined;
   m.organitzacions = async () => [];
@@ -319,5 +321,104 @@ describe('l’entitat porta el poble de la seua pertinença, mai la foto de la p
     expect(result.current.actor).toMatchObject({ tipus: 'entitat', id: 'o-colla', avatar: 'logo-colla.png', poble: '' });
     act(() => { result.current.setActor('persona'); });
     expect(result.current.actor).toMatchObject({ tipus: 'persona', nom: 'Pepa Soler', avatar: FOTO, poble: POBLE });
+  });
+});
+
+/* Gauntlet 261016 (encàrrec E; revisió adversarial, P2) · «El compte» desa
+   els drets de sèrie de les notes de la persona a profiles.copyright, però
+   «CREAR NOTA» (NotesSection, llicenciaDeLActor) només llig la preferència
+   d'este dispositiu. La sessió la posa al dia amb la seua fila en carregar-la:
+   un dispositiu nou, sense obrir el Perfil, ja hereta els drets triats. */
+describe('drets de sèrie de les notes: la fila de la sessió arriba a este dispositiu', () => {
+  /* La mateixa crida que fa CREAR NOTA (NotesSection.jsx) amb l'actor del context. */
+  const heretaCrearNota = ({ actor, memberships }) => llicenciaDeLActor({ id: actor?.id, tipus: actor?.tipus, memberships });
+
+  test('un dispositiu nou, sense obrir el Perfil: la nota nova hereta el copyright del servidor', async () => {
+    ambSessio(PEPA);
+    const port = portAmbRespostes();
+    m.getProfile = port.getProfile;
+    const { result } = munta();
+    expect(heretaCrearNota(result.current)).toBeNull();
+    await waitFor(() => expect(port.getProfile).toHaveBeenCalledTimes(1));
+    await act(async () => { port.respostes[0].resol({ ...FILA_PEPA, copyright: '© Pepa Soler' }); });
+    await waitFor(() => expect(heretaCrearNota(result.current)).toBe('© Pepa Soler'));
+    expect(llegixLlicenciaPerDefecte(PEPA.id)).toBe('© Pepa Soler');
+  });
+
+  test('una preferència vella d’este dispositiu cedix al valor que el servidor té ara (triat en un altre)', async () => {
+    desaLlicenciaPerDefecte(PEPA.id, 'CC BY 4.0');
+    ambSessio(PEPA);
+    m.getProfile = vi.fn(async () => ({ ...FILA_PEPA, copyright: 'CC BY-SA 4.0' }));
+    const { result } = munta();
+    await waitFor(() => expect(heretaCrearNota(result.current)).toBe('CC BY-SA 4.0'));
+  });
+
+  test('una tria desada en este dispositiu mentre la lectura anava de camí no la trepitja la resposta vella', async () => {
+    desaLlicenciaPerDefecte(PEPA.id, 'CC BY 4.0');
+    ambSessio(PEPA);
+    const port = portAmbRespostes();
+    m.getProfile = port.getProfile;
+    const { result } = munta();
+    await waitFor(() => expect(port.getProfile).toHaveBeenCalledTimes(1));
+    /* PerfilContext.guardarAjust: el servidor ja ha acceptat la tria nova i la preferència la copia. */
+    desaLlicenciaPerDefecte(PEPA.id, 'CC BY-SA 4.0');
+    await act(async () => { port.respostes[0].resol({ ...FILA_PEPA, copyright: 'CC BY 4.0' }); });
+    await buida();
+    expect(heretaCrearNota(result.current)).toBe('CC BY-SA 4.0');
+    /* La lectura següent ja porta la nova: res no canvia. */
+    act(() => result.current.refresh());
+    await waitFor(() => expect(port.getProfile).toHaveBeenCalledTimes(2));
+    await act(async () => { port.respostes[1].resol({ ...FILA_PEPA, copyright: 'CC BY-SA 4.0' }); });
+    await buida();
+    expect(heretaCrearNota(result.current)).toBe('CC BY-SA 4.0');
+  });
+
+  /* Un valor buit no esborra res (la columna pot faltar al servidor), com els
+     miralls de la fitxa i d'«El compte»; una fila que no és de veres no entra. */
+  test.each([
+    ['la fila de reserva', { ...FILA_PEPA, reserva: true, copyright: 'CC0 1.0' }],
+    ['una fila d’un altre compte', { ...FILA_TONI, copyright: 'CC0 1.0' }],
+    ['una fila sense la columna', { ...FILA_PEPA }],
+    ['una fila amb els drets buits', { ...FILA_PEPA, copyright: null }],
+    ['cap fila (null)', null]
+  ])('%s no toca la preferència d’este dispositiu', async (_cas, fila) => {
+    desaLlicenciaPerDefecte(PEPA.id, 'CC BY 4.0');
+    ambSessio(PEPA);
+    m.getProfile = vi.fn(async () => fila);
+    const { result } = munta();
+    await waitFor(() => expect(m.getProfile).toHaveBeenCalled());
+    await buida();
+    expect(heretaCrearNota(result.current)).toBe('CC BY 4.0');
+    expect(llegixLlicenciaPerDefecte(TONI.id)).toBeNull();
+  });
+
+  test('una resposta tardana del compte anterior no escriu cap preferència', async () => {
+    ambSessio(PEPA);
+    const port = portAmbRespostes();
+    m.getProfile = port.getProfile;
+    const { rerender } = munta();
+    await waitFor(() => expect(port.getProfile).toHaveBeenCalledTimes(1));
+    ambSessio(TONI, 2);
+    rerender();
+    await waitFor(() => expect(port.getProfile).toHaveBeenCalledTimes(2));
+    await act(async () => { port.respostes[0].resol({ ...FILA_PEPA, copyright: 'CC0 1.0' }); });
+    await buida();
+    expect(llegixLlicenciaPerDefecte(PEPA.id)).toBeNull();
+    expect(llegixLlicenciaPerDefecte(TONI.id)).toBeNull();
+    await act(async () => { port.respostes[1].resol({ ...FILA_TONI, copyright: '© Toni Ferrer' }); });
+    await waitFor(() => expect(llegixLlicenciaPerDefecte(TONI.id)).toBe('© Toni Ferrer'));
+    expect(llegixLlicenciaPerDefecte(PEPA.id)).toBeNull();
+  });
+
+  test('actuant com a entitat, la de la persona queda al dia i la de l’entitat no es toca', async () => {
+    ambSessio(PEPA);
+    m.getProfile = vi.fn(async () => ({ ...FILA_PEPA, copyright: 'CC BY-SA 4.0' }));
+    m.organitzacions = async () => [{ id: 'o-forn', name: 'Forn de la Torre', role: 'owner', slug: 'forn', kind: 'company', copyright: 'CC BY-NC 4.0' }];
+    desaPreferencia(PEPA.id, { type: 'entitat', id: 'o-forn' });
+    const { result } = munta();
+    await waitFor(() => expect(result.current.actor.tipus).toBe('entitat'));
+    await waitFor(() => expect(llegixLlicenciaPerDefecte(PEPA.id)).toBe('CC BY-SA 4.0'));
+    expect(heretaCrearNota(result.current)).toBe('CC BY-NC 4.0');
+    expect(llegixLlicenciaPerDefecte('o-forn')).toBeNull();
   });
 });

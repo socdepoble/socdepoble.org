@@ -136,7 +136,11 @@ describe('«Informa d’un error» (prompt 261009_0230, punt 4)', () => {
     render(<XatSection />);
     const llista = screen.getByRole('list', { name: 'Converses' });
     expect(within(llista).queryByRole('button', { name: "Informa d'un error" })).toBeNull();
-    expect(within(llista).getAllByRole('listitem')).toHaveLength(1);
+    /* Gauntlet 261016 (Bloc 3.6) · Sense amfitrió, la fila de «Gent de la
+       Torre» (POBLE_PER_DEFECTE) va al capdamunt: dues files, cap peu dins. */
+    const files = within(llista).getAllByRole('listitem');
+    expect(files).toHaveLength(2);
+    expect(files[0].getAttribute('data-clau')).toBe('poble:la-torre-de-les-macanes');
     const peu = boto();
     expect(peu.parentElement.classList.contains('sdp-xat-llista__peu')).toBe(true);
     expect(llista.nextElementSibling).toBe(peu.parentElement);
@@ -161,7 +165,12 @@ describe('«Informa d’un error» (prompt 261009_0230, punt 4)', () => {
     cleanup();
     mocks.avis = null;
     render(<XatSection />);
-    expect(screen.getByText('Encara no tens cap conversa')).not.toBeNull();
+    /* Gauntlet 261016 (Bloc 3.6) · «El Xat de Poble mai no pot aparèixer
+       desert»: amb cap conversa, la fila de «Gent de la Torre» hi és igual i
+       l'estat buit ja no es pinta. S'actualitza a posta (abans, «Encara no
+       tens cap conversa»). El peu continua davall. */
+    expect(screen.queryByText('Encara no tens cap conversa')).toBeNull();
+    expect(screen.getByRole('list', { name: 'Converses' }).textContent).toContain('Gent de la Torre');
     expect(boto()).not.toBeNull();
   });
 

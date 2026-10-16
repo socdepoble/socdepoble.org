@@ -21,6 +21,10 @@
  *   1.1.0 · Onada 7 (261009): useRouter i la Pedra Seca que importen el Bar,
  *           la Nevera, Salut, el Lector i l'esquelet comú. Només s'afig: un
  *           mòdul compilat contra l'1.0 ('^1.0') continua valent.
+ *   1.2.0 · Gauntlet nocturn (261016): la porta 'workspace', l'espai de
+ *           treball del Bloc de notes (UniversalWorkspace i DefaultItemCard),
+ *           perquè el Lector s'hi munte. Només s'afig una porta: un mòdul de
+ *           '^1.0' o de '^1.1' continua valent.
  *
  * MAI hi entren el port del backend, SessionContext ni IdentitatContext
  * (Model B i Llei de l'Enxufabilitat): un mòdul només sap si té dades del
@@ -28,7 +32,7 @@
  */
 
 export const ESQUEMA_MODUL = 'sdp.modul.v1';
-export const VERSIO_NUCLI = '1.1.0';
+export const VERSIO_NUCLI = '1.2.0';
 /* L'expressió global de l'objecte: el build dels mòduls hi penja cada porta. */
 export const GLOBAL_DEL_NUCLI = 'SocDePoble.nucli';
 
@@ -126,6 +130,20 @@ export const PORTES_DEL_NUCLI = congela([
     clau: 'pedraSeca',
     fonts: [`${PEDRA_SECA}/index.js`, ...PEDRA_SECA_V1.map(([fitxer]) => `${PEDRA_SECA}/${fitxer}`)],
     noms: PEDRA_SECA_V1.flatMap(([, noms]) => noms).sort()
+  },
+  /* workspace (1.2.0, Gauntlet nocturn del 261016): l'espai de treball de
+     tres columnes del Bloc de notes, perquè una app s'hi munte sense portar-ne
+     una còpia. Una sola font, la façana, i dos noms: un import
+     d'UniversalWorkspace.jsx o de NavGlyph.jsx no és de cap porta, i un altre
+     nom de la façana (ESPAI_COMU…) la porta no l'exposa; en tots dos casos el
+     build del mòdul s'atura (vite.modul.config.js).
+     Com PaginaApp a la Pedra Seca, l'espai arriba al port dins de la pàgina
+     (ItemMedia → useResolvedAsset resol les imatges del paquet), però el
+     mòdul no en rep cap mànec ni el porta dins del cos: la porta és externa. */
+  {
+    clau: 'workspace',
+    fonts: ['src/components/universal/workspace/index.js'],
+    noms: ['DefaultItemCard', 'UniversalWorkspace']
   }
 ]);
 

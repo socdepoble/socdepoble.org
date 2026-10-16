@@ -56,10 +56,12 @@ function fixture({ node = NODE_BO, versio = '0.2.0', clauPublica = '' } = {}) {
   fs.mkdirSync(plugin, { recursive: true });
   for (const rel of ADAPTADOR.fitxers) fs.copyFileSync(path.join(PLUGIN_REAL, rel), path.join(plugin, rel));
   for (const carpeta of ADAPTADOR.carpetes) fs.cpSync(path.join(PLUGIN_REAL, carpeta), path.join(plugin, carpeta), { recursive: true });
-  if (clauPublica) {
+  {
     const actualitzador = path.join(plugin, NOMES_CANAL_PROPI);
     const text = fs.readFileSync(actualitzador, 'utf8');
-    fs.writeFileSync(actualitzador, text.replace("define( 'SOCDEPOBLE_ENXUFE_CLAU_PUBLICA', '' );", `define( 'SOCDEPOBLE_ENXUFE_CLAU_PUBLICA', '${clauPublica}' );`));
+    const patro = /define\(\s*'SOCDEPOBLE_ENXUFE_CLAU_PUBLICA'\s*,\s*'[0-9a-fA-F]*'\s*\)/g;
+    assert.equal([...text.matchAll(patro)].length, 1, 'una única clau pública a la fixture');
+    fs.writeFileSync(actualitzador, text.replace(patro, `define( 'SOCDEPOBLE_ENXUFE_CLAU_PUBLICA', '${clauPublica}' )`));
   }
   const dist = path.join(plugin, 'dist');
   const fitxers = [
@@ -165,8 +167,13 @@ test('Ed25519: signa els bytes exactes, verifica com sodium i refusa qualsevol c
   assert.throws(() => signa(dades, crypto.generateKeyPairSync('ec', { namedCurve: 'P-256' }).privateKey.export({ type: 'pkcs8', format: 'pem' })), /Ed25519/);
 });
 
-test('el plugin del repositori porta la clau buida fins que el Mestre en genera una', () => {
-  assert.equal(clauIncrustada(fs.readFileSync(path.join(PLUGIN_REAL, NOMES_CANAL_PROPI), 'utf8')), '');
+test('la clau pública del plugin verifica el canal estable i el parser admet la fixture sense clau', () => {
+  const publica = clauIncrustada(fs.readFileSync(path.join(PLUGIN_REAL, NOMES_CANAL_PROPI), 'utf8'));
+  assert.match(publica, /^[0-9a-f]{64}$/);
+  const canal = fs.readFileSync(path.join(PLUGIN_REAL, 'builds/stable.json'));
+  const signatura = fs.readFileSync(path.join(PLUGIN_REAL, 'builds/stable.json.sig'), 'utf8').trim();
+  assert.equal(verifica(canal, signatura, publica), true, 'la clau instal·lada verifica els bytes del canal');
+  assert.equal(clauIncrustada("<?php define( 'SOCDEPOBLE_ENXUFE_CLAU_PUBLICA', '' );"), '');
   assert.throws(() => clauIncrustada('<?php // res'), /no definix/);
 });
 
@@ -180,8 +187,8 @@ test('una release: tres paquets amb dos runtimes explícits i un canal signat qu
     assert.equal(r.versio, '0.2.0');
     assert.equal(r.signat, true);
     assert.deepEqual([...r.escrits].sort(), [
-      '0.2.0.json', '0.2.0.json.sig', 'directori/socdepoble-enxufe-v0.2.0-260929_2200.zip', 'socdepoble-enxufe-v0.2.0-260929_2200.zip', 'socdepoble-spa-v0.2.0-260929_2200.zip', 'stable.json', 'stable.json.sig'
-    ]);
+      '0.2.0.json', '0.2.0.json.sig', '260929_2200_wordpress_directori_v0.2.0.zip', '260929_2200_wordpress_enxufe_v0.2.0.zip', '260929_2200_estatic_spa_v0.2.0.zip', 'stable.json', 'stable.json.sig'
+    ].sort());
     assert.deepEqual(r.restes.sort(), ['.vite/manifest.json', 'socdepoble-react.css']);
 
     const textCanal = fs.readFileSync(path.join(f.sortida, 'stable.json'));
@@ -199,22 +206,22 @@ test('una release: tres paquets amb dos runtimes explícits i un canal signat qu
     assert.equal(wp.slug, SLUG);
     assert.equal(wp.versio, '0.2.0');
     assert.deepEqual([wp.requires, wp.requires_php, wp.tested], ['6.5', '7.4', '7.1']);
-    assert.ok(r.avisos.some((avis) => avis.includes('soc-de-poble-enxufe')), 'avisa de l\'slug que derivaria WordPress.org');
+    assert.ok(r.avisos.some((avis) => avis.includes('soc-de-poble-portal-de-pobles-connectats')), 'avisa de l\'slug que derivaria WordPress.org');
     assert.equal(canal.notes, 'https://socdepoble.org/enxufe/0.2.0');
-    for (const [clau, nom] of [['wordpress', 'socdepoble-enxufe-v0.2.0-260929_2200.zip'], ['estatic', 'socdepoble-spa-v0.2.0-260929_2200.zip']]) {
+    for (const [clau, nom] of [['wordpress', '260929_2200_wordpress_enxufe_v0.2.0.zip'], ['estatic', '260929_2200_estatic_spa_v0.2.0.zip']]) {
       const paquet = clau === 'wordpress' ? wp.paquet : canal.estatic.paquet;
       const zip = fs.readFileSync(path.join(f.sortida, nom));
       assert.equal(paquet.url, `https://github.com/socdepoble/socdepoble.org/releases/download/enxufe-v0.2.0/${nom}`);
       assert.equal(paquet.mida, zip.length);
       assert.equal(paquet.sha256, sha256(zip));
     }
-    assert.equal(wp.directori.nom, wp.paquet.nom);
-    assert.equal(wp.directori.cami, 'directori/' + wp.directori.nom);
-    assert.equal(wp.directori.sha256, sha256(fs.readFileSync(path.join(f.sortida, 'directori/socdepoble-enxufe-v0.2.0-260929_2200.zip'))));
+    assert.equal(wp.directori.nom, '260929_2200_wordpress_directori_v0.2.0.zip');
+    assert.equal(wp.directori.cami, wp.directori.nom);
+    assert.equal(wp.directori.sha256, sha256(fs.readFileSync(path.join(f.sortida, '260929_2200_wordpress_directori_v0.2.0.zip'))));
 
-    const propi = entradesDe(path.join(f.sortida, 'socdepoble-enxufe-v0.2.0-260929_2200.zip'));
-    const directori = entradesDe(path.join(f.sortida, 'directori/socdepoble-enxufe-v0.2.0-260929_2200.zip'));
-    const estatic = entradesDe(path.join(f.sortida, 'socdepoble-spa-v0.2.0-260929_2200.zip'));
+    const propi = entradesDe(path.join(f.sortida, '260929_2200_wordpress_enxufe_v0.2.0.zip'));
+    const directori = entradesDe(path.join(f.sortida, '260929_2200_wordpress_directori_v0.2.0.zip'));
+    const estatic = entradesDe(path.join(f.sortida, '260929_2200_estatic_spa_v0.2.0.zip'));
     assert.ok([...propi.keys()].every((nom) => nom.startsWith(`${SLUG}/`)), 'arrel socdepoble-enxufe/');
     assert.ok([...estatic.keys()].every((nom) => nom.startsWith('soc-de-poble/')));
     const bundle = propi.get(`${SLUG}/dist/${ENTRADA}`);
@@ -406,7 +413,7 @@ test('destinació: rebutja eixides i enllaços abans d’escriure cap paquet', (
       assert.throws(() => empaqueta({ arrelPlugin: f.plugin, sortida, urlBase: 'http://localhost/enxufe/', prova: true }),
         /dins de wordpress-plugin\/builds|enllaços simbòlics/);
       assert.equal(fs.readFileSync(sentinel, 'utf8'), 'intacte');
-      assert.equal(fs.existsSync(path.join(sortida, 'socdepoble-spa-v0.2.0-260929_2200.zip')), false);
+      assert.equal(fs.existsSync(path.join(sortida, '260929_2200_estatic_spa_v0.2.0.zip')), false);
     } finally { neteja(f); }
   }
 });

@@ -15,11 +15,19 @@ vi.mock('../../config/assetResolver', () => ({ resolveAsset: (uri) => uri, resol
 vi.mock('../../components/universal/UniversalPage', () => ({
   UniversalPage: (props) => { pagina.props = props; return <section><p>{props.title}</p>{props.children}</section>; }
 }));
-vi.mock('../profile/agentsSeed', () => ({
+/* Gauntlet 261016 (Bloc 3) · El catàleg ve de la capa de dades: es falseja
+   només AGENTS, i tipusDAgent és el de veres (la font única del vocabulari).
+   Un de cada tipus: la IA i el personatge ANIMAL són acompanyants; la
+   persona, l'entitat, un tipus fora del catàleg i l'antic MASTER, no. */
+vi.mock('../../data/agentsSeed.js', async (importOriginal) => ({
+  ...(await importOriginal()),
   AGENTS: [
     { id: 'iaia', name: 'IAIA MarIA', role: 'Matriarca', type: 'AI', avatar_url: '/a.png' },
-    { id: 'javi', name: 'Mestre', role: 'Humà', type: 'MASTER', avatar_url: '/b.png' },
-    { id: 'pep', name: 'Pep', role: 'Veí', type: 'HUMAN', avatar_url: '/c.png' }
+    { id: 'gall', name: 'El Gall', role: 'Meteo', type: 'ANIMAL', avatar_url: '/b.png' },
+    { id: 'javi', name: 'Javi Llinares', role: 'Coordinador', type: 'PERSON', avatar_url: '/c.png' },
+    { id: 'socdepoble', name: 'Sóc de Poble', role: 'Empresa', type: 'COMPANY', avatar_url: '/d.png' },
+    { id: 'pep', name: 'Pep', role: 'Veí', type: 'HUMAN', avatar_url: '/e.png' },
+    { id: 'antic', name: 'Tipus antic', role: '—', type: 'MASTER', avatar_url: '/f.png' }
   ]
 }));
 
@@ -133,12 +141,41 @@ test('T44 · la targeta d’acompanyant marca la triada amb una classe (sense :h
   expect(document.getElementById(idAjuda).textContent).toBe('Marca amb quins acompanyants vols conversar.');
 });
 
+/* Gauntlet 261016 (Bloc 3) · Actualitzada a posta: abans hi entrava l'agent de
+   tipus MASTER («Mestre»), que no existix al catàleg, i en quedava fora el
+   personatge ANIMAL. Ara són la IA i El Gall. */
 test('T44 · el nivell 3 no demana triar: avatars de tots i el text de la connexió', () => {
   render(<RealitatSection />);
   fireEvent.click(screen.getByRole('radio', { name: 'Nivell 3 Connexió total' }));
   expect(screen.queryByRole('checkbox')).toBeNull();
-  expect(screen.getByText(/t'acompanyen tots alhora: IAIA MarIA i Mestre\./)).toBeTruthy();
+  expect(screen.getByText(/t'acompanyen tots alhora: IAIA MarIA i El Gall\./)).toBeTruthy();
   expect(document.querySelectorAll('.sdp-realitat__connexio .sdp-avatar-grup .sdp-avatar')).toHaveLength(2);
+});
+
+/* Gauntlet 261016 (Bloc 3; ordre del Mestre: els personatges ANIMAL del
+   catàleg són IA) · Els acompanyants els tria tipusDAgent: la IA i el
+   personatge ANIMAL hi són; la persona, l'entitat, un tipus fora del catàleg
+   i l'antic MASTER, no. */
+test('Gauntlet 261016 · acompanyants: la IA i el personatge ANIMAL, mai una persona, una entitat ni un tipus desconegut', () => {
+  render(<RealitatSection />);
+  fireEvent.click(screen.getByRole('radio', { name: 'Nivell 2 Interactiva' }));
+  const noms = screen.getAllByRole('checkbox').map((casella) => casella.closest('.sdp-casella').querySelector('.sdp-realitat__company-nom').textContent);
+  expect(noms).toEqual(['IAIA MarIA', 'El Gall']);
+  fireEvent.click(screen.getByRole('checkbox', { name: /El Gall/ }));
+  expect(magatzem.get('socdepoble-iaia-companions')).toEqual(['gall']);
+});
+
+/* El cas MASTER s'ha tret perquè el catàleg de veres no en porta cap: el seu
+   vocabulari és el de tipusDAgent (PERSON, AI, ANIMAL i COMPANY), i hi
+   entren com a acompanyants totes les IA i els quatre personatges ANIMAL. */
+test('Gauntlet 261016 · el catàleg de veres no porta cap tipus MASTER, i els seus ANIMAL són acompanyants', async () => {
+  const cataleg = await vi.importActual('../../data/agentsSeed.js');
+  expect(cataleg.AGENTS.filter((agent) => agent.type === 'MASTER')).toEqual([]);
+  expect(new Set(cataleg.AGENTS.map((agent) => agent.type))).toEqual(new Set(['COMPANY', 'PERSON', 'AI', 'ANIMAL']));
+  const acompanyants = cataleg.AGENTS.filter((agent) => cataleg.tipusDAgent(agent) === 'ia');
+  expect(acompanyants.filter((agent) => agent.type === 'ANIMAL').map((agent) => agent.name))
+    .toEqual(['Marc (El Gall)', 'Súper Ratolí', 'La Mixa', 'Sultan']);
+  expect(acompanyants.every((agent) => agent.type === 'AI' || agent.type === 'ANIMAL')).toBe(true);
 });
 
 /* Norma del Mestre, 261004 (logotips) · La pàgina signa Sóc de Poble (sense

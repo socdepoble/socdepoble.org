@@ -100,7 +100,8 @@ test('PRIMERA columna · arbre: l’emoji fa la mida de la carpeta de Lucide ger
 
 test('PRIMERA columna · rail plegat: l’emoji fa la mida de la Lucide germana (20px), ja no la passa', () => {
   // Les dues icones dels rails (carpetes i documents) són de 20px, i cap regla les canvia.
-  expect(midaDelJsx('className="sdp-workspace-rail__boto"\\s+aria-label=\\{category\\.label\\}')).toBe(20);
+  // El nom accessible de la carpeta incorpora ara el recompte opcional; la mida no canvia.
+  expect(midaDelJsx('className="sdp-workspace-rail__boto"\\s+aria-label=\\{nom\\}')).toBe(20);
   expect(midaDelJsx('className="sdp-workspace-rail__boto"\\s+aria-label=\\{titol\\}')).toBe(20);
   expect(MODULS.filter((r) => /sdp-workspace-rail[\w-]*.*\bsvg\b/.test(r.prelud) && /\b(width|height)\s*:/.test(r.cos)).map((r) => r.prelud)).toEqual([]);
   const emoji = px(valorDe(MODULS, '.sdp-workspace-rail .sdp-nav-glyph', 'font-size'));

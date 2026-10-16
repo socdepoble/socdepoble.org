@@ -19,6 +19,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { MemoryRouter, useLocation } from '../../../app/contexts/RouterContext';
 import { RUTA_DRETS_AUTOR } from '../../../config/systemPages.js';
+import { objecteDe, objecteDePerfil } from '../../../config/navigation.js';
 import { COPYRIGHT_SDP } from '../../universal/editorial.js';
 import { UniversalCard } from './UniversalCard.jsx';
 
@@ -94,6 +95,44 @@ describe('el copyright és un enllaç a «Drets d’autor»', () => {
     expect(parades.indexOf(enllac)).toBeGreaterThan(parades.indexOf(vel));
     enllac.focus();
     expect(document.activeElement).toBe(enllac);
+  });
+});
+
+/* Directiva de Dignitat Humana (pla 261015_1900, Onada 1.1) · La targeta
+   que representa una PERSONA (objecteDePerfil, tipus 'persona') no porta
+   drets d'autor ni categories: una persona no és una obra ni es categoritza.
+   Mana el tipus de l'OBJECTE, mai el de l'autor: una obra signada per una
+   persona, i una organització, conserven drets, etiquetes i l'enllaç. */
+describe('Dignitat Humana · la targeta d’una persona', () => {
+  const POBLE = 'La Torre de les Maçanes';
+  const persona = objecteDePerfil({ tipus: 'persona', id: 'pepa', nom: 'Pepa' });
+
+  test('sense drets ni categories, amb el poble a l’autoria', () => {
+    const { container } = pinta({
+      title: 'Pepa', author: 'Pepa', location: POBLE, objecte: persona, copyright: 'CC BY-NC-SA 4.0', labels: ['Veïna'], mainHref: persona.ruta,
+    });
+    expect(container.querySelector('.sp-card-copyright')).toBeNull();
+    expect(container.querySelector('.sp-card-labels')).toBeNull();
+    expect(container.querySelector('.sp-card-author-location').textContent).toBe(POBLE);
+    expect(container.querySelector('.sp-card-title').textContent).toBe('Pepa');
+  });
+
+  test('control: una obra signada per una persona conserva drets, etiquetes i l’enllaç', () => {
+    const article = objecteDe({ id: 'festa', title: 'La festa', author_user_id: 'pepa', author_name: 'Pepa' }, 'mur');
+    expect(article.tipus).not.toBe('persona');
+    const { container } = pinta({ objecte: article, copyright: '© Pepa', labels: ['Festes'] });
+    expect(container.querySelector('.sp-card-labels').textContent).toBe('Festes');
+    fireEvent.click(screen.getByRole('link', { name: '© Pepa' }));
+    expect(ubicacio()).toBe('/page/drets-autor');
+  });
+
+  test('control: una organització i una IA conserven drets i etiquetes', () => {
+    for (const tipus of ['entitat', 'grup', 'ia']) {
+      const { container } = pinta({ objecte: objecteDePerfil({ tipus, id: 'forn', nom: 'Forn' }), copyright: 'CC BY 4.0', labels: ['Comerç'] });
+      expect([tipus, container.querySelector('.sp-card-copyright')?.textContent]).toEqual([tipus, 'CC BY 4.0']);
+      expect([tipus, container.querySelector('.sp-card-labels')?.textContent]).toEqual([tipus, 'Comerç']);
+      cleanup();
+    }
   });
 });
 

@@ -16,9 +16,13 @@
          del build. El pany del producte no canvia (privacitat.test.js).
        · Onada 7 (261009): el Bar, la Nevera, Salut i el Lector, cadascun
          amb la seua declaració (guardesDelModul.js) i contra el nucli
-         1.1.0; sense la declaració, el build s'aturaria. Els quatre cossos,
-         executats amb el SocDePoble.nucli REAL, lliuren el seu component, i
-         el del Lector es pinta amb la Pedra Seca de la pàgina.
+         1.1.0 (des del 261016, l'1.2.0); sense la declaració, el build
+         s'aturaria. Els quatre cossos, executats amb el SocDePoble.nucli
+         REAL, lliuren el seu component, i el del Lector es pinta amb la
+         Pedra Seca de la pàgina.
+       · Nucli 1.2.0 (261016): un mòdul de prova que munta l'espai de
+         treball per la porta 'workspace' (__fixtures__/modulAmbEspai): el
+         cos el pren del nucli i no porta res de l'espai ni del port.
    El JSX el transforma l'esbuild de Vite (el default del config hi posa
    @vitejs/plugin-react, que vitest no carrega: server.deps.inline /react/).
    Entorn node: esbuild no funciona dins de jsdom. Cap prova d'ací carrega el
@@ -48,8 +52,9 @@ const ARREL = process.cwd();
 const CARPETA_DE_PROVA = path.join(ARREL, 'src/apps/plataforma/__fixtures__/modulDeProva');
 const sri384 = (text) => `sha384-${createHash('sha384').update(text).digest('base64')}`;
 const NOMES_ASCII = /^[\u0000-~]*$/;
-/* El rang que demana un mòdul compilat contra este nucli (Onada 7, 261009: l'1.1.0). */
-const RANG = '^1.1';
+/* El rang que demana un mòdul compilat contra este nucli. Actualitzat a posta (261016): l'1.2.0,
+   que afig la porta 'workspace'; abans, l'1.1.0 de l'Onada 7. */
+const RANG = '^1.2';
 
 describe('el manifest d’una app com a mòdul (llegixManifestDelModul)', () => {
   test.each(['gestoria', 'bar', 'salut', 'nevera', 'lector'])('%s: dada pura, sense carrega, i el manifest de mòdul és vàlid', (id) => {
@@ -67,7 +72,7 @@ describe('el manifest d’una app com a mòdul (llegixManifestDelModul)', () => 
   });
 
   test('el rang del nucli és el de la versió contra la qual es compila', () => {
-    expect(VERSIO_NUCLI).toBe('1.1.0');
+    expect(VERSIO_NUCLI).toBe('1.2.0');
     expect(rangDelNucli()).toBe(RANG);
     expect(rangDelNucli('1.4.2')).toBe('^1.4');
   });
@@ -102,6 +107,11 @@ describe('les guardes del cos (infraccionsDelCos)', () => {
     ['host.js', { modules: { [`${ARREL}/src/host.js`]: {} } }, 'porta el nucli de la pàgina'],
     ['una peça de Pedra Seca fora del nucli', { modules: { [`${ARREL}/src/components/PedraSeca/atoms/Avatar.jsx`]: {} } }, 'fora del nucli'],
     ['un fitxer intern de la plataforma', { modules: { [`${ARREL}/src/apps/plataforma/sessioApp.js`]: {} } }, 'fora del nucli'],
+    /* Nucli 1.2.0 (261016) · l'espai de treball, només per la porta: una peça de dins al cos, o un nom de la façana que la porta no exposa. */
+    ['una peça de l’espai de treball fora del nucli', { modules: { [`${ARREL}/src/components/universal/workspace/NavGlyph.jsx`]: {} } },
+      'porta l\'espai de treball fora del nucli'],
+    ['un nom de l’espai de treball que el nucli no exposa', { importedBindings: { 'src/components/universal/workspace/index.js': ['ESPAI_COMU'] } },
+      'no l\'exposa'],
     ['un nom que el nucli no exposa', { importedBindings: { 'src/components/PedraSeca/index.js': ['Avatar'] } }, 'no l\'exposa'],
     ['tota la façana de Pedra Seca', { importedBindings: { 'src/components/PedraSeca/index.js': ['*'] } }, 'importa tot'],
     ['un paquet que no és del nucli', { importedBindings: { 'react-dom': ['createPortal'] } }, 'no és del nucli'],
@@ -373,11 +383,13 @@ describe('un mòdul compilat de veritat (vite build, write: false)', () => {
    d'IndexedDB, un contracte de dades estable (el criteri de pesDelNucli.test.js). */
 /* `viatja`: el veí de la llavor que sí que hi és (la carta genèrica del Bar, la de la primera
    càrrega; el pont del Lector, que importa la llavor): la prova mira de veres eixa part de l'arbre.
-   `nous`: noms que el cos compilat importa i que el nucli 1.0.0 no exposava (per això no passava). */
+   `nous`: noms que el cos compilat importa i que el nucli 1.0.0 no exposava (per això no passava).
+   `workspace` (nucli 1.2.0, 261016): els de la porta de l'espai de treball; només el Lector, que
+   munta el flux de Notícies sobre UniversalWorkspace per la seua façana. */
 const APPS_DE_LA_FASE_1 = Object.freeze({
   bar: Object.freeze({
     base: 'sdp-bar',
-    nous: { router: ['useRouter'], pedraSeca: ['BarraResum', 'MarcColumna', 'TeclatNumeric', 'UniversalTPV'] },
+    nous: { router: ['useRouter'], pedraSeca: ['BarraResum', 'MarcColumna', 'TeclatNumeric', 'UniversalTPV'], workspace: [] },
     llavor: {
       fitxers: ['src/apps/bar/llavors/laParroquia.js', 'src/apps/bar/llavors/la-parroquia-loyverse.csv'],
       textos: ['Vendido por peso', 'b5-malibu'],
@@ -386,17 +398,17 @@ const APPS_DE_LA_FASE_1 = Object.freeze({
   }),
   nevera: Object.freeze({
     base: 'sdp-nevera',
-    nous: { router: ['useRouter'], pedraSeca: ['MarcColumna', 'NavegacioPeriode', 'OrdenaCategories'] },
+    nous: { router: ['useRouter'], pedraSeca: ['MarcColumna', 'NavegacioPeriode', 'OrdenaCategories'], workspace: [] },
     llavor: { fitxers: [], textos: [], viatja: [] }
   }),
   salut: Object.freeze({
     base: 'sdp-salut',
-    nous: { router: [], pedraSeca: ['Fila', 'GraellaArticles', 'LlistaArticles', 'Pila'] },
+    nous: { router: [], pedraSeca: ['Fila', 'GraellaArticles', 'LlistaArticles', 'Pila'], workspace: [] },
     llavor: { fitxers: [], textos: [], viatja: [] }
   }),
   lector: Object.freeze({
     base: 'sdp-lector',
-    nous: { router: ['useRouter'], pedraSeca: ['GraellaTargetes', 'LiniesColleccio', 'MarcColumna'] },
+    nous: { router: ['useRouter'], pedraSeca: ['GraellaTargetes', 'LiniesColleccio', 'MarcColumna'], workspace: ['UniversalWorkspace'] },
     llavor: {
       fitxers: ['src/apps/lector/llavor/'],
       textos: ['example.org', 'Club de Pilota del Trinquet', 'Colla de Dimonis'],
@@ -410,7 +422,7 @@ const senseDeclarar = (id) => [
   'fa servir un magatzem que no declara: IndexedDB'
 ].sort();
 
-describe.each(Object.keys(APPS_DE_LA_FASE_1))('Onada 7 · %s compilat com a mòdul contra el nucli 1.1.0', (id) => {
+describe.each(Object.keys(APPS_DE_LA_FASE_1))(`Onada 7 · %s compilat com a mòdul contra el nucli ${VERSIO_NUCLI}`, (id) => {
   const { base, nous, llavor } = APPS_DE_LA_FASE_1[id];
   const carpeta = path.join(ARREL, 'src/apps', id);
   let fitxers = {};
@@ -451,8 +463,11 @@ describe.each(Object.keys(APPS_DE_LA_FASE_1))('Onada 7 · %s compilat com a mòd
     expect(moduls()).toEqual(expect.arrayContaining([`src/apps/${id}/magatzem.js`, 'src/utils/magatzemLocal.js']));
   });
 
-  test('la porta mira de veres: el cos importa noms que l’1.1.0 afig al nucli, i el nucli els exposa', () => {
-    for (const [font, noms] of [['src/app/contexts/RouterContext.jsx', nous.router], ['src/components/PedraSeca/index.js', nous.pedraSeca]]) {
+  test('la porta mira de veres: el cos importa noms que l’1.1.0 i l’1.2.0 afigen al nucli, i el nucli els exposa', () => {
+    for (const [font, noms] of [
+      ['src/app/contexts/RouterContext.jsx', nous.router], ['src/components/PedraSeca/index.js', nous.pedraSeca],
+      ['src/components/universal/workspace/index.js', nous.workspace]
+    ]) {
       expect(cos.importedBindings[font] || [], font).toEqual(expect.arrayContaining(noms));
       for (const nom of noms) expect(exposaElNom(portaDeLaFont(font), nom), nom).toBe(true);
     }
@@ -471,7 +486,7 @@ describe.each(Object.keys(APPS_DE_LA_FASE_1))('Onada 7 · %s compilat com a mòd
     expect(infraccionsDelCos(cos, ARREL, carpeta, null).sort()).toEqual(senseDeclarar(id));
   });
 
-  test('la fitxa i el registre porten el rang del nucli 1.1.0, les dades del manifest i les integritats de veritat', () => {
+  test(`la fitxa i el registre porten el rang del nucli ${VERSIO_NUCLI}, les dades del manifest i les integritats de veritat`, () => {
     const fitxa = JSON.parse(fitxers[FITXER_FITXA]);
     expect(fitxa).toMatchObject({ schema: 'sdp.modul.v1', id, nucli: RANG, manifest: { id } });
     expect(fitxa.cos).toMatchObject({ cami: cos.fileName, integrity: sri384(codi()) });
@@ -509,6 +524,73 @@ describe.each(Object.keys(APPS_DE_LA_FASE_1))('Onada 7 · %s compilat com a mòd
         expect(html).toBe(renderToStaticMarkup(React.createElement(NUCLI.pedraSeca.EstatBuit, { titol: 'Encara no hi ha cap font connectada' },
           'Quan el poble connecte les seues fonts de notícies, les llegiràs ací.')));
       }
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  }, 60000);
+});
+
+/* ── Nucli 1.2.0 (261016) · la porta 'workspace', de veritat ──
+   Un mòdul de prova (__fixtures__/modulAmbEspai) que munta l'espai de treball del Bloc de notes
+   per la seua façana, l'import que farà el Lector. La clausura de l'espai arriba al port del
+   backend (ItemMedia → useResolvedAsset → backendPort, fronteres.test.js): el cos no en porta cap
+   fitxer, el pren de SocDePoble.nucli.workspace, i passa les guardes del build sense declarar res.
+   Executat amb el nucli REAL, pinta la targeta per defecte de la pàgina. Des del Gauntlet 261016
+   l'espai el munta també una app de veres, el Lector (vistes/Noticies.jsx, UniversalWorkspace):
+   el seu cos ho prova a l'Onada 7 (`nous.workspace`) i guardesDelModul.test.js, §6, ho comprova
+   per a NOMS_DEL_NUCLI_1_2. Este mòdul de prova cobrix a més DefaultItemCard. */
+describe('la porta workspace (nucli 1.2.0): un mòdul que munta l’espai de treball', () => {
+  const CARPETA = path.join(ARREL, 'src/apps/plataforma/__fixtures__/modulAmbEspai');
+  const FONT = 'src/components/universal/workspace/index.js';
+  const ELEMENT = Object.freeze({ id: 'pou-del-raval', title: 'Pou del Raval', subtitle: 'Notícia de prova' });
+  let fitxers = {};
+  let cos = null;
+  const codi = () => fitxers[cos.fileName];
+  const moduls = () => Object.keys(cos.modules).filter((modul) => !modul.startsWith('\0'))
+    .map((modul) => path.relative(ARREL, modul).split(path.sep).join('/'));
+
+  beforeAll(async () => {
+    ({ fitxers, cos } = await compilaEnMemoria({ id: 'modul-amb-espai', carpeta: CARPETA }));
+  }, 120000);
+
+  test('el cos pren l’espai de treball de SocDePoble.nucli.workspace, amb els dos noms de la porta i res més', () => {
+    expect(Object.keys(fitxers).sort()).toEqual([cos.fileName, FITXER_REGISTRE, FITXER_FITXA].sort());
+    expect(() => new vm.Script(codi())).not.toThrow();
+    expect(codi()).toMatch(NOMES_ASCII);
+    expect(cos.imports).toContain(FONT);
+    expect(cos.imports.filter((font) => !portaDeLaFont(font))).toEqual([]);
+    expect([...cos.importedBindings[FONT]].sort()).toEqual(['DefaultItemCard', 'UniversalWorkspace']);
+    for (const nom of cos.importedBindings[FONT]) expect(exposaElNom(portaDeLaFont(FONT), nom), nom).toBe(true);
+    expect(codi()).toContain('SocDePoble.nucli.workspace');
+    const crida = codi().match(/\}\)\(([\w$.,]*)\);?\s*$/);
+    expect(crida, 'la crida final de l’IIFE').not.toBeNull();
+    expect(crida[1].split(',')).toEqual(cos.imports.map((font) => globalDeLaPorta(portaDeLaFont(font))));
+    expect(codi().length).toBeLessThan(8000);
+  });
+
+  test('cap fitxer de l’espai ni del seu camí al port viatja dins del cos, i passa les guardes del build', () => {
+    expect(moduls()).toEqual(['src/apps/plataforma/__fixtures__/modulAmbEspai/AppModulAmbEspai.jsx']);
+    expect(codi()).not.toMatch(/sdp-gestor-fitxa|useResolvedAsset|resolveAsset/);
+    expect(infraccionsDelCos(cos, ARREL, CARPETA, 'modul-amb-espai')).toEqual([]);
+    const fitxa = JSON.parse(fitxers[FITXER_FITXA]);
+    expect(fitxa).toMatchObject({ schema: 'sdp.modul.v1', id: 'modul-amb-espai', nucli: RANG });
+  });
+
+  test('executat amb el SocDePoble.nucli real, pinta la targeta per defecte de la pàgina', async () => {
+    const { JSDOM } = await import('jsdom');
+    const { window: finestra } = new JSDOM('<!doctype html><html><body></body></html>', { url: 'https://poble.invalid/' });
+    vi.stubGlobal('window', finestra);
+    vi.stubGlobal('document', finestra.document);
+    try {
+      const { NUCLI } = await import('./nucliModuls.js');
+      const lliurats = [];
+      vm.runInNewContext(codi(), { SocDePoble: { nucli: NUCLI, lliuraCos: (id, fabrica) => lliurats.push([id, fabrica(NUCLI)]) } });
+      expect(lliurats.map(([id]) => id)).toEqual(['modul-amb-espai']);
+      const [[, Component]] = lliurats;
+      const html = renderToStaticMarkup(React.createElement(Component));
+      expect(html).toContain('Pou del Raval');
+      expect(html).toBe(renderToStaticMarkup(React.createElement(NUCLI.workspace.DefaultItemCard,
+        { item: ELEMENT, active: false, onSelect: () => {} })));
     } finally {
       vi.unstubAllGlobals();
     }

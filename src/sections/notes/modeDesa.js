@@ -32,7 +32,8 @@
  *
  * Disparador. El botó visible a la Pàgina Universal és decisió del Mestre:
  * ací no se n'afig cap. Mentrestant, bookmarkletDesa() construïx el
- * bookmarklet que obri el snippet des de qualsevol web. Model B: cap domini
+ * bookmarklet que obri el snippet des de qualsevol web (amb { desti:
+ * 'lector' }, amb el Lector de notícies ja triat). Model B: cap domini
  * fixat; l'origen és el de l'app que el genera (window.location.origin), on
  * l'SPA servix /notes. Porta el títol de la pàgina (300 caràcters com a
  * màxim, MAXIM_CAMP_ORIGEN) i, si hi ha text seleccionat, l'entradeta (256,
@@ -144,9 +145,10 @@ export function paramsDeLaNota({ carpeta = null, nota = null } = {}) {
 
 /* ── El bookmarklet (Model B: l'origen ix de l'execució) ───────────────── */
 
-/* __ORIGEN__ és l'origen de l'app, en JSON (bookmarkletDesa). La mida de la
-   finestra no és cap punt de tall: qualitat.test.js en lleva la línia de davall. */
-const PLANTILLA_BOOKMARKLET = "javascript:(()=>{const u=new URL('/notes',__ORIGEN__);const p=u.searchParams;p.set('mode','desa');p.set('url',location.href.split('#')[0]);p.set('titol',document.title.slice(0,300));const s=String(getSelection()||'').trim().slice(0,256);if(s)p.set('entradilla',s);open(u.href,'sdp-desa','width=480,height=720');})();";
+/* __ORIGEN__ és l'origen de l'app, en JSON, i __DESTI__ la tria de la
+   destinació, buida per al Bloc (bookmarkletDesa). La mida de la finestra no
+   és cap punt de tall: qualitat.test.js en lleva la línia de davall. */
+const PLANTILLA_BOOKMARKLET = "javascript:(()=>{const u=new URL('/notes',__ORIGEN__);const p=u.searchParams;p.set('mode','desa');__DESTI__p.set('url',location.href.split('#')[0]);p.set('titol',document.title.slice(0,300));const s=String(getSelection()||'').trim().slice(0,256);if(s)p.set('entradilla',s);open(u.href,'sdp-desa','width=480,height=720');})();";
 
 /* Bucle local: només ací s'admet http (desenvolupament). */
 const esLocal = (host) => host === 'localhost' || host.endsWith('.localhost') || host === '127.0.0.1' || host === '[::1]';
@@ -167,12 +169,25 @@ export function origenDelSnippet(valor) {
  * El bookmarklet que obri el snippet a l'app d'`origen`; per defecte, la que
  * el genera (window.location.origin de l'SPA, on viu /notes). Cap domini de
  * reserva: sense un origen vàlid (origenDelSnippet), null.
+ *
+ * Ordre del Mestre, 261016 (prompt 261016_0015, Bloc 0: «L'usuari ha de poder
+ * capturar contingut i decidir fàcilment si el destí és el Bloc de notes o el
+ * Lector RSS») · `desti`, opcional: 'bloc' (el de sempre: el mateix
+ * bookmarklet, caràcter a caràcter, que sense `desti`) o 'lector', que obri
+ * el snippet amb ?desti=lector, el Lector ja triat. El Curador continua
+ * decidint: només l'oferix si el Lector és disponible i, si no, és el Bloc
+ * (SnippetCurador.jsx, correcció SN-R1). Qualsevol altre valor, null: cap
+ * bookmarklet que porte una destinació que no existix.
  * @param {string} [origen]
+ * @param {{ desti?: 'bloc'|'lector' }} [opcions]
  * @returns {string|null} un href javascript: o null
  */
-export function bookmarkletDesa(origen = globalThis.location?.origin) {
+export function bookmarkletDesa(origen = globalThis.location?.origin, { desti = DESTINS.bloc } = {}) {
   const net = origenDelSnippet(origen);
-  return net ? PLANTILLA_BOOKMARKLET.replace('__ORIGEN__', () => JSON.stringify(net)) : null;
+  if (!net || (desti !== DESTINS.bloc && desti !== DESTINS.lector)) return null;
+  /* La clau i el valor són constants d'este mòdul (CLAUS_DESTI, DESTINS), mai text de fora. */
+  const tria = desti === DESTINS.lector ? `p.set('${CLAUS_DESTI.desti}','${DESTINS.lector}');` : '';
+  return PLANTILLA_BOOKMARKLET.replace('__DESTI__', () => tria).replace('__ORIGEN__', () => JSON.stringify(net));
 }
 
 /* ── SN (261003) · Per a què és l'enllaç: el Bloc o el Lector ──────────── */

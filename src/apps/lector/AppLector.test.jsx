@@ -1,7 +1,17 @@
 /* Notícies del Poble · l'app dins de la plataforma de veres (RutaApps →
-   AppLector → ClosaAplicacio → AppGridShell), amb la llavor sintètica, un
-   «ara» fix i el magatzem sobre el navegador fals de P2. Ample (1400 px) i
-   estret (375 px). Totes les dades són inventades. */
+   AppLector → l'espai de treball per a /noticies i ClosaAplicacio per a
+   /fonts, sobre AppGridShell), amb la llavor sintètica, un «ara» fix i el
+   magatzem sobre el navegador fals de P2. Ample (1400 px) i mitjana (800 px).
+   Totes les dades són inventades.
+   Bloc 0 del Gauntlet (ordre del Mestre, 261016, prompt 261016_0015) · Les
+   notícies ja no són columnes pròpies de UniversalCard: són l'espai de treball
+   del Bloc de notes. Les proves de l'arbre, de la llista, de la selecció per
+   URL, de «Marca-ho tot com a llegit», dels estats del port i de l'estret
+   viuen a espaiNoticies.test.jsx. Ací queden, adaptades a posta (s'obri des de
+   la fila de la llista, no des de la targeta), les de la lectura immersiva, la
+   gestió de fonts i l'instant de la vista. Les que fixaven la graella, les
+   targetes de notícia, la Revista i les Targetes, els obridors de columna i
+   «Torna» queden derogades: eixes peces ja no hi són. */
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
@@ -14,7 +24,7 @@ import AppLector from './AppLector.jsx';
 import { creaAdaptadorLlavor } from './llavor/fontLlavor.js';
 import { NOM_BASE, STORE } from './magatzem.js';
 import manifestLector from './manifest.js';
-import { ICONES_CATEGORIA } from './nucli/index.js';
+import { FINESTRA_HUI, ICONES_CATEGORIA, esDeHui, msDeData, senseFinal } from './nucli/index.js';
 import { RUTES, esCarpeta, esFont } from './rutes.js';
 import { NOMS_ICONES_CATEGORIA, iconaDeCategoria } from './vistes/icones.js';
 
@@ -23,41 +33,32 @@ const ASSAIG = 'Assaig obert de tabals per a qui vulga provar';
 
 const ambAmplada = (amplada) => vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(amplada);
 const columna = (id) => within(document.getElementById(id));
-const esquerra = () => columna('app-grid-sidebar');
 const mig = () => columna('app-grid-list');
 const detall = () => columna('app-grid-main');
 const closca = () => document.querySelector('.app-grid-shell');
 const ubicacio = () => screen.getByTestId('ubicacio').textContent;
-/* Ordre del Mestre, 261004 (prompt 261004_0515) · Cada notícia és una UniversalCard: l'element
-   principal (el botó de tota la targeta) porta data-element, i el seu nom és el títol.
-   Derogat per l'ordre del Mestre, 261004 (integració final, F05) · L'element principal ja no és
-   un botó: és l'enllaç de veres al detall (?article=<id>), el que fa servir Compartir. */
-const files = () => [...document.getElementById('app-grid-main').querySelectorAll('a.sp-card-link-overlay[data-element]')];
-const fila = (titol) => detall().getByRole('link', { name: titol });
-const targetaDe = (titol) => fila(titol).closest('article.sp-card');
-/* El detall és la Pàgina Universal: l'H1 i l'article de la pàgina (el cos). */
-const titolDelLector = (titol) => detall().findByRole('heading', { level: 1, name: titol });
+/* Bloc 0 (261016) · La fila de la llista: la fitxa per defecte de l'espai (DefaultItemCard). */
+const fitxes = () => [...document.getElementById('app-grid-list').querySelectorAll('button.sdp-gestor-fitxa')];
+const fitxa = (titol) => fitxes().find((boto) => boto.querySelector('.sdp-gestor-fitxa__titol').textContent === titol);
+const subtitolDe = (titol) => fitxa(titol).querySelector('.sdp-gestor-fitxa__subtitol').textContent;
+const idDeLaUrl = () => new URLSearchParams(window.location.search).get('article');
+/* Una fila de l'arbre pel seu nom, i el que s'hi veu: el nom i la xifra del recompte. */
+const filaDeLArbre = (nom) => within(document.querySelector('#app-grid-sidebar nav.sdp-workspace-column__body'))
+  .getByRole('button', { name: new RegExp(`^${nom}(?: \\d+ sense llegir)?$`) });
+const recompteDe = (nom) => filaDeLArbre(nom).querySelector('.sdp-insignia [aria-hidden="true"]')?.textContent ?? null;
+/* El detall és la Pàgina Universal: l'H1 (dins del detall) i l'article de la pàgina (el cos). */
+async function titolDelLector(titol) {
+  const h1 = await screen.findByRole('heading', { level: 1, name: titol });
+  expect(document.getElementById('app-grid-main').contains(h1)).toBe(true);
+  return h1;
+}
 const cosDelLector = () => document.getElementById('app-grid-main').querySelector('article.content-wrapper');
 const desat = (idb) => idb.files(NOM_BASE, STORE)[0];
-/* Ordre del Mestre, 261004 (auditoria 0605) · La descripció accessible de l'element principal
-   (aria-describedby): l'estat de la notícia que les etiquetes diuen a la vista. */
-const descripcioDe = (boto) => {
-  const id = boto.getAttribute('aria-describedby');
-  return id ? document.getElementById(id).textContent : null;
-};
-/* Les etiquetes d'estat que es veuen (no el text per al lector de pantalla, que també el diu). */
-const ETIQUETA = Object.freeze({ selector: '.sp-card-label' });
-/* Derogat per l'ordre del Mestre, 261004 (integració final, arreglo 6; arreglo del verificador,
-   «front roig i verificació emmascarada») · Les carpetes i les fonts de navegació ja no són
-   TargetesColleccions (ni la llista del Workspace de les 11:41, que hi colava la inicial: «HHui6»):
-   són UniversalCard. L'enllaç de la targeta es diu com el títol i el comptador n'és la descripció;
-   el que es veu és el títol i el subtítol. El text que comproven les proves és el mateix. */
-const textDeNavegacio = (enllac) => {
-  const targeta = enllac.closest('article.sp-card');
-  const subtitol = targeta.querySelector('.sp-card-subtitle').textContent;
-  expect(descripcioDe(enllac)).toBe(subtitol);
-  return `${targeta.querySelector('.sp-card-title').textContent} ${subtitol}`;
-};
+/* Obri una notícia des de la seua fila i n'espera l'H1. */
+async function obri(titol) {
+  fireEvent.click(fitxa(titol));
+  return titolDelLector(titol);
+}
 
 /* Les classes que existixen: els fulls canònics, els de Pedra Seca i el de la closca. */
 function classesConegudes() {
@@ -70,7 +71,7 @@ function classesConegudes() {
 }
 
 beforeEach(() => {
-  vi.stubGlobal('ResizeObserver', class { observe() {} disconnect() {} });
+  vi.stubGlobal('ResizeObserver', class { observe() {} unobserve() {} disconnect() {} });
   ambAmplada(1400);
 });
 
@@ -83,12 +84,15 @@ afterEach(() => {
 });
 
 describe('el contracte amb la plataforma', () => {
-  test('el manifest és vàlid i la taula de rutes passa validaTaulaDeClosa', () => {
+  /* Bloc 0 (261016) · Actualitzada a posta: la taula de ClosaAplicacio ja només porta la gestió
+     de fonts; les notícies tenen la seua (RUTES_NOTICIES, sense columnes) i la cobertura de les
+     entrades del manifest es comprova amb les dues (espaiNoticies.test.jsx). */
+  test('el manifest és vàlid i la taula de la closca (la gestió de fonts) passa validaTaulaDeClosa', () => {
     const { ok, errors, manifest } = validaManifestApp(manifestLector);
     expect(errors).toEqual([]);
     expect(ok).toBe(true);
     expect(validaTaulaDeClosa(RUTES, manifest)).toEqual({ ok: true, errors: [] });
-    expect(new Set(RUTES.map((ruta) => ruta.path.split('/')[0]))).toEqual(new Set(manifest.entrades.map((e) => e.slug)));
+    expect(new Set(RUTES.map((ruta) => ruta.path.split('/')[0]))).toEqual(new Set(['fonts']));
   });
 
   test('les icones de categoria: la llista tancada del nucli i la de la UI són la mateixa', () => {
@@ -105,161 +109,17 @@ describe('el contracte amb la plataforma', () => {
   });
 });
 
-describe('en ample: carpetes, fonts i notícies de costat', () => {
-  test('«Hui» per defecte: carpetes amb comptadors, fonts de totes les carpetes i les notícies per seccions', async () => {
-    munta('/app/lector/noticies');
-    await screen.findByRole('region', { name: 'Hui' });
-    expect(closca().dataset.layout).toBe('ample');
-    const hui = esquerra().getByRole('link', { name: /^Hui/ });
-    expect(hui.getAttribute('aria-current')).toBe('true');
-    expect(hui.getAttribute('href')).toBe('/app/lector/noticies/hui');
-    expect(textDeNavegacio(hui)).toBe('Hui 6 sense llegir');
-    expect(textDeNavegacio(esquerra().getByRole('link', { name: /^Per a després/ }))).toBe('Per a després 0 desades');
-    expect(esquerra().getByRole('link', { name: /^Cultura i festes/ }).getAttribute('href')).toBe('/app/lector/noticies/festes');
-    expect(mig().getByRole('link', { name: /^Totes les fonts/ }).getAttribute('aria-current')).toBe('true');
-    expect(files()).toHaveLength(6);
-    expect(detall().getAllByRole('heading', { level: 3 }).map((h) => h.textContent)).toEqual([
-      'Ajuntament i serveis 3 notícies', 'Cultura i festes 1 notícia', 'Camp i temps 1 notícia', 'Esports 1 notícia'
-    ]);
-    /* En ample el mig es veu al costat: ni «Torna» a les carpetes ni les fonts i el ✓ repetits al detall. */
-    expect(esquerra().queryByRole('button', { name: 'Torna' })).toBeNull();
-    expect(detall().queryByRole('link', { name: 'Fonts' })).toBeNull();
-    expect(detall().queryByRole('button', { name: 'Marca-ho tot com a llegit' })).toBeNull();
-    expect(mig().getByRole('button', { name: 'Marca-ho tot com a llegit' }).disabled).toBe(false);
-  });
-
-  /* Derogat per l'ordre del Mestre del 261004 (prompt 261004_0515) · La fila horitzontal de
-     LlistaArticles (miniatura 16:9, «font · fragment», hora relativa) ja no és el Lector: cada
-     notícia és una UniversalCard, amb l'anatomia de sempre i la data absoluta a la boina. */
-  test('la targeta: UniversalCard amb la boina (la font i la data absoluta), el títol, el resum, «Nou», el peu i cap imatge de fora', async () => {
-    munta('/app/lector/noticies/hui');
-    await screen.findByRole('region', { name: 'Hui' });
-    const targeta = targetaDe(CORREFOC);
-    /* Boina dalt, l'element principal, el cos i el peu blau: res abans de la boina. */
-    expect([...targeta.children].map((e) => e.className)).toEqual(['sp-card-header', 'sp-card-link-overlay', 'sp-card-body', 'sp-card-footer']);
-    expect(fila(CORREFOC).getAttribute('aria-label')).toBe(CORREFOC);
-    const boina = targeta.querySelector('header.sp-card-header');
-    /* L'autoria és la font, i porta a les seues notícies. */
-    const autor = within(boina).getByRole('link', { name: 'Colla de Dimonis de la Font Vella' });
-    expect(autor.getAttribute('href')).toBe('/app/lector/noticies/festes/colla-dimonis');
-    /* La data absoluta (hh:mm dd/mm/aa, al fus de qui llig), en text: una notícia no és al Calendari. */
-    const data = boina.querySelector('time.btn-date-time');
-    expect(data.getAttribute('datetime')).toBe('2026-10-03T09:30:00.000Z');
-    expect([...data.children].map((e) => e.textContent)).toEqual(['11:30', '03/10/26']);
-    expect(within(boina).queryByRole('button')).toBeNull();
-    /* El títol (h4 dins de la secció h3), el resum i l'etiqueta «Nou».
-       Ordre del Mestre, 261004 (integració final, F04) · I el subtítol (h4 de la targeta): la
-       secció de la font i l'autor de l'article, dades reals de la llavor. */
-    expect(within(targeta).getAllByRole('heading', { level: 4 }).map((h) => h.textContent)).toEqual([CORREFOC, 'Cultura i festes · La colla']);
-    expect(targeta.querySelector('.sp-card-subtitle').textContent).toBe('Cultura i festes · La colla');
-    expect(targeta.querySelector('.sp-card-text').textContent).toMatch(/^Enguany el correfoc eixirà de la Font Vella/);
-    expect(within(targeta).getByText('Nou', ETIQUETA).className).toBe('sp-card-label sdp-badge-accent');
-    /* El nom de l'element principal és el títol; l'estat el diu la seua descripció (auditoria 0605). */
-    expect(descripcioDe(fila(CORREFOC))).toBe('Nou');
-    expect(document.getElementById(fila(CORREFOC).getAttribute('aria-describedby')).className).toBe('sdp-nomes-lector');
-    /* El peu per defecte: les quatre accions, amb el títol al nom. */
-    const peu = within(targeta.querySelector('footer.sp-card-footer'));
-    for (const nom of [`Traduir ${CORREFOC}`, `Comentar ${CORREFOC}`, `Compartir ${CORREFOC}`, `Connectar amb ${CORREFOC}`]) {
-      expect(peu.getByRole('button', { name: nom }), nom).toBeTruthy();
-    }
-    /* Les imatges de la llavor són d'example.org, que l'amfitrió no ha permés: cap imatge, ni a les
-       targetes ni a la boina, i cap resta de la variant 16:9 ni de les files pròpies. */
-    /* Derogat per l'ordre del Mestre, 261004 (integració final, arreglo 6) · Les carpetes porten la
-       boina de l'app, amb el seu logo (un recurs propi del paquet). Cap imatge a les targetes de
-       notícia ni cap imatge de fora enlloc. */
-    expect(document.getElementById('app-grid-main').querySelectorAll('img')).toHaveLength(0);
-    for (const img of document.querySelectorAll('img')) expect(img.getAttribute('src')).not.toMatch(/^(?:https?:)?\/\//);
-    expect(document.querySelector('.sdp-panoramica, .sdp-llista-articles, .sdp-graella-articles, .sdp-rajola')).toBeNull();
-    expect(files()).toHaveLength(6);
-  });
-
-  /* Ordre del Mestre (261007) · «COMENTARIS = XAT» · Comentar de la targeta
-     obri el menú de dues vies. Una notícia no té xat públic: «En públic» es
-     queda desactivada, amb la raó, i el clic no navega ni avisa. «En privat»
-     (el xat amb Sóc de Poble, fora de l'app) és una pregunta oberta al
-     Mestre per al Lector: ací no es prova. */
-  test('el Connectar de la targeta fa el de sempre però no compta a la telemetria; Comentar obri el menú sense xat públic', async () => {
-    const vistos = [];
-    const escolta = (event) => vistos.push(event.detail);
-    window.addEventListener('sdp:telemetria', escolta);
-    /* La plataforma de proves no munta l'avisador: un avís arribaria al de reserva del context. */
-    const avis = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    try {
-      munta('/app/lector/noticies/hui');
-      await screen.findByRole('region', { name: 'Hui' });
-      const comentar = within(targetaDe(CORREFOC)).getByRole('button', { name: `Comentar ${CORREFOC}` });
-      expect(comentar.getAttribute('aria-haspopup')).toBe('menu');
-      fireEvent.click(comentar);
-      const menu = within(targetaDe(CORREFOC)).getByRole('menu');
-      const publica = within(menu).getByRole('menuitem', { name: 'En públic' });
-      expect(publica.getAttribute('aria-disabled')).toBe('true');
-      expect(publica.textContent).toBe('En públicAcí encara no hi ha cap xat públic.');
-      const avisosAbans = avis.mock.calls.length;
-      fireEvent.click(publica);
-      expect(avis.mock.calls.slice(avisosAbans)).toEqual([]);
-      expect(ubicacio()).toBe('/app/lector/noticies/hui');
-      fireEvent.click(within(targetaDe(CORREFOC)).getByRole('button', { name: `Connectar amb ${CORREFOC}` }));
-      /* El clic s'ha fet (Connectar porta on sempre) i cap intent «connectar» ha eixit. */
-      expect(ubicacio()).toMatch(/^\/connectar\?/);
-      expect(vistos.filter((intent) => intent?.nom === 'connectar')).toEqual([]);
-    } finally {
-      window.removeEventListener('sdp:telemetria', escolta);
-    }
-  });
-
-  test('una categoria i una font: el camí, el títol del panell i les notícies', async () => {
-    munta('/app/lector/noticies');
-    await screen.findByRole('region', { name: 'Hui' });
-    fireEvent.click(esquerra().getByRole('link', { name: /^Cultura i festes/ }));
-    expect(ubicacio()).toBe('/app/lector/noticies/festes');
-    await screen.findByRole('region', { name: 'Cultura i festes' });
-    expect(files()).toHaveLength(3);
-    fireEvent.click(mig().getByRole('link', { name: /^Colla de Dimonis de la Font Vella/ }));
-    expect(ubicacio()).toBe('/app/lector/noticies/festes/colla-dimonis');
-    await screen.findByRole('region', { name: 'Colla de Dimonis de la Font Vella' });
-    expect(files()).toHaveLength(3);
-  });
-
-  /* Derogat per l'ordre del Mestre del 261004 (prompt 261004_0515) · Ni rajoles ni files pròpies:
-     «Targetes» és la UniversalCard de sempre en la graella de sempre, i «Revista», la targeta plana
-     en columna. Sense seccions (una carpeta de categoria), el títol de la targeta és h3. */
-  test('la vista «Targetes» (?vista=graella): UniversalCard en la graella; «Revista»: la targeta plana en columna', async () => {
-    munta('/app/lector/noticies/festes');
-    await screen.findByRole('region', { name: 'Cultura i festes' });
-    const graella = () => detall().getByRole('group', { name: 'Cultura i festes' });
-    /* «Revista» per defecte: la columna de les targetes planes. */
-    expect(graella().className).toBe('sdp-card-llista');
-    expect([...graella().children].map((e) => e.className)).toEqual(['sp-card sp-card--pla', 'sp-card sp-card--pla', 'sp-card sp-card--pla']);
-    fireEvent.click(detall().getByRole('button', { name: 'Targetes' }));
-    expect(ubicacio()).toBe('/app/lector/noticies/festes?vista=graella');
-    expect(graella().className).toBe('sdp-card-grid');
-    expect([...graella().children].map((e) => e.className)).toEqual(['sp-card', 'sp-card', 'sp-card']);
-    expect(files()).toHaveLength(3);
-    expect(within(graella()).getAllByRole('heading', { level: 3 }).map((h) => h.textContent)).toContain(CORREFOC);
-    /* Cap element de llista fet a mà per a les targetes: només les etiquetes de cada una. */
-    expect([...graella().querySelectorAll('ul')].every((ul) => ul.classList.contains('sp-card-labels'))).toBe(true);
-  });
-
-  test('una carpeta que no existix ho diu i porta a «Hui»', async () => {
-    munta('/app/lector/noticies/inventada');
-    expect(await screen.findByText('Esta carpeta no existix')).toBeTruthy();
-    expect(screen.getByRole('link', { name: 'Ves a Hui' }).getAttribute('href')).toBe('/app/lector/noticies/hui');
-  });
-});
-
 describe('la lectura immersiva', () => {
-  test('obrir una targeta: l’article ocupa el panell, les barres laterals es queden, el focus va al títol i queda llegida', async () => {
+  test('obrir una fila: l’article ocupa el detall, l’arbre i la llista es queden, el focus va al títol i queda llegida', async () => {
     const { idb } = munta('/app/lector/noticies/hui');
     await screen.findByRole('region', { name: 'Hui' });
-    const id = fila(CORREFOC).dataset.element;
-    fireEvent.click(fila(CORREFOC));
+    const titol = await obri(CORREFOC);
+    const id = idDeLaUrl();
     expect(ubicacio()).toBe(`/app/lector/noticies/hui?article=${id}`);
-    const titol = await titolDelLector(CORREFOC);
     expect(document.activeElement).toBe(titol);
-    expect(files()).toHaveLength(0);
     expect(document.getElementById('app-grid-sidebar').hasAttribute('inert')).toBe(false);
     expect(document.getElementById('app-grid-list').hasAttribute('inert')).toBe(false);
-    expect(textDeNavegacio(esquerra().getByRole('link', { name: /^Hui/ }))).toBe('Hui 5 sense llegir');
+    expect(recompteDe('Hui')).toBe('5');
     /* Derogat per l'ordre del Mestre del 261004 (prompt 261004_0515; D-A) · El títol propi (h2 i
        p.lead dins de .sdp-centre) ja no hi és: la Pàgina Universal de les apps (PaginaApp), amb la
        doble barra, l'H1 dins de header.page-title i el cos a l'article de la pàgina. */
@@ -285,70 +145,99 @@ describe('la lectura immersiva', () => {
     await waitFor(() => expect(desat(idb)?.llegits).toEqual([id]));
   });
 
-  test('«Tornar arrere» de la barra blava tanca l’article com l’aspa, i el focus torna a la targeta', async () => {
-    munta('/app/lector/noticies/hui');
-    await screen.findByRole('region', { name: 'Hui' });
-    const id = fila(CORREFOC).dataset.element;
-    fireEvent.click(fila(CORREFOC));
-    await titolDelLector(CORREFOC);
-    fireEvent.click(detall().getByRole('button', { name: 'Tornar arrere' }));
-    expect(ubicacio()).toBe('/app/lector/noticies/hui');
-    await waitFor(() => expect(document.activeElement?.dataset.element).toBe(id));
+  /* Ordre del Mestre (261007) · «COMENTARIS = XAT» · Bloc 0 (261016): actualitzada a posta, la
+     notícia ja no té targeta a la llista; Comentar i Connectar són els de la barra blava de la
+     lectura. Una notícia no té xat públic, i el Connectar no compta a la telemetria. */
+  test('a la lectura, Comentar obri el menú sense xat públic i el Connectar no compta a la telemetria', async () => {
+    const vistos = [];
+    const escolta = (event) => vistos.push(event.detail);
+    window.addEventListener('sdp:telemetria', escolta);
+    const avis = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      munta('/app/lector/noticies/hui');
+      await screen.findByRole('region', { name: 'Hui' });
+      await obri(CORREFOC);
+      const barra = document.getElementById('app-grid-main').querySelector('header.bar-blue');
+      const comentar = within(barra).getByRole('button', { name: 'Comentar' });
+      expect(comentar.getAttribute('aria-haspopup')).toBe('menu');
+      fireEvent.click(comentar);
+      const publica = within(screen.getByRole('menu')).getByRole('menuitem', { name: 'En públic' });
+      expect(publica.getAttribute('aria-disabled')).toBe('true');
+      const avisosAbans = avis.mock.calls.length;
+      const abans = ubicacio();
+      fireEvent.click(publica);
+      expect(avis.mock.calls.slice(avisosAbans)).toEqual([]);
+      expect(ubicacio()).toBe(abans);
+      fireEvent.click(within(barra).getByRole('button', { name: 'Connectar' }));
+      expect(ubicacio()).toMatch(/^\/connectar\?/);
+      expect(vistos.filter((intent) => intent?.nom === 'connectar')).toEqual([]);
+    } finally {
+      window.removeEventListener('sdp:telemetria', escolta);
+    }
   });
 
-  test('l’aspa tanca: torna la graella, el focus a la targeta i la insígnia «Nou» ja no hi és', async () => {
+  test('«Tornar arrere» de la barra blava tanca l’article com l’aspa, i el focus torna a la fila', async () => {
     munta('/app/lector/noticies/hui');
     await screen.findByRole('region', { name: 'Hui' });
-    const id = fila(CORREFOC).dataset.element;
-    fireEvent.click(fila(CORREFOC));
-    await titolDelLector(CORREFOC);
+    await obri(CORREFOC);
+    fireEvent.click(detall().getByRole('button', { name: 'Tornar arrere' }));
+    expect(ubicacio()).toBe('/app/lector/noticies/hui');
+    await waitFor(() => expect(document.activeElement).toBe(fitxa(CORREFOC)));
+  });
+
+  test('l’aspa tanca: el focus a la fila i «Nou» ja no hi és', async () => {
+    munta('/app/lector/noticies/hui');
+    await screen.findByRole('region', { name: 'Hui' });
+    expect(subtitolDe(CORREFOC)).toMatch(/ · Nou$/);
+    await obri(CORREFOC);
     const aspa = detall().getByRole('button', { name: 'Tanca l’article' });
     /* Com a Feedly: l'aspa a l'esquerra de la barra, davant del nom de la font. */
     const nomFont = detall().getByText('Colla de Dimonis de la Font Vella', { selector: '.app-grid-col-header__titol' });
     expect(aspa.compareDocumentPosition(nomFont) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     fireEvent.click(aspa);
     expect(ubicacio()).toBe('/app/lector/noticies/hui');
-    await waitFor(() => expect(document.activeElement?.dataset.element).toBe(id));
-    expect(within(fila(CORREFOC).closest('article')).queryByText('Nou')).toBeNull();
-    /* Llegida i sense desar: cap estat a dir, cap descripció. */
-    expect(fila(CORREFOC).hasAttribute('aria-describedby')).toBe(false);
+    await waitFor(() => expect(document.activeElement).toBe(fitxa(CORREFOC)));
+    expect(subtitolDe(CORREFOC)).toBe('Colla de Dimonis de la Font Vella · 11:30 03/10/26');
   });
 
-  test('Esc també tanca, i arrere del navegador torna a la mateixa graella', async () => {
+  test('Esc també tanca, i arrere del navegador torna a la mateixa llista', async () => {
     munta('/app/lector/noticies/festes');
     await screen.findByRole('region', { name: 'Cultura i festes' });
-    const id = fila(ASSAIG).dataset.element;
-    fireEvent.click(fila(ASSAIG));
-    const titol = await titolDelLector(ASSAIG);
+    const titol = await obri(ASSAIG);
     fireEvent.keyDown(titol, { key: 'Escape' });
     expect(ubicacio()).toBe('/app/lector/noticies/festes');
-    await waitFor(() => expect(document.activeElement?.dataset.element).toBe(id));
-    fireEvent.click(fila(ASSAIG));
-    await titolDelLector(ASSAIG);
+    await waitFor(() => expect(document.activeElement).toBe(fitxa(ASSAIG)));
+    await obri(ASSAIG);
     await act(async () => { window.history.back(); });
     await waitFor(() => expect(ubicacio()).toBe('/app/lector/noticies/festes'));
-    await waitFor(() => expect(document.activeElement?.dataset.element).toBe(id));
+    await waitFor(() => expect(document.activeElement).toBe(fitxa(ASSAIG)));
   });
 
-  test('Esc tanca des del mig i amb el focus perdut; no des d’un camp de text', async () => {
+  /* Bloc 0 (261016) · Actualitzada a posta: «Marca-ho tot com a llegit» ja no és al mig amb la
+     notícia oberta (és del detall sense notícia). Esc tanca igual des de l'arbre i la llista. */
+  test('Esc tanca des de l’arbre, des de la llista i amb el focus perdut; no des d’un camp de text', async () => {
     munta('/app/lector/noticies/hui');
     await screen.findByRole('region', { name: 'Hui' });
-    fireEvent.click(fila(CORREFOC));
-    await titolDelLector(CORREFOC);
+    await obri(CORREFOC);
     /* Un camp de text dins de la closca: Esc és seu. */
     const camp = document.createElement('input');
     document.getElementById('app-grid-list').append(camp);
     fireEvent.keyDown(camp, { key: 'Escape' });
     camp.remove();
     expect(ubicacio()).toMatch(/[?&]article=/);
-    /* Des de «Marca-ho tot com a llegit», al mig. */
-    const marca = mig().getByRole('button', { name: 'Marca-ho tot com a llegit' });
-    marca.focus();
-    fireEvent.keyDown(marca, { key: 'Escape' });
+    /* Des d'una fila de l'arbre. */
+    const esports = filaDeLArbre('Esports');
+    esports.focus();
+    fireEvent.keyDown(esports, { key: 'Escape' });
+    expect(ubicacio()).toBe('/app/lector/noticies/hui');
+    /* Des d'una altra fila de la llista. */
+    await obri(CORREFOC);
+    const altra = fitxes().find((boto) => boto !== fitxa(CORREFOC));
+    altra.focus();
+    fireEvent.keyDown(altra, { key: 'Escape' });
     expect(ubicacio()).toBe('/app/lector/noticies/hui');
     /* Amb el focus perdut (un clic on no s'enfoca res). */
-    fireEvent.click(fila(CORREFOC));
-    await titolDelLector(CORREFOC);
+    await obri(CORREFOC);
     fireEvent.keyDown(document.body, { key: 'Escape' });
     expect(ubicacio()).toBe('/app/lector/noticies/hui');
   });
@@ -360,8 +249,7 @@ describe('la lectura immersiva', () => {
   test('Esc amb l’Índex de secció obert tanca només l’Índex; el següent Esc, l’article', async () => {
     munta('/app/lector/noticies/hui');
     await screen.findByRole('region', { name: 'Hui' });
-    fireEvent.click(fila(CORREFOC));
-    await titolDelLector(CORREFOC);
+    await obri(CORREFOC);
     const index = detall().getByRole('button', { name: 'Índex de secció' });
     index.focus();
     fireEvent.click(index);
@@ -400,8 +288,7 @@ describe('la lectura immersiva', () => {
     try {
       munta('/app/lector/noticies/hui');
       await screen.findByRole('region', { name: 'Hui' });
-      fireEvent.click(fila(CORREFOC));
-      await titolDelLector(CORREFOC);
+      await obri(CORREFOC);
       /* Un diàleg modal propi, dins de la closca: Esc és seu, també amb el focus perdut. */
       document.getElementById('app-grid-list').append(propi);
       fireEvent.keyDown(document.body, { key: 'Escape' });
@@ -412,8 +299,7 @@ describe('la lectura immersiva', () => {
       fireEvent.keyDown(await titolDelLector(CORREFOC), { key: 'Escape' });
       expect(ubicacio()).toBe('/app/lector/noticies/hui');
       /* Amb els diàlegs de l'amfitrió al document i el focus perdut, Esc també tanca. */
-      fireEvent.click(fila(CORREFOC));
-      await titolDelLector(CORREFOC);
+      await obri(CORREFOC);
       fireEvent.keyDown(document.body, { key: 'Escape' });
       expect(ubicacio()).toBe('/app/lector/noticies/hui');
     } finally {
@@ -431,48 +317,46 @@ describe('la lectura immersiva', () => {
     try {
       munta('/app/lector/noticies/hui');
       await screen.findByRole('region', { name: 'Hui' });
-      const id = fila(CORREFOC).dataset.element;
-      const altre = files().map((boto) => boto.dataset.element).find((element) => element !== id);
-      fireEvent.click(fila(CORREFOC));
-      await titolDelLector(CORREFOC);
+      await obri(CORREFOC);
+      const id = idDeLaUrl();
       fireEvent.click(detall().getByRole('button', { name: 'Índex de secció' }));
       const dialeg = screen.getByRole('dialog', { name: 'Taula de continguts' });
       fireEvent.click(within(dialeg).getByRole('button', { name: 'Recomanacions' }));
       expect(ubicacio()).toBe(`/app/lector/noticies/hui?article=${id}&seccio=recomanacions`);
       fireEvent.click(detall().getByRole('button', { name: 'Tanca l’article' }));
       expect(ubicacio()).toBe('/app/lector/noticies/hui');
-      fireEvent.click(document.querySelector(`a.sp-card-link-overlay[data-element="${altre}"]`));
-      expect(ubicacio()).toBe(`/app/lector/noticies/hui?article=${altre}`);
+      const altra = fitxes().find((boto) => boto !== fitxa(CORREFOC));
+      fireEvent.click(altra);
+      expect(ubicacio()).toMatch(/^\/app\/lector\/noticies\/hui\?article=[^&]+$/);
+      expect(idDeLaUrl()).not.toBe(id);
     } finally {
       Element.prototype.scrollIntoView = scrollAbans;
     }
   });
 
-  test('tancar torna la graella on era; canviar de carpeta amb l’article obert comença de dalt', async () => {
-    vi.spyOn(Element.prototype, 'scrollTop', 'get').mockReturnValue(240);
+  /* Derogat pel Bloc 0 (ordre del Mestre, 261016) · La graella ja no comparteix el panell amb el
+     lector: la llista és la seua columna de l'espai i obrir o tancar una notícia no la torna a
+     pintar ni la desplaça. Abans es restaurava el scroll a mà; ara no se n'escriu cap. P2 de Codex
+     (261016) · Només una altra carpeta o una altra font la torna a dalt (espaiNoticies.test.jsx):
+     ací la llista és a 240 i, en obrir i tancar dins de «Hui», no s'hi escriu res. */
+  test('obrir i tancar una notícia no mou el scroll de cap columna', async () => {
     const posa = vi.spyOn(Element.prototype, 'scrollTop', 'set');
     munta('/app/lector/noticies/hui');
     await screen.findByRole('region', { name: 'Hui' });
-    fireEvent.click(fila(CORREFOC));
-    await titolDelLector(CORREFOC);
-    fireEvent.click(detall().getByRole('button', { name: 'Tanca l’article' }));
-    await waitFor(() => expect(posa).toHaveBeenCalledWith(240));
-    /* El cos de la graella (la regió amb nom de MarcColumna), no cap altre element. */
-    expect(posa.mock.contexts.at(-1)).toBe(screen.getByRole('region', { name: 'Hui' }));
+    const llista = document.querySelector('#app-grid-list .sdp-workspace-column__body');
+    llista.scrollTop = 240;
     posa.mockClear();
-    fireEvent.click(fila(CORREFOC));
-    await titolDelLector(CORREFOC);
-    fireEvent.click(esquerra().getByRole('link', { name: /^Esports/ }));
-    await screen.findByRole('region', { name: 'Esports' });
-    expect(files()).toHaveLength(3);
+    await obri(CORREFOC);
+    fireEvent.click(detall().getByRole('button', { name: 'Tanca l’article' }));
+    await waitFor(() => expect(document.activeElement).toBe(fitxa(CORREFOC)));
     expect(posa).not.toHaveBeenCalled();
+    expect(llista.scrollTop).toBe(240);
   });
 
   test('«Visita el lloc web» és un enllaç de veres a una pestanya nova, sense referent ni opener', async () => {
     munta('/app/lector/noticies/festes');
     await screen.findByRole('region', { name: 'Cultura i festes' });
-    fireEvent.click(fila(CORREFOC));
-    await titolDelLector(CORREFOC);
+    await obri(CORREFOC);
     const enllac = detall().getByRole('link', { name: 'Visita el lloc web (s’obri en una pestanya nova)' });
     expect(enllac.getAttribute('href')).toBe('https://example.org/colla-dimonis/correfoc-barranc');
     expect(enllac.getAttribute('target')).toBe('_blank');
@@ -490,11 +374,13 @@ describe('la lectura immersiva', () => {
     expect(fora.map((a) => a.getAttribute('href'))).toEqual(['/app/lector/noticies/festes/colla-dimonis']);
   });
 
-  test('Pedra Seca pura: cap style=, cap imatge de fora i cap classe que no existisca, al lector i a la graella', async () => {
+  /* Bloc 0 (261016) · Actualitzada a posta: es revisen l'arbre, la llista i el detall (el que pinta
+     el Lector dins de l'espai), no la graella que ja no hi és. Les classes de l'espai són de
+     modules.css. El diàleg de la roda dentada és de l'espai i no del Lector: fora de l'abast. */
+  test('Pedra Seca pura: cap style=, cap imatge de fora i cap classe que no existisca, a l’arbre, la llista i el lector', async () => {
     const conegudes = classesConegudes();
     munta('/app/lector/noticies/hui');
     await screen.findByRole('region', { name: 'Hui' });
-    const graella = document.getElementById('app-grid-main');
     const revisa = (arrel) => {
       expect(arrel.querySelectorAll('[style]')).toHaveLength(0);
       for (const img of arrel.querySelectorAll('img')) expect(img.getAttribute('src')).not.toMatch(/^(?:https?:)?\/\//);
@@ -502,58 +388,57 @@ describe('la lectura immersiva', () => {
       expect(classes.length).toBeGreaterThan(5);
       expect(classes.filter((classe) => !conegudes.has(classe) && !classe.startsWith('lucide'))).toEqual([]);
     };
-    revisa(graella);
-    fireEvent.click(fila(CORREFOC));
-    await titolDelLector(CORREFOC);
-    revisa(graella);
+    const parts = () => [
+      document.querySelector('#app-grid-sidebar nav.sdp-workspace-column__body'),
+      document.getElementById('app-grid-list'),
+      document.getElementById('app-grid-main')
+    ];
+    for (const part of parts()) revisa(part);
+    await obri(CORREFOC);
+    for (const part of parts()) revisa(part);
   });
 
   test('un article amb vídeos: l’avís de privacitat; i «Marca com a no llegit»', async () => {
     munta('/app/lector/noticies/festes');
     await screen.findByRole('region', { name: 'Cultura i festes' });
-    fireEvent.click(fila(ASSAIG));
-    await titolDelLector(ASSAIG);
+    await obri(ASSAIG);
     expect(detall().getByText('Imatges i vídeos a part')).toBeTruthy();
     expect(detall().getByText('Al final hi haurà coca i mistela.')).toBeTruthy();
-    await waitFor(() => expect(textDeNavegacio(esquerra().getByRole('link', { name: /^Cultura i festes/ }))).toBe('Cultura i festes 2 sense llegir'));
+    await waitFor(() => expect(recompteDe('Cultura i festes')).toBe('2'));
     fireEvent.click(detall().getByRole('button', { name: 'Marca com a no llegit' }));
-    expect(textDeNavegacio(esquerra().getByRole('link', { name: /^Cultura i festes/ }))).toBe('Cultura i festes 3 sense llegir');
+    expect(recompteDe('Cultura i festes')).toBe('3');
   });
 
-  test('«Desa per a després»: la carpeta el compta, es desa al disc i s’hi llig encara que la font ja no el servisca', async () => {
-    const entorn = prepara();
-    const { idb } = munta('/app/lector/noticies/hui', entorn);
+  /* Bloc 0 (261016) · Actualitzada a posta: el recompte de «Per a després» és el de les desades
+     sense llegir (espaiNoticies.test.jsx); ací, que es desa al disc i s'hi llig. */
+  test('«Desa per a després»: es desa al disc i la carpeta la porta', async () => {
+    const { idb } = munta('/app/lector/noticies/hui');
     await screen.findByRole('region', { name: 'Hui' });
-    const id = fila(CORREFOC).dataset.element;
-    fireEvent.click(fila(CORREFOC));
-    await titolDelLector(CORREFOC);
+    await obri(CORREFOC);
+    const id = idDeLaUrl();
     const desa = detall().getByRole('button', { name: 'Desa per a després' });
     expect(desa.getAttribute('aria-pressed')).toBe('false');
     fireEvent.click(desa);
     expect(detall().getByRole('button', { name: 'Desa per a després' }).getAttribute('aria-pressed')).toBe('true');
-    expect(textDeNavegacio(esquerra().getByRole('link', { name: /^Per a després/ }))).toBe('Per a després 1 desada');
     await waitFor(() => expect(desat(idb)?.despres.map((d) => d.id)).toEqual([id]));
-    fireEvent.click(esquerra().getByRole('link', { name: /^Per a després/ }));
+    fireEvent.click(filaDeLArbre('Per a després'));
     await screen.findByRole('region', { name: 'Per a després' });
-    expect(within(fila(CORREFOC).closest('article')).getByText('Desat per a després', ETIQUETA)).toBeTruthy();
-    /* Llegida i desada: la descripció diu «Desat per a després», i no «Nou». */
-    expect(descripcioDe(fila(CORREFOC))).toBe('Desat per a després');
+    expect(fitxes().map((boto) => boto.querySelector('.sdp-gestor-fitxa__titol').textContent)).toEqual([CORREFOC]);
   });
 
   test('una notícia que la font ja no servix sencera es llig del resum, i ho diu', async () => {
     const llavor = creaAdaptadorLlavor({ ara: ARA });
     munta('/app/lector/noticies/festes', prepara({ adaptador: { ...llavor, article: async () => null } }));
     await screen.findByRole('region', { name: 'Cultura i festes' });
-    fireEvent.click(fila(CORREFOC));
-    await titolDelLector(CORREFOC);
+    await obri(CORREFOC);
     expect(detall().getByText('Només el resum')).toBeTruthy();
     expect(detall().getByText(/^Enguany el correfoc eixirà de la Font Vella/)).toBeTruthy();
   });
 
   /* Verificació «lector-nevera», D3 (REGLA D'OR 1) · Una notícia desada d'una font que el port ja
-     no servix: la targeta no en coneix la font, però l'article sí que té autor. La boina el diu,
-     sense enllaç (com el lector, Lector.jsx), i mai «Sóc de Poble», que no l'ha escrita. L'autor
-     és inventat. */
+     no servix: el lector no en coneix la font, però l'article sí que té autor. La boina el diu,
+     sense enllaç, i mai «Sóc de Poble», que no l'ha escrita. L'autor és inventat. Bloc 0 (261016):
+     actualitzada a posta, es comprova a la lectura (la fila, a espaiNoticies.test.jsx). */
   test('una notícia desada d’una font que ja no hi és: la boina diu l’autor de l’article, sense enllaç', async () => {
     const llavor = creaAdaptadorLlavor({ ara: ARA });
     const [primer] = await llavor.llistaArticles({ fontId: 'colla-dimonis' });
@@ -563,13 +448,16 @@ describe('la lectura immersiva', () => {
         const { categories, fonts } = await llavor.llistaFonts();
         return { categories, fonts: fonts.filter((font) => font.id !== 'colla-dimonis') };
       },
-      llistaArticles: async (opcions) => (await llavor.llistaArticles(opcions)).filter((article) => article.fontId !== 'colla-dimonis')
+      llistaArticles: async (opcions) => (await llavor.llistaArticles(opcions)).filter((article) => article.fontId !== 'colla-dimonis'),
+      article: async () => null
     };
     const entorn = prepara({ adaptador });
     await entorn.magatzem.desa({ llegits: [], despres: [{ ...primer, autor: 'Redacció de la Colla' }], noSeguides: [] });
     munta('/app/lector/noticies/despres', entorn);
     await screen.findByRole('region', { name: 'Per a després' });
-    const boina = (await detall().findByRole('link', { name: CORREFOC })).closest('article.sp-card').querySelector('header.sp-card-header');
+    await waitFor(() => expect(fitxa(CORREFOC)).toBeTruthy());
+    const titol = await obri(CORREFOC);
+    const boina = titol.closest('.sdp-universal-page-container').querySelector('section.bar-orange');
     expect(boina.querySelector('.sp-card-author-name').textContent).toBe('Redacció de la Colla');
     expect(within(boina).queryByRole('link')).toBeNull();
     expect(boina.textContent).not.toMatch(/Sóc de Poble/);
@@ -589,35 +477,9 @@ describe('la lectura immersiva', () => {
   });
 });
 
-describe('els estats del port', () => {
-  test('carregant: cada columna ho diu', async () => {
-    const llavor = creaAdaptadorLlavor({ ara: ARA });
-    const adaptador = { ...llavor, llistaArticles: () => new Promise(() => {}) };
-    munta('/app/lector/noticies/hui', prepara({ adaptador }));
-    expect(await screen.findByText('Carregant les notícies…')).toBeTruthy();
-    expect(detall().getByRole('status').textContent).toBe('Carregant les notícies…');
-  });
-
-  test('error: ho diu i «Torna-ho a provar» torna a demanar-ho', async () => {
-    const llavor = creaAdaptadorLlavor({ ara: ARA });
-    let falla = true;
-    const adaptador = { ...llavor, llistaFonts: () => (falla ? Promise.reject(new Error('caigut')) : llavor.llistaFonts()) };
-    munta('/app/lector/noticies/hui', prepara({ adaptador }));
-    expect(await screen.findByText('No s’han pogut carregar les notícies')).toBeTruthy();
-    falla = false;
-    fireEvent.click(detall().getByRole('button', { name: 'Torna-ho a provar' }));
-    await screen.findByRole('region', { name: 'Hui' });
-    await waitFor(() => expect(files()).toHaveLength(6));
-  });
-
-  test('sense base local, l’avís de memòria a les carpetes', async () => {
-    munta('/app/lector/noticies/hui', prepara({ sensebase: true }));
-    await screen.findByRole('region', { name: 'Hui' });
-    expect(esquerra().getByText('Només en la memòria')).toBeTruthy();
-  });
-});
-
 describe('les fonts que se seguixen', () => {
+  /* Bloc 0 (261016) · Actualitzada a posta la segona meitat: «Hui» és la llista de l'espai, i la
+     categoria sense cap font seguida no porta recompte a l'arbre (ni la font, que ja no hi és). */
   test('el catàleg: totes seguides; tocar-ne una la deixa de seguir, es desa i «Hui» ja no en porta', async () => {
     const { idb } = munta('/app/lector/fonts');
     await screen.findByRole('region', { name: 'Fonts del poble' });
@@ -633,8 +495,10 @@ describe('les fonts que se seguixen', () => {
     window.history.pushState(null, '', '/app/lector/noticies/hui');
     await act(async () => { window.dispatchEvent(new PopStateEvent('popstate')); });
     await screen.findByRole('region', { name: 'Hui' });
-    expect(files()).toHaveLength(5);
-    expect(textDeNavegacio(esquerra().getByRole('link', { name: /^Camp i temps/ }))).toBe('Camp i temps 0 tot llegit');
+    expect(fitxes()).toHaveLength(5);
+    expect(recompteDe('Camp i temps')).toBeNull();
+    fireEvent.click(filaDeLArbre('Camp i temps'));
+    expect(screen.queryByRole('button', { name: /^Cooperativa de l’Horta Vella/ })).toBeNull();
   });
 });
 
@@ -655,102 +519,22 @@ describe('la boina de les targetes de font (REGLA D’OR 1, ordre del Mestre del
   });
 });
 
-describe('en mitjana (800 px): fonts i notícies de costat, les carpetes en panell', () => {
+/* Bloc 0 (261016) · Derogades les tres proves de l'obridor «Carpetes» i de «Torna» (les
+   columnes del 261004): en mitjana la navegació és el rail de l'espai, que en desplega el panell
+   (espaiNoticies.test.jsx). La regla d'Esc amb un panell obert per damunt continua. */
+describe('en mitjana (800 px): la navegació en rail i la llista al costat', () => {
   beforeEach(() => { ambAmplada(800); });
 
-  test('l’obridor «Carpetes» obri el panell; triar-ne una navega i el tanca; llegint, les fonts es queden', async () => {
-    munta('/app/lector/noticies/hui');
-    await screen.findByRole('region', { name: 'Hui' });
-    await waitFor(() => expect(closca().dataset.layout).toBe('mitja'));
-    expect(document.getElementById('app-grid-sidebar').hasAttribute('inert')).toBe(true);
-    const obridor = detall().getByRole('button', { name: 'Carpetes' });
-    expect(obridor.dataset.obriColumna).toBe('esquerra');
-    fireEvent.click(obridor);
-    expect(closca().dataset.panell).toBe('left');
-    fireEvent.click(esquerra().getByRole('link', { name: /^Cultura i festes/ }));
-    expect(ubicacio()).toBe('/app/lector/noticies/festes');
-    await waitFor(() => expect(closca().dataset.panell).toBe(''));
-    fireEvent.click(fila(CORREFOC));
-    await titolDelLector(CORREFOC);
-    expect(document.getElementById('app-grid-list').hasAttribute('inert')).toBe(false);
-  });
-
-  test('«Torna» tanca el panell de les carpetes sense navegar i el focus torna a l’obridor', async () => {
+  test('amb el panell de la navegació obert, Esc no tanca l’article que queda davall', async () => {
     munta('/app/lector/noticies/festes');
     await screen.findByRole('region', { name: 'Cultura i festes' });
     await waitFor(() => expect(closca().dataset.layout).toBe('mitja'));
-    fireEvent.click(detall().getByRole('button', { name: 'Carpetes' }));
-    expect(closca().dataset.panell).toBe('left');
-    const torna = esquerra().getByRole('button', { name: 'Torna' });
-    torna.focus();
-    fireEvent.click(torna);
-    await waitFor(() => expect(closca().dataset.panell).toBe(''));
-    expect(ubicacio()).toBe('/app/lector/noticies/festes');
-    expect(document.activeElement?.dataset.obriColumna).toBe('esquerra');
-  });
-
-  test('amb el panell de les carpetes obert, Esc no tanca l’article que queda davall', async () => {
-    munta('/app/lector/noticies/festes');
-    await screen.findByRole('region', { name: 'Cultura i festes' });
-    await waitFor(() => expect(closca().dataset.layout).toBe('mitja'));
-    fireEvent.click(fila(CORREFOC));
-    await titolDelLector(CORREFOC);
-    /* Llegint, l'obridor és el de les fonts, al mig (el lector no en porta). */
-    fireEvent.click(mig().getByRole('button', { name: 'Carpetes' }));
-    expect(closca().dataset.panell).toBe('left');
-    fireEvent.keyDown(esquerra().getByRole('button', { name: 'Torna' }), { key: 'Escape' });
+    await obri(CORREFOC);
+    const expandir = document.querySelector('#app-grid-sidebar button[aria-controls="app-grid-sidebar"]');
+    fireEvent.click(expandir);
+    await waitFor(() => expect(closca().dataset.panell).toBe('left'));
+    fireEvent.keyDown(filaDeLArbre('Esports'), { key: 'Escape' });
     expect(ubicacio()).toMatch(/[?&]article=/);
-  });
-});
-
-describe('en estret (375 px): una columna, la que diu la ruta', () => {
-  beforeEach(() => { ambAmplada(375); });
-
-  test('/noticies: les carpetes; una categoria porta a les seues fonts; «Hui», a les notícies', async () => {
-    munta('/app/lector/noticies');
-    await screen.findByRole('region', { name: 'Carpetes' });
-    await waitFor(() => expect(closca().dataset.layout).toBe('estret'));
-    expect(closca().dataset.panell).toBe('left');
-    expect(esquerra().getByRole('link', { name: /^Cultura i festes/ }).getAttribute('href')).toBe('/app/lector/noticies/festes/fonts');
-    fireEvent.click(esquerra().getByRole('link', { name: /^Cultura i festes/ }));
-    expect(ubicacio()).toBe('/app/lector/noticies/festes/fonts');
-    await waitFor(() => expect(closca().dataset.panell).toBe('middle'));
-    fireEvent.click(mig().getByRole('link', { name: /^Totes les fonts/ }));
-    expect(ubicacio()).toBe('/app/lector/noticies/festes');
-    await waitFor(() => expect(closca().dataset.panell).toBe(''));
-    expect(detall().getByRole('button', { name: 'Carpetes' }).getAttribute('aria-controls')).toBe('app-grid-sidebar');
-  });
-
-  test('a /noticies les carpetes són la pàgina: sense «Torna»', async () => {
-    munta('/app/lector/noticies');
-    await screen.findByRole('region', { name: 'Carpetes' });
-    await waitFor(() => expect(closca().dataset.layout).toBe('estret'));
-    expect(esquerra().queryByRole('button', { name: 'Torna' })).toBeNull();
-  });
-
-  test('«Hui»: el detall porta «Marca-ho tot com a llegit» (el ✓ de Feedly) i l’enllaç a les fonts de la carpeta', async () => {
-    munta('/app/lector/noticies/hui');
-    await screen.findByRole('region', { name: 'Hui' });
-    await waitFor(() => expect(closca().dataset.layout).toBe('estret'));
-    expect(closca().dataset.panell).toBe('');
-    expect(detall().getAllByText('Nou', ETIQUETA)).toHaveLength(6);
-    fireEvent.click(detall().getByRole('button', { name: 'Marca-ho tot com a llegit' }));
-    expect(detall().queryAllByText('Nou')).toHaveLength(0);
-    expect(detall().getByRole('button', { name: 'Marca-ho tot com a llegit' }).disabled).toBe(true);
-    const fonts = detall().getByRole('link', { name: 'Fonts' });
-    expect(fonts.getAttribute('href')).toBe('/app/lector/noticies/hui/fonts');
-    fireEvent.click(fonts);
-    expect(ubicacio()).toBe('/app/lector/noticies/hui/fonts');
-    await waitFor(() => expect(closca().dataset.panell).toBe('middle'));
-    expect(textDeNavegacio(mig().getByRole('link', { name: /^Totes les fonts/ }))).toBe('Totes les fonts 0 tot llegit');
-  });
-
-  test('a les notícies d’una font, també: l’enllaç porta a les fonts de la carpeta', async () => {
-    munta('/app/lector/noticies/festes/colla-dimonis');
-    await screen.findByRole('region', { name: 'Colla de Dimonis de la Font Vella' });
-    await waitFor(() => expect(closca().dataset.layout).toBe('estret'));
-    expect(detall().getByRole('link', { name: 'Fonts' }).getAttribute('href')).toBe('/app/lector/noticies/festes/fonts');
-    expect(detall().getByRole('button', { name: 'Marca-ho tot com a llegit' }).disabled).toBe(false);
   });
 });
 
@@ -767,14 +551,52 @@ describe('l’instant de la vista', () => {
     munta('/app/lector/noticies/hui', { registre: creaRegistre({ internes: [{ ...manifestLector, carrega: () => Promise.resolve({ default: App }) }] }) });
     await screen.findByRole('region', { name: 'Hui' });
     expect(rellotge).toHaveBeenCalledTimes(1);
-    /* Un canvi d'estat sense navegar: tornar a pintar no torna a llegir el rellotge. */
-    fireEvent.click(mig().getByRole('button', { name: 'Marca-ho tot com a llegit' }));
-    expect(textDeNavegacio(esquerra().getByRole('link', { name: /^Hui/ }))).toBe('Hui 0 tot llegit');
+    /* Un canvi d'estat sense navegar: tornar a pintar no torna a llegir el rellotge. Bloc 0
+       (261016): «Marca-ho tot com a llegit» és al detall sense notícia, no al mig. */
+    fireEvent.click(detall().getByRole('button', { name: 'Marca-ho tot com a llegit' }));
+    expect(recompteDe('Hui')).toBeNull();
     expect(rellotge).toHaveBeenCalledTimes(1);
     /* Una ruta nova, un instant nou. */
-    fireEvent.click(esquerra().getByRole('link', { name: /^Cultura i festes/ }));
+    fireEvent.click(filaDeLArbre('Cultura i festes'));
     await screen.findByRole('region', { name: 'Cultura i festes' });
     expect(rellotge).toHaveBeenCalledTimes(2);
+    /* Encàrrec F del Gauntlet (261016) · Obrir i tancar una notícia no és una llista nova. */
+    await obri(CORREFOC);
+    fireEvent.click(detall().getByRole('button', { name: 'Tanca l’article' }));
+    expect(ubicacio()).toBe('/app/lector/noticies/festes');
+    expect(rellotge).toHaveBeenCalledTimes(2);
+  });
+
+  /* Encàrrec F del Gauntlet (261016, P3) · L'instant es renovava també amb la consulta: obrir una
+     notícia (?article=) tornava a llegir el rellotge. Amb la pestanya oberta prou temps, la que
+     tocava la persona ja passava de les 24 h, perdia «Hui» i l'espai, reconciliant, la portava a
+     la seua categoria (replace), mentre «Hui» s'encongia davall d'ella. Ara l'instant és el de la
+     llista (el camí): la notícia s'obri a «Hui» i la llista no es mou. */
+  test('obrir la notícia més vella de «Hui» quan ja passa de les 24 h: es queda a «Hui», i la llista també', async () => {
+    const llavor = creaAdaptadorLlavor({ ara: ARA });
+    const deHui = (await llavor.llistaArticles()).filter((article) => esDeHui(article, ARA));
+    expect(deHui).toHaveLength(6);
+    const mesVella = deHui.reduce((a, b) => (msDeData(a.data) <= msDeData(b.data) ? a : b));
+    /* L'instant següent deixa la més vella un minut fora de la finestra de «Hui». */
+    const mesTard = msDeData(mesVella.data) + FINESTRA_HUI + 60 * 1000;
+    expect(esDeHui(mesVella, mesTard)).toBe(false);
+    const { magatzem, font } = prepara();
+    const rellotge = vi.fn().mockReturnValueOnce(ARA).mockReturnValue(mesTard);
+    const App = () => <AppLector magatzem={magatzem} font={font} ara={rellotge} />;
+    munta('/app/lector/noticies/hui', { registre: creaRegistre({ internes: [{ ...manifestLector, carrega: () => Promise.resolve({ default: App }) }] }) });
+    await screen.findByRole('region', { name: 'Hui' });
+    expect(fitxes()).toHaveLength(6);
+    const titol = senseFinal(mesVella.titol);
+    await obri(titol);
+    await act(async () => {});
+    expect(ubicacio()).toBe(`/app/lector/noticies/hui?article=${mesVella.id}`);
+    expect(filaDeLArbre('Hui').getAttribute('aria-current')).toBe('page');
+    expect(fitxes()).toHaveLength(6);
+    expect(rellotge).toHaveBeenCalledTimes(1);
+    fireEvent.click(detall().getByRole('button', { name: 'Tanca l’article' }));
+    expect(ubicacio()).toBe('/app/lector/noticies/hui');
+    await screen.findByRole('region', { name: 'Hui' });
+    expect(fitxes()).toHaveLength(6);
   });
 });
 
@@ -788,6 +610,31 @@ describe('sense port i sense llavor (producció)', () => {
       render(<AppSenseLlavor />);
       expect(screen.getByText('Encara no hi ha cap font connectada')).toBeTruthy();
       expect(document.querySelector('.app-grid-shell')).toBeNull();
+    } finally {
+      vi.unstubAllEnvs();
+      vi.resetModules();
+    }
+  });
+
+  /* Ordre del Mestre, 261016 (prompt 261016_0015, Bloc 0, «Purga de Mocks») · Abans el servidor de
+     desenvolupament encenia la llavor tot sol i /app/lector/noticies ensenyava titulars inventats.
+     Ara, sense el literal EXACTE, el Lector de desenvolupament és el de producció: l'estat buit
+     honest, cap closca i cap titular de la llavor. Un valor que no és '1' no l'encén. */
+  test.each([[''], ['0'], ['true'], ['1 ']])('Purga de Mocks · en desenvolupament amb VITE_SDP_LECTOR_LLAVOR=%j: cap notícia fictícia', async (valor) => {
+    vi.stubEnv('DEV', true);
+    vi.stubEnv('VITE_SDP_LECTOR_LLAVOR', valor);
+    vi.resetModules();
+    try {
+      const { default: AppDeDesenvolupament, destinacioEnllac } = await import('./AppLector.jsx');
+      render(<AppDeDesenvolupament />);
+      expect(screen.getByText('Encara no hi ha cap font connectada')).toBeTruthy();
+      expect(screen.getByText('Quan el poble connecte les seues fonts de notícies, les llegiràs ací.')).toBeTruthy();
+      expect(document.querySelector('.app-grid-shell')).toBeNull();
+      for (const inventat of ['El ple aprova la reforma del llavador vell', CORREFOC, ASSAIG, 'La Veu de la Plaça', 'Cultura i festes']) {
+        expect(document.body.textContent, inventat).not.toContain(inventat);
+      }
+      /* Sense port, cap destinació per al Snippet Curador (correcció SN-R1). */
+      expect(destinacioEnllac).toBeNull();
     } finally {
       vi.unstubAllEnvs();
       vi.resetModules();

@@ -66,8 +66,10 @@ vi.mock('../../components/universal/enquadrament/imatgeCanvas.js', () => ({
 }));
 vi.mock('../../utils/imageUtils.js', () => ({ compressImage: dobles.compressImage }));
 
-import { PerfilEditor } from './PerfilEditor.jsx';
+import { PerfilEditor, avisDeImatgeNoDesada } from './PerfilEditor.jsx';
 import { AVIS_IMATGE_PUJANT } from './useImatgeDeFitxa.jsx';
+import { AVISOS_TARGETA_VIVA, TargetaViva, useDocumentViu } from '../../components/universal/TargetaViva.jsx';
+import { DEFAULT_AUTHOR } from '../../components/universal/UniversalUtils.js';
 import { AJUDA_FOTO } from '../../components/universal/enquadrament/useEnquadramentImatge.jsx';
 import { AJUDA_IMATGE_PUJANT } from '../../components/universal/UniversalEditorShell.jsx';
 import { TEXTOS_ESTAT_DESAMENT } from '../../components/universal/EstatDesament.jsx';
@@ -224,12 +226,14 @@ describe('les finestres', () => {
     expect(m.updateOrganization).toHaveBeenCalledWith('O', { logo_url: '/assets/nou.webp' }, CONFIG);
   });
 
-  test('«Capçalera» → «Retalla la capçalera» en 16:9 → 1.200 × 675 → hero_url; el botó torna a la imatge', async () => {
+  /* Gauntlet 261016 (Bloc 1, Llei del Quadrat) · Abans 16:9 i 1.200 × 675
+     (ordre 261008): la capçalera és ara la mateixa imatge que la targeta. */
+  test('«Capçalera» → «Retalla la capçalera» en quadrat → 1.200 × 1.200 → hero_url; el botó torna a la imatge', async () => {
     render(<PerfilEditor identitat={jo} />);
     fireEvent.click(screen.getByRole('button', { name: 'Capçalera' }));
     const { guarda } = await triaIGuarda('heroImage', 'Retalla la capçalera');
     await guarda();
-    expect(dobles.exportaRetall.mock.calls[0][2]).toEqual({ amplada: 1200, alcada: 675, tipus: 'image/png' });
+    expect(dobles.exportaRetall.mock.calls[0][2]).toEqual({ amplada: 1200, alcada: 1200, tipus: 'image/png' });
     expect(m.updateProfile).toHaveBeenCalledWith({ hero_url: '/assets/nou.webp' }, CONFIG);
     expect(document.querySelector('img.sdp-hero__imatge').getAttribute('src')).toBe('/assets/nou.webp');
   });
@@ -518,22 +522,63 @@ describe('l’ajuda es diu abans de triar', () => {
 
 /* Línia I2 (pla 261008_1201) · La píndola dels drets diu la llicència
    TRIADA de veres (dretsTriats), no el «© Nom» que perfilCamps.js posa a la
-   fitxa quan no n'hi ha cap. */
+   fitxa quan no n'hi ha cap.
+   Directiva de Dignitat Humana (pla 261015_1900) · Ara, l'organització. */
 describe('la píndola dels drets d’autor', () => {
-  test('sense llicència desada, «Elegir drets d’autor» (encara que la fitxa porte «© Pep»)', () => {
-    render(<PerfilEditor identitat={jo} />);
+  test('sense llicència desada, «Elegir drets d’autor» (encara que la fitxa porte «© Forn»)', () => {
+    render(<PerfilEditor identitat={org('owner')} />);
     expect(screen.getByRole('button', { name: /Elegir drets d'autor/ })).toBeTruthy();
     expect(screen.queryByRole('button', { name: /^Drets d'autor:/ })).toBeNull();
     cleanup();
-    render(<PerfilEditor identitat={{ ...jo, dades: { ...jo.dades, copyright: '' } }} />);
+    render(<PerfilEditor identitat={org('owner', { dades: { copyright: '' } })} />);
     expect(screen.getByRole('button', { name: /Elegir drets d'autor/ })).toBeTruthy();
   });
 
   test('amb «CC BY 4.0» desada, la píndola plena la diu: «Drets d’autor: CC BY 4.0»', () => {
-    render(<PerfilEditor identitat={{ ...jo, dades: { ...jo.dades, copyright: 'CC BY 4.0' } }} />);
+    render(<PerfilEditor identitat={org('owner', { dades: { copyright: 'CC BY 4.0' } })} />);
     const pindola = screen.getByRole('button', { name: "Drets d'autor: CC BY 4.0" });
     expect(pindola.textContent).toBe('CC BY 4.0');
     expect(screen.queryByRole('button', { name: /Elegir drets d'autor/ })).toBeNull();
+  });
+});
+
+/* Directiva de Dignitat Humana (pla 261015_1900, Onada 1.1) · De punta a punta
+   (PerfilEditor → DocumentEditor real → PageFrame): la capçalera de la fitxa
+   d'una persona no porta cap rastre de drets d'autor (ni la píndola, ni la
+   línia de copyright, ni la reserva «© Sóc de Poble», ni la vista de drets) ni
+   la llista de categories amb «Persona», també amb una llicència desada. La
+   d'una organització, com sempre. */
+describe('Dignitat Humana · la capçalera de la fitxa de persona', () => {
+  const senseDrets = () => {
+    const cap = capcalera();
+    expect(cap).not.toBeNull();
+    expect(cap.querySelector('[data-sdp-drets]')).toBeNull();
+    expect(cap.querySelector('.page-title-copyright')).toBeNull();
+    expect(cap.querySelector('ul[aria-label="Categories"]')).toBeNull();
+    expect(cap.textContent).not.toMatch(/©|CC BY|Persona|Drets d/);
+  };
+
+  test('sense llicència i amb «CC BY 4.0» desada: cap drets ni cap categoria', () => {
+    render(<PerfilEditor identitat={jo} />);
+    senseDrets();
+    cleanup();
+    render(<PerfilEditor identitat={{ ...jo, dades: { ...jo.dades, copyright: 'CC BY 4.0' } }} />);
+    senseDrets();
+  });
+
+  test('en lectura (baixa en curs): cap drets; l’estat sí, que és un avís', () => {
+    render(<PerfilEditor identitat={{ ...jo, dades: { ...jo.dades, copyright: 'CC BY 4.0', baixa_demanada_at: '2026-09-26T10:00:00Z' } }} />);
+    const cap = capcalera() || document.querySelector('header.page-title');
+    expect(cap.querySelector('.page-title-copyright')).toBeNull();
+    expect(cap.textContent).not.toMatch(/©|CC BY|Persona/);
+    expect(cap.textContent).toContain('Baixa en curs');
+  });
+
+  test('control: l’organització conserva la línia de copyright i la píndola dels drets', () => {
+    render(<PerfilEditor identitat={org('owner', { dades: { copyright: 'CC BY 4.0' } })} />);
+    const cap = capcalera();
+    expect(cap.querySelector('.page-title-copyright')?.textContent).toBe('CC BY 4.0');
+    expect(screen.getByRole('button', { name: "Drets d'autor: CC BY 4.0" })).toBeTruthy();
   });
 });
 
@@ -566,5 +611,188 @@ describe('el check del desat després d’un reintent', () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+});
+
+/* ═══════════════════════════════════════════════════════════════════
+   BLOC 3.5.4 (GAUNTLET 261016) · AVATARS SINCRONITZATS I FRACÀS HONEST
+   DEL DESAT
+
+   Pla, Onada 1.1.4: «la targeta central (TargetaViva) i el panell d'edició
+   (PerfilEditor) han de beure exactament de la mateixa instància de dades.
+   És inadmissible que a la mateixa pantalla es mostre una foto al centre i
+   una altra a la dreta.» El contraexemple de Codex (relleu 02:26, P2): amb
+   un 403/42501 injectat al desat, l'editor ensenyava la foto nova i la
+   targeta viva la vella, el retallador es tancava com si haguera desat i
+   useImatgeDeFitxa no propagava el false de saveRemote. Ací, el mateix
+   muntatge (editor, handler, cua i TargetaViva de veres; backend, pujada i
+   Canvas simulats), amb la conducta correcta per a Javi Llinares, Sóc de
+   Poble i El Rentonar.
+   ═══════════════════════════════════════════════════════════════════ */
+describe('Bloc 3.5.4 · un 403 al desat d’una imatge (P2 de Codex)', () => {
+  const VELLA = '/assets/a.webp';
+  const NOVA = '/assets/nou.webp';
+  const CAPCALERA_VELLA = '/assets/h.webp';
+  const MOTIU_403 = 'falta un permís al servidor per a desar este camp: cal aplicar-hi una migració pendent';
+  /* jsdom no té IndexedDB: la cua és només de la pestanya (llocDelText). */
+  const AVIS_403 = `El servidor no ha acceptat la imatge (${MOTIU_403}). No s’ha desat: es guarda en esta pestanya fins que tanques la sessió, i la pots tornar a provar.`;
+  const error403 = (taula) => Object.assign(
+    new Error(`Supabase 403: {"code":"42501","message":"permission denied for table ${taula}"}`), { status: 403, code: '42501' },
+  );
+  const javi = {
+    id: 'jo', mena: 'persona', nom: 'Javi Llinares', rol: 'Persona', avatar: VELLA,
+    dades: { id: 'U', full_name: 'Javi Llinares', town_name: 'La Torre de les Maçanes', avatar_url: VELLA, hero_url: CAPCALERA_VELLA },
+  };
+  const rentonar = {
+    id: 'R', mena: 'grup', nom: 'El Rentonar', rol: 'Propietària', avatar: '/assets/rentonar.webp',
+    dades: { name: 'El Rentonar', visibility: 'public', role: 'owner', town_name: 'La Torre de les Maçanes', logo_url: '/assets/rentonar.webp' },
+  };
+  const socDePoble = {
+    ...org('owner'), id: ENTITAT_PILOT_ID, nom: 'Sóc de Poble',
+    dades: { name: 'Sóc de Poble', visibility: 'public', role: 'owner', town_name: 'La Torre de les Maçanes', hero_url: CAPCALERA_VELLA },
+  };
+  const refDe = (id, entitat) => ({ ambit: m.perfil.autodesament.ambit, context: CONFIG, entitat, id });
+
+  /* La fitxa de la llista de PerfilShell (FitxaDePerfil): la targeta viva que publica l'editor. */
+  function FitxaDeLaLlista({ clau }) {
+    const viu = useDocumentViu(clau);
+    return viu ? <TargetaViva {...viu} avis={AVISOS_TARGETA_VIVA.perfil} actual /> : null;
+  }
+  const munta = (identitat) => render(<><PerfilEditor identitat={identitat} /><FitxaDeLaLlista clau={identitat.id} /></>);
+
+  const srcDe = (img) => img?.getAttribute('src') ?? null;
+  const targeta = () => document.querySelector('article.sdp-targeta-viva-carta');
+  const barraDeLEditor = () => [...document.querySelectorAll('section.bar-orange')].find((s) => !s.closest('.sdp-targeta-viva-carta'));
+  /* La imatge pròpia a les tres superfícies: l'avatar redó (o la ranura del
+     logotip) damunt de l'H1, la barra taronja de l'editor i la targeta viva. */
+  const imatgesPropies = () => ({
+    editor: srcDe(capcalera().querySelector('button.page-title-avatar--canvia img, .page-title-logo-personalitzat img[role="button"]')),
+    barra: srcDe(barraDeLEditor()?.querySelector('img.sp-card-avatar')),
+    targeta: srcDe(targeta()?.querySelector('img.sp-card-avatar')),
+  });
+  const capcaleres = () => ({
+    editor: srcDe(document.querySelector('img.sdp-hero__imatge')),
+    targeta: srcDe(targeta()?.querySelector('img.sp-card-media')),
+  });
+  const totes = (src) => ({ editor: src, barra: src, targeta: src });
+
+  async function triaIGuardaSenseTancar(camp, finestra) {
+    await act(async () => { fireEvent.change(selector(camp), { target: { files: [new File(['x'], 'foto.png', { type: 'image/png' })] } }); });
+    await act(async () => {});
+    const dialeg = screen.getByRole('dialog', { name: finestra });
+    await act(async () => { fireEvent.click(within(dialeg).getByRole('button', { name: 'Guardar' })); });
+    return dialeg;
+  }
+  const avisDeLaFinestra = (finestra) => within(screen.getByRole('dialog', { name: finestra })).queryByRole('alert')?.textContent ?? null;
+
+  test('Javi Llinares · avatar: després del 403 la finestra continua oberta amb el motiu, la cua guarda la foto, i editor, barra i targeta viva porten la mateixa', async () => {
+    m.updateProfile = vi.fn(async () => { throw error403('profiles'); });
+    munta(javi);
+    expect(imatgesPropies()).toEqual(totes(VELLA));
+    fireEvent.click(capcalera().querySelector('button.page-title-avatar--canvia'));
+    await triaIGuardaSenseTancar('logoImage', 'Retalla la foto');
+    await waitFor(() => expect(avisDeLaFinestra('Retalla la foto')).toBe(AVIS_403));
+    // El retallador no es tanca com si haguera desat: cap toast, cap recàrrega, un sol PATCH.
+    expect(m.updateProfile.mock.calls).toEqual([[{ avatar_url: NOVA }, CONFIG]]);
+    expect(m.showToast).not.toHaveBeenCalled();
+    expect(m.perfil.recarrega).not.toHaveBeenCalled();
+    // La mateixa instància a tota la pantalla: l'esborrany que la cua conserva per a reintentar.
+    expect(imatgesPropies()).toEqual(totes(NOVA));
+    const estat = cuaDesament.llig(refDe('jo', 'perfil'));
+    expect([estat.estat, estat.camps.logoImage, estat.errors.logoImage.tipus]).toEqual(['error', NOVA, 'servidor']);
+    // El servidor ja l'accepta: tornar a Guardar la desa, tanca la finestra i la cua queda neta.
+    m.updateProfile = vi.fn(async (canvis) => ({ id: 'U', ...canvis }));
+    await act(async () => { fireEvent.click(within(screen.getByRole('dialog', { name: 'Retalla la foto' })).getByRole('button', { name: 'Guardar' })); });
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Retalla la foto' })).toBeNull());
+    expect(m.updateProfile).toHaveBeenCalledWith({ avatar_url: NOVA }, CONFIG);
+    expect(cuaDesament.llig(refDe('jo', 'perfil')).camps).toEqual({});
+    expect(imatgesPropies()).toEqual(totes(NOVA));
+  });
+
+  test('Javi Llinares · avatar: Cancel·lar després del 403 no perd res; l’avís en línia ho diu i «Tornar a provar» envia el valor de la cua', async () => {
+    m.updateProfile = vi.fn(async () => { throw error403('profiles'); });
+    munta(javi);
+    fireEvent.click(capcalera().querySelector('button.page-title-avatar--canvia'));
+    await triaIGuardaSenseTancar('logoImage', 'Retalla la foto');
+    await waitFor(() => expect(avisDeLaFinestra('Retalla la foto')).toBe(AVIS_403));
+    await act(async () => { fireEvent.click(within(screen.getByRole('dialog', { name: 'Retalla la foto' })).getByRole('button', { name: 'Cancel·lar' })); });
+    expect(screen.queryByRole('dialog', { name: 'Retalla la foto' })).toBeNull();
+    expect(imatgesPropies()).toEqual(totes(NOVA));
+    const avis = document.querySelector('.sdp-avisos-camps');
+    expect(avis.textContent).toContain(`El servidor no ha acceptat el canvi (${MOTIU_403})`);
+    m.updateProfile = vi.fn(async (canvis) => ({ id: 'U', ...canvis }));
+    await act(async () => { fireEvent.click(within(avis).getByRole('button', { name: 'Tornar a provar' })); });
+    await waitFor(() => expect(cuaDesament.llig(refDe('jo', 'perfil')).camps).toEqual({}));
+    expect(m.updateProfile.mock.calls).toEqual([[{ avatar_url: NOVA }, CONFIG]]);
+    expect(m.perfil.pujaMitja).toHaveBeenCalledTimes(1);
+    expect(imatgesPropies()).toEqual(totes(NOVA));
+  });
+
+  test('Javi Llinares · capçalera: les mateixes regles; el quadrat de l’editor i el de la targeta viva són la mateixa imatge', async () => {
+    m.updateProfile = vi.fn(async () => { throw error403('profiles'); });
+    munta(javi);
+    expect(capcaleres()).toEqual({ editor: CAPCALERA_VELLA, targeta: CAPCALERA_VELLA });
+    fireEvent.click(screen.getByRole('button', { name: 'Capçalera' }));
+    await triaIGuardaSenseTancar('heroImage', 'Retalla la capçalera');
+    await waitFor(() => expect(avisDeLaFinestra('Retalla la capçalera')).toBe(AVIS_403));
+    expect(capcaleres()).toEqual({ editor: NOVA, targeta: NOVA });
+    expect(cuaDesament.llig(refDe('jo', 'perfil')).camps.heroImage).toBe(NOVA);
+    // L'avatar no s'ha mogut de cap banda.
+    expect(imatgesPropies()).toEqual(totes(VELLA));
+  });
+
+  test('El Rentonar · logotip: 403, la finestra oberta i una sola imatge; «Tornar al que hi ha desat» torna les tres superfícies al logotip del servidor', async () => {
+    m.updateOrganization = vi.fn(async () => { throw error403('organizations'); });
+    munta(rentonar);
+    expect(imatgesPropies()).toEqual(totes('/assets/rentonar.webp'));
+    fireEvent.click(within(capcalera().querySelector('.page-title-logo-personalitzat')).getByRole('button', { name: 'Logotip' }));
+    await triaIGuardaSenseTancar('logoImage', 'Retalla el logotip');
+    await waitFor(() => expect(avisDeLaFinestra('Retalla el logotip')).toBe(AVIS_403));
+    expect(m.updateOrganization.mock.calls).toEqual([['R', { logo_url: NOVA }, CONFIG]]);
+    expect(imatgesPropies()).toEqual(totes(NOVA));
+    await act(async () => { fireEvent.click(within(screen.getByRole('dialog', { name: 'Retalla el logotip' })).getByRole('button', { name: 'Cancel·lar' })); });
+    const avis = document.querySelector('.sdp-avisos-camps');
+    await act(async () => { fireEvent.click(within(avis).getByRole('button', { name: 'Tornar al que hi ha desat' })); });
+    expect(cuaDesament.llig(refDe('R', 'organitzacio')).camps).toEqual({});
+    expect(imatgesPropies()).toEqual(totes('/assets/rentonar.webp'));
+  });
+
+  test('Sóc de Poble · capçalera: 403, la finestra oberta; la barra i la targeta viva continuen amb el logotip oficial', async () => {
+    m.updateOrganization = vi.fn(async () => { throw error403('organizations'); });
+    munta(socDePoble);
+    fireEvent.click(screen.getByRole('button', { name: 'Capçalera' }));
+    await triaIGuardaSenseTancar('heroImage', 'Retalla la capçalera');
+    await waitFor(() => expect(avisDeLaFinestra('Retalla la capçalera')).toBe(AVIS_403));
+    expect(capcaleres()).toEqual({ editor: NOVA, targeta: NOVA });
+    const { barra, targeta: deLaTargeta } = imatgesPropies();
+    expect([barra, deLaTargeta]).toEqual([DEFAULT_AUTHOR.avatarUrl, DEFAULT_AUTHOR.avatarUrl]);
+  });
+
+  test('Escape a mitja pujada i després un 403: l’avís honest va fora (toast) i res no es dona per desat', async () => {
+    const estat = {};
+    m.perfil.pujaMitja = vi.fn(() => new Promise((resol) => { estat.resol = resol; }));
+    m.updateProfile = vi.fn(async () => { throw error403('profiles'); });
+    munta(javi);
+    fireEvent.click(capcalera().querySelector('button.page-title-avatar--canvia'));
+    const dialeg = await triaIGuardaSenseTancar('logoImage', 'Retalla la foto');
+    await waitFor(() => expect(m.perfil.pujaMitja).toHaveBeenCalledTimes(1));
+    await act(async () => { fireEvent(dialeg, new Event('cancel', { cancelable: true })); });
+    await act(async () => { estat.resol(NOVA); });
+    await waitFor(() => expect(m.showToast).toHaveBeenCalledWith(AVIS_403, 'error'));
+    expect(imatgesPropies()).toEqual(totes(NOVA));
+    expect(cuaDesament.llig(refDe('jo', 'perfil')).errors.logoImage.tipus).toBe('servidor');
+  });
+
+  test('avisDeImatgeNoDesada · el motiu de la cua, dit per a una imatge, i on es guarda', () => {
+    const lloc = { persistent: true };
+    expect(avisDeImatgeNoDesada({ ...lloc, errors: { logoImage: { tipus: 'servidor', missatge: `${MOTIU_403}.` } } }, 'logoImage'))
+      .toBe(`El servidor no ha acceptat la imatge (${MOTIU_403}). No s’ha desat: es guarda en este dispositiu fins que tanques la sessió, i la pots tornar a provar.`);
+    expect(avisDeImatgeNoDesada({ persistent: false, errors: { heroImage: { tipus: 'columna', columna: 'hero_url' } } }, 'heroImage'))
+      .toBe('El servidor no ha acceptat la imatge (Este camp encara no té columna al servidor «hero_url»). No s’ha desat: es guarda en esta pestanya fins que tanques la sessió, i la pots tornar a provar.');
+    expect(avisDeImatgeNoDesada({ ...lloc, errors: {}, problema: { tipus: 'temporal', missatge: 'Sense xarxa' } }, 'logoImage'))
+      .toBe('No s’ha pogut desar la imatge (Sense xarxa). Es tornarà a provar sola; mentrestant, es guarda en este dispositiu fins que tanques la sessió.');
+    // Sense error ni problema temporal (la sessió es renova): pendent, mai «desada».
+    expect(avisDeImatgeNoDesada({ ...lloc, errors: {}, problema: null }, 'logoImage'))
+      .toBe('La imatge encara no s’ha desat al servidor. Es guarda en este dispositiu fins que tanques la sessió, i eixirà sola quan es puga.');
   });
 });

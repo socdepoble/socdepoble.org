@@ -15,9 +15,18 @@
  *   · no té missatges, ni marques, ni participants (`altres` buit: «Contactes
  *     freqüents» no l'oferix);
  *   · instant 0 i sense fixar: va a la CUA de la llista, darrere de tota
- *     conversa amb activitat, en l'ordre d'AJUDA;
+ *     conversa amb activitat, en l'ordre d'ACTORS_PERMANENTS (abans, AJUDA);
  *   · obrir-la és la via que diu la seua clau (sections/xat/
  *     useObriXatPerDefecte.js), mai obriFil.
+ *
+ * Gauntlet 261016 (prompt, Bloc 3.6; pla, Onada 1.2) · Ordre del Mestre:
+ * «Hi ha d'haver permanentment 4 converses visibles»: Sóc de Poble, Javi
+ * Llinares, Gent de la Torre i la IAIA MarIA. Ací en viuen tres, les que són
+ * un contacte directe (ACTORS_PERMANENTS): s'hi afig «Javi Llinares», la
+ * persona humana de contacte (CONTACTE_HUMA). «Gent de la Torre» és la
+ * comunitat d'un poble i la porta la fila del poble del xat
+ * (sections/xat/pobleAmfitrio.js · POBLE_PER_DEFECTE). L'adaptador les afig
+ * ara en tots els modes, també la llavor i el local (supabase/xat.js).
  *
  * Model B: este mòdul és NEUTRE i pur. No sap res de React, de la xarxa ni
  * de cap proveïdor; només coneix el padró pilot (identitatsSeed.js), el
@@ -27,7 +36,7 @@
  */
 import { AGENTS_MAP } from './agentsSeed.js';
 import { PAGINES_AMB_XAT } from './contracte.js';
-import { AGENTS_IA_SEED, ENTITAT_PILOT_ID, ENTITAT_PILOT_SLUG, esIAIA } from './identitatsSeed.js';
+import { AGENTS_IA_SEED, ENTITAT_PILOT_ID, ENTITAT_PILOT_SLUG, PERSONA_PILOT, esIAIA } from './identitatsSeed.js';
 
 /** El prefix dels ids sintètics: mai cap id de fil del servidor. */
 export const PREFIX_PER_DEFECTE = 'sdp-per-defecte:';
@@ -49,6 +58,78 @@ export const AJUDA = Object.freeze([
 
 /** Els mateixos contactes, per clau ('socdepoble' | 'iaia'). */
 export const AJUDA_PER_CLAU = Object.freeze(Object.fromEntries(AJUDA.map((contacte) => [contacte.clau, contacte])));
+
+/**
+ * Gauntlet 261016 (Bloc 3.6) · «Javi Llinares», la persona humana de
+ * contacte: el nom i la foto del padró pilot (identitatsSeed.js ·
+ * PERSONA_PILOT), mai el logo de l'entitat (Pedra Seca §11). No és cap
+ * contacte d'AJUDA: «Nova conversa» (contactesAjuda.js) no el llista com a
+ * ajuda. Cap resposta seua s'inventa: el xat de mostra només en pinta el
+ * missatge automàtic de l'ordre (MISSATGE_AUTOMATIC_DE_JAVI).
+ */
+export const CONTACTE_HUMA = Object.freeze({ clau: 'javi', nom: PERSONA_PILOT.nom, tipus: 'persona', avatar: PERSONA_PILOT.avatar });
+
+/** Les tres files directes que el Xat porta sempre, en l'ordre de l'ordre del Mestre. */
+export const ACTORS_PERMANENTS = Object.freeze([AJUDA_PER_CLAU.socdepoble, CONTACTE_HUMA, AJUDA_PER_CLAU.iaia]);
+
+/** Literal de l'ordre (Bloc 3.6), amb les seues cometes: el que veu qui no s'ha registrat en obrir el xat de Javi. */
+export const MISSATGE_AUTOMATIC_DE_JAVI = '«Este missatge és automàtic: per a poder parlar amb mi has de registrar-te.»';
+
+/**
+ * Gauntlet 261016 (Bloc 3.6) · Cert si `qui` ({ id }: qui mira el xat, o el
+ * destinatari d'un ?amb=) és la persona de contacte: per id o àlies del padró
+ * pilot. Servix perquè Javi no veja una fila per a parlar amb ell mateix
+ * (crea_fil_directe ho rebutja amb SDP-XAT-002) i perquè qui no s'ha
+ * registrat arribe al seu xat de només lectura (filDeMostraDeJavi).
+ * Auditoria adversarial 261016 (P2, suplantació) · Mai pel nom: en remot el
+ * nom de la sessió és el full_name que tria i edita cada usuari, i un homònim
+ * perdia la fila de Javi. En remot el servidor no declara quin compte és el
+ * seu (les persones no hi porten slug: supabase/perfils.js · perfilDePersona);
+ * fins que el Mestre en decidisca la via, eixe compte no és Javi per a esta
+ * regla.
+ */
+export function esLaPersonaDeContacte(qui) {
+  if (!qui) return false;
+  const id = String(qui.id ?? '');
+  return Boolean(id) && PERSONA_PILOT.alies.includes(id);
+}
+
+/** Gauntlet 261016 (Bloc 3.6.1) · L'id del xat de només lectura amb Javi per a qui no s'ha registrat. No és cap fil del servidor. */
+export const ID_FIL_DE_MOSTRA_DE_JAVI = 'fake-javi';
+
+/**
+ * Gauntlet 261016 (Bloc 3.6.1) · El xat de Javi per a qui no s'ha
+ * registrat, en la forma que llig la interfície (el Fil de FakeChatOnboarding
+ * i de XatSection): el nom i la foto de CONTACTE_HUMA, un sol missatge (el
+ * literal de l'ordre), ja llegit, i de només lectura, amb `avis` al lloc del
+ * compositor. Cap resposta en nom seu.
+ * Auditoria adversarial 261016 (P3) · Una sola peça per al xat de mostra del
+ * remot sense sessió (FakeChatOnboarding, amb `ultimAl` de la mostra) i per al
+ * convidat de la llavor i del local (XatContext, amb `ultimAl` null perquè es
+ * quede a la cua, al lloc de la fila sintètica). Pura.
+ */
+export function filDeMostraDeJavi({ ultimAl = null, avis = null } = {}) {
+  return {
+    id: ID_FIL_DE_MOSTRA_DE_JAVI,
+    name: CONTACTE_HUMA.nom,
+    title: CONTACTE_HUMA.nom,
+    avatar_url: CONTACTE_HUMA.avatar,
+    tipus: CONTACTE_HUMA.tipus,
+    participants: [{ id: `contacte:${CONTACTE_HUMA.tipus}`, nom: CONTACTE_HUMA.nom, tipus: CONTACTE_HUMA.tipus }],
+    ultimAl,
+    noLlegits: 0,
+    ultimSeq: 1,
+    llegitFinsSeq: 1,
+    ultimText: MISSATGE_AUTOMATIC_DE_JAVI,
+    potEscriure: false,
+    avisNomesLectura: avis
+  };
+}
+
+/** Les bombolles d'eixe xat: el literal de l'ordre, sense traduir, en nom de Javi. Pura. */
+export function missatgesDeMostraDeJavi(creatAl = null) {
+  return [{ id: 'm5', seq: 1, text: MISSATGE_AUTOMATIC_DE_JAVI, sender: 'other', author: CONTACTE_HUMA.nom, is_ai: false, creatAl }];
+}
 
 /* Les claus del xat públic de la pàgina de la IAIA: '/iaia' és la de
    PAGINES_AMB_XAT (contracte.js); '/ia' és la clau antiga de la llista del
@@ -78,6 +159,8 @@ export function esLaIdentitatDAjuda(identitat, clau) {
   }
   /* Auditoria 261007 (B) · La regla única de qui és la IAIA (identitatsSeed.js). */
   if (clau === 'iaia') return esIAIA(idDe(identitat));
+  /* Gauntlet 261016 (Bloc 3.6) · Javi, per l'id o un àlies del padró pilot. */
+  if (clau === 'javi') return identitat.tipus === 'persona' && PERSONA_PILOT.alies.includes(idDe(identitat));
   return false;
 }
 
@@ -90,10 +173,21 @@ export function esLaIdentitatDAjuda(identitat, clau) {
  *     (per slug o per id) o com a entitat del fil;
  *   · 'iaia' · el fil de la llavor (tipus 'iaia'), un fil amb la IAIA entre
  *     els altres, o el xat públic de la seua pàgina (subjecte 'pagina' '/iaia'
- *     o '/ia'), que és on porta la fila en remot.
+ *     o '/ia'), que és on porta la fila en remot;
+ *   · 'javi' (Gauntlet 261016, Bloc 3.6) · un directe sense subjecte amb Javi
+ *     entre els altres, per id o àlies del padró pilot.
  * Una fila sintètica no és mai el xat real de res.
+ * Auditoria adversarial 261016 · Dues correccions:
+ *   · (P2, suplantació) 'javi' ja no casa pel nom: en remot `altres[].nom` és
+ *     el full_name que tria i edita cada usuari, i un directe amb qualsevol
+ *     que es diguera «Javi Llinares» retirava la fila oficial. En remot, on
+ *     el frontend no coneix l'UUID de Javi, un directe seu de veres conviu amb
+ *     la fila sintètica fins que el Mestre decidisca com es declara el compte;
+ *   · (P2) `opcions.paginaDeLaIAIA` (cert per defecte, el remot): amb fals, el
+ *     xat públic de /iaia no compta com el de la IAIA. És la llavor i el local,
+ *     on eixe xat és un grup on la IAIA no contesta.
  */
-export function jaTeElXat(conversa, clau) {
+export function jaTeElXat(conversa, clau, { paginaDeLaIAIA = true } = {}) {
   if (!conversa || conversa.perDefecte) return false;
   if (clau === 'socdepoble') {
     if (conversa.subjecte) return false;
@@ -104,7 +198,11 @@ export function jaTeElXat(conversa, clau) {
     const subjecte = conversa.subjecte;
     return conversa.tipus === 'iaia'
       || altresDe(conversa).some((altre) => esLaIdentitatDAjuda(altre, 'iaia'))
-      || (subjecte?.tipus === 'pagina' && PAGINES_DE_LA_IAIA.has(String(subjecte.id)));
+      || (paginaDeLaIAIA && subjecte?.tipus === 'pagina' && PAGINES_DE_LA_IAIA.has(String(subjecte.id)));
+  }
+  if (clau === 'javi') {
+    if (conversa.subjecte || conversa.tipus !== 'directe') return false;
+    return altresDe(conversa).some((altre) => esLaIdentitatDAjuda(altre, 'javi'));
   }
   return false;
 }
@@ -145,20 +243,24 @@ function conversaPerDefecte({ clau, nom, avatar }) {
 
 /**
  * Les converses amb els xats d'ajuda que falten, a la CUA (Sóc de Poble i
- * després la IAIA). Idempotent:
+ * després la IAIA; des del Gauntlet 261016, Bloc 3.6, Javi Llinares entre
+ * els dos: ACTORS_PERMANENTS). Idempotent:
  *   · lleva la fila sintètica d'un contacte que ja té la conversa real;
  *   · si `afig` (per defecte), afig la que falta; amb `afig: false` només
  *     lleva (el context del xat, quan s'hi sumen els fils que llegixes com a
- *     visitant: el xat públic de /iaia retira la fila de la IAIA);
+ *     visitant: en remot, el xat públic de /iaia retira la fila de la IAIA);
+ *   · `paginaDeLaIAIA` (cert per defecte) passa a jaTeElXat: la llavor i el
+ *     local el posen a fals (auditoria adversarial 261016), perquè allí el
+ *     xat públic de /iaia no és el de la IAIA i la fila s'ha de quedar;
  *   · torna la MATEIXA referència si no canvia res.
  * Pura: no muta res.
  */
-export function ambXatsPerDefecte(converses, { afig = true } = {}) {
+export function ambXatsPerDefecte(converses, { afig = true, paginaDeLaIAIA = true } = {}) {
   const llista = Array.isArray(converses) ? converses : [];
   const reals = llista.filter((conversa) => !conversa?.perDefecte);
   const cua = [];
-  for (const contacte of AJUDA) {
-    if (reals.some((conversa) => jaTeElXat(conversa, contacte.clau))) continue;
+  for (const contacte of ACTORS_PERMANENTS) {
+    if (reals.some((conversa) => jaTeElXat(conversa, contacte.clau, { paginaDeLaIAIA }))) continue;
     const present = llista.find((conversa) => conversa?.perDefecte === contacte.clau);
     if (present) cua.push(present);
     else if (afig) cua.push(conversaPerDefecte(contacte));

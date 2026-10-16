@@ -4,12 +4,11 @@ import { useNavigate, Link } from '../../app/contexts/RouterContext';
 import { AppGridContext } from '../layout/AppGridShell';
 import { useToast } from '@/components/universal/NotificationContext.jsx';
 import { useContent } from './ContentProvider';
-import { PageFrame } from './PageFrame';
+import { ImatgeDePortada, PageFrame } from './PageFrame';
 import { isSafeUrl } from './UniversalUtils';
 import { rutaActual, urlPerCompartir, useUbicacioApp } from '../PedraSeca/hooks/useAccions.js';
 import { usePastillaCalendari } from './barres/pastillaCalendari.js';
 import { objecteDePagina, rutaConnectarObjecte } from '../../config/objecteConnectable.js';
-import { resolveAsset } from '../../config/assetResolver';
 import { STORAGE_PREFIX, delVal, getVal, setVal } from '../../config/storage';
 
 /* ── P7-A · PORTADA PLEGABLE (directriu 261003_2320 del Mestre, «Hero Image
@@ -121,7 +120,7 @@ function PortadaPlegable({ clau, imatge, alt, etiquetes }) {
         </button>
       </div>
       <div id={idImatge} hidden={!visible}>
-        <img alt={alt} src={resolveAsset(imatge)} />
+        <ImatgeDePortada alt={alt} src={imatge} />
       </div>
     </>
   );

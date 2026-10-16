@@ -124,12 +124,12 @@ describe('una persona: el seu avatar redó, mai el logotip de Sóc de Poble', ()
      marca de Sóc de Poble (quadrat verd): fixava el defecte. L'avatar_url no
      és l'autoria (T3, 261001) i la marca mai no és l'avatar d'una persona
      (skill sdp-pedra-seca §11). Sense author_avatar, el bloc comença per l'H1. */
-  test('el mac-mini tal com el servix el node local (author_id mestre-obres, només avatar_url de la marca): ni avatar ni logotip', () => {
+  test('el mac-mini amb author_id javillinares i només avatar_url de la marca: ni avatar ni logotip', () => {
     const container = pinta('mercat', {
-      id: 'mac-mini-m4', title: 'Mac Mini Apple M4, 24/512GB', seller: 'Mestre Poble', author_name: 'Mestre Poble',
-      author_id: 'mestre-obres', avatar_url: QUADRAT_VERD, created_at: '2026-02-15T12:00:00.000Z'
+      id: 'mac-mini-m4', title: 'Mac Mini Apple M4, 24/512GB', seller: 'Javi Llinares', author_name: 'Javi Llinares',
+      author_id: 'javillinares', avatar_url: QUADRAT_VERD, created_at: '2026-02-15T12:00:00.000Z'
     });
-    expect(boina(container)).toBe('/gent/mestre-obres');
+    expect(boina(container)).toBe('/gent/javillinares');
     expect(container.querySelector('.page-title-logo')).toBeNull();
     expect(fills(container)[0]).toBe('H1.');
     expect(container.querySelector('.page-title-avatar')).toBeNull();

@@ -1,8 +1,24 @@
 import React from 'react';
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, expect, test, vi } from 'vitest';
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { afterEach, beforeEach, expect, test, vi } from 'vitest';
+
+/* Gauntlet 261016 (Bloc 3.5.2; ordre del Mestre: «Tota entitat creada ha de
+   portar el seu poble») · El diàleg porta el camp «Poble», obligatori: el
+   selector de sempre (opcionsDePoble) amb els pobles del contingut core, que
+   naix amb el poble de qui crea l'organització (la persona del Perfil). Per
+   defecte, la persona d'estes proves és de La Torre de les Maçanes, i les
+   altes d'abans ara envien el seu poble; les proves de davall fixen el camp. */
+const POBLE = 'La Torre de les Maçanes';
+const mocks = vi.hoisted(() => ({ towns: [], perfil: null }));
+vi.mock('../../app/contexts/CoreContentContext.jsx', () => ({ useCoreContent: () => ({ towns: mocks.towns }) }));
+vi.mock('./PerfilContext.jsx', async (importOriginal) => ({ ...(await importOriginal()), usePerfilOpcional: () => mocks.perfil }));
 import { DialegNovaOrganitzacio } from './DialegNovaOrganitzacio.jsx';
 
+const ambPersonaDe = (poble) => ({ identitats: [{ id: 'jo', mena: 'persona', dades: { town_name: poble } }] });
+beforeEach(() => {
+  mocks.towns = [{ id: 't', title: POBLE }, { id: 'b', title: 'Benilloba' }];
+  mocks.perfil = ambPersonaDe(POBLE);
+});
 afterEach(cleanup);
 
 const obri = (props = {}) => {
@@ -20,7 +36,7 @@ test('l’identificador es deriva del nom i «Crear» envia una empresa', async 
   expect(screen.getByLabelText('Identificador').value).toBe('forn-ca-l-angela');
   expect(screen.getByText(/Adreça pública: \/empresa\/forn-ca-l-angela/)).toBeTruthy();
   await crea();
-  expect(onCrea).toHaveBeenCalledWith({ name: 'Forn Ca l’Àngela', slug: 'forn-ca-l-angela', kind: 'company' });
+  expect(onCrea).toHaveBeenCalledWith({ name: 'Forn Ca l’Àngela', slug: 'forn-ca-l-angela', kind: 'company', town_name: POBLE });
 });
 
 /* Ordre del Mestre (261008) · «Un grup no té per què pertànyer a cap empresa»:
@@ -33,7 +49,9 @@ test('261008 · «Grup» sempre s’oferix, amb l’ajuda nova i sense cap camp 
   expect(screen.queryByText('Per a crear un grup, primer has d’administrar una empresa.')).toBeNull();
   fireEvent.click(grup);
   expect(screen.queryByLabelText(/Empresa mare/)).toBeNull();
-  expect(screen.queryByRole('combobox')).toBeNull();
+  /* Gauntlet 261016 (Bloc 3.5.2) · L'únic selector és el del poble: abans no
+     n'hi havia cap, i la prova ho fixava per a la mare. */
+  expect(screen.getAllByRole('combobox')).toEqual([screen.getByLabelText(/^Poble/)]);
   expect(screen.getByText(/Adreça pública: \/grup\//)).toBeTruthy();
 });
 
@@ -42,7 +60,7 @@ test('261008 · un grup s’envia sense mare', async () => {
   escriu(/^Nom/, 'Colla de dolçainers');
   fireEvent.click(screen.getByRole('radio', { name: /Grup/ }));
   await crea();
-  expect(onCrea).toHaveBeenCalledWith({ name: 'Colla de dolçainers', slug: 'colla-de-dolcainers', kind: 'group' });
+  expect(onCrea).toHaveBeenCalledWith({ name: 'Colla de dolçainers', slug: 'colla-de-dolcainers', kind: 'group', town_name: POBLE });
   expect(onCrea.mock.calls[0][0]).not.toHaveProperty('parentOrganizationId');
 });
 
@@ -52,7 +70,7 @@ test('261008 · una prop «empresesMare» d’abans no torna a pintar el camp ni
   fireEvent.click(screen.getByRole('radio', { name: /Grup/ }));
   expect(screen.queryByLabelText(/Empresa mare/)).toBeNull();
   await crea();
-  expect(onCrea).toHaveBeenCalledWith({ name: 'Colla', slug: 'colla', kind: 'group' });
+  expect(onCrea).toHaveBeenCalledWith({ name: 'Colla', slug: 'colla', kind: 'group', town_name: POBLE });
 });
 
 test('un nom massa curt es marca al camp i no s’envia', async () => {
@@ -88,7 +106,36 @@ test('l’identificador editat a mà es normalitza', async () => {
   escriu(/^Nom/, 'Forn');
   escriu('Identificador', 'El Forn Vell');
   await crea();
-  expect(onCrea).toHaveBeenCalledWith({ name: 'Forn', slug: 'el-forn-vell', kind: 'company' });
+  expect(onCrea).toHaveBeenCalledWith({ name: 'Forn', slug: 'el-forn-vell', kind: 'company', town_name: POBLE });
+});
+
+/* Gauntlet 261016 (Bloc 3.5.2) · «Poble» és obligatori. Sense poble triat
+   (la persona no en té i no se n'ha triat cap), el camp diu què cal fer i no
+   s'envia res; triant-ne un, s'envia amb l'alta. */
+test('Gauntlet 261016 · sense poble el camp «Poble» ho diu i no s’envia; triant-ne un, s’envia', async () => {
+  mocks.perfil = null;
+  const { onCrea } = obri();
+  escriu(/^Nom/, 'Forn');
+  const poble = screen.getByLabelText(/^Poble/);
+  expect(poble.value).toBe('');
+  expect(screen.getByText('Poble').closest('label').textContent).toBe('Poble (obligatori)');
+  await crea();
+  expect(onCrea).not.toHaveBeenCalled();
+  const error = screen.getByText('Cada organització ha de tindre el seu poble: tria’n un.');
+  expect(poble.getAttribute('aria-describedby')).toContain(error.closest('p').id);
+  expect(poble.getAttribute('aria-invalid')).toBe('true');
+  fireEvent.change(poble, { target: { value: 'Benilloba' } });
+  await crea();
+  expect(onCrea).toHaveBeenCalledWith({ name: 'Forn', slug: 'forn', kind: 'company', town_name: 'Benilloba' });
+});
+
+test('Gauntlet 261016 · el selector porta els pobles del node i naix amb el de la persona, també si no hi és', () => {
+  mocks.perfil = ambPersonaDe('Penàguila');
+  obri();
+  const poble = screen.getByLabelText(/^Poble/);
+  expect(poble.value).toBe('Penàguila');
+  expect(within(poble).getAllByRole('option').map((opcio) => opcio.value)).toEqual(['', 'Benilloba', POBLE, 'Penàguila']);
+  expect(within(poble).getAllByRole('option')[0].textContent).toBe('Tria un poble…');
 });
 
 test('Cancel·lar tanca amb el motiu «boto»', () => {

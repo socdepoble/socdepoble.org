@@ -1,6 +1,9 @@
-import { useRef, useState } from 'react';
-import { Dialeg, Boto, Camp, CampText, GrupOpcions } from '../../components/PedraSeca';
+import { useMemo, useRef, useState } from 'react';
+import { Dialeg, Boto, Camp, CampText, GrupOpcions, Selector } from '../../components/PedraSeca';
 import { normalizeSlug, validateOrganization, readableBackendError } from '../onboarding/onboardingModel.js';
+import { useCoreContent } from '../../app/contexts/CoreContentContext.jsx';
+import { pobleDOrganitzacio } from '../../data/pobleOrganitzacio.js';
+import { opcionsDePoble, usePerfilOpcional } from './PerfilContext.jsx';
 
 const TIPUS = Object.freeze([
   { valor: 'company', etiqueta: 'Empresa o negoci', ajuda: 'Una botiga, un taller, una cooperativa…' },
@@ -20,23 +23,39 @@ const TIPUS = Object.freeze([
  * del servidor van al camp que toca: l'identificador repetit, a
  * «Identificador»; la resta, damunt del formulari.
  *
+ * Gauntlet 261016 (Bloc 3.5.2; ordre del Mestre: «Tota entitat creada ha de
+ * portar el seu poble») · «Poble» és obligatori: el selector de sempre del
+ * poble d'una organització (opcionsDePoble, el de «El compte», amb els pobles
+ * del contingut core), que naix amb el poble de qui la crea si en té. Sense
+ * poble no s'envia res; el domini i l'adaptador també l'exigixen
+ * (data/pobleOrganitzacio.js).
+ *
  * `onCrea(dades)` és una promesa: si falla, el diàleg continua obert.
  */
 export function DialegNovaOrganitzacio({ obert, onTanca, onCrea }) {
+  const { towns } = useCoreContent();
+  const pobleDeLaPersona = usePerfilOpcional()?.identitats?.find((identitat) => identitat.mena === 'persona')?.dades?.town_name;
   const [nom, setNom] = useState('');
   const [slug, setSlug] = useState(null); // null = derivat del nom
   const [kind, setKind] = useState('company');
+  const [poble, setPoble] = useState(() => (typeof pobleDeLaPersona === 'string' ? pobleDeLaPersona.trim() : ''));
   const [errors, setErrors] = useState({});
   const [desant, setDesant] = useState(false);
   const enviant = useRef(false);
 
   const slugVisible = slug ?? normalizeSlug(nom);
+  const opcionsPoble = useMemo(() => opcionsDePoble(towns, poble), [towns, poble]);
 
   const envia = async (e) => {
     e?.preventDefault?.();
     if (enviant.current) return;
-    const dades = { name: nom.trim(), slug: normalizeSlug(slugVisible), kind };
+    const dades = { name: nom.trim(), slug: normalizeSlug(slugVisible), kind, town_name: poble.trim() };
     const nous = validateOrganization(dades);
+    try {
+      pobleDOrganitzacio(dades.town_name);
+    } catch (error) {
+      nous.town_name = error.message;
+    }
     setErrors(nous);
     if (Object.keys(nous).length) return;
 
@@ -91,6 +110,14 @@ export function DialegNovaOrganitzacio({ obert, onTanca, onCrea }) {
           onCanvi={setKind}
           disabled={desant}
         />
+        <Camp etiqueta="Poble" error={errors.town_name} obligatori>
+          <Selector
+            value={poble}
+            onChange={(e) => setPoble(e.target.value)}
+            opcions={opcionsPoble}
+            disabled={desant}
+          />
+        </Camp>
         <Camp
           etiqueta="Identificador"
           error={errors.slug}

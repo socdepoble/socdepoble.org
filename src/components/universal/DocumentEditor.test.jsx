@@ -40,6 +40,8 @@ afterEach(() => {
 const DOC = { id: 'd1', title: 'Títol', subtitle: '', lead: '', content: '', formattedDate: '01/01/26', formattedTime: '10:00' };
 const editor = (adapter) => render(<DocumentEditor adapter={{ document: DOC, labels: [{ text: 'Sistema' }], ...adapter }} />);
 const classesDe = (el) => [...el.children].map((e) => e.className || e.dataset.testid);
+/* Els id de useId canvien d'un render a l'altre: dos DOM es comparen normalitzats. */
+const senseIds = (html) => html.replace(/:r[0-9a-z]+:/g, ':id:');
 
 test('E1 · no hi ha barra grisa: la fila d’eines va seguida del document (barra blava a la fila 2)', () => {
   const { container } = editor({});
@@ -354,121 +356,67 @@ test('T66b · a l’estat buit, sense emoticona (o amb text que no és un emoji)
   }
 });
 
-/* ── T50 (decisió del Mestre, 260928: «Llista + dreta si hi cap») ──────── */
-test('T50 · sense la clau targetaViva, el DOM de sempre: cap embolcall, cap aside ni xip «Vista targeta»', () => {
-  const { container } = editor({ updateLocal: vi.fn() });
+/* ── T50 (decisió del Mestre, 260928: «Llista + dreta si hi cap») ────────
+   Bloc 3.4 del Gauntlet (261016) · Retirada definitiva de l'aside de la
+   targeta viva a la dreta de l'editor i del seu xip «Vista targeta»: cap
+   consumidor els passava (Notes, P4; el Perfil, pla 261015). Estes proves
+   fixen que l'editor és el de sempre i que una clau vella que encara arribe
+   (targetaViva, avisTargetaViva) no hi canvia res. La targeta viva es prova
+   on viu: TargetaViva.test.jsx, PerfilShell.targetaViva i DetallVistes. */
+const senseTargetaViva = (container) => {
   expect(container.querySelector('.sdp-editor-amb-targeta')).toBeNull();
   expect(container.querySelector('.sdp-targeta-viva')).toBeNull();
   expect(container.querySelector('.sp-card')).toBeNull();
+  expect(screen.queryByRole('complementary', { name: 'Previsualització de la targeta' })).toBeNull();
   expect(screen.queryByRole('button', { name: 'Vista targeta' })).toBeNull();
   // La closca continua sent filla directa del contenidor de l'editor.
   expect(container.querySelector('.sdp-editor-shell-atomic').parentElement).toBe(container);
-});
-
-test('T50 · amb targetaViva, la closca i l’aside de la targeta viuen dins d’un embolcall constant', () => {
-  const { container } = editor({ targetaViva: true, updateLocal: vi.fn(), barAuthorName: 'Pep', barAuthorLocation: 'La Torre' });
-  const graella = container.querySelector('.sdp-editor-amb-targeta > .sdp-editor-amb-targeta__graella');
-  expect([...graella.children].map((e) => e.className)).toEqual(['sdp-editor-shell-atomic', 'sdp-targeta-viva']);
-  const aside = graella.querySelector('aside.sdp-targeta-viva');
-  expect(aside.getAttribute('aria-label')).toBe('Previsualització de la targeta');
-  const targeta = aside.querySelector('article.sp-card.sp-card--pla');
-  expect(targeta.querySelector('.sp-card-title').textContent).toBe('Títol');
-  // Signa com la barra taronja i porta les mateixes píndoles.
-  expect(targeta.querySelector('.sp-card-author-name').textContent).toBe('Pep');
-  expect(targeta.querySelector('.sp-card-author-location').textContent).toBe('La Torre');
-  expect(within(targeta).getByText('Sistema')).toBeTruthy();
-  // La clau no arriba al DOM.
-  expect(container.querySelector('[targetaviva], [targetaViva]')).toBeNull();
-});
-
-test('T50 · en tornar a pintar amb el mateix id, la targeta canvia i la closca (i TipTap) és el mateix node', () => {
-  const adapter = { document: DOC, labels: [], targetaViva: true, updateLocal: vi.fn() };
-  const { container, rerender } = render(<DocumentEditor adapter={adapter} />);
-  const shell = container.querySelector('.sdp-editor-shell-atomic');
-  const cos = screen.getByTestId('cos');
-  rerender(<DocumentEditor adapter={{ ...adapter, document: { ...DOC, title: '<p>Tomaques&nbsp;<b>de penjar</b></p>', icon: '🍅' } }} />);
-  expect(container.querySelector('.sdp-targeta-viva .sp-card-title').textContent).toBe('Tomaques de penjar');
-  expect(container.querySelector('.sdp-targeta-viva .sdp-emoticona-barra').textContent).toBe('🍅');
-  expect(container.querySelector('.sdp-editor-shell-atomic')).toBe(shell);
-  expect(screen.getByTestId('cos')).toBe(cos);
-});
-
-test('T50 · el xip «Vista targeta» va davall del títol, amb Vista A4, i obri la targeta en un diàleg', () => {
-  const { container } = editor({ targetaViva: true, updateLocal: vi.fn() });
-  const control = container.querySelector('header.page-title .sdp-copyright-control');
-  const xip = within(control).getByRole('button', { name: 'Vista targeta' });
-  const botons = within(control).getAllByRole('button').map((b) => b.textContent);
-  expect(botons.slice(-3)).toEqual(['Vista A4 / PDF', 'Crear portada', 'Vista targeta']);
-  act(() => { fireEvent.click(xip); });
-  const dialeg = screen.getByRole('dialog', { name: 'Vista targeta' });
-  expect(dialeg.querySelector('.sp-card-title').textContent).toBe('Títol');
-  // Els botons de la targeta no fan res: l'avís de previsualització.
-  act(() => { fireEvent.click(within(dialeg).getByRole('button', { name: /Comentar Títol/ })); });
-  expect(screen.getByRole('dialog', { name: 'Això és una previsualització' })).toBeTruthy();
-});
-
-/* Poliment T50 (revisió de W3B1, D3) · La clau avisTargetaViva porta els textos
-   del consumidor a l'aside i al xip. Els diàlegs tancats ja són al DOM: es
-   llig la descripció de cadascun (la del xip és la germana del botó). */
-const descripcioDe = (dialeg) => dialeg.querySelector('.sdp-dialeg__descripcio').textContent;
-const dialegsDeLaTargeta = (container) => {
-  const aside = container.querySelector('aside.sdp-targeta-viva');
-  const xip = within(container.querySelector('header.page-title .sdp-copyright-control')).getByRole('button', { name: 'Vista targeta' });
-  return { aside, xip, avisAside: aside.querySelector('dialog'), vista: xip.nextElementSibling };
 };
-const senseIds = (html) => html.replace(/:r[0-9a-z]+:/g, ':id:');
 
-test('T50 · sense avisTargetaViva, l’aside i el xip conserven la reserva; null és el mateix DOM que sense la clau', () => {
-  /* Rellotge fix: la pastilla i la targeta pinten l'hora d'ara (regla
-     d'edició) i un canvi de minut entre els dos renders no pot tombar la prova. */
+test('T50 · retirada · el DOM de sempre: cap embolcall, cap aside ni xip «Vista targeta»; la closca, filla directa', () => {
+  const { container } = editor({ updateLocal: vi.fn() });
+  senseTargetaViva(container);
+});
+
+test('T50 · retirada · una clau vella (targetaViva, avisTargetaViva) no canvia res: el mateix DOM, sense atributs ni avisos de React', () => {
+  /* Rellotge fix: la pastilla pinta l'hora d'ara i un canvi de minut entre
+     els dos renders no pot tombar la prova. */
   vi.useFakeTimers({ toFake: ['Date'] });
-  vi.setSystemTime(new Date(2026, 8, 28, 10, 7));
+  vi.setSystemTime(new Date(2026, 9, 16, 1, 0));
+  const errors = vi.spyOn(console, 'error').mockImplementation(() => {});
   try {
-    const { container } = editor({ targetaViva: true, updateLocal: vi.fn() });
-    const { avisAside, vista } = dialegsDeLaTargeta(container);
-    expect(descripcioDe(avisAside)).toBe(AVIS_PREVISUALITZACIO.descripcio);
-    expect(descripcioDe(vista)).toBe(AVIS_PREVISUALITZACIO.vista);
-    const senseClau = senseIds(container.innerHTML);
+    const senseClau = editor({ updateLocal: vi.fn(), barAuthorName: 'Pep' });
+    const html = senseIds(senseClau.container.innerHTML);
     cleanup();
-    const ambNull = editor({ targetaViva: true, updateLocal: vi.fn(), avisTargetaViva: null });
-    expect(senseIds(ambNull.container.innerHTML)).toBe(senseClau);
+    const vella = editor({ updateLocal: vi.fn(), barAuthorName: 'Pep', targetaViva: true, avisTargetaViva: AVISOS_TARGETA_VIVA.notes });
+    expect(senseIds(vella.container.innerHTML)).toBe(html);
+    senseTargetaViva(vella.container);
+    // Cap diàleg de la targeta, ni tancat: ni la reserva ni el text del Bloc de Notes.
+    const pagina = document.body.innerHTML;
+    for (const text of [AVIS_PREVISUALITZACIO.descripcio, AVIS_PREVISUALITZACIO.vista, AVISOS_TARGETA_VIVA.notes.descripcio, AVISOS_TARGETA_VIVA.notes.vista]) {
+      expect(pagina).not.toContain(text);
+    }
+    // Les claus no arriben al DOM com a atributs ni fan avisos de React.
+    expect(vella.container.querySelector('[targetaviva], [targetaViva], [avistargetaviva], [avisTargetaViva]')).toBeNull();
+    const avisos = errors.mock.calls.map((crida) => crida.map(String).join(' '));
+    expect(avisos.filter((text) => /targetaViva/i.test(text))).toEqual([]);
+    // Amb la vista de drets oberta, CopyrightPage és germana de la closca: cap embolcall --drets.
+    const shell = vella.container.querySelector('.sdp-editor-shell-atomic');
+    act(() => { fireEvent.click(botoDrets()); });
+    expect(vella.container.querySelector('section.sdp-drets').nextElementSibling).toBe(shell);
+    expect(vella.container.querySelector('.sdp-editor-amb-targeta--drets')).toBeNull();
   } finally {
     vi.useRealTimers();
   }
 });
 
-test('T50 · amb avisTargetaViva, l’aside i el xip diuen el text del consumidor; la clau no arriba al DOM', () => {
-  const avis = AVISOS_TARGETA_VIVA.notes;
-  const { container } = editor({ targetaViva: true, updateLocal: vi.fn(), avisTargetaViva: avis });
-  const { aside, xip, avisAside, vista } = dialegsDeLaTargeta(container);
-  expect(descripcioDe(avisAside)).toBe(avis.descripcio);
-  expect(descripcioDe(vista)).toBe(avis.vista);
-  // Una acció de l'aside obri l'avís del consumidor.
-  act(() => { fireEvent.click(within(aside).getByRole('button', { name: /Comentar Títol/ })); });
-  expect(descripcioDe(screen.getByRole('dialog', { name: avis.titol }))).toBe(avis.descripcio);
-  act(() => { fireEvent.click(screen.getByRole('button', { name: 'Entesos' })); });
-  // La targeta del diàleg del xip també el rep.
-  act(() => { fireEvent.click(xip); });
-  const dialeg = screen.getByRole('dialog', { name: 'Vista targeta' });
-  act(() => { fireEvent.click(within(dialeg).getByRole('button', { name: /Comentar Títol/ })); });
-  expect(descripcioDe(screen.getByRole('dialog', { name: avis.titol }))).toBe(avis.descripcio);
-  expect(container.querySelector('[avistargetaviva], [avisTargetaViva]')).toBeNull();
-  expect(container.innerHTML).not.toContain(AVIS_PREVISUALITZACIO.vista);
+test('T50 · retirada · davall del títol, el control de sempre: els drets, Vista A4 / PDF i Crear portada, i res més', () => {
+  const { container } = editor({ updateLocal: vi.fn() });
+  expect(botonsDelControl(container)).toEqual(["Elegir drets d'autor", 'Vista A4 / PDF', 'Crear portada']);
+  expect(container.querySelector('.sdp-boto-targeta-viva')).toBeNull();
 });
 
-test('T50 · amb la vista de drets oberta, l’embolcall s’amaga sencer (--drets) i la closca continua muntada', () => {
-  const { container } = editor({ targetaViva: true, updateLocal: vi.fn(), saveRemote: vi.fn() });
-  const shell = container.querySelector('.sdp-editor-shell-atomic');
-  act(() => { fireEvent.click(botoDrets()); });
-  const embolcall = container.querySelector('.sdp-editor-amb-targeta');
-  expect(embolcall.classList.contains('sdp-editor-amb-targeta--drets')).toBe(true);
-  expect(container.querySelector('section.sdp-drets').nextElementSibling).toBe(embolcall);
-  expect(container.querySelector('.sdp-editor-shell-atomic')).toBe(shell);
-  act(() => { fireEvent.click(screen.getByRole('button', { name: 'Tornar al document' })); });
-  expect(embolcall.className).toBe('sdp-editor-amb-targeta');
-});
-
-/* jsdom no calcula @container: es comprova la regla escrita (com PageFrame.capes). */
+/* Es comprova la regla escrita (com PageFrame.capes). */
 const cssNet = (ruta) => readFileSync(resolve(process.cwd(), ruta), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '').replace(/\s+/g, ' ');
 const blocQueConte = (text, obertura, regla) => {
   for (let obri = text.indexOf(obertura); obri >= 0; obri = text.indexOf(obertura, obri + 1)) {
@@ -485,29 +433,22 @@ const blocQueConte = (text, obertura, regla) => {
   return '';
 };
 
-test('T50 · CSS: contenidor amb nom, aside només a partir de 60rem (i el xip amagat), xarxa sense @container', () => {
+test('T50 · retirada · CSS: cap regla de l’embolcall, de l’aside ni del xip; la carta i el token es queden', () => {
   const components = cssNet('src/css/components.css');
   const tokens = cssNet('src/css/tokens.css');
+  for (const resta of ['.sdp-editor-amb-targeta', 'sdp-editor-targeta', '--targeta-viva-xip', '.sdp-boto-targeta-viva']) {
+    expect(components, resta).not.toContain(resta);
+  }
+  // Cap regla de l'aside (.sdp-targeta-viva); la carta (.sdp-targeta-viva-carta) és un altre nom.
+  expect(components).not.toMatch(/\.sdp-targeta-viva(?![\w-])/);
+  // La carta de la fitxa de la llista i de «Les vistes», dins de @layer components.
+  const capa = blocQueConte(components, '@layer components {', '.sdp-targeta-viva-carta {');
+  expect(capa).toContain('.sdp-targeta-viva-carta { min-width: 0; }');
+  // El token es queda: el fa servir PerfilShell.css («Les vistes»).
   expect(tokens).toMatch(/--sdp-targeta-viva-ample: [\d.]+rem;/);
-  const capa = blocQueConte(components, '@layer components {', '.sdp-editor-amb-targeta {');
-  expect(capa).toContain('container: sdp-editor-targeta / inline-size;');
-  // Fora del @container (Chrome 100 i Firefox 100): cap aside, el xip es veu.
-  expect(capa).toContain('.sdp-targeta-viva { display: none; }');
-  expect(capa).toContain('.sdp-editor-amb-targeta--drets { display: none; }');
-  expect(capa).toContain('.sdp-editor-amb-targeta .sdp-boto-targeta-viva { display: var(--targeta-viva-xip, inline-flex); }');
-  const ample = blocQueConte(capa, '@container sdp-editor-targeta (min-width: 60rem) {', '.sdp-targeta-viva {');
-  expect(ample).toContain('grid-template-columns: minmax(0, 1fr) var(--sdp-targeta-viva-ample);');
-  expect(ample).toContain('display: block;');
-  expect(ample).toContain('overflow-y: auto;');
-  // El xip no consulta cap contenidor (Chrome no la reavaluava dins d'un altre
-  // contenidor): la graella, filla directa, li passa `none` per herència.
-  expect(ample).toContain('--targeta-viva-xip: none;');
-  expect(ample).not.toContain('.sdp-boto-targeta-viva');
-  // Cap @container sense nom per a la targeta viva: consultaria la pàgina, no l'editor.
-  expect(blocQueConte(components, '@container (', '.sdp-targeta-viva')).toBe('');
 });
 
-test('T50 · a l’estat buit (sense document) no hi ha targeta viva: la UniversalPage de sempre', () => {
+test('T50 · retirada · a l’estat buit, una clau vella tampoc no hi fa res: la UniversalPage de sempre', () => {
   const buit = render(<DocumentEditor adapter={{ document: null, emptyDocument: { title: 'Fitxa' }, targetaViva: true }} />);
   expect(buit.container.querySelector('.sdp-editor-amb-targeta')).toBeNull();
   expect(buit.container.querySelector('.sdp-targeta-viva')).toBeNull();
@@ -792,13 +733,14 @@ test('261008 · sense la clau dretsTriats (Notes), el DOM de sempre: mana docume
 const botonsDelControl = (container) => [...container.querySelectorAll('header.page-title .sdp-copyright-control button')]
   .filter((b) => !b.closest('dialog')).map((b) => b.textContent);
 
-test('CONTRACTE-3 · ambVistes={false}: ni Vista A4, ni Crear portada, ni el xip; el botó dels drets i l’aside es queden', () => {
-  const { container } = editor({ targetaViva: true, updateLocal: vi.fn(), ambVistes: false });
+/* T50 · Bloc 3.4 (261016) · Abans es provaven amb la targeta viva muntada (el
+   xip i l'aside); retirada la clau, es proven amb l'editor de sempre. */
+test('CONTRACTE-3 · ambVistes={false}: ni Vista A4 ni Crear portada; el botó dels drets es queda', () => {
+  const { container } = editor({ updateLocal: vi.fn(), ambVistes: false });
   expect(botonsDelControl(container)).toEqual(["Elegir drets d'autor"]);
   expect(screen.queryByRole('button', { name: 'Vista A4 / PDF' })).toBeNull();
   expect(screen.queryByRole('button', { name: 'Crear portada' })).toBeNull();
   expect(screen.queryByRole('button', { name: 'Vista targeta' })).toBeNull();
-  expect(container.querySelector('aside.sdp-targeta-viva .sp-card')).not.toBeNull();
   // La clau no arriba al DOM.
   expect(container.querySelector('[ambvistes], [ambVistes]')).toBeNull();
 });
@@ -807,11 +749,11 @@ test('CONTRACTE-3 · ambVistes={true} és el DOM de sempre (el de sense la clau)
   vi.useFakeTimers({ toFake: ['Date'] });
   vi.setSystemTime(new Date(2026, 9, 8, 12, 0));
   try {
-    const senseClau = editor({ targetaViva: true, updateLocal: vi.fn() });
-    expect(botonsDelControl(senseClau.container).slice(-3)).toEqual(['Vista A4 / PDF', 'Crear portada', 'Vista targeta']);
+    const senseClau = editor({ updateLocal: vi.fn() });
+    expect(botonsDelControl(senseClau.container)).toEqual(["Elegir drets d'autor", 'Vista A4 / PDF', 'Crear portada']);
     const html = senseIds(senseClau.container.innerHTML);
     cleanup();
-    const ambTrue = editor({ targetaViva: true, updateLocal: vi.fn(), ambVistes: true });
+    const ambTrue = editor({ updateLocal: vi.fn(), ambVistes: true });
     expect(senseIds(ambTrue.container.innerHTML)).toBe(html);
   } finally {
     vi.useRealTimers();
@@ -822,4 +764,50 @@ test('CONTRACTE-3 · ambVistes={false} sense targeta viva ni drets (sense update
   const { container } = editor({ ambVistes: false });
   expect(container.querySelector('.sdp-copyright-control')).toBeNull();
   expect(container.querySelector('.page-title-classificacio')).toBeNull();
+});
+
+/* ── Directiva de Dignitat Humana (pla 261015_1900) · ambDrets ──────────────
+   La fitxa d'una persona (PerfilEditor) no és una obra: amb ambDrets={false}
+   no hi ha cap rastre de drets d'autor (ni la píndola, ni la línia de la
+   capçalera, ni la reserva «© Sóc de Poble», ni la vista de drets), tampoc
+   amb un copyright al document o una ranura `llicencia`. */
+test('Dignitat Humana · ambDrets={false}: cap píndola, cap línia de copyright (ni la reserva) i cap vista de drets', () => {
+  for (const document of [DOC, { ...DOC, copyright: 'CC BY 4.0' }]) {
+    const { container, unmount } = render(<DocumentEditor adapter={{
+      document, updateLocal: vi.fn(), saveRemote: vi.fn(), ambDrets: false, llicencia: <p>Drets de l’original</p>,
+    }} />);
+    const capcalera = container.querySelector('header.page-title');
+    expect(capcalera).not.toBeNull();
+    expect(container.querySelector('[data-sdp-drets]')).toBeNull();
+    expect(container.querySelector('.page-title-copyright')).toBeNull();
+    expect(container.querySelector('.sdp-copyright-control')).toBeNull();
+    expect(capcalera.textContent).not.toMatch(/©|CC BY|Drets d/);
+    expect(screen.queryByRole('button', { name: /Elegir drets d'autor/ })).toBeNull();
+    expect(container.querySelector('section.sdp-drets')).toBeNull();
+    // La clau no arriba al DOM.
+    expect(container.querySelector('[ambdrets], [ambDrets]')).toBeNull();
+    unmount();
+  }
+});
+
+test('Dignitat Humana · ambDrets={false} amb labels buides: cap llista de categories en lloc de la píndola', () => {
+  const { container } = editor({ updateLocal: vi.fn(), ambDrets: false, labels: [] });
+  expect(container.querySelector('header.page-title ul[aria-label="Categories"]')).toBeNull();
+  expect(container.querySelector('.page-title-classificacio')).toBeNull();
+});
+
+test('Dignitat Humana · ambDrets={true} és el DOM de sempre (el de sense la clau)', () => {
+  vi.useFakeTimers({ toFake: ['Date'] });
+  vi.setSystemTime(new Date(2026, 9, 15, 12, 0));
+  try {
+    const doc = { ...DOC, copyright: 'CC BY 4.0' };
+    const senseClau = render(<DocumentEditor adapter={{ document: doc, updateLocal: vi.fn() }} />);
+    expect(screen.getByRole('button', { name: "Drets d'autor: CC BY 4.0" })).toBeTruthy();
+    const html = senseIds(senseClau.container.innerHTML);
+    cleanup();
+    const ambTrue = render(<DocumentEditor adapter={{ document: doc, updateLocal: vi.fn(), ambDrets: true }} />);
+    expect(senseIds(ambTrue.container.innerHTML)).toBe(html);
+  } finally {
+    vi.useRealTimers();
+  }
 });

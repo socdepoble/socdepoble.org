@@ -153,11 +153,41 @@ test('sense fitxa del poble al node, la comunitat es queda amb les inicials (cap
   expect(caraDe(llista().querySelector('li[data-clau="comunitat:c-torre"]'))).toBeNull();
 });
 
-test('sense poble declarat (socdepoble.org), la comunitat d’un poble no canvia', () => {
+/* Gauntlet 261016 (Bloc 3.6) · Derogat «sense poble declarat, res no canvia»:
+   sense amfitrió, el poble del xat és el de la llavor (POBLE_PER_DEFECTE, La
+   Torre), i la seua comunitat porta la cara com amb un amfitrió. La d'un
+   altre poble continua sense canviar. */
+test('sense poble declarat (socdepoble.org), la comunitat de la Torre porta la cara; la d’un altre poble, no', () => {
   mocks.externalConfig = {};
   ambComunitatDelPoble();
+  const vista = render(<XatSection />);
+  expect(caraDe(llista().querySelector('li[data-clau="comunitat:c-torre"]'))).toBe(CARA);
+  expect(llista().querySelector('li[data-clau^="poble:"]')).toBeNull();
+  vista.unmount();
+  const subjecte = { tipus: 'poble', id: 'sella', ruta: '/pobles/sella', titol: 'Gent de Sella' };
+  const fils = [{ id: 'c-sella', tipus: 'comunitat', titol: 'Gent de Sella', comunitatId: null, subjecte, imatgeUrl: null }].map((f) => mapejaFil(f));
+  mocks.threads = fils;
+  mocks.comunitats = agrupaComunitats(fils);
   render(<XatSection />);
-  expect(caraDe(llista().querySelector('li[data-clau="comunitat:c-torre"]'))).toBeNull();
+  expect(caraDe(llista().querySelector('li[data-clau="comunitat:c-sella"]'))).toBeNull();
+});
+
+/* Gauntlet 261016 (Bloc 3.6) · «Gent de la Torre», sempre: sense amfitrió i
+   sense cap comunitat, la fila virtual del poble de la llavor és al
+   capdamunt, amb el nom de l'ordre i la cara de la seua fitxa; prémer-la fa
+   el camí del «Comentar» del poble, com amb un amfitrió. */
+test('sense poble declarat, la fila virtual de «Gent de la Torre» és al capdamunt i obri el xat del poble', () => {
+  mocks.externalConfig = {};
+  render(<XatSection />);
+  const fila = llista().querySelector('li[data-clau="poble:la-torre-de-les-macanes"]');
+  expect(fila).not.toBeNull();
+  expect(llista().querySelector('li')).toBe(fila);
+  expect(fila.querySelector('.sdp-xat-fila__nom').textContent).toContain('Gent de la Torre');
+  expect(caraDe(fila)).toBe(CARA);
+  fireEvent.click(fila.querySelector('button'));
+  const url = new URL(mocks.navigate.mock.calls.at(-1)[0], 'https://x.invalid');
+  expect(url.searchParams.get('sobre')).toBe('poble:la-torre-de-les-macanes');
+  expect(url.searchParams.get('titol')).toBe('Gent de la Torre');
 });
 
 /* Integració Xat i Pobles (Onada 6, pla 261009_0245, ítem 4) · Un amfitrió

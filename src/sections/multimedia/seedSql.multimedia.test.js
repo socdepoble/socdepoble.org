@@ -5,9 +5,9 @@
  * Samarreta com a entrades de Multimèdia amb el text de venda sencer i el
  * logotip de foto: el segon «Mac Mini» que va trobar el Mestre.
  *
- * El seed.sql NO és l'eixida d'ara del generador (porta una llavor sintètica:
- * «Mestre Poble» per la persona pilot, i la Porta Llavor veta que hi entre el
- * seu nom), i per això no es compara byte a byte amb APP_CONTENT_ROWS. El que
+ * El seed.sql NO és l'eixida d'ara del generador (porta una llavor sintètica
+ * amb un pseudònim per a la persona pilot, i la Porta Llavor veta que hi
+ * entre el seu nom), i per això no es compara byte a byte amb APP_CONTENT_ROWS. El que
  * es fixa és la coherència del fitxer amb si mateix: les fotos derivades de
  * la seua fila 'mediaItems' són EXACTAMENT les que mediaContent.js trau de les
  * SEUES files 'marketItems' i 'towns', i cap imatge que nomena falta al disc.

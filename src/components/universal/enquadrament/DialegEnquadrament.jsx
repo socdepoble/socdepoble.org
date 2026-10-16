@@ -51,15 +51,54 @@
  *     «Guardar» a la dreta. Sense la X: Escape continua tancant.
  *   mascara (null | 'cercle') · Amb 'cercle', el vel enfosquix el que queda
  *     fora del cercle (l'avatar es pinta redó). El fitxer continua quadrat.
+ *
+ * GAUNTLET 261016 (Bloc 1.2, mandat del Mestre, pla §0.1.3) · L'EXIF de la
+ * foto es conserva de sèrie, amb la tria de la persona. Sense esta prop, el
+ * diàleg és exactament el d'abans.
+ *   ofereixConservarExif (false) · Si la foto triada (un File) porta EXIF
+ *     (exifPublicable, exifIncrustat.js), ensenya la casella, MARCADA de
+ *     sèrie, en els dos modes, davall dels controls. El text s'adapta al que
+ *     porta (Codex, relleu 02:26): «Conserva la ubicació i la data de la
+ *     foto» si en porta la ubicació o la data (l'avís diu la ubicació o, si
+ *     no n'hi ha, la data), i «Conserva les dades de la càmera de la foto» si
+ *     només porta la càmera (marca, model, MakerNote…). onDesa rep llavors, a
+ *     metadades.exif, les opcions de la pujada: { conservaExif: true,
+ *     original } (marcada; la compressió hi torna a posar l'EXIF publicable de
+ *     l'original) o { conservaExif: false } (desmarcada: la foto ix neta, com
+ *     abans). Sense casella, metadades no porta `exif`. El fitxer que lliura
+ *     el diàleg no canvia: és la compressió de qui puja (compressImage) la que
+ *     hi posa l'EXIF.
+ *     Un EXIF que hi és però no es pot conservar (ESTAT_EXIF.NO_CONSERVABLE)
+ *     també té casella, i el seu avís ho diu (errorExifNoConservable). Desar-la
+ *     marcada no desa: el mateix avís dalt del diàleg, que continua obert;
+ *     desmarcada, la foto ix neta. Mai una foto neta en silenci.
+ *     Gauntlet 261016 (Bloc B) · Tres precisions:
+ *       · Una adreça ja desada (re-enquadrar la capçalera) també: es llig
+ *         l'EXIF del blob que ha obert el carregador (carregaImatge el torna),
+ *         amb la mateixa casella, i `original` és eixe blob. Desmarcada, es
+ *         desa neta encara que el retall siga la foto sencera. Un blob:
+ *         directe no té bytes per llegir: cap casella, com abans.
+ *       · L'etiqueta i l'avís diuen el que porta el bloc que es publicarà
+ *         (contingut, exifIncrustat.js), i l'avís nomena les dades que
+ *         identifiquen la càmera (marca, model, número de sèrie, un nom de
+ *         persona) quan n'hi ha. La tria de sèrie no canvia (pla §0.1.3).
+ *       · Qui desa abans d'haver vist la casella (la lectura no havia acabat)
+ *         no publica res a cegues: si la lectura porta un EXIF per a la
+ *         casella, no es desa; la casella apareix, marcada, amb AVIS_REVISA_EXIF,
+ *         i és el segon clic el que desa. Si no porta res, es desa com abans.
+ *   lectorExif: injectable per a les proves.
  */
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { Minus, Plus } from 'lucide-react';
-import { Alerta, Boto, Camp, CampText, Carregant, Dialeg, GrupOpcions } from '../../PedraSeca/index.js';
+import { Alerta, Boto, Camp, CampText, Carregant, Casella, Dialeg, GrupOpcions } from '../../PedraSeca/index.js';
 import {
   FORMATS, FORMAT_PER_DEFECTE, ambLliscador, ambRoda, ambTecla, arrossega, esSencera, estatInicial, limita, lliscador,
   marges, midaVisor, opcionsSortida, pessic, proporcio, rectDeRetall, textAmpliacio, zoomMaxim,
 } from './enquadrament.js';
 import { llegixMetadadesImatge, senseDades } from './exif.js';
+import {
+  errorExifNoConservable, esNoConservable, etiquetaConservaExif, exifPublicable, teData, teExifPerConservar, teUbicacio,
+} from './exifIncrustat.js';
 import { ERROR_UBICACIO, PRECISIO_PER_DEFECTE, geolocalitzacio, llegixCoordenada } from './geolocalitzacio.js';
 import { carregaImatge, dibuixaVisor, exportaRetall } from './imatgeCanvas.js';
 import { ERROR_HEIC, ERROR_PIXELS, comprovaDimensions, comprovaPes, esHeic, missatgeLimit } from './limits.js';
@@ -68,6 +107,35 @@ import { UbicacioImatge } from './UbicacioImatge.jsx';
 export const ERROR_CARREGA_FITXER = 'No s’ha pogut obrir esta foto. Prova amb una imatge JPEG, PNG o WebP.';
 export const ERROR_CARREGA_URL = 'No s’ha pogut obrir esta imatge per a enquadrar-la. Torna-la a pujar des del dispositiu.';
 export const ERROR_EXPORTA = 'No s’ha pogut preparar la imatge enquadrada. Torna-ho a provar.';
+/* Gauntlet 261016 (Bloc 1.2) · L'avís de la casella: què es publica si es deixa marcada. */
+export const AJUDA_CONSERVA_UBICACIO = 'Si la deixes marcada, la ubicació es publicarà amb la foto.';
+export const AJUDA_CONSERVA_DATA = 'Si la deixes marcada, la data es publicarà amb la foto.';
+/* Gauntlet 261016 (Codex, 02:26) · Una foto que només porta la càmera. */
+export const AJUDA_CONSERVA_CAMERA = 'Si la deixes marcada, les dades de la càmera es publicaran amb la foto.';
+/* Gauntlet 261016 (Bloc B, P3) · Qui ha desat abans de veure la casella: no es desa encara. */
+export const AVIS_REVISA_EXIF = 'Esta foto porta dades que es publicarien amb ella. Revisa la casella i torna a desar.';
+
+/* Gauntlet 261016 (Bloc B, P2) · Les dades que identifiquen la càmera o una
+   persona que es publicarien (contingut, exifIncrustat.js), en l'ordre que es
+   diuen: «la marca, el model i el número de sèrie», o '' si no n'hi ha cap. */
+const PARTS_CAMERA = Object.freeze([['marca', 'la marca'], ['model', 'el model'], ['serie', 'el número de sèrie'], ['nom', 'un nom de persona']]);
+function dadesDeLaCamera(dades) {
+  const parts = PARTS_CAMERA.filter(([clau]) => dades.contingut?.[clau]).map(([, text]) => text);
+  return parts.length > 1 ? `${parts.slice(0, -1).join(', ')} i ${parts.at(-1)}` : (parts[0] || '');
+}
+
+/* L'avís de la casella per al que porta la foto; si no es pot conservar, com
+   eixir-ne. Bloc B · Decidit pel bloc que es publica (teUbicacio, teData), i
+   amb les dades que identifiquen la càmera quan n'hi ha. */
+function ajudaConservaExif(dades) {
+  if (esNoConservable(dades)) return errorExifNoConservable(dades);
+  const camera = dadesDeLaCamera(dades);
+  if (teUbicacio(dades) || teData(dades)) {
+    const base = teUbicacio(dades) ? AJUDA_CONSERVA_UBICACIO : AJUDA_CONSERVA_DATA;
+    return camera ? `${base} També es publicaran les dades de la càmera: ${camera}.` : base;
+  }
+  return camera ? `Si la deixes marcada, les dades de la càmera es publicaran amb la foto: ${camera}.` : AJUDA_CONSERVA_CAMERA;
+}
 
 /* Onada 4 (retallador senzill) · Un zoom «al límit» amb marge de coma flotant. */
 const EPSILON_ZOOM = 1e-6;
@@ -99,10 +167,12 @@ export function DialegEnquadrament({
   permetGeolocalitzacio = false,
   senzill = false,
   mascara = null,
+  ofereixConservarExif = false,
   carregador = carregaImatge,
   exportador = exportaRetall,
   dibuixant = dibuixaVisor,
   lectorMetadades = llegixMetadadesImatge,
+  lectorExif = exifPublicable,
 }) {
   const id = useId();
   const arrelRef = useRef(null);
@@ -133,6 +203,19 @@ export function DialegEnquadrament({
   /* Onada 4, T3a · El que fa el teclat sobre el visor s'anuncia (els
      lliscadors ja s'anuncien sols). */
   const [anunci, setAnunci] = useState('');
+  /* Gauntlet 261016 (Bloc 1.2) · El que s'ha llegit de l'EXIF de la foto si
+     n'hi ha per a la casella (teExifPerConservar: publicable o que no es pot
+     conservar), o null; i la tria, marcada de sèrie. La lectura és del
+     fitxer ORIGINAL, una per foto. */
+  const [exifOriginal, setExifOriginal] = useState(null);
+  const [conservaExif, setConservaExif] = useState(true);
+  const lecturaExif = useRef(null);
+  /* Gauntlet 261016 (Bloc B, P2) · El blob que el carregador ha obert per a
+     una adreça ({ font, blob }): d'ell es llig l'EXIF quan la font no és un
+     File. D'on es llig: el File mateix, o el blob d'esta adreça (mai el d'una
+     adreça anterior). */
+  const [blobCarregat, setBlobCarregat] = useState(null);
+  const origenExif = esFitxer(font) ? font : (blobCarregat?.font === font && esFitxer(blobCarregat.blob) ? blobCarregat.blob : null);
 
   const actualitza = useCallback((nou) => {
     estatRef.current = nou;
@@ -169,6 +252,7 @@ export function DialegEnquadrament({
     let viu = true;
     let carregada = null;
     setImatge(null);
+    setBlobCarregat(null);
     setErrorCarrega(null);
     setErrorDesat(null);
     setGeo(GEO_INICIAL);
@@ -190,6 +274,8 @@ export function DialegEnquadrament({
         }
         carregada = img;
         actualitza(limita(estatRef.current, img.amplada, img.alcada, formatsRef.current));
+        // Bloc B · En el mateix render que la imatge: la lectura de l'EXIF (en layout) ja hi és quan «Desar» s'activa.
+        setBlobCarregat(esFitxer(font) ? null : { font, blob: img.blob ?? null });
         setImatge(img);
       } catch (err) {
         if (viu && err?.name !== 'AbortError') setErrorCarrega(missatgeCarrega(err, font));
@@ -201,6 +287,26 @@ export function DialegEnquadrament({
       carregada?.allibera?.();
     };
   }, [obert, font, carregador, actualitza]);
+
+  /* Gauntlet 261016 (Bloc 1.2) · Cada foto nova torna a la tria de sèrie
+     (conservar). Una lectura que arriba tard d'una foto anterior no pinta
+     cap casella a la nova.
+     Bloc B, P2 · Es llig d'origenExif: el File, o el blob que el carregador ha
+     obert per a una adreça (arriba amb la imatge). En layout, i no després
+     del pintat: la lectura queda registrada abans que «Desar» es puga clicar. */
+  useLayoutEffect(() => {
+    setExifOriginal(null);
+    setConservaExif(true);
+    lecturaExif.current = null;
+    if (!obert || !ofereixConservarExif || !origenExif) return undefined;
+    let viu = true;
+    const promesa = Promise.resolve().then(() => lectorExif(origenExif)).catch(() => null);
+    lecturaExif.current = { font, origen: origenExif, promesa };
+    promesa.then((dades) => {
+      if (viu && teExifPerConservar(dades)) setExifOriginal(dades);
+    });
+    return () => { viu = false; };
+  }, [obert, font, origenExif, ofereixConservarExif, lectorExif]);
 
   /* En layout: el canvas es buida quan canvien els atributs de mida (canvi de
      forma) i així no hi ha cap fotograma en blanc. */
@@ -337,6 +443,14 @@ export function DialegEnquadrament({
   const potAllunyar = !quiet && estat.zoom > 1 + EPSILON_ZOOM;
   const potApropar = !quiet && estat.zoom < zMax - EPSILON_ZOOM;
 
+  /* Gauntlet 261016 (Bloc 1.2) · La casella de Pedra Seca (la mateixa de
+     «Vull geolocalitzar aquesta imatge»), només si hi ha EXIF; l'etiqueta i
+     l'avís diuen el que porta (Codex, 02:26). */
+  const casellaExif = exifOriginal && imatge ? (
+    <Casella etiqueta={etiquetaConservaExif(exifOriginal)} ajuda={ajudaConservaExif(exifOriginal)}
+      checked={conservaExif} disabled={desant} onChange={(ev) => setConservaExif(ev.target.checked)} />
+  ) : null;
+
   /* Onada 4, T3a · La ubicació que es desaria ara mateix (ja arrodonida), o null. */
   const ubicacio = geo.actiu
     ? geolocalitzacio({ lat: llegixCoordenada(geo.lat), lng: llegixCoordenada(geo.lng), precisio: geo.precisio, origen: geo.origen })
@@ -382,7 +496,12 @@ export function DialegEnquadrament({
     const e = estatRef.current;
     const rect = rectDeRetall(e, W, H, formats);
     const sencera = esSencera(e, W, H, formats);
-    if (sencera && !esFitxer(font) && !geo.actiu) {
+    /* Gauntlet 261016 (Bloc B) · El que la persona tenia davant en clicar: la
+       casella (si s'havia pintat) i la seua tria. Una adreça sencera no té res
+       a desar, llevat que haja desmarcat la casella: llavors es desa neta. */
+    const casellaVista = Boolean(exifOriginal);
+    const treuExif = casellaVista && !conservaExif;
+    if (sencera && !esFitxer(font) && !geo.actiu && !treuExif) {
       onTanca?.('boto');
       return;
     }
@@ -394,8 +513,31 @@ export function DialegEnquadrament({
     setErrorDesat(null);
     setDesant(true);
     try {
+      /* Gauntlet 261016 (Bloc 1.2) · La tria de l'EXIF. Si la lectura de
+         l'original encara no ha acabat, s'espera: la tria de sèrie no depén
+         de qui clica més de pressa. La casella marca la tria que hi havia en
+         clicar (desmarcada, la foto ix neta). Codex, 02:26 · Marcada amb un
+         EXIF que no es pot conservar, no es desa: l'avís, i el diàleg obert.
+         Bloc B, P3 · Si la casella no s'havia vist i la lectura porta un EXIF
+         per a ella, tampoc: ix la casella (marcada de sèrie) i l'avís, i desa
+         el segon clic. L'original és d'on s'ha llegit (el File o el blob). */
+      const lectura = lecturaExif.current;
+      const llegit = lectura?.font === font ? await lectura.promesa : null;
+      if (teExifPerConservar(llegit)) {
+        if (!casellaVista) {
+          if (muntatRef.current && fontRef.current === font) setExifOriginal(llegit);
+          fallaDesat(AVIS_REVISA_EXIF);
+          return;
+        }
+        if (conservaExif && esNoConservable(llegit)) {
+          fallaDesat(errorExifNoConservable(llegit));
+          return;
+        }
+        metadades.exif = conservaExif ? { conservaExif: true, original: lectura.origen } : { conservaExif: false };
+      }
       let fitxer = font;
-      if (!sencera || recodifica) {
+      // Bloc B · Una adreça no és cap fitxer per a lliurar: sempre el retall.
+      if (!sencera || recodifica || !esFitxer(font)) {
         try {
           fitxer = await exportador(imatge.element, rect, opcionsSortida(rect, imatge.tipus, sortida));
         } catch {
@@ -475,6 +617,7 @@ export function DialegEnquadrament({
                   <Plus size={20} aria-hidden="true" focusable="false" />
                 </button>
               </div>
+              {casellaExif}
             </>
           ) : null}
         </div>
@@ -557,6 +700,7 @@ export function DialegEnquadrament({
                 </Camp>
               </div>
               <GrupOpcions llegenda="Forma" opcions={formats} valor={estat.format} onCanvi={canviaForma} disabled={desant} />
+              {casellaExif}
               {permetGeolocalitzacio ? (
                 <UbicacioImatge geo={geo} resultat={ubicacio} desactivat={desant} onActiva={activaGeo} onCanvi={canviaGeo} />
               ) : null}

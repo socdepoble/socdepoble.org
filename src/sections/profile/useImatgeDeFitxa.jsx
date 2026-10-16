@@ -34,6 +34,8 @@ const paraCancel = (e) => e.stopPropagation();
  *   forma ('capcalera' | 'avatar' | 'logotip') · la proporció i la màscara.
  *   onImageUpload(fitxer) → url · la pujada de sempre (uploadMedia del Perfil).
  *   onDesaCamp(camp, url) · el desat del camp (la cua de la fitxa); s'espera.
+ *     Bloc 3.5.4 (Gauntlet 261016) · Si torna false o rebutja, el servidor no
+ *     té la imatge: és un fracàs, com una pujada fallada (vegeu Guardar).
  *   onError(missatge, tipus?) · la foto triada no s'admet (no és PNG, JPEG o
  *     WebP, o passa de 10 MB): no s'obri res i l'avís va fora (toast), perquè
  *     cap modal el tapa. `tipus` només ve quan no és un error ('info').
@@ -48,6 +50,11 @@ const paraCancel = (e) => e.stopPropagation();
  *   Guardar fa UNA pujada (processaFitxer) del retall, que ja ix a la mida
  *   exacta: no es torna a reduir (midaMaxima). Si falla, l'avís ix dins de la
  *   finestra, que continua oberta. Cancel·lar no puja res.
+ *   Bloc 3.5.4 (Gauntlet 261016; P2 de Codex, «error 403») · «Falla» és també
+ *   un desat del camp que el servidor no ha acceptat: onDesaCamp torna false
+ *   (o rebutja, i llavors el seu missatge és l'avís). La finestra continua
+ *   oberta amb el retall, sense `acaba` ni onDesat: res no es dona per desat.
+ *   Tornar a Guardar ho torna a provar; l'esborrany és de qui desa (la cua).
  *   Correcció de la revisió (261008) · La guarda de pujada de l'ordre E
  *   (261007), ara per a la fitxa: Escape tanca la finestra encara que estiga
  *   desant, i el desat continua. Mentre dura, obri i un fitxer triat no fan
@@ -79,7 +86,12 @@ export function useImatgeDeFitxa({
   const handler = useHeroImageHandler({
     fieldName: camp,
     onImageUpload,
-    onSaveField: (nom, valor) => { desat.current = Promise.resolve(desaCampRef.current?.(nom, valor)); },
+    onSaveField: (nom, valor) => {
+      desat.current = Promise.resolve(desaCampRef.current?.(nom, valor));
+      /* Bloc 3.5.4 · Guardar l'espera (i en llig el rebuig) just després: este
+         escoltador buit evita que un rebuig primerenc es compte com a no gestionat. */
+      desat.current.catch(() => {});
+    },
     // Amb la finestra oberta, l'error es mostra dins: el toast quedaria davall.
     onError: (missatge) => { errorPujada.current = missatge; },
   });
@@ -89,7 +101,7 @@ export function useImatgeDeFitxa({
   const enquadrament = useEnquadramentImatge({
     forma,
     onError: (missatge) => errorRef.current?.(missatge),
-    onEnquadrat: async (fitxer) => {
+    onEnquadrat: async (fitxer, info, exif) => {
       // Un sol desat alhora: els refs (desat, errorPujada, controlRef) són d'ell.
       if (pujantRef.current) throw new Error(AVIS_IMATGE_PUJANT);
       pujantRef.current = true;
@@ -97,9 +109,18 @@ export function useImatgeDeFitxa({
       try {
         errorPujada.current = null;
         desat.current = null;
-        const fet = await handlerRef.current.processaFitxer(fitxer, { pesMaxim: PES_MAXIM_FOTO, midaMaxima: costatDeSortida(forma) });
+        /* Gauntlet 261016 (Bloc 1, Llei del Quadrat) · La forma va amb el
+           fitxer: l'avatar d'una persona es desa al camp logoImage i ha de
+           pujar com a avatar (dins del pressupost), no com a logotip.
+           Bloc 1.2 · I la tria de la casella de l'EXIF (`exif`, la de
+           useEnquadramentImatge), si n'hi ha hagut. */
+        const fet = await handlerRef.current.processaFitxer(fitxer, {
+          pesMaxim: PES_MAXIM_FOTO, midaMaxima: costatDeSortida(forma), forma, ...exif,
+        });
         if (!fet) throw new Error(errorPujada.current || ERROR_DESAT_IMATGE);
-        await desat.current;
+        /* Bloc 3.5.4 · Abans s'esperava sense mirar-ne el resultat: un 403
+           tancava la finestra com si s'haguera desat. */
+        if ((await desat.current) === false) throw new Error(ERROR_DESAT_IMATGE);
         const control = controlRef.current;
         controlRef.current = null;
         control?.acaba?.();

@@ -20,6 +20,22 @@
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
+  <!-- Gauntlet 261016 (Bloc 3.5.1): les tres rutes canòniques netes (RUTES_CANONIQUES, src/config/navigation.js). -->
+  <url>
+    <loc>https://socdepoble.org/javillinares</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://socdepoble.org/socdepoble</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://socdepoble.org/rentonar</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
   <url>
     <loc>https://socdepoble.org/legal</loc>
     <changefreq>yearly</changefreq>

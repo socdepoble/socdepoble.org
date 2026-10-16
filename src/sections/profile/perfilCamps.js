@@ -69,18 +69,37 @@ export const aHtml = (text) => String(text ?? '')
 
 const text = (valor) => (typeof valor === 'string' ? valor : '');
 
+const titolDeFitxa = (identitat) => text(identitat?.dades?.[CAMPS_FITXA[menaDeFitxa(identitat)].title]) || text(identitat?.nom);
+
+/* Directiva de Dignitat Humana (pla 261015_1900, Onada 1.1) · Una persona no
+   és una obra: la seua fitxa no porta drets d'autor, ni el desat ni el «© Nom»
+   de reserva, enlloc on es pinta (l'editor, la targeta de la llista, «Les
+   vistes», la Vista A4 / PDF i la portada). La columna profiles.copyright es
+   conserva com a DADA: és la llicència de sèrie de les seues notes noves
+   (T39, herencia.js), que PerfilEditor llig de `dades.copyright`. */
+const ambDretsDeFitxa = (identitat) => menaDeFitxa(identitat) !== 'persona';
+
+/**
+ * El copyright de la fitxa com a dada: el desat o, sense, el «© Nom» de
+ * reserva, per a QUALSEVOL mena. És la base amb què l'autodesament (T47)
+ * compara el camp `copyright` amb el servidor; no és el que es pinta (per a
+ * la persona, fitxaDeLectura i documentDeFitxa hi posen '').
+ */
+export function copyrightDeFitxa(identitat) {
+  return text(identitat?.dades?.copyright) || `© ${titolDeFitxa(identitat) || 'Sóc de Poble'}`;
+}
+
 /** La fitxa en text pla: per a la vista de lectura (UniversalPage ja escapa). */
 export function fitxaDeLectura(identitat) {
   const camps = CAMPS_FITXA[menaDeFitxa(identitat)];
   const dades = identitat?.dades || {};
-  const titol = text(dades[camps.title]) || text(identitat?.nom);
   return {
-    title: titol,
+    title: titolDeFitxa(identitat),
     subtitle: text(dades[camps.subtitle]),
     lead: text(dades[camps.lead]),
     content: text(dades[camps.content]),
     heroImage: text(dades[camps.heroImage]),
-    copyright: text(dades.copyright) || `© ${titol || 'Sóc de Poble'}`,
+    copyright: ambDretsDeFitxa(identitat) ? copyrightDeFitxa(identitat) : '',
   };
 }
 
@@ -110,7 +129,9 @@ export function documentDeFitxa(identitat, local = {}) {
     logoImage: local.logoImage ?? text(dades[camps.logoImage]),
     heroImage: local.heroImage ?? lectura.heroImage,
     isPublished: fitxaPublicada(identitat),
-    copyright: local.copyright ?? lectura.copyright,
+    /* Dignitat Humana (261015) · Per a la persona, '' també amb un esborrany
+       vell de «Desar autoria» a la cua: cap via el torna a pintar. */
+    copyright: ambDretsDeFitxa(identitat) ? (local.copyright ?? lectura.copyright) : '',
     /* T66 · El camp CRU (targetaViva i la barra taronja hi apliquen emojiSol):
        '' sense emoticona. Només la mena que en té columna porta la clau. */
     ...(camps.icon ? { icon: local.icon ?? text(dades[camps.icon]) } : {}),

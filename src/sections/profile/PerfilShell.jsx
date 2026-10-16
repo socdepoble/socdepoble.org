@@ -23,6 +23,10 @@ import { nodesDelPerfil } from './nodes.js';
 import {
   PARAM_FITXA_ORGANITZACIO, itemsDAplicacions, itemsDePerfil, navegacioDePerfil, seleccioInicialDePerfil,
 } from './perfilModel.js';
+import { useAutodesament } from '../../data/autodesament/useAutodesament.js';
+import { documentDeFitxa, menaDeFitxa } from './perfilCamps.js';
+import { ENTITATS_FITXA } from './perfilEscriptor.js';
+import { avatarDeLaFitxa, potEditarFitxa } from './fitxaDePerfil.js';
 
 /* Els consumidors d'abans l'importaven d'ací. Ordre del Mestre (261008) · un
    grup ja no necessita cap empresa mare: el diàleg de NOVA ORG no la demana,
@@ -48,12 +52,35 @@ const ICONES = { categories: UserRound, items: SlidersHorizontal };
    de sempre: la targeta per defecte del Workspace (DefaultItemCard), no una
    còpia del seu DOM. L'avís de la targeta no promet cap publicació
    (AVISOS_TARGETA_VIVA.perfil) i la targeta diu que és la fitxa triada
-   (aria-current), com la compacta. */
+   (aria-current), com la compacta.
+   Gauntlet 261016 (encàrrec D; pla, Onada 1.1.4: «han de beure exactament de
+   la mateixa instància de dades») · La compacta de «La fitxa» porta la imatge
+   de la fitxa amb l'esborrany de la cua (avatarDeLaFitxa, fitxaDePerfil.js),
+   la mateixa que l'editor, «Les vistes» i «El compte»: abans, item.image
+   (identitat.avatar, el del servidor), i després d'un avatar rebutjat (403),
+   una foto al centre i una altra a la dreta. La clau de la cua és la de
+   l'editor i la de «Les vistes»: sense àmbit o en lectura, cap. Ni desa ni
+   toca la cua: només la llig. La resta d'apartats, tal qual. */
 function FitxaDePerfil({ item, active, onSelect }) {
-  const clau = active && item?.data?.vista === 'fitxa' ? item.data.identitatId : null;
+  const esFitxa = item?.data?.vista === 'fitxa';
+  const clau = active && esFitxa ? item.data.identitatId : null;
   const viu = useDocumentViu(clau);
+  const { identitats, autodesament } = usePerfil() || {};
+  const identitat = esFitxa ? (identitats || []).find((i) => i.id === item.data.identitatId) || null : null;
+  const potEditar = potEditarFitxa(identitat);
+  const mena = menaDeFitxa(identitat);
+  const id = identitat?.id;
+  const ref = useMemo(() => (autodesament && potEditar && id != null ? {
+    ambit: autodesament.ambit, context: autodesament.context, entitat: ENTITATS_FITXA[mena], id,
+  } : null), [autodesament, potEditar, mena, id]);
+  const esborrany = useAutodesament(ref).camps;
+  const compacta = useMemo(() => {
+    if (!identitat) return item;
+    const image = avatarDeLaFitxa(documentDeFitxa(identitat, esborrany), esborrany, identitat) || undefined;
+    return image === item.image ? item : { ...item, image };
+  }, [item, identitat, esborrany]);
   if (viu) return <TargetaViva {...viu} onMainClick={onSelect} avis={AVISOS_TARGETA_VIVA.perfil} actual />;
-  return <DefaultItemCard item={item} active={active} onSelect={onSelect} />;
+  return <DefaultItemCard item={compacta} active={active} onSelect={onSelect} />;
 }
 
 const renderFitxa = ({ item, active, onSelect }) => <FitxaDePerfil item={item} active={active} onSelect={onSelect} />;

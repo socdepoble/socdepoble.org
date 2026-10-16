@@ -69,9 +69,15 @@ afterEach(() => {
   fixaBaseRecursos('/');
 });
 
-test('sense amfitrió, cada fila de la mostra porta la seua cara: el poble, la IAIA i Sóc de Poble', () => {
+/* Gauntlet 261016 (Bloc 3.6) · Quatre files des d'ara: Javi Llinares hi és
+   amb la seua foto del padró pilot (mai el logo de l'entitat), i sense poble
+   declarat la mostra porta igualment «Gent de la Torre». S'actualitzen a
+   posta les proves de tres files i la de «sense poble, cap comunitat». */
+const JAVI = '/assets/fotos/javi-llinares-perfil-1200px.jpg';
+
+test('sense amfitrió, cada fila de la mostra porta la seua cara: el poble, la IAIA, Sóc de Poble i Javi', () => {
   const { container } = munta();
-  expect(cares(container)).toEqual({ 'Gent de la Torre': TORRE.avatar_url, 'IAIA MarIA': IAIA, 'Sóc de Poble': LOGO });
+  expect(cares(container)).toEqual({ 'Gent de la Torre': TORRE.avatar_url, 'IAIA MarIA': IAIA, 'Sóc de Poble': LOGO, 'Javi Llinares': JAVI });
 });
 
 test('incrustat en un amfitrió, les cares pengen de la carpeta del paquet', () => {
@@ -79,21 +85,22 @@ test('incrustat en un amfitrió, les cares pengen de la carpeta del paquet', () 
   permetOrigenMitjans(PAQUET);
   const { container } = munta();
   expect(cares(container)).toEqual({
-    'Gent de la Torre': `${PAQUET}${TORRE.avatar_url}`, 'IAIA MarIA': `${PAQUET}${IAIA}`, 'Sóc de Poble': `${PAQUET}${LOGO}`
+    'Gent de la Torre': `${PAQUET}${TORRE.avatar_url}`, 'IAIA MarIA': `${PAQUET}${IAIA}`, 'Sóc de Poble': `${PAQUET}${LOGO}`,
+    'Javi Llinares': `${PAQUET}${JAVI}`
   });
 });
 
 test('si el contingut del node no té la fitxa del poble, la comunitat es queda amb les inicials (cap cara inventada)', () => {
   mocks.towns = [{ id: 'sella', avatar_url: '/assets/towns/sella/2.jpg' }];
   const { container } = munta();
-  expect(cares(container)).toEqual({ 'Gent de la Torre': null, 'IAIA MarIA': IAIA, 'Sóc de Poble': LOGO });
+  expect(cares(container)).toEqual({ 'Gent de la Torre': null, 'IAIA MarIA': IAIA, 'Sóc de Poble': LOGO, 'Javi Llinares': JAVI });
   expect(container.querySelector('[title="Gent de la Torre"]').textContent).toContain('GD');
 });
 
-test('sense poble declarat, les dues entrades d’ajuda també porten cara', () => {
+test('sense poble declarat, les quatre files porten cara: també «Gent de la Torre», el poble de la llavor', () => {
   mocks.externalConfig = {};
   const { container } = munta();
-  expect(cares(container)).toEqual({ 'IAIA MarIA': IAIA, 'Sóc de Poble': LOGO });
+  expect(cares(container)).toEqual({ 'Gent de la Torre': TORRE.avatar_url, 'IAIA MarIA': IAIA, 'Sóc de Poble': LOGO, 'Javi Llinares': JAVI });
 });
 
 test('«Nova conversa» de la mostra (cercaMembres) porta les mateixes cares que la llista', async () => {

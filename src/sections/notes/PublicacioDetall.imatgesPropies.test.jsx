@@ -52,7 +52,6 @@ vi.mock('../multimedia/MultimediaContext', () => ({ useMultimedia: () => mocks.m
 import { PublicacioDetall, PublicacioFitxa } from './PublicacioDetall.jsx';
 import { publicacioComANota } from './masDeLUsuari.js';
 import { permetOrigenMitjans } from '../../utils/sanitize.js';
-import { resolveAsset } from '../../config/assetResolver.js';
 
 const GOOGLE = 'https://lh3.googleusercontent.com/a/pepa.png';
 const RASTREIG = 'https://rastreig.example/p.gif?campanya=1';
@@ -134,8 +133,8 @@ describe('Decisió 3 · el lector d’una publicació del Mur, del Mercat o de l
 
   /* Revisió adversarial del 261008 · sdp-media:// també és propi: el lector
      del Mur el pinta com la Multimèdia, que no passa pel mode estricte.
-     L'avatar redó el resol el port; la barra i la portada, com sempre
-     (resolveAsset de BarraTaronja i de PageFrame). */
+     L'avatar redó, la barra i la portada han de resoldre pel port: una
+     referència opaca no és una ruta que puga demanar el navegador. */
   test('un avatar i una portada sdp-media:// es pinten com abans', async () => {
     mocks.mitjans = true;
     permetOrigenMitjans(STORAGE);
@@ -152,9 +151,16 @@ describe('Decisió 3 · el lector d’una publicació del Mur, del Mercat o de l
     const media = await capcaleraIBarra('multimedia', persona({ id: 'era', title: 'Era', kind: 'image', author_avatar: SDP_MEDIA }));
     expect(mur).toEqual(media);
     expect(mur.fills).toEqual(['DIV.page-title-avatar', 'H1.']);
-    expect(mur.barra).toBe(resolveAsset(SDP_MEDIA));
+    expect(mur.barra).toBe(RESOLT);
     const ambPortada = pinta(persona({ image_url: SDP_MEDIA }), 'mur');
-    expect(portada(ambPortada).querySelector('img').getAttribute('src')).toBe(resolveAsset(SDP_MEDIA));
+    expect(fonts(ambPortada)).not.toContain(`/${SDP_MEDIA}`);
+    await waitFor(() => expect(portada(ambPortada).querySelector('img')?.getAttribute('src')).toBe(RESOLT));
+  });
+
+  test('una portada opaca sense capacitat de mitjans no genera cap petició d’imatge', () => {
+    const container = pinta(persona({ image_url: 'sdp-media://mitjans/poble/u/general/f.webp' }), 'mur');
+    expect(portada(container)?.querySelector('img')).toBeNull();
+    expect(fonts(container)).toEqual([]);
   });
 
   /* (g) · El cos HTML, pel mode estricte del sanejador (cosAmbImatgesPropies). */

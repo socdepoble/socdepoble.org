@@ -158,7 +158,10 @@ import {
   teCapacitat
 } from '../../data/backendPort.js';
 import { subjecteDeXat } from '../../data/contracte.js';
-import { ambXatsPerDefecte, esXatDeLaIAIA, gestionaLEntitatPilot, senseLaIAIA, senseXatPerDefecte } from '../../data/xatsPerDefecte.js';
+import {
+  ID_FIL_DE_MOSTRA_DE_JAVI, ambXatsPerDefecte, esLaPersonaDeContacte, esXatDeLaIAIA, filDeMostraDeJavi, gestionaLEntitatPilot,
+  missatgesDeMostraDeJavi, senseLaIAIA, senseXatPerDefecte
+} from '../../data/xatsPerDefecte.js';
 import useNivellIaia from '../realitat/useNivellIaia.js';
 import { useSession } from '../../app/contexts/SessionContext';
 import { useIdentitat } from '../../app/contexts/IdentitatContext.jsx';
@@ -434,6 +437,21 @@ export function XatProvider({ children, config }) {
      de la configuració i no del port, que encara no està segellat al primer render. */
   const modeDades = normalizeBackendConfig(config || {}).dataMode;
   const joId = usuari?.id || (modeDades !== 'remote' ? getDefaultUserId() : null);
+  /* Auditoria adversarial 261016 (P3) · Ordre del Mestre (prompt 261016_0015,
+     Bloc 3.6): «Si un usuari no registrat fa clic per parlar-hi, es mostra el
+     missatge automàtic». En llavor i en local ningú no té sessió (l'entrada
+     torna MODE_LOCAL) i el convidat hi té un xat de veres: `convidat` és qui
+     hi té joId sense cap sessió. La fila de Javi és per a ell el xat de només
+     lectura (filDeMostraDeJavi, la mateixa peça que el xat de mostra del
+     remot, FakeChatOnboarding), i res d'eixe xat no arriba al port: ni
+     historial, ni marques, ni cap directe nou. En remot sense sessió no hi ha
+     joId i el xat de mostra en té cura. */
+  const convidat = !usuari?.id && Boolean(joId);
+  const { t } = useUIActions();
+  const avisDeLaMostra = t('section.xat.fake.iaia2', "Si t'agrada el que veus, registra't per a entrar al xat de veritat!");
+  const [araDeLaMostra] = useState(() => new Date().toISOString());
+  const filDeMostra = useMemo(() => (convidat ? filDeMostraDeJavi({ avis: avisDeLaMostra }) : null), [convidat, avisDeLaMostra]);
+  const missatgesDeMostra = useMemo(() => missatgesDeMostraDeJavi(araDeLaMostra), [araDeLaMostra]);
   const scopeKey = JSON.stringify([backendScope(config), joId, actorKey, generacio]);
   /* Revisió adversarial 260930 · Les claus que NO porten `generacio`: una
      renovació del JWT no és una sessió nova (vegeu la capçalera, «Dos àmbits»). */
@@ -824,7 +842,7 @@ export function XatProvider({ children, config }) {
   /* ── Historial cap arrere (XAT-A23): abansDeSeq = el seq mínim carregat ── */
   const carregaMesAntics = useCallback(async (filId) => {
     const op = captura();
-    if (!filId || !joId || !vigent(op)) return false;
+    if (!filId || filId === ID_FIL_DE_MOSTRA_DE_JAVI || !joId || !vigent(op)) return false;
     /* Decisió 1 · Només bloqueja una càrrega de l'operació vigent: la que una
        renovació ha avortat ja no compta, i el relleu la torna a demanar. */
     const enCurs = carregantAnticsRef.current.get(filId);
@@ -906,8 +924,10 @@ export function XatProvider({ children, config }) {
   }, [despertaAntics]);
 
   /* ── Obrir un fil: carregar-lo. La lectura la marca la interfície amb marcaVist. ── */
+  /* Auditoria adversarial 261016 · El xat de només lectura de Javi no és cap
+     fil del port: obrir-lo no en demana res (ni historial, ni canal). */
   const obriFil = useCallback((filId) => {
-    if (vigent(captura())) setFilActiu(joId ? filId || null : null);
+    if (vigent(captura())) setFilActiu(joId && filId !== ID_FIL_DE_MOSTRA_DE_JAVI ? filId || null : null);
   }, [joId, captura, vigent]);
 
   useEffect(() => {
@@ -1207,7 +1227,7 @@ export function XatProvider({ children, config }) {
   enviaMarcaRef.current = enviaMarca;
 
   const marcaVist = useCallback((filId, seq) => {
-    if (!filId || !joId || !vigent(captura())) return;
+    if (!filId || filId === ID_FIL_DE_MOSTRA_DE_JAVI || !joId || !vigent(captura())) return;
     /* Un visitant no té marques al servidor: llegir no deixa rastre. */
     if (esVisitant(visitantsRef.current, filId)) return;
     const s = Number(seq) || 0;
@@ -1270,6 +1290,10 @@ export function XatProvider({ children, config }) {
     const delegada = op ? null : accioVigent('creaFil');
     if (delegada) return delegada(altreUsuariId, titol);
     if (!joId || !vigent(op)) return null;
+    /* Auditoria adversarial 261016 (P3) · El ?amb= de Javi («Escriu-li al
+       xat», «En privat») i «Nova conversa» porten el convidat al xat de només
+       lectura, per id o àlies del padró pilot: cap directe escrivible. */
+    if (convidat && esLaPersonaDeContacte({ id: altreUsuariId })) return ID_FIL_DE_MOSTRA_DE_JAVI;
     try {
       const filId = await creaFilDirecte(altreUsuariId, titol, { ...config, signal: op.controller.signal });
       if (vigent(op)) {
@@ -1280,7 +1304,7 @@ export function XatProvider({ children, config }) {
       if (vigent(op)) throw error;
     }
     return despresDelRelleu(op, accionsRef, 'creaFil', [altreUsuariId, titol]);
-  }, [joId, config, captura, vigent, accioVigent, carregaFils]);
+  }, [joId, convidat, config, captura, vigent, accioVigent, carregaFils]);
 
   /* ── T63.2 i T67 · El xat comú d'una Pàgina Universal ──
      Null si el subjecte no en té; 'sense-capacitat' si el backend no el sap
@@ -1325,17 +1349,38 @@ export function XatProvider({ children, config }) {
        · qui gestiona l'entitat pilot no veu la de Sóc de Poble: no pot obrir
          un xat amb ella mateixa (SDP-XAT-002). Ací i no a la llista, perquè
          la cerca global i la del xat lligen esta mateixa llista.
-     En llavor no n'hi ha cap: la mateixa referència i la mateixa pantalla. */
+     En llavor no n'hi ha cap: la mateixa referència i la mateixa pantalla.
+     Gauntlet 261016 (Bloc 3.6) · Ordre del Mestre: «permanentment 4
+     converses visibles». Des d'ara l'adaptador les porta també en llavor i
+     en local, i les dues regles de dalt es conserven perquè són d'identitat:
+     ningú no es parla a si mateix (SDP-XAT-002). Per la mateixa raó Javi
+     Llinares no veu la seua pròpia fila (esLaPersonaDeContacte). La IAIA
+     apagada també es conserva: és la tria explícita de la persona (nivell
+     d'IA 0), no una regla de la plataforma.
+     Auditoria adversarial 261016 · Tres correccions:
+       · (P2) Javi es reconeix per id o àlies del padró pilot, mai pel nom de
+         la sessió, que tria cada usuari (esLaPersonaDeContacte);
+       · (P2) en llavor i en local el xat públic de /iaia que llegixes com a
+         visitant no retira la fila de la IAIA (paginaDeLaIAIA), com a
+         l'adaptador: allí és un grup on la IAIA no contesta;
+       · (P3) per al convidat, la fila sintètica de Javi és el seu xat de
+         només lectura (filDeMostra), al mateix lloc de la cua. */
   const gestionaSocDePoble = gestionaLEntitatPilot(identitats);
+  const quiMiraEsJavi = esLaPersonaDeContacte({ id: joId });
+  const paginaDeLaIAIA = modeDades === 'remote';
   /* Onada 6 (tasca 12) · Amb la IAIA apagada, cap xat seu (senseLaIAIA): la
      llista, les dues cerques i les comunitats lligen d'ací. */
   const filsDeLaLlista = useMemo(() => {
     const ids = new Set(fils.map((f) => f.id));
     const extra = Object.values(visitants).filter((f) => !ids.has(f.id));
-    const ambAjuda = ambXatsPerDefecte(extra.length ? [...fils, ...extra] : fils, { afig: false });
-    const llista = gestionaSocDePoble ? senseXatPerDefecte(ambAjuda, 'socdepoble') : ambAjuda;
+    const ambAjuda = ambXatsPerDefecte(extra.length ? [...fils, ...extra] : fils, { afig: false, paginaDeLaIAIA });
+    const senseSdp = gestionaSocDePoble ? senseXatPerDefecte(ambAjuda, 'socdepoble') : ambAjuda;
+    const senseJavi = quiMiraEsJavi ? senseXatPerDefecte(senseSdp, 'javi') : senseSdp;
+    const llista = filDeMostra && senseJavi.some((f) => f.perDefecte === 'javi')
+      ? senseJavi.map((f) => (f.perDefecte === 'javi' ? filDeMostra : f))
+      : senseJavi;
     return iaiaApagada ? senseLaIAIA(llista) : llista;
-  }, [fils, visitants, gestionaSocDePoble, iaiaApagada]);
+  }, [fils, visitants, paginaDeLaIAIA, gestionaSocDePoble, quiMiraEsJavi, filDeMostra, iaiaApagada]);
   /* Integració Xat i Pobles (Onada 6, pla 261009_0245, ítem 4: «El fil de
      xat específic també es dirà 'Gent de la Torre'») · El xat d'un poble que
      és a les fitxes (useCoreContent) es diu com la seua gent a la llista, a
@@ -1417,9 +1462,15 @@ export function XatProvider({ children, config }) {
     buidaEsborranys();
   }, [clauPersona]);
 
+  /* Auditoria adversarial 261016 (P3) · El xat de només lectura de Javi porta
+     només el literal de l'ordre, i només per al convidat. */
   const getThreadMessages = useCallback(
-    (filId) => (dins() ? missatgesDerivats[filId] || [] : []),
-    [missatgesDerivats, dins]
+    (filId) => {
+      if (!dins()) return [];
+      if (filDeMostra && filId === ID_FIL_DE_MOSTRA_DE_JAVI) return missatgesDeMostra;
+      return missatgesDerivats[filId] || [];
+    },
+    [missatgesDerivats, dins, filDeMostra, missatgesDeMostra]
   );
   const hiHaMesAntics = useCallback(
     (filId) => (dins() ? Boolean(paginacio[filId]?.hiHaMes) : false),

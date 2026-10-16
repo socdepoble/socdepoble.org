@@ -21,7 +21,7 @@
  * buida. La regla R1 («cap xifra») queda derogada en part: la data fixa del
  * registre en queda fora, i la prova ho diu.
  */
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, test } from 'vitest';
 import fontApp from '../../app/App.jsx?raw';
@@ -43,6 +43,22 @@ const SENSE_TARGETA_DE_PLUGIN = ['mapa', 'vehicle', 'animalets'];
 /* L'hora del document de l'ordre (prompt 261004_0015), el criteri de les
    targetes de dalt (destinsControl.test.js). Pendent del Mestre: confirmar-la. */
 const DATA_DE_L_ORDRE = '2026-10-04T00:15:00+02:00';
+
+/* Gauntlet 261016 (Bloc 1) · Les mides d'un WebP pels bytes de la capçalera
+   del seu primer tros (VP8X, VP8 o VP8L), o null si no és un WebP que s'entén. */
+function midaWebp(b) {
+  if (b.length < 30 || b.toString('latin1', 0, 4) !== 'RIFF' || b.toString('latin1', 8, 12) !== 'WEBP') return null;
+  const tros = b.toString('latin1', 12, 16);
+  if (tros === 'VP8X') return { amplada: b.readUIntLE(24, 3) + 1, alcada: b.readUIntLE(27, 3) + 1 };
+  if (tros === 'VP8 ' && b[23] === 0x9d && b[24] === 0x01 && b[25] === 0x2a) {
+    return { amplada: b.readUInt16LE(26) & 0x3fff, alcada: b.readUInt16LE(28) & 0x3fff };
+  }
+  if (tros === 'VP8L' && b[20] === 0x2f) {
+    const bits = b.readUInt32LE(21);
+    return { amplada: (bits & 0x3fff) + 1, alcada: ((bits >>> 14) & 0x3fff) + 1 };
+  }
+  return null;
+}
 
 /* Les rutes de la taula d'App (App.jsx), amb el seu element. */
 const rutesDApp = () => [...fontApp.matchAll(/<Route\s+path="([^"]+)"/g)].map((m) => m[1]);
@@ -102,12 +118,29 @@ describe('registre de plugins', () => {
     for (const plugin of PLUGINS) expect([plugin.id, Object.isFrozen(plugin)]).toEqual([plugin.id, true]);
   });
 
-  test('cada il·lustració és /assets/ui/plugins/<id>_vinyeta.jpg i existix a public/', () => {
+  /* Gauntlet 261016 (Bloc 1, Llei del Quadrat) · La del TPV del Bar ja és
+     .webp (extensioImatge); la resta continua en .jpg, idèntica. Abans esta
+     prova fixava .jpg per a totes: l'ordre ho canvia només per al TPV. */
+  test('cada il·lustració és /assets/ui/plugins/<id>_vinyeta.jpg (la del TPV, .webp) i existix a public/', () => {
     expect(IMATGES_PLUGINS).toBe('/assets/ui/plugins');
     for (const { id, imatge } of PLUGINS) {
-      expect(imatge).toBe(`/assets/ui/plugins/${id}_vinyeta.jpg`);
+      expect([id, imatge]).toEqual([id, `/assets/ui/plugins/${id}_vinyeta.${id === 'tpv' ? 'webp' : 'jpg'}`]);
       expect([id, existsSync(path.join(process.cwd(), 'public', imatge))]).toEqual([id, true]);
     }
+  });
+
+  /* Gauntlet 261016 (Bloc 1, Llei del Quadrat: capçalera i targeta, la
+     mateixa imatge de 1.200 × 1.200 en WebP de menys de 80 KB) · La vinyeta
+     del TPV es llig pels bytes: RIFF/WEBP de veres, quadrada de 1.200 i dins
+     del pressupost. El .jpg d'abans es conserva al disc (cap esborrat). */
+  test('Llei del Quadrat · la vinyeta del TPV és un WebP de 1.200 × 1.200 de menys de 80 KB, i el .jpg es conserva', () => {
+    const bytes = readFileSync(path.join(process.cwd(), 'public', pluginPerId('tpv').imatge));
+    expect(bytes.length).toBeLessThan(80 * 1024);
+    expect([bytes.toString('latin1', 0, 4), bytes.toString('latin1', 8, 12)]).toEqual(['RIFF', 'WEBP']);
+    expect(midaWebp(bytes)).toEqual({ amplada: 1200, alcada: 1200 });
+    expect(existsSync(path.join(process.cwd(), 'public/assets/ui/plugins/tpv_vinyeta.jpg'))).toBe(true);
+    // Contraprova: el lector de mides no s'inventa res d'un fitxer que no és WebP.
+    expect(midaWebp(readFileSync(path.join(process.cwd(), 'public/assets/ui/plugins/tpv_vinyeta.jpg')))).toBeNull();
   });
 
   test('cada plugin porta títol, subtítol, entradilla, alt i l’etiqueta d’Obrir, sense punt final als títols', () => {

@@ -707,7 +707,11 @@ test('3B · /xat?vista=comunitats encén només /xat a les barres i el rail del 
     expect(window.location.pathname).toBe('/xat');
     expect(window.location.search).toBe('?vista=comunitats');
     for (const nav of navs) expect(actius(nav)).toEqual(['/xat']);
-    await waitFor(() => expect(document.getElementById('app-grid-list')?.textContent).toContain('Encara no formes part de cap comunitat'));
+    /* Gauntlet 261016 (Bloc 3.6) · La mostra sense sessió porta sempre la
+       comunitat de «Gent de la Torre» (el poble de la llavor, sense amfitrió):
+       la vista ja no és buida. S'actualitza a posta. */
+    await waitFor(() => expect(document.getElementById('app-grid-list')?.textContent).toContain('Gent de la Torre'));
+    expect(document.getElementById('app-grid-list').textContent).not.toContain('Encara no formes part de cap comunitat');
     const columna = document.getElementById('app-grid-list');
     expect(columna.querySelector('aside[aria-label="Comunitats"]')).not.toBeNull();
     expect(columna.querySelector('input[name="xatSearch"]')).toBeNull();
@@ -1496,8 +1500,10 @@ test('enllaços interns · en memòria, un <a href="?…"> no toca la URL de l�
 
     // '?vista=comunitats' es resol sobre /xat (la ruta de l'app): el rail canvia de vista.
     expect(fireEvent.click(enllacAlContingut('?vista=comunitats'))).toBe(false);
-    await waitFor(() => expect(document.getElementById('app-grid-list')?.textContent).toContain('Encara no formes part de cap comunitat'));
-    expect(document.getElementById('app-grid-list').querySelector('aside[aria-label="Comunitats"]')).not.toBeNull();
+    /* Gauntlet 261016 (Bloc 3.6) · La vista de comunitats de la mostra porta
+       sempre «Gent de la Torre»: s'espera la vista, no l'estat buit. */
+    await waitFor(() => expect(document.getElementById('app-grid-list')?.querySelector('aside[aria-label="Comunitats"]')).not.toBeNull());
+    expect(document.getElementById('app-grid-list').textContent).toContain('Gent de la Torre');
     expect(window.location.href).toBe(abans);
     expect(empenta).not.toHaveBeenCalled();
     expect(substituix).not.toHaveBeenCalled();

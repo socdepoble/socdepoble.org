@@ -102,12 +102,16 @@ test('K2 · DetallAjust · una foto de mòbil de 7 MB: arriba al retallador i pu
   expect(screen.getByRole('dialog', RETALLADOR)).toBeTruthy();
   await desa();
   expect(dobles.exportaRetall).toHaveBeenCalledTimes(1);
+  /* Gauntlet 261016 (Bloc 1, Llei del Quadrat) · Actualitzada a posta: el
+     retallador T46 de l'avatar ja no exporta fins a 1.200 px, sinó els
+     400 × 400 exactes de l'avatar (sortidaAvatar, MIDA_AVATAR). */
   expect(dobles.exportaRetall.mock.calls[0].slice(1)).toEqual([
     { x: 500, y: 0, w: 3000, h: 3000 },
-    { amplada: 1200, alcada: 1200, tipus: 'image/jpeg' },
+    { amplada: 400, alcada: 400, tipus: 'image/jpeg' },
   ]);
   const ix = await dobles.exportaRetall.mock.results[0].value;
-  expect(dobles.compressImage.mock.calls.map(([f, o]) => [f, o.maxSize])).toEqual([[ix, 600]]);
+  // Gauntlet 261016 (Bloc 1, Llei del Quadrat) · l'avatar es comprimix a 400 px (abans 600).
+  expect(dobles.compressImage.mock.calls.map(([f, o]) => [f, o.maxSize])).toEqual([[ix, 400]]);
   expect(pujaMitja).toHaveBeenCalledTimes(1);
   expect(screen.queryByRole('dialog', RETALLADOR)).toBeNull();
   expect(screen.getByAltText('Previsualització').getAttribute('src')).toBe(URL_MITJA);
@@ -119,10 +123,11 @@ test('K2 · DetallAjust · una foto QUADRADA desada sense ampliar també ix reco
   const original = foto(7);
   await triaAjust(original);
   await desa();
-  // Sencera, però recodificada amb el mateix tipus i la mateixa mida que el camí T46.
+  /* Sencera, però recodificada amb el mateix tipus que el camí T46.
+     Gauntlet 261016 (Bloc 1) · Actualitzada a posta: a 400 × 400 exactes (abans, 1.200). */
   expect(dobles.exportaRetall.mock.calls[0].slice(1)).toEqual([
     { x: 0, y: 0, w: 3000, h: 3000 },
-    { amplada: 1200, alcada: 1200, tipus: 'image/jpeg' },
+    { amplada: 400, alcada: 400, tipus: 'image/jpeg' },
   ]);
   expect(dobles.compressImage).toHaveBeenCalledTimes(1);
   expect(dobles.compressImage.mock.calls[0][0]).not.toBe(original);
@@ -135,7 +140,27 @@ test('K2 · DetallAjust · un PNG (logotip amb transparència) ix en PNG del ret
   obriAjust();
   await triaAjust(foto(1, 'logo.png', 'image/png'));
   await desa();
-  expect(dobles.exportaRetall.mock.calls[0][2]).toEqual({ amplada: 800, alcada: 800, tipus: 'image/png' });
+  /* Gauntlet 261016 (Bloc 1) · Actualitzada a posta: el tipus continua sent
+     el del camí T46 (PNG), però la mida ja no és la del retall (800 × 800):
+     és la de l'avatar, 400 × 400 exactes. */
+  expect(dobles.exportaRetall.mock.calls[0][2]).toEqual({ amplada: 400, alcada: 400, tipus: 'image/png' });
+});
+
+/* Gauntlet 261016 (Bloc 1, Llei del Quadrat: «avatars, quadrat de 400 × 400
+   px») · Abans un retall menut (300 × 300) ixia a la seua mida i la
+   compressió no l'ampliava: l'avatar quedava de 300 px. Ara s'amplia a la
+   mida exacta, com la finestra senzilla de la fitxa. */
+test('Bloc 1 · DetallAjust · un retall més menut que l’avatar s’amplia a 400 × 400 exactes', async () => {
+  dobles.carregaImatge.mockResolvedValue({ amplada: 300, alcada: 300, tipus: 'image/jpeg', element: {}, allibera: vi.fn() });
+  const { pujaMitja } = obriAjust();
+  await triaAjust(foto(0.1));
+  await desa();
+  expect(dobles.exportaRetall.mock.calls[0].slice(1)).toEqual([
+    { x: 0, y: 0, w: 300, h: 300 },
+    { amplada: 400, alcada: 400, tipus: 'image/jpeg' },
+  ]);
+  expect(dobles.compressImage.mock.calls.map(([, o]) => o.maxSize)).toEqual([400]);
+  expect(pujaMitja).toHaveBeenCalledTimes(1);
 });
 
 test('K2 · DetallAjust · més de 25 MB: l’avís del límit del retallador i cap retallador', async () => {
@@ -160,7 +185,7 @@ test('K2 · DetallAjust · més de 25 MB: l’avís del límit del retallador i 
      de 10 MB (les proves «Onada 4» de davall).
    · El retall de l'avatar limitat a 5 MB a l'eixida (un retall de 6 MB no
      pujava i l'avís eixia dins): era la pujada del diàleg (processaFitxer de
-     useHeroImageHandler). DetallAjust redueix el retall a 600 px en WebP
+     useHeroImageHandler). DetallAjust redueix el retall a 400 px en WebP
      amb compressImage i no hi aplica cap límit de pes; la fitxa hi aplica el
      de 10 MB (prova «un de 6 MB puja»). */
 
@@ -203,7 +228,8 @@ test('Onada 4 · una foto de mòbil de 9 MB arriba al retall de l’avatar i en 
     fireEvent.click(within(screen.getByRole('dialog', { name: 'Retalla la foto' })).getByRole('button', { name: 'Guardar' }));
   });
   const ix = await dobles.exportaRetall.mock.results[0].value;
-  expect(dobles.compressImage.mock.calls.map(([f, o]) => [f, o.maxSize])).toEqual([[ix, 600]]);
+  // Gauntlet 261016 (Bloc 1, Llei del Quadrat) · l'avatar de la fitxa, a 400 px (abans 600).
+  expect(dobles.compressImage.mock.calls.map(([f, o]) => [f, o.maxSize])).toEqual([[ix, 400]]);
   expect(dobles.compressImage.mock.calls[0][0]).not.toBe(original);
   expect(vista.onImageUpload).toHaveBeenCalledTimes(1);
   expect(vista.onDesaCamp.mock.calls).toEqual([['logoImage', URL_MITJA]]);

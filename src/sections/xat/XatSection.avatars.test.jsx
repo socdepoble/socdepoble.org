@@ -205,20 +205,25 @@ afterEach(() => {
   fixaBaseRecursos('/');
 });
 
-test('sense sessió a un amfitrió (el cas del Mestre): les tres files porten la seua cara i pengen del paquet', () => {
+/* Gauntlet 261016 (Bloc 3.6) · Quatre files des d'ara: Javi Llinares, amb la
+   seua foto del padró pilot (mai el logo de l'entitat), també a la mostra. */
+const FOTO_JAVI = AGENTS_MAP.JAVI.avatar_url;
+
+test('sense sessió a un amfitrió (el cas del Mestre): les quatre files porten la seua cara i pengen del paquet', () => {
   ambLaBaseDelPaquet();
   munta(senseSessio());
   expect(caresDe(llista())).toEqual({
     [POBLE.nom]: `${PAQUET}${CARA}`,
     'IAIA MarIA': `${PAQUET}${IAIA}`,
-    'Sóc de Poble': `${PAQUET}${LOGO_PNG}`
+    'Sóc de Poble': `${PAQUET}${LOGO_PNG}`,
+    'Javi Llinares': `${PAQUET}${FOTO_JAVI}`
   });
   capImatgeTrencada();
 });
 
 test('sense sessió i sense base (dev): les mateixes cares, amb la ruta de sempre', () => {
   munta(senseSessio());
-  expect(caresDe(llista())).toEqual({ [POBLE.nom]: CARA, 'IAIA MarIA': IAIA, 'Sóc de Poble': LOGO_PNG });
+  expect(caresDe(llista())).toEqual({ [POBLE.nom]: CARA, 'IAIA MarIA': IAIA, 'Sóc de Poble': LOGO_PNG, 'Javi Llinares': FOTO_JAVI });
   expect(totesLesImatges().every((src) => src.startsWith('/assets/'))).toBe(true);
 });
 

@@ -52,6 +52,7 @@ const RE_CODI_SDP = /SDP-XAT-\d{3}/;
 const RE_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const CATEGORIES_CONEGUDES = new Set(['SESSIO_CADUCADA', 'NO_TROBAT', 'DUPLICAT', 'SENSE_PERMIS', 'XARXA']);
 const channelOwners = new WeakMap();
+const channelRemovals = new WeakMap();
 
 function comprovaSenyal(config) {
   if (config.signal?.aborted) throw new DOMException('Operació cancel·lada', 'AbortError');
@@ -324,8 +325,38 @@ export const subscribeToXat = async (filId, callback, config = {}) => {
   }
 };
 
-/* Un canal remot es tanca amb el client que el va obrir. La resta (el canal del
-   magatzem local en seed) no és de Supabase: va al magatzem i no crea cap client. */
+/* Un canal remot es tanca amb el client que el va obrir. Les baixes simultànies
+   comparteixen intent. La resta (seed) va al magatzem local i no crea cap client.
+   Auditoria de Codex 261016 (P2, baixa fallida) · Amb el client instal·lat
+   (@supabase/realtime-js 2.112.4 i @supabase/phoenix 0.4.5), la baixa és
+   efectiva amb qualsevol estat que no siga 'error': amb 'timed out' Phoenix
+   també tanca el canal (phoenix channel.js, leave) i el canal ix del client
+   (RealtimeChannel.ts, _onClose → _remove). Amb 'error' o un rebuig, el canal
+   continua al client: el propietari es conserva i qui crida rep CANAL_NO_TANCAT
+   reintentable. Mai removeAllChannels: el client és compartit.
+   Alliberament acotat · El desmuntatge de XatContext dona de baixa una sola
+   vegada i no reintenta, i el client tornaria eixe canal retingut al pròxim
+   `channel()` del mateix fil. Per això, darrere d'un intent fallit, l'adaptador
+   en fa UN més, sense esperar ningú i compartit amb el reintent de qui crida.
+   Amb el client instal·lat, eixe segon intent tanca en local: el canal ja no
+   està unit i Phoenix respon 'ok' sense servidor (channel.js, leave →
+   trigger('ok')). Si també falla, el propietari es queda per a un reintent
+   explícit, i cap intent més. */
+function intentDeBaixa(subscription, propietari) {
+  const intent = Promise.resolve()
+    .then(() => propietari.removeChannel(subscription))
+    .then((estat) => {
+      if (estat === 'error') throw new Error(`El canal ha tornat l’estat ${estat} en donar-se de baixa.`);
+      channelOwners.delete(subscription);
+    })
+    .catch((cause) => {
+      throw Object.assign(errorLocal('No s’ha pogut tancar el canal del xat.', 'CANAL_NO_TANCAT', true), { cause });
+    })
+    .finally(() => { if (channelRemovals.get(subscription) === intent) channelRemovals.delete(subscription); });
+  channelRemovals.set(subscription, intent);
+  return intent;
+}
+
 export const unsubscribeFromXat = async (subscription, config = {}) => {
   if (!subscription) return;
   const propietari = channelOwners.get(subscription);
@@ -333,8 +364,16 @@ export const unsubscribeFromXat = async (subscription, config = {}) => {
     await (await local(config))?.unsubscribeFromXat(subscription);
     return;
   }
-  channelOwners.delete(subscription);
-  await propietari.removeChannel(subscription);
+  if (channelRemovals.has(subscription)) return channelRemovals.get(subscription);
+  const baixa = intentDeBaixa(subscription, propietari);
+  /* Este manejador es registra abans que el de qui crida: quan li arriba el
+     rebuig, l'intent acotat ja és a channelRemovals i un reintent s'hi suma.
+     La seua fallada no es torna a llançar: qui crida ja ha rebut la primera. */
+  baixa.catch(() => {
+    if (channelOwners.get(subscription) !== propietari || channelRemovals.has(subscription)) return;
+    intentDeBaixa(subscription, propietari).catch(() => {});
+  });
+  return baixa;
 };
 
 /* ─────────────────────────────── Missatges ─────────────────────────────── */
@@ -369,13 +408,21 @@ export const enviaMissatge = async (filId, cos, config = {}) => {
     }), config);
     if (error) throw ambEstat(error, status);
     const fila = primeraFila(data);
-    if (!fila || fila.seq === null || fila.seq === undefined) {
+    /* Auditoria de Codex 261016 (P2, confirmació invàlida) · Sense un seq enter
+       segur i positiu no hi ha confirmació: XatContext prendria la promesa per
+       un èxit i retiraria el pendent amb un seq NaN. Postgres pot serialitzar
+       el bigint com a enter decimal en text; cap coerció de booleans, arrays o
+       objectes hi val. L'error és reintentable i el reintent porta el mateix
+       id (xat_envia és idempotent per p_id). */
+    const seq = typeof fila?.seq === 'number' || (typeof fila?.seq === 'string' && /^[0-9]+$/.test(fila.seq))
+      ? Number(fila.seq) : NaN;
+    if (!Number.isSafeInteger(seq) || seq < 1) {
       throw errorLocal('El servidor no ha confirmat el missatge.', 'SENSE_CONFIRMACIO', true);
     }
     return {
       id: fila.id || entrada.id,
       filId,
-      seq: Number(fila.seq),
+      seq,
       usuariId: user.id,
       autorNom: fila.autor_nom ?? null,
       comOrgId: fila.com_org_id ?? null,
@@ -445,7 +492,16 @@ export const loadFils = async (config = {}) => {
   try {
     comprovaSenyal(config);
     const seed = await local(config);
-    if (seed) return seed.loadFils(config);
+    /* Gauntlet 261016 (Bloc 3.6: «permanentment 4 converses visibles»; i la
+       IAIA a localhost) · La llavor i el local també reben les files que hi
+       falten. Abans no passaven per ací: en local la llista naixia buida,
+       sense la IAIA, i /xat/sdp-per-defecte:iaia acabava en un 404. El
+       magatzem local fa de servidor i no en sintetitza cap, com el remot.
+       Auditoria adversarial 261016 (P2) · Ací el xat públic de /iaia és un
+       grup on la IAIA no contesta (localXat només fa respondre el fil
+       'iaia'): no retira la fila «IAIA MarIA» (paginaDeLaIAIA: false), que
+       porta al directe. Comentar a /iaia ja no se l'endú. */
+    if (seed) return ambXatsPerDefecte(await seed.loadFils(config), { paginaDeLaIAIA: false });
     const supabase = await getClient(config);
     comprovaSenyal(config);
     const tenantId = getResolvedConfig(config).tenantId;
@@ -458,7 +514,8 @@ export const loadFils = async (config = {}) => {
        regla és del mòdul neutre (xatsPerDefecte.js); ací només es crida, i
        només amb la resposta del servidor: sense poble no hi ha llista, i un
        error es propaga sense cap fila inventada. La llavor ja porta els seus
-       fils i no passa per ací.
+       fils i no passa per ací (Gauntlet 261016: derogat, vegeu dalt; i des
+       d'ara Javi Llinares també és a la cua, ACTORS_PERMANENTS).
        Onada 6 (tasca 12) · El xat de la IAIA es diu «IAIA MarIA» i porta la
        seua cara (vestixLaIAIA): el xat públic de /iaia que la fila obri ja no
        la canvia de nom. La llavor no en necessita: el seu fil 'iaia' ja es

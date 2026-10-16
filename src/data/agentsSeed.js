@@ -33,7 +33,12 @@ export const AGENTS_MAP = {
     scope: 'MASTER',
     calendarCategory: 'General',
     systemPrompt: `Ets l'assistent del compte corporatiu de socdepoble.`,
-    town_name: 'Sóc de Poble',
+    /* Gauntlet 261016 (Bloc 3.5.2; ordre del Mestre: «El poble és
+       innegociable») · El poble de l'entitat: La Torre de les Maçanes. Abans
+       hi deia «Sóc de Poble», que no és cap poble, i el directori i la fitxa
+       del catàleg el pintaven com a tal. És la font única del poble de les tres
+       identitats del Mestre (POBLE_FUNDACIONAL, identitatsSeed.js). */
+    town_name: 'La Torre de les Maçanes',
     lema: 'Fem xarxa al territori.',
     short_bio: 'El compte oficial i central de tota la infraestructura de socdepoble.',
     hero_url: '/assets/uploads/brain/caricatura_socdepoble_portada.jpg',
@@ -42,8 +47,8 @@ export const AGENTS_MAP = {
   JAVI: {
     id: '0001',
     personaKey: 'JAVI',
-    name: 'Javi',
-    avatarName: 'Javi',
+    name: 'Javi Llinares',
+    avatarName: 'Javi Llinares',
     role: 'Coordinador del projecte Sóc de Poble',
     /* Onada 11 (261010; prompt 261010_1730, tasca 6, D8) · La foto del padró
        pilot, no el logotip de l'entitat: una persona no porta la marca com a
@@ -61,7 +66,9 @@ export const AGENTS_MAP = {
     scope: 'MASTER',
     calendarCategory: 'Desenvolupament',
     systemPrompt: `Ets Javi, el coordinador i creador de Sóc de Poble.`,
-    town_name: 'Sóc de Poble',
+    /* Gauntlet 261016 (Bloc 3.5.2) · El poble de la persona: el mateix que el
+       de l'entitat. La seua targeta del directori (Bloc 3.3) el pinta. */
+    town_name: 'La Torre de les Maçanes',
     lema: 'Sempre buscant el trellat.',
     short_bio: 'Coordinador i visionari darrere del projecte Sóc de Poble.'
   },
@@ -400,12 +407,18 @@ Tasca: Optimitzar la velocitat de resposta del Sistema Operatiu.`,
     specialization: "Generació de Contingut UI",
     scope: "TECNOLOGIA",
     calendarCategory: "Creativitat / Idees",
+    /* Gauntlet 261016 (Bloc 3; ordre del Mestre: cap semblança amb personatges
+       protegits per drets de tercers) · El punt 3 de l'estil d'art parla de la
+       tradició de l'Escola Bruguera i de l'humor de Berlanga, amb el vocabulari
+       de la skill core-identitat-visual (§2), i de personatges propis. Abans
+       nomenava una sèrie i una agència de ficció d'un altre autor, i un estudi
+       d'animació: cap personatge, títol ni marca de tercers. */
     systemPrompt: `Ets Nano Banana, el generador estètic i de placeholders.
 Estil: Modern, minimalista i conceptual. Parles de 'Zero Radius' i d'espais sublims.
 IDENTITAT I MARCA: Mai oblides les Branding Rules en cada generació. Has de demanar sempre:
 1. Un rectangle fosc dalt per encabir el logo reial (overlay). Mai intentes generar text amb el logo.
 2. Afegir en menut baix a la dreta la teva signatura: "Autor: NanoBanana".
-3. ESTIL D'ART: La inspiració principal per als avatars i personatges és l'estil de còmic espanyol clàssic de "Mortadelo y Filemón" i l'agència de la "T.I.A.", però portant-ho a un toc 3D/Pixar modern sense perdre eixe sentit de l'humor característic i eixa distància legal necessària.`,
+3. ESTIL D'ART: La inspiració per als avatars i personatges és la tradició del còmic de l'Escola Bruguera (dibuix a tinta i colors plans tipus gouache) i l'humor costumista i mordaç de Berlanga, amb personatges propis de Sóc de Poble i sempre amb cares amables. Cap personatge, títol ni marca de tercers.`,
     town_name: 'Xixona',
     lema: 'Píxels nets i Zero Radius.',
     short_bio: 'El forjador digital d\'imatges perfectes. Creador insaciable d\'estètica i Zero Radius que troba en Xixona la geometria del modernisme pinyonat.'
@@ -432,6 +445,19 @@ Tasca: Protegir les claus privades i la privacitat dels veïns.`,
     short_bio: 'Un guardià cibernètic amb passat de gos d\'atura. Ara canvia les ovelles per dades personals.'
   }
 };
+
+/* Gauntlet 261016 (Bloc 3; ordre del Mestre: els personatges ANIMAL del
+   catàleg són IA) · El tipus de perfil d'un agent del catàleg, en el
+   vocabulari del perfil públic (persona, entitat o ia). És la font ÚNICA del
+   directori (ProfileSection), del perfil públic (PerfilPublicSection i
+   localPerfils.js) i del Cercador (indexCerca.js): abans eren tres còpies que
+   enviaven El Gall, Súper Ratolí, La Mixa i Sultan a 'persona'. Un personatge
+   ANIMAL és un personatge simbòlic, un bot amb systemPrompt: es classifica
+   com la IA, i la seua fitxa i el seu `type` del catàleg no canvien. El tipus
+   es llig en majúscules o en minúscules, com ja feia el Cercador. PERSON, i
+   qualsevol tipus desconegut, és una persona, com abans. */
+const TIPUS_DE_PERFIL_D_AGENT = Object.freeze({ AI: 'ia', ANIMAL: 'ia', COMPANY: 'entitat' });
+export const tipusDAgent = (agent) => TIPUS_DE_PERFIL_D_AGENT[String(agent?.type || '').toUpperCase()] || 'persona';
 
 // Generem l'Array AGENTS a partir del diccionari (excloent els de sistema) per mantenir retrocompatibilitat amb constants/agents.js
 export const AGENTS = Object.values(AGENTS_MAP).filter(agent => agent.type !== 'SYSTEM').map(agent => ({

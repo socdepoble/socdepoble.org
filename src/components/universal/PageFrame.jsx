@@ -6,6 +6,7 @@ import { Camera, Trash2 } from 'lucide-react';
 import { isSafeAsset, isSafeUrl, DEFAULT_AUTHOR, MARQUES_SVG_ANTIGUES, PAGE_CHROME_MODES, esAvatarSegur, esMarcaDeLEntitat, esRutaDelProjecte } from './UniversalUtils';
 import { RUTA_DRETS_AUTOR } from '../../config/systemPages.js';
 import { useResolvedAssetState } from '../../hooks/useResolvedAsset.js';
+import { esMitjaOpac } from '../../utils/mitjaOpac.js';
 import { escriuSeccio, llegixSeccio, rutaAmbConsulta, slugsDeSeccions } from './workspace/seleccioUrl.js';
 import { useAccions } from '../PedraSeca/hooks/useAccions.js';
 import { useTraduccioPagina } from '../PedraSeca/hooks/useTraduccioPagina.js';
@@ -818,7 +819,7 @@ export function PageFrame({
         </div>
       ) : barHeroImage ? (
         <div className="hero-image">
-          <img alt={barHeroAlt} src={resolveAsset(barHeroImage)} width={midaHero?.width} height={midaHero?.height} fetchpriority={prioritatHero} />
+          <ImatgeDePortada alt={barHeroAlt} src={barHeroImage} width={midaHero?.width} height={midaHero?.height} fetchpriority={prioritatHero} />
         </div>
       ) : null}
 
@@ -966,6 +967,16 @@ export function PageFrame({
         idPrefix={tocIdPrefix} nivellMaxIndex={nivellMaxIndex} onSeccio={traduida ? null : escriuSeccioUrl} />
     </>
   );
+}
+
+/* Una portada pujada és una referència opaca: només el port la pot
+   convertir en URL. Mentre es resol, o si falla, no es demana cap imatge.
+   La resta de fonts conserva la resolució síncrona de l'amfitrió. */
+export function ImatgeDePortada({ src, ...props }) {
+  const ref = esMitjaOpac(src) ? src.trim().replace(/^sdp-media:/i, 'sdp-media:') : '';
+  const { url } = useResolvedAssetState(ref);
+  const font = ref ? (!esMitjaOpac(url) && isSafeAsset(url) ? url : '') : resolveAsset(src);
+  return font ? <img {...props} src={font} /> : null;
 }
 
 /* Norma del Mestre, 261004 (prompt 261004_1108, logotips) · Un src de

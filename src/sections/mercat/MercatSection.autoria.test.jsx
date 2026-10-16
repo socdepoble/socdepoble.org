@@ -29,6 +29,7 @@ vi.mock('../multimedia/MultimediaContext', () => ({ useMultimedia: () => ({ stat
 import MercatSection from './MercatSection.jsx';
 import { MARKET_ITEMS } from './marketContent.js';
 import { MOCK_MARKET_ITEMS } from './marketSeed.js';
+import { propsDeTargetaDeProducte } from './targetaDeProducte.js';
 import { TargetaDelMur } from '../mur/TargetaDelMur.jsx';
 import { paginaDElement } from '../detail/elementDeSeccio.js';
 import { buildMercatDetailSectionMeta } from '../detail/detailSectionMeta.jsx';
@@ -68,13 +69,14 @@ beforeEach(() => {
 test('la llavor: el producte de la persona pilot porta el seu nom i la seua foto; el de l’entitat, el logo', () => {
   expect(MAC).toMatchObject({ author_name: PERSONA_PILOT.nom, author_avatar: PERSONA_PILOT.avatar });
   expect(SAMARRETA).toMatchObject({ author_name: 'Sóc de Poble', author_avatar: LOGO });
+  expect(MAC.imageSrc).toBe('/assets/uploads/brain/mac_mini_m4_1787721966622.jpg');
   // L'avatar de l'autor no s'escola a la imatge del producte (Multimèdia, detall).
   for (const item of MARKET_ITEMS) expect(item.imageSrc).not.toBe(PERSONA_PILOT.avatar);
 });
 
-test('Mercat: la boina del Mac Mini diu «Javi» amb la foto del perfil, mai el logo de l’entitat', () => {
+test('Mercat: la boina del Mac Mini diu «Javi Llinares» amb la foto del perfil, mai el logo de l’entitat', () => {
   const { mac, samarreta } = boinesDelMercat();
-  expect(mac).toEqual({ nom: 'Javi', avatar: PERSONA_PILOT.avatar });
+  expect(mac).toEqual({ nom: 'Javi Llinares', avatar: PERSONA_PILOT.avatar });
   expect(samarreta).toEqual({ nom: 'Sóc de Poble', avatar: LOGO });
 });
 
@@ -87,14 +89,14 @@ test('Mercat: cap producte signat per la persona pilot pinta el logo com a avata
 
 test('Mur: la targeta del Mac Mini porta la mateixa boina que al Mercat', () => {
   const targeta = render(<TargetaDelMur item={MAC} />).container.querySelector('article');
-  expect(boinaDe(targeta)).toEqual({ nom: 'Javi', avatar: PERSONA_PILOT.avatar });
+  expect(boinaDe(targeta)).toEqual({ nom: 'Javi Llinares', avatar: PERSONA_PILOT.avatar });
 });
 
-test('Detall: la barra taronja del Mac Mini signa amb «Javi» i la seua foto', () => {
+test('Detall: la barra taronja del Mac Mini signa amb «Javi Llinares» i la seua foto', () => {
   const pagina = paginaDElement(buildMercatDetailSectionMeta({ marketItems: MARKET_ITEMS, t }), MAC);
-  expect(pagina).toMatchObject({ authorName: 'Javi', authorAvatar: PERSONA_PILOT.avatar, authorHref: '/gent/javillinares' });
+  expect(pagina).toMatchObject({ authorName: 'Javi Llinares', authorAvatar: PERSONA_PILOT.avatar, authorHref: '/gent/javillinares' });
   const barra = render(<BarraTaronja authorName={pagina.authorName} authorAvatar={pagina.authorAvatar} authorLocation="" />).container;
-  expect(barra.querySelector('.sp-card-author-name').textContent).toBe('Javi');
+  expect(barra.querySelector('.sp-card-author-name').textContent).toBe('Javi Llinares');
   expect(barra.querySelector('img.sp-card-avatar').getAttribute('src')).toBe(PERSONA_PILOT.avatar);
 });
 
@@ -105,8 +107,8 @@ test('Detall: l’enllaç de la boina porta a un perfil de veres, amb sessió i 
   const senseSessio = perfils.loadPerfilPublic(clau, null);
   const ambSessio = perfils.loadPerfilPublic(clau, { id: '11111111-2222-4333-8444-555555555555', user_metadata: {} });
   // Abans, sense sessió, null: «Perfil no trobat».
-  expect(senseSessio).toMatchObject({ tipus: 'persona', nom: 'Javi', avatar: PERSONA_PILOT.avatar, propietari: false });
-  expect(ambSessio).toMatchObject({ tipus: 'persona', nom: 'Javi', avatar: PERSONA_PILOT.avatar, propietari: true });
+  expect(senseSessio).toMatchObject({ tipus: 'persona', nom: 'Javi Llinares', avatar: PERSONA_PILOT.avatar, propietari: false });
+  expect(ambSessio).toMatchObject({ tipus: 'persona', nom: 'Javi Llinares', avatar: PERSONA_PILOT.avatar, propietari: true });
   expect(senseSessio.avatar).toBe(MAC.author_avatar);
 });
 
@@ -129,7 +131,7 @@ test('Mercat: qui signa sense foto porta la silueta de reserva, mai el logo; sen
   for (const article of arrel.querySelectorAll('article')) expect(article.innerHTML).not.toContain(LOGO);
 });
 
-test('amb sessió de llavor i sense, la boina del Mercat és la mateixa: Javi i la seua foto', () => {
+test('amb sessió de llavor i sense, la boina del Mercat és la mateixa: Javi Llinares i la seua foto', () => {
   expect(usuariDeSessio()).toBeNull();
   const senseSessio = boinesDelMercat();
   cleanup();
@@ -137,7 +139,7 @@ test('amb sessió de llavor i sense, la boina del Mercat és la mateixa: Javi i 
   expect(desaSessio({ access_token: 'capcalera.carrega.signatura', user: { id: '11111111-2222-4333-8444-555555555555', user_metadata: {} } })).toBe(true);
   expect(usuariDeSessio()?.id).toBe('11111111-2222-4333-8444-555555555555');
   expect(boinesDelMercat()).toEqual(senseSessio);
-  expect(senseSessio.mac).toEqual({ nom: 'Javi', avatar: PERSONA_PILOT.avatar });
+  expect(senseSessio.mac).toEqual({ nom: 'Javi Llinares', avatar: PERSONA_PILOT.avatar });
 });
 
 test('les imatges pròpies de la llavor del Mercat existixen a public/ (cap 404: la 08 de la samarreta)', async () => {
@@ -178,4 +180,63 @@ test('Mercat: els ids remots diferents del mateix nom conserven el seu perfil, s
   const arrel = render(<MercatSection />).container;
   expect(targetaDe(arrel, 'Producte remot').querySelector('.sp-card-header a')?.getAttribute('href')).toBe('/empresa/entitat-remota');
   expect(targetaDe(arrel, 'Sense identitat').querySelector('.sp-card-header a')).toBeNull();
+});
+
+/* Gauntlet 261016 · Un nom compartit no identifica la persona pilot: cada
+   autor conserva el seu nom, la seua foto (o la silueta) i el seu perfil. */
+test.each(['Javi', 'Javi Llinares'])('Mercat: l’homònim %s amb un altre ID no hereta la identitat del pilot', (nom) => {
+  // El Mercat admet imatges pròpies: la prova d'identitat no usa un servidor alié.
+  const foto = '/assets/proves/homonim.webp';
+  mocks.mur.sortedMarketItems = [
+    { id: 'amb-foto', title: 'Producte homònim amb foto', author_name: nom, author_id: 'persona-homonima', author_avatar: foto },
+    { id: 'sense-foto', title: 'Producte homònim sense foto', seller: nom, author_id: 'persona-homonima-sense-foto' }
+  ];
+  const arrel = render(<MercatSection />).container;
+  const ambFoto = targetaDe(arrel, 'Producte homònim amb foto');
+  const senseFoto = targetaDe(arrel, 'Producte homònim sense foto');
+  expect(boinaDe(ambFoto)).toEqual({ nom, avatar: foto });
+  expect(boinaDe(senseFoto)).toEqual({ nom, avatar: null });
+  expect(senseFoto.querySelector('.sp-card-header .sp-card-avatar--fallback')).not.toBeNull();
+  expect(ambFoto.querySelector('.sp-card-header a')?.getAttribute('href')).toBe('/gent/persona-homonima');
+  expect(senseFoto.querySelector('.sp-card-header a')?.getAttribute('href')).toBe('/gent/persona-homonima-sense-foto');
+});
+
+test('Mercat: l’entitat signant té prioritat encara que la persona autora siga la pilot', () => {
+  mocks.mur.sortedMarketItems = [
+    { id: 'entitat', title: 'Producte de la cooperativa', author_name: 'Cooperativa', author_id: 'javillinares', author_org_id: 'entitat-remota', avatar_url: LOGO }
+  ];
+  const targeta = targetaDe(render(<MercatSection />).container, 'Producte de la cooperativa');
+  expect(boinaDe(targeta)).toEqual({ nom: 'Cooperativa', avatar: LOGO });
+  expect(targeta.querySelector('.sp-card-header a')?.getAttribute('href')).toBe('/empresa/entitat-remota');
+});
+
+test.each([23, { url: '/assets/proves/avatar.webp' }])('Gauntlet 261016 · avatar no textual %j no llança i la targeta pinta silueta', (avatar) => {
+  const item = { id: 'avatar-invalid', title: 'Producte amb avatar invàlid', author_id: 'javillinares', author_avatar: avatar };
+  expect(() => propsDeTargetaDeProducte(item)).not.toThrow();
+  expect(propsDeTargetaDeProducte(item).avatarUrl).toBe(avatar);
+  mocks.mur.sortedMarketItems = [item];
+  const targeta = targetaDe(render(<MercatSection />).container, item.title);
+  expect(boinaDe(targeta)).toEqual({ nom: 'Javi Llinares', avatar: null });
+  expect(targeta.querySelector('.sp-card-header .sp-card-avatar--fallback')).not.toBeNull();
+  expect(targeta.querySelector('.sp-card-header a')?.getAttribute('href')).toBe('/gent/javillinares');
+});
+
+test('Gauntlet 261016 · avatar opac amb nom semblant al logo es conserva sense resoldre’l al mapejador', () => {
+  const avatar = 'sdp-media://mitjans/T/U/avatars/logo-socdepoble-carnaval.webp';
+  const props = propsDeTargetaDeProducte({ id: 'avatar-opac', title: 'Foto pròpia', author_id: 'javillinares', author_avatar: avatar });
+  expect(props).toMatchObject({ author: 'Javi Llinares', authorHref: '/gent/javillinares', avatarUrl: avatar });
+});
+
+test.each([LOGO, '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg'])('Gauntlet 261016 · avatar amb la marca real %s es substituïx per la foto pilot', (avatar) => {
+  expect(propsDeTargetaDeProducte({ id: 'avatar-marca', title: 'Foto de la pilot', author_id: 'javillinares', author_avatar: avatar }))
+    .toMatchObject({ author: 'Javi Llinares', authorHref: '/gent/javillinares', avatarUrl: PERSONA_PILOT.avatar });
+});
+
+test('Gauntlet 261016 · avatar personal amb nom semblant al logo no se substituïx', () => {
+  const avatar = '/assets/fotos/logo-socdepoble-carnaval.webp';
+  const item = { id: 'avatar-personal', title: 'Foto de carnestoltes', author_id: 'javillinares', author_avatar: avatar };
+  expect(propsDeTargetaDeProducte(item).avatarUrl).toBe(avatar);
+  mocks.mur.sortedMarketItems = [item];
+  const targeta = targetaDe(render(<MercatSection />).container, item.title);
+  expect(boinaDe(targeta)).toEqual({ nom: 'Javi Llinares', avatar });
 });

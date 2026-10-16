@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { loadFils, loadMissatges, marcaLlegit, creaFilDirecte, carregaMembres, enviaMissatge, subscribeToXat, unsubscribeFromXat } from './xat.js';
+import { loadFils, loadMissatges, marcaLlegit, creaFilDirecte, carregaMembres, enviaMissatge, obriFilDePagina, subscribeToXat, unsubscribeFromXat } from './xat.js';
 import { reiniciaLocalXat } from '../localXat.js';
 import { AGENTS_MAP } from '../agentsSeed.js';
 import { PERSONA_PILOT } from '../identitatsSeed.js';
@@ -17,7 +17,9 @@ vi.mock('./runtime.js', () => ({
 vi.mock('./utils.js', () => ({ handleError: error => error }));
 
 const deferred = () => { let resolve; const promise = new Promise(r => { resolve = r; }); return { promise, resolve }; };
-const REMOT = { tenantId: '00000000-0000-4000-8000-000000000000' };
+/* Deixa córrer tota la cua de microtasques: l'intent acotat de la baixa no l'espera ningú. */
+const buidaCua = () => new Promise((r) => { setTimeout(r, 0); });
+const REMOT ={ tenantId: '00000000-0000-4000-8000-000000000000' };
 /* W4-10 · A Supabase l'altra part d'un fil directe és un UUID (crea_fil_directe). */
 const ALTRE = '00000000-0000-4000-8000-000000000042';
 const SEED = { dataMode: 'seed', tenantId: '00000000-0000-4000-8000-000000000000' };
@@ -25,7 +27,7 @@ let query, client;
 beforeEach(() => {
   vi.clearAllMocks(); mock.user = { id: 'A' }; mock.modePerDefecte = 'remote'; reiniciaLocalXat();
   query = { data: [], error: null, abortSignal: vi.fn().mockReturnThis() };
-  client = { rpc: vi.fn().mockReturnValue(query), from: vi.fn().mockReturnValue(query), channel: vi.fn(), removeChannel: vi.fn().mockResolvedValue(null) };
+  client = { rpc: vi.fn().mockReturnValue(query), from: vi.fn().mockReturnValue(query), channel: vi.fn(), removeChannel: vi.fn().mockResolvedValue('ok') };
   mock.getClient.mockResolvedValue(client);
 });
 
@@ -64,6 +66,36 @@ describe('transport cancel·lable del Xat', () => {
 });
 
 describe('enviament idempotent per RPC', () => {
+  it.each([1, 7, '7', Number.MAX_SAFE_INTEGER, String(Number.MAX_SAFE_INTEGER)])('admet el seq enter positiu segur %s de la confirmació', async (seq) => {
+    query.data = [{ id: 'id-client', seq }];
+    await expect(enviaMissatge('fil', { id: 'id-client', text: 'Hola' }, REMOT)).resolves.toMatchObject({ seq: Number(seq) });
+  });
+  it.each([
+    ['absent', undefined], ['nul', null], ['text', 'invalid'], ['buit', ''], ['espais', ' '],
+    ['NaN', NaN], ['infinit', Infinity], ['zero', 0], ['negatiu', -1], ['decimal', 1.5],
+    ['enter insegur', Number.MAX_SAFE_INTEGER + 1], ['enter insegur en text', '9007199254740993'],
+    ['zero en text', '0'], ['decimal en text', '1.5'], ['hexadecimal', '0x10'],
+    ['booleà true', true], ['booleà false', false], ['array buit', []], ['array numèric', [1]], ['objecte', {}]
+  ])('rebutja el seq %s amb error de confirmació reintentable', async (_cas, seq) => {
+    query.data = [{ id: 'id-client', seq }];
+    await expect(enviaMissatge('fil', { id: 'id-client', text: 'Hola' }, REMOT))
+      .rejects.toMatchObject({ code: 'SENSE_CONFIRMACIO', retriable: true });
+    expect(client.rpc).toHaveBeenCalledTimes(1);
+  });
+  /* Auditoria de Codex 261016 (P2) · El cas exacte de la reproducció: la
+     confirmació { id: 'm-bad', seq: 'invalid' } tornava seq NaN i XatContext
+     la prenia per bona. Ara falla, i el reintent de XatContext (mateix id)
+     queda confirmat per la resposta vàlida, sense cap missatge nou. */
+  it('una confirmació amb seq invàlid falla reintentable i el reintent amb el mateix id es confirma', async () => {
+    const entrada = { id: 'm-bad', text: 'Prova' };
+    query.data = [{ id: 'm-bad', seq: 'invalid' }];
+    const error = await enviaMissatge('fil', entrada, REMOT).catch((e) => e);
+    expect(error).toBeInstanceOf(Error);
+    expect(error).toMatchObject({ code: 'SENSE_CONFIRMACIO', retriable: true, message: 'El servidor no ha confirmat el missatge.' });
+    query.data = [{ id: 'm-bad', seq: 3, creat_al: '2026-10-16T00:30:00Z' }];
+    await expect(enviaMissatge('fil', entrada, REMOT)).resolves.toMatchObject({ id: 'm-bad', seq: 3 });
+    expect(client.rpc.mock.calls.map(([nom, args]) => [nom, args.p_id])).toEqual([['xat_envia', 'm-bad'], ['xat_envia', 'm-bad']]);
+  });
   it('envia una cadena amb xat_envia i un id generat, i torna el seq del servidor', async () => {
     query.data = [{ id: 'uuid-generat', seq: 7, creat_al: '2026-09-27T08:00:00Z' }];
     const desat = await enviaMissatge('fil', '  Bon dia \n', REMOT);
@@ -233,28 +265,35 @@ describe('xats d’ajuda per defecte en remot', () => {
   // Onada 8 (261009) · El logo quadrat és el PNG (abans, l'SVG).
   const LOGO_QUADRAT = '/assets/system/ui/logo-socdepoble-cuadrat-verd-256x256.png';
   const UUID_ENTITAT = '00000000-0000-4000-8000-0000000000aa';
-  it('sense cap conversa, les dues files a la cua, amb el logo quadrat de Sóc de Poble', async () => {
+  /* Gauntlet 261016 (Bloc 3.6) · Ordre del Mestre: quatre converses sempre.
+     Les tres directes (Sóc de Poble, Javi Llinares i la IAIA) van a la cua;
+     abans n'eren dues. S'actualitza a posta: la regla vella era «dues». */
+  it('sense cap conversa, les tres files a la cua: Sóc de Poble amb el logo quadrat, Javi amb la seua foto', async () => {
     query.data = [];
     const fils = await loadFils(REMOT);
     expect(fils.map(f => [f.id, f.perDefecte, f.imatgeUrl])).toEqual([
       ['sdp-per-defecte:socdepoble', 'socdepoble', LOGO_QUADRAT],
+      ['sdp-per-defecte:javi', 'javi', '/assets/fotos/javi-llinares-perfil-1200px.jpg'],
       ['sdp-per-defecte:iaia', 'iaia', AGENTS_MAP.IAIA.avatar_url]
     ]);
     expect(client.rpc).toHaveBeenCalledTimes(1);
   });
-  it('amb el missatge directe real amb l’entitat (xat_fils_meus porta el seu slug), només la IAIA', async () => {
+  it('amb el missatge directe real amb l’entitat (xat_fils_meus porta el seu slug), només Javi i la IAIA', async () => {
     query.data = [{ id: 'f-real', tipus: 'directe', titol: null, org_id: UUID_ENTITAT, entitat_nom: 'Sóc de Poble', com_entitat: false,
       altres: [{ id: UUID_ENTITAT, nom: 'Sóc de Poble', tipus: 'entitat', avatarUrl: null, slug: 'socdepoble' }], ultim_seq: 2 }];
-    expect((await loadFils(REMOT)).map(f => f.perDefecte ?? f.id)).toEqual(['f-real', 'iaia']);
+    expect((await loadFils(REMOT)).map(f => f.perDefecte ?? f.id)).toEqual(['f-real', 'javi', 'iaia']);
   });
   it('la comunitat de l’entitat (amb subjecte) no és el xat privat: Sóc de Poble es queda', async () => {
     query.data = [{ id: 'f-av', tipus: 'canal', org_id: UUID_ENTITAT, subjecte_tipus: 'entitat', subjecte_id: UUID_ENTITAT,
       altres: [{ id: UUID_ENTITAT, nom: 'Sóc de Poble', tipus: 'entitat', avatarUrl: null, slug: 'socdepoble' }] }];
-    expect((await loadFils(REMOT)).map(f => f.perDefecte ?? f.id)).toEqual(['f-av', 'socdepoble', 'iaia']);
+    expect((await loadFils(REMOT)).map(f => f.perDefecte ?? f.id)).toEqual(['f-av', 'socdepoble', 'javi', 'iaia']);
   });
-  it('en seed, cap fila sintètica: la llavor ja porta els seus fils', async () => {
+  /* Gauntlet 261016 (Bloc 3.6, també la IAIA a localhost) · Derogat «en seed,
+     cap fila sintètica»: la llavor rep les que li falten (Sóc de Poble i Javi;
+     la IAIA ja hi té el seu fil 'iaia'), sense tocar Supabase. */
+  it('en seed, les files que falten a la llavor: Sóc de Poble i Javi, no la IAIA', async () => {
     const fils = await loadFils(SEED);
-    expect(fils.some(f => f.perDefecte)).toBe(false);
+    expect(fils.filter(f => f.perDefecte).map(f => f.perDefecte)).toEqual(['socdepoble', 'javi']);
     expect(mock.getClient).not.toHaveBeenCalled();
   });
   it('sense poble, cap llista ni cap fila sintètica', async () => {
@@ -334,6 +373,100 @@ describe('canal privat de temps real', () => {
     expect(client.removeChannel).toHaveBeenCalledTimes(1);
     expect(mock.getClient).toHaveBeenCalledTimes(1);
   });
+  /* Auditoria de Codex 261016 (P2, baixa fallida) · Amb 'timed out', Phoenix
+     ja ha tancat el canal i l'ha tret del client (phoenix channel.js, leave;
+     RealtimeChannel.ts, _onClose → _remove). Esta prova el fixava abans com a
+     fallida, junt amb 'error'; l'ordre del 261016 diu que la baixa és efectiva
+     amb tot estat que no siga 'error'. */
+  it.each(['ok', 'timed out'])('la baixa amb estat %s és efectiva: lleva el propietari i no es torna a provar', async (estat) => {
+    const channel = { on: vi.fn().mockReturnThis(), subscribe: vi.fn().mockReturnThis() };
+    client.channel.mockReturnValue(channel);
+    const { subscription } = await subscribeToXat('fil', vi.fn(), REMOT);
+    client.removeChannel.mockResolvedValueOnce(estat);
+    await expect(unsubscribeFromXat(subscription)).resolves.toBeUndefined();
+    await buidaCua();
+    await expect(unsubscribeFromXat(subscription)).resolves.toBeUndefined();
+    expect(client.removeChannel).toHaveBeenCalledTimes(1);
+  });
+  it('la baixa amb estat error conserva el client propietari, avisa qui crida i el reintent s’afig a l’intent acotat', async () => {
+    const channel = { on: vi.fn().mockReturnThis(), subscribe: vi.fn().mockReturnThis() };
+    client.channel.mockReturnValue(channel);
+    client.removeAllChannels = vi.fn();
+    const { subscription } = await subscribeToXat('fil', vi.fn(), REMOT);
+    client.removeChannel.mockResolvedValueOnce('error');
+    mock.getClient.mockResolvedValue({ removeChannel: vi.fn() });
+    await expect(unsubscribeFromXat(subscription)).rejects.toMatchObject({
+      code: 'CANAL_NO_TANCAT', retriable: true, cause: expect.objectContaining({ message: 'El canal ha tornat l’estat error en donar-se de baixa.' })
+    });
+    // Encara que canvie el mode, el reintent és del client que va obrir el canal,
+    // i no n'obri cap altre: s'afig a l'intent acotat que ja és en marxa.
+    await expect(unsubscribeFromXat(subscription, SEED)).resolves.toBeUndefined();
+    expect(client.removeChannel).toHaveBeenCalledTimes(2);
+    expect(client.removeChannel).toHaveBeenLastCalledWith(channel);
+    expect(mock.getClient).toHaveBeenCalledTimes(1);
+    await unsubscribeFromXat(subscription);
+    expect(client.removeChannel).toHaveBeenCalledTimes(2);
+    expect(client.removeAllChannels).not.toHaveBeenCalled();
+  });
+  /* Alliberament acotat · El desmuntatge de XatContext dona de baixa una sola
+     vegada i no reintenta: l'adaptador fa un intent més pel seu compte. */
+  it('en el desmuntatge, darrere d’un error, un sol intent més allibera el canal sense que ningú reintente', async () => {
+    const channel = { on: vi.fn().mockReturnThis(), subscribe: vi.fn().mockReturnThis() };
+    client.channel.mockReturnValue(channel);
+    client.removeAllChannels = vi.fn();
+    const { subscription } = await subscribeToXat('fil', vi.fn(), REMOT);
+    client.removeChannel.mockResolvedValueOnce('error');
+    await expect(unsubscribeFromXat(subscription)).rejects.toMatchObject({ code: 'CANAL_NO_TANCAT', retriable: true });
+    await buidaCua();
+    expect(client.removeChannel).toHaveBeenCalledTimes(2);
+    expect(client.removeChannel).toHaveBeenLastCalledWith(channel);
+    // Ja és tancat: una baixa tardana no torna al client.
+    await expect(unsubscribeFromXat(subscription)).resolves.toBeUndefined();
+    expect(client.removeChannel).toHaveBeenCalledTimes(2);
+    expect(client.removeAllChannels).not.toHaveBeenCalled();
+  });
+  it('si l’intent acotat també falla, no n’hi ha cap més i el propietari queda per a un reintent explícit', async () => {
+    const channel = { on: vi.fn().mockReturnThis(), subscribe: vi.fn().mockReturnThis() };
+    client.channel.mockReturnValue(channel);
+    const { subscription } = await subscribeToXat('fil', vi.fn(), REMOT);
+    client.removeChannel.mockResolvedValue('error');
+    await expect(unsubscribeFromXat(subscription)).rejects.toMatchObject({ code: 'CANAL_NO_TANCAT', retriable: true });
+    await buidaCua();
+    await buidaCua();
+    expect(client.removeChannel).toHaveBeenCalledTimes(2);
+    client.removeChannel.mockResolvedValue('ok');
+    await expect(unsubscribeFromXat(subscription)).resolves.toBeUndefined();
+    expect(client.removeChannel).toHaveBeenCalledTimes(3);
+    expect(client.removeChannel).toHaveBeenLastCalledWith(channel);
+    expect(mock.getClient).toHaveBeenCalledTimes(1);
+  });
+  it.each(['rebuig', 'llançament'])('la baixa amb %s preserva la causa i es pot tornar a provar', async (cas) => {
+    const channel = { on: vi.fn().mockReturnThis(), subscribe: vi.fn().mockReturnThis() };
+    client.channel.mockReturnValue(channel);
+    const { subscription } = await subscribeToXat('fil', vi.fn(), REMOT);
+    const cause = new Error('transport fallit');
+    if (cas === 'rebuig') client.removeChannel.mockRejectedValueOnce(cause);
+    else client.removeChannel.mockImplementationOnce(() => { throw cause; });
+    await expect(unsubscribeFromXat(subscription)).rejects.toMatchObject({ code: 'CANAL_NO_TANCAT', retriable: true, cause });
+    await expect(unsubscribeFromXat(subscription)).resolves.toBeUndefined();
+    expect(client.removeChannel).toHaveBeenCalledTimes(2);
+  });
+  it('dues baixes simultànies comparteixen el mateix intent i rebuig, sense perdre el reintent', async () => {
+    const channel = { on: vi.fn().mockReturnThis(), subscribe: vi.fn().mockReturnThis() };
+    client.channel.mockReturnValue(channel);
+    const { subscription } = await subscribeToXat('fil', vi.fn(), REMOT);
+    const pendent = deferred();
+    client.removeChannel.mockReturnValueOnce(pendent.promise);
+    const resultats = Promise.allSettled([unsubscribeFromXat(subscription), unsubscribeFromXat(subscription)]);
+    await Promise.resolve();
+    expect(client.removeChannel).toHaveBeenCalledTimes(1);
+    pendent.resolve('error');
+    const [primera, segona] = await resultats;
+    expect(primera).toMatchObject({ status: 'rejected', reason: { code: 'CANAL_NO_TANCAT', retriable: true } });
+    expect(segona).toMatchObject({ status: 'rejected', reason: primera.reason });
+    await expect(unsubscribeFromXat(subscription)).resolves.toBeUndefined();
+    expect(client.removeChannel).toHaveBeenCalledTimes(2);
+  });
   it('T48 · una subscripció que no és un canal remot no crea client ni llança', async () => {
     await expect(unsubscribeFromXat({ filId: 'fil', callback: vi.fn() })).resolves.toBeUndefined();
     expect(mock.getClient).not.toHaveBeenCalled();
@@ -358,7 +491,7 @@ describe('mode seed (localXat)', () => {
 
   it('T63.1 · la llavor només porta identitats reals: cap persona ni conversa inventada', () => {
     expect(XAT_SEED_MEMBRES.map(m => [m.usuariId, m.nom, m.tipus])).toEqual([
-      ['0001', 'Javi', 'persona'],
+      ['0001', 'Javi Llinares', 'persona'],
       ['socdepoble', 'Sóc de Poble', 'entitat'],
       [XAT_SEED_IDS.iaia, 'IAIA MarIA', 'ia']
     ]);
@@ -419,7 +552,11 @@ describe('mode seed (localXat)', () => {
   });
 
   it('serveix les cinc converses de la llavor sense tocar Supabase, amb dos avisos per llegir', async () => {
-    const fils = await loadFils(SEED);
+    /* Gauntlet 261016 (Bloc 3.6) · Les files sintètiques de la cua (Sóc de
+       Poble i Javi) no són de la llavor: les prova «xats d’ajuda per defecte». */
+    const totes = await loadFils(SEED);
+    const fils = totes.filter(f => !f.perDefecte);
+    expect(totes.length - fils.length).toBe(2);
     expect(mock.getClient).not.toHaveBeenCalled();
     expect(fils).toHaveLength(5);
     expect(fils.map(f => f.tipus).sort()).toEqual(TIPUS_DE_LA_LLAVOR);
@@ -535,21 +672,21 @@ describe('mode seed (localXat)', () => {
     expect(fils.find(f => f.id === fil).noLlegits).toBe(0);
     expect(noLlegits(fils)).toBe(0);
   });
-  it('directori de tres (Javi, Sóc de Poble i la IAIA) i conversa nova, idempotent, amb canal local', async () => {
+  it('directori de tres (Javi Llinares, Sóc de Poble i la IAIA) i conversa nova, idempotent, amb canal local', async () => {
     /* Onada 12 (261011; ordres 261011_0130, punt 3, D-09) · Javi porta al padró
        del xat la foto del padró pilot (abans, null: la silueta). */
     const membres = await carregaMembres('jav', SEED);
-    expect(membres).toEqual([{ usuari_id: '0001', nom: 'Javi', tipus: 'persona', avatar_url: PERSONA_PILOT.avatar, fil_id: null }]);
+    expect(membres).toEqual([{ usuari_id: '0001', nom: 'Javi Llinares', tipus: 'persona', avatar_url: PERSONA_PILOT.avatar, fil_id: null }]);
     expect(PERSONA_PILOT.avatar).toMatch(/^\/assets\/fotos\/.+\.jpg$/);
     expect(PERSONA_PILOT.avatar).not.toBe(LOGO);
     const tots = await carregaMembres(null, SEED);
-    expect(tots.map(m => m.nom)).toEqual(['IAIA MarIA', 'Javi', 'Sóc de Poble']);
+    expect(tots.map(m => m.nom)).toEqual(['IAIA MarIA', 'Javi Llinares', 'Sóc de Poble']);
     expect(tots.find(m => m.nom === 'IAIA MarIA')).toMatchObject({ tipus: 'ia', fil_id: XAT_SEED_IDS.filIaia });
     /* La comunitat no és cap conversa amb l'entitat: el padró no hi apunta. */
     expect(tots.find(m => m.nom === 'Sóc de Poble')).toMatchObject({ tipus: 'entitat', avatar_url: LOGO, fil_id: null });
     const nou = await creaFilDirecte(XAT_SEED_IDS.javi, null, SEED);
     expect(await creaFilDirecte(XAT_SEED_IDS.javi, null, SEED)).toBe(nou);
-    expect((await loadFils(SEED)).some(f => f.id === nou && f.tipus === 'directe' && f.altresNoms[0] === 'Javi')).toBe(true);
+    expect((await loadFils(SEED)).some(f => f.id === nou && f.tipus === 'directe' && f.altresNoms[0] === 'Javi Llinares')).toBe(true);
     /* D-09 · La conversa directa amb Javi es pinta amb la seua foto, a la llista i a la capçalera. */
     expect((await loadFils(SEED)).find(f => f.id === nou)).toMatchObject({
       imatgeUrl: PERSONA_PILOT.avatar, altres: [expect.objectContaining({ id: '0001', tipus: 'persona', avatarUrl: PERSONA_PILOT.avatar })]
@@ -565,15 +702,32 @@ describe('mode seed (localXat)', () => {
     await Promise.resolve();
     expect(callback).toHaveBeenCalledWith(null, { tipus: 'nous', filId: nou, seq: 1 });
   });
-  it('en mode local no hi ha converses de llavor, però el padró és el mateix de tres', async () => {
+  /* Gauntlet 261016 (Bloc 3.6.2, «la IAIA falla a localhost») · En local no
+     hi ha converses de llavor, i la llista naixia BUIDA: ni la IAIA hi era.
+     Ara hi ha les tres files directes, la IAIA inclosa. S'actualitza a posta. */
+  it('en mode local no hi ha converses de llavor, però sí les tres files permanents, i el padró és el mateix de tres', async () => {
     const LOCAL = { dataMode: 'local', tenantId: '00000000-0000-4000-8000-000000000000' };
-    expect(await loadFils(LOCAL)).toEqual([]);
-    expect((await carregaMembres(null, LOCAL)).map(m => m.nom)).toEqual(['IAIA MarIA', 'Javi', 'Sóc de Poble']);
+    expect((await loadFils(LOCAL)).map(f => f.id)).toEqual(['sdp-per-defecte:socdepoble', 'sdp-per-defecte:javi', 'sdp-per-defecte:iaia']);
+    expect((await carregaMembres(null, LOCAL)).map(m => m.nom)).toEqual(['IAIA MarIA', 'Javi Llinares', 'Sóc de Poble']);
+    expect(mock.getClient).not.toHaveBeenCalled();
+  });
+  /* Auditoria adversarial 261016 (P2) · En local, comentar a /iaia crea el
+     grup «L'ànima de la iaia», on la IAIA no contesta. Eixe grup no és el
+     seu xat: la fila «IAIA MarIA» es queda (porta al directe, ?amb=IAIA_ID) i
+     el grup ix amb el títol de la pàgina, sense vestir. En remot, el xat
+     públic de /iaia sí que és el de la IAIA (vegeu «xats d’ajuda per defecte»). */
+  it('en mode local, el xat públic de /iaia no retira la fila de la IAIA', async () => {
+    const LOCAL = { dataMode: 'local', tenantId: '00000000-0000-4000-8000-000000000000' };
+    const obert = await obriFilDePagina({ tipus: 'pagina', id: '/iaia', ruta: '/iaia', titol: "L'ànima de la iaia" }, LOCAL);
+    expect(obert?.filId).toBeTruthy();
+    const fils = await loadFils(LOCAL);
+    expect(fils.map(f => f.perDefecte ?? f.id)).toEqual([obert.filId, 'socdepoble', 'javi', 'iaia']);
+    expect(fils[0]).toMatchObject({ tipus: 'grup', titol: "L'ànima de la iaia", subjecte: expect.objectContaining({ tipus: 'pagina', id: '/iaia' }) });
     expect(mock.getClient).not.toHaveBeenCalled();
   });
   it('sense sessió usa el convidat, que també veu la comunitat i hi pot conversar', async () => {
     mock.user = null;
-    const fils = await loadFils(SEED);
+    const fils = (await loadFils(SEED)).filter(f => !f.perDefecte);
     expect(fils.map(f => f.tipus).sort()).toEqual(TIPUS_DE_LA_LLAVOR);
     expect(noLlegits(fils)).toBe(2);
     const meu = await enviaMissatge(XAT_SEED_IDS.filGeneral, 'Hola des del convidat', SEED);

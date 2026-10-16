@@ -3,7 +3,6 @@ import { useCoreContent } from "../../app/contexts/CoreContentContext.jsx";
 import { useSession } from "../../app/contexts/SessionContext.jsx";
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { useLocalSandbox } from './useLocalSandbox.js';
-import { compressImage } from '../../utils/imageUtils.js';
 import { useNotes, etiquetesDeNota } from './NotesContext';
 import { useEstatDesamentNota, estatPerAlEditor } from './useEstatDesamentNota.js';
 import { DocumentEditor } from '../../components/universal/DocumentEditor';
@@ -69,13 +68,32 @@ const TEXTOS_EXTERN = Object.freeze({
   descripcio: 'Este contingut de fora és una còpia teua: el pots editar, i compartir-lo el porta al teu Mur citant-ne l’origen.'
 });
 
-/* Lògica de pujada d'imatges pròpia de Notes */
+/* Gauntlet 261016 (Bloc 1 i 1.2, Llei del Quadrat i mandat de l'EXIF) · Els
+   bytes d'un fitxer com a data URL, sense tocar-los. */
+function dataUrlDelFitxer(fitxer) {
+  return new Promise((resol, rebutja) => {
+    const lector = new FileReader();
+    lector.onload = () => resol(String(lector.result));
+    lector.onerror = () => rebutja(lector.error || new Error("No s'ha pogut llegir la imatge."));
+    lector.readAsDataURL(fitxer);
+  });
+}
+
+/* Lògica de pujada d'imatges pròpia de Notes.
+   Gauntlet 261016 (Bloc 1 i 1.2) · El fitxer que arriba ací (uploadMedia) ja
+   ve preparat: la closca (useHeroImageHandler: la foto a la seua mida exacta,
+   dins del pressupost i amb l'EXIF que la persona ha triat conservar; el
+   logotip) i l'ordre «/» Imatge del cos el comprimixen ABANS de cridar-lo, i
+   el camí del servidor (uploadToStorage) el puja tal qual. En seed i local es
+   desa també tal qual, com a data URL dels mateixos bytes: abans es tornava a
+   comprimir (compressImage sense opcions), i això perdia l'EXIF triat i podia
+   traure la foto del pressupost. La validació no canvia. */
 async function pujarImatgeDeNota(fitxer, config) {
   if (config?.dataMode === 'seed' || config?.dataMode === 'local') {
     if (!/^image\/(png|jpeg|webp|gif|avif)$/.test(fitxer.type) || fitxer.size > 10 * 1024 * 1024) {
       throw new Error('Tria una imatge PNG, JPEG, WebP, GIF o AVIF de menys de 10 MB.');
     }
-    return compressImage(fitxer, { maxSize: 1200 });
+    return dataUrlDelFitxer(fitxer);
   }
   if (!teCapacitat('mitjans')) return null;
   const res = await uploadToStorage(fitxer, { carpeta: 'notes', tenantId: config?.tenantId }, config);

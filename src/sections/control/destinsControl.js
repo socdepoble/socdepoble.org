@@ -7,6 +7,11 @@
  * transmeses per MarIA) · Les targetes són UniversalCards estàndard, no
  * vinyetes:
  *   · Títol, subtítol i entradilla visibles, amb els textos literals de 2245.
+ *     Derogat per al Mapa per l'ordre del Mestre del Gauntlet 261016 (pla
+ *     261016_0015, §0.1.3: EXIF íntegre per defecte, amb opt-out): la seua
+ *     entradilla ja no és la de 2245, sinó la de pageContent.js; títol,
+ *     subtítol i data no canvien (destinsControl.test.js). Treball i
+ *     Habitatge porten els seus, del 261004 (W4-08, més avall).
  *     No es copien ací: viuen a PAGE_COPY (sections/text/pageContent.js),
  *     que també pinta la UniversalPage de cada targeta. Una sola font per a
  *     la targeta i la seua pàgina, i la mateixa data a la boina i a la barra.

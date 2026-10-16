@@ -195,10 +195,12 @@ describe('creaRegistre', () => {
     expect(registre.registraModul(manifestModulDeProva({ cos: { cami: '/cos.js', integrity: 'sha384-curt' } })).ok).toBe(false);
     expect(registre.registraModul(manifestExternDeProva()).ok).toBe(false);
     const futur = registre.registraModul(manifestModulDeProva({ nucli: '^2' }));
-    expect(futur).toEqual({ ok: false, errors: ['nucli: este nucli és el 1.1.0 i el mòdul demana ^2'], manifest: null });
+    expect(futur).toEqual({ ok: false, errors: ['nucli: este nucli és el 1.2.0 i el mòdul demana ^2'], manifest: null });
     expect(registre.registraModul(manifestModulDeProva({ nucli: '^1.9' })).ok).toBe(false);
-    expect(registre.registraModul(manifestModulDeProva({ nucli: '^1.2' })).ok).toBe(false);
+    /* Actualitzat a posta (261016): amb el nucli 1.2.0 (porta 'workspace') un mòdul de '^1.2' ja entra; el primer que no, el de '^1.3'. */
+    expect(registre.registraModul(manifestModulDeProva({ nucli: '^1.3' })).ok).toBe(false);
     expect(registre.llista()).toEqual([]);
+    expect(registre.registraModul(manifestModulDeProva({ nucli: '^1.2' })).ok).toBe(true);
   });
 
   test('componentDe d’un mòdul: un lazy per id que demana el cos al carregador; retirar-lo l’oblida', () => {

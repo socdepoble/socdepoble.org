@@ -28,12 +28,13 @@ import { useIdentitat } from '../../app/contexts/IdentitatContext.jsx';
 import { useSession } from '../../app/contexts/SessionContext';
 import { useUIActions, useUIState } from '../../app/contexts/UIContext';
 import { normalizeBackendConfig } from '../../config/backendConfig.js';
+import { aliesDeLActor } from '../../data/identitatsSeed.js';
 import { useMur } from '../mur/MurContext';
 import { useMultimedia } from '../multimedia/MultimediaContext';
 import { useNotes } from '../notes/NotesContext';
 import { useXat } from '../xat/XatContext';
 import {
-  cercaEntrades, deActe, deAgent, deConversa, deIdentitat, deMedia, deMembre, deNota,
+  ambLaIdentitatPropia, cercaEntrades, deActe, deAgent, deConversa, deIdentitat, deMedia, deMembre, deNota,
   dePagina, dePoble, deProducte, dePublicacio, tipusValid
 } from './indexCerca.js';
 
@@ -172,12 +173,22 @@ export function useCercaGlobal({ q = '', tipus = 'tot' } = {}) {
   const deNotes = useMemo(() => mapa(notes.notes, deNota, opcions), [notes.notes, opcions]);
   const deConverses = useMemo(() => mapa(xat.chatThreads, deConversa, opcions), [xat.chatThreads, opcions]);
 
+  /* Gauntlet 261016 (Bloc 3.5.1) · Els àlies declarats de la persona de la
+     sessió (aliesDeLActor, la regla del MAS): en llavor, els de la persona
+     pilot; en remot, només el seu id. Amb ells, la seua fitxa del padró i del
+     catàleg es fusiona amb la pròpia (ambLaIdentitatPropia), mai pel nom. */
+  const aliesPropis = useMemo(() => {
+    const persona = llistaDe(identitats).find((identitat) => identitat?.tipus === 'persona');
+    return persona ? [...aliesDeLActor(persona, { dataMode: modeDades })] : CAP;
+  }, [identitats, modeDades]);
+
   /* L'ordre decidix qui es pinta en una clau repetida (el text de totes compta,
      vegeu fusionaPerClau): la identitat pròpia primer, el padró abans del catàleg. */
-  const index = useMemo(() => [
+  const index = useMemo(() => ambLaIdentitatPropia([
     ...deIdentitats, ...dePadro, ...deAgents, ...dePobles, ...dePublicacions, ...deActes,
     ...deProductes, ...deMedies, ...deNotes, ...deConverses, ...dePagines
-  ], [deIdentitats, dePadro, deAgents, dePobles, dePublicacions, deActes, deProductes, deMedies, deNotes, deConverses, dePagines]);
+  ], aliesPropis), [deIdentitats, dePadro, deAgents, dePobles, dePublicacions, deActes, deProductes, deMedies, deNotes,
+    deConverses, dePagines, aliesPropis]);
 
   const resultats = useMemo(() => cercaEntrades(index, qNet, filtre), [index, qNet, filtre]);
 

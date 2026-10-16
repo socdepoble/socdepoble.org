@@ -1,5 +1,6 @@
 /**
- * Lector de notícies · la llavor de desenvolupament: categories i fonts
+ * Lector de notícies · la llavor sintètica (proves i literal
+ * VITE_SDP_LECTOR_LLAVOR=1, AppLector.jsx): categories i fonts
  * INVENTADES, en valencià i sense cap marca. Cada font és un feed de veres
  * (RSS 2.0, RSS 1.0 o Atom 1.0) importat com a text (?raw): passa pel mateix
  * analitzador que passaria el feed d'una font real. Les adreces dels feeds

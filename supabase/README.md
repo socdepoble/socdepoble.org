@@ -288,6 +288,45 @@ description: "Documentació canònica de Sóc de Poble."
   sense ella la faceta «Etiquetes i categories» del Tauler diu que el
   servidor encara no té les funcions (NO-DISPONIBLE).
 
+- `migrations/2610160250_perfil_update_propi.sql`
+  Onada 1.1 (261016, Gauntlet nocturn; Bloc 3.5.3): el 403 del PATCH de la
+  fitxa. Error real a producció (gentdelatorre.net) en publicar la fitxa o
+  desar-ne un camp: `PATCH /rest/v1/profiles?id=eq.<uid>` → 403, `42501`
+  («permission denied for table profiles»). El 42501 és de privilegis de
+  columna, no de RLS: Postgres comprova els permisos de taula i de columna
+  abans de mirar cap política, i un rebuig de RLS no dona eixe missatge (el
+  WITH CHECK en dona un altre i el USING torna zero files, sense error). Per
+  això la política sola de l'ordre no el cura. Avorta sencera si
+  `public.profiles` no hi és o no té la RLS activa (`SDP-PERFIL-020`); torna a
+  donar a `authenticated` el permís d'UPDATE de cada columna de
+  `CAMPS_PERFIL` que existix (`SDP-PERFIL-021` avisa de les absents), i deixa
+  una sola política permissiva d'UPDATE propi, «profiles update own», amb
+  `(select auth.uid()) = id` al USING i al WITH CHECK; si algú ja ha creat a
+  mà la de l'ordre («Users can update own profile»), també l'esborra.
+  `SDP-PERFIL-022` i `SDP-PERFIL-023` només diagnostiquen. Cap lectura, dada,
+  columna, funció, rol ni `create_organization`. Idempotent; **NO aplicada:
+  l'aplica el Mestre, mai un agent**. **No depén de cap altra pendent d'esta
+  llista** i no n'exigix cap abans: ni 2610021520, ni 2610042350, ni
+  2610081400 a 2610081402, ni 2610081543, ni 2610101900. Cap d'elles toca els
+  permisos d'UPDATE ni les polítiques de `profiles`, tret de 2610042350, que
+  en dona el mateix permís de columna. Ací l'ordre alfabètic del directori no
+  és cap dependència, i l'ordre el fixa esta entrada (la capçalera del fitxer
+  remet ací). El que sí que ha d'estar aplicat de veres és la RLS de
+  `public.profiles` i les columnes de la fitxa, que creen 2609080000
+  (`full_name`, `visibility`), 2609110600 (`avatar_url`, `town_name`, `bio`,
+  `is_public`), 2609261500 (`lema`, `presentacio_html`, `hero_url`, i la
+  restrictiva «profiles sense baixa», que continua congelant la fitxa en
+  quarantena), 2609262232 (`copyright`) i 2609282035 (`icon`). Una columna
+  absent no atura la migració: `SDP-PERFIL-021` l'avisa i eixe camp es queda
+  sense permís; crear-la és una decisió a part, fora d'esta reparació. No
+  espera cap client nou: el publicat ja envia estos camps. Abans d'aplicar-la,
+  el Mestre executa les quatre consultes de només lectura de la capçalera i
+  en guarda el resultat, que és el que permet desfer-la.
+  **No torneu a executar 2609110600 ni 2610042350 senceres per a «arreglar» el
+  403**: la primera obri la lectura del padró sencer (`using (true)` per a
+  `anon`), i la segona esborra sobrecàrregues de `create_organization`, fora
+  d'esta reparació.
+
 - `seed.sql`
   Contingut inicial del portal.
 

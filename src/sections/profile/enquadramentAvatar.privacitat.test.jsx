@@ -17,7 +17,19 @@
  * i el seu mode sense servidor) ja no existix: la fitxa puja cada imatge amb
  * el seu botó (useImatgeDeFitxa). Els camins vigents que es comproven ací són
  * els tres botons de la fitxa, l'ajust d'imatge (DetallAjust) i el contracte
- * T46. */
+ * T46.
+ *
+ * Gauntlet 261016 (Bloc 1.2, mandat del Mestre, pla §0.1.3) · GIRADA A POSTA.
+ * Abans, tot el que pujava havia d'eixir net (ADR D4). El mandat conserva de
+ * sèrie la ubicació, la data i la càmera de les fotos, i la persona les pot
+ * llevar amb la casella «Conserva la ubicació i la data de la foto». Ara:
+ *   · avatar i capçalera, amb la casella marcada (de sèrie): el que puja és
+ *     el canvas (SORTIDA_CANVAS) amb UN APP1 nou i res més, l'EXIF publicable
+ *     de l'original (GPS, data, orientació 1), mai la miniatura de l'IFD1 (la
+ *     foto sense retallar) ni cap altre byte de l'original;
+ *   · desmarcada: net, com abans;
+ *   · el logotip (sense casella) i el contracte T46 sense la casella: net.
+ * El que no canvia: mai puja l'original ni el retall sense passar pel canvas. */
 import React, { useRef } from 'react';
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
@@ -34,17 +46,39 @@ vi.mock('../../components/universal/enquadrament/imatgeCanvas.js', () => ({
 import DetallAjust from './DetallAjust.jsx';
 import { useImatgeDeFitxa } from './useImatgeDeFitxa.jsx';
 import useHeroImageHandler from '../../hooks/useHeroImageHandler.js';
-import { DialegEnquadrament } from '../../components/universal/enquadrament/DialegEnquadrament.jsx';
+import { AJUDA_CONSERVA_UBICACIO, DialegEnquadrament } from '../../components/universal/enquadrament/DialegEnquadrament.jsx';
 import { llegixExif, teExif } from '../../components/universal/enquadrament/exif.js';
+import { ETIQUETA_CONSERVA_EXIF, extreuTiff, preparaTiff } from '../../components/universal/enquadrament/exifIncrustat.js';
 import {
-  APP0_JFIF, IMATGE, SOI, concatena, dataOriginal, gpsTorre, jpegAmbExif, orientacio,
+  APP0_JFIF, IMATGE, SOI, app1Exif, concatena, dataOriginal, gpsTorre, orientacio, tiff,
 } from '../../components/universal/enquadrament/jpegProva.js';
 
-const FOTO_GPS = jpegAmbExif({ ifd0: [orientacio(1)], exif: dataOriginal('2017:05:14 10:22:33', '+02:00'), gps: gpsTorre() });
+const MARCA_MINIATURA = Uint8Array.from('MINIATURA-SENSE-RETALLAR', (c) => c.charCodeAt(0));
+/* Una càmera de veres guarda a l'IFD1 una miniatura de la foto SENCERA: ací,
+   una marca que no pot arribar mai al servidor. */
+function ambMiniatura(bloc) {
+  const posIfd1 = bloc.length;
+  const miniatura = concatena(Uint8Array.of(0xff, 0xd8), MARCA_MINIATURA, Uint8Array.of(0xff, 0xd9));
+  const t = concatena(bloc, new Uint8Array(2 + 2 * 12 + 4), miniatura);
+  const v = new DataView(t.buffer);
+  v.setUint32(8 + 2 + v.getUint16(8) * 12, posIfd1); // MM: l'IFD0 apunta a l'IFD1
+  v.setUint16(posIfd1, 2);
+  [[0x0201, posIfd1 + 2 + 2 * 12 + 4], [0x0202, miniatura.length]].forEach(([tag, valor], i) => {
+    const p = posIfd1 + 2 + i * 12;
+    v.setUint16(p, tag);
+    v.setUint16(p + 2, 4);
+    v.setUint32(p + 4, 1);
+    v.setUint32(p + 8, valor);
+  });
+  return t;
+}
+const TIFF_GPS = ambMiniatura(tiff({ ifd0: [orientacio(6)], exif: dataOriginal('2017:05:14 10:22:33', '+02:00'), gps: gpsTorre() }));
+const FOTO_GPS = concatena(SOI, APP0_JFIF, app1Exif(TIFF_GPS), IMATGE);
 const SORTIDA_CANVAS = concatena(SOI, APP0_JFIF, IMATGE);
 const SORTIDA_RETALL = concatena(SOI, APP0_JFIF, Uint8Array.of(0xff, 0xfe, 0x00, 0x04, 0x52, 0x54), IMATGE); // amb un COM «RT»
 const MARCA_EXIF = [0x45, 0x78, 0x69, 0x66, 0x00, 0x00];
 const RETALLADOR = { name: 'Enquadrar l’avatar' };
+const CASELLA = { name: new RegExp(ETIQUETA_CONSERVA_EXIF) };
 
 const aBase64 = (bytes) => btoa(String.fromCharCode(...bytes));
 function deDataUrl(url) {
@@ -59,19 +93,29 @@ const bytesDe = (blob) => new Promise((resol, rebutja) => {
   lector.onerror = () => rebutja(lector.error);
   lector.readAsArrayBuffer(blob);
 });
-const conteMarcaExif = (bytes) => bytes.some((_, i) => MARCA_EXIF.every((b, k) => bytes[i + k] === b));
+const conteMarca = (bytes, marca) => bytes.some((_, i) => marca.every((b, k) => bytes[i + k] === b));
 /** Ha eixit de compressImage (el canvas) i no porta cap rastre de l'EXIF ni del GPS. */
 function esperaNet(bytes) {
   expect([...bytes]).toEqual([...SORTIDA_CANVAS]);
-  expect(conteMarcaExif(bytes)).toBe(false);
+  expect(conteMarca(bytes, MARCA_EXIF)).toBe(false);
   expect(teExif(bytes)).toBe(false);
   expect(llegixExif(bytes).gps).toBeNull();
 }
+/** Bloc 1.2 · El canvas amb UN APP1 nou: l'EXIF publicable de l'original, sense la miniatura, i res més. */
+function esperaAmbExif(bytes) {
+  expect([...extreuTiff(bytes)]).toEqual([...preparaTiff(TIFF_GPS)]);
+  expect(llegixExif(bytes)).toEqual({ orientacio: 1, gps: { lat: 38.5919, lng: -0.4184, altitud: 456.7 }, dataCaptura: '2017-05-14T10:22:33+02:00' });
+  expect(conteMarca(bytes, [...MARCA_MINIATURA])).toBe(false);
+  // Fora eixe APP1, queden exactament els bytes del canvas.
+  const app1 = 2 + APP0_JFIF.length;
+  const longitud = (bytes[app1 + 2] << 8) | bytes[app1 + 3];
+  expect([...bytes.subarray(0, app1), ...bytes.subarray(app1 + 2 + longitud)]).toEqual([...SORTIDA_CANVAS]);
+}
 /* FileReader (dins de compressImage) acaba en una tasca a banda: s'espera la pujada. */
-async function esperaPujadesNetes(pujada, quantes) {
+async function esperaPujades(pujada, quantes, espera) {
   await waitFor(() => expect(pujada).toHaveBeenCalledTimes(quantes));
   await act(async () => {});
-  for (const [fitxer] of pujada.mock.calls) esperaNet(await bytesDe(fitxer));
+  for (const [fitxer] of pujada.mock.calls) espera(await bytesDe(fitxer));
 }
 
 class ImatgeFalsa {
@@ -114,9 +158,10 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-test('la foto de prova porta de veres l’EXIF i el GPS de la Torre', () => {
+test('la foto de prova porta de veres l’EXIF, el GPS de la Torre i la miniatura', () => {
   expect(teExif(FOTO_GPS)).toBe(true);
-  expect(llegixExif(FOTO_GPS).gps).toMatchObject({ lat: 38.5919, lng: -0.4184 });
+  expect(llegixExif(FOTO_GPS)).toMatchObject({ orientacio: 6, gps: { lat: 38.5919, lng: -0.4184 } });
+  expect(conteMarca(FOTO_GPS, [...MARCA_MINIATURA])).toBe(true);
 });
 
 /* ── La fitxa del Perfil, Onada 4 (retallador senzill, 261008) ──
@@ -128,23 +173,49 @@ function Fitxa({ camp, forma, onImageUpload }) {
   return <>{imatge.input}{imatge.dialeg}</>;
 }
 
-test('K3 · Onada 4 · avatar, logotip i capçalera de la fitxa, desats sense ampliar: el que puja és el canvas, mai l’original', async () => {
-  const casos = [['logoImage', 'avatar', 'Retalla la foto'], ['logoImage', 'logotip', 'Retalla el logotip'], ['heroImage', 'capcalera', 'Retalla la capçalera']];
+async function obriFitxa(camp, forma, onImageUpload) {
+  const vista = render(<Fitxa camp={camp} forma={forma} onImageUpload={onImageUpload} />);
+  await act(async () => {
+    fireEvent.change(vista.container.querySelector('input[type="file"]'), { target: { files: [fotoGps()] } });
+  });
+  await act(async () => {});
+  return vista;
+}
+
+test('Bloc 1.2 · avatar i capçalera de la fitxa, desats sense ampliar i amb la casella marcada de sèrie: puja el canvas amb l’EXIF publicable, mai l’original', async () => {
+  const casos = [['logoImage', 'avatar', 'Retalla la foto'], ['heroImage', 'capcalera', 'Retalla la capçalera']];
   for (const [camp, forma, finestra] of casos) {
     const onImageUpload = vi.fn(async () => 'sdp-media://mitjans/t/u/avatars/a.webp');
-    const vista = render(<Fitxa camp={camp} forma={forma} onImageUpload={onImageUpload} />);
-    await act(async () => {
-      fireEvent.change(vista.container.querySelector('input[type="file"]'), { target: { files: [fotoGps()] } });
-    });
-    await act(async () => {});
-    await act(async () => {
-      fireEvent.click(within(screen.getByRole('dialog', { name: finestra })).getByRole('button', { name: 'Guardar' }));
-    });
+    await obriFitxa(camp, forma, onImageUpload);
+    const dialeg = screen.getByRole('dialog', { name: finestra });
+    const casella = await within(dialeg).findByRole('checkbox', CASELLA);
+    expect(casella.checked, forma).toBe(true);
+    expect(within(dialeg).getByText(AJUDA_CONSERVA_UBICACIO)).toBeTruthy();
+    await act(async () => { fireEvent.click(within(dialeg).getByRole('button', { name: 'Guardar' })); });
     expect(dobles.exportaRetall, forma).toHaveBeenCalledTimes(1);
-    await esperaPujadesNetes(onImageUpload, 1);
+    await esperaPujades(onImageUpload, 1, esperaAmbExif);
     cleanup();
     dobles.exportaRetall.mockClear();
   }
+});
+
+test('Bloc 1.2 · amb la casella desmarcada, la capçalera i l’avatar pugen nets; el logotip no té casella i puja net', async () => {
+  for (const [camp, forma, finestra] of [['heroImage', 'capcalera', 'Retalla la capçalera'], ['logoImage', 'avatar', 'Retalla la foto']]) {
+    const onImageUpload = vi.fn(async () => 'sdp-media://mitjans/t/u/avatars/a.webp');
+    await obriFitxa(camp, forma, onImageUpload);
+    const dialeg = screen.getByRole('dialog', { name: finestra });
+    await act(async () => { fireEvent.click(await within(dialeg).findByRole('checkbox', CASELLA)); });
+    expect(within(dialeg).getByRole('checkbox', CASELLA).checked).toBe(false);
+    await act(async () => { fireEvent.click(within(dialeg).getByRole('button', { name: 'Guardar' })); });
+    await esperaPujades(onImageUpload, 1, esperaNet);
+    cleanup();
+  }
+  const onImageUpload = vi.fn(async () => 'sdp-media://mitjans/t/u/organitzacions/a.webp');
+  await obriFitxa('logoImage', 'logotip', onImageUpload);
+  const dialeg = screen.getByRole('dialog', { name: 'Retalla el logotip' });
+  expect(within(dialeg).queryByRole('checkbox')).toBeNull();
+  await act(async () => { fireEvent.click(within(dialeg).getByRole('button', { name: 'Guardar' })); });
+  await esperaPujades(onImageUpload, 1, esperaNet);
 });
 
 /* ── L'ajust d'imatge (DetallAjust) ── */
@@ -157,7 +228,7 @@ const desaRetall = () => act(async () => {
   fireEvent.click(within(screen.getByRole('dialog', RETALLADOR)).getByRole('button', { name: 'Desar l’enquadrament' }));
 });
 
-test('K3 · DetallAjust: l’avatar que puja és el del canvas', async () => {
+test('Bloc 1.2 · DetallAjust: l’avatar que puja és el del canvas, amb l’EXIF publicable de sèrie', async () => {
   const ajust = { id: 'avatar', lloc: 'fitxa', titol: 'Foto de perfil', camp: 'avatar_url', tipus: 'imatge', valor: '', obert: true };
   const pujaMitja = vi.fn(async () => 'sdp-media://mitjans/t/u/avatars/a.webp');
   render(<DetallAjust ajust={ajust} identitat={{ id: 'jo', mena: 'persona', nom: 'Pep', dades: {} }} guardarAjust={vi.fn()} pujaMitja={pujaMitja} />);
@@ -165,8 +236,9 @@ test('K3 · DetallAjust: l’avatar que puja és el del canvas', async () => {
     fireEvent.change(screen.getByLabelText('Nou valor per a foto de perfil:'), { target: { files: [fotoGps()] } });
   });
   await act(async () => {});
+  expect((await within(screen.getByRole('dialog', RETALLADOR)).findByRole('checkbox', CASELLA)).checked).toBe(true);
   await desaRetall();
-  await esperaPujadesNetes(pujaMitja, 1);
+  await esperaPujades(pujaMitja, 1, esperaAmbExif);
 });
 
 /* ── El contracte T46: «Original» sense zoom torna el MATEIX File ── */
@@ -181,17 +253,18 @@ function CapcaleraT46({ font, onImageUpload, rebut }) {
   );
 }
 
-test('K3 · T46 (la capçalera de la closca): el diàleg torna l’original amb GPS, però processaFitxer el recodifica abans de pujar', async () => {
+test('K3 · T46 sense la casella (el contracte d’abans): el diàleg torna l’original amb GPS, però processaFitxer el recodifica net abans de pujar', async () => {
   const font = fotoGps();
   const rebut = [];
   const onImageUpload = vi.fn(async () => 'sdp-media://mitjans_privats/t/u/notes/a.webp');
   render(<CapcaleraT46 font={font} onImageUpload={onImageUpload} rebut={rebut} />);
   await act(async () => {});
+  expect(screen.queryByRole('checkbox')).toBeNull();
   await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Desar l’enquadrament' })); });
   // El camí T46 de veres: el mateix File, amb el seu EXIF, arriba al pare...
   expect(rebut).toHaveLength(1);
   expect(rebut[0]).toBe(font);
   expect(dobles.exportaRetall).not.toHaveBeenCalled();
   // ...i el que puja és el canvas de compressImage.
-  await esperaPujadesNetes(onImageUpload, 1);
+  await esperaPujades(onImageUpload, 1, esperaNet);
 });

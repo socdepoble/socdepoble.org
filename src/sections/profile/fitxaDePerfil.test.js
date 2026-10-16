@@ -4,8 +4,10 @@ import { ENTITAT_PILOT_ID, ENTITAT_PILOT_SLUG } from '../../data/identitatsSeed.
 import { RUTA_PERFIL_PROJECTE } from '../../config/navigation.js';
 import { DEFAULT_AUTHOR } from '../../components/universal/UniversalUtils.js';
 import {
-  ETIQUETA_IA, avatarDeLaBarraDeFitxa, esFitxaDelPilot, etiquetesDeFitxa, pobleDeFitxa, potEditarFitxa, rutaDeFitxaPublica, slugDEntitat,
+  ETIQUETA_IA, avatarDeLaBarraDeFitxa, avatarDeLaFitxa, esFitxaDelPilot, etiquetesDeFitxa, pobleDeFitxa, potEditarFitxa, rutaDeFitxaPublica,
+  slugDEntitat,
 } from './fitxaDePerfil.js';
+import { documentDeFitxa } from './perfilCamps.js';
 
 /* Ordre del Mestre (261008, «Les vistes») · Les funcions pures que l'apartat
    i la seua pàgina comparteixen amb l'editor de la fitxa. Són còpies de la
@@ -85,11 +87,14 @@ describe('pobleDeFitxa', () => {
 });
 
 describe('etiquetesDeFitxa', () => {
-  test('el rol i, si cal, la baixa, la falta de connexió o l’avís d’IA', () => {
-    expect(etiquetesDeFitxa(jo)).toEqual([{ text: 'Persona' }]);
+  /* Directiva de Dignitat Humana (pla 261015_1900, Onada 1.1) · Una persona no
+     es categoritza: cap píndola de rol. Només l'estat que fa la fitxa de
+     lectura, que és un avís honest. L'organització i l'agent, com sempre. */
+  test('el rol i, si cal, la baixa, la falta de connexió o l’avís d’IA; la persona, sense rol', () => {
+    expect(etiquetesDeFitxa(jo)).toEqual([]);
     expect(etiquetesDeFitxa(org('member'))).toEqual([{ text: 'Empresa' }]);
-    expect(etiquetesDeFitxa({ ...jo, dades: { baixa_demanada_at: '2026-09-26T10:00:00Z' } })).toEqual([{ text: 'Persona' }, { text: 'Baixa en curs' }]);
-    expect(etiquetesDeFitxa({ ...jo, dades: { reserva: true } })).toEqual([{ text: 'Persona' }, { text: 'Sense connexió' }]);
+    expect(etiquetesDeFitxa({ ...jo, dades: { baixa_demanada_at: '2026-09-26T10:00:00Z' } })).toEqual([{ text: 'Baixa en curs' }]);
+    expect(etiquetesDeFitxa({ ...jo, dades: { reserva: true } })).toEqual([{ text: 'Sense connexió' }]);
     expect(etiquetesDeFitxa(agent)).toEqual([{ text: 'Agent IA' }, { text: ETIQUETA_IA }]);
     expect(ETIQUETA_IA).toBe('Intel·ligència artificial');
   });
@@ -148,5 +153,56 @@ describe('avatarDeLaBarraDeFitxa', () => {
     expect(esFitxaDelPilot({ ...jo, nom: 'Sóc de Poble', dades: { id: 'U', slug: ENTITAT_PILOT_SLUG } })).toBe(false);
     expect(esFitxaDelPilot({ ...agent, dades: { slug: ENTITAT_PILOT_SLUG } })).toBe(false);
     expect(esFitxaDelPilot(null)).toBe(false);
+  });
+});
+
+/* Gauntlet 261016 (encàrrec D; pla, Onada 1.1.4: «han de beure exactament de
+   la mateixa instància de dades») · La regla de la imatge pròpia de la fitxa,
+   ara una sola funció: la lligen l'editor, la targeta viva, «Les vistes», «El
+   compte» i la fitxa compacta de la llista central. Amb un esborrany de
+   logoImage a la cua (pendent o rebutjat per un 403), la imatge de la fitxa tal
+   qual, també el buit de «Llevar l'avatar»; si no, la de la fitxa o, sense cap,
+   la reserva de la identitat (per a la persona, la foto de la sessió). La
+   `fitxa` és la de documentDeFitxa amb l'esborrany, com a les superfícies. */
+describe('avatarDeLaFitxa', () => {
+  const VELLA = '/assets/a.webp';
+  const NOVA = '/assets/nou.webp';
+  const SESSIO = 'https://proveidor.example/foto.jpg';
+  const javi = { ...jo, avatar: VELLA, dades: { id: 'U', avatar_url: VELLA } };
+  const forn = { ...org('owner', { logo_url: VELLA }), avatar: VELLA };
+  const iaia = { ...agent, avatar: VELLA, dades: { ...agent.dades, avatar_url: VELLA } };
+  const avatarAmb = (identitat, camps) => avatarDeLaFitxa(documentDeFitxa(identitat, camps || {}), camps, identitat);
+
+  test('amb un esborrany de logoImage a la cua, la imatge de la fitxa tal qual: la nova, mai la del servidor', () => {
+    for (const identitat of [javi, forn, iaia]) {
+      expect([identitat.id, avatarAmb(identitat, { logoImage: NOVA })]).toEqual([identitat.id, NOVA]);
+      // Una referència opaca passa tal qual: cada superfície la resol pel port.
+      expect([identitat.id, avatarAmb(identitat, { logoImage: 'sdp-media://avatars/nou.webp' })])
+        .toEqual([identitat.id, 'sdp-media://avatars/nou.webp']);
+    }
+  });
+
+  test('l’esborrany buit de «Llevar l’avatar» (pendent o rebutjat): cap foto, ni la del servidor ni la de la sessió', () => {
+    expect(avatarAmb(javi, { logoImage: '' })).toBe('');
+    expect(avatarAmb({ ...javi, avatar: SESSIO }, { logoImage: '' })).toBe('');
+    expect(avatarAmb(forn, { logoImage: '' })).toBe('');
+  });
+
+  test('sense esborrany de la imatge: la de la fitxa i, sense cap, la reserva de la identitat; sense cap de les dues, buit', () => {
+    expect(avatarAmb(javi, {})).toBe(VELLA);
+    expect(avatarAmb({ ...javi, avatar: SESSIO }, {})).toBe(VELLA);
+    expect(avatarAmb({ ...jo, avatar: SESSIO }, {})).toBe(SESSIO);
+    expect(avatarAmb({ ...jo, avatar: null }, {})).toBe('');
+    // Un esborrany d'un altre camp no hi compta; una cua sense camps (null o undefined), tampoc.
+    expect(avatarAmb(javi, { title: 'Javi del Mas' })).toBe(VELLA);
+    expect(avatarDeLaFitxa(documentDeFitxa(javi), null, javi)).toBe(VELLA);
+    expect(avatarDeLaFitxa(documentDeFitxa(javi), undefined, javi)).toBe(VELLA);
+  });
+
+  test('sense fitxa, la reserva de la identitat; sense res, buit (mai undefined ni null)', () => {
+    expect(avatarDeLaFitxa(null, {}, { ...jo, avatar: SESSIO })).toBe(SESSIO);
+    expect(avatarDeLaFitxa(null, { logoImage: '' }, { ...jo, avatar: SESSIO })).toBe('');
+    expect(avatarDeLaFitxa(null, null, null)).toBe('');
+    expect(avatarDeLaFitxa(undefined, undefined, undefined)).toBe('');
   });
 });

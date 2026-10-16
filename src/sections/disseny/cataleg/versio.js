@@ -15,7 +15,20 @@
  * src/sections/disseny/cataleg/detalls`, sense comptar les proves ni este
  * fitxer). Una versió que no és la darrera és una data falsa a la pastilla.
  *
- * Darrera posada al dia: EspecimenCamp.jsx, 2026-10-13T17:17:21+02:00, ordre del Mestre del
+ * Darrera posada al dia: EspecimenEnquadrament.jsx, 2026-10-16T03:02:33+02:00, Gauntlet nocturn
+ * 261016 (pla 261016_0015), Bloc 1 (Llei del Quadrat): la sortida exacta de cada enquadrament
+ * (l'avatar, 400 × 400; el logotip, 600 × 600; la capçalera, 1.200 × 1.200 i quadrada, com la
+ * targeta) i, Bloc 1.2, la casella ofereixConservarExif amb la seua fila al contracte. Arreplega els
+ * tocats esta nit sense posar-la al dia: EspecimenDretsAutor.jsx (01:50:47, Bloc 3.1: l'àmbit
+ * «compte» i els textos opcionals de l'ajust de drets d'«El compte»), EspecimenTargetaViva.jsx
+ * (00:54:38) i manifest.js (00:54:55), del Bloc 3.4: cap editor munta ja la targeta viva ni el seu
+ * xip. I els que quedaven endarrerits: EspecimenUniversalCard.jsx (15-10, 19:50:21, Directiva de
+ * Dignitat Humana, pla 261015_1900: la targeta d'una persona no porta drets ni categories),
+ * EspecimenPaginaApp.jsx (14-10, 21:40:28, ordre del Mestre del 14-10: l'avatar sdp-media://
+ * resolt pel port i accionsInoperatives), EspecimenShell.jsx (14-10, 05:34:08) i
+ * EspecimenCalendari.jsx (14-10, 00:34:36). La posa al dia el front F3 del Gauntlet, amb la guarda
+ * de versio.test.js, que ara reconeix també les marques «Gauntlet aammdd» i «pla aammdd».
+ * Versió anterior: EspecimenCamp.jsx, 2026-10-13T17:17:21+02:00, ordre del Mestre del
  * 13-10-2026 (pla 261013_1405, front D): la fila CampFitxer.nomsVisibles al contracte de l'espècimen,
  * la prop opt-in de la privacitat de formulari.jsx (en fals, la línia d'estat només diu el recompte
  * dels fitxers triats, mai els seus noms). La posa al dia la revisió adversarial 13-10-2026, troballa
@@ -111,4 +124,4 @@
  * Quan el manifest porte `creat` i `modificat` per espècimen, manaran eixos
  * camps i esta constant només farà de versió del conjunt.
  */
-export const VERSIO_CATALEG = '2026-10-13T17:17:21+02:00';
+export const VERSIO_CATALEG = '2026-10-16T03:02:33+02:00';

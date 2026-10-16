@@ -195,12 +195,15 @@ describe('les apps, pel seu codi de veres', () => {
 
   const APPS = codiDe('src/apps');
 
+  /* Gauntlet 261016 · El flux de Notícies del Lector ja no munta UniversalCard
+     (llegix sobre l'espai de treball); la del Lector que queda és la de «Les que
+     seguixes», a vistes/comunes.jsx. Les peces continuen sent tres. */
   test('el recorregut troba el codi de veres: les apps i les tres peces que munten UniversalCard', () => {
     expect(APPS.length).toBeGreaterThan(20);
     expect(APPS.filter((ruta) => ruta.includes('.test.'))).toEqual([]);
     const ambTargeta = APPS.filter((ruta) => /<UniversalCard\b/.test(llig(ruta)));
     expect(ambTargeta).toEqual(expect.arrayContaining([
-      'src/apps/lector/vistes/Noticies.jsx', 'src/apps/nevera/vistes/Temporada.jsx', 'src/apps/comu/esquelet/ColumnaCataleg.jsx'
+      'src/apps/lector/vistes/comunes.jsx', 'src/apps/nevera/vistes/Temporada.jsx', 'src/apps/comu/esquelet/ColumnaCataleg.jsx'
     ]));
   });
 

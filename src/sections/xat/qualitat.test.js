@@ -57,7 +57,13 @@ const FITXERS = Object.freeze([
   'src/data/supabase/xat.iaia.test.js',
   'src/components/PedraSeca/atoms/Avatar.enquadrament.test.jsx',
   /* Revisió 261009 · La bombolla en error amb el codi SDP traduït. */
-  'src/sections/xat/components/Bombolla.codiError.test.jsx'
+  'src/sections/xat/components/Bombolla.codiError.test.jsx',
+  /* Gauntlet 261016 (Bloc 3.6) · Els quatre actors permanents i la IAIA a
+     localhost: la regla neutra, el poble del xat i les seues proves. */
+  'src/data/xatsPerDefecte.js',
+  'src/data/xatsPerDefecte.test.js',
+  'src/sections/xat/pobleAmfitrio.js',
+  'src/sections/xat/XatSection.actorsPermanents.test.jsx'
 ]);
 
 const llig = (ruta) => readFileSync(path.join(ARREL, ruta), 'utf8');

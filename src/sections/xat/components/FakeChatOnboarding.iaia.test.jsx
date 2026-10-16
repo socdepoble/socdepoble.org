@@ -25,9 +25,14 @@ const munta = (iaiaApagada) => render(
 
 afterEach(cleanup);
 
+/* Gauntlet 261016 (Bloc 3.6) · Les converses directes de la mostra: sense
+   poble declarat, la comunitat de «Gent de la Torre» (els fake-poble*) també
+   hi és, i Javi Llinares va a la cua. El nivell d'IA només toca la IAIA. */
+const directes = () => valor.chatThreads.map((f) => f.id).filter((id) => !id.startsWith('fake-poble'));
+
 test('encesa: les dues entrades d’ajuda i dos no llegits', async () => {
   munta(false);
-  expect(valor.chatThreads.map((f) => f.id)).toEqual(['fake-iaia', 'fake-sdp']);
+  expect(directes()).toEqual(['fake-iaia', 'fake-sdp', 'fake-javi']);
   expect(valor.totalNoLlegits).toBe(2);
   expect((await valor.cercaMembres()).map((m) => m.nom)).toEqual(['Sóc de Poble', 'IAIA MarIA']);
   expect(valor.esFilAmagat('fake-iaia')).toBe(false);
@@ -35,7 +40,7 @@ test('encesa: les dues entrades d’ajuda i dos no llegits', async () => {
 
 test('apagada: només Sóc de Poble, un no llegit, i la IAIA no es pot obrir', async () => {
   munta(true);
-  expect(valor.chatThreads.map((f) => f.id)).toEqual(['fake-sdp']);
+  expect(directes()).toEqual(['fake-sdp', 'fake-javi']);
   expect(valor.totalNoLlegits).toBe(1);
   expect((await valor.cercaMembres()).map((m) => m.nom)).toEqual(['Sóc de Poble']);
   expect(await valor.creaFil('ajuda:ia')).toBe('fake-sdp');

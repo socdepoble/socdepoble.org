@@ -472,6 +472,31 @@ test('marcatge: integrity opcional, referència copiable, identificador i ruta c
   assert.doesNotMatch(llig('includes/manifest.php'), /wp_json_file_decode\(/, 'un JSON trencat no pot llançar avisos a cada petició');
 });
 
+/* Esquelet de càrrega (ordre del Mestre, 261016): dins de <soc-de-poble> va
+   el text literal «Carregant el mur...», amb tres punts ASCII, sense «del
+   poble» i sense traducció. Un sol lloc el construïx, i la instància de
+   WordPress i la referència copiable el compartixen. La conducta amb PHP real,
+   també amb el wptexturize de WordPress, és a tests/conformitat-amfitrio.test.mjs. */
+const ESQUELET_DE_CARREGA = 'Carregant el mur...';
+
+test('esquelet de càrrega: l’element diu literalment «Carregant el mur...», sense traduir, i wptexturize no el toca', () => {
+  const element = cosDe('includes/marcatge.php', 'socdepoble_enxufe_element');
+  assert.match(element, /\n\treturn '<soc-de-poble' \. \$atributs \. '>Carregant el mur\.\.\.<\/soc-de-poble>';\n\}/, 'el text exacte, entre l\'obertura i el tancament de l\'element');
+  assert.doesNotMatch(element, /del poble/i, 'mai «del poble»');
+  assert.doesNotMatch(element, /…|&#8230;|&hellip;/, 'tres punts ASCII, ni el caràcter ni l\'entitat de l\'el·lipsi');
+  assert.doesNotMatch(element, /\b(?:__|_e|_x|esc_html__|esc_html_e|esc_attr__|esc_attr_e)\(\s*'Carregant/, 'literal: cap funció de traducció');
+
+  // Un sol lloc al plugin, una sola vegada, i cap traducció que el canvie.
+  assert.deepEqual(PHP.filter((rel) => llig(rel).includes('Carregant')), ['includes/marcatge.php']);
+  assert.equal(llig('includes/marcatge.php').split(ESQUELET_DE_CARREGA).length, 2);
+
+  /* El render del bloc (do_blocks, prioritat 9 de the_content) i les
+     plantilles de blocs passen per wptexturize després del marcatge, i els
+     tres punts eixirien com a &#8230;. */
+  assert.match(llig('includes/marcatge.php'), /^add_filter\( 'no_texturize_tags', 'socdepoble_enxufe_sense_texturitzar' \);$/m);
+  assert.match(cosDe('includes/marcatge.php', 'socdepoble_enxufe_sense_texturitzar'), /\n\t\$etiquetes\[\] = 'soc-de-poble';\n\treturn \$etiquetes;\n\}/, 'afig l\'element i conserva la llista');
+});
+
 /* A1 (decisió del Mestre, 261003): el plugin és cec al tenant. No el desa, no
    l'emet per cap canal, no el mostra i no gasta el configura() de l'App. La
    conducta amb PHP real és a tests/conformitat-amfitrio.test.mjs. */

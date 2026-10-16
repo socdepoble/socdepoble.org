@@ -120,14 +120,14 @@ test('segona columna: els fills de cada element segons el tipus', () => {
 
 /* Ordre del Mestre (261008) · «Vista A4 / PDF», «Crear portada» i «Vista
    targeta» ixen de l'espai d'edició i fan un apartat més, com «El compte». */
-test('261008 · «Les vistes»: l’apartat, la icona de l’ull i la seua pàgina; per a la persona, l’organització que mana i els agents', async () => {
-  const { Eye } = await import('lucide-react');
+test('261008 · «Les vistes»: l’apartat, la icona de l’ull i la seua pàgina; per a la persona, l’organització que mana i els agents', () => {
   render(<PerfilShell />);
   expect(item('jo-vistes')).toMatchObject({
     title: 'Les vistes', subtitle: 'Vista A4 / PDF, portada i targeta', categoryIds: ['jo'],
     data: { vista: 'vistes', identitatId: 'jo' },
   });
-  expect(item('jo-vistes').icon).toBe(Eye);
+  // Pla 261015_1900 (Onada 1.3) · L'ull és ara l'emoji 👁️ (amb U+FE0F), com la Wiki i Disseny.
+  expect(item('jo-vistes').icon).toBe('\u{1F441}\u{FE0F}');
   expect(item('jo-vistes').searchText).toContain('portada');
   render(m.workspace.renderDetail({ item: item('jo-vistes') }));
   render(m.workspace.renderDetail({ item: item('O-vistes') }));

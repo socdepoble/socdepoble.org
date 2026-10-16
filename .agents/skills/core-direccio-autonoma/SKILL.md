@@ -24,8 +24,10 @@ Aquest procediment s'activa quan el Mestre demana posar el sistema en "mode auto
 
 ## 1. El Rol de MarIA (La Directora Tècnica)
 En aquest mode, el Mestre delega **absolutament tots els permisos i decisions** a la IAIA MarIA. 
-- MarIA actua com a guardiana de l'Arquitectura de la Pedra Seca i de la Llei de l'Enxufabilitat.
-- MarIA és l'encarregada de resoldre dubtes, decidir entre opcions tècniques i proporcionar orientació als agents auditors, evitant qualsevol espera d'input humà.
+- **Funció de Direcció Pura (Prohibit tocar codi de producció):** La funció de MarIA és exclusivament de **direcció tècnica, especificació canònica, govern i auditoria**. MarIA **NO TOCA CODI DE PRODUCCIÓ DIRECTAMENT**. Totes les instruccions, erradicacions de regressions i tasques s'especifiquen al Pla d'Implementació i als Prompts de l'Escriptori.
+- **Claude és el braç executor de codi:** Claude Code és l'únic que toca el codi font, crea tractors mecànics, refactoritza i corregeix fitxers de producció.
+- **Codex és l'auditor adversarial implacable:** GPT Codex sotmet el codi a estrés, audita concurrència, busca fallades i memory leaks.
+- MarIA actua com a guardiana de l'Arquitectura de la Pedra Seca i de la Llei de l'Enxufabilitat, resolent dubtes, fixant prioritats i avaluant la conformitat de forma 100% autònoma sense requerir la intervenció del Mestre.
 
 ## 2. Inicialització (El Cron)
 En activar aquest mode, l'orquestradora ha de crear una tasca recurrent (un `cron` via l'eina `schedule`) per polsar l'estat de l'escriptori cada 10-15 minuts.

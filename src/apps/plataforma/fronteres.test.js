@@ -65,10 +65,10 @@ function resol(ruta, especificador) {
      (llevat del motor) ni importen res de fora de src/utils.
    Sí que pot llegir el fitxer que tria la persona (File.arrayBuffer), carregar
    mòduls propis amb import() i importar text propi amb ?raw. Les portes de fora
-   (plataforma, esquelet, Pedra Seca…) no es miren per dins: són del nucli i les
-   vigilen les seues proves. Les proves de cada app (bar/frontera,
-   nevera/frontera, salut/privacitat) poden ser més estrictes; esta és el terra
-   comú d'una app nova. */
+   (plataforma, esquelet, Pedra Seca, l'espai de treball…) no es miren per
+   dins: són del nucli i les vigilen les seues proves. Les proves de cada app
+   (bar/frontera, nevera/frontera, salut/privacitat) poden ser més estrictes;
+   esta és el terra comú d'una app nova. */
 const NO_APPS = new Set(['plataforma', 'comu']);
 const CODI = /\.(?:[cm]?js|jsx)$/;
 const APP_DE = /^src\/apps\/[^/]+\//;
@@ -80,7 +80,12 @@ const PERMESOS_DE_FORA = new Set([
   'src/components/layout/AppGridColumn.jsx',
   'src/components/universal/connexio/useEnLinia.js',
   'src/app/contexts/RouterContext',
-  'src/app/contexts/RouterContext.jsx'
+  'src/app/contexts/RouterContext.jsx',
+  /* Nucli 1.2.0 (261016) · l'espai de treball del Bloc de notes, per la seua
+     façana i prou: la mateixa font que la porta 'workspace' del nucli dels
+     mòduls (contracteNucli.js). Com Pedra Seca, arriba al port dins de la
+     pàgina (ItemMedia → useResolvedAsset); l'app no en rep cap mànec. */
+  'src/components/universal/workspace/index.js'
 ]);
 const PAQUETS = new Set(['react', 'lucide-react']);
 const IMPORT_VETAT = new RegExp(['supa', 'base|backend', 'Port|adapta', 'dors|(?:^|\\/)data(?:\\/|$)|(?:^|\\/)config\\/stor',
@@ -430,6 +435,11 @@ describe('la regla transversal detecta (casos sintètics en memòria)', () => {
     ['una importació remota sense protocol', "const m = await import('//exemple.org/modul.js');", 'import //exemple.org/modul.js'],
     ['un pont al backend (el context de sessió)', "import { useSession } from '../../../app/contexts/SessionContext.jsx';",
       'import ../../../app/contexts/SessionContext.jsx fora de la llista blanca'],
+    /* Nucli 1.2.0 (261016) · l'espai de treball, només per la façana: un fitxer de dins (el que arriba al port) no passa. */
+    ['l’espai de treball per dins, i no per la façana', "import { UniversalWorkspace } from '../../../components/universal/workspace/UniversalWorkspace.jsx';",
+      'import ../../../components/universal/workspace/UniversalWorkspace.jsx fora de la llista blanca'],
+    ['una peça de dins de l’espai de treball', "import { ItemMedia } from '../../../components/universal/workspace/ItemMedia.jsx';",
+      'import ../../../components/universal/workspace/ItemMedia.jsx fora de la llista blanca'],
     ['un pont al backend (l’API de l’amfitrió)', "import { configura } from '../../../host.js';", 'import ../../../host.js fora de la llista blanca'],
     ['una altra app', "import { llavorCarta } from '../../bar/nucli/llavor.js';", 'import ../../bar/nucli/llavor.js fora de la llista blanca'],
     ['un paquet no declarat', "import Dexie from 'dexie';", 'import dexie fora de la llista blanca'],
@@ -522,6 +532,8 @@ describe('la regla transversal detecta (casos sintètics en memòria)', () => {
     ['les altres portes de fora i els paquets', ["import AppGridColumn from '../../../components/layout/AppGridColumn.jsx';",
       "import { useRouter } from '../../../app/contexts/RouterContext';", "import { useEnLinia } from '../../../components/universal/connexio/useEnLinia.js';",
       "import { useState } from 'react';", "import { Coffee } from 'lucide-react';"].join('\n')],
+    /* Nucli 1.2.0 (261016) · la porta 'workspace': l'import exacte que fa servir una app. */
+    ['l’espai de treball per la seua façana', "import { DefaultItemCard, UniversalWorkspace } from '../../../components/universal/workspace/index.js';"],
     ['una carpeta pròpia que només s’hi assembla', "import { vestit } from './metadata/vestits.js';"],
     ['carpetes pròpies amb nom de capa (adaptadors, data)', "import { llegix } from './adaptadors/csv.js';\nimport { llavor } from '../data/llavor.js';"],
     ['funcions pròpies que només s’hi assemblen', 'refetch(); prefetchCarta();'],
@@ -584,7 +596,10 @@ describe('l’API pública no arriba a cap app (correcció del 261006, HMR)', ()
    · la Pedra Seca no es mira per dins, com per a les apps internes
      (PERMESOS_DE_FORA): PaginaApp hi arriba al port per PageFrame i
      useResolvedAsset, que resol les imatges del paquet. El mòdul no en rep
-     cap mànec; ho diu l'ADR.
+     cap mànec; ho diu l'ADR. L'espai de treball (porta 'workspace', nucli
+     1.2.0, 261016), igual: hi arriba per ItemMedia → useResolvedAsset, i
+     per això és una porta (externa al cos del mòdul) i no codi que el mòdul
+     porte dins; entra només per la seua façana.
    I el paquet no el paga fins que un mòdul el demana: només l'importa el
    carregador, per import(), i el carregador (que importen host.js i el
    registre) és lleuger. */
@@ -592,13 +607,28 @@ describe('el nucli dels mòduls (sdp.modul.v1)', () => {
   const NUCLI = 'src/apps/plataforma/nucliModuls.js';
   const CARREGADOR = 'src/apps/plataforma/carregaModul.js';
   const PEDRA_SECA = /^src\/components\/PedraSeca\//;
+  const WORKSPACE = 'src/components/universal/workspace/index.js';
 
-  test('nucliModuls.js només importa React, el router, l’API pública, el seu contracte i Pedra Seca', () => {
+  test('nucliModuls.js només importa React, el router, l’API pública, el seu contracte, Pedra Seca i la façana de l’espai de treball', () => {
     const directes = especificadors(llig(NUCLI)).map((e) => fitxerImportat(NUCLI, e, existixAlDisc) || e);
     const fora = directes.filter((desti) => !['react', 'react/jsx-runtime', 'src/app/contexts/RouterContext.jsx',
-      'src/apps/plataforma/index.js', 'src/apps/plataforma/contracteNucli.js'].includes(desti) && !PEDRA_SECA.test(desti));
+      'src/apps/plataforma/index.js', 'src/apps/plataforma/contracteNucli.js', WORKSPACE].includes(desti) && !PEDRA_SECA.test(desti));
     expect(fora).toEqual([]);
     expect(directes.filter((desti) => PEDRA_SECA.test(desti)).length).toBeGreaterThan(10);
+    /* De l'espai de treball, la façana i prou (cap fitxer de dins). */
+    expect(directes.filter((desti) => desti.startsWith('src/components/universal/'))).toEqual([WORKSPACE]);
+  });
+
+  /* Nucli 1.2.0 (261016) · per què l'espai de treball és una porta i no codi del cos: la seua
+     clausura arriba al port del backend (com PaginaApp a la Pedra Seca). Si un mòdul el portava
+     dins, portaria el port; com a porta, el pren de la pàgina i el cos no el toca. */
+  test('la porta mira de veres: la façana de l’espai de treball arriba al port del backend, també per ItemMedia', () => {
+    const ITEM_MEDIA = 'src/components/universal/workspace/ItemMedia.jsx';
+    const estatica = clausuraDImports(WORKSPACE);
+    expect(estatica.has(ITEM_MEDIA)).toBe(true);
+    expect(estatica.has('src/data/backendPort.js')).toBe(true);
+    expect(camiFins(clausuraDImports(ITEM_MEDIA), 'src/data/backendPort.js'))
+      .toBe(`${ITEM_MEDIA} > src/hooks/useResolvedAsset.js > src/data/backendPort.js`);
   });
 
   test('la clausura estàtica del nucli no porta SessionContext ni IdentitatContext', () => {
@@ -607,11 +637,12 @@ describe('el nucli dels mòduls (sdp.modul.v1)', () => {
     expect(contexts).toEqual([]);
   });
 
-  test('la porta mira de veres: la clausura del nucli porta la plataforma, el router i la Pedra Seca del contracte', () => {
+  test('la porta mira de veres: la clausura del nucli porta la plataforma, el router, la Pedra Seca del contracte i l’espai de treball', () => {
     const estatica = clausuraDImports(NUCLI);
     expect([...estatica.keys()]).toEqual(expect.arrayContaining([
       'src/apps/plataforma/index.js', 'src/apps/plataforma/contracteNucli.js', 'src/app/contexts/RouterContext.jsx',
-      'src/components/PedraSeca/atoms/Boto.jsx', 'src/components/PedraSeca/organismes/PaginaApp.jsx'
+      'src/components/PedraSeca/atoms/Boto.jsx', 'src/components/PedraSeca/organismes/PaginaApp.jsx',
+      WORKSPACE, 'src/components/universal/workspace/UniversalWorkspace.jsx'
     ]));
   });
 

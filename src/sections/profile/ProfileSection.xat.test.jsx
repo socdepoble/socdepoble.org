@@ -38,12 +38,16 @@ test('l’entitat porta «Anar al xat» cap al seu xat comú, i les etiquetes es
   expect([...forn.querySelectorAll('.sp-card-labels > li')].map((li) => li.textContent)).toEqual(['Comerç']);
 });
 
-test('una persona o una IA, cap botó: el DOM de sempre', () => {
+/* Directiva de Dignitat Humana (pla 261015_1900, Onada 1.1) · La targeta
+   d'una PERSONA del directori no porta categories (UniversalCard, pel tipus
+   del seu descriptor): «Veïna» desapareix. La IA conserva la seua. */
+test('una persona o una IA, cap botó: el DOM de sempre; la persona, sense categories', () => {
   const { container } = render(<ProfileSection agents={AGENTS} />);
-  for (const nom of ['Pepa', 'IAIA MarIA']) {
+  for (const [nom, etiquetes] of [['Pepa', 0], ['IAIA MarIA', 1]]) {
     const fitxa = targeta(container, nom);
     expect([nom, within(fitxa).queryByRole('link', { name: 'Anar al xat' })]).toEqual([nom, null]);
     expect([nom, fitxa.querySelector('.sp-card-accio')]).toEqual([nom, null]);
-    expect([nom, fitxa.querySelectorAll('.sp-card-labels > li').length]).toEqual([nom, 1]);
+    expect([nom, fitxa.querySelectorAll('.sp-card-labels > li').length]).toEqual([nom, etiquetes]);
   }
+  expect(targeta(container, 'Pepa').querySelector('.sp-card-labels')).toBeNull();
 });

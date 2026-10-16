@@ -1,6 +1,6 @@
 import React from 'react';
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
-import { afterEach, beforeEach, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 const m = vi.hoisted(() => ({
   navigate: vi.fn(), logout: vi.fn(), estatBaixa: vi.fn(), estatConsentiment: vi.fn(), exporta: vi.fn(), pagina: null,
   /* Grup C (261008) · els pobles del contingut core i el context del Perfil (null: sense proveïdor). */
@@ -9,6 +9,9 @@ const m = vi.hoisted(() => ({
   toast: vi.fn(),
   /* Onada 11 (261010) · la sessió opcional (null: sense proveïdor, ningú és superadmin). */
   sessio: null,
+  /* Gauntlet 261016 (encàrrec D) · el port de la cua d'autodesament (la persona
+     de la sessió i els dos PATCH), només per a les proves del 403, al final. */
+  usuari: null, updateProfile: null, updateOrganization: null,
 }));
 vi.mock('@/components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: m.toast }) }));
 vi.mock('../../app/contexts/CoreContentContext.jsx', () => ({ useCoreContent: () => ({ status: 'ready', towns: m.towns }) }));
@@ -34,10 +37,17 @@ vi.mock('../../components/universal/UniversalPage', () => ({
 vi.mock('../../data/backendPort.js', () => ({
   teCapacitat: () => true,
   exportaLesMeuesDades: m.exporta, estatBaixa: m.estatBaixa, estatConsentiment: m.estatConsentiment,
+  getCurrentUser: () => m.usuari,
+  updateProfile: (...args) => m.updateProfile(...args),
+  updateOrganization: (...args) => m.updateOrganization(...args),
 }));
 import { DetallCompte } from './DetallCompte.jsx';
+import { cuaDesament } from '../../data/autodesament/cua.js';
+import { ambitDe } from '../../data/autodesament/ambit.js';
 
 const jo = { id: 'jo', mena: 'persona', nom: 'Pep', dades: { full_name: 'Pep', email: 'pep@poble.test', is_public: false, town_name: 'La Torre' } };
+/* Pla 261016 (Bloc 3.1; ordre del Mestre) · El bloc nou de la persona. */
+const DRETS_NOTES = 'Drets de sèrie de les meues notes';
 const forn = { id: 'O', mena: 'empresa', nom: 'Forn', dades: { name: 'Forn', slug: 'forn', kind: 'company', role: 'owner' } };
 
 let props;
@@ -61,7 +71,8 @@ test('Onada 11 · el superadmin veu «Segon factor» (en línia) i «Panell de s
   m.sessio = { esSuperadmin: true, nivell: 'aal1', calSegonFactor: true };
   pinta();
   const titols = screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent);
-  expect(titols).toEqual(['Correu electrònic', 'Estat del perfil', 'Contrasenya', 'Segon factor', 'Panell de superadministració', 'Tancar sessió']);
+  // Pla 261016 (Bloc 3.1) · Canvi deliberat: els drets de sèrie de les notes, després de l'estat.
+  expect(titols).toEqual(['Correu electrònic', 'Estat del perfil', DRETS_NOTES, 'Contrasenya', 'Segon factor', 'Panell de superadministració', 'Tancar sessió']);
   expect(within(seccio('Segon factor')).getByText('el segon factor, en línia')).toBeTruthy();
   const boto = within(seccio('Panell de superadministració')).getByRole('button', { name: 'Panell de superadministració' });
   expect(boto.disabled).toBe(false);
@@ -74,7 +85,7 @@ test('Onada 11 · el superadmin veu «Segon factor» (en línia) i «Panell de s
 test('Onada 11 · sense ser superadmin, o sense sessió, el compte és el d’abans; i una organització no porta els dos ajustos ni amb superadmin', () => {
   m.sessio = { esSuperadmin: false, nivell: 'aal1', calSegonFactor: false };
   pinta();
-  expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual(['Correu electrònic', 'Estat del perfil', 'Contrasenya', 'Tancar sessió']);
+  expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual(['Correu electrònic', 'Estat del perfil', DRETS_NOTES, 'Contrasenya', 'Tancar sessió']);
   expect(screen.queryByText('el segon factor, en línia')).toBeNull();
   cleanup();
   m.sessio = { esSuperadmin: true, nivell: 'aal2', calSegonFactor: false };
@@ -87,8 +98,37 @@ test('la persona veu els ajustos del compte i no els de la fitxa', () => {
   pinta();
   expect(screen.getByRole('heading', { level: 1, name: 'El compte' })).toBeTruthy();
   const titols = screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent);
-  expect(titols).toEqual(['Correu electrònic', 'Estat del perfil', 'Contrasenya', 'Tancar sessió']);
+  // Pla 261016 (Bloc 3.1) · Canvi deliberat: el bloc nou dels drets de sèrie de les notes.
+  expect(titols).toEqual(['Correu electrònic', 'Estat del perfil', DRETS_NOTES, 'Contrasenya', 'Tancar sessió']);
   expect(within(seccio('Correu electrònic')).getByText('pep@poble.test')).toBeTruthy();
+});
+
+/* ── Pla 261016 (Bloc 3.1; ordre del Mestre) · els drets de sèrie de les notes ── */
+
+test('261016 · la persona tria a «El compte» els drets de sèrie de les seues notes: la píndola obri la vista dins del bloc i desa per guardarAjust', async () => {
+  pinta({ ...jo, dades: { ...jo.dades, copyright: 'CC BY 4.0' } });
+  expect(screen.getByText('Les dades d’accés (correu, contrasenya, sessió i estat del perfil) i els drets de sèrie de les teues notes.')).toBeTruthy();
+  const bloc = seccio(DRETS_NOTES);
+  fireEvent.click(within(bloc).getByRole('button', { name: "Drets d'autor: CC BY 4.0" }));
+  const vista = within(bloc).getByRole('region', { name: 'Drets d’autor' });
+  expect(within(vista).getByRole('status').textContent).toContain('Estos són els drets amb què naixen les teues notes noves.');
+  fireEvent.click(within(vista).getByRole('radio', { name: /CC BY-SA 4\.0/ }));
+  await act(async () => { fireEvent.click(within(vista).getByRole('button', { name: 'Desar autoria' })); });
+  expect(props.guardarAjust).toHaveBeenCalledWith('jo', 'drets-notes', 'CC BY-SA 4.0');
+  expect(within(bloc).getByRole('status').textContent).toBe('Desat correctament.');
+  // La resta de blocs no canvien: un sol h1 i cap formulari nou fora del bloc.
+  expect(screen.getAllByRole('heading', { level: 1 }).map((h) => h.textContent)).toEqual(['El compte']);
+});
+
+test('261016 · amb una baixa en curs, els drets de sèrie es veuen però no es poden canviar; una organització no porta el bloc', () => {
+  pinta({ ...jo, dades: { ...jo.dades, copyright: 'CC0 1.0', baixa_demanada_at: '2026-09-26T10:00:00Z' } });
+  const bloc = seccio(DRETS_NOTES);
+  expect(within(bloc).queryByRole('button')).toBeNull();
+  expect(within(bloc).getByText('CC0 1.0')).toBeTruthy();
+  expect(within(bloc).getByText(/baixa en curs/)).toBeTruthy();
+  cleanup();
+  pinta(forn);
+  expect(screen.queryByRole('heading', { level: 2, name: DRETS_NOTES })).toBeNull();
 });
 
 test('una contrasenya de menys de 10 caràcters no s’envia', async () => {
@@ -404,4 +444,99 @@ test('grup C · ambMembres sense el context del Perfil, o amb un port que no en 
 test('sense identitat no pinta res', () => {
   const { container } = render(<DetallCompte identitat={null} />);
   expect(container.innerHTML).toBe('');
+});
+
+/* ═══════════════════════════════════════════════════════════════════
+   GAUNTLET 261016 (ENCÀRREC D) · «EL COMPTE» I L'EDITOR, LA MATEIXA IMATGE
+
+   Pla, Onada 1.1.4: «han de beure exactament de la mateixa instància de
+   dades». Abans, la barra taronja d'«El compte» llegia identitat.avatar, el
+   del servidor: després d'un avatar rebutjat (403), l'apartat tornava a la
+   foto vella mentre l'editor, la targeta viva i «Les vistes» ensenyaven la
+   nova. Ara, avatarDeLaFitxa (fitxaDePerfil.js). Com a DetallVistes.test.jsx,
+   el 403 s'injecta al port i el viu la cua de veres (cuaDesament, amb els
+   escriptors de perfilEscriptor.js), amb la clau de l'editor.
+   ═══════════════════════════════════════════════════════════════════ */
+describe('Gauntlet 261016 (encàrrec D) · un 403 al desat de la imatge: la barra d’«El compte» porta la de l’editor', () => {
+  const CONTEXT = Object.freeze({ tenantId: '00000000-0000-4000-8000-000000000000' });
+  const AMBIT_U = ambitDe(CONTEXT, 'U');
+  const VELLA = '/assets/a.webp';
+  const NOVA = '/assets/nou.webp';
+  const error403 = (taula) => Object.assign(
+    new Error(`Supabase 403: {"code":"42501","message":"permission denied for table ${taula}"}`), { status: 403, code: '42501' },
+  );
+  const javi = { ...jo, nom: 'Javi Llinares', avatar: VELLA, dades: { ...jo.dades, id: 'U', full_name: 'Javi Llinares', avatar_url: VELLA } };
+  const rentonar = {
+    id: 'R', mena: 'grup', nom: 'El Rentonar', avatar: '/assets/rentonar.webp',
+    dades: { name: 'El Rentonar', role: 'owner', logo_url: '/assets/rentonar.webp' },
+  };
+  const refDe = (id, entitat) => ({ ambit: AMBIT_U, context: CONTEXT, entitat, id });
+  /* El valor s'encua i el servidor el rebutja: la cua el conserva amb l'error. */
+  async function rebutjat(ref, valor) {
+    cuaDesament.encua(ref, 'logoImage', valor);
+    await cuaDesament.desaAra(ref);
+  }
+  const barra = () => m.pagina.topBarData.authorAvatar;
+
+  beforeEach(async () => {
+    await cuaDesament.reinicia();
+    m.usuari = { id: 'U' };
+    m.perfil = { autodesament: { ambit: AMBIT_U, context: CONTEXT } };
+    m.updateProfile = vi.fn(async () => { throw error403('profiles'); });
+    m.updateOrganization = vi.fn(async () => { throw error403('organizations'); });
+  });
+  afterEach(() => cuaDesament.reinicia());
+
+  test('Javi Llinares · l’avatar rebutjat: la barra porta la foto nova de la cua, no la del servidor', async () => {
+    await rebutjat(refDe('jo', 'perfil'), NOVA);
+    const estat = cuaDesament.llig(refDe('jo', 'perfil'));
+    expect([estat.estat, estat.camps.logoImage, estat.errors.logoImage.tipus]).toEqual(['error', NOVA, 'servidor']);
+    expect(m.updateProfile.mock.calls).toEqual([[{ avatar_url: NOVA }, CONTEXT]]);
+    pinta(javi);
+    expect(barra()).toBe(NOVA);
+  });
+
+  test('Javi Llinares · «Llevar l’avatar» rebutjat: cap foto, mai la vella', async () => {
+    await rebutjat(refDe('jo', 'perfil'), '');
+    expect(m.updateProfile.mock.calls).toEqual([[{ avatar_url: null }, CONTEXT]]);
+    pinta(javi);
+    expect(barra()).toBe('');
+  });
+
+  test('El Rentonar · el logotip rebutjat, el mateix; «Tornar al que hi ha desat» (la cua neta) torna al del servidor', async () => {
+    await rebutjat(refDe('R', 'organitzacio'), NOVA);
+    expect(m.updateOrganization.mock.calls).toEqual([['R', { logo_url: NOVA }, CONTEXT]]);
+    pinta(rentonar);
+    expect(barra()).toBe(NOVA);
+    cleanup();
+    cuaDesament.descarta(refDe('R', 'organitzacio'), 'logoImage');
+    pinta(rentonar);
+    expect(barra()).toBe('/assets/rentonar.webp');
+  });
+
+  test('Sóc de Poble · amb un logotip rebutjat a la cua, la barra continua amb el PNG verd oficial', async () => {
+    const { ENTITAT_PILOT_ID } = await import('../../data/identitatsSeed.js');
+    const { DEFAULT_AUTHOR } = await import('../../components/universal/UniversalUtils.js');
+    await rebutjat(refDe(ENTITAT_PILOT_ID, 'organitzacio'), 'sdp-media://organitzacions/nou.png');
+    pinta({ ...forn, id: ENTITAT_PILOT_ID, nom: 'Sóc de Poble', avatar: null });
+    expect(barra()).toBe(DEFAULT_AUTHOR.avatarUrl);
+  });
+
+  test('qui només n’és membre no llig la cua (com l’editor en lectura), i sense el context del Perfil, la fitxa del servidor', async () => {
+    await rebutjat(refDe('R', 'organitzacio'), NOVA);
+    pinta({ ...rentonar, dades: { ...rentonar.dades, role: 'member' } });
+    expect(barra()).toBe('/assets/rentonar.webp');
+    cleanup();
+    m.perfil = null;
+    pinta(rentonar);
+    expect(barra()).toBe('/assets/rentonar.webp');
+  });
+
+  test('sense esborrany a la cua: la imatge de la fitxa i, sense cap, la reserva de la identitat (la foto de la sessió)', () => {
+    pinta({ ...javi, avatar: 'https://proveidor.example/foto.jpg', dades: { ...javi.dades, avatar_url: '/assets/pep.webp' } });
+    expect(barra()).toBe('/assets/pep.webp');
+    cleanup();
+    pinta({ ...jo, avatar: 'https://proveidor.example/foto.jpg' });
+    expect(barra()).toBe('https://proveidor.example/foto.jpg');
+  });
 });

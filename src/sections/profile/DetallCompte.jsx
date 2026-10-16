@@ -7,16 +7,20 @@ import { ajustosPersona, ajustosOrganitzacio, usePerfilOpcional } from './Perfil
 import DetallAjust from './DetallAjust.jsx';
 import { BlocPerfil as Bloc } from './BlocPerfil.jsx';
 import { rutaDAutoria, rutaDePerfil } from '../../config/navigation.js';
-import { avatarDeLaBarraDeFitxa } from './fitxaDePerfil.js';
+import { useAutodesament } from '../../data/autodesament/useAutodesament.js';
+import { documentDeFitxa, menaDeFitxa } from './perfilCamps.js';
+import { ENTITATS_FITXA } from './perfilEscriptor.js';
+import { avatarDeLaBarraDeFitxa, avatarDeLaFitxa, potEditarFitxa } from './fitxaDePerfil.js';
 
 /* ═══════════════════════════════════════════════════════════════════
    EL COMPTE · el que no és la fitxa pública
 
    Només els ajustos del catàleg amb `lloc: 'compte'`: correu,
-   contrasenya, sessió i estat del perfil per a la persona; correu,
-   identificador, membres i eixida per a una organització. Els drets de la
-   persona (les meues dades, consentiment i baixa) tenen pàgina pròpia a
-   l'espai de treball: DetallPrivacitat, «Privacitat i dades».
+   contrasenya, sessió, estat del perfil i, des del pla 261016 (Bloc 3.1;
+   ordre del Mestre), els drets de sèrie de les seues notes per a la
+   persona; correu, identificador, membres i eixida per a una organització.
+   Els drets de la persona (les meues dades, consentiment i baixa) tenen
+   pàgina pròpia a l'espai de treball: DetallPrivacitat, «Privacitat i dades».
 
    T43 (ordre del Mestre, 260928) · `contacte` és el correu opcional de
    l'organització tal com l'ha llegit PerfilContext (només per a qui
@@ -83,6 +87,28 @@ export function DetallCompte({ identitat, guardarAjust, pujaMitja, contacte = nu
       : null
   ), [persona, ambMembres, perfil?.ambMembres, usuariId, llistaMembres, desaMembre, llevaMembre, cercaCandidats]);
 
+  /* Gauntlet 261016 (encàrrec D; pla, Onada 1.1.4: «han de beure exactament
+     de la mateixa instància de dades») · L'avatar de la barra taronja és la
+     imatge de la fitxa amb l'esborrany de la cua (avatarDeLaFitxa,
+     fitxaDePerfil.js), el mateix que l'editor, «Les vistes» i la fitxa
+     compacta de la llista central. Abans, identitat.avatar, el del servidor:
+     després d'un avatar rebutjat (403), «El compte» tornava a la foto vella.
+     La clau de la cua és la de l'editor: sense àmbit o en lectura, cap. Ni
+     desa ni toca la cua: només la llig. La referència opaca (sdp-media://) la
+     resol la barra (BarraTaronja), com abans. */
+  const autodesament = perfil?.autodesament;
+  const potEditar = potEditarFitxa(identitat);
+  const mena = menaDeFitxa(identitat);
+  const id = identitat?.id;
+  const ref = useMemo(() => (autodesament && potEditar && id != null ? {
+    ambit: autodesament.ambit, context: autodesament.context, entitat: ENTITATS_FITXA[mena], id,
+  } : null), [autodesament, potEditar, mena, id]);
+  const esborrany = useAutodesament(ref).camps;
+  const avatarDeLaFila = useMemo(
+    () => (identitat ? avatarDeLaFitxa(documentDeFitxa(identitat, esborrany), esborrany, identitat) : ''),
+    [identitat, esborrany],
+  );
+
   const ajustos = useMemo(() => {
     const cataleg = persona
       ? ajustosPersona(dades || {}, { superadmin })
@@ -98,14 +124,14 @@ export function DetallCompte({ identitat, guardarAjust, pujaMitja, contacte = nu
       layout="contained"
       title="El compte"
       lead={persona
-        ? 'Les dades d’accés: correu, contrasenya, sessió i estat del perfil.'
+        ? 'Les dades d’accés (correu, contrasenya, sessió i estat del perfil) i els drets de sèrie de les teues notes.'
         : `Poble, correu, identificador, membres i eixida de ${identitat.nom}.`}
       /* T51 · la data real del compte: creació o última modificació de la
          fila (profiles o l'organització). */
       {...dataDeFila(dades)}
       topBarData={{
         authorName: identitat.nom,
-        authorAvatar: avatarDeLaBarraDeFitxa(identitat, identitat.avatar || ''),
+        authorAvatar: avatarDeLaBarraDeFitxa(identitat, avatarDeLaFila),
         authorLocation: dades?.town_name || '',
         authorHref: rutaDeLaFitxa(identitat),
       }}

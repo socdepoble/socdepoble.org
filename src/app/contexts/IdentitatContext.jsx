@@ -3,6 +3,7 @@ import { useSession } from './SessionContext';
 import { getDefaultUserId, getProfile, listMyOrganizations } from '../../data/backendPort';
 import { getVal, setVal, delVal } from '../../config/storage';
 import { firmaDePersona, mateixPerfil, perfilDeFila, personaDeSessio, pobleDeLaPertinenca } from './personaDeSessio.js';
+import { llegixLlicenciaPerDefecte, sincronitzaLlicenciaPerDefecte } from '../../components/universal/drets/herencia.js';
 
 /**
  * IdentitatContext — amb quina identitat actua la persona.
@@ -99,20 +100,33 @@ export function IdentitatProvider({ children, config = {} }) {
      torna a llegir en cada entrada, renovació (generacio), refresh() i edició
      del perfil (firma). Un error, un null o la fila de reserva deixen l'estat
      com estava: la firma ja impedix que un perfil vell es pinte, i una
-     renovació que falla no fa parpellejar la foto. Res es desa enlloc: en un
-     ordinador compartit del poble (T47) el primer fotograma porta les
-     inicials de les metadades. */
+     renovació que falla no fa parpellejar la foto. El perfil no es desa
+     enlloc: en un ordinador compartit del poble (T47) el primer fotograma
+     porta les inicials de les metadades.
+     Gauntlet 261016 (encàrrec E; revisió adversarial, P2) · La mateixa fila
+     posa al dia els drets de sèrie de les notes de la persona en este
+     dispositiu (profiles.copyright, el que desa «El compte»), perquè «CREAR
+     NOTA» (llicenciaDeLActor) només llig la preferència local: abans, un
+     dispositiu on no s'havia obert «El compte» ni la fitxa naixia amb la
+     Creative Commons de sèrie o amb una tria vella. És el mirall que ja fan
+     DetallAjust i PerfilEditor (T39): per a la persona, només el valor del
+     servidor, per l'id de la fila, i un valor buit no esborra res (la columna
+     pot faltar). Si la preferència ha canviat mentre la lectura anava de camí
+     (un desat d'«El compte» en este dispositiu), la resposta vella no la
+     trepitja: la lectura següent ja porta la nova. */
   const firma = firmaDePersona(currentUser);
   const [perfil, setPerfil] = useState(null);
   useEffect(() => {
     if (!userId) { setPerfil(null); return; }
     let viu = true;
+    const dretsAbans = llegixLlicenciaPerDefecte(userId);
     Promise.resolve()
       .then(() => getProfile(configRef.current))
       .then((fila) => {
         if (!viu) return;
         const nou = perfilDeFila(fila, userId, firma);
         if (nou) setPerfil((abans) => (mateixPerfil(abans, nou) ? abans : nou));
+        if (nou && llegixLlicenciaPerDefecte(userId) === dretsAbans) sincronitzaLlicenciaPerDefecte(userId, fila.copyright);
       })
       .catch(() => {});
     return () => { viu = false; };

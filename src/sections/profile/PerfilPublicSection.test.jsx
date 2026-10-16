@@ -34,10 +34,12 @@ import PerfilPublicSection from './PerfilPublicSection.jsx';
 import { TEXTOS_COMENTAR } from '../../components/PedraSeca/organismes/textosComentar.js';
 /* Onada 8 (261009) · El pilot porta al seu perfil (RUTA_PERFIL_PROJECTE), ja no a /projecte. */
 import { oblidaEntitatDelProjecte, RUTA_PERFIL_PROJECTE, rutaDAutoria } from '../../config/navigation.js';
-import { AGENTS_MAP } from '../../data/agentsSeed.js';
+import { AGENTS_MAP, tipusDAgent } from '../../data/agentsSeed.js';
 /* Ordre del Mestre (261007) · La pàgina de l'entitat pilot s'obri pel seu
    slug declarat, el de producció ('socdepoble'). */
 import { ENTITAT_PILOT_SLUG, IAIA_ID, PERSONA_PILOT } from '../../data/identitatsSeed.js';
+/* Gauntlet 261016 (Bloc 3) · El magatzem local de perfils, que en llavor fa de servidor. */
+import { createLocalPerfilsAdapter } from '../../data/localPerfils.js';
 import { RUTA_XAT_DE_LA_IAIA, RUTA_XAT_DE_MOSTRA_DE_LA_IAIA } from '../xat/useObriXatPerDefecte.js';
 
 const IAIA = { tipus: 'ia', id: 'iaia', slug: 'iaia-maria', nom: 'IAIA MarIA', avatar: '', hero: '', lema: 'Pensant en global', bio: 'Matriarca Digital', presentacioHtml: '<p>Cor antic i circuits nous.</p>', poble: 'La Torre de les Maçanes', esIA: true, publicat: true, propietari: false, copyright: '' };
@@ -84,10 +86,15 @@ test('sense la capacitat del port cau al catàleg d’agents; sense ningú, «Pe
   mocks.capacitat = false;
   mocks.id = '0001';
   const agents = [{ id: '0001', name: 'Javi', role: 'Coordinador', type: 'PERSON', short_bio: 'Visionari.' }];
-  render(<PerfilPublicSection agents={agents} />);
+  const { container } = render(<PerfilPublicSection agents={agents} />);
   expect(await screen.findByRole('heading', { level: 1, name: 'Javi' })).toBeTruthy();
   expect(mocks.load).not.toHaveBeenCalled();
-  expect(screen.getByText('Persona', { selector: '.sp-card-label' })).toBeTruthy();
+  /* Gauntlet 261016 (Bloc 3; regressió de la Fase 1, T1 «Dignitat de
+     persona») · DEROGADA la píndola «Persona»: una persona no es categoritza
+     ni és una obra. La fitxa del catàleg (PERSON) no porta la píndola del
+     tipus ni el «© Nom» de reserva. */
+  expect(screen.queryByText('Persona', { selector: '.sp-card-label' })).toBeNull();
+  expect(container.querySelector('.page-title-copyright')).toBeNull();
   cleanup();
   mocks.id = 'ningu';
   render(<PerfilPublicSection agents={agents} />);
@@ -96,11 +103,16 @@ test('sense la capacitat del port cau al catàleg d’agents; sense ningú, «Pe
   expect(mocks.navigate).toHaveBeenCalledWith('/perfil');
 });
 
+/* Revisió adversarial del Gauntlet 261016 (encàrrec C) · Abans ho provava
+   amb 'socdepoble': és una de les tres identitats del Mestre, que en remot
+   cauen al paquet quan el servidor no les torna
+   (PerfilPublicSection.fundacionals.remot.test.jsx). La regla de sempre (D12)
+   es prova ara amb una entitat qualsevol del catàleg. */
 test.each([true, false])('en remot cap catàleg suplix un perfil absent (directori=%s)', async capacitat => {
   mocks.capacitat = capacitat;
-  mocks.id = 'socdepoble';
+  mocks.id = 'forn';
   mocks.load.mockResolvedValue(null);
-  render(<PerfilPublicSection agents={[{ id: 'socdepoble', name: 'Sóc de Poble', type: 'COMPANY' }]} />);
+  render(<PerfilPublicSection agents={[{ id: 'forn', name: 'Forn de la Torre', type: 'COMPANY' }]} />);
   expect(await screen.findByRole('heading', { level: 1, name: 'Perfil no trobat' })).toBeTruthy();
   expect(screen.queryByRole('button', { name: 'Escriu-li al xat' })).toBeNull();
   /* Poliment T45 · en remot la fitxa d'una altra persona encara no es pot
@@ -609,4 +621,152 @@ test('grup C · el poble triat per l’organització (town_name) ix a la barra t
   await screen.findByRole('heading', { level: 1, name: 'Forn de la Torre' });
   expect(sense.container.querySelector('section.bar-orange .sp-card-author-location')?.textContent || '').toBe('');
   expect(sense.container.textContent).not.toContain('Benilloba');
+});
+
+/* ── Gauntlet 261016 (Bloc 3) · La identitat ─────────────────────────────── */
+
+const etiquetesDelTitol = (container) => [...container.querySelectorAll('header.page-title .page-title-labels > li')].map((li) => li.textContent);
+const dretsDelTitol = (container) => container.querySelector('header.page-title .page-title-copyright')?.textContent ?? null;
+
+/* Regressió de la Fase 1 (T1, «Dignitat de persona») · Una persona no és una
+   obra ni es categoritza: la seua fitxa pública no porta la píndola del tipus
+   ni els drets, ni els desats (profiles.copyright és la llicència de sèrie de
+   les seues notes, perfilCamps.js) ni el «© Nom» de reserva. Es queden el
+   poble i «La teua fitxa». */
+test('Gauntlet 261016 · una persona no porta la píndola del tipus ni els drets; es queden el poble i «La teua fitxa»', async () => {
+  mocks.id = 'u-1';
+  for (const copyright of ['', 'CC BY 4.0']) {
+    mocks.load.mockResolvedValue({ ...IAIA, tipus: 'persona', id: 'u-1', slug: null, nom: 'Pepa', esIA: false, propietari: true, poble: 'Benilloba', copyright });
+    const { container } = render(<PerfilPublicSection agents={mocks.agents} />);
+    await screen.findByRole('heading', { level: 1, name: 'Pepa' });
+    expect([copyright, etiquetesDelTitol(container)]).toEqual([copyright, ['Benilloba', 'La teua fitxa']]);
+    expect([copyright, dretsDelTitol(container)]).toEqual([copyright, null]);
+    expect(container.querySelector('header.page-title').textContent).not.toMatch(/Persona|©|CC BY/);
+    cleanup();
+  }
+});
+
+/* Mana el tipus de l'objecte representat (objecteDePerfil): un tipus que el
+   descriptor no coneix és una persona, i tampoc porta ni píndola ni drets. */
+test('Gauntlet 261016 · un tipus desconegut és una persona per al descriptor: ni píndola ni drets', async () => {
+  mocks.load.mockResolvedValue({ ...IAIA, tipus: 'veina', id: 'u-2', slug: null, nom: 'Rosa', esIA: false, poble: '' });
+  const { container } = render(<PerfilPublicSection agents={mocks.agents} />);
+  await screen.findByRole('heading', { level: 1, name: 'Rosa' });
+  expect(etiquetesDelTitol(container)).toEqual([]);
+  expect(dretsDelTitol(container)).toBeNull();
+});
+
+/* L'entitat, el grup i la IA no canvien: la píndola del seu tipus i els seus
+   drets, els triats o el «© Nom» de sempre. */
+test.each([
+  ['una entitat', () => ({ ...FORN }), 'Forn de la Torre', ['Entitat', 'La Torre de les Maçanes'], '© Forn de la Torre'],
+  ['una entitat amb drets triats', () => ({ ...FORN, copyright: 'CC BY 4.0' }), 'Forn de la Torre', ['Entitat', 'La Torre de les Maçanes'], 'CC BY 4.0'],
+  ['un grup', () => ({ ...FORN, tipus: 'grup', id: 'g-1', slug: 'colla', nom: 'Colla' }), 'Colla', ['Grup', 'La Torre de les Maçanes'], '© Colla'],
+  ['la IAIA', () => IAIA, 'IAIA MarIA', ['Intel·ligència artificial', 'La Torre de les Maçanes'], '© IAIA MarIA']
+])('Gauntlet 261016 · %s conserva la píndola del seu tipus i els seus drets', async (_que, dto, nom, etiquetes, drets) => {
+  mocks.load.mockResolvedValue(dto());
+  const { container } = render(<PerfilPublicSection agents={mocks.agents} />);
+  await screen.findByRole('heading', { level: 1, name: nom });
+  expect(etiquetesDelTitol(container)).toEqual(etiquetes);
+  expect(dretsDelTitol(container)).toBe(drets);
+});
+
+/* Ordre del Mestre · Els personatges ANIMAL del catàleg (El Gall, Súper
+   Ratolí, La Mixa i Sultan) són IA: personatges simbòlics, bots amb
+   systemPrompt. La fitxa del catàleg es conserva, també el seu type 'ANIMAL';
+   només canvia com es classifica (data/agentsSeed.js · tipusDAgent, la font
+   única del directori, del perfil públic, de localPerfils i del Cercador). */
+const ANIMALS = ['GALL', 'RATO', 'MIXA', 'SULTAN'].map((clau) => AGENTS_MAP[clau]);
+
+test('Gauntlet 261016 · perfilDelCataleg: els personatges ANIMAL són IA, amb la seua fitxa sencera', async () => {
+  const { perfilDelCataleg } = await import('./PerfilPublicSection.jsx');
+  for (const agent of ANIMALS) {
+    expect([agent.name, agent.type, tipusDAgent(agent)]).toEqual([agent.name, 'ANIMAL', 'ia']);
+    expect(perfilDelCataleg(agent)).toMatchObject({
+      tipus: 'ia', esIA: true, id: agent.id, nom: agent.name, avatar: agent.avatar_url, lema: agent.lema,
+      bio: agent.role, presentacioHtml: agent.short_bio, poble: agent.town_name
+    });
+  }
+  /* PERSON continua sent persona, AI una IA i COMPANY una entitat. */
+  expect([AGENTS_MAP.JAVI, AGENTS_MAP.FLASH, AGENTS_MAP.SOCDEPOBLE].map(tipusDAgent)).toEqual(['persona', 'ia', 'entitat']);
+});
+
+/* El prefix de la ruta és orientatiu (App.jsx munta esta pàgina a /gent/:agentId
+   i a /perfil/:agentId): la clau és l'id, i perfilDelCataleg el busca per id.
+   L'avís i el botó porten el seu nom; mai els textos de la IAIA, ni la
+   promesa de les frases fetes, que només fa ella (RESPOSTA_IAIA). */
+test.each(ANIMALS.map((agent) => [agent.name, agent]))('Gauntlet 261016 · sense el port, la fitxa de «%s» és la d’una IA amb el seu nom', async (_nom, agent) => {
+  mocks.config = { dataMode: 'seed' };
+  mocks.capacitat = false;
+  mocks.id = agent.id;
+  const { container } = render(<PerfilPublicSection agents={[AGENTS_MAP.JAVI, ...ANIMALS]} />);
+  await screen.findByRole('heading', { level: 1, name: agent.name });
+  expect(etiquetesDelTitol(container)).toEqual(['Intel·ligència artificial', agent.town_name]);
+  const avis = screen.getByRole('status');
+  expect(avis.textContent).toContain('Este perfil és una intel·ligència artificial');
+  expect(avis.textContent).toContain(`${agent.name} és una màquina de Sóc de Poble, en proves. No substituïx cap persona del poble.`);
+  expect(avis.textContent).not.toMatch(/IAIA|frases fetes/);
+  expect(screen.queryByRole('button', { name: 'Parla amb la IAIA' })).toBeNull();
+  fireEvent.click(screen.getByRole('button', { name: `Parla amb ${agent.name}` }));
+  expect(mocks.navigate).toHaveBeenCalledWith(`/xat?amb=${agent.id}`);
+  /* La boina porta a la seua ruta canònica d'IA; l'avatar redó és el seu. */
+  expect(container.querySelector('section.bar-orange .sp-card-author').getAttribute('href')).toBe(`/perfil/${agent.id}`);
+  expect(container.querySelector('img.page-title-avatar__imatge').getAttribute('src')).toBe(agent.avatar_url);
+});
+
+/* En llavor, pel port (localPerfils.js, que fa de servidor): una IA del
+   catàleg que no és la IAIA i un personatge ANIMAL. */
+test.each([['una IA del catàleg', 'NANOBANANA'], ['un personatge ANIMAL', 'SULTAN']])('Gauntlet 261016 · en llavor, pel port, %s porta l’avís i el botó amb el seu nom', async (_que, clau) => {
+  const agent = AGENTS_MAP[clau];
+  const perfils = createLocalPerfilsAdapter();
+  mocks.config = { dataMode: 'seed' };
+  mocks.id = agent.id;
+  mocks.load.mockImplementation(async (id) => perfils.loadPerfilPublic(id, null));
+  render(<PerfilPublicSection agents={[]} />);
+  await screen.findByRole('heading', { level: 1, name: agent.name });
+  expect(mocks.load).toHaveBeenCalledWith(agent.id, mocks.config);
+  expect(screen.getByText('Intel·ligència artificial', { selector: '.sp-card-label' })).toBeTruthy();
+  expect(screen.getByRole('status').textContent).toContain(`${agent.name} és una màquina de Sóc de Poble, en proves.`);
+  fireEvent.click(screen.getByRole('button', { name: `Parla amb ${agent.name}` }));
+  expect(mocks.navigate).toHaveBeenCalledWith(`/xat?amb=${agent.id}`);
+});
+
+/* Pla aprovat, Onada 1.5 · /gent/javi-llinares resol la persona pilot. En
+   llavor i en local, el port (localPerfils.js) ja resol qualsevol àlies de la
+   persona pilot: sense sessió, la seua fitxa del catàleg; amb sessió, la seua
+   fitxa.
+   Revisió adversarial del Gauntlet 261016 (encàrrec C; pla aprovat, Onada 1
+   punt 5, «Paritat total entre local i producció») · DEROGAT «en remot
+   continua sent "Perfil no trobat"»: el servidor no resol cap persona per
+   àlies i la ruta que el Mestre compartirà era morta en producció. Quan el
+   servidor no la torna, la fitxa del catàleg (perfilDeLaPersonaPilot), la
+   mateixa que en llavor sense sessió. L'adaptador remot de veres, amb sessió
+   i sense, ho prova PerfilPublicSection.fundacionals.remot.test.jsx. */
+test('Gauntlet 261016 · Onada 1.5: /gent/javi-llinares és la persona pilot en llavor, sense sessió i amb sessió, i en remot quan el servidor no la torna', async () => {
+  expect(PERSONA_PILOT.alies).toContain('javi-llinares');
+  const perfils = createLocalPerfilsAdapter();
+  mocks.config = { dataMode: 'seed' };
+  mocks.id = 'javi-llinares';
+  mocks.load.mockImplementation(async (id) => perfils.loadPerfilPublic(id, null));
+  const convidat = render(<PerfilPublicSection agents={[]} />);
+  await screen.findByRole('heading', { level: 1, name: AGENTS_MAP.JAVI.name });
+  expect(convidat.container.querySelector('img.page-title-avatar__imatge').getAttribute('src')).toBe(PERSONA_PILOT.avatar);
+  expect(etiquetesDelTitol(convidat.container)).toEqual([AGENTS_MAP.JAVI.town_name]);
+  expect(dretsDelTitol(convidat.container)).toBeNull();
+  cleanup();
+  const usuari = { id: 'u-javi', user_metadata: { full_name: 'Javi Pilot' } };
+  mocks.load.mockImplementation(async (id) => perfils.loadPerfilPublic(id, usuari));
+  const ambSessio = render(<PerfilPublicSection agents={[]} />);
+  await screen.findByRole('heading', { level: 1, name: 'Javi Pilot' });
+  expect(etiquetesDelTitol(ambSessio.container)).toEqual(['La Torre de les Maçanes', 'La teua fitxa']);
+  expect(dretsDelTitol(ambSessio.container)).toBeNull();
+  cleanup();
+  mocks.config = { dataMode: 'remote' };
+  mocks.load.mockResolvedValue(null);
+  const remot = render(<PerfilPublicSection agents={[]} />);
+  await screen.findByRole('heading', { level: 1, name: AGENTS_MAP.JAVI.name });
+  expect(remot.container.querySelector('img.page-title-avatar__imatge').getAttribute('src')).toBe(PERSONA_PILOT.avatar);
+  expect(etiquetesDelTitol(remot.container)).toEqual([AGENTS_MAP.JAVI.town_name]);
+  expect(dretsDelTitol(remot.container)).toBeNull();
+  expect(screen.queryByRole('button', { name: 'Edita la fitxa' })).toBeNull();
 });

@@ -198,7 +198,6 @@ export function ColumnaSeguides() {
       <NavTargetes
         elements={seguides}
         etiqueta="Les que seguixes"
-        actiu={null}
         camiDe={(font) => ruta(NOTICIES, font.categoriaId || HUI, font.id)}
         buit={<EstatBuit titol="No en seguixes cap">Tria les fonts del poble que vols llegir.</EstatBuit>}
       />

@@ -1,5 +1,5 @@
 import React from 'react';
-import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -7,7 +7,12 @@ import { afterEach, beforeAll, beforeEach, expect, test, vi } from 'vitest';
 
    Decisió del Mestre (260928): «Llista + dreta si hi cap». La fitxa activa
    de la columna central és la targeta viva del document que s'escriu a la
-   tercera columna, i l'editor la porta també a la seua dreta (aside).
+   tercera columna.
+   Pla 261015_1900 (Onada 1.2: «poda de la quarta columna») · L'editor ja
+   no la porta a la seua dreta (cap aside): la targeta viva es queda a la
+   llista i a «Les vistes». Directiva de Dignitat Humana (Onada 1.1) · La
+   targeta d'una persona no porta drets d'autor ni la píndola «Persona».
+   Onada 1.3 · Els apartats compactes porten el seu emoji en XL.
 
    Ací va tot de veres: PerfilShell → UniversalWorkspace (llista i detall) →
    PerfilEditor → DocumentEditor → UniversalEditorShell (EditableField).
@@ -16,7 +21,17 @@ import { afterEach, beforeAll, beforeEach, expect, test, vi } from 'vitest';
    peces que no hi entren.
    ═══════════════════════════════════════════════════════════════════ */
 
-const m = vi.hoisted(() => ({ perfil: null }));
+/* Bloc 3.5.4 (Gauntlet 261016) · `usuari` i `updateProfile` només els posa la
+   prova del 403 (amb la cua d'autodesament); nul·les, el port de sempre. jsdom
+   no té canvas: la frontera del retallador i compressImage, simulades. */
+const m = vi.hoisted(() => ({ perfil: null, usuari: null, updateProfile: null }));
+const dobles = vi.hoisted(() => ({ carregaImatge: vi.fn(), exportaRetall: vi.fn(), compressImage: vi.fn() }));
+vi.mock('../../components/universal/enquadrament/imatgeCanvas.js', () => ({
+  carregaImatge: dobles.carregaImatge,
+  dibuixaVisor: () => true,
+  exportaRetall: dobles.exportaRetall,
+}));
+vi.mock('../../utils/imageUtils.js', () => ({ compressImage: dobles.compressImage }));
 vi.mock('../../hooks/useResolvedAsset.js', () => ({
   useResolvedAsset: (ref) => ref,
   useResolvedAssetState: (ref) => ({ url: ref, status: ref ? 'ready' : 'idle', error: null, isLoading: false, retry: () => {}, cancel: () => {} }),
@@ -38,7 +53,15 @@ vi.mock('../../app/contexts/UIContext', () => ({
 vi.mock('../../components/universal/ContentProvider', () => ({ useContent: () => null }));
 vi.mock('@/components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
 vi.mock('../../config/assetResolver', async (importOriginal) => ({ ...(await importOriginal()), resolveAsset: (uri) => uri }));
-vi.mock('../../data/backendPort.js', async (importOriginal) => ({ ...(await importOriginal()), teCapacitat: () => false }));
+vi.mock('../../data/backendPort.js', async (importOriginal) => {
+  const original = await importOriginal();
+  return {
+    ...original,
+    teCapacitat: () => false,
+    getCurrentUser: (...args) => (m.usuari ?? original.getCurrentUser(...args)),
+    updateProfile: (...args) => (m.updateProfile ?? original.updateProfile)(...args),
+  };
+});
 vi.mock('./PerfilContext.jsx', () => ({ PerfilProvider: ({ children }) => children, usePerfil: () => m.perfil }));
 vi.mock('./DetallCompte.jsx', () => ({ DetallCompte: ({ identitat }) => <p>{`compte de ${identitat.nom}`}</p> }));
 vi.mock('./DetallPrivacitat.jsx', () => ({ DetallPrivacitat: () => null }));
@@ -63,6 +86,8 @@ import { sanitizeHtml } from '../../utils/sanitize.js';
 import { aHtml } from './perfilCamps.js';
 import { llegixDocumentViu } from '../../components/universal/documentViu.js';
 import { DefaultItemCard } from '../../components/universal/workspace/UniversalWorkspace.jsx';
+import { cuaDesament } from '../../data/autodesament/cua.js';
+import { ambitDe } from '../../data/autodesament/ambit.js';
 import PerfilShell from './PerfilShell.jsx';
 
 const jo = {
@@ -82,6 +107,8 @@ beforeEach(() => {
     identitats: [jo], carregant: false, error: null, autodesament: null,
     guardarAjust: vi.fn(), guardarCampPerfil: vi.fn(), pujaMitja: vi.fn(), recarrega: vi.fn(), creaOrganitzacio: vi.fn(),
   };
+  m.usuari = null;
+  m.updateProfile = null;
 });
 afterEach(cleanup);
 
@@ -106,26 +133,44 @@ test('T50 · la fitxa activa de la llista és la targeta viva; la resta d’apar
   expect(targeta.querySelector('.sp-card-text').textContent).toBe('Del Mas de Baix');
   expect(targeta.querySelector('.sp-card-author-name').textContent).toBe('Javi Llinares');
   expect(targeta.querySelector('.sp-card-author-location').textContent).toBe('La Torre');
-  expect(within(targeta).getByText('Persona')).toBeTruthy();
+  // Dignitat Humana (261015) · Ni la píndola «Persona» ni drets d'autor: el poble va a l'autoria.
+  expect(within(targeta).queryByText('Persona')).toBeNull();
+  expect(targeta.querySelector('.sp-card-labels')).toBeNull();
+  expect(targeta.querySelector('.sp-card-copyright')).toBeNull();
   // El compte (i, des de T9, «Els nodes»; des del 261008, «Les vistes») continuen sent fitxes compactes.
   expect([...llista(container).querySelectorAll('.sdp-gestor-fitxa__titol')].map((e) => e.textContent)).toEqual(['Les vistes', 'El compte', 'Els nodes']);
-  // L'editor porta la mateixa targeta a la seua dreta.
-  expect(detall(container).querySelector('aside.sdp-targeta-viva .sp-card-title').textContent).toBe('Javi Llinares');
+  // Pla 261015 · L'editor ja no porta la targeta a la seua dreta: ni l'embolcall ni l'aside.
+  expect(detall(container).querySelector('.sdp-editor-shell-atomic')).not.toBeNull();
+  expect(detall(container).querySelector('.sdp-editor-amb-targeta')).toBeNull();
+  expect(detall(container).querySelector('aside.sdp-targeta-viva')).toBeNull();
+  expect(screen.queryByRole('complementary', { name: 'Previsualització de la targeta' })).toBeNull();
+  expect(screen.queryByRole('button', { name: 'Vista targeta' })).toBeNull();
 });
 
-test('T50 · escriure al títol, a l’H2 i a l’entradilla actualitza la targeta viva de la llista i la de l’aside', () => {
+test('T50 · escriure al títol, a l’H2 i a l’entradilla actualitza la targeta viva de la llista', () => {
   const { container } = render(<PerfilShell />);
   act(() => { escriu(container, 'title', 'Javi del Mas & Cia'); });
   act(() => { escriu(container, 'subtitle', 'Llaurador de tomaques'); });
   act(() => { escriu(container, 'lead', 'Visc a la Torre des de sempre.'); });
-  for (const arrel of [llista(container), detall(container).querySelector('aside.sdp-targeta-viva')]) {
-    // Text pla: l'&amp; de l'editor no arriba a la targeta.
-    expect(arrel.querySelector('.sp-card-title').textContent).toBe('Javi del Mas & Cia');
-    expect(arrel.querySelector('.sp-card-subtitle').textContent).toBe('Llaurador de tomaques');
-    expect(arrel.querySelector('.sp-card-text').textContent).toBe('Visc a la Torre des de sempre.');
-  }
+  const arrel = llista(container);
+  // Text pla: l'&amp; de l'editor no arriba a la targeta.
+  expect(arrel.querySelector('.sp-card-title').textContent).toBe('Javi del Mas & Cia');
+  expect(arrel.querySelector('.sp-card-subtitle').textContent).toBe('Llaurador de tomaques');
+  expect(arrel.querySelector('.sp-card-text').textContent).toBe('Visc a la Torre des de sempre.');
   // El nom accessible de la fitxa (que la torna a triar) segueix el títol.
   expect(within(llista(container)).getByRole('button', { name: 'Javi del Mas & Cia' })).toBeTruthy();
+});
+
+/* Pla 261015_1900 (Onada 1.3) · Els apartats compactes de la llista porten el
+   seu emoji en XL al quadrat de la fitxa (ItemMedia, sdp-fitxa-emoji-xl), com
+   la Wiki i Disseny; el nom accessible de cada fitxa no canvia. */
+test('Pla 261015 · «Les vistes», «El compte» i «Els nodes» porten el seu emoji XL; el nom accessible, el de sempre', () => {
+  const { container } = render(<PerfilShell />);
+  const emojiDe = (nom) => within(llista(container)).getByRole('button', { name: new RegExp(nom) })
+    .querySelector('.sdp-fitxa-emoji-xl')?.textContent;
+  expect(emojiDe('Les vistes')).toBe('\u{1F441}\u{FE0F}');
+  expect(emojiDe('El compte')).toBe('\u{1F510}');
+  expect(emojiDe('Els nodes')).toBe('\u{1F310}');
 });
 
 test('T50 · canviar d’apartat desmunta l’editor: l’entrada viva es retira i «La fitxa» torna a compacta', () => {
@@ -169,22 +214,20 @@ test('T50 · els botons de la targeta de la llista no naveguen: avís de previsu
 /* ── T66 (ordre del Mestre, 260928) · L'emoticona de la fitxa ─────────── */
 const emoticonaDe = (arrel) => arrel.querySelector('.sp-card .sdp-emoticona-barra');
 
-test('T66 · sense emoticona triada, cap targeta en pinta (ni la ploma); amb una, la llista i l’aside la porten', () => {
+test('T66 · sense emoticona triada, cap targeta en pinta (ni la ploma); amb una, la llista la porta', () => {
   const { container } = render(<PerfilShell />);
   expect(emoticonaDe(llista(container))).toBeNull();
-  expect(emoticonaDe(detall(container).querySelector('aside.sdp-targeta-viva'))).toBeNull();
   cleanup();
   m.perfil.identitats = [{ ...jo, dades: { ...jo.dades, icon: '🌾' } }];
   const ambIcon = render(<PerfilShell />);
   expect(emoticonaDe(llista(ambIcon.container)).textContent).toBe('🌾');
-  expect(emoticonaDe(detall(ambIcon.container).querySelector('aside.sdp-targeta-viva')).textContent).toBe('🌾');
 });
 
 /* Ordre del Mestre (261007) · «Aplica a TargetaViva.jsx (quan actua com a
    ítem de llista)»: sense capçalera i amb una emoticona triada, l'emoji XL
-   ocupa el quadrat de «La fitxa» a la llista. L'aside de l'editor no és cap
-   ítem de llista i es queda sense quadrat (Llei del Píxel). */
-test('261007 · sense imatge, l’emoticona triada de la fitxa ocupa el quadrat en XL a la llista; l’aside, sense quadrat', () => {
+   ocupa el quadrat de «La fitxa» a la llista. Pla 261015 · Ja no hi ha cap
+   aside a l'editor que la repetisca. */
+test('261007 · sense imatge, l’emoticona triada de la fitxa ocupa el quadrat en XL a la llista; l’editor, sense aside', () => {
   const quadrat = (arrel) => arrel.querySelector('.sp-card-body > .sp-card-calendar-badge .sp-card-calendar-badge__emoji');
   const { container } = render(<PerfilShell />);
   expect(quadrat(llista(container))).toBeNull();
@@ -193,11 +236,7 @@ test('261007 · sense imatge, l’emoticona triada de la fitxa ocupa el quadrat 
   const ambIcon = render(<PerfilShell />);
   expect(quadrat(llista(ambIcon.container)).textContent).toBe('🌾');
   expect(quadrat(llista(ambIcon.container)).getAttribute('aria-hidden')).toBe('true');
-  const aside = detall(ambIcon.container).querySelector('aside.sdp-targeta-viva');
-  expect(aside.querySelector('.sp-card')).not.toBeNull();
-  expect(aside.querySelector('.sp-card-calendar-badge')).toBeNull();
-  // L'emoticona continua a la caputxa de l'aside (T66).
-  expect(emoticonaDe(aside).textContent).toBe('🌾');
+  expect(detall(ambIcon.container).querySelector('aside.sdp-targeta-viva')).toBeNull();
 });
 
 test('T66 · triar l’emoticona des del botó de la barra taronja la posa a la targeta viva de seguida', () => {
@@ -242,4 +281,54 @@ test('D5 · la targeta viva exposa que és la fitxa triada; D4 · la compacta é
   expect(fitxa.hasAttribute('aria-current')).toBe(false);
   expect(vistes.hasAttribute('aria-current')).toBe(false);
   expect(compte.getAttribute('aria-current')).toBe('true');
+});
+
+/* ── Bloc 3.5.4 (Gauntlet 261016; pla, Onada 1.1.4) ────────────────────────
+   «A PerfilShell, la targeta central (TargetaViva) i el panell d'edició
+   (PerfilEditor) han de beure exactament de la mateixa instància de dades.»
+   El contraexemple de Codex (relleu 02:26, P2), ara de punta a punta per la
+   pantalla de veres: la targeta viva de la llista i l'editor del detall, amb
+   la cua d'autodesament i un 403/42501 injectat al PATCH de profiles. */
+test('Bloc 3.5.4 · després d’un 403 al desat de l’avatar, la targeta de la llista i l’editor porten la mateixa foto, i el retallador continua obert amb el motiu', async () => {
+  const CONFIG = Object.freeze({ tenantId: '00000000-0000-4000-8000-000000000000' });
+  const VELLA = '/assets/a.webp';
+  const NOVA = '/assets/nou.webp';
+  await cuaDesament.reinicia();
+  m.usuari = { id: 'U' };
+  m.updateProfile = vi.fn(async () => {
+    throw Object.assign(new Error('Supabase 403: {"code":"42501","message":"permission denied for table profiles"}'), { status: 403, code: '42501' });
+  });
+  const javi = { ...jo, avatar: VELLA, dades: { ...jo.dades, id: 'U', avatar_url: VELLA } };
+  m.perfil = {
+    ...m.perfil, identitats: [javi], autodesament: { ambit: ambitDe(CONFIG, 'U'), context: CONFIG },
+    pujaMitja: vi.fn(async () => NOVA),
+  };
+  dobles.carregaImatge.mockReset().mockResolvedValue({ amplada: 2000, alcada: 1500, tipus: 'image/png', element: {}, allibera: vi.fn() });
+  dobles.exportaRetall.mockReset().mockResolvedValue(new File(['y'], 'enquadrament.png', { type: 'image/png' }));
+  dobles.compressImage.mockReset().mockResolvedValue('data:image/webp;base64,AAAA');
+  /* Només el fetch del data URL: vi.unstubAllGlobals també trauria el ResizeObserver de beforeAll. */
+  const fetchDAbans = globalThis.fetch;
+  globalThis.fetch = vi.fn(async () => ({ blob: async () => new Blob(['w'], { type: 'image/webp' }) }));
+  try {
+    const { container } = render(<PerfilShell />);
+    const deLaLlista = () => llista(container).querySelector('article.sdp-targeta-viva-carta img.sp-card-avatar')?.getAttribute('src');
+    const delEditor = () => detall(container).querySelector('button.page-title-avatar--canvia img')?.getAttribute('src');
+    expect([deLaLlista(), delEditor()]).toEqual([VELLA, VELLA]);
+    fireEvent.click(detall(container).querySelector('button.page-title-avatar--canvia'));
+    const selector = container.ownerDocument.querySelector('input[type="file"][data-imatge-de-fitxa="logoImage"]');
+    await act(async () => { fireEvent.change(selector, { target: { files: [new File(['x'], 'foto.png', { type: 'image/png' })] } }); });
+    await act(async () => {});
+    await act(async () => {
+      fireEvent.click(within(screen.getByRole('dialog', { name: 'Retalla la foto' })).getByRole('button', { name: 'Guardar' }));
+    });
+    await waitFor(() => expect(within(screen.getByRole('dialog', { name: 'Retalla la foto' })).getByRole('alert').textContent)
+      .toContain('El servidor no ha acceptat la imatge (falta un permís al servidor per a desar este camp'));
+    expect(m.updateProfile.mock.calls).toEqual([[{ avatar_url: NOVA }, CONFIG]]);
+    expect([deLaLlista(), delEditor()]).toEqual([NOVA, NOVA]);
+    expect(cuaDesament.llig({ ambit: ambitDe(CONFIG, 'U'), entitat: 'perfil', id: 'jo' }).camps.logoImage).toBe(NOVA);
+  } finally {
+    globalThis.fetch = fetchDAbans;
+    cleanup();
+    await cuaDesament.reinicia();
+  }
 });

@@ -979,11 +979,15 @@ test('T67 · la comunitat és una sola fila, amb els grups de dins i la suma de 
   ambComunitat();
   render(<XatSection />);
   const llista = screen.getByRole('list', { name: 'Converses' });
-  /* Onada 6 · Les files de conversa; el peu («Informa d'un error») no n'és cap. */
+  /* Onada 6 · Les files de conversa; el peu («Informa d'un error») no n'és cap.
+     Gauntlet 261016 (Bloc 3.6) · Sense amfitrió, la fila de «Gent de la
+     Torre» (POBLE_PER_DEFECTE) va primera: una fila més, i la comunitat baixa
+     un lloc. S'actualitza a posta. */
   const files = within(llista).getAllByRole('button').filter((b) => !b.closest('.sdp-xat-llista__peu'));
-  expect(files).toHaveLength(3);
+  expect(files).toHaveLength(4);
+  expect(files[0].textContent).toContain('Gent de la Torre');
   const fila = files.find((b) => b.textContent.includes('Sóc de Poble'));
-  expect(files.indexOf(fila)).toBe(1);
+  expect(files.indexOf(fila)).toBe(2);
   expect(within(fila).getByText(', Comunitat')).toBeTruthy();
   expect(within(fila).getByText('Avisos, General')).toBeTruthy();
   expect(within(fila).getByText('3 missatges no llegits')).toBeTruthy();
@@ -1000,13 +1004,14 @@ test('T67 · la comunitat és una sola fila, amb els grups de dins i la suma de 
   fireEvent.click(fila);
   expect(mocks.navigate).toHaveBeenCalledWith('/xat?comunitat=c-1');
 
-  /* «Grups» inclou les comunitats. */
+  /* «Grups» inclou les comunitats. Gauntlet 261016 (Bloc 3.6) · I la fila
+     virtual de «Gent de la Torre», que és un grup (pobleAmfitrio.js). */
   fireEvent.click(screen.getByRole('button', { name: /^Filtra les converses/ }));
   fireEvent.click(screen.getByRole('menuitemradio', { name: 'Grups' }));
   expect(within(screen.getByRole('list', { name: 'Converses' })).getAllByRole('button')
     .filter((b) => !b.closest('.sdp-xat-llista__peu'))
-    .map((b) => b.textContent.includes('Sóc de Poble') || b.textContent.includes('Adeu')))
-    .toEqual([true, true]);
+    .map((b) => (b.textContent.includes('Gent de la Torre') ? 'poble' : b.textContent.includes('Sóc de Poble') || b.textContent.includes('Adeu'))))
+    .toEqual(['poble', true, true]);
 });
 
 /* Captures 19.42.54 i 19.43.00: la fitxa de la comunitat viu a la columna de
@@ -2165,17 +2170,23 @@ function ambFilesPerDefecte() {
 const textosDeLaLlista = () => within(screen.getByRole('list', { name: 'Converses' }))
   .getAllByRole('button').filter((b) => !b.closest('.sdp-xat-llista__peu')).map((b) => b.textContent);
 
+/* Gauntlet 261016 (Bloc 3.6) · Les quatre converses de l'ordre del Mestre:
+   «Gent de la Torre» al capdamunt (sense amfitrió, el poble de la llavor) i,
+   a la cua, Sóc de Poble, Javi Llinares i la IAIA. Abans eren dues files a la
+   cua i cap fila de poble: s'actualitza a posta. */
 test('261007 · les files d’ajuda van a la cua, amb el seu nom i «Cap missatge.», sense marca de fixades', () => {
   mocks.threadId = null;
   ambFilesPerDefecte();
   render(<XatSection />);
   const files = textosDeLaLlista();
-  expect(files).toHaveLength(4);
-  expect(files[0]).toContain('Hola');
-  expect(files[1]).toContain('Adeu');
-  expect(files[2]).toContain('Sóc de Poble');
-  expect(files[3]).toContain('IAIA MarIA');
-  for (const text of files.slice(2)) {
+  expect(files).toHaveLength(6);
+  expect(files[0]).toContain('Gent de la Torre');
+  expect(files[1]).toContain('Hola');
+  expect(files[2]).toContain('Adeu');
+  expect(files[3]).toContain('Sóc de Poble');
+  expect(files[4]).toContain('Javi Llinares');
+  expect(files[5]).toContain('IAIA MarIA');
+  for (const text of files.slice(3)) {
     expect(text).toContain('Cap missatge.');
     expect(text).not.toContain('Fixada');
   }

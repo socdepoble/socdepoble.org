@@ -1,4 +1,6 @@
 import React from 'react';
+import { existsSync, readFileSync } from 'node:fs';
+import path from 'node:path';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { act, cleanup, render } from '@testing-library/react';
 import { MemoryRouter, useRouter } from '../app/contexts/RouterContext';
@@ -65,6 +67,15 @@ test('les rutes vives sense useSEO propi tenen títol de reserva, no el genèric
   expect(document.title).toBe('Wiki de Poble | Sóc de Poble');
   act(() => navigate('/gent/7f3c'));
   expect(document.title).toBe('Perfil | Sóc de Poble');
+});
+/* Gauntlet 261016 (Bloc 3.5.1) · Les tres rutes canòniques obrin la fitxa de /gent, /empresa i /grup:
+   la mateixa reserva, i indexables com elles. */
+test.each(['/javillinares', '/socdepoble', '/rentonar'])('la ruta canònica %s té la reserva de la fitxa, «Perfil», i és indexable', (ruta) => {
+  render(tree());
+  act(() => navigate(ruta));
+  expect(document.title).toBe('Perfil | Sóc de Poble');
+  expect(document.querySelector('meta[name="robots"]')).toBeNull();
+  expect(document.querySelector('link[rel="canonical"]').href).toMatch(new RegExp(`${ruta}$`));
 });
 test('mateix component i mateix títol recalculen canonical amb pathname', () => {
   render(tree()); act(() => navigate('/mercat/a'));
@@ -218,4 +229,87 @@ test('S5 · routeAllowsIndex tanca gestoria i tractors també amb consulta o fra
   }
   expect(routeAllowsIndex('/mercat/producte')).toBe(true);
   expect(routeAllowsIndex('/gestoriana')).toBe(true);
+});
+
+/* Bloc 3.5.5 (Gauntlet 261016) · La targeta de WhatsApp. WhatsApp i les xarxes
+   no executen JavaScript: només compta l'HTML que servix el lloc, i eixe HTML és
+   index.html per a totes les rutes. Ací es fixa el conjunt que han de llegir
+   sense JS, i que useSEO no el desfà quan el navegador sí que l'executa.
+   Correcció del Gauntlet (261016): esta prova exigia un og:url fix a la
+   portada. Era un defecte: Facebook, Messenger i LinkedIn prenen og:url com
+   l'URL canònica de l'objecte, i amb un HTML servit per a totes les rutes
+   plegaven cada enllaç profund a la portada. Ara n'exigix l'absència, com el
+   canonical: el rastrejador pren l'URL que ha demanat, i useSEO el posa per
+   ruta al navegador (última prova del bloc). */
+const ARREL = process.cwd();
+const INDEX = readFileSync(path.join(ARREL, 'index.html'), 'utf8');
+const capcaleraEstatica = () => new DOMParser().parseFromString(INDEX, 'text/html').head;
+const ETIQUETES_XARXES = ['description', 'og:title', 'og:description', 'og:image', 'og:image:type', 'og:image:width',
+  'og:image:height', 'og:image:alt', 'og:type', 'twitter:card', 'twitter:title', 'twitter:description', 'twitter:image'];
+const etiquetesDe = (head, clau) => [...head.querySelectorAll(`meta[property="${clau}"], meta[name="${clau}"]`)];
+const etiquetesXarxes = () => Object.fromEntries(ETIQUETES_XARXES.map(clau => [clau, valor(clau)]));
+
+test('Bloc 3.5.5 · la capçalera estàtica porta, sense JS, títol, descripció, og:* amb la imatge absoluta de 1200×630 i la targeta gran, sense og:url ni canonical', () => {
+  const head = capcaleraEstatica();
+  expect(head.querySelector('title').textContent.trim()).toBe('Sóc de Poble');
+  for (const clau of ETIQUETES_XARXES) {
+    const nodes = etiquetesDe(head, clau);
+    expect(nodes, clau).toHaveLength(1);
+    expect(nodes[0].content.trim(), clau).not.toBe('');
+  }
+  const contingut = clau => etiquetesDe(head, clau)[0].content;
+  const imatge = new URL(contingut('og:image'));
+  expect(imatge.origin).toBe('https://socdepoble.org');
+  expect(existsSync(path.join(ARREL, 'public', imatge.pathname)), imatge.pathname).toBe(true);
+  expect([contingut('og:image:width'), contingut('og:image:height')]).toEqual(['1200', '630']);
+  expect(contingut('twitter:image')).toBe(imatge.href);
+  expect(contingut('twitter:card')).toBe('summary_large_image');
+  // Ni og:url ni canonical estàtics: este HTML es servix a totes les rutes i els posa useSEO (comentari d'index.html).
+  expect(etiquetesDe(head, 'og:url')).toHaveLength(0);
+  expect(head.querySelector('link[rel="canonical"]')).toBeNull();
+});
+
+/* Les reescriptures de Vercel van després dels fitxers que existixen, però un
+   actiu absent (una imatge que no ha entrat al build, un chunk d'un build vell)
+   rebia index.html amb un 200 i text/html. És el que va respondre socdepoble.org
+   per a la imatge OG el 261016 (Firebase Hosting, desplegament del 260611, amb
+   la mateixa regla de captura total). Les carpetes d'actius ja no passen per
+   l'SPA: un absent hi és un 404. Amb un sol grup sense nom, el patró de
+   path-to-regexp és la mateixa expressió regular ancorada. */
+test('Bloc 3.5.5 · la reescriptura de l’SPA (vercel.json) porta les rutes a index.html i no captura els actius estàtics', () => {
+  const { rewrites } = JSON.parse(readFileSync(path.join(ARREL, 'vercel.json'), 'utf8'));
+  const capturen = ruta => rewrites.filter(({ source }) => new RegExp(`^${source}$`).test(ruta)).map(r => r.destination);
+  for (const ruta of ['/', '/mur', '/mur/123', '/javillinares', '/socdepoble', '/rentonar', '/gent/javi.llinares', '/assetsx']) {
+    expect(capturen(ruta), ruta).toEqual(['/index.html']);
+  }
+  for (const ruta of ['/assets/system/ui/og-socdepoble-1200x630.png', '/assets/system/ui/no-hi-es.png', '/assets/index-BGERpNWR.js',
+    '/fonts/noto-sans.css']) {
+    expect(capturen(ruta), ruta).toEqual([]);
+  }
+});
+
+test('Bloc 3.5.5 · sobre la capçalera real, useSEO conserva el conjunt de les xarxes, reescriu og:url per ruta i en desmuntar el torna intacte', () => {
+  // Títol i meta de la capçalera real; els fulls i els scripts no fan res en jsdom.
+  document.head.replaceChildren(...[...capcaleraEstatica().children]
+    .filter(node => ['TITLE', 'META'].includes(node.tagName)).map(node => document.importNode(node, true)));
+  const abans = etiquetesXarxes();
+  const view = render(tree());
+  act(() => navigate('/mur'));
+  for (const clau of ETIQUETES_XARXES) expect(valor(clau), clau).toBeTruthy();
+  for (const clau of ['og:image', 'og:image:type', 'og:image:width', 'og:image:height', 'og:image:alt', 'twitter:image', 'twitter:card']) {
+    expect(valor(clau), clau).toBe(abans[clau]);
+  }
+  expect(valor('og:url')).toMatch(/\/mur$/);
+  expect(document.querySelectorAll('link[rel="canonical"]')).toHaveLength(1);
+  expect(document.querySelector('link[rel="canonical"]').href).toBe(valor('og:url'));
+  // Una ruta privada no declara cap URL canònica, però la targeta continua sencera.
+  act(() => navigate('/notes'));
+  expect(valor('og:url')).toBeNull();
+  expect(document.querySelector('link[rel="canonical"]')).toBeNull();
+  expect([valor('og:image'), valor('twitter:card')]).toEqual([abans['og:image'], abans['twitter:card']]);
+  view.unmount();
+  expect(etiquetesXarxes()).toEqual(abans);
+  expect(valor('og:url')).toBeNull();
+  expect(document.querySelector('link[rel="canonical"]')).toBeNull();
+  expect(document.title).toBe('Sóc de Poble');
 });

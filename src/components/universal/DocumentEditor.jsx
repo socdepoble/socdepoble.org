@@ -4,7 +4,6 @@ import { SelectorVisibilitat, TEXTOS_VISIBILITAT } from './SelectorVisibilitat.j
 import BotoDretsAutor from './CopyrightSelector.jsx';
 import { CopyrightPage } from './drets/CopyrightPage.jsx';
 import DocumentPrintPreview from './DocumentPrintPreview.jsx';
-import { BotoTargetaViva, TargetaViva } from './TargetaViva.jsx';
 import { UniversalPage } from './UniversalPage.jsx';
 import { Boto, DateTimeControl, Dialeg } from '../PedraSeca/index.js';
 import { dataHoraAra } from './barres/dataHoraBarra.js';
@@ -66,6 +65,14 @@ import { LLAVOR_NOTA } from '../../sections/notes/NotesSection.jsx';
  *                            // capçalera i la vista de drets continuen amb
  *                            // document.copyright. Sense la clau, document.copyright
  *                            // (Notes i el catàleg, el DOM de sempre).
+ *   ambDrets: Boolean        // Opcional (Directiva de Dignitat Humana, pla
+ *                            // 261015_1900; true). Amb false, el document no porta
+ *                            // drets d'autor enlloc: ni la píndola de davall del
+ *                            // títol (i, amb ella, «Vista A4 / PDF», que viu a la
+ *                            // mateixa ranura), ni la línia de la capçalera (tampoc
+ *                            // la reserva «© Sóc de Poble»), ni la vista de drets.
+ *                            // La fitxa d'una persona (PerfilEditor): una persona no
+ *                            // és una obra. Sense la clau, el DOM de sempre.
  *   statusIcon: ReactNode // Opcional. Icona del botó d'estat de la barra taronja.
  *   barAuthorAvatar, barAuthorName, barAuthorLocation: String // Opcionals. Autoria
  *                            // de la barra taronja (i de l'estat buit).
@@ -93,25 +100,21 @@ import { LLAVOR_NOTA } from '../../sections/notes/NotesSection.jsx';
  *   onObriEmoticona: () => void // Opcional (T51). Amb ell, l'espai central és el
  *                            // botó que obri el diàleg d'emoticona del consumidor
  *                            // (ploma blanca sense emoticona). Sense, cel·la de lectura.
- *   targetaViva: Boolean     // Opcional (T50, false). La targeta del document
- *                            // (TargetaViva) fixa a la dreta de l'editor quan el
- *                            // contenidor és prou ample, i si no, el xip «Vista
- *                            // targeta» davall del títol. Sense la clau, el DOM
- *                            // és el de sempre. Ha de ser CONSTANT durant la vida
- *                            // de l'adaptador: canviar-la canvia el pare de la
- *                            // closca i remunta TipTap.
  *   ambVistes: Boolean       // Opcional (CONTRACTE-3, pla 261008_1201; true). Amb
  *                            // false, davall del títol (.sdp-copyright-control) no es
  *                            // pinten «Vista A4 / PDF» i «Crear portada»
- *                            // (DocumentPrintPreview) ni el xip «Vista targeta»
- *                            // (BotoTargetaViva): el consumidor les porta a un altre
- *                            // apartat. El botó dels drets i l'aside de la targeta
- *                            // viva es queden. Sense la clau, el DOM de sempre (Notes
- *                            // i el catàleg).
- *   avisTargetaViva: { titol, descripcio, vista } // Opcional (T50). Els textos
- *                            // del consumidor per a l'aside i el xip de la
- *                            // targeta viva (AVISOS_TARGETA_VIVA de TargetaViva.jsx).
- *                            // Sense la clau, la reserva AVIS_PREVISUALITZACIO.
+ *                            // (DocumentPrintPreview): el consumidor les porta a un
+ *                            // altre apartat. El botó dels drets es queda. Sense la
+ *                            // clau, el DOM de sempre (Notes i el catàleg).
+ *   targetaViva, avisTargetaViva // RETIRADES (T50 · Bloc 3.4 del Gauntlet, 261016).
+ *                            // L'aside de la targeta viva a la dreta i el seu xip
+ *                            // «Vista targeta» ja no tenien cap consumidor (Notes
+ *                            // els va llevar a P4; el Perfil, al pla 261015). La
+ *                            // closca és sempre filla directa del contenidor; la
+ *                            // targeta viva viu a la fitxa de la llista (NotaFitxa,
+ *                            // PerfilShell) i a «Les vistes» (DetallVistes). Una
+ *                            // clau vella que encara arribe passa per ...rest i
+ *                            // PageFrame no la llig: el DOM de sempre.
  *   targetes: { cerca(consulta) } // Opcional (T7, 261004). Targetes incrustades al
  *                            // cos: l'ordre «/» «Targeta» obri el selector, que
  *                            // busca amb cerca() (entrades d'indexCerca: Model B).
@@ -230,6 +233,8 @@ export function DocumentEditor({ adapter, onToast }) {
     dretsAutor = null,
     /* Correcció de la revisió (261008) · la llicència triada de veres (undefined: document.copyright). */
     dretsTriats = undefined,
+    /* Directiva de Dignitat Humana (261015) · false: cap rastre de drets d'autor. */
+    ambDrets = true,
     seedContent = LLAVOR_NOTA,
     posicioEines = 'dalt',
     statusIcon,
@@ -241,11 +246,7 @@ export function DocumentEditor({ adapter, onToast }) {
     /* T51 · l'espai central de la barra taronja (camp cru i obertura del diàleg). */
     emoticona = '',
     onObriEmoticona = null,
-    /* T50 · la targeta viva a la dreta (o el xip «Vista targeta»). */
-    targetaViva = false,
-    /* Els textos de l'avís de la targeta viva (sense: la reserva de TargetaViva). */
-    avisTargetaViva = null,
-    /* CONTRACTE-3 (261008) · false: les vistes (A4, portada i targeta) no van davall del títol. */
+    /* CONTRACTE-3 (261008) · false: les vistes (A4 i portada) no van davall del títol. */
     ambVistes = true,
     /* T7 · la font de les targetes incrustades (null: el cos de sempre). */
     targetes = null,
@@ -392,15 +393,6 @@ export function DocumentEditor({ adapter, onToast }) {
     if (retorn.boto?.isConnected) retorn.boto.focus({ preventScroll: true });
   }, [dretsOberts]);
 
-  /* T50 · La targeta viva signa com la barra taronja. Abans del retorn
-     primerenc, com la resta de hooks.
-     Onada 8 (261009) · També la seua boina porta a la pàgina de qui signa
-     (barAuthorHref): cap boina sense el seu perfil. */
-  const autorTargeta = useMemo(
-    () => ({ nom: barAuthorName, avatar: barAuthorAvatar, poble: barAuthorLocation, ruta: barAuthorHref || null }),
-    [barAuthorName, barAuthorAvatar, barAuthorLocation, barAuthorHref],
-  );
-
   /* T7 (ordre del Mestre, prompt 261004_0515) · Targetes incrustades al cos.
      L'ordre de l'editor (obreSelectorDeTargeta) obri el selector pel magatzem
      de l'extensió; el selector i l'avís de previsualització són UN sol
@@ -480,27 +472,25 @@ export function DocumentEditor({ adapter, onToast }) {
      Correcció de la revisió (261008) · Amb la clau dretsTriats, mana ella:
      el Perfil hi posa el «© Nom» de lectura (perfilCamps) encara que ningú
      no n'haja triat cap, i la píndola el donava per triat. Un valor que no
-     és text (null) és «cap triada». */
-  const potTriarDrets = !llicencia && Boolean(updateLocal);
+     és text (null) és «cap triada».
+     Directiva de Dignitat Humana (261015) · Amb ambDrets={false} no es pot
+     triar res (potTriarDrets fals) i la capçalera no porta cap copyright. */
+  const potTriarDrets = ambDrets && !llicencia && Boolean(updateLocal);
   const llicenciaTriada = dretsTriats === undefined
     ? (document.copyright || '')
     : (typeof dretsTriats === 'string' ? dretsTriats : '');
-  const copyrightSelector = llicencia || (potTriarDrets ? <BotoDretsAutor valor={copyrightValue} triada={llicenciaTriada} onClick={obreDrets} /> : null);
-  /* T50 · El xip «Vista targeta», germà de Vista A4 i Crear portada. El CSS
-     l'amaga quan l'aside de la dreta ja es veu. L'avís, el del consumidor
-     (avisTargetaViva); undefined deixa la reserva de TargetaViva.
-     CONTRACTE-3 (261008) · Amb ambVistes={false} ni el xip ni Vista A4 /
-     Crear portada: el botó dels drets i l'aside es queden. */
-  const avisTargeta = avisTargetaViva || undefined;
-  const botoTargeta = targetaViva && ambVistes ? <BotoTargetaViva document={document} autor={autorTargeta} etiquetes={labels || []} avis={avisTargeta} /> : null;
-  const ranuraClassificacio = classificacio || copyrightSelector || botoTargeta ? (
+  const copyrightSelector = (ambDrets ? llicencia : null) || (potTriarDrets ? <BotoDretsAutor valor={copyrightValue} triada={llicenciaTriada} onClick={obreDrets} /> : null);
+  /* CONTRACTE-3 (261008) · Amb ambVistes={false}, ni Vista A4 / PDF ni Crear
+     portada: el botó dels drets es queda.
+     T50 · Bloc 3.4 (261016) · El xip «Vista targeta» ja no és d'esta ranura:
+     el control només porta els drets i, darrere, les vistes. */
+  const ranuraClassificacio = classificacio || copyrightSelector ? (
     <>
       {classificacio}
-      {copyrightSelector || botoTargeta ? (
+      {copyrightSelector ? (
         <div className="sdp-copyright-control">
           {copyrightSelector}
-          {copyrightSelector && ambVistes ? <DocumentPrintPreview document={document} author={barAuthorName} /> : null}
-          {botoTargeta}
+          {ambVistes ? <DocumentPrintPreview document={document} author={barAuthorName} /> : null}
         </div>
       ) : null}
     </>
@@ -544,10 +534,11 @@ export function DocumentEditor({ adapter, onToast }) {
       {...rest}
       className={classeCloscat}
       classificacio={ranuraClassificacio}
-      copyright={copyrightValue}
+      copyright={ambDrets ? copyrightValue : undefined}
       /* Decisió del Mestre (261008) · Després de ...rest: cap adaptador ho
          desfà. Sense potTriarDrets (una connexió, sense updateLocal), el
-         copyright continua sent l'enllaç de lectura. */
+         copyright continua sent l'enllaç de lectura. Amb ambDrets={false}
+         (261015), cap línia de copyright. */
       onCanviaCopyright={potTriarDrets ? obreDrets : undefined}
     >
       {/* T7 · Els NodeViews de les targetes es munten com a portals dins del
@@ -564,7 +555,7 @@ export function DocumentEditor({ adapter, onToast }) {
     <>
       {/* T39 · Germana ABANS de la closca: la posició de la closca no canvia i
           React no la remunta en obrir o tancar la vista. */}
-      {dretsOberts ? (
+      {dretsOberts && ambDrets ? (
         <CopyrightPage
           valor={copyrightValue}
           autor={dretsAutor?.autor ?? barAuthorName ?? ''}
@@ -576,22 +567,9 @@ export function DocumentEditor({ adapter, onToast }) {
           onTanca={tancaDrets}
         />
       ) : null}
-      {/* T50 (decisió del Mestre, 260928: «Llista + dreta si hi cap») · Amb
-          targetaViva, un embolcall CONSTANT (no depén de l'amplària: canviar
-          el pare de la closca remuntaria TipTap). És un contenidor amb nom:
-          l'aside de la dreta només es veu si l'editor fa almenys 60rem
-          (components.css); si no, el xip «Vista targeta» de davall del títol.
-          Amb la vista de drets oberta s'amaga sencer (la closca ja ho està). */}
-      {targetaViva ? (
-        <div className={`sdp-editor-amb-targeta${dretsOberts ? ' sdp-editor-amb-targeta--drets' : ''}`}>
-          <div className="sdp-editor-amb-targeta__graella">
-            {closca}
-            <aside className="sdp-targeta-viva" aria-label="Previsualització de la targeta">
-              <TargetaViva document={document} autor={autorTargeta} etiquetes={labels || []} avis={avisTargeta} />
-            </aside>
-          </div>
-        </div>
-      ) : closca}
+      {/* T50 · Bloc 3.4 (261016) · La closca, sempre filla directa: cap
+          embolcall ni aside de la targeta viva al costat de l'editor. */}
+      {closca}
       {/* T41 · Una sola instància, germana de la closca: l'obrin la bola del
           món (barra taronja) i PUBLICAR (barra d'eines), també en mòbil, on
           T38 amaga la taronja. */}

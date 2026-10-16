@@ -87,14 +87,15 @@ test('Onada 4 · «Avatar» de la persona: retall en cercle → UNA pujada pel p
   // Res no puja abans de guardar.
   expect(m.puja).not.toHaveBeenCalled();
   await guarda('Retalla la foto');
-  // 1600×1200 en quadrat: el quadrat central de 1200, que ix a 600.
+  /* 1600×1200 en quadrat: el quadrat central de 1200, que ix a 400 (Gauntlet
+     261016, Bloc 1, Llei del Quadrat: abans 600, la mida del logotip). */
   expect(dobles.exportaRetall).toHaveBeenCalledTimes(1);
-  expect(dobles.exportaRetall.mock.calls[0].slice(1)).toEqual([{ x: 200, y: 0, w: 1200, h: 1200 }, { amplada: 600, alcada: 600, tipus: 'image/jpeg' }]);
+  expect(dobles.exportaRetall.mock.calls[0].slice(1)).toEqual([{ x: 200, y: 0, w: 1200, h: 1200 }, { amplada: 400, alcada: 400, tipus: 'image/jpeg' }]);
   const retallat = await dobles.exportaRetall.mock.results[0].value;
-  // La compressió de l'avatar (600 px), sobre el fitxer RETALLAT.
+  // La compressió de l'avatar (400 px), sobre el fitxer RETALLAT.
   expect(dobles.compressImage).toHaveBeenCalledTimes(1);
   expect(dobles.compressImage.mock.calls[0][0]).toBe(retallat);
-  expect(dobles.compressImage.mock.calls[0][1]).toEqual({ maxSize: 600, format: 'image/webp', quality: 0.8 });
+  expect(dobles.compressImage.mock.calls[0][1]).toEqual({ maxSize: 400, format: 'image/webp', quality: 0.8 });
   // Una sola pujada, un sol fitxer, a la carpeta de la persona.
   expect(m.puja).toHaveBeenCalledTimes(1);
   const [pujat, carpeta] = m.puja.mock.calls[0];
@@ -121,14 +122,17 @@ test('Onada 4 · cancel·lar el retall: cap pujada, l’avatar d’abans intacte
   expect(acaba).not.toHaveBeenCalled();
 });
 
-test('Onada 4 · «Capçalera»: la mateixa finestra en 16:9 → 1.200 × 675, comprimida a 1.200 i desada a hero_url', async () => {
+/* Gauntlet 261016 (Bloc 1, Llei del Quadrat) · La capçalera deixa el 16:9 de
+   l'ordre 261008 (1.200 × 675): és la mateixa imatge que la targeta, un
+   quadrat de 1.200 × 1.200. */
+test('Onada 4 · «Capçalera»: la mateixa finestra en quadrat → 1.200 × 1.200, comprimida a 1.200 i desada a hero_url', async () => {
   m.puja.mockResolvedValue('sdp-media://mitjans/t/u/avatars/hero.webp');
   const { acaba } = await triaFoto({ boto: 'onHeroEdit', camp: 'heroImage' });
   const retallador = screen.getByRole('dialog', { name: 'Retalla la capçalera' });
   expect(retallador.querySelector('.sdp-enquadrament__visor-caixa--cercle')).toBeNull();
   await guarda('Retalla la capçalera');
-  // 1600×1200 en 16:9: tota l'amplada i 900 d'alçada, centrada.
-  expect(dobles.exportaRetall.mock.calls[0].slice(1)).toEqual([{ x: 0, y: 150, w: 1600, h: 900 }, { amplada: 1200, alcada: 675, tipus: 'image/jpeg' }]);
+  // 1600×1200 en quadrat: tota l'alçada i el quadrat central de 1200.
+  expect(dobles.exportaRetall.mock.calls[0].slice(1)).toEqual([{ x: 200, y: 0, w: 1200, h: 1200 }, { amplada: 1200, alcada: 1200, tipus: 'image/jpeg' }]);
   expect(dobles.compressImage.mock.calls.map(([, o]) => o.maxSize)).toEqual([1200]);
   expect(m.puja.mock.calls.map(([f, carpeta]) => [f.name, carpeta])).toEqual([['heroImage.webp', 'avatars']]);
   expect(m.updateProfile.mock.calls).toEqual([[{ hero_url: 'sdp-media://mitjans/t/u/avatars/hero.webp' }, CONFIG]]);

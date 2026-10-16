@@ -1,6 +1,6 @@
 ---
 type: plantilla
-description: 'Plantilla de Prompts per a la generació d'imatges d'estil Sóc de Poble (Bruguera)'
+description: "Plantilla de Prompts per a la generació d'imatges d'estil Sóc de Poble (Còmic Costumista)"
 ---
 
 # Plantilla: Prompt Visual de Sóc de Poble (Agnòstic)
@@ -8,7 +8,7 @@ description: 'Plantilla de Prompts per a la generació d'imatges d'estil Sóc de
 Aquesta plantilla s'ha d'utilitzar SEMPRE que s'haja de demanar una nova imatge a QUALSEVOL generador d'imatges (ja siga Nano Banana, Midjourney, DALL-E, o models futurs) per garantir la coherència estètica de "Sóc de Poble". No depenem de cap eina concreta, només de l'estil.
 
 ## 1. Regles Base (Obligatòries a cada prompt)
-- **Estil Visual:** Estil còmic clàssic espanyol dels anys 70-80, concretament Escola Bruguera (Francisco Ibáñez, Josep Escobar). Traç dinàmic, humorístic, colorit i caricaturesc (estil Mortadelo y Filemón). **Molt important:** L'estil no ha de ser "massa perfecte" ni polit. Ha de tindre eixe toc un poc "gamberro", descarat i manual de l'època.
+- **Estil Visual:** Estil còmic costumista mediterrani dels anys 70-80. Traç dinàmic, humorístic, colorit i caricaturesc, sense personatges protegits per drets de tercers. **Molt important:** L'estil no ha de ser "massa perfecte" ni polit. Ha de tindre eixe toc un poc "gamberro", descarat i manual de l'època.
 - **Format "A Sangre":** La imatge ha d'estar completament plena de vora a vora ("a sangre"). PROHIBIT incloure marcs blancs, vores de vinyeta o text incrustat fora de l'escena. 
 - **Llengua i Tipografia:** Si hi ha bafarades de text (bocadillos), el text ha d'estar **ESTRICTAMENT EN VALENCIÀ**. La lletra de les bafarades no pot ser tipus Arial o d'impremta; ha de ser una tipografia manual d'estil còmic i mantindre-se consistent.
 - **Enquadrament i Acció:** L'acció principal ha d'estar estrictament centrada. Com que la imatge es pot retallar (cropping) en CSS depenent de la pantalla (quadrada o allargada), els costats han de ser farciment de context i el centre ha de contenir l'element clau.
@@ -17,7 +17,7 @@ Aquesta plantilla s'ha d'utilitzar SEMPRE que s'haja de demanar una nova imatge 
 ## 2. Estructura del Prompt (Copia i enganxa, omplint els buits)
 
 ```text
-A vibrant, full-bleed illustration (no white borders, no frames) in the classic 1970s Spanish comic book style of Editorial Bruguera (similar to Francisco Ibáñez's Mortadelo y Filemón). The art style should not be too perfect or polished; it needs that slightly "gamberro", rough, and hand-drawn humorous feel of classic Bruguera.
+A vibrant, full-bleed illustration (no white borders, no frames) in the classic 1970s Mediterranean humorous comic book style (original Valencian village characters only, no third-party copyrighted characters). The art style should not be too perfect or polished; it needs that slightly "gamberro", rough, and hand-drawn humorous feel of classic 1970s European comics.
 
 SCENE: [Descripció de l'escena: ex: Un mercat de poble tradicional a la plaça, ple de vida i bullici].
 

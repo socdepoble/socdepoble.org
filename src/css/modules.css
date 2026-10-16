@@ -451,6 +451,16 @@ aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(2) {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* Bloc 0 del Gauntlet (ordre del Mestre, 261016) · El recompte d'una fila de
+   l'arbre (`count`, el Lector a la manera de Feedly): la Insignia de Pedra
+   Seca, fill directe del botó, va a l'extrem de la fila, darrere del nom, i
+   no s'encongix. Només la porta l'arbre de l'espai (CategoryBranch): cap altra
+   Insignia viu dins d'una fila de navegació. Sense recompte, cap node: res no
+   canvia. */
+.sdp-workspace-nav-item > .sdp-insignia {
+  margin-inline-start: auto;
+  flex: none;
+}
 .sdp-workspace-nav-item:focus-visible {
   /* La columna és crom (fosca en els dos temes): l'anell de focus és el de la closca. */
   outline: 2px solid var(--sdp-crom-focus);
@@ -9535,7 +9545,9 @@ details[open] summary.accordion-header svg:last-child {
 
 /* Ordre del Mestre, 261004 (integració final) · Front «lector-nevera».
      · .sdp-card-llista > .sp-card > .sp-card-media-container · en la variant
-       'llista' de GraellaTargetes (la «Revista» del Lector) la targeta ocupa
+       'llista' de GraellaTargetes (la de l'esquelet de catàleg; ací naix per a
+       la «Revista» del Lector, que el Bloc 0 del Gauntlet, ordre del Mestre del
+       261016, ha retirat) la targeta ocupa
        tota la columna i la imatge 1:1 s'hi estirava sencera. Sostre: l'amplària
        d'una targeta de la graella (--sdp-targeta-incrustada-ample, 360px, la
        columna de .sdp-card-grid), centrada. La peça és legítima; el defecte
@@ -9545,12 +9557,12 @@ details[open] summary.accordion-header svg:last-child {
        de baix de la targeta del Mur (32, components.css). Un sol espaiat, el
        canònic de la graella: el marge de baix fora. Només la Nevera (l'ordre);
        el Lector, el Mercat i la Consola continuen com eren (Llei del Píxel).
-     · [data-sdp-app="lector"] … [aria-current="true"] · arreglo 6 (arreglo del
-       verificador): les columnes de navegació del Lector (carpetes i fonts) ja
-       són UniversalCard, i la targeta oberta (aria-current a l'element
-       principal) havia de continuar veient-se, com a TargetesColleccions: una
-       vora interior del color d'acció, de 4px de token. Amb el focus de teclat
-       mana l'anell de focus de sempre (components.css). */
+   Bloc 0 del Gauntlet (ordre del Mestre, 261016) · Retirada la vora de la
+   carpeta oberta del Lector (arreglo 6 del 261004, [data-sdp-app="lector"] …
+   [aria-current="true"]): les seues carpetes i fonts ja no són UniversalCard,
+   són l'arbre de l'espai de treball, que marca la fila activa amb el seu
+   marcador (.sdp-workspace-nav-item[aria-current="page"], més amunt). «Les
+   que seguixes» no en marcava cap: cap píxel canvia. */
 @layer components {
   .sdp-card-llista > .sp-card > .sp-card-media-container {
     max-inline-size: var(--sdp-targeta-incrustada-ample);
@@ -9558,9 +9570,6 @@ details[open] summary.accordion-header svg:last-child {
   }
   [data-sdp-app="nevera"] .sdp-card-grid > .sp-card {
     margin-block-end: 0;
-  }
-  [data-sdp-app="lector"] .sdp-card-llista > .sp-card > .sp-card-link-overlay[aria-current="true"]:not(:focus-visible) {
-    box-shadow: 0 0 0 var(--sdp-space-1) var(--sdp-accio) inset;
   }
 }
 

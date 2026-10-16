@@ -18,11 +18,29 @@
  *   · 'iaia' · el xat públic de la seua pàgina (/iaia), com el «Comentar» de
  *     la pàgina: /xat?sobre=pagina:%2Fiaia&titol=…&ruta=%2Fiaia. El primer
  *     missatge hi entra (xat_entra_al_fil_de_pagina).
+ *     Gauntlet 261016 (Bloc 3.6.2, «la IAIA falla a localhost») · Era el camí
+ *     de TOTS els modes. En llavor i en local el xat públic de /iaia és un
+ *     grup on ningú no contesta (localXat només fa respondre el fil 'iaia'),
+ *     i el directe és rutaDelXatDeLaIAIA, la mateixa porta de «Anar al xat»
+ *     de /iaia. Ara la fila també hi va per eixa funció, amb el mode del xat.
+ *   · 'javi' (Gauntlet 261016, Bloc 3.6.1) · el directe amb la persona de
+ *     contacte. En llavor i en local, el seu id del padró (xatSeed.js), que
+ *     localXat obri. En remot el servidor no declara quin compte és el seu
+ *     (cap slug de persona: supabase/perfils.js) i pel nom s'obriria el xat
+ *     amb qualsevol que es diga igual: no s'obri res i un avís ho diu.
+ *     Auditoria adversarial 261016 · Esta via és per a qui té sessió. Qui no
+ *     en té no arriba ací: la seua fila de Javi ja és el xat de només lectura
+ *     amb el missatge automàtic (XatContext en llavor i en local,
+ *     FakeChatOnboarding en remot; data/xatsPerDefecte.js · filDeMostraDeJavi).
+ *     Com es declara el compte remot de Javi és decisió del Mestre.
  * És l'ÚNIC punt que canvia si el Mestre tria una altra via per a la IAIA.
  */
 import { useNavigate } from '../../app/contexts/RouterContext';
 import { useComentaEnPrivat } from '../../components/PedraSeca/hooks/useAccions.js';
+import { useTraductorOpcional, tradueix } from '../../components/PedraSeca/hooks/useTraductorOpcional.js';
+import { useToast } from '../../components/universal/NotificationContext.jsx';
 import { objecteDePagina, rutaXatDePagina, rutaXatPrivat } from '../../config/objecteConnectable.js';
+import { AGENTS_MAP } from '../../data/agentsSeed.js';
 import { PAGINES_AMB_XAT } from '../../data/contracte.js';
 import { IAIA_ID } from '../../data/identitatsSeed.js';
 
@@ -71,12 +89,46 @@ export function rutaDelXatDeLaIAIA(modeDades, senseSessio = false) {
   return senseSessio ? RUTA_XAT_DE_MOSTRA_DE_LA_IAIA : RUTA_XAT_DE_LA_IAIA;
 }
 
-/** (clau) => void: obri el xat real de la fila d'ajuda `clau` ('socdepoble' | 'iaia'). */
+/**
+ * Gauntlet 261016 (Bloc 3.6.1) · On porta la fila de Javi Llinares en cada
+ * mode de dades, o null en remot (vegeu la capçalera): el directe de la
+ * llavor amb el seu id del padró, que creaFilDirecte troba o crea.
+ */
+export function rutaDelXatDeJavi(modeDades) {
+  return MODES_LOCALS.has(modeDades) ? rutaXatPrivat({ id: AGENTS_MAP.JAVI.id }) : null;
+}
+
+/** [clau i18n, reserva] de l'avís de la fila de Javi quan el servidor no en
+    declara el compte.
+    Auditoria adversarial 261016 (P2) · Abans era el de SDP-XAT-016 («Esta
+    persona no està disponible al xat.»), que el servidor reserva per a qui no
+    ha donat el consentiment (supabase/xat.js): deia de Javi una cosa que no
+    és la causa. Ara és el del contacte que encara no està connectat al xat
+    del poble, el de FilaPersona, que ja és a les cinc llengües (i18n.js) i
+    diu el que passa: este poble encara no sap quin compte és el seu. */
+export const AVIS_JAVI_NO_DISPONIBLE = Object.freeze(['section.xat.padro.ajudaPendent', 'Este contacte encara no està connectat al xat del poble.']);
+
+/**
+ * (clau, { modeDades, senseSessio }) => void: obri el xat real de la fila
+ * `clau` ('socdepoble' | 'javi' | 'iaia'). `modeDades` i `senseSessio` són
+ * els de useXat(); sense, el remot amb sessió, com abans.
+ */
 export default function useObriXatPerDefecte() {
   const navigate = useNavigate();
   const comentaEnPrivat = useComentaEnPrivat();
-  return (clau) => {
+  const { showToast } = useToast();
+  const t = useTraductorOpcional();
+  return (clau, { modeDades = 'remote', senseSessio = false } = {}) => {
     if (clau === 'socdepoble') comentaEnPrivat({ replace: true });
-    else if (clau === 'iaia') navigate(RUTA_XAT_DE_LA_IAIA, { replace: true });
+    else if (clau === 'iaia') navigate(rutaDelXatDeLaIAIA(modeDades, senseSessio), { replace: true });
+    else if (clau === 'javi') {
+      const ruta = rutaDelXatDeJavi(modeDades);
+      if (ruta) {
+        navigate(ruta, { replace: true });
+        return;
+      }
+      showToast(tradueix(t, AVIS_JAVI_NO_DISPONIBLE), 'info');
+      navigate('/xat', { replace: true });
+    }
   };
 }

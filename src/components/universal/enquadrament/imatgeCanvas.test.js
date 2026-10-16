@@ -142,14 +142,46 @@ describe('T3a · carregaImatge: límits', () => {
 });
 
 describe('T3a · carregaImatge: l’orientació s’aplica UNA vegada', () => {
-  test('si el navegador ja la posa dreta, no es llig ni es gira res', async () => {
+  /* Gauntlet 261016 (P2 de Codex, 02:04:33) · ACTUALITZADA A POSTA. Abans es
+     preguntava primer al navegador (una sonda JPEG que valia per a tot) i, si
+     deia que sí, el fitxer no es llegia. Ara la resposta és PER FORMAT, i el
+     format és el dels bytes: el fitxer es llig primer, una vegada (format i
+     orientació, llegixOrientacioImatge), i al navegador només se li pregunta
+     si hi ha res a girar. El que no canvia: si el navegador ja la posa dreta,
+     no es gira res. */
+  test('si el navegador ja la posa dreta en eixe format, no es gira res', async () => {
     vi.stubGlobal('Image', imatgeFalsa({ amplada: 3000, alcada: 4000 }));
-    const lligOrientacio = vi.fn(async () => 6);
-    const img = await carregaImatge(fotoAmb(6), { orienta: async () => true, lligOrientacio });
-    expect(lligOrientacio).not.toHaveBeenCalled();
+    const lligOrientacio = vi.fn(async () => ({ format: 'image/jpeg', orientacio: 6 }));
+    const orienta = vi.fn(async () => true);
+    const foto = fotoAmb(6);
+    const img = await carregaImatge(foto, { orienta, lligOrientacio });
+    expect(lligOrientacio.mock.calls).toEqual([[foto]]);
+    expect(orienta.mock.calls).toEqual([[{ format: 'image/jpeg' }]]);
     expect(ctx.setTransform).not.toHaveBeenCalled();
     expect([img.amplada, img.alcada]).toEqual([3000, 4000]);
     expect(img.element.constructor.name).toBe('ImatgeFalsa');
+  });
+
+  test('una foto dreta (1) o sense orientació: no es pregunta al navegador ni es gira', async () => {
+    vi.stubGlobal('Image', imatgeFalsa({ amplada: 4000, alcada: 3000 }));
+    const orienta = vi.fn(async () => false);
+    for (const foto of [fotoAmb(1), new File([concatena(SOI, APP0_JFIF, IMATGE)], 'neta.jpg', { type: 'image/jpeg' })]) {
+      const img = await carregaImatge(foto, { orienta });
+      expect(img.element.constructor.name).toBe('ImatgeFalsa');
+    }
+    expect(orienta).not.toHaveBeenCalled();
+    expect(ctx.setTransform).not.toHaveBeenCalled();
+  });
+
+  test('a la sonda li arriba el format dels bytes: un JPEG que diu ser PNG no fa servir la resposta del PNG', async () => {
+    vi.stubGlobal('Image', imatgeFalsa({ amplada: 4000, alcada: 3000 }));
+    const orienta = vi.fn(async ({ format }) => format !== 'image/jpeg');
+    const foto = new File([jpegAmbExif({ ifd0: [orientacio(6)] })], 'foto.png', { type: 'image/png' });
+    const img = await carregaImatge(foto, { orienta });
+    expect(orienta.mock.calls).toEqual([[{ format: 'image/jpeg' }]]);
+    expect([img.amplada, img.alcada]).toEqual([3000, 4000]);
+    expect(ctx.setTransform.mock.calls[0]).toEqual([0, 1, -1, 0, 3000, 0]);
+    img.allibera();
   });
 
   test('si no, el lector propi llig l’orientació del fitxer i es gira sobre un canvas (que ja no porta EXIF)', async () => {
@@ -180,5 +212,33 @@ describe('T3a · carregaImatge: l’orientació s’aplica UNA vegada', () => {
     expect(orienta).not.toHaveBeenCalled();
     expect(img.amplada).toBe(400);
     expect(URL.createObjectURL).not.toHaveBeenCalled();
+  });
+});
+
+/* Gauntlet 261016 (Bloc B, P2) · El blob que s'ha obert torna amb la imatge:
+   el DialegEnquadrament en llig l'EXIF quan la font és una adreça ja desada
+   (re-enquadrar una capçalera), i la pujada el rep com a `original`. Un blob:
+   directe no se'n pot llegir (la CSP no en deixa fer fetch): null. */
+describe('Bloc B · carregaImatge torna el blob que ha obert', () => {
+  test('un File: el mateix File; una adreça: el blob baixat; un blob: directe, null', async () => {
+    vi.stubGlobal('Image', imatgeFalsa({ amplada: 400, alcada: 300 }));
+    const foto = fotoAmb(1);
+    expect((await carregaImatge(foto, { orienta: async () => true })).blob).toBe(foto);
+    const baixat = new Blob([jpegAmbExif({ gps: gpsTorre() })], { type: 'image/webp' });
+    const fetch = vi.fn(async () => ({ ok: true, blob: async () => baixat }));
+    vi.stubGlobal('fetch', fetch);
+    const img = await carregaImatge('/assets/h.webp', { orienta: async () => true });
+    expect(fetch).toHaveBeenCalledWith('/assets/h.webp', expect.objectContaining({ mode: 'cors', credentials: 'omit' }));
+    expect(img.blob).toBe(baixat);
+    expect((await carregaImatge('blob:pagina/2')).blob).toBeNull();
+  });
+
+  test('girada sobre un canvas, el blob continua sent el de l’original', async () => {
+    vi.stubGlobal('Image', imatgeFalsa({ amplada: 4000, alcada: 3000 }));
+    const foto = fotoAmb(6);
+    const img = await carregaImatge(foto, { orienta: async () => false });
+    expect(img.element).toBeInstanceOf(HTMLCanvasElement);
+    expect(img.blob).toBe(foto);
+    img.allibera();
   });
 });

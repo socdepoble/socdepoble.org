@@ -10,7 +10,7 @@ import { BlocPerfil as Bloc } from './BlocPerfil.jsx';
 import { documentDeFitxa, menaDeFitxa } from './perfilCamps.js';
 import { ENTITATS_FITXA } from './perfilEscriptor.js';
 import {
-  avatarDeLaBarraDeFitxa, esFitxaDelPilot, etiquetesDeFitxa, pobleDeFitxa, potEditarFitxa, rutaDeFitxaPublica,
+  avatarDeLaBarraDeFitxa, avatarDeLaFitxa, esFitxaDelPilot, etiquetesDeFitxa, pobleDeFitxa, potEditarFitxa, rutaDeFitxaPublica,
 } from './fitxaDePerfil.js';
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -49,8 +49,21 @@ export function DetallVistes({ identitat }) {
   );
 
   /* T35 · Una foto pujada és una referència opaca (sdp-media://) que la barra
-     no resol: es resol pel port, com a l'editor. La resta, tal qual. */
-  const avatarDesat = identitat?.avatar || '';
+     no resol: es resol pel port, com a l'editor. La resta, tal qual.
+     Gauntlet 261016 (F1) · La regla de font única de l'editor (Bloc 3.5.4,
+     PerfilEditor.jsx: imatgeDeLaFitxa i ambEsborranyDImatge), sobre la
+     mateixa fitxa refeta amb l'esborrany de la cua. Abans es llegia
+     identitat.avatar, el del servidor: després d'un avatar rebutjat (403),
+     «Les vistes» ensenyaven la foto vella mentre l'editor, la barra taronja
+     i la targeta viva ensenyaven la nova. Ara, la imatge de la fitxa tal qual
+     mentre la cua en guarda un esborrany (pendent o rebutjat, també el buit
+     de «Llevar l'avatar»); si no, la de la fitxa o, sense cap, la reserva de
+     la identitat. Les proves del 403 de DetallVistes.test.jsx en fixen la
+     conducta, la que PerfilEditor.imatges.test.jsx fixa a l'editor.
+     Gauntlet 261016 (encàrrec D) · Derogada la còpia: la regla viu a
+     fitxaDePerfil.js (avatarDeLaFitxa), la mateixa de l'editor, d'«El compte»
+     i de la fitxa compacta de la llista central. */
+  const avatarDesat = avatarDeLaFitxa(fitxa, esborrany, identitat);
   /* Prompt 261014_0400 (ordre del Mestre, tasca 4) · La fitxa del pilot, el
      PNG verd oficial a la barra i a la «Vista targeta», com a l'editor: la
      regla viu a fitxaDePerfil.js (avatarDeLaBarraDeFitxa). La resta, tal qual.

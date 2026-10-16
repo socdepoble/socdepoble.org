@@ -1,18 +1,19 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DocumentEditor } from '../../components/universal/DocumentEditor';
-import { AVISOS_TARGETA_VIVA, usePublicaDocumentViu } from '../../components/universal/TargetaViva.jsx';
+import { usePublicaDocumentViu } from '../../components/universal/TargetaViva.jsx';
 import { LLINDAR_COMPTADOR } from '../../data/limitsText.js';
 import { desaLlicenciaPerDefecte, sincronitzaLlicenciaPerDefecte } from '../../components/universal/drets/herencia.js';
 import { useToast } from '@/components/universal/NotificationContext.jsx';
 import { Alerta, DialegConfirmacio } from '../../components/PedraSeca/index.js';
 import { usePerfil } from './PerfilContext.jsx';
-import { AVIS_IMATGE_PUJANT, useImatgeDeFitxa } from './useImatgeDeFitxa.jsx';
+import { AVIS_IMATGE_PUJANT, ERROR_DESAT_IMATGE, useImatgeDeFitxa } from './useImatgeDeFitxa.jsx';
 import { AJUDA_FOTO } from '../../components/universal/enquadrament/useEnquadramentImatge.jsx';
 import { AJUDA_IMATGE_PUJANT } from '../../components/universal/UniversalEditorShell.jsx';
 import { DialegEmoticona } from '../../components/universal/classificacio/DialegEmoticona.jsx';
 import { bloqueigDeFitxa, textosDeFitxa } from './visibilitatFitxa.js';
 import {
-  CAMPS_FITXA, LIMITS_TEXT, documentDeFitxa, fitxaDeLectura, llargariaDeCamp, menaDeFitxa, retallaCamp, textDeCamp, valorPerDesar,
+  CAMPS_FITXA, LIMITS_TEXT, copyrightDeFitxa, documentDeFitxa, fitxaDeLectura, llargariaDeCamp, menaDeFitxa, retallaCamp, textDeCamp,
+  valorPerDesar,
 } from './perfilCamps.js';
 import { ENTITATS_FITXA } from './perfilEscriptor.js';
 import { cuaDesament } from '../../data/autodesament/cua.js';
@@ -21,7 +22,8 @@ import { useResolvedAsset } from '../../hooks/useResolvedAsset.js';
 import { registraEntitatDelProjecte } from '../../config/navigation.js';
 import { esRutaDelProjecte } from '../../components/universal/UniversalUtils.js';
 import {
-  ETIQUETA_IA, avatarDeLaBarraDeFitxa, esFitxaDelPilot, etiquetesDeFitxa, potEditarFitxa, rutaDeFitxaPublica, slugDEntitat,
+  ETIQUETA_IA, avatarDeLaBarraDeFitxa, avatarDeLaFitxa, esFitxaDelPilot, etiquetesDeFitxa, potEditarFitxa, rutaDeFitxaPublica,
+  slugDEntitat,
 } from './fitxaDePerfil.js';
 
 /* Línia I2 de l'Onada 4 (pla 261008_1201) · La lògica pura de la fitxa viu
@@ -80,6 +82,25 @@ function missatgeDError(error, persistent) {
      missatges de l'adaptador (frases amb punt final): sense «.).». */
   const motiu = String(error.missatge || '').replace(/[.\s]+$/, '');
   return `El servidor no ha acceptat el canvi${motiu ? ` (${motiu})` : ''}. El text es guarda ${lloc} fins que tanques la sessió.`;
+}
+
+/**
+ * Bloc 3.5.4 (Gauntlet 261016; P2 de Codex, «error 403») · El que diu la
+ * finestra de retall quan la cua no ha pogut deixar una imatge al servidor:
+ * el motiu de l'avís en línia (missatgeDError), dit per a una imatge, i on es
+ * guarda mentrestant. `desament` és la instantània de la cua (cuaDesament.llig).
+ */
+export function avisDeImatgeNoDesada(desament, camp) {
+  const lloc = llocDelText(desament?.persistent);
+  const error = desament?.errors?.[camp];
+  const temporal = !error && desament?.problema?.tipus === 'temporal' ? desament.problema : null;
+  const motiu = error?.tipus === 'columna'
+    ? `${AVIS_SENSE_COLUMNA}${error.columna ? ` «${error.columna}»` : ''}`
+    : String((error || temporal)?.missatge || '').replace(/[.\s]+$/, '');
+  const perque = motiu ? ` (${motiu})` : '';
+  if (error) return `El servidor no ha acceptat la imatge${perque}. No s’ha desat: es guarda ${lloc} fins que tanques la sessió, i la pots tornar a provar.`;
+  if (temporal) return `No s’ha pogut desar la imatge${perque}. Es tornarà a provar sola; mentrestant, es guarda ${lloc} fins que tanques la sessió.`;
+  return `La imatge encara no s’ha desat al servidor. Es guarda ${lloc} fins que tanques la sessió, i eixirà sola quan es puga.`;
 }
 
 /** El text de la ploma (EstatDesament) quan cal més que el text per defecte. */
@@ -218,8 +239,14 @@ export function PerfilEditor({ identitat }) {
      «De nou» i no «sempre»: en confirmar un desat, la cua es buida un render
      abans que la fitxa porte el valor confirmat, i el vell no l'ha de
      trepitjar. Un servidor buit no esborra res (la columna pot faltar): qui
-     hi renuncia és «Tornar al que hi ha desat» (descarta). */
-  const esborranyCopyright = desament.camps.copyright;
+     hi renuncia és «Tornar al que hi ha desat» (descarta).
+     Pla 261016 (Bloc 3.1; ordre del Mestre) · Per a la persona, l'esborrany
+     no compta: la seua fitxa ja no en pot crear cap (ambDrets: false) i els
+     drets de sèrie de les notes es trien a «El compte». Un esborrany vell de
+     «Desar autoria» que encara siga a la cua trepitjaria eixa tria (també amb
+     una CC0): el mirall només hi copia el valor del servidor. L'organització,
+     com sempre. */
+  const esborranyCopyright = mena === 'persona' ? undefined : desament.camps.copyright;
   const servidorVist = useRef(null);
   useEffect(() => {
     if (!potEditar) return;
@@ -249,14 +276,26 @@ export function PerfilEditor({ identitat }) {
     setLocal((previ) => (previ[camp] === valor ? previ : { ...previ, [camp]: valor }));
   }, []);
 
+  /* Directiva de Dignitat Humana (pla 261015_1900) · La fitxa d'una persona ja
+     no pinta drets (documentDeFitxa hi posa ''), però l'autodesament compara
+     el camp `copyright` amb la DADA de sempre (copyrightDeFitxa: la desada o el
+     «© Nom» de reserva): un esborrany vell de «Desar autoria» que encara siga a
+     la cua no entra en un conflicte fals. Per a l'organització i l'agent és el
+     mateix valor que `original.copyright`. */
+  const baseDelServidor = useCallback(
+    (camp) => (camp === 'copyright' ? copyrightDeFitxa(identitat) : original[camp]),
+    [identitat, original],
+  );
+
   /* T47 (correcció de la revisió C04, 260928) · El valor que el servidor té ara
      per a un camp, tal com es desaria: és la base de l'esborrany (el que la
      persona tenia davant) i el que `verifica` hi compara en obrir la fitxa. */
   const valorServidor = useCallback((camp) => {
-    try { return valorPerDesar(mena, camp, original[camp]).valor; } catch {
-      return camp === 'content' ? String(original[camp] ?? '') : textDeCamp(original[camp]);
+    const base = baseDelServidor(camp);
+    try { return valorPerDesar(mena, camp, base).valor; } catch {
+      return camp === 'content' ? String(base ?? '') : textDeCamp(base);
     }
-  }, [mena, original]);
+  }, [mena, baseDelServidor]);
   /* Només el primer canvi d'un camp porta la base; els següents l'hereten a la cua. */
   const ambBase = useCallback((camp) => (
     ref && !Object.hasOwn(cuaDesament.llig(ref).camps, camp) ? { baseValor: valorServidor(camp) } : undefined
@@ -292,13 +331,13 @@ export function PerfilEditor({ identitat }) {
          valor del servidor passat pel mateix camí, un blur així no envia res: ni
          aplana una descripció de diversos paràgrafs ni fa un PUT i un PATCH. */
       let igual = false;
-      try { igual = valorPerDesar(mena, camp, original[camp]).valor === valorPerDesar(mena, camp, valor).valor; } catch { igual = false; }
+      try { igual = valorPerDesar(mena, camp, baseDelServidor(camp)).valor === valorPerDesar(mena, camp, valor).valor; } catch { igual = false; }
       if (igual) return Promise.resolve(true);
     }
     posaLocal(camp, valor);
     cuaDesament.encua(ref, camp, valor, ambBase(camp));
     return cuaDesament.desaAra(ref, camp);
-  }, [ref, mena, original, posaLocal, idHerencia, ambBase]);
+  }, [ref, mena, baseDelServidor, posaLocal, idHerencia, ambBase]);
 
   /* Les dues eixides d'un avís en línia. «Retallar» escurça al límit i desa;
      «Tornar al que hi ha desat» renuncia a l'esborrany d'eixe camp. */
@@ -347,11 +386,18 @@ export function PerfilEditor({ identitat }) {
     for (const [camp, error] of Object.entries(desament.errors)) {
       const accions = [];
       const massaLlarg = esMassaLlarg(error);
+      /* Directiva de Dignitat Humana (pla 261015_1900) · La fitxa d'una
+         persona ja no mostra ni tria drets: un esborrany vell de «Desar
+         autoria» que quede en error o en conflicte només es pot deixar anar
+         («Tornar al que hi ha desat», que torna també la llicència de sèrie
+         de les notes al valor del servidor). Ni «Tornar a provar» ni
+         «Conservar el meu»: seria triar a cegues un valor que no es veu. */
+      const dretsSenseFitxa = mena === 'persona' && camp === 'copyright';
       if (massaLlarg && CAMPS_AMB_COMPTADOR.includes(camp)) {
         accions.push({ text: `Retallar a ${error.maxim}`, onClick: () => retalla(camp, error.maxim) });
       }
-      if (error.tipus === 'servidor') accions.push({ text: 'Tornar a provar', onClick: () => reintenta(camp) });
-      if (error.tipus === 'conflicte') accions.push({ text: 'Conservar el meu', onClick: () => conserva(camp) });
+      if (error.tipus === 'servidor' && !dretsSenseFitxa) accions.push({ text: 'Tornar a provar', onClick: () => reintenta(camp) });
+      if (error.tipus === 'conflicte' && !dretsSenseFitxa) accions.push({ text: 'Conservar el meu', onClick: () => conserva(camp) });
       accions.push({ text: 'Tornar al que hi ha desat', onClick: () => descarta(camp) });
       /* La xifra viva sempre al comptador (fora de l'alerta), també per al cos. */
       const comptador = avisos[camp]?.comptador
@@ -415,8 +461,23 @@ export function PerfilEditor({ identitat }) {
      Revisió del prompt 261014_0400 (ordre del Mestre) · La fitxa del pilot no
      pinta el logo de la fila enlloc (avatarTaronja i logoDeLectura, a baix):
      no es demana al port (esFitxaDelPilot, el criteri d'esPilot), com a la
-     fitxa pública. */
-  const avatarDesat = identitat.avatar || '';
+     fitxa pública.
+     Bloc 3.5.4 (Gauntlet 261016; pla, Onada 1.1.4: «la targeta central
+     (TargetaViva) i el panell d'edició (PerfilEditor) han de beure exactament
+     de la mateixa instància de dades») · Abans, la barra taronja i la targeta
+     viva (documentViu, la fitxa de la llista de PerfilShell) llegien
+     identitat.avatar, el del servidor, i l'avatar redó i la ranura, la fitxa
+     (fitxa.logoImage, amb l'esborrany): després d'un 403, una foto a cada
+     banda (P2 de Codex). Ara totes porten la imatge de la fitxa: tal qual
+     mentre la cua en guarda un esborrany (pendent o rebutjat, també el buit
+     de «Llevar l'avatar»); si no, la de la fitxa o, sense cap, la reserva de
+     la identitat (per a la persona, la foto de la sessió: pla 261014_1450,
+     front B), com fins ara.
+     Gauntlet 261016 (encàrrec D) · La regla ja no viu ací: és
+     avatarDeLaFitxa (fitxaDePerfil.js), la mateixa que lligen «Les vistes»,
+     «El compte» i la fitxa compacta de la llista central. */
+  const imatgeDeLaFitxa = fitxa.logoImage || '';
+  const avatarDesat = avatarDeLaFitxa(fitxa, desament.camps, identitat);
   const avatarResolt = useResolvedAsset(esFitxaDelPilot(identitat) ? '' : avatarDesat);
   const avatarBarra = avatarDesat.startsWith('sdp-media://') ? avatarResolt : avatarDesat;
 
@@ -425,7 +486,9 @@ export function PerfilEditor({ identitat }) {
      munta; es perd «La mateixa per a les dues», autoritzat): «Capçalera» i
      «Avatar» (persona, agent) o «Logotip» (organització). Cada botó obri el
      selector de fitxers dins del gest de la persona i, després, la mateixa
-     finestra de retall (useImatgeDeFitxa): capçalera 16:9, avatar en cercle,
+     finestra de retall (useImatgeDeFitxa): capçalera en quadrat de
+     1.200 × 1.200 (Llei del Quadrat, Gauntlet 261016, Bloc 1: la mateixa
+     imatge que la targeta; abans 16:9), avatar en cercle de 400 × 400,
      logotip en quadrat de 600 × 600. UNA pujada pel camí de sempre
      (uploadMedia) i el camp es desa per la cua de la fitxa. La closca hi
      passa `acaba`, que la torna a la imatge quan s'ha desat (T35). */
@@ -433,6 +496,17 @@ export function PerfilEditor({ identitat }) {
     (camp, valor) => saveRemote(identitat.id, camp, valor),
     [saveRemote, identitat.id],
   );
+  /* Bloc 3.5.4 (Gauntlet 261016; P2 de Codex, «error 403») · El desat de les
+     finestres de retall: saveRemote no rebutja mai, i el seu false (la cua
+     no ha pogut deixar la imatge al servidor) es donava per bo. Ara és un error
+     amb el motiu de la cua (avisDeImatgeNoDesada): la finestra continua
+     oberta amb el retall, i la cua conserva el valor per a «Tornar a
+     provar». «Llevar l'avatar» continua amb desaImatge: la seua confirmació
+     es tanca i l'avís en línia diu el que ha passat. */
+  const desaImatgeDeLaFinestra = useCallback(async (camp, valor) => {
+    if (await desaImatge(camp, valor)) return true;
+    throw new Error(ref ? avisDeImatgeNoDesada(cuaDesament.llig(ref), camp) : ERROR_DESAT_IMATGE);
+  }, [desaImatge, ref]);
   /* Correcció de la revisió (261008) · «Encara s'està desant» no és cap error: 'info'. */
   const avisImatge = useCallback((missatge, tipus = 'error') => showToast(missatge, tipus), [showToast]);
   /* Auditoria 261007 (retocs de l'ordre E, accessibilitat) · Una persona sense
@@ -449,11 +523,11 @@ export function PerfilEditor({ identitat }) {
     focusAvatarPendent.current = arrelImatgePropia.current || document;
   }, []);
   const capcalera = useImatgeDeFitxa({
-    camp: 'heroImage', forma: 'capcalera', onImageUpload: uploadMedia, onDesaCamp: desaImatge, onError: avisImatge,
+    camp: 'heroImage', forma: 'capcalera', onImageUpload: uploadMedia, onDesaCamp: desaImatgeDeLaFinestra, onError: avisImatge,
   });
   const imatgePropia = useImatgeDeFitxa({
     camp: 'logoImage', forma: mena === 'organitzacio' ? 'logotip' : 'avatar',
-    onImageUpload: uploadMedia, onDesaCamp: desaImatge, onError: avisImatge, onDesat: apuntaFocusAvatar,
+    onImageUpload: uploadMedia, onDesaCamp: desaImatgeDeLaFinestra, onError: avisImatge, onDesat: apuntaFocusAvatar,
   });
   const { obri: obriCapcalera, pujant: capcaleraPujant } = capcalera;
   const { obri: obriFitxerPropi, obert: imatgePropiaOberta, pujant: imatgePropiaPujant } = imatgePropia;
@@ -641,9 +715,10 @@ export function PerfilEditor({ identitat }) {
      (AJUDA_IMATGE_PUJANT, el text de la closca): unes píndoles desactivades
      sense cap motiu a la vista no fan res i no diuen per què.
      L'entitat pilot es reconeix per esPilot (esRutaDelProjecte de rutaFitxa,
-     a dalt, amb l'autoria de la barra taronja). */
+     a dalt, amb l'autoria de la barra taronja).
+     Bloc 3.5.4 · `imatgeDeLaFitxa` es calcula a dalt, amb l'avatar de la
+     barra taronja i de la targeta viva: la mateixa instància per a tots. */
   const ambAvatarRedo = mena !== 'organitzacio';
-  const imatgeDeLaFitxa = fitxa.logoImage || '';
   const ranuraDelLogo = potEditar && !esPilot && (!ambAvatarRedo || !imatgeDeLaFitxa);
   const etiquetaImatgePropia = ambAvatarRedo ? ETIQUETA_AVATAR : ETIQUETA_LOGOTIP;
   const avatarDeCapcalera = useMemo(() => (ambAvatarRedo && imatgeDeLaFitxa ? {
@@ -693,9 +768,10 @@ export function PerfilEditor({ identitat }) {
       /* Onada 4 (retallador senzill, ordre del Mestre 261008) · Derogat el
          botó únic de T35 («Editar capçalera i avatar» i el seu diàleg): la
          capçalera té el seu botó, «Capçalera», que diu ABANS de triar què
-         s'admet, i obri la finestra de retall en 16:9. La imatge pròpia té el
-         seu a la ranura o a l'avatar redó (ranuraDelLogo i avatarDeCapcalera,
-         a dalt). Derogat també el «logotip damunt del nom desapareix» de T35
+         s'admet, i obri la finestra de retall en quadrat de 1.200 × 1.200
+         (Llei del Quadrat, Gauntlet 261016, Bloc 1; abans 16:9). La imatge
+         pròpia té el seu a la ranura o a l'avatar redó (ranuraDelLogo i
+         avatarDeCapcalera, a dalt). Derogat també el «logotip damunt del nom desapareix» de T35
          (ordre E, 261007).
          Línia I2 (pla 261008_1201) · Les imatges pugen fora de la closca
          (useImatgeDeFitxa): `heroPujant` i `logoPujant` li diuen que hi ha
@@ -729,26 +805,29 @@ export function PerfilEditor({ identitat }) {
       /* T47 · L'indicador de l'autodesament i els avisos en línia dels camps. */
       estatDesament,
       avisosCamps,
-      /* T39 (ordre del Mestre, 260928) · La vista de drets d'autor diu que estos
-         són els de sèrie de les notes noves (un agent no en signa: sense avís).
-         L'autor és el mateix nom del «© Nom» de sèrie de la fitxa. */
-      dretsAutor: { ambit: esAgent ? 'neutre' : 'perfil', autor: fitxaDeLectura(identitat).title },
-      /* Línia I2 (pla 261008_1201) · La píndola dels drets diu la llicència
+      /* Directiva de Dignitat Humana (pla 261015_1900, Onada 1.1) · Una
+         persona no és una obra: la seua fitxa no porta drets d'autor enlloc
+         (ambDrets: false a DocumentEditor: ni píndola, ni línia de la
+         capçalera, ni vista de drets) ni la píndola del rol (etiquetesDeFitxa).
+         La llicència de sèrie de les seues notes noves (T39) és la que té
+         desada al servidor, i es tria a «El compte» (pla 261016, Bloc 3.1):
+         el mirall d'a dalt (idHerencia) només hi copia la del servidor.
+         T39 (ordre del Mestre, 260928) · Per a l'organització i l'agent, la
+         vista de drets d'autor diu que estos són els de sèrie de les notes
+         noves (un agent no en signa: sense avís). L'autor és el mateix nom del
+         «© Nom» de sèrie de la fitxa.
+         Línia I2 (pla 261008_1201) · La píndola dels drets diu la llicència
          TRIADA de veres (dretsTriats, a dalt), no el «© Nom» de lectura. */
-      dretsTriats,
-      /* T50 · La targeta fixa a la dreta de l'editor quan hi cap. Constant: no
-         remunta TipTap. L'aside diu el mateix avís que la fitxa de la llista
-         (PerfilShell). CONTRACTE-3 (Onada 4) · Al Perfil ja no hi ha xip
-         «Vista targeta» (ambVistes: false): on l'aside no hi cap, la targeta
-         es veu des de «Les vistes». */
-      targetaViva: true,
-      avisTargetaViva: AVISOS_TARGETA_VIVA.perfil,
+      ...(mena === 'persona' ? { ambDrets: false } : {
+        dretsAutor: { ambit: esAgent ? 'neutre' : 'perfil', autor: fitxaDeLectura(identitat).title },
+        dretsTriats,
+      }),
       /* T66 · L'espai central de la barra taronja (sdp-pedra-seca §10): el
          camp CRU i, en edició, el botó que obri el diàleg. */
       emoticona: fitxa.icon || '',
       onObriEmoticona: ambEmoticona ? obriEmoticona : null,
     };
-  }, [esAgent, potEditar, fitxa, identitat, etiquetes, autorTargeta, rutaFitxa, updateLocal, saveRemote, visibilitat, uploadMedia,
+  }, [mena, esAgent, potEditar, fitxa, identitat, etiquetes, autorTargeta, rutaFitxa, updateLocal, saveRemote, visibilitat, uploadMedia,
     obriCapcalera, capcaleraPujant, obriImatgePropia, imatgePropiaPujant, etiquetaImatgePropia, ranuraDelLogo, avatarDeCapcalera,
     logoDeLectura, estatDesament, avisosCamps, dretsTriats, ambEmoticona, obriEmoticona]);
 

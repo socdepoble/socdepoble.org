@@ -3,7 +3,8 @@
  * contracte sdp.modul.v1 i ADR-2026-12).
  *
  * L'objecte congelat que el cos d'un mòdul fa servir en lloc de portar el
- * seu React, la seua plataforma i la seua Pedra Seca: les instàncies de la
+ * seu React, la seua plataforma, la seua Pedra Seca i el seu espai de
+ * treball (1.2.0): les instàncies de la
  * pàgina, les úniques amb què els hooks i els contexts funcionen. Les
  * portes i els noms són els de contracteNucli.js (nucliModuls.test.js els
  * contrasta).
@@ -53,6 +54,8 @@ import { Taula } from '../../components/PedraSeca/organismes/Taula.jsx';
 import { TeclatNumeric } from '../../components/PedraSeca/organismes/TeclatNumeric.jsx';
 import { UniversalCard } from '../../components/PedraSeca/organismes/UniversalCard.jsx';
 import { UniversalTPV } from '../../components/PedraSeca/organismes/UniversalTPV.jsx';
+/* Nucli 1.2.0 (261016): l'espai de treball, per la seua façana (la font única de la porta). */
+import { DefaultItemCard, UniversalWorkspace } from '../../components/universal/workspace/index.js';
 import * as plataformaDelNucli from './index.js';
 import { VERSIO_NUCLI } from './contracteNucli.js';
 
@@ -75,5 +78,6 @@ export const NUCLI = Object.freeze({
     LiniesColleccio, LlistaArticles, MarcColumna, NavegacioPeriode, OrdenaCategories, PaginaApp, Pestanyes, Pila, PillToggle,
     Progres, Selector, SelectorCategoria, TEXTOS_ESTAT_LINIA, TargetesColleccions, Taula, TeclatNumeric, UniversalCard,
     UniversalTPV, estatLinia, mouCategoria, nivellHistograma
-  })
+  }),
+  workspace: Object.freeze({ DefaultItemCard, UniversalWorkspace })
 });

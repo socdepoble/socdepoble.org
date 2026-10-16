@@ -23,9 +23,13 @@ contracte.escriu:
 Aquesta skill s'ha d'invocar **SEMPRE** que una IA (o el Mestre) demane generar un arxiu ZIP per a pujar l'aplicació a WordPress o distribuir la SPA independent. Serveix com a tallafoc contra el "Llop Salvatge" d'escopir zips i carpetes temporals sense rumb per qualsevol lloc de l'espai de treball.
 
 ## 1. Nomenclatura Estàndard i Termodinàmica
-Qualsevol ZIP compilat (siga a mà, per script de laboratori, o per IA autònoma) HA DE TENIR obligatòriament el format següent:
-- Per al plugin WP: `socdepoble-enxufe-v[MAJOR].[MINOR].[PATCH]-aammdd_hhmm.zip` (Exemple: `socdepoble-enxufe-v1.0.3-260930_2005.zip`)
-- Per a la SPA aïllada: `socdepoble-spa-v[MAJOR].[MINOR].[PATCH]-aammdd_hhmm.zip`
+Qualsevol ZIP compilat (siga a mà, per script de laboratori, o per IA autònoma) HA DE TENIR obligatòriament el format canònic de Sóc de Poble:
+`aammdd_hhmm_categoria_titol.ext`
+
+La **categoria** reflectix l'amfitrió o sistema al qual s'enxufa el paquet:
+- Per al plugin de WordPress: `AAMMDD_HHMM_wordpress_enxufe_v[MAJOR].[MINOR].[PATCH].zip` (Exemple: `261015_2250_wordpress_enxufe_v1.1.3.zip`)
+- Per a la SPA autònoma (servidor estàtic/Sollutia): `AAMMDD_HHMM_estatic_spa_v[MAJOR].[MINOR].[PATCH].zip`
+- Per a altres amfitrions futurs: `AAMMDD_HHMM_sollutia_enxufe_vX.Y.Z.zip`, `AAMMDD_HHMM_joomla_enxufe_vX.Y.Z.zip`, `AAMMDD_HHMM_wikimedia_enxufe_vX.Y.Z.zip`
 
 ## 2. Destinació Única (wordpress-plugin/builds/)
 D'acord amb la Llei de l'Enxufabilitat i per mantindre l'ordre, els productes finals i zips de prova del connector (plugin) van EXCLUSIVAMENT a la carpeta del mateix plugin:

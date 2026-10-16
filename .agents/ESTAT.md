@@ -7,6 +7,76 @@ description: ESTAT DE LA SESSIÓ
 
 <!-- SDP:ESTAT_ACTUAL -->
 
+## ESTAT_ACTUAL · 2026-10-16 05:40 · IAIA MarIA / Gemini 4 · Tancament Final del Gauntlet Tripartit Autònom (5 Onades + Cacera Adversarial, 18.386 proves verdes)
+
+- **Torns i Governança del Gauntlet (`core-direccio-autonoma`):**
+  - Torns coordinats: `torn_9ddbf794-0d16-42b9-ab90-f70b61a29671` (Gemini 4 / MarIA), `torn_5b62e0c4-ed6d-49f1-8a29-ff692698d9f1` (Codex), `torn_60a0d776-7f83-435d-ab7d-fa26f6507f08` (Claude Code) i `torn_9821cb6e-bbe5-415a-a862-e16e3a99c24f` (Prompt/Pla).
+  - Pla d'implementació canònic religat als 4 torns: `_wiki_de_poble/04_escriptori/261016_0015_pla_implementacio_gauntlet_autonom.md` (`ef197ae0570040b581bdb29df067e8378a2de35f42c2ddf52151aa13029113a3`).
+  - Prompt unificat tripartit: `_wiki_de_poble/04_escriptori/261016_0015_prompt_gauntlet_claude_codex_gemini.md` (`2e32d28e9ef449b2fe1c6a64867ab6753ddcc7a40a48799750375fab746b55ed`).
+  - Informes finals validats a l'Escriptori: `_wiki_de_poble/04_escriptori/261016_0022_auditoria_gemini4.md` (`v1.12.0`, Relleu 12), `_wiki_de_poble/04_escriptori/261016_0022_auditoria_claude.md` (`Relleu 7`) i `_wiki_de_poble/04_escriptori/261016_0021_auditoria_codex.md` (`v1.5.0`).
+- **Resultat Final de Proves i Portes (100% en Verd):**
+  - **Vitest Global Final (`npx vitest run src tests`):** **`1.062` fitxers passats (`6` omesos); `18.386` proves passades, `89` omeses, `0` fallades (`exit code 0`).**
+  - **Suites Node i Portes:** `standalone-build.test.mjs` `31/31`, connector/conformitat/lint/política `112/112`, `convertir-a-webp.test.mjs` `4/4`, `gauntlet-codex-webp.audit.mjs` `10/10`, `tractor-rls.mjs` `0` infraccions sobre `45` fitxers SQL, `frontissa-contingut.mjs` `14/14` claus aprovades (`9/9` proves), `segella.mjs` intacte (`5e7339db...`), `porta-olivera.mjs` i `verify-ledger.mjs` en codi `0`, estrés `8/8` (1.000 a 40.000 fluxos simulats).
+- **Resum dels 5 Blocs i de les 5 Onades + Cacera Adversarial (62 troballes → 39 confirmades i corregides, 23 refutades):**
+  - **Bloc -1 (Identitat Dual):** Zero ocurrències de `Mestre Poble`/`mestre-obres`; identitat `Javi Llinares` + `Sóc de Poble` i `mac-mini-m4` (`159/159` proves).
+  - **Bloc 0 (Lector RSS sobre `UniversalWorkspace`):** Port `'workspace'` (`VERSIO_NUCLI = '1.2.0'`), arbre esquerra amb recompte de no llegits, purga de mocks, destí al Bookmarklet, restauració de scroll per carpeta i «Marca-ho tot com a llegit» respectant cerca/filtre (`289/289` proves).
+  - **Bloc 1 (Llei del Quadrat 1200×1200 WebP <80 KB i EXIF):** Capçalera `1200×1200`, avatar `400×400`, cerca binària de qualitat WebP `<80.000 B` (`qualitatPerPressupost`), EXIF conservat per defecte amb casella d'opt-out i sanejament d'IFD1 i de miniatures JPEG dins `MakerNote` tant al navegador (`exifIncrustat.js`) com al tractor (`tooling/maquinaria/convertir_a_webp.mjs`), orientació multiformat i vinyeta `tpv_vinyeta.webp` (`77.746 B`). Plantilla `prompt_nano_banana.md` netejada de marques de tercers.
+  - **Bloc 2 (WordPress):** Fallback canònic `Carregant el mur...` protegit de `wptexturize` amb `no_texturize_tags` (`36/36` Node + `30/30` Vitest).
+  - **Bloc 3, 3.5 i 3.6 (Perfil, Rutes Canòniques, SQL 403 i Xat):** Llicència per defecte de notes sincronitzada entre dispositius, `ANIMAL -> ia`, poble al directori, rutes `/javillinares`, `/socdepoble` i `/rentonar` amb fallback remot revocable i un sol «Javi Llinares» al cercador, migració `2610160250_perfil_update_propi.sql` (privilegis de columna + RLS), funció única `avatarDeLaFitxa`, SEO `1200×630` sense `og:url` estàtic duplicat, i 4 actors permanents al xat amb missatge automàtic literal de Javi i blindatge d'homònims (`2.353/2.353` proves).
+- **Decisions per al Mestre al Despertar (`requires_human_decision: true`):**
+  1. Desplegar `socdepoble.org` a Firebase Hosting (`soc-de-poble`, decidint abans l'exclusió de `rag-index.json`/`slugIndex.json` i el pes d'`og-socdepoble-1200x630.png`).
+  2. Aplicar `supabase/migrations/2610160250_perfil_update_propi.sql` al Supabase de producció després de les 4 consultes de diagnòstic.
+  3. Publicar la release signada `1.1.4` del connector WordPress i configurar Yoast SEO a `gentdelatorre.net`.
+  4. Declarar `IDS_REMOTS_FUNDACIONALS` i aprovar l'ADR del connector RSS de servidor.
+  5. Executar `git rm src/apps/lector/vistes/Carpetes.jsx src/apps/lector/vistes/Fonts.jsx` i aplicar `T-G4-24` (`Bloc 3.7` / `Onada 1.3`) a `src/sections/text/legalContent.js`.
+- **Higiene («Cadascuna a sa casa»):** Zero crons ni tasques de fons actives.
+
+## ESTAT_ACTUAL · 2026-10-16 02:40 · Codex · Auditoria Gauntlet lliurada; sense aprovació global
+
+- Torn `torn_5b62e0c4-ed6d-49f1-8a29-ff692698d9f1`; informe `_wiki_de_poble/04_escriptori/261016_0021_auditoria_codex.md` i acta `_wiki_de_poble/04_escriptori/261016_0035_acta_marmota_codex_gauntlet.md`. Tres subagents Codex acabats; Claude/Gemini reals coordinats per l’Escriptori. Cap commit, desplegament o SQL remot.
+- Fallades base reparades: portades/text 88/88, empaquetat 50/50 amb signatures/bytes. Quarta CI completa exit 0: Node 946 passades / 0 fallades / 1 skip / 4 TODO; Vitest 17.919 passades / 0 fallades / 89 skip. Huit rutes han canviat des de captura; no és un tall congelat ni aprovació del producte posterior.
+- Correccions de focus/RAF, ACK i propietat del canal verificades; ampliació de Claude amb reintent acotat preservada. Xat/conformitat 318/318 + 2 probes; nucli 1.2 guardes 123/123, build 74/74, muntatge 2/2 i 100 cicles sense recursos instrumentats residuals.
+- Estrés 8/8: 1.000/5.000/10.000/40.000 fluxos virtuals. 40.000 en 15.543,37 ms, p95 15.425,55 ms, heap després de GC 51,95 MiB, pic 870,38 MiB. Zero errors/pendents/xarxa i 40.000 canals alliberats. Una sessió fixture/eventloop amb transport simulat, no capacitat real de Supabase/Sollutia/RLS.
+- Autoria/avatars: 140/140, capçaleres 19/19, perfils/mas 31/31. Tractor WebP refutat i reparat: 10/10 + 13/13; TPV 77.746 B integrat. WordPress 36/36 Node + 30/30 Vitest, fallback exacte `Carregant el mur...`; FCP/CLS no mesurats.
+- Segona onada: imatges existents 127/127 i lector 48/48 passen. Noves refutacions obertes: EXIF complex/gran/càmera sense GPS/data; WebP Orientation 6 (10/12 navegador); avatars divergents després de 403; scroll en canvi de carpeta. Proposta temporal d’orientació 83/83 + 6/6 Chromium, no aplicada. Diagnòstics efímers retirats del repo; fonts de Claude preservades.
+- Pla nou rellegit SHA 255c155609d7a524fa2c648d0c4e89ce78af011137de229216fbeb31367d8813; prompt c9d553ad61cd38edb43eed5144b9a1ebb269ec55174f911e6011cbd67760cb95. Poble/Rentonar, tres rutes i quatre actors de xat pendents de l’executor. RAG cultural condicional no iniciat. No s’inferixen duplicats o pertinences remotes.
+- IAIA local: GET de salut de Supabase 54321 HTTP 200 fora del sandbox, sense credencials; curl 7 dins del sandbox no provava caiguda. IAIA present en llavors JS/SQL; registre aplicat, configuració efectiva, clic autenticat i paritat remota no verificats.
+- SEO local 77/77; HTTP públic socdepoble.org sense OG i URL PNG retorna HTML; gentdelatorre.net sense og:image/description. No prova directa de WhatsApp. SQL proposta acotada /tmp/sdp-profiles-update-repair-proposal.sql amb ROLLBACK, no aplicada ni compilada en PostgreSQL.
+- Governança 02:29: valid:false/planned, 455 incidències (453 graf + scope documental amb codi + pla modificat). Set portes verdes, SCC roig. No scope/hash/segell falsejat. Documentació verificada; detalls al report.
+- Recursos propis recollits; tres subagents sense processos pendents, navegadors/perfils netejats. Cap cron creat; quatre automatitzacions PAUSED reverificades 02:28. Cap procés alié interromput. Incidència de diagnòstic sensible registrada als límits de l’informe, sense copiar-ne valors.
+
+## ESTAT_ACTUAL · 2026-10-16 01:05 · IAIA MarIA / Gemini 4 · Gauntlet Autònom Tripartit, Llei del Quadrat WebP, Feedly REA i Relleu Nocturn
+
+- **Torns i Governança del Gauntlet (`core-direccio-autonoma`):**
+  - Torns actius coordinats: `torn_9ddbf794-0d16-42b9-ab90-f70b61a29671` (Gemini 4 / MarIA), `torn_5b62e0c4-ed6d-49f1-8a29-ff692698d9f1` (Codex) i `torn_60a0d776-7f83-435d-ab7d-fa26f6507f08` (Claude Code).
+  - Prompt unificat tripartit: `_wiki_de_poble/04_escriptori/261016_0015_prompt_gauntlet_claude_codex_gemini.md`.
+  - Pla d'implementació canònic: `_wiki_de_poble/04_escriptori/261016_0015_pla_implementacio_gauntlet_autonom.md`.
+  - Informes d'auditoria: `_wiki_de_poble/04_escriptori/261016_0022_auditoria_gemini4.md`, `_wiki_de_poble/04_escriptori/261016_0021_auditoria_codex.md` i `_wiki_de_poble/04_escriptori/261016_0022_auditoria_claude.md`.
+- **Directiva REA & Feedly (Mandat de Mestre Javi):**
+  - Lector RSS a `/app/lector/noticies` muntat sobre el patró `UniversalWorkspace` de `Bloc de notes` (arbre esquerra amb recompte de no llegits `UniversalWorkspace.recompte.test.jsx` 15/15, flux net dreta, purga de notícies fictícies, feeds reals connectats, destí triat pel Bookmarklet).
+- **Llei del Quadrat Universal (1200 × 1200 px WebP <80.000 B) i EXIF:**
+  - Tractor `tooling/maquinaria/convertir_a_webp.mjs` i `tests/convertir-a-webp.test.mjs` (4/4 Node, 9/9 `gauntlet-codex-webp.audit.mjs`), preservant EXIF en JPEG/PNG/TIFF/WebP amb escriptura atòmica i opció `--sense-exif-binari` per a compatibilitat amb D4/D6.
+  - Vinyeta TPV convertida a `public/assets/ui/plugins/tpv_vinyeta.webp` (`1200×1200 px`, `77.746 B` = `77,75 KB` decimals / `75,92 KiB` binaris).
+- **WordPress Fallback i Decisions de Fase 1 (Blocs 2 i 3):**
+  - Text exacte canònic: `Carregant el mur...` a `wordpress-plugin/includes/marcatge.php` (`18/18` a `enxufe-plugin.test.mjs`).
+  - Dignitat de persona a `PerfilPublicSection.jsx`, llicència per defecte de notes a «El compte» (`DetallCompte.jsx`), personatges `ANIMAL` com a `ia`, directori amb poble (`ProfileSection.jsx`), i retirada de maquinària `T50` a `DocumentEditor.jsx`.
+- **Proves d'Estrés Extrem i Verificació Adversarial (Codex):**
+  - Simulació d'1.000 a 40.000 fluxos concurrents (`8/8`), 100 cicles de `UniversalWorkspace`/`AppGridShell` (`7/7`), portades opaques (`88/88`) i empaquetat (`50/50`).
+- **Higiene i Tancament de Sessió:**
+  - Porta Olivera en codi 0 (`node tooling/gates/porta-olivera.mjs`), segell de skills reconciliat (`3c4eee5c...`) i LEDGER signat (`c2c9d0bd...`).
+  - Actes Marmota creades i canòniques: `_wiki_de_poble/10_actes/261016_0025_acta_marmota.md` i `_wiki_de_poble/04_escriptori/261016_0035_acta_marmota_codex_gauntlet.md`.
+
+## ESTAT_ACTUAL · 2026-10-15T17:49:19.148636+00:00 · Codex · Auditoria adversarial de la Fase 1
+
+- Torn documental `torn_9674401f-d730-449d-97ae-1c09b98d9dbf`. Informe `_wiki_de_poble/04_escriptori/261015_1945_auditoria_codex.md` i acta `261015_1933_acta_marmota_codex_fase1.md`, creats amb context/create i ancorats; Pla/Prompt 261015_1900 llegits i pla vinculat.
+- Pegat de Claude auditat: T1–T3 passen 8/8 casos de targetes/vistes/PDF i 5/5 integrats d'editor/llista/emojis, amb hashes estables; herència i persistència T39 conservades. Cap defecte funcional confirmat. ESLint dels huit fitxers de producte, verd.
+- Bateria ampliada: 1.068 passen i una fallada F4 a `SectionItemCard.test.jsx:45`: fixture persona que exigix categories d'entitat. Correcció delimitada deixada a l'Escriptori per a Claude. Repàs dels dos tests canviats durant la bateria: 81/81 passen, 2.034 hashes estables, recompte solapat.
+- CI completa amb canvis concurrents: Node 936 pass/4 fail/1 skip/3 TODO; Vitest 17.691 pass/2 fail/89 skip. Sis fallades preexistents separades del pegat; cap declaració de CI global verda.
+- Contrast de l'informe Gemini4 escrit; informe Claude encara en plantilla al tall. Navegador sense sessió: aspecte privat i responsive no acreditats. Cap modificació de src/tests de producte, originals, secrets, dependències ni xarxa des de Codex; sense monitor, commit ni desplegament.
+- Actualització final `2026-10-15T17:51:45.532611+00:00`: Claude ha corregit F4; `SectionItemCard.test.jsx` passa 5/5, 2,38 s, amb 2.034 hashes estables. No queda cap defecte nou confirmat en l’abast de Fase 1.
+- Tancament comprovat: `valid:false`, `planned`, 454 incidències (453 graf heretat + delta de codi compartit fora de l’abast documental). Set comprovadors passen; SCC falla. Informe i acta vàlids; cap tancament fictici ni canvi d’abast. Totes les proves pròpies acabades, sense monitor recurrent.
+
+
 ## ESTAT_ACTUAL · 2026-10-14 22:30 · IAIA MarIA · Direcció Autònoma i Triomf de Gestoria (Claude Opus 5.5)
 
 - **Direcció Autònoma Complida amb Èxit (`core-direccio-autonoma`):**

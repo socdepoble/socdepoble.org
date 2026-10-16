@@ -2,7 +2,9 @@
    (data/sectionContent.js): només l'usaven SECTION_ITEMS,
    SECTION_ITEM_LOOKUPS, getSectionItems i findSectionItem, i cap pantalla,
    eina ni prova no els cridava. La llavor arriba a l'app per appSeed.js. */
-import { ENTITAT_PILOT_ID, ENTITAT_PILOT_SLUG, ENTITATS_SEED } from '../data/identitatsSeed.js';
+import {
+  CLAUS_FUNDACIONALS, ENTITAT_PILOT_ID, ENTITAT_PILOT_SLUG, ENTITATS_SEED, clauFundacional
+} from '../data/identitatsSeed.js';
 import {
   esRutaInterna, objecteDePagina, rutaConnectarObjecte, rutaXatDePagina, TIPUS_OBJECTE, tipusDeSeccio
 } from './objecteConnectable.js';
@@ -55,6 +57,22 @@ export const rutaDePerfil = (tipus, id) => {
   if (tipus === 'ia') return `/perfil/${clau}`;
   return `/gent/${clau}`;
 };
+
+/* Gauntlet 261016 (Bloc 3.5.1; ordre del Mestre) · Les rutes canòniques netes
+   de les tres identitats que controla el Mestre: /javillinares (la persona),
+   /socdepoble (l'organització i portal central) i /rentonar (el grup de
+   treball de l'associació ecologista), cadascuna amb el slug declarat de la
+   seua identitat (CLAUS_FUNDACIONALS, identitatsSeed.js). Són rutes de primer
+   nivell (App.jsx · ActorRoutes) que obrin el perfil públic de sempre
+   (PerfilPublicSection): cap component nou. Cap no és una pàgina coneguda
+   (PAGE_ROUTE_MAP) ni el primer tram d'una altra ruta: ho vigila
+   navigation.canoniques.test.js. Les rutes d'abans (/gent/:id, /empresa/:id,
+   /grup/:id i qualsevol àlies) obrin la mateixa fitxa: la canònica és
+   l'adreça neta, la que declara el SEO. */
+export const RUTES_CANONIQUES = Object.freeze(Object.fromEntries(CLAUS_FUNDACIONALS.map((clau) => [clau, `/${clau}`])));
+
+/** La ruta canònica neta d'un perfil públic ({ tipus, id, slug }) d'una de les tres identitats del Mestre, o null. */
+export const rutaCanonicaDePerfil = (perfil) => RUTES_CANONIQUES[clauFundacional(perfil)] || null;
 
 /** Qui signa una publicació del Mur o del Mercat: { tipus, id } o null. */
 export function autorDe(item) {

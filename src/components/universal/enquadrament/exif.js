@@ -1,6 +1,25 @@
 /**
- * exif.js — Lector d'EXIF propi i mínim per a JPEG (Onada 4, T3a; ADR
- * multimèdia §3.1). Sense dependències i sense DOM: es prova en Node.
+ * exif.js — Lector d'EXIF propi i mínim per a JPEG, PNG i WebP (Onada 4,
+ * T3a; ADR multimèdia §3.1). Sense dependències (només limits.js) i sense
+ * DOM: es prova en Node.
+ *
+ * Gauntlet 261016 (P2 de Codex, 02:04:33) · On és el bloc TIFF de l'EXIF:
+ *   · JPEG: el primer APP1 «Exif» abans de la imatge (SOS).
+ *   · PNG: el tros «eXIf» (el primer tros ha de ser l'IHDR; IEND tanca).
+ *   · WebP: el tros «EXIF» del RIFF (sol anar darrere de la imatge).
+ *   En PNG i WebP el TIFF va tal qual; si porta «Exif\0\0» al davant (com
+ *   l'APP1), també es llig. Són les regles d'extreuTiff (exifIncrustat.js):
+ *   l'EXIF que la pujada hi torna a posar, amb l'orientació a 1, és el mateix
+ *   que este lector ha llegit per a girar la foto. Els CRC del PNG són feina
+ *   del descodificador del navegador, no d'este lector.
+ * El format es reconeix pels bytes, no pel MIME, amb la regla de formatImatge
+ * (netejaMetadades.js, que importa este mòdul i per això no s'hi pot
+ * importar). D'un File o Blob es llig el prefix de sempre (MAX_BYTES_EXIF) i,
+ * en PNG i WebP, més enllà del prefix, només les capçaleres de 8 bytes dels
+ * trossos i el tros de l'EXIF: els píxels que hi ha entremig no es carreguen.
+ * Només si calen més de MAX_SEGMENTS capçaleres fora del prefix (un PNG amb
+ * molts IDAT davant de l'eXIf) es llig el fitxer sencer, una vegada i fins a
+ * PES_MAXIM_ENTRADA, com fa extreuTiff.
  *
  * Llig NOMÉS el que el retallador necessita:
  *   · IFD0 › Orientation (0x0112).
@@ -8,18 +27,40 @@
  *   · GPS IFD (0x8825) › LatitudeRef, Latitude, LongitudeRef, Longitude,
  *     AltitudeRef i Altitude (1 a 6).
  *
- * LLEI: no llança mai. Un fitxer truncat, un desplaçament fora del buffer, un
- * IFD que apunta a si mateix o un nombre d'entrades absurd tornen «sense
- * dades». Els límits són durs: cap bucle depén del que diga el fitxer.
+ * LLEI: no llança mai. Un fitxer truncat, un desplaçament fora del buffer (o
+ * del tros), un IFD que apunta a si mateix o un nombre d'entrades absurd
+ * tornen «sense dades». Els límits són durs: cap bucle depén del que diga el
+ * fitxer.
  *
  * No escriu res: el fitxer que ix del retallador és un canvas nou i no porta
  * cap EXIF (ADR D4). Les coordenades viatgen com a camps (D6).
  */
+import { PES_MAXIM_ENTRADA } from './limits.js';
 
-/** El que es llig del principi del fitxer: l'APP1 ha d'anar abans de la imatge. */
+/**
+ * El que es llig del principi del fitxer (l'APP1 d'un JPEG ha d'anar abans de
+ * la imatge) i, en PNG i WebP, la mida màxima del tros de l'EXIF.
+ */
 export const MAX_BYTES_EXIF = 256 * 1024;
-/** Segments JPEG que es miren abans de rendir-se. */
+/**
+ * Segments JPEG que es miren abans de rendir-se; d'un File, també les
+ * capçaleres de PNG i WebP que es llegixen d'una en una fora del prefix.
+ */
 const MAX_SEGMENTS = 64;
+/**
+ * Trossos PNG o WebP que es recorren com a molt: cada un avança 8 bytes o
+ * més, i n'hi caben més dels que porta un PNG de PES_MAXIM_ENTRADA amb IDAT
+ * de 512 bytes.
+ */
+const MAX_TROSSOS = 65536;
+
+const FORMAT_JPEG = 'image/jpeg';
+const FORMAT_PNG = 'image/png';
+const FORMAT_WEBP = 'image/webp';
+const TROS_IHDR = 0x49484452;
+const TROS_IEND = 0x49454e44;
+const TROS_EXIF_PNG = 0x65584966; // «eXIf»
+const TROS_EXIF_WEBP = 0x45584946; // «EXIF»
 /** Entrades per IFD: un IFD0 real en porta poques desenes. */
 const MAX_ENTRADES_IFD = 512;
 /** Caràcters d'un camp ASCII de data («AAAA:MM:DD hh:mm:ss» + NUL). */
@@ -211,9 +252,20 @@ function llegixTiff(v, inici, mida, { ambGps, ambData }) {
 
 const esCapcaleraExif = (v, pos) => v.getUint32(pos) === 0x45786966 && v.getUint16(pos + 4) === 0; // «Exif\0\0»
 
+/* El format pels bytes del principi (la regla de formatImatge). */
+function formatDe(v) {
+  if (v.byteLength < 12) return null;
+  if (v.getUint16(0) === 0xffd8 && v.getUint8(2) === 0xff) return FORMAT_JPEG;
+  if (v.getUint32(0) === 0x89504e47 && v.getUint32(4) === 0x0d0a1a0a) return FORMAT_PNG;
+  if (v.getUint32(0) === 0x52494646 && v.getUint32(8) === 0x57454250) return FORMAT_WEBP; // RIFF … WEBP
+  return null;
+}
+
+const esJpeg = (v) => v.byteLength >= 2 && v.getUint16(0) === 0xffd8;
+
 /* Recorre els segments del JPEG fins al primer APP1 «Exif». Torna
    { inici, mida } del TIFF o null. Para en SOS/EOI: l'EXIF va abans. */
-function trobaTiff(v) {
+function trobaTiffJpeg(v) {
   const limit = Math.min(v.byteLength, MAX_BYTES_EXIF);
   if (limit < 4 || v.getUint16(0) !== 0xffd8) return null;
   let pos = 2;
@@ -234,9 +286,57 @@ function trobaTiff(v) {
   return null;
 }
 
+/* Gauntlet 261016 · El recorregut dels trossos d'un PNG o d'un WebP, escrit
+   UNA vegada per als dos lectors (un buffer sencer o un File per trossos):
+   demana els bytes que necessita (yield [pos, n]) i rep una DataView d'eixos
+   n bytes, o null si no hi són. Torna { inici, mida } del tros de l'EXIF o
+   null. El contingut dels altres trossos (els píxels) no es demana mai: se
+   salta movent el cursor. `capcalera` són els 12 primers bytes i `total`, la
+   mida del fitxer; el RIFF no en pot passar. */
+function* cercaTrosExif(format, capcalera, total) {
+  const png = format === FORMAT_PNG;
+  const fi = png ? total : 8 + capcalera.getUint32(4, true);
+  if (fi < 12 || fi > total) return null;
+  const minim = png ? 12 : 8; // longitud i tipus; en PNG, també el CRC
+  let pos = png ? 8 : 12;
+  for (let n = 0; n < MAX_TROSSOS && pos + minim <= fi; n += 1) {
+    const c = yield [pos, 8];
+    if (!c) return null;
+    const mida = c.getUint32(png ? 0 : 4, !png);
+    const tipus = c.getUint32(png ? 4 : 0);
+    const inici = pos + 8;
+    if (inici + mida + (png ? 4 : 0) > fi) return null; // truncat, o una longitud absurda
+    if (png && (n === 0 ? tipus !== TROS_IHDR : tipus === TROS_IEND)) return null;
+    if (tipus === (png ? TROS_EXIF_PNG : TROS_EXIF_WEBP)) return mida <= MAX_BYTES_EXIF ? { inici, mida } : null;
+    pos = inici + mida + (png ? 4 : mida & 1); // el CRC del PNG; el farciment dels trossos senars del RIFF
+  }
+  return null;
+}
+
+/* El TIFF d'un tros, sense «Exif\0\0» al davant si n'hi ha. */
+function tiffDelTros(v, inici, mida) {
+  const t = mida >= 6 && esCapcaleraExif(v, inici) ? { inici: inici + 6, mida: mida - 6 } : { inici, mida };
+  return t.mida >= 8 ? t : null;
+}
+
+/* On és el TIFF dins d'un buffer sencer: { inici, mida } o null. */
+function trobaTiff(v) {
+  if (esJpeg(v)) return trobaTiffJpeg(v);
+  const format = formatDe(v);
+  if (format !== FORMAT_PNG && format !== FORMAT_WEBP) return null;
+  const cerca = cercaTrosExif(format, v, v.byteLength);
+  let pas = cerca.next();
+  while (!pas.done) {
+    const [pos, n] = pas.value;
+    pas = cerca.next(pos + n <= v.byteLength ? new DataView(v.buffer, v.byteOffset + pos, n) : null);
+  }
+  return pas.value && tiffDelTros(v, pas.value.inici, pas.value.mida);
+}
+
 /**
- * Llig orientació, GPS i data de captura d'un JPEG (ArrayBuffer o vista).
- * `ambGps: false` no toca el bloc GPS (l'orientació sola, per a dibuixar).
+ * Llig orientació, GPS i data de captura d'un JPEG, un PNG o un WebP
+ * (ArrayBuffer o vista). `ambGps: false` no toca el bloc GPS (l'orientació
+ * sola, per a dibuixar).
  * Torna sempre { orientacio: 1..8|null, gps: { lat, lng, altitud|null }|null, dataCaptura: string|null }.
  */
 export function llegixExif(buffer, { ambGps = true, ambData = true } = {}) {
@@ -251,7 +351,10 @@ export function llegixExif(buffer, { ambGps = true, ambData = true } = {}) {
   }
 }
 
-/** Hi ha cap segment APP1 «Exif» abans de la imatge? (per a comprovar que el que ix en va net) */
+/**
+ * Porta cap EXIF que es llegiria (l'APP1 «Exif» d'un JPEG abans de la imatge,
+ * l'eXIf d'un PNG o l'EXIF d'un WebP)? Per a comprovar que el que ix en va net.
+ */
 export function teExif(buffer) {
   try {
     const v = vistaDe(buffer);
@@ -273,15 +376,91 @@ function bytesDe(blob) {
   });
 }
 
+/* El que llig cercaTrosExif d'un File: els n bytes de `pos`, de la finestra
+   ja llegida si hi són (el prefix o, després, el fitxer sencer); si no, un
+   blob.slice d'eixos n bytes i prou. A la lectura MAX_SEGMENTS + 1 fora del
+   prefix es llig el fitxer sencer (fins a PES_MAXIM_ENTRADA), UNA vegada.
+   null si el fitxer no en té tants. */
+function llegidorDe(fitxer, prefix) {
+  let finestra = prefix;
+  let lectures = 0;
+  return async (pos, n) => {
+    if (pos + n > finestra.byteLength && finestra.byteLength < fitxer.size) {
+      if (pos + n > fitxer.size) return null;
+      lectures += 1;
+      if (lectures <= MAX_SEGMENTS) {
+        const v = new DataView(await bytesDe(fitxer.slice(pos, pos + n)));
+        return v.byteLength === n ? v : null;
+      }
+      if (fitxer.size > PES_MAXIM_ENTRADA) return null;
+      finestra = new DataView(await bytesDe(fitxer));
+    }
+    return pos + n <= finestra.byteLength ? new DataView(finestra.buffer, finestra.byteOffset + pos, n) : null;
+  };
+}
+
+/* On és el TIFF d'un File o Blob: el prefix de MAX_BYTES_EXIF (el mateix de
+   sempre en JPEG) i, en PNG i WebP, el recorregut de cercaTrosExif amb el
+   llegidor de dalt. Torna { format, v, tiff }: la vista on és el TIFF i
+   { inici, mida } dins d'ella, o tiff null. */
+async function localitzaTiff(fitxer) {
+  const prefix = new DataView(await bytesDe(fitxer.slice(0, MAX_BYTES_EXIF)));
+  const format = formatDe(prefix);
+  if (esJpeg(prefix)) return { format, v: prefix, tiff: trobaTiffJpeg(prefix) };
+  if (format !== FORMAT_PNG && format !== FORMAT_WEBP) return { format, v: prefix, tiff: null };
+  const llig = llegidorDe(fitxer, prefix);
+  const cerca = cercaTrosExif(format, prefix, fitxer.size);
+  let pas = cerca.next();
+  while (!pas.done) pas = cerca.next(await llig(...pas.value));
+  if (!pas.value) return { format, v: prefix, tiff: null };
+  const tros = await llig(pas.value.inici, pas.value.mida);
+  return { format, v: tros, tiff: tros && tiffDelTros(tros, 0, tros.byteLength) };
+}
+
 /**
- * El mateix que llegixExif, d'un File o Blob: només en llig els primers
- * MAX_BYTES_EXIF (blob.slice). Mai rebutja: si no es pot llegir, sense dades.
+ * El mateix que llegixExif, d'un File o Blob: el prefix de MAX_BYTES_EXIF
+ * (blob.slice) i, en PNG i WebP, les capçaleres dels trossos i el de l'EXIF,
+ * encara que vaja darrere dels píxels. Mai rebutja: si no es pot llegir,
+ * sense dades.
  */
 export async function llegixMetadadesImatge(fitxer, opcions) {
   try {
     if (typeof Blob === 'undefined' || !(fitxer instanceof Blob)) return senseDades();
-    return llegixExif(await bytesDe(fitxer.slice(0, MAX_BYTES_EXIF)), opcions);
+    const { ambGps = true, ambData = true } = opcions || {};
+    const { v, tiff } = await localitzaTiff(fitxer);
+    return tiff ? llegixTiff(v, tiff.inici, tiff.mida, { ambGps, ambData }) : senseDades();
   } catch {
     return senseDades();
   }
+}
+
+const SENSE_ORIENTACIO = Object.freeze({ format: null, orientacio: null });
+
+async function llegixOrientacio(fitxer) {
+  try {
+    const { format, v, tiff } = await localitzaTiff(fitxer);
+    const { orientacio } = tiff ? llegixTiff(v, tiff.inici, tiff.mida, { ambGps: false, ambData: false }) : senseDades();
+    return Object.freeze({ format, orientacio });
+  } catch {
+    return SENSE_ORIENTACIO;
+  }
+}
+
+/* Una lectura per fitxer: el retallador i cada intent de compressImage del
+   pressupost (fins a 12, pujadaImatge.js) pregunten pel mateix. Es guarda
+   la resposta, mai els bytes. */
+const orientacions = new WeakMap();
+
+/**
+ * Gauntlet 261016 (P2 de Codex) · El format dels bytes ('image/jpeg',
+ * 'image/png', 'image/webp' o null) i l'orientació EXIF (1..8 o null) d'un
+ * File o Blob, en UNA lectura (la de llegixMetadadesImatge, sense el GPS ni la
+ * data) i una vegada per fitxer. És el que necessita orientacioPendent
+ * (orientacio.js) per a decidir, pel format, si el navegador ja l'ha posada
+ * dreta. Torna un objecte congelat. Mai rebutja.
+ */
+export function llegixOrientacioImatge(fitxer) {
+  if (typeof Blob === 'undefined' || !(fitxer instanceof Blob)) return Promise.resolve(SENSE_ORIENTACIO);
+  if (!orientacions.has(fitxer)) orientacions.set(fitxer, llegixOrientacio(fitxer));
+  return orientacions.get(fitxer);
 }

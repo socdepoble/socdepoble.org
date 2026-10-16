@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-10-14T03:02:00.636Z",
-  "hash": "678625948627a5de116da9e03dd6784ae234e0296ab03964a1cbe5796adfc108",
+  "timestamp": "2026-10-15T23:07:27.399Z",
+  "hash": "5e7339dbf91865606a659c5abcf5e62a719ab487c410d7e04982a7a9f4bbebf7",
   "filesCount": 37,
   "manifest": {
     ".agents/skills/00_INDEX_SKILLS.md": "c16f18485b40a29b74281ceb2afc74bf216a05dc583c888d0e18ef82043219bb",
@@ -8,9 +8,9 @@
     ".agents/skills/core-comprensio-reflexiva/SKILL.md": "9c1c70142662cdc6ced8fdd4486498c0771662b162d6d79c0e0ec7ba50b73bcc",
     ".agents/skills/core-consell-i-colmena/SKILL.md": "002164a7d50dfe9fe819696b804c5fe68a114028dc39d2a6abdea4b3ef08db46",
     ".agents/skills/core-context-panic/SKILL.md": "19983a978d033469228fb7d426ae66fa60496d058ae557833d861c4836104262",
-    ".agents/skills/core-direccio-autonoma/SKILL.md": "8833d0cf3e810ec5efed3bb890c9735a880ccadffb339d5b683cb6a348662b9f",
+    ".agents/skills/core-direccio-autonoma/SKILL.md": "0e4adce0a08394d26e79cb71c5956cc08d42f9f541154233a4204a18ab08fa77",
     ".agents/skills/core-edicio-segura/SKILL.md": "11861790753a4994f570a688476fddbd4a2c8f250c47c1412e0e11bea314ed36",
-    ".agents/skills/core-empaquetat-wp/SKILL.md": "3d8d2fbba99ed7a62cd0526e74533272dac5b48e36862105b7d33f59b28c6bbb",
+    ".agents/skills/core-empaquetat-wp/SKILL.md": "c83172417abecf56bd7ba912c59a87e78fb70068f99e821b738f3facf640cd21",
     ".agents/skills/core-estrategia-ia/SKILL.md": "315e06249d7170eca53aba68dc43e4e206cf1f963c5ca32b65f64660a7e171f0",
     ".agents/skills/core-higiene-escriptori/SKILL.md": "b66fd0e5f6019d8900feea3725c47d0be48d59f565021cc28db6c484b6305b6d",
     ".agents/skills/core-identitat-visual/SKILL.md": "ab7144c193de2cf9f1b810fa91d30ea86e774407b50d4042eacd799bec2f2473",
@@ -41,5 +41,5 @@
     ".agents/skills/wiki-documentacio-i-reflex/SKILL.md": "fcbdfcfd88c759b3a7245f29514573437a3e2bb1373af8ec5f711788e6669d65",
     ".agents/skills/wiki-propagar-veritat/SKILL.md": "7e13f737b09e033aa4588fb9bd07840f2e865ccf8a40b9a53261844003397711"
   },
-  "transaction": "242802ee-d097-48dc-9b9a-6d673cc81a02"
+  "transaction": "2e71baa6-e3a4-4ec8-adb9-ba763374ed3d"
 }

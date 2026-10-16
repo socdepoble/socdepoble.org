@@ -9,16 +9,31 @@
  *     les dates, els filtres i l'estat de la persona;
  *   · el port (fontNoticies.js): per on entren les notícies (Model B);
  *   · el magatzem local (magatzem.js): llegits, per a després, fonts seguides;
- *   · la taula de rutes (rutes.js) sobre ClosaAplicacio, i les columnes de
- *     vistes/ compostes amb peces de Pedra Seca i de l'esquelet comú.
+ *   · les rutes (rutes.js): les notícies sobre l'espai de treball del Bloc de
+ *     notes (vistes/Noticies.jsx) i la gestió de fonts sobre ClosaAplicacio,
+ *     amb les columnes de vistes/ compostes amb peces de Pedra Seca i de
+ *     l'esquelet comú.
  * Cap CSS, cap classe pròpia, cap xarxa.
+ * Bloc 0 del Gauntlet (ordre del Mestre, 261016, prompt 261016_0015) · «El
+ * Lector s'ha de muntar directament sobre el patró UniversalWorkspace de Bloc
+ * de notes»: /noticies… és l'espai de treball (arbre de carpetes i fonts a
+ * l'esquerra, llista al mig, lectura a la dreta), per la façana de l'espai i
+ * la porta 'workspace' del nucli 1.2.0. L'única ClosaAplicacio es queda per a
+ * /fonts, que l'ordre no toca.
  *
  * D'on ixen les notícies: la prop `font` (un port fet amb creaFontNoticies)
- * o, si no n'hi ha, la llavor sintètica, que només hi és en desenvolupament o
- * amb el seu literal propi (VITE_SDP_LECTOR_LLAVOR=1, el patró de
- * bar/llavors). Sense port, l'app ho diu i no obri ni el magatzem: cap notícia
- * inventada. L'adaptador de producció (el connector de l'amfitrió, que fa de
- * proxy) entrarà per la plataforma o per l'amfitrió, no per ací.
+ * o, si no n'hi ha, la llavor sintètica, que només hi és amb el seu literal
+ * propi (VITE_SDP_LECTOR_LLAVOR=1). Sense port, l'app ho diu i no obri ni el
+ * magatzem: cap notícia inventada. L'adaptador de producció (el connector de
+ * l'amfitrió, que fa de proxy) entrarà per la plataforma o per l'amfitrió, no
+ * per ací.
+ * Ordre del Mestre, 261016 (prompt 261016_0015, Bloc 0, «Purga de Mocks») ·
+ * Les notícies fictícies no poden eixir en cap pantalla de desenvolupament:
+ * abans la llavor s'encenia també amb el servidor de desenvolupament
+ * (import.meta.env.DEV) i /app/lector/noticies ensenyava titulars inventats
+ * com si foren del poble. Ara cal el literal explícit, i sense ell el Lector
+ * de desenvolupament és el de producció: l'estat buit de davall. La llavor
+ * continua sent la dada sintètica de les proves (__fixtures__/muntaLector.jsx).
  * Peça C (ordre del Mestre, 261007, prompt 261007_1628) · Correcció d'esta
  * capçalera: VITE_SDP_APP_LECTOR=1 només la compila al paquet de producció
  * (`carrega`, manifest.js); no l'obri. El manifest porta entorn
@@ -28,8 +43,9 @@
  * cap dels dos no hi és.
  *
  * Un enllaç a /noticies?article=<id> es canonitza (replace) a
- * /noticies/hui?article=<id>: en pantalla estreta, la ruta de les carpetes
- * taparia el lector.
+ * /noticies/hui?article=<id>, la llista de «Hui» de l'enllaç compartit. I
+ * l'enllaç vell a les fonts d'una carpeta en estret, /noticies/<carpeta>/fonts
+ * (les columnes del 261004), a la carpeta: les fonts ja són a l'arbre.
  *
  * `magatzem`, `font` i `ara` només els passen les proves; RutaApps munta
  * l'app sense props i llavors es fa servir el navegador de veres.
@@ -49,16 +65,18 @@ import { creaFontsPersonals, destinacioDe } from './fontsPersonals.js';
 import { creaAdaptadorLlavor } from './llavor/fontLlavor.js';
 import { creaMagatzemLector } from './magatzem.js';
 import { HUI } from './nucli/index.js';
-import { RUTES, titolsDe } from './rutes.js';
+import { CAMI_FONTS_VELL, CAMI_TOTES, RUTES, RUTES_NOTICIES, TITOLS } from './rutes.js';
 import { useFontsPersonals } from './useFontsPersonals.js';
 import { useLector } from './useLector.js';
 import { useNoticies } from './useNoticies.js';
 import { ContextLector } from './vistes/context.js';
 import { NOTICIES } from './vistes/navegacio.js';
+import { EspaiNoticies } from './vistes/Noticies.jsx';
 
 const ARA_DEL_NAVEGADOR = () => Date.now();
-/* La llavor sintètica: en desenvolupament o amb el seu literal (cap altre camí). */
-const LLAVOR_ACTIVA = import.meta.env.DEV || import.meta.env.VITE_SDP_LECTOR_LLAVOR === '1';
+/* La llavor sintètica: només amb el seu literal (cap altre camí, tampoc el
+   servidor de desenvolupament; ordre del Mestre, 261016). */
+const LLAVOR_ACTIVA = import.meta.env.VITE_SDP_LECTOR_LLAVOR === '1';
 /* El port de la llavor, o null fora del seu literal. El munta l'app i, per a
    les categories del poble, la destinació d'enllaços (una sola vegada). */
 const fontDeLaLlavor = (rellotge) => (LLAVOR_ACTIVA ? creaFontNoticies(creaAdaptadorLlavor({ ara: rellotge() })) : null);
@@ -69,14 +87,31 @@ const fontDeLaLlavor = (rellotge) => (LLAVOR_ACTIVA ? creaFontNoticies(creaAdapt
  * categories del poble. Hui el port és la llavor; el de l'amfitrió, quan
  * arribe, haurà d'entrar també ací. Crear-la no obri res: el magatzem s'obri
  * en cada operació i el port, la primera vegada que es demanen les categories.
- * Amb null (l'app encesa en producció sense port), la plataforma no oferix
- * la tria al Snippet Curador (correcció SN-R1): cap targeta morta.
+ * Amb null (l'app encesa sense port), la plataforma no oferix la tria al
+ * Snippet Curador (correcció SN-R1): cap targeta morta.
+ * Ordre del Mestre, 261016 (Purga de Mocks) · Des d'ara també en
+ * desenvolupament sense el literal de la llavor: el Curador hi oferix només
+ * el Bloc. No es desacobla del port: una font personal desada sense port
+ * aniria a la gestió de fonts, que sense port és l'estat buit, i no es veuria
+ * enlloc (la targeta morta que SN-R1 prohibix).
  */
 export const destinacioEnllac = LLAVOR_ACTIVA
   ? destinacioDe(creaFontsPersonals({ obriMagatzem: () => creaMagatzemLector(), font: () => fontDeLaLlavor(ARA_DEL_NAVEGADOR) }))
   : null;
 
-/* L'app amb un port: el magatzem, les notícies i la closca. */
+/* El camí canònic d'un enllaç de notícies que no ho és, o null (replace: l'historial no guanya
+   cap pas):
+     /noticies?article=x       → /noticies/hui?article=x
+     /noticies/<carpeta>/fonts → /noticies/<carpeta>, amb la mateixa consulta */
+function canonicDe(coincidencia, search, ruta) {
+  const cami = coincidencia?.ruta.path;
+  if (cami === NOTICIES && new URLSearchParams(search).has('article')) return `${ruta(NOTICIES, HUI)}?${search}`;
+  if (cami !== CAMI_FONTS_VELL) return null;
+  const carpeta = ruta(NOTICIES, coincidencia.params.carpeta);
+  return search ? `${carpeta}?${search}` : carpeta;
+}
+
+/* L'app amb un port: el magatzem, les notícies, l'espai de treball i la closca. */
 function LectorAmbFont({ magatzem: magatzemPropi, font, rellotge }) {
   const [magatzem] = useState(() => magatzemPropi || creaMagatzemLector());
   const lector = useLector(magatzem);
@@ -85,12 +120,9 @@ function LectorAmbFont({ magatzem: magatzemPropi, font, rellotge }) {
   const { ruta } = useApp();
   const navigate = useNavigate();
   const { pathname, search } = useLocation();
-  const coincidencia = useRutaApp(RUTES);
-  const entrada = coincidencia ? coincidencia.ruta.path.split('/')[0] : null;
+  const deNoticies = useRutaApp(RUTES_NOTICIES);
 
-  /* /noticies?article=x → /noticies/hui?article=x (replace: l'historial no guanya cap pas). */
-  const canonic = coincidencia?.ruta.path === NOTICIES && new URLSearchParams(search).has('article')
-    ? `${ruta(NOTICIES, HUI)}?${search}` : null;
+  const canonic = canonicDe(deNoticies, search, ruta);
   useEffect(() => {
     if (canonic) navigate(canonic, { replace: true });
   }, [canonic, navigate]);
@@ -104,10 +136,18 @@ function LectorAmbFont({ magatzem: magatzemPropi, font, rellotge }) {
      avancen fins a una navegació; abans, marcar com a llegit o una
      actualització del port feien avançar la finestra de 24 h. L'instant és el
      mateix per a totes les columnes mentre no es canvia de ruta.
+     Encàrrec F del Gauntlet (261016, P3) · La ruta és el camí, la llista: la
+     consulta ja només porta la notícia oberta (?article=, ?seccio=), des que
+     les notícies són l'espai de treball i ?vista= no hi és. Amb la consulta,
+     obrir una notícia tornava a llegir el rellotge; si la pestanya duia prou
+     temps oberta, la notícia que tocava la persona ja passava de les 24 h,
+     perdia «Hui» i l'espai la portava a la seua categoria (replace), mentre
+     «Hui» s'encongia davall d'ella. Obrir i tancar una notícia no avança
+     l'instant; canviar de llista, sí.
      `clau` és la clau de la memòria per ruta: ningú no la llig, només lliga
-     el camí i la consulta a les dependències (exhaustive-deps no admet una
-     dependència que el càlcul no fa servir). */
-  const instant = useMemo(() => ({ clau: `${pathname}${search}`, ara: rellotge() }), [rellotge, pathname, search]);
+     el camí a les dependències (exhaustive-deps no admet una dependència que
+     el càlcul no fa servir). */
+  const instant = useMemo(() => ({ clau: pathname, ara: rellotge() }), [rellotge, pathname]);
   const { ara } = instant;
   /* El fus de qui llig, en minuts respecte d'UTC (+120 a l'estiu de València). */
   const desfas = -new Date(ara).getTimezoneOffset();
@@ -115,9 +155,13 @@ function LectorAmbFont({ magatzem: magatzemPropi, font, rellotge }) {
     [lector, personals, noticies, font, ara, desfas, ruta]);
 
   if (!valor) return <Carregant etiqueta="Obrint el lector…" />;
+  /* Les notícies, l'espai de treball; la resta (les fonts, o una pàgina que no existix, que
+     ClosaAplicacio diu amb l'avís de sempre), la closca. */
   return (
     <ContextLector.Provider value={valor}>
-      <ClosaAplicacio rutes={RUTES} titols={titolsDe(entrada)} />
+      {deNoticies
+        ? <EspaiNoticies params={deNoticies.params} totes={deNoticies.ruta.path === CAMI_TOTES} />
+        : <ClosaAplicacio rutes={RUTES} titols={TITOLS} />}
     </ContextLector.Provider>
   );
 }

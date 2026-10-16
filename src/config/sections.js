@@ -1,4 +1,5 @@
 import { BrainCircuit, FileText, GalleryVerticalEnd, LandPlot, Newspaper, NotebookPen, Palette, Route, ShieldCheck, ShoppingCart, Waves, MessageSquare, Wifi, Settings, UserRound, CalendarDays, Network } from 'lucide-react';
+import { RUTES_CANONIQUES } from './navigation.js';
 
 /*
  * Ordre del Mestre, 261001 · La secció Calendari ('/calendari',
@@ -20,12 +21,17 @@ export const SECTION_ORDER = ['xat', 'mur', 'mercat', 'pobles', 'calendari', 'mu
    T61 (decisió del Mestre, 260928) · el-meu-perfil (i ?organitzacio=…) no és
    filla de Pobles: és l'espai de la identitat activa, s'hi arriba des de la
    barra negra i no des de Pobles, i penjar-la'n encenia Pobles en fals.
-   No la torneu a declarar a cap secció (sections.test.js ho comprova). */
+   No la torneu a declarar a cap secció (sections.test.js ho comprova).
+   Gauntlet 261016 (Bloc 3.5.1) · Les tres rutes canòniques netes
+   (RUTES_CANONIQUES, navigation.js: /javillinares, /socdepoble i /rentonar)
+   obrin la mateixa fitxa pública que /gent/:id, /empresa/:id i /grup/:id:
+   són subrutes de Pobles com elles, i Pobles s'encén igual. Es lligen de la
+   seua font, mai escrites ací. */
 export const SECTIONS = [
   { id: 'xat', path: '/xat', label: 'Xat', shortLabel: 'Xat', icon: MessageSquare, kind: 'xat', subrutes: ['/control-xat'] },
   { id: 'mur', path: '/mur', label: 'Mur', shortLabel: 'Mur', icon: Newspaper, kind: 'mur' },
   { id: 'mercat', path: '/mercat', label: 'Mercat', shortLabel: 'Mercat', icon: ShoppingCart, kind: 'market' },
-  { id: 'pobles', path: '/pobles', label: 'Pobles', shortLabel: 'Pobles', icon: LandPlot, kind: 'pobles', subrutes: ['/poblacio', '/perfil', '/gent', '/empresa', '/ajuntament', '/grup'] },
+  { id: 'pobles', path: '/pobles', label: 'Pobles', shortLabel: 'Pobles', icon: LandPlot, kind: 'pobles', subrutes: ['/poblacio', '/perfil', '/gent', '/empresa', '/ajuntament', '/grup', ...Object.values(RUTES_CANONIQUES)] },
   { id: 'calendari', path: '/calendari', label: 'Calendari', shortLabel: 'Calendari', icon: CalendarDays, kind: 'agenda' },
   { id: 'multimedia', path: '/multimedia', label: 'Multimèdia', shortLabel: 'Media', icon: GalleryVerticalEnd, kind: 'multimedia' },
   { id: 'dispositius', path: '/dispositius', label: 'Dispositius', shortLabel: 'P2P', icon: Wifi, kind: 'infra' },

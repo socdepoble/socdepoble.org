@@ -56,6 +56,39 @@ test('canviar de llicència torna a demanar l’acceptació', () => {
   expect(desar(ui).disabled).toBe(true);
 });
 
+/* Gauntlet 261016 (encàrrec E; revisió adversarial, P3) · A «El compte» no hi
+   ha cap obra: la tria són els drets amb què naixeran les notes noves. El text
+   legal de CC0 i la casella diuen això, i l'acceptació continua sent
+   obligatòria per a desar CC0 com a valor de sèrie. Fora d'«El compte», el
+   text i la casella de sempre. */
+test('261016 · a «El compte», CC0 parla de les notes noves i continua demanant l’acceptació', () => {
+  const CASELLA_COMPTE = 'Tinc els drets necessaris i accepte que les meues notes noves naixquen dedicades a CC0.';
+  for (const [opcio, text, esperat] of [[/Domini públic/, null, 'CC0 1.0'], [/Text lliure personalitzat/, 'Maria', 'Maria · CC0 1.0']]) {
+    const { container, ui, onDesa } = pinta({ ambit: 'compte', valor: 'CC BY 4.0' });
+    fireEvent.click(ui.getByRole('radio', { name: opcio }));
+    if (text) fireEvent.change(ui.getByRole('textbox'), { target: { value: text } });
+    const legal = container.querySelector('.sdp-drets__cc0').textContent;
+    expect(legal).toContain('les teues notes noves naixeran dedicades al domini públic (CC0)');
+    expect(legal).toContain('Esta renúncia és irrevocable en la mesura permesa per la llei.');
+    expect(legal).not.toMatch(/esta obra|la teua obra/);
+    expect(desar(ui).disabled).toBe(true);
+    fireEvent.click(desar(ui));
+    expect(onDesa).not.toHaveBeenCalled();
+    fireEvent.click(ui.getByRole('checkbox', { name: CASELLA_COMPTE }));
+    fireEvent.click(desar(ui));
+    expect(onDesa).toHaveBeenCalledWith(esperat);
+    cleanup();
+  }
+  for (const ambit of ['publicacio', 'perfil', 'neutre']) {
+    const { container, ui } = pinta({ ambit });
+    fireEvent.click(ui.getByRole('radio', { name: /Domini públic/ }));
+    expect(container.querySelector('.sdp-drets__cc0').textContent).toContain('En confirmar esta opció dedicaràs la teua obra al domini públic amb CC0');
+    expect(ui.getByRole('checkbox', { name: 'Tinc els drets necessaris i accepte dedicar esta obra a CC0.' })).toBeTruthy();
+    expect(ui.queryByRole('checkbox', { name: CASELLA_COMPTE })).toBeNull();
+    cleanup();
+  }
+});
+
 test('el text lliure buit no es pot desar; el comptador suma la marca', () => {
   const { ui, onDesa } = pinta();
   fireEvent.click(ui.getByRole('radio', { name: /Text lliure personalitzat/ }));
@@ -301,9 +334,17 @@ test('cada llicència porta el seu exemple de poble i els permisos amb text', ()
   expect(descripcio).toContain('Ús comercial');
 });
 
-test('avís d’herència per àmbit: perfil, publicació (amb i sense llicència de sèrie) i neutre', () => {
+test('avís d’herència per àmbit: perfil, compte, publicació (amb i sense llicència de sèrie) i neutre', () => {
   let vista = pinta({ ambit: 'perfil' });
   expect(vista.ui.getByRole('status').textContent).toContain('Les teues notes noves ho heretaran');
+  cleanup();
+  /* Pla 261016 (Bloc 3.1; ordre del Mestre) · «El compte» de la persona: amb
+     què naixen les notes noves, i que les que ja hi són no canvien. */
+  vista = pinta({ ambit: 'compte' });
+  expect(vista.ui.getByRole('status').textContent).toContain('Les teues notes noves naixen amb estos drets');
+  expect(vista.ui.getByRole('status').textContent)
+    .toContain('Estos són els drets amb què naixen les teues notes noves. Les que ja tens no canvien: cadascuna guarda els seus.');
+  expect(avisHerencia('compte', 'CC BY 4.0')).toEqual(avisHerencia('compte'));
   cleanup();
   vista = pinta({ ambit: 'publicacio', perDefecte: 'CC BY-SA 4.0' });
   expect(vista.ui.getByRole('status').textContent).toContain('«CC BY-SA 4.0»');
@@ -315,9 +356,44 @@ test('avís d’herència per àmbit: perfil, publicació (amb i sense llicènci
   expect(vista.ui.getByRole('status').textContent).toContain(`naixen amb «${LLICENCIA_PER_DEFECTE}»`);
   expect(vista.ui.getByRole('status').textContent).not.toContain('© Sóc de Poble');
   cleanup();
+  /* Directiva de Dignitat Humana (pla 261015_1900) · La fitxa d'una persona
+     ja no tria drets: l'avís de la nota no envia la persona a «la teua fitxa
+     del Perfil». La pista només queda per a l'entitat, que sí que els tria.
+     Pla 261016 (Bloc 3.1) · I la persona sap on es trien els seus: «El
+     compte», abans de la pista de l'entitat (que no canvia). */
+  for (const perDefecte of ['CC BY-SA 4.0', null]) {
+    const { text } = avisHerencia('publicacio', perDefecte);
+    expect(text).not.toMatch(/canvia’ls a la teua fitxa|Si els tries a la teua fitxa/);
+    expect(text).toContain('Si publiques com a entitat, els drets de sèrie de l’entitat es trien a la seua fitxa del Perfil.');
+    expect(text).toContain('Els drets de sèrie de les teues notes es trien a «El compte» del Perfil. Si publiques com a entitat,');
+  }
   vista = pinta({ ambit: 'neutre' });
   expect(vista.ui.queryByRole('status')).toBeNull();
   expect(avisHerencia('neutre')).toBeNull();
+});
+
+/* Pla 261016 (Bloc 3.1) · Tres props opcionals per a quan la vista no és dins
+   d'un document («El compte»). Sense elles, els textos i el DOM de sempre: el
+   mateix HTML que passant-hi els valors per defecte. */
+test('261016 · etiquetaTornar, introduccio i llegenda: sense elles, els de sempre; amb elles, els nous', () => {
+  // Els ids de useId canvien d'una vista a l'altra: es lleven abans de comparar.
+  const marcatge = (container) => container.innerHTML.replace(/\s(?:id|name|for|aria-labelledby|aria-describedby)="[^"]*"/g, '');
+  let vista = pinta();
+  expect(vista.ui.getByRole('button', { name: 'Tornar al document' })).toBeTruthy();
+  expect(vista.container.querySelector('.sdp-drets__intro').textContent)
+    .toBe('Tria qui pot usar esta obra i com. Ara té «© Sóc de Poble». Res no canvia fins que prems «Desar autoria».');
+  expect(vista.ui.getByRole('group', { name: 'Tria els drets d’esta obra' })).toBeTruthy();
+  const deSempre = marcatge(vista.container);
+  cleanup();
+  vista = pinta({ etiquetaTornar: 'Tornar al document', introduccio: null, llegenda: 'Tria els drets d’esta obra' });
+  expect(marcatge(vista.container)).toBe(deSempre);
+  cleanup();
+  vista = pinta({ etiquetaTornar: 'Tornar al compte', introduccio: 'Tria amb quins drets naixen les teues notes noves.', llegenda: 'Tria els drets de sèrie de les teues notes' });
+  fireEvent.click(vista.ui.getByRole('button', { name: 'Tornar al compte' }));
+  expect(vista.onTanca).toHaveBeenCalledWith('tornar');
+  expect(vista.ui.queryByRole('button', { name: 'Tornar al document' })).toBeNull();
+  expect(vista.container.querySelector('.sdp-drets__intro').textContent).toBe('Tria amb quins drets naixen les teues notes noves.');
+  expect(vista.ui.getByRole('group', { name: 'Tria els drets de sèrie de les teues notes' })).toBeTruthy();
 });
 
 test('els enllaços externs diuen que s’obrin en una pestanya nova', () => {

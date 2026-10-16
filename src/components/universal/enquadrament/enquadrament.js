@@ -130,9 +130,10 @@ function midaExacta(mida) {
  *     codificar) i la qualitat (0..1) si n'hi ha.
  *   · Onada 4 (retallador senzill, 261008) · Amb `sortida.exacta` =
  *     { amplada, alcada }, el fitxer fa EXACTAMENT eixa mida, també si cal
- *     ampliar el retall: el logotip ix a 600 × 600 i la capçalera a
- *     1.200 × 675. L'alçada no es deriva del retall (arrodonit al píxel), que
- *     podria donar-ne un de més o de menys.
+ *     ampliar el retall: el logotip ix a 600 × 600 i (Gauntlet 261016, Bloc 1,
+ *     Llei del Quadrat) la capçalera a 1.200 × 1.200 i l'avatar a 400 × 400.
+ *     L'alçada no es deriva del retall (arrodonit al píxel), que podria
+ *     donar-ne un de més o de menys.
  */
 export function opcionsSortida(rect, tipusOriginal, sortida = null) {
   if (!sortida) return { ...midaSortida(rect), tipus: tipusDeSortida(tipusOriginal) };

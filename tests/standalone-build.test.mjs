@@ -907,9 +907,9 @@ test('empaqueta amb el paquet trossejat: els trossos inventariats entren als zip
     assert.deepEqual(r.restes, ['trossos/Vell-Zz99Zz99.js'], 'l\'orfe ix com a resta');
     const zip = (nom) => new Map(llegixZip(fs.readFileSync(path.join(f.sortida, nom))).map((e) => [e.nom, e.dades]));
     const [estatic, wordpress, directori] = [
-      r.escrits.find((nom) => nom.startsWith('socdepoble-spa-')),
-      r.escrits.find((nom) => nom.startsWith('socdepoble-enxufe-')),
-      r.escrits.find((nom) => nom.startsWith('directori/'))
+      r.escrits.find((nom) => nom.includes('_estatic_spa_v')),
+      r.escrits.find((nom) => nom.includes('_wordpress_enxufe_v')),
+      r.escrits.find((nom) => nom.includes('_wordpress_directori_v'))
     ].map(zip);
     for (const rel of [MODUL_DE_PROVA, 'trossos/Xat-AbCd_123.js']) {
       assert.ok(estatic.has(`soc-de-poble/${rel}`), `estàtic: ${rel}`);
@@ -920,7 +920,7 @@ test('empaqueta amb el paquet trossejat: els trossos inventariats entren als zip
     assert.deepEqual(r.canal.formatDelPaquet, { format: 'trossos', modul: MODUL_DE_PROVA, trossos: 2 }, 'el canal signat porta el manifest sencer');
     // Relleu 261007 · al canal, `paquet` només són els zips: cap col·lisió de noms.
     assert.equal(Object.hasOwn(r.canal, 'paquet'), false);
-    assert.equal(r.canal.estatic.paquet.nom, r.escrits.find((nom) => nom.startsWith('socdepoble-spa-')));
+    assert.equal(r.canal.estatic.paquet.nom, r.escrits.find((nom) => nom.includes('_estatic_spa_v')));
     assert.equal(typeof r.canal.adaptadors.wordpress.paquet.sha256, 'string');
   } finally { fs.rmSync(f.arrel, { recursive: true, force: true }); }
 

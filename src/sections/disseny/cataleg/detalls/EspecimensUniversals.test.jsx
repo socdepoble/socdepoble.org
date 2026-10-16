@@ -459,8 +459,11 @@ describe('EspecimenTargetaViva', () => {
 
   /* Correcció de la revisió (261008) · CONTRACTE-3: el Perfil no munta el
      xip (PerfilEditor passa ambVistes: false i «Les vistes» pinta la targeta
-     en línia). El catàleg només ensenya el xip del consumidor que el té. */
-  it('un sol xip «Vista targeta», el del Bloc de Notes, amb el text de la seua vista; al Perfil, cap', () => {
+     en línia).
+     T50 · Bloc 3.4 del Gauntlet (261016) · Ja no el munta cap editor (el Bloc
+     de Notes el va llevar a P4): el xip que queda és el del catàleg, amb el
+     text del Bloc de Notes, i la documentació no diu que el munte ningú més. */
+  it('un sol xip «Vista targeta», amb el text de la vista del Bloc de Notes; cap editor el munta', () => {
     const arrel = pinta(EspecimenTargetaViva);
     const xips = screen.getAllByRole('button', { name: 'Vista targeta' });
     expect(xips).toHaveLength(1);
@@ -469,19 +472,27 @@ describe('EspecimenTargetaViva', () => {
     expect(dialeg.textContent).toContain(AVISOS_TARGETA_VIVA.notes.vista);
     expect(dialeg.textContent).not.toContain(AVISOS_TARGETA_VIVA.perfil.vista);
     const text = arrel.textContent;
-    expect(text).toContain('Al Perfil no hi ha xip: l’editor de la fitxa no el munta (ambVistes={false}) i l’apartat «Les vistes» pinta la targeta en línia');
+    expect(text).toContain('Cap editor el munta ja: l’aside de la dreta i este xip han eixit de DocumentEditor');
+    expect(text).toContain('Al Perfil, l’apartat «Les vistes» pinta la targeta en línia');
+    expect(text).not.toContain('l’editor de la fitxa no el munta');
     expect(text).not.toContain('el xip, amb el text de la vista del Perfil');
     const fila = [...arrel.querySelectorAll('table tbody tr')].find((tr) => tr.querySelector('td code')?.textContent === 'BotoTargetaViva');
-    expect(fila.textContent).toContain('Hui només el munta el Bloc de Notes');
+    expect(fila.textContent).toContain('Hui només el munta este catàleg');
+    expect(fila.textContent).not.toContain('el munta el Bloc de Notes');
   });
 
-  it('diu que l’aside i el xip de l’editor reben el text del consumidor (adapter.avisTargetaViva)', () => {
+  /* T50 · Bloc 3.4 (261016) · DocumentEditor ja no té la clau avisTargetaViva:
+     el contracte no la documenta i l'arbre no dona l'editor com a consumidor. */
+  it('ja no documenta cap clau adapter.avisTargetaViva ni l’aside de l’editor', () => {
     const arrel = pinta(EspecimenTargetaViva);
     const files = [...arrel.querySelectorAll('table tbody tr')];
-    const fila = files.find((tr) => tr.querySelector('td code')?.textContent === 'adapter.avisTargetaViva');
-    expect(fila).toBeTruthy();
-    expect(fila.textContent).toContain('NotesEditor hi posa AVISOS_TARGETA_VIVA.notes; PerfilEditor, .perfil');
+    expect(files.find((tr) => tr.querySelector('td code')?.textContent === 'adapter.avisTargetaViva')).toBeUndefined();
+    expect(arrel.textContent).not.toContain('avisTargetaViva');
     expect(arrel.textContent).not.toMatch(/l’aside i el xip[^.]{0,80}reserva/);
+    const consumidors = nodeUniversal('targeta-viva').consumidors.join(' · ');
+    expect(consumidors).not.toContain('DocumentEditor');
+    for (const nom of ['NotaFitxa', 'PerfilShell', 'DetallVistes']) expect(consumidors).toContain(nom);
+    expect(nodeUniversal('targeta-viva').rol).not.toContain('l’aside de l’editor');
   });
 
   it('en edició, sense data triada la targeta viva diu la data d’ara i, amb data triada, la triada', () => {
@@ -493,19 +504,24 @@ describe('EspecimenTargetaViva', () => {
     expect(fitxa.querySelector('.btn-date-time').textContent).toBe('14:3703/10/26');
   });
 
-  it('explica «Llista + dreta si hi cap»', () => {
+  /* T50 · Bloc 3.4 (261016) · La «dreta» de la decisió ja no es munta: el
+     catàleg ho diu i no explica com s'obri un xip que cap editor pinta. */
+  it('explica «Llista + dreta si hi cap» i que la dreta de l’editor s’ha retirat', () => {
     const text = pinta(EspecimenTargetaViva).textContent;
     expect(text).toContain('Llista + dreta si hi cap');
-    expect(text).toContain('el xip «Vista targeta» davall del títol obri el diàleg');
+    expect(text).toContain('cap editor munta l’aside fix ni el xip «Vista targeta» davall del títol');
+    expect(text).not.toContain('el xip «Vista targeta» davall del títol obri el diàleg');
   });
 
-  /* Ordre del Mestre (261008) · al Perfil, la targeta viu a «Les vistes». */
-  it('diu que al Perfil les vistes tenen apartat propi i que al Bloc de Notes continuen davall del títol', () => {
+  /* Ordre del Mestre (261008) · al Perfil, la targeta viu a «Les vistes».
+     T50 · Bloc 3.4 (261016) · Al Bloc de Notes, davall del títol només hi
+     continuen «Vista A4 / PDF» i «Crear portada». */
+  it('diu que al Perfil les vistes tenen apartat propi i que al Bloc de Notes A4 i portada continuen davall del títol', () => {
     const arrel = pinta(EspecimenTargetaViva);
     const text = arrel.textContent;
     expect(text).toContain('Al Perfil, «Vista A4 / PDF», «Crear portada» i «Vista targeta» viuen a l’apartat «Les vistes»');
-    expect(text).toContain('al Bloc de Notes continuen davall del títol');
-    expect(text).toContain('Al Bloc de Notes viu davall del títol, amb «Vista A4 / PDF» i «Crear portada»');
+    expect(text).toContain('al Bloc de Notes, «Vista A4 / PDF» i «Crear portada» continuen davall del títol');
+    expect(text).not.toContain('Al Bloc de Notes viu davall del títol');
     const fila = [...arrel.querySelectorAll('table tbody tr')].find((tr) => tr.querySelector('td code')?.textContent === 'DetallVistes (Perfil)');
     expect(fila.textContent).toContain('AVISOS_TARGETA_VIVA.perfil');
   });

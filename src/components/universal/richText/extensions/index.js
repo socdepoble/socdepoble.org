@@ -2,6 +2,7 @@ import Image, { inputRegex as regexImatgeMarkdown } from '@tiptap/extension-imag
 import { nodeInputRule } from '@tiptap/core';
 import { ReactNodeViewRenderer } from '@tiptap/react';
 import { compressImage } from '../../../../utils/imageUtils.js';
+import { fitxerDeDataUrl } from '../../../../utils/pujadaImatge.js';
 import { validaFitxerImatge } from '../../../../hooks/useHeroImageHandler.js';
 import { netejaFontImatge } from '../../enquadrament/netejaMetadades.js';
 import { netejaHtmlEnganxat } from './imatgesEnganxades.js';
@@ -71,12 +72,6 @@ function triaFitxer(accept = 'image/*') {
 
     input.click();
   });
-}
-
-async function aFitxerWebp(dataUrl, nom = 'imatge.webp') {
-  const resposta = await fetch(dataUrl);
-  const blob = await resposta.blob();
-  return new File([blob], nom, { type: 'image/webp' });
 }
 
 /**
@@ -200,7 +195,9 @@ export function creaOrdres({ onImageUpload = null, ambTargetes = false, onToast 
 
           let src = dataUrl;
           if (typeof onImageUpload === 'function') {
-            const fitxer = await aFitxerWebp(dataUrl, `${Date.now()}.webp`);
+            /* Gauntlet 261016 (Bloc 1) · El fitxer porta el tipus i l'extensió
+               reals (fitxerDeDataUrl): PNG si el canvas no ha sabut fer WebP. */
+            const fitxer = await fitxerDeDataUrl(dataUrl, String(Date.now()));
             const url = await onImageUpload(fitxer);
             if (url) src = url;
           }

@@ -15,6 +15,10 @@
  * porta, la pàgina de WordPress ha de ser CONFORME, sense cap cua, i la
  * neteja de l'opció ha d'esborrar només eixa clau. Es prova amb PHP real.
  *
+ * Esquelet de càrrega (ordre del Mestre, 261016): les dues eixides de
+ * WordPress porten «Carregant el mur...» dins de l'element, i, si hi ha un
+ * WordPress a mà, el seu wptexturize real no en toca els tres punts.
+ *
  * Fixtures locals i sintètiques: cap BD, cap compte, cap URL real.
  */
 import { describe, test } from 'node:test';
@@ -213,6 +217,63 @@ function paginaDeWordpress(eixida) {
 
 const ambPhp = { skip: !PHP && 'PHP absent' };
 
+/* ───────────── Esquelet de càrrega (ordre del Mestre, 261016) ───────────── */
+
+const ESQUELET_DE_CARREGA = 'Carregant el mur...';
+
+/** Els fills de l'únic <soc-de-poble> de la pàgina, llegits amb un analitzador HTML de veritat. */
+function fillsDe(html) {
+  const dom = new JSDOM(`<!doctype html><html><body>${html}</body></html>`);
+  try {
+    const elements = dom.window.document.querySelectorAll(C.element);
+    assert.equal(elements.length, 1, 'un sol <soc-de-poble>');
+    return [...elements[0].childNodes].map((node) => ({
+      tipus: node.nodeType === dom.window.Node.TEXT_NODE ? 'text' : node.nodeName.toLowerCase(),
+      text: node.textContent
+    }));
+  } finally {
+    dom.window.close();
+  }
+}
+
+/* El wptexturize de WordPress, de veritat, si n'hi ha un a mà: WP_INCLUDES o
+   un lloc de WordPress Studio (~/Studio/<lloc>/wp-includes). Només es carrega
+   formatting.php, amb un registre de filtres mínim, i el marcatge.php del
+   plugin, que hi enganxa els seus ganxos com en una petició. */
+const llocsStudio = path.join(os.homedir(), 'Studio');
+const WP_INCLUDES = [process.env.WP_INCLUDES, ...(fs.existsSync(llocsStudio) ? fs.readdirSync(llocsStudio).sort().map((lloc) => path.join(llocsStudio, lloc, 'wp-includes')) : [])]
+  .filter(Boolean).find((dir) => fs.existsSync(path.join(dir, 'formatting.php')));
+
+const TEXTURITZA = `<?php
+error_reporting( E_ALL );
+set_error_handler( static function ( $nivell, $missatge, $fitxer, $linia ) { throw new ErrorException( $missatge, 0, $nivell, $fitxer, $linia ); } );
+define( 'ABSPATH', __DIR__ . '/' );
+$cas = json_decode( file_get_contents( $argv[3] ), true, 512, JSON_THROW_ON_ERROR );
+$filtres = array();
+$shortcode_tags = array();
+function add_filter( $nom, $callback, $prioritat = 10, $arguments = 1 ) { $GLOBALS['filtres'][ $nom ][] = $callback; return true; }
+function add_action( ...$a ) { return true; }
+function apply_filters( $nom, $valor, ...$args ) { foreach ( $GLOBALS['filtres'][ $nom ] ?? array() as $callback ) { $valor = $callback( $valor, ...$args ); } return $valor; }
+function _x( $text, $context ) { return $text; }
+require $argv[2] . '/formatting.php';
+if ( $cas['ambPlugin'] ) {
+	require $argv[1] . '/wordpress-plugin/includes/marcatge.php';
+}
+echo json_encode( wptexturize( $cas['html'] ), JSON_THROW_ON_ERROR );
+`;
+
+function texturitza(html, ambPlugin, t) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sdp-texturitza-'));
+  t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+  fs.writeFileSync(path.join(dir, 'runner.php'), TEXTURITZA);
+  fs.writeFileSync(path.join(dir, 'cas.json'), JSON.stringify({ html, ambPlugin }));
+  const proces = spawnSync(PHP, [path.join(dir, 'runner.php'), ARREL, WP_INCLUDES, path.join(dir, 'cas.json')], { encoding: 'utf8', timeout: 10000 });
+  assert.equal(proces.status, 0, proces.stderr + proces.stdout);
+  return JSON.parse(proces.stdout);
+}
+
+const ambWordpress = { skip: (!PHP && 'PHP absent') || (!WP_INCLUDES && 'WordPress absent: indica WP_INCLUDES (també es detecta WordPress Studio)') };
+
 /* ─────────────────────────────── Proves ─────────────────────────────── */
 
 describe('el contracte que juga la bateria', () => {
@@ -319,6 +380,40 @@ describe('WordPress (marcatge.php real, PHP local)', () => {
     bateria(decl, 'WordPress (referència)');
     // El marcatge per a copiar en un altre amfitrió no porta cap opcional.
     assert.equal(decl.elements[0].atributs['ruta-a-url'], undefined);
+  });
+
+  test('esquelet de càrrega: la instància de WordPress i la referència copiable diuen «Carregant el mur...» dins de l’element, i res més', ambPhp, (t) => {
+    for (const cas of [{}, {
+      opcio: { nomPoble: 'Gent de Sella', poble: 'sella' },
+      instancia: { nomPoble: 'Penàguila', poble: 'penaguila', rutaInicial: '/xat' },
+      deepl: 'clau-sintetica-de-prova'
+    }]) {
+      const eixida = wordpress(cas, t);
+      const pagina = paginaDeWordpress(eixida);
+      for (const [canal, html] of [['instància', pagina], ['referència', eixida.referencia]]) {
+        const nom = `${canal} ${JSON.stringify(cas)}`;
+        assert.deepEqual(fillsDe(html), [{ tipus: 'text', text: ESQUELET_DE_CARREGA }], nom);
+        // Tal qual als bytes: tres punts ASCII, cap entitat, i mai «del poble».
+        assert.ok(html.includes(`>${ESQUELET_DE_CARREGA}</soc-de-poble>`), nom);
+        assert.doesNotMatch(html, /Carregant el mur(?!\.\.\.<\/soc-de-poble>)|del poble/, nom);
+      }
+      // El text no és cap atribut ni cap canal: les dues eixides continuen conformes.
+      bateria(declaracioDe(pagina), 'WordPress amb l’esquelet', { optIn: C.atributsOptIn });
+      bateria(declaracioDe(eixida.referencia), 'WordPress (referència) amb l’esquelet');
+    }
+  });
+
+  test('esquelet de càrrega amb el wptexturize de WordPress: els tres punts continuen ASCII dins de l’element; sense el plugin, eixirien com a &#8230;', ambWordpress, (t) => {
+    const { html } = wordpress({}, t);
+    // Com el render del bloc dins de the_content: text de l'autor abans i després.
+    const contingut = `<p>Abans...</p>${html}<p>Després...</p>`;
+    const sense = texturitza(contingut, false, t);
+    assert.ok(sense.includes('>Carregant el mur&#8230;</soc-de-poble>'), 'control: sense el filtre, wptexturize el canvia');
+    const amb = texturitza(contingut, true, t);
+    assert.deepEqual(fillsDe(amb), [{ tipus: 'text', text: ESQUELET_DE_CARREGA }]);
+    assert.ok(amb.includes(`>${ESQUELET_DE_CARREGA}</soc-de-poble>`));
+    // Fora de l'element, wptexturize fa el de sempre.
+    assert.ok(amb.startsWith('<p>Abans&#8230;</p>') && amb.endsWith('<p>Després&#8230;</p>'), amb);
   });
 
   test('A1 · amb un tenantId heretat a l’opció, WordPress no l’emet per cap canal: conforme, i sense cua', ambPhp, (t) => {

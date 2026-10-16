@@ -13,6 +13,8 @@
 import { isSafeAsset } from '../../components/universal/UniversalUtils.js';
 import { normalizeSearchText, stripMarkdownImages } from '../../config/contentHelpers.js';
 import { getSectionItemPath, resolveItemPath, resolvePageSlugPath, rutaDePerfil } from '../../config/navigation.js';
+import { tipusDAgent } from '../../data/agentsSeed.js';
+import { clauFundacional } from '../../data/identitatsSeed.js';
 import { imatgesDeProducte } from '../mercat/imatgesDeProducte.js';
 
 /* Els tipus de la cerca, en l'ordre en què es pinten els grups i els filtres.
@@ -253,12 +255,13 @@ export function extracteDeResultat(resultat, llistaFitxes = [], max = 200) {
 
 /* ── Adaptadors (un per font) ───────────────────────────────────────────── */
 
-/* El mateix vocabulari que ProfileSection.tipusDAgent: AI → ia, COMPANY → entitat. */
-const PERFIL_D_AGENT = Object.freeze({ AI: 'ia', COMPANY: 'entitat' });
-
 /** Catàleg d'agents del contingut base (seed o app_content.agents). */
 export function deAgent(agent, opcions = {}) {
-  const perfil = PERFIL_D_AGENT[String(agent?.type || '').toUpperCase()] || 'persona';
+  /* Gauntlet 261016 (Bloc 3) · El vocabulari del directori i del perfil públic,
+     de la seua font única (data/agentsSeed.js · tipusDAgent): AI i ANIMAL → ia,
+     COMPANY → entitat. Abans n'hi havia una còpia ací, i un personatge ANIMAL
+     eixia com a persona, sense l'etiqueta d'IA i cap a /gent. */
+  const perfil = tipusDAgent(agent);
   return entrada({
     tipus: perfil === 'entitat' ? 'entitats' : 'persones',
     id: agent?.id,
@@ -535,6 +538,32 @@ export function fusionaPerClau(entrades) {
     perClau.set(actual.clau, previa ? fusiona(previa, actual) : actual);
   }
   return [...perClau.values()];
+}
+
+/**
+ * Gauntlet 261016 (Bloc 3.5.1; ordre del Mestre: «Tria i deixa un sol perfil
+ * per a cadascuna») · La persona de la sessió i la seua fitxa del padró o del
+ * catàleg són UNA identitat quan ho declaren els seus identificadors, mai pel
+ * nom (la doctrina de T6, config/navigation.js). `alies` són els de la sessió
+ * (identitatsSeed · aliesDeLActor: en llavor, els de la persona pilot; en
+ * remot, només el seu id, D12). Si algun és d'una identitat fundacional
+ * (clauFundacional), l'entrada de persona amb eixa mateixa clau fundacional
+ * (el '0001' del catàleg i del padró) passa a portar la clau de la pròpia, i
+ * fusionaPerClau en fa una sola fitxa: mana la pròpia (/el-meu-perfil) i el
+ * text de l'altra també es busca. Sense «Escriu-li»: ningú no s'escriu a si
+ * mateix (el padró ja deixa fora qui busca).
+ * La regla del Bloc -1 es manté per als homònims: una persona amb un altre id
+ * i el mateix nom continua sent una altra fitxa, amb el seu enllaç.
+ */
+export function ambLaIdentitatPropia(entrades, alies = []) {
+  const llista = llistaDe(entrades);
+  const propia = llista.find((actual) => actual?.propia === 'persona');
+  if (!propia) return llista;
+  const clauDe = (id) => clauFundacional({ tipus: 'persona', id });
+  const fundacional = [propia.id, ...llistaDe(alies)].map(clauDe).find(Boolean);
+  if (!fundacional) return llista;
+  return llista.map((actual) => (actual && actual !== propia && !actual.propia && actual.tipus === propia.tipus
+    && clauDe(actual.id) === fundacional ? { ...actual, clau: propia.clau, accio: null } : actual));
 }
 
 /**

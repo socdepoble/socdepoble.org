@@ -233,10 +233,11 @@
      bombolla. Canviar-los és canviar una línia. */
   --sdp-xat-fila-mida: 72px;
   --sdp-xat-bombolla-max: 75%;
-  /* T50 · Amplària de la targeta viva fixa a la dreta de l'editor (Bloc de
-     Notes i Perfil), la de la columna del llistat: la targeta hi té el mateix
-     peu (CONNECTAR amb paraula). L'aside només es veu amb un editor de 60rem
-     o més (components.css): a l'editor li queden 36rem. */
+  /* T50 · Amplària de la targeta viva quan es pinta fora de la llista:
+     «Les vistes» del Perfil (PerfilShell.css, .perfil-vistes__targeta). És
+     la de la columna del llistat: la targeta hi té el mateix peu (CONNECTAR
+     amb paraula). Va nàixer per a l'aside de la dreta de l'editor, retirat
+     amb les seues regles al Bloc 3.4 del Gauntlet (261016; components.css). */
   --sdp-targeta-viva-ample: 24rem;
   --sdp-targeta-incrustada-ample: 22.5rem; /* T7 (261004) · la targeta incrustada al cos: 360px, com .sdp-card-grid */
   /* Norma del Mestre, 261004 (prompt 261004_1108, T2) · L'avatar redó de qui

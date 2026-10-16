@@ -1,9 +1,10 @@
 import { beforeEach, expect, test } from 'vitest';
 import { createLocalPerfilsAdapter, PERSONES_SEED } from './localPerfils.js';
 import {
-  ENTITAT_PILOT_ID, ENTITAT_PILOT_SLUG, ENTITAT_RENTONAR_SLUG, ENTITATS_SEED, IAIA_ID, entitatSeed, rolALEntitat
+  ENTITAT_PILOT_ID, ENTITAT_PILOT_SLUG, ENTITAT_RENTONAR_SLUG, ENTITATS_SEED, IAIA_ID, PERSONA_PILOT, entitatSeed, rolALEntitat
 } from './identitatsSeed.js';
 import { XAT_SEED_MEMBRES } from './xatSeed.js';
+import { AGENTS_MAP } from './agentsSeed.js';
 
 /* Lògica d'Usuari · el padró pilot del mode seed: qui ha entrat és la persona
    pilot i mana a «Sóc de Poble»; la IAIA és l'agent que eixa entitat administra. */
@@ -81,7 +82,7 @@ test('perfil públic: la IAIA es diu, l’entitat per slug, la persona pilot, el
   expect(adapter.loadPerfilPublic(ENTITAT_PILOT_ID, null)).toMatchObject({ tipus: 'entitat', propietari: false });
   expect(adapter.loadPerfilPublic(USUARI.id, USUARI)).toMatchObject({ tipus: 'persona', nom: 'Javi Pilot', propietari: true });
   expect(adapter.loadPerfilPublic('javillinares', USUARI)).toMatchObject({ tipus: 'persona', propietari: true });
-  expect(adapter.loadPerfilPublic('0001', null)).toMatchObject({ tipus: 'persona', nom: 'Javi', propietari: false });
+  expect(adapter.loadPerfilPublic('0001', null)).toMatchObject({ tipus: 'persona', nom: 'Javi Llinares', propietari: false });
   expect(adapter.loadPerfilPublic('ningu', USUARI)).toBeNull();
   expect(adapter.loadPerfilPublic('', USUARI)).toBeNull();
 });
@@ -263,9 +264,9 @@ test('grup C · una admin que no és la propietària afig membres, però no nome
   local.reclamaOrganitzacio('forn', { id: 'toni' });
   expect(codiDe(() => local.desaMembreOrganitzacio('forn-proves', { tipus: 'persona', id: 'toni', rol: 'member' }, VEI_USUARI))).toBe('SDP-ORGMEM-006');
   expect(codiDe(() => local.llevaMembreOrganitzacio('forn-proves', { tipus: 'persona', id: 'toni' }, VEI_USUARI))).toBe('SDP-ORGMEM-006');
-  // Per nom: VEI no porta nom de sessió i pren el de la persona pilot («Javi»).
+  // Per nom: VEI no porta nom de sessió i pren el de la persona pilot («Javi Llinares»).
   expect(local.llistaMembresOrganitzacio('forn-proves', VEI_USUARI).map((m) => [m.id, m.nom, m.rol]))
-    .toEqual([[VEI, 'Javi', 'admin'], ['toni', 'Toni Ferri', 'admin']]);
+    .toEqual([[VEI, 'Javi Llinares', 'admin'], ['toni', 'Toni Ferri', 'admin']]);
 });
 
 test('grup C · «Eixir»: qualsevol que no siga la propietària se’n va; la propietària no (005); idempotent', () => {
@@ -316,10 +317,13 @@ test('Front 3 · la pilot continua sent la primera del padró i Rentonar, un gru
   });
 });
 
+/* Gauntlet 261016 (Bloc 3.5.2; ordre del Mestre: «El Rentonar no pot aparèixer
+   mai sense poble») · La fitxa de Rentonar porta el seu poble, La Torre de les
+   Maçanes. Abans la prova fixava `poble: ''`: s'ha actualitzat a propòsit. */
 test('Front 3 · Rentonar té fitxa pública de grup, per slug, amb sessió i sense', () => {
   const esperat = {
     tipus: 'grup', id: 'rentonar', slug: 'rentonar', nom: 'Rentonar', lema: 'Natura i Patrimoni', bio: BIO_RENTONAR,
-    avatar: '', poble: '', correu: '', esIA: false, publicat: true, propietari: false
+    avatar: '', poble: 'La Torre de les Maçanes', correu: '', esIA: false, publicat: true, propietari: false
   };
   expect(adapter.loadPerfilPublic(ENTITAT_RENTONAR_SLUG, null)).toMatchObject(esperat);
   expect(adapter.loadPerfilPublic(ENTITAT_RENTONAR_SLUG, USUARI)).toMatchObject(esperat);
@@ -335,4 +339,35 @@ test('Front 3 · la regla de la llavor no s’estén a Rentonar: qui té sessió
   expect(adapter.listMyOrganizations(USUARI).find((org) => org.id === ENTITAT_RENTONAR_SLUG))
     .toMatchObject({ kind: 'group', parent_organization_id: ENTITAT_PILOT_ID, role: 'admin' });
   expect(adapter.loadPerfilPublic(ENTITAT_RENTONAR_SLUG, USUARI).propietari).toBe(true);
+});
+
+/* ── Gauntlet 261016 (Bloc 3) · la identitat ── */
+
+/* Ordre del Mestre · Els personatges ANIMAL del catàleg són IA (la font única,
+   agentsSeed.js · tipusDAgent): la seua fitxa pública és d'IA, amb `esIA`, i
+   la resta de la fitxa del catàleg no canvia. Una IA del catàleg continua
+   sent-ho; una persona, també. */
+test('Gauntlet 261016 · un personatge ANIMAL del catàleg té fitxa pública d’IA; PERSON i AI no canvien', () => {
+  for (const clau of ['GALL', 'RATO', 'MIXA', 'SULTAN']) {
+    const agent = AGENTS_MAP[clau];
+    for (const usuari of [null, USUARI]) {
+      expect([clau, adapter.loadPerfilPublic(agent.id, usuari)]).toEqual([clau, expect.objectContaining({
+        tipus: 'ia', esIA: true, id: agent.id, nom: agent.name, avatar: agent.avatar_url, poble: agent.town_name,
+        presentacioHtml: agent.short_bio, propietari: false
+      })]);
+    }
+    expect(agent.type).toBe('ANIMAL');
+  }
+  expect(adapter.loadPerfilPublic(AGENTS_MAP.FLASH.id, null)).toMatchObject({ tipus: 'ia', esIA: true });
+  expect(adapter.loadPerfilPublic(AGENTS_MAP.CAPATAS.id, null)).toMatchObject({ tipus: 'persona', esIA: false });
+});
+
+/* Pla aprovat, Onada 1.5 · 'javi-llinares' és un àlies de la persona pilot:
+   sense sessió, la seua fitxa del catàleg; amb sessió, la seua fitxa. */
+test('Gauntlet 261016 · Onada 1.5: l’àlies javi-llinares resol la persona pilot, amb sessió i sense', () => {
+  expect(PERSONA_PILOT.alies).toContain('javi-llinares');
+  expect(adapter.loadPerfilPublic('javi-llinares', null)).toMatchObject({ tipus: 'persona', id: AGENTS_MAP.JAVI.id, nom: AGENTS_MAP.JAVI.name, avatar: PERSONA_PILOT.avatar, propietari: false });
+  expect(adapter.loadPerfilPublic('javi-llinares', USUARI)).toMatchObject({ tipus: 'persona', id: USUARI.id, nom: 'Javi Pilot', propietari: true });
+  /* La fitxa local de la persona porta l'àlies, com els altres. */
+  expect(adapter.getProfile(USUARI).alies).toContain('javi-llinares');
 });

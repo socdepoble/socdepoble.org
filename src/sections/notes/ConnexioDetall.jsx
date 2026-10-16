@@ -213,6 +213,14 @@ export function ConnexioDetall({ nota }) {
      «Sóc de Poble» ni el Foraster per defecte). */
   const signatura = signaturaDeCaiguda(origen);
   const rutaSignatura = signatura?.ruta || (signatura ? rutaDePerfil(origen.autorTipus, origen.autorId) : null);
+  /* Gauntlet 261016 (Bloc 3; Directiva de Dignitat Humana, pla 261015_1900)
+     · Una connexió a una PERSONA no porta la píndola del tipus: una persona
+     no es categoritza. Mana el tipus de l'objecte representat (origen.objecte,
+     el del descriptor), com a la seua fitxa pública i a la seua targeta. Una
+     entitat, un grup, una IA o una obra conserven la seua. */
+  const etiquetes = origen.objecte === 'persona'
+    ? []
+    : [{ text: ETIQUETA_OBJECTE[origen.objecte] || 'Element', className: 'sdp-badge-system' }];
 
   return (
     <>
@@ -220,7 +228,7 @@ export function ConnexioDetall({ nota }) {
         chrome="context"
         layout="contained"
         title={titolOrigen}
-        labels={[{ text: ETIQUETA_OBJECTE[origen.objecte] || 'Element', className: 'sdp-badge-system' }]}
+        labels={etiquetes}
         /* T51 · sense l'original, el document que es llig és la connexió
            desada: la seua data real (creació o última modificació). */
         {...dataHoraDeBarra({ creat: nota?.createdAt, modificat: nota?.updatedAt })}

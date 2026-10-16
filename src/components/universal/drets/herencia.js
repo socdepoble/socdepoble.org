@@ -1,10 +1,18 @@
 /**
  * herencia.js — La llicència per defecte de cada identitat (sense migració).
  *
- * T39 (ordre del Mestre, 260928) · Els drets que la persona tria a la FITXA
- * del Perfil són els de sèrie de les notes noves que crea amb «CREAR NOTA».
+ * T39 (ordre del Mestre, 260928) · Els drets de la FITXA del Perfil són els de
+ * sèrie de les notes noves que crea amb «CREAR NOTA».
  * Les notes que ja té no canvien mai: el valor es copia en crear la nota,
  * no en pintar-la.
+ * Directiva de Dignitat Humana (pla 261015_1900) · La fitxa d'una PERSONA ja
+ * no mostra ni tria drets (una persona no és una obra).
+ * Pla 261016 (Bloc 3.1; ordre del Mestre) · Els drets de sèrie de les notes
+ * d'una persona es trien a «El compte» (l'ajust 'drets-notes' de
+ * PerfilContext, que DetallAjust pinta amb CopyrightPage): es desen a la
+ * mateixa columna de sempre (profiles.copyright) i, si el servidor l'accepta,
+ * també a la preferència d'este dispositiu. Cada nota els pot canviar a
+ * l'editor. L'entitat continua triant-los a la seua fitxa.
  *
  * On viu:
  *   · Una entitat: el `copyright` de la pertinença (IdentitatContext.memberships,
@@ -12,8 +20,13 @@
  *   · Si no n'hi ha (o per a la persona, que no el porta a la sessió), una
  *     preferència d'este dispositiu per identitat (config/storage: getVal /
  *     setVal, síncrona i xicoteta). PerfilEditor la fa mirall de la fitxa:
- *     l'esborrany de «Desar autoria» mentre la cua el guarda (encara que el
- *     servidor el rebutge) i, si no n'hi ha, el valor del servidor.
+ *     per a una entitat, l'esborrany de «Desar autoria» mentre la cua el
+ *     guarda (encara que el servidor el rebutge) i, si no n'hi ha, el valor
+ *     del servidor; per a la persona, només el del servidor, com «El compte».
+ *     Gauntlet 261016 (encàrrec E) · Per a la persona, IdentitatContext també
+ *     la posa al dia amb la fila de profiles en carregar la sessió: «El
+ *     compte» desa al servidor, i un dispositiu on no s'ha obert ni «El
+ *     compte» ni la fitxa ja hereta els drets triats en un altre.
  * Sense cap de les dues, este mòdul torna null. D15 (ordre del Mestre,
  * 260930): llavors la nota nova de «CREAR NOTA» naix amb la Creative Commons
  * de sèrie (LLICENCIA_PER_DEFECTE, la posa NotesSection). Les dades no es

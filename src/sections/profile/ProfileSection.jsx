@@ -4,10 +4,22 @@ import { PortaDePagina } from '../../components/PedraSeca/organismes/PortesTarge
 import { useUIActions } from '../../app/contexts/UIContext';
 import { useNavigate } from '../../app/contexts/RouterContext';
 import { objecteDePerfil, rutaConnectarPerfil, rutaDePerfil, rutaXatDePagina } from '../../config/navigation.js';
+/* El tipus d'agent del catàleg, en el vocabulari del perfil públic. Gauntlet
+   261016 (Bloc 3) · La font única viu a la capa de dades (agentsSeed.js), on
+   un personatge ANIMAL és una IA; abans n'hi havia una còpia ací. */
+import { tipusDAgent } from '../../data/agentsSeed.js';
 
-/* El tipus d'agent del catàleg, en el vocabulari del perfil públic. */
-const TIPUS = Object.freeze({ AI: 'ia', COMPANY: 'entitat' });
-export const tipusDAgent = (agent) => TIPUS[agent?.type] || 'persona';
+/* Gauntlet 261016 (Bloc 3; ordre del Mestre: «mostrar clarament el poble de
+   cada persona a la targeta del directori») · El poble va a la boina de la
+   targeta (`location`), on UniversalCard el pinta també per a una persona (la
+   guarda de dignitat no el toca). Amb el poble va l'avatar de l'agent: sense,
+   la boina pintaria la silueta de reserva al costat d'una fitxa que sí que
+   té foto. A totes les targetes del directori, per coherència de la graella.
+   Sense poble, cap prop nova: el DOM de sempre. */
+const boinaDelPoble = (agent) => {
+  const poble = typeof agent?.town_name === 'string' ? agent.town_name.trim() : '';
+  return poble ? { location: poble, avatarUrl: agent.avatar_url || undefined } : {};
+};
 
 /**
  * El directori de persones, entitats i agents del portal. Cada targeta porta
@@ -59,6 +71,7 @@ export default function ProfileSection({ agents = [] }) {
             onConnect={connecta(agent)}
             accio={portaDelXat(agent)}
             etiquetesAmbAccio
+            {...boinaDelPoble(agent)}
           />
         ))}
       </div>

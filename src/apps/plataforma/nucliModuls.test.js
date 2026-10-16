@@ -10,17 +10,26 @@ import * as jsxRuntime from 'react/jsx-runtime';
 import { describe, expect, test } from 'vitest';
 import * as Router from '../../app/contexts/RouterContext.jsx';
 import * as PedraSeca from '../../components/PedraSeca/index.js';
+import * as Workspace from '../../components/universal/workspace/index.js';
 import * as plataforma from './index.js';
 import {
   ESQUEMA_MODUL, GLOBAL_DEL_NUCLI, NOMS_PER_FITXER_DE_PEDRA_SECA, PORTES_DEL_NUCLI, VERSIO_NUCLI, exposaElNom,
   globalDeLaPorta, nucliSatisfa, portaDeLaFont
 } from './contracteNucli.js';
 import { NUCLI } from './nucliModuls.js';
-import { NOMS_DEL_NUCLI_1_0, NOMS_DEL_NUCLI_1_1 } from './__fixtures__/nomsDelNucli.js';
+import { NOMS_DEL_NUCLI_1_0, NOMS_DEL_NUCLI_1_1, NOMS_DEL_NUCLI_1_2 } from './__fixtures__/nomsDelNucli.js';
 
 const ARREL = process.cwd();
 const ordenat = (llista) => [...llista].sort();
 const porta = (clau) => PORTES_DEL_NUCLI.find((candidata) => candidata.clau === clau);
+/* Els noms de diverses versions menors, porta per porta, ordenats. */
+const fusiona = (...versions) => {
+  const total = {};
+  for (const versio of versions) {
+    for (const [clau, noms] of Object.entries(versio)) total[clau] = ordenat([...(total[clau] ?? []), ...noms]);
+  }
+  return total;
+};
 
 describe('l’objecte SocDePoble.nucli', () => {
   test('congelat, versionat i amb exactament les portes del contracte', () => {
@@ -44,6 +53,11 @@ describe('l’objecte SocDePoble.nucli', () => {
     expect(NUCLI.router.Navigate).toBe(Router.Navigate);
     expect(NUCLI.router.useRouter).toBe(Router.useRouter);
     for (const nom of porta('pedraSeca').noms) expect(NUCLI.pedraSeca[nom], nom).toBe(PedraSeca[nom]);
+    /* 1.2.0 (261016) · l'espai de treball és el de la façana (workspace/index.js), el mateix que munta el Bloc de notes. */
+    for (const nom of porta('workspace').noms) {
+      expect(typeof Workspace[nom], nom).toBe('function');
+      expect(NUCLI.workspace[nom], nom).toBe(Workspace[nom]);
+    }
   });
 
   test('la plataforma del nucli és l’API pública sencera (plataforma/index.js), ni més ni menys', () => {
@@ -83,6 +97,14 @@ describe('el contracte (contracteNucli.js)', () => {
     expect(exposaElNom(porta('React'), 'useState')).toBe(true);
     expect(exposaElNom(porta('pedraSeca'), 'Boto')).toBe(true);
     expect(exposaElNom(porta('pedraSeca'), 'UniversalButton')).toBe(false);
+    /* 1.2.0 (261016) · l'espai de treball entra només per la façana i només amb els seus dos noms. */
+    expect(porta('workspace').fonts).toEqual(['src/components/universal/workspace/index.js']);
+    expect(globalDeLaPorta(portaDeLaFont('src/components/universal/workspace/index.js'))).toBe('SocDePoble.nucli.workspace');
+    expect(portaDeLaFont('src/components/universal/workspace/UniversalWorkspace.jsx')).toBeNull();
+    expect(portaDeLaFont('src/components/universal/workspace/ItemMedia.jsx')).toBeNull();
+    expect(exposaElNom(porta('workspace'), 'UniversalWorkspace')).toBe(true);
+    expect(exposaElNom(porta('workspace'), 'DefaultItemCard')).toBe(true);
+    expect(exposaElNom(porta('workspace'), 'ESPAI_COMU')).toBe(false);
     expect(ESQUEMA_MODUL).toBe('sdp.modul.v1');
   });
 
@@ -94,6 +116,8 @@ describe('el contracte (contracteNucli.js)', () => {
     ['^1.2', '1.2.0', true],
     ['^1.0', '1.1.0', true],
     ['^1.1', '1.1.0', true],
+    ['^1.1', '1.2.0', true],
+    ['^1.3', '1.2.0', false],
     ['^2', '1.0.0', false],
     ['^0', '1.0.0', false],
     ['1', '1.0.0', false],
@@ -104,20 +128,29 @@ describe('el contracte (contracteNucli.js)', () => {
     expect(nucliSatisfa(rang, versio)).toBe(esperat);
   });
 
-  /* Onada 7 (261009) · el rang i prou: que l'1.1.0 només afig ho diu la de sota, amb els noms. */
-  test('el rang: amb el nucli 1.1.0, un mòdul compilat contra l’1.0 continua entrant, i un de l’1.2 encara no', () => {
-    expect(VERSIO_NUCLI).toBe('1.1.0');
+  /* El rang i prou: que cada menor només afig ho diu la de sota, amb els noms.
+     Gauntlet nocturn (261016) · Actualitzat a posta: amb l'1.1.0 un mòdul de
+     '^1.2' no entrava, i la porta 'workspace' (1.2.0) és exactament el que
+     ho canvia. El que no entra ara és un de '^1.3'. */
+  test('el rang: amb el nucli 1.2.0, un mòdul compilat contra l’1.0 o l’1.1 continua entrant, i un de l’1.3 encara no', () => {
+    expect(VERSIO_NUCLI).toBe('1.2.0');
     expect(nucliSatisfa('^1.0')).toBe(true);
     expect(nucliSatisfa('^1.1')).toBe(true);
-    expect(nucliSatisfa('^1.2')).toBe(false);
+    expect(nucliSatisfa('^1.2')).toBe(true);
+    expect(nucliSatisfa('^1.3')).toBe(false);
   });
 
-  /* Onada 7 (261009) · la promesa de l'1.1.0 («només s'afig») amb noms, no
-     amb números. Cada porta i cada nom de l'1.0.0 continuen al contracte i a
-     l'objecte: si no, un mòdul de '^1.0' entraria i rebria undefined. I el
-     que s'hi ha afegit és exactament NOMS_DEL_NUCLI_1_1, que
-     guardesDelModul.test.js obliga a estar en ús. */
-  test('el nucli 1.1.0 conserva cada porta i cada nom de l’1.0.0, i només afig els de l’1.1.0', () => {
+  /* La promesa de cada menor («només s'afig») amb noms, no amb números. Cada
+     porta i cada nom de l'1.0.0 continuen al contracte i a l'objecte: si no,
+     un mòdul de '^1.0' entraria i rebria undefined. I el que s'hi ha afegit
+     és exactament NOMS_DEL_NUCLI_1_1 (Onada 7, 261009), que
+     guardesDelModul.test.js obliga a estar en ús, més NOMS_DEL_NUCLI_1_2
+     (261016), una porta sencera que cap versió d'abans no tenia i que
+     modulDeBuild.test.jsx compila de veritat. */
+  test('el nucli 1.2.0 conserva cada porta i cada nom de l’1.0.0, i només afig els de l’1.1.0 i la porta de l’1.2.0', () => {
+    for (const clau of Object.keys(NOMS_DEL_NUCLI_1_2)) {
+      expect(Object.hasOwn(NOMS_DEL_NUCLI_1_0, clau) || Object.hasOwn(NOMS_DEL_NUCLI_1_1, clau), `${clau}: porta nova`).toBe(false);
+    }
     const actuals = Object.fromEntries(PORTES_DEL_NUCLI.map(({ clau, noms }) => [clau, noms]));
     expect(Object.keys(NOMS_DEL_NUCLI_1_0).filter((clau) => !Object.hasOwn(actuals, clau))).toEqual([]);
     const afegits = {};
@@ -132,6 +165,6 @@ describe('el contracte (contracteNucli.js)', () => {
       const nous = noms.filter((nom) => !abans.includes(nom));
       if (nous.length) afegits[clau] = ordenat(nous);
     }
-    expect(afegits).toEqual(Object.fromEntries(Object.entries(NOMS_DEL_NUCLI_1_1).map(([clau, noms]) => [clau, ordenat(noms)])));
+    expect(afegits).toEqual(fusiona(NOMS_DEL_NUCLI_1_1, NOMS_DEL_NUCLI_1_2));
   });
 });

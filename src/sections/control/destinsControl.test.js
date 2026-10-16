@@ -76,10 +76,13 @@ const TEXTOS_2245 = {
     'Anuncia esdeveniments, festes i reunions comunitàries.',
     'Tot esdeveniment publicat passarà a formar part de l\'agenda global del poble i podrà ser exportat a altres calendaris. Assegura\'t de tindre els permisos necessaris per a convocar o promocionar l\'activitat abans de penjar-la.'
   ],
+  /* Derogat per l'ordre del Mestre del Gauntlet 261016 (pla 261016_0015, §0.1.3:
+     EXIF íntegre per defecte, amb opt-out): l'entradilla del Mapa ja no és la de
+     2245, sinó la de pageContent.js. Títol, subtítol i data no canvien. */
   mapa: [
     'Publicar al Mapa',
     'Si tens coses que vols geolocalitzar, este és el lloc.',
-    'Per defecte esborrem la geolocalització i les dades EXIF de totes les teues fotos per privacitat, però per a publicar al mapa cal donar autorització explícita i ser conscient que la teua foto es podrà localitzar públicament des d\'altres pàgines i pobles.'
+    'Per defecte, les fotos que puges conserven la ubicació i la data en què es van fer, per a situar el patrimoni del poble al mapa; abans de publicar-les, les pots llevar desmarcant «Conserva la ubicació i la data de la foto». Les imatges que poses dins del text es netegen sempre. Publicar al mapa vol dir acceptar que la teua foto es podrà localitzar públicament des d\'altres pàgines i pobles.'
   ],
   vehicle: [
     'Vehicle Compartit',
@@ -128,9 +131,11 @@ const COS_2245 = {
     ['L\'agenda que ens unix', 'Visibilitat i difusió', 'Convocatòries legítimes'],
     ['calendari comunitari', 'pública per a tota la xarxa', 'tens l\'autoritat']
   ],
+  /* Gauntlet 261016 (§0.1.3) · La negreta del segon paràgraf diu ara que la foto
+     conserva l'EXIF; els tres H5 i els tres paràgrafs continuen sent els de 2245. */
   mapa: [
     ['Un espai per a situar-nos al territori', 'La privacitat sempre per davant', 'Visibilitat oberta'],
-    ['mapa de la comarca', 'esborra totes les dades EXIF', 'visible i geolocalitzable']
+    ['mapa de la comarca', 'les conserva dins de la foto', 'visible i geolocalitzable']
   ],
   vehicle: [
     ['Moviment eficient i solidari', 'Privacitat en les rutes', 'Sense intermediaris'],

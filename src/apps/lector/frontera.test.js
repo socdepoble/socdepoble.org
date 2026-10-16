@@ -7,13 +7,14 @@
      d'example.org (domini reservat) i els espais de noms dels formats.
    · Cap import del Bar, de Salut, de la Nevera, de la Gestoria, dels Tractors
      ni del backend: la plataforma per plataforma/index.js, l'esquelet per
-     comu/esquelet/index.js i Pedra Seca per la façana.
+     comu/esquelet/index.js, i Pedra Seca i l'espai de treball per la façana.
    · El nucli és pur: cap React, cap DOM, cap rellotge, cap atzar.
    Els patrons vetats es componen a trossos perquè les portes que llegixen
    src/ no els troben ací (patró de src/sections/gestoria/qualitat.test.js). */
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, test } from 'vitest';
+import { exposaElNom, portaDeLaFont } from '../plataforma/contracteNucli.js';
 
 const ARREL = process.cwd();
 const APP = 'src/apps/lector';
@@ -43,7 +44,11 @@ const PERMESOS_DE_FORA = new Set([
   'src/components/PedraSeca/index.js',
   'src/components/layout/AppGridColumn.jsx',
   'src/app/contexts/RouterContext',
-  'src/utils/magatzemLocal.js'
+  'src/utils/magatzemLocal.js',
+  /* Bloc 0 del Gauntlet (261016): el Lector es munta sobre l'espai de treball
+     del Bloc de notes, per la seua façana i prou (la porta 'workspace' del
+     nucli 1.2.0, src/apps/plataforma/contracteNucli.js). */
+  'src/components/universal/workspace/index.js'
 ]);
 const PAQUETS = new Set(['react', 'lucide-react']);
 
@@ -70,6 +75,22 @@ describe('el que pot importar', () => {
       .filter(([, , desti]) => !PAQUETS.has(desti) && !desti.startsWith(`${APP}/`) && !PERMESOS_DE_FORA.has(desti))
       .map(([fitxer, e]) => `${fitxer}: ${e}`));
     expect(fora).toEqual([]);
+  });
+
+  /* Bloc 0 del Gauntlet (ordre del Mestre, 261016) · De l'espai de treball, només els noms que
+     exposa la porta 'workspace' del nucli (contracteNucli.js): un altre nom de la façana
+     (ESPAI_COMU, les carpetes a la vista…) faria aturar el build del mòdul. */
+  test('de la façana de l’espai de treball, només els noms de la porta del nucli', () => {
+    const FACANA = 'src/components/universal/workspace/index.js';
+    const porta = portaDeLaFont(FACANA);
+    expect(porta?.clau).toBe('workspace');
+    const noms = PRODUCCIO.flatMap((fitxer) => [...llig(fitxer).matchAll(/import\s*\{([^}]+)\}\s*from\s*['"]([^'"]+)['"]/g)]
+      .filter(([, , especificador]) => resol(fitxer, especificador) === FACANA)
+      .flatMap(([, llista]) => llista.split(',').map((nom) => nom.trim()).filter(Boolean)));
+    expect(noms).toEqual(['UniversalWorkspace']);
+    expect(noms.filter((nom) => !exposaElNom(porta, nom))).toEqual([]);
+    /* Sonda: un nom de la façana que la porta no exposa no passaria. */
+    expect(exposaElNom(porta, 'ESPAI_COMU')).toBe(false);
   });
 
   test('el motor local, només a magatzem.js; la llavor, només com a text (?raw) des de llavor/cataleg.js', () => {

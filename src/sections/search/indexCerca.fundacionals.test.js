@@ -9,20 +9,29 @@
  * etiqueta i l'enllaç al seu perfil, i que cap dels tres té una pàgina del
  * sistema (SYSTEM_PAGES és el que el Mur barreja amb les publicacions).
  *
- * Onada 11 (261010; prompt 261010_1730, tasca 6, D8) · Girada la prova
- * [DEFECTE] de l'Onada 10 sobre «Javi Llinares»: la regla de privacitat guanya
- * (la llavor no porta el cognom) i la cara del Cercador és la foto del padró
- * pilot, no el logotip de l'entitat. Ja no queda cap prova [DEFECTE] ací.
+ * Gauntlet 261016 (Bloc -1) · El nom canònic públic de la persona pilot és
+ * «Javi Llinares», també al catàleg i al padró de llavor. El cognom es troba
+ * sense sessió, amb la foto del padró pilot, mai el logotip de l'entitat.
+ * Compartir el nom no fusiona dues fitxes ni canvia els seus enllaços.
+ *
+ * Gauntlet 261016 (Bloc 3.5.1; ordre del Mestre: «Tria i deixa un sol perfil
+ * per a cadascuna») · La regla del nom continua valent per als homònims, però
+ * la persona de la sessió i la seua fitxa del catàleg ja no són dues: en
+ * llavor, qui té sessió declara els àlies de la persona pilot (aliesDeLActor)
+ * i el '0001' és un d'ells (clauFundacional). Es fusionen per eixa identitat
+ * declarada (ambLaIdentitatPropia), mai pel nom.
  */
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 vi.mock('../../data/identitat.js', () => ({ usuariDeSessio: () => null, getDefaultUserId: () => 'convidat-seed' }));
 
-import { cercaEntrades, deAgent, deIdentitat, deMembre } from './indexCerca.js';
+import { ambLaIdentitatPropia, cercaEntrades, deAgent, deIdentitat, deMembre } from './indexCerca.js';
 import { rutaDePerfil } from '../../config/navigation.js';
 import { SYSTEM_PAGES } from '../../config/systemPages.js';
 import { AGENTS_MAP } from '../../data/agentsSeed.js';
-import { ENTITAT_PILOT_ID, ENTITAT_PILOT_SLUG, IAIA_ID, PERSONA_PILOT, agentIASeed } from '../../data/identitatsSeed.js';
+import {
+  ENTITAT_PILOT_ID, ENTITAT_PILOT_SLUG, IAIA_ID, PERSONA_PILOT, agentIASeed, aliesDeLActor
+} from '../../data/identitatsSeed.js';
 import { localXat, reiniciaLocalXat } from '../../data/localXat.js';
 import { XAT_SEED_IDS } from '../../data/xatSeed.js';
 import { AGENT_LIST } from '../profile/profileContent.js';
@@ -98,31 +107,79 @@ describe('Javi Llinares', () => {
     const { llista } = cercaEntrades(index, 'javi', 'persones');
     expect(llista).toHaveLength(1);
     const [javi] = llista;
-    expect([javi.clau, javi.tipus, javi.titol]).toEqual([`persones:${AGENTS_MAP.JAVI.id}`, 'persones', 'Javi']);
+    expect([javi.clau, javi.tipus, javi.titol]).toEqual([`persones:${AGENTS_MAP.JAVI.id}`, 'persones', 'Javi Llinares']);
     expect(javi.href).toBe('/gent/0001');
     expect(javi.href).toBe(rutaDePerfil('persona', AGENTS_MAP.JAVI.id));
     expect(javi.accio).toEqual({ tipus: 'escriu', href: `/xat?amb=${AGENTS_MAP.JAVI.id}` });
   });
 
-  test('amb la seua sessió, es troba pel nom sencer i l’enllaç és el del seu perfil', () => {
-    const jo = deIdentitat({ tipus: 'persona', id: 'u-javi', nom: 'Javi Llinares', avatar: PERSONA_PILOT.avatar }, { ...OPCIONS, nomCompte: 'El teu compte' });
-    const { llista } = cercaEntrades([jo, ...index], 'javi llinares', 'persones');
-    expect(llista.map((entrada) => [entrada.titol, entrada.href, entrada.avatar.src])).toEqual([['Javi Llinares', '/el-meu-perfil', PERSONA_PILOT.avatar]]);
+  /* Gauntlet 261016 (Bloc 3.5.1; ordre del Mestre: «Tria i deixa un sol
+     perfil per a cadascuna») · Prova actualitzada a propòsit. Abans fixava
+     dues fitxes «Javi Llinares» (la sessió 'u-javi' cap a /el-meu-perfil i el
+     '0001' del catàleg cap a /gent/0001), per la regla del Bloc -1 «compartir
+     el nom no les fusiona». Eixa regla es manté per als homònims (prova
+     següent) i en remot (D1). La fusió d'ací no és pel nom: és per identitat
+     declarada. En llavor, qui té sessió porta els àlies de la persona pilot
+     (aliesDeLActor) i el '0001' n'és un (clauFundacional). */
+  const SESSIO = Object.freeze({ tipus: 'persona', id: 'u-javi', nom: 'Javi Llinares', avatar: PERSONA_PILOT.avatar, rol: 'persona' });
+  const fitxaPropia = (identitat = SESSIO) => deIdentitat(identitat, { ...OPCIONS, nomCompte: 'El teu compte' });
+  const aliesDeLaSessio = (dataMode) => [...aliesDeLActor(SESSIO, { dataMode })];
+  const resum = (llista) => llista.map((entrada) => [entrada.clau, entrada.id, entrada.tipus, entrada.titol, entrada.href, entrada.avatar.src]);
+  const PROPIA = ['persones:u-javi', 'u-javi', 'persones', 'Javi Llinares', '/el-meu-perfil', PERSONA_PILOT.avatar];
+
+  test('Bloc 3.5.1 · en llavor amb sessió, el nom sencer troba una sola fitxa: la pròpia, sense «Escriu-li»', () => {
+    const entrades = ambLaIdentitatPropia([fitxaPropia(), ...index], aliesDeLaSessio('seed'));
+    for (const [consulta, tipus] of [['javi llinares', 'persones'], ['javi llinares', 'tot'], ['llinares', 'tot'], ['javi', 'persones']]) {
+      const resultat = cercaEntrades(entrades, consulta, tipus);
+      expect([consulta, tipus, resultat.perTipus.persones, resum(resultat.llista)]).toEqual([consulta, tipus, 1, [PROPIA]]);
+      expect(resultat.llista[0].accio).toBeNull();
+    }
+    /* El text del catàleg també compta: el seu rol troba la fitxa pròpia. */
+    expect(resum(cercaEntrades(entrades, 'coordinador', 'persones').llista)).toEqual([PROPIA]);
+    /* La IAIA i l'entitat pilot no es toquen. */
+    expect(cercaEntrades(entrades, 'iaia', 'persones').llista.map((entrada) => entrada.clau)).toEqual([`persones:${IAIA_ID}`]);
+    expect(cercaEntrades(entrades, 'sóc de poble', 'entitats').llista.map((entrada) => entrada.clau)).toEqual([`entitats:${ENTITAT_PILOT_ID}`]);
   });
 
-  /* Onada 11 (261010; prompt 261010_1730, tasca 6, D8) · Regla de privacitat:
-     la llavor l'anomena «Javi» (agentsSeed.js i el padró del xat) i cap font
-     de l'índex porta «Llinares»; pel cognom no es troba, i així ha de ser. I la
-     seua cara al Cercador és la foto del padró pilot (PERSONA_PILOT.avatar,
-     que el catàleg també porta), no el logotip de l'entitat (Pedra Seca §11). */
-  test('D8 · en llavor i sense sessió, el cognom no es troba (regla de privacitat) i la seua cara és la foto del padró pilot, no el logotip', () => {
-    expect(cercaEntrades(index, 'llinares').total).toBe(0);
-    expect(cercaEntrades(index, 'javi llinares').total).toBe(0);
-    expect(cercaEntrades(index, 'javi llinares', 'persones').total).toBe(0);
-    const [javi] = cercaEntrades(index, 'javi', 'persones').llista;
-    expect(javi.avatar.src).toBe(PERSONA_PILOT.avatar);
-    expect(javi.avatar.src).toBe(AGENTS_MAP.JAVI.avatar_url);
-    expect(javi.avatar.src).not.toBe(AGENTS_MAP.SOCDEPOBLE.avatar_url);
+  test('Bloc 3.5.1 · una sessió amb l’id d’un àlies de la persona pilot també és ella, sense cap altre àlies', () => {
+    const propia = fitxaPropia({ ...SESSIO, id: PERSONA_PILOT.slug });
+    const { llista } = cercaEntrades(ambLaIdentitatPropia([propia, ...index]), 'javi llinares', 'persones');
+    expect(llista.map((entrada) => [entrada.clau, entrada.href])).toEqual([[`persones:${PERSONA_PILOT.slug}`, '/el-meu-perfil']]);
+  });
+
+  test('Bloc 3.5.1 · la regla del Bloc -1 es manté per als homònims: un altre id amb el mateix nom és una altra fitxa', () => {
+    const homonim = deMembre({ usuari_id: 'u-pepa', nom: 'Javi Llinares', tipus: 'persona' }, { ...OPCIONS, fitxesDePersones: true });
+    const entrades = ambLaIdentitatPropia([fitxaPropia(), homonim, ...index], aliesDeLaSessio('seed'));
+    const { llista } = cercaEntrades(entrades, 'javi llinares', 'persones');
+    expect(llista.map((entrada) => [entrada.clau, entrada.titol, entrada.href, entrada.accio?.href ?? null])).toEqual([
+      ['persones:u-javi', 'Javi Llinares', '/el-meu-perfil', null],
+      ['persones:u-pepa', 'Javi Llinares', '/gent/u-pepa', '/xat?amb=u-pepa']
+    ]);
+  });
+
+  test('Bloc 3.5.1 · en remot el compte no declara cap àlies de la persona pilot: el mateix nom no el fusiona (D1)', () => {
+    const entrades = ambLaIdentitatPropia([fitxaPropia(), ...index], aliesDeLaSessio('remote'));
+    expect(cercaEntrades(entrades, 'javi llinares', 'persones').llista.map((entrada) => [entrada.clau, entrada.href])).toEqual([
+      ['persones:u-javi', '/el-meu-perfil'],
+      ['persones:0001', '/gent/0001']
+    ]);
+  });
+
+  test('Bloc 3.5.1 · sense sessió no hi ha fitxa pròpia i l’índex no canvia', () => {
+    expect(ambLaIdentitatPropia(index, aliesDeLaSessio('seed'))).toEqual(index);
+  });
+
+  /* Bloc -1 (261016) · El cognom ja és públic. El padró i el catàleg de la
+     mateixa persona es dedupliquen per ID i mantenen la foto personal. */
+  test('Gauntlet 261016 · sense sessió, el cognom troba un perfil públic amb la foto del padró pilot', () => {
+    for (const [consulta, tipus] of [['llinares', 'tot'], ['javi llinares', 'tot'], ['javi llinares', 'persones']]) {
+      const resultat = cercaEntrades(index, consulta, tipus);
+      expect(resultat.total).toBe(1);
+      expect(resultat.llista.map((entrada) => [entrada.clau, entrada.id, entrada.tipus, entrada.titol, entrada.href, entrada.avatar.src]))
+        .toEqual([['persones:0001', '0001', 'persones', 'Javi Llinares', '/gent/0001', PERSONA_PILOT.avatar]]);
+      expect(resultat.llista[0].avatar.src).toBe(AGENTS_MAP.JAVI.avatar_url);
+      expect(resultat.llista[0].avatar.src).not.toBe(AGENTS_MAP.SOCDEPOBLE.avatar_url);
+    }
   });
 });
 
@@ -136,7 +193,7 @@ describe('en local, sense catàleg', () => {
       .map((entrada) => [entrada.titol, entrada.href, entrada.accio?.href]);
     expect(troba('iaia', 'persones')).toEqual([['IAIA MarIA', `/perfil/${IAIA_ID}`, `/xat?amb=${IAIA_ID}`]]);
     expect(troba('sóc de poble', 'entitats')).toEqual([['Sóc de Poble', '/empresa/socdepoble', '/xat?amb=socdepoble']]);
-    expect(troba('javi', 'persones')).toEqual([['Javi', '/gent/0001', '/xat?amb=0001']]);
+    expect(troba('javi', 'persones')).toEqual([['Javi Llinares', '/gent/0001', '/xat?amb=0001']]);
     const [iaia] = cercaEntrades(padro, 'iaia', 'persones').llista;
     expect([iaia.meta, iaia.avatar.src]).toEqual([[ETIQUETA_IA], AGENTS_MAP.IAIA.avatar_url]);
   });

@@ -109,7 +109,7 @@ import { textDErrorDelXat, textDeFalladaDirecte } from './errorsXat.js';
 import useInformaDUnError from './useInformaDUnError.js';
 import BotoInformaDUnError from './components/BotoInformaDUnError.jsx';
 import {
-  anteposaPoble, avatarDelPoble, comunitatsAmbCaraDelPoble, esComunitatDelPoble, filsAmbCaraDelPoble, rutaSobreDelPoble
+  anteposaPoble, avatarDelPoble, comunitatsAmbCaraDelPoble, esComunitatDelPoble, filsAmbCaraDelPoble, pobleDelXat, rutaSobreDelPoble
 } from './pobleAmfitrio.js';
 
 /* Els quatre filtres fixos de WhatsApp (XAT-A17): identificador i clau i18n. */
@@ -299,13 +299,17 @@ function XatWorkspace() {
      grup va al capdamunt i, en ample, la primera arribada n'obri la fitxa a
      la columna de llista amb la presentació a la dreta (EntradaDelPoble;
      ordre del Mestre del 14-10, XAT-01: mai el General). Null a
-     socdepoble.org: res no canvia. */
+     socdepoble.org: res no canvia.
+     Gauntlet 261016 (Bloc 3.6) · La FILA, però, és sempre: sense amfitrió,
+     la de «Gent de la Torre» (pobleDelXat, POBLE_PER_DEFECTE). `poble`
+     continua sent el declarat, l'únic que obri sol la seua fitxa. */
   const poble = usePobleAmfitrio();
+  const pobleDeLaLlista = pobleDelXat(poble);
   /* Onada 3 (P2, revisió) · La cara del poble de l'amfitrió, la de la seua
      fitxa de Pobles: la porta la comunitat del poble quan el servidor no n'hi
      dona cap (pobleAmfitrio.js, filsAmbCaraDelPoble), igual que FilaPoble. */
   const { towns } = useCoreContent();
-  const caraDelPoble = useMemo(() => avatarDelPoble(poble, towns), [poble, towns]);
+  const caraDelPoble = useMemo(() => avatarDelPoble(pobleDeLaLlista, towns), [pobleDeLaLlista, towns]);
 
   const {
     chatThreads,
@@ -341,7 +345,10 @@ function XatWorkspace() {
     avisLlista = null,
     /* Onada 6 (tasca 12) · Nivell d'IA 0: la IAIA no apareix. */
     iaiaApagada = false,
-    esFilAmagat = mai
+    esFilAmagat = mai,
+    /* Gauntlet 261016 (Bloc 3.6.2) · On porten les files de la IAIA i de
+       Javi depén del mode de dades (useObriXatPerDefecte). */
+    modeDades = 'remote'
   } = useXat();
 
   const titolSeccio = t('section.xat.rail.titol', 'Xat');
@@ -381,8 +388,8 @@ function XatWorkspace() {
      ha arribat (revisió adversarial 260930, P3; vegeu l'efecte del focus). */
   const pobleDemanat = useRef(false);
 
-  const threads = useMemo(() => filsAmbCaraDelPoble(chatThreads || CAP, poble, caraDelPoble), [chatThreads, poble, caraDelPoble]);
-  const comunitats = useMemo(() => comunitatsAmbCaraDelPoble(comunitatsDelXat, poble, caraDelPoble), [comunitatsDelXat, poble, caraDelPoble]);
+  const threads = useMemo(() => filsAmbCaraDelPoble(chatThreads || CAP, pobleDeLaLlista, caraDelPoble), [chatThreads, pobleDeLaLlista, caraDelPoble]);
+  const comunitats = useMemo(() => comunitatsAmbCaraDelPoble(comunitatsDelXat, pobleDeLaLlista, caraDelPoble), [comunitatsDelXat, pobleDeLaLlista, caraDelPoble]);
   /* Auditoria 261008 (B04 i B05) · `trobatViu` és el fil de la URL tal com
      és ara a la llista (o entre els visitants). obriFil només es crida amb
      este: un id que no hi és (ni entre els visitants) no es demana mai a
@@ -463,7 +470,10 @@ function XatWorkspace() {
      sola vegada per navegació: la guarda és una ref (el doble efecte de
      StrictMode ix per ella) i porta la consulta, que és nova a cada
      navegació. Així, si el xat encara no s'ha pogut resoldre i la persona es
-     queda ací, tornar a prémer la fila el torna a demanar. */
+     queda ací, tornar a prémer la fila el torna a demanar.
+     Gauntlet 261016 (Bloc 3.6) · També la fila de Javi Llinares, i el mode
+     de dades tria la via de la IAIA i la de Javi (en llavor i en local, el
+     directe que contesta). */
   const obriPerDefecte = useObriXatPerDefecte();
   const perDefecteTractat = useRef(null);
   useEffect(() => {
@@ -471,8 +481,8 @@ function XatWorkspace() {
     const previ = perDefecteTractat.current;
     if (previ && previ.threadId === threadId && previ.params === params) return;
     perDefecteTractat.current = { threadId, params };
-    obriPerDefecte(trobatPerDefecte);
-  }, [trobatPerDefecte, threadId, params, obriPerDefecte]);
+    obriPerDefecte(trobatPerDefecte, { modeDades, senseSessio });
+  }, [trobatPerDefecte, threadId, params, obriPerDefecte, modeDades, senseSessio]);
 
   /* Onada 6 (tasca 12) · La IAIA s'ha apagat (o ja ho estava) amb la persona
      dins d'un xat seu: a la llista, amb replace i l'avís de per què. */
@@ -730,15 +740,19 @@ function XatWorkspace() {
        virtual (el xat fals porta la seua comunitat). Revisió adversarial
        260930 (P3) · Ni mentre la llista carrega: encara no se sap si la
        comunitat existix, i la fila virtual feia la llista no buida, tapava el
-       «Carregant…» i després es transformava en la de la comunitat. */
-    return anteposaPoble(llista, { poble, comunitats, virtual: !senseSessio && status === 'ready' });
-  }, [comunitats, threads, poble, senseSessio, status]);
+       «Carregant…» i després es transformava en la de la comunitat.
+       Gauntlet 261016 (Bloc 3.6) · Amb el poble del xat: sense amfitrió,
+       «Gent de la Torre». */
+    return anteposaPoble(llista, { poble: pobleDeLaLlista, comunitats, virtual: !senseSessio && status === 'ready' });
+  }, [comunitats, threads, pobleDeLaLlista, senseSessio, status]);
   /* La fila virtual del poble no es pot triar: fora mentre se seleccionen xats.
      Ordre del Mestre (261007) · Les files d'ajuda per defecte tampoc: no són
      converses i no tenen res a marcar. */
   const filesVisibles = files.filter((fila) => passaFiltre(fila, filtre)
     && !(modeSeleccio && (fila.tipus === 'poble' || fila.fil?.perDefecte)));
-  const comunitatDelPoble = poble ? comunitats.find((c) => esComunitatDelPoble(c, poble)) || null : null;
+  /* La comunitat de la fila del poble (el focus la seguix quan naix). La
+     fitxa automàtica només la rep amb un poble declarat (EntradaDelPoble). */
+  const comunitatDelPoble = comunitats.find((c) => esComunitatDelPoble(c, pobleDeLaLlista)) || null;
 
   const carregaMes = useCallback(() => {
     if (filActiuId != null) carregaMesAntics(filActiuId);

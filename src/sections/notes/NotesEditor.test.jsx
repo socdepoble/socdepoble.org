@@ -43,6 +43,8 @@ import {
 import { NotaPreparadaContext } from './notaPreparada.js';
 import { RUTA_PERFIL_PROJECTE } from '../../config/navigation.js';
 import { ENTITAT_PILOT_SLUG } from '../../data/identitatsSeed.js';
+import { dataOriginal, gpsTorre, jpegAmbExif } from '../../components/universal/enquadrament/jpegProva.js';
+import { llegixExif } from '../../components/universal/enquadrament/exif.js';
 
 beforeEach(() => {
   mocks.notes = [];
@@ -79,6 +81,36 @@ test('la pujada usa la configuració del workspace A i després la de B', async 
   rerender(<NotesEditor />);
   await mocks.adapter.uploadMedia(file);
   expect(mocks.upload).toHaveBeenLastCalledWith(file, { carpeta: 'notes', tenantId: mocks.TENANT_B }, mocks.config);
+});
+
+/* Gauntlet 261016 (Bloc 1 i 1.2, Llei del Quadrat i mandat de l'EXIF) · El
+   que arriba a uploadMedia ja ve preparat (la closca: la foto dins del
+   pressupost, amb l'EXIF que la persona ha triat conservar; l'ordre «/»
+   Imatge). Abans, en seed i local, pujarImatgeDeNota el tornava a comprimir
+   sense opcions: l'EXIF triat es perdia i la foto podia eixir del pressupost.
+   Ara es desa tal qual: els mateixos bytes, com a data URL. */
+test('Bloc 1.2 · en seed i local, la foto ja preparada es desa tal qual, amb l’EXIF triat: ni es torna a comprimir ni es puja', async () => {
+  const bytes = jpegAmbExif({ exif: dataOriginal('2017:05:14 10:22:33'), gps: gpsTorre() });
+  const preparada = new File([bytes], 'heroImage.jpg', { type: 'image/jpeg' });
+  const esperat = `data:image/jpeg;base64,${btoa(String.fromCharCode(...bytes))}`;
+  mocks.upload.mockReset();
+  for (const dataMode of ['seed', 'local']) {
+    mocks.config = { tenantId: mocks.TENANT_A, dataMode };
+    render(<NotesEditor />);
+    const desat = await mocks.adapter.uploadMedia(preparada);
+    expect(desat, dataMode).toBe(esperat);
+    const tornats = Uint8Array.from(atob(desat.slice(desat.indexOf(',') + 1)), (c) => c.charCodeAt(0));
+    expect(llegixExif(tornats).gps, dataMode).toMatchObject({ lat: 38.5919, lng: -0.4184 });
+    cleanup();
+  }
+  expect(mocks.upload).not.toHaveBeenCalled();
+});
+
+test('Bloc 1.2 · en seed, la validació de sempre: un fitxer que no és imatge no es desa', async () => {
+  mocks.config = { tenantId: mocks.TENANT_A, dataMode: 'seed' };
+  render(<NotesEditor />);
+  await expect(mocks.adapter.uploadMedia(new File(['%PDF'], 'a.pdf', { type: 'application/pdf' })))
+    .rejects.toThrow('Tria una imatge PNG, JPEG, WebP, GIF o AVIF de menys de 10 MB.');
 });
 
 

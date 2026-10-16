@@ -1,6 +1,7 @@
-import { Bot, Building2, Eye, Lock, Network, ShieldCheck, UserRound, Users } from 'lucide-react';
+import { Bot, Building2, UserRound, Users } from 'lucide-react';
 import { ESTATS_APLICACIO } from './aplicacions.js';
-import { potEditarFitxa } from './fitxaDePerfil.js';
+import { avatarDeLaFitxa, potEditarFitxa } from './fitxaDePerfil.js';
+import { documentDeFitxa } from './perfilCamps.js';
 
 /* ═══════════════════════════════════════════════════════════════════
    MODEL DE L'ESPAI DE TREBALL DEL PERFIL · funcions pures
@@ -20,6 +21,20 @@ export const SENSE_ORGANITZACIONS = 'sense-organitzacions';
 
 /** Id de categoria d'una aplicació: prefixat, perquè no xoque amb cap organització. */
 export const idAplicacio = (id) => `app-${id}`;
+
+/* Pla 261015_1900 (Onada 1.3: «emoticones grans i riques als apartats») ·
+   Els apartats de la segona columna porten un emoji, com la Wiki
+   (iconesWiki.js) i Disseny (ICONES_ESPECIMENS): ItemMedia el pinta XL al
+   quadrat de la fitxa (sdp-fitxa-emoji-xl) i el rail plegat, menut
+   (NavGlyph). «La fitxa» es queda amb l'avatar de qui és (sdp-pedra-seca
+   §11). 👁️ i 🛡️ porten el selector U+FE0F: sense, emojiSol els rebutja i es
+   pintarien com a text menut. Tots quatre són d'Unicode 6-7 (Safari 16). */
+export const ICONES_APARTATS = Object.freeze({
+  vistes: '\u{1F441}\u{FE0F}', // 👁️
+  compte: '\u{1F510}', // 🔐
+  privacitat: '\u{1F6E1}\u{FE0F}', // 🛡️
+  nodes: '\u{1F310}', // 🌐
+});
 
 /* T43 (ordre del Mestre, 260928) · «Edita la fitxa de {Org}» obri el Perfil
    a la fitxa d'eixa organització SENSE canviar d'identitat: canviar-la és
@@ -103,12 +118,17 @@ export function itemsDePerfil(identitats, { ambPrivacitat = false } = {}) {
     const persona = esPersona(identitat);
     const categoryIds = [String(identitat.id)];
     const nom = identitat.nom || '';
+    /* Gauntlet 261016 (encàrrec D) · La imatge de «La fitxa» és la de la
+       fitxa (avatarDeLaFitxa, fitxaDePerfil.js), la mateixa que l'editor,
+       «Les vistes» i «El compte»; abans, identitat.avatar. Este model és pur
+       i no veu la cua: l'esborrany el posa qui pinta la fila (FitxaDePerfil,
+       PerfilShell.jsx). */
     const fitxa = {
       id: `${identitat.id}-fitxa`,
       categoryIds,
       title: 'La fitxa',
       subtitle: esAgent(identitat) ? 'Intel·ligència artificial' : nom,
-      image: identitat.avatar || undefined,
+      image: avatarDeLaFitxa(documentDeFitxa(identitat), null, identitat) || undefined,
       icon: iconaDe(identitat),
       searchText: `fitxa ${nom}`,
       data: { vista: 'fitxa', identitatId: identitat.id },
@@ -122,7 +142,7 @@ export function itemsDePerfil(identitats, { ambPrivacitat = false } = {}) {
       categoryIds,
       title: 'Les vistes',
       subtitle: 'Vista A4 / PDF, portada i targeta',
-      icon: Eye,
+      icon: ICONES_APARTATS.vistes,
       searchText: `vistes vista a4 pdf imprimir portada targeta ${nom}`,
       data: { vista: 'vistes', identitatId: identitat.id },
     }] : [];
@@ -135,8 +155,9 @@ export function itemsDePerfil(identitats, { ambPrivacitat = false } = {}) {
         id: `${identitat.id}-compte`,
         categoryIds,
         title: 'El compte',
-        subtitle: persona ? 'Correu, contrasenya, sessió i estat del perfil' : 'Correu, identificador, membres i eixida',
-        icon: Lock,
+        /* Pla 261016 (Bloc 3.1) · La persona tria ací els drets de sèrie de les seues notes. */
+        subtitle: persona ? 'Correu, contrasenya, sessió, estat del perfil i drets de sèrie de les notes' : 'Correu, identificador, membres i eixida',
+        icon: ICONES_APARTATS.compte,
         searchText: `compte ${nom}`,
         data: { vista: 'compte', identitatId: identitat.id },
       },
@@ -147,7 +168,7 @@ export function itemsDePerfil(identitats, { ambPrivacitat = false } = {}) {
         categoryIds,
         title: 'Privacitat i dades',
         subtitle: 'Les teues dades, el consentiment i la baixa',
-        icon: ShieldCheck,
+        icon: ICONES_APARTATS.privacitat,
         searchText: `privacitat dades consentiment baixa ${nom}`,
         data: { vista: 'privacitat', identitatId: identitat.id },
       });
@@ -158,7 +179,7 @@ export function itemsDePerfil(identitats, { ambPrivacitat = false } = {}) {
         categoryIds,
         title: 'Els nodes',
         subtitle: 'On estàs connectat',
-        icon: Network,
+        icon: ICONES_APARTATS.nodes,
         searchText: `nodes connexio fedivers ${nom}`,
         data: { vista: 'nodes', identitatId: identitat.id },
       });

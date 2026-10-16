@@ -1,8 +1,7 @@
 /**
- * Lector de notícies · la LECTURA IMMERSIVA, al panell del detall: l'article
- * ocupa el lloc de la graella i les columnes de l'esquerra i del mig no
- * s'amaguen (en ample i en mitjana; en estret, la closca ensenya una sola
- * columna, com sempre).
+ * Lector de notícies · la LECTURA IMMERSIVA, al detall de l'espai de treball
+ * (Noticies.jsx): l'arbre i la llista no s'amaguen (en ample i en mitjana; en
+ * estret, la closca ensenya una sola columna, com sempre).
  *
  *   capçalera  AppGridColumn, com la barra del lector de Feedly: l'aspa
  *              «Tanca l’article» a l'esquerra, el nom de la font i, a la
@@ -19,11 +18,13 @@
  *              ni amb l'Índex de secció o un diàleg modal propi obert: Esc
  *              tanca només el que està obert més amunt (un modal de
  *              l'amfitrió, en l'encastat, no compta)
- *   focus      en obrir, a l'H1 (refTitol); en tancar, ColumnaNoticies el
- *              torna a la targeta de l'article
+ *   focus      en obrir, a l'H1 (refTitol); en tancar, Noticies.jsx el torna
+ *              a la fila de l'article a la llista (`retorn`, de davall)
  * Obrir-lo el marca com a llegit. Les imatges i vídeos de l'article no es
  * carreguen (privacitat) i una Alerta ho diu. Un article desat que la font
- * ja no servix es llig del resum desat.
+ * ja no servix es llig del resum desat. L'avís del disc (AvisLector), dins
+ * del marc: abans anava al peu de la columna de les carpetes, que ja no hi és
+ * (Bloc 0 del Gauntlet, ordre del Mestre del 261016).
  *
  * Ordre del Mestre, 261004 (prompt 261004_0515; D-A del xat de les 06:38) ·
  * El títol propi (h2 i .lead dins de .sdp-centre) es retira: el detall és la
@@ -41,6 +42,7 @@ import { Alerta, Boto, Carregant, EstatBuit, MarcColumna, PaginaApp } from '../.
 import { useClosaAplicacio } from '../../plataforma/index.js';
 import { HUI, dataDeBoina, senseFinal } from '../nucli/index.js';
 import { useArticle } from '../useNoticies.js';
+import { AvisLector } from './comunes.jsx';
 import { Contingut } from './Contingut.jsx';
 import { useVistaLector } from './context.js';
 import { NOTICIES } from './navegacio.js';
@@ -82,6 +84,11 @@ export function focusLliure(node, columna) {
 
 /* La closca de l'app (AppGridShell): on el focus és de l'app. */
 export const CLOSCA = '.app-grid-page';
+
+/* Bloc 0 del Gauntlet (ordre del Mestre, 261016) · La fila de l'article obert a la llista de
+   l'espai de treball: la de la columna del mig (l'id de la closca, el mateix que fa servir
+   aria-controls) que l'espai marca aria-current. */
+const FILA_OBERTA = '#app-grid-list [aria-current="true"]';
 
 /* On Esc és d'un altre: escriure (un camp de text) o un diàleg obert. */
 const ESC_ALIE = 'input, textarea, select, [contenteditable=""], [contenteditable="true"], dialog, [role="dialog"], [role="alertdialog"]';
@@ -168,7 +175,10 @@ function Cos({ article, portada, font, desfas, titolRef, nomesResum, onTanca }) 
   );
 }
 
-export function Lector({ id, onTanca }) {
+/* `retorn` (opcional): un ref on el lector deixa, a cada pintada, la fila de l'article a la llista
+   i la closca ({ fitxa, closca }). Qui el munta hi torna el focus en tancar-lo, també amb l'arrere
+   del navegador, que no passa per onTanca. */
+export function Lector({ id, onTanca, retorn = null }) {
   const { lector, noticies, font: port, desfas } = useVistaLector();
   const { estat, article: sencer, rellegix } = useArticle(port, id);
   const desat = lector.estat.despres.find((resum) => resum.id === id) || null;
@@ -189,6 +199,17 @@ export function Lector({ id, onTanca }) {
     tapatRef.current = mida !== 'ample' && panellObert !== null;
   });
 
+  /* Bloc 0 del Gauntlet (ordre del Mestre, 261016) · On tornarà el focus: es llig a cada pintada,
+     perquè la llista pot canviar mentre es llig (una altra carpeta, un recompte). Si la fila no hi
+     és en una pintada (la notícia fora de la llista), es conserva l'última d'este mateix article,
+     mai la d'un altre. */
+  useLayoutEffect(() => {
+    if (!retorn) return;
+    const closca = marc.current?.closest(CLOSCA) || null;
+    const fitxa = closca?.querySelector(FILA_OBERTA) || (retorn.current?.id === id ? retorn.current.fitxa : null);
+    retorn.current = { id, fitxa, closca };
+  });
+
   /* Obrir-lo el marca com a llegit (una vegada per article). */
   useEffect(() => { marcaLlegit(id); }, [id, marcaLlegit]);
 
@@ -203,8 +224,8 @@ export function Lector({ id, onTanca }) {
     if (focusLliure(titol, titol.closest(CLOSCA) || titol.closest('section'))) titol.focus({ preventScroll: true });
   }, [article, id]);
 
-  /* Esc tanca des de qualsevol columna de la closca (com a Feedly, «Marca-ho
-     tot com a llegit» al mig no l'apaga) i amb el focus perdut (body, després
+  /* Esc tanca des de qualsevol columna de la closca (com a Feedly, també des
+     de l'arbre i de la llista) i amb el focus perdut (body, després
      d'un clic en un lloc que no s'enfoca). S'escolta a l'arrel del node: el
      document o, en l'encastat, l'arrel ombra (allí el body és de l'amfitrió i
      queda fora). */
@@ -256,7 +277,8 @@ export function Lector({ id, onTanca }) {
   } else cos = <EstatBuit titol="Esta notícia ja no hi és">La font ja no la publica.</EstatBuit>;
 
   return (
-    <MarcColumna capcalera={<AppGridColumn titol={fontInfo?.nom || 'Article'} startActions={tanca} accions={accions} />} etiqueta="Article">
+    <MarcColumna capcalera={<AppGridColumn titol={fontInfo?.nom || 'Article'} startActions={tanca} accions={accions} />}
+      avis={<AvisLector />} etiqueta="Article">
       <div ref={marc}>{cos}</div>
     </MarcColumna>
   );

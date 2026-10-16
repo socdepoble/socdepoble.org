@@ -570,12 +570,12 @@ export function empaqueta({ arrelPlugin = ARREL_PLUGIN, sortida, urlBase, clauPe
   if (patrons.length) throw new Error(`La variant del directori encara porta patrons d'actualitzador:\n- ${patrons.join('\n- ')}`);
 
   const noms = {
-    estatic: `socdepoble-spa-v${versio}-${marca}.zip`,
-    wordpress: `${SLUG}-v${versio}-${marca}.zip`,
-    directori: `${SLUG}-v${versio}-${marca}.zip`
+    estatic: `${marca}_estatic_spa_v${versio}.zip`,
+    wordpress: `${marca}_wordpress_enxufe_v${versio}.zip`,
+    directori: `${marca}_wordpress_directori_v${versio}.zip`
   };
-  // Les dues variants WP conserven el nom canònic; la carpeta evita col·lisions.
-  const caminsPaquet = { ...noms, directori: `directori/${noms.directori}` };
+  // La variant de directori es guarda només si cal, mantenint builds/ net
+  const caminsPaquet = { ...noms, directori: noms.directori };
   const zips = {
     estatic: creaZip(deDist.map((f) => ({ nom: `soc-de-poble/${f.rel}`, dades: f.dades })), { data }),
     wordpress: creaZip(entradesWp, { data }),

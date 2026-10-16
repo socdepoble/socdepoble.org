@@ -185,14 +185,13 @@ for (const file of files) {
     }
   }
 
-  // R4: VISTA-DEFINER
-  const createViewRegex = /create (?:or replace )?view (?:public\.)?([a-zA-Z0-9_]+)/gi;
-  while ((match = createViewRegex.exec(content)) !== null) {
-    const viewName = match[1];
+  // R4: VISTA-DEFINER — sobre sentències sense comentaris per evitar falsos positius en comentaris (-- create view només...)
+  for (const st of sentencies(content)) {
+    const viewMatch = /^\s*create\s+(?:or\s+replace\s+)?view\s+(?:public\.)?([a-zA-Z0-9_]+)/i.exec(st);
+    if (!viewMatch) continue;
+    const viewName = viewMatch[1];
     views.add(viewName);
-    // Trobar la definició
-    const viewBlockMatch = new RegExp(`create (?:or replace )?view (?:public\\.)?${viewName}([^;]+);`, 'i').exec(content);
-    if (viewBlockMatch && !viewBlockMatch[0].toLowerCase().includes('security_invoker = true')) {
+    if (!st.toLowerCase().includes('security_invoker = true') && !st.toLowerCase().includes('security_invoker=true')) {
       falla('R4', file, `La vista ${viewName} no porta security_invoker = true`);
     }
   }

@@ -54,10 +54,12 @@ beforeEach(() => {
 });
 afterEach(() => { cleanup(); localStorage.clear(); vi.useRealTimers(); });
 
+/* Gauntlet 261016 (Bloc 3.6) · La fila sintètica de Javi Llinares també és a
+   la cua des d'ara, i el nivell d'IA no la toca: només amaga la IAIA. */
 test('amb el nivell 1 (de sèrie) la IAIA hi és: llista, no llegits i contactes freqüents', async () => {
   munta();
   await waitFor(() => expect(value.status).toBe('ready'));
-  expect(ids()).toEqual(['f-pepa', 'p-iaia', 'd-iaia', 'socdepoble']);
+  expect(ids()).toEqual(['f-pepa', 'p-iaia', 'd-iaia', 'socdepoble', 'javi']);
   expect(value.iaiaApagada).toBe(false);
   expect(value.totalNoLlegits).toBe(6);
   expect(value.contactesFrequents.map((c) => c.usuari_id)).toEqual(['P', IAIA_ID]);
@@ -69,14 +71,14 @@ test('amb el nivell 0 la IAIA desapareix de tot el que es veu, i torna en encend
   munta();
   await waitFor(() => expect(value.status).toBe('ready'));
   expect(value.iaiaApagada).toBe(true);
-  expect(ids()).toEqual(['f-pepa', 'socdepoble']);
+  expect(ids()).toEqual(['f-pepa', 'socdepoble', 'javi']);
   expect(value.totalNoLlegits).toBe(2);
   expect(value.contactesFrequents.map((c) => c.usuari_id)).toEqual(['P']);
   expect([value.esFilAmagat('p-iaia'), value.esFilAmagat('d-iaia'), value.esFilAmagat('f-pepa'), value.esFilAmagat(null)]).toEqual([true, true, false, false]);
 
   canviaNivell(2);
   expect(value.iaiaApagada).toBe(false);
-  expect(ids()).toEqual(['f-pepa', 'p-iaia', 'd-iaia', 'socdepoble']);
+  expect(ids()).toEqual(['f-pepa', 'p-iaia', 'd-iaia', 'socdepoble', 'javi']);
   expect(value.totalNoLlegits).toBe(6);
   /* Cap crida nova al servidor: les dades eren les mateixes. */
   expect(mock.loadFils).toHaveBeenCalledTimes(1);
@@ -86,9 +88,9 @@ test('la fila per defecte de la IAIA (remot, encara sense xat) també se’n va'
   mock.loadFils.mockResolvedValue(ambXatsPerDefecte([]));
   munta();
   await waitFor(() => expect(value.status).toBe('ready'));
-  expect(ids()).toEqual(['socdepoble', 'iaia']);
+  expect(ids()).toEqual(['socdepoble', 'javi', 'iaia']);
   canviaNivell(0);
-  expect(ids()).toEqual(['socdepoble']);
+  expect(ids()).toEqual(['socdepoble', 'javi']);
 });
 
 test('amb la IAIA apagada, un missatge nou al seu xat no avisa; el d’una persona, sí', async () => {

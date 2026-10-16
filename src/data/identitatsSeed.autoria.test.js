@@ -35,10 +35,11 @@ test('la persona pilot porta la foto del seu perfil, no el logo de l’entitat',
 });
 
 test('per qualsevol àlies de la persona pilot: el seu nom i la seua foto', () => {
+  expect(PERSONA_PILOT.alies).toEqual(['javillinares', '0001', 'javi', 'javi-llinares']);
   for (const id of PERSONA_PILOT.alies) {
-    expect(autoriaSeed({ author_id: id })).toEqual({ tipus: 'persona', nom: 'Javi', avatar: FOTO });
+    expect(autoriaSeed({ author_id: id })).toEqual({ tipus: 'persona', nom: 'Javi Llinares', avatar: FOTO });
   }
-  expect(autoriaSeed({ owner_user_id: 'javillinares' })).toEqual({ tipus: 'persona', nom: 'Javi', avatar: FOTO });
+  expect(autoriaSeed({ owner_user_id: 'javillinares' })).toEqual({ tipus: 'persona', nom: 'Javi Llinares', avatar: FOTO });
 });
 
 test('per qualsevol àlies de l’entitat pilot: el seu nom i el seu logo', () => {

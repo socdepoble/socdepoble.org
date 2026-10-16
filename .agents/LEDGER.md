@@ -896,4 +896,30 @@ Gestoria: quatre defectes documentats, P1 comptes CSV i P2 saldo inconsistent, t
 Torn torn_6e1c9735-95eb-43a6-864c-97f640acaccf; informe _wiki_de_poble/04_escriptori/261014_0235_auditoria_codex.md; tall 2026-10-14T00:47:48.840Z. Registre del dictamen inicial: dos P1 i dos P2 previs del Bar, reproduïts amb dades sintètiques; risc CON-03 de salut falsa; integració TPV–Rebost–Gestoria pendent. Evidència: 256 proves existents passades, tres cassets que constaten defectes i una carrera sense Web Locks; les 139 proves durant edició concurrent no acrediten un tall final. Monitor consell-de-quatre-ias-auditoria-codex-cada-15-minuts ACTIVE cada 15 minuts. Claude i la revisió de les ampliacions Gemini continuen; cap tancament del torn ni de l’onada. Rel­leu limitat a ESTAT i LEDGER, preservant l’històric íntegre; cap canvi de codi ni d’originals.
 
 
-<!-- HASH: d2f76de733ed0493d256de17767894526f4e7cdee917dd9c24cb1a25277af8ee -->
+## 2026-10-15T17:49:19.237Z · Codex · auditoria adversarial de Fase 1 · torn_9674401f-d730-449d-97ae-1c09b98d9dbf
+
+Pla/Prompt 261015_1900 llegits, torn documental amb pla vinculat i informes canònics 261015_1945_auditoria_codex i 261015_1933_acta_marmota_codex_fase1. Pegat de Claude auditat: 8/8 acceptacions targetes/vistes/PDF i 5/5 integrades editor/llista/emojis, hashes estables; ESLint huit fitxers productius verd. Bateria ampliada 1.068 pass i una fallada F4 a SectionItemCard.test.jsx:45 per fixture persona que encara exigix categories; relleu immediat per al constructor. Dos tests editats durant bateria: repàs 81/81 amb 2.034 hashes estables; no se sumen.
+
+CI global completada amb edicions concurrents: Node 936 pass/4 fail/1 skip/3 TODO, Vitest 17.691 pass/2 fail/89 skip. Sis fallades anteriors delimitades amb fonts iguals a HEAD; cap verd inventat. Informe Gemini4 contrastat; informe Claude encara en plantilla al tall. Sense sessió de navegador, no es certifica visual privat. Cap codi/tests productius, originals, secrets, dependències, paquet, commit ni desplegament modificats per Codex; cap monitor creat. ESTAT actualitzat. Tancament mecànic pendent del diagnòstic final, no es declara tancat el torn.
+
+Es preserva literalment el cos del ledger anterior; hash vàlid observat: d2f76de733ed0493d256de17767894526f4e7cdee917dd9c24cb1a25277af8ee. El segell nou acredita integritat del fitxer i esta entrada, no substituïx les proves.
+
+
+## 2026-10-15T17:51:45.567Z · Codex · verificació final · torn_9674401f-d730-449d-97ae-1c09b98d9dbf
+
+F4 corregit per Claude (fixture d'entitat real i control persona) i verificat: SectionItemCard 5/5, 2,38 s, 2.034 hashes font estables. No queda cap defecte funcional nou confirmat en l'abast auditat. Informe v1.3.0 i acta v1.2.0 amb matriu, proves i límits; ESTAT actualitzat. Tancament comprovat valid:false, planned, 454 incidències: 453 de graf heretat i una d'abast per codi compartit de Claude. Olivera/plantilles/autoritat/ledger/segell/skills/wiki passen, SCC falla; documents propis vàlids. Cap tancament, CI global verda ni verificació visual privada fingits. Tots els processos de proves de Codex acabats; cap monitor creat.
+
+
+## 2026-10-16T05:40:00.000Z · Gauntlet Tripartit Autònom Tancat (MarIA/Gemini 4 + Codex + Claude)
+
+- Torns coordinats: `torn_9ddbf794-0d16-42b9-ab90-f70b61a29671` (Gemini 4 / MarIA), `torn_5b62e0c4-ed6d-49f1-8a29-ff692698d9f1` (Codex), `torn_60a0d776-7f83-435d-ab7d-fa26f6507f08` (Claude Code) i `torn_9821cb6e-bbe5-415a-a862-e16e3a99c24f` (Prompt/Pla). Pla [[261016_0015_pla_implementacio_gauntlet_autonom]] (`ef197ae0...`) i prompt [[261016_0015_prompt_gauntlet_claude_codex_gemini]] (`2e32d28e...`).
+- Informes i actes: [[261016_0022_auditoria_gemini4]] (`v1.12.0`, Relleu 12), [[261016_0021_auditoria_codex]] (`v1.5.0`), [[261016_0022_auditoria_claude]] (`Relleu 7`), [[261016_0025_acta_marmota]] i [[261016_0035_acta_marmota_codex_gauntlet]].
+- Resultat global de proves: Vitest sencer final **1.062 fitxers passats, 6 omesos; 18.386 proves passades, 89 omeses, 0 fallades (`exit code 0`)**; `standalone-build` 31/31; connector/conformitat/lint/política Node 112/112; `tractor-rls` 0 infraccions sobre 45 SQL; `frontissa-contingut` 14/14 claus aprovades (9/9 proves); `segella` intacte (`5e7339db...`); estrés 8/8 (1.000 a 40.000 fluxos simulats).
+- Bloc -1 (Codex + Claude + Gemini 4): zero ocurrències de `Mestre Poble`/`mestre-obres`; identitat `Javi Llinares` + `Sóc de Poble` i `mac-mini-m4` (159/159 proves).
+- Bloc 0 (Claude + Codex): Lector RSS a `/app/lector/noticies` sobre `UniversalWorkspace` amb port `'workspace'` (`VERSIO_NUCLI = '1.2.0'`, 100 cicles sense fugues), purga de mocks, destí al Bookmarklet, scroll per carpeta i «Marca-ho tot com a llegit» respectant cerca/filtre (289/289 proves).
+- Bloc 1 (Gemini 4 + Claude + Codex): Llei del Quadrat (`1200x1200` capçalera/targeta, `400x400` avatar, cerca binària WebP `<80.000 B`), EXIF conservat per defecte amb casella d'opt-out i poda d'IFD1 i de miniatures JPEG dins `MakerNote` tant al navegador (`exifIncrustat.js`) com al tractor `tooling/maquinaria/convertir_a_webp.mjs` (`13/13` Node + `10/10` probes Codex), orientació multiformat, vinyeta `tpv_vinyeta.webp` (`77.746 B`) i `prompt_nano_banana.md` sense marques de tercers.
+- Bloc 2, 3, 3.5 i 3.6 (Claude + Gemini 4): fallback WordPress `Carregant el mur...` amb `no_texturize_tags` (36/36 Node + 30/30 Vitest); llicència de notes sincronitzada entre dispositius, `ANIMAL -> ia`, poble al directori i retirada de T50; rutes `/javillinares`, `/socdepoble` i `/rentonar` amb fallback remot revocable i un sol «Javi Llinares» al cercador; migració `2610160250_perfil_update_propi.sql` (privilegis de columna + RLS, pendent d'aplicar pel Mestre); `avatarDeLaFitxa` única; SEO `1200x630` sense `og:url` estàtic duplicat; i 4 actors permanents al xat amb missatge automàtic literal de Javi i blindatge d'homònims (2.353/2.353 proves).
+- Cacera adversarial (Claude): 12 caçadors (62 troballes) i 62 refutadors independents (39 confirmades i corregides en Onada 5 `8/8`, 23 refutades).
+- Cos anterior preservat literalment (hash previ verificat `423e3e85c60dad83450657feeb6796bf9f0b5df10f8fcb5d00c2568922940025`).
+
+<!-- HASH: 11c42fd6e334037807834dc4bd2810fb6c23f0f7efbd841e0c1a7a804ca9bf61 -->

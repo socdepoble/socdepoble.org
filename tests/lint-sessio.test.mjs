@@ -428,6 +428,8 @@ const FITXERS = [
   'src/components/universal/enquadrament/orientacio.js',
   'src/components/universal/enquadrament/orientacio.test.js',
   'src/components/universal/enquadrament/orientacio.espec.test.js',
+  /* Gauntlet 261016 (P2 de Codex) · l'orientació del PNG i del WebP, una vegada. */
+  'src/components/universal/enquadrament/orientacio.formats.test.js',
   'src/components/universal/enquadrament/UbicacioImatge.jsx',
   /* RICH-EXIF · imatges enganxades al text enriquit. */
   'src/components/universal/richText/extensions/index.js',
@@ -835,6 +837,16 @@ const FITXERS = [
   'src/app/RouteErrorBoundary.test.jsx',
   'src/components/ErrorBoundary.jsx',
   'src/components/universal/workspace/SlotErrorBoundary.jsx',
+  /* Gauntlet nocturn 261016 · les proves noves de la primera onada que cap
+     llista no vigilava (localPerfils.test.js, RealitatSection i
+     EspecimenEnquadrament.test.jsx ja són dalt): el poble al directori, l'estil
+     de Nano Banana sense personatges de tercers, la baixa del canal del xat amb
+     el client de Realtime de veres i l'àmbit «compte» a l'espècimen dels drets
+     d'autor. */
+  'src/sections/profile/ProfileSection.poble.test.jsx',
+  'src/data/agentsSeed.drets.test.js',
+  'src/data/supabase/xat.baixa.realtimejs.test.js',
+  'src/sections/disseny/cataleg/detalls/EspecimenDretsAutor.test.jsx',
 ];
 
 test('lint dels fitxers de la sessió (lectura)', async () => {

@@ -14,11 +14,13 @@
  * guions: el slug declarat (ENTITAT_PILOT_SLUG) passa de 'soc-de-poble' a
  * 'socdepoble' i ara és el mateix text que l'id d'agentsSeed
  * (ENTITAT_PILOT_ID). La plantilla d'alta d'appSeed ja el llig d'ací
- * (ENTITAT_PILOT_SLUG). Només va arrere la fila 'onboarding' de
- * supabase/seed.sql (línia 17), que encara porta 'soc-de-poble' com a slug i
- * com a parentSlug: ja no és cap àlies. Cap codi de src no llig eixa fila en
- * temps d'execució (appSeed.js); regenerar-la és una mutació governada que
- * queda pendent.
+ * (ENTITAT_PILOT_SLUG). Gauntlet 261016 (Bloc 3.5.1; ordre del Mestre:
+ * «Erradica qualsevol perfil fantasma o duplicat») · La fila 'onboarding' de
+ * supabase/seed.sql (línia 17), que anava arrere i encara alçava l'entitat
+ * pilot amb el slug 'soc-de-poble' (un segon «Sóc de Poble» si algú
+ * l'executava), ja porta 'socdepoble' com a slug i com a parentSlug: el
+ * mateix que en trau appSeed.js. Cap codi de src no llig eixa fila en temps
+ * d'execució.
  *
  * Ordre del Mestre (261013; pla 261013_1930, Front 3) · Les entitats
  * fundacionals 'socdepoble' i 'rentonar' han d'estar operatives. Rentonar és
@@ -50,9 +52,19 @@ export const ENTITAT_PILOT_SLUG = 'socdepoble';
 /* Front 3 (261013) · La segona entitat fundacional. Com la pilot des del
    261007, l'id i el slug declarat són el mateix text. */
 export const ENTITAT_RENTONAR_SLUG = 'rentonar';
+/* Gauntlet 261016 (Bloc 3.5.2; ordre del Mestre: «El poble és innegociable»)
+   · El poble de les tres identitats del Mestre (la persona pilot, l'entitat
+   pilot i Rentonar): La Torre de les Maçanes. Es llig del catàleg, la font
+   única, com el nom i el lema de l'entitat pilot. */
+export const POBLE_FUNDACIONAL = AGENTS_MAP.SOCDEPOBLE.town_name;
 
 export const PERSONA_PILOT = Object.freeze({
-  slug: 'javi',
+  /* Gauntlet 261016 (Bloc 3.5.1; ordre del Mestre: les rutes canòniques
+     /javillinares, /socdepoble i /rentonar) · El slug declarat de la persona
+     pilot és el de la seua ruta neta, 'javillinares', el mateix text que
+     l'autoria del Mac Mini (marketSeed.js · author_id). Abans era 'javi', que
+     continua sent un àlies: cap enllaç vell no es perd. */
+  slug: 'javillinares',
   nom: AGENTS_MAP.JAVI.avatarName,
   /* T3 (ordre del Mestre, 261001) · La foto del perfil de la persona pilot
      (public/assets/fotos; el paquet del connector copia public/). L'autoria
@@ -67,8 +79,17 @@ export const PERSONA_PILOT = Object.freeze({
      padró local de persones (localPerfils.js · PERSONES_SEED) la prenen
      d'este camp: cap fitxer torna a escriure la ruta de la foto. */
   avatar: AGENTS_MAP.JAVI.avatar_url,
-  /* Identificadors amb què la llavor signa contingut de la persona pilot. */
-  alies: Object.freeze(['javillinares', AGENTS_MAP.JAVI.id, 'javi'])
+  /* Identificadors amb què la llavor signa contingut de la persona pilot.
+     Gauntlet 261016 (pla aprovat, Onada 1.5) · 'javi-llinares', perquè
+     /gent/javi-llinares resolga la persona pilot: en llavor i en local, el
+     perfil públic (localPerfils.js · loadPerfilPublic) ja resol qualsevol
+     àlies, amb sessió (la seua fitxa) i sense (la del catàleg). En remot el
+     servidor no resol cap persona per àlies: revisió adversarial del
+     Gauntlet 261016 (encàrrec C) · la fitxa pública la pinta del paquet
+     (PerfilPublicSection.jsx · perfilDeLaPersonaPilot) quan el servidor no
+     la torna, una excepció a D12 que només val per a les tres identitats del
+     Mestre (fundacionalDeLaClau, davall). */
+  alies: Object.freeze(['javillinares', AGENTS_MAP.JAVI.id, 'javi', 'javi-llinares'])
 });
 
 export const ENTITATS_SEED = Object.freeze([Object.freeze({
@@ -83,7 +104,7 @@ export const ENTITATS_SEED = Object.freeze([Object.freeze({
   presentacio_html: '',
   copyright: '',
   visibility: 'public',
-  town_name: 'La Torre de les Maçanes',
+  town_name: POBLE_FUNDACIONAL,
   /* Identificadors amb què la llavor signa contingut de l'entitat pilot.
      Ordre del Mestre (261007) · Amb el slug declarat 'socdepoble', slug i id
      són el mateix text: el Set en deixa una sola entrada i no en perd cap si
@@ -99,9 +120,13 @@ export const ENTITATS_SEED = Object.freeze([Object.freeze({
      descripció són els de la plantilla d'alta (appSeed.js ·
      ONBOARDING_SEED.group), que des d'ara els llig d'ací: una sola font. La
      mare és l'entitat pilot, com el parentSlug de la plantilla, amb la forma
-     de la fila del servidor (parent_organization_id, l'id de la mare). Ni
-     logotip ni poble: la llavor no se'ls inventa (la mediateca en registra un
-     logotip, però el fitxer no és a public/). */
+     de la fila del servidor (parent_organization_id, l'id de la mare). Sense
+     logotip: la llavor no se l'inventa (la mediateca en registra un, però el
+     fitxer no és a public/).
+     Gauntlet 261016 (Bloc 3.5.2; ordre del Mestre: «El Rentonar no pot
+     aparèixer mai sense poble») · El poble, el de les tres identitats del
+     Mestre (POBLE_FUNDACIONAL). Abans era '' i la fitxa i la barra taronja
+     el pintaven sense poble. */
   id: ENTITAT_RENTONAR_SLUG,
   slug: ENTITAT_RENTONAR_SLUG,
   kind: 'group',
@@ -114,7 +139,7 @@ export const ENTITATS_SEED = Object.freeze([Object.freeze({
   presentacio_html: '',
   copyright: '',
   visibility: 'public',
-  town_name: '',
+  town_name: POBLE_FUNDACIONAL,
   alies: Object.freeze([ENTITAT_RENTONAR_SLUG]),
   /* Cap membre declarat i cap propietària implícita (regla del mode seed):
      ningú no l'administra fins que algú s'hi connecta (localPerfils ·
@@ -156,6 +181,91 @@ export const agentIASeed = (id) => {
   const clau = String(id ?? '');
   return AGENTS_IA_SEED.find((a) => a.id === clau || a.slug === clau) || null;
 };
+
+/* Gauntlet 261016 (Bloc 3.5.1; ordre del Mestre: «Tria i deixa un sol perfil
+   per a cadascuna») · Les tres identitats que controla el Mestre, pel slug
+   declarat de cadascuna: la persona pilot, l'entitat pilot i Rentonar. Cada
+   una té UNA fitxa, i qualsevol dels seus àlies porta a eixa fitxa. */
+export const CLAUS_FUNDACIONALS = Object.freeze([PERSONA_PILOT.slug, ENTITAT_PILOT_SLUG, ENTITAT_RENTONAR_SLUG]);
+
+/* Revisió adversarial del Gauntlet 261016 (encàrrec C; troballes
+   «clauFundacional reconeix per UUID una organització d'un altre poble» i
+   «només pel slug») · Els ids del SERVIDOR que el Mestre declara per a
+   cadascuna de les tres identitats, per la seua clau fundacional. En remot
+   l'id d'una organització o d'una persona és un UUID que la llavor no pot
+   saber, i el slug no prova res: només és únic dins d'un poble i el tria qui
+   crea l'organització (un altre poble del node, o un veí que el prenga abans
+   que el Mestre). Mentre no se'n declara cap, cap fitxa del servidor no es
+   reconeix com una de les tres: ni URL canònica ni poble de reserva. Per a
+   declarar-ne un, el seu UUID a la llista de la seua identitat. */
+export const IDS_REMOTS_FUNDACIONALS = Object.freeze({
+  [PERSONA_PILOT.slug]: Object.freeze([]),
+  [ENTITAT_PILOT_SLUG]: Object.freeze([]),
+  [ENTITAT_RENTONAR_SLUG]: Object.freeze([])
+});
+
+/* El tipus de perfil públic (PerfilPublic.tipus) de cada `kind` del padró. */
+const TIPUS_DE_KIND = Object.freeze({ company: 'entitat', group: 'grup' });
+
+/* Un UUID del servidor es compara en minúscules: PostgreSQL els torna així i
+   una ruta els pot portar en majúscules. */
+const esIdRemotDe = (clau, id, idsRemots) => Boolean(id)
+  && (idsRemots?.[clau] || []).some((declarat) => String(declarat).toLowerCase() === String(id).toLowerCase());
+
+/**
+ * Revisió adversarial del Gauntlet 261016 (encàrrec C) · Quina de les tres
+ * identitats del Mestre nomena la clau que es DEMANA (l'identificador d'una
+ * ruta: /javillinares, /gent/0001, /grup/rentonar…): la seua clau fundacional,
+ * o null. Només per un identificador que declara la llavor (l'id, un àlies o
+ * el slug declarat) o per un id remot declarat (IDS_REMOTS_FUNDACIONALS); mai
+ * pel nom. És el que fa servir la fitxa pública per a la reserva del paquet
+ * quan el servidor no en torna la fitxa (PerfilPublicSection.jsx).
+ * `idsRemots` és per a les proves; per defecte, els declarats.
+ */
+export function fundacionalDeLaClau(clau, { idsRemots = IDS_REMOTS_FUNDACIONALS } = {}) {
+  const text = String(clau ?? '').trim();
+  if (!text) return null;
+  if (PERSONA_PILOT.alies.includes(text) || esIdRemotDe(PERSONA_PILOT.slug, text, idsRemots)) return PERSONA_PILOT.slug;
+  const entitat = ENTITATS_SEED.find((e) => e.id === text || e.slug === text || e.alies.includes(text)
+    || esIdRemotDe(e.slug, text, idsRemots));
+  return entitat ? entitat.slug : null;
+}
+
+/**
+ * Gauntlet 261016 (Bloc 3.5.1) · Quina de les tres identitats del Mestre és
+ * un perfil públic ({ tipus, id, slug }, el DTO de loadPerfilPublic): el seu
+ * slug declarat (un de CLAUS_FUNDACIONALS), o null. Mai pel nom (la doctrina
+ * de T6, config/navigation.js), i amb el tipus que toca.
+ * Revisió adversarial del Gauntlet 261016 (encàrrec C) · Estricta: només per
+ * identificadors que declara la llavor. Abans una entitat també es reconeixia
+ * pel slug que torna el servidor, i un grup «rentonar» d'un altre poble obert
+ * pel seu UUID (que l'adaptador no limita al poble actiu) o una empresa que
+ * prenia el slug «socdepoble» rebien la URL canònica i el poble del Mestre.
+ *   · una entitat del padró, pel seu id o un àlies seu (en llavor) o per un
+ *     id remot declarat (IDS_REMOTS_FUNDACIONALS); el slug de la fila no hi
+ *     compta;
+ *   · la persona pilot, per l'id d'un dels seus àlies o un id remot declarat,
+ *     o pel slug de la seua fitxa en llavor amb sessió: este slug només el posa
+ *     la llavor (localPerfils.js); el DTO remot (supabase/perfils.js ·
+ *     perfilDePersona) no en porta mai cap. Si un dia el servidor en dona,
+ *     esta branca s'ha de revisar.
+ * Un grup, una persona o una IA amb l'id d'una altra identitat no ho és.
+ * `idsRemots` és per a les proves; per defecte, els declarats.
+ */
+export function clauFundacional(perfil, { idsRemots = IDS_REMOTS_FUNDACIONALS } = {}) {
+  if (!perfil) return null;
+  const id = perfil.id == null ? '' : String(perfil.id);
+  const slug = perfil.slug == null ? '' : String(perfil.slug);
+  if (perfil.tipus === 'persona') {
+    const declarada = (id && (PERSONA_PILOT.alies.includes(id) || esIdRemotDe(PERSONA_PILOT.slug, id, idsRemots)))
+      || (slug && PERSONA_PILOT.alies.includes(slug));
+    return declarada ? PERSONA_PILOT.slug : null;
+  }
+  if (!id) return null;
+  const entitat = ENTITATS_SEED.find((e) => TIPUS_DE_KIND[e.kind] === perfil.tipus
+    && (e.id === id || e.alies.includes(id) || esIdRemotDe(e.slug, id, idsRemots)));
+  return entitat ? entitat.slug : null;
+}
 
 /**
  * T3 (ordre del Mestre, 261001) · Qui signa un element de la llavor, amb el

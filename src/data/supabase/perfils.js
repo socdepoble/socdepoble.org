@@ -63,7 +63,10 @@ export function perfilDOrganitzacio(org) {
        `copyright` de la vista, 2609262232), com ja fa perfilDePersona.
        Abans es fixava '' i, en remot, la fitxa pública signava «© nom» encara
        que l'entitat haguera triat una llicència CC. Sense la columna o sense
-       tria, '' i PerfilPublicSection hi posa el «© nom» de sempre. */
+       tria, '' i PerfilPublicSection hi posa el «© nom» de sempre (entitat i
+       grup). Gauntlet 261016 (Bloc 3, «Dignitat de persona») · Per a la
+       persona ja no: perfilDePersona copia igualment la columna, però la
+       seua fitxa pública no pinta cap drets, ni els desats ni el «© nom». */
     copyright: text(org.copyright),
     /* T43 (ordre del Mestre, 260928) · Només el correu que l'organització ha
        fet públic (columna `public_email` de la vista, opt-in). El privat

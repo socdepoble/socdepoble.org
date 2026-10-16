@@ -2,8 +2,9 @@
  * Lector de notícies · EL PORT de notícies (Model B).
  *
  * L'app no fa xarxa MAI. Les fonts i les notícies entren per un adaptador que
- * li injecten: en desenvolupament, la llavor sintètica (llavor/fontLlavor.js);
- * en producció, el que proveïsca l'amfitrió o el backend. Les fonts RSS del
+ * li injecten: a les proves (o amb el literal VITE_SDP_LECTOR_LLAVOR=1), la
+ * llavor sintètica (llavor/fontLlavor.js); fora d'ací, el que proveïsca
+ * l'amfitrió o el backend. Les fonts RSS del
  * poble les llig el CONNECTOR al servidor (fa de proxy): el navegador del veí
  * no toca mai l'origen d'una font, ni per a l'XML ni per a les imatges.
  *

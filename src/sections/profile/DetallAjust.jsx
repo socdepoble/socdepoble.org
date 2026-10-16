@@ -1,12 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from '../../app/contexts/RouterContext';
-import { compressImage } from '../../utils/imageUtils.js';
+import { MIDA_AVATAR, esAvisDeLaFoto, fotoDinsDelPressupost } from '../../utils/pujadaImatge.js';
 import { isSafeUrl } from '../../components/universal/UniversalUtils';
 import { useEixidaSegura } from '../../components/universal/EixidaSegura.jsx';
 import { useToast } from '../../components/universal/NotificationContext.jsx';
 import { Boto, Camp, DialegConfirmacio, Selector } from '../../components/PedraSeca';
+import { BotoDretsAutor } from '../../components/universal/CopyrightSelector.jsx';
+import { CopyrightPage } from '../../components/universal/drets/CopyrightPage.jsx';
+import { sincronitzaLlicenciaPerDefecte } from '../../components/universal/drets/herencia.js';
 import { classificaError } from '../../data/autodesament/errors.js';
 import { ERROR_CORREU_INVALID, validaCorreu } from './contacteOrganitzacio.js';
+import { fitxaDeLectura } from './perfilCamps.js';
 import { useEnquadramentAvatar } from './useEnquadramentAvatar.jsx';
 import { GestioMembres } from './GestioMembres.jsx';
 import { SegonFactor } from '../admin/SegonFactor.jsx';
@@ -35,12 +39,6 @@ function textDeDesat(error) {
   return error?.message || 'Error en desar.';
 }
 
-/** Un data URL comprimit tornat a Blob, per a pujar-lo com a fitxer. */
-async function aBlob(dataUrl) {
-  const resposta = await fetch(dataUrl);
-  return await resposta.blob();
-}
-
 /* Si l'apujada ha fallat i la imatge es queda en data URL local, no la
    desarem a la BD si pesa com un manuscrit. */
 const MAX_DATA_URL = 150_000;
@@ -61,6 +59,10 @@ const ERROR_CONNEXIO = 'S\'ha produït un error al pujar la imatge. Comprova la 
  * Grup C (261008) · `membres` (opcional): les accions de membres del context
  * del Perfil ({ usuariId, llistaMembres, desaMembre, llevaMembre,
  * cercaCandidats }). Sense, «Membres» i «Eixir» es pinten pendents.
+ *
+ * Pla 261016 (Bloc 3.1; ordre del Mestre) · Un ajust 'llicencia' (els drets
+ * de sèrie de les notes de la persona) pinta la píndola dels drets de
+ * l'editor (BotoDretsAutor) i obri CopyrightPage en línia, dins del bloc.
  */
 export default function DetallAjust({
   ajust,
@@ -129,8 +131,40 @@ export default function DetallAjust({
      identitat sí que l'esborren, i un canvi de valor sense desat nostre també. */
   const acabaDeDesar = useRef(false);
 
+  /* Pla 261016 (Bloc 3.1; ordre del Mestre) · Els drets de sèrie de les notes
+     (tipus 'llicencia'): la píndola obri CopyrightPage dins del bloc i, en
+     tancar-la, el focus torna a la píndola (el patró d'EspecimenDretsAutor).
+     L'esborrany de la vista (la tria i el text) dura mentre esta pàgina és
+     muntada, com a l'editor (DocumentEditor): «Tornar al compte», Escape o un
+     desat que el servidor rebutja no el perden; «Cancel·lar» i un desat bo,
+     sí. La casella de CC0 no hi va mai. */
+  const [dretsOberts, setDretsOberts] = useState(false);
+  const esborranyDrets = useRef(null);
+  const pindolaDrets = useRef(null);
+  const tornaFocusDrets = useRef(false);
+  useEffect(() => {
+    if (dretsOberts || !tornaFocusDrets.current) return;
+    tornaFocusDrets.current = false;
+    pindolaDrets.current?.querySelector('[data-sdp-drets]')?.focus();
+  }, [dretsOberts]);
+
+  /* Pla 261016 (Bloc 3.1) · Els drets que el servidor té desats són els de
+     sèrie de les notes noves també en este dispositiu: el mirall que la fitxa
+     ja fa (PerfilEditor, T39) quan n'arriba un valor, ara també en obrir «El
+     compte». Per l'id de la fila, mai 'jo'. Un valor buit no esborra res: la
+     columna pot faltar al servidor. */
+  const dretsDelServidor = isPersona && ajust?.tipus === 'llicencia' && typeof ajust.valor === 'string' ? ajust.valor : '';
+  const idHerencia = identitat?.dades?.id;
+  useEffect(() => {
+    if (dretsDelServidor) sincronitzaLlicenciaPerDefecte(idHerencia, dretsDelServidor);
+  }, [dretsDelServidor, idHerencia]);
+
   useEffect(() => {
     acabaDeDesar.current = false;
+    /* Pla 261016 · Un altre ajust o una altra identitat: la vista dels drets
+       es tanca i el seu esborrany no hi passa. */
+    setDretsOberts(false);
+    esborranyDrets.current = null;
   }, [ajust?.id, identitat?.id, ajust?.tipus]);
 
   useEffect(() => {
@@ -162,21 +196,32 @@ export default function DetallAjust({
     enquadrament.obri(file);
   }
 
-  /* El fitxer ja retallat: la compressió i la pujada de sempre (600 px, WebP,
-     la carpeta de la identitat), un sol fitxer. Si falla, l'avís ix al
-     formulari i també dins del retallador, que continua obert. */
-  async function pujaImatge(file) {
+  /* El fitxer ja retallat: la compressió i la pujada de sempre (WebP, la
+     carpeta de la identitat), un sol fitxer. Si falla, l'avís ix al
+     formulari i també dins del retallador, que continua obert.
+     Gauntlet 261016 (Bloc 1, Llei del Quadrat) · L'avatar ix a MIDA_AVATAR
+     (400 px) i dins del pressupost de les fotos (menys de 80.000 bytes, només
+     baixant la qualitat: fotoDinsDelPressupost). Si ni la qualitat més baixa
+     hi cap, no puja res i es diu ERROR_PRESSUPOST, no un error de connexió.
+     El fitxer porta el tipus i l'extensió reals: JPEG si el canvas no ha
+     sabut fer WebP (Safari 16).
+     Gauntlet 261016 (Bloc 1.2, mandat del Mestre) · `exif` és la tria de la
+     casella del retallador (useEnquadramentImatge), que diu «Conserva la
+     ubicació i la data de la foto» o, si la foto només porta la càmera,
+     «Conserva les dades de la càmera de la foto». Marcada, l'avatar porta
+     l'EXIF publicable de l'original: si és ell el que no cap, es diu
+     ERROR_PRESSUPOST_EXIF (o ERROR_PRESSUPOST_EXIF_CAMERA), i si no es pot
+     conservar (l'original no ho permet o el format que ix no el porta),
+     ERROR_EXIF_NO_CONSERVABLE (o el de la càmera).
+     Gauntlet 261016 (F1) · Tots els avisos de la foto (esAvisDeLaFoto, la
+     llista única de pujadaImatge.js) es diuen tal qual. Abans només en
+     reconeixia dos, i la resta eixien com un error de connexió. */
+  async function pujaImatge(file, info, exif) {
     setPujant(true);
     setMissatge(null);
     let error = ERROR_PUJADA;
     try {
-      const dataUrl = await compressImage(file, {
-        maxSize: 600,
-        format: 'image/webp',
-        quality: 0.8,
-      });
-      const blob = await aBlob(dataUrl);
-      const fitxer = new File([blob], 'avatar.webp', { type: 'image/webp' });
+      const { fitxer } = await fotoDinsDelPressupost(file, { mida: MIDA_AVATAR, nom: 'avatar', ...exif });
       const url = await pujaMitja(fitxer, carpetaMitjans);
 
       if (url) {
@@ -185,8 +230,12 @@ export default function DetallAjust({
         return;
       }
     } catch (err) {
-      console.warn('Upload to storage failed', err);
-      error = ERROR_CONNEXIO;
+      if (esAvisDeLaFoto(err?.message)) {
+        error = err.message;
+      } else {
+        console.warn('Upload to storage failed', err);
+        error = ERROR_CONNEXIO;
+      }
     } finally {
       setPujant(false);
     }
@@ -223,6 +272,13 @@ export default function DetallAjust({
       return;
     }
 
+    await desaValor(valorTemp);
+  }
+
+  /* El desat d'un ajust, amb el seu missatge: el de «Guardar» i, des del pla
+     261016 (Bloc 3.1), el de «Desar autoria» dels drets de sèrie. Torna true
+     si el servidor l'ha acceptat. */
+  async function desaValor(valor) {
     setDesant(true);
     setMissatge(null);
     /* Abans de la crida: el Perfil pot aplicar el valor nou (i tornar a pintar
@@ -231,19 +287,40 @@ export default function DetallAjust({
     try {
       /* Identitat EXPLÍCITA: este era el forat que escrivia a
          l'entitat equivocada. */
-      await guardarAjust(identitat.id, ajust.id, valorTemp);
+      await guardarAjust(identitat.id, ajust.id, valor);
       setMissatge({ tipus: 'exit', text: 'Desat correctament.' });
       clearTimeout(timeoutMissatge.current);
       timeoutMissatge.current = setTimeout(() => {
         acabaDeDesar.current = false;
         setMissatge(null);
       }, 3000);
+      return true;
     } catch (error) {
       acabaDeDesar.current = false;
       setMissatge({ tipus: 'error', text: textDeDesat(error) });
+      return false;
     } finally {
       setDesant(false);
     }
+  }
+
+  /* Pla 261016 (Bloc 3.1) · Obrir i tancar la vista dels drets de sèrie.
+     «Desar autoria» la tanca abans del desat (com a l'editor) i el resultat
+     es diu davall de la píndola; si el servidor el rebutja, l'esborrany es
+     queda per a la pròxima obertura. Mentre es desa, la píndola no la torna
+     a obrir. */
+  function obriDrets() {
+    if (!desant) setDretsOberts(true);
+  }
+  function tancaDrets(motiu) {
+    if (motiu === 'boto') esborranyDrets.current = null;
+    tornaFocusDrets.current = true;
+    setDretsOberts(false);
+  }
+  async function desaDrets(valor) {
+    tornaFocusDrets.current = true;
+    setDretsOberts(false);
+    if (await desaValor(valor)) esborranyDrets.current = null;
   }
 
   function obriFitxa() {
@@ -359,11 +436,48 @@ export default function DetallAjust({
     return <p className="sdp-buit">Acció pendent d'implementació.</p>;
   }
 
+  /* Pla 261016 (Bloc 3.1; ordre del Mestre) · Els drets de sèrie de les
+     notes. Tancada, la píndola de l'editor (la llicència desada o «Elegir
+     drets d'autor») i el missatge del desat, com les accions del compte.
+     Oberta, CopyrightPage dins del bloc: l'àmbit 'compte' diu amb què naixen
+     les notes noves, i els textos que a l'editor parlen del document parlen
+     ací del compte i de les notes. L'autor de «Copyright (C)» és el de la
+     fitxa (fitxaDeLectura: el nom de la fila o el de la identitat). */
+  function renderitzaDrets(blocMissatge) {
+    const desats = typeof ajust.valor === 'string' ? ajust.valor : '';
+    if (dretsOberts) {
+      return (
+        <CopyrightPage
+          valor={desats}
+          autor={fitxaDeLectura(identitat).title}
+          ambit="compte"
+          esborrany={esborranyDrets.current}
+          onEsborrany={(esborrany) => { esborranyDrets.current = esborrany; }}
+          onDesa={desaDrets}
+          onTanca={tancaDrets}
+          etiquetaTornar="Tornar al compte"
+          introduccio={desats
+            ? `Tria amb quins drets naixen les teues notes noves. Ara són «${desats}». Res no canvia fins que prems «Desar autoria».`
+            : 'Tria amb quins drets naixen les teues notes noves. Res no canvia fins que prems «Desar autoria».'}
+          llegenda="Tria els drets de sèrie de les teues notes"
+        />
+      );
+    }
+    return (
+      <div className="sdp-buit" ref={pindolaDrets}>
+        <BotoDretsAutor valor={desats} triada={desats} onClick={obriDrets} />
+        {blocMissatge}
+      </div>
+    );
+  }
+
   function renderitzaFormulari() {
     if (!ajust.obert) {
       /* Un ajust tancat amb valor (el correu, l'identificador) el mostra:
-         saber-lo també és part del compte. Grup C · també el poble triat. */
-      const valorVisible = (ajust.tipus === 'text' || ajust.tipus === 'selector') && typeof ajust.valor === 'string' ? ajust.valor : '';
+         saber-lo també és part del compte. Grup C · també el poble triat.
+         Pla 261016 (Bloc 3.1) · I els drets de sèrie desats. */
+      const valorVisible = (ajust.tipus === 'text' || ajust.tipus === 'selector' || ajust.tipus === 'llicencia')
+        && typeof ajust.valor === 'string' ? ajust.valor : '';
       return (
         <>
           {valorVisible ? <p className="perfil-ajust__valor">{valorVisible}</p> : null}
@@ -396,6 +510,8 @@ export default function DetallAjust({
         </button>
       </div>
     );
+
+    if (tipus === 'llicencia') return renderitzaDrets(blocMissatge);
 
     /* Grup C (261008) · Un ajust amb opcions (el poble de l'organització):
        Camp i Selector de Pedra Seca, amb el mateix missatge i el mateix
