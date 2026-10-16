@@ -873,3 +873,4 @@ Enllaços a peces ja existents, verificats al disc; no s’han mogut ni editat e
 - [[../10_actes/261014_2050_acta_marmota]]
 - [[../10_actes/261015_1310_acta_marmota]]
 - [[../10_actes/261016_0025_acta_marmota]]
+- [[../10_actes/261016_1545_acta_marmota]]

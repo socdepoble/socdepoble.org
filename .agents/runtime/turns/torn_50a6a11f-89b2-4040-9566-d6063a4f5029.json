@@ -4,9 +4,9 @@
   "actor": "MarIA",
   "scope": "documents",
   "state": "context_loaded",
-  "revision": 6,
+  "revision": 9,
   "createdAt": "2026-10-16T13:23:27.331Z",
-  "updatedAt": "2026-10-16T13:25:08.728Z",
+  "updatedAt": "2026-10-16T13:40:37.182Z",
   "expiresAt": "2026-10-17T13:23:27.331Z",
   "contractHash": "6a1959a7c85620476e8cb465609d6b2e56cbcc2c380e5faf3c14267bee1163fa",
   "humanInventoryVersion": 1,
@@ -3812,6 +3812,32 @@
         "committedAt": "2026-10-16T13:25:08.728Z",
         "documentHash": "95745d69d00504bcd1449d7a03ea6af6f7e61931622378444efe3013c6b4bc81"
       }
+    },
+    "5f5ee9e6-1665-47b3-9e5d-a6b81a3f38d7": {
+      "id": "5f5ee9e6-1665-47b3-9e5d-a6b81a3f38d7",
+      "route": "acta",
+      "routeVersion": "2.0.0",
+      "file": "_wiki_de_poble/10_actes/261016_1545_acta_marmota.md",
+      "contractSnapshot": "6b2662bc1032c7cc74772e2e0000b28ceb221b7f95d135ff136fe098f1395064",
+      "template": "_wiki_de_poble/03_actuar/plantilles/acta.md",
+      "templateHash": "d0a64c35b75833b88ea561903829fb02558db7be214a9ee5844045cafc1333a1",
+      "issuedAt": "2026-10-16T13:40:20.492Z"
+    },
+    "4340c09a-bf56-4745-b1d4-e65856852fb5": {
+      "id": "4340c09a-bf56-4745-b1d4-e65856852fb5",
+      "route": "acta",
+      "routeVersion": "2.0.0",
+      "file": "_wiki_de_poble/10_actes/261016_1545_acta_marmota.md",
+      "contractSnapshot": "6b2662bc1032c7cc74772e2e0000b28ceb221b7f95d135ff136fe098f1395064",
+      "template": "_wiki_de_poble/03_actuar/plantilles/acta.md",
+      "templateHash": "d0a64c35b75833b88ea561903829fb02558db7be214a9ee5844045cafc1333a1",
+      "issuedAt": "2026-10-16T13:40:37.154Z",
+      "creation": {
+        "state": "committed",
+        "preparedAt": "2026-10-16T13:40:37.154Z",
+        "committedAt": "2026-10-16T13:40:37.182Z",
+        "documentHash": "693a02a14b46b78bb09b9f3d91121d37e136a7eb693f9f15d345c2d28260c31d"
+      }
     }
   },
   "plan": null,
@@ -3855,6 +3881,23 @@
       "file": "_wiki_de_poble/04_escriptori/261016_1530_prompt_gauntlet_claude_codex_gemini.md",
       "at": "2026-10-16T13:25:08.728Z",
       "hash": "95745d69d00504bcd1449d7a03ea6af6f7e61931622378444efe3013c6b4bc81"
+    },
+    {
+      "state": "context_loaded",
+      "action": "context",
+      "at": "2026-10-16T13:40:20.493Z"
+    },
+    {
+      "state": "context_loaded",
+      "action": "context",
+      "at": "2026-10-16T13:40:37.154Z"
+    },
+    {
+      "action": "create-committed",
+      "receiptId": "4340c09a-bf56-4745-b1d4-e65856852fb5",
+      "file": "_wiki_de_poble/10_actes/261016_1545_acta_marmota.md",
+      "at": "2026-10-16T13:40:37.182Z",
+      "hash": "693a02a14b46b78bb09b9f3d91121d37e136a7eb693f9f15d345c2d28260c31d"
     }
   ]
 }

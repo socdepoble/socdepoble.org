@@ -86,10 +86,51 @@ Per reduir dràsticament el FCP (First Contentful Paint) a mòbil, el connector 
      * `/assets/entitats/[slug]/` (nodes, comerços, Bar Casino, Rentonar).
      * `/assets/contingut/` (imatges del mur, vinyetes de serveis 1200x1200).
    - Canvi de context natiu: si un usuari actua com a persona, com a Sóc de Poble o com a entitat, el contingut queda assignat al seu calaix corresponent.
-2. **Arxiu Visual Complet (`/multimedia`):**
-   - Eliminar el límit artificial d'11 fotos de mostra de febrer de 2026. L'Arxiu Visual ha de reflectir **totes** les imatges del sistema per al Superadministrador.
-   - Filtres imprescindibles: **Òrfenes** (no usades a cap targeta o secció), **Poble / Sistema**, **Usuari / Entitat**, i **Cronologia real** (agrupació per mes/any extreta de les metadades EXIF).
-   - **Visor d'Imatges (Inspiració Google Fotos / Emowe):** En fer clic sobre una foto a la galeria, obrir un visor modal fluid a pantalla completa amb metadades i navegació, sense salts a pàgines duplicades o fictícies com `Town Penaguila`.
+2. **Arxiu Visual Complet (`/multimedia`) i Visor Natiu (Model Google Fotos):**
+   - **Exposició del cens real:** Eliminar el límit artificial d'11 fotos de mostra de febrer de 2026. L'Arxiu Visual ha de recuperar i reflectir **totes** les imatges del sistema (100 - 200 fotografies reals, fons patrimonial de pobles i il·lustracions generades pel Nano).
+   - **Visor d'Imatges (Inspiració Google Fotos):**
+     * En fer clic sobre qualsevol imatge de la galeria a `/multimedia`, **prohibit saltar a cap pàgina externa ni a rutes estranyes**.
+     * S'obri un visor modal / Lightbox natiu a pantalla completa sobre fons fosc: navegació entre imatges (anterior / següent), zoom fluid i panell lateral desplegable de metadades EXIF (data i hora exactes, coordenades GPS, càmera, autor, poble i drets d'ús).
+   - **Erradicació de Pàgines Duplicades (`/multimedia/town-*` vs `/pobles/*`):**
+     * Eliminar la duplicitat de pàgines com `/multimedia/town-benifallim`: és un vestigi trencat. Qualsevol referència o enllaç a un poble ha de redirigir a la seua pàgina canònica `/pobles/[slug]` (ex: `/pobles/benifallim`).
+3. **El Mapa Fotogràfic Interactiu d'Emowe (Local-First al Mur i Territori):**
+   - **Font canònica al repositori:** `_wiki_de_poble/04_escriptori/02_investigacio_ia/261014_1930_emowe_mapa_de_tu_viaje/plantilla-mapa.html` (215 KB) i `PROMPT_UNIVERSAL.txt` (referència: `https://emowe.com/inteligencia-artificial/las-fotos-de-tu-viaje-ya-saben-donde-estuviste/`).
+   - **Comportament:**
+     * Mapa interactiu que llig les coordenades GPS i data/hora EXIF de les imatges.
+     * Agrupació dinàmica segons el nivell de zoom (desagrupant a mesura que t'apropes al carrer o terme).
+     * Barra lateral amb cronologia per dies, etapes i temes.
+     * 100% respectuós amb la privacitat des del dispositiu (local-first, sense enviar fotos a tercers).
+4. **Matriu de Conformitat de Requeriments (MCR) Obligatòria per a Auditors:**
+   - Codex i Gemini tenen prohibit emetre vistiplau si no auditen punt per punt la totalitat de requeriments del Pla en una taula estricta (`[FET]`, `[PARCIAL]`, `[NO FET / BLOC PENDENT]`), garantint que res no quede oblidat entre tandes.
+
+---
+
+### Onada 0.5 · Mandat Suprem: El Quadre de Comandament Web (Dashboard de Govern Màquina - Humà)
+1. **La Diagnosi del Mestre (L'IDE és per a màquines, la Web és per als humans):**
+   - El Mestre no és informàtic: entrar a l'IDE d'Antigravity o navegar entre desenes d'arxius Markdown a Obsidian genera ofegament cognitiu (*«me ahogo, me sé cuatro cosas y no sé ni para qué valen»*).
+   - Obligar el Mestre a inspeccionar cada dia el codi per saber què s'ha fet és esgotador i trenca el descans humà.
+2. **Arquitectura del Quadre de Comandament Natiu a la Web (`/govern` o `/consola`):**
+   - Crear una secció visual accessible directament des del navegador dins de l'entorn gràfic de `socdepoble.org` (amb els tokens i components de Pedra Seca).
+   - **Mòduls Clau del Quadre de Comandament:**
+     * **1. Estat dels Requeriments en Viu:** Taula visual que mostra la Matriu de Conformitat (MCR) en temps real: què està `[FET I SEGELLAT]`, què està `[PARCIAL]` i què està `[PENDENT DE SEGÜENT TANDA]`.
+     * **2. Balanç de Sessió (Demana vs Fet):** Resum executiu que compara el que el Mestre va demanar a l'inici del torn contra el que les IAs han lliurat. El que no s'ha pogut acabar es mou automàticament a la següent tanda, sense esborrar-se mai ni quedar en l'oblit.
+     * **3. Panell de Certificació Humana:** Botons senzills perquè el Mestre puga validar, certificar o retornar una tasca amb un sol clic des de la web, sense haver d'escriure prompts tècnics.
+     * **4. Canal de Comunicació Màquina-Humà:** Un xat o registre d'esdeveniments diàfan on les IAs deixen els seus informes resumits en llenguatge humà de poble.
+
+---
+
+### Onada 0.6 · La Gran Auditoria i Rescat de l'Arxiu Històric (418 Ítems de Memòria)
+1. **El Problema del Magatzem de Papers Fòssils:**
+   - La carpeta `_wiki_de_poble/90_arxiu_historic/` conté **418 ítems acumulats**. Aquest volum massiu s'ha convertit en un llast inexecutable que bloqueja la claredat i ofega qui l'intenta consultar.
+2. **Comissió d'Auditoria Profunda per al Consell d'IAs:**
+   - Les IAs (en un procés de fons o torn dedicat) han de pentinar exhaustivament:
+     * `_wiki_de_poble/90_arxiu_historic/` (418 fitxers).
+     * `_wiki_de_poble/04_escriptori/01_produccio/` (fitxers sagrats de producció).
+     * `_wiki_de_poble/04_escriptori/02_investigacio_ia/` (laboratori d'investigació).
+   - **Objectius del Gran Rescat:**
+     * **A. Identificar feina ja feta:** Descobrir components, textos o utilitats que ja estan construïts i que s'estaven duplicant per falta de memòria.
+     * **B. Rescatar idees perdudes pel camí:** Extreure aquelles idees genials, dissenys o especificacions que el Mestre va formular fa mesos i que van quedar enterrades per l'allau de noves sessions.
+     * **C. Emetre l'Informe Extensíssim de Balanç:** Generar un gran document de memòria viva (*«de l'almacén de papeles al recuerdo humano y máquina»*) que permeta al Mestre decidir què es conserva, què s'activa i què es pot alliberar definitivament per buidar el llast d'Obsidian.
 
 ---
 

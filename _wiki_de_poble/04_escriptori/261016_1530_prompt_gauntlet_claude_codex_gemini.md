@@ -61,27 +61,25 @@ Tot el que construïm al frontend (Consola, UI, etc.) té un únic objectiu fona
 <!-- SDP:SECTION prompt.local.s_instruccio -->
 ## Instrucció del torn
 
-Aquesta nit no hi ha pauses ni preguntes al Mestre: **execució autònoma d'alt rendiment en bucle continu d'automillora a tres bandes** (`core-direccio-autonoma`).
+Aquest torn no hi ha pauses ni preguntes al Mestre: **execució autònoma d'alt rendiment en bucle continu d'automillora a tres bandes** (`core-direccio-autonoma`).
 - **Claude Code:** És el braç executor (`actor: claude`). Aplica el codi, crea els tractors mecànics, refactoritza i corregeix. Fes servir el connector **REA (Reverse Engineer Anything)** per extreure l'essència estructural i UX de referències externes (Feedly, Loyverse, Holded, GNUCash).
 - **GPT Codex:** És l'auditor adversarial implacable (`actor: codex`). Executa la suite de proves, busca falles de concurrència, bucles infinits, pèrdues de memòria (memory leaks) i sotmet el sistema a estrés extrem (simulació d'1.000 a 40.000 usuaris concurrents).
 - **Gemini 4 Argon:** És el garant de coherència sistèmica (`actor: gemini`). Revisa la conformitat de dades, la Llei del Quadrat d'imatges, la semàntica del model i el compliment del patró Pedra Seca.
-- **Comunicació per l'Escriptori:** Cada agent diposita el seu informe a `_wiki_de_poble/04_escriptori/`. Si una auditoria troba un defecte o regressió, Claude l'arregla immediatament en una segona iteració. No s'accepta cap "aprovat ràpid" sense refutació sòlida.
-- Objectiu: Xarxa descentralitzada per a connectivitat rural (`socdepoble.org`). Protecció contra obsolescència i dependència tecnològica. La descentralització definitiva arribarà a nivell de clonació de sistemes simplement llegint l'HTML, de forma completament hiperenxufable i modular.
-- Llegat: 30 anys d'activisme rural ininterromput, herència directa de `socdepoble.net` i `rentonar.blogspot.com`. No som una startup, som la continuació d'una lluita històrica.
 
-**Directrius Arquitectòniques (Innegociables):**
-- **Hipermodularitat i Enxufabilitat:** La plataforma és un client pur (SPA) altament desacoblat. 
-- **Model B:** Sollutia és l'amfitrió i el soci d'infraestructura de Sóc de Poble: allotja el Web Component, ens pot passar la sessió i ens obri la seua API només en lectura (GET a través de la Frontissa), sense injectar cap backend ni interferir en l'arquitectura o el disseny. Les dades del poble viuen al Supabase de Sóc de Poble, única font de veritat, darrere d'un port neutral (`src/data/backendPort.js`): el frontend, 100% modular, s'enxufa a qualsevol amfitrió (Sollutia, WordPress o Joomla), canviar de backend és una decisió de Sóc de Poble amb una ADR i el kit de conformitat, i sempre podem traure-ho «tot fora».
-- **Visió de futur:** Evolució cap al **Fedivers**. El model de mal·leabilitat i independència a seguir és **Obsidian**.
-- Tot el codi produït ha de respectar aquesta estricta modularitat i independència del proveïdor.
-
-**🔥 DIRECTIVA SUPREMA (Llei de l'Enxufabilitat):**
-Tot el que construïm al frontend (Consola, UI, etc.) té un únic objectiu fonamental: **l'enxufabilitat instantània amb Sollutia**. És imminent que Sollutia ens lliure els punts d'accés (endpoints/dades) de la seua API: entraran per la Frontissa (`src/data/adaptadors/sollutia/`), només en lectura GET i cada recurs amb captura real, traductor i fixture, sense tocar el port de backend. Tot el sistema ha d'estar fortificat i absolutament preparat perquè les dades fluïsquen i s'enxufen de forma eficient i sense el més mínim problema. Aquesta és la prioritat absoluta rere cada refactorització o component.
-
-<!-- SDP:SECTION prompt.local.s_instruccio -->
-## Instrucció del torn
-
-[pendent]
+### 🔥 REGLES D'OR DE COMPLIMENT OBLIGATORI (MANDAT DEL MESTRE):
+1. **Llei de la Matriu de Conformitat de Requeriments (MCR):**
+   - Prohibit emetre auditories amb vistiplaus vagues («tot aprovat», «bona feina»).
+   - Cada auditor ha d'avaluar la totalitat d'ítems del [Pla d'Implementació](file:///Users/javillinares/Documents/Antigravity/Som%20de%20Poble/socdepoble.org/_wiki_de_poble/04_escriptori/261016_1530_pla_implementacio_gauntlet_autonom.md) en una taula rigorosa: `[FET I SEGELLAT]`, `[PARCIAL]`, `[NO FET / PENDENT]`.
+2. **Llei del Balanç Transparent (Demanat vs Fet vs Traslladat):**
+   - L'informe final ha de reflectir exactament:
+     * Què va demanar el Mestre.
+     * Què s'ha aconseguit tancar i verificar.
+     * Què no s'ha pogut acabar en aquesta tanda i **es trasllada automàticament al pla següent**. Res no s'esborra, res no s'oblida.
+3. **El Quadre de Comandament Web (`/govern` o `/consola`):**
+   - El Mestre no és informàtic ni ha de patir l'ofegament d'un IDE o d'un bosc d'arxius Markdown.
+   - S'ha de projectar i maquetar un panell de control visual i intuïtiu a la mateixa web per certificar, revisar requeriments i comunicar-se amb les màquines amb zero fricció.
+4. **La Gran Auditoria de Rescat de l'Arxiu Històric (418 Ítems):**
+   - Auditar exhaustivament `90_arxiu_historic/`, `01_produccio/` i `02_investigacio_ia/` per rescatar idees perdudes, identificar codi ja fet i redactar l'informe extensíssim que permeta descarregar el llast cognitiu del Mestre a Obsidian.
 
 <!-- SDP:SECTION prompt.local.s4 -->
 ## Tasques
@@ -104,6 +102,25 @@ Tot el que construïm al frontend (Consola, UI, etc.) té un únic objectiu fona
    - **Aplicació a Sóc de Poble:** Prohibit crear noves targetes inventades o jerarquies caòtiques a `/app/lector/noticies`. El Lector s'ha de muntar directament sobre el patró **`UniversalWorkspace` de `Bloc de notes`** (panell d'arbre/carpetes a l'esquerra, flux de lectura net a la dreta).
    - **Purga de Mocks:** Eliminar les notícies fictícies ("El ple aprova la reforma del llavador vell"). Connectar fonts RSS reals del nostre entorn (Emowe, Mitjana, Jon Hernández, etc.).
    - **Integració del Bookmarklet:** L'usuari ha de poder capturar contingut i decidir fàcilment si el destí és el `Bloc de notes` o el `Lector RSS`.
+
+### Bloc 0.5 (MANDAT SUPREM HUMÀ): Quadre de Comandament Web (Dashboard de Govern Màquina-Humà a `/govern` o `/consola`)
+1. **La Raó de Ser:** El Mestre no és informàtic i l'IDE d'Antigravity o la teranyina d'Obsidian li produeixen ofegament cognitiu. La comunicació i el control del projecte han de viure en un entorn gràfic web natiu de `socdepoble.org`.
+2. **Proposta i Prototipatge:**
+   - Dissenyar la interfície d'un **Quadre de Comandament Visual** seguint els principis de Pedra Seca.
+   - **Funcionalitats essencials:**
+     * **Matriu de Requeriments en Viu:** Visualització de l'estat dels requeriments (`[FET]`, `[PARCIAL]`, `[PENDENT]`).
+     * **Balanç Transparent de Sessió:** Taula visual que compara allò demanat pel Mestre amb allò executat per les IAs. El que no s'ha acabat, es trasllada de forma automàtica al següent torn sense pèrdua.
+     * **Certificació Humana:** Botons directes perquè el Mestre valide o refute tasques sense obrir fitxers Markdown.
+     * **Consola de Comunicació:** Resums executius en llenguatge clar i humà de poble.
+
+### Bloc 0.6: La Gran Auditoria i Rescat de l'Arxiu Històric (418 Ítems)
+1. **Pentinar el Passat per Alliberar el Futur:**
+   - La carpeta `90_arxiu_historic/` té **418 ítems** i és un cementeri de papers que ofega la Wiki.
+   - Les IAs han de fer una immersió profunda en aquests 418 fitxers, junt amb `01_produccio/` i `02_investigacio_ia/`.
+2. **Lliurables de l'Auditoria:**
+   - **Què s'ha fet realment:** Identificar codi o funcionalitats existents que no recordàvem.
+   - **Quines idees es van perdre:** Rescatar perles, conceptes de disseny o necessitats expressades pel Mestre fa mesos que van quedar enterrades.
+   - **Informe Extensíssim de Rescat:** Un gran balanç per poder netejar Obsidian i quedar-nos només amb la memòria viva útil.
 
 ### Bloc 1: Llei del Quadrat Universal (1200x1200px WebP), EXIF i Neteja d'Imatges
 1. **Regla del Quadrat Universal:**
