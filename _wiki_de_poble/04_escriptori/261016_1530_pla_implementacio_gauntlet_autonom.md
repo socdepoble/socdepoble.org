@@ -105,13 +105,16 @@ Per reduir dràsticament el FCP (First Contentful Paint) a mòbil, el connector 
 
 ---
 
-### Onada 0.5 · Mandat Suprem: El Quadre de Comandament Web (Dashboard de Govern Màquina - Humà)
-1. **La Diagnosi del Mestre (L'IDE és per a màquines, la Web és per als humans):**
+### Onada 0.5 · Mandat Suprem: La Consola Web (Quadre de Comandament Màquina - Humà a `/consola`)
+1. **La Diagnosi del Mestre (L'IDE és per a màquines, la Consola Web és per als humans):**
    - El Mestre no és informàtic: entrar a l'IDE d'Antigravity o navegar entre desenes d'arxius Markdown a Obsidian genera ofegament cognitiu (*«me ahogo, me sé cuatro cosas y no sé ni para qué valen»*).
    - Obligar el Mestre a inspeccionar cada dia el codi per saber què s'ha fet és esgotador i trenca el descans humà.
-2. **Arquitectura del Quadre de Comandament Natiu a la Web (`/govern` o `/consola`):**
+2. **Diferenciació Neta: Control (Usuaris) vs Consola (Administració / Govern):**
+   - **Control:** El panell accessible per als usuaris i veïns.
+   - **Consola (`/consola`):** El quadre de comandament complet per al Mestre i l'administració del sistema.
+3. **Arquitectura de la Consola Natiu a la Web (`/consola`):**
    - Crear una secció visual accessible directament des del navegador dins de l'entorn gràfic de `socdepoble.org` (amb els tokens i components de Pedra Seca).
-   - **Mòduls Clau del Quadre de Comandament:**
+   - **Mòduls Clau de la Consola:**
      * **1. Estat dels Requeriments en Viu:** Taula visual que mostra la Matriu de Conformitat (MCR) en temps real: què està `[FET I SEGELLAT]`, què està `[PARCIAL]` i què està `[PENDENT DE SEGÜENT TANDA]`.
      * **2. Balanç de Sessió (Demana vs Fet):** Resum executiu que compara el que el Mestre va demanar a l'inici del torn contra el que les IAs han lliurat. El que no s'ha pogut acabar es mou automàticament a la següent tanda, sense esborrar-se mai ni quedar en l'oblit.
      * **3. Panell de Certificació Humana:** Botons senzills perquè el Mestre puga validar, certificar o retornar una tasca amb un sol clic des de la web, sense haver d'escriure prompts tècnics.

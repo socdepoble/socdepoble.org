@@ -91,7 +91,7 @@ Plantilla entregada: _wiki_de_poble/03_actuar/plantilles/acta.md; SHA-256 d0a64c
   - Ha exigit que la comunicació màquina-humà es trasllade a la pròpia web de `socdepoble.org` mitjançant un **Quadre de Comandament Visual (Dashboard de Govern)**.
 - **Les Tres Potes del Mandat:**
   1. **Balanç de Torn Clar (Demana vs Fet vs Pendent):** Tota sessió ha de tancar amb un resum diàfan que compare allò demanat amb allò assolit. El que no s'haja acabat, es trasllada de forma indestructible al pla següent. Res no s'esborra, res no s'oblida.
-  2. **El Quadre de Comandament Web (`/govern` o `/consola`):** Una interfície senzilla i gràfica amb Pedra Seca on el Mestre puga certificar, vore l'estat dels requeriments i rebre avisos sense tocar cap IDE.
+  2. **La Consola Web (`/consola`):** Una interfície senzilla i gràfica amb Pedra Seca on el Mestre puga certificar, vore l'estat dels requeriments i rebre avisos sense tocar cap IDE (diferenciant clarament entre `Control` per a usuaris i `Consola` per a administració).
   3. **La Gran Auditoria de Rescat de l'Arxiu Històric (418 Ítems):** El volum de `90_arxiu_historic/` s'ha d'auditar a fons per les IAs per destil·lar idees perdudes, identificar codi fet i buidar el llast d'Obsidian.
 
 <!-- SDP:SECTION acta.s5 -->
@@ -101,7 +101,7 @@ Plantilla entregada: _wiki_de_poble/03_actuar/plantilles/acta.md; SHA-256 d0a64c
 2. **Llegir aquesta Acta Marmota** (`_wiki_de_poble/10_actes/261016_1545_acta_marmota.md`) i verificar l'Escriptori net.
 3. **Llançar la convocatòria del Consell** sobre el Pla `261016_1530` i Prompt `261016_1530`.
 4. **Executar Claude sobre el paquet prioritari:**
-   - Disseny i maquetació del **Quadre de Comandament Web** a `socdepoble.org` (`/govern` o `/consola`).
+   - Disseny i maquetació de la **Consola Web** a `socdepoble.org` (`/consola`).
    - Erradicació de duplicats a `/multimedia/town-*` i visor modal Google Fotos.
    - Integració del mapa interactiu d'Emowe (`plantilla-mapa.html`).
    - Ergonomia de Notes (mirall `Nota sense títol`, desplegable Edició Avançada damunt TipTap).

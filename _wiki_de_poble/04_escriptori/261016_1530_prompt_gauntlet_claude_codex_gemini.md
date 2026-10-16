@@ -103,10 +103,13 @@ Aquest torn no hi ha pauses ni preguntes al Mestre: **execució autònoma d'alt 
    - **Purga de Mocks:** Eliminar les notícies fictícies ("El ple aprova la reforma del llavador vell"). Connectar fonts RSS reals del nostre entorn (Emowe, Mitjana, Jon Hernández, etc.).
    - **Integració del Bookmarklet:** L'usuari ha de poder capturar contingut i decidir fàcilment si el destí és el `Bloc de notes` o el `Lector RSS`.
 
-### Bloc 0.5 (MANDAT SUPREM HUMÀ): Quadre de Comandament Web (Dashboard de Govern Màquina-Humà a `/govern` o `/consola`)
+### Bloc 0.5 (MANDAT SUPREM HUMÀ): La Consola Web (Quadre de Comandament Màquina-Humà a `/consola`)
 1. **La Raó de Ser:** El Mestre no és informàtic i l'IDE d'Antigravity o la teranyina d'Obsidian li produeixen ofegament cognitiu. La comunicació i el control del projecte han de viure en un entorn gràfic web natiu de `socdepoble.org`.
-2. **Proposta i Prototipatge:**
-   - Dissenyar la interfície d'un **Quadre de Comandament Visual** seguint els principis de Pedra Seca.
+2. **Diferenciació Neta:**
+   - **Control:** El panell d'usuari (el que veuen els veïns).
+   - **Consola (`/consola`):** El quadre de comandament i govern d'administració (humà-màquina) per al Mestre.
+3. **Proposta i Prototipatge:**
+   - Dissenyar la interfície de la **Consola Web (`/consola`)** seguint els principis de Pedra Seca.
    - **Funcionalitats essencials:**
      * **Matriu de Requeriments en Viu:** Visualització de l'estat dels requeriments (`[FET]`, `[PARCIAL]`, `[PENDENT]`).
      * **Balanç Transparent de Sessió:** Taula visual que compara allò demanat pel Mestre amb allò executat per les IAs. El que no s'ha acabat, es trasllada de forma automàtica al següent torn sense pèrdua.
