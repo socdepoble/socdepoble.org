@@ -19,6 +19,7 @@ Font executiva única: `.agents/skills/`. Este índex només referencia les font
 - [[core-edicio-segura/SKILL|core-edicio-segura]]: Fusible preventiu i Tractor contra l'edició cega i la desincronització destructiva de la IAIA MarIA.
 - [[core-empaquetat-wp/SKILL|core-empaquetat-wp]]: Tractor cognitiu per estandarditzar la creació, nomenclatura i emmagatzematge dels arxius ZIP del connector de WordPress, evitant l'acumulació de brossa a l'arrel.
 - [[core-estrategia-ia/SKILL|core-estrategia-ia]]: Estratègia de consum, triatge de models i telemetria persistent de costos.
+- [[core-gauntlet-loop/SKILL|core-gauntlet-loop]]: Protocol de Gauntlet Loop (bucle adversarial de Matt Shumer/Robonuggets) i Enginyeria Inversa REA per a auditories implacables de Claude, Codex, Gemini i MarIA.
 - [[core-higiene-escriptori/SKILL|core-higiene-escriptori]]: Usa-la en arrencar, quan el hook avise o l'Escriptori estiga brut, abans de convocar (pla primer, prompt després) i abans de tancar. Cada viu porta motiu; el consumit s'arxiva amb la porta Olivera.
 - [[core-identitat/SKILL|core-identitat]]: Bootstrap d'identitat executiu de la IAIA MarIA. Carrega personalitat, veu, to i missió.
 - [[core-identitat-visual/SKILL|core-identitat-visual]]: Tractor (Skill) obligatori abans de generar cap imatge, recurs gràfic o disseny visual per a Sóc de Poble. Protegeix l'estil Bruguera/Berlanga.

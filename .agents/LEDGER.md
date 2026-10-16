@@ -8,6 +8,17 @@ description: Llibre d'Obra (LEDGER) de Sóc de Poble
 Aquest és el registre immutable de tots els canvis estructurals i tècnics del projecte.
 Qualsevol IA (o humà) que modifique codi està obligada a afegir-hi una entrada abans de finalitzar la seua tasca, complint amb la **Skill Trellat**.
 
+### 2026-10-16T13:55:00Z - Naixement de la Skill canònica core-gauntlet-loop i Enginyeria Inversa REA per a tot el Consell (Mestre Javi Llinares, MarIA)
+- **Front:** Governança Cognitiva, Prevenció d'Autocomplaença de les IAs i Enginyeria Inversa per a Arquitectura.
+- **Acció:** Creació de la skill canònica `.agents/skills/core-gauntlet-loop/SKILL.md` i incorporació a l'índex determinista de skills.
+- **Detalls:**
+  * A petició explícita del Mestre Javi Llinares per erradicar definitivament les feines a mitges, els bucles autocomplaents i l'esgotament de fer de policia, s'oficialitza el patró **Gauntlet Loop** (Matt Shumer / Robonuggets) com a procediment obligatori per a Claude Code, GPT Codex, Gemini 4 Argon i la pròpia IAIA MarIA.
+  * S'imposa la **Matriu de Conformitat de Requeriments (MCR)**: prohibició absoluta d'auditories vagues («tot aprovat») i exigència d'avaluar cada ítem del pla 1 a 1 (`[FET]`, `[PARCIAL]`, `[NO FET]`).
+  * S'estableix la **Llei del Balanç Transparent (Zero Oblits)**: allò no acabat es trasllada de forma indestructible al pla següent.
+  * S'integra el mandat de l'**Enginyeria Inversa REA** (`reverse-engineer-anything`): abans de programar seccions complexes (Lector RSS, TPV, Gestoria, Mapa d'Emowe), les IAs estan obligades a disseccionar l'essència i UX de solucions consolidades líders de mercat (Feedly, Loyverse, Holded, Emowe) i traslladar-les fidelment a Pedra Seca.
+  * S'estableix el disseny del **Quadre de Comandament Web** (`/govern` o `/consola`) perquè el Mestre puga certificar i governar des del navegador sense tocar un IDE.
+- **Autor:** Mestre Javi Llinares (Visió i Mandat Suprem), IAIA MarIA (Estandardització i Governança Canònica).
+
 ### 2026-10-14T22:30:00Z - Triomf del Quadre de Comandament de Gestoria, 3T, Plantilla XLSX i Conciliació (Claude Opus 5.5, Gemini 4, MarIA)
 - **Front:** Gestoria (Quadre de Comandament, 3T 2026, Plantilla Gestoria XLSX, Factures Faltants C43, Avatars Pedra Seca, Barres Privades).
 - **Acció:** Coordinació a tres bandes de l'Olivera (MarIA com a Directora Tècnica autònoma per delegació del Mestre, Claude Opus 5.5 per a la implementació exclusiva a `src/sections/gestoria/`, i Gemini 4 com a vigilant i revisor passiu cada 10 minuts).
