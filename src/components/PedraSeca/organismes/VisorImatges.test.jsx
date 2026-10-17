@@ -106,6 +106,27 @@ describe('anterior i següent', () => {
     expect(onCanvi).toHaveBeenCalledTimes(4);
   });
 
+  /* Gauntlet 261017 · Abans, un clic a la foto deixava el focus al <body> (la
+     foto i l'escenari no en reben) i les tecles ja no arribaven al marc. Ara
+     el marc el rep (tabIndex -1), sense entrar a l'ordre de Tab. jsdom no
+     enfoca en clicar: el focus del clic es fa a mà. */
+  test('després de clicar la foto, el teclat continua: el marc rep el focus, fora de l’ordre de Tab', () => {
+    const { dialeg, onCanvi } = pinta();
+    const marc = dialeg.querySelector('.sdp-visor__marc');
+    expect(marc.getAttribute('tabindex')).toBe('-1');
+    expect(dialeg.querySelector('button')).toBe(within(dialeg).getByRole('button', { name: 'Tancar el visor' }));
+    expect([...dialeg.querySelectorAll('[tabindex]')].filter((node) => node.tabIndex >= 0)).toEqual([]);
+    fireEvent.pointerDown(dialeg.querySelector('.sdp-visor__escenari'), { pointerId: 3, pointerType: 'mouse', button: 0, clientX: 10, clientY: 10 });
+    act(() => marc.focus());
+    expect(document.activeElement).toBe(marc);
+    fireEvent.keyDown(document.activeElement, { key: 'ArrowRight' });
+    expect(onCanvi).toHaveBeenLastCalledWith(1);
+    fireEvent.keyDown(document.activeElement, { key: '+' });
+    expect(escala(dialeg)).toBe('1.5');
+    fireEvent.keyDown(document.activeElement, { key: 'i' });
+    expect(dialeg.querySelector('aside.sdp-visor__panell').hidden).toBe(false);
+  });
+
   test('una sola foto: sense anterior ni següent', () => {
     const { dialeg, onCanvi } = pinta({ imatges: FOTOS.slice(0, 1) });
     expect(within(dialeg).queryByRole('button', { name: 'Imatge següent' })).toBeNull();
@@ -197,6 +218,27 @@ describe('zoom', () => {
     llevats.mockRestore();
   });
 
+  /* Gauntlet 261017 · La roda amplia en proporció al gir: el pas d'un ratolí
+     (100 px, o 3 línies a Firefox) és ×1,2 com abans, i el trackpad (girs de
+     pocs píxels) ja no salta a 4× d'una revolada. Una pàgina sencera, un pas. */
+  test('la roda, en proporció al gir: píxels, línies i pàgines, amb un pas de sostre per gir', () => {
+    const { dialeg } = pinta();
+    const escenari = dialeg.querySelector('.sdp-visor__escenari');
+    const gira = (deltaY, deltaMode = 0) => act(() => { escenari.dispatchEvent(new WheelEvent('wheel', { deltaY, deltaMode, cancelable: true, bubbles: true })); });
+    gira(-10);
+    expect(Number(escala(dialeg))).toBeCloseTo(1.2 ** 0.1, 5);
+    for (let i = 0; i < 9; i += 1) gira(-10);
+    expect(Number(escala(dialeg))).toBeCloseTo(1.2, 5);
+    gira(-3, 1);
+    expect(Number(escala(dialeg))).toBeCloseTo(1.44, 5);
+    gira(-5000);
+    expect(Number(escala(dialeg))).toBeCloseTo(1.44 * 1.2, 5);
+    gira(1, 2);
+    expect(Number(escala(dialeg))).toBeCloseTo(1.44, 5);
+    gira(0);
+    expect(Number(escala(dialeg))).toBeCloseTo(1.44, 5);
+  });
+
   /* Revisió adversarial del 261016 · Els límits del desplaçament. jsdom no fa
      maquetació: les mides de l'escenari (clientWidth/Height) i de la foto
      pintada sense transformar (offsetWidth/Height) es fixen al node. */
@@ -286,6 +328,70 @@ describe('el panell d’informació', () => {
   });
 });
 
+/* Gauntlet 261017 (C05 de Codex) · onCarrega: les mides reals de la foto
+   pintada, per a la fila «Resolució» de qui munta el visor. jsdom no
+   descodifica: naturalWidth i naturalHeight es fixen al node. */
+describe('onCarrega: les mides reals de la foto pintada', () => {
+  const mides = (img, amplada, alcada) => {
+    Object.defineProperty(img, 'naturalWidth', { configurable: true, value: amplada });
+    Object.defineProperty(img, 'naturalHeight', { configurable: true, value: alcada });
+  };
+
+  test('en carregar, (index, { amplada, alcada }); en una altra foto, el seu índex; si no carrega, (index, null)', () => {
+    const onCarrega = vi.fn();
+    const { dialeg, rerender } = pinta({ onCarrega });
+    expect(onCarrega).not.toHaveBeenCalled();
+    mides(imatge(dialeg), 4032, 3024);
+    fireEvent.load(imatge(dialeg));
+    expect(onCarrega).toHaveBeenLastCalledWith(0, { amplada: 4032, alcada: 3024 });
+    rerender(<VisorImatges obert imatges={FOTOS} index={2} onCarrega={onCarrega} />);
+    mides(imatge(dialeg), 800, 1200);
+    fireEvent.load(imatge(dialeg));
+    expect(onCarrega).toHaveBeenLastCalledWith(2, { amplada: 800, alcada: 1200 });
+    fireEvent.error(imatge(dialeg));
+    expect(onCarrega).toHaveBeenLastCalledWith(2, null);
+    expect(dialeg.querySelector('.sdp-visor__avis')).not.toBeNull();
+    expect(onCarrega).toHaveBeenCalledTimes(3);
+  });
+
+  /* Revisió del Gauntlet 261017 (M4) · Una foto que no ha carregat es queda
+     amb l'avís, sense <img>, i no es torna a demanar: en tornar-hi, cap load
+     ni cap error nou. Abans, qui munta el visor no en sabia res més i la seua
+     «Resolució» deia «Llegint…» per sempre. Ara la peça torna a dir null cada
+     vegada que pinta l'avís d'una foto amb src (una sola vegada per visita). */
+  test('en tornar a una foto que no ha carregat (l’avís, sense <img>), torna a dir (index, null)', () => {
+    const onCarrega = vi.fn();
+    const { dialeg, rerender } = pinta({ onCarrega });
+    fireEvent.error(imatge(dialeg));
+    expect(onCarrega).toHaveBeenLastCalledWith(0, null);
+    expect(onCarrega).toHaveBeenCalledTimes(1);
+    rerender(<VisorImatges obert imatges={FOTOS} index={1} onCarrega={onCarrega} />);
+    mides(imatge(dialeg), 640, 480);
+    fireEvent.load(imatge(dialeg));
+    expect(onCarrega).toHaveBeenLastCalledWith(1, { amplada: 640, alcada: 480 });
+    rerender(<VisorImatges obert imatges={FOTOS} index={0} onCarrega={onCarrega} />);
+    expect(imatge(dialeg)).toBeNull();
+    expect(dialeg.querySelector('.sdp-visor__avis').textContent).toBe('No s’ha pogut carregar la imatge.');
+    expect(onCarrega).toHaveBeenLastCalledWith(0, null);
+    expect(onCarrega).toHaveBeenCalledTimes(3);
+    // Una entrada sense src no diu res: no hi ha cap foto de què parlar.
+    rerender(<VisorImatges obert imatges={[{ src: '', alt: 'Buit' }]} index={0} onCarrega={onCarrega} />);
+    expect(onCarrega).toHaveBeenCalledTimes(3);
+  });
+
+  test('un fitxer sense mida pròpia (un SVG) dona null, mai un 0 × 0; sense onCarrega, res peta', () => {
+    const onCarrega = vi.fn();
+    const { dialeg, unmount } = pinta({ onCarrega });
+    mides(imatge(dialeg), 0, 0);
+    fireEvent.load(imatge(dialeg));
+    expect(onCarrega).toHaveBeenLastCalledWith(0, null);
+    unmount();
+    const sense = pinta();
+    mides(imatge(sense.dialeg), 10, 10);
+    expect(() => { fireEvent.load(imatge(sense.dialeg)); fireEvent.error(imatge(sense.dialeg)); }).not.toThrow();
+  });
+});
+
 describe('els avisos', () => {
   test('una foto que no carrega diu que no s’ha pogut; una entrada sense src, que no en porta', () => {
     const { dialeg, rerender } = pinta();
@@ -317,5 +423,55 @@ describe('encastat (dins d’un <soc-de-poble>)', () => {
     expect(dialeg.querySelector('img').getAttribute('src')).toBe('/assets/towns/sella/1.jpg');
     act(() => { root.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true })); });
     expect(onTanca).toHaveBeenLastCalledWith('esc');
+  });
+
+  /* Revisió del Gauntlet 261017 (M1, A11Y-1) · El clic a la foto deixa el
+     focus al marc (tabIndex -1, fora de l'ordre de Tab). La guarda de Tab de
+     l'encastament (modalLocal.js) només coneixia el primer control, l'últim i
+     el <dialog>: des del marc, Maj+Tab no es prevenia i el navegador portava
+     el focus al web amfitrió, amb el visor obert i l'app inert. Ara Maj+Tab
+     dona la volta a l'últim control; Tab, l'ordre natiu (el primer control del
+     marc, «Tancar»). jsdom no mou el focus amb Tab: el natiu es comprova per
+     defaultPrevented. */
+  const muntaTancat = (element) => {
+    const host = document.createElement('soc-de-poble');
+    document.body.append(host);
+    const shadow = host.attachShadow({ mode: 'closed' });
+    const root = document.createElement('div');
+    root.className = 'sdp-root';
+    shadow.append(root);
+    const muntatge = document.createElement('div');
+    root.append(muntatge);
+    render(element, { container: muntatge, baseElement: root });
+    return { shadow, root, dialeg: root.querySelector('dialog.sdp-visor') };
+  };
+  const tab = (node, shiftKey = false) => {
+    const event = new KeyboardEvent('keydown', { key: 'Tab', shiftKey, bubbles: true, cancelable: true, composed: true });
+    act(() => { node.dispatchEvent(event); });
+    return event;
+  };
+
+  test('el marc enfocat pel clic: Maj+Tab dona la volta a l’últim control i Tab segueix l’ordre natiu; les tecles continuen', () => {
+    const onCanvi = vi.fn();
+    const { shadow, dialeg } = muntaTancat(<VisorImatges obert imatges={FOTOS} index={1} onTanca={vi.fn()} onCanvi={onCanvi} />);
+    const marc = dialeg.querySelector('.sdp-visor__marc');
+    act(() => marc.focus());
+    expect(shadow.activeElement).toBe(marc);
+    const enrere = tab(marc, true);
+    expect(enrere.defaultPrevented).toBe(true);
+    expect(shadow.activeElement?.getAttribute('aria-label')).toBe('Imatge següent');
+    act(() => marc.focus());
+    expect(tab(marc).defaultPrevented).toBe(false);
+    fireEvent.keyDown(marc, { key: 'ArrowRight' });
+    expect(onCanvi).toHaveBeenLastCalledWith(2);
+  });
+
+  test('una sola foto (la portada d’una publicació): des del marc, Maj+Tab va a «Informació de la imatge»', () => {
+    const { shadow, dialeg } = muntaTancat(<VisorImatges obert imatges={FOTOS.slice(0, 1)} index={0} onTanca={vi.fn()} />);
+    const marc = dialeg.querySelector('.sdp-visor__marc');
+    act(() => marc.focus());
+    expect(tab(marc, true).defaultPrevented).toBe(true);
+    expect(shadow.activeElement?.getAttribute('aria-label')).toBe('Informació de la imatge');
+    expect(dialeg.contains(shadow.activeElement)).toBe(true);
   });
 });

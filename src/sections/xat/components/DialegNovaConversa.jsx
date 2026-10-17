@@ -1,6 +1,6 @@
 /**
- * DialegNovaConversa.jsx — el diàleg «Nova conversa» (captura 19.12.49 de
- * WhatsApp Desktop, onada 3). Substituïx el padró en línia de la llista.
+ * DialegNovaConversa.jsx — el diàleg «Nova conversa» (captura de referència
+ * 19.12.49, onada 3). Substituïx el padró en línia de la llista.
  *
  * Sobre el Dialeg de Pedra Seca (<dialog> natiu: capa superior, trampa de
  * focus, Escape i retorn del focus al «+» que l'ha obert). De dalt a baix:

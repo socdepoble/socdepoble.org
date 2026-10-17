@@ -1,7 +1,7 @@
 /**
  * BarraSeleccio.jsx — la fila de títol de la llista mentre se seleccionen
- * xats (T68, «Seleccionar xats» de WhatsApp Desktop). Substituïx la fila del
- * títol a la mateixa altura (AppGridColumn, fila 1 de la graella): la creu
+ * xats (T68, el «Seleccionar xats» del patró de missatgeria). Substituïx la
+ * fila del títol a la mateixa altura (AppGridColumn, fila 1 de la graella): la creu
  * per a eixir (també Escape, que escolta qui la munta), el recompte i
  * l'única acció que té RPC darrere: «Marcar com a llegides»
  * (useXat().marcaLlegides). Cap acció inventada. `refEixir` deixa que qui la

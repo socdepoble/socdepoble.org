@@ -22,11 +22,13 @@ const TOWN_FALLBACK_IMAGES = [
   '/assets/uploads/brain/nano_oli_oliva_1774198089084.png'
 ];
 
+/* Gauntlet 261017 (I34) · La llavor, en NFC: 'Penàguila' escrit amb l'accent
+   compost o descompost tria la mateixa reserva. Un text ASCII no canvia. */
 function pickDeterministicImage(seed, options) {
   const list = options.filter(Boolean);
   if (list.length === 0) return TOWN_FALLBACK_IMAGES[0];
 
-  const text = String(seed || '');
+  const text = String(seed || '').normalize('NFC');
   let hash = 0;
   for (let index = 0; index < text.length; index += 1) {
     hash = (hash * 31 + text.charCodeAt(index)) >>> 0;
@@ -115,9 +117,30 @@ function baseDeLScriptActual() {
 
 fixaBaseRecursos(baseDeLScriptActual());
 
+/* Gauntlet 261017 (I34) · El principi d'un camí propi que no és cap
+   carpeta: barres (també la inversa, que el navegador llig com a barra) i
+   segments de punts ('./', '../', '.', '..'). Es lleva sencer abans de posar
+   la base: '../assets/x' no puja mai fora de la carpeta del paquet, i '//x' o
+   '/\x' no es tornen mai una adreça d'un altre lloc. */
+const RE_INICI_SENSE_CARPETA = /^(?:[/\\]+|\.{1,2}(?:[/\\]|$))+/;
+// Tabuladors i salts de línia: el parser d'URL els lleva d'on siguen.
+const RE_TAB_O_SALT = /[\t\n\r]/g;
+/* Revisió del Gauntlet 261017 (Decisió 3, imatges de tercers) · Una barra
+   inversa o un caràcter de control entre les barres i els punts del principi
+   ('/\rastreig.example/p.gif', '/\t/fora.example/x.png') amaga un altre lloc:
+   no es resol i torna ''. Rentar-lo a un camí propi el feia passar pel filtre
+   d'imatges pròpies (fontImatgePropia) i el Mur pintava una imatge trencada
+   en lloc de la silueta de sempre. '//x' continua sent el camí propi '/x'. */
+const RE_INICI_AMB_ORIGEN_AMAGAT = /^[/.]*[\\\u0000-\u001F\u007F]/;
+
 export function resolveAsset(path, basePath = '/', pluginUrl = '', version = '') {
   if (!path) return '';
-  if (/^(?:https?:\/\/|data:|blob:)/i.test(path)) return path;
+  /* Gauntlet 261017 (I34) · Sense espais als extrems: ' /assets/x.png' donava
+     '/ /assets/x.png' i ' https://…', '/ https://…'. Només espais, buit. */
+  const ruta = String(path).trim();
+  if (!ruta) return '';
+  if (/^(?:https?:\/\/|data:|blob:)/i.test(ruta)) return ruta;
+  if (RE_INICI_AMB_ORIGEN_AMAGAT.test(ruta)) return '';
 
   let base = String(basePath || '').replace(/\/$/, '');
   if (base === '/') base = '';
@@ -125,22 +148,23 @@ export function resolveAsset(path, basePath = '/', pluginUrl = '', version = '')
     base = String(pluginUrl).replace(/\/$/, '');
   }
 
-  if (typeof path !== 'string') {
-    path = String(path);
-  }
   /* Sense base pròpia a la crida, la de l'amfitrió. Un camí que ja penja
      d'una base-camí no es torna a prefixar: resoldre dues vegades el mateix
      recurs (PageFrame → BarraTaronja) dona el mateix resultat. */
   if (!base && baseActual) {
-    const jaResolt = baseActual.startsWith('/') && (path === baseActual || path.startsWith(`${baseActual}/`));
+    const jaResolt = baseActual.startsWith('/') && (ruta === baseActual || ruta.startsWith(`${baseActual}/`));
     if (!jaResolt) base = baseActual;
   }
-  path = path.replace(/^\/+/, '');
-  
-  const separator = path.includes('?') ? '&' : '?';
-  const query = version ? `${separator}v=${version}` : '';
-  
-  return base ? `${base}/${path}${query}` : `/${path}${query}`;
+  const cami = ruta.replace(RE_TAB_O_SALT, '').replace(RE_INICI_SENSE_CARPETA, '');
+
+  /* C08 · La versió va a la consulta, abans del fragment: '#crop?v=7' no
+     arribava mai al servidor. Sense versió, el camí tal qual. */
+  const posFragment = cami.indexOf('#');
+  const senseFragment = posFragment === -1 ? cami : cami.slice(0, posFragment);
+  const fragment = posFragment === -1 ? '' : cami.slice(posFragment);
+  const query = version ? `${senseFragment.includes('?') ? '&' : '?'}v=${version}` : '';
+
+  return `${base}/${senseFragment}${query}${fragment}`;
 }
 
 /* Els src="/assets/…" d'un HTML de contingut (PAGE_COPY, les pàgines del
@@ -165,6 +189,17 @@ export function resolRecursPropi(valor) {
   return resolveAsset(valor);
 }
 
+/* Gauntlet 261017 (I34) · Les branques nominals: el poble i l'índex de la
+   seua reserva, en este ordre (el primer que casa mana: 'Alcoleja i Sella' és
+   Sella, com abans). Casen amb el nom sencer dins del text normalitzat (sense
+   accents, en minúscules), no amb un tros: 'Rossella' ja no és Sella. Els
+   límits són qualsevol cosa que no siga una lletra ASCII (també '-', '_',
+   '/', '.' i les xifres): un slug o un camí ('img_sella.jpg', 'xixona2.jpg')
+   continua casant. Sense lookbehind: Baseline Safari 16.0. */
+const BRANQUES_NOMINALS = Object.freeze([
+  ['benifallim', 0], ['sella', 3], ['orxeta', 4], ['relleu', 5], ['alcoleja', 6], ['xixona', 7], ['tibi', 8]
+].map(([nom, index]) => Object.freeze({ nom, index, patro: new RegExp(`(?:^|[^a-z])${nom}(?:[^a-z]|$)`) })));
+
 function resolveTownImageUrl(value, context = '', seed = '', basePath = '/', pluginUrl = '', version = '') {
   const raw = String(value || '').trim();
   const text = normalizeText(`${raw} ${context}`);
@@ -179,14 +214,8 @@ function resolveTownImageUrl(value, context = '', seed = '', basePath = '/', plu
     return resolveAsset(raw, basePath, pluginUrl, version);
   }
 
-  if (text.includes('benifallim')) return resolveAsset(TOWN_FALLBACK_IMAGES[0], basePath, pluginUrl, version);
-  if (text.includes('sella')) return resolveAsset(TOWN_FALLBACK_IMAGES[3], basePath, pluginUrl, version);
-  if (text.includes('orxeta')) return resolveAsset(TOWN_FALLBACK_IMAGES[4], basePath, pluginUrl, version);
-  if (text.includes('relleu')) return resolveAsset(TOWN_FALLBACK_IMAGES[5], basePath, pluginUrl, version);
-  if (text.includes('alcoleja')) return resolveAsset(TOWN_FALLBACK_IMAGES[6], basePath, pluginUrl, version);
-  if (text.includes('xixona')) return resolveAsset(TOWN_FALLBACK_IMAGES[7], basePath, pluginUrl, version);
-  if (text.includes('tibi')) return resolveAsset(TOWN_FALLBACK_IMAGES[8], basePath, pluginUrl, version);
-  if (raw.startsWith('/assets/images/towns/')) return resolveAsset(pickDeterministicImage(seed || text, TOWN_FALLBACK_IMAGES), basePath, pluginUrl, version);
+  const branca = BRANQUES_NOMINALS.find(({ patro }) => patro.test(text));
+  if (branca) return resolveAsset(TOWN_FALLBACK_IMAGES[branca.index], basePath, pluginUrl, version);
 
   return resolveAsset(pickDeterministicImage(seed || text, TOWN_FALLBACK_IMAGES), basePath, pluginUrl, version);
 }

@@ -287,7 +287,10 @@ export function UniversalEditorShell({
   publishDate = null,
   onPublishDateChange = null,
   avisDataPublicacio = null,
-  onToast = (msg, type) => console.log(`[Toast ${type}] ${msg}`),
+  /* Gauntlet 261017 (Bloc 0.1) · Sense `onToast`, els avisos de la capçalera
+     i del logotip van pel mateix canal que els de les accions inoperants
+     (useToast), no a la consola. */
+  onToast = null,
   className = '',
   /* T47 (ordre del Mestre, 260928) · Opcionals. `estatDesament` = { estat,
      detall, accions?, reintentant? } pinta l'indicador de l'autodesament (EstatDesament) com a PRIMER element de la barra
@@ -440,7 +443,7 @@ export function UniversalEditorShell({
     onPublishDateChange,
     avisDataPublicacio,
     estatDesament,
-    onToast
+    onToast: onToast || showToast
   });
 
   const contentContext = useContent();
@@ -741,7 +744,7 @@ function useFocusEnAcabarLaPujada(pujantDeFora) {
   return botoRef;
 }
 
-export function useEditorShell({
+function useEditorShell({
   onSaveField,
   onImageUpload = null,
   heroImage,
@@ -768,7 +771,7 @@ export function useEditorShell({
   onPublishDateChange = null,
   avisDataPublicacio = null,
   estatDesament = null,
-  onToast = console.log
+  onToast = () => {}
 }) {
   /* T46 · L'últim error de la capçalera, per a ensenyar-lo també dins del
      diàleg d'enquadrament: el modal tapa el toast. */

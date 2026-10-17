@@ -1,20 +1,23 @@
 /**
  * ajustosXat.js — el model del full «Ajustos» del Xat (torn 260930, T1), en
- * funcions pures. Calca l'arbre d'«Ajustes» de WhatsApp Desktop (captures del
- * Mestre, 20.47–21.05) i hi posa NOMÉS el que Sóc de Poble ja té: la resta
- * és «en construcció», i ho diu.
+ * funcions pures. Seguix l'anatomia habitual dels ajustos de missatgeria
+ * (captures de referència del Mestre, 20.47–21.05) i hi posa NOMÉS el que Sóc
+ * de Poble ja té: la resta és «en construcció», i ho diu. Gauntlet 261017
+ * (Bloc 3.1) · Patró estàndard de missatgeria, sense cap marca aliena.
  *
  * Sense React ni xarxa. FullAjustos.jsx el pinta; el catàleg de disseny
  * (EspecimenXatAjustos) també.
  *
- * L'arbre és una pila de pàgines dins del MATEIX marc (WhatsApp: «push dins
- * del mateix full»). Cada pàgina porta el títol i, o bé grups de files en
- * targetes, o bé un contingut especial (els Preferits), o bé l'avís «en
- * construcció». Cada fila diu quin element porta a la dreta pel seu tipus:
+ * L'arbre és una pila de pàgines dins del MATEIX marc (com a les apps de
+ * missatgeria: «push dins del mateix full»). Cada pàgina porta el títol
+ * i, o bé grups de files en targetes, o bé un contingut especial (els
+ * Preferits), o bé l'avís «en construcció». Cada fila diu quin element porta
+ * a la dreta pel seu tipus:
  *   · 'pagina' → xebró: empeny una subpàgina dins del full;
  *   · 'ruta'   → xebró: obri una ruta de l'app i tanca el full;
  *   · 'opcio'  → ✓ si és la triada (selecció única de la seua targeta; es
- *                 canvia a l'acte, sense botó de desar, com a WhatsApp);
+ *                 canvia a l'acte, sense botó de desar, com a les apps de
+ *                 missatgeria);
  *   · 'accio'  → text roig i sense xebró (destructiva: «Tanca la sessió»);
  *   · 'seccio' → només als resultats de la cerca: una capçalera de secció
  *                trobada (filaDeSeccio), que obri la pàgina on viu.
@@ -55,9 +58,9 @@ const LLENGUES = [
   ...SUPPORTED_LANGUAGES.filter((llengua) => llengua.code !== LLENGUA_PROPIA)
 ];
 
-/* Les tres opcions del tema de WhatsApp (captura 20.59.01): «Igual al
-   sistema», «Modo claro» i «Modo oscuro», sobre les preferències que ja
-   coneix config/theme.js ('system', 'light', 'dark'). */
+/* Les tres opcions de tema de la referència de missatgeria (captura
+   20.59.01): «Igual al sistema», «Modo claro» i «Modo oscuro», sobre les
+   preferències que ja coneix config/theme.js ('system', 'light', 'dark'). */
 export const OPCIONS_TEMA = Object.freeze([
   Object.freeze({ id: 'tema-system', tipus: 'opcio', opcio: 'system', clau: 'section.xat.ajustos.tema.sistema', text: 'Igual que el sistema' }),
   Object.freeze({ id: 'tema-light', tipus: 'opcio', opcio: 'light', clau: 'section.xat.ajustos.tema.clar', text: 'Mode clar' }),
@@ -104,7 +107,7 @@ export const PAGINES_AJUSTOS = Object.freeze({
         fila('xats', 'pagina', 'section.xat.rail.xats', 'Xats', { icona: 'MessageCircle', pagina: 'xats' }),
         fila('aparenca', 'pagina', 'section.xat.ajustos.aparenca', 'Aparença', { icona: 'Palette', pagina: 'aparenca' }),
         fila('notificacions', 'pagina', 'section.xat.ajustos.notificacions', 'Notificacions', { icona: 'BellDot', pagina: 'notificacions' }),
-        /* L'equivalència canònica de la skill sdp-clon-whatsapp (§2.3):
+        /* L'equivalència canònica de la skill del patró de missatgeria (§2.3):
            «Almacenamiento y datos» → «Dades i memòria local». */
         fila('dades', 'pagina', 'section.xat.ajustos.dades', 'Dades i memòria local', { icona: 'ArrowDownUp', pagina: 'dades' })
       ]) }),
@@ -129,7 +132,7 @@ export const PAGINES_AJUSTOS = Object.freeze({
     construccio: Object.freeze({ vista: 'destacats' })
   }),
 
-  /* Sense sincronització entre dispositius: el text de WhatsApp no s'aplica. */
+  /* Sense sincronització entre dispositius: el text de la referència no s'aplica. */
   historial: Object.freeze({
     id: 'historial',
     titol: ['section.xat.ajustos.historial', 'Historial del xat'],
@@ -252,7 +255,8 @@ export const PAGINES_AJUSTOS = Object.freeze({
   }),
 
   /* «Ayuda» (captura 21.04.41), amb les pàgines pròpies que ja existixen:
-     res del centre d'ajuda de WhatsApp (skill sdp-clon-whatsapp, §3). */
+     res del centre d'ajuda d'una app aliena (skill del patró de
+     missatgeria, §3). */
   ajuda: Object.freeze({
     id: 'ajuda',
     titol: ['section.xat.ajustos.ajuda', 'Ajuda'],

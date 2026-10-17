@@ -8,7 +8,8 @@
  * personals).»
  *
  * Es munta DINS de la PantallaCompleta de l'espècimen (EspecimenEmojisXL.jsx):
- * cap ruta nova. Anatomia de «Reenviar a…» de WhatsApp (Llei del Clonatge):
+ * cap ruta nova. L'anatomia habitual del «Reenviar a…» de les apps de
+ * missatgeria (Gauntlet 261017, Bloc 3.1: patró conegut, sense marca aliena):
  * la capçalera amb l'emoji en gran i el seu nom, la cerca en píndola i la
  * llista agrupada amb les files del Xat (sdp-xat-fila, sdp-xat-seccio), amb
  * l'emoji o la icona actual de cada destí a l'esquerra. Quatre grups: Notes

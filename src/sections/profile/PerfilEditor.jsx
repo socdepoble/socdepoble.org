@@ -10,6 +10,7 @@ import { AVIS_IMATGE_PUJANT, ERROR_DESAT_IMATGE, useImatgeDeFitxa } from './useI
 import { AJUDA_FOTO } from '../../components/universal/enquadrament/useEnquadramentImatge.jsx';
 import { AJUDA_IMATGE_PUJANT } from '../../components/universal/UniversalEditorShell.jsx';
 import { DialegEmoticona } from '../../components/universal/classificacio/DialegEmoticona.jsx';
+import { carregaCatalegEmojis } from '../notes/canalEmojis.js';
 import { bloqueigDeFitxa, textosDeFitxa } from './visibilitatFitxa.js';
 import {
   CAMPS_FITXA, LIMITS_TEXT, copyrightDeFitxa, documentDeFitxa, fitxaDeLectura, llargariaDeCamp, menaDeFitxa, retallaCamp, textDeCamp,
@@ -793,7 +794,9 @@ export function PerfilEditor({ identitat }) {
       uploadMedia,
       labels: etiquetes,
       /* D13: les eines baixen davall de l'entradilla. La fitxa no porta
-         llavor, i ho diu: sense la clau, DocumentEditor hi posa la de Notes. */
+         llavor, i ho diu. Gauntlet 261017 (C06, auditoria Codex) · Sense la
+         clau ja seria null: el DocumentEditor no posa cap llavor per defecte
+         (la del Bloc la passa el Bloc). El null explícit es queda. */
       posicioEines: 'davall-entradilla',
       seedContent: null,
       /* Onada 4 (retallador senzill, ordre del Mestre 261008) · Derogat el
@@ -888,7 +891,9 @@ export function PerfilEditor({ identitat }) {
   ) : null;
 
   /* T66 · Muntat només mentre és obert (com a les Notes): cada obertura
-     comença amb l'emoticona desada. */
+     comença amb l'emoticona desada. Gauntlet 261017 (F30) · Amb la graella
+     del catàleg Emojis XL, com a les Notes: un clic l'assigna (les dades, a
+     demanda i en les famílies del selector). */
   const dialegDEmoticona = ambEmoticona && dialegEmoticona ? (
     <DialegEmoticona
       key={`emoticona:${identitat.id}`}
@@ -896,6 +901,7 @@ export function PerfilEditor({ identitat }) {
       onTanca={tancaEmoticona}
       actual={fitxa.icon || ''}
       onDesa={desaEmoticona}
+      carregaCataleg={carregaCatalegEmojis}
     />
   ) : null;
 

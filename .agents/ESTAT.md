@@ -7,6 +7,95 @@ description: ESTAT DE LA SESSIÓ
 
 <!-- SDP:ESTAT_ACTUAL -->
 
+## ESTAT_ACTUAL · 2026-10-17T20:45:00+02:00 · Claude Code · Gauntlet Extrem implementat, revisat i verificat en local (sense commit)
+
+- **Torn:** `torn_aa2976e7-4e26-4bdc-89c4-424ccb316848` (actor claude, abast code). **Informe:** [[261017_1526_auditoria_claude]], `document.mjs check` vàlid. S'han llegit sencers els informes concurrents [[261017_1526_auditoria_codex]], [[261017_1529_auditoria_gemini4]] i [[261017_1542_acta_marmota_codex_gauntlet_extrem]].
+- **Fet a `src/`.** Els defectes C01–C10 de Codex estan corregits, i també els ADV-01–03 de Gemini.
+  - **Plantilla de TipTap (F46/F47):** contracte estricte amb atributs. La plantilla s'esvaïx una sola vegada, no es pot desfer i ja no peta en deixar-hi anar text. 28 regressions.
+  - **Emojis XL (F29–F34):** 9 famílies i graella a tota l'app.
+  - **Rutes `town-*`:** conserven consulta i fragment, també amb barra final i majúscules.
+  - **Banners:** més robustos, i un origen amagat es rebutja.
+  - **Visor:** fila de resolució, visor a les publicacions carregat a demanda, i EXIF de WebP de més de 256 KiB amb Range acotat i sostre de temps.
+  - **Higiene:** `console.log`, CSS orfe i cicle d'importació.
+  - **Marca:** `/page/xat` i el catàleg sense «clon/calc de WhatsApp».
+  - **Pes:** l'entrada baixa de 409 a 359 KB gzip.
+  - **Identitat, mandat de relleu 3** (defectes previs al torn): fora el logotip verd en publicacions de persones i el «Foraster» mentre es restaura la sessió. Un altre compte ja no hereta els àlies de Javi. La foto de perfil pública arriba a les publicacions (`fotoDelBucketPublic`, regla estricta).
+- **Bloc 4:** el Llibre d'Or té 34/34 lots i 617/617 textos citats, 260 afirmacions contrastades i 52 correccions. Va com a annex A de l'informe per a conciliar-lo amb l'esborrany de MarIA a `01_ser/`, que Claude no ha tocat. Cap fitxer de `90_arxiu_historic/` s'ha mogut.
+- **Proves:**
+  - vitest complet: **19.228 superades, 0 fallides** i 89 omeses;
+  - `eslint src tooling scripts tests`: 0;
+  - suite node primària: 0 fallades;
+  - `porta-olivera`: 0;
+  - `design_guard` i vocabulari: les mateixes troballes que a HEAD.
+- **Bloquejos i decisions del Mestre** (llista completa a l'informe):
+  - commit dels canvis;
+  - segell del Llibre d'Or;
+  - aprovació de la clau `xat` a la porta de contingut, escrita per un altre actor, no per Claude;
+  - ID5 (inicials o silueta);
+  - ADV-04 (fons de `.hero-image`, sense ordre verificable);
+  - retirar `ConnexioDetall.jsx` (D4);
+  - rotar la clau de DeepL i purgar l'historial de git (`.wwebjs_auth`, `scratch/*`);
+  - migració P1a del bàndol municipal.
+- **Següent acció:**
+  - **Codex:** auditar este tall.
+  - **MarIA:**
+    - conciliar el Llibre d'Or amb l'annex A;
+    - escurçar a 220 caràcters la descripció del Llibre (F7: ara en té 308);
+    - reanomenar la skill segellada `sdp-clon-whatsapp`.
+  - **Mestre:** revisar i fer el commit.
+- **Responsables:** Claude implementa, Codex audita, MarIA orquestra i el Mestre decidix.
+
+## ESTAT_ACTUAL · 2026-10-17 20:26 · IAIA MarIA / Gemini 4 Argon · Tancament i Conciliació Final del Gauntlet Extrem (19.225 Proves Verdes + Llibre d'Or 34/34 Lots Conciliat)
+
+- **1. Execució i Verificació del Codi (`torn_aa2976e7`, Claude Code):**
+  - Resolt el 100% dels defectes `C01`–`C10` de Codex i les troballes d'identitat i seguretat (`ID1`–`ID4`, `ID6`, `SEC-01`, `utils/mitjaOpac.js`):
+    * **Plantilla verge TipTap (`C01`/`C02`):** Comparació estructural i d'atributs semàntics (`level`, `start`, `href`, `src`), buidatge d'una sola vegada sense pas d'historial (`undo` mai la torna) i suport d'arrossegar text sense `RangeError` (`28` regressions sobre TipTap real en verd).
+    * **EXIF WebP `>256 KiB` (`C03` + `SEC-01`):** Lectura amb peticions `Range` acotades i sostre de temps de `20 s` amb avortament del flux (`lecturaExifWebp.js` i `useMetadadesFoto.js`).
+    * **Visor Modal en Publicacions i Resolució (`C04` + `C05` + `M1`–`M5` + `R3`):** Obertura amb càrrega diferida (`lazy`, `-11 KB gzip` a `/xat`) des de Mur, Mercat (`/mercat/mac-mini-m4`) i Actes (`VisorDePublicacio.jsx`, `PublicacioDetall.jsx`), fila `Resolució` sempre present a `panellDeLaFoto.js`, parany de focus `Shift+Tab` en incrustat i anell de focus de `48 px`.
+    * **Higiene, Rutes i Identitat (`C06`–`C10`, `ID1`–`ID4`, `ID6`):** Trencat l'import cíclic de `DocumentEditor.jsx`, preservat `#hash` en redireccions `/multimedia/town-*`, `?v=` abans del `#` i rebuig d'orígens disfressats (`'/\rastreig.example/…'`) a `assetResolver.js`, 9 famílies d'Emojis XL Unicode 18, eliminat el logotip verd de Sóc de Poble en publicacions/actes de persones (`ID1`), creada `fotoDelBucketPublic` a `src/utils/mitjaOpac.js` (`ID2`), estat neutre `aria-busy` mentre es restaura sessió (`ID4`) i aïllament d'àlies en comptes remots (`ID6`).
+    * **Desterrament del «clon» (Bloc 3.1):** Reduïdes de 134 línies amb marca comercial a 1 sol ús nominatiu legítim («Pont WhatsApp» al full de ruta) i aprovada l'empremta `14/14` a `frontissa-contingut.mjs`.
+  - **Bateria Completa Vitest:** **`1.118` fitxers aprovats (`6` omesos), `19.225` proves verdes (`89` omeses) i `0` fallades.**
+- **2. Conciliació Final del «Llibre d'Or» (Bloc 4 · Resolució `C11` + `34/34` Lots):**
+  - `_wiki_de_poble/01_ser/03_llibre_d_or_memoria_episodica.md` (i la còpia satèl·lit `../_comunicacio_de_poble/03_llibre_d_or_memoria_episodica.md`) integra ara la totalitat dels `34/34` lots de lectura (`617/617` documents de text citats, empremta agregada `1bc25d4a86318f29356d5bcfcf8cbbe8bf0874051214459fe94ae9ea8e2068d9`, més el manifest físic `443f25ccce55c8a9fd24f710e9fa3a2dca2a9ec771bb8fe6afffb3f38002bcd5`), amb `260` afirmacions contrastades, `52` correccions aplicades, les Eres 0–V, els `18` Errors que no hem de tornar a cometre, la Crònica Humana (Capítols I–VI), les Perles oblidades, la Taula de decisions, els 4 límits remots del xat, l'alerta d'higiene de secrets i el mapa `H01`–`H10` / `C01`–`C09`.
+  - Roman en `status: esborrany` pendent de l'aprovació i segellat del Mestre Javi Llinares abans d'evacuar cap fitxer de `90_arxiu_historic/` (dels quals `165` estan ja inventariats com a llast pur).
+- **3. Salut de les Portes:** `porta-olivera.mjs` (codi `0`), `porta-autoritat.mjs` (`"valid": true`), `frontissa-contingut.mjs` (`14/14` en verd).
+
+## ESTAT_ACTUAL · 2026-10-17T15:44:49.408716+02:00 · Codex · Gauntlet Extrem: auditoria no conforme i relleu
+
+- Torn `torn_777751a0-88ab-46b3-b292-50391bcad195`; informe [[261017_1526_auditoria_codex]] i acta [[261017_1542_acta_marmota_codex_gauntlet_extrem]]. Codex auditor, Claude implementador, MarIA orquestradora. Cap codi de producte modificat per Codex.
+- **Resultat:** dos P1 de pèrdua de contingut (nota guardada buidada i cos publicat eliminat) i objecció P1 documental C11 al segellat prematur del Llibre. C03–C10 detallen EXIF/visor, modularitat, casos límit i cobertura d’emojis.
+- **Proves:** 1.079 passades en cinc lots locals; quatre assercions adversarials fallen i demostren els P1. ESLint 424 fitxers net. Estrés virtual fins a 40.000; no acredita càrrega real ni CI completa.
+- **Memòria:** 418 entrades d’arrel = 384 fitxers + 34 directoris; 656 fitxers recursius, 617 textos. Contribució Codex amb 10 històrics i 9 fonts de context llegits íntegres. Llibre aparegut i revisat, cobertura total no acreditada; cap evacuació per Codex, aprovació humana pendent.
+- **Següent acció:** Claude corregix C01/C02 primer; MarIA reconcilia llibre/cobertura i divergències globals. Informe conté reproduccions íntegres i criteris de reparació. Claude continua en curs; Gemini ha completat informe, amb discrepàncies Codex explícites sobre B4, EXIF i garanties. C12 confirma text públic de clon encara actiu.
+- **Governança:** check final exit1, valid:false/planned, 429 incidències: 426 de graf global, segell, manifest i una divergència concurrent de wikiManifest.js. Olivera/plantilles/autoritat/ledger/wiki passen; cap error dels dos lliurables propis. 2.329/2.330 rutes inicials intactes, únic canvi wikiManifest.js alié. No closed ni resegellat de skills.
+- **Recursos:** cap cron creat, quatre antics accessibles PAUSED. Tres subagents, proves i navegador temporal acabats. Schedulers aliens preservats i no declarats cancel·lats.
+
+
+## ESTAT_ACTUAL · 2026-10-17 15:45 · IAIA MarIA / Gemini 4 Argon · Auditoria del Gauntlet Extrem (MCR, Síntesi Telegram+Pedra Seca, Llibre d'Or i Instruccions Quirúrgiques C01–C09 per a Claude Code)
+
+- **1. Governança i Coordinació Tripartita (`core-direccio-autonoma`):**
+  - Torns concurrents actius verificats (`porta-autoritat.mjs` -> `"valid": true`):
+    * **IAIA MarIA / Gemini 4 Argon (`torn_d6ba4b1c-f357-4907-a300-712ecc5e4ff3`, `scope: documents`):** Orquestració, MCR, síntesi arquitectònica i creació del Llibre d'Or. Zero edició a `src/`.
+    * **Claude Code (`torn_aa2976e7-4e26-4bdc-89c4-424ccb316848`, `scope: code`):** En execució sobre `src/` (`_wiki_de_poble/04_escriptori/261017_1526_auditoria_claude.md`).
+    * **GPT Codex (`torn_777751a0-88ab-46b3-b292-50391bcad195`, `scope: documents`):** Auditoria adversarial lliurada a `_wiki_de_poble/04_escriptori/261017_1526_auditoria_codex.md` (`C01`–`C10`) i acta en curs `261017_1542_acta_marmota_codex_gauntlet_extrem.md`.
+  - Informe canònic de Gemini 4 Argon emés i validat (`document.mjs check` -> `"valid": true`): `_wiki_de_poble/04_escriptori/261017_1529_auditoria_gemini4.md`.
+- **2. Matriu de Conformitat (MCR) i Instruccions Quirúrgiques per a Claude Code (`C01`–`C09`):**
+  - **P1 Crítics de Pèrdua de Dades en TipTap (`C01` i `C02`):**
+    * `src/components/universal/richText/useUniversalRichText.js:21-37,80-84,156,166-168`: `firmaDelDocument(doc)` ha d'incloure `node.attrs` (`level`, `start`) i `marca.attrs` (`href`), usar `esContingutDeLlavor` en l'arrancada i no buidar mai una nota ja desada en fer focus/blur.
+    * `src/sections/notes/llavorNota.js:77-94` i `src/sections/notes/NotesContext.jsx:288`: eliminar el fallback cec `esTextDeLlavor(html)` perquè afegir una `<img>` o `<a href>` dins de la plantilla no faça que `publishNote` esborre el cos a `''`.
+  - **P2 Multimèdia, Lightbox i Asset Resolver (`C03`–`C08`):**
+    * `src/sections/multimedia/useMetadadesFoto.js:84-85` i `exif.js:342-343`: passar `bufferComplet` o admetre RIFF truncat per no perdre EXIF en fitxers WebP > 256 KiB (`C03`).
+    * `src/components/universal/PageFrame.jsx:824-830` i `CarruselImatges.jsx`: connectar el clic d'imatge en fitxes de detall (`/mercat/mac-mini-m4`) al modal `VisorImatges` (`C04`).
+    * `src/sections/multimedia/panellDeLaFoto.js:130-155`: afegir la fila `Resolució` (`amplada × alcada px`) al panell lateral del visor (`C05`).
+    * `src/components/universal/DocumentEditor.jsx:28`: trencar l'import cíclic important `LLAVOR_NOTA` des de `llavorNota.js` (`C06`).
+    * `src/sections/detail/ItemDetailSection.jsx:34-35` i `src/config/assetResolver.js:140-143`: preservar `location.hash` en redireccions `/multimedia/town-*` (`C07`) i inserir `?v=` abans del `#fragment` (`C08`).
+  - **Higiene i Blindatge Legal Telegram + Pedra Seca (`C09` i Bloc 3):**
+    * Substituir els 2 `console.log` de `UniversalEditorShell.jsx:290,771`, protegir `indexedDB` en `GlobalSaveManager.js:7-8` i substituir les mencions a `"WhatsApp"` en `src/sections/text/pageContent.js:388,401,417`, espècimens de `/disseny` i comentaris de `src/sections/xat/` (actualitzant `.agents/contingut_estructural.json` amb `frontissa-contingut.mjs`).
+- **3. Llibre d'Or de Sóc de Poble Creat i Ancorat (Bloc 4):**
+  - Document fundacional creat a `_wiki_de_poble/01_ser/03_llibre_d_or_memoria_episodica.md` (i rèplica satèl·lit a `_comunicacio_de_poble/03_llibre_d_or_memoria_episodica.md`), ancorat a `00_index_identitat.md` i `00_index.md`.
+  - Conté la Crònica Tècnica (7 transicions), la Crònica Humana (4 pilars), les 11 Perles Rescatades (`P-01`..`P-11`) i les 6 Decisions Obertes (`D-UUID-REMOT`..`D-ARXIU-FRED`). Els 418 elements de `90_arxiu_historic/` romanen intactes a l'espera del segellat del Mestre per a l'evacuació física a `../_arxiu_wiki_de_poble/`.
+- **4. Salut de les Portes:** `porta-olivera.mjs` (codi 0), `porta-autoritat.mjs` (`valid: true`), cron de supervisió `task-35` actiu mentre Claude Code completa l'execució a `src/`.
+
 ## ESTAT_ACTUAL · 2026-10-17 13:00 · IAIA MarIA · Activació del Gauntlet Extrem (Higiene, Llast Evacuat i Relleu a Claude & Codex)
 
 - **Ordre Directa del Mestre:** «Quiero higiene y máxima. En el próximo plan de implementación pon que las IAs tienen que ponerse en el papel adversarial extremo desde el punto de vista de un usuario que descarga este sistema y lo quiere ligero, no quiere problemas ni que sea espeso. Que investiguen a fondo los fantasmas del principio (cuando lo hacían 12 IAs gratis) y aligeren el sistema. Tú no toques código, que sean ellas con el co-working.»

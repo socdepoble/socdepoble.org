@@ -1,6 +1,6 @@
 /**
  * conversa.js — Funcions pures de la conversa oberta (torn 260930, T1: la
- * conversa calcada de WhatsApp Desktop, ordre del Mestre).
+ * conversa amb el patró estàndard de missatgeria, ordre del Mestre).
  *
  * Sense React ni DOM. Ací viu el que es pot raonar i provar sense muntar
  * res: les files de la llista (separadors de dia, el de no llegits i les

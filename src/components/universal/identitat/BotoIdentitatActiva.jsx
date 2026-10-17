@@ -4,6 +4,8 @@
  *
  *   · Sense sessió: la icona de persona i «Entrar» (porta al registre). És el
  *     Foraster de sempre: el seu DOM no canvia.
+ *   · Revisió del Gauntlet 261017 (ID4) · Mentre una sessió recordada es
+ *     restaura (`pendent`): cap botó, només l'estat ocupat (vegeu baix).
  *   · Persona: la seua foto o les seues inicials.
  *   · Entitat: el SEU logo o les SEUES inicials, MAI la foto de la persona, i
  *     un anell de crom perquè es veja d'un colp que no actues com a tu.
@@ -34,10 +36,24 @@ export function etiquetaPerfilPropi(nom) {
   return `El teu perfil: ${nom}`;
 }
 
+/** Revisió del Gauntlet 261017 (ID4) · El que diu l'estat ocupat al lector de
+ *  pantalla, el mateix text de la pantalla d'espera de RequireAuth. */
+export const TEXT_COMPROVANT_SESSIO = 'Comprovant la sessió…';
+
+/* Revisió del Gauntlet 261017 (ID4; relleu 3: mai «Foraster» mentre la sessió
+   és vàlida) · `pendent`: la sessió recordada encara es restaura
+   (useIdentitatDeLaBarra). Ni el botó «Entrar» ni la silueta del Foraster ni
+   cap clic que porte a /registre: només un estat ocupat (aria-busy) per al
+   lector de pantalla, sense cap píxel nou ni cap caixa que es puga punxar.
+   Quan la comprovació es resol, l'avatar de la persona o, sense sessió, el
+   Foraster de sempre. Amb sessió, `pendent` no hi compta. */
 export function BotoIdentitatActiva({
-  teSessio = false, nom, avatar = null, llavor = null, entitat = false, obert = false,
+  teSessio = false, pendent = false, nom, avatar = null, llavor = null, entitat = false, obert = false,
   perfil = false, onClick, etiquetaEntrar = 'Entrar'
 }) {
+  if (!teSessio && pendent) {
+    return <span className="sr-only" role="status" aria-busy="true">{TEXT_COMPROVANT_SESSIO}</span>;
+  }
   if (!teSessio) {
     return (
       <button type="button" className="icon sdp-top-bar-btn" onClick={onClick} aria-label={etiquetaEntrar} title={etiquetaEntrar}>

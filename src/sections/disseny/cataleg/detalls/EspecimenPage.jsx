@@ -52,8 +52,10 @@ export default function EspecimenPage() {
           /* Decisió del Mestre (261008) · drets d'autor dins de l'editor. */
           ['onCanviaCopyright', '(event) => void', '—', 'Només l’editor (DocumentEditor, quan la persona pot triar els drets): el copyright de davall del títol és un botó amb la classe de l’enllaç, data-sdp-drets i el nom «text: canviar els drets d’autor», que obri la vista de drets dins de l’editor. Sense (lectura, connexions, l’estat buit i totes les targetes), l’enllaç a /page/drets-autor de l’ordre del 261007.'],
           /* Relleu 261007 (històric de l'actor, esmena 2 del pla 261007_1645) ·
-             La ranura del peu, que el contracte encara no llistava. */
-          ['peuDePagina', 'node', 'null', 'El peu de la pàgina (esmena 2 del pla 261007_1645): després de l’article i de la traducció, dins del contenidor que fa scroll i fora de l’Índex (ni la traducció ni el Lector el recullen), en un section.sdp-pagina-peu. Hi va l’històric de l’actor (PublicacionsDeLActor) al Bloc de Notes i a una publicació oberta del MAS. Sense, el DOM de sempre.'],
+             La ranura del peu, que el contracte encara no llistava.
+             Gauntlet 261017 (WP7a) · Des del Gauntlet 261016 (Bloc 3.9, F45)
+             el peu ja no va davall de l'editor: només de PublicacioDetall. */
+          ['peuDePagina', 'node', 'null', 'El peu de la pàgina (esmena 2 del pla 261007_1645): després de l’article i de la traducció, dins del contenidor que fa scroll i fora de l’Índex (ni la traducció ni el Lector el recullen), en un section.sdp-pagina-peu. Hi va l’històric de l’actor (PublicacionsDeLActor) davall d’una publicació oberta al Bloc de Notes (PublicacioDetall); l’editor ja no en porta. Sense, el DOM de sempre.'],
           ['etiquetaPeuDePagina', 'string', '—', 'El nom accessible del section del peu (aria-label).'],
         ]}
         a11y={[

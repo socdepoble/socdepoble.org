@@ -128,7 +128,7 @@ export default function EspecimenXatCerca() {
 
   return (
     <Especimen id="xat-cerca" nom="Xat · cerca global" fitxer="src/sections/xat/components/ (FiltresCerca, ResultatsCercaXat) · src/sections/xat/cercaXat.js"
-      descripcio="La cerca del Xat calcada de WhatsApp Desktop (captura 19.13.56): amb el focus i el camp buit, la llista vertical de filtres; en triar-ne un, una fitxa dins del camp; en escriure, els resultats de cercaXat() en tres grups (Converses, Persones i Missatges), amb els fragments ressaltats i l’avís de l’abast. Un filtre sense dades i una cerca sense resultats ho diuen amb text."
+      descripcio="La cerca del Xat amb el patró estàndard de missatgeria (captura de referència 19.13.56): amb el focus i el camp buit, la llista vertical de filtres; en triar-ne un, una fitxa dins del camp; en escriure, els resultats de cercaXat() en tres grups (Converses, Persones i Missatges), amb els fragments ressaltats i l’avís de l’abast. Un filtre sense dades i una cerca sense resultats ho diuen amb text."
       contracte={[
         ['FiltresCerca', '{ onTria, onBlur, onTornaAlCamp, t } + ref', '—', 'Les fletxes, Inici i Fi es mouen entre files; Escape, Maj+Tab a la primera o Fletxa amunt a la primera tornen al camp.'],
         ['IconaFiltre', '{ nom, size? }', '24', 'La icona de lucide pel nom de FILTRES_CERCA_XAT.'],

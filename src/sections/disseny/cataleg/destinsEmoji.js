@@ -5,8 +5,8 @@
  * només per a copiar i enganxar»: el botó «Assignar» de cada targeta obri una
  * pantalla completa (AssignacioEmoji.jsx) on «es llisten les carpetes i
  * documents disponibles (Wiki, Disseny, Notes personals)», agrupats a la
- * manera de «Reenviar a…» de WhatsApp: Notes personals, Wiki de Poble,
- * Disseny i les pàgines de Sóc de Poble que viuen al PAGE_COPY (les del
+ * manera del «Reenviar a…» de les apps de missatgeria: Notes personals, Wiki
+ * de Poble, Disseny i les pàgines de Sóc de Poble que viuen al PAGE_COPY (les del
  * sistema). Dins de cada grup, l'ordre de la seua secció, que en mòbil
  * ensenya primer l'arbre: la portada, les carpetes i els documents. Ací, en
  * funcions pures, cada font es fa destins i la cerca els filtra amb el

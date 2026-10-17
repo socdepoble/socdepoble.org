@@ -1,6 +1,6 @@
 /* MD (ordre del Mestre, 261003) · El patró mestre-detall del Workspace en
-   «estret», com WhatsApp: primer la navegació (carpetes, o la llista si no
-   n'hi ha), carpeta → llista → detall, i la fletxa ← de la barra blava (la
+   «estret», com a les apps de missatgeria: primer la navegació (carpetes, o
+   la llista si no n'hi ha), carpeta → llista → detall, i la fletxa ← de la barra blava (la
    UniversalPage de veres al detall) torna a la llista. Mai dos panells
    oberts. En ample i en mitjà res no canvia (Llei del Píxel), i el mode
    compacte (el Snippet Curador) es queda amb el detall.

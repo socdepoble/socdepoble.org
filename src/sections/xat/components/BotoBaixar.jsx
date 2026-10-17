@@ -1,5 +1,5 @@
 /**
- * BotoBaixar.jsx — el botó redó amb el xebró avall de WhatsApp (torn
+ * BotoBaixar.jsx — el botó redó amb el xebró avall, el de sempre (torn
  * 260930, T1): ix quan has deixat el fons de la conversa i, si mentrestant
  * han arribat missatges, porta la pastilla amb quants. Prémer-lo baixa al
  * final. L'àncora (.sdp-xat-baixa) no ocupa lloc: el botó hi flota, a la

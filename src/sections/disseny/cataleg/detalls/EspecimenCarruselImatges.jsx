@@ -28,6 +28,9 @@ export default function EspecimenCarruselImatges() {
         ['imatges', '[{ src, alt }] | string[]', '—', 'Les fotos, en ordre i amb el src ja resolt. La primera és la principal (sense loading="lazy"); la resta es carreguen quan s’hi arriba. Les que no porten src es descarten. Sense cap, no pinta res.'],
         ['etiqueta', 'string', "'Imatges'", 'El nom del carrusel per al lector: «Imatges de …».'],
         ['etiquetes', '{ anterior, seguent, diapositives, posicio, carrusel, diapositiva }', "'Imatge anterior' · 'Imatge següent' · 'Diapositives' · 'Imatge {n} de {total}' · 'carrusel' · 'diapositiva'", 'Els textos per al lector, ja traduïts per qui el munta (la peça no llig cap context): el nom dels dos botons, el de la pista, la plantilla de la posició de cada diapositiva i del comptador, i els dos aria-roledescription.'],
+        /* Gauntlet 261017 (C04 de Codex; WP7a) · Les files del contracte que faltaven. */
+        ['onObri', '(index, boto) => void', '—', 'Opcional. Cada foto és un <button aria-haspopup="dialog"> que la demana a pantalla completa; qui munta el carrusel hi posa el visor (a l’app, VisorDePublicacio). boto és el botó premut, on torna el focus. Un clic després de lliscar o d’arrossegar no l’obri; Intro i Espai, sí. Tab només troba el botó de la foto que es veu.'],
+        ['etiquetes.obri', 'string', "'Veure la imatge a pantalla completa'", 'El nom del botó de cada foto quan hi ha onObri, ja traduït per qui el munta.'],
         ['className', 'string', '—', 'Classes de més per a l’arrel.']
       ]}
       a11y={[

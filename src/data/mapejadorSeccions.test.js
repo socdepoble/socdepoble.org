@@ -206,3 +206,54 @@ describe('mapSectionSubmissionToItem · el poble de la publicació', () => {
     expect(acte({ poble_id: 'tibi' }).poble_id).toBe('tibi');
   });
 });
+
+/* Revisió del Gauntlet 261017 (ID2; relleu 3: la foto de la barra és la de la
+   publicació) · La foto de perfil pujada al bucket PÚBLIC
+   (sdp-media://mitjans/…) que publishNote posa a author_avatar arriba a la
+   fila. Abans validaUrl la buidava abans d'escriure-la, i el servidor sí que
+   l'admetia (2610072230_mur_imatges_propies.sql). El bucket privat i
+   qualsevol altre bucket, no: qui llig el Mur no els podria obrir. La resta
+   de fonts, validaUrl com abans, i els altres camps d'imatge no canvien. */
+describe('mapSectionSubmissionToItem · la foto de qui signa una publicació del Mur', () => {
+  const publicacio = (payload) => mapSectionSubmissionToItem({ id: 'p1', sectionId: 'mur', createdAt: PUBLICAT, payload: { title: 'Fira', ...payload } });
+
+  test('la del bucket públic es conserva (també des d’avatar_url, també en majúscules), neta', () => {
+    expect(publicacio({ author_avatar: 'sdp-media://mitjans/t/u-1/avatars/a.webp' }).author_avatar).toBe('sdp-media://mitjans/t/u-1/avatars/a.webp');
+    expect(publicacio({ avatar_url: ' sdp-media://mitjans/t/u-1/avatars/b.webp ' }).author_avatar).toBe('sdp-media://mitjans/t/u-1/avatars/b.webp');
+    // Contrast final · Es desa la forma canònica (fotoDelBucketPublic).
+    expect(publicacio({ author_avatar: 'SDP-MEDIA://mitjans/t/u-1/avatars/c.webp' }).author_avatar).toBe('sdp-media://mitjans/t/u-1/avatars/c.webp');
+  });
+
+  test('el bucket privat, un altre bucket o una referència sense bucket, no', () => {
+    for (const ref of ['sdp-media://mitjans_privats/t/u-1/avatars/a.webp', 'sdp-media://altres/t/u-1/a.webp', 'sdp-media://mitjans', 'sdp-media:mitjans/t/a.webp']) {
+      expect(publicacio({ author_avatar: ref }).author_avatar, ref).toBeNull();
+    }
+  });
+
+  /* Contrast final · Un camí que puja cap al bucket privat o porta caràcters
+     estranys no és del bucket públic, encara que en porte el prefix. */
+  test('el prefix del bucket públic amb «..», %2e, barres inverses o control, no', () => {
+    for (const ref of ['sdp-media://mitjans/../mitjans_privats/t/u-1/a.webp', 'sdp-media://mitjans/t/../../mitjans_privats/a.webp',
+      'sdp-media://mitjans/%2e%2e/mitjans_privats/a.webp', 'sdp-media://mitjans/t\\..\\x.webp', 'sdp-media://mitjans/t/\u0000a.webp',
+      'sdp-media://mitjans//t/a.webp', 'sdp-media://mitjans/t/a.webp?x=1', 'sdp-media://mitjans/.amagat/a.webp']) {
+      expect(publicacio({ author_avatar: ref }).author_avatar, ref).toBeNull();
+    }
+  });
+
+  test('la resta, validaUrl com abans (Llei del Píxel)', () => {
+    expect(publicacio({ author_avatar: '/assets/gent/pepa.webp' }).author_avatar).toBe('/assets/gent/pepa.webp');
+    expect(publicacio({ author_avatar: 'https://exemple.org/a.png' }).author_avatar).toBe('https://exemple.org/a.png');
+    expect(publicacio({ author_avatar: '//fora.example/a.png' }).author_avatar).toBeNull();
+    expect(publicacio({ author_avatar: 'javascript:alert(1)' }).author_avatar).toBeNull();
+    expect(publicacio({}).author_avatar).toBeNull();
+  });
+
+  test('els altres camps d’imatge que passen per validaUrl no canvien: una sdp-media:// hi continua buidant-se', () => {
+    const ref = 'sdp-media://mitjans/t/u-1/general/f.webp';
+    const mur = publicacio({ image_url: ref, imageSrc: ref });
+    expect([mur.image_url, mur.imageSrc]).toEqual([null, null]);
+    const mercat = mapSectionSubmissionToItem({ id: 'm1', sectionId: 'mercat', createdAt: PUBLICAT, payload: { avatar_url: ref, image_url: ref } });
+    expect([mercat.avatar_url, mercat.image_url, mercat.imageSrc, mercat.image]).toEqual([null, null, null, null]);
+    expect(acte({ image_url: ref }).image_url).toBeNull();
+  });
+});

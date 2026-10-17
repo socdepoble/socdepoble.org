@@ -39,9 +39,10 @@ const FILES = '[role="menuitem"]';
  * entra a la primera fila i en tancar-lo (Escape o una tria) torna al botó
  * (`botoRef`); l'Escape que el tanca queda consumit; un clic fora el tanca;
  * les fletxes, Inici i Fi mouen el focus.
- * La pell és la del menú de Traduir (.sdp-menu-traduir) i, com a WhatsApp
- * (Llei del Clonatge), dues files grans amb una icona a l'esquerra: el nom de
- * la via i, davall, una línia que diu on porta (la descripció accessible).
+ * La pell és la del menú de Traduir (.sdp-menu-traduir) i, com a les apps de
+ * missatgeria (un patró conegut), dues files grans amb una icona a
+ * l'esquerra: el nom de la via i, davall, una línia que diu on porta (la
+ * descripció accessible).
  * Pedra Seca §12: com a molt 300px d'ample (--sdp-menu-ample-max); la línia de
  * davall fa salt i el nom, si no hi cabera, es talla amb punts suspensius
  * (el nom accessible, aria-labelledby, és sencer).

@@ -238,12 +238,14 @@ const INSTANTANIA = new Set([
         el prefix `btn-` només el construïx l'UniversalButton de
         atoms/controls.jsx, que ningú importa (la façana exporta Boto amb
         eixe nom), i cap codi construïx `univ-manager-toolbar--`.
-     Les tres de baix no són a la llista de D-03 (l'abast es definix per
+     Les dos de baix no són a la llista de D-03 (l'abast es definix per
      superfície, skill sdp-workflow, lliçó 260923): es queden, pendents
      d'ordre. Viuen dins de selectors amb una classe viva
-     (`.app-sidebar-nav-footer .nav-item.nav-item--system`, la llista del
-     Bancal i les quatre regles de `.sdp-editor-tools__actions`). */
-  'app-sidebar-nav-footer', 'sdp-chat-bubble-meta', 'sdp-editor-tools__actions'
+     (`.app-sidebar-nav-footer .nav-item.nav-item--system` i la llista del
+     Bancal). Gauntlet 261017 (Bloc 0.1) · `.sdp-editor-tools__actions` ja
+     és fora: les seues quatre regles, amb els selectors vius que les
+     compartien intactes. */
+  'app-sidebar-nav-footer', 'sdp-chat-bubble-meta'
 ]);
 
 describe('classes òrfenes dels fulls modules, components i layout', () => {

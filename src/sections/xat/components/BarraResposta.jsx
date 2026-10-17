@@ -1,7 +1,8 @@
 /**
  * BarraResposta.jsx — la barra de «Respon» damunt del camp d'escriure (torn
- * 260930, T1), com a WhatsApp: qui va escriure el missatge («Tu» si és teu)
- * i el seu text retallat a una línia, amb la ✕ que cancel·la la resposta.
+ * 260930, T1), com a les apps de missatgeria: qui va escriure el missatge
+ * («Tu» si és teu) i el seu text retallat a una línia, amb la ✕ que
+ * cancel·la la resposta.
  * Escape dins del compositor fa el mateix (Compositor, onEscapa).
  */
 import { X } from 'lucide-react';

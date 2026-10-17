@@ -65,6 +65,7 @@ import { rutaDEntrada } from '../../config/rutaEntrada.js';
 import { reglaDEntrada } from '../connectar/contingutExtern.js';
 import { missatgeDeLError } from '../connectar/abastConnexio.js';
 import { AVIS_CATEGORIA } from './classificacioBloc.js';
+import { carregaCatalegEmojis } from './canalEmojis.js';
 import { useCoreContent } from '../../app/contexts/CoreContentContext.jsx';
 import { categoriesBase, etiquetesBase } from '../../data/personalitzacio.js';
 import {
@@ -427,6 +428,8 @@ export function SnippetCurador({ carpetes = CAP, carpetaId }) {
           onDesa={(valors) => escriu({ etiquetes: valors })}
         />
       ) : null}
+      {/* Gauntlet 261017 (F30) · L'emoticona, amb la graella del catàleg
+          Emojis XL, com al Bloc: un clic l'assigna. */}
       {dialeg === 'emoticona' ? (
         <DialegEmoticona
           key="emoticona"
@@ -434,6 +437,7 @@ export function SnippetCurador({ carpetes = CAP, carpetaId }) {
           onTanca={tanca}
           actual={emoticona}
           onDesa={(icona) => escriu({ emoticona: icona })}
+          carregaCataleg={carregaCatalegEmojis}
         />
       ) : null}
     </UniversalPage>

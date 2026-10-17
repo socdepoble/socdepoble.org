@@ -12,7 +12,6 @@ import { act, cleanup, fireEvent, render } from '@testing-library/react';
 import { afterEach, expect, test, vi } from 'vitest';
 
 const m = vi.hoisted(() => ({ editor: null, extensions: null }));
-vi.mock('../../sections/notes/NotesSection.jsx', () => ({ LLAVOR_NOTA: '<p>Llavor</p>' }));
 vi.mock('../../app/contexts/UIContext', () => ({ useUIActions: () => ({ t: (_clau, text) => text }) }));
 vi.mock('../../app/contexts/RouterContext', () => ({ useNavigate: () => vi.fn(), Link: 'a' }));
 vi.mock('./NotificationContext.jsx', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
@@ -81,6 +80,26 @@ test('registraInsercio: inserix escriu un node de text al cursor del cos, passa 
   expect(desregistra).not.toHaveBeenCalled();
   unmount();
   expect(desregistra).toHaveBeenCalledTimes(1);
+});
+
+/* Gauntlet 261017 (F32) · «Al cursor» és on siga el cursor, no només al
+   final: amb el cursor a mig mot i l'editor sense focus (el diàleg se l'ha
+   endut), l'emoji va just allí i el cursor queda darrere d'ell. */
+test('registraInsercio: amb el cursor a mig text, inserix escriu just allí, encara que l’editor haja perdut el focus', () => {
+  const registra = vi.fn();
+  const { adapter } = pinta({ registraInsercio: registra });
+  const { inserix } = registrat(registra);
+  act(() => { m.editor.commands.setTextSelection(3); });
+  act(() => { m.editor.commands.blur(); });
+  let fet;
+  act(() => { fet = inserix('🍅'); });
+  expect(fet).toBe(true);
+  expect(m.editor.getHTML()).toBe('<p>Ho🍅la</p>');
+  expect(adapter.updateLocal).toHaveBeenLastCalledWith('d1', 'content', '<p>Ho🍅la</p>');
+  // El cursor, darrere de l'emoji (dos unitats UTF-16): el següent va a continuació.
+  expect(m.editor.state.selection.from).toBe(3 + '🍅'.length);
+  act(() => { inserix('🌽'); });
+  expect(m.editor.getHTML()).toBe('<p>Ho🍅🌽la</p>');
 });
 
 test('fora de la vista (dins d’un [inert], com el detall tapat del mestre-detall): cap inserció', () => {

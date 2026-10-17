@@ -5,6 +5,7 @@ import { SelectorDataHora } from '../../../../components/PedraSeca/index.js';
 import { BarraTaronja } from '../../../../components/universal/barres/BarraTaronja.jsx';
 import { usePastillaCalendari } from '../../../../components/universal/barres/pastillaCalendari.js';
 import { DialegEmoticona } from '../../../../components/universal/classificacio/DialegEmoticona.jsx';
+import { carregaCatalegEmojis } from '../../../notes/canalEmojis.js';
 
 /* T51 (ordre del Mestre, 260928) · L'espai central de la barra taronja, en
    els quatre casos que decidix emoticonaDeBarra (utils/emoji.js): edició
@@ -17,7 +18,9 @@ import { DialegEmoticona } from '../../../../components/universal/classificacio/
    fixa de creació.
    Ordre del Mestre, 261001 (tasca 4 i carril A) · En lectura la pastilla
    porta hora i és clicable, com a les pàgines: obri el Calendari en el mes
-   de la data (abril de 2026). */
+   de la data (abril de 2026).
+   Gauntlet 261017 (F30, a tota l'app) · El DialegEmoticona porta el catàleg
+   Emojis XL, com a l'editor (canalEmojis.js · carregaCatalegEmojis). */
 
 const AUTORIA = {
   authorName: 'Sóc de Poble',
@@ -81,7 +84,8 @@ export default function EspecimenEmoticonaBarra() {
         <Barra etiqueta="Autoria i data (espècimen, lectura amb emoticona)" emoticona="🍅" />
         {obert ? (
           <DialegEmoticona key={obert} obert onTanca={tanca} actual={emoticones[obert]}
-            onDesa={(emoji) => { setEmoticones((previ) => ({ ...previ, [obert]: emoji })); tanca(); }} />
+            onDesa={(emoji) => { setEmoticones((previ) => ({ ...previ, [obert]: emoji })); tanca(); }}
+            carregaCataleg={carregaCatalegEmojis} />
         ) : null}
       </Especimen>
     </>

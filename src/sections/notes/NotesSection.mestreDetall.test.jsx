@@ -1,6 +1,6 @@
 /* MD (ordre del Mestre, 261003) · El Bloc de Notes en mòbil: patró
-   mestre-detall, com WhatsApp. Amb l'espai de treball de veres, el router en
-   memòria de veres i una Pàgina Universal de veres al detall (la barra blava
+   mestre-detall, com a les apps de missatgeria. Amb l'espai de treball de
+   veres, el router en memòria de veres i una Pàgina Universal de veres al detall (la barra blava
    i la seua fletxa ←):
      · /notes a 375 px: primer les CARPETES, mai l'editor d'entrada;
      · carpeta → NOTES → editor, una sola capa cada vegada;

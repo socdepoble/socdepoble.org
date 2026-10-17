@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { act, render, cleanup, fireEvent, screen, within } from '@testing-library/react';
 import { afterEach, expect, test, vi } from 'vitest';
-const mocks = vi.hoisted(() => ({ richText: null, llavorNota: '<h3>Llavor del Bloc</h3>' }));
+const mocks = vi.hoisted(() => ({ richText: null }));
 // El motor TipTap no entra en joc: es prova l'estructura de l'editor. El hook
 // és un vi.fn per a vore què rep (la llavor del cos).
 vi.mock('./richText', () => {
@@ -21,9 +21,9 @@ vi.mock('./richText', () => {
   };
 });
 vi.mock('./richText/extensions', () => ({ extensionsRiques: () => [] }));
-// Com a HEAD: la llavor per defecte ve del Bloc de Notes (deute previ conservat
-// per ordre del Mestre). Un valor reconeixible per a vore que és la que arriba.
-vi.mock('../../sections/notes/NotesSection.jsx', () => ({ LLAVOR_NOTA: mocks.llavorNota }));
+// Gauntlet 261017 (C06, auditoria Codex) · L'editor universal ja no importa
+// el Bloc de Notes (src/components no importa src/sections): cap mock de la
+// secció ni de la seua llavor.
 vi.mock('../../app/contexts/UIContext', () => ({ useUIActions: () => ({ t: (_clau, text) => text }) }));
 vi.mock('../../app/contexts/RouterContext', () => ({ useNavigate: () => vi.fn(), Link: 'a' }));
 vi.mock('./NotificationContext.jsx', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
@@ -80,12 +80,15 @@ test('D13 · posicioEines i seedContent no arriben al DOM ni fan avisos de React
   expect(avisos.filter((text) => /posicioEines|seedContent/i.test(text))).toEqual([]);
 });
 
-test('llavor del cos: sense seedContent val LLAVOR_NOTA (el Bloc no la passa); un valor explícit mana, també null', () => {
+/* Gauntlet 261017 (C06, auditoria Codex) · Sense la clau seedContent (o amb
+   undefined) l'editor no posa cap llavor: arriba null. La plantilla del Bloc
+   la passa el Bloc (NotesEditor · LLAVORS_NOTA). */
+test('llavor del cos: sense seedContent (clau absent o undefined) arriba null; un valor explícit mana, també null', () => {
   editor({});
-  expect(mocks.richText).toHaveBeenLastCalledWith(expect.objectContaining({ seedContent: mocks.llavorNota }));
+  expect(mocks.richText).toHaveBeenLastCalledWith(expect.objectContaining({ seedContent: null }));
   cleanup();
   editor({ seedContent: undefined });
-  expect(mocks.richText).toHaveBeenLastCalledWith(expect.objectContaining({ seedContent: mocks.llavorNota }));
+  expect(mocks.richText).toHaveBeenLastCalledWith(expect.objectContaining({ seedContent: null }));
   cleanup();
   editor({ seedContent: null });
   expect(mocks.richText).toHaveBeenLastCalledWith(expect.objectContaining({ seedContent: null }));

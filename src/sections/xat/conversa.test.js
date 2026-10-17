@@ -1,4 +1,4 @@
-/* Torn 260930 (T1 · la conversa calcada de WhatsApp Desktop) · Les funcions
+/* Torn 260930 (T1 · la conversa amb el patró de missatgeria) · Les funcions
    pures de la conversa: grups per autor, separador de no llegits, canvis de
    la llista, geometria del scroll i textos de la cita. */
 import { describe, expect, test, vi } from 'vitest';

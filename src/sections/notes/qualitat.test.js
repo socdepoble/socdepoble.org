@@ -54,6 +54,11 @@ const FITXERS = Object.freeze([
   'src/sections/notes/NotesSection.emojis.test.jsx',
   'src/sections/notes/NotesSection.emojisRail.test.jsx',
   'src/sections/notes/NotesEditor.emojis.test.jsx',
+  /* Gauntlet 261017 (F29–F34) · Les famílies del selector i les proves del
+     canal. */
+  'src/sections/notes/familiesEmojis.js',
+  'src/sections/notes/familiesEmojis.test.js',
+  'src/sections/notes/canalEmojis.test.js',
   /* Bloc 3.9 del Gauntlet (261016) · Editor Universal de notes: la plantilla
      canònica i el seu esvaïment (TipTap de veres), la signatura sense
      Foraster, «Nota sense títol» i la publicació sense la plantilla verge. */
@@ -69,7 +74,14 @@ const FITXERS = Object.freeze([
   'src/sections/notes/NotesSection.peuDePagina.test.jsx',
   /* Correccions de la revisió adversarial del Bloc 3.8/3.9 (261016): les
      guardes d'esLlavorDeNota al camí calent. */
-  'src/sections/notes/llavorNota.test.js'
+  'src/sections/notes/llavorNota.test.js',
+  /* Gauntlet 261017 (C02, C06 de Codex; WP7a) · La llavor davant de
+     l'adversari i l'extracte de la llista amb una llavor. */
+  'src/sections/notes/llavorNota.adversari.test.jsx',
+  'src/sections/notes/NotesSection.extracteLlavor.test.jsx',
+  /* Revisió del Gauntlet 261017 (ID6) · Les publicacions pròpies del Bloc amb
+     el mode de dades resolt (modeDeDadesResolt), el mateix de l'editor. */
+  'src/sections/notes/NotesSection.aliesResolt.test.jsx'
 ]);
 
 const llig = (ruta) => readFileSync(path.join(ARREL, ruta), 'utf8');

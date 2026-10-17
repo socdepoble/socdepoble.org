@@ -54,6 +54,22 @@ test('Bloc 3.9 · teContingut: la plantilla verge normalitzada (llista de llavor
   expect(teContingut({ content: LLAVOR_NOTA }, null)).toBe(true);
 });
 
+/* Gauntlet 261017 (C02, auditoria Codex) · El mateix contracte que l'editor
+   i la publicació: la plantilla amb una fotografia, un enllaç o un format
+   propis ja és contingut i crea la nota; amb un atribut d'un sanejador, no. */
+test('Gauntlet 261017 · teContingut: la plantilla amb una fotografia, un enllaç o un títol canviat crea la nota', async () => {
+  const { LLAVOR_NOTA, LLAVORS_NOTA } = await import('./llavorNota.js');
+  for (const content of [
+    `${LLAVOR_NOTA}<p><img src="sdp-media://mitjans_privats/hort.webp"></p>`,
+    LLAVOR_NOTA.replace('Una llista amb pics', '<a href="https://example.org/personal">Una llista amb pics</a>'),
+    LLAVOR_NOTA.replace('<h3>', '<h2>').replace('</h3>', '</h2>'),
+    LLAVOR_NOTA.replace('<ol>', '<ol start="10">')
+  ]) {
+    expect(teContingut({ content }, LLAVORS_NOTA)).toBe(true);
+  }
+  expect(teContingut({ content: LLAVOR_NOTA.replace('<h3>', '<h3 dir="auto" class="sdp-prose">') }, LLAVORS_NOTA)).toBe(false);
+});
+
 test('teContingut: text o imatge; la llavor, un cos buit i la classificació no compten', () => {
   expect(teContingut({}, LLAVOR)).toBe(false);
   expect(teContingut({ content: LLAVOR }, LLAVOR)).toBe(false);

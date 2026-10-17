@@ -13,7 +13,7 @@ test('cada filtre del contracte té la seua icona de lucide', () => {
   for (const filtre of FILTRES_CERCA_XAT) expect(ICONES_FILTRE[filtre.icona], filtre.id).toBeTruthy();
 });
 
-test('pinta els huit filtres en l’ordre de WhatsApp, amb icona i fletxa, i en tria un', () => {
+test('pinta els huit filtres en l’ordre de la referència, amb icona i fletxa, i en tria un', () => {
   const onTria = vi.fn();
   render(<FiltresCerca onTria={onTria} t={t} />);
   const llista = screen.getByRole('list', { name: 'Filtres de cerca' });

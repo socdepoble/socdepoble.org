@@ -47,22 +47,11 @@ export const ONBOARDING_SEED = Object.freeze({
   group: Object.freeze({ ...ONBOARDING_TEMPLATE.group })
 });
 
-export const NOTE_FOLDERS_SEED = [
-  { id: 'f-tot', name: 'Tot', parentId: null },
-  { id: 'f-mur', name: 'Mur', parentId: null },
-  { id: 'f-mercat', name: 'Mercat', parentId: null },
-  { id: 'f-pobles', name: 'Pobles', parentId: null },
-  { id: 'f-media', name: 'Multimèdia', parentId: null },
-  { id: 'f-events', name: 'Esdeveniments', parentId: null },
-  { id: 'f-mapa', name: 'Mapa', parentId: null },
-  /* T5 · la safata de les connexions: tot el que la persona connecta d'altri
-     entra ací i des d'ací es distribuïx a les carpetes pròpies.
-     D1 (ordre del Mestre, 260930) · el nom visible és «Safata d’Entrada»;
-     l'id no canvia: les notes locals i les remotes (folder_id) continuen
-     sent vàlides. */
-  { id: 'f-connectats', name: 'Safata d’Entrada', parentId: null },
-  { id: 'f-notes', name: 'Altres notes', parentId: null }
-];
+/* Gauntlet 261017 (WP7b, P2) · Les carpetes de sèrie viuen a carpetesSeed.js
+   perquè el catàleg de carpetes del tros d'entrada no arrossegue esta llavor
+   (ni PAGE_COPY). Ací es reexporten: el mateix objecte, la mateixa API. */
+import { NOTE_FOLDERS_SEED } from './carpetesSeed.js';
+export { NOTE_FOLDERS_SEED };
 
 export const NOTES_SEED = [
   {

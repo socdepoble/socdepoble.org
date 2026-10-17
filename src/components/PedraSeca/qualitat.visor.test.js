@@ -35,7 +35,11 @@ const PRODUCCIO = [
   `${MM}/MultimediaSection.jsx`, `${MM}/MultimediaContext.jsx`, `${MM}/VisorDeLArxiu.jsx`, `${MM}/useMetadadesFoto.js`,
   `${MM}/useCensImatges.js`, `${MM}/censImatges.js`, `${MM}/origenImatges.js`, `${MM}/cronologia.js`, `${MM}/panellDeLaFoto.js`,
   `${MM}/rutesMultimedia.js`, `${MM}/mediaContent.js`, `${MM}/legacyMedia.js`,
-  'src/sections/detail/ItemDetailSection.jsx', 'src/components/universal/enquadrament/exif.js'
+  'src/sections/detail/ItemDetailSection.jsx', 'src/components/universal/enquadrament/exif.js',
+  /* Gauntlet 261017 (C04) · el visor de les fotos d'una publicació del Mur. */
+  'src/sections/detail/VisorDePublicacio.jsx',
+  /* Gauntlet 261017 (C03) · la lectura de l'EXIF d'un WebP gran per trossos. */
+  `${MM}/lecturaExifWebp.js`
 ];
 const PROVES = [
   `${PS}/organismes/VisorImatges.test.jsx`, `${PS}/qualitat.visor.test.js`,
@@ -44,7 +48,13 @@ const PROVES = [
   `${MM}/mediaContent.test.js`, `${MM}/MultimediaSection.test.jsx`, `${MM}/MultimediaSection.recursos.test.jsx`,
   'src/components/universal/enquadrament/exif.test.js', 'src/components/universal/enquadrament/exif.fuzz.test.js',
   'src/sections/detail/ItemDetailSection.test.jsx', 'src/sections/detail/ItemDetailSection.imatgesPropies.test.jsx',
-  'src/sections/search/indexCerca.test.js'
+  'src/sections/search/indexCerca.test.js', 'src/sections/detail/VisorDePublicacio.test.jsx',
+  /* Gauntlet 261017 (C03, C07, M07) · l'EXIF del WebP gran i les rutes que
+     obrin el visor (/multimedia/<id>, /multimedia/town-<slug>). */
+  `${MM}/lecturaExifWebp.test.js`, `${MM}/useMetadadesFoto.test.js`, `${MM}/rutesMultimedia.test.js`,
+  'src/sections/detail/ItemDetailSection.redireccio.test.jsx', 'src/config/navigation.multimedia.test.js',
+  /* Revisió del Gauntlet 261017 (R3, M2) · el visor en diferit i el del lector del MAS. */
+  'src/sections/detail/VisorDePublicacio.diferit.test.jsx', 'src/sections/notes/PublicacioDetall.visor.test.jsx'
 ];
 /* Fitxers compartits que el front toca en un punt (lint, sense les regles de text de Pedra Seca). */
 const COMPARTITS = ['src/config/navigation.js', 'src/config/i18n.js', 'src/components/PedraSeca/index.js',
@@ -139,6 +149,40 @@ describe('el bloc VISOR D’IMATGES de components.css', () => {
   test('el fons fosc és el del crom, (0,3,0) damunt del Dialeg complet', () => {
     expect(bloc.text).toMatch(/\.sdp-dialeg\.sdp-visor\.sdp-dialeg--sense-marc\s*\{\s*background:\s*var\(--sdp-crom-fons\);/);
   });
+
+  /* Revisió del Gauntlet 261017 (M5, Llei del Píxel) · El disparador de la
+     portada sola heretava el mínim de --sdp-touch de tot botó (base.css,
+     @layer legacy): mentre la foto carregava, la portada pintava una franja
+     de 48px del color d'accent (abans, 0px) i, trencada, 48px (abans, 24px).
+     Sense mínim, la caixa és la de la imatge en tots els estats; carregada, la
+     foto és l'àrea tàctil, molt més gran que --sdp-touch. */
+  test('els disparadors del visor no hereten el mínim tàctil dels botons: la caixa de la imatge, també mentre carrega', () => {
+    const regla = bloc.text.match(/\.sdp-visor__obridor\s*\{([^}]*)\}/)?.[1] ?? '';
+    expect(regla).toMatch(/(?:^|[;\s])min-inline-size:\s*0;/);
+    expect(regla).toMatch(/(?:^|[;\s])min-block-size:\s*0;/);
+    // L'embolcall de cada foto del carrusel (onObri), igual.
+    const diapositiva = blocAmb('src/css/components.css', 'sdp-carrusel').text.match(/\.sdp-carrusel__diapositiva > button\s*\{([^}]*)\}/)?.[1] ?? '';
+    expect(diapositiva).toMatch(/(?:^|[;\s])min-inline-size:\s*0;/);
+    expect(diapositiva).toMatch(/(?:^|[;\s])min-block-size:\s*0;/);
+  });
+
+  /* Revisió del Gauntlet 261017 (M5, WCAG 2.4.7) · Sense mínim, mentre la
+     foto carrega el disparador de la portada sola fa 0px d'alt, i l'anell de
+     focus, per dins, no es veu: qui arriba amb el tabulador no sap on és. Amb
+     el focus de teclat (i només llavors) recupera --sdp-touch d'alt, i l'anell
+     es veu sencer; sense focus, la caixa continua sent la de la imatge. Les
+     diapositives del carrusel no en necessiten: la foto reserva l'alçada amb
+     aspect-ratio també mentre carrega (1020px carregada, carregant i trencada,
+     contrast_FX1/live/carrusel.cjs). */
+  test('amb el focus de teclat, el disparador de la portada sola té alçada per a l’anell; el carrusel la reserva per aspect-ratio', () => {
+    const focus = bloc.text.match(/\.sdp-visor__obridor:focus-visible\s*\{([^}]*)\}/)?.[1] ?? '';
+    expect(focus).toMatch(/(?:^|[;\s])outline:\s*var\(--sdp-focus-gruix\) solid var\(--sdp-focus\);/);
+    expect(focus).toMatch(/(?:^|[;\s])min-block-size:\s*var\(--sdp-touch\);/);
+    // Sense focus, cap mínim: la caixa de la imatge (Llei del Píxel).
+    expect(bloc.text.match(/\.sdp-visor__obridor\s*\{([^}]*)\}/)?.[1] ?? '').toMatch(/(?:^|[;\s])min-block-size:\s*0;/);
+    const carrusel = blocAmb('src/css/components.css', 'sdp-carrusel').text;
+    expect(carrusel.match(/\.sdp-carrusel__imatge\s*\{([^}]*)\}/)?.[1] ?? '').toMatch(/(?:^|[;\s])aspect-ratio:\s*1 \/ 1;/);
+  });
 });
 
 /* Revisió adversarial del 261016 · Abans la cel·la era el mateix <button> amb
@@ -156,8 +200,10 @@ describe('les cel·les de l’Arxiu (modules.css)', () => {
     expect(bloc.text).toMatch(/\.photo-grid__boto > \.photo-grid__item\s*\{\s*display:\s*block;\s*\}/);
     expect(bloc.text).toMatch(/@media \(hover: hover\) and \(pointer: fine\)\s*\{\s*\.photo-grid__boto:hover/);
     expect(bloc.text).not.toMatch(/button\.photo-grid__item/);
+    /* Gauntlet 261017 (C09, auditoria Codex) · Sense l'object-fit inert: la
+       cel·la és un <span>, no una imatge. */
     const net = senseComentaris(llig('src/css/modules.css'));
-    expect(net).toMatch(/\.photo-grid__item \{\s*width: 100%;\s*aspect-ratio: 1 \/ 1;\s*object-fit: cover;\s*border-radius: var\(--sdp-radi-m\);\s*border: 1px solid var\(--sdp-vora\);\s*\}/);
+    expect(net).toMatch(/\.photo-grid__item \{\s*width: 100%;\s*aspect-ratio: 1 \/ 1;\s*border-radius: var\(--sdp-radi-m\);\s*border: 1px solid var\(--sdp-vora\);\s*\}/);
   });
 });
 

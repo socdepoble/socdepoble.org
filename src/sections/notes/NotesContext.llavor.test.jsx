@@ -66,3 +66,17 @@ test('un cos amb text propi es publica tal qual, també barrejat amb la plantill
   expect(payload.content).toContain('Ho he escrit jo');
   expect(payload.content).not.toBe('');
 });
+
+/* Gauntlet 261017 (C02, auditoria Codex) · Una coincidència de text no és la
+   plantilla: la fotografia, l'enllaç, la negreta o el títol canviat que la
+   persona hi ha posat arriben al Mur amb tot el cos, mai amb el cos buit. */
+test.each([
+  ['una fotografia pròpia', `${LLAVOR_NOTA}<p><img src="/assets/fotos/hort.jpg" alt="La meua foto"></p>`, '/assets/fotos/hort.jpg'],
+  ['un enllaç propi', LLAVOR_NOTA.replace('Una llista amb pics', '<a href="https://example.org/personal">Una llista amb pics</a>'), 'https://example.org/personal'],
+  ['una negreta', compacta(LLAVOR_NOTA).replace('El segon pas de la llista', '<strong>El segon pas de la llista</strong>'), '<strong>El segon pas de la llista</strong>'],
+  ['l’H3 passat a H2', compacta(LLAVOR_NOTA).replace('<h3>', '<h2>').replace('</h3>', '</h2>'), '<h2>Títol de secció (H3)</h2>']
+])('la plantilla amb %s es publica amb el cos sencer', async (_cas, content, esperat) => {
+  const payload = await publica(content);
+  expect(payload.content).toContain(esperat);
+  expect(payload.content).toContain('Un paràgraf de prova davall d’un subtítol H4.');
+});

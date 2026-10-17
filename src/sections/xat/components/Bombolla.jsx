@@ -16,7 +16,7 @@
  *
  * En mode de selecció (Retall cap a Notes) la bombolla és una casella.
  *
- * Torn 260930 (T1 · la conversa calcada de WhatsApp Desktop):
+ * Torn 260930 (T1 · la conversa amb el patró estàndard de missatgeria):
  *   · Grups: `primerDelGrup` (conversa.js, anotaGrups) posa la cua
  *     (.sdp-xat-bombolla--cua) i el nom de l'autor només a la primera
  *     bombolla de cada tirada; les següents van sense i més juntes

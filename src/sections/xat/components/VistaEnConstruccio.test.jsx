@@ -1,5 +1,5 @@
 /* Onada 3B (captures 19.41.49 i 19.42.17) · Les vistes que encara no fan
-   res: la fila de títol calcada de cada captura, els controls inerts
+   res: la fila de títol de cada captura de referència, els controls inerts
    (aria-disabled i «En construcció» en prémer-los) i la targeta honesta.
    Contingut multimèdia (captura 19.41.58) ja no n'és una: derogat per
    l'ordre del Mestre del 261004 (prompt 261004_0515). Les seues proves

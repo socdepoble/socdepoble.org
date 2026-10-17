@@ -1,4 +1,4 @@
-/* Torn 260930 (T1 · la conversa calcada de WhatsApp Desktop, ordre del
+/* Torn 260930 (T1 · la conversa amb el patró de missatgeria, ordre del
    Mestre) · Conversa muntada sola, sense XatContext: grups amb cua, el
    separador «N missatges no llegits» fix des de l'obertura, el scroll que no
    salta si no eres a baix i el botó «Baixa al final», les respostes (menú,

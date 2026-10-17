@@ -1,7 +1,7 @@
 /**
  * esborranys.js — El text a mig escriure de cada conversa (torn 260930, T1),
- * com a WhatsApp: canvies de xat i, en tornar, el camp conserva el que hi
- * havies deixat.
+ * com a les apps de missatgeria: canvies de xat i, en tornar, el camp
+ * conserva el que hi havies deixat.
  *
  * Magatzem en memòria (un Map) per clau. La clau la dona XatSection
  * (`clauEsborrany` = `ambitEstable::fil`, d'useXat()), perquè el text d'una

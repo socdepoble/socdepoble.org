@@ -54,7 +54,7 @@ test('la fila d’un canal amb imatge també porta el megàfon i ho diu en text'
   expect(fila.textContent).toContain("Canal d'avisos");
 });
 
-/* ─── Torn 260930 (T1): la fila calcada de WhatsApp Desktop ─── */
+/* ─── Torn 260930 (T1): la fila del patró de missatgeria ─── */
 
 const fila = (dades, joId = 'jo') => {
   render(<FilaConversa fil={mapejaFil(dades)} onSelect={() => {}} t={t} locale="ca-ES" joId={joId} />);

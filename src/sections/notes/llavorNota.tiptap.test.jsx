@@ -8,7 +8,9 @@
      · ara el primer focus buida el cos si és la llavor verge (la d'ara, la
        d'abans, o la que ja ha desat l'editor) i el cos buit es desa;
      · un cos amb text propi, o una llavor que la persona ja ha tocat, no
-       s'esborra mai; sense llavor (el Perfil, seedContent null), tampoc. */
+       s'esborra mai; sense llavor (el Perfil, seedContent null), tampoc.
+   Les regressions de l'auditoria de Codex (261017: atributs, consum únic,
+   desfer, deixar anar) són a llavorNota.adversari.test.jsx. */
 import React from 'react';
 import { act, cleanup, fireEvent, render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
@@ -66,12 +68,21 @@ test('la LLAVOR_NOTA de veres arriba al cos amb H3, H4, paràgrafs i les dues ll
   expect(esLlavorVerge(m.editor, [LLAVOR_NOTA])).toBe(true);
 });
 
-test('sense la clau seedContent (la LLAVOR_NOTA per defecte), el primer focus buida la plantilla i el cos buit es desa', () => {
-  const adapter = pinta(LLAVOR_NOTA);
+/* Gauntlet 261017 (C06, auditoria Codex) · El DocumentEditor universal ja no
+   importa la secció de Notes per a la seua llavor per defecte: el Bloc la
+   passa (NotesEditor · seedContent: LLAVORS_NOTA) i, sense la clau, no n'hi
+   ha cap, com al Perfil. */
+test('amb la llavor del Bloc (seedContent: LLAVORS_NOTA), el primer focus buida la plantilla i el cos buit es desa; sense la clau, cap llavor', () => {
+  const adapter = pinta(LLAVOR_NOTA, { seedContent: LLAVORS_NOTA });
   expect(m.editor.isEmpty).toBe(false);
   enfoca();
   expect(m.editor.isEmpty).toBe(true);
   expect(adapter.updateLocal).toHaveBeenLastCalledWith('d1', 'content', '<p></p>');
+  cleanup();
+  const senseClau = pinta(LLAVOR_NOTA);
+  enfoca();
+  expect(m.editor.isEmpty).toBe(false);
+  expect(senseClau.updateLocal.mock.calls.filter(([, , valor]) => valor === '<p></p>')).toEqual([]);
 });
 
 test.each([

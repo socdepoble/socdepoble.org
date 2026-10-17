@@ -1,6 +1,6 @@
 /**
  * MenuLlista.jsx — el «…» rodó de la fila de títol de la llista (captures
- * 19.11.50 i 19.12.18 de WhatsApp Desktop, onada 3): a l'esquerra del títol i
+ * de referència 19.11.50 i 19.12.18, onada 3): a l'esquerra del títol i
  * amb una sola opció, «Seleccionar xats» (una marca dins d'un cercle).
  *
  * El «⋯» de la capçalera de la CONVERSA oberta (Seleccionar missatges, per al

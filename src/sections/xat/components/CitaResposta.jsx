@@ -1,7 +1,7 @@
 /**
  * CitaResposta.jsx — la cita dalt d'una bombolla que respon a un altre
- * missatge (torn 260930, T1), com a WhatsApp: qui el va escriure i dos
- * línies del seu text. És un botó que porta a l'original i el ressalta
+ * missatge (torn 260930, T1), com a les apps de missatgeria: qui el va
+ * escriure i dos línies del seu text. És un botó que porta a l'original i el ressalta
  * (Conversa, vesAlMissatge).
  *
  * No promet el que no fa: si l'original no és entre els missatges carregats

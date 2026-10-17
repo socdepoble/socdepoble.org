@@ -1,5 +1,5 @@
-/* Torn 260930 (T1) · El full «Ajustos» del Xat (captures 20.47–21.05 de
-   WhatsApp Desktop) muntat de veres dins de ClosCaXat: s'obri des del peu del
+/* Torn 260930 (T1) · El full «Ajustos» del Xat (captures de referència
+   20.47–21.05) muntat de veres dins de ClosCaXat: s'obri des del peu del
    rail, cerca a tot l'arbre, empeny i torna pàgines dins del mateix marc,
    aplica el tema, la llengua i l'amplària a l'acte, diu «en construcció» on
    no hi ha dades, i la X i Escape el tanquen. El focus va al cercador, al ‹

@@ -23,7 +23,6 @@ vi.mock('../../components/universal/richText', () => ({
   UniversalRichTextContent: () => <div data-testid="cos" />
 }));
 vi.mock('../../components/universal/richText/extensions', () => ({ extensionsRiques: () => [] }));
-vi.mock('./NotesSection.jsx', () => ({ LLAVOR_NOTA: '<h3>Llavor del Bloc</h3>' }));
 vi.mock('./NotesContext', () => ({
   useNotes: () => ({
     noteFolders: [], t: (_clau, text) => text, config: mocks.config, workspaceKey: 'ambit-A',

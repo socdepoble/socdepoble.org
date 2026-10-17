@@ -15,7 +15,35 @@
  * src/sections/disseny/cataleg/detalls`, sense comptar les proves ni este
  * fitxer). Una versió que no és la darrera és una data falsa a la pastilla.
  *
- * Darrera posada al dia: detailRegistry.jsx, manifest.js i registre.js, 2026-10-16T18:11:39+02:00,
+ * Darrera posada al dia: EspecimenIdentitat.jsx, 2026-10-17T19:28:57+02:00, Revisió del Gauntlet
+ * 261017 (ID4; relleu 3: mai «Foraster» mentre la sessió és vàlida): la fila
+ * BotoIdentitatActiva.pendent (bool, false) al contracte de l'espècimen, la prop nova que, sense
+ * sessió i mentre la sessió recordada es comprova, pinta només un estat ocupat per al lector de
+ * pantalla en lloc d'«Entrar».
+ * Versió anterior: EspecimenPublicacionsDeLActor.jsx, 2026-10-17T17:34:22+02:00, Gauntlet
+ * 261017 (WP7a, el que els paquets paral·lels no van arribar a tocar): F30 a tota l'app, el
+ * DialegEmoticona d'EspecimenClassificacio.jsx i d'EspecimenEmoticonaBarra.jsx porta el catàleg
+ * Emojis XL (carregaCatalegEmojis, de notes/canalEmojis.js), amb carregaCataleg a la fila del
+ * contracte d'EspecimenClassificacio.jsx (17:31:53); les files de contracte que faltaven, onCarrega
+ * a EspecimenVisorImatges.jsx (C05) i onObri i etiquetes.obri a EspecimenCarruselImatges.jsx (C04,
+ * 17:33:05); i els textos de F45 (Gauntlet 261016, Bloc 3.9) que encara deien que l'històric de
+ * l'actor va davall de l'editor del Bloc: ara, només davall d'una publicació oberta
+ * (PublicacioDetall), al lead de publicacions-actor de manifest.js (17:34:01), a la fila
+ * peuDePagina d'EspecimenPage.jsx (17:34:09) i a la descripció, la fila exclouId i el «Fes»
+ * d'EspecimenPublicacionsDeLActor.jsx (17:34:22).
+ * Versió anterior: EspecimenXatRail.jsx, 2026-10-17T16:50:40+02:00, Gauntlet 261017
+ * (Bloc 3.1, terminologia neutra de la missatgeria; troballa C12 de l'auditoria de Codex): els
+ * textos visibles del catàleg ja no nomenen cap marca aliena ni diuen que el Xat en siga una
+ * còpia; parlen del patró estàndard de missatgeria que la gent ja coneix. Toca els leads de
+ * manifest.js (16:40:29: la llista, el rail i el full «Ajustos», i el comentari d'este últim), la
+ * descripció i les regles d'EspecimenXatAjustos.jsx, i les descripcions d'EspecimenXatCerca.jsx i
+ * EspecimenXatLlista.jsx (16:40:56); EspecimenXatRail.jsx (16:50:40: la descripció, el contracte
+ * de textosDeVista i «el verd d'una marca aliena»); la taula d'EspecimenGestor.jsx i el paràgraf
+ * d'EspecimenControlsBarra.jsx («com a les apps de missatgeria», 16:44:46); i els comentaris
+ * d'AssignacioEmoji.jsx (16:44:46), destinsEmoji.js i EspecimenXat.jsx (16:44:55). Arreplega
+ * EspecimenVisorImatges.jsx (16-10, 22:04:04), tocat després de la versió anterior sense
+ * posar-la al dia.
+ * Versió anterior: detailRegistry.jsx, manifest.js i registre.js, 2026-10-16T18:11:39+02:00,
  * Onada 0.3 (Gauntlet 261016, pla 261016_1530: «visor modal / Lightbox natiu a pantalla completa
  * sobre fons fosc»): l'organisme nou VisorImatges, el visor de fotos de l'Arxiu visual
  * (/multimedia), registrat a registre.js, amb l'ítem superposicions/visor-imatges i l'emoji 📸 a
@@ -133,4 +161,4 @@
  * Quan el manifest porte `creat` i `modificat` per espècimen, manaran eixos
  * camps i esta constant només farà de versió del conjunt.
  */
-export const VERSIO_CATALEG = '2026-10-16T18:11:39+02:00';
+export const VERSIO_CATALEG = '2026-10-17T19:28:57+02:00';

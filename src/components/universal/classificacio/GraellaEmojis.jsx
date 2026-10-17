@@ -22,14 +22,29 @@
  *   · dins de cada llista, un sol botó entra a la seqüència del tabulador
  *     (tabindex mòbil): les fletxes, Inici i Fi s'hi mouen;
  *   · la cerca és un camp de cerca (role searchbox) amb etiqueta visible, pel
- *     nom oficial, i el recompte s'anuncia sense moure el focus.
+ *     nom oficial, i el recompte s'anuncia sense moure el focus;
+ *   · Gauntlet 261017 (F30) · dins d'un <dialog> obert, el focus inicial cau
+ *     on el posa el diàleg (el «Tancar» del peu o la X), perquè la graella
+ *     encara carregava: quan arriba el catàleg, si el focus continua allí o
+ *     s'ha perdut, passa al primer emoji del tabulador (no a la cerca: en
+ *     mòbil, el teclat taparia la graella). Mai en roba: fora d'un diàleg,
+ *     o amb el focus ja en un altre lloc, no es toca (Revisió del Gauntlet
+ *     261017, A11Y-2: tampoc el <body> del web amfitrió de l'encastament).
+ *
+ * Gauntlet 261017 (F30) · `textNoReconegut` (opcional): amb ella, un emoji
+ * que este navegador no reconeix (utils/emoji · emojiSol el rebutja: Safari
+ * 16 porta les dades d'Unicode 14) no arriba a onTria; un avís ho diu, just
+ * damunt de la graella, amb el text de qui la munta (el DialegEmoticona i el
+ * diàleg «Emojis» del Bloc tenien cadascun la seua còpia d'esta comprovació).
  *
  * CONTRACTE
  *   carregaCataleg () => Promise<{ GRUPS_EMOJIS }>  (estable: es demana en muntar)
  *   onTria (glif, nom) => void
+ *   textNoReconegut (glif) => String  (opcional i estable)
  */
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Boto, Camp, CampText, Carregant } from '../../PedraSeca/index.js';
+import { emojiSol } from '../../../utils/emoji.js';
 
 const CAP = Object.freeze([]);
 /* Una cerca curta («a») casaria amb milers de noms: se'n pinten els primers. */
@@ -115,17 +130,34 @@ const Familia = memo(function Familia({ grup, oberta, onCommuta, onTria }) {
   );
 });
 
+/* On deixa el focus un diàleg en obrir-se, sense comptar la graella (que
+   encara carregava): el primer control del tabulador. Un camp amb autoFocus
+   o el que la persona ja ha triat no ho són: eixos no es toquen. */
+const CONTROLS = 'button, a[href], input, select, textarea, summary, [tabindex], [contenteditable="true"]';
+function primerControlForaDe(dialeg, graella) {
+  return Array.from(dialeg.querySelectorAll(CONTROLS)).find((control) => (
+    control.tabIndex >= 0 && !control.disabled && !graella.contains(control) && !control.closest('[hidden], [inert]')
+  )) ?? null;
+}
+
 function textDelRecompte(trobats, total) {
   if (!total) return 'Cap emoji amb eixe nom.';
   if (total > trobats) return `Els primers ${trobats} de ${total} emojis: afina la cerca.`;
   return total === 1 ? '1 emoji.' : `${total} emojis.`;
 }
 
-export function GraellaEmojis({ carregaCataleg, onTria }) {
+export function GraellaEmojis({ carregaCataleg, onTria, textNoReconegut = null }) {
   const [cataleg, setCataleg] = useState({ estat: 'carregant', grups: CAP });
   const [intent, setIntent] = useState(0);
   const [terme, setTerme] = useState('');
   const [oberts, setOberts] = useState(null);
+  const [avis, setAvis] = useState(null);
+  const arrel = useRef(null);
+  /* Revisió del Gauntlet 261017 (A11Y-2) · Si l'últim «Torna-ho a provar»
+     se'n va amb el focus (el clic el desmunta), eixe focus l'ha perdut la
+     graella i el pot recuperar. Qualsevol altre focus fora del diàleg és de
+     la persona: no es toca. */
+  const reintentat = useRef(false);
 
   useEffect(() => {
     let viu = true;
@@ -142,6 +174,33 @@ export function GraellaEmojis({ carregaCataleg, onTria }) {
     return () => { viu = false; };
   }, [carregaCataleg, intent]);
 
+  /* Ja pintada dins d'un diàleg obert: el focus, al primer emoji, si encara
+     és on el va deixar el diàleg (o el diàleg mateix) o si s'ha perdut (el
+     «Torna-ho a provar» ja no hi és). getRootNode: també dins de l'arrel
+     d'ombra tancada de l'encastament.
+     Revisió del Gauntlet 261017 (A11Y-2) · «Mai en roba», tampoc al web
+     amfitrió: un focus al <body> (la persona ha clicat el text de la pàgina
+     de WordPress mentre el catàleg arribava) ja no compta com a perdut. Només
+     el que ha perdut la graella mateixa (reintentat), i només en el
+     document: encastat, el focus del «Torna-ho a provar» desmuntat el
+     recull modalLocal.js al <dialog> (vigiaFocus), i eixe cas és el
+     d'onLHaDeixat; un <body> de l'amfitrió no és mai del widget. */
+  useEffect(() => {
+    if (cataleg.estat !== 'llest') return;
+    const reintent = reintentat.current;
+    reintentat.current = false;
+    const graella = arrel.current;
+    const dialeg = graella?.closest('dialog');
+    if (!dialeg?.open) return;
+    const doc = graella.ownerDocument;
+    const lloc = graella.getRootNode();
+    const actiu = lloc.activeElement;
+    const perdut = reintent && lloc === doc && (!doc.activeElement || doc.activeElement === doc.body);
+    const onLHaDeixat = Boolean(actiu) && (actiu === dialeg || actiu === primerControlForaDe(dialeg, graella));
+    if (!perdut && !onLHaDeixat) return;
+    graella.querySelector('.sdp-graella-emojis__boto[tabindex="0"]')?.focus();
+  }, [cataleg.estat]);
+
   /* La primera família arrenca oberta; després mana la persona. */
   const familiesObertes = oberts ?? new Set(cataleg.grups.length ? [cataleg.grups[0].id] : CAP);
   const commuta = useCallback((id, oberta) => {
@@ -155,7 +214,20 @@ export function GraellaEmojis({ carregaCataleg, onTria }) {
     });
   }, [cataleg.grups]);
 
-  const tria = useCallback((glif, nom) => onTria?.(glif, nom), [onTria]);
+  /* Estable (amb onTria i textNoReconegut estables): l'avís no torna a pintar els botons. */
+  const tria = useCallback((glif, nom) => {
+    if (typeof textNoReconegut !== 'function') {
+      onTria?.(glif, nom);
+      return;
+    }
+    const reconegut = emojiSol(glif);
+    if (!reconegut) {
+      setAvis(textNoReconegut(glif));
+      return;
+    }
+    setAvis(null);
+    onTria?.(reconegut, nom);
+  }, [onTria, textNoReconegut]);
 
   const consulta = terme.trim().toLowerCase();
   const resultats = useMemo(() => {
@@ -169,35 +241,38 @@ export function GraellaEmojis({ carregaCataleg, onTria }) {
     return (
       <div className="sdp-graella-emojis" role="alert">
         <p className="sdp-graella-emojis__estat">No s’han pogut carregar els emojis.</p>
-        <Boto varietat="secundari" onClick={() => setIntent((n) => n + 1)}>Torna-ho a provar</Boto>
+        <Boto varietat="secundari" onClick={() => { reintentat.current = true; setIntent((n) => n + 1); }}>Torna-ho a provar</Boto>
       </div>
     );
   }
 
   return (
-    <div className="sdp-graella-emojis">
-      <Camp etiqueta={ETIQUETA_CERCA} ajuda={AJUDA_CERCA}>
-        <CampText
-          tipus="search"
-          name="graellaEmojisCerca"
-          autoComplete="off"
-          value={terme}
-          onChange={(e) => setTerme(e.target.value)}
-          onKeyDown={(e) => {
-            /* Amb text, Escape esborra; buit, el deixa passar i el diàleg es tanca. */
-            if (e.key === 'Escape' && terme) { e.preventDefault(); e.stopPropagation(); setTerme(''); }
-          }}
-        />
-      </Camp>
-      <p className="sdp-graella-emojis__estat" role="status" aria-live="polite" aria-atomic="true">
-        {resultats ? textDelRecompte(resultats.emojis.length, resultats.total) : ''}
-      </p>
-      {resultats ? (
-        resultats.emojis.length ? <Botons key={consulta} emojis={resultats.emojis} etiqueta="Resultats de la cerca" onTria={tria} /> : null
-      ) : cataleg.grups.map((grup) => (
-        <Familia key={grup.id} grup={grup} oberta={familiesObertes.has(grup.id)} onCommuta={commuta} onTria={tria} />
-      ))}
-    </div>
+    <>
+      {avis ? <p className="sdp-classificacio-dialeg__avis" role="status">{avis}</p> : null}
+      <div ref={arrel} className="sdp-graella-emojis">
+        <Camp etiqueta={ETIQUETA_CERCA} ajuda={AJUDA_CERCA}>
+          <CampText
+            tipus="search"
+            name="graellaEmojisCerca"
+            autoComplete="off"
+            value={terme}
+            onChange={(e) => setTerme(e.target.value)}
+            onKeyDown={(e) => {
+              /* Amb text, Escape esborra; buit, el deixa passar i el diàleg es tanca. */
+              if (e.key === 'Escape' && terme) { e.preventDefault(); e.stopPropagation(); setTerme(''); }
+            }}
+          />
+        </Camp>
+        <p className="sdp-graella-emojis__estat" role="status" aria-live="polite" aria-atomic="true">
+          {resultats ? textDelRecompte(resultats.emojis.length, resultats.total) : ''}
+        </p>
+        {resultats ? (
+          resultats.emojis.length ? <Botons key={consulta} emojis={resultats.emojis} etiqueta="Resultats de la cerca" onTria={tria} /> : null
+        ) : cataleg.grups.map((grup) => (
+          <Familia key={grup.id} grup={grup} oberta={familiesObertes.has(grup.id)} onCommuta={commuta} onTria={tria} />
+        ))}
+      </div>
+    </>
   );
 }
 

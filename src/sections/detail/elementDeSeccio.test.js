@@ -207,6 +207,37 @@ test('Decisió 3 · paginaDElement: la portada i l’avatar de fora no es demane
   expect(paginaDElement(mercat, { id: 'm', title: 'Mel', images: ['/assets/mercat/mel.webp'] }).heroImage).toBe('/assets/mercat/mel.webp');
 });
 
+/* Revisió del Gauntlet 261017 (ID1; ordre del Mestre: «TERMINANTMENT PROHIBIT
+   que aparega el logotip verd de l'entitat Sóc de Poble associat a Javi
+   Llinares», i relleu 3) · Una publicació que signa una persona (autorDe) i
+   no porta cap avatar torna null, no undefined: PageFrame no hi posa el
+   logotip de sèrie (DEFAULT_AUTHOR) i la barra taronja hi pinta la silueta,
+   com la targeta del Mur i la del Mercat. Una publicació sense signatura o
+   d'una entitat continua amb undefined (el logotip de reserva, Llei del
+   Píxel). L'id és sintètic: no és cap àlies de la persona pilot. */
+test('ID1 · paginaDElement: una persona sense avatar porta null (cap logotip de sèrie); l’entitat i la publicació sense signatura, com sempre', () => {
+  const UUID = '7b0c6f1e-2c1a-4d7e-9a55-0f1d2e3c4b5a';
+  const seccions = [
+    buildMurDetailSectionMeta({ feedPosts: [], t: mocks.t }),
+    buildMercatDetailSectionMeta({ marketItems: [], t: mocks.t }),
+    buildEventsDetailSectionMeta({ events: [], t: mocks.t }),
+    buildMultimediaDetailSectionMeta({ mediaItems: [], t: mocks.t })
+  ];
+  for (const seccio of seccions) {
+    for (const clau of ['ownerUserId', 'owner_user_id', 'author_user_id', 'author_id']) {
+      const pagina = paginaDElement(seccio, { id: 'p', title: 'Nota', author_name: 'Javi Llinares', [clau]: UUID });
+      expect(pagina.authorAvatar, `${seccio.listPath} · ${clau}`).toBeNull();
+      expect(pagina.authorName).toBe('Javi Llinares');
+    }
+    // La seua foto pròpia, intacta.
+    expect(paginaDElement(seccio, { id: 'p', title: 'Nota', ownerUserId: UUID, author_avatar: '/assets/gent/javi.webp' }).authorAvatar)
+      .toBe('/assets/gent/javi.webp');
+  }
+  const mur = seccions[0];
+  expect(paginaDElement(mur, { id: 'e', title: 'Pa', author_name: 'Forn', author_org_id: 'forn' }).authorAvatar).toBeUndefined();
+  expect(paginaDElement(mur, { id: 'v', title: 'Festa' }).authorAvatar).toBeUndefined();
+});
+
 /* Revisió adversarial del 261007 · És una regla del Mur: les tres seccions
    que el Mur llig (publicacions, Mercat i agenda, reconegudes per la seua
    llista) passen pel mode estricte; Pobles i Multimèdia, com abans (Llei del

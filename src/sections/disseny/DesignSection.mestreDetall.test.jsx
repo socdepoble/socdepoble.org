@@ -1,6 +1,6 @@
 /* MD (ordre del Mestre, 261003) · Disseny en mòbil: patró mestre-detall,
-   com WhatsApp. Amb l'espai de treball de veres, el router en memòria de
-   veres i la Pàgina Universal de veres de cada espècimen (CatalogDetail):
+   com a les apps de missatgeria. Amb l'espai de treball de veres, el router
+   en memòria de veres i la Pàgina Universal de veres de cada espècimen (CatalogDetail):
      · /disseny a 375 px: primer DISSENY (les famílies), no la portada;
      · família → COMPONENTS → espècimen, una sola capa cada vegada;
      · la fletxa blava torna a COMPONENTS (no a l'historial);

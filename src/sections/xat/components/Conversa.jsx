@@ -2,11 +2,11 @@
  * Conversa.jsx — la conversa oberta a la columna dreta del Xat: capçalera,
  * llista de missatges amb separadors de dia, «Carrega'n més», bombolles i
  * compositor. Extreta de XatSection.jsx (torn 260930) sense canvi de
- * comportament, perquè el detall de WhatsApp de la conversa visca en un sol
- * fitxer.
+ * comportament, perquè el detall de la conversa (el patró estàndard de
+ * missatgeria) visca en un sol fitxer.
  *
- * Torn 260930 (T1 · la conversa calcada de WhatsApp Desktop, ordre del
- * Mestre). La lògica pura viu a ../conversa.js i ../esborranys.js:
+ * Torn 260930 (T1 · la conversa amb el patró estàndard de missatgeria, ordre
+ * del Mestre). La lògica pura viu a ../conversa.js i ../esborranys.js:
  *   · Grups: les bombolles seguides del mateix autor el mateix dia van
  *     juntes; només la primera porta la cua i el nom.
  *   · «N missatges no llegits»: es calcula UNA vegada, amb la marca de
@@ -236,7 +236,7 @@ export default function Conversa({
   }, [messages, llesta, actualitzaFons]);
 
   /* La barra de resposta ocupa lloc davall de la llista: si eres a baix, s'hi
-     continua (com a WhatsApp, l'últim missatge no queda tapat). */
+     continua (com a les apps de missatgeria, l'últim missatge no queda tapat). */
   useLayoutEffect(() => {
     const ol = llistaRef.current;
     if (ol && aBaixRef.current) ol.scrollTop = ol.scrollHeight;
@@ -352,8 +352,8 @@ export default function Conversa({
     }
   }, [text, resposta, fil, onSendMessage, clauEsborrany]);
 
-  /* En triar «Respon» el focus va al camp, com a WhatsApp. Directament i no
-     amb un efecte sobre `resposta`: respondre al missatge que ja és la
+  /* En triar «Respon» el focus va al camp, com a les apps de missatgeria.
+     Directament i no amb un efecte sobre `resposta`: respondre al missatge que ja és la
      resposta no canvia l'estat, i el focus del menú desmuntat cauria a
      <body> (revisió adversarial 260930, #8). */
   const respon = useCallback((missatge) => {

@@ -4,7 +4,7 @@
 import { describe, expect, test } from 'vitest';
 import { COPYRIGHT_SDP, COPYRIGHT_VIQUIPEDIA } from '../../components/universal/editorial.js';
 import { objecteDe, rutaConnectarObjecte, rutaXatDePagina } from '../../config/navigation.js';
-import { autorDeclarat, filesDelPanell, formataCamera, formataDataHora, formataGps, pobleDe } from './panellDeLaFoto.js';
+import { autorDeclarat, filesDelPanell, formataCamera, formataDataHora, formataGps, formataResolucio, pobleDe } from './panellDeLaFoto.js';
 import { destiDeMultimedia } from './rutesMultimedia.js';
 import { LEGACY_MEDIA } from './legacyMedia.js';
 import { fotosDeLAgenda, fotosDelMercat, fotosDelMur } from './mediaContent.js';
@@ -25,12 +25,12 @@ const EXIF = {
 const ACCIONS = { comentar: 'Obrir el xat de la foto', connectar: 'Connectar la foto' };
 
 describe('filesDelPanell', () => {
-  test('completes: data i hora (amb els segons), GPS, càmera, autor, poble, drets, origen, l’article, Comentar i Connectar', () => {
+  test('completes: data i hora (amb els segons), GPS, càmera, resolució, autor, poble, drets, origen, l’article, Comentar i Connectar', () => {
     const item = { id: 'feed-p1', title: 'Fira', src: '/assets/fira.jpg', tag: 'Mur', source: 'Ajuntament', article: { sectionId: 'mur', id: 'p1' } };
-    const files = filesDelPanell(item, { exif: EXIF, estatExif: 'llest' });
-    expect(files.map((fila) => fila.clau)).toEqual(['data', 'gps', 'camera', 'autor', 'poble', 'drets', 'origen', 'publicat', 'comentar', 'connectar']);
+    const files = filesDelPanell(item, { exif: EXIF, estatExif: 'llest', mides: { amplada: 4032, alcada: 3024 }, estatMides: 'llest' });
+    expect(files.map((fila) => fila.clau)).toEqual(['data', 'gps', 'camera', 'resolucio', 'autor', 'poble', 'drets', 'origen', 'publicat', 'comentar', 'connectar']);
     expect(valors(files)).toEqual({
-      data: '14/05/2017 10:22:33', gps: '38.59190, -0.41840 · 456,7 m', camera: 'Canon EOS 5D', autor: 'Pepa Garcia',
+      data: '14/05/2017 10:22:33', gps: '38.59190, -0.41840 · 456,7 m', camera: 'Canon EOS 5D', resolucio: '4032 × 3024 px', autor: 'Pepa Garcia',
       poble: 'Desconegut', drets: '(c) Pepa Garcia', origen: 'Fotografia', publicat: 'Mur · Fira', ...ACCIONS
     });
     const objecte = objecteDe(item, 'multimedia');
@@ -44,13 +44,41 @@ describe('filesDelPanell', () => {
   test('parcials: sense EXIF, «Desconegut», mai inventat; l’autor és qui signa; una il·lustració porta els drets de Sóc de Poble', () => {
     const item = { id: 'nano-mur', title: 'Mur', src: '/assets/nano_cards/mur_nano_card.jpg', tag: 'Arxiu', source: 'Nano Banana', origen: 'ia' };
     expect(valors(filesDelPanell(item, { estatExif: 'sense' }))).toEqual({
-      data: 'Desconegut', gps: 'Desconegut', camera: 'Desconegut', autor: 'Nano Banana', poble: 'Desconegut',
+      data: 'Desconegut', gps: 'Desconegut', camera: 'Desconegut', resolucio: 'Desconegut', autor: 'Nano Banana', poble: 'Desconegut',
       drets: COPYRIGHT_SDP, origen: 'Il·lustració d’IA', publicat: 'Cap article: és de l’arxiu', ...ACCIONS
     });
   });
 
   test('sense id, ni Comentar ni Connectar: no hi ha cap objecte a qui obrir el xat', () => {
-    expect(filesDelPanell({ src: '/x.jpg' }).map((fila) => fila.clau)).toEqual(['data', 'gps', 'camera', 'autor', 'poble', 'drets', 'origen', 'publicat']);
+    expect(filesDelPanell({ src: '/x.jpg' }).map((fila) => fila.clau)).toEqual(['data', 'gps', 'camera', 'resolucio', 'autor', 'poble', 'drets', 'origen', 'publicat']);
+  });
+
+  /* Gauntlet 261017 (C05 de Codex: «la resolució coneguda no s'ha d'ocultar
+     perquè falte EXIF») · Les mides reals de la foto pintada, a part de
+     l'EXIF: sense EXIF, la resolució continua; mentre carrega, «Llegint…»;
+     si no carrega, «Desconegut». */
+  test('la resolució, darrere de la càmera: les mides de la foto pintada, sense dependre de l’EXIF', () => {
+    const item = { id: 'x', src: '/x.jpg' };
+    const resolucio = (opcions) => filesDelPanell(item, opcions).find((fila) => fila.clau === 'resolucio');
+    expect(resolucio({ estatExif: 'sense', mides: { amplada: 1200, alcada: 800 }, estatMides: 'llest' }))
+      .toEqual({ clau: 'resolucio', etiqueta: 'Resolució', valor: '1200 × 800 px' });
+    expect(resolucio({ estatExif: 'llegint', mides: { amplada: 1200, alcada: 800 }, estatMides: 'llest' }).valor).toBe('1200 × 800 px');
+    expect(resolucio({ estatExif: 'llest', estatMides: 'llegint' }).valor).toBe('Llegint…');
+    expect(resolucio({ estatExif: 'llegint', estatMides: 'sense' }).valor).toBe('Desconegut');
+    expect(resolucio({ mides: { amplada: 0, alcada: 800 }, estatMides: 'llest' }).valor).toBe('Desconegut');
+    const traduida = resolucio({ mides: { amplada: 2, alcada: 1 }, estatMides: 'llest', t: (clau, reserva) => (clau === 'section.multimedia.visor.resolucio' ? 'Resolution' : reserva) });
+    expect([traduida.etiqueta, traduida.valor]).toEqual(['Resolution', '2 × 1 px']);
+  });
+
+  /* Gauntlet 261017 (C04) · El poble d'una publicació ve pel nom: sense slug
+     del cens, el nom tal qual i sense enllaç; amb, el del cens mana. */
+  test('el poble pel nom d’una publicació: el nom, sense enllaç; el slug, si el porta, mana', () => {
+    const perNom = filesDelPanell({ src: '/x.jpg', nomPoble: ' La Torre de les Maçanes ' });
+    expect(valors(perNom).poble).toBe('La Torre de les Maçanes');
+    expect(rutes(perNom).poble).toBeUndefined();
+    const ambSlug = filesDelPanell({ src: '/x.jpg', nomPoble: 'Torre', poble: 'tibi' }, { nomDelPoble: () => 'Tibi' });
+    expect([valors(ambSlug).poble, rutes(ambSlug).poble]).toEqual(['Tibi', '/pobles/tibi']);
+    expect(valors(filesDelPanell({ src: '/x.jpg', nomPoble: '  ' })).poble).toBe('Desconegut');
   });
 
   /* Revisió adversarial del 261016 (M06: «mostrar desconegut sense inventar
@@ -118,6 +146,14 @@ describe('els formats', () => {
     expect([formataCamera({ marca: 'Canon', model: 'Canon EOS 5D' }), formataCamera({ marca: 'SONY', model: 'DSC-RX100' }), formataCamera({ marca: null, model: 'X' }), formataCamera(null)])
       .toEqual(['Canon EOS 5D', 'SONY DSC-RX100', 'X', null]);
     expect([formataGps({ lat: 1, lng: 2, altitud: null }), formataGps({ lat: 'x', lng: 2 }), formataGps(null)]).toEqual(['1.00000, 2.00000', null, null]);
+  });
+
+  test('formataResolucio: enters positius, «amplada × alçada px»; la resta, null (mai inventada)', () => {
+    expect(formataResolucio({ amplada: 4032, alcada: 3024 })).toBe('4032 × 3024 px');
+    expect(formataResolucio({ amplada: '640', alcada: '480' })).toBe('640 × 480 px');
+    for (const mides of [null, undefined, {}, { amplada: 0, alcada: 10 }, { amplada: 10, alcada: -1 }, { amplada: Number.NaN, alcada: 10 }, { amplada: 10.5, alcada: 10 }, { amplada: Infinity, alcada: 10 }]) {
+      expect(formataResolucio(mides), JSON.stringify(mides)).toBeNull();
+    }
   });
 
   test('pobleDe: el del cens o el de l’article d’un poble', () => {

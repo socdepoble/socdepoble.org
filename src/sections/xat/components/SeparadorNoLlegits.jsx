@@ -1,5 +1,5 @@
 /**
- * SeparadorNoLlegits.jsx — la franja «N missatges no llegits» de WhatsApp
+ * SeparadorNoLlegits.jsx — la franja «N missatges no llegits» de sempre
  * (torn 260930, T1). Conversa la calcula una sola vegada, amb la marca de
  * lectura del moment d'obrir, i la posa davant del primer no llegit; queda
  * fixa mentre la conversa està oberta. Sempre text, singular o plural.

@@ -278,7 +278,7 @@ export function NotesDataProvider({ children, config }) {
     const informa = (error) => {
       // Una càrrega cancel·lada (doble muntatge de StrictMode, canvi d'àmbit) no és cap error.
       if (error?.name === 'AbortError') return;
-      console.error("LOAD ERROR", error);
+      console.error('[Notes] No s’ha pogut carregar el Bloc de Notes:', error);
       if (!isCurrent()) { return; }
 
       setData((previous) => previous.token === token

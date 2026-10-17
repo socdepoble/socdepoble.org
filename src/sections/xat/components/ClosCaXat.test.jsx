@@ -68,7 +68,7 @@ function pinta({ setPanellObert = vi.fn(), ...props } = {}) {
 const nomDe = (b) => b.getAttribute('aria-label') || b.querySelector('.sdp-workspace-nav-item__label')?.textContent || b.textContent;
 const noms = (arrel) => within(arrel).getAllByRole('button').map(nomDe);
 
-test('les entrades i les vistes: sis entrades en l’ordre de WhatsApp, Destacats a «Més» i quatre vistes', () => {
+test('les entrades i les vistes: sis entrades en l’ordre del patró de missatgeria, Destacats a «Més» i quatre vistes', () => {
   expect(ENTRADES_RAIL.map((e) => e.text)).toEqual(['Xats', 'Novetats', 'Comunitats', 'Telefonades', 'Contingut multimèdia', 'Destacats']);
   expect(ENTRADES_RAIL.filter((e) => e.seccio === 'mes').map((e) => e.id)).toEqual(['destacats']);
   expect(VISTES_XAT).toEqual(['comunitats', 'telefonades', 'multimedia', 'destacats']);
@@ -336,9 +336,9 @@ test('en muntar-se amb l’entrada activa dins d’una secció plegada, la secci
 });
 
 /* Torn 260930 (T1, captures 20.47.21 i 20.48.41) · Amb `onAjustos` (el que
-   passa ClosCaXat), el peu obri el full «Ajustos», com «Tú» a WhatsApp
-   Desktop. Desplegat, l'avatar i «Tu» són un sol botó i el llapis continua
-   portant al perfil; plegat, l'avatar del peu obri el full. El nom accessible
+   passa ClosCaXat), el peu obri el full «Ajustos», com el «Tú» de la
+   referència de missatgeria. Desplegat, l'avatar i «Tu» són un sol botó i el
+   llapis continua portant al perfil; plegat, l'avatar del peu obri el full. El nom accessible
    comença pel que es veu («Tu: ajustos»). Les proves de dalt pinten el rail
    sense `onAjustos` (el catàleg del rail): el peu d'abans no canvia. */
 test('T1 · desplegat, l’avatar i «Tu» obrin el full «Ajustos» i el llapis continua portant al perfil', () => {

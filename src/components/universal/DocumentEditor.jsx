@@ -25,7 +25,6 @@ import { attrsDeEntrada } from './richText/extensions/targetes/formaDelGrup.js';
    s'esvaeix abans de qualsevol ordre que arriba de fora del cos. */
 import { buidaLlavorVerge } from './richText/useUniversalRichText.js';
 import { useUIActions } from '../../app/contexts/UIContext';
-import { LLAVOR_NOTA } from '../../sections/notes/NotesSection.jsx';
 
 /* Bloc 3.8 (261016) · On un cos d'editor no es veu ni rep el focus: la
    mateixa regla que la guarda del focus de la closca (AppGridShell). */
@@ -95,19 +94,18 @@ const FORA_DE_LA_VISTA = '[inert], [aria-hidden="true"], [hidden]';
  *                            // document de l'editor (useUniversalRichText ·
  *                            // esLlavorVerge), no amb la cadena, i pot ser una
  *                            // llista: el Bloc de Notes hi passa la llavor d'ara i
- *                            // la d'abans (llavorNota.js · LLAVORS_NOTA). Sense la
- *                            // clau (undefined) val LLAVOR_NOTA, com sempre; un
- *                            // valor explícit mana, també null (cap llavor).
+ *                            // la d'abans (llavorNota.js · LLAVORS_NOTA).
  *                            // Correcció de la revisió (261016) · Les ordres que
  *                            // arriben de fora del cos (un botó de la barra, la
  *                            // inserció de registraInsercio, una targeta triada)
  *                            // la buiden ABANS de la cadena (buidaLlavorVerge):
  *                            // també són el primer clic.
- *                            // La fitxa del Perfil (PerfilEditor) depén d'este null:
- *                            // no el convertiu en «sense clau».
- *                            // La dependència inversa cap a sections/notes és deute
- *                            // previ que es conserva per ordre del Mestre: el Bloc
- *                            // de Notes no es toca.
+ *                            // Gauntlet 261017 (C06, auditoria Codex) · Sense la
+ *                            // clau, cap llavor (null), com la fitxa del Perfil:
+ *                            // el component universal ja no importa la secció de
+ *                            // Notes (el cicle DocumentEditor → NotesSection →
+ *                            // NotesDetail → NotesEditor → DocumentEditor). Qui
+ *                            // vol una plantilla la passa: el Bloc, LLAVORS_NOTA.
  *   posicioEines: 'dalt'|'davall-entradilla' // Opcional ('dalt'). On va la barra
  *                            // d'eines; qualsevol altre valor es comporta com 'dalt'.
  *   emoticona: String        // Opcional (T51). El camp CRU d'emoticona del document
@@ -285,7 +283,7 @@ export function DocumentEditor({ adapter, onToast }) {
     dretsTriats = undefined,
     /* Directiva de Dignitat Humana (261015) · false: cap rastre de drets d'autor. */
     ambDrets = true,
-    seedContent = LLAVOR_NOTA,
+    seedContent = null,
     posicioEines = 'dalt',
     statusIcon,
     barAuthorAvatar,

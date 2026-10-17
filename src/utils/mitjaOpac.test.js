@@ -6,7 +6,26 @@
  *   text): una prova d'utils no importa d'una secció.
  */
 import { expect, test } from 'vitest';
-import { esMitjaOpac } from './mitjaOpac.js';
+import { esMitjaOpac, fotoDelBucketPublic } from './mitjaOpac.js';
+
+/* Revisió del Gauntlet 261017 (ID2, contrast final) · Una sola regla per a la
+   foto del bucket públic: la forma de les pujades i res més. */
+test('fotoDelBucketPublic: la forma canònica d’una pujada al bucket públic', () => {
+  expect(fotoDelBucketPublic('sdp-media://mitjans/la-torre/0a1b-2c/avatars/9f8e.webp')).toBe('sdp-media://mitjans/la-torre/0a1b-2c/avatars/9f8e.webp');
+  expect(fotoDelBucketPublic('  SDP-MEDIA://MITJANS/t/u_1/avatars/a.v2.webp ')).toBe('sdp-media://mitjans/t/u_1/avatars/a.v2.webp');
+});
+
+test('fotoDelBucketPublic: res del bucket privat, d’un altre, ni camins que hi pugen o bruts', () => {
+  for (const valor of [
+    'sdp-media://mitjans_privats/t/u/notes/a.webp', 'sdp-media://altres/t/a.webp', 'sdp-media://mitjans', 'sdp-media://mitjans/',
+    'sdp-media://mitjans/../mitjans_privats/t/u/a.webp', 'sdp-media://mitjans/t/../../mitjans_privats/a.webp', 'sdp-media://mitjans/./a.webp',
+    'sdp-media://mitjans/%2e%2e/mitjans_privats/a.webp', 'sdp-media://mitjans/t\\..\\a.webp', 'sdp-media://mitjans/t/\u0000a.webp',
+    'sdp-media://mitjans/t a.webp', 'sdp-media://mitjans//t/a.webp', 'sdp-media://mitjans/t/a.webp?x=1', 'sdp-media://mitjans/t/a.webp#f',
+    'https://x.example/mitjans/a.webp', '/sdp-media://mitjans/t/a.webp', '', null, undefined, 42
+  ]) {
+    expect(fotoDelBucketPublic(valor), String(valor)).toBeNull();
+  }
+});
 
 test('reconeix les referències del port, dels dos buckets i amb espais davant', () => {
   for (const ref of [

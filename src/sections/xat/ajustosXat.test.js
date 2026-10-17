@@ -1,5 +1,5 @@
-/* Torn 260930 (T1) · El model del full «Ajustos» (captures 20.47–21.05 de
-   WhatsApp Desktop): l'arbre és sa (cada porta té pàgina, cada pàgina té
+/* Torn 260930 (T1) · El model del full «Ajustos» (captures de referència
+   20.47–21.05): l'arbre és sa (cada porta té pàgina, cada pàgina té
    porta, cap id repetit, cap ruta inventada), l'arrel té l'ordre de la
    captura i la cerca plega accents i travessa tot l'arbre. */
 import { describe, expect, test } from 'vitest';
@@ -17,7 +17,7 @@ const TOTES = Object.values(PAGINES_AJUSTOS).flatMap(filesDePagina);
 const etiquetes = (resultats) => resultats.map(({ fila }) => etiquetaDeFila(fila));
 
 describe('l’arbre', () => {
-  test('l’arrel calca la captura 20.48.41: quatre grups, en l’ordre de WhatsApp', () => {
+  test('l’arrel seguix la captura 20.48.41: quatre grups, en l’ordre de la referència', () => {
     const arrel = paginaAjustos(ARREL_AJUSTOS);
     expect(textDe(arrel.titol)).toBe('Ajustos');
     expect(arrel.cercador).toBe(true);
@@ -28,7 +28,7 @@ describe('l’arbre', () => {
       ['Compte', 'Privacitat', 'Xats', 'Aparença', 'Notificacions', 'Dades i memòria local'],
       ['Ajuda']
     ]);
-    /* A l'arrel, cada fila porta icona; a les subpàgines, cap (WhatsApp). */
+    /* A l'arrel, cada fila porta icona; a les subpàgines, cap (com a la referència). */
     expect(filesDePagina(arrel).every((f) => typeof f.icona === 'string')).toBe(true);
     for (const pagina of Object.values(PAGINES_AJUSTOS)) {
       if (pagina.id === ARREL_AJUSTOS) continue;

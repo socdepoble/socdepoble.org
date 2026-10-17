@@ -31,7 +31,7 @@ import { useCoreContent } from '../../app/contexts/CoreContentContext';
 import { useMultimedia } from '../multimedia/MultimediaContext';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { buildDetailSectionMeta, imatgePropiaDelDetall } from './detailSectionMeta.jsx';
-import { rutaDePerfilDAutor } from '../../config/navigation.js';
+import { autorDe, rutaDePerfilDAutor } from '../../config/navigation.js';
 import { resolveAsset } from '../../config/assetResolver.js';
 import {
   COPYRIGHT_SDP, COPYRIGHT_VIQUIPEDIA, RUTA_CALENDARI, dataDElement, dataHoraDeBarra, rutaCalendariDeLaData
@@ -210,6 +210,16 @@ export function paginaDElement(section, item) {
     if (!authorLocation) authorLocation = nomDelPoble || titol;
     if (!authorAvatar) authorAvatar = item.avatar_url || item.image_url;
   }
+  /* Revisió del Gauntlet 261017 (ID1; ordre del Mestre: «TERMINANTMENT
+     PROHIBIT que aparega el logotip verd de l'entitat Sóc de Poble associat a
+     Javi Llinares», i relleu 3) · Una persona (autorDe) sense cap avatar porta
+     null, no undefined: PageFrame no hi posa el de sèrie (DEFAULT_AUTHOR, el
+     quadrat verd) i la barra taronja hi pinta la silueta, com la targeta del
+     Mur (TargetaDelMur.jsx) i la del Mercat. imatgePropiaDelDetall torna el
+     null tal qual, i targetaDeLaPagina.js tampoc no hi aplica la reserva: ho
+     hereten les targetes incrustades. Sense signatura o amb una entitat,
+     com sempre (Llei del Píxel). */
+  if (authorAvatar === undefined && autorDe(item)?.tipus === 'persona') authorAvatar = null;
 
   return {
     title: titol,

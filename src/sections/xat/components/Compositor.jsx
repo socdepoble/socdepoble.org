@@ -5,7 +5,8 @@
  *     contenidor és una graella amb un ::after que replica el text
  *     (data-valor) i marca l'alçada; cap style en línia ni mesura de DOM.
  *   · A l'escriptori, Retorn envia i Maj+Retorn fa salt de línia; en mode
- *     estret Retorn fa salt i s'envia amb el botó, com a WhatsApp.
+ *     estret Retorn fa salt i s'envia amb el botó, com a les apps de
+ *     missatgeria.
  *   · Límit de 4.096 caràcters amb comptador visible a partir de 3.900.
  *   · Cap botó d'adjuntar ni de micròfon: són F1 i la interfície no promet el
  *     que no fa.

@@ -17,10 +17,12 @@
  * «Torna-ho a provar» (el refresh del Mur); sense cap element, un text breu.
  * Totes les publicacions, sense límit (pregunta oberta al Mestre).
  *
- * On va · Al Bloc de Notes i a una publicació del MAS oberta, per la ranura
+ * On va · A una publicació del MAS oberta (PublicacioDetall), per la ranura
  * `peuDePagina` de PageFrame: dins de la pàgina que fa scroll i fora de
- * l'article, de manera que ni l'Índex de la nota ni la traducció ni el Lector
- * recullen els títols de les targetes.
+ * l'article, de manera que ni l'Índex de la publicació ni la traducció ni el
+ * Lector recullen els títols de les targetes. Gauntlet 261016 (Bloc 3.9, F45)
+ * · L'editor del Bloc de Notes ja no en porta cap («Ja publicat al Mur» fora
+ * de la vista d'edició).
  */
 import { useUIActions } from '../../app/contexts/UIContext';
 import { Alerta, Boto, Carregant, GraellaTargetes } from '../../components/PedraSeca/index.js';
@@ -86,9 +88,8 @@ export function VistaPublicacionsDeLActor({ seccio, elements = CAP, estat = 'rea
 
 /* Si una targeta, o el càlcul de les dades (itemsPublicatsDe, el model de
    l'acte, el moment de cada targeta), peta amb un element remot malformat, la
-   regió ho diu i deixa tornar-ho a provar; la pàgina de damunt, i a l'editor
-   el cos que s'escriu, continuen (sense, l'EditorErrorBoundary de la closca
-   s'enduria l'editor sencer). Res fora de Pedra Seca: Alerta i Boto.
+   regió ho diu i deixa tornar-ho a provar, i la pàgina de damunt continua.
+   Res fora de Pedra Seca: Alerta i Boto.
    Onada 6 · Exportada, amb els `textos` propis de qui la munta (la pestanya
    d'un poble); sense, els de l'històric de la secció. */
 export function FalladaDeLHistoric({ seccio, t, nivell, reinicia, textos: textosPropis = null }) {
@@ -122,7 +123,7 @@ function PublicacionsDeLActorAmbDades({ seccio, exclouId, nivell }) {
  * obert. Decisió per defecte del Mestre (261007) · el Foraster no veu cap
  * històric: sense actor, o amb el convidat que IdentitatContext posa quan no
  * hi ha sessió, res (useVeuHistoric, la mateixa regla que el peu de
- * NotesEditor i de PublicacioDetall).
+ * PublicacioDetall).
  */
 export function PublicacionsDeLActor({ seccio, exclouId = null, nivell = 'h2' }) {
   const veu = useVeuHistoric(seccio);

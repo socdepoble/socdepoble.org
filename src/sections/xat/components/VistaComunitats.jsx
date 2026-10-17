@@ -1,6 +1,6 @@
 /**
  * VistaComunitats.jsx — la vista «Comunitats» de la columna central (onada
- * 3B, captura 19.41.43 de WhatsApp Desktop). S'obri amb /xat?vista=comunitats
+ * 3B, captura de referència 19.41.43). S'obri amb /xat?vista=comunitats
  * des de l'entrada «Comunitats» del rail.
  *
  * De dalt a baix:

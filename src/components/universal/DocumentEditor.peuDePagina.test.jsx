@@ -20,7 +20,6 @@ vi.mock('./richText', () => ({
   }
 }));
 vi.mock('./richText/extensions', () => ({ extensionsRiques: () => [] }));
-vi.mock('../../sections/notes/NotesSection.jsx', () => ({ LLAVOR_NOTA: '<h3>Llavor</h3>' }));
 vi.mock('../../app/contexts/UIContext', () => ({ useUIActions: () => ({ t: (_clau, text) => text }) }));
 vi.mock('../../app/contexts/RouterContext', () => ({ useNavigate: () => vi.fn(), Link: 'a' }));
 vi.mock('./NotificationContext.jsx', () => ({ useToast: () => ({ showToast: vi.fn() }) }));

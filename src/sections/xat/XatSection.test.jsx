@@ -438,8 +438,9 @@ test('la capçalera no promet trucades i la línia secundària només ix als gru
   expect(screen.getByText('Pep, Maria')).toBeTruthy();
 });
 
-/* Ordre del Mestre (260927): la columna dreta que WhatsApp deixa buida
-   mostra el document per defecte només sense conversa; amb conversa, només
+/* Ordre del Mestre (260927): la columna dreta que les apps de missatgeria
+   deixen buida mostra el document per defecte només sense conversa; amb
+   conversa, només
    el xat, i en tornar a /xat torna el document.
    Ordre del Mestre (261007) · El document és la pàgina destacada que tria
    l'administrador a paginaDestacada.js: «El Xat» ('xat'). */
@@ -529,9 +530,9 @@ test('amb el document per defecte muntat, la pestanya continua sent la del Xat',
   expect(document.title).toBe('(5) Xat | Sóc de Poble');
 });
 
-/* Ordre innegociable del Mestre (260927 vesprada): el rail calca el menú de
-   WhatsApp per a Mac. «Novetats» era l'entrada del Control del xat, com a
-   commutador (excepció de l'onada 3B). D16 (ordre del Mestre, 260930): s'amaga
+/* Ordre innegociable del Mestre (260927 vesprada): el rail seguix el menú del
+   patró estàndard de missatgeria. «Novetats» era l'entrada del Control del
+   xat, com a commutador (excepció de l'onada 3B). D16 (ordre del Mestre, 260930): s'amaga
    del rail, al Xat i al Control del xat; el Control continua a /control-xat i
    s'hi arriba des de la targeta «Ajustos del xat» del Panell de Control
    (ControlSection.test.jsx). La resta obrin una vista (?vista=<id>). */
@@ -549,7 +550,7 @@ test('D16 · «Novetats» no és al rail del Xat ni al del Control del xat, i /c
   expect(within(rail).getAllByRole('button').filter((b) => b.hasAttribute('aria-pressed'))).toEqual([]);
 });
 
-test('el rail calca WhatsApp: les entrades en el seu ordre (sense Novetats, D16), capçalera «Menú», les comunitats i l’avatar propi al peu', () => {
+test('el rail seguix el patró de missatgeria: les entrades en el seu ordre (sense Novetats, D16), capçalera «Menú», les comunitats i l’avatar propi al peu', () => {
   mocks.threadId = null;
   ambComunitat();
   render(<XatSection />);
@@ -753,12 +754,12 @@ test('el drag parteix de l’amplària visible quan la desada supera l’espai d
 });
 
 /* D5 (ordre del Mestre, 260927) i onada 3 (260928, captures 19.11.50 i
-   19.12.18): la columna de la llista calca WhatsApp. De dalt a baix, una sola
-   fila de títol amb el «…» rodó a l'esquerra del títol i el «+» rodó a la
+   19.12.18): la columna de la llista seguix el patró de missatgeria. De dalt
+   a baix, una sola fila de títol amb el «…» rodó a l'esquerra del títol i el «+» rodó a la
    dreta, la cerca en píndola sempre a la vista (amb la icona de filtre a la
    mateixa línia, T12) i la llista; el diàleg «Nova conversa» viu al final de
    la columna i no ocupa cap fila (és un <dialog> tancat). */
-test('la llista calca WhatsApp: «…» i títol a l’esquerra, «+» a la dreta, cerca en píndola amb filtre i llista', () => {
+test('la llista seguix el patró de missatgeria: «…» i títol a l’esquerra, «+» a la dreta, cerca en píndola amb filtre i llista', () => {
   mocks.threadId = null;
   render(<XatSection />);
   const columna = document.getElementById('app-grid-list').querySelector('.sdp-workspace-column');
@@ -1832,7 +1833,7 @@ const AVIS_D17 = 'Aquest és un projecte lliure CC. Aquesta funció està previs
 test.each([
   ['telefonades', 'Telefonades', 'lucide-phone', AVIS_D17, AVIS_D17],
   ['destacats', 'Destacats', 'lucide-star', 'Encara no està disponible', 'En construcció']
-])('3B · ?vista=%s: fila de títol calcada, controls inerts que avisen i la dreta buida', (vista, titol, icona, avis, toast) => {
+])('3B · ?vista=%s: fila de títol de la captura, controls inerts que avisen i la dreta buida', (vista, titol, icona, avis, toast) => {
   mocks.threadId = null;
   mocks.params = new URLSearchParams({ vista });
   render(<XatSection />);
@@ -2150,8 +2151,8 @@ test('3B · en estret, la fletxa d’una conversa oberta des de la fitxa torna a
   expect(mocks.navigate).toHaveBeenLastCalledWith('/xat?comunitat=c-1&vista=comunitats');
 });
 
-/* Torn 260930 (T1 · la conversa calcada de WhatsApp) · De punta a punta pel
-   Xat: «Respon» al menú d'una bombolla, la barra damunt del camp i
+/* Torn 260930 (T1 · la conversa amb el patró de missatgeria) · De punta a
+   punta pel Xat: «Respon» al menú d'una bombolla, la barra damunt del camp i
    sendChatMessage del context amb { respostaA }. La resta del detall (grups,
    no llegits, scroll, cites, esborranys) es prova a Conversa.test.jsx. */
 test('T1 · respondre a un missatge envia amb respostaA pel context i buida la barra', async () => {

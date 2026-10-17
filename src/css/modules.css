@@ -504,7 +504,7 @@ aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(2) {
 /* Llei de la Roda Dentada (ordre del Mestre, 261007) · La configuració de
    l'espai de treball (WorkspaceSettingsDialog): «Amplada de les columnes» i
    «Carpetes a la vista». Les carpetes són una llista d'ajustos a la manera de
-   WhatsApp (sdp-clon-whatsapp): la icona a l'esquerra, el nom, l'interruptor
+   les apps de missatgeria: la icona a l'esquerra, el nom, l'interruptor
    a la dreta i un divisor fi entre files. L'interruptor és el de Pedra Seca
    (formulari.jsx), amb la seua àrea tàctil (--sdp-touch-min). Les regles de
    l'estat i dels valors predefinits viuen a AppGridShell.css. */
@@ -886,41 +886,6 @@ aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(2) {
 }
 
 @layer legacy {
-
-/* ==========================================================================
-   UNIVERSAL EDITOR SHELL (CONTRACTE DE LA CAIXA ÚNICA)
-   ========================================================================== */
-
-.ues-root {
-  height: 100%;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  isolation: isolate;
-}
-
-.ues-scroll {
-  flex: 1 1 0;
-  min-height: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-}
-
-.ues-canvas {
-  margin-inline: auto;
-  min-height: 100%;
-  display: flex;
-  flex-direction: column;
-  width: min(100%, 46rem);
-  padding: 0 var(--sdp-space-4) var(--sdp-space-8);
-  margin-top: var(--sdp-space-8);
-}
-
-.ues-canvas .ProseMirror {
-  flex: 1 1 auto;
-  outline: none;
-}
-.ues-canvas .ProseMirror:focus-visible { outline: 2px solid var(--sdp-accio-forta); outline-offset: 2px; }
 
 /* ==========================================================================
    SDP SLASH MENU
@@ -2586,10 +2551,12 @@ details[open] summary.accordion-header svg:last-child {
   margin-top: var(--sdp-space-4);
 }
 
+/* Gauntlet 261017 (C09, auditoria Codex) · Sense object-fit: la cel·la és un
+   <span> (MultimediaSection, EspecimenVisorImatges), no un element substituït,
+   i la propietat no s'hi aplicava. */
 .photo-grid__item {
   width: 100%;
   aspect-ratio: 1 / 1;
-  object-fit: cover;
   border-radius: var(--sdp-radi-m);
   border: 1px solid var(--sdp-vora);
 }
@@ -2891,7 +2858,6 @@ details[open] summary.accordion-header svg:last-child {
     color: var(--sdp-crom-text);
     background: var(--sdp-crom-fons);
   }
-  .sdp-editor-tools__actions,
   .sdp-editor-tools__formats {
     display: flex;
     align-items: center;
@@ -2901,7 +2867,6 @@ details[open] summary.accordion-header svg:last-child {
     padding: var(--sdp-space-1) var(--sdp-space-2);
     border-bottom: 1px solid var(--sdp-crom-vora);
   }
-  .sdp-editor-tools__actions > .sdp-bloc-action { margin-inline-start: auto; }
   .sdp-editor-tools__group {
     display: flex;
     flex-wrap: wrap;
@@ -3115,13 +3080,11 @@ details[open] summary.accordion-header svg:last-child {
   @media (hover: hover) and (pointer: fine) {
     .sdp-bloc-action:hover:not(:disabled) { background: var(--sdp-accent-hover); }
   }
-  [data-compact="true"] > .sdp-bloc-action,
-  [data-compact="true"] .sdp-editor-tools__actions > .sdp-bloc-action {
+  [data-compact="true"] > .sdp-bloc-action {
     width: var(--sdp-bloc-control);
     padding-inline: 0;
   }
-  [data-compact="true"] > .sdp-bloc-action > .sdp-bloc-action__label,
-  [data-compact="true"] .sdp-editor-tools__actions > .sdp-bloc-action > .sdp-bloc-action__label {
+  [data-compact="true"] > .sdp-bloc-action > .sdp-bloc-action__label {
     display: none;
   }
   .sdp-bloc-icon:disabled,
@@ -3269,9 +3232,9 @@ details[open] summary.accordion-header svg:last-child {
     padding-top: 0;
   }
 
-  /* Fila de títol de la llista (D5, calc de WhatsApp): una sola fila, la 1
+  /* Fila de títol de la llista (D5, patró de missatgeria): una sola fila, la 1
      de la graella, amb el «+» redó de «Conversa nova» (to d'acció, com el
-     botó verd de WhatsApp Desktop; radi --sdp-radi-boto, la pastilla) i, en
+     botó destacat de la referència; radi --sdp-radi-boto, la pastilla) i, en
      estret i en mitjà, el botó que obri el rail. */
   .sdp-xat-nova {
     display: inline-flex;
@@ -3439,8 +3402,8 @@ details[open] summary.accordion-header svg:last-child {
     white-space: nowrap;
     color: var(--sdp-text-suau);
   }
-  /* Torn 260930 (T1, calc de WhatsApp Desktop): si l'últim missatge és teu,
-     la previsualització comença amb les seues marques. Van en línia amb el
+  /* Torn 260930 (T1, patró estàndard de missatgeria): si l'últim missatge
+     és teu, la previsualització comença amb les seues marques. Van en línia amb el
      text, no en flex, perquè l'el·lipsi continue tallant la línia sencera;
      les separa del text l'espai que posa FilaConversa. */
   .sdp-xat-fila__previa .sdp-xat-marques { vertical-align: middle; }
@@ -3471,9 +3434,10 @@ details[open] summary.accordion-header svg:last-child {
     flex: none;
   }
   /* Sense número, el min-width i l'alçada de --sdp-space-6 ja en fan un
-     cercle: el punt de WhatsApp, del mateix diàmetre que el comptador. */
+     cercle: el punt del patró de missatgeria, del mateix diàmetre que el
+     comptador. */
   .sdp-xat-pastilla--punt { padding: 0; }
-  /* Fil silenciat (T1): la pastilla grisa de WhatsApp, amb la parella neutra
+  /* Fil silenciat (T1): la pastilla grisa habitual, amb la parella neutra
      de .sdp-insignia--neutre (--sdp-text-cos sobre --sdp-fons-subtil: 9,50:1
      en clar i 11,51:1 en fosc). Sense número, el cercle és tota la
      informació i ha de fer 3:1 (WCAG 1.4.11): el gris de --sdp-vora-control,
@@ -3755,7 +3719,7 @@ details[open] summary.accordion-header svg:last-child {
   }
   .sdp-xat-bombolla--meu { background: var(--sdp-accio-subtil); }
   .sdp-xat-bombolla--altre { background: var(--sdp-accent-subtil); }
-  /* La cua (torn 260930, T1 · WhatsApp Desktop): el triangle de la cantonada
+  /* La cua (torn 260930, T1 · patró de missatgeria): el triangle de la cantonada
      de dalt, al costat de l'autor, només a la primera bombolla de cada grup
      (Conversa, conversa.js anotaGrups); eixa cantonada es queda recta. És un
      pseudoelement amb el fons heretat de la bombolla (background: inherit):
@@ -3854,8 +3818,8 @@ details[open] summary.accordion-header svg:last-child {
   .sdp-xat-missatges > .sdp-xat-item--segueix { margin-top: calc((var(--sdp-li-gap) + var(--sdp-space-1)) * -1); }
   /* El missatge on porta una cita s'il·lumina un moment (MS_RESSALT de
      conversa.js, 1,6 s) amb la tinta de l'anell d'acció, a tota l'amplada
-     de la fila com a WhatsApp. Amb menys moviment, sense animació: la tinta
-     fixa mentre dura la classe. */
+     de la fila com a les apps de missatgeria. Amb menys moviment, sense
+     animació: la tinta fixa mentre dura la classe. */
   .sdp-xat-missatges > .sdp-xat-item--ressaltat { animation: sdp-xat-ressalt 1.6s ease-out; }
   @media (prefers-reduced-motion: reduce) {
     .sdp-xat-missatges > .sdp-xat-item--ressaltat { animation: none; background-color: var(--sdp-anell-accio); }
@@ -3866,7 +3830,8 @@ details[open] summary.accordion-header svg:last-child {
   }
 
   /* Cita dins de la bombolla (torn 260930, T1): qui va escriure l'original
-     i dos línies del seu text, amb la vora d'acció a l'inici com a WhatsApp.
+     i dos línies del seu text, amb la vora d'acció a l'inici com a les apps
+     de missatgeria.
      És un botó (porta a l'original) de --sdp-touch com a mínim; si
      l'original no s'ha carregat, o en mode de selecció, un bloc sense acció. */
   .sdp-xat-cita {
@@ -3908,7 +3873,7 @@ details[open] summary.accordion-header svg:last-child {
   }
   .sdp-xat-cita--absent { border-inline-start-color: var(--sdp-vora-control); font-style: italic; }
 
-  /* «N missatges no llegits» (torn 260930, T1): la franja de WhatsApp, a
+  /* «N missatges no llegits» (torn 260930, T1): la franja habitual, a
      l'amplada de la llista, amb la pastilla al mig. Es calcula en obrir la
      conversa i no es mou mentre està oberta. */
   .sdp-xat-no-llegits {
@@ -3926,7 +3891,7 @@ details[open] summary.accordion-header svg:last-child {
     font-weight: 600;
   }
 
-  /* «Baixa al final» (torn 260930, T1): el botó redó de WhatsApp, a la
+  /* «Baixa al final» (torn 260930, T1): el botó redó habitual, a la
      cantonada de baix a la dreta de la llista i damunt del compositor.
      L'àncora no ocupa lloc (alçada 0) i el botó hi flota; l'ombra és la
      funcional dels elements flotants (--sdp-ombra-2, la del menú), no
@@ -4199,11 +4164,11 @@ details[open] summary.accordion-header svg:last-child {
 }
 
 /* ═══ XAT · ONADA 3 (T63.2, T67, T68, T69) ═══════════════════════════════
-   La columna de llista calcada de WhatsApp Desktop (captures del Mestre,
+   La columna de llista del patró de missatgeria (captures del Mestre,
    260928): el «…» rodó de la fila de títol, la selecció de xats, el diàleg
    «Nova conversa», la cerca global amb la llista vertical de filtres, les
    files de comunitat (avatar quadrat amb targetes apilades) i la fitxa de
-   comunitat. El verd de WhatsApp no es copia: l'acció és --sdp-accio (blau,
+   comunitat. El verd d'una marca aliena no es copia: l'acció és --sdp-accio (blau,
    text i icona --sdp-sobre-accio) i les capçaleres, crom fosc. Només tokens
    semàntics, radis per token, espais de 0.25rem i zona tàctil --sdp-touch.
    ═══════════════════════════════════════════════════════════════════════ */
@@ -4590,7 +4555,7 @@ details[open] summary.accordion-header svg:last-child {
 }
 
 /* ═══ XAT · ONADA 3B (rail, vistes i catàleg) ═══════════════════════════════
-   El rail calcat del menú de WhatsApp per a Mac (captura 19.11.50): les
+   El rail amb el menú del patró de missatgeria (captura 19.11.50): les
    seccions plegables «Més» i «Comunitats» i el peu fix amb l'avatar propi,
    «Tu» i el llapis; les vistes de la columna central (Comunitats i les tres
    «En construcció») i els marcs dels espècimens del catàleg. La graella del
@@ -4984,7 +4949,7 @@ details[open] summary.accordion-header svg:last-child {
   .sdp-xat-especimen > .sdp-workspace-column { flex: 1 1 auto; min-height: 0; }
 
   /* ── El full «Ajustos» (torn 260930, T1; captures 20.47–21.05) ─────────
-     Calcat del d'«Ajustes» de WhatsApp Desktop: un modal CENTRAT de mida
+     Amb l'anatomia habitual dels ajustos de missatgeria: un modal CENTRAT de mida
      FIXA (480×640 a la captura: 30×40rem), radi gran i fons neutre amb
      targetes blanques. Navegar dins del full no el mou ni el canvia de mida,
      i una pàgina curta no l'encongix: la mida és la del marc, no la del
@@ -5005,7 +4970,8 @@ details[open] summary.accordion-header svg:last-child {
   /* Només obert: el full d'estil del navegador amaga el <dialog> tancat amb
      display: none, i un display d'autor sense [open] el tornaria a mostrar. */
   .sdp-dialeg.sdp-xat-ajustos[open] { display: flex; flex-direction: column; }
-  /* Estret: tota la pantalla, com les pantalles empeses de WhatsApp mòbil.
+  /* Estret: tota la pantalla, com les pantalles empeses de les apps de
+     missatgeria en mòbil.
      Revisió adversarial 260930 (P2) · Amb el MATEIX tall que convertix la
      resta de Dialeg en full inferior, no amb .is-compact (≤1023): entre 721
      i 1023 el full és el modal centrat, com els altres diàlegs, i a
@@ -5207,7 +5173,7 @@ details[open] summary.accordion-header svg:last-child {
     color: var(--sdp-text-suau);
   }
   .sdp-xat-ajustos__xebro { flex: none; color: var(--sdp-text-suau); }
-  /* La selecció única: el ✓ en el color d'acció, no en el verd de WhatsApp. */
+  /* La selecció única: el ✓ en el color d'acció, no en el verd d'una marca aliena. */
   .sdp-xat-ajustos__marca { flex: none; color: var(--sdp-accio); }
   /* La targeta del perfil: avatar gran i nom; porta al perfil. */
   .sdp-xat-ajustos__perfil {
@@ -6421,7 +6387,7 @@ details[open] summary.accordion-header svg:last-child {
 @layer components {
   .sdp-copyright-control { display: flex; flex-wrap: wrap; gap: var(--sdp-space-2); }
   .sdp-copyright-selector { display: inline-flex; align-items: center; gap: 6px; }
-  .sdp-copyright-selector, .sdp-note-taxonomy-button { padding-inline: 10px; }
+  .sdp-copyright-selector { padding-inline: 10px; }
   .sdp-workspace .app-grid-col-header .app-grid-col-header__plegable,
   .sdp-workspace .app-grid-col-header .app-grid-col-header__accio-text,
   .sdp-workspace .app-grid-col-header .app-grid-col-header__plegable svg,
@@ -10333,7 +10299,7 @@ details[open] summary.accordion-header svg:last-child {
    la vora pròpia perquè no se'n vegen dues. La resta del bloc .sdp-emojis-xl
    (components.css) no es toca.
    La pantalla d'assignació (AssignacioEmoji.jsx) és la de «Reenviar a…» de
-   WhatsApp: reutilitza la cerca, les seccions i les files del Xat
+   les apps de missatgeria: reutilitza la cerca, les seccions i les files del Xat
    (sdp-xat-*). Ací només hi ha la columna, la capçalera i el cercle amb
    l'emoji o la icona actual de cada fila. Sense media queries ni consultes
    de contenidor. */
@@ -10378,7 +10344,7 @@ details[open] summary.accordion-header svg:last-child {
     margin: 0;
     color: var(--sdp-text-suau);
   }
-  /* El lloc de l'avatar de WhatsApp: un cercle de --sdp-touch. */
+  /* El lloc de l'avatar del patró de missatgeria: un cercle de --sdp-touch. */
   .sdp-assigna-emoji__actual {
     display: inline-flex;
     align-items: center;

@@ -7,8 +7,10 @@
  * per tot el sistema») · Abans, el MAS només ho pintava a la columna de la
  * llista del Bloc (NotesSection · itemsPublicatsDe) i davall de l'editor no
  * hi havia res. Ara la peça és una: este hook i el component que el pinta
- * (PublicacionsDeLActor.jsx). Qui la vulga (el Bloc, una publicació oberta,
+ * (PublicacionsDeLActor.jsx). Qui la vulga (una publicació oberta,
  * un perfil demà) passa la secció i, si cal, l'element que ja té obert.
+ * Gauntlet 261016 (Bloc 3.9, F45) · L'editor del Bloc de Notes ja no en
+ * porta cap: el peu «Ja publicat al Mur» només viu a PublicacioDetall.
  *
  * Cap lògica nova ni cap petició nova (lliçó 261007: es reutilitza la
  * maquinària que ja existix):
@@ -21,7 +23,7 @@
  *    publicadesDesDeNotes: la deduplicació D2 (261004) és de la columna de la
  *    llista, on la peça és la nota editable. Ací les publicacions del Mur
  *    nascudes d'una nota sí que ixen; si no, el Mur de Sóc de Poble quedaria
- *    buit davall de l'editor;
+ *    buit al peu d'una publicació oberta;
  *  · l'ordre, el de MurSection: momentDeLaTargeta i perMomentDescendent
  *    (targetesMur.js), amb el model de l'acte (acteAEsdeveniment) per als
  *    esdeveniments.
@@ -64,7 +66,7 @@ export const teHistoric = (seccio) => SECCIONS_AMB_HISTORIC.includes(seccio);
    de conformitat: «text no buit, la sessió o el convidat»). Per això no
    n'hi ha prou amb l'id: el criteri és el d'aliesDeLActor (identitatsSeed.js),
    on el convidat tampoc no hereta res. Una sola regla per a qui decidix si
-   hi ha peu (NotesEditor, PublicacioDetall) i per a qui el pinta
+   hi ha peu (PublicacioDetall) i per a qui el pinta
    (PublicacionsDeLActor): si divergiren, PageFrame pintaria una regió amb nom,
    buida i amb coixí. */
 export const esActorAmbHistoric = (actor) => Boolean(actor?.id) && actor?.rol !== 'convidat';

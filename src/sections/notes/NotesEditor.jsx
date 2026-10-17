@@ -36,6 +36,11 @@ import { rutaDePerfilDAutor } from '../../config/navigation.js';
 const SENSE_PARAMS = {};
 const CAP = Object.freeze([]);
 
+/* Revisió del Gauntlet 261017 (ID4) · El text de càrrega de l'espai de
+   treball (UniversalWorkspace · DEFAULT_LABELS.loading; NotesSection ·
+   TEXT_CARREGANT), mentre la sessió recordada es restaura. */
+const TEXT_CARREGANT = 'Carregant…';
+
 /* La nota de benvinguda (n1) és la font del text de l'estat buit. */
 const NOTA_BENVINGUDA = NOTES_SEED.find((n) => n.id === ID_NOTA_BENVINGUDA) || {};
 
@@ -162,7 +167,7 @@ export default function NotesEditor({ activeNote, onToast = null }) {
   } = useNotes();
   const { actorId, actor, memberships } = useIdentitat();
   const { agents, towns, pages, personalitzacio } = useCoreContent();
-  const { currentUser, esSuperadmin = false } = useSession();
+  const { currentUser, estat: estatSessio, esSuperadmin = false } = useSession();
   /* Onada 11 · Les llistes de sèrie, ampliades per la taxonomia del poble si n'hi ha. */
   const taxonomia = personalitzacio?.taxonomia?.payload;
   const CATEGORIES_BASE = categoriesBase(taxonomia);
@@ -213,8 +218,19 @@ export default function NotesEditor({ activeNote, onToast = null }) {
      Sense sessió no hi ha notes pròpies, però la persona ha de poder provar
      l'editor (pla 260924_1710 §3.4). Abans calia prémer EDITAR; ara la còpia
      local de la nota de benvinguda s'obri directament: la primera tecla ja
-     edita. Els canvis es queden en memòria, res no s'envia. */
-  const foraster = !currentUser;
+     edita. Els canvis es queden en memòria, res no s'envia.
+     Revisió del Gauntlet 261017 (ID4; relleu 3: mai «Foraster» mentre la
+     sessió és vàlida) · Mentre una sessió recordada es restaura (estat
+     'comprovant' encara sense usuari) no se sap si la persona és el
+     Foraster: cap còpia de prova (signada amb el logotip verd) on escriure
+     el que després no seria a les seues notes, sinó «Carregant…» (vegeu el
+     final), com la càrrega del Bloc (NotesDataContext · sessioResolta).
+     `senseSessio` és el criteri de sempre per a tot allò que demana sessió
+     (publicar, borrar, heretar drets); `foraster`, la sessió ja resolta sense
+     ningú dins. */
+  const senseSessio = !currentUser;
+  const sessioPendent = senseSessio && estatSessio === 'comprovant';
+  const foraster = senseSessio && !sessioPendent;
   const sandboxInitial = useMemo(() => ({
     ...NOTA_BENVINGUDA, id: ID_COPIA_PROVA, isPublished: false, revision: 0
   }), []);
@@ -338,7 +354,7 @@ export default function NotesEditor({ activeNote, onToast = null }) {
      qui les pot crear les pot borrar (el mateix criteri que canCreate). El
      diàleg recorda quina nota l'ha obert: si la nota ix del Bloc i l'editor
      passa a una altra, el diàleg no es queda obert damunt de la nova. */
-  const notesPropies = !foraster || config?.dataMode === 'seed' || config?.dataMode === 'local';
+  const notesPropies = !senseSessio || config?.dataMode === 'seed' || config?.dataMode === 'local';
   const pucBorrar = Boolean(potEsborrar && notesPropies && !esSandbox && !esPreparada && mouNota && esborraNota);
   const [aBorrar, setABorrar] = useState(null);
   const [borrant, setBorrant] = useState(false);
@@ -385,7 +401,7 @@ export default function NotesEditor({ activeNote, onToast = null }) {
        publicada no es pot retirar del Mur (cap mètode al port): bloquejada,
        amb el motiu. publishNote fa els seus toasts de resultat de xarxa. */
     const bloqueig = bloqueigDeNota({
-      foraster: foraster || esSandbox,
+      foraster: senseSessio || esSandbox,
       modeLocal: config?.dataMode === 'seed' || config?.dataMode === 'local',
       publicada: Boolean(notaEnEdicio?.isPublished),
       /* T71b · el mateix motiu que publishNote en mode compartir. */
@@ -491,7 +507,7 @@ export default function NotesEditor({ activeNote, onToast = null }) {
          d'on ve la llicència de sèrie (herència des del Perfil). La còpia de
          prova del Foraster i una nota connectada (obra d'altri) no hereten
          res: sense avís. */
-      dretsAutor: foraster || esSandbox || connexio
+      dretsAutor: senseSessio || esSandbox || connexio
         ? { ambit: 'neutre' }
         : { ambit: 'publicacio', perDefecte: llicenciaDeLActor({ id: actor?.id ?? actorId, tipus: actor?.tipus, memberships }) },
       /* Revisió de D4 (260930) · Una connexió no es relicencia: la ranura de
@@ -512,7 +528,7 @@ export default function NotesEditor({ activeNote, onToast = null }) {
          l'ordre «/» Emoji. Totes dues funcions són estables (canalEmojis.js). */
       ...(canalEmojis ? { registraInsercio: canalEmojis.registra, obreEmojis: canalEmojis.obri } : {})
     };
-  }, [notaEnEdicio, documentPerAlEditor, esSandbox, esPreparada, creacioPreparada, escriuPreparada, desaPreparada, foraster, actor, actorId, autoria, memberships, actualitzaSandbox, setLocalNoteField, saveNoteField, publishNote, compartirNota, connexio, dretsReservats, dretsDeLOriginal, extern, citaOrigen, pucBorrar, obriBorrar, noteFolders, t, signatura, emptyDocument, config, classificacio, carpetes, carpetaId, estatDesament, dataNomesAlDispositiu, targetes, canalEmojis]);
+  }, [notaEnEdicio, documentPerAlEditor, esSandbox, esPreparada, creacioPreparada, escriuPreparada, desaPreparada, senseSessio, actor, actorId, autoria, memberships, actualitzaSandbox, setLocalNoteField, saveNoteField, publishNote, compartirNota, connexio, dretsReservats, dretsDeLOriginal, extern, citaOrigen, pucBorrar, obriBorrar, noteFolders, t, signatura, emptyDocument, config, classificacio, carpetes, carpetaId, estatDesament, dataNomesAlDispositiu, targetes, canalEmojis]);
 
   // Reanomenar i esborrar necessiten veure totes les notes: amb el llistat a
   // mitges, una nota no carregada es quedaria amb el nom vell.
@@ -530,6 +546,15 @@ export default function NotesEditor({ activeNote, onToast = null }) {
     globalActiu,
     avisGlobal: AVIS_SENSE_TOTES
   });
+
+  /* Revisió del Gauntlet 261017 (ID4) · Sense cap nota oberta i amb la
+     sessió encara en restauració, l'estat de càrrega de l'espai de treball
+     (UniversalWorkspace · DEFAULT_LABELS.loading, el mateix «Carregant…»),
+     no la còpia de prova del Foraster ni l'estat buit signat per Sóc de
+     Poble. Després de tots els ganxos: l'ordre no canvia entre pintades. */
+  if (sessioPendent && !notaEnEdicio) {
+    return <p role="status">{TEXT_CARREGANT}</p>;
+  }
 
   return (
     <>

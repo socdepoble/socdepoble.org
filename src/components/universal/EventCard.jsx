@@ -105,7 +105,11 @@ export function rutaDeLaBoinaDeLActe(item, deQuiSigna) {
    `authorAvatar`, opcionals: el nom i l'avatar de qui signa ja resolts per
    qui pinta la targeta (TargetaDelMur, amb signaturaDeQuiSigna de la llavor),
    pel mateix motiu que `authorHref`. Hi passen davant de les dades de
-   l'acte. Sense elles, el DOM de sempre (Llei del Píxel). */
+   l'acte. Sense elles, el DOM de sempre (Llei del Píxel).
+   Revisió del Gauntlet 261017 (ID1, actes) · `authorAvatar` null, a
+   propòsit: signa una persona i no té foto. Cap logotip de reserva al costat
+   del seu nom (vegeu avatarUrl). components/ no llig qui signa (autorDe és de
+   navigation.js): ho diu qui pinta la targeta (TargetaDelMur). */
 export function EventCard({ item, esdeveniment = null, onConnect, objecte, authorHref, authorName, authorAvatar }) {
   const data = dataDeLActe(esdeveniment, item);
   const insignia = insigniaDeCalendari(esdeveniment, data.dateTime);
@@ -133,8 +137,12 @@ export function EventCard({ item, esdeveniment = null, onConnect, objecte, autho
          el sistema ja no porta a /pobles, i qui signa ja té enllaç. */
       authorHref={rutaDeLaBoinaDeLActe(item, authorHref)}
       /* Onada 8 (261009) · La reserva és l'avatar de Sóc de Poble (el PNG),
-         no un literal: ja ve resolt i resolveAsset no el torna a tocar. */
-      avatarUrl={fontImatgePropia(resolveAsset((typeof authorAvatar === 'string' ? authorAvatar : null) || (typeof item.author_avatar === 'string' ? item.author_avatar : null) || DEFAULT_AUTHOR.avatarUrl))}
+         no un literal: ja ve resolt i resolveAsset no el torna a tocar.
+         Revisió del Gauntlet 261017 (ID1, actes) · `authorAvatar={null}` (qui
+         pinta la targeta sap que signa una persona sense foto): cap reserva de
+         la marca, la silueta, com al detall de l'acte. Sense la prop, com
+         sempre. */
+      avatarUrl={fontImatgePropia(resolveAsset((typeof authorAvatar === 'string' ? authorAvatar : null) || (typeof item.author_avatar === 'string' ? item.author_avatar : null) || (authorAvatar === null ? '' : DEFAULT_AUTHOR.avatarUrl)))}
       location={item.author_location || item.location || item.population || "La Torre de les Maçanes"}
       date={data.date}
       time={data.time}

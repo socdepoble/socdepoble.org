@@ -46,7 +46,7 @@ import { useNavigate } from '../../app/contexts/RouterContext';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { resolveAsset } from '../../config/assetResolver';
 import {
-  esRutaInterna, getSectionItemPath, objecteDe, objecteDePagina, RUTA_PERFIL_PROJECTE, rutaConnectarObjecte, rutaDePerfilDAutor
+  autorDe, esRutaInterna, getSectionItemPath, objecteDe, objecteDePagina, RUTA_PERFIL_PROJECTE, rutaConnectarObjecte, rutaDePerfilDAutor
 } from '../../config/navigation';
 import { COPYRIGHT_SDP, dataDElement } from '../../components/universal/editorial.js';
 import { DEFAULT_AUTHOR } from '../../components/universal/UniversalUtils.js';
@@ -54,6 +54,7 @@ import { accioDeLaTargeta } from '../../config/systemPages.js';
 import { fotoDeLaTargeta } from '../mercat/imatgesDeProducte.js';
 import { useEntitatDelProjecte } from '../../hooks/useEntitatDelProjecte.js';
 import { fontImatgePropia } from '../../utils/sanitize.js';
+import { esMitjaOpac, fotoDelBucketPublic } from '../../utils/mitjaOpac.js';
 import { signaturaDeQuiSigna } from '../../data/identitatsSeed.js';
 
 /**
@@ -89,9 +90,16 @@ export function TargetaDelMur({ item, esdeveniment = null }) {
        Gauntlet 261016 (Bloc -1; ordre del Mestre: «sempre la seua foto») ·
        El nom i l'avatar de la persona pilot, ja resolts (signaturaDeQuiSigna):
        EventCard no llig la llavor. Per a qualsevol altre autor, undefined, i
-       l'acte es pinta com sempre. */
+       l'acte es pinta com sempre.
+       Revisió del Gauntlet 261017 (ID1, actes) · Derogat en part «com
+       sempre»: una altra persona (autorDe) porta null, i EventCard no hi posa
+       el logotip de reserva (DEFAULT_AUTHOR): la silueta, la mateixa del
+       detall de l'acte (elementDeSeccio.js). L'avatar propi de l'acte
+       (author_avatar), si en porta, el pinta EventCard com sempre. Una
+       entitat o un acte sense signatura, undefined: el logotip de sempre. */
     const acte = objecteDe(item, 'events');
     const quiSignaLActe = signaturaDeQuiSigna(item);
+    const signaPersonaLActe = autorDe(item)?.tipus === 'persona';
     return (
       <EventCard
         item={item}
@@ -99,7 +107,7 @@ export function TargetaDelMur({ item, esdeveniment = null }) {
         objecte={acte}
         authorHref={rutaDePerfilDAutor(item) || undefined}
         authorName={quiSignaLActe.nom}
-        authorAvatar={quiSignaLActe.avatar}
+        authorAvatar={quiSignaLActe.avatar ?? (signaPersonaLActe ? null : undefined)}
         onConnect={() => navigate(rutaConnectarObjecte(acte))}
       />
     );
@@ -138,10 +146,19 @@ export function TargetaDelMur({ item, esdeveniment = null }) {
      únic (signaturaDeQuiSigna): la persona pilot porta SEMPRE el seu nom i la
      seua foto, també sense avatar (abans queia a DEFAULT_AUTHOR, el quadrat
      verd) o amb el logotip a avatar_url. Qualsevol altre autor, els valors i
-     les reserves de sempre. */
+     les reserves de sempre.
+     Revisió del Gauntlet 261017 (ID1; la mateixa ordre del Mestre i el
+     relleu 3: una sessió de veres és UNA identitat a totes les superfícies) ·
+     La reserva de la marca (DEFAULT_AUTHOR) només per a qui no signa com a
+     persona: una publicació sense signatura, del sistema o d'una entitat.
+     Una persona (autorDe) sense cap avatar ja no hi cau: null i la silueta
+     de sempre, la mateixa de la targeta del Mercat (targetaDeProducte.js),
+     del lector del MAS i de la barra taronja del detall (elementDeSeccio.js).
+     Abans el quadrat verd signava al costat del seu nom. */
+  const signaPersona = autorDe(item)?.tipus === 'persona';
   const signatura = signaturaDeQuiSigna(item, {
     nom: item.author_name || item.seller || "Sóc de Poble",
-    avatar: item.author_avatar || item.avatar_url || DEFAULT_AUTHOR.avatarUrl
+    avatar: item.author_avatar || item.avatar_url || (signaPersona ? null : DEFAULT_AUTHOR.avatarUrl)
   });
 
   return (
@@ -167,8 +184,27 @@ export function TargetaDelMur({ item, esdeveniment = null }) {
       /* Decisió 3 (261007) · L'avatar declarat, si és propi. Un de fora (un
          avatar de Google) no cau al logotip de Sóc de Poble, que signaria la
          publicació d'un veí amb la marca: null i la silueta de sempre.
-         Onada 8 (261009) · Sense cap avatar, el de Sóc de Poble (el PNG). */
-      avatarUrl={fontImatgePropia(resolveAsset(signatura.avatar))}
+         Onada 8 (261009) · Sense cap avatar, el de Sóc de Poble (el PNG).
+         Revisió del Gauntlet 261017 (ID1) · Només si no signa cap persona
+         (vegeu signaPersona, dalt).
+         Revisió del Gauntlet 261017 (ID2) · Una referència opaca
+         (sdp-media://, la foto de perfil pujada a l'app) passa tal qual:
+         la resol el port (UniversalCard · useResolvedAsset), com a la barra
+         taronja. Abans resolveAsset la convertia en '/sdp-media://…', un camí
+         del mateix origen que no carregava res. Continua sent pròpia
+         (Decisió 3: fontImatgePropia ja l'admetia).
+         Revisió del Gauntlet 261017 (ID2, contrast) · Només la del bucket
+         PÚBLIC (AVATAR_DEL_BUCKET_PUBLIC, la regla de fotoPublica a
+         autoriaNota.js). Abans hi passava qualsevol referència opaca, també
+         sdp-media://mitjans_privats/…, i el client de cada lector demanava al
+         port que en signara una URL que només podia obrir la propietària.
+         Qualsevol altra referència opaca, null: la silueta, cap petició ni
+         cap «/sdp-media://…». La resta, el camí de sempre.
+         Contrast final · La regla és la de utils/mitjaOpac.js
+         (fotoDelBucketPublic): forma canònica, sense '..' cap al bucket privat. */
+      avatarUrl={esMitjaOpac(signatura.avatar)
+        ? fotoDelBucketPublic(signatura.avatar)
+        : fontImatgePropia(resolveAsset(signatura.avatar))}
       location={item.author_location || item.population || "La Torre de les Maçanes"}
       date={data.date}
       time={data.time}

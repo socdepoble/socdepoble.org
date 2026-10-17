@@ -15,6 +15,13 @@ import { MARCA_GRUP } from '../../components/universal/richText/extensions/targe
    el lector del MAS, i la façana hi arrossegaria la biblioteca sencera. */
 import { CarruselImatges } from '../../components/PedraSeca/organismes/CarruselImatges.jsx';
 import { PortaDePagina } from '../../components/PedraSeca/organismes/PortesTargeta.jsx';
+/* Gauntlet 261017 (C04) · El visor de les fotos d'una publicació del Mur
+   (portadaDElement, més avall).
+   Revisió del Gauntlet 261017 (R3, pes) · D'ací només ve el disparador: la
+   meitat del visor (VisorDeLArxiu, l'EXIF, VisorImatges i el cens) la porta
+   VisorDePublicacio en diferit, en obrir-lo. Este mòdul el llig
+   elementDeSeccio i, per ell, /xat, Notes i cada pàgina de text. */
+import { VisorDePublicacio } from './VisorDePublicacio.jsx';
 /* Onada 6 (pàgina del poble) · Les pestanyes i el Carregant, també pel camí
    directe. El panell de la gent del poble (les seues targetes) arrossega les
    targetes del Mur i la façana: es carrega en diferit (lazyRoute), només quan
@@ -150,29 +157,73 @@ export function cosAmbImatgesPropies(text) {
  * primera pròpia, però heroImage (i og:image) és null; amb una o cap de
  * pròpia, el detall queda sense portada, encara que eixa una siga pròpia.
  * És la regla literal de l'encàrrec; pregunta oberta al Mestre.
+ * Gauntlet 261017 (C04 de Codex: «La fotografia de /mercat/mac-mini-m4 no
+ * obri cap modal en clicar-la»; requisit: «Obertura modal a pantalla
+ * completa en fer clic a qualsevol imatge d'una galeria o publicació») · Al
+ * Mur (publicacions, productes i actes), les fotos de la portada obrin el
+ * visor de l'Arxiu visual sense eixir de la pàgina (VisorDePublicacio.jsx):
+ * el carrusel, amb onObri (cada foto és un botó); la portada sola, la mateixa
+ * imatge dins d'un botó. Visualment igual, llevat del cursor de lupa. Fora
+ * del Mur, com abans.
+ * Revisió del Gauntlet 261017 (M2) · Una portada pujada (sdp-media://, que
+ * només resol el port) ja no es queda sense visor: VisorDePublicacio la
+ * resol pel port com ImatgeDePortada de PageFrame i, mentre no la té, no pinta
+ * res (la portada buida de sempre). El lector del MAS (PublicacioDetall)
+ * també la munta, per a les publicacions i els actes. Les imatges del cos
+ * (el text enriquit) encara no obrin el visor.
  */
+const SECCIO_DE_LA_LLISTA = new Map([...LLISTA_DE_SECCIO_DEL_MUR].map(([seccio, llista]) => [llista, seccio]));
+
+/* Les dades declarades de la publicació per al panell del visor
+   (VisorDePublicacio.jsx · fotosDeLaPublicacio): mai cap d'inventada. */
+const dadesDeLaPublicacio = (section, item, pagina) => ({
+  titol: String(pagina.title ?? ''),
+  autor: pagina.authorName ?? null,
+  drets: item.copyright ?? null,
+  poble: item.town_name || item.population || null,
+  article: { sectionId: SECCIO_DE_LA_LLISTA.get(section.listPath), id: item.id }
+});
+
 export function portadaDElement(section, item, pagina, t) {
   const totes = typeof section.getImages === 'function' ? section.getImages(item) : [];
-  const fotos = Array.isArray(totes) && esSeccioDelMur(section) ? totes.filter(esImatgePropiaDelDetall) : totes;
-  return Array.isArray(fotos) && fotos.length > 1 ? {
+  const delMur = esSeccioDelMur(section);
+  const fotos = Array.isArray(totes) && delMur ? totes.filter(esImatgePropiaDelDetall) : totes;
+  const ambVisor = delMur && item?.id != null && String(item.id) !== '';
+  const clau = String(item.id ?? '');
+  const obri = t('section.multimedia.visor.obri', 'Veure la imatge a pantalla completa');
+  if (!Array.isArray(fotos) || fotos.length < 2) {
+    const portada = pagina?.heroImage;
+    if (!ambVisor || typeof portada !== 'string' || portada.trim() === '') return null;
+    return {
+      topBarData: {
+        heroComponent: (
+          <VisorDePublicacio key={clau} fotos={[portada]} dades={dadesDeLaPublicacio(section, item, pagina)}
+            etiquetaObri={obri} alt={pagina.heroAlt || ''} />
+        )
+      }
+    };
+  }
+  const imatges = fotos.map((src) => ({ src: resolveAsset(src), alt: pagina.heroAlt || '' }));
+  const etiqueta = t('carrusel.imatgesDe', 'Imatges de {titol}').replace('{titol}', () => String(pagina.title ?? ''));
+  const etiquetes = {
+    anterior: t('carrusel.anterior', 'Imatge anterior'),
+    seguent: t('carrusel.seguent', 'Imatge següent'),
+    diapositives: t('carrusel.diapositives', 'Diapositives'),
+    posicio: t('carrusel.posicio', 'Imatge {n} de {total}'),
+    carrusel: t('carrusel.rol', 'carrusel'),
+    diapositiva: t('carrusel.rolDiapositiva', 'diapositiva')
+  };
+  return {
     topBarData: {
-      heroComponent: (
-        <CarruselImatges
-          key={String(item.id ?? '')}
-          imatges={fotos.map((src) => ({ src: resolveAsset(src), alt: pagina.heroAlt || '' }))}
-          etiqueta={t('carrusel.imatgesDe', 'Imatges de {titol}').replace('{titol}', () => String(pagina.title ?? ''))}
-          etiquetes={{
-            anterior: t('carrusel.anterior', 'Imatge anterior'),
-            seguent: t('carrusel.seguent', 'Imatge següent'),
-            diapositives: t('carrusel.diapositives', 'Diapositives'),
-            posicio: t('carrusel.posicio', 'Imatge {n} de {total}'),
-            carrusel: t('carrusel.rol', 'carrusel'),
-            diapositiva: t('carrusel.rolDiapositiva', 'diapositiva')
-          }}
-        />
+      heroComponent: ambVisor ? (
+        <VisorDePublicacio key={clau} fotos={fotos} dades={dadesDeLaPublicacio(section, item, pagina)}>
+          {(onObri) => <CarruselImatges imatges={imatges} etiqueta={etiqueta} etiquetes={{ ...etiquetes, obri }} onObri={onObri} />}
+        </VisorDePublicacio>
+      ) : (
+        <CarruselImatges key={clau} imatges={imatges} etiqueta={etiqueta} etiquetes={etiquetes} />
       )
     }
-  } : null;
+  };
 }
 
 /**

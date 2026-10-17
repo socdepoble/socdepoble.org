@@ -1,6 +1,6 @@
 /**
  * FiltresCerca.jsx — la llista VERTICAL de filtres de la cerca global del
- * Xat (T69, captura 19.13.56 de WhatsApp Desktop). Apareix en lloc de la
+ * Xat (T69, captura de referència 19.13.56). Apareix en lloc de la
  * llista de converses quan el cercador té el focus i el camp és buit: cada
  * fila porta la icona de contorn del tipus, l'etiqueta i, a la dreta, la
  * fletxa diagonal. Cap capçalera nova.

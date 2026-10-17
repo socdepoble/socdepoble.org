@@ -162,6 +162,43 @@ test('fora de soc-de-poble conserva showModal i no crea cap capa local', () => {
   expect(document.querySelector('.sdp-capa-modal')).toBeNull();
 });
 
+/* Revisió del Gauntlet 261017 (M1, A11Y-1) · Un element enfocable fora de
+   l'ordre de Tab (tabIndex -1: el marc del visor, que rep el focus d'un clic)
+   també és una vora del parany quan no té cap control davant (Maj+Tab) o
+   darrere (Tab): abans només ho eren el primer control, l'últim i el
+   <dialog>, i el focus eixia al web amfitrió. Entre dos controls, l'ordre
+   natiu, com sempre. */
+test('la trampa de Tab dona la volta també des d’un element amb tabIndex -1 a la vora; entre controls, l’ordre natiu', () => {
+  const { root, shadow } = muntaLocal(<Dialeg obert titol="Vores" variant="sense-marc" onTanca={() => {}}>
+    <div data-prova="davant" tabIndex={-1}>
+      <button>Primer</button><span data-prova="mig" tabIndex={-1}>mig</span><button>Últim</button>
+    </div>
+    <span data-prova="darrere" tabIndex={-1}>darrere</span>
+  </Dialeg>);
+  const d = within(root).getByRole('dialog', { name: 'Vores' });
+  const primer = within(d).getByRole('button', { name: 'Primer' });
+  const ultim = within(d).getByRole('button', { name: 'Últim' });
+  const tecla = (node, shiftKey) => {
+    node.focus();
+    const e = new KeyboardEvent('keydown', { key: 'Tab', shiftKey, bubbles: true, cancelable: true, composed: true });
+    fireEvent(node, e);
+    return e;
+  };
+  expect(tecla(d.querySelector('[data-prova="davant"]'), true).defaultPrevented).toBe(true);
+  expect(shadow.activeElement).toBe(ultim);
+  expect(tecla(d.querySelector('[data-prova="darrere"]'), false).defaultPrevented).toBe(true);
+  expect(shadow.activeElement).toBe(primer);
+  const mig = d.querySelector('[data-prova="mig"]');
+  expect(tecla(mig, true).defaultPrevented).toBe(false);
+  expect(tecla(mig, false).defaultPrevented).toBe(false);
+  // Tab avant des del contenidor de davant: el seu primer control, natiu.
+  expect(tecla(d.querySelector('[data-prova="davant"]'), false).defaultPrevented).toBe(false);
+  // El <dialog> mateix, com abans: Maj+Tab dona la volta i Tab és natiu.
+  expect(tecla(d, true).defaultPrevented).toBe(true);
+  expect(shadow.activeElement).toBe(ultim);
+  expect(tecla(d, false).defaultPrevented).toBe(false);
+});
+
 /* Onada 11 (261010; prompt 261010_1730, tasca 3) · la secció s'amaga amb una
    classe i un full d'estil del document (jsdom no carrega el CSS de l'app),
    sense cap style=: la trampa (modalLocal.js, controls) la troba per l'estil

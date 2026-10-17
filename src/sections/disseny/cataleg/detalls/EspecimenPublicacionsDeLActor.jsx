@@ -14,6 +14,10 @@
  * UIProvider) no es poden pintar la targeta d'un acte (TargetaDelMur) ni
  * l'estat d'error (EstatErrorDades): totes dues llegixen l'estat de l'App. Ho
  * diu en lloc de pintar-les; dins de l'App (/disseny) es pinten de veres.
+ *
+ * Gauntlet 261017 (WP7a) · Des del Gauntlet 261016 (Bloc 3.9, F45) el peu ja
+ * no va davall de l'editor del Bloc: només davall d'una publicació oberta
+ * (PublicacioDetall). La descripció ho diu.
  */
 import { useState } from 'react';
 import { Especimen } from '../Especimen.jsx';
@@ -46,10 +50,10 @@ export default function EspecimenPublicacionsDeLActor() {
   const [reintents, setReintents] = useState(0);
   return (
     <Especimen id="publicacions-actor" nom="PublicacionsDeLActor · el que l’actor ja té publicat" fitxer="src/sections/mur/PublicacionsDeLActor.jsx"
-      descripcio="El que l’actor actiu (la persona o l’entitat amb què actua) ja té publicat en una secció, amb la targeta canònica de cada secció: la del Mercat per als productes (TargetaDelMercat) i la del Mur per a les publicacions i els actes (TargetaDelMur), dins de GraellaTargetes. Les dades són les del Mur, pel port, filtrades per l’actor (usePublicacionsDeLActor). Al Bloc de Notes i a una publicació oberta del MAS va a la ranura peuDePagina de PageFrame: davall de l’article, dins del scroll i fora de l’Índex."
+      descripcio="El que l’actor actiu (la persona o l’entitat amb què actua) ja té publicat en una secció, amb la targeta canònica de cada secció: la del Mercat per als productes (TargetaDelMercat) i la del Mur per a les publicacions i els actes (TargetaDelMur), dins de GraellaTargetes. Les dades són les del Mur, pel port, filtrades per l’actor (usePublicacionsDeLActor). Al Bloc de Notes va a la ranura peuDePagina de PageFrame d’una publicació oberta (PublicacioDetall), mai davall de l’editor: davall de l’article, dins del scroll i fora de l’Índex."
       contracte={[
         ['seccio', "'mur' | 'mercat' | 'events'", '—', 'La secció. Una altra (Multimèdia, cap) no pinta res: no té targeta canònica de llista.'],
-        ['exclouId', 'string | number', 'null', 'L’element que ja està obert damunt (la publicació, o la de la nota que s’edita): no es repetix davall.'],
+        ['exclouId', 'string | number', 'null', 'L’element que ja està obert damunt (la publicació oberta): no es repetix davall.'],
         ['nivell', "'h2' … 'h6'", "'h2'", 'El nivell de la capçalera de la regió. A la pàgina, h2 (davall de l’H1).'],
         ['VistaPublicacionsDeLActor', '{ seccio, elements, estat, error, refresh }', '—', 'La vista sense dades pròpies: la munten el component i este espècimen.'],
         ['peuDePagina (PageFrame)', 'node', 'null', 'La ranura on va: després de l’article i de la traducció, dins del contenidor que fa scroll. Sense, el DOM de sempre.'],
@@ -60,7 +64,7 @@ export default function EspecimenPublicacionsDeLActor() {
         'Fora de l’article: l’Índex de la nota, la traducció i el Lector no en recullen els títols de les targetes.',
         'Mentre carrega, el Carregant (role=status); si falla, l’Alerta d’error amb «Torna-ho a provar»; buit, un text amb role=status.'
       ]}
-      fes={['Passar la secció de la carpeta (o de la publicació) i l’element obert.', 'Al Bloc, memoritzar el peu (useMemo): un JSX nou a cada pintada refaria l’adaptador de l’editor.']}
+      fes={['Passar la secció de la publicació i l’element obert.', 'Al Bloc, muntar-lo només davall d’una publicació oberta (PublicacioDetall): l’editor no en porta.']}
       noFacis={['Una targeta nova per a l’històric: cada secció pinta la seua de sempre.', 'Posar-lo dins de l’article (children): entraria a l’Índex i a la traducció.']}>
       <VistaPublicacionsDeLActor seccio="mercat" elements={PRODUCTES} nivell="h4" />
       {dinsDeLApp

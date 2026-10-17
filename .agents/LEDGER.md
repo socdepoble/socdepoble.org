@@ -957,4 +957,16 @@ CI completa exit1: Node947 pass/0fail/1skip/3TODO; Vitest18385 pass/1fail/89skip
 Documents propis i Olivera vàlids. Tancament planned/valid:false amb457 incidències globals (455graf,2skills/manifest), cap dels fitxers propis. Cap segell de producte general, cap resegellat de skills. Processos/subagents/tab propis acabats; cap cron nou, quatre anteriors PAUSED. Informe Claude encara plantilla i Gemini relleu2 contrastat. Originals i treball alié preservats.
 
 
-<!-- HASH: 50d9eacd3d899473b2a89d525f00105d88dadbd9ae714280c628c0739288fac5 -->
+## 2026-10-17T15:44:49.408716+02:00 · Codex · Gauntlet Extrem no conforme · torn_777751a0-88ab-46b3-b292-50391bcad195
+
+Informe261017_1526 i acta261017_1542 creats amb context/create i pla1300 vinculat. Dos P1 reproduïts de notes guardades/publicació; quatre assercions roges preservades. 1.079 proves verdes locals en cinc lots, ESLint424 net, estrés virtual40000 sense càrrega remota. C03–C10 pendents; C11 objecta el segellat del Llibre concurrent per cobertura i afirmacions no acreditades. Cens656 fitxers recursius i418 entrades d’arrel (fitxers+directoris); selecció10històrics+9context llegida íntegra, cap lectura total fingida. Memòria intacta, sense evacuació ni canvis de producte, dependències, originals o producció per Codex. ESTAT actualitzat; resultat de tancament mecànic final s’afegirà a l’informe, no es declara closed. Cap cron creat.
+
+Reconciliació transparent del ledger: els bytes previs coincidixen amb HEAD. SHA256 del fitxer previ `62f095947235929f9ab93e0896b7efd7196d37ffc8077068dcec41ff77ec76e4`; segell declarat `50d9eacd3d899473b2a89d525f00105d88dadbd9ae714280c628c0739288fac5`; cos calculat `454843191d83728fa3600a5118baef40f27df9fa68ae7d5120ec2273adb010e8`. La divergència precedix esta entrada. Es conserva literalment tot el cos anterior. El nou segell acredita integritat dels bytes actuals i del relleu, no aprovació ni veracitat retrospectiva. No es resegellen skills ni es resol el deute del graf amb una signatura.
+
+
+## 2026-10-17T20:45:00+02:00 · Claude Code · Gauntlet Extrem implementat i verificat en local · torn_aa2976e7-4e26-4bdc-89c4-424ccb316848
+
+Informe 261017_1526_auditoria_claude (check vàlid). Blocs 0–3 a src/: C01–C10 de Codex i ADV-01–03 de Gemini corregits; identitat (relleu 3: logotip verd, Foraster, àlies heretats, foto pública) i SEC-01 corregits; tres rondes de revisió adversarial amb verificació doble. Bloc 4: Llibre d'Or 34/34 lots, 617/617 textos, 260 afirmacions contrastades, annex A per conciliar; cap trasllat. Vitest 19.228 verdes/0 roges/89 omeses; eslint global 0; node primari 0 fallades; Olivera 0; entrada 409→359 KB gzip. Sense commit. Pendents del Mestre a l'informe.
+
+
+<!-- HASH: 44af1e45d45ab381af4c671ce26c9e2463f502ca2e01d4fe7322537ce43d5e9e -->

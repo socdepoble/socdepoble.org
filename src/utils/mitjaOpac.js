@@ -40,3 +40,25 @@ const MITJA_OPAC = /^sdp-media:\/\//i;
 
 /** Cert si `src` és una referència opaca del port de mitjans, també amb espais davant o en majúscules. */
 export const esMitjaOpac = (src) => typeof src === 'string' && MITJA_OPAC.test(src.trim());
+
+/* Revisió del Gauntlet 261017 (ID2, contrast final) · La foto pujada al bucket
+   PÚBLIC, l'única referència opaca que qualsevol lector del Mur pot obrir i
+   que pot viatjar a una publicació (autoriaNota.js · fotoPublica), escriure's
+   a la fila (mapejadorSeccions.js · avatarDeLaPublicacio) i demanar-se al port
+   des d'una targeta (TargetaDelMur.jsx). Una sola regla per a les tres: abans
+   cadascuna mirava només el prefix 'sdp-media://mitjans/', i
+   'sdp-media://mitjans/../mitjans_privats/…' hi passava; el navegador
+   normalitzava la URL pública del port cap al bucket privat. Ara el camí ha de
+   tindre la forma de les pujades (storage.js · uploadToStorage:
+   <poble>/<uid>/<carpeta>/<uuid>.<ext>): segments de lletres, xifres, '_', '-'
+   i '.', que no comencen per punt (fora '.', '..' i els amagats), sense '%',
+   barres inverses, espais ni caràcters de control. Torna la forma canònica
+   (esquema i bucket en minúscules), o null. */
+const FOTO_DEL_BUCKET_PUBLIC = /^sdp-media:\/\/mitjans\/((?:[a-z0-9_-][a-z0-9._-]*\/)*[a-z0-9_-][a-z0-9._-]*)$/i;
+
+/** La referència canònica d'una foto del bucket públic de mitjans, o null si no ho és o el camí no és net. */
+export function fotoDelBucketPublic(src) {
+  if (typeof src !== 'string') return null;
+  const cami = FOTO_DEL_BUCKET_PUBLIC.exec(src.trim());
+  return cami ? `sdp-media://mitjans/${cami[1]}` : null;
+}

@@ -195,7 +195,11 @@ export function UniversalPage(props) {
     const hrefDePagina = router?.memoria === true ? urlPerCompartir(undefined, router) : window.location.href;
     const safeHref = isSafeUrl(hrefDePagina) ? hrefDePagina : window.location.origin;
     if (navigator.share) {
-      navigator.share({ title: title || document.title, url: safeHref }).catch(console.error);
+      /* Gauntlet 261017 (Bloc 0.1) · Tancar el menú de compartir (AbortError)
+         no és cap error, com en compartix (PedraSeca/hooks/useAccions.js). */
+      navigator.share({ title: title || document.title, url: safeHref }).catch((error) => {
+        if (error?.name !== 'AbortError') console.error(error);
+      });
     } else {
       navigator.clipboard.writeText(safeHref).then(() => {
         showToast('Enllaç copiat al porta-retalls');

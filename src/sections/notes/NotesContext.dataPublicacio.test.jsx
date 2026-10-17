@@ -143,6 +143,44 @@ test('una persona signa amb el seu nom i el seu poble; un correu no es publica m
   expect(JSON.stringify(payload)).not.toContain('pepa@exemple.org');
 });
 
+/* Revisió del Gauntlet 261017 (ID3 i ID2; relleu 3: una sessió, una
+   identitat) · Una sessió adoptada de l'amfitrió no porta town_name a les
+   metadades, però l'actor persona sí que porta el poble de la seua fila de
+   profiles: és el que diu la barra taronja i ara també la publicació (amb el
+   seu poble_id). La foto pujada al bucket públic (sdp-media://mitjans/…)
+   també ix de publishNote cap al Mur, i el mapejador d'escriptura la conserva
+   (vegeu la prova de baix). */
+test('ID3 i ID2 · una persona publica amb el poble i la foto pujada que diu la barra', async () => {
+  mocks.user = { id: 'u-1', email: 'pepa@exemple.org', user_metadata: { full_name: 'Pepa Soler' } };
+  mocks.actor = { tipus: 'persona', id: 'u-1', nom: 'Pepa Soler', avatar: 'sdp-media://mitjans/t/u-1/avatars/a.webp', poble: 'Benifallim', rol: 'persona' };
+  const { result } = renderHook(useNotes, { wrapper: NotesProvider });
+  await act(async () => { await result.current.publishNote({ id: 'pepa-adoptada', title: 'Hola', content: '', revision: 1 }); });
+  expect(payloadEnviat()).toMatchObject({
+    author_name: 'Pepa Soler', author_avatar: 'sdp-media://mitjans/t/u-1/avatars/a.webp', author_location: 'Benifallim', poble_id: 'benifallim'
+  });
+});
+
+/* Revisió del Gauntlet 261017 (ID2) · Abans d'escriure la fila,
+   appendSectionSubmissionNetworkOnly (data/supabase/content.js) passa el
+   payload per mapSectionSubmissionToItem. Fins ara el seu validaUrl
+   (mapejadorSeccions.js, branca 'mur') buidava la referència
+   sdp-media://mitjans/ que publishNote hi posa, i la foto no arribava mai al
+   servidor (que l'admet: 2610072230_mur_imatges_propies.sql). Era una prova
+   [DEFECTE]; ara el mapejador conserva la foto del bucket públic
+   (avatarDeLaPublicacio) i la prova fixa el comportament bo. La del bucket
+   privat no hi arriba mai: fotoPublica la lleva abans (autoriaNota.test.js) i
+   el mapejador tampoc no l'admetria (mapejadorSeccions.test.js). */
+test('ID2 · la foto pujada (sdp-media://mitjans/) arriba a la fila que escriu el mapejador', async () => {
+  const { mapSectionSubmissionToItem } = await import('../../data/mapejadorSeccions.js');
+  mocks.user = { id: 'u-1', user_metadata: { full_name: 'Pepa Soler' } };
+  mocks.actor = { tipus: 'persona', id: 'u-1', nom: 'Pepa Soler', avatar: 'sdp-media://mitjans/t/u-1/avatars/a.webp', poble: 'Benifallim', rol: 'persona' };
+  const { result } = renderHook(useNotes, { wrapper: NotesProvider });
+  await act(async () => { await result.current.publishNote({ id: 'pepa-mapejada', title: 'Hola', content: '', revision: 1 }); });
+  expect(payloadEnviat().author_avatar).toBe('sdp-media://mitjans/t/u-1/avatars/a.webp');
+  const escrit = mapSectionSubmissionToItem({ id: 'pepa-mapejada', sectionId: 'mur', payload: payloadEnviat() });
+  expect(escrit.author_avatar).toBe('sdp-media://mitjans/t/u-1/avatars/a.webp');
+});
+
 test('sense actor (incrustat), el nom de l’app queda de reserva', async () => {
   mocks.externalConfig = { appName: 'Poble Amfitrió', appLocation: 'Sella' };
   const { result } = renderHook(useNotes, { wrapper: NotesProvider });

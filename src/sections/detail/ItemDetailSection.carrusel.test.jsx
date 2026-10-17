@@ -154,12 +154,17 @@ describe('/mercat/samarreta-socdepoble: la portada és un carrusel de huit fotos
 });
 
 describe('una foto o cap: la portada de sempre (Llei del Píxel)', () => {
-  test('/mercat/mac-mini-m4: la seua foto, sola i sense carrusel (abans, el quadrat verd de la marca)', () => {
+  /* Gauntlet 261017 (C04) · La foto sola obri el visor: el mateix <img> de
+     sempre, dins d'un botó (VisorDePublicacio · .sdp-visor__obridor). */
+  test('/mercat/mac-mini-m4: la seua foto, sola i sense carrusel (abans, el quadrat verd de la marca), obri el visor', () => {
     const mac = llavor('mac-mini-m4');
     const container = pinta(mac);
     const marc = portada(container);
     expect(marc.querySelector('.sdp-carrusel')).toBeNull();
-    expect([...marc.children].map((fill) => fill.tagName)).toEqual(['IMG']);
+    expect([...marc.children].map((fill) => fill.tagName)).toEqual(['BUTTON']);
+    const obridor = marc.querySelector('button.sdp-visor__obridor[aria-haspopup="dialog"]');
+    expect(obridor.childNodes).toHaveLength(1);
+    expect(obridor.firstChild).toBe(marc.querySelector('img'));
     expect(marc.querySelector('img').getAttribute('src')).toBe(mac.images[0]);
     expect(marc.querySelector('img').getAttribute('alt')).toBe(mac.title);
   });

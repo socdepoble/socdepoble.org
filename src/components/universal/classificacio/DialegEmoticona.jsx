@@ -20,8 +20,13 @@
  * autoFocus (en mòbil, el teclat taparia la graella). Un emoji del catàleg
  * massa nou per a este navegador (emojiSol el rebutja: Safari 16 porta les
  * dades d'Unicode 14) no es desa: un avís ho diu, com a l'«Assignar» de
- * Disseny (M2-12). Sense la prop, el diàleg de sempre (Perfil, Snippet i
- * espècimens).
+ * Disseny (M2-12). Sense la prop, el diàleg de sempre (espècimens).
+ *
+ * Gauntlet 261017 (F30: «DialegEmoticona substituït per graella Unicode18
+ * accessible») · Perfil i Snippet també hi passen el catàleg. La comprovació
+ * d'emojiSol de la graella viu ara a GraellaEmojis (textNoReconegut), la
+ * mateixa per a la via d'assignar i per al diàleg «Emojis» del Bloc; ací
+ * només en queda el text.
  */
 import { useCallback, useState } from 'react';
 import { Dialeg, Boto, Camp, CampText } from '../../PedraSeca/index.js';
@@ -35,7 +40,6 @@ const textNoReconegut = (glif) => `Este navegador encara no reconeix ${glif} com
 
 export function DialegEmoticona({ obert, onTanca, actual = '', onDesa, carregaCataleg = null }) {
   const [valor, setValor] = useState(actual || '');
-  const [avis, setAvis] = useState(null);
   const ambGraella = typeof carregaCataleg === 'function';
   const net = valor.trim();
   const valid = emojiSol(net);
@@ -43,15 +47,7 @@ export function DialegEmoticona({ obert, onTanca, actual = '', onDesa, carregaCa
 
   const desa = () => { if (valid) onDesa?.(valid); };
   /* Estable: escriure al camp no torna a pintar els botons de la graella. */
-  const triaDeLaGraella = useCallback((glif) => {
-    const reconegut = emojiSol(glif);
-    if (!reconegut) {
-      setAvis(textNoReconegut(glif));
-      return;
-    }
-    setAvis(null);
-    onDesa?.(reconegut);
-  }, [onDesa]);
+  const triaDeLaGraella = useCallback((glif) => onDesa?.(glif), [onDesa]);
 
   return (
     <Dialeg
@@ -82,10 +78,7 @@ export function DialegEmoticona({ obert, onTanca, actual = '', onDesa, carregaCa
         <span className="sdp-classificacio-dialeg__mostra" aria-hidden="true">{valid || '—'}</span>
       </div>
       {ambGraella ? (
-        <>
-          {avis ? <p className="sdp-classificacio-dialeg__avis" role="status">{avis}</p> : null}
-          <GraellaEmojis carregaCataleg={carregaCataleg} onTria={triaDeLaGraella} />
-        </>
+        <GraellaEmojis carregaCataleg={carregaCataleg} onTria={triaDeLaGraella} textNoReconegut={textNoReconegut} />
       ) : null}
     </Dialeg>
   );

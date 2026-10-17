@@ -50,7 +50,7 @@ async function obert(extra = {}) {
   return dialeg;
 }
 
-test('el focus va al cercador i el diàleg té les seccions de WhatsApp en ordre', async () => {
+test('el focus va al cercador i el diàleg té les seccions de la referència en ordre', async () => {
   const dialeg = await obert();
   const camp = within(dialeg).getByRole('searchbox', { name: "Nom del contacte" });
   expect(document.activeElement).toBe(camp);

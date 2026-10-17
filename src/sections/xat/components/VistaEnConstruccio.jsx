@@ -1,8 +1,9 @@
 /**
  * VistaEnConstruccio.jsx — la columna central d'una entrada del rail que encara
  * no té lògica (onada 3B, decisió del Mestre, 260928): Telefonades i Destacats
- * existixen per a que l'esquelet de navegació quede idèntic al de WhatsApp
- * Desktop (captures 19.41.49 i 19.42.17), però no fan res encara i ho diuen.
+ * existixen perquè l'esquelet de navegació seguisca el patró estàndard de
+ * missatgeria (captures de referència 19.41.49 i 19.42.17), però no fan res
+ * encara i ho diuen.
  *
  * Ordre del Mestre del 261004 (prompt 261004_0515, T5) · Contingut multimèdia
  * (captura 19.41.58) ix d'ací: ja és operativa i la pinta VistaMultimedia.
@@ -10,7 +11,7 @@
  * segmentat (FilaSegments) s'exporten perquè les dos vistes pinten el MATEIX
  * DOM; ací no canvia res.
  *
- * De dalt a baix, calcant la captura de cada vista:
+ * De dalt a baix, seguint la captura de referència de cada vista:
  *   · la fila de títol (AppGridColumn, fila 1 de la graella) amb el títol i
  *     les accions de la dreta: el «+» redó (Telefonades), la píndola
  *     «Editar» (Destacats) o, si en porta, botons d'icona;

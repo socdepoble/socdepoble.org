@@ -18,8 +18,8 @@
  * a EspecimenXatLlista, EspecimenXatCerca, EspecimenXatComunitats,
  * EspecimenXatNovaConversa i EspecimenXatRail.
  *
- * Torn 260930 (T1 · la conversa calcada de WhatsApp Desktop): les bombolles
- * es pinten agrupades com a la conversa (anotaGrups: la cua i el nom només a
+ * Torn 260930 (T1 · la conversa amb el patró estàndard de missatgeria): les
+ * bombolles es pinten agrupades com a la conversa (anotaGrups: la cua i el nom només a
  * la primera de cada tirada); un grup de tres de la mateixa persona; el
  * separador «N missatges no llegits»; dos respostes, una amb la cita que
  * porta a l'original i una amb l'original sense carregar; el botó «Baixa al

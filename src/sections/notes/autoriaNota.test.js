@@ -332,3 +332,49 @@ test('modeDeDadesResolt · un paquet seed que ja ha triat l’entrada real: en l
     window.localStorage.clear();
   }
 });
+
+/* Revisió del Gauntlet 261017 (ID3; relleu 3: una sessió, una identitat) · El
+   poble del payload del Mur (autoriaDeLActor) és el de la barra taronja i del
+   selector: el de l'actor persona (la fila de profiles, personaDeSessio) i,
+   de reserva, el town_name de les metadades, el mateix ordre que
+   autoriaDeLaSessio. Abans només les metadades: una sessió adoptada de
+   l'amfitrió (adoptaSessioExterna no copia town_name) o un compte amb el
+   poble només a profiles publicava sense poble ni poble_id, mentre la barra
+   deia «Benifallim». */
+test('ID3 · el poble del payload és el de la barra: primer l’actor persona, després les metadades', () => {
+  const actor = { tipus: 'persona', id: 'U', nom: 'Pepa Sanchis', avatar: null, poble: ' Benifallim ', rol: 'persona' };
+  const adoptada = { id: 'U', user_metadata: { full_name: 'Pepa Sanchis' } };
+  expect(autoriaDeLActor(actor, adoptada).poble).toBe('Benifallim');
+  expect(autoriaDeLActor(actor, adoptada).poble).toBe(autoriaDeNota({ notaId: 'p', actor, actorId: 'U', currentUser: adoptada }).poble);
+  // Amb totes dues fonts, mana l'actor (la fila), com a la barra.
+  const ambMetadades = { id: 'U', user_metadata: { full_name: 'Pepa Sanchis', town_name: 'Relleu' } };
+  expect(autoriaDeLActor(actor, ambMetadades).poble).toBe('Benifallim');
+  expect(autoriaDeNota({ notaId: 'p', actor, actorId: 'U', currentUser: ambMetadades }).poble).toBe('Benifallim');
+  // Sense poble a l'actor, les metadades de reserva; sense cap, buit.
+  expect(autoriaDeLActor({ ...actor, poble: null }, ambMetadades).poble).toBe('Relleu');
+  expect(autoriaDeLActor({ ...actor, poble: '  ' }, adoptada).poble).toBe('');
+});
+
+/* Revisió del Gauntlet 261017 (ID2) · La foto de perfil pujada a l'app
+   (PerfilContext · uploadToStorage: 'sdp-media://mitjans/<tenant>/<uid>/
+   avatars/…', el bucket PÚBLIC) viatja al payload: el servidor la deixa
+   passar com a pròpia (supabase/migrations/2610072230_mur_imatges_propies.sql:
+   «les pujades legítimes viatgen com a sdp-media://») i la targeta del Mur i
+   la barra taronja la resolen pel port. Una referència del bucket privat
+   (mitjans_privats) o una data: no hi viatgen mai: no les podria obrir qui
+   llig el Mur. Decisió 3 (només imatges pròpies) no canvia. */
+test('ID2 · el payload porta la foto pujada al bucket públic; mai una del privat ni una data:', () => {
+  const sessio = { id: 'U', user_metadata: { full_name: 'Pepa Sanchis' } };
+  const ambFoto = (avatar) => autoriaDeLActor({ tipus: 'persona', id: 'U', nom: 'Pepa Sanchis', avatar, rol: 'persona' }, sessio).avatar;
+  expect(ambFoto('sdp-media://mitjans/t/u/avatars/a.webp')).toBe('sdp-media://mitjans/t/u/avatars/a.webp');
+  expect(ambFoto('  sdp-media://mitjans/t/u/avatars/a.webp ')).toBe('sdp-media://mitjans/t/u/avatars/a.webp');
+  for (const fora of ['sdp-media://mitjans_privats/t/u/avatars/a.webp', 'sdp-media://altre/a.webp', 'sdp-media://mitjans', 'data:image/png;base64,iVBORw0KGgo=']) {
+    expect(ambFoto(fora), fora).toBeNull();
+  }
+  // Les de sempre, com sempre.
+  expect(ambFoto('https://exemple.org/pepa.png')).toBe('https://exemple.org/pepa.png');
+  expect(ambFoto('/assets/gent/pepa.webp')).toBe('/assets/gent/pepa.webp');
+  // El logotip pujat d'una entitat, igual.
+  expect(autoriaDeLActor({ tipus: 'entitat', id: 'O', nom: 'Forn', avatar: 'sdp-media://mitjans/t/o/logo.webp' }, sessio).avatar)
+    .toBe('sdp-media://mitjans/t/o/logo.webp');
+});

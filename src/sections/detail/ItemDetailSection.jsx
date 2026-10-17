@@ -27,12 +27,16 @@ function useSessioSegura() {
    el servidor, enllaços copiats) i porta, amb replace i conservant la
    consulta: town-<slug> a /pobles/<slug>, la pàgina canònica del poble, i la
    resta a l'Arxiu amb el visor obert en eixa foto (/multimedia?foto=<id>).
-   Sense tocar App.jsx: la ruta `:sectionId/:itemId` arriba ací. És
-   determinista en fred (l'id naix a mediaContent.js): no espera cap càrrega. */
+   És determinista en fred (l'id naix a mediaContent.js): no espera cap
+   càrrega.
+   Gauntlet 261017 (M07, C07) · Conserva també el fragment (#…). A l'App,
+   /multimedia/<id> (i amb barra final o camí darrere) ja el porta
+   RedireccioMultimedia (App.jsx) abans de la ruta `:sectionId/:itemId`, amb
+   el mateix destí: esta és la xarxa de qui munta el detall directament. */
 export default function ItemDetailSection() {
   const { sectionId, itemId } = useParams();
-  const { search } = useLocation();
-  const desti = sectionId === 'multimedia' ? destiDeMultimedia(itemId, search) : null;
+  const { search, hash } = useLocation();
+  const desti = sectionId === 'multimedia' ? destiDeMultimedia(itemId, search, hash ?? '') : null;
   if (desti) return <Navigate to={desti} replace />;
   return <DetallDElement />;
 }

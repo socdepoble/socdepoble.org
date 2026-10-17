@@ -3,7 +3,10 @@
    seus botons oberts, botons natius amb el nom oficial en anglès, cerca pel
    nom, tabulador mòbil amb les fletxes i un error que es pot reintentar. I el
    DialegEmoticona: amb `carregaCataleg`, la graella assigna; sense, el diàleg
-   de sempre. Dades sintètiques i, en una prova, el catàleg de veres. */
+   de sempre. Dades sintètiques i, en una prova, el catàleg de veres.
+   Gauntlet 261017 (F30, F34) · Amunt i avall, el focus quan arriba el
+   catàleg dins d'un diàleg (sense robar-lo mai) i l'avís dels glifs que este
+   navegador no reconeix, ara dins de la graella (textNoReconegut). */
 import React from 'react';
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, expect, test, vi } from 'vitest';
@@ -102,6 +105,239 @@ test('teclat: un sol botó de cada llista entra al tabulador, i les fletxes, Ini
   expect(document.activeElement).toBe(botons[0]);
   fireEvent.keyDown(botons[0], { key: 'ArrowLeft' });
   expect(document.activeElement).toBe(botons[0]);
+});
+
+/* Gauntlet 261017 (F34) · Amunt i avall depenen del layout (offsetTop), que
+   jsdom no fa: un doble del prototip pinta tres emojis per fila, i es
+   restaura en acabar. */
+test('teclat: amunt i avall salten una fila (les columnes, de la primera fila pintada) i no ixen de la llista', async () => {
+  const set = Array.from({ length: 7 }, (_, i) => [`E${i}`, '🙂', `emoji ${i}`]);
+  const original = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetTop');
+  Object.defineProperty(HTMLElement.prototype, 'offsetTop', {
+    configurable: true,
+    get() {
+      const fila = this.closest('li');
+      return fila ? Math.floor(Array.prototype.indexOf.call(fila.parentElement.children, fila) / 3) * 48 : 0;
+    }
+  });
+  try {
+    render(<GraellaEmojis carregaCataleg={cataleg([{ id: 'set', nom: 'Set', emojis: set }])} onTria={vi.fn()} />);
+    await screen.findByRole('button', { name: 'emoji 0' });
+    const botons = within(screen.getByRole('list', { name: 'Set' })).getAllByRole('button');
+    const prem = (tecla) => fireEvent.keyDown(document.activeElement, { key: tecla });
+    act(() => botons[0].focus());
+    prem('ArrowDown');
+    expect(document.activeElement).toBe(botons[3]);
+    expect(botons.map((b) => b.tabIndex)).toEqual([-1, -1, -1, 0, -1, -1, -1]);
+    prem('ArrowDown');
+    expect(document.activeElement).toBe(botons[6]);
+    // L'última fila: avall no ix de la llista.
+    prem('ArrowDown');
+    expect(document.activeElement).toBe(botons[6]);
+    prem('ArrowUp');
+    prem('ArrowUp');
+    expect(document.activeElement).toBe(botons[0]);
+    prem('ArrowUp');
+    expect(document.activeElement).toBe(botons[0]);
+    // Des de la fi de la segona fila no hi ha res davall: es queda.
+    act(() => botons[5].focus());
+    prem('ArrowDown');
+    expect(document.activeElement).toBe(botons[5]);
+    prem('ArrowUp');
+    expect(document.activeElement).toBe(botons[2]);
+    expect(botons.map((b) => b.tabIndex)).toEqual([-1, -1, 0, -1, -1, -1, -1]);
+  } finally {
+    if (original) Object.defineProperty(HTMLElement.prototype, 'offsetTop', original);
+    else delete HTMLElement.prototype.offsetTop;
+  }
+  expect(document.body.offsetTop).toBe(0);
+});
+
+/* Gauntlet 261017 (F30) · El focus quan arriba el catàleg. Un diàleg com el
+   DialegEmoticona: la X dalt, un camp, la graella i el peu. jsdom no obri el
+   <dialog> amb showModal: el focus inicial del diàleg es posa a mà. */
+const diferit = () => {
+  let resol;
+  const promesa = new Promise((r) => { resol = r; });
+  return { promesa, resol };
+};
+function DialegDeProva({ carrega, obert = true }) {
+  return (
+    <dialog open={obert}>
+      <button type="button">Tancar</button>
+      <input aria-label="Emoticona" />
+      <GraellaEmojis carregaCataleg={carrega} onTria={() => {}} />
+      <footer><button type="button">Desar</button></footer>
+    </dialog>
+  );
+}
+
+test('dins d’un diàleg obert: quan arriba el catàleg, el focus passa d’on el va deixar el diàleg al primer emoji (no a la cerca)', async () => {
+  const dades = diferit();
+  render(<DialegDeProva carrega={() => dades.promesa} />);
+  act(() => screen.getByRole('button', { name: 'Tancar' }).focus());
+  await act(async () => { dades.resol({ GRUPS_EMOJIS: GRUPS }); });
+  const primer = await screen.findByRole('button', { name: 'grinning face' });
+  expect(document.activeElement).toBe(primer);
+  expect(primer.tabIndex).toBe(0);
+});
+
+test('mai roba el focus: ni si la persona ja l’ha mogut, ni fora d’un diàleg obert', async () => {
+  // La persona ha anat al camp (o al peu) mentre carregava.
+  for (const nom of ['Emoticona', 'Desar']) {
+    const dades = diferit();
+    const { unmount } = render(<DialegDeProva carrega={() => dades.promesa} />);
+    const triat = nom === 'Emoticona' ? screen.getByRole('textbox', { name: nom }) : screen.getByRole('button', { name: nom });
+    act(() => triat.focus());
+    await act(async () => { dades.resol({ GRUPS_EMOJIS: GRUPS }); });
+    await screen.findByRole('button', { name: 'grinning face' });
+    expect(document.activeElement).toBe(triat);
+    unmount();
+  }
+  // Fora de cap diàleg.
+  const { unmount } = render(<><button type="button">Fora</button><GraellaEmojis carregaCataleg={cataleg()} onTria={vi.fn()} /></>);
+  const fora = screen.getByRole('button', { name: 'Fora' });
+  act(() => fora.focus());
+  await screen.findByRole('button', { name: 'grinning face' });
+  expect(document.activeElement).toBe(fora);
+  unmount();
+  // Un diàleg tancat (sense open).
+  const { container } = render(<DialegDeProva carrega={cataleg()} obert={false} />);
+  const tancar = container.querySelector('button');
+  act(() => tancar.focus());
+  await act(async () => {});
+  await vi.waitFor(() => expect(container.querySelector('.sdp-graella-emojis__boto')).not.toBeNull());
+  expect(document.activeElement).toBe(tancar);
+});
+
+test('dins d’un diàleg, amb el focus perdut («Torna-ho a provar» ja no hi és), el recupera el primer emoji', async () => {
+  const carrega = vi.fn().mockRejectedValueOnce(new Error('xarxa')).mockResolvedValueOnce({ GRUPS_EMOJIS: GRUPS });
+  render(<DialegDeProva carrega={carrega} />);
+  const reintent = await screen.findByRole('button', { name: 'Torna-ho a provar' });
+  act(() => reintent.focus());
+  fireEvent.click(reintent);
+  const primer = await screen.findByRole('button', { name: 'grinning face' });
+  expect(document.activeElement).toBe(primer);
+});
+
+/* Revisió del Gauntlet 261017 (A11Y-2) · «Mai en roba» també davant del web
+   amfitrió. Encastat (un <soc-de-poble> amb arrel d'ombra tancada), el
+   diàleg és modal només dins de la seua caixa: mentre el catàleg arriba, la
+   persona pot clicar el text de la pàgina de WordPress i el focus queda al
+   <body> del document. Abans, eixe <body> comptava com a «focus perdut» i,
+   en arribar el catàleg, el focus tornava al widget («grinning face»). Ara
+   el focus només es mou si encara és dins del diàleg (on el va deixar) o si
+   l'ha perdut la mateixa graella («Torna-ho a provar»). */
+function muntaEncastat(element) {
+  Object.defineProperty(HTMLDialogElement.prototype, 'show', { configurable: true, value: function () { this.setAttribute('open', ''); } });
+  const host = document.createElement('soc-de-poble');
+  document.body.append(host);
+  const shadow = host.attachShadow({ mode: 'closed' });
+  const root = document.createElement('div');
+  root.className = 'sdp-root';
+  shadow.append(root);
+  const muntatge = document.createElement('div');
+  root.append(muntatge);
+  const vista = render(element, { container: muntatge, baseElement: root });
+  return { host, shadow, root, ...vista };
+}
+const netejaEncastat = () => {
+  document.querySelectorAll('soc-de-poble').forEach((el) => el.remove());
+  delete HTMLDialogElement.prototype.show;
+};
+
+test('encastat: amb el focus al web amfitrió (el <body>) mentre carrega, el catàleg no el torna al widget', async () => {
+  try {
+    const dades = diferit();
+    const { shadow } = muntaEncastat(<DialegEmoticona obert onTanca={vi.fn()} onDesa={vi.fn()} carregaCataleg={() => dades.promesa} />);
+    await act(async () => {});
+    expect(shadow.activeElement).not.toBeNull();
+    // Un clic al text de la pàgina amfitriona: el control enfocat perd el focus, que queda al <body>.
+    act(() => { shadow.activeElement.blur(); });
+    expect(document.activeElement).toBe(document.body);
+    const focus = vi.spyOn(HTMLElement.prototype, 'focus');
+    await act(async () => { dades.resol({ GRUPS_EMOJIS: GRUPS }); });
+    await act(async () => {});
+    expect(shadow.querySelector('.sdp-graella-emojis__boto')).not.toBeNull();
+    expect(document.activeElement).toBe(document.body);
+    expect(shadow.activeElement).toBeNull();
+    expect(focus).not.toHaveBeenCalled();
+    focus.mockRestore();
+  } finally {
+    netejaEncastat();
+  }
+});
+
+test('encastat: amb el focus on el va deixar el diàleg, el catàleg el passa al primer emoji (dins de l’arrel d’ombra)', async () => {
+  try {
+    const dades = diferit();
+    const { shadow } = muntaEncastat(<DialegEmoticona obert onTanca={vi.fn()} onDesa={vi.fn()} carregaCataleg={() => dades.promesa} />);
+    await act(async () => {});
+    const inicial = shadow.activeElement;
+    expect(inicial).not.toBeNull();
+    await act(async () => { dades.resol({ GRUPS_EMOJIS: GRUPS }); });
+    await act(async () => {});
+    expect(shadow.activeElement?.getAttribute('aria-label')).toBe('grinning face');
+  } finally {
+    netejaEncastat();
+  }
+});
+
+test('encastat: el «Torna-ho a provar» que se’n va amb el focus el deixa al <dialog> (modalLocal) i el catàleg el passa al primer emoji', async () => {
+  try {
+    // El primer commit del Dialeg local és de sonda (la graella es munta dues vegades): falla fins que la xarxa torna.
+    let senseXarxa = true;
+    const carrega = vi.fn(async () => {
+      if (senseXarxa) throw new Error('xarxa');
+      return { GRUPS_EMOJIS: GRUPS };
+    });
+    const { shadow, root } = muntaEncastat(<DialegEmoticona obert onTanca={vi.fn()} onDesa={vi.fn()} carregaCataleg={carrega} />);
+    const reintent = await within(root).findByRole('button', { name: 'Torna-ho a provar' });
+    senseXarxa = false;
+    act(() => reintent.focus());
+    expect(shadow.activeElement).toBe(reintent);
+    fireEvent.click(reintent);
+    await within(root).findByRole('button', { name: 'grinning face' });
+    await act(async () => {});
+    expect(shadow.activeElement?.getAttribute('aria-label')).toBe('grinning face');
+  } finally {
+    netejaEncastat();
+  }
+});
+
+test('dins d’un diàleg obert, amb el focus al <body> que no ha perdut la graella, el catàleg no el mou', async () => {
+  const dades = diferit();
+  render(<DialegDeProva carrega={() => dades.promesa} />);
+  act(() => screen.getByRole('button', { name: 'Tancar' }).focus());
+  act(() => document.activeElement.blur());
+  expect(document.activeElement).toBe(document.body);
+  await act(async () => { dades.resol({ GRUPS_EMOJIS: GRUPS }); });
+  await screen.findByRole('button', { name: 'grinning face' });
+  expect(document.activeElement).toBe(document.body);
+});
+
+test('textNoReconegut: un glif que este navegador no reconeix no arriba a onTria; l’avís va just damunt de la graella', async () => {
+  const onTria = vi.fn();
+  const grups = [{ id: 'x', nom: 'Proves', emojis: [['00A9', '©', 'copyright'], ['1F345', '🍅', 'tomato']] }];
+  const { container } = render(<GraellaEmojis carregaCataleg={cataleg(grups)} onTria={onTria} textNoReconegut={(glif) => `No reconec ${glif}.`} />);
+  fireEvent.click(await screen.findByRole('button', { name: 'copyright' }));
+  expect(onTria).not.toHaveBeenCalled();
+  const avis = screen.getByText('No reconec ©.');
+  expect(avis.tagName).toBe('P');
+  expect(avis.className).toBe('sdp-classificacio-dialeg__avis');
+  expect(avis.getAttribute('role')).toBe('status');
+  expect(avis.nextElementSibling).toBe(container.querySelector('.sdp-graella-emojis'));
+  fireEvent.click(screen.getByRole('button', { name: 'tomato' }));
+  expect(onTria).toHaveBeenCalledWith('🍅', 'tomato');
+  expect(screen.queryByText('No reconec ©.')).toBeNull();
+});
+
+test('sense textNoReconegut, la graella no filtra: onTria rep el glif tal qual', async () => {
+  const onTria = vi.fn();
+  render(<GraellaEmojis carregaCataleg={cataleg([{ id: 'x', nom: 'Proves', emojis: [['00A9', '©', 'copyright']] }])} onTria={onTria} />);
+  fireEvent.click(await screen.findByRole('button', { name: 'copyright' }));
+  expect(onTria).toHaveBeenCalledWith('©', 'copyright');
+  expect(document.querySelector('.sdp-classificacio-dialeg__avis')).toBeNull();
 });
 
 test('si les dades no arriben, ho diu i «Torna-ho a provar» les torna a demanar', async () => {

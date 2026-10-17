@@ -3,7 +3,8 @@
  * avatar, nom, hora de l'últim missatge, previsualització d'una línia i el
  * comptador de no llegits. Un botó de 72px (--sdp-xat-fila-mida).
  *
- * Onada 3 (T67 i T68, calc de WhatsApp Desktop, captura 19.11.50):
+ * Onada 3 (T67 i T68, patró estàndard de missatgeria, captura de referència
+ * 19.11.50):
  *   · Un grup porta l'avatar de grup (icona de persones si no té imatge; el
  *     General d'una comunitat, la bafarada) i, quan l'últim missatge és d'una
  *     altra persona i la dada existix (`altres`), l'avanç «Nom: text».
@@ -15,10 +16,10 @@
  *   · Cada distintiu té el seu text per a lectors de pantalla: mai només un
  *     dibuix o un color.
  *   · Selecció (T68): amb `seleccio`, la fila és una casella (role=checkbox,
- *     aria-checked) amb el cercle a l'esquerra, com a WhatsApp.
+ *     aria-checked) amb el cercle a l'esquerra, com a les apps de missatgeria.
  *
- * Torn 260930 (T1, calc de WhatsApp Desktop: les files porten ✓✓ i «Tú:»
- * als missatges propis):
+ * Torn 260930 (T1, patró estàndard de missatgeria: les files porten ✓✓ i
+ * «Tú:» als missatges propis):
  *   · Si l'últim missatge és teu, la previsualització comença amb les seues
  *     marques (MarquesEstat, amb l'estat d'estatDeLUltim); als grups i canals,
  *     a més, «Tu: ». En una conversa directa, només les marques.
@@ -47,8 +48,9 @@ export function etiquetaDeTipus(fil, t) {
 }
 
 /**
- * L'avatar d'un fil. Un canal («Avisos») porta SEMPRE el megàfon, com a
- * WhatsApp (captures 19.41.43, 19.42.54 i 19.43.00): a la llavor hereta la
+ * L'avatar d'un fil. Un canal («Avisos») porta SEMPRE el megàfon, com a les
+ * apps de missatgeria (captures de referència 19.41.43, 19.42.54 i
+ * 19.43.00): a la llavor hereta la
  * imatge del primer participant i no és la seua. Un grup, la seua imatge o,
  * sense, la icona de persones (el General d'una comunitat, la bafarada). La
  * resta, la imatge o les inicials. `mida` 'sm' és la de la capçalera. La
@@ -140,7 +142,7 @@ export default function FilaConversa({ fil, activa = false, onSelect, locale, t,
   const nom = fil.name || fil.title || t('section.xat.conversaSenseNom', 'Conversa');
   const noLlegits = Number(fil.noLlegits) || 0;
   const silenciat = Boolean(fil.silenciat);
-  /* T1 · Silenciat, WhatsApp no ressalta l'hora: la pastilla grisa ja ho diu. */
+  /* T1 · Silenciat, l'hora no es ressalta: la pastilla grisa ja ho diu. */
   const ressaltada = !silenciat && (noLlegits > 0 || Boolean(fil.noLlegitManual));
   const hora = etiquetaLlista(fil.ultimAl, { locale, t });
   const tipus = etiquetaDeTipus(fil, t);

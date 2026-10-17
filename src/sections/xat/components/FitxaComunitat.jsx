@@ -1,6 +1,6 @@
 /**
  * FitxaComunitat.jsx — la fitxa d'una comunitat a la COLUMNA DE LLISTA (T67,
- * captures 19.42.54 i 19.43.00 de WhatsApp Desktop). S'obri amb
+ * captures de referència 19.42.54 i 19.43.00). S'obri amb
  * /xat?comunitat=<id> perquè el rail també la puga obrir.
  *
  * De dalt a baix: la capçalera (avatar quadrat, nom i «Comunitat»), la fila

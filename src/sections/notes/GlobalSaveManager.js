@@ -3,7 +3,17 @@ import { classificaError } from '../../data/autodesament/errors.js';
 const DB_NAME = 'SdpNotesQueue';
 const STORE_NAME = 'drafts';
 
+/* Gauntlet 261017 (Bloc 0.1) · Sense IndexedDB (Node i Vitest; cap navegador
+   de la Baseline en falta) no hi ha disc: getDB torna null, en compte d'un
+   ReferenceError que cada lectura, purga o desat abocava a la consola. Les
+   lectures i la purga tornen buit, i el desat llança un ErrorSenseDisc que la
+   cua guarda en memòria (escriu) com sempre, però sense cap avís. Amb
+   IndexedDB res no canvia: un open() que falla (Firefox 100–114 en privat)
+   continua avisant. */
+const SENSE_DISC = 'ErrorSenseDisc';
+
 function getDB() {
+  if (typeof indexedDB === 'undefined') return Promise.resolve(null);
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, 1);
     request.onupgradeneeded = () => request.result.createObjectStore(STORE_NAME);
@@ -19,6 +29,7 @@ function getDB() {
 // Read/compare/write share one transaction, including across browser tabs.
 export async function mutateDraft(key, transform) {
   const db = await getDB();
+  if (!db) throw Object.assign(new Error('Sense IndexedDB, l’esborrany no es guarda al dispositiu.'), { name: SENSE_DISC });
   try {
     return await new Promise((resolve, reject) => {
       const tx = db.transaction(STORE_NAME, 'readwrite');
@@ -55,6 +66,7 @@ export async function getDraftsForScope(scopeKey, gestor = bgSaveManager) {
 /** T47 · Esborra del disc els esborranys que compleixen `predicat(clau)`. Torna les claus. */
 export async function purgaEsborranys(predicat) {
   const db = await getDB();
+  if (!db) return [];
   try {
     return await new Promise((resolve, reject) => {
       const tx = db.transaction(STORE_NAME, 'readwrite');
@@ -79,6 +91,7 @@ export async function purgaEsborranys(predicat) {
  * els esborranys que compleixen `predicat(clau)`. Torna [[clau, registre]]. */
 export async function llegeixEsborranys(predicat) {
   const db = await getDB();
+  if (!db) return [];
   try {
     return await new Promise((resolve, reject) => {
       const tx = db.transaction(STORE_NAME, 'readonly');
@@ -108,6 +121,7 @@ export function esEsborranyDe(clau, usuariId) {
 
 async function llegeixDelDisc(scopeKey) {
   const db = await getDB();
+  if (!db) return {};
   try {
     return await new Promise((resolve, reject) => {
       const tx = db.transaction(STORE_NAME, 'readonly');
@@ -278,7 +292,7 @@ export class GlobalSaveManager {
       try {
         return await this.persist(key, transform);
       } catch (error) {
-        console.warn('[Notes] El dispositiu no guarda l’esborrany; es guarda en esta pestanya:', error);
+        if (error?.name !== SENSE_DISC) console.warn('[Notes] El dispositiu no guarda l’esborrany; es guarda en esta pestanya:', error);
         this.memoria.set(key, {});
         this.avisa(key);
       }

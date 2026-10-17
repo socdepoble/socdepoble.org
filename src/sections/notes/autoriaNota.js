@@ -51,6 +51,7 @@ import { normalizeBackendConfig } from '../../config/backendConfig.js';
 import { esLaIdentitatDAjuda, esLaPersonaDeContacte } from '../../data/xatsPerDefecte.js';
 import { PERSONA_PILOT, POBLE_FUNDACIONAL } from '../../data/identitatsSeed.js';
 import { avatarDePersona } from '../../app/contexts/personaDeSessio.js';
+import { fotoDelBucketPublic } from '../../utils/mitjaOpac.js';
 
 export const NOM_SENSE_NOM = 'Veí';
 
@@ -120,8 +121,30 @@ const RE_CORREU = /[^\s@]+@[^\s@]+\.[^\s@]+/;
 const net = (valor) => (typeof valor === 'string' ? valor.trim() : '');
 const nomPublic = (...candidats) => candidats.map(net).find((nom) => nom && !RE_CORREU.test(nom)) || '';
 /* Només una foto que qualsevol pot obrir tal qual (http(s) o ruta pròpia): una
-   referència sdp-media:// o una data: no viatja al payload del Mur. */
-const fotoPublica = (valor) => (isSafeUrl(net(valor)) ? net(valor) : null);
+   referència sdp-media:// o una data: no viatja al payload del Mur.
+   Revisió del Gauntlet 261017 (ID2; relleu 3: la foto de la barra és la de
+   la publicació) · Derogat EN PART: la foto pujada a l'app al bucket PÚBLIC
+   (sdp-media://mitjans/…, PerfilContext · uploadToStorage) sí que hi viatja.
+   La pot obrir qualsevol (el port la resol a la URL pública: la targeta del
+   Mur, UniversalCard, i la barra taronja, BarraTaronja), el servidor
+   l'admet com a pròpia (supabase/migrations/2610072230_mur_imatges_propies.sql:
+   «les pujades legítimes viatgen com a sdp-media://») i la barra negra i la
+   taronja ja la pintaven. Abans la publicació eixia sense la foto que la
+   barra prometia. El bucket privat (mitjans_privats) i una data: continuen
+   fora: qui llig el Mur no les podria obrir. Decisió 3 no canvia.
+   Revisió del Gauntlet 261017 (ID2, escriptura) · Resolt el PENDENT: el
+   mapejador d'escriptura (mapejadorSeccions.js · mapSectionSubmissionToItem,
+   avatarDeLaPublicacio de la branca 'mur') ja conserva la del bucket públic
+   amb la mateixa regla, i la foto arriba a la fila
+   (NotesContext.dataPublicacio.test.jsx). La targeta del Mur només la passa
+   al port si és d'eixe bucket (TargetaDelMur.jsx).
+   Contrast final · La regla és una sola, a utils/mitjaOpac.js
+   (fotoDelBucketPublic, que torna la forma canònica): un camí amb '..' cap al
+   bucket privat o amb caràcters estranys ja no viatja. */
+const fotoPublica = (valor) => {
+  const foto = net(valor);
+  return isSafeUrl(foto) ? foto : fotoDelBucketPublic(foto);
+};
 
 /**
  * { nom, avatar, poble } de qui signa, o null sense actor (mode incrustat sense
@@ -136,8 +159,14 @@ const fotoPublica = (valor) => (isSafeUrl(net(valor)) ? net(valor) : null);
  * actorAmbPobleDeLEntitat (la fila de la pertinença, baix). Des de l'ordre
  * del Mestre del 13-10-2026 (pla 261013_1405, front A) l'actor entitat ja el
  * porta, de la mateixa fila. L'actor persona també porta `poble` (el de la
- * fila de profiles), però ací la persona continua signant amb el town_name
- * de les metadades de la sessió: el codi no ha canviat.
+ * fila de profiles).
+ * Revisió del Gauntlet 261017 (ID3; relleu 3: una sessió, una identitat) ·
+ * La persona signa amb el poble de l'actor i, de reserva, amb el town_name
+ * de les metadades de la sessió: el mateix ordre que la barra taronja i la
+ * targeta viva (autoriaDeLaSessio, baix). Abans només les metadades: una
+ * sessió adoptada de l'amfitrió (adoptaSessioExterna no en copia el
+ * town_name) o un compte amb el poble només a profiles publicava sense poble
+ * ni poble_id, mentre la barra en deia un.
  */
 export function autoriaDeLActor(actor, currentUser) {
   if (!actor) return null;
@@ -150,7 +179,7 @@ export function autoriaDeLActor(actor, currentUser) {
   return {
     nom: nomPublic(actor.nom, meta.full_name, meta.name, currentUser?.full_name) || NOM_SENSE_NOM,
     avatar: fotoPublica(actor.avatar),
-    poble: net(meta.town_name)
+    poble: net(actor.poble) || net(meta.town_name)
   };
 }
 

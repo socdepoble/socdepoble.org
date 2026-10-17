@@ -26,6 +26,9 @@
  * Grup E de l'Onada 4 (261008) · Una pàgina del sistema que el Mur signa com
  * a «Sóc de Poble» (isSystem) es llig com la seua ruta (LectorDePaginaDelSistema);
  * el cos, només si la ruta és una pàgina de text.
+ * Revisió del Gauntlet 261017 (M2) · La portada d'una publicació del Mur o
+ * d'un acte obri el visor de la seua pàgina (portadaDElement), com la d'un
+ * producte: la mateixa foto, dins d'un botó.
  */
 import { useMemo } from 'react';
 import { ExternalLink } from 'lucide-react';
@@ -39,7 +42,8 @@ import { PortaDePagina } from '../../components/PedraSeca/organismes/PortesTarge
 import { compartix, urlPerCompartir, useUbicacioApp } from '../../components/PedraSeca/hooks/useAccions.js';
 import { renderRichText } from '../detail/detailRichText.jsx';
 import {
-  avatarAutorDElement, buildMercatDetailSectionMeta, cosAmbImatgesPropies, esSeccioDelMur, imatgePropiaDelDetall, portadaDElement
+  avatarAutorDElement, buildEventsDetailSectionMeta, buildMercatDetailSectionMeta, buildMurDetailSectionMeta, cosAmbImatgesPropies,
+  esSeccioDelMur, imatgePropiaDelDetall, portadaDElement
 } from '../detail/detailSectionMeta.jsx';
 import { paginaDElement, useLogoEntitatDElement } from '../detail/elementDeSeccio.js';
 import { dataDElement } from '../../components/universal/editorial.js';
@@ -177,6 +181,10 @@ export function PublicacioDetall({ item }) {
      llegir-ne les regles (portada, fotos, cos): l'element ja ve a data.item.
      Sense useElementDeSeccio: el lector no parpelleja quan la font recarrega. */
   const seccioMercat = useMemo(() => buildMercatDetailSectionMeta({ t }), [t]);
+  /* Revisió del Gauntlet 261017 (M2) · Les seccions del Mur i de l'agenda de
+     detail/, també només per a les seues regles: la portada amb el visor
+     (portadaDElement) i l'autoria declarada (paginaDElement). */
+  const seccionsAmbVisor = useMemo(() => ({ mur: buildMurDetailSectionMeta({ t }), events: buildEventsDetailSectionMeta({ t }) }), [t]);
   /* Ordre E (261007) · El logotip propi (logo_image), també el que resol el
      port. Els hooks, abans del retorn anticipat. `logoEnCami`: el port encara
      el resol (revisió adversarial del 261007). */
@@ -242,7 +250,23 @@ export function PublicacioDetall({ item }) {
   const cos = publicacio.content || publicacio.description || '';
   const cosDelLector = !esProducte && esSeccioDelMur(seccio) ? cosAmbImatgesPropies(cos) : cos;
   const pagina = esProducte ? paginaDElement(seccioMercat, publicacio) : null;
-  const portada = esProducte ? portadaDElement(seccioMercat, publicacio, pagina, t) : null;
+  /* Revisió del Gauntlet 261017 (M2; C04 de Codex: «qualsevol imatge d'una
+     galeria o publicació») · Una publicació del Mur o un acte amb portada:
+     la mateixa foto de sempre (la de la fitxa, pel mode estricte) obri el
+     visor de la seua pàgina sense eixir del Bloc (portadaDElement ·
+     VisorDePublicacio), amb el títol del lector i l'autoria declarada de la
+     pàgina (paginaDElement: mai la reserva «Sóc de Poble» de la barra). Una
+     pujada (sdp-media://) la resol el port, com PageFrame. La Multimèdia, com
+     abans. */
+  const heroDelLector = esProducte ? null : imatgePropiaDelDetall(seccio, item.image);
+  const seccioAmbVisor = !esProducte && Object.hasOwn(seccionsAmbVisor, seccio) ? seccionsAmbVisor[seccio] : null;
+  const portada = esProducte
+    ? portadaDElement(seccioMercat, publicacio, pagina, t)
+    : seccioAmbVisor && heroDelLector
+      ? portadaDElement(seccioAmbVisor, publicacio, {
+        ...paginaDElement(seccioAmbVisor, publicacio), title: item.title, heroImage: heroDelLector, heroAlt: item.title
+      }, t)
+      : null;
   /* Compartir · l'enllaç de la publicació, mai /notes?… (només l'obri qui la
      té). Sense ruta, el de sèrie de la UniversalPage. */
   const onShare = ruta ? () => compartix(item.title, urlPerCompartir(ruta, router), showToast) : undefined;
@@ -267,7 +291,7 @@ export function PublicacioDetall({ item }) {
       lead={(esProducte ? pagina.lead : item.excerpt) || undefined}
       /* Decisió 3 (261007) · La portada d'un producte ja ve filtrada
          (paginaDElement); la de la fitxa, pel mateix mode estricte. */
-      heroImage={(esProducte ? pagina.heroImage : imatgePropiaDelDetall(seccio, item.image)) || undefined}
+      heroImage={(esProducte ? pagina.heroImage : heroDelLector) || undefined}
       heroAlt={esProducte ? pagina.heroAlt : item.title}
       labels={item.labels || []}
       copyright={publicacio.copyright || '© Sóc de Poble'}

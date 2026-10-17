@@ -3,7 +3,7 @@
  * Sempre el número dins d'una pastilla i un text per al lector de pantalla:
  * mai només un punt de color (XAT-P04).
  *
- * Torn 260930 (T1, calc de WhatsApp Desktop):
+ * Torn 260930 (T1, patró estàndard de missatgeria):
  *   · `manual`: el fil s'ha marcat a mà com a no llegit i no té recompte. Es
  *     pinta la pastilla buida (un punt) amb el text «Marcada com a no
  *     llegida»; amb recompte, mana el número.

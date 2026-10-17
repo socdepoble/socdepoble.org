@@ -325,6 +325,9 @@ const TRANSLATIONS = {
     'section.multimedia.visor.gps': 'Coordenades GPS',
     'section.multimedia.visor.gpsPrivat': 'No es mostren en la foto d’una persona',
     'section.multimedia.visor.camera': 'Càmera',
+    // Gauntlet 261017 (C05 i C04) · les mides reals de la foto, i el botó que obri el visor des d'una publicació.
+    'section.multimedia.visor.resolucio': 'Resolució',
+    'section.multimedia.visor.obri': 'Veure la imatge a pantalla completa',
     'section.multimedia.visor.autor': 'Autor',
     'section.multimedia.visor.poble': 'Poble',
     'section.multimedia.visor.drets': 'Drets d’ús',
@@ -500,9 +503,11 @@ const TRANSLATIONS = {
     'section.notes.drets.original': 'Drets de l’original: {drets}',
     'section.notes.drets.originalSenseDeclarar': 'L’original no declara drets',
     /* Esmena 2 del pla 261007_1645 (revisió adversarial del 261007) · «Ja
-       publicat», l'històric de l'actor al peu de l'editor i de la publicació
-       oberta (usePublicacionsDeLActor.js, PublicacionsDeLActor.jsx). El valor
-       valencià és la reserva del codi. El text final és pregunta oberta. */
+       publicat», l'històric de l'actor (usePublicacionsDeLActor.js,
+       PublicacionsDeLActor.jsx). Gauntlet 261017 (WP7a) · Des del Gauntlet
+       261016 (Bloc 3.9, F45) ja no va al peu de l'editor: només davall d'una
+       publicació oberta al Bloc (PublicacioDetall). El valor valencià és la
+       reserva del codi. El text final és pregunta oberta. */
     'section.notes.historic.mur.titol': 'Ja publicat al Mur',
     'section.notes.historic.mur.buit': 'Amb esta identitat encara no hi ha res publicat al Mur.',
     'section.notes.historic.mercat.titol': 'Ja publicat al Mercat',
@@ -751,7 +756,7 @@ const TRANSLATIONS = {
     'section.xat.fake.sdp1': 'Benvingut a Sóc de Poble. Som una xarxa de pobles connectats.',
     'section.xat.fake.sdp2': "Registra't per a descobrir tot el que oferim.",
     'section.xat.fake.reply': "Açò és una simulació. Registra't per a parlar amb els pobles de veritat!",
-    /* Torn 260930 (T1): el full «Ajustos» calcat de WhatsApp Desktop. */
+    /* Torn 260930 (T1): el full «Ajustos» (anatomia habitual de missatgeria). */
     'section.xat.ajustos.titol': 'Ajustos',
     'section.xat.ajustos.obri': 'Tu: ajustos',
     /* Pla 261014_1450 (front C): el peu del rail amb una entitat activa. */
@@ -835,7 +840,7 @@ const TRANSLATIONS = {
     'carrusel.rol': 'carrusel',
     'carrusel.rolDiapositiva': 'diapositiva',
     'section.xat.avisNouMissatge': 'Missatge nou de {nom}',
-    // Xat · onada 3 (T63.2, T67, T68, T69): la columna de llista calcada de WhatsApp Desktop.
+    // Xat · onada 3 (T63.2, T67, T68, T69): la columna de llista (patró de missatgeria).
     'section.xat.mesOpcions': 'Més opcions',
     'section.xat.seleccio.xats': 'Seleccionar xats',
     'section.xat.seleccio.triaXats': 'Tria els xats',
@@ -1194,6 +1199,8 @@ const TRANSLATIONS = {
     'section.multimedia.visor.gps': 'Coordenadas GPS',
     'section.multimedia.visor.gpsPrivat': 'No se muestran en la foto de una persona',
     'section.multimedia.visor.camera': 'Cámara',
+    'section.multimedia.visor.resolucio': 'Resolución',
+    'section.multimedia.visor.obri': 'Ver la imagen a pantalla completa',
     'section.multimedia.visor.autor': 'Autoría',
     'section.multimedia.visor.poble': 'Pueblo',
     'section.multimedia.visor.drets': 'Derechos de uso',
@@ -2037,6 +2044,8 @@ const TRANSLATIONS = {
     'section.multimedia.visor.gps': 'GPS coordinates',
     'section.multimedia.visor.gpsPrivat': 'Not shown on a photo of a person',
     'section.multimedia.visor.camera': 'Camera',
+    'section.multimedia.visor.resolucio': 'Resolution',
+    'section.multimedia.visor.obri': 'View the image full screen',
     'section.multimedia.visor.autor': 'Author',
     'section.multimedia.visor.poble': 'Town',
     'section.multimedia.visor.drets': 'Usage rights',
@@ -2882,6 +2891,8 @@ const TRANSLATIONS = {
     'section.multimedia.visor.gps': 'GPS koordenatuak',
     'section.multimedia.visor.gpsPrivat': 'Ez dira erakusten pertsona baten argazkian',
     'section.multimedia.visor.camera': 'Kamera',
+    'section.multimedia.visor.resolucio': 'Bereizmena',
+    'section.multimedia.visor.obri': 'Ikusi irudia pantaila osoan',
     'section.multimedia.visor.autor': 'Egilea',
     'section.multimedia.visor.poble': 'Herria',
     'section.multimedia.visor.drets': 'Erabilera-eskubideak',
@@ -3726,6 +3737,8 @@ const TRANSLATIONS = {
     'section.multimedia.visor.gps': 'Coordenadas GPS',
     'section.multimedia.visor.gpsPrivat': 'Non se amosan na foto dunha persoa',
     'section.multimedia.visor.camera': 'Cámara',
+    'section.multimedia.visor.resolucio': 'Resolución',
+    'section.multimedia.visor.obri': 'Ver a imaxe a pantalla completa',
     'section.multimedia.visor.autor': 'Autoría',
     'section.multimedia.visor.poble': 'Pobo',
     'section.multimedia.visor.drets': 'Dereitos de uso',

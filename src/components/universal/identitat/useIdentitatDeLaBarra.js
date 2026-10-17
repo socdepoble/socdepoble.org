@@ -12,6 +12,9 @@
  *   · Sense sessió, el botó porta a entrar: /registre?mode=entrar amb la
  *     ruta on estava la persona com a ?tornar (T4, 260930). Si ja és a
  *     /registre no hi torna: l'entrada no s'encadena amb ella mateixa.
+ *   · Revisió del Gauntlet 261017 (ID4) · Mentre una sessió recordada es
+ *     restaura (estat 'comprovant' sense usuari), ni Entrar ni cap clic:
+ *     `boto.pendent` i un estat ocupat (vegeu `pendent`, baix).
  *   · Acta 261004_1027 §3 (beta testers) · Amb sessió i UNA sola identitat
  *     (la persona, sense cap organització on mane) no hi ha res a triar:
  *     l'avatar porta directament al perfil propi (`boto.perfil`). Amb més
@@ -63,12 +66,23 @@ export function rutaSencera(router) {
 export const RUTA_PERFIL_PROPI = '/el-meu-perfil';
 
 export function useIdentitatDeLaBarra({ onNavega, etiquetaEntrar } = {}) {
-  const currentUser = useSessioOpcional()?.currentUser ?? null;
+  const sessio = useSessioOpcional();
+  const currentUser = sessio?.currentUser ?? null;
   const { actor = null, identitats = [], setActor } = useIdentitatOpcional() ?? {};
   /* El router on viu l'app (memòria o navegador), o null: la ruta es llig en el clic. */
   const router = useUbicacioApp();
   const [obert, setObert] = useState(false);
   const teSessio = Boolean(currentUser);
+  /* Revisió del Gauntlet 261017 (ID4; relleu 3: mai «Foraster» mentre la
+     sessió és vàlida) · Una pestanya nova amb una sessió recordada: mentre es
+     restaura (estat 'comprovant' encara sense usuari, sessionService.js) no
+     se sap si hi ha sessió. El botó no és el Foraster ni porta a /registre:
+     un estat neutre i ocupat (BotoIdentitatActiva · pendent), com el
+     «Comprovant la sessió…» de RequireAuth i la càrrega del Bloc
+     (NotesDataContext · sessioResolta). Amb la persona ja dins i el rol en
+     vol ('comprovant' amb usuari), l'avatar de sempre. Sense SessionProvider,
+     cap estat: «Entrar», com abans. */
+  const pendent = !teSessio && sessio?.estat === 'comprovant';
   const entitat = teSessio && actor?.tipus === 'entitat';
   /* Res a triar: només la persona (o encara cap organització carregada). */
   const directe = teSessio && !entitat && identitats.length <= 1;
@@ -91,6 +105,7 @@ export function useIdentitatDeLaBarra({ onNavega, etiquetaEntrar } = {}) {
 
   const boto = {
     teSessio,
+    pendent,
     nom: teSessio ? actor?.nom : null,
     /* L'avatar de l'actor: el logo de l'entitat o la foto de la persona. Una
        entitat sense logo porta null i es pinten les SEUES inicials. */
@@ -100,7 +115,7 @@ export function useIdentitatDeLaBarra({ onNavega, etiquetaEntrar } = {}) {
     obert,
     perfil: directe,
     etiquetaEntrar,
-    onClick: !teSessio ? entra : directe ? () => navega(RUTA_PERFIL_PROPI) : () => setObert(true)
+    onClick: pendent ? undefined : !teSessio ? entra : directe ? () => navega(RUTA_PERFIL_PROPI) : () => setObert(true)
   };
 
   const calaix = teSessio ? {

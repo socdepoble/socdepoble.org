@@ -123,14 +123,22 @@ export function useNavigate() {
 
 /* `state`: en memòria ve de l'entrada del router (navigate(to, { state })),
    mai de window.history.state, que és de l'amfitrió. Al navegador l'app és
-   ama de l'historial i el pot llegir, excepte fora de base. */
+   ama de l'historial i el pot llegir, excepte fora de base.
+   Gauntlet 261017 (M07, C07) · `hash`, camp nou: el fragment (#…) de la URL
+   del document, al navegador i dins de la base. En memòria i fora de base,
+   '': l'entrada de memòria no el guarda i el fragment de fora és de
+   l'amfitrió. Els dobles d'abans no el porten: qui el llig hi posa ''. */
 export function useLocation() {
   const { currentPath, searchParams, memoria, estat } = useRouter();
   const foraDeBase = currentPath === null;
   let state = null;
+  let hash = '';
   if (memoria) state = estat;
-  else if (!foraDeBase) state = window.history.state;
-  return { pathname: foraDeBase ? '' : currentPath, search: searchParams.toString(), state };
+  else if (!foraDeBase) {
+    state = window.history.state;
+    hash = window.location.hash;
+  }
+  return { pathname: foraDeBase ? '' : currentPath, search: searchParams.toString(), state, hash };
 }
 
 export function useSearchParams() {

@@ -138,7 +138,7 @@ const FONAMENTS = [
     'capcalera sobre participants avisos megafon xat public pagina'),
   /* Onada 3B (Pedra Seca §9) · les peces noves del Xat, cadascuna amb el seu espècimen. */
   especimen('fonaments', 'xat-llista', 'Xat · llista de converses', 'MenuLlista · BarraSeleccio · FilaConversa · FilaComunitat', ['organisme', 'xat', 'llista'],
-    'La columna de llista calcada de WhatsApp Desktop: el «…» amb «Seleccionar xats», la barra de la selecció i les files de grup, de comunitat i de canal.',
+    'La columna de llista amb el patró estàndard de missatgeria: el «…» amb «Seleccionar xats», la barra de la selecció i les files de grup, de comunitat i de canal.',
     'seleccionar xats casella comunitat canal avisos grup megafon'),
   especimen('fonaments', 'xat-cerca', 'Xat · cerca global', 'FiltresCerca · ResultatsCercaXat · la fitxa del filtre', ['organisme', 'xat', 'cerca'],
     'La cerca del Xat: la llista vertical de filtres, la fitxa del filtre dins del camp i els resultats en tres grups, amb els estats buits que diuen la veritat.',
@@ -250,7 +250,7 @@ const NAVEGACIO = [
     'tornar dalt pujar amunt scroll inici fletxa boto flotant pobles'),
   /* Onada 3B (Pedra Seca §9) · el rail del Xat i les vistes que obri. */
   especimen('navegacio', 'xat-rail', 'Xat · rail i vistes', 'RailXat · VistaEnConstruccio', ['organisme', 'xat', 'rail'],
-    'El menú de l’esquerra del Xat, calcat del de WhatsApp per a Mac, desplegat i plegat, amb les seccions «Més» i «Comunitats» i el peu amb l’avatar propi; i les vistes que encara no fan res i ho diuen.',
+    'El menú de l’esquerra del Xat, amb el patró de missatgeria que la gent ja coneix, desplegat i plegat, amb les seccions «Més» i «Comunitats» i el peu amb l’avatar propi; i les vistes que encara no fan res i ho diuen.',
     'menu xats novetats comunitats telefonades multimedia destacats tu perfil en construccio marcador')
 ];
 
@@ -301,9 +301,10 @@ const SUPERPOSICIONS = [
   especimen('superposicions', 'xat-nova-conversa', 'Xat · Nova conversa', 'DialegNovaConversa', ['organisme', 'xat', 'dialeg'],
     'El diàleg del «+» del Xat: el cercador, «Nou grup» i «Nova comunitat» amb el panell honest, els contactes freqüents i la gent del poble per lletres.',
     'nova conversa padro contactes frequents nou grup nova comunitat tu mateix'),
-  /* Torn 260930 (T1) · el full «Ajustos» del Xat, calcat del de WhatsApp Desktop. */
+  /* Torn 260930 (T1) · el full «Ajustos» del Xat, amb l'anatomia habitual dels
+     ajustos de missatgeria (Gauntlet 261017, Bloc 3.1: cap marca aliena). */
   especimen('superposicions', 'xat-ajustos', 'Xat · Ajustos', 'FullAjustos · CosAjustos (T1)', ['organisme', 'xat', 'dialeg'],
-    'El full que obri «Tu» al peu del rail del Xat: un modal centrat de mida fixa amb una pila de pàgines dins del mateix marc, calcat del d’«Ajustes» de WhatsApp Desktop. Només hi ha el que el Xat ja té; la resta diu que està en construcció.',
+    'El full que obri «Tu» al peu del rail del Xat: un modal centrat de mida fixa amb una pila de pàgines dins del mateix marc, amb l’anatomia habitual dels ajustos de missatgeria. Només hi ha el que el Xat ja té; la resta diu que està en construcció.',
     'ajustos tu perfil compte privacitat aparenca tema llengua amplaria columnes preferits destacats ajuda en construccio'),
   /* T41 (ordre del Mestre, 260928) · pública o privada, amb avís. */
   especimen('superposicions', 'visibilitat', 'Selector de visibilitat', 'Pública o privada, amb avís (T41)', ['superposicio', 'visibilitat', 'publicar'],
@@ -417,10 +418,12 @@ CATALOG_ITEMS.push(
 /* Esmena 2 del pla 261007_1645 (ordre del Mestre, 261007: «Esta lògica de llistar elements de
    la categoria per a l'avatar actiu ha d'estar disponible per tot el sistema») · el que l'actor
    actiu ja té publicat, amb la targeta canònica de cada secció, i la ranura peuDePagina de
-   PageFrame on va al Bloc de Notes. Pedra Seca §9: l'espècimen abans d'endollar-lo. */
+   PageFrame on va al Bloc de Notes. Pedra Seca §9: l'espècimen abans d'endollar-lo.
+   Gauntlet 261017 (WP7a) · Des del Gauntlet 261016 (Bloc 3.9, F45) només va davall d'una
+   publicació oberta al Bloc (PublicacioDetall): l'editor ja no en porta. */
 CATALOG_ITEMS.push(
   especimen('fonaments', 'publicacions-actor', 'Publicacions de l’actor', 'PublicacionsDeLActor · TargetaDelMercat · la ranura peuDePagina', ['organisme', 'targeta', 'historic'],
-    'El que la persona, o l’entitat amb què actua, ja té publicat en una secció (Mur, Mercat o Esdeveniments), amb la targeta de sempre de cada secció dins de la graella. Al Bloc de Notes va davall de l’editor, dins del mateix scroll i fora de l’Índex de la nota.',
+    'El que la persona, o l’entitat amb què actua, ja té publicat en una secció (Mur, Mercat o Esdeveniments), amb la targeta de sempre de cada secció dins de la graella. Al Bloc de Notes va davall d’una publicació oberta, dins del mateix scroll i fora de l’Índex; l’editor ja no en porta.',
     'historic ja publicat actor avatar identitat entitat socdepoble samarreta aplec mur mercat esdeveniments notes peu pagina ranura graella targeta')
 );
 

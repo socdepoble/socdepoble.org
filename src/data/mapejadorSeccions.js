@@ -1,5 +1,6 @@
 import { sanitizeHtml, netejaText } from '../utils/sanitize.js';
 import { origenPublic } from './origenNota.js';
+import { fotoDelBucketPublic } from '../utils/mitjaOpac.js';
 
 function generateUUID() {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
@@ -69,6 +70,25 @@ function imatgeDeVariacio(image) {
   return REFERENCIA_DE_MITJANS.test(s) ? s : validaUrl(s);
 }
 
+/* Revisió del Gauntlet 261017 (ID2; relleu 3: la foto de la barra és la de la
+   publicació) · La foto de qui signa una publicació del Mur (author_avatar),
+   com la d'una variació però NOMÉS del bucket públic: la foto de perfil
+   pujada a l'app (sdp-media://mitjans/…, PerfilContext · uploadToStorage)
+   que publishNote ja hi posa (autoriaNota.js · fotoPublica). Abans validaUrl
+   la buidava abans d'escriure la fila, i la publicació eixia sense la foto
+   que la barra prometia; el servidor sí que l'admet
+   (2610072230_mur_imatges_propies.sql). El bucket privat (mitjans_privats) i
+   qualsevol altre bucket no hi entren: qui llig el Mur no els podria obrir.
+   La resta de fonts passen per validaUrl com abans; validaUrl i els altres
+   camps d'imatge no canvien. */
+/* Contrast final · La regla és una sola, a utils/mitjaOpac.js
+   (fotoDelBucketPublic): un camí amb '..' o caràcters estranys ja no passa. */
+function avatarDeLaPublicacio(avatar) {
+  if (!avatar) return null;
+  const s = String(avatar).trim();
+  return fotoDelBucketPublic(s) || validaUrl(s);
+}
+
 function netejaVariacio(variacio) {
   if (typeof variacio === 'string') return netejaText(variacio);
   if (!variacio || typeof variacio !== 'object' || Array.isArray(variacio)) return null;
@@ -122,7 +142,9 @@ export function mapSectionSubmissionToItem(submission) {
       post_subtitle: netejaText(baseItem.post_subtitle || baseItem.description || ''),
       author: netejaText(baseItem.author || baseItem.author_name || 'Foraster'),
       author_name: netejaText(baseItem.author_name || baseItem.author || 'Foraster'),
-      author_avatar: validaUrl(baseItem.author_avatar || baseItem.avatar_url),
+      /* Revisió del Gauntlet 261017 (ID2) · També la foto del bucket públic
+         (avatarDeLaPublicacio, dalt). */
+      author_avatar: avatarDeLaPublicacio(baseItem.author_avatar || baseItem.avatar_url),
       /* Onada 6 (decisió 2 de la nit del 261009) · Abans s'hi escrivia «La
          Torre de les Maçanes» quan el payload no en portava: un poble que
          ningú havia triat, persistit a section_submissions. Ara, sense poble,

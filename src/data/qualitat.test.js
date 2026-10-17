@@ -93,7 +93,11 @@ const CENS = Object.freeze([
   'src/data/iaiaLocal.js',
   'src/data/iaiaLocal.test.js',
   'src/data/localXat.iaia.test.js',
-  'src/data/localXat.iaiaOrdre.test.js'
+  'src/data/localXat.iaiaOrdre.test.js',
+  /* Gauntlet 261017 (WP7b, P2) · Les carpetes de sèrie del Bloc, soles, perquè
+     el tros d'entrada no arrossegue appSeed.js ni PAGE_COPY (appSeed les
+     reexporta). */
+  'src/data/carpetesSeed.js'
 ]);
 
 describe('el cens', () => {

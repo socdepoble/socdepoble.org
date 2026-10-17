@@ -12,7 +12,8 @@ import { EstatErrorDades } from '../mur/EstatErrorDades.jsx';
    catàleg passa pel mateix camí.
    Esmena 2 del pla 261007_1645 · La targeta de cada producte és
    TargetaDelMercat (extracció pura del JSX d'ací): la mateixa de l'històric de
-   l'actor (PublicacionsDeLActor) davall de l'editor de Notes. */
+   l'actor (PublicacionsDeLActor) al peu d'una publicació oberta
+   (PublicacioDetall; l'editor de Notes ja no en porta, F45). */
 import { TargetaDelMercat } from './TargetaDelMercat.jsx';
 
 /* Decisió 4 del Mestre (261007) · «Carregar-ne més». Un useMur sense

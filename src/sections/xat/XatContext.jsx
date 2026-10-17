@@ -168,7 +168,10 @@ import { useIdentitat } from '../../app/contexts/IdentitatContext.jsx';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
 import { filsAmbLaGentDelPoble } from '../pobles/xatDelPoble.js';
 import { normalizeBackendConfig, backendScope } from '../../config/backendConfig.js';
-import { getDefaultUserId } from '../../data/appSeed.js';
+/* Gauntlet 261017 (WP7b, P2) · De la font, identitat.js: appSeed.js només el
+   reexporta, i importar-lo d'allà arrossegava la llavor sencera (PAGE_COPY
+   inclosa) al tros d'entrada. La mateixa funció, el mateix valor. */
+import { getDefaultUserId } from '../../data/identitat.js';
 import { useLocation } from '../../app/contexts/RouterContext';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { useToast } from '../../components/universal/NotificationContext.jsx';
@@ -1131,8 +1134,8 @@ export function XatProvider({ children, config }) {
      per a qui no n'és administrador) no s'envia res ni es pinta cap bombolla.
      El Compositor ja no hi mostra el formulari i el servidor ho rebutja
      (SDP-XAT-011).
-     `opcions.respostaA`: l'id del missatge al qual es respon (la cita de
-     WhatsApp). */
+     `opcions.respostaA`: l'id del missatge al qual es respon (la cita del
+     patró de missatgeria). */
   const sendChatMessage = useCallback(async (fil, text, opcions = {}) => {
     const op = captura();
     /* Relleu 261007 · Guardada d'abans d'una renovació: la versió vigent. */

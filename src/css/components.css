@@ -1586,10 +1586,6 @@ a.pill:active {
   margin-top: 0;
 }
 
-.notes-editor .badge-row {
-  margin-top: var(--sdp-space-3);
-}
-
 .card--soft .split-grid .sp-card-labels {
   margin-top: 0;
   margin-bottom: var(--sdp-space-3);
@@ -2082,8 +2078,9 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
    Components: BotoComentar i MenuComentar (PedraSeca/organismes/Comentar.jsx),
    a la barra blava i al peu de la UniversalCard. La pell és la del menú de Traduir, de
    més amunt (.sdp-menu-traduir i les seues files, que el menú també porta):
-   ací només hi ha el que el fa clon de WhatsApp (dues files grans, una icona
-   a l'esquerra i, davall del nom, una línia que diu on porta) i el seu lloc a
+   ací només hi ha el que el fa un menú de missatgeria conegut (dues files
+   grans, una icona a l'esquerra i, davall del nom, una línia que diu on
+   porta) i el seu lloc a
    la targeta. Res d'ací es veu fins que es prem Comentar (Llei del Píxel).
      · A la barra, el lloc és el de Traduir (.bar-blue .sdp-menu-traduir):
        just davall de la barra, centrat com el trio.
@@ -2791,6 +2788,34 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
     object-fit: cover;
   }
 
+  /* Gauntlet 261017 (C04) · Amb onObri, cada foto va dins d'un <button> que
+     obri el visor: un embolcall transparent, sense pell ni premut (el dit que
+     passa fotos no l'encongix). Només el cursor de lupa canvia (Llei del
+     Píxel). Sense classe pròpia: la peça no en nomena cap de nova. L'anell,
+     per dins, perquè la pista retalla el que sobix.
+     Revisió del Gauntlet 261017 (M5) · Sense el mínim de --sdp-touch de tot
+     botó (base.css): la caixa és la de la foto, que és l'àrea tàctil. */
+  .sdp-carrusel__diapositiva > button {
+    display: block;
+    inline-size: 100%;
+    min-inline-size: 0;
+    min-block-size: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: zoom-in;
+    appearance: none;
+    transform: none;
+  }
+  .sdp-carrusel__diapositiva > button:focus-visible {
+    outline: var(--sdp-focus-gruix) solid var(--sdp-focus);
+    outline-offset: calc(-1 * var(--sdp-focus-gruix));
+  }
+
   /* Els controls, damunt de la pista, centrats en vertical sense transform. */
   .sdp-carrusel__controls {
     position: absolute;
@@ -2933,6 +2958,12 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
     gap: 0;
     border-radius: var(--sdp-radi-pastilla);
   }
+  /* Gauntlet 261017 · El marc rep el focus del clic a la foto (tabIndex -1:
+     un contenidor enfocat per programa, no un control, i Tab no s'hi para)
+     perquè les fletxes, + − 0 i «i» hi continuen arribant. Sense anell: en
+     prémer una tecla, el navegador el pintaria al voltant de tot el visor.
+     Els controls conserven el seu, el del crom. ALLOW_FOCUS_INVISIBLE */
+  .sdp-visor__marc:focus { outline: none; }
   .sdp-visor__boto:focus-visible { outline-color: var(--sdp-crom-focus); }
   .sdp-visor__boto[aria-expanded="true"] { border-color: var(--sdp-accio-control); }
   .sdp-visor__cos {
@@ -3004,8 +3035,13 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
     font-weight: 800;
     overflow-wrap: anywhere;
   }
+  /* Gauntlet 261017 (C05) · Una sola columna de files: la regla de sèrie dels
+     <dl> (sdp.css, :where(dl), «max-content 1fr») en feia dos columnes de
+     files que desbordaven el panell i en retallaven la de la dreta (GPS,
+     Resolució, Poble…). */
   .sdp-visor__dades {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: var(--sdp-space-3);
     margin: 0;
   }
@@ -3032,6 +3068,46 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
   .sdp-visor__valor a:focus-visible {
     outline: var(--sdp-focus-gruix) solid var(--sdp-crom-focus);
     outline-offset: var(--sdp-focus-separacio);
+  }
+  /* Gauntlet 261017 (C04) · El disparador del visor fora del visor: la portada
+     sola d'una publicació del Mur (detail/VisorDePublicacio.jsx) és un botó
+     que embolcalla la imatge de sempre. Transparent, sense pell ni premut
+     (base.css encongix tot botó en prémer-lo); només el cursor de lupa
+     canvia (Llei del Píxel). L'anell, per dins de la foto.
+     Revisió del Gauntlet 261017 (M5, Llei del Píxel) · Excepció conscient al
+     mínim de --sdp-touch de tot botó (base.css, LLEI DE VIDA): amb ell, la
+     portada pintava una franja de 48px d'accent mentre la foto carregava
+     (abans, 0px) i 48px amb la foto trencada (abans, 24px). Sense, la caixa
+     és la de la imatge en tots els estats (fora del focus de teclat: vegeu
+     :focus-visible, davall); carregada, la foto és l'àrea tàctil, molt més
+     gran que --sdp-touch. */
+  .sdp-visor__obridor {
+    display: block;
+    inline-size: 100%;
+    min-inline-size: 0;
+    min-block-size: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: zoom-in;
+    appearance: none;
+    transform: none;
+  }
+  /* Revisió del Gauntlet 261017 (M5, WCAG 2.4.7) · Sense el mínim, mentre la
+     foto carrega la caixa fa 0px d'alt i l'anell, per dins, no es veia: el
+     focus de teclat no deixava rastre. Només amb el focus de teclat recupera
+     --sdp-touch d'alt (el mínim de base.css) i l'anell es veu sencer; sense
+     focus, la caixa és la de la imatge, com abans. Carregada, la foto ja és
+     més alta i el mínim no hi canvia cap píxel. Les diapositives del carrusel
+     no el necessiten: la foto reserva l'alçada amb aspect-ratio. */
+  .sdp-visor__obridor:focus-visible {
+    outline: var(--sdp-focus-gruix) solid var(--sdp-focus);
+    outline-offset: calc(-1 * var(--sdp-focus-gruix));
+    min-block-size: var(--sdp-touch);
   }
   @media (max-width: 720px) {
     .sdp-visor__panell {

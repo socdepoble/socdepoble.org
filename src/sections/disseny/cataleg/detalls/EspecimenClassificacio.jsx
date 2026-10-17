@@ -4,13 +4,17 @@ import { BotoneraClassificacio } from '../../../../components/universal/classifi
 import { DialegCarpeta } from '../../../../components/universal/classificacio/DialegCarpeta.jsx';
 import { DialegValors } from '../../../../components/universal/classificacio/DialegValors.jsx';
 import { DialegEmoticona } from '../../../../components/universal/classificacio/DialegEmoticona.jsx';
+import { carregaCatalegEmojis } from '../../../notes/canalEmojis.js';
 import { Llinatge } from '../Llinatge.jsx';
 
 /* T52 (ordre del Mestre, 260928) · La botonera REAL de davall del títol i els
    seus tres diàlegs, muntats com els munta NotesEditor: la botonera no guarda
    estat i crida onObri(tipus); qui la munta obri el diàleg (muntatge
    condicional amb key, perquè cada obertura comence de zero). Dos documents de
-   mostra: un sense emoticona (la ploma) i un amb 🍅. Tot és local. */
+   mostra: un sense emoticona (la ploma) i un amb 🍅. Tot és local.
+   Gauntlet 261017 (F30: «DialegEmoticona substituït per graella Unicode18
+   accessible», a tota l'app) · El diàleg d'emoticona porta el catàleg Emojis
+   XL, com NotesEditor (canalEmojis.js · carregaCatalegEmojis, a demanda). */
 
 const CARPETES = Object.freeze([
   { id: 'hort', nom: 'Hort' },
@@ -78,7 +82,7 @@ export default function EspecimenClassificacio() {
           ['BotoneraClassificacio', '{ carpeta, categories, etiquetes, emoticona, onObri }', '—', 'Muda: pinta els quatre botons (Boto amb aria-haspopup="dialog") i crida onObri(\'carpeta\'|\'categories\'|\'etiquetes\'|\'emoticona\').'],
           ['DialegCarpeta', '{ obert, onTanca, opcions, seleccionada, onDesa, avis }', '—', 'Una carpeta i només una (ràdios). Crear, reanomenar i esborrar, desactivats amb l’avís.'],
           ['DialegValors', '{ obert, onTanca, titol, etiquetaNou, cataleg, seleccionats, minim, fixos, onDesa, onReanomena, onEsborra, … }', '—', 'Caselles d’esta nota (es confirmen amb Desar) i accions de catàleg que s’apliquen al moment. Amb minim, l’últim valor no es pot llevar.'],
-          ['DialegEmoticona', '{ obert, onTanca, actual, onDesa }', '—', 'Un sol emoji (utils/emoji.emojiSol). «Llevar» el buida.'],
+          ['DialegEmoticona', '{ obert, onTanca, actual, onDesa, carregaCataleg }', '—', 'Un sol emoji (utils/emoji.emojiSol). «Llevar» el buida. Amb carregaCataleg (() => Promise<{ GRUPS_EMOJIS }>, a demanda), la graella Emojis XL: un clic l’assigna (onDesa) i el camp de text es queda com a alternativa de teclat. A l’app tots el porten (canalEmojis.js · carregaCatalegEmojis).'],
         ]}
         a11y={[
           'Cada botó anuncia que obri una finestra (aria-haspopup="dialog"); la botonera és un grup amb nom.',
@@ -113,7 +117,7 @@ export default function EspecimenClassificacio() {
         ) : null}
         {obert?.tipus === 'emoticona' ? (
           <DialegEmoticona key={clau} obert onTanca={tanca} actual={docs[obert.doc].emoticona}
-            onDesa={(emoji) => desa('emoticona', emoji)} />
+            onDesa={(emoji) => desa('emoticona', emoji)} carregaCataleg={carregaCatalegEmojis} />
         ) : null}
       </Especimen>
     </>

@@ -1,7 +1,8 @@
 /**
  * cercaXat.js — El motor de la cerca global del Xat (T69), en funcions pures.
  *
- * Sense React ni xarxa. Calca WhatsApp Desktop (captura del Mestre, 19.13.56):
+ * Sense React ni xarxa. Seguix el patró estàndard de missatgeria (captura de
+ * referència del Mestre, 19.13.56):
  *   · El camp busca a tot arreu per defecte i torna tres grups de resultats:
  *     converses, persones del padró i missatges ja carregats. «Converses» i
  *     «Persones» són grups, no filtres.
@@ -46,7 +47,7 @@ export const FILTRES_CERCA_XAT = Object.freeze([
 const IDS_FILTRE = new Set(FILTRES_CERCA_XAT.map((filtre) => filtre.id));
 
 /* Del tipus de la BD (xat_missatges_tipus_valid) al filtre. `text`, `ubicacio`,
-   `contacte` i `adhesiu` no tenen filtre a WhatsApp; `sistema` no es busca. */
+   `contacte` i `adhesiu` no tenen filtre a la referència; `sistema` no es busca. */
 const FILTRE_DE_TIPUS = new Map([
   ['imatge', 'fotos'],
   ['video', 'videos'],
@@ -199,7 +200,7 @@ export function cercaXat({ terme = '', filtre = null, fils = [], membres = [], m
   let persones = [];
   let missatges = [];
   if (filtreNet || llistaFitxes.length) {
-    /* Amb un filtre, WhatsApp només mostra missatges d'eixe tipus. */
+    /* Amb un filtre, només es mostren missatges d'eixe tipus. */
     if (!filtreNet) {
       converses = cercaConverses(llistaFils, llistaFitxes);
       const filsTrobats = new Set(converses.map(({ fil }) => String(fil.id)));

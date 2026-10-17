@@ -47,7 +47,7 @@ export default function EspecimenGestor() {
           <tbody>
             <tr><td>ample</td><td>Des del màxim entre 900px i la suma navegació + llistat + 320px + 2px (una columna plegada hi compta 56px). Amb les amplades per defecte, 900px.</td><td>Tres columnes; dos separadors; carrils de plegat.</td></tr>
             <tr><td>mitja</td><td>De 720px fins a l’ample.</td><td>Llistat + Detall, amb un sol separador; la navegació és un panell superposat que s’obri des de la icona de la capçalera del llistat.</td></tr>
-            <tr><td>estret</td><td>&lt; 720px</td><td>Una sola capa cada vegada i cap separador. Amb panellEstret (mestre-detall, com WhatsApp): primer la navegació, després el llistat i, en triar un element, el detall; la fletxa ← del detall torna al panell d’on es venia. Mai dos panells oberts.</td></tr>
+            <tr><td>estret</td><td>&lt; 720px</td><td>Una sola capa cada vegada i cap separador. Amb panellEstret (mestre-detall, com a les apps de missatgeria): primer la navegació, després el llistat i, en triar un element, el detall; la fletxa ← del detall torna al panell d’on es venia. Mai dos panells oberts.</td></tr>
           </tbody>
         </table>
         <table>

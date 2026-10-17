@@ -77,7 +77,6 @@ vi.mock('../../components/universal/richText', () => ({
   UniversalRichTextContent: () => null,
 }));
 vi.mock('../../components/universal/richText/extensions', () => ({ extensionsRiques: () => [] }));
-vi.mock('../notes/NotesSection.jsx', () => ({ LLAVOR_NOTA: '<p>llavor</p>' }));
 vi.mock('../../components/universal/DocumentPrintPreview.jsx', () => ({ default: () => null }));
 /* D4 · Un espia damunt de la targeta per defecte del Workspace, la de veres:
    el Workspace la crida per dins (enllaç local) i el Perfil per l'export. */

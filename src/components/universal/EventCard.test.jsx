@@ -267,6 +267,40 @@ describe('Decisió 3 · només imatges pròpies', () => {
   });
 });
 
+/* Revisió del Gauntlet 261017 (ID1; ordre del Mestre: «TERMINANTMENT
+   PROHIBIT que aparega el logotip verd de l'entitat Sóc de Poble associat a
+   Javi Llinares», i relleu 3: una identitat a totes les superfícies) ·
+   `authorAvatar={null}` vol dir «signa una persona sense foto»: cap reserva
+   de la marca, la silueta de sempre, la mateixa del detall de l'acte
+   (elementDeSeccio.js). L'avatar propi de l'acte, si en porta, continua
+   pintant-se. Sense la prop (undefined), el de sempre: el logotip de reserva
+   per a una entitat o un acte sense signatura (Llei del Píxel, dalt). */
+describe('ID1 · una persona sense foto no signa l’acte amb el logotip', () => {
+  const fonts = () => [...arrel.querySelectorAll('img')].map((img) => img.getAttribute('src'));
+  const pintaAmb = (item, props) => {
+    cleanup();
+    arrel = document.createElement('div');
+    act(() => { render(<EventCard item={item} esdeveniment={acteAEsdeveniment(item)} {...props} />, { container: arrel }); });
+  };
+
+  test('authorAvatar null: la silueta, cap <img> del logotip; el nom de qui signa', () => {
+    pintaAmb({ id: 'fira', title: 'Fira', date: '2026-11-14' }, { authorName: 'Pepa Soler', authorAvatar: null });
+    expect(fonts()).toEqual([]);
+    expect(arrel.querySelector('.sp-card-avatar--fallback')).not.toBeNull();
+    expect(arrel.querySelector('.sp-card-author-name')?.textContent).toBe('Pepa Soler');
+  });
+
+  test('authorAvatar null amb un avatar propi a l’acte: es pinta el seu', () => {
+    pintaAmb({ id: 'fira', title: 'Fira', date: '2026-11-14', author_avatar: '/assets/gent/pepa.webp' }, { authorAvatar: null });
+    expect(fonts()).toEqual(['/assets/gent/pepa.webp']);
+  });
+
+  test('sense la prop, el logotip de reserva de sempre', () => {
+    pintaAmb({ id: 'fira', title: 'Fira', date: '2026-11-14' }, {});
+    expect(fonts()).toEqual([DEFAULT_AUTHOR.avatarUrl]);
+  });
+});
+
 /* Tres fusos: el del poble, un de negatiu (on el dia UTC recula) i el més
    positiu que hi ha (UTC+14). El desfasament de gener fa de guarda: si el
    canvi de TZ no s'aplica al worker, la guarda falla en lloc de deixar les

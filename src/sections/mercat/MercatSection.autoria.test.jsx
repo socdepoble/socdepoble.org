@@ -34,7 +34,7 @@ import { MOCK_MARKET_ITEMS } from './marketSeed.js';
 import { propsDeTargetaDeProducte } from './targetaDeProducte.js';
 import { TargetaDelMur } from '../mur/TargetaDelMur.jsx';
 import { paginaDElement } from '../detail/elementDeSeccio.js';
-import { avatarAutorDElement, buildMercatDetailSectionMeta } from '../detail/detailSectionMeta.jsx';
+import { avatarAutorDElement, buildEventsDetailSectionMeta, buildMercatDetailSectionMeta } from '../detail/detailSectionMeta.jsx';
 import { BarraTaronja } from '../../components/universal/barres/BarraTaronja.jsx';
 import { EventCard } from '../../components/universal/EventCard.jsx';
 import { propsDeTargetaDeLaPagina } from '../../components/universal/targetaDeLaPagina.js';
@@ -353,10 +353,13 @@ test('Mur: un acte de la pilot sense avatar ni nom sencer pinta «Javi Llinares�
 
 /* Llei del Píxel · Per a qualsevol altre autor, TargetaDelMur no passa cap
    nom ni cap avatar a EventCard: la boina és la de l'EventCard sense les
-   props noves, la de sempre. */
+   props noves, la de sempre.
+   Revisió del Gauntlet 261017 (ID1, actes) · Derogat per a l'acte d'un veí
+   (una persona, autorDe): abans duia el logotip de reserva a la targeta i la
+   silueta al detall. Ara la targeta diu el mateix que el detall (vegeu la
+   prova de baix). Les entitats, com sempre. */
 test.each([
   ['l’acte de l’entitat (la llavor)', () => EVENTS[0]],
-  ['l’acte d’un veí', () => ({ id: 'fira', type: 'event', title: 'Fira', date: '2026-11-14', author_name: 'Pepa', owner_user_id: 'pepa' })],
   ['l’acte de l’entitat amb la pilot com a autora', () => ({ id: 'festa', type: 'event', title: 'Festa', date: '2026-11-14', author_name: 'Sóc de Poble', author_entity_id: 'socdepoble', owner_user_id: 'javillinares' })]
 ])('Mur: %s es pinta igual que l’EventCard de sempre', (_, acte) => {
   const item = acte();
@@ -365,4 +368,14 @@ test.each([
   const deSempre = boinaDe(render(<EventCard item={item} />).container.querySelector('article'));
   expect(delMur).toEqual(deSempre);
   expect(delMur.nom).not.toBe('Javi Llinares');
+});
+
+test('Mur: l’acte d’un veí sense foto porta la silueta, com el seu detall; mai el logotip de Sóc de Poble', () => {
+  const item = { id: 'fira', type: 'event', title: 'Fira', date: '2026-11-14', author_name: 'Pepa', owner_user_id: 'pepa' };
+  const article = render(<TargetaDelMur item={item} />).container.querySelector('article');
+  expect(boinaDe(article)).toEqual({ nom: 'Pepa', avatar: null });
+  expect(article.querySelector('.sp-card-header .sp-card-avatar--fallback')).not.toBeNull();
+  expect(article.innerHTML).not.toContain(DEFAULT_AUTHOR.avatarUrl);
+  // El detall de l'acte (/events/fira) diu el mateix: cap avatar, la silueta de la barra taronja.
+  expect(paginaDElement(buildEventsDetailSectionMeta({ events: [item], t }), item)).toMatchObject({ authorName: 'Pepa', authorAvatar: null });
 });

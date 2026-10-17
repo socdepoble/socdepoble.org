@@ -15,7 +15,12 @@ const senseComentaris = (text) => text.replace(/\/\*[\s\S]*?\*\//g, '');
 const INDEX = llig('index.html');
 const FONTS = senseComentaris(llig('public/fonts/noto-sans.css'));
 const WOFF2_NORMAL = 'o-0bIpQlx3QUlC5A4PNB6Ryti20_6n1iPHjc5a7duw.woff2';
+/* Revisió del Gauntlet 261017 (GATE-1, M3, R1) · El variable wdth+wght encara
+   no és a public/fonts (FONTS_LOCALS.txt): noto-sans.css ja no el demana
+   (WP7b, P6: cada text estret en feia un 404). El nom es queda per a la
+   guarda de més avall: quan el fitxer arribe, torna davant a la cara estreta. */
 const WOFF2_ESTRET = 'noto-sans-wdth-wght-latin.woff2';
+const existixAFonts = (url) => existsSync(resolve(ARREL, 'public/fonts', url));
 
 /** Les cares de noto-sans.css: { descriptor: valor }, amb `src` com a llista d'URL. */
 function cares(css) {
@@ -68,17 +73,34 @@ describe('public/fonts/noto-sans.css · una cara per amplada, amb rangs', () => 
     expect(normal.urls).toEqual([`./${WOFF2_NORMAL}`]);
   });
 
-  test('amplades estretes 62.5-87.5%: primer el variable wdth+wght i, si no hi és, el d’amplada normal', () => {
+  /* Revisió del Gauntlet 261017 (GATE-1, M3, R1) · Abans, esta prova fixava
+     la llista literal [variable, normal]; el variable no ha estat mai a
+     public/fonts i el navegador en feia un 404 abans de caure en el normal,
+     que és el que es pinta. Ara, la regla de veres: es pinta el d'amplada
+     normal (el mateix fitxer d'abans, cap píxel canviat) i el variable només
+     torna davant quan el fitxer arriba a public/fonts. */
+  test('amplades estretes 62.5-87.5%: es pinta el d’amplada normal; el variable wdth+wght, davant, només quan és a public/fonts', () => {
     const estreta = llista.find((c) => c['font-stretch'] === '62.5% 87.5%');
     expect(estreta['font-weight']).toBe('400 800');
-    expect(estreta.urls).toEqual([`./${WOFF2_ESTRET}`, `./${WOFF2_NORMAL}`]);
+    expect(estreta.urls.at(-1)).toBe(`./${WOFF2_NORMAL}`);
+    expect(estreta.urls).toEqual(existixAFonts(WOFF2_ESTRET) ? [`./${WOFF2_ESTRET}`, `./${WOFF2_NORMAL}`] : [`./${WOFF2_NORMAL}`]);
   });
 
-  test('cada cara acaba en un fitxer que existix: cap src remot i cap cara sense recurs', () => {
+  test('cada url de cada src és un fitxer de public/fonts: cap src remot i cap 404', () => {
     for (const cara of llista) {
+      expect(cara.urls.length).toBeGreaterThan(0);
       expect(cara.urls.every((u) => u.startsWith('./') && u.endsWith('.woff2'))).toBe(true);
-      expect(existsSync(resolve(ARREL, 'public/fonts', cara.urls.at(-1)))).toBe(true);
+      expect(cara.urls.filter((u) => !existixAFonts(u))).toEqual([]);
     }
+  });
+
+  /* Les cares que es pinten hui (el primer src que existix) no canvien: totes
+     dues, el woff2 d'amplada normal. */
+  test('el fitxer que pinta cada cara és el d’amplada normal, mentre no arribe el variable', () => {
+    const pinta = llista.map((cara) => cara.urls.find(existixAFonts));
+    expect(pinta).toEqual(llista.map((cara) => (
+      cara['font-stretch'] !== '100%' && existixAFonts(WOFF2_ESTRET) ? `./${WOFF2_ESTRET}` : `./${WOFF2_NORMAL}`
+    )));
   });
 });
 

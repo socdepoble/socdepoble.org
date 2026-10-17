@@ -9,8 +9,9 @@ const CLASSE = 'sdp-slash-menu';
  * L'editor viu dins del shadow root de <soc-de-poble>. Si el popup es
  * munta al document.body, cau al cos del CMS amfitrió: fora del
  * shadow root no existixen els tokens --sdp-* i el menú es pinta nu.
- * I si es munta dins de .ues-canvas, l'overflow de .ues-scroll el retalla
- * i l'`isolation: isolate` de .ues-root impedix que cap z-index el salve.
+ * I si es munta dins del llenç de l'editor, qualsevol avantpassat amb
+ * overflow el retalla, i un `isolation: isolate` pel camí impedix que cap
+ * z-index el salve.
  *
  * La tercera via: germà dins del MATEIX shadow root (.sdp-root), amb
  * position: fixed i coordenades de coordsAtPos. Es demana l'arrel a
@@ -175,8 +176,9 @@ export const SlashMenu = Extension.create({
               caixa.setAttribute('aria-label', 'Inserir bloc');
               pare.appendChild(caixa);
 
-              /* Capture: true perquè el scroll de .ues-scroll no bombolleja
-                 fins a window. Sense això, el menú es queda flotant al buit. */
+              /* Capture: true perquè el scroll d'un contenidor desplaçable
+                 (el de l'editor o el de l'amfitrió) no bombolleja fins a
+                 window. Sense això, el menú es queda flotant al buit. */
               window.addEventListener('scroll', reposiciona, true);
               window.addEventListener('resize', reposiciona);
 

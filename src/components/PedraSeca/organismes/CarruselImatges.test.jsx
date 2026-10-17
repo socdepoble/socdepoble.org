@@ -245,6 +245,98 @@ describe('una foto o cap (Llei del Píxel)', () => {
   });
 });
 
+/* Gauntlet 261017 (C04 de Codex: «La fotografia de /mercat/mac-mini-m4 no
+   obri cap modal en clicar-la») · Amb onObri, cada foto és un botó amb nom
+   que la demana a pantalla completa; qui munta el carrusel hi posa el visor.
+   Passar fotos (el dit, el ratolí arrossegant, la pista que llisca) no l'obri. */
+describe('onObri: cada foto obri el visor', () => {
+  const botonsDeFoto = (container) => [...pista(container).querySelectorAll('.sdp-carrusel__diapositiva > button')];
+
+  test('sense onObri, cap botó dins de la pista (Llei del Píxel)', () => {
+    const { container } = pinta();
+    expect(pista(container).querySelector('button')).toBeNull();
+    expect(pista(container).querySelectorAll('.sdp-carrusel__diapositiva > img.sdp-carrusel__imatge')).toHaveLength(4);
+  });
+
+  test('cada foto, dins d’un <button> amb nom i aria-haspopup; només el de la foto que es veu és a l’ordre de Tab', () => {
+    const { container } = pinta({ onObri: vi.fn(), etiquetes: { obri: 'View the image full screen' } });
+    const botons = botonsDeFoto(container);
+    expect(botons).toHaveLength(4);
+    for (const [i, boto] of botons.entries()) {
+      expect(boto.type).toBe('button');
+      expect(boto.getAttribute('aria-haspopup')).toBe('dialog');
+      expect(boto.getAttribute('aria-label')).toBe('View the image full screen');
+      expect(boto.querySelector('img.sdp-carrusel__imatge').getAttribute('src')).toBe(FOTOS[i].src);
+      expect(boto.getAttribute('class')).toBeNull();
+    }
+    expect(botons.map((boto) => boto.tabIndex)).toEqual([0, -1, -1, -1]);
+    fireEvent.click(screen.getByRole('button', { name: 'Imatge següent' }));
+    expect(botonsDeFoto(container).map((boto) => boto.tabIndex)).toEqual([-1, 0, -1, -1]);
+    // Sense etiqueta, la reserva valenciana.
+    cleanup();
+    const segon = pinta({ onObri: vi.fn() });
+    expect(botonsDeFoto(segon.container)[0].getAttribute('aria-label')).toBe('Veure la imatge a pantalla completa');
+  });
+
+  test('un clic sense moure’s (o Intro i Espai, que no porten premut) obri la seua foto i passa el botó', () => {
+    const onObri = vi.fn();
+    const { container } = pinta({ onObri });
+    const botons = botonsDeFoto(container);
+    fireEvent.pointerDown(botons[2], { pointerId: 1, pointerType: 'mouse', button: 0, clientX: 100, clientY: 100 });
+    fireEvent.click(botons[2], { detail: 1, clientX: 104, clientY: 103 });
+    expect(onObri).toHaveBeenLastCalledWith(2, botons[2]);
+    fireEvent.click(botons[0], { detail: 0 });
+    expect(onObri).toHaveBeenLastCalledWith(0, botons[0]);
+    expect(onObri).toHaveBeenCalledTimes(2);
+  });
+
+  test('passar fotos no l’obri: el ratolí que arrossega, el dit que llisca la pista', () => {
+    const onObri = vi.fn();
+    const { container } = pinta({ onObri });
+    const [primer] = botonsDeFoto(container);
+    fireEvent.pointerDown(primer, { pointerId: 1, pointerType: 'mouse', button: 0, clientX: 300, clientY: 100 });
+    fireEvent.click(primer, { detail: 1, clientX: 180, clientY: 102 });
+    expect(onObri).not.toHaveBeenCalled();
+    fireEvent.pointerDown(primer, { pointerId: 2, pointerType: 'touch', button: 0, clientX: 200, clientY: 100 });
+    pista(container).scrollLeft = 60;
+    fireEvent.scroll(pista(container));
+    fireEvent.click(primer, { detail: 1, clientX: 200, clientY: 100 });
+    expect(onObri).not.toHaveBeenCalled();
+    // Un clic net després, sí: el premut d'abans no s'hi queda.
+    fireEvent.pointerDown(primer, { pointerId: 3, pointerType: 'touch', button: 0, clientX: 200, clientY: 100 });
+    fireEvent.click(primer, { detail: 1, clientX: 202, clientY: 101 });
+    expect(onObri).toHaveBeenCalledTimes(1);
+  });
+
+  test('amb el focus a una foto, les fletxes, Inici i Fi s’emporten el focus a la nova (Intro obri la que es veu)', () => {
+    const onObri = vi.fn();
+    const { container } = pinta({ onObri });
+    act(() => botonsDeFoto(container)[0].focus());
+    fireEvent.keyDown(document.activeElement, { key: 'ArrowRight' });
+    expect(document.activeElement).toBe(botonsDeFoto(container)[1]);
+    expect(comptador(container).textContent).toContain('2 / 4');
+    expect(desplacaments.at(-1)).toEqual({ left: AMPLE, behavior: 'smooth' });
+    fireEvent.keyDown(document.activeElement, { key: 'ArrowLeft' });
+    fireEvent.keyDown(document.activeElement, { key: 'ArrowLeft' });
+    expect(document.activeElement).toBe(botonsDeFoto(container)[3]);
+    fireEvent.keyDown(document.activeElement, { key: 'Home' });
+    expect(document.activeElement).toBe(botonsDeFoto(container)[0]);
+    fireEvent.keyDown(document.activeElement, { key: 'End' });
+    expect(document.activeElement).toBe(botonsDeFoto(container)[3]);
+    fireEvent.click(document.activeElement, { detail: 0 });
+    expect(onObri).toHaveBeenLastCalledWith(3, botonsDeFoto(container)[3]);
+    // Des de la pista, el focus es queda a la pista, com abans.
+    act(() => pista(container).focus());
+    fireEvent.keyDown(pista(container), { key: 'ArrowRight' });
+    expect(document.activeElement).toBe(pista(container));
+  });
+
+  test('una sola foto: la imatge tal qual, també amb onObri (la portada sola en fa el botó qui la munta)', () => {
+    const { container } = render(<CarruselImatges imatges={[FOTOS[0]]} onObri={vi.fn()} />);
+    expect(container.innerHTML).toBe('<img src="/a.png" alt="Foto 1">');
+  });
+});
+
 describe('imatgesDelCarrusel', () => {
   test('accepta cadenes i objectes, descarta els que no porten src i normalitza l’alt', () => {
     expect(imatgesDelCarrusel(['/a.png', { src: ' /b.png ', alt: 'B' }, { src: '' }, null, { src: '/c.png', alt: 3 }])).toEqual([

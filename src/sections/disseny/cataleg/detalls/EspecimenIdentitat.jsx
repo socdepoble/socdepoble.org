@@ -39,6 +39,10 @@ export default function EspecimenIdentitat() {
       descripcio="La barra negra diu sempre amb qui actues. Una entitat es mostra amb el SEU logo o les SEUES inicials i un anell de crom, mai amb la foto de la persona. El calaix «Amb qui actues?» deixa canviar d’identitat, i la vista Connectar d’una organització explica què vol dir administrar-la."
       contracte={[
         ['BotoIdentitatActiva.teSessio', 'bool', 'false', 'Sense sessió: icona de persona i «Entrar».'],
+        /* Revisió del Gauntlet 261017 (ID4) · La prop nova de
+           BotoIdentitatActiva.jsx: mai «Entrar» ni el Foraster mentre una
+           sessió recordada encara es comprova (useIdentitatDeLaBarra). */
+        ['BotoIdentitatActiva.pendent', 'bool', 'false', 'Sense sessió, mentre la sessió recordada es comprova: cap botó ni «Entrar», només un estat ocupat per al lector de pantalla («Comprovant la sessió…», role="status", aria-busy). Amb sessió no hi compta.'],
         ['BotoIdentitatActiva.entitat', 'bool', 'false', 'Anell de crom i «(organització)» al nom accessible.'],
         ['BotoIdentitatActiva.perfil', 'bool', 'false', 'Acta 261004_1027 · Una sola identitat: l’avatar porta directament al perfil propi («El teu perfil: {nom}»), sense calaix.'],
         ['BotoIdentitatActiva.avatar', 'string | null', 'null', 'Logo o foto (també sdp-media://, que es resol). Una entitat no hereta mai la foto de la persona.'],

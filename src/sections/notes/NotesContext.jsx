@@ -16,7 +16,7 @@ import { aliesDeLActor } from '../../data/identitatsSeed.js';
 import { pertanyALActor } from './masDeLUsuari.js';
 import { useIdentitat } from '../../app/contexts/IdentitatContext.jsx';
 import { useSession } from '../../app/contexts/SessionContext.jsx';
-import { actorAmbPobleDeLEntitat, autoriaDeLActor } from './autoriaNota.js';
+import { actorAmbPobleDeLEntitat, autoriaDeLActor, modeDeDadesResolt } from './autoriaNota.js';
 import { slugDelPoble } from '../pobles/nomsDelPoble.js';
 import { pobleDeConfig } from '../xat/pobleAmfitrio.js';
 import { esConnexio, esExtern, netejaDrets } from '../../data/origenNota.js';
@@ -225,11 +225,18 @@ export function NotesProvider({ children }) {
        la signa una altra identitat, no s'envia res: el motiu va pel canal de
        sempre (ErrorPublicacio, que el selector diu en línia). Si no és entre
        les carregades (el port en porta una finestra), o no se sap qui la
-       signa, o no hi ha actor, com abans. */
+       signa, o no hi ha actor, com abans.
+       Revisió del Gauntlet 261017 (ID6) · Els àlies de l'actor, amb el mode
+       RESOLT (modeDeDadesResolt), com el Bloc (NotesSection): mai els de la
+       persona pilot per a un compte remot qualsevol. Mentre la guarda de dalt
+       continue rebutjant amb el mode cru ('seed' o 'local'), el resolt només
+       difereix d'eixe en els casos que ja no arriben ací: el canvi no altera
+       cap publicació d'avui, però la guarda no tornarà a obrir el forat el
+       dia que la de dalt passe al mode resolt. */
     if (activeNote.isPublished && activeNote.publishedSubmissionId != null && actor?.id) {
       const idPublicat = String(activeNote.publishedSubmissionId);
       const publicada = (publicacionsDelMur.current || []).find((element) => element && String(element.id) === idPublicat);
-      if (publicada && autorDe(publicada) && !pertanyALActor(publicada, aliesDeLActor(actor, { dataMode: config?.dataMode }))) {
+      if (publicada && autorDe(publicada) && !pertanyALActor(publicada, aliesDeLActor(actor, { dataMode: modeDeDadesResolt(config) }))) {
         const motiu = motiuSignaturaAliena(publicada.author_name || publicada.seller);
         showToast(motiu, 'info');
         return Promise.reject(new ErrorPublicacio(motiu));

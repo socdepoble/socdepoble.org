@@ -385,9 +385,15 @@ export const PAGE_COPY = {
     "html": "\n      <h5>Obrir portes tancades</h5>\n      <p>Mantingues el poble viu anunciant eixes cases tancades que necessiten obrir de nou les portes.</p>\n      <img src=\"/assets/ui/plugins/habitatge_vinyeta.jpg\" alt=\"Habitatge\" />\n"
   },
   /* Ordre del Mestre (261007) · «El Xat»: la pàgina que explica el xat de
-     Sóc de Poble (el clon de WhatsApp) perquè ningú no tinga por de fer-lo
-     servir. Contingut literal del document 261006_2200_contingut_el_xat §2;
-     la portada és la il·lustració del Mestre (public/, 1024×1024). Es publica a
+     Sóc de Poble (el patró estàndard de missatgeria que la gent ja coneix)
+     perquè ningú no tinga por de fer-lo servir. Naix del document
+     261006_2200_contingut_el_xat §2. Gauntlet 261017 (Bloc 3.1; troballa C12
+     de l'auditoria de Codex) · Reescrit sense cap marca aliena, sense afirmar
+     cap còpia i sense garanties absolutes («privacitat absoluta»,
+     «indestructible»): la familiaritat (Llei de Jakob) s'explica com un
+     objectiu de disseny, i la privacitat diu només el que l'avís legal ja
+     sosté («no ven ni cedeix») i hi remet.
+     La portada és la il·lustració del Mestre (public/, 1024×1024). Es publica a
      /page/xat (PageDetailSection, sense ruta nova) i la seua targeta ix al Mur
      i al Calendari (SYSTEM_PAGES, amb el botó «Anar al xat»). «L'Ànima de la
      IAIA» es queda: la columna dreta de /xat tria quina pàgina hi viu
@@ -398,7 +404,7 @@ export const PAGE_COPY = {
     "date": "2026-10-07T01:30:00+02:00",
     "title": "El Xat",
     "subtitle": "Parla amb la teua gent amb la tecnologia de casa",
-    "lead": "Hem integrat un sistema de missatgeria clavat a WhatsApp. Sense descarregar aplicacions noves, sense configuracions estranyes i amb la garantia que les teues dades es queden a casa.",
+    "lead": "Hem integrat una missatgeria que funciona com les que ja coneixes. Sense descarregar aplicacions noves, sense configuracions estranyes i sense vendre ni cedir les teues converses a ningú.",
     "image": "/assets/uploads/brain/xat_portada.jpg",
     "imageWidth": 1024,
     "imageHeight": 1024,
@@ -414,7 +420,7 @@ export const PAGE_COPY = {
         "className": "sdp-badge-category"
       }
     ],
-    "html": "\n      <h3>Com a casa, com a WhatsApp</h3>\n      <p>Sabem que la tecnologia pot ser aclaparadora. Per això, quan vam dissenyar el Xat de Sóc de Poble, vam prendre una decisió molt clara: <strong>no inventarem la roda</strong>.</p>\n      <p>El nostre xat té la mateixa estructura, els mateixos botons i el mateix funcionament que el WhatsApp que ja fas servir cada dia per parlar amb la família. Si saps enviar un missatge per WhatsApp, ja saps fer servir el Xat de Sóc de Poble.</p>\n      \n      <h4>Per què un xat propi?</h4>\n      <ul>\n        <li><strong>Privacitat absoluta:</strong> Les teues converses del poble, avisos i comunicacions amb els negocis locals es queden als servidors del projecte, no en mans de megacorporacions internacionals.</li>\n        <li><strong>Integració total:</strong> Des del xat pots reservar al bar, preguntar si la panaderia té pa, o avisar que s'ha perdut un gosset, tot sense eixir de Sóc de Poble.</li>\n        <li><strong>Evolució constant:</strong> Ara mateix tens allò bàsic per a parlar i compartir, però a poc a poc anirem implementant noves funcionalitats (notes de veu, imatges, etc.) sempre respectant l'estil que ja coneixes.</li>\n      </ul>\n\n      <h4>Entra i saluda!</h4>\n      <p>Pots parlar amb la <strong>IAIA MarIA</strong> per resoldre qualsevol dubte sobre el funcionament de la plataforma, o entrar directament al canal del teu poble per vore què s'està coent hui.</p>\n      <p>No tingues por de tocar botons, l'hem construït perquè siga indestructible. Som-hi!</p>\n    "
+    "html": "\n      <h3>Com a casa, sense res nou que aprendre</h3>\n      <p>Sabem que la tecnologia pot ser aclaparadora. Per això, quan vam dissenyar el Xat de Sóc de Poble, vam prendre una decisió molt clara: <strong>no inventarem la roda</strong>.</p>\n      <p>El nostre xat seguix el patró de missatgeria que ja fas servir cada dia per parlar amb la família: la llista de converses, la conversa amb una bombolla per a cada missatge i el camp per a escriure baix de tot. Està pensat perquè no hages d'aprendre res de nou: si saps enviar un missatge des del mòbil, ja saps fer servir el Xat de Sóc de Poble.</p>\n      \n      <h4>Per què un xat propi?</h4>\n      <ul>\n        <li><strong>Privacitat sense lletra menuda:</strong> Sóc de Poble no ven ni cedix les teues converses del poble, els avisos ni el que parles amb els negocis locals, i els missatges els veuen les persones del fil. Qui els guarda per encàrrec nostre, on i en quines condicions t'ho expliquem a <a href=\"/legal\">Legal i privacitat</a>.</li>\n        <li><strong>Integració total:</strong> Des del xat pots reservar al bar, preguntar si la panaderia té pa, o avisar que s'ha perdut un gosset, tot sense eixir de Sóc de Poble.</li>\n        <li><strong>Evolució constant:</strong> Ara mateix tens allò bàsic per a parlar i compartir, però a poc a poc anirem implementant noves funcionalitats (notes de veu, imatges, etc.) sempre respectant l'estil que ja coneixes.</li>\n      </ul>\n\n      <h4>Entra i saluda!</h4>\n      <p>Pots parlar amb la <strong>IAIA MarIA</strong> per resoldre qualsevol dubte sobre el funcionament de la plataforma, o entrar directament al canal del teu poble per vore què s'està coent hui.</p>\n      <p>No tingues por de tocar botons: l'hem pensat perquè tornar arrere siga fàcil. Som-hi!</p>\n    "
   },
   /* Ordre del Mestre (261007) · «Drets d'autor»: la pàgina on porta l'enllaç
      del copyright de TOTES les targetes i capçaleres (UniversalCard i

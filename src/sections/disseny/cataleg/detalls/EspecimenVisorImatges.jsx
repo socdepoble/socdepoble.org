@@ -49,6 +49,8 @@ export default function EspecimenVisorImatges() {
         ['titol', 'string', "'Visor d’imatges'", 'El nom accessible del diàleg.'],
         ['etiquetes', '{ tanca, anterior, seguent, ampliar, reduir, info, posicio, error, senseImatge }', 'en valencià', 'Els textos, ja traduïts per qui el munta: la peça no llig cap context.'],
         ['infoInicial', 'boolean', 'false', 'El panell comença desplegat.'],
+        /* Gauntlet 261017 (C05 de Codex; WP7a) · La fila del contracte que faltava. */
+        ['onCarrega', '(index, { amplada, alcada } | null) => void', '—', 'Quan la foto oberta carrega, les seues mides reals (naturalWidth i naturalHeight); null si no carrega o el fitxer no en té (un SVG sense mida). La peça no les pinta: les passa a qui la munta, que en fa la fila «Resolució» del panell (VisorDeLArxiu).'],
         ['className', 'string', '—', 'Classes de més per al <dialog>.']
       ]}
       a11y={[

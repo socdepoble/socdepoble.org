@@ -42,7 +42,10 @@ vi.mock('./NotesDetail.jsx', async () => {
 vi.mock('./NotaFitxa.jsx', () => ({ NotaFitxa: () => null }));
 /* T71 · la fitxa de lectura de les connexions té les seues proves (ConnexioFitxa.test.jsx). */
 vi.mock('./ConnexioFitxa.jsx', () => ({ ConnexioFitxa: () => null }));
-import NotesSection, { LLAVOR_NOTA } from './NotesSection.jsx';
+/* Revisió del Gauntlet 261017 (R6) · La llavor, de la seua font canònica
+   (llavorNota.js): NotesSection ja no la reexporta. */
+import NotesSection from './NotesSection.jsx';
+import { LLAVOR_NOTA } from './llavorNota.js';
 import { NotaFitxa } from './NotaFitxa.jsx';
 import { ConnexioFitxa } from './ConnexioFitxa.jsx';
 import { PublicacioFitxa } from './PublicacioDetall.jsx';
@@ -178,11 +181,11 @@ test('T71 · el contingut de fora és una nota (s’edita), sense la ploma per d
    canònic (H3, H4, paràgrafs, llistes amb vinyetes) que s'esvaeix al primer
    clic») · La plantilla porta H3 i H4 amb el seu paràgraf, una llista de pics
    i una de numerada, i diu que s'esborra; fora l'H5 i l'H6 d'abans. És la
-   mateixa de llavorNota.js, que NotesSection reexporta. */
+   de llavorNota.js, i CREAR NOTA posa eixa mateixa (vegeu «CREAR NOTA»,
+   més avall: entradaDeCrearDes). Revisió del Gauntlet 261017 (R6) · Abans
+   es comparava amb la reexportació de NotesSection, que ja no hi és. */
 test('Bloc 3.9 · la llavor del cos és la plantilla canònica: H3 i H4 amb paràgraf, dues llistes i l’avís que s’esborra', async () => {
-  const { LLAVOR_NOTA: deLaSeccio } = await import('./NotesSection.jsx');
-  const { LLAVOR_NOTA: original, LLAVOR_NOTA_ANTIGA } = await import('./llavorNota.js');
-  expect(deLaSeccio).toBe(original);
+  const { LLAVOR_NOTA_ANTIGA } = await import('./llavorNota.js');
   const doc = new DOMParser().parseFromString(LLAVOR_NOTA, 'text/html').body;
   expect([...doc.children].map((el) => el.tagName)).toEqual(['H3', 'P', 'H4', 'P', 'UL', 'OL']);
   expect(doc.querySelectorAll('ul > li').length).toBeGreaterThanOrEqual(2);

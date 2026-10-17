@@ -543,7 +543,8 @@ nav.mobile-nav { display: none; }
 
   /* ── MODE IMMERSIU (ordre del Mestre, 261007) ──
      Una vista demana la pantalla sencera (ModeImmersiuContext; la closca només
-     posa l'atribut en compacte): la conversa del Xat en mòbil, com WhatsApp.
+     posa l'atribut en compacte): la conversa del Xat en mòbil, com a les apps
+     de missatgeria.
      Fora la barra negra, la franja de l'amfitrió i la barra inferior. La
      reserva de la barra inferior (--sdp-alt-nav-mobil) passa a zero a
      tokens.css, fora de capa com el token, i tots els coixins que la sumen

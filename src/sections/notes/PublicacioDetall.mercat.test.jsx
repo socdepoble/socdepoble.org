@@ -157,11 +157,16 @@ describe('Esmena 3 · la Samarreta al lector del MAS, com la seua pàgina', () =
 });
 
 describe('Esmena 3 · altres productes i les altres seccions', () => {
-  test('un producte d’una foto: la seua foto sola, sense carrusel', () => {
+  /* Gauntlet 261017 (C04) · La foto sola obri el visor: el mateix <img> de
+     sempre, dins d'un botó (VisorDePublicacio · .sdp-visor__obridor). */
+  test('un producte d’una foto: la seua foto sola, sense carrusel, obri el visor', () => {
     const container = pinta({ id: 'mel', title: 'Mel de romer', images: ['/assets/mel.png'], avatar_url: QUADRAT_VERD, imageSrc: QUADRAT_VERD, created_at: CREAT });
     const marc = portada(container);
     expect(marc.querySelector('.sdp-carrusel')).toBeNull();
-    expect([...marc.children].map((fill) => fill.tagName)).toEqual(['IMG']);
+    expect([...marc.children].map((fill) => fill.tagName)).toEqual(['BUTTON']);
+    const obridor = marc.querySelector('button.sdp-visor__obridor[aria-haspopup="dialog"]');
+    expect(obridor.childNodes).toHaveLength(1);
+    expect(obridor.firstChild).toBe(marc.querySelector('img'));
     expect(marc.querySelector('img').getAttribute('src')).toBe('/assets/mel.png');
   });
 

@@ -66,7 +66,6 @@ vi.mock('../../components/universal/richText', () => ({
   UniversalRichTextContent: () => <div data-testid="cos" />,
 }));
 vi.mock('../../components/universal/richText/extensions', () => ({ extensionsRiques: () => [] }));
-vi.mock('../../sections/notes/NotesSection.jsx', () => ({ LLAVOR_NOTA: '<p>Llavor</p>' }));
 /* Fora del que es prova (i en obres per un altre torn). */
 vi.mock('../../components/universal/DocumentPrintPreview.jsx', () => ({ default: () => null }));
 

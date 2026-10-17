@@ -8,7 +8,10 @@
        obri el visor i tancar-lo lleva la consulta;
      · el panell: drets per origen, el poble i «Publicat a» amb els seus
        enllaços interns; l'EXIF es llig de la foto oberta (només pròpia, 256
-       KB), sense el GPS d'una persona;
+       KB), sense el GPS d'una persona; la resolució, de la foto pintada
+       (Gauntlet 261017, C05);
+     · en tancar, el focus torna a la cel·la; amb el focus al marc (el clic a
+       la foto), el teclat continua (Gauntlet 261017);
      · l'apartat «IAIA» i el cens de public/assets (useCensImatges). */
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
@@ -130,6 +133,39 @@ describe('obrir, passar i tancar', () => {
     pinta('/multimedia?foto=no-hi-es');
     expect(obert()).toBe(false);
   });
+
+  /* Gauntlet 261017 · El focus torna a la cel·la que ha obert el visor, amb
+     «Tancar» i amb Escape, també després de passar fotos. jsdom no enfoca en
+     clicar: la cel·la s'enfoca a mà, com ho fa el navegador. */
+  test('en tancar (Tancar o Escape), el focus torna a la cel·la que l’ha obert', () => {
+    pinta();
+    const tibi = screen.getByRole('button', { name: 'Tibi' });
+    act(() => tibi.focus());
+    act(() => tibi.click());
+    expect(obert()).toBe(true);
+    expect(document.activeElement).toBe(within(visor()).getByRole('button', { name: 'Tancar el visor' }));
+    act(() => within(visor()).getByRole('button', { name: 'Imatge següent' }).click());
+    act(() => within(visor()).getByRole('button', { name: 'Tancar el visor' }).click());
+    expect(obert()).toBe(false);
+    expect(document.activeElement).toBe(tibi);
+    const mur = screen.getByRole('button', { name: 'Mur' });
+    act(() => mur.focus());
+    act(() => mur.click());
+    expect(obert()).toBe(true);
+    act(() => { visor().dispatchEvent(new Event('cancel', { cancelable: true })); });
+    expect(obert()).toBe(false);
+    expect(document.activeElement).toBe(mur);
+  });
+
+  /* Gauntlet 261017 · Després de clicar la foto (el focus va al marc), les
+     fletxes continuen passant fotos. */
+  test('amb el focus al marc (el clic a la foto), les fletxes passen de foto', () => {
+    pinta('/multimedia?foto=town-tibi');
+    const marc = visor().querySelector('.sdp-visor__marc');
+    act(() => marc.focus());
+    fireEvent.keyDown(document.activeElement, { key: 'ArrowRight' });
+    expect(foto()).toBe('nano-mur');
+  });
 });
 
 describe('el panell', () => {
@@ -144,6 +180,57 @@ describe('el panell', () => {
     expect(fila('Publicat a').querySelector('a').getAttribute('href')).toBe('/pobles/tibi');
     expect(fila('Origen').textContent).toBe('Fotografia');
     await waitFor(() => expect(fila('Càmera').textContent).toBe('Desconegut'));
+  });
+
+  /* Gauntlet 261017 (C05 de Codex: «la resolució coneguda no s'ha d'ocultar
+     perquè falte EXIF») · La resolució, de la foto que es veu: «Llegint…»
+     mentre carrega, les mides reals en carregar (sense EXIF: el fetch falla),
+     «Desconegut» si no carrega. La mida d'una altra foto no s'hi queda. */
+  test('la resolució de la foto pintada: llegint, les mides reals, i «Desconegut» si no carrega', async () => {
+    pinta('/multimedia?foto=town-tibi');
+    act(() => within(visor()).getByRole('button', { name: 'Informació de la imatge' }).click());
+    const img = () => visor().querySelector('img.sdp-visor__imatge');
+    const descodifica = (amplada, alcada) => {
+      Object.defineProperty(img(), 'naturalWidth', { configurable: true, value: amplada });
+      Object.defineProperty(img(), 'naturalHeight', { configurable: true, value: alcada });
+      fireEvent.load(img());
+    };
+    expect(fila('Resolució').textContent).toBe('Llegint…');
+    descodifica(1200, 800);
+    expect(fila('Resolució').textContent).toBe('1200 × 800 px');
+    expect([...panell().querySelectorAll('dt')].map((dt) => dt.textContent).slice(2, 4)).toEqual(['Càmera', 'Resolució']);
+    await waitFor(() => expect(fila('Càmera').textContent).toBe('Desconegut'));
+    expect(fila('Resolució').textContent).toBe('1200 × 800 px');
+    act(() => within(visor()).getByRole('button', { name: 'Imatge següent' }).click());
+    expect(fila('Resolució').textContent).toBe('Llegint…');
+    fireEvent.error(img());
+    expect(fila('Resolució').textContent).toBe('Desconegut');
+    act(() => within(visor()).getByRole('button', { name: 'Imatge anterior' }).click());
+    expect(fila('Resolució').textContent).toBe('Llegint…');
+    descodifica(1200, 800);
+    expect(fila('Resolució').textContent).toBe('1200 × 800 px');
+  });
+
+  /* Revisió del Gauntlet 261017 (M4) · La foto que no ha carregat es queda
+     amb l'avís i no es torna a demanar: en tornar-hi després d'una altra que
+     sí que ha carregat, «Resolució» diu «Desconegut», mai «Llegint…» per
+     sempre al costat de l'avís. */
+  test('tornar a una foto que no ha carregat: «Desconegut», també després d’una altra que sí', () => {
+    pinta('/multimedia?foto=town-tibi');
+    act(() => within(visor()).getByRole('button', { name: 'Informació de la imatge' }).click());
+    const img = () => visor().querySelector('img.sdp-visor__imatge');
+    fireEvent.error(img());
+    expect(fila('Resolució').textContent).toBe('Desconegut');
+    act(() => within(visor()).getByRole('button', { name: 'Imatge següent' }).click());
+    expect(fila('Resolució').textContent).toBe('Llegint…');
+    Object.defineProperty(img(), 'naturalWidth', { configurable: true, value: 800 });
+    Object.defineProperty(img(), 'naturalHeight', { configurable: true, value: 600 });
+    fireEvent.load(img());
+    expect(fila('Resolució').textContent).toBe('800 × 600 px');
+    act(() => within(visor()).getByRole('button', { name: 'Imatge anterior' }).click());
+    expect(img()).toBeNull();
+    expect(visor().querySelector('.sdp-visor__avis').textContent).toBe('No s’ha pogut carregar la imatge.');
+    expect(fila('Resolució').textContent).toBe('Desconegut');
   });
 
   test('una il·lustració d’IA porta els drets de Sóc de Poble; una foto real, mai', () => {

@@ -4,16 +4,18 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
 /* T43 (ordre del Mestre, 260928) · la identitat de la barra negra amb el
    botó i el calaix de veres; la sessió, la identitat i els mitjans simulats. */
-const m = vi.hoisted(() => ({ user: null, identitat: null, senseSessio: false, senseIdentitat: false }));
+/* Revisió del Gauntlet 261017 (ID4) · `estat` és el de useSession
+   ('comprovant' | 'dins' | 'fora'); undefined, com abans d'esta prova. */
+const m = vi.hoisted(() => ({ user: null, identitat: null, senseSessio: false, senseIdentitat: false, estat: undefined }));
 /* Prompt 261014_0400 (ordre del Mestre) · La simulació calca el contracte de
    veres dels dos mòduls: sense proveïdor, l'estricte llança amb el seu missatge
    (SessionContext.jsx, IdentitatContext.jsx) i l'opcional torna null. */
 vi.mock('../../../app/contexts/SessionContext', () => ({
   useSession: () => {
     if (m.senseSessio) throw new Error('useSession ha de ser usat dins de SessionProvider');
-    return { currentUser: m.user };
+    return { currentUser: m.user, estat: m.estat };
   },
-  useSessioOpcional: () => (m.senseSessio ? null : { currentUser: m.user })
+  useSessioOpcional: () => (m.senseSessio ? null : { currentUser: m.user, estat: m.estat })
 }));
 vi.mock('../../../app/contexts/IdentitatContext.jsx', () => ({
   useIdentitat: () => {
@@ -49,6 +51,7 @@ afterEach(cleanup);
 beforeEach(() => {
   m.senseSessio = false;
   m.senseIdentitat = false;
+  m.estat = undefined;
   m.user = { id: 'u-1', user_metadata: { avatar_url: 'https://lh3.googleusercontent.com/a/pepa.png' } };
   m.identitat = {
     actor: PERSONA,
@@ -243,4 +246,39 @@ test('amb sessió però sense IdentitatProvider no llança i el botó porta un n
   await act(async () => { fireEvent.click(boto); });
   expect(onNavega).toHaveBeenCalledWith(RUTA_PERFIL_PROPI);
   expect(screen.queryByRole('dialog')).toBeNull();
+});
+
+/* Revisió del Gauntlet 261017 (ID4; relleu 3: mai «Foraster» mentre la sessió
+   és vàlida) · Una pestanya nova amb una sessió recordada: mentre es restaura
+   (estat 'comprovant', encara sense usuari) la barra no és el Foraster. Cap
+   «Entrar» ni cap clic que porte a /registre: un estat neutre i ocupat
+   (aria-busy) fins que la comprovació es resol. Resolta sense sessió, el
+   botó Entrar de sempre. */
+test('ID4 · mentre es restaura la sessió: cap «Entrar», cap navegació i un estat ocupat; resolta sense sessió, Entrar', () => {
+  m.user = null;
+  m.estat = 'comprovant';
+  m.identitat = { actor: { tipus: 'persona', id: null, nom: null, avatar: null, rol: 'convidat' }, identitats: [], setActor: vi.fn(() => false) };
+  const onNavega = vi.fn();
+  const { container, rerender } = render(<Barra onNavega={onNavega} />);
+  expect(screen.queryByRole('button', { name: 'Entrar' })).toBeNull();
+  expect(container.querySelector('button')).toBeNull();
+  const pendent = screen.getByRole('status');
+  expect(pendent.getAttribute('aria-busy')).toBe('true');
+  expect(pendent.textContent).toBe('Comprovant la sessió…');
+  fireEvent.click(pendent);
+  expect(onNavega).not.toHaveBeenCalled();
+  expect(container.ownerDocument.querySelector('dialog')).toBeNull();
+  // La comprovació es resol sense sessió: el Foraster de sempre.
+  m.estat = 'fora';
+  rerender(<Barra onNavega={onNavega} />);
+  fireEvent.click(screen.getByRole('button', { name: 'Entrar' }));
+  expect(onNavega).toHaveBeenCalledWith('/registre?mode=entrar&tornar=%2F');
+});
+
+test('ID4 · amb la persona ja dins i el rol en vol (comprovant amb usuari): l’avatar de sempre, mai l’estat ocupat', () => {
+  m.estat = 'comprovant';
+  m.identitat.identitats = [{ ...PERSONA, activa: true }];
+  render(<Barra onNavega={vi.fn()} />);
+  expect(screen.getByRole('button', { name: etiquetaPerfilPropi('Pepa Soler') })).not.toBeNull();
+  expect(screen.queryByRole('status')).toBeNull();
 });

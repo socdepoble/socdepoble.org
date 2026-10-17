@@ -164,8 +164,23 @@ test('261007 · El Xat: les props de la seua UniversalPage', () => {
   });
   expect([mocks.props.time, mocks.props.date]).toEqual(['01:30', '07/10/26']);
   const cos = container.querySelector('[data-pagina] > article.cms-preview');
-  expect(cos.querySelector('h3').textContent).toBe('Com a casa, com a WhatsApp');
+  expect(cos.querySelector('h3').textContent).toBe('Com a casa, sense res nou que aprendre');
   expect(cos.querySelector('h1, h2')).toBeNull();
+});
+
+/* Gauntlet 261017 (Bloc 3.1; troballa C12 de l'auditoria de Codex) · La
+   pàgina del Xat explica la familiaritat com un objectiu de disseny (el patró
+   de missatgeria que la gent ja coneix): cap marca aliena, cap afirmació de
+   còpia i cap garantia absoluta. La privacitat diu el que l'avís legal sosté
+   i hi porta. El full de ruta (el pont d'interoperabilitat amb una app
+   externa, ús nominatiu) i l'avís legal no són d'esta pàgina. */
+test('Gauntlet 261017 · El Xat: sense marca aliena, sense còpia i sense garanties absolutes', () => {
+  const { container } = render(<TextSection page={PAGE_COPY.xat} pageKey="xat" />);
+  const cos = container.querySelector('[data-pagina] > article.cms-preview');
+  const text = `${PAGE_COPY.xat.title} ${PAGE_COPY.xat.subtitle} ${PAGE_COPY.xat.lead} ${cos.textContent}`;
+  expect(text).not.toMatch(/whats\s*app|\bmeta\b|clon|calca|clavat|absolut|indestructible|garantia/i);
+  expect(PAGE_COPY.xat.lead).toBe('Hem integrat una missatgeria que funciona com les que ja coneixes. Sense descarregar aplicacions noves, sense configuracions estranyes i sense vendre ni cedir les teues converses a ningú.');
+  expect([...cos.querySelectorAll('a')].map((a) => [a.getAttribute('href'), a.textContent])).toEqual([['/legal', 'Legal i privacitat']]);
 });
 
 test('el chrome del copy mana i els fills van davall del text', () => {

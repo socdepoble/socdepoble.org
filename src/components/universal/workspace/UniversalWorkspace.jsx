@@ -87,7 +87,8 @@ import { TEXTOS_LLAVOR } from '../textosLlavor.js';
  *                       Cap xifra pròpia: els punts de tall són els de
  *                       layout/graella.js, via AppGridShell (`mida`).
  *   - `mestreDetall` → (opcional, MD, ordre del Mestre 261003) el patró
- *                       mestre-detall en «estret», com WhatsApp:
+ *                       mestre-detall en «estret», com a les apps de
+ *                       missatgeria:
  *                         · false (per defecte): com sempre, el detall és la
  *                           primera vista;
  *                         · 'navegacio' (o true): la primera vista és la
@@ -311,7 +312,7 @@ const TORNADES_MAXIMES = 2;
  *     «Restablir l'amplada de les columnes» (el valor per defecte).
  *   · «Carpetes a la vista»: un interruptor per cada carpeta o categoria de
  *     primer nivell de la navegació («Tot» no s'amaga mai), a la manera
- *     d'una llista d'ajustos de WhatsApp (icona, nom, interruptor). Sense
+ *     d'una llista d'ajustos de missatgeria (icona, nom, interruptor). Sense
  *     carpetes (Admin), la secció no es pinta.
  * En tancar, el Dialeg torna el focus a la roda que l'havia obert.
  */

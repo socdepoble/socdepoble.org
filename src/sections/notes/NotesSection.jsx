@@ -14,8 +14,9 @@ import { ConnexioFitxa } from './ConnexioFitxa.jsx';
 import { PublicacioDetall, PublicacioFitxa } from './PublicacioDetall.jsx';
 import { esConnexio, esExtern } from '../../data/origenNota.js';
 import { extractPlainText } from '../../utils/contentAdapter.js';
-import { EMOTICONA_PER_DEFECTE, emojiInicial, emojiSol } from '../../utils/emoji.js';
+import { EMOTICONA_PER_DEFECTE, emojiInicial } from '../../utils/emoji.js';
 import { aliesDeLActor } from '../../data/identitatsSeed.js';
+import { modeDeDadesResolt } from './autoriaNota.js';
 import { iconaDeCarpeta, opcionsDeCarpetes } from './carpetes.js';
 import { LLAVOR_NOTA, LLAVORS_NOTA, esLlavorDeNota } from './llavorNota.js';
 import { escriuSeleccio, llegixSeleccio } from '../../components/universal/workspace/seleccioUrl.js';
@@ -36,31 +37,6 @@ import { useToast } from '@/components/universal/NotificationContext.jsx';
 import {
   CanalEmojisContext, TEXTOS_EMOJIS, carregaCatalegEmojis, copiaAlPortaretalls, textCopiat, textEmojiNoReconegut, useCanalEmojisDelBloc
 } from './canalEmojis.js';
-
-/* Correcció de la revisió adversarial (261016; encàrrec A1: l'avís per als
-   glifs que Safari 16 no pinta, amb la utilitat que ja existix) · La graella
-   del diàleg «Emojis» (mode cos). Un emoji que este navegador no reconeix
-   (emojiSol) no arriba a qui tria: el diàleg es queda obert i ho diu, com el
-   DialegEmoticona a la via d'assignar. Es munta només amb el diàleg obert:
-   l'avís no sobreviu a un tancament. */
-function GraellaDelCos({ onTria }) {
-  const [avis, setAvis] = useState(null);
-  const tria = useCallback((glif) => {
-    const reconegut = emojiSol(glif);
-    if (!reconegut) {
-      setAvis(textEmojiNoReconegut(glif));
-      return;
-    }
-    setAvis(null);
-    onTria(reconegut);
-  }, [onTria]);
-  return (
-    <>
-      {avis ? <p className="sdp-classificacio-dialeg__avis" role="status">{avis}</p> : null}
-      <GraellaEmojis carregaCataleg={carregaCatalegEmojis} onTria={tria} />
-    </>
-  );
-}
 
 /* Pell del Bloc de Notes: tot allò que el UniversalWorkspace no ha de saber. */
 const ETIQUETES = { categories: 'CARPETES', items: 'NOTES', create: 'CREAR NOTA', search: 'Cercar notes', empty: 'No hi ha notes.' };
@@ -97,7 +73,14 @@ const TEXT_ERROR_FONT = 'No s’han pogut carregar les dades.';
 const toWorkspaceNote = (note, noteFolders) => {
   /* Gauntlet 261016 (Bloc 3.9) · La llavor es reconeix normalitzada (la d'ara
      o la d'abans, escrita o tal com la torna TipTap): abans es comparava la
-     cadena exacta i un cos desat per l'editor no casava mai. */
+     cadena exacta i un cos desat per l'editor no casava mai.
+     Gauntlet 261017 (WP7a; C02 de Codex) · La reserva de text pla de la
+     llavor d'abans («Heading 3 (punxa…») es queda al costat del contracte:
+     una nota que comença amb eixa llavor i porta text propi no és cap llavor
+     per a esLlavorDeNota, i sense la reserva la seua fitxa passaria de
+     l'entradilla de reserva al text pla de la llavor (Llei del Píxel). Només
+     amaga l'extracte de la llista: no buida ni publica res. La prova:
+     NotesSection.extracteLlavor.test.jsx. */
   const isSeedContent = esLlavorDeNota(note.content) || (note.plainText && note.plainText.startsWith('Heading 3 (punxa'));
   /* Gauntlet 261016 (Bloc 3.9; ordre del Mestre: el placeholder de l'H1 és
      exactament «Nota sense títol», idèntic a la targeta) · La reserva de la
@@ -170,10 +153,14 @@ const renderDetall = ({ item }) => (
 
 /* Llavor del cos d'una nota nova: la plantilla de format de Sóc de Poble.
    Gauntlet 261016 (Bloc 3.9) · Viu a llavorNota.js (H3, H4, paràgrafs i dues
-   llistes); ací es reexporta perquè el DocumentEditor la hi llig. */
-export { LLAVOR_NOTA };
+   llistes). Gauntlet 261017 (C06, auditoria Codex) · Cap peça de producció no
+   la llig d'ací: el DocumentEditor ja no importa el Bloc, que la hi passa per
+   `seedContent` (NotesEditor · LLAVORS_NOTA).
+   Revisió del Gauntlet 261017 (R6) · Fora la reexportació, que ja només
+   servia a NotesSection.test.jsx: la prova la importa de llavorNota.js, la
+   font canònica, i comprova que CREAR NOTA posa eixa mateixa llavor.
 
-/* L'entrada d'una nota nova segons on és la persona, la que CREAR NOTA
+   L'entrada d'una nota nova segons on és la persona, la que CREAR NOTA
    enviava des de T39: una categoria o una etiqueta la porten; una carpeta,
    el folderId. Gauntlet 261016 (Bloc 3.9; ordre del Mestre: «Injectar en
    notes buides un template d'exemple canònic») · La llavor del cos va a TOTA
@@ -250,7 +237,15 @@ export default function NotesSection() {
     murAmbPagines: { status: estatFontMur, error: errorMur, refresh: refrescaMur },
     multimedia: { status: estatMultimedia, error: errorMultimedia, refresh: refrescaMultimedia }
   }), [estatMur, estatFontMur, errorMur, refrescaMur, estatMultimedia, errorMultimedia, refrescaMultimedia]);
-  const alies = useMemo(() => aliesDeLActor(actor, { dataMode: config?.dataMode }), [actor, config?.dataMode]);
+  /* Revisió del Gauntlet 261017 (ID6; relleu 3: una altra sessió mai no és
+     Javi) · Els àlies de l'actor, amb el mode de dades RESOLT
+     (modeDeDadesResolt, el mateix de NotesEditor, NotaFitxa i
+     usePublicacionsDeLActor), no amb el cru del paquet: un paquet 'seed' que
+     ja ha triat l'entrada real treballa en remot, i un compte qualsevol hi
+     heretava els àlies de la persona pilot (el Mac Mini de Javi eixia al seu
+     Bloc com a publicació pròpia). */
+  const modeResolt = useMemo(() => modeDeDadesResolt(config), [config]);
+  const alies = useMemo(() => aliesDeLActor(actor, { dataMode: modeResolt }), [actor, modeResolt]);
   const {
     status, error, notes, noteFolders, creaNota, setLocalNoteField, updateNote,
     informaError, obriConfiguracioNotes, refresh, canCreate, teSessio = false,
@@ -746,7 +741,13 @@ export default function NotesSection() {
       />
       </ProveidorSincronitzacioTargetes>
       {/* Bloc 3.8 · El diàleg «Emojis» (mode cos), germà de l'espai de treball:
-          la graella i el catàleg només es demanen en obrir-lo. */}
+          la graella i el catàleg només es demanen en obrir-lo.
+          Correcció de la revisió adversarial (261016; encàrrec A1) · Un emoji
+          que este navegador no reconeix (emojiSol) no arriba a qui tria: el
+          diàleg es queda obert i ho diu, com el DialegEmoticona a la via
+          d'assignar. La graella es munta només amb el diàleg obert: l'avís no
+          sobreviu a un tancament. Gauntlet 261017 · La comprovació, una sola,
+          dins de GraellaEmojis (textNoReconegut). */}
       {modeDesa ? null : (
         <Dialeg
           obert={emojisOberts}
@@ -758,7 +759,9 @@ export default function NotesSection() {
           ambTanca={false}
           accions={<Boto varietat="secundari" onClick={() => tancaEmojis()}>{TEXTOS_EMOJIS.tancar}</Boto>}
         >
-          {emojisOberts ? <GraellaDelCos onTria={triaEmojiDelCos} /> : null}
+          {emojisOberts ? (
+            <GraellaEmojis carregaCataleg={carregaCatalegEmojis} onTria={triaEmojiDelCos} textNoReconegut={textEmojiNoReconegut} />
+          ) : null}
         </Dialeg>
       )}
       </CanalEmojisContext.Provider>

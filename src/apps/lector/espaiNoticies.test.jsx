@@ -1000,7 +1000,7 @@ describe('en estret (375 px): el mestre-detall de l’espai', () => {
   /* Encàrrec F del Gauntlet (261016, P2) · L'Arrere del sistema (el d'Android, history.back) lleva
      ?article= sense passar per l'aspa, «Tornar» ni Esc, i la closca només aplica el panell
      d'eixida en muntar: es quedava al detall buit («Tria una notícia») en lloc de la llista, com
-     fan WhatsApp i Feedly. Ara tornar de la notícia a la llista obri el panell de la llista sempre,
+     fan les apps de missatgeria i els lectors de notícies. Ara tornar de la notícia a la llista obri el panell de la llista sempre,
      i el focus va a la fila quan el panell ja és obert. Com el navegador, el doble de focus() no
      enfoca res dins d'una columna tancada (inert), que jsdom no aplica. */
   test('l’Arrere del sistema després de llegir una notícia torna a la llista, amb el focus a la seua fila', async () => {

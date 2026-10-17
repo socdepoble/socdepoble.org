@@ -104,7 +104,7 @@ export function UIProvider({ children, externalConfig = {} }) {
     avisaDelTema(next);
   }, [systemDark]);
 
-  /* Torn 260930 (T1) · Les tres opcions de WhatsApp («Igual que el sistema»,
+  /* Torn 260930 (T1) · Les tres opcions de tema («Igual que el sistema»,
      «Mode clar», «Mode fosc») del full «Ajustos» del Xat. toggleTheme és
      binari i no sap tornar a 'system': este setter sí, i desa la tria igual.
      La barra negra continua amb toggleTheme. */

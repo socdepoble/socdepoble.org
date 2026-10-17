@@ -1,12 +1,14 @@
 /**
- * FullAjustos.jsx — el full «Ajustos» del Xat (torn 260930, T1), calcat del
- * d'«Ajustes» de WhatsApp Desktop (52 captures del Mestre, 20.47–21.05).
+ * FullAjustos.jsx — el full «Ajustos» del Xat (torn 260930, T1), amb
+ * l'anatomia habitual dels ajustos de missatgeria (52 captures de referència
+ * del Mestre, 20.47–21.05).
  *
  * «Tu» al peu del rail (o l'avatar, amb el rail plegat) l'obri. És un modal
  * CENTRAT de mida FIXA (480×640 a la captura: 30×40rem), amb una pila de
  * pàgines dins del MATEIX marc: navegar no el mou ni el canvia de mida, i una
  * pàgina curta no l'encongix. En estret ocupa tota la pantalla, com les
- * pantalles empeses de WhatsApp mòbil, amb el MATEIX tall que convertix la
+ * pantalles empeses de les apps de missatgeria en mòbil, amb el MATEIX tall
+ * que convertix la
  * resta de Dialeg en full inferior (revisió adversarial 260930, P2):
  * ≤720px a socdepoble.org i [data-sdp-estret] a l'encastat (modules.css,
  * .sdp-xat-ajustos).
@@ -21,7 +23,7 @@
  *     capçaleres de secció i les notes fora de la targeta, l'acció
  *     destructiva en roig, i l'avís honest de les pàgines sense dades.
  * Els canvis s'apliquen a l'acte (tema, llengua, amplària): no hi ha cap
- * botó de desar, com a WhatsApp.
+ * botó de desar, com a les apps de missatgeria.
  *
  * Focus: en obrir, al cercador; en entrar a una subpàgina, al seu ‹; en
  * tornar, a la fila que l'havia obert. Escape tanca el full sencer
@@ -473,7 +475,7 @@ function GrupAjustos({ grup, t, triada, valorDe, nota = '', onPrem }) {
   );
 }
 
-/* Una fila: icona lineal (només a l'arrel, com a WhatsApp), etiqueta, valor
+/* Una fila: icona lineal (només a l'arrel, com a la referència), etiqueta, valor
    gris i, a la dreta, el xebró (navega) o el ✓ (l'opció triada). El
    separador és la vora de baix de la línia: comença a l'altura de
    l'etiqueta, no de la icona. */
@@ -505,7 +507,7 @@ function FilaAjust({ fila, etiqueta, valor = '', triada = false, onPrem }) {
 }
 
 /* La cerca: una targeta amb les files trobades de tot l'arbre, amb la
-   pàgina on viuen com a valor gris; sense res, l'estat buit de WhatsApp
+   pàgina on viuen com a valor gris; sense res, l'estat buit de la referència
    (títol en negreta i una frase).
    Revisió adversarial 260930 (P3) · El terme és text de la persona: entra
    a la plantilla amb una funció de reemplaçament, perquè una cadena com a

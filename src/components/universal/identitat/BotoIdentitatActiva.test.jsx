@@ -114,3 +114,24 @@ test('sense nom, un nom honest; l’etiqueta es construïx en un sol lloc', () =
   render(<BotoIdentitatActiva teSessio perfil nom={null} />);
   expect(screen.getByRole('button', { name: etiquetaPerfilPropi('El meu compte') })).toBeTruthy();
 });
+
+/* Revisió del Gauntlet 261017 (ID4) · `pendent`: la sessió recordada encara
+   es restaura. Cap botó (ni «Entrar» ni avatar), cap silueta del Foraster i
+   cap clic: un estat ocupat (aria-busy) que diu, al lector de pantalla, que
+   es comprova la sessió. Sense `pendent`, el Foraster de sempre (vegeu
+   dalt). Amb sessió, `pendent` no hi compta. */
+test('ID4 · pendent: cap botó ni silueta, un estat ocupat i neutre', () => {
+  const onClick = vi.fn();
+  const { container } = render(<BotoIdentitatActiva teSessio={false} pendent onClick={onClick} etiquetaEntrar="Entrar" />);
+  expect(container.querySelector('button')).toBeNull();
+  expect(container.querySelector('svg')).toBeNull();
+  const estat = screen.getByRole('status');
+  expect(estat.getAttribute('aria-busy')).toBe('true');
+  expect(estat.textContent).toBe('Comprovant la sessió…');
+  fireEvent.click(estat);
+  expect(onClick).not.toHaveBeenCalled();
+  cleanup();
+  render(<BotoIdentitatActiva teSessio pendent perfil nom="Pepa Soler" onClick={onClick} />);
+  expect(screen.getByRole('button', { name: etiquetaPerfilPropi('Pepa Soler') })).not.toBeNull();
+  expect(screen.queryByRole('status')).toBeNull();
+});

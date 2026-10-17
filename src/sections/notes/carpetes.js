@@ -12,7 +12,10 @@
 import {
   CalendarDays, Folder, GalleryVerticalEnd, Inbox, LandPlot, MapPin, Newspaper, NotebookPen, ShoppingCart
 } from 'lucide-react';
-import { NOTE_FOLDERS_SEED } from '../../data/appSeed.js';
+/* Gauntlet 261017 (WP7b, P2) · De carpetesSeed.js, la mateixa llavor que
+   appSeed.js reexporta: importar-la d'appSeed portava PAGE_COPY al tros
+   d'entrada. */
+import { NOTE_FOLDERS_SEED } from '../../data/carpetesSeed.js';
 
 export const CARPETA_CONNECTATS = 'f-connectats';
 

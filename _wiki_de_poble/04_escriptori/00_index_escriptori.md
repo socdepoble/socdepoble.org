@@ -35,6 +35,7 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu — i
 
 
 
+- [[261017_1526_auditoria_claude]]
 - [[261017_1300_prompt_gauntlet_claude_codex]]
 - [[261017_1300_pla_implementacio_gauntlet_extrem]]
 - [[261016_1639_pla_implementacio_relleu_codex_gauntlet]]

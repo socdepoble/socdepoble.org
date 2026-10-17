@@ -16,16 +16,23 @@
  * Les dades del catàleg (292 kB, emojisUnicode18.js) sempre a demanda, amb
  * import(): la graella universal no les importa (components/ no importa de
  * sections/) i les rep d'ací.
+ *
+ * Gauntlet 261017 (F29–F34) · El carregador ja porta les famílies del
+ * selector (familiesEmojis.js: Cares, Persones, Animals, Menjar, Activitats,
+ * Viatges, Objectes, Símbols i Banderes): el diàleg «Emojis» del Bloc i tots
+ * els DialegEmoticona (Notes, Perfil i Snippet) en pinten les mateixes.
  */
 import { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react';
+import { familiesDelSelector } from './familiesEmojis.js';
 
 export const CanalEmojisContext = createContext(null);
 
 /** El canal del Bloc ({ registra, obri }), o null fora del Bloc. */
 export const useCanalEmojis = () => useContext(CanalEmojisContext);
 
-/** El catàleg Emojis XL, a demanda: { GRUPS_EMOJIS, … }. */
-export const carregaCatalegEmojis = () => import('../disseny/cataleg/dades/emojisUnicode18.js');
+/** El catàleg Emojis XL, a demanda i en famílies del selector: { GRUPS_EMOJIS }. */
+export const carregaCatalegEmojis = () => import('../disseny/cataleg/dades/emojisUnicode18.js')
+  .then((modul) => ({ GRUPS_EMOJIS: familiesDelSelector(modul?.GRUPS_EMOJIS) }));
 
 export const TEXTOS_EMOJIS = Object.freeze({
   titol: 'Emojis',

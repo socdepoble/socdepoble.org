@@ -1,10 +1,12 @@
 /**
  * XatSection.jsx — el Xat sobre AppGridShell (pla 260927_0055 §4.D, DEC-02).
  *
- *   · Rail esquerre plegat per defecte (ClosCaXat), llista al centre calcada
- *     de WhatsApp Desktop (ordre del Mestre, 260928: «volem que la base quede
- *     calcada a la de l'aplicació nativa»): una sola fila de títol amb el «…»
- *     rodó a l'esquerra (Seleccionar xats) i el «+» rodó blau a la dreta
+ *   · Rail esquerre plegat per defecte (ClosCaXat), llista al centre amb el
+ *     patró estàndard de missatgeria (ordre del Mestre, 260928: que la base
+ *     tinga l'estructura que la gent ja coneix de les apps natives; Gauntlet
+ *     261017, Bloc 3.1: un patró conegut, sense cap marca aliena): una sola
+ *     fila de títol amb el «…» rodó a l'esquerra (Seleccionar xats) i el «+»
+ *     rodó blau a la dreta
  *     (Nova conversa, un diàleg), la cerca en píndola sempre a la vista, les
  *     píndoles Tot · No llegits · Preferits · Grups darrere de la icona de
  *     filtre (XAT-A17, T12) i la llista; i la conversa a la dreta amb
@@ -38,7 +40,8 @@
  *     vista i, oberta des d'ella amb «Veure-ho tot», també la conserva
  *     (?comunitat=<id>&vista=comunitats): la seua fletxa hi torna.
  *   · Columna dreta (ordre del Mestre, 260927): sense conversa hi viu el
- *     document per defecte, l'espai que WhatsApp deixa buit; en obrir-ne una,
+ *     document per defecte, l'espai que les apps de missatgeria deixen buit;
+ *     en obrir-ne una,
  *     només el xat; en tornar a /xat, torna el document. En mode estret no hi
  *     cap: una sola columna cada vegada i, sense conversa, un avís sobri.
  *     Els ajustos del xat viuen a /control-xat, i s'hi arriba des de la
@@ -58,7 +61,8 @@
  * del codi obri res en fer focus. El que es veu en ample i en mitjà és la
  * barra blava del document per defecte de la columna dreta (TextSection amb
  * chrome 'context'), que hi és sempre sense conversa, i l'anell de focus del
- * camp (--sdp-focus). Ara el focus pinta la llista de filtres de WhatsApp.
+ * camp (--sdp-focus). Ara el focus pinta la llista de filtres del patró de
+ * missatgeria.
  */
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { ArrowLeft, CircleX, MessageCircle, Plus, Search, Users, X } from 'lucide-react';
@@ -116,7 +120,8 @@ import {
   anteposaPoble, avatarDelPoble, comunitatsAmbCaraDelPoble, esComunitatDelPoble, filsAmbCaraDelPoble, pobleDelXat, rutaSobreDelPoble
 } from './pobleAmfitrio.js';
 
-/* Els quatre filtres fixos de WhatsApp (XAT-A17): identificador i clau i18n. */
+/* Els quatre filtres fixos del patró de missatgeria (XAT-A17): identificador
+   i clau i18n. */
 const FILTRES = [
   ['tot', 'section.xat.filtres.tot', 'Tot'],
   ['noLlegits', 'section.xat.filtres.noLlegits', 'No llegits'],
@@ -988,8 +993,9 @@ function XatWorkspace() {
 
   /* Onada 3B · «Veure-ho tot ›» de la vista de comunitats obri la fitxa i
      conserva la vista d'origen (/xat?comunitat=<id>&vista=comunitats): la
-     fitxa hi mana, i la seua fletxa hi torna, com a WhatsApp (captura
-     19.41.43), igual que una conversa oberta des de la vista. */
+     fitxa hi mana, i la seua fletxa hi torna, com a les apps de missatgeria
+     (captura de referència 19.41.43), igual que una conversa oberta des de
+     la vista. */
   const obriComunitatDeLaVista = (id) => navigate(`/xat${consulta(id, vista)}`);
 
   /* Una conversa oberta des de la fitxa conserva la fitxa i, si n'hi havia,
@@ -1456,13 +1462,13 @@ function XatWorkspace() {
 
 /* ───────────────────────── La fila de títol de la llista ─────────────────── */
 
-/* Una sola fila, com «Chats» de WhatsApp Desktop (captures 19.11.50 i
-   19.12.18): a l'esquerra, el «…» rodó (MenuLlista: «Seleccionar xats") i, a
+/* Una sola fila, com la de «Chats» de la referència de missatgeria (captures
+   19.11.50 i 19.12.18): a l'esquerra, el «…» rodó (MenuLlista: «Seleccionar xats") i, a
    la dreta, el «+» rodó blau (nom accessible «Nova conversa», que App.test.jsx
    exigix). És la fila 1 de la graella, alineada amb la capçalera de la
    conversa. En estret i en mitjà, la closca del Xat no pinta pestanyes
    (modules.css, .sdp-xat): el primer botó és BotoObriRail, que obri el rail.
-   El títol no es centra com a WhatsApp: AppGridColumn el posa darrere de
+   El títol no es centra com a la referència: AppGridColumn el posa darrere de
    `esquerra` a tota la graella (sdp-app-grid-shell §2) i centrar-lo voldria
    tocar la capçalera compartida. Es desplaça, doncs, l'amplària del «…». */
 function CapcaleraLlista({ titol, titolRail, etiquetaNova, onNova, onSeleccionar, refBoto, t }) {
@@ -1540,15 +1546,16 @@ function MultimediaDeLaClosca({ onObriFil, ...resta }) {
 
 function FitxaDeLaClosca({ onObriFil, ...resta }) {
   const obri = useApartaEnEstret(onObriFil);
-  /* La fitxa de la comunitat també és una pantalla empesa a WhatsApp mòbil
-     (captures 12.54.22 i 12.54.37): fletxa a dalt i cap barra inferior. */
+  /* La fitxa de la comunitat també és una pantalla empesa, com a les apps de
+     missatgeria en mòbil (captures 12.54.22 i 12.54.37): fletxa a dalt i cap
+     barra inferior. */
   const { mida } = useAppGrid();
   useModeImmersiu(mida === 'estret');
   return <FitxaComunitat {...resta} onObriFil={obri} />;
 }
 
-/* Ordre del Mestre (261007) · Clon de WhatsApp en mòbil: a WhatsApp la barra
-   inferior només viu a les pestanyes d'arrel; tota pantalla empesa (conversa,
+/* Ordre del Mestre (261007) · El patró estàndard de missatgeria en mòbil: la
+   barra inferior només viu a les pestanyes d'arrel; tota pantalla empesa (conversa,
    fitxa de comunitat, ajustos) ocupa la pantalla sencera amb la fletxa a dalt
    (captures 12.54.22, 12.54.54 i 12.57.33). Amb la conversa a pantalla (estret
    i cap panell obert damunt), la closca amaga la barra negra, la franja i la

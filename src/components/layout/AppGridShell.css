@@ -173,8 +173,8 @@
   transform: translateX(-100%);
   transition: transform var(--sdp-durada-panell) var(--sdp-corba-calaix), visibility 0s linear var(--sdp-durada-panell);
 }
-/* P6 (261005) · El Xat (WhatsApp) en estret necessita que la llista ocupe tota
-   la pantalla. Correcció 261007: la classe sdp-xat és de .app-grid-page (el
+/* P6 (261005) · El Xat (patró de missatgeria) en estret necessita que la
+   llista ocupe tota la pantalla. Correcció 261007: la classe sdp-xat és de .app-grid-page (el
    pare), no de la closca; amb .app-grid-shell.sdp-xat la regla no casava mai i
    la llista era un calaix del 85% damunt d'un vel. */
 .app-grid-page.sdp-xat .app-grid-shell[data-layout="estret"] .app-grid-column--middle {

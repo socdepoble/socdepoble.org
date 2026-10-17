@@ -45,7 +45,6 @@ vi.mock('../../config/assetResolver.js', async (importOriginal) => ({ ...(await 
 vi.mock('./NotificationContext.jsx', () => ({ useToast: () => ({ showToast: (...args) => m.toast(...args) }) }));
 /* Peces alienes a l'autodesament (i algunes en obres d'altres torns): fora.
    (El selector d'identitat ja no viu al Perfil des de T40: cap mock.) */
-vi.mock('../../sections/notes/NotesSection.jsx', () => ({ LLAVOR_NOTA: '<p>Llavor</p>' }));
 vi.mock('./DocumentPrintPreview.jsx', () => ({ default: () => null }));
 vi.mock('./CopyrightSelector.jsx', () => ({ default: () => null }));
 vi.mock('./richText/extensions', () => ({ extensionsRiques: () => [] }));

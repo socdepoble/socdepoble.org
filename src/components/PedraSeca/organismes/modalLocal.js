@@ -17,6 +17,18 @@ function controls(dialeg) {
   }).sort((a, b) => (a.tabIndex || Infinity) - (b.tabIndex || Infinity));
 }
 
+/* Revisió del Gauntlet 261017 (M1, A11Y-1) · Un element enfocat de dins que
+   no és cap control del tabulador (el <dialog> mateix, o un tabIndex -1 com
+   el marc del visor, que rep el focus d'un clic) és vora quan no té cap
+   control davant (Maj+Tab) o darrere (Tab), en l'ordre del document: abans
+   només ho eren primer, últim i el <dialog>, i des del marc Maj+Tab eixia al
+   web amfitrió. Entre dos controls, l'ordre natiu. */
+function esVora(actiu, candidats, enrere) {
+  if (candidats.includes(actiu)) return false;
+  const costat = enrere ? Node.DOCUMENT_POSITION_PRECEDING : Node.DOCUMENT_POSITION_FOLLOWING;
+  return !candidats.some(control => actiu.compareDocumentPosition(control) & costat);
+}
+
 function enfoca(dialeg) {
   const candidats = controls(dialeg);
   (candidats.find(el => el.hasAttribute('autofocus') || el.hasAttribute('data-sdp-focus-inicial')) || candidats[0] || dialeg).focus();
@@ -71,7 +83,7 @@ export function obriModalLocal(dialeg, onTanca, retorn) {
     } else if (e.key === 'Tab') {
       const candidats = controls(dialeg);
       const primer = candidats[0], ultim = candidats.at(-1), actiu = shadow.activeElement;
-      if (!primer || !dialeg.contains(actiu) || (e.shiftKey ? actiu === primer || actiu === dialeg : actiu === ultim)) {
+      if (!primer || !dialeg.contains(actiu) || (e.shiftKey ? actiu === primer : actiu === ultim) || esVora(actiu, candidats, e.shiftKey)) {
         e.preventDefault();
         (e.shiftKey ? ultim || dialeg : primer || dialeg).focus();
       }

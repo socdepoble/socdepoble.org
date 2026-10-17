@@ -26,6 +26,9 @@
  * 2×), els botons ± (×1,5), el pessic amb dos dits i les tecles + − i 0. Amb
  * la foto ampliada, arrossegar-la la mou, dins dels seus límits; sense
  * ampliar, lliscar el dit a un costat passa de foto. Canviar de foto torna a 1×.
+ * Gauntlet 261017 · La roda amplia en proporció al gir: un pas de ratolí (100
+ * px, o 3 línies a Firefox) és ×1,2, com abans; el trackpad, que envia girs
+ * menuts i seguits, ja no salta a 4× d'una revolada.
  *
  * CONTRACTE
  *   obert (controlat) · onTanca(motiu: 'esc'|'boto', info?) · imatges
@@ -36,13 +39,22 @@
  *   munta hi posa els enllaços) · infoInicial (false: el panell comença
  *   plegat) · etiquetes { tanca, anterior, seguent, ampliar, reduir, info,
  *   posicio ('Imatge {n} de {total}'), error, senseImatge }, ja traduïdes ·
+ *   onCarrega(index, { amplada, alcada } | null) (Gauntlet 261017, C05 de
+ *   Codex: la resolució del panell) · les mides reals de la foto pintada
+ *   (naturalWidth i naturalHeight) quan carrega, o null si no carrega o el
+ *   fitxer no en té (un SVG sense mida); la peça no les pinta, les passa.
+ *   Revisió del Gauntlet 261017 (M4) · El null torna cada vegada que es
+ *   pinta l'avís d'una foto que no ha carregat, també en tornar-hi ·
  *   className.
  *   Tancat, no pinta cap imatge: el <dialog> és buit i no es demana res.
  *   L'estat de l'URL (?foto=) és de qui el munta.
  *
  * ACCESSIBILITAT. El diàleg porta el nom; el focus comença a «Tancar» i, en
  * tancar, torna a la foto que l'havia obert (Dialeg). Escape tanca. Les
- * fletxes passen de foto des de qualsevol control del visor; «i» plega i
+ * fletxes passen de foto des de qualsevol control del visor, també després
+ * de clicar o arrossegar la foto: el marc rep el focus del clic (tabIndex -1,
+ * fora de l'ordre de Tab), on abans queia al <body> i el teclat callava
+ * (Gauntlet 261017). «i» plega i
  * desplega el panell, que és un <aside> amb nom i aria-controls/aria-expanded
  * al seu botó. El comptador és una regió viva educada («Imatge 3 de 20»).
  * Tots els botons, de --sdp-touch.
@@ -75,6 +87,11 @@ const ESCALA_MINIMA = 1;
 const ESCALA_MAXIMA = 4;
 const PAS_BOTO = 1.5;
 const PAS_RODA = 1.2;
+/* El gir de la roda que val un PAS_RODA sencer, i els píxels d'una línia i
+   d'una pàgina (deltaMode 1 i 2: Firefox amb ratolí en dona línies). */
+const GIR_PER_PAS = 100;
+const PIXELS_PER_LINIA = 40;
+const PIXELS_PER_PAGINA = 800;
 /* Quant ha de córrer el dit (en píxels de pantalla) perquè un lliscament passe de foto. */
 const LLINDAR_LLISCAMENT = 48;
 
@@ -88,6 +105,16 @@ export function limitaEscala(escala) {
 
 const vistaInicial = (clau) => ({ clau, escala: ESCALA_MINIMA, x: 0, y: 0 });
 const distancia = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+
+/* El factor d'un gir de roda: PAS_RODA elevat al gir en píxels partit per
+   GIR_PER_PAS, amb un pas sencer de sostre per esdeveniment. */
+function factorDeRoda(event) {
+  const unitat = event.deltaMode === 1 ? PIXELS_PER_LINIA : event.deltaMode === 2 ? PIXELS_PER_PAGINA : 1;
+  return PAS_RODA ** Math.max(-1, Math.min(1, (-event.deltaY * unitat) / GIR_PER_PAS));
+}
+
+/* Les mides reals de la foto pintada, o null si el fitxer no en té. */
+const midesDe = (img) => (img?.naturalWidth > 0 && img?.naturalHeight > 0 ? { amplada: img.naturalWidth, alcada: img.naturalHeight } : null);
 
 /* El desplaçament dins dels límits: la foto ampliada es mou fins que la seua
    vora arriba a la de l'escenari, mai més enllà, i en l'eix on, ampliada,
@@ -104,7 +131,7 @@ function dinsDelsLimits(proposta, escenari, imatge) {
 }
 
 export function VisorImatges({
-  obert, onTanca, imatges, index = 0, onCanvi, titol, etiquetes, metadades, infoInicial = false, className
+  obert, onTanca, imatges, index = 0, onCanvi, titol, etiquetes, metadades, infoInicial = false, onCarrega, className
 }) {
   const llista = Array.isArray(imatges) ? imatges.filter(Boolean) : [];
   const total = llista.length;
@@ -122,13 +149,13 @@ export function VisorImatges({
       className={['sdp-visor', className].filter(Boolean).join(' ')} onObert={alObrir}>
       {visible ? (
         <ContingutVisor marcRef={marc} llista={llista} actual={actual} onCanvi={onCanvi} onTanca={onTanca} text={text}
-          metadades={metadades} infoInicial={infoInicial} />
+          metadades={metadades} infoInicial={infoInicial} onCarrega={onCarrega} />
       ) : null}
     </Dialeg>
   );
 }
 
-function ContingutVisor({ marcRef, llista, actual, onCanvi, onTanca, text, metadades, infoInicial }) {
+function ContingutVisor({ marcRef, llista, actual, onCanvi, onTanca, text, metadades, infoInicial, onCarrega }) {
   const idPanell = useId();
   const total = llista.length;
   const imatge = llista[actual];
@@ -143,6 +170,18 @@ function ContingutVisor({ marcRef, llista, actual, onCanvi, onTanca, text, metad
   const gest = useRef(null);
   const clauRef = useRef(clau);
   clauRef.current = clau;
+  const carregaRef = useRef(onCarrega);
+  carregaRef.current = onCarrega;
+
+  /* Revisió del Gauntlet 261017 (M4) · Una foto que no ha carregat es queda
+     amb l'avís, sense <img>: en tornar-hi no arriba cap load ni cap error
+     nou. El null de l'onCarrega es diu cada vegada que es pinta l'avís d'una
+     foto amb src (no només en l'error): qui munta el visor no es queda en
+     «Llegint…» al costat de l'avís. */
+  const ambAvis = Boolean(imatge.src) && errada === clau;
+  useEffect(() => {
+    if (ambAvis) carregaRef.current?.(actual, null);
+  }, [ambAvis, clau, actual]);
 
   const v = vista.clau === clau ? vista : vistaInicial(clau);
   const ampliada = v.escala > ESCALA_MINIMA;
@@ -177,7 +216,7 @@ function ContingutVisor({ marcRef, llista, actual, onCanvi, onTanca, text, metad
     const enRoda = (event) => {
       if (!event.deltaY) return;
       event.preventDefault();
-      const factor = event.deltaY < 0 ? PAS_RODA : 1 / PAS_RODA;
+      const factor = factorDeRoda(event);
       setVista((previa) => {
         const base = previa.clau === clauRef.current ? previa : vistaInicial(clauRef.current);
         const escala = limitaEscala(base.escala * factor);
@@ -261,8 +300,13 @@ function ContingutVisor({ marcRef, llista, actual, onCanvi, onTanca, text, metad
   const classesEscenari = ['sdp-visor__escenari', ampliada && 'sdp-visor__escenari--ampliat', arrossegant && 'sdp-visor__escenari--arrossega']
     .filter(Boolean).join(' ');
 
+  /* tabIndex -1: el clic a la foto deixa el focus al marc (no al <body>) i les
+     tecles hi continuen arribant; Tab no s'hi para mai.
+     Revisió del Gauntlet 261017 (M1, A11Y-1) · Des del marc, Maj+Tab no ix del
+     visor: encastat, la guarda de modalLocal.js el compta com a vora i dona
+     la volta a l'últim control; a la SPA, showModal() deixa inert la resta. */
   return (
-    <div ref={marcRef} className="sdp-visor__marc" onKeyDown={enTecla}>
+    <div ref={marcRef} className="sdp-visor__marc" tabIndex={-1} onKeyDown={enTecla}>
       <div className="sdp-visor__barra">
         <Boto varietat="secundari" className="sdp-visor__boto" icona={ArrowLeft} aria-label={text.tanca}
           aria-keyshortcuts="Escape" data-sdp-focus-inicial onClick={() => onTanca?.('boto')} />
@@ -280,8 +324,9 @@ function ContingutVisor({ marcRef, llista, actual, onCanvi, onTanca, text, metad
       <div className="sdp-visor__cos">
         <div ref={escenariRef} className={classesEscenari} onPointerDown={enPremer} onPointerMove={enMoure}
           onPointerUp={enAlcar} onPointerCancel={enAlcar} onDoubleClick={enDobleClic}>
-          {imatge.src && errada !== clau ? (
+          {imatge.src && !ambAvis ? (
             <img ref={imatgeRef} className="sdp-visor__imatge" src={imatge.src} alt={imatge.alt || ''} draggable="false"
+              onLoad={(event) => onCarrega?.(actual, midesDe(event.currentTarget))}
               onError={() => setErrada(clau)} />
           ) : (
             <p className="sdp-visor__avis">{imatge.src ? text.error : text.senseImatge}</p>

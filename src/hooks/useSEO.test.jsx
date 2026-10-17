@@ -245,9 +245,10 @@ test('S5 · routeAllowsIndex tanca gestoria i tractors també amb consulta o fra
   expect(routeAllowsIndex('/gestoriana')).toBe(true);
 });
 
-/* Bloc 3.5.5 (Gauntlet 261016) · La targeta de WhatsApp. WhatsApp i les xarxes
-   no executen JavaScript: només compta l'HTML que servix el lloc, i eixe HTML és
-   index.html per a totes les rutes. Ací es fixa el conjunt que han de llegir
+/* Bloc 3.5.5 (Gauntlet 261016) · La targeta d'un enllaç compartit en una app de
+   missatgeria. Les apps de missatgeria i les xarxes no executen JavaScript:
+   només compta l'HTML que servix el lloc, i eixe HTML és index.html per a
+   totes les rutes. Ací es fixa el conjunt que han de llegir
    sense JS, i que useSEO no el desfà quan el navegador sí que l'executa.
    Correcció del Gauntlet (261016): esta prova exigia un og:url fix a la
    portada. Era un defecte: Facebook, Messenger i LinkedIn prenen og:url com

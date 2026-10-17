@@ -19,6 +19,10 @@ const FITXERS = Object.freeze([
   'src/utils/sanitize.test.js',
   'src/sections/mur/TargetaDelMur.jsx',
   'src/sections/mur/TargetaDelMur.imatgesPropies.test.jsx',
+  /* Revisió del Gauntlet 261017 (ID1 i ID2) · L'avatar de qui signa: la
+     silueta d'una persona sense foto (publicacions i actes) i la foto pujada
+     al bucket públic, l'única referència opaca que es passa al port. */
+  'src/sections/mur/TargetaDelMur.identitat.test.jsx',
   'src/sections/mur/qualitat.imatgesPropies.test.js',
   'src/components/universal/EventCard.jsx',
   'src/components/universal/EventCard.test.jsx',

@@ -1,11 +1,12 @@
 /**
  * ClosCaXat.jsx — la closca compartida del Xat i del Control del xat
  * (pla 260927_0055 §4.D, DEC-02): un AppGridShell amb el rail esquerre,
- * plegat per defecte com la barra estreta de WhatsApp Desktop i recordat
- * amb getVal/setVal (CLAU_RAIL).
+ * plegat per defecte com la barra estreta de les apps de missatgeria
+ * d'escriptori i recordat amb getVal/setVal (CLAU_RAIL).
  *
- * El rail calca el menú principal de WhatsApp per a Mac (ordre innegociable
- * del Mestre, 260927 vesprada; captura 19.11.50, onada 3B):
+ * El rail seguix el menú principal del patró estàndard de missatgeria (ordre
+ * innegociable del Mestre, 260927 vesprada; captura de referència 19.11.50,
+ * onada 3B; Gauntlet 261017, Bloc 3.1: sense cap marca aliena):
  *   · Xats, Comunitats, Telefonades i Contingut multimèdia, en eixe ordre i
  *     amb les mateixes icones («Novetats» continua a ENTRADES_RAIL, però
  *     amagada: D16, vegeu «Destins»);
@@ -39,9 +40,10 @@
  * Mestre, 18:35).
  *
  * Torn 260930 (T1, captures 20.47.21 i 20.48.41): el peu obri el full
- * «Ajustos» (FullAjustos), com «Tú» a WhatsApp Desktop. Desplegat, l'avatar
- * i «Tu» són un sol botó; el llapis continua portant a /el-meu-perfil
- * (el lot no captura on porta el de WhatsApp). Plegat, l'avatar del peu obri
+ * «Ajustos» (FullAjustos), com «Tú» a la referència de missatgeria.
+ * Desplegat, l'avatar i «Tu» són un sol botó; el llapis continua portant a
+ * /el-meu-perfil (el lot de captures no mostra on porta el de la referència).
+ * Plegat, l'avatar del peu obri
  * el full. La closca munta el full UNA sola vegada, dins d'AppGridShell (hi
  * llig la mida i els presets de les columnes). Fora d'ample, obrir-lo tanca
  * abans el panell lliscant del rail, com qualsevol tria del rail, i en
@@ -67,8 +69,8 @@
  *
  * En estret i en mitjà (ordre del Mestre, 260927 vesprada) el Xat no usa les
  * pestanyes de la closca: cada columna porta el seu propi control a la fila
- * de títol, com WhatsApp. El rail és un panell lliscant que sempre es
- * desplega amb etiquetes (BotoObriRail l'obri des de la fila de títol de la
+ * de títol, com a les apps de missatgeria. El rail és un panell lliscant que
+ * sempre es desplega amb etiquetes (BotoObriRail l'obri des de la fila de títol de la
  * columna central i el seu propi botó el tanca), perquè un rail de 56px
  * centrat dins d'un panell de 260 o de 375px quedava perdut.
  */
@@ -121,7 +123,7 @@ function recullRetornFocus() {
   return viu;
 }
 
-/* Les sis entrades del menú de WhatsApp per a Mac, en el seu ordre i amb la
+/* Les sis entrades del menú del patró de missatgeria, en el seu ordre i amb la
    seua icona de lucide. `accio`: 'converses' (/xat), 'control' (el Control
    del xat, commutador) o 'vista' (/xat?vista=<id>). `seccio` 'mes': viu dins
    de la secció plegable «Més» del rail desplegat. `amagada`: l'entrada es
@@ -389,7 +391,7 @@ export function RailXat({
     : <CaraXat nom={nomJo} src={joAvatar} mida="xs" llavor={joId} alt="" />;
 
   if (ample && plegat) {
-    /* La barra estreta de WhatsApp Desktop: només les icones, en el mateix
+    /* La barra estreta de les apps de missatgeria: només les icones, en el mateix
        ordre, just davall del botó d'expandir; al peu, l'avatar propi. */
     const botoPlegat = (entrada) => {
       const etiqueta = t(entrada.clau, entrada.text);
@@ -498,7 +500,7 @@ export function RailXat({
       </nav>
       <div className={onAjustos ? 'sdp-xat-rail-peu sdp-xat-rail-peu--ajustos' : 'sdp-xat-rail-peu'}>
         {onAjustos ? (
-          /* L'avatar i «Tu» en un sol botó, com «Tú» de WhatsApp: el nom
+          /* L'avatar i «Tu» en un sol botó, com el «Tú» de la referència: el nom
              accessible comença per «Tu», el que es veu (WCAG 2.5.3). */
           <button type="button" className="sdp-xat-ajustos-entrada" aria-label={etiquetaAjustos} title={etiquetaAjustos} aria-haspopup="dialog" onClick={obriAjustos}>
             {avatarPropi}

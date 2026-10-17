@@ -30,7 +30,7 @@ import { lazyRoute } from '../apps/plataforma/lazyRoute.js';
 import { RouteErrorBoundary } from './RouteErrorBoundary.jsx';
 export { RouteErrorBoundary } from './RouteErrorBoundary.jsx';
 import { EVENT_NIVELL_IAIA, esIaiaActiva, nivellIaiaDesat } from '../sections/realitat/nivellIaia.js';
-import { PAGE_COPY } from '../sections/text/pageContent.js';
+import { destiDeMultimedia } from '../sections/multimedia/rutesMultimedia.js';
 import { accioDeLaPaginaDeText, accioDeTextAlFinal, objecteDeLaPaginaDeText } from '../sections/text/accionsDeText.js';
 import { AccioDeLaPaginaDeText } from '../sections/text/AccioDeLaPaginaDeText.jsx';
 import { ProveidorXatSocDePoble } from '../sections/control/xatCorporatiu.js';
@@ -735,12 +735,40 @@ const TopBar = memo(function TopBar({ onToggleSidebar, menuObert = false, nomPob
   );
 });
 
+/* Gauntlet 261017 (WP7b, P2) · La còpia local de les pàgines de text
+   (PAGE_COPY: pageContent.js i legalContent.js, uns 141 KB minificats i 49 KB
+   gzip) ja no viatja al tros d'entrada: arriba amb import() quan es pinta una
+   ruta de text, a la vegada que el tros de TextSection, que ja la duia (la
+   importa per paginaDeText.js): cap byte ni cap viatge de més. Mentre
+   arriben es veu el RouteFallback de sempre, el de la Suspense de TextRoute,
+   l'única que espera ara les dos coses: el mateix element de càrrega de
+   principi a fi. Hi passa també quan el nucli ja porta la pàgina, perquè
+   TextSection seguisca al mateix lloc de l'arbre i, quan arriba el contingut
+   del nucli, s'actualitze sense remuntar-se, com abans. Una baixada fallida
+   és un LazyRouteError, com la de qualsevol ruta. */
+const TextRouteAmbCopiaLocal = lazyRoute(() => Promise.all([
+  import('../sections/text/pageContent.js'),
+  import('../sections/text/TextSection')
+]).then(([{ PAGE_COPY }]) => ({
+  default: function AmbCopiaLocal(props) {
+    return <TextRouteContingut {...props} copiaLocal={PAGE_COPY} />;
+  }
+})));
+
 function TextRoute({ pageKey }) {
   const { pageCopy, status } = useCoreContent();
+  return (
+    <Suspense fallback={<RouteFallback />}>
+      <TextRouteAmbCopiaLocal pageKey={pageKey} pageCopy={pageCopy} status={status} />
+    </Suspense>
+  );
+}
+
+function TextRouteContingut({ pageKey, pageCopy, status, copiaLocal }) {
   // Fallback a les dades locals (PAGE_COPY) perquè la legalitat carregui de forma segura i ràpida
   // encara que Supabase estiga en fase de càrrega o sense xarxa.
-  const page = pageCopy?.[pageKey] || PAGE_COPY?.[pageKey];
-  
+  const page = pageCopy?.[pageKey] || copiaLocal?.[pageKey];
+
   if (!page) {
     if (status === 'loading') {
       return <RouteFallback />;
@@ -764,15 +792,16 @@ function TextRoute({ pageKey }) {
      resta de pàgines passen null i TextSection no el fa arribar enlloc. */
   const accioPrincipal = accioDeLaPaginaDeText(pageKey) ? <AccioDeLaPaginaDeText pageKey={pageKey} /> : null;
   const objecte = objecteDeLaPaginaDeText(pageKey, page.title);
+  /* Gauntlet 261017 (WP7b, P2) · Sense Suspense pròpia: la de TextRoute ja
+     espera TextSection, i una de nova ací pintaria un altre element de càrrega
+     en acabar d'arribar la còpia local. */
   return (
-    <Suspense fallback={<RouteFallback />}>
-      <TextSection page={page} pageKey={pageKey} accioPrincipal={accioPrincipal} objecte={objecte}>
-        {/* Transparència Radical: el comptador es mostra on s'explica la privacitat.
-            Suspense propi perquè el tauler no torne a tapar el text mentre arriba. */}
-        {pageKey === 'legal' ? <Suspense fallback={null}><TaulerTelemetria /></Suspense> : null}
-        {accioDeTextAlFinal(pageKey) ? <AccioDeLaPaginaDeText pageKey={pageKey} lloc="baix" /> : null}
-      </TextSection>
-    </Suspense>
+    <TextSection page={page} pageKey={pageKey} accioPrincipal={accioPrincipal} objecte={objecte}>
+      {/* Transparència Radical: el comptador es mostra on s'explica la privacitat.
+          Suspense propi perquè el tauler no torne a tapar el text mentre arriba. */}
+      {pageKey === 'legal' ? <Suspense fallback={null}><TaulerTelemetria /></Suspense> : null}
+      {accioDeTextAlFinal(pageKey) ? <AccioDeLaPaginaDeText pageKey={pageKey} lloc="baix" /> : null}
+    </TextSection>
   );
 }
 
@@ -892,6 +921,18 @@ function RedireccioXat() {
   return <Navigate to={consulta ? `${desti}?${consulta}` : desti} replace />;
 }
 
+/* Gauntlet 261017 (M07, C07) · /multimedia/<id>, també amb barra final o amb
+   un camí darrere (/multimedia/town-x/, /multimedia/town-x/y), que no casaven
+   amb ':sectionId/:itemId' i acabaven a NotFoundPage. Porta on porta el detall
+   (rutesMultimedia.js · destiDeMultimedia): town-<slug> a /pobles/<slug> i la
+   resta a l'Arxiu amb el visor obert, amb replace i conservant la consulta i
+   el fragment. Sense esperar el tros del detall. */
+function RedireccioMultimedia() {
+  const { itemId } = useParams();
+  const { search, hash } = useLocation();
+  return <Navigate to={destiDeMultimedia(itemId, search, hash ?? '') || '/multimedia'} replace />;
+}
+
 /* T4 (ordre del Mestre, 260930) · Els àlies d'entrada (/login, /accedir,
    /entrar, /crear-compte) porten a /registre amb el mode que obrin i
    conserven la consulta rebuda. El ?tornar només passa si és intern i no
@@ -972,6 +1013,8 @@ function ActorRoutes({ agents }) {
       <Route path="mercat" element={<MercatSection />} />
       <Route path="calendari" element={<CalendariSection />} />
       <Route path="multimedia" element={<MultimediaSection />} />
+      {/* Gauntlet 261017 (M07) · Abans del comodí ':sectionId/:itemId'. */}
+      <Route path="multimedia/:itemId/*" element={<RedireccioMultimedia />} />
       <Route path="pobles" element={<PoblesSection />} />
       <Route path="poblacio" element={<PoblacioSection />} />
       <Route path="notes" element={<NotesSection />} />

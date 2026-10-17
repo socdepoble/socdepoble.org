@@ -1109,3 +1109,32 @@ test('T7 · el diàleg de carpeta rep el parentId de les carpetes del Bloc', () 
   fireEvent.click(screen.getByRole('button', { name: 'Desar' }));
   expect(escrits()).toEqual([['p', 'folderId', 'tic']]);
 });
+
+/* Revisió del Gauntlet 261017 (ID4; relleu 3: mai «Foraster» mentre la sessió
+   és vàlida) · Mentre una sessió recordada es restaura (estat 'comprovant',
+   encara sense usuari) l'editor no obri la còpia de prova del Foraster
+   signada amb el logotip verd: diu «Carregant…», el mateix estat de
+   l'espai de treball (UniversalWorkspace · DEFAULT_LABELS.loading), i no
+   munta cap editor on escriure. Resolta sense sessió, la còpia de prova de
+   sempre. Una nota ja oberta es continua pintant. */
+test('ID4 · mentre es restaura la sessió: «Carregant…», cap còpia de prova; resolta sense sessió, la còpia de prova', () => {
+  mocks.adapter = null;
+  mocks.session = { currentUser: null, estat: 'comprovant' };
+  const { rerender } = render(<NotesEditor />);
+  expect(screen.getByRole('status').textContent).toBe('Carregant…');
+  expect(mocks.adapter).toBeNull();
+  mocks.session = { currentUser: null, estat: 'fora' };
+  rerender(<NotesEditor />);
+  expect(screen.queryByRole('status')).toBeNull();
+  expect(mocks.adapter.document.id).toBe('prova-local');
+});
+
+test('ID4 · amb una nota oberta, la restauració no l’amaga ni la canvia per la còpia de prova', () => {
+  mocks.adapter = null;
+  mocks.session = { currentUser: null, estat: 'comprovant' };
+  render(<NotesEditor activeNote={{ id: 'p', title: 'Hort', content: '<p>Reg</p>' }} />);
+  expect(screen.queryByRole('status')).toBeNull();
+  expect(mocks.adapter.document.id).toBe('p');
+  // Encara sense sessió: no es pot publicar.
+  expect(mocks.adapter.visibilitat.bloqueig).not.toBeNull();
+});

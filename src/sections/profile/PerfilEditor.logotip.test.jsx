@@ -48,7 +48,6 @@ vi.mock('../../components/universal/richText', () => ({
   UniversalRichTextContent: () => null,
 }));
 vi.mock('../../components/universal/richText/extensions', () => ({ extensionsRiques: () => [] }));
-vi.mock('../notes/NotesSection.jsx', () => ({ LLAVOR_NOTA: '<p>llavor</p>' }));
 vi.mock('../../components/universal/DocumentPrintPreview.jsx', () => ({ default: () => null }));
 
 import { PerfilEditor } from './PerfilEditor.jsx';

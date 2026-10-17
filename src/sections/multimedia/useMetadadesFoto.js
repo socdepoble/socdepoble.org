@@ -14,15 +14,38 @@
  *   · Una lectura per foto i per sessió (memòria de MAX_MEMORIA entrades); en
  *     canviar de foto o tancar, la lectura en vol s'avorta.
  * Torna { estat: 'sense' | 'llegint' | 'llest', exif }.
+ *
+ * Gauntlet 261017 (C03 de Codex) · En WebP el tros EXIF sol anar darrere de
+ * la imatge, fora del prefix, i el lector estricte el rebutjava: d'un WebP de
+ * més de 256 KB es perdia la càmera. Ara, si el prefix és un WebP que anuncia
+ * EXIF (lecturaExifWebp.js) i el servidor ha respost 206 amb un Content-Range
+ * coherent, es recorren les capçaleres dels trossos amb peticions Range de
+ * 8 bytes, es llig només el tros EXIF i es passa a llegixExif dins d'un WebP
+ * mínim. Cada peça ha de tornar 206 amb el rang demanat i el mateix total (i
+ * la mateixa ETag, si n'hi ha) i no es pot redirigir; el prefix, tampoc fora
+ * del seu origen. Com a molt MAX_PETICIONS_WEBP peticions i TEMPS_MAXIM_WEBP
+ * en total, i s'avorta amb la foto. Si alguna cosa no quadra, o el servidor
+ * ignora Range, queda el prefix de sempre: mai l'original sencer. JPEG i PNG,
+ * com abans.
  */
 import { useEffect, useState } from 'react';
 import { MAX_BYTES_EXIF, llegixExif } from '../../components/universal/enquadrament/exif.js';
 import { resolRecursPropi } from '../../config/assetResolver.js';
 import { esFontImatgePropia } from '../../utils/sanitize.js';
 import { esMitjaOpac } from '../../utils/mitjaOpac.js';
+import { cercaExifWebp, rangDeContentRange, webpAmbExifFora, webpMinim } from './lecturaExifWebp.js';
 
 const MAX_MEMORIA = 60;
 const memoria = new Map();
+/** Peticions Range que pot fer el recorregut d'un WebP, capçaleres i tros EXIF inclosos. */
+export const MAX_PETICIONS_WEBP = 6;
+/** Temps total del recorregut d'un WebP, en mil·lisegons. */
+export const TEMPS_MAXIM_WEBP = 8000;
+/* Revisió del Gauntlet 261017 (C03, «temps total») · El prefix també té
+   sostre: un servidor que envia les capçaleres i després calla deixava la
+   lectura (i el «Llegint…» del panell) penjada fins a tancar la foto. 20 s
+   basten per a 256 KB fins i tot en una connexió rural lenta. */
+export const TEMPS_MAXIM_PREFIX = 20000;
 
 const SENSE = Object.freeze({ estat: 'sense', exif: null });
 
@@ -31,11 +54,9 @@ export function esLlegible(src) {
   return typeof src === 'string' && src.trim() !== '' && !esMitjaOpac(src) && esFontImatgePropia(src);
 }
 
-/* Els primers `maxim` bytes d'una URL: Range i, si arriba sencera, el flux
-   tallat. null si no es pot. */
-export async function llegixPrefix(url, maxim, signal) {
-  const resposta = await fetch(url, { headers: { Range: `bytes=0-${maxim - 1}` }, signal, credentials: 'same-origin' });
-  if (!resposta.ok) return null;
+/* El cos d'una resposta fins a `maxim` bytes: en arribar-hi, el flux es
+   talla (si el servidor ignora Range, no es baixa la resta). */
+async function llegixCos(resposta, maxim) {
   const lector = resposta.body?.getReader?.();
   if (!lector) {
     const sencer = new Uint8Array(await resposta.arrayBuffer());
@@ -61,6 +82,113 @@ export async function llegixPrefix(url, maxim, signal) {
   return bytes;
 }
 
+/* Els primers `maxim` bytes d'una URL, amb la resposta que els porta: Range
+   i, si arriba sencera, el flux tallat. null si no es pot. */
+async function llegixPrefix(url, maxim, signal) {
+  const resposta = await fetch(url, { headers: { Range: `bytes=0-${maxim - 1}` }, signal, credentials: 'same-origin' });
+  if (!resposta.ok) return null;
+  return { resposta, bytes: await llegixCos(resposta, maxim) };
+}
+
+/* El prefix amb el seu sostre de temps: un AbortController propi, lligat al
+   de qui llig, que talla la petició (i el flux) en esgotar-se `temps`. */
+async function llegixPrefixFitat(url, signal, temps) {
+  if (typeof AbortController !== 'function') return llegixPrefix(url, MAX_BYTES_EXIF, signal);
+  const control = new AbortController();
+  const avorta = () => control.abort();
+  const rellotge = setTimeout(avorta, temps);
+  signal?.addEventListener('abort', avorta);
+  if (signal?.aborted) avorta();
+  try {
+    return await llegixPrefix(url, MAX_BYTES_EXIF, control.signal);
+  } finally {
+    clearTimeout(rellotge);
+    signal?.removeEventListener('abort', avorta);
+  }
+}
+
+/* On es demanen les peces d'un recorregut: on ha acabat la resposta del
+   prefix, si una redirecció no l'ha treta de l'origen demanat; si no, null. */
+function destiDe(resposta, url) {
+  if (!resposta.redirected) return url;
+  try {
+    const base = globalThis.location?.href;
+    return new URL(resposta.url, base).origin === new URL(url, base).origin ? resposta.url : null;
+  } catch {
+    return null;
+  }
+}
+
+/* `n` bytes des de `pos`, amb una petició Range que no es pot redirigir. Ha de
+   tornar 206 amb eixe rang exacte i el total del fitxer (i la mateixa ETag, si
+   totes dos en porten); el cos es talla a `n`. Si no, null, i el cos es
+   cancel·la sense llegir-lo: mai l'original sencer. */
+async function llegixRang(url, pos, n, fitxer, signal) {
+  const resposta = await fetch(url, { headers: { Range: `bytes=${pos}-${pos + n - 1}` }, signal, credentials: 'same-origin', redirect: 'error' });
+  const rang = rangDeContentRange(resposta.headers.get('Content-Range'));
+  const etag = resposta.headers.get('ETag');
+  const quadra = resposta.status === 206 && rang && rang.inici === pos && rang.fi === pos + n - 1 && rang.total === fitxer.total
+    && !(etag && fitxer.etag && etag !== fitxer.etag);
+  if (!quadra) {
+    resposta.body?.cancel?.().catch?.(() => {});
+    return null;
+  }
+  const bytes = await llegixCos(resposta, n);
+  return bytes.byteLength === n ? new DataView(bytes.buffer, bytes.byteOffset, n) : null;
+}
+
+/* Gauntlet 261017 (C03 de Codex) · El WebP mínim amb el tros EXIF d'un WebP
+   que acaba a `fi`, fora del prefix. Només si el prefix ha arribat amb un 206
+   «bytes 0-N/TOTAL» que quadra amb els bytes llegits i amb el RIFF. Les
+   capçaleres i el tros que ja són al prefix no es tornen a demanar; la resta,
+   com a molt MAX_PETICIONS_WEBP peticions en `temps` ms. null si no quadra o
+   no es troba; rebutja si s'esgota el temps, falla la xarxa o s'avorta. */
+async function recorreWebp(url, { resposta, bytes: prefix }, fi, signal, temps) {
+  const rang = rangDeContentRange(resposta.headers.get('Content-Range'));
+  if (resposta.status !== 206 || !rang || rang.inici !== 0 || rang.fi !== prefix.byteLength - 1 || fi > rang.total) return null;
+  const desti = destiDe(resposta, url);
+  if (!desti || typeof AbortController !== 'function') return null;
+  const fitxer = { total: rang.total, etag: resposta.headers.get('ETag') };
+  const control = new AbortController();
+  const avorta = () => control.abort();
+  const rellotge = setTimeout(avorta, temps);
+  signal?.addEventListener('abort', avorta);
+  if (signal?.aborted) avorta();
+  let peticions = 0;
+  const llig = (pos, n) => {
+    if (pos + n <= prefix.byteLength) return new DataView(prefix.buffer, prefix.byteOffset + pos, n);
+    if (peticions >= MAX_PETICIONS_WEBP) return null;
+    peticions += 1;
+    return llegixRang(desti, pos, n, fitxer, control.signal);
+  };
+  try {
+    const cerca = cercaExifWebp(fi);
+    let pas = cerca.next();
+    while (!pas.done) pas = cerca.next(await llig(pas.value, 8));
+    const tros = pas.value ? await llig(pas.value.inici, pas.value.mida) : null;
+    return tros ? webpMinim(prefix, new Uint8Array(tros.buffer, tros.byteOffset, tros.byteLength)) : null;
+  } finally {
+    clearTimeout(rellotge);
+    signal?.removeEventListener('abort', avorta);
+  }
+}
+
+/**
+ * L'EXIF d'una imatge pròpia per URL: el prefix de MAX_BYTES_EXIF i, d'un WebP
+ * que l'anuncia fora del prefix, el tros EXIF trobat per recorreWebp. Les
+ * opcions són les de llegixExif, més `signal`, `temps` (el del recorregut) i
+ * `tempsPrefix` (el de la primera petició, capçaleres i cos).
+ * null si el servidor no dona la imatge; rebutja si s'avorta, falla la xarxa o
+ * s'esgota algun dels dos temps.
+ */
+export async function llegixExifRemot(url, { signal, temps = TEMPS_MAXIM_WEBP, tempsPrefix = TEMPS_MAXIM_PREFIX, ...opcions } = {}) {
+  const prefix = await llegixPrefixFitat(url, signal, tempsPrefix);
+  if (!prefix) return null;
+  const fi = webpAmbExifFora(prefix.bytes);
+  const webp = fi ? await recorreWebp(url, prefix, fi, signal, temps) : null;
+  return llegixExif(webp || prefix.bytes, opcions);
+}
+
 function recorda(clau, exif) {
   if (memoria.size >= MAX_MEMORIA) memoria.delete(memoria.keys().next().value);
   memoria.set(clau, exif);
@@ -81,8 +209,7 @@ export function useMetadadesFoto(src, { persona = false } = {}) {
     const control = typeof AbortController === 'function' ? new AbortController() : null;
     let viu = true;
     setLectura({ clau, estat: 'llegint', exif: null });
-    llegixPrefix(resolRecursPropi(src), MAX_BYTES_EXIF, control?.signal)
-      .then((bytes) => (bytes ? llegixExif(bytes, { ambCamera: true, ambGps: !persona }) : null))
+    llegixExifRemot(resolRecursPropi(src), { ambCamera: true, ambGps: !persona, signal: control?.signal })
       .catch(() => null)
       .then((exif) => {
         if (!viu) return;

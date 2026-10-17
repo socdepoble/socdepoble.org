@@ -16,7 +16,14 @@
  *     i, si no, qui signa l'element (source), llevat de la foto d'un poble, on
  *     `source` és el nom del poble. Cap reserva inventada (mediaContent.js ja
  *     no n'escriu cap).
- *   · Poble · el del cens o el de l'article d'un poble, amb el seu enllaç.
+ *   · Resolució · Gauntlet 261017 (C05 de Codex: «la resolució coneguda no
+ *     s'ha d'ocultar perquè falte EXIF») · les mides reals de la foto pintada
+ *     (naturalWidth × naturalHeight, les que el visor llig en carregar-la),
+ *     no les de l'EXIF: són les del fitxer que es veu. Mentre carrega,
+ *     «Llegint…»; si no carrega, «Desconegut».
+ *   · Poble · el del cens o el de l'article d'un poble, amb el seu enllaç; el
+ *     d'una publicació (nomPoble, el nom que porta), sense si no és al cens
+ *     de pobles.
  *   · Drets d'ús · dretsDe (origenImatges.js); sense, «No declarats».
  *   · Origen · il·lustració d'IA, fotografia o recurs del sistema.
  *   · Publicat a · l'article on s'usa la foto, amb el seu enllaç; sense, que
@@ -74,6 +81,15 @@ export function formataCamera(camera) {
   return model.toLowerCase().startsWith(marca.toLowerCase()) ? model : `${marca} ${model}`;
 }
 
+/** Gauntlet 261017 (C05) · «4032 × 3024 px» de les mides reals de la foto
+ *  ({ amplada, alcada }, enters positius), o null: mai s'inventen. */
+export function formataResolucio(mides) {
+  const amplada = Number(mides?.amplada);
+  const alcada = Number(mides?.alcada);
+  if (!Number.isInteger(amplada) || !Number.isInteger(alcada) || amplada <= 0 || alcada <= 0) return null;
+  return `${amplada} × ${alcada} px`;
+}
+
 const SECCIONS = Object.freeze({
   mur: ['nav.mur', 'Mur'],
   mercat: ['nav.mercat', 'Mercat'],
@@ -97,22 +113,28 @@ export function pobleDe(item) {
 /**
  * Les files del panell. `exif` és el que ha llegit useMetadadesFoto
  * ({ dataCaptura, gps, camera, autor, copyright } o null) i `estatExif`
- * 'llegint' | 'llest' | 'sense'. `nomDelPoble(slug)` torna el nom del poble.
+ * 'llegint' | 'llest' | 'sense'. `mides` són les mides reals de la foto
+ * pintada ({ amplada, alcada } o null) i `estatMides`, com `estatExif`.
+ * `nomDelPoble(slug)` torna el nom del poble.
  */
-export function filesDelPanell(item, { exif = null, estatExif = 'sense', persona = false, cens = null, nomDelPoble = null, t = null } = {}) {
+export function filesDelPanell(item, {
+  exif = null, estatExif = 'sense', mides = null, estatMides = 'sense', persona = false, cens = null, nomDelPoble = null, t = null
+} = {}) {
   if (!item) return [];
   const tr = (clau, reserva) => (typeof t === 'function' ? t(clau, reserva) : reserva);
   const tradueix = ([clau, reserva]) => tr(clau, reserva);
   const desconegut = tr('section.multimedia.visor.desconegut', 'Desconegut');
-  const llegint = estatExif === 'llegint' ? tr('section.multimedia.visor.llegint', 'Llegint…') : null;
+  const textLlegint = tr('section.multimedia.visor.llegint', 'Llegint…');
+  const llegint = estatExif === 'llegint' ? textLlegint : null;
   const delExif = (valor) => valor || llegint || desconegut;
+  const resolucio = formataResolucio(mides) || (estatMides === 'llegint' ? textLlegint : desconegut);
 
   const data = formataDataHora(item.dataCaptura) || formataDataHora(exif?.dataCaptura);
   const geo = item.geolocalitzacio || exif?.gps || null;
   const origen = origenDe(item, cens);
   const autor = textNet(exif?.autor) || autorDeclarat(item);
   const slug = pobleDe(item);
-  const nomPoble = slug ? (typeof nomDelPoble === 'function' && nomDelPoble(slug)) || (item.article?.sectionId === 'pobles' && item.title) || slug : null;
+  const nomPoble = slug ? (typeof nomDelPoble === 'function' && nomDelPoble(slug)) || (item.article?.sectionId === 'pobles' && item.title) || slug : textNet(item.nomPoble);
   const drets = dretsDe(item, { origen, copyrightExif: exif?.copyright });
   const article = item.article && item.article.id != null && Object.hasOwn(SECCIONS, item.article.sectionId) ? item.article : null;
   /* El mateix descriptor que feia servir la pàgina /multimedia/<id>
@@ -135,6 +157,7 @@ export function filesDelPanell(item, { exif = null, estatExif = 'sense', persona
       valor: persona ? tr('section.multimedia.visor.gpsPrivat', 'No es mostren en la foto d’una persona') : (formataGps(geo) || delExif(null))
     },
     { clau: 'camera', etiqueta: tr('section.multimedia.visor.camera', 'Càmera'), valor: delExif(formataCamera(exif?.camera)) },
+    { clau: 'resolucio', etiqueta: tr('section.multimedia.visor.resolucio', 'Resolució'), valor: resolucio },
     { clau: 'autor', etiqueta: tr('section.multimedia.visor.autor', 'Autor'), valor: delExif(autor) },
     {
       clau: 'poble',
