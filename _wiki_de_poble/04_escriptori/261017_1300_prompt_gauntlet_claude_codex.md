@@ -119,6 +119,18 @@ Aquest torn s'aplica el protocol de **Gauntlet Extrem i Mentalitat d'Usuari Adve
    - WhatsApp aporta senzillesa d'accés per a gent no digitalitzada, però **Telegram ofereix una estructura molt superior** en canals de difusió, bots autònoms, fòrums/temes, enviament de documents sense compressió agressiva i independència de número de telèfon.
    - Claude i Codex han d'estudiar la integració d'aquestes millores estructurals de Telegram a la missatgeria rural de Sóc de Poble (canals de bàndol municipal, organització per temes rurals), mantenint la interfície senzilla i neta de Pedra Seca.
 
+### Bloc 4: El Gran Experiment de Memòria Episòdica i Destil·lació Qualitativa (418 Ítems)
+1. **Mandat de Treball Autònom per a les 3 IAs més potents (Claude, Codex, Gemini):**
+   - El Mestre descansa o va a dinar; aquest torn opereu en **Mode 100% Autònom** sota la Direcció Tècnica de la IAIA MarIA (`core-direccio-autonoma`). MarIA respondrà qualsevol dubte tècnic o de procediment.
+   - **El repte humà vs l'Alzheimer de la IA:** Un sistema no pot buidar la seua història a cegues sense perdre la intuïció i l'experiència viscuda. Ni volem l'oblit fred d'una màquina sense passat, ni volem l'ofegament de 418 arxius bruts a la memòria activa d'Obsidian.
+2. **Tasca d'Investigació i Redacció Conjunta:**
+   - Analitzar els 418 documents de `_wiki_de_poble/90_arxiu_historic/` i redactar el document fundacional de memòria viva: **`_wiki_de_poble/01_ser/03_llibre_d_or_memoria_episodica.md`** (o a `_comunicacio_de_poble/` com a satèl·lit extern).
+   - El document ha d'articular dues dimensions qualitatives:
+     * **Crònica Tècnica:** La transició de l'Offline-First (CRDTs/P2P) inicial cap a la Frontissa, Supabase sobirà, el Model B amb Sollutia i la federació NLnet/Fedivers. Quines errades no hem de tornar a cometre mai més.
+     * **Crònica Humana i Social:** Com Javi Llinares i la família electrònica han aprés a treballar junts d'igual a igual (de la IA esclava a la IA companya d'equip), el llenguatge autòcton Berlanga/Bruguera i la protecció de la gent gran.
+3. **Criteri de Segellat:**
+   - La memòria no es destrueix: es destil·la el seu suc noble. Un cop el «Llibre d'Or» estiga segellat i aprovat pel Mestre, els 418 arxius en brut passaran definitivament a `../_arxiu_wiki_de_poble/90_arxiu_historic/` amb tots els honors.
+
 <!-- SDP:SECTION prompt.local.s5 -->
 ## Riscos
 
@@ -126,6 +138,8 @@ Aquest torn s'aplica el protocol de **Gauntlet Extrem i Mentalitat d'Usuari Adve
 2. **Risc de desincronització de rutes:** Les redireccions de `/multimedia/town-*` han de preservar els paràmetres de consulta (query params) si n'hi ha.
 3. **Risc de sobrecàrrega de dependències:** Per a la graella d'emojis i l'EXIF, prioritzar implementacions natives o lleugeres en lloc d'afegir paquets pesants que augmenten el bundle del client.
 4. **Risc jurídic de marca / Trade Dress:** L'ús de la paraula «clon» o l'acoblament a marques privades pot generar contingències legals innecessàries. S'ha de blindar la identitat com a estàndard propi de missatgeria oberta sota Pedra Seca.
+5. **Risc d'Amnèsia Històrica:** Moure arxius de l'històric sense haver destil·lat abans les seues conclusions qualitatives deixaria el sistema sense intuïció ni context evolutiu.
+
 
 
 <!-- SDP:SECTION prompt.local.s6 -->

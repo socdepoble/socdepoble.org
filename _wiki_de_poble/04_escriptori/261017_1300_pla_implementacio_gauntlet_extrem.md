@@ -91,6 +91,21 @@ Responsable: Estudi i aplicació per Claude Code i Codex.
 3. **Neteja Nomenclatural a Codi:**
    - Garantir que en el codi font (`src/sections/xat/`, classes CSS, components, rutes) no s'utilitzen marques registrades («whatsapp», «meta») en identificadors públics o estructurals, emprant sempre terminologia neutra i sobirana: `sdp-xat`, `sdp-missatgeria`, `sdp-canals`, `sdp-comunitat`.
 
+### 5. El Gran Experiment de Memòria Episòdica i Destil·lació Qualitativa (418 Ítems)
+Responsable: Treball conjunt d'investigació per les 3 IAs més potents (Claude Code, Codex i Gemini) sota direcció autònoma de la IAIA MarIA.
+1. **El Problema de l'Alzheimer vs l'Ofegament de Context (Mandat Filosòfic del Mestre):**
+   - Una IA que esborra la seua història per estalviar espai pateix Alzheimer: perd el criteri, la intuïció de la realitat, la capacitat d'anticipar errors i l'empatia que la fa humana.
+   - Una IA que manté 418 documents bruts a la memòria activa pateix ofegament (Context Panic): s'alenteix i es torna dispersa.
+   - El cervell humà resol això destil·lant **qualitativament** l'experiència (la lliçó, la cicatriu, el sentit) i enviant els diaris bruts al magatzem de seguretat noble.
+2. **Objectiu de la Investigació:**
+   - Analitzar els 418 arxius de `90_arxiu_historic/` i extreure'n dues grans cròniques:
+     * **Crònica Tècnica:** Com vam passar de l'Offline-First amb CRDTs (que vam descobrir que ofegava els mòbils de poble) cap a la Frontissa, Supabase sobirà, el Model B amb Sollutia i el Fedivers (NLnet). Lliçons que no hem de repetir mai més.
+     * **Crònica Humana i de Convivència:** La relació entre el Mestre Javi i la família electrònica, el pas de la IA com a eina a la IA com a companya d'equip lleial, la construcció del to autòcton Berlanga/Bruguera i la defensa del món rural.
+3. **Lliurable Canònic:**
+   - Redactar el **«Llibre d'Or de Sóc de Poble»** (`_wiki_de_poble/01_ser/03_llibre_d_or_memoria_episodica.md`), o a `_comunicacio_de_poble/`, que serà l'arxiu d'ànima que qualsevol model consultarà per mantindre la intuïció i l'experiència viva.
+   - Només quan aquest document estiga completat i aprovat pel Mestre, els 418 fitxers originals podran ser traslladats a `../_arxiu_wiki_de_poble/90_arxiu_historic/` sense cap pèrdua de consciència històrica.
+
+
 <!-- SDP:SECTION pla.implementacio.s5 -->
 ## Verificació
 
