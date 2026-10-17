@@ -4,9 +4,9 @@
   "actor": "MarIA",
   "scope": "documents",
   "state": "context_loaded",
-  "revision": 6,
+  "revision": 8,
   "createdAt": "2026-10-17T10:50:10.345Z",
-  "updatedAt": "2026-10-17T10:51:49.472Z",
+  "updatedAt": "2026-10-17T11:49:51.081Z",
   "expiresAt": "2026-10-18T10:50:10.345Z",
   "contractHash": "6a1959a7c85620476e8cb465609d6b2e56cbcc2c380e5faf3c14267bee1163fa",
   "humanInventoryVersion": 1,
@@ -3847,6 +3847,22 @@
         "committedAt": "2026-10-17T10:51:49.472Z",
         "documentHash": "77259e6262dff1865ec423c8480e60a6b68beb5d00edc3c24a0d8d51373bd5e8"
       }
+    },
+    "779756f9-bfde-4f70-be88-e1107f1bdd05": {
+      "id": "779756f9-bfde-4f70-be88-e1107f1bdd05",
+      "route": "acta",
+      "routeVersion": "2.0.0",
+      "file": "_wiki_de_poble/10_actes/261017_1350_acta_marmota_gauntlet_extrem_i_descans.md",
+      "contractSnapshot": "6b2662bc1032c7cc74772e2e0000b28ceb221b7f95d135ff136fe098f1395064",
+      "template": "_wiki_de_poble/03_actuar/plantilles/acta.md",
+      "templateHash": "d0a64c35b75833b88ea561903829fb02558db7be214a9ee5844045cafc1333a1",
+      "issuedAt": "2026-10-17T11:49:51.052Z",
+      "creation": {
+        "state": "committed",
+        "preparedAt": "2026-10-17T11:49:51.053Z",
+        "committedAt": "2026-10-17T11:49:51.081Z",
+        "documentHash": "376f539f1c86d6b96edeaf33bdc6578ee568bd0e28499c5cf427947ee1d71478"
+      }
     }
   },
   "plan": null,
@@ -3890,6 +3906,18 @@
       "file": "_wiki_de_poble/04_escriptori/261017_1300_prompt_gauntlet_claude_codex.md",
       "at": "2026-10-17T10:51:49.472Z",
       "hash": "77259e6262dff1865ec423c8480e60a6b68beb5d00edc3c24a0d8d51373bd5e8"
+    },
+    {
+      "state": "context_loaded",
+      "action": "context",
+      "at": "2026-10-17T11:49:51.054Z"
+    },
+    {
+      "action": "create-committed",
+      "receiptId": "779756f9-bfde-4f70-be88-e1107f1bdd05",
+      "file": "_wiki_de_poble/10_actes/261017_1350_acta_marmota_gauntlet_extrem_i_descans.md",
+      "at": "2026-10-17T11:49:51.081Z",
+      "hash": "376f539f1c86d6b96edeaf33bdc6578ee568bd0e28499c5cf427947ee1d71478"
     }
   ]
 }
